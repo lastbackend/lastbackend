@@ -1,4 +1,4 @@
-package utils
+package db
 
 import (
 	"fmt"
@@ -6,23 +6,26 @@ import (
 	"log"
 )
 
-var db *bolt.DB
-
 const bucket = "map"
 
-func Open() {
+type Bolt struct {
+	DB *bolt.DB
+}
+
+func Open() *bolt.DB {
 
 	db, err := bolt.Open("/home/nate/foo/bolt.db", 0644, nil)
 	if err != nil {
 		log.Fatal(err)
 	}
-	defer db.Close()
+
+	return db
 
 }
 
-func Write(key, value []byte) {
+func (b *Bolt) Write(key, value []byte) {
 
-	err := db.Update(func(tx *bolt.Tx) error {
+	err := b.DB.Update(func(tx *bolt.Tx) error {
 		bucket, err := tx.CreateBucketIfNotExists(bucket)
 		if err != nil {
 			return err
@@ -40,8 +43,9 @@ func Write(key, value []byte) {
 	}
 }
 
-func Read(key []byte) {
-	err := db.View(func(tx *bolt.Tx) error {
+func (b *Bolt) Read(key []byte) {
+
+	err := b.DB.View(func(tx *bolt.Tx) error {
 		bucket := tx.Bucket(bucket)
 		if bucket == nil {
 			return fmt.Errorf("Bucket %q not found!", bucket)
