@@ -2,18 +2,15 @@ package log
 
 import (
 	"fmt"
-	"github.com/boltdb/bolt"
-	"log"
 	"github.com/Sirupsen/logrus"
 	"runtime"
 	"strings"
-	"github.com/deployithq/deployit/drivers/interfaces"
 )
 
 const bucket = "map"
 
 type Log struct {
-	Logger *logrus.Logger,
+	Logger *logrus.Logger
 }
 
 func New() *logrus.Logger {
@@ -37,6 +34,14 @@ func (l *Log) Error(args ...interface{}) {
 		entry := l.Logger.WithFields(logrus.Fields{})
 		entry.Data["file"] = fileInfo(2)
 		entry.Error(args...)
+	}
+}
+
+func (l *Log) Fatal(args ...interface{}) {
+	if l.Logger.Level >= logrus.FatalLevel {
+		entry := l.Logger.WithFields(logrus.Fields{})
+		entry.Data["file"] = fileInfo(2)
+		entry.Fatal(args...)
 	}
 }
 

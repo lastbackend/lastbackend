@@ -3,13 +3,9 @@ package utils
 import (
 	"crypto/sha1"
 	"encoding/base64"
-	"log"
 )
 
 func Hash(data []byte) string {
-
-	log.Println("Hash")
-
 	hash := sha1.Sum(data)
 
 	var hashString string
@@ -19,5 +15,4 @@ func Hash(data []byte) string {
 	}
 
 	return hashString
-
 }
