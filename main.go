@@ -29,7 +29,7 @@ type Env struct {
 func main() {
 	app := cli.NewApp()
 	app.Name = "deployit"
-	app.Usage = ""
+	app.Usage = "Deploy it command line tool for deploying great apps!"
 
 	app.Flags = []cli.Flag{
 		cli.BoolFlag{
@@ -39,13 +39,28 @@ func main() {
 		},
 	}
 
-	app.Action = Init
+	app.Commands = []cli.Command{
+		{
+			Name:        "Deploy it command",
+			Aliases:     []string{"it"},
+			Usage:       "Use it when you want to deploy sources of current repository",
+			Description: "This command deplos sources from current directory and sends it to Deployit servers for deploying",
+			Action:      DeployIt,
+		},
+		{
+			Name:        "Deploy url command",
+			Aliases:     []string{"url"},
+			Usage:       "",
+			Description: "",
+			Action:      DeployURL,
+		},
+	}
 
 	app.Run(os.Args)
 
 }
 
-func Init(c *cli.Context) error {
+func DeployIt(c *cli.Context) error {
 
 	env := new(Env)
 
@@ -57,9 +72,9 @@ func Init(c *cli.Context) error {
 		env.Log.SetDebugLevel()
 	}
 
-	dir, _ := filepath.Abs(filepath.Dir(os.Args[0]))
+	currentPath, _ := filepath.Abs(filepath.Dir(os.Args[0]))
 
-	storagePath := fmt.Sprintf("%s/.dit", dir)
+	storagePath := fmt.Sprintf("%s/.dit", currentPath)
 
 	err := os.Mkdir(storagePath, 0766)
 	if err != nil && os.IsNotExist(err) {
@@ -73,24 +88,11 @@ func Init(c *cli.Context) error {
 		DB: database,
 	}
 
-	cmd := string(c.Args()[0])
-
-	switch cmd {
-	case "it":
-		DeployIt(env, dir)
-	case "url":
-		DeployURL(env, "")
-	}
-
-	return nil
-}
-
-func DeployIt(env *Env, pathToFiles string) error {
 	env.Log.Debug("Deploy it")
 
 	var archiveName string = "tar.gz"
 
-	var pathToArchive string = fmt.Sprintf("%s/.dit/%s", pathToFiles, archiveName)
+	var pathToArchive string = fmt.Sprintf("%s/.dit/%s", currentPath, archiveName)
 
 	fw, err := os.Create(pathToArchive)
 	if err != nil {
@@ -105,10 +107,12 @@ func DeployIt(env *Env, pathToFiles string) error {
 	tw := tar.NewWriter(gw)
 	defer tw.Close()
 
-	err = PackFiles(env, tw, pathToFiles)
+	err = PackFiles(env, tw, currentPath)
 	if err != nil {
 		return err
 	}
+
+	// TODO Handle deleted files
 
 	res, err := UploadFile(env.Log, pathToArchive, archiveName, "")
 	if err != nil {
@@ -119,11 +123,38 @@ func DeployIt(env *Env, pathToFiles string) error {
 	// TODO Remove archive
 
 	return nil
-
 }
 
-func DeployURL(env *Env, url string) error {
+func DeployURL(c *cli.Context) error {
+	env := new(Env)
+
+	env.Log = &log.Log{
+		Logger: log.New(),
+	}
+
+	if Debug {
+		env.Log.SetDebugLevel()
+	}
+
+	currentPath, _ := filepath.Abs(filepath.Dir(os.Args[0]))
+
+	storagePath := fmt.Sprintf("%s/.dit", currentPath)
+
+	err := os.Mkdir(storagePath, 0766)
+	if err != nil && os.IsNotExist(err) {
+		env.Log.Error(err)
+	}
+
+	database := db.Open(env.Log, fmt.Sprintf("%s/map", storagePath))
+	defer database.Close()
+
+	env.Database = &db.Bolt{
+		DB: database,
+	}
+
 	env.Log.Debug("Deploy url")
+
+	var url string
 
 	if url == "" {
 		err := errors.New("Empty url")
@@ -195,7 +226,7 @@ func PackFiles(env *Env, tw *tar.Writer, pathToFiles string) error {
 		// TODO Create exclude lib
 		// TODO Parse .gitignore and exclude files from
 
-		if fileName == ".git" || fileName == ".idea" || fileName == ".dit" {
+		if fileName == ".git" || fileName == ".idea" || fileName == ".dit" || fileName == "node_modules" {
 			continue
 		}
 
@@ -225,7 +256,7 @@ func WriteToTarGZ(env *Env, pathToFile string, tw *tar.Writer, file os.FileInfo)
 	hash := utils.Hash([]byte(hashData))
 
 	value, err := env.Database.Read(env.Log, []byte(pathToFile))
-	if err != nil {
+	if err != nil && err.Error() != "BUCKET_NOT_FOUND" {
 		return err
 	}
 

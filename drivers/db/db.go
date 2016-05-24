@@ -2,12 +2,11 @@ package db
 
 import (
 	"errors"
-	"fmt"
 	"github.com/boltdb/bolt"
 	"github.com/deployithq/deployit/drivers/interfaces"
 )
 
-const bucket = "map"
+const base = "map"
 
 type Bolt struct {
 	DB *bolt.DB
@@ -28,7 +27,7 @@ func (b *Bolt) Write(log interfaces.Log, key, value []byte) error {
 	log.Debug("Write hash info to database")
 
 	err := b.DB.Update(func(tx *bolt.Tx) error {
-		bucket, err := tx.CreateBucketIfNotExists([]byte(bucket))
+		bucket, err := tx.CreateBucketIfNotExists([]byte(base))
 		if err != nil {
 			log.Error(err)
 			return err
@@ -56,9 +55,9 @@ func (b *Bolt) Read(log interfaces.Log, key []byte) (string, error) {
 	var val []byte
 
 	err := b.DB.View(func(tx *bolt.Tx) error {
-		bucket := tx.Bucket([]byte(bucket))
+		bucket := tx.Bucket([]byte(base))
 		if bucket == nil {
-			err := errors.New(fmt.Sprintf("Bucket %s not found", bucket))
+			err := errors.New("BUCKET_NOT_FOUND")
 			log.Error(err)
 			return err
 		}
