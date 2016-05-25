@@ -10,4 +10,11 @@ type Log interface {
 type DB interface {
 	Write(Log, []byte, []byte) error
 	Read(Log, []byte) (string, error)
+	ListAllFiles(Log) ([]string, error)
+	Delete(Log, []byte) error
+}
+
+type Env struct {
+	Log      Log
+	Database DB
 }
