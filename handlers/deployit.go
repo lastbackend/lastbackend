@@ -4,7 +4,6 @@ import (
 	"archive/tar"
 	"bytes"
 	"compress/gzip"
-	"encoding/json"
 	"fmt"
 	"github.com/codegangsta/cli"
 	"github.com/deployithq/deployit/drivers/db"
@@ -12,6 +11,7 @@ import (
 	"github.com/deployithq/deployit/drivers/log"
 	"github.com/deployithq/deployit/utils"
 	"io"
+	"io/ioutil"
 	"mime/multipart"
 	"net/http"
 	"os"
@@ -97,17 +97,26 @@ func DeployIt(c *cli.Context) error {
 		return err
 	}
 
+	// TODO Check if archive is empty
+
 	res, err := UploadFile(env.Log, pathToArchive, archiveName, c.String("name"), c.String("tag"))
 	if err != nil {
 		return err
 	}
 	defer res.Body.Close()
 
-	err = os.Remove(pathToArchive)
+	resp_body, err := ioutil.ReadAll(res.Body)
 	if err != nil {
-		env.Log.Error(err)
 		return err
 	}
+	env.Log.Debug(res.Status)
+	env.Log.Debug(string(resp_body))
+
+	//err = os.Remove(pathToArchive)
+	//if err != nil {
+	//	env.Log.Error(err)
+	//	return err
+	//}
 
 	return nil
 }
@@ -224,32 +233,41 @@ func UploadFile(log interfaces.Log, filePath, fileName, name, tag string) (*http
 	bodyBuf := new(bytes.Buffer)
 	bodyWriter := multipart.NewWriter(bodyBuf)
 
-	fileWriter, err := bodyWriter.CreateFormFile("tar.gz", filePath)
+	fileWriter, err := bodyWriter.CreateFormFile("file", "tar.gz")
 	if err != nil {
 		log.Error(err)
 		return res, err
 	}
+
 	_, err = io.Copy(fileWriter, fh)
 	if err != nil {
 		log.Error(err)
 		return res, err
 	}
 
-	contentType := bodyWriter.FormDataContentType()
 	bodyWriter.Close()
 
-	Body := struct {
-		Name string `json:"name"`
-		Tag  string `json:"tag"`
-	}{name, tag}
+	//Body := struct {
+	//	Name string `json:"name"`
+	//	Tag  string `json:"tag"`
+	//}{name, tag}
+	//
+	//err = json.NewEncoder(bodyBuf).Encode(Body)
+	//if err != nil {
+	//	log.Error(err)
+	//	return &http.Response{}, err
+	//}
 
-	err = json.NewEncoder(bodyBuf).Encode(Body)
+	req, err := http.NewRequest("POST", fmt.Sprintf("%s/app/deploy", Host), bodyBuf)
 	if err != nil {
 		log.Error(err)
-		return &http.Response{}, err
+		return res, err
 	}
 
-	res, err = http.Post(fmt.Sprintf("%s/app/deploy", Host), contentType, bodyBuf)
+	req.Header.Set("Content-Type", bodyWriter.FormDataContentType())
+
+	client := new(http.Client)
+	res, err = client.Do(req)
 	if err != nil {
 		log.Error(err)
 		return res, err
