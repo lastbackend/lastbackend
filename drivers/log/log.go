@@ -29,6 +29,14 @@ func (l *Log) Debug(args ...interface{}) {
 	}
 }
 
+func (l *Log) Debugf(format string, args ...interface{}) {
+	if l.Logger.Level >= logrus.DebugLevel {
+		entry := l.Logger.WithFields(logrus.Fields{})
+		entry.Data["file"] = fileInfo(2)
+		entry.Debugf(format, args)
+	}
+}
+
 func (l *Log) Error(args ...interface{}) {
 	if l.Logger.Level >= logrus.ErrorLevel {
 		entry := l.Logger.WithFields(logrus.Fields{})
@@ -37,11 +45,27 @@ func (l *Log) Error(args ...interface{}) {
 	}
 }
 
+func (l *Log) Errorf(format string, args ...interface{}) {
+	if l.Logger.Level >= logrus.DebugLevel {
+		entry := l.Logger.WithFields(logrus.Fields{})
+		entry.Data["file"] = fileInfo(2)
+		entry.Errorf(format, args)
+	}
+}
+
 func (l *Log) Fatal(args ...interface{}) {
 	if l.Logger.Level >= logrus.FatalLevel {
 		entry := l.Logger.WithFields(logrus.Fields{})
 		entry.Data["file"] = fileInfo(2)
 		entry.Fatal(args...)
+	}
+}
+
+func (l *Log) Fatalf(format string, args ...interface{}) {
+	if l.Logger.Level >= logrus.DebugLevel {
+		entry := l.Logger.WithFields(logrus.Fields{})
+		entry.Data["file"] = fileInfo(2)
+		entry.Fatalf(format, args)
 	}
 }
 

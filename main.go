@@ -2,6 +2,7 @@ package main
 
 import (
 	"github.com/codegangsta/cli"
+	"github.com/deployithq/deployit/daemon"
 	"github.com/deployithq/deployit/handlers"
 	"os"
 )
@@ -24,14 +25,16 @@ func main() {
 			Destination: &handlers.Host,
 		},
 		cli.StringFlag{
-			Name:  "name",
-			Usage: "",
-			Value: "app",
+			Name:        "name",
+			Usage:       "",
+			Value:       "app",
+			Destination: &handlers.AppName,
 		},
 		cli.StringFlag{
-			Name:  "tag",
-			Usage: "",
-			Value: "latest",
+			Name:        "tag",
+			Usage:       "",
+			Value:       "latest",
+			Destination: &handlers.Tag,
 		},
 	}
 
@@ -44,11 +47,11 @@ func main() {
 			Action:      handlers.DeployIt,
 		},
 		{
-			Name:        "Deploy url command",
-			Aliases:     []string{"url"},
+			Name:        "Deploy it daemon",
+			Aliases:     []string{"daemon"},
 			Usage:       "",
 			Description: "",
-			Action:      handlers.DeployURL,
+			Action:      daemon.Init,
 		},
 	}
 

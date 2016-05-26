@@ -1,4 +1,4 @@
-package db
+package bolt
 
 import (
 	"errors"
@@ -12,7 +12,7 @@ type Bolt struct {
 	DB *bolt.DB
 }
 
-func Open(log interfaces.Log, path string) *bolt.DB {
+func Open(log interfaces.ILog, path string) *bolt.DB {
 
 	db, err := bolt.Open(path, 0766, nil)
 	if err != nil {
@@ -37,8 +37,7 @@ func Open(log interfaces.Log, path string) *bolt.DB {
 
 }
 
-func (b *Bolt) Write(log interfaces.Log, key, value []byte) error {
-	log.Debug("Write hash info to database")
+func (b *Bolt) Write(log interfaces.ILog, key, value string) error {
 
 	err := b.DB.Update(func(tx *bolt.Tx) error {
 		bucket, err := tx.CreateBucketIfNotExists([]byte(base))
@@ -47,7 +46,7 @@ func (b *Bolt) Write(log interfaces.Log, key, value []byte) error {
 			return err
 		}
 
-		err = bucket.Put(key, value)
+		err = bucket.Put([]byte(key), []byte(value))
 		if err != nil {
 			log.Error(err)
 			return err
@@ -63,10 +62,9 @@ func (b *Bolt) Write(log interfaces.Log, key, value []byte) error {
 	return nil
 }
 
-func (b *Bolt) Read(log interfaces.Log, key []byte) (string, error) {
-	log.Debug("Read hash info from database")
+func (b *Bolt) Read(log interfaces.ILog, key string) (string, error) {
 
-	var val []byte
+	var val string
 
 	err := b.DB.View(func(tx *bolt.Tx) error {
 		bucket := tx.Bucket([]byte(base))
@@ -76,30 +74,28 @@ func (b *Bolt) Read(log interfaces.Log, key []byte) (string, error) {
 			return err
 		}
 
-		val = bucket.Get(key)
+		val = string(bucket.Get([]byte(key)))
 
 		return nil
 	})
 
 	if err != nil {
-		return string(val), err
+		return val, err
 	}
 
-	return string(val), nil
+	return val, nil
 }
 
-func (b *Bolt) Delete(log interfaces.Log, key []byte) error {
-	log.Debug("Delete from database")
+func (b *Bolt) Delete(log interfaces.ILog, key string) error {
 
 	err := b.DB.Update(func(tx *bolt.Tx) error {
 		bucket := tx.Bucket([]byte(base))
 		if bucket == nil {
-			err := errors.New("BUCKET_NOT_FOUND")
-			log.Error(err)
-			return err
+			log.Error(interfaces.ErrBucketNotFound)
+			return interfaces.ErrBucketNotFound
 		}
 
-		err := bucket.Delete(key)
+		err := bucket.Delete([]byte(key))
 		if err != nil {
 			log.Error(err)
 			return err
@@ -115,8 +111,7 @@ func (b *Bolt) Delete(log interfaces.Log, key []byte) error {
 	return nil
 }
 
-func (b *Bolt) ListAllFiles(log interfaces.Log) ([]string, error) {
-	log.Debug("List all files from database")
+func (b *Bolt) ListAllFiles(log interfaces.ILog) ([]string, error) {
 
 	var files []string
 

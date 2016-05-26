@@ -4,71 +4,49 @@ import (
 	"archive/tar"
 	"bytes"
 	"compress/gzip"
+	"encoding/json"
 	"fmt"
 	"github.com/codegangsta/cli"
-	"github.com/deployithq/deployit/drivers/db"
 	"github.com/deployithq/deployit/drivers/interfaces"
-	"github.com/deployithq/deployit/drivers/log"
+	"github.com/deployithq/deployit/env"
 	"github.com/deployithq/deployit/utils"
 	"io"
 	"io/ioutil"
 	"mime/multipart"
 	"net/http"
 	"os"
-	"path/filepath"
 	"strconv"
 	"strings"
 )
 
+// Main deploy it handler
+// - Archive all files which is in folder
+// - Send it to server
+
 func DeployIt(c *cli.Context) error {
 
-	env := new(interfaces.Env)
-
-	env.Log = &log.Log{
-		Logger: log.New(),
-	}
-
-	if Debug {
-		env.Log.SetDebugLevel()
-	}
-
-	currentPath, _ := filepath.Abs(filepath.Dir(os.Args[0]))
-
-	storagePath := fmt.Sprintf("%s/.dit", currentPath)
-
-	err := os.Mkdir(storagePath, 0766)
-	if err != nil && os.IsNotExist(err) {
-		env.Log.Error(err)
-	}
-
-	database := db.Open(env.Log, fmt.Sprintf("%s/map", storagePath))
-	defer database.Close()
-
-	env.Database = &db.Bolt{
-		DB: database,
-	}
+	env := NewEnv()
 
 	env.Log.Debug("Deploy it")
 
 	var archiveName string = "tar.gz"
-	var pathToArchive string = fmt.Sprintf("%s/.dit/%s", currentPath, archiveName)
+	var archivePath string = fmt.Sprintf("%s/.dit/%s", env.Path, archiveName)
 
-	fw, err := os.Create(pathToArchive)
+	// Creating archive
+	fw, err := os.Create(archivePath)
 	if err != nil {
 		env.Log.Error(err)
 		return err
 	}
-	defer fw.Close()
 
 	gw := gzip.NewWriter(fw)
-	defer gw.Close()
-
 	tw := tar.NewWriter(gw)
-	defer tw.Close()
 
 	deletedFiles := []string{}
 
-	storedFiles, err := env.Database.ListAllFiles(env.Log)
+	// Listing all files from database to know what files were deleted from previous run
+	// TODO Optimize logic: map stored files and check it in future
+	storedFiles, err := env.Storage.ListAllFiles(env.Log)
 	if err != nil {
 		env.Log.Error(err)
 		return err
@@ -78,8 +56,9 @@ func DeployIt(c *cli.Context) error {
 		_, err := os.Stat(k)
 		if err != nil {
 			if os.IsNotExist(err) {
+				// Gathering deleted files into slice
 				deletedFiles = append(deletedFiles, k)
-				err = env.Database.Delete(env.Log, []byte(k))
+				err = env.Storage.Delete(env.Log, k)
 				if err != nil {
 					env.Log.Error(err)
 					return err
@@ -92,45 +71,111 @@ func DeployIt(c *cli.Context) error {
 		}
 	}
 
-	err = PackFiles(env, tw, currentPath)
+	err = PackFiles(env, tw, env.Path)
 	if err != nil {
 		return err
 	}
 
-	// TODO Check if archive is empty
+	tw.Close()
+	gw.Close()
+	fw.Close()
 
-	res, err := UploadFile(env.Log, pathToArchive, archiveName, c.String("name"), c.String("tag"))
+	bodyBuffer := new(bytes.Buffer)
+	bodyWriter := multipart.NewWriter(bodyBuffer)
+
+	// Adding deleted files to request
+	if len(deletedFiles) > 0 {
+		delFiles, err := json.Marshal(deletedFiles)
+		if err != nil {
+			env.Log.Error(err)
+			return err
+		}
+
+		bodyWriter.WriteField("deleted", string(delFiles))
+	}
+
+	// Adding application info to request
+	bodyWriter.WriteField("name", AppName)
+	bodyWriter.WriteField("tag", Tag)
+
+	archiveInfo, err := os.Stat(archivePath)
 	if err != nil {
+		env.Log.Error(err)
 		return err
 	}
-	defer res.Body.Close()
 
+	// If archive size is 32 it means that it is empty and we don't need to send it
+	if archiveInfo.Size() != 32 {
+		fh, err := os.Open(archivePath)
+		if err != nil {
+			env.Log.Error(err)
+			return err
+		}
+
+		fileWriter, err := bodyWriter.CreateFormFile("file", "tar.gz")
+		if err != nil {
+			env.Log.Error(err)
+			return err
+		}
+
+		_, err = io.Copy(fileWriter, fh)
+		if err != nil {
+			env.Log.Error(err)
+			return err
+		}
+
+		fh.Close()
+	}
+
+	bodyWriter.Close()
+
+	// Creating response for file uploading with fields
+	req, err := http.NewRequest("POST", fmt.Sprintf("%s/app/deploy", Host), bodyBuffer)
+	if err != nil {
+		env.Log.Error(err)
+		return err
+	}
+
+	req.Header.Set("Content-Type", bodyWriter.FormDataContentType())
+
+	client := new(http.Client)
+	res, err := client.Do(req)
+	if err != nil {
+		env.Log.Error(err)
+		return err
+	}
+
+	// Reading response from server
 	resp_body, err := ioutil.ReadAll(res.Body)
 	if err != nil {
+		env.Log.Error(err)
 		return err
 	}
 	env.Log.Debug(res.Status)
 	env.Log.Debug(string(resp_body))
 
-	//err = os.Remove(pathToArchive)
-	//if err != nil {
-	//	env.Log.Error(err)
-	//	return err
-	//}
+	res.Body.Close()
 
-	return nil
-}
-
-func PackFiles(env *interfaces.Env, tw *tar.Writer, pathToFiles string) error {
-	env.Log.Debug("Packing files")
-
-	dir, err := os.Open(pathToFiles)
+	// Deleting files
+	err = os.Remove(archivePath)
 	if err != nil {
 		env.Log.Error(err)
 		return err
 	}
-	defer dir.Close()
 
+	return nil
+}
+
+func PackFiles(env *env.Env, tw *tar.Writer, filesPath string) error {
+
+	// Opening directory with files
+	dir, err := os.Open(filesPath)
+	if err != nil {
+		env.Log.Error(err)
+		return err
+	}
+
+	// Reading all files
 	files, err := dir.Readdir(0)
 	if err != nil {
 		env.Log.Error(err)
@@ -144,134 +189,78 @@ func PackFiles(env *interfaces.Env, tw *tar.Writer, pathToFiles string) error {
 		// TODO Create exclude lib
 		// TODO Parse .gitignore and exclude files from
 
-		currentPath := fmt.Sprintf("%s/%s", pathToFiles, fileName)
+		currentFilePath := fmt.Sprintf("%s/%s", filesPath, fileName)
 
+		// Ignoring files which is not needed for build to make archive smaller
 		if fileName == ".git" || fileName == ".idea" || fileName == ".dit" || fileName == "node_modules" {
 			continue
 		}
 
+		// If it was directory - calling this function again
+		// In other case adding file to archive
 		if file.IsDir() {
-			err = PackFiles(env, tw, currentPath)
+
+			if err = PackFiles(env, tw, currentFilePath); err != nil {
+				return err
+			}
+
 		} else {
-			err = WriteToTarGZ(env, currentPath, tw, file)
-		}
 
-		if err != nil {
-			return err
+			// Creating path, which will be inside of archive
+			newPath := strings.Replace(currentFilePath, env.Path, "", 1)[1:]
+
+			// Creating hash
+			hash := utils.Hash(fmt.Sprintf("%s:%s:%s", file.Name(), strconv.FormatInt(file.Size(), 10), file.ModTime()))
+
+			// Reading previous hash of this file
+			value, err := env.Storage.Read(env.Log, currentFilePath)
+			if err != nil && err != interfaces.ErrBucketNotFound {
+				return err
+			}
+
+			// If hashes are equal - add file to archive
+			if string(value) != hash {
+				env.Log.Debug("Packing file: ", currentFilePath)
+
+				err = env.Storage.Write(env.Log, currentFilePath, hash)
+				if err != nil {
+					return err
+				}
+
+				fr, err := os.Open(currentFilePath)
+				if err != nil {
+					env.Log.Error(err)
+					return err
+				}
+
+				h := &tar.Header{
+					Name:    newPath,
+					Size:    file.Size(),
+					Mode:    int64(file.Mode()),
+					ModTime: file.ModTime(),
+				}
+
+				err = tw.WriteHeader(h)
+				if err != nil {
+					env.Log.Error(err)
+					return err
+				}
+
+				_, err = io.Copy(tw, fr)
+				if err != nil {
+					env.Log.Error(err)
+					return err
+				}
+
+				fr.Close()
+			}
+
 		}
 
 	}
+
+	dir.Close()
 
 	return nil
 
-}
-
-func WriteToTarGZ(env *interfaces.Env, pathToFile string, tw *tar.Writer, file os.FileInfo) error {
-	env.Log.Debug("Adding to tar.gz and hash table: " + pathToFile)
-
-	absPath, _ := filepath.Abs(filepath.Dir(os.Args[0]))
-	newPath := strings.Replace(pathToFile, absPath, "", 1)[1:]
-
-	hashData := fmt.Sprintf("%s:%s:%s", file.Name(), strconv.FormatInt(file.Size(), 10), file.ModTime())
-	hash := utils.Hash([]byte(hashData))
-
-	value, err := env.Database.Read(env.Log, []byte(pathToFile))
-	if err != nil && err.Error() != "BUCKET_NOT_FOUND" {
-		return err
-	}
-
-	if string(value) == hash {
-		return nil
-	}
-
-	err = env.Database.Write(env.Log, []byte(pathToFile), []byte(hash))
-	if err != nil {
-		return err
-	}
-
-	fr, err := os.Open(pathToFile)
-	if err != nil {
-		env.Log.Error(err)
-		return err
-	}
-	defer fr.Close()
-
-	h := &tar.Header{
-		Name:    newPath,
-		Size:    file.Size(),
-		Mode:    int64(file.Mode()),
-		ModTime: file.ModTime(),
-	}
-
-	err = tw.WriteHeader(h)
-	if err != nil {
-		env.Log.Error(err)
-		return err
-	}
-
-	_, err = io.Copy(tw, fr)
-	if err != nil {
-		env.Log.Error(err)
-		return err
-	}
-
-	return nil
-}
-
-func UploadFile(log interfaces.Log, filePath, fileName, name, tag string) (*http.Response, error) {
-	log.Debug("Uploading file: " + filePath)
-
-	res := new(http.Response)
-
-	fh, err := os.Open(filePath)
-	if err != nil {
-		log.Error(err)
-		return res, err
-	}
-	defer fh.Close()
-
-	bodyBuf := new(bytes.Buffer)
-	bodyWriter := multipart.NewWriter(bodyBuf)
-
-	fileWriter, err := bodyWriter.CreateFormFile("file", "tar.gz")
-	if err != nil {
-		log.Error(err)
-		return res, err
-	}
-
-	_, err = io.Copy(fileWriter, fh)
-	if err != nil {
-		log.Error(err)
-		return res, err
-	}
-
-	bodyWriter.Close()
-
-	//Body := struct {
-	//	Name string `json:"name"`
-	//	Tag  string `json:"tag"`
-	//}{name, tag}
-	//
-	//err = json.NewEncoder(bodyBuf).Encode(Body)
-	//if err != nil {
-	//	log.Error(err)
-	//	return &http.Response{}, err
-	//}
-
-	req, err := http.NewRequest("POST", fmt.Sprintf("%s/app/deploy", Host), bodyBuf)
-	if err != nil {
-		log.Error(err)
-		return res, err
-	}
-
-	req.Header.Set("Content-Type", bodyWriter.FormDataContentType())
-
-	client := new(http.Client)
-	res, err = client.Do(req)
-	if err != nil {
-		log.Error(err)
-		return res, err
-	}
-
-	return res, err
 }
