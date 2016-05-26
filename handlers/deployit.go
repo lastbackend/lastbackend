@@ -25,20 +25,17 @@ func DeployIt(c *cli.Context) error {
 	env.Log.Debug("Deploy it")
 
 	var archiveName string = "tar.gz"
-	var pathToArchive string = fmt.Sprintf("%s/.dit/%s", env.CurrentPath, archiveName)
+	var pathToArchive string = fmt.Sprintf("%s/.dit/%s", env.Path, archiveName)
 
 	fw, err := os.Create(pathToArchive)
 	if err != nil {
 		env.Log.Error(err)
 		return err
 	}
-	defer fw.Close()
 
 	gw := gzip.NewWriter(fw)
-	defer gw.Close()
 
 	tw := tar.NewWriter(gw)
-	defer tw.Close()
 
 	deletedFiles := []string{}
 
@@ -67,7 +64,7 @@ func DeployIt(c *cli.Context) error {
 		}
 	}
 
-	err = PackFiles(env, tw, env.CurrentPath)
+	err = PackFiles(env, tw, env.Path)
 	if err != nil {
 		return err
 	}
@@ -104,7 +101,6 @@ func DeployIt(c *cli.Context) error {
 			env.Log.Error(err)
 			return err
 		}
-		defer fh.Close()
 
 		fileWriter, err := bodyWriter.CreateFormFile("file", "tar.gz")
 		if err != nil {
@@ -117,6 +113,8 @@ func DeployIt(c *cli.Context) error {
 			env.Log.Error(err)
 			return err
 		}
+
+		fh.Close()
 	}
 
 	bodyWriter.Close()
@@ -136,8 +134,6 @@ func DeployIt(c *cli.Context) error {
 		return err
 	}
 
-	defer res.Body.Close()
-
 	resp_body, err := ioutil.ReadAll(res.Body)
 	if err != nil {
 		env.Log.Error(err)
@@ -145,6 +141,8 @@ func DeployIt(c *cli.Context) error {
 	}
 	env.Log.Debug(res.Status)
 	env.Log.Debug(string(resp_body))
+
+	res.Body.Close()
 
 	err = os.Remove(pathToArchive)
 	if err != nil {
@@ -191,7 +189,7 @@ func PackFiles(env *interfaces.Env, tw *tar.Writer, pathToFiles string) error {
 
 		} else {
 
-			newPath := strings.Replace(currentPath, pathToFiles, "", 1)[1:]
+			newPath := strings.Replace(currentPath, env.Path, "", 1)[1:]
 
 			hashData := fmt.Sprintf("%s:%s:%s", file.Name(), strconv.FormatInt(file.Size(), 10), file.ModTime())
 			hash := utils.Hash([]byte(hashData))

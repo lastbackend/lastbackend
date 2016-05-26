@@ -20,7 +20,7 @@ type Env struct {
 	Log         Log
 	Database    DB
 	Host        string
-	CurrentPath string
+	Path        string
 	StoragePath string
 }
 

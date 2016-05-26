@@ -18,24 +18,23 @@ func NewEnv() *interfaces.Env {
 
 	var err error
 
-	env := new(interfaces.Env)
-
-	env.Host = Host
-
-	env.Log = &log.Log{
-		Logger: log.New(),
+	env := &interfaces.Env{
+		Log: &log.Log{
+			Logger: log.New(),
+		},
+		Host: Host,
 	}
 
 	if Debug {
 		env.Log.SetDebugLevel()
 	}
 
-	env.CurrentPath, err = filepath.Abs(filepath.Dir(os.Args[0]))
+	env.Path, err = filepath.Abs(filepath.Dir(os.Args[0]))
 	if err != nil {
 		env.Log.Fatal(err)
 	}
 
-	env.StoragePath = fmt.Sprintf("%s/.dit", env.CurrentPath)
+	env.StoragePath = fmt.Sprintf("%s/.dit", env.Path)
 
 	err = os.Mkdir(env.StoragePath, 0766)
 	if err != nil && os.IsNotExist(err) {
@@ -43,7 +42,6 @@ func NewEnv() *interfaces.Env {
 	}
 
 	database := db.Open(env.Log, fmt.Sprintf("%s/map", env.StoragePath))
-	defer database.Close()
 
 	env.Database = &db.Bolt{
 		DB: database,
