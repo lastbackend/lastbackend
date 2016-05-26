@@ -17,8 +17,11 @@ type DB interface {
 }
 
 type Env struct {
-	Log      Log
-	Database DB
+	Log         Log
+	Database    DB
+	Host        string
+	CurrentPath string
+	StoragePath string
 }
 
 var ErrBucketNotFound error = errors.New("BUCKET_NOT_FOUND")
