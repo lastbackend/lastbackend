@@ -6,10 +6,10 @@ import (
 	"compress/gzip"
 	"encoding/json"
 	"fmt"
-	"github.com/codegangsta/cli"
 	"github.com/deployithq/deployit/drivers/interfaces"
 	"github.com/deployithq/deployit/env"
 	"github.com/deployithq/deployit/utils"
+	"gopkg.in/urfave/cli.v2"
 	"io"
 	"io/ioutil"
 	"mime/multipart"
@@ -71,8 +71,7 @@ func DeployIt(c *cli.Context) error {
 		}
 	}
 
-	err = PackFiles(env, tw, env.Path)
-	if err != nil {
+	if err := PackFiles(env, tw, env.Path); err != nil {
 		return err
 	}
 
@@ -129,7 +128,7 @@ func DeployIt(c *cli.Context) error {
 
 	bodyWriter.Close()
 
-	env.Log.Error(fmt.Sprintf("%s/app/deploy", Host))
+	env.Log.Errorf("%s/app/deploy", Host)
 
 	// Creating response for file uploading with fields
 	req, err := http.NewRequest("POST", fmt.Sprintf("%s/app/deploy", Host), bodyBuffer)
@@ -172,6 +171,7 @@ func PackFiles(env *env.Env, tw *tar.Writer, filesPath string) error {
 
 	// Opening directory with files
 	dir, err := os.Open(filesPath)
+
 	if err != nil {
 		env.Log.Error(err)
 		return err
@@ -204,7 +204,7 @@ func PackFiles(env *env.Env, tw *tar.Writer, filesPath string) error {
 		// TODO: refactor this code: after isdir checing you can call continue and do not need this large if.
 		if file.IsDir() {
 
-			if err = PackFiles(env, tw, currentFilePath); err != nil {
+			if err := PackFiles(env, tw, currentFilePath); err != nil {
 				return err
 			}
 
