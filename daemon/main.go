@@ -27,7 +27,7 @@ func Init(c *cli.Context) error {
 
 	r := mux.NewRouter()
 
-	r.HandleFunc("/", Handle(Handler{env, routes.DeployAppHandler})).Methods("POST")
+	r.HandleFunc("/app/deploy", Handle(Handler{env, routes.DeployAppHandler})).Methods("POST")
 
 	if err := http.ListenAndServe(":3000", r); err != nil {
 		env.Log.Fatal(err)

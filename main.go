@@ -3,6 +3,7 @@ package main
 import (
 	"github.com/codegangsta/cli"
 	"github.com/deployithq/deployit/daemon"
+	"github.com/deployithq/deployit/drivers/docker"
 	"github.com/deployithq/deployit/handlers"
 	"os"
 )
@@ -35,6 +36,34 @@ func main() {
 			Usage:       "",
 			Value:       "latest",
 			Destination: &handlers.Tag,
+		},
+		cli.StringFlag{
+			Name:        "docker-uri",
+			Usage:       "",
+			Value:       "",
+			Destination: &docker.DOCKER_URI,
+			EnvVar:      "DOCKER_URI",
+		},
+		cli.StringFlag{
+			Name:        "docker-cert",
+			Usage:       "",
+			Value:       "",
+			Destination: &docker.DOCKER_CERT,
+			EnvVar:      "DOCKER_CERT",
+		},
+		cli.StringFlag{
+			Name:        "docker-ca",
+			Usage:       "",
+			Value:       "",
+			Destination: &docker.DOCKER_CA,
+			EnvVar:      "DOCKER_CA",
+		},
+		cli.StringFlag{
+			Name:        "docker-key",
+			Usage:       "",
+			Value:       "",
+			Destination: &docker.DOCKER_KEY,
+			EnvVar:      "DOCKER_KEY",
 		},
 	}
 
