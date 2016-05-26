@@ -38,7 +38,7 @@ func Open(log interfaces.Log, path string) *bolt.DB {
 }
 
 func (b *Bolt) Write(log interfaces.Log, key, value string) error {
-	log.Debug("Write hash info to database")
+	log.Debug("Add file to storage")
 
 	err := b.DB.Update(func(tx *bolt.Tx) error {
 		bucket, err := tx.CreateBucketIfNotExists([]byte(base))
@@ -64,7 +64,7 @@ func (b *Bolt) Write(log interfaces.Log, key, value string) error {
 }
 
 func (b *Bolt) Read(log interfaces.Log, key string) (string, error) {
-	log.Debug("Read hash info from database")
+	log.Debug("Read file from storage")
 
 	var val string
 
@@ -89,7 +89,7 @@ func (b *Bolt) Read(log interfaces.Log, key string) (string, error) {
 }
 
 func (b *Bolt) Delete(log interfaces.Log, key string) error {
-	log.Debug("Delete from database")
+	log.Debug("Delete file from storage")
 
 	err := b.DB.Update(func(tx *bolt.Tx) error {
 		bucket := tx.Bucket([]byte(base))
@@ -115,7 +115,7 @@ func (b *Bolt) Delete(log interfaces.Log, key string) error {
 }
 
 func (b *Bolt) ListAllFiles(log interfaces.Log) ([]string, error) {
-	log.Debug("List all files from database")
+	log.Debug("List all files from storage")
 
 	var files []string
 

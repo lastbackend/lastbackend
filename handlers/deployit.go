@@ -18,6 +18,10 @@ import (
 	"strings"
 )
 
+// Main deploy it handler
+// - Archive all files which is in folder
+// - Send it to server
+
 func DeployIt(c *cli.Context) error {
 
 	env := NewEnv()
@@ -27,6 +31,9 @@ func DeployIt(c *cli.Context) error {
 	var archiveName string = "tar.gz"
 	var pathToArchive string = fmt.Sprintf("%s/.dit/%s", env.Path, archiveName)
 
+	// TODO If archive exists - delete it
+
+	// Creating archive
 	fw, err := os.Create(pathToArchive)
 	if err != nil {
 		env.Log.Error(err)
@@ -34,11 +41,11 @@ func DeployIt(c *cli.Context) error {
 	}
 
 	gw := gzip.NewWriter(fw)
-
 	tw := tar.NewWriter(gw)
 
 	deletedFiles := []string{}
 
+	// Listing all files from database to know what files were deleted from previous run
 	// TODO Optimize logic: map stored files and check it in future
 	storedFiles, err := env.Database.ListAllFiles(env.Log)
 	if err != nil {
@@ -50,6 +57,7 @@ func DeployIt(c *cli.Context) error {
 		_, err := os.Stat(k)
 		if err != nil {
 			if os.IsNotExist(err) {
+				// Gathering deleted files into slice
 				deletedFiles = append(deletedFiles, k)
 				err = env.Database.Delete(env.Log, k)
 				if err != nil {
@@ -76,6 +84,7 @@ func DeployIt(c *cli.Context) error {
 	bodyBuf := new(bytes.Buffer)
 	bodyWriter := multipart.NewWriter(bodyBuf)
 
+	// Adding deleted files to request
 	if len(deletedFiles) > 0 {
 		delFiles, err := json.Marshal(deletedFiles)
 		if err != nil {
@@ -86,6 +95,7 @@ func DeployIt(c *cli.Context) error {
 		bodyWriter.WriteField("deleted", string(delFiles))
 	}
 
+	// Adding application info to request
 	bodyWriter.WriteField("name", AppName)
 	bodyWriter.WriteField("tag", Tag)
 
@@ -95,6 +105,7 @@ func DeployIt(c *cli.Context) error {
 		return err
 	}
 
+	// If archive size is 32 it means that it is empty and we don't need to send it
 	if archive.Size() != 32 {
 		fh, err := os.Open(pathToArchive)
 		if err != nil {
@@ -119,6 +130,7 @@ func DeployIt(c *cli.Context) error {
 
 	bodyWriter.Close()
 
+	// Creating response for file uploading with fields
 	req, err := http.NewRequest("POST", fmt.Sprintf("%s/app/deploy", Host), bodyBuf)
 	if err != nil {
 		env.Log.Error(err)
@@ -134,6 +146,7 @@ func DeployIt(c *cli.Context) error {
 		return err
 	}
 
+	// Reading response from server
 	resp_body, err := ioutil.ReadAll(res.Body)
 	if err != nil {
 		env.Log.Error(err)
@@ -144,6 +157,7 @@ func DeployIt(c *cli.Context) error {
 
 	res.Body.Close()
 
+	// Deleting files
 	err = os.Remove(pathToArchive)
 	if err != nil {
 		env.Log.Error(err)
@@ -154,14 +168,15 @@ func DeployIt(c *cli.Context) error {
 }
 
 func PackFiles(env *interfaces.Env, tw *tar.Writer, pathToFiles string) error {
-	env.Log.Debug("Packing files")
 
+	// Opening directory with files
 	dir, err := os.Open(pathToFiles)
 	if err != nil {
 		env.Log.Error(err)
 		return err
 	}
 
+	// Reading all files
 	files, err := dir.Readdir(0)
 	if err != nil {
 		env.Log.Error(err)
@@ -177,10 +192,13 @@ func PackFiles(env *interfaces.Env, tw *tar.Writer, pathToFiles string) error {
 
 		currentPath := fmt.Sprintf("%s/%s", pathToFiles, fileName)
 
+		// Ignoring files which is not needed for build to make archive smaller
 		if fileName == ".git" || fileName == ".idea" || fileName == ".dit" || fileName == "node_modules" {
 			continue
 		}
 
+		// If it was directory - calling this function again
+		// In other case adding file to archive
 		if file.IsDir() {
 
 			if err = PackFiles(env, tw, currentPath); err != nil {
@@ -189,51 +207,55 @@ func PackFiles(env *interfaces.Env, tw *tar.Writer, pathToFiles string) error {
 
 		} else {
 
+			// Creating path, which will be inside of archive
 			newPath := strings.Replace(currentPath, env.Path, "", 1)[1:]
 
+			// Creating hash
 			hashData := fmt.Sprintf("%s:%s:%s", file.Name(), strconv.FormatInt(file.Size(), 10), file.ModTime())
 			hash := utils.Hash([]byte(hashData))
 
+			// Reading previous hash of this file
 			value, err := env.Database.Read(env.Log, currentPath)
 			if err != nil && err != interfaces.ErrBucketNotFound {
 				return err
 			}
 
-			if string(value) == hash {
-				return nil
-			}
+			// If hashes are equal - add file to archive
+			if string(value) != hash {
+				env.Log.Debug("Packing file: ", currentPath)
 
-			err = env.Database.Write(env.Log, currentPath, hash)
-			if err != nil {
-				return err
-			}
+				err = env.Database.Write(env.Log, currentPath, hash)
+				if err != nil {
+					return err
+				}
 
-			fr, err := os.Open(currentPath)
-			if err != nil {
-				env.Log.Error(err)
-				return err
-			}
+				fr, err := os.Open(currentPath)
+				if err != nil {
+					env.Log.Error(err)
+					return err
+				}
 
-			h := &tar.Header{
-				Name:    newPath,
-				Size:    file.Size(),
-				Mode:    int64(file.Mode()),
-				ModTime: file.ModTime(),
-			}
+				h := &tar.Header{
+					Name:    newPath,
+					Size:    file.Size(),
+					Mode:    int64(file.Mode()),
+					ModTime: file.ModTime(),
+				}
 
-			err = tw.WriteHeader(h)
-			if err != nil {
-				env.Log.Error(err)
-				return err
-			}
+				err = tw.WriteHeader(h)
+				if err != nil {
+					env.Log.Error(err)
+					return err
+				}
 
-			_, err = io.Copy(tw, fr)
-			if err != nil {
-				env.Log.Error(err)
-				return err
-			}
+				_, err = io.Copy(tw, fr)
+				if err != nil {
+					env.Log.Error(err)
+					return err
+				}
 
-			fr.Close()
+				fr.Close()
+			}
 
 		}
 
