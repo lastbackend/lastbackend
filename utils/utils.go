@@ -12,6 +12,11 @@ import (
 	"strings"
 )
 
+// TODO: for any exported function comments are necessary.
+// For time saving reason just in 2 words put small information
+// about what function do and why it is needed for
+
+// Hash - create hash based on provided string
 func Hash(data string) string {
 	hash := sha1.Sum([]byte(data))
 
@@ -24,6 +29,7 @@ func Hash(data string) string {
 	return hashString
 }
 
+// Untar -
 func Untar(log interfaces.ILog, filename string) error {
 	file, err := os.Open(filename)
 
@@ -102,6 +108,7 @@ func Untar(log interfaces.ILog, filename string) error {
 	return nil
 }
 
+// Ungzip -
 func Ungzip(log interfaces.ILog, source, target string) error {
 	reader, err := os.Open(source)
 	if err != nil {

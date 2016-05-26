@@ -194,12 +194,14 @@ func PackFiles(env *env.Env, tw *tar.Writer, filesPath string) error {
 		currentFilePath := fmt.Sprintf("%s/%s", filesPath, fileName)
 
 		// Ignoring files which is not needed for build to make archive smaller
+		// TODO: create base .ignore file on first application creation
 		if fileName == ".git" || fileName == ".idea" || fileName == ".dit" || fileName == "node_modules" {
 			continue
 		}
 
 		// If it was directory - calling this function again
 		// In other case adding file to archive
+		// TODO: refactor this code: after isdir checing you can call continue and do not need this large if.
 		if file.IsDir() {
 
 			if err := PackFiles(env, tw, currentFilePath); err != nil {
@@ -221,6 +223,7 @@ func PackFiles(env *env.Env, tw *tar.Writer, filesPath string) error {
 			}
 
 			// If hashes are equal - add file to archive
+			// TODO: if hash is equeal to value just continue. Do not necessary put any if clause
 			if string(value) != hash {
 				env.Log.Debug("Packing file: ", currentFilePath)
 
