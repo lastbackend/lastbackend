@@ -37,7 +37,7 @@ func Open(log interfaces.Log, path string) *bolt.DB {
 
 }
 
-func (b *Bolt) Write(log interfaces.Log, key, value []byte) error {
+func (b *Bolt) Write(log interfaces.Log, key, value string) error {
 	log.Debug("Write hash info to database")
 
 	err := b.DB.Update(func(tx *bolt.Tx) error {
@@ -47,7 +47,7 @@ func (b *Bolt) Write(log interfaces.Log, key, value []byte) error {
 			return err
 		}
 
-		err = bucket.Put(key, value)
+		err = bucket.Put([]byte(key), []byte(value))
 		if err != nil {
 			log.Error(err)
 			return err
@@ -63,10 +63,10 @@ func (b *Bolt) Write(log interfaces.Log, key, value []byte) error {
 	return nil
 }
 
-func (b *Bolt) Read(log interfaces.Log, key []byte) (string, error) {
+func (b *Bolt) Read(log interfaces.Log, key string) (string, error) {
 	log.Debug("Read hash info from database")
 
-	var val []byte
+	var val string
 
 	err := b.DB.View(func(tx *bolt.Tx) error {
 		bucket := tx.Bucket([]byte(base))
@@ -76,30 +76,29 @@ func (b *Bolt) Read(log interfaces.Log, key []byte) (string, error) {
 			return err
 		}
 
-		val = bucket.Get(key)
+		val = string(bucket.Get([]byte(key)))
 
 		return nil
 	})
 
 	if err != nil {
-		return string(val), err
+		return val, err
 	}
 
-	return string(val), nil
+	return val, nil
 }
 
-func (b *Bolt) Delete(log interfaces.Log, key []byte) error {
+func (b *Bolt) Delete(log interfaces.Log, key string) error {
 	log.Debug("Delete from database")
 
 	err := b.DB.Update(func(tx *bolt.Tx) error {
 		bucket := tx.Bucket([]byte(base))
 		if bucket == nil {
-			err := errors.New("BUCKET_NOT_FOUND")
-			log.Error(err)
-			return err
+			log.Error(interfaces.ErrBucketNotFound)
+			return interfaces.ErrBucketNotFound
 		}
 
-		err := bucket.Delete(key)
+		err := bucket.Delete([]byte(key))
 		if err != nil {
 			log.Error(err)
 			return err

@@ -24,14 +24,16 @@ func main() {
 			Destination: &handlers.Host,
 		},
 		cli.StringFlag{
-			Name:  "name",
-			Usage: "",
-			Value: "app",
+			Name:        "name",
+			Usage:       "",
+			Value:       "app",
+			Destination: &handlers.AppName,
 		},
 		cli.StringFlag{
-			Name:  "tag",
-			Usage: "",
-			Value: "latest",
+			Name:        "tag",
+			Usage:       "",
+			Value:       "latest",
+			Destination: &handlers.Tag,
 		},
 	}
 

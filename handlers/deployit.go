@@ -4,6 +4,7 @@ import (
 	"archive/tar"
 	"bytes"
 	"compress/gzip"
+	"encoding/json"
 	"fmt"
 	"github.com/codegangsta/cli"
 	"github.com/deployithq/deployit/drivers/db"
@@ -68,6 +69,7 @@ func DeployIt(c *cli.Context) error {
 
 	deletedFiles := []string{}
 
+	// TODO Optimize logic: map stored files and check it in future
 	storedFiles, err := env.Database.ListAllFiles(env.Log)
 	if err != nil {
 		env.Log.Error(err)
@@ -79,7 +81,7 @@ func DeployIt(c *cli.Context) error {
 		if err != nil {
 			if os.IsNotExist(err) {
 				deletedFiles = append(deletedFiles, k)
-				err = env.Database.Delete(env.Log, []byte(k))
+				err = env.Database.Delete(env.Log, k)
 				if err != nil {
 					env.Log.Error(err)
 					return err
@@ -97,9 +99,11 @@ func DeployIt(c *cli.Context) error {
 		return err
 	}
 
-	// TODO Check if archive is empty
+	tw.Close()
+	gw.Close()
+	fw.Close()
 
-	res, err := UploadFile(env.Log, pathToArchive, archiveName, c.String("name"), c.String("tag"))
+	res, err := SendFile(env.Log, pathToArchive, archiveName, AppName, Tag, deletedFiles)
 	if err != nil {
 		return err
 	}
@@ -112,11 +116,11 @@ func DeployIt(c *cli.Context) error {
 	env.Log.Debug(res.Status)
 	env.Log.Debug(string(resp_body))
 
-	//err = os.Remove(pathToArchive)
-	//if err != nil {
-	//	env.Log.Error(err)
-	//	return err
-	//}
+	err = os.Remove(pathToArchive)
+	if err != nil {
+		env.Log.Error(err)
+		return err
+	}
 
 	return nil
 }
@@ -153,7 +157,7 @@ func PackFiles(env *interfaces.Env, tw *tar.Writer, pathToFiles string) error {
 		if file.IsDir() {
 			err = PackFiles(env, tw, currentPath)
 		} else {
-			err = WriteToTarGZ(env, currentPath, tw, file)
+			err = WriteToTarGZ(env, currentPath, pathToFiles, tw, file)
 		}
 
 		if err != nil {
@@ -166,17 +170,16 @@ func PackFiles(env *interfaces.Env, tw *tar.Writer, pathToFiles string) error {
 
 }
 
-func WriteToTarGZ(env *interfaces.Env, pathToFile string, tw *tar.Writer, file os.FileInfo) error {
-	env.Log.Debug("Adding to tar.gz and hash table: " + pathToFile)
+func WriteToTarGZ(env *interfaces.Env, filePath, pathToFiles string, tw *tar.Writer, file os.FileInfo) error {
+	env.Log.Debug("Adding to tar.gz and hash table: " + filePath)
 
-	absPath, _ := filepath.Abs(filepath.Dir(os.Args[0]))
-	newPath := strings.Replace(pathToFile, absPath, "", 1)[1:]
+	newPath := strings.Replace(filePath, pathToFiles, "", 1)[1:]
 
 	hashData := fmt.Sprintf("%s:%s:%s", file.Name(), strconv.FormatInt(file.Size(), 10), file.ModTime())
 	hash := utils.Hash([]byte(hashData))
 
-	value, err := env.Database.Read(env.Log, []byte(pathToFile))
-	if err != nil && err.Error() != "BUCKET_NOT_FOUND" {
+	value, err := env.Database.Read(env.Log, filePath)
+	if err != nil && err != interfaces.ErrBucketNotFound {
 		return err
 	}
 
@@ -184,12 +187,12 @@ func WriteToTarGZ(env *interfaces.Env, pathToFile string, tw *tar.Writer, file o
 		return nil
 	}
 
-	err = env.Database.Write(env.Log, []byte(pathToFile), []byte(hash))
+	err = env.Database.Write(env.Log, filePath, hash)
 	if err != nil {
 		return err
 	}
 
-	fr, err := os.Open(pathToFile)
+	fr, err := os.Open(filePath)
 	if err != nil {
 		env.Log.Error(err)
 		return err
@@ -218,45 +221,55 @@ func WriteToTarGZ(env *interfaces.Env, pathToFile string, tw *tar.Writer, file o
 	return nil
 }
 
-func UploadFile(log interfaces.Log, filePath, fileName, name, tag string) (*http.Response, error) {
-	log.Debug("Uploading file: " + filePath)
+func SendFile(log interfaces.Log, filePath, fileName, name, tag string, deletedFiles []string) (*http.Response, error) {
+	log.Debug("Execute request")
 
 	res := new(http.Response)
-
-	fh, err := os.Open(filePath)
-	if err != nil {
-		log.Error(err)
-		return res, err
-	}
-	defer fh.Close()
 
 	bodyBuf := new(bytes.Buffer)
 	bodyWriter := multipart.NewWriter(bodyBuf)
 
-	fileWriter, err := bodyWriter.CreateFormFile("file", "tar.gz")
+	if len(deletedFiles) > 0 {
+		delFiles, err := json.Marshal(deletedFiles)
+		if err != nil {
+			log.Error(err)
+			return &http.Response{}, err
+		}
+
+		bodyWriter.WriteField("deleted", string(delFiles))
+	}
+
+	bodyWriter.WriteField("name", name)
+	bodyWriter.WriteField("tag", tag)
+
+	archive, err := os.Stat(filePath)
 	if err != nil {
 		log.Error(err)
 		return res, err
 	}
 
-	_, err = io.Copy(fileWriter, fh)
-	if err != nil {
-		log.Error(err)
-		return res, err
+	if archive.Size() != 32 {
+		fh, err := os.Open(filePath)
+		if err != nil {
+			log.Error(err)
+			return res, err
+		}
+		defer fh.Close()
+
+		fileWriter, err := bodyWriter.CreateFormFile("file", "tar.gz")
+		if err != nil {
+			log.Error(err)
+			return res, err
+		}
+
+		_, err = io.Copy(fileWriter, fh)
+		if err != nil {
+			log.Error(err)
+			return res, err
+		}
 	}
 
 	bodyWriter.Close()
-
-	//Body := struct {
-	//	Name string `json:"name"`
-	//	Tag  string `json:"tag"`
-	//}{name, tag}
-	//
-	//err = json.NewEncoder(bodyBuf).Encode(Body)
-	//if err != nil {
-	//	log.Error(err)
-	//	return &http.Response{}, err
-	//}
 
 	req, err := http.NewRequest("POST", fmt.Sprintf("%s/app/deploy", Host), bodyBuf)
 	if err != nil {

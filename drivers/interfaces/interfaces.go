@@ -1,5 +1,7 @@
 package interfaces
 
+import "errors"
+
 type Log interface {
 	Debug(...interface{})
 	Error(...interface{})
@@ -8,13 +10,15 @@ type Log interface {
 }
 
 type DB interface {
-	Write(Log, []byte, []byte) error
-	Read(Log, []byte) (string, error)
+	Write(Log, string, string) error
+	Read(Log, string) (string, error)
 	ListAllFiles(Log) ([]string, error)
-	Delete(Log, []byte) error
+	Delete(Log, string) error
 }
 
 type Env struct {
 	Log      Log
 	Database DB
 }
+
+var ErrBucketNotFound error = errors.New("BUCKET_NOT_FOUND")
