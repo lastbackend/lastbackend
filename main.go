@@ -2,6 +2,7 @@ package main
 
 import (
 	"github.com/codegangsta/cli"
+	"github.com/deployithq/deployit/daemon"
 	"github.com/deployithq/deployit/handlers"
 	"os"
 )
@@ -44,6 +45,13 @@ func main() {
 			Usage:       "Use it when you want to deploy sources of current repository",
 			Description: "This command deplos sources from current directory and sends it to Deployit servers for deploying",
 			Action:      handlers.DeployIt,
+		},
+		{
+			Name:        "Deploy it daemon",
+			Aliases:     []string{"daemon"},
+			Usage:       "",
+			Description: "",
+			Action:      daemon.Init,
 		},
 	}
 
