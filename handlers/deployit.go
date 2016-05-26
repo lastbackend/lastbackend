@@ -129,6 +129,8 @@ func DeployIt(c *cli.Context) error {
 
 	bodyWriter.Close()
 
+	env.Log.Error(fmt.Sprintf("%s/app/deploy", Host))
+
 	// Creating response for file uploading with fields
 	req, err := http.NewRequest("POST", fmt.Sprintf("%s/app/deploy", Host), bodyBuffer)
 	if err != nil {

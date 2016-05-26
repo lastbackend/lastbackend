@@ -15,7 +15,7 @@ func convertImage(i *docker.Image) (interfaces.Image, error) {
 	return image, nil
 }
 
-func ConvertContainer(info docker.Container) (interfaces.Container, error) {
+func ConvertContainer(info *docker.Container) (interfaces.Container, error) {
 
 	cn := interfaces.Container{
 		Ports: []interfaces.Port{},
