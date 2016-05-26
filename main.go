@@ -22,7 +22,7 @@ func main() {
 		cli.StringFlag{
 			Name:        "host",
 			Usage:       "",
-			Value:       "https://api.deployit.co",
+			Value:       "https://api.deployit.co", // TODO: change to hub.deployit.io
 			Destination: &handlers.Host,
 		},
 		cli.StringFlag{
