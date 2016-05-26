@@ -2,9 +2,9 @@ package handlers
 
 import (
 	"fmt"
-	"github.com/deployithq/deployit/drivers/db"
-	"github.com/deployithq/deployit/drivers/interfaces"
+	"github.com/deployithq/deployit/drivers/bolt"
 	"github.com/deployithq/deployit/drivers/log"
+	"github.com/deployithq/deployit/env"
 	"os"
 	"path/filepath"
 )
@@ -14,11 +14,11 @@ var Host string
 var AppName string
 var Tag string
 
-func NewEnv() *interfaces.Env {
+func NewEnv() *env.Env {
 
 	var err error
 
-	env := &interfaces.Env{
+	env := &env.Env{
 		Log: &log.Log{
 			Logger: log.New(),
 		},
@@ -41,9 +41,9 @@ func NewEnv() *interfaces.Env {
 		env.Log.Fatal(err)
 	}
 
-	database := db.Open(env.Log, fmt.Sprintf("%s/map", env.StoragePath))
+	database := bolt.Open(env.Log, fmt.Sprintf("%s/map", env.StoragePath))
 
-	env.Database = &db.Bolt{
+	env.Storage = &bolt.Bolt{
 		DB: database,
 	}
 

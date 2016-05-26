@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"github.com/codegangsta/cli"
 	"github.com/deployithq/deployit/drivers/interfaces"
+	"github.com/deployithq/deployit/env"
 	"github.com/deployithq/deployit/utils"
 	"io"
 	"io/ioutil"
@@ -29,12 +30,10 @@ func DeployIt(c *cli.Context) error {
 	env.Log.Debug("Deploy it")
 
 	var archiveName string = "tar.gz"
-	var pathToArchive string = fmt.Sprintf("%s/.dit/%s", env.Path, archiveName)
-
-	// TODO If archive exists - delete it
+	var archivePath string = fmt.Sprintf("%s/.dit/%s", env.Path, archiveName)
 
 	// Creating archive
-	fw, err := os.Create(pathToArchive)
+	fw, err := os.Create(archivePath)
 	if err != nil {
 		env.Log.Error(err)
 		return err
@@ -47,7 +46,7 @@ func DeployIt(c *cli.Context) error {
 
 	// Listing all files from database to know what files were deleted from previous run
 	// TODO Optimize logic: map stored files and check it in future
-	storedFiles, err := env.Database.ListAllFiles(env.Log)
+	storedFiles, err := env.Storage.ListAllFiles(env.Log)
 	if err != nil {
 		env.Log.Error(err)
 		return err
@@ -59,7 +58,7 @@ func DeployIt(c *cli.Context) error {
 			if os.IsNotExist(err) {
 				// Gathering deleted files into slice
 				deletedFiles = append(deletedFiles, k)
-				err = env.Database.Delete(env.Log, k)
+				err = env.Storage.Delete(env.Log, k)
 				if err != nil {
 					env.Log.Error(err)
 					return err
@@ -81,8 +80,8 @@ func DeployIt(c *cli.Context) error {
 	gw.Close()
 	fw.Close()
 
-	bodyBuf := new(bytes.Buffer)
-	bodyWriter := multipart.NewWriter(bodyBuf)
+	bodyBuffer := new(bytes.Buffer)
+	bodyWriter := multipart.NewWriter(bodyBuffer)
 
 	// Adding deleted files to request
 	if len(deletedFiles) > 0 {
@@ -99,15 +98,15 @@ func DeployIt(c *cli.Context) error {
 	bodyWriter.WriteField("name", AppName)
 	bodyWriter.WriteField("tag", Tag)
 
-	archive, err := os.Stat(pathToArchive)
+	archiveInfo, err := os.Stat(archivePath)
 	if err != nil {
 		env.Log.Error(err)
 		return err
 	}
 
 	// If archive size is 32 it means that it is empty and we don't need to send it
-	if archive.Size() != 32 {
-		fh, err := os.Open(pathToArchive)
+	if archiveInfo.Size() != 32 {
+		fh, err := os.Open(archivePath)
 		if err != nil {
 			env.Log.Error(err)
 			return err
@@ -131,7 +130,7 @@ func DeployIt(c *cli.Context) error {
 	bodyWriter.Close()
 
 	// Creating response for file uploading with fields
-	req, err := http.NewRequest("POST", fmt.Sprintf("%s/app/deploy", Host), bodyBuf)
+	req, err := http.NewRequest("POST", fmt.Sprintf("%s/app/deploy", Host), bodyBuffer)
 	if err != nil {
 		env.Log.Error(err)
 		return err
@@ -158,7 +157,7 @@ func DeployIt(c *cli.Context) error {
 	res.Body.Close()
 
 	// Deleting files
-	err = os.Remove(pathToArchive)
+	err = os.Remove(archivePath)
 	if err != nil {
 		env.Log.Error(err)
 		return err
@@ -167,10 +166,10 @@ func DeployIt(c *cli.Context) error {
 	return nil
 }
 
-func PackFiles(env *interfaces.Env, tw *tar.Writer, pathToFiles string) error {
+func PackFiles(env *env.Env, tw *tar.Writer, filesPath string) error {
 
 	// Opening directory with files
-	dir, err := os.Open(pathToFiles)
+	dir, err := os.Open(filesPath)
 	if err != nil {
 		env.Log.Error(err)
 		return err
@@ -190,7 +189,7 @@ func PackFiles(env *interfaces.Env, tw *tar.Writer, pathToFiles string) error {
 		// TODO Create exclude lib
 		// TODO Parse .gitignore and exclude files from
 
-		currentPath := fmt.Sprintf("%s/%s", pathToFiles, fileName)
+		currentFilePath := fmt.Sprintf("%s/%s", filesPath, fileName)
 
 		// Ignoring files which is not needed for build to make archive smaller
 		if fileName == ".git" || fileName == ".idea" || fileName == ".dit" || fileName == "node_modules" {
@@ -201,35 +200,34 @@ func PackFiles(env *interfaces.Env, tw *tar.Writer, pathToFiles string) error {
 		// In other case adding file to archive
 		if file.IsDir() {
 
-			if err = PackFiles(env, tw, currentPath); err != nil {
+			if err = PackFiles(env, tw, currentFilePath); err != nil {
 				return err
 			}
 
 		} else {
 
 			// Creating path, which will be inside of archive
-			newPath := strings.Replace(currentPath, env.Path, "", 1)[1:]
+			newPath := strings.Replace(currentFilePath, env.Path, "", 1)[1:]
 
 			// Creating hash
-			hashData := fmt.Sprintf("%s:%s:%s", file.Name(), strconv.FormatInt(file.Size(), 10), file.ModTime())
-			hash := utils.Hash([]byte(hashData))
+			hash := utils.Hash(fmt.Sprintf("%s:%s:%s", file.Name(), strconv.FormatInt(file.Size(), 10), file.ModTime()))
 
 			// Reading previous hash of this file
-			value, err := env.Database.Read(env.Log, currentPath)
+			value, err := env.Storage.Read(env.Log, currentFilePath)
 			if err != nil && err != interfaces.ErrBucketNotFound {
 				return err
 			}
 
 			// If hashes are equal - add file to archive
 			if string(value) != hash {
-				env.Log.Debug("Packing file: ", currentPath)
+				env.Log.Debug("Packing file: ", currentFilePath)
 
-				err = env.Database.Write(env.Log, currentPath, hash)
+				err = env.Storage.Write(env.Log, currentFilePath, hash)
 				if err != nil {
 					return err
 				}
 
-				fr, err := os.Open(currentPath)
+				fr, err := os.Open(currentFilePath)
 				if err != nil {
 					env.Log.Error(err)
 					return err

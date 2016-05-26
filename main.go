@@ -45,13 +45,6 @@ func main() {
 			Description: "This command deplos sources from current directory and sends it to Deployit servers for deploying",
 			Action:      handlers.DeployIt,
 		},
-		{
-			Name:        "Deploy url command",
-			Aliases:     []string{"url"},
-			Usage:       "",
-			Description: "",
-			Action:      handlers.DeployURL,
-		},
 	}
 
 	app.Run(os.Args)

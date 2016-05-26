@@ -1,4 +1,4 @@
-package db
+package bolt
 
 import (
 	"errors"
@@ -12,7 +12,7 @@ type Bolt struct {
 	DB *bolt.DB
 }
 
-func Open(log interfaces.Log, path string) *bolt.DB {
+func Open(log interfaces.ILog, path string) *bolt.DB {
 
 	db, err := bolt.Open(path, 0766, nil)
 	if err != nil {
@@ -37,8 +37,7 @@ func Open(log interfaces.Log, path string) *bolt.DB {
 
 }
 
-func (b *Bolt) Write(log interfaces.Log, key, value string) error {
-	log.Debug("Add file to storage")
+func (b *Bolt) Write(log interfaces.ILog, key, value string) error {
 
 	err := b.DB.Update(func(tx *bolt.Tx) error {
 		bucket, err := tx.CreateBucketIfNotExists([]byte(base))
@@ -63,8 +62,7 @@ func (b *Bolt) Write(log interfaces.Log, key, value string) error {
 	return nil
 }
 
-func (b *Bolt) Read(log interfaces.Log, key string) (string, error) {
-	log.Debug("Read file from storage")
+func (b *Bolt) Read(log interfaces.ILog, key string) (string, error) {
 
 	var val string
 
@@ -88,8 +86,7 @@ func (b *Bolt) Read(log interfaces.Log, key string) (string, error) {
 	return val, nil
 }
 
-func (b *Bolt) Delete(log interfaces.Log, key string) error {
-	log.Debug("Delete file from storage")
+func (b *Bolt) Delete(log interfaces.ILog, key string) error {
 
 	err := b.DB.Update(func(tx *bolt.Tx) error {
 		bucket := tx.Bucket([]byte(base))
@@ -114,8 +111,7 @@ func (b *Bolt) Delete(log interfaces.Log, key string) error {
 	return nil
 }
 
-func (b *Bolt) ListAllFiles(log interfaces.Log) ([]string, error) {
-	log.Debug("List all files from storage")
+func (b *Bolt) ListAllFiles(log interfaces.ILog) ([]string, error) {
 
 	var files []string
 
