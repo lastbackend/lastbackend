@@ -1,11 +1,12 @@
 package daemon
 
 import (
-	"github.com/codegangsta/cli"
+	"fmt"
 	"github.com/deployithq/deployit/daemon/env"
 	"github.com/deployithq/deployit/daemon/routes"
 	"github.com/deployithq/deployit/drivers/log"
 	"github.com/gorilla/mux"
+	"gopkg.in/urfave/cli.v2"
 	"net/http"
 )
 
@@ -21,9 +22,13 @@ func Init(c *cli.Context) error {
 		Host: Host,
 	}
 
+	fmt.Println(c.Bool("debug"))
+
 	if Debug {
 		env.Log.SetDebugLevel()
 	}
+
+	env.Log.Debug("Init")
 
 	r := mux.NewRouter()
 
@@ -32,6 +37,8 @@ func Init(c *cli.Context) error {
 	if err := http.ListenAndServe(":3000", r); err != nil {
 		env.Log.Fatal(err)
 	}
+
+	env.Log.Debug("Listenning... on %d port", 3000)
 
 	return nil
 }

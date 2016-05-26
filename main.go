@@ -1,10 +1,10 @@
 package main
 
 import (
-	"github.com/codegangsta/cli"
 	"github.com/deployithq/deployit/daemon"
 	"github.com/deployithq/deployit/drivers/docker"
 	"github.com/deployithq/deployit/handlers"
+	"gopkg.in/urfave/cli.v2"
 	"os"
 )
 
@@ -42,28 +42,28 @@ func main() {
 			Usage:       "",
 			Value:       "",
 			Destination: &docker.DOCKER_URI,
-			EnvVar:      "DOCKER_URI",
+			EnvVars:     []string{"DOCKER_URI"},
 		},
 		cli.StringFlag{
 			Name:        "docker-cert",
 			Usage:       "",
 			Value:       "",
 			Destination: &docker.DOCKER_CERT,
-			EnvVar:      "DOCKER_CERT",
+			EnvVars:     []string{"DOCKER_CERT"},
 		},
 		cli.StringFlag{
 			Name:        "docker-ca",
 			Usage:       "",
 			Value:       "",
 			Destination: &docker.DOCKER_CA,
-			EnvVar:      "DOCKER_CA",
+			EnvVars:     []string{"DOCKER_CA"},
 		},
 		cli.StringFlag{
 			Name:        "docker-key",
 			Usage:       "",
 			Value:       "",
 			Destination: &docker.DOCKER_KEY,
-			EnvVar:      "DOCKER_KEY",
+			EnvVars:     []string{"DOCKER_KEY"},
 		},
 	}
 
