@@ -1,5 +1,4 @@
-# [Deploy It](https://deployit.co)
-___
+![alt text](https://deployit.co/images/deployit-logo.png "Logo")
 
 ## Deploy It: the command-line toolkit for fast apps deploying
 
@@ -51,6 +50,15 @@ Deploy it flags:
 * [--debug] Shows you debug logs
 * [--tag] Version of your app, examples: "latest", "master", "0.3", "1.9.9", etc.
 * [--host] Adress of your host, where daemon is running
+
+### Future commands
+
+* deploy url
+* deploy it to digital ocean
+* deploy it at 16:00 for 2 hours
+* deploy redis
+* deploy search <service>
+* deploy app stop/start/restart
 ___
 
 ## Roadmap
@@ -68,28 +76,16 @@ ___
 - [ ] Deploy scheduling (at 4:00 pm and for 2 hours) [CLI, DAEMON]
 ___
 
-## Daemon
-
-Main function of Daemon is to build and deploy sources. 
-
-## CLI
-
-The main function of CLI is to provide convenient commands for simple deploying and transform them into requests to Daemon.
-
-Future commands:
-* deploy url
-* deploy it to digital ocean
-* deploy it at 16:00 for 2 hours
-* deploy redis
-* deploy search <service>
-* deploy app stop/start/restart
-___
-
 ## Getting help
 
-All information about Daemon and CLI is available via following commands:
+All information about Deploy It is available via following commands:
 
-### CLI
+### Brief info about all commands
+```bash
+$ deploy --help
+```
+
+### Deploy it command
 ```bash
 $ deploy it --help
 ```
@@ -98,12 +94,23 @@ $ deploy it --help
 ```bash
 $ deploy daemon --help
 ```
+
+### Help about other commands:
+```bash
+$ deploy <command> --help
+```
 ___
 
 ## Examples
 
 ### Deploying app from sources
 
+1. Starting daemon
+```bash
+deploy daemon --debug
+```
+
+2. Cloning sources and running `deploy it` command
 ```bash
 git clone https://github.com/<username>/<repo>
 cd <repo>
