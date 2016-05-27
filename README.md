@@ -9,9 +9,11 @@ Deploy It uses powerful Docker containers, that means that your app will be run 
 You can run your own deployit instance on your laptop for local development and deployment and connect remote deployit daemon to provide remote deploy on any server you want.
 
 Roadmap: https://github.com/deployithq/deployit/blob/master/ROADMAP.md
+
 Changelog: https://github.com/deployithq/deployit/blob/master/CHANGELOG.md
 
 **Contibuting**: https://github.com/deployithq/deployit/blob/master/CONTRIBUTING.md
+
 Maintainers: https://github.com/deployithq/deployit/blob/master/MAINTAINERS.md
 
 ![alt text](https://deployit.co/images/cdn/intro-cli.png "Image")
