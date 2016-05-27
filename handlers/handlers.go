@@ -11,7 +11,6 @@ import (
 
 var Debug bool
 var Host string
-var AppName string
 var Tag string
 
 func NewEnv() *env.Env {
