@@ -59,7 +59,7 @@ Deploy it flags:
 
 * deploy url
 * deploy it to digital ocean
-* deploy it at 16:00 for 2 hours
+* deploy it at 4:00 pm for 2 hours
 * deploy redis
 * deploy search <service>
 * deploy app stop/start/restart
@@ -97,7 +97,7 @@ $ deploy it --help
 ### Daemon
 ```bash
 $ deploy daemon --help
-```
+```16
 
 ### Help about other commands:
 ```bash
