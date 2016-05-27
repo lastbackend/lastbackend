@@ -29,14 +29,16 @@ go build -o /opt/bin/deploy
 ```
 ___
 
-## Running Daemon
+## Current CLI Commands
+
+### Running Daemon
 Run `deploy daemon --debug`
 
-## Running CLI - Deploying app #
+### Deploy it:
 1. Go to folder with your application source code
 2. Run `deploy it --debug --host http://localhost:3000 --tag latest`
 
-What magic is behind this command:
+What magic is behind `deploy it` command:
 1. CLI scans all files
 2. CLI creates hash table for scanned files
 3. CLI packs needed files into tar.gz
@@ -45,7 +47,7 @@ What magic is behind this command:
 4. DAEMON builds unpacked sources
 5. DAEMON deploys app to host where daemon is running
 
-### CLI Flags
+Deploy it flags:
 * [--debug] Shows you debug logs
 * [--tag] Version of your app, examples: "latest", "master", "0.3", "1.9.9", etc.
 * [--host] Adress of your host, where daemon is running
@@ -98,4 +100,12 @@ $ deploy daemon --help
 ```
 ___
 
-### Example
+## Examples
+
+### Deploying app from sources
+
+```bash
+git clone https://github.com/<username>/<repo>
+cd <repo>
+deploy it --host http://localhost:3000 --tag latest
+```
