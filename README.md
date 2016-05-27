@@ -9,33 +9,38 @@ Deploy It uses powerful Docker containers, that means that your app will be run 
 You can run your own deployit instance on your laptop for local development and deployment and connect remote deployit daemon to provide remote deploy on any server you want.
 
 ![alt text](https://deployit.co/images/cdn/intro-cli.png "Image")
+
 ___
 
+## Prerequisites
 
-
-## Building Deploy It
-
-### Prerequisites for CLI:
+### CLI:
 - Go 1.6 or higher
 - Git
 
-### Prerequisites for Daemon:
+### Daemon:
 - Docker
 - Go 1.6 or higher
 - Git
 
-### Building
-```bash
-git clone git@github.com:deployithq/deployit.git
-cd deployit
-go build -o /opt/bin/deploy
-```
+___
+
+## Installation
+
+Coming soon
+
+___
+
+## Contributing
+
+If you want to contribute, please read our contribution guide here: https://github.com/deployithq/deployit/blob/master/CONTRIBUTING.md
+
 ___
 
 ## Current CLI Commands
 
 ### Running Daemon
-Run `deploy daemon --debug`
+Run `deploy daemon`
 
 ### Deploy it:
 
@@ -65,21 +70,6 @@ Deploy it flags:
 * deploy redis
 * deploy search <service>
 * deploy app stop/start/restart
-___
-
-## Roadmap
-- [ ] Deploy app to host [CLI, DAEMON]
-- [ ] Deploy app with configs from yaml file [CLI, DAEMON] 
-- [ ] Delete app from host [CLI, DAEMON]
-- [ ] App logs streaming [CLI, DAEMON]
-- [ ] App start/stop/restart [CLI, DAEMON]
-- [ ] Deploy app with git url [CLI, DAEMON]
-- [ ] Deploy app with hub url (like Docker Hub) [CLI, DAEMON]
-- [ ] Add Digital Ocean host [CLI]
-- [ ] Delete Digital Ocean host [CLI]
-- [ ] Digital Ocean host start/stop/restart [CLI]
-- [ ] Deploy to Digital Ocean host [CLI]
-- [ ] Deploy scheduling (at 4:00 pm and for 2 hours) [CLI, DAEMON]
 
 ___
 
@@ -106,6 +96,7 @@ $ deploy daemon --help
 ```bash
 $ deploy <command> --help
 ```
+
 ___
 
 ## Examples
@@ -114,7 +105,7 @@ ___
 
 1. Starting daemon
 ```bash
-deploy daemon --debug
+deploy daemon
 ```
 
 2. Cloning sources and running `deploy it` command
