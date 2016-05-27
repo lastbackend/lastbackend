@@ -7,6 +7,8 @@ Deploy It is an open-source command-line toolkit and daemon in one application, 
 Deploy It fetches code from request or repo, build it and deploy it to any server. 
 Deploy It uses powerful Docker containers, that means that your app will be run anywhere, from your development enviroment on your laptop to any large scale cloud hosting. 
 You can run your own deployit instance on your laptop for local development and deployment and connect remote deployit daemon to provide remote deploy on any server you want.
+
+![alt text](https://deployit.co/images/cdn/intro-cli.png "Image")
 ___
 
 ## Building Deploy It
@@ -34,10 +36,12 @@ ___
 Run `deploy daemon --debug`
 
 ### Deploy it:
+
 1. Go to folder with your application source code
 2. Run `deploy it --debug --host http://localhost:3000 --tag latest`
 
 What magic is behind `deploy it` command:
+
 1. CLI scans all files
 2. CLI creates hash table for scanned files
 3. CLI packs needed files into tar.gz
