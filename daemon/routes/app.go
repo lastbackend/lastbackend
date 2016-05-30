@@ -43,6 +43,10 @@ func DeployAppHandler(env *env.Env, w http.ResponseWriter, r *http.Request) erro
 	var filename, tag string
 	var excludes []string
 
+	// TODO: I guess it will be more productive to create a special header with first 10 bytes of is
+	// the header size and cut this headers from incomming buffer. The main idea is to cutl tech data
+	// from privided tarrball, if it's possible ofcource
+
 	for {
 
 		part, err := mr.NextPart()

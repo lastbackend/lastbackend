@@ -32,6 +32,10 @@ func DeployIt(c *cli.Context) error {
 	var archiveName string = "tar.gz"
 	var archivePath string = fmt.Sprintf("%s/.dit/%s", env.Path, archiveName)
 
+	splittedPath := strings.Split(env.Path, "/")
+
+	AppName := splittedPath[len(splittedPath)-1]
+
 	// Creating archive
 	fw, err := os.Create(archivePath)
 	if err != nil {
@@ -41,6 +45,22 @@ func DeployIt(c *cli.Context) error {
 
 	gw := gzip.NewWriter(fw)
 	tw := tar.NewWriter(gw)
+
+	// Deleting archive after function ends
+	defer func() {
+		env.Log.Debug("Deleting archive: ", archivePath)
+
+		fw.Close()
+		gw.Close()
+		tw.Close()
+
+		// Deleting files
+		err = os.Remove(archivePath)
+		if err != nil {
+			env.Log.Error(err)
+			return
+		}
+	}()
 
 	deletedFiles := []string{}
 
@@ -157,13 +177,6 @@ func DeployIt(c *cli.Context) error {
 
 	res.Body.Close()
 
-	// Deleting files
-	err = os.Remove(archivePath)
-	if err != nil {
-		env.Log.Error(err)
-		return err
-	}
-
 	return nil
 }
 
@@ -188,12 +201,12 @@ func PackFiles(env *env.Env, tw *tar.Writer, filesPath string) error {
 
 		fileName := file.Name()
 
-		// TODO Create exclude lib
-		// TODO Parse .gitignore and exclude files from
-
 		currentFilePath := fmt.Sprintf("%s/%s", filesPath, fileName)
 
 		// Ignoring files which is not needed for build to make archive smaller
+		// TODO: create base .ignore file on first application creation
+		// TODO Create exclude lib
+		// TODO Parse .gitignore and exclude files from
 		if fileName == ".git" || fileName == ".idea" || fileName == ".dit" || fileName == "node_modules" {
 			continue
 		}
@@ -201,63 +214,62 @@ func PackFiles(env *env.Env, tw *tar.Writer, filesPath string) error {
 		// If it was directory - calling this function again
 		// In other case adding file to archive
 		if file.IsDir() {
-
 			if err := PackFiles(env, tw, currentFilePath); err != nil {
 				return err
 			}
-
-		} else {
-
-			// Creating path, which will be inside of archive
-			newPath := strings.Replace(currentFilePath, env.Path, "", 1)[1:]
-
-			// Creating hash
-			hash := utils.Hash(fmt.Sprintf("%s:%s:%s", file.Name(), strconv.FormatInt(file.Size(), 10), file.ModTime()))
-
-			// Reading previous hash of this file
-			value, err := env.Storage.Read(env.Log, currentFilePath)
-			if err != nil && err != interfaces.ErrBucketNotFound {
-				return err
-			}
-
-			// If hashes are equal - add file to archive
-			if string(value) != hash {
-				env.Log.Debug("Packing file: ", currentFilePath)
-
-				err = env.Storage.Write(env.Log, currentFilePath, hash)
-				if err != nil {
-					return err
-				}
-
-				fr, err := os.Open(currentFilePath)
-				if err != nil {
-					env.Log.Error(err)
-					return err
-				}
-
-				h := &tar.Header{
-					Name:    newPath,
-					Size:    file.Size(),
-					Mode:    int64(file.Mode()),
-					ModTime: file.ModTime(),
-				}
-
-				err = tw.WriteHeader(h)
-				if err != nil {
-					env.Log.Error(err)
-					return err
-				}
-
-				_, err = io.Copy(tw, fr)
-				if err != nil {
-					env.Log.Error(err)
-					return err
-				}
-
-				fr.Close()
-			}
-
+			continue
 		}
+
+		// Creating path, which will be inside of archive
+		newPath := strings.Replace(currentFilePath, env.Path, "", 1)[1:]
+
+		// Creating hash
+		hash := utils.Hash(fmt.Sprintf("%s:%s:%s", file.Name(), strconv.FormatInt(file.Size(), 10), file.ModTime()))
+
+		// Reading previous hash of this file
+		value, err := env.Storage.Read(env.Log, currentFilePath)
+		if err != nil && err != interfaces.ErrBucketNotFound {
+			return err
+		}
+
+		if string(value) == hash {
+			continue
+		}
+
+		// If hashes are not equal - add file to archive
+		env.Log.Debug("Packing file: ", currentFilePath)
+
+		err = env.Storage.Write(env.Log, newPath, hash)
+		if err != nil {
+			return err
+		}
+
+		fr, err := os.Open(currentFilePath)
+		if err != nil {
+			env.Log.Error(err)
+			return err
+		}
+
+		h := &tar.Header{
+			Name:    newPath,
+			Size:    file.Size(),
+			Mode:    int64(file.Mode()),
+			ModTime: file.ModTime(),
+		}
+
+		err = tw.WriteHeader(h)
+		if err != nil {
+			env.Log.Error(err)
+			return err
+		}
+
+		_, err = io.Copy(tw, fr)
+		if err != nil {
+			env.Log.Error(err)
+			return err
+		}
+
+		fr.Close()
 
 	}
 

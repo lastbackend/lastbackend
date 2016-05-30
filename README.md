@@ -1,114 +1,144 @@
-# deployit: the command-line toolkit for apps deploying #
+![alt text](https://deployit.co/images/deployit-logo.png "Logo")
 
-DeployIT is an open-source command-line toolkit to deploy apps and manage infrastructure.
+## Deploy It: the command-line toolkit for fast apps deploying
 
-DeployIT fetch code from request or repo, build it and deploy to any server connected. 
-DeployIT uses powerful Docker containers, that means that your app will be run anywhere, from your development enviroment on your laptop to any large scale cloud hosting. 
+Deploy It is an open-source command-line toolkit and daemon in one application, which allows you to deploy any application to any server.
+
+Deploy It fetches code from request or repo, build it and deploy it to any server. 
+Deploy It uses powerful Docker containers, that means that your app will be run anywhere, from your development enviroment on your laptop to any large scale cloud hosting. 
 You can run your own deployit instance on your laptop for local development and deployment and connect remote deployit daemon to provide remote deploy on any server you want.
 
--------------------------------------------------------------------------------
+Roadmap: https://github.com/deployithq/deployit/blob/master/ROADMAP.md
 
-# deployit: structure #
+Changelog: https://github.com/deployithq/deployit/blob/master/CHANGELOG.md
 
-The deployit toolkit contains several components its based on:
-- cli:   command line interface for communication from terminal
-- app:   the main package, that handle all application management logic
-- repo:  works with git repos for implementing build from repo and autobuild features
-- node:  node management runtime, with connected cloud integrations
-- build: builder package runtime for manage build application process
+**Contibuting**: https://github.com/deployithq/deployit/blob/master/CONTRIBUTING.md
 
--------------------------------------------------------------------------------
+**We have benefits for active contributors!**
 
-# deployit: daemon #
+![alt text](https://deployit.co/images/cdn/deployy_2.gif "Image")
 
-Deployit daemon is daemon tool manages and provide all necessary logic with your apps and servers. It was created and adopted to teams and support many cool features like:
-- users and team management
-- nodes and clusters management
-- build on special prepared servers
-- apps backups and rollbacks
-- slack and other integrations
-- autodeploy after code changes
+___
 
-Deployit will be use remote platform and resources by default after you'll be logged in.
+## Table of contents
 
--------------------------------------------------------------------------------
+1. [Key features](#key_features)
+2. [Prerequisites](#prerequisites)
+3. [Getting started](#getting_started)
+4. [Current CLI Commands](#current_cli_commands)
+5. [Help](#help)
+6. [Maintainers](#maintainers)
 
-# deployit: hello world #
+___
 
-That is no way to do it simpler.
+## <a name="key_features"></a>Key features
+1. Fast application deploying to any server
+2. Easy application sharing
+3. Managing servers
+4. Deploying application with url/hub (like docker hub)
+5. Deploying scheduling
 
+___
+
+## <a name="prerequisites"></a>Prerequisites
+
+### CLI:
+- Go 1.6 or higher
+- Git
+
+### Daemon:
+- Docker
+- Go 1.6 or higher
+- Git
+
+___
+
+## <a name="getting_started"></a>Getting started
+
+1. Install Deploy it
+
+2. Start daemon
 ```bash
-$ deploy it
+deploy daemon
 ```
 
-What magic is behind this 2 words:
-1. deployit daemon scans files in app directory and store information about sources in .deployit folder
-2. after scanning deamon create tar.gz arhieve and send in to remote daemon
-3. remote daemon store arhieve to network storage and run build process
-4. after successful build daemon export root context and send it to server
-5. remote daemon on server extract arhieve and start runC container in provided archieve
-
--------------------------------------------------------------------------------
-
-# deployit: api #
-
-This section shows some basic deployit cli operations you can do.
-
-
-## getting help ##
-
-receive information about available operations with deployit command line tool   
-
+3. Clone sources and runn `deploy it` command while in sources directory
 ```bash
-$ deploy help 
+git clone https://github.com/<username>/<repo>
+cd <repo>
+deploy it --host http://localhost:3000 --tag latest
 ```
 
--------------------------------------------------------------------------------
+___
 
-## deploy app ##
+## <a name="current_cli_commands"></a>Current CLI Commands
 
-you can deploy current directory sources or remote git repository from github, bitbucket or gitlab. There is no sence what deployit will deploy.
-to deploy current directory use ```it``` as argument
+### Running Daemon
+Run `deploy daemon`
 
+### Deploy it:
+
+1. Go to folder with your application source code
+2. Run `deploy it --debug --host http://localhost:3000 --tag latest`
+
+What magic is behind `deploy it` command:
+
+1. CLI scans all files
+2. CLI creates hash table for scanned files
+3. CLI packs needed files into tar.gz
+4. CLI sends all files to daemon via HTTP
+5. DAEMON unpacks tar.gz
+6. DAEMON builds unpacked sources
+7. DAEMON deploys app to host where daemon is running
+
+Deploy it flags:
+* [--debug] Shows you debug logs
+* [--tag] Version of your app, examples: "latest", "master", "0.3", "1.9.9", etc.
+* [--host] Adress of your host, where daemon is running
+
+### Future commands
+
+* deploy url
+* deploy it to digital ocean
+* deploy it at 4:00 pm for 2 hours
+* deploy redis
+* deploy search <service>
+* deploy app stop/start/restart
+
+___
+
+## <a name="help"></a>Help
+
+All information about Deploy It is available via following commands:
+
+### Brief info about all commands
 ```bash
-$ deploy it  
+$ deploy --help
 ```
 
-After executing this command, deploy it deamon will create a special container on prepared server and deploy sources to it. You can also select specific cloud provider to use for deploy.
-You can get list of supported remote cloud executing this command 
-
+### Deploy it command
 ```bash
-$ deploy to help
-$ deploy it to digitalocean --args
-```
-For first droplet creating it will ask you for an cloud provider access. You can open link to use oauth2 authentication or just enter digitalocean access token.
-If you already have connected server to deployit you can set it for next deploy by setting its hostname like:
-
-```bash
-$ deploy it to droplet-00
+$ deploy it --help
 ```
 
--------------------------------------------------------------------------------
-
-## manage app ##
-
-You can start, stop, restart, resize, remove and receive logs from running app executing same name commands.
-
--------------------------------------------------------------------------------
-
-## manage services ##
-
-Deployit cli can run any service for you. Just type 
-
+### Daemon
 ```bash
-$ deploy services list 
+$ deploy daemon --help
 ```
 
-to see available for deploy services. 
-To create a new one service just type
-
+### Help about other commands:
 ```bash
-$ deploy service redis 
+$ deploy <command> --help
 ```
 
-and after few minutes you'll receive dns and port for running service. Like app deploy you can set specific cloud or server for deploy or create new one.
+___
+
+## <a name="maintainers"></a>Maintainers
+
+We have separated maintainers page here: [MAINTAINERS.md](https://github.com/deployithq/deployit/blob/master/MAINTAINERS.md)
+
+### Authors
+
+Alexander: https://github.com/undassa
+Konstantin: https://github.com/unloop
+Bogdan: https://github.com/gofort
