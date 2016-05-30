@@ -5,6 +5,8 @@ import "errors"
 type ILog interface {
 	Debug(...interface{})
 	Debugf(string, ...interface{})
+	Info(...interface{})
+	Infof(string, ...interface{})
 	Error(...interface{})
 	Errorf(string, ...interface{})
 	Fatal(...interface{})
@@ -15,7 +17,7 @@ type ILog interface {
 type IStorage interface {
 	Write(ILog, string, string) error
 	Read(ILog, string) (string, error)
-	ListAllFiles(ILog) ([]string, error)
+	ListAllFiles(ILog) (map[string]string, error)
 	Delete(ILog, string) error
 }
 
