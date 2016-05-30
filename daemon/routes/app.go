@@ -28,10 +28,7 @@ func DeployAppHandler(env *env.Env, w http.ResponseWriter, r *http.Request) erro
 
 	length := r.ContentLength
 
-	u := uuid.NewV4()
-	env.Log.Debug(u.String())
-
-	var filename, tag string
+	var name, tag string
 	var excludes []string
 
 	// TODO: I guess it will be more productive to create a special header with first 10 bytes of is
@@ -46,8 +43,6 @@ func DeployAppHandler(env *env.Env, w http.ResponseWriter, r *http.Request) erro
 			env.Log.Debug("Done!")
 			break
 		}
-
-		env.Log.Debug(">> ", part.FormName())
 
 		if part.FormName() == "delete" {
 			env.Log.Debug("DELETE")
@@ -70,7 +65,7 @@ func DeployAppHandler(env *env.Env, w http.ResponseWriter, r *http.Request) erro
 			buf := new(bytes.Buffer)
 			buf.ReadFrom(part)
 			env.Log.Debug("name is: ", buf.String())
-			filename = buf.String()
+			name = buf.String()
 			continue
 		}
 
@@ -93,6 +88,9 @@ func DeployAppHandler(env *env.Env, w http.ResponseWriter, r *http.Request) erro
 				return err
 			}
 
+			//env.Log.Debugf("Uploading progress %v", 0)
+			//write(env.Log, w, []byte(fmt.Sprintf("\rUploading progress %v%%\r\r", 0)))
+
 			for {
 				buffer := make([]byte, 100000)
 				cBytes, err := part.Read(buffer)
@@ -106,27 +104,41 @@ func DeployAppHandler(env *env.Env, w http.ResponseWriter, r *http.Request) erro
 				}
 				p = float32(read*100) / float32(length)
 				env.Log.Debugf("Uploading progress %v", p)
-				w.Write([]byte(fmt.Sprintf("\rUploading progress %v%%", p)))
+				write(env.Log, w, []byte(fmt.Sprintf("\rUploading progress %v%%\r\r", p)))
 				dst.Write(buffer[0:cBytes])
 			}
 
 			env.Log.Debugf("Uploading progress %v%%", 0)
-			write(env.Log, w, []byte(fmt.Sprintf("Uploading progress %v%%", 0)))
+			write(env.Log, w, []byte(fmt.Sprintf("\rUploading progress %v%%\r\r", 0)))
 			continue
 		}
 	}
 
-	env.Log.Debug(filename, tag)
-
 	env.Log.Debugf("Uploading progress %v", 100)
+
+	env.Log.Debug(">>> ", name, tag, excludes)
+
 	write(env.Log, w, []byte(fmt.Sprintf("\rUploading progress %v%%\r\r", 100)))
 
-	if err := utils.Ungzip(env.Log, "/tmp/upload.tar.gz", "temp.tar"); err != nil {
+	u := uuid.NewV4()
+	env.Log.Debug(u.String())
+
+	path := fmt.Sprintf("/var/deployit/%s/layers", name)
+	err = os.MkdirAll(path, os.FileMode(0666)) // or use 0755 if you prefer
+
+	if err != nil {
+		log.Error(err)
+		return err
+	}
+
+	target := filepath.Join(path, fmt.Sprintf("%s.tar", u))
+
+	if err := utils.Ungzip(env.Log, "/tmp/upload.tar.gz", target); err != nil {
 		env.Log.Error(err)
 		return err
 	}
 
-	//CreateLayer(env.Log, "temp.tar", excludes)
+	CreateLayer(env.Log, target, excludes)
 
 	//reader, err := os.Open("temp.tar")
 	//if err != nil {
@@ -181,8 +193,6 @@ func DeployAppHandler(env *env.Env, w http.ResponseWriter, r *http.Request) erro
 }
 
 func write(log interfaces.ILog, w http.ResponseWriter, data []byte)  {
-	log.Debug("Flusher");
-
 	if f, ok := w.(http.Flusher); ok {
 		f.Flush()
 	} else {
