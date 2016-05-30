@@ -54,11 +54,11 @@ func DeployIt(c *cli.Context) error {
 		tw.Close()
 
 		// Deleting files
-		err = os.Remove(archivePath)
-		if err != nil {
-			env.Log.Error(err)
-			return
-		}
+		//err = os.Remove(archivePath)
+		//if err != nil {
+		//	env.Log.Error(err)
+		//	return
+		//}
 	}()
 
 	// Listing all files from database to know what files were deleted from previous run
@@ -230,11 +230,12 @@ func PackFiles(env *env.Env, tw *tar.Writer, filesPath string, storedFiles map[s
 		// Creating hash
 		hash := utils.Hash(fmt.Sprintf("%s:%s:%s", file.Name(), strconv.FormatInt(file.Size(), 10), file.ModTime()))
 
-		delete(storedFiles, newPath)
-
 		if storedFiles[newPath] == hash {
+			delete(storedFiles, newPath)
 			continue
 		}
+
+		delete(storedFiles, newPath)
 
 		// If hashes are not equal - add file to archive
 		env.Log.Debug("Packing file: ", currentFilePath)
