@@ -1,5 +1,13 @@
 # Contributing to Deploy It
 
+## How to contribute to open source on GitHub
+
+Please, read the following article: https://guides.github.com/activities/contributing-to-open-source/, before contributing.
+
+## Benefits for active contributors
+
+**Unlimited apps deployments to your servers and 20% discount on Deployit servers**
+
 ## Coding Style
 
 1. All code should be formatted with `gofmt`
@@ -14,7 +22,7 @@ Great materials to read:
 ## Reporting issues
 
 1. Tell us version of Deploy it
-2. Include the steps required to reproduce the problem if possible
+2. Include the steps required to reproduce the problem, if possible
 
 ## Maintainers
 
