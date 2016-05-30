@@ -2,19 +2,16 @@ package routes
 
 import (
 	"bytes"
+	"encoding/json"
 	"fmt"
 	"github.com/deployithq/deployit/daemon/env"
+	"github.com/deployithq/deployit/daemon/modules/app"
 	"github.com/deployithq/deployit/drivers/interfaces"
+
 	"github.com/deployithq/deployit/utils"
-	"github.com/satori/go.uuid"
 	"io"
 	"net/http"
 	"os"
-	"path/filepath"
-	"strings"
-	"encoding/json"
-	"github.com/lastbackend/scheduler/drivers/log"
-	"archive/tar"
 )
 
 func DeployAppHandler(env *env.Env, w http.ResponseWriter, r *http.Request) error {
@@ -26,14 +23,19 @@ func DeployAppHandler(env *env.Env, w http.ResponseWriter, r *http.Request) erro
 		return err
 	}
 
+	paths := []string{
+		fmt.Sprintf("%s/apps", app.Default_root_path),
+		fmt.Sprintf("%s/tmp", app.Default_root_path),
+	}
+	utils.CreateDirs(paths)
+
 	length := r.ContentLength
 
 	var name, tag string
 	var excludes []string
 
-	// TODO: I guess it will be more productive to create a special header with first 10 bytes of is
-	// the header size and cut this headers from incomming buffer. The main idea is to cutl tech data
-	// from privided tarrball, if it's possible ofcource
+	id := utils.GenerateID()
+	var tmp_path string = fmt.Sprintf("%s/tmp/%s-tmp", app.Default_root_path, id)
 
 	for {
 
@@ -44,14 +46,14 @@ func DeployAppHandler(env *env.Env, w http.ResponseWriter, r *http.Request) erro
 			break
 		}
 
-		if part.FormName() == "delete" {
+		if part.FormName() == "deleted" {
 			env.Log.Debug("DELETE")
 
 			buf := new(bytes.Buffer)
 			buf.ReadFrom(part)
 			env.Log.Debug("delete is: ", buf.String())
 
-			if err:=json.Unmarshal(buf.Bytes(), &excludes); err != nil {
+			if err := json.Unmarshal(buf.Bytes(), &excludes); err != nil {
 				env.Log.Error(err)
 				return err
 			}
@@ -60,8 +62,6 @@ func DeployAppHandler(env *env.Env, w http.ResponseWriter, r *http.Request) erro
 		}
 
 		if part.FormName() == "name" {
-			env.Log.Debug("NAME")
-
 			buf := new(bytes.Buffer)
 			buf.ReadFrom(part)
 			env.Log.Debug("name is: ", buf.String())
@@ -70,8 +70,6 @@ func DeployAppHandler(env *env.Env, w http.ResponseWriter, r *http.Request) erro
 		}
 
 		if part.FormName() == "tag" {
-			env.Log.Debug("TAG")
-
 			buf := new(bytes.Buffer)
 			buf.ReadFrom(part)
 			env.Log.Debug("tag is: ", buf.String())
@@ -82,63 +80,83 @@ func DeployAppHandler(env *env.Env, w http.ResponseWriter, r *http.Request) erro
 		if part.FormName() == "file" {
 			var read int64
 			var p float32
-			dst, err := os.OpenFile("upload.tar.gz", os.O_WRONLY|os.O_CREATE, 0666)
+
+			dst, err := os.OpenFile(tmp_path, os.O_WRONLY|os.O_CREATE, 0666)
 			if err != nil {
 				env.Log.Error(err)
 				return err
 			}
 
-			//env.Log.Debugf("Uploading progress %v", 0)
-			//write(env.Log, w, []byte(fmt.Sprintf("\rUploading progress %v%%\r\r", 0)))
+			env.Log.Debugf("Uploading progress %v%%", 0)
+			w.Write([]byte(fmt.Sprintf("\rUploading progress %v%%\r", 0)))
 
 			for {
 				buffer := make([]byte, 100000)
 				cBytes, err := part.Read(buffer)
+
 				if err == io.EOF {
 					env.Log.Debug("Last buffer read")
 					break
 				}
+
 				read = read + int64(cBytes)
+
 				if read <= 0 {
 					break
 				}
+
 				p = float32(read*100) / float32(length)
-				env.Log.Debugf("Uploading progress %v", p)
-				write(env.Log, w, []byte(fmt.Sprintf("\rUploading progress %v%%\r\r", p)))
 				dst.Write(buffer[0:cBytes])
+
+				env.Log.Debugf("Uploading progress %v", p)
+				w.Write([]byte(fmt.Sprintf("\rUploading progress %v%%\r", p)))
 			}
 
-			env.Log.Debugf("Uploading progress %v%%", 0)
-			write(env.Log, w, []byte(fmt.Sprintf("\rUploading progress %v%%\r\r", 0)))
 			continue
 		}
 	}
 
 	env.Log.Debugf("Uploading progress %v", 100)
+	w.Write([]byte(fmt.Sprintf("\rUploading progress %v%%\r", 100)))
 
-	env.Log.Debug(">>> ", name, tag, excludes)
+	env.Log.Debug("incomming data info", name, tag, excludes)
 
-	write(env.Log, w, []byte(fmt.Sprintf("\rUploading progress %v%%\r\r", 100)))
-
-	u := uuid.NewV4()
-	env.Log.Debug(u.String())
-
-	path := fmt.Sprintf("/var/deployit/%s/layers", name)
-	err = os.MkdirAll(path, os.FileMode(0666)) // or use 0755 if you prefer
-
-	if err != nil {
-		log.Error(err)
-		return err
-	}
-
-	target := filepath.Join(path, fmt.Sprintf("%s.tar", u))
-
-	if err := utils.Ungzip(env.Log, "/tmp/upload.tar.gz", target); err != nil {
+	update_path := fmt.Sprintf("%s/tmp/%s", app.Default_root_path, id)
+	if err := utils.Ungzip(tmp_path, update_path); err != nil {
 		env.Log.Error(err)
 		return err
 	}
 
-	CreateLayer(env.Log, target, excludes)
+	a := app.App{}
+	if err := a.Get(""); err != nil {
+		env.Log.Error(err)
+		return err
+	}
+
+	if a.UUID != "" {
+		source_path := fmt.Sprintf("%s/app/%s", app.Default_root_path, a.Layer)
+		target_path := fmt.Sprintf("%s/app/%s", app.Default_root_path, a.Layer)
+
+		if err := utils.ModifyLayer(source_path, update_path, target_path, excludes); err != nil {
+			env.Log.Error(err)
+			return err
+		}
+
+	} else {
+		target_path := fmt.Sprintf("%s/app/%s", app.Default_root_path, utils.GenerateID())
+
+		if err := utils.CreateLayer(update_path, target_path); err != nil {
+			env.Log.Error(err)
+			return err
+		}
+	}
+
+	env.Log.Debug("tmp_path", tmp_path)
+	env.Log.Debug("update_path", update_path)
+	if err := utils.RemoveDirs([]string{tmp_path, update_path}); err != nil {
+		env.Log.Error(err)
+		return err
+	}
 
 	//reader, err := os.Open("temp.tar")
 	//if err != nil {
@@ -192,137 +210,13 @@ func DeployAppHandler(env *env.Env, w http.ResponseWriter, r *http.Request) erro
 	return nil
 }
 
-func write(log interfaces.ILog, w http.ResponseWriter, data []byte)  {
+func write(log interfaces.ILog, w http.ResponseWriter, data []byte) {
 	if f, ok := w.(http.Flusher); ok {
 		f.Flush()
 	} else {
-		log.Debug("Damn, no flush");
+		log.Debug("Damn, no flush")
 	}
 
 	w.Write(data)
-	w.Write([]byte("\n\r"))
-}
-
-func CreateLayer(log interfaces.ILog, path string, excludes []string) error {
-	log.Debug("Create Layer")
-
-	log.Debug(path)
-	sources, err := os.Open(path)
-	if err != nil {
-		log.Error("error Open", err)
-		return err
-	}
-
-	tarR2 := tar.NewReader(sources)
-
-	target_filename := filepath.Base("3")
-	target := filepath.Join("/home/unloop/Downloads/", fmt.Sprintf("%s.tar", target_filename))
-
-	log.Debug(target)
-	n, err := os.Create(target)
-	if err != nil {
-		log.Error("error Create", err)
-		return err
-	}
-
-	tarW2 := tar.NewWriter(n)
-
-	i := 0
-
-	for {
-		header, err := tarR2.Next()
-
-		if err == io.EOF {
-
-			tarW2.Flush()
-			tarW2.Close()
-			n.Close()
-
-			sources.Close()
-
-			break
-		} else if err != nil {
-			log.Error("error header", err)
-			return err
-		} else if header.Size > 1e6 {
-			log.Error("huge claimed file size")
-		}
-
-		path := header.Name
-
-		log.Debug("FLAG: ", header.Typeflag)
-
-		switch header.Typeflag {
-		case tar.TypeDir:
-			// strings.TrimRight(path, "/")
-			log.Debug("(", i, ")", "Dir: ", trimSuffix(path, "/"), header.Size)
-
-			// strings.TrimRight(path, "/")
-			if !include(excludes, trimSuffix(path, "/")) {
-				copy(header, tarW2, tarR2)
-			}
-
-			continue
-		case tar.TypeReg:
-			log.Debug("(", i, ")", "Name: ", path, header.Size)
-
-			if !include(excludes, path) {
-				copy(header, tarW2, tarR2)
-			}
-
-		default:
-			log.Debug("Can't save ", header.Typeflag, "in file", path)
-		}
-
-		i++
-	}
-
-	return nil
-}
-
-func copy(hdr *tar.Header, wr *tar.Writer, src *tar.Reader) error {
-	// write the header to the tarball archive
-	if err := wr.WriteHeader(hdr); err != nil {
-		log.Error("error WriteHeader", err)
-		return err
-	}
-
-	// copy the file data to the tarball
-	if _, err := io.Copy(wr, src); err != nil {
-		log.Error("error Copy", err)
-		return err
-	}
-
-	return nil
-}
-
-func merge(hdr *tar.Header, wr *tar.Writer, src *tar.Reader) error {
-
-	return nil
-}
-
-// Returns `true` if the target string t is in the
-// slice.
-func include(vs []string, t string) bool {
-	return index(vs, t) >= 0
-}
-
-// Returns the first index of the target string `t`, or
-// -1 if no match is found.
-func index(vs []string, t string) int {
-	for i, v := range vs {
-		if v == t {
-			return i
-		}
-	}
-
-	return -1
-}
-
-func trimSuffix(s, suffix string) string {
-
-	if strings.HasSuffix(s, suffix) {
-		s = s[:len(s)-len(suffix)]
-	}
-	return s
+	w.Write([]byte("\r"))
 }

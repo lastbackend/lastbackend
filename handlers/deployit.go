@@ -84,6 +84,7 @@ func DeployIt(c *cli.Context) error {
 		if err != nil {
 			return err
 		}
+
 		deletedFiles = append(deletedFiles, key)
 	}
 
