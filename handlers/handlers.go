@@ -26,7 +26,7 @@ func NewEnv() *env.Env {
 
 	if Debug {
 		env.Log.SetDebugLevel()
-		env.Log.Debug("Debug node enabled")
+		env.Log.Debug("Debug mode enabled")
 	}
 
 	env.Path, err = filepath.Abs(filepath.Dir(os.Args[0]))

@@ -111,18 +111,18 @@ func (b *Bolt) Delete(log interfaces.ILog, key string) error {
 	return nil
 }
 
-func (b *Bolt) ListAllFiles(log interfaces.ILog) ([]string, error) {
+func (b *Bolt) ListAllFiles(log interfaces.ILog) (map[string]string, error) {
 
-	var files []string
+	files := make(map[string]string)
 
 	err := b.DB.View(func(tx *bolt.Tx) error {
 		b := tx.Bucket([]byte(base))
 
 		c := b.Cursor()
 
-		for k, _ := c.First(); k != nil; k, _ = c.Next() {
+		for k, v := c.First(); k != nil; k, v = c.Next() {
 			if k != nil {
-				files = append(files, string(k))
+				files[string(k)] = string(v)
 			} else {
 				break
 			}
