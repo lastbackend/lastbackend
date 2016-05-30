@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"archive/tar"
+	"bufio"
 	"bytes"
 	"compress/gzip"
 	"encoding/json"
@@ -10,7 +11,6 @@ import (
 	"github.com/deployithq/deployit/utils"
 	"gopkg.in/urfave/cli.v2"
 	"io"
-	"io/ioutil"
 	"mime/multipart"
 	"net/http"
 	"os"
@@ -162,19 +162,16 @@ func DeployIt(c *cli.Context) error {
 		return err
 	}
 
-	// TODO Stream build
-
-	// Reading response from server
-	resp_body, err := ioutil.ReadAll(res.Body)
-	if err != nil {
-		env.Log.Error(err)
-		return err
+	reader := bufio.NewReader(res.Body)
+	for {
+		line, err := reader.ReadBytes('\n')
+		if err != nil {
+			break
+		}
+		fmt.Println(string(line))
 	}
 
 	// TODO Handle errors from http - clear DB if was first run
-
-	env.Log.Debug(res.Status)
-	env.Log.Debug(string(resp_body))
 
 	res.Body.Close()
 
