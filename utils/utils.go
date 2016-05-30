@@ -126,3 +126,4 @@ func Ungzip(log interfaces.ILog, source, target string) error {
 	_, err = io.Copy(writer, archive)
 	return err
 }
+

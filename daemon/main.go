@@ -25,11 +25,12 @@ func Init(c *cli.Context) error {
 
 	if Debug {
 		env.Log.SetDebugLevel()
-		env.Log.Debug("Debug node enabled")
+		env.Log.Debug("Debug mode enabled")
 	}
 
 	r := mux.NewRouter()
 
+	r.HandleFunc("/app/test", Handle(Handler{env, routes.Test})).Methods("POST")
 	r.HandleFunc("/app/deploy", Handle(Handler{env, routes.DeployAppHandler})).Methods("POST")
 
 	if err := http.ListenAndServe(":"+strconv.Itoa(Port), r); err != nil {
