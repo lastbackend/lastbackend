@@ -13,9 +13,10 @@ Roadmap: https://github.com/deployithq/deployit/blob/master/ROADMAP.md
 Changelog: https://github.com/deployithq/deployit/blob/master/CHANGELOG.md
 
 **Contibuting**: https://github.com/deployithq/deployit/blob/master/CONTRIBUTING.md
+
 **We have benefits for active contributors!**
 
-![alt text](https://deployit.co/images/cdn/intro-cli.png "Image")
+![alt text](https://deployit.co/images/cdn/deployy_2.gif "Image")
 
 ___
 
