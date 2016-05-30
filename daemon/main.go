@@ -30,7 +30,6 @@ func Init(c *cli.Context) error {
 
 	r := mux.NewRouter()
 
-	r.HandleFunc("/app/test", Handle(Handler{env, routes.Test})).Methods("POST")
 	r.HandleFunc("/app/deploy", Handle(Handler{env, routes.DeployAppHandler})).Methods("POST")
 
 	if err := http.ListenAndServe(":"+strconv.Itoa(Port), r); err != nil {

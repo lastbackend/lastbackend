@@ -6,25 +6,16 @@ import (
 	"github.com/deployithq/deployit/daemon/env"
 	"github.com/deployithq/deployit/drivers/interfaces"
 	"github.com/deployithq/deployit/utils"
-		"github.com/satori/go.uuid"
+	"github.com/satori/go.uuid"
 	"io"
 	"net/http"
 	"os"
-	"strconv"
 	"path/filepath"
 	"strings"
 	"encoding/json"
 	"github.com/lastbackend/scheduler/drivers/log"
 	"archive/tar"
 )
-
-func Test(env *env.Env, w http.ResponseWriter, r *http.Request) error {
-	for i := 0; i < 20000; i++ {
-		write(env.Log, w, []byte("ping "+strconv.Itoa(i)+ "\r"))
-	}
-
-	return nil
-}
 
 func DeployAppHandler(env *env.Env, w http.ResponseWriter, r *http.Request) error {
 	env.Log.Debug("Start uploading")
@@ -94,46 +85,33 @@ func DeployAppHandler(env *env.Env, w http.ResponseWriter, r *http.Request) erro
 		}
 
 		if part.FormName() == "file" {
-			env.Log.Debug("LOAD FILE")
-
 			var read int64
 			var p float32
-
 			dst, err := os.OpenFile("upload.tar.gz", os.O_WRONLY|os.O_CREATE, 0666)
-
 			if err != nil {
 				env.Log.Error(err)
 				return err
 			}
 
-			env.Log.Debugf("Uploading progress %v%%", 0)
-			write(env.Log, w, []byte(fmt.Sprintf("Uploading progress %v%%", 0)))
-
 			for {
-				env.Log.Debug("Read bufer")
-
 				buffer := make([]byte, 100000)
 				cBytes, err := part.Read(buffer)
-
 				if err == io.EOF {
 					env.Log.Debug("Last buffer read")
 					break
 				}
-
 				read = read + int64(cBytes)
-
 				if read <= 0 {
 					break
 				}
-
 				p = float32(read*100) / float32(length)
-
 				env.Log.Debugf("Uploading progress %v", p)
-
-				write(env.Log, w, []byte(fmt.Sprintf("\rUploading progress %v%%", p)))
+				w.Write([]byte(fmt.Sprintf("\rUploading progress %v%%", p)))
 				dst.Write(buffer[0:cBytes])
 			}
 
+			env.Log.Debugf("Uploading progress %v%%", 0)
+			write(env.Log, w, []byte(fmt.Sprintf("Uploading progress %v%%", 0)))
 			continue
 		}
 	}
@@ -148,7 +126,7 @@ func DeployAppHandler(env *env.Env, w http.ResponseWriter, r *http.Request) erro
 		return err
 	}
 
-	CreateLayer(env.Log, "temp.tar", excludes)
+	//CreateLayer(env.Log, "temp.tar", excludes)
 
 	//reader, err := os.Open("temp.tar")
 	//if err != nil {
@@ -212,7 +190,7 @@ func write(log interfaces.ILog, w http.ResponseWriter, data []byte)  {
 	}
 
 	w.Write(data)
-	w.Write([]byte("\r"))
+	w.Write([]byte("\n\r"))
 }
 
 func CreateLayer(log interfaces.ILog, path string, excludes []string) error {
