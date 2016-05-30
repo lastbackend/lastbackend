@@ -7,8 +7,6 @@ import (
 	"strings"
 )
 
-const bucket = "map"
-
 type Log struct {
 	Logger *logrus.Logger
 }
@@ -34,6 +32,22 @@ func (l *Log) Debugf(format string, args ...interface{}) {
 		entry := l.Logger.WithFields(logrus.Fields{})
 		entry.Data["file"] = fileInfo(2)
 		entry.Debugf(format, args)
+	}
+}
+
+func (l *Log) Info(args ...interface{}) {
+	if l.Logger.Level >= logrus.InfoLevel {
+		entry := l.Logger.WithFields(logrus.Fields{})
+		entry.Data["file"] = fileInfo(2)
+		entry.Info(args...)
+	}
+}
+
+func (l *Log) Infof(format string, args ...interface{}) {
+	if l.Logger.Level >= logrus.InfoLevel {
+		entry := l.Logger.WithFields(logrus.Fields{})
+		entry.Data["file"] = fileInfo(2)
+		entry.Infof(format, args...)
 	}
 }
 
