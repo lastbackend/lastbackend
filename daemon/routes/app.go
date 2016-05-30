@@ -61,14 +61,6 @@ func DeployAppHandler(env *env.Env, w http.ResponseWriter, r *http.Request) erro
 			continue
 		}
 
-		if part.FormName() == "name" {
-			buf := new(bytes.Buffer)
-			buf.ReadFrom(part)
-			env.Log.Debug("name is: ", buf.String())
-			name = buf.String()
-			continue
-		}
-
 		if part.FormName() == "tag" {
 			buf := new(bytes.Buffer)
 			buf.ReadFrom(part)
@@ -78,6 +70,7 @@ func DeployAppHandler(env *env.Env, w http.ResponseWriter, r *http.Request) erro
 		}
 
 		if part.FormName() == "file" {
+
 			var read int64
 			var p float32
 
@@ -128,14 +121,14 @@ func DeployAppHandler(env *env.Env, w http.ResponseWriter, r *http.Request) erro
 	}
 
 	a := app.App{}
-	if err := a.Get(""); err != nil {
+	if err := a.Get(env, ""); err != nil {
 		env.Log.Error(err)
 		return err
 	}
 
 	if a.UUID != "" {
-		source_path := fmt.Sprintf("%s/app/%s", app.Default_root_path, a.Layer)
-		target_path := fmt.Sprintf("%s/app/%s", app.Default_root_path, a.Layer)
+		source_path := fmt.Sprintf("%s/apps/%s", app.Default_root_path, a.Layer)
+		target_path := fmt.Sprintf("%s/apps/%s", app.Default_root_path, a.Layer)
 
 		if err := utils.ModifyLayer(source_path, update_path, target_path, excludes); err != nil {
 			env.Log.Error(err)
@@ -143,69 +136,31 @@ func DeployAppHandler(env *env.Env, w http.ResponseWriter, r *http.Request) erro
 		}
 
 	} else {
-		target_path := fmt.Sprintf("%s/app/%s", app.Default_root_path, utils.GenerateID())
+		layer := utils.GenerateID()
+		target_path := fmt.Sprintf("%s/apps/%s", app.Default_root_path, layer)
 
 		if err := utils.CreateLayer(update_path, target_path); err != nil {
 			env.Log.Error(err)
 			return err
 		}
+
+		a.Create(env, name, tag, layer)
 	}
 
-	env.Log.Debug("tmp_path", tmp_path)
-	env.Log.Debug("update_path", update_path)
 	if err := utils.RemoveDirs([]string{tmp_path, update_path}); err != nil {
 		env.Log.Error(err)
 		return err
 	}
 
-	//reader, err := os.Open("temp.tar")
-	//if err != nil {
-	//	env.Log.Error(err)
-	//	return err
-	//}
-	//defer reader.Close()
-	//
-	//or, ow := io.Pipe()
-	//opts := interfaces.BuildImageOptions{
-	//	Name:           "pacman:" + tag,
-	//	RmTmpContainer: true,
-	//	InputStream:    reader,
-	//	OutputStream:   ow,
-	//	RawJSONStream:  true,
-	//}
-	//
-	//ch := make(chan error, 1)
-	//
-	//env.Log.Debug(">> Build <<")
+	if err := a.Deploy(env, w); err != nil {
+		env.Log.Error(err)
+		return err
+	}
 
-	//go func() {
-	//	defer ow.Close()
-	//	defer close(ch)
-	//	if err := env.Containers.BuildImage(opts); err != nil {
-	//		env.Log.Error(err)
-	//		return
-	//	}
-	//}()
-	//
-	//jsonmessage.DisplayJSONMessagesStream(or, w, os.Stdout.Fd(), term.IsTerminal(os.Stdout.Fd()), nil)
-	//if err, ok := <-ch; ok {
-	//	if err != nil {
-	//		env.Log.Error(err)
-	//		return err
-	//	}
-	//}
-
-	//log.Debug(">> StartContainer <<")
-	//if err := route.Context.Adapter.StartContainer(&interfaces.Container{
-	//	CID: ``,
-	//	Config: interfaces.Config{
-	//		Image: "pacman:" + tag,
-	//	},
-	//	HostConfig: interfaces.HostConfig{},
-	//}); err != nil {
-	//	log.Error(err)
-	//	return err
-	//}
+	if err := a.Start(env); err != nil {
+		env.Log.Error(err)
+		return err
+	}
 
 	return nil
 }

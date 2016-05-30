@@ -37,78 +37,6 @@ func Hash(data string) string {
 	return hashString
 }
 
-// Untar -
-func Untar(filename string) error {
-	file, err := os.Open(filename)
-
-	if err != nil {
-		return err
-	}
-
-	defer file.Close()
-
-	var fileReader io.ReadCloser = file
-
-	// just in case we are reading a tar.gz file, add a filter to handle gzipped file
-	if strings.HasSuffix(filename, ".gz") {
-		if fileReader, err = gzip.NewReader(file); err != nil {
-			return err
-		}
-
-		defer fileReader.Close()
-	}
-
-	tarBallReader := tar.NewReader(fileReader)
-
-	// Extracting tarred files
-
-	for {
-		header, err := tarBallReader.Next()
-		if err != nil {
-			if err == io.EOF {
-				break
-			}
-
-			return err
-		}
-
-		// get the individual filename and extract to the current directory
-		filename := header.Name
-
-		switch header.Typeflag {
-		case tar.TypeDir:
-			// handle directory
-			err = os.MkdirAll(filename, os.FileMode(header.Mode)) // or use 0755 if you prefer
-
-			if err != nil {
-				return err
-			}
-
-		case tar.TypeReg:
-			// handle normal file
-			writer, err := os.Create(filename)
-
-			if err != nil {
-				return err
-			}
-
-			io.Copy(writer, tarBallReader)
-
-			err = os.Chmod(filename, os.FileMode(header.Mode))
-
-			if err != nil {
-				return err
-			}
-
-			writer.Close()
-		default:
-			continue
-		}
-	}
-
-	return nil
-}
-
 // Ungzip -
 func Ungzip(source, target string) error {
 	reader, err := os.Open(source)
@@ -138,7 +66,7 @@ func Ungzip(source, target string) error {
 
 func CreateDirs(paths []string) error {
 
-	fileMode := os.FileMode(0666)
+	fileMode := os.FileMode(666)
 
 	for _, path := range paths {
 		if err := os.MkdirAll(path, fileMode); err != nil {
@@ -184,7 +112,7 @@ func CreateLayer(source, target string) error {
 		} else if err != nil {
 			return err
 		} else if header.Size > 1e6 {
-			copy(header, target_wr, source_rd)
+			replicate(header, target_wr, source_rd)
 		}
 	}
 
@@ -241,7 +169,7 @@ func ModifyLayer(source, update, target string, excludes []string) error {
 			}
 
 			if !exists(excludes, path) {
-				copy(header, target_wr, update_rd)
+				replicate(header, target_wr, update_rd)
 			}
 		}
 
@@ -258,7 +186,7 @@ func ModifyLayer(source, update, target string, excludes []string) error {
 			return err
 		} else if header.Size > 1e6 {
 			if _, ok := excluded[header.Name]; !ok {
-				copy(header, target_wr, src_rd)
+				replicate(header, target_wr, src_rd)
 			}
 		}
 	}
@@ -271,13 +199,13 @@ func ModifyLayer(source, update, target string, excludes []string) error {
 	return nil
 }
 
-func copy(hdr *tar.Header, wr *tar.Writer, src *tar.Reader) error {
+func replicate(hdr *tar.Header, wr *tar.Writer, src *tar.Reader) error {
 	// write the header to the tarball archive
 	if err := wr.WriteHeader(hdr); err != nil {
 		return err
 	}
 
-	// copy the file data to the tarball
+	// replicate the file/dir to the tarball
 	if _, err := io.Copy(wr, src); err != nil {
 		return err
 	}
