@@ -21,7 +21,27 @@ type IStorage interface {
 	Delete(ILog, string) error
 }
 
-type IStorage interface {
+type IDB interface {
+	Exec(query string, args ...interface{}) (Result, error)
+	Query(query string, args ...interface{}) (Rows, error)
+	QueryRow(query string, args ...interface{}) Row
+}
+
+type Rows interface {
+	Scan(dest ...interface{}) error
+	Columns() ([]string, error)
+	Close() error
+	Err() error
+	Next() bool
+}
+
+type Row interface {
+	Scan(dest ...interface{}) error
+}
+
+type Result interface {
+	LastInsertId() (int64, error)
+	RowsAffected() (int64, error)
 }
 
 type IContainers interface {
