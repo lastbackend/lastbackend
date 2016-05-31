@@ -1,13 +1,11 @@
 package daemon
 
 import (
+	"fmt"
 	"github.com/deployithq/deployit/daemon/env"
-	"github.com/deployithq/deployit/daemon/routes"
 	"github.com/deployithq/deployit/drivers/log"
-	"github.com/gorilla/mux"
+	"github.com/deployithq/deployit/utils"
 	"gopkg.in/urfave/cli.v2"
-	"net/http"
-	"strconv"
 )
 
 var Host string
@@ -16,27 +14,33 @@ var Debug bool
 
 func Init(c *cli.Context) error {
 
+	log := &log.Log{
+		Logger: log.New(),
+	}
+
+	paths := []string{
+		fmt.Sprintf("%s/apps", env.Default_root_path),
+		fmt.Sprintf("%s/tmp", env.Default_root_path),
+		fmt.Sprintf("%s/db", env.Default_root_path),
+	}
+
+	utils.CreateDirs(paths)
+
+	if Debug {
+		log.SetDebugLevel()
+		log.Debug("Debug mode enabled")
+	}
+
+	log.Info("Init daemon")
+
 	env := &env.Env{
-		Log: &log.Log{
-			Logger: log.New(),
-		},
+		Log:  log,
 		Host: Host,
 	}
 
-	if Debug {
-		env.Log.SetDebugLevel()
-		env.Log.Debug("Debug mode enabled")
-	}
+	log.Info("Context inited")
 
-	r := mux.NewRouter()
-
-	r.HandleFunc("/app/deploy", Handle(Handler{env, routes.DeployAppHandler})).Methods("POST")
-
-	if err := http.ListenAndServe(":"+strconv.Itoa(Port), r); err != nil {
-		env.Log.Fatal("ListenAndServe: ", err)
-	}
-
-	env.Log.Debugf("Listenning... on %v port", strconv.Itoa(Port))
+	Route{}.Init(env)
 
 	return nil
 }
