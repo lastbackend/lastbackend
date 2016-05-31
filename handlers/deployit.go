@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"github.com/deployithq/deployit/env"
 	"github.com/deployithq/deployit/utils"
+	"github.com/fatih/color"
 	"gopkg.in/urfave/cli.v2"
 	"io"
 	"mime/multipart"
@@ -29,11 +30,20 @@ func DeployIt(c *cli.Context) error {
 	var archiveName string = "tar.gz"
 	var archivePath string = fmt.Sprintf("%s/.dit/%s", env.Path, archiveName)
 
-	splittedPath := strings.Split(env.Path, "/")
+	appInfo := new(AppInfo)
+	err := appInfo.Read(env.Log, env.Path, env.Host)
+	if err != nil {
+		env.Log.Error(err)
+		return err
+	}
 
-	appName := splittedPath[len(splittedPath)-1]
-
-	env.Log.Infof("Creating app: %s", appName)
+	if appInfo.Name == "" {
+		appInfo.Name = utils.AppName(env.Path)
+		appInfo.Tag = Tag
+		color.Cyan("Creating app: %s", appInfo.Name)
+	} else {
+		color.Cyan("Updating app: %s", appInfo.Name)
+	}
 
 	// Creating archive
 	fw, err := os.Create(archivePath)
@@ -54,11 +64,11 @@ func DeployIt(c *cli.Context) error {
 		tw.Close()
 
 		// Deleting files
-		//err = os.Remove(archivePath)
-		//if err != nil {
-		//	env.Log.Error(err)
-		//	return
-		//}
+		err = os.Remove(archivePath)
+		if err != nil {
+			env.Log.Error(err)
+			return
+		}
 	}()
 
 	// Listing all files from database to know what files were deleted from previous run
@@ -70,7 +80,7 @@ func DeployIt(c *cli.Context) error {
 
 	// TODO Include deleted folders to deletedFiles like "nginx/"
 
-	env.Log.Info("Packing files")
+	color.Cyan("Packing files")
 	storedFiles, err = PackFiles(env, tw, env.Path, storedFiles)
 	if err != nil {
 		return err
@@ -103,12 +113,17 @@ func DeployIt(c *cli.Context) error {
 			return err
 		}
 
-		bodyWriter.WriteField("deleted", string(delFiles))
+		bodyWriter.WriteField("x-deployit-deleted", string(delFiles))
 	}
 
 	// Adding application info to request
-	bodyWriter.WriteField("name", appName)
-	bodyWriter.WriteField("tag", Tag)
+	if appInfo.UUID == "" {
+		bodyWriter.WriteField("x-deployit-name", appInfo.Name)
+	} else {
+		bodyWriter.WriteField("x-deployit-id", appInfo.UUID)
+	}
+
+	bodyWriter.WriteField("x-deployit-tag", appInfo.Name)
 
 	archiveInfo, err := os.Stat(archivePath)
 	if err != nil {
@@ -144,7 +159,7 @@ func DeployIt(c *cli.Context) error {
 	env.Log.Debugf("%s/app/deploy", Host)
 
 	// Creating response for file uploading with fields
-	req, err := http.NewRequest("POST", fmt.Sprintf("%s/app/deploy", Host), bodyBuffer)
+	req, err := http.NewRequest("POST", fmt.Sprintf("%s/app/deploy", env.HostUrl), bodyBuffer)
 	if err != nil {
 		env.Log.Error(err)
 		return err
@@ -152,7 +167,7 @@ func DeployIt(c *cli.Context) error {
 
 	req.Header.Set("Content-Type", bodyWriter.FormDataContentType())
 
-	env.Log.Infof("Uploading sources")
+	color.Cyan("Uploading sources")
 
 	// TODO Show uploading progress
 
@@ -163,20 +178,37 @@ func DeployIt(c *cli.Context) error {
 		return err
 	}
 
-	reader := bufio.NewReader(res.Body)
-	for {
-		line, err := reader.ReadBytes('\n')
-		if err != nil {
-			break
+	if Log {
+		color.Cyan("Logs: ")
+		reader := bufio.NewReader(res.Body)
+		for {
+			line, err := reader.ReadBytes('\n')
+			if err != nil {
+				break
+			}
+			fmt.Println(string(line))
 		}
-		fmt.Println(string(line))
 	}
+
+	appInfo.URL = res.Header.Get("x-deployit-url")
+
+	color.Cyan(appInfo.URL)
 
 	// TODO Handle errors from http - clear DB if was first run
 
+	if appInfo.UUID == "" {
+		appInfo.UUID = res.Header.Get("x-deployit-id")
+	}
+
+	err = appInfo.Write(env.Log, env.Path, env.Host, appInfo.UUID, appInfo.Name, appInfo.Tag, appInfo.URL)
+	if err != nil {
+		env.Log.Error(err)
+		return err
+	}
+
 	res.Body.Close()
 
-	env.Log.Infof("Done")
+	color.Cyan("Done")
 
 	return nil
 }

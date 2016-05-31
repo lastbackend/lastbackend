@@ -140,5 +140,7 @@ We have separated maintainers page here: [MAINTAINERS.md](https://github.com/dep
 ### Authors
 
 Alexander: https://github.com/undassa
+
 Konstantin: https://github.com/unloop
+
 Bogdan: https://github.com/gofort

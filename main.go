@@ -29,8 +29,24 @@ func main() {
 				cli.StringFlag{
 					Name:        "host",
 					Usage:       "",
-					Value:       "https://api.deployit.co",
+					Value:       "api.deployit.co",
 					Destination: &handlers.Host,
+				},
+				cli.IntFlag{
+					Name:        "port",
+					Usage:       "",
+					Value:       3000,
+					Destination: &handlers.Port,
+				},
+				cli.BoolFlag{
+					Name:        "log",
+					Usage:       "",
+					Destination: &handlers.Log,
+				},
+				cli.BoolFlag{
+					Name:        "ssl",
+					Usage:       "",
+					Destination: &handlers.SSL,
 				},
 				cli.StringFlag{
 					Name:        "tag",

@@ -13,6 +13,12 @@ import (
 	"strings"
 )
 
+func AppName(path string) string {
+	splittedPath := strings.Split(path, "/")
+	appName := splittedPath[len(splittedPath)-1]
+	return appName
+}
+
 // GenerateID - generate random id with 64 length
 func GenerateID() string {
 	u1 := uuid.NewV4()
