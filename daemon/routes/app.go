@@ -7,7 +7,6 @@ import (
 	"github.com/deployithq/deployit/daemon/env"
 	"github.com/deployithq/deployit/daemon/modules/app"
 	"github.com/deployithq/deployit/drivers/interfaces"
-
 	"github.com/deployithq/deployit/utils"
 	"io"
 	"net/http"
@@ -27,12 +26,27 @@ func DeployAppHandler(env *env.Env, w http.ResponseWriter, r *http.Request) erro
 		fmt.Sprintf("%s/apps", app.Default_root_path),
 		fmt.Sprintf("%s/tmp", app.Default_root_path),
 	}
+
 	utils.CreateDirs(paths)
 
 	length := r.ContentLength
 
-	var name, tag string
+	var name string = r.Header.Get("name") //r.Header.Get("x-deployit-name")
+	var tag string
 	var excludes []string
+
+	a := app.App{}
+	if err := a.Get(env, ""); err != nil {
+		env.Log.Error(err)
+		return err
+	}
+
+	if a.UUID != "" {
+		a.Create(env, name, tag)
+	}
+
+	w.Header().Set("x-deployit-id", a.UUID)
+	w.Header().Set("x-deployit-url", "=)")
 
 	id := utils.GenerateID()
 	var tmp_path string = fmt.Sprintf("%s/tmp/%s-tmp", app.Default_root_path, id)
@@ -120,13 +134,7 @@ func DeployAppHandler(env *env.Env, w http.ResponseWriter, r *http.Request) erro
 		return err
 	}
 
-	a := app.App{}
-	if err := a.Get(env, ""); err != nil {
-		env.Log.Error(err)
-		return err
-	}
-
-	if a.UUID != "" {
+	if a.Layer != "" {
 		source_path := fmt.Sprintf("%s/apps/%s", app.Default_root_path, a.Layer)
 		target_path := fmt.Sprintf("%s/apps/%s", app.Default_root_path, a.Layer)
 
@@ -134,7 +142,6 @@ func DeployAppHandler(env *env.Env, w http.ResponseWriter, r *http.Request) erro
 			env.Log.Error(err)
 			return err
 		}
-
 	} else {
 		layer := utils.GenerateID()
 		target_path := fmt.Sprintf("%s/apps/%s", app.Default_root_path, layer)
@@ -143,8 +150,6 @@ func DeployAppHandler(env *env.Env, w http.ResponseWriter, r *http.Request) erro
 			env.Log.Error(err)
 			return err
 		}
-
-		a.Create(env, name, tag, layer)
 	}
 
 	if err := utils.RemoveDirs([]string{tmp_path, update_path}); err != nil {

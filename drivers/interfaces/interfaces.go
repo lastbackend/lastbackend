@@ -21,6 +21,9 @@ type IStorage interface {
 	Delete(ILog, string) error
 }
 
+type IStorage interface {
+}
+
 type IContainers interface {
 	GetContainer(string) (Container, error)
 

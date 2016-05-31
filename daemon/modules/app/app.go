@@ -25,8 +25,7 @@ type App struct {
 	Namespace string
 }
 
-func (a *App) Create(env *env.Env, name, tag, layer string) error {
-
+func (a *App) Create(env *env.Env, name, tag string) error {
 	return nil
 }
 
