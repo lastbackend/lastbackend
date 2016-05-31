@@ -13,10 +13,6 @@ import (
 	"os"
 )
 
-const (
-	Default_root_path string = "/var/lib/deployit"
-)
-
 type App struct {
 	UUID      string
 	Name      string
@@ -25,15 +21,15 @@ type App struct {
 	Namespace string
 }
 
-func (a *App) Create(env *env.Env, name, tag string) error {
+func (a *App) Create(e *env.Env, name, tag string) error {
 	return nil
 }
 
-func (a *App) Get(env *env.Env, uuid string) error {
+func (a *App) Get(e *env.Env, uuid string) error {
 	return nil
 }
 
-func (a *App) Deploy(env *env.Env, w http.ResponseWriter) error {
+func (a *App) Deploy(e *env.Env, w http.ResponseWriter) error {
 
 	if a.UUID == "" {
 		return errors.New("application not found")
@@ -41,7 +37,7 @@ func (a *App) Deploy(env *env.Env, w http.ResponseWriter) error {
 
 	reader, err := os.Open("temp.tar")
 	if err != nil {
-		env.Log.Error(err)
+		e.Log.Error(err)
 		return err
 	}
 	defer reader.Close()
@@ -57,13 +53,11 @@ func (a *App) Deploy(env *env.Env, w http.ResponseWriter) error {
 
 	ch := make(chan error, 1)
 
-	env.Log.Debug(">> Build <<")
-
 	go func() {
 		defer ow.Close()
 		defer close(ch)
-		if err := env.Containers.BuildImage(opts); err != nil {
-			env.Log.Error(err)
+		if err := e.Containers.BuildImage(opts); err != nil {
+			e.Log.Error(err)
 			return
 		}
 	}()
@@ -71,7 +65,7 @@ func (a *App) Deploy(env *env.Env, w http.ResponseWriter) error {
 	jsonmessage.DisplayJSONMessagesStream(or, w, os.Stdout.Fd(), term.IsTerminal(os.Stdout.Fd()), nil)
 	if err, ok := <-ch; ok {
 		if err != nil {
-			env.Log.Error(err)
+			e.Log.Error(err)
 			return err
 		}
 	}
@@ -79,27 +73,27 @@ func (a *App) Deploy(env *env.Env, w http.ResponseWriter) error {
 	return nil
 }
 
-func (a *App) Start(env *env.Env) error {
+func (a *App) Start(e *env.Env) error {
 
 	if a.UUID == "" {
 		return errors.New("application not found")
 	}
 
-	if err := env.Containers.StartContainer(&interfaces.Container{
+	if err := e.Containers.StartContainer(&interfaces.Container{
 		CID: ``,
 		Config: interfaces.Config{
 			Image: fmt.Sprintf("%s:%s", a.Name, a.Tag), //a.Namespace,
 		},
 		HostConfig: interfaces.HostConfig{},
 	}); err != nil {
-		env.Log.Error(err)
+		e.Log.Error(err)
 		return err
 	}
 
 	return nil
 }
 
-func (a *App) Restart(env *env.Env) error {
+func (a *App) Restart(e *env.Env) error {
 
 	if a.UUID == "" {
 		return errors.New("application not found")
@@ -108,7 +102,7 @@ func (a *App) Restart(env *env.Env) error {
 	return nil
 }
 
-func (a *App) Stop(env *env.Env) error {
+func (a *App) Stop(e *env.Env) error {
 
 	if a.UUID == "" {
 		return errors.New("application not found")
@@ -117,7 +111,7 @@ func (a *App) Stop(env *env.Env) error {
 	return nil
 }
 
-func (a *App) Remove(env *env.Env) error {
+func (a *App) Remove(e *env.Env) error {
 
 	if a.UUID == "" {
 		return errors.New("application not found")
