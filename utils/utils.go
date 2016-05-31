@@ -29,6 +29,15 @@ func Hash(data string) string {
 	return hashString
 }
 
+func AppName(path string) string {
+
+	splittedPath := strings.Split(path, "/")
+
+	appName := splittedPath[len(splittedPath)-1]
+
+	return appName
+}
+
 // Untar -
 func Untar(log interfaces.ILog, filename string) error {
 	file, err := os.Open(filename)
@@ -133,4 +142,3 @@ func Ungzip(log interfaces.ILog, source, target string) error {
 	_, err = io.Copy(writer, archive)
 	return err
 }
-
