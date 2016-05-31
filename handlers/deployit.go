@@ -112,17 +112,17 @@ func DeployIt(c *cli.Context) error {
 			return err
 		}
 
-		bodyWriter.WriteField("x-deployit-deleted", string(delFiles))
+		bodyWriter.WriteField("deleted", string(delFiles))
 	}
 
 	// Adding application info to request
 	if appInfo.UUID == "" {
-		bodyWriter.WriteField("x-deployit-name", appInfo.Name)
+		bodyWriter.WriteField("name", appInfo.Name)
 	} else {
-		bodyWriter.WriteField("x-deployit-id", appInfo.UUID)
+		bodyWriter.WriteField("id", appInfo.UUID)
 	}
 
-	bodyWriter.WriteField("x-deployit-tag", appInfo.Name)
+	bodyWriter.WriteField("tag", appInfo.Name)
 
 	archiveInfo, err := os.Stat(archivePath)
 	if err != nil {
