@@ -80,8 +80,16 @@ func DeployIt(c *cli.Context) error {
 
 	// TODO Include deleted folders to deletedFiles like "nginx/"
 
+	excludePatterns, err := utils.LoadDockerPatterns(env.Path)
+	if err != nil {
+		env.Log.Error(err)
+		return err
+	}
+
+	excludePatterns = append(excludePatterns, ".gitignore", ".dit", ".git")
+
 	color.Cyan("Packing files")
-	storedFiles, err = PackFiles(env, tw, env.Path, storedFiles)
+	storedFiles, err = PackFiles(env, tw, env.Path, storedFiles, excludePatterns)
 	if err != nil {
 		return err
 	}
@@ -213,7 +221,7 @@ func DeployIt(c *cli.Context) error {
 	return nil
 }
 
-func PackFiles(env *env.Env, tw *tar.Writer, filesPath string, storedFiles map[string]string) (map[string]string, error) {
+func PackFiles(env *env.Env, tw *tar.Writer, filesPath string, storedFiles map[string]string, excludePatterns []string) (map[string]string, error) {
 
 	// Opening directory with files
 	dir, err := os.Open(filesPath)
@@ -236,41 +244,44 @@ func PackFiles(env *env.Env, tw *tar.Writer, filesPath string, storedFiles map[s
 
 		currentFilePath := fmt.Sprintf("%s/%s", filesPath, fileName)
 
+		// Creating path, which will be inside of archive
+		relativePath := strings.Replace(currentFilePath, env.Path, "", 1)[1:]
+
 		// Ignoring files which is not needed for build to make archive smaller
-		// TODO: create base .ignore file on first application creation
-		// TODO Create exclude lib
-		// TODO Parse .gitignore and exclude files from
-		if fileName == ".git" || fileName == ".idea" || fileName == ".dit" || fileName == "node_modules" {
+		// TODO: create base .ditignore file on first application creation
+
+		matches, err := utils.Matches(relativePath, excludePatterns)
+		if err != nil {
+			return storedFiles, err
+		}
+		if matches {
 			continue
 		}
 
 		// If it was directory - calling this function again
 		// In other case adding file to archive
 		if file.IsDir() {
-			storedFiles, err = PackFiles(env, tw, currentFilePath, storedFiles)
+			storedFiles, err = PackFiles(env, tw, currentFilePath, storedFiles, excludePatterns)
 			if err != nil {
 				return storedFiles, err
 			}
 			continue
 		}
 
-		// Creating path, which will be inside of archive
-		newPath := strings.Replace(currentFilePath, env.Path, "", 1)[1:]
-
 		// Creating hash
 		hash := utils.Hash(fmt.Sprintf("%s:%s:%s", file.Name(), strconv.FormatInt(file.Size(), 10), file.ModTime()))
 
-		if storedFiles[newPath] == hash {
-			delete(storedFiles, newPath)
+		if storedFiles[relativePath] == hash {
+			delete(storedFiles, relativePath)
 			continue
 		}
 
-		delete(storedFiles, newPath)
+		delete(storedFiles, relativePath)
 
 		// If hashes are not equal - add file to archive
 		env.Log.Debug("Packing file: ", currentFilePath)
 
-		err = env.Storage.Write(env.Log, newPath, hash)
+		err = env.Storage.Write(env.Log, relativePath, hash)
 		if err != nil {
 			return storedFiles, err
 		}
@@ -282,7 +293,7 @@ func PackFiles(env *env.Env, tw *tar.Writer, filesPath string, storedFiles map[s
 		}
 
 		h := &tar.Header{
-			Name:    newPath,
+			Name:    relativePath,
 			Size:    file.Size(),
 			Mode:    int64(file.Mode()),
 			ModTime: file.ModTime(),
