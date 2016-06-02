@@ -13,7 +13,7 @@ func main() {
 	app.Name = "deployit"
 	app.Usage = "Deploy it command line tool for deploying great apps!"
 
-	app.Commands = []cli.Command{
+	app.Commands = []*cli.Command{
 		{
 			Name:        "Deploy it command",
 			Aliases:     []string{"it"},
@@ -21,34 +21,34 @@ func main() {
 			Description: "This command deplos sources from current directory and sends it to Deployit servers for deploying",
 			Action:      handlers.DeployIt,
 			Flags: []cli.Flag{
-				cli.BoolFlag{
+				&cli.BoolFlag{
 					Name:        "debug",
 					Usage:       "Debug mode",
 					Destination: &handlers.Debug,
 				},
-				cli.StringFlag{
+				&cli.StringFlag{
 					Name:        "host",
 					Usage:       "",
 					Value:       "api.deployit.co",
 					Destination: &handlers.Host,
 				},
-				cli.IntFlag{
+				&cli.IntFlag{
 					Name:        "port",
 					Usage:       "",
 					Value:       3000,
 					Destination: &handlers.Port,
 				},
-				cli.BoolFlag{
+				&cli.BoolFlag{
 					Name:        "log",
 					Usage:       "",
 					Destination: &handlers.Log,
 				},
-				cli.BoolFlag{
+				&cli.BoolFlag{
 					Name:        "ssl",
 					Usage:       "",
 					Destination: &handlers.SSL,
 				},
-				cli.StringFlag{
+				&cli.StringFlag{
 					Name:        "tag",
 					Usage:       "",
 					Value:       "latest",
@@ -61,39 +61,39 @@ func main() {
 			Description: "",
 			Action:      daemon.Init,
 			Flags: []cli.Flag{
-				cli.BoolFlag{
+				&cli.BoolFlag{
 					Name:        "debug",
 					Usage:       "Debug mode",
 					Destination: &daemon.Debug,
 				},
-				cli.IntFlag{
+				&cli.IntFlag{
 					Name:        "port",
 					Usage:       "Daemon port",
 					Value:       3000,
 					Destination: &daemon.Port,
 				},
-				cli.StringFlag{
+				&cli.StringFlag{
 					Name:        "docker-uri",
 					Usage:       "",
 					Value:       "",
 					Destination: &docker.DOCKER_URI,
 					EnvVars:     []string{"DOCKER_URI"},
 				},
-				cli.StringFlag{
+				&cli.StringFlag{
 					Name:        "docker-cert",
 					Usage:       "",
 					Value:       "",
 					Destination: &docker.DOCKER_CERT,
 					EnvVars:     []string{"DOCKER_CERT"},
 				},
-				cli.StringFlag{
+				&cli.StringFlag{
 					Name:        "docker-ca",
 					Usage:       "",
 					Value:       "",
 					Destination: &docker.DOCKER_CA,
 					EnvVars:     []string{"DOCKER_CA"},
 				},
-				cli.StringFlag{
+				&cli.StringFlag{
 					Name:        "docker-key",
 					Usage:       "",
 					Value:       "",
