@@ -41,6 +41,17 @@ func Handle(handlers ...Handler) func(http.ResponseWriter, *http.Request) {
 	}
 }
 
+func SetHeaders(w http.ResponseWriter, r *http.Request) {
+	origin := r.Header.Get("Origin")
+
+	w.Header().Add("Access-Control-Allow-Origin", origin)
+	w.Header().Add("Access-Control-Allow-Credentials", "true")
+	w.Header().Add("Access-Control-Allow-Methods", "OPTIONS,GET,POST,PUT,DELETE")
+	w.Header().Add("Access-Control-Allow-Headers", "X-CSRF-Token, Authorization, Content-Type, x-lastbackend, Origin, X-Requested-With, Content-Name, Accept")
+	w.Header().Add("Content-Type", "application/json")
+}
+
+
 type Route struct {
 }
 
@@ -48,6 +59,8 @@ func (r Route) Init(env *env.Env) {
 	env.Log.Info("Init routes")
 
 	route := mux.NewRouter()
+
+	route.Methods("OPTIONS").HandlerFunc(SetHeaders)
 
 	route.HandleFunc("/app/deploy", Handle(Handler{env, routes.DeployAppHandler})).Methods("POST")
 

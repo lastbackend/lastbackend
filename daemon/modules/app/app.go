@@ -14,18 +14,19 @@ import (
 )
 
 type App struct {
-	UUID      string
-	Name      string
-	Layer     string
-	Tag       string
-	Namespace string
-}
-
-func (a *App) Create(e *env.Env, name, tag string) error {
-	return nil
+	UUID       string
+	Name       string
+	Layer      string
+	Tag        string
+	Namespace  string
+	Containers map[string]interfaces.Container
 }
 
 func (a *App) Get(e *env.Env, uuid string) error {
+	return nil
+}
+
+func (a *App) Create(e *env.Env, name, tag string) error {
 	return nil
 }
 
