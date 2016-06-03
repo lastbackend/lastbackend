@@ -21,6 +21,12 @@ type IStorage interface {
 	Delete(ILog, string) error
 }
 
+type ILDB interface {
+	Get(key string, i interface{}) error
+	Set(key string, i interface{}) error
+	Remove(key string) error
+}
+
 type IContainers interface {
 	GetContainer(string) (Container, error)
 

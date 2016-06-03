@@ -4,8 +4,8 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"github.com/deployithq/deployit/daemon/app"
 	"github.com/deployithq/deployit/daemon/env"
-	"github.com/deployithq/deployit/daemon/modules/app"
 	"github.com/deployithq/deployit/drivers/interfaces"
 	"github.com/deployithq/deployit/utils"
 	"io"
@@ -27,19 +27,6 @@ func DeployAppHandler(e *env.Env, w http.ResponseWriter, r *http.Request) error 
 	var name, tag string
 	var root_path string = env.Default_root_path
 	var excludes []string
-
-	a := app.App{}
-	if err := a.Get(e, ""); err != nil {
-		e.Log.Error(err)
-		return err
-	}
-
-	if a.UUID != "" {
-		a.Create(e, name, tag)
-	}
-
-	w.Header().Set("x-deployit-id", a.UUID)
-	w.Header().Set("x-deployit-url", "=)")
 
 	id := utils.GenerateID()
 	var tmp_path string = fmt.Sprintf("%s/tmp/%s-tmp", root_path, id)
@@ -135,16 +122,33 @@ func DeployAppHandler(e *env.Env, w http.ResponseWriter, r *http.Request) error 
 		return err
 	}
 
+	a := app.App{}
+
+	if err := a.Get(e, "11dc2f82-3728-4a41-bdc3-151f90b04aac"); err != nil {
+		e.Log.Error(err)
+		return err
+	}
+
+	e.Log.Info("Found: ", a.UUID, a.Name)
+
+	if a.UUID == "" {
+		a.Create(e, name, tag)
+	}
+
+	w.Header().Set("x-deployit-id", a.UUID)
+	w.Header().Set("x-deployit-url", "=)")
+
+	layer := utils.GenerateID()
+
 	if a.Layer != "" {
 		source_path := fmt.Sprintf("%s/apps/%s", root_path, a.Layer)
-		target_path := fmt.Sprintf("%s/apps/%s", root_path, a.Layer)
+		target_path := fmt.Sprintf("%s/apps/%s", root_path, layer)
 
 		if err := utils.ModifyLayer(source_path, update_path, target_path, excludes); err != nil {
 			e.Log.Error(err)
 			return err
 		}
 	} else {
-		layer := utils.GenerateID()
 		target_path := fmt.Sprintf("%s/apps/%s", root_path, layer)
 
 		if err := utils.CreateLayer(update_path, target_path); err != nil {
@@ -158,15 +162,15 @@ func DeployAppHandler(e *env.Env, w http.ResponseWriter, r *http.Request) error 
 		return err
 	}
 
-	if err := a.Deploy(e, w); err != nil {
-		e.Log.Error(err)
-		return err
-	}
-
-	if err := a.Start(e); err != nil {
-		e.Log.Error(err)
-		return err
-	}
+	//if err := a.Deploy(e); err != nil {
+	//	e.Log.Error(err)
+	//	return err
+	//}
+	//
+	//if err := a.Start(e); err != nil {
+	//	e.Log.Error(err)
+	//	return err
+	//}
 
 	return nil
 }
