@@ -1,4 +1,4 @@
-![alt text](https://deployit.co/images/deployit-logo.png "Logo")
+![alt text](https://deployit.io/images/deployit-logo.png "Logo")
 
 ## Deploy It: the command-line toolkit for fast apps deploying
 
@@ -8,15 +8,15 @@ Deploy It fetches code from request or repo, build it and deploy it to any serve
 Deploy It uses powerful Docker containers, that means that your app will be run anywhere, from your development enviroment on your laptop to any large scale cloud hosting. 
 You can run your own deployit instance on your laptop for local development and deployment and connect remote deployit daemon to provide remote deploy on any server you want.
 
-Roadmap: https://github.com/deployithq/deployit/blob/master/ROADMAP.md
+[Roadmap](https://github.com/deployithq/deployit/blob/master/ROADMAP.md)
 
-Changelog: https://github.com/deployithq/deployit/blob/master/CHANGELOG.md
+[Changelog](https://github.com/deployithq/deployit/blob/master/CHANGELOG.md)
 
 **Contibuting**: https://github.com/deployithq/deployit/blob/master/CONTRIBUTING.md
 
 **We have benefits for active contributors!**
 
-![alt text](https://deployit.co/images/cdn/deployy_2.gif "Image")
+![alt text](https://deployit.io/images/cdn/deployy_2.gif "Image")
 
 ___
 
