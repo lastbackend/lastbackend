@@ -1,4 +1,4 @@
-![alt text](https://deployit.co/images/deployit-logo.png "Logo")
+![alt text](https://deployit.io/images/deployit-logo.png "Logo")
 
 ## Deploy It: the command-line toolkit for fast apps deploying
 
@@ -16,7 +16,7 @@ You can run your own deployit instance on your laptop for local development and 
 
 **We have benefits for active contributors!**
 
-![alt text](https://deployit.co/images/cdn/deployy_2.gif "Image")
+![alt text](https://deployit.io/images/cdn/deployy_2.gif "Image")
 
 ___
 
