@@ -28,6 +28,10 @@ func Init(rootPath string) (*LDB, error) {
 
 func (ldb *LDB) Get(uuid string, i interface{}) error {
 
+	if uuid == "" {
+		return nil
+	}
+
 	source, err := ioutil.ReadFile(fmt.Sprintf("%s/%s", ldb.path, uuid))
 	if err != nil {
 		return err

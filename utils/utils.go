@@ -45,18 +45,16 @@ func Hash(data string) string {
 
 // Ungzip -
 func Ungzip(source, target string) error {
+
 	reader, err := os.Open(source)
 	if err != nil {
 		return err
 	}
-	defer reader.Close()
 
 	archive, err := gzip.NewReader(reader)
 	if err != nil {
 		return err
 	}
-
-	defer archive.Close()
 
 	target = filepath.Join(target, archive.Name)
 
@@ -64,11 +62,159 @@ func Ungzip(source, target string) error {
 	if err != nil {
 		return err
 	}
-	defer writer.Close()
 
 	_, err = io.Copy(writer, archive)
+
+	reader.Close()
+	archive.Close()
+	writer.Close()
+
 	return err
 }
+
+func Clone(source, target string) error {
+
+	src_f, err := os.Open(source)
+	if err != nil {
+		return err
+	}
+
+	src_rd := tar.NewReader(src_f)
+
+	target_f, err := os.Create(target)
+	if err != nil {
+		return err
+	}
+
+	target_wr := tar.NewWriter(target_f)
+
+	for {
+		header, err := src_rd.Next()
+
+		if err == io.EOF {
+			target_wr.Flush()
+			break
+		} else if err != nil {
+			return err
+		} else if header.Size > 1e6 {
+
+			path := header.Name
+
+			if header.Typeflag == tar.TypeDir {
+				path = trimSuffix(path, "/")
+			}
+
+			// write the header to the tarball archive
+			if err := target_wr.WriteHeader(header); err != nil {
+				return err
+			}
+
+			// replicate the file/dir to the tarball
+			if _, err := io.Copy(target_wr, src_rd); err != nil {
+				return err
+			}
+		}
+
+		return nil
+	}
+
+	src_f.Close()
+	target_f.Close()
+	target_wr.Close()
+
+	return nil
+}
+
+func Update(source, target, update string, excludes []string) error {
+
+	src_f, err := os.Open(source)
+	if err != nil {
+		return err
+	}
+
+	src_rd := tar.NewReader(src_f)
+
+	update_f, err := os.Open(update)
+	if err != nil {
+		return err
+	}
+
+	update_rd := tar.NewReader(update_f)
+
+	target_f, err := os.Create(target)
+	if err != nil {
+		return err
+	}
+
+	target_wr := tar.NewWriter(target_f)
+
+	excluded := make(map[string]bool)
+
+	for {
+		header, err := update_rd.Next()
+
+		if err == io.EOF {
+			target_wr.Flush()
+			break
+		} else if err != nil {
+			return err
+		} else if header.Size > 1e6 {
+
+			path := header.Name
+
+			if header.Typeflag == tar.TypeDir {
+				path = trimSuffix(path, "/")
+			}
+
+			if _, ok := excluded[header.Name]; !ok {
+				excluded[header.Name] = true
+			}
+
+			if !exists(excludes, path) {
+				// write the header to the tarball archive
+				if err := target_wr.WriteHeader(header); err != nil {
+					return err
+				}
+				// replicate the file/dir to the tarball
+				if _, err := io.Copy(target_wr, update_rd); err != nil {
+					return err
+				}
+			}
+		}
+
+		return nil
+	}
+
+	for {
+		header, err := update_rd.Next()
+
+		if err == io.EOF {
+			target_wr.Flush()
+			break
+		} else if err != nil {
+			return err
+		} else if header.Size > 1e6 {
+			if _, ok := excluded[header.Name]; !ok {
+				// write the header to the tarball archive
+				if err := target_wr.WriteHeader(header); err != nil {
+					return err
+				}
+				// replicate the file/dir to the tarball
+				if _, err := io.Copy(target_wr, src_rd); err != nil {
+					return err
+				}
+			}
+		}
+	}
+
+	src_f.Close()
+	update_f.Close()
+	target_f.Close()
+	target_wr.Close()
+
+	return nil
+}
+
 
 func CreateDirs(paths []string) error {
 
@@ -89,20 +235,6 @@ func RemoveDirs(paths []string) error {
 		if err := os.RemoveAll(path); err != nil {
 			return err
 		}
-	}
-
-	return nil
-}
-
-func replicate(hdr *tar.Header, wr *tar.Writer, src *tar.Reader) error {
-	// write the header to the tarball archive
-	if err := wr.WriteHeader(hdr); err != nil {
-		return err
-	}
-
-	// replicate the file/dir to the tarball
-	if _, err := io.Copy(wr, src); err != nil {
-		return err
 	}
 
 	return nil

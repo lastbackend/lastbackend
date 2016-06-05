@@ -5,6 +5,7 @@ import (
 	"github.com/deployithq/deployit/daemon/env"
 	"github.com/deployithq/deployit/drivers/localDB"
 	"github.com/deployithq/deployit/drivers/log"
+	"github.com/deployithq/deployit/drivers/docker"
 	"github.com/deployithq/deployit/utils"
 	"gopkg.in/urfave/cli.v2"
 )
@@ -42,6 +43,7 @@ func Init(c *cli.Context) error {
 	env := &env.Env{
 		LDB:  ldb,
 		Log:  log,
+		Containers: &docker.Containers{},
 		Host: Host,
 	}
 

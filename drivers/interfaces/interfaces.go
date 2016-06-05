@@ -28,15 +28,13 @@ type ILDB interface {
 }
 
 type IContainers interface {
-	GetContainer(string) (Container, error)
+	PullImage(i Image) error
+	BuildImage(opts BuildImageOptions) error
 
 	StartContainer(*Container) error
 	StopContainer(*Container) error
 	RestartContainer(*Container) error
 	RemoveContainer(*Container) error
-
-	PullImage(i Image) error
-	BuildImage(opts BuildImageOptions) error
 
 	ListImages() (map[string]Image, error)
 	ListContainers() (map[string]Container, error)
