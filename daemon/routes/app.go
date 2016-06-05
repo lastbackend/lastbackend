@@ -10,6 +10,7 @@ import (
 	"io"
 	"net/http"
 	"os"
+	"github.com/deployithq/deployit/errors"
 )
 
 func DeployAppHandler(e *env.Env, w http.ResponseWriter, r *http.Request) error {
@@ -19,7 +20,7 @@ func DeployAppHandler(e *env.Env, w http.ResponseWriter, r *http.Request) error 
 	mr, err := r.MultipartReader()
 	if err != nil {
 		e.Log.Error(err)
-		return err
+		return errors.InternalServerError()
 	}
 
 	length := r.ContentLength
@@ -46,7 +47,7 @@ func DeployAppHandler(e *env.Env, w http.ResponseWriter, r *http.Request) error 
 
 			if err := json.Unmarshal(buf.Bytes(), &excludes); err != nil {
 				e.Log.Error(err)
-				return err
+				return errors.InvalidIncomingJSON()
 			}
 
 			continue
@@ -76,7 +77,7 @@ func DeployAppHandler(e *env.Env, w http.ResponseWriter, r *http.Request) error 
 			dst, err := os.OpenFile(targz_path, os.O_WRONLY|os.O_CREATE, 0666)
 			if err != nil {
 				e.Log.Error(err)
-				return err
+				return errors.InternalServerError()
 			}
 
 			e.Log.Debugf("Uploading progress %v%%", 0)
@@ -119,7 +120,7 @@ func DeployAppHandler(e *env.Env, w http.ResponseWriter, r *http.Request) error 
 		e.Log.Info("Get app", a.UUID)
 		if err := a.Get(e, uuid); err != nil {
 			e.Log.Error(err)
-			return err
+			return errors.InternalServerError()
 		}
 	} else {
 		e.Log.Info("Create app")
@@ -130,34 +131,34 @@ func DeployAppHandler(e *env.Env, w http.ResponseWriter, r *http.Request) error 
 		e.Log.Info(targz_path, excludes)
 		if err := a.Layer.CreateFromTarGz(targz_path, excludes); err != nil {
 			e.Log.Error(err)
-			return err
+			return errors.InternalServerError()
 		}
 	} else {
 		// TODO: Need clone source, create tar
 		if err := a.Layer.CreateFromUrl(url); err != nil {
 			e.Log.Error(err)
-			return err
+			return errors.InternalServerError()
 		}
 	}
 
 	if err := a.Build(e, w); err != nil {
 		e.Log.Error(err)
-		return err
+		return errors.InternalServerError()
 	}
 
 	if err := a.Update(e); err != nil {
 		e.Log.Error(err)
-		return err
+		return errors.InternalServerError()
 	}
 
 	if err := utils.RemoveDirs([]string{targz_path}); err != nil {
 		e.Log.Error(err)
-		return err
+		return errors.InternalServerError()
 	}
 
 	if err := a.Start(e); err != nil {
 		e.Log.Error(err)
-		return err
+		return errors.InternalServerError()
 	}
 
 	w.Header().Set("x-deployit-id", a.UUID)
