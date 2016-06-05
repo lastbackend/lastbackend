@@ -8,7 +8,6 @@ import (
 )
 
 type Containers struct {
-	Driver *interfaces.Container
 }
 
 var (
@@ -107,6 +106,68 @@ func (d *Containers) System() (*interfaces.Node, error) {
 	return system, nil
 }
 
+func (d *Containers) PullImage(i interfaces.Image) error {
+
+	registry := "index.docker.io"
+	repo := i.Name
+	tag := "latest"
+
+	client, err := d.client()
+	if err != nil {
+		return err
+	}
+
+	s := strings.Split(i.Name, "/")
+	if len(s) == 2 {
+		registry = s[0]
+		repo = s[1]
+	}
+
+	if len(s) == 3 {
+		registry = s[0]
+		repo = s[2]
+	}
+
+	t := strings.Split(repo, ":")
+	if len(t) == 2 {
+		tag = t[1]
+	}
+
+	return client.PullImage(docker.PullImageOptions{
+		Repository: i.Name,
+		Registry:   registry,
+		Tag:        tag,
+	}, docker.AuthConfiguration{
+		Username:      i.Auth.Username,
+		Password:      i.Auth.Password,
+		Email:         i.Auth.Email,
+		ServerAddress: i.Auth.Host,
+	})
+}
+
+func (d *Containers) BuildImage(opts interfaces.BuildImageOptions) error {
+
+	client, err := d.client()
+	if err != nil {
+		return err
+	}
+
+	o := docker.BuildImageOptions{
+		Name:           opts.Name,
+		RmTmpContainer: opts.RmTmpContainer,
+		InputStream:    opts.InputStream,
+		OutputStream:   opts.OutputStream,
+		ContextDir:     opts.ContextDir,
+		RawJSONStream:  opts.RawJSONStream,
+	}
+
+	if err := client.BuildImage(o); err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func (d *Containers) StartContainer(c *interfaces.Container) error {
 
 	client, err := d.client()
@@ -168,68 +229,6 @@ func (d *Containers) RemoveContainer(c *interfaces.Container) error {
 		RemoveVolumes: true,
 		Force:         true,
 	})
-}
-
-func (d *Containers) PullImage(i interfaces.Image) error {
-
-	registry := "index.docker.io"
-	repo := i.Name
-	tag := "latest"
-
-	client, err := d.client()
-	if err != nil {
-		return err
-	}
-
-	s := strings.Split(i.Name, "/")
-	if len(s) == 2 {
-		registry = s[0]
-		repo = s[1]
-	}
-
-	if len(s) == 3 {
-		registry = s[0]
-		repo = s[2]
-	}
-
-	t := strings.Split(repo, ":")
-	if len(t) == 2 {
-		tag = t[1]
-	}
-
-	return client.PullImage(docker.PullImageOptions{
-		Repository: i.Name,
-		Registry:   registry,
-		Tag:        tag,
-	}, docker.AuthConfiguration{
-		Username:      i.Auth.Username,
-		Password:      i.Auth.Password,
-		Email:         i.Auth.Email,
-		ServerAddress: i.Auth.Host,
-	})
-}
-
-func (d *Containers) BuildImage(opts interfaces.BuildImageOptions) error {
-
-	client, err := d.client()
-	if err != nil {
-		return err
-	}
-
-	o := docker.BuildImageOptions{
-		Name:           opts.Name,
-		RmTmpContainer: opts.RmTmpContainer,
-		InputStream:    opts.InputStream,
-		OutputStream:   opts.OutputStream,
-		ContextDir:     opts.ContextDir,
-		RawJSONStream:  opts.RawJSONStream,
-	}
-
-	if err := client.BuildImage(o); err != nil {
-		return err
-	}
-
-	return nil
 }
 
 func (d *Containers) ListImages() (map[string]interfaces.Image, error) {

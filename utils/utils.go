@@ -45,18 +45,16 @@ func Hash(data string) string {
 
 // Ungzip -
 func Ungzip(source, target string) error {
+
 	reader, err := os.Open(source)
 	if err != nil {
 		return err
 	}
-	defer reader.Close()
 
 	archive, err := gzip.NewReader(reader)
 	if err != nil {
 		return err
 	}
-
-	defer archive.Close()
 
 	target = filepath.Join(target, archive.Name)
 
@@ -64,44 +62,24 @@ func Ungzip(source, target string) error {
 	if err != nil {
 		return err
 	}
-	defer writer.Close()
 
 	_, err = io.Copy(writer, archive)
+
+	reader.Close()
+	archive.Close()
+	writer.Close()
+
 	return err
 }
 
-func CreateDirs(paths []string) error {
+func Clone(source, target string) error {
 
-	fileMode := os.FileMode(666)
-
-	for _, path := range paths {
-		if err := os.MkdirAll(path, fileMode); err != nil {
-			return err
-		}
-	}
-
-	return nil
-}
-
-func RemoveDirs(paths []string) error {
-
-	for _, path := range paths {
-		if err := os.RemoveAll(path); err != nil {
-			return err
-		}
-	}
-
-	return nil
-}
-
-func CreateLayer(source, target string) error {
-
-	source_f, err := os.Open(source)
+	src_f, err := os.Open(source)
 	if err != nil {
 		return err
 	}
 
-	source_rd := tar.NewReader(source_f)
+	src_rd := tar.NewReader(src_f)
 
 	target_f, err := os.Create(target)
 	if err != nil {
@@ -111,25 +89,43 @@ func CreateLayer(source, target string) error {
 	target_wr := tar.NewWriter(target_f)
 
 	for {
-		header, err := source_rd.Next()
+		header, err := src_rd.Next()
+
 		if err == io.EOF {
 			target_wr.Flush()
 			break
 		} else if err != nil {
 			return err
 		} else if header.Size > 1e6 {
-			replicate(header, target_wr, source_rd)
+
+			path := header.Name
+
+			if header.Typeflag == tar.TypeDir {
+				path = trimSuffix(path, "/")
+			}
+
+			// write the header to the tarball archive
+			if err := target_wr.WriteHeader(header); err != nil {
+				return err
+			}
+
+			// replicate the file/dir to the tarball
+			if _, err := io.Copy(target_wr, src_rd); err != nil {
+				return err
+			}
 		}
+
+		return nil
 	}
 
-	source_f.Close()
+	src_f.Close()
 	target_f.Close()
 	target_wr.Close()
 
 	return nil
 }
 
-func ModifyLayer(source, update, target string, excludes []string) error {
+func Update(source, target, update string, excludes []string) error {
 
 	src_f, err := os.Open(source)
 	if err != nil {
@@ -175,7 +171,14 @@ func ModifyLayer(source, update, target string, excludes []string) error {
 			}
 
 			if !exists(excludes, path) {
-				replicate(header, target_wr, update_rd)
+				// write the header to the tarball archive
+				if err := target_wr.WriteHeader(header); err != nil {
+					return err
+				}
+				// replicate the file/dir to the tarball
+				if _, err := io.Copy(target_wr, update_rd); err != nil {
+					return err
+				}
 			}
 		}
 
@@ -192,7 +195,14 @@ func ModifyLayer(source, update, target string, excludes []string) error {
 			return err
 		} else if header.Size > 1e6 {
 			if _, ok := excluded[header.Name]; !ok {
-				replicate(header, target_wr, src_rd)
+				// write the header to the tarball archive
+				if err := target_wr.WriteHeader(header); err != nil {
+					return err
+				}
+				// replicate the file/dir to the tarball
+				if _, err := io.Copy(target_wr, src_rd); err != nil {
+					return err
+				}
 			}
 		}
 	}
@@ -205,15 +215,26 @@ func ModifyLayer(source, update, target string, excludes []string) error {
 	return nil
 }
 
-func replicate(hdr *tar.Header, wr *tar.Writer, src *tar.Reader) error {
-	// write the header to the tarball archive
-	if err := wr.WriteHeader(hdr); err != nil {
-		return err
+
+func CreateDirs(paths []string) error {
+
+	fileMode := os.FileMode(666)
+
+	for _, path := range paths {
+		if err := os.MkdirAll(path, fileMode); err != nil {
+			return err
+		}
 	}
 
-	// replicate the file/dir to the tarball
-	if _, err := io.Copy(wr, src); err != nil {
-		return err
+	return nil
+}
+
+func RemoveDirs(paths []string) error {
+
+	for _, path := range paths {
+		if err := os.RemoveAll(path); err != nil {
+			return err
+		}
 	}
 
 	return nil
@@ -238,7 +259,6 @@ func index(vs []string, t string) int {
 }
 
 func trimSuffix(s, suffix string) string {
-
 	if strings.HasSuffix(s, suffix) {
 		s = s[:len(s)-len(suffix)]
 	}

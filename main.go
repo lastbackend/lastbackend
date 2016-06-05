@@ -75,28 +75,24 @@ func main() {
 				&cli.StringFlag{
 					Name:        "docker-uri",
 					Usage:       "",
-					Value:       "",
 					Destination: &docker.DOCKER_URI,
 					EnvVars:     []string{"DOCKER_URI"},
 				},
 				&cli.StringFlag{
 					Name:        "docker-cert",
 					Usage:       "",
-					Value:       "",
 					Destination: &docker.DOCKER_CERT,
 					EnvVars:     []string{"DOCKER_CERT"},
 				},
 				&cli.StringFlag{
 					Name:        "docker-ca",
 					Usage:       "",
-					Value:       "",
 					Destination: &docker.DOCKER_CA,
 					EnvVars:     []string{"DOCKER_CA"},
 				},
 				&cli.StringFlag{
 					Name:        "docker-key",
 					Usage:       "",
-					Value:       "",
 					Destination: &docker.DOCKER_KEY,
 					EnvVars:     []string{"DOCKER_KEY"},
 				}},
