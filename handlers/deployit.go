@@ -131,7 +131,7 @@ func DeployIt(c *cli.Context) error {
 		bodyWriter.WriteField("id", appInfo.UUID)
 	}
 
-	bodyWriter.WriteField("tag", appInfo.Name)
+	bodyWriter.WriteField("tag", appInfo.Tag)
 
 	archiveInfo, err := os.Stat(archivePath)
 	if err != nil {
