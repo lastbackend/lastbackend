@@ -6,6 +6,7 @@ import (
 	"github.com/deployithq/deployit/daemon/routes"
 	"strconv"
 	"github.com/gorilla/mux"
+	"github.com/deployithq/deployit/errors"
 )
 
 type Handler struct {
@@ -16,7 +17,11 @@ type Handler struct {
 func (h Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) error {
 	err := h.H(h.Env, w, r)
 	if err != nil {
-		switch err.(type) {
+		switch e := err.(type) {
+		case errors.Error:
+			// We can retrieve the status here and write out a specific
+			// HTTP status code.
+			http.Error(w, e.Error(), e.Status())
 		default:
 			http.Error(w, http.StatusText(http.StatusInternalServerError),
 				http.StatusInternalServerError)
