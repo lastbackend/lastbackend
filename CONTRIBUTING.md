@@ -47,7 +47,7 @@ $ make start-daemon
 ### Other commands
 
 ```bash
-$ deploy it --debug --host http://localhost:3000 --tag latest
+$ deploy it --debug --host localhost --port 3000 --tag latest
 ```
 
 
