@@ -169,6 +169,31 @@ func DeployAppHandler(e *env.Env, w http.ResponseWriter, r *http.Request) error 
 	return nil
 }
 
+func StartAppHandler(e *env.Env, w http.ResponseWriter, r *http.Request) error {
+	app := utils.GetStringParamFromURL(`app`, r)
+	e.Log.Debug("Start app", app)
+	return nil
+}
+
+func StopAppHandler(e *env.Env, w http.ResponseWriter, r *http.Request) error {
+	app := utils.GetStringParamFromURL(`app`, r)
+	e.Log.Debug("Stop app", app)
+	return nil
+}
+
+func RestartAppHandler(e *env.Env, w http.ResponseWriter, r *http.Request) error {
+	app := utils.GetStringParamFromURL(`app`, r)
+	e.Log.Debug("Restart app", app)
+	return nil
+}
+
+func RemoveAppHandler(e *env.Env, w http.ResponseWriter, r *http.Request) error {
+	app := utils.GetStringParamFromURL(`app`, r)
+	e.Log.Debug("Remove app", app)
+
+	return nil
+}
+
 //func write(log interfaces.ILog, w http.ResponseWriter, data []byte) {
 //	if f, ok := w.(http.Flusher); ok {
 //		f.Flush()

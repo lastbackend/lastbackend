@@ -11,6 +11,8 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"net/http"
+	"github.com/gorilla/mux"
 )
 
 func AppName(path string) string {
@@ -263,4 +265,10 @@ func trimSuffix(s, suffix string) string {
 		s = s[:len(s)-len(suffix)]
 	}
 	return s
+}
+
+func GetStringParamFromURL(param string, r *http.Request) string {
+	params := mux.Vars(r)
+	value := params[param]
+	return value
 }
