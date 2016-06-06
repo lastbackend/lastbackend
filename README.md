@@ -2,11 +2,11 @@
 
 ## Deploy It: the command-line toolkit for fast apps deploying
 
-Deploy It is an open-source command-line toolkit and daemon in one application, which allows you to deploy any application to any server.
+Deploy It is an open-source command-line toolkit and daemon in one application, which allows you to deploy applications to server.
 
-Deploy It fetches code from request or repo, build it and deploy it to any server. 
-Deploy It uses powerful Docker containers, that means that your app will be run anywhere, from your development enviroment on your laptop to any large scale cloud hosting. 
-You can run your own deployit instance on your laptop for local development and deployment and connect remote deployit daemon to provide remote deploy on any server you want.
+Deploy It fetches code from current directory, request or repo, build it and deploy it to server. 
+Deploy It uses powerful containers, that means that your app will be run anywhere, from your development environment on your laptop to any large scale cloud hosting. 
+You can run deploy it daemon on the host where you want to deploy your applications (it can be local or remote), run CLI with this host and your applications will be deployed on specified host.  
 
 [Roadmap](https://github.com/deployithq/deployit/blob/master/ROADMAP.md)
 
@@ -34,9 +34,8 @@ ___
 ## <a name="key_features"></a>Key features
 1. Fast application deploying to any server
 2. Easy application sharing
-3. Managing servers
-4. Deploying application with url/hub (like docker hub)
-5. Deploying scheduling
+3. Deploying application with url/hub (like docker hub)
+4. Deploying scheduling
 
 ___
 
@@ -53,20 +52,20 @@ ___
 
 ___
 
-## <a name="getting_started"></a>Getting started
+## <a name="getting_started"></a>Getting started or How to deploy your app
 
 1. Install Deploy it
 
-2. Start daemon
+2. Start daemon on host, where you want to deploy your apps
 ```bash
 deploy daemon
 ```
 
-3. Clone sources and runn `deploy it` command while in sources directory
+3. Clone sources and run `deploy it` command while in sources directory
 ```bash
 git clone https://github.com/<username>/<repo>
 cd <repo>
-deploy it --host http://localhost:3000 --tag latest
+deploy it --host localhost --port 3000 --tag latest
 ```
 
 ___
@@ -79,7 +78,7 @@ Run `deploy daemon`
 ### Deploy it:
 
 1. Go to folder with your application source code
-2. Run `deploy it --debug --host http://localhost:3000 --tag latest`
+2. Run `deploy it --debug --host localhost --port 3000 --tag latest`
 
 What magic is behind `deploy it` command:
 
@@ -99,7 +98,6 @@ Deploy it flags:
 ### Future commands
 
 * deploy url
-* deploy it to digital ocean
 * deploy it at 4:00 pm for 2 hours
 * deploy redis
 * deploy search <service>

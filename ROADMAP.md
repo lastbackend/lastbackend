@@ -1,5 +1,6 @@
 # Roadmap
 
+- [ ] Changing Docker to runc [DAEMON]
 - [ ] Deploy app to host [CLI, DAEMON]
 - [ ] Deploy app with configs from yaml file [CLI, DAEMON] 
 - [ ] Delete app from host [CLI, DAEMON]
