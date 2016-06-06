@@ -6,11 +6,11 @@ import (
 	"fmt"
 	"github.com/deployithq/deployit/daemon/app"
 	"github.com/deployithq/deployit/daemon/env"
+	"github.com/deployithq/deployit/errors"
 	"github.com/deployithq/deployit/utils"
 	"io"
 	"net/http"
 	"os"
-	"github.com/deployithq/deployit/errors"
 )
 
 func DeployAppHandler(e *env.Env, w http.ResponseWriter, r *http.Request) error {
