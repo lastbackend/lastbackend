@@ -68,6 +68,10 @@ func (r Route) Init(env *env.Env) {
 	route.Methods("OPTIONS").HandlerFunc(SetHeaders)
 
 	route.HandleFunc("/app/deploy", Handle(Handler{env, routes.DeployAppHandler})).Methods("POST")
+	route.HandleFunc("/app/start/{app}", Handle(Handler{env, routes.StartAppHandler})).Methods("GET")
+	route.HandleFunc("/app/stop/{app}", Handle(Handler{env, routes.StopAppHandler})).Methods("GET")
+	route.HandleFunc("/app/restart/{app}", Handle(Handler{env, routes.RestartAppHandler})).Methods("GET")
+	route.HandleFunc("/app/remove/{app}", Handle(Handler{env, routes.RemoveAppHandler})).Methods("GET")
 
 	if err := http.ListenAndServe(":"+strconv.Itoa(Port), route); err != nil {
 		env.Log.Fatal("ListenAndServe: ", err)
