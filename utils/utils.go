@@ -6,13 +6,13 @@ import (
 	"crypto/sha1"
 	"encoding/base64"
 	"fmt"
+	"github.com/gorilla/mux"
 	"github.com/satori/go.uuid"
 	"io"
+	"net/http"
 	"os"
 	"path/filepath"
 	"strings"
-	"net/http"
-	"github.com/gorilla/mux"
 )
 
 func AppName(path string) string {
@@ -74,59 +74,6 @@ func Ungzip(source, target string) error {
 	return err
 }
 
-func Clone(source, target string) error {
-
-	src_f, err := os.Open(source)
-	if err != nil {
-		return err
-	}
-
-	src_rd := tar.NewReader(src_f)
-
-	target_f, err := os.Create(target)
-	if err != nil {
-		return err
-	}
-
-	target_wr := tar.NewWriter(target_f)
-
-	for {
-		header, err := src_rd.Next()
-
-		if err == io.EOF {
-			target_wr.Flush()
-			break
-		} else if err != nil {
-			return err
-		} else if header.Size > 1e6 {
-
-			path := header.Name
-
-			if header.Typeflag == tar.TypeDir {
-				path = trimSuffix(path, "/")
-			}
-
-			// write the header to the tarball archive
-			if err := target_wr.WriteHeader(header); err != nil {
-				return err
-			}
-
-			// replicate the file/dir to the tarball
-			if _, err := io.Copy(target_wr, src_rd); err != nil {
-				return err
-			}
-		}
-
-		return nil
-	}
-
-	src_f.Close()
-	target_f.Close()
-	target_wr.Close()
-
-	return nil
-}
-
 func Update(source, target, update string, excludes []string) error {
 
 	src_f, err := os.Open(source)
@@ -136,47 +83,43 @@ func Update(source, target, update string, excludes []string) error {
 
 	src_rd := tar.NewReader(src_f)
 
-	update_f, err := os.Open(update)
-	if err != nil {
-		return err
-	}
-
-	update_rd := tar.NewReader(update_f)
-
 	target_f, err := os.Create(target)
 	if err != nil {
 		return err
 	}
 
 	target_wr := tar.NewWriter(target_f)
+	updated := make(map[string]bool)
 
-	excluded := make(map[string]bool)
+	_, err = os.Stat(update);
 
-	for {
-		header, err := update_rd.Next()
-
-		if err == io.EOF {
-			target_wr.Flush()
-			break
-		} else if err != nil {
+	// apply the update if there is file
+	if update != `` && !os.IsNotExist(err) {
+		update_f, err := os.Open(update)
+		if err != nil {
 			return err
-		} else if header.Size > 1e6 {
+		}
 
-			path := header.Name
+		update_rd := tar.NewReader(update_f)
 
-			if header.Typeflag == tar.TypeDir {
-				path = trimSuffix(path, "/")
-			}
+		// write new files
+		for {
+			header, err := update_rd.Next()
+			if err == io.EOF {
+				target_wr.Flush()
+				break
+			} else if err != nil {
+				return err
+			} else {
+				if _, ok := updated[header.Name]; !ok {
+					updated[header.Name] = true
+				}
 
-			if _, ok := excluded[header.Name]; !ok {
-				excluded[header.Name] = true
-			}
-
-			if !exists(excludes, path) {
 				// write the header to the tarball archive
 				if err := target_wr.WriteHeader(header); err != nil {
 					return err
 				}
+
 				// replicate the file/dir to the tarball
 				if _, err := io.Copy(target_wr, update_rd); err != nil {
 					return err
@@ -184,39 +127,48 @@ func Update(source, target, update string, excludes []string) error {
 			}
 		}
 
-		return nil
+		update_f.Close()
 	}
 
+	// merge new files with current layer and exclude remove files
 	for {
-		header, err := update_rd.Next()
+		header, err := src_rd.Next()
 
 		if err == io.EOF {
 			target_wr.Flush()
 			break
 		} else if err != nil {
 			return err
-		} else if header.Size > 1e6 {
-			if _, ok := excluded[header.Name]; !ok {
-				// write the header to the tarball archive
-				if err := target_wr.WriteHeader(header); err != nil {
-					return err
+		} else {
+			if _, ok := updated[header.Name]; !ok {
+
+				path := header.Name
+
+				if header.Typeflag == tar.TypeDir {
+					path = trimSuffix(path, "/")
 				}
-				// replicate the file/dir to the tarball
-				if _, err := io.Copy(target_wr, src_rd); err != nil {
-					return err
+
+				if !exists(excludes, path) {
+					// write the header to the tarball archive
+					if err := target_wr.WriteHeader(header); err != nil {
+						return err
+					}
+
+					// replicate the file/dir to the tarball
+					if _, err := io.Copy(target_wr, src_rd); err != nil {
+						return err
+					}
 				}
 			}
 		}
 	}
 
 	src_f.Close()
-	update_f.Close()
 	target_f.Close()
 	target_wr.Close()
 
 	return nil
 }
-
 
 func CreateDirs(paths []string) error {
 

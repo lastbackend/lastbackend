@@ -32,7 +32,6 @@ func DeployAppHandler(e *env.Env, w http.ResponseWriter, r *http.Request) error 
 	var targz_path string = fmt.Sprintf("%s/tmp/%s-tmp", root_path, id)
 
 	for {
-
 		part, err := mr.NextPart()
 
 		if err == io.EOF || part == nil {
@@ -115,6 +114,9 @@ func DeployAppHandler(e *env.Env, w http.ResponseWriter, r *http.Request) error 
 	e.Log.Debug("incomming data info", name, tag, excludes)
 
 	a := app.App{}
+
+	// TODO: application id need for redeploy
+	//uuid = `63a55e5d-01fe-4ccf-965f-e45d5b2c1eff`
 
 	if uuid != "" {
 		e.Log.Info("Get app", a.UUID)
