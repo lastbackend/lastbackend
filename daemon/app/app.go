@@ -69,6 +69,10 @@ func (a *App) Create(e *env.Env, name, tag string) error {
 func (a *App) Build(e *env.Env, writer io.Writer) error {
 	e.Log.Info(`Build app`)
 
+	if a.Layer.ID == `` {
+		return errors.New("layer not found")
+	}
+
 	tar_path := fmt.Sprintf("%s/apps/%s", env.Default_root_path, a.Layer.ID)
 
 	reader, err := os.Open(tar_path)

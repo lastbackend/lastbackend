@@ -26,8 +26,10 @@ func (h Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) error {
 			http.Error(w, http.StatusText(http.StatusInternalServerError),
 				http.StatusInternalServerError)
 		}
+
 		return err
 	}
+
 	return nil
 }
 
@@ -37,11 +39,9 @@ func Handle(handlers ...Handler) func(http.ResponseWriter, *http.Request) {
 		w.Header().Set("Content-type", "application/json")
 
 		for _, handler := range handlers {
-
 			if err := handler.ServeHTTP(w, r); err != nil {
 				return
 			}
-
 		}
 	}
 }
