@@ -197,3 +197,22 @@ func (a *App) Remove(e *env.Env) error {
 
 	return nil
 }
+
+
+func (a *App) Destroy(e *env.Env) error {
+	e.Log.Info(`Destroy app`)
+
+	if a.UUID == "" {
+		return errors.New("application not found")
+	}
+
+	if err:= a.Remove(e); err !=nil {
+		return err
+	}
+
+	if err := e.LDB.Remove(a.UUID); err != nil {
+		return err
+	}
+
+	return nil
+}

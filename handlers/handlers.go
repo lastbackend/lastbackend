@@ -14,10 +14,10 @@ import (
 )
 
 type AppInfo struct {
-	UUID string
-	Name string
-	Tag  string
-	URL  string
+	UUID string `yaml:"uuid"`
+	Name string `yaml:"name"`
+	Tag  string `yaml:"tag"`
+	URL  string `yaml:"url"`
 }
 
 var Debug bool
@@ -25,6 +25,7 @@ var SSL bool
 var Host string
 var Tag string
 var Log bool
+var Force bool
 var Port int
 
 func NewEnv() *env.Env {
@@ -63,7 +64,7 @@ func NewEnv() *env.Env {
 		env.Log.Fatal(err)
 	}
 
-	database := bolt.Open(env.Log, fmt.Sprintf("%s/map", env.StoragePath))
+	database := bolt.Open(env.Log, fmt.Sprintf("%s/%s_map", env.StoragePath, env.Host))
 
 	env.Storage = &bolt.Bolt{
 		DB: database,

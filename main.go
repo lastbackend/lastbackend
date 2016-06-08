@@ -15,46 +15,6 @@ func main() {
 
 	app.Commands = []*cli.Command{
 		{
-			Name:        "Deploy it command",
-			Aliases:     []string{"it"},
-			Usage:       "Use it when you want to deploy sources of current repository",
-			Description: "This command deplos sources from current directory and sends it to Deployit servers for deploying",
-			Action:      handlers.DeployIt,
-			Flags: []cli.Flag{
-				&cli.BoolFlag{
-					Name:        "debug",
-					Usage:       "Debug mode",
-					Destination: &handlers.Debug,
-				},
-				&cli.StringFlag{
-					Name:        "host",
-					Usage:       "",
-					Value:       "api.deployit.co",
-					Destination: &handlers.Host,
-				},
-				&cli.IntFlag{
-					Name:        "port",
-					Usage:       "",
-					Value:       3000,
-					Destination: &handlers.Port,
-				},
-				&cli.BoolFlag{
-					Name:        "log",
-					Usage:       "",
-					Destination: &handlers.Log,
-				},
-				&cli.BoolFlag{
-					Name:        "ssl",
-					Usage:       "",
-					Destination: &handlers.SSL,
-				},
-				&cli.StringFlag{
-					Name:        "tag",
-					Usage:       "",
-					Value:       "latest",
-					Destination: &handlers.Tag,
-				}},
-		}, {
 			Name:        "Deploy it daemon",
 			Aliases:     []string{"daemon"},
 			Usage:       "",
@@ -95,6 +55,116 @@ func main() {
 					Usage:       "",
 					Destination: &docker.DOCKER_KEY,
 					EnvVars:     []string{"DOCKER_KEY"},
+				}},
+		},
+		{
+			Name:        "",
+			Aliases:     []string{"it"},
+			Usage:       "",
+			Description: "",
+			Action:      handlers.DeployIt,
+			Flags: []cli.Flag{
+				&cli.BoolFlag{
+					Name:        "debug",
+					Usage:       "Debug mode",
+					Destination: &handlers.Debug,
+				},
+				&cli.StringFlag{
+					Name:        "host",
+					Usage:       "",
+					Value:       "api.deployit.co",
+					Destination: &handlers.Host,
+				},
+				&cli.IntFlag{
+					Name:        "port",
+					Usage:       "",
+					Value:       3000,
+					Destination: &handlers.Port,
+				},
+				&cli.BoolFlag{
+					Name:        "ssl",
+					Usage:       "",
+					Destination: &handlers.SSL,
+				},
+				&cli.BoolFlag{
+					Name:        "log",
+					Usage:       "",
+					Destination: &handlers.Log,
+				},
+				&cli.BoolFlag{
+					Name:        "force",
+					Usage:       "",
+					Destination: &handlers.Force,
+				},
+				&cli.StringFlag{
+					Name:        "tag",
+					Usage:       "",
+					Value:       "latest",
+					Destination: &handlers.Tag,
+				}},
+		},
+		{
+			Name:        "",
+			Aliases:     []string{"app"},
+			Usage:       "",
+			Description: "",
+			Subcommands: []*cli.Command{
+				{
+					Name:        "",
+					Aliases:     []string{"start"},
+					Usage:       "",
+					Description: "",
+					Action:      handlers.AppStart,
+				},
+				{
+					Name:        "",
+					Aliases:     []string{"stop"},
+					Usage:       "",
+					Description: "",
+					Action:      handlers.AppStop,
+				},
+				{
+					Name:        "",
+					Aliases:     []string{"restart"},
+					Usage:       "",
+					Description: "",
+					Action:      handlers.AppRestart,
+				},
+				{
+					Name:        "",
+					Aliases:     []string{"remove"},
+					Usage:       "",
+					Description: "",
+					Action:      handlers.AppRemove,
+				},
+			},
+			Flags: []cli.Flag{
+				&cli.BoolFlag{
+					Name:        "debug",
+					Usage:       "Debug mode",
+					Destination: &handlers.Debug,
+				},
+				&cli.StringFlag{
+					Name:        "host",
+					Usage:       "",
+					Value:       "api.deployit.co",
+					Destination: &handlers.Host,
+				},
+				&cli.IntFlag{
+					Name:        "port",
+					Usage:       "",
+					Value:       3000,
+					Destination: &handlers.Port,
+				},
+				&cli.BoolFlag{
+					Name:        "ssl",
+					Usage:       "",
+					Destination: &handlers.SSL,
+				},
+				&cli.BoolFlag{
+					Name:        "log",
+					Usage:       "",
+					Destination: &handlers.Log,
 				}},
 		},
 	}
