@@ -6,9 +6,9 @@ import (
 	"bytes"
 	"compress/gzip"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"github.com/deployithq/deployit/env"
+	"github.com/deployithq/deployit/errors"
 	"github.com/deployithq/deployit/utils"
 	"github.com/fatih/color"
 	"gopkg.in/urfave/cli.v2"
@@ -325,24 +325,25 @@ func AppCreate(env *env.Env, name, tag string) (string, error) {
 	var uuid string
 
 	request := struct {
-		name string
-		tag  string
+		Name string `json:"name"`
+		Tag  string `json:"tag"`
 	}{name, tag}
 
 	var buf io.ReadWriter
 	buf = new(bytes.Buffer)
+
 	err := json.NewEncoder(buf).Encode(request)
 	if err != nil {
 		return uuid, err
 	}
 
-	req, err := http.NewRequest("PUT", fmt.Sprintf("%s/app", env.HostUrl), new(bytes.Buffer))
+	req, err := http.NewRequest("PUT", fmt.Sprintf("%s/app", env.HostUrl), buf)
 	if err != nil {
 		env.Log.Error(err)
 		return uuid, err
 	}
 
-	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Content-Type", "application/json; charset=utf-8")
 
 	client := new(http.Client)
 	res, err := client.Do(req)
@@ -352,7 +353,7 @@ func AppCreate(env *env.Env, name, tag string) (string, error) {
 	}
 
 	if res.StatusCode != 200 {
-		err = errors.New("Something went wrong")
+		err = errors.ParseError(res)
 		env.Log.Error(err)
 		return uuid, err
 	}
@@ -361,7 +362,7 @@ func AppCreate(env *env.Env, name, tag string) (string, error) {
 		uuid string
 	}{}
 
-	err = json.NewDecoder(res.Body).Decode(response)
+	err = json.NewDecoder(res.Body).Decode(&response)
 	if err != nil {
 		env.Log.Error(err)
 		return uuid, err
