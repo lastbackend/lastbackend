@@ -45,6 +45,7 @@ func (a *App) Update(e *env.Env) error {
 	if err := e.LDB.Set(a.UUID, a); err != nil {
 		return err
 	}
+
 	return nil
 }
 
@@ -182,7 +183,6 @@ func (a *App) Remove(e *env.Env) error {
 	}
 
 	for key, container := range a.Containers {
-
 		if container.ID != "" {
 			if err := e.Containers.RemoveContainer(&interfaces.Container{
 				CID: container.ID,
