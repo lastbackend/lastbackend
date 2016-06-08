@@ -62,7 +62,7 @@ func main() {
 			Aliases:     []string{"it"},
 			Usage:       "",
 			Description: "",
-			Action:      handlers.DeployIt,
+			Action:      handlers.It,
 			Flags: []cli.Flag{
 				&cli.BoolFlag{
 					Name:        "debug",

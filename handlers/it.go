@@ -8,6 +8,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/deployithq/deployit/env"
+	"github.com/deployithq/deployit/errors"
 	"github.com/deployithq/deployit/utils"
 	"github.com/fatih/color"
 	"gopkg.in/urfave/cli.v2"
@@ -23,7 +24,7 @@ import (
 // - Archive all files which is in folder
 // - Send it to server
 
-func DeployIt(c *cli.Context) error {
+func It(c *cli.Context) error {
 
 	env := NewEnv()
 
@@ -38,8 +39,16 @@ func DeployIt(c *cli.Context) error {
 	}
 
 	if appInfo.Name == "" {
+
 		appInfo.Name = utils.AppName(env.Path)
 		appInfo.Tag = Tag
+
+		appInfo.UUID, err = AppCreate(env, appInfo.Name, appInfo.Tag)
+		if err != nil {
+			env.Log.Error(err)
+			return err
+		}
+
 		color.Cyan("Creating app: %s", appInfo.Name)
 	} else {
 		color.Cyan("Updating app: %s", appInfo.Name)
@@ -124,15 +133,6 @@ func DeployIt(c *cli.Context) error {
 		bodyWriter.WriteField("deleted", string(delFiles))
 	}
 
-	// Adding application info to request
-	if appInfo.UUID == "" {
-		bodyWriter.WriteField("name", appInfo.Name)
-	} else {
-		bodyWriter.WriteField("id", appInfo.UUID)
-	}
-
-	bodyWriter.WriteField("tag", appInfo.Tag)
-
 	archiveInfo, err := os.Stat(archivePath)
 	if err != nil {
 		env.Log.Error(err)
@@ -169,7 +169,7 @@ func DeployIt(c *cli.Context) error {
 	// TODO If error in response: rollback hash table
 
 	// Creating response for file uploading with fields
-	req, err := http.NewRequest("POST", fmt.Sprintf("%s/app/deploy", env.HostUrl), bodyBuffer)
+	req, err := http.NewRequest("POST", fmt.Sprintf("%s/app/%s/deploy", env.HostUrl, appInfo.UUID), bodyBuffer)
 	if err != nil {
 		env.Log.Error(err)
 		return err
@@ -178,8 +178,6 @@ func DeployIt(c *cli.Context) error {
 	req.Header.Set("Content-Type", bodyWriter.FormDataContentType())
 
 	color.Cyan("Uploading sources")
-
-	// TODO Show uploading progress
 
 	client := new(http.Client)
 	res, err := client.Do(req)
@@ -198,14 +196,6 @@ func DeployIt(c *cli.Context) error {
 			}
 			fmt.Println(string(line))
 		}
-	}
-
-	appInfo.URL = res.Header.Get("x-deployit-url")
-
-	color.Cyan(appInfo.URL)
-
-	if appInfo.UUID == "" {
-		appInfo.UUID = res.Header.Get("x-deployit-id")
 	}
 
 	err = appInfo.Write(env.Log, env.Path, env.Host, appInfo.UUID, appInfo.Name, appInfo.Tag, appInfo.URL)
@@ -319,4 +309,55 @@ func PackFiles(env *env.Env, tw *tar.Writer, filesPath string, storedFiles map[s
 
 	return storedFiles, err
 
+}
+
+func AppCreate(env *env.Env, name, tag string) (string, error) {
+
+	var uuid string
+
+	request := struct {
+		Name string `json:"name"`
+		Tag  string `json:"tag"`
+	}{name, tag}
+
+	var buf io.ReadWriter
+	buf = new(bytes.Buffer)
+
+	err := json.NewEncoder(buf).Encode(request)
+	if err != nil {
+		return uuid, err
+	}
+
+	req, err := http.NewRequest("PUT", fmt.Sprintf("%s/app", env.HostUrl), buf)
+	if err != nil {
+		env.Log.Error(err)
+		return uuid, err
+	}
+
+	req.Header.Set("Content-Type", "application/json; charset=utf-8")
+
+	client := new(http.Client)
+	res, err := client.Do(req)
+	if err != nil {
+		env.Log.Error(err)
+		return uuid, err
+	}
+
+	if res.StatusCode != 200 {
+		err = errors.ParseError(res)
+		env.Log.Error(err)
+		return uuid, err
+	}
+
+	response := struct {
+		uuid string
+	}{}
+
+	err = json.NewDecoder(res.Body).Decode(&response)
+	if err != nil {
+		env.Log.Error(err)
+		return uuid, err
+	}
+
+	return uuid, err
 }

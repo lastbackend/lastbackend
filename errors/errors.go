@@ -1,7 +1,9 @@
 package errors
 
 import (
+	"encoding/json"
 	"errors"
+	"net/http"
 	"strings"
 )
 
@@ -46,4 +48,21 @@ func ParamNotUnique(param string) Error {
 
 func Custom(code int, param string) Error {
 	return StatusError{code, errors.New(param)}
+}
+
+func ParseError(res *http.Response) error {
+
+	response := struct {
+		Error struct {
+			Code string `json:"code"`
+		} `json:"error"`
+	}{}
+
+	err := json.NewDecoder(res.Body).Decode(&response)
+	if err != nil {
+		return err
+	}
+
+	return errors.New(response.Error.Code)
+
 }
