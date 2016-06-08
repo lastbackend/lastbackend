@@ -13,9 +13,38 @@ import (
 	"os"
 )
 
+func CreateAppHandler(e *env.Env, w http.ResponseWriter, r *http.Request) error {
+	e.Log.Info("Create app")
+
+	payload := struct {
+		Name string `json:"name"`
+		Tag  string `json:"tag"`
+	}{}
+
+	if err := json.NewDecoder(r.Body).Decode(&payload); err != nil {
+		return errors.InvalidIncomingJSON()
+	}
+
+	if payload.Name == "" {
+		return errors.ParamInvalid(`name`)
+	}
+
+	if payload.Tag == "" {
+		return errors.ParamInvalid(`tag`)
+	}
+
+	a := app.App{}
+	a.Create(e, payload.Name, payload.Tag)
+
+	w.Write([]byte(fmt.Sprintf(`{"uuid":"%s"}`, a.UUID)))
+
+	return nil
+}
+
 func DeployAppHandler(e *env.Env, w http.ResponseWriter, r *http.Request) error {
 
-	e.Log.Debug("Start uploading")
+	uuid := utils.GetStringParamFromURL(`id`, r)
+	e.Log.Debug("Deploy app", uuid)
 
 	mr, err := r.MultipartReader()
 	if err != nil {
@@ -27,7 +56,6 @@ func DeployAppHandler(e *env.Env, w http.ResponseWriter, r *http.Request) error 
 	id := utils.GenerateID()
 
 	var excludes []string
-	var url, uuid, name, tag string
 	var root_path string = env.Default_root_path
 	var targz_path string = fmt.Sprintf("%s/tmp/%s-tmp", root_path, id)
 
@@ -49,30 +77,6 @@ func DeployAppHandler(e *env.Env, w http.ResponseWriter, r *http.Request) error 
 				return errors.InvalidIncomingJSON()
 			}
 
-			continue
-		}
-
-		if part.FormName() == "name" {
-			buf := new(bytes.Buffer)
-			buf.ReadFrom(part)
-			e.Log.Debug("name is: ", buf.String())
-			name = buf.String()
-			continue
-		}
-
-		if part.FormName() == "id" {
-			buf := new(bytes.Buffer)
-			buf.ReadFrom(part)
-			e.Log.Debug("uuid is: ", buf.String())
-			uuid = buf.String()
-			continue
-		}
-
-		if part.FormName() == "tag" {
-			buf := new(bytes.Buffer)
-			buf.ReadFrom(part)
-			e.Log.Debug("tag is: ", buf.String())
-			tag = buf.String()
 			continue
 		}
 
@@ -119,33 +123,18 @@ func DeployAppHandler(e *env.Env, w http.ResponseWriter, r *http.Request) error 
 	e.Log.Debugf("Uploading progress %v", 100)
 	// w.Write([]byte(fmt.Sprintf("\rUploading progress %v%%\r", 100)))
 
-	e.Log.Debug("incomming data info", name, tag, excludes)
+	e.Log.Debug("incomming data info", excludes)
 
 	a := app.App{}
-
-	if uuid != "" {
-		e.Log.Info("Get app", a.UUID)
-		if err := a.Get(e, uuid); err != nil {
-			e.Log.Error(err)
-			return errors.InternalServerError()
-		}
-	} else {
-		e.Log.Info("Create app")
-		a.Create(e, name, tag)
+	if err := a.Get(e, uuid); err != nil {
+		e.Log.Error(err)
+		return errors.InternalServerError()
 	}
 
-	if url == "" {
-		e.Log.Info(targz_path, excludes)
-		if err := a.Layer.CreateFromTarGz(targz_path, excludes); err != nil {
-			e.Log.Error(err)
-			return errors.InternalServerError()
-		}
-	} else {
-		// TODO: Need clone source, create tar
-		if err := a.Layer.CreateFromUrl(url); err != nil {
-			e.Log.Error(err)
-			return errors.InternalServerError()
-		}
+	e.Log.Info(targz_path, excludes)
+	if err := a.Layer.CreateFromTarGz(targz_path, excludes); err != nil {
+		e.Log.Error(err)
+		return errors.InternalServerError()
 	}
 
 	w.Header().Set("x-deployit-id", a.UUID)
@@ -166,6 +155,13 @@ func DeployAppHandler(e *env.Env, w http.ResponseWriter, r *http.Request) error 
 		return errors.InternalServerError()
 	}
 
+	if len(a.Containers) > 0 {
+		if err := a.Remove(e); err != nil {
+			e.Log.Error(err)
+			return errors.InternalServerError()
+		}
+	}
+
 	if err := a.Start(e); err != nil {
 		e.Log.Error(err)
 		return errors.InternalServerError()
@@ -177,26 +173,73 @@ func DeployAppHandler(e *env.Env, w http.ResponseWriter, r *http.Request) error 
 }
 
 func StartAppHandler(e *env.Env, w http.ResponseWriter, r *http.Request) error {
-	app := utils.GetStringParamFromURL(`app`, r)
-	e.Log.Debug("Start app", app)
+	uuid := utils.GetStringParamFromURL(`id`, r)
+	e.Log.Debug("Start app", uuid)
+
+	a := app.App{}
+	if err := a.Get(e, uuid); err != nil {
+		e.Log.Error(err)
+		return errors.InternalServerError()
+	}
+
+	if err := a.Start(e); err != nil {
+		e.Log.Error(err)
+		return errors.InternalServerError()
+	}
+
 	return nil
 }
 
 func StopAppHandler(e *env.Env, w http.ResponseWriter, r *http.Request) error {
-	app := utils.GetStringParamFromURL(`app`, r)
-	e.Log.Debug("Stop app", app)
+	uuid := utils.GetStringParamFromURL(`id`, r)
+	e.Log.Debug("Stop app", uuid)
+
+	a := app.App{}
+	if err := a.Get(e, uuid); err != nil {
+		e.Log.Error(err)
+		return errors.InternalServerError()
+	}
+
+	if err := a.Stop(e); err != nil {
+		e.Log.Error(err)
+		return errors.InternalServerError()
+	}
+
 	return nil
 }
 
 func RestartAppHandler(e *env.Env, w http.ResponseWriter, r *http.Request) error {
-	app := utils.GetStringParamFromURL(`app`, r)
-	e.Log.Debug("Restart app", app)
+	uuid := utils.GetStringParamFromURL(`id`, r)
+	e.Log.Debug("Restart app", uuid)
+
+	a := app.App{}
+	if err := a.Get(e, uuid); err != nil {
+		e.Log.Error(err)
+		return errors.InternalServerError()
+	}
+
+	if err := a.Restart(e); err != nil {
+		e.Log.Error(err)
+		return errors.InternalServerError()
+	}
+
 	return nil
 }
 
 func RemoveAppHandler(e *env.Env, w http.ResponseWriter, r *http.Request) error {
-	app := utils.GetStringParamFromURL(`app`, r)
-	e.Log.Debug("Remove app", app)
+	uuid := utils.GetStringParamFromURL(`id`, r)
+	e.Log.Debug("Remove app", uuid)
+
+	a := app.App{}
+	if err := a.Get(e, uuid); err != nil {
+		e.Log.Error(err)
+		return errors.InternalServerError()
+	}
+
+	if err := a.Remove(e); err != nil {
+		e.Log.Error(err)
+		return errors.InternalServerError()
+	}
 
 	return nil
 }

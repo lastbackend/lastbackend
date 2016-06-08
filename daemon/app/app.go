@@ -45,6 +45,7 @@ func (a *App) Update(e *env.Env) error {
 	if err := e.LDB.Set(a.UUID, a); err != nil {
 		return err
 	}
+
 	return nil
 }
 
@@ -182,7 +183,6 @@ func (a *App) Remove(e *env.Env) error {
 	}
 
 	for key, container := range a.Containers {
-
 		if container.ID != "" {
 			if err := e.Containers.RemoveContainer(&interfaces.Container{
 				CID: container.ID,
@@ -193,6 +193,25 @@ func (a *App) Remove(e *env.Env) error {
 		}
 
 		delete(a.Containers, key)
+	}
+
+	return nil
+}
+
+
+func (a *App) Destroy(e *env.Env) error {
+	e.Log.Info(`Destroy app`)
+
+	if a.UUID == "" {
+		return errors.New("application not found")
+	}
+
+	if err:= a.Remove(e); err !=nil {
+		return err
+	}
+
+	if err := e.LDB.Remove(a.UUID); err != nil {
+		return err
 	}
 
 	return nil
