@@ -123,6 +123,20 @@ func main() {
 					Description: "",
 					Action:      handlers.AppStop,
 				},
+				{
+					Name:        "",
+					Aliases:     []string{"restart"},
+					Usage:       "",
+					Description: "",
+					Action:      handlers.AppRestart,
+				},
+				{
+					Name:        "",
+					Aliases:     []string{"remove"},
+					Usage:       "",
+					Description: "",
+					Action:      handlers.AppRemove,
+				},
 			},
 			Flags: []cli.Flag{
 				&cli.BoolFlag{
