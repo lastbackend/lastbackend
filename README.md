@@ -1,4 +1,4 @@
-![alt text](https://deployit.io/images/deployit-logo.png "Logo")
+![alt text](https://deployit.io/images/cdn/logo-purpure.png)
 
 ## Deploy It: the command-line toolkit for fast apps deploying
 

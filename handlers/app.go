@@ -138,8 +138,6 @@ func AppRemove(c *cli.Context) error {
 	os.Remove(fmt.Sprintf("%s/%s_map", env.StoragePath, env.Host))
 	os.Remove(fmt.Sprintf("%s/%s.yaml", env.StoragePath, env.Host))
 
-	// TODO Remove files connected with this host
-
 	color.Cyan("Finished!")
 
 	return nil

@@ -166,6 +166,8 @@ func DeployIt(c *cli.Context) error {
 
 	env.Log.Debugf("%s/app/deploy", Host)
 
+	// TODO If error in response: rollback hash table
+
 	// Creating response for file uploading with fields
 	req, err := http.NewRequest("POST", fmt.Sprintf("%s/app/deploy", env.HostUrl), bodyBuffer)
 	if err != nil {
@@ -201,8 +203,6 @@ func DeployIt(c *cli.Context) error {
 	appInfo.URL = res.Header.Get("x-deployit-url")
 
 	color.Cyan(appInfo.URL)
-
-	// TODO Handle errors from http - clear DB if was first run
 
 	if appInfo.UUID == "" {
 		appInfo.UUID = res.Header.Get("x-deployit-id")
