@@ -125,27 +125,19 @@ func (a *App) Start(e *env.Env) error {
 		return errors.New("application not found")
 	}
 
-	//Todo: check if already exists containers, when restart or remove (analyze state)
+	//TODO: implement start with configs
+	//TODO: implement scale
 
-	for len(a.Containers) < a.Scale {
-		c := &interfaces.Container{
-			Config: interfaces.Config{
-				Image: fmt.Sprintf("%s/%s:%s", env.Default_hub, a.Name, a.Tag),
-			},
+	// Run containers if exists
+	for _, container := range a.Containers {
+		if err := e.Containers.StartContainer(&interfaces.Container{
+			CID:         container.ID,
 			HostConfig: interfaces.HostConfig{},
-		}
-
-		if err := e.Containers.StartContainer(c); err != nil {
+		}); err != nil {
 			e.Log.Error(err)
 			return err
 		}
-
-		a.Containers[c.CID] = &Container{
-			ID: c.CID,
-		}
 	}
-
-	e.Log.Info(a.Containers)
 
 	if err := a.Update(e); err != nil {
 		return err
@@ -185,10 +177,22 @@ func (a *App) Stop(e *env.Env) error {
 func (a *App) Restart(e *env.Env) error {
 	e.Log.Info(`Restart app`)
 
-	//Todo: check if already exists containers, when restart (analyze state)
+	//TODO: implement start with configs
+	//TODO: implement scale
 
 	if err := a.Update(e); err != nil {
 		return err
+	}
+
+	// Run containers if exists
+	for _, container := range a.Containers {
+		if err := e.Containers.RestartContainer(&interfaces.Container{
+			CID:         container.ID,
+			HostConfig: interfaces.HostConfig{},
+		}); err != nil {
+			e.Log.Error(err)
+			return err
+		}
 	}
 
 	return nil
