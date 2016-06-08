@@ -66,7 +66,8 @@ func (r Route) Init(env *env.Env) {
 
 	route.Methods("OPTIONS").HandlerFunc(SetHeaders)
 
-	route.HandleFunc("/app/deploy", Handle(Handler{env, routes.DeployAppHandler})).Methods("POST")
+	route.HandleFunc("/app", Handle(Handler{env, routes.CreateAppHandler})).Methods("PUT")
+	route.HandleFunc("/app/{id}/deploy", Handle(Handler{env, routes.DeployAppHandler})).Methods("POST")
 	route.HandleFunc("/app/{id}/start", Handle(Handler{env, routes.StartAppHandler})).Methods("GET")
 	route.HandleFunc("/app/{id}/stop", Handle(Handler{env, routes.StopAppHandler})).Methods("GET")
 	route.HandleFunc("/app/{id}/restart", Handle(Handler{env, routes.RestartAppHandler})).Methods("GET")
