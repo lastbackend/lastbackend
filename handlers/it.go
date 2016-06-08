@@ -133,15 +133,6 @@ func It(c *cli.Context) error {
 		bodyWriter.WriteField("deleted", string(delFiles))
 	}
 
-	// Adding application info to request
-	if appInfo.UUID == "" {
-		bodyWriter.WriteField("name", appInfo.Name)
-	} else {
-		bodyWriter.WriteField("id", appInfo.UUID)
-	}
-
-	bodyWriter.WriteField("tag", appInfo.Tag)
-
 	archiveInfo, err := os.Stat(archivePath)
 	if err != nil {
 		env.Log.Error(err)
