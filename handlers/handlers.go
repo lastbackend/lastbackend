@@ -25,6 +25,7 @@ var SSL bool
 var Host string
 var Tag string
 var Log bool
+var Force bool
 var Port int
 
 func NewEnv() *env.Env {
