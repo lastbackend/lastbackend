@@ -2,11 +2,11 @@ package daemon
 
 import (
 	"github.com/deployithq/deployit/daemon/env"
-	"net/http"
 	"github.com/deployithq/deployit/daemon/routes"
-	"strconv"
-	"github.com/gorilla/mux"
 	"github.com/deployithq/deployit/errors"
+	"github.com/gorilla/mux"
+	"net/http"
+	"strconv"
 )
 
 type Handler struct {
@@ -56,7 +56,6 @@ func SetHeaders(w http.ResponseWriter, r *http.Request) {
 	w.Header().Add("Content-Type", "application/json")
 }
 
-
 type Route struct {
 }
 
@@ -68,10 +67,10 @@ func (r Route) Init(env *env.Env) {
 	route.Methods("OPTIONS").HandlerFunc(SetHeaders)
 
 	route.HandleFunc("/app/deploy", Handle(Handler{env, routes.DeployAppHandler})).Methods("POST")
-	route.HandleFunc("/app/start/{app}", Handle(Handler{env, routes.StartAppHandler})).Methods("GET")
-	route.HandleFunc("/app/stop/{app}", Handle(Handler{env, routes.StopAppHandler})).Methods("GET")
-	route.HandleFunc("/app/restart/{app}", Handle(Handler{env, routes.RestartAppHandler})).Methods("GET")
-	route.HandleFunc("/app/remove/{app}", Handle(Handler{env, routes.RemoveAppHandler})).Methods("GET")
+	route.HandleFunc("/app/{id}/start", Handle(Handler{env, routes.StartAppHandler})).Methods("GET")
+	route.HandleFunc("/app/{id}/stop", Handle(Handler{env, routes.StopAppHandler})).Methods("GET")
+	route.HandleFunc("/app/{id}/restart", Handle(Handler{env, routes.RestartAppHandler})).Methods("GET")
+	route.HandleFunc("/app/{id}", Handle(Handler{env, routes.RemoveAppHandler})).Methods("DELETE")
 
 	if err := http.ListenAndServe(":"+strconv.Itoa(Port), route); err != nil {
 		env.Log.Fatal("ListenAndServe: ", err)
