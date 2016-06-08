@@ -60,6 +60,14 @@ func DeployAppHandler(e *env.Env, w http.ResponseWriter, r *http.Request) error 
 			continue
 		}
 
+		if part.FormName() == "id" {
+			buf := new(bytes.Buffer)
+			buf.ReadFrom(part)
+			e.Log.Debug("uuid is: ", buf.String())
+			uuid = buf.String()
+			continue
+		}
+
 		if part.FormName() == "tag" {
 			buf := new(bytes.Buffer)
 			buf.ReadFrom(part)
@@ -114,9 +122,6 @@ func DeployAppHandler(e *env.Env, w http.ResponseWriter, r *http.Request) error 
 	e.Log.Debug("incomming data info", name, tag, excludes)
 
 	a := app.App{}
-
-	// TODO: application id need for redeploy
-	//uuid = `63a55e5d-01fe-4ccf-965f-e45d5b2c1eff`
 
 	if uuid != "" {
 		e.Log.Info("Get app", a.UUID)
