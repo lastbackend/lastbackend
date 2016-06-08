@@ -88,7 +88,7 @@ func DeployAppHandler(e *env.Env, w http.ResponseWriter, r *http.Request) error 
 			}
 
 			e.Log.Debugf("Uploading progress %v%%", 0)
-			w.Write([]byte(fmt.Sprintf("\rUploading progress %v%%\r", 0)))
+			// w.Write([]byte(fmt.Sprintf("\rUploading progress %v%%\r", 0)))
 
 			for {
 				buffer := make([]byte, 100000)
@@ -109,7 +109,7 @@ func DeployAppHandler(e *env.Env, w http.ResponseWriter, r *http.Request) error 
 				dst.Write(buffer[0:cBytes])
 
 				e.Log.Debugf("Uploading progress %v", p)
-				w.Write([]byte(fmt.Sprintf("\rUploading progress %v%%\r", p)))
+				// w.Write([]byte(fmt.Sprintf("\rUploading progress %v%%\r", p)))
 			}
 
 			continue
@@ -117,7 +117,7 @@ func DeployAppHandler(e *env.Env, w http.ResponseWriter, r *http.Request) error 
 	}
 
 	e.Log.Debugf("Uploading progress %v", 100)
-	w.Write([]byte(fmt.Sprintf("\rUploading progress %v%%\r", 100)))
+	// w.Write([]byte(fmt.Sprintf("\rUploading progress %v%%\r", 100)))
 
 	e.Log.Debug("incomming data info", name, tag, excludes)
 
@@ -148,6 +148,9 @@ func DeployAppHandler(e *env.Env, w http.ResponseWriter, r *http.Request) error 
 		}
 	}
 
+	w.Header().Set("x-deployit-id", a.UUID)
+	w.Header().Set("x-deployit-url", "=)")
+
 	if err := a.Build(e, w); err != nil {
 		e.Log.Error(err)
 		return errors.InternalServerError()
@@ -167,9 +170,6 @@ func DeployAppHandler(e *env.Env, w http.ResponseWriter, r *http.Request) error 
 		e.Log.Error(err)
 		return errors.InternalServerError()
 	}
-
-	w.Header().Set("x-deployit-id", a.UUID)
-	w.Header().Set("x-deployit-url", "=)")
 
 	w.Write([]byte(""))
 
