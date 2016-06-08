@@ -145,11 +145,6 @@ func DeployAppHandler(e *env.Env, w http.ResponseWriter, r *http.Request) error 
 		return errors.InternalServerError()
 	}
 
-	if err := a.Update(e); err != nil {
-		e.Log.Error(err)
-		return errors.InternalServerError()
-	}
-
 	if err := utils.RemoveDirs([]string{targz_path}); err != nil {
 		e.Log.Error(err)
 		return errors.InternalServerError()

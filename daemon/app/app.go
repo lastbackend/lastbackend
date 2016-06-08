@@ -10,6 +10,7 @@ import (
 	"github.com/satori/go.uuid"
 	"io"
 	"os"
+	"strings"
 )
 
 type App struct {
@@ -28,7 +29,7 @@ type Container struct {
 func (a *App) Get(e *env.Env, uuid string) error {
 	e.Log.Info(`Get app`, uuid)
 
-	if err := e.LDB.Get(uuid, a); err != nil {
+	if err := e.LDB.Read(uuid, a); err != nil {
 		return err
 	}
 
@@ -42,7 +43,7 @@ func (a *App) Update(e *env.Env) error {
 		return errors.New("application not found")
 	}
 
-	if err := e.LDB.Set(a.UUID, a); err != nil {
+	if err := e.LDB.Write(a.UUID, a); err != nil {
 		return err
 	}
 
@@ -60,7 +61,7 @@ func (a *App) Create(e *env.Env, name, tag string) error {
 	a.Layer = Layer{}
 	a.Containers = make(map[string]*Container)
 
-	if err := e.LDB.Set(a.UUID, a); err != nil {
+	if err := e.LDB.Write(a.UUID, a); err != nil {
 		return err
 	}
 
@@ -110,6 +111,10 @@ func (a *App) Build(e *env.Env, writer io.Writer) error {
 		}
 	}
 
+	if err := a.Update(e); err != nil {
+		return err
+	}
+
 	return nil
 }
 
@@ -140,6 +145,12 @@ func (a *App) Start(e *env.Env) error {
 		}
 	}
 
+	e.Log.Info(a.Containers)
+
+	if err := a.Update(e); err != nil {
+		return err
+	}
+
 	return nil
 }
 
@@ -164,6 +175,10 @@ func (a *App) Stop(e *env.Env) error {
 		}
 	}
 
+	if err := a.Update(e); err != nil {
+		return err
+	}
+
 	return nil
 }
 
@@ -171,6 +186,10 @@ func (a *App) Restart(e *env.Env) error {
 	e.Log.Info(`Restart app`)
 
 	//Todo: check if already exists containers, when restart (analyze state)
+
+	if err := a.Update(e); err != nil {
+		return err
+	}
 
 	return nil
 }
@@ -188,6 +207,13 @@ func (a *App) Remove(e *env.Env) error {
 				CID: container.ID,
 			}); err != nil {
 				e.Log.Error(err)
+				index := strings.Index(err.Error(), "No such container")
+				if index != -1 {
+					e.Log.Info(`Clear record in db`)
+					delete(a.Containers, key)
+					continue
+				}
+
 				return err
 			}
 		}
@@ -195,9 +221,12 @@ func (a *App) Remove(e *env.Env) error {
 		delete(a.Containers, key)
 	}
 
+	if err := a.Update(e); err != nil {
+		return err
+	}
+
 	return nil
 }
-
 
 func (a *App) Destroy(e *env.Env) error {
 	e.Log.Info(`Destroy app`)
@@ -206,7 +235,7 @@ func (a *App) Destroy(e *env.Env) error {
 		return errors.New("application not found")
 	}
 
-	if err:= a.Remove(e); err !=nil {
+	if err := a.Remove(e); err != nil {
 		return err
 	}
 

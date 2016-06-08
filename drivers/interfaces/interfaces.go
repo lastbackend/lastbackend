@@ -22,8 +22,8 @@ type IStorage interface {
 }
 
 type ILDB interface {
-	Get(key string, i interface{}) error
-	Set(key string, i interface{}) error
+	Read(key string, i interface{}) error
+	Write(key string, i interface{}) error
 	Remove(key string) error
 }
 
