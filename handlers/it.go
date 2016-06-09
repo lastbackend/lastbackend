@@ -164,8 +164,6 @@ func It(c *cli.Context) error {
 
 	bodyWriter.Close()
 
-	env.Log.Debugf("%s/app/deploy", Host)
-
 	// TODO If error in response: rollback hash table
 
 	// Creating response for file uploading with fields
@@ -350,7 +348,7 @@ func AppCreate(env *env.Env, name, tag string) (string, error) {
 	}
 
 	response := struct {
-		uuid string
+		UUID string `json:"uuid"`
 	}{}
 
 	err = json.NewDecoder(res.Body).Decode(&response)
@@ -358,6 +356,8 @@ func AppCreate(env *env.Env, name, tag string) (string, error) {
 		env.Log.Error(err)
 		return uuid, err
 	}
+
+	uuid = response.UUID
 
 	return uuid, err
 }

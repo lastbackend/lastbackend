@@ -8,11 +8,11 @@ Deploy It fetches code from current directory, request or repo, build it and dep
 Deploy It uses powerful containers, that means that your app will be run anywhere, from your development environment on your laptop to any large scale cloud hosting. 
 You can run deploy it daemon on the host where you want to deploy your applications (it can be local or remote), run CLI with this host and your applications will be deployed on specified host.  
 
-[Roadmap](https://github.com/deployithq/deployit/blob/master/ROADMAP.md)
+This project has [Roadmap](https://github.com/deployithq/deployit/blob/master/ROADMAP.md), feel free to offer your features. 
 
-[Changelog](https://github.com/deployithq/deployit/blob/master/CHANGELOG.md)
+Look at our [Changelog](https://github.com/deployithq/deployit/blob/master/CHANGELOG.md) to see project progress!
 
-**Contibuting**: https://github.com/deployithq/deployit/blob/master/CONTRIBUTING.md
+We are actively searching for contributors! If you want to help our project and to make developers life easier, please read our **[Contibuting guideliness](https://github.com/deployithq/deployit/blob/master/CONTRIBUTING.md)**.
 
 **We have benefits for active contributors!**
 
@@ -24,8 +24,8 @@ ___
 
 1. [Key features](#key_features)
 2. [Prerequisites](#prerequisites)
-3. [Getting started](#getting_started)
-4. [Current CLI Commands](#current_cli_commands)
+3. [How to install](#how_to_install)
+4. [Current CLI commands](#current_cli_commands)
 5. [Help](#help)
 6. [Maintainers](#maintainers)
 
@@ -34,8 +34,10 @@ ___
 ## <a name="key_features"></a>Key features
 1. Fast application deploying to any server
 2. Easy application sharing
-3. Deploying application with url/hub (like docker hub)
-4. Deploying scheduling
+3. Easy application management
+4. Deploying application with url/hub (like docker hub)
+5. Deploying scheduling
+6. Deploying services like redis, rabbitmq, mysql, etc.
 
 ___
 
@@ -52,33 +54,50 @@ ___
 
 ___
 
-## <a name="getting_started"></a>Getting started or How to deploy your app
+## <a name="how_to_install"></a>How to install
 
-1. Install Deploy it
+1. Download Deploy it
+```bash
+$ git clone git@github.com:deployithq/deployit.git
+$ cd deployit
+$ make build
+```
 
 2. Start daemon on host, where you want to deploy your apps
 ```bash
-deploy daemon
+$ sudo deploy daemon
 ```
 
 3. Clone sources and run `deploy it` command while in sources directory
 ```bash
-git clone https://github.com/<username>/<repo>
-cd <repo>
-deploy it --host localhost --port 3000 --tag latest
+$ git clone https://github.com/<username>/<repo>
+$ cd <repo>
+$ deploy it --host localhost --port 3000 --tag latest
 ```
 
 ___
 
-## <a name="current_cli_commands"></a>Current CLI Commands
+## <a name="current_cli_commands"></a>Current CLI commands
 
-### Running Daemon
-Run `deploy daemon`
+### Daemon
 
-### Deploy it:
+Install daemon on the host, where you want to deploy your apps
+
+Run `$ sudo deploy daemon`
+
+Daemon flags:
+* [--debug] Shows you debug logs
+* [--port] Port, which daemon will listen
+* [--docker-uri] Docker daemon uri
+* [--docker-cert] Docker client certificate
+* [--docker-ca] Docker CA public key
+* [--docker-key] Docker client key
+
+
+### It:
 
 1. Go to folder with your application source code
-2. Run `deploy it --debug --host localhost --port 3000 --tag latest`
+2. Run `$ deploy it --host localhost --port 3000 --tag latest --log`
 
 What magic is behind `deploy it` command:
 
@@ -90,18 +109,30 @@ What magic is behind `deploy it` command:
 6. DAEMON builds unpacked sources
 7. DAEMON deploys app to host where daemon is running
 
+### App start/stop/restart/remove
+
+1. Go to folder with your application source code
+2. Run `$ deploy app --host localhost --port 3000 start`
+
+### Common flags
+
+These flags are suitable for all commands except daemon.
+
 Deploy it flags:
 * [--debug] Shows you debug logs
 * [--tag] Version of your app, examples: "latest", "master", "0.3", "1.9.9", etc.
 * [--host] Adress of your host, where daemon is running
+* [--port] Port of daemon host
+* [--ssl] HTTPS mode if your daemon uses ssl
+* [--log] Show build logs
 
 ### Future commands
 
-* deploy url
+* deploy git
+* deploy hub
+* deploy app logs
 * deploy it at 4:00 pm for 2 hours
-* deploy redis
-* deploy search <service>
-* deploy app stop/start/restart
+* deploy redis/mysql/mongodb/rabbitmq ...
 
 ___
 
