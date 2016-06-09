@@ -139,6 +139,24 @@ func (a *App) Start(e *env.Env) error {
 		}
 	}
 
+	for len(a.Containers) < a.Scale {
+		c := &interfaces.Container{
+			Config: interfaces.Config{
+				Image: fmt.Sprintf("%s/%s:%s", env.Default_hub, a.Name, a.Tag),
+			},
+			HostConfig: interfaces.HostConfig{},
+		}
+
+		if err := e.Containers.StartContainer(c); err != nil {
+			e.Log.Error(err)
+			return err
+		}
+
+		a.Containers[c.CID] = &Container{
+			ID: c.CID,
+		}
+	}
+
 	if err := a.Update(e); err != nil {
 		return err
 	}
@@ -192,6 +210,24 @@ func (a *App) Restart(e *env.Env) error {
 		}); err != nil {
 			e.Log.Error(err)
 			return err
+		}
+	}
+
+	for len(a.Containers) < a.Scale {
+		c := &interfaces.Container{
+			Config: interfaces.Config{
+				Image: fmt.Sprintf("%s/%s:%s", env.Default_hub, a.Name, a.Tag),
+			},
+			HostConfig: interfaces.HostConfig{},
+		}
+
+		if err := e.Containers.StartContainer(c); err != nil {
+			e.Log.Error(err)
+			return err
+		}
+
+		a.Containers[c.CID] = &Container{
+			ID: c.CID,
 		}
 	}
 
