@@ -10,85 +10,86 @@ import (
 
 func main() {
 	app := cli.NewApp()
+
 	app.Name = "deployit"
 	app.Usage = "Deploy it command line tool for deploying great apps!"
+	app.Version = "0.1"
 
 	app.Commands = []*cli.Command{
 		{
 			Name:        "Deploy it daemon",
 			Aliases:     []string{"daemon"},
-			Usage:       "",
-			Description: "",
+			Usage:       "Building and deploying application to host",
+			Description: "Deploy it daemon is a server-side component for building and deploying applications to host where it is ran.",
 			Action:      daemon.Init,
 			Flags: []cli.Flag{
 				&cli.BoolFlag{
 					Name:        "debug",
-					Usage:       "Debug mode",
+					Usage:       "Shows you debug logs",
 					Destination: &daemon.Debug,
 				},
 				&cli.IntFlag{
 					Name:        "port",
-					Usage:       "Daemon port",
+					Usage:       "Port, which daemon will listen",
 					Value:       3000,
 					Destination: &daemon.Port,
 				},
 				&cli.StringFlag{
 					Name:        "docker-uri",
-					Usage:       "",
+					Usage:       "Docker daemon adress",
 					Destination: &docker.DOCKER_URI,
 					EnvVars:     []string{"DOCKER_URI"},
 				},
 				&cli.StringFlag{
 					Name:        "docker-cert",
-					Usage:       "",
+					Usage:       "Docker client certificate",
 					Destination: &docker.DOCKER_CERT,
 					EnvVars:     []string{"DOCKER_CERT"},
 				},
 				&cli.StringFlag{
 					Name:        "docker-ca",
-					Usage:       "",
+					Usage:       "Docker certificate authority that signed the registry certificate",
 					Destination: &docker.DOCKER_CA,
 					EnvVars:     []string{"DOCKER_CA"},
 				},
 				&cli.StringFlag{
 					Name:        "docker-key",
-					Usage:       "",
+					Usage:       "Docker client key",
 					Destination: &docker.DOCKER_KEY,
 					EnvVars:     []string{"DOCKER_KEY"},
 				}},
 		},
 		{
-			Name:        "",
-			Aliases:     []string{"it"},
-			Usage:       "",
-			Description: "",
-			Action:      handlers.It,
+			Name:    "Deploy it",
+			Aliases: []string{"it"},
+			Usage:   "Deploying sources from current directory",
+			Action:  handlers.It,
 			Flags: []cli.Flag{
 				&cli.BoolFlag{
 					Name:        "debug",
-					Usage:       "Debug mode",
+					Usage:       "Shows you debug logs",
 					Destination: &handlers.Debug,
 				},
 				&cli.StringFlag{
 					Name:        "host",
-					Usage:       "",
+					Usage:       "Adress of your host, where daemon is running",
 					Value:       "api.deployit.co",
 					Destination: &handlers.Host,
 				},
 				&cli.IntFlag{
 					Name:        "port",
-					Usage:       "",
+					Usage:       "Port of daemon host",
 					Value:       3000,
 					Destination: &handlers.Port,
 				},
 				&cli.BoolFlag{
 					Name:        "ssl",
-					Usage:       "",
+					Usage:       "HTTPS mode if your daemon uses ssl",
 					Destination: &handlers.SSL,
 				},
 				&cli.BoolFlag{
 					Name:        "log",
-					Usage:       "",
+					Usage:       "Show build logs",
 					Destination: &handlers.Log,
 				},
 				&cli.BoolFlag{
@@ -98,72 +99,67 @@ func main() {
 				},
 				&cli.StringFlag{
 					Name:        "tag",
-					Usage:       "",
+					Usage:       `Version of your app, examples: "latest", "master", "0.3", "1.9.9", etc.`,
 					Value:       "latest",
 					Destination: &handlers.Tag,
 				}},
 		},
 		{
-			Name:        "",
-			Aliases:     []string{"app"},
-			Usage:       "",
-			Description: "",
+			Name:    "App management",
+			Aliases: []string{"app"},
+			Usage:   "App management command which allows to stop/start/restart/remove application and see its logs",
 			Subcommands: []*cli.Command{
 				{
-					Name:        "",
-					Aliases:     []string{"start"},
-					Usage:       "",
-					Description: "",
-					Action:      handlers.AppStart,
+					Name:    "App start",
+					Aliases: []string{"start"},
+					Usage:   "Start application binded to this sources",
+					Action:  handlers.AppStart,
 				},
 				{
-					Name:        "",
-					Aliases:     []string{"stop"},
-					Usage:       "",
-					Description: "",
-					Action:      handlers.AppStop,
+					Name:    "App stop",
+					Aliases: []string{"stop"},
+					Usage:   "Stop application binded to this sources",
+					Action:  handlers.AppStop,
 				},
 				{
-					Name:        "",
-					Aliases:     []string{"restart"},
-					Usage:       "",
-					Description: "",
-					Action:      handlers.AppRestart,
+					Name:    "App restart",
+					Aliases: []string{"restart"},
+					Usage:   "Restart application binded to this sources",
+					Action:  handlers.AppRestart,
 				},
 				{
-					Name:        "",
-					Aliases:     []string{"remove"},
-					Usage:       "",
-					Description: "",
-					Action:      handlers.AppRemove,
+					Name:    "App remove",
+					Aliases: []string{"remove"},
+					Usage:   "Remove application binded to this sources",
+					Action:  handlers.AppRemove,
 				},
 			},
 			Flags: []cli.Flag{
 				&cli.BoolFlag{
 					Name:        "debug",
-					Usage:       "Debug mode",
+					Usage:       "Shows you debug logs",
 					Destination: &handlers.Debug,
 				},
 				&cli.StringFlag{
 					Name:        "host",
-					Usage:       "",
+					Usage:       "Adress of your host, where daemon is running",
 					Value:       "api.deployit.co",
 					Destination: &handlers.Host,
 				},
 				&cli.IntFlag{
 					Name:        "port",
-					Usage:       "",
+					Usage:       "Port of daemon host",
 					Value:       3000,
 					Destination: &handlers.Port,
 				},
 				&cli.BoolFlag{
 					Name:        "ssl",
-					Usage:       "",
+					Usage:       "HTTPS mode if your daemon uses ssl",
 					Destination: &handlers.SSL,
 				},
 				&cli.BoolFlag{
 					Name:        "log",
-					Usage:       "",
+					Usage:       "Show build logs",
 					Destination: &handlers.Log,
 				}},
 		},
