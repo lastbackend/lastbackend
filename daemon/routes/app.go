@@ -235,14 +235,3 @@ func RemoveAppHandler(e *env.Env, w http.ResponseWriter, r *http.Request) error 
 
 	return nil
 }
-
-//func write(log interfaces.ILog, w http.ResponseWriter, data []byte) {
-//	if f, ok := w.(http.Flusher); ok {
-//		f.Flush()
-//	} else {
-//		log.Debug("Damn, no flush")
-//	}
-//
-//	w.Write(data)
-//	w.Write([]byte("\r"))
-//}
