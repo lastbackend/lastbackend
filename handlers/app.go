@@ -21,6 +21,12 @@ func AppStart(c *cli.Context) error {
 		return err
 	}
 
+	if appInfo.UUID == "" {
+		err = errors.New("App not found")
+		env.Log.Error(err)
+		return err
+	}
+
 	color.Cyan("Starting %s ...", appInfo.Name)
 
 	res, err := http.Get(fmt.Sprintf("%s/app/%s/start", env.HostUrl, appInfo.UUID))
@@ -48,6 +54,12 @@ func AppRestart(c *cli.Context) error {
 	appInfo := new(AppInfo)
 	err := appInfo.Read(env.Log, env.Path, env.Host)
 	if err != nil {
+		env.Log.Error(err)
+		return err
+	}
+
+	if appInfo.UUID == "" {
+		err = errors.New("App not found")
 		env.Log.Error(err)
 		return err
 	}
@@ -83,6 +95,12 @@ func AppStop(c *cli.Context) error {
 		return err
 	}
 
+	if appInfo.UUID == "" {
+		err = errors.New("App not found")
+		env.Log.Error(err)
+		return err
+	}
+
 	color.Cyan("Stopping %s ...", appInfo.Name)
 
 	res, err := http.Get(fmt.Sprintf("%s/app/%s/stop", env.HostUrl, appInfo.UUID))
@@ -110,6 +128,12 @@ func AppRemove(c *cli.Context) error {
 	appInfo := new(AppInfo)
 	err := appInfo.Read(env.Log, env.Path, env.Host)
 	if err != nil {
+		env.Log.Error(err)
+		return err
+	}
+
+	if appInfo.UUID == "" {
+		err = errors.New("App not found")
 		env.Log.Error(err)
 		return err
 	}
