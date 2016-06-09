@@ -20,6 +20,7 @@ type App struct {
 	Scale      int                   `json:"scale" yaml:"scale"`
 	Layer      Layer                 `json:"layer" yaml:"layer"`
 	Containers map[string]*Container `json:"container" yaml:"container"`
+	Config     Config                `json:"config" yaml:"config"`
 }
 
 type Container struct {
@@ -50,7 +51,8 @@ func (a *App) Update(e *env.Env) error {
 	return nil
 }
 
-func (a *App) Create(e *env.Env, name, tag string) error {
+func (a *App) Create(e *env.Env, hub, name, tag string) error {
+	e.Log.Info(`Create app`)
 
 	u := uuid.NewV4()
 
@@ -58,8 +60,11 @@ func (a *App) Create(e *env.Env, name, tag string) error {
 	a.Name = name
 	a.Tag = tag
 	a.Scale = 1
-	a.Layer = Layer{}
 	a.Containers = make(map[string]*Container)
+	a.Layer = Layer{}
+
+	a.Config = Config{}
+	a.Config.Create(e, hub, name, tag)
 
 	if err := e.LDB.Write(a.UUID, a); err != nil {
 		return err
@@ -75,6 +80,10 @@ func (a *App) Build(e *env.Env, writer io.Writer) error {
 		return errors.New("layer not found")
 	}
 
+	if err := a.Config.Sync(e, a.Layer.ID); err != nil {
+		return err
+	}
+
 	tar_path := fmt.Sprintf("%s/apps/%s", env.Default_root_path, a.Layer.ID)
 
 	reader, err := os.Open(tar_path)
@@ -85,7 +94,7 @@ func (a *App) Build(e *env.Env, writer io.Writer) error {
 
 	or, ow := io.Pipe()
 	opts := interfaces.BuildImageOptions{
-		Name:           fmt.Sprintf("%s/%s:%s", env.Default_hub, a.Name, a.Tag),
+		Name:           a.Config.Image,
 		RmTmpContainer: true,
 		InputStream:    reader,
 		OutputStream:   ow,
@@ -125,14 +134,25 @@ func (a *App) Start(e *env.Env) error {
 		return errors.New("application not found")
 	}
 
-	//TODO: implement start with configs
 	//TODO: implement scale
+
+	hcfg := interfaces.HostConfig{
+		Memory:     a.Config.Memory,
+		Ports:      a.Config.Ports,
+		Binds:      a.Config.Volumes,
+		Privileged: false,
+		RestartPolicy: interfaces.RestartPolicyConfig{
+			Attempt: 10,
+			Name:    "always",
+		},
+	}
 
 	// Run containers if exists
 	for _, container := range a.Containers {
+
 		if err := e.Containers.StartContainer(&interfaces.Container{
-			CID:         container.ID,
-			HostConfig: interfaces.HostConfig{},
+			CID:        container.ID,
+			HostConfig: hcfg,
 		}); err != nil {
 			e.Log.Error(err)
 			return err
@@ -140,11 +160,16 @@ func (a *App) Start(e *env.Env) error {
 	}
 
 	for len(a.Containers) < a.Scale {
+
 		c := &interfaces.Container{
 			Config: interfaces.Config{
-				Image: fmt.Sprintf("%s/%s:%s", env.Default_hub, a.Name, a.Tag),
+				Image:   a.Config.Image,
+				Memory:  a.Config.Memory,
+				Ports:   a.Config.Ports,
+				Volumes: a.Config.Volumes,
+				Env:     a.Config.Env,
 			},
-			HostConfig: interfaces.HostConfig{},
+			HostConfig: hcfg,
 		}
 
 		if err := e.Containers.StartContainer(c); err != nil {
@@ -202,11 +227,22 @@ func (a *App) Restart(e *env.Env) error {
 		return err
 	}
 
+	hcfg := interfaces.HostConfig{
+		Memory:     a.Config.Memory,
+		Ports:      a.Config.Ports,
+		Binds:      a.Config.Volumes,
+		Privileged: false,
+		RestartPolicy: interfaces.RestartPolicyConfig{
+			Attempt: 10,
+			Name:    "always",
+		},
+	}
+
 	// Run containers if exists
 	for _, container := range a.Containers {
 		if err := e.Containers.RestartContainer(&interfaces.Container{
-			CID:         container.ID,
-			HostConfig: interfaces.HostConfig{},
+			CID:        container.ID,
+			HostConfig: hcfg,
 		}); err != nil {
 			e.Log.Error(err)
 			return err
@@ -216,9 +252,13 @@ func (a *App) Restart(e *env.Env) error {
 	for len(a.Containers) < a.Scale {
 		c := &interfaces.Container{
 			Config: interfaces.Config{
-				Image: fmt.Sprintf("%s/%s:%s", env.Default_hub, a.Name, a.Tag),
+				Image:   a.Config.Image,
+				Memory:  a.Config.Memory,
+				Ports:   a.Config.Ports,
+				Volumes: a.Config.Volumes,
+				Env:     a.Config.Env,
 			},
-			HostConfig: interfaces.HostConfig{},
+			HostConfig: hcfg,
 		}
 
 		if err := e.Containers.StartContainer(c); err != nil {

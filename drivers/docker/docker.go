@@ -3,7 +3,6 @@ package docker
 import (
 	"github.com/deployithq/deployit/drivers/interfaces"
 	"github.com/fsouza/go-dockerclient"
-	"net"
 	"strings"
 )
 
@@ -38,72 +37,6 @@ func (d *Containers) client() (*docker.Client, error) {
 	}
 
 	return client, nil
-}
-
-func (d *Containers) System() (*interfaces.Node, error) {
-	system := &interfaces.Node{}
-	client, err := d.client()
-	if err != nil {
-		return system, err
-	}
-
-	info, err := client.Info()
-	if err != nil {
-		return system, err
-	}
-
-	ver, err := client.Version()
-	if err != nil {
-		return system, err
-	}
-
-	system.Driver.Name = "docker"
-	system.Driver.Version = ver.Get("Version")
-	system.Hostname = info.Name
-	system.Architecture = info.Architecture
-
-	system.OS.Type = info.OSType
-	system.OS.Name = info.OperatingSystem
-	system.Memory.Total = info.MemTotal / 1024 / 1024
-
-	for dr := range info.DriverStatus {
-		switch info.DriverStatus[dr][0] {
-		case "Data Space Total":
-			system.Storage.Total = info.DriverStatus[dr][1]
-		case "Data Space Used":
-			system.Storage.Used = info.DriverStatus[dr][1]
-		case "Data Space Available":
-			system.Storage.Available = info.DriverStatus[dr][1]
-		}
-	}
-
-	ifaces, err := net.Interfaces()
-	// handle err
-	for _, i := range ifaces {
-		addrs, err := i.Addrs()
-		if err != nil {
-			return system, err
-		}
-		// handle err
-		for _, addr := range addrs {
-
-			if ipnet, ok := addr.(*net.IPNet); ok && !ipnet.IP.IsLoopback() {
-				if ipnet.IP.To4() != nil {
-					system.IPs = append(system.IPs, struct {
-						Interface string `json:"interfaces,omitempty"`
-						IP        string `json:"ip,omitempty"`
-						Main      bool   `json:"main,omitempty"`
-					}{
-						Interface: i.Name,
-						IP:        ipnet.IP.To4().String(),
-						Main:      i.Name == `eth0`,
-					})
-				}
-			}
-		}
-	}
-
-	return system, nil
 }
 
 func (d *Containers) PullImage(i interfaces.Image) error {
@@ -176,7 +109,7 @@ func (d *Containers) StartContainer(c *interfaces.Container) error {
 	}
 
 	config := CreateConfig(c.Config)
-	hostconf := CreateHostconfig(c.HostConfig)
+	hostconf := CreateHostConfig(c.HostConfig)
 
 	if c.CID == "" {
 		options := docker.CreateContainerOptions{
