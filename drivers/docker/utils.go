@@ -1,7 +1,6 @@
 package docker
 
 import (
-	"encoding/json"
 	"fmt"
 	"github.com/deployithq/deployit/drivers/interfaces"
 	"github.com/fsouza/go-dockerclient"
@@ -34,16 +33,6 @@ func ConvertContainer(info *docker.Container) (interfaces.Container, error) {
 	cn.State.Started = info.State.StartedAt
 	cn.State.Finished = info.State.FinishedAt
 
-	for key := range info.Config.Env {
-		result := strings.Split(info.Config.Env[key], "=")
-		if result[0] == `LB` {
-			if err := json.Unmarshal([]byte(result[1]), &cn.LB); err != nil {
-				return cn, err
-			}
-			break
-		}
-	}
-
 	for port := range info.NetworkSettings.Ports {
 
 		cPort, _ := strconv.ParseInt(port.Port(), 0, 64)
@@ -68,62 +57,51 @@ func CreateConfig(c interfaces.Config) docker.Config {
 	config := docker.Config{}
 	config.Cmd = c.Cmd
 
-	config.Memory = c.Memory.Total * 1024 * 1024
-	config.MemorySwap = c.Memory.Swap * 1024 * 1024
-	config.MemoryReservation = c.Memory.Reservation * 1024 * 1024
-	config.KernelMemory = c.Memory.Kernel * 1024 * 1024
-
-	config.CPUShares = c.CPU.Shares
-	config.CPUSet = c.CPU.Set
+	config.Memory = c.Memory * 1024 * 1024
 
 	config.Env = c.Env
 	config.Entrypoint = c.Entrypoint
 
-	config.DNS = c.DNS.Server
 	config.Image = c.Image
 
 	config.ExposedPorts = make(map[docker.Port]struct{})
 	config.Volumes = make(map[string]struct{})
 
 	for _, port := range c.Ports {
-		key := docker.Port(fmt.Sprintf("%d/%s", port.Container, port.Protocol))
+		item := strings.Split(port, ":")
+		containerPort, _ := strconv.ParseInt(item[1], 10, 64)
+
+		key := docker.Port(fmt.Sprintf("%d/tcp", containerPort))
 		config.ExposedPorts[key] = struct{}{}
 	}
 
 	for _, volume := range c.Volumes {
-		config.Volumes[volume.Container] = struct{}{}
+		item := strings.Split(volume, ":")
+		config.Volumes[item[1]] = struct{}{}
 	}
 
 	return config
 }
 
-func CreateHostconfig(c interfaces.HostConfig) docker.HostConfig {
+func CreateHostConfig(c interfaces.HostConfig) docker.HostConfig {
 	host := docker.HostConfig{}
 
 	host.Privileged = c.Privileged
 
-	host.DNS = c.DNS.Server
-	host.DNSOptions = c.DNS.Options
-	host.DNSSearch = c.DNS.Search
-
 	host.RestartPolicy.Name = c.RestartPolicy.Name
 	host.RestartPolicy.MaximumRetryCount = c.RestartPolicy.Attempt
-	host.Memory = c.Memory.Total * 1024 * 1024
-	host.MemorySwap = c.Memory.Swap
-
-	host.CPUShares = c.CPU.Shares
-	host.CPUSet = c.CPU.Set
-	host.CPUSetCPUs = c.CPU.CPUs
-	host.CPUSetMEMs = c.CPU.MEMs
-	host.CPUQuota = c.CPU.Quota
-	host.CPUPeriod = c.CPU.Period
+	host.Memory = c.Memory * 1024 * 1024
 	host.Binds = c.Binds
 
 	host.PortBindings = make(map[docker.Port][]docker.PortBinding)
 
 	for _, port := range c.Ports {
-		key := docker.Port(fmt.Sprintf("%d/%s", port.Container, port.Protocol))
-		host.PortBindings[key] = append(host.PortBindings[key], docker.PortBinding{HostPort: fmt.Sprintf("%d", port.Host)})
+		item := strings.Split(port, ":")
+		hostPort, _ := strconv.ParseInt(item[0], 10, 64)
+		containerPort, _ := strconv.ParseInt(item[1], 10, 64)
+		key := docker.Port(fmt.Sprintf("%d/tcp", containerPort))
+
+		host.PortBindings[key] = append(host.PortBindings[key], docker.PortBinding{HostPort: fmt.Sprintf("%d", hostPort)})
 	}
 
 	return host

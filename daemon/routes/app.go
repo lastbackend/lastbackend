@@ -19,6 +19,7 @@ func CreateAppHandler(e *env.Env, w http.ResponseWriter, r *http.Request) error 
 	payload := struct {
 		Name string `json:"name"`
 		Tag  string `json:"tag"`
+		Hub  string `json:"hub"`
 	}{}
 
 	if err := json.NewDecoder(r.Body).Decode(&payload); err != nil {
@@ -34,7 +35,7 @@ func CreateAppHandler(e *env.Env, w http.ResponseWriter, r *http.Request) error 
 	}
 
 	a := app.App{}
-	a.Create(e, payload.Name, payload.Tag)
+	a.Create(e, payload.Hub, payload.Name, payload.Tag)
 
 	w.Write([]byte(fmt.Sprintf(`{"uuid":"%s"}`, a.UUID)))
 
@@ -131,7 +132,6 @@ func DeployAppHandler(e *env.Env, w http.ResponseWriter, r *http.Request) error 
 		return errors.InternalServerError()
 	}
 
-	e.Log.Info(targz_path, excludes)
 	if err := a.Layer.CreateFromTarGz(targz_path, excludes); err != nil {
 		e.Log.Error(err)
 		return errors.InternalServerError()

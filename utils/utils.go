@@ -8,11 +8,13 @@ import (
 	"fmt"
 	"github.com/gorilla/mux"
 	"github.com/satori/go.uuid"
+	"gopkg.in/yaml.v2"
 	"io"
 	"net/http"
 	"os"
 	"path/filepath"
 	"strings"
+	"io/ioutil"
 )
 
 func AppName(path string) string {
@@ -91,7 +93,7 @@ func Update(source, target, update string, excludes []string) error {
 	target_wr := tar.NewWriter(target_f)
 	updated := make(map[string]bool)
 
-	_, err = os.Stat(update);
+	_, err = os.Stat(update)
 
 	// apply the update if there is file
 	if update != `` && !os.IsNotExist(err) {
@@ -166,6 +168,49 @@ func Update(source, target, update string, excludes []string) error {
 	src_f.Close()
 	target_f.Close()
 	target_wr.Close()
+
+	return nil
+}
+
+func ReadConfig(path string, i interface{}) error {
+	_, err := os.Stat(path)
+
+	if os.IsNotExist(err) {
+		return nil
+	}
+
+	reader, err := os.Open(path)
+	if err != nil {
+		return err
+	}
+
+	tarReader := tar.NewReader(reader)
+
+	for {
+		header, err := tarReader.Next()
+
+		if err == io.EOF {
+			break
+		} else if err != nil {
+			return err
+		}
+
+		if header.Name == `deployit.yaml` {
+
+			data, err := ioutil.ReadAll(tarReader)
+			if err != nil {
+				return err
+			}
+
+			if err := yaml.Unmarshal(data, i); err != nil {
+				return err
+			}
+
+			break
+		}
+	}
+
+	reader.Close()
 
 	return nil
 }
