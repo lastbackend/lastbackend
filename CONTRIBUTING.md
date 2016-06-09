@@ -6,7 +6,7 @@ Please, read the following article: https://guides.github.com/activities/contrib
 
 ## Benefits for active contributors
 
-**Unlimited apps deployments to your servers and 20% discount on Deployit servers**
+**20% discount on Deployit servers**
 
 ## Coding Style
 
