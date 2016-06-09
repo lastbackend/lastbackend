@@ -3,7 +3,7 @@
 - [x] Deploy app to host
 - [x] App start/stop/restart
 - [x] Delete app from host
-- [ ] Deploy app with configs from yaml file 
+- [x] Deploy app with configs from yaml file 
 - [ ] App logs streaming
 - [ ] Deploy redis, mysql, mongodb, rabbitmq, postgresql, etc.
 - [ ] Deploy app with git url
