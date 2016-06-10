@@ -7,7 +7,7 @@ import (
 	"github.com/deployithq/deployit/drivers/log"
 	"github.com/deployithq/deployit/drivers/docker"
 	"github.com/deployithq/deployit/utils"
-	"gopkg.in/urfave/cli.v2"
+	"github.com/urfave/cli"
 )
 
 var Host string
@@ -36,7 +36,7 @@ func Init(c *cli.Context) error {
 	}
 
 	log.Info("Init local db")
-	ldb, _ := localDB.Init(fmt.Sprintf("%s/storage/", env.Default_root_path))
+	ldb, _ := localDB.Init(env.Default_root_path)
 
 	log.Info("Init daemon")
 

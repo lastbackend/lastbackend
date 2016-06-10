@@ -4,6 +4,7 @@ import (
 	"github.com/deployithq/deployit/drivers/interfaces"
 	"github.com/fsouza/go-dockerclient"
 	"strings"
+	"strconv"
 )
 
 type Containers struct {
@@ -249,4 +250,29 @@ func (d *Containers) ListContainers() (map[string]interfaces.Container, error) {
 	}
 
 	return containers, err
+}
+
+func (d *Containers) InspectContainers(c *interfaces.Container) ([]int64, error) {
+
+	ports := []int64{}
+
+	client, err := d.client()
+	if err != nil {
+		return ports, err
+	}
+
+	info, err := client.InspectContainer(c.CID)
+	if err != nil {
+		return ports, err
+	}
+
+	for port := range info.NetworkSettings.Ports {
+		var cHost int64
+		for index := range info.NetworkSettings.Ports[port] {
+			cHost, _ = strconv.ParseInt(info.NetworkSettings.Ports[port][index].HostPort, 0, 64)
+			ports = append(ports, cHost)
+		}
+	}
+
+	return ports, nil
 }

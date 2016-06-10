@@ -38,6 +38,8 @@ type IContainers interface {
 
 	ListImages() (map[string]Image, error)
 	ListContainers() (map[string]Container, error)
+
+	InspectContainers(c *Container) ([]int64, error)
 }
 
 var ErrBucketNotFound error = errors.New("BUCKET_NOT_FOUND")

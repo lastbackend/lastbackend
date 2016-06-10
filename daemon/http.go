@@ -79,12 +79,22 @@ func (r Route) Init(env *env.Env) {
 
 	route.Methods("OPTIONS").HandlerFunc(SetHeaders)
 
+	// app logic handler
 	route.HandleFunc("/app", Handle(Handler{env, routes.CreateAppHandler})).Methods("PUT")
-	route.HandleFunc("/app/{id}/deploy", Handle(Handler{env, routes.DeployAppHandler})).Methods("POST")
-	route.HandleFunc("/app/{id}/start", Handle(Handler{env, routes.StartAppHandler})).Methods("GET")
-	route.HandleFunc("/app/{id}/stop", Handle(Handler{env, routes.StopAppHandler})).Methods("GET")
-	route.HandleFunc("/app/{id}/restart", Handle(Handler{env, routes.RestartAppHandler})).Methods("GET")
-	route.HandleFunc("/app/{id}", Handle(Handler{env, routes.RemoveAppHandler})).Methods("DELETE")
+	route.HandleFunc("/app/{name}/logs", Handle(Handler{env, routes.LogsAppHandler})).Methods("GET")
+	route.HandleFunc("/app/{name}/deploy", Handle(Handler{env, routes.DeployAppHandler})).Methods("POST")
+	route.HandleFunc("/app/{name}/start", Handle(Handler{env, routes.StartAppHandler})).Methods("POST")
+	route.HandleFunc("/app/{name}/stop", Handle(Handler{env, routes.StopAppHandler})).Methods("POST")
+	route.HandleFunc("/app/{name}/restart", Handle(Handler{env, routes.RestartAppHandler})).Methods("POST")
+	route.HandleFunc("/app/{name}", Handle(Handler{env, routes.RemoveAppHandler})).Methods("DELETE")
+
+	// service logic handler
+	route.HandleFunc("/service/{name}", Handle(Handler{env, routes.CreateServiceHandler})).Methods("PUT")
+	route.HandleFunc("/service/{name}/logs", Handle(Handler{env, routes.LogsServiceHandler})).Methods("GET")
+	route.HandleFunc("/service/{name}/start", Handle(Handler{env, routes.StartServiceHandler})).Methods("POST")
+	route.HandleFunc("/service/{name}/stop", Handle(Handler{env, routes.StopServiceHandler})).Methods("POST")
+	route.HandleFunc("/service/{name}/restart", Handle(Handler{env, routes.RestartServiceHandler})).Methods("POST")
+	route.HandleFunc("/service/{name}", Handle(Handler{env, routes.RemoveServiceHandler})).Methods("DELETE")
 
 	if err := http.ListenAndServe(":"+strconv.Itoa(Port), route); err != nil {
 		env.Log.Fatal("ListenAndServe: ", err)

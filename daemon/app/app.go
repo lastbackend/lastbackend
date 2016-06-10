@@ -17,7 +17,6 @@ type App struct {
 	UUID       string                `json:"uuid" yaml:"uuid"`
 	Name       string                `json:"name" yaml:"name"`
 	Tag        string                `json:"tag" yaml:"tag"`
-	Scale      int                   `json:"scale" yaml:"scale"`
 	Layer      Layer                 `json:"layer" yaml:"layer"`
 	Containers map[string]*Container `json:"container" yaml:"container"`
 	Config     Config                `json:"config" yaml:"config"`
@@ -27,10 +26,10 @@ type Container struct {
 	ID string `json:"id" yaml:"id"`
 }
 
-func (a *App) Get(e *env.Env, uuid string) error {
-	e.Log.Info(`Get app`, uuid)
+func (a *App) Get(e *env.Env, name string) error {
+	e.Log.Info(`Get app `, name)
 
-	if err := e.LDB.Read(uuid, a); err != nil {
+	if err := e.LDB.Read(name, a); err != nil {
 		return err
 	}
 
@@ -38,13 +37,13 @@ func (a *App) Get(e *env.Env, uuid string) error {
 }
 
 func (a *App) Update(e *env.Env) error {
-	e.Log.Info(`Update app`)
+	e.Log.Info(`Update app `, a.Name)
 
 	if a.UUID == "" {
 		return errors.New("application not found")
 	}
 
-	if err := e.LDB.Write(a.UUID, a); err != nil {
+	if err := e.LDB.Write(a.Name, a); err != nil {
 		return err
 	}
 
@@ -59,14 +58,13 @@ func (a *App) Create(e *env.Env, hub, name, tag string) error {
 	a.UUID = u.String()
 	a.Name = name
 	a.Tag = tag
-	a.Scale = 1
 	a.Containers = make(map[string]*Container)
 	a.Layer = Layer{}
 
 	a.Config = Config{}
-	a.Config.Create(e, hub, name, tag)
+	a.Config.Create(e, hub, a.Name, a.Tag)
 
-	if err := e.LDB.Write(a.UUID, a); err != nil {
+	if err := e.LDB.Write(a.Name, a); err != nil {
 		return err
 	}
 
@@ -90,7 +88,6 @@ func (a *App) Build(e *env.Env, writer io.Writer) error {
 	if err != nil {
 		return err
 	}
-	defer reader.Close()
 
 	or, ow := io.Pipe()
 	opts := interfaces.BuildImageOptions{
@@ -123,6 +120,9 @@ func (a *App) Build(e *env.Env, writer io.Writer) error {
 	if err := a.Update(e); err != nil {
 		return err
 	}
+
+	reader.Close()
+	or.Close()
 
 	return nil
 }
@@ -159,7 +159,7 @@ func (a *App) Start(e *env.Env) error {
 		}
 	}
 
-	for len(a.Containers) < a.Scale {
+	for len(a.Containers) == 0 {
 
 		c := &interfaces.Container{
 			Config: interfaces.Config{
@@ -249,7 +249,7 @@ func (a *App) Restart(e *env.Env) error {
 		}
 	}
 
-	for len(a.Containers) < a.Scale {
+	for len(a.Containers) == 0 {
 		c := &interfaces.Container{
 			Config: interfaces.Config{
 				Image:   a.Config.Image,
@@ -324,4 +324,31 @@ func (a *App) Destroy(e *env.Env) error {
 	}
 
 	return nil
+}
+
+// Todo: temporary solution
+func (a *App) Ports(e *env.Env) (int64, error) {
+
+	var port int64
+
+	if len(a.Containers) == 0 {
+		return port, nil
+	}
+
+	for _, container := range a.Containers {
+		ports, err := e.Containers.InspectContainers(&interfaces.Container{
+			CID: container.ID,
+		})
+
+		if err != nil {
+			e.Log.Error(err)
+			return port, err
+		}
+
+		port = ports[0]
+
+		break
+	}
+
+	return port, nil
 }

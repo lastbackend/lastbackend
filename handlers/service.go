@@ -8,7 +8,6 @@ import (
 	"github.com/fatih/color"
 	"github.com/urfave/cli"
 	"net/http"
-	"strconv"
 )
 
 func ServiceStart(c *cli.Context) error {
@@ -34,6 +33,19 @@ func ServiceStart(c *cli.Context) error {
 		return err
 	}
 
+	response := struct {
+		Port     int64  `json:"port"`
+		Password string `json:"password"`
+	}{}
+
+	err = json.NewDecoder(res.Body).Decode(&response)
+	if err != nil {
+		env.Log.Error(err)
+		return err
+	}
+
+	color.Cyan("Your %s address: %s:%d", ServiceName, env.Host, response.Port)
+	color.Cyan("Your %s password: %s", ServiceName, response.Password)
 	color.Cyan("Finished!")
 
 	return nil
@@ -89,6 +101,19 @@ func ServiceRestart(c *cli.Context) error {
 		return err
 	}
 
+	response := struct {
+		Port     int64  `json:"port"`
+		Password string `json:"password"`
+	}{}
+
+	err = json.NewDecoder(res.Body).Decode(&response)
+	if err != nil {
+		env.Log.Error(err)
+		return err
+	}
+
+	color.Cyan("Your %s address: %s:%d", ServiceName, env.Host, response.Port)
+	color.Cyan("Your %s password: %s", ServiceName, response.Password)
 	color.Cyan("Finished!")
 
 	return nil
@@ -137,7 +162,7 @@ func ServiceDeploy(c *cli.Context) error {
 		return err
 	}
 
-	color.Cyan("Your %s adress: %s:%s", ServiceName, env.HostUrl, strconv.FormatInt(response.Port, 10))
+	color.Cyan("Your %s address: %s:%d", ServiceName, env.Host, response.Port)
 	color.Cyan("Your %s password: %s", ServiceName, response.Password)
 
 	return nil
