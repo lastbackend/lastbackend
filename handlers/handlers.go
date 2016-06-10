@@ -14,7 +14,6 @@ import (
 )
 
 type AppInfo struct {
-	UUID string `yaml:"uuid"`
 	Name string `yaml:"name"`
 	Tag  string `yaml:"tag"`
 	URL  string `yaml:"url"`
@@ -110,11 +109,10 @@ func (a *AppInfo) Read(log interfaces.ILog, path, host string) error {
 
 }
 
-func (a AppInfo) Write(log interfaces.ILog, path, host, uuid, name, tag, url string) error {
+func (a AppInfo) Write(log interfaces.ILog, path, host, name, tag, url string) error {
 	log.Debug("Writing app info to file: ", path)
 
 	appInfo, err := yaml.Marshal(AppInfo{
-		UUID: uuid,
 		Tag:  Tag,
 		Name: name,
 		URL:  url,
