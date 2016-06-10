@@ -6,9 +6,8 @@ import (
 	"fmt"
 	"github.com/deployithq/deployit/errors"
 	"github.com/fatih/color"
-	"gopkg.in/urfave/cli.v2"
+	"github.com/urfave/cli"
 	"net/http"
-	"os"
 	"strconv"
 )
 
@@ -16,9 +15,14 @@ func ServiceStart(c *cli.Context) error {
 
 	env := NewEnv()
 
-	color.Cyan("Starting %s ...", os.Args[1])
+	if ServiceName == "" {
+		env.Log.Error("Unknown service")
+		return nil
+	}
 
-	res, err := http.Post(fmt.Sprintf("%s/service/%s/start", env.HostUrl, os.Args[1]), "application/json", new(bytes.Buffer))
+	color.Cyan("Starting %s ...", ServiceName)
+
+	res, err := http.Post(fmt.Sprintf("%s/service/%s/start", env.HostUrl, ServiceName), "application/json", new(bytes.Buffer))
 	if err != nil {
 		env.Log.Error(err)
 		return err
@@ -38,9 +42,14 @@ func ServiceStart(c *cli.Context) error {
 func ServiceStop(c *cli.Context) error {
 	env := NewEnv()
 
-	color.Cyan("Stopping %s ...", os.Args[1])
+	if ServiceName == "" {
+		env.Log.Error("Unknown service")
+		return nil
+	}
 
-	res, err := http.Post(fmt.Sprintf("%s/service/%s/stop", env.HostUrl, os.Args[1]), "application/json", new(bytes.Buffer))
+	color.Cyan("Stopping %s ...", ServiceName)
+
+	res, err := http.Post(fmt.Sprintf("%s/service/%s/stop", env.HostUrl, ServiceName), "application/json", new(bytes.Buffer))
 	if err != nil {
 		env.Log.Error(err)
 		return err
@@ -61,9 +70,14 @@ func ServiceRestart(c *cli.Context) error {
 
 	env := NewEnv()
 
-	color.Cyan("Restarting %s ...", os.Args[1])
+	if ServiceName == "" {
+		env.Log.Error("Unknown service")
+		return nil
+	}
 
-	res, err := http.Post(fmt.Sprintf("%s/service/%s/restart", env.HostUrl, os.Args[1]), "application/json", new(bytes.Buffer))
+	color.Cyan("Restarting %s ...", ServiceName)
+
+	res, err := http.Post(fmt.Sprintf("%s/service/%s/restart", env.HostUrl, ServiceName), "application/json", new(bytes.Buffer))
 	if err != nil {
 		env.Log.Error(err)
 		return err
@@ -86,7 +100,12 @@ func ServiceDeploy(c *cli.Context) error {
 
 	env := NewEnv()
 
-	req, err := http.NewRequest("PUT", fmt.Sprintf("%s/service/%s", env.HostUrl, os.Args[1]), new(bytes.Buffer))
+	if ServiceName == "" {
+		env.Log.Error("Unknown service")
+		return nil
+	}
+
+	req, err := http.NewRequest("PUT", fmt.Sprintf("%s/service/%s", env.HostUrl, ServiceName), new(bytes.Buffer))
 	if err != nil {
 		env.Log.Error(err)
 		return err
@@ -118,8 +137,8 @@ func ServiceDeploy(c *cli.Context) error {
 		return err
 	}
 
-	color.Cyan("Your redis adress: %s:%s", env.HostUrl, strconv.FormatInt(response.Port, 10))
-	color.Cyan("Your redis password: %s", response.Password)
+	color.Cyan("Your %s adress: %s:%s", ServiceName, env.HostUrl, strconv.FormatInt(response.Port, 10))
+	color.Cyan("Your %s password: %s", ServiceName, response.Password)
 
 	return nil
 }
@@ -128,9 +147,14 @@ func ServiceRemove(c *cli.Context) error {
 
 	env := NewEnv()
 
-	color.Cyan("Removing %s ...", os.Args[1])
+	if ServiceName == "" {
+		env.Log.Error("Unknown service")
+		return nil
+	}
 
-	req, err := http.NewRequest("DELETE", fmt.Sprintf("%s/service/%s", env.HostUrl, os.Args[1]), new(bytes.Buffer))
+	color.Cyan("Removing %s ...", ServiceName)
+
+	req, err := http.NewRequest("DELETE", fmt.Sprintf("%s/service/%s", env.HostUrl, ServiceName), new(bytes.Buffer))
 	if err != nil {
 		env.Log.Error(err)
 		return err

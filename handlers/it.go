@@ -11,7 +11,7 @@ import (
 	"github.com/deployithq/deployit/errors"
 	"github.com/deployithq/deployit/utils"
 	"github.com/fatih/color"
-	"gopkg.in/urfave/cli.v2"
+	"github.com/urfave/cli"
 	"io"
 	"mime/multipart"
 	"net/http"
