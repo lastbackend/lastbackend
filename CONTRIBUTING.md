@@ -41,14 +41,14 @@ $ make build
 ### Daemon
 
 ```bash
-$ sudo deploy daemon --debug
+$ sudo deploy --debug daemon
 ```
 
 ### Other commands
 
 ```bash
-$ deploy it --debug --host localhost --port 3000 --tag latest
-$ deploy app --debug --host localhost --port 3000 stop
+$ deploy --debug it --host localhost --port 3000 --tag latest
+$ deploy --debug app --host localhost --port 3000 stop
 ```
 
 

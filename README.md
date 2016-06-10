@@ -109,6 +109,34 @@ What magic is behind `$ deploy it` command:
 6. DAEMON builds unpacked sources
 7. DAEMON deploys app to host where daemon is running
 
+## Deploy config
+
+If you want to deploy your application with specific configurations, you can create "deployit.yaml" file, as shown below:
+
+```
+env: 
+- DEBUG=*
+- HOST=localhost
+- PORT=3000
+cmd: nginx -g daemon off;
+memory: 256
+ports:
+- 80:3000
+- 8080:9000;
+volumes:
+- /data:/data:rw
+- /opt:/opt:rw
+```
+
+Configs:
+- env: Environments for your application
+- cmd: Main command for app starting
+- memory: Memory limit
+- ports: Host port : App port 
+- volumes: Host storage : App storage
+
+This config is optional. Use it only if you want.
+
 ### App start/stop/restart/remove
 
 1. Go to folder with your application source code

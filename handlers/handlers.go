@@ -28,6 +28,8 @@ var Log bool
 var Force bool
 var Port int
 
+var CoreServices []string = []string{"redis"}
+
 func NewEnv() *env.Env {
 
 	var err error
