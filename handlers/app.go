@@ -5,7 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/fatih/color"
-	"gopkg.in/urfave/cli.v2"
+	"github.com/urfave/cli"
 	"net/http"
 	"os"
 )

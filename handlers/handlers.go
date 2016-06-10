@@ -26,6 +26,7 @@ var Tag string
 var Log bool
 var Force bool
 var Port int
+var ServiceName string
 
 var CoreServices []string = []string{"redis"}
 

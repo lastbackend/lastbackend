@@ -4,7 +4,7 @@ import (
 	"github.com/deployithq/deployit/daemon"
 	"github.com/deployithq/deployit/drivers/docker"
 	"github.com/deployithq/deployit/handlers"
-	"gopkg.in/urfave/cli.v2"
+	"github.com/urfave/cli"
 	"os"
 )
 
@@ -23,7 +23,7 @@ func main() {
 		},
 	}
 
-	app.Commands = []*cli.Command{
+	app.Commands = []cli.Command{
 		{
 			Name:        "Deploy it daemon",
 			Aliases:     []string{"daemon"},
@@ -41,25 +41,25 @@ func main() {
 					Name:        "docker-uri",
 					Usage:       "Docker daemon adress",
 					Destination: &docker.DOCKER_URI,
-					EnvVars:     []string{"DOCKER_URI"},
+					EnvVar:      "DOCKER_URI",
 				},
 				&cli.StringFlag{
 					Name:        "docker-cert",
 					Usage:       "Docker client certificate",
 					Destination: &docker.DOCKER_CERT,
-					EnvVars:     []string{"DOCKER_CERT"},
+					EnvVar:      "DOCKER_CERT",
 				},
 				&cli.StringFlag{
 					Name:        "docker-ca",
 					Usage:       "Docker certificate authority that signed the registry certificate",
 					Destination: &docker.DOCKER_CA,
-					EnvVars:     []string{"DOCKER_CA"},
+					EnvVar:      "DOCKER_CA",
 				},
 				&cli.StringFlag{
 					Name:        "docker-key",
 					Usage:       "Docker client key",
 					Destination: &docker.DOCKER_KEY,
-					EnvVars:     []string{"DOCKER_KEY"},
+					EnvVar:      "DOCKER_KEY",
 				}},
 		},
 		{
@@ -106,7 +106,7 @@ func main() {
 			Name:    "App management",
 			Aliases: []string{"app"},
 			Usage:   "App management command which allows to stop/start/restart/remove application and see its logs",
-			Subcommands: []*cli.Command{
+			Subcommands: []cli.Command{
 				{
 					Name:    "App start",
 					Aliases: []string{"start"},
@@ -158,10 +158,10 @@ func main() {
 		},
 		{
 			Name:    "Services management",
-			Aliases: handlers.CoreServices,
+			Aliases: []string{"service"},
 			Usage:   "Deploy/start/stop/restart/remove service",
 			Action:  handlers.ServiceDeploy,
-			Subcommands: []*cli.Command{
+			Subcommands: []cli.Command{
 				{
 					Name:    "Service start",
 					Aliases: []string{"start"},
@@ -209,7 +209,14 @@ func main() {
 					Name:        "log",
 					Usage:       "Show build logs",
 					Destination: &handlers.Log,
-				}},
+				},
+				&cli.StringFlag{
+					Name:        "name",
+					Usage:       "Service name",
+					Value:       "",
+					Destination: &handlers.ServiceName,
+				},
+			},
 		},
 	}
 
