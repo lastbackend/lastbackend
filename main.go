@@ -15,6 +15,14 @@ func main() {
 	app.Usage = "Deploy it command line tool for deploying great apps!"
 	app.Version = "0.1"
 
+	app.Flags = []cli.Flag{
+		&cli.BoolFlag{
+			Name:        "debug",
+			Usage:       "Shows you debug logs",
+			Destination: &handlers.Debug,
+		},
+	}
+
 	app.Commands = []*cli.Command{
 		{
 			Name:        "Deploy it daemon",
@@ -23,11 +31,6 @@ func main() {
 			Description: "Deploy it daemon is a server-side component for building and deploying applications to host where it is ran.",
 			Action:      daemon.Init,
 			Flags: []cli.Flag{
-				&cli.BoolFlag{
-					Name:        "debug",
-					Usage:       "Shows you debug logs",
-					Destination: &daemon.Debug,
-				},
 				&cli.IntFlag{
 					Name:        "port",
 					Usage:       "Port, which daemon will listen",
@@ -63,13 +66,8 @@ func main() {
 			Name:    "Deploy it",
 			Aliases: []string{"it"},
 			Usage:   "Deploying sources from current directory",
-			Action:  handlers.It,
+			Action:  handlers.DeployIt,
 			Flags: []cli.Flag{
-				&cli.BoolFlag{
-					Name:        "debug",
-					Usage:       "Shows you debug logs",
-					Destination: &handlers.Debug,
-				},
 				&cli.StringFlag{
 					Name:        "host",
 					Usage:       "Adress of your host, where daemon is running",
@@ -135,11 +133,61 @@ func main() {
 				},
 			},
 			Flags: []cli.Flag{
-				&cli.BoolFlag{
-					Name:        "debug",
-					Usage:       "Shows you debug logs",
-					Destination: &handlers.Debug,
+				&cli.StringFlag{
+					Name:        "host",
+					Usage:       "Adress of your host, where daemon is running",
+					Value:       "api.deployit.co",
+					Destination: &handlers.Host,
 				},
+				&cli.IntFlag{
+					Name:        "port",
+					Usage:       "Port of daemon host",
+					Value:       3000,
+					Destination: &handlers.Port,
+				},
+				&cli.BoolFlag{
+					Name:        "ssl",
+					Usage:       "HTTPS mode if your daemon uses ssl",
+					Destination: &handlers.SSL,
+				},
+				&cli.BoolFlag{
+					Name:        "log",
+					Usage:       "Show build logs",
+					Destination: &handlers.Log,
+				}},
+		},
+		{
+			Name:    "Services management",
+			Aliases: handlers.CoreServices,
+			Usage:   "Deploy/start/stop/restart/remove service",
+			Action:  handlers.ServiceDeploy,
+			Subcommands: []*cli.Command{
+				{
+					Name:    "Service start",
+					Aliases: []string{"start"},
+					Usage:   "Start service",
+					Action:  handlers.ServiceStart,
+				},
+				{
+					Name:    "Service stop",
+					Aliases: []string{"stop"},
+					Usage:   "Stop service",
+					Action:  handlers.ServiceStop,
+				},
+				{
+					Name:    "Service restart",
+					Aliases: []string{"restart"},
+					Usage:   "Restart service",
+					Action:  handlers.ServiceRestart,
+				},
+				{
+					Name:    "Service remove",
+					Aliases: []string{"remove"},
+					Usage:   "Remove service",
+					Action:  handlers.ServiceRemove,
+				},
+			},
+			Flags: []cli.Flag{
 				&cli.StringFlag{
 					Name:        "host",
 					Usage:       "Adress of your host, where daemon is running",

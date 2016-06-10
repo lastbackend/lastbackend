@@ -24,7 +24,7 @@ import (
 // - Archive all files which is in folder
 // - Send it to server
 
-func It(c *cli.Context) error {
+func DeployIt(c *cli.Context) error {
 
 	env := NewEnv()
 
@@ -43,7 +43,7 @@ func It(c *cli.Context) error {
 		appInfo.Name = utils.AppName(env.Path)
 		appInfo.Tag = Tag
 
-		appInfo.UUID, err = AppCreate(env, appInfo.Name, appInfo.Tag)
+		appInfo.UUID, err = appCreate(env, appInfo.Name, appInfo.Tag)
 		if err != nil {
 			env.Log.Error(err)
 			return err
@@ -98,7 +98,7 @@ func It(c *cli.Context) error {
 	excludePatterns = append(excludePatterns, ".gitignore", ".dit", ".git")
 
 	color.Cyan("Packing files")
-	storedFiles, err = PackFiles(env, tw, env.Path, storedFiles, excludePatterns)
+	storedFiles, err = packFiles(env, tw, env.Path, storedFiles, excludePatterns)
 	if err != nil {
 		return err
 	}
@@ -209,7 +209,7 @@ func It(c *cli.Context) error {
 	return nil
 }
 
-func PackFiles(env *env.Env, tw *tar.Writer, filesPath string, storedFiles map[string]string, excludePatterns []string) (map[string]string, error) {
+func packFiles(env *env.Env, tw *tar.Writer, filesPath string, storedFiles map[string]string, excludePatterns []string) (map[string]string, error) {
 
 	// Opening directory with files
 	dir, err := os.Open(filesPath)
@@ -249,7 +249,7 @@ func PackFiles(env *env.Env, tw *tar.Writer, filesPath string, storedFiles map[s
 		// If it was directory - calling this function again
 		// In other case adding file to archive
 		if file.IsDir() {
-			storedFiles, err = PackFiles(env, tw, currentFilePath, storedFiles, excludePatterns)
+			storedFiles, err = packFiles(env, tw, currentFilePath, storedFiles, excludePatterns)
 			if err != nil {
 				return storedFiles, err
 			}
@@ -309,7 +309,7 @@ func PackFiles(env *env.Env, tw *tar.Writer, filesPath string, storedFiles map[s
 
 }
 
-func AppCreate(env *env.Env, name, tag string) (string, error) {
+func appCreate(env *env.Env, name, tag string) (string, error) {
 
 	var uuid string
 

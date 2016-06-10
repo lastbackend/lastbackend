@@ -29,7 +29,7 @@ func AppStart(c *cli.Context) error {
 
 	color.Cyan("Starting %s ...", appInfo.Name)
 
-	res, err := http.Get(fmt.Sprintf("%s/app/%s/start", env.HostUrl, appInfo.UUID))
+	res, err := http.Post(fmt.Sprintf("%s/app/%s/start", env.HostUrl, appInfo.UUID), "application/json", new(bytes.Buffer))
 	if err != nil {
 		env.Log.Error(err)
 		return err
@@ -66,7 +66,7 @@ func AppRestart(c *cli.Context) error {
 
 	color.Cyan("Restarting %s ...", appInfo.Name)
 
-	res, err := http.Get(fmt.Sprintf("%s/app/%s/restart", env.HostUrl, appInfo.UUID))
+	res, err := http.Post(fmt.Sprintf("%s/app/%s/restart", env.HostUrl, appInfo.UUID), "application/json", new(bytes.Buffer))
 	if err != nil {
 		env.Log.Error(err)
 		return err
@@ -103,7 +103,7 @@ func AppStop(c *cli.Context) error {
 
 	color.Cyan("Stopping %s ...", appInfo.Name)
 
-	res, err := http.Get(fmt.Sprintf("%s/app/%s/stop", env.HostUrl, appInfo.UUID))
+	res, err := http.Post(fmt.Sprintf("%s/app/%s/stop", env.HostUrl, appInfo.UUID), "application/json", new(bytes.Buffer))
 	if err != nil {
 		env.Log.Error(err)
 		return err
