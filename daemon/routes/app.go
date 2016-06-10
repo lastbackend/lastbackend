@@ -35,7 +35,10 @@ func CreateAppHandler(e *env.Env, w http.ResponseWriter, r *http.Request) error 
 	}
 
 	a := app.App{}
-	a.Create(e, payload.Hub, payload.Name, payload.Tag)
+	if err := a.Create(e, payload.Hub, payload.Name, payload.Tag); err != nil {
+		e.Log.Error(err)
+		return errors.InternalServerError()
+	}
 
 	w.Write([]byte(``))
 
@@ -159,7 +162,13 @@ func DeployAppHandler(e *env.Env, w http.ResponseWriter, r *http.Request) error 
 		return errors.InternalServerError()
 	}
 
-	w.Write([]byte(""))
+	port, err := a.Ports(e)
+	if err != nil {
+		e.Log.Error(err)
+		return errors.InternalServerError()
+	}
+
+	w.Write([]byte(fmt.Sprintf(`{"port":%d}`, port)))
 
 	return nil
 }
@@ -179,6 +188,14 @@ func StartAppHandler(e *env.Env, w http.ResponseWriter, r *http.Request) error {
 		return errors.InternalServerError()
 	}
 
+	port, err := a.Ports(e)
+	if err != nil {
+		e.Log.Error(err)
+		return errors.InternalServerError()
+	}
+
+	w.Write([]byte(fmt.Sprintf(`{"port":%d}`, port)))
+
 	return nil
 }
 
@@ -196,6 +213,8 @@ func StopAppHandler(e *env.Env, w http.ResponseWriter, r *http.Request) error {
 		e.Log.Error(err)
 		return errors.InternalServerError()
 	}
+
+	w.Write([]byte(``))
 
 	return nil
 }
@@ -215,6 +234,14 @@ func RestartAppHandler(e *env.Env, w http.ResponseWriter, r *http.Request) error
 		return errors.InternalServerError()
 	}
 
+	port, err := a.Ports(e)
+	if err != nil {
+		e.Log.Error(err)
+		return errors.InternalServerError()
+	}
+
+	w.Write([]byte(fmt.Sprintf(`{"port":%d}`, port)))
+
 	return nil
 }
 
@@ -233,6 +260,8 @@ func RemoveAppHandler(e *env.Env, w http.ResponseWriter, r *http.Request) error 
 		return errors.InternalServerError()
 	}
 
+	w.Write([]byte(``))
+
 	return nil
 }
 
@@ -240,6 +269,6 @@ func LogsAppHandler(e *env.Env, w http.ResponseWriter, r *http.Request) error {
 	uuid := utils.GetStringParamFromURL(`name`, r)
 	e.Log.Debug("Logs app", uuid)
 
-
+	w.Write([]byte(``))
 	return nil
 }

@@ -91,7 +91,6 @@ func (r Route) Init(env *env.Env) {
 	// service logic handler
 	route.HandleFunc("/service/{name}", Handle(Handler{env, routes.CreateServiceHandler})).Methods("PUT")
 	route.HandleFunc("/service/{name}/logs", Handle(Handler{env, routes.LogsServiceHandler})).Methods("GET")
-	route.HandleFunc("/service/{name}/deploy", Handle(Handler{env, routes.DeployServiceHandler})).Methods("POST")
 	route.HandleFunc("/service/{name}/start", Handle(Handler{env, routes.StartServiceHandler})).Methods("POST")
 	route.HandleFunc("/service/{name}/stop", Handle(Handler{env, routes.StopServiceHandler})).Methods("POST")
 	route.HandleFunc("/service/{name}/restart", Handle(Handler{env, routes.RestartServiceHandler})).Methods("POST")

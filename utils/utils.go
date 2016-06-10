@@ -15,6 +15,8 @@ import (
 	"path/filepath"
 	"strings"
 	"io/ioutil"
+	"math/rand"
+	"time"
 )
 
 func AppName(path string) string {
@@ -268,4 +270,15 @@ func GetStringParamFromURL(param string, r *http.Request) string {
 	params := mux.Vars(r)
 	value := params[param]
 	return value
+}
+
+
+const letterBytes = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
+func RandStringBytes(n int) string {
+	b := make([]byte, n)
+	for i := range b {
+		rand.Seed(int64(time.Now().Nanosecond()))
+		b[i] = letterBytes[rand.Intn(len(letterBytes))]
+	}
+	return string(b)
 }

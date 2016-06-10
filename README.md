@@ -117,22 +117,20 @@ If you want to deploy your application with specific configurations, you can cre
 env: 
 - DEBUG=*
 - HOST=localhost
-- PORT=3000
-cmd: nginx -g daemon off;
+- PORT=3003
 memory: 256
-ports:
-- 80:3000
-- 8080:9000;
+ports: 
+- 3000
+- 9000
 volumes:
-- /data:/data:rw
-- /opt:/opt:rw
+- /data:/data
+- /opt:/opt
 ```
 
 Configs:
 - env: Environments for your application
-- cmd: Main command for app starting
 - memory: Memory limit
-- ports: Host port : App port 
+- ports: App ports
 - volumes: Host storage : App storage
 
 This config is optional. Use it only if you want.

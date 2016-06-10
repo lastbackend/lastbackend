@@ -6,29 +6,30 @@ import (
 	"github.com/deployithq/deployit/errors"
 	"github.com/deployithq/deployit/utils"
 	"net/http"
+	"fmt"
 )
 
 func CreateServiceHandler(e *env.Env, w http.ResponseWriter, r *http.Request) error {
-	e.Log.Info("Create service")
 
 	name := utils.GetStringParamFromURL(`name`, r)
-	e.Log.Debug("Deploy service", name)
+	e.Log.Info("Deploy service handler ", name)
 
 	s := service.Service{}
-	s.Create(e, name)
 
-	w.Write([]byte(``))
+	s.Get(e, name)
 
-	return nil
-}
+	if s.UUID != `` {
+		port, err := s.Ports(e)
+		if err != nil {
+			e.Log.Error(err)
+			return errors.InternalServerError()
+		}
 
-func DeployServiceHandler(e *env.Env, w http.ResponseWriter, r *http.Request) error {
+		w.Write([]byte(fmt.Sprintf(`{"port":%d}`, port)))
+		return nil
+	}
 
-	name := utils.GetStringParamFromURL(`name`, r)
-	e.Log.Debug("Deploy service", name)
-
-	s := service.Service{}
-	if err := s.Get(e, name); err != nil {
+	if err := s.Create(e, name); err != nil {
 		e.Log.Error(err)
 		return errors.InternalServerError()
 	}
@@ -50,14 +51,20 @@ func DeployServiceHandler(e *env.Env, w http.ResponseWriter, r *http.Request) er
 		return errors.InternalServerError()
 	}
 
-	w.Write([]byte(""))
+	port, err := s.Ports(e)
+	if err != nil {
+		e.Log.Error(err)
+		return errors.InternalServerError()
+	}
+
+	w.Write([]byte(fmt.Sprintf(`{"port":%d}`, port)))
 
 	return nil
 }
 
 func StartServiceHandler(e *env.Env, w http.ResponseWriter, r *http.Request) error {
 	name := utils.GetStringParamFromURL(`name`, r)
-	e.Log.Debug("Start service", name)
+	e.Log.Debug("Start service handler ", name)
 
 	s := service.Service{}
 	if err := s.Get(e, name); err != nil {
@@ -70,12 +77,20 @@ func StartServiceHandler(e *env.Env, w http.ResponseWriter, r *http.Request) err
 		return errors.InternalServerError()
 	}
 
+	port, err := s.Ports(e)
+	if err != nil {
+		e.Log.Error(err)
+		return errors.InternalServerError()
+	}
+
+	w.Write([]byte(fmt.Sprintf(`{"port":%d}`, port)))
+
 	return nil
 }
 
 func StopServiceHandler(e *env.Env, w http.ResponseWriter, r *http.Request) error {
 	name := utils.GetStringParamFromURL(`name`, r)
-	e.Log.Debug("Stop service", name)
+	e.Log.Debug("Stop service handler ", name)
 
 	s := service.Service{}
 	if err := s.Get(e, name); err != nil {
@@ -88,12 +103,14 @@ func StopServiceHandler(e *env.Env, w http.ResponseWriter, r *http.Request) erro
 		return errors.InternalServerError()
 	}
 
+	w.Write([]byte(``))
+
 	return nil
 }
 
 func RestartServiceHandler(e *env.Env, w http.ResponseWriter, r *http.Request) error {
 	name := utils.GetStringParamFromURL(`name`, r)
-	e.Log.Debug("Restart service", name)
+	e.Log.Debug("Restart service handler ", name)
 
 	s := service.Service{}
 	if err := s.Get(e, name); err != nil {
@@ -106,12 +123,20 @@ func RestartServiceHandler(e *env.Env, w http.ResponseWriter, r *http.Request) e
 		return errors.InternalServerError()
 	}
 
+	port, err := s.Ports(e)
+	if err != nil {
+		e.Log.Error(err)
+		return errors.InternalServerError()
+	}
+
+	w.Write([]byte(fmt.Sprintf(`{"port":%d}`, port)))
+
 	return nil
 }
 
 func RemoveServiceHandler(e *env.Env, w http.ResponseWriter, r *http.Request) error {
 	name := utils.GetStringParamFromURL(`name`, r)
-	e.Log.Debug("Remove service", name)
+	e.Log.Debug("Remove service handler ", name)
 
 	s := service.Service{}
 	if err := s.Get(e, name); err != nil {
@@ -124,13 +149,16 @@ func RemoveServiceHandler(e *env.Env, w http.ResponseWriter, r *http.Request) er
 		return errors.InternalServerError()
 	}
 
+	w.Write([]byte(``))
+
 	return nil
 }
 
 func LogsServiceHandler(e *env.Env, w http.ResponseWriter, r *http.Request) error {
 	name := utils.GetStringParamFromURL(`name`, r)
-	e.Log.Debug("Logs service", name)
+	e.Log.Debug("Logs service handler ", name)
 
+	w.Write([]byte(``))
 
 	return nil
 }

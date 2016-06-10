@@ -26,13 +26,13 @@ func Init(rootPath string) (*LDB, error) {
 	return conn, nil
 }
 
-func (ldb *LDB) Read(uuid string, i interface{}) error {
+func (ldb *LDB) Read(key string, i interface{}) error {
 
-	if uuid == "" {
+	if key == "" {
 		return nil
 	}
 
-	source, err := ioutil.ReadFile(fmt.Sprintf("%s/%s", ldb.path, uuid))
+	source, err := ioutil.ReadFile(fmt.Sprintf("%s/%s", ldb.path, key))
 	if err != nil {
 		return err
 	}
@@ -44,11 +44,11 @@ func (ldb *LDB) Read(uuid string, i interface{}) error {
 	return nil
 }
 
-func (ldb *LDB) Write(uuid string, i interface{}) error {
+func (ldb *LDB) Write(key string, i interface{}) error {
 
 	payload, _ := yaml.Marshal(i)
 
-	filepath := fmt.Sprintf("%s/%s", ldb.path, uuid)
+	filepath := fmt.Sprintf("%s/%s", ldb.path, key)
 
 	var _, err = os.Stat(filepath)
 
@@ -79,9 +79,9 @@ func (ldb *LDB) Write(uuid string, i interface{}) error {
 	return nil
 }
 
-func (ldb *LDB) Remove(uuid string) error {
+func (ldb *LDB) Remove(key string) error {
 
-	filepath := fmt.Sprintf("%s/%s", ldb.path, uuid)
+	filepath := fmt.Sprintf("%s/%s", ldb.path, key)
 
 	var err = os.Remove(filepath)
 	if err != nil {

@@ -12,7 +12,6 @@ type Service struct {
 	UUID       string                `json:"uuid" yaml:"uuid"`
 	Name       string                `json:"name" yaml:"name"`
 	Tag        string                `json:"tag" yaml:"tag"`
-	Scale      int                   `json:"scale" yaml:"scale"`
 	Containers map[string]*Container `json:"container" yaml:"container"`
 	Config     Config                `json:"config" yaml:"config"`
 }
@@ -22,7 +21,7 @@ type Container struct {
 }
 
 func (s *Service) Get(e *env.Env, key string) error {
-	e.Log.Info(`Get service`, key)
+	e.Log.Info(`Get service `, key)
 
 	if err := e.LDB.Read(key, s); err != nil {
 		return err
@@ -32,7 +31,7 @@ func (s *Service) Get(e *env.Env, key string) error {
 }
 
 func (s *Service) Update(e *env.Env) error {
-	e.Log.Info(`Update service`)
+	e.Log.Info(`Update service `, s.Name)
 
 	if s.UUID == "" {
 		return errors.New("service not found")
@@ -46,18 +45,20 @@ func (s *Service) Update(e *env.Env) error {
 }
 
 func (s *Service) Create(e *env.Env, name string) error {
-	e.Log.Info(`Create service`)
+	e.Log.Info(`Create service `, name)
 
 	u := uuid.NewV4()
-
 	s.UUID = u.String()
 	s.Name = name
 	s.Tag = `latest`
-	s.Scale = 1
 	s.Containers = make(map[string]*Container)
 
 	s.Config = Config{}
-	s.Config.Get(e, s.Name)
+	s.Config.Get(e, name)
+
+	if s.Config.Image == `` {
+		return errors.New(`service not found`)
+	}
 
 	if err := e.LDB.Write(s.Name, s); err != nil {
 		return err
@@ -67,7 +68,7 @@ func (s *Service) Create(e *env.Env, name string) error {
 }
 
 func (s *Service) Pull(e *env.Env) error {
-	e.Log.Info(`Pull service`)
+	e.Log.Info(`Pull service `, s.Config.Image)
 
 	opts := interfaces.Image{
 		Name: s.Config.Image,
@@ -87,7 +88,7 @@ func (s *Service) Pull(e *env.Env) error {
 }
 
 func (s *Service) Start(e *env.Env) error {
-	e.Log.Info(`Start service`)
+	e.Log.Info(`Start service `, s.Name)
 
 	if s.UUID == "" {
 		return errors.New("service not found")
@@ -118,7 +119,7 @@ func (s *Service) Start(e *env.Env) error {
 		}
 	}
 
-	for len(s.Containers) < s.Scale {
+	for len(s.Containers) == 0 {
 
 		c := &interfaces.Container{
 			Config: interfaces.Config{
@@ -149,7 +150,7 @@ func (s *Service) Start(e *env.Env) error {
 }
 
 func (s *Service) Stop(e *env.Env) error {
-	e.Log.Info(`Stop service`)
+	e.Log.Info(`Stop service `, s.Name)
 
 	if s.UUID == "" {
 		return errors.New("service not found")
@@ -177,7 +178,7 @@ func (s *Service) Stop(e *env.Env) error {
 }
 
 func (s *Service) Restart(e *env.Env) error {
-	e.Log.Info(`Restart service`)
+	e.Log.Info(`Restart service `, s.Name)
 
 	//TODO: implement start with configs
 	//TODO: implement scale
@@ -208,7 +209,7 @@ func (s *Service) Restart(e *env.Env) error {
 		}
 	}
 
-	for len(s.Containers) < s.Scale {
+	for len(s.Containers) == 0 {
 		c := &interfaces.Container{
 			Config: interfaces.Config{
 				Image:   s.Config.Image,
@@ -234,7 +235,7 @@ func (s *Service) Restart(e *env.Env) error {
 }
 
 func (s *Service) Remove(e *env.Env) error {
-	e.Log.Info(`Remove service`)
+	e.Log.Info(`Remove service `, s.Name)
 
 	if s.UUID == "" {
 		return errors.New("service not found")
@@ -248,7 +249,7 @@ func (s *Service) Remove(e *env.Env) error {
 				e.Log.Error(err)
 				index := strings.Index(err.Error(), "No such container")
 				if index != -1 {
-					e.Log.Info(`Clear record in db`)
+					e.Log.Info(`Clear record in db `, s.Name)
 					delete(s.Containers, key)
 					continue
 				}
@@ -268,7 +269,7 @@ func (s *Service) Remove(e *env.Env) error {
 }
 
 func (s *Service) Destroy(e *env.Env) error {
-	e.Log.Info(`Destroy service`)
+	e.Log.Info(`Destroy service `, s.Name)
 
 	if s.UUID == "" {
 		return errors.New("service not found")
@@ -283,4 +284,31 @@ func (s *Service) Destroy(e *env.Env) error {
 	}
 
 	return nil
+}
+
+// Todo: temporary solution
+func (s *Service) Ports(e *env.Env) (int64, error) {
+
+	var port int64
+
+	if len(s.Containers) == 0 {
+		return port, nil
+	}
+
+	for _, container := range s.Containers {
+		ports, err := e.Containers.InspectContainers(&interfaces.Container{
+			CID: container.ID,
+		})
+
+		if err != nil {
+			e.Log.Error(err)
+			return port, err
+		}
+
+		port = ports[0]
+
+		break
+	}
+
+	return port, nil
 }

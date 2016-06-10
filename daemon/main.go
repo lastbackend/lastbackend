@@ -7,7 +7,7 @@ import (
 	"github.com/deployithq/deployit/drivers/log"
 	"github.com/deployithq/deployit/drivers/docker"
 	"github.com/deployithq/deployit/utils"
-	"gopkg.in/urfave/cli.v2"
+	"github.com/urfave/cli"
 )
 
 var Host string

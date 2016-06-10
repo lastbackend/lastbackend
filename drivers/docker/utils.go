@@ -68,8 +68,7 @@ func CreateConfig(c interfaces.Config) docker.Config {
 	config.Volumes = make(map[string]struct{})
 
 	for _, port := range c.Ports {
-		item := strings.Split(port, ":")
-		containerPort, _ := strconv.ParseInt(item[1], 10, 64)
+		containerPort, _ := strconv.ParseInt(port, 10, 64)
 
 		key := docker.Port(fmt.Sprintf("%d/tcp", containerPort))
 		config.ExposedPorts[key] = struct{}{}
@@ -96,12 +95,10 @@ func CreateHostConfig(c interfaces.HostConfig) docker.HostConfig {
 	host.PortBindings = make(map[docker.Port][]docker.PortBinding)
 
 	for _, port := range c.Ports {
-		item := strings.Split(port, ":")
-		hostPort, _ := strconv.ParseInt(item[0], 10, 64)
-		containerPort, _ := strconv.ParseInt(item[1], 10, 64)
+		containerPort, _ := strconv.ParseInt(port, 10, 64)
 		key := docker.Port(fmt.Sprintf("%d/tcp", containerPort))
 
-		host.PortBindings[key] = append(host.PortBindings[key], docker.PortBinding{HostPort: fmt.Sprintf("%d", hostPort)})
+		host.PortBindings[key] = append(host.PortBindings[key], docker.PortBinding{})
 	}
 
 	return host
