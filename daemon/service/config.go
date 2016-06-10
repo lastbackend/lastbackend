@@ -1,9 +1,8 @@
 package service
 
 import (
-	"fmt"
-	"github.com/deployithq/deployit/daemon/env"
 	"time"
+	"github.com/deployithq/deployit/daemon/env"
 )
 
 type Config struct {
@@ -17,11 +16,6 @@ type Config struct {
 	Updated time.Time `json:"updated" yaml:"updated"`
 }
 
-func (c *Config) Create(e *env.Env, name string) error {
-	e.Log.Info(`Sync config`)
-
-	c.Image = fmt.Sprintf("%s/%s:%s", `library`, name, `latest`)
-	c.Created = time.Now()
-
+func (c *Config) Get(e *env.Env, name string) error {
 	return nil
 }

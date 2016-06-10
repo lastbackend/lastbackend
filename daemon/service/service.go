@@ -52,11 +52,12 @@ func (s *Service) Create(e *env.Env, name string) error {
 
 	s.UUID = u.String()
 	s.Name = name
+	s.Tag = `latest`
 	s.Scale = 1
 	s.Containers = make(map[string]*Container)
 
 	s.Config = Config{}
-	s.Config.Create(e, name)
+	s.Config.Get(e, s.Name)
 
 	if err := e.LDB.Write(s.Name, s); err != nil {
 		return err

@@ -64,7 +64,7 @@ func (a *App) Create(e *env.Env, hub, name, tag string) error {
 	a.Layer = Layer{}
 
 	a.Config = Config{}
-	a.Config.Create(e, hub, name, tag)
+	a.Config.Create(e, hub, a.Name, a.Tag)
 
 	if err := e.LDB.Write(a.Name, a); err != nil {
 		return err
