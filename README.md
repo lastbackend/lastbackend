@@ -68,7 +68,7 @@ $ make build
 $ sudo deploy daemon
 ```
 
-3. Clone sources and run `deploy it` command while in sources directory
+3. Clone sources and run `$ deploy it` command while in sources directory
 ```bash
 $ git clone https://github.com/<username>/<repo>
 $ cd <repo>
@@ -88,9 +88,9 @@ Run `$ sudo deploy daemon`
 Daemon flags:
 * [--debug] Shows you debug logs
 * [--port] Port, which daemon will listen
-* [--docker-uri] Docker daemon uri
+* [--docker-uri] Docker daemon adress
 * [--docker-cert] Docker client certificate
-* [--docker-ca] Docker CA public key
+* [--docker-ca] Docker certificate authority that signed the registry certificate
 * [--docker-key] Docker client key
 
 
@@ -99,7 +99,7 @@ Daemon flags:
 1. Go to folder with your application source code
 2. Run `$ deploy it --host localhost --port 3000 --tag latest --log`
 
-What magic is behind `deploy it` command:
+What magic is behind `$ deploy it` command:
 
 1. CLI scans all files
 2. CLI creates hash table for scanned files
@@ -108,6 +108,34 @@ What magic is behind `deploy it` command:
 5. DAEMON unpacks tar.gz
 6. DAEMON builds unpacked sources
 7. DAEMON deploys app to host where daemon is running
+
+## Deploy config
+
+If you want to deploy your application with specific configurations, you can create "deployit.yaml" file, as shown below:
+
+```
+env: 
+- DEBUG=*
+- HOST=localhost
+- PORT=3000
+cmd: nginx -g daemon off;
+memory: 256
+ports:
+- 80:3000
+- 8080:9000;
+volumes:
+- /data:/data:rw
+- /opt:/opt:rw
+```
+
+Configs:
+- env: Environments for your application
+- cmd: Main command for app starting
+- memory: Memory limit
+- ports: Host port : App port 
+- volumes: Host storage : App storage
+
+This config is optional. Use it only if you want.
 
 ### App start/stop/restart/remove
 

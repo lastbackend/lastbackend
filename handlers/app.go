@@ -21,9 +21,15 @@ func AppStart(c *cli.Context) error {
 		return err
 	}
 
+	if appInfo.Name == "" {
+		err = errors.New("App not found")
+		env.Log.Error(err)
+		return err
+	}
+
 	color.Cyan("Starting %s ...", appInfo.Name)
 
-	res, err := http.Get(fmt.Sprintf("%s/app/%s/start", env.HostUrl, appInfo.UUID))
+	res, err := http.Post(fmt.Sprintf("%s/app/%s/start", env.HostUrl, appInfo.Name), "application/json", new(bytes.Buffer))
 	if err != nil {
 		env.Log.Error(err)
 		return err
@@ -52,9 +58,15 @@ func AppRestart(c *cli.Context) error {
 		return err
 	}
 
+	if appInfo.Name == "" {
+		err = errors.New("App not found")
+		env.Log.Error(err)
+		return err
+	}
+
 	color.Cyan("Restarting %s ...", appInfo.Name)
 
-	res, err := http.Get(fmt.Sprintf("%s/app/%s/restart", env.HostUrl, appInfo.UUID))
+	res, err := http.Post(fmt.Sprintf("%s/app/%s/restart", env.HostUrl, appInfo.Name), "application/json", new(bytes.Buffer))
 	if err != nil {
 		env.Log.Error(err)
 		return err
@@ -83,9 +95,15 @@ func AppStop(c *cli.Context) error {
 		return err
 	}
 
+	if appInfo.Name == "" {
+		err = errors.New("App not found")
+		env.Log.Error(err)
+		return err
+	}
+
 	color.Cyan("Stopping %s ...", appInfo.Name)
 
-	res, err := http.Get(fmt.Sprintf("%s/app/%s/stop", env.HostUrl, appInfo.UUID))
+	res, err := http.Post(fmt.Sprintf("%s/app/%s/stop", env.HostUrl, appInfo.Name), "application/json", new(bytes.Buffer))
 	if err != nil {
 		env.Log.Error(err)
 		return err
@@ -114,9 +132,15 @@ func AppRemove(c *cli.Context) error {
 		return err
 	}
 
+	if appInfo.Name == "" {
+		err = errors.New("App not found")
+		env.Log.Error(err)
+		return err
+	}
+
 	color.Cyan("Removing %s ...", appInfo.Name)
 
-	req, err := http.NewRequest("DELETE", fmt.Sprintf("%s/app/%s", env.HostUrl, appInfo.UUID), new(bytes.Buffer))
+	req, err := http.NewRequest("DELETE", fmt.Sprintf("%s/app/%s", env.HostUrl, appInfo.Name), new(bytes.Buffer))
 	if err != nil {
 		env.Log.Error(err)
 		return err
