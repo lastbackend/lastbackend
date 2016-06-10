@@ -43,7 +43,7 @@ func DeployIt(c *cli.Context) error {
 		appInfo.Name = utils.AppName(env.Path)
 		appInfo.Tag = Tag
 
-		appInfo.UUID, err = appCreate(env, appInfo.Name, appInfo.Tag)
+		err = appCreate(env, appInfo.Name, appInfo.Tag)
 		if err != nil {
 			env.Log.Error(err)
 			return err
@@ -167,7 +167,7 @@ func DeployIt(c *cli.Context) error {
 	// TODO If error in response: rollback hash table
 
 	// Creating response for file uploading with fields
-	req, err := http.NewRequest("POST", fmt.Sprintf("%s/app/%s/deploy", env.HostUrl, appInfo.UUID), bodyBuffer)
+	req, err := http.NewRequest("POST", fmt.Sprintf("%s/app/%s/deploy", env.HostUrl, appInfo.Name), bodyBuffer)
 	if err != nil {
 		env.Log.Error(err)
 		return err
@@ -196,7 +196,7 @@ func DeployIt(c *cli.Context) error {
 		}
 	}
 
-	err = appInfo.Write(env.Log, env.Path, env.Host, appInfo.UUID, appInfo.Name, appInfo.Tag, appInfo.URL)
+	err = appInfo.Write(env.Log, env.Path, env.Host, appInfo.Name, appInfo.Tag, appInfo.URL)
 	if err != nil {
 		env.Log.Error(err)
 		return err
@@ -309,9 +309,7 @@ func packFiles(env *env.Env, tw *tar.Writer, filesPath string, storedFiles map[s
 
 }
 
-func appCreate(env *env.Env, name, tag string) (string, error) {
-
-	var uuid string
+func appCreate(env *env.Env, name, tag string) error {
 
 	request := struct {
 		Name string `json:"name"`
@@ -323,13 +321,13 @@ func appCreate(env *env.Env, name, tag string) (string, error) {
 
 	err := json.NewEncoder(buf).Encode(request)
 	if err != nil {
-		return uuid, err
+		return err
 	}
 
 	req, err := http.NewRequest("PUT", fmt.Sprintf("%s/app", env.HostUrl), buf)
 	if err != nil {
 		env.Log.Error(err)
-		return uuid, err
+		return err
 	}
 
 	req.Header.Set("Content-Type", "application/json; charset=utf-8")
@@ -338,26 +336,14 @@ func appCreate(env *env.Env, name, tag string) (string, error) {
 	res, err := client.Do(req)
 	if err != nil {
 		env.Log.Error(err)
-		return uuid, err
+		return err
 	}
 
 	if res.StatusCode != 200 {
 		err = errors.ParseError(res)
 		env.Log.Error(err)
-		return uuid, err
+		return err
 	}
 
-	response := struct {
-		UUID string `json:"uuid"`
-	}{}
-
-	err = json.NewDecoder(res.Body).Decode(&response)
-	if err != nil {
-		env.Log.Error(err)
-		return uuid, err
-	}
-
-	uuid = response.UUID
-
-	return uuid, err
+	return nil
 }
