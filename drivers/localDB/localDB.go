@@ -16,7 +16,7 @@ type LDB struct {
 func Init(rootPath string) (*LDB, error) {
 
 	conn := new(LDB)
-	conn.path = path.Dir(rootPath)
+	conn.path = path.Dir(fmt.Sprintf("%s/storage/", rootPath))
 	conn.mode = os.FileMode(666)
 
 	if err := os.MkdirAll(conn.path, conn.mode); err != nil {

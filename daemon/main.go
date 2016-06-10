@@ -36,7 +36,7 @@ func Init(c *cli.Context) error {
 	}
 
 	log.Info("Init local db")
-	ldb, _ := localDB.Init(fmt.Sprintf("%s/storage/", env.Default_root_path))
+	ldb, _ := localDB.Init(env.Default_root_path)
 
 	log.Info("Init daemon")
 

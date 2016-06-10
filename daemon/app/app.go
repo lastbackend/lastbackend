@@ -66,7 +66,7 @@ func (a *App) Create(e *env.Env, hub, name, tag string) error {
 	a.Config = Config{}
 	a.Config.Create(e, hub, name, tag)
 
-	if err := e.LDB.Write(a.UUID, a); err != nil {
+	if err := e.LDB.Write(a.Name, a); err != nil {
 		return err
 	}
 
