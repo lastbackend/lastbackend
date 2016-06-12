@@ -96,9 +96,9 @@ func (r Route) Init(env *env.Env) {
 	route.HandleFunc("/service/{name}/restart", Handle(Handler{env, routes.RestartServiceHandler})).Methods("POST")
 	route.HandleFunc("/service/{name}", Handle(Handler{env, routes.RemoveServiceHandler})).Methods("DELETE")
 
-	if err := http.ListenAndServe(":"+strconv.Itoa(Port), route); err != nil {
+	if err := http.ListenAndServe(":"+strconv.Itoa(env.Port), route); err != nil {
 		env.Log.Fatal("ListenAndServe: ", err)
 	}
 
-	env.Log.Debugf("Listenning... on %v port", strconv.Itoa(Port))
+	env.Log.Debugf("Listenning... on %v port", strconv.Itoa(env.Port))
 }

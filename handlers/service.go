@@ -2,203 +2,267 @@ package handlers
 
 import (
 	"bytes"
-	"encoding/json"
+	"errors"
+	"flag"
 	"fmt"
-	"github.com/deployithq/deployit/errors"
-	"github.com/fatih/color"
-	"github.com/urfave/cli"
+	"github.com/deployithq/deployit/drivers/interfaces"
+	print_ "github.com/deployithq/deployit/drivers/print"
+	"github.com/deployithq/deployit/utils"
 	"net/http"
+	"os"
+	"path/filepath"
 )
 
-func ServiceStart(c *cli.Context) error {
+type ServiceCommand struct {
+	ServiceName string
+	Subcommand  string
+	Host        struct {
+		Name string
+		URL  string
+	}
+	Paths struct {
+		Root    string
+		Storage string
+	}
+	Print interfaces.IPrint
+}
 
-	env := NewEnv()
+func (c *ServiceCommand) Init(args []string) error {
 
-	if ServiceName == "" {
-		env.Log.Error("Unknown service")
-		return nil
+	var err error
+	var debug bool
+
+	// Initializaing printing module
+	c.Print = print_.Init()
+
+	// Adding path module
+	c.Paths.Root, err = filepath.Abs(filepath.Dir(os.Args[0]))
+	if err != nil {
+		c.Print.Error(err)
+		return err
 	}
 
-	color.Cyan("Starting %s ...", ServiceName)
+	c.Paths.Storage = fmt.Sprintf("%s/.dit", c.Paths.Root)
 
-	res, err := http.Post(fmt.Sprintf("%s/service/%s/start", env.HostUrl, ServiceName), "application/json", new(bytes.Buffer))
+	// Creating flags set
+	cmdFlags := flag.NewFlagSet("service", flag.ContinueOnError)
+	cmdFlags.Usage = func() {
+		c.Print.WhiteInfo(c.Help())
+	}
+
+	cmdFlags.BoolVar(&debug, "debug", false, "Enables debug mode")
+	if Debug == false {
+		if os.Getenv("DEPLOYIT_DEBUG") != "" {
+			Debug = true
+		}
+	}
+
+	cmdFlags.StringVar(&c.Host.URL, "host-url", "https://api.deployit.io", "URL of host, where daemon is running")
+	if Debug == false {
+		if os.Getenv("DEPLOYIT_HOST_URL") != "" {
+			Host = os.Getenv("DEPLOYIT_HOST_URL")
+		}
+	}
+
+	return nil
+
+}
+
+func (c *ServiceCommand) Run(args []string) int {
+
+	err := c.Init(args)
 	if err != nil {
-		env.Log.Error(err)
-		return err
+		c.Print.Error(err)
+		return 1
+	}
+
+	var res *http.Response
+
+	if err != nil {
+		c.Print.Error(err)
+		return 1
+	}
+
+	// TODO Services switcher
+
+	switch c.Subcommand {
+	case "stop":
+		ServiceStop(c)
 	}
 
 	if res.StatusCode != 200 {
-		err = errors.ParseError(res)
-		env.Log.Error(err)
-		return err
+		err = errors.New("Something went wrong")
+		c.Print.Error(err)
+		return 1
 	}
 
-	response := struct {
-		Port     int64  `json:"port"`
-		Password string `json:"password"`
-	}{}
+	c.Print.Info("Finished!")
 
-	err = json.NewDecoder(res.Body).Decode(&response)
-	if err != nil {
-		env.Log.Error(err)
-		return err
-	}
+	return 0
 
-	color.Cyan("Your %s address: %s:%d", ServiceName, env.Host, response.Port)
-	color.Cyan("Your %s password: %s", ServiceName, response.Password)
-	color.Cyan("Finished!")
-
-	return nil
 }
 
-func ServiceStop(c *cli.Context) error {
-	env := NewEnv()
+func ServiceStop(c *ServiceCommand) (*http.Response, error) {
 
-	if ServiceName == "" {
-		env.Log.Error("Unknown service")
-		return nil
-	}
+	c.Print.Infof("Stopping %s ...", c.ServiceName)
 
-	color.Cyan("Stopping %s ...", ServiceName)
-
-	res, err := http.Post(fmt.Sprintf("%s/service/%s/stop", env.HostUrl, ServiceName), "application/json", new(bytes.Buffer))
+	res, err := utils.ExecuteHTTPRequest(fmt.Sprintf("%s/service/%s/stop", c.Host.URL, c.ServiceName), "POST", "application/json", new(bytes.Buffer))
 	if err != nil {
-		env.Log.Error(err)
-		return err
+		c.Print.Error(err)
+		return res, err
 	}
 
-	if res.StatusCode != 200 {
-		err = errors.ParseError(res)
-		env.Log.Error(err)
-		return err
-	}
-
-	color.Cyan("Finished!")
-
-	return nil
+	return res, nil
 }
 
-func ServiceRestart(c *cli.Context) error {
+func ServiceRemove(c *ServiceCommand, appInfo *AppInfo) (*http.Response, error) {
 
-	env := NewEnv()
+	c.Print.Infof("Removing %s ...", appInfo.Name)
 
-	if ServiceName == "" {
-		env.Log.Error("Unknown service")
-		return nil
-	}
-
-	color.Cyan("Restarting %s ...", ServiceName)
-
-	res, err := http.Post(fmt.Sprintf("%s/service/%s/restart", env.HostUrl, ServiceName), "application/json", new(bytes.Buffer))
+	res, err := utils.ExecuteHTTPRequest(fmt.Sprintf("%s/service/%s", c.Host.URL, c.ServiceName), "DELETE", "application/json", new(bytes.Buffer))
 	if err != nil {
-		env.Log.Error(err)
-		return err
+		c.Print.Error(err)
+		return res, err
 	}
 
-	if res.StatusCode != 200 {
-		err = errors.ParseError(res)
-		env.Log.Error(err)
-		return err
-	}
-
-	response := struct {
-		Port     int64  `json:"port"`
-		Password string `json:"password"`
-	}{}
-
-	err = json.NewDecoder(res.Body).Decode(&response)
-	if err != nil {
-		env.Log.Error(err)
-		return err
-	}
-
-	color.Cyan("Your %s address: %s:%d", ServiceName, env.Host, response.Port)
-	color.Cyan("Your %s password: %s", ServiceName, response.Password)
-	color.Cyan("Finished!")
-
-	return nil
+	return res, nil
 }
 
-func ServiceDeploy(c *cli.Context) error {
-
-	// TODO Adapt for other services
-
-	env := NewEnv()
-
-	if ServiceName == "" {
-		env.Log.Error("Unknown service")
-		return nil
-	}
-
-	req, err := http.NewRequest("PUT", fmt.Sprintf("%s/service/%s", env.HostUrl, ServiceName), new(bytes.Buffer))
-	if err != nil {
-		env.Log.Error(err)
-		return err
-	}
-
-	req.Header.Set("Content-Type", "application/json; charset=utf-8")
-
-	client := new(http.Client)
-	res, err := client.Do(req)
-	if err != nil {
-		env.Log.Error(err)
-		return err
-	}
-
-	if res.StatusCode != 200 {
-		err = errors.ParseError(res)
-		env.Log.Error(err)
-		return err
-	}
-
-	response := struct {
-		Port     int64  `json:"port"`
-		Password string `json:"password"`
-	}{}
-
-	err = json.NewDecoder(res.Body).Decode(&response)
-	if err != nil {
-		env.Log.Error(err)
-		return err
-	}
-
-	color.Cyan("Your %s address: %s:%d", ServiceName, env.Host, response.Port)
-	color.Cyan("Your %s password: %s", ServiceName, response.Password)
-
-	return nil
+func (c *ServiceCommand) Help() string {
+	return ""
 }
 
-func ServiceRemove(c *cli.Context) error {
-
-	env := NewEnv()
-
-	if ServiceName == "" {
-		env.Log.Error("Unknown service")
-		return nil
-	}
-
-	color.Cyan("Removing %s ...", ServiceName)
-
-	req, err := http.NewRequest("DELETE", fmt.Sprintf("%s/service/%s", env.HostUrl, ServiceName), new(bytes.Buffer))
-	if err != nil {
-		env.Log.Error(err)
-		return err
-	}
-
-	client := new(http.Client)
-	res, err := client.Do(req)
-	if err != nil {
-		env.Log.Error(err)
-		return err
-	}
-
-	if res.StatusCode != 200 {
-		err = errors.ParseError(res)
-		env.Log.Error(err)
-		return err
-	}
-
-	color.Cyan("Finished!")
-
-	return nil
+func (c *ServiceCommand) Synopsis() string {
+	return ""
 }
+
+//func ServiceStart(c *cli.Context) error {
+//
+//	env := NewEnv()
+//
+//	if ServiceName == "" {
+//		env.Log.Error("Unknown service")
+//		return nil
+//	}
+//
+//	color.Cyan("Starting %s ...", ServiceName)
+//
+//	res, err := http.Post(fmt.Sprintf("%s/service/%s/start", env.HostUrl, ServiceName), "application/json", new(bytes.Buffer))
+//	if err != nil {
+//		env.Log.Error(err)
+//		return err
+//	}
+//
+//	if res.StatusCode != 200 {
+//		err = errors.ParseError(res)
+//		env.Log.Error(err)
+//		return err
+//	}
+//
+//	response := struct {
+//		Port     int64  `json:"port"`
+//		Password string `json:"password"`
+//	}{}
+//
+//	err = json.NewDecoder(res.Body).Decode(&response)
+//	if err != nil {
+//		env.Log.Error(err)
+//		return err
+//	}
+//
+//	color.Cyan("Your %s address: %s:%d", ServiceName, env.Host, response.Port)
+//	color.Cyan("Your %s password: %s", ServiceName, response.Password)
+//	color.Cyan("Finished!")
+//
+//	return nil
+//}
+//
+//func ServiceRestart(c *cli.Context) error {
+//
+//	env := NewEnv()
+//
+//	if ServiceName == "" {
+//		env.Log.Error("Unknown service")
+//		return nil
+//	}
+//
+//	color.Cyan("Restarting %s ...", ServiceName)
+//
+//	res, err := http.Post(fmt.Sprintf("%s/service/%s/restart", env.HostUrl, ServiceName), "application/json", new(bytes.Buffer))
+//	if err != nil {
+//		env.Log.Error(err)
+//		return err
+//	}
+//
+//	if res.StatusCode != 200 {
+//		err = errors.ParseError(res)
+//		env.Log.Error(err)
+//		return err
+//	}
+//
+//	response := struct {
+//		Port     int64  `json:"port"`
+//		Password string `json:"password"`
+//	}{}
+//
+//	err = json.NewDecoder(res.Body).Decode(&response)
+//	if err != nil {
+//		env.Log.Error(err)
+//		return err
+//	}
+//
+//	color.Cyan("Your %s address: %s:%d", ServiceName, env.Host, response.Port)
+//	color.Cyan("Your %s password: %s", ServiceName, response.Password)
+//	color.Cyan("Finished!")
+//
+//	return nil
+//}
+//
+//func ServiceDeploy(c *cli.Context) error {
+//
+//	// TODO Adapt for other services
+//
+//	env := NewEnv()
+//
+//	if ServiceName == "" {
+//		env.Log.Error("Unknown service")
+//		return nil
+//	}
+//
+//	req, err := http.NewRequest("PUT", fmt.Sprintf("%s/service/%s", env.HostUrl, ServiceName), new(bytes.Buffer))
+//	if err != nil {
+//		env.Log.Error(err)
+//		return err
+//	}
+//
+//	req.Header.Set("Content-Type", "application/json; charset=utf-8")
+//
+//	client := new(http.Client)
+//	res, err := client.Do(req)
+//	if err != nil {
+//		env.Log.Error(err)
+//		return err
+//	}
+//
+//	if res.StatusCode != 200 {
+//		err = errors.ParseError(res)
+//		env.Log.Error(err)
+//		return err
+//	}
+//
+//	response := struct {
+//		Port     int64  `json:"port"`
+//		Password string `json:"password"`
+//	}{}
+//
+//	err = json.NewDecoder(res.Body).Decode(&response)
+//	if err != nil {
+//		env.Log.Error(err)
+//		return err
+//	}
+//
+//	color.Cyan("Your %s address: %s:%d", ServiceName, env.Host, response.Port)
+//	color.Cyan("Your %s password: %s", ServiceName, response.Password)
+//
+//	return nil
+//}

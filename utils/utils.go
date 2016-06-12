@@ -10,12 +10,13 @@ import (
 	"github.com/satori/go.uuid"
 	"gopkg.in/yaml.v2"
 	"io"
+	"io/ioutil"
+	"math/rand"
 	"net/http"
 	"os"
 	"path/filepath"
+	"runtime"
 	"strings"
-	"io/ioutil"
-	"math/rand"
 	"time"
 )
 
@@ -272,8 +273,8 @@ func GetStringParamFromURL(param string, r *http.Request) string {
 	return value
 }
 
-
 const letterBytes = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
+
 func RandStringBytes(n int) string {
 	b := make([]byte, n)
 	for i := range b {
@@ -281,4 +282,18 @@ func RandStringBytes(n int) string {
 		b[i] = letterBytes[rand.Intn(len(letterBytes))]
 	}
 	return string(b)
+}
+
+func FileLine() string {
+	_, file, line, ok := runtime.Caller(2)
+	if !ok {
+		file = "<???>"
+		line = 1
+	} else {
+		slash := strings.LastIndex(file, "/")
+		if slash >= 0 {
+			file = file[slash+1:]
+		}
+	}
+	return fmt.Sprintf("%s:%d", file, line)
 }

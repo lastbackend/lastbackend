@@ -2,9 +2,8 @@ package handlers
 
 import (
 	"fmt"
-	"github.com/deployithq/deployit/drivers/bolt"
-	"github.com/deployithq/deployit/drivers/interfaces"
 	"github.com/deployithq/deployit/drivers/log"
+	"github.com/deployithq/deployit/drivers/storage"
 	"github.com/deployithq/deployit/env"
 	"gopkg.in/yaml.v2"
 	"io/ioutil"
@@ -22,11 +21,7 @@ type AppInfo struct {
 var Debug bool
 var SSL bool
 var Host string
-var Tag string
-var Log bool
-var Force bool
 var Port int
-var ServiceName string
 
 var CoreServices []string = []string{"redis"}
 
@@ -38,8 +33,7 @@ func NewEnv() *env.Env {
 		Log: &log.Log{
 			Logger: log.New(),
 		},
-		LogMode: Log,
-		Port:    Port,
+		Port: Port,
 	}
 
 	if Debug {
@@ -66,43 +60,34 @@ func NewEnv() *env.Env {
 		env.Log.Fatal(err)
 	}
 
-	database := bolt.Open(env.Log, fmt.Sprintf("%s/%s_map", env.StoragePath, env.Host))
-
-	env.Storage = &bolt.Bolt{
-		DB: database,
-	}
+	env.Storage, err = storage.Open(fmt.Sprintf("%s/%s_map", env.StoragePath, env.Host))
 
 	return env
 }
 
-func (a *AppInfo) Read(log interfaces.ILog, path, host string) error {
-	log.Debug("Reading app info from file: ", path)
+func (a *AppInfo) Read(path, host string) error {
 
 	appInfoFile, err := os.Open(fmt.Sprintf("%s/.dit/%s.yaml", path, host))
 	if err != nil {
 		if os.IsNotExist(err) {
 			file, err := os.Create(fmt.Sprintf("%s/.dit/%s.yaml", path, host))
 			if err != nil {
-				log.Error(err)
 				return err
 			}
 			defer file.Close()
 			return nil
 		}
-		log.Error(err)
 		return err
 	}
 	defer appInfoFile.Close()
 
 	data, err := ioutil.ReadAll(appInfoFile)
 	if err != nil {
-		log.Error(err)
 		return err
 	}
 
 	err = yaml.Unmarshal(data, a)
 	if err != nil {
-		log.Error(err)
 		return err
 	}
 
@@ -110,23 +95,20 @@ func (a *AppInfo) Read(log interfaces.ILog, path, host string) error {
 
 }
 
-func (a AppInfo) Write(log interfaces.ILog, path, host, name, tag, url string) error {
-	log.Debug("Writing app info to file: ", path)
+func (a AppInfo) Write(path, host, name, tag, url string) error {
 
 	appInfo, err := yaml.Marshal(AppInfo{
-		Tag:  Tag,
+		Tag:  tag,
 		Name: name,
 		URL:  url,
 	})
 
 	if err != nil {
-		log.Error(err)
 		return err
 	}
 
 	err = ioutil.WriteFile(fmt.Sprintf("%s/.dit/%s.yaml", path, host), appInfo, 0644)
 	if err != nil {
-		log.Error(err)
 		return err
 	}
 

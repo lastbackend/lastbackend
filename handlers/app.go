@@ -3,167 +3,180 @@ package handlers
 import (
 	"bytes"
 	"errors"
+	"flag"
 	"fmt"
-	"github.com/fatih/color"
-	"github.com/urfave/cli"
+	"github.com/deployithq/deployit/drivers/interfaces"
+	print_ "github.com/deployithq/deployit/drivers/print"
+	"github.com/deployithq/deployit/utils"
 	"net/http"
 	"os"
+	"path/filepath"
 )
 
-func AppStart(c *cli.Context) error {
+type AppCommand struct {
+	Subcommand string
+	Host       struct {
+		Name string
+		URL  string
+	}
+	Paths struct {
+		Root    string
+		Storage string
+	}
+	Print interfaces.IPrint
+}
 
-	env := NewEnv()
+func (c *AppCommand) Init(args []string) error {
 
-	appInfo := new(AppInfo)
-	err := appInfo.Read(env.Log, env.Path, env.Host)
+	var err error
+	var debug bool
+
+	// Initializaing printing module
+	c.Print = print_.Init()
+
+	// Adding path module
+	c.Paths.Root, err = filepath.Abs(filepath.Dir(os.Args[0]))
 	if err != nil {
-		env.Log.Error(err)
+		c.Print.Error(err)
 		return err
 	}
 
-	if appInfo.Name == "" {
-		err = errors.New("App not found")
-		env.Log.Error(err)
-		return err
+	c.Paths.Storage = fmt.Sprintf("%s/.dit", c.Paths.Root)
+
+	// Creating flags set
+	cmdFlags := flag.NewFlagSet("app", flag.ContinueOnError)
+	cmdFlags.Usage = func() {
+		c.Print.WhiteInfo(c.Help())
 	}
 
-	color.Cyan("Starting %s ...", appInfo.Name)
-
-	res, err := http.Post(fmt.Sprintf("%s/app/%s/start", env.HostUrl, appInfo.Name), "application/json", new(bytes.Buffer))
-	if err != nil {
-		env.Log.Error(err)
-		return err
+	cmdFlags.BoolVar(&debug, "debug", false, "Enables debug mode")
+	if Debug == false {
+		if os.Getenv("DEPLOYIT_DEBUG") != "" {
+			Debug = true
+		}
 	}
 
-	if res.StatusCode != 200 {
-		err = errors.New("Something went wrong")
-		env.Log.Error(err)
-		return err
+	cmdFlags.StringVar(&c.Host.URL, "host-url", "https://api.deployit.io", "URL of host, where daemon is running")
+	if Debug == false {
+		if os.Getenv("DEPLOYIT_HOST_URL") != "" {
+			Host = os.Getenv("DEPLOYIT_HOST_URL")
+		}
 	}
-
-	color.Cyan("Finished!")
 
 	return nil
 
 }
 
-func AppRestart(c *cli.Context) error {
+func (c *AppCommand) Run(args []string) int {
 
-	env := NewEnv()
+	err := c.Init(args)
+	if err != nil {
+		c.Print.Error(err)
+		return 1
+	}
 
 	appInfo := new(AppInfo)
-	err := appInfo.Read(env.Log, env.Path, env.Host)
+	err = appInfo.Read(c.Paths.Root, c.Host.Name)
 	if err != nil {
-		env.Log.Error(err)
-		return err
+		c.Print.Error(err)
+		return 1
 	}
 
 	if appInfo.Name == "" {
 		err = errors.New("App not found")
-		env.Log.Error(err)
-		return err
+		c.Print.Error(err)
+		return 1
 	}
 
-	color.Cyan("Restarting %s ...", appInfo.Name)
+	var res *http.Response
 
-	res, err := http.Post(fmt.Sprintf("%s/app/%s/restart", env.HostUrl, appInfo.Name), "application/json", new(bytes.Buffer))
+	switch c.Subcommand {
+	case "start":
+		res, err = AppStart(c, appInfo)
+	case "restart":
+		res, err = AppRestart(c, appInfo)
+	case "stop":
+		res, err = AppStop(c, appInfo)
+	case "remove":
+		res, err = AppRemove(c, appInfo)
+	}
+
 	if err != nil {
-		env.Log.Error(err)
-		return err
+		c.Print.Error(err)
+		return 1
 	}
 
 	if res.StatusCode != 200 {
 		err = errors.New("Something went wrong")
-		env.Log.Error(err)
-		return err
+		c.Print.Error(err)
+		return 1
 	}
 
-	color.Cyan("Finished!")
+	c.Print.Info("Finished!")
 
-	return nil
+	return 0
 
 }
 
-func AppStop(c *cli.Context) error {
+func AppStart(c *AppCommand, appInfo *AppInfo) (*http.Response, error) {
 
-	env := NewEnv()
+	c.Print.Infof("Starting %s ...", appInfo.Name)
 
-	appInfo := new(AppInfo)
-	err := appInfo.Read(env.Log, env.Path, env.Host)
+	res, err := utils.ExecuteHTTPRequest(fmt.Sprintf("%s/app/%s/start", c.Host.URL, appInfo.Name), "POST", "application/json", new(bytes.Buffer))
 	if err != nil {
-		env.Log.Error(err)
-		return err
+		c.Print.Error(err)
+		return res, err
 	}
 
-	if appInfo.Name == "" {
-		err = errors.New("App not found")
-		env.Log.Error(err)
-		return err
-	}
-
-	color.Cyan("Stopping %s ...", appInfo.Name)
-
-	res, err := http.Post(fmt.Sprintf("%s/app/%s/stop", env.HostUrl, appInfo.Name), "application/json", new(bytes.Buffer))
-	if err != nil {
-		env.Log.Error(err)
-		return err
-	}
-
-	if res.StatusCode != 200 {
-		err = errors.New("Something went wrong")
-		env.Log.Error(err)
-		return err
-	}
-
-	color.Cyan("Finished!")
-
-	return nil
-
+	return res, nil
 }
 
-func AppRemove(c *cli.Context) error {
+func AppRestart(c *AppCommand, appInfo *AppInfo) (*http.Response, error) {
 
-	env := NewEnv()
+	c.Print.Infof("Restarting %s ...", appInfo.Name)
 
-	appInfo := new(AppInfo)
-	err := appInfo.Read(env.Log, env.Path, env.Host)
+	res, err := utils.ExecuteHTTPRequest(fmt.Sprintf("%s/app/%s/restart", c.Host.URL, appInfo.Name), "POST", "application/json", new(bytes.Buffer))
 	if err != nil {
-		env.Log.Error(err)
-		return err
+		c.Print.Error(err)
+		return res, err
 	}
 
-	if appInfo.Name == "" {
-		err = errors.New("App not found")
-		env.Log.Error(err)
-		return err
-	}
+	return res, nil
+}
 
-	color.Cyan("Removing %s ...", appInfo.Name)
+func AppStop(c *AppCommand, appInfo *AppInfo) (*http.Response, error) {
 
-	req, err := http.NewRequest("DELETE", fmt.Sprintf("%s/app/%s", env.HostUrl, appInfo.Name), new(bytes.Buffer))
+	c.Print.Infof("Stopping %s ...", appInfo.Name)
+
+	res, err := utils.ExecuteHTTPRequest(fmt.Sprintf("%s/app/%s/stop", c.Host.URL, appInfo.Name), "POST", "application/json", new(bytes.Buffer))
 	if err != nil {
-		env.Log.Error(err)
-		return err
+		c.Print.Error(err)
+		return res, err
 	}
 
-	client := new(http.Client)
-	res, err := client.Do(req)
+	return res, nil
+}
+
+func AppRemove(c *AppCommand, appInfo *AppInfo) (*http.Response, error) {
+
+	c.Print.Infof("Removing %s ...", appInfo.Name)
+
+	res, err := utils.ExecuteHTTPRequest(fmt.Sprintf("%s/app/%s", c.Host.URL, appInfo.Name), "DELETE", "application/json", new(bytes.Buffer))
 	if err != nil {
-		env.Log.Error(err)
-		return err
+		c.Print.Error(err)
+		return res, err
 	}
 
-	if res.StatusCode != 200 {
-		err = errors.New("Something went wrong")
-		env.Log.Error(err)
-		return err
-	}
+	os.Remove(fmt.Sprintf("%s/%s_map", c.Paths.Storage, c.Host.Name))
+	os.Remove(fmt.Sprintf("%s/%s.yaml", c.Paths.Storage, c.Host.Name))
 
-	os.Remove(fmt.Sprintf("%s/%s_map", env.StoragePath, env.Host))
-	os.Remove(fmt.Sprintf("%s/%s.yaml", env.StoragePath, env.Host))
+	return res, nil
+}
 
-	color.Cyan("Finished!")
+func (c *AppCommand) Help() string {
+	return ""
+}
 
-	return nil
-
+func (c *AppCommand) Synopsis() string {
+	return ""
 }
