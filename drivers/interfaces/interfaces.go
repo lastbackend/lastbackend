@@ -15,10 +15,10 @@ type ILog interface {
 }
 
 type IStorage interface {
-	Write(ILog, string, string) error
-	Read(ILog, string) (string, error)
-	ListAllFiles(ILog) (map[string]string, error)
-	Delete(ILog, string) error
+	Write(string, string) error
+	Read(string) (string, error)
+	ListAllFiles() (map[string]string, error)
+	Delete(string) error
 }
 
 type ILDB interface {
@@ -40,6 +40,19 @@ type IContainers interface {
 	ListContainers() (map[string]Container, error)
 
 	InspectContainers(c *Container) ([]int64, error)
+}
+
+type IPrint interface {
+	SetDebug(bool)
+	Info(...interface{})
+	WhiteInfo(...interface{})
+	Infof(string, ...interface{})
+	Debugf(string, ...interface{})
+	Debug(...interface{})
+	Warnf(string, ...interface{})
+	Warn(...interface{})
+	Errorf(string, ...interface{})
+	Error(...interface{})
 }
 
 var ErrBucketNotFound error = errors.New("BUCKET_NOT_FOUND")

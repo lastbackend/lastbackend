@@ -1,4 +1,4 @@
-package bolt
+package storage
 
 import (
 	"errors"
@@ -8,21 +8,20 @@ import (
 
 const base = "map"
 
-type Bolt struct {
-	DB *bolt.DB
+type Storage struct {
+	Driver *bolt.DB
 }
 
-func Open(log interfaces.ILog, path string) *bolt.DB {
+func Open(path string) (*Storage, error) {
 
 	db, err := bolt.Open(path, 0766, nil)
 	if err != nil {
-		log.Fatal(err)
+		return new(Storage), err
 	}
 
 	err = db.Update(func(tx *bolt.Tx) error {
 		_, err := tx.CreateBucketIfNotExists([]byte(base))
 		if err != nil {
-			log.Error(err)
 			return err
 		}
 
@@ -30,25 +29,23 @@ func Open(log interfaces.ILog, path string) *bolt.DB {
 	})
 
 	if err != nil {
-		log.Fatal(err)
+		return new(Storage), err
 	}
 
-	return db
+	return &Storage{db}, nil
 
 }
 
-func (b *Bolt) Write(log interfaces.ILog, key, value string) error {
+func (b *Storage) Write(key, value string) error {
 
-	err := b.DB.Update(func(tx *bolt.Tx) error {
+	err := b.Driver.Update(func(tx *bolt.Tx) error {
 		bucket, err := tx.CreateBucketIfNotExists([]byte(base))
 		if err != nil {
-			log.Error(err)
 			return err
 		}
 
 		err = bucket.Put([]byte(key), []byte(value))
 		if err != nil {
-			log.Error(err)
 			return err
 		}
 
@@ -62,15 +59,14 @@ func (b *Bolt) Write(log interfaces.ILog, key, value string) error {
 	return nil
 }
 
-func (b *Bolt) Read(log interfaces.ILog, key string) (string, error) {
+func (b *Storage) Read(key string) (string, error) {
 
 	var val string
 
-	err := b.DB.View(func(tx *bolt.Tx) error {
+	err := b.Driver.View(func(tx *bolt.Tx) error {
 		bucket := tx.Bucket([]byte(base))
 		if bucket == nil {
 			err := errors.New("BUCKET_NOT_FOUND")
-			log.Error(err)
 			return err
 		}
 
@@ -86,18 +82,16 @@ func (b *Bolt) Read(log interfaces.ILog, key string) (string, error) {
 	return val, nil
 }
 
-func (b *Bolt) Delete(log interfaces.ILog, key string) error {
+func (b *Storage) Delete(key string) error {
 
-	err := b.DB.Update(func(tx *bolt.Tx) error {
+	err := b.Driver.Update(func(tx *bolt.Tx) error {
 		bucket := tx.Bucket([]byte(base))
 		if bucket == nil {
-			log.Error(interfaces.ErrBucketNotFound)
 			return interfaces.ErrBucketNotFound
 		}
 
 		err := bucket.Delete([]byte(key))
 		if err != nil {
-			log.Error(err)
 			return err
 		}
 
@@ -111,11 +105,11 @@ func (b *Bolt) Delete(log interfaces.ILog, key string) error {
 	return nil
 }
 
-func (b *Bolt) ListAllFiles(log interfaces.ILog) (map[string]string, error) {
+func (b *Storage) ListAllFiles() (map[string]string, error) {
 
 	files := make(map[string]string)
 
-	err := b.DB.View(func(tx *bolt.Tx) error {
+	err := b.Driver.View(func(tx *bolt.Tx) error {
 		b := tx.Bucket([]byte(base))
 
 		c := b.Cursor()
@@ -132,7 +126,6 @@ func (b *Bolt) ListAllFiles(log interfaces.ILog) (map[string]string, error) {
 	})
 
 	if err != nil {
-		log.Error(err)
 		return files, err
 	}
 
