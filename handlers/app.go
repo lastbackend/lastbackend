@@ -26,7 +26,7 @@ type AppCommand struct {
 	Print interfaces.IPrint
 }
 
-func Init(c *AppCommand, args []string) error {
+func (c *AppCommand) Init(args []string) error {
 
 	var err error
 	var debug bool
@@ -69,7 +69,7 @@ func Init(c *AppCommand, args []string) error {
 
 func (c *AppCommand) Run(args []string) int {
 
-	err := Init(c, args)
+	err := c.Init(args)
 	if err != nil {
 		c.Print.Error(err)
 		return 1
