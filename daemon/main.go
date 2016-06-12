@@ -1,20 +1,22 @@
 package daemon
 
 import (
+	"flag"
 	"fmt"
 	"github.com/deployithq/deployit/daemon/env"
+	"github.com/deployithq/deployit/drivers/docker"
 	"github.com/deployithq/deployit/drivers/localDB"
 	"github.com/deployithq/deployit/drivers/log"
-	"github.com/deployithq/deployit/drivers/docker"
 	"github.com/deployithq/deployit/utils"
-	"github.com/urfave/cli"
+	"os"
+	"strconv"
 )
 
-var Host string
-var Port int
-var Debug bool
+type DaemonCommand struct {
+	Debug bool
+}
 
-func Init(c *cli.Context) error {
+func (c *DaemonCommand) Run(args []string) int {
 
 	log := &log.Log{
 		Logger: log.New(),
@@ -27,10 +29,23 @@ func Init(c *cli.Context) error {
 
 	if err := utils.CreateDirs(paths); err != nil {
 		log.Fatal(err)
-		return err
+		return 1
 	}
 
-	if Debug {
+	// Creating flags set
+	cmdFlags := flag.NewFlagSet("daemon", flag.ContinueOnError)
+	cmdFlags.Usage = func() {
+		fmt.Print(c.Help())
+	}
+
+	cmdFlags.BoolVar(&c.Debug, "debug", false, "Enables debug mode")
+	if c.Debug == false {
+		if os.Getenv("DEPLOYIT_DEBUG") != "" {
+			c.Debug = true
+		}
+	}
+
+	if c.Debug {
 		log.SetDebugLevel()
 		log.Debug("Debug mode enabled")
 	}
@@ -41,15 +56,29 @@ func Init(c *cli.Context) error {
 	log.Info("Init daemon")
 
 	env := &env.Env{
-		LDB:  ldb,
-		Log:  log,
+		LDB:        ldb,
+		Log:        log,
 		Containers: &docker.Containers{},
-		Host: Host,
+	}
+
+	cmdFlags.IntVar(&env.Port, "port", 3000, "Daemon port")
+	if c.Debug == false {
+		if os.Getenv("DEPLOYIT_DAEMON_PORT") != "" {
+			env.Port, _ = strconv.Atoi(os.Getenv("DEPLOYIT_DAEMON_PORT"))
+		}
 	}
 
 	log.Info("Context inited")
 
 	Route{}.Init(env)
 
-	return nil
+	return 0
+}
+
+func (c *DaemonCommand) Help() string {
+	return ""
+}
+
+func (c *DaemonCommand) Synopsis() string {
+	return ""
 }
