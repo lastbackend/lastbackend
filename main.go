@@ -4,22 +4,44 @@ import ()
 import (
 	"github.com/deployithq/deployit/handlers"
 	"github.com/mitchellh/cli"
+	"log"
 	"os"
 )
 
 func main() {
 
-	c := cli.NewCLI("app", "1.0.0")
+	c := cli.NewCLI("deploy it", "0.1.0")
 	c.Args = os.Args[1:]
 
 	c.Commands = map[string]cli.CommandFactory{
 		"it": func() (cli.Command, error) {
 			return new(handlers.ItCommand), nil
 		},
+		"app start": func() (cli.Command, error) {
+			return &handlers.AppCommand{
+				Subcommand: "start",
+			}, nil
+		},
+		"app stop": func() (cli.Command, error) {
+			return &handlers.AppCommand{
+				Subcommand: "stop",
+			}, nil
+		},
+		"app restart": func() (cli.Command, error) {
+			return &handlers.AppCommand{
+				Subcommand: "restart",
+			}, nil
+		},
+		"app remove": func() (cli.Command, error) {
+			return &handlers.AppCommand{
+				Subcommand: "remove",
+			}, nil
+		},
 	}
 
 	exitStatus, err := c.Run()
 	if err != nil {
+		log.Fatal(err)
 	}
 
 	os.Exit(exitStatus)
