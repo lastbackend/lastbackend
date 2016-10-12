@@ -1,3 +1,9 @@
+[![Go Report Card](https://goreportcard.com/badge/github.com/deployithq/deployit)](https://goreportcard.com/report/github.com/deployithq/deployit)
+[![GoDoc](https://godoc.org/github.com/deployithq/deployit?status.png)](https://godoc.org/github.com/deployithq/deployit)
+[![Travis](https://travis-ci.org/deployithq/deployit.svg?branch=master)](https://travis-ci.org/deployithq/deployit)
+[![Join the chat at freenode:deployit](https://img.shields.io/badge/irc-freenode%3A%20%23deployithq--dev-blue.svg)](http://webchat.freenode.net/?channels=%23deployit)
+[![Licensed under Apache License version 2.0](https://img.shields.io/github/license/deployithq/deployit.svg?maxAge=2592000)](https://www.apache.org/licenses/LICENSE-2.0)
+
 ![alt text](https://deployit.io/images/cdn/logo-purpure.png)
 
 ## Deploy It: the command-line toolkit for fast apps deploying
