@@ -1,8 +1,8 @@
-.PHONY : build deps start-daemon
+.PHONY : build deps
 
 build:
 	echo "Building Deploy It"
-	go get && go build -o /opt/bin/deploy
+	go get && go build -o /usr/local/bin/deploy
 
 deps:
 	echo "Installing dependencies"
