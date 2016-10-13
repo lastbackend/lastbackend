@@ -8,6 +8,7 @@ _obj
 _test
 .idea
 .vagrant
+contrib/vagrant/ssl
 
 # Architecture specific extensions/prefixes
 *.[568vq]
