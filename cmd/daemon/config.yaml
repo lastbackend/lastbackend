@@ -1,0 +1,4 @@
+debug: true
+
+http_server:
+  port: 3000
