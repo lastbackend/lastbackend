@@ -10,7 +10,7 @@ import (
 func Start() {
 
 	var ctx = context.Get()
-	ctx.Version = "0.0.1"
+	ctx.Version = "0.1.0"
 
 	app := cli.App("deployit", "deploy it tool service")
 
