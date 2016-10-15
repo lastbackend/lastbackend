@@ -2,9 +2,9 @@ package cmd
 
 import (
 	"github.com/deployithq/deployit/cmd/daemon"
+	"github.com/deployithq/deployit/cmd/daemon/context"
 	"github.com/jawher/mow.cli"
 	"os"
-	"github.com/deployithq/deployit/cmd/daemon/context"
 )
 
 func Start() {
