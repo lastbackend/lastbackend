@@ -204,4 +204,3 @@ Alexander: https://github.com/undassa
 
 Konstantin: https://github.com/unloop
 
-Bogdan: https://github.com/gofort

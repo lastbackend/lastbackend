@@ -7,9 +7,9 @@ Please add yourself into this list with your pull request.
 
 ## Example
 
-- gofort
-    - Name: Bogdan Kurnosov
-    - Email: kurnosov_bogdan@hotmail.com
+- undassa
+    - Name: Alexander Kaloshin
+    - Email: undassa@deployit.io
 
 ## List
 
