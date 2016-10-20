@@ -11,7 +11,10 @@ func Get() *Context {
 }
 
 type Context struct {
-	Version string
-	Log     log.ILogger
+	Info struct {
+		Version    string
+		ApiVersion string
+	}
+	Log log.ILogger
 	// Other info for HTTP handlers can be here, like user UUID
 }
