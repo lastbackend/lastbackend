@@ -47,7 +47,7 @@ func (l *Log) Info(args ...interface{}) {
 }
 
 func (l *Log) Infof(format string, args ...interface{}) {
-	if l.logger.Level >= logrus.DebugLevel {
+	if l.logger.Level >= logrus.InfoLevel {
 		entry := l.logger.WithFields(logrus.Fields{})
 		entry.Data["file"] = fileLine(l.skip)
 		entry.Infof(format, args)
@@ -63,7 +63,7 @@ func (l *Log) Error(args ...interface{}) {
 }
 
 func (l *Log) Errorf(format string, args ...interface{}) {
-	if l.logger.Level >= logrus.DebugLevel {
+	if l.logger.Level >= logrus.ErrorLevel {
 		entry := l.logger.WithFields(logrus.Fields{})
 		entry.Data["file"] = fileLine(l.skip)
 		entry.Errorf(format, args)
@@ -79,7 +79,7 @@ func (l *Log) Fatal(args ...interface{}) {
 }
 
 func (l *Log) Fatalf(format string, args ...interface{}) {
-	if l.logger.Level >= logrus.DebugLevel {
+	if l.logger.Level >= logrus.FatalLevel {
 		entry := l.logger.WithFields(logrus.Fields{})
 		entry.Data["file"] = fileLine(l.skip)
 		entry.Fatalf(format, args)
@@ -95,7 +95,7 @@ func (l *Log) Panic(args ...interface{}) {
 }
 
 func (l *Log) Panicf(format string, args ...interface{}) {
-	if l.logger.Level >= logrus.DebugLevel {
+	if l.logger.Level >= logrus.PanicLevel {
 		entry := l.logger.WithFields(logrus.Fields{})
 		entry.Data["file"] = fileLine(l.skip)
 		entry.Panicf(format, args)
@@ -111,7 +111,7 @@ func (l *Log) Warn(args ...interface{}) {
 }
 
 func (l *Log) Warnf(format string, args ...interface{}) {
-	if l.logger.Level >= logrus.DebugLevel {
+	if l.logger.Level >= logrus.WarnLevel {
 		entry := l.logger.WithFields(logrus.Fields{})
 		entry.Data["file"] = fileLine(l.skip)
 		entry.Warnf(format, args)

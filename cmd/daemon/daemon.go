@@ -10,9 +10,11 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
+	"github.com/deployithq/deployit/libs/adapter/k8s"
 )
 
 func Run(cmd *cli.Cmd) {
+	var err error
 
 	var ctx = context.Get()
 	var cfg = config.Get()
@@ -53,7 +55,12 @@ func Run(cmd *cli.Cmd) {
 	}
 
 	cmd.Action = func() {
+
 		ctx.Log.Info("Initializing daemon")
+		ctx.K8S, err = k8s.Get(config.GetK8S())
+		if err != nil {
+			ctx.Log.Panic(err)
+		}
 
 		go RunHttpServer(cfg.HttpServer.Port)
 
