@@ -72,7 +72,7 @@ Vagrant.configure("2") do |config|
   config.vm.provision :file, :source => DEPLOYIT_CONFIG_PATH, :destination => "/home/core/.deployit/config.yml"
   config.vm.provision "docker" do |d|
     d.build_image "/home/core/deployit", args: "-t deployit -f /home/core/deployit/images/deployit/Dockerfile"
-    d.run "deployit", name: "deployit-daemon", args:"-v /home/core/.deployit/config.yml:/etc/deployit/config.yml -p 2967:2967"
+    d.run "deployit", name: "deployit-daemon", args:"-v /home/core/.deployit/config.yml:/etc/deployit/config.yml -v /etc/kubernetes/ssl:/etc/deployit/ssl -p 2967:2967"
   end
 
 end
