@@ -2,8 +2,8 @@ package handler
 
 import (
 	"github.com/deployithq/deployit/cmd/daemon/context"
-	"net/http"
 	"k8s.io/client-go/1.5/pkg/api"
+	"net/http"
 )
 
 func SystemVersionH(w http.ResponseWriter, _ *http.Request) {
@@ -22,5 +22,5 @@ func SystemVersionH(w http.ResponseWriter, _ *http.Request) {
 	}
 
 	w.WriteHeader(200)
-	w.Write([]byte(ctx.Version))
+	w.Write([]byte(ctx.Info.Version))
 }
