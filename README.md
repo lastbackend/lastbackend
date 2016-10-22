@@ -1,17 +1,17 @@
 [![Go Report Card](https://goreportcard.com/badge/github.com/lastbackend/lastbackend)](https://goreportcard.com/report/github.com/lastbackend/lastbackend)
 [![GoDoc](https://godoc.org/github.com/lastbackend/lastbackend?status.png)](https://godoc.org/github.com/lastbackend/lastbackend)
 [![Travis](https://travis-ci.org/lastbackend/lastbackend.svg?branch=master)](https://travis-ci.org/lastbackend/lastbackend)
-[![Join the chat at freenode:deployit](https://img.shields.io/badge/irc-freenode%3A%20%23deployit-blue.svg)](http://webchat.freenode.net/?channels=%23deployit)
+[![Join the chat at freenode:lastbackend](https://img.shields.io/badge/irc-freenode%3A%20%23lastbackend-blue.svg)](http://webchat.freenode.net/?channels=%23lastbackend)
 [![Licensed under Apache License version 2.0](https://img.shields.io/github/license/lastbackend/lastbackend.svg?maxAge=2592000)](https://www.apache.org/licenses/LICENSE-2.0)
 
-![alt text](https://deployit.io/images/cdn/logo-purpure.png)
+![alt text](https://lastbackend.com/images/logo.png)
 
-## Deploy It: the command-line toolkit for fast apps deploying
+## Last.Backend: the apps cloud hosting for fast apps deploying, you don't need to manage.
 
-Deploy It is an open-source command-line toolkit and daemon in one application, which allows you to deploy applications to server.
+Last.Backend is an open-source platform, which allows you build a personal cloud on your servers based on kubernetes technology.
 
-Deploy It fetches code from current directory, request or repo, build it and deploy it to server. 
-Deploy It uses powerful containers, that means that your app will be run anywhere, from your development environment on your laptop to any large scale cloud hosting. 
+Last.Backend fetches code from current directory, request or repo, build it and deploy it to server.
+Last.Backend uses powerful containers, that means that your app will be run anywhere, from your development environment on your laptop to any large scale cloud hosting.
 You can run deploy it daemon on the host where you want to deploy your applications (it can be local or remote), run CLI with this host and your applications will be deployed on specified host.  
 
 This project has [Roadmap](https://github.com/lastbackend/lastbackend/blob/master/ROADMAP.md), feel free to offer your features. 
@@ -62,9 +62,9 @@ ___
 
 ## <a name="how_to_install"></a>How to install
 
-1. Download Deploy it
+1. Download Last.Backend repo
 ```bash
-$ git clone git@github.com:deployithq/deployit.git
+$ git clone git@github.com:lastbackend/lastbackend.git
 $ cd deployit
 $ make build
 ```
@@ -103,7 +103,7 @@ Daemon flags:
 ### It:
 
 1. Go to folder with your application source code
-2. Run `$ deploy it --host localhost --port 3000 --tag latest --log`
+2. Run `$ lb deploy --host localhost --port 3000 --tag latest --log`
 
 What magic is behind `$ deploy it` command:
 
@@ -117,7 +117,7 @@ What magic is behind `$ deploy it` command:
 
 ## Deploy config
 
-If you want to deploy your application with specific configurations, you can create "deployit.yaml" file, as shown below:
+If you want to deploy your application with specific configurations, you can create ".lb.yaml" file, as shown below:
 
 ```
 env: 
@@ -144,7 +144,7 @@ This config is optional. Use it only if you want.
 ### App start/stop/restart/remove
 
 1. Go to folder with your application source code
-2. Run `$ deploy app --host localhost --port 3000 start`
+2. Run `$ lb deploy app --host localhost --port 3000 start`
 
 ### Common flags
 
@@ -160,36 +160,36 @@ Deploy it flags:
 
 ### Future commands
 
-* deploy git
-* deploy hub
-* deploy app logs
-* deploy it at 4:00 pm for 2 hours
-* deploy redis/mysql/mongodb/rabbitmq ...
+* lb deploy git
+* lb deploy hub
+* lb deploy app logs
+* lb deploy app at 4:00 pm for 2 hours
+* lb deploy redis/mysql/mongodb/rabbitmq ...
 
 ___
 
 ## <a name="help"></a>Help
 
-All information about Deploy It is available via following commands:
+All information about Last.Backend is available via following commands:
 
 ### Brief info about all commands
 ```bash
-$ deploy --help
+$ lb deploy --help
 ```
 
-### Deploy it command
+### Deploy app command
 ```bash
-$ deploy it --help
+$ lb deploy app --help
 ```
 
 ### Daemon
 ```bash
-$ deploy daemon --help
+$ lb daemon --help
 ```
 
 ### Help about other commands:
 ```bash
-$ deploy <command> --help
+$ lb deploy <command> --help
 ```
 
 ___

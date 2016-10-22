@@ -31,7 +31,7 @@ Don't forget to add yourself to [maintainers list](https://github.com/lastbacken
 ## Building
 
 ```bash
-$ git clone git@github.com:deployithq/deployit.git
+$ git clone git@github.com:lastbackend/lastbackend.git
 $ cd deployit
 $ make build
 ```
@@ -41,14 +41,14 @@ $ make build
 ### Daemon
 
 ```bash
-$ sudo deploy --debug daemon
+$ sudo lb --debug daemon
 ```
 
 ### Other commands
 
 ```bash
-$ deploy --debug it --host localhost --port 3000 --tag latest
-$ deploy --debug app --host localhost --port 3000 stop
+$ lb deploy --debug it --host localhost --port 3000 --tag latest
+$ lb deploy --debug app --host localhost --port 3000 stop
 ```
 
 
