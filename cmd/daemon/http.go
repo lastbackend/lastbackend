@@ -2,9 +2,9 @@ package daemon
 
 import (
 	"fmt"
+	"github.com/gorilla/mux"
 	"github.com/lastbackend/lastbackend/cmd/daemon/context"
 	"github.com/lastbackend/lastbackend/cmd/daemon/handler"
-	"github.com/gorilla/mux"
 	"net/http"
 	"strconv"
 	"time"
@@ -18,6 +18,9 @@ func RunHttpServer(port int) {
 	r.Methods("OPTIONS").HandlerFunc(Headers)
 
 	r.HandleFunc("/version", Handler(handler.SystemVersionH)).Methods("GET")
+
+	// User handlers
+	r.HandleFunc("/user", Handler(handler.UserCreateH)).Methods("PUT")
 
 	ctx.Log.Infof("Listen server on %d port", port)
 
