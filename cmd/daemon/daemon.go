@@ -1,16 +1,16 @@
 package daemon
 
 import (
-	"github.com/deployithq/deployit/cmd/daemon/config"
-	"github.com/deployithq/deployit/cmd/daemon/context"
-	"github.com/deployithq/deployit/libs/log"
 	"github.com/jawher/mow.cli"
+	"github.com/lastbackend/lastbackend/cmd/daemon/config"
+	"github.com/lastbackend/lastbackend/cmd/daemon/context"
+	"github.com/lastbackend/lastbackend/libs/adapter/k8s"
+	"github.com/lastbackend/lastbackend/libs/log"
 	"gopkg.in/yaml.v2"
 	"io/ioutil"
 	"os"
 	"os/signal"
 	"syscall"
-	"github.com/deployithq/deployit/libs/adapter/k8s"
 )
 
 func Run(cmd *cli.Cmd) {

@@ -1,7 +1,7 @@
 package color
 
 import (
-	"github.com/deployithq/deployit/libs/log/filesystem"
+	"github.com/lastbackend/lastbackend/libs/log/filesystem"
 )
 
 func Black(s string) string {

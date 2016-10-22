@@ -26,7 +26,7 @@ Great materials to read:
 
 ## Maintainers
 
-Don't forget to add yourself to [maintainers list](https://github.com/deployithq/deployit/blob/master/CONTRIBUTING.md) of this project in pull request =)
+Don't forget to add yourself to [maintainers list](https://github.com/lastbackend/lastbackend/blob/master/CONTRIBUTING.md) of this project in pull request =)
 
 ## Building
 

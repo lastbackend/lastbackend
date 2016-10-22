@@ -1,7 +1,7 @@
 package context
 
 import (
-	"github.com/deployithq/deployit/libs/interface/log"
+	"github.com/lastbackend/lastbackend/libs/interface/log"
 )
 
 var context Context

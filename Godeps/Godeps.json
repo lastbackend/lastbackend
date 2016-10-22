@@ -1,10 +1,7 @@
 {
-	"ImportPath": "github.com/deployithq/deployit",
+	"ImportPath": "github.com/lastbackend/lastbackend",
 	"GoVersion": "go1.7",
 	"GodepVersion": "v74",
-	"Packages": [
-		"./..."
-	],
 	"Deps": [
 		{
 			"ImportPath": "cloud.google.com/go/compute/metadata",
@@ -24,11 +21,6 @@
 		{
 			"ImportPath": "github.com/PuerkitoBio/urlesc",
 			"Rev": "5bd2802263f21d8788851d5305584c82a5c75d7e"
-		},
-		{
-			"ImportPath": "github.com/Sirupsen/logrus",
-			"Comment": "v0.10.0-38-g3ec0642",
-			"Rev": "3ec0642a7fb6488f65b06f9040adc67e3990296a"
 		},
 		{
 			"ImportPath": "github.com/blang/semver",
@@ -227,10 +219,6 @@
 			"Rev": "3c3a985cb79f52a3190fbc056984415ca6763d01"
 		},
 		{
-			"ImportPath": "golang.org/x/sys/unix",
-			"Rev": "002cbb5f952456d0c50e0d2aff17ea5eca716979"
-		},
-		{
 			"ImportPath": "golang.org/x/text/cases",
 			"Rev": "2910a502d2bf9e43193af9d68ca516529614eed3"
 		},
@@ -309,7 +297,7 @@
 		},
 		{
 			"ImportPath": "gopkg.in/yaml.v2",
-			"Rev": "a5b47d31c556af34a302ce5d659e6fea44d90de0"
+			"Rev": "53feefa2559fb8dfa8d81baad31be332c97d6c77"
 		},
 		{
 			"ImportPath": "k8s.io/client-go/1.5/discovery",

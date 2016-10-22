@@ -2,8 +2,8 @@ package daemon
 
 import (
 	"fmt"
-	"github.com/deployithq/deployit/cmd/daemon/context"
-	"github.com/deployithq/deployit/cmd/daemon/handler"
+	"github.com/lastbackend/lastbackend/cmd/daemon/context"
+	"github.com/lastbackend/lastbackend/cmd/daemon/handler"
 	"github.com/gorilla/mux"
 	"net/http"
 	"strconv"

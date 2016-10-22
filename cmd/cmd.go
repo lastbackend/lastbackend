@@ -2,10 +2,10 @@ package cmd
 
 import (
 	"fmt"
-	"github.com/deployithq/deployit/cmd/client"
-	cctx "github.com/deployithq/deployit/cmd/client/context"
-	"github.com/deployithq/deployit/cmd/daemon"
-	dctx "github.com/deployithq/deployit/cmd/daemon/context"
+	"github.com/lastbackend/lastbackend/cmd/client"
+	cctx "github.com/lastbackend/lastbackend/cmd/client/context"
+	"github.com/lastbackend/lastbackend/cmd/daemon"
+	dctx "github.com/lastbackend/lastbackend/cmd/daemon/context"
 	"github.com/jawher/mow.cli"
 	"os"
 )

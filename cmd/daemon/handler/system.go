@@ -1,7 +1,7 @@
 package handler
 
 import (
-	"github.com/deployithq/deployit/cmd/daemon/context"
+	"github.com/lastbackend/lastbackend/cmd/daemon/context"
 	"k8s.io/client-go/1.5/pkg/api"
 	"net/http"
 )
