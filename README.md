@@ -1,8 +1,8 @@
-[![Go Report Card](https://goreportcard.com/badge/github.com/deployithq/deployit)](https://goreportcard.com/report/github.com/deployithq/deployit)
-[![GoDoc](https://godoc.org/github.com/deployithq/deployit?status.png)](https://godoc.org/github.com/deployithq/deployit)
-[![Travis](https://travis-ci.org/deployithq/deployit.svg?branch=master)](https://travis-ci.org/deployithq/deployit)
+[![Go Report Card](https://goreportcard.com/badge/github.com/lastbackend/lastbackend)](https://goreportcard.com/report/github.com/lastbackend/lastbackend)
+[![GoDoc](https://godoc.org/github.com/lastbackend/lastbackend?status.png)](https://godoc.org/github.com/lastbackend/lastbackend)
+[![Travis](https://travis-ci.org/lastbackend/lastbackend.svg?branch=master)](https://travis-ci.org/lastbackend/lastbackend)
 [![Join the chat at freenode:deployit](https://img.shields.io/badge/irc-freenode%3A%20%23deployit-blue.svg)](http://webchat.freenode.net/?channels=%23deployit)
-[![Licensed under Apache License version 2.0](https://img.shields.io/github/license/deployithq/deployit.svg?maxAge=2592000)](https://www.apache.org/licenses/LICENSE-2.0)
+[![Licensed under Apache License version 2.0](https://img.shields.io/github/license/lastbackend/lastbackend.svg?maxAge=2592000)](https://www.apache.org/licenses/LICENSE-2.0)
 
 ![alt text](https://deployit.io/images/cdn/logo-purpure.png)
 
@@ -14,11 +14,11 @@ Deploy It fetches code from current directory, request or repo, build it and dep
 Deploy It uses powerful containers, that means that your app will be run anywhere, from your development environment on your laptop to any large scale cloud hosting. 
 You can run deploy it daemon on the host where you want to deploy your applications (it can be local or remote), run CLI with this host and your applications will be deployed on specified host.  
 
-This project has [Roadmap](https://github.com/deployithq/deployit/blob/master/ROADMAP.md), feel free to offer your features. 
+This project has [Roadmap](https://github.com/lastbackend/lastbackend/blob/master/ROADMAP.md), feel free to offer your features. 
 
-Look at our [Changelog](https://github.com/deployithq/deployit/blob/master/CHANGELOG.md) to see project progress!
+Look at our [Changelog](https://github.com/lastbackend/lastbackend/blob/master/CHANGELOG.md) to see project progress!
 
-We are actively searching for contributors! If you want to help our project and to make developers life easier, please read our **[Contibuting guideliness](https://github.com/deployithq/deployit/blob/master/CONTRIBUTING.md)**.
+We are actively searching for contributors! If you want to help our project and to make developers life easier, please read our **[Contibuting guideliness](https://github.com/lastbackend/lastbackend/blob/master/CONTRIBUTING.md)**.
 
 **We have benefits for active contributors!**
 
@@ -196,7 +196,7 @@ ___
 
 ## <a name="maintainers"></a>Maintainers
 
-We have separated maintainers page here: [MAINTAINERS.md](https://github.com/deployithq/deployit/blob/master/MAINTAINERS.md)
+We have separated maintainers page here: [MAINTAINERS.md](https://github.com/lastbackend/lastbackend/blob/master/MAINTAINERS.md)
 
 ### Authors
 

@@ -14,8 +14,8 @@ RUN apk add --update --no-cache --virtual build-dependencies \
       gcc \
       alpine-sdk
 
-WORKDIR /go/src/github.com/deployithq/deployit
-ADD . /go/src/github.com/deployithq/deployit
+WORKDIR /go/src/github.com/lastbackend/lastbackend
+ADD . /go/src/github.com/lastbackend/lastbackend
 
 RUN go get \
     && make build \

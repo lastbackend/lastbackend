@@ -2,7 +2,7 @@ package log
 
 import (
 	"fmt"
-	"github.com/deployithq/deployit/libs/log/color"
+	"github.com/lastbackend/lastbackend/libs/log/color"
 	"runtime"
 	"time"
 )

@@ -1,7 +1,7 @@
 package main
 
 import (
-	"github.com/deployithq/deployit/cmd"
+	"github.com/lastbackend/lastbackend/cmd"
 )
 
 func main() {
