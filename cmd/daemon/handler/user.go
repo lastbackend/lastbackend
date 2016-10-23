@@ -136,11 +136,6 @@ func UserCreateH(w http.ResponseWriter, r *http.Request) {
 
 	fmt.Printf("%#v", user)
 
-  ctx.K8S.Extensions().ThirdPartyResources()
-
-	res := us.client//.Post().RequestURI("https://172.17.4.99:443").Resource("users").Body(user)
-	fmt.Printf("%#v", res)
-
 	w.WriteHeader(200)
 	w.Write([]byte(`{"status":"ok"}`))
 }
