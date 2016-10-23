@@ -32,7 +32,7 @@ Don't forget to add yourself to [maintainers list](https://github.com/lastbacken
 
 ```bash
 $ git clone git@github.com:lastbackend/lastbackend.git
-$ cd deployit
+$ cd lastbackend
 $ make build
 ```
 
