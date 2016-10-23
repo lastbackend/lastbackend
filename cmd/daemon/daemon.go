@@ -11,6 +11,12 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
+
+	// install all APIs
+	//_ "k8s.io/kubernetes/pkg/api/install"
+	//_ "k8s.io/kubernetes/pkg/apis/extensions/install"
+	//_ "k8s.io/kubernetes/pkg/apis/autoscaling/install"
+	//_ "k8s.io/kubernetes/pkg/apis/batch/install"
 )
 
 func Run(cmd *cli.Cmd) {
