@@ -54,7 +54,7 @@ ___
 - Git
 
 ### Daemon:
-- Docker
+- Kubernetes 1.5
 - Go 1.6 or higher
 - Git
 
@@ -65,42 +65,37 @@ ___
 1. Download Last.Backend repo
 ```bash
 $ git clone git@github.com:lastbackend/lastbackend.git
-$ cd deployit
+$ cd lastbackend
 $ make build
 ```
 
 2. Start daemon on host, where you want to deploy your apps
 ```bash
-$ sudo deploy daemon
+$ sudo lastbackend daemon
 ```
 
-3. Clone sources and run `$ deploy it` command while in sources directory
+3. Clone sources and run `$ lb deploy` command while in sources directory
 ```bash
-$ git clone https://github.com/<username>/<repo>
-$ cd <repo>
-$ deploy it --host localhost --port 3000 --tag latest
+$ git clone https://github.com/lastbackend/hello-world
+$ cd hello-world
+$ lb deploy --host localhost --port 3000 --tag latest
 ```
 
 ___
 
 ## <a name="current_cli_commands"></a>Current CLI commands
 
-### Daemon
+### daemon
 
 Install daemon on the host, where you want to deploy your apps
 
-Run `$ sudo deploy daemon`
+Run `$ sudo lastbackend daemon`
 
 Daemon flags:
-* [--debug] Shows you debug logs
-* [--port] Port, which daemon will listen
-* [--docker-uri] Docker daemon adress
-* [--docker-cert] Docker client certificate
-* [--docker-ca] Docker certificate authority that signed the registry certificate
-* [--docker-key] Docker client key
+* [-c] Path to config file to run in different configuration
 
 
-### It:
+### deploy:
 
 1. Go to folder with your application source code
 2. Run `$ lb deploy --host localhost --port 3000 --tag latest --log`
@@ -115,7 +110,7 @@ What magic is behind `$ deploy it` command:
 6. DAEMON builds unpacked sources
 7. DAEMON deploys app to host where daemon is running
 
-## Deploy config
+## deploy config
 
 If you want to deploy your application with specific configurations, you can create ".lb.yaml" file, as shown below:
 
@@ -144,7 +139,7 @@ This config is optional. Use it only if you want.
 ### App start/stop/restart/remove
 
 1. Go to folder with your application source code
-2. Run `$ lb deploy app --host localhost --port 3000 start`
+2. Run `$ lb deploy --host localhost --port 3000 start`
 
 ### Common flags
 
@@ -153,17 +148,16 @@ These flags are suitable for all commands except daemon.
 Deploy it flags:
 * [--debug] Shows you debug logs
 * [--tag] Version of your app, examples: "latest", "master", "0.3", "1.9.9", etc.
-* [--host] Adress of your host, where daemon is running
+* [--host] Address of your host, where daemon is running
 * [--port] Port of daemon host
-* [--ssl] HTTPS mode if your daemon uses ssl
 * [--log] Show build logs
 
 ### Future commands
 
-* lb deploy git
-* lb deploy hub
-* lb deploy app logs
-* lb deploy app at 4:00 pm for 2 hours
+* lb deploy <git>
+* lb deploy <docker image>
+* lb deploy <app> logs
+* lb deploy <app> at 4:00 pm for 2 hours
 * lb deploy redis/mysql/mongodb/rabbitmq ...
 
 ___
