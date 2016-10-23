@@ -3,13 +3,15 @@ package handler
 import (
 	"encoding/json"
 	"fmt"
+	c "github.com/gorilla/context"
+	"github.com/lastbackend/api/libs/model"
 	"github.com/lastbackend/lastbackend/cmd/daemon/context"
 	e "github.com/lastbackend/lastbackend/libs/errors"
 	"github.com/lastbackend/lastbackend/utils"
 	"io"
 	"io/ioutil"
-	"k8s.io/client-go/1.5/pkg/api/v1"
-	//"k8s.io/kubernetes/pkg/client/restclient"
+	v "k8s.io/client-go/1.5/kubernetes/typed/core/v1"
+	//"k8s.io/client-go/1.5/pkg/api/v1"
 	"net/http"
 	"strings"
 	"time"
@@ -69,7 +71,7 @@ func (s *userCreateS) decodeAndValidate(reader io.Reader) *e.Err {
 	return nil
 }
 
-type UserView struct {
+type User struct {
 	UUID         string    `json:"uuid,omitempty"`
 	Username     string    `json:"username,omitempty"`
 	Email        string    `json:"email,omitempty"`
@@ -111,22 +113,22 @@ func UserCreateH(w http.ResponseWriter, r *http.Request) {
 
 	ctx.Log.Info("generate password", password)
 
-	conf := &v1.Namespace{
-		ObjectMeta: v1.ObjectMeta{
-			Name:      *rq.Username,
-			Namespace: *rq.Username,
-			Labels: map[string]string{
-				"name": "user",
-			},
-		},
-	}
+	//conf := &v1.Namespace{
+	//	ObjectMeta: v1.ObjectMeta{
+	//		Name:      *rq.Username,
+	//		Namespace: *rq.Username,
+	//		Labels: map[string]string{
+	//			"name": "user",
+	//		},
+	//	},
+	//}
+  //
+	//_, err = ctx.K8S.Core().Namespaces().Create(conf)
+	//if err != nil {
+	//	panic(err)
+	//}
 
-	_, err = ctx.K8S.Core().Namespaces().Create(conf)
-	if err != nil {
-		panic(err)
-	}
-
-	user := UserView{
+	user := User{
 		UUID:     utils.GetUUIDV4(),
 		Username: *rq.Username,
 		Email:    *rq.Email,
@@ -134,13 +136,39 @@ func UserCreateH(w http.ResponseWriter, r *http.Request) {
 
 	fmt.Printf("%#v", user)
 
-	//rst := restclient.RESTClient{}
-  //
-	//fmt.Printf("%#v", rst)
-  //
-	//res := rst.Post().Resource("users").Body(user).Do()
-  //
-	//fmt.Printf("%#v", res)
+  ctx.K8S.Extensions().ThirdPartyResources()
+
+	res := us.client//.Post().RequestURI("https://172.17.4.99:443").Resource("users").Body(user)
+	fmt.Printf("%#v", res)
+
+	w.WriteHeader(200)
+	w.Write([]byte(`{"status":"ok"}`))
+}
+
+func UserGetH(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	var ctx = context.Get()
+
+	s, ok := c.GetOk(r, `session`)
+	if !ok {
+		ctx.Log.Error(e.StatusAccessDenied)
+		e.HTTP.AccessDenied(w)
+		return
+	}
+
+	session := s.(*model.Session)
+
+	namespace, err := ctx.K8S.Core().Namespaces().Get(session.Username)
+	if err != nil {
+		panic(err)
+	}
+
+	fmt.Printf("%#v", namespace)
+
+  var client = &v.CoreClient{}
+  res := client.Get().Resource("users")
+  fmt.Printf("%#v", res)
 
 	w.WriteHeader(200)
 	w.Write([]byte(`{"status":"ok"}`))
