@@ -1,12 +1,12 @@
 .PHONY : build
 
-NAME = deployit
+NAME = lastbackend
 HARDWARE = $(shell uname -m)
 OS := $(shell uname)
 VERSION ?= 0.1.0
 
 build:
-	echo "Building Deploy It"
+	echo "Building Last.Backend"
 	go get -u github.com/tools/godep
 	godep restore
 	mkdir -p build/linux  && GOOS=linux  go build -ldflags "-X main.Version=$(VERSION)" -o build/linux/$(NAME)
@@ -15,9 +15,9 @@ build:
 install:
 	echo "Install Deploy IT, ${OS} version:= ${VERSION}"
 ifeq ($(OS),Linux)
-	mv build/linux/$(NAME) /usr/local/bin/
+	mv build/linux/$(NAME) /usr/local/bin/lb
 endif
 ifeq ($(OS) ,Darwin)
-	mv build/darwin/$(NAME) /usr/local/bin/
+	mv build/darwin/$(NAME) /usr/local/bin/lb
 endif
 	chmod +x /usr/local/bin/$(NAME)
