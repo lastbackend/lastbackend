@@ -4,10 +4,10 @@ import (
 	"fmt"
 	"github.com/gorilla/mux"
 	"github.com/lastbackend/lastbackend/cmd/daemon/context"
-	"github.com/lastbackend/lastbackend/cmd/daemon/handler"
 	"net/http"
 	"strconv"
 	"time"
+	"github.com/lastbackend/lastbackend/cmd/daemon/handler"
 )
 
 func RunHttpServer(port int) {

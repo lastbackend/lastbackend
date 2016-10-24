@@ -2,15 +2,15 @@ package handler
 
 import (
 	"encoding/json"
-	"fmt"
 	"github.com/lastbackend/lastbackend/cmd/daemon/context"
 	e "github.com/lastbackend/lastbackend/libs/errors"
+	"github.com/lastbackend/lastbackend/pkg/account"
+	"github.com/lastbackend/lastbackend/pkg/user"
 	"github.com/lastbackend/lastbackend/utils"
 	"io"
 	"io/ioutil"
 	"net/http"
 	"strings"
-	"time"
 )
 
 type userCreateS struct {
@@ -67,18 +67,6 @@ func (s *userCreateS) decodeAndValidate(reader io.Reader) *e.Err {
 	return nil
 }
 
-type User struct {
-	UUID         string    `json:"uuid,omitempty"`
-	Username     string    `json:"username,omitempty"`
-	Email        string    `json:"email,omitempty"`
-	Gravatar     string    `json:"gravatar,omitempty"`
-	Active       bool      `json:"active,omitempty"`
-	Organization bool      `json:"organization,omitempty"`
-	Balance      float64   `json:"balance,omitempty"`
-	Created      time.Time `json:"created,omitempty"`
-	Updated      time.Time `json:"updated,omitempty"`
-}
-
 func UserCreateH(w http.ResponseWriter, r *http.Request) {
 
 	var err error
@@ -107,33 +95,29 @@ func UserCreateH(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	ctx.Log.Info("generate password", password)
-
-	//conf := &v1.Namespace{
-	//	ObjectMeta: v1.ObjectMeta{
-	//		Name:      *rq.Username,
-	//		Namespace: *rq.Username,
-	//		Labels: map[string]string{
-	//			"name": "user",
-	//		},
-	//	},
-	//}
-	//
-	//_, err = ctx.K8S.Core().Namespaces().Create(conf)
-	//if err != nil {
-	//	panic(err)
-	//}
-
-	user := User{
-		UUID:     utils.GetUUIDV4(),
-		Username: *rq.Username,
-		Email:    *rq.Email,
+	u, err := user.Create(*rq.Username, *rq.Email)
+	if err != nil {
+		ctx.Log.Error(err)
+    e.HTTP.InternalServerError(w)
+    return
 	}
 
-	fmt.Printf("%#v", user)
+	session, err := account.Create(u.UUID, *rq.Password)
+	if err != nil {
+		ctx.Log.Error(err)
+    e.HTTP.InternalServerError(w)
+    return
+	}
+
+	response, err := json.Marshal(session)
+	if err != nil {
+		ctx.Log.Error(err)
+		e.HTTP.InternalServerError(w)
+		return
+	}
 
 	w.WriteHeader(200)
-	w.Write([]byte(`{"status":"ok"}`))
+	w.Write(response)
 }
 
 func UserGetH(w http.ResponseWriter, r *http.Request) {
