@@ -11,7 +11,7 @@ type ComponentAccountsGetter interface {
 
 // ComponentStatusInterface has methods to work with ComponentStatus resources.
 type ComponentAccountInterface interface {
-	Create(*account.ComponentAccount) (*account.ComponentAccount, error)
+	Create(*account.Account) (*account.Account, error)
 }
 
 // componentStatuses implements ComponentStatusInterface
@@ -27,11 +27,11 @@ func newComponentAccounts(c *LBClient) *componentAccounts {
 }
 
 // Create takes the representation of a componentStatus and creates it.  Returns the server's representation of the componentStatus, and an error, if there is any.
-func (c *componentAccounts) Create(componentAccount *account.ComponentAccount) (result *account.ComponentAccount, err error) {
-	result = &account.ComponentAccount{}
+func (c *componentAccounts) Create(Account *account.Account) (result *account.Account, err error) {
+	result = &account.Account{}
 	err = c.client.Post().
 		Resource("componentaccounts").
-		Body(componentAccount).
+		Body(Account).
 		Do().
 		Into(result)
 	return
