@@ -15,17 +15,10 @@ type Build struct {
 }
 
 type BuildSpec struct {
-	// CommonSpec is the information that represents a build
-	CommonSpec `json:",inline"`
-	// Request called and created this build
-	Request BuildRequest `json:"request,omitempty"`
-}
-
-type CommonSpec struct {
 	// Build number, incremented automatically
 	Number int `json:"number, omitempty"`
 	// Build executing status
-	Status BuildStatus `json:"status"`
+	Status BuildStatus `json:"status,omitempty"`
 	// Build sources used for build
 	Source BuildSource `json:"source,omitempty"`
 	// Build image output information
@@ -34,6 +27,8 @@ type CommonSpec struct {
 	Created time.Time `json:"created, omitempty"`
 	// Build updated time
 	Updated time.Time `json:"updated, omitempty"`
+	// Request called and created this build
+	Request BuildRequest `json:"request,omitempty"`
 }
 
 type BuildRequest struct {
@@ -57,6 +52,17 @@ type BuildStatus struct {
 }
 
 type BuildStep string
+
+const (
+	//BuildStepCreate - The first step after build creating
+	BuildStepCreate = "create"
+	//BuildStepFetch - Fetch sources step
+	BuildStepFetch = "fetch"
+	//BuildStepBuild - Build executing step
+	BuildStepBuild = "build"
+	//BuildStepUpload - Upload builded docker image step
+	BuildStepUpload = "upload"
+)
 
 type BuildSource struct {
 	// Build sources hub
