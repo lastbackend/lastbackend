@@ -1,9 +1,8 @@
 package k8s
 
 import (
-	account "github.com/lastbackend/lastbackend/pkg/account/api/v1"
+	account "github.com/lastbackend/lastbackend/libs/adapter/k8s/api/v1"
 )
-
 
 type ComponentAccountsGetter interface {
 	Accounts() ComponentAccountInterface
@@ -30,12 +29,9 @@ func newComponentAccounts(c *LBClient) *componentAccounts {
 func (c *componentAccounts) Create(Account *account.Account) (result *account.Account, err error) {
 	result = &account.Account{}
 	err = c.client.Post().
-		Resource("componentaccounts").
+		Resource("accounts").
 		Body(Account).
 		Do().
 		Into(result)
 	return
 }
-
-
-
