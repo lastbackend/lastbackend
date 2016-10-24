@@ -15,7 +15,7 @@ type Log struct {
 }
 
 func (l *Log) Init() {
-	l.skip = 2
+	l.skip = 3
 }
 
 func (l *Log) SetDebugLevel() {
@@ -75,12 +75,21 @@ func (l *Log) Warnf(format string, args ...interface{}) {
 }
 
 func (l *Log) print(message string) {
-	fmt.Printf("%v %s", time.Now().Format("2006-01-02 15:04:05"), message+_NEWLINE)
+	if l.debug {
+		fmt.Printf("[%v] %s ", time.Now().Format("2006-01-02 15:04:05"), color.Cyan(fileLine(l.skip)))
+		fmt.Printf(message+_NEWLINE)
+	} else {
+		fmt.Printf("[%v] %s ", time.Now().Format("2006-01-02 15:04:05"), message+_NEWLINE)
+	}
 }
 
 func (l *Log) printf(format string, a ...interface{}) {
-	fmt.Printf("%v %s", time.Now().Format("2006-01-02 15:04:05"), color.Cyan(fileLine(l.skip)))
-	fmt.Printf(format+_NEWLINE, a...)
+	if l.debug {
+		fmt.Printf("[%v] %s ", time.Now().Format("2006-01-02 15:04:05"), color.Cyan(fileLine(l.skip)))
+		fmt.Printf(format+_NEWLINE, a...)
+	} else {
+		fmt.Printf(fmt.Sprintf("[%v] %s ", time.Now().Format("2006-01-02 15:04:05"), format+_NEWLINE), a...)
+	}
 }
 
 func fileLine(skip int) string {

@@ -3,15 +3,11 @@ package handler
 import (
 	"encoding/json"
 	"fmt"
-	c "github.com/gorilla/context"
-	"github.com/lastbackend/api/libs/model"
 	"github.com/lastbackend/lastbackend/cmd/daemon/context"
 	e "github.com/lastbackend/lastbackend/libs/errors"
 	"github.com/lastbackend/lastbackend/utils"
 	"io"
 	"io/ioutil"
-	v "k8s.io/client-go/1.5/kubernetes/typed/core/v1"
-	//"k8s.io/client-go/1.5/pkg/api/v1"
 	"net/http"
 	"strings"
 	"time"
@@ -122,7 +118,7 @@ func UserCreateH(w http.ResponseWriter, r *http.Request) {
 	//		},
 	//	},
 	//}
-  //
+	//
 	//_, err = ctx.K8S.Core().Namespaces().Create(conf)
 	//if err != nil {
 	//	panic(err)
@@ -142,28 +138,28 @@ func UserCreateH(w http.ResponseWriter, r *http.Request) {
 
 func UserGetH(w http.ResponseWriter, r *http.Request) {
 
-	var err error
-	var ctx = context.Get()
+	//var err error
+	//var ctx = context.Get()
+	//
+	//s, ok := c.GetOk(r, `session`)
+	//if !ok {
+	//	ctx.Log.Error(e.StatusAccessDenied)
+	//	e.HTTP.AccessDenied(w)
+	//	return
+	//}
 
-	s, ok := c.GetOk(r, `session`)
-	if !ok {
-		ctx.Log.Error(e.StatusAccessDenied)
-		e.HTTP.AccessDenied(w)
-		return
-	}
+	//session := s.(*model.Session)
 
-	session := s.(*model.Session)
-
-	namespace, err := ctx.K8S.Core().Namespaces().Get(session.Username)
-	if err != nil {
-		panic(err)
-	}
-
-	fmt.Printf("%#v", namespace)
-
-  var client = &v.CoreClient{}
-  res := client.Get().Resource("users")
-  fmt.Printf("%#v", res)
+	//namespace, err := ctx.K8S.Core().Namespaces().Get(session.Username)
+	//if err != nil {
+	//panic(err)
+	//}
+	//
+	//fmt.Printf("%#v", namespace)
+	//
+	//var client = &v.CoreClient{}
+	//res := client.Get().Resource("users")
+	//fmt.Printf("%#v", res)
 
 	w.WriteHeader(200)
 	w.Write([]byte(`{"status":"ok"}`))

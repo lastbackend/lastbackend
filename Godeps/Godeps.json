@@ -166,10 +166,6 @@
 			"Rev": "77ed1c8a01217656d2080ad51981f6e99adaa177"
 		},
 		{
-			"ImportPath": "github.com/lastbackend/api/libs/model",
-			"Rev": "0312dc44d5c0e45f3c0e43effd612ce4f08e7189"
-		},
-		{
 			"ImportPath": "github.com/mailru/easyjson/buffer",
 			"Rev": "d5b7844b561a7bc640052f1b935f7b800330d7e0"
 		},
