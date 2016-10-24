@@ -18,5 +18,4 @@ type Context struct {
 	}
 	Log log.ILogger
 	K8S k8s.IK8S
-	// Other info for HTTP handlers can be here, like user UUID
 }
