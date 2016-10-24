@@ -2,12 +2,13 @@ package cmd
 
 import (
 	"fmt"
+	"os"
+
+	"github.com/jawher/mow.cli"
 	"github.com/lastbackend/lastbackend/cmd/client"
 	cctx "github.com/lastbackend/lastbackend/cmd/client/context"
 	"github.com/lastbackend/lastbackend/cmd/daemon"
 	dctx "github.com/lastbackend/lastbackend/cmd/daemon/context"
-	"github.com/jawher/mow.cli"
-	"os"
 )
 
 func Start() {
@@ -21,7 +22,7 @@ func Start() {
 	client_ctx.Info.Version = "0.1.0"
 	client_ctx.Info.ApiVersion = "1.0"
 
-	app := cli.App("deployit", "deploy it tool service")
+	app := cli.App("last.backend", "apps cloud hosting with integrated deployment tools")
 
 	app.Version("v version", fmt.Sprintf(""+
 		"Client:\r\n"+
@@ -40,7 +41,7 @@ func Start() {
 		}
 	}
 
-	app.Command("daemon", "Run deployit in daemon mode", daemon.Run)
+	app.Command("daemon", "Run last.backend daemon", daemon.Run)
 	app.Command("init", "Init project", client.Init)
 
 	app.Run(os.Args)
