@@ -29,7 +29,7 @@ func newComponentAccounts(c *LBClient) *componentAccounts {
 func (c *componentAccounts) Create(Account *account.Account) (result *account.Account, err error) {
 	result = &account.Account{}
 	err = c.client.Post().
-		Resource("componentaccounts").
+		Resource("accounts").
 		Body(Account).
 		Do().
 		Into(result)
