@@ -2,11 +2,15 @@ package daemon
 
 import (
 	"fmt"
+	c "github.com/gorilla/context"
 	"github.com/gorilla/mux"
+	"github.com/lastbackend/api/libs/model"
 	"github.com/lastbackend/lastbackend/cmd/daemon/context"
 	"github.com/lastbackend/lastbackend/cmd/daemon/handler"
+	e "github.com/lastbackend/lastbackend/libs/errors"
 	"net/http"
 	"strconv"
+	"strings"
 	"time"
 )
 
@@ -20,7 +24,8 @@ func RunHttpServer(port int) {
 	r.HandleFunc("/version", Handler(handler.SystemVersionH)).Methods("GET")
 
 	// User handlers
-	r.HandleFunc("/user", Handler(handler.UserCreateH)).Methods("PUT")
+	r.HandleFunc("/user", Handler(handler.UserCreateH)).Methods("POST")
+	r.HandleFunc("/user", Handler(handler.UserGetH, Auth)).Methods("GET")
 
 	ctx.Log.Infof("Listen server on %d port", port)
 
@@ -56,4 +61,47 @@ func Handler(h http.HandlerFunc, middleware ...func(http.HandlerFunc) http.Handl
 	}
 
 	return h
+}
+
+// Auth - authentication middleware
+func Auth(h http.HandlerFunc) http.HandlerFunc {
+
+	return func(w http.ResponseWriter, r *http.Request) {
+
+		var token string
+		var params = mux.Vars(r)
+
+		if _, ok := params["token"]; ok {
+			token = params["token"]
+		} else if r.Header.Get("Authorization") != "" {
+			// Parse authorization header
+			var auth = strings.SplitN(r.Header.Get("Authorization"), " ", 2)
+
+			// Check authorization header parts length and authorization header format
+			if len(auth) != 2 && auth[0] != "Bearer" {
+				e.HTTP.AccessDenied(w)
+				return
+			}
+
+			token = auth[1]
+
+		} else {
+			w.Header().Set("Content-Type", "application/json")
+			e.HTTP.AccessDenied(w)
+			return
+		}
+
+		s := new(model.Session)
+		err := s.Decode(token)
+		if err != nil {
+			e.HTTP.AccessDenied(w)
+			return
+		}
+
+		// Add session and token to context
+		c.Set(r, "token", token)
+		c.Set(r, "session", s)
+
+		h.ServeHTTP(w, r)
+	}
 }
