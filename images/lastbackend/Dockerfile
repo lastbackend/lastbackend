@@ -1,9 +1,9 @@
 FROM alpine:3.4
 
-ENV GOROOT=/usr/lib/go \
-    GOPATH=/go \
-    GOBIN=/go/bin \
-    PATH=$PATH:$GOROOT/bin:$GOPATH/bin:/usr/local/bin
+ENV GOROOT=/usr/lib/go
+ENV GOPATH=/go
+ENV GOBIN=/go/bin
+ENV PATH=$PATH:$GOROOT/bin:$GOPATH/bin:/usr/local/bin
 
 RUN apk add --update --no-cache \
       ca-certificates
@@ -17,7 +17,8 @@ RUN apk add --update --no-cache --virtual build-dependencies \
 WORKDIR /go/src/github.com/lastbackend/lastbackend
 ADD . /go/src/github.com/lastbackend/lastbackend
 
-RUN go get \
+RUN go get github.com/tools/godep \
+    && godep restore \
     && make build \
     && make install \
     && apk del --purge build-dependencies
@@ -29,4 +30,4 @@ RUN rm -rf /go/pkg \
 
 EXPOSE 2967
 
-CMD ["/usr/local/bin/deployit", "daemon", "-c", "/etc/deployit/config.yml"]
+CMD ["/usr/local/bin/lastbackend", "daemon", "-c", "/etc/lastbackend/config.yml"]

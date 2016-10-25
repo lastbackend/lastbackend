@@ -79,7 +79,7 @@ func (l *Log) print(message string) {
 		fmt.Printf("[%v] %s ", time.Now().Format("2006-01-02 15:04:05"), color.Cyan(fileLine(l.skip)))
 		fmt.Printf(message+_NEWLINE)
 	} else {
-		fmt.Printf("[%v] %s ", time.Now().Format("2006-01-02 15:04:05"), message+_NEWLINE)
+		fmt.Printf("[%v] %s", time.Now().Format("2006-01-02 15:04:05"), message+_NEWLINE)
 	}
 }
 
@@ -88,7 +88,7 @@ func (l *Log) printf(format string, a ...interface{}) {
 		fmt.Printf("[%v] %s ", time.Now().Format("2006-01-02 15:04:05"), color.Cyan(fileLine(l.skip)))
 		fmt.Printf(format+_NEWLINE, a...)
 	} else {
-		fmt.Printf(fmt.Sprintf("[%v] %s ", time.Now().Format("2006-01-02 15:04:05"), format+_NEWLINE), a...)
+		fmt.Printf(fmt.Sprintf("[%v] %s", time.Now().Format("2006-01-02 15:04:05"), format+_NEWLINE), a...)
 	}
 }
 

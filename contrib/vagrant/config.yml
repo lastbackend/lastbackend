@@ -6,6 +6,6 @@ http_server:
 k8s:
   host: "https://172.17.4.99:443"
   ssl:
-    ca: "/etc/deployit/ssl/ca.pem"
-    key: "/etc/deployit/ssl/admin-key.pem"
-    cert: "/etc/deployit/ssl/admin.pem"
+    ca: "/etc/lastbackend/ssl/ca.pem"
+    key: "/etc/lastbackend/ssl/admin-key.pem"
+    cert: "/etc/lastbackend/ssl/admin.pem"

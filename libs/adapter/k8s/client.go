@@ -8,12 +8,17 @@ import (
 
 type LBClientInterface interface {
 	GetRESTClient() *rest.RESTClient
+	ComponentUsersGetter
 	ComponentAccountsGetter
 	ComponentBuildsGetter
 }
 
 type LBClient struct {
 	*rest.RESTClient
+}
+
+func (c *LBClient) Users() ComponentUserInterface {
+	return newComponentUsers(c)
 }
 
 func (c *LBClient) Accounts() ComponentAccountInterface {

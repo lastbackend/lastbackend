@@ -11,6 +11,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"strings"
+  "fmt"
 )
 
 type userCreateS struct {
@@ -95,14 +96,25 @@ func UserCreateH(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	u, err := user.Create(*rq.Username, *rq.Email)
+	u1, err := user.Create(*rq.Username, *rq.Email)
 	if err != nil {
-		ctx.Log.Error(err)
+		ctx.Log.Error(":: 1 >> ", err)
     e.HTTP.InternalServerError(w)
     return
 	}
 
-	session, err := account.Create(u.UUID, *rq.Password)
+  fmt.Sprintf("1: %#v", u1)
+
+  u2, err := user.Get(*rq.Username)
+  if err != nil {
+    ctx.Log.Error(":: 2 >> ", err)
+    e.HTTP.InternalServerError(w)
+    return
+  }
+
+  fmt.Sprintf("2: %#v", u2)
+
+	session, err := account.Create(u2.UUID, password)
 	if err != nil {
 		ctx.Log.Error(err)
     e.HTTP.InternalServerError(w)
