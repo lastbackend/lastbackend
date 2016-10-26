@@ -8,20 +8,20 @@ import (
 
 type LBClientInterface interface {
 	GetRESTClient() *rest.RESTClient
-	ComponentAccountsGetter
-	ComponentBuildsGetter
+	AccountsGetter
+	BuildsGetter
 }
 
 type LBClient struct {
 	*rest.RESTClient
 }
 
-func (c *LBClient) Accounts() ComponentAccountInterface {
-	return newComponentAccounts(c)
+func (c *LBClient) Accounts() AccountInterface {
+	return newAccounts(c)
 }
 
-func (c *LBClient) Builds() ComponentBuildInterface {
-	return newComponentBuilds(c)
+func (c *LBClient) Builds() BuildInterface {
+	return newBuilds(c)
 }
 
 func (c *LBClient) GetRESTClient() *rest.RESTClient {
