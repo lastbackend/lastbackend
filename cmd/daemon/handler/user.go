@@ -2,6 +2,7 @@ package handler
 
 import (
 	"encoding/json"
+	"fmt"
 	"github.com/lastbackend/lastbackend/cmd/daemon/context"
 	e "github.com/lastbackend/lastbackend/libs/errors"
 	"github.com/lastbackend/lastbackend/pkg/account"
@@ -11,7 +12,6 @@ import (
 	"io/ioutil"
 	"net/http"
 	"strings"
-  "fmt"
 )
 
 type userCreateS struct {
@@ -99,26 +99,26 @@ func UserCreateH(w http.ResponseWriter, r *http.Request) {
 	u1, err := user.Create(*rq.Username, *rq.Email)
 	if err != nil {
 		ctx.Log.Error(":: 1 >> ", err)
-    e.HTTP.InternalServerError(w)
-    return
+		e.HTTP.InternalServerError(w)
+		return
 	}
 
-  fmt.Sprintf("1: %#v", u1)
+	fmt.Sprintf("1: %#v", u1)
 
-  u2, err := user.Get(*rq.Username)
-  if err != nil {
-    ctx.Log.Error(":: 2 >> ", err)
-    e.HTTP.InternalServerError(w)
-    return
-  }
+	u2, err := user.Get(*rq.Username)
+	if err != nil {
+		ctx.Log.Error(":: 2 >> ", err)
+		e.HTTP.InternalServerError(w)
+		return
+	}
 
-  fmt.Sprintf("2: %#v", u2)
+	fmt.Sprintf("2: %#v", u2)
 
 	session, err := account.Create(u2.UUID, password)
 	if err != nil {
 		ctx.Log.Error(err)
-    e.HTTP.InternalServerError(w)
-    return
+		e.HTTP.InternalServerError(w)
+		return
 	}
 
 	response, err := json.Marshal(session)

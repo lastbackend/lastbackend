@@ -77,7 +77,7 @@ func (l *Log) Warnf(format string, args ...interface{}) {
 func (l *Log) print(message string) {
 	if l.debug {
 		fmt.Printf("[%v] %s ", time.Now().Format("2006-01-02 15:04:05"), color.Cyan(fileLine(l.skip)))
-		fmt.Printf(message+_NEWLINE)
+		fmt.Printf(message + _NEWLINE)
 	} else {
 		fmt.Printf("[%v] %s", time.Now().Format("2006-01-02 15:04:05"), message+_NEWLINE)
 	}

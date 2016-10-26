@@ -4,7 +4,6 @@ import (
 	"github.com/lastbackend/lastbackend/cmd/daemon/context"
 	"github.com/lastbackend/lastbackend/libs/adapter/k8s/api/v1"
 	"github.com/lastbackend/lastbackend/utils"
-	"k8s.io/client-go/1.5/pkg/api/unversioned"
 	"k8s.io/client-go/1.5/pkg/apis/extensions/v1beta1"
 	"time"
 )
@@ -35,16 +34,14 @@ func Create(username, email string) (*User, error) {
 
 	ctx.K8S.Extensions().ThirdPartyResources().Create(tpr)
 
-	var t = unversioned.Now()
-
 	user := v1.User{
 		Spec: v1.UserSpec{
 			UUID:     utils.GetUUIDV4(),
 			Username: username,
 			Email:    email,
 			Gravatar: utils.GenerateGravatar(email),
-			Updated:  &t,
-			Created:  &t,
+			Updated:  time.Now(),
+			Created:  time.Now(),
 		},
 	}
 
@@ -62,8 +59,8 @@ func Create(username, email string) (*User, error) {
 	u.Username = userK8S.Spec.Username
 	u.Email = userK8S.Spec.Email
 	u.Gravatar = userK8S.Spec.Gravatar
-	u.Updated = userK8S.Spec.Updated.Time
-	u.Created = userK8S.Spec.Created.Time
+	u.Updated = userK8S.Spec.Updated
+	u.Created = userK8S.Spec.Created
 
 	return u, nil
 }
@@ -82,8 +79,8 @@ func Get(name string) (*User, error) {
 	u.Username = userK8S.Spec.Username
 	u.Email = userK8S.Spec.Email
 	u.Gravatar = userK8S.Spec.Gravatar
-	u.Updated = userK8S.Spec.Updated.Time
-	u.Created = userK8S.Spec.Created.Time
+	u.Updated = userK8S.Spec.Updated
+	u.Created = userK8S.Spec.Created
 
 	return u, nil
 }

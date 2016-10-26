@@ -1,8 +1,8 @@
 package k8s
 
 import (
-	"k8s.io/client-go/1.5/rest"
 	"k8s.io/client-go/1.5/kubernetes"
+	"k8s.io/client-go/1.5/rest"
 )
 
 type Client struct {
@@ -10,7 +10,7 @@ type Client struct {
 	*LBClientset
 }
 
-func Get (conf *rest.Config) (*Client, error) {
+func Get(conf *rest.Config) (*Client, error) {
 
 	kb, err := kubernetes.NewForConfig(conf)
 	if err != nil {
@@ -22,12 +22,3 @@ func Get (conf *rest.Config) (*Client, error) {
 
 	return &Client{kb, lb}, nil
 }
-
-
-
-
-
-
-
-
-
