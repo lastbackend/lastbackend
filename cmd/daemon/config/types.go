@@ -7,6 +7,10 @@ type Config struct {
 		Port int `yaml:"port"`
 	} `yaml:"http_server"`
 
+	Database struct {
+		Connection string `yaml:"connection"`
+	} `yaml:"database"`
+
 	K8S struct {
 		Host string `yaml:"host"`
 		SSL  struct {

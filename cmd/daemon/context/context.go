@@ -1,6 +1,7 @@
 package context
 
 import (
+	"database/sql"
 	"github.com/lastbackend/lastbackend/libs/interface/k8s"
 	"github.com/lastbackend/lastbackend/libs/interface/log"
 )
@@ -16,6 +17,7 @@ type Context struct {
 		Version    string
 		ApiVersion string
 	}
-	Log log.ILogger
-	K8S k8s.IK8S
+	Log      log.ILogger
+	Database *sql.DB
+	K8S      k8s.IK8S
 }
