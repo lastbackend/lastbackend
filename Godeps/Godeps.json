@@ -72,11 +72,6 @@
 			"Rev": "5215b55f46b2b919f50a1df0eaa5886afe4e3b3d"
 		},
 		{
-			"ImportPath": "github.com/dgrijalva/jwt-go",
-			"Comment": "v3.0.0-8-g24c63f5",
-			"Rev": "24c63f56522a87ec5339cc3567883f1039378fdb"
-		},
-		{
 			"ImportPath": "github.com/docker/distribution/digest",
 			"Comment": "v2.4.0-rc.1-38-gcd27f17",
 			"Rev": "cd27f179f2c10c5d300e6d09025b538c475b0d51"
@@ -144,11 +139,6 @@
 			"Rev": "bbcb9da2d746f8bdbd6a936686a0a6067ada0ec5"
 		},
 		{
-			"ImportPath": "github.com/gorilla/context",
-			"Comment": "v1.1-7-g08b5f42",
-			"Rev": "08b5f424b9271eedf6f9f0ce86cb9396ed337a42"
-		},
-		{
 			"ImportPath": "github.com/gorilla/mux",
 			"Comment": "v1.1-27-g757bef9",
 			"Rev": "757bef944d0f21880861c2dd9c871ca543023cba"
@@ -164,6 +154,16 @@
 		{
 			"ImportPath": "github.com/juju/ratelimit",
 			"Rev": "77ed1c8a01217656d2080ad51981f6e99adaa177"
+		},
+		{
+			"ImportPath": "github.com/lib/pq",
+			"Comment": "go1.0-cutoff-123-gae8357d",
+			"Rev": "ae8357db35d721c58dcdc911318b55bef6b1b001"
+		},
+		{
+			"ImportPath": "github.com/lib/pq/oid",
+			"Comment": "go1.0-cutoff-123-gae8357d",
+			"Rev": "ae8357db35d721c58dcdc911318b55bef6b1b001"
 		},
 		{
 			"ImportPath": "github.com/mailru/easyjson/buffer",
@@ -317,11 +317,6 @@
 		{
 			"ImportPath": "google.golang.org/appengine/internal/remote_api",
 			"Rev": "4f7eeb5305a4ba1966344836ba4af9996b7b4e05"
-		},
-		{
-			"ImportPath": "gopkg.in/dgrijalva/jwt-go.v2",
-			"Comment": "v2.7.0",
-			"Rev": "268038b363c7a8d7306b8e35bf77a1fde4b0c402"
 		},
 		{
 			"ImportPath": "gopkg.in/inf.v0",

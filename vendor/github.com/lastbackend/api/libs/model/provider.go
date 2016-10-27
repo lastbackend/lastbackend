@@ -7,4 +7,3 @@ type Provider struct {
 }
 
 type Providers []Provider
-

@@ -1,8 +1,8 @@
 package k8s
 
 import (
-	"k8s.io/client-go/1.5/kubernetes"
 	"github.com/lastbackend/lastbackend/libs/adapter/k8s"
+	"k8s.io/client-go/1.5/kubernetes"
 )
 
 type IK8S interface {

@@ -1,11 +1,13 @@
 package daemon
 
 import (
+	"database/sql"
 	"github.com/jawher/mow.cli"
 	"github.com/lastbackend/lastbackend/cmd/daemon/config"
 	"github.com/lastbackend/lastbackend/cmd/daemon/context"
 	"github.com/lastbackend/lastbackend/libs/adapter/k8s"
 	"github.com/lastbackend/lastbackend/libs/log"
+	_ "github.com/lib/pq"
 	"gopkg.in/yaml.v2"
 	"io/ioutil"
 	"os"
@@ -47,6 +49,12 @@ func Run(cmd *cli.Cmd) {
 			cfg.Debug = *debug
 			ctx.Log.SetDebugLevel()
 			ctx.Log.Info("Logger debug mode enabled")
+		}
+
+		// Initializing database
+		ctx.Database, err = sql.Open("postgres", cfg.Database.Connection)
+		if err != nil {
+			ctx.Log.Panic(err)
 		}
 
 		if cfg.HttpServer.Port == 0 {

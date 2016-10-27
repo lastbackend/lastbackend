@@ -11,7 +11,7 @@ type BuildsGetter interface {
 	Builds() BuildInterface
 }
 
-// Build has methods to work with Builds resources.
+// BuildInterface has methods to work with Builds resources.
 type BuildInterface interface {
 	List(string, v1.ListOptions) (*build.BuildList, error)
 	Get(string, string) (*build.Build, error)
@@ -26,7 +26,7 @@ type builds struct {
 	c *LBClient
 }
 
-// newBuild returns a new build interface
+// newBuilds returns a new build interface
 func newBuilds(c *LBClient) *builds {
 	return &builds{
 		c: c,
@@ -48,27 +48,48 @@ func (c *builds) List(namespace string, opts v1.ListOptions) (result *build.Buil
 // Get returns information about a particular build
 func (c *builds) Get(namespace, name string) (result *build.Build, err error) {
 	result = new(build.Build)
-	err = c.c.Get().Namespace(namespace).Resource("builds").Name(name).Do().Into(result)
+	err = c.c.Get().
+		Namespace(namespace).
+		Resource("builds").
+		Name(name).
+		Do().
+		Into(result)
 	return
 }
 
 // Create creates new build. Returns create build
 func (c *builds) Create(namespace string, spec *build.Build) (result *build.Build, err error) {
 	result = new(build.Build)
-	err = c.c.Post().Namespace(namespace).Resource("builds").Body(spec).Do().Into(result)
+	err = c.c.Post().
+		Namespace(namespace).
+		Resource("builds").
+		Body(spec).
+		Do().
+		Into(result)
 	return
 }
 
 // Update updates the build on server. Returns create build
 func (c *builds) Update(namespace string, spec *build.Build) (result *build.Build, err error) {
 	result = new(build.Build)
-	err = c.c.Put().Namespace(namespace).Resource("builds").Name(spec.Name).Body(spec).Do().Into(result)
+	err = c.c.Put().
+		Namespace(namespace).
+		Resource("builds").
+		Name(spec.Name).
+		Body(spec).
+		Do().
+		Into(result)
 	return
 }
 
 // Delete deletes a build
 func (c *builds) Delete(namespace, name string) (err error) {
-	err = c.c.Delete().Namespace(namespace).Resource("builds").Name(name).Do().Error()
+	err = c.c.Delete().
+		Namespace(namespace).
+		Resource("builds").
+		Name(name).
+		Do().
+		Error()
 	return
 }
 

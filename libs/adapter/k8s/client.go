@@ -10,6 +10,7 @@ type LBClientInterface interface {
 	GetRESTClient() *rest.RESTClient
 	AccountsGetter
 	BuildsGetter
+	UsersGetter
 }
 
 type LBClient struct {
@@ -22,6 +23,10 @@ func (c *LBClient) Accounts() AccountInterface {
 
 func (c *LBClient) Builds() BuildInterface {
 	return newBuilds(c)
+}
+
+func (c *LBClient) Users() UserInterface {
+	return newUsers(c)
 }
 
 func (c *LBClient) GetRESTClient() *rest.RESTClient {

@@ -1,7 +1,7 @@
 package model
 
 type Activity struct {
-	ID					string `json:"id"`
+	ID          string `json:"id"`
 	UserID      string `json:"user_id"`
 	EntityID    string `json:"entity_id"`
 	Name        string `json:"name"`
