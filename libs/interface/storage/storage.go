@@ -2,6 +2,6 @@ package storage
 
 type Storage struct {
 	User    IUserService
-	Profile IProfileService
+	Account IAccountService
 	// Other services should be here
 }
