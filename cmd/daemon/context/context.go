@@ -1,9 +1,10 @@
 package context
 
 import (
-	"database/sql"
+	etcd "github.com/coreos/etcd/client"
 	"github.com/lastbackend/lastbackend/libs/interface/k8s"
 	"github.com/lastbackend/lastbackend/libs/interface/log"
+	"github.com/lastbackend/lastbackend/libs/interface/storage"
 )
 
 var context Context
@@ -18,6 +19,7 @@ type Context struct {
 		ApiVersion string
 	}
 	Log      log.ILogger
-	Database *sql.DB
+	Database etcd.Client
 	K8S      k8s.IK8S
+	Storage  storage.Storage
 }

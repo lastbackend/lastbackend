@@ -2,11 +2,10 @@ package handler
 
 import (
 	"encoding/json"
-	"fmt"
 	"github.com/lastbackend/lastbackend/cmd/daemon/context"
+	c "github.com/gorilla/context"
 	e "github.com/lastbackend/lastbackend/libs/errors"
-	"github.com/lastbackend/lastbackend/pkg/account"
-	"github.com/lastbackend/lastbackend/pkg/user"
+	"github.com/lastbackend/lastbackend/libs/model"
 	"github.com/lastbackend/lastbackend/utils"
 	"io"
 	"io/ioutil"
@@ -68,9 +67,13 @@ func (s *userCreateS) decodeAndValidate(reader io.Reader) *e.Err {
 	return nil
 }
 
+type SessionView struct {
+	Token string `json:"token,omitempty"`
+}
+
 func UserCreateH(w http.ResponseWriter, r *http.Request) {
 
-	var err error
+	var err *e.Err
 	// var cfg = config.Get()
 	var ctx = context.Get()
 
@@ -82,48 +85,46 @@ func UserCreateH(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	salt, err := utils.GenerateSalt(*rq.Password)
+	salt, errsalt := utils.GenerateSalt(*rq.Password)
+	if errsalt != nil {
+		ctx.Log.Error(errsalt)
+		e.HTTP.InternalServerError(w)
+		return
+	}
+
+	_, errpassword := utils.GeneratePassword(*rq.Password, salt)
+	if errpassword != nil {
+		ctx.Log.Error(errpassword)
+		e.HTTP.InternalServerError(w)
+		return
+	}
+
+	gravatar := utils.GenerateGravatar(*rq.Email)
 	if err != nil {
 		ctx.Log.Error(err)
 		e.HTTP.InternalServerError(w)
 		return
 	}
 
-	password, err := utils.GeneratePassword(*rq.Password, salt)
+	id, err := ctx.Storage.User.Insert(ctx.Database, *rq.Username, *rq.Email, gravatar)
 	if err != nil {
 		ctx.Log.Error(err)
+		err.Http(w)
+		return
+	}
+
+	sw := new(SessionView)
+	var errencode error
+	sw.Token, errencode = model.NewSession(*id, ``, *rq.Username, *rq.Email).Encode()
+	if errencode != nil {
+		ctx.Log.Error(errencode)
 		e.HTTP.InternalServerError(w)
 		return
 	}
 
-	u1, err := user.Create(*rq.Username, *rq.Email)
-	if err != nil {
-		ctx.Log.Error(":: 1 >> ", err)
-		e.HTTP.InternalServerError(w)
-		return
-	}
-
-	fmt.Sprintf("1: %#v", u1)
-
-	u2, err := user.Get(*rq.Username)
-	if err != nil {
-		ctx.Log.Error(":: 2 >> ", err)
-		e.HTTP.InternalServerError(w)
-		return
-	}
-
-	fmt.Sprintf("2: %#v", u2)
-
-	session, err := account.Create(u2.UUID, password)
-	if err != nil {
-		ctx.Log.Error(err)
-		e.HTTP.InternalServerError(w)
-		return
-	}
-
-	response, err := json.Marshal(session)
-	if err != nil {
-		ctx.Log.Error(err)
+	response, errjson := json.Marshal(sw)
+	if errjson != nil {
+		ctx.Log.Error(errjson)
 		e.HTTP.InternalServerError(w)
 		return
 	}
@@ -134,29 +135,33 @@ func UserCreateH(w http.ResponseWriter, r *http.Request) {
 
 func UserGetH(w http.ResponseWriter, r *http.Request) {
 
-	//var err error
-	//var ctx = context.Get()
-	//
-	//s, ok := c.GetOk(r, `session`)
-	//if !ok {
-	//	ctx.Log.Error(e.StatusAccessDenied)
-	//	e.HTTP.AccessDenied(w)
-	//	return
-	//}
+	var err *e.Err
+	// var cfg = config.Get()
+	var ctx = context.Get()
 
-	//session := s.(*model.Session)
+	s, ok := c.GetOk(r, `session`)
+	if !ok {
+		ctx.Log.Error(e.StatusAccessDenied)
+		e.HTTP.AccessDenied(w)
+		return
+	}
 
-	//namespace, err := ctx.K8S.Core().Namespaces().Get(session.Username)
-	//if err != nil {
-	//panic(err)
-	//}
-	//
-	//fmt.Printf("%#v", namespace)
-	//
-	//var client = &v.CoreClient{}
-	//res := client.Get().Resource("users")
-	//fmt.Printf("%#v", res)
+	session := s.(*model.Session)
+
+	user, err := ctx.Storage.User.Get(ctx.Database, session.Username)
+	if err != nil {
+		ctx.Log.Error(err)
+		err.Http(w)
+		return
+	}
+
+	response, errjson := json.Marshal(user)
+	if errjson != nil {
+		ctx.Log.Error(errjson)
+		e.HTTP.InternalServerError(w)
+		return
+	}
 
 	w.WriteHeader(200)
-	w.Write([]byte(`{"status":"ok"}`))
+	w.Write([]byte(response))
 }

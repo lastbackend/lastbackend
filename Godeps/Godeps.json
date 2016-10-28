@@ -33,6 +33,21 @@
 			"Rev": "31b736133b98f26d5e078ec9eb591666edfd091f"
 		},
 		{
+			"ImportPath": "github.com/coreos/etcd/client",
+			"Comment": "v3.1.0-rc.0-126-gc6cd63d",
+			"Rev": "c6cd63dc35c53cc073ce3d0a21b136f581635095"
+		},
+		{
+			"ImportPath": "github.com/coreos/etcd/pkg/pathutil",
+			"Comment": "v3.1.0-rc.0-126-gc6cd63d",
+			"Rev": "c6cd63dc35c53cc073ce3d0a21b136f581635095"
+		},
+		{
+			"ImportPath": "github.com/coreos/etcd/pkg/types",
+			"Comment": "v3.1.0-rc.0-126-gc6cd63d",
+			"Rev": "c6cd63dc35c53cc073ce3d0a21b136f581635095"
+		},
+		{
 			"ImportPath": "github.com/coreos/go-oidc/http",
 			"Rev": "5644a2f50e2d2d5ba0b474bc5bc55fea1925936d"
 		},
@@ -70,6 +85,11 @@
 		{
 			"ImportPath": "github.com/davecgh/go-spew/spew",
 			"Rev": "5215b55f46b2b919f50a1df0eaa5886afe4e3b3d"
+		},
+		{
+			"ImportPath": "github.com/dgrijalva/jwt-go",
+			"Comment": "v3.0.0-8-g24c63f5",
+			"Rev": "24c63f56522a87ec5339cc3567883f1039378fdb"
 		},
 		{
 			"ImportPath": "github.com/docker/distribution/digest",
@@ -137,6 +157,11 @@
 		{
 			"ImportPath": "github.com/google/gofuzz",
 			"Rev": "bbcb9da2d746f8bdbd6a936686a0a6067ada0ec5"
+		},
+		{
+			"ImportPath": "github.com/gorilla/context",
+			"Comment": "v1.1-7-g08b5f42",
+			"Rev": "08b5f424b9271eedf6f9f0ce86cb9396ed337a42"
 		},
 		{
 			"ImportPath": "github.com/gorilla/mux",
