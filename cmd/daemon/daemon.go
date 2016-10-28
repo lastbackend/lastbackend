@@ -1,7 +1,6 @@
 package daemon
 
 import (
-	"database/sql"
 	"github.com/jawher/mow.cli"
 	"github.com/lastbackend/lastbackend/cmd/daemon/config"
 	"github.com/lastbackend/lastbackend/cmd/daemon/context"
@@ -13,6 +12,7 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
+	"github.com/lastbackend/lastbackend/libs/adapter/etcd"
 )
 
 func Run(cmd *cli.Cmd) {
@@ -52,7 +52,7 @@ func Run(cmd *cli.Cmd) {
 		}
 
 		// Initializing database
-		ctx.Database, err = sql.Open("postgres", cfg.Database.Connection)
+		ctx.Database, err = config.GetEtcd()
 		if err != nil {
 			ctx.Log.Panic(err)
 		}
@@ -69,6 +69,9 @@ func Run(cmd *cli.Cmd) {
 		if err != nil {
 			ctx.Log.Panic(err)
 		}
+
+		// Initializing storage
+		ctx.Storage.User = etcd.UserService{}
 
 		go RunHttpServer(cfg.HttpServer.Port)
 
