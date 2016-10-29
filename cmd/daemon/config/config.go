@@ -23,13 +23,11 @@ func GetK8S() *rest.Config {
 	}
 }
 
-func GetEtcd() (etcd.Client, error) {
-	db_config := etcd.Config{
+func GetEtcd() etcd.Config {
+	return etcd.Config{
 		Endpoints: []string{"http://localhost:2379"},
 		Transport: etcd.DefaultTransport,
 		// set timeout per request to fail fast when the target endpoint is unavailable
 		HeaderTimeoutPerRequest: time.Second,
 	}
-
-	return etcd.New(db_config)
 }

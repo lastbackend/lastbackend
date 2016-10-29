@@ -1,9 +1,11 @@
 package daemon
 
 import (
+	etcd_client "github.com/coreos/etcd/client"
 	"github.com/jawher/mow.cli"
 	"github.com/lastbackend/lastbackend/cmd/daemon/config"
 	"github.com/lastbackend/lastbackend/cmd/daemon/context"
+	"github.com/lastbackend/lastbackend/libs/adapter/etcd"
 	"github.com/lastbackend/lastbackend/libs/adapter/k8s"
 	"github.com/lastbackend/lastbackend/libs/log"
 	_ "github.com/lib/pq"
@@ -12,7 +14,6 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
-	"github.com/lastbackend/lastbackend/libs/adapter/etcd"
 )
 
 func Run(cmd *cli.Cmd) {
@@ -52,7 +53,7 @@ func Run(cmd *cli.Cmd) {
 		}
 
 		// Initializing database
-		ctx.Database, err = config.GetEtcd()
+		ctx.Database, err = etcd_client.New(config.GetEtcd())
 		if err != nil {
 			ctx.Log.Panic(err)
 		}
