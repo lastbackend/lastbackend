@@ -72,6 +72,7 @@ func Run(cmd *cli.Cmd) {
 
 		// Initializing storage
 		ctx.Storage.User = etcd.UserService{}
+		ctx.Storage.Account = etcd.AccountService{}
 
 		go RunHttpServer(cfg.HttpServer.Port)
 

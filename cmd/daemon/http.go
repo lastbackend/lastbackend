@@ -23,8 +23,13 @@ func RunHttpServer(port int) {
 
 	r.HandleFunc("/version", Handler(handler.SystemVersionH)).Methods("GET")
 
+	r.HandleFunc("/session", Handler(handler.SessionCreateH)).Methods("POST")
+
+	// Account handlers
+	r.HandleFunc("/account", Handler(handler.AccountCreateH)).Methods("POST")
+	r.HandleFunc("/account", Handler(handler.AccountGetH, Auth)).Methods("GET")
+
 	// User handlers
-	r.HandleFunc("/user", Handler(handler.UserCreateH)).Methods("POST")
 	r.HandleFunc("/user", Handler(handler.UserGetH, Auth)).Methods("GET")
 
 	ctx.Log.Infof("Listen server on %d port", port)

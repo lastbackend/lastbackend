@@ -8,6 +8,7 @@ import (
 	"github.com/lastbackend/lastbackend/libs/model"
 	"github.com/lastbackend/lastbackend/utils"
 	"golang.org/x/net/context"
+	"time"
 )
 
 // User Service type for interface in interfaces folder
@@ -17,12 +18,15 @@ func (UserService) Insert(db adapter.IDatabase, username, email, gravatar string
 
 	var err error
 	var uuid = utils.GetUUIDV4()
+	var t = time.Now()
 
 	user := model.User{
 		UUID:     uuid,
 		Username: username,
 		Email:    email,
 		Gravatar: gravatar,
+		Updated:  t,
+		Created:  t,
 	}
 
 	data, err := user.ToJson()
@@ -30,7 +34,7 @@ func (UserService) Insert(db adapter.IDatabase, username, email, gravatar string
 		return nil, e.User.Unknown(err)
 	}
 
-	_, err = client.NewKeysAPI(db).Set(context.Background(), username, data, nil)
+	_, err = client.NewKeysAPI(db).Set(context.Background(), username, string(data), nil)
 	if err != nil {
 		return nil, e.User.Unknown(err)
 	}
