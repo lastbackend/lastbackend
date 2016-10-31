@@ -1,8 +1,6 @@
 package etcd
 
 import (
-	"encoding/json"
-	"github.com/coreos/etcd/client"
 	"github.com/lastbackend/lastbackend/libs/adapter"
 	e "github.com/lastbackend/lastbackend/libs/errors"
 	"github.com/lastbackend/lastbackend/libs/model"
@@ -14,7 +12,7 @@ import (
 // User Service type for interface in interfaces folder
 type UserService struct{}
 
-func (UserService) Insert(db adapter.IDatabase, username, email, gravatar string) (*string, *e.Err) {
+func (UserService) Insert(db adapter.IStorage, username, email, gravatar string) (*string, *e.Err) {
 
 	var err error
 	var uuid = utils.GetUUIDV4()
@@ -29,12 +27,7 @@ func (UserService) Insert(db adapter.IDatabase, username, email, gravatar string
 		Created:  t,
 	}
 
-	data, err := user.ToJson()
-	if err != nil {
-		return nil, e.User.Unknown(err)
-	}
-
-	_, err = client.NewKeysAPI(db).Set(context.Background(), username, string(data), nil)
+	err = db.Create(context.Background(), "user", user, 0)
 	if err != nil {
 		return nil, e.User.Unknown(err)
 	}
@@ -42,16 +35,11 @@ func (UserService) Insert(db adapter.IDatabase, username, email, gravatar string
 	return &uuid, nil
 }
 
-func (UserService) Get(db adapter.IDatabase, username string) (*model.User, *e.Err) {
+func (UserService) Get(db adapter.IStorage, username string) (*model.User, *e.Err) {
 	var err error
 
-	resp, err := client.NewKeysAPI(db).Get(context.Background(), username, nil)
-	if err != nil {
-		return nil, e.User.Unknown(err)
-	}
-
 	var user = new(model.User)
-	err = json.Unmarshal([]byte(resp.Node.Value), user)
+	err = db.Get(context.Background(), "", user)
 	if err != nil {
 		return nil, e.User.Unknown(err)
 	}

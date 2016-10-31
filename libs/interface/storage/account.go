@@ -7,6 +7,6 @@ import (
 )
 
 type IAccountService interface {
-	Insert(db adapter.IDatabase, username, userID, password, salt string) (*string, *e.Err)
-	Get(db adapter.IDatabase, username string) (*model.Account, *e.Err)
+	Insert(db adapter.IStorage, username, userID, password, salt string) (*string, *e.Err)
+	Get(db adapter.IStorage, username string) (*model.Account, *e.Err)
 }

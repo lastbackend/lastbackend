@@ -1,7 +1,7 @@
 package config
 
 import (
-	etcd "github.com/coreos/etcd/client"
+	"github.com/coreos/etcd/clientv3"
 	"k8s.io/client-go/1.5/rest"
 	"time"
 )
@@ -23,11 +23,9 @@ func GetK8S() *rest.Config {
 	}
 }
 
-func GetEtcd() etcd.Config {
-	return etcd.Config{
-		Endpoints: []string{"http://localhost:2379"},
-		Transport: etcd.DefaultTransport,
-		// set timeout per request to fail fast when the target endpoint is unavailable
-		HeaderTimeoutPerRequest: time.Second,
+func GetEtcd3() clientv3.Config {
+	return clientv3.Config{
+		Endpoints:   []string{"http://localhost:2379"},
+		DialTimeout: 5 * time.Second,
 	}
 }

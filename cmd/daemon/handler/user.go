@@ -24,7 +24,7 @@ func UserGetH(w http.ResponseWriter, r *http.Request) {
 
 	session := s.(*model.Session)
 
-	user, err := ctx.Storage.User.Get(ctx.Database, session.Username)
+	user, err := ctx.Adapter.User.Get(ctx.Storage, session.Username)
 	if err != nil {
 		ctx.Log.Error(err)
 		err.Http(w)

@@ -1,10 +1,10 @@
 package context
 
 import (
-	etcd "github.com/coreos/etcd/client"
+	"github.com/lastbackend/lastbackend/libs/adapter"
 	"github.com/lastbackend/lastbackend/libs/interface/k8s"
 	"github.com/lastbackend/lastbackend/libs/interface/log"
-	"github.com/lastbackend/lastbackend/libs/interface/storage"
+	lib_storage "github.com/lastbackend/lastbackend/libs/interface/storage"
 )
 
 var context Context
@@ -18,8 +18,8 @@ type Context struct {
 		Version    string
 		ApiVersion string
 	}
-	Log      log.ILogger
-	Database etcd.Client
-	K8S      k8s.IK8S
-	Storage  storage.Storage
+	Log     log.ILogger
+	Storage adapter.IStorage
+	K8S     k8s.IK8S
+	Adapter lib_storage.Storage
 }

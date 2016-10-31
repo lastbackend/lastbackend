@@ -55,14 +55,14 @@ func SessionCreateH(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	user, err := ctx.Storage.User.Get(ctx.Database, *rq.Login)
+	user, err := ctx.Adapter.User.Get(ctx.Storage, *rq.Login)
 	if err != nil {
 		ctx.Log.Error(err.Err())
 		err.Http(w)
 		return
 	}
 
-	acc, err := ctx.Storage.Account.Get(ctx.Database, user.Username)
+	acc, err := ctx.Adapter.Account.Get(ctx.Storage, user.Username)
 	if err != nil {
 		ctx.Log.Error(err.Err())
 		err.Http(w)

@@ -1,13 +1,14 @@
 package daemon
 
 import (
-	etcd_client "github.com/coreos/etcd/client"
 	"github.com/jawher/mow.cli"
 	"github.com/lastbackend/lastbackend/cmd/daemon/config"
 	"github.com/lastbackend/lastbackend/cmd/daemon/context"
 	"github.com/lastbackend/lastbackend/libs/adapter/etcd"
 	"github.com/lastbackend/lastbackend/libs/adapter/k8s"
 	"github.com/lastbackend/lastbackend/libs/log"
+	"github.com/lastbackend/lastbackend/pkg/runtime/serializer/json"
+	"github.com/lastbackend/lastbackend/pkg/storage/etcd3"
 	_ "github.com/lib/pq"
 	"gopkg.in/yaml.v2"
 	"io/ioutil"
@@ -53,10 +54,7 @@ func Run(cmd *cli.Cmd) {
 		}
 
 		// Initializing database
-		ctx.Database, err = etcd_client.New(config.GetEtcd())
-		if err != nil {
-			ctx.Log.Panic(err)
-		}
+		ctx.Storage = etcd3.New(config.GetEtcd3(), json.NewSerializer(), "/")
 
 		if cfg.HttpServer.Port == 0 {
 			cfg.HttpServer.Port = 3000
@@ -72,8 +70,8 @@ func Run(cmd *cli.Cmd) {
 		}
 
 		// Initializing storage
-		ctx.Storage.User = etcd.UserService{}
-		ctx.Storage.Account = etcd.AccountService{}
+		ctx.Adapter.User = etcd.UserService{}
+		ctx.Adapter.Account = etcd.AccountService{}
 
 		go RunHttpServer(cfg.HttpServer.Port)
 

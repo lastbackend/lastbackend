@@ -107,14 +107,14 @@ func AccountCreateH(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	accountID, err := ctx.Storage.User.Insert(ctx.Database, *rq.Username, *rq.Email, gravatar)
+	accountID, err := ctx.Adapter.User.Insert(ctx.Storage, *rq.Username, *rq.Email, gravatar)
 	if err != nil {
 		ctx.Log.Error(err)
 		err.Http(w)
 		return
 	}
 
-	_, err = ctx.Storage.Account.Insert(ctx.Database, *rq.Username, *accountID, password, salt)
+	_, err = ctx.Adapter.Account.Insert(ctx.Storage, *rq.Username, *accountID, password, salt)
 	if err != nil {
 		ctx.Log.Error(err)
 		err.Http(w)
@@ -157,7 +157,7 @@ func AccountGetH(w http.ResponseWriter, r *http.Request) {
 
 	session := s.(*model.Session)
 
-	account, err := ctx.Storage.Account.Get(ctx.Database, session.Username)
+	account, err := ctx.Adapter.Account.Get(ctx.Storage, session.Username)
 	if err != nil {
 		ctx.Log.Error(err)
 		err.Http(w)
