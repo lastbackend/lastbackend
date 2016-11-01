@@ -1,9 +1,12 @@
 package config
 
 import (
-	"github.com/coreos/etcd/clientv3"
+	"crypto/tls"
+	"crypto/x509"
+	"fmt"
+	r "gopkg.in/dancannon/gorethink.v2"
+	"io/ioutil"
 	"k8s.io/client-go/1.5/rest"
-	"time"
 )
 
 var config Config
@@ -23,9 +26,36 @@ func GetK8S() *rest.Config {
 	}
 }
 
-func GetEtcd3() clientv3.Config {
-	return clientv3.Config{
-		Endpoints:   []string{"http://localhost:2379"},
-		DialTimeout: 5 * time.Second,
+// Get Rethink DB options used for creating session
+func GetRethinkDB() r.ConnectOpts {
+
+	options := r.ConnectOpts{
+		MaxOpen:    config.RethinkDB.MaxOpen,
+		InitialCap: config.RethinkDB.InitialCap,
+		Database:   config.RethinkDB.Database,
+		AuthKey:    config.RethinkDB.AuthKey,
 	}
+
+	if len(config.RethinkDB.Addresses) > 0 {
+		options.Addresses = config.RethinkDB.Addresses
+	} else {
+		options.Address = config.RethinkDB.Address
+	}
+
+	if config.RethinkDB.SSL.CA != "" {
+		roots := x509.NewCertPool()
+		cert, err := ioutil.ReadFile(config.RethinkDB.SSL.CA)
+
+		if err != nil {
+			fmt.Errorf("SSL read error: %s", err.Error())
+		}
+
+		roots.AppendCertsFromPEM(cert)
+
+		options.TLSConfig = &tls.Config{
+			RootCAs: roots,
+		}
+	}
+
+	return options
 }
