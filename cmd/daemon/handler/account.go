@@ -72,53 +72,48 @@ type SessionView struct {
 func AccountCreateH(w http.ResponseWriter, r *http.Request) {
 
 	//var err *e.Err
-	var ctx = context.Get()
+	//var ctx = context.Get()
 
-	ctx.Log.Debug("Create account handler")
-
-	// request body struct
-	rq := new(accountCreateS)
-	if err := rq.decodeAndValidate(r.Body); err != nil {
-		ctx.Log.Error(err)
-		err.Http(w)
-		return
-	}
-
+	//ctx.Log.Debug("Create account handler")
+  //
+	//// request body struct
+	//rq := new(accountCreateS)
+	//if err := rq.decodeAndValidate(r.Body); err != nil {
+	//	ctx.Log.Error(err)
+	//	err.Http(w)
+	//	return
+	//}
+  //
 	//salt, errsalt := utils.GenerateSalt(*rq.Password)
 	//if errsalt != nil {
 	//	ctx.Log.Error(errsalt)
 	//	e.HTTP.InternalServerError(w)
 	//	return
 	//}
-
+  //
 	//password, errpassword := utils.GeneratePassword(*rq.Password, salt)
 	//if errpassword != nil {
 	//	ctx.Log.Error(errpassword)
 	//	e.HTTP.InternalServerError(w)
 	//	return
 	//}
-	//
+  //
 	//gravatar := utils.GenerateGravatar(*rq.Email)
-	//if err != nil {
-	//	ctx.Log.Error(err)
-	//	e.HTTP.InternalServerError(w)
-	//	return
-	//}
-
+  //
 	//accountID, err := ctx.Adapter.User.Insert(ctx.Storage, *rq.Username, *rq.Email, gravatar)
 	//if err != nil {
 	//	ctx.Log.Error(err)
 	//	err.Http(w)
 	//	return
 	//}
-	//
+  //
 	//_, err = ctx.Adapter.Account.Insert(ctx.Storage, *rq.Username, *accountID, password, salt)
 	//if err != nil {
 	//	ctx.Log.Error(err)
 	//	err.Http(w)
 	//	return
 	//}
-
+  //
 	//sw := new(SessionView)
 	//var errencode error
 	//sw.Token, errencode = model.NewSession(*accountID, ``, *rq.Username, *rq.Email).Encode()
@@ -127,7 +122,7 @@ func AccountCreateH(w http.ResponseWriter, r *http.Request) {
 	//	e.HTTP.InternalServerError(w)
 	//	return
 	//}
-	//
+  //
 	//response, errjson := json.Marshal(sw)
 	//if errjson != nil {
 	//	ctx.Log.Error(errjson)
@@ -136,32 +131,32 @@ func AccountCreateH(w http.ResponseWriter, r *http.Request) {
 	//}
 
 	w.WriteHeader(200)
-	w.Write([]byte(""))
+	w.Write([]byte{})
 }
 
 func AccountGetH(w http.ResponseWriter, r *http.Request) {
 
 	//var err *e.Err
-	var ctx = context.Get()
-
-	ctx.Log.Debug("Get account handler")
-
+	//var ctx = context.Get()
+  //
+	//ctx.Log.Debug("Get account handler")
+  //
 	//s, ok := c.GetOk(r, `session`)
 	//if !ok {
 	//	ctx.Log.Error(e.StatusAccessDenied)
 	//	e.HTTP.AccessDenied(w)
 	//	return
 	//}
-
+  //
 	//session := s.(*model.Session)
-
-	//account, err := ctx.Adapter.Account.Get(ctx.Storage, session.Username)
+  //
+	//account, err := ctx.Adapter.Account.GetByID(ctx.Storage, session.Uid)
 	//if err != nil {
 	//	ctx.Log.Error(err)
 	//	err.Http(w)
 	//	return
 	//}
-	//
+  //
 	//response, errjson := account.View().ToJson()
 	//if errjson != nil {
 	//	ctx.Log.Error(errjson)
@@ -170,5 +165,5 @@ func AccountGetH(w http.ResponseWriter, r *http.Request) {
 	//}
 
 	w.WriteHeader(200)
-	w.Write([]byte(""))
+	w.Write([]byte{})
 }

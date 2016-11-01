@@ -5,7 +5,7 @@ import (
 	"github.com/lastbackend/lastbackend/cmd/daemon/config"
 	"github.com/lastbackend/lastbackend/cmd/daemon/context"
 	"github.com/lastbackend/lastbackend/libs/adapter/k8s"
-	"github.com/lastbackend/lastbackend/libs/adapter/rethinkdb"
+	"github.com/lastbackend/lastbackend/libs/adapter/storage"
 	"github.com/lastbackend/lastbackend/libs/log"
 	"gopkg.in/yaml.v2"
 	"io/ioutil"
@@ -57,7 +57,7 @@ func Run(cmd *cli.Cmd) {
 			ctx.Log.Panic(err)
 		}
 
-		ctx.Storage.Session, err = rethinkdb.Get(config.GetRethinkDB())
+		ctx.Storage.Session, err = storage.Get(config.GetRethinkDB())
 		if err != nil {
 			ctx.Log.Panic(err)
 		}
