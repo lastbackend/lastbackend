@@ -1,10 +1,9 @@
-package rethinkdb
+package storage
 
 import (
+	"github.com/lastbackend/lastbackend/cmd/daemon/context"
 	e "github.com/lastbackend/lastbackend/libs/errors"
 	"github.com/lastbackend/lastbackend/libs/model"
-
-	"github.com/lastbackend/lastbackend/cmd/daemon/context"
 	r "gopkg.in/dancannon/gorethink.v2"
 )
 
