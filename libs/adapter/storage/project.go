@@ -4,62 +4,53 @@ import (
 	e "github.com/lastbackend/lastbackend/libs/errors"
 	"github.com/lastbackend/lastbackend/libs/model"
 
-	"github.com/lastbackend/lastbackend/cmd/daemon/context"
+	"github.com/lastbackend/lastbackend/libs/interface/storage"
 	r "gopkg.in/dancannon/gorethink.v2"
 )
 
 const ProjectTable string = "projects"
 
-type IProject interface {
-	GetByID(string) (*model.Project, *error)
-	GetByUser(string) (*model.ProjectList, *error)
-	Insert(*model.Project) (*model.Project, *error)
-	Replace(*model.Project) (*model.Project, *error)
-}
-
 // Project Service type for interface in interfaces folder
 type ProjectStorage struct {
-	IProject
+	Session *r.Session
+	storage.IProject
 }
 
-func (ProjectStorage) GetByID(uuid string) (*model.Build, *e.Err) {
+func (s *ProjectStorage) GetByID(uuid string) (*model.Project, *e.Err) {
 
 	var err error
-	var build = new(model.Build)
-	ctx := context.Get()
+	var project = new(model.Project)
 
-	res, err := r.Table(ProjectTable).Get(uuid).Run(ctx.Storage.Session)
+	res, err := r.Table(ProjectTable).Get(uuid).Run(s.Session)
 	if err != nil {
 		return nil, e.Project.NotFound(err)
 	}
-	res.One(build)
+	res.One(project)
 
 	defer res.Close()
-	return build, nil
+	return project, nil
 }
 
-func (ProjectStorage) GetByUser(id string) (*model.BuildList, *e.Err) {
+func (s *ProjectStorage) GetByUser(id string) (*model.ProjectList, *e.Err) {
 
 	var err error
-	var builds = new(model.BuildList)
-	ctx := context.Get()
+	var projects = new(model.ProjectList)
 
-	res, err := r.Table(BuildTable).Get(id).Run(ctx.Storage.Session)
+	res, err := r.Table(BuildTable).Get(id).Run(s.Session)
 	if err != nil {
 		return nil, e.Build.Unknown(err)
 	}
 
-	res.All(builds)
+	res.All(projects)
 
 	defer res.Close()
-	return builds, nil
+	return projects, nil
 }
 
 // Insert new project into storage
-func (ProjectStorage) Insert(project *model.Project) (*model.Project, *e.Err) {
-	ctx := context.Get()
+func (s *ProjectStorage) Insert(project *model.Project) (*model.Project, *e.Err) {
 
-	res, err := r.Table(ProjectTable).Insert(project, r.InsertOpts{ReturnChanges: true}).Run(ctx.Storage.Session)
+	res, err := r.Table(ProjectTable).Insert(project, r.InsertOpts{ReturnChanges: true}).Run(s.Session)
 	if err != nil {
 		return nil, e.Project.Unknown(err)
 	}
@@ -70,10 +61,9 @@ func (ProjectStorage) Insert(project *model.Project) (*model.Project, *e.Err) {
 }
 
 // Replace build model
-func (ProjectStorage) Replace(project *model.Project) (*model.Project, *e.Err) {
-	ctx := context.Get()
+func (s *ProjectStorage) Replace(project *model.Project) (*model.Project, *e.Err) {
 
-	res, err := r.Table(ProjectTable).Get(project.ID).Replace(project, r.ReplaceOpts{ReturnChanges: true}).Run(ctx.Storage.Session)
+	res, err := r.Table(ProjectTable).Get(project.ID).Replace(project, r.ReplaceOpts{ReturnChanges: true}).Run(s.Session)
 	if err != nil {
 		return nil, e.Build.Unknown(err)
 	}
@@ -81,4 +71,10 @@ func (ProjectStorage) Replace(project *model.Project) (*model.Project, *e.Err) {
 
 	defer res.Close()
 	return project, nil
+}
+
+func newProjectStorage(session *r.Session) *ProjectStorage {
+	s := new(ProjectStorage)
+	s.Session = session
+	return s
 }

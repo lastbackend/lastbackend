@@ -57,7 +57,8 @@ func Run(cmd *cli.Cmd) {
 			ctx.Log.Panic(err)
 		}
 
-		ctx.Storage.Session, err = storage.Get(config.GetRethinkDB())
+		ctx.Storage, err = storage.Get()
+
 		if err != nil {
 			ctx.Log.Panic(err)
 		}

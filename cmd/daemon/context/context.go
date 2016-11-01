@@ -3,7 +3,7 @@ package context
 import (
 	"github.com/lastbackend/lastbackend/libs/interface/k8s"
 	"github.com/lastbackend/lastbackend/libs/interface/log"
-	r "gopkg.in/dancannon/gorethink.v2"
+	"github.com/lastbackend/lastbackend/libs/interface/storage"
 )
 
 var context Context
@@ -18,8 +18,6 @@ type Context struct {
 		ApiVersion string
 	}
 	Log     log.ILogger
-	Storage struct {
-		Session *r.Session
-	}
 	K8S     k8s.IK8S
+	Storage storage.IStorage
 }

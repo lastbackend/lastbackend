@@ -4,33 +4,24 @@ import (
 	e "github.com/lastbackend/lastbackend/libs/errors"
 	"github.com/lastbackend/lastbackend/libs/model"
 
-	"github.com/lastbackend/lastbackend/cmd/daemon/context"
+	"github.com/lastbackend/lastbackend/libs/interface/storage"
 	r "gopkg.in/dancannon/gorethink.v2"
 )
 
 const ImageTable string = "images"
 
-type IImage interface {
-	GetByID(string) (*model.Image, *error)
-	GetByUser(string) (*model.ImageList, error)
-	GetByProject(string) (*model.ImageList, error)
-	GetByService(string) (*model.ImageList, error)
-	Insert(*model.Image) (*model.Image, *error)
-	Replace(*model.Image) (*model.Image, *error)
-}
-
 // Project Service type for interface in interfaces folder
 type ImageStorage struct {
-	IImage
+	Session *r.Session
+	storage.IImage
 }
 
-func (ImageStorage) GetByID(uuid string) (*model.Image, *e.Err) {
+func (s *ImageStorage) GetByID(uuid string) (*model.Image, *e.Err) {
 
 	var err error
 	var image = new(model.Image)
-	ctx := context.Get()
 
-	res, err := r.Table(ImageTable).Get(uuid).Run(ctx.Storage.Session)
+	res, err := r.Table(ImageTable).Get(uuid).Run(s.Session)
 	if err != nil {
 		return nil, e.Image.NotFound(err)
 	}
@@ -40,13 +31,12 @@ func (ImageStorage) GetByID(uuid string) (*model.Image, *e.Err) {
 	return image, nil
 }
 
-func (ImageStorage) GetByUser(id string) (*model.ImageList, *e.Err) {
+func (s *ImageStorage) GetByUser(id string) (*model.ImageList, *e.Err) {
 
 	var err error
 	var images = new(model.ImageList)
-	ctx := context.Get()
 
-	res, err := r.Table(ImageTable).Get(id).Run(ctx.Storage.Session)
+	res, err := r.Table(ImageTable).Get(id).Run(s.Session)
 	if err != nil {
 		return nil, e.Image.Unknown(err)
 	}
@@ -57,13 +47,12 @@ func (ImageStorage) GetByUser(id string) (*model.ImageList, *e.Err) {
 	return images, nil
 }
 
-func (ImageStorage) GetByProject(id string) (*model.ImageList, *e.Err) {
+func (s *ImageStorage) GetByProject(id string) (*model.ImageList, *e.Err) {
 
 	var err error
 	var images = new(model.ImageList)
-	ctx := context.Get()
 
-	res, err := r.Table(ImageTable).Get(id).Run(ctx.Storage.Session)
+	res, err := r.Table(ImageTable).Get(id).Run(s.Session)
 	if err != nil {
 		return nil, e.Image.Unknown(err)
 	}
@@ -74,13 +63,12 @@ func (ImageStorage) GetByProject(id string) (*model.ImageList, *e.Err) {
 	return images, nil
 }
 
-func (ImageStorage) GetByService(id string) (*model.ImageList, *e.Err) {
+func (s *ImageStorage) GetByService(id string) (*model.ImageList, *e.Err) {
 
 	var err error
 	var images = new(model.ImageList)
-	ctx := context.Get()
 
-	res, err := r.Table(ImageTable).Get(id).Run(ctx.Storage.Session)
+	res, err := r.Table(ImageTable).Get(id).Run(s.Session)
 	if err != nil {
 		return nil, e.Image.Unknown(err)
 	}
@@ -92,10 +80,9 @@ func (ImageStorage) GetByService(id string) (*model.ImageList, *e.Err) {
 }
 
 // Insert new image into storage
-func (ImageStorage) Insert(image *model.Image) (*model.Image, *e.Err) {
-	ctx := context.Get()
+func (s *ImageStorage) Insert(image *model.Image) (*model.Image, *e.Err) {
 
-	res, err := r.Table(ImageTable).Insert(image, r.InsertOpts{ReturnChanges: true}).Run(ctx.Storage.Session)
+	res, err := r.Table(ImageTable).Insert(image, r.InsertOpts{ReturnChanges: true}).Run(s.Session)
 	if err != nil {
 		return nil, e.Project.Unknown(err)
 	}
@@ -106,10 +93,9 @@ func (ImageStorage) Insert(image *model.Image) (*model.Image, *e.Err) {
 }
 
 // Replace build model
-func (ImageStorage) Replace(image *model.Image) (*model.Image, *e.Err) {
-	ctx := context.Get()
+func (s *ImageStorage) Replace(image *model.Image) (*model.Image, *e.Err) {
 
-	res, err := r.Table(ImageTable).Get(image.ID).Replace(image, r.ReplaceOpts{ReturnChanges: true}).Run(ctx.Storage.Session)
+	res, err := r.Table(ImageTable).Get(image.ID).Replace(image, r.ReplaceOpts{ReturnChanges: true}).Run(s.Session)
 	if err != nil {
 		return nil, e.Build.Unknown(err)
 	}
@@ -117,4 +103,10 @@ func (ImageStorage) Replace(image *model.Image) (*model.Image, *e.Err) {
 
 	defer res.Close()
 	return image, nil
+}
+
+func newImageStorage(session *r.Session) *ImageStorage {
+	s := new(ImageStorage)
+	s.Session = session
+	return s
 }

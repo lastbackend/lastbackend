@@ -1,33 +1,26 @@
 package storage
 
 import (
-	"github.com/lastbackend/lastbackend/cmd/daemon/context"
 	e "github.com/lastbackend/lastbackend/libs/errors"
+	"github.com/lastbackend/lastbackend/libs/interface/storage"
 	"github.com/lastbackend/lastbackend/libs/model"
 	r "gopkg.in/dancannon/gorethink.v2"
 )
 
-const (
-	userTable = "users"
-)
-
-type IUser interface {
-	GetByID(string) (*model.User, *error)
-	Insert(model.User) (*model.User, *e.Err)
-}
+const UserTable = "users"
 
 // Service User type for interface in interfaces folder
-type User struct{
-  IUser
+type UserStorage struct {
+	Session *r.Session
+	storage.IUser
 }
 
-func (User) GetByID(uuid string) (*model.User, *e.Err) {
+func (s *UserStorage) GetByID(uuid string) (*model.User, *e.Err) {
 
 	var err error
 	var user = new(model.User)
-	ctx := context.Get()
 
-	res, err := r.Table(userTable).Get(uuid).Run(ctx.Storage.Session)
+	res, err := r.Table(UserTable).Get(uuid).Run(s.Session)
 	if err != nil {
 		return nil, e.User.NotFound(err)
 	}
@@ -37,13 +30,11 @@ func (User) GetByID(uuid string) (*model.User, *e.Err) {
 	return user, nil
 }
 
-func (User) Insert(u model.User) (*model.User, *e.Err) {
+func (s *UserStorage) Insert(user *model.User) (*model.User, *e.Err) {
 
 	var err error
-	var user = new(model.User)
-	ctx := context.Get()
 
-	res, err := r.Table(userTable).Insert(user).Run(ctx.Storage.Session)
+	res, err := r.Table(UserTable).Insert(user).Run(s.Session)
 	if err != nil {
 		return nil, e.User.NotFound(err)
 	}
@@ -51,4 +42,10 @@ func (User) Insert(u model.User) (*model.User, *e.Err) {
 
 	defer res.Close()
 	return user, nil
+}
+
+func newUserStorage(session *r.Session) *UserStorage {
+	s := new(UserStorage)
+	s.Session = session
+	return s
 }
