@@ -21,5 +21,5 @@ type Context struct {
 	Storage struct {
 		Session *r.Session
 	}
-	K8S k8s.IK8S
+	K8S     k8s.IK8S
 }
