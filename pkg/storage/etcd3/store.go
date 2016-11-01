@@ -15,22 +15,24 @@ import (
 type store struct {
 	client     *clientv3.Client
 	serializer runtime.Serializer
-	versioner  storage.Versioner
 	pathPrefix string
 	//watcher    *watcher
 }
 
 // New returns an etcd3 implementation of storage.Interface.
-func New(c *clientv3.Client, serializer runtime.Serializer, prefix string) storage.Interface {
+func New(c clientv3.Config, serializer runtime.Serializer, prefix string) storage.Interface {
 	return newStore(c, serializer, prefix)
 }
 
-func newStore(c *clientv3.Client, serializer runtime.Serializer, prefix string) *store {
-	versioner := struct{}{} // TODO
+func newStore(c clientv3.Config, serializer runtime.Serializer, prefix string) *store {
+	client, err := clientv3.New(c)
+	if err != nil {
+		return nil
+	}
+
 	return &store{
-		client:     c,
+		client:     client,
 		serializer: serializer,
-		versioner:  versioner,
 		pathPrefix: prefix,
 		//watcher:    newWatcher(c, serializer, versioner),
 	}
@@ -51,35 +53,9 @@ func (s *store) ttlOpts(ctx context.Context, ttl int64) ([]clientv3.OpOption, er
 	return []clientv3.OpOption{clientv3.WithLease(clientv3.LeaseID(lcr.ID))}, nil
 }
 
-// Versioner implements storage.Interface.Versioner.
-func (s *store) Versioner() storage.Versioner {
-	return s.versioner
-}
-
-// Get implements storage.Interface.Get.
-func (s *store) Get(ctx context.Context, key string, out runtime.Object, ignoreNotFound bool) error {
-	key = keyWithPrefix(s.pathPrefix, key)
-	getResp, err := s.client.KV.Get(ctx, key)
-	if err != nil {
-		return err
-	}
-
-	if len(getResp.Kvs) == 0 {
-		if ignoreNotFound {
-			return setZeroValue(out)
-		}
-		return errors.New("New key not found")
-	}
-	kv := getResp.Kvs[0]
-	return decode(s.serializer, s.versioner, kv.Value, out, kv.ModRevision)
-}
-
 // Create implements storage.Interface.Create.
-func (s *store) Create(ctx context.Context, key string, obj, out runtime.Object, ttl uint64) error {
-	if version, err := s.versioner.ObjectResourceVersion(obj); err == nil && version != 0 {
-		return errors.New("resourceVersion should not be set on objects to be created")
-	}
-	data, err := runtime.Encode(s.serializer, obj)
+func (s *store) Create(ctx context.Context, key string, obj runtime.Object, ttl uint64) error {
+	data, err := s.serializer.Encode(obj)
 	if err != nil {
 		return err
 	}
@@ -102,11 +78,23 @@ func (s *store) Create(ctx context.Context, key string, obj, out runtime.Object,
 		return errors.New("New key exists")
 	}
 
-	if out != nil {
-		putResp := txnResp.Responses[0].GetResponsePut()
-		return decode(s.serializer, s.versioner, data, out, putResp.Header.Revision)
-	}
 	return nil
+}
+
+// Get implements storage.Interface.Get.
+func (s *store) Get(ctx context.Context, key string, out runtime.Object) error {
+	key = keyWithPrefix(s.pathPrefix, key)
+	getResp, err := s.client.KV.Get(ctx, key)
+	if err != nil {
+		return err
+	}
+
+	if len(getResp.Kvs) == 0 {
+		return errors.New("New key not found")
+	}
+
+	kv := getResp.Kvs[0]
+	return decode(s.serializer, kv.Value, out)
 }
 
 func keyWithPrefix(prefix, key string) string {
@@ -116,27 +104,16 @@ func keyWithPrefix(prefix, key string) string {
 	return path.Join(prefix, key)
 }
 
-func decode(serializer runtime.Serializer, versioner storage.Versioner, value []byte, obj runtime.Object, rev int64) error {
+func decode(serializer runtime.Serializer, value []byte, obj runtime.Object) error {
 	if _, err := enforcePointer(obj); err != nil {
 		panic("unable to convert output object to pointer")
 	}
-	_, err := serializer.Decode(value, obj)
+
+	err := serializer.Decode(value, obj)
 	if err != nil {
 		return err
 	}
 
-	// being unable to set the version does not prevent the object from being extracted
-	versioner.UpdateObject(obj, uint64(rev)) // TODO: реализовать
-	return nil
-}
-
-// SetZeroValue would set the object of obj to zero value of its type.
-func setZeroValue(obj runtime.Object) error {
-	v, err := enforcePointer(obj)
-	if err != nil {
-		return err
-	}
-	v.Set(reflect.Zero(v.Type()))
 	return nil
 }
 

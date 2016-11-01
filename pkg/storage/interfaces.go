@@ -27,11 +27,10 @@ type Versioner interface {
 // Interface offers a common interface for object marshaling/unmarshaling operations and
 // hides all the storage-related operations behind it.
 type Interface interface {
-	Versioner() Versioner
-	Get(ctx context.Context, key string, obj runtime.Object, ignoreNotFound bool) error
-	//GetToList(ctx context.Context, key string, filter Filter, listObj runtime.Object) error
-	//List(ctx context.Context, key string, filter Filter, listObj runtime.Object) error
-	Create(ctx context.Context, key string, obj, out runtime.Object, ttl uint64) error
+	Create(ctx context.Context, key string, obj runtime.Object, ttl uint64) error
+	Get(ctx context.Context, key string, obj runtime.Object) error
+	//GetToList(ctx context.Context, key string, filter Filter, listObj runtime.runtime.Object) error
+	//List(ctx context.Context, key string, filter Filter, listObj runtime.runtime.Object) error
 	//Delete(ctx context.Context, key string, out runtime.Object, preconditions *Preconditions) error
 	//Watch(ctx context.Context, key string, filter Filter) (watch.Interface, error)
 	//WatchList(ctx context.Context, key string, filter Filter) (watch.Interface, error)

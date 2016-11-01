@@ -2,13 +2,12 @@ package cmd
 
 import (
 	"fmt"
-	"os"
-
 	"github.com/jawher/mow.cli"
 	"github.com/lastbackend/lastbackend/cmd/client"
 	cctx "github.com/lastbackend/lastbackend/cmd/client/context"
 	"github.com/lastbackend/lastbackend/cmd/daemon"
 	dctx "github.com/lastbackend/lastbackend/cmd/daemon/context"
+	"os"
 )
 
 func Start() {
