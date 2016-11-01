@@ -1,8 +1,7 @@
-package rethinkdb
+package storage
 
 import (
 	r "gopkg.in/dancannon/gorethink.v2"
-
 )
 
 // Get RethinkDB session
