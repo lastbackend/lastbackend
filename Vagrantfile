@@ -17,9 +17,9 @@ USER_DATA_PATH = File.expand_path("contrib/vagrant/user-data")
 SSL_TARBALL_PATH = File.expand_path("contrib/vagrant/ssl/controller.tar")
 LASTBACKEND_CONFIG_PATH = File.expand_path("contrib/vagrant/config.yml")
 
-system("mkdir -p ./contrib/vagrant/ssl && ./contrib/vagrant/lib/init-ssl-ca ./contrib/vagrant/ssl") or abort ("failed generating SSL CA artifacts")
-system("./contrib/vagrant/lib/init-ssl ./contrib/vagrant/ssl apiserver controller IP.1=#{NODE_IP},IP.2=#{CLUSTER_IP}") or abort ("failed generating SSL certificate artifacts")
-system("./contrib/vagrant/lib/init-ssl ./contrib/vagrant/ssl admin kube-admin") or abort("failed generating admin SSL artifacts")
+system("mkdir -p ./contrib/vagrant/ssl && ./hack/ssl/init-ssl-ca ./contrib/vagrant/ssl") or abort ("failed generating SSL CA artifacts")
+system("./hack/ssl/init-ssl ./contrib/vagrant/ssl apiserver controller IP.1=#{NODE_IP},IP.2=#{CLUSTER_IP}") or abort ("failed generating SSL certificate artifacts")
+system("./hack/ssl/init-ssl ./contrib/vagrant/ssl admin kube-admin") or abort("failed generating admin SSL artifacts")
 
 Vagrant.configure("2") do |config|
   # always use Vagrant's insecure key

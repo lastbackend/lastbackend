@@ -4,11 +4,9 @@ import (
 	"github.com/jawher/mow.cli"
 	"github.com/lastbackend/lastbackend/cmd/daemon/config"
 	"github.com/lastbackend/lastbackend/cmd/daemon/context"
-	"github.com/lastbackend/lastbackend/libs/adapter/etcd"
 	"github.com/lastbackend/lastbackend/libs/adapter/k8s"
+	"github.com/lastbackend/lastbackend/libs/adapter/rethinkdb"
 	"github.com/lastbackend/lastbackend/libs/log"
-	"github.com/lastbackend/lastbackend/pkg/runtime/serializer/json"
-	"github.com/lastbackend/lastbackend/pkg/storage/etcd3"
 	"gopkg.in/yaml.v2"
 	"io/ioutil"
 	"os"
@@ -53,7 +51,16 @@ func Run(cmd *cli.Cmd) {
 		}
 
 		// Initializing database
-		ctx.Storage = etcd3.New(config.GetEtcd3(), json.NewSerializer(), "/")
+		ctx.Log.Info("Initializing daemon")
+		ctx.K8S, err = k8s.Get(config.GetK8S())
+		if err != nil {
+			ctx.Log.Panic(err)
+		}
+
+		ctx.Storage.Session, err = rethinkdb.Get(config.GetRethinkDB())
+		if err != nil {
+			ctx.Log.Panic(err)
+		}
 
 		if cfg.HttpServer.Port == 0 {
 			cfg.HttpServer.Port = 3000
@@ -61,16 +68,6 @@ func Run(cmd *cli.Cmd) {
 	}
 
 	cmd.Action = func() {
-
-		ctx.Log.Info("Initializing daemon")
-		ctx.K8S, err = k8s.Get(config.GetK8S())
-		if err != nil {
-			ctx.Log.Panic(err)
-		}
-
-		// Initializing storage
-		ctx.Adapter.User = etcd.UserService{}
-		ctx.Adapter.Account = etcd.AccountService{}
 
 		go RunHttpServer(cfg.HttpServer.Port)
 

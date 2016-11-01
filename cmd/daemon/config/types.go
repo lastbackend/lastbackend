@@ -19,4 +19,16 @@ type Config struct {
 			Cert string `yaml:"cert"`
 		} `yaml:"ssl"`
 	} `yaml:"k8s"`
+
+	RethinkDB struct {
+		Address    string   `yaml:"address"`
+		Addresses  []string `yaml:"addresses"`
+		MaxOpen    int      `yaml:"max_open"`
+		InitialCap int      `yaml:"initial_cap"`
+		Database   string   `yaml:"database"`
+		AuthKey    string   `yaml:"auth_key"`
+		SSL        struct {
+			CA string `yaml:"ca"`
+		} `yaml:"ssl"`
+	} `yaml:"rethinkdb"`
 }

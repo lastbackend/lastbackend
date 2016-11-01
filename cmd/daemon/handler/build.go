@@ -7,7 +7,7 @@ import (
 
 func BuildListH(w http.ResponseWriter, _ *http.Request) {
 	var ctx = context.Get()
-	ctx.Log.Info("get projects list")
+	ctx.Log.Info("get builds list")
 
 	w.WriteHeader(200)
 	w.Write([]byte(ctx.Info.Version))
