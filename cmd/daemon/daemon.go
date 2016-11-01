@@ -9,7 +9,6 @@ import (
 	"github.com/lastbackend/lastbackend/libs/log"
 	"github.com/lastbackend/lastbackend/pkg/runtime/serializer/json"
 	"github.com/lastbackend/lastbackend/pkg/storage/etcd3"
-	_ "github.com/lib/pq"
 	"gopkg.in/yaml.v2"
 	"io/ioutil"
 	"os"
