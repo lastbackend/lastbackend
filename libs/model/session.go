@@ -28,7 +28,6 @@ func NewSession(uid, oid, username, email string) *Session {
 	}
 }
 
-// Session structure
 type Session struct {
 	Uid      string // session user id
 	Oid      string // session organization id

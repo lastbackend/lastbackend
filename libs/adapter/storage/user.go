@@ -15,6 +15,38 @@ type UserStorage struct {
 	storage.IUser
 }
 
+func (s *UserStorage) GetByUsername(username string) (*model.User, *e.Err) {
+
+	var err error
+	var user = new(model.User)
+
+	var username_filter = r.Row.Field("username").Eq(username)
+	res, err := r.Table(UserTable).Filter(username_filter).Run(s.Session)
+	if err != nil {
+		return nil, e.User.NotFound(err)
+	}
+	res.One(user)
+
+	defer res.Close()
+	return user, nil
+}
+
+func (s *UserStorage) GetByEmail(email string) (*model.User, *e.Err) {
+
+	var err error
+	var user = new(model.User)
+
+	var email_filter = r.Row.Field("email").Eq(email)
+	res, err := r.Table(UserTable).Filter(email_filter).Run(s.Session)
+	if err != nil {
+		return nil, e.User.NotFound(err)
+	}
+	res.One(user)
+
+	defer res.Close()
+	return user, nil
+}
+
 func (s *UserStorage) GetByID(uuid string) (*model.User, *e.Err) {
 
 	var err error
@@ -34,17 +66,17 @@ func (s *UserStorage) Insert(user *model.User) (*model.User, *e.Err) {
 
 	var err error
 
-	res, err := r.Table(UserTable).Insert(user).Run(s.Session)
+	res, err := r.Table(UserTable).Insert(user, r.InsertOpts{ReturnChanges: true}).RunWrite(s.Session)
 	if err != nil {
-		return nil, e.User.NotFound(err)
+		return nil, e.Project.Unknown(err)
 	}
-	res.One(user)
+	user.ID = res.GeneratedKeys[0]
 
-	defer res.Close()
 	return user, nil
 }
 
 func newUserStorage(session *r.Session) *UserStorage {
+	r.TableCreate(UserTable, r.TableCreateOpts{}).Run(session)
 	s := new(UserStorage)
 	s.Session = session
 	return s

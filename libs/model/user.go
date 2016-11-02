@@ -1,50 +1,47 @@
 package model
 
 import (
-	"encoding/json"
+	e "github.com/lastbackend/lastbackend/libs/errors"
+	"golang.org/x/crypto/bcrypt"
+	"k8s.io/client-go/1.5/pkg/util/json"
 	"time"
 )
 
 type User struct {
-	UUID     string    `json:"uuid"`
-	Username string    `json:"username"`
-	Email    string    `json:"email"`
-	Gravatar string    `json:"gravatar"`
-	Created  time.Time `json:"created"`
-	Updated  time.Time `json:"updated"`
+	ID           string    `json:"id,omitempty" gorethink:"id,omitempty"`
+	Username     string    `json:"username,omitempty" gorethink:"username,omitempty"`
+	Email        string    `json:"email,omitempty" gorethink:"email,omitempty"`
+	Gravatar     string    `json:"gravatar,omitempty" gorethink:"gravatar,omitempty"`
+	Organization bool      `json:"organization,omitempty" gorethink:"organization,omitempty"`
+	Created      time.Time `json:"created,omitempty" gorethink:"created,omitempty"`
+	Updated      time.Time `json:"updated,omitempty" gorethink:"updated,omitempty"`
+
+	Password string `json:"-" gorethink:"password,omitempty"`
+	Salt     string `json:"-" gorethink:"salt,omitempty"`
+
+	Profile Profile `json:"profile" gorethink:"profile"`
 }
 
-type UserView struct {
-	UUID     string    `json:"uuid"`
-	Username string    `json:"username"`
-	Email    string    `json:"email"`
-	Gravatar string    `json:"gravatar"`
-	Created  time.Time `json:"created"`
-	Updated  time.Time `json:"updated"`
+type Profile struct {
+	FirstName string `json:"first_name,omitempty" gorethink:"first_name,omitempty"`
+	LastName  string `json:"last_name,omitempty" gorethink:"last_name,omitempty"`
+	Company   string `json:"company,omitempty" gorethink:"company,omitempty"`
 }
 
-// Convert to json
-func (u *User) ToJson() ([]byte, error) {
-	buf, err := json.Marshal(u)
-	return buf, err
+// Validation methods
+func (u *User) ValidatePassword(password string) *e.Err {
+	if err := bcrypt.CompareHashAndPassword([]byte(u.Password), []byte(password+string(u.Salt))); err != nil {
+		return e.Account.AccessDenied(err)
+	}
+
+	return nil
 }
 
-// Convert to view
-func (u *User) View() *UserView {
-	var view = new(UserView)
+func (u *User) ToJson() ([]byte, *e.Err) {
+	byte, err := json.Marshal(u)
+	if err != nil {
+		return nil, e.User.Unknown(err)
+	}
 
-	view.UUID = u.UUID
-	view.Username = u.Username
-	view.Email = u.Email
-	view.Gravatar = u.Gravatar
-	view.Created = u.Created
-	view.Updated = u.Updated
-
-	return view
-}
-
-// Convert to json
-func (u *UserView) ToJson() ([]byte, error) {
-	buf, err := json.Marshal(u)
-	return buf, err
+	return byte, nil
 }
