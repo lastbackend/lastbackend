@@ -53,26 +53,22 @@ func (s *BuildStorage) GetByImage(user, id string) (*model.BuildList, *e.Err) {
 // Insert new build into storage
 func (s *BuildStorage) Insert(build *model.Build) (*model.Build, *e.Err) {
 
-	res, err := r.Table(BuildTable).Insert(build, r.InsertOpts{ReturnChanges: true}).Run(s.Session)
+	res, err := r.Table(BuildTable).Insert(build, r.InsertOpts{ReturnChanges: true}).RunWrite(s.Session)
 	if err != nil {
 		return nil, e.Build.Unknown(err)
 	}
-	res.One(build)
-
-	defer res.Close()
+	build.ID = res.GeneratedKeys[0]
 	return build, nil
 }
 
 // Replace build model
 func (s *BuildStorage) Replace(build *model.Build) (*model.Build, *e.Err) {
 	var user_filter = r.Row.Field("user").Eq(build.User)
-	res, err := r.Table(BuildTable).Get(build.ID).Filter(user_filter).Replace(build, r.ReplaceOpts{ReturnChanges: true}).Run(s.Session)
+	_, err := r.Table(BuildTable).Get(build.ID).Filter(user_filter).Replace(build, r.ReplaceOpts{ReturnChanges: true}).RunWrite(s.Session)
 	if err != nil {
 		return nil, e.Build.Unknown(err)
 	}
-	res.One(build)
 
-	defer res.Close()
 	return build, nil
 }
 

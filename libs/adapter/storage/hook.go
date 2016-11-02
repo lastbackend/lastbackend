@@ -89,13 +89,11 @@ func (s *HookStorage) GetByService(user, id string) (*model.HookList, *e.Err) {
 // Insert new hook into storage
 func (s *HookStorage) Insert(hook *model.Hook) (*model.Hook, *e.Err) {
 
-	res, err := r.Table(HookTable).Insert(hook, r.InsertOpts{ReturnChanges: true}).Run(s.Session)
+	res, err := r.Table(HookTable).Insert(hook, r.InsertOpts{ReturnChanges: true}).RunWrite(s.Session)
 	if err != nil {
 		return nil, e.Hook.Unknown(err)
 	}
-	res.One(hook)
-
-	defer res.Close()
+	hook.ID = res.GeneratedKeys[0]
 	return hook, nil
 }
 

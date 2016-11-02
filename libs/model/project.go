@@ -13,8 +13,6 @@ type Project struct {
 	Name string `json:"name, omitempty" gorethink:"name,omitempty"`
 	// Project description
 	Description string `json:"description, omitempty" gorethink:"description,omitempty"`
-	//Project K8S namespace
-	Namespace string `gorethink:"namespace,omitempty"`
 	// Project created time
 	Created time.Time `json:"created, omitempty" gorethink:"created,omitempty"`
 	// Project updated time

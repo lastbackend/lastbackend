@@ -86,26 +86,22 @@ func (s *ImageStorage) GetByService(user, id string) (*model.ImageList, *e.Err) 
 // Insert new image into storage
 func (s *ImageStorage) Insert(image *model.Image) (*model.Image, *e.Err) {
 
-	res, err := r.Table(ImageTable).Insert(image, r.InsertOpts{ReturnChanges: true}).Run(s.Session)
+	res, err := r.Table(ImageTable).Insert(image, r.InsertOpts{ReturnChanges: true}).RunWrite(s.Session)
 	if err != nil {
 		return nil, e.Project.Unknown(err)
 	}
-	res.One(image)
-
-	defer res.Close()
+	image.ID = res.GeneratedKeys[0]
 	return image, nil
 }
 
 // Replace build model
 func (s *ImageStorage) Replace(image *model.Image) (*model.Image, *e.Err) {
 	var user_filter = r.Row.Field("user").Eq(image.User)
-	res, err := r.Table(ImageTable).Get(image.ID).Filter(user_filter).Replace(image, r.ReplaceOpts{ReturnChanges: true}).Run(s.Session)
+	_, err := r.Table(ImageTable).Get(image.ID).Filter(user_filter).Replace(image, r.ReplaceOpts{ReturnChanges: true}).RunWrite(s.Session)
 	if err != nil {
 		return nil, e.Build.Unknown(err)
 	}
-	res.One(image)
 
-	defer res.Close()
 	return image, nil
 }
 

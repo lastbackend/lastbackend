@@ -37,8 +37,11 @@ func RunHttpServer(port int) {
 	r.HandleFunc("/build", Handler(handler.BuildCreateH)).Methods("POST")
 
 	// Project handlers
-	r.HandleFunc("/project", Handler(handler.ProjectListH)).Methods("GET")
-	r.HandleFunc("/project", Handler(handler.ProjectCreateH)).Methods("POST")
+	r.HandleFunc("/project", Handler(handler.ProjectListH, Auth)).Methods("GET")
+	r.HandleFunc("/project", Handler(handler.ProjectCreateH, Auth)).Methods("POST")
+	r.HandleFunc("/project/:id", Handler(handler.ProjectInfoH, Auth)).Methods("GET")
+	r.HandleFunc("/project/:id", Handler(handler.ProjectDeleteH, Auth)).Methods("DELETE")
+	r.HandleFunc("/project/:id", Handler(handler.ProjectDeleteH, Auth)).Methods("PUT")
 
 	ctx.Log.Infof("Listen server on %d port", port)
 
