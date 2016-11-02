@@ -21,15 +21,14 @@ func RunHttpServer(port int) {
 	r := mux.NewRouter()
 	r.Methods("OPTIONS").HandlerFunc(Headers)
 
+	// Information handlers
 	r.HandleFunc("/version", Handler(handler.SystemVersionH)).Methods("GET")
 
+	// Session handlers
 	r.HandleFunc("/session", Handler(handler.SessionCreateH)).Methods("POST")
 
-	// Account handlers
-	r.HandleFunc("/account", Handler(handler.AccountCreateH)).Methods("POST")
-	r.HandleFunc("/account", Handler(handler.AccountGetH, Auth)).Methods("GET")
-
 	// User handlers
+	r.HandleFunc("/user", Handler(handler.UserCreateH)).Methods("POST")
 	r.HandleFunc("/user", Handler(handler.UserGetH, Auth)).Methods("GET")
 
 	// Build handlers

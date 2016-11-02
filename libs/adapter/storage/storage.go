@@ -8,7 +8,6 @@ import (
 
 type Storage struct {
 	*UserStorage
-	*AccountStorage
 	*ProjectStorage
 	*ImageStorage
 	*BuildStorage
@@ -20,13 +19,6 @@ func (s *Storage) User() storage.IUser {
 		return nil
 	}
 	return s.UserStorage
-}
-
-func (s *Storage) Account() storage.IAccount {
-	if s == nil {
-		return nil
-	}
-	return s.AccountStorage
 }
 
 func (s *Storage) Project() storage.IProject {
@@ -69,7 +61,6 @@ func Get() (*Storage, error) {
 	r.DBCreate(config.Get().RethinkDB.Database).Run(session)
 
 	store.UserStorage = newUserStorage(session)
-	store.AccountStorage = newAccountStorage(session)
 	store.ProjectStorage = newProjectStorage(session)
 	store.ImageStorage = newImageStorage(session)
 	store.BuildStorage = newBuildStorage(session)
