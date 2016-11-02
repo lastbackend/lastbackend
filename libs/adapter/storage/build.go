@@ -17,12 +17,12 @@ type BuildStorage struct {
 }
 
 // Get build model by id
-func (s *BuildStorage) GetByID(id string) (*model.Build, *e.Err) {
+func (s *BuildStorage) GetByID(user, id string) (*model.Build, *e.Err) {
 
 	var err error
 	var build = new(model.Build)
-
-	res, err := r.Table(BuildTable).Get(id).Run(s.Session)
+	var user_filter = r.Row.Field("user").Eq(user)
+	res, err := r.Table(BuildTable).Get(id).Filter(user_filter).Run(s.Session)
 	if err != nil {
 		return nil, e.Build.NotFound(err)
 	}
@@ -33,12 +33,13 @@ func (s *BuildStorage) GetByID(id string) (*model.Build, *e.Err) {
 }
 
 // Get builds by image
-func (s *BuildStorage) GetByImage(id string) (*model.BuildList, *e.Err) {
+func (s *BuildStorage) GetByImage(user, id string) (*model.BuildList, *e.Err) {
 
 	var err error
 	var builds = new(model.BuildList)
-
-	res, err := r.Table(BuildTable).Get(id).Run(s.Session)
+	var image_filter = r.Row.Field("image").Field("id").Eq(id)
+	var user_filter = r.Row.Field("user").Eq(user)
+	res, err := r.Table(BuildTable).Filter(image_filter).Filter(user_filter).Run(s.Session)
 	if err != nil {
 		return nil, e.Build.Unknown(err)
 	}
@@ -64,8 +65,8 @@ func (s *BuildStorage) Insert(build *model.Build) (*model.Build, *e.Err) {
 
 // Replace build model
 func (s *BuildStorage) Replace(build *model.Build) (*model.Build, *e.Err) {
-
-	res, err := r.Table(BuildTable).Get(build.ID).Replace(build, r.ReplaceOpts{ReturnChanges: true}).Run(s.Session)
+	var user_filter = r.Row.Field("user").Eq(build.User)
+	res, err := r.Table(BuildTable).Get(build.ID).Filter(user_filter).Replace(build, r.ReplaceOpts{ReturnChanges: true}).Run(s.Session)
 	if err != nil {
 		return nil, e.Build.Unknown(err)
 	}
@@ -76,6 +77,7 @@ func (s *BuildStorage) Replace(build *model.Build) (*model.Build, *e.Err) {
 }
 
 func newBuildStorage(session *r.Session) *BuildStorage {
+	r.TableCreate(BuildTable, r.TableCreateOpts{}).Run(session)
 	s := new(BuildStorage)
 	s.Session = session
 	return s

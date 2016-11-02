@@ -12,6 +12,7 @@ type Storage struct {
 	*ProjectStorage
 	*ImageStorage
 	*BuildStorage
+	*HookStorage
 }
 
 func (s *Storage) User() storage.IUser {
@@ -49,6 +50,13 @@ func (s *Storage) Build() storage.IBuild {
 	return s.BuildStorage
 }
 
+func (s *Storage) Hook() storage.IHook {
+	if s == nil {
+		return nil
+	}
+	return s.HookStorage
+}
+
 func Get() (*Storage, error) {
 
 	store := new(Storage)
@@ -58,11 +66,14 @@ func Get() (*Storage, error) {
 		panic(err.Error())
 	}
 
+	r.DBCreate(config.Get().RethinkDB.Database).Run(session)
+
 	store.UserStorage = newUserStorage(session)
 	store.AccountStorage = newAccountStorage(session)
 	store.ProjectStorage = newProjectStorage(session)
 	store.ImageStorage = newImageStorage(session)
 	store.BuildStorage = newBuildStorage(session)
+	store.HookStorage = newHookStorage(session)
 
 	return store, nil
 }
