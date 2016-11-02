@@ -7,7 +7,6 @@ import (
 
 type IStorage interface {
 	User() IUser
-	Account() IAccount
 	Build() IBuild
 	Image() IImage
 	Project() IProject
@@ -16,11 +15,6 @@ type IStorage interface {
 type IUser interface {
 	GetByID(string) (*model.User, *errors.Err)
 	Insert(*model.User) (*model.User, *errors.Err)
-}
-
-type IAccount interface {
-	GetByID(string) (*model.Account, *errors.Err)
-	Insert(*model.Account) (*model.Account, *errors.Err)
 }
 
 type IBuild interface {

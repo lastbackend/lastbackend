@@ -18,30 +18,30 @@ type UserStorage struct {
 func (s *UserStorage) GetByID(uuid string) (*model.User, *e.Err) {
 
 	var err error
-	var user = new(model.User)
+	var account = new(model.User)
 
 	res, err := r.Table(UserTable).Get(uuid).Run(s.Session)
 	if err != nil {
 		return nil, e.User.NotFound(err)
 	}
-	res.One(user)
+	res.One(account)
 
 	defer res.Close()
-	return user, nil
+	return account, nil
 }
 
-func (s *UserStorage) Insert(user *model.User) (*model.User, *e.Err) {
+func (s *UserStorage) Insert(account *model.User) (*model.User, *e.Err) {
 
 	var err error
 
-	res, err := r.Table(UserTable).Insert(user).Run(s.Session)
+	res, err := r.Table(UserTable).Insert(account).Run(s.Session)
 	if err != nil {
 		return nil, e.User.NotFound(err)
 	}
-	res.One(user)
+	res.One(account)
 
 	defer res.Close()
-	return user, nil
+	return account, nil
 }
 
 func newUserStorage(session *r.Session) *UserStorage {
