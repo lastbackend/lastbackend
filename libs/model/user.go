@@ -2,12 +2,13 @@ package model
 
 import (
 	e "github.com/lastbackend/lastbackend/libs/errors"
+	"golang.org/x/crypto/bcrypt"
 	"k8s.io/client-go/1.5/pkg/util/json"
 	"time"
 )
 
 type User struct {
-	UUID         string    `json:"uuid,omitempty" gorethink:"uuid,omitempty"`
+	ID           string    `json:"id,omitempty" gorethink:"id,omitempty"`
 	Username     string    `json:"username,omitempty" gorethink:"username,omitempty"`
 	Email        string    `json:"email,omitempty" gorethink:"email,omitempty"`
 	Gravatar     string    `json:"gravatar,omitempty" gorethink:"gravatar,omitempty"`
@@ -25,6 +26,15 @@ type Profile struct {
 	FirstName string `json:"first_name,omitempty" gorethink:"first_name,omitempty"`
 	LastName  string `json:"last_name,omitempty" gorethink:"last_name,omitempty"`
 	Company   string `json:"company,omitempty" gorethink:"company,omitempty"`
+}
+
+// Validation methods
+func (u *User) ValidatePassword(password string) *e.Err {
+	if err := bcrypt.CompareHashAndPassword([]byte(u.Password), []byte(password+string(u.Salt))); err != nil {
+		return e.Account.AccessDenied(err)
+	}
+
+	return nil
 }
 
 func (u *User) ToJson() ([]byte, *e.Err) {

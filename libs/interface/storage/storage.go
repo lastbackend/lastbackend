@@ -15,6 +15,8 @@ type IStorage interface {
 
 type IUser interface {
 	GetByID(string) (*model.User, *errors.Err)
+	GetByUsername(string) (*model.User, *errors.Err)
+	GetByEmail(string) (*model.User, *errors.Err)
 	Insert(*model.User) (*model.User, *errors.Err)
 }
 

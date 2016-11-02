@@ -2,8 +2,8 @@ package handler
 
 import (
 	"encoding/json"
-	c "github.com/gorilla/context"
-	"github.com/lastbackend/lastbackend/cmd/daemon/context"
+	"github.com/gorilla/context"
+	c "github.com/lastbackend/lastbackend/cmd/daemon/context"
 	e "github.com/lastbackend/lastbackend/libs/errors"
 	"github.com/lastbackend/lastbackend/libs/model"
 	"github.com/lastbackend/lastbackend/utils"
@@ -24,7 +24,7 @@ type userCreate struct {
 func (s *userCreate) decodeAndValidate(reader io.Reader) *e.Err {
 
 	var err error
-	var ctx = context.Get()
+	var ctx = c.Get()
 
 	body, err := ioutil.ReadAll(reader)
 	if err != nil {
@@ -70,7 +70,7 @@ func (s *userCreate) decodeAndValidate(reader io.Reader) *e.Err {
 func UserCreateH(w http.ResponseWriter, r *http.Request) {
 
 	var err *e.Err
-	var ctx = context.Get()
+	var ctx = c.Get()
 
 	ctx.Log.Debug("Create user handler")
 
@@ -98,14 +98,33 @@ func UserCreateH(w http.ResponseWriter, r *http.Request) {
 
 	u := new(model.User)
 
-	u.UUID = utils.GetUUIDV4()
 	u.Username = *rq.Username
 	u.Email = *rq.Email
 	u.Gravatar = utils.GenerateGravatar(u.Email)
 	u.Password = password
 	u.Salt = salt
 
-	user, err := ctx.Storage.User().Insert(u)
+	user, err := ctx.Storage.User().GetByUsername(u.Username)
+	if err == nil && user != nil {
+		err = e.User.UsernameExists()
+	}
+	if err != nil {
+		ctx.Log.Error(err.Err())
+		err.Http(w)
+		return
+	}
+
+	user, err = ctx.Storage.User().GetByEmail(u.Email)
+	if err == nil && user != nil {
+		err = e.User.EmailExists()
+	}
+	if err != nil {
+		ctx.Log.Error(err.Err())
+		err.Http(w)
+		return
+	}
+
+	user, err = ctx.Storage.User().Insert(u)
 	if err != nil {
 		ctx.Log.Error(err.Err())
 		err.Http(w)
@@ -117,7 +136,7 @@ func UserCreateH(w http.ResponseWriter, r *http.Request) {
 	}{}
 
 	var errencode error
-	sw.Token, errencode = model.NewSession(user.UUID, ``, user.Username, user.Email).Encode()
+	sw.Token, errencode = model.NewSession(user.ID, ``, user.Username, user.Email).Encode()
 	if errencode != nil {
 		ctx.Log.Error(errencode)
 		e.HTTP.InternalServerError(w)
@@ -138,11 +157,11 @@ func UserCreateH(w http.ResponseWriter, r *http.Request) {
 func UserGetH(w http.ResponseWriter, r *http.Request) {
 
 	var err *e.Err
-	var ctx = context.Get()
+	var ctx = c.Get()
 
 	ctx.Log.Debug("Get user handler")
 
-	s, ok := c.GetOk(r, `session`)
+	s, ok := context.GetOk(r, `session`)
 	if !ok {
 		ctx.Log.Error(e.StatusAccessDenied)
 		e.HTTP.AccessDenied(w)
