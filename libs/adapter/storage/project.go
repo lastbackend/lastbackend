@@ -16,12 +16,13 @@ type ProjectStorage struct {
 	storage.IProject
 }
 
-func (s *ProjectStorage) GetByID(uuid string) (*model.Project, *e.Err) {
+func (s *ProjectStorage) GetByID(user, id string) (*model.Project, *e.Err) {
 
 	var err error
 	var project = new(model.Project)
 
-	res, err := r.Table(ProjectTable).Get(uuid).Run(s.Session)
+	var user_filter = r.Row.Field("user").Eq(user)
+	res, err := r.Table(ProjectTable).Get(id).Filter(user_filter).Run(s.Session)
 	if err != nil {
 		return nil, e.Project.NotFound(err)
 	}
@@ -36,7 +37,7 @@ func (s *ProjectStorage) GetByUser(id string) (*model.ProjectList, *e.Err) {
 	var err error
 	var projects = new(model.ProjectList)
 
-	res, err := r.Table(BuildTable).Get(id).Run(s.Session)
+	res, err := r.Table(ProjectTable).Filter(r.Row.Field("user").Eq(id)).Run(s.Session)
 	if err != nil {
 		return nil, e.Build.Unknown(err)
 	}
@@ -62,8 +63,8 @@ func (s *ProjectStorage) Insert(project *model.Project) (*model.Project, *e.Err)
 
 // Replace build model
 func (s *ProjectStorage) Replace(project *model.Project) (*model.Project, *e.Err) {
-
-	res, err := r.Table(ProjectTable).Get(project.ID).Replace(project, r.ReplaceOpts{ReturnChanges: true}).Run(s.Session)
+	var user_filter = r.Row.Field("user").Eq(project.User)
+	res, err := r.Table(ProjectTable).Get(project.ID).Filter(user_filter).Replace(project, r.ReplaceOpts{ReturnChanges: true}).Run(s.Session)
 	if err != nil {
 		return nil, e.Build.Unknown(err)
 	}
@@ -74,6 +75,7 @@ func (s *ProjectStorage) Replace(project *model.Project) (*model.Project, *e.Err
 }
 
 func newProjectStorage(session *r.Session) *ProjectStorage {
+	r.TableCreate(ProjectTable, r.TableCreateOpts{}).Run(session)
 	s := new(ProjectStorage)
 	s.Session = session
 	return s

@@ -6,7 +6,9 @@ type BuildList []Build
 
 type Build struct {
 	// Build number, incremented automatically
-	ID int `json:"id, omitempty" gorethink:"id,omitempty"`
+	ID string `json:"id, omitempty" gorethink:"id,omitempty"`
+	// Build number, incremented automatically
+	User string `json:"user, omitempty" gorethink:"id,omitempty"`
 	// Build executing status
 	Status BuildStatus `json:"status,omitempty" gorethink:"status,omitempty"`
 	// Build sources used for build
@@ -41,13 +43,15 @@ const (
 	BuildStepFetch = "fetch"
 	//BuildStepBuild - Build executing step
 	BuildStepBuild = "build"
-	//BuildStepUpload - Upload builded docker image step
+	//BuildStepUpload - Upload docker image step
 	BuildStepUpload = "upload"
 )
 
 type BuildSource struct {
 	// Build sources hub
 	Hub string `json:"hub,omitempty" gorethink:"hub,omitempty"`
+	// Build sources owner
+	Owner string `json:"owner,omitempty" gorethink:"owner,omitempty"`
 	// Build sources repo
 	Repo string `json:"repo,omitempty" gorethink:"repo,omitempty"`
 	// Build source tag (branch, tag)
