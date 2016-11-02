@@ -6,6 +6,7 @@ import (
 
 	"github.com/lastbackend/lastbackend/libs/interface/storage"
 	r "gopkg.in/dancannon/gorethink.v2"
+	"time"
 )
 
 const ProjectTable string = "projects"
@@ -51,26 +52,24 @@ func (s *ProjectStorage) GetByUser(id string) (*model.ProjectList, *e.Err) {
 // Insert new project into storage
 func (s *ProjectStorage) Insert(project *model.Project) (*model.Project, *e.Err) {
 
-	res, err := r.Table(ProjectTable).Insert(project, r.InsertOpts{ReturnChanges: true}).Run(s.Session)
+	project.Created = time.Now()
+	project.Updated = time.Now()
+	res, err := r.Table(ProjectTable).Insert(project, r.InsertOpts{ReturnChanges: true}).RunWrite(s.Session)
 	if err != nil {
 		return nil, e.Project.Unknown(err)
 	}
-	res.One(project)
-
-	defer res.Close()
+	project.ID = res.GeneratedKeys[0]
 	return project, nil
 }
 
 // Replace build model
 func (s *ProjectStorage) Replace(project *model.Project) (*model.Project, *e.Err) {
+	project.Updated = time.Now()
 	var user_filter = r.Row.Field("user").Eq(project.User)
-	res, err := r.Table(ProjectTable).Get(project.ID).Filter(user_filter).Replace(project, r.ReplaceOpts{ReturnChanges: true}).Run(s.Session)
+	_, err := r.Table(ProjectTable).Get(project.ID).Filter(user_filter).Replace(project, r.ReplaceOpts{ReturnChanges: true}).RunWrite(s.Session)
 	if err != nil {
 		return nil, e.Build.Unknown(err)
 	}
-	res.One(project)
-
-	defer res.Close()
 	return project, nil
 }
 
