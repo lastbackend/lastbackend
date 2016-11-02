@@ -16,12 +16,12 @@ type ImageStorage struct {
 	storage.IImage
 }
 
-func (s *ImageStorage) GetByID(uuid string) (*model.Image, *e.Err) {
+func (s *ImageStorage) GetByID(user, id string) (*model.Image, *e.Err) {
 
 	var err error
 	var image = new(model.Image)
-
-	res, err := r.Table(ImageTable).Get(uuid).Run(s.Session)
+	var user_filter = r.Row.Field("user").Eq(id)
+	res, err := r.Table(ImageTable).Get(id).Filter(user_filter).Run(s.Session)
 	if err != nil {
 		return nil, e.Image.NotFound(err)
 	}
@@ -47,12 +47,14 @@ func (s *ImageStorage) GetByUser(id string) (*model.ImageList, *e.Err) {
 	return images, nil
 }
 
-func (s *ImageStorage) GetByProject(id string) (*model.ImageList, *e.Err) {
+func (s *ImageStorage) GetByProject(user, id string) (*model.ImageList, *e.Err) {
 
 	var err error
 	var images = new(model.ImageList)
+	var project_filter = r.Row.Field("project").Field("id").Eq(id)
+	var user_filter = r.Row.Field("user").Eq(user)
 
-	res, err := r.Table(ImageTable).Get(id).Run(s.Session)
+	res, err := r.Table(ImageTable).Filter(project_filter).Filter(user_filter).Run(s.Session)
 	if err != nil {
 		return nil, e.Image.Unknown(err)
 	}
@@ -63,12 +65,14 @@ func (s *ImageStorage) GetByProject(id string) (*model.ImageList, *e.Err) {
 	return images, nil
 }
 
-func (s *ImageStorage) GetByService(id string) (*model.ImageList, *e.Err) {
+func (s *ImageStorage) GetByService(user, id string) (*model.ImageList, *e.Err) {
 
 	var err error
 	var images = new(model.ImageList)
 
-	res, err := r.Table(ImageTable).Get(id).Run(s.Session)
+	var project_filter = r.Row.Field("project").Field("id").Eq(id)
+	var user_filter = r.Row.Field("user").Eq(user)
+	res, err := r.Table(ImageTable).Filter(project_filter).Filter(user_filter).Run(s.Session)
 	if err != nil {
 		return nil, e.Image.Unknown(err)
 	}
@@ -94,8 +98,8 @@ func (s *ImageStorage) Insert(image *model.Image) (*model.Image, *e.Err) {
 
 // Replace build model
 func (s *ImageStorage) Replace(image *model.Image) (*model.Image, *e.Err) {
-
-	res, err := r.Table(ImageTable).Get(image.ID).Replace(image, r.ReplaceOpts{ReturnChanges: true}).Run(s.Session)
+	var user_filter = r.Row.Field("user").Eq(image.User)
+	res, err := r.Table(ImageTable).Get(image.ID).Filter(user_filter).Replace(image, r.ReplaceOpts{ReturnChanges: true}).Run(s.Session)
 	if err != nil {
 		return nil, e.Build.Unknown(err)
 	}
@@ -106,6 +110,7 @@ func (s *ImageStorage) Replace(image *model.Image) (*model.Image, *e.Err) {
 }
 
 func newImageStorage(session *r.Session) *ImageStorage {
+	r.TableCreate(ImageTable, r.TableCreateOpts{}).Run(session)
 	s := new(ImageStorage)
 	s.Session = session
 	return s

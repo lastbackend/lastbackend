@@ -9,3 +9,8 @@ k8s:
     ca: "/etc/lastbackend/ssl/ca.pem"
     key: "/etc/lastbackend/ssl/admin-key.pem"
     cert: "/etc/lastbackend/ssl/admin.pem"
+
+rethinkdb:
+  address: "localhost:28015"
+  database: "lastbackend"
+  max_open: 50

@@ -31,6 +31,14 @@ func RunHttpServer(port int) {
 	r.HandleFunc("/user", Handler(handler.UserCreateH)).Methods("POST")
 	r.HandleFunc("/user", Handler(handler.UserGetH, Auth)).Methods("GET")
 
+	// Build handlers
+	r.HandleFunc("/build", Handler(handler.BuildListH)).Methods("GET")
+	r.HandleFunc("/build", Handler(handler.BuildCreateH)).Methods("POST")
+
+	// Project handlers
+	r.HandleFunc("/project", Handler(handler.ProjectListH)).Methods("GET")
+	r.HandleFunc("/project", Handler(handler.ProjectCreateH)).Methods("POST")
+
 	ctx.Log.Infof("Listen server on %d port", port)
 
 	if err := http.ListenAndServe(":"+strconv.Itoa(port), r); err != nil {
