@@ -152,9 +152,9 @@ func ProjectDeleteH(w http.ResponseWriter, r *http.Request) {
 	var ctx = c.Get()
 	ctx.Log.Info("delete project")
 
-	params := mux.Vars(r)
-	id := params["id"]
+	//params := mux.Vars(r)
+	//id := params["id"]
 
 	w.WriteHeader(200)
-	w.Write([]byte("{}"))
+	w.Write([]byte{})
 }
