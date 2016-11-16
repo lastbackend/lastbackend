@@ -47,14 +47,6 @@ func (user) UsernameExists(e ...error) *Err {
 	}
 }
 
-func (user) AccounExists(e ...error) *Err {
-	return &Err{
-		Code:   StatusNotUnique,
-		origin: getError("User: account already exists", e...),
-		http:   HTTP.getNotUnique("account"),
-	}
-}
-
 func (user) IncorrectJSON(e ...error) *Err {
 	return &Err{
 		Code:   StatusIncorrectJson,

@@ -2,9 +2,8 @@ package storage
 
 import (
 	e "github.com/lastbackend/lastbackend/libs/errors"
-	"github.com/lastbackend/lastbackend/libs/model"
-
 	"github.com/lastbackend/lastbackend/libs/interface/storage"
+	"github.com/lastbackend/lastbackend/libs/model"
 	r "gopkg.in/dancannon/gorethink.v2"
 	"time"
 )
@@ -21,15 +20,24 @@ func (s *ProjectStorage) GetByID(user, id string) (*model.Project, *e.Err) {
 
 	var err error
 	var project = new(model.Project)
+	var project_filter = map[string]interface{}{
+		"id":   id,
+		"user": user,
+	}
 
-	var user_filter = r.Row.Field("user").Eq(user)
-	res, err := r.Table(ProjectTable).Get(id).Filter(user_filter).Run(s.Session)
+	res, err := r.Table(ProjectTable).Filter(project_filter).Run(s.Session)
+
 	if err != nil {
 		return nil, e.Project.NotFound(err)
 	}
+	defer res.Close()
+
+	if res.IsNil() {
+		return nil, nil
+	}
+
 	res.One(project)
 
-	defer res.Close()
 	return project, nil
 }
 
@@ -37,40 +45,70 @@ func (s *ProjectStorage) GetByUser(id string) (*model.ProjectList, *e.Err) {
 
 	var err error
 	var projects = new(model.ProjectList)
+	var project_filter = r.Row.Field("user").Eq(id)
 
-	res, err := r.Table(ProjectTable).Filter(r.Row.Field("user").Eq(id)).Run(s.Session)
+	res, err := r.Table(ProjectTable).Filter(project_filter).Run(s.Session)
 	if err != nil {
-		return nil, e.Build.Unknown(err)
+		return nil, e.Project.Unknown(err)
+	}
+	defer res.Close()
+
+	if res.IsNil() {
+		return nil, nil
 	}
 
 	res.All(projects)
 
-	defer res.Close()
 	return projects, nil
 }
 
 // Insert new project into storage
 func (s *ProjectStorage) Insert(project *model.Project) (*model.Project, *e.Err) {
 
+	var err error
+	var opts = r.InsertOpts{ReturnChanges: true}
+
 	project.Created = time.Now()
 	project.Updated = time.Now()
-	res, err := r.Table(ProjectTable).Insert(project, r.InsertOpts{ReturnChanges: true}).RunWrite(s.Session)
+
+	res, err := r.Table(ProjectTable).Insert(project, opts).RunWrite(s.Session)
 	if err != nil {
 		return nil, e.Project.Unknown(err)
 	}
+
 	project.ID = res.GeneratedKeys[0]
+
 	return project, nil
 }
 
-// Replace build model
-func (s *ProjectStorage) Replace(project *model.Project) (*model.Project, *e.Err) {
+// Update build model
+func (s *ProjectStorage) Update(project *model.Project) (*model.Project, *e.Err) {
+
+	var err error
+	var opts = r.UpdateOpts{ReturnChanges: true}
+
 	project.Updated = time.Now()
-	var user_filter = r.Row.Field("user").Eq(project.User)
-	_, err := r.Table(ProjectTable).Get(project.ID).Filter(user_filter).Replace(project, r.ReplaceOpts{ReturnChanges: true}).RunWrite(s.Session)
+
+	_, err = r.Table(ProjectTable).Update(project, opts).RunWrite(s.Session)
 	if err != nil {
-		return nil, e.Build.Unknown(err)
+		return nil, e.Project.Unknown(err)
 	}
+
 	return project, nil
+}
+
+// Remove build model
+func (s *ProjectStorage) Remove(id string) *e.Err {
+
+	var err error
+	var opts = r.DeleteOpts{ReturnChanges: true}
+
+	_, err = r.Table(ProjectTable).Get(id).Delete(opts).RunWrite(s.Session)
+	if err != nil {
+		return e.Project.Unknown(err)
+	}
+
+	return nil
 }
 
 func newProjectStorage(session *r.Session) *ProjectStorage {

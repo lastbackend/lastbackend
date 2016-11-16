@@ -70,7 +70,7 @@ func (Http) getIncorrectJSON() *Http {
 	return &Http{
 		Code:    400,
 		Status:  StatusIncorrectJson,
-		Message: "JSON is invalid",
+		Message: "incorrect json",
 	}
 }
 

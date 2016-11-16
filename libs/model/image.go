@@ -5,17 +5,17 @@ import "time"
 type ImageList []Image
 
 type Image struct {
-	// Project uuid, incremented automatically
+	// Image uuid, incremented automatically
 	ID string `json:"id, omitempty" gorethink:"id,omitempty"`
-	// Project user
+	// Image user
 	User string `json:"user, omitempty" gorethink:"user,omitempty"`
-	// Project name
+	// Image name
 	Name string `json:"name, omitempty" gorethink:"name,omitempty"`
-
+	// Image tag lists
 	Tags map[string]ImageTag `json:"tags, omitempty" gorethink:"tags,omitempty"`
-	// Project created time
+	// Image created time
 	Created time.Time `json:"created, omitempty" gorethink:"created,omitempty"`
-	// Project updated time
+	// Image updated time
 	Updated time.Time `json:"updated, omitempty" gorethink:"updated,omitempty"`
 }
 

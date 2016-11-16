@@ -1,6 +1,10 @@
 package model
 
-import "time"
+import (
+	"encoding/json"
+	e "github.com/lastbackend/lastbackend/libs/errors"
+	"time"
+)
 
 type ProjectList []Project
 
@@ -17,4 +21,22 @@ type Project struct {
 	Created time.Time `json:"created, omitempty" gorethink:"created,omitempty"`
 	// Project updated time
 	Updated time.Time `json:"updated, omitempty" gorethink:"updated,omitempty"`
+}
+
+func (p *Project) ToJson() ([]byte, *e.Err) {
+	buf, err := json.Marshal(p)
+	if err != nil {
+		return nil, e.Project.Unknown(err)
+	}
+
+	return buf, nil
+}
+
+func (p *ProjectList) ToJson() ([]byte, *e.Err) {
+	buf, err := json.Marshal(p)
+	if err != nil {
+		return nil, e.Project.Unknown(err)
+	}
+
+	return buf, nil
 }

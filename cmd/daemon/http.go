@@ -14,9 +14,7 @@ import (
 	"time"
 )
 
-func RunHttpServer(port int) {
-
-	var ctx = context.Get()
+func NewRouter() *mux.Router {
 
 	r := mux.NewRouter()
 	r.Methods("OPTIONS").HandlerFunc(Headers)
@@ -38,13 +36,20 @@ func RunHttpServer(port int) {
 	// Project handlers
 	r.HandleFunc("/project", Handler(handler.ProjectListH, Auth)).Methods("GET")
 	r.HandleFunc("/project", Handler(handler.ProjectCreateH, Auth)).Methods("POST")
-	r.HandleFunc("/project/:id", Handler(handler.ProjectInfoH, Auth)).Methods("GET")
-	r.HandleFunc("/project/:id", Handler(handler.ProjectDeleteH, Auth)).Methods("DELETE")
-	r.HandleFunc("/project/:id", Handler(handler.ProjectDeleteH, Auth)).Methods("PUT")
+	r.HandleFunc("/project/{id}", Handler(handler.ProjectInfoH, Auth)).Methods("GET")
+	r.HandleFunc("/project/{id}", Handler(handler.ProjectUpdateH, Auth)).Methods("PUT")
+	r.HandleFunc("/project/{id}", Handler(handler.ProjectRemoveH, Auth)).Methods("DELETE")
+
+	return r
+}
+
+func RunHttpServer(routes *mux.Router, port int) {
+
+	var ctx = context.Get()
 
 	ctx.Log.Infof("Listen server on %d port", port)
 
-	if err := http.ListenAndServe(":"+strconv.Itoa(port), r); err != nil {
+	if err := http.ListenAndServe(":"+strconv.Itoa(port), routes); err != nil {
 		ctx.Log.Fatal("ListenAndServe: ", err)
 	}
 }

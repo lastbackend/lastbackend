@@ -39,10 +39,10 @@ func (u *User) ValidatePassword(password string) *e.Err {
 }
 
 func (u *User) ToJson() ([]byte, *e.Err) {
-	byte, err := json.Marshal(u)
+	buf, err := json.Marshal(u)
 	if err != nil {
 		return nil, e.User.Unknown(err)
 	}
 
-	return byte, nil
+	return buf, nil
 }
