@@ -1,7 +1,6 @@
 package daemon
 
 import (
-	"encoding/json"
 	"github.com/jawher/mow.cli"
 	"github.com/lastbackend/lastbackend/cmd/daemon/config"
 	"github.com/lastbackend/lastbackend/cmd/daemon/context"
@@ -10,7 +9,6 @@ import (
 	"github.com/lastbackend/lastbackend/libs/log"
 	"gopkg.in/yaml.v2"
 	"io/ioutil"
-	"k8s.io/client-go/1.5/pkg/api"
 	"os"
 	"os/signal"
 	"syscall"
