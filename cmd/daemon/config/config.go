@@ -47,7 +47,7 @@ func GetRethinkDB() r.ConnectOpts {
 		cert, err := ioutil.ReadFile(config.RethinkDB.SSL.CA)
 
 		if err != nil {
-			fmt.Errorf("SSL read error: %s", err.Error())
+			_ = fmt.Errorf("SSL read error: %s", err.Error())
 		}
 
 		roots.AppendCertsFromPEM(cert)

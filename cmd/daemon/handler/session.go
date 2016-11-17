@@ -42,6 +42,7 @@ func (s *sessionCreateS) decodeAndValidate(reader io.Reader) *e.Err {
 // SessionCreateH - create session handler
 func SessionCreateH(w http.ResponseWriter, r *http.Request) {
 
+	var er error
 	var err *e.Err
 	var ctx = context.Get()
 
@@ -77,17 +78,16 @@ func SessionCreateH(w http.ResponseWriter, r *http.Request) {
 		Token string `json:"token"`
 	}{}
 
-	var errsesion error
-	sw.Token, errsesion = model.NewSession(user.ID, ``, user.Username, user.Email).Encode()
-	if errsesion != nil {
-		ctx.Log.Error(errsesion)
+	sw.Token, er = model.NewSession(user.ID, ``, user.Username, user.Email).Encode()
+	if er != nil {
+		ctx.Log.Error(er)
 		e.HTTP.InternalServerError(w)
 		return
 	}
 
-	response, errjson := json.Marshal(sw)
-	if errjson != nil {
-		ctx.Log.Error(errjson)
+	response, er := json.Marshal(sw)
+	if er != nil {
+		ctx.Log.Error(er)
 		e.HTTP.InternalServerError(w)
 		return
 	}
