@@ -3,6 +3,7 @@ package log
 type ILogger interface {
 	Init()
 	SetDebugLevel()
+	Disabled()
 	Debug(args ...interface{})
 	Debugf(format string, args ...interface{})
 	Info(args ...interface{})

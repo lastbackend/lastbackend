@@ -15,11 +15,11 @@ func Start() {
 	var client_ctx = cctx.Get()
 	var daemon_ctx = dctx.Get()
 
-	daemon_ctx.Info.Version = "0.1.0"
-	daemon_ctx.Info.ApiVersion = "1.0"
+	daemon_ctx.Info.Version = "0.3.0"
+	daemon_ctx.Info.ApiVersion = "3.0"
 
-	client_ctx.Info.Version = "0.1.0"
-	client_ctx.Info.ApiVersion = "1.0"
+	client_ctx.Info.Version = "0.3.0"
+	client_ctx.Info.ApiVersion = "3.0"
 
 	app := cli.App("last.backend", "apps cloud hosting with integrated deployment tools")
 
