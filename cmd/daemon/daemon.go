@@ -58,7 +58,6 @@ func Run(cmd *cli.Cmd) {
 		}
 
 		ctx.Storage, err = storage.Get()
-
 		if err != nil {
 			ctx.Log.Panic(err)
 		}
@@ -70,7 +69,7 @@ func Run(cmd *cli.Cmd) {
 
 	cmd.Action = func() {
 
-		go RunHttpServer(cfg.HttpServer.Port)
+		go RunHttpServer(NewRouter(), cfg.HttpServer.Port)
 
 		// Handle SIGINT and SIGTERM.
 		ch := make(chan os.Signal)

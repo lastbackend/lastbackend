@@ -5,6 +5,7 @@ import (
 	"github.com/lastbackend/lastbackend/libs/interface/storage"
 	"github.com/lastbackend/lastbackend/libs/model"
 	r "gopkg.in/dancannon/gorethink.v2"
+	"time"
 )
 
 const UserTable = "users"
@@ -24,11 +25,16 @@ func (s *UserStorage) GetByUsername(username string) (*model.User, *e.Err) {
 	res, err := r.Table(UserTable).Filter(username_filter).Run(s.Session)
 
 	if err != nil {
-		return nil, e.User.NotFound(err)
+		return nil, e.User.Unknown(err)
 	}
+	defer res.Close()
+
+	if res.IsNil() {
+		return nil, nil
+	}
+
 	res.One(user)
 
-	defer res.Close()
 	return user, nil
 }
 
@@ -41,9 +47,13 @@ func (s *UserStorage) GetByEmail(email string) (*model.User, *e.Err) {
 	res, err := r.Table(UserTable).Filter(email_filter).Run(s.Session)
 
 	if err != nil {
-		return nil, e.User.NotFound(err)
+		return nil, e.User.Unknown(err)
 	}
 	defer res.Close()
+
+	if res.IsNil() {
+		return nil, nil
+	}
 
 	res.One(user)
 
@@ -58,9 +68,13 @@ func (s *UserStorage) GetByID(uuid string) (*model.User, *e.Err) {
 	res, err := r.Table(UserTable).Get(uuid).Run(s.Session)
 
 	if err != nil {
-		return nil, e.User.NotFound(err)
+		return nil, e.User.Unknown(err)
 	}
 	defer res.Close()
+
+	if res.IsNil() {
+		return nil, nil
+	}
 
 	res.One(user)
 
@@ -72,11 +86,15 @@ func (s *UserStorage) Insert(user *model.User) (*model.User, *e.Err) {
 	var err error
 	var opts = r.InsertOpts{ReturnChanges: true}
 
+	user.Created = time.Now()
+	user.Updated = time.Now()
+
 	res, err := r.Table(UserTable).Insert(user, opts).RunWrite(s.Session)
 
 	if err != nil {
 		return nil, e.Project.Unknown(err)
 	}
+
 	user.ID = res.GeneratedKeys[0]
 
 	return user, nil

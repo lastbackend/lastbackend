@@ -13,72 +13,102 @@ import (
 	"net/http"
 )
 
-func ProjectListH(w http.ResponseWriter, _ *http.Request) {
-	var ctx = c.Get()
-	ctx.Log.Info("get projects list")
+func ProjectListH(w http.ResponseWriter, r *http.Request) {
 
-	projects, err := ctx.Storage.Project().GetByUser("test")
-	if err != nil {
-		ctx.Log.Error(err)
-		e.HTTP.InternalServerError(w)
-		return
-	}
+	var (
+		err     *e.Err
+		session *model.Session
+		ctx     = c.Get()
+	)
 
-	buf, er := json.Marshal(projects)
-	if er != nil {
-		ctx.Log.Error(er.Error())
-		e.HTTP.InternalServerError(w)
-		return
-	}
-
-	w.WriteHeader(200)
-	w.Write(buf)
-}
-
-func ProjectInfoH(w http.ResponseWriter, r *http.Request) {
-	var ctx = c.Get()
-	ctx.Log.Info("get project info")
+	ctx.Log.Debug("List project handler")
 
 	s, ok := context.GetOk(r, `session`)
 	if !ok {
+		ctx.Log.Error("Error: get session context")
 		e.User.AccessDenied().Http(w)
 		return
 	}
 
-	params := mux.Vars(r)
-	id := params["id"]
+	session = s.(*model.Session)
 
-	session := s.(*model.Session)
-
-	projects, err := ctx.Storage.Project().GetByID(session.Uid, id)
+	projects, err := ctx.Storage.Project().GetByUser(session.Uid)
 	if err != nil {
-		ctx.Log.Error(err)
+		ctx.Log.Error("Error: find projects by user", err)
 		e.HTTP.InternalServerError(w)
 		return
 	}
 
-	buf, er := json.Marshal(projects)
-	if er != nil {
-		ctx.Log.Error(er.Error())
-		e.HTTP.InternalServerError(w)
+	response, err := projects.ToJson()
+	if err != nil {
+		ctx.Log.Error("Error: convert struct to json", err.Err())
+		err.Http(w)
 		return
 	}
 
 	w.WriteHeader(200)
-	w.Write(buf)
+	w.Write(response)
 }
 
-type projectCreateS struct {
+func ProjectInfoH(w http.ResponseWriter, r *http.Request) {
+
+	var (
+		err     *e.Err
+		session *model.Session
+		ctx     = c.Get()
+		params  = mux.Vars(r)
+		id      = params["id"]
+	)
+
+	ctx.Log.Debug("Get project handler")
+
+	s, ok := context.GetOk(r, `session`)
+	if !ok {
+		ctx.Log.Error("Error: get session context")
+		e.User.AccessDenied().Http(w)
+		return
+	}
+
+	session = s.(*model.Session)
+
+	project, err := ctx.Storage.Project().GetByID(session.Uid, id)
+	if err == nil && project == nil {
+		e.Project.NotFound().Http(w)
+		return
+	}
+	if err != nil {
+		ctx.Log.Error("Error: find project by id", err.Err())
+		err.Http(w)
+		return
+	}
+
+	response, err := project.ToJson()
+	if err != nil {
+		ctx.Log.Error("Error: convert struct to json", err.Err())
+		err.Http(w)
+		return
+	}
+
+	w.WriteHeader(200)
+	w.Write(response)
+}
+
+type projectCreate struct {
 	Name        *string `json:"name,omitempty"`
 	Description *string `json:"description,omitempty"`
 }
 
-func (s *projectCreateS) decodeAndValidate(reader io.Reader) *e.Err {
-	var ctx = c.Get()
+func (s *projectCreate) decodeAndValidate(reader io.Reader) *e.Err {
+
+	var (
+		err error
+		ctx = c.Get()
+	)
+
 	body, err := ioutil.ReadAll(reader)
 	if err != nil {
 		ctx.Log.Error(err)
-		return e.Project.Unknown(err)
+		return e.User.Unknown(err)
 	}
 
 	err = json.Unmarshal(body, s)
@@ -86,36 +116,53 @@ func (s *projectCreateS) decodeAndValidate(reader io.Reader) *e.Err {
 		return e.Project.IncorrectJSON(err)
 	}
 
+	if s.Name == nil {
+		return e.Project.BadParameter("name")
+	}
+
+	if s.Description == nil {
+		s.Description = new(string)
+	}
+
 	return nil
 }
 
 func ProjectCreateH(w http.ResponseWriter, r *http.Request) {
-	var ctx = c.Get()
-	ctx.Log.Info("create project")
+
+	var (
+		er      error
+		err     *e.Err
+		session *model.Session
+		ctx     = c.Get()
+	)
+
+	ctx.Log.Debug("Create project handler")
 
 	s, ok := context.GetOk(r, `session`)
 	if !ok {
+		ctx.Log.Error("Error: get session context")
 		e.User.AccessDenied().Http(w)
 		return
 	}
-	session := s.(*model.Session)
+
+	session = s.(*model.Session)
 
 	// request body struct
-	rq := new(projectCreateS)
+	rq := new(projectCreate)
 	if err := rq.decodeAndValidate(r.Body); err != nil {
-		ctx.Log.Error(err)
+		ctx.Log.Error("Error: validation incomming data", err)
 		err.Http(w)
 		return
 	}
 
 	p := new(model.Project)
+	p.User = session.Uid
 	p.Name = *rq.Name
 	p.Description = *rq.Description
-	p.User = session.Uid
 
 	project, err := ctx.Storage.Project().Insert(p)
 	if err != nil {
-		ctx.Log.Error(err)
+		ctx.Log.Error("Error: insert project to db", err)
 		e.HTTP.InternalServerError(w)
 		return
 	}
@@ -130,30 +177,124 @@ func ProjectCreateH(w http.ResponseWriter, r *http.Request) {
 		},
 	}
 
-	_, er := ctx.K8S.Core().Namespaces().Create(namespace)
+	_, er = ctx.K8S.Core().Namespaces().Create(namespace)
 	if er != nil {
-		ctx.Log.Error(er.Error())
+		ctx.Log.Error("Error: create namespace", er.Error())
 		e.HTTP.InternalServerError(w)
 		return
 	}
 
-	buf, er := json.Marshal(project)
-	if er != nil {
-		ctx.Log.Error(er.Error())
-		e.HTTP.InternalServerError(w)
+	response, err := project.ToJson()
+	if err != nil {
+		ctx.Log.Error("Error: convert struct to json", err.Err())
+		err.Http(w)
 		return
 	}
 
 	w.WriteHeader(200)
-	w.Write(buf)
+	w.Write(response)
 }
 
-func ProjectDeleteH(w http.ResponseWriter, r *http.Request) {
-	var ctx = c.Get()
-	ctx.Log.Info("delete project")
+type projectReplace struct {
+	Name        *string `json:"name,omitempty"`
+	Description *string `json:"description,omitempty"`
+}
 
-	//params := mux.Vars(r)
-	//id := params["id"]
+func (s *projectReplace) decodeAndValidate(reader io.Reader) *e.Err {
+
+	var (
+		err error
+		ctx = c.Get()
+	)
+
+	body, err := ioutil.ReadAll(reader)
+	if err != nil {
+		ctx.Log.Error(err)
+		return e.User.Unknown(err)
+	}
+
+	err = json.Unmarshal(body, s)
+	if err != nil {
+		return e.Project.IncorrectJSON(err)
+	}
+
+	if s.Name == nil {
+		return e.Project.BadParameter("name")
+	}
+
+	if s.Description == nil {
+		s.Description = new(string)
+	}
+
+	return nil
+}
+
+func ProjectUpdateH(w http.ResponseWriter, r *http.Request) {
+
+	var (
+		err     *e.Err
+		session *model.Session
+		ctx     = c.Get()
+	)
+
+	ctx.Log.Debug("Update project handler")
+
+	s, ok := context.GetOk(r, `session`)
+	if !ok {
+		ctx.Log.Error("Error: get session context")
+		e.User.AccessDenied().Http(w)
+		return
+	}
+
+	session = s.(*model.Session)
+
+	// request body struct
+	rq := new(projectReplace)
+	if err := rq.decodeAndValidate(r.Body); err != nil {
+		ctx.Log.Error("Error: validation incomming data", err)
+		err.Http(w)
+		return
+	}
+
+	p := new(model.Project)
+	p.User = session.Uid
+	p.Name = *rq.Name
+	p.Description = *rq.Description
+
+	project, err := ctx.Storage.Project().Update(p)
+	if err != nil {
+		ctx.Log.Error("Error: insert project to db", err)
+		e.HTTP.InternalServerError(w)
+		return
+	}
+
+	response, err := project.ToJson()
+	if err != nil {
+		ctx.Log.Error("Error: convert struct to json", err.Err())
+		err.Http(w)
+		return
+	}
+
+	w.WriteHeader(200)
+	w.Write(response)
+}
+
+func ProjectRemoveH(w http.ResponseWriter, r *http.Request) {
+
+	var (
+		ctx    = c.Get()
+		params = mux.Vars(r)
+		id     = params["id"]
+	)
+
+	ctx.Log.Info("Remove project")
+
+	err := ctx.Storage.Project().Remove(id)
+	if err != nil {
+		ctx.Log.Error("Error: remove project from db", err)
+		e.HTTP.InternalServerError(w)
+		return
+	}
 
 	w.WriteHeader(200)
 	w.Write([]byte{})

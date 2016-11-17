@@ -26,7 +26,7 @@ type IBuild interface {
 	GetByImage(string, string) (*model.BuildList, *errors.Err)
 	// Insert and replace build
 	Insert(*model.Build) (*model.Build, *errors.Err)
-	Replace(*model.Build) (*model.Build, *errors.Err)
+	Update(*model.Build) (*model.Build, *errors.Err)
 }
 
 type IImage interface {
@@ -35,14 +35,15 @@ type IImage interface {
 	GetByProject(string, string) (*model.ImageList, *errors.Err)
 	GetByService(string, string) (*model.ImageList, *errors.Err)
 	Insert(*model.Image) (*model.Image, *errors.Err)
-	Replace(*model.Image) (*model.Image, *errors.Err)
+	Update(*model.Image) (*model.Image, *errors.Err)
 }
 
 type IProject interface {
 	GetByID(string, string) (*model.Project, *errors.Err)
 	GetByUser(string) (*model.ProjectList, *errors.Err)
 	Insert(*model.Project) (*model.Project, *errors.Err)
-	Replace(*model.Project) (*model.Project, *errors.Err)
+	Update(*model.Project) (*model.Project, *errors.Err)
+	Remove(string) *errors.Err
 }
 
 type IHook interface {

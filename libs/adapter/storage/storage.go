@@ -55,7 +55,7 @@ func Get() (*Storage, error) {
 
 	session, err := r.Connect(config.GetRethinkDB())
 	if err != nil {
-		panic(err.Error())
+		return nil, err
 	}
 
 	r.DBCreate(config.Get().RethinkDB.Database).Run(session)
