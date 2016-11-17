@@ -1,9 +1,13 @@
-.PHONY : build
+.PHONY : test build
 
 NAME = lastbackend
 HARDWARE = $(shell uname -m)
 OS := $(shell uname)
 VERSION ?= 0.1.0
+
+test:
+	echo "Testing Last.Backend"
+	godep go test $(go list ./... | grep -v /vendor/)
 
 build:
 	echo "Building Last.Backend"
