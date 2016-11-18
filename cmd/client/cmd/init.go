@@ -5,9 +5,9 @@ import (
 )
 
 func Init(app *cli.Cli) {
-	app.Command("login", "login to lb", func(c *cli.Cmd) {
+	app.Command("signup", "create new account", func(c *cli.Cmd) {
 		c.Action = func() {
-			Login()
+			SignUp()
 		}
 	})
 }
