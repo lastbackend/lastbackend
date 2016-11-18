@@ -5,13 +5,14 @@ import (
 )
 
 var context Context
+var mock Context
 
 func Get() *Context {
 	return &context
 }
 
 func Mock() *Context {
-	return &context
+	return &mock
 }
 
 type Context struct {

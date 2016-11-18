@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"github.com/docker/distribution/registry/client"
 	"github.com/jawher/mow.cli"
 	"github.com/lastbackend/lastbackend/cmd/client/cmd"
 	"github.com/lastbackend/lastbackend/cmd/client/config"
@@ -47,7 +46,7 @@ func main() {
 		}
 	}
 
-	cmd.Init(app.Action)
+	cmd.Init(app.Action, ctx)
 
 	er = app.Run(os.Args)
 	if er != nil {

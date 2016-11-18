@@ -1,8 +1,8 @@
 package config
 
 import (
-	"github.com/lastbackend/lastbackend/libs/log/filesystem"
 	"fmt"
+	"github.com/lastbackend/lastbackend/libs/log/filesystem"
 )
 
 var config Config
