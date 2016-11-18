@@ -92,7 +92,7 @@ func (s *UserStorage) Insert(user *model.User) (*model.User, *e.Err) {
 	res, err := r.Table(UserTable).Insert(user, opts).RunWrite(s.Session)
 
 	if err != nil {
-		return nil, e.Project.Unknown(err)
+		return nil, e.User.Unknown(err)
 	}
 
 	user.ID = res.GeneratedKeys[0]

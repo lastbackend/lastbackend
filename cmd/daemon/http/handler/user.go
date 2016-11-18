@@ -193,6 +193,7 @@ func UserGetH(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.WriteHeader(200)
+
 	_, er = w.Write(response)
 	if er != nil {
 		ctx.Log.Error("Error: write response", er.Error())
