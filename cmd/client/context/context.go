@@ -10,6 +10,10 @@ func Get() *Context {
 	return &context
 }
 
+func Mock() *Context {
+	return &context
+}
+
 type Context struct {
 	Info struct {
 		Version    string

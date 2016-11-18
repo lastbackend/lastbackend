@@ -2,9 +2,12 @@ package main
 
 import (
 	"fmt"
+	"github.com/docker/distribution/registry/client"
 	"github.com/jawher/mow.cli"
 	"github.com/lastbackend/lastbackend/cmd/client/cmd"
+	"github.com/lastbackend/lastbackend/cmd/client/config"
 	"github.com/lastbackend/lastbackend/cmd/client/context"
+	"github.com/lastbackend/lastbackend/libs/log"
 	"os"
 )
 
@@ -12,6 +15,7 @@ func main() {
 
 	var (
 		er  error
+		cfg = config.Get()
 		ctx = context.Get()
 	)
 
@@ -25,15 +29,25 @@ func main() {
 		" Version:\t%s\r\n"+
 		" API version:\t%s", ctx.Info.Version, ctx.Info.ApiVersion))
 
+	app.Spec = "[-d]"
+
+	var debug = app.Bool(cli.BoolOpt{Name: "d debug", Value: false, Desc: "Enable debug mode"})
 	var help = app.Bool(cli.BoolOpt{Name: "h help", Value: false, Desc: "Show the help info and exit", HideValue: true})
 
 	app.Before = func() {
 		if *help {
 			app.PrintLongHelp()
 		}
+		ctx.Log = new(log.Log)
+		ctx.Log.Init()
+		if *debug {
+			cfg.Debug = *debug
+			ctx.Log.SetDebugLevel()
+			ctx.Log.Info("Logger debug mode enabled")
+		}
 	}
 
-	cmd.Init(app)
+	cmd.Init(app.Action)
 
 	er = app.Run(os.Args)
 	if er != nil {

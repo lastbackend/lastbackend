@@ -5,5 +5,9 @@ import (
 )
 
 func Init(app *cli.Cli) {
-	app.Command("login", "User authentication", Login)
+	app.Command("login", "login to lb", func(c *cli.Cmd) {
+		c.Action = func() {
+			Login()
+		}
+	})
 }
