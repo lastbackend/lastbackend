@@ -10,8 +10,9 @@ import (
 const _NEWLINE = "\n"
 
 type Log struct {
-	skip  int
-	debug bool
+	skip     int
+	debug    bool
+	disabled bool
 }
 
 func (l *Log) Init() {
@@ -20,6 +21,10 @@ func (l *Log) Init() {
 
 func (l *Log) SetDebugLevel() {
 	l.debug = true
+}
+
+func (l *Log) Disabled() {
+	l.disabled = true
 }
 
 func (l *Log) Debug(args ...interface{}) {
@@ -75,6 +80,10 @@ func (l *Log) Warnf(format string, args ...interface{}) {
 }
 
 func (l *Log) print(message string) {
+	if  l.disabled {
+		return
+	}
+
 	if l.debug {
 		fmt.Printf("[%v] %s ", time.Now().Format("2006-01-02 15:04:05"), color.Cyan(fileLine(l.skip)))
 		fmt.Printf(message + _NEWLINE)
@@ -84,6 +93,10 @@ func (l *Log) print(message string) {
 }
 
 func (l *Log) printf(format string, a ...interface{}) {
+	if  l.disabled {
+		return
+	}
+
 	if l.debug {
 		fmt.Printf("[%v] %s ", time.Now().Format("2006-01-02 15:04:05"), color.Cyan(fileLine(l.skip)))
 		fmt.Printf(format+_NEWLINE, a...)
