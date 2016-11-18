@@ -1,7 +1,7 @@
 {
 	"ImportPath": "github.com/lastbackend/lastbackend",
 	"GoVersion": "go1.7",
-	"GodepVersion": "v74",
+	"GodepVersion": "v75",
 	"Deps": [
 		{
 			"ImportPath": "cloud.google.com/go/compute/metadata",

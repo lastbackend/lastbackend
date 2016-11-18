@@ -1,11 +1,11 @@
-package daemon
+package http
 
 import (
 	"fmt"
 	c "github.com/gorilla/context"
 	"github.com/gorilla/mux"
 	"github.com/lastbackend/lastbackend/cmd/daemon/context"
-	"github.com/lastbackend/lastbackend/cmd/daemon/handler"
+	"github.com/lastbackend/lastbackend/cmd/daemon/http/handler"
 	e "github.com/lastbackend/lastbackend/libs/errors"
 	"github.com/lastbackend/lastbackend/libs/model"
 	"net/http"

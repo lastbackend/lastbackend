@@ -1,81 +1,42 @@
-package daemon
+package main
 
 import (
+	"fmt"
 	"github.com/jawher/mow.cli"
-	"github.com/lastbackend/lastbackend/cmd/daemon/config"
+	"github.com/lastbackend/lastbackend/cmd/daemon/cmd"
 	"github.com/lastbackend/lastbackend/cmd/daemon/context"
-	"github.com/lastbackend/lastbackend/libs/adapter/k8s"
-	"github.com/lastbackend/lastbackend/libs/adapter/storage"
-	"github.com/lastbackend/lastbackend/libs/log"
-	"gopkg.in/yaml.v2"
-	"io/ioutil"
 	"os"
-	"os/signal"
-	"syscall"
 )
 
-func Run(cmd *cli.Cmd) {
-	var err error
+func main() {
 
-	var ctx = context.Get()
-	var cfg = config.Get()
+	var (
+		er  error
+		ctx = context.Get()
+	)
 
-	cmd.Spec = "[-c][-d]"
+	ctx.Info.Version = "0.3.0"
+	ctx.Info.ApiVersion = "3.0"
 
-	var debug = cmd.Bool(cli.BoolOpt{Name: "d debug", Value: false, Desc: "Enable debug mode"})
-	var configPath = cmd.String(cli.StringOpt{Name: "c config", Value: "./config.yaml", Desc: "Path to config file", HideValue: true})
+	app := cli.App("last.backend", "apps cloud hosting with integrated deployment tools")
 
-	cmd.Before = func() {
+	app.Version("v version", fmt.Sprintf(""+
+		" Version:\t%s\r\n"+
+		" API version:\t%s", ctx.Info.Version, ctx.Info.ApiVersion))
 
-		ctx.Log = new(log.Log)
-		ctx.Log.Init()
+	var help = app.Bool(cli.BoolOpt{Name: "h help", Value: false, Desc: "Show the help info and exit", HideValue: true})
 
-		if *configPath != "" {
-
-			// Parsing config file
-			configBytes, err := ioutil.ReadFile(*configPath)
-			if err != nil {
-				ctx.Log.Panic(err)
-			}
-
-			err = yaml.Unmarshal(configBytes, cfg)
-			if err != nil {
-				ctx.Log.Panic(err)
-			}
-		}
-
-		if *debug {
-			cfg.Debug = *debug
-			ctx.Log.SetDebugLevel()
-			ctx.Log.Info("Logger debug mode enabled")
-		}
-
-		// Initializing database
-		ctx.Log.Info("Initializing daemon")
-		ctx.K8S, err = k8s.Get(config.GetK8S())
-		if err != nil {
-			ctx.Log.Panic(err)
-		}
-
-		ctx.Storage, err = storage.Get()
-		if err != nil {
-			ctx.Log.Panic(err)
-		}
-
-		if cfg.HttpServer.Port == 0 {
-			cfg.HttpServer.Port = 3000
+	app.Before = func() {
+		if *help {
+			app.PrintLongHelp()
 		}
 	}
 
-	cmd.Action = func() {
+	cmd.Init(app)
 
-		go RunHttpServer(NewRouter(), cfg.HttpServer.Port)
-
-		// Handle SIGINT and SIGTERM.
-		ch := make(chan os.Signal)
-		signal.Notify(ch, syscall.SIGINT, syscall.SIGTERM)
-		ctx.Log.Debug(<-ch)
-
-		ctx.Log.Info("Handle SIGINT and SIGTERM.")
+	er = app.Run(os.Args)
+	if er != nil {
+		ctx.Log.Panic("Error: run application", er.Error())
+		return
 	}
 }

@@ -80,7 +80,7 @@ func (l *Log) Warnf(format string, args ...interface{}) {
 }
 
 func (l *Log) print(message string) {
-	if  l.disabled {
+	if l.disabled {
 		return
 	}
 
@@ -93,7 +93,7 @@ func (l *Log) print(message string) {
 }
 
 func (l *Log) printf(format string, a ...interface{}) {
-	if  l.disabled {
+	if l.disabled {
 		return
 	}
 

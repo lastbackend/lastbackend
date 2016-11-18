@@ -151,11 +151,16 @@ func UserCreateH(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.WriteHeader(200)
-	w.Write(response)
+	_, er = w.Write(response)
+	if er != nil {
+		ctx.Log.Error("Error: write response", er.Error())
+		return
+	}
 }
 
 func UserGetH(w http.ResponseWriter, r *http.Request) {
 
+	var er error
 	var err *e.Err
 	var ctx = c.Get()
 
@@ -188,5 +193,9 @@ func UserGetH(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.WriteHeader(200)
-	w.Write(response)
+	_, er = w.Write(response)
+	if er != nil {
+		ctx.Log.Error("Error: write response", er.Error())
+		return
+	}
 }

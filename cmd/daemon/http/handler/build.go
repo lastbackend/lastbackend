@@ -10,7 +10,12 @@ import (
 )
 
 func BuildListH(w http.ResponseWriter, _ *http.Request) {
-	var ctx = context.Get()
+
+	var (
+		er  error
+		ctx = context.Get()
+	)
+
 	ctx.Log.Info("get builds list")
 	builds, err := ctx.Storage.Build().GetByImage("", "")
 	if err != nil {
@@ -27,11 +32,20 @@ func BuildListH(w http.ResponseWriter, _ *http.Request) {
 	}
 
 	w.WriteHeader(200)
-	w.Write(buf)
+	_, er = w.Write(buf)
+	if er != nil {
+		ctx.Log.Error("Error: write response", er.Error())
+		return
+	}
 }
 
 func BuildCreateH(w http.ResponseWriter, _ *http.Request) {
-	var ctx = context.Get()
+
+	var (
+		er  error
+		ctx = context.Get()
+	)
+
 	ctx.Log.Info("create build")
 
 	b := new(model.Build)
@@ -53,5 +67,9 @@ func BuildCreateH(w http.ResponseWriter, _ *http.Request) {
 	}
 
 	w.WriteHeader(200)
-	w.Write(buf)
+	_, er = w.Write(buf)
+	if er != nil {
+		ctx.Log.Error("Error: write response", er.Error())
+		return
+	}
 }

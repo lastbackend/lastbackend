@@ -42,9 +42,11 @@ func (s *sessionCreateS) decodeAndValidate(reader io.Reader) *e.Err {
 // SessionCreateH - create session handler
 func SessionCreateH(w http.ResponseWriter, r *http.Request) {
 
-	var er error
-	var err *e.Err
-	var ctx = context.Get()
+	var (
+		er  error
+		err *e.Err
+		ctx = context.Get()
+	)
 
 	ctx.Log.Debug("Create session handler")
 
@@ -93,5 +95,9 @@ func SessionCreateH(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.WriteHeader(200)
-	w.Write(response)
+	_, er = w.Write(response)
+	if er != nil {
+		ctx.Log.Error("Error: write response", er.Error())
+		return
+	}
 }
