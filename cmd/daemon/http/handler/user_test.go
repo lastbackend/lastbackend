@@ -2,8 +2,8 @@ package handler_test
 
 import (
 	"bytes"
-	"github.com/lastbackend/lastbackend/cmd/daemon"
 	"github.com/lastbackend/lastbackend/cmd/daemon/context"
+	h "github.com/lastbackend/lastbackend/cmd/daemon/http"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -13,7 +13,7 @@ func TestUserCreateH(t *testing.T) {
 
 	_ = context.Mock()
 
-	r := daemon.NewRouter()
+	r := h.NewRouter()
 
 	var json = `{"username":"mocked", "email":"mocked@mocked.com", "password":"mockedpassword"}`
 
@@ -36,7 +36,7 @@ func TestUserGetH(t *testing.T) {
 
 	_ = context.Mock()
 
-	r := daemon.NewRouter()
+	r := h.NewRouter()
 
 	req, err := http.NewRequest("GET", "/user", nil)
 	if err != nil {

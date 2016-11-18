@@ -16,6 +16,7 @@ import (
 func ProjectListH(w http.ResponseWriter, r *http.Request) {
 
 	var (
+		er      error
 		err     *e.Err
 		session *model.Session
 		ctx     = c.Get()
@@ -47,12 +48,17 @@ func ProjectListH(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.WriteHeader(200)
-	w.Write(response)
+	_, er = w.Write(response)
+	if er != nil {
+		ctx.Log.Error("Error: write response", er.Error())
+		return
+	}
 }
 
 func ProjectInfoH(w http.ResponseWriter, r *http.Request) {
 
 	var (
+		er      error
 		err     *e.Err
 		session *model.Session
 		ctx     = c.Get()
@@ -90,7 +96,11 @@ func ProjectInfoH(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.WriteHeader(200)
-	w.Write(response)
+	_, er = w.Write(response)
+	if er != nil {
+		ctx.Log.Error("Error: write response", er.Error())
+		return
+	}
 }
 
 type projectCreate struct {
@@ -192,7 +202,11 @@ func ProjectCreateH(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.WriteHeader(200)
-	w.Write(response)
+	_, er = w.Write(response)
+	if er != nil {
+		ctx.Log.Error("Error: write response", er.Error())
+		return
+	}
 }
 
 type projectReplace struct {
@@ -232,6 +246,7 @@ func (s *projectReplace) decodeAndValidate(reader io.Reader) *e.Err {
 func ProjectUpdateH(w http.ResponseWriter, r *http.Request) {
 
 	var (
+		er      error
 		err     *e.Err
 		session *model.Session
 		ctx     = c.Get()
@@ -276,12 +291,17 @@ func ProjectUpdateH(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.WriteHeader(200)
-	w.Write(response)
+	_, er = w.Write(response)
+	if er != nil {
+		ctx.Log.Error("Error: write response", er.Error())
+		return
+	}
 }
 
 func ProjectRemoveH(w http.ResponseWriter, r *http.Request) {
 
 	var (
+		er     error
 		ctx    = c.Get()
 		params = mux.Vars(r)
 		id     = params["id"]
@@ -297,5 +317,9 @@ func ProjectRemoveH(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.WriteHeader(200)
-	w.Write([]byte{})
+	_, er = w.Write([]byte{})
+	if er != nil {
+		ctx.Log.Error("Error: write response", er.Error())
+		return
+	}
 }

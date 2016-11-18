@@ -7,7 +7,11 @@ import (
 )
 
 func ServiceListH(w http.ResponseWriter, _ *http.Request) {
-	var ctx = context.Get()
+
+	var (
+		er  error
+		ctx = context.Get()
+	)
 
 	ctx.Log.Info("get nodes list")
 
@@ -25,5 +29,9 @@ func ServiceListH(w http.ResponseWriter, _ *http.Request) {
 	}
 
 	w.WriteHeader(200)
-	w.Write([]byte(ctx.Info.Version))
+	_, er = w.Write([]byte(ctx.Info.Version))
+	if er != nil {
+		ctx.Log.Error("Error: write response", er.Error())
+		return
+	}
 }

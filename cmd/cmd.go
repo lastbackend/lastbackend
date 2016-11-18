@@ -3,17 +3,20 @@ package cmd
 import (
 	"fmt"
 	"github.com/jawher/mow.cli"
-	"github.com/lastbackend/lastbackend/cmd/client"
+	client "github.com/lastbackend/lastbackend/cmd/client/cmd"
 	cctx "github.com/lastbackend/lastbackend/cmd/client/context"
-	"github.com/lastbackend/lastbackend/cmd/daemon"
+	daemon "github.com/lastbackend/lastbackend/cmd/daemon/cmd"
 	dctx "github.com/lastbackend/lastbackend/cmd/daemon/context"
 	"os"
 )
 
-func Start() {
+func Init() {
 
-	var client_ctx = cctx.Get()
-	var daemon_ctx = dctx.Get()
+	var (
+		er         error
+		client_ctx = cctx.Get()
+		daemon_ctx = dctx.Get()
+	)
 
 	daemon_ctx.Info.Version = "0.3.0"
 	daemon_ctx.Info.ApiVersion = "3.0"
@@ -40,8 +43,12 @@ func Start() {
 		}
 	}
 
-	app.Command("daemon", "Run last.backend daemon", daemon.Run)
-	app.Command("init", "Init project", client.Init)
+	client.Init(app)
+	daemon.Init(app)
 
-	app.Run(os.Args)
+	er = app.Run(os.Args)
+	if er != nil {
+		daemon_ctx.Log.Panic("Error: run application", er.Error())
+		return
+	}
 }

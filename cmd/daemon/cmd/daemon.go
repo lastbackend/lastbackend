@@ -1,9 +1,10 @@
-package daemon
+package cmd
 
 import (
 	"github.com/jawher/mow.cli"
 	"github.com/lastbackend/lastbackend/cmd/daemon/config"
 	"github.com/lastbackend/lastbackend/cmd/daemon/context"
+	"github.com/lastbackend/lastbackend/cmd/daemon/http"
 	"github.com/lastbackend/lastbackend/libs/adapter/k8s"
 	"github.com/lastbackend/lastbackend/libs/adapter/storage"
 	"github.com/lastbackend/lastbackend/libs/log"
@@ -69,7 +70,7 @@ func Run(cmd *cli.Cmd) {
 
 	cmd.Action = func() {
 
-		go RunHttpServer(NewRouter(), cfg.HttpServer.Port)
+		go http.RunHttpServer(http.NewRouter(), cfg.HttpServer.Port)
 
 		// Handle SIGINT and SIGTERM.
 		ch := make(chan os.Signal)
