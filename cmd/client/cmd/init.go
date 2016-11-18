@@ -10,4 +10,10 @@ func Init(app *cli.Cli) {
 			SignUp()
 		}
 	})
+
+	app.Command("login", "Auth to account", func(c *cli.Cmd) {
+		c.Action = func() {
+			Auth()
+		}
+	})
 }

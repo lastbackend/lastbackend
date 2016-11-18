@@ -17,5 +17,6 @@ func Get() *Config {
 
 	config.StoragePath = homedir + "/token.txt"
 	config.CreateUserUrl = "http://localhost:3000/user"
+	config.AuthUserUrl = "http://localhost:3000/session"
 	return &config
 }

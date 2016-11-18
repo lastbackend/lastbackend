@@ -5,4 +5,5 @@ type Config struct {
 	Debug         bool   `yaml:"debug"`
 	CreateUserUrl string `yaml:"createUserUrl"`
 	StoragePath   string `yaml:"storagePah"`
+	AuthUserUrl   string `yaml:"authUserUrl"`
 }

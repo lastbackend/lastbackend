@@ -65,9 +65,9 @@ func SignUp() {
 
 	var token tokenInfo
 	err = json.Unmarshal(respContent, &token)
-	token.Token += "Bearer "
 	byteToken := []byte(token.Token)
 
+	//TODO что за рандомный параметр 0544
 	err = ioutil.WriteFile(config.Get().StoragePath, byteToken, 0544)
 	if err != nil {
 		fmt.Println(err.Error())
