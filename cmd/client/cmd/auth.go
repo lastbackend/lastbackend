@@ -31,7 +31,7 @@ func Auth(ctx *context.Context) {
 		return
 	}
 
-	err = ioutil.WriteFile(config.Get().StoragePath + "token", byteToken, 0644)
+	err = ioutil.WriteFile(config.Get().StoragePath+"token", byteToken, 0644)
 	if err != nil {
 		fmt.Println(err.Error())
 		return

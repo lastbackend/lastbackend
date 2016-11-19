@@ -18,7 +18,7 @@ type loginInfo struct {
 type whoamiInfo struct {
 	Username     string  `json:"username"`
 	Email        string  `json:"email"`
-	Balance      float32 `json:"balance"`
+	Balance      float64 `json:"balance"`
 	Organization bool    `json:"organization"`
 	Created      string  `json:"created"`
 	Updated      string  `json:"updated"`

@@ -7,8 +7,10 @@ import (
 	"github.com/lastbackend/lastbackend/cmd/client/config"
 	"github.com/lastbackend/lastbackend/cmd/client/context"
 	httpClient "github.com/lastbackend/lastbackend/libs/http/client"
-	"os"
+	"github.com/lastbackend/lastbackend/libs/table"
 	"io/ioutil"
+	"os"
+	"strconv"
 )
 
 func Whoami(ctx *context.Context) {
@@ -18,8 +20,18 @@ func Whoami(ctx *context.Context) {
 		return
 	}
 
-	fmt.Println(whoamiContent.Username, "", whoamiContent.Email, "", whoamiContent.Balance, "",
-		whoamiContent.Organization, "", whoamiContent.Created, "", whoamiContent.Updated)
+	var header []string = []string{"Username", "Email", "Balance", "Organization", "Created", "Updated"}
+	var data [][]string
+
+	organization := strconv.FormatBool(whoamiContent.Organization)
+	balance := strconv.FormatFloat(whoamiContent.Balance, 'E', -1, 64)
+	d := []string{
+		whoamiContent.Username, whoamiContent.Email, balance,
+		organization, whoamiContent.Created, whoamiContent.Updated}
+	data = append(data, d)
+	d = d[:0]
+
+	table.PrintTable(header, data, []string{})
 }
 
 func WhoamiLogic(ctx *context.Context) (whoamiInfo, error) {
@@ -30,7 +42,7 @@ func WhoamiLogic(ctx *context.Context) (whoamiInfo, error) {
 		defer httpmock.Deactivate()
 	} else {
 		tokenFile, err := os.Open(config.Get().StoragePath + "token")
-		if err != nil{
+		if err != nil {
 			return whoamiInfo{}, err
 		}
 		defer tokenFile.Close()
@@ -48,7 +60,7 @@ func WhoamiLogic(ctx *context.Context) (whoamiInfo, error) {
 		return whoamiInfo{}, err
 	}
 
-	resp := httpClient.Get(config.Get().UserUrl, jsonData, "Authorization", "Bearer " + token)
+	resp := httpClient.Get(config.Get().UserUrl, jsonData, "Authorization", "Bearer "+token)
 
 	var whoamiContent whoamiInfo
 	err = json.Unmarshal(resp, &whoamiContent)
