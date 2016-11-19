@@ -7,7 +7,7 @@ import (
 	"testing"
 )
 
-func TestSighUpMock(t *testing.T) {
+func TestSignUpMock(t *testing.T) {
 	ctx := context.Mock()
 
 	expected, err := CreateNewUser(ctx)

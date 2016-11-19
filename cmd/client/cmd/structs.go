@@ -15,11 +15,20 @@ type loginInfo struct {
 	Password string `json:"password"`
 }
 
+type profileInfo struct {
+	FirstName string `json:"first_name"`
+	LastName  string `json:"last_name"`
+	Company   string `json:"company"`
+}
+
 type whoamiInfo struct {
-	Username     string  `json:"username"`
-	Email        string  `json:"email"`
-	Balance      float64 `json:"balance"`
-	Organization bool    `json:"organization"`
-	Created      string  `json:"created"`
-	Updated      string  `json:"updated"`
+	Id           string      `json:"id"`
+	Username     string      `json:"username"`
+	Email        string      `json:"email"`
+	Gravatar     string      `json:"gravatar"`
+	Balance      float64     `json:"balance"`
+	Organization bool        `json:"organization"`
+	Profile      profileInfo `json:"profile"`
+	Created      string      `json:"created"`
+	Updated      string      `json:"updated"`
 }

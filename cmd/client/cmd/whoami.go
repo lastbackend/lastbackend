@@ -49,7 +49,7 @@ func WhoamiLogic(ctx *context.Context) (whoamiInfo, error) {
 
 		fileContent, err := ioutil.ReadAll(tokenFile)
 		if err != nil {
-			fmt.Println(err.Error())
+			return whoamiInfo{}, err
 		}
 		token = string(fileContent)
 	}
@@ -80,8 +80,20 @@ func MockWhoami() string {
 
 	httpmock.Activate()
 
-	httpmock.RegisterResponder("POST", config.Get().AuthUserUrl,
-		httpmock.NewStringResponder(200, `{"username": :"lavr", "email":"lavr@lb.com", "balance":10, "organization":false, "created":""2014-01-16T07:38:28.45Z",", "updated":""2014-01-16T07:38:28.45Z""}`))
+	httpmock.RegisterResponder("GET", config.Get().UserUrl,
+		httpmock.NewStringResponder(200, `{"id":"some_id",
+ 											"username":"some_username",
+											"email":"some_email",
+											"gravatar":"some_gravatar",
+											"balance":10,
+											"organization":false,
+											"profile":{
+												"first_name":"some_first_name",
+												"last_name":"some_last_name",
+       											"company":"some_company"
+       										},
+											"created":"2014-01-16T07:38:28.45Z",
+											"updated":"2014-01-16T07:38:28.45Z"}`))
 
 	return token
 }
