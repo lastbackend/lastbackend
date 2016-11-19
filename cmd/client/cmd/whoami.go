@@ -7,6 +7,9 @@ import (
 	"github.com/lastbackend/lastbackend/cmd/client/config"
 	"github.com/lastbackend/lastbackend/cmd/client/context"
 	httpClient "github.com/lastbackend/lastbackend/libs/http/client"
+	filesystem "github.com/lastbackend/lastbackend/libs/filesystem"
+	"os"
+	"io/ioutil"
 )
 
 func Whoami(ctx *context.Context) {
@@ -26,17 +29,26 @@ func WhoamiLogic(ctx *context.Context) (whoamiInfo, error) {
 		token = MockWhoami()
 		defer httpmock.Deactivate()
 	} else {
-		token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJl" +
-			"bSI6ImxhdnJAbGIuY29tIiwiZXhwIjoxNDg3NjA3MTExLCJqdGkiOj" +
-			"E0ODc2MDcxMTEsIm9pZCI6IiIsInVpZCI6ImIzMjZjZjJlLTdmZTUtNDUz" +
-			"NS1hNDg2LWEwY2I0Y2QzYTY5ZCIsInVzZXIiOiJsYXZyIn0.Xliv13Eko9xW" +
-			"qhcqxtESLjfWuLuZYt5L4LARnawsfvw"
+		homeDir, err := filesystem.GetHomeDir()
+		if err != nil {
+			return whoamiInfo{}, err
+		}
+		tokenFile, err := os.Open(homeDir + "/.lb/token")
+		if err != nil{
+			return whoamiInfo{}, err
+		}
+		defer tokenFile.Close()
+
+		fileContent, err := ioutil.ReadAll(tokenFile)
+		if err != nil {
+			fmt.Println(err.Error())
+		}
+		token = string(fileContent)
 	}
 
 	data := tokenInfo{Token: token}
 	jsonData, err := json.Marshal(data)
 	if err != nil {
-		fmt.Println(err.Error())
 		return whoamiInfo{}, err
 	}
 
@@ -45,7 +57,6 @@ func WhoamiLogic(ctx *context.Context) (whoamiInfo, error) {
 	var whoamiContent whoamiInfo
 	err = json.Unmarshal(resp, &whoamiContent)
 	if err != nil {
-		fmt.Println(err.Error())
 		return whoamiInfo{}, err
 	}
 

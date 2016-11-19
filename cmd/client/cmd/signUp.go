@@ -50,7 +50,6 @@ func CreateNewUser(ctx *context.Context) (string, error) {
 	var token tokenInfo
 	err = json.Unmarshal(resp, &token)
 	if err != nil {
-		fmt.Println(err.Error())
 		return "", err
 	}
 

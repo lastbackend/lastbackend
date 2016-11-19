@@ -45,7 +45,6 @@ func Login(ctx *context.Context) (string, error) {
 		fmt.Print("Password: ")
 		pass, err := gopass.GetPasswd()
 		if err != nil {
-			fmt.Println(err.Error())
 			return "", err
 		}
 		password = string(pass)
@@ -54,7 +53,6 @@ func Login(ctx *context.Context) (string, error) {
 	data := loginInfo{login, password}
 	jsonData, err := json.Marshal(data)
 	if err != nil {
-		fmt.Println(err.Error())
 		return "", err
 	}
 
@@ -63,7 +61,7 @@ func Login(ctx *context.Context) (string, error) {
 	var token tokenInfo
 	err = json.Unmarshal(resp, &token)
 	if err != nil {
-		fmt.Println(err.Error())
+		return "", err
 	}
 
 	return token.Token, err
