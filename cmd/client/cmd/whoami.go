@@ -7,7 +7,6 @@ import (
 	"github.com/lastbackend/lastbackend/cmd/client/config"
 	"github.com/lastbackend/lastbackend/cmd/client/context"
 	httpClient "github.com/lastbackend/lastbackend/libs/http/client"
-	filesystem "github.com/lastbackend/lastbackend/libs/filesystem"
 	"os"
 	"io/ioutil"
 )
@@ -18,6 +17,7 @@ func Whoami(ctx *context.Context) {
 		fmt.Println(err.Error())
 		return
 	}
+
 	fmt.Println(whoamiContent.Username, "", whoamiContent.Email, "", whoamiContent.Balance, "",
 		whoamiContent.Organization, "", whoamiContent.Created, "", whoamiContent.Updated)
 }
@@ -29,11 +29,7 @@ func WhoamiLogic(ctx *context.Context) (whoamiInfo, error) {
 		token = MockWhoami()
 		defer httpmock.Deactivate()
 	} else {
-		homeDir, err := filesystem.GetHomeDir()
-		if err != nil {
-			return whoamiInfo{}, err
-		}
-		tokenFile, err := os.Open(homeDir + "/.lb/token")
+		tokenFile, err := os.Open(config.Get().StoragePath + "token")
 		if err != nil{
 			return whoamiInfo{}, err
 		}
@@ -64,12 +60,11 @@ func WhoamiLogic(ctx *context.Context) (whoamiInfo, error) {
 }
 
 func MockWhoami() string {
-	token := "eyJhbGciOiJIUzI1Ni" +
-		"IsInR5cCI6IkpXVCJ9.eyJlbSI6ImxhdnJAb" +
-		"GIuY29tIiwiZXhwIjoxNDg3NjA3MTExLCJqdGkiOjE0OD" +
-		"c2MDcxMTEsIm9pZCI6IiIsInVpZCI6ImIzMjZjZjJlLTdmZTUtNDUzNS1h" +
-		"NDg2LWEwY2I0Y2QzYTY5ZCIsInVzZXIiOiJsYXZyIn0.Xliv13Eko9xWqhcqx" +
-		"tESLjfWuLuZYt5L4LARnawsfvw"
+	token := "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbSI6ImxhdnJAbGI" +
+		"uY29tIiwiZXhwIjoxNDg3NjExOTM5LCJqdGkiOjE0" +
+		"ODc2MTE5MzksIm9pZCI6IiIsInVpZCI6ImU3Y2YyMTQxLTQzMT" +
+		"ItNGJiNi05Yjc5LTUxNjE5Mzk2N2M2OCIsInVzZXIiOiJsYXZyIn0._gq" +
+		"x4yNH29Qqphv3Rxu8RDKruaUh82mSd_5bnv-CaxA"
 
 	httpmock.Activate()
 

@@ -8,6 +8,7 @@ import (
 	"github.com/lastbackend/lastbackend/cmd/client/config"
 	"github.com/lastbackend/lastbackend/cmd/client/context"
 	httpClient "github.com/lastbackend/lastbackend/libs/http/client"
+	"github.com/lastbackend/lastbackend/libs/log/filesystem"
 	"io/ioutil"
 )
 
@@ -24,7 +25,13 @@ func Auth(ctx *context.Context) {
 		return
 	}
 
-	err = ioutil.WriteFile(config.Get().StoragePath, byteToken, 0644)
+	err = filesystem.MkDir(config.Get().StoragePath)
+	if err != nil {
+		fmt.Println(err.Error())
+		return
+	}
+
+	err = ioutil.WriteFile(config.Get().StoragePath + "token", byteToken, 0644)
 	if err != nil {
 		fmt.Println(err.Error())
 		return
