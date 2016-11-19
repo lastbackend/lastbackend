@@ -10,7 +10,7 @@ import (
 func TestSighUpMock(t *testing.T) {
 	ctx := context.Mock()
 
-	expected, err := Login(ctx)
+	expected, err := CreateNewUser(ctx)
 	if err != nil {
 		fmt.Println(err.Error())
 	}

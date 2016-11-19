@@ -36,7 +36,7 @@ func Login(ctx *context.Context) (string, error) {
 	var login string
 
 	if ctx == context.Mock() {
-		login, password = MockUp()
+		login, password = MockAuth()
 		defer httpmock.Deactivate()
 	} else {
 		fmt.Print("Login: ")
@@ -69,7 +69,7 @@ func Login(ctx *context.Context) (string, error) {
 	return token.Token, err
 }
 
-func MockUp() (string, string) {
+func MockAuth() (string, string) {
 	login := "lavr"
 	password := "12345678"
 

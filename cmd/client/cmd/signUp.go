@@ -7,30 +7,37 @@ import (
 	"github.com/lastbackend/lastbackend/cmd/client/context"
 	httpClient "github.com/lastbackend/lastbackend/libs/http/client"
 	"k8s.io/client-go/1.5/pkg/util/json"
+	"github.com/jarcoal/httpmock"
 )
 
 func SignUp(ctx *context.Context) {
-	_, err := CreateNewUser()
+	_, err := CreateNewUser(ctx)
 	if err != nil {
 		fmt.Println(err.Error())
 	}
 }
 
-func CreateNewUser() (string, error) {
-	fmt.Print("Username: ")
+func CreateNewUser(ctx *context.Context) (string, error) {
 	var username string
-	fmt.Scan(&username)
-
-	fmt.Print("Email: ")
 	var email string
-	fmt.Scan(&email)
+	var password string
 
-	fmt.Print("Password: ")
-	pass, err := gopass.GetPasswd()
-	if err != nil {
-		return "", err
+	if ctx == context.Mock(){
+		username, email, password = MockSignUp()
+	} else {
+		fmt.Print("Username: ")
+		fmt.Scan(&username)
+
+		fmt.Print("Email: ")
+		fmt.Scan(&email)
+
+		fmt.Print("Password: ")
+		pass, err := gopass.GetPasswd()
+		if err != nil {
+			return "", err
+		}
+		password = string(pass)
 	}
-	password := string(pass)
 
 	data := newUserInfo{username, email, password}
 	jsonData, err := json.Marshal(data)
@@ -49,3 +56,17 @@ func CreateNewUser() (string, error) {
 
 	return token.Token, err
 }
+
+func MockSignUp() (string, string, string) {
+	username := "testname"
+	email := "test@lb.com"
+	password := "12345678"
+
+	httpmock.Activate()
+
+	httpmock.RegisterResponder("POST", config.Get().CreateUserUrl,
+		httpmock.NewStringResponder(200, `{"token": "token"}`))
+
+	return username, email, password
+}
+
