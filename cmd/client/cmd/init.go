@@ -8,7 +8,7 @@ import (
 func Init(app *cli.Cli, ctx *context.Context) {
 	app.Command("signup", "create new account", func(c *cli.Cmd) {
 		c.Action = func() {
-			SignUp()
+			SignUp(ctx)
 		}
 	})
 
