@@ -3,11 +3,11 @@ package cmd
 import (
 	"fmt"
 	"github.com/howeyc/gopass"
+	"github.com/jarcoal/httpmock"
 	"github.com/lastbackend/lastbackend/cmd/client/config"
 	"github.com/lastbackend/lastbackend/cmd/client/context"
 	httpClient "github.com/lastbackend/lastbackend/libs/http/client"
 	"k8s.io/client-go/1.5/pkg/util/json"
-	"github.com/jarcoal/httpmock"
 )
 
 func SignUp(ctx *context.Context) {
@@ -22,7 +22,7 @@ func CreateNewUser(ctx *context.Context) (string, error) {
 	var email string
 	var password string
 
-	if ctx == context.Mock(){
+	if ctx == context.Mock() {
 		username, email, password = MockSignUp()
 	} else {
 		fmt.Print("Username: ")
@@ -45,7 +45,7 @@ func CreateNewUser(ctx *context.Context) (string, error) {
 		return "", err
 	}
 
-	resp := httpClient.Post(config.Get().CreateUserUrl, jsonData, "Content-Type", "application/json")
+	resp := httpClient.Post(config.Get().UserUrl, jsonData, "Content-Type", "application/json")
 
 	var token tokenInfo
 	err = json.Unmarshal(resp, &token)
@@ -64,9 +64,8 @@ func MockSignUp() (string, string, string) {
 
 	httpmock.Activate()
 
-	httpmock.RegisterResponder("POST", config.Get().CreateUserUrl,
+	httpmock.RegisterResponder("POST", config.Get().UserUrl,
 		httpmock.NewStringResponder(200, `{"token": "token"}`))
 
 	return username, email, password
 }
-

@@ -6,7 +6,7 @@ import (
 )
 
 func Init(app *cli.Cli, ctx *context.Context) {
-	app.Command("signup", "create new account", func(c *cli.Cmd) {
+	app.Command("signup", "Create new account", func(c *cli.Cmd) {
 		c.Action = func() {
 			SignUp(ctx)
 		}
@@ -15,6 +15,12 @@ func Init(app *cli.Cli, ctx *context.Context) {
 	app.Command("login", "Auth to account", func(c *cli.Cmd) {
 		c.Action = func() {
 			Auth(ctx)
+		}
+	})
+
+	app.Command("whoami", "Display the current user's login name", func(c *cli.Cmd) {
+		c.Action = func() {
+			Whoami(ctx)
 		}
 	})
 }

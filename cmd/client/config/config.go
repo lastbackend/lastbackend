@@ -16,7 +16,7 @@ func Get() *Config {
 	}
 
 	config.StoragePath = homedir + "/.lb/token"
-	config.CreateUserUrl = "http://localhost:3000/user"
+	config.UserUrl = "http://localhost:3000/user"
 	config.AuthUserUrl = "http://localhost:3000/session"
 	return &config
 }
