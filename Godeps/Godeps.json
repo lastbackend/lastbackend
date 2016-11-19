@@ -168,6 +168,14 @@
 			"Rev": "e80d13ce29ede4452c43dea11e79b9bc8a15b478"
 		},
 		{
+			"ImportPath": "github.com/howeyc/gopass",
+			"Rev": "f5387c492211eb133053880d23dfae62aa14123d"
+		},
+		{
+			"ImportPath": "github.com/jarcoal/httpmock",
+			"Rev": "145b10d659265440f062c31ea15326166bae56ee"
+		},
+		{
 			"ImportPath": "github.com/jawher/mow.cli",
 			"Rev": "660b9261e2c80bb92e5a0eaa581596084656140e"
 		},
@@ -218,6 +226,10 @@
 		},
 		{
 			"ImportPath": "golang.org/x/crypto/pbkdf2",
+			"Rev": "3c0d69f1777220f1a1d2ec373cb94a282f03eb42"
+		},
+		{
+			"ImportPath": "golang.org/x/crypto/ssh/terminal",
 			"Rev": "3c0d69f1777220f1a1d2ec373cb94a282f03eb42"
 		},
 		{
