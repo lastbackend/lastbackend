@@ -9,16 +9,6 @@ import (
 	"net/http"
 )
 
-type newUserInfo struct {
-	Username string `json:"username"`
-	Email    string `json:"email"`
-	Password string `json:"password"`
-}
-
-type tokenInfo struct {
-	Token string `json:"token"`
-}
-
 func SignUp() {
 	fmt.Print("Username: ")
 	var username string

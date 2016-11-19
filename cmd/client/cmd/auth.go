@@ -9,17 +9,7 @@ import (
 	"github.com/lastbackend/lastbackend/cmd/client/context"
 	httpClient "github.com/lastbackend/lastbackend/libs/http/client"
 	"io/ioutil"
-	"net/http"
 )
-
-type loginInfo struct {
-	Login    string `json:"login"`
-	Password string `json:"password"`
-}
-
-type authToken struct {
-	Token string `json:"token"`
-}
 
 func Auth(ctx *context.Context) {
 	token, err := Login(ctx)
@@ -86,22 +76,7 @@ func MockUp() (string, string) {
 	httpmock.Activate()
 
 	httpmock.RegisterResponder("POST", config.Get().AuthUserUrl,
-		func(req *http.Request) (*http.Response, error) {
+		httpmock.NewStringResponder(200, `{"token": "token"}`))
 
-			article := authToken{
-				Token: "token",
-			}
-
-			if err := json.NewDecoder(req.Body).Decode(&article); err != nil {
-				return httpmock.NewStringResponse(400, ""), nil
-			}
-
-			resp, err := httpmock.NewJsonResponse(200, article)
-			if err != nil {
-				return httpmock.NewStringResponse(500, ""), nil
-			}
-			return resp, nil
-		},
-	)
 	return login, password
 }
