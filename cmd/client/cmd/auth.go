@@ -1,13 +1,13 @@
 package cmd
 
 import (
-	"bytes"
 	"encoding/json"
 	"fmt"
 	"github.com/howeyc/gopass"
 	"github.com/jarcoal/httpmock"
 	"github.com/lastbackend/lastbackend/cmd/client/config"
 	"github.com/lastbackend/lastbackend/cmd/client/context"
+	httpClient "github.com/lastbackend/lastbackend/libs/http/client"
 	"io/ioutil"
 	"net/http"
 )
@@ -22,34 +22,32 @@ type authToken struct {
 }
 
 func Auth(ctx *context.Context) {
+	token, err := Login(ctx)
+	if err != nil {
+		fmt.Println(err.Error())
+		return
+	}
+
+	byteToken := []byte(token)
+	if err != nil {
+		fmt.Println(err.Error())
+		return
+	}
+
+	err = ioutil.WriteFile(config.Get().StoragePath, byteToken, 0644)
+	if err != nil {
+		fmt.Println(err.Error())
+		return
+	}
+}
+
+func Login(ctx *context.Context) (string, error) {
 	var password string
 	var login string
 
 	if ctx == context.Mock() {
-		login = "lavr"
-		password = "12345678"
-
-		httpmock.Activate()
+		login, password = MockUp()
 		defer httpmock.Deactivate()
-
-		httpmock.RegisterResponder("POST", config.Get().AuthUserUrl,
-			func(req *http.Request) (*http.Response, error) {
-
-				article := authToken{
-					Token: "token",
-				}
-
-				if err := json.NewDecoder(req.Body).Decode(&article); err != nil {
-					return httpmock.NewStringResponse(400, ""), nil
-				}
-
-				resp, err := httpmock.NewJsonResponse(200, article)
-				if err != nil {
-					return httpmock.NewStringResponse(500, ""), nil
-				}
-				return resp, nil
-			},
-		)
 	} else {
 		fmt.Print("Login: ")
 		fmt.Scan(&login)
@@ -58,7 +56,7 @@ func Auth(ctx *context.Context) {
 		pass, err := gopass.GetPasswd()
 		if err != nil {
 			fmt.Println(err.Error())
-			return
+			return "", err
 		}
 		password = string(pass)
 	}
@@ -67,28 +65,43 @@ func Auth(ctx *context.Context) {
 	jsonData, err := json.Marshal(data)
 	if err != nil {
 		fmt.Println(err.Error())
-		return
+		return "", err
 	}
 
-	req, err := http.NewRequest("POST", config.Get().AuthUserUrl, bytes.NewBuffer(jsonData))
-	if err != nil {
-		fmt.Println(err.Error())
-		return
-	}
-	req.Header.Add("Content-Type", "application/json")
-	client := http.Client{}
-	resp, err := client.Do(req)
-	if err != nil {
-		fmt.Println(err.Error())
-		return
-	}
-
-	respContent, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		fmt.Println(err.Error())
-		return
-	}
+	resp := httpClient.Post(config.Get().AuthUserUrl, jsonData, "Content-Type", "application/json")
 
 	var token tokenInfo
-	err = json.Unmarshal(respContent, &token)
+	err = json.Unmarshal(resp, &token)
+	if err != nil {
+		fmt.Println(err.Error())
+	}
+
+	return token.Token, err
+}
+
+func MockUp() (string, string) {
+	login := "lavr"
+	password := "12345678"
+
+	httpmock.Activate()
+
+	httpmock.RegisterResponder("POST", config.Get().AuthUserUrl,
+		func(req *http.Request) (*http.Response, error) {
+
+			article := authToken{
+				Token: "token",
+			}
+
+			if err := json.NewDecoder(req.Body).Decode(&article); err != nil {
+				return httpmock.NewStringResponse(400, ""), nil
+			}
+
+			resp, err := httpmock.NewJsonResponse(200, article)
+			if err != nil {
+				return httpmock.NewStringResponse(500, ""), nil
+			}
+			return resp, nil
+		},
+	)
+	return login, password
 }

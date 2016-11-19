@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"github.com/howeyc/gopass"
 	"github.com/lastbackend/lastbackend/cmd/client/config"
-	"io/ioutil"
 	"k8s.io/client-go/1.5/pkg/util/json"
 	"net/http"
 )
@@ -51,24 +50,7 @@ func SignUp() {
 	}
 	req.Header.Add("Content-Type", "application/json")
 	client := http.Client{}
-	resp, err := client.Do(req)
-	if err != nil {
-		fmt.Println(err.Error())
-		return
-	}
-
-	respContent, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		fmt.Println(err.Error())
-		return
-	}
-
-	var token tokenInfo
-	err = json.Unmarshal(respContent, &token)
-	byteToken := []byte(token.Token)
-
-	//TODO что за рандомный параметр 0544
-	err = ioutil.WriteFile(config.Get().StoragePath, byteToken, 0544)
+	_, err = client.Do(req)
 	if err != nil {
 		fmt.Println(err.Error())
 		return
