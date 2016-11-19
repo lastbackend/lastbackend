@@ -43,7 +43,7 @@ func Init() {
 		}
 	}
 
-	client.Init(app)
+	client.Init(app, client_ctx)
 	daemon.Init(app)
 
 	er = app.Run(os.Args)
