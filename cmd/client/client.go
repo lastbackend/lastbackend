@@ -46,7 +46,7 @@ func main() {
 		}
 	}
 
-	cmd.Init(app.Action, ctx)
+	cmd.Init(app, ctx)
 
 	er = app.Run(os.Args)
 	if er != nil {
