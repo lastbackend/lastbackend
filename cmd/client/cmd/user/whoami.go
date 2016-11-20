@@ -24,7 +24,7 @@ func Whoami(ctx *context.Context) {
 	var data [][]string
 
 	organization := strconv.FormatBool(whoamiContent.Organization)
-	balance := strconv.FormatFloat(whoamiContent.Balance, 'E', -1, 64)
+	balance := strconv.FormatFloat(float64(whoamiContent.Balance), 'f', 2, 32)
 	d := []string{
 		whoamiContent.Username, whoamiContent.Email, balance,
 		organization, whoamiContent.Created, whoamiContent.Updated}
@@ -72,11 +72,7 @@ func WhoamiLogic(ctx *context.Context) (whoamiInfo, error) {
 }
 
 func MockWhoami() string {
-	token := "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbSI6ImxhdnJAbGI" +
-		"uY29tIiwiZXhwIjoxNDg3NjExOTM5LCJqdGkiOjE0" +
-		"ODc2MTE5MzksIm9pZCI6IiIsInVpZCI6ImU3Y2YyMTQxLTQzMT" +
-		"ItNGJiNi05Yjc5LTUxNjE5Mzk2N2M2OCIsInVzZXIiOiJsYXZyIn0._gq" +
-		"x4yNH29Qqphv3Rxu8RDKruaUh82mSd_5bnv-CaxA"
+	token := "token"
 
 	httpmock.Activate()
 

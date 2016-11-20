@@ -26,7 +26,7 @@ type whoamiInfo struct {
 	Username     string      `json:"username"`
 	Email        string      `json:"email"`
 	Gravatar     string      `json:"gravatar"`
-	Balance      float64     `json:"balance"`
+	Balance      float32     `json:"balance"`
 	Organization bool        `json:"organization"`
 	Profile      profileInfo `json:"profile"`
 	Created      string      `json:"created"`

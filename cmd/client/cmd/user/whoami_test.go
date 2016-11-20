@@ -1,10 +1,10 @@
 package cmd
 
 import (
-	"github.com/lastbackend/lastbackend/cmd/client/context"
-	"testing"
-	"github.com/stretchr/testify/assert"
 	"fmt"
+	"github.com/lastbackend/lastbackend/cmd/client/context"
+	"github.com/stretchr/testify/assert"
+	"testing"
 )
 
 func TestWhoamiMock(t *testing.T) {
@@ -19,7 +19,7 @@ func TestWhoamiMock(t *testing.T) {
 	assert.Equal(t, "some_username", actual.Username)
 	assert.Equal(t, "some_email", actual.Email)
 	assert.Equal(t, "some_gravatar", actual.Gravatar)
-	assert.Equal(t, 10.0, actual.Balance)
+	assert.Equal(t, float32(10), actual.Balance)
 	assert.Equal(t, false, actual.Organization)
 	assert.Equal(t, "some_first_name", actual.Profile.FirstName)
 	assert.Equal(t, "some_last_name", actual.Profile.LastName)

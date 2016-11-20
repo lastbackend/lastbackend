@@ -12,7 +12,7 @@ import (
 	"io/ioutil"
 )
 
-func Auth(ctx *context.Context) {
+func SignIn(ctx *context.Context) {
 	token, err := Login(ctx)
 	if err != nil {
 		fmt.Println(err.Error())
@@ -75,7 +75,7 @@ func Login(ctx *context.Context) (string, error) {
 }
 
 func MockAuth() (string, string) {
-	login := "lavr"
+	login := "testname"
 	password := "12345678"
 
 	httpmock.Activate()
