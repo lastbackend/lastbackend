@@ -1,16 +1,16 @@
 package cmd
 
-type newUserInfo struct {
+type NewUserInfo struct {
 	Username string `json:"username"`
 	Email    string `json:"email"`
 	Password string `json:"password"`
 }
 
-type tokenInfo struct {
+type TokenInfo struct {
 	Token string `json:"token"`
 }
 
-type loginInfo struct {
+type LoginInfo struct {
 	Login    string `json:"login"`
 	Password string `json:"password"`
 }
@@ -21,7 +21,7 @@ type profileInfo struct {
 	Company   string `json:"company"`
 }
 
-type whoamiInfo struct {
+type WhoamiInfo struct {
 	Id           string      `json:"id"`
 	Username     string      `json:"username"`
 	Email        string      `json:"email"`

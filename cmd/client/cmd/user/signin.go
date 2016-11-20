@@ -6,6 +6,8 @@ import (
 	"github.com/howeyc/gopass"
 	"github.com/jarcoal/httpmock"
 	"github.com/lastbackend/lastbackend/cmd/client/config"
+	structs "github.com/lastbackend/lastbackend/cmd/client/cmd/user/structs"
+	mock "github.com/lastbackend/lastbackend/cmd/client/cmd/user/mocks"
 	"github.com/lastbackend/lastbackend/cmd/client/context"
 	httpClient "github.com/lastbackend/lastbackend/libs/http/client"
 	"github.com/lastbackend/lastbackend/libs/log/filesystem"
@@ -43,7 +45,7 @@ func Login(ctx *context.Context) (string, error) {
 	var login string
 
 	if ctx == context.Mock() {
-		login, password = MockAuth()
+		login, password = mock.MockAuth()
 		defer httpmock.Deactivate()
 	} else {
 		fmt.Print("Login: ")
@@ -57,7 +59,7 @@ func Login(ctx *context.Context) (string, error) {
 		password = string(pass)
 	}
 
-	data := loginInfo{login, password}
+	data := structs.LoginInfo{login, password}
 	jsonData, err := json.Marshal(data)
 	if err != nil {
 		return "", err
@@ -65,23 +67,11 @@ func Login(ctx *context.Context) (string, error) {
 
 	resp := httpClient.Post(config.Get().AuthUserUrl, jsonData, "Content-Type", "application/json")
 
-	var token tokenInfo
+	var token structs.TokenInfo
 	err = json.Unmarshal(resp, &token)
 	if err != nil {
 		return "", err
 	}
 
 	return token.Token, err
-}
-
-func MockAuth() (string, string) {
-	login := "testname"
-	password := "12345678"
-
-	httpmock.Activate()
-
-	httpmock.RegisterResponder("POST", config.Get().AuthUserUrl,
-		httpmock.NewStringResponder(200, `{"token": "token"}`))
-
-	return login, password
 }

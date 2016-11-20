@@ -7,6 +7,8 @@ import (
 	"github.com/lastbackend/lastbackend/cmd/client/config"
 	"github.com/lastbackend/lastbackend/cmd/client/context"
 	httpClient "github.com/lastbackend/lastbackend/libs/http/client"
+	structs "github.com/lastbackend/lastbackend/cmd/client/cmd/user/structs"
+	mock "github.com/lastbackend/lastbackend/cmd/client/cmd/user/mocks"
 	"k8s.io/client-go/1.5/pkg/util/json"
 )
 
@@ -23,7 +25,8 @@ func CreateNewUser(ctx *context.Context) (string, error) {
 	var password string
 
 	if ctx == context.Mock() {
-		username, email, password = MockSignUp()
+		username, email, password = mock.MockSignUp()
+		defer httpmock.Deactivate()
 	} else {
 		fmt.Print("Username: ")
 		fmt.Scan(&username)
@@ -39,7 +42,7 @@ func CreateNewUser(ctx *context.Context) (string, error) {
 		password = string(pass)
 	}
 
-	data := newUserInfo{username, email, password}
+	data := structs.NewUserInfo{username, email, password}
 	jsonData, err := json.Marshal(data)
 	if err != nil {
 		return "", err
@@ -47,24 +50,11 @@ func CreateNewUser(ctx *context.Context) (string, error) {
 
 	resp := httpClient.Post(config.Get().UserUrl, jsonData, "Content-Type", "application/json")
 
-	var token tokenInfo
+	var token structs.TokenInfo
 	err = json.Unmarshal(resp, &token)
 	if err != nil {
 		return "", err
 	}
 
 	return token.Token, err
-}
-
-func MockSignUp() (string, string, string) {
-	username := "testname"
-	email := "test@lb.com"
-	password := "12345678"
-
-	httpmock.Activate()
-
-	httpmock.RegisterResponder("POST", config.Get().UserUrl,
-		httpmock.NewStringResponder(200, `{"token": "token"}`))
-
-	return username, email, password
 }

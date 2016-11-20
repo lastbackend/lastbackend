@@ -7,6 +7,8 @@ import (
 	"github.com/lastbackend/lastbackend/cmd/client/config"
 	"github.com/lastbackend/lastbackend/cmd/client/context"
 	httpClient "github.com/lastbackend/lastbackend/libs/http/client"
+	structs "github.com/lastbackend/lastbackend/cmd/client/cmd/user/structs"
+	mock "github.com/lastbackend/lastbackend/cmd/client/cmd/user/mocks"
 	"github.com/lastbackend/lastbackend/libs/table"
 	"io/ioutil"
 	"os"
@@ -34,62 +36,39 @@ func Whoami(ctx *context.Context) {
 	table.PrintTable(header, data, []string{})
 }
 
-func WhoamiLogic(ctx *context.Context) (whoamiInfo, error) {
+func WhoamiLogic(ctx *context.Context) (structs.WhoamiInfo, error) {
 	var token string
 
 	if ctx == context.Mock() {
-		token = MockWhoami()
+		token = mock.MockWhoami()
 		defer httpmock.Deactivate()
 	} else {
 		tokenFile, err := os.Open(config.Get().StoragePath + "token")
 		if err != nil {
-			return whoamiInfo{}, err
+			return structs.WhoamiInfo{}, err
 		}
 		defer tokenFile.Close()
 
 		fileContent, err := ioutil.ReadAll(tokenFile)
 		if err != nil {
-			return whoamiInfo{}, err
+			return structs.WhoamiInfo{}, err
 		}
 		token = string(fileContent)
 	}
 
-	data := tokenInfo{Token: token}
+	data := structs.TokenInfo{Token: token}
 	jsonData, err := json.Marshal(data)
 	if err != nil {
-		return whoamiInfo{}, err
+		return structs.WhoamiInfo{}, err
 	}
 
 	resp := httpClient.Get(config.Get().UserUrl, jsonData, "Authorization", "Bearer "+token)
 
-	var whoamiContent whoamiInfo
+	var whoamiContent structs.WhoamiInfo
 	err = json.Unmarshal(resp, &whoamiContent)
 	if err != nil {
-		return whoamiInfo{}, err
+		return structs.WhoamiInfo{}, err
 	}
 
 	return whoamiContent, err
-}
-
-func MockWhoami() string {
-	token := "token"
-
-	httpmock.Activate()
-
-	httpmock.RegisterResponder("GET", config.Get().UserUrl,
-		httpmock.NewStringResponder(200, `{"id":"some_id",
- 											"username":"some_username",
-											"email":"some_email",
-											"gravatar":"some_gravatar",
-											"balance":10,
-											"organization":false,
-											"profile":{
-												"first_name":"some_first_name",
-												"last_name":"some_last_name",
-       											"company":"some_company"
-       										},
-											"created":"2014-01-16T07:38:28.45Z",
-											"updated":"2014-01-16T07:38:28.45Z"}`))
-
-	return token
 }
