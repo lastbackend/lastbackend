@@ -10,7 +10,6 @@ import (
 var config Config
 
 func Get() *Config {
-
 	homedir, err := filesystem.GetHomeDir()
 	if err != nil {
 		fmt.Println(err.Error())

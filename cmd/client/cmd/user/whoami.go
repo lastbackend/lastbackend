@@ -31,7 +31,7 @@ func Whoami(ctx *context.Context) {
 	balance := strconv.FormatFloat(float64(whoamiContent.Balance), 'f', 2, 32)
 	d := []string{
 		whoamiContent.Username, whoamiContent.Email, balance,
-		organization, whoamiContent.Created, whoamiContent.Updated}
+		organization, whoamiContent.Created[:10], whoamiContent.Updated[:10]}
 	data = append(data, d)
 	d = d[:0]
 
@@ -70,6 +70,7 @@ func WhoamiLogic(ctx *context.Context) (structs.WhoamiInfo, error, string) {
 	}
 
 	var httpError structs.ErrorJson
+
 	err = json.Unmarshal(resp, &httpError)
 	if err != nil {
 		return structs.WhoamiInfo{}, err, ""
