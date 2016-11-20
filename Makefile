@@ -1,10 +1,14 @@
-.PHONY : deps test build
+.PHONY : default deps test build install
 
 NAME = lastbackend
 HARDWARE = $(shell uname -m)
 OS := $(shell uname)
 VERSION ?= 0.1.0
 
+default:
+	deps
+	test
+	build
 
 deps:
 	echo "Configuring Last.Backend"
@@ -12,8 +16,8 @@ deps:
 	godep restore
 
 test:
-	echo "Testing Last.Backend"
-	godep go test ./...
+	@echo "Testing Last.Backend"
+	@sh ./test/test.sh
 
 build:
 	echo "Building Last.Backend"
