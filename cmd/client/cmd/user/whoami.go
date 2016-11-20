@@ -14,13 +14,13 @@ import (
 )
 
 func Whoami(ctx *context.Context, cfg *config.Config) {
-	whoamiContent, err, _ := WhoamiLogic(ctx, cfg)
-	if err != nil {
-		fmt.Println(err.Error())
+	if cfg.Token == "" {
 		return
 	}
 
-	if whoamiContent.Id == "" {
+	whoamiContent, err, _ := WhoamiLogic(ctx, cfg)
+	if err != nil {
+		fmt.Println(err.Error())
 		return
 	}
 
@@ -75,7 +75,7 @@ func WhoamiLogic(ctx *context.Context, cfg *config.Config) (structs.WhoamiInfo, 
 	if err != nil {
 		return structs.WhoamiInfo{}, err, ""
 	}
-	fmt.Printf("Whoami failed: %s\n", httpError.Message)
+	fmt.Printf("Whoami failed: %s", httpError.Message)
 
 	return structs.WhoamiInfo{}, nil, httpError.Message
 }

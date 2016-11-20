@@ -20,6 +20,10 @@ func SignUp(ctx *context.Context, cfg *config.Config) {
 		fmt.Println(err.Error())
 	}
 
+	if token == "" {
+		return
+	}
+
 	byteToken := []byte(token)
 	if err != nil {
 		fmt.Println(err.Error())
@@ -119,7 +123,7 @@ func CreateNewUser(ctx *context.Context, cfg *config.Config) (string, error, str
 	if err != nil {
 		return "", err, ""
 	}
-	fmt.Printf("Account create failed: %s", httpError.Message)
+	fmt.Printf("Account create failed: %s\n", httpError.Message)
 
 	return "", nil, httpError.Message
 }

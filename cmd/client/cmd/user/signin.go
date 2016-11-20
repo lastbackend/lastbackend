@@ -21,6 +21,10 @@ func SignIn(ctx *context.Context, cfg *config.Config) {
 		return
 	}
 
+	if token == "" {
+		return
+	}
+
 	byteToken := []byte(token)
 	if err != nil {
 		fmt.Println(err.Error())
@@ -66,6 +70,7 @@ func Login(ctx *context.Context, cfg *config.Config) (string, error, string) {
 	data := structs.LoginInfo{login, password}
 	jsonData, err := json.Marshal(data)
 	if err != nil {
+		fmt.Println("LOGININGO")
 		return "", err, ""
 	}
 
@@ -75,6 +80,7 @@ func Login(ctx *context.Context, cfg *config.Config) (string, error, string) {
 		var token structs.TokenInfo
 		err = json.Unmarshal(resp, &token)
 		if err != nil {
+			fmt.Println("RESP")
 			return "", err, ""
 		}
 
@@ -86,9 +92,10 @@ func Login(ctx *context.Context, cfg *config.Config) (string, error, string) {
 	var httpError structs.ErrorJson
 	err = json.Unmarshal(resp, &httpError)
 	if err != nil {
+		fmt.Println("ERRORJSON")
 		return "", err, ""
 	}
-	fmt.Printf("Login failed: %s", httpError.Message)
+	fmt.Printf("Login failed: %s\n", httpError.Message)
 
 	return "", nil, httpError.Message
 }
