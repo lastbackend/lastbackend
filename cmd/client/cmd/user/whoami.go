@@ -10,8 +10,6 @@ import (
 	"github.com/lastbackend/lastbackend/cmd/client/context"
 	httpClient "github.com/lastbackend/lastbackend/libs/http/client"
 	"github.com/lastbackend/lastbackend/libs/table"
-	"io/ioutil"
-	"os"
 	"strconv"
 )
 
@@ -51,17 +49,7 @@ func WhoamiLogic(ctx *context.Context) (structs.WhoamiInfo, error, string) {
 		}
 		defer httpmock.Deactivate()
 	} else {
-		tokenFile, err := os.Open(config.Get().StoragePath + "token")
-		if err != nil {
-			return structs.WhoamiInfo{}, err, ""
-		}
-		defer tokenFile.Close()
-
-		fileContent, err := ioutil.ReadAll(tokenFile)
-		if err != nil {
-			return structs.WhoamiInfo{}, err, ""
-		}
-		token = string(fileContent)
+		token = config.Get().Token
 	}
 
 	data := structs.TokenInfo{Token: token}
