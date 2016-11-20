@@ -22,6 +22,10 @@ func Whoami(ctx *context.Context) {
 		return
 	}
 
+	if whoamiContent.Id == "" {
+		return
+	}
+
 	var header []string = []string{"Username", "Email", "Balance", "Organization", "Created", "Updated"}
 	var data [][]string
 
@@ -62,13 +66,23 @@ func WhoamiLogic(ctx *context.Context) (structs.WhoamiInfo, error) {
 		return structs.WhoamiInfo{}, err
 	}
 
-	resp, _ := httpClient.Get(config.Get().UserUrl, jsonData, "Authorization", "Bearer "+token)
+	resp, status := httpClient.Get(config.Get().UserUrl, jsonData, "Authorization", "Bearer "+token)
+	if status == 200 {
+		var whoamiContent structs.WhoamiInfo
+		err = json.Unmarshal(resp, &whoamiContent)
+		if err != nil {
+			return structs.WhoamiInfo{}, err
+		}
 
-	var whoamiContent structs.WhoamiInfo
-	err = json.Unmarshal(resp, &whoamiContent)
+		return whoamiContent, err
+	}
+
+	var httpError structs.ErrorJson
+	err = json.Unmarshal(resp, &httpError)
 	if err != nil {
 		return structs.WhoamiInfo{}, err
 	}
+	fmt.Printf("Whoami failed: %s\n", httpError.Message)
 
-	return whoamiContent, err
+	return structs.WhoamiInfo{}, nil
 }

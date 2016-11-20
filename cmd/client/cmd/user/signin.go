@@ -67,14 +67,23 @@ func Login(ctx *context.Context) (string, error) {
 
 	resp, status := httpClient.Post(config.Get().AuthUserUrl, jsonData, "Content-Type", "application/json")
 	if status == 200 {
-		fmt.Println("Auth OK")
+		var token structs.TokenInfo
+		err = json.Unmarshal(resp, &token)
+		if err != nil {
+			return "", err
+		}
+
+		fmt.Println("Login successful")
+
+		return token.Token, err
 	}
 
-	var token structs.TokenInfo
-	err = json.Unmarshal(resp, &token)
+	var httpError structs.ErrorJson
+	err = json.Unmarshal(resp, &httpError)
 	if err != nil {
 		return "", err
 	}
+	fmt.Printf("Login failed: %s", httpError.Message)
 
-	return token.Token, err
+	return "", nil
 }

@@ -32,3 +32,9 @@ type WhoamiInfo struct {
 	Created      string      `json:"created"`
 	Updated      string      `json:"updated"`
 }
+
+type ErrorJson struct {
+	Code    int    `json:"code"`
+	Status  string `json:"status"`
+	Message string `json:"message"`
+}

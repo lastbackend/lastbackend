@@ -9,13 +9,33 @@ import (
 	"github.com/lastbackend/lastbackend/cmd/client/config"
 	"github.com/lastbackend/lastbackend/cmd/client/context"
 	httpClient "github.com/lastbackend/lastbackend/libs/http/client"
+	"github.com/lastbackend/lastbackend/libs/log/filesystem"
+	"io/ioutil"
 	"k8s.io/client-go/1.5/pkg/util/json"
 )
 
 func SignUp(ctx *context.Context) {
-	_, err := CreateNewUser(ctx)
+	token, err := CreateNewUser(ctx)
 	if err != nil {
 		fmt.Println(err.Error())
+	}
+
+	byteToken := []byte(token)
+	if err != nil {
+		fmt.Println(err.Error())
+		return
+	}
+
+	err = filesystem.MkDir(config.Get().StoragePath)
+	if err != nil {
+		fmt.Println(err.Error())
+		return
+	}
+
+	err = ioutil.WriteFile(config.Get().StoragePath+"token", byteToken, 0644)
+	if err != nil {
+		fmt.Println(err.Error())
+		return
 	}
 }
 
@@ -50,14 +70,22 @@ func CreateNewUser(ctx *context.Context) (string, error) {
 
 	resp, status := httpClient.Post(config.Get().UserUrl, jsonData, "Content-Type", "application/json")
 	if status == 200 {
-		fmt.Println("Account create")
+		var token structs.TokenInfo
+		err = json.Unmarshal(resp, &token)
+		if err != nil {
+			return "", err
+		}
+		fmt.Println("Account created successful")
+
+		return token.Token, err
 	}
 
-	var token structs.TokenInfo
-	err = json.Unmarshal(resp, &token)
+	var httpError structs.ErrorJson
+	err = json.Unmarshal(resp, &httpError)
 	if err != nil {
 		return "", err
 	}
+	fmt.Printf("Account create failed: %s", httpError.Message)
 
-	return token.Token, err
+	return "", nil
 }
