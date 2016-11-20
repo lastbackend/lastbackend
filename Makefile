@@ -5,10 +5,7 @@ HARDWARE = $(shell uname -m)
 OS := $(shell uname)
 VERSION ?= 0.1.0
 
-default:
-	deps
-	test
-	build
+default: deps; test; build;
 
 deps:
 	echo "Configuring Last.Backend"
