@@ -41,11 +41,17 @@ func SignUp(ctx *context.Context, cfg *config.Config) {
 
 func instruction() {
 	fmt.Println("User field must be at least 4 letters")
-	fmt.Println("Email filed must be at least 6 letters")
 	fmt.Println("Password filed must be at least 6 letters")
+	fmt.Println("---Example---")
+	fmt.Println("User: user")
+	fmt.Println("Email: email@email.email")
+	fmt.Println("Password: password")
+	fmt.Println("-------------")
 }
 
-func inputUserData() (string, string, string) {
+func inputUserData() (string, string, string, error) {
+	instruction()
+
 	var username string
 	var email string
 	var password string
@@ -59,17 +65,18 @@ func inputUserData() (string, string, string) {
 	fmt.Print("Password: ")
 	pass, err := gopass.GetPasswd()
 	if err != nil {
-		return "", err, ""
+		return "", "", "", err
 	}
 	password = string(pass)
 
-	return username, email, password
+	return username, email, password, err
 }
 
 func CreateNewUser(ctx *context.Context, cfg *config.Config) (string, error, string) {
 	var username string
 	var email string
 	var password string
+	var err error
 
 	if ctx == context.Mock() {
 		if ctx.Info.Version == "OK" {
@@ -83,7 +90,10 @@ func CreateNewUser(ctx *context.Context, cfg *config.Config) (string, error, str
 		}
 		defer httpmock.Deactivate()
 	} else {
-		username, email, password = inputUserData()
+		username, email, password, err = inputUserData()
+		if err != nil {
+			fmt.Println(err.Error())
+		}
 	}
 
 	data := structs.NewUserInfo{username, email, password}
