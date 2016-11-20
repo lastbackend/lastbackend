@@ -6,8 +6,6 @@ import (
 )
 
 func MockWhoamiOk() string {
-	token := "token"
-
 	httpmock.Activate()
 
 	httpmock.RegisterResponder("GET", config.Get().UserUrl,
@@ -25,12 +23,10 @@ func MockWhoamiOk() string {
 											"created":"2014-01-16T07:38:28.45Z",
 											"updated":"2014-01-16T07:38:28.45Z"}`))
 
-	return token
+	return "token"
 }
 
 func MockWhoamiBad() string {
-	token := "token"
-
 	httpmock.Activate()
 
 	httpmock.RegisterResponder("GET", config.Get().UserUrl,
@@ -38,7 +34,7 @@ func MockWhoamiBad() string {
 											"status":"USER_NOT_FOUND",
 											"message":"user not found"}`))
 
-	return token
+	return "bad_token"
 }
 
 func MockSignUpOk() (string, string, string) {
@@ -80,28 +76,6 @@ func MockSignUpBadEmail() (string, string, string) {
 		httpmock.NewStringResponder(406, `{"code":406,
 											"status":"BAD_PARAMETER_EMAIL",
 											"message":"bad email parameter"}`))
-
-	//httpmock.RegisterResponder("POST", config.Get().UserUrl,
-	//	func(req *http.Request) (*http.Response, error) {
-	//
-	//		reqC, err := ioutil.ReadAll(req.Body)
-	//		if err != nil {
-	//			fmt.Println("lal", err.Error())
-	//		}
-	//
-	//		var body structs.NewUserInfo
-	//		json.Unmarshal(reqC, &body)
-	//		fmt.Println(body)
-	//
-	//		resp, err := httpmock.NewJsonResponse(406, `{"code":406,
-	//												"status":"BAD_PARAMETER_EMAIL",
-	//												"message":"bad email parameter"}`)
-	//		if err != nil {
-	//			return httpmock.NewStringResponse(500, ""), nil
-	//		}
-	//		return resp, nil
-	//	},
-	//)
 
 	return username, email, password
 }
