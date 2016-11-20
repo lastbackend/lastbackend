@@ -5,7 +5,7 @@ import (
 	"github.com/lastbackend/lastbackend/cmd/client/config"
 )
 
-func MockWhoami() string {
+func MockWhoamiOk() string {
 	token := "token"
 
 	httpmock.Activate()
@@ -28,7 +28,20 @@ func MockWhoami() string {
 	return token
 }
 
-func MockSignUp() (string, string, string) {
+func MockWhoamiBad() string {
+	token := "token"
+
+	httpmock.Activate()
+
+	httpmock.RegisterResponder("GET", config.Get().UserUrl,
+		httpmock.NewStringResponder(404, `{"code":404,
+											"status":"USER_NOT_FOUND",
+											"message":"user not found"}`))
+
+	return token
+}
+
+func MockSignUpOk() (string, string, string) {
 	username := "testname"
 	email := "test@lb.com"
 	password := "12345678"
@@ -41,7 +54,52 @@ func MockSignUp() (string, string, string) {
 	return username, email, password
 }
 
-func MockAuth() (string, string) {
+func MockSignUpBadUsername() (string, string, string) {
+	username := "tes"
+	email := "test@lb.com"
+	password := "12345678"
+
+	httpmock.Activate()
+
+	httpmock.RegisterResponder("POST", config.Get().UserUrl,
+		httpmock.NewStringResponder(406, `{"code":406,
+											"status":"BAD_PARAMETER_USERNAME",
+											"message":"bad username parameter"}`))
+
+	return username, email, password
+}
+
+func MockSignUpBadEmail() (string, string, string) {
+	username := "testname"
+	email := "test@lb"
+	password := "12345678"
+
+	httpmock.Activate()
+
+	httpmock.RegisterResponder("POST", config.Get().UserUrl,
+		httpmock.NewStringResponder(406, `{"code":406,
+											"status":"BAD_PARAMETER_EMAIL",
+											"message":"bad email parameter"}`))
+
+	return username, email, password
+}
+
+func MockSignUpBadPassword() (string, string, string) {
+	username := "testname"
+	email := "test@lb.com"
+	password := "12345"
+
+	httpmock.Activate()
+
+	httpmock.RegisterResponder("POST", config.Get().UserUrl,
+		httpmock.NewStringResponder(406, `{"code":406,
+											"status":"BAD_PARAMETER_PASSWORD",
+											"message":"bad password parameter"}`))
+
+	return username, email, password
+}
+
+func MockSignInOk() (string, string) {
 	login := "testname"
 	password := "12345678"
 
@@ -49,6 +107,20 @@ func MockAuth() (string, string) {
 
 	httpmock.RegisterResponder("POST", config.Get().AuthUserUrl,
 		httpmock.NewStringResponder(200, `{"token": "token"}`))
+
+	return login, password
+}
+
+func MockSignInBad() (string, string) {
+	login := "testname"
+	password := "12345678"
+
+	httpmock.Activate()
+
+	httpmock.RegisterResponder("POST", config.Get().AuthUserUrl,
+		httpmock.NewStringResponder(401, `{"code":401,
+											"status":"ACCESS_DENIED",
+											"message":"access denied"}`))
 
 	return login, password
 }

@@ -15,7 +15,7 @@ import (
 )
 
 func SignUp(ctx *context.Context) {
-	token, err := CreateNewUser(ctx)
+	token, err, _ := CreateNewUser(ctx)
 	if err != nil {
 		fmt.Println(err.Error())
 	}
@@ -39,13 +39,21 @@ func SignUp(ctx *context.Context) {
 	}
 }
 
-func CreateNewUser(ctx *context.Context) (string, error) {
+func CreateNewUser(ctx *context.Context) (string, error, string) {
 	var username string
 	var email string
 	var password string
 
 	if ctx == context.Mock() {
-		username, email, password = mock.MockSignUp()
+		if ctx.Info.Version == "OK" {
+			username, email, password = mock.MockSignUpOk()
+		} else if ctx.Info.Version == "BAD_USERNAME" {
+			username, email, password = mock.MockSignUpBadUsername()
+		} else if ctx.Info.Version == "BAD_EMAIL" {
+			username, email, password = mock.MockSignUpBadEmail()
+		} else if ctx.Info.Version == "BAD_PASSWORD" {
+			username, email, password = mock.MockSignUpBadPassword()
+		}
 		defer httpmock.Deactivate()
 	} else {
 		fmt.Print("Username: ")
@@ -57,7 +65,7 @@ func CreateNewUser(ctx *context.Context) (string, error) {
 		fmt.Print("Password: ")
 		pass, err := gopass.GetPasswd()
 		if err != nil {
-			return "", err
+			return "", err, ""
 		}
 		password = string(pass)
 	}
@@ -65,7 +73,7 @@ func CreateNewUser(ctx *context.Context) (string, error) {
 	data := structs.NewUserInfo{username, email, password}
 	jsonData, err := json.Marshal(data)
 	if err != nil {
-		return "", err
+		return "", err, ""
 	}
 
 	resp, status := httpClient.Post(config.Get().UserUrl, jsonData, "Content-Type", "application/json")
@@ -73,19 +81,19 @@ func CreateNewUser(ctx *context.Context) (string, error) {
 		var token structs.TokenInfo
 		err = json.Unmarshal(resp, &token)
 		if err != nil {
-			return "", err
+			return "", err, ""
 		}
 		fmt.Println("Account created successful")
 
-		return token.Token, err
+		return token.Token, err, ""
 	}
 
 	var httpError structs.ErrorJson
 	err = json.Unmarshal(resp, &httpError)
 	if err != nil {
-		return "", err
+		return "", err, ""
 	}
 	fmt.Printf("Account create failed: %s", httpError.Message)
 
-	return "", nil
+	return "", nil, httpError.Message
 }

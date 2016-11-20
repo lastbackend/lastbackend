@@ -10,7 +10,8 @@ import (
 func TestWhoamiMock(t *testing.T) {
 	ctx := context.Mock()
 
-	actual, err := WhoamiLogic(ctx)
+	ctx.Info.Version = "OK"
+	actual, err, _ := WhoamiLogic(ctx)
 	if err != nil {
 		fmt.Println(err.Error())
 	}
@@ -26,4 +27,12 @@ func TestWhoamiMock(t *testing.T) {
 	assert.Equal(t, "some_company", actual.Profile.Company)
 	assert.Equal(t, "2014-01-16T07:38:28.45Z", actual.Created)
 	assert.Equal(t, "2014-01-16T07:38:28.45Z", actual.Updated)
+
+	ctx.Info.Version = "BAD"
+	_, err, httpError := WhoamiLogic(ctx)
+	if err != nil {
+		fmt.Println(err.Error())
+	}
+
+	assert.Equal(t, "user not found", httpError)
 }

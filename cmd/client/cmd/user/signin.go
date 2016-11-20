@@ -15,7 +15,7 @@ import (
 )
 
 func SignIn(ctx *context.Context) {
-	token, err := Login(ctx)
+	token, err, _ := Login(ctx)
 	if err != nil {
 		fmt.Println(err.Error())
 		return
@@ -40,12 +40,16 @@ func SignIn(ctx *context.Context) {
 	}
 }
 
-func Login(ctx *context.Context) (string, error) {
+func Login(ctx *context.Context) (string, error, string) {
 	var password string
 	var login string
 
 	if ctx == context.Mock() {
-		login, password = mock.MockAuth()
+		if ctx.Info.Version == "OK" {
+			login, password = mock.MockSignInOk()
+		} else if ctx.Info.Version == "BAD" {
+			login, password = mock.MockSignInBad()
+		}
 		defer httpmock.Deactivate()
 	} else {
 		fmt.Print("Login: ")
@@ -54,7 +58,7 @@ func Login(ctx *context.Context) (string, error) {
 		fmt.Print("Password: ")
 		pass, err := gopass.GetPasswd()
 		if err != nil {
-			return "", err
+			return "", err, ""
 		}
 		password = string(pass)
 	}
@@ -62,28 +66,29 @@ func Login(ctx *context.Context) (string, error) {
 	data := structs.LoginInfo{login, password}
 	jsonData, err := json.Marshal(data)
 	if err != nil {
-		return "", err
+		return "", err, ""
 	}
 
-	resp, status := httpClient.Post(config.Get().AuthUserUrl, jsonData, "Content-Type", "application/json")
+	resp, status := httpClient.Post(config.Get().AuthUserUrl, jsonData,
+		"Content-Type", "application/json")
 	if status == 200 {
 		var token structs.TokenInfo
 		err = json.Unmarshal(resp, &token)
 		if err != nil {
-			return "", err
+			return "", err, ""
 		}
 
 		fmt.Println("Login successful")
 
-		return token.Token, err
+		return token.Token, err, ""
 	}
 
 	var httpError structs.ErrorJson
 	err = json.Unmarshal(resp, &httpError)
 	if err != nil {
-		return "", err
+		return "", err, ""
 	}
 	fmt.Printf("Login failed: %s", httpError.Message)
 
-	return "", nil
+	return "", nil, httpError.Message
 }

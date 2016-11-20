@@ -16,7 +16,7 @@ import (
 )
 
 func Whoami(ctx *context.Context) {
-	whoamiContent, err := WhoamiLogic(ctx)
+	whoamiContent, err, _ := WhoamiLogic(ctx)
 	if err != nil {
 		fmt.Println(err.Error())
 		return
@@ -40,22 +40,26 @@ func Whoami(ctx *context.Context) {
 	table.PrintTable(header, data, []string{})
 }
 
-func WhoamiLogic(ctx *context.Context) (structs.WhoamiInfo, error) {
+func WhoamiLogic(ctx *context.Context) (structs.WhoamiInfo, error, string) {
 	var token string
 
 	if ctx == context.Mock() {
-		token = mock.MockWhoami()
+		if ctx.Info.Version == "OK" {
+			token = mock.MockWhoamiOk()
+		} else if ctx.Info.Version == "BAD" {
+			token = mock.MockWhoamiBad()
+		}
 		defer httpmock.Deactivate()
 	} else {
 		tokenFile, err := os.Open(config.Get().StoragePath + "token")
 		if err != nil {
-			return structs.WhoamiInfo{}, err
+			return structs.WhoamiInfo{}, err, ""
 		}
 		defer tokenFile.Close()
 
 		fileContent, err := ioutil.ReadAll(tokenFile)
 		if err != nil {
-			return structs.WhoamiInfo{}, err
+			return structs.WhoamiInfo{}, err, ""
 		}
 		token = string(fileContent)
 	}
@@ -63,7 +67,7 @@ func WhoamiLogic(ctx *context.Context) (structs.WhoamiInfo, error) {
 	data := structs.TokenInfo{Token: token}
 	jsonData, err := json.Marshal(data)
 	if err != nil {
-		return structs.WhoamiInfo{}, err
+		return structs.WhoamiInfo{}, err, ""
 	}
 
 	resp, status := httpClient.Get(config.Get().UserUrl, jsonData, "Authorization", "Bearer "+token)
@@ -71,18 +75,18 @@ func WhoamiLogic(ctx *context.Context) (structs.WhoamiInfo, error) {
 		var whoamiContent structs.WhoamiInfo
 		err = json.Unmarshal(resp, &whoamiContent)
 		if err != nil {
-			return structs.WhoamiInfo{}, err
+			return structs.WhoamiInfo{}, err, ""
 		}
 
-		return whoamiContent, err
+		return whoamiContent, err, ""
 	}
 
 	var httpError structs.ErrorJson
 	err = json.Unmarshal(resp, &httpError)
 	if err != nil {
-		return structs.WhoamiInfo{}, err
+		return structs.WhoamiInfo{}, err, ""
 	}
 	fmt.Printf("Whoami failed: %s\n", httpError.Message)
 
-	return structs.WhoamiInfo{}, nil
+	return structs.WhoamiInfo{}, nil, httpError.Message
 }
