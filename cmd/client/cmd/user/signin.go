@@ -14,8 +14,8 @@ import (
 	"io/ioutil"
 )
 
-func SignIn(ctx *context.Context) {
-	token, err, _ := Login(ctx)
+func SignIn(ctx *context.Context, cfg *config.Config) {
+	token, err, _ := Login(ctx, cfg)
 	if err != nil {
 		fmt.Println(err.Error())
 		return
@@ -27,20 +27,20 @@ func SignIn(ctx *context.Context) {
 		return
 	}
 
-	err = filesystem.MkDir(config.Get().StoragePath)
+	err = filesystem.MkDir(cfg.StoragePath)
 	if err != nil {
 		fmt.Println(err.Error())
 		return
 	}
 
-	err = ioutil.WriteFile(config.Get().StoragePath+"token", byteToken, 0644)
+	err = ioutil.WriteFile(cfg.StoragePath+"token", byteToken, 0644)
 	if err != nil {
 		fmt.Println(err.Error())
 		return
 	}
 }
 
-func Login(ctx *context.Context) (string, error, string) {
+func Login(ctx *context.Context, cfg *config.Config) (string, error, string) {
 	var password string
 	var login string
 
@@ -69,7 +69,7 @@ func Login(ctx *context.Context) (string, error, string) {
 		return "", err, ""
 	}
 
-	resp, status := httpClient.Post(config.Get().AuthUserUrl, jsonData,
+	resp, status := httpClient.Post(cfg.AuthUserUrl, jsonData,
 		"Content-Type", "application/json")
 	if status == 200 {
 		var token structs.TokenInfo

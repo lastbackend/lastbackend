@@ -13,8 +13,8 @@ import (
 	"strconv"
 )
 
-func Whoami(ctx *context.Context) {
-	whoamiContent, err, _ := WhoamiLogic(ctx)
+func Whoami(ctx *context.Context, cfg *config.Config) {
+	whoamiContent, err, _ := WhoamiLogic(ctx, cfg)
 	if err != nil {
 		fmt.Println(err.Error())
 		return
@@ -38,7 +38,7 @@ func Whoami(ctx *context.Context) {
 	table.PrintTable(header, data, []string{})
 }
 
-func WhoamiLogic(ctx *context.Context) (structs.WhoamiInfo, error, string) {
+func WhoamiLogic(ctx *context.Context, cfg *config.Config) (structs.WhoamiInfo, error, string) {
 	var token string
 
 	if ctx == context.Mock() {
@@ -58,7 +58,7 @@ func WhoamiLogic(ctx *context.Context) (structs.WhoamiInfo, error, string) {
 		return structs.WhoamiInfo{}, err, ""
 	}
 
-	resp, status := httpClient.Get(config.Get().UserUrl, jsonData, "Authorization", "Bearer "+token)
+	resp, status := httpClient.Get(cfg.UserUrl, jsonData, "Authorization", "Bearer "+token)
 	if status == 200 {
 		var whoamiContent structs.WhoamiInfo
 		err = json.Unmarshal(resp, &whoamiContent)
