@@ -5,9 +5,9 @@ import (
 	"fmt"
 	"github.com/howeyc/gopass"
 	"github.com/jarcoal/httpmock"
-	"github.com/lastbackend/lastbackend/cmd/client/config"
-	structs "github.com/lastbackend/lastbackend/cmd/client/cmd/user/structs"
 	mock "github.com/lastbackend/lastbackend/cmd/client/cmd/user/mocks"
+	structs "github.com/lastbackend/lastbackend/cmd/client/cmd/user/structs"
+	"github.com/lastbackend/lastbackend/cmd/client/config"
 	"github.com/lastbackend/lastbackend/cmd/client/context"
 	httpClient "github.com/lastbackend/lastbackend/libs/http/client"
 	"github.com/lastbackend/lastbackend/libs/log/filesystem"
@@ -65,7 +65,10 @@ func Login(ctx *context.Context) (string, error) {
 		return "", err
 	}
 
-	resp := httpClient.Post(config.Get().AuthUserUrl, jsonData, "Content-Type", "application/json")
+	resp, status := httpClient.Post(config.Get().AuthUserUrl, jsonData, "Content-Type", "application/json")
+	if status == 200 {
+		fmt.Println("Auth OK")
+	}
 
 	var token structs.TokenInfo
 	err = json.Unmarshal(resp, &token)

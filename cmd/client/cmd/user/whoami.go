@@ -4,11 +4,11 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/jarcoal/httpmock"
+	mock "github.com/lastbackend/lastbackend/cmd/client/cmd/user/mocks"
+	structs "github.com/lastbackend/lastbackend/cmd/client/cmd/user/structs"
 	"github.com/lastbackend/lastbackend/cmd/client/config"
 	"github.com/lastbackend/lastbackend/cmd/client/context"
 	httpClient "github.com/lastbackend/lastbackend/libs/http/client"
-	structs "github.com/lastbackend/lastbackend/cmd/client/cmd/user/structs"
-	mock "github.com/lastbackend/lastbackend/cmd/client/cmd/user/mocks"
 	"github.com/lastbackend/lastbackend/libs/table"
 	"io/ioutil"
 	"os"
@@ -62,7 +62,7 @@ func WhoamiLogic(ctx *context.Context) (structs.WhoamiInfo, error) {
 		return structs.WhoamiInfo{}, err
 	}
 
-	resp := httpClient.Get(config.Get().UserUrl, jsonData, "Authorization", "Bearer "+token)
+	resp, _ := httpClient.Get(config.Get().UserUrl, jsonData, "Authorization", "Bearer "+token)
 
 	var whoamiContent structs.WhoamiInfo
 	err = json.Unmarshal(resp, &whoamiContent)

@@ -4,11 +4,11 @@ import (
 	"fmt"
 	"github.com/howeyc/gopass"
 	"github.com/jarcoal/httpmock"
+	mock "github.com/lastbackend/lastbackend/cmd/client/cmd/user/mocks"
+	structs "github.com/lastbackend/lastbackend/cmd/client/cmd/user/structs"
 	"github.com/lastbackend/lastbackend/cmd/client/config"
 	"github.com/lastbackend/lastbackend/cmd/client/context"
 	httpClient "github.com/lastbackend/lastbackend/libs/http/client"
-	structs "github.com/lastbackend/lastbackend/cmd/client/cmd/user/structs"
-	mock "github.com/lastbackend/lastbackend/cmd/client/cmd/user/mocks"
 	"k8s.io/client-go/1.5/pkg/util/json"
 )
 
@@ -48,7 +48,10 @@ func CreateNewUser(ctx *context.Context) (string, error) {
 		return "", err
 	}
 
-	resp := httpClient.Post(config.Get().UserUrl, jsonData, "Content-Type", "application/json")
+	resp, status := httpClient.Post(config.Get().UserUrl, jsonData, "Content-Type", "application/json")
+	if status == 200 {
+		fmt.Println("Account create")
+	}
 
 	var token structs.TokenInfo
 	err = json.Unmarshal(resp, &token)

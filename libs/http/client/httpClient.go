@@ -7,7 +7,7 @@ import (
 	"net/http"
 )
 
-func Post(url string, json []byte, header string, headerType string) []byte {
+func Post(url string, json []byte, header string, headerType string) ([]byte, int) {
 	req, err := http.NewRequest("POST", url, bytes.NewBuffer(json))
 	if err != nil {
 		fmt.Println(err.Error())
@@ -24,10 +24,10 @@ func Post(url string, json []byte, header string, headerType string) []byte {
 		fmt.Println(err.Error())
 	}
 
-	return respContent
+	return respContent, resp.StatusCode
 }
 
-func Get(url string, json []byte, header string, headerType string) []byte {
+func Get(url string, json []byte, header string, headerType string) ([]byte, int) {
 	req, err := http.NewRequest("GET", url, bytes.NewBuffer(json))
 	if err != nil {
 		fmt.Println(err.Error())
@@ -44,5 +44,5 @@ func Get(url string, json []byte, header string, headerType string) []byte {
 		fmt.Println(err.Error())
 	}
 
-	return respContent
+	return respContent, resp.StatusCode
 }
