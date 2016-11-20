@@ -14,10 +14,14 @@ import (
 	"k8s.io/client-go/1.5/pkg/util/json"
 )
 
-func SignUp(ctx *context.Context) {
-	token, err, _ := CreateNewUser(ctx)
+func SignUp(ctx *context.Context, cfg *config.Config) {
+	token, err, _ := CreateNewUser(ctx, cfg)
 	if err != nil {
 		fmt.Println(err.Error())
+	}
+
+	if token == "" {
+		return
 	}
 
 	byteToken := []byte(token)
@@ -26,23 +30,57 @@ func SignUp(ctx *context.Context) {
 		return
 	}
 
-	err = filesystem.MkDir(config.Get().StoragePath)
+	err = filesystem.MkDir(cfg.StoragePath)
 	if err != nil {
 		fmt.Println(err.Error())
 		return
 	}
 
-	err = ioutil.WriteFile(config.Get().StoragePath+"token", byteToken, 0644)
+	err = ioutil.WriteFile(cfg.StoragePath+"token", byteToken, 0644)
 	if err != nil {
 		fmt.Println(err.Error())
 		return
 	}
 }
 
-func CreateNewUser(ctx *context.Context) (string, error, string) {
+func instruction() {
+	fmt.Println("User field must be at least 4 letters")
+	fmt.Println("Password filed must be at least 6 letters")
+	fmt.Println("---Example---")
+	fmt.Println("User: user")
+	fmt.Println("Email: email@email.email")
+	fmt.Println("Password: password")
+	fmt.Println("-------------")
+}
+
+func inputUserData() (string, string, string, error) {
+	instruction()
+
 	var username string
 	var email string
 	var password string
+
+	fmt.Print("Username: ")
+	fmt.Scan(&username)
+
+	fmt.Print("Email: ")
+	fmt.Scan(&email)
+
+	fmt.Print("Password: ")
+	pass, err := gopass.GetPasswd()
+	if err != nil {
+		return "", "", "", err
+	}
+	password = string(pass)
+
+	return username, email, password, err
+}
+
+func CreateNewUser(ctx *context.Context, cfg *config.Config) (string, error, string) {
+	var username string
+	var email string
+	var password string
+	var err error
 
 	if ctx == context.Mock() {
 		if ctx.Info.Version == "OK" {
@@ -56,18 +94,10 @@ func CreateNewUser(ctx *context.Context) (string, error, string) {
 		}
 		defer httpmock.Deactivate()
 	} else {
-		fmt.Print("Username: ")
-		fmt.Scan(&username)
-
-		fmt.Print("Email: ")
-		fmt.Scan(&email)
-
-		fmt.Print("Password: ")
-		pass, err := gopass.GetPasswd()
+		username, email, password, err = inputUserData()
 		if err != nil {
-			return "", err, ""
+			fmt.Println(err.Error())
 		}
-		password = string(pass)
 	}
 
 	data := structs.NewUserInfo{username, email, password}
@@ -76,7 +106,7 @@ func CreateNewUser(ctx *context.Context) (string, error, string) {
 		return "", err, ""
 	}
 
-	resp, status := httpClient.Post(config.Get().UserUrl, jsonData, "Content-Type", "application/json")
+	resp, status := httpClient.Post(cfg.UserUrl, jsonData, "Content-Type", "application/json")
 	if status == 200 {
 		var token structs.TokenInfo
 		err = json.Unmarshal(resp, &token)
@@ -93,7 +123,7 @@ func CreateNewUser(ctx *context.Context) (string, error, string) {
 	if err != nil {
 		return "", err, ""
 	}
-	fmt.Printf("Account create failed: %s", httpError.Message)
+	fmt.Printf("Account create failed: %s\n", httpError.Message)
 
 	return "", nil, httpError.Message
 }

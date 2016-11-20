@@ -14,10 +14,14 @@ import (
 	"io/ioutil"
 )
 
-func SignIn(ctx *context.Context) {
-	token, err, _ := Login(ctx)
+func SignIn(ctx *context.Context, cfg *config.Config) {
+	token, err, _ := Login(ctx, cfg)
 	if err != nil {
 		fmt.Println(err.Error())
+		return
+	}
+
+	if token == "" {
 		return
 	}
 
@@ -27,20 +31,20 @@ func SignIn(ctx *context.Context) {
 		return
 	}
 
-	err = filesystem.MkDir(config.Get().StoragePath)
+	err = filesystem.MkDir(cfg.StoragePath)
 	if err != nil {
 		fmt.Println(err.Error())
 		return
 	}
 
-	err = ioutil.WriteFile(config.Get().StoragePath+"token", byteToken, 0644)
+	err = ioutil.WriteFile(cfg.StoragePath+"token", byteToken, 0644)
 	if err != nil {
 		fmt.Println(err.Error())
 		return
 	}
 }
 
-func Login(ctx *context.Context) (string, error, string) {
+func Login(ctx *context.Context, cfg *config.Config) (string, error, string) {
 	var password string
 	var login string
 
@@ -66,15 +70,17 @@ func Login(ctx *context.Context) (string, error, string) {
 	data := structs.LoginInfo{login, password}
 	jsonData, err := json.Marshal(data)
 	if err != nil {
+		fmt.Println("LOGININGO")
 		return "", err, ""
 	}
 
-	resp, status := httpClient.Post(config.Get().AuthUserUrl, jsonData,
+	resp, status := httpClient.Post(cfg.AuthUserUrl, jsonData,
 		"Content-Type", "application/json")
 	if status == 200 {
 		var token structs.TokenInfo
 		err = json.Unmarshal(resp, &token)
 		if err != nil {
+			fmt.Println("RESP")
 			return "", err, ""
 		}
 
@@ -86,9 +92,10 @@ func Login(ctx *context.Context) (string, error, string) {
 	var httpError structs.ErrorJson
 	err = json.Unmarshal(resp, &httpError)
 	if err != nil {
+		fmt.Println("ERRORJSON")
 		return "", err, ""
 	}
-	fmt.Printf("Login failed: %s", httpError.Message)
+	fmt.Printf("Login failed: %s\n", httpError.Message)
 
 	return "", nil, httpError.Message
 }
