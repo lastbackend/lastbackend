@@ -10,6 +10,7 @@ import (
 var config Config
 
 func Get() *Config {
+
 	homedir, err := filesystem.GetHomeDir()
 	if err != nil {
 		fmt.Println(err.Error())
@@ -19,6 +20,10 @@ func Get() *Config {
 	config.StoragePath = homedir + "/.lb/"
 	config.UserUrl = "http://localhost:3000/user"
 	config.AuthUserUrl = "http://localhost:3000/session"
+	config.ProjectUrl = "http://localhost:3000/project"
+
+
+
 	config.Token, _ = getToken()
 	if err != nil {
 		fmt.Println(err.Error())

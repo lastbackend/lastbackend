@@ -8,6 +8,7 @@ import (
 	"github.com/lastbackend/lastbackend/cmd/client/context"
 	"github.com/lastbackend/lastbackend/libs/log"
 	"os"
+	"github.com/lastbackend/lastbackend/libs/http"
 )
 
 func main() {
@@ -44,6 +45,7 @@ func main() {
 			ctx.Log.SetDebugLevel()
 			ctx.Log.Info("Logger debug mode enabled")
 		}
+		ctx.HTTP = new(http.HTTP)
 	}
 
 	cmd.Init(app, ctx, cfg)

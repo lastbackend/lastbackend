@@ -3,8 +3,8 @@ package cmd
 import (
 	"fmt"
 	"github.com/howeyc/gopass"
-	"github.com/jarcoal/httpmock"
-	mock "github.com/lastbackend/lastbackend/cmd/client/cmd/user/mocks"
+//	"github.com/jarcoal/httpmock"
+//	mock "github.com/lastbackend/lastbackend/cmd/client/cmd/user/mocks"
 	structs "github.com/lastbackend/lastbackend/cmd/client/cmd/user/structs"
 	"github.com/lastbackend/lastbackend/cmd/client/config"
 	"github.com/lastbackend/lastbackend/cmd/client/context"
@@ -82,23 +82,28 @@ func CreateNewUser(ctx *context.Context, cfg *config.Config) (string, error, str
 	var password string
 	var err error
 
-	if ctx == context.Mock() {
-		if ctx.Info.Version == "OK" {
-			username, email, password = mock.MockSignUpOk()
-		} else if ctx.Info.Version == "BAD_USERNAME" {
-			username, email, password = mock.MockSignUpBadUsername()
-		} else if ctx.Info.Version == "BAD_EMAIL" {
-			username, email, password = mock.MockSignUpBadEmail()
-		} else if ctx.Info.Version == "BAD_PASSWORD" {
-			username, email, password = mock.MockSignUpBadPassword()
-		}
-		defer httpmock.Deactivate()
-	} else {
-		username, email, password, err = inputUserData()
+	//if ctx == context.Mock() {
+	//	if ctx.Info.Version == "OK" {
+	//		username, email, password = mock.MockSignUpOk()
+	//	} else if ctx.Info.Version == "BAD_USERNAME" {
+	//		username, email, password = mock.MockSignUpBadUsername()
+	//	} else if ctx.Info.Version == "BAD_EMAIL" {
+	//		username, email, password = mock.MockSignUpBadEmail()
+	//	} else if ctx.Info.Version == "BAD_PASSWORD" {
+	//		username, email, password = mock.MockSignUpBadPassword()
+	//	}
+	//	defer httpmock.Deactivate()
+	//} else {
+	//	username, email, password, err = inputUserData()
+	//	if err != nil {
+	//		fmt.Println(err.Error())
+	//	}
+	//}
+	username, email, password, err = inputUserData()
 		if err != nil {
 			fmt.Println(err.Error())
 		}
-	}
+
 
 	data := structs.NewUserInfo{username, email, password}
 	jsonData, err := json.Marshal(data)

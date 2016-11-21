@@ -4,8 +4,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/howeyc/gopass"
-	"github.com/jarcoal/httpmock"
-	mock "github.com/lastbackend/lastbackend/cmd/client/cmd/user/mocks"
+//	"github.com/jarcoal/httpmock"
+//	mock "github.com/lastbackend/lastbackend/cmd/client/cmd/user/mocks"
 	structs "github.com/lastbackend/lastbackend/cmd/client/cmd/user/structs"
 	"github.com/lastbackend/lastbackend/cmd/client/config"
 	"github.com/lastbackend/lastbackend/cmd/client/context"
@@ -47,7 +47,7 @@ func SignIn(ctx *context.Context, cfg *config.Config) {
 func Login(ctx *context.Context, cfg *config.Config) (string, error, string) {
 	var password string
 	var login string
-
+	/*
 	if ctx == context.Mock() {
 		if ctx.Info.Version == "OK" {
 			login, password = mock.MockSignInOk()
@@ -66,7 +66,25 @@ func Login(ctx *context.Context, cfg *config.Config) (string, error, string) {
 		}
 		password = string(pass)
 	}
+	*/
+	fmt.Print("Login: ")
+	fmt.Scan(&login)
 
+	fmt.Print("Password: ")
+	pass, err := gopass.GetPasswd()
+	if err != nil {
+		return "", err, ""
+	}
+	password = string(pass)
+	fmt.Print("Login: ")
+	fmt.Scan(&login)
+
+	fmt.Print("Password: ")
+	pass, err = gopass.GetPasswd()
+	if err != nil {
+		return "", err, ""
+	}
+	password = string(pass)
 	data := structs.LoginInfo{login, password}
 	jsonData, err := json.Marshal(data)
 	if err != nil {

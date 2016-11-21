@@ -7,11 +7,10 @@ import (
 	"net/http"
 )
 
-func Post(url string, json []byte, header string, headerType string) ([]byte, int) {
-	req, err := http.NewRequest("POST", url, bytes.NewBuffer(json))
-	if err != nil {
-		fmt.Println(err.Error())
-	}
+type HTTP struct{}
+
+func (h *HTTP) Post(url string, json []byte, header string, headerType string) ([]byte, int) {
+	req := h.request("POST", url, json)
 	req.Header.Add(header, headerType)
 	client := http.Client{}
 	resp, err := client.Do(req)
@@ -27,11 +26,8 @@ func Post(url string, json []byte, header string, headerType string) ([]byte, in
 	return respContent, resp.StatusCode
 }
 
-func Get(url string, json []byte, header string, headerType string) ([]byte, int) {
-	req, err := http.NewRequest("GET", url, bytes.NewBuffer(json))
-	if err != nil {
-		fmt.Println(err.Error())
-	}
+func (h *HTTP) Get(url string, json []byte, header string, headerType string) ([]byte, int) {
+	req := h.request("GET", url, nil)
 	req.Header.Add(header, headerType)
 	client := http.Client{}
 	resp, err := client.Do(req)
@@ -47,11 +43,8 @@ func Get(url string, json []byte, header string, headerType string) ([]byte, int
 	return respContent, resp.StatusCode
 }
 
-func Delete(url string, header string, headerType string) int {
-	req, err := http.NewRequest("DELETE", url, nil)
-	if err != nil {
-		fmt.Println(err.Error())
-	}
+func (h *HTTP) Delete(url string, header string, headerType string) int {
+	req := h.request("DELETE", url, nil)
 	req.Header.Add(header, headerType)
 	client := http.Client{}
 	resp, err := client.Do(req)
@@ -60,4 +53,12 @@ func Delete(url string, header string, headerType string) int {
 	}
 
 	return resp.StatusCode
+}
+
+func (h *HTTP) request(method string, url string, json []byte) *http.Request {
+	req, err := http.NewRequest(method, url, bytes.NewBuffer(json))
+	if err != nil {
+		fmt.Println(err.Error())
+	}
+	return req
 }
