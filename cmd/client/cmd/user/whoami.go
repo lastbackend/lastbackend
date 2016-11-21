@@ -3,8 +3,8 @@ package cmd
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/jarcoal/httpmock"
-	mock "github.com/lastbackend/lastbackend/cmd/client/cmd/user/mocks"
+//	"github.com/jarcoal/httpmock"
+//	mock "github.com/lastbackend/lastbackend/cmd/client/cmd/user/mocks"
 	structs "github.com/lastbackend/lastbackend/cmd/client/cmd/user/structs"
 	"github.com/lastbackend/lastbackend/cmd/client/config"
 	"github.com/lastbackend/lastbackend/cmd/client/context"
@@ -40,7 +40,7 @@ func Whoami() {
 
 func WhoamiLogic() (structs.WhoamiInfo, error, string) {
 	var token string
-
+	/*
 	if ctx == context.Mock() {
 		if ctx.Info.Version == "OK" {
 			token = mock.MockWhoamiOk()
@@ -51,7 +51,7 @@ func WhoamiLogic() (structs.WhoamiInfo, error, string) {
 	} else {
 		token = config.Get().Token
 	}
-
+	*/
 	data := structs.TokenInfo{Token: token}
 	jsonData, err := json.Marshal(data)
 	if err != nil {

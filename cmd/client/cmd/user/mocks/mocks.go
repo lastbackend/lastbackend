@@ -17,7 +17,7 @@ func MockWhoamiOk() string {
 											"organization":false,
 											"profile":{
 												"first_name":"some_first_name",
-												"last_name":"some_last_name",
+												"last_name"/opt/src/github.com/lastbackend/lastbackend/cmd/client/cmd/projects:"some_last_name",
        											"company":"some_company"
        										},
 											"created":"2014-01-16T07:38:28.45Z",

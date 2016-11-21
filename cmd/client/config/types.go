@@ -6,5 +6,6 @@ type Config struct {
 	UserUrl     string `yaml:"createUserUrl"`
 	StoragePath string `yaml:"storagePah"`
 	AuthUserUrl string `yaml:"authUserUrl"`
+	ProjectUrl  string `yaml:"projectUrl"`
 	Token       string `yaml:"token"`
 }
