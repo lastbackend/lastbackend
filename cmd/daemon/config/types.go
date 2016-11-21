@@ -4,6 +4,8 @@ package config
 type Config struct {
 	Debug bool `yaml:"debug"`
 
+	TokenSecret string `yaml:"secret"`
+
 	HttpServer struct {
 		Port int `yaml:"port"`
 	} `yaml:"http_server"`

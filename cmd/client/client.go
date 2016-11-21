@@ -16,7 +16,7 @@ func main() {
 	)
 
 	ctx.Info.Version = "0.3.0"
-	ctx.Info.ApiVersion = "3.0"
+	ctx.Info.ApiVersion = "0.3.0"
 
 	app := cli.App("last.backend", "apps cloud hosting with integrated deployment tools")
 

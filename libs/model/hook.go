@@ -6,17 +6,17 @@ type HookList []Hook
 
 type Hook struct {
 	// Hook uuid, incremented automatically
-	ID string `json:"id, omitempty" gorethink:"id,omitempty"`
+	ID string `json:"id" gorethink:"id"`
 	// Hook owner
-	User string `json:"user, omitempty" gorethink:"user,omitempty"`
+	User string `json:"user" gorethink:"user"`
 	// Hook token
-	Token string `json:"token, omitempty" gorethink:"token,omitempty"`
+	Token string `json:"token" gorethink:"token"`
 	// Hook image to build
-	Image string `json:"image, omitempty" gorethink:"name,omitempty"`
+	Image string `json:"image" gorethink:"name"`
 	// Hook service to build images
-	Service string `json:"service, omitempty" gorethink:"name,omitempty"`
+	Service string `json:"service" gorethink:"name"`
 	// Hook created time
-	Created time.Time `json:"created, omitempty" gorethink:"created,omitempty"`
+	Created time.Time `json:"created" gorethink:"created"`
 	// Hook updated time
-	Updated time.Time `json:"updated, omitempty" gorethink:"updated,omitempty"`
+	Updated time.Time `json:"updated" gorethink:"updated"`
 }

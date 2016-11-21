@@ -4,11 +4,8 @@ import "errors"
 
 import (
 	"github.com/dgrijalva/jwt-go"
+	"github.com/lastbackend/lastbackend/cmd/daemon/config"
 	"time"
-)
-
-const (
-	SESSION_TOKEN_SECRET = "LB:TokeN_#2015#_SecreT:KEY"
 )
 
 var (
@@ -38,8 +35,10 @@ type Session struct {
 // Decode - decode token to session object
 func (s *Session) Decode(token string) error {
 
+	var cfg = config.Get()
+
 	payload, err := jwt.Parse(token, func(payload *jwt.Token) (interface{}, error) {
-		result := []byte(SESSION_TOKEN_SECRET)
+		result := []byte(cfg.TokenSecret)
 
 		err := func(token *jwt.Token) error {
 
@@ -95,6 +94,8 @@ func (s *Session) Decode(token string) error {
 // Encode - encode session structure to jwt token
 func (s *Session) Encode() (string, error) {
 
+	var cfg = config.Get()
+
 	context := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
 		"uid":  s.Uid,
 		"oid":  s.Oid,
@@ -104,5 +105,5 @@ func (s *Session) Encode() (string, error) {
 		"exp":  time.Now().Add(time.Hour * 2232).Unix(),
 	})
 
-	return context.SignedString([]byte(SESSION_TOKEN_SECRET))
+	return context.SignedString([]byte(cfg.TokenSecret))
 }
