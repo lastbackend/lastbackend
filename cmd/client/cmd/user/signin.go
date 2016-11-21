@@ -1,121 +1,80 @@
-package cmd
+package user
 
 import (
-	"encoding/json"
 	"fmt"
+	"github.com/boltdb/bolt"
 	"github.com/howeyc/gopass"
-//	"github.com/jarcoal/httpmock"
-//	mock "github.com/lastbackend/lastbackend/cmd/client/cmd/user/mocks"
-	structs "github.com/lastbackend/lastbackend/cmd/client/cmd/user/structs"
-	"github.com/lastbackend/lastbackend/cmd/client/config"
 	"github.com/lastbackend/lastbackend/cmd/client/context"
-	httpClient "github.com/lastbackend/lastbackend/libs/http/client"
-	"github.com/lastbackend/lastbackend/libs/log/filesystem"
-	"io/ioutil"
+	"github.com/lastbackend/lastbackend/libs/errors"
 )
 
+type UserLoginS struct {
+	Login    string `json:"login"`
+	Password string `json:"password"`
+}
+
 func SignIn() {
-	token, err, _ := Login()
+
+	var (
+		err      error
+		login    string
+		password string
+		ctx      = context.Get()
+	)
+
+	login, password, err = inputLoginUserData()
 	if err != nil {
 		fmt.Println(err.Error())
+	}
+
+	er := errors.Http{}
+	res := struct {
+		Token string `json:"token"`
+	}{}
+
+	ctx.HTTP.
+		POST("/session").
+		AddHeader("Content-Type", "application/json").
+		BodyJSON(UserLoginS{login, password}).
+		Request(&res, &er)
+
+	if res.Token == "" {
 		return
 	}
 
-	if token == "" {
-		return
-	}
+	err = ctx.Storage.Update(func(tx *bolt.Tx) error {
+		bucket, err := tx.CreateBucketIfNotExists([]byte("session"))
+		if err != nil {
+			return err
+		}
 
-	byteToken := []byte(token)
+		err = bucket.Put([]byte("token"), []byte(res.Token))
+		if err != nil {
+			return err
+		}
+		return nil
+	})
 	if err != nil {
-		fmt.Println(err.Error())
-		return
-	}
-
-	err = filesystem.MkDir(cfg.StoragePath)
-	if err != nil {
-		fmt.Println(err.Error())
-		return
-	}
-
-	err = ioutil.WriteFile(cfg.StoragePath+"token", byteToken, 0644)
-	if err != nil {
-		fmt.Println(err.Error())
-		return
+		ctx.Log.Error(err)
 	}
 }
 
-func Login() (string, error, string) {
-	var password string
-	var login string
-	/*
-	if ctx == context.Mock() {
-		if ctx.Info.Version == "OK" {
-			login, password = mock.MockSignInOk()
-		} else if ctx.Info.Version == "BAD" {
-			login, password = mock.MockSignInBad()
-		}
-		defer httpmock.Deactivate()
-	} else {
-		fmt.Print("Login: ")
-		fmt.Scan(&login)
+func inputLoginUserData() (string, string, error) {
 
-		fmt.Print("Password: ")
-		pass, err := gopass.GetPasswd()
-		if err != nil {
-			return "", err, ""
-		}
-		password = string(pass)
-	}
-	*/
+	var (
+		login    string
+		password string
+	)
+
 	fmt.Print("Login: ")
 	fmt.Scan(&login)
 
 	fmt.Print("Password: ")
 	pass, err := gopass.GetPasswd()
 	if err != nil {
-		return "", err, ""
+		return "", "", err
 	}
 	password = string(pass)
-	fmt.Print("Login: ")
-	fmt.Scan(&login)
 
-	fmt.Print("Password: ")
-	pass, err = gopass.GetPasswd()
-	if err != nil {
-		return "", err, ""
-	}
-	password = string(pass)
-	data := structs.LoginInfo{login, password}
-	jsonData, err := json.Marshal(data)
-	if err != nil {
-		fmt.Println("LOGININGO")
-		return "", err, ""
-	}
-
-	ctx.HTTP.POST("/user", struct {}{})
-
-	resp, status := httpClient.Post(cfg.AuthUserUrl, jsonData,
-		"Content-Type", "application/json")
-	if status == 200 {
-		var token structs.TokenInfo
-		err = json.Unmarshal(resp, &token)
-		if err != nil {
-			fmt.Println("RESP")
-			return "", err, ""
-		}
-
-		fmt.Println("Login successful")
-
-		return token.Token, err, ""
-	}
-
-	var httpError structs.ErrorJson
-	err = json.Unmarshal(resp, &httpError)
-	if err != nil {
-		fmt.Println("ERRORJSON")
-		return "", err, ""
-	}
-	fmt.Printf("Login failed: %s\n", httpError.Message)
-
-	return "", nil, httpError.Message
+	return login, password, err
 }

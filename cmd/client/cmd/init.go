@@ -1,20 +1,10 @@
 package cmd
 
 import (
-	"github.com/jawher/mow.cli"
-<<<<<<< HEAD
-	u "github.com/lastbackend/lastbackend/cmd/client/cmd/user"
-=======
-	user "github.com/lastbackend/lastbackend/cmd/client/cmd/user"
-	"github.com/lastbackend/lastbackend/cmd/client/config"
-	"github.com/lastbackend/lastbackend/cmd/client/context"
-
-
-	//"lb_cli/cli"
-	"github.com/lastbackend/lastbackend/cmd/client/cmd/projects"
-	//"github.com/lastbackend/lastbackend/cmd/client/cmd/user/structs"
 	"fmt"
->>>>>>> upstream/master
+	"github.com/jawher/mow.cli"
+	"github.com/lastbackend/lastbackend/cmd/client/cmd/project"
+	u "github.com/lastbackend/lastbackend/cmd/client/cmd/user"
 )
 
 func Init(app *cli.Cli) {
@@ -29,39 +19,39 @@ func Init(app *cli.Cli) {
 	app.Command("whoami", "Display the current user's login name", func(c *cli.Cmd) {
 		c.Action = u.Whoami
 	})
-	//--------------------------------------------------------------------------------------------------------
-	// TODO add authorization toket
-	//--------------------------------------------------------------------------------------------------------
+
+	app.Command("projects", "Display the project list", func(c *cli.Cmd) {
+		c.Action = project.List
+	})
+
 	app.Command("project", "project managment", func(c *cli.Cmd) {
 		var (
-			p_name *string
+			name *string
 			desc *string
 		)
-		c.Spec = "[NAME] [[-d] DESC]"
-		p_name = c.String(cli.StringArg{Name: "NAME", Value: "", Desc: "name of your project"})
-		c.Bool(cli.BoolOpt{Name: "d description", Value: false})
-		desc = c.String(cli.StringArg{Name: "DESC", Desc: "desc text"})
-		c.Command("create", "create new project", func (c *cli.Cmd) {
+
+		app.Spec = "[NAME]"
+
+		name = c.String(cli.StringArg{Name: "NAME", Value: "", Desc: "name of your project"})
+		desc = c.String(cli.StringOpt{Name: "description", Value: "", HideValue: true})
+
+		fmt.Println(*name)
+
+		c.Command("create", "create new project", func(c *cli.Cmd) {
 			c.Action = func() {
-				projects.Create(*p_name, *desc, ctx)
+				project.Create(*name, *desc)
 			}
 		})
 
-		c.Command("remove", "remove an existing project", func (c *cli.Cmd) {
+		c.Command("remove", "remove an existing project", func(c *cli.Cmd) {
 			c.Action = func() {
-				projects.Remove(*p_name, ctx)
+				project.Remove(*name)
 			}
 		})
 
 		c.Action = func() {
-
-
-			if *p_name == "" {
-				projects.List(ctx)
-			} else {
-				fmt.Println(*p_name)
-				projects.Get(*p_name, ctx)
-			}
+			fmt.Println(*name)
+			project.Get(*name)
 		}
 
 	})

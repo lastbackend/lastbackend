@@ -1,15 +1,14 @@
-package user
+package project
 
 import (
 	"github.com/boltdb/bolt"
-	"github.com/lastbackend/api/libs/model"
 	"github.com/lastbackend/lastbackend/cmd/client/context"
 	"github.com/lastbackend/lastbackend/libs/errors"
+	"github.com/lastbackend/lastbackend/libs/model"
 	"github.com/lastbackend/lastbackend/libs/table"
-	"strconv"
 )
 
-func Whoami() {
+func Get(name string) {
 
 	var (
 		ctx   = context.Get()
@@ -28,24 +27,20 @@ func Whoami() {
 	}
 
 	er := errors.Http{}
-	res := model.User{}
+	res := model.Project{}
 
 	ctx.HTTP.
-		GET("/user").
+		GET("/project/"+name).
 		AddHeader("Content-Type", "application/json").
 		AddHeader("Authorization", "Bearer "+token).
 		Request(&res, &er)
 
-	var header []string = []string{"Username", "Email", "Balance", "Organization", "Created", "Updated"}
+	var header []string = []string{"ID", "Name", "Created", "Updated"}
 	var data [][]string
 
-	organization := strconv.FormatBool(res.Organization)
-	balance := strconv.FormatFloat(float64(res.Balance), 'f', 2, 32)
 	d := []string{
-		res.Username,
-		res.Email,
-		balance,
-		organization,
+		res.ID,
+		res.Name,
 		res.Created.String()[:10],
 		res.Updated.String()[:10],
 	}

@@ -1,52 +1,65 @@
-package cmd
+package user
 
 import (
 	"fmt"
+	"github.com/boltdb/bolt"
 	"github.com/howeyc/gopass"
-//	"github.com/jarcoal/httpmock"
-//	mock "github.com/lastbackend/lastbackend/cmd/client/cmd/user/mocks"
-	structs "github.com/lastbackend/lastbackend/cmd/client/cmd/user/structs"
-	"github.com/lastbackend/lastbackend/cmd/client/config"
 	"github.com/lastbackend/lastbackend/cmd/client/context"
-	httpClient "github.com/lastbackend/lastbackend/libs/http/client"
-	"github.com/lastbackend/lastbackend/libs/log/filesystem"
-	"io/ioutil"
-	"k8s.io/client-go/1.5/pkg/util/json"
+	"github.com/lastbackend/lastbackend/libs/errors"
 )
+
+type UserCreateS struct {
+	Username string `json:"username"`
+	Email    string `json:"email"`
+	Password string `json:"password"`
+}
 
 func SignUp() {
 
 	var (
-		err error
-		cfg = config.Get()
+		err      error
+		ctx      = context.Get()
+		username string
+		email    string
+		password string
 	)
 
-	token, err, _ := CreateNewUser()
+	username, email, password, err = inputSignupUserData()
 	if err != nil {
 		fmt.Println(err.Error())
 	}
 
-	if token == "" {
+	er := errors.Http{}
+	res := struct {
+		Token string `json:"token"`
+	}{}
+
+	ctx.HTTP.
+		POST("/user").
+		AddHeader("Content-Type", "application/json").
+		BodyJSON(UserCreateS{username, email, password}).
+		Request(&res, &er)
+
+	if res.Token == "" {
 		return
 	}
 
-	byteToken := []byte(token)
+	err = ctx.Storage.Update(func(tx *bolt.Tx) error {
+		bucket, err := tx.CreateBucketIfNotExists([]byte("session"))
+		if err != nil {
+			return err
+		}
+
+		err = bucket.Put([]byte("token"), []byte(res.Token))
+		if err != nil {
+			return err
+		}
+		return nil
+	})
 	if err != nil {
-		fmt.Println(err.Error())
-		return
+		ctx.Log.Error(err)
 	}
 
-	err = filesystem.MkDir(cfg.StoragePath)
-	if err != nil {
-		fmt.Println(err.Error())
-		return
-	}
-
-	err = ioutil.WriteFile(cfg.StoragePath+"token", byteToken, 0644)
-	if err != nil {
-		fmt.Println(err.Error())
-		return
-	}
 }
 
 func instruction() {
@@ -59,7 +72,7 @@ func instruction() {
 	fmt.Println("-------------")
 }
 
-func inputUserData() (string, string, string, error) {
+func inputSignupUserData() (string, string, string, error) {
 	instruction()
 
 	var username string
@@ -80,61 +93,4 @@ func inputUserData() (string, string, string, error) {
 	password = string(pass)
 
 	return username, email, password, err
-}
-
-func CreateNewUser() (string, error, string) {
-	var username string
-	var email string
-	var password string
-	var err error
-
-	//if ctx == context.Mock() {
-	//	if ctx.Info.Version == "OK" {
-	//		username, email, password = mock.MockSignUpOk()
-	//	} else if ctx.Info.Version == "BAD_USERNAME" {
-	//		username, email, password = mock.MockSignUpBadUsername()
-	//	} else if ctx.Info.Version == "BAD_EMAIL" {
-	//		username, email, password = mock.MockSignUpBadEmail()
-	//	} else if ctx.Info.Version == "BAD_PASSWORD" {
-	//		username, email, password = mock.MockSignUpBadPassword()
-	//	}
-	//	defer httpmock.Deactivate()
-	//} else {
-	//	username, email, password, err = inputUserData()
-	//	if err != nil {
-	//		fmt.Println(err.Error())
-	//	}
-	//}
-	username, email, password, err = inputUserData()
-		if err != nil {
-			fmt.Println(err.Error())
-		}
-
-
-	data := structs.NewUserInfo{username, email, password}
-	jsonData, err := json.Marshal(data)
-	if err != nil {
-		return "", err, ""
-	}
-
-	resp, status := httpClient.Post(cfg.UserUrl, jsonData, "Content-Type", "application/json")
-	if status == 200 {
-		var token structs.TokenInfo
-		err = json.Unmarshal(resp, &token)
-		if err != nil {
-			return "", err, ""
-		}
-		fmt.Println("Account created successful")
-
-		return token.Token, err, ""
-	}
-
-	var httpError structs.ErrorJson
-	err = json.Unmarshal(resp, &httpError)
-	if err != nil {
-		return "", err, ""
-	}
-	fmt.Printf("Account create failed: %s\n", httpError.Message)
-
-	return "", nil, httpError.Message
 }
