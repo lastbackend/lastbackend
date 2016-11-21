@@ -15,7 +15,7 @@ type LoginInfo struct {
 	Password string `json:"password"`
 }
 
-type profileInfo struct {
+type ProfileInfo struct {
 	FirstName string `json:"first_name"`
 	LastName  string `json:"last_name"`
 	Company   string `json:"company"`
@@ -28,7 +28,7 @@ type WhoamiInfo struct {
 	Gravatar     string      `json:"gravatar"`
 	Balance      float32     `json:"balance"`
 	Organization bool        `json:"organization"`
-	Profile      profileInfo `json:"profile"`
+	Profile      ProfileInfo `json:"profile"`
 	Created      string      `json:"created"`
 	Updated      string      `json:"updated"`
 }

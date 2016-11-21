@@ -3,8 +3,8 @@ package cmd
 import (
 	"fmt"
 	"github.com/howeyc/gopass"
-	"github.com/jarcoal/httpmock"
-	mock "github.com/lastbackend/lastbackend/cmd/client/cmd/user/mocks"
+//	"github.com/jarcoal/httpmock"
+//	mock "github.com/lastbackend/lastbackend/cmd/client/cmd/user/mocks"
 	structs "github.com/lastbackend/lastbackend/cmd/client/cmd/user/structs"
 	"github.com/lastbackend/lastbackend/cmd/client/config"
 	"github.com/lastbackend/lastbackend/cmd/client/context"
@@ -14,10 +14,14 @@ import (
 	"k8s.io/client-go/1.5/pkg/util/json"
 )
 
-func SignUp(ctx *context.Context) {
-	token, err, _ := CreateNewUser(ctx)
+func SignUp(ctx *context.Context, cfg *config.Config) {
+	token, err, _ := CreateNewUser(ctx, cfg)
 	if err != nil {
 		fmt.Println(err.Error())
+	}
+
+	if token == "" {
+		return
 	}
 
 	byteToken := []byte(token)
@@ -26,49 +30,80 @@ func SignUp(ctx *context.Context) {
 		return
 	}
 
-	err = filesystem.MkDir(config.Get().StoragePath)
+	err = filesystem.MkDir(cfg.StoragePath)
 	if err != nil {
 		fmt.Println(err.Error())
 		return
 	}
 
-	err = ioutil.WriteFile(config.Get().StoragePath+"token", byteToken, 0644)
+	err = ioutil.WriteFile(cfg.StoragePath+"token", byteToken, 0644)
 	if err != nil {
 		fmt.Println(err.Error())
 		return
 	}
 }
 
-func CreateNewUser(ctx *context.Context) (string, error, string) {
+func instruction() {
+	fmt.Println("User field must be at least 4 letters")
+	fmt.Println("Password filed must be at least 6 letters")
+	fmt.Println("---Example---")
+	fmt.Println("User: user")
+	fmt.Println("Email: email@email.email")
+	fmt.Println("Password: password")
+	fmt.Println("-------------")
+}
+
+func inputUserData() (string, string, string, error) {
+	instruction()
+
 	var username string
 	var email string
 	var password string
 
-	if ctx == context.Mock() {
-		if ctx.Info.Version == "OK" {
-			username, email, password = mock.MockSignUpOk()
-		} else if ctx.Info.Version == "BAD_USERNAME" {
-			username, email, password = mock.MockSignUpBadUsername()
-		} else if ctx.Info.Version == "BAD_EMAIL" {
-			username, email, password = mock.MockSignUpBadEmail()
-		} else if ctx.Info.Version == "BAD_PASSWORD" {
-			username, email, password = mock.MockSignUpBadPassword()
-		}
-		defer httpmock.Deactivate()
-	} else {
-		fmt.Print("Username: ")
-		fmt.Scan(&username)
+	fmt.Print("Username: ")
+	fmt.Scan(&username)
 
-		fmt.Print("Email: ")
-		fmt.Scan(&email)
+	fmt.Print("Email: ")
+	fmt.Scan(&email)
 
-		fmt.Print("Password: ")
-		pass, err := gopass.GetPasswd()
-		if err != nil {
-			return "", err, ""
-		}
-		password = string(pass)
+	fmt.Print("Password: ")
+	pass, err := gopass.GetPasswd()
+	if err != nil {
+		return "", "", "", err
 	}
+	password = string(pass)
+
+	return username, email, password, err
+}
+
+func CreateNewUser(ctx *context.Context, cfg *config.Config) (string, error, string) {
+	var username string
+	var email string
+	var password string
+	var err error
+
+	//if ctx == context.Mock() {
+	//	if ctx.Info.Version == "OK" {
+	//		username, email, password = mock.MockSignUpOk()
+	//	} else if ctx.Info.Version == "BAD_USERNAME" {
+	//		username, email, password = mock.MockSignUpBadUsername()
+	//	} else if ctx.Info.Version == "BAD_EMAIL" {
+	//		username, email, password = mock.MockSignUpBadEmail()
+	//	} else if ctx.Info.Version == "BAD_PASSWORD" {
+	//		username, email, password = mock.MockSignUpBadPassword()
+	//	}
+	//	defer httpmock.Deactivate()
+	//} else {
+	//	username, email, password, err = inputUserData()
+	//	if err != nil {
+	//		fmt.Println(err.Error())
+	//	}
+	//}
+	username, email, password, err = inputUserData()
+		if err != nil {
+			fmt.Println(err.Error())
+		}
+
 
 	data := structs.NewUserInfo{username, email, password}
 	jsonData, err := json.Marshal(data)
@@ -76,7 +111,7 @@ func CreateNewUser(ctx *context.Context) (string, error, string) {
 		return "", err, ""
 	}
 
-	resp, status := httpClient.Post(config.Get().UserUrl, jsonData, "Content-Type", "application/json")
+	resp, status := httpClient.Post(cfg.UserUrl, jsonData, "Content-Type", "application/json")
 	if status == 200 {
 		var token structs.TokenInfo
 		err = json.Unmarshal(resp, &token)
@@ -93,7 +128,7 @@ func CreateNewUser(ctx *context.Context) (string, error, string) {
 	if err != nil {
 		return "", err, ""
 	}
-	fmt.Printf("Account create failed: %s", httpError.Message)
+	fmt.Printf("Account create failed: %s\n", httpError.Message)
 
 	return "", nil, httpError.Message
 }

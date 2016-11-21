@@ -3,6 +3,7 @@ package cmd
 import (
 	"github.com/jawher/mow.cli"
 	user "github.com/lastbackend/lastbackend/cmd/client/cmd/user"
+	"github.com/lastbackend/lastbackend/cmd/client/config"
 	"github.com/lastbackend/lastbackend/cmd/client/context"
 
 
@@ -12,35 +13,33 @@ import (
 	"fmt"
 )
 
-func Init(app *cli.Cli, ctx *context.Context) {
-
-
+func Init(app *cli.Cli, ctx *context.Context, cfg *config.Config) {
 	app.Command("signup", "Create new account", func(c *cli.Cmd) {
 		c.Action = func() {
-			user.SignUp(ctx)
+			user.SignUp(ctx, cfg)
 		}
 	})
 
 	app.Command("login", "Auth to account", func(c *cli.Cmd) {
 		c.Action = func() {
-			user.SignIn(ctx)
+			user.SignIn(ctx, cfg)
 		}
 	})
 
 	app.Command("whoami", "Display the current user's login name", func(c *cli.Cmd) {
 		c.Action = func() {
-			user.Whoami(ctx)
+			user.Whoami(ctx, cfg)
 		}
 	})
 	//--------------------------------------------------------------------------------------------------------
-	// метод для получения токена авторизации еще не написан. в дальнейшем он обозначен как ctx.GetUserToken()
+	// TODO add authorization toket
 	//--------------------------------------------------------------------------------------------------------
 	app.Command("project", "project managment", func(c *cli.Cmd) {
 		var (
 			p_name *string
 			desc *string
 		)
-		c.Spec = "NAME [[-d] DESC]"
+		c.Spec = "[NAME] [[-d] DESC]"
 		p_name = c.String(cli.StringArg{Name: "NAME", Value: "", Desc: "name of your project"})
 		c.Bool(cli.BoolOpt{Name: "d description", Value: false})
 		desc = c.String(cli.StringArg{Name: "DESC", Desc: "desc text"})
@@ -57,11 +56,13 @@ func Init(app *cli.Cli, ctx *context.Context) {
 		})
 
 		c.Action = func() {
-			fmt.Println(*p_name)
+
+
 			if *p_name == "" {
-				projects.Get(*p_name, ctx)
-			} else {
 				projects.List(ctx)
+			} else {
+				fmt.Println(*p_name)
+				projects.Get(*p_name, ctx)
 			}
 		}
 

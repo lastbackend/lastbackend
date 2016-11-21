@@ -6,8 +6,6 @@ import (
 )
 
 func MockWhoamiOk() string {
-	token := "token"
-
 	httpmock.Activate()
 
 	httpmock.RegisterResponder("GET", config.Get().UserUrl,
@@ -19,18 +17,16 @@ func MockWhoamiOk() string {
 											"organization":false,
 											"profile":{
 												"first_name":"some_first_name",
-												"last_name":"some_last_name",
+												"last_name"/opt/src/github.com/lastbackend/lastbackend/cmd/client/cmd/projects:"some_last_name",
        											"company":"some_company"
        										},
 											"created":"2014-01-16T07:38:28.45Z",
 											"updated":"2014-01-16T07:38:28.45Z"}`))
 
-	return token
+	return "token"
 }
 
 func MockWhoamiBad() string {
-	token := "token"
-
 	httpmock.Activate()
 
 	httpmock.RegisterResponder("GET", config.Get().UserUrl,
@@ -38,7 +34,7 @@ func MockWhoamiBad() string {
 											"status":"USER_NOT_FOUND",
 											"message":"user not found"}`))
 
-	return token
+	return "bad_token"
 }
 
 func MockSignUpOk() (string, string, string) {

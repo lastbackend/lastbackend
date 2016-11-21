@@ -2,32 +2,36 @@ package projects
 
 import (
 	httpClient "github.com/lastbackend/lastbackend/libs/http/client"
-	"github.com/lastbackend/lastbackend/cmd/client/config"
-	"fmt"
 	"encoding/json"
 	"github.com/lastbackend/lastbackend/cmd/client/cmd/projects/structures"
 	"github.com/lastbackend/lastbackend/libs/table"
 	"github.com/lastbackend/lastbackend/cmd/client/context"
+	"github.com/lastbackend/lastbackend/cmd/client/cmd/projects/errors"
+	"fmt"
 )
+
 
 func Get(p_name string, ctx *context.Context) {
 	var jdata structures.Project
-	//Get(url string, json []byte, header string, headerType string) ([]byte, int)
-	jbytes, status := httpClient.Get(config.Get().ProjectUrl + "/" + p_name, nil,
-		"Authorization", "Bearer " /* + ctx.GetUserToken() */)
-	if status != 200 {
-		fmt.Println("something went wrong")
+	fmt.Println("ENTER PROJECT ID: ")
+	var id string
+	fmt.Scan(&id)
+	fmt.Println("YOUR ID: ", id)
+	jbytes, status := httpClient.Get("http://localhost:3000/project/" + id, nil,
+		"Authorization", "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbSI6Im1vY2tlZEBtb2NrZWQuY29tIiwiZXhwIjoxNDg3NDE3ODk1LCJqdGkiOjE0ODc0MTc4OTUsIm9pZCI6IiIsInVpZCI6IjU2MmYwY2EwLTI2ZWEtNGFiNC1hZDBmLTU1N2NmYjJmYjgwNyIsInVzZXIiOiJtb2NrZWQifQ.VjHgKRqJCwf7TDphHPHhMl6njwL7agE1dzPVeGy5HFI")
+	if errors.Process(status) {
 		return
 	}
-	json.Unmarshal(jbytes, jdata)
-
-	var header []string = []string{"Title", "Description", "Created", "Updated"}
-	var record []string
-	record = append(record, jdata.Name)
-	record = append(record, jdata.Description)
-	record = append(record, jdata.Created)
-	record = append(record, jdata.Updated)
+	err := json.Unmarshal(jbytes, &jdata)
+	if err != nil {
+		return
+	}
+	var header []string = []string{"ID", "Name", "Created", "Updated"}
 	var data [][]string
-	data = append(data, record, []string{})
+	d := []string{jdata.Id, jdata.Name, jdata.Created, jdata.Updated}
+
+	data = append(data, d)
+	d = d[:0]
+
 	table.PrintTable(header, data, []string{})
 }

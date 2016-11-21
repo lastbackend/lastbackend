@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/jawher/mow.cli"
 	client "github.com/lastbackend/lastbackend/cmd/client/cmd"
+	cfg "github.com/lastbackend/lastbackend/cmd/client/config"
 	cctx "github.com/lastbackend/lastbackend/cmd/client/context"
 	daemon "github.com/lastbackend/lastbackend/cmd/daemon/cmd"
 	dctx "github.com/lastbackend/lastbackend/cmd/daemon/context"
@@ -43,7 +44,7 @@ func Init() {
 		}
 	}
 
-	client.Init(app, client_ctx)
+	client.Init(app, client_ctx, cfg.Get())
 	daemon.Init(app)
 
 	er = app.Run(os.Args)

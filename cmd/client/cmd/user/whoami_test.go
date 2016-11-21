@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"fmt"
+	"github.com/lastbackend/lastbackend/cmd/client/config"
 	"github.com/lastbackend/lastbackend/cmd/client/context"
 	"github.com/stretchr/testify/assert"
 	"testing"
@@ -9,9 +10,10 @@ import (
 
 func TestWhoamiMock(t *testing.T) {
 	ctx := context.Mock()
+	cfg := config.Get()
 
 	ctx.Info.Version = "OK"
-	actual, err, _ := WhoamiLogic(ctx)
+	actual, err, _ := WhoamiLogic(ctx, cfg)
 	if err != nil {
 		fmt.Println(err.Error())
 	}
@@ -29,7 +31,7 @@ func TestWhoamiMock(t *testing.T) {
 	assert.Equal(t, "2014-01-16T07:38:28.45Z", actual.Updated)
 
 	ctx.Info.Version = "BAD"
-	_, err, httpError := WhoamiLogic(ctx)
+	_, err, httpError := WhoamiLogic(ctx, cfg)
 	if err != nil {
 		fmt.Println(err.Error())
 	}

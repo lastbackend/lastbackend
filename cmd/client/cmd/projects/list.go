@@ -2,35 +2,28 @@ package projects
 
 import (
 	httpClient "github.com/lastbackend/lastbackend/libs/http/client"
-	"github.com/lastbackend/lastbackend/cmd/client/config"
 	"github.com/lastbackend/lastbackend/cmd/client/context"
-	"fmt"
 	"encoding/json"
 	"github.com/lastbackend/lastbackend/libs/table"
 	"github.com/lastbackend/lastbackend/cmd/client/cmd/projects/structures"
+	"github.com/lastbackend/lastbackend/cmd/client/cmd/projects/errors"
 )
 
 func List(ctx *context.Context) {
 	var jdata structures.ProjList
-	//Get(url string, json []byte, header string, headerType string) ([]byte, int)
-	jbytes, status := httpClient.Get(config.Get().ProjectUrl, nil,
-		"Authorization", "Bearer " /* + ctx.GetUserToken() */)
-	if status != 200 {
-		fmt.Println("something went wrong")
+
+	jbytes, status := httpClient.Get("http://localhost:3000/project", nil,
+		"Authorization", "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbSI6Im1vY2tlZEBtb2NrZWQuY29tIiwiZXhwIjoxNDg3NDE3ODk1LCJqdGkiOjE0ODc0MTc4OTUsIm9pZCI6IiIsInVpZCI6IjU2MmYwY2EwLTI2ZWEtNGFiNC1hZDBmLTU1N2NmYjJmYjgwNyIsInVzZXIiOiJtb2NrZWQifQ.VjHgKRqJCwf7TDphHPHhMl6njwL7agE1dzPVeGy5HFI")
+	if errors.Process(status) {
 		return
 	}
-	json.Unmarshal(jbytes, jdata)
-
-	var table_data [][]string
-	var header []string = []string{"Title", "Description", "Created", "Updated"}
-
-	for i := 0; i < len(jdata.Proj); i++ {
-		var record []string
-		record = append(record, jdata.Proj[i].Name)
-		record = append(record, jdata.Proj[i].Description)
-		record = append(record, jdata.Proj[i].Created)
-		record = append(record, jdata.Proj[i].Updated)
-		table_data = append(table_data, record)
+	json.Unmarshal(jbytes, &jdata)
+	var header []string = []string{"ID", "Name", "Created", "Updated"}
+	var data [][]string
+	for i := 0; i < len(jdata); i++ {
+		d := []string{jdata[i].Id, jdata[i].Name, jdata[i].Created, jdata[i].Updated}
+		data = append(data, d)
 	}
-	table.PrintTable(header, table_data, []string{})
+	table.PrintTable(header, data, []string{})
+
 }

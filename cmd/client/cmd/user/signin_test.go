@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"fmt"
+	"github.com/lastbackend/lastbackend/cmd/client/config"
 	"github.com/lastbackend/lastbackend/cmd/client/context"
 	"github.com/stretchr/testify/assert"
 	"testing"
@@ -9,9 +10,10 @@ import (
 
 func TestAuthMock(t *testing.T) {
 	ctx := context.Mock()
+	cfg := config.Get()
 
 	ctx.Info.Version = "OK"
-	expected, err, _ := Login(ctx)
+	expected, err, _ := Login(ctx, cfg)
 	if err != nil {
 		fmt.Println(err.Error())
 	}
@@ -19,7 +21,7 @@ func TestAuthMock(t *testing.T) {
 	assert.Equal(t, expected, "token")
 
 	ctx.Info.Version = "BAD"
-	_, err, httpError := Login(ctx)
+	_, err, httpError := Login(ctx, cfg)
 	if err != nil {
 		fmt.Println(err.Error())
 	}
