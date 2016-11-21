@@ -14,8 +14,14 @@ import (
 	"k8s.io/client-go/1.5/pkg/util/json"
 )
 
-func SignUp(ctx *context.Context, cfg *config.Config) {
-	token, err, _ := CreateNewUser(ctx, cfg)
+func SignUp() {
+
+	var (
+		err error
+		cfg = config.Get()
+	)
+
+	token, err, _ := CreateNewUser()
 	if err != nil {
 		fmt.Println(err.Error())
 	}
@@ -76,7 +82,7 @@ func inputUserData() (string, string, string, error) {
 	return username, email, password, err
 }
 
-func CreateNewUser(ctx *context.Context, cfg *config.Config) (string, error, string) {
+func CreateNewUser() (string, error, string) {
 	var username string
 	var email string
 	var password string

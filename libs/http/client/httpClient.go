@@ -7,7 +7,8 @@ import (
 	"net/http"
 )
 
-func Post(url string, json []byte, header string, headerType string) ([]byte, int) {
+
+func POST(url string, json []byte, header string, headerType string) ([]byte, int) {
 	req, err := http.NewRequest("POST", url, bytes.NewBuffer(json))
 	if err != nil {
 		fmt.Println(err.Error())

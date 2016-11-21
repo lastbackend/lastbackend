@@ -14,8 +14,8 @@ import (
 	"io/ioutil"
 )
 
-func SignIn(ctx *context.Context, cfg *config.Config) {
-	token, err, _ := Login(ctx, cfg)
+func SignIn() {
+	token, err, _ := Login()
 	if err != nil {
 		fmt.Println(err.Error())
 		return
@@ -44,7 +44,7 @@ func SignIn(ctx *context.Context, cfg *config.Config) {
 	}
 }
 
-func Login(ctx *context.Context, cfg *config.Config) (string, error, string) {
+func Login() (string, error, string) {
 	var password string
 	var login string
 
@@ -73,6 +73,8 @@ func Login(ctx *context.Context, cfg *config.Config) (string, error, string) {
 		fmt.Println("LOGININGO")
 		return "", err, ""
 	}
+
+	ctx.HTTP.POST("/user", struct {}{})
 
 	resp, status := httpClient.Post(cfg.AuthUserUrl, jsonData,
 		"Content-Type", "application/json")

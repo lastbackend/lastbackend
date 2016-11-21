@@ -13,12 +13,12 @@ import (
 	"strconv"
 )
 
-func Whoami(ctx *context.Context, cfg *config.Config) {
+func Whoami() {
 	if cfg.Token == "" {
 		return
 	}
 
-	whoamiContent, err, _ := WhoamiLogic(ctx, cfg)
+	whoamiContent, err, _ := WhoamiLogic()
 	if err != nil {
 		fmt.Println(err.Error())
 		return
@@ -38,7 +38,7 @@ func Whoami(ctx *context.Context, cfg *config.Config) {
 	table.PrintTable(header, data, []string{})
 }
 
-func WhoamiLogic(ctx *context.Context, cfg *config.Config) (structs.WhoamiInfo, error, string) {
+func WhoamiLogic() (structs.WhoamiInfo, error, string) {
 	var token string
 
 	if ctx == context.Mock() {

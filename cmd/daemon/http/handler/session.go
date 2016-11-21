@@ -59,9 +59,9 @@ func SessionCreateH(w http.ResponseWriter, r *http.Request) {
 	}
 
 	user, err := ctx.Storage.User().GetByUsername(*rq.Login)
-	if err == nil && user != nil {
-		user, err := ctx.Storage.User().GetByEmail(*rq.Login)
-		if err == nil && user != nil {
+	if err == nil && user == nil {
+		user, err = ctx.Storage.User().GetByEmail(*rq.Login)
+		if err == nil && user == nil {
 			err = e.User.NotFound()
 		}
 	}

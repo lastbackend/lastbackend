@@ -8,6 +8,8 @@ import (
 	"github.com/lastbackend/lastbackend/cmd/client/context"
 	"github.com/lastbackend/lastbackend/libs/log"
 	"os"
+	"github.com/boltdb/bolt"
+	"github.com/lastbackend/lastbackend/utils"
 )
 
 func main() {
@@ -37,16 +39,25 @@ func main() {
 		if *help {
 			app.PrintLongHelp()
 		}
+
 		ctx.Log = new(log.Log)
 		ctx.Log.Init()
+
 		if *debug {
 			cfg.Debug = *debug
 			ctx.Log.SetDebugLevel()
 			ctx.Log.Info("Logger debug mode enabled")
 		}
+
+		db, err := bolt.Open(utils.GetHomeDir + "/.lb/.session", 0755, nil)
+		if err != nil {
+			ctx.Log.Fatal(err)
+		}
+		defer db.Close()
+
 	}
 
-	cmd.Init(app, ctx, cfg)
+	cmd.Init(app)
 
 	er = app.Run(os.Args)
 	if er != nil {
