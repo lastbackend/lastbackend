@@ -2,8 +2,8 @@ package handler_test
 
 import (
 	"bytes"
-	"github.com/lastbackend/lastbackend/cmd/daemon/context"
-	h "github.com/lastbackend/lastbackend/cmd/daemon/http"
+	"github.com/lastbackend/lastbackend/pkg/daemon/context"
+	h "github.com/lastbackend/lastbackend/pkg/daemon/http"
 	"net/http"
 	"net/http/httptest"
 	"testing"
