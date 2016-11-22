@@ -2,12 +2,12 @@ package cmd
 
 import (
 	"github.com/jawher/mow.cli"
-	"github.com/lastbackend/lastbackend/cmd/daemon/config"
-	"github.com/lastbackend/lastbackend/cmd/daemon/context"
-	"github.com/lastbackend/lastbackend/cmd/daemon/http"
 	"github.com/lastbackend/lastbackend/libs/adapter/k8s"
 	"github.com/lastbackend/lastbackend/libs/adapter/storage"
 	"github.com/lastbackend/lastbackend/libs/log"
+	"github.com/lastbackend/lastbackend/pkg/daemon/config"
+	"github.com/lastbackend/lastbackend/pkg/daemon/context"
+	"github.com/lastbackend/lastbackend/pkg/daemon/http"
 	"gopkg.in/yaml.v2"
 	"io/ioutil"
 	"os"
@@ -15,7 +15,7 @@ import (
 	"syscall"
 )
 
-func Run(cmd *cli.Cmd) {
+func daemon(cmd *cli.Cmd) {
 	var err error
 
 	var ctx = context.Get()

@@ -4,7 +4,7 @@ import "errors"
 
 import (
 	"github.com/dgrijalva/jwt-go"
-	"github.com/lastbackend/lastbackend/cmd/daemon/config"
+	"github.com/lastbackend/lastbackend/pkg/daemon/config"
 	"time"
 )
 

@@ -3,9 +3,9 @@ package handler
 import (
 	"encoding/json"
 	"github.com/gorilla/context"
-	c "github.com/lastbackend/lastbackend/cmd/daemon/context"
 	e "github.com/lastbackend/lastbackend/libs/errors"
 	"github.com/lastbackend/lastbackend/libs/model"
+	c "github.com/lastbackend/lastbackend/pkg/daemon/context"
 	"github.com/lastbackend/lastbackend/utils"
 	"io"
 	"io/ioutil"

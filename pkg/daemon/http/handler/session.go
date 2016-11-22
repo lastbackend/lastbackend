@@ -2,9 +2,9 @@ package handler
 
 import (
 	"encoding/json"
-	"github.com/lastbackend/lastbackend/cmd/daemon/context"
 	e "github.com/lastbackend/lastbackend/libs/errors"
 	"github.com/lastbackend/lastbackend/libs/model"
+	"github.com/lastbackend/lastbackend/pkg/daemon/context"
 	"io"
 	"io/ioutil"
 	"net/http"

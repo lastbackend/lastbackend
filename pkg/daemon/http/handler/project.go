@@ -4,9 +4,9 @@ import (
 	"encoding/json"
 	"github.com/gorilla/context"
 	"github.com/gorilla/mux"
-	c "github.com/lastbackend/lastbackend/cmd/daemon/context"
 	e "github.com/lastbackend/lastbackend/libs/errors"
 	"github.com/lastbackend/lastbackend/libs/model"
+	c "github.com/lastbackend/lastbackend/pkg/daemon/context"
 	"io"
 	"io/ioutil"
 	"k8s.io/client-go/1.5/pkg/api/v1"
@@ -120,7 +120,7 @@ func (s *projectCreate) decodeAndValidate(reader io.Reader) *e.Err {
 		ctx.Log.Error(err)
 		return e.User.Unknown(err)
 	}
-ctx.Log.Info(">>>>>> ", string(body))
+
 	err = json.Unmarshal(body, s)
 	if err != nil {
 		return e.Project.IncorrectJSON(err)

@@ -8,25 +8,25 @@ import (
 )
 
 type User struct {
-	ID           string    `json:"id" gorethink:"id"`
-	Username     string    `json:"username" gorethink:"username"`
-	Email        string    `json:"email" gorethink:"email"`
-	Gravatar     string    `json:"gravatar" gorethink:"gravatar"`
-	Balance      float32   `json:"balance" gorethink:"balance"`
-	Organization bool      `json:"organization" gorethink:"organization"`
-	Created      time.Time `json:"created" gorethink:"created"`
-	Updated      time.Time `json:"updated" gorethink:"updated"`
+	ID           string    `json:"id" gorethink:"id,omitempty"`
+	Username     string    `json:"username" gorethink:"username,omitempty"`
+	Email        string    `json:"email" gorethink:"email,omitempty"`
+	Gravatar     string    `json:"gravatar" gorethink:"gravatar,omitempty"`
+	Balance      float32   `json:"balance" gorethink:"balance,omitempty"`
+	Organization bool      `json:"organization" gorethink:"organization,omitempty"`
+	Created      time.Time `json:"created" gorethink:"created,omitempty"`
+	Updated      time.Time `json:"updated" gorethink:"updated,omitempty"`
 
-	Password string `json:"-" gorethink:"password,omitempty"`
-	Salt     string `json:"-" gorethink:"salt,omitempty"`
+	Password string `json:"-" gorethink:"password,omitempty,omitempty"`
+	Salt     string `json:"-" gorethink:"salt,omitempty,omitempty"`
 
-	Profile Profile `json:"profile" gorethink:"profile"`
+	Profile Profile `json:"profile" gorethink:"profile,omitempty"`
 }
 
 type Profile struct {
-	FirstName string `json:"first_name" gorethink:"first_name"`
-	LastName  string `json:"last_name" gorethink:"last_name"`
-	Company   string `json:"company" gorethink:"company"`
+	FirstName string `json:"first_name" gorethink:"first_name,omitempty"`
+	LastName  string `json:"last_name" gorethink:"last_name,omitempty"`
+	Company   string `json:"company" gorethink:"company,omitempty"`
 }
 
 // Validation methods

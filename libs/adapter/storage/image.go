@@ -90,7 +90,9 @@ func (i *ImageStorage) Insert(image *model.Image) (*model.Image, *e.Err) {
 	if err != nil {
 		return nil, e.Image.Unknown(err)
 	}
+
 	image.ID = res.GeneratedKeys[0]
+
 	return image, nil
 }
 

@@ -2,11 +2,11 @@ package user
 
 import (
 	"errors"
-	"github.com/lastbackend/api/libs/model"
 	e "github.com/lastbackend/lastbackend/libs/errors"
 	"github.com/lastbackend/lastbackend/libs/table"
 	"github.com/lastbackend/lastbackend/pkg/client/context"
 	"strconv"
+	"github.com/lastbackend/lastbackend/libs/model"
 )
 
 func WhoamiCmd() {

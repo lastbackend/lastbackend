@@ -1,8 +1,8 @@
 package storage
 
 import (
-	"github.com/lastbackend/lastbackend/cmd/daemon/config"
 	"github.com/lastbackend/lastbackend/libs/interface/storage"
+	"github.com/lastbackend/lastbackend/pkg/daemon/config"
 	r "gopkg.in/dancannon/gorethink.v2"
 )
 
