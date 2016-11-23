@@ -19,12 +19,12 @@ func TestList_Success(t *testing.T) {
 	)
 
 	var ctx = context.Mock()
-	tk := string([]byte(token))
-	ctx.Session.Token = &tk
+	ctx.Session.Set(token)
 
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 
 		tk := r.Header.Get("Authorization")
+
 		assert.NotEmpty(t, tk, "token should be not empty")
 		assert.Equal(t, tk, "Bearer "+token, "they should be equal")
 

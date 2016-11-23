@@ -10,7 +10,6 @@ import (
 var context Context
 
 func Get() *Context {
-	context.Session = new(session)
 	return &context
 }
 
@@ -21,33 +20,36 @@ func Mock() *Context {
 	context.Log.Disabled()
 
 	context.Storage, _ = bolt.Open("/tmp/test.db", 0755, nil)
-	context.Session = new(session)
+
+	context.mock = true
 
 	return &context
 }
 
 type Context struct {
-	Session *session
+	Session session
 	Log     log.ILogger
 	HTTP    *http.RawReq
 	Storage *bolt.DB
+	mock    bool
 	// Other info for HTTP handlers can be here, like user UUID
 }
 
 type session struct {
-	Token *string
+	token *string
 }
 
 func (s *session) Get() (*string, error) {
-	if s.Token != nil {
-		return s.Token, nil
+
+	if s.token != nil || context.mock {
+		return s.token, nil
 	}
 
 	err := context.Storage.View(func(tx *bolt.Tx) error {
 		bucket := tx.Bucket([]byte("session"))
 		buf := bucket.Get([]byte("token"))
 		token := string(buf)
-		s.Token = &(token)
+		s.token = &(token)
 
 		return nil
 	})
@@ -55,11 +57,16 @@ func (s *session) Get() (*string, error) {
 		return nil, err
 	}
 
-	return s.Token, nil
+	return s.token, nil
 }
 
 func (s *session) Set(token string) error {
-	s.Token = &token
+
+	s.token = &token
+
+	if context.mock {
+		return nil
+	}
 
 	err := context.Storage.Update(func(tx *bolt.Tx) error {
 		bucket, err := tx.CreateBucketIfNotExists([]byte("session"))
@@ -68,6 +75,35 @@ func (s *session) Set(token string) error {
 		}
 
 		err = bucket.Put([]byte("token"), []byte(token))
+		if err != nil {
+			return err
+		}
+
+		return nil
+	})
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (s *session) Clear() error {
+
+	s.token = nil
+
+	if context.mock {
+		return nil
+	}
+
+	err := context.Storage.View(func(tx *bolt.Tx) error {
+		bucket := tx.Bucket([]byte("session"))
+		err := bucket.Delete([]byte("token"))
+		if err != nil {
+			return err
+		}
+
+		err = bucket.DeleteBucket([]byte("session"))
 		if err != nil {
 			return err
 		}

@@ -19,8 +19,7 @@ func TestWhoami_Success(t *testing.T) {
 	)
 
 	var ctx = context.Mock()
-	tk := string([]byte(token))
-	ctx.Session.Token = &tk
+	ctx.Session.Set(token)
 
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 
