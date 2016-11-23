@@ -39,6 +39,7 @@ type IImage interface {
 }
 
 type IProject interface {
+	GetByName(string, string) (*model.Project, *errors.Err)
 	GetByID(string, string) (*model.Project, *errors.Err)
 	GetByUser(string) (*model.ProjectList, *errors.Err)
 	Insert(*model.Project) (*model.Project, *errors.Err)

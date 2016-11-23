@@ -7,6 +7,7 @@ import (
 	e "github.com/lastbackend/lastbackend/libs/errors"
 	"github.com/lastbackend/lastbackend/libs/model"
 	c "github.com/lastbackend/lastbackend/pkg/daemon/context"
+	"github.com/lastbackend/lastbackend/utils"
 	"io"
 	"io/ioutil"
 	"k8s.io/client-go/1.5/pkg/api/v1"
@@ -77,7 +78,12 @@ func ProjectInfoH(w http.ResponseWriter, r *http.Request) {
 
 	session = s.(*model.Session)
 
-	project, err := ctx.Storage.Project().GetByID(session.Uid, id)
+	var project *model.Project
+	if !utils.IsUUID(id) {
+		project, err = ctx.Storage.Project().GetByName(session.Uid, id)
+	} else {
+		project, err = ctx.Storage.Project().GetByID(session.Uid, id)
+	}
 	if err == nil && project == nil {
 		e.Project.NotFound().Http(w)
 		return
@@ -250,6 +256,8 @@ func ProjectUpdateH(w http.ResponseWriter, r *http.Request) {
 		err     *e.Err
 		session *model.Session
 		ctx     = c.Get()
+		params  = mux.Vars(r)
+		id      = params["id"]
 	)
 
 	ctx.Log.Debug("Update project handler")
@@ -271,7 +279,23 @@ func ProjectUpdateH(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if !utils.IsUUID(id) {
+		project, err := ctx.Storage.Project().GetByName(session.Uid, id)
+		if err == nil && project == nil {
+			e.Project.NotFound().Http(w)
+			return
+		}
+		if err != nil {
+			ctx.Log.Error("Error: find project by id", err.Err())
+			err.Http(w)
+			return
+		}
+
+		id = project.ID
+	}
+
 	p := new(model.Project)
+	p.ID = id
 	p.User = session.Uid
 	p.Name = *rq.Name
 	p.Description = *rq.Description
@@ -301,13 +325,34 @@ func ProjectUpdateH(w http.ResponseWriter, r *http.Request) {
 func ProjectRemoveH(w http.ResponseWriter, r *http.Request) {
 
 	var (
-		er     error
-		ctx    = c.Get()
-		params = mux.Vars(r)
-		id     = params["id"]
+		er      error
+		ctx     = c.Get()
+		session *model.Session
+		params  = mux.Vars(r)
+		id      = params["id"]
 	)
 
 	ctx.Log.Info("Remove project")
+
+	s, ok := context.GetOk(r, `session`)
+	if !ok {
+		ctx.Log.Error("Error: get session context")
+		e.User.AccessDenied().Http(w)
+		return
+	}
+
+	session = s.(*model.Session)
+
+	if !utils.IsUUID(id) {
+		project, err := ctx.Storage.Project().GetByName(session.Uid, id)
+		if err != nil {
+			ctx.Log.Error("Error: find project by id", err.Err())
+			err.Http(w)
+			return
+		}
+
+		id = project.ID
+	}
 
 	err := ctx.Storage.Project().Remove(id)
 	if err != nil {

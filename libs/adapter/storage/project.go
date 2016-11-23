@@ -16,6 +16,31 @@ type ProjectStorage struct {
 	storage.IProject
 }
 
+func (s *ProjectStorage) GetByName(user, name string) (*model.Project, *e.Err) {
+
+	var err error
+	var project = new(model.Project)
+	var project_filter = map[string]interface{}{
+		"name": name,
+		"user": user,
+	}
+
+	res, err := r.Table(ProjectTable).Filter(project_filter).Run(s.Session)
+
+	if err != nil {
+		return nil, e.Project.NotFound(err)
+	}
+	defer res.Close()
+
+	if res.IsNil() {
+		return nil, nil
+	}
+
+	res.One(project)
+
+	return project, nil
+}
+
 func (s *ProjectStorage) GetByID(user, id string) (*model.Project, *e.Err) {
 
 	var err error
