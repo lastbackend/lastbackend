@@ -14,14 +14,11 @@ func Get() *Context {
 }
 
 func Mock() *Context {
-
+	context.mock = true
 	context.Log = new(l.Log)
 	context.Log.Init()
 	context.Log.Disabled()
-
-	context.Storage, _ = bolt.Open("/tmp/test.db", 0755, nil)
-
-	context.mock = true
+	context.Storage = new(bolt.DB)
 
 	return &context
 }

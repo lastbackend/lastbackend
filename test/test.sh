@@ -9,5 +9,5 @@
 #echo "\n"#
 
 echo "===> Test common packages:"
-go test -v $(go list ./... | grep -v /vendor/)
+godep go test -v $(go list ./... | grep -v /vendor/)
 echo "\n"
