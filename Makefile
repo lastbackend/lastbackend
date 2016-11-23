@@ -1,6 +1,7 @@
 .PHONY : default deps test build install
 
-NAME = lastbackend
+NAME_DAEMON = lastbackend
+NAME_CLI = lb
 HARDWARE = $(shell uname -m)
 OS := $(shell uname)
 VERSION ?= 0.1.0
@@ -17,9 +18,14 @@ test:
 	@sh ./test/test.sh
 
 build:
-	echo "Building Last.Backend"
-	mkdir -p build/linux  && GOOS=linux  go build -ldflags "-X main.Version=$(VERSION)" -o build/linux/$(NAME)
-	mkdir -p build/darwin && GOOS=darwin go build -ldflags "-X main.Version=$(VERSION)" -o build/darwin/$(NAME)
+	echo "Pre-building configuration"
+	mkdir -p build/linux && mkdir -p build/darwin
+	echo "Building Last.Backend daemon"
+	GOOS=linux  go build -ldflags "-X main.Version=$(VERSION)" -o build/linux/$(NAME_DAEMON) cmd/daemon/daemon.go
+	GOOS=darwin go build -ldflags "-X main.Version=$(VERSION)" -o build/darwin/$(NAME_DAEMON) cmd/daemon/daemon.go
+	echo "Building Last.Backend CLI"
+	GOOS=linux  go build -ldflags "-X main.Version=$(VERSION)" -o build/linux/$(NAME_CLI) cmd/client/client.go
+	GOOS=darwin go build -ldflags "-X main.Version=$(VERSION)" -o build/darwin/$(NAME_CLI) cmd/client/client.go
 
 install:
 	echo "Install Last.Backend, ${OS} version:= ${VERSION}"

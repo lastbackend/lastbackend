@@ -15,7 +15,7 @@ import (
 	"syscall"
 )
 
-func daemon(cmd *cli.Cmd) {
+func Daemon(cmd *cli.Cmd) {
 	var err error
 
 	var ctx = context.Get()
