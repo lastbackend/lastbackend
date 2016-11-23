@@ -33,6 +33,11 @@ func (p *Project) ToJson() ([]byte, *e.Err) {
 }
 
 func (p *ProjectList) ToJson() ([]byte, *e.Err) {
+
+	if p == nil {
+		return []byte("[]"), nil
+	}
+
 	buf, err := json.Marshal(p)
 	if err != nil {
 		return nil, e.Project.Unknown(err)
