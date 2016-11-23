@@ -93,7 +93,9 @@ func (s *HookStorage) Insert(hook *model.Hook) (*model.Hook, *e.Err) {
 	if err != nil {
 		return nil, e.Hook.Unknown(err)
 	}
+
 	hook.ID = res.GeneratedKeys[0]
+
 	return hook, nil
 }
 

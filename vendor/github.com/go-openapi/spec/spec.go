@@ -27,14 +27,9 @@ const (
 )
 
 var (
-	jsonSchema    *Schema
-	swaggerSchema *Schema
-)
-
-func init() {
-	jsonSchema = MustLoadJSONSchemaDraft04()
+	jsonSchema    = MustLoadJSONSchemaDraft04()
 	swaggerSchema = MustLoadSwagger20Schema()
-}
+)
 
 // MustLoadJSONSchemaDraft04 panics when Swagger20Schema returns an error
 func MustLoadJSONSchemaDraft04() *Schema {

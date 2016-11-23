@@ -30,7 +30,6 @@ type HeaderProps struct {
 type Header struct {
 	CommonValidations
 	SimpleSchema
-	VendorExtensible
 	HeaderProps
 }
 
@@ -157,9 +156,6 @@ func (h *Header) UnmarshalJSON(data []byte) error {
 		return err
 	}
 	if err := json.Unmarshal(data, &h.SimpleSchema); err != nil {
-		return err
-	}
-	if err := json.Unmarshal(data, &h.VendorExtensible); err != nil {
 		return err
 	}
 	if err := json.Unmarshal(data, &h.HeaderProps); err != nil {

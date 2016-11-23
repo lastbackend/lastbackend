@@ -6,32 +6,32 @@ type BuildList []Build
 
 type Build struct {
 	// Build number, incremented automatically
-	ID string `json:"id, omitempty" gorethink:"id,omitempty"`
+	ID string `json:"id" gorethink:"id,omitempty"`
 	// Build number, incremented automatically
-	User string `json:"user, omitempty" gorethink:"id,omitempty"`
+	User string `json:"user" gorethink:"id,omitempty"`
 	// Build executing status
-	Status BuildStatus `json:"status,omitempty" gorethink:"status,omitempty"`
+	Status BuildStatus `json:"status" gorethink:"status,omitempty"`
 	// Build sources used for build
-	Source BuildSource `json:"source,omitempty" gorethink:"source,omitempty"`
+	Source BuildSource `json:"source" gorethink:"source,omitempty"`
 	// Build image output information
-	Image BuildImage `json:"image, omitempty" gorethink:"image,omitempty"`
+	Image BuildImage `json:"image" gorethink:"image,omitempty"`
 	// Build created time
-	Created time.Time `json:"created, omitempty" gorethink:"created,omitempty"`
+	Created time.Time `json:"created" gorethink:"created,omitempty"`
 	// Build updated time
-	Updated time.Time `json:"updated, omitempty" gorethink:"updated,omitempty"`
+	Updated time.Time `json:"updated" gorethink:"updated,omitempty"`
 }
 
 type BuildStatus struct {
 	// Build current step
-	Step BuildStep `json:"step,omitempty" gorethink:"step,omitempty"`
+	Step BuildStep `json:"step" gorethink:"step,omitempty"`
 	// Is build cancelled
-	Cancelled bool `json:"cancelled,omitempty" gorethink:"cancelled,omitempty"`
+	Cancelled bool `json:"cancelled" gorethink:"cancelled,omitempty"`
 	// Build executing message
-	Message string `json:"message,omitempty" gorethink:"message,omitempty"`
+	Message string `json:"message" gorethink:"message,omitempty"`
 	// Build error information
-	Error string `json:"error,omitempty" gorethink:"error,omitempty"`
+	Error string `json:"error" gorethink:"error,omitempty"`
 	// Build status updated time
-	Updated time.Time `json:"updated,omitempty" gorethink:"updated,omitempty"`
+	Updated time.Time `json:"updated" gorethink:"updated,omitempty"`
 }
 
 type BuildStep string
@@ -49,34 +49,34 @@ const (
 
 type BuildSource struct {
 	// Build sources hub
-	Hub string `json:"hub,omitempty" gorethink:"hub,omitempty"`
+	Hub string `json:"hub" gorethink:"hub,omitempty"`
 	// Build sources owner
-	Owner string `json:"owner,omitempty" gorethink:"owner,omitempty"`
+	Owner string `json:"owner" gorethink:"owner,omitempty"`
 	// Build sources repo
-	Repo string `json:"repo,omitempty" gorethink:"repo,omitempty"`
+	Repo string `json:"repo" gorethink:"repo,omitempty"`
 	// Build source tag (branch, tag)
-	Tag string `json:"tag,omitempty" gorethink:"tag,omitempty"`
+	Tag string `json:"tag" gorethink:"tag,omitempty"`
 	// Build commit information
-	Commit GitSourceCommit `json:"commit,omitempty" gorethink:"commit,omitempty"`
+	Commit GitSourceCommit `json:"commit" gorethink:"commit,omitempty"`
 	// Build sources auth reference
 }
 
 type BuildImage struct {
 	// Build image repo name
-	Repo string `json:"repo,omitempty" gorethink:"repo,omitempty"`
+	Repo string `json:"repo" gorethink:"repo,omitempty"`
 	// Build image tag name
-	Tag string `json:"tag,omitempty" gorethink:"tag,omitempty"`
+	Tag string `json:"tag" gorethink:"tag,omitempty"`
 	// Build image registry reference
-	Registry string `json:"registry,omitempty" gorethink:"registry,omitempty"`
+	Registry string `json:"registry" gorethink:"registry,omitempty"`
 }
 
 type GitSourceCommit struct {
 	// Git commit information hash
-	Commit string `json:"commit,omitempty" gorethink:"id,omitempty"`
+	Commit string `json:"commit" gorethink:"id,omitempty"`
 	// Git committer gravatar
-	Committer string `json:"committer,omitempty" gorethink:"id,omitempty"`
+	Committer string `json:"committer" gorethink:"id,omitempty"`
 	// Git committer email
-	Author string `json:"author,omitempty" gorethink:"id,omitempty"`
+	Author string `json:"author" gorethink:"id,omitempty"`
 	// Git commit message
-	Message string `json:"message,omitempty" gorethink:"id,omitempty"`
+	Message string `json:"message" gorethink:"id,omitempty"`
 }

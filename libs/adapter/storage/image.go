@@ -88,9 +88,11 @@ func (i *ImageStorage) Insert(image *model.Image) (*model.Image, *e.Err) {
 
 	res, err := r.Table(ImageTable).Insert(image, r.InsertOpts{ReturnChanges: true}).RunWrite(i.Session)
 	if err != nil {
-		return nil, e.Project.Unknown(err)
+		return nil, e.Image.Unknown(err)
 	}
+
 	image.ID = res.GeneratedKeys[0]
+
 	return image, nil
 }
 
@@ -99,7 +101,7 @@ func (i *ImageStorage) Update(image *model.Image) (*model.Image, *e.Err) {
 	var user_filter = r.Row.Field("user").Eq(image.User)
 	_, err := r.Table(ImageTable).Get(image.ID).Filter(user_filter).Replace(image, r.ReplaceOpts{ReturnChanges: true}).RunWrite(i.Session)
 	if err != nil {
-		return nil, e.Build.Unknown(err)
+		return nil, e.Image.Unknown(err)
 	}
 
 	return image, nil

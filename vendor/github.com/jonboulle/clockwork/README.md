@@ -1,9 +1,6 @@
 clockwork
 =========
 
-[![Build Status](https://travis-ci.org/jonboulle/clockwork.png?branch=master)](https://travis-ci.org/jonboulle/clockwork)
-[![godoc](https://godoc.org/github.com/jonboulle/clockwork?status.svg)](http://godoc.org/github.com/jonboulle/clockwork)
-
 a simple fake clock for golang
 
 # Usage
@@ -35,12 +32,7 @@ func TestMyFunc(t *testing.T) {
 	c := clockwork.NewFakeClock()
 
 	// Start our sleepy function
-	var wg sync.WaitGroup
-	wg.Add(1)
-	go func() {
-		my_func(c)
-		wg.Done()
-	}()
+	my_func(c)
 
 	// Ensure we wait until my_func is sleeping
 	c.BlockUntil(1)
@@ -48,10 +40,7 @@ func TestMyFunc(t *testing.T) {
 	assert_state()
 
 	// Advance the FakeClock forward in time
-	c.Advance(3 * time.Second)
-
-	// Wait until the function completes
-	wg.Wait()
+	c.Advance(3)
 
 	assert_state()
 }
@@ -66,4 +55,4 @@ See [example_test.go](example_test.go) for a full example.
 
 # Credits
 
-clockwork is inspired by @wickman's [threaded fake clock](https://gist.github.com/wickman/3840816), and the [Golang playground](http://blog.golang.org/playground#Faking time)
+Inspired by @wickman's [threaded fake clock](https://gist.github.com/wickman/3840816), and the [Golang playground](http://blog.golang.org/playground#Faking time)

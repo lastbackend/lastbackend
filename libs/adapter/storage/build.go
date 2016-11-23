@@ -57,7 +57,9 @@ func (s *BuildStorage) Insert(build *model.Build) (*model.Build, *e.Err) {
 	if err != nil {
 		return nil, e.Build.Unknown(err)
 	}
+
 	build.ID = res.GeneratedKeys[0]
+
 	return build, nil
 }
 

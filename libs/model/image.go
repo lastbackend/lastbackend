@@ -6,17 +6,17 @@ type ImageList []Image
 
 type Image struct {
 	// Image uuid, incremented automatically
-	ID string `json:"id, omitempty" gorethink:"id,omitempty"`
+	ID string `json:"id" gorethink:"id,omitempty"`
 	// Image user
-	User string `json:"user, omitempty" gorethink:"user,omitempty"`
+	User string `json:"user" gorethink:"user,omitempty"`
 	// Image name
-	Name string `json:"name, omitempty" gorethink:"name,omitempty"`
+	Name string `json:"name" gorethink:"name,omitempty"`
 	// Image tag lists
-	Tags map[string]ImageTag `json:"tags, omitempty" gorethink:"tags,omitempty"`
+	Tags map[string]ImageTag `json:"tags" gorethink:"tags,omitempty"`
 	// Image created time
-	Created time.Time `json:"created, omitempty" gorethink:"created,omitempty"`
+	Created time.Time `json:"created" gorethink:"created,omitempty"`
 	// Image updated time
-	Updated time.Time `json:"updated, omitempty" gorethink:"updated,omitempty"`
+	Updated time.Time `json:"updated" gorethink:"updated,omitempty"`
 }
 
 type ImageTag struct {

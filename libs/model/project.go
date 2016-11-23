@@ -10,17 +10,17 @@ type ProjectList []Project
 
 type Project struct {
 	// Project uuid, incremented automatically
-	ID string `json:"id, omitempty" gorethink:"id,omitempty"`
+	ID string `json:"id" gorethink:"id,omitempty"`
 	// Project user
-	User string `json:"user, omitempty" gorethink:"user,omitempty"`
+	User string `json:"user" gorethink:"user,omitempty"`
 	// Project name
-	Name string `json:"name, omitempty" gorethink:"name,omitempty"`
+	Name string `json:"name" gorethink:"name,omitempty"`
 	// Project description
-	Description string `json:"description, omitempty" gorethink:"description,omitempty"`
+	Description string `json:"description" gorethink:"description,omitempty"`
 	// Project created time
-	Created time.Time `json:"created, omitempty" gorethink:"created,omitempty"`
+	Created time.Time `json:"created" gorethink:"created,omitempty"`
 	// Project updated time
-	Updated time.Time `json:"updated, omitempty" gorethink:"updated,omitempty"`
+	Updated time.Time `json:"updated" gorethink:"updated,omitempty"`
 }
 
 func (p *Project) ToJson() ([]byte, *e.Err) {

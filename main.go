@@ -1,9 +1,11 @@
 package main
 
 import (
-	"github.com/lastbackend/lastbackend/cmd"
+	c "github.com/lastbackend/lastbackend/pkg/client/cmd"
+	d "github.com/lastbackend/lastbackend/pkg/daemon/cmd"
 )
 
 func main() {
-	cmd.Init()
+	d.Run()
+	c.Run()
 }
