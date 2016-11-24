@@ -44,7 +44,15 @@ func (s *session) Get() (*string, error) {
 
 	err := context.Storage.View(func(tx *bolt.Tx) error {
 		bucket := tx.Bucket([]byte("session"))
+		if bucket == nil {
+			return nil
+		}
+
 		buf := bucket.Get([]byte("token"))
+		if buf == nil {
+			return nil
+		}
+
 		token := string(buf)
 		s.token = &(token)
 
@@ -95,6 +103,10 @@ func (s *session) Clear() error {
 
 	err := context.Storage.View(func(tx *bolt.Tx) error {
 		bucket := tx.Bucket([]byte("session"))
+		if bucket == nil {
+			return nil
+		}
+
 		err := bucket.Delete([]byte("token"))
 		if err != nil {
 			return err

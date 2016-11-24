@@ -2,9 +2,10 @@ package project
 
 import (
 	"errors"
+	tab "github.com/crackcomm/go-clitable"
 	e "github.com/lastbackend/lastbackend/libs/errors"
+	em "github.com/lastbackend/lastbackend/libs/errors"
 	"github.com/lastbackend/lastbackend/libs/model"
-	"github.com/lastbackend/lastbackend/libs/table"
 	"github.com/lastbackend/lastbackend/pkg/client/context"
 )
 
@@ -14,7 +15,7 @@ func ListCmd() {
 
 	err := List()
 	if err != nil {
-		ctx.Log.Error(err) // TODO: Need handle error and print to console
+		ctx.Log.Error(err)
 		return
 	}
 }
@@ -32,35 +33,33 @@ func List() error {
 		return errors.New(e.StatusAccessDenied)
 	}
 
-	er := e.Http{}
+	er := new(e.Http)
 	res := []model.Project{}
 
 	_, _, err = ctx.HTTP.
 		GET("/project").
 		AddHeader("Content-Type", "application/json").
 		AddHeader("Authorization", "Bearer "+*token).
-		Request(&res, &er) // TODO: Need handle er
+		Request(&res, er)
 	if err != nil {
 		return err
 	}
 
-	// TODO: Need handle response status code
-
-	var header []string = []string{"ID", "Name", "Created", "Updated"}
-	var data [][]string
-
-	for i := 0; i < len(res); i++ {
-		d := []string{
-			res[i].ID,
-			res[i].Name,
-			res[i].Created.String()[:10],
-			res[i].Updated.String()[:10],
-		}
-
-		data = append(data, d)
+	if er.Code != 0 {
+		return errors.New(em.Message(er.Status))
 	}
 
-	table.PrintTable(header, data, []string{})
+	for i := 0; i < len(res); i++ {
+		table := tab.New([]string{"ID", "NAME", "Created", "Updated"})
+		table.AddRow(map[string]interface{}{
+			"ID":      res[i].ID,
+			"Name":    res[i].Name,
+			"Created": res[i].Created.String()[:10],
+			"Updated": res[i].Updated.String()[:10],
+		})
+		table.Markdown = true
+		table.Print()
+	}
 
 	return nil
 }

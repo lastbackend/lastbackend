@@ -2,11 +2,11 @@ package user
 
 import (
 	"errors"
+	"fmt"
 	e "github.com/lastbackend/lastbackend/libs/errors"
+	em "github.com/lastbackend/lastbackend/libs/errors"
 	"github.com/lastbackend/lastbackend/libs/model"
-	"github.com/lastbackend/lastbackend/libs/table"
 	"github.com/lastbackend/lastbackend/pkg/client/context"
-	"strconv"
 )
 
 func WhoamiCmd() {
@@ -18,7 +18,7 @@ func WhoamiCmd() {
 
 	err = Whoami()
 	if err != nil {
-		ctx.Log.Error(err) // TODO: Need handle error and print to console
+		ctx.Log.Error(err)
 		return
 	}
 }
@@ -32,41 +32,30 @@ func Whoami() error {
 
 	token, err = ctx.Session.Get()
 	if token == nil {
-		return errors.New(e.StatusAccessDenied)
+		return errors.New(em.Message(e.StatusAccessDenied))
 	}
 
-	er := e.Http{}
-	res := model.User{}
+	er := new(e.Http)
+	res := new(model.User)
 
 	_, _, err = ctx.HTTP.
 		GET("/user").
 		AddHeader("Content-Type", "application/json").
 		AddHeader("Authorization", "Bearer "+*token).
-		Request(&res, &er) // TODO: Need handle er
+		Request(res, er)
 	if err != nil {
 		return err
 	}
 
-	// TODO: Need handle response status code
-
-	var header []string = []string{"Username", "Email", "Balance", "Organization", "Created", "Updated"}
-	var data [][]string
-
-	organization := strconv.FormatBool(res.Organization)
-	balance := strconv.FormatFloat(float64(res.Balance), 'f', 2, 32)
-	d := []string{
-		res.Username,
-		res.Email,
-		balance,
-		organization,
-		res.Created.String()[:10],
-		res.Updated.String()[:10],
+	if er.Code != 0 {
+		return errors.New(em.Message(er.Status))
 	}
 
-	data = append(data, d)
-	d = d[:0]
-
-	table.PrintTable(header, data, []string{})
+	fmt.Println(fmt.Sprintf("Username: %s\n"+
+		"E-mail: %s\nBalance: %.0f\n"+
+		"Organization: %t\nCreated: %s\n"+
+		"Updated: %s", res.Username, res.Email,
+		res.Balance, res.Organization, res.Created.String()[:10], res.Updated.String()[:10]))
 
 	return nil
 }
