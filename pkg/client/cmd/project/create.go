@@ -36,15 +36,15 @@ func Create(name, description string) error {
 		return errors.New(e.StatusAccessDenied)
 	}
 
-	er := e.Http{}
-	res := model.Project{}
+	er := new(e.Http)
+	res := new(model.Project)
 
 	_, _, err = ctx.HTTP.
 		POST("/project").
 		AddHeader("Content-Type", "application/json").
 		AddHeader("Authorization", "Bearer "+*token).
 		BodyJSON(createS{name, description}).
-		Request(&res, &er) // TODO: Need handle er
+		Request(&res, er) // TODO: Need handle er
 	if err != nil {
 		return err
 	}

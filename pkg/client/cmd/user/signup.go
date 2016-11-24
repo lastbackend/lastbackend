@@ -53,7 +53,7 @@ func SignUp(username, email, password string) error {
 		ctx = context.Get()
 	)
 
-	var er e.Http
+	er := new(e.Http)
 	res := struct {
 		Token string `json:"token"`
 	}{}
@@ -67,7 +67,7 @@ func SignUp(username, email, password string) error {
 		return err
 	}
 
-	if er != nil {
+	if er.Code != 0 {
 		return errors.New(em.Message(er.Status))
 	} else {
 		fmt.Println("Registration completed successfully")

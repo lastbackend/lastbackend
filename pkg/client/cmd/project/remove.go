@@ -30,14 +30,14 @@ func Remove(name string) error {
 		return errors.New(e.StatusAccessDenied)
 	}
 
-	er := e.Http{}
+	er := new(e.Http)
 	res := struct{}{}
 
 	_, _, err = ctx.HTTP.
 		DELETE("/project/"+name).
 		AddHeader("Content-Type", "application/json").
 		AddHeader("Authorization", "Bearer "+*token).
-		Request(&res, &er) // TODO: Need handle er
+		Request(&res, er) // TODO: Need handle er
 	if err != nil {
 		return err
 	}

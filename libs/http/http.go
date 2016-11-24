@@ -118,14 +118,12 @@ func decodeResponseJSON(resp *http.Response, successV, failureV interface{}) err
 }
 
 func decodeResponseBodyJSON(resp *http.Response, v interface{}) error {
+
 	err := json.NewDecoder(resp.Body).Decode(v)
 	if err != nil && io.EOF == err {
 		return nil
 	}
-	if err != nil  {
-		return err
-	}
-	return nil
+	return err
 }
 
 func (r RawReq) clear() (err error) {

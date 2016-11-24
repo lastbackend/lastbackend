@@ -35,8 +35,8 @@ func Whoami() error {
 		return errors.New(em.Message(e.StatusAccessDenied))
 	}
 
-	var er *e.Http
-	var res *model.User
+	er := new(e.Http)
+	res := new(model.User)
 
 	_, _, err = ctx.HTTP.
 		GET("/user").
@@ -47,7 +47,7 @@ func Whoami() error {
 		return err
 	}
 
-	if er != nil {
+	if er.Code != 0 {
 		return errors.New(em.Message(er.Status))
 	}
 

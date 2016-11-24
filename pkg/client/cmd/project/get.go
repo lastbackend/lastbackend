@@ -32,14 +32,14 @@ func Get(name string) error {
 		return errors.New(e.StatusAccessDenied)
 	}
 
-	er := e.Http{}
-	res := model.Project{}
+	er := new(e.Http)
+	res := new(model.Project)
 
 	_, _, err = ctx.HTTP.
 		GET("/project/"+name).
 		AddHeader("Content-Type", "application/json").
 		AddHeader("Authorization", "Bearer "+*token).
-		Request(&res, &er) // TODO: Need handle er
+		Request(&res, er) // TODO: Need handle er
 	if err != nil {
 		return err
 	}

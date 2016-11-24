@@ -9,7 +9,7 @@ func Message(errStatus string) string {
 	}
 
 	if errStatus == "USER_NOT_FOUND" {
-		errMessage = "User not found"
+		errMessage = "Incorrect login or password"
 	}
 
 	if errStatus == "INTERNAL_SERVER_ERROR" {
