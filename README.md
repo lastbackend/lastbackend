@@ -3,6 +3,7 @@
 [![Travis](https://travis-ci.org/lastbackend/lastbackend.svg?branch=master)](https://travis-ci.org/lastbackend/lastbackend)
 [![Join the chat at freenode:lastbackend](https://img.shields.io/badge/irc-freenode%3A%20%23lastbackend-blue.svg)](http://webchat.freenode.net/?channels=%23lastbackend)
 [![Licensed under Apache License version 2.0](https://img.shields.io/github/license/lastbackend/lastbackend.svg?maxAge=2592000)](https://www.apache.org/licenses/LICENSE-2.0)
+[![Coverage Status](https://coveralls.io/repos/github/lastbackend/lastbackend/badge.svg?branch=master)](https://coveralls.io/github/lastbackend/lastbackend?branch=master)
 
 ![alt text](https://lastbackend.com/images/logo.png)
 
