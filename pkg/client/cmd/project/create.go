@@ -5,6 +5,7 @@ import (
 	e "github.com/lastbackend/lastbackend/libs/errors"
 	"github.com/lastbackend/lastbackend/libs/model"
 	"github.com/lastbackend/lastbackend/pkg/client/context"
+	em "github.com/lastbackend/lastbackend/libs/errors"
 )
 
 type createS struct {
@@ -18,7 +19,7 @@ func CreateCmd(name, description string) {
 
 	err := Create(name, description)
 	if err != nil {
-		ctx.Log.Error(err) // TODO: Need handle error and print to console
+		ctx.Log.Error(err)
 		return
 	}
 }
@@ -44,12 +45,14 @@ func Create(name, description string) error {
 		AddHeader("Content-Type", "application/json").
 		AddHeader("Authorization", "Bearer "+*token).
 		BodyJSON(createS{name, description}).
-		Request(&res, er) // TODO: Need handle er
+		Request(&res, er)
 	if err != nil {
 		return err
 	}
 
-	// TODO: Need handle response status code
+	if er.Code != 0 {
+		return errors.New(em.Message(er.Status))
+	}
 
 	return nil
 }

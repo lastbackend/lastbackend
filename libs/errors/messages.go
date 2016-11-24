@@ -5,7 +5,7 @@ func Message(errStatus string) string {
 	var errMessage string
 
 	if errStatus == "ACCESS_DENIED" {
-		errMessage = "You need to be authorized to provide this operation"
+		errMessage = "Access denied"
 	}
 
 	if errStatus == "USER_NOT_FOUND" {
@@ -46,6 +46,18 @@ func Message(errStatus string) string {
 
 	if errStatus == "BAD_PARAMETER_PASSWORD" {
 		errMessage = "Bad parameter password"
+	}
+
+	if errStatus == "BAD_PARAMETER_NAME" {
+		errMessage = "Bad project name parameter"
+	}
+
+	if errStatus == "NAME_NOT_UNIQUE" {
+		errMessage = "Project name not unique"
+	}
+
+	if errStatus == "PROJECT_NOT_FOUND" {
+		errMessage = "Project not found"
 	}
 
 	return errMessage

@@ -4,6 +4,7 @@ import (
 	"errors"
 	e "github.com/lastbackend/lastbackend/libs/errors"
 	"github.com/lastbackend/lastbackend/pkg/client/context"
+	em "github.com/lastbackend/lastbackend/libs/errors"
 )
 
 func RemoveCmd(name string) {
@@ -12,7 +13,7 @@ func RemoveCmd(name string) {
 
 	err := Remove(name)
 	if err != nil {
-		ctx.Log.Error(err) // TODO: Need handle error and print to console
+		ctx.Log.Error(err)
 		return
 	}
 }
@@ -37,12 +38,14 @@ func Remove(name string) error {
 		DELETE("/project/"+name).
 		AddHeader("Content-Type", "application/json").
 		AddHeader("Authorization", "Bearer "+*token).
-		Request(&res, er) // TODO: Need handle er
+		Request(&res, er)
 	if err != nil {
 		return err
 	}
 
-	// TODO: Need handle response status code
+	if er.Code != 0 {
+		return errors.New(em.Message(er.Status))
+	}
 
 	return nil
 }
