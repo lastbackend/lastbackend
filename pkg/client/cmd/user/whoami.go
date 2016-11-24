@@ -4,9 +4,8 @@ import (
 	"errors"
 	e "github.com/lastbackend/lastbackend/libs/errors"
 	"github.com/lastbackend/lastbackend/libs/model"
-	"github.com/lastbackend/lastbackend/libs/table"
 	"github.com/lastbackend/lastbackend/pkg/client/context"
-	"strconv"
+	"fmt"
 )
 
 func WhoamiCmd() {
@@ -49,24 +48,11 @@ func Whoami() error {
 
 	// TODO: Need handle response status code
 
-	var header []string = []string{"Username", "Email", "Balance", "Organization", "Created", "Updated"}
-	var data [][]string
-
-	organization := strconv.FormatBool(res.Organization)
-	balance := strconv.FormatFloat(float64(res.Balance), 'f', 2, 32)
-	d := []string{
-		res.Username,
-		res.Email,
-		balance,
-		organization,
-		res.Created.String()[:10],
-		res.Updated.String()[:10],
-	}
-
-	data = append(data, d)
-	d = d[:0]
-
-	table.PrintTable(header, data, []string{})
+	fmt.Println(fmt.Sprintf("Username: %s\n" +
+		"E-mail: %s\nBalance: %.0f\n" +
+		"Organization: %t\nCreated: %s\n" +
+		"Updated: %s", res.Username, res.Email,
+		res.Balance, res.Organization, res.Created.String()[:10], res.Updated.String()[:10]))
 
 	return nil
 }
