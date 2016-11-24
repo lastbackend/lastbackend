@@ -49,6 +49,10 @@ func (s *session) Get() (*string, error) {
 		}
 
 		buf := bucket.Get([]byte("token"))
+		if buf == nil {
+			return nil
+		}
+
 		token := string(buf)
 		s.token = &(token)
 
