@@ -9,14 +9,14 @@ func LogoutCmd() {
 
 	ctx := context.Get()
 
-	err := logout()
+	err := Logout()
 	if err != nil {
 		ctx.Log.Error(err)
 		return
 	}
 }
 
-func logout() error {
+func Logout() error {
 
 	ctx := context.Get()
 
