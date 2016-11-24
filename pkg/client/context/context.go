@@ -5,6 +5,8 @@ import (
 	"github.com/lastbackend/lastbackend/libs/http"
 	"github.com/lastbackend/lastbackend/libs/interface/log"
 	l "github.com/lastbackend/lastbackend/libs/log"
+	f "github.com/lastbackend/lastbackend/utils"
+	"os"
 )
 
 var context Context
@@ -94,31 +96,7 @@ func (s *session) Set(token string) error {
 }
 
 func (s *session) Clear() error {
-
-	s.token = nil
-
-	if context.mock {
-		return nil
-	}
-
-	err := context.Storage.View(func(tx *bolt.Tx) error {
-		bucket := tx.Bucket([]byte("session"))
-		if bucket == nil {
-			return nil
-		}
-
-		err := bucket.Delete([]byte("token"))
-		if err != nil {
-			return err
-		}
-
-		err = bucket.DeleteBucket([]byte("session"))
-		if err != nil {
-			return err
-		}
-
-		return nil
-	})
+	err := os.RemoveAll(f.GetHomeDir() + "/.lb")
 	if err != nil {
 		return err
 	}
