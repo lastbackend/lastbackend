@@ -2,11 +2,11 @@ package project
 
 import (
 	"errors"
+	tab "github.com/crackcomm/go-clitable"
 	e "github.com/lastbackend/lastbackend/libs/errors"
-	"github.com/lastbackend/lastbackend/libs/model"
-	"github.com/lastbackend/lastbackend/libs/table"
-	"github.com/lastbackend/lastbackend/pkg/client/context"
 	em "github.com/lastbackend/lastbackend/libs/errors"
+	"github.com/lastbackend/lastbackend/libs/model"
+	"github.com/lastbackend/lastbackend/pkg/client/context"
 )
 
 func ListCmd() {
@@ -49,21 +49,17 @@ func List() error {
 		return errors.New(em.Message(er.Status))
 	}
 
-	var header []string = []string{"ID", "Name", "Created", "Updated"}
-	var data [][]string
-
 	for i := 0; i < len(res); i++ {
-		d := []string{
-			res[i].ID,
-			res[i].Name,
-			res[i].Created.String()[:10],
-			res[i].Updated.String()[:10],
-		}
-
-		data = append(data, d)
+		table := tab.New([]string{"ID", "NAME", "Created", "Updated"})
+		table.AddRow(map[string]interface{}{
+			"ID":      res[i].ID,
+			"Name":    res[i].Name,
+			"Created": res[i].Created.String()[:10],
+			"Updated": res[i].Updated.String()[:10],
+		})
+		table.Markdown = true
+		table.Print()
 	}
-
-	table.PrintTable(header, data, []string{})
 
 	return nil
 }

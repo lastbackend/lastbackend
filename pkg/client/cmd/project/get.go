@@ -2,11 +2,11 @@ package project
 
 import (
 	"errors"
+	tab "github.com/crackcomm/go-clitable"
 	e "github.com/lastbackend/lastbackend/libs/errors"
-	"github.com/lastbackend/lastbackend/libs/model"
-	"github.com/lastbackend/lastbackend/libs/table"
-	"github.com/lastbackend/lastbackend/pkg/client/context"
 	em "github.com/lastbackend/lastbackend/libs/errors"
+	"github.com/lastbackend/lastbackend/libs/model"
+	"github.com/lastbackend/lastbackend/pkg/client/context"
 )
 
 func GetCmd(name string) {
@@ -49,19 +49,29 @@ func Get(name string) error {
 		return errors.New(em.Message(er.Status))
 	}
 
-	var header []string = []string{"ID", "Name", "Created", "Updated"}
-	var data [][]string
+	//var header []string = []string{"ID", "Name", "Created", "Updated"}
+	//var data [][]string
+	//
+	//d := []string{
+	//	res.ID,
+	//	res.Name,
+	//	res.Created.String()[:10],
+	//	res.Updated.String()[:10],
+	//}
+	//
+	//data = append(data, d)
+	//
+	//table.PrintTable(header, data, []string{})
 
-	d := []string{
-		res.ID,
-		res.Name,
-		res.Created.String()[:10],
-		res.Updated.String()[:10],
-	}
-
-	data = append(data, d)
-
-	table.PrintTable(header, data, []string{})
+	table := tab.New([]string{"ID", "NAME", "Created", "Updated"})
+	table.AddRow(map[string]interface{}{
+		"ID":      res.ID,
+		"Name":    res.Name,
+		"Created": res.Created.String()[:10],
+		"Updated": res.Updated.String()[:10],
+	})
+	table.Markdown = true
+	table.Print()
 
 	return nil
 }
