@@ -3,6 +3,7 @@ package user
 import (
 	"fmt"
 	"github.com/lastbackend/lastbackend/pkg/client/context"
+	"errors"
 )
 
 func LogoutCmd() {
@@ -22,7 +23,7 @@ func Logout() error {
 
 	err := ctx.Session.Clear()
 	if err != nil {
-		return err
+		return errors.New("Some problems with logout")
 	}
 
 	fmt.Println("Logout successfully")

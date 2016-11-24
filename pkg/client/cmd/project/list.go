@@ -4,7 +4,6 @@ import (
 	"errors"
 	tab "github.com/crackcomm/go-clitable"
 	e "github.com/lastbackend/lastbackend/libs/errors"
-	em "github.com/lastbackend/lastbackend/libs/errors"
 	"github.com/lastbackend/lastbackend/libs/model"
 	"github.com/lastbackend/lastbackend/pkg/client/context"
 )
@@ -46,7 +45,7 @@ func List() error {
 	}
 
 	if er.Code != 0 {
-		return errors.New(em.Message(er.Status))
+		return errors.New(e.Message(er.Status))
 	}
 
 	for i := 0; i < len(res); i++ {

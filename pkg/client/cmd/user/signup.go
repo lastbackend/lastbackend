@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"github.com/howeyc/gopass"
 	e "github.com/lastbackend/lastbackend/libs/errors"
-	em "github.com/lastbackend/lastbackend/libs/errors"
 	"github.com/lastbackend/lastbackend/pkg/client/context"
 )
 
@@ -68,7 +67,7 @@ func SignUp(username, email, password string) error {
 	}
 
 	if er.Code != 0 {
-		return errors.New(em.Message(er.Status))
+		return errors.New(e.Message(er.Status))
 	} else {
 		fmt.Println("Registration completed successfully")
 	}
