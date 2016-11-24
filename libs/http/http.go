@@ -52,7 +52,7 @@ func (r *RawReq) Request(successV, failureV interface{}) (req *http.Request, res
 		return nil, nil, err
 	}
 
-	return req, resp, err
+	return req, resp, nil
 }
 
 func (r *RawReq) AddHeader(key, value string) *RawReq {
@@ -122,7 +122,10 @@ func decodeResponseBodyJSON(resp *http.Response, v interface{}) error {
 	if err != nil && io.EOF == err {
 		return nil
 	}
-	return err
+	if err != nil  {
+		return err
+	}
+	return nil
 }
 
 func (r RawReq) clear() (err error) {

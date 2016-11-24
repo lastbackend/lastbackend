@@ -4,7 +4,7 @@ import (
 	"errors"
 	"fmt"
 	e "github.com/lastbackend/lastbackend/libs/errors"
-	m "github.com/lastbackend/lastbackend/libs/errors"
+	em "github.com/lastbackend/lastbackend/libs/errors"
 	"github.com/lastbackend/lastbackend/libs/model"
 	"github.com/lastbackend/lastbackend/pkg/client/context"
 )
@@ -32,11 +32,11 @@ func Whoami() error {
 
 	token, err = ctx.Session.Get()
 	if token == nil {
-		return errors.New(m.Message(e.StatusAccessDenied))
+		return errors.New(em.Message(e.StatusAccessDenied))
 	}
 
-	er := new(e.Http)
-	res := new(model.User)
+	var er *e.Http
+	var res *model.User
 
 	_, _, err = ctx.HTTP.
 		GET("/user").
@@ -48,13 +48,7 @@ func Whoami() error {
 	}
 
 	if er != nil {
-		if er.Code == 401 {
-			return errors.New(m.Message(er.Status))
-		}
-
-		if er.Code == 500 {
-			return errors.New(m.Message(er.Status))
-		}
+		return errors.New(em.Message(er.Status))
 	}
 
 	fmt.Println(fmt.Sprintf("Username: %s\n"+
