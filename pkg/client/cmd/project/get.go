@@ -4,7 +4,6 @@ import (
 	"errors"
 	tab "github.com/crackcomm/go-clitable"
 	e "github.com/lastbackend/lastbackend/libs/errors"
-	em "github.com/lastbackend/lastbackend/libs/errors"
 	"github.com/lastbackend/lastbackend/libs/model"
 	"github.com/lastbackend/lastbackend/pkg/client/context"
 )
@@ -46,22 +45,8 @@ func Get(name string) error {
 	}
 
 	if er.Code != 0 {
-		return errors.New(em.Message(er.Status))
+		return errors.New(e.Message(er.Status))
 	}
-
-	//var header []string = []string{"ID", "Name", "Created", "Updated"}
-	//var data [][]string
-	//
-	//d := []string{
-	//	res.ID,
-	//	res.Name,
-	//	res.Created.String()[:10],
-	//	res.Updated.String()[:10],
-	//}
-	//
-	//data = append(data, d)
-	//
-	//table.PrintTable(header, data, []string{})
 
 	table := tab.New([]string{"ID", "NAME", "Created", "Updated"})
 	table.AddRow(map[string]interface{}{

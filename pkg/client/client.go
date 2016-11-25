@@ -81,6 +81,9 @@ func configure(app *cli.Cli) {
 	app.Command("whoami", "Display the current user's login name", func(c *cli.Cmd) {
 		c.Action = u.WhoamiCmd
 	})
+	app.Command("logout", "logout from account", func(c *cli.Cmd) {
+		c.Action = u.LogoutCmd
+	})
 
 	app.Command("projects", "Display the project list", func(c *cli.Cmd) {
 		c.Action = p.ListCmd
