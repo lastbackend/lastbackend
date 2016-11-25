@@ -21,9 +21,15 @@ func TestLogout(t *testing.T) {
 
 	assert.NotNil(t, files)
 
-	user.Logout()
+	err = user.Logout()
+	if err != nil {
+		t.Error(err)
+	}
 
 	files, err = ioutil.ReadDir(f.GetHomeDir() + "/.lb")
+	if err != nil {
+		t.Error(err)
+	}
 
 	assert.Nil(t, files)
 }
