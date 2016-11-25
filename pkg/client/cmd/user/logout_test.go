@@ -28,8 +28,6 @@ func TestLogout(t *testing.T) {
 
 	files, err = ioutil.ReadDir(f.GetHomeDir() + "/.lb")
 	if err != nil {
-		t.Error(err)
+		assert.Nil(t, files)
 	}
-
-	assert.Nil(t, files)
 }
