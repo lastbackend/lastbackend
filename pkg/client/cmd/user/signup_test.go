@@ -47,7 +47,7 @@ func TestSignUp_Success(t *testing.T) {
 		assert.Equal(t, d.Password, password, "they should be equal")
 
 		w.WriteHeader(200)
-		_, err = w.Write([]byte(`{"token":"mocktoken"}`))
+		_, err = w.Write([]byte(`{"token":"c"}`))
 		if err != nil {
 			t.Error(err)
 			return

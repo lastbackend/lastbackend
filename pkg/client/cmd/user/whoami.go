@@ -26,11 +26,17 @@ func Whoami() error {
 	var (
 		err   error
 		ctx   = context.Get()
-		token *string
 	)
 
-	token, err = ctx.Session.Get()
-	if token == nil {
+	token := struct {
+		Token string `json:"token"`
+	}{}
+
+	err = ctx.Storage.Get("session", &token)
+	if err != nil {
+		return errors.New(err.Error())
+	}
+	if token.Token == "" {
 		return errors.New(e.Message(e.StatusAccessDenied))
 	}
 
@@ -40,10 +46,10 @@ func Whoami() error {
 	_, _, err = ctx.HTTP.
 		GET("/user").
 		AddHeader("Content-Type", "application/json").
-		AddHeader("Authorization", "Bearer "+*token).
+		AddHeader("Authorization", "Bearer "+token.Token).
 		Request(res, er)
 	if err != nil {
-		return err
+		return errors.New(e.Message(err.Error()))
 	}
 
 	if er.Code != 0 {

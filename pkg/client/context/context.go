@@ -1,12 +1,14 @@
 package context
 
 import (
+	"encoding/json"
 	"github.com/boltdb/bolt"
 	"github.com/lastbackend/lastbackend/libs/http"
 	"github.com/lastbackend/lastbackend/libs/interface/log"
 	l "github.com/lastbackend/lastbackend/libs/log"
 	f "github.com/lastbackend/lastbackend/utils"
 	"os"
+	"fmt"
 )
 
 var context Context
@@ -20,68 +22,56 @@ func Mock() *Context {
 	context.Log = new(l.Log)
 	context.Log.Init()
 	context.Log.Disabled()
-	context.Storage = new(bolt.DB)
+	context.Storage.db = new(bolt.DB)
 
 	return &context
 }
 
 type Context struct {
-	Session session
 	Log     log.ILogger
 	HTTP    *http.RawReq
-	Storage *bolt.DB
+	Storage storage
 	mock    bool
 	// Other info for HTTP handlers can be here, like user UUID
 }
 
-type session struct {
-	token *string
+type storage struct {
+	db *bolt.DB
 }
 
-func (s *session) Get() (*string, error) {
+func (s *storage) Init() error {
 
-	if s.token != nil || context.mock {
-		return s.token, nil
-	}
+	dir := f.GetHomeDir() + "/.lb"
 
-	err := context.Storage.View(func(tx *bolt.Tx) error {
-		bucket := tx.Bucket([]byte("session"))
-		if bucket == nil {
-			return nil
-		}
+	f.MkDir(dir, 0755)
 
-		buf := bucket.Get([]byte("token"))
-		if buf == nil {
-			return nil
-		}
-
-		token := string(buf)
-		s.token = &(token)
-
-		return nil
-	})
+	var err error
+	s.db, err = bolt.Open(dir+"/lb.db", 0755, nil)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
-	return s.token, nil
+	return nil
 }
 
-func (s *session) Set(token string) error {
-
-	s.token = &token
+func (s *storage) Get(fieldname string, iface interface{}) error {
 
 	if context.mock {
 		return nil
 	}
 
-	err := context.Storage.Update(func(tx *bolt.Tx) error {
-		bucket, err := tx.CreateBucketIfNotExists([]byte("session"))
-		if err != nil {
-			return err
+	err := s.db.View(func(tx *bolt.Tx) error {
+		bucket := tx.Bucket([]byte("storage"))
+		if bucket == nil {
+			return nil
 		}
 
-		err = bucket.Put([]byte("token"), []byte(token))
+		buf := bucket.Get([]byte(fieldname))
+		if buf == nil {
+			return nil
+		}
+
+		err := json.Unmarshal(buf, iface)
 		if err != nil {
 			return err
 		}
@@ -95,7 +85,40 @@ func (s *session) Set(token string) error {
 	return nil
 }
 
-func (s *session) Clear() error {
+func (s *storage) Set(fieldname string, iface interface{}) error {
+
+	fmt.Println("fn: ", fieldname, "if: ", iface)
+
+	if context.mock {
+		return nil
+	}
+
+	err := s.db.Update(func(tx *bolt.Tx) error {
+		bucket, err := tx.CreateBucketIfNotExists([]byte("storage"))
+		if err != nil {
+			return err
+		}
+
+		ifacebyte, err := json.Marshal(&iface)
+		if err != nil {
+			return err
+		}
+
+		err = bucket.Put([]byte(fieldname), ifacebyte)
+		if err != nil {
+			return err
+		}
+
+		return nil
+	})
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (s *storage) Clear() error {
 	err := os.RemoveAll(f.GetHomeDir() + "/.lb")
 	if err != nil {
 		return err

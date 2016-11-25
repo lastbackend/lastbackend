@@ -1,15 +1,15 @@
 package user_test
 
 import (
+	"github.com/lastbackend/lastbackend/pkg/client/cmd/user"
 	f "github.com/lastbackend/lastbackend/utils"
+	"github.com/stretchr/testify/assert"
 	"io/ioutil"
 	"testing"
-	"github.com/stretchr/testify/assert"
-	"github.com/lastbackend/lastbackend/pkg/client/cmd/user"
 )
 
 func TestLogout(t *testing.T) {
-	err := f.MkDir(f.GetHomeDir() + "/.lb", 0777)
+	err := f.MkDir(f.GetHomeDir()+"/.lb", 0777)
 	if err != nil {
 		t.Error(err)
 	}

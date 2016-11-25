@@ -66,7 +66,7 @@ func SignIn(login, password string) error {
 		fmt.Println("Login successful")
 	}
 
-	err = ctx.Session.Set(res.Token)
+	err = ctx.Storage.Set("session", res)
 	if err != nil {
 		return err
 	}
