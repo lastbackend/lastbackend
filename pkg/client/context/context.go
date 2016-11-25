@@ -2,13 +2,13 @@ package context
 
 import (
 	"encoding/json"
+	"fmt"
 	"github.com/boltdb/bolt"
 	"github.com/lastbackend/lastbackend/libs/http"
 	"github.com/lastbackend/lastbackend/libs/interface/log"
 	l "github.com/lastbackend/lastbackend/libs/log"
 	f "github.com/lastbackend/lastbackend/utils"
 	"os"
-	"fmt"
 )
 
 var context Context
@@ -22,7 +22,6 @@ func Mock() *Context {
 	context.Log = new(l.Log)
 	context.Log.Init()
 	context.Log.Disabled()
-	context.Storage.db = new(bolt.DB)
 
 	return &context
 }
@@ -30,16 +29,23 @@ func Mock() *Context {
 type Context struct {
 	Log     log.ILogger
 	HTTP    *http.RawReq
-	Storage storage
+	Storage ILocalStorage
 	mock    bool
 	// Other info for HTTP handlers can be here, like user UUID
 }
 
-type storage struct {
+type ILocalStorage interface {
+	Get(string, interface{}) error
+	Set(string, interface{}) error
+	Clear() error
+	Init() error
+}
+
+type LocalStorage struct {
 	db *bolt.DB
 }
 
-func (s *storage) Init() error {
+func (s *LocalStorage) Init() error {
 
 	dir := f.GetHomeDir() + "/.lb"
 
@@ -54,11 +60,7 @@ func (s *storage) Init() error {
 	return nil
 }
 
-func (s *storage) Get(fieldname string, iface interface{}) error {
-
-	if context.mock {
-		return nil
-	}
+func (s *LocalStorage) Get(fieldname string, iface interface{}) error {
 
 	err := s.db.View(func(tx *bolt.Tx) error {
 		bucket := tx.Bucket([]byte("storage"))
@@ -85,13 +87,7 @@ func (s *storage) Get(fieldname string, iface interface{}) error {
 	return nil
 }
 
-func (s *storage) Set(fieldname string, iface interface{}) error {
-
-	fmt.Println("fn: ", fieldname, "if: ", iface)
-
-	if context.mock {
-		return nil
-	}
+func (s *LocalStorage) Set(fieldname string, iface interface{}) error {
 
 	err := s.db.Update(func(tx *bolt.Tx) error {
 		bucket, err := tx.CreateBucketIfNotExists([]byte("storage"))
@@ -118,7 +114,10 @@ func (s *storage) Set(fieldname string, iface interface{}) error {
 	return nil
 }
 
-func (s *storage) Clear() error {
+func (s *LocalStorage) Clear() error {
+
+	fmt.Println("lal")
+
 	err := os.RemoveAll(f.GetHomeDir() + "/.lb")
 	if err != nil {
 		return err

@@ -48,12 +48,14 @@ func Run() {
 
 		ctx.HTTP = http.New(cfg.ApiHost)
 
+		ctx.Storage = new(context.LocalStorage)
+
 		err = ctx.Storage.Init()
 		if err != nil {
 			ctx.Log.Error(err)
 		}
 
-		ctx.Storage.Get("storage", nil)
+		ctx.Storage.Get("session", nil)
 	}
 
 	configure(app)

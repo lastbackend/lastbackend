@@ -21,7 +21,14 @@ func Logout() error {
 
 	ctx := context.Get()
 
+	fmt.Println("LOGOUT.GO CTX", ctx)
+
+	fmt.Println("LOGOUT.GO CTX.STORAGE", ctx.Storage)
+
 	err := ctx.Storage.Clear()
+
+	fmt.Println("lal")
+
 	if err != nil {
 		return errors.New("Some problems with logout")
 	}

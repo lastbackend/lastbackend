@@ -22,8 +22,8 @@ func GetCmd(name string) {
 func Get(name string) error {
 
 	var (
-		err   error
-		ctx   = context.Get()
+		err error
+		ctx = context.Get()
 	)
 
 	token := struct {

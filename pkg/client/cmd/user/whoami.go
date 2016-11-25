@@ -24,8 +24,8 @@ func WhoamiCmd() {
 
 func Whoami() error {
 	var (
-		err   error
-		ctx   = context.Get()
+		err error
+		ctx = context.Get()
 	)
 
 	token := struct {
@@ -33,6 +33,7 @@ func Whoami() error {
 	}{}
 
 	err = ctx.Storage.Get("session", &token)
+
 	if err != nil {
 		return errors.New(err.Error())
 	}
