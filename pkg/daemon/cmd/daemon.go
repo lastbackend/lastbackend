@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"github.com/ghodss/yaml"
 	"github.com/jawher/mow.cli"
 	"github.com/lastbackend/lastbackend/libs/adapter/k8s"
 	"github.com/lastbackend/lastbackend/libs/adapter/storage"
@@ -8,7 +9,6 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/daemon/config"
 	"github.com/lastbackend/lastbackend/pkg/daemon/context"
 	"github.com/lastbackend/lastbackend/pkg/daemon/http"
-	"gopkg.in/yaml.v2"
 	"io/ioutil"
 	"os"
 	"os/signal"

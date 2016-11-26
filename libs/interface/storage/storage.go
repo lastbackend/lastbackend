@@ -10,6 +10,7 @@ type IStorage interface {
 	Build() IBuild
 	Image() IImage
 	Project() IProject
+	Service() IService
 	Hook() IHook
 }
 
@@ -44,6 +45,15 @@ type IProject interface {
 	GetByUser(string) (*model.ProjectList, *errors.Err)
 	Insert(*model.Project) (*model.Project, *errors.Err)
 	Update(*model.Project) (*model.Project, *errors.Err)
+	Remove(string) *errors.Err
+}
+
+type IService interface {
+	GetByName(string, string) (*model.Service, *errors.Err)
+	GetByID(string, string) (*model.Service, *errors.Err)
+	GetByUser(string) (*model.ServiceList, *errors.Err)
+	Insert(*model.Service) (*model.Service, *errors.Err)
+	Update(*model.Service) (*model.Service, *errors.Err)
 	Remove(string) *errors.Err
 }
 

@@ -10,6 +10,7 @@ import (
 	"github.com/lastbackend/lastbackend/utils"
 	"io"
 	"io/ioutil"
+	"k8s.io/client-go/1.5/pkg/api"
 	"k8s.io/client-go/1.5/pkg/api/v1"
 	"net/http"
 )
@@ -345,6 +346,10 @@ func ProjectRemoveH(w http.ResponseWriter, r *http.Request) {
 
 	if !utils.IsUUID(id) {
 		project, err := ctx.Storage.Project().GetByName(session.Uid, id)
+		if err == nil && project == nil {
+			e.Project.NotFound().Http(w)
+			return
+		}
 		if err != nil {
 			ctx.Log.Error("Error: find project by id", err.Err())
 			err.Http(w)
@@ -352,6 +357,15 @@ func ProjectRemoveH(w http.ResponseWriter, r *http.Request) {
 		}
 
 		id = project.ID
+	}
+
+	var opts = new(api.DeleteOptions)
+
+	er = ctx.K8S.Core().Namespaces().Delete(id, opts)
+	if er != nil {
+		ctx.Log.Error("Error: remove namespace", er.Error())
+		e.HTTP.InternalServerError(w)
+		return
 	}
 
 	err := ctx.Storage.Project().Remove(id)

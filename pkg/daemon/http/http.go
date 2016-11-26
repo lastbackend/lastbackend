@@ -37,6 +37,13 @@ func NewRouter() *mux.Router {
 	r.HandleFunc("/project/{id}", Handler(handler.ProjectUpdateH, Auth)).Methods("PUT")
 	r.HandleFunc("/project/{id}", Handler(handler.ProjectRemoveH, Auth)).Methods("DELETE")
 
+	// Service handlers
+	r.HandleFunc("/service", Handler(handler.ServiceListH, Auth)).Methods("GET")
+	r.HandleFunc("/service", Handler(handler.ServiceCreateH, Auth)).Methods("POST")
+	r.HandleFunc("/service/{id}", Handler(handler.ServiceInfoH, Auth)).Methods("GET")
+	r.HandleFunc("/service/{id}", Handler(handler.ServiceUpdateH, Auth)).Methods("PUT")
+	r.HandleFunc("/service/{id}", Handler(handler.ServiceRemoveH, Auth)).Methods("DELETE")
+
 	return r
 }
 
