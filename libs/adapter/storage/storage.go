@@ -9,6 +9,7 @@ import (
 type Storage struct {
 	*UserStorage
 	*ProjectStorage
+	*ServiceStorage
 	*ImageStorage
 	*BuildStorage
 	*HookStorage
@@ -26,6 +27,13 @@ func (s *Storage) Project() storage.IProject {
 		return nil
 	}
 	return s.ProjectStorage
+}
+
+func (s *Storage) Service() storage.IService {
+	if s == nil {
+		return nil
+	}
+	return s.ServiceStorage
 }
 
 func (s *Storage) Image() storage.IImage {
@@ -62,6 +70,7 @@ func Get() (*Storage, error) {
 
 	store.UserStorage = newUserStorage(session)
 	store.ProjectStorage = newProjectStorage(session)
+	store.ServiceStorage = newServiceStorage(session)
 	store.ImageStorage = newImageStorage(session)
 	store.BuildStorage = newBuildStorage(session)
 	store.HookStorage = newHookStorage(session)
