@@ -22,13 +22,19 @@ func GetCmd(name string) {
 func Get(name string) error {
 
 	var (
-		err   error
-		ctx   = context.Get()
-		token *string
+		err error
+		ctx = context.Get()
 	)
 
-	token, err = ctx.Session.Get()
-	if token == nil {
+	token := struct {
+		Token string `json:"token"`
+	}{}
+
+	err = ctx.Storage.Get("token", token)
+	if err != nil {
+		return errors.New(err.Error())
+	}
+	if token.Token == "" {
 		return errors.New(e.StatusAccessDenied)
 	}
 
@@ -38,10 +44,10 @@ func Get(name string) error {
 	_, _, err = ctx.HTTP.
 		GET("/project/"+name).
 		AddHeader("Content-Type", "application/json").
-		AddHeader("Authorization", "Bearer "+*token).
+		AddHeader("Authorization", "Bearer "+token.Token).
 		Request(&res, er)
 	if err != nil {
-		return err
+		return errors.New(err.Error())
 	}
 
 	if er.Code != 0 {

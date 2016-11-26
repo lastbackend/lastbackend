@@ -72,7 +72,7 @@ func SignUp(username, email, password string) error {
 		fmt.Println("Registration completed successfully")
 	}
 
-	err = ctx.Session.Set(res.Token)
+	err = ctx.Storage.Set("session", res)
 	if err != nil {
 		return err
 	}

@@ -46,6 +46,8 @@ func SignIn(login, password string) error {
 		ctx = context.Get()
 	)
 
+	fmt.Println(ctx)
+
 	er := new(e.Http)
 	res := struct {
 		Token string `json:"token"`
@@ -66,7 +68,7 @@ func SignIn(login, password string) error {
 		fmt.Println("Login successful")
 	}
 
-	err = ctx.Session.Set(res.Token)
+	err = ctx.Storage.Set("session", res)
 	if err != nil {
 		return err
 	}

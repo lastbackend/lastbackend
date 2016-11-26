@@ -1,7 +1,6 @@
 package client
 
 import (
-	"github.com/boltdb/bolt"
 	"github.com/jawher/mow.cli"
 	"github.com/lastbackend/lastbackend/libs/http"
 	"github.com/lastbackend/lastbackend/libs/log"
@@ -9,7 +8,6 @@ import (
 	u "github.com/lastbackend/lastbackend/pkg/client/cmd/user"
 	"github.com/lastbackend/lastbackend/pkg/client/config"
 	"github.com/lastbackend/lastbackend/pkg/client/context"
-	"github.com/lastbackend/lastbackend/utils"
 	"os"
 )
 
@@ -50,15 +48,14 @@ func Run() {
 
 		ctx.HTTP = http.New(cfg.ApiHost)
 
-		dir := utils.GetHomeDir() + "/.lb"
+		ctx.Storage = new(context.LocalStorage)
 
-		utils.MkDir(dir, 0755)
-		ctx.Storage, err = bolt.Open(dir+"/lb.db", 0755, nil)
+		err = ctx.Storage.Init()
 		if err != nil {
-			ctx.Log.Fatal(err)
+			ctx.Log.Error(err)
 		}
 
-		ctx.Session.Get()
+		ctx.Storage.Get("session", nil)
 	}
 
 	configure(app)

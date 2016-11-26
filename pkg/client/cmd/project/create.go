@@ -31,7 +31,7 @@ func Create(name, description string) error {
 		token *string
 	)
 
-	token, err = ctx.Session.Get()
+	err = ctx.Storage.Get("session", nil)
 	if token == nil {
 		return errors.New(e.StatusAccessDenied)
 	}
