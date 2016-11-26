@@ -9,6 +9,7 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/client/config"
 	"github.com/lastbackend/lastbackend/pkg/client/context"
 	"os"
+	"github.com/lastbackend/lastbackend/pkg/client/cmd/service"
 )
 
 func Run() {
@@ -122,6 +123,32 @@ func configure(app *cli.Cli) {
 		c.Command("remove", "Remove project by name", func(c *cli.Cmd) {
 			c.Action = func() {
 				p.RemoveCmd(*name)
+			}
+		})
+
+	})
+
+	app.Command("service", "Service management", func(c *cli.Cmd) {
+		c.Spec = "[SERVICE_NAME]"
+		var service_name = c.String(cli.StringArg{
+			Name:      "SERVICE_NAME",
+			Value:     "",
+			Desc:      "name of service",
+			HideValue: true,
+		})
+		c.Command("create", "create new service", func(c *cli.Cmd) {
+			c.Action = func() {
+				service.Create(*service_name)
+			}
+		})
+		c.Command("inspect", "examine the inspect", func(c *cli.Cmd) {
+			c.Action = func() {
+				service.Inspect(*service_name)
+			}
+		})
+		c.Command("remove", "remove an existing service", func(c *cli.Cmd) {
+			c.Action = func() {
+				service.Remove(*service_name)
 			}
 		})
 
