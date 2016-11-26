@@ -6,6 +6,7 @@ import (
 	e "github.com/lastbackend/lastbackend/libs/errors"
 	"github.com/lastbackend/lastbackend/libs/model"
 	"github.com/lastbackend/lastbackend/pkg/client/context"
+
 )
 
 func ListCmd() {
@@ -24,11 +25,12 @@ func List() error {
 	var (
 		err   error
 		ctx   = context.Get()
-		token *string
 	)
-
-	err = ctx.Storage.Get("session", nil)
-	if token == nil {
+	token := struct {
+		Token string `json:"token"`
+	}{}
+	err = ctx.Storage.Get("session", &token)
+	if token.Token == "" {
 		return errors.New(e.StatusAccessDenied)
 	}
 
@@ -38,7 +40,7 @@ func List() error {
 	_, _, err = ctx.HTTP.
 		GET("/project").
 		AddHeader("Content-Type", "application/json").
-		AddHeader("Authorization", "Bearer "+*token).
+		AddHeader("Authorization", "Bearer " + token.Token).
 		Request(&res, er)
 	if err != nil {
 		return err
@@ -47,9 +49,9 @@ func List() error {
 	if er.Code != 0 {
 		return errors.New(e.Message(er.Status))
 	}
-
+	table := tab.New([]string{"ID", "Name", "Created", "Updated"})
 	for i := 0; i < len(res); i++ {
-		table := tab.New([]string{"ID", "NAME", "Created", "Updated"})
+
 		table.AddRow(map[string]interface{}{
 			"ID":      res[i].ID,
 			"Name":    res[i].Name,
@@ -57,8 +59,8 @@ func List() error {
 			"Updated": res[i].Updated.String()[:10],
 		})
 		table.Markdown = true
-		table.Print()
-	}
 
+	}
+	table.Print()
 	return nil
 }
