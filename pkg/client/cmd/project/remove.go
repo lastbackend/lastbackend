@@ -12,7 +12,7 @@ func RemoveCmd(name string) {
 
 	err := Remove(name)
 	if err != nil {
-		ctx.Log.Error(err) // TODO: Need handle error and print to console
+		ctx.Log.Error(err)
 		return
 	}
 }
@@ -20,29 +20,37 @@ func RemoveCmd(name string) {
 func Remove(name string) error {
 
 	var (
-		err   error
-		ctx   = context.Get()
-		token *string
+		err error
+		ctx = context.Get()
 	)
 
-	token, err = ctx.Session.Get()
-	if token == nil {
+	token := struct {
+		Token string `json:"token"`
+	}{}
+
+	err = ctx.Storage.Get("token", token)
+	if err != nil {
+		return errors.New(err.Error())
+	}
+	if token.Token == "" {
 		return errors.New(e.StatusAccessDenied)
 	}
 
-	er := e.Http{}
+	er := new(e.Http)
 	res := struct{}{}
 
 	_, _, err = ctx.HTTP.
 		DELETE("/project/"+name).
 		AddHeader("Content-Type", "application/json").
-		AddHeader("Authorization", "Bearer "+*token).
-		Request(&res, &er) // TODO: Need handle er
+		AddHeader("Authorization", "Bearer "+token.Token).
+		Request(&res, er)
 	if err != nil {
-		return err
+		return errors.New(err.Error())
 	}
 
-	// TODO: Need handle response status code
+	if er.Code != 0 {
+		return errors.New(e.Message(er.Status))
+	}
 
 	return nil
 }

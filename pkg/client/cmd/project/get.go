@@ -2,9 +2,9 @@ package project
 
 import (
 	"errors"
+	tab "github.com/crackcomm/go-clitable"
 	e "github.com/lastbackend/lastbackend/libs/errors"
 	"github.com/lastbackend/lastbackend/libs/model"
-	"github.com/lastbackend/lastbackend/libs/table"
 	"github.com/lastbackend/lastbackend/pkg/client/context"
 )
 
@@ -14,7 +14,7 @@ func GetCmd(name string) {
 
 	err := Get(name)
 	if err != nil {
-		ctx.Log.Error(err) // TODO: Need handle error and print to console
+		ctx.Log.Error(err)
 		return
 	}
 }
@@ -22,43 +22,47 @@ func GetCmd(name string) {
 func Get(name string) error {
 
 	var (
-		err   error
-		ctx   = context.Get()
-		token *string
+		err error
+		ctx = context.Get()
 	)
 
-	token, err = ctx.Session.Get()
-	if token == nil {
+	token := struct {
+		Token string `json:"token"`
+	}{}
+
+	err = ctx.Storage.Get("token", token)
+	if err != nil {
+		return errors.New(err.Error())
+	}
+	if token.Token == "" {
 		return errors.New(e.StatusAccessDenied)
 	}
 
-	er := e.Http{}
-	res := model.Project{}
+	er := new(e.Http)
+	res := new(model.Project)
 
 	_, _, err = ctx.HTTP.
 		GET("/project/"+name).
 		AddHeader("Content-Type", "application/json").
-		AddHeader("Authorization", "Bearer "+*token).
-		Request(&res, &er) // TODO: Need handle er
+		AddHeader("Authorization", "Bearer "+token.Token).
+		Request(&res, er)
 	if err != nil {
-		return err
+		return errors.New(err.Error())
 	}
 
-	// TODO: Need handle response status code
-
-	var header []string = []string{"ID", "Name", "Created", "Updated"}
-	var data [][]string
-
-	d := []string{
-		res.ID,
-		res.Name,
-		res.Created.String()[:10],
-		res.Updated.String()[:10],
+	if er.Code != 0 {
+		return errors.New(e.Message(er.Status))
 	}
 
-	data = append(data, d)
-
-	table.PrintTable(header, data, []string{})
+	table := tab.New([]string{"ID", "NAME", "Created", "Updated"})
+	table.AddRow(map[string]interface{}{
+		"ID":      res.ID,
+		"Name":    res.Name,
+		"Created": res.Created.String()[:10],
+		"Updated": res.Updated.String()[:10],
+	})
+	table.Markdown = true
+	table.Print()
 
 	return nil
 }

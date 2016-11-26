@@ -86,6 +86,10 @@
 			"Rev": "447b7ec906e523386d9c53be15b55a8ae86ea944"
 		},
 		{
+			"ImportPath": "github.com/crackcomm/go-clitable",
+			"Rev": "53bcff2fea363f918b5fc960c654a5fb4b3f9950"
+		},
+		{
 			"ImportPath": "github.com/davecgh/go-spew/spew",
 			"Rev": "5215b55f46b2b919f50a1df0eaa5886afe4e3b3d"
 		},
@@ -202,6 +206,11 @@
 		{
 			"ImportPath": "github.com/mailru/easyjson/jwriter",
 			"Rev": "d5b7844b561a7bc640052f1b935f7b800330d7e0"
+		},
+		{
+			"ImportPath": "github.com/mattn/go-runewidth",
+			"Comment": "v0.0.1-10-g737072b",
+			"Rev": "737072b4e32b7a5018b4a7125da8d12de90e8045"
 		},
 		{
 			"ImportPath": "github.com/pborman/uuid",

@@ -22,14 +22,14 @@ func SignInCmd() {
 	fmt.Print("Password: ")
 	pass, err := gopass.GetPasswd()
 	if err != nil {
-		ctx.Log.Error(err) // TODO: Need handle error and print to console
+		ctx.Log.Error(err)
 		return
 	}
 	password = string(pass)
 
 	err = SignIn(login, password)
 	if err != nil {
-		ctx.Log.Error(err) // TODO: Need handle error and print to console
+		ctx.Log.Error(err)
 		return
 	}
 }
@@ -46,7 +46,9 @@ func SignIn(login, password string) error {
 		ctx = context.Get()
 	)
 
-	er := e.Http{}
+	fmt.Println(ctx)
+
+	er := new(e.Http)
 	res := struct {
 		Token string `json:"token"`
 	}{}
@@ -55,18 +57,18 @@ func SignIn(login, password string) error {
 		POST("/session").
 		AddHeader("Content-Type", "application/json").
 		BodyJSON(userLoginS{login, password}).
-		Request(&res, &er) // TODO: Need handle er
+		Request(&res, er)
 	if err != nil {
 		return err
 	}
 
-	// TODO: Need handle response status code
-
-	if res.Token == "" {
-		return errors.New(e.StatusAccessDenied)
+	if er.Code != 0 {
+		return errors.New(e.Message(er.Status))
+	} else {
+		fmt.Println("Login successful")
 	}
 
-	err = ctx.Session.Set(res.Token)
+	err = ctx.Storage.Set("session", res)
 	if err != nil {
 		return err
 	}
