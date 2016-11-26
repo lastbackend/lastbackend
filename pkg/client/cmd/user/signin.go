@@ -46,7 +46,7 @@ func SignIn(login, password string) error {
 		ctx = context.Get()
 	)
 
-	fmt.Println(ctx)
+	//fmt.Println(ctx)
 
 	er := new(e.Http)
 	res := struct {

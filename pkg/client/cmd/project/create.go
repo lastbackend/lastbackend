@@ -28,11 +28,13 @@ func Create(name, description string) error {
 	var (
 		err   error
 		ctx   = context.Get()
-		token *string
-	)
 
-	err = ctx.Storage.Get("session", nil)
-	if token == nil {
+	)
+	token := struct {
+		Token string `json:"token"`
+	}{}
+	err = ctx.Storage.Get("session", &token)
+	if token.Token == "" {
 		return errors.New(e.StatusAccessDenied)
 	}
 
@@ -42,7 +44,7 @@ func Create(name, description string) error {
 	_, _, err = ctx.HTTP.
 		POST("/project").
 		AddHeader("Content-Type", "application/json").
-		AddHeader("Authorization", "Bearer "+*token).
+		AddHeader("Authorization", "Bearer " + token.Token).
 		BodyJSON(createS{name, description}).
 		Request(&res, er)
 	if err != nil {

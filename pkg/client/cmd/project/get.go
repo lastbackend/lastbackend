@@ -30,7 +30,7 @@ func Get(name string) error {
 		Token string `json:"token"`
 	}{}
 
-	err = ctx.Storage.Get("token", token)
+	err = ctx.Storage.Get("session", &token)
 	if err != nil {
 		return errors.New(err.Error())
 	}
@@ -44,7 +44,7 @@ func Get(name string) error {
 	_, _, err = ctx.HTTP.
 		GET("/project/"+name).
 		AddHeader("Content-Type", "application/json").
-		AddHeader("Authorization", "Bearer "+token.Token).
+		AddHeader("Authorization", "Bearer " + token.Token).
 		Request(&res, er)
 	if err != nil {
 		return errors.New(err.Error())
@@ -54,7 +54,7 @@ func Get(name string) error {
 		return errors.New(e.Message(er.Status))
 	}
 
-	table := tab.New([]string{"ID", "NAME", "Created", "Updated"})
+	table := tab.New([]string{"ID", "Name", "Created", "Updated"})
 	table.AddRow(map[string]interface{}{
 		"ID":      res.ID,
 		"Name":    res.Name,
