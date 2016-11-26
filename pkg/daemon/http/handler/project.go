@@ -177,6 +177,8 @@ func ProjectCreateH(w http.ResponseWriter, r *http.Request) {
 	p.Name = *rq.Name
 	p.Description = *rq.Description
 
+	// TODO: check for unique name
+
 	project, err := ctx.Storage.Project().Insert(p)
 	if err != nil {
 		ctx.Log.Error("Error: insert project to db", err)
@@ -300,6 +302,8 @@ func ProjectUpdateH(w http.ResponseWriter, r *http.Request) {
 	p.User = session.Uid
 	p.Name = *rq.Name
 	p.Description = *rq.Description
+
+	// TODO: check for unique name
 
 	project, err := ctx.Storage.Project().Update(p)
 	if err != nil {

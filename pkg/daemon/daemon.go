@@ -5,6 +5,7 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/daemon/cmd"
 	"github.com/lastbackend/lastbackend/pkg/daemon/context"
 	"os"
+	"github.com/lastbackend/lastbackend/libs/interface/log"
 )
 
 func Run() {
