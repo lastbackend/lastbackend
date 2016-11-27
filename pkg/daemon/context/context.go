@@ -1,11 +1,11 @@
 package context
 
 import (
+	m "github.com/lastbackend/lastbackend/libs/adapter/storage/mock"
+	"github.com/lastbackend/lastbackend/libs/http"
 	"github.com/lastbackend/lastbackend/libs/interface/k8s"
 	"github.com/lastbackend/lastbackend/libs/interface/log"
 	"github.com/lastbackend/lastbackend/libs/interface/storage"
-
-	m "github.com/lastbackend/lastbackend/libs/adapter/storage/mock"
 	l "github.com/lastbackend/lastbackend/libs/log"
 )
 
@@ -42,7 +42,8 @@ func Mock() *Context {
 }
 
 type Context struct {
-	Log     log.ILogger
-	K8S     k8s.IK8S
-	Storage storage.IStorage
+	Log              log.ILogger
+	K8S              k8s.IK8S
+	TemplateRegistry *http.RawReq
+	Storage          storage.IStorage
 }
