@@ -180,7 +180,7 @@ func ProjectCreateH(w http.ResponseWriter, r *http.Request) {
 
 	exists, er := ctx.Storage.Project().ExistByName(p.User, p.Name)
 	if er != nil {
-		ctx.Log.Error("Error: insert project to db", er.Error())
+		ctx.Log.Error("Error: check exists by name", er.Error())
 		e.HTTP.InternalServerError(w)
 		return
 	}
@@ -315,7 +315,7 @@ func ProjectUpdateH(w http.ResponseWriter, r *http.Request) {
 
 	exists, er := ctx.Storage.Project().ExistByName(p.User, p.Name)
 	if er != nil {
-		ctx.Log.Error("Error: insert project to db", er.Error())
+		ctx.Log.Error("Error: check exists by name", er.Error())
 		e.HTTP.InternalServerError(w)
 		return
 	}

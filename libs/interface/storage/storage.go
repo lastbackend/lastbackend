@@ -50,6 +50,7 @@ type IProject interface {
 }
 
 type IService interface {
+	CheckExistsByName(string, string, string) (bool, error)
 	GetByName(string, string) (*model.Service, *errors.Err)
 	GetByID(string, string) (*model.Service, *errors.Err)
 	GetByUser(string) (*model.ServiceList, *errors.Err)
