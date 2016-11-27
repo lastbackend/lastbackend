@@ -6,6 +6,7 @@ import (
 	"github.com/gorilla/mux"
 	e "github.com/lastbackend/lastbackend/libs/errors"
 	"github.com/lastbackend/lastbackend/libs/model"
+	"github.com/lastbackend/lastbackend/pkg/client/cmd/project"
 	c "github.com/lastbackend/lastbackend/pkg/daemon/context"
 	"github.com/lastbackend/lastbackend/utils"
 	"io"
@@ -176,7 +177,14 @@ func ProjectCreateH(w http.ResponseWriter, r *http.Request) {
 	p.User = session.Uid
 	p.Name = *rq.Name
 	p.Description = *rq.Description
-
+	exists, err := ctx.Storage.Project().ExistByName(p.User, p.Name)
+	if err != nil {
+		w.Write([]byte("project already exists"))
+	}
+	if exists {
+		e.Project.NameExists().Http(w)
+		return
+	}
 	project, err := ctx.Storage.Project().Insert(p)
 	if err != nil {
 		ctx.Log.Error("Error: insert project to db", err)

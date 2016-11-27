@@ -41,6 +41,21 @@ func (s *ProjectStorage) GetByName(user, name string) (*model.Project, *e.Err) {
 	return project, nil
 }
 
+func (s *ProjectStorage) ExistByName(user, name string) (bool, error) {
+	var project_filter = map[string]interface{}{
+		"name": name,
+		"user": user,
+	}
+
+	res, err := r.Table(ProjectTable).Filter(project_filter).Run(s.Session)
+
+	if err != nil {
+		return false, err
+	}
+
+	return !res.IsNil(), nil
+}
+
 func (s *ProjectStorage) GetByID(user, id string) (*model.Project, *e.Err) {
 
 	var err error
