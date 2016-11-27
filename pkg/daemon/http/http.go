@@ -44,6 +44,9 @@ func NewRouter() *mux.Router {
 	r.HandleFunc("/service/{id}", Handler(handler.ServiceUpdateH, Auth)).Methods("PUT")
 	r.HandleFunc("/service/{id}", Handler(handler.ServiceRemoveH, Auth)).Methods("DELETE")
 
+	// Template handlers
+	r.HandleFunc("/template", Handler(handler.TemplateListH, Auth)).Methods("GET")
+
 	return r
 }
 

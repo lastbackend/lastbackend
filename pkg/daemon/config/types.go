@@ -6,6 +6,10 @@ type Config struct {
 
 	TokenSecret string `yaml:"secret"`
 
+	TemplateRegistry struct {
+		Host string `yaml:"host"`
+	} `yaml:"template_registry"`
+
 	HttpServer struct {
 		Port int `yaml:"port"`
 	} `yaml:"http_server"`
