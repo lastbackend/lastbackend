@@ -14,6 +14,14 @@ func (project) NotFound(e ...error) *Err {
 	}
 }
 
+func (project) NameExists(e ...error) *Err {
+	return &Err{
+		Code:   StatusNotUnique,
+		origin: getError("Project: name not unique", e...),
+		http:   HTTP.getNotUnique("name"),
+	}
+}
+
 func (project) BadParameter(attr string, e ...error) *Err {
 	return &Err{
 		Code:   StatusBadParameter,

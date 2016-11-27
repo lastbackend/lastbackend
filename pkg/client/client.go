@@ -5,11 +5,11 @@ import (
 	"github.com/lastbackend/lastbackend/libs/http"
 	"github.com/lastbackend/lastbackend/libs/log"
 	p "github.com/lastbackend/lastbackend/pkg/client/cmd/project"
+	"github.com/lastbackend/lastbackend/pkg/client/cmd/service"
 	u "github.com/lastbackend/lastbackend/pkg/client/cmd/user"
 	"github.com/lastbackend/lastbackend/pkg/client/config"
 	"github.com/lastbackend/lastbackend/pkg/client/context"
 	"os"
-	"github.com/lastbackend/lastbackend/pkg/client/cmd/service"
 )
 
 func Run() {
