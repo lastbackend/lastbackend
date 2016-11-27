@@ -20,7 +20,7 @@ func (s *ProjectStorage) GetByName(user, name string) (*model.Project, *e.Err) {
 
 	var err error
 	var project = new(model.Project)
-	var project_filter = map[string]interface{}{
+	var project_filter = map[string]string{
 		"name": name,
 		"user": user,
 	}
@@ -41,18 +41,20 @@ func (s *ProjectStorage) GetByName(user, name string) (*model.Project, *e.Err) {
 	return project, nil
 }
 
-func (s *ProjectStorage) ExistByName(user, name string) (bool, error) {
-	var project_filter = map[string]interface{}{
+func (s *ProjectStorage) ExistByName(userID, name string) (bool, error) {
+	var project_filter = map[string]string{
 		"name": name,
-		"user": user,
+		"user": userID,
 	}
-
 	res, err := r.Table(ProjectTable).Filter(project_filter).Run(s.Session)
 
 	if err != nil {
-		return false, err
+		return true, err
 	}
 
+	if !res.IsNil() {
+		return true, nil
+	}
 	return !res.IsNil(), nil
 }
 
@@ -129,7 +131,10 @@ func (s *ProjectStorage) Update(project *model.Project) (*model.Project, *e.Err)
 
 	project.Updated = time.Now()
 
-	_, err = r.Table(ProjectTable).Update(project, opts).RunWrite(s.Session)
+	_, err = r.Table(ProjectTable).Get(project.ID).Update(map[string]string{
+		"name": project.Name,
+		"description": project.Description,
+	}, opts).RunWrite(s.Session)
 	if err != nil {
 		return nil, e.Project.Unknown(err)
 	}

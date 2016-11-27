@@ -6,7 +6,7 @@ import (
 	"github.com/gorilla/mux"
 	e "github.com/lastbackend/lastbackend/libs/errors"
 	"github.com/lastbackend/lastbackend/libs/model"
-	"github.com/lastbackend/lastbackend/pkg/client/cmd/project"
+
 	c "github.com/lastbackend/lastbackend/pkg/daemon/context"
 	"github.com/lastbackend/lastbackend/utils"
 	"io"
@@ -14,6 +14,7 @@ import (
 	"k8s.io/client-go/1.5/pkg/api"
 	"k8s.io/client-go/1.5/pkg/api/v1"
 	"net/http"
+//	"github.com/lastbackend/lastbackend/pkg/client/cmd/project"
 )
 
 func ProjectListH(w http.ResponseWriter, r *http.Request) {
@@ -177,10 +178,10 @@ func ProjectCreateH(w http.ResponseWriter, r *http.Request) {
 	p.User = session.Uid
 	p.Name = *rq.Name
 	p.Description = *rq.Description
-	exists, err := ctx.Storage.Project().ExistByName(p.User, p.Name)
-	if err != nil {
-		w.Write([]byte("project already exists"))
-	}
+
+	var exists bool
+	exists, er = ctx.Storage.Project().ExistByName(p.User, p.Name)
+
 	if exists {
 		e.Project.NameExists().Http(w)
 		return
@@ -308,10 +309,16 @@ func ProjectUpdateH(w http.ResponseWriter, r *http.Request) {
 	p.User = session.Uid
 	p.Name = *rq.Name
 	p.Description = *rq.Description
+	 var exist bool
+	exist, er = ctx.Storage.Project().ExistByName(p.User, p.Name)
 
+	if exist {
+		e.Project.NameExists().Http(w)
+		return
+	}
 	project, err := ctx.Storage.Project().Update(p)
 	if err != nil {
-		ctx.Log.Error("Error: insert project to db", err)
+		ctx.Log.Error("Error: insert project to db", err.Err())
 		e.HTTP.InternalServerError(w)
 		return
 	}
