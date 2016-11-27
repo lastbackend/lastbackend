@@ -42,7 +42,7 @@ func Remove(name string) error {
 	_, _, err = ctx.HTTP.
 		DELETE("/project/"+name).
 		AddHeader("Content-Type", "application/json").
-		AddHeader("Authorization", "Bearer " + token.Token).
+		AddHeader("Authorization", "Bearer "+token.Token).
 		Request(&res, er)
 	if err != nil {
 		return errors.New(err.Error())

@@ -6,7 +6,6 @@ import (
 	e "github.com/lastbackend/lastbackend/libs/errors"
 	"github.com/lastbackend/lastbackend/libs/model"
 	"github.com/lastbackend/lastbackend/pkg/client/context"
-
 )
 
 func ListCmd() {
@@ -23,8 +22,8 @@ func ListCmd() {
 func List() error {
 
 	var (
-		err   error
-		ctx   = context.Get()
+		err error
+		ctx = context.Get()
 	)
 	token := struct {
 		Token string `json:"token"`
@@ -40,7 +39,7 @@ func List() error {
 	_, _, err = ctx.HTTP.
 		GET("/project").
 		AddHeader("Content-Type", "application/json").
-		AddHeader("Authorization", "Bearer " + token.Token).
+		AddHeader("Authorization", "Bearer "+token.Token).
 		Request(&res, er)
 	if err != nil {
 		return err

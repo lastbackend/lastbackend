@@ -1,15 +1,14 @@
 package service
 
 import (
+	tab "github.com/crackcomm/go-clitable"
+	e "github.com/lastbackend/lastbackend/libs/errors"
 	"github.com/lastbackend/lastbackend/libs/model"
 	"github.com/lastbackend/lastbackend/pkg/client/context"
-	e "github.com/lastbackend/lastbackend/libs/errors"
-	tab "github.com/crackcomm/go-clitable"
 )
 
 type serviceCreate struct {
 	Name string `json:"name"`
-
 }
 
 func getToken(ctx *context.Context) (string, error) {
@@ -36,41 +35,41 @@ func printData(data model.Service) {
 
 func Create(name string) error {
 	var (
-		err error
-		ctx = context.Get()
+		err   error
+		ctx   = context.Get()
 		token string
-		res model.Project
+		res   model.Project
 	)
 	token, err = getToken(ctx)
 	req_err := new(e.Http)
 	_, _, err = ctx.HTTP.
 		POST("/service").
 		AddHeader("Content-Type", "application/json").
-		AddHeader("Authorization", "Bearer " + token).
+		AddHeader("Authorization", "Bearer "+token).
 		BodyJSON(serviceCreate{name}).
 		Request(&res, req_err)
-	if err != nil {}
+	if err != nil {
+	}
 	return err
 
 }
 
 func Inspect(name string) error {
 	var (
-		err error
-		ctx = context.Get()
+		err   error
+		ctx   = context.Get()
 		token string
-		res model.Service
+		res   model.Service
 	)
 	token, err = getToken(ctx)
 	req_err := new(e.Http)
 	_, _, err = ctx.HTTP.
-		GET("/service/" + name).
-		AddHeader("Authorization", "Bearer " + token).
+		GET("/service/"+name).
+		AddHeader("Authorization", "Bearer "+token).
 		Request(&res, req_err)
 	if err != nil {
 		return err
 	}
-
 
 	printData(res)
 	return err
@@ -80,17 +79,18 @@ func Inspect(name string) error {
 
 func Remove(name string) error {
 	var (
-		err error
-		ctx = context.Get()
+		err   error
+		ctx   = context.Get()
 		token string
-		res model.Project
+		res   model.Project
 	)
 	token, err = getToken(ctx)
 	req_err := new(e.Http)
 	_, _, err = ctx.HTTP.
-		DELETE("/service/" + name).
-		AddHeader("Authorization", "Bearer " + token).
+		DELETE("/service/"+name).
+		AddHeader("Authorization", "Bearer "+token).
 		Request(&res, req_err)
-	if err != nil {}
+	if err != nil {
+	}
 	return err
 }
