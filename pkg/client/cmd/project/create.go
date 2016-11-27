@@ -26,9 +26,8 @@ func CreateCmd(name, description string) {
 func Create(name, description string) error {
 
 	var (
-		err   error
-		ctx   = context.Get()
-
+		err error
+		ctx = context.Get()
 	)
 	token := struct {
 		Token string `json:"token"`
@@ -44,7 +43,7 @@ func Create(name, description string) error {
 	_, _, err = ctx.HTTP.
 		POST("/project").
 		AddHeader("Content-Type", "application/json").
-		AddHeader("Authorization", "Bearer " + token.Token).
+		AddHeader("Authorization", "Bearer "+token.Token).
 		BodyJSON(createS{name, description}).
 		Request(&res, er)
 	if err != nil {

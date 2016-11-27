@@ -44,6 +44,7 @@ type IProject interface {
 	GetByID(string, string) (*model.Project, *errors.Err)
 	GetByUser(string) (*model.ProjectList, *errors.Err)
 	Insert(*model.Project) (*model.Project, *errors.Err)
+	ExistByName(string, string) (bool, error)
 	Update(*model.Project) (*model.Project, *errors.Err)
 	Remove(string) *errors.Err
 }
