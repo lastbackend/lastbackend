@@ -13,6 +13,8 @@ type Service struct {
 	ID string `json:"id" gorethink:"id,omitempty"`
 	// Service user
 	User string `json:"user" gorethink:"user,omitempty"`
+	// Service project
+	Project string `json:"project" gorethink:"project,omitempty"`
 	// Service image
 	Image string `json:"image" gorethink:"image,omitempty"`
 	// Service name
