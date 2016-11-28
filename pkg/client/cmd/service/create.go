@@ -1,10 +1,11 @@
 package service
 
 import (
-tab "github.com/crackcomm/go-clitable"
-e "github.com/lastbackend/lastbackend/libs/errors"
-"github.com/lastbackend/lastbackend/libs/model"
-"github.com/lastbackend/lastbackend/pkg/client/context"
+	"errors"
+	tab "github.com/crackcomm/go-clitable"
+	e "github.com/lastbackend/lastbackend/libs/errors"
+	"github.com/lastbackend/lastbackend/libs/model"
+	"github.com/lastbackend/lastbackend/pkg/client/context"
 )
 
 type serviceCreate struct {
@@ -52,6 +53,11 @@ func Create(name string) error {
 		res   model.Project
 	)
 	token, err = getToken(ctx)
+
+	if err != nil {
+		return err
+	}
+
 	req_err := new(e.Http)
 	_, _, err = ctx.HTTP.
 		POST("/service").
@@ -59,8 +65,11 @@ func Create(name string) error {
 		AddHeader("Authorization", "Bearer "+token).
 		BodyJSON(serviceCreate{name}).
 		Request(&res, req_err)
-	if err != nil {
+
+	if req_err.Code != 0 {
+		return errors.New(e.Message(req_err.Status))
 	}
+
 	return err
 
 }

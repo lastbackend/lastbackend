@@ -186,7 +186,7 @@ func configure(app *cli.Cli) {
 
 	app.Command("templates", "view templates", func(c *cli.Cmd) {
 		c.Action = func() {
-			template.ViewTemplates()
+			template.ViewTemplatesCmd()
 		}
 	})
 }

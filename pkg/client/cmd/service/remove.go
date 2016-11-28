@@ -1,6 +1,7 @@
 package service
 
 import (
+	"errors"
 	e "github.com/lastbackend/lastbackend/libs/errors"
 	"github.com/lastbackend/lastbackend/libs/model"
 	"github.com/lastbackend/lastbackend/pkg/client/context"
@@ -25,11 +26,20 @@ func Remove(name string) error {
 		res   model.Project
 	)
 	token, err = getToken(ctx)
+
+	if err != nil {
+		return err
+	}
+
 	req_err := new(e.Http)
 	_, _, err = ctx.HTTP.
 		DELETE("/service/"+name).
 		AddHeader("Authorization", "Bearer "+token).
 		Request(&res, req_err)
+
+	if req_err.Code != 0 {
+		return errors.New(e.Message(req_err.Status))
+	}
 
 	return err
 }
