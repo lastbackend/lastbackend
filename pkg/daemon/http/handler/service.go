@@ -261,6 +261,10 @@ func (s *serviceReplace) decodeAndValidate(reader io.Reader) *e.Err {
 		return e.Service.IncorrectJSON(err)
 	}
 
+	if s.Name != nil && !utils.IsServiceName(*s.Name) {
+		return e.Service.BadParameter("name")
+	}
+
 	return nil
 }
 
@@ -312,7 +316,7 @@ func ServiceUpdateH(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if rq.Name == nil {
+	if rq.Name == nil || *rq.Name == "" {
 		rq.Name = &service.Name
 	}
 
