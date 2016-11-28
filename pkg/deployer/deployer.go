@@ -6,4 +6,6 @@ import (
 
 type Deployer struct{}
 
-func (Deployer) DeployFromTemplate(service string, template *model.Template)
+func (Deployer) DeployFromTemplate(service string, template *model.Template) error {
+	return nil
+}

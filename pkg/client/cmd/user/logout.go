@@ -27,8 +27,6 @@ func Logout() error {
 
 	err := ctx.Storage.Clear()
 
-	fmt.Println("lal")
-
 	if err != nil {
 		return errors.New("Some problems with logout")
 	}
