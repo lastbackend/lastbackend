@@ -167,17 +167,17 @@ func configure(app *cli.Cli) {
 		})
 		c.Command("create", "create new service", func(c *cli.Cmd) {
 			c.Action = func() {
-				service.Create(*service_name)
+				service.CreateCmd(*service_name)
 			}
 		})
-		c.Command("inspect", "examine the inspect", func(c *cli.Cmd) {
+		c.Command("inspect", "inspect the service", func(c *cli.Cmd) {
 			c.Action = func() {
-				service.Inspect(*service_name)
+				service.InspectCmd(*service_name)
 			}
 		})
 		c.Command("remove", "remove an existing service", func(c *cli.Cmd) {
 			c.Action = func() {
-				service.Remove(*service_name)
+				service.RemoveCmd(*service_name)
 			}
 		})
 
@@ -186,7 +186,7 @@ func configure(app *cli.Cli) {
 
 	app.Command("templates", "view templates", func(c *cli.Cmd) {
 		c.Action = func() {
-			template.ViewTemplates()
+			template.ViewTemplatesCmd()
 		}
 	})
 }
