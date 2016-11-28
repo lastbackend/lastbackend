@@ -1,0 +1,6 @@
+package template
+
+
+func ViewTemplates() {
+
+}

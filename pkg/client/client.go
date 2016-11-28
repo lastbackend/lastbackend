@@ -6,6 +6,7 @@ import (
 	"github.com/lastbackend/lastbackend/libs/log"
 	p "github.com/lastbackend/lastbackend/pkg/client/cmd/project"
 	"github.com/lastbackend/lastbackend/pkg/client/cmd/service"
+	"github.com/lastbackend/lastbackend/pkg/client/cmd/template"
 	u "github.com/lastbackend/lastbackend/pkg/client/cmd/user"
 	"github.com/lastbackend/lastbackend/pkg/client/config"
 	"github.com/lastbackend/lastbackend/pkg/client/context"
@@ -183,4 +184,9 @@ func configure(app *cli.Cli) {
 
 	})
 
+	app.Command("templates", "view templates", func(c *cli.Cmd) {
+		c.Action = func() {
+			template.ViewTemplates()
+		}
+	})
 }
