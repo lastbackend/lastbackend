@@ -4,7 +4,7 @@ package template
 	res["mock template 1"] = string{"first ver.", "last ver."}
 	res["mock template 2"] = string{"first ver.","ver 0.0", "last ver."}
  */
-
+/*
 import (
 "github.com/lastbackend/lastbackend/pkg/client/context"
 e "github.com/lastbackend/lastbackend/libs/errors"
@@ -50,3 +50,4 @@ func ViewTemplatesTest() error {
 
 	return nil
 }
+*/
