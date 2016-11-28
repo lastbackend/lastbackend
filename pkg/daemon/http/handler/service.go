@@ -261,10 +261,6 @@ func (s *serviceReplace) decodeAndValidate(reader io.Reader) *e.Err {
 		return e.Service.IncorrectJSON(err)
 	}
 
-	if s.Name == nil {
-		return e.Service.BadParameter("name")
-	}
-
 	return nil
 }
 
@@ -274,9 +270,11 @@ func ServiceUpdateH(w http.ResponseWriter, r *http.Request) {
 		er      error
 		err     *e.Err
 		session *model.Session
+		service *model.Service
 		ctx     = c.Get()
 		params  = mux.Vars(r)
 		id      = params["id"]
+		name    = params["id"]
 	)
 
 	ctx.Log.Debug("Update service handler")
@@ -298,24 +296,26 @@ func ServiceUpdateH(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if !utils.IsUUID(id) {
-		service, err := ctx.Storage.Service().GetByName(session.Uid, id)
-		if err == nil && service == nil {
-			e.Service.NotFound().Http(w)
-			return
-		}
-		if err != nil {
-			ctx.Log.Error("Error: find service by id", err.Err())
-			err.Http(w)
-			return
-		}
-
-		id = service.ID
+	if !utils.IsUUID(name) {
+		service, err = ctx.Storage.Service().GetByName(session.Uid, name)
+	} else {
+		service, err = ctx.Storage.Service().GetByID(session.Uid, id)
 	}
 
-	service := new(model.Service)
-	service.ID = id
-	service.User = session.Uid
+	if err == nil && service == nil {
+		e.Service.NotFound().Http(w)
+		return
+	}
+	if err != nil {
+		ctx.Log.Error("Error: find service by name or id", err.Err())
+		err.Http(w)
+		return
+	}
+
+	if rq.Name == nil {
+		rq.Name = &service.Name
+	}
+
 	service.Name = *rq.Name
 
 	if !utils.IsUUID(id) && service.Name != *rq.Name {
