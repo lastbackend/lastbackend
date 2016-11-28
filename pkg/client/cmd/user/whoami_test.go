@@ -18,16 +18,16 @@ func TestWhoami_Success(t *testing.T) {
 		email    string = "mock@lastbackend.com"
 	)
 
-  var (
-    err error
-    ctx = context.Mock()
-  )
+	var (
+		err error
+		ctx = context.Mock()
+	)
 
-  err = ctx.Storage.Init()
-  if err != nil {
-    panic(err)
-  }
-  defer ctx.Storage.Close()
+	err = ctx.Storage.Init()
+	if err != nil {
+		panic(err)
+	}
+	defer ctx.Storage.Close()
 
 	token := struct {
 		Token string `json:"token"`

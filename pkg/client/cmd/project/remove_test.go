@@ -17,16 +17,16 @@ func TestRemove_Success(t *testing.T) {
 		token string = "mocktoken"
 	)
 
-  var (
-    err error
-    ctx = context.Mock()
-  )
+	var (
+		err error
+		ctx = context.Mock()
+	)
 
-  err = ctx.Storage.Init()
-  if err != nil {
-    panic(err)
-  }
-  defer ctx.Storage.Close()
+	err = ctx.Storage.Init()
+	if err != nil {
+		panic(err)
+	}
+	defer ctx.Storage.Close()
 
 	session := struct {
 		Token string `json:"token"`
