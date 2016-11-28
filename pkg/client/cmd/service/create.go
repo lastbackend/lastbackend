@@ -1,10 +1,10 @@
 package service
 
 import (
-	tab "github.com/crackcomm/go-clitable"
-	e "github.com/lastbackend/lastbackend/libs/errors"
-	"github.com/lastbackend/lastbackend/libs/model"
-	"github.com/lastbackend/lastbackend/pkg/client/context"
+tab "github.com/crackcomm/go-clitable"
+e "github.com/lastbackend/lastbackend/libs/errors"
+"github.com/lastbackend/lastbackend/libs/model"
+"github.com/lastbackend/lastbackend/pkg/client/context"
 )
 
 type serviceCreate struct {
@@ -33,6 +33,17 @@ func printData(data model.Service) {
 	table.Print()
 }
 
+func CreateCmd(name string) {
+
+	ctx := context.Get()
+
+	err := Create(name)
+	if err != nil {
+		ctx.Log.Error(err)
+		return
+	}
+}
+
 func Create(name string) error {
 	var (
 		err   error
@@ -54,41 +65,5 @@ func Create(name string) error {
 
 }
 
-func Inspect(name string) error {
-	var (
-		err   error
-		ctx   = context.Get()
-		token string
-		res   model.Service
-	)
-	token, err = getToken(ctx)
-	req_err := new(e.Http)
-	_, _, err = ctx.HTTP.
-		GET("/service/"+name).
-		AddHeader("Authorization", "Bearer "+token).
-		Request(&res, req_err)
-	if err != nil {
-		return err
-	}
 
-	printData(res)
-	return err
-}
 
-func Remove(name string) error {
-	var (
-		err   error
-		ctx   = context.Get()
-		token string
-		res   model.Project
-	)
-	token, err = getToken(ctx)
-	req_err := new(e.Http)
-	_, _, err = ctx.HTTP.
-		DELETE("/service/"+name).
-		AddHeader("Authorization", "Bearer "+token).
-		Request(&res, req_err)
-	if err != nil {
-	}
-	return err
-}
