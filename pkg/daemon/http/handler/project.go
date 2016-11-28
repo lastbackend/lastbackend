@@ -78,13 +78,14 @@ func ProjectInfoH(w http.ResponseWriter, r *http.Request) {
 	}
 
 	session = s.(*model.Session)
-
 	var project *model.Project
+
 	if !utils.IsUUID(id) {
 		project, err = ctx.Storage.Project().GetByName(session.Uid, id)
 	} else {
 		project, err = ctx.Storage.Project().GetByID(session.Uid, id)
 	}
+
 	if err == nil && project == nil {
 		e.Project.NotFound().Http(w)
 		return
@@ -175,17 +176,23 @@ func ProjectCreateH(w http.ResponseWriter, r *http.Request) {
 		err.Http(w)
 		return
 	}
+
 	p := new(model.Project)
 	p.User = session.Uid
 	p.Name = *rq.Name
 	p.Description = *rq.Description
-	var exists bool
-	exists, er = ctx.Storage.Project().ExistByName(p.User, p.Name)
 
+	exists, er := ctx.Storage.Project().ExistByName(p.User, p.Name)
+	if er != nil {
+		ctx.Log.Error("Error: check exists by name", er.Error())
+		e.HTTP.InternalServerError(w)
+		return
+	}
 	if exists {
 		e.Project.NameExists().Http(w)
 		return
 	}
+
 	project, err := ctx.Storage.Project().Insert(p)
 	if err != nil {
 		ctx.Log.Error("Error: insert project to db", err)

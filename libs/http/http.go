@@ -55,6 +55,23 @@ func (r *RawReq) Request(successV, failureV interface{}) (req *http.Request, res
 	return req, resp, nil
 }
 
+func (r *RawReq) Do() (req *http.Request, resp *http.Response, err error) {
+
+	req, err = r.getRequest()
+	if err != nil {
+		return nil, nil, err
+	}
+
+	req.Cookies()
+
+	resp, err = http.DefaultClient.Do(req)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	return req, resp, nil
+}
+
 func (r *RawReq) AddHeader(key, value string) *RawReq {
 	r.header.Set(key, value)
 	return r

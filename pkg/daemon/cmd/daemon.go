@@ -4,6 +4,7 @@ import (
 	"github.com/jawher/mow.cli"
 	"github.com/lastbackend/lastbackend/libs/adapter/k8s"
 	"github.com/lastbackend/lastbackend/libs/adapter/storage"
+	http_client "github.com/lastbackend/lastbackend/libs/http"
 	"github.com/lastbackend/lastbackend/libs/log"
 	"github.com/lastbackend/lastbackend/pkg/daemon/config"
 	"github.com/lastbackend/lastbackend/pkg/daemon/context"
@@ -66,6 +67,12 @@ func Daemon(cmd *cli.Cmd) {
 		if cfg.HttpServer.Port == 0 {
 			cfg.HttpServer.Port = 3000
 		}
+
+		if cfg.TemplateRegistry.Host == "" {
+			cfg.TemplateRegistry.Host = "http://localhost:3003"
+		}
+
+		ctx.TemplateRegistry = http_client.New(cfg.TemplateRegistry.Host)
 	}
 
 	cmd.Action = func() {

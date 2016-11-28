@@ -16,6 +16,28 @@ type ServiceStorage struct {
 	storage.IService
 }
 
+func (s *ServiceStorage) CheckExistsByName(userID, projectID, name string) (bool, error) {
+
+	var err error
+	var service_filter = map[string]string{
+		"name":    name,
+		"user":    userID,
+		"project": projectID,
+	}
+
+	res, err := r.Table(ServiceTable).Filter(service_filter).Run(s.Session)
+
+	if err != nil {
+		return true, err
+	}
+
+	if !res.IsNil() {
+		return true, nil
+	}
+
+	return !res.IsNil(), nil
+}
+
 func (s *ServiceStorage) GetByName(user, name string) (*model.Service, *e.Err) {
 
 	var err error
@@ -114,7 +136,9 @@ func (s *ServiceStorage) Update(service *model.Service) (*model.Service, *e.Err)
 
 	service.Updated = time.Now()
 
-	_, err = r.Table(ServiceTable).Update(service, opts).RunWrite(s.Session)
+	_, err = r.Table(ServiceTable).Update(map[string]string{
+		"name": service.Name,
+	}, opts).RunWrite(s.Session)
 	if err != nil {
 		return nil, e.Service.Unknown(err)
 	}

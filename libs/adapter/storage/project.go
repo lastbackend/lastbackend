@@ -135,7 +135,7 @@ func (s *ProjectStorage) Update(project *model.Project) (*model.Project, *e.Err)
 	project.Updated = time.Now()
 
 	_, err = r.Table(ProjectTable).Get(project.ID).Update(map[string]string{
-		"name": project.Name,
+		"name":        project.Name,
 		"description": project.Description,
 	}, opts).RunWrite(s.Session)
 

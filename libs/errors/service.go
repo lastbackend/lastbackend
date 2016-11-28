@@ -23,6 +23,14 @@ func (service) BadParameter(attr string, e ...error) *Err {
 	}
 }
 
+func (service) NameExists(e ...error) *Err {
+	return &Err{
+		Code:   StatusNotUnique,
+		origin: getError("Service: name not unique", e...),
+		http:   HTTP.getNotUnique("name"),
+	}
+}
+
 func (service) IncorrectJSON(e ...error) *Err {
 	return &Err{
 		Code:   StatusIncorrectJson,
