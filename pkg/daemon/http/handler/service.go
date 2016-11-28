@@ -141,6 +141,10 @@ func (s *serviceCreate) decodeAndValidate(reader io.Reader) *e.Err {
 		return e.Service.BadParameter("name")
 	}
 
+	if s.Name != nil && !utils.IsServiceName(*s.Name) {
+		return e.Service.BadParameter("name")
+	}
+
 	if s.Project == nil {
 		return e.Service.BadParameter("project")
 	}
