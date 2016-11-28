@@ -6,7 +6,6 @@ import (
 	"github.com/gorilla/mux"
 	e "github.com/lastbackend/lastbackend/libs/errors"
 	"github.com/lastbackend/lastbackend/libs/model"
-
 	c "github.com/lastbackend/lastbackend/pkg/daemon/context"
 	"github.com/lastbackend/lastbackend/utils"
 	"io"
@@ -14,7 +13,6 @@ import (
 	"k8s.io/client-go/1.5/pkg/api"
 	"k8s.io/client-go/1.5/pkg/api/v1"
 	"net/http"
-//	"github.com/lastbackend/lastbackend/pkg/client/cmd/project"
 )
 
 func ProjectListH(w http.ResponseWriter, r *http.Request) {
@@ -139,6 +137,10 @@ func (s *projectCreate) decodeAndValidate(reader io.Reader) *e.Err {
 		return e.Project.BadParameter("name")
 	}
 
+	if s.Name != nil && !utils.IsProjectName(*s.Name) {
+		return e.Project.BadParameter("name")
+	}
+
 	if s.Description == nil {
 		s.Description = new(string)
 	}
@@ -173,12 +175,10 @@ func ProjectCreateH(w http.ResponseWriter, r *http.Request) {
 		err.Http(w)
 		return
 	}
-
 	p := new(model.Project)
 	p.User = session.Uid
 	p.Name = *rq.Name
 	p.Description = *rq.Description
-
 	var exists bool
 	exists, er = ctx.Storage.Project().ExistByName(p.User, p.Name)
 
@@ -248,7 +248,7 @@ func (s *projectReplace) decodeAndValidate(reader io.Reader) *e.Err {
 		return e.Project.IncorrectJSON(err)
 	}
 
-	if s.Name == nil {
+	if s.Name != nil && !utils.IsProjectName(*s.Name) {
 		return e.Project.BadParameter("name")
 	}
 
@@ -265,9 +265,11 @@ func ProjectUpdateH(w http.ResponseWriter, r *http.Request) {
 		er      error
 		err     *e.Err
 		session *model.Session
+		project *model.Project
 		ctx     = c.Get()
 		params  = mux.Vars(r)
 		id      = params["id"]
+		name    = params["id"]
 	)
 
 	ctx.Log.Debug("Update project handler")
@@ -289,34 +291,40 @@ func ProjectUpdateH(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if !utils.IsUUID(id) {
-		project, err := ctx.Storage.Project().GetByName(session.Uid, id)
-		if err == nil && project == nil {
-			e.Project.NotFound().Http(w)
-			return
-		}
-		if err != nil {
-			ctx.Log.Error("Error: find project by id", err.Err())
-			err.Http(w)
-			return
-		}
-
-		id = project.ID
+	if !utils.IsUUID(name) {
+		project, err = ctx.Storage.Project().GetByName(session.Uid, name)
+	} else {
+		project, err = ctx.Storage.Project().GetByID(session.Uid, id)
 	}
-
-	p := new(model.Project)
-	p.ID = id
-	p.User = session.Uid
-	p.Name = *rq.Name
-	p.Description = *rq.Description
-	 var exist bool
-	exist, er = ctx.Storage.Project().ExistByName(p.User, p.Name)
-
-	if exist {
-		e.Project.NameExists().Http(w)
+	if err == nil && project == nil {
+		e.Project.NotFound().Http(w)
 		return
 	}
-	project, err := ctx.Storage.Project().Update(p)
+	if err != nil {
+		ctx.Log.Error("Error: find project by id", err.Err())
+		err.Http(w)
+		return
+	}
+
+	if rq.Name == nil || *rq.Name == "" {
+		rq.Name = &project.Name
+	}
+
+	project.Description = *rq.Description
+
+	if !utils.IsUUID(name) && project.Name != *rq.Name {
+		exists, er := ctx.Storage.Project().ExistByName(project.User, project.Name)
+		if er != nil {
+			e.HTTP.InternalServerError(w)
+		}
+		if exists {
+			e.Project.NameExists().Http(w)
+			return
+		}
+	}
+
+	project, err = ctx.Storage.Project().Update(project)
+
 	if err != nil {
 		ctx.Log.Error("Error: insert project to db", err.Err())
 		e.HTTP.InternalServerError(w)

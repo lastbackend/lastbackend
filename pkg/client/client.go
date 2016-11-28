@@ -126,6 +126,34 @@ func configure(app *cli.Cli) {
 			}
 		})
 
+		c.Command("switch", "switch to project", func(c *cli.Cmd) {
+			c.Action = func() {
+				p.SwitchCmd(*name)
+			}
+		})
+
+		c.Command("current", "information about current project", func(c *cli.Cmd) {
+			c.Action = func() {
+				p.Current()
+			}
+		})
+
+		c.Command("update", "if you wish to change name or description of the project", func(c *cli.Cmd) {
+
+			c.Spec = "[--desc]"
+
+			var desc = c.String(cli.StringOpt{
+				Name:      "desc",
+				Value:     "",
+				Desc:      "Set description info",
+				HideValue: true,
+			})
+
+			c.Action = func() {
+				p.UpdateCmd(*name, *desc)
+			}
+		})
+
 	})
 
 	app.Command("service", "Service management", func(c *cli.Cmd) {
@@ -151,6 +179,7 @@ func configure(app *cli.Cli) {
 				service.Remove(*service_name)
 			}
 		})
+
 
 	})
 
