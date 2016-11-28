@@ -37,9 +37,13 @@ func Remove(name string) error {
 		AddHeader("Authorization", "Bearer "+token).
 		Request(&res, req_err)
 
+	if err != nil {
+		return err
+	}
+
 	if req_err.Code != 0 {
 		return errors.New(e.Message(req_err.Status))
 	}
 
-	return err
+	return nil
 }
