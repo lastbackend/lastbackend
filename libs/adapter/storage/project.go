@@ -6,6 +6,7 @@ import (
 	"github.com/lastbackend/lastbackend/libs/model"
 	r "gopkg.in/dancannon/gorethink.v2"
 	"time"
+
 )
 
 const ProjectTable string = "projects"
@@ -40,6 +41,8 @@ func (s *ProjectStorage) GetByName(user, name string) (*model.Project, *e.Err) {
 
 	return project, nil
 }
+
+
 
 func (s *ProjectStorage) ExistByName(userID, name string) (bool, error) {
 	var project_filter = map[string]string{
@@ -135,6 +138,7 @@ func (s *ProjectStorage) Update(project *model.Project) (*model.Project, *e.Err)
 		"name":        project.Name,
 		"description": project.Description,
 	}, opts).RunWrite(s.Session)
+
 	if err != nil {
 		return nil, e.Project.Unknown(err)
 	}

@@ -138,6 +138,10 @@ func (s *projectCreate) decodeAndValidate(reader io.Reader) *e.Err {
 		return e.Project.BadParameter("name")
 	}
 
+	if s.Name != nil && !utils.IsProjectName(*s.Name) {
+		return e.Project.BadParameter("name")
+	}
+
 	if s.Description == nil {
 		s.Description = new(string)
 	}
@@ -251,7 +255,7 @@ func (s *projectReplace) decodeAndValidate(reader io.Reader) *e.Err {
 		return e.Project.IncorrectJSON(err)
 	}
 
-	if s.Name == nil {
+	if s.Name != nil && !utils.IsProjectName(*s.Name) {
 		return e.Project.BadParameter("name")
 	}
 
@@ -268,9 +272,11 @@ func ProjectUpdateH(w http.ResponseWriter, r *http.Request) {
 		er      error
 		err     *e.Err
 		session *model.Session
+		project *model.Project
 		ctx     = c.Get()
 		params  = mux.Vars(r)
 		id      = params["id"]
+		name    = params["id"]
 	)
 
 	ctx.Log.Debug("Update project handler")
@@ -292,41 +298,42 @@ func ProjectUpdateH(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if !utils.IsUUID(id) {
-		project, err := ctx.Storage.Project().GetByName(session.Uid, id)
-		if err == nil && project == nil {
-			e.Project.NotFound().Http(w)
-			return
-		}
-		if err != nil {
-			ctx.Log.Error("Error: find project by id", err.Err())
-			err.Http(w)
-			return
-		}
-
-		id = project.ID
+	if !utils.IsUUID(name) {
+		project, err = ctx.Storage.Project().GetByName(session.Uid, name)
+	} else {
+		project, err = ctx.Storage.Project().GetByID(session.Uid, id)
 	}
-
-	p := new(model.Project)
-	p.ID = id
-	p.User = session.Uid
-	p.Name = *rq.Name
-	p.Description = *rq.Description
-
-	exists, er := ctx.Storage.Project().ExistByName(p.User, p.Name)
-	if er != nil {
-		ctx.Log.Error("Error: check exists by name", er.Error())
-		e.HTTP.InternalServerError(w)
+	if err == nil && project == nil {
+		e.Project.NotFound().Http(w)
 		return
 	}
-	if exists {
-		e.Project.NameExists().Http(w)
-		return
-	}
-
-	project, err := ctx.Storage.Project().Update(p)
 	if err != nil {
-		ctx.Log.Error("Error: insert project to db", err)
+		ctx.Log.Error("Error: find project by id", err.Err())
+		err.Http(w)
+		return
+	}
+
+	if rq.Name == nil || *rq.Name == "" {
+		rq.Name = &project.Name
+	}
+
+	project.Description = *rq.Description
+
+	if !utils.IsUUID(name) && project.Name != *rq.Name {
+		exists, er := ctx.Storage.Project().ExistByName(project.User, project.Name)
+		if er != nil {
+			e.HTTP.InternalServerError(w)
+		}
+		if exists {
+			e.Project.NameExists().Http(w)
+			return
+		}
+	}
+
+	project, err = ctx.Storage.Project().Update(project)
+
+	if err != nil {
+		ctx.Log.Error("Error: insert project to db", err.Err())
 		e.HTTP.InternalServerError(w)
 		return
 	}
