@@ -17,10 +17,6 @@ func ViewTemplates() error {
 		GET("/jumpstart").
 		Request(&res, req_err)
 
-
-	res["word-press"] = []string{"latest"}
-	res["nginx"] = []string{"0.0000001", "0.0000002"}
-
 	table := tab.New([]string{"Name", "Version"})
 	keys := make([]string, 0, len(res))
 	for k := range res {
@@ -40,8 +36,6 @@ func ViewTemplates() error {
 			})
 			table.Markdown = true
 		}
-
-
 	}
 	table.Print()
 
