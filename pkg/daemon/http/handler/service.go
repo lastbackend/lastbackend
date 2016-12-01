@@ -8,6 +8,7 @@ import (
 	e "github.com/lastbackend/lastbackend/libs/errors"
 	"github.com/lastbackend/lastbackend/libs/model"
 	c "github.com/lastbackend/lastbackend/pkg/daemon/context"
+	"github.com/lastbackend/lastbackend/pkg/deployer"
 	"github.com/lastbackend/lastbackend/utils"
 	"io"
 	"io/ioutil"
@@ -194,11 +195,11 @@ func ServiceCreateH(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var httperr = new(e.Http)
-	var res = new(model.Template)
+	var tpl = new(model.Template)
 
 	_, _, er = ctx.TemplateRegistry.
 		GET(fmt.Sprintf("/template/%s/%s", rq.Template.Name, rq.Template.Version)).
-		Request(res, httperr)
+		Request(tpl, httperr)
 	if er != nil {
 		ctx.Log.Error(httperr.Message)
 		e.HTTP.InternalServerError(w)
@@ -225,6 +226,15 @@ func ServiceCreateH(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		ctx.Log.Error("Error: insert service to db", err.Err())
 		e.HTTP.InternalServerError(w)
+		return
+	}
+
+	d := deployer.Get()
+
+	err = d.DeployFromTemplate(service.User, service.ID, *tpl)
+	if err != nil {
+		ctx.Log.Error("Error: deploy service from tempalte", err.Err())
+		err.Http(w)
 		return
 	}
 

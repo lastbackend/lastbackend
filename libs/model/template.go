@@ -3,21 +3,21 @@ package model
 import (
 	"encoding/json"
 	e "github.com/lastbackend/lastbackend/libs/errors"
-	"k8s.io/client-go/1.5/pkg/api"
-	"k8s.io/client-go/1.5/pkg/apis/extensions"
+	"k8s.io/client-go/1.5/pkg/api/v1"
+	"k8s.io/client-go/1.5/pkg/apis/extensions/v1beta1"
 )
 
 type TemplateList map[string][]string
 
 type Template struct {
-	Namespaces             []api.Namespace             `json:"namespaces,omitempty"`
-	PersistentVolumes      []api.PersistentVolume      `json:"persistent_volumes,omitempty"`
-	PersistentVolumeClaims []api.PersistentVolumeClaim `json:"persistent_volume_claims,omitempty"`
-	ServiceAccounts        []api.ServiceAccount        `json:"service_accounts,omitempty"`
-	Services               []api.Service               `json:"services,omitempty"`
-	ReplicationControllers []api.ReplicationController `json:"replication_controllers,omitempty"`
-	Pods                   []api.Pod                   `json:"pods,omitempty"`
-	Deployments            []extensions.Deployment     `json:"deployments,omitempty"`
+	Secrets                []v1.Secret                `json:"secrets,omitempty"`
+	PersistentVolumes      []v1.PersistentVolume      `json:"persistent_volumes,omitempty"`
+	PersistentVolumeClaims []v1.PersistentVolumeClaim `json:"persistent_volume_claims,omitempty"`
+	ServiceAccounts        []v1.ServiceAccount        `json:"service_accounts,omitempty"`
+	Services               []v1.Service               `json:"services,omitempty"`
+	ReplicationControllers []v1.ReplicationController `json:"replication_controllers,omitempty"`
+	Pods                   []v1.Pod                   `json:"pods,omitempty"`
+	Deployments            []v1beta1.Deployment       `json:"deployments,omitempty"`
 }
 
 func (t *Template) ToJson() ([]byte, *e.Err) {
