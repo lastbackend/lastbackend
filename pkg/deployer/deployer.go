@@ -23,29 +23,15 @@ func Get() *Deployer {
 	return deployer
 }
 
-func (d *Deployer) DeployFromTemplate(userID, serviceID string, tpl model.Template) *e.Err {
+func (d *Deployer) DeployProjectFromTemplate(namespace string, tpl model.Template) *e.Err {
 
 	var (
 		er  error
 		ctx = d.ctx
 	)
 
-	service, err := ctx.Storage.Service().GetByID(userID, serviceID)
-	if err != nil {
-		ctx.Log.Error(err.Err())
-		return err
-	}
-
 	for _, val := range tpl.Secrets {
-		_, er := ctx.K8S.Core().Secrets(service.Project).Create(&val)
-		if er != nil {
-			ctx.Log.Error(er.Error())
-			return e.Service.Unknown(er)
-		}
-	}
-
-	for _, val := range tpl.Services {
-		_, er := ctx.K8S.Core().Services(service.Project).Create(&val)
+		_, er := ctx.K8S.Core().Secrets(namespace).Create(&val)
 		if er != nil {
 			ctx.Log.Error(er.Error())
 			return e.Service.Unknown(er)
@@ -61,7 +47,15 @@ func (d *Deployer) DeployFromTemplate(userID, serviceID string, tpl model.Templa
 	}
 
 	for _, val := range tpl.PersistentVolumeClaims {
-		_, er = ctx.K8S.Core().PersistentVolumeClaims(service.Project).Create(&val)
+		_, er = ctx.K8S.Core().PersistentVolumeClaims(namespace).Create(&val)
+		if er != nil {
+			ctx.Log.Error(er.Error())
+			return e.Service.Unknown(er)
+		}
+	}
+
+	for _, val := range tpl.Services {
+		_, er := ctx.K8S.Core().Services(namespace).Create(&val)
 		if er != nil {
 			ctx.Log.Error(er.Error())
 			return e.Service.Unknown(er)
@@ -69,7 +63,7 @@ func (d *Deployer) DeployFromTemplate(userID, serviceID string, tpl model.Templa
 	}
 
 	for _, val := range tpl.ServiceAccounts {
-		_, er = ctx.K8S.Core().ServiceAccounts(service.Project).Create(&val)
+		_, er = ctx.K8S.Core().ServiceAccounts(namespace).Create(&val)
 		if er != nil {
 			ctx.Log.Error(er.Error())
 			return e.Service.Unknown(er)
@@ -77,7 +71,7 @@ func (d *Deployer) DeployFromTemplate(userID, serviceID string, tpl model.Templa
 	}
 
 	for _, val := range tpl.Deployments {
-		_, er = ctx.K8S.Extensions().Deployments(service.Project).Create(&val)
+		_, er = ctx.K8S.Extensions().Deployments(namespace).Create(&val)
 		if er != nil {
 			ctx.Log.Error(er.Error())
 			return e.Service.Unknown(er)
@@ -85,7 +79,7 @@ func (d *Deployer) DeployFromTemplate(userID, serviceID string, tpl model.Templa
 	}
 
 	for _, val := range tpl.ReplicationControllers {
-		_, er = ctx.K8S.Core().ReplicationControllers(service.Project).Create(&val)
+		_, er = ctx.K8S.Core().ReplicationControllers(namespace).Create(&val)
 		if er != nil {
 			ctx.Log.Error(er.Error())
 			return e.Service.Unknown(er)
@@ -93,7 +87,7 @@ func (d *Deployer) DeployFromTemplate(userID, serviceID string, tpl model.Templa
 	}
 
 	for _, val := range tpl.Pods {
-		_, er = ctx.K8S.Core().Pods(service.Project).Create(&val)
+		_, er = ctx.K8S.Core().Pods(namespace).Create(&val)
 		if er != nil {
 			ctx.Log.Error(er.Error())
 			return e.Service.Unknown(er)

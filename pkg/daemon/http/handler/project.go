@@ -2,11 +2,13 @@ package handler
 
 import (
 	"encoding/json"
+	"fmt"
 	"github.com/gorilla/context"
 	"github.com/gorilla/mux"
 	e "github.com/lastbackend/lastbackend/libs/errors"
 	"github.com/lastbackend/lastbackend/libs/model"
 	c "github.com/lastbackend/lastbackend/pkg/daemon/context"
+	"github.com/lastbackend/lastbackend/pkg/deployer"
 	"github.com/lastbackend/lastbackend/utils"
 	"io"
 	"io/ioutil"
@@ -114,6 +116,10 @@ func ProjectInfoH(w http.ResponseWriter, r *http.Request) {
 type projectCreate struct {
 	Name        *string `json:"name,omitempty"`
 	Description *string `json:"description,omitempty"`
+	Template    *struct {
+		Name    string `json:"name"`
+		Version string `json:"version"`
+	} `json:"template,omitempty"`
 }
 
 func (s *projectCreate) decodeAndValidate(reader io.Reader) *e.Err {
@@ -144,6 +150,16 @@ func (s *projectCreate) decodeAndValidate(reader io.Reader) *e.Err {
 
 	if s.Description == nil {
 		s.Description = new(string)
+	}
+
+	if s.Template != nil {
+		if s.Template.Name == "" {
+			return e.Template.BadParameter("name")
+		}
+
+		if s.Template.Version == "" {
+			s.Template.Version = "latest"
+		}
 	}
 
 	return nil
@@ -215,6 +231,29 @@ func ProjectCreateH(w http.ResponseWriter, r *http.Request) {
 		ctx.Log.Error("Error: create namespace", er.Error())
 		e.HTTP.InternalServerError(w)
 		return
+	}
+
+	if rq.Template != nil {
+		var httperr = new(e.Http)
+		var tpl = new(model.Template)
+
+		_, _, er = ctx.TemplateRegistry.
+			GET(fmt.Sprintf("/template/%s/%s", rq.Template.Name, rq.Template.Version)).
+			Request(tpl, httperr)
+		if er != nil {
+			ctx.Log.Error(httperr.Message)
+			e.HTTP.InternalServerError(w)
+			return
+		}
+
+		d := deployer.Get()
+
+		err = d.DeployProjectFromTemplate(project.ID, *tpl)
+		if err != nil {
+			ctx.Log.Error("Error: deploy project from tempalte", err.Err())
+			err.Http(w)
+			return
+		}
 	}
 
 	response, err := project.ToJson()
