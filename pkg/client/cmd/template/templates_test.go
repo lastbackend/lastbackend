@@ -1,39 +1,30 @@
 package template
 
+/*
+	res["mock template 1"] = string{"first ver.", "last ver."}
+	res["mock template 2"] = string{"first ver.","ver 0.0", "last ver."}
+ */
+/*
 import (
-	"errors"
-	"github.com/lastbackend/lastbackend/pkg/client/context"
-	e "github.com/lastbackend/lastbackend/libs/errors"
-	tab "github.com/crackcomm/go-clitable"
+"github.com/lastbackend/lastbackend/pkg/client/context"
+e "github.com/lastbackend/lastbackend/libs/errors"
+tab "github.com/crackcomm/go-clitable"
 )
 
-func ViewTemplatesCmd() {
-	ctx := context.Get()
 
-	err := ViewTemplates()
-	if err != nil {
-		ctx.Log.Error(err)
-		return
-	}
-}
 
-func ViewTemplates() error {
+func ViewTemplatesTest() error {
 
 	var res = make(map[string][]string)
 	req_err := new(e.Http)
 
 	ctx := context.Mock()
-	_, _, err := ctx.HTTP.
-		GET("/template").
+	ctx.HTTP.
+		GET("/jumpstart").
 		Request(&res, req_err)
 
-	if err != nil {
-		return err
-	}
-
-	if req_err.Code != 0 {
-		return errors.New(e.Message(req_err.Status))
-	}
+	res["mock template 1"] = string{"first ver.", "last ver."}
+	res["mock template 2"] = string{"first ver.","ver 0.0", "last ver."}
 
 	table := tab.New([]string{"Name", "Version"})
 	keys := make([]string, 0, len(res))
@@ -57,5 +48,6 @@ func ViewTemplates() error {
 	}
 	table.Print()
 
-	return err
+	return nil
 }
+*/
