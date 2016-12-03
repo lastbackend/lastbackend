@@ -7,7 +7,7 @@ import (
 	e "github.com/lastbackend/lastbackend/libs/errors"
 	"github.com/lastbackend/lastbackend/libs/model"
 	c "github.com/lastbackend/lastbackend/pkg/daemon/context"
-	"github.com/lastbackend/lastbackend/utils"
+	"github.com/lastbackend/lastbackend/pkg/util/validator"
 	"io"
 	"io/ioutil"
 	"net/http"
@@ -78,7 +78,7 @@ func ServiceInfoH(w http.ResponseWriter, r *http.Request) {
 	session = s.(*model.Session)
 	var service *model.Service
 
-	if !utils.IsUUID(id) {
+	if !validator.IsUUID(id) {
 		service, err = ctx.Storage.Service().GetByName(session.Uid, id)
 	} else {
 		service, err = ctx.Storage.Service().GetByID(session.Uid, id)
@@ -131,7 +131,7 @@ func (s *serviceReplaceS) decodeAndValidate(reader io.Reader) *e.Err {
 		return e.Service.IncorrectJSON(err)
 	}
 
-	if s.Name != nil && !utils.IsServiceName(*s.Name) {
+	if s.Name != nil && !validator.IsServiceName(*s.Name) {
 		return e.Service.BadParameter("name")
 	}
 
@@ -170,7 +170,7 @@ func ServiceUpdateH(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if !utils.IsUUID(name) {
+	if !validator.IsUUID(name) {
 		service, err = ctx.Storage.Service().GetByName(session.Uid, name)
 	} else {
 		service, err = ctx.Storage.Service().GetByID(session.Uid, id)
@@ -192,7 +192,7 @@ func ServiceUpdateH(w http.ResponseWriter, r *http.Request) {
 
 	service.Name = *rq.Name
 
-	if !utils.IsUUID(id) && service.Name != *rq.Name {
+	if !validator.IsUUID(id) && service.Name != *rq.Name {
 		exists, er := ctx.Storage.Service().CheckExistsByName(service.User, service.Project, service.Name)
 		if er != nil {
 			ctx.Log.Error("Error: check exists by name", er.Error())
@@ -248,7 +248,7 @@ func ServiceRemoveH(w http.ResponseWriter, r *http.Request) {
 
 	session = s.(*model.Session)
 
-	if !utils.IsUUID(id) {
+	if !validator.IsUUID(id) {
 		service, err := ctx.Storage.Service().GetByName(session.Uid, id)
 		if err == nil && service == nil {
 			e.Service.NotFound().Http(w)

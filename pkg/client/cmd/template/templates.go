@@ -2,60 +2,47 @@ package template
 
 import (
 	"errors"
-	"github.com/lastbackend/lastbackend/pkg/client/context"
 	e "github.com/lastbackend/lastbackend/libs/errors"
-	tab "github.com/crackcomm/go-clitable"
+	"github.com/lastbackend/lastbackend/libs/model"
+	"github.com/lastbackend/lastbackend/pkg/client/context"
 )
 
-func ViewTemplatesCmd() {
+func ListCmd() {
 	ctx := context.Get()
 
-	err := ViewTemplates()
+	err := List()
 	if err != nil {
 		ctx.Log.Error(err)
 		return
 	}
 }
 
-func ViewTemplates() error {
+func List() error {
 
-	var res = make(map[string][]string)
-	req_err := new(e.Http)
+	var (
+		ctx       = context.Get()
+		er        = new(e.Http)
+		templates = new(model.TemplateList)
+	)
 
-	ctx := context.Mock()
 	_, _, err := ctx.HTTP.
 		GET("/template").
-		Request(&res, req_err)
+		AddHeader("Authorization", "Bearer "+ctx.Token).
+		Request(&templates, er)
 
 	if err != nil {
 		return err
 	}
 
-	if req_err.Code != 0 {
-		return errors.New(e.Message(req_err.Status))
+	if er.Code == 401 {
+		return errors.New("You are currently not logged in to the system, to get proper access create a new user or login with an existing user.")
 	}
 
-	table := tab.New([]string{"Name", "Version"})
-	keys := make([]string, 0, len(res))
-	for k := range res {
-		keys = append(keys, k)
+	if er.Code != 0 {
+		return errors.New(e.Message(er.Status))
 	}
-	for i := 0; i < len(res); i++ {
 
-		table.AddRow(map[string]interface{}{
-			"Name":    keys[i],
-			"Version": res[keys[i]][0],
-		})
-		table.Markdown = true
-		for ii := 1; ii < len(res[keys[i]]); ii++ {
-			table.AddRow(map[string]interface{}{
-				"Name":    " ",
-				"Version": res[keys[i]][ii],
-			})
-			table.Markdown = true
-		}
-	}
-	table.Print()
+	templates.DrawTable()
 
 	return err
 }

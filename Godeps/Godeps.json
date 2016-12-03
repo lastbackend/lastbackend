@@ -3,7 +3,7 @@
 	"GoVersion": "go1.7",
 	"GodepVersion": "v75",
 	"Packages": [
-		"./..."
+		"../..."
 	],
 	"Deps": [
 		{
@@ -194,6 +194,58 @@
 		{
 			"ImportPath": "github.com/juju/ratelimit",
 			"Rev": "77ed1c8a01217656d2080ad51981f6e99adaa177"
+		},
+		{
+			"ImportPath": "github.com/lastbackend/registry/cmd/registry",
+			"Rev": "0aedd9845299a92ea339603890accf38783a2078"
+		},
+		{
+			"ImportPath": "github.com/lastbackend/registry/libs/errors",
+			"Rev": "0aedd9845299a92ea339603890accf38783a2078"
+		},
+		{
+			"ImportPath": "github.com/lastbackend/registry/libs/interface/log",
+			"Rev": "0aedd9845299a92ea339603890accf38783a2078"
+		},
+		{
+			"ImportPath": "github.com/lastbackend/registry/libs/log",
+			"Rev": "0aedd9845299a92ea339603890accf38783a2078"
+		},
+		{
+			"ImportPath": "github.com/lastbackend/registry/libs/log/color",
+			"Rev": "0aedd9845299a92ea339603890accf38783a2078"
+		},
+		{
+			"ImportPath": "github.com/lastbackend/registry/libs/log/filesystem",
+			"Rev": "0aedd9845299a92ea339603890accf38783a2078"
+		},
+		{
+			"ImportPath": "github.com/lastbackend/registry/pkg/registry",
+			"Rev": "0aedd9845299a92ea339603890accf38783a2078"
+		},
+		{
+			"ImportPath": "github.com/lastbackend/registry/pkg/registry/cmd",
+			"Rev": "0aedd9845299a92ea339603890accf38783a2078"
+		},
+		{
+			"ImportPath": "github.com/lastbackend/registry/pkg/registry/config",
+			"Rev": "0aedd9845299a92ea339603890accf38783a2078"
+		},
+		{
+			"ImportPath": "github.com/lastbackend/registry/pkg/registry/context",
+			"Rev": "0aedd9845299a92ea339603890accf38783a2078"
+		},
+		{
+			"ImportPath": "github.com/lastbackend/registry/pkg/registry/http",
+			"Rev": "0aedd9845299a92ea339603890accf38783a2078"
+		},
+		{
+			"ImportPath": "github.com/lastbackend/registry/pkg/registry/http/handler",
+			"Rev": "0aedd9845299a92ea339603890accf38783a2078"
+		},
+		{
+			"ImportPath": "github.com/lastbackend/registry/pkg/template",
+			"Rev": "0aedd9845299a92ea339603890accf38783a2078"
 		},
 		{
 			"ImportPath": "github.com/mailru/easyjson/buffer",

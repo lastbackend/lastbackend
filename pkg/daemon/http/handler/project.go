@@ -7,7 +7,7 @@ import (
 	e "github.com/lastbackend/lastbackend/libs/errors"
 	"github.com/lastbackend/lastbackend/libs/model"
 	c "github.com/lastbackend/lastbackend/pkg/daemon/context"
-	"github.com/lastbackend/lastbackend/utils"
+	"github.com/lastbackend/lastbackend/pkg/util/validator"
 	"io"
 	"io/ioutil"
 	"k8s.io/client-go/1.5/pkg/api"
@@ -80,7 +80,7 @@ func ProjectInfoH(w http.ResponseWriter, r *http.Request) {
 	session = s.(*model.Session)
 	var project *model.Project
 
-	if !utils.IsUUID(id) {
+	if !validator.IsUUID(id) {
 		project, err = ctx.Storage.Project().GetByName(session.Uid, id)
 	} else {
 		project, err = ctx.Storage.Project().GetByID(session.Uid, id)
@@ -138,7 +138,7 @@ func (s *projectCreateS) decodeAndValidate(reader io.Reader) *e.Err {
 		return e.Project.BadParameter("name")
 	}
 
-	if s.Name != nil && !utils.IsProjectName(*s.Name) {
+	if s.Name != nil && !validator.IsProjectName(*s.Name) {
 		return e.Project.BadParameter("name")
 	}
 
@@ -255,7 +255,7 @@ func (s *projectReplaceS) decodeAndValidate(reader io.Reader) *e.Err {
 		return e.Project.IncorrectJSON(err)
 	}
 
-	if s.Name != nil && !utils.IsProjectName(*s.Name) {
+	if s.Name != nil && !validator.IsProjectName(*s.Name) {
 		return e.Project.BadParameter("name")
 	}
 
@@ -298,7 +298,7 @@ func ProjectUpdateH(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if !utils.IsUUID(name) {
+	if !validator.IsUUID(name) {
 		project, err = ctx.Storage.Project().GetByName(session.Uid, name)
 	} else {
 		project, err = ctx.Storage.Project().GetByID(session.Uid, id)
@@ -319,7 +319,7 @@ func ProjectUpdateH(w http.ResponseWriter, r *http.Request) {
 
 	project.Description = *rq.Description
 
-	if !utils.IsUUID(name) && project.Name != *rq.Name {
+	if !validator.IsUUID(name) && project.Name != *rq.Name {
 		exists, er := ctx.Storage.Project().ExistByName(project.User, project.Name)
 		if er != nil {
 			e.HTTP.InternalServerError(w)
@@ -374,7 +374,7 @@ func ProjectRemoveH(w http.ResponseWriter, r *http.Request) {
 
 	session = s.(*model.Session)
 
-	if !utils.IsUUID(id) {
+	if !validator.IsUUID(id) {
 		project, err := ctx.Storage.Project().GetByName(session.Uid, id)
 		if err == nil && project == nil {
 			e.Project.NotFound().Http(w)

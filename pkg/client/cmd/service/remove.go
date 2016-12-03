@@ -19,31 +19,36 @@ func RemoveCmd(name string) {
 }
 
 func Remove(name string) error {
-	var (
-		err   error
-		ctx   = context.Get()
-		token string
-		res   model.Project
-	)
-	token, err = getToken(ctx)
 
-	if err != nil {
-		return err
+	var (
+		err     error
+		ctx     = context.Get()
+		service = new(model.Project)
+		er      = new(e.Http)
+	)
+
+	if len(name) == 0 {
+		return e.BadParameter("name").Err()
 	}
 
-	req_err := new(e.Http)
 	_, _, err = ctx.HTTP.
 		DELETE("/service/"+name).
-		AddHeader("Authorization", "Bearer "+token).
-		Request(&res, req_err)
+		AddHeader("Authorization", "Bearer "+ctx.Token).
+		Request(service, er)
 
 	if err != nil {
 		return err
 	}
 
-	if req_err.Code != 0 {
-		return errors.New(e.Message(req_err.Status))
+	if er.Code == 401 {
+		return errors.New("You are currently not logged in to the system, to get proper access create a new user or login with an existing user.")
 	}
+
+	if er.Code != 0 {
+		return errors.New(e.Message(er.Status))
+	}
+
+	ctx.Log.Info("Successful")
 
 	return nil
 }

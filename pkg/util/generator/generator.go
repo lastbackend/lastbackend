@@ -1,10 +1,11 @@
-package utils
+package generator
 
 import (
 	"crypto/md5"
 	"crypto/rand"
 	"crypto/sha1"
 	"fmt"
+	"github.com/satori/go.uuid"
 	"golang.org/x/crypto/bcrypt"
 	"io"
 	mathrand "math/rand"
@@ -13,6 +14,10 @@ import (
 )
 
 const RANDOM_PASS_LEN = 10
+
+func GetUUIDV4() string {
+	return uuid.NewV4().String()
+}
 
 func GenerateSalt(password string) (string, error) {
 	buf := make([]byte, 10, 10+sha1.Size)
@@ -81,8 +86,4 @@ func GenerateToken(n int) string {
 	str = strings.Replace(str, "-", "", -1)
 
 	return str[:n]
-}
-
-func GenerateDomain(name, username string) string {
-	return fmt.Sprintf(`%s.%s.lbapp.in`, name, username)
 }

@@ -18,34 +18,37 @@ func InspectCmd(name string) {
 	}
 }
 
-
 func Inspect(name string) error {
-	var (
-		err   error
-		ctx   = context.Get()
-		token string
-		res   model.Service
-	)
-	token, err = getToken(ctx)
 
-	if err != nil {
-		return err
+	var (
+		err     error
+		ctx     = context.Get()
+		er      = new(e.Http)
+		service = new(model.Service)
+	)
+
+	if len(name) == 0 {
+		return e.BadParameter("name").Err()
 	}
 
-	req_err := new(e.Http)
 	_, _, err = ctx.HTTP.
 		GET("/service/"+name).
-		AddHeader("Authorization", "Bearer "+token).
-		Request(&res, req_err)
+		AddHeader("Authorization", "Bearer "+ctx.Token).
+		Request(service, er)
 
 	if err != nil {
 		return err
 	}
 
-	if req_err.Code != 0 {
-		return errors.New(e.Message(req_err.Status))
+	if er.Code == 401 {
+		return errors.New("You are currently not logged in to the system, to get proper access create a new user or login with an existing user.")
 	}
 
-	printData(res)
+	if er.Code != 0 {
+		return errors.New(e.Message(er.Status))
+	}
+
+	service.DrawTable()
+
 	return nil
 }

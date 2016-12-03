@@ -1,7 +1,7 @@
 package user_test
 
 import (
-	"fmt"
+	"github.com/lastbackend/lastbackend/libs/db"
 	h "github.com/lastbackend/lastbackend/libs/http"
 	"github.com/lastbackend/lastbackend/pkg/client/cmd/user"
 	"github.com/lastbackend/lastbackend/pkg/client/context"
@@ -16,6 +16,7 @@ func TestWhoami_Success(t *testing.T) {
 	const (
 		username string = "mock"
 		email    string = "mock@lastbackend.com"
+		token    string = "mocktoken"
 	)
 
 	var (
@@ -23,25 +24,18 @@ func TestWhoami_Success(t *testing.T) {
 		ctx = context.Mock()
 	)
 
-	err = ctx.Storage.Init()
+	ctx.Storage, err = db.Init()
 	if err != nil {
 		panic(err)
 	}
 	defer ctx.Storage.Close()
 
-	token := struct {
-		Token string `json:"token"`
-	}{"mocktoken"}
-
-	err = ctx.Storage.Set("session", token)
-	if err != nil {
-		fmt.Println(err)
-	}
+	ctx.Token = token
 
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		tk := r.Header.Get("Authorization")
 		assert.NotEmpty(t, tk, "token should be not empty")
-		assert.Equal(t, tk, "Bearer "+token.Token, "they should be equal")
+		assert.Equal(t, tk, "Bearer "+token, "they should be equal")
 
 		w.WriteHeader(200)
 		_, err := w.Write([]byte(`{"id":"mock", "username":"` + username + `", "email":"` + email + `"}`))

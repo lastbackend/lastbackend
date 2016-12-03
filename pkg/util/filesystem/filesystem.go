@@ -1,25 +1,9 @@
-package utils
+package filesystem
 
 import (
 	"io/ioutil"
 	"os"
-	"os/user"
 )
-
-func GetHomeDir() string {
-
-	var dir string
-
-	usr, err := user.Current()
-	if err == nil {
-		dir = usr.HomeDir
-	} else {
-		// Maybe it's cross compilation without cgo support. (darwin, unix)
-		dir = os.Getenv("HOME")
-	}
-
-	return dir
-}
 
 // MkDir is used to create directory
 func MkDir(path string, mode os.FileMode) (err error) {

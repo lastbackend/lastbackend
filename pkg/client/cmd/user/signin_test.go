@@ -2,6 +2,7 @@ package user_test
 
 import (
 	"encoding/json"
+	"github.com/lastbackend/lastbackend/libs/db"
 	h "github.com/lastbackend/lastbackend/libs/http"
 	"github.com/lastbackend/lastbackend/pkg/client/cmd/user"
 	"github.com/lastbackend/lastbackend/pkg/client/context"
@@ -24,7 +25,7 @@ func TestSignIn_Success(t *testing.T) {
 		ctx = context.Mock()
 	)
 
-	err = ctx.Storage.Init()
+	ctx.Storage, err = db.Init()
 	if err != nil {
 		panic(err)
 	}

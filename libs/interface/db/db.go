@@ -1,9 +1,8 @@
-package localdb
+package db
 
-type ILocalStorage interface {
+type IDB interface {
 	Get(string, interface{}) error
 	Set(string, interface{}) error
 	Clear() error
-	Init() error
 	Close() error
 }

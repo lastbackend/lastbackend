@@ -2,7 +2,6 @@ package service
 
 import (
 	"errors"
-	tab "github.com/crackcomm/go-clitable"
 	e "github.com/lastbackend/lastbackend/libs/errors"
 	"github.com/lastbackend/lastbackend/libs/model"
 	"github.com/lastbackend/lastbackend/pkg/client/context"
@@ -12,31 +11,11 @@ type serviceCreate struct {
 	Name string `json:"name"`
 }
 
-func getToken(ctx *context.Context) (string, error) {
-	var err error
-	token := struct {
-		Token string `json:"token"`
-	}{}
-	err = ctx.Storage.Get("session", &token)
-	return token.Token, err
-}
-
-func printData(data model.Service) {
-	table := tab.New([]string{"ID", "Project", "Name", "Created", "Updated"})
-	table.AddRow(map[string]interface{}{
-		"ID":      data.ID,
-		"Project": data.Image,
-		"Name":    data.Name,
-		"Created": data.Created.String()[:10],
-		"Updated": data.Updated.String()[:10],
-	})
-	table.Markdown = true
-	table.Print()
-}
-
 func CreateCmd(name string) {
 
-	ctx := context.Get()
+	var (
+		ctx = context.Get()
+	)
 
 	err := Create(name)
 	if err != nil {
@@ -46,37 +25,36 @@ func CreateCmd(name string) {
 }
 
 func Create(name string) error {
-	var (
-		err   error
-		ctx   = context.Get()
-		token string
-		res   model.Project
-	)
-	token, err = getToken(ctx)
 
-	if err != nil {
-		return err
+	var (
+		err     error
+		ctx     = context.Get()
+		service = new(model.Project)
+		er      = new(e.Http)
+	)
+
+	if len(name) == 0 {
+		return e.BadParameter("name").Err()
 	}
 
-	req_err := new(e.Http)
 	_, _, err = ctx.HTTP.
 		POST("/service").
 		AddHeader("Content-Type", "application/json").
-		AddHeader("Authorization", "Bearer "+token).
+		AddHeader("Authorization", "Bearer "+ctx.Token).
 		BodyJSON(serviceCreate{name}).
-		Request(&res, req_err)
+		Request(service, er)
 
 	if err != nil {
 		return err
 	}
 
-	if req_err.Code != 0 {
-		return errors.New(e.Message(req_err.Status))
+	if er.Code == 401 {
+		return errors.New("You are currently not logged in to the system, to get proper access create a new user or login with an existing user.")
+	}
+
+	if er.Code != 0 {
+		return errors.New(e.Message(er.Status))
 	}
 
 	return nil
-
 }
-
-
-
