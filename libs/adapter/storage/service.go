@@ -133,12 +133,13 @@ func (s *ServiceStorage) Update(service *model.Service) (*model.Service, *e.Err)
 
 	var err error
 	var opts = r.UpdateOpts{ReturnChanges: true}
+	var project_filter = map[string]interface{}{
+		"name": service.Name,
+	}
 
 	service.Updated = time.Now()
 
-	_, err = r.Table(ServiceTable).Update(map[string]string{
-		"name": service.Name,
-	}, opts).RunWrite(s.Session)
+	_, err = r.Table(ServiceTable).Update(project_filter, opts).RunWrite(s.Session)
 	if err != nil {
 		return nil, e.Service.Unknown(err)
 	}
@@ -153,6 +154,23 @@ func (s *ServiceStorage) Remove(id string) *e.Err {
 	var opts = r.DeleteOpts{ReturnChanges: true}
 
 	_, err = r.Table(ServiceTable).Get(id).Delete(opts).RunWrite(s.Session)
+	if err != nil {
+		return e.Service.Unknown(err)
+	}
+
+	return nil
+}
+
+// Remove build model
+func (s *ServiceStorage) RemoveByProject(id string) *e.Err {
+
+	var err error
+	var opts = r.DeleteOpts{ReturnChanges: true}
+	var project_filter = map[string]interface{}{
+		"project": id,
+	}
+
+	_, err = r.Table(ServiceTable).Filter(project_filter).Delete(opts).RunWrite(s.Session)
 	if err != nil {
 		return e.Service.Unknown(err)
 	}

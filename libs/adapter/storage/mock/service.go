@@ -28,13 +28,18 @@ func (s *ServiceMock) Insert(service *model.Service) (*model.Service, *e.Err) {
 	return nil, nil
 }
 
-// Update build model
+// Update service model
 func (s *ServiceMock) Update(service *model.Service) (*model.Service, *e.Err) {
 	return nil, nil
 }
 
-// Remove build model
+// Remove service model
 func (s *ServiceMock) Remove(id string) *e.Err {
+	return nil
+}
+
+// Remove service model
+func (s *ServiceMock) RemoveByProject(id string) *e.Err {
 	return nil
 }
 

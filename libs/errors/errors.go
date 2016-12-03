@@ -28,8 +28,7 @@ const (
 	StatusPaymentRequired = "PAYMENT_REQUIRED"
 	StatusAccessDenied    = "ACCESS_DENIED"
 
-	StatusForbidden        = "FORBIDDEN"
-	StatusMethodNotAllowed = "METHOD_NOT_ALLOWED"
+	StatusForbidden = "FORBIDDEN"
 
 	StatusInternalServerError = "INTERNAL_SERVER_ERROR"
 
@@ -56,5 +55,30 @@ func getError(msg string, e ...error) error {
 		return errors.New(msg)
 	} else {
 		return e[0]
+	}
+}
+
+func BadParameter(attr string, e ...error) *Err {
+	return &Err{
+		Code:   StatusBadParameter,
+		Attr:   attr,
+		origin: getError("bad parameter", e...),
+		http:   HTTP.getBadParameter(attr),
+	}
+}
+
+func IncorrectJSON(e ...error) *Err {
+	return &Err{
+		Code:   StatusIncorrectJson,
+		origin: getError("incorrect json", e...),
+		http:   HTTP.getIncorrectJSON(),
+	}
+}
+
+func Unknown(e ...error) *Err {
+	return &Err{
+		Code:   StatusUnknown,
+		origin: getError("unknown error", e...),
+		http:   HTTP.getUnknown(),
 	}
 }

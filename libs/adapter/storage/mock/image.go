@@ -36,7 +36,7 @@ func (i *ImageMock) Insert(image *model.Image) (*model.Image, *e.Err) {
 	return nil, nil
 }
 
-// Update build model
+// Update image model
 func (i *ImageMock) Update(image *model.Image) (*model.Image, *e.Err) {
 	return nil, nil
 }

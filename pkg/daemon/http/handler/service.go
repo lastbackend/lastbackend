@@ -109,115 +109,11 @@ func ServiceInfoH(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-type serviceCreate struct {
-	Name    *string `json:"name,omitempty"`
-	Project *string `json:"project,omitempty"`
-}
-
-func (s *serviceCreate) decodeAndValidate(reader io.Reader) *e.Err {
-
-	var (
-		err error
-		ctx = c.Get()
-	)
-
-	body, err := ioutil.ReadAll(reader)
-	if err != nil {
-		ctx.Log.Error(err)
-		return e.User.Unknown(err)
-	}
-
-	err = json.Unmarshal(body, s)
-	if err != nil {
-		return e.Service.IncorrectJSON(err)
-	}
-
-	if s.Name == nil {
-		return e.Service.BadParameter("name")
-	}
-
-	if s.Name != nil && !utils.IsServiceName(*s.Name) {
-		return e.Service.BadParameter("name")
-	}
-
-	if s.Project == nil {
-		return e.Service.BadParameter("project")
-	}
-
-	return nil
-}
-
-func ServiceCreateH(w http.ResponseWriter, r *http.Request) {
-
-	var (
-		er      error
-		ctx     = c.Get()
-		session *model.Session
-	)
-
-	ctx.Log.Debug("Create service handler")
-
-	s, ok := context.GetOk(r, `session`)
-	if !ok {
-		ctx.Log.Error("Error: get session context")
-		e.User.AccessDenied().Http(w)
-		return
-	}
-
-	session = s.(*model.Session)
-	ctx.Log.Debug(session.Uid)
-
-	// request body struct
-	rq := new(serviceCreate)
-	if err := rq.decodeAndValidate(r.Body); err != nil {
-		ctx.Log.Error("Error: validation incomming data", err.Err())
-		err.Http(w)
-		return
-	}
-
-	service := new(model.Service)
-	service.User = session.Uid
-	service.Project = *rq.Project
-	service.Name = *rq.Name
-
-	exists, er := ctx.Storage.Service().CheckExistsByName(service.User, service.Project, service.Name)
-	if er != nil {
-		ctx.Log.Error("Error: check exists by name", er.Error())
-		e.HTTP.InternalServerError(w)
-		return
-	}
-	if exists {
-		e.Service.NameExists().Http(w)
-		return
-	}
-
-	service, err := ctx.Storage.Service().Insert(service)
-	if err != nil {
-		ctx.Log.Error("Error: insert service to db", err.Err())
-		e.HTTP.InternalServerError(w)
-		return
-	}
-
-	response, err := service.ToJson()
-	if er != nil {
-		ctx.Log.Error("Error: convert struct to json", err.Err())
-		e.HTTP.InternalServerError(w)
-		return
-	}
-
-	w.WriteHeader(200)
-	_, er = w.Write(response)
-	if er != nil {
-		ctx.Log.Error("Error: write response", er.Error())
-		return
-	}
-}
-
-type serviceReplace struct {
+type serviceReplaceS struct {
 	Name *string `json:"name,omitempty"`
 }
 
-func (s *serviceReplace) decodeAndValidate(reader io.Reader) *e.Err {
+func (s *serviceReplaceS) decodeAndValidate(reader io.Reader) *e.Err {
 
 	var (
 		err error
@@ -267,7 +163,7 @@ func ServiceUpdateH(w http.ResponseWriter, r *http.Request) {
 	session = s.(*model.Session)
 
 	// request body struct
-	rq := new(serviceReplace)
+	rq := new(serviceReplaceS)
 	if err := rq.decodeAndValidate(r.Body); err != nil {
 		ctx.Log.Error("Error: validation incomming data", err)
 		err.Http(w)

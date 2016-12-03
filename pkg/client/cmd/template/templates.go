@@ -24,7 +24,7 @@ func ViewTemplates() error {
 
 	ctx := context.Mock()
 	_, _, err := ctx.HTTP.
-		GET("/jumpstart").
+		GET("/template").
 		Request(&res, req_err)
 
 	if err != nil {

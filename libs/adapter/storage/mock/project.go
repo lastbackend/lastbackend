@@ -28,12 +28,12 @@ func (s *ProjectMock) Insert(project *model.Project) (*model.Project, *e.Err) {
 	return nil, nil
 }
 
-// Update build model
+// Update project model
 func (s *ProjectMock) Update(project *model.Project) (*model.Project, *e.Err) {
 	return nil, nil
 }
 
-// Remove build model
+// Remove project model
 func (s *ProjectMock) Remove(id string) *e.Err {
 	return nil
 }

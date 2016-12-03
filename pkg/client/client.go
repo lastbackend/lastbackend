@@ -181,7 +181,6 @@ func configure(app *cli.Cli) {
 			}
 		})
 
-
 	})
 
 	app.Command("templates", "view templates", func(c *cli.Cmd) {

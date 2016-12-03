@@ -31,6 +31,10 @@ func (Http) InternalServerError(w http.ResponseWriter) {
 	Http{Code: 500, Status: StatusInternalServerError, Message: "internal server error"}.send(w)
 }
 
+func (Http) NotImplemented(w http.ResponseWriter) {
+	Http{Code: 501, Status: StatusNotImplemented, Message: "not implemented"}.send(w)
+}
+
 func (h Http) send(w http.ResponseWriter) {
 	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
 	w.WriteHeader(h.Code)
