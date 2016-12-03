@@ -13,6 +13,7 @@ type Storage struct {
 	*ImageStorage
 	*BuildStorage
 	*HookStorage
+	*VolumeStorage
 }
 
 func (s *Storage) User() storage.IUser {
@@ -57,6 +58,13 @@ func (s *Storage) Hook() storage.IHook {
 	return s.HookStorage
 }
 
+func (s *Storage) Volume() storage.IVolume {
+	if s == nil {
+		return nil
+	}
+	return s.VolumeStorage
+}
+
 func Get() (*Storage, error) {
 
 	store := new(Storage)
@@ -74,6 +82,7 @@ func Get() (*Storage, error) {
 	store.ImageStorage = newImageStorage(session)
 	store.BuildStorage = newBuildStorage(session)
 	store.HookStorage = newHookStorage(session)
+	store.VolumeStorage = newVolumeStorage(session)
 
 	return store, nil
 }

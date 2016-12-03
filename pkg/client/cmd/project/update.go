@@ -7,7 +7,6 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/client/context"
 )
 
-
 func UpdateCmd(name, description string) {
 
 	var ctx = context.Get()
@@ -39,7 +38,7 @@ func Update(name, description string) error {
 	_, _, err = ctx.HTTP.
 		PUT("/project").
 		AddHeader("Content-Type", "application/json").
-		AddHeader("Authorization", "Bearer " + token.Token).
+		AddHeader("Authorization", "Bearer "+token.Token).
 		BodyJSON(createS{name, description}).
 		Request(&res, er)
 	if err != nil {

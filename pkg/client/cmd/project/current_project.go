@@ -2,13 +2,12 @@ package project
 
 import (
 	"errors"
+	tab "github.com/crackcomm/go-clitable"
 	"github.com/lastbackend/lastbackend/libs/model"
 	"github.com/lastbackend/lastbackend/pkg/client/context"
-	tab "github.com/crackcomm/go-clitable"
-
 )
 
-func Current () error {
+func Current() error {
 	var ctx = context.Get()
 
 	var project = new(model.Project)

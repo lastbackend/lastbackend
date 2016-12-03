@@ -1,6 +1,5 @@
 package template
 
-
 func ViewTemplates() {
 
 }

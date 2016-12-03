@@ -12,6 +12,7 @@ type IStorage interface {
 	Project() IProject
 	Service() IService
 	Hook() IHook
+	Volume() IVolume
 }
 
 type IUser interface {
@@ -57,6 +58,7 @@ type IService interface {
 	Insert(*model.Service) (*model.Service, *errors.Err)
 	Update(*model.Service) (*model.Service, *errors.Err)
 	Remove(string) *errors.Err
+	RemoveByProject(string) *errors.Err
 }
 
 type IHook interface {
@@ -66,4 +68,11 @@ type IHook interface {
 	GetByService(string, string) (*model.HookList, *errors.Err)
 	Insert(*model.Hook) (*model.Hook, *errors.Err)
 	Delete(string, string) *errors.Err
+}
+
+type IVolume interface {
+	GetByToken(string) (*model.Volume, *errors.Err)
+	GetByProject(string) (*model.VolumeList, *errors.Err)
+	Insert(*model.Volume) (*model.Volume, *errors.Err)
+	Remove(string) *errors.Err
 }
