@@ -28,7 +28,7 @@ func (s *ProjectStorage) GetByName(user, name string) (*model.Project, *e.Err) {
 	res, err := r.Table(ProjectTable).Filter(project_filter).Run(s.Session)
 
 	if err != nil {
-		return nil, e.Project.NotFound(err)
+		return nil, e.New("project").NotFound(err)
 	}
 	defer res.Close()
 
@@ -70,7 +70,7 @@ func (s *ProjectStorage) GetByID(user, id string) (*model.Project, *e.Err) {
 	res, err := r.Table(ProjectTable).Filter(project_filter).Run(s.Session)
 
 	if err != nil {
-		return nil, e.Project.NotFound(err)
+		return nil, e.New("project").NotFound(err)
 	}
 	defer res.Close()
 
@@ -91,7 +91,7 @@ func (s *ProjectStorage) GetByUser(id string) (*model.ProjectList, *e.Err) {
 
 	res, err := r.Table(ProjectTable).Filter(project_filter).Run(s.Session)
 	if err != nil {
-		return nil, e.Project.Unknown(err)
+		return nil, e.New("project").Unknown(err)
 	}
 	defer res.Close()
 
@@ -115,7 +115,7 @@ func (s *ProjectStorage) Insert(project *model.Project) (*model.Project, *e.Err)
 
 	res, err := r.Table(ProjectTable).Insert(project, opts).RunWrite(s.Session)
 	if err != nil {
-		return nil, e.Project.Unknown(err)
+		return nil, e.New("project").Unknown(err)
 	}
 
 	project.ID = res.GeneratedKeys[0]
@@ -137,7 +137,7 @@ func (s *ProjectStorage) Update(project *model.Project) (*model.Project, *e.Err)
 	}, opts).RunWrite(s.Session)
 
 	if err != nil {
-		return nil, e.Project.Unknown(err)
+		return nil, e.New("project").Unknown(err)
 	}
 
 	return project, nil
@@ -151,7 +151,7 @@ func (s *ProjectStorage) Remove(id string) *e.Err {
 
 	_, err = r.Table(ProjectTable).Get(id).Delete(opts).RunWrite(s.Session)
 	if err != nil {
-		return e.Project.Unknown(err)
+		return e.New("project").Unknown(err)
 	}
 
 	return nil

@@ -20,20 +20,20 @@ func (s *sessionCreateS) decodeAndValidate(reader io.Reader) *e.Err {
 	var err error
 	body, err := ioutil.ReadAll(reader)
 	if err != nil {
-		return e.Session.Unknown(err)
+		return e.New("user").Unknown(err)
 	}
 
 	err = json.Unmarshal(body, s)
 	if err != nil {
-		return e.Session.IncorrectJSON(err)
+		return e.New("user").IncorrectJSON(err)
 	}
 
 	if s.Login == nil || *s.Login == "" {
-		return e.Session.BadParameter("login", err)
+		return e.New("user").BadParameter("login", err)
 	}
 
 	if s.Password == nil || *s.Password == "" {
-		return e.Session.BadParameter("password", err)
+		return e.New("user").BadParameter("password", err)
 	}
 
 	return nil
@@ -62,7 +62,7 @@ func SessionCreateH(w http.ResponseWriter, r *http.Request) {
 	if err == nil && user == nil {
 		user, err = ctx.Storage.User().GetByEmail(*rq.Login)
 		if err == nil && user == nil {
-			err = e.User.NotFound()
+			err = e.New("user").NotFound()
 		}
 	}
 	if err != nil {

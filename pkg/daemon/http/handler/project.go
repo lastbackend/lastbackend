@@ -29,7 +29,7 @@ func ProjectListH(w http.ResponseWriter, r *http.Request) {
 	s, ok := context.GetOk(r, `session`)
 	if !ok {
 		ctx.Log.Error("Error: get session context")
-		e.User.AccessDenied().Http(w)
+		e.New("user").AccessDenied().Http(w)
 		return
 	}
 
@@ -73,7 +73,7 @@ func ProjectInfoH(w http.ResponseWriter, r *http.Request) {
 	s, ok := context.GetOk(r, `session`)
 	if !ok {
 		ctx.Log.Error("Error: get session context")
-		e.User.AccessDenied().Http(w)
+		e.New("user").AccessDenied().Http(w)
 		return
 	}
 
@@ -87,7 +87,7 @@ func ProjectInfoH(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err == nil && project == nil {
-		e.Project.NotFound().Http(w)
+		e.New("project").NotFound().Http(w)
 		return
 	}
 	if err != nil {
@@ -126,20 +126,20 @@ func (s *projectCreateS) decodeAndValidate(reader io.Reader) *e.Err {
 	body, err := ioutil.ReadAll(reader)
 	if err != nil {
 		ctx.Log.Error(err)
-		return e.User.Unknown(err)
+		return e.New("user").Unknown(err)
 	}
 
 	err = json.Unmarshal(body, s)
 	if err != nil {
-		return e.Project.IncorrectJSON(err)
+		return e.New("project").IncorrectJSON(err)
 	}
 
 	if s.Name == nil {
-		return e.Project.BadParameter("name")
+		return e.New("project").BadParameter("name")
 	}
 
 	if s.Name != nil && !validator.IsProjectName(*s.Name) {
-		return e.Project.BadParameter("name")
+		return e.New("project").BadParameter("name")
 	}
 
 	if s.Description == nil {
@@ -163,7 +163,7 @@ func ProjectCreateH(w http.ResponseWriter, r *http.Request) {
 	s, ok := context.GetOk(r, `session`)
 	if !ok {
 		ctx.Log.Error("Error: get session context")
-		e.User.AccessDenied().Http(w)
+		e.New("user").AccessDenied().Http(w)
 		return
 	}
 
@@ -189,7 +189,7 @@ func ProjectCreateH(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if exists {
-		e.Project.NameExists().Http(w)
+		e.New("project").NotUnique("name").Http(w)
 		return
 	}
 
@@ -247,16 +247,16 @@ func (s *projectReplaceS) decodeAndValidate(reader io.Reader) *e.Err {
 	body, err := ioutil.ReadAll(reader)
 	if err != nil {
 		ctx.Log.Error(err)
-		return e.User.Unknown(err)
+		return e.New("user").Unknown(err)
 	}
 
 	err = json.Unmarshal(body, s)
 	if err != nil {
-		return e.Project.IncorrectJSON(err)
+		return e.New("project").IncorrectJSON(err)
 	}
 
 	if s.Name != nil && !validator.IsProjectName(*s.Name) {
-		return e.Project.BadParameter("name")
+		return e.New("project").BadParameter("name")
 	}
 
 	if s.Description == nil {
@@ -284,7 +284,7 @@ func ProjectUpdateH(w http.ResponseWriter, r *http.Request) {
 	s, ok := context.GetOk(r, `session`)
 	if !ok {
 		ctx.Log.Error("Error: get session context")
-		e.User.AccessDenied().Http(w)
+		e.New("user").AccessDenied().Http(w)
 		return
 	}
 
@@ -304,7 +304,7 @@ func ProjectUpdateH(w http.ResponseWriter, r *http.Request) {
 		project, err = ctx.Storage.Project().GetByID(session.Uid, id)
 	}
 	if err == nil && project == nil {
-		e.Project.NotFound().Http(w)
+		e.New("project").NotFound().Http(w)
 		return
 	}
 	if err != nil {
@@ -325,7 +325,7 @@ func ProjectUpdateH(w http.ResponseWriter, r *http.Request) {
 			e.HTTP.InternalServerError(w)
 		}
 		if exists {
-			e.Project.NameExists().Http(w)
+			e.New("project").NotUnique("name").Http(w)
 			return
 		}
 	}
@@ -368,7 +368,7 @@ func ProjectRemoveH(w http.ResponseWriter, r *http.Request) {
 	s, ok := context.GetOk(r, `session`)
 	if !ok {
 		ctx.Log.Error("Error: get session context")
-		e.User.AccessDenied().Http(w)
+		e.New("user").AccessDenied().Http(w)
 		return
 	}
 
@@ -377,7 +377,7 @@ func ProjectRemoveH(w http.ResponseWriter, r *http.Request) {
 	if !validator.IsUUID(id) {
 		project, err := ctx.Storage.Project().GetByName(session.Uid, id)
 		if err == nil && project == nil {
-			e.Project.NotFound().Http(w)
+			e.New("project").NotFound().Http(w)
 			return
 		}
 		if err != nil {

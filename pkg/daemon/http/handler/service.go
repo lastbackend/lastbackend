@@ -27,7 +27,7 @@ func ServiceListH(w http.ResponseWriter, r *http.Request) {
 	s, ok := context.GetOk(r, `session`)
 	if !ok {
 		ctx.Log.Error("Error: get session context")
-		e.User.AccessDenied().Http(w)
+		e.New("user").AccessDenied().Http(w)
 		return
 	}
 
@@ -71,7 +71,7 @@ func ServiceInfoH(w http.ResponseWriter, r *http.Request) {
 	s, ok := context.GetOk(r, `session`)
 	if !ok {
 		ctx.Log.Error("Error: get session context")
-		e.User.AccessDenied().Http(w)
+		e.New("user").AccessDenied().Http(w)
 		return
 	}
 
@@ -85,7 +85,7 @@ func ServiceInfoH(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err == nil && service == nil {
-		e.Service.NotFound().Http(w)
+		e.New("service").NotFound().Http(w)
 		return
 	}
 	if err != nil {
@@ -123,16 +123,16 @@ func (s *serviceReplaceS) decodeAndValidate(reader io.Reader) *e.Err {
 	body, err := ioutil.ReadAll(reader)
 	if err != nil {
 		ctx.Log.Error(err)
-		return e.User.Unknown(err)
+		return e.New("user").Unknown(err)
 	}
 
 	err = json.Unmarshal(body, s)
 	if err != nil {
-		return e.Service.IncorrectJSON(err)
+		return e.New("service").IncorrectJSON(err)
 	}
 
 	if s.Name != nil && !validator.IsServiceName(*s.Name) {
-		return e.Service.BadParameter("name")
+		return e.New("service").BadParameter("name")
 	}
 
 	return nil
@@ -156,7 +156,7 @@ func ServiceUpdateH(w http.ResponseWriter, r *http.Request) {
 	s, ok := context.GetOk(r, `session`)
 	if !ok {
 		ctx.Log.Error("Error: get session context")
-		e.User.AccessDenied().Http(w)
+		e.New("user").AccessDenied().Http(w)
 		return
 	}
 
@@ -177,7 +177,7 @@ func ServiceUpdateH(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err == nil && service == nil {
-		e.Service.NotFound().Http(w)
+		e.New("service").NotFound().Http(w)
 		return
 	}
 	if err != nil {
@@ -200,7 +200,7 @@ func ServiceUpdateH(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		if exists {
-			e.Service.NameExists().Http(w)
+			e.New("service").NotUnique("name").Http(w)
 			return
 		}
 	}
@@ -242,7 +242,7 @@ func ServiceRemoveH(w http.ResponseWriter, r *http.Request) {
 	s, ok := context.GetOk(r, `session`)
 	if !ok {
 		ctx.Log.Error("Error: get session context")
-		e.User.AccessDenied().Http(w)
+		e.New("user").AccessDenied().Http(w)
 		return
 	}
 
@@ -251,7 +251,7 @@ func ServiceRemoveH(w http.ResponseWriter, r *http.Request) {
 	if !validator.IsUUID(id) {
 		service, err := ctx.Storage.Service().GetByName(session.Uid, id)
 		if err == nil && service == nil {
-			e.Service.NotFound().Http(w)
+			e.New("service").NotFound().Http(w)
 			return
 		}
 		if err != nil {

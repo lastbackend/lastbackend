@@ -25,7 +25,7 @@ func (s *UserStorage) GetByUsername(username string) (*model.User, *e.Err) {
 	res, err := r.Table(UserTable).Filter(username_filter).Run(s.Session)
 
 	if err != nil {
-		return nil, e.User.Unknown(err)
+		return nil, e.New("user").Unknown(err)
 	}
 	defer res.Close()
 
@@ -47,7 +47,7 @@ func (s *UserStorage) GetByEmail(email string) (*model.User, *e.Err) {
 	res, err := r.Table(UserTable).Filter(email_filter).Run(s.Session)
 
 	if err != nil {
-		return nil, e.User.Unknown(err)
+		return nil, e.New("user").Unknown(err)
 	}
 	defer res.Close()
 
@@ -68,7 +68,7 @@ func (s *UserStorage) GetByID(uuid string) (*model.User, *e.Err) {
 	res, err := r.Table(UserTable).Get(uuid).Run(s.Session)
 
 	if err != nil {
-		return nil, e.User.Unknown(err)
+		return nil, e.New("user").Unknown(err)
 	}
 	defer res.Close()
 
@@ -92,7 +92,7 @@ func (s *UserStorage) Insert(user *model.User) (*model.User, *e.Err) {
 	res, err := r.Table(UserTable).Insert(user, opts).RunWrite(s.Session)
 
 	if err != nil {
-		return nil, e.User.Unknown(err)
+		return nil, e.New("user").Unknown(err)
 	}
 
 	user.ID = res.GeneratedKeys[0]

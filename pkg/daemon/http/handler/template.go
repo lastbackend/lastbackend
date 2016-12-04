@@ -2,7 +2,7 @@ package handler
 
 import (
 	"github.com/lastbackend/lastbackend/pkg/daemon/context"
-	"io/ioutil"
+	"github.com/lastbackend/lastbackend/pkg/template"
 	"net/http"
 )
 
@@ -12,7 +12,7 @@ func TemplateListH(w http.ResponseWriter, _ *http.Request) {
 		er             error
 		ctx            = context.Get()
 		response_empty = func() {
-			w.WriteHeader(404)
+			w.WriteHeader(200)
 			_, er = w.Write([]byte("[]"))
 			if er != nil {
 				ctx.Log.Error("Error: write response", er.Error())
@@ -22,22 +22,27 @@ func TemplateListH(w http.ResponseWriter, _ *http.Request) {
 		}
 	)
 
-	_, resp, er := ctx.TemplateRegistry.GET("/template").Do()
-	if er != nil {
-		ctx.Log.Error(er.Error())
+	templates, err := template.List()
+	if err != nil {
+		ctx.Log.Error(err.Err())
 		response_empty()
 		return
 	}
 
-	buf, er := ioutil.ReadAll(resp.Body)
+	if templates == nil {
+		response_empty()
+		return
+	}
+
+	response, err := templates.ToJson()
 	if er != nil {
-		ctx.Log.Error(er.Error())
+		ctx.Log.Error(err.Err())
 		response_empty()
 		return
 	}
 
 	w.WriteHeader(200)
-	_, er = w.Write(buf)
+	_, er = w.Write(response)
 	if er != nil {
 		ctx.Log.Error("Error: write response", er.Error())
 		return

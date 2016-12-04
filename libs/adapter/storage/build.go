@@ -24,7 +24,7 @@ func (s *BuildStorage) GetByID(user, id string) (*model.Build, *e.Err) {
 	var user_filter = r.Row.Field("user").Eq(user)
 	res, err := r.Table(BuildTable).Get(id).Filter(user_filter).Run(s.Session)
 	if err != nil {
-		return nil, e.Build.NotFound(err)
+		return nil, e.New("build").NotFound(err)
 	}
 	res.One(build)
 
@@ -41,7 +41,7 @@ func (s *BuildStorage) GetByImage(user, id string) (*model.BuildList, *e.Err) {
 	var user_filter = r.Row.Field("user").Eq(user)
 	res, err := r.Table(BuildTable).Filter(image_filter).Filter(user_filter).Run(s.Session)
 	if err != nil {
-		return nil, e.Build.Unknown(err)
+		return nil, e.New("build").Unknown(err)
 	}
 
 	res.All(builds)
@@ -55,7 +55,7 @@ func (s *BuildStorage) Insert(build *model.Build) (*model.Build, *e.Err) {
 
 	res, err := r.Table(BuildTable).Insert(build, r.InsertOpts{ReturnChanges: true}).RunWrite(s.Session)
 	if err != nil {
-		return nil, e.Build.Unknown(err)
+		return nil, e.New("build").Unknown(err)
 	}
 
 	build.ID = res.GeneratedKeys[0]
@@ -68,7 +68,7 @@ func (s *BuildStorage) Replace(build *model.Build) (*model.Build, *e.Err) {
 	var user_filter = r.Row.Field("user").Eq(build.User)
 	_, err := r.Table(BuildTable).Get(build.ID).Filter(user_filter).Replace(build, r.ReplaceOpts{ReturnChanges: true}).RunWrite(s.Session)
 	if err != nil {
-		return nil, e.Build.Unknown(err)
+		return nil, e.New("build").Unknown(err)
 	}
 
 	return build, nil

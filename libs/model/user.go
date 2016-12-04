@@ -32,7 +32,7 @@ type Profile struct {
 // Validation methods
 func (u *User) ValidatePassword(password string) *e.Err {
 	if err := bcrypt.CompareHashAndPassword([]byte(u.Password), []byte(password+string(u.Salt))); err != nil {
-		return e.Account.AccessDenied(err)
+		return e.New("user").AccessDenied(err)
 	}
 
 	return nil
@@ -41,7 +41,7 @@ func (u *User) ValidatePassword(password string) *e.Err {
 func (u *User) ToJson() ([]byte, *e.Err) {
 	buf, err := json.Marshal(u)
 	if err != nil {
-		return nil, e.User.Unknown(err)
+		return nil, e.New("user").Unknown(err)
 	}
 
 	return buf, nil
