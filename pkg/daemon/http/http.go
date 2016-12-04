@@ -47,7 +47,7 @@ func NewRouter() *mux.Router {
 	r.HandleFunc("/deploy", Handler(handler.DeployH, Auth)).Methods("POST")
 
 	// Template handlers
-	r.HandleFunc("/template", Handler(handler.TemplateListH, Auth)).Methods("GET")
+	r.HandleFunc("/template", Handler(handler.TemplateListH)).Methods("GET")
 
 	return r
 }
@@ -107,7 +107,7 @@ func Auth(h http.HandlerFunc) http.HandlerFunc {
 			var auth = strings.SplitN(r.Header.Get("Authorization"), " ", 2)
 
 			// Check authorization header parts length and authorization header format
-			if len(auth) != 2 && auth[0] != "Bearer" {
+			if len(auth) != 2 || auth[0] != "Bearer" {
 				e.HTTP.AccessDenied(w)
 				return
 			}

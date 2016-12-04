@@ -2,7 +2,6 @@ package user
 
 import (
 	"errors"
-	"fmt"
 	"github.com/lastbackend/lastbackend/pkg/client/context"
 )
 
@@ -19,19 +18,17 @@ func LogoutCmd() {
 
 func Logout() error {
 
-	ctx := context.Get()
+	var (
+		err error
+		ctx = context.Get()
+	)
 
-	fmt.Println("LOGOUT.GO CTX", ctx)
-
-	fmt.Println("LOGOUT.GO CTX.STORAGE", ctx.Storage)
-
-	err := ctx.Storage.Clear()
-
+	err = ctx.Storage.Clear()
 	if err != nil {
 		return errors.New("Some problems with logout")
 	}
 
-	fmt.Println("Logout successfully")
+	ctx.Log.Info("Logout successfully")
 
 	return nil
 }

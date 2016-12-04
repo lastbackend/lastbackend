@@ -27,6 +27,8 @@ func SignInCmd() {
 	}
 	password = string(pass)
 
+	fmt.Print("\r\n")
+
 	err = SignIn(login, password)
 	if err != nil {
 		ctx.Log.Error(err)
@@ -44,11 +46,9 @@ func SignIn(login, password string) error {
 	var (
 		err error
 		ctx = context.Get()
+		er  = new(e.Http)
 	)
 
-	//fmt.Println(ctx)
-
-	er := new(e.Http)
 	res := struct {
 		Token string `json:"token"`
 	}{}
@@ -62,16 +62,20 @@ func SignIn(login, password string) error {
 		return err
 	}
 
+	if er.Code == 401 {
+		return errors.New("Invalid login or password")
+	}
+
 	if er.Code != 0 {
 		return errors.New(e.Message(er.Status))
-	} else {
-		fmt.Println("Login successful")
 	}
 
 	err = ctx.Storage.Set("session", res)
 	if err != nil {
 		return err
 	}
+
+	ctx.Log.Info("Login successful")
 
 	return nil
 }

@@ -1,9 +1,10 @@
 package user_test
 
 import (
+	"github.com/lastbackend/lastbackend/libs/db"
 	"github.com/lastbackend/lastbackend/pkg/client/cmd/user"
 	"github.com/lastbackend/lastbackend/pkg/client/context"
-	f "github.com/lastbackend/lastbackend/utils"
+	"github.com/lastbackend/lastbackend/pkg/util/homedir"
 	"github.com/stretchr/testify/assert"
 	"io/ioutil"
 	"testing"
@@ -17,7 +18,7 @@ func TestLogout(t *testing.T) {
 		ctx = context.Mock()
 	)
 
-	err = ctx.Storage.Init()
+	ctx.Storage, err = db.Init()
 	if err != nil {
 		panic(err)
 	}
@@ -28,7 +29,7 @@ func TestLogout(t *testing.T) {
 		t.Error(err)
 	}
 
-	files, err := ioutil.ReadDir(f.GetHomeDir() + "/.lb")
+	files, err := ioutil.ReadDir(homedir.HomeDir() + "/.lb")
 	if err != nil {
 		assert.Nil(t, files)
 	}

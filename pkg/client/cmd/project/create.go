@@ -26,33 +26,35 @@ func CreateCmd(name, description string) {
 func Create(name, description string) error {
 
 	var (
-		err error
-		ctx = context.Get()
+		err     error
+		ctx     = context.Get()
+		er      = new(e.Http)
+		project = new(model.Project)
 	)
-	token := struct {
-		Token string `json:"token"`
-	}{}
-	err = ctx.Storage.Get("session", &token)
-	if token.Token == "" {
-		return errors.New(e.StatusAccessDenied)
-	}
 
-	er := new(e.Http)
-	res := new(model.Project)
+	if len(name) == 0 {
+		return e.BadParameter("name").Err()
+	}
 
 	_, _, err = ctx.HTTP.
 		POST("/project").
 		AddHeader("Content-Type", "application/json").
-		AddHeader("Authorization", "Bearer "+token.Token).
+		AddHeader("Authorization", "Bearer "+ctx.Token).
 		BodyJSON(createS{name, description}).
-		Request(&res, er)
+		Request(&project, er)
 	if err != nil {
 		return err
+	}
+
+	if er.Code == 401 {
+		return errors.New("You are currently not logged in to the system, to get proper access create a new user or login with an existing user.")
 	}
 
 	if er.Code != 0 {
 		return errors.New(e.Message(er.Status))
 	}
+
+	ctx.Log.Info("Successful")
 
 	return nil
 }

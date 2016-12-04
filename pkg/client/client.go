@@ -2,8 +2,10 @@ package client
 
 import (
 	"github.com/jawher/mow.cli"
+	"github.com/lastbackend/lastbackend/libs/db"
 	"github.com/lastbackend/lastbackend/libs/http"
 	"github.com/lastbackend/lastbackend/libs/log"
+	"github.com/lastbackend/lastbackend/pkg/client/cmd/deploy"
 	p "github.com/lastbackend/lastbackend/pkg/client/cmd/project"
 	"github.com/lastbackend/lastbackend/pkg/client/cmd/service"
 	"github.com/lastbackend/lastbackend/pkg/client/cmd/template"
@@ -50,14 +52,18 @@ func Run() {
 
 		ctx.HTTP = http.New(cfg.ApiHost)
 
-		ctx.Storage = new(context.LocalStorage)
-
-		err = ctx.Storage.Init()
+		ctx.Storage, err = db.Init()
 		if err != nil {
-			ctx.Log.Error(err)
+			ctx.Log.Panic("Error: init local storage", err.Error())
+			return
 		}
 
-		ctx.Storage.Get("session", nil)
+		session := struct {
+			Token string `json:"token,omitempty"`
+		}{}
+
+		ctx.Storage.Get("session", &session)
+		ctx.Token = session.Token
 	}
 
 	configure(app)
@@ -83,9 +89,36 @@ func configure(app *cli.Cli) {
 	app.Command("logout", "logout from account", func(c *cli.Cmd) {
 		c.Action = u.LogoutCmd
 	})
-
 	app.Command("projects", "Display the project list", func(c *cli.Cmd) {
 		c.Action = p.ListCmd
+	})
+
+	app.Command("deploy", "Deploy management", func(c *cli.Cmd) {
+
+		//c.Command("it", "deploy local sources", func(sc *cli.Cmd) {
+		//	sc.Action = func() {
+		//		// TODO: Deploy it command for deploy local sources in LB host
+		//	}
+		//})
+
+		c.Spec = "[TARGET]"
+
+		var target = c.String(cli.StringArg{
+			Name:      "TARGET",
+			Value:     "",
+			Desc:      "tempalte name or git repo url",
+			HideValue: true,
+		})
+
+		c.Action = func() {
+			if len(*target) == 0 {
+				c.PrintHelp()
+				return
+			}
+
+			deploy.DeployTargetCmd(*target)
+		}
+
 	})
 
 	app.Command("project", "", func(c *cli.Cmd) {
@@ -99,93 +132,122 @@ func configure(app *cli.Cli) {
 			HideValue: true,
 		})
 
-		c.Command("create", "Create new project", func(c *cli.Cmd) {
+		c.Command("create", "Create new project", func(sc *cli.Cmd) {
 
-			c.Spec = "[--desc]"
+			sc.Spec = "[--desc]"
 
-			var desc = c.String(cli.StringOpt{
+			var desc = sc.String(cli.StringOpt{
 				Name:      "desc",
 				Value:     "",
 				Desc:      "Set description info",
 				HideValue: true,
 			})
 
-			c.Action = func() {
+			sc.Action = func() {
+				if len(*name) == 0 {
+					c.PrintHelp()
+					return
+				}
+
 				p.CreateCmd(*name, *desc)
 			}
 		})
 
-		c.Command("inspect", "Get project info by name", func(c *cli.Cmd) {
-			c.Action = func() {
+		c.Command("inspect", "Get project info by name", func(sc *cli.Cmd) {
+			sc.Action = func() {
+				if len(*name) == 0 {
+					c.PrintHelp()
+					return
+				}
+
 				p.GetCmd(*name)
 			}
 		})
 
-		c.Command("remove", "Remove project by name", func(c *cli.Cmd) {
-			c.Action = func() {
+		c.Command("remove", "Remove project by name", func(sc *cli.Cmd) {
+			sc.Action = func() {
+				if len(*name) == 0 {
+					c.PrintHelp()
+					return
+				}
+
 				p.RemoveCmd(*name)
 			}
 		})
 
-		c.Command("switch", "switch to project", func(c *cli.Cmd) {
-			c.Action = func() {
+		c.Command("switch", "switch to project", func(sc *cli.Cmd) {
+			sc.Action = func() {
+				if len(*name) == 0 {
+					c.PrintHelp()
+					return
+				}
+
 				p.SwitchCmd(*name)
 			}
 		})
 
-		c.Command("current", "information about current project", func(c *cli.Cmd) {
-			c.Action = func() {
-				p.Current()
-			}
-		})
+		c.Command("update", "if you wish to change name or description of the project", func(sc *cli.Cmd) {
 
-		c.Command("update", "if you wish to change name or description of the project", func(c *cli.Cmd) {
+			sc.Spec = "[--desc]"
 
-			c.Spec = "[--desc]"
-
-			var desc = c.String(cli.StringOpt{
+			var desc = sc.String(cli.StringOpt{
 				Name:      "desc",
 				Value:     "",
 				Desc:      "Set description info",
 				HideValue: true,
 			})
 
-			c.Action = func() {
+			sc.Action = func() {
+				if len(*name) == 0 {
+					c.PrintHelp()
+					return
+				}
+
 				p.UpdateCmd(*name, *desc)
 			}
 		})
 
+		c.Command("current", "information about current project", func(sc *cli.Cmd) {
+			sc.Action = func() {
+				if len(*name) != 0 {
+					c.PrintHelp()
+					return
+				}
+				p.CurrentCmd()
+			}
+		})
 	})
 
 	app.Command("service", "Service management", func(c *cli.Cmd) {
+
 		c.Spec = "[SERVICE_NAME]"
+
 		var service_name = c.String(cli.StringArg{
 			Name:      "SERVICE_NAME",
 			Value:     "",
 			Desc:      "name of service",
 			HideValue: true,
 		})
-		c.Command("create", "create new service", func(c *cli.Cmd) {
-			c.Action = func() {
+		c.Command("create", "create new service", func(sc *cli.Cmd) {
+			sc.Action = func() {
 				service.CreateCmd(*service_name)
 			}
 		})
-		c.Command("inspect", "inspect the service", func(c *cli.Cmd) {
-			c.Action = func() {
+		c.Command("inspect", "inspect the service", func(sc *cli.Cmd) {
+			sc.Action = func() {
 				service.InspectCmd(*service_name)
 			}
 		})
-		c.Command("remove", "remove an existing service", func(c *cli.Cmd) {
-			c.Action = func() {
+		c.Command("remove", "remove an existing service", func(sc *cli.Cmd) {
+			sc.Action = func() {
 				service.RemoveCmd(*service_name)
 			}
 		})
-
 	})
 
 	app.Command("templates", "view templates", func(c *cli.Cmd) {
 		c.Action = func() {
-			template.ViewTemplatesCmd()
+			template.ListCmd()
 		}
 	})
 }

@@ -5,7 +5,7 @@ import (
 	e "github.com/lastbackend/lastbackend/libs/errors"
 	"github.com/lastbackend/lastbackend/libs/model"
 	"github.com/lastbackend/lastbackend/pkg/daemon/context"
-	"github.com/lastbackend/lastbackend/utils"
+	"github.com/lastbackend/lastbackend/pkg/util/generator"
 )
 
 var deployer *Deployer
@@ -38,7 +38,7 @@ func (d *Deployer) DeployFromTemplate(userID, projectID string, tpl model.Templa
 		var volume = new(model.Volume)
 		volume.User = userID
 		volume.Project = projectID
-		volume.Name = fmt.Sprintf("%s-%s", val.Name, utils.GetUUIDV4()[0:12])
+		volume.Name = fmt.Sprintf("%s-%s", val.Name, generator.GetUUIDV4()[0:12])
 
 		volume, err := ctx.Storage.Volume().Insert(volume)
 		if err != nil {
@@ -91,7 +91,7 @@ func (d *Deployer) DeployFromTemplate(userID, projectID string, tpl model.Templa
 		var service = new(model.Service)
 		service.User = userID
 		service.Project = projectID
-		service.Name = fmt.Sprintf("%s-%s", val.Name, utils.GetUUIDV4()[0:12])
+		service.Name = fmt.Sprintf("%s-%s", val.Name, generator.GetUUIDV4()[0:12])
 
 		service, err := ctx.Storage.Service().Insert(service)
 		if err != nil {

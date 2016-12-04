@@ -62,7 +62,7 @@ func BadParameter(attr string, e ...error) *Err {
 	return &Err{
 		Code:   StatusBadParameter,
 		Attr:   attr,
-		origin: getError("bad parameter", e...),
+		origin: getError(attr+": bad parameter", e...),
 		http:   HTTP.getBadParameter(attr),
 	}
 }

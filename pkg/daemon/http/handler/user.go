@@ -6,7 +6,8 @@ import (
 	e "github.com/lastbackend/lastbackend/libs/errors"
 	"github.com/lastbackend/lastbackend/libs/model"
 	c "github.com/lastbackend/lastbackend/pkg/daemon/context"
-	"github.com/lastbackend/lastbackend/utils"
+	"github.com/lastbackend/lastbackend/pkg/util/generator"
+	"github.com/lastbackend/lastbackend/pkg/util/validator"
 	"io"
 	"io/ioutil"
 	"net/http"
@@ -41,7 +42,7 @@ func (s *userCreate) decodeAndValidate(reader io.Reader) *e.Err {
 		return e.User.BadParameter("email")
 	}
 
-	if !utils.IsEmail(*s.Email) {
+	if !validator.IsEmail(*s.Email) {
 		return e.User.BadParameter("email")
 	}
 
@@ -49,7 +50,7 @@ func (s *userCreate) decodeAndValidate(reader io.Reader) *e.Err {
 		return e.User.BadParameter("username")
 	}
 
-	if !utils.IsUsername(*s.Username) {
+	if !validator.IsUsername(*s.Username) {
 		return e.User.BadParameter("username")
 	}
 
@@ -57,7 +58,7 @@ func (s *userCreate) decodeAndValidate(reader io.Reader) *e.Err {
 		return e.User.BadParameter("password")
 	}
 
-	if !utils.IsPassword(*s.Password) {
+	if !validator.IsPassword(*s.Password) {
 		return e.User.BadParameter("password")
 	}
 
@@ -83,14 +84,14 @@ func UserCreateH(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	salt, er := utils.GenerateSalt(*rq.Password)
+	salt, er := generator.GenerateSalt(*rq.Password)
 	if er != nil {
 		ctx.Log.Error("Error: generate salt", er)
 		e.HTTP.InternalServerError(w)
 		return
 	}
 
-	password, er := utils.GeneratePassword(*rq.Password, salt)
+	password, er := generator.GeneratePassword(*rq.Password, salt)
 	if er != nil {
 		ctx.Log.Error("Error: generate password", er)
 		e.HTTP.InternalServerError(w)
@@ -101,7 +102,7 @@ func UserCreateH(w http.ResponseWriter, r *http.Request) {
 
 	u.Username = *rq.Username
 	u.Email = *rq.Email
-	u.Gravatar = utils.GenerateGravatar(u.Email)
+	u.Gravatar = generator.GenerateGravatar(u.Email)
 	u.Password = password
 	u.Salt = salt
 

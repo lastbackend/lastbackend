@@ -2,6 +2,7 @@ package model
 
 import (
 	"encoding/json"
+	tab "github.com/crackcomm/go-clitable"
 	e "github.com/lastbackend/lastbackend/libs/errors"
 	"time"
 )
@@ -34,6 +35,19 @@ func (s *Service) ToJson() ([]byte, *e.Err) {
 	return buf, nil
 }
 
+func (s *Service) DrawTable() {
+	table := tab.New([]string{"ID", "Project", "Name", "Created", "Updated"})
+	table.AddRow(map[string]interface{}{
+		"ID":      s.ID,
+		"Project": s.Image,
+		"Name":    s.Name,
+		"Created": s.Created.String()[:10],
+		"Updated": s.Updated.String()[:10],
+	})
+	table.Markdown = true
+	table.Print()
+}
+
 func (s *ServiceList) ToJson() ([]byte, *e.Err) {
 
 	if s == nil {
@@ -46,4 +60,20 @@ func (s *ServiceList) ToJson() ([]byte, *e.Err) {
 	}
 
 	return buf, nil
+}
+
+func (s *ServiceList) DrawTable() {
+	table := tab.New([]string{"ID", "Project", "Name", "Created", "Updated"})
+
+	for _, service := range *s {
+		table.AddRow(map[string]interface{}{
+			"ID":      service.ID,
+			"Project": service.Image,
+			"Name":    service.Name,
+			"Created": service.Created.String()[:10],
+			"Updated": service.Updated.String()[:10],
+		})
+		table.Markdown = true
+		table.Print()
+	}
 }

@@ -8,7 +8,7 @@ import (
 	"github.com/lastbackend/lastbackend/libs/model"
 	c "github.com/lastbackend/lastbackend/pkg/daemon/context"
 	"github.com/lastbackend/lastbackend/pkg/deployer"
-	"github.com/lastbackend/lastbackend/utils"
+	"github.com/lastbackend/lastbackend/pkg/util/validator"
 	"io"
 	"io/ioutil"
 	"net/http"
@@ -76,7 +76,7 @@ func DeployH(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if utils.IsGitUrl(*rq.Target) {
+	if validator.IsGitUrl(*rq.Target) {
 		// TODO: deploy from git repo url
 		ctx.Log.Error("Error: not implement")
 		e.HTTP.NotImplemented(w)

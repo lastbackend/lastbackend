@@ -32,6 +32,8 @@ func SignUpCmd() {
 	}
 	password = string(pass)
 
+	fmt.Print("\r\n")
+
 	err = SignUp(username, email, password)
 	if err != nil {
 		ctx.Log.Error(err)
@@ -50,9 +52,9 @@ func SignUp(username, email, password string) error {
 	var (
 		err error
 		ctx = context.Get()
+		er  = new(e.Http)
 	)
 
-	er := new(e.Http)
 	res := struct {
 		Token string `json:"token"`
 	}{}
@@ -68,14 +70,14 @@ func SignUp(username, email, password string) error {
 
 	if er.Code != 0 {
 		return errors.New(e.Message(er.Status))
-	} else {
-		fmt.Println("Registration completed successfully")
 	}
 
 	err = ctx.Storage.Set("session", res)
 	if err != nil {
 		return err
 	}
+
+	ctx.Log.Info("Registration completed successfully")
 
 	return nil
 }
