@@ -12,10 +12,10 @@ import (
 func Get(name, version string) (*model.Template, *e.Err) {
 
 	var (
-		er  error
-		ctx = context.Get()
+		er      error
+		ctx     = context.Get()
 		httperr = new(e.Http)
-		tpl = new(model.Template)
+		tpl     = new(model.Template)
 	)
 
 	_, _, er = ctx.TemplateRegistry.
@@ -40,7 +40,7 @@ func Get(name, version string) (*model.Template, *e.Err) {
 func List() (*model.TemplateList, *e.Err) {
 
 	var (
-		er error
+		er        error
 		ctx       = context.Get()
 		templates = new(model.TemplateList)
 	)
