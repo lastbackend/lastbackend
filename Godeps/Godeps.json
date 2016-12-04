@@ -86,10 +86,6 @@
 			"Rev": "447b7ec906e523386d9c53be15b55a8ae86ea944"
 		},
 		{
-			"ImportPath": "github.com/crackcomm/go-clitable",
-			"Rev": "53bcff2fea363f918b5fc960c654a5fb4b3f9950"
-		},
-		{
 			"ImportPath": "github.com/davecgh/go-spew/spew",
 			"Rev": "5215b55f46b2b919f50a1df0eaa5886afe4e3b3d"
 		},
