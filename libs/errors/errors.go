@@ -44,8 +44,29 @@ type Err struct {
 	http   *Http
 }
 
-type err struct {
-	name string
+func BadParameter(attr string, e ...error) *Err {
+	return &Err{
+		Code:   StatusBadParameter,
+		Attr:   attr,
+		origin: getError(attr+": bad parameter", e...),
+		http:   HTTP.getBadParameter(attr),
+	}
+}
+
+func IncorrectJSON(e ...error) *Err {
+	return &Err{
+		Code:   StatusIncorrectJson,
+		origin: getError("incorrect json", e...),
+		http:   HTTP.getIncorrectJSON(),
+	}
+}
+
+func Unknown(e ...error) *Err {
+	return &Err{
+		Code:   StatusUnknown,
+		origin: getError("unknown error", e...),
+		http:   HTTP.getUnknown(),
+	}
 }
 
 func (self *Err) Err() error {
@@ -54,6 +75,10 @@ func (self *Err) Err() error {
 
 func (self *Err) Http(w http.ResponseWriter) {
 	self.http.send(w)
+}
+
+type err struct {
+	name string
 }
 
 func New(name string) *err {
