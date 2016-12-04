@@ -2,8 +2,8 @@ package model
 
 import (
 	"encoding/json"
-	tab "github.com/crackcomm/go-clitable"
 	e "github.com/lastbackend/lastbackend/libs/errors"
+	"github.com/lastbackend/lastbackend/pkg/util/table"
 	"k8s.io/client-go/1.5/pkg/api/v1"
 	"k8s.io/client-go/1.5/pkg/apis/extensions/v1beta1"
 	"strings"
@@ -45,17 +45,15 @@ func (t *TemplateList) ToJson() ([]byte, *e.Err) {
 	return buf, nil
 }
 
-func (t *TemplateList) DrawTable() {
-	table := tab.New([]string{"Name", "Version"})
+func (tpl *TemplateList) DrawTable() {
+	t := table.New([]string{"Name", "Version"})
 
-	for name, versions := range *t {
-		table.AddRow(map[string]interface{}{
+	for name, versions := range *tpl {
+		t.AddRow(map[string]interface{}{
 			"Name":    name,
 			"Version": strings.Join(versions, "\r\n"),
 		})
-
-		table.Markdown = true
 	}
 
-	table.Print()
+	t.Print()
 }
