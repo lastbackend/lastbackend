@@ -50,7 +50,7 @@ func (s *ServiceStorage) GetByName(user, name string) (*model.Service, *e.Err) {
 	res, err := r.Table(ServiceTable).Filter(project_filter).Run(s.Session)
 
 	if err != nil {
-		return nil, e.Service.NotFound(err)
+		return nil, e.New("service").NotFound(err)
 	}
 	defer res.Close()
 
@@ -75,7 +75,7 @@ func (s *ServiceStorage) GetByID(user, id string) (*model.Service, *e.Err) {
 	res, err := r.Table(ServiceTable).Filter(project_filter).Run(s.Session)
 
 	if err != nil {
-		return nil, e.Service.NotFound(err)
+		return nil, e.New("service").NotFound(err)
 	}
 	defer res.Close()
 
@@ -96,7 +96,7 @@ func (s *ServiceStorage) GetByUser(id string) (*model.ServiceList, *e.Err) {
 
 	res, err := r.Table(ServiceTable).Filter(project_filter).Run(s.Session)
 	if err != nil {
-		return nil, e.Service.Unknown(err)
+		return nil, e.New("service").Unknown(err)
 	}
 	defer res.Close()
 
@@ -120,7 +120,7 @@ func (s *ServiceStorage) Insert(service *model.Service) (*model.Service, *e.Err)
 
 	res, err := r.Table(ServiceTable).Insert(service, opts).RunWrite(s.Session)
 	if err != nil {
-		return nil, e.Service.Unknown(err)
+		return nil, e.New("service").Unknown(err)
 	}
 
 	service.ID = res.GeneratedKeys[0]
@@ -141,7 +141,7 @@ func (s *ServiceStorage) Update(service *model.Service) (*model.Service, *e.Err)
 
 	_, err = r.Table(ServiceTable).Update(project_filter, opts).RunWrite(s.Session)
 	if err != nil {
-		return nil, e.Service.Unknown(err)
+		return nil, e.New("service").Unknown(err)
 	}
 
 	return service, nil
@@ -155,7 +155,7 @@ func (s *ServiceStorage) Remove(id string) *e.Err {
 
 	_, err = r.Table(ServiceTable).Get(id).Delete(opts).RunWrite(s.Session)
 	if err != nil {
-		return e.Service.Unknown(err)
+		return e.New("service").Unknown(err)
 	}
 
 	return nil
@@ -172,7 +172,7 @@ func (s *ServiceStorage) RemoveByProject(id string) *e.Err {
 
 	_, err = r.Table(ServiceTable).Filter(project_filter).Delete(opts).RunWrite(s.Session)
 	if err != nil {
-		return e.Service.Unknown(err)
+		return e.New("service").Unknown(err)
 	}
 
 	return nil

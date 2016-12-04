@@ -1,8 +1,6 @@
 package color
 
-import (
-	"github.com/lastbackend/lastbackend/libs/log/filesystem"
-)
+import "github.com/lastbackend/lastbackend/pkg/util/filesystem"
 
 func Black(s string) string {
 	if !filesystem.IsWindows() {

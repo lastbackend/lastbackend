@@ -50,7 +50,7 @@ func (d *Deployer) DeployFromTemplate(userID, projectID string, tpl model.Templa
 		_, er = ctx.K8S.Core().PersistentVolumes().Create(&val)
 		if er != nil {
 			ctx.Log.Error(er.Error())
-			return e.Service.Unknown(er)
+			return e.New("service").Unknown(er)
 		}
 	}
 
@@ -58,7 +58,7 @@ func (d *Deployer) DeployFromTemplate(userID, projectID string, tpl model.Templa
 		_, er := ctx.K8S.Core().Services(namespace).Create(&val)
 		if er != nil {
 			ctx.Log.Error(er.Error())
-			return e.Service.Unknown(er)
+			return e.New("service").Unknown(er)
 		}
 	}
 
@@ -66,7 +66,7 @@ func (d *Deployer) DeployFromTemplate(userID, projectID string, tpl model.Templa
 		_, er := ctx.K8S.Core().Secrets(namespace).Create(&val)
 		if er != nil {
 			ctx.Log.Error(er.Error())
-			return e.Service.Unknown(er)
+			return e.New("service").Unknown(er)
 		}
 	}
 
@@ -74,7 +74,7 @@ func (d *Deployer) DeployFromTemplate(userID, projectID string, tpl model.Templa
 		_, er = ctx.K8S.Core().PersistentVolumeClaims(namespace).Create(&val)
 		if er != nil {
 			ctx.Log.Error(er.Error())
-			return e.Service.Unknown(er)
+			return e.New("service").Unknown(er)
 		}
 	}
 
@@ -82,7 +82,7 @@ func (d *Deployer) DeployFromTemplate(userID, projectID string, tpl model.Templa
 		_, er = ctx.K8S.Core().ServiceAccounts(namespace).Create(&val)
 		if er != nil {
 			ctx.Log.Error(er.Error())
-			return e.Service.Unknown(er)
+			return e.New("service").Unknown(er)
 		}
 	}
 
@@ -103,7 +103,7 @@ func (d *Deployer) DeployFromTemplate(userID, projectID string, tpl model.Templa
 		_, er = ctx.K8S.Extensions().Deployments(namespace).Create(&val)
 		if er != nil {
 			ctx.Log.Error(er.Error())
-			return e.Service.Unknown(er)
+			return e.New("service").Unknown(er)
 		}
 	}
 
@@ -111,7 +111,7 @@ func (d *Deployer) DeployFromTemplate(userID, projectID string, tpl model.Templa
 		_, er = ctx.K8S.Core().ReplicationControllers(namespace).Create(&val)
 		if er != nil {
 			ctx.Log.Error(er.Error())
-			return e.Service.Unknown(er)
+			return e.New("service").Unknown(er)
 		}
 	}
 
@@ -119,7 +119,7 @@ func (d *Deployer) DeployFromTemplate(userID, projectID string, tpl model.Templa
 		_, er = ctx.K8S.Core().Pods(namespace).Create(&val)
 		if er != nil {
 			ctx.Log.Error(er.Error())
-			return e.Service.Unknown(er)
+			return e.New("service").Unknown(er)
 		}
 	}
 

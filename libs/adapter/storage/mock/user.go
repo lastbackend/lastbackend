@@ -36,7 +36,7 @@ func (u *UserMock) GetByUsername(_ string) (*model.User, *e.Err) {
 
 	res, err := r.Table(mockDB).Table(userTable).Get(mockID).Run(u.Mock)
 	if err != nil {
-		return nil, e.User.Unknown(err)
+		return nil, e.New("user").Unknown(err)
 	}
 
 	if res.IsNil() {
@@ -57,7 +57,7 @@ func (u *UserMock) GetByEmail(_ string) (*model.User, *e.Err) {
 
 	res, err := r.Table(mockDB).Table(userTable).Get(mockID).Run(u.Mock)
 	if err != nil {
-		return nil, e.User.Unknown(err)
+		return nil, e.New("user").Unknown(err)
 	}
 
 	if res.IsNil() {
@@ -78,11 +78,11 @@ func (u *UserMock) GetByID(_ string) (*model.User, *e.Err) {
 
 	res, err := r.Table(mockDB).Table(userTable).Get(mockID).Run(u.Mock)
 	if err != nil {
-		return nil, e.User.Unknown(err)
+		return nil, e.New("user").Unknown(err)
 	}
 
 	if err != nil {
-		return nil, e.User.Unknown(err)
+		return nil, e.New("user").Unknown(err)
 	}
 	defer res.Close()
 
@@ -105,7 +105,7 @@ func (u *UserMock) Insert(_ *model.User) (*model.User, *e.Err) {
 	res, err := r.Table(mockDB).Table(mockDB).Insert(userMock, opts).RunWrite(u.Mock)
 
 	if err != nil {
-		return nil, e.User.Unknown(err)
+		return nil, e.New("user").Unknown(err)
 	}
 
 	userMock.ID = res.GeneratedKeys[0]

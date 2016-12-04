@@ -24,7 +24,7 @@ func (s *HookStorage) GetByToken(token string) (*model.Hook, *e.Err) {
 	var token_filter = r.Row.Field("token").Eq(token)
 	res, err := r.Table(HookTable).Filter(token_filter).Run(s.Session)
 	if err != nil {
-		return nil, e.Hook.Unknown(err)
+		return nil, e.New("hook").Unknown(err)
 	}
 
 	res.One(hook)
@@ -41,7 +41,7 @@ func (s *HookStorage) GetByUser(id string) (*model.HookList, *e.Err) {
 	var user_filter = r.Row.Field("user").Eq(id)
 	res, err := r.Table(HookTable).Filter(user_filter).Run(s.Session)
 	if err != nil {
-		return nil, e.Hook.Unknown(err)
+		return nil, e.New("hook").Unknown(err)
 	}
 
 	res.All(hooks)
@@ -59,7 +59,7 @@ func (s *HookStorage) GetByImage(user, id string) (*model.HookList, *e.Err) {
 	var user_filter = r.Row.Field("user").Eq(user)
 	res, err := r.Table(HookTable).Filter(image_filter).Filter(user_filter).Run(s.Session)
 	if err != nil {
-		return nil, e.Hook.Unknown(err)
+		return nil, e.New("hook").Unknown(err)
 	}
 
 	res.All(hooks)
@@ -77,7 +77,7 @@ func (s *HookStorage) GetByService(user, id string) (*model.HookList, *e.Err) {
 	var user_filter = r.Row.Field("user").Eq(user)
 	res, err := r.Table(HookTable).Filter(service_filter).Filter(user_filter).Run(s.Session)
 	if err != nil {
-		return nil, e.Hook.Unknown(err)
+		return nil, e.New("hook").Unknown(err)
 	}
 
 	res.All(hooks)
@@ -91,7 +91,7 @@ func (s *HookStorage) Insert(hook *model.Hook) (*model.Hook, *e.Err) {
 
 	res, err := r.Table(HookTable).Insert(hook, r.InsertOpts{ReturnChanges: true}).RunWrite(s.Session)
 	if err != nil {
-		return nil, e.Hook.Unknown(err)
+		return nil, e.New("hook").Unknown(err)
 	}
 
 	hook.ID = res.GeneratedKeys[0]
@@ -104,7 +104,7 @@ func (s *HookStorage) Delete(user, id string) *e.Err {
 	var user_filter = r.Row.Field("user").Eq(user)
 	_, err := r.Table(HookTable).Get(id).Filter(user_filter).Delete().Run(s.Session)
 	if err != nil {
-		return e.Hook.NotFound(err)
+		return e.New("hook").NotFound(err)
 	}
 
 	return nil

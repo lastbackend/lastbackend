@@ -2,12 +2,12 @@ package handler
 
 import (
 	"encoding/json"
-	"fmt"
 	"github.com/gorilla/context"
 	e "github.com/lastbackend/lastbackend/libs/errors"
 	"github.com/lastbackend/lastbackend/libs/model"
 	c "github.com/lastbackend/lastbackend/pkg/daemon/context"
 	"github.com/lastbackend/lastbackend/pkg/deployer"
+	"github.com/lastbackend/lastbackend/pkg/template"
 	"github.com/lastbackend/lastbackend/pkg/util/validator"
 	"io"
 	"io/ioutil"
@@ -30,20 +30,20 @@ func (d *deployS) decodeAndValidate(reader io.Reader) *e.Err {
 	body, err := ioutil.ReadAll(reader)
 	if err != nil {
 		ctx.Log.Error(err)
-		return e.User.Unknown(err)
+		return e.New("service").Unknown(err)
 	}
 
 	err = json.Unmarshal(body, d)
 	if err != nil {
-		return e.IncorrectJSON(err)
+		return e.New("service").IncorrectJSON(err)
 	}
 
 	if d.Project == nil {
-		return e.BadParameter("project")
+		return e.New("service").BadParameter("project")
 	}
 
 	if d.Target == nil {
-		return e.BadParameter("target")
+		return e.New("service").BadParameter("target")
 	}
 
 	return nil
@@ -62,7 +62,7 @@ func DeployH(w http.ResponseWriter, r *http.Request) {
 	s, ok := context.GetOk(r, `session`)
 	if !ok {
 		ctx.Log.Error("Error: get session context")
-		e.User.AccessDenied().Http(w)
+		e.New("user").AccessDenied().Http(w)
 		return
 	}
 
@@ -94,28 +94,15 @@ func DeployH(w http.ResponseWriter, r *http.Request) {
 		version = parts[1]
 	}
 
-	var httperr = new(e.Http)
-	var tpl = new(model.Template)
-
-	_, _, er = ctx.TemplateRegistry.
-		GET(fmt.Sprintf("/template/%s/%s", name, version)).
-		Request(tpl, httperr)
-
-	ctx.Log.Debug("RESPONSE: GET TEMPALTE", er, httperr)
-	if er != nil {
-		ctx.Log.Error("Error: get tempalte", er.Error())
-		e.HTTP.InternalServerError(w)
-		return
-	}
-	if httperr != nil && httperr.Code != 0 {
-		// TODO: Switch errors for client
-		ctx.Log.Error("Error: get tempalte", httperr.Message)
-		e.HTTP.InternalServerError(w)
+	tpl, err := template.Get(name, version)
+	if err != nil {
+		ctx.Log.Error("Error: deploy from tempalte", err.Err())
+		err.Http(w)
 		return
 	}
 
 	d := deployer.Get()
-	err := d.DeployFromTemplate(session.Uid, *rq.Project, *tpl)
+	err = d.DeployFromTemplate(session.Uid, *rq.Project, *tpl)
 	if err != nil {
 		ctx.Log.Error("Error: deploy from tempalte", err.Err())
 		err.Http(w)

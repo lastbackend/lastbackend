@@ -27,7 +27,7 @@ type Project struct {
 func (p *Project) ToJson() ([]byte, *e.Err) {
 	buf, err := json.Marshal(p)
 	if err != nil {
-		return nil, e.Project.Unknown(err)
+		return nil, e.New("project").Unknown(err)
 	}
 
 	return buf, nil
@@ -52,7 +52,7 @@ func (p *ProjectList) ToJson() ([]byte, *e.Err) {
 
 	buf, err := json.Marshal(p)
 	if err != nil {
-		return nil, e.Project.Unknown(err)
+		return nil, e.New("project").Unknown(err)
 	}
 
 	return buf, nil

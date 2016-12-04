@@ -27,12 +27,16 @@ func (Http) BadRequest(w http.ResponseWriter) {
 	Http{Code: 400, Status: StatusBadRequest, Message: "Bad request"}.send(w)
 }
 
+func (Http) NotFound(w http.ResponseWriter) {
+	Http{Code: 404, Status: StatusNotFound, Message: "Not found"}.send(w)
+}
+
 func (Http) InternalServerError(w http.ResponseWriter) {
-	Http{Code: 500, Status: StatusInternalServerError, Message: "internal server error"}.send(w)
+	Http{Code: 500, Status: StatusInternalServerError, Message: "Internal server error"}.send(w)
 }
 
 func (Http) NotImplemented(w http.ResponseWriter) {
-	Http{Code: 501, Status: StatusNotImplemented, Message: "not implemented"}.send(w)
+	Http{Code: 501, Status: StatusNotImplemented, Message: "Not implemented"}.send(w)
 }
 
 func (h Http) send(w http.ResponseWriter) {

@@ -25,7 +25,7 @@ type Template struct {
 func (t *Template) ToJson() ([]byte, *e.Err) {
 	buf, err := json.Marshal(t)
 	if err != nil {
-		return nil, e.Template.Unknown(err)
+		return nil, e.New("template").Unknown(err)
 	}
 
 	return buf, nil
@@ -39,7 +39,7 @@ func (t *TemplateList) ToJson() ([]byte, *e.Err) {
 
 	buf, err := json.Marshal(t)
 	if err != nil {
-		return nil, e.Template.Unknown(err)
+		return nil, e.New("template").Unknown(err)
 	}
 
 	return buf, nil

@@ -30,36 +30,36 @@ func (s *userCreate) decodeAndValidate(reader io.Reader) *e.Err {
 	body, err := ioutil.ReadAll(reader)
 	if err != nil {
 		ctx.Log.Error(err)
-		return e.User.Unknown(err)
+		return e.New("user").Unknown(err)
 	}
 
 	err = json.Unmarshal(body, s)
 	if err != nil {
-		return e.User.IncorrectJSON(err)
+		return e.New("user").IncorrectJSON(err)
 	}
 
 	if s.Email == nil {
-		return e.User.BadParameter("email")
+		return e.New("user").BadParameter("email")
 	}
 
 	if !validator.IsEmail(*s.Email) {
-		return e.User.BadParameter("email")
+		return e.New("user").BadParameter("email")
 	}
 
 	if s.Username == nil {
-		return e.User.BadParameter("username")
+		return e.New("user").BadParameter("username")
 	}
 
 	if !validator.IsUsername(*s.Username) {
-		return e.User.BadParameter("username")
+		return e.New("user").BadParameter("username")
 	}
 
 	if s.Password == nil {
-		return e.User.BadParameter("password")
+		return e.New("user").BadParameter("password")
 	}
 
 	if !validator.IsPassword(*s.Password) {
-		return e.User.BadParameter("password")
+		return e.New("user").BadParameter("password")
 	}
 
 	*s.Username = strings.ToLower(*s.Username)
@@ -108,7 +108,7 @@ func UserCreateH(w http.ResponseWriter, r *http.Request) {
 
 	user, err := ctx.Storage.User().GetByUsername(u.Username)
 	if err == nil && user != nil {
-		err = e.User.UsernameExists()
+		err = e.New("user").NotUnique("username")
 	}
 	if err != nil {
 		ctx.Log.Error("Error: find user by username", err.Err())
@@ -118,7 +118,7 @@ func UserCreateH(w http.ResponseWriter, r *http.Request) {
 
 	user, err = ctx.Storage.User().GetByEmail(u.Email)
 	if err == nil && user != nil {
-		err = e.User.EmailExists()
+		err = e.New("user").NotUnique("email")
 	}
 	if err != nil {
 		ctx.Log.Error("Error: find user by email", err.Err())
@@ -178,7 +178,7 @@ func UserGetH(w http.ResponseWriter, r *http.Request) {
 
 	user, err := ctx.Storage.User().GetByID(session.Uid)
 	if err == nil && user == nil {
-		err = e.User.NotFound()
+		err = e.New("user").NotFound()
 	}
 	if err != nil {
 		ctx.Log.Error("Error: find user by id", err.Err())

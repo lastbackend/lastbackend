@@ -3,7 +3,15 @@ package filesystem
 import (
 	"io/ioutil"
 	"os"
+	"runtime"
 )
+
+const _WINDOWS = "windows"
+
+// Check OS Windows
+func IsWindows() bool {
+	return runtime.GOOS == _WINDOWS
+}
 
 // MkDir is used to create directory
 func MkDir(path string, mode os.FileMode) (err error) {

@@ -23,7 +23,7 @@ func (i *ImageStorage) GetByID(user, id string) (*model.Image, *e.Err) {
 	var user_filter = r.Row.Field("user").Eq(id)
 	res, err := r.Table(ImageTable).Get(id).Filter(user_filter).Run(i.Session)
 	if err != nil {
-		return nil, e.Image.NotFound(err)
+		return nil, e.New("image").NotFound(err)
 	}
 	res.One(image)
 
@@ -38,7 +38,7 @@ func (i *ImageStorage) GetByUser(id string) (*model.ImageList, *e.Err) {
 
 	res, err := r.Table(ImageTable).Get(id).Run(i.Session)
 	if err != nil {
-		return nil, e.Image.Unknown(err)
+		return nil, e.New("image").Unknown(err)
 	}
 
 	res.All(images)
@@ -56,7 +56,7 @@ func (i *ImageStorage) GetByProject(user, id string) (*model.ImageList, *e.Err) 
 
 	res, err := r.Table(ImageTable).Filter(project_filter).Filter(user_filter).Run(i.Session)
 	if err != nil {
-		return nil, e.Image.Unknown(err)
+		return nil, e.New("image").Unknown(err)
 	}
 
 	res.All(images)
@@ -74,7 +74,7 @@ func (i *ImageStorage) GetByService(user, id string) (*model.ImageList, *e.Err) 
 	var user_filter = r.Row.Field("user").Eq(user)
 	res, err := r.Table(ImageTable).Filter(project_filter).Filter(user_filter).Run(i.Session)
 	if err != nil {
-		return nil, e.Image.Unknown(err)
+		return nil, e.New("image").Unknown(err)
 	}
 
 	res.All(images)
@@ -88,7 +88,7 @@ func (i *ImageStorage) Insert(image *model.Image) (*model.Image, *e.Err) {
 
 	res, err := r.Table(ImageTable).Insert(image, r.InsertOpts{ReturnChanges: true}).RunWrite(i.Session)
 	if err != nil {
-		return nil, e.Image.Unknown(err)
+		return nil, e.New("image").Unknown(err)
 	}
 
 	image.ID = res.GeneratedKeys[0]
@@ -101,7 +101,7 @@ func (i *ImageStorage) Update(image *model.Image) (*model.Image, *e.Err) {
 	var user_filter = r.Row.Field("user").Eq(image.User)
 	_, err := r.Table(ImageTable).Get(image.ID).Filter(user_filter).Replace(image, r.ReplaceOpts{ReturnChanges: true}).RunWrite(i.Session)
 	if err != nil {
-		return nil, e.Image.Unknown(err)
+		return nil, e.New("image").Unknown(err)
 	}
 
 	return image, nil

@@ -29,7 +29,7 @@ type Service struct {
 func (s *Service) ToJson() ([]byte, *e.Err) {
 	buf, err := json.Marshal(s)
 	if err != nil {
-		return nil, e.Service.Unknown(err)
+		return nil, e.New("service").Unknown(err)
 	}
 
 	return buf, nil
@@ -55,7 +55,7 @@ func (s *ServiceList) ToJson() ([]byte, *e.Err) {
 
 	buf, err := json.Marshal(s)
 	if err != nil {
-		return nil, e.Service.Unknown(err)
+		return nil, e.New("service").Unknown(err)
 	}
 
 	return buf, nil

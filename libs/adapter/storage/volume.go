@@ -28,7 +28,7 @@ func (s *VolumeStorage) GetByID(user, id string) (*model.Volume, *e.Err) {
 	res, err := r.Table(VolumeTable).Filter(volume_filter).Run(s.Session)
 
 	if err != nil {
-		return nil, e.Volume.NotFound(err)
+		return nil, e.New("volume").NotFound(err)
 	}
 	defer res.Close()
 
@@ -49,7 +49,7 @@ func (s *VolumeStorage) GetByProject(id string) (*model.VolumeList, *e.Err) {
 
 	res, err := r.Table(VolumeTable).Filter(volume_filter).Run(s.Session)
 	if err != nil {
-		return nil, e.Volume.Unknown(err)
+		return nil, e.New("volume").Unknown(err)
 	}
 	defer res.Close()
 
@@ -73,7 +73,7 @@ func (s *VolumeStorage) Insert(volume *model.Volume) (*model.Volume, *e.Err) {
 
 	res, err := r.Table(VolumeTable).Insert(volume, opts).RunWrite(s.Session)
 	if err != nil {
-		return nil, e.Volume.Unknown(err)
+		return nil, e.New("volume").Unknown(err)
 	}
 
 	volume.ID = res.GeneratedKeys[0]
@@ -89,7 +89,7 @@ func (s *VolumeStorage) Remove(id string) *e.Err {
 
 	_, err = r.Table(VolumeTable).Get(id).Delete(opts).RunWrite(s.Session)
 	if err != nil {
-		return e.Volume.Unknown(err)
+		return e.New("volume").Unknown(err)
 	}
 
 	return nil
