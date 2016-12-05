@@ -50,7 +50,7 @@ func TestList_Success(t *testing.T) {
 
 	ctx.HTTP = h.New(server.URL)
 
-	err = project.List()
+	_, err = project.List()
 	if err != nil {
 		t.Error(err)
 	}
