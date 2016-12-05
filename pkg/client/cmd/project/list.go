@@ -11,14 +11,16 @@ func ListCmd() {
 
 	var ctx = context.Get()
 
-	err := List()
+	projects, err := List()
 	if err != nil {
 		ctx.Log.Error(err)
 		return
 	}
+
+	projects.DrawTable()
 }
 
-func List() error {
+func List() (*model.ProjectList, error) {
 
 	var (
 		err      error
@@ -33,23 +35,21 @@ func List() error {
 		AddHeader("Authorization", "Bearer "+ctx.Token).
 		Request(projects, er)
 	if err != nil {
-		return err
+		return nil,err
 	}
 
 	if er.Code == 401 {
-		return errors.New("You are currently not logged in to the system, to get proper access create a new user or login with an existing user.")
+		return nil, errors.New("You are currently not logged in to the system, to get proper access create a new user or login with an existing user.")
 	}
 
 	if er.Code != 0 {
-		return errors.New(e.Message(er.Status))
+		return nil, errors.New(e.Message(er.Status))
 	}
 
 	if len(*projects) == 0 {
 		ctx.Log.Info("You don't have any projects")
-		return nil
+		return nil, nil
 	}
 
-	projects.DrawTable()
-
-	return nil
+	return projects, nil
 }

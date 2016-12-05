@@ -10,14 +10,17 @@ import (
 func ListCmd() {
 	ctx := context.Get()
 
-	err := List()
+	templates, err := List()
+
 	if err != nil {
 		ctx.Log.Error(err)
 		return
 	}
+
+	templates.DrawTable()
 }
 
-func List() error {
+func List() (*model.TemplateList, error) {
 
 	var (
 		ctx       = context.Get()
@@ -31,18 +34,16 @@ func List() error {
 		Request(&templates, er)
 
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	if er.Code == 401 {
-		return errors.New("You are currently not logged in to the system, to get proper access create a new user or login with an existing user.")
+		return nil, errors.New("You are currently not logged in to the system, to get proper access create a new user or login with an existing user.")
 	}
 
 	if er.Code != 0 {
-		return errors.New(e.Message(er.Status))
+		return nil, errors.New(e.Message(er.Status))
 	}
 
-	templates.DrawTable()
-
-	return err
+	return templates, err
 }

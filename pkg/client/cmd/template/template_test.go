@@ -66,7 +66,7 @@ func TestList(t *testing.T) {
 	//------------------------------------------------------------------------------------------
 	ctx.HTTP = h.New(server.URL)
 
-	err = template.List()
+	_, err = template.List()
 
 	if err != nil {
 		t.Error(err)

@@ -10,14 +10,17 @@ func CurrentCmd() {
 
 	var ctx = context.Get()
 
-	err := Current()
+	project, err := Current()
+
 	if err != nil {
 		ctx.Log.Error(err)
 		return
 	}
+
+	project.DrawTable()
 }
 
-func Current() error {
+func Current() (*model.Project, error) {
 
 	var (
 		err     error
@@ -26,20 +29,18 @@ func Current() error {
 	)
 
 	if ctx.Token == "" {
-		return errors.New("You are currently not logged in to the system, to get proper access create a new user or login with an existing user.")
+		return nil, errors.New("You are currently not logged in to the system, to get proper access create a new user or login with an existing user.")
 	}
 
 	err = ctx.Storage.Get("project", project)
 	if err != nil {
-		return errors.New(err.Error())
+		return nil, errors.New(err.Error())
 	}
 
 	if project.ID == "" {
 		ctx.Log.Info("Project didn't select")
-		return nil
+		return nil, nil
 	}
 
-	project.DrawTable()
-
-	return nil
+	return project, nil
 }

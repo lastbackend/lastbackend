@@ -39,7 +39,7 @@ func TestCurrent(t *testing.T) {
 		return
 	}
 
-	err = project.Current()
+	_, err = project.Current()
 
 	if err != nil {
 		t.Error(err)
