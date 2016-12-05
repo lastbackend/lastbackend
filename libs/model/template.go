@@ -20,6 +20,9 @@ type Template struct {
 	ReplicationControllers []v1.ReplicationController `json:"replication_controllers,omitempty"`
 	Pods                   []v1.Pod                   `json:"pods,omitempty"`
 	Deployments            []v1beta1.Deployment       `json:"deployments,omitempty"`
+	DaemonSets             []v1beta1.DaemonSet        `json:"daemon_sets,omitempty"`
+	Jobs                   []v1beta1.Job              `json:"jobs,omitempty"`
+	Ingresses              []v1beta1.Ingress          `json:"ingresses,omitempty"`
 }
 
 func (t *Template) ToJson() ([]byte, *e.Err) {
