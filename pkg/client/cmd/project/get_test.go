@@ -49,7 +49,7 @@ func TestGet_Success(t *testing.T) {
 
 	ctx.HTTP = h.New(server.URL)
 
-	err = project.Get(name)
+	_, err = project.Get(name)
 	if err != nil {
 		t.Error(err)
 	}

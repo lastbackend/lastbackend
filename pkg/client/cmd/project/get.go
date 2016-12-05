@@ -11,14 +11,17 @@ func GetCmd(name string) {
 
 	var ctx = context.Get()
 
-	err := Get(name)
+	project, err := Get(name)
+
 	if err != nil {
 		ctx.Log.Error(err)
 		return
 	}
+
+	project.DrawTable()
 }
 
-func Get(name string) error {
+func Get(name string) (*model.Project, error) {
 
 	var (
 		err     error
@@ -28,7 +31,7 @@ func Get(name string) error {
 	)
 
 	if len(name) == 0 {
-		return e.BadParameter("name").Err()
+		return nil, e.BadParameter("name").Err()
 	}
 
 	_, _, err = ctx.HTTP.
@@ -37,18 +40,16 @@ func Get(name string) error {
 		AddHeader("Authorization", "Bearer "+ctx.Token).
 		Request(&project, er)
 	if err != nil {
-		return errors.New(err.Error())
+		return nil, errors.New(err.Error())
 	}
 
 	if er.Code == 401 {
-		return errors.New("You are currently not logged in to the system, to get proper access create a new user or login with an existing user.")
+		return nil, errors.New("You are currently not logged in to the system, to get proper access create a new user or login with an existing user.")
 	}
 
 	if er.Code != 0 {
-		return errors.New(e.Message(er.Status))
+		return nil, errors.New(e.Message(er.Status))
 	}
 
-	project.DrawTable()
-
-	return nil
+	return project, nil
 }
