@@ -48,7 +48,7 @@ func TestList(t *testing.T) {
 		temp["test_temp_1"] = []string{"ver. 1.1", "ver 2.2"}
 		temp["test_temp_2"] = []string{"ver. 1.1", "ver 2.2", "ver. 3.3"}
 
-		bytes, err := json.Marshal(temp)
+		buff, err := json.Marshal(temp)
 
 		if err != nil {
 			t.Error(err)
@@ -56,7 +56,7 @@ func TestList(t *testing.T) {
 		}
 
 		w.WriteHeader(200)
-		_, err = w.Write(bytes)
+		_, err = w.Write(buff)
 		if err != nil {
 			t.Error(err)
 			return
