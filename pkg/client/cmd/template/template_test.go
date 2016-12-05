@@ -1,18 +1,16 @@
-package project_test
+package template_test
 
 import (
 	"encoding/json"
 	"github.com/lastbackend/lastbackend/libs/db"
 	h "github.com/lastbackend/lastbackend/libs/http"
-	"github.com/lastbackend/lastbackend/libs/model"
-	"github.com/lastbackend/lastbackend/pkg/client/cmd/project"
+	"github.com/lastbackend/lastbackend/pkg/client/cmd/template"
 	"github.com/lastbackend/lastbackend/pkg/client/context"
 	"github.com/stretchr/testify/assert"
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
 	"testing"
-	"time"
 )
 
 func TestList(t *testing.T) {
@@ -20,11 +18,16 @@ func TestList(t *testing.T) {
 		err error
 		ctx = context.Mock()
 	)
-
 	const token = "mocktoken"
 
-	ctx.Token = token
+	ctx.Storage, err = db.Init()
 
+	if err != nil {
+		panic(err)
+	}
+	defer ctx.Storage.Close()
+
+	ctx.Token = token
 	//------------------------------------------------------------------------------------------
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 
@@ -38,39 +41,14 @@ func TestList(t *testing.T) {
 			return
 		}
 
-		assert.NotEmpty(t, body, "body should not be empty")
-		db_project := new(model.Project)
-		reqw_project := new(model.Project)
-		err = json.Unmarshal(body, &db_project)
+		assert.Empty(t, body, "body should be empty")
 
-		if err != nil {
-			t.Error(err)
-			return
-		}
+		var temp = make(map[string][]string)
 
-		data, err := db.Init()
+		temp["test_temp_1"] = []string{"ver. 1.1", "ver 2.2"}
+		temp["test_temp_2"] = []string{"ver. 1.1", "ver 2.2", "ver. 3.3"}
 
-		if err != nil {
-			t.Error(err)
-			return
-		}
-
-		defer data.Close()
-
-		err = data.Get("project", &db_project)
-
-		if err != nil {
-			t.Error(err)
-			return
-		}
-
-		if reqw_project.Name != "" {
-			db_project.Name = reqw_project.Name
-		}
-
-		db_project.Description = reqw_project.Description
-		db_project.Updated = time.Now()
-		err = data.Set("project", db_project)
+		buff, err := json.Marshal(temp)
 
 		if err != nil {
 			t.Error(err)
@@ -78,8 +56,7 @@ func TestList(t *testing.T) {
 		}
 
 		w.WriteHeader(200)
-		_, err = w.Write(nil)
-
+		_, err = w.Write(buff)
 		if err != nil {
 			t.Error(err)
 			return
@@ -87,9 +64,9 @@ func TestList(t *testing.T) {
 	}))
 	defer server.Close()
 	//------------------------------------------------------------------------------------------
-
 	ctx.HTTP = h.New(server.URL)
-	err = project.Update("mock_name", "mock desc")
+
+	err = template.List()
 
 	if err != nil {
 		t.Error(err)
