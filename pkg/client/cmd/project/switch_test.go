@@ -15,21 +15,21 @@ import (
 	"time"
 )
 
-const token = "mocktoken"
-const mock_name = "mock_name"
-
-var mock_proj = model.Project{Name: "mock_name",
-	ID:          "mock_id",
-	Created:     time.Now(),
-	Updated:     time.Now(),
-	User:        "you",
-	Description: "sample description"}
-
 func TestSwitch(t *testing.T) {
 	var (
 		err error
 		ctx = context.Mock()
 	)
+
+	const token = "mocktoken"
+	const mock_name = "mock_name"
+
+	var mock_proj = model.Project{Name: "mock_name",
+		ID:          "mock_id",
+		Created:     time.Now(),
+		Updated:     time.Now(),
+		User:        "you",
+		Description: "sample description"}
 
 	ctx.Storage, err = db.Init()
 	if err != nil {
@@ -45,27 +45,27 @@ func TestSwitch(t *testing.T) {
 		tk := r.Header.Get("Authorization")
 		assert.NotEmpty(t, tk, "token should be not empty")
 		assert.Equal(t, tk, "Bearer "+token, "they should be equal")
-
 		body, err := ioutil.ReadAll(r.Body)
+
 		if err != nil {
 			t.Error(err)
 			return
 		}
 
 		assert.Empty(t, body, "body should be empty")
-		byte, _ := json.Marshal(mock_proj)
+		bytes, _ := json.Marshal(mock_proj)
 
 		w.WriteHeader(200)
-		_, err = w.Write(byte)
+		_, err = w.Write(bytes)
 		if err != nil {
 			t.Error(err)
 			return
 		}
 	}))
 	defer server.Close()
-	ctx.HTTP = h.New(server.URL)
 	//------------------------------------------------------------------------------------------
 
+	ctx.HTTP = h.New(server.URL)
 	err = project.Switch(mock_name)
 
 	if err != nil {

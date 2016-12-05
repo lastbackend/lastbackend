@@ -17,11 +17,14 @@ import (
 
 func TestList(t *testing.T) {
 	var (
-		err       error
-		ctx       = context.Mock()
+		err error
+		ctx = context.Mock()
 	)
 
+	const token = "mocktoken"
+
 	ctx.Token = token
+
 	//------------------------------------------------------------------------------------------
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 
@@ -36,17 +39,18 @@ func TestList(t *testing.T) {
 		}
 
 		assert.NotEmpty(t, body, "body should not be empty")
-
 		db_project := new(model.Project)
 		reqw_project := new(model.Project)
-
 		json.Unmarshal(body, &db_project)
 		data, err := db.Init()
+
 		if err != nil {
 			t.Error(err)
 			return
 		}
+
 		defer data.Close()
+
 		err = data.Get("project", &db_project)
 
 		if err != nil {
@@ -59,9 +63,7 @@ func TestList(t *testing.T) {
 		}
 
 		db_project.Description = reqw_project.Description
-
 		db_project.Updated = time.Now()
-
 		err = data.Set("project", db_project)
 
 		if err != nil {
@@ -71,15 +73,16 @@ func TestList(t *testing.T) {
 
 		w.WriteHeader(200)
 		_, err = w.Write(nil)
+
 		if err != nil {
 			t.Error(err)
 			return
 		}
 	}))
 	defer server.Close()
-	ctx.HTTP = h.New(server.URL)
 	//------------------------------------------------------------------------------------------
 
+	ctx.HTTP = h.New(server.URL)
 	err = project.Update("mock_name", "mock desc")
 
 	if err != nil {

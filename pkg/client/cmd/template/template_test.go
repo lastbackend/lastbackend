@@ -13,15 +13,17 @@ import (
 	"testing"
 )
 
-const token = "mocktoken"
+
 
 func TestList(t *testing.T) {
 	var (
 		err error
 		ctx = context.Mock()
 	)
+	const token = "mocktoken"
 
 	ctx.Storage, err = db.Init()
+
 	if err != nil {
 		panic(err)
 	}
@@ -44,8 +46,10 @@ func TestList(t *testing.T) {
 		assert.Empty(t, body, "body should be empty")
 
 		var temp = make(map[string][]string)
+
 		temp["test_temp_1"] = []string{"ver. 1.1", "ver 2.2"}
 		temp["test_temp_2"] = []string{"ver. 1.1", "ver 2.2", "ver. 3.3"}
+
 		byte, _ := json.Marshal(temp)
 
 		w.WriteHeader(200)
@@ -56,8 +60,8 @@ func TestList(t *testing.T) {
 		}
 	}))
 	defer server.Close()
-	ctx.HTTP = h.New(server.URL)
 	//------------------------------------------------------------------------------------------
+	ctx.HTTP = h.New(server.URL)
 
 	err = template.List()
 
@@ -65,6 +69,7 @@ func TestList(t *testing.T) {
 		t.Error(err)
 		return
 	}
+
 	return
 
 }
