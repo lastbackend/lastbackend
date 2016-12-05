@@ -17,8 +17,8 @@ const token = "mocktoken"
 
 func TestList(t *testing.T) {
 	var (
-		err       error
-		ctx       = context.Mock()
+		err error
+		ctx = context.Mock()
 	)
 
 	ctx.Storage, err = db.Init()
@@ -65,17 +65,6 @@ func TestList(t *testing.T) {
 		t.Error(err)
 		return
 	}
-
-	if err == 401 {
-		t.Error("You are currently not logged in to the system, to get proper access create a new user or login with an existing user.")
-		return
-	}
-
-	if err != 0 {
-		t.Error(err)
-		return
-	}
-
 	return
 
 }
