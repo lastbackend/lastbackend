@@ -3,7 +3,6 @@ package project_test
 import (
 	"encoding/json"
 	"github.com/lastbackend/lastbackend/libs/db"
-	e "github.com/lastbackend/lastbackend/libs/errors"
 	h "github.com/lastbackend/lastbackend/libs/http"
 	"github.com/lastbackend/lastbackend/libs/model"
 	"github.com/lastbackend/lastbackend/pkg/client/cmd/project"
@@ -30,7 +29,6 @@ func TestSwitch(t *testing.T) {
 	var (
 		err error
 		ctx = context.Mock()
-		er  = new(e.Http)
 	)
 
 	ctx.Storage, err = db.Init()
@@ -72,16 +70,6 @@ func TestSwitch(t *testing.T) {
 
 	if err != nil {
 		t.Error(err)
-		return
-	}
-
-	if er.Code == 401 {
-		t.Error("You are currently not logged in to the system, to get proper access create a new user or login with an existing user.")
-		return
-	}
-
-	if er.Code != 0 {
-		t.Error(er.Code)
 		return
 	}
 
