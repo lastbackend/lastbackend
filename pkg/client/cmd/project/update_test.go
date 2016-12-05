@@ -1,10 +1,5 @@
 package project_test
 
-/*
-	res["mock template 1"] = []string{"first ver.", "last ver."}
-	res["mock template 2"] = []string{"first ver.","ver 0.0", "last ver."}
-*/
-
 import (
 	"encoding/json"
 	"github.com/lastbackend/lastbackend/libs/db"
