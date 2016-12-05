@@ -41,7 +41,13 @@ func TestList(t *testing.T) {
 		assert.NotEmpty(t, body, "body should not be empty")
 		db_project := new(model.Project)
 		reqw_project := new(model.Project)
-		json.Unmarshal(body, &db_project)
+		err = json.Unmarshal(body, &db_project)
+
+		if err != nil {
+			t.Error(err)
+			return
+		}
+
 		data, err := db.Init()
 
 		if err != nil {
