@@ -53,7 +53,12 @@ func TestSwitch(t *testing.T) {
 		}
 
 		assert.Empty(t, body, "body should be empty")
-		bytes, _ := json.Marshal(mock_proj)
+		bytes, err := json.Marshal(mock_proj)
+
+		if err != nil {
+			t.Error(err)
+			return
+		}
 
 		w.WriteHeader(200)
 		_, err = w.Write(bytes)

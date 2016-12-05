@@ -13,8 +13,6 @@ import (
 	"testing"
 )
 
-
-
 func TestList(t *testing.T) {
 	var (
 		err error
@@ -50,7 +48,12 @@ func TestList(t *testing.T) {
 		temp["test_temp_1"] = []string{"ver. 1.1", "ver 2.2"}
 		temp["test_temp_2"] = []string{"ver. 1.1", "ver 2.2", "ver. 3.3"}
 
-		byte, _ := json.Marshal(temp)
+		byte, err := json.Marshal(temp)
+
+		if err != nil {
+			t.Error(err)
+			return
+		}
 
 		w.WriteHeader(200)
 		_, err = w.Write(byte)

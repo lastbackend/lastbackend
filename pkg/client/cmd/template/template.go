@@ -5,7 +5,6 @@ import (
 	e "github.com/lastbackend/lastbackend/libs/errors"
 	"github.com/lastbackend/lastbackend/libs/model"
 	"github.com/lastbackend/lastbackend/pkg/client/context"
-
 )
 
 func ListCmd() {
