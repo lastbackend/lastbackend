@@ -3,9 +3,8 @@ package template_test
 import (
 	"encoding/json"
 	"github.com/lastbackend/lastbackend/libs/db"
-	e "github.com/lastbackend/lastbackend/libs/errors"
 	h "github.com/lastbackend/lastbackend/libs/http"
-	"github.com/lastbackend/lastbackend/libs/model"
+	"github.com/lastbackend/lastbackend/pkg/client/cmd/template"
 	"github.com/lastbackend/lastbackend/pkg/client/context"
 	"github.com/stretchr/testify/assert"
 	"io/ioutil"
@@ -20,8 +19,6 @@ func TestList(t *testing.T) {
 	var (
 		err       error
 		ctx       = context.Mock()
-		er        = new(e.Http)
-		templates = new(model.TemplateList)
 	)
 
 	ctx.Storage, err = db.Init()
@@ -62,24 +59,22 @@ func TestList(t *testing.T) {
 	ctx.HTTP = h.New(server.URL)
 	//------------------------------------------------------------------------------------------
 
-	err = List()
+	err = template.List()
 
 	if err != nil {
 		t.Error(err)
 		return
 	}
 
-	if er.Code == 401 {
+	if err == 401 {
 		t.Error("You are currently not logged in to the system, to get proper access create a new user or login with an existing user.")
 		return
 	}
 
-	if er.Code != 0 {
-		t.Error(er.Code)
+	if err != 0 {
+		t.Error(err)
 		return
 	}
-
-	templates.DrawTable()
 
 	return
 
