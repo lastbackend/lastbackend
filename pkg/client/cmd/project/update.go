@@ -7,6 +7,11 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/client/context"
 )
 
+type updateS struct {
+	Name string `json:"name"`
+	Desc string `json:"description"`
+}
+
 func UpdateCmd(name, description string) {
 
 	var ctx = context.Get()
@@ -16,6 +21,8 @@ func UpdateCmd(name, description string) {
 		ctx.Log.Error(err)
 		return
 	}
+
+	ctx.Log.Info("Successful")
 }
 
 func Update(name, description string) error {
@@ -35,7 +42,7 @@ func Update(name, description string) error {
 		PUT("/project").
 		AddHeader("Content-Type", "application/json").
 		AddHeader("Authorization", "Bearer "+ctx.Token).
-		BodyJSON(createS{name, description}).
+		BodyJSON(updateS{name, description}).
 		Request(&res, er)
 	if err != nil {
 		return err
@@ -48,8 +55,6 @@ func Update(name, description string) error {
 	if er.Code != 0 {
 		return errors.New(e.Message(er.Status))
 	}
-
-	ctx.Log.Info("Successful")
 
 	return nil
 }

@@ -39,6 +39,8 @@ func SignUpCmd() {
 		ctx.Log.Error(err)
 		return
 	}
+
+	ctx.Log.Info("Registration completed successfully")
 }
 
 type userCreateS struct {
@@ -76,8 +78,6 @@ func SignUp(username, email, password string) error {
 	if err != nil {
 		return err
 	}
-
-	ctx.Log.Info("Registration completed successfully")
 
 	return nil
 }

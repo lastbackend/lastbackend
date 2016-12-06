@@ -11,7 +11,6 @@ import (
 )
 
 func TestLogout(t *testing.T) {
-	_ = context.Get()
 
 	var (
 		err error
@@ -22,7 +21,13 @@ func TestLogout(t *testing.T) {
 	if err != nil {
 		panic(err)
 	}
-	defer ctx.Storage.Close()
+	defer (func() {
+		err = ctx.Storage.Close()
+		if err != nil {
+			t.Error(err)
+			return
+		}
+	})()
 
 	err = user.Logout()
 	if err != nil {

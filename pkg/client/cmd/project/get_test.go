@@ -1,7 +1,6 @@
 package project_test
 
 import (
-	"github.com/lastbackend/lastbackend/libs/db"
 	h "github.com/lastbackend/lastbackend/libs/http"
 	"github.com/lastbackend/lastbackend/pkg/client/cmd/project"
 	"github.com/lastbackend/lastbackend/pkg/client/context"
@@ -24,14 +23,9 @@ func TestGet_Success(t *testing.T) {
 		ctx = context.Mock()
 	)
 
-	ctx.Storage, err = db.Init()
-	if err != nil {
-		panic(err)
-	}
-	defer ctx.Storage.Close()
-
 	ctx.Token = token
 
+	//------------------------------------------------------------------------------------------
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 
 		tk := r.Header.Get("Authorization")
@@ -46,6 +40,7 @@ func TestGet_Success(t *testing.T) {
 		}
 	}))
 	defer server.Close()
+	//------------------------------------------------------------------------------------------
 
 	ctx.HTTP = h.New(server.URL)
 

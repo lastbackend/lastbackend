@@ -15,14 +15,23 @@ func WhoamiCmd() {
 		ctx = context.Get()
 	)
 
-	err = Whoami()
+	user, err := Whoami()
 	if err != nil {
 		ctx.Log.Error(err)
 		return
 	}
+
+	ctx.Log.Info(fmt.Sprintf("User information:\r\n\r\n"+
+		"Username: \t%s\n"+
+		"E-mail: \t%s\n"+
+		"Balance: \t%.0f\n"+
+		"Organization: \t%v\n"+
+		"Created: \t%s\n"+
+		"Updated: \t%s", user.Username, user.Email,
+		user.Balance, user.Organization, user.Created.String()[:10], user.Updated.String()[:10]))
 }
 
-func Whoami() error {
+func Whoami() (*model.User, error) {
 
 	var (
 		err  error
@@ -37,25 +46,16 @@ func Whoami() error {
 		AddHeader("Authorization", "Bearer "+ctx.Token).
 		Request(user, er)
 	if err != nil {
-		return errors.New(e.Message(err.Error()))
+		return nil, errors.New(e.Message(err.Error()))
 	}
 
 	if er.Code == 401 {
-		return errors.New("You are currently not logged in to the system, to get proper access create a new user or login with an existing user.")
+		return nil, errors.New("You are currently not logged in to the system, to get proper access create a new user or login with an existing user.")
 	}
 
 	if er.Code != 0 {
-		return errors.New(e.Message(er.Status))
+		return nil, errors.New(e.Message(er.Status))
 	}
 
-	ctx.Log.Info(fmt.Sprintf("User information:\r\n\r\n"+
-		"Username: \t%s\n"+
-		"E-mail: \t%s\n"+
-		"Balance: \t%.0f\n"+
-		"Organization: \t%v\n"+
-		"Created: \t%s\n"+
-		"Updated: \t%s", user.Username, user.Email,
-		user.Balance, user.Organization, user.Created.String()[:10], user.Updated.String()[:10]))
-
-	return nil
+	return user, nil
 }

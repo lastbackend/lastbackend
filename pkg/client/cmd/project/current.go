@@ -17,6 +17,11 @@ func CurrentCmd() {
 		return
 	}
 
+	if project == nil {
+		ctx.Log.Info("Project didn't select")
+		return
+	}
+
 	project.DrawTable()
 }
 
@@ -38,7 +43,6 @@ func Current() (*model.Project, error) {
 	}
 
 	if project.ID == "" {
-		ctx.Log.Info("Project didn't select")
 		return nil, nil
 	}
 

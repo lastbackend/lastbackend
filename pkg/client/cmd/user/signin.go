@@ -34,6 +34,8 @@ func SignInCmd() {
 		ctx.Log.Error(err)
 		return
 	}
+
+	ctx.Log.Info("Login successful")
 }
 
 type userLoginS struct {
@@ -74,8 +76,6 @@ func SignIn(login, password string) error {
 	if err != nil {
 		return err
 	}
-
-	ctx.Log.Info("Login successful")
 
 	return nil
 }

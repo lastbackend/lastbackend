@@ -35,7 +35,7 @@ func List() (*model.ProjectList, error) {
 		AddHeader("Authorization", "Bearer "+ctx.Token).
 		Request(projects, er)
 	if err != nil {
-		return nil,err
+		return nil, err
 	}
 
 	if er.Code == 401 {

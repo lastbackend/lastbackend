@@ -28,12 +28,25 @@ func TestCreate_Success(t *testing.T) {
 
 	ctx.Storage, err = db.Init()
 	if err != nil {
-		panic(err)
+		t.Error(err)
+		return
 	}
-	defer ctx.Storage.Close()
+	defer (func() {
+		err = ctx.Storage.Clear()
+		if err != nil {
+			t.Error(err)
+			return
+		}
+		err = ctx.Storage.Close()
+		if err != nil {
+			t.Error(err)
+			return
+		}
+	})()
 
 	ctx.Token = token
 
+	//------------------------------------------------------------------------------------------
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 
 		tk := r.Header.Get("Authorization")
@@ -70,6 +83,7 @@ func TestCreate_Success(t *testing.T) {
 	defer server.Close()
 
 	ctx.HTTP = h.New(server.URL)
+	//------------------------------------------------------------------------------------------
 
 	err = project.Create(name, description)
 	if err != nil {
