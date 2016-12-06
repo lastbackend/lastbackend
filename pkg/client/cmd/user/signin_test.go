@@ -29,8 +29,20 @@ func TestSignIn_Success(t *testing.T) {
 	if err != nil {
 		panic(err)
 	}
-	defer ctx.Storage.Close()
+	defer (func() {
+		err = ctx.Storage.Clear()
+		if err != nil {
+			t.Error(err)
+			return
+		}
+		err = ctx.Storage.Close()
+		if err != nil {
+			t.Error(err)
+			return
+		}
+	})()
 
+	//------------------------------------------------------------------------------------------
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		body, err := ioutil.ReadAll(r.Body)
 		if err != nil {
@@ -60,6 +72,7 @@ func TestSignIn_Success(t *testing.T) {
 		}
 	}))
 	defer server.Close()
+	//------------------------------------------------------------------------------------------
 
 	ctx.HTTP = h.New(server.URL)
 

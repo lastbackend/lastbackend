@@ -29,7 +29,7 @@ func (l *Log) Disabled() {
 
 func (l *Log) Debug(args ...interface{}) {
 	if l.debug {
-		l.print(color.White(l.sprintlnn(args...)))
+		l.print(color.White(l.sprintln(args...)))
 	}
 }
 
@@ -40,7 +40,7 @@ func (l *Log) Debugf(format string, args ...interface{}) {
 }
 
 func (l *Log) Info(args ...interface{}) {
-	l.print(color.Yellow(l.sprintlnn(args...)))
+	l.print(color.Yellow(l.sprintln(args...)))
 }
 
 func (l *Log) Infof(format string, args ...interface{}) {
@@ -48,7 +48,7 @@ func (l *Log) Infof(format string, args ...interface{}) {
 }
 
 func (l *Log) Error(args ...interface{}) {
-	l.print(color.Red(l.sprintlnn(args...)))
+	l.print(color.Red(l.sprintln(args...)))
 }
 
 func (l *Log) Errorf(format string, args ...interface{}) {
@@ -56,7 +56,7 @@ func (l *Log) Errorf(format string, args ...interface{}) {
 }
 
 func (l *Log) Fatal(args ...interface{}) {
-	l.print(color.Red(l.sprintlnn(args...)))
+	l.print(color.Red(l.sprintln(args...)))
 }
 
 func (l *Log) Fatalf(format string, args ...interface{}) {
@@ -64,7 +64,7 @@ func (l *Log) Fatalf(format string, args ...interface{}) {
 }
 
 func (l *Log) Panic(args ...interface{}) {
-	l.print(color.Red(l.sprintlnn(args...)))
+	l.print(color.Red(l.sprintln(args...)))
 }
 
 func (l *Log) Panicf(format string, args ...interface{}) {
@@ -72,7 +72,7 @@ func (l *Log) Panicf(format string, args ...interface{}) {
 }
 
 func (l *Log) Warn(args ...interface{}) {
-	l.print(color.Magenta(l.sprintlnn(args...)))
+	l.print(color.Magenta(l.sprintln(args...)))
 }
 
 func (l *Log) Warnf(format string, args ...interface{}) {
@@ -118,7 +118,7 @@ func fileLine(skip int) string {
 // fmt.Sprintln where spaces are always added between operands, regardless of
 // their type. Instead of vendoring the Sprintln implementation to spare a
 // string allocation, we do the simplest thing.
-func (l *Log) sprintlnn(args ...interface{}) string {
+func (l *Log) sprintln(args ...interface{}) string {
 	msg := fmt.Sprintln(args...)
 	return msg[:len(msg)-1]
 }

@@ -22,6 +22,8 @@ func CreateCmd(name string) {
 		ctx.Log.Error(err)
 		return
 	}
+
+	ctx.Log.Info("Successful")
 }
 
 func Create(name string) error {

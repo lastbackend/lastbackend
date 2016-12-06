@@ -2,7 +2,6 @@ package template_test
 
 import (
 	"encoding/json"
-	"github.com/lastbackend/lastbackend/libs/db"
 	h "github.com/lastbackend/lastbackend/libs/http"
 	"github.com/lastbackend/lastbackend/pkg/client/cmd/template"
 	"github.com/lastbackend/lastbackend/pkg/client/context"
@@ -14,20 +13,16 @@ import (
 )
 
 func TestList(t *testing.T) {
+
+	const token = "mocktoken"
+
 	var (
 		err error
 		ctx = context.Mock()
 	)
-	const token = "mocktoken"
-
-	ctx.Storage, err = db.Init()
-
-	if err != nil {
-		panic(err)
-	}
-	defer ctx.Storage.Close()
 
 	ctx.Token = token
+
 	//------------------------------------------------------------------------------------------
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 
@@ -64,6 +59,7 @@ func TestList(t *testing.T) {
 	}))
 	defer server.Close()
 	//------------------------------------------------------------------------------------------
+
 	ctx.HTTP = h.New(server.URL)
 
 	_, err = template.List()
@@ -72,7 +68,4 @@ func TestList(t *testing.T) {
 		t.Error(err)
 		return
 	}
-
-	return
-
 }

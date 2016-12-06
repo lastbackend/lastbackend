@@ -21,6 +21,8 @@ func CreateCmd(name, description string) {
 		ctx.Log.Error(err)
 		return
 	}
+
+	ctx.Log.Info("Successful")
 }
 
 func Create(name, description string) error {
@@ -53,8 +55,6 @@ func Create(name, description string) error {
 	if er.Code != 0 {
 		return errors.New(e.Message(er.Status))
 	}
-
-	ctx.Log.Info("Successful")
 
 	return nil
 }

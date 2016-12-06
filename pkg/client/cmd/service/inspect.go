@@ -11,14 +11,16 @@ func InspectCmd(name string) {
 
 	ctx := context.Get()
 
-	err := Inspect(name)
+	service, err := Inspect(name)
 	if err != nil {
 		ctx.Log.Error(err)
 		return
 	}
+
+	service.DrawTable()
 }
 
-func Inspect(name string) error {
+func Inspect(name string) (*model.Service, error) {
 
 	var (
 		err     error
@@ -28,7 +30,7 @@ func Inspect(name string) error {
 	)
 
 	if len(name) == 0 {
-		return e.BadParameter("name").Err()
+		return nil, e.BadParameter("name").Err()
 	}
 
 	_, _, err = ctx.HTTP.
@@ -37,18 +39,16 @@ func Inspect(name string) error {
 		Request(service, er)
 
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	if er.Code == 401 {
-		return errors.New("You are currently not logged in to the system, to get proper access create a new user or login with an existing user.")
+		return nil, errors.New("You are currently not logged in to the system, to get proper access create a new user or login with an existing user.")
 	}
 
 	if er.Code != 0 {
-		return errors.New(e.Message(er.Status))
+		return nil, errors.New(e.Message(er.Status))
 	}
 
-	service.DrawTable()
-
-	return nil
+	return service, nil
 }

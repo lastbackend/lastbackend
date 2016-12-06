@@ -14,6 +14,8 @@ func LogoutCmd() {
 		ctx.Log.Error(err)
 		return
 	}
+
+	ctx.Log.Info("Logout successfully")
 }
 
 func Logout() error {
@@ -27,8 +29,6 @@ func Logout() error {
 	if err != nil {
 		return errors.New("Some problems with logout")
 	}
-
-	ctx.Log.Info("Logout successfully")
 
 	return nil
 }

@@ -16,6 +16,8 @@ func RemoveCmd(name string) {
 		ctx.Log.Error(err)
 		return
 	}
+
+	ctx.Log.Info("Successful")
 }
 
 func Remove(name string) error {
@@ -47,8 +49,6 @@ func Remove(name string) error {
 	if er.Code != 0 {
 		return errors.New(e.Message(er.Status))
 	}
-
-	ctx.Log.Info("Successful")
 
 	return nil
 }

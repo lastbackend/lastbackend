@@ -8,7 +8,8 @@ import (
 )
 
 func ListCmd() {
-	ctx := context.Get()
+
+	var ctx = context.Get()
 
 	templates, err := List()
 

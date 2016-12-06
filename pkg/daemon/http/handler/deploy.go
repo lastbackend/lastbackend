@@ -6,7 +6,6 @@ import (
 	e "github.com/lastbackend/lastbackend/libs/errors"
 	"github.com/lastbackend/lastbackend/libs/model"
 	c "github.com/lastbackend/lastbackend/pkg/daemon/context"
-	"github.com/lastbackend/lastbackend/pkg/deployer"
 	"github.com/lastbackend/lastbackend/pkg/template"
 	"github.com/lastbackend/lastbackend/pkg/util/validator"
 	"io"
@@ -84,7 +83,6 @@ func DeployH(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Below this template deployment
-
 	parts := strings.Split(*rq.Target, ":")
 
 	var name = parts[0]
@@ -95,16 +93,18 @@ func DeployH(w http.ResponseWriter, r *http.Request) {
 	}
 
 	tpl, err := template.Get(name, version)
+	if err == nil && tpl == nil {
+		err = e.New("template").NotFound()
+	}
 	if err != nil {
 		ctx.Log.Error("Error: deploy from tempalte", err.Err())
 		err.Http(w)
 		return
 	}
 
-	d := deployer.Get()
-	err = d.DeployFromTemplate(session.Uid, *rq.Project, *tpl)
+	err = tpl.Provision(*rq.Project, session.Uid, *rq.Project)
 	if err != nil {
-		ctx.Log.Error("Error: deploy from tempalte", err.Err())
+		ctx.Log.Error("Error: tempalte provision failed", err.Err())
 		err.Http(w)
 		return
 	}
