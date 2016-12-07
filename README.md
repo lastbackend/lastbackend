@@ -4,7 +4,7 @@
 [![Join the chat at freenode:lastbackend](https://img.shields.io/badge/irc-freenode%3A%20%23lastbackend-blue.svg)](http://webchat.freenode.net/?channels=%23lastbackend)
 [![Licensed under Apache License version 2.0](https://img.shields.io/github/license/lastbackend/lastbackend.svg?maxAge=2592000)](https://www.apache.org/licenses/LICENSE-2.0)
 
-![alt text](https://lastbackend.com/images/logo.png)
+![alt text](docs/assets/logo.png?raw=true "Image")
 
 ## Last.Backend: the apps cloud hosting for fast apps deploying, you don't need to manage.
 
@@ -14,15 +14,15 @@ Last.Backend fetches code from current directory, request or repo, build it and 
 Last.Backend uses powerful containers, that means that your app will be run anywhere, from your development environment on your laptop to any large scale cloud hosting.
 You can run deploy it daemon on the host where you want to deploy your applications (it can be local or remote), run CLI with this host and your applications will be deployed on specified host.  
 
-This project has [Roadmap](https://github.com/lastbackend/lastbackend/blob/master/ROADMAP.md), feel free to offer your features. 
+This project has [Roadmap](ROADMAP.md), feel free to offer your features. 
 
-Look at our [Changelog](https://github.com/lastbackend/lastbackend/blob/master/CHANGELOG.md) to see project progress!
+Look at our [Changelog](CHANGELOG.md) to see project progress!
 
-We are actively searching for contributors! If you want to help our project and to make developers life easier, please read our **[Contibuting guideliness](https://github.com/lastbackend/lastbackend/blob/master/CONTRIBUTING.md)**.
+We are actively searching for contributors! If you want to help our project and to make developers life easier, please read our **[Contibuting guideliness](CONTRIBUTING.md)**.
 
 **We have benefits for active contributors!**
 
-![alt text](https://deployit.io/images/cdn/deployy_2.gif "Image")
+![alt text](docs/screens/workflow.gif?raw=true "Image")
 
 ___
 
@@ -32,11 +32,14 @@ ___
 2. [Prerequisites](#prerequisites)
 3. [How to install](#how_to_install)
 4. [Maintainers](#maintainers)
+4. [Community](#community)
 5. [Authors](#authors)
+6. [License](#license)
 
 ___
 
 ## <a name="key_features"></a>Key features
+
 1. Fast application deploying to any server
 2. Easy application sharing
 3. Easy application management
@@ -49,10 +52,12 @@ ___
 ## <a name="prerequisites"></a>Prerequisites
 
 ### CLI:
+
 - Go 1.6 or higher
 - Git
 
 ### Daemon:
+
 - Kubernetes 1.5
 - Go 1.6 or higher
 - Git
@@ -65,9 +70,28 @@ For develop locally on your host you need read the [documentation](https://githu
 
 ---
 
+### API
+
+For additional information about the API see Last.Backend [API Reference](https://github.com/lastbackend/lastbackend/wiki/API-Reference).
+
+---
+
 ## <a name="maintainers"></a>Maintainers
 
-We have separated maintainers page here: [MAINTAINERS.md](https://github.com/lastbackend/lastbackend/blob/master/MAINTAINERS.md)
+We have separated maintainers page [here](https://github.com/lastbackend/lastbackend/blob/master/MAINTAINERS.md)
+
+---
+
+### <a name="community"></a>Community
+
+Join us on social media:
+ - [Twitter](https://twitter.com/LastBackend)
+ - [Facebook](https://www.facebook.com/lastbackend)
+ - [Stackshare](https://stackshare.io/last-backend/last-backend)
+ - [AngelList](https://angel.co/last-backend)
+ - [LinkedIn](https://www.linkedin.com/company/last-backend)
+
+Read our [blog](https://blog.lastbackend.com).
 
 ---
 
@@ -77,3 +101,7 @@ Alexander: https://github.com/undassa
 
 Konstantin: https://github.com/unloop
 
+---
+## <a name="license"></a>License
+
+Origin is licensed under the [Apache License, Version 2.0](http://www.apache.org/licenses/).

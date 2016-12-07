@@ -1,25 +1,19 @@
 # Roadmap
 
 ### v0.1.0
-- [ ] User create account
-- [ ] User authentication method
+- [x] User create account
+- [x] User authentication method
 - [ ] User password management
-- [ ] Create and deploy web service from sources
-- [ ] Service list output
-- [ ] Provide base DNS system for services
-- [ ] Service base management operations: start/stop/restart/delete
+- [x] Create new project
+- [x] Project list output
+- [x] Remove project
+- [x] Get info about project
+- [x] Create and deploy service from template
+- [x] Service list output
+- [x] Get info about service
+- [x] Remove service
 - [ ] Service real-time logs streaming
-
-### v0.1.1
-- [ ] Setup service config from .deploy.yml file
-- [ ] Create service from templates (redis, mysql, mongodb, rabbitmq, postgresql, etc. [CURRENT])
-- [ ] Create service from git url
-- [ ] Service scale operation
-
-### v0.1.2
-- [ ] Rollback service update
-- [ ] Schedule deploy (at 4:00pm and for 2 hours)
-
+- [x] Template list output
 
 Note:
 If you need more features, please submit your ideas with issues with label - idea
