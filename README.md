@@ -32,9 +32,9 @@ ___
 2. [Prerequisites](#prerequisites)
 3. [How to install](#how_to_install)
 4. [Maintainers](#maintainers)
-4. [Community](#community)
-5. [Authors](#authors)
-6. [License](#license)
+5. [Community](#community)
+6. [Authors](#authors)
+7. [License](#license)
 
 ___
 
@@ -51,15 +51,9 @@ ___
 
 ## <a name="prerequisites"></a>Prerequisites
 
-### CLI:
-
 - Go 1.6 or higher
-- Git
-
-### Daemon:
-
 - Kubernetes 1.5
-- Go 1.6 or higher
+- RethinkDB 2.3.5
 - Git
 
 ___
