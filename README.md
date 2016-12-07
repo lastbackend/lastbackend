@@ -32,11 +32,14 @@ ___
 2. [Prerequisites](#prerequisites)
 3. [How to install](#how_to_install)
 4. [Maintainers](#maintainers)
+4. [Community](#community)
 5. [Authors](#authors)
+6. [License](#license)
 
 ___
 
 ## <a name="key_features"></a>Key features
+
 1. Fast application deploying to any server
 2. Easy application sharing
 3. Easy application management
@@ -49,10 +52,12 @@ ___
 ## <a name="prerequisites"></a>Prerequisites
 
 ### CLI:
+
 - Go 1.6 or higher
 - Git
 
 ### Daemon:
+
 - Kubernetes 1.5
 - Go 1.6 or higher
 - Git
@@ -65,9 +70,28 @@ For develop locally on your host you need read the [documentation](https://githu
 
 ---
 
+### API
+
+For additional information about the API see Last.Backend [API Reference](https://github.com/lastbackend/lastbackend/wiki/API-Reference).
+
+---
+
 ## <a name="maintainers"></a>Maintainers
 
-We have separated maintainers page here: [MAINTAINERS.md](https://github.com/lastbackend/lastbackend/blob/master/MAINTAINERS.md)
+We have separated maintainers page [here](https://github.com/lastbackend/lastbackend/blob/master/MAINTAINERS.md)
+
+---
+
+### <a name="community"></a>Community
+
+Join us on social media:
+ - [Twitter](https://twitter.com/LastBackend)
+ - [Facebook](https://www.facebook.com/lastbackend)
+ - [Stackshare](https://stackshare.io/last-backend/last-backend)
+ - [AngelList](https://angel.co/last-backend)
+ - [LinkedIn](https://www.linkedin.com/company/last-backend)
+
+Read our [blog](https://blog.lastbackend.com).
 
 ---
 
@@ -77,3 +101,7 @@ Alexander: https://github.com/undassa
 
 Konstantin: https://github.com/unloop
 
+---
+## <a name="license"></a>License
+
+Origin is licensed under the [Apache License, Version 2.0](http://www.apache.org/licenses/).
