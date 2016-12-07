@@ -13,7 +13,7 @@
 - [x] Get info about service
 - [x] Remove service
 - [ ] Service real-time logs streaming
-- [ ] Template list output
+- [x] Template list output
 
 Note:
 If you need more features, please submit your ideas with issues with label - idea
