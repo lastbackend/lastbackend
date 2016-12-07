@@ -14,15 +14,15 @@ Last.Backend fetches code from current directory, request or repo, build it and 
 Last.Backend uses powerful containers, that means that your app will be run anywhere, from your development environment on your laptop to any large scale cloud hosting.
 You can run deploy it daemon on the host where you want to deploy your applications (it can be local or remote), run CLI with this host and your applications will be deployed on specified host.  
 
-This project has [Roadmap](https://github.com/lastbackend/lastbackend/blob/master/ROADMAP.md), feel free to offer your features. 
+This project has [Roadmap](ROADMAP.md), feel free to offer your features. 
 
-Look at our [Changelog](https://github.com/lastbackend/lastbackend/blob/master/CHANGELOG.md) to see project progress!
+Look at our [Changelog](CHANGELOG.md) to see project progress!
 
-We are actively searching for contributors! If you want to help our project and to make developers life easier, please read our **[Contibuting guideliness](https://github.com/lastbackend/lastbackend/blob/master/CONTRIBUTING.md)**.
+We are actively searching for contributors! If you want to help our project and to make developers life easier, please read our **[Contibuting guideliness](CONTRIBUTING.md)**.
 
 **We have benefits for active contributors!**
 
-![alt text](https://github.com/lastbackend/lastbackend/blob/master/docs/screens/workflow.gif?raw=true "Image")
+![alt text](docs/screens/workflow.gif?raw=true "Image")
 
 ___
 
