@@ -31,9 +31,8 @@ ___
 1. [Key features](#key_features)
 2. [Prerequisites](#prerequisites)
 3. [How to install](#how_to_install)
-4. [Current CLI commands](#current_cli_commands)
-5. [Help](#help)
-6. [Maintainers](#maintainers)
+4. [Maintainers](#maintainers)
+5. [Authors](#authors)
 
 ___
 
@@ -62,137 +61,17 @@ ___
 
 ## <a name="how_to_install"></a>How to install
 
-1. Download Last.Backend repo
-```bash
-$ git clone git@github.com:lastbackend/lastbackend.git
-$ cd lastbackend
-$ make build
-```
+For develop locally on your host you need read the [documentation](https://github.com/lastbackend/lastbackend/wiki/Getting-Started) for build and running this.
 
-2. Start daemon on host, where you want to deploy your apps
-```bash
-$ sudo lastbackend daemon
-```
-
-3. Clone sources and run `$ lb deploy` command while in sources directory
-```bash
-$ git clone https://github.com/lastbackend/hello-world
-$ cd hello-world
-$ lb deploy --host localhost --port 3000 --tag latest
-```
-
-___
-
-## <a name="current_cli_commands"></a>Current CLI commands
-
-### daemon
-
-Install daemon on the host, where you want to deploy your apps
-
-Run `$ sudo lastbackend daemon`
-
-Daemon flags:
-* [-c] Path to config file to run in different configuration
-
-
-### deploy:
-
-1. Go to folder with your application source code
-2. Run `$ lb deploy --host localhost --port 3000 --tag latest --log`
-
-What magic is behind `$ deploy it` command:
-
-1. CLI scans all files
-2. CLI creates hash table for scanned files
-3. CLI packs needed files into tar.gz
-4. CLI sends all files to daemon via HTTP
-5. DAEMON unpacks tar.gz
-6. DAEMON builds unpacked sources
-7. DAEMON deploys app to host where daemon is running
-
-## deploy config
-
-If you want to deploy your application with specific configurations, you can create ".lb.yaml" file, as shown below:
-
-```
-env: 
-- DEBUG=*
-- HOST=localhost
-- PORT=3003
-memory: 256
-ports: 
-- 3000
-- 9000
-volumes:
-- /data:/data
-- /opt:/opt
-```
-
-Configs:
-- env: Environments for your application
-- memory: Memory limit
-- ports: App ports
-- volumes: Host storage : App storage
-
-This config is optional. Use it only if you want.
-
-### App start/stop/restart/remove
-
-1. Go to folder with your application source code
-2. Run `$ lb deploy --host localhost --port 3000 start`
-
-### Common flags
-
-These flags are suitable for all commands except daemon.
-
-Deploy it flags:
-* [--debug] Shows you debug logs
-* [--tag] Version of your app, examples: "latest", "master", "0.3", "1.9.9", etc.
-* [--host] Address of your host, where daemon is running
-* [--port] Port of daemon host
-* [--log] Show build logs
-
-### Future commands
-
-* lb deploy <git>
-* lb deploy <docker image>
-* lb deploy <app> logs
-* lb deploy <app> at 4:00 pm for 2 hours
-* lb deploy redis/mysql/mongodb/rabbitmq ...
-
-___
-
-## <a name="help"></a>Help
-
-All information about Last.Backend is available via following commands:
-
-### Brief info about all commands
-```bash
-$ lb deploy --help
-```
-
-### Deploy app command
-```bash
-$ lb deploy app --help
-```
-
-### Daemon
-```bash
-$ lb daemon --help
-```
-
-### Help about other commands:
-```bash
-$ lb deploy <command> --help
-```
-
-___
+---
 
 ## <a name="maintainers"></a>Maintainers
 
 We have separated maintainers page here: [MAINTAINERS.md](https://github.com/lastbackend/lastbackend/blob/master/MAINTAINERS.md)
 
-### Authors
+---
+
+### <a name="authors"></a>Authors
 
 Alexander: https://github.com/undassa
 
