@@ -4,7 +4,7 @@
 [![Join the chat at freenode:lastbackend](https://img.shields.io/badge/irc-freenode%3A%20%23lastbackend-blue.svg)](http://webchat.freenode.net/?channels=%23lastbackend)
 [![Licensed under Apache License version 2.0](https://img.shields.io/github/license/lastbackend/lastbackend.svg?maxAge=2592000)](https://www.apache.org/licenses/LICENSE-2.0)
 
-![alt text](https://lastbackend.com/images/logo.png)
+![alt text](https://github.com/lastbackend/lastbackend/blob/master/docs/assets/logo.png?raw=true "Image")
 
 ## Last.Backend: the apps cloud hosting for fast apps deploying, you don't need to manage.
 
@@ -22,7 +22,7 @@ We are actively searching for contributors! If you want to help our project and 
 
 **We have benefits for active contributors!**
 
-![alt text](https://deployit.io/images/cdn/deployy_2.gif "Image")
+![alt text](https://github.com/lastbackend/lastbackend/blob/master/docs/screens/workflow.gif?raw=true "Image")
 
 ___
 
