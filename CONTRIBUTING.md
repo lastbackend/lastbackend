@@ -1,12 +1,14 @@
 # How to Contribute
 
+The Last.Backend project is Apache 2.0 licensed and accepts contributions via Github pull requests. This document outlines some of the conventions on commit message formatting, contact points for developers and other resources to make getting your contribution accepted.
+
 ## How to contribute to open source on GitHub
 
 Please, read the following article: https://guides.github.com/activities/contributing-to-open-source/, before contributing.
 
 ## Benefits for active contributors
 
-**20% discount on Last.Backend servers**
+**20% discount on Last.BackThe Last.Backend project is Apache 2.0 licensed and accepts contributions via Github pull requests. This document outlines some of the conventions on commit message formatting, contact points for developers and other resources to make getting your contribution accepted.end servers**
 
 ## Coding Style
 
