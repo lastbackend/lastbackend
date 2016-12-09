@@ -3,6 +3,7 @@
 [![Travis](https://travis-ci.org/lastbackend/lastbackend.svg?branch=master)](https://travis-ci.org/lastbackend/lastbackend)
 [![Join the chat at freenode:lastbackend](https://img.shields.io/badge/irc-freenode%3A%20%23lastbackend-blue.svg)](http://webchat.freenode.net/?channels=%23lastbackend)
 [![Licensed under Apache License version 2.0](https://img.shields.io/github/license/lastbackend/lastbackend.svg?maxAge=2592000)](https://www.apache.org/licenses/LICENSE-2.0)
+[![StackShare](https://img.shields.io/badge/tech-stack-0690fa.svg?style=flat)](https://stackshare.io/last-backend/last-backend)
 
 ![alt text](docs/assets/logo.png?raw=true "Image")
 
@@ -31,7 +32,7 @@ ___
 1. [Key features](#key_features)
 2. [Prerequisites](#prerequisites)
 3. [How to install](#how_to_install)
-4. [API](#api)
+4. [API Reference](#api)
 5. [Maintainers](#maintainers)
 6. [Roadmap](#roadmap)
 7. [Community](#community)
@@ -66,7 +67,7 @@ For develop locally on your host you need read the [documentation](https://githu
 
 ---
 
-### <a name="api"></a>API
+### <a name="api"></a>API Reference
 
 For additional information about the API see Last.Backend [API Reference](https://github.com/lastbackend/lastbackend/wiki/API-Reference).
 
