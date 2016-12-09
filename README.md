@@ -32,10 +32,12 @@ ___
 1. [Key features](#key_features)
 2. [Prerequisites](#prerequisites)
 3. [How to install](#how_to_install)
-4. [Maintainers](#maintainers)
-5. [Community](#community)
-6. [Authors](#authors)
-7. [License](#license)
+4. [API Reference](#api)
+5. [Maintainers](#maintainers)
+6. [Roadmap](#roadmap)
+7. [Community](#community)
+8. [Authors](#authors)
+9. [License](#license)
 
 ___
 
@@ -65,7 +67,7 @@ For develop locally on your host you need read the [documentation](https://githu
 
 ---
 
-### API
+### <a name="api"></a>API Reference
 
 For additional information about the API see Last.Backend [API Reference](https://github.com/lastbackend/lastbackend/wiki/API-Reference).
 
@@ -74,6 +76,12 @@ For additional information about the API see Last.Backend [API Reference](https:
 ## <a name="maintainers"></a>Maintainers
 
 We have separated maintainers page [here](https://github.com/lastbackend/lastbackend/blob/master/MAINTAINERS.md)
+
+---
+
+## <a name="roadmap"></a>Roadmap
+
+For details on our planned features and future direction please refer to our [roadmap](ROADMAP.md).
 
 ---
 
