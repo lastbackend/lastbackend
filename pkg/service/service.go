@@ -9,18 +9,54 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/util/generator"
 	"k8s.io/client-go/1.5/pkg/api/v1"
 	"k8s.io/client-go/1.5/pkg/apis/extensions/v1beta1"
+	"k8s.io/client-go/1.5/pkg/util/json"
 )
 
 type Service struct {
-	Name   string `json:"name"`
-	Status string `json:"status"`
-	config *v1beta1.Deployment
+	Name      string            `json:"name"`
+	Namespace string            `json:"namespace"`
+	Labels    map[string]string `json:"labels"`
+	Replicas  int32             `json:"replicas"`
+	config    *v1beta1.Deployment
 }
 
 type ServiceList []Service
 
 func Get(namespace, name string) (*Service, *e.Err) {
-	return &Service{}, nil
+
+	var (
+		er      error
+		ctx     = context.Get()
+		service = new(Service)
+	)
+
+	detail, er := deployment.GetDeploymentDetail(ctx.K8S, namespace, name)
+	if er != nil {
+		return nil, e.New("service").Unknown(er)
+	}
+
+	//dp, er := ctx.K8S.Extensions().Deployments(namespace).Get(name)
+	//if er != nil {
+	//	return nil, e.New("service").Unknown(er)
+	//}
+	//
+	//p, er := ctx.K8S.Core().Pods(namespace).Get("wordpress-efcb053a-b6a-2301371364-fupyy")
+	//if er != nil {
+	//	return nil, e.New("service").Unknown(er)
+	//}
+
+	buf1, er := json.Marshal(detail)
+	if er != nil {
+		return nil, e.New("service").Unknown(er)
+	}
+	ctx.Log.Info(string(buf1))
+
+	//service.Name = dp.Name
+	//service.Namespace = dp.Namespace
+	//service.Labels = dp.Labels
+	//service.Replicas = *dp.Spec.Replicas
+
+	return service, nil
 }
 
 func List(namespace string) (*ServiceList, *e.Err) {
