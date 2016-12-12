@@ -93,6 +93,7 @@ Join us on social media:
  - [Stackshare](https://stackshare.io/last-backend/last-backend)
  - [AngelList](https://angel.co/last-backend)
  - [LinkedIn](https://www.linkedin.com/company/last-backend)
+ - [question@lastbackend.com](mailto:question@lastbackend.com)
 
 Read our [blog](https://blog.lastbackend.com).
 
