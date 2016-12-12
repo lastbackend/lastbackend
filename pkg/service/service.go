@@ -12,20 +12,14 @@ import (
 )
 
 type Service struct {
-	Name   string `json:"name"`
-	Status string `json:"status"`
-	config *v1beta1.Deployment
+	Name      string            `json:"name"`
+	Namespace string            `json:"namespace"`
+	Labels    map[string]string `json:"labels"`
+	Replicas  int32             `json:"replicas"`
+	config    *v1beta1.Deployment
 }
 
 type ServiceList []Service
-
-func Get(namespace, name string) (*Service, *e.Err) {
-	return &Service{}, nil
-}
-
-func List(namespace string) (*ServiceList, *e.Err) {
-	return &ServiceList{}, nil
-}
 
 func Create(user, project string, config interface{}) (*Service, *e.Err) {
 
