@@ -97,14 +97,14 @@ func DeployH(w http.ResponseWriter, r *http.Request) {
 		err = e.New("template").NotFound()
 	}
 	if err != nil {
-		ctx.Log.Error("Error: deploy from tempalte", err.Err())
+		ctx.Log.Error("Error: deploy from template", err.Err())
 		err.Http(w)
 		return
 	}
 
 	err = tpl.Provision(*rq.Project, session.Uid, *rq.Project)
 	if err != nil {
-		ctx.Log.Error("Error: tempalte provision failed", err.Err())
+		ctx.Log.Error("Error: template provision failed", err.Err())
 		err.Http(w)
 		return
 	}

@@ -106,7 +106,7 @@ func configure(app *cli.Cli) {
 		var target = c.String(cli.StringArg{
 			Name:      "TARGET",
 			Value:     "",
-			Desc:      "tempalte name or git repo url",
+			Desc:      "template name or git repo url",
 			HideValue: true,
 		})
 
