@@ -11,6 +11,7 @@ import (
 	"io"
 	"io/ioutil"
 	"net/http"
+	"github.com/lastbackend/lastbackend/pkg/service"
 )
 
 func ServiceListH(w http.ResponseWriter, r *http.Request) {
@@ -76,15 +77,15 @@ func ServiceInfoH(w http.ResponseWriter, r *http.Request) {
 	}
 
 	session = s.(*model.Session)
-	var service *model.Service
+	var sm *model.Service
 
 	if !validator.IsUUID(id) {
-		service, err = ctx.Storage.Service().GetByName(session.Uid, id)
+		sm, err = ctx.Storage.Service().GetByName(session.Uid, id)
 	} else {
-		service, err = ctx.Storage.Service().GetByID(session.Uid, id)
+		sm, err = ctx.Storage.Service().GetByID(session.Uid, id)
 	}
 
-	if err == nil && service == nil {
+	if err == nil && sm == nil {
 		e.New("service").NotFound().Http(w)
 		return
 	}
@@ -94,7 +95,23 @@ func ServiceInfoH(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	response, err := service.ToJson()
+	serviceSpec, err := service.Get(sm.Project, sm.Name)
+	if err != nil {
+		ctx.Log.Error("Error: get serivce spec from cluster", err.Err())
+		err.Http(w)
+		return
+	}
+
+	buf, er := json.Marshal(serviceSpec)
+	if er != nil {
+		ctx.Log.Error("Error: parse spec", er.Error())
+		e.Unknown(er).Http(w)
+		return
+	}
+
+	ctx.Log.Info(">>>>>>>> ", string(buf))
+
+	response, err := sm.ToJson()
 	if err != nil {
 		ctx.Log.Error("Error: convert struct to json", err.Err())
 		err.Http(w)
