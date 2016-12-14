@@ -56,5 +56,12 @@ func Create(name, description string) error {
 		return errors.New(e.Message(er.Status))
 	}
 
+	project, err = Switch(name)
+	if err != nil {
+		return errors.New(err.Error())
+	}
+
+	ctx.Log.Infof("The project `%s` was selected as the current", project.Name)
+
 	return nil
 }
