@@ -27,8 +27,8 @@
 		},
 		{
 			"ImportPath": "github.com/Sirupsen/logrus",
-			"Comment": "v0.10.0-38-g3ec0642",
-			"Rev": "3ec0642a7fb6488f65b06f9040adc67e3990296a"
+			"Comment": "v0.11.0-25-g881bee4",
+			"Rev": "881bee4e20a5d11a6a88a5667c6f292072ac1963"
 		},
 		{
 			"ImportPath": "github.com/asaskevich/govalidator",
@@ -91,8 +91,8 @@
 		},
 		{
 			"ImportPath": "github.com/dgrijalva/jwt-go",
-			"Comment": "v3.0.0-8-g24c63f5",
-			"Rev": "24c63f56522a87ec5339cc3567883f1039378fdb"
+			"Comment": "v3.0.0-10-g9ed569b",
+			"Rev": "9ed569b5d1ac936e6494082958d63a6aa4fff99a"
 		},
 		{
 			"ImportPath": "github.com/docker/distribution/digest",
@@ -181,7 +181,7 @@
 		},
 		{
 			"ImportPath": "github.com/jawher/mow.cli",
-			"Rev": "660b9261e2c80bb92e5a0eaa581596084656140e"
+			"Rev": "0de3d3b4ed00f261460d12ecde4efa90fbfcd8ed"
 		},
 		{
 			"ImportPath": "github.com/jonboulle/clockwork",
