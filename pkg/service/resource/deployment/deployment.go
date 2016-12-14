@@ -38,6 +38,7 @@ func GetDeployment(client k8s.IK8S, namespace string, deploymentName string) (*D
 	}
 
 	var meta = new(api.ObjectMeta)
+
 	err = converter.Convert_v1_ObjectMeta_to_api_ObjectMeta(&deployment.ObjectMeta, meta)
 	if err != nil {
 		return nil, err

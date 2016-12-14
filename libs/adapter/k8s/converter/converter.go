@@ -8,23 +8,30 @@ import (
 	"k8s.io/client-go/1.5/pkg/api/v1"
 	"k8s.io/client-go/1.5/pkg/apis/extensions"
 	"k8s.io/client-go/1.5/pkg/apis/extensions/v1beta1"
+	"k8s.io/client-go/1.5/pkg/types"
+	"k8s.io/client-go/1.5/pkg/util/intstr"
+)
+
+var (
+	error_incoming_data  = errors.New("data incoming cannot be nil")
+	error_outcoming_data = errors.New("data outcoming cannot be nil")
 )
 
 func Convert_v1_ObjectMeta_to_api_ObjectMeta(in *v1.ObjectMeta, out *api.ObjectMeta) error {
 
 	if in == nil {
-		return errors.New("Error: incoming data can not be nil")
+		return error_incoming_data
 	}
 
 	if out == nil {
-		return errors.New("Error: outcoming data can not be nil")
+		return error_outcoming_data
 	}
 
 	out.Name = in.Name
 	out.GenerateName = in.GenerateName
 	out.Namespace = in.Namespace
 	out.SelfLink = in.SelfLink
-	out.UID = in.UID
+	out.UID = types.UID(in.UID)
 	out.ResourceVersion = in.ResourceVersion
 	out.Generation = in.Generation
 	out.CreationTimestamp = in.CreationTimestamp
@@ -35,97 +42,17 @@ func Convert_v1_ObjectMeta_to_api_ObjectMeta(in *v1.ObjectMeta, out *api.ObjectM
 	out.Finalizers = in.Finalizers
 	out.ClusterName = in.ClusterName
 
-	for _, val := range in.OwnerReferences {
-		out.OwnerReferences = append(out.OwnerReferences, api.OwnerReference{
-			APIVersion: val.APIVersion,
-			Kind:       val.Kind,
-			Name:       val.Name,
-			UID:        val.UID,
-			Controller: val.Controller,
-		})
-	}
+	if in.OwnerReferences != nil {
+		in, out := &in.OwnerReferences, &out.OwnerReferences
+		*out = make([]api.OwnerReference, len(*in))
 
-	return nil
-}
-
-func Convert_v1beta1_Deployment_To_extensions_Deployment(in *v1beta1.Deployment, out *extensions.Deployment) error {
-
-	if in == nil {
-		return errors.New("Error: incoming data can not be nil")
-	}
-
-	if out == nil {
-		return errors.New("Error: outcoming data can not be nil")
-	}
-
-	out.APIVersion = in.APIVersion
-	out.Kind = in.Kind
-	out.Name = in.Name
-	out.GenerateName = in.GenerateName
-	out.Namespace = in.Namespace
-	out.SelfLink = in.SelfLink
-	out.UID = in.UID
-	out.ResourceVersion = in.ResourceVersion
-	out.Generation = in.Generation
-	out.CreationTimestamp = in.CreationTimestamp
-	out.DeletionTimestamp = in.DeletionTimestamp
-	out.DeletionGracePeriodSeconds = in.DeletionGracePeriodSeconds
-	out.Labels = in.Labels
-	out.Annotations = in.Annotations
-	out.Finalizers = in.Finalizers
-	out.ClusterName = in.ClusterName
-
-	for _, val := range in.OwnerReferences {
-		out.OwnerReferences = append(out.OwnerReferences, api.OwnerReference{
-			APIVersion: val.APIVersion,
-			Kind:       val.Kind,
-			Name:       val.Name,
-			UID:        val.UID,
-			Controller: val.Controller,
-		})
-	}
-
-	err := Convert_v1_ObjectMeta_to_api_ObjectMeta(&in.ObjectMeta, &out.ObjectMeta)
-	if err != nil {
-		return err
-	}
-
-	out.TypeMeta = in.TypeMeta
-
-	out.Spec = extensions.DeploymentSpec{
-		Replicas:             *in.Spec.Replicas,
-		Selector:             &unversioned.LabelSelector{},
-		Template:             api.PodTemplateSpec{},
-		Strategy:             extensions.DeploymentStrategy{},
-		MinReadySeconds:      in.Spec.MinReadySeconds,
-		RevisionHistoryLimit: in.Spec.RevisionHistoryLimit,
-		Paused:               in.Spec.Paused,
-		RollbackTo:           &extensions.RollbackConfig{},
-	}
-
-	err = Convert_v1_PodTemplateSpec_to_api_PodTemplateSpec(&in.Spec.Template, &out.Spec.Template)
-	if err != nil {
-		return err
-	}
-
-	out.Spec.Selector.MatchLabels = in.Spec.Selector.MatchLabels
-
-	for _, val := range in.Spec.Selector.MatchExpressions {
-		var item = unversioned.LabelSelectorRequirement{}
-
-		item.Key = val.Key
-		item.Operator = unversioned.LabelSelectorOperator(val.Operator)
-		item.Values = val.Values
-
-		out.Spec.Selector.MatchExpressions = append(out.Spec.Selector.MatchExpressions, item)
-	}
-
-	out.Status = extensions.DeploymentStatus{
-		ObservedGeneration:  in.Status.ObservedGeneration,
-		Replicas:            in.Status.Replicas,
-		UpdatedReplicas:     in.Status.UpdatedReplicas,
-		AvailableReplicas:   in.Status.AvailableReplicas,
-		UnavailableReplicas: in.Status.UnavailableReplicas,
+		for i := range *in {
+			if err := Convert_v1_OwnerReference_To_api_OwnerReference(&(*in)[i], &(*out)[i]); err != nil {
+				return err
+			}
+		}
+	} else {
+		out.OwnerReferences = nil
 	}
 
 	return nil
@@ -134,11 +61,11 @@ func Convert_v1beta1_Deployment_To_extensions_Deployment(in *v1beta1.Deployment,
 func Convert_v1_PodTemplateSpec_to_api_PodTemplateSpec(in *v1.PodTemplateSpec, out *api.PodTemplateSpec) error {
 
 	if in == nil {
-		return errors.New("Error: incoming data can not be nil")
+		return error_incoming_data
 	}
 
 	if out == nil {
-		return errors.New("Error: outcoming data can not be nil")
+		return error_outcoming_data
 	}
 
 	out.Name = in.Name
@@ -182,11 +109,11 @@ func Convert_v1_PodTemplateSpec_to_api_PodTemplateSpec(in *v1.PodTemplateSpec, o
 func Convert_v1_PodSpec_to_api_PodSpec(in *v1.PodSpec, out *api.PodSpec) error {
 
 	if in == nil {
-		return errors.New("Error: incoming data can not be nil")
+		return error_incoming_data
 	}
 
 	if out == nil {
-		return errors.New("Error: outcoming data can not be nil")
+		return error_outcoming_data
 	}
 
 	for _, val := range in.InitContainers {
@@ -724,6 +651,226 @@ func Convert_v1_Container_to_api_Container(in *v1.Container, out *api.Container)
 	out.Stdin = in.Stdin
 	out.StdinOnce = in.StdinOnce
 	out.TTY = in.TTY
+
+	return nil
+}
+
+func Convert_v1_OwnerReference_To_api_OwnerReference(in *v1.OwnerReference, out *api.OwnerReference) error {
+
+	if in == nil {
+		return error_incoming_data
+	}
+
+	if out == nil {
+		return error_outcoming_data
+	}
+
+	out.APIVersion = in.APIVersion
+	out.Kind = in.Kind
+	out.Name = in.Name
+	out.UID = types.UID(in.UID)
+	out.Controller = in.Controller
+
+	return nil
+}
+
+func Convert_v1beta1_Deployment_To_extensions_Deployment(in *v1beta1.Deployment, out *extensions.Deployment) error {
+
+	if in == nil {
+		return error_incoming_data
+	}
+
+	if out == nil {
+		return error_outcoming_data
+	}
+
+	Set_defaults_extensions_deployment(out)
+
+	if err := Convert_unversioned_TypeMeta_to_unversioned_TypeMeta(&in.TypeMeta, &out.TypeMeta); err != nil {
+		return err
+	}
+
+	if err := Convert_v1_ObjectMeta_to_api_ObjectMeta(&in.ObjectMeta, &out.ObjectMeta); err != nil {
+		return err
+	}
+
+	if err := Convert_v1beta1_DeploymentSpec_to_extensions_DeploymentSpec(&in.Spec, &out.Spec); err != nil {
+		return err
+	}
+
+	if err := Convert_v1beta1_DeploymentStatus_to_extensions_DeploymentStatus(&in.Status, &out.Status); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func Convert_v1beta1_DeploymentSpec_to_extensions_DeploymentSpec(in *v1beta1.DeploymentSpec, out *extensions.DeploymentSpec) error {
+
+	if in == nil {
+		return error_incoming_data
+	}
+
+	if out == nil {
+		return error_outcoming_data
+	}
+
+	if in.Replicas != nil {
+		out.Replicas = *in.Replicas
+	}
+
+	if in.Selector != nil {
+		out.Selector = new(unversioned.LabelSelector)
+		if err := Convert_v1beta1_LabelSelector_to_unversioned_LabelSelector(in.Selector, out.Selector); err != nil {
+			return err
+		}
+	} else {
+		out.Selector = nil
+	}
+
+	if err := Convert_v1_PodTemplateSpec_to_api_PodTemplateSpec(&in.Template, &out.Template); err != nil {
+		return err
+	}
+
+	if err := Convert_v1beta1_DeploymentStrategy_to_extensions_DeploymentStrategy(&in.Strategy, &out.Strategy); err != nil {
+		return err
+	}
+
+	out.RevisionHistoryLimit = in.RevisionHistoryLimit
+	out.MinReadySeconds = in.MinReadySeconds
+	out.Paused = in.Paused
+	if in.RollbackTo != nil {
+		out.RollbackTo = new(extensions.RollbackConfig)
+		out.RollbackTo.Revision = in.RollbackTo.Revision
+	} else {
+		out.RollbackTo = nil
+	}
+
+	return nil
+}
+
+func Convert_v1beta1_DeploymentStrategy_to_extensions_DeploymentStrategy(in *v1beta1.DeploymentStrategy, out *extensions.DeploymentStrategy) error {
+
+	if in == nil {
+		return error_incoming_data
+	}
+
+	if out == nil {
+		return error_outcoming_data
+	}
+
+	out.Type = extensions.DeploymentStrategyType(in.Type)
+	if in.RollingUpdate != nil {
+		out.RollingUpdate = new(extensions.RollingUpdateDeployment)
+		if err := Convert_v1beta1_RollingUpdateDeployment_to_extensions_RollingUpdateDeployment(in.RollingUpdate, out.RollingUpdate); err != nil {
+			return err
+		}
+	} else {
+		out.RollingUpdate = nil
+	}
+
+	return nil
+}
+
+func Convert_v1beta1_RollingUpdateDeployment_to_extensions_RollingUpdateDeployment(in *v1beta1.RollingUpdateDeployment, out *extensions.RollingUpdateDeployment) error {
+
+	if in == nil {
+		return error_incoming_data
+	}
+
+	if out == nil {
+		return error_outcoming_data
+	}
+
+	out.MaxSurge = intstr.IntOrString{
+		Type:   in.MaxSurge.Type,
+		IntVal: in.MaxSurge.IntVal,
+		StrVal: in.MaxSurge.StrVal,
+	}
+
+	out.MaxUnavailable = intstr.IntOrString{
+		Type:   in.MaxUnavailable.Type,
+		IntVal: in.MaxUnavailable.IntVal,
+		StrVal: in.MaxUnavailable.StrVal,
+	}
+
+	return nil
+}
+
+func Convert_v1beta1_LabelSelector_to_unversioned_LabelSelector(in *v1beta1.LabelSelector, out *unversioned.LabelSelector) error {
+
+	if in == nil {
+		return error_incoming_data
+	}
+
+	if out == nil {
+		return error_outcoming_data
+	}
+
+	out.MatchLabels = in.MatchLabels
+	if in.MatchExpressions != nil {
+		in, out := &in.MatchExpressions, &out.MatchExpressions
+		*out = make([]unversioned.LabelSelectorRequirement, len(*in))
+		for i := range *in {
+			if err := Convert_v1beta1_LabelSelectorRequirement_to_unversioned_LabelSelectorRequirement(&(*in)[i], &(*out)[i]); err != nil {
+				return err
+			}
+		}
+	} else {
+		out.MatchExpressions = nil
+	}
+
+	return nil
+}
+
+func Convert_v1beta1_LabelSelectorRequirement_to_unversioned_LabelSelectorRequirement(in *v1beta1.LabelSelectorRequirement, out *unversioned.LabelSelectorRequirement) error {
+
+	if in == nil {
+		return error_incoming_data
+	}
+
+	if out == nil {
+		return error_outcoming_data
+	}
+
+	out.Key = in.Key
+	out.Operator = unversioned.LabelSelectorOperator(in.Operator)
+	out.Values = in.Values
+
+	return nil
+}
+
+func Convert_v1beta1_DeploymentStatus_to_extensions_DeploymentStatus(in *v1beta1.DeploymentStatus, out *extensions.DeploymentStatus) error {
+
+	if in == nil {
+		return error_incoming_data
+	}
+
+	if out == nil {
+		return error_outcoming_data
+	}
+
+	out.ObservedGeneration = in.ObservedGeneration
+	out.Replicas = in.Replicas
+	out.UpdatedReplicas = in.UpdatedReplicas
+	out.AvailableReplicas = in.AvailableReplicas
+	out.UnavailableReplicas = in.UnavailableReplicas
+
+	return nil
+}
+
+func Convert_unversioned_TypeMeta_to_unversioned_TypeMeta(in, out *unversioned.TypeMeta) error {
+
+	if in == nil {
+		return error_incoming_data
+	}
+
+	if out == nil {
+		return error_outcoming_data
+	}
+
+	out.APIVersion = in.APIVersion
+	out.Kind = in.Kind
 
 	return nil
 }
