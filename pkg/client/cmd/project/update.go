@@ -56,5 +56,20 @@ func Update(name, description string) error {
 		return errors.New(e.Message(er.Status))
 	}
 
+	project, err := Current()
+	if err != nil {
+		return errors.New(err.Error())
+	}
+
+	if name == project.Name {
+		project.Description = description
+		project.Name = name
+
+		err = ctx.Storage.Set("project", project)
+		if err != nil {
+			return errors.New(err.Error())
+		}
+	}
+
 	return nil
 }
