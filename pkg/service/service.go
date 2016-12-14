@@ -1,7 +1,6 @@
 package service
 
 import (
-	"encoding/json"
 	"errors"
 	"fmt"
 	e "github.com/lastbackend/lastbackend/libs/errors"
@@ -36,32 +35,9 @@ func Get(namespace, name string) (*Service, *e.Err) {
 		return nil, e.New("service").Unknown(er)
 	}
 
-	dp, er := ctx.K8S.Extensions().Deployments(namespace).Get(name)
-	if er != nil {
-		return nil, e.New("service").Unknown(er)
-	}
-
-	p, er := ctx.K8S.Core().Pods(namespace).Get("wordpress-efcb053a-b6a-2301371364-fupyy")
-	if er != nil {
-		return nil, e.New("service").Unknown(er)
-	}
-
-	buf1, er := json.Marshal(detail)
-	if er != nil {
-		return nil, e.New("service").Unknown(er)
-	}
-	ctx.Log.Info("###", string(buf1))
-
-	buf2, er := json.Marshal(p)
-	if er != nil {
-		return nil, e.New("service").Unknown(er)
-	}
-	ctx.Log.Info(string(buf2))
-
-	service.Name = dp.Name
-	service.Namespace = dp.Namespace
-	service.Labels = dp.Labels
-	service.Replicas = *dp.Spec.Replicas
+	service.Name = detail.ObjectMeta.Name
+	service.Namespace = detail.ObjectMeta.Namespace
+	service.Labels = detail.ObjectMeta.Labels
 
 	return service, nil
 }

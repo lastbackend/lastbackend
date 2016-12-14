@@ -8,16 +8,13 @@ import (
 // ReplicationSetList contains a list of Pods in the cluster.
 type PodList struct {
 	ListMeta common.ListMeta `json:"listMeta"`
-
 	// Unordered list of Pods.
 	Pods []Pod `json:"pods"`
-	//CumulativeMetrics []metric.Metric `json:"cumulativeMetrics"`
 }
 
 type PodStatus struct {
 	// Status of the Pod. See Kubernetes API for reference.
 	PodPhase api.PodPhase `json:"podPhase"`
-
 	ContainerStates []api.ContainerState `json:"containerStates"`
 }
 
@@ -38,8 +35,8 @@ type Pod struct {
 func CreatePodList(pods []api.Pod) PodList {
 
 	podList := PodList{
-		Pods:     make([]Pod, 0),
 		ListMeta: common.ListMeta{TotalItems: len(pods)},
+		Pods:     make([]Pod, 0),
 	}
 
 	for _, pod := range pods {
@@ -49,8 +46,8 @@ func CreatePodList(pods []api.Pod) PodList {
 			PodStatus:    getPodStatus(pod),
 			RestartCount: getRestartCount(pod),
 		}
-		podList.Pods = append(podList.Pods, podDetail)
 
+		podList.Pods = append(podList.Pods, podDetail)
 	}
 
 	return podList

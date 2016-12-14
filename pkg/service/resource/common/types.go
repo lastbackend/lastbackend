@@ -108,7 +108,7 @@ func NewTypeMeta(kind ResourceKind) TypeMeta {
 // selector targets the same Resources (or subset) that
 // the tested object with the given selector.
 func IsSelectorMatching(labelSelector map[string]string,
-testedObjectLabels map[string]string) bool {
+	testedObjectLabels map[string]string) bool {
 
 	// If service has no selectors, then assume it targets different Resource.
 	if len(labelSelector) == 0 {

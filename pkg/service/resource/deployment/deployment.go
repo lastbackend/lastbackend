@@ -13,8 +13,8 @@ import (
 
 // DeploymentDetail is a presentation layer view of Kubernetes Deployment resource.
 type Deployment struct {
-	ObjectMeta common.ObjectMeta `json:"objectMeta"`
-	TypeMeta   common.TypeMeta   `json:"typeMeta"`
+	ObjectMeta common.ObjectMeta `json:"meta"`
+	TypeMeta   common.TypeMeta   `json:"spec"`
 	// Detailed information about Pods belonging to this Deployment.
 	PodList pod.PodList `json:"podList"`
 	// Label selector of the service.
