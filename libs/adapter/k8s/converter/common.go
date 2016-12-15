@@ -3,12 +3,22 @@ package converter
 import (
 	"k8s.io/client-go/1.5/pkg/api/unversioned"
 	"k8s.io/client-go/1.5/pkg/apis/extensions"
+	"k8s.io/client-go/1.5/pkg/apis/extensions/v1beta1"
 	"k8s.io/client-go/1.5/pkg/util/intstr"
 )
 
 func Set_defaults_extensions_deployment(obj *extensions.Deployment) {
+
 	// Default labels and selector to labels from pod template spec.
-	labels := obj.Spec.Template.Labels
+	var (
+		replicas       int32 = 1
+		labels               = obj.Spec.Template.Labels
+		maxUnavailable       = intstr.FromInt(1)
+		maxSurge             = intstr.FromInt(1)
+	)
+
+	obj.APIVersion = "extensions/v1beta1"
+	obj.Kind = "Deployment"
 
 	if labels != nil {
 		if obj.Spec.Selector == nil {
@@ -20,7 +30,7 @@ func Set_defaults_extensions_deployment(obj *extensions.Deployment) {
 	}
 
 	// Set DeploymentSpec.Replicas to 1 if it is not set.
-	obj.Spec.Replicas = 1
+	obj.Spec.Replicas = replicas
 
 	strategy := &obj.Spec.Strategy
 
@@ -36,9 +46,55 @@ func Set_defaults_extensions_deployment(obj *extensions.Deployment) {
 		}
 
 		// Set default MaxUnavailable as 1 by default.
-		strategy.RollingUpdate.MaxUnavailable = intstr.FromInt(1)
+		strategy.RollingUpdate.MaxUnavailable = maxUnavailable
 
 		// Set default MaxSurge as 1 by default.
-		strategy.RollingUpdate.MaxSurge = intstr.FromInt(1)
+		strategy.RollingUpdate.MaxSurge = maxSurge
+	}
+}
+
+func Set_defaults_v1beta1_deployment(obj *v1beta1.Deployment) {
+
+	// Default labels and selector to labels from pod template spec.
+	var (
+		replicas       int32 = 1
+		labels               = obj.Spec.Template.Labels
+		maxUnavailable       = intstr.FromInt(1)
+		maxSurge             = intstr.FromInt(1)
+	)
+
+	obj.APIVersion = "extensions/v1beta1"
+	obj.Kind = "Deployment"
+
+	if labels != nil {
+		if obj.Spec.Selector == nil {
+			obj.Spec.Selector = &v1beta1.LabelSelector{MatchLabels: labels}
+		}
+		if len(obj.Labels) == 0 {
+			obj.Labels = labels
+		}
+	}
+
+	// Set DeploymentSpec.Replicas to 1 if it is not set.
+	obj.Spec.Replicas = &replicas
+
+	strategy := &obj.Spec.Strategy
+
+	// Set default DeploymentStrategyType as RollingUpdate.
+	if strategy.Type == "" {
+		strategy.Type = v1beta1.RollingUpdateDeploymentStrategyType
+	}
+
+	if strategy.Type == v1beta1.RollingUpdateDeploymentStrategyType {
+		if strategy.RollingUpdate == nil {
+			rollingUpdate := v1beta1.RollingUpdateDeployment{}
+			strategy.RollingUpdate = &rollingUpdate
+		}
+
+		// Set default MaxUnavailable as 1 by default.
+		strategy.RollingUpdate.MaxUnavailable = &maxUnavailable
+
+		// Set default MaxSurge as 1 by default.
+		strategy.RollingUpdate.MaxSurge = &maxSurge
 	}
 }

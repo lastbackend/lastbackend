@@ -6,13 +6,11 @@ import (
 	"k8s.io/client-go/1.5/pkg/api/v1"
 )
 
-// PodListChannel is a list and error channels to Nodes.
 type PodListChannel struct {
 	List  chan *api.PodList
 	Error chan error
 }
 
-// GetPodListChannelWithOptions is GetPodListChannel plus listing options.
 func GetPodListChannelWithOptions(client k8s.IK8S, nsQuery *NamespaceQuery, options api.ListOptions, numReads int) PodListChannel {
 
 	channel := PodListChannel{

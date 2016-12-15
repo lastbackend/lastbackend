@@ -20,6 +20,8 @@ type Service struct {
 	Image string `json:"image" gorethink:"image,omitempty"`
 	// Service name
 	Name string `json:"name" gorethink:"name,omitempty"`
+	// Service spec
+	Spec interface{} `json:"spec" gorethink:"-"`
 	// Service created time
 	Created time.Time `json:"created" gorethink:"created,omitempty"`
 	// Service updated time

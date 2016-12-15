@@ -1,7 +1,6 @@
 package deployment
 
 import (
-	"fmt"
 	"github.com/lastbackend/lastbackend/libs/adapter/k8s/converter"
 	"github.com/lastbackend/lastbackend/libs/interface/k8s"
 	"github.com/lastbackend/lastbackend/pkg/service/resource/common"
@@ -11,31 +10,46 @@ import (
 	"k8s.io/client-go/1.5/pkg/apis/extensions"
 )
 
-// DeploymentDetail is a presentation layer view of Kubernetes Deployment resource.
+const kind = "deployment"
+
 type Deployment struct {
 	ObjectMeta common.ObjectMeta `json:"meta"`
 	TypeMeta   common.TypeMeta   `json:"spec"`
-	// Detailed information about Pods belonging to this Deployment.
-	PodList pod.PodList `json:"podList"`
-	// Label selector of the service.
-	Selector map[string]string `json:"selector"`
+	PodList    pod.PodList       `json:"pods"`
+	Selector   map[string]string `json:"selector"`
 }
 
-// GetDeploymentDetail returns model object of deployment and error, if any.
-func GetDeployment(client k8s.IK8S, namespace string, deploymentName string) (*Deployment, error) {
+func GetDeployment(client k8s.IK8S, namespace string, name string) (*Deployment, error) {
 
-	fmt.Printf("Getting details of %s deployment in %s namespace", deploymentName, namespace)
-
-	deployment, err := client.Extensions().Deployments(namespace).Get(deploymentName)
+	deployment, err := client.Extensions().Deployments(namespace).Get(name)
 	if err != nil {
 		return nil, err
 	}
 
-	// Pods
-	podList, err := GetDeploymentPods(client, namespace, deploymentName)
+	var deploymentNew = new(extensions.Deployment)
+
+	err = converter.Convert_Deployment_v1beta1_to_extensions(deployment, deploymentNew)
 	if err != nil {
 		return nil, err
 	}
+
+	selector, err := unversioned.LabelSelectorAsSelector(deploymentNew.Spec.Selector)
+	if err != nil {
+		return nil, err
+	}
+
+	options := api.ListOptions{LabelSelector: selector}
+
+	podChannel := common.GetPodListChannelWithOptions(client, common.NewSameNamespaceQuery(namespace), options, 1)
+
+	podListRaw := <-podChannel.List
+	if err := <-podChannel.Error; err != nil {
+		return nil, err
+	}
+
+	pods := common.FilterNamespacedPodsBySelector(podListRaw.Items, deployment.ObjectMeta.Namespace, deployment.Spec.Selector.MatchLabels)
+
+	podList := pod.CreatePodList(pods)
 
 	var meta = new(api.ObjectMeta)
 
@@ -46,45 +60,8 @@ func GetDeployment(client k8s.IK8S, namespace string, deploymentName string) (*D
 
 	return &Deployment{
 		ObjectMeta: common.NewObjectMeta(*meta),
-		TypeMeta:   common.NewTypeMeta(common.ResourceKindDeployment),
+		TypeMeta:   common.NewTypeMeta(kind),
 		PodList:    *podList,
 		Selector:   deployment.Spec.Selector.MatchLabels,
 	}, nil
-
-}
-
-// getJobPods returns list of pods targeting deployment.
-func GetDeploymentPods(client k8s.IK8S, namespace string, deploymentName string) (*pod.PodList, error) {
-
-	deployment, err := client.Extensions().Deployments(namespace).Get(deploymentName)
-	if err != nil {
-		return nil, err
-	}
-
-	var extensionDeployment = new(extensions.Deployment)
-
-	err = converter.Convert_Deployment_v1beta1_to_extensions(deployment, extensionDeployment)
-	if err != nil {
-		return nil, err
-	}
-
-	selector, err := unversioned.LabelSelectorAsSelector(extensionDeployment.Spec.Selector)
-	if err != nil {
-		return nil, err
-	}
-
-	options := api.ListOptions{LabelSelector: selector}
-
-	podChannels := common.GetPodListChannelWithOptions(client, common.NewSameNamespaceQuery(namespace), options, 1)
-
-	rawPods := <-podChannels.List
-	if err := <-podChannels.Error; err != nil {
-		return nil, err
-	}
-
-	pods := common.FilterNamespacedPodsBySelector(rawPods.Items, deployment.ObjectMeta.Namespace, deployment.Spec.Selector.MatchLabels)
-
-	podList := pod.CreatePodList(pods)
-
-	return &podList, nil
 }

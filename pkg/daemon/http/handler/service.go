@@ -102,14 +102,7 @@ func ServiceInfoH(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	buf, er := json.Marshal(serviceSpec)
-	if er != nil {
-		ctx.Log.Error("Error: parse spec", er.Error())
-		e.Unknown(er).Http(w)
-		return
-	}
-
-	ctx.Log.Info(">>>>>>>> ", string(buf))
+	sm.Spec = serviceSpec
 
 	response, err := sm.ToJson()
 	if err != nil {
