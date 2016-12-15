@@ -23,8 +23,8 @@ func TestCreate(t *testing.T) {
 	)
 
 	var (
-		err  error
-		ctx  = context.Mock()
+		err error
+		ctx = context.Mock()
 
 		prct = new(model.Project)
 	)

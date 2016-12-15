@@ -1,9 +1,10 @@
 package project_test
 
-
 import (
 	"encoding/json"
+	"github.com/lastbackend/lastbackend/libs/db"
 	h "github.com/lastbackend/lastbackend/libs/http"
+	"github.com/lastbackend/lastbackend/libs/model"
 	"github.com/lastbackend/lastbackend/pkg/client/cmd/project"
 	"github.com/lastbackend/lastbackend/pkg/client/context"
 	"github.com/stretchr/testify/assert"
@@ -11,25 +12,23 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"testing"
-	"github.com/lastbackend/lastbackend/libs/db"
-	"github.com/lastbackend/lastbackend/libs/model"
 	"time"
 )
 
 func TestUpdate(t *testing.T) {
 
 	const (
-		name        string = "project"
+		name           string = "project"
 		newProjectName string = "newname"
-		description string = "new description"
-		token              = "mocktoken"
+		description    string = "new description"
+		token                 = "mocktoken"
 	)
 
 	var (
-		err error
-		ctx = context.Mock()
+		err          error
+		ctx          = context.Mock()
 		projectmodel = new(model.Project)
-		switchData = model.Project{
+		switchData   = model.Project{
 			Name:        "project",
 			ID:          "mock_id",
 			User:        "mock_user",
