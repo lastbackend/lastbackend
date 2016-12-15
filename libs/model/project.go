@@ -34,15 +34,13 @@ func (p *Project) ToJson() ([]byte, *e.Err) {
 }
 
 func (p *Project) DrawTable() {
-	t := table.New([]string{"ID", "Name", "Description", "Created", "Updated"})
-	t.AddRow(map[string]interface{}{
-		"ID":      p.ID,
-		"Name":    p.Name,
+	table.PrintHorizontal(map[string]interface{}{
+		"ID":          p.ID,
+		"Name":        p.Name,
 		"Description": p.Description,
-		"Created": p.Created.String()[:10],
-		"Updated": p.Updated.String()[:10],
+		"Created":     p.Created,
+		"Updated":     p.Updated,
 	})
-	t.Print()
 }
 
 func (p *ProjectList) ToJson() ([]byte, *e.Err) {
