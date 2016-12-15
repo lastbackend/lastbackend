@@ -59,8 +59,6 @@ func Update(name, newProjectName, description string) error {
 		res = new(model.Project)
 	)
 
-	ctx.Log.Info(name, newProjectName, description)
-
 	_, _, err = ctx.HTTP.
 		PUT("/project/"+name).
 		AddHeader("Content-Type", "application/json").
@@ -84,14 +82,16 @@ func Update(name, newProjectName, description string) error {
 		return errors.New(err.Error())
 	}
 
-	if name == project.Name {
-		project.Name = newProjectName
-		project.Description = description
-		project.Updated = time.Now()
+	if project != nil {
+		if name == project.Name {
+			project.Name = newProjectName
+			project.Description = description
+			project.Updated = time.Now()
 
-		err = ctx.Storage.Set("project", project)
-		if err != nil {
-			return errors.New(err.Error())
+			err = ctx.Storage.Set("project", project)
+			if err != nil {
+				return errors.New(err.Error())
+			}
 		}
 	}
 
