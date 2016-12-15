@@ -5,6 +5,8 @@ import (
 	"k8s.io/client-go/1.5/pkg/api"
 )
 
+const kind = "container"
+
 type ContainerList struct {
 	ListMeta   common.ListMeta `json:"meta"`
 	Containers []Container     `json:"containers"`
@@ -15,14 +17,15 @@ type ContainerStatus struct {
 }
 
 type Container struct {
-	Name       string   `json:"name"`
-	Image      string   `json:"image"`
-	Command    []string `json:"command,omitempty"`
-	Args       []string `json:"args,omitempty"`
-	WorkingDir string   `json:"workdir,omitempty"`
-	Ports      []Port   `json:"ports,omitempty"`
-	Env        []EnvVar `json:"env,omitempty"`
-	Volumes    []Volume `json:"volumes,omitempty"`
+	TypeMeta   common.TypeMeta `json:"spec"`
+	Name       string          `json:"name"`
+	Image      string          `json:"image"`
+	Command    []string        `json:"command,omitempty"`
+	Args       []string        `json:"args,omitempty"`
+	WorkingDir string          `json:"workdir,omitempty"`
+	Ports      []Port          `json:"ports,omitempty"`
+	Env        []EnvVar        `json:"env,omitempty"`
+	Volumes    []Volume        `json:"volumes,omitempty"`
 }
 
 // Port represents a network port in a single container
@@ -70,6 +73,7 @@ func CreateContainerList(containers []api.Container) *ContainerList {
 	for _, c := range containers {
 
 		var p = Container{
+			TypeMeta:   common.NewTypeMeta(kind),
 			Name:       c.Name,
 			Image:      c.Image,
 			Command:    c.Command,

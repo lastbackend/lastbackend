@@ -103,6 +103,64 @@ func Convert_PodTemplateSpec_v1_to_api(in *v1.PodTemplateSpec, out *api.PodTempl
 	return nil
 }
 
+func Convert_ContainerStatus_v1_to_api(in *v1.ContainerStatus, out *api.ContainerStatus) error {
+
+	if in == nil {
+		return error_incoming_data
+	}
+
+	if out == nil {
+		return error_outcoming_data
+	}
+
+	out.Name = in.Name
+
+	if err := Convert_ContainerState_v1_to_api(&in.State, &out.State); err != nil {
+		return err
+	}
+
+	if err := Convert_ContainerState_v1_to_api(&in.LastTerminationState, &out.LastTerminationState); err != nil {
+		return err
+	}
+
+	out.Ready = in.Ready
+	out.RestartCount = in.RestartCount
+	out.Image = in.Image
+	out.ImageID = in.ImageID
+	out.ContainerID = in.ContainerID
+	return nil
+}
+
+func Convert_ContainerState_v1_to_api(in *v1.ContainerState, out *api.ContainerState) error {
+
+	out.Waiting = nil
+	if in.Waiting != nil {
+		out.Waiting = new(api.ContainerStateWaiting)
+		out.Waiting.Reason = in.Waiting.Reason
+		out.Waiting.Message = in.Waiting.Message
+	}
+
+	out.Running = nil
+	if in.Running != nil {
+		out.Running = new(api.ContainerStateRunning)
+		out.Running.StartedAt = in.Running.StartedAt
+	}
+
+	out.Terminated = nil
+	if in.Terminated != nil {
+		out.Terminated = new(api.ContainerStateTerminated)
+		out.Terminated.StartedAt = in.Terminated.StartedAt
+		out.Terminated.ContainerID = in.Terminated.ContainerID
+		out.Terminated.ExitCode = in.Terminated.ExitCode
+		out.Terminated.FinishedAt = in.Terminated.FinishedAt
+		out.Terminated.Message = in.Terminated.Message
+		out.Terminated.Reason = in.Terminated.Reason
+		out.Terminated.Signal = in.Terminated.Signal
+	}
+
+	return nil
+}
+
 func Convert_PodSpec_v1_to_api(in *v1.PodSpec, out *api.PodSpec) error {
 
 	if in == nil {
@@ -395,6 +453,110 @@ func Convert_PodSpec_v1_to_api(in *v1.PodSpec, out *api.PodSpec) error {
 
 		out.Volumes = append(out.Volumes, volume)
 	}
+
+	return nil
+}
+
+func Convert_PodList_v1_to_api(in *v1.PodList, out *api.PodList) error {
+
+	out.TypeMeta = in.TypeMeta
+	out.ListMeta = in.ListMeta
+
+	out.Items = nil
+	if in.Items != nil {
+		in, out := &in.Items, &out.Items
+		*out = make([]api.Pod, len(*in))
+
+		for i := range *in {
+			if err := Convert_Pod_v1_to_api(&(*in)[i], &(*out)[i]); err != nil {
+				return err
+			}
+		}
+	}
+
+	return nil
+}
+
+func Convert_Pod_v1_to_api(in *v1.Pod, out *api.Pod) error {
+
+	Set_defaults_v1_Pod(in)
+
+	if err := Convert_ObjectMeta_v1_to_api(&in.ObjectMeta, &out.ObjectMeta); err != nil {
+		return err
+	}
+
+	if err := Convert_PodSpec_v1_to_api(&in.Spec, &out.Spec); err != nil {
+		return err
+	}
+
+	if err := Convert_PodStatus_v1_to_api(&in.Status, &out.Status); err != nil {
+		return err
+	}
+
+	// Convert TypeMeta
+	out.APIVersion = in.APIVersion
+	out.Kind = in.Kind
+
+	return nil
+}
+
+func Convert_PodStatus_v1_to_api(in *v1.PodStatus, out *api.PodStatus) error {
+
+	out.Phase = api.PodPhase(in.Phase)
+
+	out.Conditions = nil
+	if in.Conditions != nil {
+		in, out := &in.Conditions, &out.Conditions
+		*out = make([]api.PodCondition, len(*in))
+
+		for i := range *in {
+			if err := Convert_PodCondition_v1_to_api(&(*in)[i], &(*out)[i]); err != nil {
+				return err
+			}
+		}
+	}
+
+	out.Message = in.Message
+	out.Reason = in.Reason
+	out.HostIP = in.HostIP
+	out.PodIP = in.PodIP
+	out.StartTime = in.StartTime
+
+	out.InitContainerStatuses = nil
+	if in.InitContainerStatuses != nil {
+		in, out := &in.InitContainerStatuses, &out.InitContainerStatuses
+		*out = make([]api.ContainerStatus, len(*in))
+
+		for i := range *in {
+			if err := Convert_ContainerStatus_v1_to_api(&(*in)[i], &(*out)[i]); err != nil {
+				return err
+			}
+		}
+	}
+
+	out.ContainerStatuses = nil
+	if in.ContainerStatuses != nil {
+		in, out := &in.ContainerStatuses, &out.ContainerStatuses
+		*out = make([]api.ContainerStatus, len(*in))
+
+		for i := range *in {
+			if err := Convert_ContainerStatus_v1_to_api(&(*in)[i], &(*out)[i]); err != nil {
+				return err
+			}
+		}
+	}
+
+	return nil
+}
+
+func Convert_PodCondition_v1_to_api(in *v1.PodCondition, out *api.PodCondition) error {
+
+	out.Type = api.PodConditionType(in.Type)
+	out.Status = api.ConditionStatus(in.Status)
+	out.LastProbeTime.Time = in.LastProbeTime.Time
+	out.LastTransitionTime.Time = in.LastTransitionTime.Time
+	out.Reason = in.Reason
+	out.Message = in.Message
 
 	return nil
 }
@@ -707,6 +869,7 @@ func Convert_DeploymentSpec_v1beta1_to_extensions(in *v1beta1.DeploymentSpec, ou
 	out.Selector = nil
 	if in.Selector != nil {
 		out.Selector = new(unversioned.LabelSelector)
+
 		if err := Convert_LabelSelector_v1beta1_to_unversioned(in.Selector, out.Selector); err != nil {
 			return err
 		}
