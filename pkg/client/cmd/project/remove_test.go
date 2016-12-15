@@ -8,6 +8,9 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"testing"
+	"github.com/lastbackend/lastbackend/libs/model"
+	"time"
+	"github.com/lastbackend/lastbackend/libs/db"
 )
 
 func TestRemove(t *testing.T) {
@@ -20,7 +23,34 @@ func TestRemove(t *testing.T) {
 	var (
 		err error
 		ctx = context.Mock()
+		projectmodel = new(model.Project)
+		switchData   = model.Project{
+			Name:        "project",
+			ID:          "mock_id",
+			User:        "mock_user",
+			Description: "sample description",
+			Created:     time.Now(),
+			Updated:     time.Now(),
+		}
 	)
+
+	ctx.Storage, err = db.Init()
+	if err != nil {
+		t.Error(err)
+		return
+	}
+	defer (func() {
+		err = ctx.Storage.Clear()
+		if err != nil {
+			t.Error(err)
+			return
+		}
+		err = ctx.Storage.Close()
+		if err != nil {
+			t.Error(err)
+			return
+		}
+	})()
 
 	ctx.Token = token
 
@@ -36,10 +66,23 @@ func TestRemove(t *testing.T) {
 	defer server.Close()
 	//------------------------------------------------------------------------------------------
 
-	ctx.HTTP = h.New(server.URL)
+	err = ctx.Storage.Set("project", switchData)
+	if err != nil {
+		t.Error(err)
+		return
+	}
 
+	ctx.HTTP = h.New(server.URL)
 	err = project.Remove(name)
 	if err != nil {
 		t.Error(err)
 	}
+
+	err = ctx.Storage.Get("project", projectmodel)
+	if err != nil {
+		t.Error(err)
+		return
+	}
+
+	assert.Equal(t, projectmodel.ID, "")
 }
