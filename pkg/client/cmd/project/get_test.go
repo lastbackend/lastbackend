@@ -10,7 +10,7 @@ import (
 	"testing"
 )
 
-func TestGet_Success(t *testing.T) {
+func TestGet(t *testing.T) {
 
 	const (
 		name        string = "project"

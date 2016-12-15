@@ -34,14 +34,13 @@ func (p *Project) ToJson() ([]byte, *e.Err) {
 }
 
 func (p *Project) DrawTable() {
-	t := table.New([]string{"ID", "Name", "Created", "Updated"})
-	t.AddRow(map[string]interface{}{
-		"ID":      p.ID,
-		"Name":    p.Name,
-		"Created": p.Created.String()[:10],
-		"Updated": p.Updated.String()[:10],
+	table.PrintHorizontal(map[string]interface{}{
+		"ID":          p.ID,
+		"Name":        p.Name,
+		"Description": p.Description,
+		"Created":     p.Created,
+		"Updated":     p.Updated,
 	})
-	t.Print()
 }
 
 func (p *ProjectList) ToJson() ([]byte, *e.Err) {
@@ -58,15 +57,16 @@ func (p *ProjectList) ToJson() ([]byte, *e.Err) {
 	return buf, nil
 }
 
-func (p *ProjectList) DrawTable() {
-	t := table.New([]string{"ID", "Name", "Created", "Updated"})
+func (projects *ProjectList) DrawTable() {
+	t := table.New([]string{"ID", "Name", "Description", "Created", "Updated"})
 
-	for _, project := range *p {
+	for _, p := range *projects {
 		t.AddRow(map[string]interface{}{
-			"ID":      project.ID,
-			"Name":    project.Name,
-			"Created": project.Created.String()[:10],
-			"Updated": project.Updated.String()[:10],
+			"ID":          p.ID,
+			"Name":        p.Name,
+			"Description": p.Description,
+			"Created":     p.Created.String()[:10],
+			"Updated":     p.Updated.String()[:10],
 		})
 	}
 

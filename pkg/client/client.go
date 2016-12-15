@@ -188,12 +188,19 @@ func configure(app *cli.Cli) {
 
 		c.Command("update", "if you wish to change name or description of the project", func(sc *cli.Cmd) {
 
-			sc.Spec = "[--desc]"
+			sc.Spec = "[--desc][--name]"
 
 			var desc = sc.String(cli.StringOpt{
 				Name:      "desc",
 				Value:     "",
 				Desc:      "Set description info",
+				HideValue: true,
+			})
+
+			var newProjectName = sc.String(cli.StringOpt{
+				Name:      "name",
+				Value:     "",
+				Desc:      "Set new project name",
 				HideValue: true,
 			})
 
@@ -203,7 +210,7 @@ func configure(app *cli.Cli) {
 					return
 				}
 
-				p.UpdateCmd(*name, *desc)
+				p.UpdateCmd(*name, *newProjectName, *desc)
 			}
 		})
 
