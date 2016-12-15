@@ -317,10 +317,8 @@ func ProjectUpdateH(w http.ResponseWriter, r *http.Request) {
 		rq.Name = &project.Name
 	}
 
-	project.Description = *rq.Description
-
 	if !validator.IsUUID(name) && project.Name != *rq.Name {
-		exists, er := ctx.Storage.Project().ExistByName(project.User, project.Name)
+		exists, er := ctx.Storage.Project().ExistByName(project.User, *rq.Name)
 		if er != nil {
 			e.HTTP.InternalServerError(w)
 		}
@@ -329,6 +327,9 @@ func ProjectUpdateH(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	}
+
+	project.Name =  *rq.Name
+	project.Description = *rq.Description
 
 	project, err = ctx.Storage.Project().Update(project)
 

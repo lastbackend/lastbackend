@@ -5,6 +5,8 @@ import (
 	e "github.com/lastbackend/lastbackend/libs/errors"
 	"github.com/lastbackend/lastbackend/libs/model"
 	"github.com/lastbackend/lastbackend/pkg/client/context"
+	"fmt"
+	"strings"
 )
 
 type updateS struct {
@@ -12,11 +14,33 @@ type updateS struct {
 	Desc string `json:"description"`
 }
 
-func UpdateCmd(name, description string) {
+func UpdateCmd(name, newProjectName, description string) {
 
 	var ctx = context.Get()
+	var choice string
 
-	err := Update(name, description)
+	if description == "" {
+		ctx.Log.Info("Description is empty, field will be cleared\n" +
+			"Want to continue? [Y\\n]")
+
+		for {
+			fmt.Scan(&choice)
+
+			switch strings.ToLower(choice) {
+			case "y":
+				break
+			case "n":
+				return
+			default:
+				ctx.Log.Error("Incorrect input. [Y\n]")
+				continue
+			}
+
+			break
+		}
+	}
+
+	err := Update(name, newProjectName, description)
 	if err != nil {
 		ctx.Log.Error(err)
 		return
@@ -25,7 +49,7 @@ func UpdateCmd(name, description string) {
 	ctx.Log.Info("Successful")
 }
 
-func Update(name, description string) error {
+func Update(name, newProjectName, description string) error {
 
 	var (
 		err error
@@ -34,15 +58,13 @@ func Update(name, description string) error {
 		res = new(model.Project)
 	)
 
-	if len(name) == 0 {
-		return e.BadParameter("name").Err()
-	}
+	ctx.Log.Info(name, newProjectName, description)
 
 	_, _, err = ctx.HTTP.
-		PUT("/project").
+		PUT("/project/"+name).
 		AddHeader("Content-Type", "application/json").
 		AddHeader("Authorization", "Bearer "+ctx.Token).
-		BodyJSON(updateS{name, description}).
+		BodyJSON(updateS{newProjectName, description}).
 		Request(&res, er)
 	if err != nil {
 		return err

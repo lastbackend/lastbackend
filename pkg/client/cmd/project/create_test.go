@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"github.com/lastbackend/lastbackend/libs/db"
 	h "github.com/lastbackend/lastbackend/libs/http"
+	"github.com/lastbackend/lastbackend/libs/model"
 	"github.com/lastbackend/lastbackend/pkg/client/cmd/project"
 	"github.com/lastbackend/lastbackend/pkg/client/context"
 	"github.com/stretchr/testify/assert"
@@ -11,7 +12,6 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"testing"
-	"github.com/lastbackend/lastbackend/libs/model"
 )
 
 func TestCreate_Success(t *testing.T) {
@@ -23,8 +23,8 @@ func TestCreate_Success(t *testing.T) {
 	)
 
 	var (
-		err error
-		ctx = context.Mock()
+		err  error
+		ctx  = context.Mock()
 		prct = new(model.Project)
 	)
 
