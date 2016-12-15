@@ -59,6 +59,7 @@ func (p *ProjectList) ToJson() ([]byte, *e.Err) {
 
 func (projects *ProjectList) DrawTable() {
 	t := table.New([]string{"ID", "Name", "Description", "Created", "Updated"})
+	t.VisibleHeader = true
 
 	for _, p := range *projects {
 		t.AddRow(map[string]interface{}{
