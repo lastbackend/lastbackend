@@ -17,7 +17,9 @@ func ListCmd() {
 		return
 	}
 
-	projects.DrawTable()
+	if projects != nil {
+		projects.DrawTable()
+	}
 }
 
 func List() (*model.ProjectList, error) {
@@ -50,6 +52,6 @@ func List() (*model.ProjectList, error) {
 		ctx.Log.Info("You don't have any projects")
 		return nil, nil
 	}
-
+	//TODO если вернуть пустоту, то не надо печатать
 	return projects, nil
 }
