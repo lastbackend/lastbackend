@@ -328,7 +328,7 @@ func ProjectUpdateH(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	project.Name =  *rq.Name
+	project.Name = *rq.Name
 	project.Description = *rq.Description
 
 	project, err = ctx.Storage.Project().Update(project)

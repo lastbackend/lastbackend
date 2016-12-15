@@ -2,11 +2,12 @@ package project
 
 import (
 	"errors"
+	"fmt"
 	e "github.com/lastbackend/lastbackend/libs/errors"
 	"github.com/lastbackend/lastbackend/libs/model"
 	"github.com/lastbackend/lastbackend/pkg/client/context"
-	"fmt"
 	"strings"
+	"time"
 )
 
 type updateS struct {
@@ -84,8 +85,9 @@ func Update(name, newProjectName, description string) error {
 	}
 
 	if name == project.Name {
+		project.Name = newProjectName
 		project.Description = description
-		project.Name = name
+		project.Updated = time.Now()
 
 		err = ctx.Storage.Set("project", project)
 		if err != nil {
