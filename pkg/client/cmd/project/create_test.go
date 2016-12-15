@@ -11,6 +11,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"testing"
+	"github.com/lastbackend/lastbackend/libs/model"
 )
 
 func TestCreate_Success(t *testing.T) {
@@ -24,6 +25,7 @@ func TestCreate_Success(t *testing.T) {
 	var (
 		err error
 		ctx = context.Mock()
+		prct = new(model.Project)
 	)
 
 	ctx.Storage, err = db.Init()
@@ -90,4 +92,12 @@ func TestCreate_Success(t *testing.T) {
 		t.Error(err.Error())
 		return
 	}
+
+	err = ctx.Storage.Get("project", prct)
+	if err != nil {
+		t.Error(err.Error())
+		return
+	}
+
+	assert.Equal(t, prct.Name, name)
 }
