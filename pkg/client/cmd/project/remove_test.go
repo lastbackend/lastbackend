@@ -10,7 +10,7 @@ import (
 	"testing"
 )
 
-func TestRemove_Success(t *testing.T) {
+func TestRemove(t *testing.T) {
 
 	const (
 		name  string = "project"

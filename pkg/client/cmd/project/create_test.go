@@ -14,7 +14,7 @@ import (
 	"testing"
 )
 
-func TestCreate_Success(t *testing.T) {
+func TestCreate(t *testing.T) {
 
 	const (
 		name        string = "project"
@@ -25,6 +25,7 @@ func TestCreate_Success(t *testing.T) {
 	var (
 		err  error
 		ctx  = context.Mock()
+
 		prct = new(model.Project)
 	)
 
@@ -89,13 +90,13 @@ func TestCreate_Success(t *testing.T) {
 
 	err = project.Create(name, description)
 	if err != nil {
-		t.Error(err.Error())
+		t.Error(err)
 		return
 	}
 
 	err = ctx.Storage.Get("project", prct)
 	if err != nil {
-		t.Error(err.Error())
+		t.Error(err)
 		return
 	}
 
