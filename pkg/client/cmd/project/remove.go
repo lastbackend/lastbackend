@@ -49,5 +49,19 @@ func Remove(name string) error {
 		return errors.New(e.Message(er.Status))
 	}
 
+	project, err := Current()
+	if err != nil {
+		return errors.New(err.Error())
+	}
+
+	if project != nil {
+		if name == project.Name {
+			err = ctx.Storage.Set("project", "")
+			if err != nil {
+				return errors.New(err.Error())
+			}
+		}
+	}
+
 	return nil
 }
