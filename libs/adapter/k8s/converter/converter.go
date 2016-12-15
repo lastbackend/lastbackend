@@ -17,7 +17,7 @@ var (
 	error_outcoming_data = errors.New("data outcoming cannot be nil")
 )
 
-func Convert_v1_ObjectMeta_to_api_ObjectMeta(in *v1.ObjectMeta, out *api.ObjectMeta) error {
+func Convert_ObjectMeta_v1_to_api(in *v1.ObjectMeta, out *api.ObjectMeta) error {
 
 	if in == nil {
 		return error_incoming_data
@@ -41,24 +41,23 @@ func Convert_v1_ObjectMeta_to_api_ObjectMeta(in *v1.ObjectMeta, out *api.ObjectM
 	out.Annotations = in.Annotations
 	out.Finalizers = in.Finalizers
 	out.ClusterName = in.ClusterName
+	out.OwnerReferences = nil
 
 	if in.OwnerReferences != nil {
 		in, out := &in.OwnerReferences, &out.OwnerReferences
 		*out = make([]api.OwnerReference, len(*in))
 
 		for i := range *in {
-			if err := Convert_v1_OwnerReference_To_api_OwnerReference(&(*in)[i], &(*out)[i]); err != nil {
+			if err := Convert_OwnerReference_v1_to_api(&(*in)[i], &(*out)[i]); err != nil {
 				return err
 			}
 		}
-	} else {
-		out.OwnerReferences = nil
 	}
 
 	return nil
 }
 
-func Convert_v1_PodTemplateSpec_to_api_PodTemplateSpec(in *v1.PodTemplateSpec, out *api.PodTemplateSpec) error {
+func Convert_PodTemplateSpec_v1_to_api(in *v1.PodTemplateSpec, out *api.PodTemplateSpec) error {
 
 	if in == nil {
 		return error_incoming_data
@@ -93,20 +92,18 @@ func Convert_v1_PodTemplateSpec_to_api_PodTemplateSpec(in *v1.PodTemplateSpec, o
 		})
 	}
 
-	err := Convert_v1_ObjectMeta_to_api_ObjectMeta(&in.ObjectMeta, &out.ObjectMeta)
-	if err != nil {
+	if err := Convert_ObjectMeta_v1_to_api(&in.ObjectMeta, &out.ObjectMeta); err != nil {
 		return err
 	}
 
-	err = Convert_v1_PodSpec_to_api_PodSpec(&in.Spec, &out.Spec)
-	if err != nil {
+	if err := Convert_PodSpec_v1_to_api(&in.Spec, &out.Spec); err != nil {
 		return err
 	}
 
 	return nil
 }
 
-func Convert_v1_PodSpec_to_api_PodSpec(in *v1.PodSpec, out *api.PodSpec) error {
+func Convert_PodSpec_v1_to_api(in *v1.PodSpec, out *api.PodSpec) error {
 
 	if in == nil {
 		return error_incoming_data
@@ -117,10 +114,9 @@ func Convert_v1_PodSpec_to_api_PodSpec(in *v1.PodSpec, out *api.PodSpec) error {
 	}
 
 	for _, val := range in.InitContainers {
-		var container = new(api.Container)
+		container := new(api.Container)
 
-		err := Convert_v1_Container_to_api_Container(&val, container)
-		if err != nil {
+		if err := Convert_Container_v1_to_api(&val, container); err != nil {
 			return err
 		}
 
@@ -128,11 +124,9 @@ func Convert_v1_PodSpec_to_api_PodSpec(in *v1.PodSpec, out *api.PodSpec) error {
 	}
 
 	for _, val := range in.Containers {
+		container := new(api.Container)
 
-		var container = new(api.Container)
-
-		err := Convert_v1_Container_to_api_Container(&val, container)
-		if err != nil {
+		if err := Convert_Container_v1_to_api(&val, container); err != nil {
 			return err
 		}
 
@@ -147,18 +141,13 @@ func Convert_v1_PodSpec_to_api_PodSpec(in *v1.PodSpec, out *api.PodSpec) error {
 	out.ServiceAccountName = in.ServiceAccountName
 	out.NodeName = in.NodeName
 
-	if out.SecurityContext == nil {
-		out.SecurityContext = new(api.PodSecurityContext)
-	}
-
+	out.SecurityContext = new(api.PodSecurityContext)
 	out.SecurityContext.HostNetwork = in.HostNetwork
 	out.SecurityContext.HostPID = in.HostPID
 	out.SecurityContext.HostIPC = in.HostIPC
 
 	if in.SecurityContext.SELinuxOptions != nil {
-		if out.SecurityContext.SELinuxOptions == nil {
-			out.SecurityContext.SELinuxOptions = new(api.SELinuxOptions)
-		}
+		out.SecurityContext.SELinuxOptions = new(api.SELinuxOptions)
 		out.SecurityContext.SELinuxOptions.Level = in.SecurityContext.SELinuxOptions.Level
 		out.SecurityContext.SELinuxOptions.Role = in.SecurityContext.SELinuxOptions.Role
 		out.SecurityContext.SELinuxOptions.Type = in.SecurityContext.SELinuxOptions.Type
@@ -179,8 +168,8 @@ func Convert_v1_PodSpec_to_api_PodSpec(in *v1.PodSpec, out *api.PodSpec) error {
 	out.Subdomain = in.Subdomain
 
 	for _, val := range in.Volumes {
-		var volume = api.Volume{}
 
+		volume := api.Volume{}
 		volume.Name = val.Name
 		volume.VolumeSource = api.VolumeSource{}
 		if val.VolumeSource.HostPath != nil {
@@ -329,7 +318,7 @@ func Convert_v1_PodSpec_to_api_PodSpec(in *v1.PodSpec, out *api.PodSpec) error {
 			volume.VolumeSource.DownwardAPI.DefaultMode = val.VolumeSource.DownwardAPI.DefaultMode
 
 			for _, val := range val.VolumeSource.DownwardAPI.Items {
-				var item = api.DownwardAPIVolumeFile{}
+				item := api.DownwardAPIVolumeFile{}
 
 				item.Mode = val.Mode
 				item.Path = val.Path
@@ -376,13 +365,11 @@ func Convert_v1_PodSpec_to_api_PodSpec(in *v1.PodSpec, out *api.PodSpec) error {
 			}
 
 			for _, val := range val.VolumeSource.ConfigMap.Items {
-				var item = api.KeyToPath{}
-
-				item.Key = val.Key
-				item.Mode = val.Mode
-				item.Path = val.Path
-
-				volume.VolumeSource.ConfigMap.Items = append(volume.VolumeSource.ConfigMap.Items, item)
+				volume.VolumeSource.ConfigMap.Items = append(volume.VolumeSource.ConfigMap.Items, api.KeyToPath{
+					Key:  val.Key,
+					Mode: val.Mode,
+					Path: val.Path,
+				})
 			}
 		}
 
@@ -398,7 +385,7 @@ func Convert_v1_PodSpec_to_api_PodSpec(in *v1.PodSpec, out *api.PodSpec) error {
 			volume.VolumeSource.AzureDisk.ReadOnly = val.VolumeSource.AzureDisk.ReadOnly
 
 			if val.VolumeSource.AzureDisk.CachingMode != nil {
-				var item = api.AzureDataDiskCachingMode(*val.VolumeSource.AzureDisk.CachingMode)
+				item := api.AzureDataDiskCachingMode(*val.VolumeSource.AzureDisk.CachingMode)
 				volume.VolumeSource.AzureDisk.CachingMode = &item
 			}
 
@@ -412,7 +399,7 @@ func Convert_v1_PodSpec_to_api_PodSpec(in *v1.PodSpec, out *api.PodSpec) error {
 	return nil
 }
 
-func Convert_v1_Container_to_api_Container(in *v1.Container, out *api.Container) error {
+func Convert_Container_v1_to_api(in *v1.Container, out *api.Container) error {
 
 	if in == nil {
 		return errors.New("Error: incoming data can not be nil")
@@ -425,8 +412,7 @@ func Convert_v1_Container_to_api_Container(in *v1.Container, out *api.Container)
 	out.WorkingDir = in.WorkingDir
 
 	for _, val := range in.Ports {
-		var port = api.ContainerPort{}
-
+		port := api.ContainerPort{}
 		port.Name = val.Name
 		port.HostPort = val.HostPort
 		port.ContainerPort = val.ContainerPort
@@ -437,8 +423,8 @@ func Convert_v1_Container_to_api_Container(in *v1.Container, out *api.Container)
 	}
 
 	for _, val := range in.Env {
-		var env = api.EnvVar{}
 
+		env := api.EnvVar{}
 		env.Name = val.Name
 		env.Value = val.Value
 		out.Env = append(out.Env, env)
@@ -477,9 +463,8 @@ func Convert_v1_Container_to_api_Container(in *v1.Container, out *api.Container)
 
 	out.Resources.Limits = api.ResourceList{}
 	for key, val := range in.Resources.Limits {
-		var item = resource.Quantity{}
+		item := resource.Quantity{}
 		item.Format = val.Format
-
 		out.Resources.Limits[api.ResourceName(key)] = item
 	}
 
@@ -655,7 +640,7 @@ func Convert_v1_Container_to_api_Container(in *v1.Container, out *api.Container)
 	return nil
 }
 
-func Convert_v1_OwnerReference_To_api_OwnerReference(in *v1.OwnerReference, out *api.OwnerReference) error {
+func Convert_OwnerReference_v1_to_api(in *v1.OwnerReference, out *api.OwnerReference) error {
 
 	if in == nil {
 		return error_incoming_data
@@ -674,7 +659,7 @@ func Convert_v1_OwnerReference_To_api_OwnerReference(in *v1.OwnerReference, out 
 	return nil
 }
 
-func Convert_v1beta1_Deployment_To_extensions_Deployment(in *v1beta1.Deployment, out *extensions.Deployment) error {
+func Convert_Deployment_v1beta1_to_extensions(in *v1beta1.Deployment, out *extensions.Deployment) error {
 
 	if in == nil {
 		return error_incoming_data
@@ -686,26 +671,26 @@ func Convert_v1beta1_Deployment_To_extensions_Deployment(in *v1beta1.Deployment,
 
 	Set_defaults_extensions_deployment(out)
 
-	if err := Convert_unversioned_TypeMeta_to_unversioned_TypeMeta(&in.TypeMeta, &out.TypeMeta); err != nil {
+	// Convert TypeMeta
+	out.APIVersion = in.APIVersion
+	out.Kind = in.Kind
+
+	if err := Convert_ObjectMeta_v1_to_api(&in.ObjectMeta, &out.ObjectMeta); err != nil {
 		return err
 	}
 
-	if err := Convert_v1_ObjectMeta_to_api_ObjectMeta(&in.ObjectMeta, &out.ObjectMeta); err != nil {
+	if err := Convert_DeploymentSpec_v1beta1_to_extensions(&in.Spec, &out.Spec); err != nil {
 		return err
 	}
 
-	if err := Convert_v1beta1_DeploymentSpec_to_extensions_DeploymentSpec(&in.Spec, &out.Spec); err != nil {
-		return err
-	}
-
-	if err := Convert_v1beta1_DeploymentStatus_to_extensions_DeploymentStatus(&in.Status, &out.Status); err != nil {
+	if err := Convert_DeploymentStatus_v1beta1_to_extensions(&in.Status, &out.Status); err != nil {
 		return err
 	}
 
 	return nil
 }
 
-func Convert_v1beta1_DeploymentSpec_to_extensions_DeploymentSpec(in *v1beta1.DeploymentSpec, out *extensions.DeploymentSpec) error {
+func Convert_DeploymentSpec_v1beta1_to_extensions(in *v1beta1.DeploymentSpec, out *extensions.DeploymentSpec) error {
 
 	if in == nil {
 		return error_incoming_data
@@ -719,37 +704,36 @@ func Convert_v1beta1_DeploymentSpec_to_extensions_DeploymentSpec(in *v1beta1.Dep
 		out.Replicas = *in.Replicas
 	}
 
+	out.Selector = nil
 	if in.Selector != nil {
 		out.Selector = new(unversioned.LabelSelector)
-		if err := Convert_v1beta1_LabelSelector_to_unversioned_LabelSelector(in.Selector, out.Selector); err != nil {
+		if err := Convert_LabelSelector_v1beta1_to_unversioned(in.Selector, out.Selector); err != nil {
 			return err
 		}
-	} else {
-		out.Selector = nil
 	}
 
-	if err := Convert_v1_PodTemplateSpec_to_api_PodTemplateSpec(&in.Template, &out.Template); err != nil {
+	if err := Convert_PodTemplateSpec_v1_to_api(&in.Template, &out.Template); err != nil {
 		return err
 	}
 
-	if err := Convert_v1beta1_DeploymentStrategy_to_extensions_DeploymentStrategy(&in.Strategy, &out.Strategy); err != nil {
+	if err := Convert_DeploymentStrategy_v1beta1_to_extensions(&in.Strategy, &out.Strategy); err != nil {
 		return err
 	}
 
 	out.RevisionHistoryLimit = in.RevisionHistoryLimit
 	out.MinReadySeconds = in.MinReadySeconds
 	out.Paused = in.Paused
+
+	out.RollbackTo = nil
 	if in.RollbackTo != nil {
 		out.RollbackTo = new(extensions.RollbackConfig)
 		out.RollbackTo.Revision = in.RollbackTo.Revision
-	} else {
-		out.RollbackTo = nil
 	}
 
 	return nil
 }
 
-func Convert_v1beta1_DeploymentStrategy_to_extensions_DeploymentStrategy(in *v1beta1.DeploymentStrategy, out *extensions.DeploymentStrategy) error {
+func Convert_DeploymentStrategy_v1beta1_to_extensions(in *v1beta1.DeploymentStrategy, out *extensions.DeploymentStrategy) error {
 
 	if in == nil {
 		return error_incoming_data
@@ -760,19 +744,19 @@ func Convert_v1beta1_DeploymentStrategy_to_extensions_DeploymentStrategy(in *v1b
 	}
 
 	out.Type = extensions.DeploymentStrategyType(in.Type)
+
+	out.RollingUpdate = nil
 	if in.RollingUpdate != nil {
 		out.RollingUpdate = new(extensions.RollingUpdateDeployment)
-		if err := Convert_v1beta1_RollingUpdateDeployment_to_extensions_RollingUpdateDeployment(in.RollingUpdate, out.RollingUpdate); err != nil {
+		if err := Convert_RollingUpdateDeployment_v1beta1_to_extensions(in.RollingUpdate, out.RollingUpdate); err != nil {
 			return err
 		}
-	} else {
-		out.RollingUpdate = nil
 	}
 
 	return nil
 }
 
-func Convert_v1beta1_RollingUpdateDeployment_to_extensions_RollingUpdateDeployment(in *v1beta1.RollingUpdateDeployment, out *extensions.RollingUpdateDeployment) error {
+func Convert_RollingUpdateDeployment_v1beta1_to_extensions(in *v1beta1.RollingUpdateDeployment, out *extensions.RollingUpdateDeployment) error {
 
 	if in == nil {
 		return error_incoming_data
@@ -797,7 +781,7 @@ func Convert_v1beta1_RollingUpdateDeployment_to_extensions_RollingUpdateDeployme
 	return nil
 }
 
-func Convert_v1beta1_LabelSelector_to_unversioned_LabelSelector(in *v1beta1.LabelSelector, out *unversioned.LabelSelector) error {
+func Convert_LabelSelector_v1beta1_to_unversioned(in *v1beta1.LabelSelector, out *unversioned.LabelSelector) error {
 
 	if in == nil {
 		return error_incoming_data
@@ -808,22 +792,23 @@ func Convert_v1beta1_LabelSelector_to_unversioned_LabelSelector(in *v1beta1.Labe
 	}
 
 	out.MatchLabels = in.MatchLabels
+
+	out.MatchExpressions = nil
 	if in.MatchExpressions != nil {
 		in, out := &in.MatchExpressions, &out.MatchExpressions
 		*out = make([]unversioned.LabelSelectorRequirement, len(*in))
+
 		for i := range *in {
-			if err := Convert_v1beta1_LabelSelectorRequirement_to_unversioned_LabelSelectorRequirement(&(*in)[i], &(*out)[i]); err != nil {
+			if err := Convert_LabelSelectorRequirement_v1beta1_to_unversioned(&(*in)[i], &(*out)[i]); err != nil {
 				return err
 			}
 		}
-	} else {
-		out.MatchExpressions = nil
 	}
 
 	return nil
 }
 
-func Convert_v1beta1_LabelSelectorRequirement_to_unversioned_LabelSelectorRequirement(in *v1beta1.LabelSelectorRequirement, out *unversioned.LabelSelectorRequirement) error {
+func Convert_LabelSelectorRequirement_v1beta1_to_unversioned(in *v1beta1.LabelSelectorRequirement, out *unversioned.LabelSelectorRequirement) error {
 
 	if in == nil {
 		return error_incoming_data
@@ -840,7 +825,7 @@ func Convert_v1beta1_LabelSelectorRequirement_to_unversioned_LabelSelectorRequir
 	return nil
 }
 
-func Convert_v1beta1_DeploymentStatus_to_extensions_DeploymentStatus(in *v1beta1.DeploymentStatus, out *extensions.DeploymentStatus) error {
+func Convert_DeploymentStatus_v1beta1_to_extensions(in *v1beta1.DeploymentStatus, out *extensions.DeploymentStatus) error {
 
 	if in == nil {
 		return error_incoming_data
@@ -855,22 +840,6 @@ func Convert_v1beta1_DeploymentStatus_to_extensions_DeploymentStatus(in *v1beta1
 	out.UpdatedReplicas = in.UpdatedReplicas
 	out.AvailableReplicas = in.AvailableReplicas
 	out.UnavailableReplicas = in.UnavailableReplicas
-
-	return nil
-}
-
-func Convert_unversioned_TypeMeta_to_unversioned_TypeMeta(in, out *unversioned.TypeMeta) error {
-
-	if in == nil {
-		return error_incoming_data
-	}
-
-	if out == nil {
-		return error_outcoming_data
-	}
-
-	out.APIVersion = in.APIVersion
-	out.Kind = in.Kind
 
 	return nil
 }
