@@ -17,7 +17,9 @@ func ListCmd() {
 		return
 	}
 
-	projects.DrawTable()
+	if projects != nil {
+		projects.DrawTable()
+	}
 }
 
 func List() (*model.ProjectList, error) {

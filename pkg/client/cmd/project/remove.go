@@ -3,6 +3,7 @@ package project
 import (
 	"errors"
 	e "github.com/lastbackend/lastbackend/libs/errors"
+	"github.com/lastbackend/lastbackend/libs/model"
 	"github.com/lastbackend/lastbackend/pkg/client/context"
 )
 
@@ -47,6 +48,20 @@ func Remove(name string) error {
 
 	if er.Code != 0 {
 		return errors.New(e.Message(er.Status))
+	}
+
+	project, err := Current()
+	if err != nil {
+		return errors.New(err.Error())
+	}
+
+	if project != nil {
+		if name == project.Name {
+			err = ctx.Storage.Set("project", model.Project{})
+			if err != nil {
+				return errors.New(err.Error())
+			}
+		}
 	}
 
 	return nil
