@@ -41,7 +41,7 @@ func (s *VolumeStorage) GetByID(user, id string) (*model.Volume, *e.Err) {
 	return volume, nil
 }
 
-func (s *VolumeStorage) GetByProject(id string) (*model.VolumeList, *e.Err) {
+func (s *VolumeStorage) ListByProject(id string) (*model.VolumeList, *e.Err) {
 
 	var err error
 	var volumes = new(model.VolumeList)

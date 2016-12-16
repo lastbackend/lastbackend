@@ -21,7 +21,7 @@ func (s *BuildMock) GetByID(user, id string) (*model.Build, *e.Err) {
 }
 
 // Get builds by image
-func (s *BuildMock) GetByImage(user, id string) (*model.BuildList, *e.Err) {
+func (s *BuildMock) ListByImage(user, id string) (*model.BuildList, *e.Err) {
 	return nil, nil
 }
 

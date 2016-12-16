@@ -17,10 +17,13 @@ import (
 func ServiceListH(w http.ResponseWriter, r *http.Request) {
 
 	var (
-		er      error
-		err     *e.Err
-		session *model.Session
-		ctx     = c.Get()
+		er           error
+		err          *e.Err
+		session      *model.Session
+		projectModel *model.Project
+		ctx          = c.Get()
+		params       = mux.Vars(r)
+		projectParam = params["project"]
 	)
 
 	ctx.Log.Debug("List service handler")
@@ -34,14 +37,32 @@ func ServiceListH(w http.ResponseWriter, r *http.Request) {
 
 	session = s.(*model.Session)
 
-	services, err := ctx.Storage.Service().GetByUser(session.Uid)
+	projectModel, err = ctx.Storage.Project().GetByNameOrID(session.Uid, projectParam)
+	if err == nil && projectModel == nil {
+		e.New("service").NotFound().Http(w)
+		return
+	}
+	if err != nil {
+		ctx.Log.Error("Error: find service by id", err.Err())
+		err.Http(w)
+		return
+	}
+
+	_, err = ctx.Storage.Service().ListByProject(session.Uid, projectModel.ID)
 	if err != nil {
 		ctx.Log.Error("Error: find services by user", err)
 		e.HTTP.InternalServerError(w)
 		return
 	}
 
-	response, err := services.ToJson()
+	servicesSpec, err := service.List(projectParam)
+	if err != nil {
+		ctx.Log.Error("Error: get serivce spec from cluster", err.Err())
+		err.Http(w)
+		return
+	}
+
+	response, er := json.Marshal(servicesSpec)
 	if err != nil {
 		ctx.Log.Error("Error: convert struct to json", err.Err())
 		err.Http(w)
@@ -59,12 +80,15 @@ func ServiceListH(w http.ResponseWriter, r *http.Request) {
 func ServiceInfoH(w http.ResponseWriter, r *http.Request) {
 
 	var (
-		er      error
-		err     *e.Err
-		session *model.Session
-		ctx     = c.Get()
-		params  = mux.Vars(r)
-		id      = params["id"]
+		er           error
+		err          *e.Err
+		session      *model.Session
+		projectModel *model.Project
+		serviceModel *model.Service
+		ctx          = c.Get()
+		params       = mux.Vars(r)
+		projectParam = params["project"]
+		serviceParam = params["service"]
 	)
 
 	ctx.Log.Debug("Get service handler")
@@ -77,15 +101,9 @@ func ServiceInfoH(w http.ResponseWriter, r *http.Request) {
 	}
 
 	session = s.(*model.Session)
-	var sm *model.Service
 
-	if !validator.IsUUID(id) {
-		sm, err = ctx.Storage.Service().GetByName(session.Uid, id)
-	} else {
-		sm, err = ctx.Storage.Service().GetByID(session.Uid, id)
-	}
-
-	if err == nil && sm == nil {
+	projectModel, err = ctx.Storage.Project().GetByNameOrID(session.Uid, projectParam)
+	if err == nil && projectModel == nil {
 		e.New("service").NotFound().Http(w)
 		return
 	}
@@ -95,16 +113,27 @@ func ServiceInfoH(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	serviceSpec, err := service.Get(sm.Project, sm.Name)
+	serviceModel, err = ctx.Storage.Service().GetByNameOrID(session.Uid, projectModel.ID, serviceParam)
+	if err == nil && serviceModel == nil {
+		e.New("service").NotFound().Http(w)
+		return
+	}
+	if err != nil {
+		ctx.Log.Error("Error: find service by id", err.Err())
+		err.Http(w)
+		return
+	}
+
+	serviceSpec, err := service.Get(serviceModel.Project, serviceModel.Name)
 	if err != nil {
 		ctx.Log.Error("Error: get serivce spec from cluster", err.Err())
 		err.Http(w)
 		return
 	}
 
-	sm.Spec = serviceSpec
+	serviceModel.Spec = serviceSpec
 
-	response, err := sm.ToJson()
+	response, err := serviceModel.ToJson()
 	if err != nil {
 		ctx.Log.Error("Error: convert struct to json", err.Err())
 		err.Http(w)
@@ -151,14 +180,15 @@ func (s *serviceReplaceS) decodeAndValidate(reader io.Reader) *e.Err {
 func ServiceUpdateH(w http.ResponseWriter, r *http.Request) {
 
 	var (
-		er      error
-		err     *e.Err
-		session *model.Session
-		service *model.Service
-		ctx     = c.Get()
-		params  = mux.Vars(r)
-		id      = params["id"]
-		name    = params["id"]
+		er           error
+		err          *e.Err
+		session      *model.Session
+		projectModel *model.Project
+		serviceModel *model.Service
+		ctx          = c.Get()
+		params       = mux.Vars(r)
+		projectParam = params["project"]
+		serviceParam = params["service"]
 	)
 
 	ctx.Log.Debug("Update service handler")
@@ -180,13 +210,19 @@ func ServiceUpdateH(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if !validator.IsUUID(name) {
-		service, err = ctx.Storage.Service().GetByName(session.Uid, name)
-	} else {
-		service, err = ctx.Storage.Service().GetByID(session.Uid, id)
+	projectModel, err = ctx.Storage.Project().GetByNameOrID(session.Uid, projectParam)
+	if err == nil && projectModel == nil {
+		e.New("service").NotFound().Http(w)
+		return
+	}
+	if err != nil {
+		ctx.Log.Error("Error: find service by id", err.Err())
+		err.Http(w)
+		return
 	}
 
-	if err == nil && service == nil {
+	serviceModel, err = ctx.Storage.Service().GetByNameOrID(session.Uid, projectModel.ID, serviceParam)
+	if err == nil && serviceModel == nil {
 		e.New("service").NotFound().Http(w)
 		return
 	}
@@ -197,13 +233,13 @@ func ServiceUpdateH(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if rq.Name == nil || *rq.Name == "" {
-		rq.Name = &service.Name
+		rq.Name = &serviceModel.Name
 	}
 
-	service.Name = *rq.Name
+	serviceModel.Name = *rq.Name
 
-	if !validator.IsUUID(id) && service.Name != *rq.Name {
-		exists, er := ctx.Storage.Service().CheckExistsByName(service.User, service.Project, service.Name)
+	if !validator.IsUUID(serviceParam) && serviceModel.Name != *rq.Name {
+		exists, er := ctx.Storage.Service().CheckExistsByName(serviceModel.User, serviceModel.Project, serviceModel.Name)
 		if er != nil {
 			ctx.Log.Error("Error: check exists by name", er.Error())
 			e.HTTP.InternalServerError(w)
@@ -215,14 +251,14 @@ func ServiceUpdateH(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	service, err = ctx.Storage.Service().Update(service)
+	serviceModel, err = ctx.Storage.Service().Update(serviceModel)
 	if err != nil {
 		ctx.Log.Error("Error: insert service to db", err)
 		e.HTTP.InternalServerError(w)
 		return
 	}
 
-	response, err := service.ToJson()
+	response, err := serviceModel.ToJson()
 	if err != nil {
 		ctx.Log.Error("Error: convert struct to json", err.Err())
 		err.Http(w)
@@ -240,11 +276,13 @@ func ServiceUpdateH(w http.ResponseWriter, r *http.Request) {
 func ServiceRemoveH(w http.ResponseWriter, r *http.Request) {
 
 	var (
-		er      error
-		ctx     = c.Get()
-		session *model.Session
-		params  = mux.Vars(r)
-		id      = params["id"]
+		er           error
+		ctx          = c.Get()
+		session      *model.Session
+		projectModel *model.Project
+		params       = mux.Vars(r)
+		projectParam = params["project"]
+		serviceParam = params["service"]
 	)
 
 	ctx.Log.Info("Remove service")
@@ -258,9 +296,20 @@ func ServiceRemoveH(w http.ResponseWriter, r *http.Request) {
 
 	session = s.(*model.Session)
 
-	if !validator.IsUUID(id) {
-		service, err := ctx.Storage.Service().GetByName(session.Uid, id)
-		if err == nil && service == nil {
+	projectModel, err := ctx.Storage.Project().GetByNameOrID(session.Uid, projectParam)
+	if err == nil && projectModel == nil {
+		e.New("service").NotFound().Http(w)
+		return
+	}
+	if err != nil {
+		ctx.Log.Error("Error: find service by id", err.Err())
+		err.Http(w)
+		return
+	}
+
+	if !validator.IsUUID(serviceParam) {
+		serviceModel, err := ctx.Storage.Service().GetByName(session.Uid, projectModel.ID, serviceParam)
+		if err == nil && serviceModel == nil {
 			e.New("service").NotFound().Http(w)
 			return
 		}
@@ -270,12 +319,12 @@ func ServiceRemoveH(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		id = service.ID
+		serviceParam = serviceModel.ID
 	}
 
 	// TODO: Clear entities from kubernetes
 
-	err := ctx.Storage.Service().Remove(id)
+	err = ctx.Storage.Service().Remove(session.Uid, projectParam, serviceParam)
 	if err != nil {
 		ctx.Log.Error("Error: remove service from db", err)
 		e.HTTP.InternalServerError(w)

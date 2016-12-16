@@ -27,7 +27,7 @@ func Get(namespace, name string) (*Service, *e.Err) {
 		ctx = context.Get()
 	)
 
-	detail, er := deployment.GetDeployment(ctx.K8S, namespace, name)
+	detail, er := deployment.Get(ctx.K8S, namespace, name)
 	if er != nil {
 		return nil, e.New("service").Unknown(er)
 	}
@@ -38,6 +38,19 @@ func Get(namespace, name string) (*Service, *e.Err) {
 }
 
 func List(namespace string) (*ServiceList, *e.Err) {
+
+	var (
+		er  error
+		ctx = context.Get()
+	)
+
+	list, er := deployment.List(ctx.K8S, namespace)
+	if er != nil {
+		return nil, e.New("service").Unknown(er)
+	}
+
+	ctx.Log.Info(list)
+
 	return &ServiceList{}, nil
 }
 

@@ -19,7 +19,7 @@ type Deployment struct {
 	Selector   map[string]string `json:"selector"`
 }
 
-func GetDeployment(client k8s.IK8S, namespace string, name string) (*Deployment, error) {
+func Get(client k8s.IK8S, namespace string, name string) (*Deployment, error) {
 
 	deployment, err := client.Extensions().Deployments(namespace).Get(name)
 	if err != nil {
@@ -51,17 +51,57 @@ func GetDeployment(client k8s.IK8S, namespace string, name string) (*Deployment,
 
 	podList := pod.CreatePodList(pods)
 
-	var meta = new(api.ObjectMeta)
+	return &Deployment{
+		ObjectMeta: common.NewObjectMeta(deploymentNew.ObjectMeta),
+		TypeMeta:   common.NewTypeMeta(kind),
+		PodList:    *podList,
+		Selector:   deploymentNew.Spec.Selector.MatchLabels,
+	}, nil
+}
 
-	err = converter.Convert_ObjectMeta_v1_to_api(&deployment.ObjectMeta, meta)
+func List(client k8s.IK8S, namespace string) ([]Deployment, error) {
+
+	deploymentList, err := client.Extensions().Deployments(namespace).List(api.ListOptions{})
 	if err != nil {
 		return nil, err
 	}
 
-	return &Deployment{
-		ObjectMeta: common.NewObjectMeta(*meta),
-		TypeMeta:   common.NewTypeMeta(kind),
-		PodList:    *podList,
-		Selector:   deployment.Spec.Selector.MatchLabels,
-	}, nil
+	var deploymentNewList = []Deployment{}
+
+	for _, val := range deploymentList.Items {
+
+		var deploymentNew = extensions.Deployment{}
+
+		err = converter.Convert_Deployment_v1beta1_to_extensions(&val, &deploymentNew)
+		if err != nil {
+			return nil, err
+		}
+
+		selector, err := unversioned.LabelSelectorAsSelector(deploymentNew.Spec.Selector)
+		if err != nil {
+			return nil, err
+		}
+
+		options := api.ListOptions{LabelSelector: selector}
+
+		podChannel := common.GetPodListChannelWithOptions(client, common.NewSameNamespaceQuery(namespace), options, 1)
+
+		podListRaw := <-podChannel.List
+		if err := <-podChannel.Error; err != nil {
+			return nil, err
+		}
+
+		pods := common.FilterNamespacedPodsBySelector(podListRaw.Items, deploymentNew.ObjectMeta.Namespace, deploymentNew.Spec.Selector.MatchLabels)
+
+		podList := pod.CreatePodList(pods)
+
+		deploymentNewList = append(deploymentNewList, Deployment{
+			ObjectMeta: common.NewObjectMeta(deploymentNew.ObjectMeta),
+			TypeMeta:   common.NewTypeMeta(kind),
+			PodList:    *podList,
+			Selector:   deploymentNew.Spec.Selector.MatchLabels,
+		})
+	}
+
+	return nil, nil
 }

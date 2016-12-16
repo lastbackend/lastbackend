@@ -15,11 +15,15 @@ type ProjectMock struct {
 	storage.IProject
 }
 
+func (s *ProjectMock) GetByNameOrID(user, nameOrID string) (*model.Project, *e.Err) {
+	return nil, nil
+}
+
 func (s *ProjectMock) GetByID(user, id string) (*model.Project, *e.Err) {
 	return nil, nil
 }
 
-func (s *ProjectMock) GetByUser(id string) (*model.ProjectList, *e.Err) {
+func (s *ProjectMock) ListByUser(user string) (*model.ProjectList, *e.Err) {
 	return nil, nil
 }
 
@@ -34,7 +38,7 @@ func (s *ProjectMock) Update(project *model.Project) (*model.Project, *e.Err) {
 }
 
 // Remove project model
-func (s *ProjectMock) Remove(id string) *e.Err {
+func (s *ProjectMock) Remove(user, id string) *e.Err {
 	return nil
 }
 

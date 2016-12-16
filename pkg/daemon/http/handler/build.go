@@ -17,7 +17,7 @@ func BuildListH(w http.ResponseWriter, _ *http.Request) {
 	)
 
 	ctx.Log.Info("get builds list")
-	builds, err := ctx.Storage.Build().GetByImage("", "")
+	builds, err := ctx.Storage.Build().ListByImage("", "")
 	if err != nil {
 		ctx.Log.Error(err)
 		e.HTTP.InternalServerError(w)
