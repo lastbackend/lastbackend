@@ -10,7 +10,7 @@ import (
 	"testing"
 )
 
-func TestList_Success(t *testing.T) {
+func TestList(t *testing.T) {
 
 	const (
 		name        string = "project"

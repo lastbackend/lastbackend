@@ -56,5 +56,10 @@ func Create(name, description string) error {
 		return errors.New(e.Message(er.Status))
 	}
 
+	project, err = Switch(name)
+	if err != nil {
+		return errors.New(err.Error())
+	}
+
 	return nil
 }

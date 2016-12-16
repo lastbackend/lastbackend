@@ -28,10 +28,6 @@ func Switch(name string) (*model.Project, error) {
 		project = new(model.Project)
 	)
 
-	if len(name) == 0 {
-		return nil, e.BadParameter("name").Err()
-	}
-
 	_, _, err := ctx.HTTP.
 		GET("/project/"+name).
 		AddHeader("Content-Type", "application/json").

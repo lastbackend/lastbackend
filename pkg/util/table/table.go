@@ -7,9 +7,10 @@ import (
 )
 
 type table struct {
-	fields     []string
-	rows       []map[string]string
-	fieldSizes map[string]int
+	fields        []string
+	rows          []map[string]string
+	fieldSizes    map[string]int
+	VisibleHeader bool
 }
 
 func New(fields []string) *table {
@@ -40,20 +41,37 @@ func (t *table) AddRow(row map[string]interface{}) {
 	}
 }
 
+func PrintHorizontal(m map[string]interface{}) {
+	table := New([]string{"Key", "Value"})
+	table.VisibleHeader = false
+	for key, value := range m {
+		row := map[string]interface{}{}
+		row["Key"] = strings.Title(key)
+		row["Value"] = value
+		table.AddRow(row)
+	}
+
+	table.Print()
+}
+
 func (t *table) Print() {
 	if len(t.rows) == 0 {
 		return
 	}
 
-	t.printHead()
+	t.printHeader()
 
 	for _, r := range t.rows {
 		t.printRow(r)
 	}
 }
 
-func (t *table) printHead() {
+func (t *table) printHeader() {
 	var s string
+
+	if !t.VisibleHeader {
+		return
+	}
 
 	for _, name := range t.fields {
 		s += t.fieldToString(name, strings.Title(name))
