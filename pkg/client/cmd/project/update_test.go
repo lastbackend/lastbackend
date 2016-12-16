@@ -86,11 +86,11 @@ func TestUpdate(t *testing.T) {
 		assert.Equal(t, d.Description, description, "they should be equal")
 
 		w.WriteHeader(200)
-		//_, err = w.Write([]byte(`{"id":"mock", "name":"` + name + `", "description":"` + description + `"}`))
-		//if err != nil {
-		//	t.Error(err)
-		//	return
-		//}
+		_, err = w.Write([]byte(`{"id":"mock", "name":"` + name + `", "description":"` + description + `"}`))
+		if err != nil {
+			t.Error(err)
+			return
+		}
 	}))
 	defer server.Close()
 	//------------------------------------------------------------------------------------------

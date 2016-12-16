@@ -1,4 +1,4 @@
-package project
+package service
 
 import (
 	"errors"
@@ -7,34 +7,34 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/client/context"
 )
 
-func ListProjectCmd() {
+func ListServiceCmd() {
 
 	var ctx = context.Get()
 
-	projects, err := List()
+	services, err := List()
 	if err != nil {
 		ctx.Log.Error(err)
 		return
 	}
 
-	if projects != nil {
-		projects.DrawTable()
+	if services != nil {
+		services.DrawTable()
 	}
 }
 
-func List() (*model.ProjectList, error) {
+func List() (*model.ServiceList, error) {
 
 	var (
 		err      error
 		ctx      = context.Get()
 		er       = new(e.Http)
-		projects = new(model.ProjectList)
+		services = new(model.ServiceList)
 	)
 
 	_, _, err = ctx.HTTP.
-		GET("/project").
+		GET("/service").
 		AddHeader("Authorization", "Bearer "+ctx.Token).
-		Request(projects, er)
+		Request(services, er)
 	if err != nil {
 		return nil, err
 	}
@@ -47,10 +47,10 @@ func List() (*model.ProjectList, error) {
 		return nil, errors.New(e.Message(er.Status))
 	}
 
-	if len(*projects) == 0 {
+	if len(*services) == 0 {
 		ctx.Log.Info("You don't have any projects")
 		return nil, nil
 	}
 
-	return projects, nil
+	return services, nil
 }

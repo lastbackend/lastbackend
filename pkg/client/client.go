@@ -7,12 +7,13 @@ import (
 	"github.com/lastbackend/lastbackend/libs/log"
 	"github.com/lastbackend/lastbackend/pkg/client/cmd/deploy"
 	p "github.com/lastbackend/lastbackend/pkg/client/cmd/project"
-	"github.com/lastbackend/lastbackend/pkg/client/cmd/service"
+	s "github.com/lastbackend/lastbackend/pkg/client/cmd/service"
 	"github.com/lastbackend/lastbackend/pkg/client/cmd/template"
 	u "github.com/lastbackend/lastbackend/pkg/client/cmd/user"
 	"github.com/lastbackend/lastbackend/pkg/client/config"
 	"github.com/lastbackend/lastbackend/pkg/client/context"
 	"os"
+	"github.com/lastbackend/lastbackend/pkg/service"
 )
 
 func Run() {
@@ -80,17 +81,25 @@ func configure(app *cli.Cli) {
 	app.Command("signup", "Create new account", func(c *cli.Cmd) {
 		c.Action = u.SignUpCmd
 	})
+
 	app.Command("login", "Auth to account", func(c *cli.Cmd) {
 		c.Action = u.SignInCmd
 	})
+
 	app.Command("whoami", "Display the current user's login name", func(c *cli.Cmd) {
 		c.Action = u.WhoamiCmd
 	})
+
 	app.Command("logout", "logout from account", func(c *cli.Cmd) {
 		c.Action = u.LogoutCmd
 	})
+
 	app.Command("projects", "Display the project list", func(c *cli.Cmd) {
-		c.Action = p.ListCmd
+		c.Action = p.ListProjectCmd
+	})
+
+	app.Command("services", "Display the service list", func(c *cli.Cmd) {
+		c.Action = s.ListServiceCmd
 	})
 
 	app.Command("deploy", "Deploy management", func(c *cli.Cmd) {
@@ -244,7 +253,18 @@ func configure(app *cli.Cli) {
 					return
 				}
 
-				service.CreateCmd(*name)
+				s.CreateCmd(*name)
+			}
+		})
+
+		c.Command("", "create new service", func(sc *cli.Cmd) {
+			sc.Action = func() {
+				if len(*name) != 0 {
+					c.PrintHelp()
+					return
+				}
+
+				s.CreateCmd(*name)
 			}
 		})
 
@@ -255,7 +275,7 @@ func configure(app *cli.Cli) {
 					return
 				}
 
-				service.InspectCmd(*name)
+				s.InspectCmd(*name)
 			}
 		})
 
@@ -266,7 +286,7 @@ func configure(app *cli.Cli) {
 					return
 				}
 
-				service.RemoveCmd(*name)
+				s.RemoveCmd(*name)
 			}
 		})
 	})
