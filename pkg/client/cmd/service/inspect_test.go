@@ -2,7 +2,7 @@ package service_test
 
 import (
 	h "github.com/lastbackend/lastbackend/libs/http"
-	"github.com/lastbackend/lastbackend/pkg/client/cmd/project"
+	"github.com/lastbackend/lastbackend/pkg/client/cmd/service"
 	"github.com/lastbackend/lastbackend/pkg/client/context"
 	"github.com/stretchr/testify/assert"
 	"net/http"
@@ -13,9 +13,8 @@ import (
 func TestGet(t *testing.T) {
 
 	const (
-		name        string = "project"
-		description string = "project describe"
-		token       string = "mocktoken"
+		name  string = "project"
+		token string = "mocktoken"
 	)
 
 	var (
@@ -33,7 +32,7 @@ func TestGet(t *testing.T) {
 		assert.Equal(t, tk, "Bearer "+token, "they should be equal")
 
 		w.WriteHeader(200)
-		_, err := w.Write([]byte(`{"id":"mock", "name":"` + name + `", "description":"` + description + `"}`))
+		_, err := w.Write([]byte(`{"id":"mock", "name":"` + name + `"}`))
 		if err != nil {
 			t.Error(err)
 			return
@@ -44,7 +43,7 @@ func TestGet(t *testing.T) {
 
 	ctx.HTTP = h.New(server.URL)
 
-	_, err = project.Get(name)
+	_, err = service.Inspect(name)
 	if err != nil {
 		t.Error(err)
 	}
