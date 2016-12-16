@@ -18,8 +18,6 @@ type Service struct {
 	config *v1beta1.Deployment
 }
 
-type ServiceList []Service
-
 func Get(namespace, name string) (*Service, *e.Err) {
 
 	var (
@@ -32,26 +30,27 @@ func Get(namespace, name string) (*Service, *e.Err) {
 		return nil, e.New("service").Unknown(er)
 	}
 
-	service := &Service{*detail, nil}
-
-	return service, nil
+	return &Service{*detail, nil}, nil
 }
 
-func List(namespace string) (*ServiceList, *e.Err) {
+func List(namespace string) (map[string]*Service, *e.Err) {
 
 	var (
-		er  error
-		ctx = context.Get()
+		er          error
+		ctx         = context.Get()
+		serviceList = make(map[string]*Service)
 	)
 
-	list, er := deployment.List(ctx.K8S, namespace)
+	detailList, er := deployment.List(ctx.K8S, namespace)
 	if er != nil {
 		return nil, e.New("service").Unknown(er)
 	}
 
-	ctx.Log.Info(list)
+	for _, val := range detailList {
+		serviceList[val.ObjectMeta.Name] = &Service{val, nil}
+	}
 
-	return &ServiceList{}, nil
+	return serviceList, nil
 }
 
 func Create(user, project string, config interface{}) (*Service, *e.Err) {

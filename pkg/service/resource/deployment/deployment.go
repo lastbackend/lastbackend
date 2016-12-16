@@ -103,5 +103,5 @@ func List(client k8s.IK8S, namespace string) ([]Deployment, error) {
 		})
 	}
 
-	return nil, nil
+	return deploymentNewList, nil
 }

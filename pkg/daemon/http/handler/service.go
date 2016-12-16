@@ -48,7 +48,7 @@ func ServiceListH(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	_, err = ctx.Storage.Service().ListByProject(session.Uid, projectModel.ID)
+	projectModels, err := ctx.Storage.Service().ListByProject(session.Uid, projectModel.ID)
 	if err != nil {
 		ctx.Log.Error("Error: find services by user", err)
 		e.HTTP.InternalServerError(w)
@@ -62,7 +62,14 @@ func ServiceListH(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	response, er := json.Marshal(servicesSpec)
+	var list = model.ServiceList{}
+
+	for _, val := range *projectModels {
+		val.Spec = servicesSpec[val.Name]
+		list = append(list, val)
+	}
+
+	response, err := list.ToJson()
 	if err != nil {
 		ctx.Log.Error("Error: convert struct to json", err.Err())
 		err.Http(w)
