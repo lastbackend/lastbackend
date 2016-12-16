@@ -2,12 +2,12 @@ package service_test
 
 import (
 	h "github.com/lastbackend/lastbackend/libs/http"
+	"github.com/lastbackend/lastbackend/pkg/client/cmd/service"
 	"github.com/lastbackend/lastbackend/pkg/client/context"
 	"github.com/stretchr/testify/assert"
 	"net/http"
 	"net/http/httptest"
 	"testing"
-	"github.com/lastbackend/lastbackend/pkg/client/cmd/service"
 )
 
 func TestList(t *testing.T) {

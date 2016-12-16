@@ -48,7 +48,7 @@ func List() (*model.ServiceList, error) {
 	}
 
 	if len(*services) == 0 {
-		ctx.Log.Info("You don't have any projects")
+		ctx.Log.Info("You don't have any services")
 		return nil, nil
 	}
 

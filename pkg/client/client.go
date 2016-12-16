@@ -13,7 +13,6 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/client/config"
 	"github.com/lastbackend/lastbackend/pkg/client/context"
 	"os"
-	"github.com/lastbackend/lastbackend/pkg/service"
 )
 
 func Run() {
@@ -248,18 +247,7 @@ func configure(app *cli.Cli) {
 
 		c.Command("create", "create new service", func(sc *cli.Cmd) {
 			sc.Action = func() {
-				if len(*name) != 0 {
-					c.PrintHelp()
-					return
-				}
-
-				s.CreateCmd(*name)
-			}
-		})
-
-		c.Command("", "create new service", func(sc *cli.Cmd) {
-			sc.Action = func() {
-				if len(*name) != 0 {
+				if len(*name) == 0 {
 					c.PrintHelp()
 					return
 				}
@@ -270,7 +258,7 @@ func configure(app *cli.Cli) {
 
 		c.Command("inspect", "inspect the service", func(sc *cli.Cmd) {
 			sc.Action = func() {
-				if len(*name) != 0 {
+				if len(*name) == 0 {
 					c.PrintHelp()
 					return
 				}
@@ -281,7 +269,7 @@ func configure(app *cli.Cli) {
 
 		c.Command("remove", "remove an existing service", func(sc *cli.Cmd) {
 			sc.Action = func() {
-				if len(*name) != 0 {
+				if len(*name) == 0 {
 					c.PrintHelp()
 					return
 				}
