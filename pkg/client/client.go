@@ -220,6 +220,7 @@ func configure(app *cli.Cli) {
 					c.PrintHelp()
 					return
 				}
+
 				p.CurrentCmd()
 			}
 		})
@@ -229,25 +230,43 @@ func configure(app *cli.Cli) {
 
 		c.Spec = "[SERVICE_NAME]"
 
-		var service_name = c.String(cli.StringArg{
+		var name = c.String(cli.StringArg{
 			Name:      "SERVICE_NAME",
 			Value:     "",
 			Desc:      "name of service",
 			HideValue: true,
 		})
+
 		c.Command("create", "create new service", func(sc *cli.Cmd) {
 			sc.Action = func() {
-				service.CreateCmd(*service_name)
+				if len(*name) != 0 {
+					c.PrintHelp()
+					return
+				}
+
+				service.CreateCmd(*name)
 			}
 		})
+
 		c.Command("inspect", "inspect the service", func(sc *cli.Cmd) {
 			sc.Action = func() {
-				service.InspectCmd(*service_name)
+				if len(*name) != 0 {
+					c.PrintHelp()
+					return
+				}
+
+				service.InspectCmd(*name)
 			}
 		})
+
 		c.Command("remove", "remove an existing service", func(sc *cli.Cmd) {
 			sc.Action = func() {
-				service.RemoveCmd(*service_name)
+				if len(*name) != 0 {
+					c.PrintHelp()
+					return
+				}
+
+				service.RemoveCmd(*name)
 			}
 		})
 	})

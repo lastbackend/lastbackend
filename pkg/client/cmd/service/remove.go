@@ -29,10 +29,6 @@ func Remove(name string) error {
 		er      = new(e.Http)
 	)
 
-	if len(name) == 0 {
-		return e.BadParameter("name").Err()
-	}
-
 	_, _, err = ctx.HTTP.
 		DELETE("/service/"+name).
 		AddHeader("Authorization", "Bearer "+ctx.Token).

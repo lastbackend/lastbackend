@@ -29,10 +29,6 @@ func Inspect(name string) (*model.Service, error) {
 		service = new(model.Service)
 	)
 
-	if len(name) == 0 {
-		return nil, e.BadParameter("name").Err()
-	}
-
 	_, _, err = ctx.HTTP.
 		GET("/service/"+name).
 		AddHeader("Authorization", "Bearer "+ctx.Token).

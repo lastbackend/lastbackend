@@ -35,10 +35,6 @@ func Create(name string) error {
 		er      = new(e.Http)
 	)
 
-	if len(name) == 0 {
-		return e.BadParameter("name").Err()
-	}
-
 	_, _, err = ctx.HTTP.
 		POST("/service").
 		AddHeader("Content-Type", "application/json").
