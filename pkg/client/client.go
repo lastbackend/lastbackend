@@ -245,17 +245,6 @@ func configure(app *cli.Cli) {
 			HideValue: true,
 		})
 
-		c.Command("create", "create new service", func(sc *cli.Cmd) {
-			sc.Action = func() {
-				if len(*name) == 0 {
-					c.PrintHelp()
-					return
-				}
-
-				s.CreateCmd(*name)
-			}
-		})
-
 		c.Command("inspect", "inspect the service", func(sc *cli.Cmd) {
 			sc.Action = func() {
 				if len(*name) == 0 {
