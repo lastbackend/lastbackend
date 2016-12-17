@@ -19,15 +19,15 @@ func (i *ImageMock) GetByID(user, id string) (*model.Image, *e.Err) {
 	return nil, nil
 }
 
-func (i *ImageMock) GetByUser(id string) (*model.ImageList, *e.Err) {
+func (i *ImageMock) ListByUser(id string) (*model.ImageList, *e.Err) {
 	return nil, nil
 }
 
-func (i *ImageMock) GetByProject(user, id string) (*model.ImageList, *e.Err) {
+func (i *ImageMock) ListByProject(user, id string) (*model.ImageList, *e.Err) {
 	return nil, nil
 }
 
-func (i *ImageMock) GetByService(user, id string) (*model.ImageList, *e.Err) {
+func (i *ImageMock) ListByService(user, id string) (*model.ImageList, *e.Err) {
 	return nil, nil
 }
 

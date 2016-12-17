@@ -33,15 +33,13 @@ func NewRouter() *mux.Router {
 	// Project handlers
 	r.HandleFunc("/project", Handler(handler.ProjectListH, Auth)).Methods("GET")
 	r.HandleFunc("/project", Handler(handler.ProjectCreateH, Auth)).Methods("POST")
-	r.HandleFunc("/project/{id}", Handler(handler.ProjectInfoH, Auth)).Methods("GET")
-	r.HandleFunc("/project/{id}", Handler(handler.ProjectUpdateH, Auth)).Methods("PUT")
-	r.HandleFunc("/project/{id}", Handler(handler.ProjectRemoveH, Auth)).Methods("DELETE")
-
-	// Service handlers
-	r.HandleFunc("/service", Handler(handler.ServiceListH, Auth)).Methods("GET")
-	r.HandleFunc("/service/{id}", Handler(handler.ServiceInfoH, Auth)).Methods("GET")
-	r.HandleFunc("/service/{id}", Handler(handler.ServiceUpdateH, Auth)).Methods("PUT")
-	r.HandleFunc("/service/{id}", Handler(handler.ServiceRemoveH, Auth)).Methods("DELETE")
+	r.HandleFunc("/project/{project}", Handler(handler.ProjectInfoH, Auth)).Methods("GET")
+	r.HandleFunc("/project/{project}", Handler(handler.ProjectUpdateH, Auth)).Methods("PUT")
+	r.HandleFunc("/project/{project}", Handler(handler.ProjectRemoveH, Auth)).Methods("DELETE")
+	r.HandleFunc("/project/{project}/service", Handler(handler.ServiceListH, Auth)).Methods("GET")
+	r.HandleFunc("/project/{project}/service/{service}", Handler(handler.ServiceInfoH, Auth)).Methods("GET")
+	r.HandleFunc("/project/{project}/service/{service}", Handler(handler.ServiceUpdateH, Auth)).Methods("PUT")
+	r.HandleFunc("/project/{project}/service/{service}", Handler(handler.ServiceRemoveH, Auth)).Methods("DELETE")
 
 	// Deploy template/source/repo
 	r.HandleFunc("/deploy", Handler(handler.DeployH, Auth)).Methods("POST")

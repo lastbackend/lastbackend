@@ -281,6 +281,28 @@ app.Command("list", "list all configs", func(cmd *cli.Cmd)) {
 
 This could go on to any depth if need be.
 
+mow.cli also supports command aliases. For example:
+
+```go
+app.Command("start run r", "start doing things", cli.ActionCommand(func() { start() }))
+```
+
+will alias `start`, `run`, and `r` to the same action. Aliases also work for
+subcommands:
+
+```go
+app.Command("job j", "actions on jobs", func(cmd *cli.Cmd) {
+    cmd.Command("list ls", "list jobs", func(cmd *cli.Cmd) {
+        cmd.Action = func() {
+            list()
+        }
+    })
+})
+```
+
+which then allows you to invoke the subcommand as `app job list`, `app job ls`,
+`app j ls`, or `app j list`.
+
 
 As a side-note: it may seem a bit weird the way mow.cli uses a function to initialize a command instead of just returning the command struct.
 

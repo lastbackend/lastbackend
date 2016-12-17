@@ -3,23 +3,55 @@ package service
 import (
 	"errors"
 	"fmt"
+	"github.com/lastbackend/lastbackend/libs/adapter/k8s/converter"
 	e "github.com/lastbackend/lastbackend/libs/errors"
 	"github.com/lastbackend/lastbackend/libs/model"
 	"github.com/lastbackend/lastbackend/pkg/daemon/context"
+	"github.com/lastbackend/lastbackend/pkg/service/resource/deployment"
 	"github.com/lastbackend/lastbackend/pkg/util/generator"
 	"k8s.io/client-go/1.5/pkg/api/v1"
 	"k8s.io/client-go/1.5/pkg/apis/extensions/v1beta1"
 )
 
 type Service struct {
-	Name      string            `json:"name"`
-	Namespace string            `json:"namespace"`
-	Labels    map[string]string `json:"labels"`
-	Replicas  int32             `json:"replicas"`
-	config    *v1beta1.Deployment
+	deployment.Deployment
+	config *v1beta1.Deployment
 }
 
-type ServiceList []Service
+func Get(namespace, name string) (*Service, *e.Err) {
+
+	var (
+		er  error
+		ctx = context.Get()
+	)
+
+	detail, er := deployment.Get(ctx.K8S, namespace, name)
+	if er != nil {
+		return nil, e.New("service").Unknown(er)
+	}
+
+	return &Service{*detail, nil}, nil
+}
+
+func List(namespace string) (map[string]*Service, *e.Err) {
+
+	var (
+		er          error
+		ctx         = context.Get()
+		serviceList = make(map[string]*Service)
+	)
+
+	detailList, er := deployment.List(ctx.K8S, namespace)
+	if er != nil {
+		return nil, e.New("service").Unknown(er)
+	}
+
+	for _, val := range detailList {
+		serviceList[val.ObjectMeta.Name] = &Service{val, nil}
+	}
+
+	return serviceList, nil
+}
 
 func Create(user, project string, config interface{}) (*Service, *e.Err) {
 
@@ -33,9 +65,9 @@ func Create(user, project string, config interface{}) (*Service, *e.Err) {
 	case *v1beta1.Deployment:
 		s.config = config.(*v1beta1.Deployment)
 	case *v1.ReplicationController:
-		s.config = convertReplicationControllerToDeployment(config.(*v1.ReplicationController))
+		s.config = converter.Convert_ReplicationController_to_Deployment(config.(*v1.ReplicationController))
 	case *v1.Pod:
-		s.config = convertPodToDeployment(config.(*v1.Pod))
+		s.config = converter.Convert_Pod_to_Deployment(config.(*v1.Pod))
 	default:
 		return nil, e.New("service").Unknown(errors.New("unknown type config"))
 	}
@@ -67,40 +99,4 @@ func (s Service) Deploy(namespace string) *e.Err {
 	}
 
 	return nil
-}
-
-func convertReplicationControllerToDeployment(config *v1.ReplicationController) *v1beta1.Deployment {
-
-	var deployment = new(v1beta1.Deployment)
-
-	deployment.APIVersion = "extensions/v1beta1"
-	deployment.Kind = "Deployment"
-	deployment.ObjectMeta = config.ObjectMeta
-	deployment.Spec.Strategy.Type = "Recreate"
-	deployment.Spec.Replicas = config.Spec.Replicas
-	deployment.Spec.Template.Spec = config.Spec.Template.Spec
-	deployment.Spec.Template.ObjectMeta = config.Spec.Template.ObjectMeta
-
-	for key, val := range config.Spec.Selector {
-		deployment.Spec.Selector.MatchLabels[key] = val
-	}
-
-	return deployment
-}
-
-func convertPodToDeployment(config *v1.Pod) *v1beta1.Deployment {
-
-	var (
-		replicas   int32 = 1
-		deployment       = new(v1beta1.Deployment)
-	)
-
-	deployment.APIVersion = "extensions/v1beta1"
-	deployment.Kind = "Deployment"
-	deployment.ObjectMeta = config.ObjectMeta
-	deployment.Spec.Strategy.Type = "Recreate"
-	deployment.Spec.Replicas = &replicas
-	deployment.Spec.Template.Spec = config.Spec
-
-	return deployment
 }

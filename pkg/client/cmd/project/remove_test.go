@@ -1,16 +1,16 @@
 package project_test
 
 import (
+	"github.com/lastbackend/lastbackend/libs/db"
 	h "github.com/lastbackend/lastbackend/libs/http"
+	"github.com/lastbackend/lastbackend/libs/model"
 	"github.com/lastbackend/lastbackend/pkg/client/cmd/project"
 	"github.com/lastbackend/lastbackend/pkg/client/context"
 	"github.com/stretchr/testify/assert"
 	"net/http"
 	"net/http/httptest"
 	"testing"
-	"github.com/lastbackend/lastbackend/libs/model"
 	"time"
-	"github.com/lastbackend/lastbackend/libs/db"
 )
 
 func TestRemove(t *testing.T) {
@@ -21,8 +21,8 @@ func TestRemove(t *testing.T) {
 	)
 
 	var (
-		err error
-		ctx = context.Mock()
+		err          error
+		ctx          = context.Mock()
 		projectmodel = new(model.Project)
 		switchData   = model.Project{
 			Name:        "project",
