@@ -21,17 +21,17 @@ func (s *HookMock) GetByToken(token string) (*model.Hook, *e.Err) {
 }
 
 // Get hooks by image
-func (s *HookMock) GetByUser(id string) (*model.HookList, *e.Err) {
+func (s *HookMock) ListByUser(id string) (*model.HookList, *e.Err) {
 	return nil, nil
 }
 
 // Get hooks by image
-func (s *HookMock) GetByImage(user, id string) (*model.HookList, *e.Err) {
+func (s *HookMock) ListByImage(user, id string) (*model.HookList, *e.Err) {
 	return nil, nil
 }
 
 // Get hooks by service
-func (s *HookMock) GetByService(user, id string) (*model.HookList, *e.Err) {
+func (s *HookMock) ListByService(user, id string) (*model.HookList, *e.Err) {
 	return nil, nil
 }
 

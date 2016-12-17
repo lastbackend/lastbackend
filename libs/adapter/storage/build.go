@@ -33,7 +33,7 @@ func (s *BuildStorage) GetByID(user, id string) (*model.Build, *e.Err) {
 }
 
 // Get builds by image
-func (s *BuildStorage) GetByImage(user, id string) (*model.BuildList, *e.Err) {
+func (s *BuildStorage) ListByImage(user, id string) (*model.BuildList, *e.Err) {
 
 	var err error
 	var builds = new(model.BuildList)

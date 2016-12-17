@@ -15,11 +15,15 @@ type ServiceMock struct {
 	storage.IService
 }
 
-func (s *ServiceMock) GetByID(user, id string) (*model.Service, *e.Err) {
+func (s *ServiceMock) GetByNameOrID(user, project, nameOrID string) (*model.Service, *e.Err) {
 	return nil, nil
 }
 
-func (s *ServiceMock) GetByUser(id string) (*model.ServiceList, *e.Err) {
+func (s *ServiceMock) GetByID(user, project, id string) (*model.Service, *e.Err) {
+	return nil, nil
+}
+
+func (s *ServiceMock) ListByProject(user, project string) (*model.ServiceList, *e.Err) {
 	return nil, nil
 }
 
@@ -34,12 +38,12 @@ func (s *ServiceMock) Update(service *model.Service) (*model.Service, *e.Err) {
 }
 
 // Remove service model
-func (s *ServiceMock) Remove(id string) *e.Err {
+func (s *ServiceMock) Remove(user, project, id string) *e.Err {
 	return nil
 }
 
 // Remove service model
-func (s *ServiceMock) RemoveByProject(id string) *e.Err {
+func (s *ServiceMock) RemoveByProject(user, project string) *e.Err {
 	return nil
 }
 

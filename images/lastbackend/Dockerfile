@@ -15,7 +15,7 @@ RUN apk add --update --no-cache --virtual build-dependencies \
       alpine-sdk
 
 WORKDIR /go/src/github.com/lastbackend/lastbackend
-ADD . /go/src/github.com/lastbackend/lastbackend
+ADD ../.. /go/src/github.com/lastbackend/lastbackend
 
 RUN go get github.com/tools/godep \
     && godep restore \

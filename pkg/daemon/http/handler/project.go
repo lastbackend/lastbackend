@@ -35,14 +35,14 @@ func ProjectListH(w http.ResponseWriter, r *http.Request) {
 
 	session = s.(*model.Session)
 
-	projects, err := ctx.Storage.Project().GetByUser(session.Uid)
+	projectListModel, err := ctx.Storage.Project().ListByUser(session.Uid)
 	if err != nil {
 		ctx.Log.Error("Error: find projects by user", err)
 		e.HTTP.InternalServerError(w)
 		return
 	}
 
-	response, err := projects.ToJson()
+	response, err := projectListModel.ToJson()
 	if err != nil {
 		ctx.Log.Error("Error: convert struct to json", err.Err())
 		err.Http(w)
@@ -60,12 +60,12 @@ func ProjectListH(w http.ResponseWriter, r *http.Request) {
 func ProjectInfoH(w http.ResponseWriter, r *http.Request) {
 
 	var (
-		er      error
-		err     *e.Err
-		session *model.Session
-		ctx     = c.Get()
-		params  = mux.Vars(r)
-		id      = params["id"]
+		er           error
+		err          *e.Err
+		session      *model.Session
+		ctx          = c.Get()
+		params       = mux.Vars(r)
+		projectParam = params["project"]
 	)
 
 	ctx.Log.Debug("Get project handler")
@@ -78,15 +78,10 @@ func ProjectInfoH(w http.ResponseWriter, r *http.Request) {
 	}
 
 	session = s.(*model.Session)
-	var project *model.Project
+	var projectModel *model.Project
 
-	if !validator.IsUUID(id) {
-		project, err = ctx.Storage.Project().GetByName(session.Uid, id)
-	} else {
-		project, err = ctx.Storage.Project().GetByID(session.Uid, id)
-	}
-
-	if err == nil && project == nil {
+	projectModel, err = ctx.Storage.Project().GetByNameOrID(session.Uid, projectParam)
+	if err == nil && projectModel == nil {
 		e.New("project").NotFound().Http(w)
 		return
 	}
@@ -96,7 +91,7 @@ func ProjectInfoH(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	response, err := project.ToJson()
+	response, err := projectModel.ToJson()
 	if err != nil {
 		ctx.Log.Error("Error: convert struct to json", err.Err())
 		err.Http(w)
@@ -177,12 +172,12 @@ func ProjectCreateH(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	p := new(model.Project)
-	p.User = session.Uid
-	p.Name = *rq.Name
-	p.Description = *rq.Description
+	projectModel := new(model.Project)
+	projectModel.User = session.Uid
+	projectModel.Name = *rq.Name
+	projectModel.Description = *rq.Description
 
-	exists, er := ctx.Storage.Project().ExistByName(p.User, p.Name)
+	exists, er := ctx.Storage.Project().ExistByName(projectModel.User, projectModel.Name)
 	if er != nil {
 		ctx.Log.Error("Error: check exists by name", er.Error())
 		e.HTTP.InternalServerError(w)
@@ -193,7 +188,7 @@ func ProjectCreateH(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	project, err := ctx.Storage.Project().Insert(p)
+	project, err := ctx.Storage.Project().Insert(projectModel)
 	if err != nil {
 		ctx.Log.Error("Error: insert project to db", err)
 		e.HTTP.InternalServerError(w)
@@ -269,14 +264,13 @@ func (s *projectReplaceS) decodeAndValidate(reader io.Reader) *e.Err {
 func ProjectUpdateH(w http.ResponseWriter, r *http.Request) {
 
 	var (
-		er      error
-		err     *e.Err
-		session *model.Session
-		project *model.Project
-		ctx     = c.Get()
-		params  = mux.Vars(r)
-		id      = params["id"]
-		name    = params["id"]
+		er           error
+		err          *e.Err
+		session      *model.Session
+		projectModel *model.Project
+		ctx          = c.Get()
+		params       = mux.Vars(r)
+		projectParam = params["project"]
 	)
 
 	ctx.Log.Debug("Update project handler")
@@ -298,12 +292,8 @@ func ProjectUpdateH(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if !validator.IsUUID(name) {
-		project, err = ctx.Storage.Project().GetByName(session.Uid, name)
-	} else {
-		project, err = ctx.Storage.Project().GetByID(session.Uid, id)
-	}
-	if err == nil && project == nil {
+	projectModel, err = ctx.Storage.Project().GetByNameOrID(session.Uid, projectParam)
+	if err == nil && projectModel == nil {
 		e.New("project").NotFound().Http(w)
 		return
 	}
@@ -314,11 +304,11 @@ func ProjectUpdateH(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if rq.Name == nil || *rq.Name == "" {
-		rq.Name = &project.Name
+		rq.Name = &projectModel.Name
 	}
 
-	if !validator.IsUUID(name) && project.Name != *rq.Name {
-		exists, er := ctx.Storage.Project().ExistByName(project.User, *rq.Name)
+	if !validator.IsUUID(projectParam) && projectModel.Name != *rq.Name {
+		exists, er := ctx.Storage.Project().ExistByName(projectModel.User, *rq.Name)
 		if er != nil {
 			e.HTTP.InternalServerError(w)
 		}
@@ -328,10 +318,10 @@ func ProjectUpdateH(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	project.Name = *rq.Name
-	project.Description = *rq.Description
+	projectModel.Name = *rq.Name
+	projectModel.Description = *rq.Description
 
-	project, err = ctx.Storage.Project().Update(project)
+	projectModel, err = ctx.Storage.Project().Update(projectModel)
 
 	if err != nil {
 		ctx.Log.Error("Error: insert project to db", err.Err())
@@ -339,7 +329,7 @@ func ProjectUpdateH(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	response, err := project.ToJson()
+	response, err := projectModel.ToJson()
 	if err != nil {
 		ctx.Log.Error("Error: convert struct to json", err.Err())
 		err.Http(w)
@@ -357,11 +347,11 @@ func ProjectUpdateH(w http.ResponseWriter, r *http.Request) {
 func ProjectRemoveH(w http.ResponseWriter, r *http.Request) {
 
 	var (
-		er      error
-		ctx     = c.Get()
-		session *model.Session
-		params  = mux.Vars(r)
-		id      = params["id"]
+		er           error
+		ctx          = c.Get()
+		session      *model.Session
+		params       = mux.Vars(r)
+		projectParam = params["project"]
 	)
 
 	ctx.Log.Info("Remove project")
@@ -375,9 +365,9 @@ func ProjectRemoveH(w http.ResponseWriter, r *http.Request) {
 
 	session = s.(*model.Session)
 
-	if !validator.IsUUID(id) {
-		project, err := ctx.Storage.Project().GetByName(session.Uid, id)
-		if err == nil && project == nil {
+	if !validator.IsUUID(projectParam) {
+		projectModel, err := ctx.Storage.Project().GetByName(session.Uid, projectParam)
+		if err == nil && projectModel == nil {
 			e.New("project").NotFound().Http(w)
 			return
 		}
@@ -387,19 +377,19 @@ func ProjectRemoveH(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		id = project.ID
+		projectParam = projectModel.ID
 	}
 
 	var opts = new(api.DeleteOptions)
 
-	er = ctx.K8S.Core().Namespaces().Delete(id, opts)
+	er = ctx.K8S.Core().Namespaces().Delete(projectParam, opts)
 	if er != nil {
 		ctx.Log.Error("Error: remove namespace", er.Error())
 		e.HTTP.InternalServerError(w)
 		return
 	}
 
-	volumes, err := ctx.Storage.Volume().GetByProject(id)
+	volumes, err := ctx.Storage.Volume().ListByProject(projectParam)
 	if err != nil {
 		ctx.Log.Error("Error: get volumes from db", err)
 		e.HTTP.InternalServerError(w)
@@ -424,14 +414,14 @@ func ProjectRemoveH(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	err = ctx.Storage.Service().RemoveByProject(id)
+	err = ctx.Storage.Service().RemoveByProject(session.Uid, projectParam)
 	if err != nil {
 		ctx.Log.Error("Error: remove services from db", err)
 		e.HTTP.InternalServerError(w)
 		return
 	}
 
-	err = ctx.Storage.Project().Remove(id)
+	err = ctx.Storage.Project().Remove(session.Uid, projectParam)
 	if err != nil {
 		ctx.Log.Error("Error: remove project from db", err)
 		e.HTTP.InternalServerError(w)

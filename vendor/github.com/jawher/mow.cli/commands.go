@@ -27,9 +27,10 @@ type Cmd struct {
 	// The command error handling strategy
 	ErrorHandling flag.ErrorHandling
 
-	init CmdInitializer
-	name string
-	desc string
+	init    CmdInitializer
+	name    string
+	aliases []string
+	desc    string
 
 	commands   []*Cmd
 	options    []*opt
@@ -103,9 +104,11 @@ the last argument, init, is a function that will be called by mow.cli to further
 (sub) command, e.g. to add options, arguments and the code to execute
 */
 func (c *Cmd) Command(name, desc string, init CmdInitializer) {
+	aliases := strings.Split(name, " ")
 	c.commands = append(c.commands, &Cmd{
 		ErrorHandling: c.ErrorHandling,
-		name:          name,
+		name:          aliases[0],
+		aliases:       aliases,
 		desc:          desc,
 		init:          init,
 		commands:      []*Cmd{},
@@ -356,7 +359,7 @@ func (c *Cmd) printHelp(longDesc bool) {
 		fmt.Fprintf(stdErr, "\nCommands:\n")
 
 		for _, c := range c.commands {
-			fmt.Fprintf(w, "  %s\t%s\n", c.name, c.desc)
+			fmt.Fprintf(w, "  %s\t%s\n", strings.Join(c.aliases, ", "), c.desc)
 		}
 		w.Flush()
 	}
@@ -445,7 +448,7 @@ func (c *Cmd) parse(args []string, entry, inFlow, outFlow *step) error {
 
 	arg := args[0]
 	for _, sub := range c.commands {
-		if arg == sub.name {
+		if sub.isAlias(arg) {
 			if err := sub.doInit(); err != nil {
 				panic(err)
 			}
@@ -471,7 +474,7 @@ func (c *Cmd) parse(args []string, entry, inFlow, outFlow *step) error {
 func (c *Cmd) isArgSet(args []string, searchArgs []string) bool {
 	for _, arg := range args {
 		for _, sub := range c.commands {
-			if arg == sub.name {
+			if sub.isAlias(arg) {
 				return false
 			}
 		}
@@ -493,11 +496,20 @@ func (c *Cmd) getOptsAndArgs(args []string) int {
 
 	for _, arg := range args {
 		for _, sub := range c.commands {
-			if arg == sub.name {
+			if sub.isAlias(arg) {
 				return consumed
 			}
 		}
 		consumed++
 	}
 	return consumed
+}
+
+func (c *Cmd) isAlias(arg string) bool {
+	for _, alias := range c.aliases {
+		if arg == alias {
+			return true
+		}
+	}
+	return false
 }
