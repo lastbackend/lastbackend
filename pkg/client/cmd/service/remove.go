@@ -35,7 +35,7 @@ func Remove(name string) error {
 		Request(service, er)
 
 	if err != nil {
-		return err
+		return errors.New(err.Error())
 	}
 
 	if er.Code == 401 {

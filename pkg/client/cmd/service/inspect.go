@@ -4,6 +4,7 @@ import (
 	"errors"
 	e "github.com/lastbackend/lastbackend/libs/errors"
 	"github.com/lastbackend/lastbackend/libs/model"
+	p "github.com/lastbackend/lastbackend/pkg/client/cmd/project"
 	"github.com/lastbackend/lastbackend/pkg/client/context"
 )
 
@@ -29,13 +30,18 @@ func Inspect(name string) (*model.Service, error) {
 		service = new(model.Service)
 	)
 
+	project, err := p.Current()
+	if err != nil {
+		return nil, errors.New(err.Error())
+	}
+
 	_, _, err = ctx.HTTP.
-		GET("/service/"+name).
+		GET("/project/"+project.Name+"/service/"+name).
 		AddHeader("Authorization", "Bearer "+ctx.Token).
 		Request(service, er)
 
 	if err != nil {
-		return nil, err
+		return nil, errors.New(err.Error())
 	}
 
 	if er.Code == 401 {
