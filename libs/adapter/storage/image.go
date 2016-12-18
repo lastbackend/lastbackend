@@ -47,7 +47,7 @@ func (i *ImageStorage) GetByUser(id string) (*model.ImageList, *e.Err) {
 	return images, nil
 }
 
-func (i *ImageStorage) GetByProject(user, id string) (*model.ImageList, *e.Err) {
+func (i *ImageStorage) ListByProject(user, id string) (*model.ImageList, *e.Err) {
 
 	var err error
 	var images = new(model.ImageList)
@@ -65,7 +65,7 @@ func (i *ImageStorage) GetByProject(user, id string) (*model.ImageList, *e.Err) 
 	return images, nil
 }
 
-func (i *ImageStorage) GetByService(user, id string) (*model.ImageList, *e.Err) {
+func (i *ImageStorage) ListByService(user, id string) (*model.ImageList, *e.Err) {
 
 	var err error
 	var images = new(model.ImageList)

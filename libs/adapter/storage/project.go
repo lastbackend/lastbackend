@@ -111,7 +111,7 @@ func (s *ProjectStorage) GetByID(user, id string) (*model.Project, *e.Err) {
 	return project, nil
 }
 
-func (s *ProjectStorage) GetByUser(id string) (*model.ProjectList, *e.Err) {
+func (s *ProjectStorage) ListByUser(id string) (*model.ProjectList, *e.Err) {
 
 	var err error
 	var projects = new(model.ProjectList)
