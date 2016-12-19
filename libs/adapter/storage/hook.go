@@ -51,7 +51,7 @@ func (s *HookStorage) GetByUser(id string) (*model.HookList, *e.Err) {
 }
 
 // Get hooks by image
-func (s *HookStorage) GetByImage(user, id string) (*model.HookList, *e.Err) {
+func (s *HookStorage) ListByImage(user, id string) (*model.HookList, *e.Err) {
 
 	var err error
 	var hooks = new(model.HookList)
@@ -69,7 +69,7 @@ func (s *HookStorage) GetByImage(user, id string) (*model.HookList, *e.Err) {
 }
 
 // Get hooks by service
-func (s *HookStorage) GetByService(user, id string) (*model.HookList, *e.Err) {
+func (s *HookStorage) ListByService(user, id string) (*model.HookList, *e.Err) {
 
 	var err error
 	var hooks = new(model.HookList)

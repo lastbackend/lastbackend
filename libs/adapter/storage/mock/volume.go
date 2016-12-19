@@ -19,7 +19,7 @@ func (s *VolumeMock) GetByID(user, id string) (*model.Volume, *e.Err) {
 	return nil, nil
 }
 
-func (s *VolumeMock) GetByProject(id string) (*model.VolumeList, *e.Err) {
+func (s *VolumeMock) ListByProject(id string) (*model.VolumeList, *e.Err) {
 	return nil, nil
 }
 
