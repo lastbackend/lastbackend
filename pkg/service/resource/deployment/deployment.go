@@ -105,3 +105,23 @@ func List(client k8s.IK8S, namespace string) ([]Deployment, error) {
 
 	return deploymentNewList, nil
 }
+
+func Update(client k8s.IK8S, namespace, name string, config interface{}) error {
+
+	deployment, err := client.Extensions().Deployments(namespace).Get(name)
+	if err != nil {
+		return err
+	}
+
+	// TODO: need config
+	var replicas int32 = 2
+
+	deployment.Spec.Replicas = &replicas
+
+	_, err = client.Extensions().Deployments(namespace).Update(deployment)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}

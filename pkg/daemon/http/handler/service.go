@@ -63,17 +63,28 @@ func ServiceListH(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var list = model.ServiceList{}
+	var response []byte
 
-	for _, val := range *projectModels {
-		val.Spec = servicesSpec[val.Name]
-		list = append(list, val)
-	}
+	if servicesSpec != nil {
+		for _, val := range *projectModels {
+			val.Spec = servicesSpec[val.Name]
+			list = append(list, val)
+		}
 
-	response, err := list.ToJson()
-	if err != nil {
-		ctx.Log.Error("Error: convert struct to json", err.Err())
-		err.Http(w)
-		return
+		response, err = list.ToJson()
+		if err != nil {
+			ctx.Log.Error("Error: convert struct to json", err.Err())
+			err.Http(w)
+			return
+		}
+
+	} else {
+		response, err = projectModels.ToJson()
+		if err != nil {
+			ctx.Log.Error("Error: convert struct to json", err.Err())
+			err.Http(w)
+			return
+		}
 	}
 
 	w.WriteHeader(200)
@@ -243,6 +254,9 @@ func ServiceUpdateH(w http.ResponseWriter, r *http.Request) {
 		rq.Name = &serviceModel.Name
 	}
 
+	ctx.Log.Info(">>>>>>>> ", serviceModel.Project, serviceModel.Name, *rq.Name)
+
+	var currentServiceName = serviceModel.Name
 	serviceModel.Name = *rq.Name
 
 	if !validator.IsUUID(serviceParam) && serviceModel.Name != *rq.Name {
@@ -256,6 +270,14 @@ func ServiceUpdateH(w http.ResponseWriter, r *http.Request) {
 			e.New("service").NotUnique("name").Http(w)
 			return
 		}
+	}
+
+	// TODO: Update config
+	err = service.Update(serviceModel.Project, currentServiceName, struct{}{})
+	if err != nil {
+		ctx.Log.Error("Error: update service", err.Err())
+		err.Http(w)
+		return
 	}
 
 	serviceModel, err = ctx.Storage.Service().Update(serviceModel)

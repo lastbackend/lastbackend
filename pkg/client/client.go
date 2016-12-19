@@ -245,6 +245,12 @@ func configure(app *cli.Cli) {
 				service.InspectCmd(*service_name)
 			}
 		})
+		c.Command("update", "if you wish to change configuration of the service", func(sc *cli.Cmd) {
+
+			sc.Action = func() {
+				service.UpdateCmd(*service_name)
+			}
+		})
 		c.Command("remove", "remove an existing service", func(sc *cli.Cmd) {
 			sc.Action = func() {
 				service.RemoveCmd(*service_name)

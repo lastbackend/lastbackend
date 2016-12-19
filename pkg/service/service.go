@@ -86,6 +86,21 @@ func Create(user, project string, config interface{}) (*Service, *e.Err) {
 	return s, nil
 }
 
+func Update(namespace, name string, config interface{}) *e.Err {
+
+	var (
+		er  error
+		ctx = context.Get()
+	)
+
+	er = deployment.Update(ctx.K8S, namespace, name, config)
+	if er != nil {
+		return e.New("service").Unknown(er)
+	}
+
+	return nil
+}
+
 func (s Service) Deploy(namespace string) *e.Err {
 
 	var (
