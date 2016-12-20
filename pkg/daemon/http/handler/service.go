@@ -48,14 +48,14 @@ func ServiceListH(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	projectModels, err := ctx.Storage.Service().ListByProject(session.Uid, projectModel.ID)
+	serviceModels, err := ctx.Storage.Service().ListByProject(session.Uid, projectModel.ID)
 	if err != nil {
 		ctx.Log.Error("Error: find services by user", err)
 		e.HTTP.InternalServerError(w)
 		return
 	}
 
-	servicesSpec, err := service.List(ctx.K8S, projectParam)
+	servicesSpec, err := service.List(ctx.K8S, projectModel.ID)
 	if err != nil {
 		ctx.Log.Error("Error: get serivce spec from cluster", err.Err())
 		err.Http(w)
@@ -65,8 +65,10 @@ func ServiceListH(w http.ResponseWriter, r *http.Request) {
 	var list = model.ServiceList{}
 	var response []byte
 
+	ctx.Log.Info(servicesSpec)
+
 	if servicesSpec != nil {
-		for _, val := range *projectModels {
+		for _, val := range *serviceModels {
 			val.Spec = servicesSpec[val.Name]
 			list = append(list, val)
 		}
@@ -79,7 +81,7 @@ func ServiceListH(w http.ResponseWriter, r *http.Request) {
 		}
 
 	} else {
-		response, err = projectModels.ToJson()
+		response, err = serviceModels.ToJson()
 		if err != nil {
 			ctx.Log.Error("Error: convert struct to json", err.Err())
 			err.Http(w)
