@@ -6,6 +6,7 @@ import (
 	"github.com/lastbackend/lastbackend/libs/model"
 	p "github.com/lastbackend/lastbackend/pkg/client/cmd/project"
 	"github.com/lastbackend/lastbackend/pkg/client/context"
+	s "github.com/lastbackend/lastbackend/pkg/service"
 )
 
 func InspectCmd(name string) {
@@ -18,7 +19,17 @@ func InspectCmd(name string) {
 		return
 	}
 
-	service.DrawTable()
+	_, err = p.Current()
+	if err != nil {
+		ctx.Log.Error(err)
+		return
+	}
+
+	service.Spec = service.Spec.(s.Service)
+	//service.Spec.
+	//
+	//
+	//service.DrawTable(service.Spec, project.Name)
 }
 
 func Inspect(name string) (*model.Service, error) {

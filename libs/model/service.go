@@ -38,14 +38,30 @@ func (s *Service) ToJson() ([]byte, *e.Err) {
 }
 
 func (s *Service) DrawTable() {
-	t := table.New([]string{"ID", "Project", "Name", "Created", "Updated"})
+	t := table.New([]string{"ID", "Name", "Image"})
+
 	t.AddRow(map[string]interface{}{
-		"ID":      s.ID,
-		"Project": s.Image,
-		"Name":    s.Name,
-		"Created": s.Created.String()[:10],
-		"Updated": s.Updated.String()[:10],
+		"ID":   s.ID,
+		"Name": s.Name,
 	})
+
+	t.Print()
+
+	t = table.New([]string{"Image", "Status"})
+
+	//for _, pods := range *spec.PodList.Pods {
+	//	//for _, container := range *pods.Containers.Containers {
+	//	//	t.AddRow(map[string]interface{}{
+	//	//		"Image":     container.Image,
+	//	//		"Status": container.
+	//	//	})
+	//	//
+	//	//}
+	//	pods.PodStatus.PodPhase
+	//}
+
+	t.VisibleHeader = true
+
 	t.Print()
 }
 
@@ -75,6 +91,8 @@ func (s *ServiceList) DrawTable() {
 			"Updated": service.Updated.String()[:10],
 		})
 	}
+
+	table.VisibleHeader = true
 
 	table.Print()
 }

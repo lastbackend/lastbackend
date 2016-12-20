@@ -58,5 +58,6 @@ func (tpl *TemplateList) DrawTable() {
 		})
 	}
 
+	t.AddRow(map[string]interface{}{})
 	t.Print()
 }
