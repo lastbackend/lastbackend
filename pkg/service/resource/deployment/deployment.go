@@ -14,7 +14,8 @@ const kind = "deployment"
 
 type Deployment struct {
 	ObjectMeta common.ObjectMeta `json:"meta"`
-	TypeMeta   common.TypeMeta   `json:"spec"`
+	TypeMeta   common.TypeMeta   `json:"type"`
+	Spec       common.Spec       `json:"spec"`
 	PodList    pod.PodList       `json:"pods"`
 	Selector   map[string]string `json:"selector"`
 }
@@ -54,6 +55,7 @@ func Get(client k8s.IK8S, namespace string, name string) (*Deployment, error) {
 	return &Deployment{
 		ObjectMeta: common.NewObjectMeta(deploymentNew.ObjectMeta),
 		TypeMeta:   common.NewTypeMeta(kind),
+		Spec:       common.NewSpec(deploymentNew.Spec),
 		PodList:    *podList,
 		Selector:   deploymentNew.Spec.Selector.MatchLabels,
 	}, nil
@@ -98,10 +100,31 @@ func List(client k8s.IK8S, namespace string) ([]Deployment, error) {
 		deploymentNewList = append(deploymentNewList, Deployment{
 			ObjectMeta: common.NewObjectMeta(deploymentNew.ObjectMeta),
 			TypeMeta:   common.NewTypeMeta(kind),
+			Spec:       common.NewSpec(deploymentNew.Spec),
 			PodList:    *podList,
 			Selector:   deploymentNew.Spec.Selector.MatchLabels,
 		})
 	}
 
 	return deploymentNewList, nil
+}
+
+func Update(client k8s.IK8S, namespace, name string, config interface{}) error {
+
+	deployment, err := client.Extensions().Deployments(namespace).Get(name)
+	if err != nil {
+		return err
+	}
+
+	// TODO: need config
+	var replicas int32 = 2
+
+	deployment.Spec.Replicas = &replicas
+
+	_, err = client.Extensions().Deployments(namespace).Update(deployment)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }

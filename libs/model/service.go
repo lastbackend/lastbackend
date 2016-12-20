@@ -2,7 +2,9 @@ package model
 
 import (
 	"encoding/json"
+	"fmt"
 	e "github.com/lastbackend/lastbackend/libs/errors"
+	"github.com/lastbackend/lastbackend/pkg/service"
 	"github.com/lastbackend/lastbackend/pkg/util/table"
 	"time"
 )
@@ -21,7 +23,7 @@ type Service struct {
 	// Service name
 	Name string `json:"name" gorethink:"name,omitempty"`
 	// Service spec
-	Spec interface{} `json:"spec" gorethink:"-"`
+	Spec *service.Service `json:"spec,omitempty" gorethink:"-"`
 	// Service created time
 	Created time.Time `json:"created" gorethink:"created,omitempty"`
 	// Service updated time
@@ -37,30 +39,25 @@ func (s *Service) ToJson() ([]byte, *e.Err) {
 	return buf, nil
 }
 
-func (s *Service) DrawTable() {
-	t := table.New([]string{"ID", "Name", "Image"})
-
-	t.AddRow(map[string]interface{}{
-		"ID":   s.ID,
-		"Name": s.Name,
+func (s *Service) DrawTable(projectName string) {
+	table.PrintHorizontal(map[string]interface{}{
+		"ID":      s.ID,
+		"NAME":    s.Name,
+		"PROJECT": projectName,
+		"PODS":    s.Spec.PodList.ListMeta.Total,
 	})
 
-	t.Print()
-
-	t = table.New([]string{"Image", "Status"})
-
-	//for _, pods := range *spec.PodList.Pods {
-	//	//for _, container := range *pods.Containers.Containers {
-	//	//	t.AddRow(map[string]interface{}{
-	//	//		"Image":     container.Image,
-	//	//		"Status": container.
-	//	//	})
-	//	//
-	//	//}
-	//	pods.PodStatus.PodPhase
-	//}
-
+	t := table.New([]string{" ", "NAME", "STATUS", "RESTARTS"})
 	t.VisibleHeader = true
+	for _, pod := range s.Spec.PodList.Pods {
+		t.AddRow(map[string]interface{}{
+			" ":        "",
+			"NAME":     pod.ObjectMeta.Name,
+			"STATUS":   pod.PodStatus.PodPhase,
+			"RESTARTS": pod.RestartCount,
+		})
+	}
+	t.AddRow(map[string]interface{}{})
 
 	t.Print()
 }
@@ -79,20 +76,21 @@ func (s *ServiceList) ToJson() ([]byte, *e.Err) {
 	return buf, nil
 }
 
-func (s *ServiceList) DrawTable() {
-	table := table.New([]string{"ID", "Project", "Name", "Created", "Updated"})
+func (s *ServiceList) DrawTable(projectName string) {
+	fmt.Println("Project: " + projectName)
 
-	for _, service := range *s {
-		table.AddRow(map[string]interface{}{
-			"ID":      service.ID,
-			"Project": service.Image,
-			"Name":    service.Name,
-			"Created": service.Created.String()[:10],
-			"Updated": service.Updated.String()[:10],
+	t := table.New([]string{"", "ID", "Name", "Created", "Updated"})
+	t.VisibleHeader = true
+
+	for _, s := range *s {
+		t.AddRow(map[string]interface{}{
+			"":        "",
+			"ID":      s.ID,
+			"Name":    s.Name,
+			"Created": s.Created.String()[:10],
+			"Updated": s.Updated.String()[:10],
 		})
 	}
 
-	table.VisibleHeader = true
-
-	table.Print()
+	t.Print()
 }

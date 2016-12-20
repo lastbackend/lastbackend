@@ -3,6 +3,7 @@ package common
 import (
 	"k8s.io/client-go/1.5/pkg/api"
 	"k8s.io/client-go/1.5/pkg/api/unversioned"
+	"k8s.io/client-go/1.5/pkg/apis/extensions"
 )
 
 type ObjectMeta struct {
@@ -14,6 +15,17 @@ type ObjectMeta struct {
 
 type TypeMeta struct {
 	Kind Kind `json:"kind,omitempty"`
+}
+
+type Spec struct {
+	Replicas             int32                         `json:"replicas,omitempty"`
+	Selector             *unversioned.LabelSelector    `json:"selector,omitempty"`
+	Template             api.PodTemplateSpec           `json:"template"`
+	Strategy             extensions.DeploymentStrategy `json:"strategy,omitempty"`
+	MinReadySeconds      int32                         `json:"minReadySeconds,omitempty"`
+	RevisionHistoryLimit *int32                        `json:"revisionHistoryLimit,omitempty"`
+	Paused               bool                          `json:"paused,omitempty"`
+	RollbackTo           *extensions.RollbackConfig    `json:"rollbackTo,omitempty"`
 }
 
 type Kind string
@@ -34,6 +46,19 @@ type ListMeta struct {
 func NewTypeMeta(kind Kind) TypeMeta {
 	return TypeMeta{
 		Kind: kind,
+	}
+}
+
+func NewSpec(k8sSpec extensions.DeploymentSpec) Spec {
+	return Spec{
+		Replicas:             k8sSpec.Replicas,
+		Selector:             k8sSpec.Selector,
+		Template:             k8sSpec.Template,
+		Strategy:             k8sSpec.Strategy,
+		MinReadySeconds:      k8sSpec.MinReadySeconds,
+		RevisionHistoryLimit: k8sSpec.RevisionHistoryLimit,
+		Paused:               k8sSpec.Paused,
+		RollbackTo:           k8sSpec.RollbackTo,
 	}
 }
 

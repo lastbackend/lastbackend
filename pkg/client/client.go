@@ -256,6 +256,12 @@ func configure(app *cli.Cli) {
 			}
 		})
 
+		c.Command("update", "if you wish to change configuration of the service", func(sc *cli.Cmd) {
+			sc.Action = func() {
+				s.UpdateCmd(*name)
+			}
+		})
+
 		c.Command("remove", "remove an existing service", func(sc *cli.Cmd) {
 			sc.Action = func() {
 				if len(*name) == 0 {

@@ -6,33 +6,22 @@ import (
 	"github.com/lastbackend/lastbackend/libs/model"
 	p "github.com/lastbackend/lastbackend/pkg/client/cmd/project"
 	"github.com/lastbackend/lastbackend/pkg/client/context"
-	s "github.com/lastbackend/lastbackend/pkg/service"
 )
 
 func InspectCmd(name string) {
 
 	ctx := context.Get()
 
-	service, err := Inspect(name)
+	service, projectName, err := Inspect(name)
 	if err != nil {
 		ctx.Log.Error(err)
 		return
 	}
 
-	_, err = p.Current()
-	if err != nil {
-		ctx.Log.Error(err)
-		return
-	}
-
-	service.Spec = service.Spec.(s.Service)
-	//service.Spec.
-	//
-	//
-	//service.DrawTable(service.Spec, project.Name)
+	service.DrawTable(projectName)
 }
 
-func Inspect(name string) (*model.Service, error) {
+func Inspect(name string) (*model.Service, string, error) {
 
 	var (
 		err     error
@@ -43,7 +32,7 @@ func Inspect(name string) (*model.Service, error) {
 
 	project, err := p.Current()
 	if err != nil {
-		return nil, errors.New(err.Error())
+		return nil, "", errors.New(err.Error())
 	}
 
 	_, _, err = ctx.HTTP.
@@ -52,16 +41,16 @@ func Inspect(name string) (*model.Service, error) {
 		Request(service, er)
 
 	if err != nil {
-		return nil, errors.New(err.Error())
+		return nil, "", errors.New(err.Error())
 	}
 
 	if er.Code == 401 {
-		return nil, errors.New("You are currently not logged in to the system, to get proper access create a new user or login with an existing user.")
+		return nil, "", errors.New("You are currently not logged in to the system, to get proper access create a new user or login with an existing user.")
 	}
 
 	if er.Code != 0 {
-		return nil, errors.New(e.Message(er.Status))
+		return nil, "", errors.New(e.Message(er.Status))
 	}
 
-	return service, nil
+	return service, project.Name, nil
 }
