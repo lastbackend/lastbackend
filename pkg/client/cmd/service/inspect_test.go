@@ -8,6 +8,9 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"testing"
+	"time"
+	"github.com/lastbackend/lastbackend/libs/model"
+	"github.com/lastbackend/lastbackend/libs/db"
 )
 
 func TestGet(t *testing.T) {
@@ -20,7 +23,38 @@ func TestGet(t *testing.T) {
 	var (
 		err error
 		ctx = context.Mock()
+		data = model.Project{
+			Name:        "mock_name",
+			ID:          "mock_id",
+			Created:     time.Now(),
+			Updated:     time.Now(),
+			User:        "mock_demo",
+			Description: "sample description",
+		}
 	)
+
+	ctx.Storage, err = db.Init()
+	if err != nil {
+		t.Error(err)
+		return
+	}
+	defer (func() {
+		err = ctx.Storage.Clear()
+		if err != nil {
+			t.Error(err)
+			return
+		}
+		err = ctx.Storage.Close()
+		if err != nil {
+			t.Error(err)
+			return
+		}
+	})()
+	if err != nil {
+		t.Error(err)
+		return
+	}
+	defer ctx.Storage.Close()
 
 	ctx.Token = token
 
@@ -41,9 +75,15 @@ func TestGet(t *testing.T) {
 	defer server.Close()
 	//------------------------------------------------------------------------------------------
 
+	err = ctx.Storage.Set("project", data)
+	if err != nil {
+		t.Error(err)
+		return
+	}
+
 	ctx.HTTP = h.New(server.URL)
 
-	_, err = service.Inspect(name)
+	_, _, err = service.Inspect(name)
 	if err != nil {
 		t.Error(err)
 	}
