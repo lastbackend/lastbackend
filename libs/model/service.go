@@ -22,7 +22,7 @@ type Service struct {
 	// Service name
 	Name string `json:"name" gorethink:"name,omitempty"`
 	// Service spec
-	Spec *service.Service `json:"spec,omitempty" gorethink:"-"`
+	Detail *service.Service `json:"detail,omitempty" gorethink:"-"`
 	// Service created time
 	Created time.Time `json:"created" gorethink:"created,omitempty"`
 	// Service updated time
@@ -78,4 +78,30 @@ func (s *ServiceList) DrawTable() {
 	}
 
 	table.Print()
+}
+
+type ServiceConfig struct {
+	Replicas   int32           `json:"scale,omitempty" yaml:"scale"`
+	Containers ContainerConfig `json:"containers,omitempty" yaml:"containers"`
+	Command    []string        `json:"command,omitempty" yaml:"command"`
+	Args       []string        `json:"args,omitempty" yaml:"args"`
+	WorkingDir string          `json:"workdir,omitempty" yaml:"workdir"`
+	Ports      []Port          `json:"ports,omitempty" yaml:"ports"`
+	Env        []EnvVar        `json:"env,omitempty" yaml:"env"`
+}
+
+type Port struct {
+	Name          string `json:"name,omitempty" yaml:"name"`
+	HostPort      int32  `json:"host,omitempty" yaml:"host"`
+	ContainerPort int32  `json:"container" yaml:"container"`
+	Protocol      string `json:"protocol,omitempty" yaml:"protocol"`
+	HostIP        string `json:"ip,omitempty" yaml:"ip"`
+}
+
+type EnvVar struct {
+	Name  string `json:"name" yaml:"name"`
+	Value string `json:"value,omitempty" yaml:"value"`
+}
+
+type ContainerConfig struct {
 }

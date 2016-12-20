@@ -7,14 +7,10 @@ import (
 	e "github.com/lastbackend/lastbackend/libs/errors"
 	"github.com/lastbackend/lastbackend/libs/model"
 	"github.com/lastbackend/lastbackend/pkg/client/context"
-	"k8s.io/client-go/1.5/pkg/util/json"
 	"strings"
+	"encoding/json"
+	"gopkg.in/yaml.v2"
 )
-
-type updateS struct {
-	Name     string `json:"name"`
-	Replicas int32  `json:"replicas"`
-}
 
 func UpdateCmd(name string) {
 
@@ -26,29 +22,34 @@ func UpdateCmd(name string) {
 		return
 	}
 
-	var config = model.Config{
-		Replicas:   serviceModel.Spec.Spec.Replicas,
-		Command:    []string{},
+	var config = model.ServiceConfig{
+		Replicas:   serviceModel.Detail.Spec.Replicas,
+		Command:    []string{"111", "222"},
 		Args:       []string{},
 		WorkingDir: "",
-		Ports:      []model.PortConfig{},
-		Env:        []model.EnvVarConfig{},
-		Volumes:    []model.VolumeConfig{},
+		Ports:      []model.Port{},
+		Env:        []model.EnvVar{},
 	}
 
-	buf, err := json.Marshal(config)
+	buf, err := json.MarshalIndent(config, "", " ")
 	if err != nil {
 		ctx.Log.Error(err)
 		return
 	}
+
+	buf1, err := yaml.Marshal(serviceModel.Detail.Spec)
+	if err != nil {
+		ctx.Log.Error(err)
+		return
+	}
+
+	ctx.Log.Info(string(buf1))
 
 	res, err := editor.Run(strings.NewReader(string(buf)))
 	if err != nil {
 		fmt.Println(err)
 		return
 	}
-
-	fmt.Println(res.Lines())
 
 	err = res.ToYAML(&config)
 	if err != nil {
@@ -65,7 +66,7 @@ func UpdateCmd(name string) {
 	ctx.Log.Info("Successful")
 }
 
-func Update(name string, config interface{}) error {
+func Update(name string, config model.ServiceConfig) error {
 
 	var (
 		err     error
