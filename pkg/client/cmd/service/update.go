@@ -26,7 +26,7 @@ func UpdateCmd(name string) {
 		return
 	}
 
-	err = Update(name, config)
+	err = Update(name, *config)
 	if err != nil {
 		ctx.Log.Error(err)
 		return
@@ -76,7 +76,7 @@ func Update(name string, config model.ServiceConfig) error {
 	return nil
 }
 
-func GetConfig(service model.Service) (*model.ServiceConfig, error) {
+func GetConfig(service *model.Service) (*model.ServiceConfig, error) {
 
 	var config = service.GetConfig()
 
