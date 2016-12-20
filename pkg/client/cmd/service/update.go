@@ -7,6 +7,7 @@ import (
 	e "github.com/lastbackend/lastbackend/libs/errors"
 	"github.com/lastbackend/lastbackend/libs/model"
 	"github.com/lastbackend/lastbackend/pkg/client/context"
+	"k8s.io/client-go/1.5/pkg/util/json"
 	"strings"
 )
 
@@ -19,19 +20,35 @@ func UpdateCmd(name string) {
 
 	var ctx = context.Get()
 
-	//service, err := Inspect(name)
-	//if err != nil {
-	//	return err
-	//}
+	serviceModel, err := Inspect(name)
+	if err != nil {
+		ctx.Log.Error(err)
+		return
+	}
 
-	var config interface{}
+	var config = model.Config{
+		Replicas:   serviceModel.Spec.Spec.Replicas,
+		Command:    []string{},
+		Args:       []string{},
+		WorkingDir: "",
+		Ports:      []model.PortConfig{},
+		Env:        []model.EnvVarConfig{},
+		Volumes:    []model.VolumeConfig{},
+	}
 
-	input := strings.NewReader("-replicas: 1")
-	res, err := editor.Run(input)
+	buf, err := json.Marshal(config)
+	if err != nil {
+		ctx.Log.Error(err)
+		return
+	}
+
+	res, err := editor.Run(strings.NewReader(string(buf)))
 	if err != nil {
 		fmt.Println(err)
 		return
 	}
+
+	fmt.Println(res.Lines())
 
 	err = res.ToYAML(&config)
 	if err != nil {
@@ -39,11 +56,11 @@ func UpdateCmd(name string) {
 		return
 	}
 
-	err = Update(name, config)
-	if err != nil {
-		ctx.Log.Error(err)
-		return
-	}
+	//err = Update(name, config)
+	//if err != nil {
+	//	ctx.Log.Error(err)
+	//	return
+	//}
 
 	ctx.Log.Info("Successful")
 }
@@ -51,18 +68,29 @@ func UpdateCmd(name string) {
 func Update(name string, config interface{}) error {
 
 	var (
-		err error
-		ctx = context.Get()
-		er  = new(e.Http)
-		res = new(model.Project)
+		err     error
+		ctx     = context.Get()
+		er      = new(e.Http)
+		project = new(model.Project)
+		res     = new(model.Project)
 	)
 
+	err = ctx.Storage.Get("project", project)
+	if err != nil {
+		return errors.New(err.Error())
+	}
+
+	if project.ID == "" {
+		return errors.New("Project didn't select")
+	}
+
 	_, _, err = ctx.HTTP.
-		PUT("/service/"+name).
+		PUT("/project/"+project.ID+"/service/"+name).
 		AddHeader("Content-Type", "application/json").
 		AddHeader("Authorization", "Bearer "+ctx.Token).
 		BodyJSON(config).
 		Request(&res, er)
+
 	if err != nil {
 		return err
 	}

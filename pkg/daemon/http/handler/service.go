@@ -55,7 +55,7 @@ func ServiceListH(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	servicesSpec, err := service.List(projectParam)
+	servicesSpec, err := service.List(ctx.K8S, projectParam)
 	if err != nil {
 		ctx.Log.Error("Error: get serivce spec from cluster", err.Err())
 		err.Http(w)
@@ -142,7 +142,7 @@ func ServiceInfoH(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	serviceSpec, err := service.Get(serviceModel.Project, serviceModel.Name)
+	serviceSpec, err := service.Get(ctx.K8S, serviceModel.Project, serviceModel.Name)
 	if err != nil {
 		ctx.Log.Error("Error: get serivce spec from cluster", err.Err())
 		err.Http(w)
@@ -273,7 +273,7 @@ func ServiceUpdateH(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// TODO: Update config
-	err = service.Update(serviceModel.Project, currentServiceName, struct{}{})
+	err = service.Update(ctx.K8S, serviceModel.Project, currentServiceName, struct{}{})
 	if err != nil {
 		ctx.Log.Error("Error: update service", err.Err())
 		err.Http(w)

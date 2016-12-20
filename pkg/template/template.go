@@ -108,15 +108,25 @@ func (t *Template) Provision(namespace, user, project string) *e.Err {
 	}
 
 	for _, val := range t.Deployments {
-		s, err := service.Create(user, project, &val)
+		s, err := service.Create(&val)
 		if err != nil {
 			ctx.Log.Info(err.Err())
 			return err
 		}
 
-		err = s.Deploy(namespace)
+		delail, err := s.Deploy(ctx.K8S, namespace)
 		if err != nil {
 			ctx.Log.Info(err.Err())
+			return err
+		}
+
+		var service = new(model.Service)
+		service.User = user
+		service.Project = project
+		service.Name = delail.ObjectMeta.Name
+
+		service, err = ctx.Storage.Service().Insert(service)
+		if err != nil {
 			return err
 		}
 	}
@@ -146,16 +156,26 @@ func (t *Template) Provision(namespace, user, project string) *e.Err {
 	}
 
 	for _, val := range t.Jobs {
-		s, err := service.Create(user, project, &val)
+		s, err := service.Create(&val)
 		if err != nil {
 			ctx.Log.Info(err.Err())
-			return e.New("template").Unknown(err.Err())
+			return err
 		}
 
-		err = s.Deploy(namespace)
-		if er != nil {
+		delail, err := s.Deploy(ctx.K8S, namespace)
+		if err != nil {
 			ctx.Log.Info(err.Err())
-			return e.New("template").Unknown(err.Err())
+			return err
+		}
+
+		var service = new(model.Service)
+		service.User = user
+		service.Project = project
+		service.Name = delail.ObjectMeta.Name
+
+		service, err = ctx.Storage.Service().Insert(service)
+		if err != nil {
+			return err
 		}
 	}
 
@@ -168,30 +188,50 @@ func (t *Template) Provision(namespace, user, project string) *e.Err {
 	}
 
 	for _, val := range t.ReplicationControllers {
-		s, err := service.Create(user, project, &val)
+		s, err := service.Create(&val)
 		if err != nil {
 			ctx.Log.Info(err.Err())
-			return e.New("template").Unknown(err.Err())
+			return err
 		}
 
-		err = s.Deploy(namespace)
+		delail, err := s.Deploy(ctx.K8S, namespace)
 		if err != nil {
 			ctx.Log.Info(err.Err())
-			return e.New("template").Unknown(err.Err())
+			return err
+		}
+
+		var service = new(model.Service)
+		service.User = user
+		service.Project = project
+		service.Name = delail.ObjectMeta.Name
+
+		service, err = ctx.Storage.Service().Insert(service)
+		if err != nil {
+			return err
 		}
 	}
 
 	for _, val := range t.Pods {
-		s, err := service.Create(user, project, &val)
+		s, err := service.Create(&val)
 		if err != nil {
 			ctx.Log.Info(err.Err())
-			return e.New("template").Unknown(err.Err())
+			return err
 		}
 
-		err = s.Deploy(namespace)
-		if er != nil {
+		delail, err := s.Deploy(ctx.K8S, namespace)
+		if err != nil {
 			ctx.Log.Info(err.Err())
-			return e.New("template").Unknown(err.Err())
+			return err
+		}
+
+		var service = new(model.Service)
+		service.User = user
+		service.Project = project
+		service.Name = delail.ObjectMeta.Name
+
+		service, err = ctx.Storage.Service().Insert(service)
+		if err != nil {
+			return err
 		}
 	}
 

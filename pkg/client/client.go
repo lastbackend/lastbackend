@@ -246,7 +246,6 @@ func configure(app *cli.Cli) {
 			}
 		})
 		c.Command("update", "if you wish to change configuration of the service", func(sc *cli.Cmd) {
-
 			sc.Action = func() {
 				service.UpdateCmd(*service_name)
 			}

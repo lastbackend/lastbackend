@@ -3,6 +3,7 @@ package model
 import (
 	"encoding/json"
 	e "github.com/lastbackend/lastbackend/libs/errors"
+	"github.com/lastbackend/lastbackend/pkg/service"
 	"github.com/lastbackend/lastbackend/pkg/util/table"
 	"time"
 )
@@ -21,7 +22,7 @@ type Service struct {
 	// Service name
 	Name string `json:"name" gorethink:"name,omitempty"`
 	// Service spec
-	Spec interface{} `json:"spec" gorethink:"-"`
+	Spec *service.Service `json:"spec,omitempty" gorethink:"-"`
 	// Service created time
 	Created time.Time `json:"created" gorethink:"created,omitempty"`
 	// Service updated time
