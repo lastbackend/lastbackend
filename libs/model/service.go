@@ -82,16 +82,6 @@ func (s *ServiceList) DrawTable(projectName string) {
 	fmt.Print(" Project ", projectName + "\n\n")
 
 	for _, s := range *s {
-		//tservice :=  table.New([]string{"ID", "NAME", "PODS"})
-		//tservice.VisibleHeader = true
-		//
-		//tservice.AddRow(map[string]interface{}{
-		//	"ID": s.ID,
-		//	"NAME": s.Name,
-		//	"PODS": s.Spec.PodList.ListMeta.Total,
-		//})
-		//tservice.Print()
-
 		table.PrintHorizontal(map[string]interface{}{
 			"ID":      s.ID,
 			"NAME":    s.Name,
