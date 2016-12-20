@@ -39,6 +39,42 @@ func (s *Service) ToJson() ([]byte, *e.Err) {
 	return buf, nil
 }
 
+func (s *Service) GetConfig() *ServiceConfig {
+	var config = new(ServiceConfig)
+
+	config.Replicas = s.Detail.Spec.Replicas
+	config.Containers = make([]ContainerConfig, len(s.Detail.Spec.Template.Spec.Containers))
+
+	for index, item := range s.Detail.Spec.Template.Spec.Containers {
+		var (
+			container = ContainerConfig{}
+		)
+
+		container.Name = item.Name
+
+		for _, val := range item.Ports {
+			container.Ports = append(container.Ports, Port{
+				Name:          val.Name,
+				HostIP:        val.HostIP,
+				HostPort:      val.HostPort,
+				ContainerPort: val.ContainerPort,
+				Protocol:      string(val.Protocol),
+			})
+		}
+
+		for _, val := range item.Env {
+			container.Env = append(container.Env, EnvVar{
+				Name:  val.Name,
+				Value: val.Value,
+			})
+		}
+
+		config.Containers[index] = container
+	}
+
+	return config
+}
+
 func (s *Service) DrawTable(projectName string) {
 	table.PrintHorizontal(map[string]interface{}{
 		"ID":      s.ID,
@@ -107,27 +143,28 @@ func (s *ServiceList) DrawTable(projectName string) {
 }
 
 type ServiceConfig struct {
-	Replicas   int32           `json:"scale,omitempty" yaml:"scale"`
-	Containers ContainerConfig `json:"containers,omitempty" yaml:"containers"`
-	Command    []string        `json:"command,omitempty" yaml:"command"`
-	Args       []string        `json:"args,omitempty" yaml:"args"`
-	WorkingDir string          `json:"workdir,omitempty" yaml:"workdir"`
-	Ports      []Port          `json:"ports,omitempty" yaml:"ports"`
-	Env        []EnvVar        `json:"env,omitempty" yaml:"env"`
+	Replicas   int32             `json:"scale" yaml:"scale"`
+	Containers []ContainerConfig `json:"containers" yaml:"containers"`
+	Command    []string          `json:"command" yaml:"command"`
+	Args       []string          `json:"args" yaml:"args"`
+	WorkingDir string            `json:"workdir" yaml:"workdir"`
+}
+
+type ContainerConfig struct {
+	Name  string   `json:"name" yaml:"name"`
+	Env   []EnvVar `json:"env" yaml:"env"`
+	Ports []Port   `json:"ports" yaml:"ports"`
 }
 
 type Port struct {
-	Name          string `json:"name,omitempty" yaml:"name"`
-	HostPort      int32  `json:"host,omitempty" yaml:"host"`
+	Name          string `json:"name" yaml:"name"`
+	HostPort      int32  `json:"host" yaml:"host"`
 	ContainerPort int32  `json:"container" yaml:"container"`
-	Protocol      string `json:"protocol,omitempty" yaml:"protocol"`
-	HostIP        string `json:"ip,omitempty" yaml:"ip"`
+	Protocol      string `json:"protocol" yaml:"protocol"`
+	HostIP        string `json:"ip" yaml:"ip"`
 }
 
 type EnvVar struct {
 	Name  string `json:"name" yaml:"name"`
-	Value string `json:"value,omitempty" yaml:"value"`
-}
-
-type ContainerConfig struct {
+	Value string `json:"value" yaml:"value"`
 }

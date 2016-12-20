@@ -80,7 +80,7 @@ func (e *Editor) Line(i int) string {
 	return e.context.output.c[i]
 }
 
-func (e *Editor) ToYAML(i interface{}) error {
+func (e *Editor) FromYAML(i interface{}) error {
 	return yaml.Unmarshal(e.context.output.Bytes(), i)
 }
 

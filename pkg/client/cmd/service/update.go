@@ -1,9 +1,7 @@
 package service
 
 import (
-	"encoding/json"
 	"errors"
-	"fmt"
 	"github.com/lastbackend/lastbackend/libs/editor"
 	e "github.com/lastbackend/lastbackend/libs/errors"
 	"github.com/lastbackend/lastbackend/libs/model"
@@ -22,46 +20,17 @@ func UpdateCmd(name string) {
 		return
 	}
 
-	var config = model.ServiceConfig{
-		Replicas:   serviceModel.Detail.Spec.Replicas,
-		Command:    []string{"111", "222"},
-		Args:       []string{},
-		WorkingDir: "",
-		Ports:      []model.Port{},
-		Env:        []model.EnvVar{},
-	}
-
-	buf, err := json.MarshalIndent(config, "", " ")
+	config, err := GetConfig(serviceModel)
 	if err != nil {
 		ctx.Log.Error(err)
 		return
 	}
 
-	buf1, err := yaml.Marshal(serviceModel.Detail.Spec)
+	err = Update(name, config)
 	if err != nil {
 		ctx.Log.Error(err)
 		return
 	}
-
-	ctx.Log.Info(string(buf1))
-
-	res, err := editor.Run(strings.NewReader(string(buf)))
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
-
-	err = res.ToYAML(&config)
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
-
-	//err = Update(name, config)
-	//if err != nil {
-	//	ctx.Log.Error(err)
-	//	return
-	//}
 
 	ctx.Log.Info("Successful")
 }
@@ -105,4 +74,28 @@ func Update(name string, config model.ServiceConfig) error {
 	}
 
 	return nil
+}
+
+func GetConfig(service model.Service) (*model.ServiceConfig, error) {
+
+	var config = service.GetConfig()
+
+	buf, err := yaml.Marshal(config)
+	if err != nil {
+		return nil, err
+	}
+
+	// TODO: To allow for the possibility of naming the session re-editing
+	res, err := editor.Run(strings.NewReader(string(buf)))
+	if err != nil {
+		return nil, err
+	}
+
+	err = res.FromYAML(&config)
+	if err != nil {
+		// TODO: When is have error parse yaml. Ask question about reopen config for correct this
+		return nil, err
+	}
+
+	return config, nil
 }
