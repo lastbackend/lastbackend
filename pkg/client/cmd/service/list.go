@@ -8,26 +8,28 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/client/context"
 )
 
-func InspectCmd(name string) {
+func ListServiceCmd() {
 
-	ctx := context.Get()
+	var ctx = context.Get()
 
-	service, projectName, err := Inspect(name)
+	services, projectName, err := List()
 	if err != nil {
 		ctx.Log.Error(err)
 		return
 	}
 
-	service.DrawTable(projectName)
+	if services != nil {
+		services.DrawTable(projectName)
+	}
 }
 
-func Inspect(name string) (*model.Service, string, error) {
+func List() (*model.ServiceList, string, error) {
 
 	var (
-		err     error
-		ctx     = context.Get()
-		er      = new(e.Http)
-		service = new(model.Service)
+		err      error
+		ctx      = context.Get()
+		er       = new(e.Http)
+		services = new(model.ServiceList)
 	)
 
 	project, err := p.Current()
@@ -36,10 +38,9 @@ func Inspect(name string) (*model.Service, string, error) {
 	}
 
 	_, _, err = ctx.HTTP.
-		GET("/project/"+project.Name+"/service/"+name).
+		GET("/project/"+project.Name+"/service").
 		AddHeader("Authorization", "Bearer "+ctx.Token).
-		Request(service, er)
-
+		Request(services, er)
 	if err != nil {
 		return nil, "", errors.New(err.Error())
 	}
@@ -52,5 +53,10 @@ func Inspect(name string) (*model.Service, string, error) {
 		return nil, "", errors.New(e.Message(er.Status))
 	}
 
-	return service, project.Name, nil
+	if len(*services) == 0 {
+		ctx.Log.Info("You don't have any services")
+		return nil, "", nil
+	}
+
+	return services, project.Name, nil
 }

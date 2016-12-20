@@ -33,7 +33,6 @@ func List() (*model.TemplateList, error) {
 		GET("/template").
 		AddHeader("Authorization", "Bearer "+ctx.Token).
 		Request(&templates, er)
-
 	if err != nil {
 		return nil, err
 	}

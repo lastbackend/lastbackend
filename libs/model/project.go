@@ -71,5 +71,7 @@ func (projects *ProjectList) DrawTable() {
 		})
 	}
 
+	t.AddRow(map[string]interface{}{})
+
 	t.Print()
 }

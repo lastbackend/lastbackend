@@ -2,6 +2,7 @@ package model
 
 import (
 	"encoding/json"
+	"fmt"
 	e "github.com/lastbackend/lastbackend/libs/errors"
 	"github.com/lastbackend/lastbackend/pkg/service"
 	"github.com/lastbackend/lastbackend/pkg/util/table"
@@ -38,15 +39,28 @@ func (s *Service) ToJson() ([]byte, *e.Err) {
 	return buf, nil
 }
 
-func (s *Service) DrawTable() {
-	t := table.New([]string{"ID", "Project", "Name", "Created", "Updated"})
-	t.AddRow(map[string]interface{}{
+func (s *Service) DrawTable(projectName string) {
+	table.PrintHorizontal(map[string]interface{}{
 		"ID":      s.ID,
-		"Project": s.Image,
-		"Name":    s.Name,
-		"Created": s.Created.String()[:10],
-		"Updated": s.Updated.String()[:10],
+		"NAME":    s.Name,
+		"PROJECT": projectName,
+		"PODS":    s.Detail.PodList.ListMeta.Total,
 	})
+
+	t := table.New([]string{" ", "NAME", "STATUS", "RESTARTS", "CONTAINERS"})
+	t.VisibleHeader = true
+
+	for _, pod := range s.Detail.PodList.Pods {
+		t.AddRow(map[string]interface{}{
+			" ":          "",
+			"NAME":       pod.ObjectMeta.Name,
+			"STATUS":     pod.PodStatus.PodPhase,
+			"RESTARTS":   pod.RestartCount,
+			"CONTAINERS": pod.Containers.ListMeta.Total,
+		})
+	}
+	t.AddRow(map[string]interface{}{})
+
 	t.Print()
 }
 
@@ -64,20 +78,32 @@ func (s *ServiceList) ToJson() ([]byte, *e.Err) {
 	return buf, nil
 }
 
-func (s *ServiceList) DrawTable() {
-	table := table.New([]string{"ID", "Project", "Name", "Created", "Updated"})
+func (s *ServiceList) DrawTable(projectName string) {
+	fmt.Print(" Project ", projectName+"\n\n")
 
-	for _, service := range *s {
-		table.AddRow(map[string]interface{}{
-			"ID":      service.ID,
-			"Project": service.Image,
-			"Name":    service.Name,
-			"Created": service.Created.String()[:10],
-			"Updated": service.Updated.String()[:10],
+	for _, s := range *s {
+		table.PrintHorizontal(map[string]interface{}{
+			"ID":   s.ID,
+			"NAME": s.Name,
+			"PODS": s.Detail.PodList.ListMeta.Total,
 		})
-	}
 
-	table.Print()
+		for _, pod := range s.Detail.PodList.Pods {
+			tpods := table.New([]string{" ", "NAME", "STATUS", "RESTARTS", "CONTAINERS"})
+			tpods.VisibleHeader = true
+
+			tpods.AddRow(map[string]interface{}{
+				" ":          "",
+				"NAME":       pod.ObjectMeta.Name,
+				"STATUS":     pod.PodStatus.PodPhase,
+				"RESTARTS":   pod.RestartCount,
+				"CONTAINERS": pod.Containers.ListMeta.Total,
+			})
+			tpods.Print()
+		}
+
+		fmt.Print("\n\n")
+	}
 }
 
 type ServiceConfig struct {

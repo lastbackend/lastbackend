@@ -7,7 +7,7 @@ import (
 	"github.com/lastbackend/lastbackend/libs/log"
 	"github.com/lastbackend/lastbackend/pkg/client/cmd/deploy"
 	p "github.com/lastbackend/lastbackend/pkg/client/cmd/project"
-	"github.com/lastbackend/lastbackend/pkg/client/cmd/service"
+	s "github.com/lastbackend/lastbackend/pkg/client/cmd/service"
 	"github.com/lastbackend/lastbackend/pkg/client/cmd/template"
 	u "github.com/lastbackend/lastbackend/pkg/client/cmd/user"
 	"github.com/lastbackend/lastbackend/pkg/client/config"
@@ -80,17 +80,25 @@ func configure(app *cli.Cli) {
 	app.Command("signup", "Create new account", func(c *cli.Cmd) {
 		c.Action = u.SignUpCmd
 	})
+
 	app.Command("login", "Auth to account", func(c *cli.Cmd) {
 		c.Action = u.SignInCmd
 	})
+
 	app.Command("whoami", "Display the current user's login name", func(c *cli.Cmd) {
 		c.Action = u.WhoamiCmd
 	})
+
 	app.Command("logout", "logout from account", func(c *cli.Cmd) {
 		c.Action = u.LogoutCmd
 	})
+
 	app.Command("projects", "Display the project list", func(c *cli.Cmd) {
-		c.Action = p.ListCmd
+		c.Action = p.ListProjectCmd
+	})
+
+	app.Command("services", "Display the service list", func(c *cli.Cmd) {
+		c.Action = s.ListServiceCmd
 	})
 
 	app.Command("deploy", "Deploy management", func(c *cli.Cmd) {
@@ -220,6 +228,7 @@ func configure(app *cli.Cli) {
 					c.PrintHelp()
 					return
 				}
+
 				p.CurrentCmd()
 			}
 		})
@@ -229,30 +238,38 @@ func configure(app *cli.Cli) {
 
 		c.Spec = "[SERVICE_NAME]"
 
-		var service_name = c.String(cli.StringArg{
+		var name = c.String(cli.StringArg{
 			Name:      "SERVICE_NAME",
 			Value:     "",
 			Desc:      "name of service",
 			HideValue: true,
 		})
-		c.Command("create", "create new service", func(sc *cli.Cmd) {
-			sc.Action = func() {
-				service.CreateCmd(*service_name)
-			}
-		})
+
 		c.Command("inspect", "inspect the service", func(sc *cli.Cmd) {
 			sc.Action = func() {
-				service.InspectCmd(*service_name)
+				if len(*name) == 0 {
+					c.PrintHelp()
+					return
+				}
+
+				s.InspectCmd(*name)
 			}
 		})
+
 		c.Command("update", "if you wish to change configuration of the service", func(sc *cli.Cmd) {
 			sc.Action = func() {
-				service.UpdateCmd(*service_name)
+				s.UpdateCmd(*name)
 			}
 		})
+
 		c.Command("remove", "remove an existing service", func(sc *cli.Cmd) {
 			sc.Action = func() {
-				service.RemoveCmd(*service_name)
+				if len(*name) == 0 {
+					c.PrintHelp()
+					return
+				}
+
+				s.RemoveCmd(*name)
 			}
 		})
 	})

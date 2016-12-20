@@ -55,7 +55,7 @@ func ServiceListH(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	servicesSpec, err := service.List(ctx.K8S, projectModel.Name)
+	servicesSpec, err := service.List(ctx.K8S, projectModel.ID)
 	if err != nil {
 		ctx.Log.Error("Error: get serivce spec from cluster", err.Err())
 		err.Http(w)

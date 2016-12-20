@@ -1,22 +1,22 @@
 package service
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"github.com/lastbackend/lastbackend/libs/editor"
 	e "github.com/lastbackend/lastbackend/libs/errors"
 	"github.com/lastbackend/lastbackend/libs/model"
 	"github.com/lastbackend/lastbackend/pkg/client/context"
-	"strings"
-	"encoding/json"
 	"gopkg.in/yaml.v2"
+	"strings"
 )
 
 func UpdateCmd(name string) {
 
 	var ctx = context.Get()
 
-	serviceModel, err := Inspect(name)
+	serviceModel, _, err := Inspect(name)
 	if err != nil {
 		ctx.Log.Error(err)
 		return

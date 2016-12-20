@@ -7,7 +7,7 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/client/context"
 )
 
-func ListCmd() {
+func ListProjectCmd() {
 
 	var ctx = context.Get()
 
@@ -33,7 +33,6 @@ func List() (*model.ProjectList, error) {
 
 	_, _, err = ctx.HTTP.
 		GET("/project").
-		AddHeader("Content-Type", "application/json").
 		AddHeader("Authorization", "Bearer "+ctx.Token).
 		Request(projects, er)
 	if err != nil {
