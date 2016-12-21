@@ -18,12 +18,14 @@ type ServiceStorage struct {
 
 func (s *ServiceStorage) CheckExistsByName(user, project, name string) (bool, error) {
 
-	var err error
-	var service_filter = map[string]string{
-		"name":    name,
-		"user":    user,
-		"project": project,
-	}
+	var (
+		err            error
+		service_filter = map[string]string{
+			"name":    name,
+			"user":    user,
+			"project": project,
+		}
+	)
 
 	res, err := r.Table(ServiceTable).Filter(service_filter).Run(s.Session)
 
@@ -40,8 +42,10 @@ func (s *ServiceStorage) CheckExistsByName(user, project, name string) (bool, er
 
 func (s *ServiceStorage) GetByNameOrID(user, project, nameOrID string) (*model.Service, *e.Err) {
 
-	var err error
-	var service = new(model.Service)
+	var (
+		err     error
+		service = new(model.Service)
+	)
 
 	res, err := r.Table(ServiceTable).Filter(func(talk r.Term) r.Term {
 		return r.And(
@@ -69,13 +73,15 @@ func (s *ServiceStorage) GetByNameOrID(user, project, nameOrID string) (*model.S
 
 func (s *ServiceStorage) GetByName(user, project, name string) (*model.Service, *e.Err) {
 
-	var err error
-	var service = new(model.Service)
-	var project_filter = map[string]interface{}{
-		"name":    name,
-		"project": project,
-		"user":    user,
-	}
+	var (
+		err            error
+		service        = new(model.Service)
+		project_filter = map[string]interface{}{
+			"name":    name,
+			"project": project,
+			"user":    user,
+		}
+	)
 
 	res, err := r.Table(ServiceTable).Filter(project_filter).Run(s.Session)
 
@@ -95,13 +101,15 @@ func (s *ServiceStorage) GetByName(user, project, name string) (*model.Service, 
 
 func (s *ServiceStorage) GetByID(user, project, id string) (*model.Service, *e.Err) {
 
-	var err error
-	var service = new(model.Service)
-	var project_filter = map[string]interface{}{
-		"id":      id,
-		"project": project,
-		"user":    user,
-	}
+	var (
+		err            error
+		service        = new(model.Service)
+		project_filter = map[string]interface{}{
+			"id":      id,
+			"project": project,
+			"user":    user,
+		}
+	)
 
 	res, err := r.Table(ServiceTable).Filter(project_filter).Run(s.Session)
 
@@ -121,9 +129,11 @@ func (s *ServiceStorage) GetByID(user, project, id string) (*model.Service, *e.E
 
 func (s *ServiceStorage) ListByProject(user, project string) (*model.ServiceList, *e.Err) {
 
-	var err error
-	var projects = new(model.ServiceList)
-	var project_filter = r.Row.Field("project").Eq(project)
+	var (
+		err            error
+		projects       = new(model.ServiceList)
+		project_filter = r.Row.Field("project").Eq(project)
+	)
 
 	res, err := r.Table(ServiceTable).Filter(project_filter).Run(s.Session)
 	if err != nil {
@@ -143,8 +153,10 @@ func (s *ServiceStorage) ListByProject(user, project string) (*model.ServiceList
 // Insert new service into storage
 func (s *ServiceStorage) Insert(service *model.Service) (*model.Service, *e.Err) {
 
-	var err error
-	var opts = r.InsertOpts{ReturnChanges: true}
+	var (
+		err  error
+		opts = r.InsertOpts{ReturnChanges: true}
+	)
 
 	service.Created = time.Now()
 	service.Updated = time.Now()
@@ -162,13 +174,16 @@ func (s *ServiceStorage) Insert(service *model.Service) (*model.Service, *e.Err)
 // Update build model
 func (s *ServiceStorage) Update(service *model.Service) (*model.Service, *e.Err) {
 
-	var err error
-	var opts = r.UpdateOpts{ReturnChanges: true}
-	var project_filter = map[string]interface{}{
-		"name": service.Name,
-	}
-
 	service.Updated = time.Now()
+
+	var (
+		err            error
+		opts           = r.UpdateOpts{ReturnChanges: true}
+		project_filter = map[string]interface{}{
+			"description": service.Description,
+			"updated":     service.Updated,
+		}
+	)
 
 	_, err = r.Table(ServiceTable).Update(project_filter, opts).RunWrite(s.Session)
 	if err != nil {
@@ -181,13 +196,15 @@ func (s *ServiceStorage) Update(service *model.Service) (*model.Service, *e.Err)
 // Remove build model
 func (s *ServiceStorage) Remove(user, project, id string) *e.Err {
 
-	var err error
-	var project_filter = map[string]interface{}{
-		"user":    user,
-		"project": project,
-		"id":      id,
-	}
-	var opts = r.DeleteOpts{ReturnChanges: true}
+	var (
+		err            error
+		opts           = r.DeleteOpts{ReturnChanges: true}
+		project_filter = map[string]interface{}{
+			"user":    user,
+			"project": project,
+			"id":      id,
+		}
+	)
 
 	_, err = r.Table(ServiceTable).Filter(project_filter).Delete(opts).RunWrite(s.Session)
 	if err != nil {
@@ -200,12 +217,14 @@ func (s *ServiceStorage) Remove(user, project, id string) *e.Err {
 // Remove build model
 func (s *ServiceStorage) RemoveByProject(user, project string) *e.Err {
 
-	var err error
-	var project_filter = map[string]interface{}{
-		"user":    user,
-		"project": project,
-	}
-	var opts = r.DeleteOpts{ReturnChanges: true}
+	var (
+		err            error
+		opts           = r.DeleteOpts{ReturnChanges: true}
+		project_filter = map[string]interface{}{
+			"user":    user,
+			"project": project,
+		}
+	)
 
 	_, err = r.Table(ServiceTable).Filter(project_filter).Delete(opts).RunWrite(s.Session)
 	if err != nil {
