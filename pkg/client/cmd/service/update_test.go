@@ -1,11 +1,11 @@
-package project_test
+package service_test
 
 import (
 	"encoding/json"
 	"github.com/lastbackend/lastbackend/libs/db"
 	h "github.com/lastbackend/lastbackend/libs/http"
 	"github.com/lastbackend/lastbackend/libs/model"
-	"github.com/lastbackend/lastbackend/pkg/client/cmd/project"
+	"github.com/lastbackend/lastbackend/pkg/client/cmd/service"
 	"github.com/lastbackend/lastbackend/pkg/client/context"
 	"github.com/stretchr/testify/assert"
 	"io/ioutil"
@@ -18,23 +18,27 @@ import (
 func TestUpdate(t *testing.T) {
 
 	const (
-		name           string = "project"
-		newProjectName string = "newname"
-		description    string = "new description"
-		token                 = "mocktoken"
+		name        string = "service"
+		description string = "service describe"
+		scale       int32  = 10
+		token       string = "mocktoken"
 	)
 
 	var (
-		err          error
-		ctx          = context.Mock()
-		projectmodel = new(model.Project)
-		switchData   = model.Project{
-			Name:        "project",
+		err     error
+		ctx     = context.Mock()
+		project = model.Project{
+			Name:        "mock_name",
 			ID:          "mock_id",
-			User:        "mock_user",
-			Description: "sample description",
 			Created:     time.Now(),
 			Updated:     time.Now(),
+			User:        "mock_demo",
+			Description: "sample description",
+		}
+		updateData = model.ServiceUpdateConfig{
+			Description: description,
+			Replicas:    scale,
+			Containers:  []model.ContainerConfig{},
 		}
 	)
 
@@ -71,10 +75,7 @@ func TestUpdate(t *testing.T) {
 			return
 		}
 
-		var d = struct {
-			Name        string `json:"name,omitempty"`
-			Description string `json:"description,omitempty"`
-		}{}
+		var d = model.ServiceUpdateConfig{}
 
 		err = json.Unmarshal(body, &d)
 		if err != nil {
@@ -82,11 +83,11 @@ func TestUpdate(t *testing.T) {
 			return
 		}
 
-		assert.Equal(t, d.Name, newProjectName, "they should be equal")
 		assert.Equal(t, d.Description, description, "they should be equal")
+		assert.Equal(t, d.Replicas, scale, "they should be equal")
 
 		w.WriteHeader(200)
-		_, err = w.Write([]byte(`{"id":"mock", "name":"` + name + `", "description":"` + description + `"}`))
+		_, err = w.Write([]byte{})
 		if err != nil {
 			t.Error(err)
 			return
@@ -95,25 +96,16 @@ func TestUpdate(t *testing.T) {
 	defer server.Close()
 	//------------------------------------------------------------------------------------------
 
-	err = ctx.Storage.Set("project", switchData)
+	err = ctx.Storage.Set("project", project)
 	if err != nil {
 		t.Error(err)
 		return
 	}
 
 	ctx.HTTP = h.New(server.URL)
-	err = project.Update(name, newProjectName, description)
+	err = service.Update(name, updateData)
 	if err != nil {
 		t.Error(err)
 		return
 	}
-
-	err = ctx.Storage.Get("project", projectmodel)
-	if err != nil {
-		t.Error(err)
-		return
-	}
-
-	assert.Equal(t, projectmodel.Name, newProjectName)
-	assert.Equal(t, projectmodel.Description, description)
 }

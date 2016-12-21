@@ -13,9 +13,8 @@ import (
 func TestGet(t *testing.T) {
 
 	const (
-		name        string = "project"
-		description string = "project describe"
-		token       string = "mocktoken"
+		name  string = "project"
+		token string = "mocktoken"
 	)
 
 	var (
@@ -33,7 +32,7 @@ func TestGet(t *testing.T) {
 		assert.Equal(t, tk, "Bearer "+token, "they should be equal")
 
 		w.WriteHeader(200)
-		_, err := w.Write([]byte(`{"id":"mock", "name":"` + name + `", "description":"` + description + `"}`))
+		_, err := w.Write([]byte(`{"id":"mock", "name":"` + name + `"}`))
 		if err != nil {
 			t.Error(err)
 			return

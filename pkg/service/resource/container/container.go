@@ -17,15 +17,15 @@ type ContainerStatus struct {
 }
 
 type Container struct {
-	TypeMeta   common.TypeMeta `json:"spec"`
-	Name       string          `json:"name"`
-	Image      string          `json:"image"`
-	Command    []string        `json:"command,omitempty"`
-	Args       []string        `json:"args,omitempty"`
-	WorkingDir string          `json:"workdir,omitempty"`
-	Ports      []Port          `json:"ports,omitempty"`
-	Env        []EnvVar        `json:"env,omitempty"`
-	Volumes    []Volume        `json:"volumes,omitempty"`
+	TypeMeta        common.TypeMeta `json:"spec"`
+	Name            string          `json:"name"`
+	Image           string          `json:"image"`
+	Command         []string        `json:"command,omitempty"`
+	Args            []string        `json:"args,omitempty"`
+	WorkingDir      string          `json:"workdir,omitempty"`
+	Ports           []Port          `json:"ports,omitempty"`
+	Env             []EnvVar        `json:"env,omitempty"`
+	Volumes         []Volume        `json:"volumes,omitempty"`
 }
 
 // Port represents a network port in a single container

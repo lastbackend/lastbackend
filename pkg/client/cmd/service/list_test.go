@@ -13,11 +13,12 @@ import (
 	"github.com/lastbackend/lastbackend/libs/db"
 )
 
-func TestGet(t *testing.T) {
+func TestList(t *testing.T) {
 
 	const (
-		name  string = "project"
-		token string = "mocktoken"
+		name        string = "service"
+		description string = "service describe"
+		token       string = "mocktoken"
 	)
 
 	var (
@@ -62,11 +63,12 @@ func TestGet(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 
 		tk := r.Header.Get("Authorization")
+
 		assert.NotEmpty(t, tk, "token should be not empty")
 		assert.Equal(t, tk, "Bearer "+token, "they should be equal")
 
 		w.WriteHeader(200)
-		_, err := w.Write([]byte(`{"id":"mock", "name":"` + name + `"}`))
+		_, err := w.Write([]byte(`[{"id":"mock", "name":"` + name + `", "description":"` + description + `"}]`))
 		if err != nil {
 			t.Error(err)
 			return
@@ -83,7 +85,7 @@ func TestGet(t *testing.T) {
 
 	ctx.HTTP = h.New(server.URL)
 
-	_, _, err = service.Inspect(name)
+	_, _, err = service.List()
 	if err != nil {
 		t.Error(err)
 	}

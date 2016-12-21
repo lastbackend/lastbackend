@@ -5,8 +5,7 @@ import (
 	"fmt"
 	"github.com/lastbackend/lastbackend/libs/adapter/k8s/converter"
 	e "github.com/lastbackend/lastbackend/libs/errors"
-	"github.com/lastbackend/lastbackend/libs/model"
-	"github.com/lastbackend/lastbackend/pkg/daemon/context"
+	"github.com/lastbackend/lastbackend/libs/interface/k8s"
 	"github.com/lastbackend/lastbackend/pkg/service/resource/deployment"
 	"github.com/lastbackend/lastbackend/pkg/util/generator"
 	"k8s.io/client-go/1.5/pkg/api/v1"
@@ -18,14 +17,11 @@ type Service struct {
 	config *v1beta1.Deployment
 }
 
-func Get(namespace, name string) (*Service, *e.Err) {
+func Get(client k8s.IK8S, namespace, name string) (*Service, *e.Err) {
 
-	var (
-		er  error
-		ctx = context.Get()
-	)
+	var er error
 
-	detail, er := deployment.Get(ctx.K8S, namespace, name)
+	detail, er := deployment.Get(client, namespace, name)
 	if er != nil {
 		return nil, e.New("service").Unknown(er)
 	}
@@ -33,15 +29,14 @@ func Get(namespace, name string) (*Service, *e.Err) {
 	return &Service{*detail, nil}, nil
 }
 
-func List(namespace string) (map[string]*Service, *e.Err) {
+func List(client k8s.IK8S, namespace string) (map[string]*Service, *e.Err) {
 
 	var (
 		er          error
-		ctx         = context.Get()
 		serviceList = make(map[string]*Service)
 	)
 
-	detailList, er := deployment.List(ctx.K8S, namespace)
+	detailList, er := deployment.List(client, namespace)
 	if er != nil {
 		return nil, e.New("service").Unknown(er)
 	}
@@ -53,13 +48,9 @@ func List(namespace string) (map[string]*Service, *e.Err) {
 	return serviceList, nil
 }
 
-func Create(user, project string, config interface{}) (*Service, *e.Err) {
+func Create(config interface{}) (*Service, *e.Err) {
 
-	var (
-		ctx     = context.Get()
-		s       = new(Service)
-		service = new(model.Service)
-	)
+	var s = new(Service)
 
 	switch config.(type) {
 	case *v1beta1.Deployment:
@@ -72,31 +63,43 @@ func Create(user, project string, config interface{}) (*Service, *e.Err) {
 		return nil, e.New("service").Unknown(errors.New("unknown type config"))
 	}
 
-	service.User = user
-	service.Project = project
-	service.Name = fmt.Sprintf("%s-%s", s.config.Name, generator.GetUUIDV4()[0:12])
-
-	service, err := ctx.Storage.Service().Insert(service)
-	if err != nil {
-		return nil, err
-	}
-
-	s.config.Name = service.Name
+	s.config.Name = fmt.Sprintf("%s-%s", s.config.Name, generator.GetUUIDV4()[0:12])
 
 	return s, nil
 }
 
-func (s Service) Deploy(namespace string) *e.Err {
+func Update(client k8s.IK8S, namespace, name string, config *ServiceConfig) *e.Err {
 
-	var (
-		er  error
-		ctx = context.Get()
-	)
+	var er error
 
-	_, er = ctx.K8S.Extensions().Deployments(namespace).Create(s.config)
+	dp, er := client.Extensions().Deployments(namespace).Get(name)
+	if er != nil {
+		return e.New("service").Unknown(er)
+	}
+
+	config.update(dp)
+
+	er = deployment.Update(client, namespace, dp)
 	if er != nil {
 		return e.New("service").Unknown(er)
 	}
 
 	return nil
+}
+
+func (s Service) Deploy(client k8s.IK8S, namespace string) (*Service, *e.Err) {
+
+	var er error
+
+	_, er = client.Extensions().Deployments(namespace).Create(s.config)
+	if er != nil {
+		return nil, e.New("service").Unknown(er)
+	}
+
+	detail, er := deployment.Get(client, namespace, s.ObjectMeta.Name)
+	if er != nil {
+		return nil, e.New("service").Unknown(er)
+	}
+
+	return &Service{*detail, nil}, nil
 }

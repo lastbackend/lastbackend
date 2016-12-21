@@ -18,17 +18,20 @@ type ProjectStorage struct {
 
 func (s *ProjectStorage) GetByNameOrID(user, nameOrID string) (*model.Project, *e.Err) {
 
-	var err error
-	var project = new(model.Project)
+	var (
+		err            error
+		project        = new(model.Project)
+		project_filter = func(talk r.Term) r.Term {
+			return r.And(
+				talk.Field("user").Eq(user),
+				r.Or(
+					talk.Field("name").Eq(nameOrID),
+					talk.Field("id").Eq(nameOrID)),
+			)
+		}
+	)
 
-	res, err := r.Table(ProjectTable).Filter(func(talk r.Term) r.Term {
-		return r.And(
-			talk.Field("user").Eq(user),
-			r.Or(
-				talk.Field("name").Eq(nameOrID),
-				talk.Field("id").Eq(nameOrID)),
-		)
-	}).Run(s.Session)
+	res, err := r.Table(ProjectTable).Filter(project_filter).Run(s.Session)
 
 	if err != nil {
 		return nil, e.New("project").NotFound(err)
@@ -46,12 +49,14 @@ func (s *ProjectStorage) GetByNameOrID(user, nameOrID string) (*model.Project, *
 
 func (s *ProjectStorage) GetByName(user, name string) (*model.Project, *e.Err) {
 
-	var err error
-	var project = new(model.Project)
-	var project_filter = map[string]string{
-		"name": name,
-		"user": user,
-	}
+	var (
+		err            error
+		project        = new(model.Project)
+		project_filter = map[string]string{
+			"name": name,
+			"user": user,
+		}
+	)
 
 	res, err := r.Table(ProjectTable).Filter(project_filter).Run(s.Session)
 
@@ -70,12 +75,13 @@ func (s *ProjectStorage) GetByName(user, name string) (*model.Project, *e.Err) {
 }
 
 func (s *ProjectStorage) ExistByName(userID, name string) (bool, error) {
+
 	var project_filter = map[string]string{
 		"name": name,
 		"user": userID,
 	}
-	res, err := r.Table(ProjectTable).Filter(project_filter).Run(s.Session)
 
+	res, err := r.Table(ProjectTable).Filter(project_filter).Run(s.Session)
 	if err != nil {
 		return true, err
 	}
@@ -83,17 +89,20 @@ func (s *ProjectStorage) ExistByName(userID, name string) (bool, error) {
 	if !res.IsNil() {
 		return true, nil
 	}
+
 	return !res.IsNil(), nil
 }
 
 func (s *ProjectStorage) GetByID(user, id string) (*model.Project, *e.Err) {
 
-	var err error
-	var project = new(model.Project)
-	var project_filter = map[string]interface{}{
-		"id":   id,
-		"user": user,
-	}
+	var (
+		err            error
+		project        = new(model.Project)
+		project_filter = map[string]interface{}{
+			"id":   id,
+			"user": user,
+		}
+	)
 
 	res, err := r.Table(ProjectTable).Filter(project_filter).Run(s.Session)
 
@@ -113,9 +122,11 @@ func (s *ProjectStorage) GetByID(user, id string) (*model.Project, *e.Err) {
 
 func (s *ProjectStorage) ListByUser(id string) (*model.ProjectList, *e.Err) {
 
-	var err error
-	var projects = new(model.ProjectList)
-	var project_filter = r.Row.Field("user").Eq(id)
+	var (
+		err            error
+		projects       = new(model.ProjectList)
+		project_filter = r.Row.Field("user").Eq(id)
+	)
 
 	res, err := r.Table(ProjectTable).Filter(project_filter).Run(s.Session)
 	if err != nil {
@@ -135,8 +146,10 @@ func (s *ProjectStorage) ListByUser(id string) (*model.ProjectList, *e.Err) {
 // Insert new project into storage
 func (s *ProjectStorage) Insert(project *model.Project) (*model.Project, *e.Err) {
 
-	var err error
-	var opts = r.InsertOpts{ReturnChanges: true}
+	var (
+		err  error
+		opts = r.InsertOpts{ReturnChanges: true}
+	)
 
 	project.Created = time.Now()
 	project.Updated = time.Now()
@@ -154,15 +167,19 @@ func (s *ProjectStorage) Insert(project *model.Project) (*model.Project, *e.Err)
 // Update build model
 func (s *ProjectStorage) Update(project *model.Project) (*model.Project, *e.Err) {
 
-	var err error
-	var opts = r.UpdateOpts{ReturnChanges: true}
-
 	project.Updated = time.Now()
 
-	_, err = r.Table(ProjectTable).Get(project.ID).Update(map[string]string{
-		"name":        project.Name,
-		"description": project.Description,
-	}, opts).RunWrite(s.Session)
+	var (
+		err            error
+		opts           = r.UpdateOpts{ReturnChanges: true}
+		project_filter = map[string]interface{}{
+			"name":        project.Name,
+			"description": project.Description,
+			"updated":     project.Updated,
+		}
+	)
+
+	_, err = r.Table(ProjectTable).Get(project.ID).Update(project_filter, opts).RunWrite(s.Session)
 
 	if err != nil {
 		return nil, e.New("project").Unknown(err)
@@ -174,12 +191,14 @@ func (s *ProjectStorage) Update(project *model.Project) (*model.Project, *e.Err)
 // Remove build model
 func (s *ProjectStorage) Remove(user, id string) *e.Err {
 
-	var err error
-	var project_filter = map[string]string{
-		"id":   id,
-		"user": user,
-	}
-	var opts = r.DeleteOpts{ReturnChanges: true}
+	var (
+		err            error
+		opts           = r.DeleteOpts{ReturnChanges: true}
+		project_filter = map[string]string{
+			"id":   id,
+			"user": user,
+		}
+	)
 
 	_, err = r.Table(ProjectTable).Filter(project_filter).Delete(opts).RunWrite(s.Session)
 	if err != nil {

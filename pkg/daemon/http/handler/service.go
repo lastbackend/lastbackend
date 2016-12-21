@@ -48,14 +48,14 @@ func ServiceListH(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	projectModels, err := ctx.Storage.Service().ListByProject(session.Uid, projectModel.ID)
+	serviceModel, err := ctx.Storage.Service().ListByProject(session.Uid, projectModel.ID)
 	if err != nil {
 		ctx.Log.Error("Error: find services by user", err)
 		e.HTTP.InternalServerError(w)
 		return
 	}
 
-	servicesSpec, err := service.List(projectParam)
+	servicesSpec, err := service.List(ctx.K8S, projectModel.ID)
 	if err != nil {
 		ctx.Log.Error("Error: get serivce spec from cluster", err.Err())
 		err.Http(w)
@@ -63,17 +63,28 @@ func ServiceListH(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var list = model.ServiceList{}
+	var response []byte
 
-	for _, val := range *projectModels {
-		val.Spec = servicesSpec[val.Name]
-		list = append(list, val)
-	}
+	if servicesSpec != nil {
+		for _, val := range *serviceModel {
+			val.Detail = servicesSpec[val.Name]
+			list = append(list, val)
+		}
 
-	response, err := list.ToJson()
-	if err != nil {
-		ctx.Log.Error("Error: convert struct to json", err.Err())
-		err.Http(w)
-		return
+		response, err = list.ToJson()
+		if err != nil {
+			ctx.Log.Error("Error: convert struct to json", err.Err())
+			err.Http(w)
+			return
+		}
+
+	} else {
+		response, err = serviceModel.ToJson()
+		if err != nil {
+			ctx.Log.Error("Error: convert struct to json", err.Err())
+			err.Http(w)
+			return
+		}
 	}
 
 	w.WriteHeader(200)
@@ -131,14 +142,14 @@ func ServiceInfoH(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	serviceSpec, err := service.Get(serviceModel.Project, serviceModel.Name)
+	serviceSpec, err := service.Get(ctx.K8S, serviceModel.Project, serviceModel.Name)
 	if err != nil {
 		ctx.Log.Error("Error: get serivce spec from cluster", err.Err())
 		err.Http(w)
 		return
 	}
 
-	serviceModel.Spec = serviceSpec
+	serviceModel.Detail = serviceSpec
 
 	response, err := serviceModel.ToJson()
 	if err != nil {
@@ -156,7 +167,7 @@ func ServiceInfoH(w http.ResponseWriter, r *http.Request) {
 }
 
 type serviceReplaceS struct {
-	Name *string `json:"name,omitempty"`
+	*model.ServiceUpdateConfig
 }
 
 func (s *serviceReplaceS) decodeAndValidate(reader io.Reader) *e.Err {
@@ -175,10 +186,6 @@ func (s *serviceReplaceS) decodeAndValidate(reader io.Reader) *e.Err {
 	err = json.Unmarshal(body, s)
 	if err != nil {
 		return e.New("service").IncorrectJSON(err)
-	}
-
-	if s.Name != nil && !validator.IsServiceName(*s.Name) {
-		return e.New("service").BadParameter("name")
 	}
 
 	return nil
@@ -239,29 +246,21 @@ func ServiceUpdateH(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if rq.Name == nil || *rq.Name == "" {
-		rq.Name = &serviceModel.Name
-	}
-
-	serviceModel.Name = *rq.Name
-
-	if !validator.IsUUID(serviceParam) && serviceModel.Name != *rq.Name {
-		exists, er := ctx.Storage.Service().CheckExistsByName(serviceModel.User, serviceModel.Project, serviceModel.Name)
-		if er != nil {
-			ctx.Log.Error("Error: check exists by name", er.Error())
-			e.HTTP.InternalServerError(w)
-			return
-		}
-		if exists {
-			e.New("service").NotUnique("name").Http(w)
-			return
-		}
-	}
+	serviceModel.Description = rq.Description
 
 	serviceModel, err = ctx.Storage.Service().Update(serviceModel)
 	if err != nil {
-		ctx.Log.Error("Error: insert service to db", err)
+		ctx.Log.Error("Error: insert service to db", err.Err())
 		e.HTTP.InternalServerError(w)
+		return
+	}
+
+	cfg := rq.CreateServiceConfig()
+
+	err = service.Update(ctx.K8S, serviceModel.Project, serviceModel.Name, cfg)
+	if err != nil {
+		ctx.Log.Error("Error: update service", err.Err())
+		err.Http(w)
 		return
 	}
 
