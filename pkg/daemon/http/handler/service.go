@@ -167,7 +167,7 @@ func ServiceInfoH(w http.ResponseWriter, r *http.Request) {
 }
 
 type serviceReplaceS struct {
-	Name *string `json:"name,omitempty"`
+	*model.ServiceUpdateConfig
 }
 
 func (s *serviceReplaceS) decodeAndValidate(reader io.Reader) *e.Err {
@@ -186,10 +186,6 @@ func (s *serviceReplaceS) decodeAndValidate(reader io.Reader) *e.Err {
 	err = json.Unmarshal(body, s)
 	if err != nil {
 		return e.New("service").IncorrectJSON(err)
-	}
-
-	if s.Name != nil && !validator.IsServiceName(*s.Name) {
-		return e.New("service").BadParameter("name")
 	}
 
 	return nil
@@ -250,40 +246,21 @@ func ServiceUpdateH(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if rq.Name == nil || *rq.Name == "" {
-		rq.Name = &serviceModel.Name
-	}
-
-	ctx.Log.Info(">>>>>>>> ", serviceModel.Project, serviceModel.Name, *rq.Name)
-
-	var currentServiceName = serviceModel.Name
-	serviceModel.Name = *rq.Name
-
-	if !validator.IsUUID(serviceParam) && serviceModel.Name != *rq.Name {
-		exists, er := ctx.Storage.Service().CheckExistsByName(serviceModel.User, serviceModel.Project, serviceModel.Name)
-		if er != nil {
-			ctx.Log.Error("Error: check exists by name", er.Error())
-			e.HTTP.InternalServerError(w)
-			return
-		}
-		if exists {
-			e.New("service").NotUnique("name").Http(w)
-			return
-		}
-	}
-
-	// TODO: Update config
-	err = service.Update(ctx.K8S, serviceModel.Project, currentServiceName, struct{}{})
-	if err != nil {
-		ctx.Log.Error("Error: update service", err.Err())
-		err.Http(w)
-		return
-	}
+	serviceModel.Description = rq.Description
 
 	serviceModel, err = ctx.Storage.Service().Update(serviceModel)
 	if err != nil {
-		ctx.Log.Error("Error: insert service to db", err)
+		ctx.Log.Error("Error: insert service to db", err.Err())
 		e.HTTP.InternalServerError(w)
+		return
+	}
+
+	cfg := rq.CreateServiceConfig()
+
+	err = service.Update(ctx.K8S, serviceModel.Project, serviceModel.Name, cfg)
+	if err != nil {
+		ctx.Log.Error("Error: update service", err.Err())
+		err.Http(w)
 		return
 	}
 

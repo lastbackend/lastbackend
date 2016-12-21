@@ -19,9 +19,7 @@ type Service struct {
 
 func Get(client k8s.IK8S, namespace, name string) (*Service, *e.Err) {
 
-	var (
-		er error
-	)
+	var er error
 
 	detail, er := deployment.Get(client, namespace, name)
 	if er != nil {
@@ -70,11 +68,18 @@ func Create(config interface{}) (*Service, *e.Err) {
 	return s, nil
 }
 
-func Update(client k8s.IK8S, namespace, name string, config interface{}) *e.Err {
+func Update(client k8s.IK8S, namespace, name string, config *ServiceConfig) *e.Err {
 
 	var er error
 
-	er = deployment.Update(client, namespace, name, config)
+	dp, er := client.Extensions().Deployments(namespace).Get(name)
+	if er != nil {
+		return e.New("service").Unknown(er)
+	}
+
+	config.update(dp)
+
+	er = deployment.Update(client, namespace, dp)
 	if er != nil {
 		return e.New("service").Unknown(er)
 	}

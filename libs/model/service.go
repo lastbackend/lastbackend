@@ -5,6 +5,7 @@ import (
 	"fmt"
 	e "github.com/lastbackend/lastbackend/libs/errors"
 	"github.com/lastbackend/lastbackend/pkg/service"
+	"github.com/lastbackend/lastbackend/pkg/service/resource/container"
 	"github.com/lastbackend/lastbackend/pkg/util/table"
 	"time"
 )
@@ -22,6 +23,8 @@ type Service struct {
 	Image string `json:"image" gorethink:"image,omitempty"`
 	// Service name
 	Name string `json:"name" gorethink:"name,omitempty"`
+	// Service description
+	Description string `json:"description" gorethink:"description,omitempty"`
 	// Service spec
 	Detail *service.Service `json:"detail,omitempty" gorethink:"-"`
 	// Service created time
@@ -39,37 +42,39 @@ func (s *Service) ToJson() ([]byte, *e.Err) {
 	return buf, nil
 }
 
-func (s *Service) GetConfig() *ServiceConfig {
-	var config = new(ServiceConfig)
+func (s *Service) GetConfig() *ServiceUpdateConfig {
 
+	var config = new(ServiceUpdateConfig)
+
+	config.Description = s.Description
 	config.Replicas = s.Detail.Spec.Replicas
 	config.Containers = make([]ContainerConfig, len(s.Detail.Spec.Template.Spec.Containers))
 
-	for index, item := range s.Detail.Spec.Template.Spec.Containers {
-		var (
-			container = ContainerConfig{}
-		)
+	for index, val := range s.Detail.Spec.Template.Spec.Containers {
+		cfg := ContainerConfig{}
 
-		container.Name = item.Name
+		cfg.Name = val.Name
+		cfg.Image = val.Image
+		cfg.WorkingDir = val.WorkingDir
+		cfg.Command = val.Command
+		cfg.Args = val.Args
 
-		for _, val := range item.Ports {
-			container.Ports = append(container.Ports, Port{
+		for _, val := range val.Ports {
+			cfg.Ports = append(cfg.Ports, Port{
 				Name:          val.Name,
-				HostIP:        val.HostIP,
-				HostPort:      val.HostPort,
 				ContainerPort: val.ContainerPort,
 				Protocol:      string(val.Protocol),
 			})
 		}
 
-		for _, val := range item.Env {
-			container.Env = append(container.Env, EnvVar{
+		for _, val := range val.Env {
+			cfg.Env = append(cfg.Env, EnvVar{
 				Name:  val.Name,
 				Value: val.Value,
 			})
 		}
 
-		config.Containers[index] = container
+		config.Containers[index] = cfg
 	}
 
 	return config
@@ -142,29 +147,65 @@ func (s *ServiceList) DrawTable(projectName string) {
 	}
 }
 
-type ServiceConfig struct {
-	Replicas   int32             `json:"scale" yaml:"scale"`
-	Containers []ContainerConfig `json:"containers" yaml:"containers"`
-	Command    []string          `json:"command" yaml:"command"`
-	Args       []string          `json:"args" yaml:"args"`
-	WorkingDir string            `json:"workdir" yaml:"workdir"`
+type ServiceUpdateConfig struct {
+	Description string            `json:"description" yaml:"description"`
+	Replicas    int32             `json:"scale" yaml:"scale"`
+	Containers  []ContainerConfig `json:"containers" yaml:"containers"`
 }
 
 type ContainerConfig struct {
-	Name  string   `json:"name" yaml:"name"`
-	Env   []EnvVar `json:"env" yaml:"env"`
-	Ports []Port   `json:"ports" yaml:"ports"`
+	Image      string   `json:"image" yaml:"image"`
+	Name       string   `json:"name" yaml:"name"`
+	WorkingDir string   `json:"workdir" yaml:"workdir"`
+	Command    []string `json:"command" yaml:"command"`
+	Args       []string `json:"args" yaml:"args"`
+	Env        []EnvVar `json:"env" yaml:"env"`
+	Ports      []Port   `json:"ports" yaml:"ports"`
 }
 
 type Port struct {
 	Name          string `json:"name" yaml:"name"`
-	HostPort      int32  `json:"host" yaml:"host"`
 	ContainerPort int32  `json:"container" yaml:"container"`
 	Protocol      string `json:"protocol" yaml:"protocol"`
-	HostIP        string `json:"ip" yaml:"ip"`
 }
 
 type EnvVar struct {
 	Name  string `json:"name" yaml:"name"`
 	Value string `json:"value" yaml:"value"`
+}
+
+func (s ServiceUpdateConfig) CreateServiceConfig() *service.ServiceConfig {
+	var cfg = new(service.ServiceConfig)
+
+	cfg.Replicas = s.Replicas
+
+	for _, val := range s.Containers {
+		c := container.Container{}
+
+		c.Name = val.Name
+		c.Image = val.Image
+		c.WorkingDir = val.WorkingDir
+		c.Command = val.Command
+		c.Args = val.Args
+
+		for _, item := range val.Ports {
+			c.Ports = append(c.Ports, container.Port{
+				Name:          item.Name,
+				ContainerPort: item.ContainerPort,
+				Protocol:      item.Protocol,
+			})
+
+			for _, val := range val.Env {
+				c.Env = append(c.Env, container.EnvVar{
+					Name:  val.Name,
+					Value: val.Value,
+				})
+			}
+
+		}
+
+		cfg.Containers = append(cfg.Containers, c)
+	}
+
+	return cfg
 }

@@ -8,6 +8,7 @@ import (
 	"k8s.io/client-go/1.5/pkg/api"
 	"k8s.io/client-go/1.5/pkg/api/unversioned"
 	"k8s.io/client-go/1.5/pkg/apis/extensions"
+	"k8s.io/client-go/1.5/pkg/apis/extensions/v1beta1"
 )
 
 const kind = "deployment"
@@ -109,19 +110,9 @@ func List(client k8s.IK8S, namespace string) ([]Deployment, error) {
 	return deploymentNewList, nil
 }
 
-func Update(client k8s.IK8S, namespace, name string, config interface{}) error {
+func Update(client k8s.IK8S, namespace string, config *v1beta1.Deployment) error {
 
-	deployment, err := client.Extensions().Deployments(namespace).Get(name)
-	if err != nil {
-		return err
-	}
-
-	// TODO: need config
-	var replicas int32 = 2
-
-	deployment.Spec.Replicas = &replicas
-
-	_, err = client.Extensions().Deployments(namespace).Update(deployment)
+	_, err := client.Extensions().Deployments(namespace).Update(config)
 	if err != nil {
 		return err
 	}

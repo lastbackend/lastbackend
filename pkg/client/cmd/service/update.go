@@ -35,7 +35,7 @@ func UpdateCmd(name string) {
 	ctx.Log.Info("Successful")
 }
 
-func Update(name string, config model.ServiceConfig) error {
+func Update(name string, config model.ServiceUpdateConfig) error {
 
 	var (
 		err     error
@@ -76,7 +76,7 @@ func Update(name string, config model.ServiceConfig) error {
 	return nil
 }
 
-func GetConfig(service *model.Service) (*model.ServiceConfig, error) {
+func GetConfig(service *model.Service) (*model.ServiceUpdateConfig, error) {
 
 	var config = service.GetConfig()
 
