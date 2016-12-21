@@ -170,16 +170,16 @@ func (s *ProjectStorage) Update(project *model.Project) (*model.Project, *e.Err)
 	project.Updated = time.Now()
 
 	var (
-		err            error
-		opts           = r.UpdateOpts{ReturnChanges: true}
-		project_filter = map[string]interface{}{
+		err  error
+		opts = r.UpdateOpts{ReturnChanges: true}
+		data = map[string]interface{}{
 			"name":        project.Name,
 			"description": project.Description,
 			"updated":     project.Updated,
 		}
 	)
 
-	_, err = r.Table(ProjectTable).Get(project.ID).Update(project_filter, opts).RunWrite(s.Session)
+	_, err = r.Table(ProjectTable).Get(project.ID).Update(data, opts).RunWrite(s.Session)
 
 	if err != nil {
 		return nil, e.New("project").Unknown(err)

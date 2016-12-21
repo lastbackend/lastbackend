@@ -177,15 +177,15 @@ func (s *ServiceStorage) Update(service *model.Service) (*model.Service, *e.Err)
 	service.Updated = time.Now()
 
 	var (
-		err            error
-		opts           = r.UpdateOpts{ReturnChanges: true}
-		project_filter = map[string]interface{}{
+		err  error
+		opts = r.UpdateOpts{ReturnChanges: true}
+		data = map[string]interface{}{
 			"description": service.Description,
 			"updated":     service.Updated,
 		}
 	)
 
-	_, err = r.Table(ServiceTable).Update(project_filter, opts).RunWrite(s.Session)
+	_, err = r.Table(ServiceTable).Get(service.ID).Update(data, opts).RunWrite(s.Session)
 	if err != nil {
 		return nil, e.New("service").Unknown(err)
 	}

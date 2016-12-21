@@ -84,6 +84,6 @@ func (e *Editor) FromYAML(i interface{}) error {
 	return yaml.Unmarshal(e.context.output.Bytes(), i)
 }
 
-func (e *Editor) ToJSON(i interface{}) error {
+func (e *Editor) FromJSON(i interface{}) error {
 	return json.Unmarshal(e.context.output.Bytes(), i)
 }
