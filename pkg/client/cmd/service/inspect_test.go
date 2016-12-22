@@ -1,7 +1,9 @@
 package service_test
 
 import (
+	"github.com/lastbackend/lastbackend/libs/db"
 	h "github.com/lastbackend/lastbackend/libs/http"
+	"github.com/lastbackend/lastbackend/libs/model"
 	"github.com/lastbackend/lastbackend/pkg/client/cmd/service"
 	"github.com/lastbackend/lastbackend/pkg/client/context"
 	"github.com/stretchr/testify/assert"
@@ -9,8 +11,6 @@ import (
 	"net/http/httptest"
 	"testing"
 	"time"
-	"github.com/lastbackend/lastbackend/libs/model"
-	"github.com/lastbackend/lastbackend/libs/db"
 )
 
 func TestGet(t *testing.T) {
@@ -21,8 +21,8 @@ func TestGet(t *testing.T) {
 	)
 
 	var (
-		err error
-		ctx = context.Mock()
+		err  error
+		ctx  = context.Mock()
 		data = model.Project{
 			Name:        "mock_name",
 			ID:          "mock_id",

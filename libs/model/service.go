@@ -97,7 +97,7 @@ func (s *Service) DrawTable(projectName string) {
 			"NAME":       pod.ObjectMeta.Name,
 			"STATUS":     pod.PodStatus.PodPhase,
 			"RESTARTS":   pod.RestartCount,
-			"CONTAINERS": pod.Containers.ListMeta.Total,
+			"CONTAINERS": pod.ContainerList.ListMeta.Total,
 		})
 	}
 	t.AddRow(map[string]interface{}{})
@@ -138,7 +138,7 @@ func (s *ServiceList) DrawTable(projectName string) {
 				"NAME":       pod.ObjectMeta.Name,
 				"STATUS":     pod.PodStatus.PodPhase,
 				"RESTARTS":   pod.RestartCount,
-				"CONTAINERS": pod.Containers.ListMeta.Total,
+				"CONTAINERS": pod.ContainerList.ListMeta.Total,
 			})
 			tpods.Print()
 		}
