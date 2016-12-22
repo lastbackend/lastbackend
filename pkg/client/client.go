@@ -258,7 +258,23 @@ func configure(app *cli.Cli) {
 
 		c.Command("update", "if you wish to change configuration of the service", func(sc *cli.Cmd) {
 			sc.Action = func() {
+				if len(*name) == 0 {
+					c.PrintHelp()
+					return
+				}
+
 				s.UpdateCmd(*name)
+			}
+		})
+
+		c.Command("logs", "show service logs", func(sc *cli.Cmd) {
+			sc.Action = func() {
+				if len(*name) == 0 {
+					c.PrintHelp()
+					return
+				}
+
+				s.LogsServiceCmd(*name)
 			}
 		})
 

@@ -236,6 +236,11 @@
 			"Rev": "f1f1a805ed361a0e078bb537e4ea78cd37dcf065"
 		},
 		{
+			"ImportPath": "github.com/unloop/gopipe",
+			"Comment": "0.2.0",
+			"Rev": "aca87f166889b8e546d391bd834677bc89de1b75"
+		},
+		{
 			"ImportPath": "golang.org/x/crypto/bcrypt",
 			"Rev": "1f22c0103821b9390939b6776727195525381532"
 		},

@@ -9,31 +9,34 @@ type Stream struct {
 	buffer int       // Buffer size
 	w      io.Writer // Underlying writer to send data to
 	c      int       // Number of bytes written since last call to Count()
+	done   chan bool // Done pipe
 }
 
-func New(w io.Writer) (s *Stream) {
-	s = new(Stream)
+func New(w io.Writer) *Stream {
+	s := new(Stream)
 	s.w = w
 	s.buffer = 1024
-	return
+	s.done = make(chan bool, 1)
+	return s
 }
 
-func (s *Stream) SetBuffer(size int) {
+func (s *Stream) SetBuffer(size int) *Stream {
 	s.buffer = size
+	return s
 }
 
 // Write: standard io.Writer interface.  To use this package call
 // Write continually.  This will both count the bytes written and
 // write to the underlying writer.
 func (s *Stream) Write(p []byte) (n int, err error) {
-	f, _ := s.w.(http.Flusher)
-
 	n, err = s.w.Write(p)
 	if err != nil {
 		return n, err
 	}
 
-	f.Flush()
+	if f, ok := s.w.(http.Flusher); ok {
+		f.Flush()
+	}
 
 	return n, nil
 }
@@ -41,21 +44,33 @@ func (s *Stream) Write(p []byte) (n int, err error) {
 // Pipe io.ReadCloser to io.Writer
 func (s *Stream) Pipe(reader *io.ReadCloser) {
 
-	buffer := make([]byte, s.buffer)
+	var (
+		buffer = make([]byte, s.buffer)
+	)
 
 	for {
-		n, err := (*reader).Read(buffer)
-		if err != nil {
+		select {
+		case <-s.done:
 			(*reader).Close()
-			break
-		}
+			return
+		default:
+			n, err := (*reader).Read(buffer)
+			if err != nil {
+				(*reader).Close()
+				break
+			}
 
-		data := buffer[0:n]
+			s.Write(buffer[0:n])
 
-		s.Write(data)
-
-		for i := 0; i < n; i++ {
-			buffer[i] = 0
+			for i := 0; i < n; i++ {
+				buffer[i] = 0
+			}
 		}
 	}
+}
+
+// Close pipe streaming
+func (s *Stream) Close() {
+	s.done <- true
+	return
 }

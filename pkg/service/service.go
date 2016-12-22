@@ -8,8 +8,12 @@ import (
 	"github.com/lastbackend/lastbackend/libs/interface/k8s"
 	"github.com/lastbackend/lastbackend/pkg/service/resource/deployment"
 	"github.com/lastbackend/lastbackend/pkg/util/generator"
+	"github.com/unloop/gopipe"
+	"io"
+	"k8s.io/client-go/1.5/pkg/api/unversioned"
 	"k8s.io/client-go/1.5/pkg/api/v1"
 	"k8s.io/client-go/1.5/pkg/apis/extensions/v1beta1"
+	"time"
 )
 
 type Service struct {
@@ -83,6 +87,67 @@ func Update(client k8s.IK8S, namespace, name string, config *ServiceConfig) *e.E
 	if er != nil {
 		return e.New("service").Unknown(er)
 	}
+
+	return nil
+}
+
+type ServiceLogsOption struct {
+	Stream       io.Writer
+	Pod          string
+	Container    string
+	Follow       bool
+	Previous     bool
+	Timestamps   bool
+	SinceSeconds *int64
+	SinceTime    *time.Time
+	TailLines    *int64
+	LimitBytes   *int64
+}
+
+func Logs(client k8s.IK8S, namespace string, opts *ServiceLogsOption, close chan bool) *e.Err {
+
+	var (
+		er     error
+		s      = stream.New(opts.Stream)
+		option = v1.PodLogOptions{
+			Container:  opts.Container,
+			Follow:     opts.Follow,
+			Previous:   opts.Previous,
+			Timestamps: opts.Timestamps,
+		}
+	)
+
+	if opts.SinceSeconds != nil {
+		option.SinceSeconds = opts.SinceSeconds
+	}
+
+	if opts.SinceTime != nil {
+		t := unversioned.Time{}
+		t.Time = *opts.SinceTime
+		option.SinceTime = &t
+	}
+
+	if opts.TailLines != nil {
+		option.TailLines = opts.TailLines
+	}
+
+	if opts.LimitBytes != nil {
+		option.LimitBytes = opts.LimitBytes
+	}
+
+	req := client.Core().Pods(namespace).GetLogs(opts.Pod, &option)
+
+	readCloser, err := req.Stream()
+	if err != nil {
+		return e.New("service").Unknown(er)
+	}
+	defer readCloser.Close()
+
+	go s.Pipe(&readCloser)
+
+	<-close
+
+	s.Close()
 
 	return nil
 }

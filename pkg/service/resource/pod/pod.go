@@ -19,11 +19,11 @@ type PodStatus struct {
 }
 
 type Pod struct {
-	ObjectMeta   common.ObjectMeta        `json:"meta"`
-	TypeMeta     common.TypeMeta          `json:"spec"`
-	PodStatus    PodStatus                `json:"status"`
-	RestartCount int32                    `json:"restart_count"`
-	Containers   *container.ContainerList `json:"containers"`
+	ObjectMeta    common.ObjectMeta        `json:"meta"`
+	TypeMeta      common.TypeMeta          `json:"spec"`
+	PodStatus     PodStatus                `json:"status"`
+	RestartCount  int32                    `json:"restart_count"`
+	ContainerList *container.ContainerList `json:"containers"`
 }
 
 func CreatePodList(pods []api.Pod) *PodList {
@@ -36,11 +36,11 @@ func CreatePodList(pods []api.Pod) *PodList {
 	for _, pod := range pods {
 
 		var p = Pod{
-			ObjectMeta:   common.NewObjectMeta(pod.ObjectMeta),
-			TypeMeta:     common.NewTypeMeta(kind),
-			PodStatus:    getPodStatus(pod),
-			RestartCount: getRestartCount(pod),
-			Containers:   container.CreateContainerList(pod.Spec.Containers),
+			ObjectMeta:    common.NewObjectMeta(pod.ObjectMeta),
+			TypeMeta:      common.NewTypeMeta(kind),
+			PodStatus:     getPodStatus(pod),
+			RestartCount:  getRestartCount(pod),
+			ContainerList: container.CreateContainerList(pod.Spec.Containers),
 		}
 
 		podList.Pods = append(podList.Pods, p)
