@@ -28,8 +28,8 @@ func (Writer) Write(p []byte) (int, error) {
 func LogsServiceCmd(name string) {
 
 	var (
-		ctx    = context.Get()
-		choice string
+		ctx           = context.Get()
+		choice string = "0"
 	)
 
 	service, projectName, err := Inspect(name)
@@ -55,16 +55,18 @@ func LogsServiceCmd(name string) {
 		index++
 	}
 
-	for {
-		fmt.Print("\nEnter container number for watch log or ^C for Exit: ")
-		fmt.Scan(&choice)
-		choice = strings.ToLower(choice)
+	if len(m) > 1 {
+		for {
+			fmt.Print("\nEnter container number for watch log or ^C for Exit: ")
+			fmt.Scan(&choice)
+			choice = strings.ToLower(choice)
 
-		if _, ok := m[choice]; ok {
-			break
+			if _, ok := m[choice]; ok {
+				break
+			}
+
+			ctx.Log.Error("Number not correct!")
 		}
-
-		ctx.Log.Error("Number not correct!")
 	}
 
 	reader, err := Logs(projectName, service.Name, m[choice].Pod, m[choice].Container)
