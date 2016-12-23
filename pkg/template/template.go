@@ -3,12 +3,15 @@ package template
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/lastbackend/lastbackend/libs/adapter/k8s/common"
 	e "github.com/lastbackend/lastbackend/libs/errors"
 	"github.com/lastbackend/lastbackend/libs/model"
 	"github.com/lastbackend/lastbackend/pkg/daemon/context"
 	"github.com/lastbackend/lastbackend/pkg/service"
 	"github.com/lastbackend/lastbackend/pkg/volume"
 	"io/ioutil"
+	"k8s.io/client-go/1.5/pkg/api/v1"
+	"k8s.io/client-go/1.5/pkg/apis/extensions/v1beta1"
 )
 
 const packageName = "template"
@@ -70,6 +73,36 @@ func List() (*TemplateList, *e.Err) {
 	return templates, nil
 }
 
+func CreateDefaultDeploymentConfig(name, image string) *Template {
+
+	dp := new(v1beta1.Deployment)
+
+	common.Set_defaults_v1beta1_deployment(dp)
+
+	dp.Name = name
+	dp.GenerateName = name
+	dp.Spec.Selector = new(v1beta1.LabelSelector)
+	dp.Spec.Selector.MatchLabels = map[string]string{
+		"app": name,
+	}
+
+	dp.Spec.Template.Labels = map[string]string{
+		"app": name,
+	}
+
+	dp.Spec.Template.Name = name
+	dp.Spec.Template.Spec.Containers = make([]v1.Container, 1)
+	dp.Spec.Template.Spec.Containers[0].Name = name
+	dp.Spec.Template.Spec.Containers[0].Image = image
+	dp.Spec.Template.Spec.Containers[0].ImagePullPolicy = v1.PullAlways
+
+	var tpl = new(Template)
+	tpl.Deployments = make([]v1beta1.Deployment, 1)
+	tpl.Deployments[0] = *dp
+
+	return tpl
+}
+
 func (t *Template) Provision(namespace, user, project string) *e.Err {
 
 	var (
@@ -114,18 +147,18 @@ func (t *Template) Provision(namespace, user, project string) *e.Err {
 			return err
 		}
 
-		delail, err := s.Deploy(ctx.K8S, namespace)
+		detail, err := s.Deploy(ctx.K8S, namespace)
 		if err != nil {
 			ctx.Log.Info(err.Err())
 			return err
 		}
 
-		var service = new(model.Service)
-		service.User = user
-		service.Project = project
-		service.Name = delail.ObjectMeta.Name
+		var serviceModel = new(model.Service)
+		serviceModel.User = user
+		serviceModel.Project = project
+		serviceModel.Name = detail.ObjectMeta.Name
 
-		service, err = ctx.Storage.Service().Insert(service)
+		serviceModel, err = ctx.Storage.Service().Insert(serviceModel)
 		if err != nil {
 			return err
 		}
@@ -162,18 +195,18 @@ func (t *Template) Provision(namespace, user, project string) *e.Err {
 			return err
 		}
 
-		delail, err := s.Deploy(ctx.K8S, namespace)
+		detail, err := s.Deploy(ctx.K8S, namespace)
 		if err != nil {
 			ctx.Log.Info(err.Err())
 			return err
 		}
 
-		var service = new(model.Service)
-		service.User = user
-		service.Project = project
-		service.Name = delail.ObjectMeta.Name
+		var serviceModel = new(model.Service)
+		serviceModel.User = user
+		serviceModel.Project = project
+		serviceModel.Name = detail.ObjectMeta.Name
 
-		service, err = ctx.Storage.Service().Insert(service)
+		serviceModel, err = ctx.Storage.Service().Insert(serviceModel)
 		if err != nil {
 			return err
 		}
@@ -194,18 +227,18 @@ func (t *Template) Provision(namespace, user, project string) *e.Err {
 			return err
 		}
 
-		delail, err := s.Deploy(ctx.K8S, namespace)
+		detail, err := s.Deploy(ctx.K8S, namespace)
 		if err != nil {
 			ctx.Log.Info(err.Err())
 			return err
 		}
 
-		var service = new(model.Service)
-		service.User = user
-		service.Project = project
-		service.Name = delail.ObjectMeta.Name
+		var serviceModel = new(model.Service)
+		serviceModel.User = user
+		serviceModel.Project = project
+		serviceModel.Name = detail.ObjectMeta.Name
 
-		service, err = ctx.Storage.Service().Insert(service)
+		serviceModel, err = ctx.Storage.Service().Insert(serviceModel)
 		if err != nil {
 			return err
 		}
@@ -218,18 +251,18 @@ func (t *Template) Provision(namespace, user, project string) *e.Err {
 			return err
 		}
 
-		delail, err := s.Deploy(ctx.K8S, namespace)
+		detail, err := s.Deploy(ctx.K8S, namespace)
 		if err != nil {
 			ctx.Log.Info(err.Err())
 			return err
 		}
 
-		var service = new(model.Service)
-		service.User = user
-		service.Project = project
-		service.Name = delail.ObjectMeta.Name
+		var serviceModel = new(model.Service)
+		serviceModel.User = user
+		serviceModel.Project = project
+		serviceModel.Name = detail.ObjectMeta.Name
 
-		service, err = ctx.Storage.Service().Insert(service)
+		serviceModel, err = ctx.Storage.Service().Insert(serviceModel)
 		if err != nil {
 			return err
 		}

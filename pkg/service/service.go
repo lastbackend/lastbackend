@@ -152,7 +152,7 @@ func Logs(client k8s.IK8S, namespace string, opts *ServiceLogsOption, close chan
 	return nil
 }
 
-func (s Service) Deploy(client k8s.IK8S, namespace string) (*Service, *e.Err) {
+func (s *Service) Deploy(client k8s.IK8S, namespace string) (*Service, *e.Err) {
 
 	var er error
 

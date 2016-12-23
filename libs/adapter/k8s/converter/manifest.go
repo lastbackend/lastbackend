@@ -1,6 +1,7 @@
 package converter
 
 import (
+	"github.com/lastbackend/lastbackend/libs/adapter/k8s/common"
 	"k8s.io/client-go/1.5/pkg/api/v1"
 	"k8s.io/client-go/1.5/pkg/apis/extensions/v1beta1"
 )
@@ -9,7 +10,7 @@ func Convert_ReplicationController_to_Deployment(config *v1.ReplicationControlle
 
 	var deployment = new(v1beta1.Deployment)
 
-	Set_defaults_v1beta1_deployment(deployment)
+	common.Set_defaults_v1beta1_deployment(deployment)
 
 	deployment.ObjectMeta = config.ObjectMeta
 	deployment.Spec.Replicas = config.Spec.Replicas
@@ -30,7 +31,7 @@ func Convert_Pod_to_Deployment(config *v1.Pod) *v1beta1.Deployment {
 		deployment       = new(v1beta1.Deployment)
 	)
 
-	Set_defaults_v1beta1_deployment(deployment)
+	common.Set_defaults_v1beta1_deployment(deployment)
 
 	deployment.ObjectMeta = config.ObjectMeta
 	deployment.Spec.Replicas = &replicas
