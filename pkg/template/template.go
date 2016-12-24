@@ -12,6 +12,7 @@ import (
 	"io/ioutil"
 	"k8s.io/client-go/1.5/pkg/api/v1"
 	"k8s.io/client-go/1.5/pkg/apis/extensions/v1beta1"
+	"strings"
 )
 
 const packageName = "template"
@@ -19,7 +20,35 @@ const packageName = "template"
 type Template model.Template
 type TemplateList model.TemplateList
 
-func Get(name, version string) (*Template, *e.Err) {
+type PatchConfig struct {
+	Image   string   `json:"image"`
+	Scale   int32    `json:"scale"`
+	Ports   []Port   `json:"ports"`
+	Env     []EnvVar `json:"env"`
+	Volumes []Volume `json:"volumes"`
+}
+
+// Port represents a network port in a single container
+type Port struct {
+	Name          string `json:"name,omitempty"`
+	ContainerPort int32  `json:"container"`
+	Protocol      string `json:"protocol,omitempty"`
+}
+
+// EnvVar represents an environment variable present in a Container.
+type EnvVar struct {
+	Name  string `json:"name"`
+	Value string `json:"value,omitempty"`
+}
+
+// VolumeMount describes a mounting of a Volume within a container.
+type Volume struct {
+	Name      string `json:"name"`
+	ReadOnly  bool   `json:"readonly,omitempty"`
+	MountPath string `json:"mountpath"`
+}
+
+func Get(name string) (*Template, *e.Err) {
 
 	var (
 		er      error
@@ -27,6 +56,15 @@ func Get(name, version string) (*Template, *e.Err) {
 		httperr = new(e.Http)
 		tpl     = new(Template)
 	)
+
+	parts := strings.Split(name, ":")
+
+	name = parts[0]
+	version := "latest"
+
+	if len(parts) == 2 {
+		version = parts[1]
+	}
 
 	_, _, er = ctx.TemplateRegistry.
 		GET(fmt.Sprintf("/template/%s/%s", name, version)).
@@ -73,7 +111,7 @@ func List() (*TemplateList, *e.Err) {
 	return templates, nil
 }
 
-func CreateDefaultDeploymentConfig(name, image string) *Template {
+func CreateDefaultDeploymentConfig(name string) *Template {
 
 	dp := new(v1beta1.Deployment)
 
@@ -93,7 +131,7 @@ func CreateDefaultDeploymentConfig(name, image string) *Template {
 	dp.Spec.Template.Name = name
 	dp.Spec.Template.Spec.Containers = make([]v1.Container, 1)
 	dp.Spec.Template.Spec.Containers[0].Name = name
-	dp.Spec.Template.Spec.Containers[0].Image = image
+	dp.Spec.Template.Spec.Containers[0].Image = "alpine"
 	dp.Spec.Template.Spec.Containers[0].ImagePullPolicy = v1.PullAlways
 
 	var tpl = new(Template)
@@ -269,6 +307,10 @@ func (t *Template) Provision(namespace, user, project string) *e.Err {
 	}
 
 	return nil
+}
+
+func (t *Template) Patch(config *PatchConfig) {
+	return
 }
 
 func (t *Template) ToJson() ([]byte, *e.Err) {

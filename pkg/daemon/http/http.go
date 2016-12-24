@@ -44,7 +44,6 @@ func NewRouter() *mux.Router {
 
 	// Deploy template/docker/source/repo
 	r.HandleFunc("/deploy", Handler(handler.DeployH, Auth)).Methods("POST")
-	r.HandleFunc("/template", Handler(handler.TemplateDeployH, Auth)).Methods("POST")
 
 	// Template handlers
 	r.HandleFunc("/template", Handler(handler.TemplateListH)).Methods("GET")

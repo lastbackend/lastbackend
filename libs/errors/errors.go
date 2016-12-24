@@ -126,6 +126,14 @@ func (self *err) IncorrectJSON(e ...error) *Err {
 	}
 }
 
+func (self *err) NotImplemented(e ...error) *Err {
+	return &Err{
+		Code:   StatusNotImplemented,
+		origin: getError("not implemented", e...),
+		http:   HTTP.getUnknown(),
+	}
+}
+
 func (self *err) Unknown(e ...error) *Err {
 	return &Err{
 		Code:   StatusUnknown,

@@ -6,6 +6,7 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
+	"fmt"
 )
 
 func IsBool(s string) bool {
@@ -31,6 +32,11 @@ func IsUsername(s string) bool {
 
 func IsPassword(s string) bool {
 	return len(s) > 6
+}
+
+func IsDockerNamespace(s string) bool {
+	// Todo: check valid docker namespace
+	return true
 }
 
 func IsServiceName(s string) bool {
@@ -129,4 +135,28 @@ func IsGitUrl(url string) bool {
 	}
 
 	return res
+}
+
+func validateDockerRepositoryName(repositoryName string) error {
+	var (
+		namespace string
+		name      string
+	)
+	nameParts := strings.SplitN(repositoryName, "/", 2)
+	if len(nameParts) < 2 {
+		namespace = "library"
+		name = nameParts[0]
+	} else {
+		namespace = nameParts[0]
+		name = nameParts[1]
+	}
+	validNamespace := regexp.MustCompile(`^([a-z0-9_]{4,30})$`)
+	if !validNamespace.MatchString(namespace) {
+		return fmt.Errorf("Invalid namespace name (%s), only [a-z0-9_] are allowed, size between 4 and 30", namespace)
+	}
+	validRepo := regexp.MustCompile(`^([a-zA-Z0-9-_.]+)$`)
+	if !validRepo.MatchString(name) {
+		return fmt.Errorf("Invalid repository name (%s), only [a-zA-Z0-9-_.] are allowed", name)
+	}
+	return nil
 }

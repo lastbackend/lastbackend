@@ -2,11 +2,8 @@ package handler
 
 import (
 	"encoding/json"
-	"github.com/gorilla/context"
 	e "github.com/lastbackend/lastbackend/libs/errors"
-	"github.com/lastbackend/lastbackend/libs/model"
 	c "github.com/lastbackend/lastbackend/pkg/daemon/context"
-	"github.com/lastbackend/lastbackend/pkg/service"
 	"github.com/lastbackend/lastbackend/pkg/template"
 	"io"
 	"io/ioutil"
@@ -84,57 +81,6 @@ func TemplateListH(w http.ResponseWriter, _ *http.Request) {
 
 	w.WriteHeader(200)
 	_, er = w.Write(response)
-	if er != nil {
-		ctx.Log.Error("Error: write response", er.Error())
-		return
-	}
-}
-
-func TemplateDeployH(w http.ResponseWriter, r *http.Request) {
-
-	var (
-		er      error
-		ctx     = c.Get()
-		session *model.Session
-	)
-
-	ctx.Log.Debug("Deploy template")
-
-	s, ok := context.GetOk(r, `session`)
-	if !ok {
-		ctx.Log.Error("Error: get session context")
-		e.New("user").AccessDenied().Http(w)
-		return
-	}
-
-	session = s.(*model.Session)
-
-	tpl := template.CreateDefaultDeploymentConfig("redis", "redis")
-
-	srv, err := service.Create(&tpl.Deployments[0])
-	if err != nil {
-		ctx.Log.Info(err.Err())
-		return
-	}
-
-	detail, err := srv.Deploy(ctx.K8S, "785f7418-d731-48d6-868b-074ebd749ae3")
-	if err != nil {
-		ctx.Log.Info(err.Err())
-		return
-	}
-
-	var serviceModel = new(model.Service)
-	serviceModel.User = session.Uid
-	serviceModel.Project = "785f7418-d731-48d6-868b-074ebd749ae3"
-	serviceModel.Name = detail.ObjectMeta.Name
-
-	serviceModel, err = ctx.Storage.Service().Insert(serviceModel)
-	if err != nil {
-		return
-	}
-
-	w.WriteHeader(200)
-	_, er = w.Write([]byte{})
 	if er != nil {
 		ctx.Log.Error("Error: write response", er.Error())
 		return
