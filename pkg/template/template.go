@@ -23,6 +23,8 @@ type TemplateList model.TemplateList
 type PatchConfig struct {
 	Image   string   `json:"image"`
 	Scale   int32    `json:"scale"`
+	Command []string `json:"command"`
+	Args    []string `json:"args"`
 	Ports   []Port   `json:"ports"`
 	Env     []EnvVar `json:"env"`
 	Volumes []Volume `json:"volumes"`
@@ -125,7 +127,8 @@ func CreateDefaultDeploymentConfig(name string) *Template {
 	}
 
 	dp.Spec.Template.Labels = map[string]string{
-		"app": name,
+		"app":  name,
+		"role": "placeholder",
 	}
 
 	dp.Spec.Template.Name = name
@@ -310,6 +313,44 @@ func (t *Template) Provision(namespace, user, project string) *e.Err {
 }
 
 func (t *Template) Patch(config *PatchConfig) {
+	if config == nil {
+		return
+	}
+
+	for _, dp := range t.Deployments {
+		if _, ok := dp.Spec.Template.Labels["role"]; ok && dp.Spec.Template.Labels["role"] == "placeholder" {
+			for _, c := range dp.Spec.Template.Spec.Containers {
+
+				c.Command = config.Command
+				c.Args = config.Args
+				c.Image = config.Image
+
+				for _, p := range config.Ports {
+					c.Ports = append(c.Ports, v1.ContainerPort{
+						Protocol:      v1.Protocol(p.Protocol),
+						ContainerPort: p.ContainerPort,
+						Name:          p.Name,
+					})
+				}
+
+				for _, env := range config.Env {
+					c.Env = append(c.Env, v1.EnvVar{
+						Name:  env.Name,
+						Value: env.Value,
+					})
+				}
+
+				for _, volume := range config.Volumes {
+					c.VolumeMounts = append(c.VolumeMounts, v1.VolumeMount{
+						Name:      volume.Name,
+						ReadOnly:  volume.ReadOnly,
+						MountPath: volume.MountPath,
+					})
+				}
+			}
+		}
+	}
+
 	return
 }
 
