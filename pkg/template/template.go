@@ -23,8 +23,6 @@ type TemplateList model.TemplateList
 type PatchConfig struct {
 	Image   string   `json:"image"`
 	Scale   int32    `json:"scale"`
-	Command []string `json:"command"`
-	Args    []string `json:"args"`
 	Ports   []Port   `json:"ports"`
 	Env     []EnvVar `json:"env"`
 	Volumes []Volume `json:"volumes"`
@@ -321,8 +319,6 @@ func (t *Template) Patch(config *PatchConfig) {
 		if _, ok := dp.Spec.Template.Labels["role"]; ok && dp.Spec.Template.Labels["role"] == "placeholder" {
 			for _, c := range dp.Spec.Template.Spec.Containers {
 
-				c.Command = config.Command
-				c.Args = config.Args
 				c.Image = config.Image
 
 				for _, p := range config.Ports {

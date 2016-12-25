@@ -17,19 +17,19 @@ type deployS struct {
 	Project  *string `json:"project,omitempty"`
 	Name     *string `json:"name,omitempty"`
 	Template *string `json:"template,omitempty"`
-	Docker   *string `json:"docker,omitempty"`
+	Image    *string `json:"image,omitempty"`
 	Url      *string `json:"url,omitempty"`
 	Config   *struct {
 		Scale   *int32      `json:"scale,omitempty"`
-		Ports   *PortList   `json:"ports,omitempty"`
-		Env     *EnvList    `json:"env,omitempty"`
-		Volumes *VolumeList `json:"volumes,omitempty"`
+		Ports   *portList   `json:"ports,omitempty"`
+		Env     *envList    `json:"env,omitempty"`
+		Volumes *volumeList `json:"volumes,omitempty"`
 	} `json:"config,omitempty"`
 }
 
-type PortList []template.Port
-type EnvList []template.EnvVar
-type VolumeList []template.Volume
+type portList []template.Port
+type envList []template.EnvVar
+type volumeList []template.Volume
 
 func (d *deployS) decodeAndValidate(reader io.Reader) *e.Err {
 
@@ -53,7 +53,7 @@ func (d *deployS) decodeAndValidate(reader io.Reader) *e.Err {
 		return e.New("service").BadParameter("project")
 	}
 
-	if d.Docker != nil && !validator.IsServiceName(*d.Docker) {
+	if d.Image != nil && !validator.IsServiceName(*d.Image) {
 		return e.New("service").BadParameter("docker")
 	}
 
@@ -114,8 +114,8 @@ func DeployH(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Set image as default for docker image
-	if rq.Docker != nil {
-		cfg.Image = *rq.Docker
+	if rq.Image != nil {
+		cfg.Image = *rq.Image
 	}
 
 	// If have custom config, then need patch this config

@@ -17,6 +17,7 @@ func WhoamiCmd() {
 
 	user, err := Whoami()
 	if err != nil {
+		fmt.Println(err)
 		ctx.Log.Error(err)
 		return
 	}
@@ -39,6 +40,10 @@ func Whoami() (*model.User, error) {
 		er   = new(e.Http)
 		user = new(model.User)
 	)
+
+	if ctx.Token == "" {
+		return nil, errors.New("You are currently not logged in to the system, to get proper access create a new user or login with an existing user.")
+	}
 
 	_, _, err = ctx.HTTP.
 		GET("/user").

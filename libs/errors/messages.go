@@ -60,5 +60,9 @@ func Message(errStatus string) string {
 		errMessage = "Project not found"
 	}
 
+	if errMessage == "" {
+		errMessage = errStatus
+	}
+
 	return errMessage
 }
