@@ -53,13 +53,24 @@ func (d *deployS) decodeAndValidate(reader io.Reader) *e.Err {
 		return e.New("service").BadParameter("project")
 	}
 
-	if d.Image != nil && !validator.IsServiceName(*d.Image) {
-		return e.New("service").BadParameter("docker")
+	if d.Image != nil {
+		if !validator.IsServiceName(*d.Image) {
+			return e.New("service").BadParameter("docker")
+		}
+
+		if d.Name == nil {
+			*d.Name = "docker"
+		}
 	}
 
-	if d.Url != nil && !validator.IsGitUrl(*d.Url) {
-		ctx.Log.Error("Error: not implement")
-		e.New("service").NotImplemented()
+	if d.Url != nil {
+		if !validator.IsGitUrl(*d.Url) {
+			e.New("service").NotImplemented()
+		}
+
+		if d.Name == nil {
+			*d.Name = "service"
+		}
 	}
 
 	return nil
@@ -69,6 +80,7 @@ func DeployH(w http.ResponseWriter, r *http.Request) {
 
 	var (
 		er      error
+		err     *e.Err
 		ctx     = c.Get()
 		session *model.Session
 		tpl     *template.Template
@@ -96,9 +108,11 @@ func DeployH(w http.ResponseWriter, r *http.Request) {
 
 	// Load template from registry
 	if rq.Template != nil {
-		tpl, err := template.Get(*rq.Template)
+		tpl, err = template.Get(*rq.Template)
 		if err == nil && tpl == nil {
-			err = e.New("template").NotFound()
+			ctx.Log.Error("Error: tempalte " + *rq.Template + " not found")
+			e.New("template").NotFound().Http(w)
+			return
 		}
 		if err != nil {
 			ctx.Log.Error("Error: deploy from template", err.Err())
@@ -174,7 +188,7 @@ func DeployH(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Deploy from service template config
-	err := tpl.Provision(*rq.Project, session.Uid, *rq.Project)
+	err = tpl.Provision(*rq.Project, session.Uid, *rq.Project, *rq.Name)
 	if err != nil {
 		ctx.Log.Error("Error: template provision failed", err.Err())
 		err.Http(w)

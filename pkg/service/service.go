@@ -2,12 +2,10 @@ package service
 
 import (
 	"errors"
-	"fmt"
 	"github.com/lastbackend/lastbackend/libs/adapter/k8s/converter"
 	e "github.com/lastbackend/lastbackend/libs/errors"
 	"github.com/lastbackend/lastbackend/libs/interface/k8s"
 	"github.com/lastbackend/lastbackend/pkg/service/resource/deployment"
-	"github.com/lastbackend/lastbackend/pkg/util/generator"
 	"github.com/unloop/gopipe"
 	"io"
 	"k8s.io/client-go/1.5/pkg/api/unversioned"
@@ -52,7 +50,7 @@ func List(client k8s.IK8S, namespace string) (map[string]*Service, *e.Err) {
 	return serviceList, nil
 }
 
-func Create(config interface{}) (*Service, *e.Err) {
+func Create(name string, config interface{}) (*Service, *e.Err) {
 
 	var s = new(Service)
 
@@ -67,7 +65,7 @@ func Create(config interface{}) (*Service, *e.Err) {
 		return nil, e.New("service").Unknown(errors.New("unknown type config"))
 	}
 
-	s.config.Name = fmt.Sprintf("%s-%s", s.config.Name, generator.GetUUIDV4()[0:12])
+	s.config.Name = name
 
 	return s, nil
 }
@@ -152,19 +150,21 @@ func Logs(client k8s.IK8S, namespace string, opts *ServiceLogsOption, close chan
 	return nil
 }
 
-func (s *Service) Deploy(client k8s.IK8S, namespace string) (*Service, *e.Err) {
+func (s *Service) Deploy(client k8s.IK8S, namespace string) *e.Err {
 
 	var er error
 
 	_, er = client.Extensions().Deployments(namespace).Create(s.config)
 	if er != nil {
-		return nil, e.New("service").Unknown(er)
+		return e.New("service").Unknown(er)
 	}
 
 	detail, er := deployment.Get(client, namespace, s.ObjectMeta.Name)
 	if er != nil {
-		return nil, e.New("service").Unknown(er)
+		return e.New("service").Unknown(er)
 	}
 
-	return &Service{*detail, nil}, nil
+	s = &Service{*detail, nil}
+
+	return nil
 }

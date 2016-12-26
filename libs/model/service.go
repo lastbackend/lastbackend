@@ -23,6 +23,8 @@ type Service struct {
 	Image string `json:"image" gorethink:"image,omitempty"`
 	// Service name
 	Name string `json:"name" gorethink:"name,omitempty"`
+	// Deployments name
+	Deployment string `json:"-" gorethink:"deployment,omitempty"`
 	// Service description
 	Description string `json:"description" gorethink:"description,omitempty"`
 	// Service spec

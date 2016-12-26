@@ -109,7 +109,7 @@ func configure(app *cli.Cli) {
 		//	}
 		//})
 
-		c.Spec = "[URL][-i][-n][--scale]" // [-e][-p][-v]
+		c.Spec = "[URL][-t][-i][-n][--scale]" // [-e][-p][-v]
 
 		var url = c.String(cli.StringArg{Name: "URL", Value: "", Desc: "git repo url", HideValue: true})
 		var name = c.String(cli.StringOpt{Name: "n name", Desc: "service name", HideValue:true})

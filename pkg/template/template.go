@@ -73,13 +73,12 @@ func Get(name string) (*Template, *e.Err) {
 		return nil, e.New(packageName).Unknown(er)
 	}
 
+	if httperr.Code == 404 {
+		return nil, nil
+	}
+
 	if httperr.Code != 0 {
-		switch httperr.Status {
-		case e.StatusNotFound:
-			return nil, nil
-		default:
-			return nil, e.New(packageName).Unknown(er)
-		}
+		return nil, e.New(packageName).Unknown(er)
 	}
 
 	return tpl, nil
@@ -118,9 +117,7 @@ func CreateDefaultDeploymentConfig(name string) *Template {
 	common.Set_defaults_v1beta1_deployment(dp)
 
 	dp.Name = name
-	dp.GenerateName = name
-	dp.Spec.Selector = new(v1beta1.LabelSelector)
-	dp.Spec.Selector.MatchLabels = map[string]string{
+	dp.Labels = map[string]string{
 		"app": name,
 	}
 
@@ -130,7 +127,6 @@ func CreateDefaultDeploymentConfig(name string) *Template {
 	}
 
 	dp.Spec.Template.Name = name
-	dp.Spec.Template.ObjectMeta.Name = name
 	dp.Spec.Template.Spec.Containers = make([]v1.Container, 1)
 	dp.Spec.Template.Spec.Containers[0].Name = name
 	dp.Spec.Template.Spec.Containers[0].Image = "alpine"
@@ -143,23 +139,46 @@ func CreateDefaultDeploymentConfig(name string) *Template {
 	return tpl
 }
 
-func (t *Template) Provision(namespace, user, project string) *e.Err {
+func (t *Template) Provision(namespace, user, project, name string) *e.Err {
 
 	var (
-		er  error
-		ctx = context.Get()
+		er         error
+		ctx        = context.Get()
+		deployFunc = func(name string, val interface{}) *e.Err {
+
+			var serviceModel = new(model.Service)
+			serviceModel.User = user
+			serviceModel.Project = project
+			serviceModel.Name = name
+			serviceModel.Deployment = name
+
+			serviceModel, err := ctx.Storage.Service().Insert(serviceModel)
+			if err != nil {
+				return err
+			}
+
+			s, err := service.Create(serviceModel.ID, val)
+			if err != nil {
+				return err
+			}
+
+			err = s.Deploy(ctx.K8S, namespace)
+			if err != nil {
+				return err
+			}
+
+			return nil
+		}
 	)
 
 	for _, val := range t.PersistentVolumes {
 		pv, err := volume.Create(user, project, &val)
 		if err != nil {
-			ctx.Log.Info(err.Err())
 			return e.New("template").Unknown(err.Err())
 		}
 
 		err = pv.Deploy()
 		if err != nil {
-			ctx.Log.Info(err.Err())
 			return e.New("template").Unknown(err.Err())
 		}
 	}
@@ -181,24 +200,12 @@ func (t *Template) Provision(namespace, user, project string) *e.Err {
 	}
 
 	for _, val := range t.Deployments {
-		s, err := service.Create(&val)
-		if err != nil {
-			ctx.Log.Info(err.Err())
-			return err
+
+		if name == "" {
+			name = val.Name
 		}
 
-		detail, err := s.Deploy(ctx.K8S, namespace)
-		if err != nil {
-			ctx.Log.Info(err.Err())
-			return err
-		}
-
-		var serviceModel = new(model.Service)
-		serviceModel.User = user
-		serviceModel.Project = project
-		serviceModel.Name = detail.ObjectMeta.Name
-
-		serviceModel, err = ctx.Storage.Service().Insert(serviceModel)
+		err := deployFunc(name, &val)
 		if err != nil {
 			return err
 		}
@@ -229,24 +236,12 @@ func (t *Template) Provision(namespace, user, project string) *e.Err {
 	}
 
 	for _, val := range t.Jobs {
-		s, err := service.Create(&val)
-		if err != nil {
-			ctx.Log.Info(err.Err())
-			return err
+
+		if name == "" {
+			name = val.Name
 		}
 
-		detail, err := s.Deploy(ctx.K8S, namespace)
-		if err != nil {
-			ctx.Log.Info(err.Err())
-			return err
-		}
-
-		var serviceModel = new(model.Service)
-		serviceModel.User = user
-		serviceModel.Project = project
-		serviceModel.Name = detail.ObjectMeta.Name
-
-		serviceModel, err = ctx.Storage.Service().Insert(serviceModel)
+		err := deployFunc(name, &val)
 		if err != nil {
 			return err
 		}
@@ -261,48 +256,24 @@ func (t *Template) Provision(namespace, user, project string) *e.Err {
 	}
 
 	for _, val := range t.ReplicationControllers {
-		s, err := service.Create(&val)
-		if err != nil {
-			ctx.Log.Info(err.Err())
-			return err
+
+		if name == "" {
+			name = val.Name
 		}
 
-		detail, err := s.Deploy(ctx.K8S, namespace)
-		if err != nil {
-			ctx.Log.Info(err.Err())
-			return err
-		}
-
-		var serviceModel = new(model.Service)
-		serviceModel.User = user
-		serviceModel.Project = project
-		serviceModel.Name = detail.ObjectMeta.Name
-
-		serviceModel, err = ctx.Storage.Service().Insert(serviceModel)
+		err := deployFunc(name, &val)
 		if err != nil {
 			return err
 		}
 	}
 
 	for _, val := range t.Pods {
-		s, err := service.Create(&val)
-		if err != nil {
-			ctx.Log.Info(err.Err())
-			return err
+
+		if name == "" {
+			name = val.Name
 		}
 
-		detail, err := s.Deploy(ctx.K8S, namespace)
-		if err != nil {
-			ctx.Log.Info(err.Err())
-			return err
-		}
-
-		var serviceModel = new(model.Service)
-		serviceModel.User = user
-		serviceModel.Project = project
-		serviceModel.Name = detail.ObjectMeta.Name
-
-		serviceModel, err = ctx.Storage.Service().Insert(serviceModel)
+		err := deployFunc(name, &val)
 		if err != nil {
 			return err
 		}
