@@ -109,22 +109,25 @@ func configure(app *cli.Cli) {
 		//	}
 		//})
 
-		c.Spec = "[TARGET]"
+		c.Spec = "[URL][-t][-i][-n][--scale]" // [-e][-p][-v]
 
-		var target = c.String(cli.StringArg{
-			Name:      "TARGET",
-			Value:     "",
-			Desc:      "template name or git repo url",
-			HideValue: true,
-		})
+		var url = c.String(cli.StringArg{Name: "URL", Value: "", Desc: "git repo url", HideValue: true})
+		var name = c.String(cli.StringOpt{Name: "n name", Desc: "service name", HideValue:true})
+		var image = c.String(cli.StringOpt{Name: "i image", Desc: "docker image name", HideValue:true})
+		var template = c.String(cli.StringOpt{Name: "t tempalte", Desc: "tempalte name", HideValue:true})
+
+		var scale = c.Int(cli.IntOpt{Name: "scale", Desc: "service scale", HideValue:true})
+		//var env = c.Strings(cli.StringsOpt{Name: "e", Desc: "enviroment", HideValue:true})
+		//var ports = c.Strings(cli.StringsOpt{Name: "p", Desc: "ports", HideValue:true})
+		//var volumes = c.Strings(cli.StringsOpt{Name: "v", Desc: "volumes", HideValue:true})
 
 		c.Action = func() {
-			if len(*target) == 0 {
+			if len(*url) == 0 && len(*image) == 0 && len(*template) == 0 {
 				c.PrintHelp()
 				return
 			}
 
-			deploy.DeployTargetCmd(*target)
+			deploy.DeployCmd(*name, *image, *template, *url, *scale)
 		}
 
 	})
@@ -133,23 +136,13 @@ func configure(app *cli.Cli) {
 
 		c.Spec = "[NAME]"
 
-		var name = c.String(cli.StringArg{
-			Name:      "NAME",
-			Value:     "",
-			Desc:      "name of your project",
-			HideValue: true,
-		})
+		var name = c.String(cli.StringArg{Name: "NAME", Value: "", Desc: "name of your project", HideValue: true})
 
 		c.Command("create", "Create new project", func(sc *cli.Cmd) {
 
 			sc.Spec = "[--desc]"
 
-			var desc = sc.String(cli.StringOpt{
-				Name:      "desc",
-				Value:     "",
-				Desc:      "Set description info",
-				HideValue: true,
-			})
+			var desc = sc.String(cli.StringOpt{Name: "desc", Value: "", Desc: "Set description info", HideValue: true})
 
 			sc.Action = func() {
 				if len(*name) == 0 {
@@ -198,19 +191,8 @@ func configure(app *cli.Cli) {
 
 			sc.Spec = "[--desc][--name]"
 
-			var desc = sc.String(cli.StringOpt{
-				Name:      "desc",
-				Value:     "",
-				Desc:      "Set description info",
-				HideValue: true,
-			})
-
-			var newProjectName = sc.String(cli.StringOpt{
-				Name:      "name",
-				Value:     "",
-				Desc:      "Set new project name",
-				HideValue: true,
-			})
+			var desc = sc.String(cli.StringOpt{Name: "desc", Value: "", Desc: "Set description info", HideValue: true})
+			var newProjectName = sc.String(cli.StringOpt{Name: "name", Value: "", Desc: "Set new project name", HideValue: true})
 
 			sc.Action = func() {
 				if len(*name) == 0 {
@@ -238,12 +220,7 @@ func configure(app *cli.Cli) {
 
 		c.Spec = "[SERVICE_NAME]"
 
-		var name = c.String(cli.StringArg{
-			Name:      "SERVICE_NAME",
-			Value:     "",
-			Desc:      "name of service",
-			HideValue: true,
-		})
+		var name = c.String(cli.StringArg{Name: "SERVICE_NAME", Value: "", Desc: "name of service", HideValue: true})
 
 		c.Command("inspect", "inspect the service", func(sc *cli.Cmd) {
 			sc.Action = func() {

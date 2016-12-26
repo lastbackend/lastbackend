@@ -10,6 +10,7 @@ import (
 	"k8s.io/client-go/1.5/pkg/apis/extensions/v1beta1"
 	"k8s.io/client-go/1.5/pkg/types"
 	"k8s.io/client-go/1.5/pkg/util/intstr"
+	"github.com/lastbackend/lastbackend/libs/adapter/k8s/common"
 )
 
 var (
@@ -479,7 +480,7 @@ func Convert_PodList_v1_to_api(in *v1.PodList, out *api.PodList) error {
 
 func Convert_Pod_v1_to_api(in *v1.Pod, out *api.Pod) error {
 
-	Set_defaults_v1_Pod(in)
+	common.Set_defaults_v1_Pod(in)
 
 	if err := Convert_ObjectMeta_v1_to_api(&in.ObjectMeta, &out.ObjectMeta); err != nil {
 		return err
@@ -831,7 +832,7 @@ func Convert_Deployment_v1beta1_to_extensions(in *v1beta1.Deployment, out *exten
 		return error_outcoming_data
 	}
 
-	Set_defaults_extensions_deployment(out)
+	common.Set_defaults_extensions_deployment(out)
 
 	// Convert TypeMeta
 	out.APIVersion = in.APIVersion

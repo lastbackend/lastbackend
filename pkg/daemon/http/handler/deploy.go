@@ -7,17 +7,30 @@ import (
 	"github.com/lastbackend/lastbackend/libs/model"
 	c "github.com/lastbackend/lastbackend/pkg/daemon/context"
 	"github.com/lastbackend/lastbackend/pkg/template"
+	"github.com/lastbackend/lastbackend/pkg/util/converter"
 	"github.com/lastbackend/lastbackend/pkg/util/validator"
 	"io"
 	"io/ioutil"
 	"net/http"
-	"strings"
 )
 
 type deployS struct {
-	Project *string `json:"project,omitempty"`
-	Target  *string `json:"target,omitempty"`
+	Project  *string `json:"project,omitempty"`
+	Name     *string `json:"name,omitempty"`
+	Template *string `json:"template,omitempty"`
+	Image    *string `json:"image,omitempty"`
+	Url      *string `json:"url,omitempty"`
+	Config   *struct {
+		Scale   *int32      `json:"scale,omitempty"`
+		Ports   *portList   `json:"ports,omitempty"`
+		Env     *envList    `json:"env,omitempty"`
+		Volumes *volumeList `json:"volumes,omitempty"`
+	} `json:"config,omitempty"`
 }
+
+type portList []template.Port
+type envList []template.EnvVar
+type volumeList []template.Volume
 
 func (d *deployS) decodeAndValidate(reader io.Reader) *e.Err {
 
@@ -41,8 +54,40 @@ func (d *deployS) decodeAndValidate(reader io.Reader) *e.Err {
 		return e.New("service").BadParameter("project")
 	}
 
-	if d.Target == nil {
-		return e.New("service").BadParameter("target")
+	if d.Template != nil {
+		if d.Name == nil {
+			d.Name = d.Template
+		}
+	}
+
+	if d.Image != nil && d.Url == nil {
+		if !validator.IsServiceName(*d.Image) {
+			return e.New("service").BadParameter("docker")
+		}
+
+		source, err := converter.DockerNamespaceParse(*d.Image)
+		if err != nil {
+			return e.New("service").BadParameter("image")
+		}
+
+		if d.Name == nil {
+			d.Name = &source.Repo
+		}
+	}
+
+	if d.Url != nil {
+		if !validator.IsGitUrl(*d.Url) {
+			e.New("service").BadParameter("url")
+		}
+
+		source, err := converter.GitUrlParse(*d.Url)
+		if err != nil {
+			return e.New("service").BadParameter("url")
+		}
+
+		if d.Name == nil {
+			d.Name = &source.Repo
+		}
 	}
 
 	return nil
@@ -52,8 +97,11 @@ func DeployH(w http.ResponseWriter, r *http.Request) {
 
 	var (
 		er      error
+		err     *e.Err
 		ctx     = c.Get()
 		session *model.Session
+		tpl     *template.Template
+		cfg     = new(template.PatchConfig)
 	)
 
 	ctx.Log.Debug("Deploy handler")
@@ -75,34 +123,78 @@ func DeployH(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if validator.IsGitUrl(*rq.Target) {
-		// TODO: deploy from git repo url
-		ctx.Log.Error("Error: not implement")
-		e.HTTP.NotImplemented(w)
-		return
+	// Load template from registry
+	if rq.Template != nil {
+		tpl, err = template.Get(*rq.Template)
+		if err == nil && tpl == nil {
+			ctx.Log.Error("Error: tempalte " + *rq.Template + " not found")
+			e.New("template").NotFound().Http(w)
+			return
+		}
+		if err != nil {
+			ctx.Log.Error("Error: deploy from template", err.Err())
+			err.Http(w)
+			return
+		}
 	}
 
-	// Below this template deployment
-	parts := strings.Split(*rq.Target, ":")
-
-	var name = parts[0]
-	var version = "latest"
-
-	if len(parts) == 2 {
-		version = parts[1]
+	// If you are not using a template, then create a standard configuration template
+	if tpl == nil {
+		tpl = template.CreateDefaultDeploymentConfig(*rq.Name)
 	}
 
-	tpl, err := template.Get(name, version)
-	if err == nil && tpl == nil {
-		err = e.New("template").NotFound()
-	}
-	if err != nil {
-		ctx.Log.Error("Error: deploy from template", err.Err())
-		err.Http(w)
-		return
+	cfg.Name = *rq.Name
+
+	// Set image as default for docker image
+	if rq.Image != nil {
+		cfg.Image = *rq.Image
 	}
 
-	err = tpl.Provision(*rq.Project, session.Uid, *rq.Project)
+	// If have custom config, then need patch this config
+	if rq.Config != nil {
+
+		if rq.Config.Scale != nil {
+			cfg.Scale = *rq.Config.Scale
+		}
+
+		if rq.Config.Ports != nil {
+			for _, item := range *rq.Config.Ports {
+				ports := template.Port{
+					Name:          item.Name,
+					ContainerPort: item.ContainerPort,
+					Protocol:      item.Protocol,
+				}
+
+				cfg.Ports = append(cfg.Ports, ports)
+			}
+		}
+
+		if rq.Config.Env != nil {
+			for _, item := range *rq.Config.Env {
+				env := template.EnvVar{
+					Name:  item.Name,
+					Value: item.Value,
+				}
+
+				cfg.Env = append(cfg.Env, env)
+			}
+		}
+
+		if rq.Config.Volumes != nil {
+			for _, item := range *rq.Config.Volumes {
+				volume := template.Volume{
+					Name:      item.Name,
+					ReadOnly:  item.ReadOnly,
+					MountPath: item.MountPath,
+				}
+
+				cfg.Volumes = append(cfg.Volumes, volume)
+			}
+		}
+	}
+
+	// Deploy from service template config
+	err = tpl.Provision(*rq.Project, session.Uid, *rq.Project, cfg)
 	if err != nil {
 		ctx.Log.Error("Error: template provision failed", err.Err())
 		err.Http(w)

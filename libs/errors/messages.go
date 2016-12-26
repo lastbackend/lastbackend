@@ -60,5 +60,13 @@ func Message(errStatus string) string {
 		errMessage = "Project not found"
 	}
 
+	if errStatus == "TEMPLATE_NOT_FOUND" {
+		errMessage = "Tempalte not found"
+	}
+
+	if errMessage == "" {
+		errMessage = errStatus
+	}
+
 	return errMessage
 }

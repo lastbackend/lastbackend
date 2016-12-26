@@ -65,9 +65,9 @@ func ServiceListH(w http.ResponseWriter, r *http.Request) {
 	var list = model.ServiceList{}
 	var response []byte
 
-	if servicesSpec != nil {
+	if serviceModel != nil {
 		for _, val := range *serviceModel {
-			val.Detail = servicesSpec[val.Name]
+			val.Detail = servicesSpec[val.ID]
 			list = append(list, val)
 		}
 
@@ -142,7 +142,7 @@ func ServiceInfoH(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	serviceSpec, err := service.Get(ctx.K8S, serviceModel.Project, serviceModel.Name)
+	serviceSpec, err := service.Get(ctx.K8S, serviceModel.Project, serviceModel.ID)
 	if err != nil {
 		ctx.Log.Error("Error: get serivce spec from cluster", err.Err())
 		err.Http(w)
@@ -257,7 +257,7 @@ func ServiceUpdateH(w http.ResponseWriter, r *http.Request) {
 
 	cfg := rq.CreateServiceConfig()
 
-	err = service.Update(ctx.K8S, serviceModel.Project, serviceModel.Name, cfg)
+	err = service.Update(ctx.K8S, serviceModel.Project, serviceModel.ID, cfg)
 	if err != nil {
 		ctx.Log.Error("Error: update service", err.Err())
 		err.Http(w)
