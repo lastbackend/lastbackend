@@ -71,7 +71,8 @@ func DeployH(w http.ResponseWriter, r *http.Request) {
 		er      error
 		ctx     = c.Get()
 		session *model.Session
-		tpl     = new(template.Template)
+		tpl     *template.Template
+		cfg     *template.PatchConfig
 	)
 
 	ctx.Log.Debug("Deploy handler")
@@ -106,8 +107,6 @@ func DeployH(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	cfg := new(template.PatchConfig)
-
 	// If you are not using a template, then create a standard configuration template
 	if tpl == nil {
 		tpl = template.CreateDefaultDeploymentConfig(*rq.Name)
@@ -115,11 +114,20 @@ func DeployH(w http.ResponseWriter, r *http.Request) {
 
 	// Set image as default for docker image
 	if rq.Image != nil {
+
+		if cfg == nil {
+			cfg = new(template.PatchConfig)
+		}
+
 		cfg.Image = *rq.Image
 	}
 
 	// If have custom config, then need patch this config
 	if rq.Config != nil {
+
+		if cfg == nil {
+			cfg = new(template.PatchConfig)
+		}
 
 		if rq.Config.Scale != nil {
 			cfg.Scale = *rq.Config.Scale
@@ -159,7 +167,9 @@ func DeployH(w http.ResponseWriter, r *http.Request) {
 				cfg.Volumes = append(cfg.Volumes, volume)
 			}
 		}
+	}
 
+	if cfg != nil {
 		tpl.Patch(cfg)
 	}
 

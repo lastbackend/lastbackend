@@ -130,6 +130,7 @@ func CreateDefaultDeploymentConfig(name string) *Template {
 	}
 
 	dp.Spec.Template.Name = name
+	dp.Spec.Template.ObjectMeta.Name = name
 	dp.Spec.Template.Spec.Containers = make([]v1.Container, 1)
 	dp.Spec.Template.Spec.Containers[0].Name = name
 	dp.Spec.Template.Spec.Containers[0].Image = "alpine"
@@ -315,11 +316,24 @@ func (t *Template) Patch(config *PatchConfig) {
 		return
 	}
 
-	for _, dp := range t.Deployments {
-		if _, ok := dp.Spec.Template.Labels["role"]; ok && dp.Spec.Template.Labels["role"] == "placeholder" {
-			for _, c := range dp.Spec.Template.Spec.Containers {
+	for dp_index := range t.Deployments {
+		var dp = &t.Deployments[dp_index]
 
-				c.Image = config.Image
+		if _, ok := dp.Spec.Template.Labels["role"]; ok && dp.Spec.Template.Labels["role"] == "placeholder" {
+
+			delete(dp.Spec.Template.Labels, "role")
+
+			if config.Scale > 1 {
+				dp.Spec.Replicas = &config.Scale
+			}
+
+			for c_index := range dp.Spec.Template.Spec.Containers {
+
+				var c = &dp.Spec.Template.Spec.Containers[c_index]
+
+				if config.Image != "" {
+					c.Image = config.Image
+				}
 
 				for _, p := range config.Ports {
 					c.Ports = append(c.Ports, v1.ContainerPort{

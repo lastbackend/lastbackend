@@ -89,8 +89,7 @@ func Set_defaults_v1beta1_deployment(obj *v1beta1.Deployment) {
 
 	if strategy.Type == v1beta1.RollingUpdateDeploymentStrategyType {
 		if strategy.RollingUpdate == nil {
-			rollingUpdate := v1beta1.RollingUpdateDeployment{}
-			strategy.RollingUpdate = &rollingUpdate
+			strategy.RollingUpdate = new(v1beta1.RollingUpdateDeployment)
 		}
 
 		// Set default MaxUnavailable as 1 by default.
