@@ -7,6 +7,7 @@ import (
 	"github.com/lastbackend/lastbackend/libs/model"
 	c "github.com/lastbackend/lastbackend/pkg/daemon/context"
 	"github.com/lastbackend/lastbackend/pkg/template"
+	"github.com/lastbackend/lastbackend/pkg/util/converter"
 	"github.com/lastbackend/lastbackend/pkg/util/validator"
 	"io"
 	"io/ioutil"
@@ -58,18 +59,28 @@ func (d *deployS) decodeAndValidate(reader io.Reader) *e.Err {
 			return e.New("service").BadParameter("docker")
 		}
 
+		source, err := converter.DockerNamespaceParse(*d.Image)
+		if err != nil {
+			return e.New("service").BadParameter("image")
+		}
+
 		if d.Name == nil {
-			*d.Name = "docker"
+			*d.Name = source.Repo
 		}
 	}
 
 	if d.Url != nil {
 		if !validator.IsGitUrl(*d.Url) {
-			e.New("service").NotImplemented()
+			e.New("service").BadParameter("url")
+		}
+
+		source, err := converter.GitUrlParse(*d.Url)
+		if err != nil {
+			return e.New("service").BadParameter("url")
 		}
 
 		if d.Name == nil {
-			*d.Name = "service"
+			*d.Name = source.Repo
 		}
 	}
 
