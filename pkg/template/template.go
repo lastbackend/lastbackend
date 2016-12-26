@@ -284,9 +284,11 @@ func (t *Template) Patch(config *PatchConfig) {
 	for dp_index := range t.Deployments {
 		var dp = &t.Deployments[dp_index]
 
-		dp.Name =  config.Name
+		dp.Name =  config.Name+"-"+dp.Name
 
 		if _, ok := dp.Spec.Template.Labels["role"]; ok && dp.Spec.Template.Labels["role"] == "placeholder" {
+
+			dp.Name =  config.Name
 
 			delete(dp.Spec.Template.Labels, "role")
 
