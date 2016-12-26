@@ -54,7 +54,13 @@ func (d *deployS) decodeAndValidate(reader io.Reader) *e.Err {
 		return e.New("service").BadParameter("project")
 	}
 
-	if d.Image != nil {
+	if d.Template != nil {
+		if d.Name == nil {
+			d.Name = d.Template
+		}
+	}
+
+	if d.Image != nil && d.Url == nil {
 		if !validator.IsServiceName(*d.Image) {
 			return e.New("service").BadParameter("docker")
 		}
@@ -65,7 +71,7 @@ func (d *deployS) decodeAndValidate(reader io.Reader) *e.Err {
 		}
 
 		if d.Name == nil {
-			*d.Name = source.Repo
+			d.Name = &source.Repo
 		}
 	}
 
@@ -80,7 +86,7 @@ func (d *deployS) decodeAndValidate(reader io.Reader) *e.Err {
 		}
 
 		if d.Name == nil {
-			*d.Name = source.Repo
+			d.Name = &source.Repo
 		}
 	}
 
@@ -95,7 +101,7 @@ func DeployH(w http.ResponseWriter, r *http.Request) {
 		ctx     = c.Get()
 		session *model.Session
 		tpl     *template.Template
-		cfg     *template.PatchConfig
+		cfg     = new(template.PatchConfig)
 	)
 
 	ctx.Log.Debug("Deploy handler")
@@ -137,22 +143,15 @@ func DeployH(w http.ResponseWriter, r *http.Request) {
 		tpl = template.CreateDefaultDeploymentConfig(*rq.Name)
 	}
 
+	cfg.Name = *rq.Name
+
 	// Set image as default for docker image
 	if rq.Image != nil {
-
-		if cfg == nil {
-			cfg = new(template.PatchConfig)
-		}
-
 		cfg.Image = *rq.Image
 	}
 
 	// If have custom config, then need patch this config
 	if rq.Config != nil {
-
-		if cfg == nil {
-			cfg = new(template.PatchConfig)
-		}
 
 		if rq.Config.Scale != nil {
 			cfg.Scale = *rq.Config.Scale
@@ -194,12 +193,8 @@ func DeployH(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	if cfg != nil {
-		tpl.Patch(cfg)
-	}
-
 	// Deploy from service template config
-	err = tpl.Provision(*rq.Project, session.Uid, *rq.Project, *rq.Name)
+	err = tpl.Provision(*rq.Project, session.Uid, *rq.Project, cfg)
 	if err != nil {
 		ctx.Log.Error("Error: template provision failed", err.Err())
 		err.Http(w)

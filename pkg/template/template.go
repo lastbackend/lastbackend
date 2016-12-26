@@ -2,8 +2,10 @@ package template
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"github.com/lastbackend/lastbackend/libs/adapter/k8s/common"
+	"github.com/lastbackend/lastbackend/libs/adapter/k8s/converter"
 	e "github.com/lastbackend/lastbackend/libs/errors"
 	"github.com/lastbackend/lastbackend/libs/model"
 	"github.com/lastbackend/lastbackend/pkg/daemon/context"
@@ -21,6 +23,7 @@ type Template model.Template
 type TemplateList model.TemplateList
 
 type PatchConfig struct {
+	Name    string   `json:"name"`
 	Image   string   `json:"image"`
 	Scale   int32    `json:"scale"`
 	Ports   []Port   `json:"ports"`
@@ -139,29 +142,41 @@ func CreateDefaultDeploymentConfig(name string) *Template {
 	return tpl
 }
 
-func (t *Template) Provision(namespace, user, project, name string) *e.Err {
+func (t *Template) Provision(namespace, user, project string, patchConfig *PatchConfig) *e.Err {
+
+	t.Patch(patchConfig)
 
 	var (
 		er         error
 		ctx        = context.Get()
-		deployFunc = func(name string, val interface{}) *e.Err {
+		deployFunc = func(val interface{}) *e.Err {
+
+			var config *v1beta1.Deployment
+
+			switch val.(type) {
+			case *v1beta1.Deployment:
+				config = val.(*v1beta1.Deployment)
+			case *v1.ReplicationController:
+				config = converter.Convert_ReplicationController_to_Deployment(val.(*v1.ReplicationController))
+			case *v1.Pod:
+				config = converter.Convert_Pod_to_Deployment(val.(*v1.Pod))
+			default:
+				return e.New("service").Unknown(errors.New("unknown type config"))
+			}
 
 			var serviceModel = new(model.Service)
 			serviceModel.User = user
 			serviceModel.Project = project
-			serviceModel.Name = name
+			serviceModel.Name = config.Name
 
 			serviceModel, err := ctx.Storage.Service().Insert(serviceModel)
 			if err != nil {
 				return err
 			}
 
-			s, err := service.Create(serviceModel.ID, val)
-			if err != nil {
-				return err
-			}
+			config.Name = serviceModel.ID
 
-			err = s.Deploy(ctx.K8S, namespace)
+			_, err = service.Deploy(ctx.K8S, namespace, config)
 			if err != nil {
 				return err
 			}
@@ -199,12 +214,7 @@ func (t *Template) Provision(namespace, user, project, name string) *e.Err {
 	}
 
 	for _, val := range t.Deployments {
-
-		if name == "" {
-			name = val.Name
-		}
-
-		err := deployFunc(name, &val)
+		err := deployFunc(&val)
 		if err != nil {
 			return err
 		}
@@ -235,12 +245,7 @@ func (t *Template) Provision(namespace, user, project, name string) *e.Err {
 	}
 
 	for _, val := range t.Jobs {
-
-		if name == "" {
-			name = val.Name
-		}
-
-		err := deployFunc(name, &val)
+		err := deployFunc(&val)
 		if err != nil {
 			return err
 		}
@@ -255,24 +260,14 @@ func (t *Template) Provision(namespace, user, project, name string) *e.Err {
 	}
 
 	for _, val := range t.ReplicationControllers {
-
-		if name == "" {
-			name = val.Name
-		}
-
-		err := deployFunc(name, &val)
+		err := deployFunc(&val)
 		if err != nil {
 			return err
 		}
 	}
 
 	for _, val := range t.Pods {
-
-		if name == "" {
-			name = val.Name
-		}
-
-		err := deployFunc(name, &val)
+		err := deployFunc(&val)
 		if err != nil {
 			return err
 		}
@@ -288,6 +283,8 @@ func (t *Template) Patch(config *PatchConfig) {
 
 	for dp_index := range t.Deployments {
 		var dp = &t.Deployments[dp_index]
+
+		dp.Name =  config.Name
 
 		if _, ok := dp.Spec.Template.Labels["role"]; ok && dp.Spec.Template.Labels["role"] == "placeholder" {
 

@@ -1,8 +1,6 @@
 package service
 
 import (
-	"errors"
-	"github.com/lastbackend/lastbackend/libs/adapter/k8s/converter"
 	e "github.com/lastbackend/lastbackend/libs/errors"
 	"github.com/lastbackend/lastbackend/libs/interface/k8s"
 	"github.com/lastbackend/lastbackend/pkg/service/resource/deployment"
@@ -16,7 +14,6 @@ import (
 
 type Service struct {
 	deployment.Deployment
-	config *v1beta1.Deployment
 }
 
 func Get(client k8s.IK8S, namespace, name string) (*Service, *e.Err) {
@@ -28,7 +25,7 @@ func Get(client k8s.IK8S, namespace, name string) (*Service, *e.Err) {
 		return nil, e.New("service").Unknown(er)
 	}
 
-	return &Service{*detail, nil}, nil
+	return &Service{*detail}, nil
 }
 
 func List(client k8s.IK8S, namespace string) (map[string]*Service, *e.Err) {
@@ -44,30 +41,10 @@ func List(client k8s.IK8S, namespace string) (map[string]*Service, *e.Err) {
 	}
 
 	for _, val := range detailList {
-		serviceList[val.ObjectMeta.Name] = &Service{val, nil}
+		serviceList[val.ObjectMeta.Name] = &Service{val}
 	}
 
 	return serviceList, nil
-}
-
-func Create(name string, config interface{}) (*Service, *e.Err) {
-
-	var s = new(Service)
-
-	switch config.(type) {
-	case *v1beta1.Deployment:
-		s.config = config.(*v1beta1.Deployment)
-	case *v1.ReplicationController:
-		s.config = converter.Convert_ReplicationController_to_Deployment(config.(*v1.ReplicationController))
-	case *v1.Pod:
-		s.config = converter.Convert_Pod_to_Deployment(config.(*v1.Pod))
-	default:
-		return nil, e.New("service").Unknown(errors.New("unknown type config"))
-	}
-
-	s.config.Name = name
-
-	return s, nil
 }
 
 func Update(client k8s.IK8S, namespace, name string, config *ServiceConfig) *e.Err {
@@ -150,21 +127,19 @@ func Logs(client k8s.IK8S, namespace string, opts *ServiceLogsOption, close chan
 	return nil
 }
 
-func (s *Service) Deploy(client k8s.IK8S, namespace string) *e.Err {
+func Deploy(client k8s.IK8S, namespace string, config *v1beta1.Deployment) (*Service, *e.Err) {
 
 	var er error
 
-	_, er = client.Extensions().Deployments(namespace).Create(s.config)
+	_, er = client.Extensions().Deployments(namespace).Create(config)
 	if er != nil {
-		return e.New("service").Unknown(er)
+		return nil, e.New("service").Unknown(er)
 	}
 
-	detail, er := deployment.Get(client, namespace, s.ObjectMeta.Name)
+	detail, er := deployment.Get(client, namespace, config.Name)
 	if er != nil {
-		return e.New("service").Unknown(er)
+		return nil, e.New("service").Unknown(er)
 	}
 
-	s = &Service{*detail, nil}
-
-	return nil
+	return &Service{*detail}, nil
 }
