@@ -150,7 +150,6 @@ func (t *Template) Provision(namespace, user, project, name string) *e.Err {
 			serviceModel.User = user
 			serviceModel.Project = project
 			serviceModel.Name = name
-			serviceModel.Deployment = name
 
 			serviceModel, err := ctx.Storage.Service().Insert(serviceModel)
 			if err != nil {
