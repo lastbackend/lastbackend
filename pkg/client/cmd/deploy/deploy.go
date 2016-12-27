@@ -7,23 +7,45 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/client/context"
 )
 
-type createS struct {
-	Project string `json:"project"`
-	Target  string `json:"target"`
+type deployS struct {
+	Project  string  `json:"project,omitempty"`
+	Name     string  `json:"name,omitempty"`
+	Template string  `json:"template,omitempty"`
+	Image    string  `json:"image,omitempty"`
+	Url      string  `json:"url,omitempty"`
+	Config   *Config `json:"config,omitempty"`
 }
 
-func DeployTargetCmd(target string) {
+type Config struct {
+	Scale int `json:"scale,omitempty"`
+	//Ports   []string `json:"ports,omitempty"`
+	//Env     []string `json:"env,omitempty"`
+	//Volumes []string `json:"volumes,omitempty"`
+}
 
-	var ctx = context.Get()
+func DeployCmd(name, image, template, url string, scale int) {
 
-	err := DeployTarget(target)
+	var (
+		ctx    = context.Get()
+		config *Config
+	)
+
+	if scale != 0 /* || len(env) != 0 || len(ports) != 0 || len(volumes) != 0 */ {
+		config = new(Config)
+		config.Scale = scale
+		//config.Env = env
+		//config.Ports = ports
+		//config.Volumes = volumes
+	}
+
+	err := Deploy(name, image, template, url, config)
 	if err != nil {
 		ctx.Log.Error(err)
 		return
 	}
 }
 
-func DeployTarget(target string) error {
+func Deploy(name, image, template, url string, config *Config) error {
 
 	var (
 		err     error
@@ -42,11 +64,34 @@ func DeployTarget(target string) error {
 		return errors.New("Project didn't select")
 	}
 
+	var cfg = deployS{}
+	cfg.Project = project.ID
+
+	if name != "" {
+		cfg.Name = name
+	}
+
+	if template != "" {
+		cfg.Template = template
+	}
+
+	if image != "" {
+		cfg.Image = image
+	}
+
+	if url != "" {
+		cfg.Url = url
+	}
+
+	if config != nil {
+		cfg.Config = config
+	}
+
 	_, _, err = ctx.HTTP.
 		POST("/deploy").
 		AddHeader("Content-Type", "application/json").
 		AddHeader("Authorization", "Bearer "+ctx.Token).
-		BodyJSON(createS{project.ID, target}).
+		BodyJSON(cfg).
 		Request(res, er)
 	if err != nil {
 		return err

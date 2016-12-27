@@ -1,16 +1,54 @@
 package handler
 
 import (
-	"github.com/lastbackend/lastbackend/pkg/daemon/context"
+	"encoding/json"
+	e "github.com/lastbackend/lastbackend/libs/errors"
+	c "github.com/lastbackend/lastbackend/pkg/daemon/context"
 	"github.com/lastbackend/lastbackend/pkg/template"
+	"io"
+	"io/ioutil"
 	"net/http"
 )
+
+type deployTemplateS struct {
+	Project *string `json:"project,omitempty"`
+	Target  *string `json:"target,omitempty"`
+}
+
+func (d *deployTemplateS) decodeAndValidate(reader io.Reader) *e.Err {
+
+	var (
+		err error
+		ctx = c.Get()
+	)
+
+	body, err := ioutil.ReadAll(reader)
+	if err != nil {
+		ctx.Log.Error(err)
+		return e.New("service").Unknown(err)
+	}
+
+	err = json.Unmarshal(body, d)
+	if err != nil {
+		return e.New("service").IncorrectJSON(err)
+	}
+
+	if d.Project == nil {
+		return e.New("service").BadParameter("project")
+	}
+
+	if d.Target == nil {
+		return e.New("service").BadParameter("target")
+	}
+
+	return nil
+}
 
 func TemplateListH(w http.ResponseWriter, _ *http.Request) {
 
 	var (
 		er             error
-		ctx            = context.Get()
+		ctx            = c.Get()
 		response_empty = func() {
 			w.WriteHeader(200)
 			_, er = w.Write([]byte("[]"))

@@ -43,7 +43,7 @@ func ServiceListH(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if err != nil {
-		ctx.Log.Error("Error: find service by id", err.Err())
+		ctx.Log.Error("Error: find project by id", err.Err())
 		err.Http(w)
 		return
 	}
@@ -65,9 +65,9 @@ func ServiceListH(w http.ResponseWriter, r *http.Request) {
 	var list = model.ServiceList{}
 	var response []byte
 
-	if servicesSpec != nil {
+	if serviceModel != nil {
 		for _, val := range *serviceModel {
-			val.Detail = servicesSpec[val.Name]
+			val.Detail = servicesSpec[val.ID]
 			list = append(list, val)
 		}
 
@@ -126,7 +126,7 @@ func ServiceInfoH(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if err != nil {
-		ctx.Log.Error("Error: find service by id", err.Err())
+		ctx.Log.Error("Error: find project by id", err.Err())
 		err.Http(w)
 		return
 	}
@@ -142,7 +142,7 @@ func ServiceInfoH(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	serviceSpec, err := service.Get(ctx.K8S, serviceModel.Project, serviceModel.Name)
+	serviceSpec, err := service.Get(ctx.K8S, serviceModel.Project, serviceModel.ID)
 	if err != nil {
 		ctx.Log.Error("Error: get serivce spec from cluster", err.Err())
 		err.Http(w)
@@ -230,7 +230,7 @@ func ServiceUpdateH(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if err != nil {
-		ctx.Log.Error("Error: find service by id", err.Err())
+		ctx.Log.Error("Error: find project by id", err.Err())
 		err.Http(w)
 		return
 	}
@@ -257,7 +257,7 @@ func ServiceUpdateH(w http.ResponseWriter, r *http.Request) {
 
 	cfg := rq.CreateServiceConfig()
 
-	err = service.Update(ctx.K8S, serviceModel.Project, serviceModel.Name, cfg)
+	err = service.Update(ctx.K8S, serviceModel.Project, serviceModel.ID, cfg)
 	if err != nil {
 		ctx.Log.Error("Error: update service", err.Err())
 		err.Http(w)
@@ -308,7 +308,7 @@ func ServiceRemoveH(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if err != nil {
-		ctx.Log.Error("Error: find service by id", err.Err())
+		ctx.Log.Error("Error: find project by id", err.Err())
 		err.Http(w)
 		return
 	}
@@ -343,4 +343,71 @@ func ServiceRemoveH(w http.ResponseWriter, r *http.Request) {
 		ctx.Log.Error("Error: write response", er.Error())
 		return
 	}
+}
+
+func ServiceLogsH(w http.ResponseWriter, r *http.Request) {
+
+	var (
+		ctx            = c.Get()
+		session        *model.Session
+		projectModel   *model.Project
+		serviceModel   *model.Service
+		params         = mux.Vars(r)
+		projectParam   = params["project"]
+		serviceParam   = params["service"]
+		query          = r.URL.Query()
+		podQuery       = query.Get("pod")
+		containerQuery = query.Get("container")
+		ch             = make(chan bool, 1)
+		notify         = w.(http.CloseNotifier).CloseNotify()
+	)
+
+	ctx.Log.Info("Show service log")
+
+	go func() {
+		<-notify
+		ctx.Log.Debug("HTTP connection just closed.")
+		ch <- true
+	}()
+
+	s, ok := context.GetOk(r, `session`)
+	if !ok {
+		ctx.Log.Error("Error: get session context")
+		e.New("user").AccessDenied().Http(w)
+		return
+	}
+
+	session = s.(*model.Session)
+
+	projectModel, err := ctx.Storage.Project().GetByNameOrID(session.Uid, projectParam)
+	if err == nil && projectModel == nil {
+		e.New("service").NotFound().Http(w)
+		return
+	}
+	if err != nil {
+		ctx.Log.Error("Error: find project by id", err.Err())
+		err.Http(w)
+		return
+	}
+
+	serviceModel, err = ctx.Storage.Service().GetByNameOrID(session.Uid, projectModel.ID, serviceParam)
+	if err == nil && serviceModel == nil {
+		e.New("service").NotFound().Http(w)
+		return
+	}
+	if err != nil {
+		ctx.Log.Error("Error: find service by id", err.Err())
+		err.Http(w)
+		return
+	}
+
+	opts := service.ServiceLogsOption{
+		Stream:     w,
+		Pod:        podQuery,
+		Container:  containerQuery,
+		Follow:     true,
+		Timestamps: true,
+	}
+
+	service.Logs(ctx.K8S, serviceModel.Project, &opts, ch)
 }

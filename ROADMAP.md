@@ -1,6 +1,6 @@
 # Roadmap
 
-Full roadmap you can see to [trello](https://trello.com/b/XvLpWB8k/last-backend).
+Full roadmap you can see at [github project](https://github.com/lastbackend/lastbackend/projects/5).
 
 ### v0.1.0
 - [x] User create account
