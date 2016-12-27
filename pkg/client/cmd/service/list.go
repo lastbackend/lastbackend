@@ -37,6 +37,11 @@ func List() (*model.ServiceList, string, error) {
 		return nil, "", errors.New(err.Error())
 	}
 
+	if project == nil {
+		ctx.Log.Info("Project didn't select")
+		return nil, "", nil
+	}
+
 	_, _, err = ctx.HTTP.
 		GET("/project/"+project.Name+"/service").
 		AddHeader("Authorization", "Bearer "+ctx.Token).

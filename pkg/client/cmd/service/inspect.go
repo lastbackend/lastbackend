@@ -35,6 +35,11 @@ func Inspect(name string) (*model.Service, string, error) {
 		return nil, "", errors.New(err.Error())
 	}
 
+	if project == nil {
+		ctx.Log.Info("Project didn't select")
+		return nil, "", nil
+	}
+
 	_, _, err = ctx.HTTP.
 		GET("/project/"+project.Name+"/service/"+name).
 		AddHeader("Authorization", "Bearer "+ctx.Token).
