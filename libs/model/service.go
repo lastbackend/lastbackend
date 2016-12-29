@@ -123,24 +123,31 @@ func (s *ServiceList) DrawTable(projectName string) {
 	fmt.Print(" Project ", projectName+"\n\n")
 
 	for _, s := range *s {
-		table.PrintHorizontal(map[string]interface{}{
-			"ID":   s.ID,
-			"NAME": s.Name,
-			"PODS": s.Detail.PodList.ListMeta.Total,
-		})
 
-		for _, pod := range s.Detail.PodList.Pods {
-			tpods := table.New([]string{" ", "NAME", "STATUS", "RESTARTS", "CONTAINERS"})
-			tpods.VisibleHeader = true
+		t := make(map[string]interface{})
+		t["ID"] =   s.ID
+		t["NAME"] = s.Name
 
-			tpods.AddRow(map[string]interface{}{
-				" ":          "",
-				"NAME":       pod.ObjectMeta.Name,
-				"STATUS":     pod.PodStatus.PodPhase,
-				"RESTARTS":   pod.RestartCount,
-				"CONTAINERS": pod.ContainerList.ListMeta.Total,
-			})
-			tpods.Print()
+		if s.Detail != nil {
+			t["PODS"] = s.Detail.PodList.ListMeta.Total
+		}
+
+		table.PrintHorizontal(t)
+
+		if (s.Detail != nil) {
+			for _, pod := range s.Detail.PodList.Pods {
+				tpods := table.New([]string{" ", "NAME", "STATUS", "RESTARTS", "CONTAINERS"})
+				tpods.VisibleHeader = true
+
+				tpods.AddRow(map[string]interface{}{
+					" ":          "",
+					"NAME":       pod.ObjectMeta.Name,
+					"STATUS":     pod.PodStatus.PodPhase,
+					"RESTARTS":   pod.RestartCount,
+					"CONTAINERS": pod.ContainerList.ListMeta.Total,
+				})
+				tpods.Print()
+			}
 		}
 
 		fmt.Print("\n\n")
