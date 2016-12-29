@@ -13,19 +13,64 @@ import (
 )
 
 type Service struct {
-	deployment.Deployment
+	Name      string            `json:"name"`
+	Namespace string            `json:"namespace"`
+	Labels    map[string]string `json:"labels"`
+	Scale     int32             `json:"scale"`
+	Template  struct {
+		ContainerList []Container `json:"containers"`
+	} `json:"tempalte"`
+	PodList []Pod `json:"pods"`
+}
+
+type Pod struct {
+	Name          string            `json:"name"`
+	Namespace     string            `json:"namespace"`
+	Status        string            `json:"status"`
+	Labels        map[string]string `json:"labels"`
+	ContainerList []Container       `json:"containers"`
+}
+
+type Container struct {
+	Name       string   `json:"name"`
+	Image      string   `json:"image"`
+	WorkingDir string   `json:"workdir"`
+	Command    []string `json:"command"`
+	Args       []string `json:"args"`
+	PortList   []Port   `json:"ports"`
+	EnvList    []Env    `json:"env"`
+	VolumeList []Volume `json:"volumes"`
+}
+
+type Port struct {
+	Name      string `json:"name"`
+	Container int32  `json:"container"`
+	Protocol  string `json:"protocol"`
+}
+
+type Env struct {
+	Name  string `json:"name"`
+	Value string `json:"value"`
+}
+
+type Volume struct {
+	Name     string `json:"name"`
+	Path     string `json:"path"`
+	Readonly bool   `json:"readonly"`
 }
 
 func Get(client k8s.IK8S, namespace, name string) (*Service, *e.Err) {
 
 	var er error
 
-	detail, er := deployment.Get(client, namespace, name)
+	dp, er := deployment.Get(client, namespace, name)
 	if er != nil {
 		return nil, e.New("service").Unknown(er)
 	}
 
-	return &Service{*detail}, nil
+	service := convert_deployment_to_service(dp)
+
+	return service, nil
 }
 
 func List(client k8s.IK8S, namespace string) (map[string]*Service, *e.Err) {
@@ -35,13 +80,14 @@ func List(client k8s.IK8S, namespace string) (map[string]*Service, *e.Err) {
 		serviceList = make(map[string]*Service)
 	)
 
-	detailList, er := deployment.List(client, namespace)
+	deploymentList, er := deployment.List(client, namespace)
 	if er != nil {
 		return nil, e.New("service").Unknown(er)
 	}
 
-	for _, val := range detailList {
-		serviceList[val.ObjectMeta.Name] = &Service{val}
+	for _, dp := range deploymentList {
+		service := convert_deployment_to_service(&dp)
+		serviceList[dp.ObjectMeta.Name] = service
 	}
 
 	return serviceList, nil
@@ -136,10 +182,108 @@ func Deploy(client k8s.IK8S, namespace string, config *v1beta1.Deployment) (*Ser
 		return nil, e.New("service").Unknown(er)
 	}
 
-	detail, er := deployment.Get(client, namespace, config.Name)
+	dp, er := deployment.Get(client, namespace, config.Name)
 	if er != nil {
 		return nil, e.New("service").Unknown(er)
 	}
 
-	return &Service{*detail}, nil
+	service := convert_deployment_to_service(dp)
+
+	return service, nil
+}
+
+func convert_deployment_to_service(dp *deployment.Deployment) *Service {
+
+	var s = new(Service)
+
+	s.Name = dp.ObjectMeta.Name
+	s.Namespace = dp.ObjectMeta.Namespace
+	s.Labels = dp.ObjectMeta.Labels
+	s.Scale = dp.Spec.Replicas
+
+	for _, container := range dp.Spec.Template.Spec.Containers {
+		c := Container{}
+		c.Name = container.Name
+		c.Image = container.Image
+		c.WorkingDir = container.WorkingDir
+		c.Command = container.Command
+		c.Args = container.Args
+
+		for _, port := range container.Ports {
+			cp := Port{}
+			cp.Name = port.Name
+			cp.Protocol = string(port.Protocol)
+			cp.Container = port.ContainerPort
+
+			c.PortList = append(c.PortList, cp)
+		}
+
+		for _, env := range container.Env {
+			ce := Env{}
+			ce.Name = env.Name
+			ce.Value = env.Value
+
+			c.EnvList = append(c.EnvList, ce)
+		}
+
+		for _, volume := range container.VolumeMounts {
+			cv := Volume{}
+			cv.Name = volume.Name
+			cv.Path = volume.MountPath
+			cv.Readonly = volume.ReadOnly
+
+			c.VolumeList = append(c.VolumeList, cv)
+		}
+
+		s.Template.ContainerList = append(s.Template.ContainerList, c)
+	}
+
+	for _, pod := range dp.PodList.Pods {
+		p := Pod{}
+		p.Name = pod.ObjectMeta.Name
+		p.Namespace = pod.ObjectMeta.Namespace
+		p.Status = string(pod.PodStatus.PodPhase)
+		p.Labels = pod.ObjectMeta.Labels
+
+		for _, container := range pod.ContainerList.Containers {
+			c := Container{}
+			c.Name = container.Name
+			c.Image = container.Image
+			c.WorkingDir = container.WorkingDir
+			c.Command = container.Command
+			c.Args = container.Args
+
+			for _, port := range container.Ports {
+				cp := Port{}
+				cp.Name = port.Name
+				cp.Protocol = port.Protocol
+				cp.Container = port.ContainerPort
+
+				c.PortList = append(c.PortList, cp)
+			}
+
+			for _, env := range container.Env {
+				ce := Env{}
+				ce.Name = env.Name
+				ce.Value = env.Value
+
+				c.EnvList = append(c.EnvList, ce)
+			}
+
+			for _, volume := range container.Volumes {
+				cv := Volume{}
+				cv.Name = volume.Name
+				cv.Path = volume.MountPath
+				cv.Readonly = volume.ReadOnly
+
+				c.VolumeList = append(c.VolumeList, cv)
+			}
+
+			p.ContainerList = append(p.ContainerList, c)
+		}
+
+		s.PodList = append(s.PodList, p)
+	}
+
+	return s
 }

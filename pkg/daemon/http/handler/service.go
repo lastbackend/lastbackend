@@ -67,7 +67,7 @@ func ServiceListH(w http.ResponseWriter, r *http.Request) {
 
 	if serviceModel != nil {
 		for _, val := range *serviceModel {
-			val.Detail = servicesSpec["lb-"+val.ID]
+			val.Spec = servicesSpec["lb-"+val.ID]
 			list = append(list, val)
 		}
 
@@ -149,7 +149,7 @@ func ServiceInfoH(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	serviceModel.Detail = serviceSpec
+	serviceModel.Spec = serviceSpec
 
 	response, err := serviceModel.ToJson()
 	if err != nil {

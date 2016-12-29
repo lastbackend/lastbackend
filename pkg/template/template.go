@@ -174,7 +174,7 @@ func (t *Template) Provision(namespace, user, project string, patchConfig *Patch
 				return err
 			}
 
-			config.Name = "lb-"+serviceModel.ID
+			config.Name = "lb-"+serviceModel.Name
 
 			_, err = service.Deploy(ctx.K8S, namespace, config)
 			if err != nil {
