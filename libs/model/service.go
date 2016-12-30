@@ -26,7 +26,7 @@ type Service struct {
 	// Service description
 	Description string `json:"description" gorethink:"description,omitempty"`
 	// Service spec
-	Detail *service.Service `json:"detail,omitempty" gorethink:"-"`
+	Spec *service.Service `json:"spec,omitempty" gorethink:"-"`
 	// Service created time
 	Created time.Time `json:"created" gorethink:"created,omitempty"`
 	// Service updated time
@@ -47,10 +47,10 @@ func (s *Service) GetConfig() *ServiceUpdateConfig {
 	var config = new(ServiceUpdateConfig)
 
 	config.Description = s.Description
-	config.Replicas = s.Detail.Spec.Replicas
-	config.Containers = make([]ContainerConfig, len(s.Detail.Spec.Template.Spec.Containers))
+	config.Replicas = s.Spec.Scale
+	config.Containers = make([]ContainerConfig, len(s.Spec.Template.ContainerList))
 
-	for index, val := range s.Detail.Spec.Template.Spec.Containers {
+	for index, val := range s.Spec.Template.ContainerList {
 		cfg := ContainerConfig{}
 
 		cfg.Name = val.Name
@@ -59,15 +59,15 @@ func (s *Service) GetConfig() *ServiceUpdateConfig {
 		cfg.Command = val.Command
 		cfg.Args = val.Args
 
-		for _, val := range val.Ports {
+		for _, val := range val.PortList {
 			cfg.Ports = append(cfg.Ports, Port{
-				Name:          val.Name,
-				ContainerPort: val.ContainerPort,
-				Protocol:      string(val.Protocol),
+				Name:      val.Name,
+				Container: val.Container,
+				Protocol:  string(val.Protocol),
 			})
 		}
 
-		for _, val := range val.Env {
+		for _, val := range val.EnvList {
 			cfg.Env = append(cfg.Env, EnvVar{
 				Name:  val.Name,
 				Value: val.Value,
@@ -85,19 +85,18 @@ func (s *Service) DrawTable(projectName string) {
 		"ID":      s.ID,
 		"NAME":    s.Name,
 		"PROJECT": projectName,
-		"PODS":    s.Detail.PodList.ListMeta.Total,
+		"PODS":    len(s.Spec.PodList),
 	})
 
-	t := table.New([]string{" ", "NAME", "STATUS", "RESTARTS", "CONTAINERS"})
+	t := table.New([]string{" ", "NAME", "STATUS", "CONTAINERS"})
 	t.VisibleHeader = true
 
-	for _, pod := range s.Detail.PodList.Pods {
+	for _, pod := range s.Spec.PodList {
 		t.AddRow(map[string]interface{}{
 			" ":          "",
-			"NAME":       pod.ObjectMeta.Name,
-			"STATUS":     pod.PodStatus.PodPhase,
-			"RESTARTS":   pod.RestartCount,
-			"CONTAINERS": pod.ContainerList.ListMeta.Total,
+			"NAME":       pod.Name,
+			"STATUS":     pod.Status,
+			"CONTAINERS": len(pod.ContainerList),
 		})
 	}
 	t.AddRow(map[string]interface{}{})
@@ -123,24 +122,30 @@ func (s *ServiceList) DrawTable(projectName string) {
 	fmt.Print(" Project ", projectName+"\n\n")
 
 	for _, s := range *s {
-		table.PrintHorizontal(map[string]interface{}{
-			"ID":   s.ID,
-			"NAME": s.Name,
-			"PODS": s.Detail.PodList.ListMeta.Total,
-		})
 
-		for _, pod := range s.Detail.PodList.Pods {
-			tpods := table.New([]string{" ", "NAME", "STATUS", "RESTARTS", "CONTAINERS"})
-			tpods.VisibleHeader = true
+		t := make(map[string]interface{})
+		t["ID"] = s.ID
+		t["NAME"] = s.Name
 
-			tpods.AddRow(map[string]interface{}{
-				" ":          "",
-				"NAME":       pod.ObjectMeta.Name,
-				"STATUS":     pod.PodStatus.PodPhase,
-				"RESTARTS":   pod.RestartCount,
-				"CONTAINERS": pod.ContainerList.ListMeta.Total,
-			})
-			tpods.Print()
+		if s.Spec != nil {
+			t["PODS"] = len(s.Spec.PodList)
+		}
+
+		table.PrintHorizontal(t)
+
+		if s.Spec != nil {
+			for _, pod := range s.Spec.PodList {
+				tpods := table.New([]string{" ", "NAME", "STATUS", "CONTAINERS"})
+				tpods.VisibleHeader = true
+
+				tpods.AddRow(map[string]interface{}{
+					" ":          "",
+					"NAME":       pod.Name,
+					"STATUS":     pod.Status,
+					"CONTAINERS": len(pod.ContainerList),
+				})
+				tpods.Print()
+			}
 		}
 
 		fmt.Print("\n\n")
@@ -164,9 +169,9 @@ type ContainerConfig struct {
 }
 
 type Port struct {
-	Name          string `json:"name" yaml:"name"`
-	ContainerPort int32  `json:"container" yaml:"container"`
-	Protocol      string `json:"protocol" yaml:"protocol"`
+	Name      string `json:"name" yaml:"name"`
+	Container int32  `json:"container" yaml:"container"`
+	Protocol  string `json:"protocol" yaml:"protocol"`
 }
 
 type EnvVar struct {
@@ -191,7 +196,7 @@ func (s ServiceUpdateConfig) CreateServiceConfig() *service.ServiceConfig {
 		for _, item := range val.Ports {
 			c.Ports = append(c.Ports, container.Port{
 				Name:          item.Name,
-				ContainerPort: item.ContainerPort,
+				ContainerPort: item.Container,
 				Protocol:      item.Protocol,
 			})
 

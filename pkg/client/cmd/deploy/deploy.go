@@ -43,6 +43,9 @@ func DeployCmd(name, image, template, url string, scale int) {
 		ctx.Log.Error(err)
 		return
 	}
+
+	// TODO: Waiting for start service
+	// TODO: Show spinner
 }
 
 func Deploy(name, image, template, url string, config *Config) error {

@@ -43,12 +43,12 @@ func LogsServiceCmd(name string) {
 
 	fmt.Println("Contaner list:\n")
 
-	for _, pod := range service.Detail.PodList.Pods {
-		for _, container := range pod.ContainerList.Containers {
+	for _, pod := range service.Spec.PodList {
+		for _, container := range pod.ContainerList {
 			fmt.Printf("[%d] %s\n", index, container.Name)
 
 			m[strconv.Itoa(index)] = serviceInfo{
-				Pod:       pod.ObjectMeta.Name,
+				Pod:       pod.Name,
 				Container: container.Name,
 			}
 		}

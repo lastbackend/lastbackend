@@ -67,7 +67,7 @@ func ServiceListH(w http.ResponseWriter, r *http.Request) {
 
 	if serviceModel != nil {
 		for _, val := range *serviceModel {
-			val.Detail = servicesSpec[val.ID]
+			val.Spec = servicesSpec["lb-"+val.ID]
 			list = append(list, val)
 		}
 
@@ -142,14 +142,14 @@ func ServiceInfoH(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	serviceSpec, err := service.Get(ctx.K8S, serviceModel.Project, serviceModel.ID)
+	serviceSpec, err := service.Get(ctx.K8S, serviceModel.Project, "lb-"+serviceModel.ID)
 	if err != nil {
 		ctx.Log.Error("Error: get serivce spec from cluster", err.Err())
 		err.Http(w)
 		return
 	}
 
-	serviceModel.Detail = serviceSpec
+	serviceModel.Spec = serviceSpec
 
 	response, err := serviceModel.ToJson()
 	if err != nil {
