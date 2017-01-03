@@ -2,10 +2,12 @@ package db
 
 import (
 	"encoding/json"
+	"os"
+	"path"
+
 	"github.com/boltdb/bolt"
 	"github.com/lastbackend/lastbackend/pkg/util/filesystem"
 	"github.com/lastbackend/lastbackend/pkg/util/homedir"
-	"os"
 )
 
 type DB struct {
@@ -19,13 +21,13 @@ func Init() (*DB, error) {
 		d   = new(DB)
 	)
 
-	dir := homedir.HomeDir() + "/.lb"
+	dir := path.Join(homedir.HomeDir(), string(os.PathSeparator), ".lb")
 	err = filesystem.MkDir(dir, 0755)
 	if err != nil {
 		return nil, err
 	}
 
-	d.db, err = bolt.Open(dir+"/lb.db", 0755, nil)
+	d.db, err = bolt.Open(path.Join(dir, string(os.PathSeparator), "lb.db"), 0755, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -88,7 +90,7 @@ func (d *DB) Set(fieldname string, iface interface{}) error {
 }
 
 func (d *DB) Clear() error {
-	err := os.RemoveAll(homedir.HomeDir() + "/.lb")
+	err := os.RemoveAll(path.Join(homedir.HomeDir(), string(os.PathSeparator), ".lb"))
 	if err != nil {
 		return err
 	}
