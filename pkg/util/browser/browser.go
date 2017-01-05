@@ -8,25 +8,27 @@ import (
 	"runtime"
 )
 
+var Os = runtime.GOOS
+
+var CommandWrapper = func(name string, parameters ...string) error {
+	return exec.Command(name, parameters...).Start()
+}
+
 func Open(url string) error {
 	var err error
 
-	switch runtime.GOOS {
+	switch Os {
 	case "linux":
-		err = exec.Command("xdg-open", url).Start()
+		err = CommandWrapper("xdg-open", url)
 	case "windows":
 		cmd := "url.dll,FileProtocolHandler"
 		runDll32 := filepath.Join(os.Getenv("SYSTEMROOT"), "System32", "rundll32.exe")
-
-    err = exec.Command(runDll32, cmd, url).Start()
+		err = CommandWrapper(runDll32, cmd, url)
 	case "darwin":
-		err = exec.Command("open", url).Start()
+		err = CommandWrapper("open", url)
 	default:
 		err = errors.New("unsupported platform")
 	}
-	if err != nil {
-		return err
-	}
 
-	return nil
+	return err
 }
