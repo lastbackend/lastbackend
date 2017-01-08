@@ -1,0 +1,681 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "Stage": {
+      "type": "string",
+      "defaultValue": "stg",
+      "metadata": {
+        "description": "Infrastructure stage type"
+      }
+    },
+    "Region": {
+      "type": "string",
+      "defaultValue": "we",
+      "metadata": {
+        "description": "Infrastructure stage type"
+      }
+    },
+    "EtcdCount": {
+      "type": "int",
+      "defaultValue": 3,
+      "metadata": {
+        "description": "Number of etcd nodes to create"
+      }
+    },
+    "KubeMasterCount": {
+      "type": "int",
+      "defaultValue": 3,
+      "metadata": {
+        "description": "Number of kubernetes masters to create"
+       }
+    },
+    "KubeNodeCount": {
+      "type": "int",
+      "defaultValue": 3,
+      "metadata": {
+        "description": "Number of kubernetes nodes to create"
+      }
+    },
+    "adminUserName": {
+      "type": "string",
+      "defaultValue": "lastbackend",
+      "metadata": {
+        "description": "Username to login to the VMs"
+      }
+    },
+    "sshKeyData": {
+      "type": "string",
+      "metadata": {
+        "description": "Public key for SSH authentication"
+      }
+    }
+  },
+  "variables": {
+    "prefix": "[concat(parameters('stage'),'-',parameters('region'))]",
+    "trimmedprefix": "[concat(parameters('stage'),parameters('region'))]",
+    "virtualNetworkName": "[concat(variables('prefix'),'-vnet')]",
+    "addressPrefix": "10.240.0.0/16",
+    "subnetName": "default",
+    "subnetPrefix": "10.240.0.0/24",
+    "publicIPAddressType": "Dynamic",
+    "vnetID": "[resourceId('Microsoft.Network/virtualNetworks',variables('virtualNetworkName'))]",
+    "subnetRef": "[concat(variables('vnetID'),'/subnets/',variables('subnetName'))]",
+    "imagePublisher": "Canonical",
+    "imageOffer": "UbuntuServer",
+    "imageSku": "16.04.0-LTS",
+    "vmStorageAccountContainerName": "vhds",
+    "sshKeyPath": "[concat('/home/',parameters('adminUserName'),'/.ssh/authorized_keys')]"
+  },
+  "resources": [
+
+    {
+      "type": "Microsoft.Network/virtualNetworks",
+      "name": "[variables('virtualNetworkName')]",
+      "location": "[resourceGroup().location]",
+      "apiVersion":"2015-06-15",
+      "properties": {
+        "addressSpace": {
+          "addressPrefixes": [
+            "[variables('addressPrefix')]"
+          ]
+        },
+        "subnets": [
+          {
+            "name": "[variables('subnetName')]",
+            "properties": {
+              "addressPrefix": "[variables('subnetPrefix')]"
+            }
+          },
+          {
+              "name": "etcd",
+              "properties": {
+                  "addressPrefix": "10.240.1.0/24"
+              }
+          },
+          {
+              "name": "master",
+              "properties": {
+                  "addressPrefix": "10.240.2.0/24"
+              }
+          },
+          {
+              "name": "node",
+              "properties": {
+                  "addressPrefix": "10.240.3.0/24"
+              }
+          }
+        ]
+      }
+    },
+    {
+      "type": "Microsoft.Storage/storageAccounts",
+      "name": "[concat(variables('trimmedprefix'),'diag')]",
+      "location": "[resourceGroup().location]",
+      "apiVersion":"2015-06-15",
+      "properties": {
+        "accountType": "Standard_RAGRS"
+      }
+    },
+
+    {
+      "type": "Microsoft.Storage/storageAccounts",
+      "name": "[concat(variables('trimmedprefix'),'master')]",
+      "location": "[resourceGroup().location]",
+      "apiVersion":"2015-06-15",
+      "properties": {
+        "accountType": "Premium_LRS"
+      }
+    },
+    {
+      "type": "Microsoft.Network/networkSecurityGroups",
+      "name": "[concat(variables('prefix'),'-nsg-master')]",
+      "location": "[resourceGroup().location]",
+      "apiVersion":"2015-06-15",
+      "properties": {
+        "securityRules": [
+          {
+            "name": "SSH",
+            "properties": {
+              "description": "SSH rules",
+              "protocol": "Tcp",
+              "sourcePortRange": "*",
+              "destinationPortRange": "22",
+              "sourceAddressPrefix": "*",
+              "destinationAddressPrefix": "*",
+              "access": "Allow",
+              "priority": 100,
+              "direction": "Inbound"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "type": "Microsoft.Network/networkInterfaces",
+      "name": "[concat(variables('prefix'),'-nic-master-', padLeft(copyindex(),2,'0'))]",
+      "copy": {
+        "name": "nicLoop",
+        "count": "[parameters('kubeMasterCount')]"
+      },
+      "location": "[resourceGroup().location]",
+      "dependsOn": [
+        "[concat('Microsoft.Network/virtualNetworks/', variables('virtualNetworkName'))]",
+        "[resourceId('Microsoft.Network/networkSecurityGroups', concat(variables('prefix'),'-nsg-master'))]"
+      ],
+      "apiVersion":"2015-06-15",
+      "properties": {
+        "ipConfigurations": [
+          {
+            "name": "ipconfig",
+            "properties": {
+              "privateIPAddress": "[concat('10.240.2.',copyindex(5))]",
+              "privateIPAllocationMethod": "Static",
+              "subnet": {
+                "id": "[concat(variables('vnetID'),'/subnets/master')]"
+              }
+            }
+          }
+        ],
+        "networkSecurityGroup": {
+          "id": "[resourceId('Microsoft.Network/networkSecurityGroups', concat(variables('prefix'),'-nsg-master'))]"
+        }
+      }
+    },
+    {
+      "type": "Microsoft.Compute/availabilitySets",
+      "name": "[concat(variables('prefix'),'-as-master')]",
+      "apiVersion": "2015-06-15",
+      "location": "[resourceGroup().location]",
+      "properties": {
+        "platformFaultDomainCount": 3,
+        "platformUpdateDomainCount": 20
+      }
+    },
+    {
+      "type": "Microsoft.Compute/virtualMachines",
+      "name": "[concat(variables('prefix'),'-master-', padLeft(copyindex(),2,'0'))]",
+      "copy": {
+        "name": "vmMasterLoop",
+        "count": "[parameters('KubeMasterCount')]"
+      },
+      "location": "[resourceGroup().location]",
+      "dependsOn": [
+        "[concat('Microsoft.Storage/storageAccounts/', variables('trimmedprefix'),'master')]",
+        "[concat('Microsoft.Network/networkInterfaces/', variables('prefix'),'-nic-master-', padLeft(copyindex(),2,'0'))]",
+        "[concat('Microsoft.Compute/availabilitySets/', variables('prefix'),'-as-master')]"
+      ],
+      "apiVersion":"2015-06-15",
+      "properties": {
+        "hardwareProfile": {
+          "vmSize": "Standard_DS1_v2"
+        },
+        "osProfile": {
+          "computerName": "[concat(variables('prefix'),'-master-', padLeft(copyindex(),2,'0'))]",
+          "adminUsername": "[parameters('adminUsername')]",
+          "linuxConfiguration": {
+            "disablePasswordAuthentication": true,
+            "ssh": {
+              "publicKeys": [
+                {
+                  "path": "[variables('sshKeyPath')]",
+                  "keyData": "[parameters('sshKeyData')]"
+                }
+              ]
+            }
+          }
+        },
+        "storageProfile": {
+          "imageReference": {
+            "publisher": "[variables('imagePublisher')]",
+            "offer": "[variables('imageOffer')]",
+            "sku": "[variables('imageSku')]",
+            "version": "latest"
+          },
+          "osDisk": {
+            "name": "[concat(variables('prefix'),'-master-', padLeft(copyindex(),2,'0'))]",
+            "vhd": {
+              "uri": "[concat('http://',variables('trimmedprefix'),'master','.blob.core.windows.net/vhds/',variables('prefix'),'-master-', padLeft(copyindex(),2,'0'),'.vhd')]"
+            },
+            "caching": "ReadWrite",
+            "createOption": "FromImage"
+          }
+        },
+        "networkProfile": {
+          "networkInterfaces": [
+            {
+              "id": "[resourceId('Microsoft.Network/networkInterfaces',concat(variables('prefix'),'-nic-master-', padLeft(copyindex(),2,'0')))]"
+            }
+          ]
+        },
+        "availabilitySet": {
+          "id": "[resourceId('Microsoft.Compute/availabilitySets', concat(variables('prefix'),'-as-master'))]"
+        },
+        "diagnosticsProfile": {
+          "bootDiagnostics": {
+            "enabled": "true",
+            "storageUri": "[concat(reference(concat('Microsoft.Storage/storageAccounts/', variables('trimmedprefix'),'diag'), '2015-06-15').primaryEndpoints.blob)]"
+          }
+        }
+      }
+    },
+
+    {
+      "type": "Microsoft.Storage/storageAccounts",
+      "name": "[concat(variables('trimmedprefix'),'node')]",
+      "location": "[resourceGroup().location]",
+      "apiVersion":"2015-06-15",
+      "properties": {
+        "accountType": "Premium_LRS"
+      }
+    },
+    {
+      "type": "Microsoft.Network/networkSecurityGroups",
+      "name": "[concat(variables('prefix'),'-nsg-node')]",
+      "location": "[resourceGroup().location]",
+      "apiVersion":"2015-06-15",
+      "properties": {
+        "securityRules": [
+          {
+            "name": "SSH",
+            "properties": {
+              "description": "SSH rules",
+              "protocol": "Tcp",
+              "sourcePortRange": "*",
+              "destinationPortRange": "22",
+              "sourceAddressPrefix": "*",
+              "destinationAddressPrefix": "*",
+              "access": "Allow",
+              "priority": 100,
+              "direction": "Inbound"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "type": "Microsoft.Network/networkInterfaces",
+      "name": "[concat(variables('prefix'),'-nic-node-', padLeft(copyindex(),2,'0'))]",
+      "copy": {
+        "name": "nicLoop",
+        "count": "[parameters('kubeNodeCount')]"
+      },
+      "location": "[resourceGroup().location]",
+      "dependsOn": [
+        "[concat('Microsoft.Network/virtualNetworks/', variables('virtualNetworkName'))]",
+        "[resourceId('Microsoft.Network/networkSecurityGroups', concat(variables('prefix'),'-nsg-node'))]"
+      ],
+      "apiVersion":"2015-06-15",
+      "properties": {
+        "ipConfigurations": [
+          {
+            "name": "ipconfig",
+            "properties": {
+              "privateIPAddress": "[concat('10.240.3.',copyindex(5))]",
+              "privateIPAllocationMethod": "Static",
+              "subnet": {
+                "id": "[concat(variables('vnetID'),'/subnets/node')]"
+              }
+            }
+          }
+        ],
+        "networkSecurityGroup": {
+          "id": "[resourceId('Microsoft.Network/networkSecurityGroups', concat(variables('prefix'),'-nsg-node'))]"
+        }
+      }
+    },
+    {
+      "type": "Microsoft.Compute/availabilitySets",
+      "name": "[concat(variables('prefix'),'-as-node')]",
+      "apiVersion": "2015-06-15",
+      "location": "[resourceGroup().location]",
+      "properties": {
+        "platformFaultDomainCount": 3,
+        "platformUpdateDomainCount": 20
+      }
+    },
+    {
+      "type": "Microsoft.Compute/virtualMachines",
+      "name": "[concat(variables('prefix'),'-node-', padLeft(copyindex(),2,'0'))]",
+      "copy": {
+        "name": "vmEtcdLoop",
+        "count": "[parameters('kubeNodeCount')]"
+      },
+      "location": "[resourceGroup().location]",
+      "dependsOn": [
+        "[concat('Microsoft.Storage/storageAccounts/', variables('trimmedprefix'),'node')]",
+        "[concat('Microsoft.Network/networkInterfaces/', variables('prefix'),'-nic-node-', padLeft(copyindex(),2,'0'))]",
+        "[concat('Microsoft.Compute/availabilitySets/', variables('prefix'),'-as-node')]"
+      ],
+      "apiVersion":"2015-06-15",
+      "properties": {
+        "hardwareProfile": {
+          "vmSize": "Standard_DS1_v2"
+        },
+        "osProfile": {
+          "computerName": "[concat(variables('prefix'),'-node-', padLeft(copyindex(),2,'0'))]",
+          "adminUsername": "[parameters('adminUsername')]",
+          "linuxConfiguration": {
+            "disablePasswordAuthentication": true,
+            "ssh": {
+              "publicKeys": [
+                {
+                  "path": "[variables('sshKeyPath')]",
+                  "keyData": "[parameters('sshKeyData')]"
+                }
+              ]
+            }
+          }
+        },
+        "storageProfile": {
+          "imageReference": {
+            "publisher": "[variables('imagePublisher')]",
+            "offer": "[variables('imageOffer')]",
+            "sku": "[variables('imageSku')]",
+            "version": "latest"
+          },
+          "osDisk": {
+            "name": "[concat(variables('prefix'),'-node-', padLeft(copyindex(),2,'0'))]",
+            "vhd": {
+              "uri": "[concat('http://',variables('trimmedprefix'),'node','.blob.core.windows.net/vhds/',variables('prefix'),'-node-', padLeft(copyindex(),2,'0'),'.vhd')]"
+            },
+            "caching": "ReadWrite",
+            "createOption": "FromImage"
+          }
+        },
+        "networkProfile": {
+          "networkInterfaces": [
+            {
+              "id": "[resourceId('Microsoft.Network/networkInterfaces',concat(variables('prefix'),'-nic-node-', padLeft(copyindex(),2,'0')))]"
+            }
+          ]
+        },
+        "availabilitySet": {
+          "id": "[resourceId('Microsoft.Compute/availabilitySets', concat(variables('prefix'),'-as-node'))]"
+        },
+        "diagnosticsProfile": {
+          "bootDiagnostics": {
+            "enabled": "true",
+            "storageUri": "[concat(reference(concat('Microsoft.Storage/storageAccounts/', variables('trimmedprefix'),'diag'), '2015-06-15').primaryEndpoints.blob)]"
+          }
+        }
+      }
+    },
+
+     {
+      "type": "Microsoft.Storage/storageAccounts",
+      "name": "[concat(variables('trimmedprefix'),'etcd')]",
+      "location": "[resourceGroup().location]",
+      "apiVersion":"2015-06-15",
+      "properties": {
+        "accountType": "Premium_LRS"
+      }
+    },
+    {
+      "type": "Microsoft.Network/networkSecurityGroups",
+      "name": "[concat(variables('prefix'),'-nsg-etcd')]",
+      "location": "[resourceGroup().location]",
+      "apiVersion":"2015-06-15",
+      "properties": {
+        "securityRules": [
+          {
+            "name": "SSH",
+            "properties": {
+              "description": "SSH rules",
+              "protocol": "Tcp",
+              "sourcePortRange": "*",
+              "destinationPortRange": "22",
+              "sourceAddressPrefix": "*",
+              "destinationAddressPrefix": "*",
+              "access": "Allow",
+              "priority": 100,
+              "direction": "Inbound"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "type": "Microsoft.Network/networkInterfaces",
+      "name": "[concat(variables('prefix'),'-nic-etcd-', padLeft(copyindex(),2,'0'))]",
+      "copy": {
+        "name": "nicLoop",
+        "count": "[parameters('etcdCount')]"
+      },
+      "location": "[resourceGroup().location]",
+      "dependsOn": [
+        "[concat('Microsoft.Network/virtualNetworks/', variables('virtualNetworkName'))]",
+        "[resourceId('Microsoft.Network/networkSecurityGroups', concat(variables('prefix'),'-nsg-etcd'))]"
+      ],
+      "apiVersion":"2015-06-15",
+      "properties": {
+        "ipConfigurations": [
+          {
+            "name": "ipconfig",
+            "properties": {
+              "privateIPAddress": "[concat('10.240.1.',copyindex(5))]",
+              "privateIPAllocationMethod": "Static",
+              "subnet": {
+                "id": "[concat(variables('vnetID'),'/subnets/etcd')]"
+              }
+            }
+          }
+        ],
+        "networkSecurityGroup": {
+          "id": "[resourceId('Microsoft.Network/networkSecurityGroups', concat(variables('prefix'),'-nsg-etcd'))]"
+        }
+      }
+    },
+    {
+      "type": "Microsoft.Compute/availabilitySets",
+      "name": "[concat(variables('prefix'),'-as-etcd')]",
+      "apiVersion": "2015-06-15",
+      "location": "[resourceGroup().location]",
+      "properties": {
+        "platformFaultDomainCount": 3,
+        "platformUpdateDomainCount": 20
+      }
+    },
+    {
+      "type": "Microsoft.Compute/virtualMachines",
+      "name": "[concat(variables('prefix'),'-etcd-', padLeft(copyindex(),2,'0'))]",
+      "copy": {
+        "name": "vmEtcdLoop",
+        "count": "[parameters('etcdCount')]"
+      },
+      "location": "[resourceGroup().location]",
+      "dependsOn": [
+        "[concat('Microsoft.Storage/storageAccounts/', variables('trimmedprefix'),'etcd')]",
+        "[concat('Microsoft.Network/networkInterfaces/', variables('prefix'),'-nic-etcd-', padLeft(copyindex(),2,'0'))]",
+        "[concat('Microsoft.Compute/availabilitySets/', variables('prefix'),'-as-etcd')]"
+      ],
+      "apiVersion": "2015-06-15",
+      "properties": {
+        "hardwareProfile": {
+          "vmSize": "Standard_DS1_v2"
+        },
+        "osProfile": {
+          "computerName": "[concat(variables('prefix'),'-etcd-', padLeft(copyindex(),2,'0'))]",
+          "adminUsername": "[parameters('adminUsername')]",
+          "linuxConfiguration": {
+            "disablePasswordAuthentication": true,
+            "ssh": {
+              "publicKeys": [
+                {
+                  "path": "[variables('sshKeyPath')]",
+                  "keyData": "[parameters('sshKeyData')]"
+                }
+              ]
+            }
+          }
+        },
+        "storageProfile": {
+          "imageReference": {
+            "publisher": "[variables('imagePublisher')]",
+            "offer": "[variables('imageOffer')]",
+            "sku": "[variables('imageSku')]",
+            "version": "latest"
+          },
+          "osDisk": {
+            "name": "[concat(variables('prefix'),'-etcd-', padLeft(copyindex(),2,'0'))]",
+            "vhd": {
+              "uri": "[concat('http://',variables('trimmedprefix'),'etcd','.blob.core.windows.net/vhds/',variables('prefix'),'-etcd-', padLeft(copyindex(),2,'0'),'.vhd')]"
+            },
+            "caching": "ReadWrite",
+            "createOption": "FromImage"
+          }
+        },
+        "networkProfile": {
+          "networkInterfaces": [
+            {
+              "id": "[resourceId('Microsoft.Network/networkInterfaces',concat(variables('prefix'),'-nic-etcd-', padLeft(copyindex(),2,'0')))]"
+            }
+          ]
+        },
+        "availabilitySet": {
+          "id": "[resourceId('Microsoft.Compute/availabilitySets', concat(variables('prefix'),'-as-etcd'))]"
+        },
+        "diagnosticsProfile": {
+          "bootDiagnostics": {
+            "enabled": "true",
+            "storageUri": "[concat(reference(concat('Microsoft.Storage/storageAccounts/', variables('trimmedprefix'),'diag'), '2015-06-15').primaryEndpoints.blob)]"
+          }
+        }
+      }
+    },
+
+
+    {
+      "type": "Microsoft.Storage/storageAccounts",
+      "name": "[concat(variables('trimmedprefix'),'bastion')]",
+      "location": "[resourceGroup().location]",
+      "apiVersion": "2015-06-15",
+      "properties": {
+        "accountType": "Standard_LRS"
+      }
+    },
+    {
+      "type": "Microsoft.Network/networkSecurityGroups",
+      "name": "[concat(variables('prefix'),'-nsg-bastion')]",
+      "location": "[resourceGroup().location]",
+      "apiVersion": "2015-06-15",
+      "properties": {
+        "securityRules": [
+          {
+            "name": "SSH",
+            "properties": {
+              "description": "SSH rules",
+              "protocol": "Tcp",
+              "sourcePortRange": "*",
+              "destinationPortRange": "22",
+              "sourceAddressPrefix": "*",
+              "destinationAddressPrefix": "*",
+              "access": "Allow",
+              "priority": 100,
+              "direction": "Inbound"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "type": "Microsoft.Network/publicIPAddresses",
+      "name": "[concat(variables('prefix'),'-ip-bastion')]",
+      "location": "[resourceGroup().location]",
+      "apiVersion": "2015-06-15",
+      "properties": {
+        "publicIPAllocationMethod": "Static"
+      }
+    },
+    {
+      "type": "Microsoft.Network/networkInterfaces",
+      "name": "[concat(variables('prefix'),'-nic-bastion')]",
+      "location": "[resourceGroup().location]",
+      "dependsOn": [
+        "[concat('Microsoft.Network/virtualNetworks/', variables('virtualNetworkName'))]",
+        "[resourceId('Microsoft.Network/networkSecurityGroups', concat(variables('prefix'),'-nsg-bastion'))]"
+      ],
+      "apiVersion": "2015-06-15",
+      "properties": {
+        "ipConfigurations": [
+          {
+            "name": "ipconfig",
+            "properties": {
+              "privateIPAddress": "10.240.0.4",
+              "privateIPAllocationMethod": "Static",
+              "publicIPAddress": {
+                "id": "[resourceId('Microsoft.Network/publicIPAddresses',concat(variables('prefix'),'-ip-bastion'))]"
+              },
+              "subnet": {
+                "id": "[variables('subnetRef')]"
+              }
+            }
+          }
+        ],
+        "networkSecurityGroup": {
+          "id": "[resourceId('Microsoft.Network/networkSecurityGroups', concat(variables('prefix'),'-nsg-bastion'))]"
+        }
+      }
+    },
+    {
+      "type": "Microsoft.Compute/virtualMachines",
+      "name": "[concat(variables('prefix'),'-bastion')]",
+      "location": "[resourceGroup().location]",
+      "dependsOn": [
+        "[concat('Microsoft.Storage/storageAccounts/', variables('trimmedprefix'),'bastion')]",
+        "[concat('Microsoft.Network/networkInterfaces/', variables('prefix'),'-nic-bastion')]"
+      ],
+      "apiVersion": "2015-06-15",
+      "properties": {
+        "hardwareProfile": {
+          "vmSize": "Standard_A0"
+        },
+        "osProfile": {
+          "computerName": "[concat(variables('prefix'),'-bastion')]",
+          "adminUsername": "[parameters('adminUsername')]",
+          "linuxConfiguration": {
+            "disablePasswordAuthentication": true,
+            "ssh": {
+              "publicKeys": [
+                {
+                  "path": "[variables('sshKeyPath')]",
+                  "keyData": "[parameters('sshKeyData')]"
+                }
+              ]
+            }
+          }
+        },
+        "storageProfile": {
+          "imageReference": {
+            "publisher": "[variables('imagePublisher')]",
+            "offer": "[variables('imageOffer')]",
+            "sku": "[variables('imageSku')]",
+            "version": "latest"
+          },
+          "osDisk": {
+            "name": "[concat(variables('prefix'),'-bastion')]",
+            "vhd": {
+              "uri": "[concat('http://',variables('trimmedprefix'),'bastion','.blob.core.windows.net/vhds/',variables('prefix'),'-bastion','.vhd')]"
+            },
+            "caching": "ReadWrite",
+            "createOption": "FromImage"
+          }
+        },
+        "networkProfile": {
+          "networkInterfaces": [
+            {
+              "id": "[resourceId('Microsoft.Network/networkInterfaces',concat(variables('prefix'),'-nic-bastion'))]"
+            }
+          ]
+        },
+        "diagnosticsProfile": {
+          "bootDiagnostics": {
+            "enabled": "true",
+            "storageUri": "[concat(reference(concat('Microsoft.Storage/storageAccounts/', variables('trimmedprefix'),'diag'), '2015-06-15').primaryEndpoints.blob)]"
+          }
+        }
+      }
+    }
+
+  ]
+}

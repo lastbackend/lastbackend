@@ -1,6 +1,7 @@
 # How to Contribute
 
-The Last.Backend project is Apache 2.0 licensed and accepts contributions via Github pull requests. This document outlines some of the conventions on commit message formatting, contact points for developers and other resources to make getting your contribution accepted.
+The Last.Backend project is Apache 2.0 licensed and accepts contributions via Github pull requests. 
+This document outlines some of the conventions on commit message formatting, contact points for developers and other resources to make getting your contribution accepted.
 
 ## How to contribute to open source on GitHub
 
@@ -37,7 +38,7 @@ Don't forget to add yourself to [maintainers list](https://github.com/lastbacken
 
 ## The Roadmap
 
-The Last.Backend project roadmap lives [on Trello](https://trello.com/b/XvLpWB8k/last-backend). A summary of the roadmap, releases, and other info can be found here.
+The Last.Backend project roadmap lives [github project](https://github.com/lastbackend/lastbackend/projects/5). 
 
 ## Support
 
