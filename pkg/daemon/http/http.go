@@ -2,16 +2,17 @@ package http
 
 import (
 	"fmt"
+	"net/http"
+	"strconv"
+	"strings"
+	"time"
+
 	c "github.com/gorilla/context"
 	"github.com/gorilla/mux"
 	e "github.com/lastbackend/lastbackend/libs/errors"
 	"github.com/lastbackend/lastbackend/libs/model"
 	"github.com/lastbackend/lastbackend/pkg/daemon/context"
 	"github.com/lastbackend/lastbackend/pkg/daemon/http/handler"
-	"net/http"
-	"strconv"
-	"strings"
-	"time"
 )
 
 func NewRouter() *mux.Router {
@@ -107,7 +108,7 @@ func Auth(h http.HandlerFunc) http.HandlerFunc {
 
 			// Check authorization header parts length and authorization header format
 			if len(auth) != 2 || auth[0] != "Bearer" {
-				e.HTTP.AccessDenied(w)
+				e.HTTP.Unauthorized(w)
 				return
 			}
 
@@ -115,14 +116,14 @@ func Auth(h http.HandlerFunc) http.HandlerFunc {
 
 		} else {
 			w.Header().Set("Content-Type", "application/json")
-			e.HTTP.AccessDenied(w)
+			e.HTTP.Unauthorized(w)
 			return
 		}
 
 		s := new(model.Session)
 		err := s.Decode(token)
 		if err != nil {
-			e.HTTP.AccessDenied(w)
+			e.HTTP.Unauthorized(w)
 			return
 		}
 

@@ -2,16 +2,17 @@ package handler
 
 import (
 	"encoding/json"
+	"io"
+	"io/ioutil"
+	"net/http"
+	"strings"
+
 	"github.com/gorilla/context"
 	e "github.com/lastbackend/lastbackend/libs/errors"
 	"github.com/lastbackend/lastbackend/libs/model"
 	c "github.com/lastbackend/lastbackend/pkg/daemon/context"
 	"github.com/lastbackend/lastbackend/pkg/util/generator"
 	"github.com/lastbackend/lastbackend/pkg/util/validator"
-	"io"
-	"io/ioutil"
-	"net/http"
-	"strings"
 )
 
 type userCreate struct {
@@ -151,7 +152,7 @@ func UserCreateH(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	w.WriteHeader(200)
+	w.WriteHeader(http.StatusOK)
 	_, er = w.Write(response)
 	if er != nil {
 		ctx.Log.Error("Error: write response", er.Error())
@@ -169,8 +170,8 @@ func UserGetH(w http.ResponseWriter, r *http.Request) {
 
 	s, ok := context.GetOk(r, `session`)
 	if !ok {
-		ctx.Log.Error(e.StatusAccessDenied)
-		e.HTTP.AccessDenied(w)
+		ctx.Log.Error(http.StatusText(http.StatusUnauthorized))
+		e.HTTP.Unauthorized(w)
 		return
 	}
 
@@ -193,7 +194,7 @@ func UserGetH(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	w.WriteHeader(200)
+	w.WriteHeader(http.StatusOK)
 
 	_, er = w.Write(response)
 	if er != nil {
