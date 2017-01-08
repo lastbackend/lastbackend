@@ -2,17 +2,18 @@ package handler
 
 import (
 	"encoding/json"
+	"io"
+	"io/ioutil"
+	"net/http"
+
 	"github.com/gorilla/context"
 	"github.com/gorilla/mux"
 	e "github.com/lastbackend/lastbackend/libs/errors"
 	"github.com/lastbackend/lastbackend/libs/model"
 	c "github.com/lastbackend/lastbackend/pkg/daemon/context"
 	"github.com/lastbackend/lastbackend/pkg/util/validator"
-	"io"
-	"io/ioutil"
 	"k8s.io/client-go/1.5/pkg/api"
 	"k8s.io/client-go/1.5/pkg/api/v1"
-	"net/http"
 )
 
 func ProjectListH(w http.ResponseWriter, r *http.Request) {
@@ -29,7 +30,7 @@ func ProjectListH(w http.ResponseWriter, r *http.Request) {
 	s, ok := context.GetOk(r, `session`)
 	if !ok {
 		ctx.Log.Error("Error: get session context")
-		e.New("user").AccessDenied().Http(w)
+		e.New("user").Unauthorized().Http(w)
 		return
 	}
 
@@ -51,7 +52,7 @@ func ProjectListH(w http.ResponseWriter, r *http.Request) {
 
 	ctx.Log.Info(string(response))
 
-	w.WriteHeader(200)
+	w.WriteHeader(http.StatusOK)
 	_, er = w.Write(response)
 	if er != nil {
 		ctx.Log.Error("Error: write response", er.Error())
@@ -75,7 +76,7 @@ func ProjectInfoH(w http.ResponseWriter, r *http.Request) {
 	s, ok := context.GetOk(r, `session`)
 	if !ok {
 		ctx.Log.Error("Error: get session context")
-		e.New("user").AccessDenied().Http(w)
+		e.New("user").Unauthorized().Http(w)
 		return
 	}
 
@@ -100,7 +101,7 @@ func ProjectInfoH(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	w.WriteHeader(200)
+	w.WriteHeader(http.StatusOK)
 	_, er = w.Write(response)
 	if er != nil {
 		ctx.Log.Error("Error: write response", er.Error())
@@ -160,7 +161,7 @@ func ProjectCreateH(w http.ResponseWriter, r *http.Request) {
 	s, ok := context.GetOk(r, `session`)
 	if !ok {
 		ctx.Log.Error("Error: get session context")
-		e.New("user").AccessDenied().Http(w)
+		e.New("user").Unauthorized().Http(w)
 		return
 	}
 
@@ -221,7 +222,7 @@ func ProjectCreateH(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	w.WriteHeader(200)
+	w.WriteHeader(http.StatusOK)
 	_, er = w.Write(response)
 	if er != nil {
 		ctx.Log.Error("Error: write response", er.Error())
@@ -280,7 +281,7 @@ func ProjectUpdateH(w http.ResponseWriter, r *http.Request) {
 	s, ok := context.GetOk(r, `session`)
 	if !ok {
 		ctx.Log.Error("Error: get session context")
-		e.New("user").AccessDenied().Http(w)
+		e.New("user").Unauthorized().Http(w)
 		return
 	}
 
@@ -338,7 +339,7 @@ func ProjectUpdateH(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	w.WriteHeader(200)
+	w.WriteHeader(http.StatusOK)
 	_, er = w.Write(response)
 	if er != nil {
 		ctx.Log.Error("Error: write response", er.Error())
@@ -361,7 +362,7 @@ func ProjectRemoveH(w http.ResponseWriter, r *http.Request) {
 	s, ok := context.GetOk(r, `session`)
 	if !ok {
 		ctx.Log.Error("Error: get session context")
-		e.New("user").AccessDenied().Http(w)
+		e.New("user").Unauthorized().Http(w)
 		return
 	}
 
@@ -430,7 +431,7 @@ func ProjectRemoveH(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	w.WriteHeader(200)
+	w.WriteHeader(http.StatusOK)
 	_, er = w.Write([]byte{})
 	if er != nil {
 		ctx.Log.Error("Error: write response", er.Error())

@@ -15,28 +15,28 @@ type Http struct {
 	Message string `json:"message"`
 }
 
-func (Http) AccessDenied(w http.ResponseWriter) {
-	Http{Code: 401, Status: StatusAccessDenied, Message: "Access denied"}.send(w)
+func (Http) Unauthorized(w http.ResponseWriter) {
+	Http{Code: http.StatusUnauthorized, Status: http.StatusText(http.StatusUnauthorized), Message: "Access denied"}.send(w)
 }
 
 func (Http) InvalidJSON(w http.ResponseWriter) {
-	Http{Code: 400, Status: StatusIncorrectJson, Message: "Invalid josn"}.send(w)
+	Http{Code: http.StatusBadRequest, Status: StatusIncorrectJson, Message: "Invalid josn"}.send(w)
 }
 
 func (Http) BadRequest(w http.ResponseWriter) {
-	Http{Code: 400, Status: StatusBadRequest, Message: "Bad request"}.send(w)
+	Http{Code: http.StatusBadRequest, Status: http.StatusText(http.StatusBadRequest), Message: "Bad request"}.send(w)
 }
 
 func (Http) NotFound(w http.ResponseWriter) {
-	Http{Code: 404, Status: StatusNotFound, Message: "Not found"}.send(w)
+	Http{Code: http.StatusNotFound, Status: http.StatusText(http.StatusNotFound), Message: "Not found"}.send(w)
 }
 
 func (Http) InternalServerError(w http.ResponseWriter) {
-	Http{Code: 500, Status: StatusInternalServerError, Message: "Internal server error"}.send(w)
+	Http{Code: http.StatusInternalServerError, Status: http.StatusText(http.StatusInternalServerError), Message: "Internal server error"}.send(w)
 }
 
 func (Http) NotImplemented(w http.ResponseWriter) {
-	Http{Code: 501, Status: StatusNotImplemented, Message: "Not implemented"}.send(w)
+	Http{Code: http.StatusNotImplemented, Status: http.StatusText(http.StatusNotImplemented), Message: "Not implemented"}.send(w)
 }
 
 func (h Http) send(w http.ResponseWriter) {
@@ -52,7 +52,7 @@ func (h Http) send(w http.ResponseWriter) {
 
 func (Http) getNotFound(name string) *Http {
 	return &Http{
-		Code:    404,
+		Code:    http.StatusNotFound,
 		Status:  fmt.Sprintf("%s_NOT_FOUND", strings.ToUpper(name)),
 		Message: fmt.Sprintf("%s not found", strings.ToLower(name)),
 	}
@@ -60,7 +60,7 @@ func (Http) getNotFound(name string) *Http {
 
 func (Http) getBadParameter(name string) *Http {
 	return &Http{
-		Code:    406,
+		Code:    http.StatusNotAcceptable,
 		Status:  fmt.Sprintf("BAD_PARAMETER_%s", strings.ToUpper(name)),
 		Message: fmt.Sprintf("bad %s parameter", strings.ToLower(name)),
 	}
@@ -68,7 +68,7 @@ func (Http) getBadParameter(name string) *Http {
 
 func (Http) getNotUnique(name string) *Http {
 	return &Http{
-		Code:    400,
+		Code:    http.StatusBadRequest,
 		Status:  fmt.Sprintf("%s_NOT_UNIQUE", strings.ToUpper(name)),
 		Message: fmt.Sprintf("%s is already in use", strings.ToLower(name)),
 	}
@@ -76,24 +76,24 @@ func (Http) getNotUnique(name string) *Http {
 
 func (Http) getIncorrectJSON() *Http {
 	return &Http{
-		Code:    400,
+		Code:    http.StatusBadRequest,
 		Status:  StatusIncorrectJson,
 		Message: "incorrect json",
 	}
 }
 
-func (Http) getAccessDenied() *Http {
+func (Http) getUnauthorized() *Http {
 	return &Http{
-		Code:    401,
-		Status:  StatusAccessDenied,
+		Code:    http.StatusUnauthorized,
+		Status:  http.StatusText(http.StatusUnauthorized),
 		Message: "Access denied",
 	}
 }
 
 func (Http) getUnknown() *Http {
 	return &Http{
-		Code:    500,
-		Status:  StatusInternalServerError,
+		Code:    http.StatusInternalServerError,
+		Status:  http.StatusText(http.StatusInternalServerError),
 		Message: "internal server error",
 	}
 }

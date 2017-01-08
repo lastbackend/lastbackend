@@ -2,6 +2,10 @@ package handler
 
 import (
 	"encoding/json"
+	"io"
+	"io/ioutil"
+	"net/http"
+
 	"github.com/gorilla/context"
 	e "github.com/lastbackend/lastbackend/libs/errors"
 	"github.com/lastbackend/lastbackend/libs/model"
@@ -9,9 +13,6 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/template"
 	"github.com/lastbackend/lastbackend/pkg/util/converter"
 	"github.com/lastbackend/lastbackend/pkg/util/validator"
-	"io"
-	"io/ioutil"
-	"net/http"
 )
 
 type deployS struct {
@@ -109,7 +110,7 @@ func DeployH(w http.ResponseWriter, r *http.Request) {
 	s, ok := context.GetOk(r, `session`)
 	if !ok {
 		ctx.Log.Error("Error: get session context")
-		e.New("user").AccessDenied().Http(w)
+		e.New("user").Unauthorized().Http(w)
 		return
 	}
 
@@ -201,7 +202,7 @@ func DeployH(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	w.WriteHeader(200)
+	w.WriteHeader(http.StatusOK)
 	_, er = w.Write([]byte{})
 	if er != nil {
 		ctx.Log.Error("Error: write response", er.Error())

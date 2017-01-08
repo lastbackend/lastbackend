@@ -2,6 +2,10 @@ package handler
 
 import (
 	"encoding/json"
+	"io"
+	"io/ioutil"
+	"net/http"
+
 	"github.com/gorilla/context"
 	"github.com/gorilla/mux"
 	e "github.com/lastbackend/lastbackend/libs/errors"
@@ -9,9 +13,6 @@ import (
 	c "github.com/lastbackend/lastbackend/pkg/daemon/context"
 	"github.com/lastbackend/lastbackend/pkg/service"
 	"github.com/lastbackend/lastbackend/pkg/util/validator"
-	"io"
-	"io/ioutil"
-	"net/http"
 )
 
 func ServiceListH(w http.ResponseWriter, r *http.Request) {
@@ -31,7 +32,7 @@ func ServiceListH(w http.ResponseWriter, r *http.Request) {
 	s, ok := context.GetOk(r, `session`)
 	if !ok {
 		ctx.Log.Error("Error: get session context")
-		e.New("user").AccessDenied().Http(w)
+		e.New("user").Unauthorized().Http(w)
 		return
 	}
 
@@ -87,7 +88,7 @@ func ServiceListH(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	w.WriteHeader(200)
+	w.WriteHeader(http.StatusOK)
 	_, er = w.Write(response)
 	if er != nil {
 		ctx.Log.Error("Error: write response", er.Error())
@@ -114,7 +115,7 @@ func ServiceInfoH(w http.ResponseWriter, r *http.Request) {
 	s, ok := context.GetOk(r, `session`)
 	if !ok {
 		ctx.Log.Error("Error: get session context")
-		e.New("user").AccessDenied().Http(w)
+		e.New("user").Unauthorized().Http(w)
 		return
 	}
 
@@ -158,7 +159,7 @@ func ServiceInfoH(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	w.WriteHeader(200)
+	w.WriteHeader(http.StatusOK)
 	_, er = w.Write(response)
 	if er != nil {
 		ctx.Log.Error("Error: write response", er.Error())
@@ -210,7 +211,7 @@ func ServiceUpdateH(w http.ResponseWriter, r *http.Request) {
 	s, ok := context.GetOk(r, `session`)
 	if !ok {
 		ctx.Log.Error("Error: get session context")
-		e.New("user").AccessDenied().Http(w)
+		e.New("user").Unauthorized().Http(w)
 		return
 	}
 
@@ -271,7 +272,7 @@ func ServiceUpdateH(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	w.WriteHeader(200)
+	w.WriteHeader(http.StatusOK)
 	_, er = w.Write(response)
 	if er != nil {
 		ctx.Log.Error("Error: write response", er.Error())
@@ -296,7 +297,7 @@ func ServiceRemoveH(w http.ResponseWriter, r *http.Request) {
 	s, ok := context.GetOk(r, `session`)
 	if !ok {
 		ctx.Log.Error("Error: get session context")
-		e.New("user").AccessDenied().Http(w)
+		e.New("user").Unauthorized().Http(w)
 		return
 	}
 
@@ -337,7 +338,7 @@ func ServiceRemoveH(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	w.WriteHeader(200)
+	w.WriteHeader(http.StatusOK)
 	_, er = w.Write([]byte{})
 	if er != nil {
 		ctx.Log.Error("Error: write response", er.Error())
@@ -373,7 +374,7 @@ func ServiceLogsH(w http.ResponseWriter, r *http.Request) {
 	s, ok := context.GetOk(r, `session`)
 	if !ok {
 		ctx.Log.Error("Error: get session context")
-		e.New("user").AccessDenied().Http(w)
+		e.New("user").Unauthorized().Http(w)
 		return
 	}
 

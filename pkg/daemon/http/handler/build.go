@@ -2,11 +2,12 @@ package handler
 
 import (
 	"encoding/json"
+	"net/http"
+	"time"
+
 	e "github.com/lastbackend/lastbackend/libs/errors"
 	"github.com/lastbackend/lastbackend/libs/model"
 	"github.com/lastbackend/lastbackend/pkg/daemon/context"
-	"net/http"
-	"time"
 )
 
 func BuildListH(w http.ResponseWriter, _ *http.Request) {
@@ -31,7 +32,7 @@ func BuildListH(w http.ResponseWriter, _ *http.Request) {
 		return
 	}
 
-	w.WriteHeader(200)
+	w.WriteHeader(http.StatusOK)
 	_, er = w.Write(buf)
 	if er != nil {
 		ctx.Log.Error("Error: write response", er.Error())
@@ -66,7 +67,7 @@ func BuildCreateH(w http.ResponseWriter, _ *http.Request) {
 		return
 	}
 
-	w.WriteHeader(200)
+	w.WriteHeader(http.StatusOK)
 	_, er = w.Write(buf)
 	if er != nil {
 		ctx.Log.Error("Error: write response", er.Error())

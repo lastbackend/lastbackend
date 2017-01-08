@@ -1,10 +1,11 @@
 package model
 
 import (
+	"time"
+
 	e "github.com/lastbackend/lastbackend/libs/errors"
 	"golang.org/x/crypto/bcrypt"
 	"k8s.io/client-go/1.5/pkg/util/json"
-	"time"
 )
 
 type User struct {
@@ -32,7 +33,7 @@ type Profile struct {
 // Validation methods
 func (u *User) ValidatePassword(password string) *e.Err {
 	if err := bcrypt.CompareHashAndPassword([]byte(u.Password), []byte(password+string(u.Salt))); err != nil {
-		return e.New("user").AccessDenied(err)
+		return e.New("user").Unauthorized(err)
 	}
 
 	return nil

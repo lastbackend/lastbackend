@@ -7,34 +7,11 @@ import (
 )
 
 const (
-	StatusIncorrectXml      = "INCORRECT_XML"
-	StatusIncorrectJson     = "INCORRECT_JSON"
-	StatusIncorrectName     = "INCORRECT_NAME"
-	StatusIncorrectEmail    = "INCORRECT_EMAIL"
-	StatusIncorrectUsename  = "INCORRECT_USERNAME"
-	StatusIncorrectPassword = "INCORRECT_PASSWORD"
-	StatusIncorrectAuth     = "INCORRECT_AUTH"
-	StatusIncorrectPayload  = "INCORRECT_PAYLOAD"
-
-	StatusBadRequest   = "BAD_REQUEST"
-	StatusBadGateway   = "BAD_GATEWAY"
-	StatusBadParameter = "BAD_PARAMETER"
-
-	StatusNotFound       = "NOT_FOUND"
-	StatusNotUnique      = "NOT_UNIQUE"
-	StatusNotSupported   = "NOT_SUPPORTED"
-	StatusNotAcceptable  = "NOT_ACCEPTABLE"
-	StatusNotImplemented = "NOT_IMPLEMENTED"
-
-	StatusPaymentRequired = "PAYMENT_REQUIRED"
-	StatusAccessDenied    = "ACCESS_DENIED"
-
-	StatusForbidden        = "FORBIDDEN"
-	StatusMethodNotAllowed = "METHOD_NOT_ALLOWED"
-
-	StatusInternalServerError = "INTERNAL_SERVER_ERROR"
-
-	StatusUnknown = "UNKNOWN"
+	StatusBadParameter  = "Bad Parameter"
+	StatusUnknown       = "Unknow"
+	StatusIncorrectXml  = "Incorrect XML"
+	StatusIncorrectJson = "Incorrect json"
+	StatusNotUnique     = "Not Unique"
 )
 
 type Err struct {
@@ -85,17 +62,17 @@ func New(name string) *err {
 	return &err{strings.ToLower(name)}
 }
 
-func (self *err) AccessDenied(e ...error) *Err {
+func (self *err) Unauthorized(e ...error) *Err {
 	return &Err{
-		Code:   StatusAccessDenied,
+		Code:   http.StatusText(http.StatusUnauthorized),
 		origin: getError(toUpperFirstChar(self.name)+"access denied", e...),
-		http:   HTTP.getAccessDenied(),
+		http:   HTTP.getUnauthorized(),
 	}
 }
 
 func (self *err) NotFound(e ...error) *Err {
 	return &Err{
-		Code:   StatusNotFound,
+		Code:   http.StatusText(http.StatusNotFound),
 		origin: getError(toUpperFirstChar(self.name)+": not found", e...),
 		http:   HTTP.getNotFound(self.name),
 	}
@@ -128,7 +105,7 @@ func (self *err) IncorrectJSON(e ...error) *Err {
 
 func (self *err) NotImplemented(e ...error) *Err {
 	return &Err{
-		Code:   StatusNotImplemented,
+		Code:   http.StatusText(http.StatusNotImplemented),
 		origin: getError("not implemented", e...),
 		http:   HTTP.getUnknown(),
 	}

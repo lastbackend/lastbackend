@@ -2,12 +2,13 @@ package handler
 
 import (
 	"encoding/json"
-	e "github.com/lastbackend/lastbackend/libs/errors"
-	"github.com/lastbackend/lastbackend/libs/model"
-	"github.com/lastbackend/lastbackend/pkg/daemon/context"
 	"io"
 	"io/ioutil"
 	"net/http"
+
+	e "github.com/lastbackend/lastbackend/libs/errors"
+	"github.com/lastbackend/lastbackend/libs/model"
+	"github.com/lastbackend/lastbackend/pkg/daemon/context"
 )
 
 type sessionCreateS struct {
@@ -72,7 +73,7 @@ func SessionCreateH(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := user.ValidatePassword(*rq.Password); err != nil {
-		e.HTTP.AccessDenied(w)
+		e.HTTP.Unauthorized(w)
 		return
 	}
 
@@ -94,7 +95,7 @@ func SessionCreateH(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	w.WriteHeader(200)
+	w.WriteHeader(http.StatusOK)
 	_, er = w.Write(response)
 	if er != nil {
 		ctx.Log.Error("Error: write response", er.Error())

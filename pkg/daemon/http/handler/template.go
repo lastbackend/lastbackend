@@ -2,12 +2,13 @@ package handler
 
 import (
 	"encoding/json"
-	e "github.com/lastbackend/lastbackend/libs/errors"
-	c "github.com/lastbackend/lastbackend/pkg/daemon/context"
-	"github.com/lastbackend/lastbackend/pkg/template"
 	"io"
 	"io/ioutil"
 	"net/http"
+
+	e "github.com/lastbackend/lastbackend/libs/errors"
+	c "github.com/lastbackend/lastbackend/pkg/daemon/context"
+	"github.com/lastbackend/lastbackend/pkg/template"
 )
 
 type deployTemplateS struct {
@@ -50,7 +51,7 @@ func TemplateListH(w http.ResponseWriter, _ *http.Request) {
 		er             error
 		ctx            = c.Get()
 		response_empty = func() {
-			w.WriteHeader(200)
+			w.WriteHeader(http.StatusOK)
 			_, er = w.Write([]byte("[]"))
 			if er != nil {
 				ctx.Log.Error("Error: write response", er.Error())
@@ -79,7 +80,7 @@ func TemplateListH(w http.ResponseWriter, _ *http.Request) {
 		return
 	}
 
-	w.WriteHeader(200)
+	w.WriteHeader(http.StatusOK)
 	_, er = w.Write(response)
 	if er != nil {
 		ctx.Log.Error("Error: write response", er.Error())
