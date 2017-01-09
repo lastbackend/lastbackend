@@ -1,7 +1,6 @@
 package storage
 
 import (
-	e "github.com/lastbackend/lastbackend/libs/errors"
 	"github.com/lastbackend/lastbackend/libs/interface/storage"
 	"github.com/lastbackend/lastbackend/libs/model"
 	r "gopkg.in/dancannon/gorethink.v2"
@@ -40,7 +39,7 @@ func (s *ServiceStorage) CheckExistsByName(user, project, name string) (bool, er
 	return !res.IsNil(), nil
 }
 
-func (s *ServiceStorage) GetByNameOrID(user, project, nameOrID string) (*model.Service, *e.Err) {
+func (s *ServiceStorage) GetByNameOrID(user, project, nameOrID string) (*model.Service, error) {
 
 	var (
 		err     error
@@ -58,7 +57,7 @@ func (s *ServiceStorage) GetByNameOrID(user, project, nameOrID string) (*model.S
 	}).Run(s.Session)
 
 	if err != nil {
-		return nil, e.New("service").Unknown(err)
+		return nil, err
 	}
 	defer res.Close()
 
@@ -71,7 +70,7 @@ func (s *ServiceStorage) GetByNameOrID(user, project, nameOrID string) (*model.S
 	return service, nil
 }
 
-func (s *ServiceStorage) GetByName(user, project, name string) (*model.Service, *e.Err) {
+func (s *ServiceStorage) GetByName(user, project, name string) (*model.Service, error) {
 
 	var (
 		err            error
@@ -85,7 +84,7 @@ func (s *ServiceStorage) GetByName(user, project, name string) (*model.Service, 
 
 	res, err := r.Table(ServiceTable).Filter(project_filter).Run(s.Session)
 	if err != nil {
-		return nil, e.New("service").Unknown(err)
+		return nil, err
 	}
 	defer res.Close()
 
@@ -98,7 +97,7 @@ func (s *ServiceStorage) GetByName(user, project, name string) (*model.Service, 
 	return service, nil
 }
 
-func (s *ServiceStorage) GetByID(user, project, id string) (*model.Service, *e.Err) {
+func (s *ServiceStorage) GetByID(user, project, id string) (*model.Service, error) {
 
 	var (
 		err            error
@@ -113,7 +112,7 @@ func (s *ServiceStorage) GetByID(user, project, id string) (*model.Service, *e.E
 	res, err := r.Table(ServiceTable).Filter(project_filter).Run(s.Session)
 
 	if err != nil {
-		return nil, e.New("service").Unknown(err)
+		return nil, err
 	}
 	defer res.Close()
 
@@ -126,7 +125,7 @@ func (s *ServiceStorage) GetByID(user, project, id string) (*model.Service, *e.E
 	return service, nil
 }
 
-func (s *ServiceStorage) ListByProject(user, project string) (*model.ServiceList, *e.Err) {
+func (s *ServiceStorage) ListByProject(user, project string) (*model.ServiceList, error) {
 
 	var (
 		err            error
@@ -136,7 +135,7 @@ func (s *ServiceStorage) ListByProject(user, project string) (*model.ServiceList
 
 	res, err := r.Table(ServiceTable).Filter(project_filter).Run(s.Session)
 	if err != nil {
-		return nil, e.New("service").Unknown(err)
+		return nil, err
 	}
 	defer res.Close()
 
@@ -150,7 +149,7 @@ func (s *ServiceStorage) ListByProject(user, project string) (*model.ServiceList
 }
 
 // Insert new service into storage
-func (s *ServiceStorage) Insert(service *model.Service) (*model.Service, *e.Err) {
+func (s *ServiceStorage) Insert(service *model.Service) (*model.Service, error) {
 
 	var (
 		err  error
@@ -162,7 +161,7 @@ func (s *ServiceStorage) Insert(service *model.Service) (*model.Service, *e.Err)
 
 	res, err := r.Table(ServiceTable).Insert(service, opts).RunWrite(s.Session)
 	if err != nil {
-		return nil, e.New("service").Unknown(err)
+		return nil, err
 	}
 
 	service.ID = res.GeneratedKeys[0]
@@ -171,7 +170,7 @@ func (s *ServiceStorage) Insert(service *model.Service) (*model.Service, *e.Err)
 }
 
 // Update build model
-func (s *ServiceStorage) Update(service *model.Service) (*model.Service, *e.Err) {
+func (s *ServiceStorage) Update(service *model.Service) (*model.Service, error) {
 
 	service.Updated = time.Now()
 
@@ -186,14 +185,14 @@ func (s *ServiceStorage) Update(service *model.Service) (*model.Service, *e.Err)
 
 	_, err = r.Table(ServiceTable).Get(service.ID).Update(data, opts).RunWrite(s.Session)
 	if err != nil {
-		return nil, e.New("service").Unknown(err)
+		return nil, err
 	}
 
 	return service, nil
 }
 
 // Remove build model
-func (s *ServiceStorage) Remove(user, project, id string) *e.Err {
+func (s *ServiceStorage) Remove(user, project, id string) error {
 
 	var (
 		err            error
@@ -207,14 +206,14 @@ func (s *ServiceStorage) Remove(user, project, id string) *e.Err {
 
 	_, err = r.Table(ServiceTable).Filter(project_filter).Delete(opts).RunWrite(s.Session)
 	if err != nil {
-		return e.New("service").Unknown(err)
+		return err
 	}
 
 	return nil
 }
 
 // Remove build model
-func (s *ServiceStorage) RemoveByProject(user, project string) *e.Err {
+func (s *ServiceStorage) RemoveByProject(user, project string) error {
 
 	var (
 		err            error
@@ -227,7 +226,7 @@ func (s *ServiceStorage) RemoveByProject(user, project string) *e.Err {
 
 	_, err = r.Table(ServiceTable).Filter(project_filter).Delete(opts).RunWrite(s.Session)
 	if err != nil {
-		return e.New("service").Unknown(err)
+		return err
 	}
 
 	return nil

@@ -1,7 +1,6 @@
 package mock
 
 import (
-	e "github.com/lastbackend/lastbackend/libs/errors"
 	"github.com/lastbackend/lastbackend/libs/interface/storage"
 	"github.com/lastbackend/lastbackend/libs/model"
 	r "gopkg.in/dancannon/gorethink.v2"
@@ -15,35 +14,35 @@ type ServiceMock struct {
 	storage.IService
 }
 
-func (s *ServiceMock) GetByNameOrID(user, project, nameOrID string) (*model.Service, *e.Err) {
+func (s *ServiceMock) GetByNameOrID(user, project, nameOrID string) (*model.Service, error) {
 	return nil, nil
 }
 
-func (s *ServiceMock) GetByID(user, project, id string) (*model.Service, *e.Err) {
+func (s *ServiceMock) GetByID(user, project, id string) (*model.Service, error) {
 	return nil, nil
 }
 
-func (s *ServiceMock) ListByProject(user, project string) (*model.ServiceList, *e.Err) {
+func (s *ServiceMock) ListByProject(user, project string) (*model.ServiceList, error) {
 	return nil, nil
 }
 
 // Insert new service into storage
-func (s *ServiceMock) Insert(service *model.Service) (*model.Service, *e.Err) {
+func (s *ServiceMock) Insert(service *model.Service) (*model.Service, error) {
 	return nil, nil
 }
 
 // Update service model
-func (s *ServiceMock) Update(service *model.Service) (*model.Service, *e.Err) {
+func (s *ServiceMock) Update(service *model.Service) (*model.Service, error) {
 	return nil, nil
 }
 
 // Remove service model
-func (s *ServiceMock) Remove(user, project, id string) *e.Err {
+func (s *ServiceMock) Remove(user, project, id string) error {
 	return nil
 }
 
 // Remove service model
-func (s *ServiceMock) RemoveByProject(user, project string) *e.Err {
+func (s *ServiceMock) RemoveByProject(user, project string) error {
 	return nil
 }
 

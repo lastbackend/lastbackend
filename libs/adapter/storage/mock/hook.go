@@ -1,7 +1,6 @@
 package mock
 
 import (
-	e "github.com/lastbackend/lastbackend/libs/errors"
 	"github.com/lastbackend/lastbackend/libs/interface/storage"
 	"github.com/lastbackend/lastbackend/libs/model"
 	r "gopkg.in/dancannon/gorethink.v2"
@@ -16,32 +15,32 @@ type HookMock struct {
 }
 
 // Get hooks by image
-func (s *HookMock) GetByToken(token string) (*model.Hook, *e.Err) {
+func (s *HookMock) GetByToken(token string) (*model.Hook, error) {
 	return nil, nil
 }
 
 // Get hooks by image
-func (s *HookMock) ListByUser(id string) (*model.HookList, *e.Err) {
+func (s *HookMock) ListByUser(id string) (*model.HookList, error) {
 	return nil, nil
 }
 
 // Get hooks by image
-func (s *HookMock) ListByImage(user, id string) (*model.HookList, *e.Err) {
+func (s *HookMock) ListByImage(user, id string) (*model.HookList, error) {
 	return nil, nil
 }
 
 // Get hooks by service
-func (s *HookMock) ListByService(user, id string) (*model.HookList, *e.Err) {
+func (s *HookMock) ListByService(user, id string) (*model.HookList, error) {
 	return nil, nil
 }
 
 // Insert new hook into storage
-func (s *HookMock) Insert(hook *model.Hook) (*model.Hook, *e.Err) {
+func (s *HookMock) Insert(hook *model.Hook) (*model.Hook, error) {
 	return nil, nil
 }
 
 // Insert new hook into storage
-func (s *HookMock) Delete(user, id string) *e.Err {
+func (s *HookMock) Delete(user, id string) error {
 	return nil
 }
 

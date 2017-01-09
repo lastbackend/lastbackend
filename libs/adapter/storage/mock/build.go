@@ -1,7 +1,6 @@
 package mock
 
 import (
-	e "github.com/lastbackend/lastbackend/libs/errors"
 	"github.com/lastbackend/lastbackend/libs/interface/storage"
 	"github.com/lastbackend/lastbackend/libs/model"
 	r "gopkg.in/dancannon/gorethink.v2"
@@ -16,22 +15,22 @@ type BuildMock struct {
 }
 
 // Get build model by id
-func (s *BuildMock) GetByID(user, id string) (*model.Build, *e.Err) {
+func (s *BuildMock) GetByID(user, id string) (*model.Build, error) {
 	return nil, nil
 }
 
 // Get builds by image
-func (s *BuildMock) ListByImage(user, id string) (*model.BuildList, *e.Err) {
+func (s *BuildMock) ListByImage(user, id string) (*model.BuildList, error) {
 	return nil, nil
 }
 
 // Insert new build into storage
-func (s *BuildMock) Insert(build *model.Build) (*model.Build, *e.Err) {
+func (s *BuildMock) Insert(build *model.Build) (*model.Build, error) {
 	return nil, nil
 }
 
 // Replace build model
-func (s *BuildMock) Replace(build *model.Build) (*model.Build, *e.Err) {
+func (s *BuildMock) Replace(build *model.Build) (*model.Build, error) {
 	return nil, nil
 }
 

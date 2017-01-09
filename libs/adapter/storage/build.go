@@ -1,10 +1,8 @@
 package storage
 
 import (
-	e "github.com/lastbackend/lastbackend/libs/errors"
-	"github.com/lastbackend/lastbackend/libs/model"
-
 	"github.com/lastbackend/lastbackend/libs/interface/storage"
+	"github.com/lastbackend/lastbackend/libs/model"
 	r "gopkg.in/dancannon/gorethink.v2"
 )
 
@@ -17,14 +15,14 @@ type BuildStorage struct {
 }
 
 // Get build model by id
-func (s *BuildStorage) GetByID(user, id string) (*model.Build, *e.Err) {
+func (s *BuildStorage) GetByID(user, id string) (*model.Build, error) {
 
 	var err error
 	var build = new(model.Build)
 	var user_filter = r.Row.Field("user").Eq(user)
 	res, err := r.Table(BuildTable).Get(id).Filter(user_filter).Run(s.Session)
 	if err != nil {
-		return nil, e.New("build").Unknown(err)
+		return nil, err
 	}
 
 	if res.IsNil() {
@@ -38,7 +36,7 @@ func (s *BuildStorage) GetByID(user, id string) (*model.Build, *e.Err) {
 }
 
 // Get builds by image
-func (s *BuildStorage) ListByImage(user, id string) (*model.BuildList, *e.Err) {
+func (s *BuildStorage) ListByImage(user, id string) (*model.BuildList, error) {
 
 	var err error
 	var builds = new(model.BuildList)
@@ -46,7 +44,7 @@ func (s *BuildStorage) ListByImage(user, id string) (*model.BuildList, *e.Err) {
 	var user_filter = r.Row.Field("user").Eq(user)
 	res, err := r.Table(BuildTable).Filter(image_filter).Filter(user_filter).Run(s.Session)
 	if err != nil {
-		return nil, e.New("build").Unknown(err)
+		return nil, err
 	}
 
 	if res.IsNil() {
@@ -60,11 +58,11 @@ func (s *BuildStorage) ListByImage(user, id string) (*model.BuildList, *e.Err) {
 }
 
 // Insert new build into storage
-func (s *BuildStorage) Insert(build *model.Build) (*model.Build, *e.Err) {
+func (s *BuildStorage) Insert(build *model.Build) (*model.Build, error) {
 
 	res, err := r.Table(BuildTable).Insert(build, r.InsertOpts{ReturnChanges: true}).RunWrite(s.Session)
 	if err != nil {
-		return nil, e.New("build").Unknown(err)
+		return nil, err
 	}
 
 	build.ID = res.GeneratedKeys[0]
@@ -73,11 +71,11 @@ func (s *BuildStorage) Insert(build *model.Build) (*model.Build, *e.Err) {
 }
 
 // Replace build model
-func (s *BuildStorage) Replace(build *model.Build) (*model.Build, *e.Err) {
+func (s *BuildStorage) Replace(build *model.Build) (*model.Build, error) {
 	var user_filter = r.Row.Field("user").Eq(build.User)
 	_, err := r.Table(BuildTable).Get(build.ID).Filter(user_filter).Replace(build, r.ReplaceOpts{ReturnChanges: true}).RunWrite(s.Session)
 	if err != nil {
-		return nil, e.New("build").Unknown(err)
+		return nil, err
 	}
 
 	return build, nil

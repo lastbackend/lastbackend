@@ -2,7 +2,6 @@ package model
 
 import (
 	"encoding/json"
-	e "github.com/lastbackend/lastbackend/libs/errors"
 	"github.com/lastbackend/lastbackend/pkg/util/table"
 	"time"
 )
@@ -24,10 +23,10 @@ type Project struct {
 	Updated time.Time `json:"updated" gorethink:"updated,omitempty"`
 }
 
-func (p *Project) ToJson() ([]byte, *e.Err) {
+func (p *Project) ToJson() ([]byte, error) {
 	buf, err := json.Marshal(p)
 	if err != nil {
-		return nil, e.New("project").Unknown(err)
+		return nil, err
 	}
 
 	return buf, nil
@@ -43,7 +42,7 @@ func (p *Project) DrawTable() {
 	})
 }
 
-func (p *ProjectList) ToJson() ([]byte, *e.Err) {
+func (p *ProjectList) ToJson() ([]byte, error) {
 
 	if p == nil {
 		return []byte("[]"), nil
@@ -51,7 +50,7 @@ func (p *ProjectList) ToJson() ([]byte, *e.Err) {
 
 	buf, err := json.Marshal(p)
 	if err != nil {
-		return nil, e.New("project").Unknown(err)
+		return nil, err
 	}
 
 	return buf, nil

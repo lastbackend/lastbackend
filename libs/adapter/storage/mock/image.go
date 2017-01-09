@@ -1,7 +1,6 @@
 package mock
 
 import (
-	e "github.com/lastbackend/lastbackend/libs/errors"
 	"github.com/lastbackend/lastbackend/libs/interface/storage"
 	"github.com/lastbackend/lastbackend/libs/model"
 	r "gopkg.in/dancannon/gorethink.v2"
@@ -15,29 +14,29 @@ type ImageMock struct {
 	storage.IImage
 }
 
-func (i *ImageMock) GetByID(user, id string) (*model.Image, *e.Err) {
+func (i *ImageMock) GetByID(user, id string) (*model.Image, error) {
 	return nil, nil
 }
 
-func (i *ImageMock) ListByUser(id string) (*model.ImageList, *e.Err) {
+func (i *ImageMock) ListByUser(id string) (*model.ImageList, error) {
 	return nil, nil
 }
 
-func (i *ImageMock) ListByProject(user, id string) (*model.ImageList, *e.Err) {
+func (i *ImageMock) ListByProject(user, id string) (*model.ImageList, error) {
 	return nil, nil
 }
 
-func (i *ImageMock) ListByService(user, id string) (*model.ImageList, *e.Err) {
+func (i *ImageMock) ListByService(user, id string) (*model.ImageList, error) {
 	return nil, nil
 }
 
 // Insert new image into storage
-func (i *ImageMock) Insert(image *model.Image) (*model.Image, *e.Err) {
+func (i *ImageMock) Insert(image *model.Image) (*model.Image, error) {
 	return nil, nil
 }
 
 // Update image model
-func (i *ImageMock) Update(image *model.Image) (*model.Image, *e.Err) {
+func (i *ImageMock) Update(image *model.Image) (*model.Image, error) {
 	return nil, nil
 }
 

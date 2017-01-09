@@ -20,7 +20,7 @@ func (Http) Unauthorized(w http.ResponseWriter) {
 }
 
 func (Http) InvalidJSON(w http.ResponseWriter) {
-	Http{Code: http.StatusBadRequest, Status: StatusIncorrectJson, Message: "Invalid josn"}.send(w)
+	Http{Code: http.StatusBadRequest, Status: StatusIncorrectJson, Message: "Invalid json"}.send(w)
 }
 
 func (Http) BadRequest(w http.ResponseWriter) {
@@ -86,7 +86,7 @@ func (Http) getUnauthorized() *Http {
 	return &Http{
 		Code:    http.StatusUnauthorized,
 		Status:  http.StatusText(http.StatusUnauthorized),
-		Message: "Access denied",
+		Message: "access denied",
 	}
 }
 

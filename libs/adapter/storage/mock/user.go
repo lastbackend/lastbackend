@@ -1,7 +1,6 @@
 package mock
 
 import (
-	e "github.com/lastbackend/lastbackend/libs/errors"
 	"github.com/lastbackend/lastbackend/libs/interface/storage"
 	"github.com/lastbackend/lastbackend/libs/model"
 	r "gopkg.in/dancannon/gorethink.v2"
@@ -27,7 +26,7 @@ var userMock = &model.User{
 	Profile:  model.Profile{},
 }
 
-func (u *UserMock) GetByUsername(_ string) (*model.User, *e.Err) {
+func (u *UserMock) GetByUsername(_ string) (*model.User, error) {
 
 	var err error
 	var user = new(model.User)
@@ -36,7 +35,7 @@ func (u *UserMock) GetByUsername(_ string) (*model.User, *e.Err) {
 
 	res, err := r.Table(mockDB).Table(userTable).Get(mockID).Run(u.Mock)
 	if err != nil {
-		return nil, e.New("user").Unknown(err)
+		return nil, err
 	}
 
 	if res.IsNil() {
@@ -48,7 +47,7 @@ func (u *UserMock) GetByUsername(_ string) (*model.User, *e.Err) {
 	return user, nil
 }
 
-func (u *UserMock) GetByEmail(_ string) (*model.User, *e.Err) {
+func (u *UserMock) GetByEmail(_ string) (*model.User, error) {
 
 	var err error
 	var user = new(model.User)
@@ -57,7 +56,7 @@ func (u *UserMock) GetByEmail(_ string) (*model.User, *e.Err) {
 
 	res, err := r.Table(mockDB).Table(userTable).Get(mockID).Run(u.Mock)
 	if err != nil {
-		return nil, e.New("user").Unknown(err)
+		return nil, err
 	}
 
 	if res.IsNil() {
@@ -69,7 +68,7 @@ func (u *UserMock) GetByEmail(_ string) (*model.User, *e.Err) {
 	return user, nil
 }
 
-func (u *UserMock) GetByID(_ string) (*model.User, *e.Err) {
+func (u *UserMock) GetByID(_ string) (*model.User, error) {
 
 	var err error
 	var user = new(model.User)
@@ -78,11 +77,11 @@ func (u *UserMock) GetByID(_ string) (*model.User, *e.Err) {
 
 	res, err := r.Table(mockDB).Table(userTable).Get(mockID).Run(u.Mock)
 	if err != nil {
-		return nil, e.New("user").Unknown(err)
+		return nil, err
 	}
 
 	if err != nil {
-		return nil, e.New("user").Unknown(err)
+		return nil, err
 	}
 	defer res.Close()
 
@@ -95,7 +94,7 @@ func (u *UserMock) GetByID(_ string) (*model.User, *e.Err) {
 	return user, nil
 }
 
-func (u *UserMock) Insert(_ *model.User) (*model.User, *e.Err) {
+func (u *UserMock) Insert(_ *model.User) (*model.User, error) {
 
 	var err error
 	var opts = r.InsertOpts{ReturnChanges: true}
@@ -105,7 +104,7 @@ func (u *UserMock) Insert(_ *model.User) (*model.User, *e.Err) {
 	res, err := r.Table(mockDB).Table(mockDB).Insert(userMock, opts).RunWrite(u.Mock)
 
 	if err != nil {
-		return nil, e.New("user").Unknown(err)
+		return nil, err
 	}
 
 	userMock.ID = res.GeneratedKeys[0]

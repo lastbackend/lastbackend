@@ -1,10 +1,8 @@
 package storage
 
 import (
-	e "github.com/lastbackend/lastbackend/libs/errors"
-	"github.com/lastbackend/lastbackend/libs/model"
-
 	"github.com/lastbackend/lastbackend/libs/interface/storage"
+	"github.com/lastbackend/lastbackend/libs/model"
 	r "gopkg.in/dancannon/gorethink.v2"
 )
 
@@ -17,14 +15,14 @@ type HookStorage struct {
 }
 
 // Get hooks by image
-func (s *HookStorage) GetByToken(token string) (*model.Hook, *e.Err) {
+func (s *HookStorage) GetByToken(token string) (*model.Hook, error) {
 
 	var err error
 	var hook = new(model.Hook)
 	var token_filter = r.Row.Field("token").Eq(token)
 	res, err := r.Table(HookTable).Filter(token_filter).Run(s.Session)
 	if err != nil {
-		return nil, e.New("hook").Unknown(err)
+		return nil, err
 	}
 
 	res.One(hook)
@@ -34,14 +32,14 @@ func (s *HookStorage) GetByToken(token string) (*model.Hook, *e.Err) {
 }
 
 // Get hooks by image
-func (s *HookStorage) GetByUser(id string) (*model.HookList, *e.Err) {
+func (s *HookStorage) GetByUser(id string) (*model.HookList, error) {
 
 	var err error
 	var hooks = new(model.HookList)
 	var user_filter = r.Row.Field("user").Eq(id)
 	res, err := r.Table(HookTable).Filter(user_filter).Run(s.Session)
 	if err != nil {
-		return nil, e.New("hook").Unknown(err)
+		return nil, err
 	}
 
 	res.All(hooks)
@@ -51,7 +49,7 @@ func (s *HookStorage) GetByUser(id string) (*model.HookList, *e.Err) {
 }
 
 // Get hooks by image
-func (s *HookStorage) ListByImage(user, id string) (*model.HookList, *e.Err) {
+func (s *HookStorage) ListByImage(user, id string) (*model.HookList, error) {
 
 	var err error
 	var hooks = new(model.HookList)
@@ -59,7 +57,7 @@ func (s *HookStorage) ListByImage(user, id string) (*model.HookList, *e.Err) {
 	var user_filter = r.Row.Field("user").Eq(user)
 	res, err := r.Table(HookTable).Filter(image_filter).Filter(user_filter).Run(s.Session)
 	if err != nil {
-		return nil, e.New("hook").Unknown(err)
+		return nil, err
 	}
 
 	res.All(hooks)
@@ -69,7 +67,7 @@ func (s *HookStorage) ListByImage(user, id string) (*model.HookList, *e.Err) {
 }
 
 // Get hooks by service
-func (s *HookStorage) ListByService(user, id string) (*model.HookList, *e.Err) {
+func (s *HookStorage) ListByService(user, id string) (*model.HookList, error) {
 
 	var err error
 	var hooks = new(model.HookList)
@@ -77,7 +75,7 @@ func (s *HookStorage) ListByService(user, id string) (*model.HookList, *e.Err) {
 	var user_filter = r.Row.Field("user").Eq(user)
 	res, err := r.Table(HookTable).Filter(service_filter).Filter(user_filter).Run(s.Session)
 	if err != nil {
-		return nil, e.New("hook").Unknown(err)
+		return nil, err
 	}
 
 	if res.IsNil() {
@@ -91,11 +89,11 @@ func (s *HookStorage) ListByService(user, id string) (*model.HookList, *e.Err) {
 }
 
 // Insert new hook into storage
-func (s *HookStorage) Insert(hook *model.Hook) (*model.Hook, *e.Err) {
+func (s *HookStorage) Insert(hook *model.Hook) (*model.Hook, error) {
 
 	res, err := r.Table(HookTable).Insert(hook, r.InsertOpts{ReturnChanges: true}).RunWrite(s.Session)
 	if err != nil {
-		return nil, e.New("hook").Unknown(err)
+		return nil, err
 	}
 
 	hook.ID = res.GeneratedKeys[0]
@@ -104,11 +102,11 @@ func (s *HookStorage) Insert(hook *model.Hook) (*model.Hook, *e.Err) {
 }
 
 // Insert new hook into storage
-func (s *HookStorage) Delete(user, id string) *e.Err {
+func (s *HookStorage) Delete(user, id string) error {
 	var user_filter = r.Row.Field("user").Eq(user)
 	_, err := r.Table(HookTable).Get(id).Filter(user_filter).Delete().Run(s.Session)
 	if err != nil {
-		return e.New("hook").Unknown(err)
+		return err
 	}
 
 	return nil
