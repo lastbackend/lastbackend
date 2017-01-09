@@ -1,7 +1,6 @@
 package storage
 
 import (
-	e "github.com/lastbackend/lastbackend/libs/errors"
 	"github.com/lastbackend/lastbackend/libs/interface/storage"
 	"github.com/lastbackend/lastbackend/libs/model"
 	r "gopkg.in/dancannon/gorethink.v2"
@@ -16,7 +15,7 @@ type UserStorage struct {
 	storage.IUser
 }
 
-func (s *UserStorage) GetByUsername(username string) (*model.User, *e.Err) {
+func (s *UserStorage) GetByUsername(username string) (*model.User, error) {
 
 	var err error
 	var user = new(model.User)
@@ -25,7 +24,7 @@ func (s *UserStorage) GetByUsername(username string) (*model.User, *e.Err) {
 	res, err := r.Table(UserTable).Filter(username_filter).Run(s.Session)
 
 	if err != nil {
-		return nil, e.New("user").Unknown(err)
+		return nil, err
 	}
 	defer res.Close()
 
@@ -38,7 +37,7 @@ func (s *UserStorage) GetByUsername(username string) (*model.User, *e.Err) {
 	return user, nil
 }
 
-func (s *UserStorage) GetByEmail(email string) (*model.User, *e.Err) {
+func (s *UserStorage) GetByEmail(email string) (*model.User, error) {
 
 	var err error
 	var user = new(model.User)
@@ -47,7 +46,7 @@ func (s *UserStorage) GetByEmail(email string) (*model.User, *e.Err) {
 	res, err := r.Table(UserTable).Filter(email_filter).Run(s.Session)
 
 	if err != nil {
-		return nil, e.New("user").Unknown(err)
+		return nil, err
 	}
 	defer res.Close()
 
@@ -60,7 +59,7 @@ func (s *UserStorage) GetByEmail(email string) (*model.User, *e.Err) {
 	return user, nil
 }
 
-func (s *UserStorage) GetByID(uuid string) (*model.User, *e.Err) {
+func (s *UserStorage) GetByID(uuid string) (*model.User, error) {
 
 	var err error
 	var user = new(model.User)
@@ -68,7 +67,7 @@ func (s *UserStorage) GetByID(uuid string) (*model.User, *e.Err) {
 	res, err := r.Table(UserTable).Get(uuid).Run(s.Session)
 
 	if err != nil {
-		return nil, e.New("user").Unknown(err)
+		return nil, err
 	}
 	defer res.Close()
 
@@ -81,7 +80,7 @@ func (s *UserStorage) GetByID(uuid string) (*model.User, *e.Err) {
 	return user, nil
 }
 
-func (s *UserStorage) Insert(user *model.User) (*model.User, *e.Err) {
+func (s *UserStorage) Insert(user *model.User) (*model.User, error) {
 
 	var err error
 	var opts = r.InsertOpts{ReturnChanges: true}
@@ -92,7 +91,7 @@ func (s *UserStorage) Insert(user *model.User) (*model.User, *e.Err) {
 	res, err := r.Table(UserTable).Insert(user, opts).RunWrite(s.Session)
 
 	if err != nil {
-		return nil, e.New("user").Unknown(err)
+		return nil, err
 	}
 
 	user.ID = res.GeneratedKeys[0]

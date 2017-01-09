@@ -51,10 +51,10 @@ type Volume struct {
 	MountPath string `json:"mountpath"`
 }
 
-func Get(name string) (*Template, *e.Err) {
+func Get(name string) (*Template, error) {
 
 	var (
-		er      error
+		err     error
 		ctx     = context.Get()
 		httperr = new(e.Http)
 		tpl     = new(Template)
@@ -69,11 +69,11 @@ func Get(name string) (*Template, *e.Err) {
 		version = parts[1]
 	}
 
-	_, _, er = ctx.TemplateRegistry.
+	_, _, err = ctx.TemplateRegistry.
 		GET(fmt.Sprintf("/template/%s/%s", name, version)).
 		Request(tpl, httperr)
-	if er != nil {
-		return nil, e.New(packageName).Unknown(er)
+	if err != nil {
+		return nil, err
 	}
 
 	if httperr.Code == 404 {
@@ -81,33 +81,33 @@ func Get(name string) (*Template, *e.Err) {
 	}
 
 	if httperr.Code != 0 {
-		return nil, e.New(packageName).Unknown(er)
+		return nil, err
 	}
 
 	return tpl, nil
 }
 
-func List() (*TemplateList, *e.Err) {
+func List() (*TemplateList, error) {
 
 	var (
-		er        error
+		err       error
 		ctx       = context.Get()
 		templates = new(TemplateList)
 	)
 
-	_, resp, er := ctx.TemplateRegistry.GET("/template").Do()
-	if er != nil {
-		return nil, e.New(packageName).Unknown(er)
+	_, resp, err := ctx.TemplateRegistry.GET("/template").Do()
+	if err != nil {
+		return nil, err
 	}
 
-	buf, er := ioutil.ReadAll(resp.Body)
-	if er != nil {
-		return nil, e.New(packageName).Unknown(er)
+	buf, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return nil, err
 	}
 
-	er = json.Unmarshal(buf, templates)
-	if er != nil {
-		return nil, e.New(packageName).Unknown(er)
+	err = json.Unmarshal(buf, templates)
+	if err != nil {
+		return nil, err
 	}
 
 	return templates, nil
@@ -142,14 +142,14 @@ func CreateDefaultDeploymentConfig(name string) *Template {
 	return tpl
 }
 
-func (t *Template) Provision(namespace, user, project string, patchConfig *PatchConfig) *e.Err {
+func (t *Template) Provision(namespace, user, project string, patchConfig *PatchConfig) error {
 
 	t.Patch(patchConfig)
 
 	var (
-		er         error
+		err        error
 		ctx        = context.Get()
-		deployFunc = func(val interface{}) *e.Err {
+		deployFunc = func(val interface{}) error {
 
 			var config *v1beta1.Deployment
 
@@ -161,7 +161,7 @@ func (t *Template) Provision(namespace, user, project string, patchConfig *Patch
 			case *v1.Pod:
 				config = converter.Convert_Pod_to_Deployment(val.(*v1.Pod))
 			default:
-				return e.New("service").Unknown(errors.New("unknown type config"))
+				return errors.New("unknown type config")
 			}
 
 			var serviceModel = new(model.Service)
@@ -174,7 +174,7 @@ func (t *Template) Provision(namespace, user, project string, patchConfig *Patch
 				return err
 			}
 
-			config.Name = "lb-"+serviceModel.Name
+			config.Name = "lb-" + serviceModel.Name
 
 			_, err = service.Deploy(ctx.K8S, namespace, config)
 			if err != nil {
@@ -188,28 +188,28 @@ func (t *Template) Provision(namespace, user, project string, patchConfig *Patch
 	for _, val := range t.PersistentVolumes {
 		pv, err := volume.Create(user, project, &val)
 		if err != nil {
-			return e.New("template").Unknown(err.Err())
+			return err
 		}
 
 		err = pv.Deploy()
 		if err != nil {
-			return e.New("template").Unknown(err.Err())
+			return err
 		}
 	}
 
 	for _, val := range t.Services {
-		_, er = ctx.K8S.Core().Services(namespace).Create(&val)
-		if er != nil {
-			ctx.Log.Info(er.Error())
-			return e.New("template").Unknown(er)
+		_, err = ctx.K8S.Core().Services(namespace).Create(&val)
+		if err != nil {
+			ctx.Log.Info(err.Error())
+			return err
 		}
 	}
 
 	for _, val := range t.Secrets {
-		_, er = ctx.K8S.Core().Secrets(namespace).Create(&val)
-		if er != nil {
-			ctx.Log.Info(er.Error())
-			return e.New("template").Unknown(er)
+		_, err = ctx.K8S.Core().Secrets(namespace).Create(&val)
+		if err != nil {
+			ctx.Log.Info(err.Error())
+			return err
 		}
 	}
 
@@ -221,26 +221,26 @@ func (t *Template) Provision(namespace, user, project string, patchConfig *Patch
 	}
 
 	for _, val := range t.PersistentVolumeClaims {
-		_, er = ctx.K8S.Core().PersistentVolumeClaims(namespace).Create(&val)
-		if er != nil {
-			ctx.Log.Info(er.Error())
-			return e.New("template").Unknown(er)
+		_, err = ctx.K8S.Core().PersistentVolumeClaims(namespace).Create(&val)
+		if err != nil {
+			ctx.Log.Info(err.Error())
+			return err
 		}
 	}
 
 	for _, val := range t.ServiceAccounts {
-		_, er = ctx.K8S.Core().ServiceAccounts(namespace).Create(&val)
-		if er != nil {
-			ctx.Log.Info(er.Error())
-			return e.New("template").Unknown(er)
+		_, err = ctx.K8S.Core().ServiceAccounts(namespace).Create(&val)
+		if err != nil {
+			ctx.Log.Info(err.Error())
+			return err
 		}
 	}
 
 	for _, val := range t.DaemonSets {
-		_, er = ctx.K8S.Extensions().DaemonSets(namespace).Create(&val)
-		if er != nil {
-			ctx.Log.Info(er.Error())
-			return e.New("template").Unknown(er)
+		_, err = ctx.K8S.Extensions().DaemonSets(namespace).Create(&val)
+		if err != nil {
+			ctx.Log.Info(err.Error())
+			return err
 		}
 	}
 
@@ -252,10 +252,10 @@ func (t *Template) Provision(namespace, user, project string, patchConfig *Patch
 	}
 
 	for _, val := range t.Ingresses {
-		_, er = ctx.K8S.Extensions().Ingresses(namespace).Create(&val)
-		if er != nil {
-			ctx.Log.Info(er.Error())
-			return e.New("template").Unknown(er)
+		_, err = ctx.K8S.Extensions().Ingresses(namespace).Create(&val)
+		if err != nil {
+			ctx.Log.Info(err.Error())
+			return err
 		}
 	}
 
@@ -284,11 +284,11 @@ func (t *Template) Patch(config *PatchConfig) {
 	for dp_index := range t.Deployments {
 		var dp = &t.Deployments[dp_index]
 
-		dp.Name =  config.Name+"-"+dp.Name
+		dp.Name = config.Name + "-" + dp.Name
 
 		if _, ok := dp.Spec.Template.Labels["role"]; ok && dp.Spec.Template.Labels["role"] == "placeholder" {
 
-			dp.Name =  config.Name
+			dp.Name = config.Name
 
 			delete(dp.Spec.Template.Labels, "role")
 
@@ -333,16 +333,16 @@ func (t *Template) Patch(config *PatchConfig) {
 	return
 }
 
-func (t *Template) ToJson() ([]byte, *e.Err) {
+func (t *Template) ToJson() ([]byte, error) {
 	buf, err := json.Marshal(t)
 	if err != nil {
-		return nil, e.New("template").Unknown(err)
+		return nil, err
 	}
 
 	return buf, nil
 }
 
-func (t *TemplateList) ToJson() ([]byte, *e.Err) {
+func (t *TemplateList) ToJson() ([]byte, error) {
 
 	if t == nil {
 		return []byte("[]"), nil
@@ -350,7 +350,7 @@ func (t *TemplateList) ToJson() ([]byte, *e.Err) {
 
 	buf, err := json.Marshal(t)
 	if err != nil {
-		return nil, e.New("template").Unknown(err)
+		return nil, err
 	}
 
 	return buf, nil

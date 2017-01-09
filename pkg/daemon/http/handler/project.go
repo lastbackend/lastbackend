@@ -19,8 +19,7 @@ import (
 func ProjectListH(w http.ResponseWriter, r *http.Request) {
 
 	var (
-		er      error
-		err     *e.Err
+		err     error
 		session *model.Session
 		ctx     = c.Get()
 	)
@@ -45,17 +44,17 @@ func ProjectListH(w http.ResponseWriter, r *http.Request) {
 
 	response, err := projectListModel.ToJson()
 	if err != nil {
-		ctx.Log.Error("Error: convert struct to json", err.Err())
-		err.Http(w)
+		ctx.Log.Error("Error: convert struct to json", err.Error())
+		e.HTTP.InternalServerError(w)
 		return
 	}
 
 	ctx.Log.Info(string(response))
 
 	w.WriteHeader(http.StatusOK)
-	_, er = w.Write(response)
-	if er != nil {
-		ctx.Log.Error("Error: write response", er.Error())
+	_, err = w.Write(response)
+	if err != nil {
+		ctx.Log.Error("Error: write response", err.Error())
 		return
 	}
 }
@@ -63,8 +62,7 @@ func ProjectListH(w http.ResponseWriter, r *http.Request) {
 func ProjectInfoH(w http.ResponseWriter, r *http.Request) {
 
 	var (
-		er           error
-		err          *e.Err
+		err          error
 		session      *model.Session
 		ctx          = c.Get()
 		params       = mux.Vars(r)
@@ -84,27 +82,27 @@ func ProjectInfoH(w http.ResponseWriter, r *http.Request) {
 	var projectModel *model.Project
 
 	projectModel, err = ctx.Storage.Project().GetByNameOrID(session.Uid, projectParam)
-	if err == nil && projectModel == nil {
-		e.New("project").NotFound().Http(w)
+	if err != nil {
+		ctx.Log.Error("Error: find project by id", err.Error())
+		e.HTTP.InternalServerError(w)
 		return
 	}
-	if err != nil {
-		ctx.Log.Error("Error: find project by id", err.Err())
-		err.Http(w)
+	if projectModel == nil {
+		e.New("project").NotFound().Http(w)
 		return
 	}
 
 	response, err := projectModel.ToJson()
 	if err != nil {
-		ctx.Log.Error("Error: convert struct to json", err.Err())
-		err.Http(w)
+		ctx.Log.Error("Error: convert struct to json", err.Error())
+		e.HTTP.InternalServerError(w)
 		return
 	}
 
 	w.WriteHeader(http.StatusOK)
-	_, er = w.Write(response)
-	if er != nil {
-		ctx.Log.Error("Error: write response", er.Error())
+	_, err = w.Write(response)
+	if err != nil {
+		ctx.Log.Error("Error: write response", err.Error())
 		return
 	}
 }
@@ -150,8 +148,7 @@ func (s *projectCreateS) decodeAndValidate(reader io.Reader) *e.Err {
 func ProjectCreateH(w http.ResponseWriter, r *http.Request) {
 
 	var (
-		er      error
-		err     *e.Err
+		err     error
 		session *model.Session
 		ctx     = c.Get()
 	)
@@ -180,9 +177,9 @@ func ProjectCreateH(w http.ResponseWriter, r *http.Request) {
 	projectModel.Name = *rq.Name
 	projectModel.Description = *rq.Description
 
-	exists, er := ctx.Storage.Project().ExistByName(projectModel.User, projectModel.Name)
-	if er != nil {
-		ctx.Log.Error("Error: check exists by name", er.Error())
+	exists, err := ctx.Storage.Project().ExistByName(projectModel.User, projectModel.Name)
+	if err != nil {
+		ctx.Log.Error("Error: check exists by name", err.Error())
 		e.HTTP.InternalServerError(w)
 		return
 	}
@@ -208,24 +205,24 @@ func ProjectCreateH(w http.ResponseWriter, r *http.Request) {
 		},
 	}
 
-	_, er = ctx.K8S.Core().Namespaces().Create(namespace)
-	if er != nil {
-		ctx.Log.Error("Error: create namespace", er.Error())
+	_, err = ctx.K8S.Core().Namespaces().Create(namespace)
+	if err != nil {
+		ctx.Log.Error("Error: create namespace", err.Error())
 		e.HTTP.InternalServerError(w)
 		return
 	}
 
 	response, err := project.ToJson()
 	if err != nil {
-		ctx.Log.Error("Error: convert struct to json", err.Err())
-		err.Http(w)
+		ctx.Log.Error("Error: convert struct to json", err.Error())
+		e.HTTP.InternalServerError(w)
 		return
 	}
 
 	w.WriteHeader(http.StatusOK)
-	_, er = w.Write(response)
-	if er != nil {
-		ctx.Log.Error("Error: write response", er.Error())
+	_, err = w.Write(response)
+	if err != nil {
+		ctx.Log.Error("Error: write response", err.Error())
 		return
 	}
 }
@@ -267,8 +264,7 @@ func (s *projectReplaceS) decodeAndValidate(reader io.Reader) *e.Err {
 func ProjectUpdateH(w http.ResponseWriter, r *http.Request) {
 
 	var (
-		er           error
-		err          *e.Err
+		err          error
 		session      *model.Session
 		projectModel *model.Project
 		ctx          = c.Get()
@@ -296,13 +292,13 @@ func ProjectUpdateH(w http.ResponseWriter, r *http.Request) {
 	}
 
 	projectModel, err = ctx.Storage.Project().GetByNameOrID(session.Uid, projectParam)
-	if err == nil && projectModel == nil {
-		e.New("project").NotFound().Http(w)
+	if err != nil {
+		ctx.Log.Error("Error: find project by id", err.Error())
+		e.HTTP.InternalServerError(w)
 		return
 	}
-	if err != nil {
-		ctx.Log.Error("Error: find project by id", err.Err())
-		err.Http(w)
+	if projectModel == nil {
+		e.New("project").NotFound().Http(w)
 		return
 	}
 
@@ -311,8 +307,8 @@ func ProjectUpdateH(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if !validator.IsUUID(projectParam) && projectModel.Name != *rq.Name {
-		exists, er := ctx.Storage.Project().ExistByName(projectModel.User, *rq.Name)
-		if er != nil {
+		exists, err := ctx.Storage.Project().ExistByName(projectModel.User, *rq.Name)
+		if err != nil {
 			e.HTTP.InternalServerError(w)
 		}
 		if exists {
@@ -325,24 +321,23 @@ func ProjectUpdateH(w http.ResponseWriter, r *http.Request) {
 	projectModel.Description = *rq.Description
 
 	projectModel, err = ctx.Storage.Project().Update(projectModel)
-
 	if err != nil {
-		ctx.Log.Error("Error: insert project to db", err.Err())
+		ctx.Log.Error("Error: insert project to db", err.Error())
 		e.HTTP.InternalServerError(w)
 		return
 	}
 
 	response, err := projectModel.ToJson()
 	if err != nil {
-		ctx.Log.Error("Error: convert struct to json", err.Err())
-		err.Http(w)
+		ctx.Log.Error("Error: convert struct to json", err.Error())
+		e.HTTP.InternalServerError(w)
 		return
 	}
 
 	w.WriteHeader(http.StatusOK)
-	_, er = w.Write(response)
-	if er != nil {
-		ctx.Log.Error("Error: write response", er.Error())
+	_, err = w.Write(response)
+	if err != nil {
+		ctx.Log.Error("Error: write response", err.Error())
 		return
 	}
 }
@@ -350,7 +345,7 @@ func ProjectUpdateH(w http.ResponseWriter, r *http.Request) {
 func ProjectRemoveH(w http.ResponseWriter, r *http.Request) {
 
 	var (
-		er           error
+		err          error
 		ctx          = c.Get()
 		session      *model.Session
 		params       = mux.Vars(r)
@@ -370,13 +365,13 @@ func ProjectRemoveH(w http.ResponseWriter, r *http.Request) {
 
 	if !validator.IsUUID(projectParam) {
 		projectModel, err := ctx.Storage.Project().GetByName(session.Uid, projectParam)
-		if err == nil && projectModel == nil {
-			e.New("project").NotFound().Http(w)
+		if err != nil {
+			ctx.Log.Error("Error: find project by id", err.Error())
+			e.HTTP.InternalServerError(w)
 			return
 		}
-		if err != nil {
-			ctx.Log.Error("Error: find project by id", err.Err())
-			err.Http(w)
+		if projectModel == nil {
+			e.New("project").NotFound().Http(w)
 			return
 		}
 
@@ -385,9 +380,9 @@ func ProjectRemoveH(w http.ResponseWriter, r *http.Request) {
 
 	var opts = new(api.DeleteOptions)
 
-	er = ctx.K8S.Core().Namespaces().Delete(projectParam, opts)
-	if er != nil {
-		ctx.Log.Error("Error: remove namespace", er.Error())
+	err = ctx.K8S.Core().Namespaces().Delete(projectParam, opts)
+	if err != nil {
+		ctx.Log.Error("Error: remove namespace", err.Error())
 		e.HTTP.InternalServerError(w)
 		return
 	}
@@ -401,9 +396,9 @@ func ProjectRemoveH(w http.ResponseWriter, r *http.Request) {
 
 	if volumes != nil {
 		for _, val := range *volumes {
-			er = ctx.K8S.Core().PersistentVolumes().Delete(val.Name, &api.DeleteOptions{})
-			if er != nil {
-				ctx.Log.Error("Error: remove persistent volume", er.Error())
+			err = ctx.K8S.Core().PersistentVolumes().Delete(val.Name, &api.DeleteOptions{})
+			if err != nil {
+				ctx.Log.Error("Error: remove persistent volume", err.Error())
 				e.HTTP.InternalServerError(w)
 				return
 			}
@@ -432,9 +427,9 @@ func ProjectRemoveH(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.WriteHeader(http.StatusOK)
-	_, er = w.Write([]byte{})
-	if er != nil {
-		ctx.Log.Error("Error: write response", er.Error())
+	_, err = w.Write([]byte{})
+	if err != nil {
+		ctx.Log.Error("Error: write response", err.Error())
 		return
 	}
 }

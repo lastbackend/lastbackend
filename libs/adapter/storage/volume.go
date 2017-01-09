@@ -1,7 +1,6 @@
 package storage
 
 import (
-	e "github.com/lastbackend/lastbackend/libs/errors"
 	"github.com/lastbackend/lastbackend/libs/interface/storage"
 	"github.com/lastbackend/lastbackend/libs/model"
 	r "gopkg.in/dancannon/gorethink.v2"
@@ -16,7 +15,7 @@ type VolumeStorage struct {
 	storage.IVolume
 }
 
-func (s *VolumeStorage) GetByID(user, id string) (*model.Volume, *e.Err) {
+func (s *VolumeStorage) GetByID(user, id string) (*model.Volume, error) {
 
 	var err error
 	var volume = new(model.Volume)
@@ -26,9 +25,8 @@ func (s *VolumeStorage) GetByID(user, id string) (*model.Volume, *e.Err) {
 	}
 
 	res, err := r.Table(VolumeTable).Filter(volume_filter).Run(s.Session)
-
 	if err != nil {
-		return nil, e.New("volume").NotFound(err)
+		return nil, err
 	}
 	defer res.Close()
 
@@ -41,7 +39,7 @@ func (s *VolumeStorage) GetByID(user, id string) (*model.Volume, *e.Err) {
 	return volume, nil
 }
 
-func (s *VolumeStorage) ListByProject(id string) (*model.VolumeList, *e.Err) {
+func (s *VolumeStorage) ListByProject(id string) (*model.VolumeList, error) {
 
 	var err error
 	var volumes = new(model.VolumeList)
@@ -49,7 +47,7 @@ func (s *VolumeStorage) ListByProject(id string) (*model.VolumeList, *e.Err) {
 
 	res, err := r.Table(VolumeTable).Filter(volume_filter).Run(s.Session)
 	if err != nil {
-		return nil, e.New("volume").Unknown(err)
+		return nil, err
 	}
 	defer res.Close()
 
@@ -63,7 +61,7 @@ func (s *VolumeStorage) ListByProject(id string) (*model.VolumeList, *e.Err) {
 }
 
 // Insert new volume into storage
-func (s *VolumeStorage) Insert(volume *model.Volume) (*model.Volume, *e.Err) {
+func (s *VolumeStorage) Insert(volume *model.Volume) (*model.Volume, error) {
 
 	var err error
 	var opts = r.InsertOpts{ReturnChanges: true}
@@ -73,7 +71,7 @@ func (s *VolumeStorage) Insert(volume *model.Volume) (*model.Volume, *e.Err) {
 
 	res, err := r.Table(VolumeTable).Insert(volume, opts).RunWrite(s.Session)
 	if err != nil {
-		return nil, e.New("volume").Unknown(err)
+		return nil, err
 	}
 
 	volume.ID = res.GeneratedKeys[0]
@@ -82,14 +80,14 @@ func (s *VolumeStorage) Insert(volume *model.Volume) (*model.Volume, *e.Err) {
 }
 
 // Remove build model
-func (s *VolumeStorage) Remove(id string) *e.Err {
+func (s *VolumeStorage) Remove(id string) error {
 
 	var err error
 	var opts = r.DeleteOpts{ReturnChanges: true}
 
 	_, err = r.Table(VolumeTable).Get(id).Delete(opts).RunWrite(s.Session)
 	if err != nil {
-		return e.New("volume").Unknown(err)
+		return err
 	}
 
 	return nil
