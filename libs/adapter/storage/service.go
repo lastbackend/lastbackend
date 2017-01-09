@@ -58,7 +58,7 @@ func (s *ServiceStorage) GetByNameOrID(user, project, nameOrID string) (*model.S
 	}).Run(s.Session)
 
 	if err != nil {
-		return nil, e.New("service").NotFound(err)
+		return nil, e.New("service").Unknown(err)
 	}
 	defer res.Close()
 
@@ -84,9 +84,8 @@ func (s *ServiceStorage) GetByName(user, project, name string) (*model.Service, 
 	)
 
 	res, err := r.Table(ServiceTable).Filter(project_filter).Run(s.Session)
-
 	if err != nil {
-		return nil, e.New("service").NotFound(err)
+		return nil, e.New("service").Unknown(err)
 	}
 	defer res.Close()
 
@@ -114,7 +113,7 @@ func (s *ServiceStorage) GetByID(user, project, id string) (*model.Service, *e.E
 	res, err := r.Table(ServiceTable).Filter(project_filter).Run(s.Session)
 
 	if err != nil {
-		return nil, e.New("service").NotFound(err)
+		return nil, e.New("service").Unknown(err)
 	}
 	defer res.Close()
 

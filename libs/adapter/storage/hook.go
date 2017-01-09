@@ -80,6 +80,10 @@ func (s *HookStorage) ListByService(user, id string) (*model.HookList, *e.Err) {
 		return nil, e.New("hook").Unknown(err)
 	}
 
+	if res.IsNil() {
+		return nil, nil
+	}
+
 	res.All(hooks)
 
 	defer res.Close()
@@ -104,7 +108,7 @@ func (s *HookStorage) Delete(user, id string) *e.Err {
 	var user_filter = r.Row.Field("user").Eq(user)
 	_, err := r.Table(HookTable).Get(id).Filter(user_filter).Delete().Run(s.Session)
 	if err != nil {
-		return e.New("hook").NotFound(err)
+		return e.New("hook").Unknown(err)
 	}
 
 	return nil

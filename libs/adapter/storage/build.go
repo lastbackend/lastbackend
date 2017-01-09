@@ -24,8 +24,13 @@ func (s *BuildStorage) GetByID(user, id string) (*model.Build, *e.Err) {
 	var user_filter = r.Row.Field("user").Eq(user)
 	res, err := r.Table(BuildTable).Get(id).Filter(user_filter).Run(s.Session)
 	if err != nil {
-		return nil, e.New("build").NotFound(err)
+		return nil, e.New("build").Unknown(err)
 	}
+
+	if res.IsNil() {
+		return nil, nil
+	}
+
 	res.One(build)
 
 	defer res.Close()
@@ -42,6 +47,10 @@ func (s *BuildStorage) ListByImage(user, id string) (*model.BuildList, *e.Err) {
 	res, err := r.Table(BuildTable).Filter(image_filter).Filter(user_filter).Run(s.Session)
 	if err != nil {
 		return nil, e.New("build").Unknown(err)
+	}
+
+	if res.IsNil() {
+		return nil, nil
 	}
 
 	res.All(builds)

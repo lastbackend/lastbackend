@@ -32,9 +32,8 @@ func (s *ProjectStorage) GetByNameOrID(user, nameOrID string) (*model.Project, *
 	)
 
 	res, err := r.Table(ProjectTable).Filter(project_filter).Run(s.Session)
-
 	if err != nil {
-		return nil, e.New("project").NotFound(err)
+		return nil, e.New("project").Unknown(err)
 	}
 	defer res.Close()
 
@@ -59,9 +58,8 @@ func (s *ProjectStorage) GetByName(user, name string) (*model.Project, *e.Err) {
 	)
 
 	res, err := r.Table(ProjectTable).Filter(project_filter).Run(s.Session)
-
 	if err != nil {
-		return nil, e.New("project").NotFound(err)
+		return nil, e.New("project").Unknown(err)
 	}
 	defer res.Close()
 
@@ -105,9 +103,8 @@ func (s *ProjectStorage) GetByID(user, id string) (*model.Project, *e.Err) {
 	)
 
 	res, err := r.Table(ProjectTable).Filter(project_filter).Run(s.Session)
-
 	if err != nil {
-		return nil, e.New("project").NotFound(err)
+		return nil, e.New("project").Unknown(err)
 	}
 	defer res.Close()
 

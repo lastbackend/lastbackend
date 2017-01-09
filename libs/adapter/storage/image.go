@@ -23,8 +23,13 @@ func (i *ImageStorage) GetByID(user, id string) (*model.Image, *e.Err) {
 	var user_filter = r.Row.Field("user").Eq(id)
 	res, err := r.Table(ImageTable).Get(id).Filter(user_filter).Run(i.Session)
 	if err != nil {
-		return nil, e.New("image").NotFound(err)
+		return nil, e.New("image").Unknown(err)
 	}
+
+	if res.IsNil() {
+		return nil, nil
+	}
+
 	res.One(image)
 
 	defer res.Close()
@@ -57,6 +62,10 @@ func (i *ImageStorage) ListByProject(user, id string) (*model.ImageList, *e.Err)
 	res, err := r.Table(ImageTable).Filter(project_filter).Filter(user_filter).Run(i.Session)
 	if err != nil {
 		return nil, e.New("image").Unknown(err)
+	}
+
+	if res.IsNil() {
+		return nil, nil
 	}
 
 	res.All(images)

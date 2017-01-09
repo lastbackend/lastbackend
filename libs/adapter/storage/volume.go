@@ -26,9 +26,8 @@ func (s *VolumeStorage) GetByID(user, id string) (*model.Volume, *e.Err) {
 	}
 
 	res, err := r.Table(VolumeTable).Filter(volume_filter).Run(s.Session)
-
 	if err != nil {
-		return nil, e.New("volume").NotFound(err)
+		return nil, e.New("volume").Unknown(err)
 	}
 	defer res.Close()
 
