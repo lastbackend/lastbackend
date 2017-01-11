@@ -1,9 +1,9 @@
 package common
 
 import (
-	"k8s.io/client-go/1.5/pkg/api"
-	"k8s.io/client-go/1.5/pkg/api/unversioned"
-	"k8s.io/client-go/1.5/pkg/apis/extensions"
+	"k8s.io/client-go/pkg/api"
+	"k8s.io/client-go/pkg/api/unversioned"
+	"k8s.io/client-go/pkg/apis/extensions"
 )
 
 type ObjectMeta struct {

@@ -6,7 +6,7 @@ import (
 	"fmt"
 	r "gopkg.in/dancannon/gorethink.v2"
 	"io/ioutil"
-	"k8s.io/client-go/1.5/rest"
+	"k8s.io/client-go/rest"
 )
 
 var config Config

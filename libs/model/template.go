@@ -3,8 +3,8 @@ package model
 import (
 	"encoding/json"
 	"github.com/lastbackend/lastbackend/pkg/util/table"
-	"k8s.io/client-go/1.5/pkg/api/v1"
-	"k8s.io/client-go/1.5/pkg/apis/extensions/v1beta1"
+	"k8s.io/client-go/pkg/api/v1"
+	"k8s.io/client-go/pkg/apis/extensions/v1beta1"
 	"strings"
 )
 

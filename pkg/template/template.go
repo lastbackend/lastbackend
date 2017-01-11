@@ -12,8 +12,8 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/service"
 	"github.com/lastbackend/lastbackend/pkg/volume"
 	"io/ioutil"
-	"k8s.io/client-go/1.5/pkg/api/v1"
-	"k8s.io/client-go/1.5/pkg/apis/extensions/v1beta1"
+	"k8s.io/client-go/pkg/api/v1"
+	"k8s.io/client-go/pkg/apis/extensions/v1beta1"
 	"strings"
 )
 

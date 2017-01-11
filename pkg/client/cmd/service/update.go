@@ -66,11 +66,11 @@ func Update(name string, config model.ServiceUpdateConfig) error {
 	}
 
 	if er.Code == 401 {
-		return errors.New("You are currently not logged in to the system, to get proper access create a new user or login with an existing user.")
+		return e.NotLoggedMessage
 	}
 
 	if er.Code != 0 {
-		return errors.New(e.Message(er.Status))
+		return errors.New(er.Message)
 	}
 
 	return nil

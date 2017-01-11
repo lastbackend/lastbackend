@@ -5,9 +5,9 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/service/resource/deployment"
 	"github.com/unloop/gopipe"
 	"io"
-	"k8s.io/client-go/1.5/pkg/api/unversioned"
-	"k8s.io/client-go/1.5/pkg/api/v1"
-	"k8s.io/client-go/1.5/pkg/apis/extensions/v1beta1"
+	"k8s.io/client-go/pkg/api/unversioned"
+	"k8s.io/client-go/pkg/api/v1"
+	"k8s.io/client-go/pkg/apis/extensions/v1beta1"
 	"time"
 )
 

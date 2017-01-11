@@ -65,7 +65,7 @@ func New(name string) *err {
 func (self *err) Unauthorized(e ...error) *Err {
 	return &Err{
 		Code:   http.StatusText(http.StatusUnauthorized),
-		origin: getError(toUpperFirstChar(self.name)+"access denied", e...),
+		origin: getError(joinNameAndMessage(self.name, "access denied"), e...),
 		http:   HTTP.getUnauthorized(),
 	}
 }
@@ -73,7 +73,7 @@ func (self *err) Unauthorized(e ...error) *Err {
 func (self *err) NotFound(e ...error) *Err {
 	return &Err{
 		Code:   http.StatusText(http.StatusNotFound),
-		origin: getError(toUpperFirstChar(self.name)+": not found", e...),
+		origin: getError(joinNameAndMessage(self.name, "not found"), e...),
 		http:   HTTP.getNotFound(self.name),
 	}
 }
@@ -81,7 +81,7 @@ func (self *err) NotFound(e ...error) *Err {
 func (self *err) NotUnique(attr string, e ...error) *Err {
 	return &Err{
 		Code:   StatusNotUnique,
-		origin: getError(toUpperFirstChar(self.name)+":"+strings.ToLower(attr)+" not unique", e...),
+		origin: getError(joinNameAndMessage(self.name, strings.ToLower(attr)+" not unique"), e...),
 		http:   HTTP.getNotUnique(strings.ToLower(attr)),
 	}
 }
@@ -90,7 +90,7 @@ func (self *err) BadParameter(attr string, e ...error) *Err {
 	return &Err{
 		Code:   StatusBadParameter,
 		Attr:   attr,
-		origin: getError(toUpperFirstChar(self.name)+": bad parameter", e...),
+		origin: getError(joinNameAndMessage(self.name, "bad parameter"), e...),
 		http:   HTTP.getBadParameter(attr),
 	}
 }
@@ -98,23 +98,15 @@ func (self *err) BadParameter(attr string, e ...error) *Err {
 func (self *err) IncorrectJSON(e ...error) *Err {
 	return &Err{
 		Code:   StatusIncorrectJson,
-		origin: getError(toUpperFirstChar(self.name)+": incorrect json", e...),
+		origin: getError(joinNameAndMessage(self.name, "incorrect json"), e...),
 		http:   HTTP.getIncorrectJSON(),
-	}
-}
-
-func (self *err) NotImplemented(e ...error) *Err {
-	return &Err{
-		Code:   http.StatusText(http.StatusNotImplemented),
-		origin: getError("not implemented", e...),
-		http:   HTTP.getUnknown(),
 	}
 }
 
 func (self *err) Unknown(e ...error) *Err {
 	return &Err{
 		Code:   StatusUnknown,
-		origin: getError(toUpperFirstChar(self.name)+": unknow error", e...),
+		origin: getError(joinNameAndMessage(self.name, "unknow error"), e...),
 		http:   HTTP.getUnknown(),
 	}
 }
@@ -125,6 +117,10 @@ func getError(msg string, e ...error) error {
 	} else {
 		return e[0]
 	}
+}
+
+func joinNameAndMessage(name, message string) string {
+	return toUpperFirstChar(name) + ": " + message
 }
 
 func toUpperFirstChar(srt string) string {

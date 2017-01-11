@@ -100,8 +100,12 @@ func Deploy(name, image, template, url string, config *Config) error {
 		return err
 	}
 
+	if er.Code == 401 {
+		return e.NotLoggedMessage
+	}
+
 	if er.Code != 0 {
-		return errors.New(e.Message(er.Status))
+		return errors.New(er.Message)
 	}
 
 	return nil

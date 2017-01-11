@@ -3,7 +3,7 @@ package pod
 import (
 	"github.com/lastbackend/lastbackend/pkg/service/resource/common"
 	"github.com/lastbackend/lastbackend/pkg/service/resource/container"
-	"k8s.io/client-go/1.5/pkg/api"
+	"k8s.io/client-go/pkg/api"
 )
 
 const kind = "pod"

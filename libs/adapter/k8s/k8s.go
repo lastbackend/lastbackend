@@ -1,8 +1,8 @@
 package k8s
 
 import (
-	"k8s.io/client-go/1.5/kubernetes"
-	"k8s.io/client-go/1.5/rest"
+	"k8s.io/client-go/kubernetes"
+	"k8s.io/client-go/rest"
 )
 
 type Client struct {
@@ -17,7 +17,7 @@ func Get(conf *rest.Config) (*Client, error) {
 		panic(err.Error())
 	}
 
-	rc := kb.Core().GetRESTClient()
+	rc := kb.CoreV1().RESTClient()
 	lb := &LBClientset{&LBClient{rc}}
 
 	return &Client{kb, lb}, nil

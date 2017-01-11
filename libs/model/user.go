@@ -2,7 +2,7 @@ package model
 
 import (
 	"golang.org/x/crypto/bcrypt"
-	"k8s.io/client-go/1.5/pkg/util/json"
+	"k8s.io/client-go/pkg/util/json"
 	"time"
 )
 

@@ -38,11 +38,11 @@ func List() (*model.TemplateList, error) {
 	}
 
 	if er.Code == 401 {
-		return nil, errors.New("You are currently not logged in to the system, to get proper access create a new user or login with an existing user.")
+		return nil, e.NotLoggedMessage
 	}
 
 	if er.Code != 0 {
-		return nil, errors.New(e.Message(er.Status))
+		return nil, errors.New(er.Message)
 	}
 
 	return templates, err

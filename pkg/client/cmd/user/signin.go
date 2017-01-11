@@ -65,11 +65,19 @@ func SignIn(login, password string) error {
 	}
 
 	if er.Code == 401 {
-		return errors.New("Invalid login or password")
+		return e.LoginErrorMessage
+	}
+
+	if er.Code == 404 {
+		return e.LoginErrorMessage
+	}
+
+	if er.Code == 500 {
+		return e.UnknownMessage
 	}
 
 	if er.Code != 0 {
-		return errors.New(e.Message(er.Status))
+		return errors.New(er.Message)
 	}
 
 	err = ctx.Storage.Set("session", res)
