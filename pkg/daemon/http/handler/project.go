@@ -2,18 +2,16 @@ package handler
 
 import (
 	"encoding/json"
-	"io"
-	"io/ioutil"
-	"net/http"
-
 	"github.com/gorilla/context"
 	"github.com/gorilla/mux"
 	e "github.com/lastbackend/lastbackend/libs/errors"
 	"github.com/lastbackend/lastbackend/libs/model"
 	c "github.com/lastbackend/lastbackend/pkg/daemon/context"
 	"github.com/lastbackend/lastbackend/pkg/util/validator"
-	"k8s.io/client-go/1.5/pkg/api"
-	"k8s.io/client-go/1.5/pkg/api/v1"
+	"io"
+	"io/ioutil"
+	"k8s.io/client-go/pkg/api/v1"
+	"net/http"
 )
 
 func ProjectListH(w http.ResponseWriter, r *http.Request) {
@@ -378,9 +376,7 @@ func ProjectRemoveH(w http.ResponseWriter, r *http.Request) {
 		projectParam = projectModel.ID
 	}
 
-	var opts = new(api.DeleteOptions)
-
-	err = ctx.K8S.Core().Namespaces().Delete(projectParam, opts)
+	err = ctx.K8S.Core().Namespaces().Delete(projectParam, &v1.DeleteOptions{})
 	if err != nil {
 		ctx.Log.Error("Error: remove namespace", err.Error())
 		e.HTTP.InternalServerError(w)
@@ -396,7 +392,7 @@ func ProjectRemoveH(w http.ResponseWriter, r *http.Request) {
 
 	if volumes != nil {
 		for _, val := range *volumes {
-			err = ctx.K8S.Core().PersistentVolumes().Delete(val.Name, &api.DeleteOptions{})
+			err = ctx.K8S.Core().PersistentVolumes().Delete(val.Name, &v1.DeleteOptions{})
 			if err != nil {
 				ctx.Log.Error("Error: remove persistent volume", err.Error())
 				e.HTTP.InternalServerError(w)

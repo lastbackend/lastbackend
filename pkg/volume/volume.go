@@ -5,8 +5,7 @@ import (
 	"github.com/lastbackend/lastbackend/libs/model"
 	"github.com/lastbackend/lastbackend/pkg/daemon/context"
 	"github.com/lastbackend/lastbackend/pkg/util/generator"
-	"k8s.io/client-go/1.5/pkg/api"
-	"k8s.io/client-go/1.5/pkg/api/v1"
+	"k8s.io/client-go/pkg/api/v1"
 )
 
 type Volume struct {
@@ -37,7 +36,7 @@ func List() (*v1.PersistentVolumeList, error) {
 		ctx = context.Get()
 	)
 
-	pv, err := ctx.K8S.Core().PersistentVolumes().List(api.ListOptions{})
+	pv, err := ctx.K8S.Core().PersistentVolumes().List(v1.ListOptions{})
 	if err != nil {
 		return nil, err
 	}

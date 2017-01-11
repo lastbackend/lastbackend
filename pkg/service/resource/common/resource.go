@@ -3,7 +3,8 @@ package common
 import (
 	"github.com/lastbackend/lastbackend/libs/adapter/k8s/converter"
 	"github.com/lastbackend/lastbackend/libs/interface/k8s"
-	"k8s.io/client-go/1.5/pkg/api"
+	"k8s.io/client-go/pkg/api"
+	"k8s.io/client-go/pkg/api/v1"
 )
 
 type PodListChannel struct {
@@ -11,7 +12,7 @@ type PodListChannel struct {
 	Error chan error
 }
 
-func GetPodListChannelWithOptions(client k8s.IK8S, nsQuery *NamespaceQuery, options api.ListOptions, limit int) PodListChannel {
+func GetPodListChannelWithOptions(client k8s.IK8S, nsQuery *NamespaceQuery, options v1.ListOptions, limit int) PodListChannel {
 
 	channel := PodListChannel{
 		List:  make(chan *api.PodList, limit),

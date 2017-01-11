@@ -1,11 +1,11 @@
 package common
 
 import (
-	"k8s.io/client-go/1.5/pkg/api/unversioned"
-	"k8s.io/client-go/1.5/pkg/api/v1"
-	"k8s.io/client-go/1.5/pkg/apis/extensions"
-	"k8s.io/client-go/1.5/pkg/apis/extensions/v1beta1"
-	"k8s.io/client-go/1.5/pkg/util/intstr"
+	"k8s.io/client-go/pkg/api/unversioned"
+	"k8s.io/client-go/pkg/api/v1"
+	"k8s.io/client-go/pkg/apis/extensions"
+	"k8s.io/client-go/pkg/apis/extensions/v1beta1"
+	"k8s.io/client-go/pkg/util/intstr"
 )
 
 func Set_defaults_extensions_deployment(obj *extensions.Deployment) {
@@ -70,7 +70,7 @@ func Set_defaults_v1beta1_deployment(obj *v1beta1.Deployment) {
 
 	if labels != nil {
 		if obj.Spec.Selector == nil {
-			obj.Spec.Selector = &v1beta1.LabelSelector{MatchLabels: labels}
+			obj.Spec.Selector = &unversioned.LabelSelector{MatchLabels: labels}
 		}
 		if len(obj.Labels) == 0 {
 			obj.Labels = labels

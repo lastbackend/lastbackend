@@ -2,8 +2,8 @@ package converter
 
 import (
 	"github.com/lastbackend/lastbackend/libs/adapter/k8s/common"
-	"k8s.io/client-go/1.5/pkg/api/v1"
-	"k8s.io/client-go/1.5/pkg/apis/extensions/v1beta1"
+	"k8s.io/client-go/pkg/api/v1"
+	"k8s.io/client-go/pkg/apis/extensions/v1beta1"
 )
 
 func Convert_ReplicationController_to_Deployment(config *v1.ReplicationController) *v1beta1.Deployment {
