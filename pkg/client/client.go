@@ -7,6 +7,7 @@ import (
 	"github.com/lastbackend/lastbackend/libs/log"
 	"github.com/lastbackend/lastbackend/pkg/client/cmd/deploy"
 	p "github.com/lastbackend/lastbackend/pkg/client/cmd/project"
+	"github.com/lastbackend/lastbackend/pkg/client/cmd/proxy"
 	s "github.com/lastbackend/lastbackend/pkg/client/cmd/service"
 	"github.com/lastbackend/lastbackend/pkg/client/cmd/template"
 	u "github.com/lastbackend/lastbackend/pkg/client/cmd/user"
@@ -112,11 +113,11 @@ func configure(app *cli.Cli) {
 		c.Spec = "[URL][-t][-i][-n][--scale]" // [-e][-p][-v]
 
 		var url = c.String(cli.StringArg{Name: "URL", Value: "", Desc: "git repo url", HideValue: true})
-		var name = c.String(cli.StringOpt{Name: "n name", Desc: "service name", HideValue:true})
-		var image = c.String(cli.StringOpt{Name: "i image", Desc: "docker image name", HideValue:true})
-		var template = c.String(cli.StringOpt{Name: "t tempalte", Desc: "tempalte name", HideValue:true})
+		var name = c.String(cli.StringOpt{Name: "n name", Desc: "service name", HideValue: true})
+		var image = c.String(cli.StringOpt{Name: "i image", Desc: "docker image name", HideValue: true})
+		var template = c.String(cli.StringOpt{Name: "t tempalte", Desc: "tempalte name", HideValue: true})
 
-		var scale = c.Int(cli.IntOpt{Name: "scale", Desc: "service scale", HideValue:true})
+		var scale = c.Int(cli.IntOpt{Name: "scale", Desc: "service scale", HideValue: true})
 		//var env = c.Strings(cli.StringsOpt{Name: "e", Desc: "enviroment", HideValue:true})
 		//var ports = c.Strings(cli.StringsOpt{Name: "p", Desc: "ports", HideValue:true})
 		//var volumes = c.Strings(cli.StringsOpt{Name: "v", Desc: "volumes", HideValue:true})
@@ -130,6 +131,21 @@ func configure(app *cli.Cli) {
 			deploy.DeployCmd(*name, *image, *template, *url, *scale)
 		}
 
+	})
+
+	app.Command("proxy", "Proxy commands", func(c *cli.Cmd) {
+		c.Spec = "[--port]"
+
+		var port = c.String(cli.StringOpt{Name: "port", Value: "", Desc: "port for your proxy", HideValue: true})
+
+		c.Action = func() {
+			if len(*port) == 0 {
+				c.PrintHelp()
+				return
+			}
+
+			proxy.Proxy(*port)
+		}
 	})
 
 	app.Command("project", "", func(c *cli.Cmd) {

@@ -2,11 +2,11 @@ package validator
 
 import (
 	"encoding/base64"
+	"fmt"
 	"github.com/asaskevich/govalidator"
 	"regexp"
 	"strconv"
 	"strings"
-	"fmt"
 )
 
 func IsBool(s string) bool {

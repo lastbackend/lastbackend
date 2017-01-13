@@ -25,7 +25,7 @@ func Run() {
 			app.PrintLongHelp()
 		}
 	}
-	
+
 	app.Command("daemon", "Run last.backend daemon", cmd.Daemon)
 
 	er = app.Run(os.Args)

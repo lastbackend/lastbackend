@@ -42,6 +42,8 @@ func NewRouter() *mux.Router {
 	r.HandleFunc("/project/{project}/service/{service}", handle(handler.ServiceRemoveH, auth)).Methods("DELETE")
 	r.HandleFunc("/project/{project}/service/{service}/logs", handle(handler.ServiceLogsH, auth)).Methods("GET")
 
+	r.HandleFunc("/proxy", handle(handler.ProxyToken)).Methods("POST")
+
 	// Deploy template/docker/source/repo
 	r.HandleFunc("/deploy", handle(handler.DeployH, auth)).Methods("POST")
 
