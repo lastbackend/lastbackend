@@ -1,6 +1,6 @@
 {
 	"ImportPath": "github.com/lastbackend/lastbackend",
-	"GoVersion": "go1.7",
+	"GoVersion": "go1.6",
 	"GodepVersion": "v75",
 	"Packages": [
 		"./..."
