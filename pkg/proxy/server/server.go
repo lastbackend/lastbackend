@@ -3,6 +3,7 @@ package server
 import (
 	"log"
 	"net"
+	"github.com/lastbackend/lastbackend/libs/model"
 )
 
 const (
@@ -47,7 +48,15 @@ func handleClient(conn net.Conn) {
 		if i == 0 {
 			i++
 
+			a := new(model.Session)
+			err = a.Decode(string(buf[:248]))
+			if err != nil {
+				conn.Close()
+				return
+			}
 		}
+
+		log.Println("lal")
 
 		if n > 0 {
 			_, err := conn.Write(buf)

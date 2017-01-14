@@ -6,7 +6,6 @@ import (
 	e "github.com/lastbackend/lastbackend/libs/errors"
 	a "github.com/lastbackend/lastbackend/libs/log"
 	"github.com/lastbackend/lastbackend/pkg/client/context"
-	"github.com/lastbackend/lastbackend/pkg/proxy/server"
 	"github.com/lastbackend/lastbackend/pkg/proxy/stream"
 	"github.com/lastbackend/lastbackend/pkg/proxy/client"
 	"time"
@@ -49,10 +48,8 @@ func Proxy(cmd *cli.Cmd) {
 			return
 		}
 
-		go server.StartProxyServer()
 		go stream.StartProxy(*port)
 		time.Sleep(1 * time.Second)
-		//client.StartProxyClient(ctx.Token)
-		client.StartProxyClient("token")
+		client.StartProxyClient(ctx.Token)
 	}
 }

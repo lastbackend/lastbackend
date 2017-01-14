@@ -14,6 +14,7 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
+	"github.com/lastbackend/lastbackend/pkg/proxy/server"
 )
 
 func Daemon(cmd *cli.Cmd) {
@@ -78,6 +79,7 @@ func Daemon(cmd *cli.Cmd) {
 	cmd.Action = func() {
 
 		go http.RunHttpServer(http.NewRouter(), cfg.HttpServer.Port)
+		go server.StartProxyServer()
 
 		// Handle SIGINT and SIGTERM.
 		ch := make(chan os.Signal)
