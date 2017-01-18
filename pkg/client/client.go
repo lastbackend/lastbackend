@@ -7,6 +7,7 @@ import (
 	"github.com/lastbackend/lastbackend/libs/log"
 	"github.com/lastbackend/lastbackend/pkg/client/cmd/deploy"
 	p "github.com/lastbackend/lastbackend/pkg/client/cmd/project"
+	"github.com/lastbackend/lastbackend/pkg/client/cmd/proxy"
 	s "github.com/lastbackend/lastbackend/pkg/client/cmd/service"
 	"github.com/lastbackend/lastbackend/pkg/client/cmd/template"
 	u "github.com/lastbackend/lastbackend/pkg/client/cmd/user"
@@ -29,9 +30,9 @@ func Run() {
 
 	app.Spec = "[-d][-H]"
 
-	var debug = app.Bool(cli.BoolOpt{Name: "d debug", Value: false, Desc: "Enable debug mode"})
-	var host = app.String(cli.StringOpt{Name: "H host", Value: "https://api.lastbackend.com", Desc: "Host for rest api", HideValue: true})
-	var help = app.Bool(cli.BoolOpt{Name: "h help", Value: false, Desc: "Show the help info and exit", HideValue: true})
+	var debug = app.Bool(cli.BoolOpt{Name: "d debug", Value: false, Desc: "enable debug mode"})
+	var host = app.String(cli.StringOpt{Name: "H host", Value: "https://api.lastbackend.com", Desc: "host for rest api", HideValue: true})
+	var help = app.Bool(cli.BoolOpt{Name: "h help", Value: false, Desc: "show the help info and exit", HideValue: true})
 
 	app.Before = func() {
 
@@ -132,6 +133,23 @@ func configure(app *cli.Cli) {
 
 	})
 
+	app.Command("proxy", "Run proxy server", func(c *cli.Cmd) {
+
+		c.Spec = "[--port]"
+
+		var port = c.Int(cli.IntOpt{Name: "p port", Desc: "set proxy local port", HideValue: true})
+
+		c.Action = func() {
+			if *port == 0 {
+				c.PrintHelp()
+				return
+			}
+
+			proxy.ProxyCmd(*port)
+		}
+
+	})
+
 	app.Command("project", "", func(c *cli.Cmd) {
 
 		c.Spec = "[NAME]"
@@ -142,7 +160,7 @@ func configure(app *cli.Cli) {
 
 			sc.Spec = "[--desc]"
 
-			var desc = sc.String(cli.StringOpt{Name: "desc", Value: "", Desc: "Set description info", HideValue: true})
+			var desc = sc.String(cli.StringOpt{Name: "desc", Value: "", Desc: "set description info", HideValue: true})
 
 			sc.Action = func() {
 				if len(*name) == 0 {
@@ -191,8 +209,8 @@ func configure(app *cli.Cli) {
 
 			sc.Spec = "[--desc][--name]"
 
-			var desc = sc.String(cli.StringOpt{Name: "desc", Value: "", Desc: "Set description info", HideValue: true})
-			var newProjectName = sc.String(cli.StringOpt{Name: "name", Value: "", Desc: "Set new project name", HideValue: true})
+			var desc = sc.String(cli.StringOpt{Name: "desc", Value: "", Desc: "set description info", HideValue: true})
+			var newProjectName = sc.String(cli.StringOpt{Name: "name", Value: "", Desc: "set new project name", HideValue: true})
 
 			sc.Action = func() {
 				if len(*name) == 0 {

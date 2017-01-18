@@ -1,34 +1,135 @@
 package proxy
 
 import (
-	"github.com/jawher/mow.cli"
-	"github.com/lastbackend/lastbackend/pkg/client/context"
-	"github.com/lastbackend/lastbackend/pkg/proxy/cmd"
-	"os"
+	"errors"
+	"fmt"
+	"io"
+	"net"
+	"time"
 )
 
-func Run() {
+type Proxy struct {
+	localAddr  *net.TCPAddr
+	remoteAddr *net.TCPAddr
+	listener   net.Listener
+	auth       *AuthOpts
+	Closed     chan bool
+}
 
-	ctx := context.Get()
+type ProxyOpts struct {
+	Auth *AuthOpts
+}
 
-	app := cli.App("lb", "apps cloud hosting with integrated deployment tools")
+type AuthOpts struct {
+	Token string
+}
 
-	app.Version("v version", "0.3.0")
+func New(local, remote string, opts *ProxyOpts) (*Proxy, error) {
 
-	var help = app.Bool(cli.BoolOpt{Name: "h help", Value: false, Desc: "Show the help info and exit", HideValue: true})
+	var (
+		err    error
+		proxy = new(Proxy)
+	)
 
-	app.Before = func() {
+	proxy.localAddr, err = net.ResolveTCPAddr("tcp", local)
+	if err != nil {
+		return nil, err
+	}
 
-		if *help {
-			app.PrintLongHelp()
+	proxy.remoteAddr, err = net.ResolveTCPAddr("tcp", remote)
+	if err != nil {
+		return nil, err
+	}
+
+	if opts != nil {
+		proxy.auth = opts.Auth
+	}
+
+	return proxy, nil
+}
+
+func (p *Proxy) Listen() error {
+
+	var err error
+
+	client, err := net.DialTCP("tcp", nil, p.remoteAddr)
+	if err != nil {
+		fmt.Println(fmt.Sprintf("Unable to connect to %s, %v\n", client, err))
+		return err
+	}
+
+	err = client.SetKeepAlive(true)
+	if err != nil {
+		return err
+	}
+
+	err = client.SetKeepAlivePeriod(30 * time.Second)
+	if err != nil {
+		return err
+	}
+
+	notify := make(chan error)
+
+	go func() {
+		buf := make([]byte, 1024)
+
+		for {
+			n, err := client.Read(buf)
+			if err != nil {
+				notify <- err
+				if io.EOF == err {
+					return
+				}
+			}
+
+			if n > 0 {
+				fmt.Println("unexpected data: %s", buf[:n])
+			}
+		}
+	}()
+
+	go func() {
+		for {
+			select {
+			case err := <-notify:
+				fmt.Println("connection dropped message", err)
+				break
+			case <-time.After(time.Second * 1):
+				fmt.Println("timeout 1, still alive")
+			}
+		}
+	}()
+
+	p.listener, err = net.ListenTCP("tcp", p.localAddr)
+	if err != nil {
+		return errors.New(fmt.Sprintf("Unable to start listener, %v\n", err))
+	}
+
+	for {
+		conn, err := p.listener.Accept()
+		if err != nil {
+			fmt.Printf("Accept failed, %v\n", err)
+		} else {
+			go p.proxy(conn, client)
 		}
 	}
 
-	app.Command("proxy", "Run last.backend proxy", cmd.Proxy)
+	return nil
+}
 
-	err := app.Run(os.Args)
-	if err != nil {
-		ctx.Log.Panic("Error: run application", err.Error())
-		return
-	}
+func (p *Proxy) Close() error {
+	return p.listener.Close()
+}
+
+func (p *Proxy) proxy(conn, client net.Conn) {
+	stream(conn, client)
+	stream(client, conn)
+}
+
+func stream(from, to net.Conn) {
+	go func() {
+		defer from.Close()
+		defer to.Close()
+		io.Copy(from, to)
+	}()
 }
