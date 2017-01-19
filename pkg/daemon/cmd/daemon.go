@@ -9,12 +9,12 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/daemon/config"
 	"github.com/lastbackend/lastbackend/pkg/daemon/context"
 	"github.com/lastbackend/lastbackend/pkg/daemon/http"
+	"github.com/lastbackend/lastbackend/pkg/proxy/server"
 	"gopkg.in/yaml.v2"
 	"io/ioutil"
 	"os"
 	"os/signal"
 	"syscall"
-	"github.com/lastbackend/lastbackend/pkg/tcp"
 )
 
 func Daemon(cmd *cli.Cmd) {
@@ -79,7 +79,7 @@ func Daemon(cmd *cli.Cmd) {
 	cmd.Action = func() {
 
 		go http.RunHttpServer(http.NewRouter(), cfg.HttpServer.Port)
-		go tcp.RunTCPServer()
+		go server.RunTCPServer()
 
 		// Handle SIGINT and SIGTERM.
 		ch := make(chan os.Signal)

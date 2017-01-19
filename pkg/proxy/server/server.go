@@ -1,4 +1,4 @@
-package tcp
+package server
 
 import (
   "fmt"
@@ -9,7 +9,9 @@ import (
 
 func handleConnection(conn net.Conn) {
   defer conn.Close()
+
   notify := make(chan error)
+
   go func() {
     buf := make([]byte, 1024)
     for {
@@ -31,8 +33,8 @@ func handleConnection(conn net.Conn) {
         fmt.Println("connection dropped message", err)
         return
       }
-    case <-time.After(time.Second * 1):
-      fmt.Println("timeout 1, still alive")
+    //case <-time.After(time.Second * 1):
+    //  fmt.Println("timeout 1, still alive")
     }
   }
 }
