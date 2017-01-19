@@ -1,4 +1,4 @@
-package server
+package client
 
 import (
 	"fmt"
@@ -82,8 +82,8 @@ func (c *Client) Connect(address string) (*Client, error) {
 				fmt.Println("connection dropped message", err)
 				c.connected <- false
 				break
-			case <-time.After(time.Second * 1):
-				fmt.Println("timeout 1, still alive")
+			//case <-time.After(time.Second * 1):
+			//	fmt.Println("timeout 1, still alive")
 			}
 		}
 	}()
