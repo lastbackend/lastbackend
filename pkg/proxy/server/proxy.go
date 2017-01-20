@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"github.com/lastbackend/lastbackend/libs/interface/k8s"
 	"io"
-	"k8s.io/client-go/pkg/api/v1"
 	"net"
+	"k8s.io/client-go/pkg/api"
 )
 
 type Proxy struct {
@@ -42,37 +42,38 @@ func (p *Proxy) Start(port int) {
 
 		fmt.Println("::1")
 
-		var otps = &v1.PodAttachOptions{
-			Container: "redis",
-			Stdin:     true,
-			Stdout:    false,
-			Stderr:    false,
-			TTY:       false,
-		}
-
-		req := p.ctx.LB().Pods("aaaca8b4-6198-491c-8bb4-edb8f1740945").Attach("lb-redis-4065565212-a79sb", otps)
-
-		//req := p.ctx.LB().RESTClient().Post().
-		//	Resource("pods").
-		//	Name("lb-redis-4065565212-a79sb").
-		//	Namespace("aaaca8b4-6198-491c-8bb4-edb8f1740945").
-		//	SubResource("attach")
-		//req.VersionedParams(&api.PodAttachOptions{
+		//var otps = &v1.PodAttachOptions{
 		//	Container: "redis",
 		//	Stdin:     true,
 		//	Stdout:    true,
 		//	Stderr:    true,
 		//	TTY:       true,
-		//}, api.ParameterCodec)
+		//}
 
-		fmt.Println(req.URL())
+		//req := p.ctx.LB().Pods("aaaca8b4-6198-491c-8bb4-edb8f1740945").Attach("lb-redis-4065565212-a79sb", otps)
+
+		req := p.ctx.Core().RESTClient().Post().
+			Resource("pods").
+			Name("lb-redis-4065565212-a79sb").
+			Namespace("aaaca8b4-6198-491c-8bb4-edb8f1740945").
+			SubResource("attach")
+		req.VersionedParams(&api.PodAttachOptions{
+			Container: "redis",
+			Stdin:     true,
+			Stdout:    true,
+			Stderr:    true,
+			TTY:       true,
+		}, api.ParameterCodec)
+
+		fmt.Println("::1", req.URL())
 
 		readCloser, err := req.Stream()
 		if err != nil {
-			fmt.Println(err)
+			fmt.Println("::2", err)
 			return
 		}
 
+		fmt.Println("::3")
 		defer readCloser.Close()
 
 		io.Copy(conn, readCloser)

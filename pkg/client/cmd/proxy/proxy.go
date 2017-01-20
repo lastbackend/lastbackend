@@ -35,16 +35,18 @@ func Proxy(port int) error {
 	go proxy.Start(port)
 
 	go func() {
-		select {
-		case <-proxy.Ready:
-			ctx.Log.Info("Listen proxy on", port, "port")
-		case <-proxy.Done:
-			done <- true
-			return
-		case <-sigs:
-			proxy.Shutdown()
-			done <- true
-			return
+		for {
+			select {
+			case <-proxy.Ready:
+				ctx.Log.Info("Listen proxy on", port, "port")
+			case <-proxy.Done:
+				done <- true
+				return
+			case <-sigs:
+				proxy.Shutdown()
+				done <- true
+				return
+			}
 		}
 	}()
 

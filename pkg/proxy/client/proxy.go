@@ -77,8 +77,7 @@ func (p *Proxy) Start(port int) {
 						if err := server.Start(); err != nil {
 							fmt.Println(err)
 						}
-						fmt.Printf("Listen proxy on %d port\n", port)
-						//p.Ready <- true
+						p.Ready <- true
 					}
 
 					server.Accept(func(conn net.Conn) {
