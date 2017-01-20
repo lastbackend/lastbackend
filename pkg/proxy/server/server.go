@@ -1,53 +1,55 @@
 package server
 
 import (
-  "fmt"
-  "io"
-  "net"
-  "time"
+	"fmt"
+	"net"
 )
 
-func handleConnection(conn net.Conn) {
-  defer conn.Close()
+type Server struct {
+	port        int
+	listener    net.Listener
+	connections map[net.Conn]bool
 
-  notify := make(chan error)
-
-  go func() {
-    buf := make([]byte, 1024)
-    for {
-      n, err := conn.Read(buf)
-      if err != nil {
-        notify <- err
-        return
-      }
-      if n > 0 {
-        fmt.Println("unexpected data: %s", buf[:n])
-      }
-    }
-  }()
-
-  for {
-    select {
-    case err := <-notify:
-      if io.EOF == err {
-        fmt.Println("connection dropped message", err)
-        return
-      }
-    //case <-time.After(time.Second * 1):
-    //  fmt.Println("timeout 1, still alive")
-    }
-  }
+	Running bool
 }
 
-func RunTCPServer() {
+func NewTCPServer(port int) *Server {
+	var server = Server{
+		port:        port,
+		connections: make(map[net.Conn]bool),
+	}
+	return &server
+}
 
-  fmt.Println("Launching server...")
+func (s *Server) Start() (err error) {
+	s.listener, err = net.Listen("tcp", fmt.Sprintf(":%d", s.port))
+	fmt.Printf("Listen tcp server on %d port\r\n", s.port)
+	s.Running = err == nil
+	return err
+}
 
-  ln, _ := net.Listen("tcp", ":9999")
+func (s *Server) Accept(cb func(net.Conn)) {
+	for {
+		connection, err := s.listener.Accept()
+		if err != nil {
+			fmt.Printf("Accept failed, %v\n", err)
+			cb(nil)
+		} else {
+			s.connections[connection] = true
+			cb(connection)
+		}
+	}
+}
 
-  for {
-    conn, _ := ln.Accept()
-    go handleConnection(conn)
-  }
+func (s *Server) Send(b []byte) {
+	for connection := range s.connections {
+		connection.Write(b)
+	}
+}
 
+func (s *Server) Close() error {
+	for connection := range s.connections {
+		connection.Close()
+	}
+	return s.listener.Close()
 }

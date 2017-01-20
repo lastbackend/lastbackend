@@ -55,7 +55,7 @@ func RunHttpServer(routes *mux.Router, port int) {
 
 	var ctx = context.Get()
 
-	ctx.Log.Infof("Listen server on %d port", port)
+	ctx.Log.Infof("Listen http server on %d port", port)
 
 	if err := http.ListenAndServe(":"+strconv.Itoa(port), routes); err != nil {
 		ctx.Log.Fatal("ListenAndServe: ", err)

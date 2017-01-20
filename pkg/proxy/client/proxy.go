@@ -10,24 +10,28 @@ type Proxy struct {
 	port       string
 	address    string
 	token      string
+	project    string
+	service    string
 	authorized bool
 
 	close chan int
-	error chan error
 
-	Done chan int
+	Ready chan bool
+	Done  chan int
 }
 
-func New(address, token string) *Proxy {
+func New(address, token, project, service string) *Proxy {
 
 	var proxy = new(Proxy)
 
 	proxy.address = address
 	proxy.token = token
+	proxy.project = project
+	proxy.service = service
 	proxy.close = make(chan int)
-	proxy.error = make(chan error)
 
 	proxy.Done = make(chan int)
+	proxy.Ready = make(chan bool)
 
 	return proxy
 }
@@ -35,19 +39,16 @@ func New(address, token string) *Proxy {
 func (p *Proxy) Start(port int) {
 
 	server := NewTCPServer(port)
+
 	client, err := NewTCPClient().Connect(p.address)
 	if err != nil {
 		fmt.Println(err)
 		return
 	}
 
-	_, err = client.Send([]byte(p.token))
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
+	var rawData = []byte(fmt.Sprintf(`{"project":"%s","service":"%s","token":"%s"}`, p.project, p.service, p.token))
 
-	err = server.Start()
+	_, err = client.Send(rawData)
 	if err != nil {
 		fmt.Println(err)
 		return
@@ -67,17 +68,24 @@ func (p *Proxy) Start(port int) {
 		for {
 			select {
 			case msg := <-client.Message:
-				fmt.Println("client.message", string(msg))
-
 				if !p.authorized {
-					p.authorized = true
-					if err := server.Start(); err != nil {
-						fmt.Println(err)
+					if `{"allow":true}` != string(msg) {
+						break
+					}
+
+					if !server.Running {
+						if err := server.Start(); err != nil {
+							fmt.Println(err)
+						}
+						fmt.Printf("Listen proxy on %d port\n", port)
+						//p.Ready <- true
 					}
 
 					server.Accept(func(conn net.Conn) {
 						go p.copy(conn, client.connection)
 					})
+
+					p.authorized = true
 
 				} else {
 					server.Send(msg)

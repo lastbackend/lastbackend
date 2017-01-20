@@ -26,8 +26,8 @@ func NewTCPClient() *Client {
 	client.connect = make(chan bool)
 	client.connected = make(chan bool)
 	client.done = make(chan bool)
-
 	client.error = make(chan error)
+	client.Message = make(chan []byte)
 
 	return client
 }
@@ -69,8 +69,8 @@ func (c *Client) Connect(address string) (*Client, error) {
 			}
 
 			if n > 0 {
-				fmt.Println("unexpected data: %s", buf[:n])
-				c.Message <- buf
+				//fmt.Println("unexpected data: %s", buf[:n])
+				c.Message <- buf[:n]
 			}
 		}
 	}()
@@ -82,8 +82,8 @@ func (c *Client) Connect(address string) (*Client, error) {
 				fmt.Println("connection dropped message", err)
 				c.connected <- false
 				break
-			//case <-time.After(time.Second * 1):
-			//	fmt.Println("timeout 1, still alive")
+				//case <-time.After(time.Second * 1):
+				//	fmt.Println("timeout 1, still alive")
 			}
 		}
 	}()

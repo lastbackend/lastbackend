@@ -79,12 +79,20 @@ func Daemon(cmd *cli.Cmd) {
 	cmd.Action = func() {
 
 		go http.RunHttpServer(http.NewRouter(), cfg.HttpServer.Port)
-		go server.RunTCPServer()
+
+		proxy := server.New(ctx.K8S)
+		go proxy.Start(9999)
 
 		// Handle SIGINT and SIGTERM.
 		ch := make(chan os.Signal)
 		signal.Notify(ch, syscall.SIGINT, syscall.SIGTERM)
-		ctx.Log.Debug(<-ch)
+
+		go func() {
+			<-ch
+			proxy.Shutdown()
+		}()
+
+		<-proxy.Done
 
 		ctx.Log.Info("Handle SIGINT and SIGTERM.")
 	}

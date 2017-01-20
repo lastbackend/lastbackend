@@ -25,22 +25,30 @@ func Proxy(port int) error {
 	var (
 		ctx  = context.Get()
 		sigs = make(chan os.Signal, 1)
+		done = make(chan bool, 1)
 	)
-
-	proxy := client.New("127.0.0.1:9999", ctx.Token)
-
-	ctx.Log.Info("Listen proxy on", port, "port")
-
-	go proxy.Start(port)
 
 	signal.Notify(sigs, os.Interrupt)
 
+	proxy := client.New("127.0.0.1:9999", ctx.Token, "aaaca8b4-6198-491c-8bb4-edb8f1740945", "lb-redis-4065565212-a79sb")
+
+	go proxy.Start(port)
+
 	go func() {
-		<-sigs
-		proxy.Shutdown()
+		select {
+		case <-proxy.Ready:
+			ctx.Log.Info("Listen proxy on", port, "port")
+		case <-proxy.Done:
+			done <- true
+			return
+		case <-sigs:
+			proxy.Shutdown()
+			done <- true
+			return
+		}
 	}()
 
-	<-proxy.Done
+	<-done
 
 	return nil
 }

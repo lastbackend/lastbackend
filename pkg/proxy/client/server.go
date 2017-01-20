@@ -9,6 +9,8 @@ type Server struct {
 	port        int
 	listener    net.Listener
 	connections map[net.Conn]bool
+
+	Running bool
 }
 
 func NewTCPServer(port int) *Server {
@@ -21,6 +23,7 @@ func NewTCPServer(port int) *Server {
 
 func (s *Server) Start() (err error) {
 	s.listener, err = net.Listen("tcp", fmt.Sprintf(":%d", s.port))
+	s.Running = err == nil
 	return err
 }
 
@@ -47,6 +50,5 @@ func (s *Server) Close() error {
 	for connection := range s.connections {
 		connection.Close()
 	}
-
 	return s.listener.Close()
 }
