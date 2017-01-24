@@ -23,7 +23,6 @@ func NewRouter() *mux.Router {
 	r.HandleFunc("/session", handle(handler.SessionCreateH)).Methods("POST")
 
 	// User handlers
-	r.HandleFunc("/user", handle(handler.UserCreateH)).Methods("POST")
 	r.HandleFunc("/user", handle(handler.UserGetH, auth)).Methods("GET")
 
 	// Build handlers

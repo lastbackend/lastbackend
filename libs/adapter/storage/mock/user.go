@@ -31,9 +31,9 @@ func (u *UserMock) GetByUsername(_ string) (*model.User, error) {
 	var err error
 	var user = new(model.User)
 
-	u.Mock.On(r.Table(mockDB).Table(userTable).Get(mockID)).Return(userMock, nil)
+	u.Mock.On(r.DB(mockDB).Table(userTable).Get(mockID)).Return(userMock, nil)
 
-	res, err := r.Table(mockDB).Table(userTable).Get(mockID).Run(u.Mock)
+	res, err := r.DB(mockDB).Table(userTable).Get(mockID).Run(u.Mock)
 	if err != nil {
 		return nil, err
 	}
@@ -52,9 +52,9 @@ func (u *UserMock) GetByEmail(_ string) (*model.User, error) {
 	var err error
 	var user = new(model.User)
 
-	u.Mock.On(r.Table(mockDB).Table(userTable).Get(mockID)).Return(userMock, nil)
+	u.Mock.On(r.DB(mockDB).Table(userTable).Get(mockID)).Return(userMock, nil)
 
-	res, err := r.Table(mockDB).Table(userTable).Get(mockID).Run(u.Mock)
+	res, err := r.DB(mockDB).Table(userTable).Get(mockID).Run(u.Mock)
 	if err != nil {
 		return nil, err
 	}
@@ -73,9 +73,9 @@ func (u *UserMock) GetByID(_ string) (*model.User, error) {
 	var err error
 	var user = new(model.User)
 
-	u.Mock.On(r.Table(mockDB).Table(userTable).Get(mockID)).Return(userMock, nil)
+	u.Mock.On(r.DB(mockDB).Table(userTable).Get(mockID)).Return(userMock, nil)
 
-	res, err := r.Table(mockDB).Table(userTable).Get(mockID).Run(u.Mock)
+	res, err := r.DB(mockDB).Table(userTable).Get(mockID).Run(u.Mock)
 	if err != nil {
 		return nil, err
 	}
@@ -99,9 +99,9 @@ func (u *UserMock) Insert(_ *model.User) (*model.User, error) {
 	var err error
 	var opts = r.InsertOpts{ReturnChanges: true}
 
-	u.Mock.On(r.Table(mockDB).Table(mockDB).Insert(userMock)).Return(nil, nil)
+	u.Mock.On(r.DB(mockDB).Table(mockDB).Insert(userMock)).Return(nil, nil)
 
-	res, err := r.Table(mockDB).Table(mockDB).Insert(userMock, opts).RunWrite(u.Mock)
+	res, err := r.DB(mockDB).Table(mockDB).Insert(userMock, opts).RunWrite(u.Mock)
 
 	if err != nil {
 		return nil, err

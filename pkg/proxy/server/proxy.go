@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"github.com/lastbackend/lastbackend/libs/interface/k8s"
 	"io"
-	"net"
 	"k8s.io/client-go/pkg/api"
+	"net"
 )
 
 type Proxy struct {

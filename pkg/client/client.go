@@ -78,10 +78,6 @@ func Run() {
 
 func configure(app *cli.Cli) {
 
-	app.Command("signup", "Create new account", func(c *cli.Cmd) {
-		c.Action = u.SignUpCmd
-	})
-
 	app.Command("login", "Auth to account", func(c *cli.Cmd) {
 		c.Action = u.SignInCmd
 	})
