@@ -22,6 +22,7 @@ func TestUserCreateH(t *testing.T) {
 		t.Fatal("Creating 'POST /user' request failed!")
 	}
 
+	req.Header.Add("Authorization", "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbSI6Im1vY2tlZEBtb2NrZWQuY29tIiwiZXhwIjoxNDkzMjI5NTEwLCJqdGkiOjE0OTMyMjk1MTAsIm9pZCI6IiIsInVpZCI6ImM0ZmU5NTFjLTNmMmEtNDJlNS1hYjAwLWM5NDM1ZDJmOTUwZiIsInVzZXIiOiJtb2NrZWQifQ.-xiAaTqbdwz50LQliQoqNsYYhtEIc77PKneLzDutAD4")
 	req.Header.Add("Content-Type", "application/json")
 
 	res := httptest.NewRecorder()
@@ -31,25 +32,3 @@ func TestUserCreateH(t *testing.T) {
 		t.Error("Server returned: ", res.Code, " instead of ", http.StatusBadRequest)
 	}
 }
-
-// TODO
-//func TestUserGetH(t *testing.T) {
-//
-//	_ = context.Mock()
-//
-//	r := h.NewRouter()
-//
-//	req, err := http.NewRequest("GET", "/user", nil)
-//	if err != nil {
-//		t.Fatal("Creating 'GET /user' request failed!")
-//	}
-//
-//	req.Header.Add("Authorization", "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbSI6Im1vY2tlZEBtb2NrZWQuY29tIiwiZXhwIjoxNDg3NDE3ODk1LCJqdGkiOjE0ODc0MTc4OTUsIm9pZCI6IiIsInVpZCI6IjU2MmYwY2EwLTI2ZWEtNGFiNC1hZDBmLTU1N2NmYjJmYjgwNyIsInVzZXIiOiJtb2NrZWQifQ.VjHgKRqJCwf7TDphHPHhMl6njwL7agE1dzPVeGy5HFI")
-//
-//	res := httptest.NewRecorder()
-//	r.ServeHTTP(res, req)
-//
-//	if res.Code != http.StatusOK {
-//		t.Error("Server returned: ", res.Code, " instead of ", http.StatusBadRequest)
-//	}
-//}
