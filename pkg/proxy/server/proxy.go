@@ -24,7 +24,6 @@ func New(ctx k8s.IK8S) *Proxy {
 	proxy.ctx = ctx
 
 	proxy.close = make(chan int)
-
 	proxy.Done = make(chan int)
 	proxy.Ready = make(chan int)
 
@@ -36,11 +35,20 @@ func (p *Proxy) Start(port int) {
 	server := NewTCPServer(port)
 	server.Start()
 
+	go func() {
+		for {
+			select {
+			case <-p.close:
+				server.Close()
+				close(p.Done)
+				return
+			}
+		}
+	}()
+
 	server.Accept(func(conn net.Conn) {
 		fmt.Printf("New connection")
 		conn.Write([]byte(`{"allow":true}`))
-
-		fmt.Println("::1")
 
 		//var otps = &v1.PodAttachOptions{
 		//	Container: "redis",
@@ -65,15 +73,13 @@ func (p *Proxy) Start(port int) {
 			TTY:       true,
 		}, api.ParameterCodec)
 
-		fmt.Println("::1", req.URL())
+		fmt.Println(req.URL())
 
 		readCloser, err := req.Stream()
 		if err != nil {
-			fmt.Println("::2", err)
 			return
 		}
 
-		fmt.Println("::3")
 		defer readCloser.Close()
 
 		io.Copy(conn, readCloser)
@@ -88,24 +94,26 @@ func (p *Proxy) Start(port int) {
 					notify <- err
 					return
 				}
-				fmt.Println("::4")
+
 				if n > 0 {
 					fmt.Println("unexpected data: %s", buf[:n])
 				}
 			}
 		}()
 
-		for {
-			select {
-			case err := <-notify:
-				if io.EOF == err {
-					fmt.Println("connection dropped message", err)
-					return
+		go func() {
+			for {
+				select {
+				case err := <-notify:
+					if io.EOF == err {
+						fmt.Println("connection dropped message", err)
+						return
+					}
+					//case <-time.After(time.Second * 1):
+					//  fmt.Println("timeout 1, still alive")
 				}
-				//case <-time.After(time.Second * 1):
-				//  fmt.Println("timeout 1, still alive")
 			}
-		}
+		}()
 
 		//defer readCloser.Close()
 
@@ -120,19 +128,9 @@ func (p *Proxy) Start(port int) {
 		//p.copy(conn, client.connection)
 
 		//go func() {
-		//	select {
-		//	case <-p.close:
-		//		client.Close()
-		//		server.Close()
-		//		close(p.Done)
-		//		return
-		//	}
-		//}()
-		//
-		//go func() {
 		//	for {
 		//		select {
-		//		case msg := <-client.Message:
+		//		case msg := <-readCloser.Message:
 		//			fmt.Println("---------------")
 		//			fmt.Println(string(msg))
 		//			fmt.Println("---------------")
@@ -148,8 +146,6 @@ func (p *Proxy) Shutdown() {
 
 func (p *Proxy) copy(from, to net.Conn) {
 	select {
-	case <-p.close:
-		return
 	default:
 		if _, err := io.Copy(to, from); err != nil {
 			return

@@ -10,6 +10,10 @@ type Config struct {
 		Host string `yaml:"host"`
 	} `yaml:"template_registry"`
 
+	ProxyServer struct {
+		Port int `yaml:"port"`
+	} `yaml:"proxy_server"`
+
 	HttpServer struct {
 		Port int `yaml:"port"`
 	} `yaml:"http_server"`

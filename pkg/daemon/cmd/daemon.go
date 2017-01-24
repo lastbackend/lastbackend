@@ -15,6 +15,7 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
+	"fmt"
 )
 
 func Daemon(cmd *cli.Cmd) {
@@ -69,6 +70,10 @@ func Daemon(cmd *cli.Cmd) {
 			cfg.HttpServer.Port = 3000
 		}
 
+		if cfg.ProxyServer.Port == 0 {
+			cfg.ProxyServer.Port = 9999
+		}
+
 		if cfg.TemplateRegistry.Host == "" {
 			cfg.TemplateRegistry.Host = "http://localhost:3003"
 		}
@@ -78,21 +83,41 @@ func Daemon(cmd *cli.Cmd) {
 
 	cmd.Action = func() {
 
+		var (
+			sigs = make(chan os.Signal)
+			done = make(chan bool, 1)
+		)
+
 		go http.RunHttpServer(http.NewRouter(), cfg.HttpServer.Port)
 
 		proxy := server.New(ctx.K8S)
-		go proxy.Start(9999)
+		go proxy.Start(cfg.ProxyServer.Port)
 
 		// Handle SIGINT and SIGTERM.
-		ch := make(chan os.Signal)
-		signal.Notify(ch, syscall.SIGINT, syscall.SIGTERM)
+		signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)
 
 		go func() {
-			<-ch
-			proxy.Shutdown()
+			for {
+				select {
+				case <-proxy.Ready:
+					ctx.Log.Info("Listen proxy on", cfg.ProxyServer.Port, "port")
+				case <-proxy.Done:
+					done <- true
+					return
+				case <-sigs:
+				fmt.Println(":: >> 1")
+					proxy.Shutdown()
+					fmt.Println(":: >> 2")
+					<-proxy.Done
+					fmt.Println(":: >> 3")
+					done <- true
+					fmt.Println(":: >> 4")
+					return
+				}
+			}
 		}()
 
-		<-proxy.Done
+		<-done
 
 		ctx.Log.Info("Handle SIGINT and SIGTERM.")
 	}
