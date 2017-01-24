@@ -12,6 +12,7 @@ type IStorage interface {
 	Service() IService
 	Hook() IHook
 	Volume() IVolume
+	Activity() IActivity
 }
 
 type IUser interface {
@@ -75,4 +76,12 @@ type IVolume interface {
 	ListByProject(string) (*model.VolumeList, error)
 	Insert(*model.Volume) (*model.Volume, error)
 	Remove(string) error
+}
+
+type IActivity interface {
+	Insert(*model.Activity) (*model.Activity, error)
+	ListProjectActivity(string, string) (*model.ActivityList, error)
+	ListServiceActivity(string, string) (*model.ActivityList, error)
+	RemoveByProject(user, project string) error
+	RemoveByService(user, service string) error
 }

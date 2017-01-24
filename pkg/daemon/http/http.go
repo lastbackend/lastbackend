@@ -35,10 +35,12 @@ func NewRouter() *mux.Router {
 	r.HandleFunc("/project/{project}", handle(handler.ProjectInfoH, auth)).Methods("GET")
 	r.HandleFunc("/project/{project}", handle(handler.ProjectUpdateH, auth)).Methods("PUT")
 	r.HandleFunc("/project/{project}", handle(handler.ProjectRemoveH, auth)).Methods("DELETE")
+	r.HandleFunc("/project/{project}/activity", handle(handler.ProjectActivityListH, auth)).Methods("GET")
 	r.HandleFunc("/project/{project}/service", handle(handler.ServiceListH, auth)).Methods("GET")
 	r.HandleFunc("/project/{project}/service/{service}", handle(handler.ServiceInfoH, auth)).Methods("GET")
 	r.HandleFunc("/project/{project}/service/{service}", handle(handler.ServiceUpdateH, auth)).Methods("PUT")
 	r.HandleFunc("/project/{project}/service/{service}", handle(handler.ServiceRemoveH, auth)).Methods("DELETE")
+	r.HandleFunc("/project/{project}/service/{service}/activity", handle(handler.ServiceActivityListH, auth)).Methods("GET")
 	r.HandleFunc("/project/{project}/service/{service}/logs", handle(handler.ServiceLogsH, auth)).Methods("GET")
 
 	// Deploy template/docker/source/repo

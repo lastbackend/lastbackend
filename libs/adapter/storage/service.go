@@ -169,7 +169,7 @@ func (s *ServiceStorage) Insert(service *model.Service) (*model.Service, error) 
 	return service, nil
 }
 
-// Update build model
+// Update service model
 func (s *ServiceStorage) Update(service *model.Service) (*model.Service, error) {
 
 	service.Updated = time.Now()
@@ -191,7 +191,7 @@ func (s *ServiceStorage) Update(service *model.Service) (*model.Service, error) 
 	return service, nil
 }
 
-// Remove build model
+// Remove service model
 func (s *ServiceStorage) Remove(user, project, id string) error {
 
 	var (
@@ -212,7 +212,7 @@ func (s *ServiceStorage) Remove(user, project, id string) error {
 	return nil
 }
 
-// Remove build model
+// Remove service model
 func (s *ServiceStorage) RemoveByProject(user, project string) error {
 
 	var (

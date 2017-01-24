@@ -326,7 +326,12 @@ func ServiceRemoveH(w http.ResponseWriter, r *http.Request) {
 		serviceParam = serviceModel.ID
 	}
 
-	// TODO: Clear entities from kubernetes
+	err = ctx.Storage.Activity().RemoveByService(session.Uid, serviceParam)
+	if err != nil {
+		ctx.Log.Error("Error: remove activity from db", err)
+		e.HTTP.InternalServerError(w)
+		return
+	}
 
 	err = ctx.Storage.Service().Remove(session.Uid, projectParam, serviceParam)
 	if err != nil {
@@ -339,6 +344,62 @@ func ServiceRemoveH(w http.ResponseWriter, r *http.Request) {
 	_, er = w.Write([]byte{})
 	if er != nil {
 		ctx.Log.Error("Error: write response", er.Error())
+		return
+	}
+}
+
+func ServiceActivityListH(w http.ResponseWriter, r *http.Request) {
+
+	var (
+		err          error
+		session      *model.Session
+		projectModel *model.Project
+		ctx          = c.Get()
+		params       = mux.Vars(r)
+		projectParam = params["project"]
+		serviceParam = params["service"]
+	)
+
+	ctx.Log.Debug("List service activity handler")
+
+	s, ok := context.GetOk(r, `session`)
+	if !ok {
+		ctx.Log.Error("Error: get session context")
+		e.New("user").Unauthorized().Http(w)
+		return
+	}
+
+	session = s.(*model.Session)
+
+	projectModel, err = ctx.Storage.Project().GetByNameOrID(session.Uid, projectParam)
+	if err == nil && projectModel == nil {
+		e.New("service").NotFound().Http(w)
+		return
+	}
+	if err != nil {
+		ctx.Log.Error("Error: find project by id", err.Error())
+		e.HTTP.InternalServerError(w)
+		return
+	}
+
+	activityListModel, err := ctx.Storage.Activity().ListServiceActivity(session.Uid, serviceParam)
+	if err != nil {
+		ctx.Log.Error("Error: find service avtivity list by id", err)
+		e.HTTP.InternalServerError(w)
+		return
+	}
+
+	response, err := activityListModel.ToJson()
+	if err != nil {
+		ctx.Log.Error("Error: convert struct to json", err.Error())
+		e.HTTP.InternalServerError(w)
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+	_, err = w.Write(response)
+	if err != nil {
+		ctx.Log.Error("Error: write response", err.Error())
 		return
 	}
 }

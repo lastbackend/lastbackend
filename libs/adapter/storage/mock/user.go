@@ -6,8 +6,8 @@ import (
 	r "gopkg.in/dancannon/gorethink.v2"
 )
 
-const mockDB = "test"
-const mockID = "mocked"
+const mockUserDB = "test"
+const mockUserID = "mocked"
 const userTable = "users"
 
 // Service User type for interface in interfaces folder
@@ -17,7 +17,7 @@ type UserMock struct {
 }
 
 var userMock = &model.User{
-	ID:       mockID,
+	ID:       mockUserID,
 	Username: "mocked",
 	Email:    "mocked@mocked.com",
 	Gravatar: "a931b3bb185354ecfe43d736b7ad51cb",
@@ -31,9 +31,9 @@ func (u *UserMock) GetByUsername(_ string) (*model.User, error) {
 	var err error
 	var user = new(model.User)
 
-	u.Mock.On(r.DB(mockDB).Table(userTable).Get(mockID)).Return(userMock, nil)
+	u.Mock.On(r.DB(mockUserDB).Table(userTable).Get(mockUserID)).Return(userMock, nil)
 
-	res, err := r.DB(mockDB).Table(userTable).Get(mockID).Run(u.Mock)
+	res, err := r.DB(mockUserDB).Table(userTable).Get(mockUserID).Run(u.Mock)
 	if err != nil {
 		return nil, err
 	}
@@ -52,9 +52,9 @@ func (u *UserMock) GetByEmail(_ string) (*model.User, error) {
 	var err error
 	var user = new(model.User)
 
-	u.Mock.On(r.DB(mockDB).Table(userTable).Get(mockID)).Return(userMock, nil)
+	u.Mock.On(r.DB(mockUserDB).Table(userTable).Get(mockUserID)).Return(userMock, nil)
 
-	res, err := r.DB(mockDB).Table(userTable).Get(mockID).Run(u.Mock)
+	res, err := r.DB(mockUserDB).Table(userTable).Get(mockUserID).Run(u.Mock)
 	if err != nil {
 		return nil, err
 	}
@@ -73,9 +73,9 @@ func (u *UserMock) GetByID(_ string) (*model.User, error) {
 	var err error
 	var user = new(model.User)
 
-	u.Mock.On(r.DB(mockDB).Table(userTable).Get(mockID)).Return(userMock, nil)
+	u.Mock.On(r.DB(mockUserDB).Table(userTable).Get(mockUserID)).Return(userMock, nil)
 
-	res, err := r.DB(mockDB).Table(userTable).Get(mockID).Run(u.Mock)
+	res, err := r.DB(mockUserDB).Table(userTable).Get(mockUserID).Run(u.Mock)
 	if err != nil {
 		return nil, err
 	}
@@ -99,9 +99,9 @@ func (u *UserMock) Insert(_ *model.User) (*model.User, error) {
 	var err error
 	var opts = r.InsertOpts{ReturnChanges: true}
 
-	u.Mock.On(r.DB(mockDB).Table(mockDB).Insert(userMock)).Return(nil, nil)
+	u.Mock.On(r.DB(mockUserDB).Table(mockUserDB).Insert(userMock)).Return(nil, nil)
 
-	res, err := r.DB(mockDB).Table(mockDB).Insert(userMock, opts).RunWrite(u.Mock)
+	res, err := r.DB(mockUserDB).Table(mockUserDB).Insert(userMock, opts).RunWrite(u.Mock)
 
 	if err != nil {
 		return nil, err

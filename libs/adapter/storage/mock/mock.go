@@ -13,6 +13,7 @@ type Mock struct {
 	*BuildMock
 	*HookMock
 	*VolumeMock
+	*ActivityMock
 }
 
 func (s *Mock) User() storage.IUser {
@@ -64,6 +65,13 @@ func (s *Mock) Volume() storage.IVolume {
 	return s.VolumeMock
 }
 
+func (s *Mock) Activity() storage.IActivity {
+	if s == nil {
+		return nil
+	}
+	return s.ActivityMock
+}
+
 func Get() (*Mock, error) {
 
 	var store = new(Mock)
@@ -76,6 +84,7 @@ func Get() (*Mock, error) {
 	store.BuildMock = newBuildMock(mock)
 	store.HookMock = newHookMock(mock)
 	store.VolumeMock = newVolumeMock(mock)
+	store.ActivityMock = newActivityMock(mock)
 
 	return store, nil
 }

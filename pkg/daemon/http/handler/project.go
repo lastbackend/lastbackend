@@ -62,6 +62,7 @@ func ProjectInfoH(w http.ResponseWriter, r *http.Request) {
 	var (
 		err          error
 		session      *model.Session
+		projectModel *model.Project
 		ctx          = c.Get()
 		params       = mux.Vars(r)
 		projectParam = params["project"]
@@ -77,7 +78,6 @@ func ProjectInfoH(w http.ResponseWriter, r *http.Request) {
 	}
 
 	session = s.(*model.Session)
-	var projectModel *model.Project
 
 	projectModel, err = ctx.Storage.Project().GetByNameOrID(session.Uid, projectParam)
 	if err != nil {
@@ -96,6 +96,63 @@ func ProjectInfoH(w http.ResponseWriter, r *http.Request) {
 		e.HTTP.InternalServerError(w)
 		return
 	}
+
+	w.WriteHeader(http.StatusOK)
+	_, err = w.Write(response)
+	if err != nil {
+		ctx.Log.Error("Error: write response", err.Error())
+		return
+	}
+}
+
+func ProjectActivityListH(w http.ResponseWriter, r *http.Request) {
+
+	var (
+		err          error
+		session      *model.Session
+		projectModel *model.Project
+		ctx          = c.Get()
+		params       = mux.Vars(r)
+		projectParam = params["project"]
+	)
+
+	ctx.Log.Debug("List project activity handler")
+
+	s, ok := context.GetOk(r, `session`)
+	if !ok {
+		ctx.Log.Error("Error: get session context")
+		e.New("user").Unauthorized().Http(w)
+		return
+	}
+
+	session = s.(*model.Session)
+
+	projectModel, err = ctx.Storage.Project().GetByNameOrID(session.Uid, projectParam)
+	if err != nil {
+		ctx.Log.Error("Error: find project by id", err.Error())
+		e.HTTP.InternalServerError(w)
+		return
+	}
+	if projectModel == nil {
+		e.New("project").NotFound().Http(w)
+		return
+	}
+
+	activityListModel, err := ctx.Storage.Activity().ListProjectActivity(session.Uid, projectModel.ID)
+	if err != nil {
+		ctx.Log.Error("Error: find projects by user", err)
+		e.HTTP.InternalServerError(w)
+		return
+	}
+
+	response, err := activityListModel.ToJson()
+	if err != nil {
+		ctx.Log.Error("Error: convert struct to json", err.Error())
+		e.HTTP.InternalServerError(w)
+		return
+	}
+
+	ctx.Log.Info(string(response))
 
 	w.WriteHeader(http.StatusOK)
 	_, err = w.Write(response)
@@ -411,6 +468,13 @@ func ProjectRemoveH(w http.ResponseWriter, r *http.Request) {
 	err = ctx.Storage.Service().RemoveByProject(session.Uid, projectParam)
 	if err != nil {
 		ctx.Log.Error("Error: remove services from db", err)
+		e.HTTP.InternalServerError(w)
+		return
+	}
+
+	err = ctx.Storage.Activity().RemoveByProject(session.Uid, projectParam)
+	if err != nil {
+		ctx.Log.Error("Error: remove activity from db", err)
 		e.HTTP.InternalServerError(w)
 		return
 	}
