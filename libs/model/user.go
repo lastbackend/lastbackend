@@ -11,7 +11,6 @@ type User struct {
 	Username     string    `json:"username" gorethink:"username,omitempty"`
 	Email        string    `json:"email" gorethink:"email,omitempty"`
 	Gravatar     string    `json:"gravatar" gorethink:"gravatar,omitempty"`
-	Balance      float32   `json:"balance" gorethink:"balance,omitempty"`
 	Organization bool      `json:"organization" gorethink:"organization,omitempty"`
 	Created      time.Time `json:"created" gorethink:"created,omitempty"`
 	Updated      time.Time `json:"updated" gorethink:"updated,omitempty"`
