@@ -8,6 +8,7 @@ import (
 	"github.com/lastbackend/lastbackend/libs/model"
 	c "github.com/lastbackend/lastbackend/pkg/daemon/context"
 	"github.com/lastbackend/lastbackend/pkg/service"
+	"github.com/lastbackend/lastbackend/pkg/util/generator"
 	"github.com/lastbackend/lastbackend/pkg/util/validator"
 	"io"
 	"io/ioutil"
@@ -470,6 +471,81 @@ func ServiceLogsH(w http.ResponseWriter, r *http.Request) {
 	service.Logs(ctx.K8S, serviceModel.Project, &opts, ch)
 }
 
+func ServiceHookCreateH(w http.ResponseWriter, r *http.Request) {
+
+	var (
+		err          error
+		session      *model.Session
+		projectModel *model.Project
+		serviceModel *model.Service
+		hookModel    *model.Hook
+		ctx          = c.Get()
+		params       = mux.Vars(r)
+		projectParam = params["project"]
+		serviceParam = params["service"]
+	)
+
+	ctx.Log.Debug("List hook create handler")
+
+	s, ok := context.GetOk(r, `session`)
+	if !ok {
+		ctx.Log.Error("Error: get session context")
+		e.New("user").Unauthorized().Http(w)
+		return
+	}
+
+	session = s.(*model.Session)
+
+	projectModel, err = ctx.Storage.Project().GetByNameOrID(session.Uid, projectParam)
+	if err == nil && projectModel == nil {
+		e.New("service").NotFound().Http(w)
+		return
+	}
+	if err != nil {
+		ctx.Log.Error("Error: find project by id", err.Error())
+		e.HTTP.InternalServerError(w)
+		return
+	}
+
+	serviceModel, err = ctx.Storage.Service().GetByNameOrID(session.Uid, projectModel.ID, serviceParam)
+	if err == nil && serviceModel == nil {
+		e.New("service").NotFound().Http(w)
+		return
+	}
+	if err != nil {
+		ctx.Log.Error("Error: find service by id", err.Error())
+		e.HTTP.InternalServerError(w)
+		return
+	}
+
+	hookModel = &model.Hook{
+		User:    serviceModel.User,
+		Token:   generator.GenerateToken(32),
+		Service: serviceModel.ID,
+	}
+
+	hookModel, err = ctx.Storage.Hook().Insert(hookModel)
+	if err != nil {
+		ctx.Log.Error("Error: find hook list by user", err)
+		e.HTTP.InternalServerError(w)
+		return
+	}
+
+	response, err := hookModel.ToJson()
+	if err != nil {
+		ctx.Log.Error("Error: convert struct to json", err.Error())
+		e.HTTP.InternalServerError(w)
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+	_, err = w.Write(response)
+	if err != nil {
+		ctx.Log.Error("Error: write response", err.Error())
+		return
+	}
+}
+
 func ServiceHookListH(w http.ResponseWriter, r *http.Request) {
 
 	var (
@@ -533,6 +609,68 @@ func ServiceHookListH(w http.ResponseWriter, r *http.Request) {
 
 	w.WriteHeader(http.StatusOK)
 	_, err = w.Write(response)
+	if err != nil {
+		ctx.Log.Error("Error: write response", err.Error())
+		return
+	}
+}
+
+func ServiceHookRemoveH(w http.ResponseWriter, r *http.Request) {
+
+	var (
+		err          error
+		ctx          = c.Get()
+		session      *model.Session
+		projectModel *model.Project
+		serviceModel *model.Service
+		params       = mux.Vars(r)
+		projectParam = params["project"]
+		serviceParam = params["service"]
+		hookParam    = params["hook"]
+	)
+
+	ctx.Log.Info("List service hook handler")
+
+	s, ok := context.GetOk(r, `session`)
+	if !ok {
+		ctx.Log.Error("Error: get session context")
+		e.New("user").Unauthorized().Http(w)
+		return
+	}
+
+	session = s.(*model.Session)
+
+	projectModel, err = ctx.Storage.Project().GetByNameOrID(session.Uid, projectParam)
+	if err == nil && projectModel == nil {
+		e.New("service").NotFound().Http(w)
+		return
+	}
+	if err != nil {
+		ctx.Log.Error("Error: find project by id", err.Error())
+		e.HTTP.InternalServerError(w)
+		return
+	}
+
+	serviceModel, err = ctx.Storage.Service().GetByNameOrID(session.Uid, projectModel.ID, serviceParam)
+	if err == nil && serviceModel == nil {
+		e.New("service").NotFound().Http(w)
+		return
+	}
+	if err != nil {
+		ctx.Log.Error("Error: find service by id", err.Error())
+		e.HTTP.InternalServerError(w)
+		return
+	}
+
+	err = ctx.Storage.Hook().Remove(hookParam)
+	if err != nil {
+		ctx.Log.Error("Error: remove activity from db", err)
+		e.HTTP.InternalServerError(w)
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+	_, err = w.Write([]byte{})
 	if err != nil {
 		ctx.Log.Error("Error: write response", err.Error())
 		return

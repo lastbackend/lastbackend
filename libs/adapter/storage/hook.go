@@ -142,10 +142,11 @@ func (s *HookStorage) Insert(hook *model.Hook) (*model.Hook, error) {
 }
 
 // Insert new hook into storage
-func (s *HookStorage) Delete(user, id string) error {
-	var user_filter = r.Row.Field("user").Eq(user)
+func (s *HookStorage) Remove(id string) error {
 
-	err := r.Table(HookTable).Get(id).Filter(user_filter).Delete().Exec(s.Session)
+	var opts = r.DeleteOpts{}
+
+	err := r.Table(HookTable).Get(id).Delete(opts).Exec(s.Session)
 	if err != nil {
 		return err
 	}

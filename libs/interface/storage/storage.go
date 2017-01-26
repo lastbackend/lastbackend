@@ -68,7 +68,7 @@ type IHook interface {
 	ListByImage(string, string) (*model.HookList, error)
 	ListByService(string, string) (*model.HookList, error)
 	Insert(*model.Hook) (*model.Hook, error)
-	Remove(string, string) error
+	Remove(string) error
 }
 
 type IVolume interface {

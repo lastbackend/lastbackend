@@ -26,26 +26,6 @@ var hookMock = &model.Hook{
 	Updated: time.Now(),
 }
 
-var hookImageMock = &model.Hook{
-	ID:      mockHookID,
-	User:    mockHookID,
-	Service: "",
-	Image:   mockHookID,
-	Token:   "mocktoken",
-	Created: time.Now(),
-	Updated: time.Now(),
-}
-
-var hookServiceMock = &model.Hook{
-	ID:      mockHookID,
-	User:    mockHookID,
-	Service: mockHookID,
-	Image:   "",
-	Token:   "mocktoken",
-	Created: time.Now(),
-	Updated: time.Now(),
-}
-
 // Get hooks by image
 func (s *HookMock) GetByToken(token string) (*model.Hook, error) {
 
@@ -108,20 +88,16 @@ func (s *HookMock) Insert(hook *model.Hook) (*model.Hook, error) {
 }
 
 // Insert new hook into storage
-func (s *HookMock) Delete(user, id string) error {
+func (s *HookMock) Remove(id string) error {
 
 	var (
-		err         error
-		opts        = r.DeleteOpts{ReturnChanges: true}
-		hook_filter = map[string]interface{}{
-			"user": user,
-			"id":   id,
-		}
+		err  error
+		opts = r.DeleteOpts{ReturnChanges: true}
 	)
 
-	s.Mock.On(r.DB("test").Table(hookTable).Filter(hook_filter).Delete(opts)).Return(nil, nil)
+	s.Mock.On(r.DB("test").Table(hookTable).Get(id).Delete(opts)).Return(nil, nil)
 
-	err = r.DB("test").Table(hookTable).Filter(hook_filter).Delete(opts).Exec(s.Mock)
+	err = r.DB("test").Table(hookTable).Get(id).Delete(opts).Exec(s.Mock)
 	if err != nil {
 		return err
 	}
