@@ -64,11 +64,11 @@ type IService interface {
 
 type IHook interface {
 	GetByToken(string) (*model.Hook, error)
-	GetByUser(string) (*model.HookList, error)
+	ListByUser(string) (*model.HookList, error)
 	ListByImage(string, string) (*model.HookList, error)
 	ListByService(string, string) (*model.HookList, error)
 	Insert(*model.Hook) (*model.Hook, error)
-	Delete(string, string) error
+	Remove(string, string) error
 }
 
 type IVolume interface {

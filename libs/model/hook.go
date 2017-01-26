@@ -1,6 +1,9 @@
 package model
 
-import "time"
+import (
+	"encoding/json"
+	"time"
+)
 
 type HookList []Hook
 
@@ -19,4 +22,27 @@ type Hook struct {
 	Created time.Time `json:"created" gorethink:"created,omitempty"`
 	// Hook updated time
 	Updated time.Time `json:"updated" gorethink:"updated,omitempty"`
+}
+
+func (h *Hook) ToJson() ([]byte, error) {
+	buf, err := json.Marshal(h)
+	if err != nil {
+		return nil, err
+	}
+
+	return buf, nil
+}
+
+func (h *HookList) ToJson() ([]byte, error) {
+
+	if h == nil {
+		return []byte("[]"), nil
+	}
+
+	buf, err := json.Marshal(h)
+	if err != nil {
+		return nil, err
+	}
+
+	return buf, nil
 }

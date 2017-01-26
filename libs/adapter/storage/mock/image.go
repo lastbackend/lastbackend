@@ -6,6 +6,7 @@ import (
 	r "gopkg.in/dancannon/gorethink.v2"
 )
 
+const mockImageID string = "mocked"
 const ImageTable string = "images"
 
 // Project Service type for interface in interfaces folder

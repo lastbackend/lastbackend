@@ -2,9 +2,6 @@ package handler
 
 import (
 	"encoding/json"
-	"io"
-	"io/ioutil"
-	"net/http"
 	"github.com/gorilla/context"
 	"github.com/gorilla/mux"
 	e "github.com/lastbackend/lastbackend/libs/errors"
@@ -12,6 +9,9 @@ import (
 	c "github.com/lastbackend/lastbackend/pkg/daemon/context"
 	"github.com/lastbackend/lastbackend/pkg/service"
 	"github.com/lastbackend/lastbackend/pkg/util/validator"
+	"io"
+	"io/ioutil"
+	"net/http"
 )
 
 func ServiceListH(w http.ResponseWriter, r *http.Request) {
@@ -468,4 +468,73 @@ func ServiceLogsH(w http.ResponseWriter, r *http.Request) {
 	}
 
 	service.Logs(ctx.K8S, serviceModel.Project, &opts, ch)
+}
+
+func ServiceHookListH(w http.ResponseWriter, r *http.Request) {
+
+	var (
+		err           error
+		session       *model.Session
+		projectModel  *model.Project
+		serviceModel  *model.Service
+		hookListModel *model.HookList
+		ctx           = c.Get()
+		params        = mux.Vars(r)
+		projectParam  = params["project"]
+		serviceParam  = params["service"]
+	)
+
+	ctx.Log.Debug("List hook handler")
+
+	s, ok := context.GetOk(r, `session`)
+	if !ok {
+		ctx.Log.Error("Error: get session context")
+		e.New("user").Unauthorized().Http(w)
+		return
+	}
+
+	session = s.(*model.Session)
+
+	projectModel, err = ctx.Storage.Project().GetByNameOrID(session.Uid, projectParam)
+	if err == nil && projectModel == nil {
+		e.New("service").NotFound().Http(w)
+		return
+	}
+	if err != nil {
+		ctx.Log.Error("Error: find project by id", err.Error())
+		e.HTTP.InternalServerError(w)
+		return
+	}
+
+	serviceModel, err = ctx.Storage.Service().GetByNameOrID(session.Uid, projectModel.ID, serviceParam)
+	if err == nil && serviceModel == nil {
+		e.New("service").NotFound().Http(w)
+		return
+	}
+	if err != nil {
+		ctx.Log.Error("Error: find service by id", err.Error())
+		e.HTTP.InternalServerError(w)
+		return
+	}
+
+	hookListModel, err = ctx.Storage.Hook().ListByService(session.Uid, serviceModel.ID)
+	if err != nil {
+		ctx.Log.Error("Error: find hook list by user", err)
+		e.HTTP.InternalServerError(w)
+		return
+	}
+
+	response, err := hookListModel.ToJson()
+	if err != nil {
+		ctx.Log.Error("Error: convert struct to json", err.Error())
+		e.HTTP.InternalServerError(w)
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+	_, err = w.Write(response)
+	if err != nil {
+		ctx.Log.Error("Error: write response", err.Error())
+		return
+	}
 }

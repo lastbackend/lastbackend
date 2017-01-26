@@ -47,8 +47,6 @@ func ProjectListH(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	ctx.Log.Info(string(response))
-
 	w.WriteHeader(http.StatusOK)
 	_, err = w.Write(response)
 	if err != nil {

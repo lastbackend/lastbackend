@@ -716,7 +716,6 @@ func (r *Request) Stream() (io.ReadCloser, error) {
 	url := r.URL().String()
 	req, err := http.NewRequest(r.verb, url, nil)
 	if err != nil {
-		fmt.Println(">>> 1 ", err)
 		return nil, err
 	}
 	req.Header = r.headers
@@ -729,14 +728,12 @@ func (r *Request) Stream() (io.ReadCloser, error) {
 	updateURLMetrics(r, resp, err)
 	if r.baseURL != nil {
 		if err != nil {
-			fmt.Println(">>> 2 ", err)
 			r.backoffMgr.UpdateBackoff(r.URL(), err, 0)
 		} else {
 			r.backoffMgr.UpdateBackoff(r.URL(), err, resp.StatusCode)
 		}
 	}
 	if err != nil {
-		fmt.Println(">>> 3 ", err)
 		return nil, err
 	}
 
@@ -750,7 +747,6 @@ func (r *Request) Stream() (io.ReadCloser, error) {
 
 		result := r.transformResponse(resp, req)
 		if result.err != nil {
-			fmt.Println(">>> 4 ", result.err)
 			return nil, result.err
 		}
 		return nil, fmt.Errorf("%d while accessing %v: %s", result.statusCode, url, string(result.body))

@@ -17,75 +17,115 @@ type HookStorage struct {
 // Get hooks by image
 func (s *HookStorage) GetByToken(token string) (*model.Hook, error) {
 
-	var err error
-	var hook = new(model.Hook)
-	var token_filter = r.Row.Field("token").Eq(token)
+	var (
+		err          error
+		hook         = new(model.Hook)
+		token_filter = r.Row.Field("token").Eq(token)
+	)
+
 	res, err := r.Table(HookTable).Filter(token_filter).Run(s.Session)
 	if err != nil {
 		return nil, err
 	}
-
-	res.One(hook)
-
 	defer res.Close()
-	return hook, nil
-}
 
-// Get hooks by image
-func (s *HookStorage) GetByUser(id string) (*model.HookList, error) {
+	if res.IsNil() {
+		return nil, nil
+	}
 
-	var err error
-	var hooks = new(model.HookList)
-	var user_filter = r.Row.Field("user").Eq(id)
-	res, err := r.Table(HookTable).Filter(user_filter).Run(s.Session)
+	err = res.All(hook)
 	if err != nil {
 		return nil, err
 	}
 
-	res.All(hooks)
+	return hook, nil
+}
 
+// Get hooks by image
+func (s *HookStorage) ListByUser(id string) (*model.HookList, error) {
+
+	var (
+		err         error
+		hooks       = new(model.HookList)
+		user_filter = r.Row.Field("user").Eq(id)
+	)
+
+	res, err := r.Table(HookTable).Filter(user_filter).Run(s.Session)
+	if err != nil {
+		return nil, err
+	}
 	defer res.Close()
+
+	if res.IsNil() {
+		return nil, nil
+	}
+
+	err = res.All(hooks)
+	if err != nil {
+		return nil, err
+	}
+
 	return hooks, nil
 }
 
 // Get hooks by image
 func (s *HookStorage) ListByImage(user, id string) (*model.HookList, error) {
 
-	var err error
-	var hooks = new(model.HookList)
-	var image_filter = r.Row.Field("image").Eq(id)
-	var user_filter = r.Row.Field("user").Eq(user)
-	res, err := r.Table(HookTable).Filter(image_filter).Filter(user_filter).Run(s.Session)
+	var (
+		err         error
+		hookList    = new(model.HookList)
+		hook_filter = map[string]interface{}{
+			"user":  user,
+			"image": id,
+		}
+	)
+
+	res, err := r.Table(HookTable).Filter(hook_filter).Run(s.Session)
 	if err != nil {
 		return nil, err
 	}
-
-	res.All(hooks)
-
 	defer res.Close()
-	return hooks, nil
-}
-
-// Get hooks by service
-func (s *HookStorage) ListByService(user, id string) (*model.HookList, error) {
-
-	var err error
-	var hooks = new(model.HookList)
-	var service_filter = r.Row.Field("service").Eq(id)
-	var user_filter = r.Row.Field("user").Eq(user)
-	res, err := r.Table(HookTable).Filter(service_filter).Filter(user_filter).Run(s.Session)
-	if err != nil {
-		return nil, err
-	}
 
 	if res.IsNil() {
 		return nil, nil
 	}
 
-	res.All(hooks)
+	err = res.All(hookList)
+	if err != nil {
+		return nil, err
+	}
 
+	return hookList, nil
+}
+
+// Get hooks by service
+func (s *HookStorage) ListByService(user, id string) (*model.HookList, error) {
+
+	var (
+		err         error
+		hookList    = new(model.HookList)
+		hook_filter = map[string]interface{}{
+			"user":    user,
+			"service": id,
+		}
+	)
+
+	res, err := r.Table(HookTable).Filter(hook_filter).Run(s.Session)
+	if err != nil {
+		return nil, err
+	}
 	defer res.Close()
-	return hooks, nil
+
+	if res.IsNil() {
+		return nil, nil
+	}
+
+	err = res.All(hookList)
+	if err != nil {
+		return nil, err
+	}
+
+	return hookList, nil
 }
 
 // Insert new hook into storage
@@ -104,7 +144,8 @@ func (s *HookStorage) Insert(hook *model.Hook) (*model.Hook, error) {
 // Insert new hook into storage
 func (s *HookStorage) Delete(user, id string) error {
 	var user_filter = r.Row.Field("user").Eq(user)
-	_, err := r.Table(HookTable).Get(id).Filter(user_filter).Delete().Run(s.Session)
+
+	err := r.Table(HookTable).Get(id).Filter(user_filter).Delete().Exec(s.Session)
 	if err != nil {
 		return err
 	}
