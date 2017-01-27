@@ -28,7 +28,7 @@ var serviceMock = model.Service{
 	Updated:     time.Now(),
 }
 
-func (s *ServiceMock) GetByNameOrID(user, project, nameOrID string) (*model.Service, error) {
+func (s *ServiceMock) GetByNameOrID(user, nameOrID string) (*model.Service, error) {
 
 	var (
 		err            error
@@ -36,10 +36,7 @@ func (s *ServiceMock) GetByNameOrID(user, project, nameOrID string) (*model.Serv
 		service_filter = func(talk r.Term) r.Term {
 			return r.And(
 				talk.Field("user").Eq(user),
-				r.Or(
-					r.And(talk.Field("project").Eq(service), talk.Field("id").Eq(nameOrID)),
-					r.And(talk.Field("project").Eq(service), talk.Field("name").Eq(nameOrID)),
-				),
+				r.Or(talk.Field("id").Eq(nameOrID), talk.Field("name").Eq(nameOrID)),
 			)
 		}
 	)
@@ -63,7 +60,7 @@ func (s *ServiceMock) GetByNameOrID(user, project, nameOrID string) (*model.Serv
 	return service, nil
 }
 
-func (s *ServiceMock) GetByID(user, project, id string) (*model.Service, error) {
+func (s *ServiceMock) GetByID(user, id string) (*model.Service, error) {
 
 	var (
 		err            error
@@ -137,15 +134,14 @@ func (s *ServiceMock) Update(service *model.Service) (*model.Service, error) {
 }
 
 // Remove service model
-func (s *ServiceMock) Remove(user, project, id string) error {
+func (s *ServiceMock) Remove(user, id string) error {
 
 	var (
 		err            error
 		opts           = r.DeleteOpts{ReturnChanges: true}
 		service_filter = map[string]interface{}{
-			"user":    user,
-			"project": project,
-			"id":      id,
+			"user": user,
+			"id":   id,
 		}
 	)
 

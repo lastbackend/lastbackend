@@ -1,9 +1,11 @@
 package pod
 
 import (
+	"github.com/lastbackend/lastbackend/libs/interface/k8s"
 	"github.com/lastbackend/lastbackend/pkg/service/resource/common"
 	"github.com/lastbackend/lastbackend/pkg/service/resource/container"
 	"k8s.io/client-go/pkg/api"
+	"k8s.io/client-go/pkg/api/v1"
 )
 
 const kind = "pod"
@@ -24,6 +26,11 @@ type Pod struct {
 	PodStatus     PodStatus                `json:"status"`
 	RestartCount  int32                    `json:"restart_count"`
 	ContainerList *container.ContainerList `json:"containers"`
+}
+
+func (p *Pod) Remove(client k8s.IK8S) error {
+	var opts = new(v1.DeleteOptions)
+	return client.Core().Pods(p.ObjectMeta.Namespace).Delete(p.ObjectMeta.Name, opts)
 }
 
 func CreatePodList(pods []api.Pod) *PodList {

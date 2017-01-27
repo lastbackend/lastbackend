@@ -191,6 +191,22 @@ func Deploy(client k8s.IK8S, namespace string, config *v1beta1.Deployment) (*Ser
 	return service, nil
 }
 
+func UpdateImage(client k8s.IK8S, namespace, name string) error {
+
+	dp, err := deployment.Get(client, namespace, name)
+	if err != nil {
+		return err
+	}
+
+	for index := range dp.PodList.Pods {
+		if err := dp.PodList.Pods[index].Remove(client); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
 func convert_deployment_to_service(dp *deployment.Deployment) *Service {
 
 	var s = new(Service)

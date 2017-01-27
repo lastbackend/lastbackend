@@ -15,14 +15,13 @@ type ServiceStorage struct {
 	storage.IService
 }
 
-func (s *ServiceStorage) CheckExistsByName(user, project, name string) (bool, error) {
+func (s *ServiceStorage) CheckExistsByName(user, name string) (bool, error) {
 
 	var (
 		err            error
 		service_filter = map[string]string{
-			"name":    name,
-			"user":    user,
-			"project": project,
+			"name": name,
+			"user": user,
 		}
 	)
 
@@ -39,7 +38,7 @@ func (s *ServiceStorage) CheckExistsByName(user, project, name string) (bool, er
 	return !res.IsNil(), nil
 }
 
-func (s *ServiceStorage) GetByNameOrID(user, project, nameOrID string) (*model.Service, error) {
+func (s *ServiceStorage) GetByNameOrID(user, nameOrID string) (*model.Service, error) {
 
 	var (
 		err     error
@@ -49,10 +48,7 @@ func (s *ServiceStorage) GetByNameOrID(user, project, nameOrID string) (*model.S
 	res, err := r.Table(ServiceTable).Filter(func(talk r.Term) r.Term {
 		return r.And(
 			talk.Field("user").Eq(user),
-			r.Or(
-				r.And(talk.Field("project").Eq(project), talk.Field("id").Eq(nameOrID)),
-				r.And(talk.Field("project").Eq(project), talk.Field("name").Eq(nameOrID)),
-			),
+			r.Or(talk.Field("id").Eq(nameOrID), talk.Field("name").Eq(nameOrID)),
 		)
 	}).Run(s.Session)
 
@@ -70,15 +66,14 @@ func (s *ServiceStorage) GetByNameOrID(user, project, nameOrID string) (*model.S
 	return service, nil
 }
 
-func (s *ServiceStorage) GetByName(user, project, name string) (*model.Service, error) {
+func (s *ServiceStorage) GetByName(user, name string) (*model.Service, error) {
 
 	var (
 		err            error
 		service        = new(model.Service)
 		project_filter = map[string]interface{}{
-			"name":    name,
-			"project": project,
-			"user":    user,
+			"name": name,
+			"user": user,
 		}
 	)
 
@@ -97,15 +92,14 @@ func (s *ServiceStorage) GetByName(user, project, name string) (*model.Service, 
 	return service, nil
 }
 
-func (s *ServiceStorage) GetByID(user, project, id string) (*model.Service, error) {
+func (s *ServiceStorage) GetByID(user, id string) (*model.Service, error) {
 
 	var (
 		err            error
 		service        = new(model.Service)
 		project_filter = map[string]interface{}{
-			"id":      id,
-			"project": project,
-			"user":    user,
+			"id":   id,
+			"user": user,
 		}
 	)
 
@@ -192,15 +186,14 @@ func (s *ServiceStorage) Update(service *model.Service) (*model.Service, error) 
 }
 
 // Remove service model
-func (s *ServiceStorage) Remove(user, project, id string) error {
+func (s *ServiceStorage) Remove(user, id string) error {
 
 	var (
 		err            error
 		opts           = r.DeleteOpts{ReturnChanges: true}
 		project_filter = map[string]interface{}{
-			"user":    user,
-			"project": project,
-			"id":      id,
+			"user": user,
+			"id":   id,
 		}
 	)
 

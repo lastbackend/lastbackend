@@ -5,6 +5,7 @@ import (
 	e "github.com/lastbackend/lastbackend/libs/errors"
 	"github.com/lastbackend/lastbackend/libs/model"
 	c "github.com/lastbackend/lastbackend/pkg/daemon/context"
+	"github.com/lastbackend/lastbackend/pkg/service"
 	"net/http"
 )
 
@@ -28,7 +29,27 @@ func HookExecuteH(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if hookModel.Service != "" {
-		// TODO: Run redeploy
+		serviceModel, err := ctx.Storage.Service().GetByID(hookModel.User, hookModel.Service)
+		if err != nil && serviceModel == nil {
+			ctx.Log.Error("Error: get service by id", err.Error())
+			e.HTTP.BadRequest(w)
+			return
+		}
+
+		projectModel, err := ctx.Storage.Project().GetByID(serviceModel.User, serviceModel.Project)
+		if err != nil && serviceModel == nil {
+			ctx.Log.Error("Error: get project by id", err.Error())
+			e.HTTP.BadRequest(w)
+			return
+		}
+
+		err = service.UpdateImage(ctx.K8S, projectModel.ID, "lb-"+serviceModel.Name)
+		if err != nil && serviceModel == nil {
+			ctx.Log.Error("Error: update image for service", err.Error())
+			e.HTTP.BadRequest(w)
+			return
+		}
+
 	} else if hookModel.Image != "" {
 		// TODO: Run rebuild
 	} else {

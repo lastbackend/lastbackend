@@ -50,15 +50,15 @@ type IProject interface {
 }
 
 type IService interface {
-	CheckExistsByName(string, string, string) (bool, error)
-	GetByNameOrID(string, string, string) (*model.Service, error)
-	GetByName(string, string, string) (*model.Service, error)
-	GetByID(string, string, string) (*model.Service, error)
+	CheckExistsByName(string, string) (bool, error)
+	GetByNameOrID(string, string) (*model.Service, error)
+	GetByName(string, string) (*model.Service, error)
+	GetByID(string, string) (*model.Service, error)
 	ListByUser(string, string) (*model.ServiceList, error)
 	ListByProject(string, string) (*model.ServiceList, error)
 	Insert(*model.Service) (*model.Service, error)
 	Update(*model.Service) (*model.Service, error)
-	Remove(string, string, string) error
+	Remove(string, string) error
 	RemoveByProject(string, string) error
 }
 

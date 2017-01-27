@@ -33,7 +33,7 @@ func (s *HookStorage) GetByToken(token string) (*model.Hook, error) {
 		return nil, nil
 	}
 
-	err = res.All(hook)
+	err = res.One(hook)
 	if err != nil {
 		return nil, err
 	}

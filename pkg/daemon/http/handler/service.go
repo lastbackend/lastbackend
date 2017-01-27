@@ -130,8 +130,8 @@ func ServiceInfoH(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	serviceModel, err = ctx.Storage.Service().GetByNameOrID(session.Uid, projectModel.ID, serviceParam)
-	if err == nil && serviceModel == nil {
+	serviceModel, err = ctx.Storage.Service().GetByNameOrID(session.Uid, serviceParam)
+	if err == nil && (serviceModel == nil || serviceModel.Project != projectModel.ID) {
 		e.New("service").NotFound().Http(w)
 		return
 	}
@@ -233,8 +233,8 @@ func ServiceUpdateH(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	serviceModel, err = ctx.Storage.Service().GetByNameOrID(session.Uid, projectModel.ID, serviceParam)
-	if err == nil && serviceModel == nil {
+	serviceModel, err = ctx.Storage.Service().GetByNameOrID(session.Uid, serviceParam)
+	if err == nil && (serviceModel == nil || serviceModel.Project != projectModel.ID) {
 		e.New("service").NotFound().Http(w)
 		return
 	}
@@ -312,8 +312,8 @@ func ServiceRemoveH(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if !validator.IsUUID(serviceParam) {
-		serviceModel, err := ctx.Storage.Service().GetByName(session.Uid, projectModel.ID, serviceParam)
-		if err == nil && serviceModel == nil {
+		serviceModel, err := ctx.Storage.Service().GetByName(session.Uid, serviceParam)
+		if err == nil && (serviceModel == nil || serviceModel.Project != projectModel.ID) {
 			e.New("service").NotFound().Http(w)
 			return
 		}
@@ -333,7 +333,19 @@ func ServiceRemoveH(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = ctx.Storage.Service().Remove(session.Uid, projectParam, serviceParam)
+	serviceModel, err := ctx.Storage.Service().GetByID(session.Uid, serviceParam)
+	if err != nil {
+		ctx.Log.Error("Error: remove service from db", err)
+		e.HTTP.InternalServerError(w)
+		return
+	}
+
+	if serviceModel.Project != projectParam {
+		e.HTTP.BadRequest(w)
+		return
+	}
+
+	err = ctx.Storage.Service().Remove(session.Uid, serviceParam)
 	if err != nil {
 		ctx.Log.Error("Error: remove service from db", err)
 		e.HTTP.InternalServerError(w)
@@ -449,8 +461,8 @@ func ServiceLogsH(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	serviceModel, err = ctx.Storage.Service().GetByNameOrID(session.Uid, projectModel.ID, serviceParam)
-	if err == nil && serviceModel == nil {
+	serviceModel, err = ctx.Storage.Service().GetByNameOrID(session.Uid, serviceParam)
+	if err == nil && (serviceModel == nil || serviceModel.Project != projectModel.ID) {
 		e.New("service").NotFound().Http(w)
 		return
 	}
@@ -507,8 +519,8 @@ func ServiceHookCreateH(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	serviceModel, err = ctx.Storage.Service().GetByNameOrID(session.Uid, projectModel.ID, serviceParam)
-	if err == nil && serviceModel == nil {
+	serviceModel, err = ctx.Storage.Service().GetByNameOrID(session.Uid, serviceParam)
+	if err == nil && (serviceModel == nil || serviceModel.Project != projectModel.ID) {
 		e.New("service").NotFound().Http(w)
 		return
 	}
@@ -582,8 +594,8 @@ func ServiceHookListH(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	serviceModel, err = ctx.Storage.Service().GetByNameOrID(session.Uid, projectModel.ID, serviceParam)
-	if err == nil && serviceModel == nil {
+	serviceModel, err = ctx.Storage.Service().GetByNameOrID(session.Uid, serviceParam)
+	if err == nil && (serviceModel == nil || serviceModel.Project != projectModel.ID) {
 		e.New("service").NotFound().Http(w)
 		return
 	}
@@ -651,8 +663,8 @@ func ServiceHookRemoveH(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	serviceModel, err = ctx.Storage.Service().GetByNameOrID(session.Uid, projectModel.ID, serviceParam)
-	if err == nil && serviceModel == nil {
+	serviceModel, err = ctx.Storage.Service().GetByNameOrID(session.Uid, serviceParam)
+	if err == nil && (serviceModel == nil || serviceModel.Project != projectModel.ID) {
 		e.New("service").NotFound().Http(w)
 		return
 	}
