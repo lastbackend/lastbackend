@@ -2,12 +2,10 @@ package volume
 
 import (
 	"fmt"
-	e "github.com/lastbackend/lastbackend/libs/errors"
 	"github.com/lastbackend/lastbackend/libs/model"
 	"github.com/lastbackend/lastbackend/pkg/daemon/context"
 	"github.com/lastbackend/lastbackend/pkg/util/generator"
-	"k8s.io/client-go/1.5/pkg/api"
-	"k8s.io/client-go/1.5/pkg/api/v1"
+	"k8s.io/client-go/pkg/api/v1"
 )
 
 type Volume struct {
@@ -16,37 +14,37 @@ type Volume struct {
 
 type VolumeList []Volume
 
-func Get(name string) (*v1.PersistentVolume, *e.Err) {
+func Get(name string) (*v1.PersistentVolume, error) {
 
 	var (
-		er  error
+		err error
 		ctx = context.Get()
 	)
 
-	volume, er := ctx.K8S.Core().PersistentVolumes().Get(name)
-	if er != nil {
-		return nil, e.New("volume").Unknown(er)
+	volume, err := ctx.K8S.Core().PersistentVolumes().Get(name)
+	if err != nil {
+		return nil, err
 	}
 
 	return volume, nil
 }
 
-func List() (*v1.PersistentVolumeList, *e.Err) {
+func List() (*v1.PersistentVolumeList, error) {
 
 	var (
-		er  error
+		err error
 		ctx = context.Get()
 	)
 
-	pv, er := ctx.K8S.Core().PersistentVolumes().List(api.ListOptions{})
-	if er != nil {
-		return nil, e.New("volume").Unknown(er)
+	pv, err := ctx.K8S.Core().PersistentVolumes().List(v1.ListOptions{})
+	if err != nil {
+		return nil, err
 	}
 
 	return pv, nil
 }
 
-func Create(user, project string, config *v1.PersistentVolume) (*Volume, *e.Err) {
+func Create(user, project string, config *v1.PersistentVolume) (*Volume, error) {
 
 	var (
 		ctx    = context.Get()
@@ -69,16 +67,16 @@ func Create(user, project string, config *v1.PersistentVolume) (*Volume, *e.Err)
 	return pv, nil
 }
 
-func (v *Volume) Deploy() *e.Err {
+func (v *Volume) Deploy() error {
 
 	var (
-		er  error
+		err error
 		ctx = context.Get()
 	)
 
-	_, er = ctx.K8S.Core().PersistentVolumes().Create(v.config)
-	if er != nil {
-		return e.New("volume").Unknown(er)
+	_, err = ctx.K8S.Core().PersistentVolumes().Create(v.config)
+	if err != nil {
+		return err
 	}
 
 	return nil

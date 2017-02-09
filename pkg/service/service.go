@@ -1,14 +1,13 @@
 package service
 
 import (
-	e "github.com/lastbackend/lastbackend/libs/errors"
 	"github.com/lastbackend/lastbackend/libs/interface/k8s"
 	"github.com/lastbackend/lastbackend/pkg/service/resource/deployment"
 	"github.com/unloop/gopipe"
 	"io"
-	"k8s.io/client-go/1.5/pkg/api/unversioned"
-	"k8s.io/client-go/1.5/pkg/api/v1"
-	"k8s.io/client-go/1.5/pkg/apis/extensions/v1beta1"
+	"k8s.io/client-go/pkg/api/unversioned"
+	"k8s.io/client-go/pkg/api/v1"
+	"k8s.io/client-go/pkg/apis/extensions/v1beta1"
 	"time"
 )
 
@@ -59,13 +58,13 @@ type Volume struct {
 	Readonly bool   `json:"readonly"`
 }
 
-func Get(client k8s.IK8S, namespace, name string) (*Service, *e.Err) {
+func Get(client k8s.IK8S, namespace, name string) (*Service, error) {
 
-	var er error
+	var err error
 
-	dp, er := deployment.Get(client, namespace, name)
-	if er != nil {
-		return nil, e.New("service").Unknown(er)
+	dp, err := deployment.Get(client, namespace, name)
+	if err != nil {
+		return nil, err
 	}
 
 	service := convert_deployment_to_service(dp)
@@ -73,16 +72,16 @@ func Get(client k8s.IK8S, namespace, name string) (*Service, *e.Err) {
 	return service, nil
 }
 
-func List(client k8s.IK8S, namespace string) (map[string]*Service, *e.Err) {
+func List(client k8s.IK8S, namespace string) (map[string]*Service, error) {
 
 	var (
-		er          error
+		err         error
 		serviceList = make(map[string]*Service)
 	)
 
-	deploymentList, er := deployment.List(client, namespace)
-	if er != nil {
-		return nil, e.New("service").Unknown(er)
+	deploymentList, err := deployment.List(client, namespace)
+	if err != nil {
+		return nil, err
 	}
 
 	for _, dp := range deploymentList {
@@ -93,20 +92,20 @@ func List(client k8s.IK8S, namespace string) (map[string]*Service, *e.Err) {
 	return serviceList, nil
 }
 
-func Update(client k8s.IK8S, namespace, name string, config *ServiceConfig) *e.Err {
+func Update(client k8s.IK8S, namespace, name string, config *ServiceConfig) error {
 
-	var er error
+	var err error
 
-	dp, er := client.Extensions().Deployments(namespace).Get(name)
-	if er != nil {
-		return e.New("service").Unknown(er)
+	dp, err := client.Extensions().Deployments(namespace).Get(name)
+	if err != nil {
+		return err
 	}
 
 	config.update(dp)
 
-	er = deployment.Update(client, namespace, dp)
-	if er != nil {
-		return e.New("service").Unknown(er)
+	err = deployment.Update(client, namespace, dp)
+	if err != nil {
+		return err
 	}
 
 	return nil
@@ -125,10 +124,10 @@ type ServiceLogsOption struct {
 	LimitBytes   *int64
 }
 
-func Logs(client k8s.IK8S, namespace string, opts *ServiceLogsOption, close chan bool) *e.Err {
+func Logs(client k8s.IK8S, namespace string, opts *ServiceLogsOption, close chan bool) error {
 
 	var (
-		er     error
+		err    error
 		s      = stream.New(opts.Stream)
 		option = v1.PodLogOptions{
 			Container:  opts.Container,
@@ -160,7 +159,7 @@ func Logs(client k8s.IK8S, namespace string, opts *ServiceLogsOption, close chan
 
 	readCloser, err := req.Stream()
 	if err != nil {
-		return e.New("service").Unknown(er)
+		return err
 	}
 	defer readCloser.Close()
 
@@ -173,18 +172,18 @@ func Logs(client k8s.IK8S, namespace string, opts *ServiceLogsOption, close chan
 	return nil
 }
 
-func Deploy(client k8s.IK8S, namespace string, config *v1beta1.Deployment) (*Service, *e.Err) {
+func Deploy(client k8s.IK8S, namespace string, config *v1beta1.Deployment) (*Service, error) {
 
-	var er error
+	var err error
 
-	_, er = client.Extensions().Deployments(namespace).Create(config)
-	if er != nil {
-		return nil, e.New("service").Unknown(er)
+	_, err = client.Extensions().Deployments(namespace).Create(config)
+	if err != nil {
+		return nil, err
 	}
 
-	dp, er := deployment.Get(client, namespace, config.Name)
-	if er != nil {
-		return nil, e.New("service").Unknown(er)
+	dp, err := deployment.Get(client, namespace, config.Name)
+	if err != nil {
+		return nil, err
 	}
 
 	service := convert_deployment_to_service(dp)

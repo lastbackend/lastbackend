@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"strings"
 )
 
 var HTTP Http
@@ -20,7 +19,7 @@ func (Http) Unauthorized(w http.ResponseWriter) {
 }
 
 func (Http) InvalidJSON(w http.ResponseWriter) {
-	Http{Code: http.StatusBadRequest, Status: StatusIncorrectJson, Message: "Invalid josn"}.send(w)
+	Http{Code: http.StatusBadRequest, Status: StatusIncorrectJson, Message: "Invalid json"}.send(w)
 }
 
 func (Http) BadRequest(w http.ResponseWriter) {
@@ -53,24 +52,24 @@ func (h Http) send(w http.ResponseWriter) {
 func (Http) getNotFound(name string) *Http {
 	return &Http{
 		Code:    http.StatusNotFound,
-		Status:  fmt.Sprintf("%s_NOT_FOUND", strings.ToUpper(name)),
-		Message: fmt.Sprintf("%s not found", strings.ToLower(name)),
+		Status:  http.StatusText(http.StatusNotFound),
+		Message: fmt.Sprintf("%s not found", toUpperFirstChar(name)),
 	}
 }
 
 func (Http) getBadParameter(name string) *Http {
 	return &Http{
 		Code:    http.StatusNotAcceptable,
-		Status:  fmt.Sprintf("BAD_PARAMETER_%s", strings.ToUpper(name)),
-		Message: fmt.Sprintf("bad %s parameter", strings.ToLower(name)),
+		Status:  StatusBadParameter,
+		Message: fmt.Sprintf("Bad %s parameter", name),
 	}
 }
 
 func (Http) getNotUnique(name string) *Http {
 	return &Http{
 		Code:    http.StatusBadRequest,
-		Status:  fmt.Sprintf("%s_NOT_UNIQUE", strings.ToUpper(name)),
-		Message: fmt.Sprintf("%s is already in use", strings.ToLower(name)),
+		Status:  StatusNotUnique,
+		Message: fmt.Sprintf("%s is already in use", toUpperFirstChar(name)),
 	}
 }
 
@@ -78,7 +77,7 @@ func (Http) getIncorrectJSON() *Http {
 	return &Http{
 		Code:    http.StatusBadRequest,
 		Status:  StatusIncorrectJson,
-		Message: "incorrect json",
+		Message: "Incorrect json",
 	}
 }
 
@@ -94,6 +93,6 @@ func (Http) getUnknown() *Http {
 	return &Http{
 		Code:    http.StatusInternalServerError,
 		Status:  http.StatusText(http.StatusInternalServerError),
-		Message: "internal server error",
+		Message: "Internal server error",
 	}
 }

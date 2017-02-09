@@ -2,10 +2,9 @@ package model
 
 import (
 	"encoding/json"
-	e "github.com/lastbackend/lastbackend/libs/errors"
 	"github.com/lastbackend/lastbackend/pkg/util/table"
-	"k8s.io/client-go/1.5/pkg/api/v1"
-	"k8s.io/client-go/1.5/pkg/apis/extensions/v1beta1"
+	"k8s.io/client-go/pkg/api/v1"
+	"k8s.io/client-go/pkg/apis/extensions/v1beta1"
 	"strings"
 )
 
@@ -25,16 +24,16 @@ type Template struct {
 	Ingresses              []v1beta1.Ingress          `json:"ingresses,omitempty"`
 }
 
-func (t *Template) ToJson() ([]byte, *e.Err) {
+func (t *Template) ToJson() ([]byte, error) {
 	buf, err := json.Marshal(t)
 	if err != nil {
-		return nil, e.New("template").Unknown(err)
+		return nil, err
 	}
 
 	return buf, nil
 }
 
-func (t *TemplateList) ToJson() ([]byte, *e.Err) {
+func (t *TemplateList) ToJson() ([]byte, error) {
 
 	if t == nil {
 		return []byte("[]"), nil
@@ -42,7 +41,7 @@ func (t *TemplateList) ToJson() ([]byte, *e.Err) {
 
 	buf, err := json.Marshal(t)
 	if err != nil {
-		return nil, e.New("template").Unknown(err)
+		return nil, err
 	}
 
 	return buf, nil

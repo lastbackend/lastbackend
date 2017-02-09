@@ -71,8 +71,7 @@ func (s *userCreate) decodeAndValidate(reader io.Reader) *e.Err {
 
 func UserCreateH(w http.ResponseWriter, r *http.Request) {
 
-	var er error
-	var err *e.Err
+	var err error
 	var ctx = c.Get()
 
 	ctx.Log.Debug("Create user handler")
@@ -109,28 +108,30 @@ func UserCreateH(w http.ResponseWriter, r *http.Request) {
 
 	user, err := ctx.Storage.User().GetByUsername(u.Username)
 	if err == nil && user != nil {
-		err = e.New("user").NotUnique("username")
+		e.New("user").NotUnique("username").Http(w)
+		return
 	}
 	if err != nil {
-		ctx.Log.Error("Error: find user by username", err.Err())
-		err.Http(w)
+		ctx.Log.Error("Error: find user by username", err.Error())
+		e.HTTP.InternalServerError(w)
 		return
 	}
 
 	user, err = ctx.Storage.User().GetByEmail(u.Email)
 	if err == nil && user != nil {
-		err = e.New("user").NotUnique("email")
+		e.New("user").NotUnique("email").Http(w)
+		return
 	}
 	if err != nil {
-		ctx.Log.Error("Error: find user by email", err.Err())
-		err.Http(w)
+		ctx.Log.Error("Error: find user by email", err.Error())
+		e.HTTP.InternalServerError(w)
 		return
 	}
 
 	user, err = ctx.Storage.User().Insert(u)
 	if err != nil {
-		ctx.Log.Error("Error: insert user to db", err.Err())
-		err.Http(w)
+		ctx.Log.Error("Error: insert user to db", err.Error())
+		e.HTTP.InternalServerError(w)
 		return
 	}
 
@@ -138,33 +139,34 @@ func UserCreateH(w http.ResponseWriter, r *http.Request) {
 		Token string `json:"token"`
 	}{}
 
-	sw.Token, er = model.NewSession(user.ID, ``, user.Username, user.Email).Encode()
-	if er != nil {
-		ctx.Log.Error("Error: create session token", er)
+	sw.Token, err = model.NewSession(user.ID, ``, user.Username, user.Email).Encode()
+	if err != nil {
+		ctx.Log.Error("Error: create session token", err)
 		e.HTTP.InternalServerError(w)
 		return
 	}
 
-	response, er := json.Marshal(sw)
-	if er != nil {
-		ctx.Log.Error("Error: convert struct to json", er)
+	response, err := json.Marshal(sw)
+	if err != nil {
+		ctx.Log.Error("Error: convert struct to json", err)
 		e.HTTP.InternalServerError(w)
 		return
 	}
 
 	w.WriteHeader(http.StatusOK)
-	_, er = w.Write(response)
-	if er != nil {
-		ctx.Log.Error("Error: write response", er.Error())
+	_, err = w.Write(response)
+	if err != nil {
+		ctx.Log.Error("Error: write response", err.Error())
 		return
 	}
 }
 
 func UserGetH(w http.ResponseWriter, r *http.Request) {
 
-	var er error
-	var err *e.Err
-	var ctx = c.Get()
+	var (
+		err error
+		ctx = c.Get()
+	)
 
 	ctx.Log.Debug("Get user handler")
 
@@ -179,26 +181,27 @@ func UserGetH(w http.ResponseWriter, r *http.Request) {
 
 	user, err := ctx.Storage.User().GetByID(session.Uid)
 	if err == nil && user == nil {
-		err = e.New("user").NotFound()
+		e.New("user").NotFound().Http(w)
+		return
 	}
 	if err != nil {
-		ctx.Log.Error("Error: find user by id", err.Err())
-		err.Http(w)
+		ctx.Log.Error("Error: find user by id", err.Error())
+		e.HTTP.InternalServerError(w)
 		return
 	}
 
 	response, err := user.ToJson()
 	if err != nil {
-		ctx.Log.Error("Error: convert struct to json", err.Err())
-		err.Http(w)
+		ctx.Log.Error("Error: convert struct to json", err.Error())
+		e.HTTP.InternalServerError(w)
 		return
 	}
 
 	w.WriteHeader(http.StatusOK)
 
-	_, er = w.Write(response)
-	if er != nil {
-		ctx.Log.Error("Error: write response", er.Error())
+	_, err = w.Write(response)
+	if err != nil {
+		ctx.Log.Error("Error: write response", err.Error())
 		return
 	}
 }

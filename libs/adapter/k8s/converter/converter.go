@@ -2,14 +2,14 @@ package converter
 
 import (
 	"errors"
-	"k8s.io/client-go/1.5/pkg/api"
-	"k8s.io/client-go/1.5/pkg/api/resource"
-	"k8s.io/client-go/1.5/pkg/api/unversioned"
-	"k8s.io/client-go/1.5/pkg/api/v1"
-	"k8s.io/client-go/1.5/pkg/apis/extensions"
-	"k8s.io/client-go/1.5/pkg/apis/extensions/v1beta1"
-	"k8s.io/client-go/1.5/pkg/types"
-	"k8s.io/client-go/1.5/pkg/util/intstr"
+	"k8s.io/client-go/pkg/api"
+	"k8s.io/client-go/pkg/api/resource"
+	"k8s.io/client-go/pkg/api/unversioned"
+	"k8s.io/client-go/pkg/api/v1"
+	"k8s.io/client-go/pkg/apis/extensions"
+	"k8s.io/client-go/pkg/apis/extensions/v1beta1"
+	"k8s.io/client-go/pkg/types"
+	"k8s.io/client-go/pkg/util/intstr"
 	"github.com/lastbackend/lastbackend/libs/adapter/k8s/common"
 )
 
@@ -945,7 +945,7 @@ func Convert_RollingUpdateDeployment_v1beta1_to_extensions(in *v1beta1.RollingUp
 	return nil
 }
 
-func Convert_LabelSelector_v1beta1_to_unversioned(in *v1beta1.LabelSelector, out *unversioned.LabelSelector) error {
+func Convert_LabelSelector_v1beta1_to_unversioned(in *unversioned.LabelSelector, out *unversioned.LabelSelector) error {
 
 	if in == nil {
 		return error_incoming_data
@@ -972,7 +972,7 @@ func Convert_LabelSelector_v1beta1_to_unversioned(in *v1beta1.LabelSelector, out
 	return nil
 }
 
-func Convert_LabelSelectorRequirement_v1beta1_to_unversioned(in *v1beta1.LabelSelectorRequirement, out *unversioned.LabelSelectorRequirement) error {
+func Convert_LabelSelectorRequirement_v1beta1_to_unversioned(in *unversioned.LabelSelectorRequirement, out *unversioned.LabelSelectorRequirement) error {
 
 	if in == nil {
 		return error_incoming_data

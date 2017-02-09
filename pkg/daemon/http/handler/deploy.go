@@ -97,8 +97,7 @@ func (d *deployS) decodeAndValidate(reader io.Reader) *e.Err {
 func DeployH(w http.ResponseWriter, r *http.Request) {
 
 	var (
-		er      error
-		err     *e.Err
+		err     error
 		ctx     = c.Get()
 		session *model.Session
 		tpl     *template.Template
@@ -120,7 +119,7 @@ func DeployH(w http.ResponseWriter, r *http.Request) {
 	rq := new(deployS)
 	if err := rq.decodeAndValidate(r.Body); err != nil {
 		ctx.Log.Error("Error: validation incomming data", err.Err())
-		err.Http(w)
+		e.HTTP.InternalServerError(w)
 		return
 	}
 
@@ -133,8 +132,8 @@ func DeployH(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		if err != nil {
-			ctx.Log.Error("Error: deploy from template", err.Err())
-			err.Http(w)
+			ctx.Log.Error("Error: deploy from template", err.Error())
+			e.HTTP.InternalServerError(w)
 			return
 		}
 	}
@@ -197,15 +196,15 @@ func DeployH(w http.ResponseWriter, r *http.Request) {
 	// Deploy from service template config
 	err = tpl.Provision(*rq.Project, session.Uid, *rq.Project, cfg)
 	if err != nil {
-		ctx.Log.Error("Error: template provision failed", err.Err())
-		err.Http(w)
+		ctx.Log.Error("Error: template provision failed", err.Error())
+		e.HTTP.InternalServerError(w)
 		return
 	}
 
 	w.WriteHeader(http.StatusOK)
-	_, er = w.Write([]byte{})
-	if er != nil {
-		ctx.Log.Error("Error: write response", er.Error())
+	_, err = w.Write([]byte{})
+	if err != nil {
+		ctx.Log.Error("Error: write response", err.Error())
 		return
 	}
 }

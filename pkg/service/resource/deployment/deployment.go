@@ -5,10 +5,10 @@ import (
 	"github.com/lastbackend/lastbackend/libs/interface/k8s"
 	"github.com/lastbackend/lastbackend/pkg/service/resource/common"
 	"github.com/lastbackend/lastbackend/pkg/service/resource/pod"
-	"k8s.io/client-go/1.5/pkg/api"
-	"k8s.io/client-go/1.5/pkg/api/unversioned"
-	"k8s.io/client-go/1.5/pkg/apis/extensions"
-	"k8s.io/client-go/1.5/pkg/apis/extensions/v1beta1"
+	"k8s.io/client-go/pkg/api/unversioned"
+	"k8s.io/client-go/pkg/api/v1"
+	"k8s.io/client-go/pkg/apis/extensions"
+	"k8s.io/client-go/pkg/apis/extensions/v1beta1"
 )
 
 const kind = "deployment"
@@ -40,7 +40,7 @@ func Get(client k8s.IK8S, namespace string, name string) (*Deployment, error) {
 		return nil, err
 	}
 
-	options := api.ListOptions{LabelSelector: selector}
+	options := v1.ListOptions{LabelSelector: selector.String()}
 
 	podChannel := common.GetPodListChannelWithOptions(client, common.NewSameNamespaceQuery(namespace), options, 1)
 
@@ -64,7 +64,7 @@ func Get(client k8s.IK8S, namespace string, name string) (*Deployment, error) {
 
 func List(client k8s.IK8S, namespace string) ([]Deployment, error) {
 
-	deploymentList, err := client.Extensions().Deployments(namespace).List(api.ListOptions{})
+	deploymentList, err := client.Extensions().Deployments(namespace).List(v1.ListOptions{})
 	if err != nil {
 		return nil, err
 	}
@@ -85,7 +85,7 @@ func List(client k8s.IK8S, namespace string) ([]Deployment, error) {
 			return nil, err
 		}
 
-		options := api.ListOptions{LabelSelector: selector}
+		options := v1.ListOptions{LabelSelector: selector.String()}
 
 		podChannel := common.GetPodListChannelWithOptions(client, common.NewSameNamespaceQuery(namespace), options, 1)
 

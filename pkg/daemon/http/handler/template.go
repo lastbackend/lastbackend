@@ -63,7 +63,7 @@ func TemplateListH(w http.ResponseWriter, _ *http.Request) {
 
 	templates, err := template.List()
 	if err != nil {
-		ctx.Log.Error(err.Err())
+		ctx.Log.Error(err.Error())
 		response_empty()
 		return
 	}
@@ -75,7 +75,7 @@ func TemplateListH(w http.ResponseWriter, _ *http.Request) {
 
 	response, err := templates.ToJson()
 	if er != nil {
-		ctx.Log.Error(err.Err())
+		ctx.Log.Error(err.Error())
 		response_empty()
 		return
 	}

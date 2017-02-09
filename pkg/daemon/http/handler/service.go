@@ -18,8 +18,7 @@ import (
 func ServiceListH(w http.ResponseWriter, r *http.Request) {
 
 	var (
-		er           error
-		err          *e.Err
+		err          error
 		session      *model.Session
 		projectModel *model.Project
 		ctx          = c.Get()
@@ -44,8 +43,8 @@ func ServiceListH(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if err != nil {
-		ctx.Log.Error("Error: find project by id", err.Err())
-		err.Http(w)
+		ctx.Log.Error("Error: find project by id", err.Error())
+		e.HTTP.InternalServerError(w)
 		return
 	}
 
@@ -58,8 +57,8 @@ func ServiceListH(w http.ResponseWriter, r *http.Request) {
 
 	servicesSpec, err := service.List(ctx.K8S, projectModel.ID)
 	if err != nil {
-		ctx.Log.Error("Error: get serivce spec from cluster", err.Err())
-		err.Http(w)
+		ctx.Log.Error("Error: get serivce spec from cluster", err.Error())
+		e.HTTP.InternalServerError(w)
 		return
 	}
 
@@ -74,24 +73,24 @@ func ServiceListH(w http.ResponseWriter, r *http.Request) {
 
 		response, err = list.ToJson()
 		if err != nil {
-			ctx.Log.Error("Error: convert struct to json", err.Err())
-			err.Http(w)
+			ctx.Log.Error("Error: convert struct to json", err.Error())
+			e.HTTP.InternalServerError(w)
 			return
 		}
 
 	} else {
 		response, err = serviceModel.ToJson()
 		if err != nil {
-			ctx.Log.Error("Error: convert struct to json", err.Err())
-			err.Http(w)
+			ctx.Log.Error("Error: convert struct to json", err.Error())
+			e.HTTP.InternalServerError(w)
 			return
 		}
 	}
 
 	w.WriteHeader(http.StatusOK)
-	_, er = w.Write(response)
-	if er != nil {
-		ctx.Log.Error("Error: write response", er.Error())
+	_, err = w.Write(response)
+	if err != nil {
+		ctx.Log.Error("Error: write response", err.Error())
 		return
 	}
 }
@@ -99,8 +98,7 @@ func ServiceListH(w http.ResponseWriter, r *http.Request) {
 func ServiceInfoH(w http.ResponseWriter, r *http.Request) {
 
 	var (
-		er           error
-		err          *e.Err
+		err          error
 		session      *model.Session
 		projectModel *model.Project
 		serviceModel *model.Service
@@ -127,8 +125,8 @@ func ServiceInfoH(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if err != nil {
-		ctx.Log.Error("Error: find project by id", err.Err())
-		err.Http(w)
+		ctx.Log.Error("Error: find project by id", err.Error())
+		e.HTTP.InternalServerError(w)
 		return
 	}
 
@@ -138,15 +136,15 @@ func ServiceInfoH(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if err != nil {
-		ctx.Log.Error("Error: find service by id", err.Err())
-		err.Http(w)
+		ctx.Log.Error("Error: find service by id", err.Error())
+		e.HTTP.InternalServerError(w)
 		return
 	}
 
 	serviceSpec, err := service.Get(ctx.K8S, serviceModel.Project, "lb-"+serviceModel.ID)
 	if err != nil {
-		ctx.Log.Error("Error: get serivce spec from cluster", err.Err())
-		err.Http(w)
+		ctx.Log.Error("Error: get serivce spec from cluster", err.Error())
+		e.HTTP.InternalServerError(w)
 		return
 	}
 
@@ -154,15 +152,15 @@ func ServiceInfoH(w http.ResponseWriter, r *http.Request) {
 
 	response, err := serviceModel.ToJson()
 	if err != nil {
-		ctx.Log.Error("Error: convert struct to json", err.Err())
-		err.Http(w)
+		ctx.Log.Error("Error: convert struct to json", err.Error())
+		e.HTTP.InternalServerError(w)
 		return
 	}
 
 	w.WriteHeader(http.StatusOK)
-	_, er = w.Write(response)
-	if er != nil {
-		ctx.Log.Error("Error: write response", er.Error())
+	_, err = w.Write(response)
+	if err != nil {
+		ctx.Log.Error("Error: write response", err.Error())
 		return
 	}
 }
@@ -195,8 +193,7 @@ func (s *serviceReplaceS) decodeAndValidate(reader io.Reader) *e.Err {
 func ServiceUpdateH(w http.ResponseWriter, r *http.Request) {
 
 	var (
-		er           error
-		err          *e.Err
+		err          error
 		session      *model.Session
 		projectModel *model.Project
 		serviceModel *model.Service
@@ -221,7 +218,7 @@ func ServiceUpdateH(w http.ResponseWriter, r *http.Request) {
 	rq := new(serviceReplaceS)
 	if err := rq.decodeAndValidate(r.Body); err != nil {
 		ctx.Log.Error("Error: validation incomming data", err)
-		err.Http(w)
+		e.HTTP.InternalServerError(w)
 		return
 	}
 
@@ -231,8 +228,8 @@ func ServiceUpdateH(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if err != nil {
-		ctx.Log.Error("Error: find project by id", err.Err())
-		err.Http(w)
+		ctx.Log.Error("Error: find project by id", err.Error())
+		e.HTTP.InternalServerError(w)
 		return
 	}
 
@@ -242,8 +239,8 @@ func ServiceUpdateH(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if err != nil {
-		ctx.Log.Error("Error: find service by name or id", err.Err())
-		err.Http(w)
+		ctx.Log.Error("Error: find service by name or id", err.Error())
+		e.HTTP.InternalServerError(w)
 		return
 	}
 
@@ -251,7 +248,7 @@ func ServiceUpdateH(w http.ResponseWriter, r *http.Request) {
 
 	serviceModel, err = ctx.Storage.Service().Update(serviceModel)
 	if err != nil {
-		ctx.Log.Error("Error: insert service to db", err.Err())
+		ctx.Log.Error("Error: insert service to db", err.Error())
 		e.HTTP.InternalServerError(w)
 		return
 	}
@@ -260,22 +257,22 @@ func ServiceUpdateH(w http.ResponseWriter, r *http.Request) {
 
 	err = service.Update(ctx.K8S, serviceModel.Project, serviceModel.ID, cfg)
 	if err != nil {
-		ctx.Log.Error("Error: update service", err.Err())
-		err.Http(w)
+		ctx.Log.Error("Error: update service", err.Error())
+		e.HTTP.InternalServerError(w)
 		return
 	}
 
 	response, err := serviceModel.ToJson()
 	if err != nil {
-		ctx.Log.Error("Error: convert struct to json", err.Err())
-		err.Http(w)
+		ctx.Log.Error("Error: convert struct to json", err.Error())
+		e.HTTP.InternalServerError(w)
 		return
 	}
 
 	w.WriteHeader(http.StatusOK)
-	_, er = w.Write(response)
-	if er != nil {
-		ctx.Log.Error("Error: write response", er.Error())
+	_, err = w.Write(response)
+	if err != nil {
+		ctx.Log.Error("Error: write response", err.Error())
 		return
 	}
 }
@@ -309,8 +306,8 @@ func ServiceRemoveH(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if err != nil {
-		ctx.Log.Error("Error: find project by id", err.Err())
-		err.Http(w)
+		ctx.Log.Error("Error: find project by id", err.Error())
+		e.HTTP.InternalServerError(w)
 		return
 	}
 
@@ -321,8 +318,8 @@ func ServiceRemoveH(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		if err != nil {
-			ctx.Log.Error("Error: find service by id", err.Err())
-			err.Http(w)
+			ctx.Log.Error("Error: find service by id", err.Error())
+			e.HTTP.InternalServerError(w)
 			return
 		}
 
@@ -386,8 +383,8 @@ func ServiceLogsH(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if err != nil {
-		ctx.Log.Error("Error: find project by id", err.Err())
-		err.Http(w)
+		ctx.Log.Error("Error: find project by id", err.Error())
+		e.HTTP.InternalServerError(w)
 		return
 	}
 
@@ -397,8 +394,8 @@ func ServiceLogsH(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if err != nil {
-		ctx.Log.Error("Error: find service by id", err.Err())
-		err.Http(w)
+		ctx.Log.Error("Error: find service by id", err.Error())
+		e.HTTP.InternalServerError(w)
 		return
 	}
 

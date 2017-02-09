@@ -1,7 +1,7 @@
 package user
 
 import (
-	"errors"
+	e "github.com/lastbackend/lastbackend/libs/errors"
 	"github.com/lastbackend/lastbackend/pkg/client/context"
 )
 
@@ -27,7 +27,7 @@ func Logout() error {
 
 	err = ctx.Storage.Clear()
 	if err != nil {
-		return errors.New("Some problems with logout")
+		return e.LogoutErrorMessage
 	}
 
 	return nil

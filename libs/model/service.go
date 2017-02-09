@@ -3,7 +3,6 @@ package model
 import (
 	"encoding/json"
 	"fmt"
-	e "github.com/lastbackend/lastbackend/libs/errors"
 	"github.com/lastbackend/lastbackend/pkg/service"
 	"github.com/lastbackend/lastbackend/pkg/service/resource/container"
 	"github.com/lastbackend/lastbackend/pkg/util/table"
@@ -33,10 +32,10 @@ type Service struct {
 	Updated time.Time `json:"updated" gorethink:"updated,omitempty"`
 }
 
-func (s *Service) ToJson() ([]byte, *e.Err) {
+func (s *Service) ToJson() ([]byte, error) {
 	buf, err := json.Marshal(s)
 	if err != nil {
-		return nil, e.New("service").Unknown(err)
+		return nil, err
 	}
 
 	return buf, nil
@@ -104,7 +103,7 @@ func (s *Service) DrawTable(projectName string) {
 	t.Print()
 }
 
-func (s *ServiceList) ToJson() ([]byte, *e.Err) {
+func (s *ServiceList) ToJson() ([]byte, error) {
 
 	if s == nil {
 		return []byte("[]"), nil
@@ -112,7 +111,7 @@ func (s *ServiceList) ToJson() ([]byte, *e.Err) {
 
 	buf, err := json.Marshal(s)
 	if err != nil {
-		return nil, e.New("service").Unknown(err)
+		return nil, err
 	}
 
 	return buf, nil

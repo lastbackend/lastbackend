@@ -1,7 +1,6 @@
 package mock
 
 import (
-	e "github.com/lastbackend/lastbackend/libs/errors"
 	"github.com/lastbackend/lastbackend/libs/interface/storage"
 	"github.com/lastbackend/lastbackend/libs/model"
 	r "gopkg.in/dancannon/gorethink.v2"
@@ -15,21 +14,21 @@ type VolumeMock struct {
 	storage.IVolume
 }
 
-func (s *VolumeMock) GetByID(user, id string) (*model.Volume, *e.Err) {
+func (s *VolumeMock) GetByID(user, id string) (*model.Volume, error) {
 	return nil, nil
 }
 
-func (s *VolumeMock) ListByProject(id string) (*model.VolumeList, *e.Err) {
+func (s *VolumeMock) ListByProject(id string) (*model.VolumeList, error) {
 	return nil, nil
 }
 
 // Insert new volume into storage
-func (s *VolumeMock) Insert(project *model.Volume) (*model.Volume, *e.Err) {
+func (s *VolumeMock) Insert(project *model.Volume) (*model.Volume, error) {
 	return nil, nil
 }
 
 // Remove volume model
-func (s *VolumeMock) Remove(id string) *e.Err {
+func (s *VolumeMock) Remove(id string) error {
 	return nil
 }
 

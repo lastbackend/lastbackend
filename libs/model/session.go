@@ -1,8 +1,7 @@
 package model
 
-import "errors"
-
 import (
+	"errors"
 	"github.com/dgrijalva/jwt-go"
 	"github.com/lastbackend/lastbackend/pkg/daemon/config"
 	"time"

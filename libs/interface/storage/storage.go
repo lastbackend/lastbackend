@@ -1,7 +1,6 @@
 package storage
 
 import (
-	"github.com/lastbackend/lastbackend/libs/errors"
 	"github.com/lastbackend/lastbackend/libs/model"
 )
 
@@ -16,64 +15,64 @@ type IStorage interface {
 }
 
 type IUser interface {
-	GetByID(string) (*model.User, *errors.Err)
-	GetByUsername(string) (*model.User, *errors.Err)
-	GetByEmail(string) (*model.User, *errors.Err)
-	Insert(*model.User) (*model.User, *errors.Err)
+	GetByID(string) (*model.User, error)
+	GetByUsername(string) (*model.User, error)
+	GetByEmail(string) (*model.User, error)
+	Insert(*model.User) (*model.User, error)
 }
 
 type IBuild interface {
-	GetByID(string, string) (*model.Build, *errors.Err)
-	ListByImage(string, string) (*model.BuildList, *errors.Err)
-	Insert(*model.Build) (*model.Build, *errors.Err)
-	Update(*model.Build) (*model.Build, *errors.Err)
+	GetByID(string, string) (*model.Build, error)
+	ListByImage(string, string) (*model.BuildList, error)
+	Insert(*model.Build) (*model.Build, error)
+	Update(*model.Build) (*model.Build, error)
 }
 
 type IImage interface {
-	GetByID(string, string) (*model.Image, *errors.Err)
-	GetByUser(string) (*model.ImageList, *errors.Err)
-	ListByProject(string, string) (*model.ImageList, *errors.Err)
-	ListByService(string, string) (*model.ImageList, *errors.Err)
-	Insert(*model.Image) (*model.Image, *errors.Err)
-	Update(*model.Image) (*model.Image, *errors.Err)
+	GetByID(string, string) (*model.Image, error)
+	GetByUser(string) (*model.ImageList, error)
+	ListByProject(string, string) (*model.ImageList, error)
+	ListByService(string, string) (*model.ImageList, error)
+	Insert(*model.Image) (*model.Image, error)
+	Update(*model.Image) (*model.Image, error)
 }
 
 type IProject interface {
-	GetByNameOrID(string, string) (*model.Project, *errors.Err)
-	GetByName(string, string) (*model.Project, *errors.Err)
-	GetByID(string, string) (*model.Project, *errors.Err)
-	ListByUser(string) (*model.ProjectList, *errors.Err)
-	Insert(*model.Project) (*model.Project, *errors.Err)
+	GetByNameOrID(string, string) (*model.Project, error)
+	GetByName(string, string) (*model.Project, error)
+	GetByID(string, string) (*model.Project, error)
+	ListByUser(string) (*model.ProjectList, error)
+	Insert(*model.Project) (*model.Project, error)
 	ExistByName(string, string) (bool, error)
-	Update(*model.Project) (*model.Project, *errors.Err)
-	Remove(string, string) *errors.Err
+	Update(*model.Project) (*model.Project, error)
+	Remove(string, string) error
 }
 
 type IService interface {
 	CheckExistsByName(string, string, string) (bool, error)
-	GetByNameOrID(string, string, string) (*model.Service, *errors.Err)
-	GetByName(string, string, string) (*model.Service, *errors.Err)
-	GetByID(string, string, string) (*model.Service, *errors.Err)
-	ListByUser(string, string) (*model.ServiceList, *errors.Err)
-	ListByProject(string, string) (*model.ServiceList, *errors.Err)
-	Insert(*model.Service) (*model.Service, *errors.Err)
-	Update(*model.Service) (*model.Service, *errors.Err)
-	Remove(string, string, string) *errors.Err
-	RemoveByProject(string, string) *errors.Err
+	GetByNameOrID(string, string, string) (*model.Service, error)
+	GetByName(string, string, string) (*model.Service, error)
+	GetByID(string, string, string) (*model.Service, error)
+	ListByUser(string, string) (*model.ServiceList, error)
+	ListByProject(string, string) (*model.ServiceList, error)
+	Insert(*model.Service) (*model.Service, error)
+	Update(*model.Service) (*model.Service, error)
+	Remove(string, string, string) error
+	RemoveByProject(string, string) error
 }
 
 type IHook interface {
-	GetByToken(string) (*model.Hook, *errors.Err)
-	GetByUser(string) (*model.HookList, *errors.Err)
-	ListByImage(string, string) (*model.HookList, *errors.Err)
-	ListByService(string, string) (*model.HookList, *errors.Err)
-	Insert(*model.Hook) (*model.Hook, *errors.Err)
-	Delete(string, string) *errors.Err
+	GetByToken(string) (*model.Hook, error)
+	GetByUser(string) (*model.HookList, error)
+	ListByImage(string, string) (*model.HookList, error)
+	ListByService(string, string) (*model.HookList, error)
+	Insert(*model.Hook) (*model.Hook, error)
+	Delete(string, string) error
 }
 
 type IVolume interface {
-	GetByToken(string) (*model.Volume, *errors.Err)
-	ListByProject(string) (*model.VolumeList, *errors.Err)
-	Insert(*model.Volume) (*model.Volume, *errors.Err)
-	Remove(string) *errors.Err
+	GetByToken(string) (*model.Volume, error)
+	ListByProject(string) (*model.VolumeList, error)
+	Insert(*model.Volume) (*model.Volume, error)
+	Remove(string) error
 }

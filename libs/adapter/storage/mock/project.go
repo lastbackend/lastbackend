@@ -1,7 +1,6 @@
 package mock
 
 import (
-	e "github.com/lastbackend/lastbackend/libs/errors"
 	"github.com/lastbackend/lastbackend/libs/interface/storage"
 	"github.com/lastbackend/lastbackend/libs/model"
 	r "gopkg.in/dancannon/gorethink.v2"
@@ -15,30 +14,30 @@ type ProjectMock struct {
 	storage.IProject
 }
 
-func (s *ProjectMock) GetByNameOrID(user, nameOrID string) (*model.Project, *e.Err) {
+func (s *ProjectMock) GetByNameOrID(user, nameOrID string) (*model.Project, error) {
 	return nil, nil
 }
 
-func (s *ProjectMock) GetByID(user, id string) (*model.Project, *e.Err) {
+func (s *ProjectMock) GetByID(user, id string) (*model.Project, error) {
 	return nil, nil
 }
 
-func (s *ProjectMock) ListByUser(user string) (*model.ProjectList, *e.Err) {
+func (s *ProjectMock) ListByUser(user string) (*model.ProjectList, error) {
 	return nil, nil
 }
 
 // Insert new project into storage
-func (s *ProjectMock) Insert(project *model.Project) (*model.Project, *e.Err) {
+func (s *ProjectMock) Insert(project *model.Project) (*model.Project, error) {
 	return nil, nil
 }
 
 // Update project model
-func (s *ProjectMock) Update(project *model.Project) (*model.Project, *e.Err) {
+func (s *ProjectMock) Update(project *model.Project) (*model.Project, error) {
 	return nil, nil
 }
 
 // Remove project model
-func (s *ProjectMock) Remove(user, id string) *e.Err {
+func (s *ProjectMock) Remove(user, id string) error {
 	return nil
 }
 

@@ -2,6 +2,7 @@ package project
 
 import (
 	"errors"
+	e "github.com/lastbackend/lastbackend/libs/errors"
 	"github.com/lastbackend/lastbackend/libs/model"
 	"github.com/lastbackend/lastbackend/pkg/client/context"
 )
@@ -34,7 +35,7 @@ func Current() (*model.Project, error) {
 	)
 
 	if ctx.Token == "" {
-		return nil, errors.New("You are currently not logged in to the system, to get proper access create a new user or login with an existing user.")
+		return nil, e.NotLoggedMessage
 	}
 
 	err = ctx.Storage.Get("project", project)

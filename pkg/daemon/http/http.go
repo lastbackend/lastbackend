@@ -2,52 +2,51 @@ package http
 
 import (
 	"fmt"
-	"net/http"
-	"strconv"
-	"strings"
-	"time"
-
 	c "github.com/gorilla/context"
 	"github.com/gorilla/mux"
 	e "github.com/lastbackend/lastbackend/libs/errors"
 	"github.com/lastbackend/lastbackend/libs/model"
 	"github.com/lastbackend/lastbackend/pkg/daemon/context"
 	"github.com/lastbackend/lastbackend/pkg/daemon/http/handler"
+	"net/http"
+	"strconv"
+	"strings"
+	"time"
 )
 
 func NewRouter() *mux.Router {
 
 	r := mux.NewRouter()
-	r.Methods("OPTIONS").HandlerFunc(Headers)
+	r.Methods("OPTIONS").HandlerFunc(headers)
 
 	// Session handlers
-	r.HandleFunc("/session", Handler(handler.SessionCreateH)).Methods("POST")
+	r.HandleFunc("/session", handle(handler.SessionCreateH)).Methods("POST")
 
 	// User handlers
-	r.HandleFunc("/user", Handler(handler.UserCreateH)).Methods("POST")
-	r.HandleFunc("/user", Handler(handler.UserGetH, Auth)).Methods("GET")
+	r.HandleFunc("/user", handle(handler.UserCreateH)).Methods("POST")
+	r.HandleFunc("/user", handle(handler.UserGetH, auth)).Methods("GET")
 
 	// Build handlers
-	r.HandleFunc("/build", Handler(handler.BuildListH)).Methods("GET")
-	r.HandleFunc("/build", Handler(handler.BuildCreateH)).Methods("POST")
+	r.HandleFunc("/build", handle(handler.BuildListH)).Methods("GET")
+	r.HandleFunc("/build", handle(handler.BuildCreateH)).Methods("POST")
 
 	// Project handlers
-	r.HandleFunc("/project", Handler(handler.ProjectListH, Auth)).Methods("GET")
-	r.HandleFunc("/project", Handler(handler.ProjectCreateH, Auth)).Methods("POST")
-	r.HandleFunc("/project/{project}", Handler(handler.ProjectInfoH, Auth)).Methods("GET")
-	r.HandleFunc("/project/{project}", Handler(handler.ProjectUpdateH, Auth)).Methods("PUT")
-	r.HandleFunc("/project/{project}", Handler(handler.ProjectRemoveH, Auth)).Methods("DELETE")
-	r.HandleFunc("/project/{project}/service", Handler(handler.ServiceListH, Auth)).Methods("GET")
-	r.HandleFunc("/project/{project}/service/{service}", Handler(handler.ServiceInfoH, Auth)).Methods("GET")
-	r.HandleFunc("/project/{project}/service/{service}", Handler(handler.ServiceUpdateH, Auth)).Methods("PUT")
-	r.HandleFunc("/project/{project}/service/{service}", Handler(handler.ServiceRemoveH, Auth)).Methods("DELETE")
-	r.HandleFunc("/project/{project}/service/{service}/logs", Handler(handler.ServiceLogsH, Auth)).Methods("GET")
+	r.HandleFunc("/project", handle(handler.ProjectListH, auth)).Methods("GET")
+	r.HandleFunc("/project", handle(handler.ProjectCreateH, auth)).Methods("POST")
+	r.HandleFunc("/project/{project}", handle(handler.ProjectInfoH, auth)).Methods("GET")
+	r.HandleFunc("/project/{project}", handle(handler.ProjectUpdateH, auth)).Methods("PUT")
+	r.HandleFunc("/project/{project}", handle(handler.ProjectRemoveH, auth)).Methods("DELETE")
+	r.HandleFunc("/project/{project}/service", handle(handler.ServiceListH, auth)).Methods("GET")
+	r.HandleFunc("/project/{project}/service/{service}", handle(handler.ServiceInfoH, auth)).Methods("GET")
+	r.HandleFunc("/project/{project}/service/{service}", handle(handler.ServiceUpdateH, auth)).Methods("PUT")
+	r.HandleFunc("/project/{project}/service/{service}", handle(handler.ServiceRemoveH, auth)).Methods("DELETE")
+	r.HandleFunc("/project/{project}/service/{service}/logs", handle(handler.ServiceLogsH, auth)).Methods("GET")
 
 	// Deploy template/docker/source/repo
-	r.HandleFunc("/deploy", Handler(handler.DeployH, Auth)).Methods("POST")
+	r.HandleFunc("/deploy", handle(handler.DeployH, auth)).Methods("POST")
 
 	// Template handlers
-	r.HandleFunc("/template", Handler(handler.TemplateListH)).Methods("GET")
+	r.HandleFunc("/template", handle(handler.TemplateListH)).Methods("GET")
 
 	return r
 }
@@ -63,7 +62,7 @@ func RunHttpServer(routes *mux.Router, port int) {
 	}
 }
 
-func Headers(w http.ResponseWriter, r *http.Request) {
+func headers(w http.ResponseWriter, r *http.Request) {
 	origin := r.Header.Get("Origin")
 
 	w.Header().Add("Access-Control-Allow-Origin", origin)
@@ -73,11 +72,13 @@ func Headers(w http.ResponseWriter, r *http.Request) {
 	w.Header().Add("Content-Type", "application/json")
 }
 
-func Handler(h http.HandlerFunc, middleware ...func(http.HandlerFunc) http.HandlerFunc) http.HandlerFunc {
+func handle(h http.HandlerFunc, middleware ...func(http.HandlerFunc) http.HandlerFunc) http.HandlerFunc {
 	headers := func(h http.HandlerFunc) http.HandlerFunc {
 		return func(w http.ResponseWriter, r *http.Request) {
+
 			start := time.Now()
-			Headers(w, r)
+
+			headers(w, r)
 			h.ServeHTTP(w, r)
 
 			fmt.Println(fmt.Sprintf("%s\t%s\t%s", r.Method, r.RequestURI, time.Since(start)))
@@ -93,7 +94,7 @@ func Handler(h http.HandlerFunc, middleware ...func(http.HandlerFunc) http.Handl
 }
 
 // Auth - authentication middleware
-func Auth(h http.HandlerFunc) http.HandlerFunc {
+func auth(h http.HandlerFunc) http.HandlerFunc {
 
 	return func(w http.ResponseWriter, r *http.Request) {
 

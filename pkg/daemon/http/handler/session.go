@@ -44,8 +44,7 @@ func (s *sessionCreateS) decodeAndValidate(reader io.Reader) *e.Err {
 func SessionCreateH(w http.ResponseWriter, r *http.Request) {
 
 	var (
-		er  error
-		err *e.Err
+		err error
 		ctx = context.Get()
 	)
 
@@ -53,9 +52,9 @@ func SessionCreateH(w http.ResponseWriter, r *http.Request) {
 
 	// request body struct
 	rq := new(sessionCreateS)
-	if err = rq.decodeAndValidate(r.Body); err != nil {
-		ctx.Log.Error(err.Err())
-		err.Http(w)
+	if er := rq.decodeAndValidate(r.Body); err != nil {
+		ctx.Log.Error(err.Error())
+		er.Http(w)
 		return
 	}
 
@@ -63,12 +62,13 @@ func SessionCreateH(w http.ResponseWriter, r *http.Request) {
 	if err == nil && user == nil {
 		user, err = ctx.Storage.User().GetByEmail(*rq.Login)
 		if err == nil && user == nil {
-			err = e.New("user").NotFound()
+			e.New("user").NotFound().Http(w)
+			return
 		}
 	}
 	if err != nil {
-		ctx.Log.Error(err.Err())
-		err.Http(w)
+		ctx.Log.Error(err.Error())
+		e.HTTP.InternalServerError(w)
 		return
 	}
 
@@ -81,9 +81,9 @@ func SessionCreateH(w http.ResponseWriter, r *http.Request) {
 		Token string `json:"token"`
 	}{}
 
-	sw.Token, er = model.NewSession(user.ID, ``, user.Username, user.Email).Encode()
-	if er != nil {
-		ctx.Log.Error(er)
+	sw.Token, err = model.NewSession(user.ID, ``, user.Username, user.Email).Encode()
+	if err != nil {
+		ctx.Log.Error(err)
 		e.HTTP.InternalServerError(w)
 		return
 	}
