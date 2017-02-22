@@ -56,8 +56,8 @@ func NewRouter() *mux.Router {
 	r.HandleFunc("/hook/{token}", handle(handler.HookExecuteH)).Methods("POST")
 
 	// Docker handlers
-	r.HandleFunc("/docker/repo/search", handle(handler.DockerRepositorySearchH, auth)).Methods("GET")
-	r.HandleFunc("/docker/repo/tags", handle(handler.DockerRepositoryTagListH, auth)).Methods("GET")
+	r.HandleFunc("/docker/repo/search", handle(handler.DockerRepositorySearchH)).Methods("GET")
+	r.HandleFunc("/docker/repo/tags", handle(handler.DockerRepositoryTagListH)).Methods("GET")
 
 	return r
 }

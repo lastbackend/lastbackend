@@ -12,6 +12,7 @@ import (
 	"io/ioutil"
 	"k8s.io/client-go/pkg/api/v1"
 	"net/http"
+	"strings"
 )
 
 func ProjectListH(w http.ResponseWriter, r *http.Request) {
@@ -187,7 +188,9 @@ func (s *projectCreateS) decodeAndValidate(reader io.Reader) *e.Err {
 		return e.New("project").BadParameter("name")
 	}
 
-	if s.Name != nil && !validator.IsProjectName(*s.Name) {
+	*s.Name = strings.ToLower(*s.Name)
+
+	if len(*s.Name) < 4 && len(*s.Name) > 64 && !validator.IsProjectName(*s.Name) {
 		return e.New("project").BadParameter("name")
 	}
 
@@ -280,12 +283,12 @@ func ProjectCreateH(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-type projectReplaceS struct {
+type projectUpdateS struct {
 	Name        *string `json:"name,omitempty"`
 	Description *string `json:"description,omitempty"`
 }
 
-func (s *projectReplaceS) decodeAndValidate(reader io.Reader) *e.Err {
+func (s *projectUpdateS) decodeAndValidate(reader io.Reader) *e.Err {
 
 	var (
 		err error
@@ -303,7 +306,13 @@ func (s *projectReplaceS) decodeAndValidate(reader io.Reader) *e.Err {
 		return e.New("project").IncorrectJSON(err)
 	}
 
-	if s.Name != nil && !validator.IsProjectName(*s.Name) {
+	if s.Name == nil {
+		return e.New("project").BadParameter("name")
+	}
+
+	*s.Name = strings.ToLower(*s.Name)
+
+	if len(*s.Name) < 4 && len(*s.Name) > 64 && !validator.IsProjectName(*s.Name) {
 		return e.New("project").BadParameter("name")
 	}
 
@@ -337,7 +346,7 @@ func ProjectUpdateH(w http.ResponseWriter, r *http.Request) {
 	session = s.(*model.Session)
 
 	// request body struct
-	rq := new(projectReplaceS)
+	rq := new(projectUpdateS)
 	if err := rq.decodeAndValidate(r.Body); err != nil {
 		ctx.Log.Error("Error: validation incomming data", err)
 		err.Http(w)
