@@ -62,7 +62,7 @@ func (d *deployS) decodeAndValidate(reader io.Reader) *e.Err {
   }
 
   if d.Image != "" && d.Url == ""  {
-    if !validator.IsServiceName(d.Image) {
+    if !validator.IsServiceName(d.Name) {
       return e.New("service").BadParameter("docker")
     }
 

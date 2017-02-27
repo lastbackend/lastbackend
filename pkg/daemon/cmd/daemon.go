@@ -15,7 +15,6 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
-	"fmt"
 )
 
 func Daemon(cmd *cli.Cmd) {
@@ -105,13 +104,9 @@ func Daemon(cmd *cli.Cmd) {
 					done <- true
 					return
 				case <-sigs:
-				fmt.Println(":: >> 1")
 					proxy.Shutdown()
-					fmt.Println(":: >> 2")
 					<-proxy.Done
-					fmt.Println(":: >> 3")
 					done <- true
-					fmt.Println(":: >> 4")
 					return
 				}
 			}
