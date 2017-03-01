@@ -2,6 +2,10 @@ package handler
 
 import (
 	"encoding/json"
+	"io"
+	"io/ioutil"
+	"net/http"
+
 	"github.com/gorilla/context"
 	"github.com/gorilla/mux"
 	e "github.com/lastbackend/lastbackend/libs/errors"
@@ -10,9 +14,6 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/service"
 	"github.com/lastbackend/lastbackend/pkg/util/generator"
 	"github.com/lastbackend/lastbackend/pkg/util/validator"
-	"io"
-	"io/ioutil"
-	"net/http"
 )
 
 func ServiceListH(w http.ResponseWriter, r *http.Request) {
