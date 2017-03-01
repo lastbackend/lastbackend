@@ -1,14 +1,15 @@
 package service
 
 import (
+	"io"
+	"time"
+
 	"github.com/lastbackend/lastbackend/libs/interface/k8s"
 	"github.com/lastbackend/lastbackend/pkg/service/resource/deployment"
 	"github.com/unloop/gopipe"
-	"io"
 	"k8s.io/client-go/pkg/api/unversioned"
 	"k8s.io/client-go/pkg/api/v1"
 	"k8s.io/client-go/pkg/apis/extensions/v1beta1"
-	"time"
 )
 
 type Service struct {
@@ -18,7 +19,7 @@ type Service struct {
 	Scale     int32             `json:"scale"`
 	Template  struct {
 		ContainerList []Container `json:"containers"`
-	} `json:"tempalte"`
+	} `json:"template"`
 	PodList []Pod `json:"pods"`
 }
 
