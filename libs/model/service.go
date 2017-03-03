@@ -27,9 +27,19 @@ type Service struct {
 	// Service spec
 	Spec *service.Service `json:"spec,omitempty" gorethink:"-"`
 	// Service created time
+	Source Source `json:"source,omitempty" gorethink:"sources"`
+	// Service created time
 	Created time.Time `json:"created" gorethink:"created,omitempty"`
 	// Service updated time
 	Updated time.Time `json:"updated" gorethink:"updated,omitempty"`
+}
+
+type Source struct {
+	Type     string `json:"type" gorethink:"type,omitempty"`
+	Hub      string `json:"hub" gorethink:"hub,omitempty"`
+	Username string `json:"username" gorethink:"username,omitempty"`
+	Repo     string `json:"repo" gorethink:"repo,omitempty"`
+	Branch   string `json:"branch" gorethink:"branch,omitempty"`
 }
 
 func (s *Service) ToJson() ([]byte, error) {

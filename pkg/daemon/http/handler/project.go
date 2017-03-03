@@ -89,6 +89,15 @@ func ProjectInfoH(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	namespace, err := ctx.K8S.Core().Namespaces().Get(projectModel.ID)
+	if err != nil {
+		ctx.Log.Error("Error: remove namespace", err.Error())
+		e.HTTP.InternalServerError(w)
+		return
+	}
+
+	projectModel.Labels = namespace.ObjectMeta.Labels
+
 	response, err := projectModel.ToJson()
 	if err != nil {
 		ctx.Log.Error("Error: convert struct to json", err.Error())

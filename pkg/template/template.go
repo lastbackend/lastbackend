@@ -168,6 +168,7 @@ func (t *Template) Provision(namespace, user, project string, patchConfig *Patch
 			serviceModel.User = user
 			serviceModel.Project = project
 			serviceModel.Name = config.Name
+			serviceModel.Source = model.Source{}
 
 			serviceModel, err := ctx.Storage.Service().Insert(serviceModel)
 			if err != nil {

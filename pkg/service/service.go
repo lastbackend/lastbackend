@@ -27,14 +27,18 @@ type Pod struct {
 	Name          string            `json:"name"`
 	Namespace     string            `json:"namespace"`
 	Status        string            `json:"status"`
+	RestartCount  int32             `json:"restart_count"`
+	RestartPolicy string            `json:"restart_policy"`
 	Labels        map[string]string `json:"labels"`
 	ContainerList []Container       `json:"containers"`
+	StartTime     time.Time         `json:"uptime"`
 }
 
 type Container struct {
 	Name       string   `json:"name"`
 	Image      string   `json:"image"`
 	WorkingDir string   `json:"workdir"`
+	Status     string   `json:"status,omitempty"`
 	Command    []string `json:"command"`
 	Args       []string `json:"args"`
 	PortList   []Port   `json:"ports"`
@@ -258,13 +262,17 @@ func convert_deployment_to_service(dp *deployment.Deployment) *Service {
 		p := Pod{}
 		p.Name = pod.ObjectMeta.Name
 		p.Namespace = pod.ObjectMeta.Namespace
-		p.Status = string(pod.PodStatus.PodPhase)
+		p.Status = string(pod.Status.PodPhase)
 		p.Labels = pod.ObjectMeta.Labels
+		p.RestartCount = pod.RestartCount
+		p.RestartPolicy = string(pod.RestartPolicy)
+		p.StartTime = pod.StartTime
 
 		for _, container := range pod.ContainerList.Containers {
 			c := Container{}
 			c.Name = container.Name
 			c.Image = container.Image
+			c.Status = container.Status
 			c.WorkingDir = container.WorkingDir
 			c.Command = container.Command
 			c.Args = container.Args
