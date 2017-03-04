@@ -166,11 +166,11 @@ func ServiceInfoH(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-type serviceReplaceS struct {
+type serviceUpdateS struct {
 	*model.ServiceUpdateConfig
 }
 
-func (s *serviceReplaceS) decodeAndValidate(reader io.Reader) *e.Err {
+func (s *serviceUpdateS) decodeAndValidate(reader io.Reader) *e.Err {
 
 	var (
 		err error
@@ -216,7 +216,7 @@ func ServiceUpdateH(w http.ResponseWriter, r *http.Request) {
 	session = s.(*model.Session)
 
 	// request body struct
-	rq := new(serviceReplaceS)
+	rq := new(serviceUpdateS)
 	if err := rq.decodeAndValidate(r.Body); err != nil {
 		ctx.Log.Error("Error: validation incomming data", err)
 		e.HTTP.InternalServerError(w)
@@ -245,7 +245,9 @@ func ServiceUpdateH(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	serviceModel.Description = rq.Description
+	if rq.Description != nil {
+		serviceModel.Description = *rq.Description
+	}
 
 	serviceModel, err = ctx.Storage.Service().Update(serviceModel)
 	if err != nil {
@@ -256,12 +258,14 @@ func ServiceUpdateH(w http.ResponseWriter, r *http.Request) {
 
 	cfg := rq.CreateServiceConfig()
 
-	err = service.Update(ctx.K8S, serviceModel.Project, serviceModel.ID, cfg)
+	serviceSpec, err := service.Update(ctx.K8S, serviceModel.Project, "lb-"+serviceModel.ID, cfg)
 	if err != nil {
 		ctx.Log.Error("Error: update service", err.Error())
 		e.HTTP.InternalServerError(w)
 		return
 	}
+
+	serviceModel.Spec = serviceSpec
 
 	response, err := serviceModel.ToJson()
 	if err != nil {

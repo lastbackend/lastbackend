@@ -3,7 +3,6 @@ package service
 import (
 	"io"
 	"time"
-
 	"github.com/lastbackend/lastbackend/libs/interface/k8s"
 	"github.com/lastbackend/lastbackend/pkg/service/resource/deployment"
 	"github.com/unloop/gopipe"
@@ -72,9 +71,9 @@ func Get(client k8s.IK8S, namespace, name string) (*Service, error) {
 		return nil, err
 	}
 
-	service := convert_deployment_to_service(dp)
+	s := convert_deployment_to_service(dp)
 
-	return service, nil
+	return s, nil
 }
 
 func List(client k8s.IK8S, namespace string) (map[string]*Service, error) {
@@ -97,23 +96,23 @@ func List(client k8s.IK8S, namespace string) (map[string]*Service, error) {
 	return serviceList, nil
 }
 
-func Update(client k8s.IK8S, namespace, name string, config *ServiceConfig) error {
+func Update(client k8s.IK8S, namespace, name string, config *ServiceConfig) (*Service, error) {
 
 	var err error
 
-	dp, err := client.Extensions().Deployments(namespace).Get(name)
+	dp, err := client.ExtensionsV1beta1().Deployments(namespace).Get(name)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	config.update(dp)
+	config.patch(dp)
 
 	err = deployment.Update(client, namespace, dp)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	return nil
+	return Get(client, namespace, name)
 }
 
 type ServiceLogsOption struct {
@@ -220,14 +219,20 @@ func convert_deployment_to_service(dp *deployment.Deployment) *Service {
 	s.Namespace = dp.ObjectMeta.Namespace
 	s.Labels = dp.ObjectMeta.Labels
 	s.Scale = dp.Spec.Replicas
+	s.Template.ContainerList = []Container{}
+	s.PodList = []Pod{}
 
 	for _, container := range dp.Spec.Template.Spec.Containers {
 		c := Container{}
+
 		c.Name = container.Name
 		c.Image = container.Image
 		c.WorkingDir = container.WorkingDir
 		c.Command = container.Command
 		c.Args = container.Args
+		c.PortList = []Port{}
+		c.EnvList = []Env{}
+		c.VolumeList = []Volume{}
 
 		for _, port := range container.Ports {
 			cp := Port{}
@@ -267,15 +272,20 @@ func convert_deployment_to_service(dp *deployment.Deployment) *Service {
 		p.RestartCount = pod.RestartCount
 		p.RestartPolicy = string(pod.RestartPolicy)
 		p.StartTime = pod.StartTime
+		p.ContainerList = []Container{}
 
 		for _, container := range pod.ContainerList.Containers {
 			c := Container{}
+
 			c.Name = container.Name
 			c.Image = container.Image
 			c.Status = container.Status
 			c.WorkingDir = container.WorkingDir
 			c.Command = container.Command
 			c.Args = container.Args
+			c.PortList = []Port{}
+			c.EnvList = []Env{}
+			c.VolumeList = []Volume{}
 
 			for _, port := range container.Ports {
 				cp := Port{}
