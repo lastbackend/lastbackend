@@ -245,6 +245,10 @@ func ServiceUpdateH(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if rq.Name != nil {
+		serviceModel.Name = *rq.Name
+	}
+
 	if rq.Description != nil {
 		serviceModel.Description = *rq.Description
 	}
@@ -256,11 +260,20 @@ func ServiceUpdateH(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	cfg := rq.CreateServiceConfig()
+	if rq.Containers != nil {
+		cfg := rq.CreateServiceConfig()
 
-	serviceSpec, err := service.Update(ctx.K8S, serviceModel.Project, "lb-"+serviceModel.ID, cfg)
+		err = service.Update(ctx.K8S, serviceModel.Project, "lb-"+serviceModel.ID, cfg)
+		if err != nil {
+			ctx.Log.Error("Error: update service", err.Error())
+			e.HTTP.InternalServerError(w)
+			return
+		}
+	}
+
+	serviceSpec, err := service.Get(ctx.K8S, serviceModel.Project, "lb-"+serviceModel.ID)
 	if err != nil {
-		ctx.Log.Error("Error: update service", err.Error())
+		ctx.Log.Error("Error: get serivce spec from cluster", err.Error())
 		e.HTTP.InternalServerError(w)
 		return
 	}

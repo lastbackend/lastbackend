@@ -163,6 +163,7 @@ func (s *ServiceList) DrawTable(projectName string) {
 }
 
 type ServiceUpdateConfig struct {
+	Name        *string            `json:"name,omitempty" yaml:"name,omitempty"`
 	Description *string            `json:"description,omitempty" yaml:"description,omitempty"`
 	Replicas    *int32             `json:"scale,omitempty" yaml:"scale,omitempty"`
 	Containers  *[]ContainerConfig `json:"containers,omitempty" yaml:"containers,omitempty"`

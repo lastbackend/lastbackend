@@ -96,23 +96,18 @@ func List(client k8s.IK8S, namespace string) (map[string]*Service, error) {
 	return serviceList, nil
 }
 
-func Update(client k8s.IK8S, namespace, name string, config *ServiceConfig) (*Service, error) {
+func Update(client k8s.IK8S, namespace, name string, config *ServiceConfig) error {
 
 	var err error
 
 	dp, err := client.ExtensionsV1beta1().Deployments(namespace).Get(name)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
 	config.patch(dp)
 
-	err = deployment.Update(client, namespace, dp)
-	if err != nil {
-		return nil, err
-	}
-
-	return Get(client, namespace, name)
+	return  deployment.Update(client, namespace, dp)
 }
 
 type ServiceLogsOption struct {

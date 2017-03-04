@@ -172,6 +172,7 @@ func (s *ServiceStorage) Update(service *model.Service) (*model.Service, error) 
 		err  error
 		opts = r.UpdateOpts{ReturnChanges: true}
 		data = map[string]interface{}{
+			"name":        service.Name,
 			"description": service.Description,
 			"updated":     service.Updated,
 		}
