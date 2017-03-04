@@ -154,7 +154,7 @@ func Logs(client k8s.IK8S, namespace string, opts *ServiceLogsOption, close chan
 		option.LimitBytes = opts.LimitBytes
 	}
 
-	req := client.Core().Pods(namespace).GetLogs(opts.Pod, &option)
+	req := client.CoreV1().Pods(namespace).GetLogs(opts.Pod, &option)
 
 	readCloser, err := req.Stream()
 	if err != nil {
@@ -175,7 +175,7 @@ func Deploy(client k8s.IK8S, namespace string, config *v1beta1.Deployment) (*Ser
 
 	var err error
 
-	_, err = client.Extensions().Deployments(namespace).Create(config)
+	_, err = client.ExtensionsV1beta1().Deployments(namespace).Create(config)
 	if err != nil {
 		return nil, err
 	}

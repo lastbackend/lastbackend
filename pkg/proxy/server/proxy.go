@@ -60,7 +60,7 @@ func (p *Proxy) Start(port int) {
 
 		//req := p.ctx.LB().Pods("aaaca8b4-6198-491c-8bb4-edb8f1740945").Attach("lb-redis-4065565212-a79sb", otps)
 
-		req := p.ctx.Core().RESTClient().Post().
+		req := p.ctx.CoreV1().RESTClient().Post().
 			Resource("pods").
 			Name("lb-redis-4065565212-a79sb").
 			Namespace("aaaca8b4-6198-491c-8bb4-edb8f1740945").

@@ -17,7 +17,7 @@ import (
 
 func TestUpdate(t *testing.T) {
 
-	const (
+	var (
 		name        string = "service"
 		description string = "service describe"
 		scale       int32  = 10
@@ -35,12 +35,12 @@ func TestUpdate(t *testing.T) {
 			User:        "mock_demo",
 			Description: "sample description",
 		}
-		updateData = model.ServiceUpdateConfig{
-			Description: description,
-			Replicas:    scale,
-			Containers:  []model.ContainerConfig{},
-		}
+		updateData = model.ServiceUpdateConfig{}
 	)
+
+	updateData.Name = &name
+	updateData.Description = &description
+	updateData.Replicas = &scale
 
 	ctx.Storage, err = db.Init()
 	if err != nil {
@@ -83,8 +83,9 @@ func TestUpdate(t *testing.T) {
 			return
 		}
 
-		assert.Equal(t, d.Description, description, "they should be equal")
-		assert.Equal(t, d.Replicas, scale, "they should be equal")
+		assert.Equal(t, d.Name, &name, "they should be equal")
+		assert.Equal(t, d.Description, &description, "they should be equal")
+		assert.Equal(t, d.Replicas, &scale, "they should be equal")
 
 		w.WriteHeader(200)
 		_, err = w.Write([]byte{})

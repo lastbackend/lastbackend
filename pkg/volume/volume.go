@@ -21,7 +21,7 @@ func Get(name string) (*v1.PersistentVolume, error) {
 		ctx = context.Get()
 	)
 
-	volume, err := ctx.K8S.Core().PersistentVolumes().Get(name)
+	volume, err := ctx.K8S.CoreV1().PersistentVolumes().Get(name)
 	if err != nil {
 		return nil, err
 	}
@@ -36,7 +36,7 @@ func List() (*v1.PersistentVolumeList, error) {
 		ctx = context.Get()
 	)
 
-	pv, err := ctx.K8S.Core().PersistentVolumes().List(v1.ListOptions{})
+	pv, err := ctx.K8S.CoreV1().PersistentVolumes().List(v1.ListOptions{})
 	if err != nil {
 		return nil, err
 	}
@@ -74,7 +74,7 @@ func (v *Volume) Deploy() error {
 		ctx = context.Get()
 	)
 
-	_, err = ctx.K8S.Core().PersistentVolumes().Create(v.config)
+	_, err = ctx.K8S.CoreV1().PersistentVolumes().Create(v.config)
 	if err != nil {
 		return err
 	}

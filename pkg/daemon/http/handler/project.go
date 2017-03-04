@@ -89,7 +89,7 @@ func ProjectInfoH(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	namespace, err := ctx.K8S.Core().Namespaces().Get(projectModel.ID)
+	namespace, err := ctx.K8S.CoreV1().Namespaces().Get(projectModel.ID)
 	if err != nil {
 		ctx.Log.Error("Error: remove namespace", err.Error())
 		e.HTTP.InternalServerError(w)
@@ -270,7 +270,7 @@ func ProjectCreateH(w http.ResponseWriter, r *http.Request) {
 		},
 	}
 
-	_, err = ctx.K8S.Core().Namespaces().Create(namespace)
+	_, err = ctx.K8S.CoreV1().Namespaces().Create(namespace)
 	if err != nil {
 		ctx.Log.Error("Error: create namespace", err.Error())
 		e.HTTP.InternalServerError(w)
@@ -449,7 +449,7 @@ func ProjectRemoveH(w http.ResponseWriter, r *http.Request) {
 		projectParam = projectModel.ID
 	}
 
-	err = ctx.K8S.Core().Namespaces().Delete(projectParam, &v1.DeleteOptions{})
+	err = ctx.K8S.CoreV1().Namespaces().Delete(projectParam, &v1.DeleteOptions{})
 	if err != nil {
 		ctx.Log.Error("Error: remove namespace", err.Error())
 		e.HTTP.InternalServerError(w)
@@ -465,7 +465,7 @@ func ProjectRemoveH(w http.ResponseWriter, r *http.Request) {
 
 	if volumes != nil {
 		for _, val := range *volumes {
-			err = ctx.K8S.Core().PersistentVolumes().Delete(val.Name, &v1.DeleteOptions{})
+			err = ctx.K8S.CoreV1().PersistentVolumes().Delete(val.Name, &v1.DeleteOptions{})
 			if err != nil {
 				ctx.Log.Error("Error: remove persistent volume", err.Error())
 				e.HTTP.InternalServerError(w)

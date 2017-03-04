@@ -20,7 +20,7 @@ func GetPodListChannelWithOptions(client k8s.IK8S, nsQuery *NamespaceQuery, opti
 	}
 
 	go func() {
-		list, err := client.Core().Pods(nsQuery.ToRequestParam()).List(options)
+		list, err := client.CoreV1().Pods(nsQuery.ToRequestParam()).List(options)
 
 		var items []api.Pod
 		var apiPodList = new(api.PodList)

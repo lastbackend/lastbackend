@@ -34,7 +34,7 @@ type Pod struct {
 
 func (p *Pod) Remove(client k8s.IK8S) error {
 	var opts = new(v1.DeleteOptions)
-	return client.Core().Pods(p.ObjectMeta.Namespace).Delete(p.ObjectMeta.Name, opts)
+	return client.CoreV1().Pods(p.ObjectMeta.Namespace).Delete(p.ObjectMeta.Name, opts)
 }
 
 func CreatePodList(pods []api.Pod) *PodList {
