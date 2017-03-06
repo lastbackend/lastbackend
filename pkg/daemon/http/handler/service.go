@@ -13,7 +13,6 @@ import (
 	c "github.com/lastbackend/lastbackend/pkg/daemon/context"
 	"github.com/lastbackend/lastbackend/pkg/service"
 	"github.com/lastbackend/lastbackend/pkg/util/generator"
-	"github.com/lastbackend/lastbackend/pkg/util/validator"
 )
 
 func ServiceListH(w http.ResponseWriter, r *http.Request) {
@@ -252,7 +251,6 @@ func ServiceUpdateH(w http.ResponseWriter, r *http.Request) {
 	if rq.Description != nil {
 		serviceModel.Description = *rq.Description
 	}
-
 	serviceModel, err = ctx.Storage.Service().Update(serviceModel)
 	if err != nil {
 		ctx.Log.Error("Error: insert service to db", err.Error())
@@ -260,15 +258,13 @@ func ServiceUpdateH(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if rq.Containers != nil {
-		cfg := rq.CreateServiceConfig()
+	cfg := rq.CreateServiceConfig()
 
-		err = service.Update(ctx.K8S, serviceModel.Project, "lb-"+serviceModel.ID, cfg)
-		if err != nil {
-			ctx.Log.Error("Error: update service", err.Error())
-			e.HTTP.InternalServerError(w)
-			return
-		}
+	err = service.Update(ctx.K8S, serviceModel.Project, "lb-"+serviceModel.ID, cfg)
+	if err != nil {
+		ctx.Log.Error("Error: update service", err.Error())
+		e.HTTP.InternalServerError(w)
+		return
 	}
 
 	serviceSpec, err := service.Get(ctx.K8S, serviceModel.Project, "lb-"+serviceModel.ID)
@@ -329,41 +325,32 @@ func ServiceRemoveH(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if !validator.IsUUID(serviceParam) {
-		serviceModel, err := ctx.Storage.Service().GetByName(session.Uid, serviceParam)
-		if err == nil && (serviceModel == nil || serviceModel.Project != projectModel.ID) {
-			e.New("service").NotFound().Http(w)
-			return
-		}
-		if err != nil {
-			ctx.Log.Error("Error: find service by id", err.Error())
-			e.HTTP.InternalServerError(w)
-			return
-		}
-
-		serviceParam = serviceModel.ID
+	serviceModel, err := ctx.Storage.Service().GetByNameOrID(session.Uid, serviceParam)
+	if err == nil && (serviceModel == nil || serviceModel.Project != projectModel.ID) {
+		e.New("service").NotFound().Http(w)
+		return
+	}
+	if err != nil {
+		ctx.Log.Error("Error: find service by id", err.Error())
+		e.HTTP.InternalServerError(w)
+		return
 	}
 
-	err = ctx.Storage.Activity().RemoveByService(session.Uid, serviceParam)
+	err = ctx.Storage.Activity().RemoveByService(session.Uid, serviceModel.ID)
 	if err != nil {
 		ctx.Log.Error("Error: remove activity from db", err)
 		e.HTTP.InternalServerError(w)
 		return
 	}
 
-	serviceModel, err := ctx.Storage.Service().GetByID(session.Uid, serviceParam)
+	err = service.Remove(ctx.K8S, serviceModel.Project, "lb-"+serviceModel.ID)
 	if err != nil {
-		ctx.Log.Error("Error: remove service from db", err)
+		ctx.Log.Error("Error: remove service from kubernetes", err)
 		e.HTTP.InternalServerError(w)
 		return
 	}
 
-	if serviceModel.Project != projectParam {
-		e.HTTP.BadRequest(w)
-		return
-	}
-
-	err = ctx.Storage.Service().Remove(session.Uid, serviceParam)
+	err = ctx.Storage.Service().Remove(session.Uid, serviceModel.ID)
 	if err != nil {
 		ctx.Log.Error("Error: remove service from db", err)
 		e.HTTP.InternalServerError(w)

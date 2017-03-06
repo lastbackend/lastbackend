@@ -1,14 +1,14 @@
 package service
 
 import (
-	"io"
-	"time"
 	"github.com/lastbackend/lastbackend/libs/interface/k8s"
 	"github.com/lastbackend/lastbackend/pkg/service/resource/deployment"
 	"github.com/unloop/gopipe"
+	"io"
 	"k8s.io/client-go/pkg/api/unversioned"
 	"k8s.io/client-go/pkg/api/v1"
 	"k8s.io/client-go/pkg/apis/extensions/v1beta1"
+	"time"
 )
 
 type Service struct {
@@ -107,7 +107,11 @@ func Update(client k8s.IK8S, namespace, name string, config *ServiceConfig) erro
 
 	config.patch(dp)
 
-	return  deployment.Update(client, namespace, dp)
+	return deployment.Update(client, namespace, dp)
+}
+
+func Remove(client k8s.IK8S, namespace, name string) error {
+	return deployment.Remove(client, namespace, name)
 }
 
 type ServiceLogsOption struct {

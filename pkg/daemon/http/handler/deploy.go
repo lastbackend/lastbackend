@@ -2,12 +2,6 @@ package handler
 
 import (
 	"encoding/json"
-	"io"
-	"io/ioutil"
-	"net/http"
-
-	"strings"
-
 	"github.com/gorilla/context"
 	e "github.com/lastbackend/lastbackend/libs/errors"
 	"github.com/lastbackend/lastbackend/libs/model"
@@ -15,6 +9,10 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/template"
 	"github.com/lastbackend/lastbackend/pkg/util/converter"
 	"github.com/lastbackend/lastbackend/pkg/util/validator"
+	"io"
+	"io/ioutil"
+	"net/http"
+	"strings"
 )
 
 type deployS struct {
@@ -64,10 +62,6 @@ func (d *deployS) decodeAndValidate(reader io.Reader) *e.Err {
 	}
 
 	if d.Image != "" && d.Url == "" {
-		if !validator.IsServiceName(d.Name) {
-			return e.New("service").BadParameter("docker")
-		}
-
 		source, err := converter.DockerNamespaceParse(d.Image)
 		if err != nil {
 			return e.New("service").BadParameter("image")
@@ -94,6 +88,10 @@ func (d *deployS) decodeAndValidate(reader io.Reader) *e.Err {
 	}
 
 	d.Name = strings.ToLower(d.Name)
+
+	if !validator.IsServiceName(d.Name) {
+		return e.New("service").BadParameter("name")
+	}
 
 	return nil
 }

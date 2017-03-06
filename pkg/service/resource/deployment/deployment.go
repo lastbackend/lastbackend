@@ -119,3 +119,29 @@ func Update(client k8s.IK8S, namespace string, config *v1beta1.Deployment) error
 
 	return nil
 }
+
+func Remove(client k8s.IK8S, namespace string, name string) error {
+	var opts = new(v1.DeleteOptions)
+
+	dp, err := client.ExtensionsV1beta1().Deployments(namespace).Get(name)
+	if err != nil {
+		return err
+	}
+
+	if err := client.ExtensionsV1beta1().Deployments(namespace).Delete(name, opts); err != nil {
+		return err
+	}
+
+	selector, err := unversioned.LabelSelectorAsSelector(dp.Spec.Selector)
+	if err != nil {
+		return err
+	}
+
+	filter := v1.ListOptions{LabelSelector: selector.String()}
+
+	if err := client.ExtensionsV1beta1().ReplicaSets(namespace).DeleteCollection(opts, filter); err != nil {
+		return err
+	}
+
+	return client.CoreV1().Pods(namespace).DeleteCollection(opts, filter)
+}
