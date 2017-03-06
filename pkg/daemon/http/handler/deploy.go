@@ -121,7 +121,7 @@ func DeployH(w http.ResponseWriter, r *http.Request) {
 	rq := new(deployS)
 	if err := rq.decodeAndValidate(r.Body); err != nil {
 		ctx.Log.Error("Error: validation incomming data", err.Err())
-		e.HTTP.InternalServerError(w)
+		err.Http(w)
 		return
 	}
 

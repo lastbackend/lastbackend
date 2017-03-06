@@ -218,7 +218,7 @@ func ServiceUpdateH(w http.ResponseWriter, r *http.Request) {
 	rq := new(serviceUpdateS)
 	if err := rq.decodeAndValidate(r.Body); err != nil {
 		ctx.Log.Error("Error: validation incomming data", err)
-		e.HTTP.InternalServerError(w)
+		err.Http(w)
 		return
 	}
 
