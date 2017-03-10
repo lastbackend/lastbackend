@@ -2,10 +2,6 @@ package handler
 
 import (
 	"encoding/json"
-	"io"
-	"io/ioutil"
-	"net/http"
-
 	"github.com/gorilla/context"
 	"github.com/gorilla/mux"
 	e "github.com/lastbackend/lastbackend/libs/errors"
@@ -13,6 +9,9 @@ import (
 	c "github.com/lastbackend/lastbackend/pkg/daemon/context"
 	"github.com/lastbackend/lastbackend/pkg/service"
 	"github.com/lastbackend/lastbackend/pkg/util/generator"
+	"io"
+	"io/ioutil"
+	"net/http"
 )
 
 func ServiceListH(w http.ResponseWriter, r *http.Request) {
@@ -332,6 +331,13 @@ func ServiceRemoveH(w http.ResponseWriter, r *http.Request) {
 	}
 	if err != nil {
 		ctx.Log.Error("Error: find service by id", err.Error())
+		e.HTTP.InternalServerError(w)
+		return
+	}
+
+	err = ctx.Storage.Hook().RemoveByService(serviceModel.ID)
+	if err != nil {
+		ctx.Log.Error("Error: remove hook from db", err)
 		e.HTTP.InternalServerError(w)
 		return
 	}
@@ -681,7 +687,7 @@ func ServiceHookRemoveH(w http.ResponseWriter, r *http.Request) {
 
 	err = ctx.Storage.Hook().Remove(hookParam)
 	if err != nil {
-		ctx.Log.Error("Error: remove activity from db", err)
+		ctx.Log.Error("Error: remove hook from db", err)
 		e.HTTP.InternalServerError(w)
 		return
 	}

@@ -141,12 +141,30 @@ func (s *HookStorage) Insert(hook *model.Hook) (*model.Hook, error) {
 	return hook, nil
 }
 
-// Insert new hook into storage
+// Remove  hook by id from storage
 func (s *HookStorage) Remove(id string) error {
 
 	var opts = r.DeleteOpts{}
 
 	err := r.Table(HookTable).Get(id).Delete(opts).Exec(s.Session)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// Remove  hook by service id from storage
+func (s *HookStorage) RemoveByService(id string) error {
+
+	var (
+		opts        = r.DeleteOpts{}
+		hook_filter = map[string]interface{}{
+			"service": id,
+		}
+	)
+
+	err := r.Table(HookTable).Filter(hook_filter).Delete(opts).Exec(s.Session)
 	if err != nil {
 		return err
 	}

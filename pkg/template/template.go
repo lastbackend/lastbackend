@@ -10,6 +10,7 @@ import (
 	"github.com/lastbackend/lastbackend/libs/model"
 	"github.com/lastbackend/lastbackend/pkg/daemon/context"
 	"github.com/lastbackend/lastbackend/pkg/service"
+	"github.com/lastbackend/lastbackend/pkg/util/generator"
 	"github.com/lastbackend/lastbackend/pkg/volume"
 	"io/ioutil"
 	"k8s.io/client-go/pkg/api/v1"
@@ -168,9 +169,19 @@ func (t *Template) Provision(namespace, user, project string, patchConfig *Patch
 			serviceModel.User = user
 			serviceModel.Project = project
 			serviceModel.Name = config.Name
-			serviceModel.Source = model.Source{}
 
 			serviceModel, err := ctx.Storage.Service().Insert(serviceModel)
+			if err != nil {
+				return err
+			}
+
+			hookModel := &model.Hook{
+				User:    serviceModel.User,
+				Token:   generator.GenerateToken(32),
+				Service: serviceModel.ID,
+			}
+
+			hookModel, err = ctx.Storage.Hook().Insert(hookModel)
 			if err != nil {
 				return err
 			}

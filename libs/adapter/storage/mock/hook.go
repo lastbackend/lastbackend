@@ -105,6 +105,27 @@ func (s *HookMock) Remove(id string) error {
 	return nil
 }
 
+// Insert new hook into storage
+func (s *HookMock) RemoveByService(id string) error {
+
+	var (
+		err  error
+		opts = r.DeleteOpts{ReturnChanges: true}
+		hook_filter = map[string]interface{}{
+			"service": id,
+		}
+	)
+
+	s.Mock.On(r.DB("test").Table(hookTable).Filter(hook_filter).Delete(opts)).Return(nil, nil)
+
+	err = r.DB("test").Table(hookTable).Filter(hook_filter).Delete(opts).Exec(s.Mock)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func newHookMock(mock *r.Mock) *HookMock {
 	s := new(HookMock)
 	s.Mock = mock

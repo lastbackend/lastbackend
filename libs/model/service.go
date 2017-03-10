@@ -27,7 +27,7 @@ type Service struct {
 	// Service spec
 	Spec *service.Service `json:"spec,omitempty" gorethink:"-"`
 	// Service created time
-	Source Source `json:"source,omitempty" gorethink:"sources"`
+	Source *Source `json:"source,omitempty" gorethink:"source,omitempty"`
 	// Service created time
 	Created time.Time `json:"created" gorethink:"created,omitempty"`
 	// Service updated time
@@ -35,7 +35,6 @@ type Service struct {
 }
 
 type Source struct {
-	Type     string `json:"type" gorethink:"type,omitempty"`
 	Hub      string `json:"hub" gorethink:"hub,omitempty"`
 	Username string `json:"username" gorethink:"username,omitempty"`
 	Repo     string `json:"repo" gorethink:"repo,omitempty"`

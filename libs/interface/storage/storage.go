@@ -69,6 +69,7 @@ type IHook interface {
 	ListByService(string, string) (*model.HookList, error)
 	Insert(*model.Hook) (*model.Hook, error)
 	Remove(string) error
+	RemoveByService(string) error
 }
 
 type IVolume interface {
