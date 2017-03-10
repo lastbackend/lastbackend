@@ -18,7 +18,8 @@ type User struct {
 	Password string `json:"-" gorethink:"password,omitempty,omitempty"`
 	Salt     string `json:"-" gorethink:"salt,omitempty,omitempty"`
 
-	Profile Profile `json:"profile" gorethink:"profile,omitempty"`
+	Profile      Profile         `json:"profile" gorethink:"profile,omitempty"`
+	Integrations map[string]bool `json:"integrations" gorethink:"integrations,omitempty"`
 }
 
 type Profile struct {
