@@ -1,5 +1,7 @@
 package config
 
+import "time"
+
 // The structure of the config to run the daemon
 type Config struct {
 	Debug bool `yaml:"debug"`
@@ -18,9 +20,14 @@ type Config struct {
 		Port int `yaml:"port"`
 	} `yaml:"http_server"`
 
+	Etcd struct {
+		Endpoints []string `yaml:"endpoints"`
+		TimeOut   time.Duration `yaml:"timeout"`
+	} `yaml:"etcd"`
+
 	K8S struct {
 		Host string `yaml:"host"`
-		SSL  struct {
+		SSL struct {
 			CA   string `yaml:"ca"`
 			Key  string `yaml:"key"`
 			Cert string `yaml:"cert"`
@@ -34,7 +41,7 @@ type Config struct {
 		InitialCap int      `yaml:"initial_cap"`
 		Database   string   `yaml:"database"`
 		AuthKey    string   `yaml:"auth_key"`
-		SSL        struct {
+		SSL struct {
 			CA string `yaml:"ca"`
 		} `yaml:"ssl"`
 	} `yaml:"rethinkdb"`

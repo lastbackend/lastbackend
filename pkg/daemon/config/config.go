@@ -4,9 +4,11 @@ import (
 	"crypto/tls"
 	"crypto/x509"
 	"fmt"
+	etcd "github.com/coreos/etcd/clientv3"
 	r "gopkg.in/dancannon/gorethink.v2"
 	"io/ioutil"
 	"k8s.io/client-go/rest"
+	"time"
 )
 
 var config Config
@@ -24,6 +26,19 @@ func GetK8S() *rest.Config {
 			CertFile: config.K8S.SSL.Cert,
 		},
 	}
+}
+
+// Get Etcd DB options used for creating session
+func GetEtcdDB() *etcd.Client {
+	cli, err := etcd.New(etcd.Config{
+		Endpoints:   config.Etcd.Endpoints,
+		DialTimeout: config.Etcd.TimeOut * time.Second,
+	})
+	if err != nil {
+		_ = fmt.Errorf("Etcd error: %s", err.Error())
+	}
+
+	return cli
 }
 
 // Get Rethink DB options used for creating session

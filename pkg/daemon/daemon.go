@@ -5,14 +5,14 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/daemon/cmd"
 	"github.com/lastbackend/lastbackend/pkg/daemon/context"
 	"os"
+	"github.com/lastbackend/lastbackend/pkg/daemon/http"
 )
+
+var ctx = context.Get()
 
 func Run() {
 
-	var (
-		er  error
-		ctx = context.Get()
-	)
+	var er  error
 
 	app := cli.App("lb", "apps cloud hosting with integrated deployment tools")
 
@@ -33,4 +33,11 @@ func Run() {
 		ctx.Log.Panic("Error: run application", er.Error())
 		return
 	}
+}
+
+func ExtendAPI(extends map[string]http.Handler) {
+	http.Extends = extends
+}
+
+func ExtendStorage() {
 }

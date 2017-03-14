@@ -47,3 +47,4 @@ type Context struct {
 	TemplateRegistry *http.RawReq
 	Storage          storage.IStorage
 }
+

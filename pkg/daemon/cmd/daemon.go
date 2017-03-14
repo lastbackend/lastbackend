@@ -83,11 +83,12 @@ func Daemon(cmd *cli.Cmd) {
 	cmd.Action = func() {
 
 		var (
-			sigs = make(chan os.Signal)
-			done = make(chan bool, 1)
+			sigs   = make(chan os.Signal)
+			done   = make(chan bool, 1)
+			routes = http.NewRouter()
 		)
 
-		go http.RunHttpServer(http.NewRouter(), cfg.HttpServer.Port)
+		go http.RunHttpServer(routes, cfg.HttpServer.Port)
 
 		proxy := server.New(ctx.K8S)
 		go proxy.Start(cfg.ProxyServer.Port)
