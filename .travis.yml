@@ -5,3 +5,4 @@ go:
 
 notifications:
   slack: lastbackend:IhTIns2zne944hjFoPLaOUuE
+  webhooks: https://outlook.office.com/webhook/8b256036-e341-49bc-b3d3-ed167a222024@e0b9c306-4889-4b33-a947-e6316e914e36/TravisCI/e3db5a51723045b49ad47df31b5219f8/a7509023-b1b7-41e8-b7d2-6aaead7d6517
