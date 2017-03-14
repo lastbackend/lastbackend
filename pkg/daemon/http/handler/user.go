@@ -44,8 +44,9 @@ func UserGetH(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	w.WriteHeader(http.StatusOK)
+	ctx.Log.Info(string(response))
 
+	w.WriteHeader(http.StatusOK)
 	_, err = w.Write(response)
 	if err != nil {
 		ctx.Log.Error("Error: write response", err.Error())

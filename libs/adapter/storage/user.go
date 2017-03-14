@@ -59,12 +59,12 @@ func (s *UserStorage) GetByEmail(email string) (*model.User, error) {
 	return user, nil
 }
 
-func (s *UserStorage) GetByID(uuid string) (*model.User, error) {
+func (s *UserStorage) GetByID(id string) (*model.User, error) {
 
 	var err error
 	var user = new(model.User)
 
-	res, err := r.Table(UserTable).Get(uuid).Run(s.Session)
+	res, err := r.Table(UserTable).Get(id).Run(s.Session)
 
 	if err != nil {
 		return nil, err
