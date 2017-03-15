@@ -19,6 +19,7 @@ type IUser interface {
 	GetByID(string) (*model.User, error)
 	GetByUsername(string) (*model.User, error)
 	GetByEmail(string) (*model.User, error)
+	GetByUsernameOrEmail(string) (*model.User, error)
 	Insert(*model.User) (*model.User, error)
 }
 

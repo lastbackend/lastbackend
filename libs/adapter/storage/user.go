@@ -80,6 +80,37 @@ func (s *UserStorage) GetByID(id string) (*model.User, error) {
 	return user, nil
 }
 
+func (s *UserStorage) GetByUsernameOrEmail(usernameOrEmail string) (*model.User, error) {
+
+	var (
+		err    error
+		user   = new(model.User)
+		filter = func(talk r.Term) r.Term {
+			return r.Or(
+				talk.Field("username").Eq(usernameOrEmail),
+				talk.Field("email").Eq(usernameOrEmail),
+			)
+		}
+	)
+
+	res, err := r.Table(UserTable).Filter(filter).Run(s.Session)
+	if err != nil {
+		return nil, err
+	}
+	defer res.Close()
+
+	if res.IsNil() {
+		return nil, nil
+	}
+
+	err = res.One(user)
+	if err != nil {
+		return nil, err
+	}
+
+	return user, nil
+}
+
 func (s *UserStorage) Insert(user *model.User) (*model.User, error) {
 
 	var err error

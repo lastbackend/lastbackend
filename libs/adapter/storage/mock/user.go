@@ -4,7 +4,6 @@ import (
 	"github.com/lastbackend/lastbackend/libs/interface/storage"
 	"github.com/lastbackend/lastbackend/libs/model"
 	r "gopkg.in/dancannon/gorethink.v2"
-	"time"
 )
 
 const mockUserDB = "test"
@@ -28,115 +27,26 @@ var userMock = &model.User{
 }
 
 func (u *UserMock) GetByUsername(_ string) (*model.User, error) {
-
-	var err error
-	var user = new(model.User)
-
-	u.Mock.On(r.DB(mockUserDB).Table(userTable).Get(mockUserID)).Return(userMock, nil)
-
-	res, err := r.DB(mockUserDB).Table(userTable).Get(mockUserID).Run(u.Mock)
-	if err != nil {
-		return nil, err
-	}
-
-	if res.IsNil() {
-		return nil, nil
-	}
-
-	res.One(user)
-
-	return user, nil
+	return &model.User{}, nil
 }
 
 func (u *UserMock) GetByEmail(_ string) (*model.User, error) {
-
-	var err error
-	var user = new(model.User)
-
-	u.Mock.On(r.DB(mockUserDB).Table(userTable).Get(mockUserID)).Return(userMock, nil)
-
-	res, err := r.DB(mockUserDB).Table(userTable).Get(mockUserID).Run(u.Mock)
-	if err != nil {
-		return nil, err
-	}
-
-	if res.IsNil() {
-		return nil, nil
-	}
-
-	res.One(user)
-
-	return user, nil
+	return &model.User{}, nil
 }
 
 func (u *UserMock) GetByID(_ string) (*model.User, error) {
+	return &model.User{}, nil
+}
 
-	var err error
-	var user = new(model.User)
-
-	u.Mock.On(r.DB(mockUserDB).Table(userTable).Get(mockUserID)).Return(userMock, nil)
-
-	res, err := r.DB(mockUserDB).Table(userTable).Get(mockUserID).Run(u.Mock)
-	if err != nil {
-		return nil, err
-	}
-
-	if err != nil {
-		return nil, err
-	}
-	defer res.Close()
-
-	if res.IsNil() {
-		return nil, nil
-	}
-
-	res.One(user)
-
-	return user, nil
+func (u *UserMock) GetByUsernameOrEmail(_ string) (*model.User, error) {
+	return &model.User{}, nil
 }
 
 func (u *UserMock) Insert(_ *model.User) (*model.User, error) {
-
-	var (
-		err  error
-		opts = r.InsertOpts{ReturnChanges: true}
-	)
-
-	u.Mock.On(r.DB(mockUserDB).Table(mockUserDB).Insert(userMock, opts)).Return(nil, nil)
-
-	res, err := r.DB(mockUserDB).Table(mockUserDB).Insert(userMock, opts).RunWrite(u.Mock)
-
-	if err != nil {
-		return nil, err
-	}
-
-	userMock.ID = res.GeneratedKeys[0]
-
-	return userMock, nil
+	return &model.User{}, nil
 }
 
 func (u *UserMock) ChangePassword(id, password, salt string) error {
-
-	var (
-		err  error
-		opts = r.ReplaceOpts{ReturnChanges: true}
-		data = map[string]interface{}{
-			"password": password,
-			"salt":     salt,
-			"updated":  time.Now(),
-		}
-	)
-
-	u.Mock.On(r.DB(mockUserDB).Table(mockUserDB).Replace(data, opts)).Return(nil, nil)
-
-	res, err := r.DB(mockUserDB).Table(mockUserDB).Replace(data, opts).RunWrite(u.Mock)
-
-	if err != nil {
-		return err
-	}
-
-	userMock.ID = res.GeneratedKeys[0]
-
 	return nil
 }
 
