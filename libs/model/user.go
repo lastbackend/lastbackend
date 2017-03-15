@@ -1,8 +1,8 @@
 package model
 
 import (
+	"encoding/json"
 	"golang.org/x/crypto/bcrypt"
-	"k8s.io/client-go/pkg/util/json"
 	"time"
 )
 
@@ -11,15 +11,16 @@ type User struct {
 	Username     string    `json:"username" gorethink:"username,omitempty"`
 	Email        string    `json:"email" gorethink:"email,omitempty"`
 	Gravatar     string    `json:"gravatar" gorethink:"gravatar,omitempty"`
-	Balance      float32   `json:"balance" gorethink:"balance,omitempty"`
 	Organization bool      `json:"organization" gorethink:"organization,omitempty"`
+	Balance      float64   `json:"balance" gorethink:"balance,omitempty"`
 	Created      time.Time `json:"created" gorethink:"created,omitempty"`
 	Updated      time.Time `json:"updated" gorethink:"updated,omitempty"`
 
 	Password string `json:"-" gorethink:"password,omitempty,omitempty"`
 	Salt     string `json:"-" gorethink:"salt,omitempty,omitempty"`
 
-	Profile Profile `json:"profile" gorethink:"profile,omitempty"`
+	Profile      Profile           `json:"profile" gorethink:"profile,omitempty"`
+	Integrations map[string]string `json:"integrations" gorethink:"integrations,omitempty"`
 }
 
 type Profile struct {

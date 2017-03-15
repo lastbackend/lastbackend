@@ -1,9 +1,12 @@
 package pod
 
 import (
+	"github.com/lastbackend/lastbackend/libs/interface/k8s"
 	"github.com/lastbackend/lastbackend/pkg/service/resource/common"
 	"github.com/lastbackend/lastbackend/pkg/service/resource/container"
 	"k8s.io/client-go/pkg/api"
+	"k8s.io/client-go/pkg/api/v1"
+	"time"
 )
 
 const kind = "pod"
@@ -21,9 +24,17 @@ type PodStatus struct {
 type Pod struct {
 	ObjectMeta    common.ObjectMeta        `json:"meta"`
 	TypeMeta      common.TypeMeta          `json:"spec"`
-	PodStatus     PodStatus                `json:"status"`
+	Status        PodStatus                `json:"status"`
 	RestartCount  int32                    `json:"restart_count"`
+	IP            string                   `json:"ip"`
+	StartTime     time.Time                `json:"startTime"`
+	RestartPolicy api.RestartPolicy        `json:"restartPolicy,omitempty"`
 	ContainerList *container.ContainerList `json:"containers"`
+}
+
+func (p *Pod) Remove(client k8s.IK8S) error {
+	var opts = new(v1.DeleteOptions)
+	return client.CoreV1().Pods(p.ObjectMeta.Namespace).Delete(p.ObjectMeta.Name, opts)
 }
 
 func CreatePodList(pods []api.Pod) *PodList {
@@ -34,13 +45,15 @@ func CreatePodList(pods []api.Pod) *PodList {
 	}
 
 	for _, pod := range pods {
-
 		var p = Pod{
 			ObjectMeta:    common.NewObjectMeta(pod.ObjectMeta),
 			TypeMeta:      common.NewTypeMeta(kind),
-			PodStatus:     getPodStatus(pod),
+			Status:        getPodStatus(pod),
+			IP:            pod.Status.PodIP,
+			StartTime:     pod.Status.StartTime.Time,
+			RestartPolicy: pod.Spec.RestartPolicy,
 			RestartCount:  getRestartCount(pod),
-			ContainerList: container.CreateContainerList(pod.Spec.Containers),
+			ContainerList: container.CreateContainerList(pod.Spec.Containers, pod.Status.ContainerStatuses),
 		}
 
 		podList.Pods = append(podList.Pods, p)

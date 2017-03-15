@@ -9,8 +9,6 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/daemon/config"
 	"github.com/lastbackend/lastbackend/pkg/daemon/context"
 	"github.com/lastbackend/lastbackend/pkg/daemon/http"
-	"gopkg.in/yaml.v2"
-	"io/ioutil"
 	"os"
 	"os/signal"
 	"syscall"
@@ -33,15 +31,7 @@ func Daemon(cmd *cli.Cmd) {
 		ctx.Log.Init()
 
 		if *configPath != "" {
-
-			// Parsing config file
-			configBytes, err := ioutil.ReadFile(*configPath)
-			if err != nil {
-				ctx.Log.Panic(err)
-			}
-
-			err = yaml.Unmarshal(configBytes, cfg)
-			if err != nil {
+			if err := cfg.Configure(*configPath); err != nil {
 				ctx.Log.Panic(err)
 			}
 		}
@@ -68,6 +58,10 @@ func Daemon(cmd *cli.Cmd) {
 			cfg.HttpServer.Port = 3000
 		}
 
+		if cfg.ProxyServer.Port == 0 {
+			cfg.ProxyServer.Port = 9999
+		}
+
 		if cfg.TemplateRegistry.Host == "" {
 			cfg.TemplateRegistry.Host = "http://localhost:3003"
 		}
@@ -77,12 +71,28 @@ func Daemon(cmd *cli.Cmd) {
 
 	cmd.Action = func() {
 
-		go http.RunHttpServer(http.NewRouter(), cfg.HttpServer.Port)
+		var (
+			sigs   = make(chan os.Signal)
+			done   = make(chan bool, 1)
+			routes = http.NewRouter()
+		)
+
+		go http.RunHttpServer(routes, cfg.HttpServer.Port)
 
 		// Handle SIGINT and SIGTERM.
-		ch := make(chan os.Signal)
-		signal.Notify(ch, syscall.SIGINT, syscall.SIGTERM)
-		ctx.Log.Debug(<-ch)
+		signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)
+
+		go func() {
+			for {
+				select {
+				case <-sigs:
+					done <- true
+					return
+				}
+			}
+		}()
+
+		<-done
 
 		ctx.Log.Info("Handle SIGINT and SIGTERM.")
 	}

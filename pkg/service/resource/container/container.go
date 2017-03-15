@@ -17,15 +17,17 @@ type ContainerStatus struct {
 }
 
 type Container struct {
-	TypeMeta   common.TypeMeta `json:"spec"`
-	Name       string          `json:"name"`
-	Image      string          `json:"image"`
-	Command    []string        `json:"command,omitempty"`
-	Args       []string        `json:"args,omitempty"`
-	WorkingDir string          `json:"workdir,omitempty"`
-	Ports      []Port          `json:"ports,omitempty"`
-	Env        []EnvVar        `json:"env,omitempty"`
-	Volumes    []Volume        `json:"volumes,omitempty"`
+	TypeMeta        common.TypeMeta `json:"spec"`
+	Name            string          `json:"name"`
+	Image           string          `json:"image"`
+	WorkingDir      string          `json:"workdir,omitempty"`
+	Status          string          `json:"status"`
+	Command         []string        `json:"command,omitempty"`
+	Args            []string        `json:"args,omitempty"`
+	Ports           []Port          `json:"ports,omitempty"`
+	Env             []EnvVar        `json:"env,omitempty"`
+	Volumes         []Volume        `json:"volumes,omitempty"`
+	ImagePullPolicy api.PullPolicy  `json:"imagePullPolicy"`
 }
 
 // Port represents a network port in a single container
@@ -63,11 +65,27 @@ type Volume struct {
 	SubPath string `json:"subpath,omitempty"`
 }
 
-func CreateContainerList(containers []api.Container) *ContainerList {
+func CreateContainerList(containers []api.Container, statuses []api.ContainerStatus) *ContainerList {
 
 	containerList := ContainerList{
 		ListMeta:   common.ListMeta{Total: len(containers)},
 		Containers: make([]Container, 0),
+	}
+
+	var containerStatuseMap = make(map[string]string)
+
+	for _, status := range statuses {
+		switch true {
+		case status.State.Running != nil:
+			containerStatuseMap[status.Name] = "running"
+			break
+		case status.State.Terminated != nil:
+			containerStatuseMap[status.Name] = "terminated"
+			break
+		case status.State.Waiting != nil:
+			containerStatuseMap[status.Name] = "waiting"
+			break
+		}
 	}
 
 	for _, c := range containers {
@@ -79,6 +97,7 @@ func CreateContainerList(containers []api.Container) *ContainerList {
 			Command:    c.Command,
 			Args:       c.Args,
 			WorkingDir: c.WorkingDir,
+			Status:     containerStatuseMap[c.Name],
 		}
 
 		for _, port := range c.Ports {
@@ -106,6 +125,8 @@ func CreateContainerList(containers []api.Container) *ContainerList {
 				SubPath:   volume.SubPath,
 			})
 		}
+
+		p.ImagePullPolicy = c.ImagePullPolicy
 
 		containerList.Containers = append(containerList.Containers, p)
 	}

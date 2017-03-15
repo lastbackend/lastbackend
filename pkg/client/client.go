@@ -29,9 +29,9 @@ func Run() {
 
 	app.Spec = "[-d][-H]"
 
-	var debug = app.Bool(cli.BoolOpt{Name: "d debug", Value: false, Desc: "Enable debug mode"})
-	var host = app.String(cli.StringOpt{Name: "H host", Value: "https://api.lastbackend.com", Desc: "Host for rest api", HideValue: true})
-	var help = app.Bool(cli.BoolOpt{Name: "h help", Value: false, Desc: "Show the help info and exit", HideValue: true})
+	var debug = app.Bool(cli.BoolOpt{Name: "d debug", Value: false, Desc: "enable debug mode"})
+	var host = app.String(cli.StringOpt{Name: "H host", Value: "https://api.lastbackend.com", Desc: "host for rest api", HideValue: true})
+	var help = app.Bool(cli.BoolOpt{Name: "h help", Value: false, Desc: "show the help info and exit", HideValue: true})
 
 	app.Before = func() {
 
@@ -77,10 +77,6 @@ func Run() {
 
 func configure(app *cli.Cli) {
 
-	app.Command("signup", "Create new account", func(c *cli.Cmd) {
-		c.Action = u.SignUpCmd
-	})
-
 	app.Command("login", "Auth to account", func(c *cli.Cmd) {
 		c.Action = u.SignInCmd
 	})
@@ -112,11 +108,11 @@ func configure(app *cli.Cli) {
 		c.Spec = "[URL][-t][-i][-n][--scale]" // [-e][-p][-v]
 
 		var url = c.String(cli.StringArg{Name: "URL", Value: "", Desc: "git repo url", HideValue: true})
-		var name = c.String(cli.StringOpt{Name: "n name", Desc: "service name", HideValue:true})
-		var image = c.String(cli.StringOpt{Name: "i image", Desc: "docker image name", HideValue:true})
-		var template = c.String(cli.StringOpt{Name: "t tempalte", Desc: "tempalte name", HideValue:true})
+		var name = c.String(cli.StringOpt{Name: "n name", Desc: "service name", HideValue: true})
+		var image = c.String(cli.StringOpt{Name: "i image", Desc: "docker image name", HideValue: true})
+		var template = c.String(cli.StringOpt{Name: "t tempalte", Desc: "tempalte name", HideValue: true})
 
-		var scale = c.Int(cli.IntOpt{Name: "scale", Desc: "service scale", HideValue:true})
+		var scale = c.Int(cli.IntOpt{Name: "scale", Desc: "service scale", HideValue: true})
 		//var env = c.Strings(cli.StringsOpt{Name: "e", Desc: "enviroment", HideValue:true})
 		//var ports = c.Strings(cli.StringsOpt{Name: "p", Desc: "ports", HideValue:true})
 		//var volumes = c.Strings(cli.StringsOpt{Name: "v", Desc: "volumes", HideValue:true})
@@ -142,7 +138,7 @@ func configure(app *cli.Cli) {
 
 			sc.Spec = "[--desc]"
 
-			var desc = sc.String(cli.StringOpt{Name: "desc", Value: "", Desc: "Set description info", HideValue: true})
+			var desc = sc.String(cli.StringOpt{Name: "desc", Value: "", Desc: "set description info", HideValue: true})
 
 			sc.Action = func() {
 				if len(*name) == 0 {
@@ -191,8 +187,8 @@ func configure(app *cli.Cli) {
 
 			sc.Spec = "[--desc][--name]"
 
-			var desc = sc.String(cli.StringOpt{Name: "desc", Value: "", Desc: "Set description info", HideValue: true})
-			var newProjectName = sc.String(cli.StringOpt{Name: "name", Value: "", Desc: "Set new project name", HideValue: true})
+			var desc = sc.String(cli.StringOpt{Name: "desc", Value: "", Desc: "set description info", HideValue: true})
+			var newProjectName = sc.String(cli.StringOpt{Name: "name", Value: "", Desc: "set new project name", HideValue: true})
 
 			sc.Action = func() {
 				if len(*name) == 0 {

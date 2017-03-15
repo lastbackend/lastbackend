@@ -6,8 +6,8 @@ import (
 	r "gopkg.in/dancannon/gorethink.v2"
 )
 
-const mockDB = "test"
-const mockID = "mocked"
+const mockUserDB = "test"
+const mockUserID = "mocked"
 const userTable = "users"
 
 // Service User type for interface in interfaces folder
@@ -17,7 +17,7 @@ type UserMock struct {
 }
 
 var userMock = &model.User{
-	ID:       mockID,
+	ID:       mockUserID,
 	Username: "mocked",
 	Email:    "mocked@mocked.com",
 	Gravatar: "a931b3bb185354ecfe43d736b7ad51cb",
@@ -27,89 +27,27 @@ var userMock = &model.User{
 }
 
 func (u *UserMock) GetByUsername(_ string) (*model.User, error) {
-
-	var err error
-	var user = new(model.User)
-
-	u.Mock.On(r.Table(mockDB).Table(userTable).Get(mockID)).Return(userMock, nil)
-
-	res, err := r.Table(mockDB).Table(userTable).Get(mockID).Run(u.Mock)
-	if err != nil {
-		return nil, err
-	}
-
-	if res.IsNil() {
-		return nil, nil
-	}
-
-	res.One(user)
-
-	return user, nil
+	return &model.User{}, nil
 }
 
 func (u *UserMock) GetByEmail(_ string) (*model.User, error) {
-
-	var err error
-	var user = new(model.User)
-
-	u.Mock.On(r.Table(mockDB).Table(userTable).Get(mockID)).Return(userMock, nil)
-
-	res, err := r.Table(mockDB).Table(userTable).Get(mockID).Run(u.Mock)
-	if err != nil {
-		return nil, err
-	}
-
-	if res.IsNil() {
-		return nil, nil
-	}
-
-	res.One(user)
-
-	return user, nil
+	return &model.User{}, nil
 }
 
 func (u *UserMock) GetByID(_ string) (*model.User, error) {
+	return &model.User{}, nil
+}
 
-	var err error
-	var user = new(model.User)
-
-	u.Mock.On(r.Table(mockDB).Table(userTable).Get(mockID)).Return(userMock, nil)
-
-	res, err := r.Table(mockDB).Table(userTable).Get(mockID).Run(u.Mock)
-	if err != nil {
-		return nil, err
-	}
-
-	if err != nil {
-		return nil, err
-	}
-	defer res.Close()
-
-	if res.IsNil() {
-		return nil, nil
-	}
-
-	res.One(user)
-
-	return user, nil
+func (u *UserMock) GetByUsernameOrEmail(_ string) (*model.User, error) {
+	return &model.User{}, nil
 }
 
 func (u *UserMock) Insert(_ *model.User) (*model.User, error) {
+	return &model.User{}, nil
+}
 
-	var err error
-	var opts = r.InsertOpts{ReturnChanges: true}
-
-	u.Mock.On(r.Table(mockDB).Table(mockDB).Insert(userMock)).Return(nil, nil)
-
-	res, err := r.Table(mockDB).Table(mockDB).Insert(userMock, opts).RunWrite(u.Mock)
-
-	if err != nil {
-		return nil, err
-	}
-
-	userMock.ID = res.GeneratedKeys[0]
-
-	return userMock, nil
+func (u *UserMock) ChangePassword(id, password, salt string) error {
+	return nil
 }
 
 func newUserMock(mock *r.Mock) *UserMock {

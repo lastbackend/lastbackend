@@ -18,14 +18,15 @@ type TypeMeta struct {
 }
 
 type Spec struct {
-	Replicas             int32                         `json:"replicas,omitempty"`
-	Selector             *unversioned.LabelSelector    `json:"selector,omitempty"`
-	Template             api.PodTemplateSpec           `json:"template"`
-	Strategy             extensions.DeploymentStrategy `json:"strategy,omitempty"`
-	MinReadySeconds      int32                         `json:"minReadySeconds,omitempty"`
-	RevisionHistoryLimit *int32                        `json:"revisionHistoryLimit,omitempty"`
-	Paused               bool                          `json:"paused,omitempty"`
-	RollbackTo           *extensions.RollbackConfig    `json:"rollbackTo,omitempty"`
+	Replicas                int32                         `json:"replicas,omitempty"`
+	Selector                *unversioned.LabelSelector    `json:"selector,omitempty"`
+	Template                api.PodTemplateSpec           `json:"template"`
+	Strategy                extensions.DeploymentStrategy `json:"strategy,omitempty"`
+	MinReadySeconds         int32                         `json:"minReadySeconds,omitempty"`
+	RevisionHistoryLimit    *int32                        `json:"revisionHistoryLimit,omitempty"`
+	Paused                  bool                          `json:"paused,omitempty"`
+	RollbackTo              *extensions.RollbackConfig    `json:"rollbackTo,omitempty"`
+	ProgressDeadlineSeconds *int32                        `json:"progressDeadlineSeconds,omitempty"`
 }
 
 type Kind string
@@ -51,14 +52,15 @@ func NewTypeMeta(kind Kind) TypeMeta {
 
 func NewSpec(k8sSpec extensions.DeploymentSpec) Spec {
 	return Spec{
-		Replicas:             k8sSpec.Replicas,
-		Selector:             k8sSpec.Selector,
-		Template:             k8sSpec.Template,
-		Strategy:             k8sSpec.Strategy,
-		MinReadySeconds:      k8sSpec.MinReadySeconds,
-		RevisionHistoryLimit: k8sSpec.RevisionHistoryLimit,
-		Paused:               k8sSpec.Paused,
-		RollbackTo:           k8sSpec.RollbackTo,
+		Replicas:                k8sSpec.Replicas,
+		Selector:                k8sSpec.Selector,
+		Template:                k8sSpec.Template,
+		Strategy:                k8sSpec.Strategy,
+		MinReadySeconds:         k8sSpec.MinReadySeconds,
+		RevisionHistoryLimit:    k8sSpec.RevisionHistoryLimit,
+		Paused:                  k8sSpec.Paused,
+		RollbackTo:              k8sSpec.RollbackTo,
+		ProgressDeadlineSeconds: k8sSpec.ProgressDeadlineSeconds,
 	}
 }
 

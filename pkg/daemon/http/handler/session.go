@@ -62,7 +62,7 @@ func SessionCreateH(w http.ResponseWriter, r *http.Request) {
 	if err == nil && user == nil {
 		user, err = ctx.Storage.User().GetByEmail(*rq.Login)
 		if err == nil && user == nil {
-			e.New("user").NotFound().Http(w)
+			e.HTTP.Unauthorized(w)
 			return
 		}
 	}

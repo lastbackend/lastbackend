@@ -17,6 +17,8 @@ type Project struct {
 	Name string `json:"name" gorethink:"name,omitempty"`
 	// Project description
 	Description string `json:"description" gorethink:"description,omitempty"`
+	// Project labels
+	Labels map[string]string  `json:"labels,omitempty" gorethink:"-"`
 	// Project created time
 	Created time.Time `json:"created" gorethink:"created,omitempty"`
 	// Project updated time

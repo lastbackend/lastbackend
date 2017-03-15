@@ -3,16 +3,17 @@ package daemon
 import (
 	"github.com/jawher/mow.cli"
 	"github.com/lastbackend/lastbackend/pkg/daemon/cmd"
+	"github.com/lastbackend/lastbackend/pkg/daemon/config"
 	"github.com/lastbackend/lastbackend/pkg/daemon/context"
+	"github.com/lastbackend/lastbackend/pkg/daemon/http"
 	"os"
 )
 
+var ctx = context.Get()
+
 func Run() {
 
-	var (
-		er  error
-		ctx = context.Get()
-	)
+	var er error
 
 	app := cli.App("lb", "apps cloud hosting with integrated deployment tools")
 
@@ -25,7 +26,7 @@ func Run() {
 			app.PrintLongHelp()
 		}
 	}
-	
+
 	app.Command("daemon", "Run last.backend daemon", cmd.Daemon)
 
 	er = app.Run(os.Args)
@@ -33,4 +34,15 @@ func Run() {
 		ctx.Log.Panic("Error: run application", er.Error())
 		return
 	}
+}
+
+func LoadConfig(i interface{}) {
+	config.ExternalConfig = i
+}
+
+func ExtendAPI(extends map[string]http.Handler) {
+	http.Extends = extends
+}
+
+func ExtendStorage() {
 }

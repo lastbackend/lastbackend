@@ -12,6 +12,7 @@ import (
 	"io/ioutil"
 	"k8s.io/client-go/pkg/api/v1"
 	"net/http"
+	"strings"
 )
 
 func ProjectListH(w http.ResponseWriter, r *http.Request) {
@@ -47,8 +48,6 @@ func ProjectListH(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	ctx.Log.Info(string(response))
-
 	w.WriteHeader(http.StatusOK)
 	_, err = w.Write(response)
 	if err != nil {
@@ -62,6 +61,7 @@ func ProjectInfoH(w http.ResponseWriter, r *http.Request) {
 	var (
 		err          error
 		session      *model.Session
+		projectModel *model.Project
 		ctx          = c.Get()
 		params       = mux.Vars(r)
 		projectParam = params["project"]
@@ -77,7 +77,6 @@ func ProjectInfoH(w http.ResponseWriter, r *http.Request) {
 	}
 
 	session = s.(*model.Session)
-	var projectModel *model.Project
 
 	projectModel, err = ctx.Storage.Project().GetByNameOrID(session.Uid, projectParam)
 	if err != nil {
@@ -90,12 +89,78 @@ func ProjectInfoH(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	namespace, err := ctx.K8S.CoreV1().Namespaces().Get(projectModel.ID)
+	if err != nil {
+		ctx.Log.Error("Error: remove namespace", err.Error())
+		e.HTTP.InternalServerError(w)
+		return
+	}
+
+	projectModel.Labels = namespace.ObjectMeta.Labels
+
 	response, err := projectModel.ToJson()
 	if err != nil {
 		ctx.Log.Error("Error: convert struct to json", err.Error())
 		e.HTTP.InternalServerError(w)
 		return
 	}
+
+	w.WriteHeader(http.StatusOK)
+	_, err = w.Write(response)
+	if err != nil {
+		ctx.Log.Error("Error: write response", err.Error())
+		return
+	}
+}
+
+func ProjectActivityListH(w http.ResponseWriter, r *http.Request) {
+
+	var (
+		err          error
+		session      *model.Session
+		projectModel *model.Project
+		ctx          = c.Get()
+		params       = mux.Vars(r)
+		projectParam = params["project"]
+	)
+
+	ctx.Log.Debug("List project activity handler")
+
+	s, ok := context.GetOk(r, `session`)
+	if !ok {
+		ctx.Log.Error("Error: get session context")
+		e.New("user").Unauthorized().Http(w)
+		return
+	}
+
+	session = s.(*model.Session)
+
+	projectModel, err = ctx.Storage.Project().GetByNameOrID(session.Uid, projectParam)
+	if err != nil {
+		ctx.Log.Error("Error: find project by id", err.Error())
+		e.HTTP.InternalServerError(w)
+		return
+	}
+	if projectModel == nil {
+		e.New("project").NotFound().Http(w)
+		return
+	}
+
+	activityListModel, err := ctx.Storage.Activity().ListProjectActivity(session.Uid, projectModel.ID)
+	if err != nil {
+		ctx.Log.Error("Error: find projects by user", err)
+		e.HTTP.InternalServerError(w)
+		return
+	}
+
+	response, err := activityListModel.ToJson()
+	if err != nil {
+		ctx.Log.Error("Error: convert struct to json", err.Error())
+		e.HTTP.InternalServerError(w)
+		return
+	}
+
+	ctx.Log.Info(string(response))
 
 	w.WriteHeader(http.StatusOK)
 	_, err = w.Write(response)
@@ -132,7 +197,9 @@ func (s *projectCreateS) decodeAndValidate(reader io.Reader) *e.Err {
 		return e.New("project").BadParameter("name")
 	}
 
-	if s.Name != nil && !validator.IsProjectName(*s.Name) {
+	*s.Name = strings.ToLower(*s.Name)
+
+	if len(*s.Name) < 4 && len(*s.Name) > 64 && !validator.IsProjectName(*s.Name) {
 		return e.New("project").BadParameter("name")
 	}
 
@@ -203,7 +270,7 @@ func ProjectCreateH(w http.ResponseWriter, r *http.Request) {
 		},
 	}
 
-	_, err = ctx.K8S.Core().Namespaces().Create(namespace)
+	_, err = ctx.K8S.CoreV1().Namespaces().Create(namespace)
 	if err != nil {
 		ctx.Log.Error("Error: create namespace", err.Error())
 		e.HTTP.InternalServerError(w)
@@ -225,12 +292,12 @@ func ProjectCreateH(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-type projectReplaceS struct {
+type projectUpdateS struct {
 	Name        *string `json:"name,omitempty"`
 	Description *string `json:"description,omitempty"`
 }
 
-func (s *projectReplaceS) decodeAndValidate(reader io.Reader) *e.Err {
+func (s *projectUpdateS) decodeAndValidate(reader io.Reader) *e.Err {
 
 	var (
 		err error
@@ -248,7 +315,13 @@ func (s *projectReplaceS) decodeAndValidate(reader io.Reader) *e.Err {
 		return e.New("project").IncorrectJSON(err)
 	}
 
-	if s.Name != nil && !validator.IsProjectName(*s.Name) {
+	if s.Name == nil {
+		return e.New("project").BadParameter("name")
+	}
+
+	*s.Name = strings.ToLower(*s.Name)
+
+	if len(*s.Name) < 4 && len(*s.Name) > 64 && !validator.IsProjectName(*s.Name) {
 		return e.New("project").BadParameter("name")
 	}
 
@@ -282,7 +355,7 @@ func ProjectUpdateH(w http.ResponseWriter, r *http.Request) {
 	session = s.(*model.Session)
 
 	// request body struct
-	rq := new(projectReplaceS)
+	rq := new(projectUpdateS)
 	if err := rq.decodeAndValidate(r.Body); err != nil {
 		ctx.Log.Error("Error: validation incomming data", err)
 		err.Http(w)
@@ -376,7 +449,7 @@ func ProjectRemoveH(w http.ResponseWriter, r *http.Request) {
 		projectParam = projectModel.ID
 	}
 
-	err = ctx.K8S.Core().Namespaces().Delete(projectParam, &v1.DeleteOptions{})
+	err = ctx.K8S.CoreV1().Namespaces().Delete(projectParam, &v1.DeleteOptions{})
 	if err != nil {
 		ctx.Log.Error("Error: remove namespace", err.Error())
 		e.HTTP.InternalServerError(w)
@@ -392,7 +465,7 @@ func ProjectRemoveH(w http.ResponseWriter, r *http.Request) {
 
 	if volumes != nil {
 		for _, val := range *volumes {
-			err = ctx.K8S.Core().PersistentVolumes().Delete(val.Name, &v1.DeleteOptions{})
+			err = ctx.K8S.CoreV1().PersistentVolumes().Delete(val.Name, &v1.DeleteOptions{})
 			if err != nil {
 				ctx.Log.Error("Error: remove persistent volume", err.Error())
 				e.HTTP.InternalServerError(w)
@@ -411,6 +484,13 @@ func ProjectRemoveH(w http.ResponseWriter, r *http.Request) {
 	err = ctx.Storage.Service().RemoveByProject(session.Uid, projectParam)
 	if err != nil {
 		ctx.Log.Error("Error: remove services from db", err)
+		e.HTTP.InternalServerError(w)
+		return
+	}
+
+	err = ctx.Storage.Activity().RemoveByProject(session.Uid, projectParam)
+	if err != nil {
+		ctx.Log.Error("Error: remove activity from db", err)
 		e.HTTP.InternalServerError(w)
 		return
 	}

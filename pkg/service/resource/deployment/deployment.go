@@ -23,19 +23,19 @@ type Deployment struct {
 
 func Get(client k8s.IK8S, namespace string, name string) (*Deployment, error) {
 
-	deployment, err := client.Extensions().Deployments(namespace).Get(name)
+	d, err := client.ExtensionsV1beta1().Deployments(namespace).Get(name)
 	if err != nil {
 		return nil, err
 	}
 
-	var deploymentNew = new(extensions.Deployment)
+	var dNew = new(extensions.Deployment)
 
-	err = converter.Convert_Deployment_v1beta1_to_extensions(deployment, deploymentNew)
+	err = converter.Convert_Deployment_v1beta1_to_extensions(d, dNew)
 	if err != nil {
 		return nil, err
 	}
 
-	selector, err := unversioned.LabelSelectorAsSelector(deploymentNew.Spec.Selector)
+	selector, err := unversioned.LabelSelectorAsSelector(dNew.Spec.Selector)
 	if err != nil {
 		return nil, err
 	}
@@ -49,22 +49,22 @@ func Get(client k8s.IK8S, namespace string, name string) (*Deployment, error) {
 		return nil, err
 	}
 
-	pods := common.FilterNamespacedPodsBySelector(podListRaw.Items, deployment.ObjectMeta.Namespace, deployment.Spec.Selector.MatchLabels)
+	pods := common.FilterNamespacedPodsBySelector(podListRaw.Items, d.ObjectMeta.Namespace, d.Spec.Selector.MatchLabels)
 
 	podList := pod.CreatePodList(pods)
 
 	return &Deployment{
-		ObjectMeta: common.NewObjectMeta(deploymentNew.ObjectMeta),
+		ObjectMeta: common.NewObjectMeta(dNew.ObjectMeta),
 		TypeMeta:   common.NewTypeMeta(kind),
-		Spec:       common.NewSpec(deploymentNew.Spec),
+		Spec:       common.NewSpec(dNew.Spec),
 		PodList:    *podList,
-		Selector:   deploymentNew.Spec.Selector.MatchLabels,
+		Selector:   dNew.Spec.Selector.MatchLabels,
 	}, nil
 }
 
 func List(client k8s.IK8S, namespace string) ([]Deployment, error) {
 
-	deploymentList, err := client.Extensions().Deployments(namespace).List(v1.ListOptions{})
+	deploymentList, err := client.ExtensionsV1beta1().Deployments(namespace).List(v1.ListOptions{})
 	if err != nil {
 		return nil, err
 	}
@@ -112,10 +112,36 @@ func List(client k8s.IK8S, namespace string) ([]Deployment, error) {
 
 func Update(client k8s.IK8S, namespace string, config *v1beta1.Deployment) error {
 
-	_, err := client.Extensions().Deployments(namespace).Update(config)
+	_, err := client.ExtensionsV1beta1().Deployments(namespace).Update(config)
 	if err != nil {
 		return err
 	}
 
 	return nil
+}
+
+func Remove(client k8s.IK8S, namespace string, name string) error {
+	var opts = new(v1.DeleteOptions)
+
+	dp, err := client.ExtensionsV1beta1().Deployments(namespace).Get(name)
+	if err != nil {
+		return err
+	}
+
+	if err := client.ExtensionsV1beta1().Deployments(namespace).Delete(name, opts); err != nil {
+		return err
+	}
+
+	selector, err := unversioned.LabelSelectorAsSelector(dp.Spec.Selector)
+	if err != nil {
+		return err
+	}
+
+	filter := v1.ListOptions{LabelSelector: selector.String()}
+
+	if err := client.ExtensionsV1beta1().ReplicaSets(namespace).DeleteCollection(opts, filter); err != nil {
+		return err
+	}
+
+	return client.CoreV1().Pods(namespace).DeleteCollection(opts, filter)
 }

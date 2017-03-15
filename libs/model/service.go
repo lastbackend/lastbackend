@@ -27,9 +27,18 @@ type Service struct {
 	// Service spec
 	Spec *service.Service `json:"spec,omitempty" gorethink:"-"`
 	// Service created time
+	Source *Source `json:"source,omitempty" gorethink:"source,omitempty"`
+	// Service created time
 	Created time.Time `json:"created" gorethink:"created,omitempty"`
 	// Service updated time
 	Updated time.Time `json:"updated" gorethink:"updated,omitempty"`
+}
+
+type Source struct {
+	Hub      string `json:"hub" gorethink:"hub,omitempty"`
+	Username string `json:"username" gorethink:"username,omitempty"`
+	Repo     string `json:"repo" gorethink:"repo,omitempty"`
+	Branch   string `json:"branch" gorethink:"branch,omitempty"`
 }
 
 func (s *Service) ToJson() ([]byte, error) {
@@ -45,9 +54,10 @@ func (s *Service) GetConfig() *ServiceUpdateConfig {
 
 	var config = new(ServiceUpdateConfig)
 
-	config.Description = s.Description
-	config.Replicas = s.Spec.Scale
-	config.Containers = make([]ContainerConfig, len(s.Spec.Template.ContainerList))
+	config.Description = &s.Description
+
+	config.Replicas = &s.Spec.Scale
+	*config.Containers = make([]ContainerConfig, len(s.Spec.Template.ContainerList))
 
 	for index, val := range s.Spec.Template.ContainerList {
 		cfg := ContainerConfig{}
@@ -73,7 +83,7 @@ func (s *Service) GetConfig() *ServiceUpdateConfig {
 			})
 		}
 
-		config.Containers[index] = cfg
+		(*config.Containers)[index] = cfg
 	}
 
 	return config
@@ -152,9 +162,10 @@ func (s *ServiceList) DrawTable(projectName string) {
 }
 
 type ServiceUpdateConfig struct {
-	Description string            `json:"description" yaml:"description"`
-	Replicas    int32             `json:"scale" yaml:"scale"`
-	Containers  []ContainerConfig `json:"containers" yaml:"containers"`
+	Name        *string            `json:"name,omitempty" yaml:"name,omitempty"`
+	Description *string            `json:"description,omitempty" yaml:"description,omitempty"`
+	Replicas    *int32             `json:"scale,omitempty" yaml:"scale,omitempty"`
+	Containers  *[]ContainerConfig `json:"containers,omitempty" yaml:"containers,omitempty"`
 }
 
 type ContainerConfig struct {
@@ -179,36 +190,42 @@ type EnvVar struct {
 }
 
 func (s ServiceUpdateConfig) CreateServiceConfig() *service.ServiceConfig {
+
 	var cfg = new(service.ServiceConfig)
 
-	cfg.Replicas = s.Replicas
+	if s.Replicas != nil {
+		cfg.Scale = *s.Replicas
+	}
 
-	for _, val := range s.Containers {
-		c := container.Container{}
+	if s.Containers != nil {
+		cfg.Containers = &[]container.Container{}
+		for _, val := range *s.Containers {
+			c := container.Container{}
 
-		c.Name = val.Name
-		c.Image = val.Image
-		c.WorkingDir = val.WorkingDir
-		c.Command = val.Command
-		c.Args = val.Args
+			c.Name = val.Name
+			c.Image = val.Image
+			c.WorkingDir = val.WorkingDir
+			c.Command = val.Command
+			c.Args = val.Args
 
-		for _, item := range val.Ports {
-			c.Ports = append(c.Ports, container.Port{
-				Name:          item.Name,
-				ContainerPort: item.Container,
-				Protocol:      item.Protocol,
-			})
-
-			for _, val := range val.Env {
-				c.Env = append(c.Env, container.EnvVar{
-					Name:  val.Name,
-					Value: val.Value,
+			for _, item := range val.Ports {
+				c.Ports = append(c.Ports, container.Port{
+					Name:          item.Name,
+					ContainerPort: item.Container,
+					Protocol:      item.Protocol,
 				})
+
+				for _, val := range val.Env {
+					c.Env = append(c.Env, container.EnvVar{
+						Name:  val.Name,
+						Value: val.Value,
+					})
+				}
+
 			}
 
+			*cfg.Containers = append(*cfg.Containers, c)
 		}
-
-		cfg.Containers = append(cfg.Containers, c)
 	}
 
 	return cfg

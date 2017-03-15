@@ -2,10 +2,6 @@ package handler
 
 import (
 	"encoding/json"
-	"io"
-	"io/ioutil"
-	"net/http"
-
 	"github.com/gorilla/context"
 	e "github.com/lastbackend/lastbackend/libs/errors"
 	"github.com/lastbackend/lastbackend/libs/model"
@@ -13,16 +9,20 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/template"
 	"github.com/lastbackend/lastbackend/pkg/util/converter"
 	"github.com/lastbackend/lastbackend/pkg/util/validator"
+	"io"
+	"io/ioutil"
+	"net/http"
+	"strings"
 )
 
 type deployS struct {
-	Project  *string `json:"project,omitempty"`
-	Name     *string `json:"name,omitempty"`
-	Template *string `json:"template,omitempty"`
-	Image    *string `json:"image,omitempty"`
-	Url      *string `json:"url,omitempty"`
+	Project  string `json:"project,omitempty"`
+	Name     string `json:"name,omitempty"`
+	Template string `json:"template,omitempty"`
+	Image    string `json:"image,omitempty"`
+	Url      string `json:"url,omitempty"`
 	Config   *struct {
-		Scale   *int32      `json:"scale,omitempty"`
+		Scale   int32       `json:"scale,omitempty"`
 		Ports   *portList   `json:"ports,omitempty"`
 		Env     *envList    `json:"env,omitempty"`
 		Volumes *volumeList `json:"volumes,omitempty"`
@@ -51,44 +51,46 @@ func (d *deployS) decodeAndValidate(reader io.Reader) *e.Err {
 		return e.New("service").IncorrectJSON(err)
 	}
 
-	if d.Project == nil {
+	if d.Project == "" {
 		return e.New("service").BadParameter("project")
 	}
 
-	if d.Template != nil {
-		if d.Name == nil {
+	if d.Template != "" {
+		if d.Name == "" {
 			d.Name = d.Template
 		}
 	}
 
-	if d.Image != nil && d.Url == nil {
-		if !validator.IsServiceName(*d.Image) {
-			return e.New("service").BadParameter("docker")
-		}
-
-		source, err := converter.DockerNamespaceParse(*d.Image)
+	if d.Image != "" && d.Url == "" {
+		source, err := converter.DockerNamespaceParse(d.Image)
 		if err != nil {
 			return e.New("service").BadParameter("image")
 		}
 
-		if d.Name == nil {
-			d.Name = &source.Repo
+		if d.Name == "" {
+			d.Name = source.Repo
 		}
 	}
 
-	if d.Url != nil {
-		if !validator.IsGitUrl(*d.Url) {
+	if d.Url != "" {
+		if !validator.IsGitUrl(d.Url) {
 			e.New("service").BadParameter("url")
 		}
 
-		source, err := converter.GitUrlParse(*d.Url)
+		source, err := converter.GitUrlParse(d.Url)
 		if err != nil {
 			return e.New("service").BadParameter("url")
 		}
 
-		if d.Name == nil {
-			d.Name = &source.Repo
+		if d.Name == "" {
+			d.Name = source.Repo
 		}
+	}
+
+	d.Name = strings.ToLower(d.Name)
+
+	if !validator.IsServiceName(d.Name) {
+		return e.New("service").BadParameter("name")
 	}
 
 	return nil
@@ -119,15 +121,15 @@ func DeployH(w http.ResponseWriter, r *http.Request) {
 	rq := new(deployS)
 	if err := rq.decodeAndValidate(r.Body); err != nil {
 		ctx.Log.Error("Error: validation incomming data", err.Err())
-		e.HTTP.InternalServerError(w)
+		err.Http(w)
 		return
 	}
 
 	// Load template from registry
-	if rq.Template != nil {
-		tpl, err = template.Get(*rq.Template)
+	if rq.Template != "" {
+		tpl, err = template.Get(rq.Template)
 		if err == nil && tpl == nil {
-			ctx.Log.Error("Error: tempalte " + *rq.Template + " not found")
+			ctx.Log.Error("Error: tempalte " + rq.Template + " not found")
 			e.New("template").NotFound().Http(w)
 			return
 		}
@@ -140,21 +142,21 @@ func DeployH(w http.ResponseWriter, r *http.Request) {
 
 	// If you are not using a template, then create a standard configuration template
 	if tpl == nil {
-		tpl = template.CreateDefaultDeploymentConfig(*rq.Name)
+		tpl = template.CreateDefaultDeploymentConfig(rq.Name)
 	}
 
-	cfg.Name = *rq.Name
+	cfg.Name = rq.Name
 
 	// Set image as default for docker image
-	if rq.Image != nil {
-		cfg.Image = *rq.Image
+	if rq.Image != "" {
+		cfg.Image = rq.Image
 	}
 
 	// If have custom config, then need patch this config
 	if rq.Config != nil {
 
-		if rq.Config.Scale != nil {
-			cfg.Scale = *rq.Config.Scale
+		if rq.Config.Scale != 0 {
+			cfg.Scale = rq.Config.Scale
 		}
 
 		if rq.Config.Ports != nil {
@@ -193,8 +195,19 @@ func DeployH(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
+	projectModel, err := ctx.Storage.Project().GetByNameOrID(session.Uid, rq.Project)
+	if err == nil && projectModel == nil {
+		e.New("service").NotFound().Http(w)
+		return
+	}
+	if err != nil {
+		ctx.Log.Error("Error: find project by id", err.Error())
+		e.HTTP.InternalServerError(w)
+		return
+	}
+
 	// Deploy from service template config
-	err = tpl.Provision(*rq.Project, session.Uid, *rq.Project, cfg)
+	err = tpl.Provision(projectModel.ID, session.Uid, projectModel.ID, cfg)
 	if err != nil {
 		ctx.Log.Error("Error: template provision failed", err.Error())
 		e.HTTP.InternalServerError(w)
