@@ -10,8 +10,6 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/daemon/context"
 	"github.com/lastbackend/lastbackend/pkg/daemon/http"
 	"github.com/lastbackend/lastbackend/pkg/proxy/server"
-	"gopkg.in/yaml.v2"
-	"io/ioutil"
 	"os"
 	"os/signal"
 	"syscall"
@@ -34,15 +32,7 @@ func Daemon(cmd *cli.Cmd) {
 		ctx.Log.Init()
 
 		if *configPath != "" {
-
-			// Parsing config file
-			configBytes, err := ioutil.ReadFile(*configPath)
-			if err != nil {
-				ctx.Log.Panic(err)
-			}
-
-			err = yaml.Unmarshal(configBytes, cfg)
-			if err != nil {
+			if err := cfg.Configure(*configPath); err != nil {
 				ctx.Log.Panic(err)
 			}
 		}

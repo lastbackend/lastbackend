@@ -6,15 +6,36 @@ import (
 	"fmt"
 	etcd "github.com/coreos/etcd/clientv3"
 	r "gopkg.in/dancannon/gorethink.v2"
+	"gopkg.in/yaml.v2"
 	"io/ioutil"
 	"k8s.io/client-go/rest"
+	"reflect"
 	"time"
 )
 
-var config Config
+var ExternalConfig interface{}
+var config = new(Config)
+
+func (Config) Configure(path string) error {
+
+	// Parsing config file
+	buf, err := ioutil.ReadFile(path)
+	if err != nil {
+		return err
+	}
+
+	if !isNil(ExternalConfig) {
+		err = yaml.Unmarshal(buf, ExternalConfig)
+		if err != nil {
+			return err
+		}
+	}
+
+	return yaml.Unmarshal(buf, &config)
+}
 
 func Get() *Config {
-	return &config
+	return config
 }
 
 func GetK8S() *rest.Config {
@@ -35,7 +56,7 @@ func GetEtcdDB() *etcd.Client {
 		DialTimeout: config.Etcd.TimeOut * time.Second,
 	})
 	if err != nil {
-		_ = fmt.Errorf("Etcd error: %s", err.Error())
+		_ = fmt.Errorf("Etcd error: %c", err.Error())
 	}
 
 	return cli
@@ -62,7 +83,7 @@ func GetRethinkDB() r.ConnectOpts {
 		cert, err := ioutil.ReadFile(config.RethinkDB.SSL.CA)
 
 		if err != nil {
-			_ = fmt.Errorf("SSL read error: %s", err.Error())
+			_ = fmt.Errorf("SSL read error: %c", err.Error())
 		}
 
 		roots.AppendCertsFromPEM(cert)
@@ -73,4 +94,9 @@ func GetRethinkDB() r.ConnectOpts {
 	}
 
 	return options
+}
+
+func isNil(a interface{}) bool {
+	defer func() { recover() }()
+	return a == nil || reflect.ValueOf(a).IsNil()
 }
