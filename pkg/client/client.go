@@ -7,7 +7,6 @@ import (
 	"github.com/lastbackend/lastbackend/libs/log"
 	"github.com/lastbackend/lastbackend/pkg/client/cmd/deploy"
 	p "github.com/lastbackend/lastbackend/pkg/client/cmd/project"
-	"github.com/lastbackend/lastbackend/pkg/client/cmd/proxy"
 	s "github.com/lastbackend/lastbackend/pkg/client/cmd/service"
 	"github.com/lastbackend/lastbackend/pkg/client/cmd/template"
 	u "github.com/lastbackend/lastbackend/pkg/client/cmd/user"
@@ -125,23 +124,6 @@ func configure(app *cli.Cli) {
 			}
 
 			deploy.DeployCmd(*name, *image, *template, *url, *scale)
-		}
-
-	})
-
-	app.Command("proxy", "Run proxy server", func(c *cli.Cmd) {
-
-		c.Spec = "[--port]"
-
-		var port = c.Int(cli.IntOpt{Name: "p port", Desc: "set proxy local port", HideValue: true})
-
-		c.Action = func() {
-			if *port == 0 {
-				c.PrintHelp()
-				return
-			}
-
-			proxy.ProxyCmd(*port)
 		}
 
 	})

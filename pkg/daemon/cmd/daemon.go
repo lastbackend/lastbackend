@@ -9,7 +9,6 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/daemon/config"
 	"github.com/lastbackend/lastbackend/pkg/daemon/context"
 	"github.com/lastbackend/lastbackend/pkg/daemon/http"
-	"github.com/lastbackend/lastbackend/pkg/proxy/server"
 	"os"
 	"os/signal"
 	"syscall"
@@ -80,23 +79,13 @@ func Daemon(cmd *cli.Cmd) {
 
 		go http.RunHttpServer(routes, cfg.HttpServer.Port)
 
-		proxy := server.New(ctx.K8S)
-		go proxy.Start(cfg.ProxyServer.Port)
-
 		// Handle SIGINT and SIGTERM.
 		signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)
 
 		go func() {
 			for {
 				select {
-				case <-proxy.Ready:
-					ctx.Log.Info("Listen proxy on", cfg.ProxyServer.Port, "port")
-				case <-proxy.Done:
-					done <- true
-					return
 				case <-sigs:
-					proxy.Shutdown()
-					<-proxy.Done
 					done <- true
 					return
 				}
