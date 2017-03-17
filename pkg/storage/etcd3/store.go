@@ -26,6 +26,7 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/util/converter"
 	"golang.org/x/net/context"
 	"path"
+	"fmt"
 )
 
 type store struct {
@@ -47,6 +48,7 @@ func (s *store) Create(ctx context.Context, key string, obj, outPtr interface{},
 	if err != nil {
 		return err
 	}
+	fmt.Println("Create:", key, string(data))
 	txnResp, err := s.client.KV.Txn(ctx).If(notFound(key)).
 		Then(clientv3.OpPut(key, string(data), opts...)).
 		Commit()

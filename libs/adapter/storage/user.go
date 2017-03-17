@@ -23,6 +23,7 @@ import (
 	"github.com/lastbackend/lastbackend/libs/model"
 	db "github.com/lastbackend/lastbackend/pkg/storage"
 	"github.com/lastbackend/lastbackend/pkg/storage/store"
+	"golang.org/x/net/context"
 )
 
 const UserTable = "users"
@@ -43,7 +44,20 @@ func (s *UserStorage) GetByEmail(email string) (*model.User, error) {
 }
 
 func (s *UserStorage) GetByID(id string) (*model.User, error) {
+
 	var user = new(model.User)
+
+	client, close, err := s.Client()
+	if err != nil {
+		return nil, err
+	}
+	defer close()
+
+	err = client.Get(context.Background(), UserTable+"/"+id, user)
+	if err != nil {
+		return nil, err
+	}
+
 	return user, nil
 }
 
