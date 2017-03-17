@@ -1,89 +1,57 @@
+//
+// Last.Backend LLC CONFIDENTIAL
+// __________________
+//
+// [2014] - [2017] Last.Backend LLC
+// All Rights Reserved.
+//
+// NOTICE:  All information contained herein is, and remains
+// the property of Last.Backend LLC and its suppliers,
+// if any.  The intellectual and technical concepts contained
+// herein are proprietary to Last.Backend LLC
+// and its suppliers and may be covered by Russian Federation and Foreign Patents,
+// patents in process, and are protected by trade secret or copyright law.
+// Dissemination of this information or reproduction of this material
+// is strictly forbidden unless prior written permission is obtained
+// from Last.Backend LLC.
+//
+
 package storage
 
 import (
 	"github.com/lastbackend/lastbackend/libs/interface/storage"
 	"github.com/lastbackend/lastbackend/libs/model"
-	r "gopkg.in/dancannon/gorethink.v2"
+	db "github.com/lastbackend/lastbackend/pkg/storage"
+	"github.com/lastbackend/lastbackend/pkg/storage/store"
 )
 
 const BuildTable string = "builds"
 
 // Service Build type for interface in interfaces folder
 type BuildStorage struct {
-	Session *r.Session
 	storage.IBuild
+	Client func() (store.Interface, store.DestroyFunc, error)
 }
 
 // Get build model by id
 func (s *BuildStorage) GetByID(user, id string) (*model.Build, error) {
-
-	var err error
-	var build = new(model.Build)
-	var user_filter = r.Row.Field("user").Eq(user)
-	res, err := r.Table(BuildTable).Get(id).Filter(user_filter).Run(s.Session)
-	if err != nil {
-		return nil, err
-	}
-
-	if res.IsNil() {
-		return nil, nil
-	}
-
-	res.One(build)
-
-	defer res.Close()
-	return build, nil
+	return nil, nil
 }
 
 // Get builds by image
 func (s *BuildStorage) ListByImage(user, id string) (*model.BuildList, error) {
-
-	var err error
-	var builds = new(model.BuildList)
-	var image_filter = r.Row.Field("image").Field("id").Eq(id)
-	var user_filter = r.Row.Field("user").Eq(user)
-	res, err := r.Table(BuildTable).Filter(image_filter).Filter(user_filter).Run(s.Session)
-	if err != nil {
-		return nil, err
-	}
-
-	if res.IsNil() {
-		return nil, nil
-	}
-
-	res.All(builds)
-
-	defer res.Close()
-	return builds, nil
+	return nil, nil
 }
 
 // Insert new build into storage
 func (s *BuildStorage) Insert(build *model.Build) (*model.Build, error) {
-
-	res, err := r.Table(BuildTable).Insert(build, r.InsertOpts{ReturnChanges: true}).RunWrite(s.Session)
-	if err != nil {
-		return nil, err
-	}
-
-	build.ID = res.GeneratedKeys[0]
-
-	return build, nil
+	return nil, nil
 }
 
-// Replace build model
-func (s *BuildStorage) Replace(build *model.Build) (*model.Build, error) {
-	var user_filter = r.Row.Field("user").Eq(build.User)
-	_, err := r.Table(BuildTable).Get(build.ID).Filter(user_filter).Replace(build, r.ReplaceOpts{ReturnChanges: true}).RunWrite(s.Session)
-	if err != nil {
-		return nil, err
-	}
-
-	return build, nil
-}
-
-func newBuildStorage(session *r.Session) *BuildStorage {
-	r.TableCreate(BuildTable, r.TableCreateOpts{}).Run(session)
+func newBuildStorage(config store.Config) *BuildStorage {
 	s := new(BuildStorage)
-	s.Session = session
+	s.Client = func() (store.Interface, store.DestroyFunc, error) {
+		return db.Create(config)
+	}
 	return s
 }
