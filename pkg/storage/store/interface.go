@@ -43,6 +43,9 @@ type Interface interface {
 	// Get unmarshals json found at key into objPtr. On a not found error, will either
 	// return a zero object.
 	Get(ctx context.Context, key string, objPtr interface{}) error
+	// List unmarshalls jsons found at directory defined by key and opaque them
+	// into list object.
+	List(ctx context.Context, key string, listObj interface{}) error
 	// Delete removes the specified key and returns the value that existed at that spot.
 	// If key didn't exist, it will return NotFound storage error.
 	Delete(ctx context.Context, key string, out interface{}) error

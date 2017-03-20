@@ -24,6 +24,7 @@ import (
 	"github.com/coreos/etcd/pkg/transport"
 	"github.com/lastbackend/lastbackend/pkg/storage/etcd3"
 	"github.com/lastbackend/lastbackend/pkg/storage/store"
+	"time"
 )
 
 func createEtcd3Storage(c store.Config) (store.Interface, store.DestroyFunc, error) {
@@ -34,8 +35,9 @@ func createEtcd3Storage(c store.Config) (store.Interface, store.DestroyFunc, err
 	}
 
 	cfg := clientv3.Config{
-		Endpoints: c.Endpoints,
-		TLS:       tlsConfig,
+		Endpoints:   c.Endpoints,
+		TLS:         tlsConfig,
+		DialTimeout: 5 * time.Second,
 	}
 
 	client, err := clientv3.New(cfg)
