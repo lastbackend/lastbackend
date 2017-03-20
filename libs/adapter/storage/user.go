@@ -24,6 +24,7 @@ import (
 	db "github.com/lastbackend/lastbackend/pkg/storage"
 	"github.com/lastbackend/lastbackend/pkg/storage/store"
 	"golang.org/x/net/context"
+	"time"
 )
 
 const UserTable = "users"
@@ -53,7 +54,9 @@ func (s *UserStorage) GetByID(id string) (*model.User, error) {
 	}
 	defer close()
 
-	err = client.Get(context.Background(), UserTable+"/"+id, user)
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	err = client.Get(ctx, UserTable+"/"+id, user)
+	cancel()
 	if err != nil {
 		return nil, err
 	}

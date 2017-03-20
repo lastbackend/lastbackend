@@ -73,7 +73,7 @@ func (s *store) Create(ctx context.Context, key string, obj, outPtr interface{},
 }
 
 // Get implements store.Interface.Get.
-func (s *store) Get(ctx context.Context, key string, objPtr interface{}) error {
+func (s *store) Get(ctx context.Context, key string, outPtr interface{}) error {
 	key = path.Join(s.pathPrefix, key)
 	fmt.Println("Get:", key)
 	res, err := s.client.KV.Get(ctx, key, s.getOps...)
@@ -83,14 +83,12 @@ func (s *store) Get(ctx context.Context, key string, objPtr interface{}) error {
 	if len(res.Kvs) == 0 {
 		return nil
 	}
-	return decode(s.codec, res.Kvs[0].Value, objPtr)
+	return decode(s.codec, res.Kvs[0].Value, outPtr)
 }
 
 // List implements storage.Interface.List.
-func (s *store) List(ctx context.Context, key string, listObjPtr interface{}) error {
-
+func (s *store) List(ctx context.Context, key string, listOutPtr interface{}) error {
 	key = path.Join(s.pathPrefix, key)
-
 	// We need to make sure the key ended with "/" so that we only get children "directories".
 	// e.g. if we have key "/a", "/a/b", "/ab", getting keys with prefix "/a" will return all three,
 	// while with prefix "/a/" will return only "/a/b" which is the correct answer.
@@ -104,16 +102,16 @@ func (s *store) List(ctx context.Context, key string, listObjPtr interface{}) er
 		return err
 	}
 
-	elems := make([]itemForDecode, 0, len(getResp.Kvs))
+	items := make([]itemForDecode, 0, len(getResp.Kvs))
 	for _, kv := range getResp.Kvs {
-		elems = append(elems, itemForDecode(kv.Value))
+		items = append(items, itemForDecode(kv.Value))
 	}
 
-	return decodeList(elems, listObjPtr, s.codec)
+	return decodeList(items, listOutPtr, s.codec)
 }
 
 // Delete implements store.Interface.Delete.
-func (s *store) Delete(ctx context.Context, key string, objPtr interface{}) error {
+func (s *store) Delete(ctx context.Context, key string, outPtr interface{}) error {
 	key = path.Join(s.pathPrefix, key)
 	// We need to do get and delete in single transaction in order to
 	// know the value and revision before deleting it.
@@ -125,7 +123,7 @@ func (s *store) Delete(ctx context.Context, key string, objPtr interface{}) erro
 	if err != nil {
 		return err
 	}
-	if validator.IsNil(objPtr) {
+	if validator.IsNil(outPtr) {
 		return nil
 	}
 
@@ -133,22 +131,22 @@ func (s *store) Delete(ctx context.Context, key string, objPtr interface{}) erro
 	if len(getResp.Kvs) == 0 {
 		return errors.New(st.ErrKeyNotFound)
 	}
-	return decode(s.codec, getResp.Kvs[0].Value, objPtr)
+	return decode(s.codec, getResp.Kvs[0].Value, outPtr)
 }
 
 // Decode decodes value of bytes into object.
 // On success, objPtr would be set to the object.
-func decode(s serializer.Codec, value []byte, objPtr interface{}) error {
-	if _, err := converter.EnforcePtr(objPtr); err != nil {
+func decode(s serializer.Codec, value []byte, outPtr interface{}) error {
+	if _, err := converter.EnforcePtr(outPtr); err != nil {
 		panic("unable to convert output object to pointer")
 	}
-	return serializer.Decode(s, value, objPtr)
+	return serializer.Decode(s, value, outPtr)
 }
 
 // decodeList decodes a list of values into a list of objects.
 // On success, ListObjPtr would be set to the list of objects.
-func decodeList(items []itemForDecode, ListObjPtr interface{}, codec serializer.Codec) error {
-	v, err := converter.EnforcePtr(ListObjPtr)
+func decodeList(items []itemForDecode, ListOutPtr interface{}, codec serializer.Codec) error {
+	v, err := converter.EnforcePtr(ListOutPtr)
 	if err != nil || v.Kind() != reflect.Slice {
 		panic("need ptr to slice")
 	}
