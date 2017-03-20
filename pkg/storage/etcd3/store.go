@@ -22,7 +22,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/coreos/etcd/clientv3"
-	"github.com/lastbackend/cloud/pkg/util/validator"
+	"github.com/lastbackend/lastbackend/pkg/util/validator"
 	"github.com/lastbackend/lastbackend/pkg/serializer"
 	st "github.com/lastbackend/lastbackend/pkg/storage/store"
 	"github.com/lastbackend/lastbackend/pkg/util/converter"
