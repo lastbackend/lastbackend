@@ -1,101 +1,60 @@
+//
+// Last.Backend LLC CONFIDENTIAL
+// __________________
+//
+// [2014] - [2017] Last.Backend LLC
+// All Rights Reserved.
+//
+// NOTICE:  All information contained herein is, and remains
+// the property of Last.Backend LLC and its suppliers,
+// if any.  The intellectual and technical concepts contained
+// herein are proprietary to Last.Backend LLC
+// and its suppliers and may be covered by Russian Federation and Foreign Patents,
+// patents in process, and are protected by trade secret or copyright law.
+// Dissemination of this information or reproduction of this material
+// is strictly forbidden unless prior written permission is obtained
+// from Last.Backend LLC.
+//
+
 package storage
 
 import (
 	"github.com/lastbackend/lastbackend/libs/interface/storage"
 	"github.com/lastbackend/lastbackend/libs/model"
-	r "gopkg.in/dancannon/gorethink.v2"
-	"time"
+	db "github.com/lastbackend/lastbackend/pkg/storage"
+	"github.com/lastbackend/lastbackend/pkg/storage/store"
 )
 
 const VolumeTable string = "volumes"
 
 // Volume Service type for interface in interfaces folder
 type VolumeStorage struct {
-	Session *r.Session
 	storage.IVolume
+	Client func() (store.Interface, store.DestroyFunc, error)
 }
 
 func (s *VolumeStorage) GetByID(user, id string) (*model.Volume, error) {
-
-	var err error
-	var volume = new(model.Volume)
-	var volume_filter = map[string]interface{}{
-		"id":   id,
-		"user": user,
-	}
-
-	res, err := r.Table(VolumeTable).Filter(volume_filter).Run(s.Session)
-	if err != nil {
-		return nil, err
-	}
-	defer res.Close()
-
-	if res.IsNil() {
-		return nil, nil
-	}
-
-	res.One(volume)
-
-	return volume, nil
+	return nil, nil
 }
 
 func (s *VolumeStorage) ListByProject(id string) (*model.VolumeList, error) {
-
-	var err error
-	var volumes = new(model.VolumeList)
-	var volume_filter = r.Row.Field("project").Eq(id)
-
-	res, err := r.Table(VolumeTable).Filter(volume_filter).Run(s.Session)
-	if err != nil {
-		return nil, err
-	}
-	defer res.Close()
-
-	if res.IsNil() {
-		return nil, nil
-	}
-
-	res.All(volumes)
-
-	return volumes, nil
+	return nil, nil
 }
 
 // Insert new volume into storage
 func (s *VolumeStorage) Insert(volume *model.Volume) (*model.Volume, error) {
-
-	var err error
-	var opts = r.InsertOpts{ReturnChanges: true}
-
-	volume.Created = time.Now()
-	volume.Updated = time.Now()
-
-	res, err := r.Table(VolumeTable).Insert(volume, opts).RunWrite(s.Session)
-	if err != nil {
-		return nil, err
-	}
-
-	volume.ID = res.GeneratedKeys[0]
-
-	return volume, nil
+	return nil, nil
 }
 
 // Remove build model
 func (s *VolumeStorage) Remove(id string) error {
-
-	var err error
-	var opts = r.DeleteOpts{ReturnChanges: true}
-
-	_, err = r.Table(VolumeTable).Get(id).Delete(opts).RunWrite(s.Session)
-	if err != nil {
-		return err
-	}
-
 	return nil
 }
 
-func newVolumeStorage(session *r.Session) *VolumeStorage {
-	r.TableCreate(VolumeTable, r.TableCreateOpts{}).Run(session)
+func newVolumeStorage(config store.Config) *VolumeStorage {
 	s := new(VolumeStorage)
-	s.Session = session
+	s.Client = func() (store.Interface, store.DestroyFunc, error) {
+		return db.Create(config)
+	}
 	return s
 }
