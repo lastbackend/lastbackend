@@ -59,8 +59,7 @@ func Run() {
 			app.PrintLongHelp()
 		}
 
-		ctx.Log = new(log.Log)
-		ctx.Log.Init()
+		ctx.Log = log.Init()
 
 		if *debug {
 			cfg.Debug = *debug
