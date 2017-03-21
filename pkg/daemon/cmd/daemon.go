@@ -27,6 +27,7 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/daemon/config"
 	"github.com/lastbackend/lastbackend/pkg/daemon/context"
 	"github.com/lastbackend/lastbackend/pkg/daemon/http"
+	"log/syslog"
 	"os"
 	"os/signal"
 	"syscall"
@@ -45,8 +46,11 @@ func Daemon(cmd *cli.Cmd) {
 
 	cmd.Before = func() {
 
-		ctx.Log = new(log.Log)
-		ctx.Log.Init()
+		ctx.Log = log.Init()
+
+		// If you want to connect to local syslog (Ex. "/dev/log" or "/var/run/syslog" or "/var/run/log").
+		// Just assign empty string to the first two parameters of NewSyslogHook. It should look like the following.
+		ctx.Log.SetSyslog("", "", syslog.LOG_INFO, "")
 
 		if *configPath != "" {
 			if err := cfg.Configure(*configPath); err != nil {

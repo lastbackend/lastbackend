@@ -40,6 +40,10 @@ func (Http) InvalidJSON(w http.ResponseWriter) {
 	Http{Code: http.StatusBadRequest, Status: StatusIncorrectJson, Message: "Invalid json"}.send(w)
 }
 
+func (Http) InvalidXML(w http.ResponseWriter) {
+	Http{Code: http.StatusBadRequest, Status: StatusIncorrectXml, Message: "Invalid xml"}.send(w)
+}
+
 func (Http) BadRequest(w http.ResponseWriter) {
 	Http{Code: http.StatusBadRequest, Status: http.StatusText(http.StatusBadRequest), Message: "Bad request"}.send(w)
 }
@@ -96,6 +100,14 @@ func (Http) getIncorrectJSON() *Http {
 		Code:    http.StatusBadRequest,
 		Status:  StatusIncorrectJson,
 		Message: "Incorrect json",
+	}
+}
+
+func (Http) getIncorrectXML() *Http {
+	return &Http{
+		Code:    http.StatusBadRequest,
+		Status:  StatusIncorrectXml,
+		Message: "Incorrect xml",
 	}
 }
 
