@@ -34,9 +34,7 @@ func Get() *Context {
 
 func Mock() *Context {
 	context.mock = true
-	context.Log = new(l.Log)
-	context.Log.Init()
-	context.Log.Disabled()
+	context.Log = l.Init()
 	context.Storage = new(db.DB)
 
 	return &context
