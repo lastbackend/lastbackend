@@ -18,10 +18,13 @@
 
 package log
 
+import (
+	"log/syslog"
+)
+
 type ILogger interface {
-	Init()
 	SetDebugLevel()
-	Disabled()
+	SetSyslog(network, raddr string, priority syslog.Priority, tag string)
 	Debug(args ...interface{})
 	Debugf(format string, args ...interface{})
 	Info(args ...interface{})

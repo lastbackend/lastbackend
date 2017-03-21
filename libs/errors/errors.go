@@ -56,6 +56,14 @@ func IncorrectJSON(e ...error) *Err {
 	}
 }
 
+func IncorrectXML(e ...error) *Err {
+	return &Err{
+		Code:   StatusIncorrectXml,
+		origin: getError("incorrect xml", e...),
+		http:   HTTP.getIncorrectJSON(),
+	}
+}
+
 func Unknown(e ...error) *Err {
 	return &Err{
 		Code:   StatusUnknown,
@@ -118,6 +126,14 @@ func (self *err) IncorrectJSON(e ...error) *Err {
 		Code:   StatusIncorrectJson,
 		origin: getError(joinNameAndMessage(self.name, "incorrect json"), e...),
 		http:   HTTP.getIncorrectJSON(),
+	}
+}
+
+func (self *err) IncorrectXML(e ...error) *Err {
+	return &Err{
+		Code:   StatusIncorrectJson,
+		origin: getError(joinNameAndMessage(self.name, "incorrect xml"), e...),
+		http:   HTTP.getIncorrectXML(),
 	}
 }
 
