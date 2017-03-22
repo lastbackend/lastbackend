@@ -1,43 +1,33 @@
+//
+// Last.Backend LLC CONFIDENTIAL
+// __________________
+//
+// [2014] - [2017] Last.Backend LLC
+// All Rights Reserved.
+//
+// NOTICE:  All information contained herein is, and remains
+// the property of Last.Backend LLC and its suppliers,
+// if any.  The intellectual and technical concepts contained
+// herein are proprietary to Last.Backend LLC
+// and its suppliers and may be covered by Russian Federation and Foreign Patents,
+// patents in process, and are protected by trade secret or copyright law.
+// Dissemination of this information or reproduction of this material
+// is strictly forbidden unless prior written permission is obtained
+// from Last.Backend LLC.
+//
+
 package context
 
 import (
-	m "github.com/lastbackend/lastbackend/libs/adapter/storage/mock"
 	"github.com/lastbackend/lastbackend/libs/http"
 	"github.com/lastbackend/lastbackend/libs/interface/k8s"
 	"github.com/lastbackend/lastbackend/libs/interface/log"
 	"github.com/lastbackend/lastbackend/libs/interface/storage"
-	l "github.com/lastbackend/lastbackend/libs/log"
 )
 
 var context Context
 
 func Get() *Context {
-	return &context
-}
-
-func Mock() *Context {
-	var err error
-
-	context.Log = new(l.Log)
-	context.Log.Init()
-	context.Log.SetDebugLevel()
-	context.Log.Disabled()
-
-	if err != nil {
-		context.Log.Panic(err)
-	}
-
-	// TODO: Need create mocks for k8s
-	//context.K8S, err = k8s.Get(config.GetK8S())
-	//if err != nil {
-	//	context.Log.Panic(err)
-	//}
-
-	context.Storage, err = m.Get()
-	if err != nil {
-		context.Log.Panic(err)
-	}
-
 	return &context
 }
 
@@ -47,4 +37,3 @@ type Context struct {
 	TemplateRegistry *http.RawReq
 	Storage          storage.IStorage
 }
-

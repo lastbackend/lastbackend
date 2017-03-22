@@ -31,6 +31,11 @@
 			"Rev": "881bee4e20a5d11a6a88a5667c6f292072ac1963"
 		},
 		{
+			"ImportPath": "github.com/Sirupsen/logrus/hooks/syslog",
+			"Comment": "v0.11.0-25-g881bee4",
+			"Rev": "881bee4e20a5d11a6a88a5667c6f292072ac1963"
+		},
+		{
 			"ImportPath": "github.com/asaskevich/govalidator",
 			"Comment": "v5",
 			"Rev": "7b3beb6df3c42abd3509abfc3bcacc0fbfb7c877"
@@ -44,11 +49,6 @@
 			"ImportPath": "github.com/boltdb/bolt",
 			"Comment": "v1.3.0-34-g0d9f544",
 			"Rev": "0d9f544bb94aac29c185968483459ef74d6deb5d"
-		},
-		{
-			"ImportPath": "github.com/cenk/backoff",
-			"Comment": "v1.0.0-15-gb02f2bb",
-			"Rev": "b02f2bbce11d7ea6b97f282ef1771b0fe2f65ef3"
 		},
 		{
 			"ImportPath": "github.com/coreos/etcd/auth/authpb",
@@ -72,6 +72,16 @@
 		},
 		{
 			"ImportPath": "github.com/coreos/etcd/mvcc/mvccpb",
+			"Comment": "v3.1.0-rc.1-712-gdf839f3",
+			"Rev": "df839f3b7f75e81c394827b4cbc30683e5a91045"
+		},
+		{
+			"ImportPath": "github.com/coreos/etcd/pkg/tlsutil",
+			"Comment": "v3.1.0-rc.1-712-gdf839f3",
+			"Rev": "df839f3b7f75e81c394827b4cbc30683e5a91045"
+		},
+		{
+			"ImportPath": "github.com/coreos/etcd/pkg/transport",
 			"Comment": "v3.1.0-rc.1-712-gdf839f3",
 			"Rev": "df839f3b7f75e81c394827b4cbc30683e5a91045"
 		},
@@ -216,10 +226,6 @@
 			"Rev": "0c0b378a74040eeb5ef415c5289258a193be0e94"
 		},
 		{
-			"ImportPath": "github.com/hailocab/go-hostpool",
-			"Rev": "e80d13ce29ede4452c43dea11e79b9bc8a15b478"
-		},
-		{
 			"ImportPath": "github.com/howeyc/gopass",
 			"Rev": "3ca23474a7c7203e0a0a070fd33508f6efdb9b3d"
 		},
@@ -289,10 +295,6 @@
 		},
 		{
 			"ImportPath": "golang.org/x/crypto/blowfish",
-			"Rev": "1f22c0103821b9390939b6776727195525381532"
-		},
-		{
-			"ImportPath": "golang.org/x/crypto/pbkdf2",
 			"Rev": "1f22c0103821b9390939b6776727195525381532"
 		},
 		{
@@ -486,30 +488,6 @@
 			"ImportPath": "google.golang.org/grpc/transport",
 			"Comment": "v1.0.5-109-gcdee119",
 			"Rev": "cdee119ee21e61eef7093a41ba148fa83585e143"
-		},
-		{
-			"ImportPath": "gopkg.in/dancannon/gorethink.v2",
-			"Comment": "v2.2.2",
-			"Rev": "016a1d3b4d15951ab2e39bd3596718ba94d298ba"
-		},
-		{
-			"ImportPath": "gopkg.in/dancannon/gorethink.v2/encoding",
-			"Comment": "v2.2.2",
-			"Rev": "016a1d3b4d15951ab2e39bd3596718ba94d298ba"
-		},
-		{
-			"ImportPath": "gopkg.in/dancannon/gorethink.v2/ql2",
-			"Comment": "v2.2.2",
-			"Rev": "016a1d3b4d15951ab2e39bd3596718ba94d298ba"
-		},
-		{
-			"ImportPath": "gopkg.in/dancannon/gorethink.v2/types",
-			"Comment": "v2.2.2",
-			"Rev": "016a1d3b4d15951ab2e39bd3596718ba94d298ba"
-		},
-		{
-			"ImportPath": "gopkg.in/fatih/pool.v2",
-			"Rev": "20a0a429c5f93de45c90f5f09ea297c25e0929b3"
 		},
 		{
 			"ImportPath": "gopkg.in/inf.v0",
