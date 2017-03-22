@@ -1,3 +1,21 @@
+//
+// Last.Backend LLC CONFIDENTIAL
+// __________________
+//
+// [2014] - [2017] Last.Backend LLC
+// All Rights Reserved.
+//
+// NOTICE:  All information contained herein is, and remains
+// the property of Last.Backend LLC and its suppliers,
+// if any.  The intellectual and technical concepts contained
+// herein are proprietary to Last.Backend LLC
+// and its suppliers and may be covered by Russian Federation and Foreign Patents,
+// patents in process, and are protected by trade secret or copyright law.
+// Dissemination of this information or reproduction of this material
+// is strictly forbidden unless prior written permission is obtained
+// from Last.Backend LLC.
+//
+
 package volume
 
 import (
@@ -21,7 +39,7 @@ func Get(name string) (*v1.PersistentVolume, error) {
 		ctx = context.Get()
 	)
 
-	volume, err := ctx.K8S.Core().PersistentVolumes().Get(name)
+	volume, err := ctx.K8S.CoreV1().PersistentVolumes().Get(name)
 	if err != nil {
 		return nil, err
 	}
@@ -36,7 +54,7 @@ func List() (*v1.PersistentVolumeList, error) {
 		ctx = context.Get()
 	)
 
-	pv, err := ctx.K8S.Core().PersistentVolumes().List(v1.ListOptions{})
+	pv, err := ctx.K8S.CoreV1().PersistentVolumes().List(v1.ListOptions{})
 	if err != nil {
 		return nil, err
 	}
@@ -74,7 +92,7 @@ func (v *Volume) Deploy() error {
 		ctx = context.Get()
 	)
 
-	_, err = ctx.K8S.Core().PersistentVolumes().Create(v.config)
+	_, err = ctx.K8S.CoreV1().PersistentVolumes().Create(v.config)
 	if err != nil {
 		return err
 	}

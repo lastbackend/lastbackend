@@ -1,7 +1,26 @@
+//
+// Last.Backend LLC CONFIDENTIAL
+// __________________
+//
+// [2014] - [2017] Last.Backend LLC
+// All Rights Reserved.
+//
+// NOTICE:  All information contained herein is, and remains
+// the property of Last.Backend LLC and its suppliers,
+// if any.  The intellectual and technical concepts contained
+// herein are proprietary to Last.Backend LLC
+// and its suppliers and may be covered by Russian Federation and Foreign Patents,
+// patents in process, and are protected by trade secret or copyright law.
+// Dissemination of this information or reproduction of this material
+// is strictly forbidden unless prior written permission is obtained
+// from Last.Backend LLC.
+//
+
 package converter
 
 import (
 	"errors"
+	"github.com/lastbackend/lastbackend/libs/adapter/k8s/common"
 	"k8s.io/client-go/pkg/api"
 	"k8s.io/client-go/pkg/api/resource"
 	"k8s.io/client-go/pkg/api/unversioned"
@@ -10,7 +29,6 @@ import (
 	"k8s.io/client-go/pkg/apis/extensions/v1beta1"
 	"k8s.io/client-go/pkg/types"
 	"k8s.io/client-go/pkg/util/intstr"
-	"github.com/lastbackend/lastbackend/libs/adapter/k8s/common"
 )
 
 var (

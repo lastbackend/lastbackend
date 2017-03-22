@@ -1,12 +1,30 @@
+//
+// Last.Backend LLC CONFIDENTIAL
+// __________________
+//
+// [2014] - [2017] Last.Backend LLC
+// All Rights Reserved.
+//
+// NOTICE:  All information contained herein is, and remains
+// the property of Last.Backend LLC and its suppliers,
+// if any.  The intellectual and technical concepts contained
+// herein are proprietary to Last.Backend LLC
+// and its suppliers and may be covered by Russian Federation and Foreign Patents,
+// patents in process, and are protected by trade secret or copyright law.
+// Dissemination of this information or reproduction of this material
+// is strictly forbidden unless prior written permission is obtained
+// from Last.Backend LLC.
+//
+
 package http
 
 import (
 	"fmt"
-	c "github.com/gorilla/context"
+	"github.com/gorilla/context"
 	"github.com/gorilla/mux"
 	e "github.com/lastbackend/lastbackend/libs/errors"
 	"github.com/lastbackend/lastbackend/libs/model"
-	"github.com/lastbackend/lastbackend/pkg/daemon/context"
+	c "github.com/lastbackend/lastbackend/pkg/daemon/context"
 	"github.com/lastbackend/lastbackend/pkg/daemon/http/handler"
 	"net/http"
 	"strconv"
@@ -14,48 +32,81 @@ import (
 	"time"
 )
 
+var Extends = make(map[string]Handler)
+
+type Handler struct {
+	Path    string
+	Method  string
+	Auth    bool
+	Handler func(http.ResponseWriter, *http.Request)
+}
+
 func NewRouter() *mux.Router {
 
+	var ctx = c.Get()
 	r := mux.NewRouter()
 	r.Methods("OPTIONS").HandlerFunc(headers)
 
 	// Session handlers
-	r.HandleFunc("/session", handle(handler.SessionCreateH)).Methods("POST")
+	r.HandleFunc("/session", handle(handler.SessionCreateH)).Methods(http.MethodPost)
 
 	// User handlers
-	r.HandleFunc("/user", handle(handler.UserCreateH)).Methods("POST")
-	r.HandleFunc("/user", handle(handler.UserGetH, auth)).Methods("GET")
+	r.HandleFunc("/user", handle(handler.UserGetH, auth)).Methods(http.MethodGet)
 
 	// Build handlers
-	r.HandleFunc("/build", handle(handler.BuildListH)).Methods("GET")
-	r.HandleFunc("/build", handle(handler.BuildCreateH)).Methods("POST")
+	r.HandleFunc("/build", handle(handler.BuildListH)).Methods(http.MethodGet)
+	r.HandleFunc("/build", handle(handler.BuildCreateH)).Methods(http.MethodPost)
 
 	// Project handlers
-	r.HandleFunc("/project", handle(handler.ProjectListH, auth)).Methods("GET")
-	r.HandleFunc("/project", handle(handler.ProjectCreateH, auth)).Methods("POST")
-	r.HandleFunc("/project/{project}", handle(handler.ProjectInfoH, auth)).Methods("GET")
-	r.HandleFunc("/project/{project}", handle(handler.ProjectUpdateH, auth)).Methods("PUT")
-	r.HandleFunc("/project/{project}", handle(handler.ProjectRemoveH, auth)).Methods("DELETE")
-	r.HandleFunc("/project/{project}/service", handle(handler.ServiceListH, auth)).Methods("GET")
-	r.HandleFunc("/project/{project}/service/{service}", handle(handler.ServiceInfoH, auth)).Methods("GET")
-	r.HandleFunc("/project/{project}/service/{service}", handle(handler.ServiceUpdateH, auth)).Methods("PUT")
-	r.HandleFunc("/project/{project}/service/{service}", handle(handler.ServiceRemoveH, auth)).Methods("DELETE")
-	r.HandleFunc("/project/{project}/service/{service}/logs", handle(handler.ServiceLogsH, auth)).Methods("GET")
+	r.HandleFunc("/project", handle(handler.ProjectListH, auth)).Methods(http.MethodGet)
+	r.HandleFunc("/project", handle(handler.ProjectCreateH, auth)).Methods(http.MethodPost)
+	r.HandleFunc("/project/{project}", handle(handler.ProjectInfoH, auth)).Methods(http.MethodGet)
+	r.HandleFunc("/project/{project}", handle(handler.ProjectUpdateH, auth)).Methods(http.MethodPut)
+	r.HandleFunc("/project/{project}", handle(handler.ProjectRemoveH, auth)).Methods(http.MethodDelete)
+	r.HandleFunc("/project/{project}/activity", handle(handler.ProjectActivityListH, auth)).Methods(http.MethodGet)
+	r.HandleFunc("/project/{project}/service", handle(handler.ServiceListH, auth)).Methods(http.MethodGet)
+	r.HandleFunc("/project/{project}/service/{service}", handle(handler.ServiceInfoH, auth)).Methods(http.MethodGet)
+	r.HandleFunc("/project/{project}/service/{service}", handle(handler.ServiceUpdateH, auth)).Methods(http.MethodPut)
+	r.HandleFunc("/project/{project}/service/{service}", handle(handler.ServiceRemoveH, auth)).Methods(http.MethodDelete)
+	r.HandleFunc("/project/{project}/service/{service}/activity", handle(handler.ServiceActivityListH, auth)).Methods(http.MethodGet)
+	r.HandleFunc("/project/{project}/service/{service}/hook", handle(handler.ServiceHookCreateH, auth)).Methods(http.MethodPost)
+	r.HandleFunc("/project/{project}/service/{service}/hook", handle(handler.ServiceHookListH, auth)).Methods(http.MethodGet)
+	r.HandleFunc("/project/{project}/service/{service}/hook/{hook}", handle(handler.ServiceHookRemoveH, auth)).Methods(http.MethodDelete)
+	r.HandleFunc("/project/{project}/service/{service}/logs", handle(handler.ServiceLogsH, auth)).Methods(http.MethodGet)
 
 	// Deploy template/docker/source/repo
-	r.HandleFunc("/deploy", handle(handler.DeployH, auth)).Methods("POST")
+	r.HandleFunc("/deploy", handle(handler.DeployH, auth)).Methods(http.MethodPost)
 
 	// Template handlers
-	r.HandleFunc("/template", handle(handler.TemplateListH)).Methods("GET")
+	r.HandleFunc("/template", handle(handler.TemplateListH)).Methods(http.MethodGet)
+
+	// Hook handlers
+	r.HandleFunc("/hook/{token}", handle(handler.HookExecuteH)).Methods(http.MethodPost)
+
+	// Docker handlers
+	r.HandleFunc("/docker/repo/search", handle(handler.DockerRepositorySearchH)).Methods(http.MethodGet)
+	r.HandleFunc("/docker/repo/tags", handle(handler.DockerRepositoryTagListH)).Methods(http.MethodGet)
+
+	ctx.Log.Info("Extends API methods:")
+
+	for name, h := range Extends {
+		// TODO: Check path on correctly
+		ctx.Log.Info(name)
+		if h.Auth {
+			r.HandleFunc(h.Path, handle(h.Handler, auth)).Methods(h.Method)
+		} else {
+			r.HandleFunc(h.Path, handle(h.Handler)).Methods(h.Method)
+		}
+	}
 
 	return r
 }
 
 func RunHttpServer(routes *mux.Router, port int) {
 
-	var ctx = context.Get()
+	var ctx = c.Get()
 
-	ctx.Log.Infof("Listen server on %d port", port)
+	ctx.Log.Infof("Listen http server on %d port", port)
 
 	if err := http.ListenAndServe(":"+strconv.Itoa(port), routes); err != nil {
 		ctx.Log.Fatal("ListenAndServe: ", err)
@@ -129,8 +180,8 @@ func auth(h http.HandlerFunc) http.HandlerFunc {
 		}
 
 		// Add session and token to context
-		c.Set(r, "token", token)
-		c.Set(r, "session", s)
+		context.Set(r, "token", token)
+		context.Set(r, "session", s)
 
 		h.ServeHTTP(w, r)
 	}

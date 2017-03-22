@@ -1,124 +1,106 @@
 package log
 
 import (
-	"fmt"
-	"github.com/lastbackend/lastbackend/libs/log/color"
+	"github.com/Sirupsen/logrus"
+	"github.com/Sirupsen/logrus/hooks/syslog"
+	"log/syslog"
+	"os"
+	"path"
 	"runtime"
-	"time"
 )
 
-const _NEWLINE = "\n"
-
-type Log struct {
-	skip     int
-	debug    bool
-	disabled bool
+type log struct {
+	log *logrus.Entry
 }
 
-func (l *Log) Init() {
-	l.skip = 3
+func Init() *log {
+	l := new(log)
+	entry := logrus.NewEntry(logrus.New())
+	entry.Logger.Out = os.Stdout
+	entry.Logger.Formatter = getJSONFormatter()
+	l.log = entry.WithFields(getFileLocate(logrus.Fields{}))
+	return l
 }
 
-func (l *Log) SetDebugLevel() {
-	l.debug = true
+func (l *log) SetDebugLevel() {
+	l.log.Level = logrus.DebugLevel
+	l.log.Logger.Formatter = getTextFormatter()
 }
 
-func (l *Log) Disabled() {
-	l.disabled = true
-}
-
-func (l *Log) Debug(args ...interface{}) {
-	if l.debug {
-		l.print(color.White(l.sprintln(args...)))
+func (l *log) SetSyslog(network, raddr string, priority syslog.Priority, tag string) {
+	if hook, err := logrus_syslog.NewSyslogHook(network, raddr, priority, tag); err == nil {
+		l.log.Logger.Hooks.Add(hook)
 	}
 }
 
-func (l *Log) Debugf(format string, args ...interface{}) {
-	if l.debug {
-		l.printf(color.White(format), args...)
+func (l *log) Debug(args ...interface{}) {
+	l.log.Debug(args)
+}
+
+func (l *log) Debugf(format string, args ...interface{}) {
+	l.log.Debugf(format, args)
+}
+
+func (l *log) Info(args ...interface{}) {
+	l.log.Info(args...)
+}
+
+func (l *log) Infof(format string, args ...interface{}) {
+	l.log.Infof(format, args)
+}
+
+func (l *log) Error(args ...interface{}) {
+	l.log.Error(args...)
+}
+
+func (l *log) Errorf(format string, args ...interface{}) {
+	l.log.Errorf(format, args)
+}
+
+func (l *log) Fatal(args ...interface{}) {
+	l.log.Fatal(args...)
+}
+
+func (l *log) Fatalf(format string, args ...interface{}) {
+	l.log.Fatalf(format, args)
+}
+
+func (l *log) Panic(args ...interface{}) {
+	l.log.Panic(args...)
+}
+
+func (l *log) Panicf(format string, args ...interface{}) {
+	l.log.Panicf(format, args)
+}
+
+func (l *log) Warn(args ...interface{}) {
+	l.log.Warn(args...)
+}
+
+func (l *log) Warnf(format string, args ...interface{}) {
+	l.log.Warnf(format, args)
+}
+
+func getTextFormatter() *logrus.TextFormatter {
+	var formatter = new(logrus.TextFormatter)
+	formatter.TimestampFormat = "2006-01-02 15:04:05"
+	formatter.ForceColors = true
+	formatter.FullTimestamp = true
+	return formatter
+}
+
+func getJSONFormatter() *logrus.JSONFormatter {
+	var formatter = new(logrus.JSONFormatter)
+	formatter.TimestampFormat = "2006-01-02 15:04:05"
+	return formatter
+}
+
+func getFileLocate(fields logrus.Fields) logrus.Fields {
+	if pc, file, line, ok := runtime.Caller(2); ok {
+		funcName := runtime.FuncForPC(pc).Name()
+		fields["func"] = path.Base(funcName)
+		fields["file"] = file
+		fields["line"] = line
 	}
-}
-
-func (l *Log) Info(args ...interface{}) {
-	l.print(color.Yellow(l.sprintln(args...)))
-}
-
-func (l *Log) Infof(format string, args ...interface{}) {
-	l.printf(color.Yellow(format), args...)
-}
-
-func (l *Log) Error(args ...interface{}) {
-	l.print(color.Red(l.sprintln(args...)))
-}
-
-func (l *Log) Errorf(format string, args ...interface{}) {
-	l.printf(color.Red(format), args...)
-}
-
-func (l *Log) Fatal(args ...interface{}) {
-	l.print(color.Red(l.sprintln(args...)))
-}
-
-func (l *Log) Fatalf(format string, args ...interface{}) {
-	l.printf(color.Red(format), args...)
-}
-
-func (l *Log) Panic(args ...interface{}) {
-	l.print(color.Red(l.sprintln(args...)))
-}
-
-func (l *Log) Panicf(format string, args ...interface{}) {
-	l.printf(color.Red(format), args...)
-}
-
-func (l *Log) Warn(args ...interface{}) {
-	l.print(color.Magenta(l.sprintln(args...)))
-}
-
-func (l *Log) Warnf(format string, args ...interface{}) {
-	l.printf(color.Magenta(format), args...)
-}
-
-func (l *Log) print(message string) {
-	if l.disabled {
-		return
-	}
-
-	if l.debug {
-		fmt.Printf("[%v] %s ", time.Now().Format("2006-01-02 15:04:05"), color.Cyan(fileLine(l.skip)))
-		fmt.Printf(message + _NEWLINE)
-	} else {
-		fmt.Printf("%s", message+_NEWLINE)
-	}
-}
-
-func (l *Log) printf(format string, a ...interface{}) {
-	if l.disabled {
-		return
-	}
-
-	if l.debug {
-		fmt.Printf("[%v] %s ", time.Now().Format("2006-01-02 15:04:05"), color.Cyan(fileLine(l.skip)))
-		fmt.Printf(format+_NEWLINE, a...)
-	} else {
-		fmt.Printf(fmt.Sprintf("%s", format+_NEWLINE), a...)
-	}
-}
-
-func fileLine(skip int) string {
-	_, file, line, ok := runtime.Caller(skip)
-	if !ok {
-		file = "<???>"
-		line = 1
-	}
-	return fmt.Sprintf("%s:%d", file, line)
-}
-
-// Sprintlnn => Sprint no newline. This is to get the behavior of how
-// fmt.Sprintln where spaces are always added between operands, regardless of
-// their type. Instead of vendoring the Sprintln implementation to spare a
-// string allocation, we do the simplest thing.
-func (l *Log) sprintln(args ...interface{}) string {
-	msg := fmt.Sprintln(args...)
-	return msg[:len(msg)-1]
+	return fields
 }

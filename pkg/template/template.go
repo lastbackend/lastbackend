@@ -1,3 +1,21 @@
+//
+// Last.Backend LLC CONFIDENTIAL
+// __________________
+//
+// [2014] - [2017] Last.Backend LLC
+// All Rights Reserved.
+//
+// NOTICE:  All information contained herein is, and remains
+// the property of Last.Backend LLC and its suppliers,
+// if any.  The intellectual and technical concepts contained
+// herein are proprietary to Last.Backend LLC
+// and its suppliers and may be covered by Russian Federation and Foreign Patents,
+// patents in process, and are protected by trade secret or copyright law.
+// Dissemination of this information or reproduction of this material
+// is strictly forbidden unless prior written permission is obtained
+// from Last.Backend LLC.
+//
+
 package template
 
 import (
@@ -10,6 +28,7 @@ import (
 	"github.com/lastbackend/lastbackend/libs/model"
 	"github.com/lastbackend/lastbackend/pkg/daemon/context"
 	"github.com/lastbackend/lastbackend/pkg/service"
+	"github.com/lastbackend/lastbackend/pkg/util/generator"
 	"github.com/lastbackend/lastbackend/pkg/volume"
 	"io/ioutil"
 	"k8s.io/client-go/pkg/api/v1"
@@ -174,7 +193,18 @@ func (t *Template) Provision(namespace, user, project string, patchConfig *Patch
 				return err
 			}
 
-			config.Name = "lb-" + serviceModel.Name
+			hookModel := &model.Hook{
+				User:    serviceModel.User,
+				Token:   generator.GenerateToken(32),
+				Service: serviceModel.ID,
+			}
+
+			hookModel, err = ctx.Storage.Hook().Insert(hookModel)
+			if err != nil {
+				return err
+			}
+
+			config.Name = "lb-" + serviceModel.ID
 
 			_, err = service.Deploy(ctx.K8S, namespace, config)
 			if err != nil {
@@ -198,7 +228,7 @@ func (t *Template) Provision(namespace, user, project string, patchConfig *Patch
 	}
 
 	for _, val := range t.Services {
-		_, err = ctx.K8S.Core().Services(namespace).Create(&val)
+		_, err = ctx.K8S.CoreV1().Services(namespace).Create(&val)
 		if err != nil {
 			ctx.Log.Info(err.Error())
 			return err
@@ -206,7 +236,7 @@ func (t *Template) Provision(namespace, user, project string, patchConfig *Patch
 	}
 
 	for _, val := range t.Secrets {
-		_, err = ctx.K8S.Core().Secrets(namespace).Create(&val)
+		_, err = ctx.K8S.CoreV1().Secrets(namespace).Create(&val)
 		if err != nil {
 			ctx.Log.Info(err.Error())
 			return err
@@ -221,7 +251,7 @@ func (t *Template) Provision(namespace, user, project string, patchConfig *Patch
 	}
 
 	for _, val := range t.PersistentVolumeClaims {
-		_, err = ctx.K8S.Core().PersistentVolumeClaims(namespace).Create(&val)
+		_, err = ctx.K8S.CoreV1().PersistentVolumeClaims(namespace).Create(&val)
 		if err != nil {
 			ctx.Log.Info(err.Error())
 			return err
@@ -229,7 +259,7 @@ func (t *Template) Provision(namespace, user, project string, patchConfig *Patch
 	}
 
 	for _, val := range t.ServiceAccounts {
-		_, err = ctx.K8S.Core().ServiceAccounts(namespace).Create(&val)
+		_, err = ctx.K8S.CoreV1().ServiceAccounts(namespace).Create(&val)
 		if err != nil {
 			ctx.Log.Info(err.Error())
 			return err
@@ -237,7 +267,7 @@ func (t *Template) Provision(namespace, user, project string, patchConfig *Patch
 	}
 
 	for _, val := range t.DaemonSets {
-		_, err = ctx.K8S.Extensions().DaemonSets(namespace).Create(&val)
+		_, err = ctx.K8S.ExtensionsV1beta1().DaemonSets(namespace).Create(&val)
 		if err != nil {
 			ctx.Log.Info(err.Error())
 			return err
@@ -252,7 +282,7 @@ func (t *Template) Provision(namespace, user, project string, patchConfig *Patch
 	}
 
 	for _, val := range t.Ingresses {
-		_, err = ctx.K8S.Extensions().Ingresses(namespace).Create(&val)
+		_, err = ctx.K8S.ExtensionsV1beta1().Ingresses(namespace).Create(&val)
 		if err != nil {
 			ctx.Log.Info(err.Error())
 			return err

@@ -1,3 +1,21 @@
+//
+// Last.Backend LLC CONFIDENTIAL
+// __________________
+//
+// [2014] - [2017] Last.Backend LLC
+// All Rights Reserved.
+//
+// NOTICE:  All information contained herein is, and remains
+// the property of Last.Backend LLC and its suppliers,
+// if any.  The intellectual and technical concepts contained
+// herein are proprietary to Last.Backend LLC
+// and its suppliers and may be covered by Russian Federation and Foreign Patents,
+// patents in process, and are protected by trade secret or copyright law.
+// Dissemination of this information or reproduction of this material
+// is strictly forbidden unless prior written permission is obtained
+// from Last.Backend LLC.
+//
+
 package service
 
 import (
@@ -18,7 +36,7 @@ type Service struct {
 	Scale     int32             `json:"scale"`
 	Template  struct {
 		ContainerList []Container `json:"containers"`
-	} `json:"tempalte"`
+	} `json:"template"`
 	PodList []Pod `json:"pods"`
 }
 
@@ -26,14 +44,18 @@ type Pod struct {
 	Name          string            `json:"name"`
 	Namespace     string            `json:"namespace"`
 	Status        string            `json:"status"`
+	RestartCount  int32             `json:"restart_count"`
+	RestartPolicy string            `json:"restart_policy"`
 	Labels        map[string]string `json:"labels"`
 	ContainerList []Container       `json:"containers"`
+	StartTime     time.Time         `json:"uptime"`
 }
 
 type Container struct {
 	Name       string   `json:"name"`
 	Image      string   `json:"image"`
 	WorkingDir string   `json:"workdir"`
+	Status     string   `json:"status,omitempty"`
 	Command    []string `json:"command"`
 	Args       []string `json:"args"`
 	PortList   []Port   `json:"ports"`
@@ -67,9 +89,9 @@ func Get(client k8s.IK8S, namespace, name string) (*Service, error) {
 		return nil, err
 	}
 
-	service := convert_deployment_to_service(dp)
+	s := convert_deployment_to_service(dp)
 
-	return service, nil
+	return s, nil
 }
 
 func List(client k8s.IK8S, namespace string) (map[string]*Service, error) {
@@ -96,19 +118,18 @@ func Update(client k8s.IK8S, namespace, name string, config *ServiceConfig) erro
 
 	var err error
 
-	dp, err := client.Extensions().Deployments(namespace).Get(name)
+	dp, err := client.ExtensionsV1beta1().Deployments(namespace).Get(name)
 	if err != nil {
 		return err
 	}
 
-	config.update(dp)
+	config.patch(dp)
 
-	err = deployment.Update(client, namespace, dp)
-	if err != nil {
-		return err
-	}
+	return deployment.Update(client, namespace, dp)
+}
 
-	return nil
+func Remove(client k8s.IK8S, namespace, name string) error {
+	return deployment.Remove(client, namespace, name)
 }
 
 type ServiceLogsOption struct {
@@ -155,7 +176,7 @@ func Logs(client k8s.IK8S, namespace string, opts *ServiceLogsOption, close chan
 		option.LimitBytes = opts.LimitBytes
 	}
 
-	req := client.Core().Pods(namespace).GetLogs(opts.Pod, &option)
+	req := client.CoreV1().Pods(namespace).GetLogs(opts.Pod, &option)
 
 	readCloser, err := req.Stream()
 	if err != nil {
@@ -176,7 +197,7 @@ func Deploy(client k8s.IK8S, namespace string, config *v1beta1.Deployment) (*Ser
 
 	var err error
 
-	_, err = client.Extensions().Deployments(namespace).Create(config)
+	_, err = client.ExtensionsV1beta1().Deployments(namespace).Create(config)
 	if err != nil {
 		return nil, err
 	}
@@ -191,6 +212,22 @@ func Deploy(client k8s.IK8S, namespace string, config *v1beta1.Deployment) (*Ser
 	return service, nil
 }
 
+func UpdateImage(client k8s.IK8S, namespace, name string) error {
+
+	dp, err := deployment.Get(client, namespace, name)
+	if err != nil {
+		return err
+	}
+
+	for index := range dp.PodList.Pods {
+		if err := dp.PodList.Pods[index].Remove(client); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
 func convert_deployment_to_service(dp *deployment.Deployment) *Service {
 
 	var s = new(Service)
@@ -199,14 +236,20 @@ func convert_deployment_to_service(dp *deployment.Deployment) *Service {
 	s.Namespace = dp.ObjectMeta.Namespace
 	s.Labels = dp.ObjectMeta.Labels
 	s.Scale = dp.Spec.Replicas
+	s.Template.ContainerList = []Container{}
+	s.PodList = []Pod{}
 
 	for _, container := range dp.Spec.Template.Spec.Containers {
 		c := Container{}
+
 		c.Name = container.Name
 		c.Image = container.Image
 		c.WorkingDir = container.WorkingDir
 		c.Command = container.Command
 		c.Args = container.Args
+		c.PortList = []Port{}
+		c.EnvList = []Env{}
+		c.VolumeList = []Volume{}
 
 		for _, port := range container.Ports {
 			cp := Port{}
@@ -241,16 +284,25 @@ func convert_deployment_to_service(dp *deployment.Deployment) *Service {
 		p := Pod{}
 		p.Name = pod.ObjectMeta.Name
 		p.Namespace = pod.ObjectMeta.Namespace
-		p.Status = string(pod.PodStatus.PodPhase)
+		p.Status = string(pod.Status.PodPhase)
 		p.Labels = pod.ObjectMeta.Labels
+		p.RestartCount = pod.RestartCount
+		p.RestartPolicy = string(pod.RestartPolicy)
+		p.StartTime = pod.StartTime
+		p.ContainerList = []Container{}
 
 		for _, container := range pod.ContainerList.Containers {
 			c := Container{}
+
 			c.Name = container.Name
 			c.Image = container.Image
+			c.Status = container.Status
 			c.WorkingDir = container.WorkingDir
 			c.Command = container.Command
 			c.Args = container.Args
+			c.PortList = []Port{}
+			c.EnvList = []Env{}
+			c.VolumeList = []Volume{}
 
 			for _, port := range container.Ports {
 				cp := Port{}

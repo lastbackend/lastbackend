@@ -1,3 +1,21 @@
+//
+// Last.Backend LLC CONFIDENTIAL
+// __________________
+//
+// [2014] - [2017] Last.Backend LLC
+// All Rights Reserved.
+//
+// NOTICE:  All information contained herein is, and remains
+// the property of Last.Backend LLC and its suppliers,
+// if any.  The intellectual and technical concepts contained
+// herein are proprietary to Last.Backend LLC
+// and its suppliers and may be covered by Russian Federation and Foreign Patents,
+// patents in process, and are protected by trade secret or copyright law.
+// Dissemination of this information or reproduction of this material
+// is strictly forbidden unless prior written permission is obtained
+// from Last.Backend LLC.
+//
+
 package service_test
 
 import (
@@ -17,7 +35,7 @@ import (
 
 func TestUpdate(t *testing.T) {
 
-	const (
+	var (
 		name        string = "service"
 		description string = "service describe"
 		scale       int32  = 10
@@ -35,12 +53,12 @@ func TestUpdate(t *testing.T) {
 			User:        "mock_demo",
 			Description: "sample description",
 		}
-		updateData = model.ServiceUpdateConfig{
-			Description: description,
-			Replicas:    scale,
-			Containers:  []model.ContainerConfig{},
-		}
+		updateData = model.ServiceUpdateConfig{}
 	)
+
+	updateData.Name = &name
+	updateData.Description = &description
+	updateData.Replicas = &scale
 
 	ctx.Storage, err = db.Init()
 	if err != nil {
@@ -83,8 +101,9 @@ func TestUpdate(t *testing.T) {
 			return
 		}
 
-		assert.Equal(t, d.Description, description, "they should be equal")
-		assert.Equal(t, d.Replicas, scale, "they should be equal")
+		assert.Equal(t, d.Name, &name, "they should be equal")
+		assert.Equal(t, d.Description, &description, "they should be equal")
+		assert.Equal(t, d.Replicas, &scale, "they should be equal")
 
 		w.WriteHeader(200)
 		_, err = w.Write([]byte{})

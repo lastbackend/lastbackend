@@ -1,8 +1,26 @@
+//
+// Last.Backend LLC CONFIDENTIAL
+// __________________
+//
+// [2014] - [2017] Last.Backend LLC
+// All Rights Reserved.
+//
+// NOTICE:  All information contained herein is, and remains
+// the property of Last.Backend LLC and its suppliers,
+// if any.  The intellectual and technical concepts contained
+// herein are proprietary to Last.Backend LLC
+// and its suppliers and may be covered by Russian Federation and Foreign Patents,
+// patents in process, and are protected by trade secret or copyright law.
+// Dissemination of this information or reproduction of this material
+// is strictly forbidden unless prior written permission is obtained
+// from Last.Backend LLC.
+//
+
 package model
 
 import (
+	"encoding/json"
 	"golang.org/x/crypto/bcrypt"
-	"k8s.io/client-go/pkg/util/json"
 	"time"
 )
 
@@ -11,15 +29,16 @@ type User struct {
 	Username     string    `json:"username" gorethink:"username,omitempty"`
 	Email        string    `json:"email" gorethink:"email,omitempty"`
 	Gravatar     string    `json:"gravatar" gorethink:"gravatar,omitempty"`
-	Balance      float32   `json:"balance" gorethink:"balance,omitempty"`
 	Organization bool      `json:"organization" gorethink:"organization,omitempty"`
+	Balance      float64   `json:"balance" gorethink:"balance,omitempty"`
 	Created      time.Time `json:"created" gorethink:"created,omitempty"`
 	Updated      time.Time `json:"updated" gorethink:"updated,omitempty"`
 
 	Password string `json:"-" gorethink:"password,omitempty,omitempty"`
 	Salt     string `json:"-" gorethink:"salt,omitempty,omitempty"`
 
-	Profile Profile `json:"profile" gorethink:"profile,omitempty"`
+	Profile      Profile           `json:"profile" gorethink:"profile,omitempty"`
+	Integrations map[string]string `json:"integrations" gorethink:"integrations,omitempty"`
 }
 
 type Profile struct {

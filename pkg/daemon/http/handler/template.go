@@ -1,49 +1,28 @@
+//
+// Last.Backend LLC CONFIDENTIAL
+// __________________
+//
+// [2014] - [2017] Last.Backend LLC
+// All Rights Reserved.
+//
+// NOTICE:  All information contained herein is, and remains
+// the property of Last.Backend LLC and its suppliers,
+// if any.  The intellectual and technical concepts contained
+// herein are proprietary to Last.Backend LLC
+// and its suppliers and may be covered by Russian Federation and Foreign Patents,
+// patents in process, and are protected by trade secret or copyright law.
+// Dissemination of this information or reproduction of this material
+// is strictly forbidden unless prior written permission is obtained
+// from Last.Backend LLC.
+//
+
 package handler
 
 import (
-	"encoding/json"
-	"io"
-	"io/ioutil"
 	"net/http"
-
-	e "github.com/lastbackend/lastbackend/libs/errors"
 	c "github.com/lastbackend/lastbackend/pkg/daemon/context"
 	"github.com/lastbackend/lastbackend/pkg/template"
 )
-
-type deployTemplateS struct {
-	Project *string `json:"project,omitempty"`
-	Target  *string `json:"target,omitempty"`
-}
-
-func (d *deployTemplateS) decodeAndValidate(reader io.Reader) *e.Err {
-
-	var (
-		err error
-		ctx = c.Get()
-	)
-
-	body, err := ioutil.ReadAll(reader)
-	if err != nil {
-		ctx.Log.Error(err)
-		return e.New("service").Unknown(err)
-	}
-
-	err = json.Unmarshal(body, d)
-	if err != nil {
-		return e.New("service").IncorrectJSON(err)
-	}
-
-	if d.Project == nil {
-		return e.New("service").BadParameter("project")
-	}
-
-	if d.Target == nil {
-		return e.New("service").BadParameter("target")
-	}
-
-	return nil
-}
 
 func TemplateListH(w http.ResponseWriter, _ *http.Request) {
 

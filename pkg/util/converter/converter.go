@@ -1,3 +1,21 @@
+//
+// Last.Backend LLC CONFIDENTIAL
+// __________________
+//
+// [2014] - [2017] Last.Backend LLC
+// All Rights Reserved.
+//
+// NOTICE:  All information contained herein is, and remains
+// the property of Last.Backend LLC and its suppliers,
+// if any.  The intellectual and technical concepts contained
+// herein are proprietary to Last.Backend LLC
+// and its suppliers and may be covered by Russian Federation and Foreign Patents,
+// patents in process, and are protected by trade secret or copyright law.
+// Dissemination of this information or reproduction of this material
+// is strictly forbidden unless prior written permission is obtained
+// from Last.Backend LLC.
+//
+
 package converter
 
 import (
@@ -6,6 +24,8 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
+	"fmt"
+	"reflect"
 )
 
 type source struct {
@@ -96,4 +116,21 @@ func DockerNamespaceParse(namespace string) (*source, error) {
 
 	return parsingNamespace, nil
 
+}
+
+// EnforcePtr ensures that obj is a pointer of some sort. Returns a reflect.Value
+// of the dereferenced pointer, ensuring that it is settable/addressable.
+// Returns an error if this is not possible.
+func EnforcePtr(obj interface{}) (reflect.Value, error) {
+	v := reflect.ValueOf(obj)
+	if v.Kind() != reflect.Ptr {
+		if v.Kind() == reflect.Invalid {
+			return reflect.Value{}, fmt.Errorf("expected pointer, but got invalid kind")
+		}
+		return reflect.Value{}, fmt.Errorf("expected pointer, but got %v type", v.Type())
+	}
+	if v.IsNil() {
+		return reflect.Value{}, fmt.Errorf("expected pointer, but got nil")
+	}
+	return v.Elem(), nil
 }

@@ -1,61 +1,80 @@
+//
+// Last.Backend LLC CONFIDENTIAL
+// __________________
+//
+// [2014] - [2017] Last.Backend LLC
+// All Rights Reserved.
+//
+// NOTICE:  All information contained herein is, and remains
+// the property of Last.Backend LLC and its suppliers,
+// if any.  The intellectual and technical concepts contained
+// herein are proprietary to Last.Backend LLC
+// and its suppliers and may be covered by Russian Federation and Foreign Patents,
+// patents in process, and are protected by trade secret or copyright law.
+// Dissemination of this information or reproduction of this material
+// is strictly forbidden unless prior written permission is obtained
+// from Last.Backend LLC.
+//
+
 package config
 
 import (
-	"crypto/tls"
-	"crypto/x509"
-	"fmt"
-	r "gopkg.in/dancannon/gorethink.v2"
+	"github.com/lastbackend/lastbackend/pkg/serializer"
+	"github.com/lastbackend/lastbackend/pkg/serializer/json"
+	"github.com/lastbackend/lastbackend/pkg/storage/store"
+	"github.com/lastbackend/lastbackend/pkg/util/validator"
+	"gopkg.in/yaml.v2"
 	"io/ioutil"
 	"k8s.io/client-go/rest"
 )
 
-var config Config
+var (
+	cfg            = new(Config)
+	ExternalConfig interface{}
+)
+
+func (Config) Configure(path string) error {
+
+	// Parsing config file
+	buf, err := ioutil.ReadFile(path)
+	if err != nil {
+		return err
+	}
+
+	if !validator.IsNil(ExternalConfig) {
+		err = yaml.Unmarshal(buf, ExternalConfig)
+		if err != nil {
+			return err
+		}
+	}
+
+	return yaml.Unmarshal(buf, &cfg)
+}
 
 func Get() *Config {
-	return &config
+	return cfg
 }
 
 func GetK8S() *rest.Config {
 	return &rest.Config{
-		Host: config.K8S.Host,
+		Host: cfg.K8S.Host,
 		TLSClientConfig: rest.TLSClientConfig{
-			CAFile:   config.K8S.SSL.CA,
-			KeyFile:  config.K8S.SSL.Key,
-			CertFile: config.K8S.SSL.Cert,
+			CAFile:   cfg.K8S.SSL.CA,
+			KeyFile:  cfg.K8S.SSL.Key,
+			CertFile: cfg.K8S.SSL.Cert,
 		},
 	}
 }
 
-// Get Rethink DB options used for creating session
-func GetRethinkDB() r.ConnectOpts {
-
-	options := r.ConnectOpts{
-		MaxOpen:    config.RethinkDB.MaxOpen,
-		InitialCap: config.RethinkDB.InitialCap,
-		Database:   config.RethinkDB.Database,
-		AuthKey:    config.RethinkDB.AuthKey,
+// Get Etcd DB options used for creating session
+func GetEtcdDB() store.Config {
+	return store.Config{
+		Prefix:    "lastbackend",
+		Endpoints: cfg.Etcd.Endpoints,
+		KeyFile:   cfg.Etcd.TLS.Key,
+		CertFile:  cfg.Etcd.TLS.Cert,
+		CAFile:    cfg.Etcd.TLS.CA,
+		Quorum:    cfg.Etcd.Quorum,
+		Codec:     serializer.NewSerializer(json.Encoder{}, json.Decoder{}),
 	}
-
-	if len(config.RethinkDB.Addresses) > 0 {
-		options.Addresses = config.RethinkDB.Addresses
-	} else {
-		options.Address = config.RethinkDB.Address
-	}
-
-	if config.RethinkDB.SSL.CA != "" {
-		roots := x509.NewCertPool()
-		cert, err := ioutil.ReadFile(config.RethinkDB.SSL.CA)
-
-		if err != nil {
-			_ = fmt.Errorf("SSL read error: %s", err.Error())
-		}
-
-		roots.AppendCertsFromPEM(cert)
-
-		options.TLSConfig = &tls.Config{
-			RootCAs: roots,
-		}
-	}
-
-	return options
 }

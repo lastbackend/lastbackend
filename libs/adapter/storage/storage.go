@@ -1,9 +1,27 @@
+//
+// Last.Backend LLC CONFIDENTIAL
+// __________________
+//
+// [2014] - [2017] Last.Backend LLC
+// All Rights Reserved.
+//
+// NOTICE:  All information contained herein is, and remains
+// the property of Last.Backend LLC and its suppliers,
+// if any.  The intellectual and technical concepts contained
+// herein are proprietary to Last.Backend LLC
+// and its suppliers and may be covered by Russian Federation and Foreign Patents,
+// patents in process, and are protected by trade secret or copyright law.
+// Dissemination of this information or reproduction of this material
+// is strictly forbidden unless prior written permission is obtained
+// from Last.Backend LLC.
+//
+
 package storage
 
 import (
 	"github.com/lastbackend/lastbackend/libs/interface/storage"
-	"github.com/lastbackend/lastbackend/pkg/daemon/config"
-	r "gopkg.in/dancannon/gorethink.v2"
+	cfg "github.com/lastbackend/lastbackend/pkg/daemon/config"
+
 )
 
 type Storage struct {
@@ -14,6 +32,7 @@ type Storage struct {
 	*BuildStorage
 	*HookStorage
 	*VolumeStorage
+	*ActivityStorage
 }
 
 func (s *Storage) User() storage.IUser {
@@ -65,24 +84,28 @@ func (s *Storage) Volume() storage.IVolume {
 	return s.VolumeStorage
 }
 
+func (s *Storage) Activity() storage.IActivity {
+	if s == nil {
+		return nil
+	}
+	return s.ActivityStorage
+}
+
 func Get() (*Storage, error) {
 
-	store := new(Storage)
+	var (
+		store  = new(Storage)
+		config = cfg.GetEtcdDB()
+	)
 
-	session, err := r.Connect(config.GetRethinkDB())
-	if err != nil {
-		return nil, err
-	}
-
-	r.DBCreate(config.Get().RethinkDB.Database).Run(session)
-
-	store.UserStorage = newUserStorage(session)
-	store.ProjectStorage = newProjectStorage(session)
-	store.ServiceStorage = newServiceStorage(session)
-	store.ImageStorage = newImageStorage(session)
-	store.BuildStorage = newBuildStorage(session)
-	store.HookStorage = newHookStorage(session)
-	store.VolumeStorage = newVolumeStorage(session)
+	store.UserStorage = newUserStorage(config)
+	store.ProjectStorage = newProjectStorage(config)
+	store.ServiceStorage = newServiceStorage(config)
+	store.ImageStorage = newImageStorage(config)
+	store.BuildStorage = newBuildStorage(config)
+	store.HookStorage = newHookStorage(config)
+	store.VolumeStorage = newVolumeStorage(config)
+	store.ActivityStorage = newActivityStorage(config)
 
 	return store, nil
 }
