@@ -24,32 +24,32 @@ type BuildList []Build
 
 type Build struct {
 	// Build number, incremented automatically
-	ID string `json:"id" gorethink:"id,omitempty"`
+	ID string `json:"id"`
 	// Build number, incremented automatically
-	User string `json:"user" gorethink:"id,omitempty"`
+	User string `json:"user"`
 	// Build executing status
-	Status BuildStatus `json:"status" gorethink:"status,omitempty"`
+	Status BuildStatus `json:"status"`
 	// Build sources used for build
-	Source BuildSource `json:"source" gorethink:"source,omitempty"`
+	Source BuildSource `json:"source"`
 	// Build image output information
-	Image BuildImage `json:"image" gorethink:"image,omitempty"`
+	Image BuildImage `json:"image"`
 	// Build created time
-	Created time.Time `json:"created" gorethink:"created,omitempty"`
+	Created time.Time `json:"created"`
 	// Build updated time
-	Updated time.Time `json:"updated" gorethink:"updated,omitempty"`
+	Updated time.Time `json:"updated"`
 }
 
 type BuildStatus struct {
 	// Build current step
-	Step BuildStep `json:"step" gorethink:"step,omitempty"`
+	Step BuildStep `json:"step"`
 	// Is build cancelled
-	Cancelled bool `json:"cancelled" gorethink:"cancelled,omitempty"`
+	Cancelled bool `json:"cancelled"`
 	// Build executing message
-	Message string `json:"message" gorethink:"message,omitempty"`
+	Message string `json:"message"`
 	// Build error information
-	Error string `json:"error" gorethink:"error,omitempty"`
+	Error string `json:"error"`
 	// Build status updated time
-	Updated time.Time `json:"updated" gorethink:"updated,omitempty"`
+	Updated time.Time `json:"updated"`
 }
 
 type BuildStep string
@@ -67,34 +67,34 @@ const (
 
 type BuildSource struct {
 	// Build sources hub
-	Hub string `json:"hub" gorethink:"hub,omitempty"`
+	Hub string `json:"hub"`
 	// Build sources owner
-	Owner string `json:"owner" gorethink:"owner,omitempty"`
+	Owner string `json:"owner"`
 	// Build sources repo
-	Repo string `json:"repo" gorethink:"repo,omitempty"`
+	Repo string `json:"repo"`
 	// Build source tag (branch, tag)
-	Tag string `json:"tag" gorethink:"tag,omitempty"`
+	Tag string `json:"tag"`
 	// Build commit information
-	Commit GitSourceCommit `json:"commit" gorethink:"commit,omitempty"`
+	Commit GitSourceCommit `json:"commit"`
 	// Build sources auth reference
 }
 
 type BuildImage struct {
 	// Build image repo name
-	Repo string `json:"repo" gorethink:"repo,omitempty"`
+	Repo string `json:"repo"`
 	// Build image tag name
-	Tag string `json:"tag" gorethink:"tag,omitempty"`
+	Tag string `json:"tag"`
 	// Build image registry reference
-	Registry string `json:"registry" gorethink:"registry,omitempty"`
+	Registry string `json:"registry"`
 }
 
 type GitSourceCommit struct {
 	// Git commit information hash
-	Commit string `json:"commit" gorethink:"id,omitempty"`
+	Commit string `json:"commit"`
 	// Git committer gravatar
-	Committer string `json:"committer" gorethink:"id,omitempty"`
+	Committer string `json:"committer"`
 	// Git committer email
-	Author string `json:"author" gorethink:"id,omitempty"`
+	Author string `json:"author"`
 	// Git commit message
-	Message string `json:"message" gorethink:"id,omitempty"`
+	Message string `json:"message"`
 }

@@ -27,21 +27,21 @@ type ActivityList []Activity
 
 type Activity struct {
 	// Activity uuid, incremented automatically
-	ID      string `json:"id" gorethink:"id,omitempty"`
+	ID      string `json:"id"`
 	// Activity user
-	User    string `json:"user" gorethink:"user,omitempty"`
+	User    string `json:"user"`
 	// Activity project
-	Project string `json:"project" gorethink:"project,omitempty"`
+	Project string `json:"project"`
 	// Activity service
-	Service string `json:"service" gorethink:"service,omitempty"`
+	Service string `json:"service"`
 	// Activity name
-	Name    string `json:"name" gorethink:"name,omitempty"`
+	Name    string `json:"name"`
 	// Activity status
-	Event   string `json:"event" gorethink:"event,omitempty"`
+	Event   string `json:"event"`
 	// Activity created time
-	Created time.Time `json:"created" gorethink:"created,omitempty"`
+	Created time.Time `json:"created"`
 	// Activity updated time
-	Updated time.Time `json:"updated" gorethink:"updated,omitempty"`
+	Updated time.Time `json:"updated"`
 }
 
 func (s *Activity) ToJson() ([]byte, error) {
