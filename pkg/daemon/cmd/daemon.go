@@ -20,7 +20,6 @@ package cmd
 
 import (
 	"github.com/jawher/mow.cli"
-	"github.com/lastbackend/lastbackend/libs/adapter/k8s"
 	"github.com/lastbackend/lastbackend/libs/adapter/storage"
 	http_client "github.com/lastbackend/lastbackend/libs/http"
 	"github.com/lastbackend/lastbackend/libs/log"
@@ -66,10 +65,6 @@ func Daemon(cmd *cli.Cmd) {
 
 		// Initializing database
 		ctx.Log.Info("Initializing daemon")
-		ctx.K8S, err = k8s.Get(config.GetK8S())
-		if err != nil {
-			ctx.Log.Panic(err)
-		}
 
 		ctx.Storage, err = storage.Get()
 		if err != nil {

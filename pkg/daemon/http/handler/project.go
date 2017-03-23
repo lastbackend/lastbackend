@@ -28,7 +28,6 @@ package handler
 //	"github.com/lastbackend/lastbackend/pkg/util/validator"
 //	"io"
 //	"io/ioutil"
-//	"k8s.io/client-go/pkg/api/v1"
 //	"net/http"
 //	"strings"
 //)
@@ -104,13 +103,6 @@ package handler
 //	}
 //	if projectModel == nil {
 //		e.New("project").NotFound().Http(w)
-//		return
-//	}
-//
-//	namespace, err := ctx.K8S.CoreV1().Namespaces().Get(projectModel.ID)
-//	if err != nil {
-//		ctx.Log.Error("Error: remove namespace", err.Error())
-//		e.HTTP.InternalServerError(w)
 //		return
 //	}
 //
@@ -288,13 +280,6 @@ package handler
 //		},
 //	}
 //
-//	_, err = ctx.K8S.CoreV1().Namespaces().Create(namespace)
-//	if err != nil {
-//		ctx.Log.Error("Error: create namespace", err.Error())
-//		e.HTTP.InternalServerError(w)
-//		return
-//	}
-//
 //	response, err := project.ToJson()
 //	if err != nil {
 //		ctx.Log.Error("Error: convert struct to json", err.Error())
@@ -467,12 +452,6 @@ package handler
 //		projectParam = projectModel.ID
 //	}
 //
-//	err = ctx.K8S.CoreV1().Namespaces().Delete(projectParam, &v1.DeleteOptions{})
-//	if err != nil {
-//		ctx.Log.Error("Error: remove namespace", err.Error())
-//		e.HTTP.InternalServerError(w)
-//		return
-//	}
 //
 //	volumes, err := ctx.Storage.Volume().ListByProject(projectParam)
 //	if err != nil {
@@ -482,14 +461,6 @@ package handler
 //	}
 //
 //	if volumes != nil {
-//		for _, val := range *volumes {
-//			err = ctx.K8S.CoreV1().PersistentVolumes().Delete(val.Name, &v1.DeleteOptions{})
-//			if err != nil {
-//				ctx.Log.Error("Error: remove persistent volume", err.Error())
-//				e.HTTP.InternalServerError(w)
-//				return
-//			}
-//
 //			err := ctx.Storage.Volume().Remove(val.ID)
 //			if err != nil {
 //				ctx.Log.Error("Error: remove volume from db", err)

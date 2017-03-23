@@ -2,15 +2,3 @@ debug: true
 
 http_server:
   port: 2967
-
-k8s:
-  host: "https://172.17.4.99:443"
-  ssl:
-    ca: "/etc/lastbackend/ssl/ca.pem"
-    key: "/etc/lastbackend/ssl/admin-key.pem"
-    cert: "/etc/lastbackend/ssl/admin.pem"
-
-rethinkdb:
-  address: "localhost:28015"
-  database: "lastbackend"
-  max_open: 50

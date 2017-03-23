@@ -20,7 +20,6 @@ package context
 
 import (
 	"github.com/lastbackend/lastbackend/libs/http"
-	"github.com/lastbackend/lastbackend/libs/interface/k8s"
 	"github.com/lastbackend/lastbackend/libs/interface/log"
 	"github.com/lastbackend/lastbackend/libs/interface/storage"
 )
@@ -33,7 +32,6 @@ func Get() *Context {
 
 type Context struct {
 	Log              log.ILogger
-	K8S              k8s.IK8S
 	TemplateRegistry *http.RawReq
 	Storage          storage.IStorage
 }
