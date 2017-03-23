@@ -65,7 +65,7 @@ func NewServerHandlerTransport(w http.ResponseWriter, r *http.Request) (ServerTr
 	if r.Method != "POST" {
 		return nil, errors.New("invalid gRPC request method")
 	}
-	if !validContentType(r.Header.Get("Content-Type")) {
+	if !strings.Contains(r.Header.Get("Content-Type"), "application/grpc") {
 		return nil, errors.New("invalid gRPC request content-type")
 	}
 	if _, ok := w.(http.Flusher); !ok {
@@ -83,21 +83,18 @@ func NewServerHandlerTransport(w http.ResponseWriter, r *http.Request) (ServerTr
 	}
 
 	if v := r.Header.Get("grpc-timeout"); v != "" {
-		to, err := decodeTimeout(v)
+		to, err := timeoutDecode(v)
 		if err != nil {
-			return nil, streamErrorf(codes.Internal, "malformed time-out: %v", err)
+			return nil, StreamErrorf(codes.Internal, "malformed time-out: %v", err)
 		}
 		st.timeoutSet = true
 		st.timeout = to
 	}
 
 	var metakv []string
-	if r.Host != "" {
-		metakv = append(metakv, ":authority", r.Host)
-	}
 	for k, vv := range r.Header {
 		k = strings.ToLower(k)
-		if isReservedHeader(k) && !isWhitelistedPseudoHeader(k) {
+		if isReservedHeader(k) {
 			continue
 		}
 		for _, v := range vv {
@@ -111,6 +108,7 @@ func NewServerHandlerTransport(w http.ResponseWriter, r *http.Request) (ServerTr
 				}
 			}
 			metakv = append(metakv, k, v)
+
 		}
 	}
 	st.headerMD = metadata.Pairs(metakv...)
@@ -194,14 +192,10 @@ func (ht *serverHandlerTransport) WriteStatus(s *Stream, statusCode codes.Code, 
 		h := ht.rw.Header()
 		h.Set("Grpc-Status", fmt.Sprintf("%d", statusCode))
 		if statusDesc != "" {
-			h.Set("Grpc-Message", encodeGrpcMessage(statusDesc))
+			h.Set("Grpc-Message", statusDesc)
 		}
 		if md := s.Trailer(); len(md) > 0 {
 			for k, vv := range md {
-				// Clients don't tolerate reading restricted headers after some non restricted ones were sent.
-				if isReservedHeader(k) {
-					continue
-				}
 				for _, v := range vv {
 					// http2 ResponseWriter mechanism to
 					// send undeclared Trailers after the
@@ -255,10 +249,6 @@ func (ht *serverHandlerTransport) WriteHeader(s *Stream, md metadata.MD) error {
 		ht.writeCommonHeaders(s)
 		h := ht.rw.Header()
 		for k, vv := range md {
-			// Clients don't tolerate reading restricted headers after some non restricted ones were sent.
-			if isReservedHeader(k) {
-				continue
-			}
 			for _, v := range vv {
 				h.Add(k, v)
 			}
@@ -268,7 +258,7 @@ func (ht *serverHandlerTransport) WriteHeader(s *Stream, md metadata.MD) error {
 	})
 }
 
-func (ht *serverHandlerTransport) HandleStreams(startStream func(*Stream), traceCtx func(context.Context, string) context.Context) {
+func (ht *serverHandlerTransport) HandleStreams(startStream func(*Stream)) {
 	// With this transport type there will be exactly 1 stream: this HTTP request.
 
 	var ctx context.Context
@@ -312,7 +302,7 @@ func (ht *serverHandlerTransport) HandleStreams(startStream func(*Stream), trace
 		Addr: ht.RemoteAddr(),
 	}
 	if req.TLS != nil {
-		pr.AuthInfo = credentials.TLSInfo{State: *req.TLS}
+		pr.AuthInfo = credentials.TLSInfo{*req.TLS}
 	}
 	ctx = metadata.NewContext(ctx, ht.headerMD)
 	ctx = peer.NewContext(ctx, pr)
@@ -323,21 +313,15 @@ func (ht *serverHandlerTransport) HandleStreams(startStream func(*Stream), trace
 	readerDone := make(chan struct{})
 	go func() {
 		defer close(readerDone)
-
-		// TODO: minimize garbage, optimize recvBuffer code/ownership
-		const readSize = 8196
-		for buf := make([]byte, readSize); ; {
+		for {
+			buf := make([]byte, 1024) // TODO: minimize garbage, optimize recvBuffer code/ownership
 			n, err := req.Body.Read(buf)
 			if n > 0 {
-				s.buf.put(&recvMsg{data: buf[:n:n]})
-				buf = buf[n:]
+				s.buf.put(&recvMsg{data: buf[:n]})
 			}
 			if err != nil {
 				s.buf.put(&recvMsg{err: mapRecvMsgError(err)})
 				return
-			}
-			if len(buf) == 0 {
-				buf = make([]byte, readSize)
 			}
 		}
 	}()
@@ -370,10 +354,6 @@ func (ht *serverHandlerTransport) runStream() {
 	}
 }
 
-func (ht *serverHandlerTransport) Drain() {
-	panic("Drain() is not implemented")
-}
-
 // mapRecvMsgError returns the non-nil err into the appropriate
 // error value as expected by callers of *grpc.parser.recvMsg.
 // In particular, in can only be:
@@ -393,5 +373,5 @@ func mapRecvMsgError(err error) error {
 			}
 		}
 	}
-	return connectionErrorf(true, err, err.Error())
+	return ConnectionError{Desc: err.Error()}
 }

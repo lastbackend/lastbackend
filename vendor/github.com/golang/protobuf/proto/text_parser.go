@@ -44,9 +44,6 @@ import (
 	"unicode/utf8"
 )
 
-// Error string emitted when deserializing Any and fields are already set
-const anyRepeatedlyUnpacked = "Any message unpacked multiple times, or %q already set"
-
 type ParseError struct {
 	Message string
 	Line    int // 1-based line number
@@ -511,16 +508,8 @@ func (p *textParser) readStruct(sv reflect.Value, terminator string) error {
 				if err != nil {
 					return p.errorf("failed to marshal message of type %q: %v", messageName, err)
 				}
-				if fieldSet["type_url"] {
-					return p.errorf(anyRepeatedlyUnpacked, "type_url")
-				}
-				if fieldSet["value"] {
-					return p.errorf(anyRepeatedlyUnpacked, "value")
-				}
 				sv.FieldByName("TypeUrl").SetString(extName)
 				sv.FieldByName("Value").SetBytes(b)
-				fieldSet["type_url"] = true
-				fieldSet["value"] = true
 				continue
 			}
 
@@ -561,7 +550,7 @@ func (p *textParser) readStruct(sv reflect.Value, terminator string) error {
 				}
 				reqFieldErr = err
 			}
-			ep := sv.Addr().Interface().(Message)
+			ep := sv.Addr().Interface().(extendableProto)
 			if !rep {
 				SetExtension(ep, desc, ext.Interface())
 			} else {
@@ -592,11 +581,7 @@ func (p *textParser) readStruct(sv reflect.Value, terminator string) error {
 			props = oop.Prop
 			nv := reflect.New(oop.Type.Elem())
 			dst = nv.Elem().Field(0)
-			field := sv.Field(oop.Field)
-			if !field.IsNil() {
-				return p.errorf("field '%s' would overwrite already parsed oneof '%s'", name, sv.Type().Field(oop.Field).Name)
-			}
-			field.Set(nv)
+			sv.Field(oop.Field).Set(nv)
 		}
 		if !dst.IsValid() {
 			return p.errorf("unknown field name %q in %v", name, st)
@@ -617,9 +602,8 @@ func (p *textParser) readStruct(sv reflect.Value, terminator string) error {
 
 			// The map entry should be this sequence of tokens:
 			//	< key : KEY value : VALUE >
-			// However, implementations may omit key or value, and technically
-			// we should support them in any order.  See b/28924776 for a time
-			// this went wrong.
+			// Technically the "key" and "value" could come in any order,
+			// but in practice they won't.
 
 			tok := p.next()
 			var terminator string
@@ -631,39 +615,32 @@ func (p *textParser) readStruct(sv reflect.Value, terminator string) error {
 			default:
 				return p.errorf("expected '{' or '<', found %q", tok.value)
 			}
-			for {
-				tok := p.next()
-				if tok.err != nil {
-					return tok.err
-				}
-				if tok.value == terminator {
-					break
-				}
-				switch tok.value {
-				case "key":
-					if err := p.consumeToken(":"); err != nil {
-						return err
-					}
-					if err := p.readAny(key, props.mkeyprop); err != nil {
-						return err
-					}
-					if err := p.consumeOptionalSeparator(); err != nil {
-						return err
-					}
-				case "value":
-					if err := p.checkForColon(props.mvalprop, dst.Type().Elem()); err != nil {
-						return err
-					}
-					if err := p.readAny(val, props.mvalprop); err != nil {
-						return err
-					}
-					if err := p.consumeOptionalSeparator(); err != nil {
-						return err
-					}
-				default:
-					p.back()
-					return p.errorf(`expected "key", "value", or %q, found %q`, terminator, tok.value)
-				}
+			if err := p.consumeToken("key"); err != nil {
+				return err
+			}
+			if err := p.consumeToken(":"); err != nil {
+				return err
+			}
+			if err := p.readAny(key, props.mkeyprop); err != nil {
+				return err
+			}
+			if err := p.consumeOptionalSeparator(); err != nil {
+				return err
+			}
+			if err := p.consumeToken("value"); err != nil {
+				return err
+			}
+			if err := p.checkForColon(props.mvalprop, dst.Type().Elem()); err != nil {
+				return err
+			}
+			if err := p.readAny(val, props.mvalprop); err != nil {
+				return err
+			}
+			if err := p.consumeOptionalSeparator(); err != nil {
+				return err
+			}
+			if err := p.consumeToken(terminator); err != nil {
+				return err
 			}
 
 			dst.SetMapIndex(key, val)
@@ -686,8 +663,7 @@ func (p *textParser) readStruct(sv reflect.Value, terminator string) error {
 				return err
 			}
 			reqFieldErr = err
-		}
-		if props.Required {
+		} else if props.Required {
 			reqCount--
 		}
 
@@ -796,12 +772,12 @@ func (p *textParser) readAny(v reflect.Value, props *Properties) error {
 		fv.Set(reflect.Append(fv, reflect.New(at.Elem()).Elem()))
 		return p.readAny(fv.Index(fv.Len()-1), props)
 	case reflect.Bool:
-		// true/1/t/True or false/f/0/False.
+		// Either "true", "false", 1 or 0.
 		switch tok.value {
-		case "true", "1", "t", "True":
+		case "true", "1":
 			fv.SetBool(true)
 			return nil
-		case "false", "0", "f", "False":
+		case "false", "0":
 			fv.SetBool(false)
 			return nil
 		}

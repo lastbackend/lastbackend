@@ -43,10 +43,9 @@ func WhoamiCmd() {
 	ctx.Log.Info(fmt.Sprintf("User information:\r\n\r\n"+
 		"Username: \t%s\n"+
 		"E-mail: \t%s\n"+
-		"Organization: \t%v\n"+
 		"Created: \t%s\n"+
-		"Updated: \t%s", user.Username, user.Email,
-		user.Organization, user.Created.String()[:10], user.Updated.String()[:10]))
+		"Updated: \t%s", user.Username, user.Emails.GetDefault(),
+		user.Created.String()[:10], user.Updated.String()[:10]))
 }
 
 func Whoami() (*model.User, error) {
