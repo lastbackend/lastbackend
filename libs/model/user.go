@@ -25,38 +25,97 @@ import (
 )
 
 type User struct {
-	ID           string    `json:"id" gorethink:"id,omitempty"`
-	Username     string    `json:"username" gorethink:"username,omitempty"`
-	Email        string    `json:"email" gorethink:"email,omitempty"`
-	Gravatar     string    `json:"gravatar" gorethink:"gravatar,omitempty"`
-	Organization bool      `json:"organization" gorethink:"organization,omitempty"`
-	Balance      float64   `json:"balance" gorethink:"balance,omitempty"`
-	Created      time.Time `json:"created" gorethink:"created,omitempty"`
-	Updated      time.Time `json:"updated" gorethink:"updated,omitempty"`
+	userInfo
 
-	Password string `json:"-" gorethink:"password,omitempty,omitempty"`
-	Salt     string `json:"-" gorethink:"salt,omitempty,omitempty"`
-
-	Profile      Profile           `json:"profile" gorethink:"profile,omitempty"`
-	Integrations map[string]string `json:"integrations" gorethink:"integrations,omitempty"`
+	Username string       `json:"username"`
+	Security UserSecurity `json:"security"`
+	Emails   UserEmails   `json:"emails"`
+	Profile  UserProfile  `json:"profile"`
 }
 
-type Profile struct {
-	FirstName string `json:"first_name" gorethink:"first_name,omitempty"`
-	LastName  string `json:"last_name" gorethink:"last_name,omitempty"`
-	Company   string `json:"company" gorethink:"company,omitempty"`
+type UserView struct {
+	userInfo
+
+	Username string      `json:"username"`
+	Emails   UserEmails  `json:"emails"`
+	Profile  UserProfile `json:"profile"`
+}
+
+type userInfo struct {
+	Gravatar string    `json:"gravatar"`
+	Created  time.Time `json:"created"`
+	Updated  time.Time `json:"updated"`
+}
+
+type userPass struct {
+	Password string `json:"password"`
+	Salt     string `json:"salt"`
+}
+
+type UserEmails map[string]bool
+type UserInfo struct{ userInfo }
+type UserPassword struct{ userPass }
+
+type UserProfile struct {
+	FirstName string `json:"first_name"`
+	LastName  string `json:"last_name"`
+}
+
+type UserSecurity struct {
+	Pass UserPassword `json:"pass"`
+	SSH  []UserSSH    `json:"ssh"`
+}
+
+type UserSSH struct {
+	Name        string `json:"name"`
+	Fingerprint string `json:"fingerprint"`
+	Key         string `json:"key"`
 }
 
 // Validation methods
-func (u *User) ValidatePassword(password string) error {
-	if err := bcrypt.CompareHashAndPassword([]byte(u.Password), []byte(password+string(u.Salt))); err != nil {
+func (p *UserPassword) ValidatePassword(password string) error {
+	if err := bcrypt.CompareHashAndPassword([]byte(p.Password), []byte(password+string(p.Salt))); err != nil {
 		return err
 	}
 
 	return nil
 }
 
+// Get primary email
+func (p *UserEmails) GetDefault() string {
+	for k, v := range *p {
+		if v == true {
+			return k
+		}
+	}
+
+	var email string
+	for email = range *p {
+		break
+	}
+
+	return email
+}
+
+func (u *User) ConvertToView() *UserView {
+	var view = new(UserView)
+	view.Username = u.Username
+	view.userInfo = u.userInfo
+	view.Profile = u.Profile
+	view.Emails = u.Emails
+	return view
+}
+
 func (u *User) ToJson() ([]byte, error) {
+	buf, err := json.Marshal(u)
+	if err != nil {
+		return nil, err
+	}
+
+	return buf, nil
+}
+
+func (u *UserView) ToJson() ([]byte, error) {
 	buf, err := json.Marshal(u)
 	if err != nil {
 		return nil, err
