@@ -53,7 +53,7 @@ type optMatcher struct {
 
 func (o *optMatcher) match(args []string, c *parseContext) (bool, []string) {
 	if len(args) == 0 || c.rejectOptions {
-		return false, args
+		return o.theOne.valueSetFromEnv, args
 	}
 
 	idx := 0
@@ -63,7 +63,7 @@ func (o *optMatcher) match(args []string, c *parseContext) (bool, []string) {
 		case arg == "-":
 			idx++
 		case arg == "--":
-			return false, nil
+			return o.theOne.valueSetFromEnv, nil
 		case strings.HasPrefix(arg, "--"):
 			matched, consumed, nargs := o.matchLongOpt(args, idx, c)
 
@@ -71,7 +71,7 @@ func (o *optMatcher) match(args []string, c *parseContext) (bool, []string) {
 				return true, nargs
 			}
 			if consumed == 0 {
-				return false, args
+				return o.theOne.valueSetFromEnv, args
 			}
 			idx += consumed
 
@@ -81,15 +81,15 @@ func (o *optMatcher) match(args []string, c *parseContext) (bool, []string) {
 				return true, nargs
 			}
 			if consumed == 0 {
-				return false, args
+				return o.theOne.valueSetFromEnv, args
 			}
 			idx += consumed
 
 		default:
-			return false, args
+			return o.theOne.valueSetFromEnv, args
 		}
 	}
-	return false, args
+	return o.theOne.valueSetFromEnv, args
 }
 
 func (o *optMatcher) matchLongOpt(args []string, idx int, c *parseContext) (bool, int, []string) {

@@ -96,7 +96,7 @@ func Update(name string, config model.ServiceUpdateConfig) error {
 
 func GetConfig(service *model.Service) (*model.ServiceUpdateConfig, error) {
 
-	var config = service.GetConfig()
+	var config = struct {}{}
 
 	buf, err := yaml.Marshal(config)
 	if err != nil {
@@ -115,5 +115,5 @@ func GetConfig(service *model.Service) (*model.ServiceUpdateConfig, error) {
 		return nil, err
 	}
 
-	return config, nil
+	return &model.ServiceUpdateConfig{}, nil
 }

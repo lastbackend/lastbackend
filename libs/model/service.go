@@ -21,8 +21,6 @@ package model
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/lastbackend/lastbackend/pkg/service"
-	"github.com/lastbackend/lastbackend/pkg/service/resource/container"
 	"github.com/lastbackend/lastbackend/pkg/util/table"
 	"time"
 )
@@ -43,7 +41,7 @@ type Service struct {
 	// Service description
 	Description string `json:"description"`
 	// Service spec
-	Spec *service.Service `json:"spec,omitempty"`
+	Spec interface{} `json:"spec,omitempty"`
 	// Service created time
 	Source *Source `json:"source,omitempty"`
 	// Service created time
@@ -68,64 +66,25 @@ func (s *Service) ToJson() ([]byte, error) {
 	return buf, nil
 }
 
-func (s *Service) GetConfig() *ServiceUpdateConfig {
-
-	var config = new(ServiceUpdateConfig)
-
-	config.Description = &s.Description
-
-	config.Replicas = &s.Spec.Scale
-	*config.Containers = make([]ContainerConfig, len(s.Spec.Template.ContainerList))
-
-	for index, val := range s.Spec.Template.ContainerList {
-		cfg := ContainerConfig{}
-
-		cfg.Name = val.Name
-		cfg.Image = val.Image
-		cfg.WorkingDir = val.WorkingDir
-		cfg.Command = val.Command
-		cfg.Args = val.Args
-
-		for _, val := range val.PortList {
-			cfg.Ports = append(cfg.Ports, Port{
-				Name:      val.Name,
-				Container: val.Container,
-				Protocol:  string(val.Protocol),
-			})
-		}
-
-		for _, val := range val.EnvList {
-			cfg.Env = append(cfg.Env, EnvVar{
-				Name:  val.Name,
-				Value: val.Value,
-			})
-		}
-
-		(*config.Containers)[index] = cfg
-	}
-
-	return config
-}
-
 func (s *Service) DrawTable(projectName string) {
-	table.PrintHorizontal(map[string]interface{}{
-		"ID":      s.ID,
-		"NAME":    s.Name,
-		"PROJECT": projectName,
-		"PODS":    len(s.Spec.PodList),
-	})
-
+	//table.PrintHorizontal(map[string]interface{}{
+	//	"ID":      s.ID,
+	//	"NAME":    s.Name,
+	//	"PROJECT": projectName,
+	//	"PODS":    len(s.Spec.PodList),
+	//})
+	//
 	t := table.New([]string{" ", "NAME", "STATUS", "CONTAINERS"})
-	t.VisibleHeader = true
-
-	for _, pod := range s.Spec.PodList {
-		t.AddRow(map[string]interface{}{
-			" ":          "",
-			"NAME":       pod.Name,
-			"STATUS":     pod.Status,
-			"CONTAINERS": len(pod.ContainerList),
-		})
-	}
+	//t.VisibleHeader = true
+	//
+	//for _, pod := range s.Spec.PodList {
+	//	t.AddRow(map[string]interface{}{
+	//		" ":          "",
+	//		"NAME":       pod.Name,
+	//		"STATUS":     pod.Status,
+	//		"CONTAINERS": len(pod.ContainerList),
+	//	})
+	//}
 	t.AddRow(map[string]interface{}{})
 
 	t.Print()
@@ -148,35 +107,35 @@ func (s *ServiceList) ToJson() ([]byte, error) {
 func (s *ServiceList) DrawTable(projectName string) {
 	fmt.Print(" Project ", projectName+"\n\n")
 
-	for _, s := range *s {
-
-		t := make(map[string]interface{})
-		t["ID"] = s.ID
-		t["NAME"] = s.Name
-
-		if s.Spec != nil {
-			t["PODS"] = len(s.Spec.PodList)
-		}
-
-		table.PrintHorizontal(t)
-
-		if s.Spec != nil {
-			for _, pod := range s.Spec.PodList {
-				tpods := table.New([]string{" ", "NAME", "STATUS", "CONTAINERS"})
-				tpods.VisibleHeader = true
-
-				tpods.AddRow(map[string]interface{}{
-					" ":          "",
-					"NAME":       pod.Name,
-					"STATUS":     pod.Status,
-					"CONTAINERS": len(pod.ContainerList),
-				})
-				tpods.Print()
-			}
-		}
-
-		fmt.Print("\n\n")
-	}
+	//for _, s := range *s {
+	//
+	//	t := make(map[string]interface{})
+	//	t["ID"] = s.ID
+	//	t["NAME"] = s.Name
+	//
+	//	if s.Spec != nil {
+	//		t["PODS"] = len(s.Spec.PodList)
+	//	}
+	//
+	//	table.PrintHorizontal(t)
+	//
+	//	if s.Spec != nil {
+	//		for _, pod := range s.Spec.PodList {
+	//			tpods := table.New([]string{" ", "NAME", "STATUS", "CONTAINERS"})
+	//			tpods.VisibleHeader = true
+	//
+	//			tpods.AddRow(map[string]interface{}{
+	//				" ":          "",
+	//				"NAME":       pod.Name,
+	//				"STATUS":     pod.Status,
+	//				"CONTAINERS": len(pod.ContainerList),
+	//			})
+	//			tpods.Print()
+	//		}
+	//	}
+	//
+	//	fmt.Print("\n\n")
+	//}
 }
 
 type ServiceUpdateConfig struct {
@@ -205,46 +164,4 @@ type Port struct {
 type EnvVar struct {
 	Name  string `json:"name" yaml:"name"`
 	Value string `json:"value" yaml:"value"`
-}
-
-func (s ServiceUpdateConfig) CreateServiceConfig() *service.ServiceConfig {
-
-	var cfg = new(service.ServiceConfig)
-
-	if s.Replicas != nil {
-		cfg.Scale = *s.Replicas
-	}
-
-	if s.Containers != nil {
-		cfg.Containers = &[]container.Container{}
-		for _, val := range *s.Containers {
-			c := container.Container{}
-
-			c.Name = val.Name
-			c.Image = val.Image
-			c.WorkingDir = val.WorkingDir
-			c.Command = val.Command
-			c.Args = val.Args
-
-			for _, item := range val.Ports {
-				c.Ports = append(c.Ports, container.Port{
-					Name:          item.Name,
-					ContainerPort: item.Container,
-					Protocol:      item.Protocol,
-				})
-
-				for _, val := range val.Env {
-					c.Env = append(c.Env, container.EnvVar{
-						Name:  val.Name,
-						Value: val.Value,
-					})
-				}
-
-			}
-
-			*cfg.Containers = append(*cfg.Containers, c)
-		}
-	}
-
-	return cfg
 }
