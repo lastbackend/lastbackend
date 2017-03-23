@@ -25,7 +25,6 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/util/validator"
 	"gopkg.in/yaml.v2"
 	"io/ioutil"
-	"k8s.io/client-go/rest"
 )
 
 var (
@@ -53,17 +52,6 @@ func (Config) Configure(path string) error {
 
 func Get() *Config {
 	return cfg
-}
-
-func GetK8S() *rest.Config {
-	return &rest.Config{
-		Host: cfg.K8S.Host,
-		TLSClientConfig: rest.TLSClientConfig{
-			CAFile:   cfg.K8S.SSL.CA,
-			KeyFile:  cfg.K8S.SSL.Key,
-			CertFile: cfg.K8S.SSL.Cert,
-		},
-	}
 }
 
 // Get Etcd DB options used for creating session
