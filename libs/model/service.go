@@ -31,32 +31,32 @@ type ServiceList []Service
 
 type Service struct {
 	// Service uuid, incremented automatically
-	ID string `json:"id" gorethink:"id,omitempty"`
+	ID string `json:"id"`
 	// Service user
-	User string `json:"user" gorethink:"user,omitempty"`
+	User string `json:"user"`
 	// Service project
-	Project string `json:"project" gorethink:"project,omitempty"`
+	Project string `json:"project"`
 	// Service image
-	Image string `json:"image" gorethink:"image,omitempty"`
+	Image string `json:"image"`
 	// Service name
-	Name string `json:"name" gorethink:"name,omitempty"`
+	Name string `json:"name"`
 	// Service description
-	Description string `json:"description" gorethink:"description,omitempty"`
+	Description string `json:"description"`
 	// Service spec
-	Spec *service.Service `json:"spec,omitempty" gorethink:"-"`
+	Spec *service.Service `json:"spec,omitempty"`
 	// Service created time
-	Source *Source `json:"source,omitempty" gorethink:"source,omitempty"`
+	Source *Source `json:"source,omitempty"`
 	// Service created time
-	Created time.Time `json:"created" gorethink:"created,omitempty"`
+	Created time.Time `json:"created"`
 	// Service updated time
-	Updated time.Time `json:"updated" gorethink:"updated,omitempty"`
+	Updated time.Time `json:"updated"`
 }
 
 type Source struct {
-	Hub      string `json:"hub" gorethink:"hub,omitempty"`
-	Username string `json:"username" gorethink:"username,omitempty"`
-	Repo     string `json:"repo" gorethink:"repo,omitempty"`
-	Branch   string `json:"branch" gorethink:"branch,omitempty"`
+	Hub      string `json:"hub"`
+	Username string `json:"username"`
+	Repo     string `json:"repo"`
+	Branch   string `json:"branch"`
 }
 
 func (s *Service) ToJson() ([]byte, error) {

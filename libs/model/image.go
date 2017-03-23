@@ -24,18 +24,24 @@ type ImageList []Image
 
 type Image struct {
 	// Image uuid, incremented automatically
-	ID string `json:"id" gorethink:"id,omitempty"`
+	ID string `json:"id"`
 	// Image user
-	User string `json:"user" gorethink:"user,omitempty"`
+	User string `json:"user"`
 	// Image name
-	Name string `json:"name" gorethink:"name,omitempty"`
+	Name string `json:"name"`
 	// Image tag lists
-	Tags map[string]ImageTag `json:"tags" gorethink:"tags,omitempty"`
+	Tags map[string]string `json:"tags"`
+	// Image Registry info
+	Registry Registry
 	// Image created time
-	Created time.Time `json:"created" gorethink:"created,omitempty"`
+	Created time.Time `json:"created"`
 	// Image updated time
-	Updated time.Time `json:"updated" gorethink:"updated,omitempty"`
+	Updated time.Time `json:"updated"`
 }
 
-type ImageTag struct {
+type ImageSpec struct {
+	Name string
+	Tag  string
+	Registry Registry
 }
+

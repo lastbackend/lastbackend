@@ -27,19 +27,19 @@ type HookList []Hook
 
 type Hook struct {
 	// Hook uuid, incremented automatically
-	ID string `json:"id" gorethink:"id,omitempty"`
+	ID string `json:"id"`
 	// Hook owner
-	User string `json:"user" gorethink:"user,omitempty"`
+	User string `json:"user"`
 	// Hook token
-	Token string `json:"token" gorethink:"token,omitempty"`
+	Token string `json:"token"`
 	// Hook image to build
-	Image string `json:"image" gorethink:"image,omitempty"`
+	Image string `json:"image"`
 	// Hook service to build images
-	Service string `json:"service" gorethink:"service,omitempty"`
+	Service string `json:"service"`
 	// Hook created time
-	Created time.Time `json:"created" gorethink:"created,omitempty"`
+	Created time.Time `json:"created"`
 	// Hook updated time
-	Updated time.Time `json:"updated" gorethink:"updated,omitempty"`
+	Updated time.Time `json:"updated"`
 }
 
 func (h *Hook) ToJson() ([]byte, error) {

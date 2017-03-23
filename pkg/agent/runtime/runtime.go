@@ -27,7 +27,6 @@ func (r *Runtime) Init() {
 	r.Client, _ = client.NewEnvClient()
 
 	// Get Container list
-
 	containers, _ := r.Client.ContainerList(context.Background(), types.ContainerListOptions{})
 	cj, _ := json.Marshal(containers)
 	logrus.Debugf("%s", cj)

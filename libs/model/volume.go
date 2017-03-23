@@ -26,15 +26,21 @@ type VolumeList []Volume
 
 type Volume struct {
 	// Volume uuid, incremented automatically
-	ID string `json:"id" gorethink:"id,omitempty"`
+	ID string `json:"id"`
 	// Volume uuid, incremented automatically
-	Project string `json:"project" gorethink:"project,omitempty"`
+	Project string `json:"project"`
 	// Volume user
-	User string `json:"user" gorethink:"user,omitempty"`
+	User string `json:"user"`
 	// Volume name
-	Name string `json:"name" gorethink:"name,omitempty"`
+	Name string `json:"name"`
 	// Volume tag lists
-	Created time.Time `json:"created" gorethink:"created,omitempty"`
+	Created time.Time `json:"created"`
 	// Volume updated time
-	Updated time.Time `json:"updated" gorethink:"updated,omitempty"`
+	Updated time.Time `json:"updated"`
+}
+
+
+type VolumesSpec struct {
+	Volume string
+	MountPath string
 }
