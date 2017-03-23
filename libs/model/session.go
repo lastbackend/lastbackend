@@ -27,24 +27,19 @@ import (
 
 var (
 	ErrUnexpectedSigninMethod = errors.New("UNEXPECTED_SIGNIN_METHD")
-	ErrSessionTokenHasNoUID   = errors.New("NO_UID_IN_TOKEN")
 	ErrSessionTokenHasNoEXP   = errors.New("NO_EXP_IN_TOKEN")
 	ErrSessionTokenHasNoJTI   = errors.New("NO_JTI_IN_TOKEN")
 )
 
 // Generate new Session pointer structure
-func NewSession(uid, oid, username, email string) *Session {
+func NewSession(username, email string) *Session {
 	return &Session{
-		Uid:      uid,
-		Oid:      oid,
 		Username: username,
 		Email:    email,
 	}
 }
 
 type Session struct {
-	Uid      string // session user id
-	Oid      string // session organization id
 	Username string // session username
 	Email    string // session email
 }
@@ -63,10 +58,6 @@ func (s *Session) Decode(token string) error {
 
 			if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 				return ErrUnexpectedSigninMethod
-			}
-
-			if claims["uid"] == nil {
-				return ErrSessionTokenHasNoUID
 			}
 
 			if claims["exp"] == nil {
@@ -89,20 +80,12 @@ func (s *Session) Decode(token string) error {
 
 	claims := payload.Claims.(jwt.MapClaims)
 
-	if _, ok := claims["oid"]; ok {
-		s.Oid = claims["oid"].(string)
-	}
-
-	if _, ok := claims["uid"]; ok {
-		s.Uid = claims["uid"].(string)
-	}
-
 	if _, ok := claims["em"]; ok {
 		s.Email = claims["em"].(string)
 	}
 
-	if _, ok := claims["user"]; ok {
-		s.Username = claims["user"].(string)
+	if _, ok := claims["un"]; ok {
+		s.Username = claims["un"].(string)
 	}
 
 	return nil
@@ -114,12 +97,10 @@ func (s *Session) Encode() (string, error) {
 	var cfg = config.Get()
 
 	context := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
-		"uid":  s.Uid,
-		"oid":  s.Oid,
-		"em":   s.Email,
-		"user": s.Username,
-		"jti":  time.Now().Add(time.Hour * 2232).Unix(),
-		"exp":  time.Now().Add(time.Hour * 2232).Unix(),
+		"em":  s.Email,
+		"un":  s.Username,
+		"jti": time.Now().Add(time.Hour * 2232).Unix(),
+		"exp": time.Now().Add(time.Hour * 2232).Unix(),
 	})
 
 	return context.SignedString([]byte(cfg.TokenSecret))

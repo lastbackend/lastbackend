@@ -34,11 +34,14 @@ type IStorage interface {
 }
 
 type IUser interface {
-	GetByID(string) (*model.User, error)
 	GetByUsername(string) (*model.User, error)
 	GetByEmail(string) (*model.User, error)
-	GetByUsernameOrEmail(string) (*model.User, error)
-	Insert(*model.User) (*model.User, error)
+
+	SetInfo(string, *model.UserInfo) error
+	SetProfile(string, *model.UserProfile) error
+	SetEmail(string, string, bool) error
+
+	DeleteEmail(string, string) error
 }
 
 type IBuild interface {

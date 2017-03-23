@@ -62,8 +62,8 @@ func (s *sessionCreateS) decodeAndValidate(reader io.Reader) *e.Err {
 func SessionCreateH(w http.ResponseWriter, r *http.Request) {
 
 	var (
-		err error
-		ctx = context.Get()
+		err   error
+		ctx   = context.Get()
 	)
 
 	ctx.Log.Debug("Create session handler")
@@ -90,7 +90,7 @@ func SessionCreateH(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := user.ValidatePassword(*rq.Password); err != nil {
+	if err := user.Security.Pass.ValidatePassword(*rq.Password); err != nil {
 		e.HTTP.Unauthorized(w)
 		return
 	}
@@ -99,7 +99,7 @@ func SessionCreateH(w http.ResponseWriter, r *http.Request) {
 		Token string `json:"token"`
 	}{}
 
-	sw.Token, err = model.NewSession(user.ID, ``, user.Username, user.Email).Encode()
+	sw.Token, err = model.NewSession(user.Username, user.Emails.GetDefault()).Encode()
 	if err != nil {
 		ctx.Log.Error(err)
 		e.HTTP.InternalServerError(w)
@@ -114,9 +114,9 @@ func SessionCreateH(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.WriteHeader(http.StatusOK)
-	_, er = w.Write(response)
-	if er != nil {
-		ctx.Log.Error("Error: write response", er.Error())
+	_, err = w.Write(response)
+	if err != nil {
+		ctx.Log.Error("Error: write response", err.Error())
 		return
 	}
 }
