@@ -22,10 +22,10 @@ import (
 	"errors"
 	"fmt"
 	"github.com/coreos/etcd/clientv3"
-	"github.com/lastbackend/lastbackend/pkg/util/validator"
 	"github.com/lastbackend/lastbackend/pkg/serializer"
 	st "github.com/lastbackend/lastbackend/pkg/storage/store"
 	"github.com/lastbackend/lastbackend/pkg/util/converter"
+	"github.com/lastbackend/lastbackend/pkg/util/validator"
 	"golang.org/x/net/context"
 	"path"
 	"reflect"
@@ -64,6 +64,9 @@ func (s *store) Create(ctx context.Context, key string, obj, outPtr interface{},
 	if !txnResp.Succeeded {
 		return errors.New(st.ErrKeyExists)
 	}
+	if validator.IsNil(outPtr) {
+		return nil
+	}
 
 	if outPtr != nil {
 		return decode(s.codec, data, outPtr)
@@ -81,8 +84,9 @@ func (s *store) Get(ctx context.Context, key string, outPtr interface{}) error {
 		return err
 	}
 	if len(res.Kvs) == 0 {
-		return nil
+		return errors.New(st.ErrKeyNotFound)
 	}
+	fmt.Println("Result get:", string(res.Kvs[0].Value))
 	return decode(s.codec, res.Kvs[0].Value, outPtr)
 }
 
@@ -116,7 +120,7 @@ func (s *store) Delete(ctx context.Context, key string, outPtr interface{}) erro
 	// We need to do get and delete in single transaction in order to
 	// know the value and revision before deleting it.
 	fmt.Println("Del:", key)
-	txnResp, err := s.client.KV.Txn(ctx).If().Then(
+	res, err := s.client.KV.Txn(ctx).If().Then(
 		clientv3.OpGet(key),
 		clientv3.OpDelete(key),
 	).Commit()
@@ -127,7 +131,7 @@ func (s *store) Delete(ctx context.Context, key string, outPtr interface{}) erro
 		return nil
 	}
 
-	getResp := txnResp.Responses[0].GetResponseRange()
+	getResp := res.Responses[0].GetResponseRange()
 	if len(getResp.Kvs) == 0 {
 		return errors.New(st.ErrKeyNotFound)
 	}

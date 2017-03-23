@@ -44,7 +44,7 @@ func UserGetH(w http.ResponseWriter, r *http.Request) {
 
 	session := s.(*model.Session)
 
-	user, err := ctx.Storage.User().GetByID(session.Uid)
+	user, err := ctx.Storage.User().GetByUsername(session.Username)
 	if err == nil && user == nil {
 		e.New("user").NotFound().Http(w)
 		return
@@ -55,14 +55,12 @@ func UserGetH(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	response, err := user.ToJson()
+	response, err := user.ConvertToView().ToJson()
 	if err != nil {
 		ctx.Log.Error("Error: convert struct to json", err.Error())
 		e.HTTP.InternalServerError(w)
 		return
 	}
-
-	ctx.Log.Info(string(response))
 
 	w.WriteHeader(http.StatusOK)
 	_, err = w.Write(response)
