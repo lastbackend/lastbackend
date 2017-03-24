@@ -36,7 +36,7 @@ type Project struct {
 	// Project description
 	Description string `json:"description"`
 	// Project labels
-	Labels map[string]string  `json:"labels,omitempty"`
+	Labels map[string]string `json:"labels,omitempty"`
 	// Project created time
 	Created time.Time `json:"created"`
 	// Project updated time

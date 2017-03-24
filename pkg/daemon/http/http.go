@@ -58,11 +58,11 @@ func NewRouter() *mux.Router {
 	r.HandleFunc("/build", handle(handler.BuildCreateH)).Methods(http.MethodPost)
 
 	// Project handlers
-	//r.HandleFunc("/project", handle(handler.ProjectListH, auth)).Methods(http.MethodGet)
-	//r.HandleFunc("/project", handle(handler.ProjectCreateH, auth)).Methods(http.MethodPost)
-	//r.HandleFunc("/project/{project}", handle(handler.ProjectInfoH, auth)).Methods(http.MethodGet)
+	r.HandleFunc("/project", handle(handler.ProjectListH, auth)).Methods(http.MethodGet)
+	r.HandleFunc("/project", handle(handler.ProjectCreateH, auth)).Methods(http.MethodPost)
+	r.HandleFunc("/project/{project}", handle(handler.ProjectInfoH, auth)).Methods(http.MethodGet)
 	//r.HandleFunc("/project/{project}", handle(handler.ProjectUpdateH, auth)).Methods(http.MethodPut)
-	//r.HandleFunc("/project/{project}", handle(handler.ProjectRemoveH, auth)).Methods(http.MethodDelete)
+	r.HandleFunc("/project/{project}", handle(handler.ProjectRemoveH, auth)).Methods(http.MethodDelete)
 	//r.HandleFunc("/project/{project}/activity", handle(handler.ProjectActivityListH, auth)).Methods(http.MethodGet)
 	//r.HandleFunc("/project/{project}/service", handle(handler.ServiceListH, auth)).Methods(http.MethodGet)
 	//r.HandleFunc("/project/{project}/service/{service}", handle(handler.ServiceInfoH, auth)).Methods(http.MethodGet)

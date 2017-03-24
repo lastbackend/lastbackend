@@ -21,11 +21,11 @@ package converter
 import (
 	"encoding/base64"
 	"errors"
+	"fmt"
+	"reflect"
 	"regexp"
 	"strconv"
 	"strings"
-	"fmt"
-	"reflect"
 )
 
 type source struct {
@@ -118,9 +118,6 @@ func DockerNamespaceParse(namespace string) (*source, error) {
 
 }
 
-// EnforcePtr ensures that obj is a pointer of some sort. Returns a reflect.Value
-// of the dereferenced pointer, ensuring that it is settable/addressable.
-// Returns an error if this is not possible.
 func EnforcePtr(obj interface{}) (reflect.Value, error) {
 	v := reflect.ValueOf(obj)
 	if v.Kind() != reflect.Ptr {

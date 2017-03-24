@@ -16,18 +16,4 @@
 // from Last.Backend LLC.
 //
 
-package store
-
-import (
-	"github.com/lastbackend/lastbackend/pkg/serializer"
-)
-
-type Config struct {
-	Prefix    string
-	Endpoints []string
-	KeyFile   string
-	CertFile  string
-	CAFile    string
-	Quorum    bool
-	Codec     serializer.Codec
-}
+package types

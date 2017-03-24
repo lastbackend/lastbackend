@@ -37,7 +37,7 @@ type TxResponse struct {
 	*clientv3.TxnResponse
 }
 
-// Commit transaction context
+//TODO: add compare parameters as argument
 func (t *tx) Create(key string, objPtr interface{}, ttl uint64) error {
 	key = path.Join(t.pathPrefix, key)
 	t.cmp = append(t.cmp, clientv3.Compare(clientv3.ModRevision(key), "=", 0))
@@ -53,20 +53,17 @@ func (t *tx) Create(key string, objPtr interface{}, ttl uint64) error {
 	return nil
 }
 
-// Delete key transaction context
+//TODO: add compare parameters as argument
 func (t *tx) Delete(key string) {
 	key = path.Join(t.pathPrefix, key)
 	t.ops = append(t.ops, clientv3.OpDelete(key))
 }
 
-// Commit transaction context
 func (t *tx) Commit() error {
 	_, err := t.txn.If(t.cmp...).Then(t.ops...).Commit()
 	return err
 }
 
-// ttlOpts returns client options based on given ttl.
-// ttl: if ttl is non-zero, it will attach the key to a lease with ttl of roughly the same length
 func (t *tx) ttlOpts(ttl int64) ([]clientv3.OpOption, error) {
 	if ttl == 0 {
 		return nil, nil

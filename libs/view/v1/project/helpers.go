@@ -42,6 +42,9 @@ func (obj *Project) ToJson() ([]byte, error) {
 
 func NewList(obj *model.ProjectList) *ProjectList {
 	p := new(ProjectList)
+	if obj == nil {
+		return nil
+	}
 	for _, v := range *obj {
 		*p = append(*p, *New(&v))
 	}
@@ -49,7 +52,7 @@ func NewList(obj *model.ProjectList) *ProjectList {
 }
 
 func (obj *ProjectList) ToJson() ([]byte, error) {
-	if obj == nil {
+	if obj == nil || len(*obj) == 0 {
 		return []byte("[]"), nil
 	}
 	return json.Marshal(obj)
