@@ -25,7 +25,21 @@ import (
 	"path"
 )
 
+// Interface offers a common interface for object marshaling/unmarshaling operations and
+// hides all the storage-related operations behind it.
+type ITx interface {
+	// Create adds a new object at a key unless it already exists.
+	Create(string, interface{}, uint64) error
+	// Delete removes the specified key.
+	Delete(string)
+	// Commit transacton.
+	Commit() (*TxResponse, error)
+}
+
+type Tx ITx
+
 type tx struct {
+	ITx
 	*store
 	txn     clientv3.Txn
 	context context.Context

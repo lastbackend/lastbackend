@@ -38,7 +38,7 @@ type FilterFunc func(obj interface{}) bool
 
 // Interface offers a common interface for object marshaling/unmarshaling operations and
 // hides all the storage-related operations behind it.
-type IStore interface {
+type Interface interface {
 	// Create adds a new object at a key unless it already exists.
 	Create(ctx context.Context, key string, obj, out interface{}, ttl uint64) error
 	// Get unmarshals json found at key into objPtr. On a not found error, will either
@@ -52,16 +52,6 @@ type IStore interface {
 	Delete(ctx context.Context, key string, out interface{}) error
 	// Delete removes the specified key and returns the value that existed at that spot.
 	// If key didn't exist, it will return NotFound storage error.
-	Begin(ctx context.Context) ITx
+	Begin(ctx context.Context) *etcd3.Tx
 }
 
-// Interface offers a common interface for object marshaling/unmarshaling operations and
-// hides all the storage-related operations behind it.
-type ITx interface {
-	// Create adds a new object at a key unless it already exists.
-	Create(string, interface{}, uint64) error
-	// Delete removes the specified key.
-	Delete(string)
-	// Commit transacton.
-	Commit() (*etcd3.TxResponse, error)
-}

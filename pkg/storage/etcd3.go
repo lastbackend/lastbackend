@@ -27,7 +27,7 @@ import (
 	"time"
 )
 
-func createEtcd3Storage(c store.Config) (store.IStore, store.DestroyFunc, error) {
+func createEtcd3Storage(c store.Config) (store.Interface, store.DestroyFunc, error) {
 
 	tlsConfig, err := getTLSConfig(c.CertFile, c.KeyFile, c.CAFile)
 	if err != nil {

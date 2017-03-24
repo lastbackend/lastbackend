@@ -140,7 +140,7 @@ func (s *store) Delete(ctx context.Context, key string, outPtr interface{}) erro
 }
 
 // Create transaction client
-func (s *store) Begin(ctx context.Context) st.ITx {
+func (s *store) Begin(ctx context.Context) *tx {
 	return &tx{
 		store:   s,
 		context: ctx,
