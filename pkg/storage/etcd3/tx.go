@@ -29,6 +29,8 @@ type tx struct {
 	*store
 	txn     clientv3.Txn
 	context context.Context
+	cmp     []clientv3.Cmp
+	ops     []clientv3.Op
 }
 
 type TxResponse struct {
@@ -38,28 +40,28 @@ type TxResponse struct {
 // Commit transaction context
 func (t *tx) Create(key string, objPtr interface{}, ttl uint64) error {
 	key = path.Join(t.pathPrefix, key)
+	t.cmp = append(t.cmp, clientv3.Compare(clientv3.ModRevision(key), "=", 0))
 	data, err := serializer.Encode(t.codec, objPtr)
 	if err != nil {
 		return err
 	}
 	opts, err := t.ttlOpts(int64(ttl))
-	t.txn = t.txn.
-		If(clientv3.Compare(clientv3.ModRevision(key), "=", 0)).
-		Then(clientv3.OpPut(key, string(data), opts...))
+	if err != nil {
+		return err
+	}
+	t.ops = append(t.ops, clientv3.OpPut(key, string(data), opts...))
 	return nil
 }
 
 // Delete key transaction context
 func (t *tx) Delete(key string) {
 	key = path.Join(t.pathPrefix, key)
-	t.txn = t.txn.
-		If().
-		Then(clientv3.OpDelete(key))
+	t.ops = append(t.ops, clientv3.OpDelete(key))
 }
 
 // Commit transaction context
 func (t *tx) Commit() error {
-	_, err := t.txn.Commit()
+	_, err := t.txn.If(t.cmp...).Then(t.ops...).Commit()
 	return err
 }
 
