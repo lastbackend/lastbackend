@@ -16,25 +16,17 @@
 // from Last.Backend LLC.
 //
 
-package routes
+package project
 
-import (
-	"net/http"
-	"github.com/Sirupsen/logrus"
-)
+import "time"
 
-func VersionGetR(w http.ResponseWriter, r *http.Request) {
-
-	var (
-		err error
-	)
-
-	logrus.Debug("Get user handler")
-
-	w.WriteHeader(http.StatusOK)
-	_, err = w.Write([]byte("{}"))
-	if err != nil {
-		logrus.Error("Error: write response", err.Error())
-		return
-	}
+type Project struct {
+	ID          string    `json:"id"`
+	User        string    `json:"user"`
+	Name        string    `json:"name"`
+	Description string    `json:"description"`
+	Created     time.Time `json:"created"`
+	Updated     time.Time `json:"updated"`
 }
+
+type ProjectList []Project

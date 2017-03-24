@@ -22,6 +22,7 @@ import (
 	"github.com/gorilla/context"
 	e "github.com/lastbackend/lastbackend/libs/errors"
 	"github.com/lastbackend/lastbackend/libs/model"
+	"github.com/lastbackend/lastbackend/libs/view/v1"
 	c "github.com/lastbackend/lastbackend/pkg/daemon/context"
 	"net/http"
 )
@@ -55,7 +56,7 @@ func UserGetH(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	response, err := user.ConvertToView().ToJson()
+	response, err := v1.NewUser(user).ToJson()
 	if err != nil {
 		ctx.Log.Error("Error: convert struct to json", err.Error())
 		e.HTTP.InternalServerError(w)

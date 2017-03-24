@@ -16,25 +16,41 @@
 // from Last.Backend LLC.
 //
 
-package routes
+package project
 
 import (
-	"net/http"
-	"github.com/Sirupsen/logrus"
+	"encoding/json"
+	"github.com/lastbackend/lastbackend/libs/model"
 )
 
-func VersionGetR(w http.ResponseWriter, r *http.Request) {
+func New(obj *model.Project) *Project {
+	p := new(Project)
 
-	var (
-		err error
-	)
+	p.ID = obj.ID
+	p.User = obj.User
+	p.Name = obj.Name
+	p.Description = obj.Description
+	p.Updated = obj.Updated
+	p.Created = obj.Created
 
-	logrus.Debug("Get user handler")
+	return p
+}
 
-	w.WriteHeader(http.StatusOK)
-	_, err = w.Write([]byte("{}"))
-	if err != nil {
-		logrus.Error("Error: write response", err.Error())
-		return
+func (obj *Project) ToJson() ([]byte, error) {
+	return json.Marshal(obj)
+}
+
+func NewList(obj *model.ProjectList) *ProjectList {
+	p := new(ProjectList)
+	for _, v := range *obj {
+		*p = append(*p, New(&v))
 	}
+	return p
+}
+
+func (obj *ProjectList) ToJson() ([]byte, error) {
+	if obj == nil {
+		return []byte("[]"), nil
+	}
+	return json.Marshal(obj)
 }

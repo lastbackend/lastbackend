@@ -16,25 +16,24 @@
 // from Last.Backend LLC.
 //
 
-package routes
+package user
 
 import (
-	"net/http"
-	"github.com/Sirupsen/logrus"
+	"time"
 )
 
-func VersionGetR(w http.ResponseWriter, r *http.Request) {
+type User struct {
+	Gravatar string    `json:"gravatar"`
+	Username string    `json:"username"`
+	Emails   Emails    `json:"emails"`
+	Profile  Profile   `json:"profile"`
+	Created  time.Time `json:"created"`
+	Updated  time.Time `json:"updated"`
+}
 
-	var (
-		err error
-	)
+type Emails map[string]bool
 
-	logrus.Debug("Get user handler")
-
-	w.WriteHeader(http.StatusOK)
-	_, err = w.Write([]byte("{}"))
-	if err != nil {
-		logrus.Error("Error: write response", err.Error())
-		return
-	}
+type Profile struct {
+	FirstName string `json:"first_name"`
+	LastName  string `json:"last_name"`
 }

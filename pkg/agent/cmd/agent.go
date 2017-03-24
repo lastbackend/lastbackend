@@ -1,14 +1,32 @@
+//
+// Last.Backend LLC CONFIDENTIAL
+// __________________
+//
+// [2014] - [2017] Last.Backend LLC
+// All Rights Reserved.
+//
+// NOTICE:  All information contained herein is, and remains
+// the property of Last.Backend LLC and its suppliers,
+// if any.  The intellectual and technical concepts contained
+// herein are proprietary to Last.Backend LLC
+// and its suppliers and may be covered by Russian Federation and Foreign Patents,
+// patents in process, and are protected by trade secret or copyright law.
+// Dissemination of this information or reproduction of this material
+// is strictly forbidden unless prior written permission is obtained
+// from Last.Backend LLC.
+//
+
 package cmd
 
 import (
+	"github.com/Sirupsen/logrus"
 	"github.com/jawher/mow.cli"
 	"github.com/lastbackend/lastbackend/pkg/agent/config"
+	"github.com/lastbackend/lastbackend/pkg/agent/http"
+	"github.com/lastbackend/lastbackend/pkg/agent/runtime"
 	"os"
 	"os/signal"
 	"syscall"
-	"github.com/lastbackend/lastbackend/pkg/agent/http"
-	"github.com/Sirupsen/logrus"
-	"github.com/lastbackend/lastbackend/pkg/agent/runtime"
 )
 
 func Agent(cmd *cli.Cmd) {
@@ -42,8 +60,8 @@ func Agent(cmd *cli.Cmd) {
 
 		go http.RunHttpServer(routes, cfg.HttpServer.Port)
 
-		runtime := runtime.New()
-		runtime.Init()
+		r := runtime.New()
+		r.Init()
 
 		// Handle SIGINT and SIGTERM.
 		signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)
