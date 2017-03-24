@@ -21,7 +21,6 @@ package project
 import "time"
 
 type Project struct {
-	ID          string    `json:"id"`
 	User        string    `json:"user"`
 	Name        string    `json:"name"`
 	Description string    `json:"description"`

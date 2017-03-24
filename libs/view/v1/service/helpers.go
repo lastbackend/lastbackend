@@ -16,50 +16,43 @@
 // from Last.Backend LLC.
 //
 
-package project
+package service
 
 import (
-	"errors"
-	e "github.com/lastbackend/lastbackend/libs/errors"
+	"encoding/json"
 	"github.com/lastbackend/lastbackend/libs/model"
-	"github.com/lastbackend/lastbackend/pkg/client/context"
 )
 
-func CurrentCmd() {
+func New(obj *model.Service) *Service {
+	s := new(Service)
 
-	var ctx = context.Get()
+	s.User = obj.User
+	s.Name = obj.Name
+	s.Description = obj.Description
+	s.Updated = obj.Updated
+	s.Created = obj.Created
 
-	project, err := Current()
-
-	if err != nil {
-		ctx.Log.Error(err)
-		return
-	}
-
-	if project == nil {
-		ctx.Log.Info("Project didn't select")
-		return
-	}
-
-	project.DrawTable()
+	return s
 }
 
-func Current() (*model.Project, error) {
+func (obj *Service) ToJson() ([]byte, error) {
+	return json.Marshal(obj)
+}
 
-	var (
-		err     error
-		ctx     = context.Get()
-		project = new(model.Project)
-	)
-
-	if ctx.Token == "" {
-		return nil, e.NotLoggedMessage
+func NewList(obj *model.ServiceList) *ServiceList {
+	s := new(ServiceList)
+	if obj == nil {
+		return nil
 	}
-
-	err = ctx.Storage.Get("project", project)
-	if err != nil {
-		return nil, errors.New(err.Error())
+	for _, v := range *obj {
+		*s = append(*s, *New(&v))
 	}
+	return s
+}
 
-	return project, nil
+func (obj *ServiceList) ToJson() ([]byte, error) {
+	if obj == nil || len(*obj) == 0 {
+		return []byte("[]"), nil
+	}
+	return json.Marshal(obj)
 }

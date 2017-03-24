@@ -19,10 +19,14 @@
 package storage
 
 import (
+	"fmt"
 	"github.com/lastbackend/lastbackend/libs/interface/storage"
 	"github.com/lastbackend/lastbackend/libs/model"
 	db "github.com/lastbackend/lastbackend/pkg/storage"
 	"github.com/lastbackend/lastbackend/pkg/storage/store"
+	st "github.com/lastbackend/lastbackend/pkg/storage/store"
+	"golang.org/x/net/context"
+	"time"
 )
 
 const ServiceTable string = "services"
@@ -33,29 +37,86 @@ type ServiceStorage struct {
 	Client func() (store.IStore, store.DestroyFunc, error)
 }
 
-func (s *ServiceStorage) CheckExistsByName(user, name string) (bool, error) {
-	return false, nil
+// Get project by name for user
+func (s *ServiceStorage) GetByName(username, project, name string) (*model.Service, error) {
+	var (
+		service = new(model.Service)
+		key     = fmt.Sprintf("/%s/%s/%s/%s/%s/info", ProjectTable, username, project, name, ServiceTable)
+	)
+
+	client, destroy, err := s.Client()
+	if err != nil {
+		return nil, err
+	}
+	defer destroy()
+
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	if err := client.Get(ctx, key, service); err != nil {
+		if err.Error() == st.ErrKeyNotFound {
+			return nil, nil
+		}
+		return nil, err
+	}
+
+	return service, nil
 }
 
-func (s *ServiceStorage) GetByNameOrID(user, nameOrID string) (*model.Service, error) {
-	return nil, nil
-}
+// List project by username
+func (s *ServiceStorage) ListByProject(username, project string) (*model.ServiceList, error) {
+	var (
+		serviceList = new(model.ServiceList)
+		key         = fmt.Sprintf("/%s/%s/%s/%s", ProjectTable, username, project, ServiceTable)
+		filter      = `\b(.+)\/info\b`
+	)
 
-func (s *ServiceStorage) GetByName(user, name string) (*model.Service, error) {
-	return nil, nil
-}
+	client, destroy, err := s.Client()
+	if err != nil {
+		return nil, err
+	}
+	defer destroy()
 
-func (s *ServiceStorage) GetByID(user, id string) (*model.Service, error) {
-	return nil, nil
-}
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
 
-func (s *ServiceStorage) ListByProject(user, project string) (*model.ServiceList, error) {
-	return nil, nil
+	if err := client.List(ctx, key, filter, serviceList); err != nil {
+		if err.Error() == st.ErrKeyNotFound {
+			return nil, nil
+		}
+		return nil, err
+	}
+
+	return serviceList, nil
 }
 
 // Insert new service into storage
-func (s *ServiceStorage) Insert(service *model.Service) (*model.Service, error) {
-	return nil, nil
+func (s *ServiceStorage) Insert(username, name, description string) (*model.Service, error) {
+	var (
+		service = new(model.Service)
+		keyInfo = fmt.Sprintf("%s/%s/%s/info", ProjectTable, username, name)
+	)
+
+	service.Name = name
+	service.User = username
+	service.Description = description
+	service.Updated = time.Now()
+	service.Created = time.Now()
+
+	client, destroy, err := s.Client()
+	if err != nil {
+		return service, err
+	}
+	defer destroy()
+
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	if err := client.Create(ctx, keyInfo, service, nil, 0); err != nil {
+		return service, err
+	}
+
+	return service, nil
 }
 
 // Update service model
@@ -64,12 +125,48 @@ func (s *ServiceStorage) Update(service *model.Service) (*model.Service, error) 
 }
 
 // Remove service model
-func (s *ServiceStorage) Remove(user, id string) error {
+func (s *ServiceStorage) Remove(username, project, name string) error {
+
+	var (
+		key = fmt.Sprintf("%s/%s/%s/%s/%s", ProjectTable, username, project, ServiceTable, name)
+	)
+
+	client, destroy, err := s.Client()
+	if err != nil {
+		return err
+	}
+	defer destroy()
+
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	if err := client.Delete(ctx, key, nil); err != nil {
+		return err
+	}
+
 	return nil
 }
 
 // Remove service model
-func (s *ServiceStorage) RemoveByProject(user, project string) error {
+func (s *ServiceStorage) RemoveByProject(username, project string) error {
+
+	var (
+		key = fmt.Sprintf("%s/%s/%s/%s", ProjectTable, username, project, ServiceTable)
+	)
+
+	client, destroy, err := s.Client()
+	if err != nil {
+		return err
+	}
+	defer destroy()
+
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	if err := client.Delete(ctx, key, nil); err != nil {
+		return err
+	}
+
 	return nil
 }
 

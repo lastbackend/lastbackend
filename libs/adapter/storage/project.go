@@ -25,7 +25,6 @@ import (
 	db "github.com/lastbackend/lastbackend/pkg/storage"
 	"github.com/lastbackend/lastbackend/pkg/storage/store"
 	st "github.com/lastbackend/lastbackend/pkg/storage/store"
-	"github.com/lastbackend/lastbackend/pkg/util/generator"
 	"golang.org/x/net/context"
 	"time"
 )
@@ -38,11 +37,11 @@ type ProjectStorage struct {
 	Client func() (store.IStore, store.DestroyFunc, error)
 }
 
-// Get project by id for user
-func (s *ProjectStorage) GetByID(username, id string) (*model.Project, error) {
+// Get project by name for user
+func (s *ProjectStorage) GetByName(username, name string) (*model.Project, error) {
 	var (
 		project = new(model.Project)
-		key     = fmt.Sprintf("%s/%s/%s/info", ProjectTable, username, id)
+		key     = fmt.Sprintf("%s/%s/%s/info", ProjectTable, username, name)
 	)
 
 	client, destroy, err := s.Client()
@@ -62,32 +61,6 @@ func (s *ProjectStorage) GetByID(username, id string) (*model.Project, error) {
 	}
 
 	return project, nil
-}
-
-// List project by name for user
-func (s *ProjectStorage) GetByName(username, name string) (*model.Project, error) {
-	var (
-		id  string
-		key = fmt.Sprintf("helper/%s/%s/%s", ProjectTable, username, name)
-	)
-
-	client, destroy, err := s.Client()
-	if err != nil {
-		return nil, err
-	}
-	defer destroy()
-
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-	defer cancel()
-
-	if err := client.Get(ctx, key, &id); err != nil {
-		if err.Error() == st.ErrKeyNotFound {
-			return nil, nil
-		}
-		return nil, err
-	}
-
-	return s.GetByID(username, id)
 }
 
 // List project by username
@@ -120,13 +93,10 @@ func (s *ProjectStorage) ListByUser(username string) (*model.ProjectList, error)
 // Insert new project into storage  for user
 func (s *ProjectStorage) Insert(username, name, description string) (*model.Project, error) {
 	var (
-		project   = new(model.Project)
-		id        = generator.GetUUIDV4()
-		keyHelper = fmt.Sprintf("helper/%s/%s/%s", ProjectTable, username, name)
-		keyInfo   = fmt.Sprintf("%s/%s/%s/info", ProjectTable, username, id)
+		project = new(model.Project)
+		keyInfo = fmt.Sprintf("%s/%s/%s/info", ProjectTable, username, name)
 	)
 
-	project.ID = id
 	project.Name = name
 	project.User = username
 	project.Description = description
@@ -142,17 +112,7 @@ func (s *ProjectStorage) Insert(username, name, description string) (*model.Proj
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	tx := client.Begin(ctx)
-
-	if err := tx.Create(keyHelper, project.ID, 0); err != nil {
-		return project, err
-	}
-
-	if err := tx.Create(keyInfo, project, 0); err != nil {
-		return project, err
-	}
-
-	if err := tx.Commit(); err != nil {
+	if err := client.Create(ctx, keyInfo, project, nil, 0); err != nil {
 		return project, err
 	}
 
