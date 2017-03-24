@@ -36,21 +36,25 @@ type TxResponse struct {
 }
 
 // Commit transaction context
-func (t *tx) Create(key string, obj, ttl uint64) error {
+func (t *tx) Create(key string, objPtr interface{}, ttl uint64) error {
 	key = path.Join(t.pathPrefix, key)
-	data, err := serializer.Encode(t.codec, obj)
+	data, err := serializer.Encode(t.codec, objPtr)
 	if err != nil {
 		return err
 	}
 	opts, err := t.ttlOpts(int64(ttl))
-	t.txn = t.txn.Then(clientv3.OpPut(key, string(data), opts...))
+	t.txn = t.txn.
+		If(clientv3.Compare(clientv3.ModRevision(key), "=", 0)).
+		Then(clientv3.OpPut(key, string(data), opts...))
 	return nil
 }
 
 // Delete key transaction context
 func (t *tx) Delete(key string) {
 	key = path.Join(t.pathPrefix, key)
-	t.txn = t.txn.Then(clientv3.OpDelete(key))
+	t.txn = t.txn.
+		If().
+		Then(clientv3.OpDelete(key))
 }
 
 // Commit transaction context

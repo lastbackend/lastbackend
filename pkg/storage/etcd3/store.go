@@ -55,7 +55,8 @@ func (s *store) Create(ctx context.Context, key string, obj, outPtr interface{},
 		return err
 	}
 	fmt.Println("Create:", key, string(data))
-	txnResp, err := s.client.KV.Txn(ctx).If(notFound(key)).
+	txnResp, err := s.client.KV.Txn(ctx).
+		If(clientv3.Compare(clientv3.ModRevision(key), "=", 0)).
 		Then(clientv3.OpPut(key, string(data), opts...)).
 		Commit()
 	if err != nil {
@@ -120,10 +121,10 @@ func (s *store) Delete(ctx context.Context, key string, outPtr interface{}) erro
 	// We need to do get and delete in single transaction in order to
 	// know the value and revision before deleting it.
 	fmt.Println("Del:", key)
-	res, err := s.client.KV.Txn(ctx).If().Then(
-		clientv3.OpGet(key),
-		clientv3.OpDelete(key),
-	).Commit()
+	res, err := s.client.KV.Txn(ctx).
+		If().
+		Then(clientv3.OpGet(key), clientv3.OpDelete(key)).
+		Commit()
 	if err != nil {
 		return err
 	}
@@ -139,13 +140,12 @@ func (s *store) Delete(ctx context.Context, key string, outPtr interface{}) erro
 }
 
 // Create transaction client
-func (s *store) Tx(ctx context.Context, opts []clientv3.OpOption) *tx {
-	tx := tx{
+func (s *store) Begin(ctx context.Context) st.ITx {
+	return &tx{
 		store:   s,
-		txn:     s.client.KV.Txn(ctx),
 		context: ctx,
+		txn:     s.client.KV.Txn(ctx),
 	}
-	return &tx
 }
 
 // Decode decodes value of bytes into object.
@@ -174,10 +174,6 @@ func decodeList(items []itemForDecode, ListOutPtr interface{}, codec serializer.
 		v.Set(reflect.Append(v, reflect.ValueOf(obj).Elem()))
 	}
 	return nil
-}
-
-func notFound(key string) clientv3.Cmp {
-	return clientv3.Compare(clientv3.ModRevision(key), "=", 0)
 }
 
 // ttlOpts returns client options based on given ttl.
