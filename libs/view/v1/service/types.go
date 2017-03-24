@@ -16,31 +16,16 @@
 // from Last.Backend LLC.
 //
 
-package v1
+package service
 
-import (
-	"github.com/lastbackend/lastbackend/libs/model"
-	"github.com/lastbackend/lastbackend/libs/view/v1/project"
-	"github.com/lastbackend/lastbackend/libs/view/v1/service"
-	"github.com/lastbackend/lastbackend/libs/view/v1/user"
-)
+import "time"
 
-func NewUser(obj *model.User) *user.User {
-	return user.New(obj)
+type Service struct {
+	User        string    `json:"user"`
+	Name        string    `json:"name"`
+	Description string    `json:"description"`
+	Created     time.Time `json:"created"`
+	Updated     time.Time `json:"updated"`
 }
 
-func NewProject(obj *model.Project) *project.Project {
-	return project.New(obj)
-}
-
-func NewProjectList(obj *model.ProjectList) *project.ProjectList {
-	return project.NewList(obj)
-}
-
-func NewService(obj *model.Service) *service.Service {
-	return service.New(obj)
-}
-
-func NewServiceList(obj *model.ServiceList) *service.ServiceList {
-	return service.NewList(obj)
-}
+type ServiceList []Service

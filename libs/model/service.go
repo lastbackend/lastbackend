@@ -28,8 +28,6 @@ import (
 type ServiceList []Service
 
 type Service struct {
-	// Service uuid, incremented automatically
-	ID string `json:"id"`
 	// Service user
 	User string `json:"user"`
 	// Service project

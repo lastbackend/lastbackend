@@ -96,11 +96,7 @@ func ProjectInfoH(w http.ResponseWriter, r *http.Request) {
 
 	session = s.(*model.Session)
 
-	if validator.IsUUID(projectParam) {
-		project, err = ctx.Storage.Project().GetByID(session.Username, projectParam)
-	} else {
-		project, err = ctx.Storage.Project().GetByName(session.Username, projectParam)
-	}
+	project, err = ctx.Storage.Project().GetByName(session.Username, projectParam)
 	if err != nil {
 		ctx.Log.Error("Error: find project by id", err.Error())
 		e.HTTP.InternalServerError(w)
@@ -426,19 +422,15 @@ func ProjectRemoveH(w http.ResponseWriter, r *http.Request) {
 
 	session = s.(*model.Session)
 
-	if !validator.IsUUID(projectParam) {
-		projectModel, err := ctx.Storage.Project().GetByName(session.Username, projectParam)
-		if err != nil {
-			ctx.Log.Error("Error: find project by id", err.Error())
-			e.HTTP.InternalServerError(w)
-			return
-		}
-		if projectModel == nil {
-			e.New("project").NotFound().Http(w)
-			return
-		}
-
-		projectParam = projectModel.ID
+	projectModel, err := ctx.Storage.Project().GetByName(session.Username, projectParam)
+	if err != nil {
+		ctx.Log.Error("Error: find project by name", err.Error())
+		e.HTTP.InternalServerError(w)
+		return
+	}
+	if projectModel == nil {
+		e.New("project").NotFound().Http(w)
+		return
 	}
 
 	// Todo: remove all services by project id

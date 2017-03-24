@@ -28,7 +28,9 @@ type HookList []Hook
 type Hook struct {
 	// Hook uuid, incremented automatically
 	ID string `json:"id"`
-	// Hook owner
+	// Project name
+	Project string `json:"project"`
+	// User username
 	User string `json:"user"`
 	// Hook token
 	Token string `json:"token"`

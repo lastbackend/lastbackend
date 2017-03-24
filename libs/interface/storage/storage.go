@@ -45,7 +45,6 @@ type IUser interface {
 }
 
 type IProject interface {
-	GetByID(string, string) (*model.Project, error)
 	GetByName(string, string) (*model.Project, error)
 	ListByUser(string) (*model.ProjectList, error)
 	Insert(string, string, string) (*model.Project, error)
@@ -70,15 +69,11 @@ type IImage interface {
 }
 
 type IService interface {
-	CheckExistsByName(string, string) (bool, error)
-	GetByNameOrID(string, string) (*model.Service, error)
-	GetByName(string, string) (*model.Service, error)
-	GetByID(string, string) (*model.Service, error)
-	ListByUser(string, string) (*model.ServiceList, error)
+	GetByName(string, string, string) (*model.Service, error)
 	ListByProject(string, string) (*model.ServiceList, error)
-	Insert(*model.Service) (*model.Service, error)
+	Insert(string, string, string) (*model.Service, error)
 	Update(*model.Service) (*model.Service, error)
-	Remove(string, string) error
+	Remove(string, string, string) error
 	RemoveByProject(string, string) error
 }
 

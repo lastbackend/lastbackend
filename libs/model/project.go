@@ -27,8 +27,6 @@ import (
 type ProjectList []Project
 
 type Project struct {
-	// Project uuid, incremented automatically
-	ID string `json:"id"`
 	// Project user
 	User string `json:"user"`
 	// Project name
@@ -54,7 +52,6 @@ func (p *Project) ToJson() ([]byte, error) {
 
 func (p *Project) DrawTable() {
 	table.PrintHorizontal(map[string]interface{}{
-		"ID":          p.ID,
 		"Name":        p.Name,
 		"Description": p.Description,
 		"Created":     p.Created,
@@ -82,7 +79,6 @@ func (projects *ProjectList) DrawTable() {
 
 	for _, p := range *projects {
 		t.AddRow(map[string]interface{}{
-			"ID":          p.ID,
 			"Name":        p.Name,
 			"Description": p.Description,
 			"Created":     p.Created.String()[:10],
