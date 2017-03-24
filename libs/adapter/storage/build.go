@@ -30,7 +30,7 @@ const BuildTable string = "builds"
 // Service Build type for interface in interfaces folder
 type BuildStorage struct {
 	storage.IBuild
-	Client func() (store.Interface, store.DestroyFunc, error)
+	Client func() (store.IStore, store.DestroyFunc, error)
 }
 
 // Get build model by id
@@ -50,7 +50,7 @@ func (s *BuildStorage) Insert(build *model.Build) (*model.Build, error) {
 
 func newBuildStorage(config store.Config) *BuildStorage {
 	s := new(BuildStorage)
-	s.Client = func() (store.Interface, store.DestroyFunc, error) {
+	s.Client = func() (store.IStore, store.DestroyFunc, error) {
 		return db.Create(config)
 	}
 	return s

@@ -30,7 +30,7 @@ const HookTable string = "hooks"
 // Service Build type for interface in interfaces folder
 type HookStorage struct {
 	storage.IHook
-	Client func() (store.Interface, store.DestroyFunc, error)
+	Client func() (store.IStore, store.DestroyFunc, error)
 }
 
 // Get hooks by image
@@ -66,7 +66,7 @@ func (s *HookStorage) RemoveByService(id string) error {
 
 func newHookStorage(config store.Config) *HookStorage {
 	s := new(HookStorage)
-	s.Client = func() (store.Interface, store.DestroyFunc, error) {
+	s.Client = func() (store.IStore, store.DestroyFunc, error) {
 		return db.Create(config)
 	}
 	return s

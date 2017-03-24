@@ -30,7 +30,7 @@ const ProjectTable string = "projects"
 // Project Service type for interface in interfaces folder
 type ProjectStorage struct {
 	storage.IProject
-	Client func() (store.Interface, store.DestroyFunc, error)
+	Client func() (store.IStore, store.DestroyFunc, error)
 }
 
 func (s *ProjectStorage) GetByNameOrID(user, nameOrID string) (*model.Project, error) {
@@ -70,7 +70,7 @@ func (s *ProjectStorage) Remove(user, id string) error {
 
 func newProjectStorage(config store.Config) *ProjectStorage {
 	s := new(ProjectStorage)
-	s.Client = func() (store.Interface, store.DestroyFunc, error) {
+	s.Client = func() (store.IStore, store.DestroyFunc, error) {
 		return db.Create(config)
 	}
 	return s

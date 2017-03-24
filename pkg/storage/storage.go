@@ -23,6 +23,6 @@ import (
 )
 
 // Create a storage backend based on given config.
-func Create(c store.Config) (store.Interface, store.DestroyFunc, error) {
+func Create(c store.Config) (store.IStore, store.DestroyFunc, error) {
 	return createEtcd3Storage(c)
 }

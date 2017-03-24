@@ -42,7 +42,7 @@ type store struct {
 
 type itemForDecode []byte
 
-// Create implements store.Interface.Create.
+// Create implements store.IStore.Create.
 // You can optionally set a TTL for a key to expire in a certain number of seconds.
 func (s *store) Create(ctx context.Context, key string, obj, outPtr interface{}, ttl uint64) error {
 	data, err := serializer.Encode(s.codec, obj)
@@ -76,7 +76,7 @@ func (s *store) Create(ctx context.Context, key string, obj, outPtr interface{},
 	return nil
 }
 
-// Get implements store.Interface.Get.
+// Get implements store.IStore.Get.
 func (s *store) Get(ctx context.Context, key string, outPtr interface{}) error {
 	key = path.Join(s.pathPrefix, key)
 	fmt.Println("Get:", key)
@@ -115,7 +115,7 @@ func (s *store) List(ctx context.Context, key string, listOutPtr interface{}) er
 	return decodeList(items, listOutPtr, s.codec)
 }
 
-// Delete implements store.Interface.Delete.
+// Delete implements store.IStore.Delete.
 func (s *store) Delete(ctx context.Context, key string, outPtr interface{}) error {
 	key = path.Join(s.pathPrefix, key)
 	// We need to do get and delete in single transaction in order to
@@ -140,7 +140,7 @@ func (s *store) Delete(ctx context.Context, key string, outPtr interface{}) erro
 }
 
 // Create transaction client
-func (s *store) Begin(ctx context.Context) *tx {
+func (s *store) Begin(ctx context.Context) st.ITx {
 	return &tx{
 		store:   s,
 		context: ctx,

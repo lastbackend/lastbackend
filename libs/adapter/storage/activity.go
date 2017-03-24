@@ -30,7 +30,7 @@ const ActivityTable string = "activities"
 // Activity Service type for interface in interfaces folder
 type ActivityStorage struct {
 	storage.IActivity
-	Client func() (store.Interface, store.DestroyFunc, error)
+	Client func() (store.IStore, store.DestroyFunc, error)
 }
 
 func (s *ActivityStorage) Insert(activity *model.Activity) (*model.Activity, error) {
@@ -55,7 +55,7 @@ func (s *ActivityStorage) RemoveByService(user, service string) error {
 
 func newActivityStorage(config store.Config) *ActivityStorage {
 	s := new(ActivityStorage)
-	s.Client = func() (store.Interface, store.DestroyFunc, error) {
+	s.Client = func() (store.IStore, store.DestroyFunc, error) {
 		return db.Create(config)
 	}
 	return s
