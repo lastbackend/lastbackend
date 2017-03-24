@@ -35,14 +35,14 @@ import (
 type store struct {
 	client *clientv3.Client
 	// getOpts contains additional options that should be passed to all Get() calls.
-	getOps     []clientv3.OpOption
+	opts       []clientv3.OpOption
 	codec      serializer.Codec
 	pathPrefix string
 }
 
 type itemForDecode []byte
 
-// Create implements store.Interface.Create.
+// Create implements store.IStore.Create.
 // You can optionally set a TTL for a key to expire in a certain number of seconds.
 func (s *store) Create(ctx context.Context, key string, obj, outPtr interface{}, ttl uint64) error {
 	data, err := serializer.Encode(s.codec, obj)
@@ -55,7 +55,8 @@ func (s *store) Create(ctx context.Context, key string, obj, outPtr interface{},
 		return err
 	}
 	fmt.Println("Create:", key, string(data))
-	txnResp, err := s.client.KV.Txn(ctx).If(notFound(key)).
+	txnResp, err := s.client.KV.Txn(ctx).
+		If(clientv3.Compare(clientv3.ModRevision(key), "=", 0)).
 		Then(clientv3.OpPut(key, string(data), opts...)).
 		Commit()
 	if err != nil {
@@ -75,11 +76,11 @@ func (s *store) Create(ctx context.Context, key string, obj, outPtr interface{},
 	return nil
 }
 
-// Get implements store.Interface.Get.
+// Get implements store.IStore.Get.
 func (s *store) Get(ctx context.Context, key string, outPtr interface{}) error {
 	key = path.Join(s.pathPrefix, key)
 	fmt.Println("Get:", key)
-	res, err := s.client.KV.Get(ctx, key, s.getOps...)
+	res, err := s.client.KV.Get(ctx, key, s.opts...)
 	if err != nil {
 		return err
 	}
@@ -114,16 +115,16 @@ func (s *store) List(ctx context.Context, key string, listOutPtr interface{}) er
 	return decodeList(items, listOutPtr, s.codec)
 }
 
-// Delete implements store.Interface.Delete.
+// Delete implements store.IStore.Delete.
 func (s *store) Delete(ctx context.Context, key string, outPtr interface{}) error {
 	key = path.Join(s.pathPrefix, key)
 	// We need to do get and delete in single transaction in order to
 	// know the value and revision before deleting it.
 	fmt.Println("Del:", key)
-	res, err := s.client.KV.Txn(ctx).If().Then(
-		clientv3.OpGet(key),
-		clientv3.OpDelete(key),
-	).Commit()
+	res, err := s.client.KV.Txn(ctx).
+		If().
+		Then(clientv3.OpGet(key), clientv3.OpDelete(key)).
+		Commit()
 	if err != nil {
 		return err
 	}
@@ -136,6 +137,15 @@ func (s *store) Delete(ctx context.Context, key string, outPtr interface{}) erro
 		return errors.New(st.ErrKeyNotFound)
 	}
 	return decode(s.codec, getResp.Kvs[0].Value, outPtr)
+}
+
+// Create transaction client
+func (s *store) Begin(ctx context.Context) st.ITx {
+	return &tx{
+		store:   s,
+		context: ctx,
+		txn:     s.client.KV.Txn(ctx),
+	}
 }
 
 // Decode decodes value of bytes into object.
@@ -164,10 +174,6 @@ func decodeList(items []itemForDecode, ListOutPtr interface{}, codec serializer.
 		v.Set(reflect.Append(v, reflect.ValueOf(obj).Elem()))
 	}
 	return nil
-}
-
-func notFound(key string) clientv3.Cmp {
-	return clientv3.Compare(clientv3.ModRevision(key), "=", 0)
 }
 
 // ttlOpts returns client options based on given ttl.

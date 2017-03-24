@@ -22,7 +22,7 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/storage/store"
 )
 
-// Create creates a storage backend based on given config.
-func Create(c store.Config) (store.Interface, store.DestroyFunc, error) {
+// Create a storage backend based on given config.
+func Create(c store.Config) (store.IStore, store.DestroyFunc, error) {
 	return createEtcd3Storage(c)
 }

@@ -34,7 +34,7 @@ const UserTable = "users"
 // Service User type for interface in interfaces folder
 type UserStorage struct {
 	storage.IUser
-	Client func() (store.Interface, store.DestroyFunc, error)
+	Client func() (store.IStore, store.DestroyFunc, error)
 }
 
 func (s *UserStorage) GetByUsername(username string) (*model.User, error) {
@@ -200,7 +200,7 @@ func (s *UserStorage) DeleteEmail(username, email string) error {
 
 func newUserStorage(config store.Config) *UserStorage {
 	s := new(UserStorage)
-	s.Client = func() (store.Interface, store.DestroyFunc, error) {
+	s.Client = func() (store.IStore, store.DestroyFunc, error) {
 		return db.Create(config)
 	}
 	return s

@@ -26,13 +26,13 @@ import (
 )
 
 // New returns an etcd3 implementation of storage.Interface.
-func New(client *clientv3.Client, codec serializer.Codec, prefix string) s.Interface {
+func New(client *clientv3.Client, codec serializer.Codec, prefix string) s.IStore {
 	return newStore(client, true, codec, prefix)
 }
 
 // NewWithNoQuorumRead returns etcd3 implementation of storage.Interface
 // where Get operations don't require quorum read.
-func NewWithNoQuorumRead(client *clientv3.Client, codec serializer.Codec, prefix string) s.Interface {
+func NewWithNoQuorumRead(client *clientv3.Client, codec serializer.Codec, prefix string) s.IStore {
 	return newStore(client, false, codec, prefix)
 }
 
@@ -47,7 +47,7 @@ func newStore(client *clientv3.Client, quorumRead bool, codec serializer.Codec, 
 	if !quorumRead {
 		// In case of non-quorum reads, we can set WithSerializable()
 		// options for all Get operations.
-		result.getOps = append(result.getOps, clientv3.WithSerializable())
+		result.opts = append(result.opts, clientv3.WithSerializable())
 	}
 
 	return result

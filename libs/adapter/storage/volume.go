@@ -30,7 +30,7 @@ const VolumeTable string = "volumes"
 // Volume Service type for interface in interfaces folder
 type VolumeStorage struct {
 	storage.IVolume
-	Client func() (store.Interface, store.DestroyFunc, error)
+	Client func() (store.IStore, store.DestroyFunc, error)
 }
 
 func (s *VolumeStorage) GetByID(user, id string) (*model.Volume, error) {
@@ -53,7 +53,7 @@ func (s *VolumeStorage) Remove(id string) error {
 
 func newVolumeStorage(config store.Config) *VolumeStorage {
 	s := new(VolumeStorage)
-	s.Client = func() (store.Interface, store.DestroyFunc, error) {
+	s.Client = func() (store.IStore, store.DestroyFunc, error) {
 		return db.Create(config)
 	}
 	return s

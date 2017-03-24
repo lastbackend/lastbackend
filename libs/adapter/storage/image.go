@@ -30,7 +30,7 @@ const ImageTable string = "images"
 // Project Service type for interface in interfaces folder
 type ImageStorage struct {
 	storage.IImage
-	Client func() (store.Interface, store.DestroyFunc, error)
+	Client func() (store.IStore, store.DestroyFunc, error)
 }
 
 func (i *ImageStorage) GetByID(user, id string) (*model.Image, error) {
@@ -61,7 +61,7 @@ func (i *ImageStorage) Update(image *model.Image) (*model.Image, error) {
 
 func newImageStorage(config store.Config) *ImageStorage {
 	s := new(ImageStorage)
-	s.Client = func() (store.Interface, store.DestroyFunc, error) {
+	s.Client = func() (store.IStore, store.DestroyFunc, error) {
 		return db.Create(config)
 	}
 	return s

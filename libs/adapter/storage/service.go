@@ -30,7 +30,7 @@ const ServiceTable string = "services"
 // Service Service type for interface in interfaces folder
 type ServiceStorage struct {
 	storage.IService
-	Client func() (store.Interface, store.DestroyFunc, error)
+	Client func() (store.IStore, store.DestroyFunc, error)
 }
 
 func (s *ServiceStorage) CheckExistsByName(user, name string) (bool, error) {
@@ -75,7 +75,7 @@ func (s *ServiceStorage) RemoveByProject(user, project string) error {
 
 func newServiceStorage(config store.Config) *ServiceStorage {
 	s := new(ServiceStorage)
-	s.Client = func() (store.Interface, store.DestroyFunc, error) {
+	s.Client = func() (store.IStore, store.DestroyFunc, error) {
 		return db.Create(config)
 	}
 	return s

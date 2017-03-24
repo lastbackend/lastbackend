@@ -54,9 +54,9 @@ ___
 
 ## <a name="prerequisites"></a>Prerequisites
 
-- Go 1.6 or higher
-- Kubernetes 1.5
-- RethinkDB 2.3.5
+- Go 1.7 or higher
+- Go docker client v17.03
+- Go etcd client for v3
 - Git
 
 ___
