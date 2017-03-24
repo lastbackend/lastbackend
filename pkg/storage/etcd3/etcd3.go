@@ -47,7 +47,7 @@ func newStore(client *clientv3.Client, quorumRead bool, codec serializer.Codec, 
 	if !quorumRead {
 		// In case of non-quorum reads, we can set WithSerializable()
 		// options for all Get operations.
-		result.getOps = append(result.getOps, clientv3.WithSerializable())
+		result.opts = append(result.opts, clientv3.WithSerializable())
 	}
 
 	return result

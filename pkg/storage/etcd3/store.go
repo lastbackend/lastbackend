@@ -35,7 +35,7 @@ import (
 type store struct {
 	client *clientv3.Client
 	// getOpts contains additional options that should be passed to all Get() calls.
-	getOps     []clientv3.OpOption
+	opts       []clientv3.OpOption
 	codec      serializer.Codec
 	pathPrefix string
 }
@@ -79,7 +79,7 @@ func (s *store) Create(ctx context.Context, key string, obj, outPtr interface{},
 func (s *store) Get(ctx context.Context, key string, outPtr interface{}) error {
 	key = path.Join(s.pathPrefix, key)
 	fmt.Println("Get:", key)
-	res, err := s.client.KV.Get(ctx, key, s.getOps...)
+	res, err := s.client.KV.Get(ctx, key, s.opts...)
 	if err != nil {
 		return err
 	}
@@ -136,6 +136,16 @@ func (s *store) Delete(ctx context.Context, key string, outPtr interface{}) erro
 		return errors.New(st.ErrKeyNotFound)
 	}
 	return decode(s.codec, getResp.Kvs[0].Value, outPtr)
+}
+
+// Create transaction client
+func (s *store) Tx(ctx context.Context, opts []clientv3.OpOption) *tx {
+	tx := tx{
+		store:   s,
+		txn:     s.client.KV.Txn(ctx),
+		context: ctx,
+	}
+	return &tx
 }
 
 // Decode decodes value of bytes into object.
