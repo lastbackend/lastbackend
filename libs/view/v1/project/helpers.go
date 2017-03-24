@@ -43,7 +43,7 @@ func (obj *Project) ToJson() ([]byte, error) {
 func NewList(obj *model.ProjectList) *ProjectList {
 	p := new(ProjectList)
 	for _, v := range *obj {
-		*p = append(*p, New(&v))
+		*p = append(*p, *New(&v))
 	}
 	return p
 }
