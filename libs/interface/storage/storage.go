@@ -24,9 +24,9 @@ import (
 
 type IStorage interface {
 	User() IUser
+	Project() IProject
 	Build() IBuild
 	Image() IImage
-	Project() IProject
 	Service() IService
 	Hook() IHook
 	Volume() IVolume
@@ -44,6 +44,15 @@ type IUser interface {
 	DeleteEmail(string, string) error
 }
 
+type IProject interface {
+	GetByID(string, string) (*model.Project, error)
+	GetByName(string, string) (*model.Project, error)
+	ListByUser(string) (*model.ProjectList, error)
+	Insert(string, string, string) (*model.Project, error)
+	Update(*model.Project) (*model.Project, error)
+	Remove(string, string) error
+}
+
 type IBuild interface {
 	GetByID(string, string) (*model.Build, error)
 	ListByImage(string, string) (*model.BuildList, error)
@@ -58,17 +67,6 @@ type IImage interface {
 	ListByService(string, string) (*model.ImageList, error)
 	Insert(*model.Image) (*model.Image, error)
 	Update(*model.Image) (*model.Image, error)
-}
-
-type IProject interface {
-	GetByNameOrID(string, string) (*model.Project, error)
-	GetByName(string, string) (*model.Project, error)
-	GetByID(string, string) (*model.Project, error)
-	ListByUser(string) (*model.ProjectList, error)
-	Insert(*model.Project) (*model.Project, error)
-	ExistByName(string, string) (bool, error)
-	Update(*model.Project) (*model.Project, error)
-	Remove(string, string) error
 }
 
 type IService interface {
