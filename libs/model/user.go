@@ -33,14 +33,6 @@ type User struct {
 	Profile  UserProfile  `json:"profile"`
 }
 
-type UserView struct {
-	userInfo
-
-	Username string      `json:"username"`
-	Emails   UserEmails  `json:"emails"`
-	Profile  UserProfile `json:"profile"`
-}
-
 type userInfo struct {
 	Gravatar string    `json:"gravatar"`
 	Created  time.Time `json:"created"`
@@ -97,25 +89,7 @@ func (p *UserEmails) GetDefault() string {
 	return email
 }
 
-func (u *User) ConvertToView() *UserView {
-	var view = new(UserView)
-	view.Username = u.Username
-	view.userInfo = u.userInfo
-	view.Profile = u.Profile
-	view.Emails = u.Emails
-	return view
-}
-
 func (u *User) ToJson() ([]byte, error) {
-	buf, err := json.Marshal(u)
-	if err != nil {
-		return nil, err
-	}
-
-	return buf, nil
-}
-
-func (u *UserView) ToJson() ([]byte, error) {
 	buf, err := json.Marshal(u)
 	if err != nil {
 		return nil, err

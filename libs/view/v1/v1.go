@@ -16,25 +16,22 @@
 // from Last.Backend LLC.
 //
 
-package routes
+package v1
 
 import (
-	"net/http"
-	"github.com/Sirupsen/logrus"
+	"github.com/lastbackend/lastbackend/libs/model"
+	"github.com/lastbackend/lastbackend/libs/view/v1/user"
+	"github.com/lastbackend/lastbackend/libs/view/v1/project"
 )
 
-func VersionGetR(w http.ResponseWriter, r *http.Request) {
+func NewUser(obj *model.User) *user.User {
+	return user.New(obj)
+}
 
-	var (
-		err error
-	)
+func NewProject(obj *model.Project) *project.Project {
+	return project.New(obj)
+}
 
-	logrus.Debug("Get user handler")
-
-	w.WriteHeader(http.StatusOK)
-	_, err = w.Write([]byte("{}"))
-	if err != nil {
-		logrus.Error("Error: write response", err.Error())
-		return
-	}
+func NewProjectList(obj *model.ProjectList) *project.ProjectList {
+	return project.NewList(obj)
 }
