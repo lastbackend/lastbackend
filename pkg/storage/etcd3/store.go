@@ -29,6 +29,7 @@ import (
 	"golang.org/x/net/context"
 	"path"
 	"reflect"
+	"regexp"
 	"strings"
 )
 
@@ -88,7 +89,7 @@ func (s *store) Get(ctx context.Context, key string, outPtr interface{}) error {
 	return decode(s.codec, res.Kvs[0].Value, outPtr)
 }
 
-func (s *store) List(ctx context.Context, key string, listOutPtr interface{}) error {
+func (s *store) List(ctx context.Context, key, keyRegexFilter string, listOutPtr interface{}) error {
 	key = path.Join(s.pathPrefix, key)
 	if !strings.HasSuffix(key, "/") {
 		key += "/"
@@ -99,9 +100,15 @@ func (s *store) List(ctx context.Context, key string, listOutPtr interface{}) er
 		return err
 	}
 
+	fmt.Println("Res:", len(getResp.Kvs))
+
+	r, _ := regexp.Compile(keyRegexFilter)
 	items := make([]buffer, 0, len(getResp.Kvs))
 	for _, kv := range getResp.Kvs {
-		items = append(items, buffer(kv.Value))
+		fmt.Println("Keys:", string(kv.Key))
+		if r.MatchString(string(kv.Key)) {
+			items = append(items, buffer(kv.Value))
+		}
 	}
 
 	return decodeList(s.codec, items, listOutPtr)

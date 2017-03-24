@@ -35,13 +35,13 @@ type FilterFunc func(obj interface{}) bool
 type IStore interface {
 	Create(ctx context.Context, key string, obj, out interface{}, ttl uint64) error
 	Get(ctx context.Context, key string, objPtr interface{}) error
-	List(ctx context.Context, key string, listObj interface{}) error
+	List(ctx context.Context, key, keyRegexpFilter string, listObj interface{}) error
 	Delete(ctx context.Context, key string, out interface{}) error
 	Begin(ctx context.Context) ITx
 }
 
 type ITx interface {
-	Create(string, interface{}, uint64) error
-	Delete(string)
+	Create(key string, obj interface{}, ttl uint64) error
+	Delete(key string)
 	Commit() error
 }

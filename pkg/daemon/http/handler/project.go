@@ -249,14 +249,14 @@ func ProjectCreateH(w http.ResponseWriter, r *http.Request) {
 		err.Http(w)
 		return
 	}
-ctx.Log.Info(">>>>> ", *rq.Name)
+
 	project, err := ctx.Storage.Project().GetByName(session.Username, *rq.Name)
 	if err != nil {
 		ctx.Log.Error("Error: check exists by name", err.Error())
 		e.HTTP.InternalServerError(w)
 		return
 	}
-	ctx.Log.Info(">>>>> ", project)
+
 	if project != nil {
 		e.New("project").NotUnique("name").Http(w)
 		return

@@ -95,6 +95,7 @@ func (s *ProjectStorage) ListByUser(username string) (*model.ProjectList, error)
 	var (
 		projectList = new(model.ProjectList)
 		key         = fmt.Sprintf("%s/%s", ProjectTable, username)
+		filter      = `\b(.+)\/info\b`
 	)
 
 	client, destroy, err := s.Client()
@@ -106,7 +107,7 @@ func (s *ProjectStorage) ListByUser(username string) (*model.ProjectList, error)
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	if err := client.Get(ctx, key, projectList); err != nil {
+	if err := client.List(ctx, key, filter, projectList); err != nil {
 		if err.Error() == st.ErrKeyNotFound {
 			return nil, nil
 		}
