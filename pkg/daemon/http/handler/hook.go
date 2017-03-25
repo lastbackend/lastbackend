@@ -36,7 +36,7 @@ func HookExecuteH(w http.ResponseWriter, r *http.Request) {
 		hookParam = params["token"]
 	)
 
-	ctx.Log.Debug("Get project handler")
+	ctx.Log.Debug("Get hook execute handler")
 
 	hookModel, err = ctx.Storage.Hook().GetByToken(hookParam)
 	if err != nil || hookModel == nil {
@@ -48,7 +48,7 @@ func HookExecuteH(w http.ResponseWriter, r *http.Request) {
 	if hookModel.Service != "" {
 		serviceModel, err := ctx.Storage.Service().GetByName(hookModel.User, hookModel.Project, hookModel.Service)
 		if err != nil && serviceModel == nil {
-			ctx.Log.Error("Error: get service by id", err.Error())
+			ctx.Log.Error("Error: get service by name", err.Error())
 			e.HTTP.BadRequest(w)
 			return
 		}
