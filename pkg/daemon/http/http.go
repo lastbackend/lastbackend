@@ -41,7 +41,7 @@ type Handler struct {
 	Handler func(http.ResponseWriter, *http.Request)
 }
 
-type Handlers map[string]*Handler
+type Handlers map[string]Handler
 
 func NewRouter() *mux.Router {
 

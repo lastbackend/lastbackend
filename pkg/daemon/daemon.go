@@ -58,6 +58,6 @@ func LoadConfig(i interface{}) {
 	config.ExternalConfig = i
 }
 
-func ExtendAPI(extends map[string]*http.Handler) {
+func ExtendAPI(extends map[string]http.Handler) {
 	http.Extends = extends
 }
