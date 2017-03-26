@@ -32,7 +32,7 @@ import (
 	"time"
 )
 
-var Extends = make(map[string]Handler)
+var Extends = make(Handlers)
 
 type Handler struct {
 	Path    string
@@ -41,10 +41,13 @@ type Handler struct {
 	Handler func(http.ResponseWriter, *http.Request)
 }
 
+type Handlers map[string]*Handler
+
 func NewRouter() *mux.Router {
 
 	var ctx = c.Get()
-	r := mux.NewRouter()
+	var r = mux.NewRouter()
+
 	r.Methods("OPTIONS").HandlerFunc(headers)
 
 	// Session handlers
@@ -52,6 +55,14 @@ func NewRouter() *mux.Router {
 
 	// User handlers
 	r.HandleFunc("/user", handle(handler.UserGetH, auth)).Methods(http.MethodGet)
+
+	// Vendor handlers
+	r.HandleFunc("/oauth/{vendor}", handle(handler.OAuthDisconnectH, auth)).Methods(http.MethodDelete)
+	r.HandleFunc("/oauth/{vendor}/{code}", handle(handler.OAuthConnectH, auth)).Methods(http.MethodPost)
+
+	// VCS handlers extends
+	r.HandleFunc("/vcs/{vendor}/repos", handle(handler.VCSRepositoriesListH, auth)).Methods(http.MethodGet)
+	r.HandleFunc("/vcs/{vendor}/branches", handle(handler.VCSBranchesListH, auth)).Methods(http.MethodGet)
 
 	// Build handlers
 	r.HandleFunc("/build", handle(handler.BuildListH)).Methods(http.MethodGet)
@@ -90,9 +101,9 @@ func NewRouter() *mux.Router {
 		// TODO: Check path on correctly
 		ctx.Log.Info(name)
 		if h.Auth {
-			r.HandleFunc(h.Path, handle(h.Handler, auth)).Methods(h.Method)
+			r.Methods(h.Method).Path(h.Path).HandlerFunc(handle(h.Handler, auth))
 		} else {
-			r.HandleFunc(h.Path, handle(h.Handler)).Methods(h.Method)
+			r.Methods(h.Method).Path(h.Path).HandlerFunc(handle(h.Handler))
 		}
 	}
 
@@ -123,12 +134,9 @@ func headers(w http.ResponseWriter, r *http.Request) {
 func handle(h http.HandlerFunc, middleware ...func(http.HandlerFunc) http.HandlerFunc) http.HandlerFunc {
 	headers := func(h http.HandlerFunc) http.HandlerFunc {
 		return func(w http.ResponseWriter, r *http.Request) {
-
 			start := time.Now()
-
 			headers(w, r)
 			h.ServeHTTP(w, r)
-
 			fmt.Println(fmt.Sprintf("%s\t%s\t%s", r.Method, r.RequestURI, time.Since(start)))
 		}
 	}

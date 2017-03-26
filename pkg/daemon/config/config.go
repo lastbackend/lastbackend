@@ -66,3 +66,24 @@ func GetEtcdDB() store.Config {
 		Codec:     serializer.NewSerializer(json.Encoder{}, json.Decoder{}),
 	}
 }
+
+func (c *Config) GetVendorConfig(vendor string) (string, string, string) {
+
+	var clientID, clientSecretID, redirectURI string
+
+	switch vendor {
+	case "github":
+		clientID = c.VCS.Github.User.Platform.Client.ID
+		clientSecretID = c.VCS.Github.User.Platform.Client.SecretID
+	case "gitlab":
+		clientID = c.VCS.Gitlab.User.Platform.Client.ID
+		clientSecretID = c.VCS.Gitlab.User.Platform.Client.SecretID
+		redirectURI = c.VCS.Gitlab.User.Platform.RedirectUri
+	case "bitbucket":
+		clientID = c.VCS.Bitbucket.User.Platform.Client.ID
+		clientSecretID = c.VCS.Bitbucket.User.Platform.Client.SecretID
+		redirectURI = c.VCS.Bitbucket.User.Platform.RedirectUri
+	}
+
+	return clientID, clientSecretID, redirectURI
+}

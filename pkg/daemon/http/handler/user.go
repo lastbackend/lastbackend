@@ -22,9 +22,9 @@ import (
 	"github.com/gorilla/context"
 	e "github.com/lastbackend/lastbackend/libs/errors"
 	"github.com/lastbackend/lastbackend/libs/model"
-	"github.com/lastbackend/lastbackend/libs/view/v1"
 	c "github.com/lastbackend/lastbackend/pkg/daemon/context"
 	"net/http"
+	"github.com/lastbackend/lastbackend/libs/view/v1"
 )
 
 func UserGetH(w http.ResponseWriter, r *http.Request) {

@@ -21,11 +21,11 @@ package storage
 import (
 	"github.com/lastbackend/lastbackend/libs/interface/storage"
 	cfg "github.com/lastbackend/lastbackend/pkg/daemon/config"
-
 )
 
 type Storage struct {
 	*UserStorage
+	*VendorStorage
 	*ProjectStorage
 	*ServiceStorage
 	*ImageStorage
@@ -40,6 +40,13 @@ func (s *Storage) User() storage.IUser {
 		return nil
 	}
 	return s.UserStorage
+}
+
+func (s *Storage) Vendor() storage.IVendor {
+	if s == nil {
+		return nil
+	}
+	return s.VendorStorage
 }
 
 func (s *Storage) Project() storage.IProject {
@@ -99,6 +106,7 @@ func Get() (*Storage, error) {
 	)
 
 	store.UserStorage = newUserStorage(config)
+	store.VendorStorage = newVendorStorage(config)
 	store.ProjectStorage = newProjectStorage(config)
 	store.ServiceStorage = newServiceStorage(config)
 	store.ImageStorage = newImageStorage(config)
