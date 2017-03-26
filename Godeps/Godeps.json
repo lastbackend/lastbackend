@@ -300,39 +300,39 @@
 		},
 		{
 			"ImportPath": "golang.org/x/net/context",
-			"Rev": "a6577fac2d73be281a500b310739095313165611"
+			"Rev": "6c23252515492caf9b228a9d5cabcdbde29f7f82"
 		},
 		{
 			"ImportPath": "golang.org/x/net/context/ctxhttp",
-			"Rev": "a6577fac2d73be281a500b310739095313165611"
+			"Rev": "6c23252515492caf9b228a9d5cabcdbde29f7f82"
 		},
 		{
 			"ImportPath": "golang.org/x/net/http2",
-			"Rev": "a6577fac2d73be281a500b310739095313165611"
+			"Rev": "6c23252515492caf9b228a9d5cabcdbde29f7f82"
 		},
 		{
 			"ImportPath": "golang.org/x/net/http2/hpack",
-			"Rev": "a6577fac2d73be281a500b310739095313165611"
+			"Rev": "6c23252515492caf9b228a9d5cabcdbde29f7f82"
 		},
 		{
 			"ImportPath": "golang.org/x/net/idna",
-			"Rev": "a6577fac2d73be281a500b310739095313165611"
+			"Rev": "6c23252515492caf9b228a9d5cabcdbde29f7f82"
 		},
 		{
 			"ImportPath": "golang.org/x/net/internal/timeseries",
-			"Rev": "a6577fac2d73be281a500b310739095313165611"
+			"Rev": "6c23252515492caf9b228a9d5cabcdbde29f7f82"
 		},
 		{
 			"ImportPath": "golang.org/x/net/lex/httplex",
-			"Rev": "a6577fac2d73be281a500b310739095313165611"
+			"Rev": "6c23252515492caf9b228a9d5cabcdbde29f7f82"
 		},
 		{
 			"ImportPath": "golang.org/x/net/proxy",
-			"Rev": "a6577fac2d73be281a500b310739095313165611"
+			"Rev": "6c23252515492caf9b228a9d5cabcdbde29f7f82"
 		},
 		{
 			"ImportPath": "golang.org/x/net/trace",
-			"Rev": "a6577fac2d73be281a500b310739095313165611"
+			"Rev": "6c23252515492caf9b228a9d5cabcdbde29f7f82"
 		},
 		{
 			"ImportPath": "golang.org/x/sys/unix",
@@ -405,6 +405,117 @@
 		{
 			"ImportPath": "gopkg.in/yaml.v2",
 			"Rev": "a3f3340b5840cee44f372bddb5880fcbc419b46a"
+		},
+		{
+			"ImportPath": "golang.org/x/text/secure/bidirule",
+			"Rev": "fc7fa097411d30e6708badff276c4c164425590c"
+		},
+		{
+			"ImportPath": "golang.org/x/text/unicode/norm",
+			"Rev": "fc7fa097411d30e6708badff276c4c164425590c"
+		},
+		{
+			"ImportPath": "golang.org/x/text/transform",
+			"Rev": "fc7fa097411d30e6708badff276c4c164425590c"
+		},
+		{
+			"ImportPath": "golang.org/x/text/unicode/bidi",
+			"Rev": "fc7fa097411d30e6708badff276c4c164425590c"
+		},
+		{
+			"ImportPath": "github.com/docker/distribution/vendor/github.com/opencontainers/go-digest",
+			"Comment": "v2.6.0-rc.1-153-g0700fa5",
+			"Rev": "0700fa570d7bcc1b3e46ee127c4489fd25f4daa3"
+		},
+		{
+			"ImportPath": "github.com/docker/docker/vendor/github.com/Sirupsen/logrus",
+			"Comment": "docs-v1.12.0-rc4-2016-07-15-5752-gad530ff",
+			"Rev": "ad530ffee09a4ca6b87a2b009f86b4651653e29a"
+		},
+		{
+			"ImportPath": "github.com/docker/docker/vendor/github.com/docker/libtrust",
+			"Comment": "docs-v1.12.0-rc4-2016-07-15-5752-gad530ff",
+			"Rev": "ad530ffee09a4ca6b87a2b009f86b4651653e29a"
+		},
+		{
+			"ImportPath": "github.com/docker/docker/vendor/golang.org/x/sys/unix",
+			"Comment": "docs-v1.12.0-rc4-2016-07-15-5752-gad530ff",
+			"Rev": "ad530ffee09a4ca6b87a2b009f86b4651653e29a"
+		},
+		{
+			"ImportPath": "github.com/docker/docker/vendor/github.com/docker/go-connections/nat",
+			"Comment": "docs-v1.12.0-rc4-2016-07-15-5752-gad530ff",
+			"Rev": "ad530ffee09a4ca6b87a2b009f86b4651653e29a"
+		},
+		{
+			"ImportPath": "github.com/docker/docker/vendor/github.com/docker/go-units",
+			"Comment": "docs-v1.12.0-rc4-2016-07-15-5752-gad530ff",
+			"Rev": "ad530ffee09a4ca6b87a2b009f86b4651653e29a"
+		},
+		{
+			"ImportPath": "github.com/docker/docker/vendor/golang.org/x/net/context",
+			"Comment": "docs-v1.12.0-rc4-2016-07-15-5752-gad530ff",
+			"Rev": "ad530ffee09a4ca6b87a2b009f86b4651653e29a"
+		},
+		{
+			"ImportPath": "github.com/docker/docker/vendor/github.com/Microsoft/go-winio",
+			"Comment": "docs-v1.12.0-rc4-2016-07-15-5752-gad530ff",
+			"Rev": "ad530ffee09a4ca6b87a2b009f86b4651653e29a"
+		},
+		{
+			"ImportPath": "github.com/docker/docker/vendor/golang.org/x/sys/windows",
+			"Comment": "docs-v1.12.0-rc4-2016-07-15-5752-gad530ff",
+			"Rev": "ad530ffee09a4ca6b87a2b009f86b4651653e29a"
+		},
+		{
+			"ImportPath": "github.com/docker/docker/vendor/github.com/docker/distribution/reference",
+			"Comment": "docs-v1.12.0-rc4-2016-07-15-5752-gad530ff",
+			"Rev": "ad530ffee09a4ca6b87a2b009f86b4651653e29a"
+		},
+		{
+			"ImportPath": "github.com/docker/docker/vendor/github.com/docker/go-connections/sockets",
+			"Comment": "docs-v1.12.0-rc4-2016-07-15-5752-gad530ff",
+			"Rev": "ad530ffee09a4ca6b87a2b009f86b4651653e29a"
+		},
+		{
+			"ImportPath": "github.com/docker/docker/vendor/github.com/docker/go-connections/tlsconfig",
+			"Comment": "docs-v1.12.0-rc4-2016-07-15-5752-gad530ff",
+			"Rev": "ad530ffee09a4ca6b87a2b009f86b4651653e29a"
+		},
+		{
+			"ImportPath": "github.com/docker/docker/vendor/github.com/pkg/errors",
+			"Comment": "docs-v1.12.0-rc4-2016-07-15-5752-gad530ff",
+			"Rev": "ad530ffee09a4ca6b87a2b009f86b4651653e29a"
+		},
+		{
+			"ImportPath": "github.com/docker/docker/vendor/golang.org/x/net/context/ctxhttp",
+			"Comment": "docs-v1.12.0-rc4-2016-07-15-5752-gad530ff",
+			"Rev": "ad530ffee09a4ca6b87a2b009f86b4651653e29a"
+		},
+		{
+			"ImportPath": "github.com/docker/docker/vendor/github.com/docker/distribution/digestset",
+			"Comment": "docs-v1.12.0-rc4-2016-07-15-5752-gad530ff",
+			"Rev": "ad530ffee09a4ca6b87a2b009f86b4651653e29a"
+		},
+		{
+			"ImportPath": "github.com/docker/docker/vendor/github.com/opencontainers/go-digest",
+			"Comment": "docs-v1.12.0-rc4-2016-07-15-5752-gad530ff",
+			"Rev": "ad530ffee09a4ca6b87a2b009f86b4651653e29a"
+		},
+		{
+			"ImportPath": "github.com/docker/docker/vendor/golang.org/x/net/proxy",
+			"Comment": "docs-v1.12.0-rc4-2016-07-15-5752-gad530ff",
+			"Rev": "ad530ffee09a4ca6b87a2b009f86b4651653e29a"
+		},
+		{
+			"ImportPath": "github.com/stretchr/testify/vendor/github.com/davecgh/go-spew/spew",
+			"Comment": "v1.1.4-27-g4d4bfba",
+			"Rev": "4d4bfba8f1d1027c4fdbe371823030df51419987"
+		},
+		{
+			"ImportPath": "github.com/stretchr/testify/vendor/github.com/pmezard/go-difflib/difflib",
+			"Comment": "v1.1.4-27-g4d4bfba",
+			"Rev": "4d4bfba8f1d1027c4fdbe371823030df51419987"
 		}
 	]
 }

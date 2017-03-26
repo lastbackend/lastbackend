@@ -20,10 +20,12 @@ package storage
 
 import (
 	"github.com/lastbackend/lastbackend/libs/model"
+	"golang.org/x/oauth2"
 )
 
 type IStorage interface {
 	User() IUser
+	Vendor() IVendor
 	Project() IProject
 	Build() IBuild
 	Image() IImage
@@ -42,6 +44,14 @@ type IUser interface {
 	SetEmail(string, string, bool) error
 
 	DeleteEmail(string, string) error
+}
+
+type IVendor interface {
+	Insert(string, string, string, string, string, *oauth2.Token) error
+	Get(string, string) (*model.Vendor, error)
+	List(string) (*model.VendorItems, error)
+	Update(string, *model.Vendor) error
+	Remove(string, string) error
 }
 
 type IProject interface {

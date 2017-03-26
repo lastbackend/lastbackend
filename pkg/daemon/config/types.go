@@ -45,4 +45,42 @@ type Config struct {
 		} `yaml:"tls"`
 		Quorum bool `yaml:"quorum"`
 	} `yaml:"etcd"`
+
+	VCS struct {
+		Github struct {
+			User struct {
+				Platform struct {
+					Client struct {
+						ID       string `yaml:"id"`
+						SecretID string `yaml:"secret_id"`
+					} `yaml:"client"`
+				} `yaml:"platform"`
+			} `yaml:"user"`
+		} `yaml:"github"`
+
+		Bitbucket struct {
+			User struct {
+				Platform struct {
+					Client struct {
+						ID       string `yaml:"id"`
+						SecretID string `yaml:"secret_id"`
+					} `yaml:"client"`
+					RedirectUri string `yaml:"redirect_uri"`
+				} `yaml:"platform"`
+			} `yaml:"user"`
+		} `yaml:"bitbucket"`
+
+		Gitlab struct {
+			User struct {
+				Platform struct {
+					Client struct {
+						ID       string `yaml:"id"`
+						SecretID string `yaml:"secret_id"`
+					} `yaml:"client"`
+					RedirectUri string `yaml:"redirect_uri"`
+				} `yaml:"platform"`
+			} `yaml:"user"`
+		} `yaml:"gitlab"`
+	} `yaml:"vcs"`
+
 }

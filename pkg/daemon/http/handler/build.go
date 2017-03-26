@@ -35,7 +35,8 @@ func BuildListH(w http.ResponseWriter, _ *http.Request) {
 		ctx = context.Get()
 	)
 
-	ctx.Log.Info("get builds list")
+	ctx.Log.Debug("Get boold list handler")
+
 	builds, err := ctx.Storage.Build().ListByImage("", "")
 	if err != nil {
 		ctx.Log.Error(err)
@@ -65,7 +66,7 @@ func BuildCreateH(w http.ResponseWriter, _ *http.Request) {
 		ctx = context.Get()
 	)
 
-	ctx.Log.Info("create build")
+	ctx.Log.Debug("Get create build handler")
 
 	b := new(model.Build)
 	b.Created = time.Now()

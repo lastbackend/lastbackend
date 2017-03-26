@@ -16,4 +16,22 @@
 // from Last.Backend LLC.
 //
 
-package handler_test
+package model
+
+import (
+	"golang.org/x/oauth2"
+)
+
+type Vendor struct {
+	ServiceID string        `json:"service_id"`
+	Username  string        `json:"username"`
+	Vendor    string        `json:"vendor"`
+	Host      string        `json:"host"`
+	Token     *oauth2.Token `json:"token"`
+}
+
+type VendorItems struct {
+	Github    *Vendor `json:"github"`
+	Gitlab    *Vendor `json:"gitlab"`
+	Bitbucket *Vendor `json:"bitbucket"`
+}

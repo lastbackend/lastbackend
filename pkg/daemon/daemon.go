@@ -61,6 +61,3 @@ func LoadConfig(i interface{}) {
 func ExtendAPI(extends map[string]http.Handler) {
 	http.Extends = extends
 }
-
-func ExtendStorage() {
-}
