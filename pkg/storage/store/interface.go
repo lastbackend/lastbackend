@@ -36,6 +36,7 @@ type IStore interface {
 	Create(ctx context.Context, key string, obj, out interface{}, ttl uint64) error
 	Get(ctx context.Context, key string, objPtr interface{}) error
 	List(ctx context.Context, key, keyRegexpFilter string, listObj interface{}) error
+	Update(ctx context.Context, key string, obj, outPtr interface{}, ttl uint64) error
 	Delete(ctx context.Context, key string, out interface{}) error
 	Begin(ctx context.Context) ITx
 }

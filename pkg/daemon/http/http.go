@@ -121,8 +121,6 @@ func RunHttpServer(routes *mux.Router, port int) {
 	}
 }
 
-
-
 func headers(w http.ResponseWriter, r *http.Request) {
 	origin := r.Header.Get("Origin")
 
