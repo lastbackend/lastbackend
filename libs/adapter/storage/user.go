@@ -162,7 +162,7 @@ func (s *UserStorage) SetEmail(username, email string, asDefault bool) error {
 	var (
 		keyList   = fmt.Sprintf("%s/%s/emails", UserTable, username)
 		keyCreate = fmt.Sprintf("%s/%s/emails/%s", UserTable, username, email)
-		//keyUpdate = fmt.Sprintf("%s/%s/emails", UserTable, username)
+		keyUpdate = fmt.Sprintf("%s/%s/emails", UserTable, username)
 		list = make(map[string]bool)
 	)
 
@@ -191,7 +191,7 @@ func (s *UserStorage) SetEmail(username, email string, asDefault bool) error {
 
 	list[email] = asDefault
 
-	return nil // TODO: Need implement update method to storage -> client.Update(ctx, keyUpdate, list)
+	return client.Update(ctx, keyUpdate, list, nil, 0)
 }
 
 func (s *UserStorage) DeleteEmail(username, email string) error {
