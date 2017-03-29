@@ -18,11 +18,8 @@ type IStorage interface {
 }
 
 type IUser interface {
-	GetByID(string) (*types.User, error)
 	GetByUsername(string) (*types.User, error)
 	GetByEmail(string) (*types.User, error)
-	GetByUsernameOrEmail(string) (*types.User, error)
-	Insert(string,string,string) (*types.User, error)
 }
 
 type IBuild interface {
@@ -42,12 +39,9 @@ type IImage interface {
 }
 
 type IProject interface {
-	GetByNameOrID(string, string) (*types.Project, error)
 	GetByName(string, string) (*types.Project, error)
-	GetByID(string, string) (*types.Project, error)
 	ListByUser(string) (*types.ProjectList, error)
 	Insert(string, string, string) (*types.Project, error)
-	ExistByName(string, string) (bool, error)
 	Update(*types.Project) (*types.Project, error)
 	Remove(string, string) error
 }
