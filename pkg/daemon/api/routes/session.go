@@ -26,7 +26,7 @@ import (
 
 	"github.com/lastbackend/lastbackend/pkg/errors"
 	"github.com/lastbackend/lastbackend/pkg/daemon/context"
-	"github.com/lastbackend/lastbackend/pkg/api/types"
+	"github.com/lastbackend/lastbackend/pkg/apis/types"
 )
 
 type sessionCreateS struct {

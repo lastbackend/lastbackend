@@ -4,7 +4,7 @@ import (
 	"github.com/gorilla/mux"
 	"strings"
 	"net/http"
-	"github.com/lastbackend/lastbackend/pkg/api/types"
+	"github.com/lastbackend/lastbackend/pkg/apis/types"
 	"github.com/gorilla/context"
 	"github.com/lastbackend/lastbackend/pkg/errors"
 )

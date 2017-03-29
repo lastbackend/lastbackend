@@ -150,8 +150,8 @@ func IsPublicKey(key string) bool {
 
 // Check incoming string on git valid utl
 // Ex:
-// 	* https://github.com/lastbackend/vendors.git
-// 	* git@github.com:lastbackend/vendors.git
+// 	* https://github.com/lastbackend/lastbackend.git
+// 	* git@github.com:lastbackend/lastbackend.git
 func IsGitUrl(url string) bool {
 	res, err := regexp.MatchString(`^(?:ssh|git|http(?:s)?)(?:@|:\/\/(?:.+@)?)((\w+)\.\w+)(?:\/|:)(.+)(?:\/)(.+)(?:\..+)$`, url)
 	if err != nil {

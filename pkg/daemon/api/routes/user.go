@@ -21,10 +21,10 @@ package routes
 import (
 	"github.com/gorilla/context"
 	"github.com/lastbackend/lastbackend/pkg/errors"
-	"github.com/lastbackend/lastbackend/pkg/api/views/v1"
+	"github.com/lastbackend/lastbackend/pkg/daemon/api/views/v1"
 	c "github.com/lastbackend/lastbackend/pkg/daemon/context"
 	"net/http"
-	"github.com/lastbackend/lastbackend/pkg/api/types"
+	"github.com/lastbackend/lastbackend/pkg/apis/types"
 )
 
 func UserGetH(w http.ResponseWriter, r *http.Request) {

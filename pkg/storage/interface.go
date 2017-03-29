@@ -1,7 +1,7 @@
 package storage
 
 import (
-	"github.com/lastbackend/lastbackend/pkg/api/types"
+	"github.com/lastbackend/lastbackend/pkg/apis/types"
 	"golang.org/x/oauth2"
 )
 

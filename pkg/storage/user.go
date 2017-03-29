@@ -20,7 +20,7 @@ package storage
 
 import (
 	"fmt"
-	"github.com/lastbackend/lastbackend/pkg/api/types"
+	"github.com/lastbackend/lastbackend/pkg/apis/types"
 	"github.com/lastbackend/lastbackend/pkg/storage/store"
 	"golang.org/x/net/context"
 	"time"

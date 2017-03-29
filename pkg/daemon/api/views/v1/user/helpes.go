@@ -16,43 +16,31 @@
 // from Last.Backend LLC.
 //
 
-package service
+package user
 
 import (
 	"encoding/json"
-	"github.com/lastbackend/lastbackend/pkg/api/types"
+	"github.com/lastbackend/lastbackend/pkg/apis/types"
 )
 
-func New(obj *types.Service) *Service {
-	s := new(Service)
+func New(obj *types.User) *User {
+	u := new(User)
 
-	s.User = obj.User
-	s.Name = obj.Name
-	s.Description = obj.Description
-	s.Updated = obj.Updated
-	s.Created = obj.Created
+	u.Username = obj.Username
+	u.Gravatar = obj.Gravatar
+	u.Profile.FirstName = obj.Profile.FirstName
+	u.Profile.LastName = obj.Profile.LastName
+	u.Updated = obj.Updated
+	u.Created = obj.Created
+	u.Emails = make(Emails, len(obj.Emails))
 
-	return s
+	for k, v := range obj.Emails {
+		u.Emails[k] = v
+	}
+
+	return u
 }
 
-func (obj *Service) ToJson() ([]byte, error) {
-	return json.Marshal(obj)
-}
-
-func NewList(obj *types.ServiceList) *ServiceList {
-	s := new(ServiceList)
-	if obj == nil {
-		return nil
-	}
-	for _, v := range *obj {
-		*s = append(*s, *New(&v))
-	}
-	return s
-}
-
-func (obj *ServiceList) ToJson() ([]byte, error) {
-	if obj == nil || len(*obj) == 0 {
-		return []byte("[]"), nil
-	}
+func (obj *User) ToJson() ([]byte, error) {
 	return json.Marshal(obj)
 }

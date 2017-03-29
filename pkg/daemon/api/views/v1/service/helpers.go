@@ -16,41 +16,41 @@
 // from Last.Backend LLC.
 //
 
-package project
+package service
 
 import (
 	"encoding/json"
-	"github.com/lastbackend/lastbackend/pkg/api/types"
+	"github.com/lastbackend/lastbackend/pkg/apis/types"
 )
 
-func New(obj *types.Project) *Project {
-	p := new(Project)
+func New(obj *types.Service) *Service {
+	s := new(Service)
 
-	p.User = obj.User
-	p.Name = obj.Name
-	p.Description = obj.Description
-	p.Updated = obj.Updated
-	p.Created = obj.Created
+	s.User = obj.User
+	s.Name = obj.Name
+	s.Description = obj.Description
+	s.Updated = obj.Updated
+	s.Created = obj.Created
 
-	return p
+	return s
 }
 
-func (obj *Project) ToJson() ([]byte, error) {
+func (obj *Service) ToJson() ([]byte, error) {
 	return json.Marshal(obj)
 }
 
-func NewList(obj *types.ProjectList) *ProjectList {
-	p := new(ProjectList)
+func NewList(obj *types.ServiceList) *ServiceList {
+	s := new(ServiceList)
 	if obj == nil {
 		return nil
 	}
 	for _, v := range *obj {
-		*p = append(*p, *New(&v))
+		*s = append(*s, *New(&v))
 	}
-	return p
+	return s
 }
 
-func (obj *ProjectList) ToJson() ([]byte, error) {
+func (obj *ServiceList) ToJson() ([]byte, error) {
 	if obj == nil || len(*obj) == 0 {
 		return []byte("[]"), nil
 	}

@@ -24,7 +24,7 @@ import (
 	"time"
 
 	"github.com/lastbackend/lastbackend/pkg/errors"
-	"github.com/lastbackend/lastbackend/pkg/api/types"
+	"github.com/lastbackend/lastbackend/pkg/apis/types"
 	"github.com/lastbackend/lastbackend/pkg/daemon/context"
 )
 
