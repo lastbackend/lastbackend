@@ -19,16 +19,16 @@
 package project_test
 
 import (
-	"github.com/lastbackend/lastbackend/pkg/client/storage"
-	h "github.com/lastbackend/lastbackend/pkg/util/http"
+	"github.com/lastbackend/lastbackend/pkg/apis/types"
 	"github.com/lastbackend/lastbackend/pkg/client/cmd/project"
 	"github.com/lastbackend/lastbackend/pkg/client/context"
+	"github.com/lastbackend/lastbackend/pkg/client/storage"
+	h "github.com/lastbackend/lastbackend/pkg/util/http"
 	"github.com/stretchr/testify/assert"
 	"net/http"
 	"net/http/httptest"
 	"testing"
 	"time"
-	"github.com/lastbackend/lastbackend/pkg/api/types"
 )
 
 func TestRemove(t *testing.T) {

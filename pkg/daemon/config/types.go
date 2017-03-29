@@ -33,7 +33,8 @@ type Config struct {
 	} `yaml:"proxy_server"`
 
 	HttpServer struct {
-		Port int `yaml:"port"`
+		Host string `yaml:"host"`
+		Port int    `yaml:"port"`
 	} `yaml:"http_server"`
 
 	Etcd struct {
@@ -82,5 +83,4 @@ type Config struct {
 			} `yaml:"user"`
 		} `yaml:"gitlab"`
 	} `yaml:"vcs"`
-
 }

@@ -19,10 +19,10 @@
 package service
 
 import (
-	"github.com/lastbackend/lastbackend/pkg/errors"
+	"github.com/lastbackend/lastbackend/pkg/apis/types"
 	"github.com/lastbackend/lastbackend/pkg/client/cmd/project"
 	"github.com/lastbackend/lastbackend/pkg/client/context"
-	"github.com/lastbackend/lastbackend/pkg/api/types"
+	"github.com/lastbackend/lastbackend/pkg/errors"
 )
 
 func ListServiceCmd() {
@@ -60,7 +60,7 @@ func List() (*types.ServiceList, string, error) {
 	}
 
 	_, _, err = ctx.HTTP.
-		GET("/p/"+ p.Name+"/service").
+		GET("/p/"+p.Name+"/service").
 		AddHeader("Authorization", "Bearer "+ctx.Token).
 		Request(services, er)
 	if err != nil {

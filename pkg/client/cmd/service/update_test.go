@@ -20,17 +20,17 @@ package service_test
 
 import (
 	"encoding/json"
-	"github.com/lastbackend/lastbackend/pkg/client/storage"
-	h "github.com/lastbackend/lastbackend/pkg/util/http"
+	"github.com/lastbackend/lastbackend/pkg/apis/types"
 	"github.com/lastbackend/lastbackend/pkg/client/cmd/service"
 	"github.com/lastbackend/lastbackend/pkg/client/context"
+	"github.com/lastbackend/lastbackend/pkg/client/storage"
+	h "github.com/lastbackend/lastbackend/pkg/util/http"
 	"github.com/stretchr/testify/assert"
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
 	"testing"
 	"time"
-	"github.com/lastbackend/lastbackend/pkg/api/types"
 )
 
 func TestUpdate(t *testing.T) {

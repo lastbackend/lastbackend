@@ -2,9 +2,8 @@ package http
 
 import (
 	"fmt"
-	"time"
 	"net/http"
-	"strconv"
+	"time"
 )
 
 func Handle(h http.HandlerFunc, middleware ...Middleware) http.HandlerFunc {
@@ -25,6 +24,6 @@ func Handle(h http.HandlerFunc, middleware ...Middleware) http.HandlerFunc {
 	return h
 }
 
-func Listen (port int, router http.Handler) error {
-	return http.ListenAndServe(":"+strconv.Itoa(port), router)
+func Listen(host string, port int, router http.Handler) error {
+	return http.ListenAndServe(fmt.Sprintf("%s:%d", host, port), router)
 }

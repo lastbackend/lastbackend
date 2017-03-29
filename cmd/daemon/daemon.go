@@ -16,14 +16,13 @@
 // from Last.Backend LLC.
 //
 
-
 package main
 
 import (
+	"fmt"
+	"github.com/jawher/mow.cli"
 	"github.com/lastbackend/lastbackend/pkg/daemon/cmd"
 	"os"
-	"github.com/jawher/mow.cli"
-	"fmt"
 )
 
 func main() {
