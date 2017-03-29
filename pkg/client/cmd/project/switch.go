@@ -19,10 +19,9 @@
 package project
 
 import (
-	"errors"
-	e "github.com/lastbackend/lastbackend/libs/errors"
-	"github.com/lastbackend/lastbackend/libs/model"
+	"github.com/lastbackend/lastbackend/pkg/errors"
 	"github.com/lastbackend/lastbackend/pkg/client/context"
+	"github.com/lastbackend/lastbackend/pkg/api/types"
 )
 
 func SwitchCmd(name string) {
@@ -38,12 +37,12 @@ func SwitchCmd(name string) {
 	ctx.Log.Infof("The project `%s` was selected as the current", project.Name)
 }
 
-func Switch(name string) (*model.Project, error) {
+func Switch(name string) (*types.Project, error) {
 
 	var (
 		ctx     = context.Get()
-		er      = new(e.Http)
-		project = new(model.Project)
+		er      = new(errors.Http)
+		project = new(types.Project)
 	)
 
 	_, _, err := ctx.HTTP.
@@ -57,7 +56,7 @@ func Switch(name string) (*model.Project, error) {
 	}
 
 	if er.Code == 401 {
-		return nil, e.NotLoggedMessage
+		return nil, errors.NotLoggedMessage
 	}
 
 	if er.Code != 0 {

@@ -19,9 +19,9 @@
 package context
 
 import (
-	"github.com/lastbackend/lastbackend/libs/http"
-	"github.com/lastbackend/lastbackend/libs/interface/log"
-	"github.com/lastbackend/lastbackend/libs/interface/storage"
+	"github.com/lastbackend/lastbackend/pkg/logger"
+	"github.com/lastbackend/lastbackend/pkg/storage"
+	"github.com/lastbackend/lastbackend/pkg/util/http"
 )
 
 var context Context
@@ -31,7 +31,7 @@ func Get() *Context {
 }
 
 type Context struct {
-	Log              log.ILogger
+	Log              *logger.Logger
 	TemplateRegistry *http.RawReq
 	Storage          storage.IStorage
 }

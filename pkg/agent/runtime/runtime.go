@@ -24,14 +24,11 @@ import (
 	"github.com/Sirupsen/logrus"
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/client"
-	"github.com/lastbackend/lastbackend/libs/model"
 )
 
 type Runtime struct {
 	Context    context.Context
 	Client     *client.Client
-	Containers *model.ContainerList
-	Images     *model.ImageList
 }
 
 func New() *Runtime {
@@ -67,5 +64,12 @@ func (r *Runtime) Init() {
 			}
 		}
 	}()
+}
+
+func (r *Runtime) Loop () {
+
+}
+
+func (r *Runtime) Sync () {
 
 }

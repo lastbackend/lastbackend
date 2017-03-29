@@ -19,7 +19,7 @@
 package project_test
 
 import (
-	h "github.com/lastbackend/lastbackend/libs/http"
+	h "github.com/lastbackend/lastbackend/pkg/util/http"
 	"github.com/lastbackend/lastbackend/pkg/client/cmd/project"
 	"github.com/lastbackend/lastbackend/pkg/client/context"
 	"github.com/stretchr/testify/assert"

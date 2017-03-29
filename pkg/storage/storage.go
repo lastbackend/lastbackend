@@ -22,6 +22,101 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/storage/store"
 )
 
-func Create(c store.Config) (store.IStore, store.DestroyFunc, error) {
+
+type Storage struct {
+	*UserStorage
+	*VendorStorage
+	*ProjectStorage
+	*ServiceStorage
+	*ImageStorage
+	*BuildStorage
+	*HookStorage
+	*VolumeStorage
+	*ActivityStorage
+}
+
+func (s *Storage) User() IUser {
+	if s == nil {
+		return nil
+	}
+	return s.UserStorage
+}
+
+func (s *Storage) Vendor() IVendor {
+	if s == nil {
+		return nil
+	}
+	return s.VendorStorage
+}
+
+func (s *Storage) Project() IProject {
+	if s == nil {
+		return nil
+	}
+	return s.ProjectStorage
+}
+
+func (s *Storage) Service() IService {
+	if s == nil {
+		return nil
+	}
+	return s.ServiceStorage
+}
+
+func (s *Storage) Image() IImage {
+	if s == nil {
+		return nil
+	}
+	return s.ImageStorage
+}
+
+func (s *Storage) Build() IBuild {
+	if s == nil {
+		return nil
+	}
+	return s.BuildStorage
+}
+
+func (s *Storage) Hook() IHook {
+	if s == nil {
+		return nil
+	}
+	return s.HookStorage
+}
+
+func (s *Storage) Volume() IVolume {
+	if s == nil {
+		return nil
+	}
+	return s.VolumeStorage
+}
+
+func (s *Storage) Activity() IActivity {
+	if s == nil {
+		return nil
+	}
+	return s.ActivityStorage
+}
+
+func Get(config store.Config) (*Storage, error) {
+
+	var (
+		store  = new(Storage)
+	)
+
+	store.UserStorage = newUserStorage(config)
+	store.VendorStorage = newVendorStorage(config)
+	store.ProjectStorage = newProjectStorage(config)
+	store.ServiceStorage = newServiceStorage(config)
+	store.ImageStorage = newImageStorage(config)
+	store.BuildStorage = newBuildStorage(config)
+	store.HookStorage = newHookStorage(config)
+	store.VolumeStorage = newVolumeStorage(config)
+	store.ActivityStorage = newActivityStorage(config)
+
+	return store, nil
+}
+
+func New(c store.Config) (store.IStore, store.DestroyFunc, error) {
 	return createEtcd3Storage(c)
 }

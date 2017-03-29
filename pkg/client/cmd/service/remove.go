@@ -19,10 +19,9 @@
 package service
 
 import (
-	"errors"
-	e "github.com/lastbackend/lastbackend/libs/errors"
-	"github.com/lastbackend/lastbackend/libs/model"
+	"github.com/lastbackend/lastbackend/pkg/errors"
 	"github.com/lastbackend/lastbackend/pkg/client/context"
+	"github.com/lastbackend/lastbackend/pkg/api/types"
 )
 
 func RemoveCmd(name string) {
@@ -43,8 +42,8 @@ func Remove(name string) error {
 	var (
 		err     error
 		ctx     = context.Get()
-		service = new(model.Project)
-		er      = new(e.Http)
+		service = new(types.Project)
+		er      = new(errors.Http)
 	)
 
 	_, _, err = ctx.HTTP.
@@ -57,7 +56,7 @@ func Remove(name string) error {
 	}
 
 	if er.Code == 401 {
-		return e.NotLoggedMessage
+		return errors.NotLoggedMessage
 	}
 
 	if er.Code != 0 {

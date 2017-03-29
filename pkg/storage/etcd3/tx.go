@@ -20,7 +20,7 @@ package etcd3
 
 import (
 	"github.com/coreos/etcd/clientv3"
-	"github.com/lastbackend/lastbackend/pkg/serializer"
+	"github.com/lastbackend/lastbackend/pkg/util/serializer"
 	"golang.org/x/net/context"
 	"path"
 )

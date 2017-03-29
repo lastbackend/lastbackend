@@ -19,13 +19,12 @@
 package project
 
 import (
-	"errors"
 	"fmt"
-	e "github.com/lastbackend/lastbackend/libs/errors"
-	"github.com/lastbackend/lastbackend/libs/model"
+	"github.com/lastbackend/lastbackend/pkg/errors"
 	"github.com/lastbackend/lastbackend/pkg/client/context"
 	"strings"
 	"time"
+	"github.com/lastbackend/lastbackend/pkg/api/types"
 )
 
 type updateS struct {
@@ -73,8 +72,8 @@ func Update(name, newProjectName, description string) error {
 	var (
 		err error
 		ctx = context.Get()
-		er  = new(e.Http)
-		res = new(model.Project)
+		er  = new(errors.Http)
+		res = new(types.Project)
 	)
 
 	_, _, err = ctx.HTTP.
@@ -88,7 +87,7 @@ func Update(name, newProjectName, description string) error {
 	}
 
 	if er.Code == 401 {
-		return e.NotLoggedMessage
+		return errors.NotLoggedMessage
 	}
 
 	if er.Code != 0 {

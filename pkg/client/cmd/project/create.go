@@ -19,10 +19,9 @@
 package project
 
 import (
-	"errors"
-	e "github.com/lastbackend/lastbackend/libs/errors"
-	"github.com/lastbackend/lastbackend/libs/model"
+	"github.com/lastbackend/lastbackend/pkg/errors"
 	"github.com/lastbackend/lastbackend/pkg/client/context"
+	"github.com/lastbackend/lastbackend/pkg/api/types"
 )
 
 type createS struct {
@@ -48,12 +47,12 @@ func Create(name, description string) error {
 	var (
 		err     error
 		ctx     = context.Get()
-		er      = new(e.Http)
-		project = new(model.Project)
+		er      = new(errors.Http)
+		project = new(types.Project)
 	)
 
 	if len(name) == 0 {
-		return e.BadParameter("name").Err()
+		return errors.BadParameter("name").Err()
 	}
 
 	_, _, err = ctx.HTTP.
@@ -67,7 +66,7 @@ func Create(name, description string) error {
 	}
 
 	if er.Code == 401 {
-		return e.NotLoggedMessage
+		return errors.NotLoggedMessage
 	}
 
 	if er.Code != 0 {

@@ -19,7 +19,7 @@
 package user_test
 
 import (
-	"github.com/lastbackend/lastbackend/libs/db"
+	"github.com/lastbackend/lastbackend/pkg/client/storage"
 	"github.com/lastbackend/lastbackend/pkg/client/cmd/user"
 	"github.com/lastbackend/lastbackend/pkg/client/context"
 	"github.com/lastbackend/lastbackend/pkg/util/homedir"
@@ -35,7 +35,7 @@ func TestLogout(t *testing.T) {
 		ctx = context.Mock()
 	)
 
-	ctx.Storage, err = db.Init()
+	ctx.Storage, err = storage.Init()
 	if err != nil {
 		panic(err)
 	}

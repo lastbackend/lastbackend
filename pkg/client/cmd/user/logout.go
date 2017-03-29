@@ -19,7 +19,7 @@
 package user
 
 import (
-	e "github.com/lastbackend/lastbackend/libs/errors"
+	e "github.com/lastbackend/lastbackend/pkg/errors"
 	"github.com/lastbackend/lastbackend/pkg/client/context"
 )
 

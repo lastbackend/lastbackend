@@ -19,11 +19,9 @@
 package context
 
 import (
-	"github.com/lastbackend/lastbackend/libs/db"
-	"github.com/lastbackend/lastbackend/libs/http"
-	d "github.com/lastbackend/lastbackend/libs/interface/db"
-	"github.com/lastbackend/lastbackend/libs/interface/log"
-	l "github.com/lastbackend/lastbackend/libs/log"
+	"github.com/lastbackend/lastbackend/pkg/client/storage"
+	"github.com/lastbackend/lastbackend/pkg/util/http"
+	"github.com/lastbackend/lastbackend/pkg/logger"
 )
 
 var context Context
@@ -34,17 +32,17 @@ func Get() *Context {
 
 func Mock() *Context {
 	context.mock = true
-	context.Log = l.Init()
-	context.Storage = new(db.DB)
+	context.Log = logger.Init()
+	context.Storage = new(storage.DB)
 
 	return &context
 }
 
 type Context struct {
 	Token   string
-	Log     log.ILogger
+	Log     *logger.Logger
 	HTTP    *http.RawReq
-	Storage d.IDB
+	Storage *storage.DB
 	mock    bool
 	// Other info for HTTP handlers can be here, like user UUID
 }

@@ -19,11 +19,10 @@
 package user
 
 import (
-	"errors"
 	"fmt"
-	e "github.com/lastbackend/lastbackend/libs/errors"
-	"github.com/lastbackend/lastbackend/libs/model"
+	"github.com/lastbackend/lastbackend/pkg/errors"
 	"github.com/lastbackend/lastbackend/pkg/client/context"
+	"github.com/lastbackend/lastbackend/pkg/api/types"
 )
 
 func WhoamiCmd() {
@@ -48,17 +47,17 @@ func WhoamiCmd() {
 		user.Created.String()[:10], user.Updated.String()[:10]))
 }
 
-func Whoami() (*model.User, error) {
+func Whoami() (*types.User, error) {
 
 	var (
 		err  error
 		ctx  = context.Get()
-		er   = new(e.Http)
-		user = new(model.User)
+		er   = new(errors.Http)
+		user = new(types.User)
 	)
 
 	if ctx.Token == "" {
-		return nil, e.NotLoggedMessage
+		return nil, errors.NotLoggedMessage
 	}
 
 	_, _, err = ctx.HTTP.
@@ -67,15 +66,15 @@ func Whoami() (*model.User, error) {
 		AddHeader("Authorization", "Bearer "+ctx.Token).
 		Request(user, er)
 	if err != nil {
-		return nil, e.UnknownMessage
+		return nil, errors.UnknownMessage
 	}
 
 	if er.Code == 401 {
-		return nil, e.NotLoggedMessage
+		return nil, errors.NotLoggedMessage
 	}
 
 	if er.Code == 500 {
-		return nil, e.UnknownMessage
+		return nil, errors.UnknownMessage
 	}
 
 	if er.Code != 0 {

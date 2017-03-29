@@ -19,10 +19,9 @@
 package project
 
 import (
-	"errors"
-	e "github.com/lastbackend/lastbackend/libs/errors"
-	"github.com/lastbackend/lastbackend/libs/model"
+	"github.com/lastbackend/lastbackend/pkg/errors"
 	"github.com/lastbackend/lastbackend/pkg/client/context"
+	"github.com/lastbackend/lastbackend/pkg/api/types"
 )
 
 func GetCmd(name string) {
@@ -39,17 +38,17 @@ func GetCmd(name string) {
 	project.DrawTable()
 }
 
-func Get(name string) (*model.Project, error) {
+func Get(name string) (*types.Project, error) {
 
 	var (
 		err     error
 		ctx     = context.Get()
-		er      = new(e.Http)
-		project = new(model.Project)
+		er      = new(errors.Http)
+		project = new(types.Project)
 	)
 
 	if len(name) == 0 {
-		return nil, e.BadParameter("name").Err()
+		return nil, errors.BadParameter("name").Err()
 	}
 
 	_, _, err = ctx.HTTP.
@@ -62,7 +61,7 @@ func Get(name string) (*model.Project, error) {
 	}
 
 	if er.Code == 401 {
-		return nil, e.NotLoggedMessage
+		return nil, errors.NotLoggedMessage
 	}
 
 	if er.Code != 0 {

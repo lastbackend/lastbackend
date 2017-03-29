@@ -19,11 +19,10 @@
 package service
 
 import (
-	"errors"
-	e "github.com/lastbackend/lastbackend/libs/errors"
-	"github.com/lastbackend/lastbackend/libs/model"
-	p "github.com/lastbackend/lastbackend/pkg/client/cmd/project"
+	"github.com/lastbackend/lastbackend/pkg/errors"
+	"github.com/lastbackend/lastbackend/pkg/client/cmd/project"
 	"github.com/lastbackend/lastbackend/pkg/client/context"
+	"github.com/lastbackend/lastbackend/pkg/api/types"
 )
 
 func InspectCmd(name string) {
@@ -39,27 +38,27 @@ func InspectCmd(name string) {
 	service.DrawTable(projectName)
 }
 
-func Inspect(name string) (*model.Service, string, error) {
+func Inspect(name string) (*types.Service, string, error) {
 
 	var (
 		err     error
 		ctx     = context.Get()
-		er      = new(e.Http)
-		service = new(model.Service)
+		er      = new(errors.Http)
+		service = new(types.Service)
 	)
 
-	project, err := p.Current()
+	p, err := project.Current()
 	if err != nil {
 		return nil, "", errors.New(err.Error())
 	}
 
-	if project == nil {
+	if p == nil {
 		ctx.Log.Info("Project didn't select")
 		return nil, "", nil
 	}
 
 	_, _, err = ctx.HTTP.
-		GET("/project/"+project.Name+"/service/"+name).
+		GET("/project/"+p.Name+"/service/"+name).
 		AddHeader("Authorization", "Bearer "+ctx.Token).
 		Request(service, er)
 
@@ -68,12 +67,12 @@ func Inspect(name string) (*model.Service, string, error) {
 	}
 
 	if er.Code == 401 {
-		return nil, "", e.NotLoggedMessage
+		return nil, "", errors.NotLoggedMessage
 	}
 
 	if er.Code != 0 {
 		return nil, "", errors.New(er.Message)
 	}
 
-	return service, project.Name, nil
+	return service, p.Name, nil
 }

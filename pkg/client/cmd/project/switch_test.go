@@ -20,9 +20,8 @@ package project_test
 
 import (
 	"encoding/json"
-	"github.com/lastbackend/lastbackend/libs/db"
-	h "github.com/lastbackend/lastbackend/libs/http"
-	"github.com/lastbackend/lastbackend/libs/model"
+	"github.com/lastbackend/lastbackend/pkg/client/storage"
+	h "github.com/lastbackend/lastbackend/pkg/util/http"
 	"github.com/lastbackend/lastbackend/pkg/client/cmd/project"
 	"github.com/lastbackend/lastbackend/pkg/client/context"
 	"github.com/stretchr/testify/assert"
@@ -31,6 +30,7 @@ import (
 	"net/http/httptest"
 	"testing"
 	"time"
+	"github.com/lastbackend/lastbackend/pkg/api/types"
 )
 
 func TestSwitch(t *testing.T) {
@@ -43,9 +43,8 @@ func TestSwitch(t *testing.T) {
 	var (
 		err  error
 		ctx  = context.Mock()
-		data = model.Project{
+		data = types.Project{
 			Name:        "mock_name",
-			ID:          "mock_id",
 			User:        "mock_user",
 			Description: "sample description",
 			Created:     time.Now(),
@@ -53,7 +52,7 @@ func TestSwitch(t *testing.T) {
 		}
 	)
 
-	ctx.Storage, err = db.Init()
+	ctx.Storage, err = storage.Init()
 	if err != nil {
 		t.Error(err)
 		return
