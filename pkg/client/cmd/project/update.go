@@ -20,11 +20,11 @@ package project
 
 import (
 	"fmt"
-	"github.com/lastbackend/lastbackend/pkg/errors"
+	"github.com/lastbackend/lastbackend/pkg/apis/types"
 	"github.com/lastbackend/lastbackend/pkg/client/context"
+	"github.com/lastbackend/lastbackend/pkg/errors"
 	"strings"
 	"time"
-	"github.com/lastbackend/lastbackend/pkg/api/types"
 )
 
 type updateS struct {

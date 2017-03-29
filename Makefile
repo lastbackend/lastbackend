@@ -45,8 +45,11 @@ ifeq ($(OS) ,Darwin)
 	mv build/darwin/$(NAME_AGENT) /usr/local/bin/$(NAME_AGENT)
 endif
 
+image:
+	docker build -t lastbackend/lastbackend -f ./images/lastbackend/Dockerfile .
+
 run-daemon:
-	go run cmd/daemon/daemon.go daemon -d
+	go run cmd/daemon/daemon.go daemon -d -c ./contrib/config.yml
 
 run-agent:
 	go run cmd/agent/agent.go daemon -d

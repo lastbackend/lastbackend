@@ -19,12 +19,12 @@
 package project_test
 
 import (
-	"github.com/lastbackend/lastbackend/pkg/client/storage"
+	"github.com/lastbackend/lastbackend/pkg/apis/types"
 	"github.com/lastbackend/lastbackend/pkg/client/cmd/project"
 	"github.com/lastbackend/lastbackend/pkg/client/context"
+	"github.com/lastbackend/lastbackend/pkg/client/storage"
 	"testing"
 	"time"
-	"github.com/lastbackend/lastbackend/pkg/api/types"
 )
 
 func TestCurrent(t *testing.T) {
