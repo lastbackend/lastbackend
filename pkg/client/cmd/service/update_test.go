@@ -20,9 +20,8 @@ package service_test
 
 import (
 	"encoding/json"
-	"github.com/lastbackend/lastbackend/libs/db"
-	h "github.com/lastbackend/lastbackend/libs/http"
-	"github.com/lastbackend/lastbackend/libs/model"
+	"github.com/lastbackend/lastbackend/pkg/client/storage"
+	h "github.com/lastbackend/lastbackend/pkg/util/http"
 	"github.com/lastbackend/lastbackend/pkg/client/cmd/service"
 	"github.com/lastbackend/lastbackend/pkg/client/context"
 	"github.com/stretchr/testify/assert"
@@ -31,6 +30,7 @@ import (
 	"net/http/httptest"
 	"testing"
 	"time"
+	"github.com/lastbackend/lastbackend/pkg/api/types"
 )
 
 func TestUpdate(t *testing.T) {
@@ -45,22 +45,21 @@ func TestUpdate(t *testing.T) {
 	var (
 		err     error
 		ctx     = context.Mock()
-		project = model.Project{
+		project = types.Project{
 			Name:        "mock_name",
-			ID:          "mock_id",
 			Created:     time.Now(),
 			Updated:     time.Now(),
 			User:        "mock_demo",
 			Description: "sample description",
 		}
-		updateData = model.ServiceUpdateConfig{}
+		updateData = types.ServiceUpdateConfig{}
 	)
 
 	updateData.Name = &name
 	updateData.Description = &description
 	updateData.Replicas = &scale
 
-	ctx.Storage, err = db.Init()
+	ctx.Storage, err = storage.Init()
 	if err != nil {
 		t.Error(err)
 		return
@@ -93,7 +92,7 @@ func TestUpdate(t *testing.T) {
 			return
 		}
 
-		var d = model.ServiceUpdateConfig{}
+		var d = types.ServiceUpdateConfig{}
 
 		err = json.Unmarshal(body, &d)
 		if err != nil {

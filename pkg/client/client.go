@@ -20,9 +20,8 @@ package client
 
 import (
 	"github.com/jawher/mow.cli"
-	"github.com/lastbackend/lastbackend/libs/db"
-	"github.com/lastbackend/lastbackend/libs/http"
-	"github.com/lastbackend/lastbackend/libs/log"
+	"github.com/lastbackend/lastbackend/pkg/client/storage"
+	"github.com/lastbackend/lastbackend/pkg/util/http"
 	"github.com/lastbackend/lastbackend/pkg/client/cmd/deploy"
 	p "github.com/lastbackend/lastbackend/pkg/client/cmd/project"
 	s "github.com/lastbackend/lastbackend/pkg/client/cmd/service"
@@ -30,6 +29,7 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/client/config"
 	"github.com/lastbackend/lastbackend/pkg/client/context"
 	"os"
+	"github.com/lastbackend/lastbackend/pkg/logger"
 )
 
 func Run() {
@@ -58,7 +58,7 @@ func Run() {
 			app.PrintLongHelp()
 		}
 
-		ctx.Log = log.Init()
+		ctx.Log = logger.Init()
 
 		if *debug {
 			cfg.Debug = *debug
@@ -68,7 +68,7 @@ func Run() {
 
 		ctx.HTTP = http.New(cfg.ApiHost)
 
-		ctx.Storage, err = db.Init()
+		ctx.Storage, err = storage.Init()
 		if err != nil {
 			ctx.Log.Panic("Error: init local storage", err.Error())
 			return

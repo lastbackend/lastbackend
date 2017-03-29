@@ -45,6 +45,9 @@ ifeq ($(OS) ,Darwin)
 	mv build/darwin/$(NAME_AGENT) /usr/local/bin/$(NAME_AGENT)
 endif
 
+run-daemon:
+	go run cmd/daemon/daemon.go daemon -d
+
 run-agent:
 	go run cmd/agent/agent.go daemon -d
 

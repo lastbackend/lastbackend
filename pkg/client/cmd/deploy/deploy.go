@@ -19,10 +19,9 @@
 package deploy
 
 import (
-	"errors"
-	e "github.com/lastbackend/lastbackend/libs/errors"
-	"github.com/lastbackend/lastbackend/libs/model"
+	"github.com/lastbackend/lastbackend/pkg/errors"
 	"github.com/lastbackend/lastbackend/pkg/client/context"
+	"github.com/lastbackend/lastbackend/pkg/api/types"
 )
 
 type deployS struct {
@@ -71,8 +70,8 @@ func Deploy(name, image, template, url string, config *Config) error {
 	var (
 		err     error
 		ctx     = context.Get()
-		project = new(model.Project)
-		er      = new(e.Http)
+		project = new(types.Project)
+		er      = new(errors.Http)
 		res     = new(struct{})
 	)
 
@@ -81,12 +80,12 @@ func Deploy(name, image, template, url string, config *Config) error {
 		return errors.New(err.Error())
 	}
 
-	if project.ID == "" {
+	if project.Name == "" {
 		return errors.New("Project didn't select")
 	}
 
 	var cfg = deployS{}
-	cfg.Project = project.ID
+	cfg.Project = project.Name
 
 	if name != "" {
 		cfg.Name = name
@@ -119,7 +118,7 @@ func Deploy(name, image, template, url string, config *Config) error {
 	}
 
 	if er.Code == 401 {
-		return e.NotLoggedMessage
+		return errors.NotLoggedMessage
 	}
 
 	if er.Code != 0 {

@@ -20,16 +20,16 @@ package cmd
 
 import (
 	"github.com/jawher/mow.cli"
-	"github.com/lastbackend/lastbackend/libs/adapter/storage"
-	http_client "github.com/lastbackend/lastbackend/libs/http"
-	"github.com/lastbackend/lastbackend/libs/log"
+	"github.com/lastbackend/lastbackend/pkg/storage"
 	"github.com/lastbackend/lastbackend/pkg/daemon/config"
 	"github.com/lastbackend/lastbackend/pkg/daemon/context"
-	"github.com/lastbackend/lastbackend/pkg/daemon/http"
 	"log/syslog"
 	"os"
 	"os/signal"
 	"syscall"
+
+	"github.com/lastbackend/lastbackend/pkg/logger"
+	"github.com/lastbackend/lastbackend/pkg/daemon/api"
 )
 
 func Daemon(cmd *cli.Cmd) {
@@ -45,7 +45,7 @@ func Daemon(cmd *cli.Cmd) {
 
 	cmd.Before = func() {
 
-		ctx.Log = log.Init()
+		ctx.Log = logger.Init()
 
 		// If you want to connect to local syslog (Ex. "/dev/log" or "/var/run/syslog" or "/var/run/log").
 		// Just assign empty string to the first two parameters of NewSyslogHook. It should look like the following.
@@ -66,7 +66,7 @@ func Daemon(cmd *cli.Cmd) {
 		// Initializing database
 		ctx.Log.Info("Initializing daemon")
 
-		ctx.Storage, err = storage.Get()
+		ctx.Storage, err = storage.Get(cfg.GetEtcdDB())
 		if err != nil {
 			ctx.Log.Panic(err)
 		}
@@ -75,15 +75,6 @@ func Daemon(cmd *cli.Cmd) {
 			cfg.HttpServer.Port = 3000
 		}
 
-		if cfg.ProxyServer.Port == 0 {
-			cfg.ProxyServer.Port = 9999
-		}
-
-		if cfg.TemplateRegistry.Host == "" {
-			cfg.TemplateRegistry.Host = "http://localhost:3003"
-		}
-
-		ctx.TemplateRegistry = http_client.New(cfg.TemplateRegistry.Host)
 	}
 
 	cmd.Action = func() {
@@ -91,10 +82,14 @@ func Daemon(cmd *cli.Cmd) {
 		var (
 			sigs   = make(chan os.Signal)
 			done   = make(chan bool, 1)
-			routes = http.NewRouter()
 		)
 
-		go http.RunHttpServer(routes, cfg.HttpServer.Port)
+		go func () {
+			if err := api.Listen(cfg.HttpServer.Port); err != nil {
+				ctx.Log.Warnf("Http server start error: %s", err.Error())
+			}
+		}()
+
 
 		// Handle SIGINT and SIGTERM.
 		signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)

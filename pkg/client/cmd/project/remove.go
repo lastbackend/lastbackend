@@ -19,10 +19,9 @@
 package project
 
 import (
-	"errors"
-	e "github.com/lastbackend/lastbackend/libs/errors"
-	"github.com/lastbackend/lastbackend/libs/model"
+	"github.com/lastbackend/lastbackend/pkg/errors"
 	"github.com/lastbackend/lastbackend/pkg/client/context"
+	"github.com/lastbackend/lastbackend/pkg/api/types"
 )
 
 func RemoveCmd(name string) {
@@ -43,12 +42,12 @@ func Remove(name string) error {
 	var (
 		err error
 		ctx = context.Get()
-		er  = new(e.Http)
+		er  = new(errors.Http)
 		res = new(struct{})
 	)
 
 	if len(name) == 0 {
-		return e.BadParameter("name").Err()
+		return errors.BadParameter("name").Err()
 	}
 
 	_, _, err = ctx.HTTP.
@@ -61,7 +60,7 @@ func Remove(name string) error {
 	}
 
 	if er.Code == 401 {
-		return e.NotLoggedMessage
+		return errors.NotLoggedMessage
 	}
 
 	if er.Code != 0 {
@@ -75,7 +74,7 @@ func Remove(name string) error {
 
 	if project != nil {
 		if name == project.Name {
-			err = ctx.Storage.Set("project", model.Project{})
+			err = ctx.Storage.Set("project", types.Project{})
 			if err != nil {
 				return errors.New(err.Error())
 			}

@@ -20,9 +20,8 @@ package project_test
 
 import (
 	"encoding/json"
-	"github.com/lastbackend/lastbackend/libs/db"
-	h "github.com/lastbackend/lastbackend/libs/http"
-	"github.com/lastbackend/lastbackend/libs/model"
+	"github.com/lastbackend/lastbackend/pkg/client/storage"
+	h "github.com/lastbackend/lastbackend/pkg/util/http"
 	"github.com/lastbackend/lastbackend/pkg/client/cmd/project"
 	"github.com/lastbackend/lastbackend/pkg/client/context"
 	"github.com/stretchr/testify/assert"
@@ -30,6 +29,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"testing"
+	"github.com/lastbackend/lastbackend/pkg/api/types"
 )
 
 func TestCreate(t *testing.T) {
@@ -44,10 +44,10 @@ func TestCreate(t *testing.T) {
 		err error
 		ctx = context.Mock()
 
-		prct = new(model.Project)
+		prct = new(types.Project)
 	)
 
-	ctx.Storage, err = db.Init()
+	ctx.Storage, err = storage.Init()
 	if err != nil {
 		t.Error(err)
 		return

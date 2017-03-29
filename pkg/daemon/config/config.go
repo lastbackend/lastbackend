@@ -19,17 +19,15 @@
 package config
 
 import (
-	"github.com/lastbackend/lastbackend/pkg/serializer"
-	"github.com/lastbackend/lastbackend/pkg/serializer/json"
+	"github.com/lastbackend/lastbackend/pkg/util/serializer"
+	"github.com/lastbackend/lastbackend/pkg/util/serializer/json"
 	"github.com/lastbackend/lastbackend/pkg/storage/store"
-	"github.com/lastbackend/lastbackend/pkg/util/validator"
 	"gopkg.in/yaml.v2"
 	"io/ioutil"
 )
 
 var (
 	cfg            = new(Config)
-	ExternalConfig interface{}
 )
 
 func (Config) Configure(path string) error {
@@ -40,13 +38,6 @@ func (Config) Configure(path string) error {
 		return err
 	}
 
-	if !validator.IsNil(ExternalConfig) {
-		err = yaml.Unmarshal(buf, ExternalConfig)
-		if err != nil {
-			return err
-		}
-	}
-
 	return yaml.Unmarshal(buf, &cfg)
 }
 
@@ -55,14 +46,14 @@ func Get() *Config {
 }
 
 // Get Etcd DB options used for creating session
-func GetEtcdDB() store.Config {
+func (c *Config) GetEtcdDB() store.Config {
 	return store.Config{
 		Prefix:    "lastbackend",
-		Endpoints: cfg.Etcd.Endpoints,
-		KeyFile:   cfg.Etcd.TLS.Key,
-		CertFile:  cfg.Etcd.TLS.Cert,
-		CAFile:    cfg.Etcd.TLS.CA,
-		Quorum:    cfg.Etcd.Quorum,
+		Endpoints: c.Etcd.Endpoints,
+		KeyFile:   c.Etcd.TLS.Key,
+		CertFile:  c.Etcd.TLS.Cert,
+		CAFile:    c.Etcd.TLS.CA,
+		Quorum:    c.Etcd.Quorum,
 		Codec:     serializer.NewSerializer(json.Encoder{}, json.Decoder{}),
 	}
 }

@@ -19,10 +19,9 @@
 package project
 
 import (
-	"errors"
-	e "github.com/lastbackend/lastbackend/libs/errors"
-	"github.com/lastbackend/lastbackend/libs/model"
+	"github.com/lastbackend/lastbackend/pkg/errors"
 	"github.com/lastbackend/lastbackend/pkg/client/context"
+	"github.com/lastbackend/lastbackend/pkg/api/types"
 )
 
 func CurrentCmd() {
@@ -44,16 +43,16 @@ func CurrentCmd() {
 	project.DrawTable()
 }
 
-func Current() (*model.Project, error) {
+func Current() (*types.Project, error) {
 
 	var (
 		err     error
 		ctx     = context.Get()
-		project = new(model.Project)
+		project = new(types.Project)
 	)
 
 	if ctx.Token == "" {
-		return nil, e.NotLoggedMessage
+		return nil, errors.NotLoggedMessage
 	}
 
 	err = ctx.Storage.Get("project", project)

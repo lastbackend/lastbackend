@@ -18,6 +18,11 @@
 
 package context
 
+import (
+	"context"
+	"github.com/lastbackend/lastbackend/pkg/api/types"
+)
+
 var _ctx ctx
 
 func Get() *ctx {
@@ -25,6 +30,8 @@ func Get() *ctx {
 }
 
 type ctx struct {
+	context.Context
 
+	Pods   *types.PodList
+	Images *types.ImageList
 }
-

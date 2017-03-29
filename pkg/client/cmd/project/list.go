@@ -19,10 +19,9 @@
 package project
 
 import (
-	"errors"
-	e "github.com/lastbackend/lastbackend/libs/errors"
-	"github.com/lastbackend/lastbackend/libs/model"
+	"github.com/lastbackend/lastbackend/pkg/errors"
 	"github.com/lastbackend/lastbackend/pkg/client/context"
+	"github.com/lastbackend/lastbackend/pkg/api/types"
 )
 
 func ListProjectCmd() {
@@ -40,13 +39,13 @@ func ListProjectCmd() {
 	}
 }
 
-func List() (*model.ProjectList, error) {
+func List() (*types.ProjectList, error) {
 
 	var (
 		err      error
 		ctx      = context.Get()
-		er       = new(e.Http)
-		projects = new(model.ProjectList)
+		er       = new(errors.Http)
+		projects = new(types.ProjectList)
 	)
 
 	_, _, err = ctx.HTTP.
@@ -58,7 +57,7 @@ func List() (*model.ProjectList, error) {
 	}
 
 	if er.Code == 401 {
-		return nil, e.NotLoggedMessage
+		return nil, errors.NotLoggedMessage
 	}
 
 	if er.Code != 0 {

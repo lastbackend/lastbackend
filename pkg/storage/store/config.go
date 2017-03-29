@@ -19,7 +19,7 @@
 package store
 
 import (
-	"github.com/lastbackend/lastbackend/pkg/serializer"
+	"github.com/lastbackend/lastbackend/pkg/util/serializer"
 )
 
 type Config struct {
