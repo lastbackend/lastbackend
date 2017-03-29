@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/lastbackend/vendors/interfaces"
+	"github.com/lastbackend/lastbackend/pkg/vendors/interfaces"
 	"golang.org/x/oauth2"
 	"net/http"
 	"net/url"

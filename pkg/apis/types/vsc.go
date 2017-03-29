@@ -2,7 +2,7 @@ package types
 
 import (
 	"encoding/json"
-	"github.com/lastbackend/vendors/interfaces"
+	"github.com/lastbackend/lastbackend/pkg/vendors/interfaces"
 )
 
 type VCSRepository struct {

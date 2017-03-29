@@ -24,8 +24,8 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/errors"
 	"github.com/lastbackend/lastbackend/pkg/daemon/config"
 	c "github.com/lastbackend/lastbackend/pkg/daemon/context"
-	"github.com/lastbackend/vendors"
-	"github.com/lastbackend/vendors/interfaces"
+	"github.com/lastbackend/lastbackend/pkg/vendors"
+	"github.com/lastbackend/lastbackend/pkg/vendors/interfaces"
 	"net/http"
 	"github.com/lastbackend/lastbackend/pkg/apis/types"
 )
