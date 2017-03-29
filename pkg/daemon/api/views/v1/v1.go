@@ -16,31 +16,31 @@
 // from Last.Backend LLC.
 //
 
-package user
+package v1
 
 import (
-	"encoding/json"
-	"github.com/lastbackend/lastbackend/pkg/api/types"
+	"github.com/lastbackend/lastbackend/pkg/daemon/api/views/v1/project"
+	"github.com/lastbackend/lastbackend/pkg/daemon/api/views/v1/service"
+	"github.com/lastbackend/lastbackend/pkg/daemon/api/views/v1/user"
+	"github.com/lastbackend/lastbackend/pkg/apis/types"
 )
 
-func New(obj *types.User) *User {
-	u := new(User)
-
-	u.Username = obj.Username
-	u.Gravatar = obj.Gravatar
-	u.Profile.FirstName = obj.Profile.FirstName
-	u.Profile.LastName = obj.Profile.LastName
-	u.Updated = obj.Updated
-	u.Created = obj.Created
-	u.Emails = make(Emails, len(obj.Emails))
-
-	for k, v := range obj.Emails {
-		u.Emails[k] = v
-	}
-
-	return u
+func NewUser(obj *types.User) *user.User {
+	return user.New(obj)
 }
 
-func (obj *User) ToJson() ([]byte, error) {
-	return json.Marshal(obj)
+func NewProject(obj *types.Project) *project.Project {
+	return project.New(obj)
+}
+
+func NewProjectList(obj *types.ProjectList) *project.ProjectList {
+	return project.NewList(obj)
+}
+
+func NewService(obj *types.Service) *service.Service {
+	return service.New(obj)
+}
+
+func NewServiceList(obj *types.ServiceList) *service.ServiceList {
+	return service.NewList(obj)
 }

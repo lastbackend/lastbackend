@@ -20,7 +20,7 @@ package context
 
 import (
 	"context"
-	"github.com/lastbackend/lastbackend/pkg/api/types"
+	"github.com/lastbackend/lastbackend/pkg/apis/types"
 )
 
 var _ctx ctx

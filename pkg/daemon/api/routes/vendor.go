@@ -27,7 +27,7 @@ import (
 	"github.com/lastbackend/vendors"
 	"github.com/lastbackend/vendors/interfaces"
 	"net/http"
-	"github.com/lastbackend/lastbackend/pkg/api/types"
+	"github.com/lastbackend/lastbackend/pkg/apis/types"
 )
 
 // Авторизация сторонних сервисов для платформы

@@ -21,7 +21,7 @@ package routes
 import (
 	"github.com/gorilla/mux"
 	"github.com/lastbackend/lastbackend/pkg/errors"
-	"github.com/lastbackend/lastbackend/pkg/api/types"
+	"github.com/lastbackend/lastbackend/pkg/apis/types"
 	"github.com/lastbackend/lastbackend/pkg/daemon/context"
 	"net/http"
 )

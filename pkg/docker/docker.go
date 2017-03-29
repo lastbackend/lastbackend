@@ -25,7 +25,7 @@ import (
   "net/http"
   "strings"
   "time"
-  "github.com/lastbackend/lastbackend/pkg/api/types"
+  "github.com/lastbackend/lastbackend/pkg/apis/types"
 )
 
 func GetRepository(name string) (*types.DockerRepositoryList, error) {

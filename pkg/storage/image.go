@@ -19,7 +19,7 @@
 package storage
 
 import (
-	"github.com/lastbackend/lastbackend/pkg/api/types"
+	"github.com/lastbackend/lastbackend/pkg/apis/types"
 	"github.com/lastbackend/lastbackend/pkg/storage/store"
 )
 
