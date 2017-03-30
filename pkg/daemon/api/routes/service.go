@@ -45,8 +45,8 @@ func ServiceListH(w http.ResponseWriter, r *http.Request) {
 
 	ctx.Log.Debug("List service handler")
 
-	s, ok := context.GetOk(r, `session`)
-	if !ok {
+	s := r.Context().Value(`session`)
+	if s == nil {
 		ctx.Log.Error("Error: get session context")
 		errors.New("user").Unauthorized().Http(w)
 		return
@@ -101,8 +101,8 @@ func ServiceInfoH(w http.ResponseWriter, r *http.Request) {
 
 	ctx.Log.Debug("Get service handler")
 
-	s, ok := context.GetOk(r, `session`)
-	if !ok {
+	s := r.Context().Value(`session`)
+	if s == nil {
 		ctx.Log.Error("Error: get session context")
 		errors.New("user").Unauthorized().Http(w)
 		return
