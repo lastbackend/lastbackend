@@ -20,16 +20,12 @@ package cmd
 
 import (
 	"github.com/jawher/mow.cli"
+	"github.com/lastbackend/lastbackend/pkg/daemon/api"
 	"github.com/lastbackend/lastbackend/pkg/daemon/config"
 	"github.com/lastbackend/lastbackend/pkg/daemon/context"
-	"github.com/lastbackend/lastbackend/pkg/storage"
-	"log/syslog"
 	"os"
 	"os/signal"
 	"syscall"
-
-	"github.com/lastbackend/lastbackend/pkg/daemon/api"
-	"github.com/lastbackend/lastbackend/pkg/logger"
 )
 
 func Daemon(cmd *cli.Cmd) {
