@@ -14,14 +14,14 @@ RUN apk add --update --no-cache --virtual build-dependencies \
       gcc \
       alpine-sdk
 
+ADD contrib/config.yml /etc/lastbackend/config.yml
 ADD . /go/src/github.com/lastbackend/lastbackend
 WORKDIR /go/src/github.com/lastbackend/lastbackend
 
-RUN go get github.com/tools/godep \
-    && godep restore \
-    && make build \
-    && make install \
-    && apk del --purge build-dependencies
+RUN go get github.com/tools/godep 
+RUN make deps
+RUN make build && make install
+RUN apk del --purge build-dependencies
 
 WORKDIR /go/bin
 RUN rm -rf /go/pkg \
@@ -30,4 +30,4 @@ RUN rm -rf /go/pkg \
 
 EXPOSE 2967
 
-CMD ["/usr/local/bin/lastbackend", "daemon", "-c", "/etc/lastbackend/config.yml"]
+CMD ["/usr/local/bin/lbd", "daemon", "-c", "/etc/lastbackend/config.yml", "-d"]

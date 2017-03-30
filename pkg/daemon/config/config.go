@@ -19,15 +19,15 @@
 package config
 
 import (
+	"github.com/lastbackend/lastbackend/pkg/storage/store"
 	"github.com/lastbackend/lastbackend/pkg/util/serializer"
 	"github.com/lastbackend/lastbackend/pkg/util/serializer/json"
-	"github.com/lastbackend/lastbackend/pkg/storage/store"
 	"gopkg.in/yaml.v2"
 	"io/ioutil"
 )
 
 var (
-	cfg            = new(Config)
+	cfg = new(Config)
 )
 
 func (Config) Configure(path string) error {
@@ -37,7 +37,8 @@ func (Config) Configure(path string) error {
 	if err != nil {
 		return err
 	}
-
+	cfg.HttpServer.Port = 3000
+	cfg.HttpServer.Host = "0.0.0.0"
 	return yaml.Unmarshal(buf, &cfg)
 }
 

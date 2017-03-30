@@ -6,10 +6,10 @@ template_registry:
   host: "http://localhost:3003"
 
 proxy_server:
-  port: 9999
+  port: 2968
 
 http_server:
-  port: 3000
+  port: 2967
 
 etcd:
   endpoints:

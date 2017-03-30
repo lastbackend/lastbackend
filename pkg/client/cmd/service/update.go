@@ -19,12 +19,12 @@
 package service
 
 import (
+	"github.com/lastbackend/lastbackend/pkg/apis/types"
+	"github.com/lastbackend/lastbackend/pkg/client/context"
 	"github.com/lastbackend/lastbackend/pkg/editor"
 	"github.com/lastbackend/lastbackend/pkg/errors"
-	"github.com/lastbackend/lastbackend/pkg/client/context"
 	"gopkg.in/yaml.v2"
 	"strings"
-	"github.com/lastbackend/lastbackend/pkg/api/types"
 )
 
 func UpdateCmd(name string) {
@@ -95,7 +95,7 @@ func Update(name string, config types.ServiceUpdateConfig) error {
 
 func GetConfig(service *types.Service) (*types.ServiceUpdateConfig, error) {
 
-	var config = struct {}{}
+	var config = struct{}{}
 
 	buf, err := yaml.Marshal(config)
 	if err != nil {

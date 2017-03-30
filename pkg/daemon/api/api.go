@@ -6,13 +6,14 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/util/http"
 )
 
-func Listen(port int) error {
+func Listen(host string, port int) error {
+
 	router := mux.NewRouter()
-	router.Methods("OPTIONS").HandlerFunc(http.Headers)
+
 	for _, route := range Routes {
 		router.Handle(route.Path, http.Handle(route.Handler, route.Middleware...)).Methods(route.Method)
 	}
-	return http.Listen(port, router)
+	return http.Listen(host, port, router)
 }
 
 var Routes = []http.Route{
