@@ -28,9 +28,8 @@ RUN set -ex \
 	&& rm -rf /*.patch \
 
 ENV GOPATH /go
+ENV GOROOT /usr/local/go
 ENV PATH $GOPATH/bin:/usr/local/go/bin:$PATH
-
-RUN apk add --update --no-cache ca-certificates
 
 ADD contrib/config.yml /etc/lastbackend/config.yml
 ADD . /go/src/github.com/lastbackend/lastbackend
