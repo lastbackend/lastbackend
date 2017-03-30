@@ -22,8 +22,7 @@ import (
 	"github.com/Sirupsen/logrus"
 	"github.com/jawher/mow.cli"
 	"github.com/lastbackend/lastbackend/pkg/agent/config"
-	"github.com/lastbackend/lastbackend/pkg/agent/http"
-	"github.com/lastbackend/lastbackend/pkg/agent/runtime"
+	"github.com/lastbackend/lastbackend/pkg/agent/context"
 	"os"
 	"os/signal"
 	"syscall"
@@ -31,6 +30,7 @@ import (
 
 func Agent(cmd *cli.Cmd) {
 
+	var ctx = context.Get()
 	var cfg = config.Get()
 
 	cmd.Spec = "[-d]"
@@ -41,8 +41,6 @@ func Agent(cmd *cli.Cmd) {
 
 		if *debug {
 			cfg.Debug = *debug
-			logrus.SetLevel(logrus.DebugLevel)
-			logrus.Debug("Logger debug mode enabled")
 		}
 
 		if cfg.HttpServer.Port == 0 {
@@ -53,16 +51,11 @@ func Agent(cmd *cli.Cmd) {
 	cmd.Action = func() {
 
 		var (
-			sigs   = make(chan os.Signal)
-			done   = make(chan bool, 1)
-			routes = http.NewRouter()
+			sigs = make(chan os.Signal)
+			done = make(chan bool, 1)
 		)
 
-		go http.RunHttpServer(routes, cfg.HttpServer.Port)
-
-		r := runtime.New()
-		r.Init()
-
+		ctx.Init(cfg)
 		// Handle SIGINT and SIGTERM.
 		signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)
 

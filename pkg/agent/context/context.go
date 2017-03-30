@@ -19,8 +19,9 @@
 package context
 
 import (
-	"context"
-	"github.com/lastbackend/lastbackend/pkg/apis/types"
+	"github.com/lastbackend/lastbackend/pkg/agent/config"
+	"github.com/lastbackend/lastbackend/pkg/agent/runtime"
+	"github.com/lastbackend/lastbackend/pkg/logger"
 )
 
 var _ctx ctx
@@ -30,8 +31,17 @@ func Get() *ctx {
 }
 
 type ctx struct {
-	context.Context
+	Log     *logger.Logger
+	Config  *config.Config
+	Runtime *runtime.Runtime
+}
 
-	Pods   *types.PodList
-	Images *types.ImageList
+func (c *ctx) Init(config *config.Config) {
+
+	c.Config = config
+	c.Log = logger.New(c.Config.Debug)
+	c.Runtime = runtime.New(c.Config.Runtime)
+
+	// Initializing database
+	c.Log.Info("Initializing runtime daemon")
 }

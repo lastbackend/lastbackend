@@ -19,57 +19,46 @@
 package runtime
 
 import (
-	"context"
-	"encoding/json"
-	"github.com/Sirupsen/logrus"
-	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/client"
+	"github.com/lastbackend/lastbackend/pkg/agent/config"
+	"github.com/lastbackend/lastbackend/pkg/agent/manager"
 )
 
 type Runtime struct {
-	Context    context.Context
-	Client     *client.Client
+	Client *client.Client
+
+	pManager *manager.PodManager
+	iManager *manager.ImageManager
+	eManager *manager.EventManager
 }
 
-func New() *Runtime {
+func New(cfg *config.Runtime) *Runtime {
 	var runtime = new(Runtime)
-
-	return runtime
+	return runtime.Init(cfg)
 }
 
-func (r *Runtime) Init() {
-
+func (r *Runtime) Init(cfg *config.Runtime) *Runtime {
 	r.Client, _ = client.NewEnvClient()
 
-	// Get Container list
-	containers, _ := r.Client.ContainerList(context.Background(), types.ContainerListOptions{})
-	cj, _ := json.Marshal(containers)
-	logrus.Debugf("%s", cj)
+	r.pManager = manager.NewPodManager()
+	r.iManager = manager.NewImageManager()
+	r.eManager = manager.NewEventManager()
 
-	// Get Images list
-	images, _ := r.Client.ImageList(context.Background(), types.ImageListOptions{})
-	ci, _ := json.Marshal(images)
-	logrus.Debugf("%s", ci)
-
-	events, _ := r.Client.Events(context.Background(), types.EventsOptions{})
-	go func() {
-		for {
-			select {
-			case e := <-events:
-				if e.Type == "container" && e.Status != "destroy" {
-					ej, _ := json.Marshal(e)
-					logrus.Debugf("%s", ej)
-					continue
-				}
-			}
-		}
-	}()
+	return r
 }
 
-func (r *Runtime) Loop () {
+func (r *Runtime) Pods() *manager.PodManager {
+	return r.pManager
+}
+
+func (r *Runtime) Images() *manager.ImageManager {
+	return r.iManager
+}
+
+func (r *Runtime) Loop() {
 
 }
 
-func (r *Runtime) Sync () {
+func (r *Runtime) Sync() {
 
 }

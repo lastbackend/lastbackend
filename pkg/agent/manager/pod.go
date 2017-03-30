@@ -1,8 +1,8 @@
 package manager
 
 import (
-	"github.com/golang/glog"
 	"github.com/lastbackend/lastbackend/pkg/apis/types"
+	"github.com/lastbackend/lastbackend/pkg/agent/context"
 )
 
 type PodManager struct {
@@ -11,7 +11,8 @@ type PodManager struct {
 }
 
 func NewPodManager() *PodManager {
-	glog.V(4).Info("Create new pod Manager")
+	ctx := context.Get()
+	ctx.Log.Info("Create new pod Manager")
 	var pm = new(PodManager)
 
 	pm.update = make(chan types.PodList)
@@ -21,14 +22,16 @@ func NewPodManager() *PodManager {
 }
 
 func ReleasePodManager(pm *PodManager) error {
-	glog.V(4).Info("Release pod manager")
+	ctx := context.Get()
+	ctx.Log.Info("Release pod manager")
 	close(pm.update)
 	close(pm.close)
 	return nil
 }
 
 func (pm *PodManager) watch() error {
-	glog.V(4).Info("Start new pod watcher")
+	ctx := context.Get()
+	ctx.Log.Info("Start pod watcher")
 
 	for {
 		select {
@@ -47,6 +50,7 @@ func (pm *PodManager) watch() error {
 }
 
 func (pm *PodManager) sync(p *types.Pod) {
-	glog.V(4).Infof("Pod update: %s", p)
+	ctx := context.Get()
+	ctx.Log.Infof("pod sync")
 
 }
