@@ -60,7 +60,7 @@ func Daemon(cmd *cli.Cmd) {
 		)
 
 		go func() {
-			if err := api.Listen(cfg.HttpServer.Port); err != nil {
+			if err := api.Listen(cfg.HttpServer.Host, cfg.HttpServer.Port); err != nil {
 				ctx.Log.Warnf("Http server start error: %s", err.Error())
 			}
 		}()

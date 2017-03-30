@@ -9,6 +9,7 @@ proxy_server:
   port: 2968
 
 http_server:
+  host: ""
   port: 2967
 
 etcd:
