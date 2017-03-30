@@ -48,39 +48,26 @@ type Config struct {
 
 	VCS struct {
 		Github struct {
-			User struct {
-				Platform struct {
-					Client struct {
-						ID       string `yaml:"id"`
-						SecretID string `yaml:"secret_id"`
-					} `yaml:"client"`
-				} `yaml:"platform"`
-			} `yaml:"user"`
+			Client struct {
+				ID       string `yaml:"id"`
+				SecretID string `yaml:"secret_id"`
+			} `yaml:"client"`
 		} `yaml:"github"`
 
 		Bitbucket struct {
-			User struct {
-				Platform struct {
-					Client struct {
-						ID       string `yaml:"id"`
-						SecretID string `yaml:"secret_id"`
-					} `yaml:"client"`
-					RedirectUri string `yaml:"redirect_uri"`
-				} `yaml:"platform"`
-			} `yaml:"user"`
+			Client struct {
+				ID       string `yaml:"id"`
+				SecretID string `yaml:"secret_id"`
+			} `yaml:"client"`
+			RedirectUri string `yaml:"redirect_uri"`
 		} `yaml:"bitbucket"`
 
 		Gitlab struct {
-			User struct {
-				Platform struct {
-					Client struct {
-						ID       string `yaml:"id"`
-						SecretID string `yaml:"secret_id"`
-					} `yaml:"client"`
-					RedirectUri string `yaml:"redirect_uri"`
-				} `yaml:"platform"`
-			} `yaml:"user"`
+			Client struct {
+				ID       string `yaml:"id"`
+				SecretID string `yaml:"secret_id"`
+			} `yaml:"client"`
+			RedirectUri string `yaml:"redirect_uri"`
 		} `yaml:"gitlab"`
 	} `yaml:"vcs"`
-
 }
