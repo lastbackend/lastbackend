@@ -33,8 +33,6 @@ import (
 )
 
 func Daemon(cmd *cli.Cmd) {
-	var err error
-
 	var ctx = context.Get()
 	var cfg = config.Get()
 
@@ -44,37 +42,14 @@ func Daemon(cmd *cli.Cmd) {
 	var configPath = cmd.String(cli.StringOpt{Name: "c config", Value: "./config.yaml", Desc: "Path to config file", HideValue: true})
 
 	cmd.Before = func() {
-
-		ctx.Log = logger.Init()
-
-		// If you want to connect to local syslog (Ex. "/dev/log" or "/var/run/syslog" or "/var/run/log").
-		// Just assign empty string to the first two parameters of NewSyslogHook. It should look like the following.
-		ctx.Log.SetSyslog("", "", syslog.LOG_INFO, "")
-
 		if *configPath != "" {
 			if err := cfg.Configure(*configPath); err != nil {
-				ctx.Log.Panic(err)
+				panic(err)
 			}
 		}
 
-		if *debug {
-			cfg.Debug = *debug
-			ctx.Log.SetDebugLevel()
-			ctx.Log.Info("Logger debug mode enabled")
-		}
-
-		// Initializing database
-		ctx.Log.Info("Initializing daemon")
-
-		ctx.Storage, err = storage.Get(cfg.GetEtcdDB())
-		if err != nil {
-			ctx.Log.Panic(err)
-		}
-
-		if cfg.HttpServer.Port == 0 {
-			cfg.HttpServer.Port = 3000
-		}
-
+		cfg.Debug = *debug
+		ctx.Init(cfg)
 	}
 
 	cmd.Action = func() {

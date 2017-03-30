@@ -7,9 +7,7 @@ import (
 )
 
 func Listen(host string, port int) error {
-
 	router := mux.NewRouter()
-
 	for _, route := range Routes {
 		router.Handle(route.Path, http.Handle(route.Handler, route.Middleware...)).Methods(route.Method)
 	}

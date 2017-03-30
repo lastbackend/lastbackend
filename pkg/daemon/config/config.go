@@ -65,16 +65,16 @@ func (c *Config) GetVendorConfig(vendor string) (string, string, string) {
 
 	switch vendor {
 	case "github":
-		clientID = c.VCS.Github.User.Platform.Client.ID
-		clientSecretID = c.VCS.Github.User.Platform.Client.SecretID
+		clientID = c.VCS.Github.Client.ID
+		clientSecretID = c.VCS.Github.Client.SecretID
 	case "gitlab":
-		clientID = c.VCS.Gitlab.User.Platform.Client.ID
-		clientSecretID = c.VCS.Gitlab.User.Platform.Client.SecretID
-		redirectURI = c.VCS.Gitlab.User.Platform.RedirectUri
+		clientID = c.VCS.Gitlab.Client.ID
+		clientSecretID = c.VCS.Gitlab.Client.SecretID
+		redirectURI = c.VCS.Gitlab.RedirectUri
 	case "bitbucket":
-		clientID = c.VCS.Bitbucket.User.Platform.Client.ID
-		clientSecretID = c.VCS.Bitbucket.User.Platform.Client.SecretID
-		redirectURI = c.VCS.Bitbucket.User.Platform.RedirectUri
+		clientID = c.VCS.Bitbucket.Client.ID
+		clientSecretID = c.VCS.Bitbucket.Client.SecretID
+		redirectURI = c.VCS.Bitbucket.RedirectUri
 	}
 
 	return clientID, clientSecretID, redirectURI
