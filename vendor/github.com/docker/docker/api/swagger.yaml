@@ -245,6 +245,9 @@ definitions:
       ReadOnly:
         description: "Whether the mount should be read-only."
         type: "boolean"
+      Consistency:
+        description: "The consistency requirement for the mount: `default`, `consistent`, `cached`, or `delegated`."
+        type: "string"
       BindOptions:
         description: "Optional configuration for the `bind` type."
         type: "object"
@@ -1445,11 +1448,17 @@ definitions:
           - WorkDir
           - Network
           - Linux
+          - PidHost
           - PropagatedMount
+          - IpcHost
           - Mounts
           - Env
           - Args
         properties:
+          DockerVersion:
+            description: "Docker Version used to create the plugin"
+            type: "string"
+            x-nullable: false
           Description:
             type: "string"
             x-nullable: false
@@ -1512,6 +1521,12 @@ definitions:
                   $ref: "#/definitions/PluginDevice"
           PropagatedMount:
             type: "string"
+            x-nullable: false
+          IpcHost:
+            type: "boolean"
+            x-nullable: false
+          PidHost:
+            type: "boolean"
             x-nullable: false
           Mounts:
             type: "array"
