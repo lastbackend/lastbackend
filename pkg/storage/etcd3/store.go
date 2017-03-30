@@ -22,9 +22,9 @@ import (
 	"errors"
 	"fmt"
 	"github.com/coreos/etcd/clientv3"
-	"github.com/lastbackend/lastbackend/pkg/util/serializer"
 	st "github.com/lastbackend/lastbackend/pkg/storage/store"
 	"github.com/lastbackend/lastbackend/pkg/util/converter"
+	"github.com/lastbackend/lastbackend/pkg/util/serializer"
 	"github.com/lastbackend/lastbackend/pkg/util/validator"
 	"golang.org/x/net/context"
 	"path"
@@ -169,7 +169,7 @@ func decode(s serializer.Codec, value []byte, outPtr interface{}) error {
 
 func decodeList(codec serializer.Codec, items []buffer, ListOutPtr interface{}) error {
 	v, err := converter.EnforcePtr(ListOutPtr)
-	if err != nil || v.Kind() != reflect.Slice {
+	if err != nil || (v.Kind() != reflect.Slice && v.Kind() != reflect.Map) {
 		panic("Error: need ptr to slice")
 	}
 	for _, item := range items {
