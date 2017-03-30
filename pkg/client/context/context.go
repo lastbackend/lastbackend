@@ -20,8 +20,8 @@ package context
 
 import (
 	"github.com/lastbackend/lastbackend/pkg/client/storage"
-	"github.com/lastbackend/lastbackend/pkg/util/http"
 	"github.com/lastbackend/lastbackend/pkg/logger"
+	"github.com/lastbackend/lastbackend/pkg/util/http"
 )
 
 var context Context
@@ -32,7 +32,7 @@ func Get() *Context {
 
 func Mock() *Context {
 	context.mock = true
-	context.Log = logger.Init()
+	context.Log = logger.New(true)
 	context.Storage = new(storage.DB)
 
 	return &context

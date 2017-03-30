@@ -19,7 +19,7 @@
 package config
 
 import (
-"time"
+	"time"
 )
 
 // The structure of the config to run the daemon
@@ -37,8 +37,11 @@ type Config struct {
 		TimeOut   time.Duration `yaml:"timeout"`
 	} `yaml:"etcd"`
 
+	Runtime *Runtime `yaml:"runtime"`
+}
+
+type Runtime struct {
 	Docker struct {
 		Endpoint, CA, Cert, Key string
 	}
 }
-

@@ -23,7 +23,6 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/logger"
 	"github.com/lastbackend/lastbackend/pkg/storage"
 	"github.com/lastbackend/lastbackend/pkg/util/http"
-	"log/syslog"
 )
 
 var context Context
@@ -42,16 +41,7 @@ func (c *Context) Init(cfg *config.Config) {
 
 	var err error
 
-	c.Log = logger.Init()
-
-	// If you want to connect to local syslog (Ex. "/dev/log" or "/var/run/syslog" or "/var/run/log").
-	// Just assign empty string to the first two parameters of NewSyslogHook. It should look like the following.
-	c.Log.SetSyslog("", "", syslog.LOG_INFO, "")
-
-	if cfg.Debug {
-		c.Log.SetDebugLevel()
-		c.Log.Info("Logger debug mode enabled")
-	}
+	c.Log = logger.New(cfg.Debug)
 
 	// Initializing database
 	c.Log.Info("Initializing daemon")
