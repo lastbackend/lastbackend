@@ -20,12 +20,11 @@ package routes
 
 import (
 	"encoding/json"
-	"github.com/gorilla/context"
 	"github.com/gorilla/mux"
-	"github.com/lastbackend/lastbackend/pkg/errors"
 	"github.com/lastbackend/lastbackend/pkg/apis/types"
 	"github.com/lastbackend/lastbackend/pkg/daemon/api/views/v1"
 	c "github.com/lastbackend/lastbackend/pkg/daemon/context"
+	"github.com/lastbackend/lastbackend/pkg/errors"
 	"github.com/lastbackend/lastbackend/pkg/util/validator"
 	"io"
 	"io/ioutil"
@@ -43,8 +42,8 @@ func ProjectListH(w http.ResponseWriter, r *http.Request) {
 
 	ctx.Log.Debug("List project handler")
 
-	s, ok := context.GetOk(r, `session`)
-	if !ok {
+	s := r.Context().Value(`session`)
+	if s == nil {
 		ctx.Log.Error("Error: get session context")
 		errors.New("user").Unauthorized().Http(w)
 		return
@@ -87,8 +86,8 @@ func ProjectInfoH(w http.ResponseWriter, r *http.Request) {
 
 	ctx.Log.Debug("Get project handler")
 
-	s, ok := context.GetOk(r, `session`)
-	if !ok {
+	s := r.Context().Value(`session`)
+	if s == nil {
 		ctx.Log.Error("Error: get session context")
 		errors.New("user").Unauthorized().Http(w)
 		return
@@ -228,8 +227,8 @@ func ProjectCreateH(w http.ResponseWriter, r *http.Request) {
 
 	ctx.Log.Debug("Create project handler")
 
-	s, ok := context.GetOk(r, `session`)
-	if !ok {
+	s := r.Context().Value(`session`)
+	if s == nil {
 		ctx.Log.Error("Error: get session context")
 		errors.New("user").Unauthorized().Http(w)
 		return
@@ -411,8 +410,8 @@ func ProjectRemoveH(w http.ResponseWriter, r *http.Request) {
 
 	ctx.Log.Info("Remove project")
 
-	s, ok := context.GetOk(r, `session`)
-	if !ok {
+	s := r.Context().Value(`session`)
+	if s == nil {
 		ctx.Log.Error("Error: get session context")
 		errors.New("user").Unauthorized().Http(w)
 		return
