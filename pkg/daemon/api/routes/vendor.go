@@ -19,15 +19,14 @@
 package routes
 
 import (
-	"github.com/gorilla/context"
 	"github.com/gorilla/mux"
-	"github.com/lastbackend/lastbackend/pkg/errors"
+	"github.com/lastbackend/lastbackend/pkg/apis/types"
 	"github.com/lastbackend/lastbackend/pkg/daemon/config"
 	c "github.com/lastbackend/lastbackend/pkg/daemon/context"
+	"github.com/lastbackend/lastbackend/pkg/errors"
 	"github.com/lastbackend/lastbackend/pkg/vendors"
 	"github.com/lastbackend/lastbackend/pkg/vendors/interfaces"
 	"net/http"
-	"github.com/lastbackend/lastbackend/pkg/apis/types"
 )
 
 // Авторизация сторонних сервисов для платформы
@@ -38,6 +37,7 @@ func OAuthConnectH(w http.ResponseWriter, r *http.Request) {
 		clientSecretID string
 		redirectURI    string
 		client         interfaces.IAuth
+		session        *types.Session
 		ctx            = c.Get()
 		params         = mux.Vars(r)
 		vendor         = params["vendor"]
@@ -46,14 +46,14 @@ func OAuthConnectH(w http.ResponseWriter, r *http.Request) {
 
 	ctx.Log.Debug("Connect service handler")
 
-	s, ok := context.GetOk(r, "session")
-	if !ok {
-		ctx.Log.Error(http.StatusText(http.StatusUnauthorized))
-		errors.HTTP.Unauthorized(w)
+	s := r.Context().Value(`session`)
+	if s == nil {
+		ctx.Log.Error("Error: get session context")
+		errors.New("user").Unauthorized().Http(w)
 		return
 	}
 
-	session := s.(*types.Session)
+	session = s.(*types.Session)
 
 	clientID, clientSecretID, redirectURI = config.Get().GetVendorConfig(vendor)
 
@@ -106,21 +106,22 @@ func OAuthConnectH(w http.ResponseWriter, r *http.Request) {
 func OAuthDisconnectH(w http.ResponseWriter, r *http.Request) {
 
 	var (
-		ctx    = c.Get()
-		params = mux.Vars(r)
-		vendor = params[`vendor`]
+		ctx     = c.Get()
+		session *types.Session
+		params  = mux.Vars(r)
+		vendor  = params[`vendor`]
 	)
 
 	ctx.Log.Debug("Disconnect service handler")
 
-	s, ok := context.GetOk(r, `session`)
-	if !ok {
-		ctx.Log.Error(http.StatusText(http.StatusUnauthorized))
-		errors.HTTP.Unauthorized(w)
+	s := r.Context().Value(`session`)
+	if s == nil {
+		ctx.Log.Error("Error: get session context")
+		errors.New("user").Unauthorized().Http(w)
 		return
 	}
 
-	session := s.(*types.Session)
+	session = s.(*types.Session)
 
 	userModel, err := ctx.Storage.User().GetByUsername(session.Username)
 	if err != nil {
@@ -141,21 +142,23 @@ func OAuthDisconnectH(w http.ResponseWriter, r *http.Request) {
 
 func VCSRepositoriesListH(w http.ResponseWriter, r *http.Request) {
 
-	var clientID, clientSecretID, redirectURI string
-	var client interfaces.IVCS
-	var ctx = c.Get()
+	var (
+		clientID, clientSecretID, redirectURI string
+		client                                interfaces.IVCS
+		session                               *types.Session
+		ctx                                   = c.Get()
+		params                                = mux.Vars(r)
+		vendor                                = params[`vendor`]
+	)
 
-	params := mux.Vars(r)
-	vendor := params[`vendor`]
-
-	s, ok := context.GetOk(r, `session`)
-	if !ok {
-		ctx.Log.Error(http.StatusText(http.StatusUnauthorized))
-		errors.HTTP.Unauthorized(w)
+	s := r.Context().Value(`session`)
+	if s == nil {
+		ctx.Log.Error("Error: get session context")
+		errors.New("user").Unauthorized().Http(w)
 		return
 	}
 
-	session := s.(*types.Session)
+	session = s.(*types.Session)
 
 	clientID, clientSecretID, redirectURI = config.Get().GetVendorConfig(vendor)
 
@@ -237,20 +240,21 @@ func VCSBranchesListH(w http.ResponseWriter, r *http.Request) {
 	var (
 		clientID, clientSecretID, redirectURI string
 		client                                interfaces.IVCS
+		session                               *types.Session
 		ctx                                   = c.Get()
 		params                                = mux.Vars(r)
 		vendor                                = params[`vendor`]
 		repo                                  = r.URL.Query().Get(`repo`)
 	)
 
-	s, ok := context.GetOk(r, `session`)
-	if !ok {
-		ctx.Log.Error(http.StatusText(http.StatusUnauthorized))
-		errors.HTTP.Unauthorized(w)
+	s := r.Context().Value(`session`)
+	if s == nil {
+		ctx.Log.Error("Error: get session context")
+		errors.New("user").Unauthorized().Http(w)
 		return
 	}
 
-	session := s.(*types.Session)
+	session = s.(*types.Session)
 
 	clientID, clientSecretID, redirectURI = config.Get().GetVendorConfig(vendor)
 

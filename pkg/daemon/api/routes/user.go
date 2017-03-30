@@ -19,7 +19,6 @@
 package routes
 
 import (
-	"github.com/gorilla/context"
 	"github.com/lastbackend/lastbackend/pkg/errors"
 	"github.com/lastbackend/lastbackend/pkg/daemon/api/views/v1"
 	c "github.com/lastbackend/lastbackend/pkg/daemon/context"
@@ -31,18 +30,19 @@ func UserGetH(w http.ResponseWriter, r *http.Request) {
 
 	var (
 		ctx = c.Get()
+		session *types.Session
 	)
 
 	ctx.Log.Debug("Get user handler")
 
-	s, ok := context.GetOk(r, `session`)
-	if !ok {
-		ctx.Log.Error(http.StatusText(http.StatusUnauthorized))
-		errors.HTTP.Unauthorized(w)
+	s := r.Context().Value(`session`)
+	if s == nil {
+		ctx.Log.Error("Error: get session context")
+		errors.New("user").Unauthorized().Http(w)
 		return
 	}
 
-	session := s.(*types.Session)
+	session = s.(*types.Session)
 
 	user, err := ctx.Storage.User().GetByUsername(session.Username)
 	if err == nil && user == nil {
