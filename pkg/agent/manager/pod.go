@@ -1,8 +1,8 @@
 package manager
 
 import (
-	"github.com/lastbackend/lastbackend/pkg/apis/types"
 	"github.com/lastbackend/lastbackend/pkg/agent/context"
+	"github.com/lastbackend/lastbackend/pkg/apis/types"
 )
 
 type PodManager struct {
