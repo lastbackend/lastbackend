@@ -22,9 +22,13 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/lastbackend/lastbackend/pkg/daemon/api/routes"
 	"github.com/lastbackend/lastbackend/pkg/util/http"
+	"github.com/lastbackend/lastbackend/pkg/daemon/context"
 )
 
 func Listen(host string, port int) error {
+	ctx := context.Get()
+	ctx.Log.Debug("Listen HTTP server")
+
 	router := mux.NewRouter()
 	router.Methods("OPTIONS").HandlerFunc(http.Headers)
 	for _, route := range Routes {
