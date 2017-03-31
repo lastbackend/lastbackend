@@ -24,6 +24,7 @@ import (
 	c "github.com/lastbackend/lastbackend/pkg/daemon/context"
 	"net/http"
 	"github.com/lastbackend/lastbackend/pkg/apis/types"
+	"github.com/gorilla/context"
 )
 
 func UserGetH(w http.ResponseWriter, r *http.Request) {
@@ -35,10 +36,10 @@ func UserGetH(w http.ResponseWriter, r *http.Request) {
 
 	ctx.Log.Debug("Get user handler")
 
-	s := r.Context().Value(`session`)
-	if s == nil {
-		ctx.Log.Error("Error: get session context")
-		errors.New("user").Unauthorized().Http(w)
+	s, ok := context.GetOk(r, `session`)
+	if !ok {
+		ctx.Log.Error(http.StatusText(http.StatusUnauthorized))
+		errors.HTTP.Unauthorized(w)
 		return
 	}
 

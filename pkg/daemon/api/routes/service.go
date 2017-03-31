@@ -45,10 +45,10 @@ func ServiceListH(w http.ResponseWriter, r *http.Request) {
 
 	ctx.Log.Debug("List service handler")
 
-	s := r.Context().Value(`session`)
-	if s == nil {
-		ctx.Log.Error("Error: get session context")
-		errors.New("user").Unauthorized().Http(w)
+	s, ok := context.GetOk(r, `session`)
+	if !ok {
+		ctx.Log.Error(http.StatusText(http.StatusUnauthorized))
+		errors.HTTP.Unauthorized(w)
 		return
 	}
 
@@ -101,10 +101,10 @@ func ServiceInfoH(w http.ResponseWriter, r *http.Request) {
 
 	ctx.Log.Debug("Get service handler")
 
-	s := r.Context().Value(`session`)
-	if s == nil {
-		ctx.Log.Error("Error: get session context")
-		errors.New("user").Unauthorized().Http(w)
+	s, ok := context.GetOk(r, `session`)
+	if !ok {
+		ctx.Log.Error(http.StatusText(http.StatusUnauthorized))
+		errors.HTTP.Unauthorized(w)
 		return
 	}
 
@@ -200,8 +200,8 @@ func ServiceRemoveH(w http.ResponseWriter, r *http.Request) {
 
 	s, ok := context.GetOk(r, `session`)
 	if !ok {
-		ctx.Log.Error("Error: get session context")
-		errors.New("user").Unauthorized().Http(w)
+		ctx.Log.Error(http.StatusText(http.StatusUnauthorized))
+		errors.HTTP.Unauthorized(w)
 		return
 	}
 
