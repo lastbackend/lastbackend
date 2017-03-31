@@ -20,12 +20,11 @@ package routes
 
 import (
 	"encoding/json"
-	"github.com/gorilla/context"
-	"github.com/gorilla/mux"
 	"github.com/lastbackend/lastbackend/pkg/apis/types"
-	"github.com/lastbackend/lastbackend/pkg/errors"
 	"github.com/lastbackend/lastbackend/pkg/daemon/api/views/v1"
 	c "github.com/lastbackend/lastbackend/pkg/daemon/context"
+	"github.com/lastbackend/lastbackend/pkg/errors"
+	"github.com/lastbackend/lastbackend/pkg/util/http/utils"
 	"github.com/lastbackend/lastbackend/pkg/util/validator"
 	"io"
 	"io/ioutil"
@@ -39,20 +38,18 @@ func ServiceListH(w http.ResponseWriter, r *http.Request) {
 		session      *types.Session
 		project      *types.Project
 		ctx          = c.Get()
-		params       = mux.Vars(r)
+		params       = utils.Vars(r)
 		projectParam = params["project"]
 	)
 
 	ctx.Log.Debug("List service handler")
 
-	s, ok := context.GetOk(r, `session`)
-	if !ok {
+	session = utils.Session(r)
+	if session == nil {
 		ctx.Log.Error(http.StatusText(http.StatusUnauthorized))
 		errors.HTTP.Unauthorized(w)
 		return
 	}
-
-	session = s.(*types.Session)
 
 	project, err := ctx.Storage.Project().GetByName(session.Username, projectParam)
 	if err != nil {
@@ -94,21 +91,19 @@ func ServiceInfoH(w http.ResponseWriter, r *http.Request) {
 		project      *types.Project
 		service      *types.Service
 		ctx          = c.Get()
-		params       = mux.Vars(r)
+		params       = utils.Vars(r)
 		projectParam = params["project"]
 		serviceParam = params["service"]
 	)
 
 	ctx.Log.Debug("Get service handler")
 
-	s, ok := context.GetOk(r, `session`)
-	if !ok {
+	session = utils.Session(r)
+	if session == nil {
 		ctx.Log.Error(http.StatusText(http.StatusUnauthorized))
 		errors.HTTP.Unauthorized(w)
 		return
 	}
-
-	session = s.(*types.Session)
 
 	project, err := ctx.Storage.Project().GetByName(session.Username, projectParam)
 	if err != nil {
@@ -191,21 +186,19 @@ func ServiceRemoveH(w http.ResponseWriter, r *http.Request) {
 	var (
 		ctx          = c.Get()
 		session      *types.Session
-		params       = mux.Vars(r)
+		params       = utils.Vars(r)
 		projectParam = params["project"]
 		serviceParam = params["service"]
 	)
 
 	ctx.Log.Info("Remove service")
 
-	s, ok := context.GetOk(r, `session`)
-	if !ok {
+	session = utils.Session(r)
+	if session == nil {
 		ctx.Log.Error(http.StatusText(http.StatusUnauthorized))
 		errors.HTTP.Unauthorized(w)
 		return
 	}
-
-	session = s.(*types.Session)
 
 	projectModel, err := ctx.Storage.Project().GetByName(session.Username, projectParam)
 	if err != nil {
