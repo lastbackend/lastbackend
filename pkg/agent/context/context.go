@@ -20,7 +20,6 @@ package context
 
 import (
 	"github.com/lastbackend/lastbackend/pkg/agent/config"
-	"github.com/lastbackend/lastbackend/pkg/agent/runtime"
 	"github.com/lastbackend/lastbackend/pkg/logger"
 )
 
@@ -33,14 +32,12 @@ func Get() *ctx {
 type ctx struct {
 	Log     *logger.Logger
 	Config  *config.Config
-	Runtime *runtime.Runtime
 }
 
-func (c *ctx) Init(config *config.Config) {
+func (c *ctx) New(config *config.Config) {
 
 	c.Config = config
 	c.Log = logger.New(c.Config.Debug)
-	c.Runtime = runtime.New(c.Config.Runtime)
 
 	// Initializing database
 	c.Log.Info("Initializing runtime daemon")

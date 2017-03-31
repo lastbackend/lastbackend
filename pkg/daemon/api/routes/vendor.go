@@ -19,14 +19,14 @@
 package routes
 
 import (
-	"net/http"
 	"github.com/lastbackend/lastbackend/pkg/apis/types"
 	"github.com/lastbackend/lastbackend/pkg/daemon/config"
 	c "github.com/lastbackend/lastbackend/pkg/daemon/context"
 	"github.com/lastbackend/lastbackend/pkg/errors"
+	"github.com/lastbackend/lastbackend/pkg/util/http/utils"
 	"github.com/lastbackend/lastbackend/pkg/vendors"
 	"github.com/lastbackend/lastbackend/pkg/vendors/interfaces"
-	"github.com/lastbackend/lastbackend/pkg/util/http/utils"
+	"net/http"
 )
 
 // Авторизация сторонних сервисов для платформы
