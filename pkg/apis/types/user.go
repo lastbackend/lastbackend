@@ -46,7 +46,7 @@ type userPass struct {
 }
 
 type UserEmails map[string]bool
-type UserVendors map[string]string
+type UserVendors map[string]*Vendor
 type UserInfo struct{ userInfo }
 type UserPassword struct{ userPass }
 

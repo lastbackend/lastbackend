@@ -20,8 +20,8 @@ package user
 
 import (
 	"encoding/json"
-	"github.com/lastbackend/lastbackend/pkg/apis/types"
 	"fmt"
+	"github.com/lastbackend/lastbackend/pkg/apis/types"
 )
 
 func New(obj *types.User) *User {
@@ -42,7 +42,7 @@ func New(obj *types.User) *User {
 	}
 
 	for k, v := range obj.Vendors {
-		u.Vendors[k] = v
+		u.Vendors[k] = v.Username
 	}
 
 	return u
