@@ -20,17 +20,16 @@ package routes
 
 import (
 	"encoding/json"
-	"github.com/gorilla/mux"
 	"github.com/lastbackend/lastbackend/pkg/apis/types"
 	"github.com/lastbackend/lastbackend/pkg/daemon/api/views/v1"
 	c "github.com/lastbackend/lastbackend/pkg/daemon/context"
 	"github.com/lastbackend/lastbackend/pkg/errors"
+	"github.com/lastbackend/lastbackend/pkg/util/http/utils"
 	"github.com/lastbackend/lastbackend/pkg/util/validator"
 	"io"
 	"io/ioutil"
 	"net/http"
 	"strings"
-	"github.com/gorilla/context"
 )
 
 func ProjectListH(w http.ResponseWriter, r *http.Request) {
@@ -43,14 +42,12 @@ func ProjectListH(w http.ResponseWriter, r *http.Request) {
 
 	ctx.Log.Debug("List project handler")
 
-	s, ok := context.GetOk(r, `session`)
-	if !ok {
+	session = utils.Session(r)
+	if session == nil {
 		ctx.Log.Error(http.StatusText(http.StatusUnauthorized))
 		errors.HTTP.Unauthorized(w)
 		return
 	}
-
-	session = s.(*types.Session)
 
 	projectList, err := ctx.Storage.Project().ListByUser(session.Username)
 	if err != nil {
@@ -81,20 +78,18 @@ func ProjectInfoH(w http.ResponseWriter, r *http.Request) {
 		session      *types.Session
 		project      *types.Project
 		ctx          = c.Get()
-		params       = mux.Vars(r)
+		params       = utils.Vars(r)
 		projectParam = params["project"]
 	)
 
 	ctx.Log.Info("Get project handler")
 
-	s, ok := context.GetOk(r, `session`)
-	if !ok {
+	session = utils.Session(r)
+	if session == nil {
 		ctx.Log.Error(http.StatusText(http.StatusUnauthorized))
 		errors.HTTP.Unauthorized(w)
 		return
 	}
-
-	session = s.(*types.Session)
 
 	project, err = ctx.Storage.Project().GetByName(session.Username, projectParam)
 	if err != nil {
@@ -130,7 +125,7 @@ func ProjectInfoH(w http.ResponseWriter, r *http.Request) {
 //		session      *types.Session
 //		projectModel *types.Project
 //		ctx          = c.Get()
-//		params       = mux.Vars(r)
+//		params       = utils.Vars(r)
 //		projectParam = params["project"]
 //	)
 //
@@ -228,14 +223,12 @@ func ProjectCreateH(w http.ResponseWriter, r *http.Request) {
 
 	ctx.Log.Debug("Create project handler")
 
-	s, ok := context.GetOk(r, `session`)
-	if !ok {
+	session = utils.Session(r)
+	if session == nil {
 		ctx.Log.Error(http.StatusText(http.StatusUnauthorized))
 		errors.HTTP.Unauthorized(w)
 		return
 	}
-
-	session = s.(*types.Session)
 
 	// request body struct
 	rq := new(projectCreateS)
@@ -326,7 +319,7 @@ func ProjectCreateH(w http.ResponseWriter, r *http.Request) {
 //		session      *types.Session
 //		projectModel *types.Project
 //		ctx          = c.Get()
-//		params       = mux.Vars(r)
+//		params       = utils.Vars(r)
 //		projectParam = params["project"]
 //	)
 //
@@ -405,20 +398,18 @@ func ProjectRemoveH(w http.ResponseWriter, r *http.Request) {
 	var (
 		ctx          = c.Get()
 		session      *types.Session
-		params       = mux.Vars(r)
+		params       = utils.Vars(r)
 		projectParam = params["project"]
 	)
 
 	ctx.Log.Info("Remove project")
 
-	s, ok := context.GetOk(r, `session`)
-	if !ok {
+	session = utils.Session(r)
+	if session == nil {
 		ctx.Log.Error(http.StatusText(http.StatusUnauthorized))
 		errors.HTTP.Unauthorized(w)
 		return
 	}
-
-	session = s.(*types.Session)
 
 	projectModel, err := ctx.Storage.Project().GetByName(session.Username, projectParam)
 	if err != nil {
