@@ -61,10 +61,6 @@ func Authenticate(h http.HandlerFunc) http.HandlerFunc {
 			errors.HTTP.Unauthorized(w)
 			return
 		}
-		//
-		//// Add session and token to context
-		//context.Set(r, "token", token)
-		//context.Set(r, "session", s)
 
 		ctx := c.WithValue(r.Context(), "token", token)
 		ctx = c.WithValue(ctx, "session", s)
