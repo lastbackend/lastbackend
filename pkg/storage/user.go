@@ -41,6 +41,7 @@ func (s *UserStorage) GetByUsername(username string) (*types.User, error) {
 		keyProfile  = fmt.Sprintf("%s/%s/profile", UserTable, username)
 		keyPassword = fmt.Sprintf("%s/%s/security/password", UserTable, username)
 		keyEmails   = fmt.Sprintf("%s/%s/emails", UserTable, username)
+		keyVendors  = fmt.Sprintf("%s/%s/vendors", UserTable, username)
 		user        = new(types.User)
 	)
 
@@ -85,6 +86,14 @@ func (s *UserStorage) GetByUsername(username string) (*types.User, error) {
 		return nil, err
 	}
 
+	vendors := new(types.UserVendors)
+	if err := client.Get(ctx, keyVendors, vendors); err != nil {
+		if err.Error() == store.ErrKeyNotFound {
+			return nil, nil
+		}
+		return nil, err
+	}
+
 	user.Username = username
 	user.Profile = *profile
 	user.Emails = *emails
@@ -93,6 +102,7 @@ func (s *UserStorage) GetByUsername(username string) (*types.User, error) {
 	user.Updated = info.Updated
 	user.Security.Pass.Salt = password.Salt
 	user.Security.Pass.Password = password.Password
+	user.Vendors = *vendors
 
 	return user, nil
 }

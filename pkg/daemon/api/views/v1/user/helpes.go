@@ -33,9 +33,14 @@ func New(obj *types.User) *User {
 	u.Updated = obj.Updated
 	u.Created = obj.Created
 	u.Emails = make(Emails, len(obj.Emails))
+	u.Vendors = make(Vendors, len(obj.Vendors))
 
 	for k, v := range obj.Emails {
 		u.Emails[k] = v
+	}
+
+	for k, v := range obj.Vendors {
+		u.Vendors[k] = v
 	}
 
 	return u
