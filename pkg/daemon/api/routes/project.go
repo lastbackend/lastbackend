@@ -30,6 +30,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"strings"
+	"github.com/gorilla/context"
 )
 
 func ProjectListH(w http.ResponseWriter, r *http.Request) {
@@ -42,10 +43,10 @@ func ProjectListH(w http.ResponseWriter, r *http.Request) {
 
 	ctx.Log.Debug("List project handler")
 
-	s := r.Context().Value(`session`)
-	if s == nil {
-		ctx.Log.Error("Error: get session context")
-		errors.New("user").Unauthorized().Http(w)
+	s, ok := context.GetOk(r, `session`)
+	if !ok {
+		ctx.Log.Error(http.StatusText(http.StatusUnauthorized))
+		errors.HTTP.Unauthorized(w)
 		return
 	}
 
@@ -86,10 +87,10 @@ func ProjectInfoH(w http.ResponseWriter, r *http.Request) {
 
 	ctx.Log.Info("Get project handler")
 
-	s := r.Context().Value(`session`)
-	if s == nil {
-		ctx.Log.Error("Error: get session context")
-		errors.New("user").Unauthorized().Http(w)
+	s, ok := context.GetOk(r, `session`)
+	if !ok {
+		ctx.Log.Error(http.StatusText(http.StatusUnauthorized))
+		errors.HTTP.Unauthorized(w)
 		return
 	}
 
@@ -227,10 +228,10 @@ func ProjectCreateH(w http.ResponseWriter, r *http.Request) {
 
 	ctx.Log.Debug("Create project handler")
 
-	s := r.Context().Value(`session`)
-	if s == nil {
-		ctx.Log.Error("Error: get session context")
-		errors.New("user").Unauthorized().Http(w)
+	s, ok := context.GetOk(r, `session`)
+	if !ok {
+		ctx.Log.Error(http.StatusText(http.StatusUnauthorized))
+		errors.HTTP.Unauthorized(w)
 		return
 	}
 
@@ -410,10 +411,10 @@ func ProjectRemoveH(w http.ResponseWriter, r *http.Request) {
 
 	ctx.Log.Info("Remove project")
 
-	s := r.Context().Value(`session`)
-	if s == nil {
-		ctx.Log.Error("Error: get session context")
-		errors.New("user").Unauthorized().Http(w)
+	s, ok := context.GetOk(r, `session`)
+	if !ok {
+		ctx.Log.Error(http.StatusText(http.StatusUnauthorized))
+		errors.HTTP.Unauthorized(w)
 		return
 	}
 

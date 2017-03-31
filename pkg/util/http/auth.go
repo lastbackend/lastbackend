@@ -19,10 +19,10 @@
 package http
 
 import (
+	"github.com/gorilla/context"
 	"github.com/gorilla/mux"
 	"github.com/lastbackend/lastbackend/pkg/apis/types"
 	"github.com/lastbackend/lastbackend/pkg/errors"
-	c "golang.org/x/net/context"
 	"net/http"
 	"strings"
 )
@@ -62,9 +62,9 @@ func Authenticate(h http.HandlerFunc) http.HandlerFunc {
 			return
 		}
 
-		ctx := c.WithValue(r.Context(), "token", token)
-		ctx = c.WithValue(ctx, "session", s)
-		r = r.WithContext(ctx)
+		// Add session and token to context
+		context.Set(r, "token", token)
+		context.Set(r, "session", s)
 
 		h.ServeHTTP(w, r)
 	}

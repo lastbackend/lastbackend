@@ -27,6 +27,7 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/vendors"
 	"github.com/lastbackend/lastbackend/pkg/vendors/interfaces"
 	"net/http"
+	"github.com/gorilla/context"
 )
 
 // Авторизация сторонних сервисов для платформы
@@ -46,11 +47,10 @@ func OAuthConnectH(w http.ResponseWriter, r *http.Request) {
 
 	ctx.Log.Debug("Connect service handler")
 
-	s := r.Context().Value(`session`)
-
-	if s == nil {
-		ctx.Log.Error("Error: get session context")
-		errors.New("user").Unauthorized().Http(w)
+	s, ok := context.GetOk(r, `session`)
+	if !ok {
+		ctx.Log.Error(http.StatusText(http.StatusUnauthorized))
+		errors.HTTP.Unauthorized(w)
 		return
 	}
 
@@ -115,10 +115,10 @@ func OAuthDisconnectH(w http.ResponseWriter, r *http.Request) {
 
 	ctx.Log.Debug("Disconnect service handler")
 
-	s := r.Context().Value(`session`)
-	if s == nil {
-		ctx.Log.Error("Error: get session context")
-		errors.New("user").Unauthorized().Http(w)
+	s, ok := context.GetOk(r, `session`)
+	if !ok {
+		ctx.Log.Error(http.StatusText(http.StatusUnauthorized))
+		errors.HTTP.Unauthorized(w)
 		return
 	}
 
@@ -152,10 +152,10 @@ func VCSRepositoriesListH(w http.ResponseWriter, r *http.Request) {
 		vendor                                = params[`vendor`]
 	)
 
-	s := r.Context().Value(`session`)
-	if s == nil {
-		ctx.Log.Error("Error: get session context")
-		errors.New("user").Unauthorized().Http(w)
+	s, ok := context.GetOk(r, `session`)
+	if !ok {
+		ctx.Log.Error(http.StatusText(http.StatusUnauthorized))
+		errors.HTTP.Unauthorized(w)
 		return
 	}
 
@@ -248,10 +248,10 @@ func VCSBranchesListH(w http.ResponseWriter, r *http.Request) {
 		repo                                  = r.URL.Query().Get(`repo`)
 	)
 
-	s := r.Context().Value(`session`)
-	if s == nil {
-		ctx.Log.Error("Error: get session context")
-		errors.New("user").Unauthorized().Http(w)
+	s, ok := context.GetOk(r, `session`)
+	if !ok {
+		ctx.Log.Error(http.StatusText(http.StatusUnauthorized))
+		errors.HTTP.Unauthorized(w)
 		return
 	}
 
