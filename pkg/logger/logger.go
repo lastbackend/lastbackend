@@ -28,15 +28,16 @@ import (
 )
 
 type Logger struct {
-	log *logrus.Entry
+	log   *logrus.Logger
+	entry *logrus.Entry
 }
 
 func New(debug bool) *Logger {
 	l := new(Logger)
-	entry := logrus.NewEntry(logrus.New())
-	entry.Logger.Out = os.Stdout
-	entry.Logger.Formatter = getJSONFormatter()
-	l.log = entry.WithFields(getFileLocate(logrus.Fields{}))
+	l.log = logrus.New()
+	l.log.Out = os.Stdout
+	l.log.Formatter = getJSONFormatter()
+	l.entry = l.log.WithFields(getFileLocate(logrus.Fields{}))
 
 	// If you want to connect to local syslog (Ex. "/dev/log" or "/var/run/syslog" or "/var/run/log").
 	// Just assign empty string to the first two parameters of NewSyslogHook. It should look like the following.
@@ -44,7 +45,7 @@ func New(debug bool) *Logger {
 
 	if debug {
 		l.SetDebugLevel()
-		l.Info("Logger debug mode enabled")
+		l.Debug("Logger debug mode enabled")
 	}
 
 	return l
@@ -52,61 +53,61 @@ func New(debug bool) *Logger {
 
 func (l *Logger) SetDebugLevel() {
 	l.log.Level = logrus.DebugLevel
-	l.log.Logger.Formatter = getTextFormatter()
+	l.log.Formatter = getTextFormatter()
 }
 
 func (l *Logger) SetSyslog(network, raddr string, priority syslog.Priority, tag string) {
 	if hook, err := logrus_syslog.NewSyslogHook(network, raddr, priority, tag); err == nil {
-		l.log.Logger.Hooks.Add(hook)
+		l.log.Hooks.Add(hook)
 	}
 }
 
 func (l *Logger) Debug(args ...interface{}) {
-	l.log.Debug(args)
+	l.entry.Debug(args)
 }
 
 func (l *Logger) Debugf(format string, args ...interface{}) {
-	l.log.Debugf(format, args)
+	l.entry.Debugf(format, args)
 }
 
 func (l *Logger) Info(args ...interface{}) {
-	l.log.Info(args...)
+	l.entry.Info(args...)
 }
 
 func (l *Logger) Infof(format string, args ...interface{}) {
-	l.log.Infof(format, args)
+	l.entry.Infof(format, args)
 }
 
 func (l *Logger) Error(args ...interface{}) {
-	l.log.Error(args...)
+	l.entry.Error(args...)
 }
 
 func (l *Logger) Errorf(format string, args ...interface{}) {
-	l.log.Errorf(format, args)
+	l.entry.Errorf(format, args)
 }
 
 func (l *Logger) Fatal(args ...interface{}) {
-	l.log.Fatal(args...)
+	l.entry.Fatal(args...)
 }
 
 func (l *Logger) Fatalf(format string, args ...interface{}) {
-	l.log.Fatalf(format, args)
+	l.entry.Fatalf(format, args)
 }
 
 func (l *Logger) Panic(args ...interface{}) {
-	l.log.Panic(args...)
+	l.entry.Panic(args...)
 }
 
 func (l *Logger) Panicf(format string, args ...interface{}) {
-	l.log.Panicf(format, args)
+	l.entry.Panicf(format, args)
 }
 
 func (l *Logger) Warn(args ...interface{}) {
-	l.log.Warn(args...)
+	l.entry.Warn(args...)
 }
 
 func (l *Logger) Warnf(format string, args ...interface{}) {
-	l.log.Warnf(format, args)
+	l.entry.Warnf(format, args)
 }
 
 func getTextFormatter() *logrus.TextFormatter {
