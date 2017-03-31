@@ -26,6 +26,7 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
+	"github.com/lastbackend/lastbackend/pkg/agent/runtime"
 )
 
 func Agent(cmd *cli.Cmd) {
@@ -55,7 +56,9 @@ func Agent(cmd *cli.Cmd) {
 			done = make(chan bool, 1)
 		)
 
-		ctx.Init(cfg)
+		ctx.New(cfg)
+		runtime.New(cfg.Runtime)
+
 		// Handle SIGINT and SIGTERM.
 		signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)
 
