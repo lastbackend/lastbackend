@@ -26,9 +26,7 @@ import (
 	"io/ioutil"
 )
 
-var (
-	cfg = new(Config)
-)
+var cfg = new(Config)
 
 func (Config) Configure(path string) error {
 
@@ -40,6 +38,11 @@ func (Config) Configure(path string) error {
 	cfg.HttpServer.Port = 3000
 	cfg.HttpServer.Host = "0.0.0.0"
 	return yaml.Unmarshal(buf, &cfg)
+}
+
+func Set(c *Config) *Config {
+	cfg = c
+	return cfg
 }
 
 func Get() *Config {

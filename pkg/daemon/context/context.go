@@ -38,8 +38,9 @@ type Context struct {
 }
 
 func (c *Context) Init(cfg *config.Config) {
-
 	var err error
+
+	config.Set(cfg)
 
 	c.Log = logger.New(cfg.Debug)
 

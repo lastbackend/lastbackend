@@ -40,13 +40,14 @@ func OAuthConnectH(w http.ResponseWriter, r *http.Request) {
 		session        *types.Session
 		ctx            = c.Get()
 		params         = mux.Vars(r)
-		vendor         = params["vendor"]
-		code           = params["code"]
+		vendor         = params[`vendor`]
+		code           = params[`code`]
 	)
 
 	ctx.Log.Debug("Connect service handler")
 
 	s := r.Context().Value(`session`)
+
 	if s == nil {
 		ctx.Log.Error("Error: get session context")
 		errors.New("user").Unauthorized().Http(w)
