@@ -19,7 +19,6 @@
 package manager
 
 import (
-	"github.com/golang/glog"
 	"github.com/lastbackend/lastbackend/pkg/agent/context"
 	"github.com/lastbackend/lastbackend/pkg/apis/types"
 )

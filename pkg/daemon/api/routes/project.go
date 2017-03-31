@@ -84,7 +84,7 @@ func ProjectInfoH(w http.ResponseWriter, r *http.Request) {
 		projectParam = params["project"]
 	)
 
-	ctx.Log.Debug("Get project handler")
+	ctx.Log.Info("Get project handler")
 
 	s := r.Context().Value(`session`)
 	if s == nil {
