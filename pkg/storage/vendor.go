@@ -39,7 +39,7 @@ func (s *VendorStorage) Insert(username, vendorUsername, vendorName, vendorHost,
 	var (
 		err error
 		key = fmt.Sprintf("%s/%s/%s/%s", UserTable, username, VendorTable, vendorName)
-		vm  *types.Vendor
+		vm  = new(types.Vendor)
 	)
 
 	vm.Username = vendorUsername
