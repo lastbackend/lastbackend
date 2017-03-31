@@ -103,7 +103,7 @@ func (s *UserStorage) GetByUsername(username string) (*types.User, error) {
 	user.Security.Pass.Salt = password.Salt
 	user.Security.Pass.Password = password.Password
 	user.Vendors = *vendors
-
+	fmt.Println("user >>>", user)
 	return user, nil
 }
 
