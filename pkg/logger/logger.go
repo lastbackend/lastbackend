@@ -20,11 +20,10 @@ package logger
 
 import (
 	"github.com/Sirupsen/logrus"
-	"github.com/Sirupsen/logrus/hooks/syslog"
-	"log/syslog"
-	"os"
 	"path"
 	"runtime"
+	"os"
+	_os "github.com/lastbackend/lastbackend/pkg/logger/os"
 )
 
 type Logger struct {
@@ -39,9 +38,7 @@ func New(debug bool) *Logger {
 	l.log.Formatter = getJSONFormatter()
 	l.entry = l.log.WithFields(getFileLocate(logrus.Fields{}))
 
-	// If you want to connect to local syslog (Ex. "/dev/log" or "/var/run/syslog" or "/var/run/log").
-	// Just assign empty string to the first two parameters of NewSyslogHook. It should look like the following.
-	l.SetSyslog("", "", syslog.LOG_INFO, "")
+	_os.SetSyslog(l.log)
 
 	if debug {
 		l.SetDebugLevel()
@@ -54,12 +51,6 @@ func New(debug bool) *Logger {
 func (l *Logger) SetDebugLevel() {
 	l.log.Level = logrus.DebugLevel
 	l.log.Formatter = getTextFormatter()
-}
-
-func (l *Logger) SetSyslog(network, raddr string, priority syslog.Priority, tag string) {
-	if hook, err := logrus_syslog.NewSyslogHook(network, raddr, priority, tag); err == nil {
-		l.log.Hooks.Add(hook)
-	}
 }
 
 func (l *Logger) Debug(args ...interface{}) {
