@@ -19,21 +19,26 @@
 package manager
 
 import (
+	"fmt"
+	_types "github.com/docker/docker/api/types"
+	"github.com/docker/docker/client"
 	"github.com/lastbackend/lastbackend/pkg/agent/context"
 	"github.com/lastbackend/lastbackend/pkg/apis/types"
 )
 
 type PodManager struct {
-	update chan types.PodList
-	close  chan bool
+	client *client.Client
+
+	sync  chan types.PodList
+	close chan bool
 }
 
-func NewPodManager() *PodManager {
+func NewPodManager(c *client.Client) *PodManager {
 	ctx := context.Get()
-	ctx.Log.Info("Create new pod Manager")
-	var pm = new(PodManager)
+	ctx.Log.Debug("Create new pod Manager")
 
-	pm.update = make(chan types.PodList)
+	var pm = &PodManager{client: c}
+	pm.sync = make(chan types.PodList)
 	pm.close = make(chan bool)
 
 	return pm
@@ -41,24 +46,38 @@ func NewPodManager() *PodManager {
 
 func ReleasePodManager(pm *PodManager) error {
 	ctx := context.Get()
-	ctx.Log.Info("Release pod manager")
-	close(pm.update)
+	ctx.Log.Debug("Release pod manager")
+	close(pm.sync)
 	close(pm.close)
 	return nil
 }
 
+func (pm *PodManager) Run() {
+	ctx := context.Get()
+	ctx.Log.Debug("Restore pod manager state")
+
+	containers, err := pm.client.ContainerList(context.Background(), _types.ContainerListOptions{})
+	if err != nil {
+		panic(err)
+	}
+
+	for _, container := range containers {
+		fmt.Printf("%s %s\n", container.ID[:10], container.Image)
+	}
+}
+
 func (pm *PodManager) watch() error {
 	ctx := context.Get()
-	ctx.Log.Info("Start pod watcher")
+	ctx.Log.Debug("Start pod watcher")
 
 	for {
 		select {
 		case _ = <-pm.close:
 			return ReleasePodManager(pm)
-		case pods := <-pm.update:
+		case pods := <-pm.sync:
 			{
 				for _, pod := range pods {
-					pm.sync(&pod)
+					pm.patch(&pod)
 				}
 			}
 		}
@@ -67,8 +86,8 @@ func (pm *PodManager) watch() error {
 	return nil
 }
 
-func (pm *PodManager) sync(p *types.Pod) {
+func (pm *PodManager) patch(p *types.Pod) {
 	ctx := context.Get()
-	ctx.Log.Infof("pod sync")
+	ctx.Log.Debug("pod sync")
 
 }

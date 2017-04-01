@@ -21,6 +21,7 @@ package context
 import (
 	"github.com/lastbackend/lastbackend/pkg/agent/config"
 	"github.com/lastbackend/lastbackend/pkg/logger"
+	"golang.org/x/net/context"
 )
 
 var _ctx ctx
@@ -30,15 +31,15 @@ func Get() *ctx {
 }
 
 type ctx struct {
-	Log     *logger.Logger
-	Config  *config.Config
+	Log    *logger.Logger
+	Config *config.Config
 }
 
 func (c *ctx) New(config *config.Config) {
-
 	c.Config = config
 	c.Log = logger.New(c.Config.Debug)
+}
 
-	// Initializing database
-	c.Log.Info("Initializing runtime daemon")
+func Background() context.Context {
+	return context.Background()
 }

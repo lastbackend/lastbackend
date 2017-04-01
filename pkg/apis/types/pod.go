@@ -20,7 +20,7 @@ package types
 
 import "time"
 
-type PodList []Pod
+type PodList []*Pod
 
 type Pod struct {
 	// Pod Meta
@@ -39,9 +39,9 @@ type Pod struct {
 
 type PodMeta struct {
 	// Pod ID
-	ID      string
+	ID string
 	// Pod owner
-	Owner   string
+	Owner string
 	// Pod project
 	Project string
 	// Pod service
@@ -52,6 +52,5 @@ type PodPolicy struct {
 	// Pull image flag
 	PullImage bool
 	// Restart containers flag
-	Restart   bool
+	Restart bool
 }
-
