@@ -19,31 +19,29 @@
 package routes
 
 import (
-	"github.com/lastbackend/lastbackend/pkg/errors"
+	"github.com/lastbackend/lastbackend/pkg/apis/types"
 	"github.com/lastbackend/lastbackend/pkg/daemon/api/views/v1"
 	c "github.com/lastbackend/lastbackend/pkg/daemon/context"
+	"github.com/lastbackend/lastbackend/pkg/errors"
+	"github.com/lastbackend/lastbackend/pkg/util/http/utils"
 	"net/http"
-	"github.com/lastbackend/lastbackend/pkg/apis/types"
-	"github.com/gorilla/context"
 )
 
 func UserGetH(w http.ResponseWriter, r *http.Request) {
 
 	var (
-		ctx = c.Get()
+		ctx     = c.Get()
 		session *types.Session
 	)
 
 	ctx.Log.Debug("Get user handler")
 
-	s, ok := context.GetOk(r, `session`)
-	if !ok {
+	session = utils.Session(r)
+	if session == nil {
 		ctx.Log.Error(http.StatusText(http.StatusUnauthorized))
 		errors.HTTP.Unauthorized(w)
 		return
 	}
-
-	session = s.(*types.Session)
 
 	user, err := ctx.Storage.User().GetByUsername(session.Username)
 	if err == nil && user == nil {

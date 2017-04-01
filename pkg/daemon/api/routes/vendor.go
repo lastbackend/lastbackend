@@ -19,15 +19,14 @@
 package routes
 
 import (
-	"github.com/gorilla/mux"
 	"github.com/lastbackend/lastbackend/pkg/apis/types"
 	"github.com/lastbackend/lastbackend/pkg/daemon/config"
 	c "github.com/lastbackend/lastbackend/pkg/daemon/context"
 	"github.com/lastbackend/lastbackend/pkg/errors"
+	"github.com/lastbackend/lastbackend/pkg/util/http/utils"
 	"github.com/lastbackend/lastbackend/pkg/vendors"
 	"github.com/lastbackend/lastbackend/pkg/vendors/interfaces"
 	"net/http"
-	"github.com/gorilla/context"
 )
 
 // Авторизация сторонних сервисов для платформы
@@ -40,21 +39,19 @@ func OAuthConnectH(w http.ResponseWriter, r *http.Request) {
 		client         interfaces.IAuth
 		session        *types.Session
 		ctx            = c.Get()
-		params         = mux.Vars(r)
+		params         = utils.Vars(r)
 		vendor         = params[`vendor`]
 		code           = params[`code`]
 	)
 
 	ctx.Log.Debug("Connect service handler")
 
-	s, ok := context.GetOk(r, `session`)
-	if !ok {
+	session = utils.Session(r)
+	if session == nil {
 		ctx.Log.Error(http.StatusText(http.StatusUnauthorized))
 		errors.HTTP.Unauthorized(w)
 		return
 	}
-
-	session = s.(*types.Session)
 
 	clientID, clientSecretID, redirectURI = config.Get().GetVendorConfig(vendor)
 
@@ -109,20 +106,18 @@ func OAuthDisconnectH(w http.ResponseWriter, r *http.Request) {
 	var (
 		ctx     = c.Get()
 		session *types.Session
-		params  = mux.Vars(r)
+		params  = utils.Vars(r)
 		vendor  = params[`vendor`]
 	)
 
 	ctx.Log.Debug("Disconnect service handler")
 
-	s, ok := context.GetOk(r, `session`)
-	if !ok {
+	session = utils.Session(r)
+	if session == nil {
 		ctx.Log.Error(http.StatusText(http.StatusUnauthorized))
 		errors.HTTP.Unauthorized(w)
 		return
 	}
-
-	session = s.(*types.Session)
 
 	userModel, err := ctx.Storage.User().GetByUsername(session.Username)
 	if err != nil {
@@ -148,18 +143,16 @@ func VCSRepositoriesListH(w http.ResponseWriter, r *http.Request) {
 		client                                interfaces.IVCS
 		session                               *types.Session
 		ctx                                   = c.Get()
-		params                                = mux.Vars(r)
+		params                                = utils.Vars(r)
 		vendor                                = params[`vendor`]
 	)
 
-	s, ok := context.GetOk(r, `session`)
-	if !ok {
+	session = utils.Session(r)
+	if session == nil {
 		ctx.Log.Error(http.StatusText(http.StatusUnauthorized))
 		errors.HTTP.Unauthorized(w)
 		return
 	}
-
-	session = s.(*types.Session)
 
 	clientID, clientSecretID, redirectURI = config.Get().GetVendorConfig(vendor)
 
@@ -243,19 +236,17 @@ func VCSBranchesListH(w http.ResponseWriter, r *http.Request) {
 		client                                interfaces.IVCS
 		session                               *types.Session
 		ctx                                   = c.Get()
-		params                                = mux.Vars(r)
+		params                                = utils.Vars(r)
 		vendor                                = params[`vendor`]
 		repo                                  = r.URL.Query().Get(`repo`)
 	)
 
-	s, ok := context.GetOk(r, `session`)
-	if !ok {
+	session = utils.Session(r)
+	if session == nil {
 		ctx.Log.Error(http.StatusText(http.StatusUnauthorized))
 		errors.HTTP.Unauthorized(w)
 		return
 	}
-
-	session = s.(*types.Session)
 
 	clientID, clientSecretID, redirectURI = config.Get().GetVendorConfig(vendor)
 

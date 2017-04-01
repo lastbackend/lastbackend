@@ -21,8 +21,8 @@ package api
 import (
 	"github.com/gorilla/mux"
 	"github.com/lastbackend/lastbackend/pkg/daemon/api/routes"
-	"github.com/lastbackend/lastbackend/pkg/util/http"
 	"github.com/lastbackend/lastbackend/pkg/daemon/context"
+	"github.com/lastbackend/lastbackend/pkg/util/http"
 )
 
 func Listen(host string, port int) error {
@@ -32,6 +32,7 @@ func Listen(host string, port int) error {
 	router := mux.NewRouter()
 	router.Methods("OPTIONS").HandlerFunc(http.Headers)
 	for _, route := range Routes {
+		ctx.Log.Debugf("Init route: %s", route.Path)
 		router.Handle(route.Path, http.Handle(route.Handler, route.Middleware...)).Methods(route.Method)
 	}
 	return http.Listen(host, port, router)

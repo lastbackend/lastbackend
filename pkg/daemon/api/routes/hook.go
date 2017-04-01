@@ -19,10 +19,10 @@
 package routes
 
 import (
-	"github.com/gorilla/mux"
-	"github.com/lastbackend/lastbackend/pkg/errors"
 	"github.com/lastbackend/lastbackend/pkg/apis/types"
 	"github.com/lastbackend/lastbackend/pkg/daemon/context"
+	"github.com/lastbackend/lastbackend/pkg/errors"
+	"github.com/lastbackend/lastbackend/pkg/util/http/utils"
 	"net/http"
 )
 
@@ -31,7 +31,7 @@ func HookExecuteH(w http.ResponseWriter, r *http.Request) {
 	var (
 		hookModel *types.Hook
 		ctx       = context.Get()
-		params    = mux.Vars(r)
+		params    = utils.Vars(r)
 		hookParam = params["token"]
 	)
 
