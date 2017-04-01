@@ -63,47 +63,35 @@ func (s *UserStorage) GetByUsername(username string) (*types.User, error) {
 	}
 
 	profile := new(types.UserProfile)
-	if err := client.Get(ctx, keyProfile, profile); err != nil {
-		if err.Error() == store.ErrKeyNotFound {
-			return nil, nil
-		}
+	if err := client.Get(ctx, keyProfile, profile); err != nil && err.Error() != store.ErrKeyNotFound{
 		return nil, err
 	}
 
 	password := new(types.UserPassword)
-	if err := client.Get(ctx, keyPassword, password); err != nil {
-		if err.Error() == store.ErrKeyNotFound {
-			return nil, nil
-		}
+	if err := client.Get(ctx, keyPassword, password); err != nil && err.Error() != store.ErrKeyNotFound{
 		return nil, err
 	}
 
 	emails := new(types.UserEmails)
-	if err := client.Get(ctx, keyEmails, emails); err != nil {
-		if err.Error() == store.ErrKeyNotFound {
-			return nil, nil
-		}
+	if err := client.Get(ctx, keyEmails, emails); err != nil && err.Error() != store.ErrKeyNotFound{
 		return nil, err
 	}
 
 	vendors := new(types.UserVendors)
-	if err := client.Get(ctx, keyVendors, vendors); err != nil {
-		if err.Error() == store.ErrKeyNotFound {
-			return nil, nil
-		}
+	if err := client.Get(ctx, keyVendors, vendors); err != nil && err.Error() != store.ErrKeyNotFound{
 		return nil, err
 	}
 
 	user.Username = username
 	user.Profile = *profile
 	user.Emails = *emails
+	user.Vendors = *vendors
 	user.Gravatar = info.Gravatar
 	user.Created = info.Created
 	user.Updated = info.Updated
 	user.Security.Pass.Salt = password.Salt
 	user.Security.Pass.Password = password.Password
-	user.Vendors = *vendors
-	
+
 	return user, nil
 }
 

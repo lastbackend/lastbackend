@@ -20,12 +20,10 @@ package user
 
 import (
 	"encoding/json"
-	"fmt"
 	"github.com/lastbackend/lastbackend/pkg/apis/types"
 )
 
 func New(obj *types.User) *User {
-	fmt.Println("obj >>>", obj)
 	u := new(User)
 
 	u.Username = obj.Username

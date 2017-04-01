@@ -105,7 +105,7 @@ type IActivity interface {
 type IVendor interface {
 	Insert(string, string, string, string, string, *oauth2.Token) error
 	Get(string, string) (*types.Vendor, error)
-	List(string) (*types.VendorItems, error)
+	List(string) (map[string]*types.Vendor, error)
 	Update(string, *types.Vendor) error
 	Remove(string, string) error
 }
