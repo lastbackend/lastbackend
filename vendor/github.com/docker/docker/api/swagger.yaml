@@ -490,10 +490,10 @@ definitions:
         description: |
           The test to perform. Possible values are:
 
-          - `{}` inherit healthcheck from image or parent image
-          - `{"NONE"}` disable healthcheck
-          - `{"CMD", args...}` exec arguments directly
-          - `{"CMD-SHELL", command}` run command with system's default shell
+          - `[]` inherit healthcheck from image or parent image
+          - `["NONE"]` disable healthcheck
+          - `["CMD", args...]` exec arguments directly
+          - `["CMD-SHELL", command]` run command with system's default shell
         type: "array"
         items:
           type: "string"
@@ -754,7 +754,7 @@ definitions:
         default: false
       Env:
         description: |
-          A list of environment variables to set inside the container in the form `["VAR=value", ...]`
+          A list of environment variables to set inside the container in the form `["VAR=value", ...]`. A variable without `=` is removed from the environment, rather than to have an empty value.
         type: "array"
         items:
           type: "string"
@@ -1117,6 +1117,8 @@ definitions:
         type: "boolean"
       Attachable:
         type: "boolean"
+      Ingress:
+        type: "boolean"
       Containers:
         type: "object"
         additionalProperties:
@@ -1145,6 +1147,7 @@ definitions:
           foo: "bar"
       Internal: false
       Attachable: false
+      Ingress: false
       Containers:
         19a4d5d687db25203351ed79d478946f861258f018fe384f229f2efa4b23513c:
           Name: "test"
@@ -6211,6 +6214,7 @@ paths:
                 EnableIPv6: false
                 Internal: false
                 Attachable: false
+                Ingress: false
                 IPAM:
                   Driver: "default"
                   Config:
@@ -6237,6 +6241,7 @@ paths:
                 EnableIPv6: false
                 Internal: false
                 Attachable: false
+                Ingress: false
                 IPAM:
                   Driver: "default"
                   Config: []
@@ -6250,6 +6255,7 @@ paths:
                 EnableIPv6: false
                 Internal: false
                 Attachable: false
+                Ingress: false
                 IPAM:
                   Driver: "default"
                   Config: []
@@ -6269,6 +6275,7 @@ paths:
             - `id=<network-id>` Matches all or part of a network ID.
             - `label=<key>` or `label=<key>=<value>` of a network label.
             - `name=<network-name>` Matches all or part of a network name.
+            - `scope=["swarm"|"global"|"local"]` Filters networks by scope (`swarm`, `global`, or `local`).
             - `type=["custom"|"builtin"]` Filters networks by type. The `custom` keyword returns all user-defined networks.
           type: "string"
       tags: ["Network"]
@@ -6382,6 +6389,9 @@ paths:
               Attachable:
                 description: "Globally scoped network is manually attachable by regular containers from workers in swarm mode."
                 type: "boolean"
+              Ingress:
+                description: "Ingress network is the network which provides the routing-mesh in swarm mode."
+                type: "boolean"
               IPAM:
                 description: "Optional custom IP scheme for the network."
                 $ref: "#/definitions/IPAM"
@@ -6415,6 +6425,7 @@ paths:
                   foo: "bar"
               Internal: true
               Attachable: false
+              Ingress: false
               Options:
                 com.docker.network.bridge.default_bridge: "true"
                 com.docker.network.bridge.enable_icc: "true"
@@ -7973,6 +7984,9 @@ paths:
           description: |
             A JSON encoded value of the filters (a `map[string][]string`) to process on the secrets list. Available filters:
 
+            - `id=<secret id>`
+            - `label=<key> or label=<key>=value`
+            - `name=<secret name>`
             - `names=<secret name>`
       tags: ["Secret"]
   /secrets/create:
