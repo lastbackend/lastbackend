@@ -20,18 +20,21 @@ package service
 
 import (
 	"encoding/json"
+	"fmt"
 	"github.com/lastbackend/lastbackend/pkg/apis/types"
 )
 
 func New(obj *types.Service) *Service {
 	s := new(Service)
-
 	s.User = obj.User
 	s.Name = obj.Name
 	s.Description = obj.Description
 	s.Updated = obj.Updated
 	s.Created = obj.Created
-
+	s.Image = obj.Image
+	s.Config.Region = obj.Config.Region
+	s.Config.Memory = obj.Config.Memory
+	s.Config.Replicas = obj.Config.Replicas
 	return s
 }
 

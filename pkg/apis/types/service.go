@@ -38,21 +38,46 @@ type Service struct {
 	Name string `json:"name"`
 	// Service description
 	Description string `json:"description"`
-	// Service spec
-	Spec interface{} `json:"spec,omitempty"`
-	// Service created time
-	Source *Source `json:"source,omitempty"`
+	// Service source info
+	Source *ServiceSource `json:"source,omitempty"`
+	// Service config info
+	Config *ServiceConfig `json:"config,omitempty"`
 	// Service created time
 	Created time.Time `json:"created"`
 	// Service updated time
 	Updated time.Time `json:"updated"`
 }
 
-type Source struct {
-	Hub      string `json:"hub"`
-	Username string `json:"username"`
-	Repo     string `json:"repo"`
-	Branch   string `json:"branch"`
+const (
+	SourceGitType      = "git"
+	SourceDockerType   = "docker"
+	SourceTemplateType = "template"
+)
+
+type ServiceSource struct {
+	Type   string `json:"type" yaml:"type,omitempty"`
+	Hub    string `json:"hub" yaml:"hub,omitempty"`
+	Owner  string `json:"owner" yaml:"owner,omitempty"`
+	Repo   string `json:"repo" yaml:"repo,omitempty"`
+	Branch string `json:"branch" yaml:"branch,omitempty"`
+}
+
+func (s *ServiceSource) GetFromUrl(url string) error {
+	return nil
+}
+
+func (s *ServiceSource) GetFromImage(image string) error {
+	return nil
+}
+
+func (s *ServiceSource) GetFromTemplate(template interface{}) error {
+	return nil
+}
+
+type ServiceConfig struct {
+	Replicas int    `json:"scale,omitempty" yaml:"scale,omitempty"`
+	Memory   int    `json:"memory,omitempty" yaml:"memory,omitempty"`
+	Region   string `json:"region,omitempty" yaml:"region,omitempty"`
 }
 
 func (s *Service) ToJson() ([]byte, error) {

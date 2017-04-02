@@ -24,6 +24,7 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/daemon/api/views/v1"
 	c "github.com/lastbackend/lastbackend/pkg/daemon/context"
 	"github.com/lastbackend/lastbackend/pkg/errors"
+	"github.com/lastbackend/lastbackend/pkg/util/converter"
 	"github.com/lastbackend/lastbackend/pkg/util/http/utils"
 	"github.com/lastbackend/lastbackend/pkg/util/validator"
 	"io"
@@ -31,6 +32,215 @@ import (
 	"net/http"
 	"strings"
 )
+
+type serviceCreateS struct {
+	Name        string     `json:"name"`
+	Description string     `json:"description"`
+	Template    string     `json:"template"`
+	Image       string     `json:"image"`
+	Url         string     `json:"url"`
+	Resources   *Resources `json:"resources,omitempty"`
+	source      *types.ServiceSource
+}
+
+type Resources struct {
+	Region string `json:"region"`
+	Memory int    `json:"memory"`
+}
+
+func (s *serviceCreateS) decodeAndValidate(reader io.Reader) *errors.Err {
+
+	var (
+		ctx = c.Get()
+	)
+
+	body, err := ioutil.ReadAll(reader)
+	if err != nil {
+		ctx.Log.Error(err)
+		return errors.New("user").Unknown(err)
+	}
+
+	err = json.Unmarshal(body, s)
+	if err != nil {
+		return errors.New("service").IncorrectJSON(err)
+	}
+
+	if s.Template == "" && s.Image == "" && s.Url == "" {
+		return errors.New("service").BadParameter("template,image,url")
+	}
+
+	if s.Template != "" {
+		if s.Name == "" {
+			s.Name = s.Template
+		}
+	}
+
+	if s.Image != "" && s.Url == "" {
+		source, err := converter.DockerNamespaceParse(s.Image)
+		if err != nil {
+			return errors.New("service").BadParameter("image")
+		}
+
+		if s.Name == "" {
+			s.Name = source.Repo
+		}
+
+		s.source = &types.ServiceSource{
+			Type:   types.SourceDockerType,
+			Hub:    source.Hub,
+			Owner:  source.Owner,
+			Repo:   source.Repo,
+			Branch: source.Branch,
+		}
+	}
+
+	if s.Url != "" {
+		if !validator.IsGitUrl(s.Url) {
+			return errors.New("service").BadParameter("url")
+		}
+
+		source, err := converter.GitUrlParse(s.Url)
+		if err != nil {
+			return errors.New("service").BadParameter("url")
+		}
+
+		if s.Name == "" {
+			s.Name = source.Repo
+		}
+
+		s.source = &types.ServiceSource{
+			Type:   types.SourceGitType,
+			Hub:    source.Hub,
+			Owner:  source.Owner,
+			Repo:   source.Repo,
+			Branch: source.Branch,
+		}
+	}
+
+	s.Name = strings.ToLower(s.Name)
+
+	if s.Name == "" {
+		return errors.New("service").BadParameter("name")
+	}
+
+	s.Name = strings.ToLower(s.Name)
+
+	if len(s.Name) < 4 && len(s.Name) > 64 && !validator.IsServiceName(s.Name) {
+		return errors.New("service").BadParameter("name")
+	}
+
+	if s.Resources != nil {
+		// Set default resource memory if not setting
+		if s.Resources.Memory == 0 {
+			s.Resources.Memory = 128
+		}
+
+		// Set default resource region if not setting
+		if s.Resources.Region == "" {
+			s.Resources.Region = types.WestEuropeRegion
+		}
+	}
+
+	return nil
+}
+
+func ServiceCreateH(w http.ResponseWriter, r *http.Request) {
+
+	var (
+		err          error
+		session      *types.Session
+		project      *types.Project
+		service      *types.Service
+		ctx          = c.Get()
+		params       = utils.Vars(r)
+		projectParam = params["project"]
+	)
+
+	ctx.Log.Debug("Create service handler")
+
+	session = utils.Session(r)
+	if session == nil {
+		ctx.Log.Error(http.StatusText(http.StatusUnauthorized))
+		errors.HTTP.Unauthorized(w)
+		return
+	}
+
+	// request body struct
+	rq := new(serviceCreateS)
+	if err := rq.decodeAndValidate(r.Body); err != nil {
+		ctx.Log.Error("Error: validation incomming data", err)
+		errors.New("Invalid incomming data").Unknown().Http(w)
+		return
+	}
+
+	project, err = ctx.Storage.Project().GetByName(session.Username, projectParam)
+	if err != nil {
+		ctx.Log.Error("Error: find project by name", err.Error())
+		errors.HTTP.InternalServerError(w)
+		return
+	}
+	if project == nil {
+		errors.New("project").NotFound().Http(w)
+		return
+	}
+
+	service, err = ctx.Storage.Service().GetByName(session.Username, project.Name, rq.Name)
+	if err != nil {
+		ctx.Log.Error("Error: check exists by name", err.Error())
+		errors.HTTP.InternalServerError(w)
+		return
+	}
+
+	if service != nil {
+		errors.New("service").NotUnique("name").Http(w)
+		return
+	}
+
+	// Load template from registry
+	if rq.Template != "" {
+		// TODO: send request for get template config from registry
+		// TODO: Set service source with types.SourceTemplateType type field
+	}
+
+	// If you are not using a template, then create a standard configuration template
+	//if tpl == nil {
+	// TODO: Generate default template for service
+	//}
+
+	// Patch config if exists custom configurations
+	if rq.Resources != nil {
+		// TODO: If have custom config, then need patch this config
+	}
+
+	config := &types.ServiceConfig{
+		Replicas: 1,
+		Memory:   rq.Resources.Memory,
+		Region:   rq.Resources.Region,
+	}
+
+	// TODO: Create service from template
+
+	service, err = ctx.Storage.Service().Insert(session.Username, projectParam, rq.Name, rq.Description, rq.source, config)
+	if err != nil {
+		ctx.Log.Error("Error: insert project to db", err)
+		errors.HTTP.InternalServerError(w)
+		return
+	}
+
+	response, err := v1.NewService(service).ToJson()
+	if err != nil {
+		ctx.Log.Error("Error: convert struct to json", err.Error())
+		errors.HTTP.InternalServerError(w)
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+	_, err = w.Write(response)
+	if err != nil {
+		ctx.Log.Error("Error: write response", err.Error())
+		return
+	}
+}
 
 func ServiceListH(w http.ResponseWriter, r *http.Request) {
 
@@ -53,7 +263,7 @@ func ServiceListH(w http.ResponseWriter, r *http.Request) {
 
 	project, err := ctx.Storage.Project().GetByName(session.Username, projectParam)
 	if err != nil {
-		ctx.Log.Error("Error: find project by id", err.Error())
+		ctx.Log.Error("Error: find project by name", err.Error())
 		errors.HTTP.InternalServerError(w)
 		return
 	}
@@ -107,7 +317,7 @@ func ServiceInfoH(w http.ResponseWriter, r *http.Request) {
 
 	project, err := ctx.Storage.Project().GetByName(session.Username, projectParam)
 	if err != nil {
-		ctx.Log.Error("Error: find project by id", err.Error())
+		ctx.Log.Error("Error: find project by name", err.Error())
 		errors.HTTP.InternalServerError(w)
 		return
 	}
@@ -140,45 +350,6 @@ func ServiceInfoH(w http.ResponseWriter, r *http.Request) {
 		ctx.Log.Error("Error: write response", err.Error())
 		return
 	}
-}
-
-type serviceCreateS struct {
-	Name        *string `json:"name,omitempty"`
-	Description *string `json:"description,omitempty"`
-}
-
-func (s *serviceCreateS) decodeAndValidate(reader io.Reader) *errors.Err {
-
-	var (
-		ctx = c.Get()
-	)
-
-	body, err := ioutil.ReadAll(reader)
-	if err != nil {
-		ctx.Log.Error(err)
-		return errors.New("user").Unknown(err)
-	}
-
-	err = json.Unmarshal(body, s)
-	if err != nil {
-		return errors.New("project").IncorrectJSON(err)
-	}
-
-	if s.Name == nil {
-		return errors.New("project").BadParameter("name")
-	}
-
-	*s.Name = strings.ToLower(*s.Name)
-
-	if len(*s.Name) < 4 && len(*s.Name) > 64 && !validator.IsServiceName(*s.Name) {
-		return errors.New("service").BadParameter("name")
-	}
-
-	if s.Description == nil {
-		s.Description = new(string)
-	}
-
-	return nil
 }
 
 func ServiceRemoveH(w http.ResponseWriter, r *http.Request) {

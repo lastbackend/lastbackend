@@ -16,4 +16,4 @@
 // from Last.Backend LLC.
 //
 
-package templates
+package template
