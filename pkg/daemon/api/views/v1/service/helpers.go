@@ -20,7 +20,6 @@ package service
 
 import (
 	"encoding/json"
-	"fmt"
 	"github.com/lastbackend/lastbackend/pkg/apis/types"
 )
 
