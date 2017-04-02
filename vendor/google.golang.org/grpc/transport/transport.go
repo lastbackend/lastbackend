@@ -365,12 +365,10 @@ const (
 
 // ServerConfig consists of all the configurations to establish a server transport.
 type ServerConfig struct {
-	MaxStreams      uint32
-	AuthInfo        credentials.AuthInfo
-	InTapHandle     tap.ServerInHandle
-	StatsHandler    stats.Handler
-	KeepaliveParams keepalive.ServerParameters
-	KeepalivePolicy keepalive.EnforcementPolicy
+	MaxStreams   uint32
+	AuthInfo     credentials.AuthInfo
+	InTapHandle  tap.ServerInHandle
+	StatsHandler stats.Handler
 }
 
 // NewServerTransport creates a ServerTransport with conn or non-nil error

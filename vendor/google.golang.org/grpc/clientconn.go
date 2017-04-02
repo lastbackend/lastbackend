@@ -38,6 +38,7 @@ import (
 	"fmt"
 	"math"
 	"net"
+	"strings"
 	"sync"
 	"time"
 
@@ -309,14 +310,6 @@ func DialContext(ctx context.Context, target string, opts ...DialOption) (conn *
 	for _, opt := range opts {
 		opt(&cc.dopts)
 	}
-
-	grpcUA := "grpc-go/" + Version
-	if cc.dopts.copts.UserAgent != "" {
-		cc.dopts.copts.UserAgent += " " + grpcUA
-	} else {
-		cc.dopts.copts.UserAgent = grpcUA
-	}
-
 	if cc.dopts.timeout > 0 {
 		var cancel context.CancelFunc
 		ctx, cancel = context.WithTimeout(ctx, cc.dopts.timeout)
@@ -359,7 +352,11 @@ func DialContext(ctx context.Context, target string, opts ...DialOption) (conn *
 	} else if cc.dopts.insecure && cc.dopts.copts.Authority != "" {
 		cc.authority = cc.dopts.copts.Authority
 	} else {
-		cc.authority = target
+		colonPos := strings.LastIndex(target, ":")
+		if colonPos == -1 {
+			colonPos = len(target)
+		}
+		cc.authority = target[:colonPos]
 	}
 	waitC := make(chan error, 1)
 	go func() {
