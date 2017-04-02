@@ -1,8 +1,22 @@
-package config
+//
+// Last.Backend LLC CONFIDENTIAL
+// __________________
+//
+// [2014] - [2017] Last.Backend LLC
+// All Rights Reserved.
+//
+// NOTICE:  All information contained herein is, and remains
+// the property of Last.Backend LLC and its suppliers,
+// if any.  The intellectual and technical concepts contained
+// herein are proprietary to Last.Backend LLC
+// and its suppliers and may be covered by Russian Federation and Foreign Patents,
+// patents in process, and are protected by trade secret or copyright law.
+// Dissemination of this information or reproduction of this material
+// is strictly forbidden unless prior written permission is obtained
+// from Last.Backend LLC.
+//
 
-import (
-	"time"
-)
+package config
 
 // The structure of the config to run the daemon
 type Config struct {
@@ -19,32 +33,42 @@ type Config struct {
 	} `yaml:"proxy_server"`
 
 	HttpServer struct {
-		Port int `yaml:"port"`
+		Host string `yaml:"host"`
+		Port int    `yaml:"port"`
 	} `yaml:"http_server"`
 
 	Etcd struct {
-		Endpoints []string      `yaml:"endpoints"`
-		TimeOut   time.Duration `yaml:"timeout"`
-	} `yaml:"etcd"`
-
-	K8S struct {
-		Host string `yaml:"host"`
-		SSL  struct {
-			CA   string `yaml:"ca"`
+		Endpoints []string `yaml:"endpoints"`
+		TLS       struct {
 			Key  string `yaml:"key"`
 			Cert string `yaml:"cert"`
-		} `yaml:"ssl"`
-	} `yaml:"k8s"`
+			CA   string `yaml:"ca"`
+		} `yaml:"tls"`
+		Quorum bool `yaml:"quorum"`
+	} `yaml:"etcd"`
 
-	RethinkDB struct {
-		Address    string   `yaml:"address"`
-		Addresses  []string `yaml:"addresses"`
-		MaxOpen    int      `yaml:"max_open"`
-		InitialCap int      `yaml:"initial_cap"`
-		Database   string   `yaml:"database"`
-		AuthKey    string   `yaml:"auth_key"`
-		SSL        struct {
-			CA string `yaml:"ca"`
-		} `yaml:"ssl"`
-	} `yaml:"rethinkdb"`
+	VCS struct {
+		Github struct {
+			Client struct {
+				ID       string `yaml:"id"`
+				SecretID string `yaml:"secret_id"`
+			} `yaml:"client"`
+		} `yaml:"github"`
+
+		Bitbucket struct {
+			Client struct {
+				ID       string `yaml:"id"`
+				SecretID string `yaml:"secret_id"`
+			} `yaml:"client"`
+			RedirectUri string `yaml:"redirect_uri"`
+		} `yaml:"bitbucket"`
+
+		Gitlab struct {
+			Client struct {
+				ID       string `yaml:"id"`
+				SecretID string `yaml:"secret_id"`
+			} `yaml:"client"`
+			RedirectUri string `yaml:"redirect_uri"`
+		} `yaml:"gitlab"`
+	} `yaml:"vcs"`
 }

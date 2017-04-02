@@ -1,10 +1,27 @@
+//
+// Last.Backend LLC CONFIDENTIAL
+// __________________
+//
+// [2014] - [2017] Last.Backend LLC
+// All Rights Reserved.
+//
+// NOTICE:  All information contained herein is, and remains
+// the property of Last.Backend LLC and its suppliers,
+// if any.  The intellectual and technical concepts contained
+// herein are proprietary to Last.Backend LLC
+// and its suppliers and may be covered by Russian Federation and Foreign Patents,
+// patents in process, and are protected by trade secret or copyright law.
+// Dissemination of this information or reproduction of this material
+// is strictly forbidden unless prior written permission is obtained
+// from Last.Backend LLC.
+//
+
 package deploy
 
 import (
-	"errors"
-	e "github.com/lastbackend/lastbackend/libs/errors"
-	"github.com/lastbackend/lastbackend/libs/model"
+	"github.com/lastbackend/lastbackend/pkg/apis/types"
 	"github.com/lastbackend/lastbackend/pkg/client/context"
+	"github.com/lastbackend/lastbackend/pkg/errors"
 )
 
 type deployS struct {
@@ -53,8 +70,8 @@ func Deploy(name, image, template, url string, config *Config) error {
 	var (
 		err     error
 		ctx     = context.Get()
-		project = new(model.Project)
-		er      = new(e.Http)
+		project = new(types.Project)
+		er      = new(errors.Http)
 		res     = new(struct{})
 	)
 
@@ -63,12 +80,12 @@ func Deploy(name, image, template, url string, config *Config) error {
 		return errors.New(err.Error())
 	}
 
-	if project.ID == "" {
+	if project.Name == "" {
 		return errors.New("Project didn't select")
 	}
 
 	var cfg = deployS{}
-	cfg.Project = project.ID
+	cfg.Project = project.Name
 
 	if name != "" {
 		cfg.Name = name
@@ -101,7 +118,7 @@ func Deploy(name, image, template, url string, config *Config) error {
 	}
 
 	if er.Code == 401 {
-		return e.NotLoggedMessage
+		return errors.NotLoggedMessage
 	}
 
 	if er.Code != 0 {

@@ -1,17 +1,34 @@
+//
+// Last.Backend LLC CONFIDENTIAL
+// __________________
+//
+// [2014] - [2017] Last.Backend LLC
+// All Rights Reserved.
+//
+// NOTICE:  All information contained herein is, and remains
+// the property of Last.Backend LLC and its suppliers,
+// if any.  The intellectual and technical concepts contained
+// herein are proprietary to Last.Backend LLC
+// and its suppliers and may be covered by Russian Federation and Foreign Patents,
+// patents in process, and are protected by trade secret or copyright law.
+// Dissemination of this information or reproduction of this material
+// is strictly forbidden unless prior written permission is obtained
+// from Last.Backend LLC.
+//
+
 package client
 
 import (
 	"github.com/jawher/mow.cli"
-	"github.com/lastbackend/lastbackend/libs/db"
-	"github.com/lastbackend/lastbackend/libs/http"
-	"github.com/lastbackend/lastbackend/libs/log"
 	"github.com/lastbackend/lastbackend/pkg/client/cmd/deploy"
 	p "github.com/lastbackend/lastbackend/pkg/client/cmd/project"
 	s "github.com/lastbackend/lastbackend/pkg/client/cmd/service"
-	"github.com/lastbackend/lastbackend/pkg/client/cmd/template"
 	u "github.com/lastbackend/lastbackend/pkg/client/cmd/user"
 	"github.com/lastbackend/lastbackend/pkg/client/config"
 	"github.com/lastbackend/lastbackend/pkg/client/context"
+	"github.com/lastbackend/lastbackend/pkg/client/storage"
+	"github.com/lastbackend/lastbackend/pkg/logger"
+	"github.com/lastbackend/lastbackend/pkg/util/http"
 	"os"
 )
 
@@ -41,18 +58,15 @@ func Run() {
 			app.PrintLongHelp()
 		}
 
-		ctx.Log = new(log.Log)
-		ctx.Log.Init()
-
 		if *debug {
 			cfg.Debug = *debug
-			ctx.Log.SetDebugLevel()
-			ctx.Log.Info("Logger debug mode enabled")
 		}
+
+		ctx.Log = logger.New(cfg.Debug)
 
 		ctx.HTTP = http.New(cfg.ApiHost)
 
-		ctx.Storage, err = db.Init()
+		ctx.Storage, err = storage.Init()
 		if err != nil {
 			ctx.Log.Panic("Error: init local storage", err.Error())
 			return
@@ -261,11 +275,5 @@ func configure(app *cli.Cli) {
 				s.RemoveCmd(*name)
 			}
 		})
-	})
-
-	app.Command("templates", "view templates", func(c *cli.Cmd) {
-		c.Action = func() {
-			template.ListCmd()
-		}
 	})
 }

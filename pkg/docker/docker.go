@@ -1,16 +1,34 @@
+//
+// Last.Backend LLC CONFIDENTIAL
+// __________________
+//
+// [2014] - [2017] Last.Backend LLC
+// All Rights Reserved.
+//
+// NOTICE:  All information contained herein is, and remains
+// the property of Last.Backend LLC and its suppliers,
+// if any.  The intellectual and technical concepts contained
+// herein are proprietary to Last.Backend LLC
+// and its suppliers and may be covered by Russian Federation and Foreign Patents,
+// patents in process, and are protected by trade secret or copyright law.
+// Dissemination of this information or reproduction of this material
+// is strictly forbidden unless prior written permission is obtained
+// from Last.Backend LLC.
+//
+
 package docker
 
 import (
   "encoding/json"
   "fmt"
-  "github.com/lastbackend/lastbackend/libs/model"
   "io/ioutil"
   "net/http"
   "strings"
   "time"
+  "github.com/lastbackend/lastbackend/pkg/apis/types"
 )
 
-func GetRepository(name string) (*model.DockerRepositoryList, error) {
+func GetRepository(name string) (*types.DockerRepositoryList, error) {
 
   var page, size int64 = 1, 10
   var results = struct {
@@ -45,7 +63,7 @@ func GetRepository(name string) (*model.DockerRepositoryList, error) {
     return nil, err
   }
 
-  var repos = new(model.DockerRepositoryList)
+  var repos = new(types.DockerRepositoryList)
   for _, item := range results.Results {
 
     var owner, name = "", ""
@@ -59,7 +77,7 @@ func GetRepository(name string) (*model.DockerRepositoryList, error) {
       name = items[0]
     }
 
-    *repos = append(*repos, model.DockerRepository{
+    *repos = append(*repos, types.DockerRepository{
       StarCount: item.StarCount,
       PullCount: item.PullCount,
       Hub:       "index.docker.io",
@@ -74,7 +92,7 @@ func GetRepository(name string) (*model.DockerRepositoryList, error) {
   return repos, nil
 }
 
-func ListTag(owner, name string) (*model.DockerTagList, error) {
+func ListTag(owner, name string) (*types.DockerTagList, error) {
 
   var page, size int64 = 1, 10
 
@@ -113,11 +131,11 @@ func ListTag(owner, name string) (*model.DockerTagList, error) {
     return nil, err
   }
 
-  var tags = new(model.DockerTagList)
+  var tags = new(types.DockerTagList)
   tags.Owner = owner
   tags.Name = name
   for _, item := range results.Results {
-    tags.Tags = append(tags.Tags, model.DockerTag{
+    tags.Tags = append(tags.Tags, types.DockerTag{
       ID:          item.ID,
       Name:        item.Name,
       Size:        item.Size,

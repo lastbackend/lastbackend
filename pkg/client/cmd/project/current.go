@@ -1,10 +1,27 @@
+//
+// Last.Backend LLC CONFIDENTIAL
+// __________________
+//
+// [2014] - [2017] Last.Backend LLC
+// All Rights Reserved.
+//
+// NOTICE:  All information contained herein is, and remains
+// the property of Last.Backend LLC and its suppliers,
+// if any.  The intellectual and technical concepts contained
+// herein are proprietary to Last.Backend LLC
+// and its suppliers and may be covered by Russian Federation and Foreign Patents,
+// patents in process, and are protected by trade secret or copyright law.
+// Dissemination of this information or reproduction of this material
+// is strictly forbidden unless prior written permission is obtained
+// from Last.Backend LLC.
+//
+
 package project
 
 import (
-	"errors"
-	e "github.com/lastbackend/lastbackend/libs/errors"
-	"github.com/lastbackend/lastbackend/libs/model"
+	"github.com/lastbackend/lastbackend/pkg/apis/types"
 	"github.com/lastbackend/lastbackend/pkg/client/context"
+	"github.com/lastbackend/lastbackend/pkg/errors"
 )
 
 func CurrentCmd() {
@@ -26,25 +43,21 @@ func CurrentCmd() {
 	project.DrawTable()
 }
 
-func Current() (*model.Project, error) {
+func Current() (*types.Project, error) {
 
 	var (
 		err     error
 		ctx     = context.Get()
-		project = new(model.Project)
+		project = new(types.Project)
 	)
 
 	if ctx.Token == "" {
-		return nil, e.NotLoggedMessage
+		return nil, errors.NotLoggedMessage
 	}
 
 	err = ctx.Storage.Get("project", project)
 	if err != nil {
 		return nil, errors.New(err.Error())
-	}
-
-	if project.ID == "" {
-		return nil, nil
 	}
 
 	return project, nil

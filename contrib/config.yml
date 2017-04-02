@@ -1,0 +1,34 @@
+debug: true
+
+secret: "SeCrEt_KeY"
+
+template_registry:
+  host: "http://localhost:3003"
+
+proxy_server:
+  port: 2968
+
+http_server:
+  host: ""
+  port: 2967
+
+etcd:
+  endpoints:
+  - "localhost:2379"
+
+vcs:
+  github:
+    client:
+      id: ""
+      secret_id: ""
+    redirect_uri: ""
+  bitbucket:
+    client:
+      id: ""
+      secret_id: ""
+    redirect_uri: ""
+  gitlab:
+    client:
+      id: ""
+      secret_id: ""
+    redirect_uri: ""

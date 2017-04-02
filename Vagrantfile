@@ -35,7 +35,7 @@ Vagrant.configure("2") do |config|
       v.vmx['memsize'] = NODE_MEMORY_SIZE
       v.gui = false
 
-      override.vm.box_url = "http://%s.release.core-os.net/amd64-usr/current/coreos_production_vagrant_vmware_fusion.json" % $update_channel
+      override.vm.box_url = 'http://%s.release.core-os.net/amd64-usr/current/coreos_production_vagrant_vmware_fusion.json' % $update_channel
     end
   end
 
