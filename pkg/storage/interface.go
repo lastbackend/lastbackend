@@ -71,7 +71,7 @@ type IService interface {
 	GetByID(string, string) (*types.Service, error)
 	ListByUser(string, string) (*types.ServiceList, error)
 	ListByProject(string, string) (*types.ServiceList, error)
-	Insert(username, name, description string) (*types.Service, error)
+	Insert(username, project, name, description string, source *types.ServiceSource, config *types.ServiceConfig) (*types.Service, error)
 	Update(*types.Service) (*types.Service, error)
 	Remove(string, string, string) error
 	RemoveByProject(string, string) error
@@ -105,7 +105,7 @@ type IActivity interface {
 type IVendor interface {
 	Insert(string, string, string, string, string, *oauth2.Token) error
 	Get(string, string) (*types.Vendor, error)
-	List(string) (*types.VendorItems, error)
+	List(string) (map[string]*types.Vendor, error)
 	Update(string, *types.Vendor) error
 	Remove(string, string) error
 }

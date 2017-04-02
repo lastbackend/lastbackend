@@ -34,7 +34,7 @@ type source struct {
 	Repo     string
 	Owner    string
 	Vendor   string
-	Brunch   string
+	Branch   string
 }
 
 func StringToInt64(s string) int64 {
@@ -111,7 +111,7 @@ func DockerNamespaceParse(namespace string) (*source, error) {
 	repoAndTag := strings.Split(splitStr[len(splitStr)-1], ":")
 	parsingNamespace.Repo = repoAndTag[0]
 	if len(repoAndTag) == 2 {
-		parsingNamespace.Brunch = repoAndTag[1]
+		parsingNamespace.Branch = repoAndTag[1]
 	}
 
 	return parsingNamespace, nil

@@ -20,6 +20,11 @@ package types
 
 import "time"
 
+const (
+	WestEuropeRegion = "WE"
+	EastAsiaRegion = "EA"
+)
+
 type ClusterList []Cluster
 
 type Cluster struct {

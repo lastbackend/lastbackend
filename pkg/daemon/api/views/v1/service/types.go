@@ -24,8 +24,16 @@ type Service struct {
 	User        string    `json:"user"`
 	Name        string    `json:"name"`
 	Description string    `json:"description"`
+	Image       string    `json:"image"`
+	Config      Config    `json:"config"`
 	Created     time.Time `json:"created"`
 	Updated     time.Time `json:"updated"`
+}
+
+type Config struct {
+	Replicas int    `json:"scale,omitempty"`
+	Memory   int    `json:"memory,omitempty"`
+	Region   string `json:"region,omitempty"`
 }
 
 type ServiceList []Service

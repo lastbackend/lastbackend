@@ -63,6 +63,7 @@ var Routes = []http.Route{
 	//{ Path: "/project/{project}", Method: http.MethodPut, Middleware: []http.Middleware{http.Authenticate}, Handler: routes.routes.ProjectUpdateH},
 	{Path: "/project/{project}", Method: http.MethodDelete, Middleware: []http.Middleware{http.Authenticate}, Handler: routes.ProjectRemoveH},
 	//{ Path: "/project/{project}/activity", Method: http.MethodGet, Middleware: []http.Middleware{http.Authenticate}, Handler: routes.routes.ProjectActivityListH},
+	{Path: "/project/{project}/service", Method: http.MethodPost, Middleware: []http.Middleware{http.Authenticate}, Handler: routes.ServiceCreateH},
 	{Path: "/project/{project}/service", Method: http.MethodGet, Middleware: []http.Middleware{http.Authenticate}, Handler: routes.ServiceListH},
 	{Path: "/project/{project}/service/{service}", Method: http.MethodGet, Middleware: []http.Middleware{http.Authenticate}, Handler: routes.ServiceInfoH},
 	//{ Path: "/project/{project}/service/{service}", Method: http.MethodPut, Middleware: []http.Middleware{http.Authenticate}, Handler: routes.routes.ServiceUpdateH},

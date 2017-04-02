@@ -27,6 +27,7 @@ type User struct {
 	Username string    `json:"username"`
 	Emails   Emails    `json:"emails"`
 	Profile  Profile   `json:"profile"`
+	Vendors  Vendors   `json:"integrations"`
 	Created  time.Time `json:"created"`
 	Updated  time.Time `json:"updated"`
 }
@@ -37,3 +38,5 @@ type Profile struct {
 	FirstName string `json:"first_name"`
 	LastName  string `json:"last_name"`
 }
+
+type Vendors map[string]string

@@ -41,6 +41,7 @@ func (s *UserStorage) GetByUsername(username string) (*types.User, error) {
 		keyProfile  = fmt.Sprintf("%s/%s/profile", UserTable, username)
 		keyPassword = fmt.Sprintf("%s/%s/security/password", UserTable, username)
 		keyEmails   = fmt.Sprintf("%s/%s/emails", UserTable, username)
+		keyVendors  = fmt.Sprintf("%s/%s/vendors", UserTable, username)
 		user        = new(types.User)
 	)
 
@@ -62,32 +63,29 @@ func (s *UserStorage) GetByUsername(username string) (*types.User, error) {
 	}
 
 	profile := new(types.UserProfile)
-	if err := client.Get(ctx, keyProfile, profile); err != nil {
-		if err.Error() == store.ErrKeyNotFound {
-			return nil, nil
-		}
+	if err := client.Get(ctx, keyProfile, profile); err != nil && err.Error() != store.ErrKeyNotFound{
 		return nil, err
 	}
 
 	password := new(types.UserPassword)
-	if err := client.Get(ctx, keyPassword, password); err != nil {
-		if err.Error() == store.ErrKeyNotFound {
-			return nil, nil
-		}
+	if err := client.Get(ctx, keyPassword, password); err != nil && err.Error() != store.ErrKeyNotFound{
 		return nil, err
 	}
 
 	emails := new(types.UserEmails)
-	if err := client.Get(ctx, keyEmails, emails); err != nil {
-		if err.Error() == store.ErrKeyNotFound {
-			return nil, nil
-		}
+	if err := client.Get(ctx, keyEmails, emails); err != nil && err.Error() != store.ErrKeyNotFound{
+		return nil, err
+	}
+
+	vendors := new(types.UserVendors)
+	if err := client.Get(ctx, keyVendors, vendors); err != nil && err.Error() != store.ErrKeyNotFound{
 		return nil, err
 	}
 
 	user.Username = username
 	user.Profile = *profile
 	user.Emails = *emails
+	user.Vendors = *vendors
 	user.Gravatar = info.Gravatar
 	user.Created = info.Created
 	user.Updated = info.Updated
