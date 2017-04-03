@@ -26,14 +26,26 @@ import (
 func New(obj *types.Service) *Service {
 	s := new(Service)
 	s.User = obj.User
+	s.Project = obj.Project
 	s.Name = obj.Name
 	s.Description = obj.Description
 	s.Updated = obj.Updated
 	s.Created = obj.Created
-	s.Image = obj.Image
-	s.Config.Region = obj.Config.Region
-	s.Config.Memory = obj.Config.Memory
-	s.Config.Replicas = obj.Config.Replicas
+
+	if obj.Config != nil {
+		s.Config.Region = obj.Config.Region
+		s.Config.Memory = obj.Config.Memory
+		s.Config.Replicas = obj.Config.Replicas
+	}
+
+	if obj.Source != nil && obj.Source.Type == types.SourceGitType {
+		s.Source = new(Source)
+		s.Source.Hub = obj.Source.Hub
+		s.Source.Owner = obj.Source.Owner
+		s.Source.Repo = obj.Source.Repo
+		s.Source.Branch = obj.Source.Branch
+	}
+
 	return s
 }
 

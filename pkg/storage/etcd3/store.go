@@ -96,7 +96,7 @@ func (s *store) List(ctx context.Context, key, keyRegexFilter string, listOutPtr
 		return err
 	}
 	r, _ := regexp.Compile(keyRegexFilter)
-	items := make([]buffer, 0, len(getResp.Kvs))
+	items := []buffer{}
 	for _, kv := range getResp.Kvs {
 		if r.MatchString(string(kv.Key)) {
 			items = append(items, buffer(kv.Value))

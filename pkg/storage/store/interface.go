@@ -43,6 +43,7 @@ type IStore interface {
 
 type ITx interface {
 	Create(key string, obj interface{}, ttl uint64) error
+	Update(key string, obj interface{}, ttl uint64) error
 	Delete(key string)
 	Commit() error
 }
