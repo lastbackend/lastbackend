@@ -118,63 +118,6 @@ func ProjectInfoH(w http.ResponseWriter, r *http.Request) {
 
 }
 
-//func ProjectActivityListH(w http.ResponseWriter, r *http.Request) {
-//
-//	var (
-//		err          error
-//		session      *types.Session
-//		projectModel *types.Project
-//		ctx          = c.Get()
-//		params       = utils.Vars(r)
-//		projectParam = params["project"]
-//	)
-//
-//	ctx.Log.Debug("List project activity handler")
-//
-//	s, ok := context.GetOk(r, `session`)
-//	if !ok {
-//		ctx.Log.Error("Error: get session context")
-//		e.New("user").Unauthorized().Http(w)
-//		return
-//	}
-//
-//	session = s.(*types.Session)
-//
-//	projectModel, err = ctx.Storage.Project().GetByNameOrID(session.Username, projectParam)
-//	if err != nil {
-//		ctx.Log.Error("Error: find project by id", err.Error())
-//		e.HTTP.InternalServerError(w)
-//		return
-//	}
-//	if projectModel == nil {
-//		e.New("project").NotFound().Http(w)
-//		return
-//	}
-//
-//	activityListModel, err := ctx.Storage.Activity().ListProjectActivity(session.Username, projectModel.ID)
-//	if err != nil {
-//		ctx.Log.Error("Error: find projects by user", err)
-//		e.HTTP.InternalServerError(w)
-//		return
-//	}
-//
-//	response, err := activityListModel.ToJson()
-//	if err != nil {
-//		ctx.Log.Error("Error: convert struct to json", err.Error())
-//		e.HTTP.InternalServerError(w)
-//		return
-//	}
-//
-//	ctx.Log.Info(string(response))
-//
-//	w.WriteHeader(http.StatusOK)
-//	_, err = w.Write(response)
-//	if err != nil {
-//		ctx.Log.Error("Error: write response", err.Error())
-//		return
-//	}
-//}
-
 type projectCreateS struct {
 	Name        *string `json:"name,omitempty"`
 	Description *string `json:"description,omitempty"`
@@ -272,126 +215,86 @@ func ProjectCreateH(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-//type projectUpdateS struct {
-//	Name        *string `json:"name,omitempty"`
-//	Description *string `json:"description,omitempty"`
-//}
-//
-//func (s *projectUpdateS) decodeAndValidate(reader io.Reader) *e.Err {
-//
-//	var (
-//		err error
-//		ctx = c.Get()
-//	)
-//
-//	body, err := ioutil.ReadAll(reader)
-//	if err != nil {
-//		ctx.Log.Error(err)
-//		return e.New("user").Unknown(err)
-//	}
-//
-//	err = json.Unmarshal(body, s)
-//	if err != nil {
-//		return e.New("project").IncorrectJSON(err)
-//	}
-//
-//	if s.Name == nil {
-//		return e.New("project").BadParameter("name")
-//	}
-//
-//	*s.Name = strings.ToLower(*s.Name)
-//
-//	if len(*s.Name) < 4 && len(*s.Name) > 64 && !validator.IsProjectName(*s.Name) {
-//		return e.New("project").BadParameter("name")
-//	}
-//
-//	if s.Description == nil {
-//		s.Description = new(string)
-//	}
-//
-//	return nil
-//}
-//
-//func ProjectUpdateH(w http.ResponseWriter, r *http.Request) {
-//
-//	var (
-//		err          error
-//		session      *types.Session
-//		projectModel *types.Project
-//		ctx          = c.Get()
-//		params       = utils.Vars(r)
-//		projectParam = params["project"]
-//	)
-//
-//	ctx.Log.Debug("Update project handler")
-//
-//	s, ok := context.GetOk(r, `session`)
-//	if !ok {
-//		ctx.Log.Error("Error: get session context")
-//		e.New("user").Unauthorized().Http(w)
-//		return
-//	}
-//
-//	session = s.(*types.Session)
-//
-//	// request body struct
-//	rq := new(projectUpdateS)
-//	if err := rq.decodeAndValidate(r.Body); err != nil {
-//		ctx.Log.Error("Error: validation incomming data", err)
-//		err.Http(w)
-//		return
-//	}
-//
-//	projectModel, err = ctx.Storage.Project().GetByNameOrID(session.Uid, projectParam)
-//	if err != nil {
-//		ctx.Log.Error("Error: find project by id", err.Error())
-//		e.HTTP.InternalServerError(w)
-//		return
-//	}
-//	if projectModel == nil {
-//		e.New("project").NotFound().Http(w)
-//		return
-//	}
-//
-//	if rq.Name == nil || *rq.Name == "" {
-//		rq.Name = &projectModel.Name
-//	}
-//
-//	if !validator.IsUUID(projectParam) && projectModel.Name != *rq.Name {
-//		exists, err := ctx.Storage.Project().ExistByName(projectModel.User, *rq.Name)
-//		if err != nil {
-//			e.HTTP.InternalServerError(w)
-//		}
-//		if exists {
-//			e.New("project").NotUnique("name").Http(w)
-//			return
-//		}
-//	}
-//
-//	projectModel.Name = *rq.Name
-//	projectModel.Description = *rq.Description
-//
-//	projectModel, err = ctx.Storage.Project().Update(projectModel)
-//	if err != nil {
-//		ctx.Log.Error("Error: insert project to db", err.Error())
-//		e.HTTP.InternalServerError(w)
-//		return
-//	}
-//
-//	response, err := projectModel.ToJson()
-//	if err != nil {
-//		ctx.Log.Error("Error: convert struct to json", err.Error())
-//		e.HTTP.InternalServerError(w)
-//		return
-//	}
-//
-//	w.WriteHeader(http.StatusOK)
-//	_, err = w.Write(response)
-//	if err != nil {
-//		ctx.Log.Error("Error: write response", err.Error())
-//		return
-//	}
-//}
+type projectUpdateS struct {
+	Description string `json:"description"`
+}
+
+func (s *projectUpdateS) decodeAndValidate(reader io.Reader) *errors.Err {
+
+	var (
+		ctx = c.Get()
+	)
+
+	body, err := ioutil.ReadAll(reader)
+	if err != nil {
+		ctx.Log.Error(err)
+		return errors.New("user").Unknown(err)
+	}
+
+	err = json.Unmarshal(body, s)
+	if err != nil {
+		return errors.New("project").IncorrectJSON(err)
+	}
+
+	return nil
+}
+
+func ProjectUpdateH(w http.ResponseWriter, r *http.Request) {
+
+	var (
+		session *types.Session
+		ctx     = c.Get()
+		params       = utils.Vars(r)
+		projectParam = params["project"]
+	)
+
+	ctx.Log.Debug("Update project handler")
+
+	session = utils.Session(r)
+	if session == nil {
+		ctx.Log.Error(http.StatusText(http.StatusUnauthorized))
+		errors.HTTP.Unauthorized(w)
+		return
+	}
+
+	// request body struct
+	rq := new(projectUpdateS)
+	if err := rq.decodeAndValidate(r.Body); err != nil {
+		ctx.Log.Error("Error: validation incomming data", err)
+		errors.New("Invalid incomming data").Unknown().Http(w)
+		return
+	}
+
+	project, err := ctx.Storage.Project().GetByName(session.Username, projectParam)
+	if err != nil {
+		ctx.Log.Error("Error: check exists by name", err.Error())
+		errors.HTTP.InternalServerError(w)
+		return
+	}
+
+	project.Description = rq.Description
+
+	project, err = ctx.Storage.Project().Update(session.Username, project)
+	if err != nil {
+		ctx.Log.Error("Error: update project to db", err)
+		errors.HTTP.InternalServerError(w)
+		return
+	}
+
+	response, err := v1.NewProject(project).ToJson()
+	if err != nil {
+		ctx.Log.Error("Error: convert struct to json", err.Error())
+		errors.HTTP.InternalServerError(w)
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+	_, err = w.Write(response)
+	if err != nil {
+		ctx.Log.Error("Error: write response", err.Error())
+		return
+	}
+}
 
 func ProjectRemoveH(w http.ResponseWriter, r *http.Request) {
 
@@ -448,6 +351,19 @@ func ProjectRemoveH(w http.ResponseWriter, r *http.Request) {
 
 	w.WriteHeader(http.StatusOK)
 	_, err = w.Write([]byte{})
+	if err != nil {
+		ctx.Log.Error("Error: write response", err.Error())
+		return
+	}
+}
+
+func ProjectActivityListH(w http.ResponseWriter, r *http.Request) {
+	var (
+		err error
+		ctx = c.Get()
+	)
+	w.WriteHeader(http.StatusOK)
+	_, err = w.Write([]byte(`[]`))
 	if err != nil {
 		ctx.Log.Error("Error: write response", err.Error())
 		return
