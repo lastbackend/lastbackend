@@ -18,7 +18,10 @@
 
 package types
 
-import "time"
+import (
+	"fmt"
+	"time"
+)
 
 type ImageList []Image
 
@@ -40,8 +43,18 @@ type Image struct {
 }
 
 type ImageSpec struct {
-	Name string
-	Tag  string
+	Name     string
+	Tag      string
 	Registry Registry
 }
 
+func (i *ImageSpec) Image() string {
+	if i.Registry.Hub != "" {
+		return fmt.Sprintf("%s/%s/%s", i.Registry.Hub, i.Name, i.Tag)
+	}
+	return fmt.Sprintf("%s/%s", i.Name, i.Tag)
+}
+
+func (i *ImageSpec) Auth() string {
+	return ""
+}

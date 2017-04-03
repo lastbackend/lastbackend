@@ -20,6 +20,8 @@ package context
 
 import (
 	"github.com/lastbackend/lastbackend/pkg/agent/config"
+	"github.com/lastbackend/lastbackend/pkg/agent/cri"
+	"github.com/lastbackend/lastbackend/pkg/agent/storage"
 	"github.com/lastbackend/lastbackend/pkg/logger"
 	"golang.org/x/net/context"
 )
@@ -31,13 +33,42 @@ func Get() *ctx {
 }
 
 type ctx struct {
-	Log    *logger.Logger
-	Config *config.Config
+	cri     cri.CRI
+	logger  *logger.Logger
+	config  *config.Config
+	storage *storage.Storage
 }
 
-func (c *ctx) New(config *config.Config) {
-	c.Config = config
-	c.Log = logger.New(c.Config.Debug)
+func (c *ctx) SetLogger(log *logger.Logger) {
+	c.logger = log
+}
+
+func (c *ctx) GetLogger() *logger.Logger {
+	return c.logger
+}
+
+func (c *ctx) SetConfig(cfg *config.Config) {
+	c.config = cfg
+}
+
+func (c *ctx) GetConfig() *config.Config {
+	return c.config
+}
+
+func (c *ctx) SetCri(_cri cri.CRI) {
+	c.cri = _cri
+}
+
+func (c *ctx) GetCri() cri.CRI {
+	return c.cri
+}
+
+func (c *ctx) SetStorage(s *storage.Storage) {
+	c.storage = s
+}
+
+func (c *ctx) GetStorage() *storage.Storage {
+	return c.storage
 }
 
 func Background() context.Context {

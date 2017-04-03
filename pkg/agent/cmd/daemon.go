@@ -23,7 +23,10 @@ import (
 	"github.com/jawher/mow.cli"
 	"github.com/lastbackend/lastbackend/pkg/agent/config"
 	"github.com/lastbackend/lastbackend/pkg/agent/context"
+	"github.com/lastbackend/lastbackend/pkg/agent/cri"
 	"github.com/lastbackend/lastbackend/pkg/agent/runtime"
+	"github.com/lastbackend/lastbackend/pkg/agent/storage"
+	"github.com/lastbackend/lastbackend/pkg/logger"
 	"os"
 	"os/signal"
 	"syscall"
@@ -36,30 +39,61 @@ func Agent(cmd *cli.Cmd) {
 
 	cmd.Spec = "[-d]"
 
-	var debug = cmd.Bool(cli.BoolOpt{Name: "d debug", Value: false, Desc: "Enable debug mode"})
+	cfg.Debug = cmd.Bool(cli.BoolOpt{Name: "d debug", Value: false, Desc: "Enable debug mode"})
+
+	cfg.Runtime.Docker.Host = cmd.String(cli.StringOpt{
+		Name: "docker-host", Value: "", Desc: "Provide path to Docker daemon",
+		EnvVar: "DOCKER_HOST", HideValue: true,
+	})
+
+	cfg.Runtime.Docker.Certs = cmd.String(cli.StringOpt{
+		Name: "docker-certs", Value: "", Desc: "Provide path to Docker certificates",
+		EnvVar: "DOCKER_CERT_PATH", HideValue: true,
+	})
+
+	cfg.Runtime.Docker.Version = cmd.String(cli.StringOpt{
+		Name: "docker-api-version", Value: "", Desc: "Docker daemon API version",
+		EnvVar: "DOCKER_API_VERSION", HideValue: true,
+	})
+
+	cfg.Runtime.Docker.TLS = cmd.Bool(cli.BoolOpt{
+		Name: "docker-tls", Value: false, Desc: "Use secure connection to docker daemon",
+		EnvVar: "DOCKER_TLS_VERIFY", HideValue: true,
+	})
+
+	cfg.Runtime.CRI = cmd.String(cli.StringOpt{
+		Name: "cri", Value: "docker", Desc: "Default container runtime interface",
+		EnvVar: "LB_CRI", HideValue: true,
+	})
 
 	cmd.Before = func() {
 
-		if *debug {
-			cfg.Debug = *debug
-		}
-
-		if cfg.HttpServer.Port == 0 {
-			cfg.HttpServer.Port = 2967
-		}
 	}
 
 	cmd.Action = func() {
 
 		var (
+			err  error
+			crii cri.CRI
 			sigs = make(chan os.Signal)
 			done = make(chan bool, 1)
 		)
 
-		ctx.New(cfg)
+		ctx.SetConfig(cfg)
+		ctx.SetLogger(logger.New(*cfg.Debug))
+		ctx.SetStorage(storage.New())
 
-		// Initializing database
-		runtime.New(cfg.Runtime)
+		rntm := &runtime.Runtime{}
+		crii, err = rntm.SetCri(cfg.Runtime)
+		if err != nil {
+			ctx.GetLogger().Errorf("Cannot initialize runtime: %s", err.Error())
+		}
+
+		ctx.SetCri(crii)
+
+		if err = rntm.StartPodManager(); err != nil {
+			ctx.GetLogger().Errorf("Cannot initialize pod manager: %s", err.Error())
+		}
 
 		// Handle SIGINT and SIGTERM.
 		signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)
