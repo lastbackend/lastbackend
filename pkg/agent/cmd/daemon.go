@@ -23,10 +23,10 @@ import (
 	"github.com/jawher/mow.cli"
 	"github.com/lastbackend/lastbackend/pkg/agent/config"
 	"github.com/lastbackend/lastbackend/pkg/agent/context"
+	"github.com/lastbackend/lastbackend/pkg/agent/runtime"
 	"os"
 	"os/signal"
 	"syscall"
-	"github.com/lastbackend/lastbackend/pkg/agent/runtime"
 )
 
 func Agent(cmd *cli.Cmd) {
@@ -57,6 +57,8 @@ func Agent(cmd *cli.Cmd) {
 		)
 
 		ctx.New(cfg)
+
+		// Initializing database
 		runtime.New(cfg.Runtime)
 
 		// Handle SIGINT and SIGTERM.

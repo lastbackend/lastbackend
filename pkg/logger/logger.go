@@ -54,7 +54,7 @@ func (l *Logger) SetDebugLevel() {
 }
 
 func (l *Logger) Debug(args ...interface{}) {
-	l.entry.Debug(args)
+	l.entry.Debug(args...)
 }
 
 func (l *Logger) Debugf(format string, args ...interface{}) {

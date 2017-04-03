@@ -21,6 +21,7 @@ package runtime
 import (
 	"github.com/docker/docker/client"
 	"github.com/lastbackend/lastbackend/pkg/agent/config"
+	"github.com/lastbackend/lastbackend/pkg/agent/context"
 	"github.com/lastbackend/lastbackend/pkg/agent/manager"
 )
 
@@ -33,6 +34,9 @@ type Runtime struct {
 }
 
 func New(cfg *config.Runtime) *Runtime {
+	ctx := context.Get()
+	ctx.Log.Debug("Initializing runtime")
+
 	var runtime = new(Runtime)
 	return runtime.Init(cfg)
 }
@@ -40,9 +44,11 @@ func New(cfg *config.Runtime) *Runtime {
 func (r *Runtime) Init(cfg *config.Runtime) *Runtime {
 	r.Client, _ = client.NewEnvClient()
 
-	r.pManager = manager.NewPodManager()
 	r.iManager = manager.NewImageManager()
 	r.eManager = manager.NewEventManager()
+	r.pManager = manager.NewPodManager(r.Client)
+
+	r.pManager.Run()
 
 	return r
 }
