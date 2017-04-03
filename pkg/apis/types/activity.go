@@ -27,17 +27,17 @@ type ActivityList []Activity
 
 type Activity struct {
 	// Activity uuid, incremented automatically
-	ID      string `json:"id"`
+	ID string `json:"id"`
 	// Activity user
-	User    string `json:"user"`
+	User string `json:"user"`
 	// Activity project
 	Project string `json:"project"`
 	// Activity service
 	Service string `json:"service"`
 	// Activity name
-	Name    string `json:"name"`
+	Name string `json:"name"`
 	// Activity status
-	Event   string `json:"event"`
+	Event string `json:"event"`
 	// Activity created time
 	Created time.Time `json:"created"`
 	// Activity updated time

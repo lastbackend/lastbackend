@@ -63,22 +63,22 @@ func (s *UserStorage) GetByUsername(username string) (*types.User, error) {
 	}
 
 	profile := new(types.UserProfile)
-	if err := client.Get(ctx, keyProfile, profile); err != nil && err.Error() != store.ErrKeyNotFound{
+	if err := client.Get(ctx, keyProfile, profile); err != nil && err.Error() != store.ErrKeyNotFound {
 		return nil, err
 	}
 
 	password := new(types.UserPassword)
-	if err := client.Get(ctx, keyPassword, password); err != nil && err.Error() != store.ErrKeyNotFound{
+	if err := client.Get(ctx, keyPassword, password); err != nil && err.Error() != store.ErrKeyNotFound {
 		return nil, err
 	}
 
 	emails := new(types.UserEmails)
-	if err := client.Get(ctx, keyEmails, emails); err != nil && err.Error() != store.ErrKeyNotFound{
+	if err := client.Get(ctx, keyEmails, emails); err != nil && err.Error() != store.ErrKeyNotFound {
 		return nil, err
 	}
 
 	vendors := new(types.UserVendors)
-	if err := client.Get(ctx, keyVendors, vendors); err != nil && err.Error() != store.ErrKeyNotFound{
+	if err := client.Get(ctx, keyVendors, vendors); err != nil && err.Error() != store.ErrKeyNotFound {
 		return nil, err
 	}
 

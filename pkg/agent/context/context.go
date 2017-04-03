@@ -30,8 +30,8 @@ func Get() *ctx {
 }
 
 type ctx struct {
-	Log     *logger.Logger
-	Config  *config.Config
+	Log    *logger.Logger
+	Config *config.Config
 }
 
 func (c *ctx) New(config *config.Config) {

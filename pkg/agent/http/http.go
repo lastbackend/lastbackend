@@ -20,14 +20,13 @@ package http
 
 import (
 	"fmt"
+	"github.com/Sirupsen/logrus"
 	"github.com/gorilla/mux"
 	"github.com/lastbackend/lastbackend/pkg/agent/http/routes"
 	"net/http"
 	"strconv"
 	"time"
-	"github.com/Sirupsen/logrus"
 )
-
 
 type Handler struct {
 	Path    string

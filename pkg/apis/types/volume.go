@@ -39,8 +39,7 @@ type Volume struct {
 	Updated time.Time `json:"updated"`
 }
 
-
 type VolumesSpec struct {
-	Volume string
+	Volume    string
 	MountPath string
 }

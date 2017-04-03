@@ -23,10 +23,10 @@ import (
 	"github.com/jawher/mow.cli"
 	"github.com/lastbackend/lastbackend/pkg/agent/config"
 	"github.com/lastbackend/lastbackend/pkg/agent/context"
+	"github.com/lastbackend/lastbackend/pkg/agent/runtime"
 	"os"
 	"os/signal"
 	"syscall"
-	"github.com/lastbackend/lastbackend/pkg/agent/runtime"
 )
 
 func Agent(cmd *cli.Cmd) {

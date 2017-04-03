@@ -20,10 +20,10 @@ package logger
 
 import (
 	"github.com/Sirupsen/logrus"
+	_os "github.com/lastbackend/lastbackend/pkg/logger/os"
+	"os"
 	"path"
 	"runtime"
-	"os"
-	_os "github.com/lastbackend/lastbackend/pkg/logger/os"
 )
 
 type Logger struct {

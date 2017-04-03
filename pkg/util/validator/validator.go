@@ -22,10 +22,10 @@ import (
 	"encoding/base64"
 	"fmt"
 	"github.com/asaskevich/govalidator"
+	"reflect"
 	"regexp"
 	"strconv"
 	"strings"
-	"reflect"
 )
 
 func IsNil(a interface{}) bool {

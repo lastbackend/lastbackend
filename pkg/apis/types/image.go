@@ -40,8 +40,7 @@ type Image struct {
 }
 
 type ImageSpec struct {
-	Name string
-	Tag  string
+	Name     string
+	Tag      string
 	Registry Registry
 }
-

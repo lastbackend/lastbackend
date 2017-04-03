@@ -39,7 +39,7 @@ func (em *EventManager) watch() error {
 			return ReleaseEventManager(em)
 		case event := <-em.update:
 			ctx := context.Get()
-			je,_ :=  event.ToJson()
+			je, _ := event.ToJson()
 			ctx.Log.Infof("handle event %s", je)
 		}
 	}
