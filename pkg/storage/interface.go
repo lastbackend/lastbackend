@@ -61,6 +61,7 @@ type IHook interface {
 }
 
 type IProject interface {
+	GetByID(username, id string) (*types.Project, error)
 	GetByName(username, name string) (*types.Project, error)
 	ListByUser(username string) (*types.ProjectList, error)
 	Insert(username, name, description string) (*types.Project, error)
@@ -69,6 +70,7 @@ type IProject interface {
 }
 
 type IService interface {
+	GetByID(username, project, id string) (*types.Service, error)
 	GetByName(username, project, name string) (*types.Service, error)
 	ListByProject(username, project string) (*types.ServiceList, error)
 	Insert(username, project, name, description string, source *types.ServiceSource, config *types.ServiceConfig) (*types.Service, error)

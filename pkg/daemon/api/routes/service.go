@@ -134,7 +134,9 @@ func (s *serviceCreateS) decodeAndValidate(reader io.Reader) *errors.Err {
 func ServiceCreateH(w http.ResponseWriter, r *http.Request) {
 
 	var (
+		err          error
 		session      *types.Session
+		project      = new(types.Project)
 		ctx          = c.Get()
 		params       = utils.Vars(r)
 		projectParam = params["project"]
@@ -157,7 +159,22 @@ func ServiceCreateH(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	service, err := ctx.Storage.Service().GetByName(session.Username, projectParam, rq.Name)
+	if validator.IsUUID(projectParam) {
+		project, err = ctx.Storage.Project().GetByID(session.Username, projectParam)
+	} else {
+		project, err = ctx.Storage.Project().GetByName(session.Username, projectParam)
+	}
+	if err != nil {
+		ctx.Log.Error("Error: find project by name", err.Error())
+		errors.HTTP.InternalServerError(w)
+		return
+	}
+	if project == nil {
+		errors.New("project").NotFound().Http(w)
+		return
+	}
+
+	service, err := ctx.Storage.Service().GetByName(session.Username, project.ID, rq.Name)
 	if err != nil {
 		ctx.Log.Error("Error: check exists by name", err.Error())
 		errors.HTTP.InternalServerError(w)
@@ -209,6 +226,7 @@ func ServiceCreateH(w http.ResponseWriter, r *http.Request) {
 }
 
 type serviceUpdateS struct {
+	Name        string               `json:"name"`
 	Description string               `json:"description"`
 	Config      *types.ServiceConfig `json:"config,omitempty"`
 	Domains     *[]string            `json:"domains,omitempty"`
@@ -229,14 +247,29 @@ func (s *serviceUpdateS) decodeAndValidate(reader io.Reader) *errors.Err {
 		return errors.New("service").IncorrectJSON(err)
 	}
 
+	s.Name = strings.ToLower(s.Name)
+
+	if s.Name == "" {
+		return errors.New("service").BadParameter("name")
+	}
+
+	s.Name = strings.ToLower(s.Name)
+
+	if len(s.Name) < 4 && len(s.Name) > 64 && !validator.IsServiceName(s.Name) {
+		return errors.New("service").BadParameter("name")
+	}
+
 	return nil
 }
 
 func ServiceUpdateH(w http.ResponseWriter, r *http.Request) {
 
 	var (
+		err          error
 		ctx          = c.Get()
 		session      *types.Session
+		project      = new(types.Project)
+		service      = new(types.Service)
 		params       = utils.Vars(r)
 		projectParam = params["project"]
 		serviceParam = params["service"]
@@ -259,13 +292,33 @@ func ServiceUpdateH(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	service, err := ctx.Storage.Service().GetByName(session.Username, projectParam, serviceParam)
+	if validator.IsUUID(projectParam) {
+		project, err = ctx.Storage.Project().GetByID(session.Username, projectParam)
+	} else {
+		project, err = ctx.Storage.Project().GetByName(session.Username, projectParam)
+	}
+	if err != nil {
+		ctx.Log.Error("Error: find project by name", err.Error())
+		errors.HTTP.InternalServerError(w)
+		return
+	}
+	if project == nil {
+		errors.New("project").NotFound().Http(w)
+		return
+	}
+
+	if validator.IsUUID(projectParam) {
+		service, err = ctx.Storage.Service().GetByID(session.Username, project.ID, serviceParam)
+	} else {
+		service, err = ctx.Storage.Service().GetByName(session.Username, project.ID, serviceParam)
+	}
 	if err != nil {
 		ctx.Log.Error("Error: Get service by name", err.Error())
 		errors.HTTP.InternalServerError(w)
 		return
 	}
 
+	service.Name = rq.Name
 	service.Description = rq.Description
 
 	if rq.Config != nil {
@@ -304,8 +357,10 @@ func ServiceUpdateH(w http.ResponseWriter, r *http.Request) {
 func ServiceListH(w http.ResponseWriter, r *http.Request) {
 
 	var (
+		err          error
 		ctx          = c.Get()
 		session      *types.Session
+		project      = new(types.Project)
 		params       = utils.Vars(r)
 		projectParam = params["project"]
 	)
@@ -319,7 +374,22 @@ func ServiceListH(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	serviceList, err := ctx.Storage.Service().ListByProject(session.Username, projectParam)
+	if validator.IsUUID(projectParam) {
+		project, err = ctx.Storage.Project().GetByID(session.Username, projectParam)
+	} else {
+		project, err = ctx.Storage.Project().GetByName(session.Username, projectParam)
+	}
+	if err != nil {
+		ctx.Log.Error("Error: find project by name", err.Error())
+		errors.HTTP.InternalServerError(w)
+		return
+	}
+	if project == nil {
+		errors.New("project").NotFound().Http(w)
+		return
+	}
+
+	serviceList, err := ctx.Storage.Service().ListByProject(session.Username, project.ID)
 	if err != nil {
 		ctx.Log.Error("Error: find service list by user", err)
 		errors.HTTP.InternalServerError(w)
@@ -342,9 +412,11 @@ func ServiceListH(w http.ResponseWriter, r *http.Request) {
 
 func ServiceInfoH(w http.ResponseWriter, r *http.Request) {
 	var (
-		session      *types.Session
-		service      *types.Service
+		err          error
 		ctx          = c.Get()
+		session      *types.Session
+		project      = new(types.Project)
+		service      = new(types.Service)
 		params       = utils.Vars(r)
 		projectParam = params["project"]
 		serviceParam = params["service"]
@@ -359,7 +431,26 @@ func ServiceInfoH(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	service, err := ctx.Storage.Service().GetByName(session.Username, projectParam, serviceParam)
+	if validator.IsUUID(projectParam) {
+		project, err = ctx.Storage.Project().GetByID(session.Username, projectParam)
+	} else {
+		project, err = ctx.Storage.Project().GetByName(session.Username, projectParam)
+	}
+	if err != nil {
+		ctx.Log.Error("Error: find project by name", err.Error())
+		errors.HTTP.InternalServerError(w)
+		return
+	}
+	if project == nil {
+		errors.New("project").NotFound().Http(w)
+		return
+	}
+
+	if validator.IsUUID(projectParam) {
+		service, err = ctx.Storage.Service().GetByID(session.Username, project.ID, serviceParam)
+	} else {
+		service, err = ctx.Storage.Service().GetByName(session.Username, project.ID, serviceParam)
+	}
 	if err != nil {
 		ctx.Log.Error("Error: find service by name", err.Error())
 		errors.HTTP.InternalServerError(w)
@@ -386,7 +477,9 @@ func ServiceInfoH(w http.ResponseWriter, r *http.Request) {
 
 func ServiceRemoveH(w http.ResponseWriter, r *http.Request) {
 	var (
+		err          error
 		ctx          = c.Get()
+		project      = new(types.Project)
 		session      *types.Session
 		params       = utils.Vars(r)
 		projectParam = params["project"]
@@ -402,9 +495,24 @@ func ServiceRemoveH(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if validator.IsUUID(projectParam) {
+		project, err = ctx.Storage.Project().GetByID(session.Username, projectParam)
+	} else {
+		project, err = ctx.Storage.Project().GetByName(session.Username, projectParam)
+	}
+	if err != nil {
+		ctx.Log.Error("Error: find project by name", err.Error())
+		errors.HTTP.InternalServerError(w)
+		return
+	}
+	if project == nil {
+		errors.New("project").NotFound().Http(w)
+		return
+	}
+
 	// Todo: remove all activity by service name
 
-	if err := ctx.Storage.Service().Remove(session.Username, projectParam, serviceParam); err != nil {
+	if err := ctx.Storage.Service().Remove(session.Username, project.ID, serviceParam); err != nil {
 		ctx.Log.Error("Error: remove service from db", err)
 		errors.HTTP.InternalServerError(w)
 		return

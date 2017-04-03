@@ -27,8 +27,6 @@ type ProjectList []Project
 
 type Project struct {
 	Meta `json:"meta"`
-	// Project id
-	ID string `json:"-"`
 	// Project user
 	User string `json:"-"`
 }
