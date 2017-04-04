@@ -27,7 +27,7 @@ import (
 	"time"
 )
 
-func BuildListH(w http.ResponseWriter, _ *http.Request) {
+func BuildListH(w http.ResponseWriter, r *http.Request) {
 
 	var (
 		ctx = context.Get()
@@ -35,7 +35,7 @@ func BuildListH(w http.ResponseWriter, _ *http.Request) {
 
 	ctx.Log.Debug("Get boold list handler")
 
-	builds, err := ctx.Storage.Build().ListByImage("", "")
+	builds, err := ctx.Storage.Build().ListByImage(r.Context(), "", "")
 	if err != nil {
 		ctx.Log.Error(err)
 		errors.HTTP.InternalServerError(w)
@@ -57,7 +57,7 @@ func BuildListH(w http.ResponseWriter, _ *http.Request) {
 	}
 }
 
-func BuildCreateH(w http.ResponseWriter, _ *http.Request) {
+func BuildCreateH(w http.ResponseWriter, r *http.Request) {
 
 	var (
 		ctx = context.Get()
@@ -69,7 +69,7 @@ func BuildCreateH(w http.ResponseWriter, _ *http.Request) {
 	b.Created = time.Now()
 	b.Updated = time.Now()
 
-	build, err := ctx.Storage.Build().Insert(b)
+	build, err := ctx.Storage.Build().Insert(r.Context(), b)
 	if err != nil {
 		ctx.Log.Error(err)
 		errors.HTTP.InternalServerError(w)

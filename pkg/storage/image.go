@@ -35,7 +35,7 @@ type ImageStorage struct {
 	Client func() (store.IStore, store.DestroyFunc, error)
 }
 
-func (s *ImageStorage) GetByID(user, id string) (*types.Image, error) {
+func (s *ImageStorage) GetByID(ctx context.Context, user, id string) (*types.Image, error) {
 	var (
 		image = new(types.Image)
 		key   = fmt.Sprintf("/%s/%s", ImageTable, id)
@@ -69,7 +69,7 @@ func (s *ImageStorage) GetByID(user, id string) (*types.Image, error) {
 }
 
 // Insert new image into storage
-func (s *ImageStorage) Insert(_ *types.ImageSource) (*types.Image, error) {
+func (s *ImageStorage) Insert(ctx context.Context, _ *types.ImageSource) (*types.Image, error) {
 	var (
 		id    = generator.GetUUIDV4()
 		image = new(types.Image)
@@ -81,7 +81,7 @@ func (s *ImageStorage) Insert(_ *types.ImageSource) (*types.Image, error) {
 }
 
 // Update build model
-func (s *ImageStorage) Update(image *types.Image) (*types.Image, error) {
+func (s *ImageStorage) Update(ctx context.Context, image *types.Image) (*types.Image, error) {
 	return nil, nil
 }
 

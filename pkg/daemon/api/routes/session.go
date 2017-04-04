@@ -74,9 +74,9 @@ func SessionCreateH(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	user, err := ctx.Storage.User().GetByUsername(*rq.Login)
+	user, err := ctx.Storage.User().GetByUsername(r.Context(), *rq.Login)
 	if err == nil && user == nil {
-		user, err = ctx.Storage.User().GetByEmail(*rq.Login)
+		user, err = ctx.Storage.User().GetByEmail(r.Context(), *rq.Login)
 		if err == nil && user == nil {
 			errors.HTTP.Unauthorized(w)
 			return

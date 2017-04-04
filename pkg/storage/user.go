@@ -34,7 +34,7 @@ type UserStorage struct {
 	Client func() (store.IStore, store.DestroyFunc, error)
 }
 
-func (s *UserStorage) GetByUsername(username string) (*types.User, error) {
+func (s *UserStorage) GetByUsername(ctx context.Context, username string) (*types.User, error) {
 
 	var (
 		keyMeta     = fmt.Sprintf("%s/%s/meta", UserTable, username)
@@ -91,7 +91,7 @@ func (s *UserStorage) GetByUsername(username string) (*types.User, error) {
 	return user, nil
 }
 
-func (s *UserStorage) GetByEmail(email string) (*types.User, error) {
+func (s *UserStorage) GetByEmail(ctx context.Context, email string) (*types.User, error) {
 
 	var (
 		key      = fmt.Sprintf("helper/emails/%s", email)
@@ -114,7 +114,7 @@ func (s *UserStorage) GetByEmail(email string) (*types.User, error) {
 		return nil, err
 	}
 
-	return s.GetByUsername(username)
+	return s.GetByUsername(ctx, username)
 }
 
 func newUserStorage(config store.Config) *UserStorage {

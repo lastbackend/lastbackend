@@ -36,7 +36,7 @@ type ProjectStorage struct {
 }
 
 // Get project by name for user
-func (s *ProjectStorage) GetByID(username, id string) (*types.Project, error) {
+func (s *ProjectStorage) GetByID(ctx context.Context, username, id string) (*types.Project, error) {
 	var (
 		project = new(types.Project)
 		key     = fmt.Sprintf("%s/%s/%s/meta", ProjectTable, username, id)
@@ -71,7 +71,7 @@ func (s *ProjectStorage) GetByID(username, id string) (*types.Project, error) {
 }
 
 // Get project by name for user
-func (s *ProjectStorage) GetByName(username, name string) (*types.Project, error) {
+func (s *ProjectStorage) GetByName(ctx context.Context, username, name string) (*types.Project, error) {
 
 	var (
 		id string
@@ -95,11 +95,11 @@ func (s *ProjectStorage) GetByName(username, name string) (*types.Project, error
 		return nil, err
 	}
 
-	return s.GetByID(username, id)
+	return s.GetByID(ctx, username, id)
 }
 
 // List project by username
-func (s *ProjectStorage) ListByUser(username string) (*types.ProjectList, error) {
+func (s *ProjectStorage) ListByUser(ctx context.Context, username string) (*types.ProjectList, error) {
 	var (
 		key    = fmt.Sprintf("%s/%s", ProjectTable, username)
 		filter = `\b(.+)\/info\b`
@@ -145,7 +145,7 @@ func (s *ProjectStorage) ListByUser(username string) (*types.ProjectList, error)
 }
 
 // Insert new project into storage  for user
-func (s *ProjectStorage) Insert(username, name, description string) (*types.Project, error) {
+func (s *ProjectStorage) Insert(ctx context.Context, username, name, description string) (*types.Project, error) {
 	var (
 		id        = generator.GetUUIDV4()
 		project   = new(types.Project)
@@ -196,7 +196,7 @@ func (s *ProjectStorage) Insert(username, name, description string) (*types.Proj
 }
 
 // Update project model
-func (s *ProjectStorage) Update(username string, project *types.Project) (*types.Project, error) {
+func (s *ProjectStorage) Update(ctx context.Context, username string, project *types.Project) (*types.Project, error) {
 	var (
 		keyMeta = fmt.Sprintf("%s/%s/%s/meta", ProjectTable, username, project.ID)
 	)
@@ -227,7 +227,7 @@ func (s *ProjectStorage) Update(username string, project *types.Project) (*types
 }
 
 // Remove project model
-func (s *ProjectStorage) Remove(username, id string) error {
+func (s *ProjectStorage) Remove(ctx context.Context, username, id string) error {
 	var (
 		keyMeta = fmt.Sprintf("%s/%s/%s/meta", ProjectTable, username, id)
 	)

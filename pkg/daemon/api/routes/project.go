@@ -49,7 +49,7 @@ func ProjectListH(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	projectList, err := ctx.Storage.Project().ListByUser(session.Username)
+	projectList, err := ctx.Storage.Project().ListByUser(r.Context(), session.Username)
 	if err != nil {
 		ctx.Log.Error("Error: find projects by user", err)
 		errors.HTTP.InternalServerError(w)
@@ -92,9 +92,9 @@ func ProjectInfoH(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if validator.IsUUID(projectParam) {
-		project, err = ctx.Storage.Project().GetByID(session.Username, projectParam)
+		project, err = ctx.Storage.Project().GetByID(r.Context(), session.Username, projectParam)
 	} else {
-		project, err = ctx.Storage.Project().GetByName(session.Username, projectParam)
+		project, err = ctx.Storage.Project().GetByName(r.Context(), session.Username, projectParam)
 	}
 	if err != nil {
 		ctx.Log.Error("Error: find project by id", err.Error())
@@ -181,7 +181,7 @@ func ProjectCreateH(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	project, err := ctx.Storage.Project().GetByName(session.Username, rq.Name)
+	project, err := ctx.Storage.Project().GetByName(r.Context(), session.Username, rq.Name)
 	if err != nil {
 		ctx.Log.Error("Error: check exists by name", err.Error())
 		errors.HTTP.InternalServerError(w)
@@ -193,7 +193,7 @@ func ProjectCreateH(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	project, err = ctx.Storage.Project().Insert(session.Username, rq.Name, rq.Description)
+	project, err = ctx.Storage.Project().Insert(r.Context(), session.Username, rq.Name, rq.Description)
 	if err != nil {
 		ctx.Log.Error("Error: insert project to db", err)
 		errors.HTTP.InternalServerError(w)
@@ -279,9 +279,9 @@ func ProjectUpdateH(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if validator.IsUUID(projectParam) {
-		project, err = ctx.Storage.Project().GetByID(session.Username, projectParam)
+		project, err = ctx.Storage.Project().GetByID(r.Context(), session.Username, projectParam)
 	} else {
-		project, err = ctx.Storage.Project().GetByName(session.Username, projectParam)
+		project, err = ctx.Storage.Project().GetByName(r.Context(), session.Username, projectParam)
 	}
 	if err != nil {
 		ctx.Log.Error("Error: check exists by name", err.Error())
@@ -292,7 +292,7 @@ func ProjectUpdateH(w http.ResponseWriter, r *http.Request) {
 	project.Name = rq.Name
 	project.Description = rq.Description
 
-	project, err = ctx.Storage.Project().Update(session.Username, project)
+	project, err = ctx.Storage.Project().Update(r.Context(), session.Username, project)
 	if err != nil {
 		ctx.Log.Error("Error: update project to db", err)
 		errors.HTTP.InternalServerError(w)
@@ -334,9 +334,9 @@ func ProjectRemoveH(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if validator.IsUUID(projectParam) {
-		project, err = ctx.Storage.Project().GetByID(session.Username, projectParam)
+		project, err = ctx.Storage.Project().GetByID(r.Context(), session.Username, projectParam)
 	} else {
-		project, err = ctx.Storage.Project().GetByName(session.Username, projectParam)
+		project, err = ctx.Storage.Project().GetByName(r.Context(), session.Username, projectParam)
 	}
 	if err != nil {
 		ctx.Log.Error("Error: find project by name", err.Error())
@@ -365,7 +365,7 @@ func ProjectRemoveH(w http.ResponseWriter, r *http.Request) {
 	//	return
 	//}
 
-	err = ctx.Storage.Project().Remove(session.Username, project.ID)
+	err = ctx.Storage.Project().Remove(r.Context(), session.Username, project.ID)
 	if err != nil {
 		ctx.Log.Error("Error: remove project from db", err)
 		errors.HTTP.InternalServerError(w)

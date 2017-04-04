@@ -36,7 +36,7 @@ type ServiceStorage struct {
 }
 
 // Get project by name for user
-func (s *ServiceStorage) GetByID(username, projectID, serviceID string) (*types.Service, error) {
+func (s *ServiceStorage) GetByID(ctx context.Context, username, projectID, serviceID string) (*types.Service, error) {
 	var (
 		project        = new(types.Project)
 		service        = new(types.Service)
@@ -101,7 +101,7 @@ func (s *ServiceStorage) GetByID(username, projectID, serviceID string) (*types.
 }
 
 // Get project by name for user
-func (s *ServiceStorage) GetByName(username, projectID, name string) (*types.Service, error) {
+func (s *ServiceStorage) GetByName(ctx context.Context, username, projectID, name string) (*types.Service, error) {
 	var (
 		id string
 		// Key example: /helper/projects/<username>/<project id>/services/<name>
@@ -124,11 +124,11 @@ func (s *ServiceStorage) GetByName(username, projectID, name string) (*types.Ser
 		return nil, err
 	}
 
-	return s.GetByID(username, projectID, id)
+	return s.GetByID(ctx, username, projectID, id)
 }
 
 // List project by username
-func (s *ServiceStorage) ListByProject(username, projectID string) (*types.ServiceList, error) {
+func (s *ServiceStorage) ListByProject(ctx context.Context, username, projectID string) (*types.ServiceList, error) {
 	var (
 		projects    = make(map[string]*types.Project)
 		keyProjects = fmt.Sprintf("%s/%s", ProjectTable, username)
@@ -184,7 +184,7 @@ func (s *ServiceStorage) ListByProject(username, projectID string) (*types.Servi
 }
 
 // Insert new service into storage
-func (s *ServiceStorage) Insert(username, projectID, name, description, image string, config *types.ServiceConfig) (*types.Service, error) {
+func (s *ServiceStorage) Insert(ctx context.Context, username, projectID, name, description, image string, config *types.ServiceConfig) (*types.Service, error) {
 	var (
 		id             = generator.GetUUIDV4()
 		service        = new(types.Service)
@@ -250,7 +250,7 @@ func (s *ServiceStorage) Insert(username, projectID, name, description, image st
 }
 
 // Update service in storage
-func (s *ServiceStorage) Update(username, projectID string, service *types.Service) (*types.Service, error) {
+func (s *ServiceStorage) Update(ctx context.Context, username, projectID string, service *types.Service) (*types.Service, error) {
 	var (
 		keyMeta   = fmt.Sprintf("%s/%s/%s/%s/%s/meta", ProjectTable, username, projectID, ServiceTable, service.Name)
 		keyConfig = fmt.Sprintf("%s/%s/%s/%s/%s/config", ProjectTable, username, projectID, ServiceTable, service.Name)
@@ -290,7 +290,7 @@ func (s *ServiceStorage) Update(username, projectID string, service *types.Servi
 }
 
 // Remove service model
-func (s *ServiceStorage) Remove(username, projectID, serviceID string) error {
+func (s *ServiceStorage) Remove(ctx context.Context, username, projectID, serviceID string) error {
 
 	var (
 		keyProjectMeta = fmt.Sprintf("%s/%s/%s/meta", ProjectTable, username, projectID)
@@ -325,7 +325,7 @@ func (s *ServiceStorage) Remove(username, projectID, serviceID string) error {
 }
 
 // Remove service model
-func (s *ServiceStorage) RemoveByProject(username, project string) error {
+func (s *ServiceStorage) RemoveByProject(ctx context.Context, username, project string) error {
 
 	var (
 		key = fmt.Sprintf("%s/%s/%s/%s", ProjectTable, username, project, ServiceTable)

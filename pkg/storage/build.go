@@ -21,6 +21,7 @@ package storage
 import (
 	"github.com/lastbackend/lastbackend/pkg/apis/types"
 	"github.com/lastbackend/lastbackend/pkg/storage/store"
+	"golang.org/x/net/context"
 )
 
 const BuildTable string = "builds"
@@ -32,17 +33,17 @@ type BuildStorage struct {
 }
 
 // Get build model by id
-func (s *BuildStorage) GetByID(user, id string) (*types.Build, error) {
+func (s *BuildStorage) GetByID(ctx context.Context, user, id string) (*types.Build, error) {
 	return nil, nil
 }
 
 // Get builds by image
-func (s *BuildStorage) ListByImage(user, id string) (*types.BuildList, error) {
+func (s *BuildStorage) ListByImage(ctx context.Context, user, id string) (*types.BuildList, error) {
 	return nil, nil
 }
 
 // Insert new build into storage
-func (s *BuildStorage) Insert(build *types.Build) (*types.Build, error) {
+func (s *BuildStorage) Insert(ctx context.Context, build *types.Build) (*types.Build, error) {
 	return nil, nil
 }
 
