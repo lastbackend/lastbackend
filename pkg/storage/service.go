@@ -55,14 +55,16 @@ func (s *ServiceStorage) GetByID(username, projectID, serviceID string) (*types.
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	if err := client.Get(ctx, keyProjectMeta, &project.Meta); err != nil {
+	pmeta := new(types.ProjectMeta)
+	if err := client.Get(ctx, keyProjectMeta, pmeta); err != nil {
 		if err.Error() == store.ErrKeyNotFound {
 			return nil, nil
 		}
 		return nil, err
 	}
 
-	if err := client.Get(ctx, keyMeta, &service.Meta); err != nil {
+	smeta := new(types.ServiceMeta)
+	if err := client.Get(ctx, keyMeta, smeta); err != nil {
 		if err.Error() == store.ErrKeyNotFound {
 			return nil, nil
 		}
@@ -85,6 +87,13 @@ func (s *ServiceStorage) GetByID(username, projectID, serviceID string) (*types.
 		return nil, err
 	}
 
+	service.ID = smeta.ID
+	service.Name = smeta.Name
+	service.Image = smeta.Image
+	service.Description = smeta.Description
+	service.Labels = smeta.Labels
+	service.Created = smeta.Created
+	service.Updated = smeta.Updated
 	service.User = username
 	service.Project = project.Name
 
@@ -136,8 +145,6 @@ func (s *ServiceStorage) ListByProject(username, projectID string) (*types.Servi
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	metaList := []types.Meta{}
-
 	if err := client.Map(ctx, keyProjects, ``, projects); err != nil {
 		if err.Error() == store.ErrKeyNotFound {
 			return nil, nil
@@ -145,6 +152,7 @@ func (s *ServiceStorage) ListByProject(username, projectID string) (*types.Servi
 		return nil, err
 	}
 
+	metaList := []types.ServiceMeta{}
 	if err := client.List(ctx, key, filter, &metaList); err != nil {
 		if err.Error() == store.ErrKeyNotFound {
 			return nil, nil
@@ -158,23 +166,33 @@ func (s *ServiceStorage) ListByProject(username, projectID string) (*types.Servi
 
 	serviceList := new(types.ServiceList)
 	for _, meta := range metaList {
-		*serviceList = append(*serviceList, types.Service{Meta: meta, User: username, Project: projects[projectID].Name})
+		service := types.Service{}
+		service.ID = meta.ID
+		service.Name = meta.Name
+		service.Description = meta.Description
+		service.Image = meta.Image
+		service.Labels = meta.Labels
+		service.Created = meta.Created
+		service.Updated = meta.Updated
+		service.User = username
+		service.Project = projects[projectID].Name
+
+		*serviceList = append(*serviceList, service)
 	}
 
 	return serviceList, nil
 }
 
 // Insert new service into storage
-func (s *ServiceStorage) Insert(username, projectID, name, description string, source *types.ServiceSource, config *types.ServiceConfig) (*types.Service, error) {
+func (s *ServiceStorage) Insert(username, projectID, name, description, image string, config *types.ServiceConfig) (*types.Service, error) {
 	var (
 		id             = generator.GetUUIDV4()
-		project        = new(types.Project)
 		service        = new(types.Service)
 		keyProjectMeta = fmt.Sprintf("%s/%s/%s/meta", ProjectTable, username, projectID)
 		keyHelper      = fmt.Sprintf("/helper/%s/%s/%s/%s/%s", ProjectTable, username, projectID, ServiceTable, name)
 		keyMeta        = fmt.Sprintf("%s/%s/%s/%s/%s/meta", ProjectTable, username, projectID, ServiceTable, id)
 		keyConfig      = fmt.Sprintf("%s/%s/%s/%s/%s/config", ProjectTable, username, projectID, ServiceTable, id)
-		keySource      = fmt.Sprintf("%s/%s/%s/%s/%s/source", ProjectTable, username, projectID, ServiceTable, id)
+		//keySource      = fmt.Sprintf("%s/%s/%s/%s/%s/source", ProjectTable, username, projectID, ServiceTable, id)
 	)
 
 	service.ID = id
@@ -183,7 +201,7 @@ func (s *ServiceStorage) Insert(username, projectID, name, description string, s
 	service.User = username
 	service.Description = description
 	service.Config = config
-	service.Source = source
+	service.Image = image
 	service.Updated = time.Now()
 	service.Created = time.Now()
 
@@ -196,7 +214,8 @@ func (s *ServiceStorage) Insert(username, projectID, name, description string, s
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	if err := client.Get(ctx, keyProjectMeta, &project.Meta); err != nil {
+	pmeta := new(types.ProjectMeta)
+	if err := client.Get(ctx, keyProjectMeta, pmeta); err != nil {
 		if err.Error() == store.ErrKeyNotFound {
 			return nil, nil
 		}
@@ -217,13 +236,15 @@ func (s *ServiceStorage) Insert(username, projectID, name, description string, s
 		return nil, err
 	}
 
-	if err := tx.Create(keySource, source, 0); err != nil {
-		return nil, err
-	}
+	//if err := tx.Create(keySource, source, 0); err != nil {
+	//	return nil, err
+	//}
 
 	if err := tx.Commit(); err != nil {
 		return nil, err
 	}
+
+	service.Project = pmeta.Name
 
 	return service, nil
 }
@@ -272,7 +293,6 @@ func (s *ServiceStorage) Update(username, projectID string, service *types.Servi
 func (s *ServiceStorage) Remove(username, projectID, serviceID string) error {
 
 	var (
-		project        = new(types.Project)
 		keyProjectMeta = fmt.Sprintf("%s/%s/%s/meta", ProjectTable, username, projectID)
 		key            = fmt.Sprintf("%s/%s/%s/%s/%s", ProjectTable, username, projectID, ServiceTable, serviceID)
 	)
@@ -286,14 +306,15 @@ func (s *ServiceStorage) Remove(username, projectID, serviceID string) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	if err := client.Get(ctx, keyProjectMeta, &project.Meta); err != nil {
+	pmeta := new(types.ProjectMeta)
+	if err := client.Get(ctx, keyProjectMeta, pmeta); err != nil {
 		if err.Error() == store.ErrKeyNotFound {
 			return nil
 		}
 		return err
 	}
 
-	var keyHelper = fmt.Sprintf("/helper/%s/%s/%s/%s/%s", ProjectTable, username, projectID, ServiceTable, project.Name)
+	var keyHelper = fmt.Sprintf("/helper/%s/%s/%s/%s/%s", ProjectTable, username, projectID, ServiceTable, pmeta.Name)
 
 	tx := client.Begin(ctx)
 

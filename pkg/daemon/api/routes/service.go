@@ -36,12 +36,13 @@ import (
 type serviceCreateS struct {
 	Name        string               `json:"name"`
 	Description string               `json:"description"`
+	Region      string               `json:"region"`
 	Template    string               `json:"template"`
 	Image       string               `json:"image"`
 	Url         string               `json:"url"`
-	Region      string               `json:"region"`
 	Config      *types.ServiceConfig `json:"config,omitempty"`
-	source      *types.ServiceSource
+	Source      *types.ServiceSource `json:"source,omitempty"`
+	source      *types.ImageSource
 }
 
 type resources struct {
@@ -84,7 +85,7 @@ func (s *serviceCreateS) decodeAndValidate(reader io.Reader) *errors.Err {
 			s.Name = source.Repo
 		}
 
-		s.source = &types.ServiceSource{
+		s.source = &types.ImageSource{
 			Type:   types.SourceDockerType,
 			Hub:    source.Hub,
 			Owner:  source.Owner,
@@ -107,12 +108,27 @@ func (s *serviceCreateS) decodeAndValidate(reader io.Reader) *errors.Err {
 			s.Name = source.Repo
 		}
 
-		s.source = &types.ServiceSource{
+		s.source = &types.ImageSource{
 			Type:   types.SourceGitType,
 			Hub:    source.Hub,
 			Owner:  source.Owner,
 			Repo:   source.Repo,
 			Branch: "master",
+		}
+	}
+
+	if s.Source != nil {
+
+		if s.Name == "" {
+			s.Name = s.Source.Repo
+		}
+
+		s.source = &types.ImageSource{
+			Type:   types.SourceGitType,
+			Hub:    s.Source.Hub,
+			Owner:  s.Source.Owner,
+			Repo:   s.Source.Repo,
+			Branch: s.Source.Branch,
 		}
 	}
 
@@ -136,6 +152,7 @@ func ServiceCreateH(w http.ResponseWriter, r *http.Request) {
 	var (
 		err          error
 		session      *types.Session
+		image        = new(types.Image)
 		project      = new(types.Project)
 		ctx          = c.Get()
 		params       = utils.Vars(r)
@@ -187,8 +204,10 @@ func ServiceCreateH(w http.ResponseWriter, r *http.Request) {
 
 	// Load template from registry
 	if rq.Template != "" {
-		// TODO: send request for get template config from registry
+		// TODO: Send request for get template config from registry
 		// TODO: Set service source with types.SourceTemplateType type field
+		// TODO: Patch template config if need
+		// TODO: Template provision
 	}
 
 	// If you are not using a template, then create a standard configuration template
@@ -199,11 +218,18 @@ func ServiceCreateH(w http.ResponseWriter, r *http.Request) {
 	// Patch config if exists custom configurations
 	if rq.Config != nil {
 		// TODO: If have custom config, then need patch this config
+	} else {
+		rq.Config = types.ServiceConfig{}.GetDefault()
 	}
 
-	rq.Config = types.ServiceConfig{}.GetDefault()
+	image, err = ctx.Storage.Image().Insert(rq.source)
+	if err != nil {
+		ctx.Log.Error("Error: insert image to db", err)
+		errors.HTTP.InternalServerError(w)
+		return
+	}
 
-	service, err = ctx.Storage.Service().Insert(session.Username, project.ID, rq.Name, rq.Description, rq.source, rq.Config)
+	service, err = ctx.Storage.Service().Insert(session.Username, project.ID, rq.Name, rq.Description, image.ID, rq.Config)
 	if err != nil {
 		ctx.Log.Error("Error: insert service to db", err)
 		errors.HTTP.InternalServerError(w)

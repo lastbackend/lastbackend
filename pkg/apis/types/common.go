@@ -22,17 +22,19 @@ import (
 	"time"
 )
 
-type Meta struct {
-	// Service unique id
+type Meta struct{ meta }
+
+type meta struct {
+	// Meta id
 	ID string `json:"id"`
-	// Service unique name
+	// Meta name
 	Name string `json:"name"`
-	// Service description
+	// Meta description
 	Description string `json:"description"`
-	// Service labels
+	// Meta labels
 	Labels map[string]string `json:"lables"`
-	// Service created time
+	// Meta created time
 	Created time.Time `json:"created"`
-	// Service updated time
+	// Meta updated time
 	Updated time.Time `json:"updated"`
 }

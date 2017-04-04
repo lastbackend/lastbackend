@@ -73,7 +73,7 @@ type IService interface {
 	GetByID(username, project, id string) (*types.Service, error)
 	GetByName(username, project, name string) (*types.Service, error)
 	ListByProject(username, project string) (*types.ServiceList, error)
-	Insert(username, project, name, description string, source *types.ServiceSource, config *types.ServiceConfig) (*types.Service, error)
+	Insert(username, project, name, description, image string, config *types.ServiceConfig) (*types.Service, error)
 	Update(username, project string, service *types.Service) (*types.Service, error)
 	Remove(username, project, name string) error
 	RemoveByProject(username, project string) error
@@ -81,10 +81,7 @@ type IService interface {
 
 type IImage interface {
 	GetByID(string, string) (*types.Image, error)
-	GetByUser(string) (*types.ImageList, error)
-	ListByProject(string, string) (*types.ImageList, error)
-	ListByService(string, string) (*types.ImageList, error)
-	Insert(*types.Image) (*types.Image, error)
+	Insert(usource *types.ImageSource) (*types.Image, error)
 	Update(*types.Image) (*types.Image, error)
 }
 
