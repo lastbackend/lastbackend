@@ -43,7 +43,7 @@ func UserGetH(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	user, err := ctx.Storage.User().GetByUsername(session.Username)
+	user, err := ctx.Storage.User().GetByUsername(r.Context(), session.Username)
 	if err == nil && user == nil {
 		errors.New("user").NotFound().Http(w)
 		return

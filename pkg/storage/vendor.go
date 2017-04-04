@@ -35,7 +35,7 @@ type VendorStorage struct {
 	Client func() (store.IStore, store.DestroyFunc, error)
 }
 
-func (s *VendorStorage) Insert(username, vendorUsername, vendorName, vendorHost, serviceID string, token *oauth2.Token) error {
+func (s *VendorStorage) Insert(ctx context.Context, username, vendorUsername, vendorName, vendorHost, serviceID string, token *oauth2.Token) error {
 	var (
 		err error
 		// Key example: /users/<username>/vendors/<vendor>
@@ -69,7 +69,7 @@ func (s *VendorStorage) Insert(username, vendorUsername, vendorName, vendorHost,
 	return client.Update(ctx, key, vm, nil, 0)
 }
 
-func (s *VendorStorage) Get(username, vendorName string) (*types.Vendor, error) {
+func (s *VendorStorage) Get(ctx context.Context, username, vendorName string) (*types.Vendor, error) {
 	var (
 		vendor = new(types.Vendor)
 		// Key example: /users/<username>/vendors/<vendor>
@@ -95,7 +95,7 @@ func (s *VendorStorage) Get(username, vendorName string) (*types.Vendor, error) 
 	return vendor, nil
 }
 
-func (s *VendorStorage) List(username string) (map[string]*types.Vendor, error) {
+func (s *VendorStorage) List(ctx context.Context, username string) (map[string]*types.Vendor, error) {
 	var (
 		vendors = make(map[string]*types.Vendor)
 		// Key example: /users/<username>/vendors
@@ -121,7 +121,7 @@ func (s *VendorStorage) List(username string) (map[string]*types.Vendor, error) 
 	return vendors, nil
 }
 
-func (s *VendorStorage) Remove(username, vendorName string) error {
+func (s *VendorStorage) Remove(ctx context.Context, username, vendorName string) error {
 	var (
 		err error
 		// Key example: /users/<username>/vendors/<vendor>

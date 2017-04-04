@@ -38,13 +38,13 @@ func New(obj *types.Service) *Service {
 		s.Config.Replicas = obj.Config.Replicas
 	}
 
-	if obj.Source != nil && obj.Source.Type == types.SourceGitType {
-		s.Source = new(Source)
-		s.Source.Hub = obj.Source.Hub
-		s.Source.Owner = obj.Source.Owner
-		s.Source.Repo = obj.Source.Repo
-		s.Source.Branch = obj.Source.Branch
-	}
+	//if obj.Source != nil && obj.Source.Type == types.SourceGitType {
+	//	s.Source = new(Source)
+	//	s.Source.Hub = obj.Source.Hub
+	//	s.Source.Owner = obj.Source.Owner
+	//	s.Source.Repo = obj.Source.Repo
+	//	s.Source.Branch = obj.Source.Branch
+	//}
 
 	return s
 }

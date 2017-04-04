@@ -20,22 +20,20 @@ package types
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"github.com/lastbackend/lastbackend/pkg/util/table"
-	"errors"
 )
 
 type ServiceList []Service
 
 type Service struct {
-	Meta `json:"meta"`
+	serviceMeta
 
-	// Service id
-	ID string `json:"-"`
 	// Service username
-	User string `json:"-"`
+	User string `json:"user"`
 	// Service project
-	Project string `json:"-"`
+	Project string `json:"project"`
 
 	// Service custom domains
 	Domains []string `json:"domains"`
@@ -51,8 +49,20 @@ const (
 	SourceTemplateType = "template"
 )
 
+type serviceMeta struct{ ServiceMeta }
+type ServiceMeta struct {
+	meta
+
+	// Add fields to expand the meta data
+	// Example:
+	// Note string `json:"note,omitempty"`
+	// Uptime time.Time `json:"uptime"
+
+	// Service image
+	Image string `json:"image"`
+}
+
 type ServiceSource struct {
-	Type   string `json:"type"`
 	Hub    string `json:"hub"`
 	Owner  string `json:"owner"`
 	Repo   string `json:"repo"`

@@ -36,7 +36,7 @@ type ProjectStorage struct {
 }
 
 // Get project by name for user
-func (s *ProjectStorage) GetByID(username, id string) (*types.Project, error) {
+func (s *ProjectStorage) GetByID(ctx context.Context, username, id string) (*types.Project, error) {
 	var (
 		project = new(types.Project)
 		key     = fmt.Sprintf("%s/%s/%s/meta", ProjectTable, username, id)
@@ -51,7 +51,8 @@ func (s *ProjectStorage) GetByID(username, id string) (*types.Project, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	if err := client.Get(ctx, key, &project.Meta); err != nil {
+	meta := new(types.ProjectMeta)
+	if err := client.Get(ctx, key, meta); err != nil {
 		if err.Error() == store.ErrKeyNotFound {
 			return nil, nil
 		}
@@ -59,12 +60,18 @@ func (s *ProjectStorage) GetByID(username, id string) (*types.Project, error) {
 	}
 
 	project.User = username
+	project.ID = meta.ID
+	project.Name = meta.Name
+	project.Description = meta.Description
+	project.Labels = meta.Labels
+	project.Created = meta.Created
+	project.Updated = meta.Updated
 
 	return project, nil
 }
 
 // Get project by name for user
-func (s *ProjectStorage) GetByName(username, name string) (*types.Project, error) {
+func (s *ProjectStorage) GetByName(ctx context.Context, username, name string) (*types.Project, error) {
 
 	var (
 		id string
@@ -88,11 +95,11 @@ func (s *ProjectStorage) GetByName(username, name string) (*types.Project, error
 		return nil, err
 	}
 
-	return s.GetByID(username, id)
+	return s.GetByID(ctx, username, id)
 }
 
 // List project by username
-func (s *ProjectStorage) ListByUser(username string) (*types.ProjectList, error) {
+func (s *ProjectStorage) ListByUser(ctx context.Context, username string) (*types.ProjectList, error) {
 	var (
 		key    = fmt.Sprintf("%s/%s", ProjectTable, username)
 		filter = `\b(.+)\/info\b`
@@ -122,14 +129,23 @@ func (s *ProjectStorage) ListByUser(username string) (*types.ProjectList, error)
 
 	projectList := new(types.ProjectList)
 	for _, meta := range metaList {
-		*projectList = append(*projectList, types.Project{Meta: meta, User: username})
+		project := types.Project{}
+		project.ID = meta.ID
+		project.User = username
+		project.Name = meta.Name
+		project.Description = meta.Description
+		project.Labels = meta.Labels
+		project.Created = meta.Created
+		project.Updated = meta.Updated
+
+		*projectList = append(*projectList, project)
 	}
 
 	return projectList, nil
 }
 
 // Insert new project into storage  for user
-func (s *ProjectStorage) Insert(username, name, description string) (*types.Project, error) {
+func (s *ProjectStorage) Insert(ctx context.Context, username, name, description string) (*types.Project, error) {
 	var (
 		id        = generator.GetUUIDV4()
 		project   = new(types.Project)
@@ -160,7 +176,15 @@ func (s *ProjectStorage) Insert(username, name, description string) (*types.Proj
 		return nil, err
 	}
 
-	if err := tx.Create(keyMeta, &project.Meta, 0); err != nil {
+	meta := new(types.ProjectMeta)
+	meta.ID = id
+	meta.Name = name
+	meta.Description = description
+	meta.Labels = map[string]string{"tier": "ptoject"}
+	meta.Updated = time.Now()
+	meta.Created = time.Now()
+
+	if err := tx.Create(keyMeta, meta, 0); err != nil {
 		return nil, err
 	}
 
@@ -172,7 +196,7 @@ func (s *ProjectStorage) Insert(username, name, description string) (*types.Proj
 }
 
 // Update project model
-func (s *ProjectStorage) Update(username string, project *types.Project) (*types.Project, error) {
+func (s *ProjectStorage) Update(ctx context.Context, username string, project *types.Project) (*types.Project, error) {
 	var (
 		keyMeta = fmt.Sprintf("%s/%s/%s/meta", ProjectTable, username, project.ID)
 	)
@@ -188,7 +212,14 @@ func (s *ProjectStorage) Update(username string, project *types.Project) (*types
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	if err := client.Update(ctx, keyMeta, &project.Meta, nil, 0); err != nil {
+	meta := new(types.ProjectMeta)
+	meta.ID = project.ID
+	meta.Name = project.Name
+	meta.Description = project.Description
+	meta.Labels = project.Labels
+	meta.Updated = time.Now()
+
+	if err := client.Update(ctx, keyMeta, meta, nil, 0); err != nil {
 		return project, err
 	}
 
@@ -196,9 +227,8 @@ func (s *ProjectStorage) Update(username string, project *types.Project) (*types
 }
 
 // Remove project model
-func (s *ProjectStorage) Remove(username, id string) error {
+func (s *ProjectStorage) Remove(ctx context.Context, username, id string) error {
 	var (
-		project = new(types.Project)
 		keyMeta = fmt.Sprintf("%s/%s/%s/meta", ProjectTable, username, id)
 	)
 
@@ -211,13 +241,14 @@ func (s *ProjectStorage) Remove(username, id string) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	if err := client.Get(ctx, keyMeta, &project.Meta); err != nil {
+	meta := new(types.ProjectMeta)
+	if err := client.Get(ctx, keyMeta, meta); err != nil {
 		return err
 	}
 
 	tx := client.Begin(ctx)
 
-	var keyHelper = fmt.Sprintf("/helper/%s/%s/%s", ProjectTable, username, project.Name)
+	var keyHelper = fmt.Sprintf("/helper/%s/%s/%s", ProjectTable, username, meta.Name)
 
 	tx.Delete(keyHelper)
 	tx.Delete(keyMeta)

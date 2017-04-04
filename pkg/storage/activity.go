@@ -21,6 +21,7 @@ package storage
 import (
 	"github.com/lastbackend/lastbackend/pkg/apis/types"
 	"github.com/lastbackend/lastbackend/pkg/storage/store"
+	"golang.org/x/net/context"
 )
 
 const ActivityTable string = "activities"
@@ -31,23 +32,23 @@ type ActivityStorage struct {
 	Client func() (store.IStore, store.DestroyFunc, error)
 }
 
-func (s *ActivityStorage) Insert(activity *types.Activity) (*types.Activity, error) {
+func (s *ActivityStorage) Insert(ctx context.Context, activity *types.Activity) (*types.Activity, error) {
 	return nil, nil
 }
 
-func (s *ActivityStorage) ListProjectActivity(user, project string) (*types.ActivityList, error) {
+func (s *ActivityStorage) ListProjectActivity(ctx context.Context, user, project string) (*types.ActivityList, error) {
 	return nil, nil
 }
 
-func (s *ActivityStorage) ListServiceActivity(user, service string) (*types.ActivityList, error) {
+func (s *ActivityStorage) ListServiceActivity(ctx context.Context, user, service string) (*types.ActivityList, error) {
 	return nil, nil
 }
 
-func (s *ActivityStorage) RemoveByProject(user, project string) error {
+func (s *ActivityStorage) RemoveByProject(ctx context.Context, user, project string) error {
 	return nil
 }
 
-func (s *ActivityStorage) RemoveByService(user, service string) error {
+func (s *ActivityStorage) RemoveByService(ctx context.Context, user, service string) error {
 	return nil
 }
 

@@ -25,8 +25,8 @@ type Service struct {
 	Project     string     `json:"project"`
 	Name        string     `json:"name"`
 	Description string     `json:"description"`
+	Image       Image      `json:"image"`
 	Config      Config     `json:"config"`
-	Source      *Source    `json:"source"`
 	Pods        []struct{} `json:"pods"`
 	Created     time.Time  `json:"created"`
 	Updated     time.Time  `json:"updated"`
@@ -36,6 +36,10 @@ type Config struct {
 	Replicas int    `json:"scale,omitempty"`
 	Memory   int    `json:"memory,omitempty"`
 	Region   string `json:"region,omitempty"`
+}
+
+type Image struct {
+	Source Source `json:"source"`
 }
 
 type Source struct {
