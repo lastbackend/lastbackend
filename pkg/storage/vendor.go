@@ -37,9 +37,9 @@ type VendorStorage struct {
 
 func (s *VendorStorage) Insert(username, vendorUsername, vendorName, vendorHost, serviceID string, token *oauth2.Token) error {
 	var (
-		err     error
-		vendors = make(map[string]*types.Vendor)
-		key     = fmt.Sprintf("%s/%s/%s", UserTable, username, VendorTable)
+		err error
+		// Key example: /users/<username>/vendors/<vendor>
+		key     = fmt.Sprintf("%s/%s/%s/%s", UserTable, username, VendorTable, vendorName)
 		vm      = new(types.Vendor)
 	)
 
@@ -58,24 +58,22 @@ func (s *VendorStorage) Insert(username, vendorUsername, vendorName, vendorHost,
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	err = client.Get(ctx, key, &vendors)
+	err = client.Get(ctx, key, vm)
 	if err != nil && err.Error() != store.ErrKeyNotFound {
 		return err
 	}
-
-	vendors[vendorName] = vm
-
 	if err != nil && err.Error() == store.ErrKeyNotFound {
-		return client.Create(ctx, key, vendors, nil, 0)
+		return client.Create(ctx, key, vm, nil, 0)
 	}
 
-	return client.Update(ctx, key, vendors, nil, 0)
+	return client.Update(ctx, key, vm, nil, 0)
 }
 
 func (s *VendorStorage) Get(username, vendorName string) (*types.Vendor, error) {
 	var (
-		vendors = make(map[string]*types.Vendor)
-		key     = fmt.Sprintf("%s/%s/%s", UserTable, username, VendorTable)
+		vendor = new(types.Vendor)
+		// Key example: /users/<username>/vendors/<vendor>
+		key = fmt.Sprintf("%s/%s/%s/%s", UserTable, username, VendorTable, vendorName)
 	)
 
 	client, destroy, err := s.Client()
@@ -87,20 +85,21 @@ func (s *VendorStorage) Get(username, vendorName string) (*types.Vendor, error) 
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	if err := client.Get(ctx, key, vendors); err != nil {
+	if err := client.Get(ctx, key, &vendor); err != nil {
 		if err.Error() == store.ErrKeyNotFound {
 			return nil, nil
 		}
 		return nil, err
 	}
 
-	return vendors[vendorName], nil
+	return vendor, nil
 }
 
 func (s *VendorStorage) List(username string) (map[string]*types.Vendor, error) {
 	var (
 		vendors = make(map[string]*types.Vendor)
-		key     = fmt.Sprintf("%s/%s/%s", UserTable, username, VendorTable)
+		// Key example: /users/<username>/vendors
+		key = fmt.Sprintf("%s/%s/%s", UserTable, username, VendorTable)
 	)
 
 	client, destroy, err := s.Client()
@@ -112,7 +111,7 @@ func (s *VendorStorage) List(username string) (map[string]*types.Vendor, error) 
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	if err := client.List(ctx, key, ``, vendors); err != nil {
+	if err := client.Map(ctx, key, ``, vendors); err != nil {
 		if err.Error() == store.ErrKeyNotFound {
 			return nil, nil
 		}
@@ -124,9 +123,9 @@ func (s *VendorStorage) List(username string) (map[string]*types.Vendor, error) 
 
 func (s *VendorStorage) Remove(username, vendorName string) error {
 	var (
-		err     error
-		vendors = make(map[string]*types.Vendor)
-		key     = fmt.Sprintf("%s/%s/%s", UserTable, username, VendorTable)
+		err error
+		// Key example: /users/<username>/vendors/<vendor>
+		key = fmt.Sprintf("%s/%s/%s/%s", UserTable, username, VendorTable, vendorName)
 	)
 
 	client, destroy, err := s.Client()
@@ -138,16 +137,12 @@ func (s *VendorStorage) Remove(username, vendorName string) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	err = client.Get(ctx, key, &vendors)
+	err = client.Delete(ctx, key, nil)
 	if err != nil && err.Error() == store.ErrKeyNotFound {
 		return nil
 	}
-	if err != nil && err.Error() != store.ErrKeyNotFound {
-		return err
-	}
 
-	delete(vendors, vendorName)
-	return client.Update(ctx, key, vendors, nil, 0)
+	return nil
 }
 
 func newVendorStorage(config store.Config) *VendorStorage {

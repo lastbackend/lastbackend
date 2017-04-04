@@ -23,6 +23,8 @@ import (
 )
 
 type Meta struct {
+	// Service unique id
+	ID string `json:"id"`
 	// Service unique name
 	Name string `json:"name"`
 	// Service description
