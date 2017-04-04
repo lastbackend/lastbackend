@@ -365,7 +365,7 @@ func ProjectRemoveH(w http.ResponseWriter, r *http.Request) {
 	//	return
 	//}
 
-	err = ctx.Storage.Project().Remove(session.Username, projectParam)
+	err = ctx.Storage.Project().Remove(session.Username, project.ID)
 	if err != nil {
 		ctx.Log.Error("Error: remove project from db", err)
 		errors.HTTP.InternalServerError(w)

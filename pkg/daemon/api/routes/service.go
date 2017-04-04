@@ -203,7 +203,7 @@ func ServiceCreateH(w http.ResponseWriter, r *http.Request) {
 
 	rq.Config = types.ServiceConfig{}.GetDefault()
 
-	service, err = ctx.Storage.Service().Insert(session.Username, projectParam, rq.Name, rq.Description, rq.source, rq.Config)
+	service, err = ctx.Storage.Service().Insert(session.Username, project.ID, rq.Name, rq.Description, rq.source, rq.Config)
 	if err != nil {
 		ctx.Log.Error("Error: insert service to db", err)
 		errors.HTTP.InternalServerError(w)

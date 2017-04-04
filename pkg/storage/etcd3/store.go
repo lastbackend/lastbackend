@@ -96,7 +96,7 @@ func (s *store) List(ctx context.Context, key, keyRegexFilter string, listOutPtr
 		return err
 	}
 	r, _ := regexp.Compile(keyRegexFilter)
-	items := []buffer{}
+	items := make([]buffer, 0, len(getResp.Kvs))
 	for _, kv := range getResp.Kvs {
 		if r.MatchString(string(kv.Key)) {
 			items = append(items, buffer(kv.Value))
@@ -110,26 +110,20 @@ func (s *store) Map(ctx context.Context, key, keyRegexFilter string, mapOutPtr i
 	if !strings.HasSuffix(key, "/") {
 		key += "/"
 	}
-
+	fmt.Println("Map:", key)
 	getResp, err := s.client.KV.Get(ctx, key, clientv3.WithPrefix())
 	if err != nil {
 		return err
 	}
-
-
 	r, _ := regexp.Compile(keyRegexFilter)
-	//items := make([]buffer, 0, len(getResp.Kvs))
-
 	items := make(map[string]buffer, len(getResp.Kvs))
-
 	for _, kv := range getResp.Kvs {
 		if (keyRegexFilter == "") || r.MatchString(string(kv.Key)) {
-			key := strings.Split(string(kv.Key),"/")
+			key := strings.Split(string(kv.Key), "/")
 			items[key[len(key)-1]] = buffer(kv.Value)
 		}
 
 	}
-
 	return decodeMap(s.codec, items, mapOutPtr)
 }
 
@@ -139,7 +133,7 @@ func (s *store) Update(ctx context.Context, key string, obj, outPtr interface{},
 		return err
 	}
 	key = path.Join(s.pathPrefix, key)
-	fmt.Println("Update:", key, string(data))
+	fmt.Println("Update:", key)
 	opts, err := s.ttlOpts(ctx, int64(ttl))
 	if err != nil {
 		return err
@@ -188,17 +182,17 @@ func (s *store) Begin(ctx context.Context) st.ITx {
 	}
 }
 
-func decode(s serializer.Codec, value []byte, outPtr interface{}) error {
-	if _, err := converter.EnforcePtr(outPtr); err != nil {
+func decode(s serializer.Codec, value []byte, out interface{}) error {
+	if _, err := converter.EnforcePtr(out); err != nil {
 		panic("Error: unable to convert output object to pointer")
 	}
-	return serializer.Decode(s, value, outPtr)
+	return serializer.Decode(s, value, out)
 }
 
-func decodeList(codec serializer.Codec, items []buffer, ListOutPtr interface{}) error {
-	v, err := converter.EnforcePtr(ListOutPtr)
+func decodeList(codec serializer.Codec, items []buffer, listOut interface{}) error {
+	v, err := converter.EnforcePtr(listOut)
 	if err != nil || (v.Kind() != reflect.Slice) {
-		panic("Error: need ptr to slice")
+		panic("Error: need ptr slice")
 	}
 	for _, item := range items {
 		var obj = reflect.New(v.Type().Elem()).Interface().(interface{})
@@ -211,17 +205,13 @@ func decodeList(codec serializer.Codec, items []buffer, ListOutPtr interface{}) 
 	return nil
 }
 
-func decodeMap(codec serializer.Codec, items map[string]buffer, MapOutPtr interface{}) error {
-
-	v := reflect.ValueOf(MapOutPtr)
-
+func decodeMap(codec serializer.Codec, items map[string]buffer, mapOut interface{}) error {
+	v := reflect.ValueOf(mapOut)
 	if v.Kind() != reflect.Map {
 		panic("Error: need map")
 	}
-
 	for key, item := range items {
 		var obj = reflect.New(v.Type().Elem()).Interface().(interface{})
-
 		err := serializer.Decode(codec, item, obj)
 		if err != nil {
 			return err

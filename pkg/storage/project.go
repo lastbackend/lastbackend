@@ -39,7 +39,7 @@ type ProjectStorage struct {
 func (s *ProjectStorage) GetByID(username, id string) (*types.Project, error) {
 	var (
 		project = new(types.Project)
-		key     = fmt.Sprintf("%s/%s/%s/info", ProjectTable, username, id)
+		key     = fmt.Sprintf("%s/%s/%s/meta", ProjectTable, username, id)
 	)
 
 	client, destroy, err := s.Client()
@@ -134,7 +134,7 @@ func (s *ProjectStorage) Insert(username, name, description string) (*types.Proj
 		id        = generator.GetUUIDV4()
 		project   = new(types.Project)
 		keyHelper = fmt.Sprintf("/helper/%s/%s/%s", ProjectTable, username, name)
-		keyInfo   = fmt.Sprintf("%s/%s/%s/info", ProjectTable, username, id)
+		keyMeta   = fmt.Sprintf("%s/%s/%s/meta", ProjectTable, username, id)
 	)
 
 	project.ID = id
@@ -156,11 +156,11 @@ func (s *ProjectStorage) Insert(username, name, description string) (*types.Proj
 
 	tx := client.Begin(ctx)
 
-	if err := tx.Create(keyHelper, &id, 0); err != nil {
+	if err := tx.Create(keyHelper, &project.ID, 0); err != nil {
 		return nil, err
 	}
 
-	if err := tx.Create(keyInfo, &project.Meta, 0); err != nil {
+	if err := tx.Create(keyMeta, &project.Meta, 0); err != nil {
 		return nil, err
 	}
 
@@ -174,7 +174,7 @@ func (s *ProjectStorage) Insert(username, name, description string) (*types.Proj
 // Update project model
 func (s *ProjectStorage) Update(username string, project *types.Project) (*types.Project, error) {
 	var (
-		keyInfo = fmt.Sprintf("%s/%s/%s/info", ProjectTable, username, project.ID)
+		keyMeta = fmt.Sprintf("%s/%s/%s/meta", ProjectTable, username, project.ID)
 	)
 
 	project.Updated = time.Now()
@@ -188,7 +188,7 @@ func (s *ProjectStorage) Update(username string, project *types.Project) (*types
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	if err := client.Update(ctx, keyInfo, &project.Meta, nil, 0); err != nil {
+	if err := client.Update(ctx, keyMeta, &project.Meta, nil, 0); err != nil {
 		return project, err
 	}
 
@@ -198,7 +198,8 @@ func (s *ProjectStorage) Update(username string, project *types.Project) (*types
 // Remove project model
 func (s *ProjectStorage) Remove(username, id string) error {
 	var (
-		key = fmt.Sprintf("%s/%s/%s/info", ProjectTable, username, id)
+		project = new(types.Project)
+		keyMeta = fmt.Sprintf("%s/%s/%s/meta", ProjectTable, username, id)
 	)
 
 	client, destroy, err := s.Client()
@@ -210,7 +211,18 @@ func (s *ProjectStorage) Remove(username, id string) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	if err := client.Delete(ctx, key, nil); err != nil {
+	if err := client.Get(ctx, keyMeta, &project.Meta); err != nil {
+		return err
+	}
+
+	tx := client.Begin(ctx)
+
+	var keyHelper = fmt.Sprintf("/helper/%s/%s/%s", ProjectTable, username, project.Name)
+
+	tx.Delete(keyHelper)
+	tx.Delete(keyMeta)
+
+	if err := tx.Commit(); err != nil {
 		return err
 	}
 

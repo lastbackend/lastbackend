@@ -37,7 +37,7 @@ type UserStorage struct {
 func (s *UserStorage) GetByUsername(username string) (*types.User, error) {
 
 	var (
-		keyInfo     = fmt.Sprintf("%s/%s/info", UserTable, username)
+		keyMeta     = fmt.Sprintf("%s/%s/meta", UserTable, username)
 		keyProfile  = fmt.Sprintf("%s/%s/profile", UserTable, username)
 		keyPassword = fmt.Sprintf("%s/%s/security/password", UserTable, username)
 		keyEmails   = fmt.Sprintf("%s/%s/emails", UserTable, username)
@@ -55,37 +55,33 @@ func (s *UserStorage) GetByUsername(username string) (*types.User, error) {
 	defer cancel()
 
 	info := new(types.UserInfo)
-	if err := client.Get(ctx, keyInfo, info); err != nil {
+	if err := client.Get(ctx, keyMeta, info); err != nil {
 		if err.Error() == store.ErrKeyNotFound {
 			return nil, nil
 		}
 		return nil, err
 	}
 
-	profile := new(types.UserProfile)
-	if err := client.Get(ctx, keyProfile, profile); err != nil && err.Error() != store.ErrKeyNotFound{
+	if err := client.Get(ctx, keyProfile, &user.Profile); err != nil && err.Error() != store.ErrKeyNotFound {
 		return nil, err
 	}
 
 	password := new(types.UserPassword)
-	if err := client.Get(ctx, keyPassword, password); err != nil && err.Error() != store.ErrKeyNotFound{
+	if err := client.Get(ctx, keyPassword, password); err != nil && err.Error() != store.ErrKeyNotFound {
 		return nil, err
 	}
 
-	emails := new(types.UserEmails)
-	if err := client.Get(ctx, keyEmails, emails); err != nil && err.Error() != store.ErrKeyNotFound{
+	user.Emails = make(map[string]bool)
+	if err := client.Map(ctx, keyEmails, ``, user.Emails); err != nil && err.Error() != store.ErrKeyNotFound {
 		return nil, err
 	}
 
-	vendors := new(types.UserVendors)
-	if err := client.Get(ctx, keyVendors, vendors); err != nil && err.Error() != store.ErrKeyNotFound{
+	user.Vendors = make(map[string]*types.Vendor)
+	if err := client.Map(ctx, keyVendors, ``, user.Vendors); err != nil && err.Error() != store.ErrKeyNotFound {
 		return nil, err
 	}
 
 	user.Username = username
-	user.Profile = *profile
-	user.Emails = *emails
-	user.Vendors = *vendors
 	user.Gravatar = info.Gravatar
 	user.Created = info.Created
 	user.Updated = info.Updated
