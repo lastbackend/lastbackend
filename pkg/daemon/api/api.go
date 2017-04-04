@@ -39,46 +39,44 @@ func Listen(host string, port int) error {
 }
 
 var Routes = []http.Route{
-	{Path: "/session", Method: http.MethodPost, Handler: routes.SessionCreateH},
-
 	// User handlers
-	{Path: "/user", Method: http.MethodGet, Middleware: []http.Middleware{http.Authenticate}, Handler: routes.UserGetH},
+	{Path: "/user", Method: http.MethodGet, Middleware: []http.Middleware{http.Context}, Handler: routes.UserGetH},
 
 	// Vendor handlers
-	{Path: "/oauth/{vendor}", Method: http.MethodDelete, Middleware: []http.Middleware{http.Authenticate}, Handler: routes.OAuthDisconnectH},
-	{Path: "/oauth/{vendor}/{code}", Method: http.MethodPost, Middleware: []http.Middleware{http.Authenticate}, Handler: routes.OAuthConnectH},
+	{Path: "/oauth/{vendor}", Method: http.MethodDelete, Middleware: []http.Middleware{http.Context}, Handler: routes.OAuthDisconnectH},
+	{Path: "/oauth/{vendor}/{code}", Method: http.MethodPost, Middleware: []http.Middleware{http.Context}, Handler: routes.OAuthConnectH},
 
 	// VCS handlers extends
-	{Path: "/vcs/{vendor}/repos", Method: http.MethodGet, Middleware: []http.Middleware{http.Authenticate}, Handler: routes.VCSRepositoriesListH},
-	{Path: "/vcs/{vendor}/branches", Method: http.MethodGet, Middleware: []http.Middleware{http.Authenticate}, Handler: routes.VCSBranchesListH},
+	{Path: "/vcs/{vendor}/repos", Method: http.MethodGet, Middleware: []http.Middleware{http.Context}, Handler: routes.VCSRepositoriesListH},
+	{Path: "/vcs/{vendor}/branches", Method: http.MethodGet, Middleware: []http.Middleware{http.Context}, Handler: routes.VCSBranchesListH},
 
 	// Build handlers
-	{Path: "/build", Method: http.MethodGet, Handler: routes.BuildListH},
-	{Path: "/build", Method: http.MethodPost, Handler: routes.BuildCreateH},
+	{Path: "/build", Method: http.MethodGet, Middleware: []http.Middleware{http.Context}, Handler: routes.BuildListH},
+	{Path: "/build", Method: http.MethodPost, Middleware: []http.Middleware{http.Context}, Handler: routes.BuildCreateH},
 
 	// Project handlers
-	{Path: "/project", Method: http.MethodGet, Middleware: []http.Middleware{http.Authenticate}, Handler: routes.ProjectListH},
-	{Path: "/project", Method: http.MethodPost, Middleware: []http.Middleware{http.Authenticate}, Handler: routes.ProjectCreateH},
-	{Path: "/project/{project}", Method: http.MethodGet, Middleware: []http.Middleware{http.Authenticate}, Handler: routes.ProjectInfoH},
-	{Path: "/project/{project}", Method: http.MethodPut, Middleware: []http.Middleware{http.Authenticate}, Handler: routes.ProjectUpdateH},
-	{Path: "/project/{project}", Method: http.MethodDelete, Middleware: []http.Middleware{http.Authenticate}, Handler: routes.ProjectRemoveH},
-	{Path: "/project/{project}/activity", Method: http.MethodGet, Middleware: []http.Middleware{http.Authenticate}, Handler: routes.ProjectActivityListH},
-	{Path: "/project/{project}/service", Method: http.MethodPost, Middleware: []http.Middleware{http.Authenticate}, Handler: routes.ServiceCreateH},
-	{Path: "/project/{project}/service", Method: http.MethodGet, Middleware: []http.Middleware{http.Authenticate}, Handler: routes.ServiceListH},
-	{Path: "/project/{project}/service/{service}", Method: http.MethodGet, Middleware: []http.Middleware{http.Authenticate}, Handler: routes.ServiceInfoH},
-	{Path: "/project/{project}/service/{service}", Method: http.MethodPut, Middleware: []http.Middleware{http.Authenticate}, Handler: routes.ServiceUpdateH},
-	{Path: "/project/{project}/service/{service}", Method: http.MethodDelete, Middleware: []http.Middleware{http.Authenticate}, Handler: routes.ServiceRemoveH},
+	{Path: "/project", Method: http.MethodGet, Middleware: []http.Middleware{http.Context}, Handler: routes.ProjectListH},
+	{Path: "/project", Method: http.MethodPost, Middleware: []http.Middleware{http.Context}, Handler: routes.ProjectCreateH},
+	{Path: "/project/{project}", Method: http.MethodGet, Middleware: []http.Middleware{http.Context}, Handler: routes.ProjectInfoH},
+	{Path: "/project/{project}", Method: http.MethodPut, Middleware: []http.Middleware{http.Context}, Handler: routes.ProjectUpdateH},
+	{Path: "/project/{project}", Method: http.MethodDelete, Middleware: []http.Middleware{http.Context}, Handler: routes.ProjectRemoveH},
+	{Path: "/project/{project}/activity", Method: http.MethodGet, Middleware: []http.Middleware{http.Context}, Handler: routes.ProjectActivityListH},
+	{Path: "/project/{project}/service", Method: http.MethodPost, Middleware: []http.Middleware{http.Context}, Handler: routes.ServiceCreateH},
+	{Path: "/project/{project}/service", Method: http.MethodGet, Middleware: []http.Middleware{http.Context}, Handler: routes.ServiceListH},
+	{Path: "/project/{project}/service/{service}", Method: http.MethodGet, Middleware: []http.Middleware{http.Context}, Handler: routes.ServiceInfoH},
+	{Path: "/project/{project}/service/{service}", Method: http.MethodPut, Middleware: []http.Middleware{http.Context}, Handler: routes.ServiceUpdateH},
+	{Path: "/project/{project}/service/{service}", Method: http.MethodDelete, Middleware: []http.Middleware{http.Context}, Handler: routes.ServiceRemoveH},
 
-	//{ Path: "/project/{project}/service/{service}/activity", Method: http.MethodGet, Middleware: []http.Middleware{http.Authenticate}, Handler: routes.ServiceActivityListH},
-	//{ Path: "/project/{project}/service/{service}/hook", Method: http.MethodPost, Middleware: []http.Middleware{http.Authenticate}, Handler: routes.ServiceHookCreateH},
-	//{ Path: "/project/{project}/service/{service}/hook", Method: http.MethodGet, Middleware: []http.Middleware{http.Authenticate}, Handler: routes.ServiceHookListH},
-	//{ Path: "/project/{project}/service/{service}/hook/{hook}", Method: http.MethodDelete, Middleware: []http.Middleware{http.Authenticate}, Handler: routes.ServiceHookRemoveH},
-	//{ Path: "/project/{project}/service/{service}/logs", Method: http.MethodGet, Middleware: []http.Middleware{http.Authenticate}, Handler: routes.ServiceLogsH},
+	//{ Path: "/project/{project}/service/{service}/activity", Method: http.MethodGet, Middleware: []http.Middleware{http.Context}, Handler: routes.ServiceActivityListH},
+	//{ Path: "/project/{project}/service/{service}/hook", Method: http.MethodPost, Middleware: []http.Middleware{http.Context}, Handler: routes.ServiceHookCreateH},
+	//{ Path: "/project/{project}/service/{service}/hook", Method: http.MethodGet, Middleware: []http.Middleware{http.Context}, Handler: routes.ServiceHookListH},
+	//{ Path: "/project/{project}/service/{service}/hook/{hook}", Method: http.MethodDelete, Middleware: []http.Middleware{http.Context}, Handler: routes.ServiceHookRemoveH},
+	//{ Path: "/project/{project}/service/{service}/logs", Method: http.MethodGet, Middleware: []http.Middleware{http.Context}, Handler: routes.ServiceLogsH},
 
 	// Hook routes.
-	{Path: "/hook/{token}", Method: http.MethodPost, Handler: routes.HookExecuteH},
+	{Path: "/hook/{token}", Method: http.MethodPost, Middleware: []http.Middleware{http.Context}, Handler: routes.HookExecuteH},
 
 	// Docker routes.
-	{Path: "/docker/repo/search", Method: http.MethodGet, Handler: routes.DockerRepositorySearchH},
-	{Path: "/docker/repo/tags", Method: http.MethodGet, Handler: routes.DockerRepositoryTagListH},
+	{Path: "/docker/repo/search", Method: http.MethodGet, Middleware: []http.Middleware{http.Context}, Handler: routes.DockerRepositorySearchH},
+	{Path: "/docker/repo/tags", Method: http.MethodGet, Middleware: []http.Middleware{http.Context}, Handler: routes.DockerRepositoryTagListH},
 }
