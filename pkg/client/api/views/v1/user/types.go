@@ -19,7 +19,6 @@
 package user
 
 import (
-	"github.com/lastbackend/lastbackend/pkg/util/table"
 	"time"
 )
 

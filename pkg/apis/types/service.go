@@ -21,8 +21,6 @@ package types
 import (
 	"encoding/json"
 	"errors"
-	"fmt"
-	"github.com/lastbackend/lastbackend/pkg/util/table"
 )
 
 type ServiceList []Service
