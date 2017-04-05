@@ -19,9 +19,9 @@
 package user_test
 
 import (
-	"github.com/lastbackend/lastbackend/pkg/client/storage"
 	"github.com/lastbackend/lastbackend/pkg/client/cmd/user"
 	"github.com/lastbackend/lastbackend/pkg/client/context"
+	"github.com/lastbackend/lastbackend/pkg/client/storage"
 	"github.com/lastbackend/lastbackend/pkg/util/homedir"
 	"github.com/stretchr/testify/assert"
 	"io/ioutil"

@@ -22,7 +22,6 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/storage/store"
 )
 
-
 type Storage struct {
 	*UserStorage
 	*VendorStorage
@@ -101,7 +100,7 @@ func (s *Storage) Activity() IActivity {
 func Get(config store.Config) (*Storage, error) {
 
 	var (
-		store  = new(Storage)
+		store = new(Storage)
 	)
 
 	store.UserStorage = newUserStorage(config)

@@ -19,8 +19,8 @@
 package routes
 
 import (
-	"net/http"
 	"github.com/Sirupsen/logrus"
+	"net/http"
 )
 
 func VersionGetR(w http.ResponseWriter, r *http.Request) {

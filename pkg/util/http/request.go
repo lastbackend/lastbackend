@@ -133,13 +133,9 @@ func decodeResponseJSON(resp *http.Response, successV, failureV interface{}) err
 			case "text/html":
 				buf := new(bytes.Buffer)
 				buf.ReadFrom(resp.Body)
-				s := buf.String()
-				fmt.Println(s)
 			case "text/plain":
 				buf := new(bytes.Buffer)
 				buf.ReadFrom(resp.Body)
-				s := buf.String()
-				fmt.Println(s)
 			case "application/json":
 				return decodeResponseBodyJSON(resp, failureV)
 			//fmt.Printf("%+v", failureV)

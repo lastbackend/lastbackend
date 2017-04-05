@@ -22,7 +22,7 @@ import "time"
 
 const (
 	WestEuropeRegion = "WE"
-	EastAsiaRegion = "EA"
+	EastAsiaRegion   = "EA"
 )
 
 type ClusterList []Cluster

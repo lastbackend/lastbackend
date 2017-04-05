@@ -22,8 +22,8 @@ import (
 	"errors"
 	"fmt"
 	"github.com/howeyc/gopass"
-	e "github.com/lastbackend/lastbackend/pkg/errors"
 	"github.com/lastbackend/lastbackend/pkg/client/context"
+	e "github.com/lastbackend/lastbackend/pkg/errors"
 )
 
 func SignInCmd() {
@@ -54,6 +54,7 @@ func SignInCmd() {
 	}
 
 	ctx.Log.Info("Login successful")
+	fmt.Println("Login successful")
 }
 
 type userLoginS struct {

@@ -22,39 +22,38 @@ import "time"
 
 type ContainerSpec struct {
 	// Image spec
-	Image         ImageSpec `json:"image"`
+	Image ImageSpec `json:"image"`
 	// Network spec
-	Network       ContainerNetworkSpec `json:"network"`
+	Network ContainerNetworkSpec `json:"network"`
 	// Ports configuration
-	Ports         []ContainerPortSpec `json:"ports"`
+	Ports []ContainerPortSpec `json:"ports"`
 	// Labels list
-	Labels        map[string]string `json:"labels"`
+	Labels map[string]string `json:"labels"`
 	// Environments list
-	Envs          map[string]string `json:"envs"`
+	Envs map[string]string `json:"envs"`
 	// Container enrtypoint
-	Entrypoint    string `json:"entrypoint"`
+	Entrypoint string `json:"entrypoint"`
 	// Container run command
-	Command       string `json:"command"`
+	Command string `json:"command"`
 	// Container run command arguments
-	Args          []string `json:"args"`
+	Args []string `json:"args"`
 	// Container DNS configuration
-	DNS           ContainerDNSSpec `json:"dns"`
+	DNS ContainerDNSSpec `json:"dns"`
 	// Container resources quota
-	Quota         ContainerQuotaSpec `json:"quota"`
+	Quota ContainerQuotaSpec `json:"quota"`
 	// Container restart policy
 	RestartPolicy ContainerRestartPolicySpec `json:"restart_policy"`
 	// Container volumes mount
-	Volumes       []VolumesSpec `json:"volumes"`
+	Volumes []VolumesSpec `json:"volumes"`
 }
-
 
 type ContainerNetworkSpec struct {
 	// Container hostname
 	Hostname string `json:"hostname"`
 	// Container host domain
-	Domain   string `json:"domain"`
+	Domain string `json:"domain"`
 	// Network ID to use
-	Network  string `json:"network"`
+	Network string `json:"network"`
 }
 
 type ContainerPortSpec struct {
@@ -66,9 +65,9 @@ type ContainerPortSpec struct {
 
 type ContainerDNSSpec struct {
 	// List of DNS servers
-	Server  []string `json:"server"`
+	Server []string `json:"server"`
 	// DNS server search options
-	Search  []string `json:"search"`
+	Search []string `json:"search"`
 	// DNS server other options
 	Options []string `json:"options"`
 }

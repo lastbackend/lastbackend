@@ -19,10 +19,10 @@
 package main
 
 import (
-	"os"
 	"github.com/Sirupsen/logrus"
 	"github.com/jawher/mow.cli"
 	"github.com/lastbackend/lastbackend/pkg/agent/cmd"
+	"os"
 )
 
 func main() {
