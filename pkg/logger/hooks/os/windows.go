@@ -4,8 +4,9 @@ package os
 
 import (
 	"github.com/Sirupsen/logrus"
+	"github.com/Sirupsen/logrus/hooks/syslog"
 )
 
-func SyslogHook(_ *logrus.Entry) error {
+func SyslogHook(network, raddr string, tag string) (*logrus_syslog.SyslogHook, error) {
 	return nil
 }

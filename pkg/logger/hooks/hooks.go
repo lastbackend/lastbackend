@@ -21,7 +21,6 @@ package hooks
 import (
 	"github.com/Sirupsen/logrus"
 	"github.com/lastbackend/lastbackend/pkg/logger/hooks/os"
-	"log/syslog"
 	"path"
 	"runtime"
 	"strings"
@@ -31,17 +30,17 @@ type ContextHook struct {
 	Skip int
 }
 
-func (hook ContextHook) Levels() []logrus.Level {
+func (ContextHook) Levels() []logrus.Level {
 	return logrus.AllLevels
 }
 
-func (hook ContextHook) Fire(entry *logrus.Entry) error {
-	if hook.Skip == 0 {
-		hook.Skip = 8
+func (h ContextHook) Fire(entry *logrus.Entry) error {
+	if h.Skip == 0 {
+		h.Skip = 8
 	}
 
 	pc := make([]uintptr, 3, 3)
-	cnt := runtime.Callers(hook.Skip, pc)
+	cnt := runtime.Callers(h.Skip, pc)
 
 	for i := 0; i < cnt; i++ {
 		fu := runtime.FuncForPC(pc[i] - 1)
@@ -63,10 +62,14 @@ type SyslogHook struct {
 	Raddr   string
 }
 
-func (hook SyslogHook) Levels() []logrus.Level {
+func (SyslogHook) Levels() []logrus.Level {
 	return logrus.AllLevels
 }
 
-func (hook SyslogHook) Fire(entry *logrus.Entry) error {
-	return os.SyslogHook(entry, hook.Network, hook.Raddr, syslog.LOG_DEBUG, hook.Tag)
+func (h SyslogHook) Fire(entry *logrus.Entry) error {
+	hook, err := os.SyslogHook(h.Network, h.Raddr, h.Tag)
+	if hook != nil {
+		entry.Logger.Hooks.Add(hook)
+	}
+	return err
 }
