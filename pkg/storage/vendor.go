@@ -19,7 +19,6 @@
 package storage
 
 import (
-	"fmt"
 	"github.com/lastbackend/lastbackend/pkg/apis/types"
 	"github.com/lastbackend/lastbackend/pkg/storage/store"
 	"golang.org/x/net/context"
@@ -32,6 +31,7 @@ const VendorTable = "vendors"
 // Service User type for interface in interfaces folder
 type VendorStorage struct {
 	IVendor
+	Helper IHelper
 	Client func() (store.IStore, store.DestroyFunc, error)
 }
 
@@ -39,8 +39,8 @@ func (s *VendorStorage) Insert(ctx context.Context, username, vendorUsername, ve
 	var (
 		err error
 		// Key example: /users/<username>/vendors/<vendor>
-		key     = fmt.Sprintf("%s/%s/%s/%s", UserTable, username, VendorTable, vendorName)
-		vm      = new(types.Vendor)
+		key = s.Helper.KeyDecorator(ctx, UserTable, VendorTable, vendorName)
+		vm  = new(types.Vendor)
 	)
 
 	vm.Username = vendorUsername
@@ -73,7 +73,7 @@ func (s *VendorStorage) Get(ctx context.Context, username, vendorName string) (*
 	var (
 		vendor = new(types.Vendor)
 		// Key example: /users/<username>/vendors/<vendor>
-		key = fmt.Sprintf("%s/%s/%s/%s", UserTable, username, VendorTable, vendorName)
+		key = s.Helper.KeyDecorator(ctx, UserTable, VendorTable, vendorName)
 	)
 
 	client, destroy, err := s.Client()
@@ -99,7 +99,7 @@ func (s *VendorStorage) List(ctx context.Context, username string) (map[string]*
 	var (
 		vendors = make(map[string]*types.Vendor)
 		// Key example: /users/<username>/vendors
-		key = fmt.Sprintf("%s/%s/%s", UserTable, username, VendorTable)
+		key = s.Helper.KeyDecorator(ctx, UserTable, VendorTable)
 	)
 
 	client, destroy, err := s.Client()
@@ -125,7 +125,7 @@ func (s *VendorStorage) Remove(ctx context.Context, username, vendorName string)
 	var (
 		err error
 		// Key example: /users/<username>/vendors/<vendor>
-		key = fmt.Sprintf("%s/%s/%s/%s", UserTable, username, VendorTable, vendorName)
+		key = s.Helper.KeyDecorator(ctx, UserTable, VendorTable, vendorName)
 	)
 
 	client, destroy, err := s.Client()
@@ -145,8 +145,9 @@ func (s *VendorStorage) Remove(ctx context.Context, username, vendorName string)
 	return nil
 }
 
-func newVendorStorage(config store.Config) *VendorStorage {
+func NewVendorStorage(config store.Config, helper IHelper) *VendorStorage {
 	s := new(VendorStorage)
+	s.Helper = helper
 	s.Client = func() (store.IStore, store.DestroyFunc, error) {
 		return New(config)
 	}

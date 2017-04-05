@@ -29,6 +29,7 @@ const HookTable string = "hooks"
 // Service Build type for interface in interfaces folder
 type HookStorage struct {
 	IHook
+	Helper IHelper
 	Client func() (store.IStore, store.DestroyFunc, error)
 }
 
@@ -63,8 +64,9 @@ func (s *HookStorage) RemoveByService(ctx context.Context, id string) error {
 	return nil
 }
 
-func newHookStorage(config store.Config) *HookStorage {
+func NewHookStorage(config store.Config, helper IHelper) *HookStorage {
 	s := new(HookStorage)
+	s.Helper = helper
 	s.Client = func() (store.IStore, store.DestroyFunc, error) {
 		return New(config)
 	}

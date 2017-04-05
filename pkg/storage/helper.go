@@ -16,14 +16,20 @@
 // from Last.Backend LLC.
 //
 
-package http
+package storage
 
 import (
-	"net/http"
+	"strings"
 )
 
-func Context(h http.HandlerFunc) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		h.ServeHTTP(w, r)
-	}
+type Helper struct {
+	IHelper
+}
+
+func (Helper) KeyDecorator(ctx IContext, pattern ...string) string {
+	return "/" + strings.Join(pattern, "/")
+}
+
+func (Helper) GetUsername(ctx IContext) string {
+	return ctx.Value("username").(string)
 }

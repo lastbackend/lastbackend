@@ -29,6 +29,7 @@ const VolumeTable string = "volumes"
 // Volume Service type for interface in interfaces folder
 type VolumeStorage struct {
 	IVolume
+	Helper IHelper
 	Client func() (store.IStore, store.DestroyFunc, error)
 }
 
@@ -50,8 +51,9 @@ func (s *VolumeStorage) Remove(ctx context.Context, id string) error {
 	return nil
 }
 
-func newVolumeStorage(config store.Config) *VolumeStorage {
+func NewVolumeStorage(config store.Config, helper IHelper) *VolumeStorage {
 	s := new(VolumeStorage)
+	s.Helper = helper
 	s.Client = func() (store.IStore, store.DestroyFunc, error) {
 		return New(config)
 	}

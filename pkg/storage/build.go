@@ -29,6 +29,7 @@ const BuildTable string = "builds"
 // Service Build type for interface in interfaces folder
 type BuildStorage struct {
 	IBuild
+	Helper IHelper
 	Client func() (store.IStore, store.DestroyFunc, error)
 }
 
@@ -47,8 +48,9 @@ func (s *BuildStorage) Insert(ctx context.Context, build *types.Build) (*types.B
 	return nil, nil
 }
 
-func newBuildStorage(config store.Config) *BuildStorage {
+func NewBuildStorage(config store.Config, helper IHelper) *BuildStorage {
 	s := new(BuildStorage)
+	s.Helper = helper
 	s.Client = func() (store.IStore, store.DestroyFunc, error) {
 		return New(config)
 	}

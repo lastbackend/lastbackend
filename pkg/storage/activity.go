@@ -29,6 +29,7 @@ const ActivityTable string = "activities"
 // Activity Service type for interface in interfaces folder
 type ActivityStorage struct {
 	IActivity
+	Helper IHelper
 	Client func() (store.IStore, store.DestroyFunc, error)
 }
 
@@ -52,8 +53,9 @@ func (s *ActivityStorage) RemoveByService(ctx context.Context, user, service str
 	return nil
 }
 
-func newActivityStorage(config store.Config) *ActivityStorage {
+func NewActivityStorage(config store.Config, helper IHelper) *ActivityStorage {
 	s := new(ActivityStorage)
+	s.Helper = helper
 	s.Client = func() (store.IStore, store.DestroyFunc, error) {
 		return New(config)
 	}

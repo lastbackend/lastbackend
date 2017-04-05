@@ -19,7 +19,6 @@
 package storage
 
 import (
-	"fmt"
 	"github.com/lastbackend/lastbackend/pkg/apis/types"
 	"github.com/lastbackend/lastbackend/pkg/storage/store"
 	"golang.org/x/net/context"
@@ -31,17 +30,18 @@ const UserTable = "users"
 // Service User type for interface in interfaces folder
 type UserStorage struct {
 	IUser
+	Helper IHelper
 	Client func() (store.IStore, store.DestroyFunc, error)
 }
 
 func (s *UserStorage) GetByUsername(ctx context.Context, username string) (*types.User, error) {
 
 	var (
-		keyMeta     = fmt.Sprintf("%s/%s/meta", UserTable, username)
-		keyProfile  = fmt.Sprintf("%s/%s/profile", UserTable, username)
-		keyPassword = fmt.Sprintf("%s/%s/security/password", UserTable, username)
-		keyEmails   = fmt.Sprintf("%s/%s/emails", UserTable, username)
-		keyVendors  = fmt.Sprintf("%s/%s/vendors", UserTable, username)
+		keyMeta     = s.Helper.KeyDecorator(ctx,"meta")
+		keyProfile  = s.Helper.KeyDecorator(ctx,"profile")
+		keyPassword = s.Helper.KeyDecorator(ctx,"security", "password")
+		keyEmails   = s.Helper.KeyDecorator(ctx,"emails")
+		keyVendors  = s.Helper.KeyDecorator(ctx,"vendors")
 		user        = new(types.User)
 	)
 
@@ -94,7 +94,7 @@ func (s *UserStorage) GetByUsername(ctx context.Context, username string) (*type
 func (s *UserStorage) GetByEmail(ctx context.Context, email string) (*types.User, error) {
 
 	var (
-		key      = fmt.Sprintf("helper/emails/%s", email)
+		key      = s.Helper.KeyDecorator(ctx,"helper", "emails", email)
 		username string
 	)
 
@@ -117,8 +117,9 @@ func (s *UserStorage) GetByEmail(ctx context.Context, email string) (*types.User
 	return s.GetByUsername(ctx, username)
 }
 
-func newUserStorage(config store.Config) *UserStorage {
+func NewUserStorage(config store.Config, helper IHelper) *UserStorage {
 	s := new(UserStorage)
+	s.Helper = helper
 	s.Client = func() (store.IStore, store.DestroyFunc, error) {
 		return New(config)
 	}

@@ -22,7 +22,6 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/storage/store"
 )
 
-
 type Storage struct {
 	*UserStorage
 	*VendorStorage
@@ -102,17 +101,18 @@ func Get(config store.Config) (*Storage, error) {
 
 	var (
 		store  = new(Storage)
+		helper = new(Helper)
 	)
 
-	store.UserStorage = newUserStorage(config)
-	store.VendorStorage = newVendorStorage(config)
-	store.ProjectStorage = newProjectStorage(config)
-	store.ServiceStorage = newServiceStorage(config)
-	store.ImageStorage = newImageStorage(config)
-	store.BuildStorage = newBuildStorage(config)
-	store.HookStorage = newHookStorage(config)
-	store.VolumeStorage = newVolumeStorage(config)
-	store.ActivityStorage = newActivityStorage(config)
+	store.UserStorage = NewUserStorage(config, helper)
+	store.VendorStorage = NewVendorStorage(config, helper)
+	store.ProjectStorage = NewProjectStorage(config, helper)
+	store.ServiceStorage = NewServiceStorage(config, helper)
+	store.ImageStorage = NewImageStorage(config, helper)
+	store.BuildStorage = NewBuildStorage(config, helper)
+	store.HookStorage = NewHookStorage(config, helper)
+	store.VolumeStorage = NewVolumeStorage(config, helper)
+	store.ActivityStorage = NewActivityStorage(config, helper)
 
 	return store, nil
 }

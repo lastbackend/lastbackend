@@ -19,7 +19,6 @@
 package storage
 
 import (
-	"fmt"
 	"github.com/lastbackend/lastbackend/pkg/apis/types"
 	"github.com/lastbackend/lastbackend/pkg/storage/store"
 	"github.com/lastbackend/lastbackend/pkg/util/generator"
@@ -32,6 +31,7 @@ const ServiceTable string = "services"
 // Service Service type for interface in interfaces folder
 type ServiceStorage struct {
 	IService
+	Helper IHelper
 	Client func() (store.IStore, store.DestroyFunc, error)
 }
 
@@ -40,10 +40,10 @@ func (s *ServiceStorage) GetByID(ctx context.Context, username, projectID, servi
 	var (
 		project        = new(types.Project)
 		service        = new(types.Service)
-		keyProjectMeta = fmt.Sprintf("%s/%s/%s/meta", ProjectTable, username, projectID)
-		keyMeta        = fmt.Sprintf("%s/%s/%s/%s/%s/meta", ProjectTable, username, projectID, ServiceTable, serviceID)
-		keyConfig      = fmt.Sprintf("%s/%s/%s/%s/%s/config", ProjectTable, username, projectID, ServiceTable, serviceID)
-		keySource      = fmt.Sprintf("%s/%s/%s/%s/%s/source", ProjectTable, username, projectID, ServiceTable, serviceID)
+		keyProjectMeta = s.Helper.KeyDecorator(ctx, ProjectTable, projectID, "meta")
+		keyMeta        = s.Helper.KeyDecorator(ctx, ProjectTable, projectID, ServiceTable, serviceID, "meta")
+		keyConfig      = s.Helper.KeyDecorator(ctx, ProjectTable, projectID, ServiceTable, serviceID, "config")
+		keySource      = s.Helper.KeyDecorator(ctx, ProjectTable, projectID, ServiceTable, serviceID, "source")
 	)
 
 	client, destroy, err := s.Client()
@@ -103,9 +103,8 @@ func (s *ServiceStorage) GetByID(ctx context.Context, username, projectID, servi
 // Get project by name for user
 func (s *ServiceStorage) GetByName(ctx context.Context, username, projectID, name string) (*types.Service, error) {
 	var (
-		id string
-		// Key example: /helper/projects/<username>/<project id>/services/<name>
-		key = fmt.Sprintf("/helper/%s/%s/%s/%s/%s", ProjectTable, username, projectID, ServiceTable, name)
+		id  string
+		key = s.Helper.KeyDecorator(ctx, "helper", ProjectTable, projectID, ServiceTable, name)
 	)
 
 	client, destroy, err := s.Client()
@@ -131,8 +130,8 @@ func (s *ServiceStorage) GetByName(ctx context.Context, username, projectID, nam
 func (s *ServiceStorage) ListByProject(ctx context.Context, username, projectID string) (*types.ServiceList, error) {
 	var (
 		projects    = make(map[string]*types.Project)
-		keyProjects = fmt.Sprintf("%s/%s", ProjectTable, username)
-		key         = fmt.Sprintf("%s/%s/%s/%s", ProjectTable, username, projectID, ServiceTable)
+		keyProjects = s.Helper.KeyDecorator(ctx, ProjectTable)
+		key         = s.Helper.KeyDecorator(ctx,  ProjectTable, projectID, ServiceTable)
 		filter      = `\b(.+)\/info\b`
 	)
 
@@ -188,11 +187,11 @@ func (s *ServiceStorage) Insert(ctx context.Context, username, projectID, name, 
 	var (
 		id             = generator.GetUUIDV4()
 		service        = new(types.Service)
-		keyProjectMeta = fmt.Sprintf("%s/%s/%s/meta", ProjectTable, username, projectID)
-		keyHelper      = fmt.Sprintf("/helper/%s/%s/%s/%s/%s", ProjectTable, username, projectID, ServiceTable, name)
-		keyMeta        = fmt.Sprintf("%s/%s/%s/%s/%s/meta", ProjectTable, username, projectID, ServiceTable, id)
-		keyConfig      = fmt.Sprintf("%s/%s/%s/%s/%s/config", ProjectTable, username, projectID, ServiceTable, id)
-		//keySource      = fmt.Sprintf("%s/%s/%s/%s/%s/source", ProjectTable, username, projectID, ServiceTable, id)
+		keyProjectMeta = s.Helper.KeyDecorator(ctx, ProjectTable, projectID, "meta")
+		keyHelper      = s.Helper.KeyDecorator(ctx, ProjectTable, projectID, ServiceTable, name)
+		keyMeta        = s.Helper.KeyDecorator(ctx, ProjectTable, projectID, ServiceTable, id, "meta")
+		keyConfig      = s.Helper.KeyDecorator(ctx, ProjectTable, projectID, ServiceTable, id, "config")
+		//keySource      = s.Helper.KeyDecorator(ctx, ProjectTable, projectID, ServiceTable, id, "source")
 	)
 
 	service.ID = id
@@ -252,9 +251,9 @@ func (s *ServiceStorage) Insert(ctx context.Context, username, projectID, name, 
 // Update service in storage
 func (s *ServiceStorage) Update(ctx context.Context, username, projectID string, service *types.Service) (*types.Service, error) {
 	var (
-		keyMeta   = fmt.Sprintf("%s/%s/%s/%s/%s/meta", ProjectTable, username, projectID, ServiceTable, service.Name)
-		keyConfig = fmt.Sprintf("%s/%s/%s/%s/%s/config", ProjectTable, username, projectID, ServiceTable, service.Name)
-		keySource = fmt.Sprintf("%s/%s/%s/%s/%s/source", ProjectTable, username, projectID, ServiceTable, service.Name)
+		keyMeta   = s.Helper.KeyDecorator(ctx, ProjectTable, projectID, ServiceTable, service.Name, "meta")
+		keyConfig = s.Helper.KeyDecorator(ctx, ProjectTable, projectID, ServiceTable, service.Name, "config")
+		keySource = s.Helper.KeyDecorator(ctx, ProjectTable, projectID, ServiceTable, service.Name, "source")
 	)
 
 	service.Updated = time.Now()
@@ -293,8 +292,8 @@ func (s *ServiceStorage) Update(ctx context.Context, username, projectID string,
 func (s *ServiceStorage) Remove(ctx context.Context, username, projectID, serviceID string) error {
 
 	var (
-		keyProjectMeta = fmt.Sprintf("%s/%s/%s/meta", ProjectTable, username, projectID)
-		key            = fmt.Sprintf("%s/%s/%s/%s/%s", ProjectTable, username, projectID, ServiceTable, serviceID)
+		keyProjectMeta = s.Helper.KeyDecorator(ctx, ProjectTable, projectID, "meta")
+		key            = s.Helper.KeyDecorator(ctx, ProjectTable, projectID, ServiceTable, serviceID)
 	)
 
 	client, destroy, err := s.Client()
@@ -314,7 +313,7 @@ func (s *ServiceStorage) Remove(ctx context.Context, username, projectID, servic
 		return err
 	}
 
-	var keyHelper = fmt.Sprintf("/helper/%s/%s/%s/%s/%s", ProjectTable, username, projectID, ServiceTable, pmeta.Name)
+	var keyHelper = s.Helper.KeyDecorator(ctx, "helper", ProjectTable, projectID, ServiceTable, pmeta.Name)
 
 	tx := client.Begin(ctx)
 
@@ -328,7 +327,7 @@ func (s *ServiceStorage) Remove(ctx context.Context, username, projectID, servic
 func (s *ServiceStorage) RemoveByProject(ctx context.Context, username, project string) error {
 
 	var (
-		key = fmt.Sprintf("%s/%s/%s/%s", ProjectTable, username, project, ServiceTable)
+		key = s.Helper.KeyDecorator(ctx, ProjectTable, project, ServiceTable)
 	)
 
 	client, destroy, err := s.Client()
@@ -347,8 +346,9 @@ func (s *ServiceStorage) RemoveByProject(ctx context.Context, username, project 
 	return nil
 }
 
-func newServiceStorage(config store.Config) *ServiceStorage {
+func NewServiceStorage(config store.Config, helper IHelper) *ServiceStorage {
 	s := new(ServiceStorage)
+	s.Helper = helper
 	s.Client = func() (store.IStore, store.DestroyFunc, error) {
 		return New(config)
 	}

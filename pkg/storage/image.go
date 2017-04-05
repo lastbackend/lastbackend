@@ -19,7 +19,6 @@
 package storage
 
 import (
-	"fmt"
 	"github.com/lastbackend/lastbackend/pkg/apis/types"
 	"github.com/lastbackend/lastbackend/pkg/storage/store"
 	"github.com/lastbackend/lastbackend/pkg/util/generator"
@@ -32,13 +31,14 @@ const ImageTable string = "images"
 // Project Service type for interface in interfaces folder
 type ImageStorage struct {
 	IImage
+	Helper IHelper
 	Client func() (store.IStore, store.DestroyFunc, error)
 }
 
 func (s *ImageStorage) GetByID(ctx context.Context, user, id string) (*types.Image, error) {
 	var (
 		image = new(types.Image)
-		key   = fmt.Sprintf("/%s/%s", ImageTable, id)
+		key   = s.Helper.KeyDecorator(ctx, ImageTable, id)
 	)
 
 	client, destroy, err := s.Client()
@@ -85,8 +85,9 @@ func (s *ImageStorage) Update(ctx context.Context, image *types.Image) (*types.I
 	return nil, nil
 }
 
-func newImageStorage(config store.Config) *ImageStorage {
+func NewImageStorage(config store.Config, helper IHelper) *ImageStorage {
 	s := new(ImageStorage)
+	s.Helper = helper
 	s.Client = func() (store.IStore, store.DestroyFunc, error) {
 		return New(config)
 	}

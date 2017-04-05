@@ -19,7 +19,6 @@
 package storage
 
 import (
-	"fmt"
 	"github.com/lastbackend/lastbackend/pkg/apis/types"
 	"github.com/lastbackend/lastbackend/pkg/storage/store"
 	"github.com/lastbackend/lastbackend/pkg/util/generator"
@@ -32,6 +31,7 @@ const ProjectTable string = "projects"
 // Project Service type for interface in interfaces folder
 type ProjectStorage struct {
 	IProject
+	Helper IHelper
 	Client func() (store.IStore, store.DestroyFunc, error)
 }
 
@@ -39,7 +39,7 @@ type ProjectStorage struct {
 func (s *ProjectStorage) GetByID(ctx context.Context, username, id string) (*types.Project, error) {
 	var (
 		project = new(types.Project)
-		key     = fmt.Sprintf("%s/%s/%s/meta", ProjectTable, username, id)
+		key     = s.Helper.KeyDecorator(ctx, ProjectTable, id, "meta")
 	)
 
 	client, destroy, err := s.Client()
@@ -74,9 +74,8 @@ func (s *ProjectStorage) GetByID(ctx context.Context, username, id string) (*typ
 func (s *ProjectStorage) GetByName(ctx context.Context, username, name string) (*types.Project, error) {
 
 	var (
-		id string
-		// Key example: /helper/projects/<username>/<name>
-		key = fmt.Sprintf("/helper/%s/%s/%s", ProjectTable, username, name)
+		id  string
+		key = s.Helper.KeyDecorator(ctx, "helper", ProjectTable, name)
 	)
 
 	client, destroy, err := s.Client()
@@ -101,7 +100,7 @@ func (s *ProjectStorage) GetByName(ctx context.Context, username, name string) (
 // List project by username
 func (s *ProjectStorage) ListByUser(ctx context.Context, username string) (*types.ProjectList, error) {
 	var (
-		key    = fmt.Sprintf("%s/%s", ProjectTable, username)
+		key    = s.Helper.KeyDecorator(ctx, ProjectTable)
 		filter = `\b(.+)\/info\b`
 	)
 
@@ -149,8 +148,8 @@ func (s *ProjectStorage) Insert(ctx context.Context, username, name, description
 	var (
 		id        = generator.GetUUIDV4()
 		project   = new(types.Project)
-		keyHelper = fmt.Sprintf("/helper/%s/%s/%s", ProjectTable, username, name)
-		keyMeta   = fmt.Sprintf("%s/%s/%s/meta", ProjectTable, username, id)
+		keyHelper = s.Helper.KeyDecorator(ctx, "helper", ProjectTable, name)
+		keyMeta   = s.Helper.KeyDecorator(ctx, ProjectTable, id)
 	)
 
 	project.ID = id
@@ -198,7 +197,7 @@ func (s *ProjectStorage) Insert(ctx context.Context, username, name, description
 // Update project model
 func (s *ProjectStorage) Update(ctx context.Context, username string, project *types.Project) (*types.Project, error) {
 	var (
-		keyMeta = fmt.Sprintf("%s/%s/%s/meta", ProjectTable, username, project.ID)
+		keyMeta = s.Helper.KeyDecorator(ctx, ProjectTable, project.ID)
 	)
 
 	project.Updated = time.Now()
@@ -229,7 +228,7 @@ func (s *ProjectStorage) Update(ctx context.Context, username string, project *t
 // Remove project model
 func (s *ProjectStorage) Remove(ctx context.Context, username, id string) error {
 	var (
-		keyMeta = fmt.Sprintf("%s/%s/%s/meta", ProjectTable, username, id)
+		keyMeta = s.Helper.KeyDecorator(ctx, ProjectTable, id, "meta")
 	)
 
 	client, destroy, err := s.Client()
@@ -248,7 +247,7 @@ func (s *ProjectStorage) Remove(ctx context.Context, username, id string) error 
 
 	tx := client.Begin(ctx)
 
-	var keyHelper = fmt.Sprintf("/helper/%s/%s/%s", ProjectTable, username, meta.Name)
+	var keyHelper = s.Helper.KeyDecorator(ctx, "helper", ProjectTable, meta.Name)
 
 	tx.Delete(keyHelper)
 	tx.Delete(keyMeta)
@@ -260,8 +259,9 @@ func (s *ProjectStorage) Remove(ctx context.Context, username, id string) error 
 	return nil
 }
 
-func newProjectStorage(config store.Config) *ProjectStorage {
+func NewProjectStorage(config store.Config, helper IHelper) *ProjectStorage {
 	s := new(ProjectStorage)
+	s.Helper = helper
 	s.Client = func() (store.IStore, store.DestroyFunc, error) {
 		return New(config)
 	}
