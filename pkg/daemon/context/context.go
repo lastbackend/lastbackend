@@ -42,7 +42,7 @@ func (c *Context) Init(cfg *config.Config) {
 
 	config.Set(cfg)
 
-	c.Log = logger.New(cfg.Debug)
+	c.Log = logger.New(cfg.Debug, 9)
 
 	// Initializing database
 	c.Log.Info("Initializing daemon")
