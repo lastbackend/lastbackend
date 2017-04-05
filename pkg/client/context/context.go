@@ -32,7 +32,7 @@ func Get() *Context {
 
 func Mock() *Context {
 	context.mock = true
-	context.Log = logger.New(true)
+	context.Log = logger.New(true, 8)
 	context.Storage = new(storage.DB)
 
 	return &context

@@ -6,6 +6,6 @@ import (
 	"github.com/Sirupsen/logrus"
 )
 
-func SetSyslog(_ *logrus.Logger) {
-
+func SyslogHook(_ *logrus.Entry) error {
+	return nil
 }

@@ -62,7 +62,7 @@ func Run() {
 			cfg.Debug = *debug
 		}
 
-		ctx.Log = logger.New(cfg.Debug)
+		ctx.Log = logger.New(cfg.Debug, 8)
 
 		ctx.HTTP = http.New(cfg.ApiHost)
 
