@@ -19,11 +19,11 @@
 package etcd3
 
 import (
+	"fmt"
 	"github.com/coreos/etcd/clientv3"
 	"github.com/lastbackend/lastbackend/pkg/util/serializer"
 	"golang.org/x/net/context"
 	"path"
-	"fmt"
 )
 
 type tx struct {

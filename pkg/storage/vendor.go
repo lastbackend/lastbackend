@@ -39,8 +39,8 @@ func (s *VendorStorage) Insert(ctx context.Context, username, vendorUsername, ve
 	var (
 		err error
 		// Key example: /users/<username>/vendors/<vendor>
-		key     = fmt.Sprintf("%s/%s/%s/%s", UserTable, username, VendorTable, vendorName)
-		vm      = new(types.Vendor)
+		key = fmt.Sprintf("%s/%s/%s/%s", UserTable, username, VendorTable, vendorName)
+		vm  = new(types.Vendor)
 	)
 
 	vm.Username = vendorUsername
