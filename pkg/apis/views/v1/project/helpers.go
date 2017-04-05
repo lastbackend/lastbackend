@@ -21,6 +21,7 @@ package project
 import (
 	"encoding/json"
 	"github.com/lastbackend/lastbackend/pkg/apis/types"
+	"github.com/lastbackend/lastbackend/pkg/util/table"
 )
 
 func New(obj *types.Project) *Project {
@@ -36,6 +37,15 @@ func New(obj *types.Project) *Project {
 
 func (obj *Project) ToJson() ([]byte, error) {
 	return json.Marshal(obj)
+}
+
+func (p *Project) DrawTable() {
+	table.PrintHorizontal(map[string]interface{}{
+		"Name":        p.Name,
+		"Description": p.Description,
+		"Created":     p.Created,
+		"Updated":     p.Updated,
+	})
 }
 
 func NewList(obj *types.ProjectList) *ProjectList {
@@ -54,4 +64,22 @@ func (obj *ProjectList) ToJson() ([]byte, error) {
 		return []byte("[]"), nil
 	}
 	return json.Marshal(obj)
+}
+
+func (projects *ProjectList) DrawTable() {
+	t := table.New([]string{"ID", "Name", "Description", "Created", "Updated"})
+	t.VisibleHeader = true
+
+	for _, p := range *projects {
+		t.AddRow(map[string]interface{}{
+			"Name":        p.Name,
+			"Description": p.Description,
+			"Created":     p.Created.String()[:10],
+			"Updated":     p.Updated.String()[:10],
+		})
+	}
+
+	t.AddRow(map[string]interface{}{})
+
+	t.Print()
 }

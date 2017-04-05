@@ -108,6 +108,8 @@ func (d *DB) Set(fieldname string, iface interface{}) error {
 }
 
 func (d *DB) Clear() error {
+	d.Close()
+
 	err := os.RemoveAll(path.Join(homedir.HomeDir(), string(os.PathSeparator), ".lb"))
 	if err != nil {
 		return err

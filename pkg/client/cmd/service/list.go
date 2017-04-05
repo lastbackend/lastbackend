@@ -19,7 +19,7 @@
 package service
 
 import (
-	"github.com/lastbackend/lastbackend/pkg/apis/types"
+	s "github.com/lastbackend/lastbackend/pkg/apis/views/v1/service"
 	"github.com/lastbackend/lastbackend/pkg/client/cmd/project"
 	"github.com/lastbackend/lastbackend/pkg/client/context"
 	"github.com/lastbackend/lastbackend/pkg/errors"
@@ -40,13 +40,13 @@ func ListServiceCmd() {
 	}
 }
 
-func List() (*types.ServiceList, string, error) {
+func List() (*s.ServiceList, string, error) {
 
 	var (
 		err      error
 		ctx      = context.Get()
 		er       = new(errors.Http)
-		services = new(types.ServiceList)
+		services = new(s.ServiceList)
 	)
 
 	p, err := project.Current()

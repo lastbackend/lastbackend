@@ -54,6 +54,7 @@ func SignInCmd() {
 	}
 
 	ctx.Log.Info("Login successful")
+	fmt.Println("Login successful")
 }
 
 type userLoginS struct {
