@@ -67,9 +67,5 @@ func (SyslogHook) Levels() []logrus.Level {
 }
 
 func (h SyslogHook) Fire(entry *logrus.Entry) error {
-	hook, err := os.SyslogHook(h.Network, h.Raddr, h.Tag)
-	if hook != nil {
-		entry.Logger.Hooks.Add(hook)
-	}
-	return err
+	return os.SyslogHook(entry, h.Network, h.Raddr, h.Tag)
 }

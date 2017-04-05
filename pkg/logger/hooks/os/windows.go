@@ -7,6 +7,6 @@ import (
 	"github.com/Sirupsen/logrus/hooks/syslog"
 )
 
-func SyslogHook(network, raddr string, tag string) (*logrus_syslog.SyslogHook, error) {
+func SyslogHook(entry *logrus.Entry, network, raddr, tag string) error {
 	return nil
 }
