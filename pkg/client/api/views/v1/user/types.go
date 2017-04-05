@@ -16,31 +16,28 @@
 // from Last.Backend LLC.
 //
 
-package v1
+package user
 
 import (
-	"github.com/lastbackend/lastbackend/pkg/apis/types"
-	"github.com/lastbackend/lastbackend/pkg/daemon/api/views/v1/project"
-	"github.com/lastbackend/lastbackend/pkg/daemon/api/views/v1/service"
-	"github.com/lastbackend/lastbackend/pkg/daemon/api/views/v1/user"
+	"github.com/lastbackend/lastbackend/pkg/util/table"
+	"time"
 )
 
-func NewUser(obj *types.User) *user.User {
-	return user.New(obj)
+type User struct {
+	Gravatar string    `json:"gravatar"`
+	Username string    `json:"username"`
+	Emails   Emails    `json:"emails"`
+	Profile  Profile   `json:"profile"`
+	Vendors  Vendors   `json:"integrations"`
+	Created  time.Time `json:"created"`
+	Updated  time.Time `json:"updated"`
 }
 
-func NewProject(obj *types.Project) *project.Project {
-	return project.New(obj)
+type Emails map[string]bool
+
+type Profile struct {
+	FirstName string `json:"first_name"`
+	LastName  string `json:"last_name"`
 }
 
-func NewProjectList(obj *types.ProjectList) *project.ProjectList {
-	return project.NewList(obj)
-}
-
-func NewService(obj *types.Service) *service.Service {
-	return service.New(obj)
-}
-
-func NewServiceList(obj *types.ServiceList) *service.ServiceList {
-	return service.NewList(obj)
-}
+type Vendors map[string]string

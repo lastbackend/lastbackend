@@ -20,8 +20,8 @@ package storage
 
 import (
 	"github.com/lastbackend/lastbackend/pkg/apis/types"
-	"golang.org/x/oauth2"
 	"golang.org/x/net/context"
+	"golang.org/x/oauth2"
 )
 
 type IStorage interface {
