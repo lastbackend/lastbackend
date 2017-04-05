@@ -19,7 +19,7 @@
 package service
 
 import (
-	"github.com/lastbackend/lastbackend/pkg/apis/types"
+	s "github.com/lastbackend/lastbackend/pkg/client/api/views/v1/service"
 	"github.com/lastbackend/lastbackend/pkg/client/cmd/project"
 	"github.com/lastbackend/lastbackend/pkg/client/context"
 	"github.com/lastbackend/lastbackend/pkg/errors"
@@ -38,13 +38,13 @@ func InspectCmd(name string) {
 	service.DrawTable(projectName)
 }
 
-func Inspect(name string) (*types.Service, string, error) {
+func Inspect(name string) (*s.Service, string, error) {
 
 	var (
 		err     error
 		ctx     = context.Get()
 		er      = new(errors.Http)
-		service = new(types.Service)
+		service = new(s.Service)
 	)
 
 	p, err := project.Current()

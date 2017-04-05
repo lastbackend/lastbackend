@@ -19,7 +19,7 @@
 package project
 
 import (
-	"github.com/lastbackend/lastbackend/pkg/apis/types"
+	p "github.com/lastbackend/lastbackend/pkg/client/api/views/v1/project"
 	"github.com/lastbackend/lastbackend/pkg/client/context"
 	"github.com/lastbackend/lastbackend/pkg/errors"
 )
@@ -39,13 +39,13 @@ func ListProjectCmd() {
 	}
 }
 
-func List() (*types.ProjectList, error) {
+func List() (*p.ProjectList, error) {
 
 	var (
 		err      error
 		ctx      = context.Get()
 		er       = new(errors.Http)
-		projects = new(types.ProjectList)
+		projects = new(p.ProjectList)
 	)
 
 	_, _, err = ctx.HTTP.
