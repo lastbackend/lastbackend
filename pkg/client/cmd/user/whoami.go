@@ -66,7 +66,7 @@ func Whoami() (*types.User, error) {
 		AddHeader("Authorization", "Bearer "+ctx.Token).
 		Request(user, er)
 	if err != nil {
-		return nil, errors.UnknownMessage
+		return nil, err
 	}
 
 	if er.Code == 401 {
