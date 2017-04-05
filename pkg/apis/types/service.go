@@ -20,32 +20,27 @@ package types
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"github.com/lastbackend/lastbackend/pkg/util/table"
-	"time"
 )
 
 type ServiceList []Service
 
 type Service struct {
-	// Service user
+	serviceMeta
+
+	// Service username
 	User string `json:"user"`
 	// Service project
 	Project string `json:"project"`
-	// Service image
-	Image string `json:"image"`
-	// Service name
-	Name string `json:"name"`
-	// Service description
-	Description string `json:"description"`
+
+	// Service custom domains
+	Domains []string `json:"domains"`
 	// Service source info
 	Source *ServiceSource `json:"source,omitempty"`
 	// Service config info
 	Config *ServiceConfig `json:"config,omitempty"`
-	// Service created time
-	Created time.Time `json:"created"`
-	// Service updated time
-	Updated time.Time `json:"updated"`
 }
 
 const (
@@ -54,30 +49,76 @@ const (
 	SourceTemplateType = "template"
 )
 
+type serviceMeta struct{ ServiceMeta }
+type ServiceMeta struct {
+	meta
+
+	// Add fields to expand the meta data
+	// Example:
+	// Note string `json:"note,omitempty"`
+	// Uptime time.Time `json:"uptime"
+
+	// Service image
+	Image string `json:"image"`
+}
+
 type ServiceSource struct {
-	Type   string `json:"type" yaml:"type,omitempty"`
-	Hub    string `json:"hub" yaml:"hub,omitempty"`
-	Owner  string `json:"owner" yaml:"owner,omitempty"`
-	Repo   string `json:"repo" yaml:"repo,omitempty"`
-	Branch string `json:"branch" yaml:"branch,omitempty"`
-}
-
-func (s *ServiceSource) GetFromUrl(url string) error {
-	return nil
-}
-
-func (s *ServiceSource) GetFromImage(image string) error {
-	return nil
-}
-
-func (s *ServiceSource) GetFromTemplate(template interface{}) error {
-	return nil
+	Hub    string `json:"hub"`
+	Owner  string `json:"owner"`
+	Repo   string `json:"repo"`
+	Branch string `json:"branch"`
 }
 
 type ServiceConfig struct {
-	Replicas int    `json:"scale,omitempty" yaml:"scale,omitempty"`
-	Memory   int    `json:"memory,omitempty" yaml:"memory,omitempty"`
-	Region   string `json:"region,omitempty" yaml:"region,omitempty"`
+	Replicas   int      `json:"scale"`
+	Memory     int      `json:"memory"`
+	Region     string   `json:"region"`
+	WorkingDir string   `json:"workdir"`
+	Entrypoint string   `json:"entrypoint"`
+	Image      string   `json:"image"`
+	Command    []string `json:"command"`
+	Args       []string `json:"args"`
+	EnvVars    []string `json:"env"`
+	Ports      []Port   `json:"ports"`
+}
+
+func (c *ServiceConfig) Update(patch *ServiceConfig) error {
+
+	if patch.Replicas < 0 {
+		return errors.New("The value of the `scale` parameter must be at least 1")
+	}
+	c.Replicas = patch.Replicas
+
+	if patch.Memory < 32 {
+		return errors.New("The value of the `memory` parameter must be at least 32")
+	}
+	c.Memory = patch.Memory
+
+	c.WorkingDir = patch.WorkingDir
+	c.Entrypoint = patch.Entrypoint
+	c.Image = patch.Image
+	c.Command = patch.Command
+	c.Args = patch.Args
+
+	c.Ports = patch.Ports
+
+	// TODO: Check valid format env params
+	c.EnvVars = patch.EnvVars
+
+	return nil
+}
+
+func (ServiceConfig) GetDefault() *ServiceConfig {
+	var config = new(ServiceConfig)
+	config.Memory = 256
+	return config
+}
+
+type Port struct {
+	Name      string `json:"name"`
+	Protocol  string `json:"protocol"`
+	Container int32  `json:"container"`
+	Published bool   `json:"published"`
 }
 
 func (s *Service) ToJson() ([]byte, error) {
@@ -174,17 +215,6 @@ type ContainerConfig struct {
 	WorkingDir string   `json:"workdir" yaml:"workdir"`
 	Command    []string `json:"command" yaml:"command"`
 	Args       []string `json:"args" yaml:"args"`
-	Env        []EnvVar `json:"env" yaml:"env"`
+	EnvVars    []string `json:"env" yaml:"env"`
 	Ports      []Port   `json:"ports" yaml:"ports"`
-}
-
-type Port struct {
-	Name      string `json:"name" yaml:"name"`
-	Container int32  `json:"container" yaml:"container"`
-	Protocol  string `json:"protocol" yaml:"protocol"`
-}
-
-type EnvVar struct {
-	Name  string `json:"name" yaml:"name"`
-	Value string `json:"value" yaml:"value"`
 }

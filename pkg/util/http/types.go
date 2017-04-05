@@ -27,4 +27,8 @@ type Route struct {
 	Method     string
 }
 
+//type Middleware interface {
+//	Handler(func(w http.ResponseWriter, r *http.Request) error) func(w http.ResponseWriter, r *http.Request) error
+//}
+
 type Middleware func(http.HandlerFunc) http.HandlerFunc

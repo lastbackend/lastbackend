@@ -21,91 +21,87 @@ package storage
 import (
 	"github.com/lastbackend/lastbackend/pkg/apis/types"
 	"golang.org/x/oauth2"
+	"golang.org/x/net/context"
 )
 
 type IStorage interface {
-	User() IUser
+	Activity() IActivity
 	Build() IBuild
+	Hook() IHook
 	Image() IImage
 	Project() IProject
 	Service() IService
-	Hook() IHook
-	Volume() IVolume
-	Activity() IActivity
+	User() IUser
 	Vendor() IVendor
-}
-
-type IUser interface {
-	GetByUsername(string) (*types.User, error)
-	GetByEmail(string) (*types.User, error)
-}
-
-type IBuild interface {
-	GetByID(string, string) (*types.Build, error)
-	ListByImage(string, string) (*types.BuildList, error)
-	Insert(*types.Build) (*types.Build, error)
-	Update(*types.Build) (*types.Build, error)
-}
-
-type IImage interface {
-	GetByID(string, string) (*types.Image, error)
-	GetByUser(string) (*types.ImageList, error)
-	ListByProject(string, string) (*types.ImageList, error)
-	ListByService(string, string) (*types.ImageList, error)
-	Insert(*types.Image) (*types.Image, error)
-	Update(*types.Image) (*types.Image, error)
-}
-
-type IProject interface {
-	GetByName(string, string) (*types.Project, error)
-	ListByUser(string) (*types.ProjectList, error)
-	Insert(string, string, string) (*types.Project, error)
-	Update(*types.Project) (*types.Project, error)
-	Remove(string, string) error
-}
-
-type IService interface {
-	CheckExistsByName(string, string) (bool, error)
-	GetByNameOrID(string, string) (*types.Service, error)
-	GetByName(string, string, string) (*types.Service, error)
-	GetByID(string, string) (*types.Service, error)
-	ListByUser(string, string) (*types.ServiceList, error)
-	ListByProject(string, string) (*types.ServiceList, error)
-	Insert(username, project, name, description string, source *types.ServiceSource, config *types.ServiceConfig) (*types.Service, error)
-	Update(*types.Service) (*types.Service, error)
-	Remove(string, string, string) error
-	RemoveByProject(string, string) error
-}
-
-type IHook interface {
-	GetByToken(string) (*types.Hook, error)
-	ListByUser(string) (*types.HookList, error)
-	ListByImage(string, string) (*types.HookList, error)
-	ListByService(string, string) (*types.HookList, error)
-	Insert(*types.Hook) (*types.Hook, error)
-	Remove(string) error
-	RemoveByService(string) error
-}
-
-type IVolume interface {
-	GetByToken(string) (*types.Volume, error)
-	ListByProject(string) (*types.VolumeList, error)
-	Insert(*types.Volume) (*types.Volume, error)
-	Remove(string) error
+	Volume() IVolume
 }
 
 type IActivity interface {
-	Insert(*types.Activity) (*types.Activity, error)
-	ListProjectActivity(string, string) (*types.ActivityList, error)
-	ListServiceActivity(string, string) (*types.ActivityList, error)
-	RemoveByProject(user, project string) error
-	RemoveByService(user, service string) error
+	Insert(ctx context.Context, activity *types.Activity) (*types.Activity, error)
+	ListProjectActivity(ctx context.Context, username, id string) (*types.ActivityList, error)
+	ListServiceActivity(ctx context.Context, username, id string) (*types.ActivityList, error)
+	RemoveByProject(ctx context.Context, username, id string) error
+	RemoveByService(ctx context.Context, username, id string) error
+}
+
+type IBuild interface {
+	GetByID(ctx context.Context, username, id string) (*types.Build, error)
+	ListByImage(ctx context.Context, username, id string) (*types.BuildList, error)
+	Insert(ctx context.Context, build *types.Build) (*types.Build, error)
+	Update(ctx context.Context, build *types.Build) (*types.Build, error)
+}
+
+type IHook interface {
+	GetByToken(ctx context.Context, token string) (*types.Hook, error)
+	ListByUser(ctx context.Context, username string) (*types.HookList, error)
+	ListByImage(ctx context.Context, username, id string) (*types.HookList, error)
+	ListByService(ctx context.Context, username, id string) (*types.HookList, error)
+	Insert(ctx context.Context, hook *types.Hook) (*types.Hook, error)
+	Remove(ctx context.Context, id string) error
+	RemoveByService(ctx context.Context, id string) error
+}
+
+type IProject interface {
+	GetByID(ctx context.Context, username, id string) (*types.Project, error)
+	GetByName(ctx context.Context, username, name string) (*types.Project, error)
+	ListByUser(ctx context.Context, username string) (*types.ProjectList, error)
+	Insert(ctx context.Context, username, name, description string) (*types.Project, error)
+	Update(ctx context.Context, username string, project *types.Project) (*types.Project, error)
+	Remove(ctx context.Context, username, name string) error
+}
+
+type IService interface {
+	GetByID(ctx context.Context, username, project, id string) (*types.Service, error)
+	GetByName(ctx context.Context, username, project, name string) (*types.Service, error)
+	ListByProject(ctx context.Context, username, project string) (*types.ServiceList, error)
+	Insert(ctx context.Context, username, project, name, description, image string, config *types.ServiceConfig) (*types.Service, error)
+	Update(ctx context.Context, username, project string, service *types.Service) (*types.Service, error)
+	Remove(ctx context.Context, username, project, name string) error
+	RemoveByProject(ctx context.Context, username, project string) error
+}
+
+type IImage interface {
+	GetByID(ctx context.Context, username, id string) (*types.Image, error)
+	Insert(ctx context.Context, source *types.ImageSource) (*types.Image, error)
+	Update(ctx context.Context, image *types.Image) (*types.Image, error)
+}
+
+type IUser interface {
+	GetByUsername(ctx context.Context, username string) (*types.User, error)
+	GetByEmail(ctx context.Context, email string) (*types.User, error)
 }
 
 type IVendor interface {
-	Insert(string, string, string, string, string, *oauth2.Token) error
-	Get(string, string) (*types.Vendor, error)
-	List(string) (map[string]*types.Vendor, error)
-	Update(string, *types.Vendor) error
-	Remove(string, string) error
+	Insert(ctx context.Context, username, vendorUsername, vendorName, vendorHost, serviceID string, token *oauth2.Token) error
+	Get(ctx context.Context, username, vendorName string) (*types.Vendor, error)
+	List(ctx context.Context, username string) (map[string]*types.Vendor, error)
+	Update(ctx context.Context, username string, vendor *types.Vendor) error
+	Remove(ctx context.Context, username string, vendorName string) error
+}
+
+type IVolume interface {
+	GetByToken(ctx context.Context, token string) (*types.Volume, error)
+	ListByProject(ctx context.Context, project string) (*types.VolumeList, error)
+	Insert(ctx context.Context, volume *types.Volume) (*types.Volume, error)
+	Remove(ctx context.Context, id string) error
 }

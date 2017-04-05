@@ -19,8 +19,12 @@
 package storage
 
 import (
+	"fmt"
 	"github.com/lastbackend/lastbackend/pkg/apis/types"
 	"github.com/lastbackend/lastbackend/pkg/storage/store"
+	"github.com/lastbackend/lastbackend/pkg/util/generator"
+	"golang.org/x/net/context"
+	"time"
 )
 
 const ImageTable string = "images"
@@ -31,29 +35,53 @@ type ImageStorage struct {
 	Client func() (store.IStore, store.DestroyFunc, error)
 }
 
-func (i *ImageStorage) GetByID(user, id string) (*types.Image, error) {
-	return nil, nil
-}
+func (s *ImageStorage) GetByID(ctx context.Context, user, id string) (*types.Image, error) {
+	var (
+		image = new(types.Image)
+		key   = fmt.Sprintf("/%s/%s", ImageTable, id)
+	)
 
-func (i *ImageStorage) GetByUser(id string) (*types.ImageList, error) {
-	return nil, nil
-}
+	client, destroy, err := s.Client()
+	if err != nil {
+		return nil, err
+	}
+	defer destroy()
 
-func (i *ImageStorage) ListByProject(user, id string) (*types.ImageList, error) {
-	return nil, nil
-}
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
 
-func (i *ImageStorage) ListByService(user, id string) (*types.ImageList, error) {
-	return nil, nil
+	meta := new(types.ImageMeta)
+	if err := client.Get(ctx, key, meta); err != nil {
+		if err.Error() == store.ErrKeyNotFound {
+			return nil, nil
+		}
+		return nil, err
+	}
+
+	image.ID = meta.ID
+	image.Name = meta.Name
+	image.Description = meta.Description
+	image.Labels = meta.Labels
+	image.Created = meta.Created
+	image.Updated = meta.Updated
+
+	return image, nil
 }
 
 // Insert new image into storage
-func (i *ImageStorage) Insert(image *types.Image) (*types.Image, error) {
-	return nil, nil
+func (s *ImageStorage) Insert(ctx context.Context, _ *types.ImageSource) (*types.Image, error) {
+	var (
+		id    = generator.GetUUIDV4()
+		image = new(types.Image)
+	)
+
+	image.ID = id
+
+	return image, nil
 }
 
 // Update build model
-func (i *ImageStorage) Update(image *types.Image) (*types.Image, error) {
+func (s *ImageStorage) Update(ctx context.Context, image *types.Image) (*types.Image, error) {
 	return nil, nil
 }
 

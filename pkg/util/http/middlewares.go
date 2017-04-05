@@ -16,12 +16,14 @@
 // from Last.Backend LLC.
 //
 
-package routes_test
+package http
 
-//import (
-//	"testing"
-//)
-//
-//func TestSessionCreate(t *testing.T) {
-//
-//}
+import (
+	"net/http"
+)
+
+func Context(h http.HandlerFunc) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		h.ServeHTTP(w, r)
+	}
+}

@@ -12,7 +12,7 @@ type EventManager struct {
 
 func NewEventManager() *EventManager {
 	ctx := context.Get()
-	ctx.Log.Info("Create new event Manager")
+	ctx.Log.Debug("Create new event Manager")
 	var em = new(EventManager)
 
 	em.update = make(chan types.Event)
@@ -23,7 +23,7 @@ func NewEventManager() *EventManager {
 
 func ReleaseEventManager(em *EventManager) error {
 	ctx := context.Get()
-	ctx.Log.Info("Release event Manager")
+	ctx.Log.Debug("Release event Manager")
 	close(em.update)
 	close(em.close)
 	return nil
@@ -31,7 +31,7 @@ func ReleaseEventManager(em *EventManager) error {
 
 func (em *EventManager) watch() error {
 	ctx := context.Get()
-	ctx.Log.Info("start event watcher")
+	ctx.Log.Debug("start event watcher")
 
 	for {
 		select {

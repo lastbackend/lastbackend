@@ -57,6 +57,8 @@ func Agent(cmd *cli.Cmd) {
 		)
 
 		ctx.New(cfg)
+
+		// Initializing database
 		runtime.New(cfg.Runtime)
 
 		// Handle SIGINT and SIGTERM.

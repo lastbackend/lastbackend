@@ -36,7 +36,7 @@ type deployS struct {
 type Config struct {
 	Scale int `json:"scale,omitempty"`
 	//Ports   []string `json:"ports,omitempty"`
-	//Env     []string `json:"env,omitempty"`
+	//EnvVars     []string `json:"env,omitempty"`
 	//Volumes []string `json:"volumes,omitempty"`
 }
 
@@ -50,7 +50,7 @@ func DeployCmd(name, image, template, url string, scale int) {
 	if scale != 0 /* || len(env) != 0 || len(ports) != 0 || len(volumes) != 0 */ {
 		config = new(Config)
 		config.Scale = scale
-		//config.Env = env
+		//config.EnvVars = env
 		//config.Ports = ports
 		//config.Volumes = volumes
 	}

@@ -18,29 +18,40 @@
 
 package types
 
-import "time"
-
 type ImageList []Image
 
 type Image struct {
-	// Image uuid, incremented automatically
-	ID string `json:"id"`
+	imageMeta
 	// Image user
 	User string `json:"user"`
-	// Image name
-	Name string `json:"name"`
-	// Image tag lists
-	Tags map[string]string `json:"tags"`
 	// Image Registry info
-	Registry Registry
-	// Image created time
-	Created time.Time `json:"created"`
-	// Image updated time
-	Updated time.Time `json:"updated"`
+	Registry Registry `json:"registry"`
+	// Image source info
+	Source ImageSource `json:"source"`
+}
+
+type imageMeta struct{ ImageMeta }
+type ImageMeta struct {
+	meta
+
+	// Add fields to expand the meta data
+	// Example:
+	// Note string `json:"note,omitempty"`
+	// Uptime time.Time `json:"uptime"`
+
+	Status string `json:"status"`
 }
 
 type ImageSpec struct {
 	Name     string
 	Tag      string
 	Registry Registry
+}
+
+type ImageSource struct {
+	Type   string `json:"type"`
+	Hub    string `json:"hub"`
+	Owner  string `json:"owner"`
+	Repo   string `json:"repo"`
+	Branch string `json:"branch"`
 }

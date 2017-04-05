@@ -91,7 +91,7 @@ func OAuthConnectH(w http.ResponseWriter, r *http.Request) {
 
 	vendorInfo := client.GetVendorInfo()
 
-	if err := ctx.Storage.Vendor().Insert(session.Username, serviceUser.Username, vendorInfo.Vendor, vendorInfo.Host, serviceUser.ServiceID, token); err != nil {
+	if err := ctx.Storage.Vendor().Insert(r.Context(), session.Username, serviceUser.Username, vendorInfo.Vendor, vendorInfo.Host, serviceUser.ServiceID, token); err != nil {
 		ctx.Log.Error(err.Error())
 		errors.HTTP.InternalServerError(w)
 		return
@@ -119,14 +119,14 @@ func OAuthDisconnectH(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	userModel, err := ctx.Storage.User().GetByUsername(session.Username)
+	userModel, err := ctx.Storage.User().GetByUsername(r.Context(), session.Username)
 	if err != nil {
 		ctx.Log.Error(err)
 		errors.HTTP.InternalServerError(w)
 		return
 	}
 
-	if err := ctx.Storage.Vendor().Remove(userModel.Username, vendor); err != nil {
+	if err := ctx.Storage.Vendor().Remove(r.Context(), userModel.Username, vendor); err != nil {
 		ctx.Log.Error(err)
 		errors.HTTP.InternalServerError(w)
 		return
@@ -180,7 +180,7 @@ func VCSRepositoriesListH(w http.ResponseWriter, r *http.Request) {
 
 	vendorInfo := client.GetVendorInfo()
 
-	oaModel, err := ctx.Storage.Vendor().Get(session.Username, vendorInfo.Vendor)
+	oaModel, err := ctx.Storage.Vendor().Get(r.Context(), session.Username, vendorInfo.Vendor)
 	if err != nil {
 		ctx.Log.Error(err)
 		errors.HTTP.InternalServerError(w)
@@ -206,7 +206,7 @@ func VCSRepositoriesListH(w http.ResponseWriter, r *http.Request) {
 		oaModel.Token = token
 		oaModel.Username = u.Username
 
-		if err = ctx.Storage.Vendor().Update(session.Username, oaModel); err != nil {
+		if err = ctx.Storage.Vendor().Update(r.Context(), session.Username, oaModel); err != nil {
 			ctx.Log.Error(err)
 			errors.HTTP.InternalServerError(w)
 		}
@@ -274,7 +274,7 @@ func VCSBranchesListH(w http.ResponseWriter, r *http.Request) {
 
 	vendorInfo := client.GetVendorInfo()
 
-	oaModel, err := ctx.Storage.Vendor().Get(session.Username, vendorInfo.Vendor)
+	oaModel, err := ctx.Storage.Vendor().Get(r.Context(), session.Username, vendorInfo.Vendor)
 	if err != nil {
 		ctx.Log.Error(err)
 		errors.HTTP.InternalServerError(w)
@@ -299,7 +299,7 @@ func VCSBranchesListH(w http.ResponseWriter, r *http.Request) {
 		oaModel.Token = token
 		oaModel.Username = u.Username
 
-		if err = ctx.Storage.Vendor().Update(session.Username, oaModel); err != nil {
+		if err = ctx.Storage.Vendor().Update(r.Context(), session.Username, oaModel); err != nil {
 			ctx.Log.Error(err)
 			errors.HTTP.InternalServerError(w)
 		}

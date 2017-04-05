@@ -21,6 +21,7 @@ package storage
 import (
 	"github.com/lastbackend/lastbackend/pkg/apis/types"
 	"github.com/lastbackend/lastbackend/pkg/storage/store"
+	"golang.org/x/net/context"
 )
 
 const VolumeTable string = "volumes"
@@ -31,21 +32,21 @@ type VolumeStorage struct {
 	Client func() (store.IStore, store.DestroyFunc, error)
 }
 
-func (s *VolumeStorage) GetByID(user, id string) (*types.Volume, error) {
+func (s *VolumeStorage) GetByID(ctx context.Context, user, id string) (*types.Volume, error) {
 	return nil, nil
 }
 
-func (s *VolumeStorage) ListByProject(id string) (*types.VolumeList, error) {
+func (s *VolumeStorage) ListByProject(ctx context.Context, id string) (*types.VolumeList, error) {
 	return nil, nil
 }
 
 // Insert new volume into storage
-func (s *VolumeStorage) Insert(volume *types.Volume) (*types.Volume, error) {
+func (s *VolumeStorage) Insert(ctx context.Context, volume *types.Volume) (*types.Volume, error) {
 	return nil, nil
 }
 
 // Remove build model
-func (s *VolumeStorage) Remove(id string) error {
+func (s *VolumeStorage) Remove(ctx context.Context, id string) error {
 	return nil
 }
 

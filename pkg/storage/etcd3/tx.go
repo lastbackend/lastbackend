@@ -23,6 +23,7 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/util/serializer"
 	"golang.org/x/net/context"
 	"path"
+	"fmt"
 )
 
 type tx struct {
@@ -39,6 +40,7 @@ type TxResponse struct {
 
 //TODO: add compare parameters as argument
 func (t *tx) Create(key string, objPtr interface{}, ttl uint64) error {
+	fmt.Println("Create:", key)
 	key = path.Join(t.pathPrefix, key)
 	t.cmp = append(t.cmp, clientv3.Compare(clientv3.ModRevision(key), "=", 0))
 	data, err := serializer.Encode(t.codec, objPtr)
@@ -53,8 +55,25 @@ func (t *tx) Create(key string, objPtr interface{}, ttl uint64) error {
 	return nil
 }
 
+func (t *tx) Update(key string, objPtr interface{}, ttl uint64) error {
+	fmt.Println("Update:", key)
+	key = path.Join(t.pathPrefix, key)
+	t.cmp = append(t.cmp, clientv3.Compare(clientv3.ModRevision(key), "!=", 0))
+	data, err := serializer.Encode(t.codec, objPtr)
+	if err != nil {
+		return err
+	}
+	opts, err := t.ttlOpts(int64(ttl))
+	if err != nil {
+		return err
+	}
+	t.ops = append(t.ops, clientv3.OpPut(key, string(data), opts...))
+	return nil
+}
+
 //TODO: add compare parameters as argument
 func (t *tx) Delete(key string) {
+	fmt.Println("Del:", key)
 	key = path.Join(t.pathPrefix, key)
 	t.ops = append(t.ops, clientv3.OpDelete(key))
 }

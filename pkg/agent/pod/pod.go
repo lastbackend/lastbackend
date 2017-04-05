@@ -17,3 +17,13 @@
 //
 
 package pod
+
+import "github.com/lastbackend/lastbackend/pkg/apis/types"
+
+func Create(pod *types.Pod) {
+
+}
+
+func Delete(pod *types.Pod) {
+
+}

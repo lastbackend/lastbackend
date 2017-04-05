@@ -21,24 +21,24 @@ package types
 import (
 	"encoding/json"
 	"github.com/lastbackend/lastbackend/pkg/util/table"
-	"time"
 )
 
 type ProjectList []Project
 
 type Project struct {
+	projectMeta
 	// Project user
 	User string `json:"user"`
-	// Project name
-	Name string `json:"name"`
-	// Project description
-	Description string `json:"description"`
-	// Project labels
-	Labels map[string]string `json:"labels,omitempty"`
-	// Project created time
-	Created time.Time `json:"created"`
-	// Project updated time
-	Updated time.Time `json:"updated"`
+}
+
+type projectMeta struct{ ProjectMeta }
+type ProjectMeta struct{
+	meta
+
+	// Add fields to expand the meta data
+	// Example:
+	// Note string `json:"note,omitempty"`
+	// Uptime time.Time `json:"uptime"
 }
 
 func (p *Project) ToJson() ([]byte, error) {

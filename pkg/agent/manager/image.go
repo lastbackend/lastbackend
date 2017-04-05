@@ -30,7 +30,7 @@ type ImageManager struct {
 
 func NewImageManager() *ImageManager {
 	ctx := context.Get()
-	ctx.Log.Info("start image manager")
+	ctx.Log.Debug("Create new image manager")
 	var im = new(ImageManager)
 
 	im.update = make(chan types.ImageList)
@@ -41,7 +41,7 @@ func NewImageManager() *ImageManager {
 
 func ReleaseImageManager(im *ImageManager) error {
 	ctx := context.Get()
-	ctx.Log.Info("release image manager")
+	ctx.Log.Debug("release image manager")
 	close(im.update)
 	close(im.close)
 	return nil
@@ -49,7 +49,7 @@ func ReleaseImageManager(im *ImageManager) error {
 
 func (im *ImageManager) watch() error {
 	ctx := context.Get()
-	ctx.Log.Info("start image watcher")
+	ctx.Log.Debug("start image watcher")
 
 	for {
 		select {
@@ -69,6 +69,5 @@ func (im *ImageManager) watch() error {
 
 func (im *ImageManager) sync(i *types.Image) {
 	ctx := context.Get()
-	ctx.Log.Info("image manager sync")
-
+	ctx.Log.Debug("image manager sync")
 }

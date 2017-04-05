@@ -16,4 +16,25 @@
 // from Last.Backend LLC.
 //
 
-package proxy
+package types
+
+import (
+	"time"
+)
+
+type Meta struct{ meta }
+
+type meta struct {
+	// Meta id
+	ID string `json:"id"`
+	// Meta name
+	Name string `json:"name"`
+	// Meta description
+	Description string `json:"description"`
+	// Meta labels
+	Labels map[string]string `json:"lables"`
+	// Meta created time
+	Created time.Time `json:"created"`
+	// Meta updated time
+	Updated time.Time `json:"updated"`
+}

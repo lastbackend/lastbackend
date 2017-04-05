@@ -20,7 +20,7 @@ package types
 
 import "time"
 
-type PodList []Pod
+type PodList []*Pod
 
 type Pod struct {
 	// Pod Meta
