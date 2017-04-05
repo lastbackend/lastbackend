@@ -28,8 +28,6 @@ type ActivityList []Activity
 type Activity struct {
 	// Activity uuid, incremented automatically
 	ID string `json:"id"`
-	// Activity user
-	User string `json:"user"`
 	// Activity project
 	Project string `json:"project"`
 	// Activity service

@@ -30,8 +30,6 @@ type Hook struct {
 	ID string `json:"id"`
 	// Project name
 	Project string `json:"project"`
-	// User username
-	User string `json:"user"`
 	// Hook token
 	Token string `json:"token"`
 	// Hook image to build

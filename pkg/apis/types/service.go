@@ -28,8 +28,6 @@ type ServiceList []Service
 type Service struct {
 	serviceMeta
 
-	// Service username
-	User string `json:"user"`
 	// Service project
 	Project string `json:"project"`
 

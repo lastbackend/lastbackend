@@ -27,7 +27,6 @@ import (
 func New(obj *types.Project) *Project {
 	p := new(Project)
 
-	p.User = obj.User
 	p.Name = obj.Name
 	p.Description = obj.Description
 	p.Updated = obj.Updated
@@ -38,6 +37,15 @@ func New(obj *types.Project) *Project {
 
 func (obj *Project) ToJson() ([]byte, error) {
 	return json.Marshal(obj)
+}
+
+func (p *Project) DrawTable() {
+	table.PrintHorizontal(map[string]interface{}{
+		"Name":        p.Name,
+		"Description": p.Description,
+		"Created":     p.Created,
+		"Updated":     p.Updated,
+	})
 }
 
 func NewList(obj *types.ProjectList) *ProjectList {
@@ -56,15 +64,6 @@ func (obj *ProjectList) ToJson() ([]byte, error) {
 		return []byte("[]"), nil
 	}
 	return json.Marshal(obj)
-}
-
-func (p *Project) DrawTable() {
-	table.PrintHorizontal(map[string]interface{}{
-		"Name":        p.Name,
-		"Description": p.Description,
-		"Created":     p.Created,
-		"Updated":     p.Updated,
-	})
 }
 
 func (projects *ProjectList) DrawTable() {

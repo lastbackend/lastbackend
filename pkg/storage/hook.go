@@ -19,16 +19,17 @@
 package storage
 
 import (
+	"context"
 	"github.com/lastbackend/lastbackend/pkg/apis/types"
 	"github.com/lastbackend/lastbackend/pkg/storage/store"
-	"golang.org/x/net/context"
 )
 
-const HookTable string = "hooks"
+const hookStorage string = "hooks"
 
 // Service Build type for interface in interfaces folder
 type HookStorage struct {
 	IHook
+	util   IUtil
 	Client func() (store.IStore, store.DestroyFunc, error)
 }
 
@@ -38,17 +39,17 @@ func (s *HookStorage) GetByToken(ctx context.Context, token string) (*types.Hook
 }
 
 // Get hooks by image
-func (s *HookStorage) ListByUser(ctx context.Context, id string) (*types.HookList, error) {
+func (s *HookStorage) List(ctx context.Context, id string) (*types.HookList, error) {
 	return nil, nil
 }
 
 // Get hooks by image
-func (s *HookStorage) ListByImage(ctx context.Context, user, id string) (*types.HookList, error) {
+func (s *HookStorage) ListByImage(ctx context.Context, id string) (*types.HookList, error) {
 	return nil, nil
 }
 
 // Get hooks by service
-func (s *HookStorage) ListByService(ctx context.Context, user, id string) (*types.HookList, error) {
+func (s *HookStorage) ListByService(ctx context.Context, id string) (*types.HookList, error) {
 	return nil, nil
 }
 
@@ -63,8 +64,9 @@ func (s *HookStorage) RemoveByService(ctx context.Context, id string) error {
 	return nil
 }
 
-func newHookStorage(config store.Config) *HookStorage {
+func NewHookStorage(config store.Config, util IUtil) *HookStorage {
 	s := new(HookStorage)
+	s.util = util
 	s.Client = func() (store.IStore, store.DestroyFunc, error) {
 		return New(config)
 	}

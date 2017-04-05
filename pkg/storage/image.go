@@ -19,27 +19,21 @@
 package storage
 
 import (
-	"fmt"
+	"context"
 	"github.com/lastbackend/lastbackend/pkg/apis/types"
 	"github.com/lastbackend/lastbackend/pkg/storage/store"
-	"github.com/lastbackend/lastbackend/pkg/util/generator"
-	"golang.org/x/net/context"
-	"time"
 )
 
-const ImageTable string = "images"
+const imageStorage string = "images"
 
 // Project Service type for interface in interfaces folder
 type ImageStorage struct {
 	IImage
+	util   IUtil
 	Client func() (store.IStore, store.DestroyFunc, error)
 }
 
-func (s *ImageStorage) GetByID(ctx context.Context, user, id string) (*types.Image, error) {
-	var (
-		image = new(types.Image)
-		key   = fmt.Sprintf("/%s/%s", ImageTable, id)
-	)
+func (s *ImageStorage) GetByID(ctx context.Context, id string) (*types.Image, error) {
 
 	client, destroy, err := s.Client()
 	if err != nil {
@@ -47,9 +41,7 @@ func (s *ImageStorage) GetByID(ctx context.Context, user, id string) (*types.Ima
 	}
 	defer destroy()
 
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-	defer cancel()
-
+	key := s.util.Key(ctx, imageStorage, id)
 	meta := new(types.ImageMeta)
 	if err := client.Get(ctx, key, meta); err != nil {
 		if err.Error() == store.ErrKeyNotFound {
@@ -58,6 +50,7 @@ func (s *ImageStorage) GetByID(ctx context.Context, user, id string) (*types.Ima
 		return nil, err
 	}
 
+	image := new(types.Image)
 	image.ID = meta.ID
 	image.Name = meta.Name
 	image.Description = meta.Description
@@ -69,15 +62,8 @@ func (s *ImageStorage) GetByID(ctx context.Context, user, id string) (*types.Ima
 }
 
 // Insert new image into storage
-func (s *ImageStorage) Insert(ctx context.Context, _ *types.ImageSource) (*types.Image, error) {
-	var (
-		id    = generator.GetUUIDV4()
-		image = new(types.Image)
-	)
-
-	image.ID = id
-
-	return image, nil
+func (s *ImageStorage) Insert(ctx context.Context, source *types.ImageSource) (*types.Image, error) {
+	return nil, nil
 }
 
 // Update build model
@@ -85,8 +71,9 @@ func (s *ImageStorage) Update(ctx context.Context, image *types.Image) (*types.I
 	return nil, nil
 }
 
-func newImageStorage(config store.Config) *ImageStorage {
+func NewImageStorage(config store.Config, util IUtil) *ImageStorage {
 	s := new(ImageStorage)
+	s.util = util
 	s.Client = func() (store.IStore, store.DestroyFunc, error) {
 		return New(config)
 	}

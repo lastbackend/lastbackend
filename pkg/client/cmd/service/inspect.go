@@ -19,7 +19,7 @@
 package service
 
 import (
-	s "github.com/lastbackend/lastbackend/pkg/client/api/views/v1/service"
+	s "github.com/lastbackend/lastbackend/pkg/apis/views/v1/service"
 	"github.com/lastbackend/lastbackend/pkg/client/cmd/project"
 	"github.com/lastbackend/lastbackend/pkg/client/context"
 	"github.com/lastbackend/lastbackend/pkg/errors"

@@ -19,7 +19,7 @@
 package project
 
 import (
-	p "github.com/lastbackend/lastbackend/pkg/client/api/views/v1/project"
+	p "github.com/lastbackend/lastbackend/pkg/apis/views/v1/project"
 	"github.com/lastbackend/lastbackend/pkg/client/context"
 	"github.com/lastbackend/lastbackend/pkg/errors"
 )

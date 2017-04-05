@@ -16,27 +16,14 @@
 // from Last.Backend LLC.
 //
 
-package user
+package middleware
 
 import (
-	"time"
+	"net/http"
 )
 
-type User struct {
-	Gravatar string    `json:"gravatar"`
-	Username string    `json:"username"`
-	Emails   Emails    `json:"emails"`
-	Profile  Profile   `json:"profile"`
-	Vendors  Vendors   `json:"integrations"`
-	Created  time.Time `json:"created"`
-	Updated  time.Time `json:"updated"`
+func Context(h http.HandlerFunc) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		h.ServeHTTP(w, r)
+	}
 }
-
-type Emails map[string]bool
-
-type Profile struct {
-	FirstName string `json:"first_name"`
-	LastName  string `json:"last_name"`
-}
-
-type Vendors map[string]string

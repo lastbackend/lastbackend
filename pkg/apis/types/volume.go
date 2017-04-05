@@ -29,8 +29,6 @@ type Volume struct {
 	ID string `json:"id"`
 	// Volume uuid, incremented automatically
 	Project string `json:"project"`
-	// Volume user
-	User string `json:"user"`
 	// Volume name
 	Name string `json:"name"`
 	// Volume tag lists

@@ -45,7 +45,7 @@ func HookExecuteH(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if hookModel.Service != "" {
-		serviceModel, err := ctx.Storage.Service().GetByName(r.Context(), hookModel.User, hookModel.Project, hookModel.Service)
+		serviceModel, err := ctx.Storage.Service().GetByName(r.Context(), hookModel.Project, hookModel.Service)
 		if err != nil && serviceModel == nil {
 			ctx.Log.Error("Error: get service by name", err.Error())
 			errors.HTTP.BadRequest(w)

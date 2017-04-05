@@ -20,14 +20,9 @@ package v1
 
 import (
 	"github.com/lastbackend/lastbackend/pkg/apis/types"
-	"github.com/lastbackend/lastbackend/pkg/client/api/views/v1/project"
-	"github.com/lastbackend/lastbackend/pkg/client/api/views/v1/service"
-	"github.com/lastbackend/lastbackend/pkg/client/api/views/v1/user"
+	"github.com/lastbackend/lastbackend/pkg/apis/views/v1/project"
+	"github.com/lastbackend/lastbackend/pkg/apis/views/v1/service"
 )
-
-func NewUser(obj *types.User) *user.User {
-	return user.New(obj)
-}
 
 func NewProject(obj *types.Project) *project.Project {
 	return project.New(obj)

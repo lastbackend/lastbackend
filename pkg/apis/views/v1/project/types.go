@@ -16,14 +16,15 @@
 // from Last.Backend LLC.
 //
 
-package http
+package project
 
-import (
-	"net/http"
-)
+import "time"
 
-func Context(h http.HandlerFunc) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		h.ServeHTTP(w, r)
-	}
+type Project struct {
+	Name        string    `json:"name"`
+	Description string    `json:"description"`
+	Created     time.Time `json:"created"`
+	Updated     time.Time `json:"updated"`
 }
+
+type ProjectList []Project

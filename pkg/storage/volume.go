@@ -19,20 +19,21 @@
 package storage
 
 import (
+	"context"
 	"github.com/lastbackend/lastbackend/pkg/apis/types"
 	"github.com/lastbackend/lastbackend/pkg/storage/store"
-	"golang.org/x/net/context"
 )
 
-const VolumeTable string = "volumes"
+const volumeStorage string = "volumes"
 
 // Volume Service type for interface in interfaces folder
 type VolumeStorage struct {
 	IVolume
+	util   IUtil
 	Client func() (store.IStore, store.DestroyFunc, error)
 }
 
-func (s *VolumeStorage) GetByID(ctx context.Context, user, id string) (*types.Volume, error) {
+func (s *VolumeStorage) GetByID(ctx context.Context, id string) (*types.Volume, error) {
 	return nil, nil
 }
 
@@ -50,8 +51,9 @@ func (s *VolumeStorage) Remove(ctx context.Context, id string) error {
 	return nil
 }
 
-func newVolumeStorage(config store.Config) *VolumeStorage {
+func NewVolumeStorage(config store.Config, util IUtil) *VolumeStorage {
 	s := new(VolumeStorage)
+	s.util = util
 	s.Client = func() (store.IStore, store.DestroyFunc, error) {
 		return New(config)
 	}

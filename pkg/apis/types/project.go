@@ -26,8 +26,6 @@ type ProjectList []Project
 
 type Project struct {
 	projectMeta
-	// Project user
-	User string `json:"user"`
 }
 
 type projectMeta struct{ ProjectMeta }

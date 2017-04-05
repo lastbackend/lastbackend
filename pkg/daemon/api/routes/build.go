@@ -35,7 +35,7 @@ func BuildListH(w http.ResponseWriter, r *http.Request) {
 
 	ctx.Log.Debug("Get boold list handler")
 
-	builds, err := ctx.Storage.Build().ListByImage(r.Context(), "", "")
+	builds, err := ctx.Storage.Build().ListByImage(r.Context(), "")
 	if err != nil {
 		ctx.Log.Error(err)
 		errors.HTTP.InternalServerError(w)

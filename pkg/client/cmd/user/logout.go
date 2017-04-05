@@ -19,7 +19,6 @@
 package user
 
 import (
-	"fmt"
 	"github.com/lastbackend/lastbackend/pkg/client/context"
 	e "github.com/lastbackend/lastbackend/pkg/errors"
 )
@@ -35,7 +34,6 @@ func LogoutCmd() {
 	}
 
 	ctx.Log.Info("Logout successfully")
-	fmt.Println("Logout successfully")
 }
 
 func Logout() error {

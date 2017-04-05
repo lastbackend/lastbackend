@@ -25,8 +25,6 @@ type BuildList []Build
 type Build struct {
 	// Build number, incremented automatically
 	ID string `json:"id"`
-	// Build number, incremented automatically
-	User string `json:"user"`
 	// Build executing status
 	Status BuildStatus `json:"status"`
 	// Build sources used for build

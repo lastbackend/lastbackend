@@ -21,7 +21,7 @@ package routes
 import (
 	"encoding/json"
 	"github.com/lastbackend/lastbackend/pkg/apis/types"
-	"github.com/lastbackend/lastbackend/pkg/client/api/views/v1"
+	"github.com/lastbackend/lastbackend/pkg/apis/views/v1"
 	c "github.com/lastbackend/lastbackend/pkg/daemon/context"
 	"github.com/lastbackend/lastbackend/pkg/errors"
 	"github.com/lastbackend/lastbackend/pkg/util/converter"
@@ -151,7 +151,6 @@ func ServiceCreateH(w http.ResponseWriter, r *http.Request) {
 
 	var (
 		err          error
-		session      *types.Session
 		image        = new(types.Image)
 		project      = new(types.Project)
 		ctx          = c.Get()
@@ -160,13 +159,6 @@ func ServiceCreateH(w http.ResponseWriter, r *http.Request) {
 	)
 
 	ctx.Log.Debug("Create service handler")
-
-	session = utils.Session(r)
-	if session == nil {
-		ctx.Log.Error(http.StatusText(http.StatusUnauthorized))
-		errors.HTTP.Unauthorized(w)
-		return
-	}
 
 	// request body struct
 	rq := new(serviceCreateS)
@@ -177,9 +169,9 @@ func ServiceCreateH(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if validator.IsUUID(projectParam) {
-		project, err = ctx.Storage.Project().GetByID(r.Context(), session.Username, projectParam)
+		project, err = ctx.Storage.Project().GetByID(r.Context(), projectParam)
 	} else {
-		project, err = ctx.Storage.Project().GetByName(r.Context(), session.Username, projectParam)
+		project, err = ctx.Storage.Project().GetByName(r.Context(), projectParam)
 	}
 	if err != nil {
 		ctx.Log.Error("Error: find project by name", err.Error())
@@ -191,7 +183,7 @@ func ServiceCreateH(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	service, err := ctx.Storage.Service().GetByName(r.Context(), session.Username, project.ID, rq.Name)
+	service, err := ctx.Storage.Service().GetByName(r.Context(), project.ID, rq.Name)
 	if err != nil {
 		ctx.Log.Error("Error: check exists by name", err.Error())
 		errors.HTTP.InternalServerError(w)
@@ -229,7 +221,7 @@ func ServiceCreateH(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	service, err = ctx.Storage.Service().Insert(r.Context(), session.Username, project.ID, rq.Name, rq.Description, image.ID, rq.Config)
+	service, err = ctx.Storage.Service().Insert(r.Context(), project.ID, rq.Name, rq.Description, image.ID, rq.Config)
 	if err != nil {
 		ctx.Log.Error("Error: insert service to db", err)
 		errors.HTTP.InternalServerError(w)
@@ -293,7 +285,6 @@ func ServiceUpdateH(w http.ResponseWriter, r *http.Request) {
 	var (
 		err          error
 		ctx          = c.Get()
-		session      *types.Session
 		project      = new(types.Project)
 		service      = new(types.Service)
 		params       = utils.Vars(r)
@@ -302,13 +293,6 @@ func ServiceUpdateH(w http.ResponseWriter, r *http.Request) {
 	)
 
 	ctx.Log.Debug("Update service handler")
-
-	session = utils.Session(r)
-	if session == nil {
-		ctx.Log.Error(http.StatusText(http.StatusUnauthorized))
-		errors.HTTP.Unauthorized(w)
-		return
-	}
 
 	// request body struct
 	rq := new(serviceUpdateS)
@@ -319,9 +303,9 @@ func ServiceUpdateH(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if validator.IsUUID(projectParam) {
-		project, err = ctx.Storage.Project().GetByID(r.Context(), session.Username, projectParam)
+		project, err = ctx.Storage.Project().GetByID(r.Context(), projectParam)
 	} else {
-		project, err = ctx.Storage.Project().GetByName(r.Context(), session.Username, projectParam)
+		project, err = ctx.Storage.Project().GetByName(r.Context(), projectParam)
 	}
 	if err != nil {
 		ctx.Log.Error("Error: find project by name", err.Error())
@@ -334,9 +318,9 @@ func ServiceUpdateH(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if validator.IsUUID(projectParam) {
-		service, err = ctx.Storage.Service().GetByID(r.Context(), session.Username, project.ID, serviceParam)
+		service, err = ctx.Storage.Service().GetByID(r.Context(), project.ID, serviceParam)
 	} else {
-		service, err = ctx.Storage.Service().GetByName(r.Context(), session.Username, project.ID, serviceParam)
+		service, err = ctx.Storage.Service().GetByName(r.Context(), project.ID, serviceParam)
 	}
 	if err != nil {
 		ctx.Log.Error("Error: Get service by name", err.Error())
@@ -359,7 +343,7 @@ func ServiceUpdateH(w http.ResponseWriter, r *http.Request) {
 		service.Domains = *rq.Domains
 	}
 
-	service, err = ctx.Storage.Service().Update(r.Context(), session.Username, projectParam, service)
+	service, err = ctx.Storage.Service().Update(r.Context(), projectParam, service)
 	if err != nil {
 		ctx.Log.Error("Error: insert service to db", err)
 		errors.HTTP.InternalServerError(w)
@@ -385,7 +369,6 @@ func ServiceListH(w http.ResponseWriter, r *http.Request) {
 	var (
 		err          error
 		ctx          = c.Get()
-		session      *types.Session
 		project      = new(types.Project)
 		params       = utils.Vars(r)
 		projectParam = params["project"]
@@ -393,17 +376,10 @@ func ServiceListH(w http.ResponseWriter, r *http.Request) {
 
 	ctx.Log.Debug("List service handler")
 
-	session = utils.Session(r)
-	if session == nil {
-		ctx.Log.Error(http.StatusText(http.StatusUnauthorized))
-		errors.HTTP.Unauthorized(w)
-		return
-	}
-
 	if validator.IsUUID(projectParam) {
-		project, err = ctx.Storage.Project().GetByID(r.Context(), session.Username, projectParam)
+		project, err = ctx.Storage.Project().GetByID(r.Context(), projectParam)
 	} else {
-		project, err = ctx.Storage.Project().GetByName(r.Context(), session.Username, projectParam)
+		project, err = ctx.Storage.Project().GetByName(r.Context(), projectParam)
 	}
 	if err != nil {
 		ctx.Log.Error("Error: find project by name", err.Error())
@@ -415,7 +391,7 @@ func ServiceListH(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	serviceList, err := ctx.Storage.Service().ListByProject(r.Context(), session.Username, project.ID)
+	serviceList, err := ctx.Storage.Service().ListByProject(r.Context(), project.ID)
 	if err != nil {
 		ctx.Log.Error("Error: find service list by user", err)
 		errors.HTTP.InternalServerError(w)
@@ -440,7 +416,6 @@ func ServiceInfoH(w http.ResponseWriter, r *http.Request) {
 	var (
 		err          error
 		ctx          = c.Get()
-		session      *types.Session
 		project      = new(types.Project)
 		service      = new(types.Service)
 		params       = utils.Vars(r)
@@ -450,17 +425,10 @@ func ServiceInfoH(w http.ResponseWriter, r *http.Request) {
 
 	ctx.Log.Debug("Get service handler")
 
-	session = utils.Session(r)
-	if session == nil {
-		ctx.Log.Error(http.StatusText(http.StatusUnauthorized))
-		errors.HTTP.Unauthorized(w)
-		return
-	}
-
 	if validator.IsUUID(projectParam) {
-		project, err = ctx.Storage.Project().GetByID(r.Context(), session.Username, projectParam)
+		project, err = ctx.Storage.Project().GetByID(r.Context(), projectParam)
 	} else {
-		project, err = ctx.Storage.Project().GetByName(r.Context(), session.Username, projectParam)
+		project, err = ctx.Storage.Project().GetByName(r.Context(), projectParam)
 	}
 	if err != nil {
 		ctx.Log.Error("Error: find project by name", err.Error())
@@ -473,9 +441,9 @@ func ServiceInfoH(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if validator.IsUUID(projectParam) {
-		service, err = ctx.Storage.Service().GetByID(r.Context(), session.Username, project.ID, serviceParam)
+		service, err = ctx.Storage.Service().GetByID(r.Context(), project.ID, serviceParam)
 	} else {
-		service, err = ctx.Storage.Service().GetByName(r.Context(), session.Username, project.ID, serviceParam)
+		service, err = ctx.Storage.Service().GetByName(r.Context(), project.ID, serviceParam)
 	}
 	if err != nil {
 		ctx.Log.Error("Error: find service by name", err.Error())
@@ -506,7 +474,7 @@ func ServiceRemoveH(w http.ResponseWriter, r *http.Request) {
 		err          error
 		ctx          = c.Get()
 		project      = new(types.Project)
-		session      *types.Session
+		service      = new(types.Service)
 		params       = utils.Vars(r)
 		projectParam = params["project"]
 		serviceParam = params["service"]
@@ -514,17 +482,10 @@ func ServiceRemoveH(w http.ResponseWriter, r *http.Request) {
 
 	ctx.Log.Info("Remove service")
 
-	session = utils.Session(r)
-	if session == nil {
-		ctx.Log.Error(http.StatusText(http.StatusUnauthorized))
-		errors.HTTP.Unauthorized(w)
-		return
-	}
-
 	if validator.IsUUID(projectParam) {
-		project, err = ctx.Storage.Project().GetByID(r.Context(), session.Username, projectParam)
+		project, err = ctx.Storage.Project().GetByID(r.Context(), projectParam)
 	} else {
-		project, err = ctx.Storage.Project().GetByName(r.Context(), session.Username, projectParam)
+		project, err = ctx.Storage.Project().GetByName(r.Context(), projectParam)
 	}
 	if err != nil {
 		ctx.Log.Error("Error: find project by name", err.Error())
@@ -536,9 +497,23 @@ func ServiceRemoveH(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if !validator.IsUUID(projectParam) {
+		service, err = ctx.Storage.Service().GetByName(r.Context(), project.ID, serviceParam)
+		if err != nil {
+			ctx.Log.Error("Error: find project by name", err.Error())
+			errors.HTTP.InternalServerError(w)
+			return
+		}
+		if project == nil {
+			errors.New("project").NotFound().Http(w)
+			return
+		}
+		serviceParam = service.ID
+	}
+
 	// Todo: remove all activity by service name
 
-	if err := ctx.Storage.Service().Remove(r.Context(), session.Username, project.ID, serviceParam); err != nil {
+	if err := ctx.Storage.Service().Remove(r.Context(), project.ID, serviceParam); err != nil {
 		ctx.Log.Error("Error: remove service from db", err)
 		errors.HTTP.InternalServerError(w)
 		return
