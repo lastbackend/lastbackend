@@ -160,7 +160,7 @@ func (s *store) Update(ctx context.Context, key string, obj, outPtr interface{},
 func (s *store) Delete(ctx context.Context, key string, outPtr interface{}) error {
 	key = path.Join(s.pathPrefix, key)
 	fmt.Println("Del:", key)
-	res, err := s.client.KV.Txn(ctx).Then(clientv3.OpGet(key), clientv3.OpDelete(key)).Commit()
+	res, err := s.client.KV.Txn(ctx).Then(clientv3.OpGet(key), clientv3.OpDelete(key, clientv3.WithPrefix())).Commit()
 	if err != nil {
 		return err
 	}

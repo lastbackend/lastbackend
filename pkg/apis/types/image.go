@@ -22,8 +22,6 @@ type ImageList []Image
 
 type Image struct {
 	imageMeta
-	// Image user
-	User string `json:"user"`
 	// Image Registry info
 	Registry Registry `json:"registry"`
 	// Image source info

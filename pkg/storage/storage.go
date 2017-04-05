@@ -23,7 +23,6 @@ import (
 )
 
 type Storage struct {
-	*UserStorage
 	*VendorStorage
 	*ProjectStorage
 	*ServiceStorage
@@ -32,13 +31,6 @@ type Storage struct {
 	*HookStorage
 	*VolumeStorage
 	*ActivityStorage
-}
-
-func (s *Storage) User() IUser {
-	if s == nil {
-		return nil
-	}
-	return s.UserStorage
 }
 
 func (s *Storage) Vendor() IVendor {
@@ -100,19 +92,18 @@ func (s *Storage) Activity() IActivity {
 func Get(config store.Config) (*Storage, error) {
 
 	var (
-		store  = new(Storage)
-		helper = new(Helper)
+		store = new(Storage)
+		util  = new(util)
 	)
 
-	store.UserStorage = NewUserStorage(config, helper)
-	store.VendorStorage = NewVendorStorage(config, helper)
-	store.ProjectStorage = NewProjectStorage(config, helper)
-	store.ServiceStorage = NewServiceStorage(config, helper)
-	store.ImageStorage = NewImageStorage(config, helper)
-	store.BuildStorage = NewBuildStorage(config, helper)
-	store.HookStorage = NewHookStorage(config, helper)
-	store.VolumeStorage = NewVolumeStorage(config, helper)
-	store.ActivityStorage = NewActivityStorage(config, helper)
+	store.VendorStorage = NewVendorStorage(config, util)
+	store.ProjectStorage = NewProjectStorage(config, util)
+	store.ServiceStorage = NewServiceStorage(config, util)
+	store.ImageStorage = NewImageStorage(config, util)
+	store.BuildStorage = NewBuildStorage(config, util)
+	store.HookStorage = NewHookStorage(config, util)
+	store.VolumeStorage = NewVolumeStorage(config, util)
+	store.ActivityStorage = NewActivityStorage(config, util)
 
 	return store, nil
 }

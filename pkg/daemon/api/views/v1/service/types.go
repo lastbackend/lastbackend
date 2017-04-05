@@ -21,7 +21,6 @@ package service
 import "time"
 
 type Service struct {
-	User        string     `json:"user"`
 	Project     string     `json:"project"`
 	Name        string     `json:"name"`
 	Description string     `json:"description"`

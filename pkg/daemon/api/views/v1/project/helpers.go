@@ -26,7 +26,6 @@ import (
 func New(obj *types.Project) *Project {
 	p := new(Project)
 
-	p.User = obj.User
 	p.Name = obj.Name
 	p.Description = obj.Description
 	p.Updated = obj.Updated

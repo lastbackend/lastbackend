@@ -19,32 +19,25 @@
 package storage
 
 import (
+	"context"
 	"github.com/lastbackend/lastbackend/pkg/apis/types"
 	"github.com/lastbackend/lastbackend/pkg/storage/store"
 	"github.com/lastbackend/lastbackend/pkg/util/generator"
-	"golang.org/x/net/context"
 	"time"
 )
 
-const ServiceTable string = "services"
+const serviceStorage string = "services"
 
 // Service Service type for interface in interfaces folder
 type ServiceStorage struct {
 	IService
-	Helper IHelper
+	util   IUtil
 	Client func() (store.IStore, store.DestroyFunc, error)
 }
 
-// Get project by name for user
-func (s *ServiceStorage) GetByID(ctx context.Context, username, projectID, serviceID string) (*types.Service, error) {
-	var (
-		project        = new(types.Project)
-		service        = new(types.Service)
-		keyProjectMeta = s.Helper.KeyDecorator(ctx, ProjectTable, projectID, "meta")
-		keyMeta        = s.Helper.KeyDecorator(ctx, ProjectTable, projectID, ServiceTable, serviceID, "meta")
-		keyConfig      = s.Helper.KeyDecorator(ctx, ProjectTable, projectID, ServiceTable, serviceID, "config")
-		keySource      = s.Helper.KeyDecorator(ctx, ProjectTable, projectID, ServiceTable, serviceID, "source")
-	)
+// Get project by name
+func (s *ServiceStorage) GetByID(ctx context.Context, projectID, serviceID string) (*types.Service, error) {
+	var service = new(types.Service)
 
 	client, destroy, err := s.Client()
 	if err != nil {
@@ -52,9 +45,7 @@ func (s *ServiceStorage) GetByID(ctx context.Context, username, projectID, servi
 	}
 	defer destroy()
 
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-	defer cancel()
-
+	keyProjectMeta := s.util.Key(ctx, projectStorage, projectID, "meta")
 	pmeta := new(types.ProjectMeta)
 	if err := client.Get(ctx, keyProjectMeta, pmeta); err != nil {
 		if err.Error() == store.ErrKeyNotFound {
@@ -63,6 +54,7 @@ func (s *ServiceStorage) GetByID(ctx context.Context, username, projectID, servi
 		return nil, err
 	}
 
+	keyMeta := s.util.Key(ctx, projectStorage, projectID, serviceStorage, serviceID, "meta")
 	smeta := new(types.ServiceMeta)
 	if err := client.Get(ctx, keyMeta, smeta); err != nil {
 		if err.Error() == store.ErrKeyNotFound {
@@ -71,16 +63,9 @@ func (s *ServiceStorage) GetByID(ctx context.Context, username, projectID, servi
 		return nil, err
 	}
 
+	keyConfig := s.util.Key(ctx, projectStorage, projectID, serviceStorage, serviceID, "config")
 	service.Config = new(types.ServiceConfig)
 	if err := client.Get(ctx, keyConfig, service.Config); err != nil {
-		if err.Error() == store.ErrKeyNotFound {
-			return nil, nil
-		}
-		return nil, err
-	}
-
-	service.Source = new(types.ServiceSource)
-	if err := client.Get(ctx, keySource, service.Source); err != nil {
 		if err.Error() == store.ErrKeyNotFound {
 			return nil, nil
 		}
@@ -94,18 +79,14 @@ func (s *ServiceStorage) GetByID(ctx context.Context, username, projectID, servi
 	service.Labels = smeta.Labels
 	service.Created = smeta.Created
 	service.Updated = smeta.Updated
-	service.User = username
-	service.Project = project.Name
+	service.Project = pmeta.Name
 
 	return service, nil
 }
 
-// Get project by name for user
-func (s *ServiceStorage) GetByName(ctx context.Context, username, projectID, name string) (*types.Service, error) {
-	var (
-		id  string
-		key = s.Helper.KeyDecorator(ctx, "helper", ProjectTable, projectID, ServiceTable, name)
-	)
+// Get project by name
+func (s *ServiceStorage) GetByName(ctx context.Context, projectID, name string) (*types.Service, error) {
+	var id string
 
 	client, destroy, err := s.Client()
 	if err != nil {
@@ -113,9 +94,7 @@ func (s *ServiceStorage) GetByName(ctx context.Context, username, projectID, nam
 	}
 	defer destroy()
 
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-	defer cancel()
-
+	key := s.util.Key(ctx, "helper", projectStorage, projectID, serviceStorage, name)
 	if err := client.Get(ctx, key, &id); err != nil {
 		if err.Error() == store.ErrKeyNotFound {
 			return nil, nil
@@ -123,17 +102,13 @@ func (s *ServiceStorage) GetByName(ctx context.Context, username, projectID, nam
 		return nil, err
 	}
 
-	return s.GetByID(ctx, username, projectID, id)
+	return s.GetByID(ctx, projectID, id)
 }
 
-// List project by username
-func (s *ServiceStorage) ListByProject(ctx context.Context, username, projectID string) (*types.ServiceList, error) {
-	var (
-		projects    = make(map[string]*types.Project)
-		keyProjects = s.Helper.KeyDecorator(ctx, ProjectTable)
-		key         = s.Helper.KeyDecorator(ctx,  ProjectTable, projectID, ServiceTable)
-		filter      = `\b(.+)\/info\b`
-	)
+// List project
+func (s *ServiceStorage) ListByProject(ctx context.Context, projectID string) (*types.ServiceList, error) {
+
+	const filter = `\b(.+)\/meta\b`
 
 	client, destroy, err := s.Client()
 	if err != nil {
@@ -141,18 +116,18 @@ func (s *ServiceStorage) ListByProject(ctx context.Context, username, projectID 
 	}
 	defer destroy()
 
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-	defer cancel()
-
-	if err := client.Map(ctx, keyProjects, ``, projects); err != nil {
+	keyProjectMeta := s.util.Key(ctx, projectStorage, projectID, "meta")
+	pmeta := new(types.ProjectMeta)
+	if err := client.Get(ctx, keyProjectMeta, pmeta); err != nil {
 		if err.Error() == store.ErrKeyNotFound {
 			return nil, nil
 		}
 		return nil, err
 	}
 
+	keyServiceList := s.util.Key(ctx, projectStorage, projectID, serviceStorage)
 	metaList := []types.ServiceMeta{}
-	if err := client.List(ctx, key, filter, &metaList); err != nil {
+	if err := client.List(ctx, keyServiceList, filter, &metaList); err != nil {
 		if err.Error() == store.ErrKeyNotFound {
 			return nil, nil
 		}
@@ -173,8 +148,7 @@ func (s *ServiceStorage) ListByProject(ctx context.Context, username, projectID 
 		service.Labels = meta.Labels
 		service.Created = meta.Created
 		service.Updated = meta.Updated
-		service.User = username
-		service.Project = projects[projectID].Name
+		service.Project = pmeta.Name
 
 		*serviceList = append(*serviceList, service)
 	}
@@ -183,21 +157,15 @@ func (s *ServiceStorage) ListByProject(ctx context.Context, username, projectID 
 }
 
 // Insert new service into storage
-func (s *ServiceStorage) Insert(ctx context.Context, username, projectID, name, description, image string, config *types.ServiceConfig) (*types.Service, error) {
+func (s *ServiceStorage) Insert(ctx context.Context, projectID, name, description, image string, config *types.ServiceConfig) (*types.Service, error) {
 	var (
-		id             = generator.GetUUIDV4()
-		service        = new(types.Service)
-		keyProjectMeta = s.Helper.KeyDecorator(ctx, ProjectTable, projectID, "meta")
-		keyHelper      = s.Helper.KeyDecorator(ctx, ProjectTable, projectID, ServiceTable, name)
-		keyMeta        = s.Helper.KeyDecorator(ctx, ProjectTable, projectID, ServiceTable, id, "meta")
-		keyConfig      = s.Helper.KeyDecorator(ctx, ProjectTable, projectID, ServiceTable, id, "config")
-		//keySource      = s.Helper.KeyDecorator(ctx, ProjectTable, projectID, ServiceTable, id, "source")
+		id      = generator.GetUUIDV4()
+		service = new(types.Service)
 	)
 
 	service.ID = id
 	service.Name = name
 	service.Project = projectID
-	service.User = username
 	service.Description = description
 	service.Config = config
 	service.Image = image
@@ -210,9 +178,7 @@ func (s *ServiceStorage) Insert(ctx context.Context, username, projectID, name, 
 	}
 	defer destroy()
 
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-	defer cancel()
-
+	keyProjectMeta := s.util.Key(ctx, projectStorage, projectID, "meta")
 	pmeta := new(types.ProjectMeta)
 	if err := client.Get(ctx, keyProjectMeta, pmeta); err != nil {
 		if err.Error() == store.ErrKeyNotFound {
@@ -223,21 +189,20 @@ func (s *ServiceStorage) Insert(ctx context.Context, username, projectID, name, 
 
 	tx := client.Begin(ctx)
 
+	keyHelper := s.util.Key(ctx, "helper", projectStorage, projectID, serviceStorage, name)
 	if err := tx.Create(keyHelper, &id, 0); err != nil {
 		return nil, err
 	}
 
+	keyMeta := s.util.Key(ctx, projectStorage, projectID, serviceStorage, service.ID, "meta")
 	if err := tx.Create(keyMeta, service, 0); err != nil {
 		return nil, err
 	}
 
+	keyConfig := s.util.Key(ctx, projectStorage, projectID, serviceStorage, service.ID, "config")
 	if err := tx.Create(keyConfig, config, 0); err != nil {
 		return nil, err
 	}
-
-	//if err := tx.Create(keySource, source, 0); err != nil {
-	//	return nil, err
-	//}
 
 	if err := tx.Commit(); err != nil {
 		return nil, err
@@ -249,12 +214,7 @@ func (s *ServiceStorage) Insert(ctx context.Context, username, projectID, name, 
 }
 
 // Update service in storage
-func (s *ServiceStorage) Update(ctx context.Context, username, projectID string, service *types.Service) (*types.Service, error) {
-	var (
-		keyMeta   = s.Helper.KeyDecorator(ctx, ProjectTable, projectID, ServiceTable, service.Name, "meta")
-		keyConfig = s.Helper.KeyDecorator(ctx, ProjectTable, projectID, ServiceTable, service.Name, "config")
-		keySource = s.Helper.KeyDecorator(ctx, ProjectTable, projectID, ServiceTable, service.Name, "source")
-	)
+func (s *ServiceStorage) Update(ctx context.Context, projectID string, service *types.Service) (*types.Service, error) {
 
 	service.Updated = time.Now()
 
@@ -264,20 +224,15 @@ func (s *ServiceStorage) Update(ctx context.Context, username, projectID string,
 	}
 	defer destroy()
 
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-	defer cancel()
-
 	tx := client.Begin(ctx)
 
+	keyMeta := s.util.Key(ctx, projectStorage, projectID, serviceStorage, service.Name, "meta")
 	if err := tx.Update(keyMeta, service, 0); err != nil {
 		return nil, err
 	}
 
+	keyConfig := s.util.Key(ctx, projectStorage, projectID, serviceStorage, service.Name, "config")
 	if err := tx.Update(keyConfig, service.Config, 0); err != nil {
-		return nil, err
-	}
-
-	if err := tx.Update(keySource, service.Source, 0); err != nil {
 		return nil, err
 	}
 
@@ -289,12 +244,7 @@ func (s *ServiceStorage) Update(ctx context.Context, username, projectID string,
 }
 
 // Remove service model
-func (s *ServiceStorage) Remove(ctx context.Context, username, projectID, serviceID string) error {
-
-	var (
-		keyProjectMeta = s.Helper.KeyDecorator(ctx, ProjectTable, projectID, "meta")
-		key            = s.Helper.KeyDecorator(ctx, ProjectTable, projectID, ServiceTable, serviceID)
-	)
+func (s *ServiceStorage) Remove(ctx context.Context, projectID, serviceID string) error {
 
 	client, destroy, err := s.Client()
 	if err != nil {
@@ -302,33 +252,28 @@ func (s *ServiceStorage) Remove(ctx context.Context, username, projectID, servic
 	}
 	defer destroy()
 
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-	defer cancel()
-
-	pmeta := new(types.ProjectMeta)
-	if err := client.Get(ctx, keyProjectMeta, pmeta); err != nil {
+	keyMeta := s.util.Key(ctx, projectStorage, projectID, serviceStorage, serviceID, "meta")
+	meta := new(types.ProjectMeta)
+	if err := client.Get(ctx, keyMeta, meta); err != nil {
 		if err.Error() == store.ErrKeyNotFound {
 			return nil
 		}
 		return err
 	}
 
-	var keyHelper = s.Helper.KeyDecorator(ctx, "helper", ProjectTable, projectID, ServiceTable, pmeta.Name)
-
 	tx := client.Begin(ctx)
 
+	keyHelper := s.util.Key(ctx, "helper", projectStorage, projectID, serviceStorage, meta.Name)
 	tx.Delete(keyHelper)
-	tx.Delete(key)
+
+	keyService := s.util.Key(ctx, projectStorage, projectID, serviceStorage, serviceID)
+	tx.Delete(keyService)
 
 	return tx.Commit()
 }
 
-// Remove service model
-func (s *ServiceStorage) RemoveByProject(ctx context.Context, username, project string) error {
-
-	var (
-		key = s.Helper.KeyDecorator(ctx, ProjectTable, project, ServiceTable)
-	)
+// Remove services from project
+func (s *ServiceStorage) RemoveByProject(ctx context.Context, project string) error {
 
 	client, destroy, err := s.Client()
 	if err != nil {
@@ -336,9 +281,7 @@ func (s *ServiceStorage) RemoveByProject(ctx context.Context, username, project 
 	}
 	defer destroy()
 
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-	defer cancel()
-
+	key := s.util.Key(ctx, projectStorage, project, serviceStorage)
 	if err := client.Delete(ctx, key, nil); err != nil {
 		return err
 	}
@@ -346,9 +289,9 @@ func (s *ServiceStorage) RemoveByProject(ctx context.Context, username, project 
 	return nil
 }
 
-func NewServiceStorage(config store.Config, helper IHelper) *ServiceStorage {
+func NewServiceStorage(config store.Config, util IUtil) *ServiceStorage {
 	s := new(ServiceStorage)
-	s.Helper = helper
+	s.util = util
 	s.Client = func() (store.IStore, store.DestroyFunc, error) {
 		return New(config)
 	}

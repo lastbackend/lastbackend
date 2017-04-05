@@ -19,8 +19,8 @@
 package user
 
 import (
-	e "github.com/lastbackend/lastbackend/pkg/errors"
 	"github.com/lastbackend/lastbackend/pkg/client/context"
+	e "github.com/lastbackend/lastbackend/pkg/errors"
 )
 
 func LogoutCmd() {

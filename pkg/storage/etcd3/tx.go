@@ -19,11 +19,11 @@
 package etcd3
 
 import (
+	"fmt"
 	"github.com/coreos/etcd/clientv3"
 	"github.com/lastbackend/lastbackend/pkg/util/serializer"
 	"golang.org/x/net/context"
 	"path"
-	"fmt"
 )
 
 type tx struct {
@@ -75,7 +75,7 @@ func (t *tx) Update(key string, objPtr interface{}, ttl uint64) error {
 func (t *tx) Delete(key string) {
 	fmt.Println("Del:", key)
 	key = path.Join(t.pathPrefix, key)
-	t.ops = append(t.ops, clientv3.OpDelete(key))
+	t.ops = append(t.ops, clientv3.OpDelete(key, clientv3.WithPrefix()))
 }
 
 func (t *tx) Commit() error {

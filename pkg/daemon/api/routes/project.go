@@ -35,21 +35,13 @@ import (
 func ProjectListH(w http.ResponseWriter, r *http.Request) {
 
 	var (
-		err     error
-		session *types.Session
-		ctx     = c.Get()
+		err error
+		ctx = c.Get()
 	)
 
 	ctx.Log.Debug("List project handler")
 
-	session = utils.Session(r)
-	if session == nil {
-		ctx.Log.Error(http.StatusText(http.StatusUnauthorized))
-		errors.HTTP.Unauthorized(w)
-		return
-	}
-
-	projectList, err := ctx.Storage.Project().ListByUser(r.Context(), session.Username)
+	projectList, err := ctx.Storage.Project().List(r.Context())
 	if err != nil {
 		ctx.Log.Error("Error: find projects by user", err)
 		errors.HTTP.InternalServerError(w)
@@ -75,7 +67,6 @@ func ProjectInfoH(w http.ResponseWriter, r *http.Request) {
 
 	var (
 		err          error
-		session      *types.Session
 		project      *types.Project
 		ctx          = c.Get()
 		params       = utils.Vars(r)
@@ -84,17 +75,10 @@ func ProjectInfoH(w http.ResponseWriter, r *http.Request) {
 
 	ctx.Log.Info("Get project handler")
 
-	session = utils.Session(r)
-	if session == nil {
-		ctx.Log.Error(http.StatusText(http.StatusUnauthorized))
-		errors.HTTP.Unauthorized(w)
-		return
-	}
-
 	if validator.IsUUID(projectParam) {
-		project, err = ctx.Storage.Project().GetByID(r.Context(), session.Username, projectParam)
+		project, err = ctx.Storage.Project().GetByID(r.Context(), projectParam)
 	} else {
-		project, err = ctx.Storage.Project().GetByName(r.Context(), session.Username, projectParam)
+		project, err = ctx.Storage.Project().GetByName(r.Context(), projectParam)
 	}
 	if err != nil {
 		ctx.Log.Error("Error: find project by id", err.Error())
@@ -160,18 +144,10 @@ func (s *projectCreateS) decodeAndValidate(reader io.Reader) *errors.Err {
 func ProjectCreateH(w http.ResponseWriter, r *http.Request) {
 
 	var (
-		session *types.Session
-		ctx     = c.Get()
+		ctx = c.Get()
 	)
 
 	ctx.Log.Debug("Create project handler")
-
-	session = utils.Session(r)
-	if session == nil {
-		ctx.Log.Error(http.StatusText(http.StatusUnauthorized))
-		errors.HTTP.Unauthorized(w)
-		return
-	}
 
 	// request body struct
 	rq := new(projectCreateS)
@@ -181,7 +157,7 @@ func ProjectCreateH(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	project, err := ctx.Storage.Project().GetByName(r.Context(), session.Username, rq.Name)
+	project, err := ctx.Storage.Project().GetByName(r.Context(), rq.Name)
 	if err != nil {
 		ctx.Log.Error("Error: check exists by name", err.Error())
 		errors.HTTP.InternalServerError(w)
@@ -193,7 +169,7 @@ func ProjectCreateH(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	project, err = ctx.Storage.Project().Insert(r.Context(), session.Username, rq.Name, rq.Description)
+	project, err = ctx.Storage.Project().Insert(r.Context(), rq.Name, rq.Description)
 	if err != nil {
 		ctx.Log.Error("Error: insert project to db", err)
 		errors.HTTP.InternalServerError(w)
@@ -254,7 +230,6 @@ func ProjectUpdateH(w http.ResponseWriter, r *http.Request) {
 
 	var (
 		err          error
-		session      *types.Session
 		project      = new(types.Project)
 		ctx          = c.Get()
 		params       = utils.Vars(r)
@@ -262,13 +237,6 @@ func ProjectUpdateH(w http.ResponseWriter, r *http.Request) {
 	)
 
 	ctx.Log.Debug("Update project handler")
-
-	session = utils.Session(r)
-	if session == nil {
-		ctx.Log.Error(http.StatusText(http.StatusUnauthorized))
-		errors.HTTP.Unauthorized(w)
-		return
-	}
 
 	// request body struct
 	rq := new(projectUpdateS)
@@ -279,9 +247,9 @@ func ProjectUpdateH(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if validator.IsUUID(projectParam) {
-		project, err = ctx.Storage.Project().GetByID(r.Context(), session.Username, projectParam)
+		project, err = ctx.Storage.Project().GetByID(r.Context(), projectParam)
 	} else {
-		project, err = ctx.Storage.Project().GetByName(r.Context(), session.Username, projectParam)
+		project, err = ctx.Storage.Project().GetByName(r.Context(), projectParam)
 	}
 	if err != nil {
 		ctx.Log.Error("Error: check exists by name", err.Error())
@@ -292,7 +260,7 @@ func ProjectUpdateH(w http.ResponseWriter, r *http.Request) {
 	project.Name = rq.Name
 	project.Description = rq.Description
 
-	project, err = ctx.Storage.Project().Update(r.Context(), session.Username, project)
+	project, err = ctx.Storage.Project().Update(r.Context(), project)
 	if err != nil {
 		ctx.Log.Error("Error: update project to db", err)
 		errors.HTTP.InternalServerError(w)
@@ -318,7 +286,6 @@ func ProjectRemoveH(w http.ResponseWriter, r *http.Request) {
 	var (
 		err          error
 		ctx          = c.Get()
-		session      *types.Session
 		project      = new(types.Project)
 		params       = utils.Vars(r)
 		projectParam = params["project"]
@@ -326,17 +293,10 @@ func ProjectRemoveH(w http.ResponseWriter, r *http.Request) {
 
 	ctx.Log.Info("Remove project")
 
-	session = utils.Session(r)
-	if session == nil {
-		ctx.Log.Error(http.StatusText(http.StatusUnauthorized))
-		errors.HTTP.Unauthorized(w)
-		return
-	}
-
 	if validator.IsUUID(projectParam) {
-		project, err = ctx.Storage.Project().GetByID(r.Context(), session.Username, projectParam)
+		project, err = ctx.Storage.Project().GetByID(r.Context(), projectParam)
 	} else {
-		project, err = ctx.Storage.Project().GetByName(r.Context(), session.Username, projectParam)
+		project, err = ctx.Storage.Project().GetByName(r.Context(), projectParam)
 	}
 	if err != nil {
 		ctx.Log.Error("Error: find project by name", err.Error())
@@ -365,7 +325,7 @@ func ProjectRemoveH(w http.ResponseWriter, r *http.Request) {
 	//	return
 	//}
 
-	err = ctx.Storage.Project().Remove(r.Context(), session.Username, project.ID)
+	err = ctx.Storage.Project().Remove(r.Context(), project.ID)
 	if err != nil {
 		ctx.Log.Error("Error: remove project from db", err)
 		errors.HTTP.InternalServerError(w)

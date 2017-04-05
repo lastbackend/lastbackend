@@ -27,12 +27,10 @@ type ProjectList []Project
 
 type Project struct {
 	projectMeta
-	// Project user
-	User string `json:"user"`
 }
 
 type projectMeta struct{ ProjectMeta }
-type ProjectMeta struct{
+type ProjectMeta struct {
 	meta
 
 	// Add fields to expand the meta data

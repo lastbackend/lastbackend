@@ -16,36 +16,17 @@
 // from Last.Backend LLC.
 //
 
-package user
+package storage
 
 import (
-	"encoding/json"
-	"github.com/lastbackend/lastbackend/pkg/apis/types"
+	"context"
+	"strings"
 )
 
-func New(obj *types.User) *User {
-	u := new(User)
-
-	u.Username = obj.Username
-	u.Gravatar = obj.Gravatar
-	u.Profile.FirstName = obj.Profile.FirstName
-	u.Profile.LastName = obj.Profile.LastName
-	u.Updated = obj.Updated
-	u.Created = obj.Created
-	u.Emails = make(Emails, len(obj.Emails))
-	u.Vendors = make(Vendors, len(obj.Vendors))
-
-	for k, v := range obj.Emails {
-		u.Emails[k] = v
-	}
-
-	for k, v := range obj.Vendors {
-		u.Vendors[k] = v.Username
-	}
-
-	return u
+type util struct {
+	IUtil
 }
 
-func (obj *User) ToJson() ([]byte, error) {
-	return json.Marshal(obj)
+func (util) Key(ctx context.Context, pattern ...string) string {
+	return "/" + strings.Join(pattern, "/")
 }

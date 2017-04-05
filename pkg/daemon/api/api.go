@@ -40,9 +40,6 @@ func Listen(host string, port int) error {
 }
 
 var Routes = []http.Route{
-	// User handlers
-	{Path: "/user", Method: http.MethodGet, Middleware: []http.Middleware{middleware.Context}, Handler: routes.UserGetH},
-
 	// Vendor handlers
 	{Path: "/oauth/{vendor}", Method: http.MethodDelete, Middleware: []http.Middleware{middleware.Context}, Handler: routes.OAuthDisconnectH},
 	{Path: "/oauth/{vendor}/{code}", Method: http.MethodPost, Middleware: []http.Middleware{middleware.Context}, Handler: routes.OAuthConnectH},

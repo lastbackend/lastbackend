@@ -19,27 +19,27 @@
 package storage
 
 import (
+	"context"
 	"github.com/lastbackend/lastbackend/pkg/apis/types"
 	"github.com/lastbackend/lastbackend/pkg/storage/store"
-	"golang.org/x/net/context"
 )
 
-const BuildTable string = "builds"
+const buildStorage string = "builds"
 
 // Service Build type for interface in interfaces folder
 type BuildStorage struct {
 	IBuild
-	Helper IHelper
+	util   IUtil
 	Client func() (store.IStore, store.DestroyFunc, error)
 }
 
 // Get build model by id
-func (s *BuildStorage) GetByID(ctx context.Context, user, id string) (*types.Build, error) {
+func (s *BuildStorage) GetByID(ctx context.Context, id string) (*types.Build, error) {
 	return nil, nil
 }
 
 // Get builds by image
-func (s *BuildStorage) ListByImage(ctx context.Context, user, id string) (*types.BuildList, error) {
+func (s *BuildStorage) ListByImage(ctx context.Context, id string) (*types.BuildList, error) {
 	return nil, nil
 }
 
@@ -48,9 +48,9 @@ func (s *BuildStorage) Insert(ctx context.Context, build *types.Build) (*types.B
 	return nil, nil
 }
 
-func NewBuildStorage(config store.Config, helper IHelper) *BuildStorage {
+func NewBuildStorage(config store.Config, util IUtil) *BuildStorage {
 	s := new(BuildStorage)
-	s.Helper = helper
+	s.util = util
 	s.Client = func() (store.IStore, store.DestroyFunc, error) {
 		return New(config)
 	}

@@ -25,7 +25,6 @@ import (
 
 func New(obj *types.Service) *Service {
 	s := new(Service)
-	s.User = obj.User
 	s.Project = obj.Project
 	s.Name = obj.Name
 	s.Description = obj.Description
