@@ -230,7 +230,7 @@ func (s *ProjectStorage) Remove(ctx context.Context, id string) error {
 	return nil
 }
 
-func NewProjectStorage(config store.Config, util IUtil) *ProjectStorage {
+func newProjectStorage(config store.Config, util IUtil) *ProjectStorage {
 	s := new(ProjectStorage)
 	s.util = util
 	s.Client = func() (store.IStore, store.DestroyFunc, error) {

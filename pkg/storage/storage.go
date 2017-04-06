@@ -22,6 +22,9 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/storage/store"
 )
 
+// Util helpers
+var _util IUtil
+
 type Storage struct {
 	*VendorStorage
 	*ProjectStorage
@@ -31,6 +34,10 @@ type Storage struct {
 	*HookStorage
 	*VolumeStorage
 	*ActivityStorage
+}
+
+func SetUtil(u IUtil) {
+	_util = u
 }
 
 func (s *Storage) Vendor() IVendor {
@@ -91,19 +98,21 @@ func (s *Storage) Activity() IActivity {
 
 func Get(config store.Config) (*Storage, error) {
 
-	var (
-		store = new(Storage)
-		util  = new(util)
-	)
+	var store = new(Storage)
 
-	store.VendorStorage = NewVendorStorage(config, util)
-	store.ProjectStorage = NewProjectStorage(config, util)
-	store.ServiceStorage = NewServiceStorage(config, util)
-	store.ImageStorage = NewImageStorage(config, util)
-	store.BuildStorage = NewBuildStorage(config, util)
-	store.HookStorage = NewHookStorage(config, util)
-	store.VolumeStorage = NewVolumeStorage(config, util)
-	store.ActivityStorage = NewActivityStorage(config, util)
+	if _util == nil {
+		// Set default util helpers
+		_util = new(util)
+	}
+
+	store.VendorStorage = newVendorStorage(config, _util)
+	store.ProjectStorage = newProjectStorage(config, _util)
+	store.ServiceStorage = newServiceStorage(config, _util)
+	store.ImageStorage = newImageStorage(config, _util)
+	store.BuildStorage = newBuildStorage(config, _util)
+	store.HookStorage = newHookStorage(config, _util)
+	store.VolumeStorage = newVolumeStorage(config, _util)
+	store.ActivityStorage = newActivityStorage(config, _util)
 
 	return store, nil
 }

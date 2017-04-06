@@ -20,6 +20,7 @@ package storage
 
 import (
 	"context"
+	"fmt"
 	"strings"
 )
 
@@ -27,6 +28,8 @@ type util struct {
 	IUtil
 }
 
+const sep = "/"
+
 func (util) Key(ctx context.Context, pattern ...string) string {
-	return "/" + strings.Join(pattern, "/")
+	return strings.Join([]string{sep, strings.Join(pattern, sep)}, sep)
 }

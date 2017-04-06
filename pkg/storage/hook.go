@@ -64,7 +64,7 @@ func (s *HookStorage) RemoveByService(ctx context.Context, id string) error {
 	return nil
 }
 
-func NewHookStorage(config store.Config, util IUtil) *HookStorage {
+func newHookStorage(config store.Config, util IUtil) *HookStorage {
 	s := new(HookStorage)
 	s.util = util
 	s.Client = func() (store.IStore, store.DestroyFunc, error) {

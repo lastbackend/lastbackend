@@ -20,7 +20,6 @@ package etcd3
 
 import (
 	"errors"
-	"fmt"
 	"github.com/coreos/etcd/clientv3"
 	st "github.com/lastbackend/lastbackend/pkg/storage/store"
 	"github.com/lastbackend/lastbackend/pkg/util/converter"
@@ -53,7 +52,6 @@ func (s *store) Create(ctx context.Context, key string, obj, outPtr interface{},
 	if err != nil {
 		return err
 	}
-	fmt.Println("Create:", key, string(data))
 	txnResp, err := s.client.KV.Txn(ctx).
 		If(clientv3.Compare(clientv3.ModRevision(key), "=", 0)).
 		Then(clientv3.OpPut(key, string(data), opts...)).Commit()
@@ -74,7 +72,6 @@ func (s *store) Create(ctx context.Context, key string, obj, outPtr interface{},
 
 func (s *store) Get(ctx context.Context, key string, outPtr interface{}) error {
 	key = path.Join(s.pathPrefix, key)
-	fmt.Println("Get:", key)
 	res, err := s.client.KV.Get(ctx, key, s.opts...)
 	if err != nil {
 		return err
@@ -90,7 +87,6 @@ func (s *store) List(ctx context.Context, key, keyRegexFilter string, listOutPtr
 	if !strings.HasSuffix(key, "/") {
 		key += "/"
 	}
-	fmt.Println("List:", key)
 	getResp, err := s.client.KV.Get(ctx, key, clientv3.WithPrefix())
 	if err != nil {
 		return err
@@ -110,7 +106,6 @@ func (s *store) Map(ctx context.Context, key, keyRegexFilter string, mapOutPtr i
 	if !strings.HasSuffix(key, "/") {
 		key += "/"
 	}
-	fmt.Println("Map:", key)
 	getResp, err := s.client.KV.Get(ctx, key, clientv3.WithPrefix())
 	if err != nil {
 		return err
@@ -133,7 +128,6 @@ func (s *store) Update(ctx context.Context, key string, obj, outPtr interface{},
 		return err
 	}
 	key = path.Join(s.pathPrefix, key)
-	fmt.Println("Update:", key)
 	opts, err := s.ttlOpts(ctx, int64(ttl))
 	if err != nil {
 		return err
@@ -159,7 +153,6 @@ func (s *store) Update(ctx context.Context, key string, obj, outPtr interface{},
 
 func (s *store) Delete(ctx context.Context, key string, outPtr interface{}) error {
 	key = path.Join(s.pathPrefix, key)
-	fmt.Println("Del:", key)
 	res, err := s.client.KV.Txn(ctx).Then(clientv3.OpGet(key), clientv3.OpDelete(key, clientv3.WithPrefix())).Commit()
 	if err != nil {
 		return err

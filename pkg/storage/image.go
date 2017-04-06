@@ -71,7 +71,7 @@ func (s *ImageStorage) Update(ctx context.Context, image *types.Image) (*types.I
 	return nil, nil
 }
 
-func NewImageStorage(config store.Config, util IUtil) *ImageStorage {
+func newImageStorage(config store.Config, util IUtil) *ImageStorage {
 	s := new(ImageStorage)
 	s.util = util
 	s.Client = func() (store.IStore, store.DestroyFunc, error) {
