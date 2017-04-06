@@ -51,7 +51,7 @@ func (s *VolumeStorage) Remove(ctx context.Context, id string) error {
 	return nil
 }
 
-func NewVolumeStorage(config store.Config, util IUtil) *VolumeStorage {
+func newVolumeStorage(config store.Config, util IUtil) *VolumeStorage {
 	s := new(VolumeStorage)
 	s.util = util
 	s.Client = func() (store.IStore, store.DestroyFunc, error) {

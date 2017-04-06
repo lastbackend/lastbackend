@@ -53,7 +53,7 @@ func (s *ActivityStorage) RemoveByService(ctx context.Context, service string) e
 	return nil
 }
 
-func NewActivityStorage(config store.Config, util IUtil) *ActivityStorage {
+func newActivityStorage(config store.Config, util IUtil) *ActivityStorage {
 	s := new(ActivityStorage)
 	s.util = util
 	s.Client = func() (store.IStore, store.DestroyFunc, error) {

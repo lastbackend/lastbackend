@@ -48,7 +48,7 @@ func (s *BuildStorage) Insert(ctx context.Context, build *types.Build) (*types.B
 	return nil, nil
 }
 
-func NewBuildStorage(config store.Config, util IUtil) *BuildStorage {
+func newBuildStorage(config store.Config, util IUtil) *BuildStorage {
 	s := new(BuildStorage)
 	s.util = util
 	s.Client = func() (store.IStore, store.DestroyFunc, error) {

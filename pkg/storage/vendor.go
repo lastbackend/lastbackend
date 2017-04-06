@@ -118,7 +118,7 @@ func (s *VendorStorage) Remove(ctx context.Context, vendorName string) error {
 	return nil
 }
 
-func NewVendorStorage(config store.Config, util IUtil) *VendorStorage {
+func newVendorStorage(config store.Config, util IUtil) *VendorStorage {
 	s := new(VendorStorage)
 	s.util = util
 	s.Client = func() (store.IStore, store.DestroyFunc, error) {
