@@ -23,6 +23,7 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/apis/types"
 	"github.com/lastbackend/lastbackend/pkg/apis/views/v1"
 	c "github.com/lastbackend/lastbackend/pkg/daemon/context"
+	i "github.com/lastbackend/lastbackend/pkg/daemon/image"
 	"github.com/lastbackend/lastbackend/pkg/errors"
 	"github.com/lastbackend/lastbackend/pkg/util/converter"
 	"github.com/lastbackend/lastbackend/pkg/util/http/utils"
@@ -36,13 +37,13 @@ import (
 type serviceCreateS struct {
 	Name        string               `json:"name"`
 	Description string               `json:"description"`
+	Registry    string               `json:"registry"`
 	Region      string               `json:"region"`
 	Template    string               `json:"template"`
 	Image       string               `json:"image"`
 	Url         string               `json:"url"`
 	Config      *types.ServiceConfig `json:"config,omitempty"`
-	Source      *types.ServiceSource `json:"source,omitempty"`
-	source      *types.ImageSource
+	source      *types.ServiceSource
 }
 
 type resources struct {
@@ -84,14 +85,6 @@ func (s *serviceCreateS) decodeAndValidate(reader io.Reader) *errors.Err {
 		if s.Name == "" {
 			s.Name = source.Repo
 		}
-
-		s.source = &types.ImageSource{
-			Type:   types.SourceDockerType,
-			Hub:    source.Hub,
-			Owner:  source.Owner,
-			Repo:   source.Repo,
-			Branch: source.Branch,
-		}
 	}
 
 	if s.Url != "" {
@@ -108,27 +101,11 @@ func (s *serviceCreateS) decodeAndValidate(reader io.Reader) *errors.Err {
 			s.Name = source.Repo
 		}
 
-		s.source = &types.ImageSource{
-			Type:   types.SourceGitType,
+		s.source = &types.ServiceSource{
 			Hub:    source.Hub,
 			Owner:  source.Owner,
 			Repo:   source.Repo,
 			Branch: "master",
-		}
-	}
-
-	if s.Source != nil {
-
-		if s.Name == "" {
-			s.Name = s.Source.Repo
-		}
-
-		s.source = &types.ImageSource{
-			Type:   types.SourceGitType,
-			Hub:    s.Source.Hub,
-			Owner:  s.Source.Owner,
-			Repo:   s.Source.Repo,
-			Branch: s.Source.Branch,
 		}
 	}
 
@@ -205,6 +182,7 @@ func ServiceCreateH(w http.ResponseWriter, r *http.Request) {
 	// If you are not using a template, then create a standard configuration template
 	//if tpl == nil {
 	// TODO: Generate default template for service
+	//return
 	//}
 
 	// Patch config if exists custom configurations
@@ -214,14 +192,19 @@ func ServiceCreateH(w http.ResponseWriter, r *http.Request) {
 		rq.Config = types.ServiceConfig{}.GetDefault()
 	}
 
-	image, err = ctx.Storage.Image().Insert(r.Context(), rq.source)
-	if err != nil {
-		ctx.Log.Error("Error: insert image to db", err)
-		errors.HTTP.InternalServerError(w)
-		return
+	if rq.source != nil {
+		image, err = i.Create(r.Context(), rq.Registry, rq.source)
+		if err != nil {
+			ctx.Log.Error("Error: insert service to db", err)
+			errors.HTTP.InternalServerError(w)
+			return
+		}
+		rq.Config.Image = image.Name
+	} else {
+		rq.Config.Image = rq.Image
 	}
 
-	service, err = ctx.Storage.Service().Insert(r.Context(), project.ID, rq.Name, rq.Description, image.ID, rq.Config)
+	service, err = ctx.Storage.Service().Insert(r.Context(), project.ID, rq.Name, rq.Description, rq.Config)
 	if err != nil {
 		ctx.Log.Error("Error: insert service to db", err)
 		errors.HTTP.InternalServerError(w)

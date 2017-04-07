@@ -39,12 +39,6 @@ type Service struct {
 	Config *ServiceConfig `json:"config,omitempty"`
 }
 
-const (
-	SourceGitType      = "git"
-	SourceDockerType   = "docker"
-	SourceTemplateType = "template"
-)
-
 type serviceMeta struct{ ServiceMeta }
 type ServiceMeta struct {
 	meta
@@ -53,9 +47,6 @@ type ServiceMeta struct {
 	// Example:
 	// Note string `json:"note,omitempty"`
 	// Uptime time.Time `json:"uptime"
-
-	// Service image
-	Image string `json:"image"`
 }
 
 type ServiceSource struct {

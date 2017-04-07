@@ -37,6 +37,10 @@ func GetUUIDV4() string {
 	return uuid.NewV4().String()
 }
 
+func UnixTimestamp() int {
+	return int(time.Now().Unix())
+}
+
 func GenerateSalt(password string) (string, error) {
 	buf := make([]byte, 10, 10+sha1.Size)
 	_, err := io.ReadFull(rand.Reader, buf)

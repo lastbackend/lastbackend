@@ -74,7 +74,6 @@ func (s *ServiceStorage) GetByID(ctx context.Context, projectID, serviceID strin
 
 	service.ID = smeta.ID
 	service.Name = smeta.Name
-	service.Image = smeta.Image
 	service.Description = smeta.Description
 	service.Labels = smeta.Labels
 	service.Created = smeta.Created
@@ -108,7 +107,7 @@ func (s *ServiceStorage) GetByName(ctx context.Context, projectID, name string) 
 // List project
 func (s *ServiceStorage) ListByProject(ctx context.Context, projectID string) (*types.ServiceList, error) {
 
-	const filter = `\b(.+)\/meta\b`
+	const filter = `\b(.+)services\/[a-z0-9-]{36}\/meta\b`
 
 	client, destroy, err := s.Client()
 	if err != nil {
@@ -144,7 +143,6 @@ func (s *ServiceStorage) ListByProject(ctx context.Context, projectID string) (*
 		service.ID = meta.ID
 		service.Name = meta.Name
 		service.Description = meta.Description
-		service.Image = meta.Image
 		service.Labels = meta.Labels
 		service.Created = meta.Created
 		service.Updated = meta.Updated
@@ -157,7 +155,7 @@ func (s *ServiceStorage) ListByProject(ctx context.Context, projectID string) (*
 }
 
 // Insert new service into storage
-func (s *ServiceStorage) Insert(ctx context.Context, projectID, name, description, image string, config *types.ServiceConfig) (*types.Service, error) {
+func (s *ServiceStorage) Insert(ctx context.Context, projectID, name, description string, config *types.ServiceConfig) (*types.Service, error) {
 	var (
 		id      = generator.GetUUIDV4()
 		service = new(types.Service)
@@ -168,7 +166,6 @@ func (s *ServiceStorage) Insert(ctx context.Context, projectID, name, descriptio
 	service.Project = projectID
 	service.Description = description
 	service.Config = config
-	service.Image = image
 	service.Updated = time.Now()
 	service.Created = time.Now()
 
@@ -224,15 +221,34 @@ func (s *ServiceStorage) Update(ctx context.Context, projectID string, service *
 	}
 	defer destroy()
 
-	tx := client.Begin(ctx)
-
-	keyMeta := s.util.Key(ctx, projectStorage, projectID, serviceStorage, service.Name, "meta")
-	if err := tx.Update(keyMeta, service, 0); err != nil {
+	keyMeta := s.util.Key(ctx, projectStorage, projectID, serviceStorage, service.ID, "meta")
+	smeta := new(types.ProjectMeta)
+	if err := client.Get(ctx, keyMeta, smeta); err != nil {
+		if err.Error() == store.ErrKeyNotFound {
+			return nil, nil
+		}
 		return nil, err
 	}
 
-	keyConfig := s.util.Key(ctx, projectStorage, projectID, serviceStorage, service.Name, "config")
-	if err := tx.Update(keyConfig, service.Config, 0); err != nil {
+	tx := client.Begin(ctx)
+
+	if smeta.Name != service.Name {
+		keyHelper1 := s.util.Key(ctx, "helper", projectStorage, projectID, serviceStorage, smeta.Name)
+		tx.Delete(keyHelper1)
+
+		keyHelper2 := s.util.Key(ctx, "helper", projectStorage, projectID, serviceStorage, service.Name)
+		if err := tx.Create(keyHelper2, &service.ID, 0); err != nil {
+			return nil, err
+		}
+	}
+
+	keyMeta = s.util.Key(ctx, projectStorage, service.ID, "meta")
+	if err := tx.Update(keyMeta, service.ServiceMeta, 0); err != nil {
+		return nil, err
+	}
+
+	keyMeta = s.util.Key(ctx, projectStorage, service.ID, "config")
+	if err := tx.Update(keyMeta, service.Config, 0); err != nil {
 		return nil, err
 	}
 
@@ -282,7 +298,7 @@ func (s *ServiceStorage) RemoveByProject(ctx context.Context, project string) er
 	defer destroy()
 
 	key := s.util.Key(ctx, projectStorage, project, serviceStorage)
-	if err := client.Delete(ctx, key, nil); err != nil {
+	if err := client.DeleteDir(ctx, key); err != nil {
 		return err
 	}
 

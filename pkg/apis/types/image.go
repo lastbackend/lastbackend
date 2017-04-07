@@ -36,8 +36,6 @@ type ImageMeta struct {
 	// Example:
 	// Note string `json:"note,omitempty"`
 	// Uptime time.Time `json:"uptime"`
-
-	Status string `json:"status"`
 }
 
 type ImageSpec struct {
@@ -47,9 +45,12 @@ type ImageSpec struct {
 }
 
 type ImageSource struct {
-	Type   string `json:"type"`
-	Hub    string `json:"hub"`
-	Owner  string `json:"owner"`
-	Repo   string `json:"repo"`
-	Branch string `json:"branch"`
+	Hub   string `json:"hub"`
+	Owner string `json:"owner"`
+	Repo  string `json:"repo"`
+	Tag   string `json:"tag"`
+}
+
+func (i *ImageSource) GenerateName() string {
+	return ""
 }

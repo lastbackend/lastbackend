@@ -16,25 +16,34 @@
 // from Last.Backend LLC.
 //
 
-package types
+package build
 
 import (
-	"time"
+	"context"
+	"github.com/lastbackend/lastbackend/pkg/apis/types"
+	c "github.com/lastbackend/lastbackend/pkg/daemon/context"
 )
 
-type Meta struct{ meta }
+func Create(ctx context.Context, imageID string, source *types.ServiceSource) (*types.Build, error) {
+	var (
+		lctx = c.Get()
+	)
 
-type meta struct {
-	// Meta id
-	ID string `json:"id"`
-	// Meta name
-	Name string `json:"name"`
-	// Meta description
-	Description string `json:"description,omitempty"`
-	// Meta labels
-	Labels map[string]string `json:"lables"`
-	// Meta created time
-	Created time.Time `json:"created"`
-	// Meta updated time
-	Updated time.Time `json:"updated"`
+	lctx.Log.Debug("Create build")
+
+	//TODO: Get commit info
+
+	bsource := &types.BuildSource{
+		Hub:   source.Hub,
+		Owner: source.Owner,
+		Repo:  source.Repo,
+		Tag:   source.Branch,
+	}
+
+	bld, err := lctx.Storage.Build().Insert(ctx, imageID, bsource)
+	if err != nil {
+		return nil, err
+	}
+
+	return bld, nil
 }

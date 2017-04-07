@@ -42,6 +42,30 @@ type store struct {
 // Need for decode array bytes
 type buffer []byte
 
+func (s *store) Count(ctx context.Context, key, keyRegexFilter string) (int, error) {
+	key = path.Join(s.pathPrefix, key)
+	if !strings.HasSuffix(key, "/") {
+		key += "/"
+	}
+	getResp, err := s.client.KV.Get(ctx, key, clientv3.WithPrefix())
+	if err != nil {
+		return 0, err
+	}
+	r, _ := regexp.Compile(keyRegexFilter)
+
+	if len(keyRegexFilter) == 0 {
+		return len(getResp.Kvs), nil
+	}
+
+	count := 0
+	for _, kv := range getResp.Kvs {
+		if r.MatchString(string(kv.Key)) {
+			count++
+		}
+	}
+	return count, nil
+}
+
 func (s *store) Create(ctx context.Context, key string, obj, outPtr interface{}, ttl uint64) error {
 	data, err := serializer.Encode(s.codec, obj)
 	if err != nil {
@@ -151,20 +175,26 @@ func (s *store) Update(ctx context.Context, key string, obj, outPtr interface{},
 	return nil
 }
 
-func (s *store) Delete(ctx context.Context, key string, outPtr interface{}) error {
+func (s *store) Delete(ctx context.Context, key string) error {
 	key = path.Join(s.pathPrefix, key)
-	res, err := s.client.KV.Txn(ctx).Then(clientv3.OpGet(key), clientv3.OpDelete(key, clientv3.WithPrefix())).Commit()
+	_, err := s.client.KV.Txn(ctx).
+		Then(clientv3.OpGet(key), clientv3.OpDelete(key)).
+		Commit()
 	if err != nil {
 		return err
 	}
-	if validator.IsNil(outPtr) {
-		return nil
+	return nil
+}
+
+func (s *store) DeleteDir(ctx context.Context, key string) error {
+	key = path.Join(s.pathPrefix, key)
+	_, err := s.client.KV.Txn(ctx).
+		Then(clientv3.OpDelete(key, clientv3.WithPrefix())).
+		Commit()
+	if err != nil {
+		return err
 	}
-	getResp := res.Responses[0].GetResponseRange()
-	if len(getResp.Kvs) == 0 {
-		return errors.New(st.ErrKeyNotFound)
-	}
-	return decode(s.codec, getResp.Kvs[0].Value, outPtr)
+	return nil
 }
 
 func (s *store) Begin(ctx context.Context) st.ITx {
