@@ -18,6 +18,8 @@
 
 package types
 
+import "time"
+
 type Registry struct {
 	// Registry ID
 	ID string `json:"id"`
@@ -25,6 +27,10 @@ type Registry struct {
 	Name string `json:"username"`
 	// Registry authentication information
 	Auth *RegistryAuth `json:"auth,omitempty"`
+	// Meta created time
+	Created time.Time `json:"created"`
+	// Meta updated time
+	Updated time.Time `json:"updated"`
 }
 
 type RegistryAuth struct {
@@ -32,3 +38,5 @@ type RegistryAuth struct {
 	Username string `json:"username"`
 	Password string `json:"password"`
 }
+
+type RegistryList []Registry
