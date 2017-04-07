@@ -214,7 +214,7 @@ func ServiceCreateH(w http.ResponseWriter, r *http.Request) {
 		rq.Config = types.ServiceConfig{}.GetDefault()
 	}
 
-	image, err = ctx.Storage.Image().Insert(r.Context(), rq.source)
+	image, err = ctx.Storage.Image().Insert(r.Context(), "", "", rq.source)
 	if err != nil {
 		ctx.Log.Error("Error: insert image to db", err)
 		errors.HTTP.InternalServerError(w)

@@ -224,15 +224,34 @@ func (s *ServiceStorage) Update(ctx context.Context, projectID string, service *
 	}
 	defer destroy()
 
-	tx := client.Begin(ctx)
-
-	keyMeta := s.util.Key(ctx, projectStorage, projectID, serviceStorage, service.Name, "meta")
-	if err := tx.Update(keyMeta, service, 0); err != nil {
+	keyMeta := s.util.Key(ctx, projectStorage, projectID, serviceStorage, service.ID, "meta")
+	smeta := new(types.ProjectMeta)
+	if err := client.Get(ctx, keyMeta, smeta); err != nil {
+		if err.Error() == store.ErrKeyNotFound {
+			return nil, nil
+		}
 		return nil, err
 	}
 
-	keyConfig := s.util.Key(ctx, projectStorage, projectID, serviceStorage, service.Name, "config")
-	if err := tx.Update(keyConfig, service.Config, 0); err != nil {
+	tx := client.Begin(ctx)
+
+	if smeta.Name != service.Name {
+		keyHelper1 := s.util.Key(ctx, "helper", projectStorage, projectID, serviceStorage, smeta.Name)
+		tx.Delete(keyHelper1)
+
+		keyHelper2 := s.util.Key(ctx, "helper", projectStorage, projectID, serviceStorage, service.Name)
+		if err := tx.Create(keyHelper2, &service.ID, 0); err != nil {
+			return nil, err
+		}
+	}
+
+	keyMeta = s.util.Key(ctx, projectStorage, service.ID, "meta")
+	if err := tx.Update(keyMeta, service.ServiceMeta, 0); err != nil {
+		return nil, err
+	}
+
+	keyMeta = s.util.Key(ctx, projectStorage, service.ID, "config")
+	if err := tx.Update(keyMeta, service.Config, 0); err != nil {
 		return nil, err
 	}
 
@@ -282,7 +301,7 @@ func (s *ServiceStorage) RemoveByProject(ctx context.Context, project string) er
 	defer destroy()
 
 	key := s.util.Key(ctx, projectStorage, project, serviceStorage)
-	if err := client.Delete(ctx, key, nil); err != nil {
+	if err := client.DeleteDir(ctx, key); err != nil {
 		return err
 	}
 

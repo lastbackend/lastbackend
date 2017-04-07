@@ -36,8 +36,6 @@ type ImageMeta struct {
 	// Example:
 	// Note string `json:"note,omitempty"`
 	// Uptime time.Time `json:"uptime"`
-
-	Status string `json:"status"`
 }
 
 type ImageSpec struct {

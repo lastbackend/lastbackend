@@ -110,7 +110,7 @@ func (s *VendorStorage) Remove(ctx context.Context, vendorName string) error {
 	defer destroy()
 
 	key := s.util.Key(ctx, vendorStorage, vendorName)
-	err = client.Delete(ctx, key, nil)
+	err = client.Delete(ctx, key)
 	if err != nil && err.Error() == store.ErrKeyNotFound {
 		return nil
 	}

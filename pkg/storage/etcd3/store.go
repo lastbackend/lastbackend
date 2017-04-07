@@ -151,20 +151,26 @@ func (s *store) Update(ctx context.Context, key string, obj, outPtr interface{},
 	return nil
 }
 
-func (s *store) Delete(ctx context.Context, key string, outPtr interface{}) error {
+func (s *store) Delete(ctx context.Context, key string) error {
 	key = path.Join(s.pathPrefix, key)
-	res, err := s.client.KV.Txn(ctx).Then(clientv3.OpGet(key), clientv3.OpDelete(key, clientv3.WithPrefix())).Commit()
+	_, err := s.client.KV.Txn(ctx).
+		Then(clientv3.OpGet(key), clientv3.OpDelete(key)).
+		Commit()
 	if err != nil {
 		return err
 	}
-	if validator.IsNil(outPtr) {
-		return nil
+	return nil
+}
+
+func (s *store) DeleteDir(ctx context.Context, key string) error {
+	key = path.Join(s.pathPrefix, key)
+	_, err := s.client.KV.Txn(ctx).
+		Then(clientv3.OpDelete(key, clientv3.WithPrefix())).
+		Commit()
+	if err != nil {
+		return err
 	}
-	getResp := res.Responses[0].GetResponseRange()
-	if len(getResp.Kvs) == 0 {
-		return errors.New(st.ErrKeyNotFound)
-	}
-	return decode(s.codec, getResp.Kvs[0].Value, outPtr)
+	return nil
 }
 
 func (s *store) Begin(ctx context.Context) st.ITx {

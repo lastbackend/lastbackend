@@ -32,11 +32,14 @@ Structure
 /lastbackend/projects/<project id>/services/<service id>/config: <service config object>
 /lastbackend/projects/<project id>/services/<service id>/source: <service sources object>
 /lastbackend/projects/<project id>/services/<service id>/domains: <service domains object>
+/lastbackend/projects/<project id>/services/<service id>/image: <image name>
 /lastbackend/projects/<project id>/services/<service id>/containers/<container id>: <service container object>
 /lastbackend/projects/<project id>/services/<service id>/builds/<build number>: <service build object>
 
-# public images
-/lastbackend/images/<image id>: <image object>
+# image information data layer
+/lastbackend/images/<image id>/meta: <image info object>
+/lastbackend/images/<image id>/source: <image source object>
+/lastbackend/images/<image id>/builds/<build id>: <build object>
 
 # helpers information data layer
 /lastbackend/helper/projects/<name>: <project id>
@@ -44,6 +47,73 @@ Structure
 ```
 
 ### Структуры данных
+
+Image info object
+```json
+{
+  "name": "hub.lastbackend.com/lastbackend/hello-world",
+  "description": "hello-world description",
+  "source": {
+    "hub":"github.com",
+    "owner":"lastbackend",
+    "repo":"proxy",
+    "branch":"master"
+  },
+  "builds": {
+    "1491502060": {
+      "commit": "a454517a3c5c657cc71548b874d023f2e2d8915b",
+      "commitMessage": "Merge pull request #218",
+      "committer": "unloop",
+      "status": "failed",
+      "message": "clone repo failed",
+      "created": "Wed Mar 01 2017 17:13:08 GMT+03:00",
+      "updated": "Wed Mar 01 2017 17:13:08 GMT+03:00"
+    },
+    "1491502073": {
+      "commit": "e7a91e0fc4f7de117728344229c41beaf18a0549",
+      "commitMessage": "Merge pull request #219",
+      "committer": "undassa",
+      "status": "success",
+      "message": "",
+      "created": "Wed Mar 05 2017 17:13:08 GMT+03:00",
+      "updated": "Wed Mar 05 2017 17:13:08 GMT+03:00"
+    }
+  },
+  "created": "Wed Mar 01 2017 17:13:08 GMT+03:00",
+  "updated": "Wed Mar 01 2017 17:13:08 GMT+03:00"
+}
+```
+
+Image source object
+```json
+{
+  "hub":"github.com",
+  "owner":"lastbackend",
+  "repo":"proxy",
+  "branch":"master"
+}
+```
+
+Build object
+```json
+{
+  "id": "<build id>",
+  "status": "success",
+  "message": "",
+  "created": "Wed Mar 05 2017 17:13:08 GMT+03:00",
+  "updated": "Wed Mar 05 2017 17:13:08 GMT+03:00"
+}
+```
+
+Registry account object
+```json
+{
+ "email": "",
+ "password": "",
+ "username": "",
+ "host": "hub.lastbackend.com"
+}
+```
 
 Vendor map
 ```json
@@ -150,27 +220,5 @@ Service container object
   },
   "updated": "Wed Mar 01 2017 17:13:39 GMT+03:00",
   "created": "Wed Mar 01 2017 17:13:39 GMT+03:00"
-}
-```
-
-Service sources object
-```json
-{
-  "type":"git",
-  "hub":"github.com",
-  "owner":"lastbackend",
-  "repo":"proxy",
-  "baranch":"master"
-}
-```
-
-Image info object
-```json
-{
-  "name": "demo",
-  "status": "",
-  "source": {},
-  "created": "Wed Mar 01 2017 17:13:08 GMT+03:00",
-  "updated": "Wed Mar 01 2017 17:13:08 GMT+03:00"
 }
 ```
