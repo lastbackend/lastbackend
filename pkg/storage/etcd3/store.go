@@ -42,6 +42,30 @@ type store struct {
 // Need for decode array bytes
 type buffer []byte
 
+func (s *store) Count(ctx context.Context, key, keyRegexFilter string) (int, error) {
+	key = path.Join(s.pathPrefix, key)
+	if !strings.HasSuffix(key, "/") {
+		key += "/"
+	}
+	getResp, err := s.client.KV.Get(ctx, key, clientv3.WithPrefix())
+	if err != nil {
+		return 0, err
+	}
+	r, _ := regexp.Compile(keyRegexFilter)
+
+	if len(keyRegexFilter) == 0 {
+		return len(getResp.Kvs), nil
+	}
+
+	count := 0
+	for _, kv := range getResp.Kvs {
+		if r.MatchString(string(kv.Key)) {
+			count++
+		}
+	}
+	return count, nil
+}
+
 func (s *store) Create(ctx context.Context, key string, obj, outPtr interface{}, ttl uint64) error {
 	data, err := serializer.Encode(s.codec, obj)
 	if err != nil {

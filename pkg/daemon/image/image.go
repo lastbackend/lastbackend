@@ -17,3 +17,58 @@
 //
 
 package image
+
+import (
+	"context"
+	"github.com/lastbackend/lastbackend/pkg/apis/types"
+	b "github.com/lastbackend/lastbackend/pkg/daemon/build"
+	c "github.com/lastbackend/lastbackend/pkg/daemon/context"
+)
+
+var Util IUtil = util{}
+
+func Create(ctx context.Context, registry string, source *types.ServiceSource) (*types.Image, error) {
+	var (
+		lctx = c.Get()
+	)
+
+	lctx.Log.Debug("Create image")
+
+	name := Util.Name(ctx, registry, source.Repo)
+	isource := &types.ImageSource{
+		Hub:   source.Hub,
+		Owner: source.Owner,
+		Repo:  source.Repo,
+		Tag:   source.Branch,
+	}
+
+	img, err := lctx.Storage.Image().Insert(ctx, name, isource)
+	if err != nil {
+		return nil, err
+	}
+
+	_, err = b.Create(ctx, img.ID, source)
+	if err != nil {
+		return nil, err
+	}
+
+	auth := Util.RegistryAuth(ctx, name)
+	if auth != nil {
+		img.Registry.Auth = new(types.RegistryAuth)
+		img.Registry.Auth.Server = auth.Server
+		img.Registry.Auth.Username = auth.Username
+		img.Registry.Auth.Password = auth.Password
+	}
+
+	return img, nil
+}
+
+func Get(ctx context.Context, id string) (*types.Image, error) {
+	var (
+		lctx = c.Get()
+	)
+
+	lctx.Log.Debug("Get image by id")
+
+	return nil, nil
+}

@@ -74,7 +74,6 @@ func (s *ServiceStorage) GetByID(ctx context.Context, projectID, serviceID strin
 
 	service.ID = smeta.ID
 	service.Name = smeta.Name
-	service.Image = smeta.Image
 	service.Description = smeta.Description
 	service.Labels = smeta.Labels
 	service.Created = smeta.Created
@@ -144,7 +143,6 @@ func (s *ServiceStorage) ListByProject(ctx context.Context, projectID string) (*
 		service.ID = meta.ID
 		service.Name = meta.Name
 		service.Description = meta.Description
-		service.Image = meta.Image
 		service.Labels = meta.Labels
 		service.Created = meta.Created
 		service.Updated = meta.Updated
@@ -157,7 +155,7 @@ func (s *ServiceStorage) ListByProject(ctx context.Context, projectID string) (*
 }
 
 // Insert new service into storage
-func (s *ServiceStorage) Insert(ctx context.Context, projectID, name, description, image string, config *types.ServiceConfig) (*types.Service, error) {
+func (s *ServiceStorage) Insert(ctx context.Context, projectID, name, description string, config *types.ServiceConfig) (*types.Service, error) {
 	var (
 		id      = generator.GetUUIDV4()
 		service = new(types.Service)
@@ -168,7 +166,6 @@ func (s *ServiceStorage) Insert(ctx context.Context, projectID, name, descriptio
 	service.Project = projectID
 	service.Description = description
 	service.Config = config
-	service.Image = image
 	service.Updated = time.Now()
 	service.Created = time.Now()
 
@@ -286,7 +283,7 @@ func (s *ServiceStorage) Remove(ctx context.Context, projectID, serviceID string
 	tx.Delete(keyHelper)
 
 	keyService := s.util.Key(ctx, projectStorage, projectID, serviceStorage, serviceID)
-	tx.DeleteDir(keyService)
+	tx.Delete(keyService)
 
 	return tx.Commit()
 }

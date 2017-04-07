@@ -22,6 +22,9 @@ import (
 	"context"
 	"github.com/lastbackend/lastbackend/pkg/apis/types"
 	"github.com/lastbackend/lastbackend/pkg/storage/store"
+	"github.com/lastbackend/lastbackend/pkg/util/generator"
+	"strconv"
+	"time"
 )
 
 const buildStorage string = "builds"
@@ -34,7 +37,7 @@ type BuildStorage struct {
 }
 
 // Get build model by id
-func (s *BuildStorage) GetByID(ctx context.Context, id string) (*types.Build, error) {
+func (s *BuildStorage) GetByID(ctx context.Context, imageID, id string) (*types.Build, error) {
 	return nil, nil
 }
 
@@ -44,8 +47,33 @@ func (s *BuildStorage) ListByImage(ctx context.Context, id string) (*types.Build
 }
 
 // Insert new build into storage
-func (s *BuildStorage) Insert(ctx context.Context, build *types.Build) (*types.Build, error) {
-	return nil, nil
+func (s *BuildStorage) Insert(ctx context.Context, imageID string, source *types.BuildSource) (*types.Build, error) {
+
+	build := new(types.Build)
+	build.ID = strconv.Itoa(generator.UnixTimestamp())
+	build.Status = types.BuildStatus{
+		Step:    types.BuildStepCreate,
+		Updated: time.Now(),
+	}
+	build.Source = *source
+	build.Created = time.Now()
+	build.Updated = time.Now()
+
+	client, destroy, err := s.Client()
+	if err != nil {
+		return nil, err
+	}
+	defer destroy()
+
+	keyMeta := s.util.Key(ctx, imageStorage, imageID, buildStorage, build.ID)
+	if err := client.Create(ctx, keyMeta, build, nil, 0); err != nil {
+		if err.Error() == store.ErrKeyExists {
+			return nil, nil
+		}
+		return nil, err
+	}
+
+	return build, nil
 }
 
 func newBuildStorage(config store.Config, util IUtil) *BuildStorage {

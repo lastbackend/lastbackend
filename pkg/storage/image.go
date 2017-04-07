@@ -20,10 +20,11 @@ package storage
 
 import (
 	"context"
+	"fmt"
 	"github.com/lastbackend/lastbackend/pkg/apis/types"
 	"github.com/lastbackend/lastbackend/pkg/storage/store"
+	"strings"
 	"time"
-	"fmt"
 )
 
 const imageStorage string = "images"
@@ -64,15 +65,15 @@ func (s *ImageStorage) GetByID(ctx context.Context, id string) (*types.Image, er
 }
 
 // Insert new image into storage
-func (s *ImageStorage) Insert(ctx context.Context, name, description string, source *types.ImageSource) (*types.Image, error) {
+func (s *ImageStorage) Insert(ctx context.Context, name string, source *types.ImageSource) (*types.Image, error) {
 
 	var (
-		image = new(types.Image)
+		image  = new(types.Image)
+		vendor = strings.Split(source.Hub, ".")[0]
 	)
 
-	image.ImageMeta.ID = fmt.Sprintf("%s:%s:%s")
+	image.ImageMeta.ID = fmt.Sprintf("%s:%s", vendor, name)
 	image.ImageMeta.Name = name
-	image.ImageMeta.Description = description
 	image.Source = *source
 	image.ImageMeta.Created = time.Now()
 	image.ImageMeta.Updated = time.Now()
@@ -85,7 +86,7 @@ func (s *ImageStorage) Insert(ctx context.Context, name, description string, sou
 
 	tx := client.Begin(ctx)
 
-	keyMeta := s.util.Key(ctx, imageStorage, name, "meta")
+	keyMeta := s.util.Key(ctx, imageStorage, image.ID, "meta")
 	if err := tx.Create(keyMeta, image.ImageMeta, 0); err != nil {
 		if err.Error() == store.ErrKeyExists {
 			return nil, nil
@@ -93,13 +94,19 @@ func (s *ImageStorage) Insert(ctx context.Context, name, description string, sou
 		return nil, err
 	}
 
-	keySource := s.util.Key(ctx, imageStorage, name, "source")
+	keySource := s.util.Key(ctx, imageStorage, image.ID, "source")
 	if err := tx.Create(keySource, image.Source, 0); err != nil {
 		if err.Error() == store.ErrKeyExists {
 			return nil, nil
 		}
 		return nil, err
 	}
+
+	if err := tx.Commit(); err != nil {
+		return nil, err
+	}
+
+	image.ImageMeta.Name = fmt.Sprintf("%s:%s-0", name, vendor)
 
 	return image, nil
 }

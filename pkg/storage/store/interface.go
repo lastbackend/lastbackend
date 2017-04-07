@@ -33,6 +33,7 @@ type DestroyFunc func()
 type FilterFunc func(obj interface{}) bool
 
 type IStore interface {
+	Count(ctx context.Context, key, keyRegexFilter string) (int, error)
 	Create(ctx context.Context, key string, obj, out interface{}, ttl uint64) error
 	Get(ctx context.Context, key string, objPtr interface{}) error
 	List(ctx context.Context, key, keyRegexpFilter string, listObjPtr interface{}) error

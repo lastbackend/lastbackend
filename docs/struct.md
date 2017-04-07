@@ -39,7 +39,7 @@ Structure
 # image information data layer
 /lastbackend/images/<image id>/meta: <image info object>
 /lastbackend/images/<image id>/source: <image source object>
-/lastbackend/images/<image id>/builds/<build id>: <build object>
+/lastbackend/images/<image id>/builds/<build number>: <build object>
 
 # helpers information data layer
 /lastbackend/helper/projects/<name>: <project id>
@@ -53,32 +53,6 @@ Image info object
 {
   "name": "hub.lastbackend.com/lastbackend/hello-world",
   "description": "hello-world description",
-  "source": {
-    "hub":"github.com",
-    "owner":"lastbackend",
-    "repo":"proxy",
-    "branch":"master"
-  },
-  "builds": {
-    "1491502060": {
-      "commit": "a454517a3c5c657cc71548b874d023f2e2d8915b",
-      "commitMessage": "Merge pull request #218",
-      "committer": "unloop",
-      "status": "failed",
-      "message": "clone repo failed",
-      "created": "Wed Mar 01 2017 17:13:08 GMT+03:00",
-      "updated": "Wed Mar 01 2017 17:13:08 GMT+03:00"
-    },
-    "1491502073": {
-      "commit": "e7a91e0fc4f7de117728344229c41beaf18a0549",
-      "commitMessage": "Merge pull request #219",
-      "committer": "undassa",
-      "status": "success",
-      "message": "",
-      "created": "Wed Mar 05 2017 17:13:08 GMT+03:00",
-      "updated": "Wed Mar 05 2017 17:13:08 GMT+03:00"
-    }
-  },
   "created": "Wed Mar 01 2017 17:13:08 GMT+03:00",
   "updated": "Wed Mar 01 2017 17:13:08 GMT+03:00"
 }
@@ -97,11 +71,13 @@ Image source object
 Build object
 ```json
 {
-  "id": "<build id>",
-  "status": "success",
-  "message": "",
-  "created": "Wed Mar 05 2017 17:13:08 GMT+03:00",
-  "updated": "Wed Mar 05 2017 17:13:08 GMT+03:00"
+  "commit": "a454517a3c5c657cc71548b874d023f2e2d8915b",
+  "commitMessage": "Merge pull request #218",
+  "committer": "unloop",
+  "status": "failed",
+  "message": "clone repo failed",
+  "created": "Wed Mar 01 2017 17:13:08 GMT+03:00",
+  "updated": "Wed Mar 01 2017 17:13:08 GMT+03:00"
 }
 ```
 

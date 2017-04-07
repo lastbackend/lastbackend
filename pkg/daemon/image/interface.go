@@ -16,25 +16,14 @@
 // from Last.Backend LLC.
 //
 
-package types
+package image
 
 import (
-	"time"
+	"context"
+	"github.com/lastbackend/lastbackend/pkg/apis/types"
 )
 
-type Meta struct{ meta }
-
-type meta struct {
-	// Meta id
-	ID string `json:"id"`
-	// Meta name
-	Name string `json:"name"`
-	// Meta description
-	Description string `json:"description,omitempty"`
-	// Meta labels
-	Labels map[string]string `json:"lables"`
-	// Meta created time
-	Created time.Time `json:"created"`
-	// Meta updated time
-	Updated time.Time `json:"updated"`
+type IUtil interface {
+	Name(ctx context.Context, hub, name string) string
+	RegistryAuth(ctx context.Context, namespace string) *types.RegistryAuth
 }

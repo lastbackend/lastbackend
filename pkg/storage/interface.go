@@ -48,10 +48,9 @@ type IActivity interface {
 }
 
 type IBuild interface {
-	GetByID(ctx context.Context, id string) (*types.Build, error)
+	GetByID(ctx context.Context, imageID, id string) (*types.Build, error)
 	ListByImage(ctx context.Context, id string) (*types.BuildList, error)
-	Insert(ctx context.Context, build *types.Build) (*types.Build, error)
-	Update(ctx context.Context, build *types.Build) (*types.Build, error)
+	Insert(ctx context.Context, imageID string, source *types.BuildSource) (*types.Build, error)
 }
 
 type IHook interface {
@@ -76,15 +75,15 @@ type IService interface {
 	GetByID(ctx context.Context, project, id string) (*types.Service, error)
 	GetByName(ctx context.Context, project, name string) (*types.Service, error)
 	ListByProject(ctx context.Context, project string) (*types.ServiceList, error)
-	Insert(ctx context.Context, project, name, description, image string, config *types.ServiceConfig) (*types.Service, error)
+	Insert(ctx context.Context, project, name, description string, config *types.ServiceConfig) (*types.Service, error)
 	Update(ctx context.Context, project string, service *types.Service) (*types.Service, error)
 	Remove(ctx context.Context, project, name string) error
 	RemoveByProject(ctx context.Context, project string) error
 }
 
 type IImage interface {
-	GetByID(ctx context.Context, id string) (*types.Image, error)
-	Insert(ctx context.Context, name, description string, source *types.ImageSource) (*types.Image, error)
+	GetByName(ctx context.Context, name string) (*types.Image, error)
+	Insert(ctx context.Context, name string, source *types.ImageSource) (*types.Image, error)
 	Update(ctx context.Context, image *types.Image) (*types.Image, error)
 }
 
