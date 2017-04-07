@@ -108,7 +108,7 @@ func (s *ServiceStorage) GetByName(ctx context.Context, projectID, name string) 
 // List project
 func (s *ServiceStorage) ListByProject(ctx context.Context, projectID string) (*types.ServiceList, error) {
 
-	const filter = `\b(.+)\/meta\b`
+	const filter = `\b(.+)services\/[a-z0-9-]{36}\/meta\b`
 
 	client, destroy, err := s.Client()
 	if err != nil {
@@ -286,7 +286,7 @@ func (s *ServiceStorage) Remove(ctx context.Context, projectID, serviceID string
 	tx.Delete(keyHelper)
 
 	keyService := s.util.Key(ctx, projectStorage, projectID, serviceStorage, serviceID)
-	tx.Delete(keyService)
+	tx.DeleteDir(keyService)
 
 	return tx.Commit()
 }

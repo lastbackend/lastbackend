@@ -90,7 +90,7 @@ func (s *ProjectStorage) GetByName(ctx context.Context, name string) (*types.Pro
 // List projects
 func (s *ProjectStorage) List(ctx context.Context) (*types.ProjectList, error) {
 
-	const filter = `\b(.+)\/meta\b`
+	const filter = `\b(.+)projects\/[a-z0-9-]{36}\/meta\b`
 
 	client, destroy, err := s.Client()
 	if err != nil {
@@ -246,7 +246,7 @@ func (s *ProjectStorage) Remove(ctx context.Context, id string) error {
 	tx.Delete(keyHelper)
 
 	key := s.util.Key(ctx, projectStorage, id)
-	tx.Delete(key)
+	tx.DeleteDir(key)
 
 	if err := tx.Commit(); err != nil {
 		return err
