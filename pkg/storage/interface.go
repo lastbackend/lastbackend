@@ -82,7 +82,7 @@ type IService interface {
 }
 
 type IImage interface {
-	GetByName(ctx context.Context, name string) (*types.Image, error)
+	Get(ctx context.Context, id string) (*types.Image, error)
 	Insert(ctx context.Context, name string, source *types.ImageSource) (*types.Image, error)
 	Update(ctx context.Context, image *types.Image) (*types.Image, error)
 }

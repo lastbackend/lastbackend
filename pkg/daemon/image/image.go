@@ -42,9 +42,15 @@ func Create(ctx context.Context, registry string, source *types.ServiceSource) (
 		Tag:   source.Branch,
 	}
 
-	img, err := lctx.Storage.Image().Insert(ctx, name, isource)
+	img, err := lctx.Storage.Image().Get(ctx, name)
 	if err != nil {
 		return nil, err
+	}
+	if img == nil {
+		img, err = lctx.Storage.Image().Insert(ctx, name, isource)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	_, err = b.Create(ctx, img.ID, source)
@@ -61,14 +67,4 @@ func Create(ctx context.Context, registry string, source *types.ServiceSource) (
 	}
 
 	return img, nil
-}
-
-func Get(ctx context.Context, id string) (*types.Image, error) {
-	var (
-		lctx = c.Get()
-	)
-
-	lctx.Log.Debug("Get image by id")
-
-	return nil, nil
 }
