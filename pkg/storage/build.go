@@ -65,11 +65,35 @@ func (s *BuildStorage) Insert(ctx context.Context, imageID string, source *types
 	}
 	defer destroy()
 
-	keyMeta := s.util.Key(ctx, imageStorage, imageID, buildStorage, build.ID)
-	if err := client.Create(ctx, keyMeta, build, nil, 0); err != nil {
+	keyImageMeta := s.util.Key(ctx, imageStorage, imageID, "meta")
+	imeta := new(types.ImageMeta)
+	if err := client.Get(ctx, keyImageMeta, imeta); err != nil {
+		if err.Error() == store.ErrKeyNotFound {
+			return nil, nil
+		}
+		return nil, err
+	}
+
+	tx := client.Begin(ctx)
+
+	keyImageMeta = s.util.Key(ctx, imageStorage, imageID, "meta")
+	imeta.BuildCount++
+	if err := tx.Update(keyImageMeta, imeta, 0); err != nil {
 		if err.Error() == store.ErrKeyExists {
 			return nil, nil
 		}
+		return nil, err
+	}
+
+	keyMeta := s.util.Key(ctx, imageStorage, imageID, buildStorage, build.ID)
+	if err := tx.Create(keyMeta, build, 0); err != nil {
+		if err.Error() == store.ErrKeyExists {
+			return nil, nil
+		}
+		return nil, err
+	}
+
+	if err := tx.Commit(); err != nil {
 		return nil, err
 	}
 

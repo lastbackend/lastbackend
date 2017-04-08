@@ -36,7 +36,7 @@ type ImageStorage struct {
 	Client func() (store.IStore, store.DestroyFunc, error)
 }
 
-func (s *ImageStorage) GetByID(ctx context.Context, id string) (*types.Image, error) {
+func (s *ImageStorage) Get(ctx context.Context, id string) (*types.Image, error) {
 
 	client, destroy, err := s.Client()
 	if err != nil {
@@ -106,7 +106,7 @@ func (s *ImageStorage) Insert(ctx context.Context, name string, source *types.Im
 		return nil, err
 	}
 
-	image.ImageMeta.Name = fmt.Sprintf("%s:%s-0", name, vendor)
+	image.ImageMeta.Name = fmt.Sprintf("%s:%s-1", name, vendor)
 
 	return image, nil
 }
