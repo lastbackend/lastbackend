@@ -251,14 +251,12 @@ func (s *serviceUpdateS) decodeAndValidate(reader io.Reader) *errors.Err {
 
 	s.Name = strings.ToLower(s.Name)
 
-	if s.Name == "" {
-		return errors.New("service").BadParameter("name")
-	}
+	if s.Name != "" {
+		s.Name = strings.ToLower(s.Name)
 
-	s.Name = strings.ToLower(s.Name)
-
-	if len(s.Name) < 4 && len(s.Name) > 64 && !validator.IsServiceName(s.Name) {
-		return errors.New("service").BadParameter("name")
+		if len(s.Name) < 4 && len(s.Name) > 64 && !validator.IsServiceName(s.Name) {
+			return errors.New("service").BadParameter("name")
+		}
 	}
 
 	return nil
@@ -301,19 +299,30 @@ func ServiceUpdateH(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if validator.IsUUID(projectParam) {
+	if validator.IsUUID(serviceParam) {
 		service, err = ctx.Storage.Service().GetByID(r.Context(), project.Meta.ID, uuid.FromStringOrNil(serviceParam))
 	} else {
 		service, err = ctx.Storage.Service().GetByName(r.Context(), project.Meta.ID, serviceParam)
 	}
+
 	if err != nil {
 		ctx.Log.Error("Error: Get service by name", err.Error())
 		errors.HTTP.InternalServerError(w)
 		return
 	}
 
-	service.Meta.Name = rq.Name
-	service.Meta.Description = rq.Description
+	if service == nil {
+		errors.New("service").NotFound().Http(w)
+		return
+	}
+
+	if rq.Name != "" {
+		service.Meta.Name = rq.Name
+	}
+
+	if rq.Description != "" {
+		service.Meta.Description = rq.Description
+	}
 
 	if rq.Config != nil {
 		if err := service.Config.Update(rq.Config); err != nil {
@@ -481,22 +490,26 @@ func ServiceRemoveH(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if !validator.IsUUID(serviceParam) {
+	if validator.IsUUID(serviceParam) {
+		service, err = ctx.Storage.Service().GetByID(r.Context(), project.Meta.ID, uuid.FromStringOrNil(serviceParam))
+	} else {
 		service, err = ctx.Storage.Service().GetByName(r.Context(), project.Meta.ID, serviceParam)
-		if err != nil {
-			ctx.Log.Error("Error: find project by name", err.Error())
-			errors.HTTP.InternalServerError(w)
-			return
-		}
-		if project == nil {
-			errors.New("project").NotFound().Http(w)
-			return
-		}
 	}
+
+	if err != nil {
+		ctx.Log.Error("Error: find service by name", err.Error())
+		errors.HTTP.InternalServerError(w)
+		return
+	}
+	if service == nil {
+		errors.New("service").NotFound().Http(w)
+		return
+	}
+
 
 	// Todo: remove all activity by service name
 
-	if err := ctx.Storage.Service().Remove(r.Context(), project.Meta.ID, service.Meta.ID); err != nil {
+	if err := ctx.Storage.Service().Remove(r.Context(), project.Meta.ID, service); err != nil {
 		ctx.Log.Error("Error: remove service from db", err)
 		errors.HTTP.InternalServerError(w)
 		return
