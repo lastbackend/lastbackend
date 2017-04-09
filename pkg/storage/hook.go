@@ -22,6 +22,7 @@ import (
 	"context"
 	"github.com/lastbackend/lastbackend/pkg/apis/types"
 	"github.com/lastbackend/lastbackend/pkg/storage/store"
+	"github.com/satori/go.uuid"
 )
 
 const hookStorage string = "hooks"
@@ -39,17 +40,17 @@ func (s *HookStorage) GetByToken(ctx context.Context, token string) (*types.Hook
 }
 
 // Get hooks by image
-func (s *HookStorage) List(ctx context.Context, id string) (*types.HookList, error) {
+func (s *HookStorage) List(ctx context.Context, id uuid.UUID) (*types.HookList, error) {
 	return nil, nil
 }
 
 // Get hooks by image
-func (s *HookStorage) ListByImage(ctx context.Context, id string) (*types.HookList, error) {
+func (s *HookStorage) ListByImage(ctx context.Context, id uuid.UUID) (*types.HookList, error) {
 	return nil, nil
 }
 
 // Get hooks by service
-func (s *HookStorage) ListByService(ctx context.Context, id string) (*types.HookList, error) {
+func (s *HookStorage) ListByService(ctx context.Context, id uuid.UUID) (*types.HookList, error) {
 	return nil, nil
 }
 
@@ -59,7 +60,7 @@ func (s *HookStorage) Insert(ctx context.Context, hook *types.Hook) (*types.Hook
 }
 
 // Remove  hook by service id from storage
-func (s *HookStorage) RemoveByService(ctx context.Context, id string) error {
+func (s *HookStorage) RemoveByService(ctx context.Context, id uuid.UUID) error {
 
 	return nil
 }

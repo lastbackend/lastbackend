@@ -18,23 +18,17 @@
 
 package types
 
-import (
-	"time"
-)
+import ()
 
 type VolumeList []Volume
 
 type Volume struct {
-	// Volume uuid, incremented automatically
-	ID string `json:"id"`
-	// Volume uuid, incremented automatically
-	Project string `json:"project"`
+	// Volume meta
+	Meta Meta `json:"meta"`
 	// Volume name
 	Name string `json:"name"`
-	// Volume tag lists
-	Created time.Time `json:"created"`
-	// Volume updated time
-	Updated time.Time `json:"updated"`
+	// Volume uuid, incremented automatically
+	Project string `json:"project"`
 }
 
 type VolumesSpec struct {

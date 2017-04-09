@@ -26,6 +26,7 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/errors"
 	"github.com/lastbackend/lastbackend/pkg/util/http/utils"
 	"github.com/lastbackend/lastbackend/pkg/util/validator"
+	"github.com/satori/go.uuid"
 	"io"
 	"io/ioutil"
 	"net/http"
@@ -66,19 +67,19 @@ func ProjectListH(w http.ResponseWriter, r *http.Request) {
 func ProjectInfoH(w http.ResponseWriter, r *http.Request) {
 
 	var (
-		err          error
-		project      *types.Project
-		ctx          = c.Get()
-		params       = utils.Vars(r)
-		projectParam = params["project"]
+		err       error
+		project   *types.Project
+		ctx       = c.Get()
+		params    = utils.Vars(r)
+		projectID = params["project"]
 	)
 
 	ctx.Log.Info("Get project handler")
 
-	if validator.IsUUID(projectParam) {
-		project, err = ctx.Storage.Project().GetByID(r.Context(), projectParam)
+	if validator.IsUUID(projectID) {
+		project, err = ctx.Storage.Project().GetByID(r.Context(), uuid.FromStringOrNil(projectID))
 	} else {
-		project, err = ctx.Storage.Project().GetByName(r.Context(), projectParam)
+		project, err = ctx.Storage.Project().GetByName(r.Context(), projectID)
 	}
 	if err != nil {
 		ctx.Log.Error("Error: find project by id", err.Error())
@@ -247,7 +248,7 @@ func ProjectUpdateH(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if validator.IsUUID(projectParam) {
-		project, err = ctx.Storage.Project().GetByID(r.Context(), projectParam)
+		project, err = ctx.Storage.Project().GetByID(r.Context(), uuid.FromStringOrNil(projectParam))
 	} else {
 		project, err = ctx.Storage.Project().GetByName(r.Context(), projectParam)
 	}
@@ -294,7 +295,7 @@ func ProjectRemoveH(w http.ResponseWriter, r *http.Request) {
 	ctx.Log.Info("Remove project")
 
 	if validator.IsUUID(projectParam) {
-		project, err = ctx.Storage.Project().GetByID(r.Context(), projectParam)
+		project, err = ctx.Storage.Project().GetByID(r.Context(), uuid.FromStringOrNil(projectParam))
 	} else {
 		project, err = ctx.Storage.Project().GetByName(r.Context(), projectParam)
 	}
@@ -325,7 +326,7 @@ func ProjectRemoveH(w http.ResponseWriter, r *http.Request) {
 	//	return
 	//}
 
-	err = ctx.Storage.Project().Remove(r.Context(), project.ID)
+	err = ctx.Storage.Project().Remove(r.Context(), project.Meta.ID)
 	if err != nil {
 		ctx.Log.Error("Error: remove project from db", err)
 		errors.HTTP.InternalServerError(w)

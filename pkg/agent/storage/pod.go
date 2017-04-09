@@ -14,6 +14,64 @@
 // Dissemination of this information or reproduction of this material
 // is strictly forbidden unless prior written permission is obtained
 // from Last.Backend LLC.
-//
 
 package storage
+
+import (
+	"github.com/lastbackend/lastbackend/pkg/apis/types"
+	"github.com/satori/go.uuid"
+	"sync"
+)
+
+type PodStorage struct {
+	lock sync.RWMutex
+	pods map[uuid.UUID]*types.Pod
+}
+
+func (ps *PodStorage) GetPods() map[uuid.UUID]*types.Pod {
+	return ps.pods
+}
+
+func (ps *PodStorage) GetPod(id uuid.UUID) *types.Pod {
+	pod, ok := ps.pods[id]
+	if !ok {
+		return nil
+	}
+	return pod
+}
+
+func (ps *PodStorage) AddPod(pod *types.Pod) {
+	ps.lock.Lock()
+	defer ps.lock.Unlock()
+
+	ps.pods[pod.ID()] = pod
+}
+
+func (ps *PodStorage) SetPod(pod *types.Pod) {
+	ps.lock.Lock()
+	defer ps.lock.Unlock()
+
+	ps.pods[pod.ID()] = pod
+}
+
+func (ps *PodStorage) DetPod(pod *types.Pod) {
+	ps.lock.Lock()
+	defer ps.lock.Unlock()
+	delete(ps.pods, pod.ID())
+}
+
+func (ps *PodStorage) SetPods(pods []*types.Pod) {
+	ps.lock.Lock()
+	defer ps.lock.Unlock()
+
+	for _, pod := range pods {
+		ps.pods[pod.ID()] = pod
+	}
+}
+
+func NewPodStorage() *PodStorage {
+	pods := make(map[uuid.UUID]*types.Pod)
+	return &PodStorage{
+		pods: pods,
+	}
+}

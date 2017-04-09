@@ -45,7 +45,7 @@ func (c *Context) Init(cfg *config.Config) {
 	c.Log = logger.New(cfg.Debug, 9)
 
 	// Initializing database
-	c.Log.Info("Initializing daemon")
+	c.Log.Info("Initializing daemon context")
 
 	c.Storage, err = storage.Get(cfg.GetEtcdDB())
 	if err != nil {

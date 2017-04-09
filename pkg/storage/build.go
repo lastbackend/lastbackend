@@ -20,10 +20,10 @@ package storage
 
 import (
 	"context"
+	"fmt"
 	"github.com/lastbackend/lastbackend/pkg/apis/types"
 	"github.com/lastbackend/lastbackend/pkg/storage/store"
-	"github.com/lastbackend/lastbackend/pkg/util/generator"
-	"strconv"
+	"github.com/satori/go.uuid"
 	"time"
 )
 
@@ -37,29 +37,29 @@ type BuildStorage struct {
 }
 
 // Get build model by id
-func (s *BuildStorage) GetByID(ctx context.Context, imageID, id string) (*types.Build, error) {
+func (s *BuildStorage) GetByID(ctx context.Context, imageID, id uuid.UUID) (*types.Build, error) {
 	return nil, nil
 }
 
 // Get builds by image
-func (s *BuildStorage) ListByImage(ctx context.Context, id string) (*types.BuildList, error) {
+func (s *BuildStorage) ListByImage(ctx context.Context, id uuid.UUID) (*types.BuildList, error) {
 	return nil, nil
 }
 
 // Insert new build into storage
-func (s *BuildStorage) Insert(ctx context.Context, imageID string, source *types.BuildSource) (*types.Build, error) {
+func (s *BuildStorage) Insert(ctx context.Context, imageID uuid.UUID, source *types.BuildSource) (*types.Build, error) {
 
 
 
 	build := new(types.Build)
-	build.ID = strconv.Itoa(generator.UnixTimestamp())
+	build.Meta.ID = uuid.NewV4()
 	build.Status = types.BuildStatus{
 		Step:    types.BuildStepCreate,
 		Updated: time.Now(),
 	}
 	build.Source = *source
-	build.Created = time.Now()
-	build.Updated = time.Now()
+	build.Meta.Created = time.Now()
+	build.Meta.Updated = time.Now()
 
 	client, destroy, err := s.Client()
 	if err != nil {
@@ -67,7 +67,7 @@ func (s *BuildStorage) Insert(ctx context.Context, imageID string, source *types
 	}
 	defer destroy()
 
-	keyImageMeta := s.util.Key(ctx, imageStorage, imageID, "meta")
+	keyImageMeta := s.util.Key(ctx, imageStorage, imageID.String(), "meta")
 	imeta := new(types.ImageMeta)
 	if err := client.Get(ctx, keyImageMeta, imeta); err != nil {
 		if err.Error() == store.ErrKeyNotFound {
@@ -78,8 +78,8 @@ func (s *BuildStorage) Insert(ctx context.Context, imageID string, source *types
 
 	tx := client.Begin(ctx)
 
-	keyImageMeta = s.util.Key(ctx, imageStorage, imageID, "meta")
-	imeta.BuildCount++
+	keyImageMeta = s.util.Key(ctx, imageStorage, imageID.String(), "meta")
+	imeta.Builds++
 	if err := tx.Update(keyImageMeta, imeta, 0); err != nil {
 		if err.Error() == store.ErrKeyExists {
 			return nil, nil
@@ -87,7 +87,9 @@ func (s *BuildStorage) Insert(ctx context.Context, imageID string, source *types
 		return nil, err
 	}
 
-	keyMeta := s.util.Key(ctx, imageStorage, imageID, buildStorage, build.ID)
+	keyMeta := s.util.Key(ctx, imageStorage, imageID.String(),
+		buildStorage, fmt.Sprintf("%s", build.Meta.Created.Unix()))
+
 	if err := tx.Create(keyMeta, build, 0); err != nil {
 		if err.Error() == store.ErrKeyExists {
 			return nil, nil

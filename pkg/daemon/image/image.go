@@ -21,7 +21,7 @@ package image
 import (
 	"context"
 	"github.com/lastbackend/lastbackend/pkg/apis/types"
-	b "github.com/lastbackend/lastbackend/pkg/daemon/build"
+	"github.com/lastbackend/lastbackend/pkg/daemon/build"
 	c "github.com/lastbackend/lastbackend/pkg/daemon/context"
 )
 
@@ -53,7 +53,7 @@ func Create(ctx context.Context, registry string, source *types.ServiceSource) (
 		}
 	}
 
-	_, err = b.Create(ctx, img.ID, source)
+	_, err = build.Create(ctx, img.Meta.ID, source)
 	if err != nil {
 		return nil, err
 	}

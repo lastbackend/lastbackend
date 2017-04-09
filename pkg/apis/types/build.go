@@ -18,21 +18,19 @@
 
 package types
 
-import "time"
+import (
+	"time"
+)
 
 type BuildList []Build
 
 type Build struct {
-	// Build number, incremented automatically
-	ID string `json:"id"`
+	// Build Meta
+	Meta Meta `json:"meta"`
 	// Build executing status
 	Status BuildStatus `json:"status"`
 	// Build sources used for build
 	Source BuildSource `json:"source"`
-	// Build created time
-	Created time.Time `json:"created"`
-	// Build updated time
-	Updated time.Time `json:"updated"`
 }
 
 type BuildStatus struct {

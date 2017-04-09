@@ -18,7 +18,11 @@
 
 package config
 
-var cfg = new(Config)
+var cfg = &Config{
+	Runtime: &Runtime{
+		Docker: &Docker{},
+	},
+}
 
 func Get() *Config {
 	return cfg
