@@ -47,7 +47,8 @@ func (s *ProjectStorage) GetByID(ctx context.Context, id uuid.UUID) (*types.Proj
 	defer destroy()
 
 	key := s.util.Key(ctx, projectStorage, id.String(), "meta")
-	meta := types.Meta{}
+	meta := &types.Meta{}
+
 	if err := client.Get(ctx, key, meta); err != nil {
 		if err.Error() == store.ErrKeyNotFound {
 			return nil, nil
@@ -55,7 +56,7 @@ func (s *ProjectStorage) GetByID(ctx context.Context, id uuid.UUID) (*types.Proj
 		return nil, err
 	}
 
-	project.Meta = meta
+	project.Meta = *meta
 
 	return project, nil
 }
@@ -136,16 +137,17 @@ func (s *ProjectStorage) Insert(ctx context.Context, name, description string) (
 		return nil, err
 	}
 
-	meta := new(types.Meta)
-	meta.ID = id
-	meta.Name = name
-	meta.Description = description
-	meta.Labels = map[string]string{"tier": "ptoject"}
-	meta.Updated = time.Now()
-	meta.Created = time.Now()
+	project.Meta = types.Meta{
+		ID:          id,
+		Name:        name,
+		Description: description,
+		Labels:      map[string]string{"tier": "ptoject"},
+		Updated:     time.Now(),
+		Created:     time.Now(),
+	}
 
 	keyMeta := s.util.Key(ctx, projectStorage, id.String(), "meta")
-	if err := tx.Create(keyMeta, meta, 0); err != nil {
+	if err := tx.Create(keyMeta, project.Meta, 0); err != nil {
 		return nil, err
 	}
 
