@@ -78,8 +78,12 @@ type GitSourceCommit struct {
 	Commit string `json:"commit"`
 	// Git committer gravatar
 	Committer string `json:"committer"`
-	// Git committer email
+	// Git committer username
 	Author string `json:"author"`
+	// Git committer username
+	Email string `json:"email"`
 	// Git commit message
 	Message string `json:"message"`
+	// Git commit date
+	Date time.Time `json:"date"`
 }
