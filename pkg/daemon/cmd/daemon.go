@@ -1,22 +1,34 @@
+//
+// Last.Backend LLC CONFIDENTIAL
+// __________________
+//
+// [2014] - [2017] Last.Backend LLC
+// All Rights Reserved.
+//
+// NOTICE:  All information contained herein is, and remains
+// the property of Last.Backend LLC and its suppliers,
+// if any.  The intellectual and technical concepts contained
+// herein are proprietary to Last.Backend LLC
+// and its suppliers and may be covered by Russian Federation and Foreign Patents,
+// patents in process, and are protected by trade secret or copyright law.
+// Dissemination of this information or reproduction of this material
+// is strictly forbidden unless prior written permission is obtained
+// from Last.Backend LLC.
+//
+
 package cmd
 
 import (
 	"github.com/jawher/mow.cli"
-	"github.com/lastbackend/lastbackend/libs/adapter/k8s"
-	"github.com/lastbackend/lastbackend/libs/adapter/storage"
-	http_client "github.com/lastbackend/lastbackend/libs/http"
-	"github.com/lastbackend/lastbackend/libs/log"
+	"github.com/lastbackend/lastbackend/pkg/daemon/api"
 	"github.com/lastbackend/lastbackend/pkg/daemon/config"
 	"github.com/lastbackend/lastbackend/pkg/daemon/context"
-	"github.com/lastbackend/lastbackend/pkg/daemon/http"
 	"os"
 	"os/signal"
 	"syscall"
 )
 
 func Daemon(cmd *cli.Cmd) {
-	var err error
-
 	var ctx = context.Get()
 	var cfg = config.Get()
 
@@ -26,58 +38,28 @@ func Daemon(cmd *cli.Cmd) {
 	var configPath = cmd.String(cli.StringOpt{Name: "c config", Value: "./config.yaml", Desc: "Path to config file", HideValue: true})
 
 	cmd.Before = func() {
-
-		ctx.Log = new(log.Log)
-		ctx.Log.Init()
-
 		if *configPath != "" {
 			if err := cfg.Configure(*configPath); err != nil {
-				ctx.Log.Panic(err)
+				panic(err)
 			}
 		}
 
-		if *debug {
-			cfg.Debug = *debug
-			ctx.Log.SetDebugLevel()
-			ctx.Log.Info("Logger debug mode enabled")
-		}
-
-		// Initializing database
-		ctx.Log.Info("Initializing daemon")
-		ctx.K8S, err = k8s.Get(config.GetK8S())
-		if err != nil {
-			ctx.Log.Panic(err)
-		}
-
-		ctx.Storage, err = storage.Get()
-		if err != nil {
-			ctx.Log.Panic(err)
-		}
-
-		if cfg.HttpServer.Port == 0 {
-			cfg.HttpServer.Port = 3000
-		}
-
-		if cfg.ProxyServer.Port == 0 {
-			cfg.ProxyServer.Port = 9999
-		}
-
-		if cfg.TemplateRegistry.Host == "" {
-			cfg.TemplateRegistry.Host = "http://localhost:3003"
-		}
-
-		ctx.TemplateRegistry = http_client.New(cfg.TemplateRegistry.Host)
+		cfg.Debug = *debug
+		ctx.Init(cfg)
 	}
 
 	cmd.Action = func() {
 
 		var (
-			sigs   = make(chan os.Signal)
-			done   = make(chan bool, 1)
-			routes = http.NewRouter()
+			sigs = make(chan os.Signal)
+			done = make(chan bool, 1)
 		)
 
-		go http.RunHttpServer(routes, cfg.HttpServer.Port)
+		go func() {
+			if err := api.Listen(cfg.HttpServer.Host, cfg.HttpServer.Port); err != nil {
+				ctx.Log.Warnf("Http server start error: %s", err.Error())
+			}
+		}()
 
 		// Handle SIGINT and SIGTERM.
 		signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)

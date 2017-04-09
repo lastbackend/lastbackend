@@ -1,10 +1,28 @@
+//
+// Last.Backend LLC CONFIDENTIAL
+// __________________
+//
+// [2014] - [2017] Last.Backend LLC
+// All Rights Reserved.
+//
+// NOTICE:  All information contained herein is, and remains
+// the property of Last.Backend LLC and its suppliers,
+// if any.  The intellectual and technical concepts contained
+// herein are proprietary to Last.Backend LLC
+// and its suppliers and may be covered by Russian Federation and Foreign Patents,
+// patents in process, and are protected by trade secret or copyright law.
+// Dissemination of this information or reproduction of this material
+// is strictly forbidden unless prior written permission is obtained
+// from Last.Backend LLC.
+//
+
 package project_test
 
 import (
-	"github.com/lastbackend/lastbackend/libs/db"
-	"github.com/lastbackend/lastbackend/libs/model"
+	"github.com/lastbackend/lastbackend/pkg/apis/types"
 	"github.com/lastbackend/lastbackend/pkg/client/cmd/project"
 	"github.com/lastbackend/lastbackend/pkg/client/context"
+	"github.com/lastbackend/lastbackend/pkg/client/storage"
 	"testing"
 	"time"
 )
@@ -16,9 +34,8 @@ func TestCurrent(t *testing.T) {
 	var (
 		err  error
 		ctx  = context.Mock()
-		data = model.Project{
+		data = types.Project{
 			Name:        "mock_name",
-			ID:          "mock_id",
 			Created:     time.Now(),
 			Updated:     time.Now(),
 			User:        "mock_demo",
@@ -26,7 +43,7 @@ func TestCurrent(t *testing.T) {
 		}
 	)
 
-	ctx.Storage, err = db.Init()
+	ctx.Storage, err = storage.Init()
 	if err != nil {
 		t.Error(err)
 		return

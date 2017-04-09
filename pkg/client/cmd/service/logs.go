@@ -1,13 +1,30 @@
+//
+// Last.Backend LLC CONFIDENTIAL
+// __________________
+//
+// [2014] - [2017] Last.Backend LLC
+// All Rights Reserved.
+//
+// NOTICE:  All information contained herein is, and remains
+// the property of Last.Backend LLC and its suppliers,
+// if any.  The intellectual and technical concepts contained
+// herein are proprietary to Last.Backend LLC
+// and its suppliers and may be covered by Russian Federation and Foreign Patents,
+// patents in process, and are protected by trade secret or copyright law.
+// Dissemination of this information or reproduction of this material
+// is strictly forbidden unless prior written permission is obtained
+// from Last.Backend LLC.
+//
+
 package service
 
 import (
 	"errors"
 	"fmt"
-	e "github.com/lastbackend/lastbackend/libs/errors"
 	"github.com/lastbackend/lastbackend/pkg/client/context"
+	e "github.com/lastbackend/lastbackend/pkg/errors"
 	"github.com/unloop/gopipe"
 	"io"
-	"strconv"
 	"strings"
 )
 
@@ -39,21 +56,21 @@ func LogsServiceCmd(name string) {
 	}
 
 	var m = make(mapInfo)
-	var index int = 0
+	//var index int = 0
 
 	fmt.Println("Contaner list:\n")
 
-	for _, pod := range service.Spec.PodList {
-		for _, container := range pod.ContainerList {
-			fmt.Printf("[%d] %s\n", index, container.Name)
-
-			m[strconv.Itoa(index)] = serviceInfo{
-				Pod:       pod.Name,
-				Container: container.Name,
-			}
-		}
-		index++
-	}
+	//for _, pod := range service.Spec.PodList {
+	//	for _, container := range pod.ContainerList {
+	//		fmt.Printf("[%d] %s\n", index, container.Name)
+	//
+	//		m[strconv.Itoa(index)] = serviceInfo{
+	//			Pod:       pod.Name,
+	//			Container: container.Name,
+	//		}
+	//	}
+	//	index++
+	//}
 
 	if len(m) > 1 {
 		for {

@@ -1,10 +1,27 @@
+//
+// Last.Backend LLC CONFIDENTIAL
+// __________________
+//
+// [2014] - [2017] Last.Backend LLC
+// All Rights Reserved.
+//
+// NOTICE:  All information contained herein is, and remains
+// the property of Last.Backend LLC and its suppliers,
+// if any.  The intellectual and technical concepts contained
+// herein are proprietary to Last.Backend LLC
+// and its suppliers and may be covered by Russian Federation and Foreign Patents,
+// patents in process, and are protected by trade secret or copyright law.
+// Dissemination of this information or reproduction of this material
+// is strictly forbidden unless prior written permission is obtained
+// from Last.Backend LLC.
+//
+
 package project
 
 import (
-	"errors"
-	e "github.com/lastbackend/lastbackend/libs/errors"
-	"github.com/lastbackend/lastbackend/libs/model"
+	p "github.com/lastbackend/lastbackend/pkg/apis/views/v1/project"
 	"github.com/lastbackend/lastbackend/pkg/client/context"
+	"github.com/lastbackend/lastbackend/pkg/errors"
 )
 
 func ListProjectCmd() {
@@ -22,13 +39,13 @@ func ListProjectCmd() {
 	}
 }
 
-func List() (*model.ProjectList, error) {
+func List() (*p.ProjectList, error) {
 
 	var (
 		err      error
 		ctx      = context.Get()
-		er       = new(e.Http)
-		projects = new(model.ProjectList)
+		er       = new(errors.Http)
+		projects = new(p.ProjectList)
 	)
 
 	_, _, err = ctx.HTTP.
@@ -40,7 +57,7 @@ func List() (*model.ProjectList, error) {
 	}
 
 	if er.Code == 401 {
-		return nil, e.NotLoggedMessage
+		return nil, errors.NotLoggedMessage
 	}
 
 	if er.Code != 0 {
