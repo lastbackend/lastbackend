@@ -136,16 +136,17 @@ func (s *ProjectStorage) Insert(ctx context.Context, name, description string) (
 		return nil, err
 	}
 
-	meta := new(types.Meta)
-	meta.ID = id
-	meta.Name = name
-	meta.Description = description
-	meta.Labels = map[string]string{"tier": "ptoject"}
-	meta.Updated = time.Now()
-	meta.Created = time.Now()
+	project.Meta = types.Meta{
+		ID: id,
+		Name: name,
+		Description: description,
+		Labels : map[string]string{"tier": "ptoject"},
+		Updated : time.Now(),
+		Created : time.Now(),
+	}
 
 	keyMeta := s.util.Key(ctx, projectStorage, id.String(), "meta")
-	if err := tx.Create(keyMeta, meta, 0); err != nil {
+	if err := tx.Create(keyMeta, project.Meta, 0); err != nil {
 		return nil, err
 	}
 
