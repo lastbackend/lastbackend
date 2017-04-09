@@ -22,6 +22,7 @@ import (
 	"context"
 	"github.com/lastbackend/lastbackend/pkg/apis/types"
 	"github.com/lastbackend/lastbackend/pkg/storage/store"
+	"github.com/satori/go.uuid"
 )
 
 const activityStorage string = "activities"
@@ -37,19 +38,19 @@ func (s *ActivityStorage) Insert(ctx context.Context, activity *types.Activity) 
 	return nil, nil
 }
 
-func (s *ActivityStorage) ListProjectActivity(ctx context.Context, project string) (*types.ActivityList, error) {
+func (s *ActivityStorage) ListProjectActivity(ctx context.Context, project uuid.UUID) (*types.ActivityList, error) {
 	return nil, nil
 }
 
-func (s *ActivityStorage) ListServiceActivity(ctx context.Context, service string) (*types.ActivityList, error) {
+func (s *ActivityStorage) ListServiceActivity(ctx context.Context, service uuid.UUID) (*types.ActivityList, error) {
 	return nil, nil
 }
 
-func (s *ActivityStorage) RemoveByProject(ctx context.Context, project string) error {
+func (s *ActivityStorage) RemoveByProject(ctx context.Context, project uuid.UUID) error {
 	return nil
 }
 
-func (s *ActivityStorage) RemoveByService(ctx context.Context, service string) error {
+func (s *ActivityStorage) RemoveByService(ctx context.Context, service uuid.UUID) error {
 	return nil
 }
 

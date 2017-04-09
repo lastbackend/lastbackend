@@ -22,6 +22,7 @@ import (
 	"encoding/json"
 	"github.com/lastbackend/lastbackend/pkg/daemon/context"
 	"github.com/lastbackend/lastbackend/pkg/errors"
+	"github.com/satori/go.uuid"
 	"net/http"
 )
 
@@ -33,7 +34,10 @@ func BuildListH(w http.ResponseWriter, r *http.Request) {
 
 	ctx.Log.Debug("Get boold list handler")
 
-	builds, err := ctx.Storage.Build().ListByImage(r.Context(), "")
+	// TODO: replace to valid image uuid
+	var uuid uuid.UUID
+
+	builds, err := ctx.Storage.Build().ListByImage(r.Context(), uuid)
 	if err != nil {
 		ctx.Log.Error(err)
 		errors.HTTP.InternalServerError(w)

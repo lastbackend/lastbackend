@@ -26,10 +26,10 @@ import (
 func New(obj *types.Service) *Service {
 	s := new(Service)
 	s.Project = obj.Project
-	s.Name = obj.Name
-	s.Description = obj.Description
-	s.Updated = obj.Updated
-	s.Created = obj.Created
+	s.Name = obj.Meta.Name
+	s.Description = obj.Meta.Description
+	s.Updated = obj.Meta.Updated
+	s.Created = obj.Meta.Created
 
 	if obj.Config != nil {
 		s.Config.Region = obj.Config.Region

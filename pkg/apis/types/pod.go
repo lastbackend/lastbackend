@@ -50,15 +50,11 @@ type Pod struct {
 	Containers map[string]*Container `json:"containers"`
 	// Secrets
 	Secrets map[string]*PodSecret `json:"secrets"`
-	// Pod created time
-	Created time.Time `json:"created"`
-	// Pod updated timestamp
-	Updated time.Time `json:"updated"`
 }
 
 type PodMeta struct {
-	// Pod ID
-	ID uuid.UUID `json:"id"`
+	Meta
+
 	// Pod owner
 	Owner string `json:"owner"`
 	// Pod project

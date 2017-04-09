@@ -25,17 +25,7 @@ import (
 type ProjectList []Project
 
 type Project struct {
-	projectMeta
-}
-
-type projectMeta struct{ ProjectMeta }
-type ProjectMeta struct {
-	meta
-
-	// Add fields to expand the meta data
-	// Example:
-	// Note string `json:"note,omitempty"`
-	// Uptime time.Time `json:"uptime"
+	Meta `json:"meta"`
 }
 
 func (p *Project) ToJson() ([]byte, error) {

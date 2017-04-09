@@ -19,14 +19,13 @@
 package types
 
 import (
+	"github.com/satori/go.uuid"
 	"time"
 )
 
-type Meta struct{ meta }
-
-type meta struct {
+type Meta struct {
 	// Meta id
-	ID string `json:"id"`
+	ID uuid.UUID `json:"id"`
 	// Meta name
 	Name string `json:"name"`
 	// Meta description

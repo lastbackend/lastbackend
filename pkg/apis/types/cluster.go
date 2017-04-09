@@ -18,7 +18,9 @@
 
 package types
 
-import "time"
+import (
+	"time"
+)
 
 const (
 	WestEuropeRegion = "WE"
@@ -28,8 +30,7 @@ const (
 type ClusterList []Cluster
 
 type Cluster struct {
-	// Cluster uuid, generated automatically
-	ID string `json:"id"`
+	Meta Meta `json:"meta"`
 	// Cluster owner username
 	Owner string `json:"owner"`
 	// Cluster name

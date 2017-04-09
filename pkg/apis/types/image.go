@@ -27,10 +27,8 @@ type ImageList []Image
 
 type Image struct {
 	lock sync.RWMutex
-
+	// Image meta
 	Meta ImageMeta `json:"meta"`
-	// Image id
-	ID string `json:"id"`
 	// Image name
 	Name string `json:"name"`
 	// Image tag lists
@@ -56,10 +54,6 @@ type ImageSpec struct {
 	Auth string `json:"auth"`
 }
 
-type ImageMeta struct {
-
-}
-
 type ImageSource struct {
 	Hub   string `json:"hub"`
 	Owner string `json:"owner"`
@@ -67,9 +61,14 @@ type ImageSource struct {
 	Tag   string `json:"tag"`
 }
 
+type ImageMeta struct {
+	Meta
+	Builds int `json:"builds"`
+}
+
 func NewImage() *Image {
 	return &Image{}
-
+}
 
 func (i *ImageSource) GenerateName() string {
 	return ""

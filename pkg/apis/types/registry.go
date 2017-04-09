@@ -21,10 +21,8 @@ package types
 import "time"
 
 type Registry struct {
-	// Registry ID
-	ID string `json:"id"`
-	// Registry name
-	Name string `json:"username"`
+	// Registry Meta
+	Meta Meta `json:"meta"`
 	// Registry authentication information
 	Auth *RegistryAuth `json:"auth,omitempty"`
 	// Meta created time
