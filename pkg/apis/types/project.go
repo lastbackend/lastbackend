@@ -25,7 +25,7 @@ import (
 type ProjectList []Project
 
 type Project struct {
-	Meta `json:"meta"`
+	Meta Meta `json:"meta"`
 }
 
 func (p *Project) ToJson() ([]byte, error) {
