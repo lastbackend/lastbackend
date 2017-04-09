@@ -161,7 +161,7 @@ func ServiceCreateH(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	service, err := ctx.Storage.Service().GetByName(r.Context(), project.ID, rq.Name)
+	service, err := ctx.Storage.Service().GetByName(r.Context(), project.Meta.ID, rq.Name)
 	if err != nil {
 		ctx.Log.Error("Error: check exists by name", err.Error())
 		errors.HTTP.InternalServerError(w)
@@ -205,7 +205,7 @@ func ServiceCreateH(w http.ResponseWriter, r *http.Request) {
 		rq.Config.Image = rq.Image
 	}
 
-	service, err = ctx.Storage.Service().Insert(r.Context(), project.ID, rq.Name, rq.Description, rq.Config)
+	service, err = ctx.Storage.Service().Insert(r.Context(), project.Meta.ID, rq.Name, rq.Description, rq.Config)
 	if err != nil {
 		ctx.Log.Error("Error: insert service to db", err)
 		errors.HTTP.InternalServerError(w)
@@ -302,9 +302,9 @@ func ServiceUpdateH(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if validator.IsUUID(projectParam) {
-		service, err = ctx.Storage.Service().GetByID(r.Context(), project.ID, uuid.FromStringOrNil(serviceParam))
+		service, err = ctx.Storage.Service().GetByID(r.Context(), project.Meta.ID, uuid.FromStringOrNil(serviceParam))
 	} else {
-		service, err = ctx.Storage.Service().GetByName(r.Context(), project.ID, serviceParam)
+		service, err = ctx.Storage.Service().GetByName(r.Context(), project.Meta.ID, serviceParam)
 	}
 	if err != nil {
 		ctx.Log.Error("Error: Get service by name", err.Error())
@@ -375,7 +375,7 @@ func ServiceListH(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	serviceList, err := ctx.Storage.Service().ListByProject(r.Context(), project.ID)
+	serviceList, err := ctx.Storage.Service().ListByProject(r.Context(), project.Meta.ID)
 	if err != nil {
 		ctx.Log.Error("Error: find service list by user", err)
 		errors.HTTP.InternalServerError(w)
@@ -425,9 +425,9 @@ func ServiceInfoH(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if validator.IsUUID(projectParam) {
-		service, err = ctx.Storage.Service().GetByID(r.Context(), project.ID, uuid.FromStringOrNil(serviceParam))
+		service, err = ctx.Storage.Service().GetByID(r.Context(), project.Meta.ID, uuid.FromStringOrNil(serviceParam))
 	} else {
-		service, err = ctx.Storage.Service().GetByName(r.Context(), project.ID, serviceParam)
+		service, err = ctx.Storage.Service().GetByName(r.Context(), project.Meta.ID, serviceParam)
 	}
 	if err != nil {
 		ctx.Log.Error("Error: find service by name", err.Error())
@@ -482,7 +482,7 @@ func ServiceRemoveH(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if !validator.IsUUID(serviceParam) {
-		service, err = ctx.Storage.Service().GetByName(r.Context(), project.ID, serviceParam)
+		service, err = ctx.Storage.Service().GetByName(r.Context(), project.Meta.ID, serviceParam)
 		if err != nil {
 			ctx.Log.Error("Error: find project by name", err.Error())
 			errors.HTTP.InternalServerError(w)
@@ -496,7 +496,7 @@ func ServiceRemoveH(w http.ResponseWriter, r *http.Request) {
 
 	// Todo: remove all activity by service name
 
-	if err := ctx.Storage.Service().Remove(r.Context(), project.ID, service.Meta.ID); err != nil {
+	if err := ctx.Storage.Service().Remove(r.Context(), project.Meta.ID, service.Meta.ID); err != nil {
 		ctx.Log.Error("Error: remove service from db", err)
 		errors.HTTP.InternalServerError(w)
 		return

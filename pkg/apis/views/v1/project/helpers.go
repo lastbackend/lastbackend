@@ -27,10 +27,10 @@ import (
 func New(obj *types.Project) *Project {
 	p := new(Project)
 
-	p.Name = obj.Name
-	p.Description = obj.Description
-	p.Updated = obj.Updated
-	p.Created = obj.Created
+	p.Name = obj.Meta.Name
+	p.Description = obj.Meta.Description
+	p.Updated = obj.Meta.Updated
+	p.Created = obj.Meta.Created
 
 	return p
 }

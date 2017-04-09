@@ -47,7 +47,7 @@ func (s *ProjectStorage) GetByID(ctx context.Context, id uuid.UUID) (*types.Proj
 	defer destroy()
 
 	key := s.util.Key(ctx, projectStorage, id.String(), "meta")
-	meta := new(types.Meta)
+	meta := types.Meta{}
 	if err := client.Get(ctx, key, meta); err != nil {
 		if err.Error() == store.ErrKeyNotFound {
 			return nil, nil
@@ -55,12 +55,7 @@ func (s *ProjectStorage) GetByID(ctx context.Context, id uuid.UUID) (*types.Proj
 		return nil, err
 	}
 
-	project.Meta.ID = meta.ID
-	project.Meta.Name = meta.Name
-	project.Meta.Description = meta.Description
-	project.Meta.Labels = meta.Labels
-	project.Meta.Created = meta.Created
-	project.Meta.Updated = meta.Updated
+	project.Meta = meta
 
 	return project, nil
 }
@@ -114,13 +109,7 @@ func (s *ProjectStorage) List(ctx context.Context) (*types.ProjectList, error) {
 	projectList := new(types.ProjectList)
 	for _, meta := range metaList {
 		project := types.Project{}
-		project.ID = meta.ID
-		project.Name = meta.Name
-		project.Description = meta.Description
-		project.Labels = meta.Labels
-		project.Created = meta.Created
-		project.Updated = meta.Updated
-
+		project.Meta = meta
 		*projectList = append(*projectList, project)
 	}
 
@@ -143,7 +132,7 @@ func (s *ProjectStorage) Insert(ctx context.Context, name, description string) (
 	tx := client.Begin(ctx)
 
 	keyHelper := s.util.Key(ctx, "helper", projectStorage, name)
-	if err := tx.Create(keyHelper, project.ID.String(), 0); err != nil {
+	if err := tx.Create(keyHelper, project.Meta.ID.String(), 0); err != nil {
 		return nil, err
 	}
 
@@ -170,7 +159,7 @@ func (s *ProjectStorage) Insert(ctx context.Context, name, description string) (
 // Update project model
 func (s *ProjectStorage) Update(ctx context.Context, project *types.Project) (*types.Project, error) {
 
-	project.Updated = time.Now()
+	project.Meta.Updated = time.Now()
 
 	client, destroy, err := s.Client()
 	if err != nil {
@@ -178,7 +167,7 @@ func (s *ProjectStorage) Update(ctx context.Context, project *types.Project) (*t
 	}
 	defer destroy()
 
-	keyMeta := s.util.Key(ctx, projectStorage, project.ID.String(), "meta")
+	keyMeta := s.util.Key(ctx, projectStorage, project.Meta.ID.String(), "meta")
 	pmeta := new(types.Meta)
 	if err := client.Get(ctx, keyMeta, pmeta); err != nil {
 		if err.Error() == store.ErrKeyNotFound {
@@ -187,21 +176,18 @@ func (s *ProjectStorage) Update(ctx context.Context, project *types.Project) (*t
 		return nil, err
 	}
 
-	meta := new(types.Meta)
-	meta.ID = project.ID
-	meta.Name = project.Name
-	meta.Description = project.Description
-	meta.Labels = project.Labels
+	meta := types.Meta{}
+	meta = project.Meta
 	meta.Updated = time.Now()
 
 	tx := client.Begin(ctx)
 
-	if pmeta.Name != project.Name {
+	if pmeta.Name != project.Meta.Name {
 		keyHelper1 := s.util.Key(ctx, "helper", projectStorage, pmeta.Name)
 		tx.Delete(keyHelper1)
 
-		keyHelper2 := s.util.Key(ctx, "helper", projectStorage, project.Name)
-		if err := tx.Create(keyHelper2, &project.ID, 0); err != nil {
+		keyHelper2 := s.util.Key(ctx, "helper", projectStorage, project.Meta.Name)
+		if err := tx.Create(keyHelper2, project.Meta.ID.String(), 0); err != nil {
 			return project, err
 		}
 	}
