@@ -96,7 +96,7 @@ func (s *store) List(ctx context.Context, key, keyRegexFilter string, listOutPtr
 		return err
 	}
 	r, _ := regexp.Compile(keyRegexFilter)
-	items := make([]buffer, 0, len(getResp.Kvs))
+	items := []buffer{}
 	for _, kv := range getResp.Kvs {
 		if r.MatchString(string(kv.Key)) {
 			items = append(items, buffer(kv.Value))
@@ -169,7 +169,7 @@ func decode(s serializer.Codec, value []byte, outPtr interface{}) error {
 
 func decodeList(codec serializer.Codec, items []buffer, ListOutPtr interface{}) error {
 	v, err := converter.EnforcePtr(ListOutPtr)
-	if err != nil || (v.Kind() != reflect.Slice && v.Kind() != reflect.Map) {
+	if err != nil || (v.Kind() != reflect.Slice) {
 		panic("Error: need ptr to slice")
 	}
 	for _, item := range items {

@@ -16,4 +16,21 @@
 // from Last.Backend LLC.
 //
 
-package templates
+package types
+
+import (
+	"time"
+)
+
+type Meta struct {
+	// Service unique name
+	Name string `json:"name"`
+	// Service description
+	Description string `json:"description"`
+	// Service labels
+	Labels map[string]string `json:"lables"`
+	// Service created time
+	Created time.Time `json:"created"`
+	// Service updated time
+	Updated time.Time `json:"updated"`
+}

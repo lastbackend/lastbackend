@@ -33,38 +33,38 @@
 		},
 		{
 			"ImportPath": "github.com/coreos/etcd/auth/authpb",
-			"Comment": "v3.1.0-rc.1-826-g36735d52",
-			"Rev": "36735d52a4fde4d3d7e568d15c212d83970a7aab"
+			"Comment": "v3.1.0-rc.1-768-g049ca874",
+			"Rev": "049ca8746a1d3ab17c4448425074537584fe3006"
 		},
 		{
 			"ImportPath": "github.com/coreos/etcd/clientv3",
-			"Comment": "v3.1.0-rc.1-826-g36735d52",
-			"Rev": "36735d52a4fde4d3d7e568d15c212d83970a7aab"
+			"Comment": "v3.1.0-rc.1-768-g049ca874",
+			"Rev": "049ca8746a1d3ab17c4448425074537584fe3006"
 		},
 		{
 			"ImportPath": "github.com/coreos/etcd/etcdserver/api/v3rpc/rpctypes",
-			"Comment": "v3.1.0-rc.1-826-g36735d52",
-			"Rev": "36735d52a4fde4d3d7e568d15c212d83970a7aab"
+			"Comment": "v3.1.0-rc.1-768-g049ca874",
+			"Rev": "049ca8746a1d3ab17c4448425074537584fe3006"
 		},
 		{
 			"ImportPath": "github.com/coreos/etcd/etcdserver/etcdserverpb",
-			"Comment": "v3.1.0-rc.1-826-g36735d52",
-			"Rev": "36735d52a4fde4d3d7e568d15c212d83970a7aab"
+			"Comment": "v3.1.0-rc.1-768-g049ca874",
+			"Rev": "049ca8746a1d3ab17c4448425074537584fe3006"
 		},
 		{
 			"ImportPath": "github.com/coreos/etcd/mvcc/mvccpb",
-			"Comment": "v3.1.0-rc.1-826-g36735d52",
-			"Rev": "36735d52a4fde4d3d7e568d15c212d83970a7aab"
+			"Comment": "v3.1.0-rc.1-768-g049ca874",
+			"Rev": "049ca8746a1d3ab17c4448425074537584fe3006"
 		},
 		{
 			"ImportPath": "github.com/coreos/etcd/pkg/tlsutil",
-			"Comment": "v3.1.0-rc.1-826-g36735d52",
-			"Rev": "36735d52a4fde4d3d7e568d15c212d83970a7aab"
+			"Comment": "v3.1.0-rc.1-768-g049ca874",
+			"Rev": "049ca8746a1d3ab17c4448425074537584fe3006"
 		},
 		{
 			"ImportPath": "github.com/coreos/etcd/pkg/transport",
-			"Comment": "v3.1.0-rc.1-826-g36735d52",
-			"Rev": "36735d52a4fde4d3d7e568d15c212d83970a7aab"
+			"Comment": "v3.1.0-rc.1-768-g049ca874",
+			"Rev": "049ca8746a1d3ab17c4448425074537584fe3006"
 		},
 		{
 			"ImportPath": "github.com/davecgh/go-spew/spew",

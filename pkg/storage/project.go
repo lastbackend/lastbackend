@@ -50,12 +50,14 @@ func (s *ProjectStorage) GetByName(username, name string) (*types.Project, error
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	if err := client.Get(ctx, key, project); err != nil {
+	if err := client.Get(ctx, key, &project.Meta); err != nil {
 		if err.Error() == store.ErrKeyNotFound {
 			return nil, nil
 		}
 		return nil, err
 	}
+
+	project.User = username
 
 	return project, nil
 }
@@ -63,9 +65,8 @@ func (s *ProjectStorage) GetByName(username, name string) (*types.Project, error
 // List project by username
 func (s *ProjectStorage) ListByUser(username string) (*types.ProjectList, error) {
 	var (
-		projectList = new(types.ProjectList)
-		key         = fmt.Sprintf("%s/%s", ProjectTable, username)
-		filter      = `\b(.+)\/info\b`
+		key    = fmt.Sprintf("%s/%s", ProjectTable, username)
+		filter = `\b(.+)\/info\b`
 	)
 
 	client, destroy, err := s.Client()
@@ -77,11 +78,22 @@ func (s *ProjectStorage) ListByUser(username string) (*types.ProjectList, error)
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	if err := client.List(ctx, key, filter, projectList); err != nil {
+	metaList := []types.Meta{}
+
+	if err := client.List(ctx, key, filter, &metaList); err != nil {
 		if err.Error() == store.ErrKeyNotFound {
 			return nil, nil
 		}
 		return nil, err
+	}
+
+	if metaList == nil {
+		return nil, nil
+	}
+
+	projectList := new(types.ProjectList)
+	for _, meta := range metaList {
+		*projectList = append(*projectList, types.Project{Meta: meta, User: username})
 	}
 
 	return projectList, nil
@@ -97,6 +109,7 @@ func (s *ProjectStorage) Insert(username, name, description string) (*types.Proj
 	project.Name = name
 	project.User = username
 	project.Description = description
+	project.Labels = map[string]string{"tier": "ptoject"}
 	project.Updated = time.Now()
 	project.Created = time.Now()
 
@@ -109,7 +122,7 @@ func (s *ProjectStorage) Insert(username, name, description string) (*types.Proj
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	if err := client.Create(ctx, keyInfo, project, nil, 0); err != nil {
+	if err := client.Create(ctx, keyInfo, &project.Meta, nil, 0); err != nil {
 		return project, err
 	}
 
@@ -117,8 +130,27 @@ func (s *ProjectStorage) Insert(username, name, description string) (*types.Proj
 }
 
 // Update project model
-func (s *ProjectStorage) Update(project *types.Project) (*types.Project, error) {
-	return nil, nil
+func (s *ProjectStorage) Update(username string, project *types.Project) (*types.Project, error) {
+	var (
+		keyInfo = fmt.Sprintf("%s/%s/%s/info", ProjectTable, username, project.Name)
+	)
+
+	project.Updated = time.Now()
+
+	client, destroy, err := s.Client()
+	if err != nil {
+		return project, err
+	}
+	defer destroy()
+
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	if err := client.Update(ctx, keyInfo, &project.Meta, nil, 0); err != nil {
+		return project, err
+	}
+
+	return project, nil
 }
 
 // Remove project model

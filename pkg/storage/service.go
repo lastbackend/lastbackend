@@ -20,7 +20,6 @@ package storage
 
 import (
 	"fmt"
-
 	"github.com/lastbackend/lastbackend/pkg/apis/types"
 	"github.com/lastbackend/lastbackend/pkg/storage/store"
 	"golang.org/x/net/context"
@@ -38,8 +37,10 @@ type ServiceStorage struct {
 // Get project by name for user
 func (s *ServiceStorage) GetByName(username, project, name string) (*types.Service, error) {
 	var (
-		service = new(types.Service)
-		key     = fmt.Sprintf("/%s/%s/%s/%s/%s/info", ProjectTable, username, project, name, ServiceTable)
+		service   = new(types.Service)
+		keyInfo   = fmt.Sprintf("%s/%s/%s//%s/%s/info", ProjectTable, username, project, ServiceTable, name)
+		keyConfig = fmt.Sprintf("%s/%s/%s/%s//%s/config", ProjectTable, username, project, ServiceTable, name)
+		keySource = fmt.Sprintf("%s/%s/%s/%s//%s/source", ProjectTable, username, project, ServiceTable, name)
 	)
 
 	client, destroy, err := s.Client()
@@ -51,12 +52,31 @@ func (s *ServiceStorage) GetByName(username, project, name string) (*types.Servi
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	if err := client.Get(ctx, key, service); err != nil {
+	if err := client.Get(ctx, keyInfo, &service.Meta); err != nil {
 		if err.Error() == store.ErrKeyNotFound {
 			return nil, nil
 		}
 		return nil, err
 	}
+
+	service.Config = new(types.ServiceConfig)
+	if err := client.Get(ctx, keyConfig, service.Config); err != nil {
+		if err.Error() == store.ErrKeyNotFound {
+			return nil, nil
+		}
+		return nil, err
+	}
+
+	service.Source = new(types.ServiceSource)
+	if err := client.Get(ctx, keySource, service.Source); err != nil {
+		if err.Error() == store.ErrKeyNotFound {
+			return nil, nil
+		}
+		return nil, err
+	}
+
+	service.User = username
+	service.Project = project
 
 	return service, nil
 }
@@ -64,9 +84,8 @@ func (s *ServiceStorage) GetByName(username, project, name string) (*types.Servi
 // List project by username
 func (s *ServiceStorage) ListByProject(username, project string) (*types.ServiceList, error) {
 	var (
-		serviceList = new(types.ServiceList)
-		key         = fmt.Sprintf("/%s/%s/%s/%s", ProjectTable, username, project, ServiceTable)
-		filter      = `\b(.+)\/info\b`
+		key    = fmt.Sprintf("%s/%s/%s//%s", ProjectTable, username, project, ServiceTable)
+		filter = `\b(.+)\/info\b`
 	)
 
 	client, destroy, err := s.Client()
@@ -78,26 +97,41 @@ func (s *ServiceStorage) ListByProject(username, project string) (*types.Service
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	if err := client.List(ctx, key, filter, serviceList); err != nil {
+	metaList := []types.Meta{}
+
+	if err := client.List(ctx, key, filter, &metaList); err != nil {
 		if err.Error() == store.ErrKeyNotFound {
 			return nil, nil
 		}
 		return nil, err
 	}
 
+	if metaList == nil {
+		return nil, nil
+	}
+
+	serviceList := new(types.ServiceList)
+	for _, meta := range metaList {
+		*serviceList = append(*serviceList, types.Service{Meta: meta, User: username, Project: project})
+	}
+
 	return serviceList, nil
 }
 
 // Insert new service into storage
-func (s *ServiceStorage) Insert(username, name, description string) (*types.Service, error) {
+func (s *ServiceStorage) Insert(username, project, name, description string, source *types.ServiceSource, config *types.ServiceConfig) (*types.Service, error) {
 	var (
-		service = new(types.Service)
-		keyInfo = fmt.Sprintf("%s/%s/%s/info", ProjectTable, username, name)
+		service   = new(types.Service)
+		keyInfo   = fmt.Sprintf("%s/%s/%s//%s/%s/info", ProjectTable, username, project, ServiceTable, name)
+		keyConfig = fmt.Sprintf("%s/%s/%s/%s//%s/config", ProjectTable, username, project, ServiceTable, name)
+		keySource = fmt.Sprintf("%s/%s/%s/%s//%s/source", ProjectTable, username, project, ServiceTable, name)
 	)
 
 	service.Name = name
 	service.User = username
 	service.Description = description
+	service.Config = config
+	service.Source = source
 	service.Updated = time.Now()
 	service.Created = time.Now()
 
@@ -110,16 +144,65 @@ func (s *ServiceStorage) Insert(username, name, description string) (*types.Serv
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	if err := client.Create(ctx, keyInfo, service, nil, 0); err != nil {
-		return service, err
+	tx := client.Begin(ctx)
+
+	if err := tx.Create(keyInfo, service, 0); err != nil {
+		return nil, err
+	}
+
+	if err := tx.Create(keyConfig, config, 0); err != nil {
+		return nil, err
+	}
+
+	if err := tx.Create(keySource, source, 0); err != nil {
+		return nil, err
+	}
+
+	if err := tx.Commit(); err != nil {
+		return nil, err
 	}
 
 	return service, nil
 }
 
-// Update service model
-func (s *ServiceStorage) Update(service *types.Service) (*types.Service, error) {
-	return nil, nil
+// Update service in storage
+func (s *ServiceStorage) Update(username, project string, service *types.Service) (*types.Service, error) {
+	var (
+		keyInfo   = fmt.Sprintf("%s/%s/%s//%s/%s/info", ProjectTable, username, project, ServiceTable, service.Name)
+		keyConfig = fmt.Sprintf("%s/%s/%s/%s//%s/config", ProjectTable, username, project, ServiceTable, service.Name)
+		keySource = fmt.Sprintf("%s/%s/%s/%s//%s/source", ProjectTable, username, project, ServiceTable, service.Name)
+	)
+
+	service.Updated = time.Now()
+
+	client, destroy, err := s.Client()
+	if err != nil {
+		return service, err
+	}
+	defer destroy()
+
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	tx := client.Begin(ctx)
+
+	if err := tx.Update(keyInfo, service, 0); err != nil {
+		return nil, err
+	}
+
+	if err := tx.Update(keyConfig, service.Config, 0); err != nil {
+		return nil, err
+	}
+
+	if err := tx.Update(keySource, service.Source, 0); err != nil {
+		return nil, err
+	}
+
+	if err := tx.Commit(); err != nil {
+		return nil, err
+	}
+
+	return service, nil
 }
 
 // Remove service model

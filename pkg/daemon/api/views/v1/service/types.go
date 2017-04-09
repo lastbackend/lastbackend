@@ -21,11 +21,28 @@ package service
 import "time"
 
 type Service struct {
-	User        string    `json:"user"`
-	Name        string    `json:"name"`
-	Description string    `json:"description"`
-	Created     time.Time `json:"created"`
-	Updated     time.Time `json:"updated"`
+	User        string     `json:"user"`
+	Project     string     `json:"project"`
+	Name        string     `json:"name"`
+	Description string     `json:"description"`
+	Config      Config     `json:"config"`
+	Source      *Source    `json:"source"`
+	Pods        []struct{} `json:"pods"`
+	Created     time.Time  `json:"created"`
+	Updated     time.Time  `json:"updated"`
+}
+
+type Config struct {
+	Replicas int    `json:"scale,omitempty"`
+	Memory   int    `json:"memory,omitempty"`
+	Region   string `json:"region,omitempty"`
+}
+
+type Source struct {
+	Hub    string `json:"hub"`
+	Owner  string `json:"owner"`
+	Repo   string `json:"repo"`
+	Branch string `json:"branch"`
 }
 
 type ServiceList []Service
