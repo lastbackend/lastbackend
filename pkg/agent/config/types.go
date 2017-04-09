@@ -18,30 +18,18 @@
 
 package config
 
-import (
-	"time"
-)
-
 // The structure of the config to run the daemon
 type Config struct {
-	Debug bool `yaml:"debug"`
-
-	TokenSecret string `yaml:"secret"`
-
-	HttpServer struct {
-		Port int `yaml:"port"`
-	} `yaml:"http_server"`
-
-	Etcd struct {
-		Endpoints []string      `yaml:"endpoints"`
-		TimeOut   time.Duration `yaml:"timeout"`
-	} `yaml:"etcd"`
-
-	Runtime *Runtime `yaml:"runtime"`
+	Debug   *bool
+	Runtime *Runtime
 }
 
 type Runtime struct {
-	Docker struct {
-		Endpoint, CA, Cert, Key string
-	}
+	CRI    *string
+	Docker *Docker
+}
+
+type Docker struct {
+	Host, Certs, Version *string
+	TLS                  *bool
 }

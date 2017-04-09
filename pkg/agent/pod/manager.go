@@ -1,67 +1,95 @@
+//
+// Last.Backend LLC CONFIDENTIAL
+// __________________
+//
+// [2014] - [2017] Last.Backend LLC
+// All Rights Reserved.
+//
+// NOTICE:  All information contained herein is, and remains
+// the property of Last.Backend LLC and its suppliers,
+// if any.  The intellectual and technical concepts contained
+// herein are proprietary to Last.Backend LLC
+// and its suppliers and may be covered by Russian Federation and Foreign Patents,
+// patents in process, and are protected by trade secret or copyright law.
+// Dissemination of this information or reproduction of this material
+// is strictly forbidden unless prior written permission is obtained
+// from Last.Backend LLC.
+
 package pod
 
 import (
-	"encoding/json"
+	"github.com/lastbackend/lastbackend/pkg/agent/context"
 	"github.com/lastbackend/lastbackend/pkg/apis/types"
+	"github.com/satori/go.uuid"
 	"sync"
 )
 
 type PodManager struct {
-	lock sync.RWMutex
-	pods map[string]*types.Pod
-}
-
-func (pm *PodManager) GetPods() types.PodList {
-	return nil
-}
-
-func (pm *PodManager) SetPods(pods types.PodList) {
-	pm.lock.Lock()
-	defer pm.lock.Unlock()
-	pm.pods = make(map[string]*types.Pod)
-
-	for _, pod := range pods {
-		pm.SetPod(pod)
-	}
-
-}
-
-func (pm *PodManager) GetPod(uuid string) *types.Pod {
-	return nil
-}
-
-func (pm *PodManager) AddPod(pod *types.Pod) {
-
-}
-
-func (pm *PodManager) SetPod(pod *types.Pod) {
-	pm.pods[pod.Meta.ID] = pod
-}
-
-func (pm *PodManager) DelPod(pod *types.Pod) {
-
+	lock    sync.RWMutex
+	workers map[uuid.UUID]*Worker
 }
 
 func (pm *PodManager) SyncPod(pod *types.Pod) {
-	p := pm.pods[pod.Meta.ID]
+	s := context.Get().GetStorage().Pods()
+	pods := s.GetPods()
 
-	if p == nil {
-		pm.SetPod(pod)
+	p, ok := pods[pod.Meta.ID]
+
+	if !ok {
+		p := types.NewPod()
+		p.Meta = pod.Meta
+		p.Meta.Spec = uuid.NewV4()
+		s.SetPod(p)
+		pm.sync(pod.State, pod.Meta, pod.Spec, pod)
 		return
 	}
 
-	ohash, _ := json.Marshal(p.Spec)
-	nhash, _ := json.Marshal(pod.Spec)
-
-	if string(ohash) == string(nhash) {
-		return
+	if p.Meta.Spec != (pod.Meta.Spec) || p.State.State != pod.State.State {
+		pm.sync(pod.State, pod.Meta, pod.Spec, p)
 	}
-
 }
 
-func NewPodManager() Manager {
-	pm := &PodManager{}
-	pm.SetPods(nil)
+// meta - new pod meta
+// spec - new pod spec
+// pod - current pod information
+func (pm *PodManager) sync(state types.PodState, meta types.PodMeta, spec types.PodSpec, pod *types.Pod) {
+	// Create new worker to sync pod
+	// Check if pod worker exists
+	w := pm.workers[pod.Meta.ID]
+	if w == nil {
+		w = NewWorker()
 
-	return pm
+		// Start worker watcher
+		go func() {
+			<-w.done
+			pm.lock.Lock()
+			delete(pm.workers, pod.ID())
+			pm.lock.Unlock()
+		}()
+	}
+
+	w.Proceed(state, meta, spec, pod)
+}
+
+func NewPodManager() (*PodManager, error) {
+	log := context.Get().GetLogger()
+	log.Debug("Create new pod manager")
+
+	//	s := context.Get().GetStorage().Pods()
+
+	var (
+	//	err error
+	)
+
+	crii := context.Get().GetCri()
+
+	pm := &PodManager{}
+
+	pm.workers = make(map[uuid.UUID]*Worker)
+
+	log.Debug("Restore new pod manager state")
+
+	crii.PodList()
+
+	return pm, nil
 }

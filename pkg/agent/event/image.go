@@ -16,14 +16,4 @@
 // from Last.Backend LLC.
 //
 
-package config
-
-var cfg = &Config{
-	Runtime: &Runtime{
-		Docker: &Docker{},
-	},
-}
-
-func Get() *Config {
-	return cfg
-}
+package event

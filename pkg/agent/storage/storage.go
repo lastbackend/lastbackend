@@ -14,16 +14,20 @@
 // Dissemination of this information or reproduction of this material
 // is strictly forbidden unless prior written permission is obtained
 // from Last.Backend LLC.
-//
 
-package config
+package storage
 
-var cfg = &Config{
-	Runtime: &Runtime{
-		Docker: &Docker{},
-	},
+type Storage struct {
+	PodStorage *PodStorage
 }
 
-func Get() *Config {
-	return cfg
+func New() *Storage {
+	return &Storage{
+		PodStorage: &PodStorage{},
+	}
+}
+
+// Return pods storage
+func (s *Storage) Pods() *PodStorage {
+	return s.PodStorage
 }

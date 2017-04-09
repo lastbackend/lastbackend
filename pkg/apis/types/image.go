@@ -18,32 +18,46 @@
 
 package types
 
+import (
+	"sync"
+	"time"
+)
+
 type ImageList []Image
 
 type Image struct {
-	imageMeta
-	// Image Registry info
+	lock sync.RWMutex
+
+	Meta ImageMeta `json:"meta"`
+	// Image id
+	ID string `json:"id"`
+	// Image name
+	Name string `json:"name"`
+	// Image tag lists
+	Tags []string `json:"tags"`
+
+	// Image registry info
 	Registry Registry `json:"registry"`
 	// Image source info
 	Source ImageSource `json:"source"`
-}
 
-type imageMeta struct{ ImageMeta }
-type ImageMeta struct {
-	meta
-
-	// Add fields to expand the meta data
-	// Example:
-	// Note string `json:"note,omitempty"`
-	// Uptime time.Time `json:"uptime"`
-
-	BuildCount int `json:"build_count"`
+	// Image created time
+	Created time.Time `json:"created"`
+	// Image updated time
+	Updated time.Time `json:"updated"`
 }
 
 type ImageSpec struct {
-	Name     string
-	Tag      string
-	Registry Registry
+	// Image full name
+	Name string `json:"name"`
+	// Image pull provision flag
+	Pull bool `json:"image-pull"`
+	// Image Auth base64 encoded string
+	Auth string `json:"auth"`
+}
+
+type ImageMeta struct {
+
 }
 
 type ImageSource struct {
@@ -52,6 +66,10 @@ type ImageSource struct {
 	Repo  string `json:"repo"`
 	Tag   string `json:"tag"`
 }
+
+func NewImage() *Image {
+	return &Image{}
+
 
 func (i *ImageSource) GenerateName() string {
 	return ""

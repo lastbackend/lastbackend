@@ -18,7 +18,31 @@
 
 package types
 
-import "time"
+import (
+	"time"
+)
+
+type Container struct {
+	// Container ID
+	ID string `json:"cid"`
+	// Image information
+	Image ContainerImage `json:"image"`
+	// Container current state
+	State string `json:"state"`
+	// Container current state
+	Status string `json:"status"`
+	// Container ports mapping
+	Ports map[string]int
+	// Container created time
+	Created time.Time `json:"created"`
+	// Container started time
+	Started time.Time `json:"started"`
+}
+
+type ContainerImage struct {
+	ID   string `json:"id"`
+	Name string `json:"name"`
+}
 
 type ContainerSpec struct {
 	// Image spec
@@ -30,11 +54,11 @@ type ContainerSpec struct {
 	// Labels list
 	Labels map[string]string `json:"labels"`
 	// Environments list
-	Envs map[string]string `json:"envs"`
+	Envs []string `json:"envs"`
 	// Container enrtypoint
-	Entrypoint string `json:"entrypoint"`
+	Entrypoint []string `json:"entrypoint"`
 	// Container run command
-	Command string `json:"command"`
+	Command []string `json:"command"`
 	// Container run command arguments
 	Args []string `json:"args"`
 	// Container DNS configuration
@@ -54,6 +78,8 @@ type ContainerNetworkSpec struct {
 	Domain string `json:"domain"`
 	// Network ID to use
 	Network string `json:"network"`
+	// Network Mode to use
+	Mode string `json:"mode"`
 }
 
 type ContainerPortSpec struct {
@@ -74,9 +100,9 @@ type ContainerDNSSpec struct {
 
 type ContainerQuotaSpec struct {
 	// Maximum memory allowed to use
-	Memory int `json:"memory"`
+	Memory int64 `json:"memory"`
 	// CPU shares for container on one node
-	CPUShares int `json:"cpu_shares"`
+	CPUShares int64 `json:"cpu_shares"`
 }
 
 type ContainerRestartPolicySpec struct {
@@ -89,6 +115,8 @@ type ContainerRestartPolicySpec struct {
 type ContainerStatusInfo struct {
 	// Container ID on host
 	ID string `json:"cid"`
+	// Image ID
+	Image string `json:"image"`
 	// Container current state
 	State string `json:"state"`
 	// Container ports mapping
@@ -98,3 +126,6 @@ type ContainerStatusInfo struct {
 	// Container updated time
 	Updated time.Time `json:"updated"`
 }
+
+const ContainerStateError = "error"
+const ContainerStatePending = "pending"

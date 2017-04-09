@@ -19,52 +19,47 @@
 package runtime
 
 import (
-	"github.com/docker/docker/client"
 	"github.com/lastbackend/lastbackend/pkg/agent/config"
+	"github.com/lastbackend/lastbackend/pkg/agent/cri"
+	"github.com/lastbackend/lastbackend/pkg/agent/cri/docker"
+	"github.com/lastbackend/lastbackend/pkg/agent/pod"
+	"github.com/lastbackend/lastbackend/pkg/apis/types"
+
 	"github.com/lastbackend/lastbackend/pkg/agent/context"
-	"github.com/lastbackend/lastbackend/pkg/agent/manager"
 )
 
 type Runtime struct {
-	Client *client.Client
-
-	pManager *manager.PodManager
-	iManager *manager.ImageManager
-	eManager *manager.EventManager
+	pManager *pod.PodManager
 }
 
-func New(cfg *config.Runtime) *Runtime {
-	ctx := context.Get()
-	ctx.Log.Debug("Initializing runtime")
+func (r *Runtime) SetCri(cfg *config.Runtime) (cri.CRI, error) {
+	var cri cri.CRI
+	var err error
 
-	var runtime = new(Runtime)
-	return runtime.Init(cfg)
+	switch *cfg.CRI {
+	case "docker":
+		cri, err = docker.New(cfg.Docker)
+	}
+
+	if err != nil {
+		return cri, err
+	}
+
+	return cri, err
 }
 
-func (r *Runtime) Init(cfg *config.Runtime) *Runtime {
-	r.Client, _ = client.NewEnvClient()
-
-	r.iManager = manager.NewImageManager()
-	r.eManager = manager.NewEventManager()
-	r.pManager = manager.NewPodManager(r.Client)
-
-	r.pManager.Run()
-
-	return r
+func (r *Runtime) StartPodManager() error {
+	var err error
+	if r.pManager, err = pod.NewPodManager(); err != nil {
+		return err
+	}
+	return nil
 }
 
-func (r *Runtime) Pods() *manager.PodManager {
-	return r.pManager
-}
-
-func (r *Runtime) Images() *manager.ImageManager {
-	return r.iManager
-}
-
-func (r *Runtime) Loop() {
-
-}
-
-func (r *Runtime) Sync() {
-
+func (r *Runtime) Sync(pods types.PodList) {
+	log := context.Get().GetLogger()
+	log.Debugf("Runtime: sync:\n%s", pods.ToJson())
+	for _, pod := range pods {
+		r.pManager.SyncPod(pod)
+	}
 }
