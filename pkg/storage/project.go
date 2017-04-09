@@ -132,7 +132,7 @@ func (s *ProjectStorage) Insert(ctx context.Context, name, description string) (
 	tx := client.Begin(ctx)
 
 	keyHelper := s.util.Key(ctx, "helper", projectStorage, name)
-	if err := tx.Create(keyHelper, project.Meta.ID.String(), 0); err != nil {
+	if err := tx.Create(keyHelper, id.String(), 0); err != nil {
 		return nil, err
 	}
 
