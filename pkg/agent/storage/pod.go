@@ -1,20 +1,38 @@
+//
+// Last.Backend LLC CONFIDENTIAL
+// __________________
+//
+// [2014] - [2017] Last.Backend LLC
+// All Rights Reserved.
+//
+// NOTICE:  All information contained herein is, and remains
+// the property of Last.Backend LLC and its suppliers,
+// if any.  The intellectual and technical concepts contained
+// herein are proprietary to Last.Backend LLC
+// and its suppliers and may be covered by Russian Federation and Foreign Patents,
+// patents in process, and are protected by trade secret or copyright law.
+// Dissemination of this information or reproduction of this material
+// is strictly forbidden unless prior written permission is obtained
+// from Last.Backend LLC.
+
 package storage
 
 import (
 	"github.com/lastbackend/lastbackend/pkg/apis/types"
+	"github.com/satori/go.uuid"
 	"sync"
 )
 
 type PodStorage struct {
 	lock sync.RWMutex
-	pods map[types.PodID]*types.Pod
+	pods map[uuid.UUID]*types.Pod
 }
 
-func (ps *PodStorage) GetPods() map[types.PodID]*types.Pod {
+func (ps *PodStorage) GetPods() map[uuid.UUID]*types.Pod {
 	return ps.pods
 }
 
-func (ps *PodStorage) GetPod(id types.PodID) *types.Pod {
+func (ps *PodStorage) GetPod(id uuid.UUID) *types.Pod {
 	pod, ok := ps.pods[id]
 	if !ok {
 		return nil
@@ -52,7 +70,7 @@ func (ps *PodStorage) SetPods(pods []*types.Pod) {
 }
 
 func NewPodStorage() *PodStorage {
-	pods := make(map[types.PodID]*types.Pod)
+	pods := make(map[uuid.UUID]*types.Pod)
 	return &PodStorage{
 		pods: pods,
 	}

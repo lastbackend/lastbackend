@@ -10,7 +10,7 @@ import (
 	"strconv"
 )
 
-func GetConfig(spec types.ContainerSpec) *container.Config {
+func GetConfig(spec *types.ContainerSpec) *container.Config {
 
 	var volumes map[string]struct{}
 	var ports nat.PortSet
@@ -32,12 +32,12 @@ func GetConfig(spec types.ContainerSpec) *container.Config {
 		Labels:       spec.Labels,
 		Cmd:          strslice.StrSlice(spec.Command),
 		Entrypoint:   strslice.StrSlice(spec.Entrypoint),
-		Image:        spec.Image,
+		Image:        spec.Image.Name,
 	}
 	return cfg
 }
 
-func GetHostConfig(spec types.ContainerSpec) *container.HostConfig {
+func GetHostConfig(spec *types.ContainerSpec) *container.HostConfig {
 
 	rPolicy := container.RestartPolicy{
 		Name:              spec.RestartPolicy.Name,
@@ -81,7 +81,7 @@ func GetHostConfig(spec types.ContainerSpec) *container.HostConfig {
 	return cfg
 }
 
-func GetNetworkConfig(spec types.ContainerSpec) *network.NetworkingConfig {
+func GetNetworkConfig(spec *types.ContainerSpec) *network.NetworkingConfig {
 	cfg := &network.NetworkingConfig{
 		EndpointsConfig: make(map[string]*network.EndpointSettings),
 	}

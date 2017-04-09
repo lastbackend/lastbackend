@@ -7,7 +7,7 @@ import (
 	"time"
 )
 
-func (r *Runtime) ContainerCreate(spec types.ContainerSpec) (string, error) {
+func (r *Runtime) ContainerCreate(spec *types.ContainerSpec) (string, error) {
 
 	c, err := r.client.ContainerCreate(
 		context.Background(),

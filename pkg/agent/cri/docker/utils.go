@@ -13,6 +13,8 @@ func GetPodMetaFromContainer(c docker.Container) types.PodMeta {
 	log.Debug("Docker: get pod meta from contanier")
 
 	var meta types.PodMeta
+	var err error
+
 	meta = types.PodMeta{}
 
 	ID, ok := c.Labels["LB_POD_ID"]
@@ -20,12 +22,10 @@ func GetPodMetaFromContainer(c docker.Container) types.PodMeta {
 		return meta
 	}
 
-	uuid, err := uuid.FromString(ID)
+	meta.ID, err = uuid.FromString(ID)
 	if err != nil {
 		return meta
 	}
-
-	meta.ID = types.PodID(uuid)
 
 	meta.Owner, ok = c.Labels["LB_POD_OWNER"]
 	if !ok {
@@ -46,12 +46,14 @@ func GetPodMetaFromContainer(c docker.Container) types.PodMeta {
 
 }
 
-func GetContainerSpecFromContainer(c docker.ContainerJSON) types.ContainerSpec {
+func GetContainerSpecFromContainer(c docker.ContainerJSON) *types.ContainerSpec {
 	log := context.Get().GetLogger()
 	log.Debug("Docker: get pod spec from contanier")
-	var spec types.ContainerSpec
+	var spec *types.ContainerSpec
 
-	spec = types.ContainerSpec{
+	log.Debugf("Container Image: %s", c.Image)
+	log.Debugf("Container Image name: %s", c.Config.Image)
+	spec = &types.ContainerSpec{
 
 		Network: types.ContainerNetworkSpec{
 			Hostname: c.Config.Hostname,
@@ -99,31 +101,23 @@ func GetContainerSpecFromContainer(c docker.ContainerJSON) types.ContainerSpec {
 	return spec
 }
 
-func GetContainer(dc docker.Container) types.Container {
+func GetContainer(dc docker.Container, info docker.ContainerJSON) *types.Container {
 	log := context.Get().GetLogger()
 	log.Debug("Docker: convert container format")
 
-	var c types.Container
+	var c *types.Container
 
-	ID, ok := dc.Labels["LB_CONTANIER_ID"]
-	if !ok {
-		return c
-	}
-
-	uuid, err := uuid.FromString(ID)
-	if err != nil {
-		return c
-	}
-
-	c = types.Container{
-		ID:      types.ContainerID(uuid),
-		CID:     dc.ID,
-		Image:   dc.ImageID,
+	c = &types.Container{
+		ID:      dc.ID,
 		State:   dc.State,
 		Status:  dc.Status,
 		Created: time.Unix(dc.Created, 0),
 	}
 
+	t, _ := time.Parse(time.RFC3339Nano, info.State.StartedAt)
+	c.Started = t
+	c.Image.ID = dc.ImageID
+	c.Image.Name = dc.Image
 	return c
 
 }

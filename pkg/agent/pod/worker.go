@@ -1,15 +1,33 @@
+//
+// Last.Backend LLC CONFIDENTIAL
+// __________________
+//
+// [2014] - [2017] Last.Backend LLC
+// All Rights Reserved.
+//
+// NOTICE:  All information contained herein is, and remains
+// the property of Last.Backend LLC and its suppliers,
+// if any.  The intellectual and technical concepts contained
+// herein are proprietary to Last.Backend LLC
+// and its suppliers and may be covered by Russian Federation and Foreign Patents,
+// patents in process, and are protected by trade secret or copyright law.
+// Dissemination of this information or reproduction of this material
+// is strictly forbidden unless prior written permission is obtained
+// from Last.Backend LLC.
+//
+
 package pod
 
 import (
 	"github.com/lastbackend/lastbackend/pkg/agent/context"
 	"github.com/lastbackend/lastbackend/pkg/agent/cri"
 	"github.com/lastbackend/lastbackend/pkg/apis/types"
-	"github.com/satori/go.uuid"
 	"sync"
 	"time"
 )
 
-const ContainerRestartTimeout = 10 //seconds
+const ContainerRestartTimeout = 10 // seconds
+const ContainerStopTimeout = 10    // seconds
 
 type Worker struct {
 	lock sync.RWMutex
@@ -25,8 +43,9 @@ type Task struct {
 	close chan bool
 	done  chan bool
 
-	policy types.PodPolicy
-	spec   types.PodSpec
+	state types.PodState
+	meta  types.PodMeta
+	spec  types.PodSpec
 
 	pod *types.Pod
 }
@@ -37,13 +56,20 @@ func NewWorker() *Worker {
 	}
 }
 
-func NewTask(policy types.PodPolicy, spec types.PodSpec, p *types.Pod) *Task {
+func NewTask(state types.PodState, meta types.PodMeta, spec types.PodSpec, pod *types.Pod) *Task {
 	log := context.Get().GetLogger()
-	log.Debugf("Create new task for pod: %s", p.ID())
-	return &Task{policy: policy, spec: spec, pod: p, done: make(chan bool), close: make(chan bool)}
+	log.Debugf("Create new task for pod: %s", pod.ID())
+	return &Task{
+		state: state,
+		meta:  meta,
+		spec:  spec,
+		pod:   pod,
+		done:  make(chan bool),
+		close: make(chan bool),
+	}
 }
 
-func (w *Worker) Proceed(policy types.PodPolicy, spec types.PodSpec, p *types.Pod) {
+func (w *Worker) Proceed(state types.PodState, meta types.PodMeta, spec types.PodSpec, p *types.Pod) {
 	log := context.Get().GetLogger()
 	log.Debugf("Proceed new task for pod: %s", p.ID())
 
@@ -53,14 +79,14 @@ func (w *Worker) Proceed(policy types.PodPolicy, spec types.PodSpec, p *types.Po
 		w.next = nil
 	}
 
-	t := NewTask(policy, spec, p)
+	t := NewTask(state, meta, spec, p)
 
 	// Update next task for execution
 	if w.current != nil {
 		w.lock.Lock()
 		w.next = t
 		w.lock.Unlock()
-		w.current.stop()
+		w.current.finish()
 		return
 	}
 
@@ -91,74 +117,92 @@ func (w *Worker) loop() {
 }
 
 func (t *Task) exec() {
+
 	log := context.Get().GetLogger()
-	log.Debugf("start task for pod: %s", t.pod.ID())
+	log.Debugf("start task for pod: %s", t.pod.Meta.ID)
 
-	var err error
-
-	crii := context.Get().GetCri()
-	log.Debug(t.pod.Containers)
-
-	if t.policy.Restart {
-		for _, c := range t.pod.Containers {
-			timeout := time.Duration(ContainerRestartTimeout) * time.Second
-			crii.ContainerRestart(c.CID, &timeout)
-			t.pod.SetContainer(c)
-		}
-		t.pod.Policy.Restart = false
-		return
+	// Set current spec
+	t.pod.Meta.Spec = t.spec.ID
+	// Check spec version
+	if t.meta.Spec != t.pod.Meta.Spec {
+		t.imagesUpdate()
+		t.containersUpdate()
 	}
+
+	// check container state
+	t.containersState()
+	log.Debugf("done task for pod: %s", t.pod.ID())
+}
+
+func (t *Task) imagesUpdate() {
+	log := context.Get().GetLogger()
+	crii := context.Get().GetCri()
+
+	// Check images states
+	images := make(map[string]struct{})
+
+	// Get images currently used by this pod
+	for _, container := range t.pod.Containers {
+		log.Debugf("Add images as used: %s", container.Image.Name)
+		images[container.Image.Name] = struct{}{}
+	}
+
+	// Check imaged we need to pull
+	for _, spec := range t.spec.Containers {
+
+		// Check image exists and not need to be pulled
+		if _, ok := images[spec.Image.Name]; ok {
+
+			log.Debugf("Image exists in prev spec: %s", spec.Image.Name)
+			// Check if image need to be updated
+			if !spec.Image.Pull {
+				log.Debugf("Image not needed to pull: %s", spec.Image.Name)
+				delete(images, spec.Image.Name)
+				continue
+			}
+
+			log.Debugf("Delete images from unused: %s", spec.Image.Name)
+			delete(images, spec.Image.Name)
+		}
+
+		log.Debugf("Image update needed: %s", spec.Image.Name)
+		crii.ImagePull(&spec.Image)
+		// add image to storage
+	}
+
+	// Clean up unused images
+	for name := range images {
+		log.Debug("Delete unused images: %s", name)
+		crii.ImageRemove(name)
+	}
+
+}
+
+func (t *Task) containersUpdate() {
+
+	log := context.Get().GetLogger()
+	crii := context.Get().GetCri()
+
+	log.Debugf("Start containers update process for pod: %s", t.pod.Meta.ID)
+	var err error
 
 	// Remove old containers
 	for _, c := range t.pod.Containers {
-		if c.CID != "" {
-			crii.ContainerRemove(c.CID, true, true)
+		if c.ID != "" {
+			crii.ContainerRemove(c.ID, true, true)
 		}
 		t.pod.DelContainer(c.ID)
 	}
 
-	// Pull new images
-	n_images := make(map[string]types.ImageSpec)
-	o_images := make(map[string]types.ImageSpec)
-
-	for _, spec := range t.spec.Containers {
-		n_images[spec.Image] = t.spec.Images[spec.Image]
-	}
-
-	for _, spec := range t.pod.Spec.Containers {
-		o_images[spec.Image] = t.spec.Images[spec.Image]
-	}
-
-	for image, spec := range n_images {
-		if _, ok := o_images[image]; ok {
-			// old image exists
-			// check if we need to pull it
-			if t.policy.PullImage {
-				crii.ImagePull(spec)
-				continue
-			}
-
-			delete(o_images, image)
-			continue
-		}
-
-		crii.ImagePull(spec)
-	}
-
-	// Clean up unused images
-	for _, spec := range o_images {
-		crii.ImageRemove(spec.Image())
-	}
-
+	// Create new containers
 	for _, spec := range t.spec.Containers {
 
-		c := types.Container{
-			ID:      types.ContainerID(uuid.NewV4()),
+		c := &types.Container{
 			State:   types.ContainerStatePending,
 			Created: time.Now(),
 		}
 
-		c.CID, err = crii.ContainerCreate(spec)
+		c.ID, err = crii.ContainerCreate(spec)
 
 		if err != nil {
 			c.State = types.ContainerStateError
@@ -170,10 +214,40 @@ func (t *Task) exec() {
 		t.pod.AddContainer(c)
 	}
 
-	log.Debugf("done task for pod: %s", t.pod.ID())
 }
 
-func (t *Task) stop() {
+func (t *Task) containersState() {
+
+	crii := context.Get().GetCri()
+	// Update containers states
+	if t.pod.State.State == types.PodStateStarted {
+		for _, c := range t.pod.Containers {
+			crii.ContainerStart(c.ID)
+			t.pod.SetContainer(c)
+		}
+		return
+	}
+
+	if t.pod.State.State == types.PodStateStopped {
+		for _, c := range t.pod.Containers {
+			timeout := time.Duration(ContainerStopTimeout) * time.Second
+			crii.ContainerStop(c.ID, &timeout)
+			t.pod.SetContainer(c)
+		}
+		return
+	}
+
+	if t.pod.State.State == types.PodStateRestarted {
+		for _, c := range t.pod.Containers {
+			timeout := time.Duration(ContainerRestartTimeout) * time.Second
+			crii.ContainerRestart(c.ID, &timeout)
+			t.pod.SetContainer(c)
+		}
+		return
+	}
+}
+
+func (t *Task) finish() {
 	t.close <- true
 }
 

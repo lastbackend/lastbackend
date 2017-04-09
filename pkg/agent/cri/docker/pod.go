@@ -5,9 +5,11 @@ import (
 	docker "github.com/docker/docker/api/types"
 	"github.com/lastbackend/lastbackend/pkg/agent/context"
 	"github.com/lastbackend/lastbackend/pkg/apis/types"
+	"github.com/satori/go.uuid"
+	"strings"
 )
 
-func (r *Runtime) PodList() (map[types.PodID]*types.Pod, error) {
+func (r *Runtime) PodList() (map[uuid.UUID]*types.Pod, error) {
 	log := context.Get().GetLogger()
 	log.Debug("Docker: retrieve pod list")
 
@@ -15,7 +17,7 @@ func (r *Runtime) PodList() (map[types.PodID]*types.Pod, error) {
 	var pods types.PodMap
 
 	pods = types.PodMap{
-		Items: make(map[types.PodID]*types.Pod),
+		Items: make(map[uuid.UUID]*types.Pod),
 	}
 
 	items, err := r.client.ContainerList(context.Background(), docker.ContainerListOptions{
@@ -27,35 +29,43 @@ func (r *Runtime) PodList() (map[types.PodID]*types.Pod, error) {
 		log.Debug("Check container:", c.ID)
 
 		// Check container is managed by LB
-		_, ok := c.Labels["LB_MANAGED"]
+		// Meta: owner/project/service/pod/spec
+		label, ok := c.Labels["LB_META"]
 		if !ok {
 			continue
 		}
 
-		meta := GetPodMetaFromContainer(c)
+		info := strings.Split(label, "/")
+
+		meta := types.PodMeta{
+			ID:      uuid.FromStringOrNil(info[4]),
+			Owner:   info[1],
+			Project: info[2],
+			Service: info[3],
+			Spec:    uuid.FromStringOrNil(info[5]),
+		}
 
 		pod, ok := pods.Items[meta.ID]
 		if !ok {
-			pod = new(types.Pod)
+			pod = types.NewPod()
 			pods.Items[meta.ID] = pod
-			pod.Meta = meta
-			pod.Containers = make(map[types.ContainerID]types.Container)
+		}
+		pod.Meta = meta
+		pod.Spec.ID = pod.Meta.Spec
+
+		inspected, _ := r.client.ContainerInspect(context.Background(), c.ID)
+		if container := GetContainer(c, inspected); container != nil {
+			log.Debugf("Add container %x", container)
+			pod.AddContainer(container)
 		}
 
-		info, err := r.client.ContainerInspect(context.Background(), c.ID)
-		if err != nil {
-			continue
-		}
-
-		pod.Spec.Containers = append(pod.Spec.Containers, GetContainerSpecFromContainer(info))
-		pod.AddContainer(GetContainer(c))
 	}
 
 	pds, err := json.Marshal(pods.Items)
 	if err != nil {
 		log.Error(err.Error())
 	}
-	log.Debugf(string(pds))
+	log.Debug(string(pds))
 
 	if err != nil {
 		return pods.Items, err

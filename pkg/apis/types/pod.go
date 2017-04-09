@@ -20,6 +20,7 @@ package types
 
 import (
 	"encoding/json"
+	"fmt"
 	"github.com/satori/go.uuid"
 	"sync"
 	"time"
@@ -33,7 +34,7 @@ func (pl *PodList) ToJson() []byte {
 }
 
 type PodMap struct {
-	Items map[PodID]*Pod `json:"pods"`
+	Items map[uuid.UUID]*Pod `json:"pods"`
 }
 
 type Pod struct {
@@ -41,83 +42,150 @@ type Pod struct {
 
 	// Pod Meta
 	Meta PodMeta `json:"meta"`
-	// Pod provision flag
-	Policy PodPolicy `json:"provision"`
 	// Container spec
 	Spec PodSpec `json:"spec"`
+	// Pod state
+	State PodState `json:"state"`
 	// Containers status info
-	Containers map[ContainerID]Container `json:"containers"`
+	Containers map[string]*Container `json:"containers"`
 	// Secrets
-	Secrets map[string]PodSecret `json:"secrets"`
-	// Container created time
+	Secrets map[string]*PodSecret `json:"secrets"`
+	// Pod created time
 	Created time.Time `json:"created"`
-	// Container updated time
+	// Pod updated timestamp
 	Updated time.Time `json:"updated"`
-}
-
-func (p *Pod) ID() PodID {
-	return p.Meta.ID
-}
-
-func (p *Pod) AddContainer(c Container) {
-	p.lock.Lock()
-	defer p.lock.Unlock()
-	p.Containers[c.ID] = c
-}
-
-func (p *Pod) SetContainer(c Container) {
-	p.lock.Lock()
-	defer p.lock.Unlock()
-	p.Containers[c.ID] = c
-}
-
-func (p *Pod) DelContainer(ID ContainerID) {
-	p.lock.Lock()
-	defer p.lock.Unlock()
-	delete(p.Containers, ID)
-}
-
-type PodSpec struct {
-	Containers []ContainerSpec
-	Volumes    []VolumesSpec
-	Images     map[string]ImageSpec
 }
 
 type PodMeta struct {
 	// Pod ID
-	ID PodID
+	ID uuid.UUID `json:"id"`
 	// Pod owner
-	Owner string
+	Owner string `json:"owner"`
 	// Pod project
-	Project string
+	Project string `json:"project"`
 	// Pod service
-	Service string
+	Service string `json:"service"`
+	// Current Spec ID
+	Spec uuid.UUID `json:"spec"`
 }
 
-type PodPolicy struct {
-	// Pull image flag
-	PullImage bool
-	// Restart containers flag
-	Restart bool
+type PodSpec struct {
+	// Provision ID
+	ID uuid.UUID `json:"id"`
+	// Provision state
+	State string `json:"state"`
+	// Provision status
+	Status string `json:"status"`
+
+	// Containers spec for pod
+	Containers []*ContainerSpec
+
+	// Provision create time
+	Created time.Time `json:"created"`
+	// Provision update time
+	Updated time.Time `json:"updated"`
+}
+
+type PodState struct {
+	// Pod current state
+	State string `json:"state"`
+	// Pod current status
+	Status string `json:"status"`
+	// Pod provision
+}
+
+type PodProvision struct {
+	// Provision ID
+	ID uuid.UUID `json:"id"`
+	// Provision state
+	State string `json:"state"`
+	// Provision status
+	Status string `json:"status"`
+
+	// Image pull provision flag
+	ImagePull bool `json:"image-pull"`
+	// Provision create time
+	Created time.Time `json:"created"`
+	// Provision update time
+	Updated time.Time `json:"updated"`
 }
 
 type PodSecret struct {
 }
 
-type PodID uuid.UUID
-
-func (s *PodSpec) Equal(spec PodSpec) bool {
-
-	ohash, _ := json.Marshal(s)
-	nhash, _ := json.Marshal(spec)
-
-	if string(ohash) == string(nhash) {
-		return true
-	}
-
-	return false
+func (p *Pod) ID() uuid.UUID {
+	return p.Meta.ID
 }
 
-func (s *PodSpec) NotEqual(spec PodSpec) bool {
-	return !s.Equal(spec)
+func (p *Pod) AddContainer(c *Container) {
+	p.lock.Lock()
+	defer p.lock.Unlock()
+	fmt.Println(p, c)
+	p.Containers[c.ID] = c
+	p.CalculateState()
+}
+
+func (p *Pod) SetContainer(c *Container) {
+	p.lock.Lock()
+	defer p.lock.Unlock()
+	p.Containers[c.ID] = c
+	p.CalculateState()
+}
+
+func (p *Pod) DelContainer(ID string) {
+	p.lock.Lock()
+	defer p.lock.Unlock()
+	delete(p.Containers, ID)
+	p.CalculateState()
+}
+
+func (p *Pod) CalculateState() {
+	for _, c := range p.Containers {
+
+		if c.State == "exited" && p.State.Status == "" {
+			p.State.State = "stopped"
+			continue
+		}
+
+		if c.State == "exited" && p.State.Status != "stopped" {
+			p.State.State = "warning"
+			continue
+		}
+
+		if c.State == "running" && p.State.Status != "running" {
+			p.State.State = "warning"
+			continue
+		}
+
+		if p.State.State == "" {
+			p.State.State = c.State
+			continue
+		}
+
+		if c.State == p.State.State {
+			continue
+		}
+
+		if p.State.State == "error" {
+			continue
+		}
+
+		if c.State == "error" {
+			p.State.State = c.State
+			p.State.Status = c.Status
+			continue
+		}
+
+	}
+}
+
+const PodStateStarted = "started"
+const PodStateRestarted = "restarted"
+const PodStateStopped = "stopped"
+
+func NewPod() *Pod {
+	return &Pod{
+		Containers: make(map[string]*Container),
+		Secrets:    make(map[string]*PodSecret),
+	}
 }

@@ -20,17 +20,13 @@ package types
 
 import (
 	"time"
-
-	"github.com/satori/go.uuid"
 )
 
 type Container struct {
 	// Container ID
-	ID ContainerID `json:"id"`
-	// Container ID on host
-	CID string `json:"cid"`
-	// Image ID string
-	Image string `json:"image"`
+	ID string `json:"cid"`
+	// Image information
+	Image ContainerImage `json:"image"`
 	// Container current state
 	State string `json:"state"`
 	// Container current state
@@ -39,13 +35,18 @@ type Container struct {
 	Ports map[string]int
 	// Container created time
 	Created time.Time `json:"created"`
+	// Container started time
+	Started time.Time `json:"started"`
 }
 
-type ContainerID uuid.UUID
+type ContainerImage struct {
+	ID   string `json:"id"`
+	Name string `json:"name"`
+}
 
 type ContainerSpec struct {
 	// Image spec
-	Image string `json:"image"`
+	Image ImageSpec `json:"image"`
 	// Network spec
 	Network ContainerNetworkSpec `json:"network"`
 	// Ports configuration

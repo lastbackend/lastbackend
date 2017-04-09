@@ -19,23 +19,21 @@
 package types
 
 import (
-	"fmt"
+	"sync"
 	"time"
 )
 
 type ImageList []Image
 
 type Image struct {
-	// Image uuid, incremented automatically
+	lock sync.RWMutex
+
+	// Image id
 	ID string `json:"id"`
-	// Image user
-	User string `json:"user"`
 	// Image name
 	Name string `json:"name"`
 	// Image tag lists
-	Tags map[string]string `json:"tags"`
-	// Image Registry info
-	Registry Registry
+	Tags []string `json:"tags"`
 	// Image created time
 	Created time.Time `json:"created"`
 	// Image updated time
@@ -43,18 +41,14 @@ type Image struct {
 }
 
 type ImageSpec struct {
-	Name     string
-	Tag      string
-	Registry Registry
+	// Image full name
+	Name string `json:"name"`
+	// Image pull provision flag
+	Pull bool `json:"image-pull"`
+	// Image Auth base64 encoded string
+	Auth string `json:"auth"`
 }
 
-func (i *ImageSpec) Image() string {
-	if i.Registry.Hub != "" {
-		return fmt.Sprintf("%s/%s/%s", i.Registry.Hub, i.Name, i.Tag)
-	}
-	return fmt.Sprintf("%s/%s", i.Name, i.Tag)
-}
-
-func (i *ImageSpec) Auth() string {
-	return ""
+func NewImage() *Image {
+	return &Image{}
 }
