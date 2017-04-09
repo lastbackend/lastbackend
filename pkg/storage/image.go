@@ -21,8 +21,10 @@ package storage
 import (
 	"context"
 	"fmt"
+
 	"github.com/lastbackend/lastbackend/pkg/apis/types"
 	"github.com/lastbackend/lastbackend/pkg/storage/store"
+	"github.com/satori/go.uuid"
 	"strings"
 	"time"
 )
@@ -36,7 +38,7 @@ type ImageStorage struct {
 	Client func() (store.IStore, store.DestroyFunc, error)
 }
 
-func (s *ImageStorage) Get(ctx context.Context, id string) (*types.Image, error) {
+func (s *ImageStorage) Get(ctx context.Context, name string) (*types.Image, error) {
 
 	client, destroy, err := s.Client()
 	if err != nil {
@@ -44,8 +46,8 @@ func (s *ImageStorage) Get(ctx context.Context, id string) (*types.Image, error)
 	}
 	defer destroy()
 
-	key := s.util.Key(ctx, imageStorage, id)
-	meta := new(types.ImageMeta)
+	key := s.util.Key(ctx, imageStorage, name)
+	meta := types.ImageMeta{}
 	if err := client.Get(ctx, key, meta); err != nil {
 		if err.Error() == store.ErrKeyNotFound {
 			return nil, nil
@@ -54,13 +56,7 @@ func (s *ImageStorage) Get(ctx context.Context, id string) (*types.Image, error)
 	}
 
 	image := new(types.Image)
-	image.ID = meta.ID
-	image.Name = meta.Name
-	image.Description = meta.Description
-	image.Labels = meta.Labels
-	image.Created = meta.Created
-	image.Updated = meta.Updated
-
+	image.Meta = meta
 	return image, nil
 }
 
@@ -72,11 +68,11 @@ func (s *ImageStorage) Insert(ctx context.Context, name string, source *types.Im
 		vendor = strings.Split(source.Hub, ".")[0]
 	)
 
-	image.ImageMeta.ID = fmt.Sprintf("%s:%s", vendor, name)
-	image.ImageMeta.Name = name
+	image.Meta.ID = uuid.NewV4()
+	image.Meta.Name = fmt.Sprintf("%s:%s-1", name, vendor)
 	image.Source = *source
-	image.ImageMeta.Created = time.Now()
-	image.ImageMeta.Updated = time.Now()
+	image.Meta.Created = time.Now()
+	image.Meta.Updated = time.Now()
 
 	client, destroy, err := s.Client()
 	if err != nil {
@@ -85,16 +81,15 @@ func (s *ImageStorage) Insert(ctx context.Context, name string, source *types.Im
 	defer destroy()
 
 	tx := client.Begin(ctx)
-
-	keyMeta := s.util.Key(ctx, imageStorage, image.ID, "meta")
-	if err := tx.Create(keyMeta, image.ImageMeta, 0); err != nil {
+	keyMeta := s.util.Key(ctx, imageStorage, image.Meta.Name, "meta")
+	if err := tx.Create(keyMeta, image.Meta, 0); err != nil {
 		if err.Error() == store.ErrKeyExists {
 			return nil, nil
 		}
 		return nil, err
 	}
 
-	keySource := s.util.Key(ctx, imageStorage, image.ID, "source")
+	keySource := s.util.Key(ctx, imageStorage, image.Name, "source")
 	if err := tx.Create(keySource, image.Source, 0); err != nil {
 		if err.Error() == store.ErrKeyExists {
 			return nil, nil
@@ -105,8 +100,6 @@ func (s *ImageStorage) Insert(ctx context.Context, name string, source *types.Im
 	if err := tx.Commit(); err != nil {
 		return nil, err
 	}
-
-	image.ImageMeta.Name = fmt.Sprintf("%s:%s-1", name, vendor)
 
 	return image, nil
 }

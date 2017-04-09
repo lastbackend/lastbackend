@@ -80,7 +80,7 @@ func Agent(cmd *cli.Cmd) {
 		)
 
 		ctx.SetConfig(cfg)
-		ctx.SetLogger(logger.New(*cfg.Debug))
+		ctx.SetLogger(logger.New(*cfg.Debug, 0))
 		ctx.SetStorage(storage.New())
 
 		rntm := &runtime.Runtime{}

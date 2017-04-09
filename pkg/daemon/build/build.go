@@ -22,9 +22,10 @@ import (
 	"context"
 	"github.com/lastbackend/lastbackend/pkg/apis/types"
 	c "github.com/lastbackend/lastbackend/pkg/daemon/context"
+	"github.com/satori/go.uuid"
 )
 
-func Create(ctx context.Context, imageID string, source *types.ServiceSource) (*types.Build, error) {
+func Create(ctx context.Context, imageID uuid.UUID, source *types.ServiceSource) (*types.Build, error) {
 	var (
 		lctx = c.Get()
 	)

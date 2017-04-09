@@ -20,6 +20,7 @@ package types
 
 import (
 	"encoding/json"
+	"github.com/satori/go.uuid"
 	"time"
 )
 
@@ -27,7 +28,7 @@ type ActivityList []Activity
 
 type Activity struct {
 	// Activity uuid, incremented automatically
-	ID string `json:"id"`
+	ID uuid.UUID `json:"id"`
 	// Activity project
 	Project string `json:"project"`
 	// Activity service

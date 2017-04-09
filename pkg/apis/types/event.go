@@ -26,8 +26,8 @@ import (
 type EventList []Event
 
 type Event struct {
-	// Activity uuid, incremented automatically
-	ID string `json:"id"`
+	// Event meta
+	Meta Meta `json:"meta"`
 	// Activity project
 	Project string `json:"project"`
 	// Activity service

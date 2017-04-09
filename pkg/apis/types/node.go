@@ -18,13 +18,11 @@
 
 package types
 
-import "time"
-
 type NodeList []Node
 
 type Node struct {
 	// Node metadata
-	Meta NodeMeta `json:"meta"`
+	Meta Meta `json:"meta"`
 	// Node spec info
 	Spec NodeSpec `json:"spec"`
 	// Node Addresses
@@ -37,19 +35,6 @@ type Node struct {
 	Labels map[string]string `json:"labels"`
 	// Node images list
 	Images []NodeImage `json:"images"`
-}
-
-type NodeMeta struct {
-	// Node unique ID
-	ID string `json:"ID"`
-	// Node cluster link
-	Cluster string `json:"cluster"`
-	// Node hostname
-	HostName string `json:"hostname"`
-	// Node created time
-	Created time.Time `json:"created"`
-	// Node updated time
-	Updated time.Time `json:"updated"`
 }
 
 type NodeSpec struct {

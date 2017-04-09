@@ -28,6 +28,7 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/util/converter"
 	"github.com/lastbackend/lastbackend/pkg/util/http/utils"
 	"github.com/lastbackend/lastbackend/pkg/util/validator"
+	"github.com/satori/go.uuid"
 	"io"
 	"io/ioutil"
 	"net/http"
@@ -146,7 +147,7 @@ func ServiceCreateH(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if validator.IsUUID(projectParam) {
-		project, err = ctx.Storage.Project().GetByID(r.Context(), projectParam)
+		project, err = ctx.Storage.Project().GetByID(r.Context(), uuid.FromStringOrNil(projectParam))
 	} else {
 		project, err = ctx.Storage.Project().GetByName(r.Context(), projectParam)
 	}
@@ -286,7 +287,7 @@ func ServiceUpdateH(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if validator.IsUUID(projectParam) {
-		project, err = ctx.Storage.Project().GetByID(r.Context(), projectParam)
+		project, err = ctx.Storage.Project().GetByID(r.Context(), uuid.FromStringOrNil(projectParam))
 	} else {
 		project, err = ctx.Storage.Project().GetByName(r.Context(), projectParam)
 	}
@@ -301,7 +302,7 @@ func ServiceUpdateH(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if validator.IsUUID(projectParam) {
-		service, err = ctx.Storage.Service().GetByID(r.Context(), project.ID, serviceParam)
+		service, err = ctx.Storage.Service().GetByID(r.Context(), project.ID, uuid.FromStringOrNil(serviceParam))
 	} else {
 		service, err = ctx.Storage.Service().GetByName(r.Context(), project.ID, serviceParam)
 	}
@@ -311,8 +312,8 @@ func ServiceUpdateH(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	service.Name = rq.Name
-	service.Description = rq.Description
+	service.Meta.Name = rq.Name
+	service.Meta.Description = rq.Description
 
 	if rq.Config != nil {
 		if err := service.Config.Update(rq.Config); err != nil {
@@ -326,7 +327,7 @@ func ServiceUpdateH(w http.ResponseWriter, r *http.Request) {
 		service.Domains = *rq.Domains
 	}
 
-	service, err = ctx.Storage.Service().Update(r.Context(), projectParam, service)
+	service, err = ctx.Storage.Service().Update(r.Context(), project.Meta.ID, service)
 	if err != nil {
 		ctx.Log.Error("Error: insert service to db", err)
 		errors.HTTP.InternalServerError(w)
@@ -360,7 +361,7 @@ func ServiceListH(w http.ResponseWriter, r *http.Request) {
 	ctx.Log.Debug("List service handler")
 
 	if validator.IsUUID(projectParam) {
-		project, err = ctx.Storage.Project().GetByID(r.Context(), projectParam)
+		project, err = ctx.Storage.Project().GetByID(r.Context(), uuid.FromStringOrNil(projectParam))
 	} else {
 		project, err = ctx.Storage.Project().GetByName(r.Context(), projectParam)
 	}
@@ -409,7 +410,7 @@ func ServiceInfoH(w http.ResponseWriter, r *http.Request) {
 	ctx.Log.Debug("Get service handler")
 
 	if validator.IsUUID(projectParam) {
-		project, err = ctx.Storage.Project().GetByID(r.Context(), projectParam)
+		project, err = ctx.Storage.Project().GetByID(r.Context(), uuid.FromStringOrNil(projectParam))
 	} else {
 		project, err = ctx.Storage.Project().GetByName(r.Context(), projectParam)
 	}
@@ -424,7 +425,7 @@ func ServiceInfoH(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if validator.IsUUID(projectParam) {
-		service, err = ctx.Storage.Service().GetByID(r.Context(), project.ID, serviceParam)
+		service, err = ctx.Storage.Service().GetByID(r.Context(), project.ID, uuid.FromStringOrNil(serviceParam))
 	} else {
 		service, err = ctx.Storage.Service().GetByName(r.Context(), project.ID, serviceParam)
 	}
@@ -466,7 +467,7 @@ func ServiceRemoveH(w http.ResponseWriter, r *http.Request) {
 	ctx.Log.Info("Remove service")
 
 	if validator.IsUUID(projectParam) {
-		project, err = ctx.Storage.Project().GetByID(r.Context(), projectParam)
+		project, err = ctx.Storage.Project().GetByID(r.Context(), uuid.FromStringOrNil(projectParam))
 	} else {
 		project, err = ctx.Storage.Project().GetByName(r.Context(), projectParam)
 	}
@@ -480,7 +481,7 @@ func ServiceRemoveH(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if !validator.IsUUID(projectParam) {
+	if !validator.IsUUID(serviceParam) {
 		service, err = ctx.Storage.Service().GetByName(r.Context(), project.ID, serviceParam)
 		if err != nil {
 			ctx.Log.Error("Error: find project by name", err.Error())
@@ -491,12 +492,11 @@ func ServiceRemoveH(w http.ResponseWriter, r *http.Request) {
 			errors.New("project").NotFound().Http(w)
 			return
 		}
-		serviceParam = service.ID
 	}
 
 	// Todo: remove all activity by service name
 
-	if err := ctx.Storage.Service().Remove(r.Context(), project.ID, serviceParam); err != nil {
+	if err := ctx.Storage.Service().Remove(r.Context(), project.ID, service.Meta.ID); err != nil {
 		ctx.Log.Error("Error: remove service from db", err)
 		errors.HTTP.InternalServerError(w)
 		return

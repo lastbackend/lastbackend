@@ -26,27 +26,16 @@ import (
 type ServiceList []Service
 
 type Service struct {
-	serviceMeta
-
+	// Service Meta
+	Meta Meta `json:"meta"`
 	// Service project
 	Project string `json:"project"`
-
 	// Service custom domains
 	Domains []string `json:"domains"`
 	// Service source info
 	Source *ServiceSource `json:"source,omitempty"`
 	// Service config info
 	Config *ServiceConfig `json:"config,omitempty"`
-}
-
-type serviceMeta struct{ ServiceMeta }
-type ServiceMeta struct {
-	meta
-
-	// Add fields to expand the meta data
-	// Example:
-	// Note string `json:"note,omitempty"`
-	// Uptime time.Time `json:"uptime"
 }
 
 type ServiceSource struct {
