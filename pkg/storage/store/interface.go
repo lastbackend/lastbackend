@@ -33,11 +33,14 @@ type DestroyFunc func()
 type FilterFunc func(obj interface{}) bool
 
 type IStore interface {
+	Count(ctx context.Context, key, keyRegexFilter string) (int, error)
 	Create(ctx context.Context, key string, obj, out interface{}, ttl uint64) error
 	Get(ctx context.Context, key string, objPtr interface{}) error
 	List(ctx context.Context, key, keyRegexpFilter string, listObjPtr interface{}) error
+	Map(ctx context.Context, key, keyRegexpFilter string, mapObj interface{}) error
 	Update(ctx context.Context, key string, obj, outPtr interface{}, ttl uint64) error
-	Delete(ctx context.Context, key string, out interface{}) error
+	Delete(ctx context.Context, key string) error
+	DeleteDir(ctx context.Context, key string) error
 	Begin(ctx context.Context) ITx
 }
 
@@ -45,5 +48,6 @@ type ITx interface {
 	Create(key string, obj interface{}, ttl uint64) error
 	Update(key string, obj interface{}, ttl uint64) error
 	Delete(key string)
+	DeleteDir(key string)
 	Commit() error
 }

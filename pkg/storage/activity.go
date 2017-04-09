@@ -19,40 +19,43 @@
 package storage
 
 import (
+	"context"
 	"github.com/lastbackend/lastbackend/pkg/apis/types"
 	"github.com/lastbackend/lastbackend/pkg/storage/store"
 )
 
-const ActivityTable string = "activities"
+const activityStorage string = "activities"
 
 // Activity Service type for interface in interfaces folder
 type ActivityStorage struct {
 	IActivity
+	util   IUtil
 	Client func() (store.IStore, store.DestroyFunc, error)
 }
 
-func (s *ActivityStorage) Insert(activity *types.Activity) (*types.Activity, error) {
+func (s *ActivityStorage) Insert(ctx context.Context, activity *types.Activity) (*types.Activity, error) {
 	return nil, nil
 }
 
-func (s *ActivityStorage) ListProjectActivity(user, project string) (*types.ActivityList, error) {
+func (s *ActivityStorage) ListProjectActivity(ctx context.Context, project string) (*types.ActivityList, error) {
 	return nil, nil
 }
 
-func (s *ActivityStorage) ListServiceActivity(user, service string) (*types.ActivityList, error) {
+func (s *ActivityStorage) ListServiceActivity(ctx context.Context, service string) (*types.ActivityList, error) {
 	return nil, nil
 }
 
-func (s *ActivityStorage) RemoveByProject(user, project string) error {
+func (s *ActivityStorage) RemoveByProject(ctx context.Context, project string) error {
 	return nil
 }
 
-func (s *ActivityStorage) RemoveByService(user, service string) error {
+func (s *ActivityStorage) RemoveByService(ctx context.Context, service string) error {
 	return nil
 }
 
-func newActivityStorage(config store.Config) *ActivityStorage {
+func newActivityStorage(config store.Config, util IUtil) *ActivityStorage {
 	s := new(ActivityStorage)
+	s.util = util
 	s.Client = func() (store.IStore, store.DestroyFunc, error) {
 		return New(config)
 	}

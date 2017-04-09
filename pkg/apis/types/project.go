@@ -20,17 +20,22 @@ package types
 
 import (
 	"encoding/json"
-	"github.com/lastbackend/lastbackend/pkg/util/table"
 )
 
 type ProjectList []Project
 
 type Project struct {
-	Meta `json:"meta"`
-	// Project id
-	ID string `json:"-"`
-	// Project user
-	User string `json:"-"`
+	projectMeta
+}
+
+type projectMeta struct{ ProjectMeta }
+type ProjectMeta struct {
+	meta
+
+	// Add fields to expand the meta data
+	// Example:
+	// Note string `json:"note,omitempty"`
+	// Uptime time.Time `json:"uptime"
 }
 
 func (p *Project) ToJson() ([]byte, error) {
@@ -40,15 +45,6 @@ func (p *Project) ToJson() ([]byte, error) {
 	}
 
 	return buf, nil
-}
-
-func (p *Project) DrawTable() {
-	table.PrintHorizontal(map[string]interface{}{
-		"Name":        p.Name,
-		"Description": p.Description,
-		"Created":     p.Created,
-		"Updated":     p.Updated,
-	})
 }
 
 func (p *ProjectList) ToJson() ([]byte, error) {
@@ -63,22 +59,4 @@ func (p *ProjectList) ToJson() ([]byte, error) {
 	}
 
 	return buf, nil
-}
-
-func (projects *ProjectList) DrawTable() {
-	t := table.New([]string{"ID", "Name", "Description", "Created", "Updated"})
-	t.VisibleHeader = true
-
-	for _, p := range *projects {
-		t.AddRow(map[string]interface{}{
-			"Name":        p.Name,
-			"Description": p.Description,
-			"Created":     p.Created.String()[:10],
-			"Updated":     p.Updated.String()[:10],
-		})
-	}
-
-	t.AddRow(map[string]interface{}{})
-
-	t.Print()
 }

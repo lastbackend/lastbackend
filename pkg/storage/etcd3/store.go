@@ -20,7 +20,6 @@ package etcd3
 
 import (
 	"errors"
-	"fmt"
 	"github.com/coreos/etcd/clientv3"
 	st "github.com/lastbackend/lastbackend/pkg/storage/store"
 	"github.com/lastbackend/lastbackend/pkg/util/converter"
@@ -43,6 +42,30 @@ type store struct {
 // Need for decode array bytes
 type buffer []byte
 
+func (s *store) Count(ctx context.Context, key, keyRegexFilter string) (int, error) {
+	key = path.Join(s.pathPrefix, key)
+	if !strings.HasSuffix(key, "/") {
+		key += "/"
+	}
+	getResp, err := s.client.KV.Get(ctx, key, clientv3.WithPrefix())
+	if err != nil {
+		return 0, err
+	}
+	r, _ := regexp.Compile(keyRegexFilter)
+
+	if len(keyRegexFilter) == 0 {
+		return len(getResp.Kvs), nil
+	}
+
+	count := 0
+	for _, kv := range getResp.Kvs {
+		if r.MatchString(string(kv.Key)) {
+			count++
+		}
+	}
+	return count, nil
+}
+
 func (s *store) Create(ctx context.Context, key string, obj, outPtr interface{}, ttl uint64) error {
 	data, err := serializer.Encode(s.codec, obj)
 	if err != nil {
@@ -53,7 +76,6 @@ func (s *store) Create(ctx context.Context, key string, obj, outPtr interface{},
 	if err != nil {
 		return err
 	}
-	fmt.Println("Create:", key, string(data))
 	txnResp, err := s.client.KV.Txn(ctx).
 		If(clientv3.Compare(clientv3.ModRevision(key), "=", 0)).
 		Then(clientv3.OpPut(key, string(data), opts...)).Commit()
@@ -74,7 +96,6 @@ func (s *store) Create(ctx context.Context, key string, obj, outPtr interface{},
 
 func (s *store) Get(ctx context.Context, key string, outPtr interface{}) error {
 	key = path.Join(s.pathPrefix, key)
-	fmt.Println("Get:", key)
 	res, err := s.client.KV.Get(ctx, key, s.opts...)
 	if err != nil {
 		return err
@@ -90,13 +111,12 @@ func (s *store) List(ctx context.Context, key, keyRegexFilter string, listOutPtr
 	if !strings.HasSuffix(key, "/") {
 		key += "/"
 	}
-	fmt.Println("List:", key)
 	getResp, err := s.client.KV.Get(ctx, key, clientv3.WithPrefix())
 	if err != nil {
 		return err
 	}
 	r, _ := regexp.Compile(keyRegexFilter)
-	items := []buffer{}
+	items := make([]buffer, 0, len(getResp.Kvs))
 	for _, kv := range getResp.Kvs {
 		if r.MatchString(string(kv.Key)) {
 			items = append(items, buffer(kv.Value))
@@ -105,13 +125,33 @@ func (s *store) List(ctx context.Context, key, keyRegexFilter string, listOutPtr
 	return decodeList(s.codec, items, listOutPtr)
 }
 
+func (s *store) Map(ctx context.Context, key, keyRegexFilter string, mapOutPtr interface{}) error {
+	key = path.Join(s.pathPrefix, key)
+	if !strings.HasSuffix(key, "/") {
+		key += "/"
+	}
+	getResp, err := s.client.KV.Get(ctx, key, clientv3.WithPrefix())
+	if err != nil {
+		return err
+	}
+	r, _ := regexp.Compile(keyRegexFilter)
+	items := make(map[string]buffer, len(getResp.Kvs))
+	for _, kv := range getResp.Kvs {
+		if (keyRegexFilter == "") || r.MatchString(string(kv.Key)) {
+			key := strings.Split(string(kv.Key), "/")
+			items[key[len(key)-1]] = buffer(kv.Value)
+		}
+
+	}
+	return decodeMap(s.codec, items, mapOutPtr)
+}
+
 func (s *store) Update(ctx context.Context, key string, obj, outPtr interface{}, ttl uint64) error {
 	data, err := serializer.Encode(s.codec, obj)
 	if err != nil {
 		return err
 	}
 	key = path.Join(s.pathPrefix, key)
-	fmt.Println("Update:", key, string(data))
 	opts, err := s.ttlOpts(ctx, int64(ttl))
 	if err != nil {
 		return err
@@ -135,21 +175,26 @@ func (s *store) Update(ctx context.Context, key string, obj, outPtr interface{},
 	return nil
 }
 
-func (s *store) Delete(ctx context.Context, key string, outPtr interface{}) error {
+func (s *store) Delete(ctx context.Context, key string) error {
 	key = path.Join(s.pathPrefix, key)
-	fmt.Println("Del:", key)
-	res, err := s.client.KV.Txn(ctx).Then(clientv3.OpGet(key), clientv3.OpDelete(key)).Commit()
+	_, err := s.client.KV.Txn(ctx).
+		Then(clientv3.OpGet(key), clientv3.OpDelete(key)).
+		Commit()
 	if err != nil {
 		return err
 	}
-	if validator.IsNil(outPtr) {
-		return nil
+	return nil
+}
+
+func (s *store) DeleteDir(ctx context.Context, key string) error {
+	key = path.Join(s.pathPrefix, key)
+	_, err := s.client.KV.Txn(ctx).
+		Then(clientv3.OpDelete(key, clientv3.WithPrefix())).
+		Commit()
+	if err != nil {
+		return err
 	}
-	getResp := res.Responses[0].GetResponseRange()
-	if len(getResp.Kvs) == 0 {
-		return errors.New(st.ErrKeyNotFound)
-	}
-	return decode(s.codec, getResp.Kvs[0].Value, outPtr)
+	return nil
 }
 
 func (s *store) Begin(ctx context.Context) st.ITx {
@@ -160,17 +205,17 @@ func (s *store) Begin(ctx context.Context) st.ITx {
 	}
 }
 
-func decode(s serializer.Codec, value []byte, outPtr interface{}) error {
-	if _, err := converter.EnforcePtr(outPtr); err != nil {
+func decode(s serializer.Codec, value []byte, out interface{}) error {
+	if _, err := converter.EnforcePtr(out); err != nil {
 		panic("Error: unable to convert output object to pointer")
 	}
-	return serializer.Decode(s, value, outPtr)
+	return serializer.Decode(s, value, out)
 }
 
-func decodeList(codec serializer.Codec, items []buffer, ListOutPtr interface{}) error {
-	v, err := converter.EnforcePtr(ListOutPtr)
+func decodeList(codec serializer.Codec, items []buffer, listOut interface{}) error {
+	v, err := converter.EnforcePtr(listOut)
 	if err != nil || (v.Kind() != reflect.Slice) {
-		panic("Error: need ptr to slice")
+		panic("Error: need ptr slice")
 	}
 	for _, item := range items {
 		var obj = reflect.New(v.Type().Elem()).Interface().(interface{})
@@ -179,6 +224,22 @@ func decodeList(codec serializer.Codec, items []buffer, ListOutPtr interface{}) 
 			return err
 		}
 		v.Set(reflect.Append(v, reflect.ValueOf(obj).Elem()))
+	}
+	return nil
+}
+
+func decodeMap(codec serializer.Codec, items map[string]buffer, mapOut interface{}) error {
+	v := reflect.ValueOf(mapOut)
+	if v.Kind() != reflect.Map {
+		panic("Error: need map")
+	}
+	for key, item := range items {
+		var obj = reflect.New(v.Type().Elem()).Interface().(interface{})
+		err := serializer.Decode(codec, item, obj)
+		if err != nil {
+			return err
+		}
+		v.SetMapIndex(reflect.ValueOf(key), reflect.ValueOf(obj).Elem())
 	}
 	return nil
 }

@@ -19,38 +19,41 @@
 package storage
 
 import (
+	"context"
 	"github.com/lastbackend/lastbackend/pkg/apis/types"
 	"github.com/lastbackend/lastbackend/pkg/storage/store"
 )
 
-const VolumeTable string = "volumes"
+const volumeStorage string = "volumes"
 
 // Volume Service type for interface in interfaces folder
 type VolumeStorage struct {
 	IVolume
+	util   IUtil
 	Client func() (store.IStore, store.DestroyFunc, error)
 }
 
-func (s *VolumeStorage) GetByID(user, id string) (*types.Volume, error) {
+func (s *VolumeStorage) GetByID(ctx context.Context, id string) (*types.Volume, error) {
 	return nil, nil
 }
 
-func (s *VolumeStorage) ListByProject(id string) (*types.VolumeList, error) {
+func (s *VolumeStorage) ListByProject(ctx context.Context, id string) (*types.VolumeList, error) {
 	return nil, nil
 }
 
 // Insert new volume into storage
-func (s *VolumeStorage) Insert(volume *types.Volume) (*types.Volume, error) {
+func (s *VolumeStorage) Insert(ctx context.Context, volume *types.Volume) (*types.Volume, error) {
 	return nil, nil
 }
 
 // Remove build model
-func (s *VolumeStorage) Remove(id string) error {
+func (s *VolumeStorage) Remove(ctx context.Context, id string) error {
 	return nil
 }
 
-func newVolumeStorage(config store.Config) *VolumeStorage {
+func newVolumeStorage(config store.Config, util IUtil) *VolumeStorage {
 	s := new(VolumeStorage)
+	s.util = util
 	s.Client = func() (store.IStore, store.DestroyFunc, error) {
 		return New(config)
 	}

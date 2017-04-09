@@ -37,7 +37,6 @@ func OAuthConnectH(w http.ResponseWriter, r *http.Request) {
 		clientSecretID string
 		redirectURI    string
 		client         interfaces.IAuth
-		session        *types.Session
 		ctx            = c.Get()
 		params         = utils.Vars(r)
 		vendor         = params[`vendor`]
@@ -45,13 +44,6 @@ func OAuthConnectH(w http.ResponseWriter, r *http.Request) {
 	)
 
 	ctx.Log.Debug("Connect service handler")
-
-	session = utils.Session(r)
-	if session == nil {
-		ctx.Log.Error(http.StatusText(http.StatusUnauthorized))
-		errors.HTTP.Unauthorized(w)
-		return
-	}
 
 	clientID, clientSecretID, redirectURI = config.Get().GetVendorConfig(vendor)
 
@@ -91,7 +83,7 @@ func OAuthConnectH(w http.ResponseWriter, r *http.Request) {
 
 	vendorInfo := client.GetVendorInfo()
 
-	if err := ctx.Storage.Vendor().Insert(session.Username, serviceUser.Username, vendorInfo.Vendor, vendorInfo.Host, serviceUser.ServiceID, token); err != nil {
+	if err := ctx.Storage.Vendor().Insert(r.Context(), serviceUser.Username, vendorInfo.Vendor, vendorInfo.Host, serviceUser.ServiceID, token); err != nil {
 		ctx.Log.Error(err.Error())
 		errors.HTTP.InternalServerError(w)
 		return
@@ -104,29 +96,14 @@ func OAuthConnectH(w http.ResponseWriter, r *http.Request) {
 func OAuthDisconnectH(w http.ResponseWriter, r *http.Request) {
 
 	var (
-		ctx     = c.Get()
-		session *types.Session
-		params  = utils.Vars(r)
-		vendor  = params[`vendor`]
+		ctx    = c.Get()
+		params = utils.Vars(r)
+		vendor = params[`vendor`]
 	)
 
 	ctx.Log.Debug("Disconnect service handler")
 
-	session = utils.Session(r)
-	if session == nil {
-		ctx.Log.Error(http.StatusText(http.StatusUnauthorized))
-		errors.HTTP.Unauthorized(w)
-		return
-	}
-
-	userModel, err := ctx.Storage.User().GetByUsername(session.Username)
-	if err != nil {
-		ctx.Log.Error(err)
-		errors.HTTP.InternalServerError(w)
-		return
-	}
-
-	if err := ctx.Storage.Vendor().Remove(userModel.Username, vendor); err != nil {
+	if err := ctx.Storage.Vendor().Remove(r.Context(), vendor); err != nil {
 		ctx.Log.Error(err)
 		errors.HTTP.InternalServerError(w)
 		return
@@ -139,22 +116,13 @@ func OAuthDisconnectH(w http.ResponseWriter, r *http.Request) {
 func VCSRepositoriesListH(w http.ResponseWriter, r *http.Request) {
 
 	var (
-		clientID, clientSecretID, redirectURI string
-		client                                interfaces.IVCS
-		session                               *types.Session
-		ctx                                   = c.Get()
-		params                                = utils.Vars(r)
-		vendor                                = params[`vendor`]
+		client interfaces.IVCS
+		ctx    = c.Get()
+		params = utils.Vars(r)
+		vendor = params[`vendor`]
 	)
 
-	session = utils.Session(r)
-	if session == nil {
-		ctx.Log.Error(http.StatusText(http.StatusUnauthorized))
-		errors.HTTP.Unauthorized(w)
-		return
-	}
-
-	clientID, clientSecretID, redirectURI = config.Get().GetVendorConfig(vendor)
+	clientID, clientSecretID, redirectURI := config.Get().GetVendorConfig(vendor)
 
 	if clientID == "" || clientSecretID == "" {
 		ctx.Log.Error("Error: user unauthorized")
@@ -180,7 +148,7 @@ func VCSRepositoriesListH(w http.ResponseWriter, r *http.Request) {
 
 	vendorInfo := client.GetVendorInfo()
 
-	oaModel, err := ctx.Storage.Vendor().Get(session.Username, vendorInfo.Vendor)
+	oaModel, err := ctx.Storage.Vendor().Get(r.Context(), vendorInfo.Vendor)
 	if err != nil {
 		ctx.Log.Error(err)
 		errors.HTTP.InternalServerError(w)
@@ -206,7 +174,7 @@ func VCSRepositoriesListH(w http.ResponseWriter, r *http.Request) {
 		oaModel.Token = token
 		oaModel.Username = u.Username
 
-		if err = ctx.Storage.Vendor().Update(session.Username, oaModel); err != nil {
+		if err = ctx.Storage.Vendor().Update(r.Context(), oaModel); err != nil {
 			ctx.Log.Error(err)
 			errors.HTTP.InternalServerError(w)
 		}
@@ -232,23 +200,14 @@ func VCSRepositoriesListH(w http.ResponseWriter, r *http.Request) {
 func VCSBranchesListH(w http.ResponseWriter, r *http.Request) {
 
 	var (
-		clientID, clientSecretID, redirectURI string
-		client                                interfaces.IVCS
-		session                               *types.Session
-		ctx                                   = c.Get()
-		params                                = utils.Vars(r)
-		vendor                                = params[`vendor`]
-		repo                                  = r.URL.Query().Get(`repo`)
+		client interfaces.IVCS
+		ctx    = c.Get()
+		params = utils.Vars(r)
+		vendor = params[`vendor`]
+		repo   = r.URL.Query().Get(`repo`)
 	)
 
-	session = utils.Session(r)
-	if session == nil {
-		ctx.Log.Error(http.StatusText(http.StatusUnauthorized))
-		errors.HTTP.Unauthorized(w)
-		return
-	}
-
-	clientID, clientSecretID, redirectURI = config.Get().GetVendorConfig(vendor)
+	clientID, clientSecretID, redirectURI := config.Get().GetVendorConfig(vendor)
 
 	if clientID == "" || clientSecretID == "" {
 		ctx.Log.Error("Error: user unauthorized")
@@ -274,7 +233,7 @@ func VCSBranchesListH(w http.ResponseWriter, r *http.Request) {
 
 	vendorInfo := client.GetVendorInfo()
 
-	oaModel, err := ctx.Storage.Vendor().Get(session.Username, vendorInfo.Vendor)
+	oaModel, err := ctx.Storage.Vendor().Get(r.Context(), vendorInfo.Vendor)
 	if err != nil {
 		ctx.Log.Error(err)
 		errors.HTTP.InternalServerError(w)
@@ -299,7 +258,7 @@ func VCSBranchesListH(w http.ResponseWriter, r *http.Request) {
 		oaModel.Token = token
 		oaModel.Username = u.Username
 
-		if err = ctx.Storage.Vendor().Update(session.Username, oaModel); err != nil {
+		if err = ctx.Storage.Vendor().Update(r.Context(), oaModel); err != nil {
 			ctx.Log.Error(err)
 			errors.HTTP.InternalServerError(w)
 		}

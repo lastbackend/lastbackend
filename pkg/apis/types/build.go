@@ -25,14 +25,10 @@ type BuildList []Build
 type Build struct {
 	// Build number, incremented automatically
 	ID string `json:"id"`
-	// Build number, incremented automatically
-	User string `json:"user"`
 	// Build executing status
 	Status BuildStatus `json:"status"`
 	// Build sources used for build
 	Source BuildSource `json:"source"`
-	// Build image output information
-	Image BuildImage `json:"image"`
 	// Build created time
 	Created time.Time `json:"created"`
 	// Build updated time
@@ -77,15 +73,6 @@ type BuildSource struct {
 	// Build commit information
 	Commit GitSourceCommit `json:"commit"`
 	// Build sources auth reference
-}
-
-type BuildImage struct {
-	// Build image repo name
-	Repo string `json:"repo"`
-	// Build image tag name
-	Tag string `json:"tag"`
-	// Build image registry reference
-	Registry string `json:"registry"`
 }
 
 type GitSourceCommit struct {

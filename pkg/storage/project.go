@@ -19,27 +19,26 @@
 package storage
 
 import (
-	"fmt"
+	"context"
 	"github.com/lastbackend/lastbackend/pkg/apis/types"
 	"github.com/lastbackend/lastbackend/pkg/storage/store"
-	"golang.org/x/net/context"
+	"github.com/lastbackend/lastbackend/pkg/util/generator"
 	"time"
 )
 
-const ProjectTable string = "projects"
+const projectStorage = "projects"
 
 // Project Service type for interface in interfaces folder
 type ProjectStorage struct {
 	IProject
+	util   IUtil
 	Client func() (store.IStore, store.DestroyFunc, error)
 }
 
-// Get project by name for user
-func (s *ProjectStorage) GetByName(username, name string) (*types.Project, error) {
-	var (
-		project = new(types.Project)
-		key     = fmt.Sprintf("%s/%s/%s/info", ProjectTable, username, name)
-	)
+// Get project by name
+func (s *ProjectStorage) GetByID(ctx context.Context, id string) (*types.Project, error) {
+
+	project := new(types.Project)
 
 	client, destroy, err := s.Client()
 	if err != nil {
@@ -47,27 +46,29 @@ func (s *ProjectStorage) GetByName(username, name string) (*types.Project, error
 	}
 	defer destroy()
 
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-	defer cancel()
-
-	if err := client.Get(ctx, key, &project.Meta); err != nil {
+	key := s.util.Key(ctx, projectStorage, id, "meta")
+	meta := new(types.ProjectMeta)
+	if err := client.Get(ctx, key, meta); err != nil {
 		if err.Error() == store.ErrKeyNotFound {
 			return nil, nil
 		}
 		return nil, err
 	}
 
-	project.User = username
+	project.ID = meta.ID
+	project.Name = meta.Name
+	project.Description = meta.Description
+	project.Labels = meta.Labels
+	project.Created = meta.Created
+	project.Updated = meta.Updated
 
 	return project, nil
 }
 
-// List project by username
-func (s *ProjectStorage) ListByUser(username string) (*types.ProjectList, error) {
-	var (
-		key    = fmt.Sprintf("%s/%s", ProjectTable, username)
-		filter = `\b(.+)\/info\b`
-	)
+// Get project by name
+func (s *ProjectStorage) GetByName(ctx context.Context, name string) (*types.Project, error) {
+
+	var id string
 
 	client, destroy, err := s.Client()
 	if err != nil {
@@ -75,11 +76,30 @@ func (s *ProjectStorage) ListByUser(username string) (*types.ProjectList, error)
 	}
 	defer destroy()
 
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-	defer cancel()
+	key := s.util.Key(ctx, "helper", projectStorage, name)
+	if err := client.Get(ctx, key, &id); err != nil {
+		if err.Error() == store.ErrKeyNotFound {
+			return nil, nil
+		}
+		return nil, err
+	}
 
+	return s.GetByID(ctx, id)
+}
+
+// List projects
+func (s *ProjectStorage) List(ctx context.Context) (*types.ProjectList, error) {
+
+	const filter = `\b(.+)projects\/[a-z0-9-]{36}\/meta\b`
+
+	client, destroy, err := s.Client()
+	if err != nil {
+		return nil, err
+	}
+	defer destroy()
+
+	key := s.util.Key(ctx, projectStorage)
 	metaList := []types.Meta{}
-
 	if err := client.List(ctx, key, filter, &metaList); err != nil {
 		if err.Error() == store.ErrKeyNotFound {
 			return nil, nil
@@ -93,21 +113,29 @@ func (s *ProjectStorage) ListByUser(username string) (*types.ProjectList, error)
 
 	projectList := new(types.ProjectList)
 	for _, meta := range metaList {
-		*projectList = append(*projectList, types.Project{Meta: meta, User: username})
+		project := types.Project{}
+		project.ID = meta.ID
+		project.Name = meta.Name
+		project.Description = meta.Description
+		project.Labels = meta.Labels
+		project.Created = meta.Created
+		project.Updated = meta.Updated
+
+		*projectList = append(*projectList, project)
 	}
 
 	return projectList, nil
 }
 
-// Insert new project into storage  for user
-func (s *ProjectStorage) Insert(username, name, description string) (*types.Project, error) {
+// Insert new project into storage
+func (s *ProjectStorage) Insert(ctx context.Context, name, description string) (*types.Project, error) {
 	var (
+		id      = generator.GetUUIDV4()
 		project = new(types.Project)
-		keyInfo = fmt.Sprintf("%s/%s/%s/info", ProjectTable, username, name)
 	)
 
+	project.ID = id
 	project.Name = name
-	project.User = username
 	project.Description = description
 	project.Labels = map[string]string{"tier": "ptoject"}
 	project.Updated = time.Now()
@@ -115,25 +143,39 @@ func (s *ProjectStorage) Insert(username, name, description string) (*types.Proj
 
 	client, destroy, err := s.Client()
 	if err != nil {
-		return project, err
+		return nil, err
 	}
 	defer destroy()
 
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-	defer cancel()
+	tx := client.Begin(ctx)
 
-	if err := client.Create(ctx, keyInfo, &project.Meta, nil, 0); err != nil {
-		return project, err
+	keyHelper := s.util.Key(ctx, "helper", projectStorage, name)
+	if err := tx.Create(keyHelper, &project.ID, 0); err != nil {
+		return nil, err
+	}
+
+	meta := new(types.ProjectMeta)
+	meta.ID = id
+	meta.Name = name
+	meta.Description = description
+	meta.Labels = map[string]string{"tier": "ptoject"}
+	meta.Updated = time.Now()
+	meta.Created = time.Now()
+
+	keyMeta := s.util.Key(ctx, projectStorage, id, "meta")
+	if err := tx.Create(keyMeta, meta, 0); err != nil {
+		return nil, err
+	}
+
+	if err := tx.Commit(); err != nil {
+		return nil, err
 	}
 
 	return project, nil
 }
 
 // Update project model
-func (s *ProjectStorage) Update(username string, project *types.Project) (*types.Project, error) {
-	var (
-		keyInfo = fmt.Sprintf("%s/%s/%s/info", ProjectTable, username, project.Name)
-	)
+func (s *ProjectStorage) Update(ctx context.Context, project *types.Project) (*types.Project, error) {
 
 	project.Updated = time.Now()
 
@@ -143,21 +185,48 @@ func (s *ProjectStorage) Update(username string, project *types.Project) (*types
 	}
 	defer destroy()
 
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-	defer cancel()
+	keyMeta := s.util.Key(ctx, projectStorage, project.ID, "meta")
+	pmeta := new(types.ProjectMeta)
+	if err := client.Get(ctx, keyMeta, pmeta); err != nil {
+		if err.Error() == store.ErrKeyNotFound {
+			return nil, nil
+		}
+		return nil, err
+	}
 
-	if err := client.Update(ctx, keyInfo, &project.Meta, nil, 0); err != nil {
+	meta := new(types.ProjectMeta)
+	meta.ID = project.ID
+	meta.Name = project.Name
+	meta.Description = project.Description
+	meta.Labels = project.Labels
+	meta.Updated = time.Now()
+
+	tx := client.Begin(ctx)
+
+	if pmeta.Name != project.Name {
+		keyHelper1 := s.util.Key(ctx, "helper", projectStorage, pmeta.Name)
+		tx.Delete(keyHelper1)
+
+		keyHelper2 := s.util.Key(ctx, "helper", projectStorage, project.Name)
+		if err := tx.Create(keyHelper2, &project.ID, 0); err != nil {
+			return project, err
+		}
+	}
+
+	keyMeta = s.util.Key(ctx, projectStorage, project.ID, "meta")
+	if err := tx.Update(keyMeta, meta, 0); err != nil {
 		return project, err
+	}
+
+	if err := tx.Commit(); err != nil {
+		return nil, err
 	}
 
 	return project, nil
 }
 
 // Remove project model
-func (s *ProjectStorage) Remove(username, id string) error {
-	var (
-		key = fmt.Sprintf("%s/%s/%s/info", ProjectTable, username, id)
-	)
+func (s *ProjectStorage) Remove(ctx context.Context, id string) error {
 
 	client, destroy, err := s.Client()
 	if err != nil {
@@ -165,18 +234,30 @@ func (s *ProjectStorage) Remove(username, id string) error {
 	}
 	defer destroy()
 
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-	defer cancel()
+	keyMeta := s.util.Key(ctx, projectStorage, id, "meta")
+	meta := new(types.ProjectMeta)
+	if err := client.Get(ctx, keyMeta, meta); err != nil {
+		return err
+	}
 
-	if err := client.Delete(ctx, key, nil); err != nil {
+	tx := client.Begin(ctx)
+
+	keyHelper := s.util.Key(ctx, "helper", projectStorage, meta.Name)
+	tx.Delete(keyHelper)
+
+	key := s.util.Key(ctx, projectStorage, id)
+	tx.DeleteDir(key)
+
+	if err := tx.Commit(); err != nil {
 		return err
 	}
 
 	return nil
 }
 
-func newProjectStorage(config store.Config) *ProjectStorage {
+func newProjectStorage(config store.Config, util IUtil) *ProjectStorage {
 	s := new(ProjectStorage)
+	s.util = util
 	s.Client = func() (store.IStore, store.DestroyFunc, error) {
 		return New(config)
 	}

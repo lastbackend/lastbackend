@@ -23,7 +23,6 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/client/cmd/deploy"
 	p "github.com/lastbackend/lastbackend/pkg/client/cmd/project"
 	s "github.com/lastbackend/lastbackend/pkg/client/cmd/service"
-	u "github.com/lastbackend/lastbackend/pkg/client/cmd/user"
 	"github.com/lastbackend/lastbackend/pkg/client/config"
 	"github.com/lastbackend/lastbackend/pkg/client/context"
 	"github.com/lastbackend/lastbackend/pkg/client/storage"
@@ -62,7 +61,7 @@ func Run() {
 			cfg.Debug = *debug
 		}
 
-		ctx.Log = logger.New(cfg.Debug)
+		ctx.Log = logger.New(cfg.Debug, 8)
 
 		ctx.HTTP = http.New(cfg.ApiHost)
 
@@ -90,18 +89,6 @@ func Run() {
 }
 
 func configure(app *cli.Cli) {
-
-	app.Command("login", "Auth to account", func(c *cli.Cmd) {
-		c.Action = u.SignInCmd
-	})
-
-	app.Command("whoami", "Display the current user's login name", func(c *cli.Cmd) {
-		c.Action = u.WhoamiCmd
-	})
-
-	app.Command("logout", "logout from account", func(c *cli.Cmd) {
-		c.Action = u.LogoutCmd
-	})
 
 	app.Command("projects", "Display the project list", func(c *cli.Cmd) {
 		c.Action = p.ListProjectCmd

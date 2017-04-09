@@ -47,6 +47,12 @@ type Config struct {
 		Quorum bool `yaml:"quorum"`
 	} `yaml:"etcd"`
 
+	Registry struct {
+		Server   string `yaml:"server"`
+		Username string `yaml:"username"`
+		Password string `yaml:"password"`
+	} `yaml:"registry"`
+
 	VCS struct {
 		Github struct {
 			Client struct {

@@ -19,46 +19,106 @@
 package storage
 
 import (
+	"context"
+	"fmt"
 	"github.com/lastbackend/lastbackend/pkg/apis/types"
 	"github.com/lastbackend/lastbackend/pkg/storage/store"
+	"strings"
+	"time"
 )
 
-const ImageTable string = "images"
+const imageStorage string = "images"
 
 // Project Service type for interface in interfaces folder
 type ImageStorage struct {
 	IImage
+	util   IUtil
 	Client func() (store.IStore, store.DestroyFunc, error)
 }
 
-func (i *ImageStorage) GetByID(user, id string) (*types.Image, error) {
-	return nil, nil
-}
+func (s *ImageStorage) Get(ctx context.Context, id string) (*types.Image, error) {
 
-func (i *ImageStorage) GetByUser(id string) (*types.ImageList, error) {
-	return nil, nil
-}
+	client, destroy, err := s.Client()
+	if err != nil {
+		return nil, err
+	}
+	defer destroy()
 
-func (i *ImageStorage) ListByProject(user, id string) (*types.ImageList, error) {
-	return nil, nil
-}
+	key := s.util.Key(ctx, imageStorage, id)
+	meta := new(types.ImageMeta)
+	if err := client.Get(ctx, key, meta); err != nil {
+		if err.Error() == store.ErrKeyNotFound {
+			return nil, nil
+		}
+		return nil, err
+	}
 
-func (i *ImageStorage) ListByService(user, id string) (*types.ImageList, error) {
-	return nil, nil
+	image := new(types.Image)
+	image.ID = meta.ID
+	image.Name = meta.Name
+	image.Description = meta.Description
+	image.Labels = meta.Labels
+	image.Created = meta.Created
+	image.Updated = meta.Updated
+
+	return image, nil
 }
 
 // Insert new image into storage
-func (i *ImageStorage) Insert(image *types.Image) (*types.Image, error) {
-	return nil, nil
+func (s *ImageStorage) Insert(ctx context.Context, name string, source *types.ImageSource) (*types.Image, error) {
+
+	var (
+		image  = new(types.Image)
+		vendor = strings.Split(source.Hub, ".")[0]
+	)
+
+	image.ImageMeta.ID = fmt.Sprintf("%s:%s", vendor, name)
+	image.ImageMeta.Name = name
+	image.Source = *source
+	image.ImageMeta.Created = time.Now()
+	image.ImageMeta.Updated = time.Now()
+
+	client, destroy, err := s.Client()
+	if err != nil {
+		return nil, err
+	}
+	defer destroy()
+
+	tx := client.Begin(ctx)
+
+	keyMeta := s.util.Key(ctx, imageStorage, image.ID, "meta")
+	if err := tx.Create(keyMeta, image.ImageMeta, 0); err != nil {
+		if err.Error() == store.ErrKeyExists {
+			return nil, nil
+		}
+		return nil, err
+	}
+
+	keySource := s.util.Key(ctx, imageStorage, image.ID, "source")
+	if err := tx.Create(keySource, image.Source, 0); err != nil {
+		if err.Error() == store.ErrKeyExists {
+			return nil, nil
+		}
+		return nil, err
+	}
+
+	if err := tx.Commit(); err != nil {
+		return nil, err
+	}
+
+	image.ImageMeta.Name = fmt.Sprintf("%s:%s-1", name, vendor)
+
+	return image, nil
 }
 
 // Update build model
-func (i *ImageStorage) Update(image *types.Image) (*types.Image, error) {
+func (s *ImageStorage) Update(ctx context.Context, image *types.Image) (*types.Image, error) {
 	return nil, nil
 }
 
-func newImageStorage(config store.Config) *ImageStorage {
+func newImageStorage(config store.Config, util IUtil) *ImageStorage {
 	s := new(ImageStorage)
+	s.util = util
 	s.Client = func() (store.IStore, store.DestroyFunc, error) {
 		return New(config)
 	}

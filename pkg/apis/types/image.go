@@ -28,12 +28,19 @@ type ImageList []Image
 type Image struct {
 	lock sync.RWMutex
 
+	Meta ImageMeta `json:"meta"`
 	// Image id
 	ID string `json:"id"`
 	// Image name
 	Name string `json:"name"`
 	// Image tag lists
 	Tags []string `json:"tags"`
+
+	// Image registry info
+	Registry Registry `json:"registry"`
+	// Image source info
+	Source ImageSource `json:"source"`
+
 	// Image created time
 	Created time.Time `json:"created"`
 	// Image updated time
@@ -49,6 +56,21 @@ type ImageSpec struct {
 	Auth string `json:"auth"`
 }
 
+type ImageMeta struct {
+
+}
+
+type ImageSource struct {
+	Hub   string `json:"hub"`
+	Owner string `json:"owner"`
+	Repo  string `json:"repo"`
+	Tag   string `json:"tag"`
+}
+
 func NewImage() *Image {
 	return &Image{}
+
+
+func (i *ImageSource) GenerateName() string {
+	return ""
 }

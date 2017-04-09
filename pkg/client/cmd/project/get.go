@@ -19,7 +19,7 @@
 package project
 
 import (
-	"github.com/lastbackend/lastbackend/pkg/apis/types"
+	p "github.com/lastbackend/lastbackend/pkg/apis/views/v1/project"
 	"github.com/lastbackend/lastbackend/pkg/client/context"
 	"github.com/lastbackend/lastbackend/pkg/errors"
 )
@@ -38,13 +38,13 @@ func GetCmd(name string) {
 	project.DrawTable()
 }
 
-func Get(name string) (*types.Project, error) {
+func Get(name string) (*p.Project, error) {
 
 	var (
 		err     error
 		ctx     = context.Get()
 		er      = new(errors.Http)
-		project = new(types.Project)
+		project = new(p.Project)
 	)
 
 	if len(name) == 0 {

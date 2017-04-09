@@ -20,6 +20,7 @@ package service
 
 import (
 	"github.com/lastbackend/lastbackend/pkg/apis/types"
+	s "github.com/lastbackend/lastbackend/pkg/apis/views/v1/service"
 	"github.com/lastbackend/lastbackend/pkg/client/context"
 	"github.com/lastbackend/lastbackend/pkg/editor"
 	"github.com/lastbackend/lastbackend/pkg/errors"
@@ -93,7 +94,7 @@ func Update(name string, config types.ServiceUpdateConfig) error {
 	return nil
 }
 
-func GetConfig(service *types.Service) (*types.ServiceUpdateConfig, error) {
+func GetConfig(service *s.Service) (*types.ServiceUpdateConfig, error) {
 
 	var config = struct{}{}
 

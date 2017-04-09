@@ -29,9 +29,3 @@ type Vendor struct {
 	Host      string        `json:"host"`
 	Token     *oauth2.Token `json:"token"`
 }
-
-type VendorItems struct {
-	Github    *Vendor `json:"github"`
-	Gitlab    *Vendor `json:"gitlab"`
-	Bitbucket *Vendor `json:"bitbucket"`
-}

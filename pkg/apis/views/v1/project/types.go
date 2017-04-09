@@ -16,37 +16,15 @@
 // from Last.Backend LLC.
 //
 
-package user
+package project
 
-import (
-	e "github.com/lastbackend/lastbackend/pkg/errors"
-	"github.com/lastbackend/lastbackend/pkg/client/context"
-)
+import "time"
 
-func LogoutCmd() {
-
-	ctx := context.Get()
-
-	err := Logout()
-	if err != nil {
-		ctx.Log.Error(err)
-		return
-	}
-
-	ctx.Log.Info("Logout successfully")
+type Project struct {
+	Name        string    `json:"name"`
+	Description string    `json:"description"`
+	Created     time.Time `json:"created"`
+	Updated     time.Time `json:"updated"`
 }
 
-func Logout() error {
-
-	var (
-		err error
-		ctx = context.Get()
-	)
-
-	err = ctx.Storage.Clear()
-	if err != nil {
-		return e.LogoutErrorMessage
-	}
-
-	return nil
-}
+type ProjectList []Project

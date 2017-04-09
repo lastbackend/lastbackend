@@ -16,12 +16,34 @@
 // from Last.Backend LLC.
 //
 
-package routes_test
+package build
 
-//import (
-//	"testing"
-//)
-//
-//func TestSessionCreate(t *testing.T) {
-//
-//}
+import (
+	"context"
+	"github.com/lastbackend/lastbackend/pkg/apis/types"
+	c "github.com/lastbackend/lastbackend/pkg/daemon/context"
+)
+
+func Create(ctx context.Context, imageID string, source *types.ServiceSource) (*types.Build, error) {
+	var (
+		lctx = c.Get()
+	)
+
+	lctx.Log.Debug("Create build")
+
+	//TODO: Get commit info
+
+	bsource := &types.BuildSource{
+		Hub:   source.Hub,
+		Owner: source.Owner,
+		Repo:  source.Repo,
+		Tag:   source.Branch,
+	}
+
+	bld, err := lctx.Storage.Build().Insert(ctx, imageID, bsource)
+	if err != nil {
+		return nil, err
+	}
+
+	return bld, nil
+}

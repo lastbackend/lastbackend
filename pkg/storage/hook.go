@@ -19,51 +19,54 @@
 package storage
 
 import (
+	"context"
 	"github.com/lastbackend/lastbackend/pkg/apis/types"
 	"github.com/lastbackend/lastbackend/pkg/storage/store"
 )
 
-const HookTable string = "hooks"
+const hookStorage string = "hooks"
 
 // Service Build type for interface in interfaces folder
 type HookStorage struct {
 	IHook
+	util   IUtil
 	Client func() (store.IStore, store.DestroyFunc, error)
 }
 
 // Get hooks by image
-func (s *HookStorage) GetByToken(token string) (*types.Hook, error) {
+func (s *HookStorage) GetByToken(ctx context.Context, token string) (*types.Hook, error) {
 	return nil, nil
 }
 
 // Get hooks by image
-func (s *HookStorage) ListByUser(id string) (*types.HookList, error) {
+func (s *HookStorage) List(ctx context.Context, id string) (*types.HookList, error) {
 	return nil, nil
 }
 
 // Get hooks by image
-func (s *HookStorage) ListByImage(user, id string) (*types.HookList, error) {
+func (s *HookStorage) ListByImage(ctx context.Context, id string) (*types.HookList, error) {
 	return nil, nil
 }
 
 // Get hooks by service
-func (s *HookStorage) ListByService(user, id string) (*types.HookList, error) {
+func (s *HookStorage) ListByService(ctx context.Context, id string) (*types.HookList, error) {
 	return nil, nil
 }
 
 // Insert new hook into storage
-func (s *HookStorage) Insert(hook *types.Hook) (*types.Hook, error) {
+func (s *HookStorage) Insert(ctx context.Context, hook *types.Hook) (*types.Hook, error) {
 	return nil, nil
 }
 
 // Remove  hook by service id from storage
-func (s *HookStorage) RemoveByService(id string) error {
+func (s *HookStorage) RemoveByService(ctx context.Context, id string) error {
 
 	return nil
 }
 
-func newHookStorage(config store.Config) *HookStorage {
+func newHookStorage(config store.Config, util IUtil) *HookStorage {
 	s := new(HookStorage)
+	s.util = util
 	s.Client = func() (store.IStore, store.DestroyFunc, error) {
 		return New(config)
 	}

@@ -21,7 +21,7 @@ package routes
 import (
 	"encoding/json"
 	"github.com/lastbackend/lastbackend/pkg/apis/types"
-	"github.com/lastbackend/lastbackend/pkg/daemon/api/views/v1"
+	"github.com/lastbackend/lastbackend/pkg/apis/views/v1"
 	c "github.com/lastbackend/lastbackend/pkg/daemon/context"
 	"github.com/lastbackend/lastbackend/pkg/errors"
 	"github.com/lastbackend/lastbackend/pkg/util/http/utils"
@@ -35,21 +35,13 @@ import (
 func ProjectListH(w http.ResponseWriter, r *http.Request) {
 
 	var (
-		err     error
-		session *types.Session
-		ctx     = c.Get()
+		err error
+		ctx = c.Get()
 	)
 
 	ctx.Log.Debug("List project handler")
 
-	session = utils.Session(r)
-	if session == nil {
-		ctx.Log.Error(http.StatusText(http.StatusUnauthorized))
-		errors.HTTP.Unauthorized(w)
-		return
-	}
-
-	projectList, err := ctx.Storage.Project().ListByUser(session.Username)
+	projectList, err := ctx.Storage.Project().List(r.Context())
 	if err != nil {
 		ctx.Log.Error("Error: find projects by user", err)
 		errors.HTTP.InternalServerError(w)
@@ -75,7 +67,6 @@ func ProjectInfoH(w http.ResponseWriter, r *http.Request) {
 
 	var (
 		err          error
-		session      *types.Session
 		project      *types.Project
 		ctx          = c.Get()
 		params       = utils.Vars(r)
@@ -84,14 +75,11 @@ func ProjectInfoH(w http.ResponseWriter, r *http.Request) {
 
 	ctx.Log.Info("Get project handler")
 
-	session = utils.Session(r)
-	if session == nil {
-		ctx.Log.Error(http.StatusText(http.StatusUnauthorized))
-		errors.HTTP.Unauthorized(w)
-		return
+	if validator.IsUUID(projectParam) {
+		project, err = ctx.Storage.Project().GetByID(r.Context(), projectParam)
+	} else {
+		project, err = ctx.Storage.Project().GetByName(r.Context(), projectParam)
 	}
-
-	project, err = ctx.Storage.Project().GetByName(session.Username, projectParam)
 	if err != nil {
 		ctx.Log.Error("Error: find project by id", err.Error())
 		errors.HTTP.InternalServerError(w)
@@ -119,8 +107,8 @@ func ProjectInfoH(w http.ResponseWriter, r *http.Request) {
 }
 
 type projectCreateS struct {
-	Name        *string `json:"name,omitempty"`
-	Description *string `json:"description,omitempty"`
+	Name        string `json:"name"`
+	Description string `json:"description"`
 }
 
 func (s *projectCreateS) decodeAndValidate(reader io.Reader) *errors.Err {
@@ -140,18 +128,14 @@ func (s *projectCreateS) decodeAndValidate(reader io.Reader) *errors.Err {
 		return errors.New("project").IncorrectJSON(err)
 	}
 
-	if s.Name == nil {
+	if s.Name == "" {
 		return errors.New("project").BadParameter("name")
 	}
 
-	*s.Name = strings.ToLower(*s.Name)
+	s.Name = strings.ToLower(s.Name)
 
-	if len(*s.Name) < 4 && len(*s.Name) > 64 && !validator.IsProjectName(*s.Name) {
+	if len(s.Name) < 4 && len(s.Name) > 64 && !validator.IsProjectName(s.Name) {
 		return errors.New("project").BadParameter("name")
-	}
-
-	if s.Description == nil {
-		s.Description = new(string)
 	}
 
 	return nil
@@ -160,18 +144,10 @@ func (s *projectCreateS) decodeAndValidate(reader io.Reader) *errors.Err {
 func ProjectCreateH(w http.ResponseWriter, r *http.Request) {
 
 	var (
-		session *types.Session
-		ctx     = c.Get()
+		ctx = c.Get()
 	)
 
 	ctx.Log.Debug("Create project handler")
-
-	session = utils.Session(r)
-	if session == nil {
-		ctx.Log.Error(http.StatusText(http.StatusUnauthorized))
-		errors.HTTP.Unauthorized(w)
-		return
-	}
 
 	// request body struct
 	rq := new(projectCreateS)
@@ -181,7 +157,7 @@ func ProjectCreateH(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	project, err := ctx.Storage.Project().GetByName(session.Username, *rq.Name)
+	project, err := ctx.Storage.Project().GetByName(r.Context(), rq.Name)
 	if err != nil {
 		ctx.Log.Error("Error: check exists by name", err.Error())
 		errors.HTTP.InternalServerError(w)
@@ -193,7 +169,7 @@ func ProjectCreateH(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	project, err = ctx.Storage.Project().Insert(session.Username, *rq.Name, *rq.Description)
+	project, err = ctx.Storage.Project().Insert(r.Context(), rq.Name, rq.Description)
 	if err != nil {
 		ctx.Log.Error("Error: insert project to db", err)
 		errors.HTTP.InternalServerError(w)
@@ -216,6 +192,7 @@ func ProjectCreateH(w http.ResponseWriter, r *http.Request) {
 }
 
 type projectUpdateS struct {
+	Name        string `json:"name"`
 	Description string `json:"description"`
 }
 
@@ -236,26 +213,30 @@ func (s *projectUpdateS) decodeAndValidate(reader io.Reader) *errors.Err {
 		return errors.New("project").IncorrectJSON(err)
 	}
 
+	if s.Name == "" {
+		return errors.New("project").BadParameter("name")
+	}
+
+	s.Name = strings.ToLower(s.Name)
+
+	if len(s.Name) < 4 && len(s.Name) > 64 && !validator.IsProjectName(s.Name) {
+		return errors.New("project").BadParameter("name")
+	}
+
 	return nil
 }
 
 func ProjectUpdateH(w http.ResponseWriter, r *http.Request) {
 
 	var (
-		session *types.Session
-		ctx     = c.Get()
+		err          error
+		project      = new(types.Project)
+		ctx          = c.Get()
 		params       = utils.Vars(r)
 		projectParam = params["project"]
 	)
 
 	ctx.Log.Debug("Update project handler")
-
-	session = utils.Session(r)
-	if session == nil {
-		ctx.Log.Error(http.StatusText(http.StatusUnauthorized))
-		errors.HTTP.Unauthorized(w)
-		return
-	}
 
 	// request body struct
 	rq := new(projectUpdateS)
@@ -265,16 +246,21 @@ func ProjectUpdateH(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	project, err := ctx.Storage.Project().GetByName(session.Username, projectParam)
+	if validator.IsUUID(projectParam) {
+		project, err = ctx.Storage.Project().GetByID(r.Context(), projectParam)
+	} else {
+		project, err = ctx.Storage.Project().GetByName(r.Context(), projectParam)
+	}
 	if err != nil {
 		ctx.Log.Error("Error: check exists by name", err.Error())
 		errors.HTTP.InternalServerError(w)
 		return
 	}
 
+	project.Name = rq.Name
 	project.Description = rq.Description
 
-	project, err = ctx.Storage.Project().Update(session.Username, project)
+	project, err = ctx.Storage.Project().Update(r.Context(), project)
 	if err != nil {
 		ctx.Log.Error("Error: update project to db", err)
 		errors.HTTP.InternalServerError(w)
@@ -289,8 +275,7 @@ func ProjectUpdateH(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.WriteHeader(http.StatusOK)
-	_, err = w.Write(response)
-	if err != nil {
+	if _, err = w.Write(response); err != nil {
 		ctx.Log.Error("Error: write response", err.Error())
 		return
 	}
@@ -299,28 +284,26 @@ func ProjectUpdateH(w http.ResponseWriter, r *http.Request) {
 func ProjectRemoveH(w http.ResponseWriter, r *http.Request) {
 
 	var (
+		err          error
 		ctx          = c.Get()
-		session      *types.Session
+		project      = new(types.Project)
 		params       = utils.Vars(r)
 		projectParam = params["project"]
 	)
 
 	ctx.Log.Info("Remove project")
 
-	session = utils.Session(r)
-	if session == nil {
-		ctx.Log.Error(http.StatusText(http.StatusUnauthorized))
-		errors.HTTP.Unauthorized(w)
-		return
+	if validator.IsUUID(projectParam) {
+		project, err = ctx.Storage.Project().GetByID(r.Context(), projectParam)
+	} else {
+		project, err = ctx.Storage.Project().GetByName(r.Context(), projectParam)
 	}
-
-	projectModel, err := ctx.Storage.Project().GetByName(session.Username, projectParam)
 	if err != nil {
 		ctx.Log.Error("Error: find project by name", err.Error())
 		errors.HTTP.InternalServerError(w)
 		return
 	}
-	if projectModel == nil {
+	if project == nil {
 		errors.New("project").NotFound().Http(w)
 		return
 	}
@@ -342,7 +325,7 @@ func ProjectRemoveH(w http.ResponseWriter, r *http.Request) {
 	//	return
 	//}
 
-	err = ctx.Storage.Project().Remove(session.Username, projectParam)
+	err = ctx.Storage.Project().Remove(r.Context(), project.ID)
 	if err != nil {
 		ctx.Log.Error("Error: remove project from db", err)
 		errors.HTTP.InternalServerError(w)

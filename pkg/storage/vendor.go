@@ -19,33 +19,27 @@
 package storage
 
 import (
-	"fmt"
+	"context"
 	"github.com/lastbackend/lastbackend/pkg/apis/types"
 	"github.com/lastbackend/lastbackend/pkg/storage/store"
-	"golang.org/x/net/context"
 	"golang.org/x/oauth2"
-	"time"
 )
 
-const VendorTable = "vendors"
+const vendorStorage = "vendors"
 
-// Service User type for interface in interfaces folder
+// Service vendor type for interface in interfaces folder
 type VendorStorage struct {
 	IVendor
+	util   IUtil
 	Client func() (store.IStore, store.DestroyFunc, error)
 }
 
-func (s *VendorStorage) Insert(username, vendorUsername, vendorName, vendorHost, serviceID string, token *oauth2.Token) error {
-	var (
-		err     error
-		vendors = make(map[string]*types.Vendor)
-		key     = fmt.Sprintf("%s/%s/%s", UserTable, username, VendorTable)
-		vm      = new(types.Vendor)
-	)
+func (s *VendorStorage) Insert(ctx context.Context, owner, name, host, serviceID string, token *oauth2.Token) error {
 
-	vm.Username = vendorUsername
-	vm.Vendor = vendorName
-	vm.Host = vendorHost
+	vm := new(types.Vendor)
+	vm.Username = owner
+	vm.Vendor = name
+	vm.Host = host
 	vm.ServiceID = serviceID
 	vm.Token = token
 
@@ -55,28 +49,19 @@ func (s *VendorStorage) Insert(username, vendorUsername, vendorName, vendorHost,
 	}
 	defer destroy()
 
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-	defer cancel()
-
-	err = client.Get(ctx, key, &vendors)
+	key := s.util.Key(ctx, vendorStorage, name)
+	err = client.Get(ctx, key, vm)
 	if err != nil && err.Error() != store.ErrKeyNotFound {
 		return err
 	}
-
-	vendors[vendorName] = vm
-
 	if err != nil && err.Error() == store.ErrKeyNotFound {
-		return client.Create(ctx, key, vendors, nil, 0)
+		return client.Create(ctx, key, vm, nil, 0)
 	}
 
-	return client.Update(ctx, key, vendors, nil, 0)
+	return client.Update(ctx, key, vm, nil, 0)
 }
 
-func (s *VendorStorage) Get(username, vendorName string) (*types.Vendor, error) {
-	var (
-		vendors = make(map[string]*types.Vendor)
-		key     = fmt.Sprintf("%s/%s/%s", UserTable, username, VendorTable)
-	)
+func (s *VendorStorage) Get(ctx context.Context, vendorName string) (*types.Vendor, error) {
 
 	client, destroy, err := s.Client()
 	if err != nil {
@@ -84,24 +69,19 @@ func (s *VendorStorage) Get(username, vendorName string) (*types.Vendor, error) 
 	}
 	defer destroy()
 
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-	defer cancel()
-
-	if err := client.Get(ctx, key, vendors); err != nil {
+	key := s.util.Key(ctx, vendorStorage, vendorName)
+	vendor := new(types.Vendor)
+	if err := client.Get(ctx, key, &vendor); err != nil {
 		if err.Error() == store.ErrKeyNotFound {
 			return nil, nil
 		}
 		return nil, err
 	}
 
-	return vendors[vendorName], nil
+	return vendor, nil
 }
 
-func (s *VendorStorage) List(username string) (map[string]*types.Vendor, error) {
-	var (
-		vendors = make(map[string]*types.Vendor)
-		key     = fmt.Sprintf("%s/%s/%s", UserTable, username, VendorTable)
-	)
+func (s *VendorStorage) List(ctx context.Context) (map[string]*types.Vendor, error) {
 
 	client, destroy, err := s.Client()
 	if err != nil {
@@ -109,10 +89,9 @@ func (s *VendorStorage) List(username string) (map[string]*types.Vendor, error) 
 	}
 	defer destroy()
 
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-	defer cancel()
-
-	if err := client.List(ctx, key, ``, vendors); err != nil {
+	key := s.util.Key(ctx, vendorStorage)
+	vendors := make(map[string]*types.Vendor)
+	if err := client.Map(ctx, key, ``, vendors); err != nil {
 		if err.Error() == store.ErrKeyNotFound {
 			return nil, nil
 		}
@@ -122,12 +101,7 @@ func (s *VendorStorage) List(username string) (map[string]*types.Vendor, error) 
 	return vendors, nil
 }
 
-func (s *VendorStorage) Remove(username, vendorName string) error {
-	var (
-		err     error
-		vendors = make(map[string]*types.Vendor)
-		key     = fmt.Sprintf("%s/%s/%s", UserTable, username, VendorTable)
-	)
+func (s *VendorStorage) Remove(ctx context.Context, vendorName string) error {
 
 	client, destroy, err := s.Client()
 	if err != nil {
@@ -135,23 +109,18 @@ func (s *VendorStorage) Remove(username, vendorName string) error {
 	}
 	defer destroy()
 
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-	defer cancel()
-
-	err = client.Get(ctx, key, &vendors)
+	key := s.util.Key(ctx, vendorStorage, vendorName)
+	err = client.Delete(ctx, key)
 	if err != nil && err.Error() == store.ErrKeyNotFound {
 		return nil
 	}
-	if err != nil && err.Error() != store.ErrKeyNotFound {
-		return err
-	}
 
-	delete(vendors, vendorName)
-	return client.Update(ctx, key, vendors, nil, 0)
+	return nil
 }
 
-func newVendorStorage(config store.Config) *VendorStorage {
+func newVendorStorage(config store.Config, util IUtil) *VendorStorage {
 	s := new(VendorStorage)
+	s.util = util
 	s.Client = func() (store.IStore, store.DestroyFunc, error) {
 		return New(config)
 	}

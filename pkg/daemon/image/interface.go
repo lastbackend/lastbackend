@@ -16,31 +16,14 @@
 // from Last.Backend LLC.
 //
 
-package v1
+package image
 
 import (
-	"github.com/lastbackend/lastbackend/pkg/daemon/api/views/v1/project"
-	"github.com/lastbackend/lastbackend/pkg/daemon/api/views/v1/service"
-	"github.com/lastbackend/lastbackend/pkg/daemon/api/views/v1/user"
+	"context"
 	"github.com/lastbackend/lastbackend/pkg/apis/types"
 )
 
-func NewUser(obj *types.User) *user.User {
-	return user.New(obj)
-}
-
-func NewProject(obj *types.Project) *project.Project {
-	return project.New(obj)
-}
-
-func NewProjectList(obj *types.ProjectList) *project.ProjectList {
-	return project.NewList(obj)
-}
-
-func NewService(obj *types.Service) *service.Service {
-	return service.New(obj)
-}
-
-func NewServiceList(obj *types.ServiceList) *service.ServiceList {
-	return service.NewList(obj)
+type IUtil interface {
+	Name(ctx context.Context, hub, name string) string
+	RegistryAuth(ctx context.Context, namespace string) *types.RegistryAuth
 }

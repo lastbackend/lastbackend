@@ -20,25 +20,22 @@ package logger
 
 import (
 	"github.com/Sirupsen/logrus"
-	"path"
-	"runtime"
+	"github.com/lastbackend/lastbackend/pkg/logger/hooks"
 	"os"
-	_os "github.com/lastbackend/lastbackend/pkg/logger/os"
 )
 
 type Logger struct {
-	log   *logrus.Logger
-	entry *logrus.Entry
+	log *logrus.Logger
 }
 
-func New(debug bool) *Logger {
+func New(debug bool, skip int) *Logger {
 	l := new(Logger)
 	l.log = logrus.New()
 	l.log.Out = os.Stdout
 	l.log.Formatter = getJSONFormatter()
-	l.entry = l.log.WithFields(getFileLocate(logrus.Fields{}))
 
-	_os.SetSyslog(l.log)
+	l.log.Hooks.Add(hooks.SyslogHook{})
+	l.log.Hooks.Add(hooks.ContextHook{skip})
 
 	if debug {
 		l.SetDebugLevel()
@@ -54,51 +51,51 @@ func (l *Logger) SetDebugLevel() {
 }
 
 func (l *Logger) Debug(args ...interface{}) {
-	l.entry.Debug(args...)
+	l.log.Debug(args...)
 }
 
 func (l *Logger) Debugf(format string, args ...interface{}) {
-	l.entry.Debugf(format, args)
+	l.log.Debugf(format, args)
 }
 
 func (l *Logger) Info(args ...interface{}) {
-	l.entry.Info(args...)
+	l.log.Info(args...)
 }
 
 func (l *Logger) Infof(format string, args ...interface{}) {
-	l.entry.Infof(format, args)
+	l.log.Infof(format, args)
 }
 
 func (l *Logger) Error(args ...interface{}) {
-	l.entry.Error(args...)
+	l.log.Error(args...)
 }
 
 func (l *Logger) Errorf(format string, args ...interface{}) {
-	l.entry.Errorf(format, args)
+	l.log.Errorf(format, args)
 }
 
 func (l *Logger) Fatal(args ...interface{}) {
-	l.entry.Fatal(args...)
+	l.log.Fatal(args...)
 }
 
 func (l *Logger) Fatalf(format string, args ...interface{}) {
-	l.entry.Fatalf(format, args)
+	l.log.Fatalf(format, args)
 }
 
 func (l *Logger) Panic(args ...interface{}) {
-	l.entry.Panic(args...)
+	l.log.Panic(args...)
 }
 
 func (l *Logger) Panicf(format string, args ...interface{}) {
-	l.entry.Panicf(format, args)
+	l.log.Panicf(format, args)
 }
 
 func (l *Logger) Warn(args ...interface{}) {
-	l.entry.Warn(args...)
+	l.log.Warn(args...)
 }
 
 func (l *Logger) Warnf(format string, args ...interface{}) {
-	l.entry.Warnf(format, args)
+	l.log.Warnf(format, args)
 }
 
 func getTextFormatter() *logrus.TextFormatter {
@@ -113,14 +110,4 @@ func getJSONFormatter() *logrus.JSONFormatter {
 	var formatter = new(logrus.JSONFormatter)
 	formatter.TimestampFormat = "2006-01-02 15:04:05"
 	return formatter
-}
-
-func getFileLocate(fields logrus.Fields) logrus.Fields {
-	if pc, file, line, ok := runtime.Caller(2); ok {
-		funcName := runtime.FuncForPC(pc).Name()
-		fields["func"] = path.Base(funcName)
-		fields["file"] = file
-		fields["line"] = line
-	}
-	return fields
 }

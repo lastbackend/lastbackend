@@ -21,10 +21,14 @@ package http
 import "net/http"
 
 type Route struct {
-	Path string
-	Handler func(w http.ResponseWriter, r *http.Request)
+	Path       string
+	Handler    func(w http.ResponseWriter, r *http.Request)
 	Middleware []Middleware
-	Method string
+	Method     string
 }
+
+//type Middleware interface {
+//	Handler(func(w http.ResponseWriter, r *http.Request) error) func(w http.ResponseWriter, r *http.Request) error
+//}
 
 type Middleware func(http.HandlerFunc) http.HandlerFunc
