@@ -78,7 +78,7 @@ type IService interface {
 	ListByProject(ctx context.Context, project uuid.UUID) (*types.ServiceList, error)
 	Insert(ctx context.Context, project uuid.UUID, name, description string, config *types.ServiceConfig) (*types.Service, error)
 	Update(ctx context.Context, project uuid.UUID, service *types.Service) (*types.Service, error)
-	Remove(ctx context.Context, project, id uuid.UUID) error
+	Remove(ctx context.Context, project uuid.UUID, service *types.Service) error
 	RemoveByProject(ctx context.Context, project uuid.UUID) error
 }
 
