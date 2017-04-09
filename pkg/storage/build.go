@@ -49,6 +49,8 @@ func (s *BuildStorage) ListByImage(ctx context.Context, id string) (*types.Build
 // Insert new build into storage
 func (s *BuildStorage) Insert(ctx context.Context, imageID string, source *types.BuildSource) (*types.Build, error) {
 
+
+
 	build := new(types.Build)
 	build.ID = strconv.Itoa(generator.UnixTimestamp())
 	build.Status = types.BuildStatus{
