@@ -19,6 +19,7 @@
 package runtime
 
 import (
+	"fmt"
 	"github.com/lastbackend/lastbackend/pkg/agent/context"
 	"github.com/lastbackend/lastbackend/pkg/agent/cri"
 	"github.com/lastbackend/lastbackend/pkg/apis/types"
@@ -123,11 +124,12 @@ func (t *Task) exec() {
 	log := context.Get().GetLogger()
 	log.Debugf("start task for pod: %s", t.pod.Meta.ID)
 
-	// Set current spec
-	t.pod.Meta.Spec = t.spec.ID
 	// Check spec version
-	if t.meta.Spec != t.pod.Meta.Spec {
+	log.Debugf("pod spec: %s, new spec: %s", t.pod.Spec.ID, t.spec.ID)
+	if t.spec.ID != t.pod.Spec.ID {
 		log.Debugf("spec is differrent, apply new one: %s", t.pod.Meta.Spec)
+		// Set current spec
+		t.pod.Spec.ID = t.spec.ID
 		t.imagesUpdate()
 		t.containersUpdate()
 	}
@@ -175,7 +177,7 @@ func (t *Task) imagesUpdate() {
 
 	// Clean up unused images
 	for name := range images {
-		log.Debug("Delete unused images: %s", name)
+		log.Debugf("Delete unused images: %s", name)
 		crii.ImageRemove(name)
 	}
 
@@ -191,29 +193,40 @@ func (t *Task) containersUpdate() {
 
 	// Remove old containers
 	for _, c := range t.pod.Containers {
+
 		if c.ID != "" {
-			crii.ContainerRemove(c.ID, true, true)
+			log.Debugf("Container %s remove", c.ID)
+			err := crii.ContainerRemove(c.ID, true, true)
+			if err != nil {
+				log.Errorf("Container remove error: %s", err.Error())
+			}
 		}
 		t.pod.DelContainer(c.ID)
 	}
 
 	// Create new containers
 	for _, spec := range t.spec.Containers {
+		log.Debugf("Container create")
 
 		c := &types.Container{
 			State:   types.ContainerStatePending,
 			Created: time.Now(),
 		}
 
+		if spec.Labels == nil {
+			spec.Labels = make(map[string]string)
+		}
+		spec.Labels["LB_META"] = fmt.Sprintf("%s/%s", t.pod.Meta.ID, t.pod.Spec.ID)
 		c.ID, err = crii.ContainerCreate(spec)
 
 		if err != nil {
+			log.Errorf("Container create error %s", err.Error())
 			c.State = types.ContainerStateError
 			c.Status = err.Error()
-			t.pod.AddContainer(c)
 			continue
 		}
 
+		log.Debugf("New container created: %s", c.ID)
 		t.pod.AddContainer(c)
 	}
 
@@ -235,6 +248,7 @@ func (t *Task) containersState() {
 			c.State = "running"
 			c.Status = ""
 			if err != nil {
+				log.Errorf("Container: start error: %s", err.Error())
 				c.State = "error"
 				c.Status = err.Error()
 			}
@@ -254,6 +268,7 @@ func (t *Task) containersState() {
 			c.State = "stopped"
 			c.Status = ""
 			if err != nil {
+				log.Errorf("Container: stop error: %s", err.Error())
 				c.State = "error"
 				c.Status = err.Error()
 			}
@@ -273,6 +288,7 @@ func (t *Task) containersState() {
 			c.State = "running"
 			c.Status = ""
 			if err != nil {
+				log.Errorf("Container: restart error: %s", err.Error())
 				c.State = "error"
 				c.Status = err.Error()
 			}

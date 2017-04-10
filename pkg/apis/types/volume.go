@@ -30,5 +30,3 @@ type Volume struct {
 	// Volume uuid, incremented automatically
 	Project string `json:"project"`
 }
-
-

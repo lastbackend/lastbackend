@@ -35,21 +35,13 @@ func (r *Runtime) PodList() ([]*types.Pod, error) {
 
 		info := strings.Split(label, "/")
 
-		meta := types.PodMeta{
-			Owner:   info[1],
-			Project: info[2],
-			Service: info[3],
-			Spec:    info[5],
-		}
-		meta.ID = info[4]
-
-		pod, ok := pods[meta.ID]
+		pod, ok := pods[info[0]]
 		if !ok {
 			pod = types.NewPod()
-			pods[meta.ID] = pod
+			pods[info[0]] = pod
 		}
-		pod.Meta = meta
-		pod.Spec.ID = pod.Meta.Spec
+		pod.Meta.ID = info[0]
+		pod.Spec.ID = info[1]
 
 		inspected, _ := r.client.ContainerInspect(context.Background(), c.ID)
 		if container := GetContainer(c, inspected); container != nil {

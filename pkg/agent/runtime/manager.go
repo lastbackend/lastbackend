@@ -20,7 +20,6 @@ package runtime
 import (
 	"github.com/lastbackend/lastbackend/pkg/agent/context"
 	"github.com/lastbackend/lastbackend/pkg/apis/types"
-	"github.com/satori/go.uuid"
 	"sync"
 )
 
@@ -38,15 +37,14 @@ func (pm *PodManager) SyncPod(pod *types.Pod) {
 	if p == nil {
 		log.Debugf("Pod %s not found, create new one", pod.Meta.ID)
 		p := types.NewPod()
-		p.Meta = pod.Meta
-		p.Meta.Spec = uuid.NewV4().String()
+		p.Meta.ID = pod.Meta.ID
 		context.Get().GetStorage().Pods().SetPod(p)
-		pm.sync(pod.State, pod.Meta, pod.Spec, pod)
+		pm.sync(pod.State, pod.Meta, pod.Spec, p)
 		return
 	}
 
 	log.Debugf("Pod %s found", pod.Meta.ID)
-	if p.Meta.Spec == (pod.Meta.Spec) && p.State.State == pod.State.State {
+	if (p.Spec.ID == pod.Spec.ID) && p.State.State == pod.State.State {
 		log.Debugf("Pod %s in correct state", pod.Meta.ID)
 		return
 	}

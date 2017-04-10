@@ -69,7 +69,7 @@ type PodSpec struct {
 	Status string `json:"status"`
 
 	// Containers spec for pod
-	Containers []ContainerSpec
+	Containers []ContainerSpec `json:"containers"`
 
 	// Provision create time
 	Created time.Time `json:"created"`

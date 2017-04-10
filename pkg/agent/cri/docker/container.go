@@ -46,7 +46,6 @@ func (r *Runtime) ContainerResume(ID string) error {
 
 func (r *Runtime) ContainerRemove(ID string, clean bool, force bool) error {
 	return r.client.ContainerRemove(context.Background(), ID, docker.ContainerRemoveOptions{
-		RemoveLinks:   clean,
 		RemoveVolumes: clean,
 		Force:         force,
 	})
