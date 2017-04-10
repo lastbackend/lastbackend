@@ -20,9 +20,11 @@ package image
 
 import (
 	"context"
+	"fmt"
 	"github.com/lastbackend/lastbackend/pkg/apis/types"
 	"github.com/lastbackend/lastbackend/pkg/daemon/build"
 	c "github.com/lastbackend/lastbackend/pkg/daemon/context"
+	"strings"
 )
 
 var Util IUtil = util{}
@@ -55,10 +57,44 @@ func Create(ctx context.Context, registry string, source *types.ServiceSource) (
 		}
 	}
 
-	_, err = build.Create(ctx, img.Meta.ID, source)
+	_, err = build.Create(ctx, img.Meta.Name, source)
 	if err != nil {
 		return nil, err
 	}
+
+	img, err = storage.Image().Get(ctx, img.Meta.Name)
+	if err != nil {
+		return nil, err
+	}
+
+	img.Meta.Name = fmt.Sprintf("%s:%s-%d", img.Meta.Name, strings.Split(img.Source.Hub, ".")[0], img.Meta.Builds)
+
+	auth := Util.RegistryAuth(ctx, name)
+	if auth != nil {
+		img.Registry.Auth = new(types.RegistryAuth)
+		img.Registry.Auth.Server = auth.Server
+		img.Registry.Auth.Username = auth.Username
+		img.Registry.Auth.Password = auth.Password
+	}
+
+	return img, nil
+}
+
+func Get(ctx context.Context, namespace string) (*types.Image, error) {
+
+	var (
+		log     = c.Get().GetLogger()
+		storage = c.Get().GetStorage()
+		name    = strings.Split(namespace, ":")[0]
+	)
+
+	log.Debug("Get image")
+
+	img, err := storage.Image().Get(ctx, name)
+	if err != nil {
+		return nil, err
+	}
+	img.Meta.Name = fmt.Sprintf("%s:%s-%d", img.Meta.Name, strings.Split(img.Source.Hub, ".")[0], img.Meta.Builds)
 
 	auth := Util.RegistryAuth(ctx, name)
 	if auth != nil {

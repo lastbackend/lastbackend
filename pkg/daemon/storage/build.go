@@ -24,6 +24,7 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/apis/types"
 	"github.com/lastbackend/lastbackend/pkg/daemon/storage/store"
 	"github.com/satori/go.uuid"
+	"strings"
 	"time"
 )
 
@@ -47,7 +48,7 @@ func (s *BuildStorage) ListByImage(ctx context.Context, id string) (*types.Build
 }
 
 // Insert new build into storage
-func (s *BuildStorage) Insert(ctx context.Context, imageID string, source *types.BuildSource) (*types.Build, error) {
+func (s *BuildStorage) Insert(ctx context.Context, imageName string, source *types.BuildSource) (*types.Build, error) {
 
 	build := new(types.Build)
 	build.Meta.ID = uuid.NewV4().String()
@@ -65,7 +66,9 @@ func (s *BuildStorage) Insert(ctx context.Context, imageID string, source *types
 	}
 	defer destroy()
 
-	keyImageMeta := s.util.Key(ctx, imageStorage, imageID, "meta")
+	iname := strings.Replace(imageName, "/", ":", -1)
+
+	keyImageMeta := s.util.Key(ctx, imageStorage, iname, "meta")
 	imeta := new(types.ImageMeta)
 	if err := client.Get(ctx, keyImageMeta, imeta); err != nil {
 		if err.Error() == store.ErrKeyNotFound {
@@ -76,7 +79,6 @@ func (s *BuildStorage) Insert(ctx context.Context, imageID string, source *types
 
 	tx := client.Begin(ctx)
 
-	keyImageMeta = s.util.Key(ctx, imageStorage, imageID, "meta")
 	imeta.Builds++
 	if err := tx.Update(keyImageMeta, imeta, 0); err != nil {
 		if err.Error() == store.ErrKeyExists {
@@ -85,8 +87,7 @@ func (s *BuildStorage) Insert(ctx context.Context, imageID string, source *types
 		return nil, err
 	}
 
-	keyMeta := s.util.Key(ctx, imageStorage, imageID,
-		buildStorage, fmt.Sprintf("%s", build.Meta.Created.Unix()))
+	keyMeta := s.util.Key(ctx, imageStorage, iname, buildStorage, fmt.Sprintf("%d", build.Meta.Created.Unix()))
 
 	if err := tx.Create(keyMeta, build, 0); err != nil {
 		if err.Error() == store.ErrKeyExists {

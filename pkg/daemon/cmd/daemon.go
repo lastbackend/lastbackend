@@ -64,6 +64,18 @@ func Daemon(cmd *cli.Cmd) {
 		Name: "http-server-port", Desc: "Http server port",
 		EnvVar: "HTTP-SERVER-PORT", Value: 2967, HideValue: true,
 	})
+	var registryServer = cmd.String(cli.StringOpt{
+		Name: "registry-server", Desc: "Http server port",
+		EnvVar: "REGISTRY-SERVER", Value: "hub.registry.net", HideValue: true,
+	})
+	var registryUsername = cmd.String(cli.StringOpt{
+		Name: "registry-username", Desc: "Http server port",
+		EnvVar: "REGISTRY-USERNAME", Value: "demo", HideValue: true,
+	})
+	var registryPassword = cmd.String(cli.StringOpt{
+		Name: "registry-password", Desc: "Http server port",
+		EnvVar: "REGISTRY-PASSWORD", Value: "IU1yxkTD", HideValue: true,
+	})
 	var etcdEndpoints = cmd.Strings(cli.StringsOpt{
 		Name: "etcd-endpoints", Desc: "Set etcd endpoints list",
 		EnvVar: "ETCD-ENDPOINTS", Value: []string{"localhost:2379"}, HideValue: true,
@@ -129,6 +141,9 @@ func Daemon(cmd *cli.Cmd) {
 		cfg.ProxyServer.Port = *proxyServerPort
 		cfg.HttpServer.Host = *httpServerHost
 		cfg.HttpServer.Port = *httpServerPort
+		cfg.Registry.Server = *registryServer
+		cfg.Registry.Username = *registryUsername
+		cfg.Registry.Password = *registryPassword
 		cfg.Etcd.Endpoints = *etcdEndpoints
 		cfg.Etcd.TLS.Key = *etcdTlsKey
 		cfg.Etcd.TLS.Cert = *etcdTlsSert

@@ -21,31 +21,19 @@ package service
 import "time"
 
 type Service struct {
-	Project     string     `json:"project"`
 	Name        string     `json:"name"`
 	Description string     `json:"description"`
-	Image       Image      `json:"image"`
-	Config      Config     `json:"config"`
-	Pods        []struct{} `json:"pods"`
 	Created     time.Time  `json:"created"`
 	Updated     time.Time  `json:"updated"`
+	Pods        *[]struct{} `json:"pods,omitempty"`
+	Config      *Config     `json:"config,omitempty"`
 }
 
 type Config struct {
 	Replicas int    `json:"scale,omitempty"`
 	Memory   int    `json:"memory,omitempty"`
+	Image    string `json:"image,omitempty"`
 	Region   string `json:"region,omitempty"`
-}
-
-type Image struct {
-	Source Source `json:"source"`
-}
-
-type Source struct {
-	Hub    string `json:"hub"`
-	Owner  string `json:"owner"`
-	Repo   string `json:"repo"`
-	Branch string `json:"branch"`
 }
 
 type ServiceList []Service
