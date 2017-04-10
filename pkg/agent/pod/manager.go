@@ -26,7 +26,7 @@ import (
 
 type PodManager struct {
 	lock    sync.RWMutex
-	workers map[uuid.UUID]*Worker
+	workers map[string]*Worker
 }
 
 func (pm *PodManager) SyncPod(pod *types.Pod) {
@@ -38,7 +38,7 @@ func (pm *PodManager) SyncPod(pod *types.Pod) {
 	if !ok {
 		p := types.NewPod()
 		p.Meta = pod.Meta
-		p.Meta.Spec = uuid.NewV4()
+		p.Meta.Spec = uuid.NewV4().String()
 		s.SetPod(p)
 		pm.sync(pod.State, pod.Meta, pod.Spec, pod)
 		return
@@ -63,7 +63,7 @@ func (pm *PodManager) sync(state types.PodState, meta types.PodMeta, spec types.
 		go func() {
 			<-w.done
 			pm.lock.Lock()
-			delete(pm.workers, pod.ID())
+			delete(pm.workers, pod.Meta.ID)
 			pm.lock.Unlock()
 		}()
 	}
@@ -85,7 +85,7 @@ func NewPodManager() (*PodManager, error) {
 
 	pm := &PodManager{}
 
-	pm.workers = make(map[uuid.UUID]*Worker)
+	pm.workers = make(map[string]*Worker)
 
 	log.Debug("Restore new pod manager state")
 

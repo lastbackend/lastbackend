@@ -2,7 +2,6 @@ package cri
 
 import (
 	"github.com/lastbackend/lastbackend/pkg/apis/types"
-	"github.com/satori/go.uuid"
 	"io"
 	"time"
 )
@@ -16,7 +15,7 @@ type CRI interface {
 	ContainerResume(ID string) error
 	ContainerRemove(ID string, clean bool, force bool) error
 
-	PodList() (map[uuid.UUID]*types.Pod, error)
+	PodList() (map[string]*types.Pod, error)
 
 	ImagePull(spec *types.ImageSpec) (io.ReadCloser, error)
 	ImageRemove(image string) error

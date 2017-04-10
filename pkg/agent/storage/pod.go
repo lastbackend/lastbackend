@@ -19,20 +19,19 @@ package storage
 
 import (
 	"github.com/lastbackend/lastbackend/pkg/apis/types"
-	"github.com/satori/go.uuid"
 	"sync"
 )
 
 type PodStorage struct {
 	lock sync.RWMutex
-	pods map[uuid.UUID]*types.Pod
+	pods map[string]*types.Pod
 }
 
-func (ps *PodStorage) GetPods() map[uuid.UUID]*types.Pod {
+func (ps *PodStorage) GetPods() map[string]*types.Pod {
 	return ps.pods
 }
 
-func (ps *PodStorage) GetPod(id uuid.UUID) *types.Pod {
+func (ps *PodStorage) GetPod(id string) *types.Pod {
 	pod, ok := ps.pods[id]
 	if !ok {
 		return nil
@@ -44,20 +43,20 @@ func (ps *PodStorage) AddPod(pod *types.Pod) {
 	ps.lock.Lock()
 	defer ps.lock.Unlock()
 
-	ps.pods[pod.ID()] = pod
+	ps.pods[pod.Meta.ID] = pod
 }
 
 func (ps *PodStorage) SetPod(pod *types.Pod) {
 	ps.lock.Lock()
 	defer ps.lock.Unlock()
 
-	ps.pods[pod.ID()] = pod
+	ps.pods[pod.Meta.ID] = pod
 }
 
 func (ps *PodStorage) DetPod(pod *types.Pod) {
 	ps.lock.Lock()
 	defer ps.lock.Unlock()
-	delete(ps.pods, pod.ID())
+	delete(ps.pods, pod.Meta.ID)
 }
 
 func (ps *PodStorage) SetPods(pods []*types.Pod) {
@@ -65,12 +64,12 @@ func (ps *PodStorage) SetPods(pods []*types.Pod) {
 	defer ps.lock.Unlock()
 
 	for _, pod := range pods {
-		ps.pods[pod.ID()] = pod
+		ps.pods[pod.Meta.ID] = pod
 	}
 }
 
 func NewPodStorage() *PodStorage {
-	pods := make(map[uuid.UUID]*types.Pod)
+	pods := make(map[string]*types.Pod)
 	return &PodStorage{
 		pods: pods,
 	}

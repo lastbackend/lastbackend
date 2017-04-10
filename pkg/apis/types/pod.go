@@ -20,8 +20,6 @@ package types
 
 import (
 	"encoding/json"
-	"fmt"
-	"github.com/satori/go.uuid"
 	"sync"
 	"time"
 )
@@ -34,7 +32,7 @@ func (pl *PodList) ToJson() []byte {
 }
 
 type PodMap struct {
-	Items map[uuid.UUID]*Pod `json:"pods"`
+	Items map[string]*Pod `json:"pods"`
 }
 
 type Pod struct {
@@ -62,12 +60,12 @@ type PodMeta struct {
 	// Pod service
 	Service string `json:"service"`
 	// Current Spec ID
-	Spec uuid.UUID `json:"spec"`
+	Spec string `json:"spec"`
 }
 
 type PodSpec struct {
 	// Provision ID
-	ID uuid.UUID `json:"id"`
+	ID string `json:"id"`
 	// Provision state
 	State string `json:"state"`
 	// Provision status
@@ -90,33 +88,12 @@ type PodState struct {
 	// Pod provision
 }
 
-type PodProvision struct {
-	// Provision ID
-	ID uuid.UUID `json:"id"`
-	// Provision state
-	State string `json:"state"`
-	// Provision status
-	Status string `json:"status"`
-
-	// Image pull provision flag
-	ImagePull bool `json:"image-pull"`
-	// Provision create time
-	Created time.Time `json:"created"`
-	// Provision update time
-	Updated time.Time `json:"updated"`
-}
-
 type PodSecret struct {
-}
-
-func (p *Pod) ID() string {
-	return p.Meta.ID
 }
 
 func (p *Pod) AddContainer(c *Container) {
 	p.lock.Lock()
 	defer p.lock.Unlock()
-	fmt.Println(p, c)
 	p.Containers[c.ID] = c
 	p.CalculateState()
 }
