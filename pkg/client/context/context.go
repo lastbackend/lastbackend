@@ -19,30 +19,59 @@
 package context
 
 import (
+	"github.com/lastbackend/lastbackend/pkg/client/config"
 	"github.com/lastbackend/lastbackend/pkg/client/storage"
 	"github.com/lastbackend/lastbackend/pkg/logger"
 	"github.com/lastbackend/lastbackend/pkg/util/http"
 )
 
-var context Context
+var _ctx ctx
 
-func Get() *Context {
-	return &context
+func Get() *ctx {
+	return &_ctx
 }
 
-func Mock() *Context {
-	context.mock = true
-	context.Log = logger.New(true, 8)
-	context.Storage = new(storage.DB)
-
-	return &context
+func Mock() *ctx {
+	_ctx.mock = true
+	return &_ctx
 }
 
-type Context struct {
-	Token   string
-	Log     *logger.Logger
-	HTTP    *http.RawReq
-	Storage *storage.DB
+type ctx struct {
+	logger  *logger.Logger
+	http    *http.RawReq
+	storage *storage.DB
+	config  *config.Config
 	mock    bool
-	// Other info for HTTP handlers can be here, like user UUID
+}
+
+func (c *ctx) SetLogger(log *logger.Logger) {
+	c.logger = log
+}
+
+func (c *ctx) GetLogger() *logger.Logger {
+	return c.logger
+}
+
+func (c *ctx) SetHttpClient(http *http.RawReq) {
+	c.http = http
+}
+
+func (c *ctx) GetHttpClient() *http.RawReq {
+	return c.http
+}
+
+func (c *ctx) SetStorage(storage *storage.DB) {
+	c.storage = storage
+}
+
+func (c *ctx) GetStorage() *storage.DB {
+	return c.storage
+}
+
+func (c *ctx) SetConfig(cfg *config.Config) {
+	c.config = cfg
+}
+
+func (c *ctx) GetConfig() *config.Config {
+	return c.config
 }

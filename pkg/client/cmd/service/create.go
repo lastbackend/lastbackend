@@ -16,15 +16,16 @@
 // from Last.Backend LLC.
 //
 
-package deploy
+package service
+
 
 import (
 	"github.com/lastbackend/lastbackend/pkg/apis/types"
-	"github.com/lastbackend/lastbackend/pkg/client/context"
+	c "github.com/lastbackend/lastbackend/pkg/client/context"
 	"github.com/lastbackend/lastbackend/pkg/errors"
 )
 
-type deployS struct {
+type createS struct {
 	Project  string  `json:"project,omitempty"`
 	Name     string  `json:"name,omitempty"`
 	Template string  `json:"template,omitempty"`
@@ -40,10 +41,10 @@ type Config struct {
 	//Volumes []string `json:"volumes,omitempty"`
 }
 
-func DeployCmd(name, image, template, url string, scale int) {
+func CreateCmd(name, image, template, url string, scale int) {
 
 	var (
-		ctx    = context.Get()
+		log    = c.Get().GetLogger()
 		config *Config
 	)
 
@@ -55,9 +56,9 @@ func DeployCmd(name, image, template, url string, scale int) {
 		//config.Volumes = volumes
 	}
 
-	err := Deploy(name, image, template, url, config)
+	err := Create(name, image, template, url, config)
 	if err != nil {
-		ctx.Log.Error(err)
+		log.Error(err)
 		return
 	}
 
@@ -65,27 +66,28 @@ func DeployCmd(name, image, template, url string, scale int) {
 	// TODO: Show spinner
 }
 
-func Deploy(name, image, template, url string, config *Config) error {
+func Create(name, image, template, url string, config *Config) error {
 
 	var (
 		err     error
-		ctx     = context.Get()
+		http    = c.Get().GetHttpClient()
+		storage = c.Get().GetStorage()
 		project = new(types.Project)
 		er      = new(errors.Http)
 		res     = new(struct{})
 	)
 
-	err = ctx.Storage.Get("project", project)
+	err = storage.Get("project", project)
 	if err != nil {
 		return errors.New(err.Error())
 	}
 
-	if project.Name == "" {
+	if project.Meta.Name == "" {
 		return errors.New("Project didn't select")
 	}
 
-	var cfg = deployS{}
-	cfg.Project = project.Name
+	var cfg = createS{}
+	cfg.Project = project.Meta.Name
 
 	if name != "" {
 		cfg.Name = name
@@ -107,10 +109,9 @@ func Deploy(name, image, template, url string, config *Config) error {
 		cfg.Config = config
 	}
 
-	_, _, err = ctx.HTTP.
-		POST("/deploy").
+	_, _, err = http.
+	POST("/deploy").
 		AddHeader("Content-Type", "application/json").
-		AddHeader("Authorization", "Bearer "+ctx.Token).
 		BodyJSON(cfg).
 		Request(res, er)
 	if err != nil {
@@ -127,3 +128,4 @@ func Deploy(name, image, template, url string, config *Config) error {
 
 	return nil
 }
+

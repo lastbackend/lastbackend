@@ -20,7 +20,7 @@ package etcd3
 
 import (
 	"github.com/coreos/etcd/clientv3"
-	s "github.com/lastbackend/lastbackend/pkg/storage/store"
+	s "github.com/lastbackend/lastbackend/pkg/daemon/storage/store"
 	"github.com/lastbackend/lastbackend/pkg/util/serializer"
 	"path"
 )

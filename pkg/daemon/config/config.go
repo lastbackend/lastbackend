@@ -19,14 +19,14 @@
 package config
 
 import (
-	"github.com/lastbackend/lastbackend/pkg/storage/store"
+	"github.com/lastbackend/lastbackend/pkg/daemon/storage/store"
 	"github.com/lastbackend/lastbackend/pkg/util/serializer"
 	"github.com/lastbackend/lastbackend/pkg/util/serializer/json"
 	"gopkg.in/yaml.v2"
 	"io/ioutil"
 )
 
-var cfg = new(Config)
+var _cfg = new(Config)
 
 func (Config) Configure(path string) error {
 
@@ -35,18 +35,18 @@ func (Config) Configure(path string) error {
 	if err != nil {
 		return err
 	}
-	cfg.HttpServer.Port = 3000
-	cfg.HttpServer.Host = "0.0.0.0"
-	return yaml.Unmarshal(buf, &cfg)
+	_cfg.HttpServer.Port = 3000
+	_cfg.HttpServer.Host = "0.0.0.0"
+	return yaml.Unmarshal(buf, &_cfg)
 }
 
 func Set(c *Config) *Config {
-	cfg = c
-	return cfg
+	_cfg = c
+	return _cfg
 }
 
 func Get() *Config {
-	return cfg
+	return _cfg
 }
 
 // Get Etcd DB options used for creating session

@@ -21,7 +21,7 @@ package service
 import (
 	"errors"
 	"fmt"
-	"github.com/lastbackend/lastbackend/pkg/client/context"
+	c "github.com/lastbackend/lastbackend/pkg/client/context"
 	e "github.com/lastbackend/lastbackend/pkg/errors"
 	"github.com/unloop/gopipe"
 	"io"
@@ -45,13 +45,13 @@ func (Writer) Write(p []byte) (int, error) {
 func LogsServiceCmd(name string) {
 
 	var (
-		ctx           = context.Get()
+		log           = c.Get().GetLogger()
 		choice string = "0"
 	)
 
 	service, projectName, err := Inspect(name)
 	if err != nil {
-		ctx.Log.Error(err)
+		log.Error(err)
 		return
 	}
 
@@ -82,13 +82,13 @@ func LogsServiceCmd(name string) {
 				break
 			}
 
-			ctx.Log.Error("Number not correct!")
+			log.Error("Number not correct!")
 		}
 	}
 
 	reader, err := Logs(projectName, service.Name, m[choice].Pod, m[choice].Container)
 	if err != nil {
-		ctx.Log.Error(err)
+		log.Error(err)
 		return
 	}
 
@@ -98,14 +98,13 @@ func LogsServiceCmd(name string) {
 func Logs(project, name, pod, container string) (*io.ReadCloser, error) {
 
 	var (
-		err error
-		ctx = context.Get()
-		er  = new(e.Http)
+		err  error
+		http = c.Get().GetHttpClient()
+		er   = new(e.Http)
 	)
 
-	_, res, err := ctx.HTTP.
-		GET("/project/"+project+"/service/"+name+"/logs?pod="+pod+"&container="+container).
-		AddHeader("Authorization", "Bearer "+ctx.Token).Do()
+	_, res, err := http.
+		GET("/project/" + project + "/service/" + name + "/logs?pod=" + pod + "&container=" + container).Do()
 	if err != nil {
 		return nil, errors.New(err.Error())
 	}

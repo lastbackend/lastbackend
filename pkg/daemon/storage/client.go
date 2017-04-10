@@ -22,8 +22,8 @@ import (
 	"crypto/tls"
 	"github.com/coreos/etcd/clientv3"
 	"github.com/coreos/etcd/pkg/transport"
-	"github.com/lastbackend/lastbackend/pkg/storage/etcd3"
-	"github.com/lastbackend/lastbackend/pkg/storage/store"
+	"github.com/lastbackend/lastbackend/pkg/daemon/storage/etcd3"
+	"github.com/lastbackend/lastbackend/pkg/daemon/storage/store"
 	"time"
 )
 

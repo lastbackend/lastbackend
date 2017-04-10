@@ -18,8 +18,8 @@
 
 package config
 
-var config Config
+var _cfg Config
 
 func Get() *Config {
-	return &config
+	return &_cfg
 }

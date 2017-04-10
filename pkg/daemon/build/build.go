@@ -43,16 +43,17 @@ const (
 
 func Create(ctx context.Context, imageID string, source *types.ServiceSource) (*types.Build, error) {
 	var (
+		log            = c.Get().GetLogger()
+		storage        = c.Get().GetStorage()
 		err            error
 		clientID       string
 		clientSecretID string
 		redirectURI    string
-		lctx           = c.Get()
 		vendor         = strings.Split(source.Hub, ".")[0]
 		commit         *types.GitSourceCommit
 	)
 
-	lctx.Log.Debug("Create build")
+	log.Debug("Create build")
 
 	var client interfaces.IVCS
 	clientID, clientSecretID, redirectURI = config.Get().GetVendorConfig(vendor)
@@ -73,27 +74,27 @@ func Create(ctx context.Context, imageID string, source *types.ServiceSource) (*
 		case "gitlab":
 			client = vendors.GetGitLab(clientID, clientSecretID, redirectURI)
 		default:
-			lctx.Log.Error(ErrVendorSupported)
+			log.Error(ErrVendorSupported)
 			return nil, errors.New(ErrVendorSupported)
 		}
 
 		vendorInfo := client.GetVendorInfo()
 
-		oauth, err := lctx.Storage.Vendor().Get(ctx, vendorInfo.Vendor)
+		oauth, err := storage.Vendor().Get(ctx, vendorInfo.Vendor)
 		if err != nil {
-			lctx.Log.Error(err)
+			log.Error(err)
 			return nil, err
 		}
 
 		token, modify, err := client.RefreshToken(oauth.Token)
 		if err != nil {
-			lctx.Log.Error(err)
+			log.Error(err)
 			return nil, err
 		}
 
 		u, err := client.GetUser(token)
 		if err != nil {
-			lctx.Log.Error(err)
+			log.Error(err)
 			return nil, err
 		}
 
@@ -105,15 +106,15 @@ func Create(ctx context.Context, imageID string, source *types.ServiceSource) (*
 			oauth.Token = token
 			oauth.Username = u.Username
 
-			if err = lctx.Storage.Vendor().Update(ctx, oauth); err != nil {
-				lctx.Log.Error(err)
+			if err = storage.Vendor().Update(ctx, oauth); err != nil {
+				log.Error(err)
 				return nil, err
 			}
 		}
 
 		info, err := client.GetLastCommitOfBranch(token, source.Owner, source.Repo, source.Branch)
 		if err != nil {
-			lctx.Log.Error(err)
+			log.Error(err)
 			return nil, err
 		}
 
@@ -134,7 +135,7 @@ func Create(ctx context.Context, imageID string, source *types.ServiceSource) (*
 		Commit: *commit,
 	}
 
-	bld, err := lctx.Storage.Build().Insert(ctx, imageID, bsource)
+	bld, err := storage.Build().Insert(ctx, imageID, bsource)
 	if err != nil {
 		return nil, err
 	}

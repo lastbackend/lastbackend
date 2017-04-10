@@ -20,7 +20,7 @@ package runtime
 
 import (
 	"github.com/gorilla/mux"
-	"github.com/lastbackend/lastbackend/pkg/storage"
+	"github.com/lastbackend/lastbackend/pkg/daemon/storage"
 )
 
 type Runtime struct {

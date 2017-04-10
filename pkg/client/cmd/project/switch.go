@@ -20,35 +20,37 @@ package project
 
 import (
 	"github.com/lastbackend/lastbackend/pkg/apis/types"
-	"github.com/lastbackend/lastbackend/pkg/client/context"
+	c "github.com/lastbackend/lastbackend/pkg/client/context"
 	"github.com/lastbackend/lastbackend/pkg/errors"
 )
 
 func SwitchCmd(name string) {
 
-	var ctx = context.Get()
+	var (
+		log = c.Get().GetLogger()
+	)
 
 	project, err := Switch(name)
 	if err != nil {
-		ctx.Log.Error(err)
+		log.Error(err)
 		return
 	}
 
-	ctx.Log.Infof("The project `%s` was selected as the current", project.Name)
+	log.Infof("The project `%s` was selected as the current", project.Meta.Name)
 }
 
 func Switch(name string) (*types.Project, error) {
 
 	var (
-		ctx     = context.Get()
 		er      = new(errors.Http)
+		http    = c.Get().GetHttpClient()
+		storage = c.Get().GetStorage()
 		project = new(types.Project)
 	)
 
-	_, _, err := ctx.HTTP.
+	_, _, err := http.
 		GET("/project/"+name).
 		AddHeader("Content-Type", "application/json").
-		AddHeader("Authorization", "Bearer "+ctx.Token).
 		Request(&project, er)
 
 	if err != nil {
@@ -63,7 +65,7 @@ func Switch(name string) (*types.Project, error) {
 		return nil, errors.New(er.Message)
 	}
 
-	err = ctx.Storage.Set("project", project)
+	err = storage.Set("project", project)
 	if err != nil {
 		return nil, errors.New(err.Error())
 	}

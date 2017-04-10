@@ -20,40 +20,41 @@ package project
 
 import (
 	"github.com/lastbackend/lastbackend/pkg/apis/types"
-	"github.com/lastbackend/lastbackend/pkg/client/context"
+	c "github.com/lastbackend/lastbackend/pkg/client/context"
 	"github.com/lastbackend/lastbackend/pkg/errors"
 )
 
 func RemoveCmd(name string) {
 
-	var ctx = context.Get()
+	var (
+		log = c.Get().GetLogger()
+	)
 
-	err := Remove(name)
-	if err != nil {
-		ctx.Log.Error(err)
+	if err := Remove(name); err != nil {
+		log.Error(err)
 		return
 	}
 
-	ctx.Log.Info("Successful")
+	log.Info("Successful")
 }
 
 func Remove(name string) error {
 
 	var (
-		err error
-		ctx = context.Get()
-		er  = new(errors.Http)
-		res = new(struct{})
+		err     error
+		http    = c.Get().GetHttpClient()
+		storage = c.Get().GetStorage()
+		er      = new(errors.Http)
+		res     = new(struct{})
 	)
 
 	if len(name) == 0 {
 		return errors.BadParameter("name").Err()
 	}
 
-	_, _, err = ctx.HTTP.
+	_, _, err = http.
 		DELETE("/project/"+name).
 		AddHeader("Content-Type", "application/json").
-		AddHeader("Authorization", "Bearer "+ctx.Token).
 		Request(res, er)
 	if err != nil {
 		return errors.New(err.Error())
@@ -74,7 +75,7 @@ func Remove(name string) error {
 
 	if project != nil {
 		if name == project.Name {
-			err = ctx.Storage.Set("project", types.Project{})
+			err = storage.Set("project", types.Project{})
 			if err != nil {
 				return errors.New(err.Error())
 			}

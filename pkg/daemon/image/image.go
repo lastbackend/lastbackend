@@ -28,11 +28,13 @@ import (
 var Util IUtil = util{}
 
 func Create(ctx context.Context, registry string, source *types.ServiceSource) (*types.Image, error) {
+
 	var (
-		lctx = c.Get()
+		log     = c.Get().GetLogger()
+		storage = c.Get().GetStorage()
 	)
 
-	lctx.Log.Debug("Create image")
+	log.Debug("Create image")
 
 	name := Util.Name(ctx, registry, source.Repo)
 	isource := &types.ImageSource{
@@ -42,12 +44,12 @@ func Create(ctx context.Context, registry string, source *types.ServiceSource) (
 		Tag:   source.Branch,
 	}
 
-	img, err := lctx.Storage.Image().Get(ctx, name)
+	img, err := storage.Image().Get(ctx, name)
 	if err != nil {
 		return nil, err
 	}
 	if img == nil {
-		img, err = lctx.Storage.Image().Insert(ctx, name, isource)
+		img, err = storage.Image().Insert(ctx, name, isource)
 		if err != nil {
 			return nil, err
 		}
