@@ -68,22 +68,4 @@ type BuildSource struct {
 	Repo string `json:"repo"`
 	// Build source tag (branch, tag)
 	Tag string `json:"tag"`
-	// Build commit information
-	Commit GitSourceCommit `json:"commit"`
-	// Build sources auth reference
-}
-
-type GitSourceCommit struct {
-	// Git commit information hash
-	Commit string `json:"commit"`
-	// Git committer gravatar
-	Committer string `json:"committer"`
-	// Git committer username
-	Author string `json:"author"`
-	// Git committer username
-	Email string `json:"email"`
-	// Git commit message
-	Message string `json:"message"`
-	// Git commit date
-	Date time.Time `json:"date"`
 }
