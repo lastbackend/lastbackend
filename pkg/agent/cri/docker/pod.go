@@ -5,11 +5,10 @@ import (
 	docker "github.com/docker/docker/api/types"
 	"github.com/lastbackend/lastbackend/pkg/agent/context"
 	"github.com/lastbackend/lastbackend/pkg/apis/types"
-	"github.com/satori/go.uuid"
 	"strings"
 )
 
-func (r *Runtime) PodList() (map[uuid.UUID]*types.Pod, error) {
+func (r *Runtime) PodList() (map[string]*types.Pod, error) {
 	log := context.Get().GetLogger()
 	log.Debug("Docker: retrieve pod list")
 
@@ -17,7 +16,7 @@ func (r *Runtime) PodList() (map[uuid.UUID]*types.Pod, error) {
 	var pods types.PodMap
 
 	pods = types.PodMap{
-		Items: make(map[uuid.UUID]*types.Pod),
+		Items: make(map[string]*types.Pod),
 	}
 
 	items, err := r.client.ContainerList(context.Background(), docker.ContainerListOptions{
@@ -38,12 +37,12 @@ func (r *Runtime) PodList() (map[uuid.UUID]*types.Pod, error) {
 		info := strings.Split(label, "/")
 
 		meta := types.PodMeta{
-			ID:      uuid.FromStringOrNil(info[4]),
 			Owner:   info[1],
 			Project: info[2],
 			Service: info[3],
-			Spec:    uuid.FromStringOrNil(info[5]),
+			Spec:    info[5],
 		}
+		meta.ID = info[4]
 
 		pod, ok := pods.Items[meta.ID]
 		if !ok {
@@ -55,7 +54,7 @@ func (r *Runtime) PodList() (map[uuid.UUID]*types.Pod, error) {
 
 		inspected, _ := r.client.ContainerInspect(context.Background(), c.ID)
 		if container := GetContainer(c, inspected); container != nil {
-			log.Debugf("Add container %x", container)
+			log.Debugf("Add container %s to pod %s", container.ID, pod.Meta.ID)
 			pod.AddContainer(container)
 		}
 

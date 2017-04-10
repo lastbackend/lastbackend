@@ -55,7 +55,7 @@ func (l *Logger) Debug(args ...interface{}) {
 }
 
 func (l *Logger) Debugf(format string, args ...interface{}) {
-	l.log.Debugf(format, args)
+	l.log.Debugf(format, args...)
 }
 
 func (l *Logger) Info(args ...interface{}) {
@@ -63,7 +63,7 @@ func (l *Logger) Info(args ...interface{}) {
 }
 
 func (l *Logger) Infof(format string, args ...interface{}) {
-	l.log.Infof(format, args)
+	l.log.Infof(format, args...)
 }
 
 func (l *Logger) Error(args ...interface{}) {
@@ -71,7 +71,7 @@ func (l *Logger) Error(args ...interface{}) {
 }
 
 func (l *Logger) Errorf(format string, args ...interface{}) {
-	l.log.Errorf(format, args)
+	l.log.Errorf(format, args...)
 }
 
 func (l *Logger) Fatal(args ...interface{}) {
@@ -79,7 +79,7 @@ func (l *Logger) Fatal(args ...interface{}) {
 }
 
 func (l *Logger) Fatalf(format string, args ...interface{}) {
-	l.log.Fatalf(format, args)
+	l.log.Fatalf(format, args...)
 }
 
 func (l *Logger) Panic(args ...interface{}) {
@@ -87,7 +87,7 @@ func (l *Logger) Panic(args ...interface{}) {
 }
 
 func (l *Logger) Panicf(format string, args ...interface{}) {
-	l.log.Panicf(format, args)
+	l.log.Panicf(format, args...)
 }
 
 func (l *Logger) Warn(args ...interface{}) {
@@ -95,7 +95,7 @@ func (l *Logger) Warn(args ...interface{}) {
 }
 
 func (l *Logger) Warnf(format string, args ...interface{}) {
-	l.log.Warnf(format, args)
+	l.log.Warnf(format, args...)
 }
 
 func getTextFormatter() *logrus.TextFormatter {

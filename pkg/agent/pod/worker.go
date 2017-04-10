@@ -58,7 +58,7 @@ func NewWorker() *Worker {
 
 func NewTask(state types.PodState, meta types.PodMeta, spec types.PodSpec, pod *types.Pod) *Task {
 	log := context.Get().GetLogger()
-	log.Debugf("Create new task for pod: %s", pod.ID())
+	log.Debugf("Create new task for pod: %s", pod.Meta.ID)
 	return &Task{
 		state: state,
 		meta:  meta,
@@ -71,7 +71,7 @@ func NewTask(state types.PodState, meta types.PodMeta, spec types.PodSpec, pod *
 
 func (w *Worker) Proceed(state types.PodState, meta types.PodMeta, spec types.PodSpec, p *types.Pod) {
 	log := context.Get().GetLogger()
-	log.Debugf("Proceed new task for pod: %s", p.ID())
+	log.Debugf("Proceed new task for pod: %s", p.Meta.ID)
 
 	// Clean next task if exists
 	if w.next != nil {
@@ -131,7 +131,7 @@ func (t *Task) exec() {
 
 	// check container state
 	t.containersState()
-	log.Debugf("done task for pod: %s", t.pod.ID())
+	log.Debugf("done task for pod: %s", t.pod.Meta.ID)
 }
 
 func (t *Task) imagesUpdate() {
