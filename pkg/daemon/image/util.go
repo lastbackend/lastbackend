@@ -22,7 +22,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/lastbackend/lastbackend/pkg/apis/types"
-	"github.com/lastbackend/lastbackend/pkg/daemon/config"
+	c "github.com/lastbackend/lastbackend/pkg/daemon/context"
 	"strings"
 )
 
@@ -31,12 +31,10 @@ type util struct {
 }
 
 func (util) Name(_ context.Context, hub, name string) string {
-	var (
-		cfg       = config.Get()
-		namespace = name
-	)
+	cfg := c.Get().GetConfig()
+	namespace := name
 	if cfg.Registry.Username != "" {
-		namespace = fmt.Sprintf("%s/%s", namespace, cfg.Registry.Username)
+		namespace = fmt.Sprintf("%s/%s", cfg.Registry.Username, namespace)
 	}
 	if cfg.Registry.Server != "" {
 		server := cfg.Registry.Server
@@ -46,13 +44,13 @@ func (util) Name(_ context.Context, hub, name string) string {
 		case strings.HasPrefix(server, "https://") == true:
 			server = server[8:]
 		}
-		namespace = fmt.Sprintf("%s/%s", namespace, server)
+		namespace = fmt.Sprintf("%s/%s", server, namespace)
 	}
 	return namespace
 }
 
 func (util) RegistryAuth(_ context.Context, _ string) *types.RegistryAuth {
-	var cfg = config.Get()
+	cfg := c.Get().GetConfig()
 	return &types.RegistryAuth{
 		Username: cfg.Registry.Username,
 		Password: cfg.Registry.Password,

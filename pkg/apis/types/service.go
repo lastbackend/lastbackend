@@ -28,8 +28,6 @@ type ServiceList []Service
 type Service struct {
 	// Service Meta
 	Meta Meta `json:"meta"`
-	// Service project
-	Project string `json:"project"`
 	// Service custom domains
 	Domains []string `json:"domains"`
 	// Service source info

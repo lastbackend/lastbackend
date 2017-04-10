@@ -41,7 +41,7 @@ const (
 	ErrVendorSupported = "vendor is not supported yet"
 )
 
-func Create(ctx context.Context, imageID string, source *types.ServiceSource) (*types.Build, error) {
+func Create(ctx context.Context, imageName string, source *types.ServiceSource) (*types.Build, error) {
 	var (
 		log            = c.Get().GetLogger()
 		storage        = c.Get().GetStorage()
@@ -135,7 +135,7 @@ func Create(ctx context.Context, imageID string, source *types.ServiceSource) (*
 		Commit: *commit,
 	}
 
-	bld, err := storage.Build().Insert(ctx, imageID, bsource)
+	bld, err := storage.Build().Insert(ctx, imageName, bsource)
 	if err != nil {
 		return nil, err
 	}
