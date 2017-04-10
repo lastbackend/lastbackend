@@ -16,4 +16,4 @@
 // from Last.Backend LLC.
 //
 
-package deploy_test
+package service_test

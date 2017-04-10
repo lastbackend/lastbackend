@@ -20,7 +20,7 @@ package project
 
 import (
 	"github.com/lastbackend/lastbackend/pkg/apis/types"
-	"github.com/lastbackend/lastbackend/pkg/client/context"
+	c "github.com/lastbackend/lastbackend/pkg/client/context"
 	"github.com/lastbackend/lastbackend/pkg/errors"
 )
 
@@ -31,22 +31,24 @@ type createS struct {
 
 func CreateCmd(name, description string) {
 
-	var ctx = context.Get()
+	var (
+		log = c.Get().GetLogger()
+	)
 
 	err := Create(name, description)
 	if err != nil {
-		ctx.Log.Error(err)
+		log.Error(err)
 		return
 	}
 
-	ctx.Log.Info("Successful")
+	log.Info("Successful")
 }
 
 func Create(name, description string) error {
 
 	var (
 		err     error
-		ctx     = context.Get()
+		http    = c.Get().GetHttpClient()
 		er      = new(errors.Http)
 		project = new(types.Project)
 	)
@@ -55,10 +57,9 @@ func Create(name, description string) error {
 		return errors.BadParameter("name").Err()
 	}
 
-	_, _, err = ctx.HTTP.
+	_, _, err = http.
 		POST("/project").
 		AddHeader("Content-Type", "application/json").
-		AddHeader("Authorization", "Bearer "+ctx.Token).
 		BodyJSON(createS{name, description}).
 		Request(&project, er)
 	if err != nil {

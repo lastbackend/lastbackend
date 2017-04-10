@@ -28,23 +28,23 @@ import (
 func DockerRepositorySearchH(w http.ResponseWriter, r *http.Request) {
 
 	var (
-		ctx    = c.Get()
+		log    = c.Get().GetLogger()
 		params = r.URL.Query()
 		name   = params.Get("name")
 	)
 
-	ctx.Log.Debug("Search docker repository handler")
+	log.Debug("Search docker repository handler")
 
 	repoListModel, err := docker.GetRepository(name)
 	if err != nil {
-		ctx.Log.Error(err)
+		log.Error(err)
 		errors.HTTP.InternalServerError(w)
 		return
 	}
 
 	response, err := repoListModel.ToJson()
 	if err != nil {
-		ctx.Log.Error("Error: convert struct to json", err.Error())
+		log.Error("Error: convert struct to json", err.Error())
 		errors.HTTP.InternalServerError(w)
 		return
 	}
@@ -56,24 +56,24 @@ func DockerRepositorySearchH(w http.ResponseWriter, r *http.Request) {
 func DockerRepositoryTagListH(w http.ResponseWriter, r *http.Request) {
 
 	var (
-		ctx    = c.Get()
+		log    = c.Get().GetLogger()
 		params = r.URL.Query()
 		owner  = params.Get("owner")
 		name   = params.Get("name")
 	)
 
-	ctx.Log.Debug("List docker repository tags handler")
+	log.Debug("List docker repository tags handler")
 
 	tagListModel, err := docker.ListTag(owner, name)
 	if err != nil {
-		ctx.Log.Error(err)
+		log.Error(err)
 		errors.HTTP.InternalServerError(w)
 		return
 	}
 
 	response, err := tagListModel.ToJson()
 	if err != nil {
-		ctx.Log.Error("Error: convert struct to json", err.Error())
+		log.Error("Error: convert struct to json", err.Error())
 		errors.HTTP.InternalServerError(w)
 		return
 	}

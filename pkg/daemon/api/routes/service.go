@@ -53,11 +53,13 @@ type resources struct {
 
 func (s *serviceCreateS) decodeAndValidate(reader io.Reader) *errors.Err {
 
-	var ctx = c.Get()
+	var (
+		log = c.Get().GetLogger()
+	)
 
 	body, err := ioutil.ReadAll(reader)
 	if err != nil {
-		ctx.Log.Error(err)
+		log.Error(err)
 		return errors.New("user").Unknown(err)
 	}
 
@@ -128,30 +130,31 @@ func ServiceCreateH(w http.ResponseWriter, r *http.Request) {
 
 	var (
 		err          error
+		log          = c.Get().GetLogger()
+		storage      = c.Get().GetStorage()
 		image        = new(types.Image)
 		project      = new(types.Project)
-		ctx          = c.Get()
 		params       = utils.Vars(r)
 		projectParam = params["project"]
 	)
 
-	ctx.Log.Debug("Create service handler")
+	log.Debug("Create service handler")
 
 	// request body struct
 	rq := new(serviceCreateS)
 	if err := rq.decodeAndValidate(r.Body); err != nil {
-		ctx.Log.Error("Error: validation incomming data", err)
+		log.Error("Error: validation incomming data", err)
 		errors.New("Invalid incomming data").Unknown().Http(w)
 		return
 	}
 
 	if validator.IsUUID(projectParam) {
-		project, err = ctx.Storage.Project().GetByID(r.Context(), projectParam)
+		project, err = storage.Project().GetByID(r.Context(), projectParam)
 	} else {
-		project, err = ctx.Storage.Project().GetByName(r.Context(), projectParam)
+		project, err = storage.Project().GetByName(r.Context(), projectParam)
 	}
 	if err != nil {
-		ctx.Log.Error("Error: find project by name", err.Error())
+		log.Error("Error: find project by name", err.Error())
 		errors.HTTP.InternalServerError(w)
 		return
 	}
@@ -160,9 +163,9 @@ func ServiceCreateH(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	service, err := ctx.Storage.Service().GetByName(r.Context(), project.Meta.ID, rq.Name)
+	service, err := storage.Service().GetByName(r.Context(), project.Meta.ID, rq.Name)
 	if err != nil {
-		ctx.Log.Error("Error: check exists by name", err.Error())
+		log.Error("Error: check exists by name", err.Error())
 		errors.HTTP.InternalServerError(w)
 		return
 	}
@@ -195,7 +198,7 @@ func ServiceCreateH(w http.ResponseWriter, r *http.Request) {
 	if rq.source != nil {
 		image, err = i.Create(r.Context(), rq.Registry, rq.source)
 		if err != nil {
-			ctx.Log.Error("Error: insert service to db", err)
+			log.Error("Error: insert service to db", err)
 			errors.HTTP.InternalServerError(w)
 			return
 		}
@@ -204,24 +207,23 @@ func ServiceCreateH(w http.ResponseWriter, r *http.Request) {
 		rq.Config.Image = rq.Image
 	}
 
-	service, err = ctx.Storage.Service().Insert(r.Context(), project.Meta.ID, rq.Name, rq.Description, rq.Config)
+	service, err = storage.Service().Insert(r.Context(), project.Meta.ID, rq.Name, rq.Description, rq.Config)
 	if err != nil {
-		ctx.Log.Error("Error: insert service to db", err)
+		log.Error("Error: insert service to db", err)
 		errors.HTTP.InternalServerError(w)
 		return
 	}
 
 	response, err := v1.NewService(service).ToJson()
 	if err != nil {
-		ctx.Log.Error("Error: convert struct to json", err.Error())
+		log.Error("Error: convert struct to json", err.Error())
 		errors.HTTP.InternalServerError(w)
 		return
 	}
 
 	w.WriteHeader(http.StatusOK)
-	_, err = w.Write(response)
-	if err != nil {
-		ctx.Log.Error("Error: write response", err.Error())
+	if _, err = w.Write(response); err != nil {
+		log.Error("Error: write response", err.Error())
 		return
 	}
 }
@@ -235,11 +237,13 @@ type serviceUpdateS struct {
 
 func (s *serviceUpdateS) decodeAndValidate(reader io.Reader) *errors.Err {
 
-	var ctx = c.Get()
+	var (
+		log = c.Get().GetLogger()
+	)
 
 	body, err := ioutil.ReadAll(reader)
 	if err != nil {
-		ctx.Log.Error(err)
+		log.Error(err)
 		return errors.New("user").Unknown(err)
 	}
 
@@ -265,7 +269,8 @@ func ServiceUpdateH(w http.ResponseWriter, r *http.Request) {
 
 	var (
 		err          error
-		ctx          = c.Get()
+		log          = c.Get().GetLogger()
+		storage      = c.Get().GetStorage()
 		project      = new(types.Project)
 		service      = new(types.Service)
 		params       = utils.Vars(r)
@@ -273,23 +278,23 @@ func ServiceUpdateH(w http.ResponseWriter, r *http.Request) {
 		serviceParam = params["service"]
 	)
 
-	ctx.Log.Debug("Update service handler")
+	log.Debug("Update service handler")
 
 	// request body struct
 	rq := new(serviceUpdateS)
 	if err := rq.decodeAndValidate(r.Body); err != nil {
-		ctx.Log.Error("Error: validation incomming data", err)
+		log.Error("Error: validation incomming data", err)
 		errors.New("Invalid incomming data").Unknown().Http(w)
 		return
 	}
 
 	if validator.IsUUID(projectParam) {
-		project, err = ctx.Storage.Project().GetByID(r.Context(), projectParam)
+		project, err = storage.Project().GetByID(r.Context(), projectParam)
 	} else {
-		project, err = ctx.Storage.Project().GetByName(r.Context(), projectParam)
+		project, err = storage.Project().GetByName(r.Context(), projectParam)
 	}
 	if err != nil {
-		ctx.Log.Error("Error: find project by name", err.Error())
+		log.Error("Error: find project by name", err.Error())
 		errors.HTTP.InternalServerError(w)
 		return
 	}
@@ -299,13 +304,13 @@ func ServiceUpdateH(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if validator.IsUUID(serviceParam) {
-		service, err = ctx.Storage.Service().GetByID(r.Context(), project.Meta.ID, serviceParam)
+		service, err = storage.Service().GetByID(r.Context(), project.Meta.ID, serviceParam)
 	} else {
-		service, err = ctx.Storage.Service().GetByName(r.Context(), project.Meta.ID, serviceParam)
+		service, err = storage.Service().GetByName(r.Context(), project.Meta.ID, serviceParam)
 	}
 
 	if err != nil {
-		ctx.Log.Error("Error: Get service by name", err.Error())
+		log.Error("Error: Get service by name", err.Error())
 		errors.HTTP.InternalServerError(w)
 		return
 	}
@@ -325,7 +330,7 @@ func ServiceUpdateH(w http.ResponseWriter, r *http.Request) {
 
 	if rq.Config != nil {
 		if err := service.Config.Update(rq.Config); err != nil {
-			ctx.Log.Error("Error: update service config", err.Error())
+			log.Error("Error: update service config", err.Error())
 			errors.New("service").BadParameter("config", err)
 			return
 		}
@@ -335,23 +340,23 @@ func ServiceUpdateH(w http.ResponseWriter, r *http.Request) {
 		service.Domains = *rq.Domains
 	}
 
-	service, err = ctx.Storage.Service().Update(r.Context(), project.Meta.ID, service)
+	service, err = storage.Service().Update(r.Context(), project.Meta.ID, service)
 	if err != nil {
-		ctx.Log.Error("Error: insert service to db", err)
+		log.Error("Error: insert service to db", err)
 		errors.HTTP.InternalServerError(w)
 		return
 	}
 
 	response, err := v1.NewService(service).ToJson()
 	if err != nil {
-		ctx.Log.Error("Error: convert struct to json", err.Error())
+		log.Error("Error: convert struct to json", err.Error())
 		errors.HTTP.InternalServerError(w)
 		return
 	}
 
 	w.WriteHeader(http.StatusOK)
 	if _, err = w.Write(response); err != nil {
-		ctx.Log.Error("Error: write response", err.Error())
+		log.Error("Error: write response", err.Error())
 		return
 	}
 }
@@ -360,21 +365,22 @@ func ServiceListH(w http.ResponseWriter, r *http.Request) {
 
 	var (
 		err          error
-		ctx          = c.Get()
+		log          = c.Get().GetLogger()
+		storage      = c.Get().GetStorage()
 		project      = new(types.Project)
 		params       = utils.Vars(r)
 		projectParam = params["project"]
 	)
 
-	ctx.Log.Debug("List service handler")
+	log.Debug("List service handler")
 
 	if validator.IsUUID(projectParam) {
-		project, err = ctx.Storage.Project().GetByID(r.Context(), projectParam)
+		project, err = storage.Project().GetByID(r.Context(), projectParam)
 	} else {
-		project, err = ctx.Storage.Project().GetByName(r.Context(), projectParam)
+		project, err = storage.Project().GetByName(r.Context(), projectParam)
 	}
 	if err != nil {
-		ctx.Log.Error("Error: find project by name", err.Error())
+		log.Error("Error: find project by name", err.Error())
 		errors.HTTP.InternalServerError(w)
 		return
 	}
@@ -383,23 +389,23 @@ func ServiceListH(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	serviceList, err := ctx.Storage.Service().ListByProject(r.Context(), project.Meta.ID)
+	serviceList, err := storage.Service().ListByProject(r.Context(), project.Meta.ID)
 	if err != nil {
-		ctx.Log.Error("Error: find service list by user", err)
+		log.Error("Error: find service list by user", err)
 		errors.HTTP.InternalServerError(w)
 		return
 	}
 
 	response, err := v1.NewServiceList(serviceList).ToJson()
 	if err != nil {
-		ctx.Log.Error("Error: convert struct to json", err.Error())
+		log.Error("Error: convert struct to json", err.Error())
 		errors.HTTP.InternalServerError(w)
 		return
 	}
 
 	w.WriteHeader(http.StatusOK)
 	if _, err := w.Write(response); err != nil {
-		ctx.Log.Error("Error: write response", err.Error())
+		log.Error("Error: write response", err.Error())
 		return
 	}
 }
@@ -407,7 +413,8 @@ func ServiceListH(w http.ResponseWriter, r *http.Request) {
 func ServiceInfoH(w http.ResponseWriter, r *http.Request) {
 	var (
 		err          error
-		ctx          = c.Get()
+		log          = c.Get().GetLogger()
+		storage      = c.Get().GetStorage()
 		project      = new(types.Project)
 		service      = new(types.Service)
 		params       = utils.Vars(r)
@@ -415,15 +422,15 @@ func ServiceInfoH(w http.ResponseWriter, r *http.Request) {
 		serviceParam = params["service"]
 	)
 
-	ctx.Log.Debug("Get service handler")
+	log.Debug("Get service handler")
 
 	if validator.IsUUID(projectParam) {
-		project, err = ctx.Storage.Project().GetByID(r.Context(), projectParam)
+		project, err = storage.Project().GetByID(r.Context(), projectParam)
 	} else {
-		project, err = ctx.Storage.Project().GetByName(r.Context(), projectParam)
+		project, err = storage.Project().GetByName(r.Context(), projectParam)
 	}
 	if err != nil {
-		ctx.Log.Error("Error: find project by name", err.Error())
+		log.Error("Error: find project by name", err.Error())
 		errors.HTTP.InternalServerError(w)
 		return
 	}
@@ -433,12 +440,12 @@ func ServiceInfoH(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if validator.IsUUID(projectParam) {
-		service, err = ctx.Storage.Service().GetByID(r.Context(), project.Meta.ID, serviceParam)
+		service, err = storage.Service().GetByID(r.Context(), project.Meta.ID, serviceParam)
 	} else {
-		service, err = ctx.Storage.Service().GetByName(r.Context(), project.Meta.ID, serviceParam)
+		service, err = storage.Service().GetByName(r.Context(), project.Meta.ID, serviceParam)
 	}
 	if err != nil {
-		ctx.Log.Error("Error: find service by name", err.Error())
+		log.Error("Error: find service by name", err.Error())
 		errors.HTTP.InternalServerError(w)
 		return
 	}
@@ -449,14 +456,14 @@ func ServiceInfoH(w http.ResponseWriter, r *http.Request) {
 
 	response, err := v1.NewService(service).ToJson()
 	if err != nil {
-		ctx.Log.Error("Error: convert struct to json", err.Error())
+		log.Error("Error: convert struct to json", err.Error())
 		errors.HTTP.InternalServerError(w)
 		return
 	}
 
 	w.WriteHeader(http.StatusOK)
 	if _, err = w.Write(response); err != nil {
-		ctx.Log.Error("Error: write response", err.Error())
+		log.Error("Error: write response", err.Error())
 		return
 	}
 }
@@ -464,7 +471,8 @@ func ServiceInfoH(w http.ResponseWriter, r *http.Request) {
 func ServiceRemoveH(w http.ResponseWriter, r *http.Request) {
 	var (
 		err          error
-		ctx          = c.Get()
+		log          = c.Get().GetLogger()
+		storage      = c.Get().GetStorage()
 		project      = new(types.Project)
 		service      = new(types.Service)
 		params       = utils.Vars(r)
@@ -472,15 +480,15 @@ func ServiceRemoveH(w http.ResponseWriter, r *http.Request) {
 		serviceParam = params["service"]
 	)
 
-	ctx.Log.Info("Remove service")
+	log.Info("Remove service")
 
 	if validator.IsUUID(projectParam) {
-		project, err = ctx.Storage.Project().GetByID(r.Context(), projectParam)
+		project, err = storage.Project().GetByID(r.Context(), projectParam)
 	} else {
-		project, err = ctx.Storage.Project().GetByName(r.Context(), projectParam)
+		project, err = storage.Project().GetByName(r.Context(), projectParam)
 	}
 	if err != nil {
-		ctx.Log.Error("Error: find project by name", err.Error())
+		log.Error("Error: find project by name", err.Error())
 		errors.HTTP.InternalServerError(w)
 		return
 	}
@@ -490,13 +498,13 @@ func ServiceRemoveH(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if validator.IsUUID(serviceParam) {
-		service, err = ctx.Storage.Service().GetByID(r.Context(), project.Meta.ID, serviceParam)
+		service, err = storage.Service().GetByID(r.Context(), project.Meta.ID, serviceParam)
 	} else {
-		service, err = ctx.Storage.Service().GetByName(r.Context(), project.Meta.ID, serviceParam)
+		service, err = storage.Service().GetByName(r.Context(), project.Meta.ID, serviceParam)
 	}
 
 	if err != nil {
-		ctx.Log.Error("Error: find service by name", err.Error())
+		log.Error("Error: find service by name", err.Error())
 		errors.HTTP.InternalServerError(w)
 		return
 	}
@@ -507,15 +515,15 @@ func ServiceRemoveH(w http.ResponseWriter, r *http.Request) {
 
 	// Todo: remove all activity by service name
 
-	if err := ctx.Storage.Service().Remove(r.Context(), project.Meta.ID, service); err != nil {
-		ctx.Log.Error("Error: remove service from db", err)
+	if err := storage.Service().Remove(r.Context(), project.Meta.ID, service); err != nil {
+		log.Error("Error: remove service from db", err)
 		errors.HTTP.InternalServerError(w)
 		return
 	}
 
 	w.WriteHeader(http.StatusOK)
 	if _, err := w.Write([]byte{}); err != nil {
-		ctx.Log.Error("Error: write response", err.Error())
+		log.Error("Error: write response", err.Error())
 		return
 	}
 }

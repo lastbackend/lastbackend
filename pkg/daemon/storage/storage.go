@@ -19,7 +19,7 @@
 package storage
 
 import (
-	"github.com/lastbackend/lastbackend/pkg/storage/store"
+	"github.com/lastbackend/lastbackend/pkg/daemon/storage/store"
 )
 
 // Util helpers

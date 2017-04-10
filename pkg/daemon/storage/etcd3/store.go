@@ -21,7 +21,7 @@ package etcd3
 import (
 	"errors"
 	"github.com/coreos/etcd/clientv3"
-	st "github.com/lastbackend/lastbackend/pkg/storage/store"
+	st "github.com/lastbackend/lastbackend/pkg/daemon/storage/store"
 	"github.com/lastbackend/lastbackend/pkg/util/converter"
 	"github.com/lastbackend/lastbackend/pkg/util/serializer"
 	"github.com/lastbackend/lastbackend/pkg/util/validator"

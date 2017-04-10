@@ -21,17 +21,19 @@ package service
 import (
 	s "github.com/lastbackend/lastbackend/pkg/apis/views/v1/service"
 	"github.com/lastbackend/lastbackend/pkg/client/cmd/project"
-	"github.com/lastbackend/lastbackend/pkg/client/context"
+	c "github.com/lastbackend/lastbackend/pkg/client/context"
 	"github.com/lastbackend/lastbackend/pkg/errors"
 )
 
 func InspectCmd(name string) {
 
-	ctx := context.Get()
+	var (
+		log = c.Get().GetLogger()
+	)
 
 	service, projectName, err := Inspect(name)
 	if err != nil {
-		ctx.Log.Error(err)
+		log.Error(err)
 		return
 	}
 
@@ -42,7 +44,8 @@ func Inspect(name string) (*s.Service, string, error) {
 
 	var (
 		err     error
-		ctx     = context.Get()
+		log     = c.Get().GetLogger()
+		http    = c.Get().GetHttpClient()
 		er      = new(errors.Http)
 		service = new(s.Service)
 	)
@@ -53,13 +56,12 @@ func Inspect(name string) (*s.Service, string, error) {
 	}
 
 	if p == nil {
-		ctx.Log.Info("Project didn't select")
+		log.Info("Project didn't select")
 		return nil, "", nil
 	}
 
-	_, _, err = ctx.HTTP.
+	_, _, err = http.
 		GET("/project/"+p.Name+"/service/"+name).
-		AddHeader("Authorization", "Bearer "+ctx.Token).
 		Request(service, er)
 
 	if err != nil {

@@ -20,35 +20,36 @@ package service
 
 import (
 	"github.com/lastbackend/lastbackend/pkg/apis/types"
-	"github.com/lastbackend/lastbackend/pkg/client/context"
+	c "github.com/lastbackend/lastbackend/pkg/client/context"
 	"github.com/lastbackend/lastbackend/pkg/errors"
 )
 
 func RemoveCmd(name string) {
 
-	ctx := context.Get()
+	var (
+		log = c.Get().GetLogger()
+	)
 
 	err := Remove(name)
 	if err != nil {
-		ctx.Log.Error(err)
+		log.Error(err)
 		return
 	}
 
-	ctx.Log.Info("Successful")
+	log.Info("Successful")
 }
 
 func Remove(name string) error {
 
 	var (
 		err     error
-		ctx     = context.Get()
+		http    = c.Get().GetHttpClient()
 		service = new(types.Project)
 		er      = new(errors.Http)
 	)
 
-	_, _, err = ctx.HTTP.
+	_, _, err = http.
 		DELETE("/service/"+name).
-		AddHeader("Authorization", "Bearer "+ctx.Token).
 		Request(service, er)
 
 	if err != nil {

@@ -20,61 +20,53 @@ package config
 
 // The structure of the config to run the daemon
 type Config struct {
-	Debug bool `yaml:"debug"`
-
-	TokenSecret string `yaml:"secret"`
-
+	Debug       bool
+	SecretToken string
 	TemplateRegistry struct {
-		Host string `yaml:"host"`
-	} `yaml:"template_registry"`
-
+		Host string
+	}
 	ProxyServer struct {
-		Port int `yaml:"port"`
-	} `yaml:"proxy_server"`
-
+		Port int
+	}
 	HttpServer struct {
-		Host string `yaml:"host"`
-		Port int    `yaml:"port"`
-	} `yaml:"http_server"`
-
+		Host string
+		Port int
+	}
 	Etcd struct {
-		Endpoints []string `yaml:"endpoints"`
+		Endpoints []string
 		TLS       struct {
-			Key  string `yaml:"key"`
-			Cert string `yaml:"cert"`
-			CA   string `yaml:"ca"`
-		} `yaml:"tls"`
-		Quorum bool `yaml:"quorum"`
-	} `yaml:"etcd"`
-
+			Key  string
+			Cert string
+			CA   string
+		}
+		Quorum bool
+	}
 	Registry struct {
-		Server   string `yaml:"server"`
-		Username string `yaml:"username"`
-		Password string `yaml:"password"`
-	} `yaml:"registry"`
-
+		Server   string
+		Username string
+		Password string
+	}
 	VCS struct {
 		Github struct {
 			Client struct {
-				ID       string `yaml:"id"`
-				SecretID string `yaml:"secret_id"`
-			} `yaml:"client"`
-		} `yaml:"github"`
-
+				ID       string
+				SecretID string
+			}
+			RedirectUri string
+		}
 		Bitbucket struct {
 			Client struct {
-				ID       string `yaml:"id"`
-				SecretID string `yaml:"secret_id"`
-			} `yaml:"client"`
-			RedirectUri string `yaml:"redirect_uri"`
-		} `yaml:"bitbucket"`
-
+				ID       string
+				SecretID string
+			}
+			RedirectUri string
+		}
 		Gitlab struct {
 			Client struct {
-				ID       string `yaml:"id"`
-				SecretID string `yaml:"secret_id"`
-			} `yaml:"client"`
-			RedirectUri string `yaml:"redirect_uri"`
-		} `yaml:"gitlab"`
-	} `yaml:"vcs"`
+				ID       string
+				SecretID string
+			}
+			RedirectUri string
+		}
+	}
 }

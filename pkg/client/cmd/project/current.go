@@ -20,23 +20,25 @@ package project
 
 import (
 	p "github.com/lastbackend/lastbackend/pkg/apis/views/v1/project"
-	"github.com/lastbackend/lastbackend/pkg/client/context"
+	c "github.com/lastbackend/lastbackend/pkg/client/context"
 	"github.com/lastbackend/lastbackend/pkg/errors"
 )
 
 func CurrentCmd() {
 
-	var ctx = context.Get()
+	var (
+		log = c.Get().GetLogger()
+	)
 
 	project, err := Current()
 
 	if err != nil {
-		ctx.Log.Error(err)
+		log.Error(err)
 		return
 	}
 
 	if project == nil {
-		ctx.Log.Info("Project didn't select")
+		log.Info("Project didn't select")
 		return
 	}
 
@@ -47,15 +49,11 @@ func Current() (*p.Project, error) {
 
 	var (
 		err     error
-		ctx     = context.Get()
+		storage = c.Get().GetStorage()
 		project = new(p.Project)
 	)
 
-	if ctx.Token == "" {
-		return nil, errors.NotLoggedMessage
-	}
-
-	err = ctx.Storage.Get("project", project)
+	err = storage.Get("project", project)
 	if err != nil {
 		return nil, errors.New(err.Error())
 	}

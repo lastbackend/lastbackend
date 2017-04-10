@@ -21,7 +21,7 @@ package project
 import (
 	"fmt"
 	"github.com/lastbackend/lastbackend/pkg/apis/types"
-	"github.com/lastbackend/lastbackend/pkg/client/context"
+	c "github.com/lastbackend/lastbackend/pkg/client/context"
 	"github.com/lastbackend/lastbackend/pkg/errors"
 	"strings"
 	"time"
@@ -34,11 +34,13 @@ type updateS struct {
 
 func UpdateCmd(name, newProjectName, description string) {
 
-	var ctx = context.Get()
-	var choice string
+	var (
+		log    = c.Get().GetLogger()
+		choice string
+	)
 
 	if description == "" {
-		ctx.Log.Info("Description is empty, field will be cleared\n" +
+		log.Info("Description is empty, field will be cleared\n" +
 			"Want to continue? [Y\\n]")
 
 		for {
@@ -50,7 +52,7 @@ func UpdateCmd(name, newProjectName, description string) {
 			case "n":
 				return
 			default:
-				ctx.Log.Error("Incorrect input. [Y\n]")
+				log.Error("Incorrect input. [Y\n]")
 				continue
 			}
 
@@ -60,26 +62,26 @@ func UpdateCmd(name, newProjectName, description string) {
 
 	err := Update(name, newProjectName, description)
 	if err != nil {
-		ctx.Log.Error(err)
+		log.Error(err)
 		return
 	}
 
-	ctx.Log.Info("Successful")
+	log.Info("Successful")
 }
 
 func Update(name, newProjectName, description string) error {
 
 	var (
-		err error
-		ctx = context.Get()
-		er  = new(errors.Http)
-		res = new(types.Project)
+		err     error
+		http    = c.Get().GetHttpClient()
+		storage = c.Get().GetStorage()
+		er      = new(errors.Http)
+		res     = new(types.Project)
 	)
 
-	_, _, err = ctx.HTTP.
+	_, _, err = http.
 		PUT("/project/"+name).
 		AddHeader("Content-Type", "application/json").
-		AddHeader("Authorization", "Bearer "+ctx.Token).
 		BodyJSON(updateS{newProjectName, description}).
 		Request(&res, er)
 	if err != nil {
@@ -105,7 +107,7 @@ func Update(name, newProjectName, description string) error {
 			project.Description = description
 			project.Updated = time.Now()
 
-			err = ctx.Storage.Set("project", project)
+			err = storage.Set("project", project)
 			if err != nil {
 				return errors.New(err.Error())
 			}

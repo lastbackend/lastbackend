@@ -22,7 +22,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/lastbackend/lastbackend/pkg/apis/types"
-	"github.com/lastbackend/lastbackend/pkg/storage/store"
+	"github.com/lastbackend/lastbackend/pkg/daemon/storage/store"
 	"github.com/satori/go.uuid"
 	"time"
 )

@@ -21,38 +21,51 @@ package context
 import (
 	"github.com/lastbackend/lastbackend/pkg/daemon/config"
 	"github.com/lastbackend/lastbackend/pkg/logger"
-	"github.com/lastbackend/lastbackend/pkg/storage"
+	"github.com/lastbackend/lastbackend/pkg/daemon/storage"
 	"github.com/lastbackend/lastbackend/pkg/util/http"
 )
 
-var context Context
+var _ctx ctx
 
-func Get() *Context {
-	return &context
+type ctx struct {
+	logger               *logger.Logger
+	storage              *storage.Storage
+	config               *config.Config
+	httpTemplateRegistry *http.RawReq
 }
 
-type Context struct {
-	Log              *logger.Logger
-	TemplateRegistry *http.RawReq
-	Storage          storage.IStorage
+func Get() *ctx {
+	return &_ctx
 }
 
-func (c *Context) Init(cfg *config.Config) {
-	var err error
+func (c *ctx) SetLogger(log *logger.Logger) {
+	c.logger = log
+}
 
-	config.Set(cfg)
+func (c *ctx) GetLogger() *logger.Logger {
+	return c.logger
+}
 
-	c.Log = logger.New(cfg.Debug, 9)
+func (c *ctx) SetConfig(cfg *config.Config) {
+	c.config = cfg
+}
 
-	// Initializing database
-	c.Log.Info("Initializing daemon context")
+func (c *ctx) GetConfig() *config.Config {
+	return c.config
+}
 
-	c.Storage, err = storage.Get(cfg.GetEtcdDB())
-	if err != nil {
-		c.Log.Panic(err)
-	}
+func (c *ctx) SetStorage(storage *storage.Storage) {
+	c.storage = storage
+}
 
-	if cfg.HttpServer.Port == 0 {
-		cfg.HttpServer.Port = 3000
-	}
+func (c *ctx) GetStorage() *storage.Storage {
+	return c.storage
+}
+
+func (c *ctx) SetHttpTemplateRegistry(http *http.RawReq) {
+	c.httpTemplateRegistry = http
+}
+
+func (c *ctx) GetHttpTemplateRegistry() *http.RawReq {
+	return c.httpTemplateRegistry
 }
