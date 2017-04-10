@@ -109,7 +109,7 @@ type PodProvision struct {
 type PodSecret struct {
 }
 
-func (p *Pod) ID() uuid.UUID {
+func (p *Pod) ID() string {
 	return p.Meta.ID
 }
 

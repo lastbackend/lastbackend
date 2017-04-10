@@ -27,7 +27,6 @@ import (
 func New(obj *types.Project) *Project {
 	p := new(Project)
 
-	p.ID = obj.Meta.ID
 	p.Name = obj.Meta.Name
 	p.Description = obj.Meta.Description
 	p.Updated = obj.Meta.Updated
@@ -42,7 +41,6 @@ func (obj *Project) ToJson() ([]byte, error) {
 
 func (p *Project) DrawTable() {
 	table.PrintHorizontal(map[string]interface{}{
-		"ID":          p.ID.String(),
 		"Name":        p.Name,
 		"Description": p.Description,
 		"Created":     p.Created,

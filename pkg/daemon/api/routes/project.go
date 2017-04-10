@@ -26,7 +26,6 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/errors"
 	"github.com/lastbackend/lastbackend/pkg/util/http/utils"
 	"github.com/lastbackend/lastbackend/pkg/util/validator"
-	"github.com/satori/go.uuid"
 	"io"
 	"io/ioutil"
 	"net/http"
@@ -77,7 +76,7 @@ func ProjectInfoH(w http.ResponseWriter, r *http.Request) {
 	ctx.Log.Info("Get project handler")
 
 	if validator.IsUUID(projectID) {
-		project, err = ctx.Storage.Project().GetByID(r.Context(), uuid.FromStringOrNil(projectID))
+		project, err = ctx.Storage.Project().GetByID(r.Context(), projectID)
 	} else {
 		project, err = ctx.Storage.Project().GetByName(r.Context(), projectID)
 	}
@@ -248,7 +247,7 @@ func ProjectUpdateH(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if validator.IsUUID(projectParam) {
-		project, err = ctx.Storage.Project().GetByID(r.Context(), uuid.FromStringOrNil(projectParam))
+		project, err = ctx.Storage.Project().GetByID(r.Context(), projectParam)
 	} else {
 		project, err = ctx.Storage.Project().GetByName(r.Context(), projectParam)
 	}
@@ -295,7 +294,7 @@ func ProjectRemoveH(w http.ResponseWriter, r *http.Request) {
 	ctx.Log.Info("Remove project")
 
 	if validator.IsUUID(projectParam) {
-		project, err = ctx.Storage.Project().GetByID(r.Context(), uuid.FromStringOrNil(projectParam))
+		project, err = ctx.Storage.Project().GetByID(r.Context(), projectParam)
 	} else {
 		project, err = ctx.Storage.Project().GetByName(r.Context(), projectParam)
 	}

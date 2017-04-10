@@ -21,7 +21,6 @@ package storage
 import (
 	"context"
 	"github.com/lastbackend/lastbackend/pkg/apis/types"
-	"github.com/satori/go.uuid"
 	"golang.org/x/oauth2"
 )
 
@@ -42,44 +41,44 @@ type IStorage interface {
 
 type IActivity interface {
 	Insert(ctx context.Context, activity *types.Activity) (*types.Activity, error)
-	ListProjectActivity(ctx context.Context, id uuid.UUID) (*types.ActivityList, error)
-	ListServiceActivity(ctx context.Context, id uuid.UUID) (*types.ActivityList, error)
-	RemoveByProject(ctx context.Context, id uuid.UUID) error
-	RemoveByService(ctx context.Context, id uuid.UUID) error
+	ListProjectActivity(ctx context.Context, id string) (*types.ActivityList, error)
+	ListServiceActivity(ctx context.Context, id string) (*types.ActivityList, error)
+	RemoveByProject(ctx context.Context, id string) error
+	RemoveByService(ctx context.Context, id string) error
 }
 
 type IBuild interface {
-	GetByID(ctx context.Context, imageID, id uuid.UUID) (*types.Build, error)
-	ListByImage(ctx context.Context, id uuid.UUID) (*types.BuildList, error)
-	Insert(ctx context.Context, imageID uuid.UUID, source *types.BuildSource) (*types.Build, error)
+	GetByID(ctx context.Context, imageID, id string) (*types.Build, error)
+	ListByImage(ctx context.Context, id string) (*types.BuildList, error)
+	Insert(ctx context.Context, imageID string, source *types.BuildSource) (*types.Build, error)
 }
 
 type IHook interface {
 	GetByToken(ctx context.Context, token string) (*types.Hook, error)
-	ListByImage(ctx context.Context, id uuid.UUID) (*types.HookList, error)
-	ListByService(ctx context.Context, id uuid.UUID) (*types.HookList, error)
+	ListByImage(ctx context.Context, id string) (*types.HookList, error)
+	ListByService(ctx context.Context, id string) (*types.HookList, error)
 	Insert(ctx context.Context, hook *types.Hook) (*types.Hook, error)
-	Remove(ctx context.Context, id uuid.UUID) error
-	RemoveByService(ctx context.Context, id uuid.UUID) error
+	Remove(ctx context.Context, id string) error
+	RemoveByService(ctx context.Context, id string) error
 }
 
 type IProject interface {
-	GetByID(ctx context.Context, id uuid.UUID) (*types.Project, error)
+	GetByID(ctx context.Context, id string) (*types.Project, error)
 	GetByName(ctx context.Context, name string) (*types.Project, error)
 	List(ctx context.Context) (*types.ProjectList, error)
 	Insert(ctx context.Context, name, description string) (*types.Project, error)
 	Update(ctx context.Context, project *types.Project) (*types.Project, error)
-	Remove(ctx context.Context, id uuid.UUID) error
+	Remove(ctx context.Context, id string) error
 }
 
 type IService interface {
-	GetByID(ctx context.Context, project, id uuid.UUID) (*types.Service, error)
-	GetByName(ctx context.Context, project uuid.UUID, name string) (*types.Service, error)
-	ListByProject(ctx context.Context, project uuid.UUID) (*types.ServiceList, error)
-	Insert(ctx context.Context, project uuid.UUID, name, description string, config *types.ServiceConfig) (*types.Service, error)
-	Update(ctx context.Context, project uuid.UUID, service *types.Service) (*types.Service, error)
-	Remove(ctx context.Context, project uuid.UUID, service *types.Service) error
-	RemoveByProject(ctx context.Context, project uuid.UUID) error
+	GetByID(ctx context.Context, project, id string) (*types.Service, error)
+	GetByName(ctx context.Context, project string, name string) (*types.Service, error)
+	ListByProject(ctx context.Context, project string) (*types.ServiceList, error)
+	Insert(ctx context.Context, project string, name, description string, config *types.ServiceConfig) (*types.Service, error)
+	Update(ctx context.Context, project string, service *types.Service) (*types.Service, error)
+	Remove(ctx context.Context, project string, service *types.Service) error
+	RemoveByProject(ctx context.Context, project string) error
 }
 
 type IImage interface {
@@ -98,7 +97,7 @@ type IVendor interface {
 
 type IVolume interface {
 	GetByToken(ctx context.Context, token string) (*types.Volume, error)
-	ListByProject(ctx context.Context, project uuid.UUID) (*types.VolumeList, error)
+	ListByProject(ctx context.Context, project string) (*types.VolumeList, error)
 	Insert(ctx context.Context, volume *types.Volume) (*types.Volume, error)
-	Remove(ctx context.Context, id uuid.UUID) error
+	Remove(ctx context.Context, id string) error
 }
