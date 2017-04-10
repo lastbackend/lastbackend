@@ -68,7 +68,7 @@ func (s *ImageStorage) Insert(ctx context.Context, name string, source *types.Im
 		vendor = strings.Split(source.Hub, ".")[0]
 	)
 
-	image.Meta.ID = uuid.NewV4()
+	image.Meta.ID = uuid.NewV4().String()
 	image.Meta.Name = fmt.Sprintf("%s:%s-1", name, vendor)
 	image.Source = *source
 	image.Meta.Created = time.Now()

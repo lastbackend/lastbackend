@@ -22,7 +22,6 @@ import (
 	"context"
 	"github.com/lastbackend/lastbackend/pkg/apis/types"
 	"github.com/lastbackend/lastbackend/pkg/storage/store"
-	"github.com/satori/go.uuid"
 )
 
 const volumeStorage string = "volumes"
@@ -34,11 +33,11 @@ type VolumeStorage struct {
 	Client func() (store.IStore, store.DestroyFunc, error)
 }
 
-func (s *VolumeStorage) GetByID(ctx context.Context, id uuid.UUID) (*types.Volume, error) {
+func (s *VolumeStorage) GetByID(ctx context.Context, id string) (*types.Volume, error) {
 	return nil, nil
 }
 
-func (s *VolumeStorage) ListByProject(ctx context.Context, id uuid.UUID) (*types.VolumeList, error) {
+func (s *VolumeStorage) ListByProject(ctx context.Context, id string) (*types.VolumeList, error) {
 	return nil, nil
 }
 
@@ -48,7 +47,7 @@ func (s *VolumeStorage) Insert(ctx context.Context, volume *types.Volume) (*type
 }
 
 // Remove build model
-func (s *VolumeStorage) Remove(ctx context.Context, id uuid.UUID) error {
+func (s *VolumeStorage) Remove(ctx context.Context, id string) error {
 	return nil
 }
 

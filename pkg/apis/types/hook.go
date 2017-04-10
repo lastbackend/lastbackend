@@ -20,7 +20,6 @@ package types
 
 import (
 	"encoding/json"
-	"github.com/satori/go.uuid"
 )
 
 type HookList []Hook
@@ -29,13 +28,13 @@ type Hook struct {
 	// Hook Meta
 	Meta Meta `json:"meta"`
 	// Project name
-	Project uuid.UUID `json:"project"`
+	Project string `json:"project"`
 	// Hook token
 	Token string `json:"token"`
 	// Hook image to build
 	Image string `json:"image"`
 	// Hook service to build images
-	Service uuid.UUID `json:"service"`
+	Service string `json:"service"`
 }
 
 func (h *Hook) ToJson() ([]byte, error) {

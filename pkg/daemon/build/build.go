@@ -29,7 +29,6 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/util/generator"
 	"github.com/lastbackend/lastbackend/pkg/vendors"
 	"github.com/lastbackend/lastbackend/pkg/vendors/interfaces"
-	"github.com/satori/go.uuid"
 	"io/ioutil"
 	"net/http"
 	"regexp"
@@ -42,7 +41,7 @@ const (
 	ErrVendorSupported = "vendor is not supported yet"
 )
 
-func Create(ctx context.Context, imageID uuid.UUID, source *types.ServiceSource) (*types.Build, error) {
+func Create(ctx context.Context, imageID string, source *types.ServiceSource) (*types.Build, error) {
 	var (
 		err            error
 		clientID       string

@@ -37,22 +37,20 @@ type BuildStorage struct {
 }
 
 // Get build model by id
-func (s *BuildStorage) GetByID(ctx context.Context, imageID, id uuid.UUID) (*types.Build, error) {
+func (s *BuildStorage) GetByID(ctx context.Context, imageID, id string) (*types.Build, error) {
 	return nil, nil
 }
 
 // Get builds by image
-func (s *BuildStorage) ListByImage(ctx context.Context, id uuid.UUID) (*types.BuildList, error) {
+func (s *BuildStorage) ListByImage(ctx context.Context, id string) (*types.BuildList, error) {
 	return nil, nil
 }
 
 // Insert new build into storage
-func (s *BuildStorage) Insert(ctx context.Context, imageID uuid.UUID, source *types.BuildSource) (*types.Build, error) {
-
-
+func (s *BuildStorage) Insert(ctx context.Context, imageID string, source *types.BuildSource) (*types.Build, error) {
 
 	build := new(types.Build)
-	build.Meta.ID = uuid.NewV4()
+	build.Meta.ID = uuid.NewV4().String()
 	build.Status = types.BuildStatus{
 		Step:    types.BuildStepCreate,
 		Updated: time.Now(),
@@ -67,7 +65,7 @@ func (s *BuildStorage) Insert(ctx context.Context, imageID uuid.UUID, source *ty
 	}
 	defer destroy()
 
-	keyImageMeta := s.util.Key(ctx, imageStorage, imageID.String(), "meta")
+	keyImageMeta := s.util.Key(ctx, imageStorage, imageID, "meta")
 	imeta := new(types.ImageMeta)
 	if err := client.Get(ctx, keyImageMeta, imeta); err != nil {
 		if err.Error() == store.ErrKeyNotFound {
@@ -78,7 +76,7 @@ func (s *BuildStorage) Insert(ctx context.Context, imageID uuid.UUID, source *ty
 
 	tx := client.Begin(ctx)
 
-	keyImageMeta = s.util.Key(ctx, imageStorage, imageID.String(), "meta")
+	keyImageMeta = s.util.Key(ctx, imageStorage, imageID, "meta")
 	imeta.Builds++
 	if err := tx.Update(keyImageMeta, imeta, 0); err != nil {
 		if err.Error() == store.ErrKeyExists {
@@ -87,7 +85,7 @@ func (s *BuildStorage) Insert(ctx context.Context, imageID uuid.UUID, source *ty
 		return nil, err
 	}
 
-	keyMeta := s.util.Key(ctx, imageStorage, imageID.String(),
+	keyMeta := s.util.Key(ctx, imageStorage, imageID,
 		buildStorage, fmt.Sprintf("%s", build.Meta.Created.Unix()))
 
 	if err := tx.Create(keyMeta, build, 0); err != nil {
