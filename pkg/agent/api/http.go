@@ -19,69 +19,29 @@
 package api
 
 import (
-	"fmt"
-	"github.com/Sirupsen/logrus"
 	"github.com/gorilla/mux"
 	"github.com/lastbackend/lastbackend/pkg/agent/api/routes"
-	"net/http"
-	"strconv"
-	"time"
+	"github.com/lastbackend/lastbackend/pkg/agent/context"
+	"github.com/lastbackend/lastbackend/pkg/util/http"
+	"github.com/lastbackend/lastbackend/pkg/util/http/middleware"
 )
 
-type Handler struct {
-	Path    string
-	Method  string
-	Auth    bool
-	Handler func(http.ResponseWriter, *http.Request)
-}
+func Listen(host string, port int) error {
 
-func NewRouter() *mux.Router {
+	log := context.Get().GetLogger()
+	log.Debug("Listen HTTP server")
 
-	r := mux.NewRouter()
-	r.Methods("OPTIONS").HandlerFunc(headers)
-
-	// Session handlers
-	r.HandleFunc("/system", handle(routes.VersionGetR)).Methods(http.MethodPost)
-
-	// User handlers
-
-	return r
-}
-
-func RunHttpServer(routes *mux.Router, port int) {
-	logrus.Infof("Listen http server on %d port", port)
-	if err := http.ListenAndServe(":"+strconv.Itoa(port), routes); err != nil {
-		logrus.Fatal("ListenAndServe: ", err)
+	router := mux.NewRouter()
+	router.Methods("OPTIONS").HandlerFunc(http.Headers)
+	for _, route := range Routes {
+		log.Debugf("Init route: %s", route.Path)
+		router.Handle(route.Path, http.Handle(route.Handler, route.Middleware...)).Methods(route.Method)
 	}
+	return http.Listen(host, port, router)
 }
 
-func headers(w http.ResponseWriter, r *http.Request) {
-	origin := r.Header.Get("Origin")
-
-	w.Header().Add("Access-Control-Allow-Origin", origin)
-	w.Header().Add("Access-Control-Allow-Credentials", "true")
-	w.Header().Add("Access-Control-Allow-Methods", "OPTIONS,GET,POST,PUT,DELETE")
-	w.Header().Add("Access-Control-Allow-Headers", "X-CSRF-Token, Authorization, Content-Type, x-lastbackend, Origin, X-Requested-With, Content-Name, Accept")
-	w.Header().Add("Content-Type", "application/json")
-}
-
-func handle(h http.HandlerFunc, middleware ...func(http.HandlerFunc) http.HandlerFunc) http.HandlerFunc {
-	headers := func(h http.HandlerFunc) http.HandlerFunc {
-		return func(w http.ResponseWriter, r *http.Request) {
-
-			start := time.Now()
-
-			headers(w, r)
-			h.ServeHTTP(w, r)
-
-			fmt.Println(fmt.Sprintf("%s\t%s\t%s", r.Method, r.RequestURI, time.Since(start)))
-		}
-	}
-
-	h = headers(h)
-	for _, m := range middleware {
-		h = m(h)
-	}
-
-	return h
+var Routes = []http.Route{
+	// Vendor handlers
+	{Path: "/patch", Method: http.MethodPut, Middleware: []http.Middleware{middleware.Context},
+		Handler: routes.SetPods},
 }

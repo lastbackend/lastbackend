@@ -15,7 +15,7 @@ type CRI interface {
 	ContainerResume(ID string) error
 	ContainerRemove(ID string, clean bool, force bool) error
 
-	PodList() (map[string]*types.Pod, error)
+	PodList() ([]*types.Pod, error)
 
 	ImagePull(spec *types.ImageSpec) (io.ReadCloser, error)
 	ImageRemove(image string) error

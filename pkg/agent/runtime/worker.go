@@ -16,7 +16,7 @@
 // from Last.Backend LLC.
 //
 
-package pod
+package runtime
 
 import (
 	"github.com/lastbackend/lastbackend/pkg/agent/context"
@@ -107,6 +107,8 @@ func (w *Worker) loop() {
 		}
 
 		w.current.exec()
+		w.current = nil
+
 		w.lock.Lock()
 		if w.next != nil {
 			w.current = w.next
@@ -125,6 +127,7 @@ func (t *Task) exec() {
 	t.pod.Meta.Spec = t.spec.ID
 	// Check spec version
 	if t.meta.Spec != t.pod.Meta.Spec {
+		log.Debugf("spec is differrent, apply new one: %s", t.pod.Meta.Spec)
 		t.imagesUpdate()
 		t.containersUpdate()
 	}
@@ -217,32 +220,67 @@ func (t *Task) containersUpdate() {
 }
 
 func (t *Task) containersState() {
+	// TODO: wait 5 seconds and recheck container state
+	log := context.Get().GetLogger()
+	log.Debugf("update container state from: %s to %s", t.pod.State.State, t.state.State)
+
+	t.pod.State.State = "provision"
 
 	crii := context.Get().GetCri()
 	// Update containers states
-	if t.pod.State.State == types.PodStateStarted {
+	if t.state.State == types.PodStateStarted || t.state.State == types.PodStateRunning {
 		for _, c := range t.pod.Containers {
-			crii.ContainerStart(c.ID)
+			log.Debugf("Container: %s try to start", c.ID)
+			err := crii.ContainerStart(c.ID)
+			c.State = "running"
+			c.Status = ""
+			if err != nil {
+				c.State = "error"
+				c.Status = err.Error()
+			}
+			log.Debugf("Container: %s started", c.ID)
 			t.pod.SetContainer(c)
+			log.Debugf("Container: %s updated", c.ID)
 		}
+		t.pod.UpdateState()
 		return
 	}
 
-	if t.pod.State.State == types.PodStateStopped {
+	if t.state.State == types.PodStateStopped {
 		for _, c := range t.pod.Containers {
 			timeout := time.Duration(ContainerStopTimeout) * time.Second
-			crii.ContainerStop(c.ID, &timeout)
+			log.Debugf("Container: %s try to stop", c.ID)
+			err := crii.ContainerStop(c.ID, &timeout)
+			c.State = "stopped"
+			c.Status = ""
+			if err != nil {
+				c.State = "error"
+				c.Status = err.Error()
+			}
+			log.Debugf("Container: %s stopped", c.ID)
 			t.pod.SetContainer(c)
+			log.Debugf("Container: %s updated", c.ID)
 		}
+		t.pod.UpdateState()
 		return
 	}
 
-	if t.pod.State.State == types.PodStateRestarted {
+	if t.state.State == types.PodStateRestarted {
 		for _, c := range t.pod.Containers {
 			timeout := time.Duration(ContainerRestartTimeout) * time.Second
-			crii.ContainerRestart(c.ID, &timeout)
+			log.Debugf("Container: %s try to restart", c.ID)
+			err := crii.ContainerRestart(c.ID, &timeout)
+			c.State = "running"
+			c.Status = ""
+			if err != nil {
+				c.State = "error"
+				c.Status = err.Error()
+			}
+			log.Debugf("Container: %s restarted", c.ID)
 			t.pod.SetContainer(c)
+			log.Debugf("Container: %s updated", c.ID)
 		}
+		t.pod.UpdateState()
 		return
 	}
 }

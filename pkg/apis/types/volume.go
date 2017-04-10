@@ -31,7 +31,4 @@ type Volume struct {
 	Project string `json:"project"`
 }
 
-type VolumesSpec struct {
-	Volume    string
-	MountPath string
-}
+

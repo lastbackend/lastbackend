@@ -2,14 +2,11 @@ package docker
 
 import (
 	docker "github.com/docker/docker/api/types"
-	"github.com/lastbackend/lastbackend/pkg/agent/context"
 	"github.com/lastbackend/lastbackend/pkg/apis/types"
 	"time"
 )
 
 func GetContainer(dc docker.Container, info docker.ContainerJSON) *types.Container {
-	log := context.Get().GetLogger()
-	log.Debug("Docker: convert container format")
 
 	var c *types.Container
 

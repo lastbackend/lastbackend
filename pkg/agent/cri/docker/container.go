@@ -52,6 +52,6 @@ func (r *Runtime) ContainerRemove(ID string, clean bool, force bool) error {
 	})
 }
 
-func (r *Runtime) ContainerInspect() {
-
+func (r *Runtime) ContainerInspect(ID string) (*types.Container, error) {
+	return nil, nil
 }

@@ -16,32 +16,65 @@
 // from Last.Backend LLC.
 //
 
-package types
+package node
 
-import (
-	"time"
-)
+import "time"
 
-type Container struct {
-	// Container ID
-	ID string `json:"id"`
-	// Image information
-	Image ContainerImage `json:"image"`
-	// Container current state
-	State string `json:"state"`
-	// Container current state
-	Status string `json:"status"`
-	// Container ports mapping
-	Ports map[string]int
-	// Container created time
-	Created time.Time `json:"created"`
-	// Container started time
-	Started time.Time `json:"started"`
+type Spec struct {
+	// Pods spec
+	Pods []Pod `json:"pods"`
 }
 
-type ContainerImage struct {
-	ID   string `json:"id"`
-	Name string `json:"name"`
+type Pod struct {
+	// Pod Meta
+	Meta PodMeta `json:"meta"`
+	// Container spec
+	Spec PodSpec `json:"spec"`
+	// Pod state
+	State PodState `json:"state"`
+}
+
+type PodState struct {
+	// Pod current state
+	State string `json:"state"`
+	// Pod current status
+	Status string `json:"status"`
+}
+
+type PodMeta struct {
+	// Meta id
+	ID string `json:"id"`
+	// Meta labels
+	Labels map[string]string `json:"lables"`
+	// Pod owner
+	Owner string `json:"owner"`
+	// Pod project
+	Project string `json:"project"`
+	// Pod service
+	Service string `json:"service"`
+	// Current Spec ID
+	Spec string `json:"spec"`
+	// Meta created time
+	Created time.Time `json:"created"`
+	// Meta updated time
+	Updated time.Time `json:"updated"`
+}
+
+type PodSpec struct {
+	// Provision ID
+	ID string `json:"id"`
+	// Provision state
+	State string `json:"state"`
+	// Provision status
+	Status string `json:"status"`
+
+	// Containers spec for pod
+	Containers []ContainerSpec
+
+	// Provision create time
+	Created time.Time `json:"created"`
+	// Provision update time
+	Updated time.Time `json:"updated"`
 }
 
 type ContainerSpec struct {
@@ -69,6 +102,15 @@ type ContainerSpec struct {
 	RestartPolicy ContainerRestartPolicySpec `json:"restart_policy"`
 	// Container volumes mount
 	Volumes []ContainerVolumeSpec `json:"volumes"`
+}
+
+type ImageSpec struct {
+	// Image full name
+	Name string `json:"name"`
+	// Image pull provision flag
+	Pull bool `json:"image-pull"`
+	// Image Auth base64 encoded string
+	Auth string `json:"auth"`
 }
 
 type ContainerNetworkSpec struct {
@@ -118,21 +160,3 @@ type ContainerVolumeSpec struct {
 	// Container mount path
 	MountPath string `json:"mount_path"`
 }
-
-type ContainerStatusInfo struct {
-	// Container ID on host
-	ID string `json:"cid"`
-	// Image ID
-	Image string `json:"image"`
-	// Container current state
-	State string `json:"state"`
-	// Container ports mapping
-	Ports map[string]int
-	// Container created time
-	Created time.Time `json:"created"`
-	// Container updated time
-	Updated time.Time `json:"updated"`
-}
-
-const ContainerStateError = "error"
-const ContainerStatePending = "pending"

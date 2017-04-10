@@ -21,6 +21,7 @@ package cmd
 import (
 	"github.com/Sirupsen/logrus"
 	"github.com/jawher/mow.cli"
+	"github.com/lastbackend/lastbackend/pkg/agent/api"
 	"github.com/lastbackend/lastbackend/pkg/agent/config"
 	"github.com/lastbackend/lastbackend/pkg/agent/context"
 	"github.com/lastbackend/lastbackend/pkg/agent/cri"
@@ -66,6 +67,16 @@ func Agent(cmd *cli.Cmd) {
 		EnvVar: "LB_CRI", HideValue: true,
 	})
 
+	cfg.HTTP.Host = cmd.String(cli.StringOpt{
+		Name: "host", Value: "0.0.0.0", Desc: "HTTP server listen address",
+		EnvVar: "LB_AGENT_HOST", HideValue: true,
+	})
+
+	cfg.HTTP.Port = cmd.Int(cli.IntOpt{
+		Name: "port", Value: 2967, Desc: "HTTP server listen port",
+		EnvVar: "LB_AGENT_PORT", HideValue: true,
+	})
+
 	cmd.Before = func() {
 
 	}
@@ -80,10 +91,10 @@ func Agent(cmd *cli.Cmd) {
 		)
 
 		ctx.SetConfig(cfg)
-		ctx.SetLogger(logger.New(*cfg.Debug, 0))
+		ctx.SetLogger(logger.New(*cfg.Debug, 9))
 		ctx.SetStorage(storage.New())
 
-		rntm := &runtime.Runtime{}
+		rntm := runtime.Get()
 		crii, err = rntm.SetCri(cfg.Runtime)
 		if err != nil {
 			ctx.GetLogger().Errorf("Cannot initialize runtime: %s", err.Error())
@@ -94,6 +105,12 @@ func Agent(cmd *cli.Cmd) {
 		if err = rntm.StartPodManager(); err != nil {
 			ctx.GetLogger().Errorf("Cannot initialize pod manager: %s", err.Error())
 		}
+
+		go func() {
+			if err := api.Listen(*cfg.HTTP.Host, *cfg.HTTP.Port); err != nil {
+				ctx.GetLogger().Warnf("Http server start error: %s", err.Error())
+			}
+		}()
 
 		// Handle SIGINT and SIGTERM.
 		signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)

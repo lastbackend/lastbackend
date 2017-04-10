@@ -22,6 +22,7 @@ package config
 type Config struct {
 	Debug   *bool
 	Runtime *Runtime
+	HTTP    *HTTP
 }
 
 type Runtime struct {
@@ -32,4 +33,9 @@ type Runtime struct {
 type Docker struct {
 	Host, Certs, Version *string
 	TLS                  *bool
+}
+
+type HTTP struct {
+	Host *string
+	Port *int
 }
