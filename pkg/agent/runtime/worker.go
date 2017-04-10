@@ -148,8 +148,8 @@ func (t *Task) imagesUpdate() {
 
 	// Get images currently used by this pod
 	for _, container := range t.pod.Containers {
-		log.Debugf("Add images as used: %s", container.Image.Name)
-		images[container.Image.Name] = struct{}{}
+		log.Debugf("Add images as used: %s", container.Image)
+		images[container.Image] = struct{}{}
 	}
 
 	// Check imaged we need to pull
@@ -191,17 +191,14 @@ func (t *Task) containersUpdate() {
 	log.Debugf("Start containers update process for pod: %s", t.pod.Meta.ID)
 	var err error
 
+	var ids []string
+	var ncs []*types.Container
+
 	// Remove old containers
 	for _, c := range t.pod.Containers {
-
 		if c.ID != "" {
-			log.Debugf("Container %s remove", c.ID)
-			err := crii.ContainerRemove(c.ID, true, true)
-			if err != nil {
-				log.Errorf("Container remove error: %s", err.Error())
-			}
+			ids = append(ids, c.ID)
 		}
-		t.pod.DelContainer(c.ID)
 	}
 
 	// Create new containers
@@ -209,6 +206,7 @@ func (t *Task) containersUpdate() {
 		log.Debugf("Container create")
 
 		c := &types.Container{
+			Image:   spec.Image.Name,
 			State:   types.ContainerStatePending,
 			Created: time.Now(),
 		}
@@ -216,6 +214,7 @@ func (t *Task) containersUpdate() {
 		if spec.Labels == nil {
 			spec.Labels = make(map[string]string)
 		}
+
 		spec.Labels["LB_META"] = fmt.Sprintf("%s/%s", t.pod.Meta.ID, t.pod.Spec.ID)
 		c.ID, err = crii.ContainerCreate(spec)
 
@@ -223,11 +222,25 @@ func (t *Task) containersUpdate() {
 			log.Errorf("Container create error %s", err.Error())
 			c.State = types.ContainerStateError
 			c.Status = err.Error()
-			continue
+			break
 		}
 
 		log.Debugf("New container created: %s", c.ID)
+		ncs = append(ncs, c)
+	}
+
+	for _, c := range ncs {
 		t.pod.AddContainer(c)
+	}
+
+	for _, id := range ids {
+
+		log.Debugf("Container %s remove", id)
+		err := crii.ContainerRemove(id, true, true)
+		if err != nil {
+			log.Errorf("Container remove error: %s", err.Error())
+		}
+		t.pod.DelContainer(id)
 	}
 
 }

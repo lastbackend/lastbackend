@@ -26,7 +26,7 @@ type Container struct {
 	// Container ID
 	ID string `json:"id"`
 	// Image information
-	Image ContainerImage `json:"image"`
+	Image string `json:"image"`
 	// Container current state
 	State string `json:"state"`
 	// Container current state
@@ -37,11 +37,6 @@ type Container struct {
 	Created time.Time `json:"created"`
 	// Container started time
 	Started time.Time `json:"started"`
-}
-
-type ContainerImage struct {
-	ID   string `json:"id"`
-	Name string `json:"name"`
 }
 
 type ContainerSpec struct {
