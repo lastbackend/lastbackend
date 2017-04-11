@@ -20,7 +20,6 @@ package client
 
 import (
 	"github.com/jawher/mow.cli"
-	"github.com/lastbackend/lastbackend/pkg/client/cmd/deploy"
 	p "github.com/lastbackend/lastbackend/pkg/client/cmd/project"
 	s "github.com/lastbackend/lastbackend/pkg/client/cmd/service"
 	"github.com/lastbackend/lastbackend/pkg/client/config"
@@ -61,29 +60,22 @@ func Run() {
 			cfg.Debug = *debug
 		}
 
-		ctx.Log = logger.New(cfg.Debug, 8)
+		ctx.SetLogger(logger.New(cfg.Debug, 8))
+		ctx.SetHttpClient(http.New(cfg.ApiHost))
 
-		ctx.HTTP = http.New(cfg.ApiHost)
-
-		ctx.Storage, err = storage.Init()
+		strg, err := storage.Init()
 		if err != nil {
-			ctx.Log.Panic("Error: init local storage", err.Error())
+			ctx.GetLogger().Panic("Error: init local storage", err.Error())
 			return
 		}
-
-		session := struct {
-			Token string `json:"token,omitempty"`
-		}{}
-
-		ctx.Storage.Get("session", &session)
-		ctx.Token = session.Token
+		ctx.SetStorage(strg)
 	}
 
 	configure(app)
 
 	err = app.Run(os.Args)
 	if err != nil {
-		ctx.Log.Panic("Error: run application", err.Error())
+		ctx.GetLogger().Panic("Error: run application", err.Error())
 		return
 	}
 }
@@ -124,7 +116,7 @@ func configure(app *cli.Cli) {
 				return
 			}
 
-			deploy.DeployCmd(*name, *image, *template, *url, *scale)
+			s.CreateCmd(*name, *image, *template, *url, *scale)
 		}
 
 	})

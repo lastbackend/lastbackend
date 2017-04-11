@@ -20,17 +20,19 @@ package project
 
 import (
 	p "github.com/lastbackend/lastbackend/pkg/apis/views/v1/project"
-	"github.com/lastbackend/lastbackend/pkg/client/context"
+	c "github.com/lastbackend/lastbackend/pkg/client/context"
 	"github.com/lastbackend/lastbackend/pkg/errors"
 )
 
 func ListProjectCmd() {
 
-	var ctx = context.Get()
+	var (
+		log = c.Get().GetLogger()
+	)
 
 	projects, err := List()
 	if err != nil {
-		ctx.Log.Error(err)
+		log.Error(err)
 		return
 	}
 
@@ -43,14 +45,14 @@ func List() (*p.ProjectList, error) {
 
 	var (
 		err      error
-		ctx      = context.Get()
+		log      = c.Get().GetLogger()
+		http     = c.Get().GetHttpClient()
 		er       = new(errors.Http)
 		projects = new(p.ProjectList)
 	)
 
-	_, _, err = ctx.HTTP.
+	_, _, err = http.
 		GET("/project").
-		AddHeader("Authorization", "Bearer "+ctx.Token).
 		Request(projects, er)
 	if err != nil {
 		return nil, err
@@ -65,7 +67,7 @@ func List() (*p.ProjectList, error) {
 	}
 
 	if len(*projects) == 0 {
-		ctx.Log.Info("You don't have any projects")
+		log.Info("You don't have any projects")
 		return nil, nil
 	}
 

@@ -25,6 +25,7 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/errors"
 	"github.com/lastbackend/lastbackend/pkg/util/http/utils"
 	"github.com/lastbackend/lastbackend/pkg/vendors"
+	"github.com/lastbackend/lastbackend/pkg/vendors/docker"
 	"github.com/lastbackend/lastbackend/pkg/vendors/interfaces"
 	"net/http"
 )
@@ -33,22 +34,23 @@ import (
 func OAuthConnectH(w http.ResponseWriter, r *http.Request) {
 
 	var (
+		log            = c.Get().GetLogger()
+		storage        = c.Get().GetStorage()
 		clientID       string
 		clientSecretID string
 		redirectURI    string
 		client         interfaces.IAuth
-		ctx            = c.Get()
 		params         = utils.Vars(r)
 		vendor         = params[`vendor`]
 		code           = params[`code`]
 	)
 
-	ctx.Log.Debug("Connect service handler")
+	log.Debug("Connect service handler")
 
 	clientID, clientSecretID, redirectURI = config.Get().GetVendorConfig(vendor)
 
 	if clientID == "" || clientSecretID == "" {
-		ctx.Log.Error("Error: user unauthorized")
+		log.Error("Error: user unauthorized")
 		errors.HTTP.Unauthorized(w)
 		return
 	}
@@ -62,70 +64,78 @@ func OAuthConnectH(w http.ResponseWriter, r *http.Request) {
 	case "gitlab":
 		client = vendors.GetGitLab(clientID, clientSecretID, redirectURI)
 	default:
-		ctx.Log.Error("vendor is not supported yet")
+		log.Error("vendor is not supported yet")
 		errors.BadParameter("vendor").Http(w)
 		return
 	}
 
 	token, err := client.GetToken(code)
 	if err != nil {
-		ctx.Log.Error(err)
+		log.Error(err)
 		errors.HTTP.InternalServerError(w)
 		return
 	}
 
 	serviceUser, err := client.GetUser(token)
 	if err != nil {
-		ctx.Log.Error(err)
+		log.Error(err)
 		errors.HTTP.InternalServerError(w)
 		return
 	}
 
 	vendorInfo := client.GetVendorInfo()
 
-	if err := ctx.Storage.Vendor().Insert(r.Context(), serviceUser.Username, vendorInfo.Vendor, vendorInfo.Host, serviceUser.ServiceID, token); err != nil {
-		ctx.Log.Error(err.Error())
+	if err := storage.Vendor().Insert(r.Context(), serviceUser.Username, vendorInfo.Vendor, vendorInfo.Host, serviceUser.ServiceID, token); err != nil {
+		log.Error(err.Error())
 		errors.HTTP.InternalServerError(w)
 		return
 	}
 
 	w.WriteHeader(http.StatusOK)
-	w.Write([]byte{})
+	if _, err := w.Write([]byte{}); err != nil {
+		c.Get().GetLogger().Error("Error: write response", err.Error())
+		return
+	}
 }
 
 func OAuthDisconnectH(w http.ResponseWriter, r *http.Request) {
 
 	var (
-		ctx    = c.Get()
-		params = utils.Vars(r)
-		vendor = params[`vendor`]
+		log     = c.Get().GetLogger()
+		storage = c.Get().GetStorage()
+		params  = utils.Vars(r)
+		vendor  = params[`vendor`]
 	)
 
-	ctx.Log.Debug("Disconnect service handler")
+	log.Debug("Disconnect service handler")
 
-	if err := ctx.Storage.Vendor().Remove(r.Context(), vendor); err != nil {
-		ctx.Log.Error(err)
+	if err := storage.Vendor().Remove(r.Context(), vendor); err != nil {
+		log.Error(err)
 		errors.HTTP.InternalServerError(w)
 		return
 	}
 
 	w.WriteHeader(http.StatusOK)
-	w.Write([]byte{})
+	if _, err := w.Write([]byte{}); err != nil {
+		c.Get().GetLogger().Error("Error: write response", err.Error())
+		return
+	}
 }
 
-func VCSRepositoriesListH(w http.ResponseWriter, r *http.Request) {
+func VCSRepositoryListH(w http.ResponseWriter, r *http.Request) {
 
 	var (
-		client interfaces.IVCS
-		ctx    = c.Get()
-		params = utils.Vars(r)
-		vendor = params[`vendor`]
+		log     = c.Get().GetLogger()
+		storage = c.Get().GetStorage()
+		client  interfaces.IVCS
+		params  = utils.Vars(r)
+		vendor  = params[`vendor`]
 	)
 
 	clientID, clientSecretID, redirectURI := config.Get().GetVendorConfig(vendor)
 
 	if clientID == "" || clientSecretID == "" {
-		ctx.Log.Error("Error: user unauthorized")
+		log.Error("Error: user unauthorized")
 		errors.HTTP.Unauthorized(w)
 		return
 	}
@@ -139,7 +149,7 @@ func VCSRepositoriesListH(w http.ResponseWriter, r *http.Request) {
 	case "gitlab":
 		client = vendors.GetGitLab(clientID, clientSecretID, redirectURI)
 	default:
-		ctx.Log.Error("vendor is not supported yet")
+		log.Error("vendor is not supported yet")
 		errors.BadParameter("vendor").Http(w)
 		return
 	}
@@ -148,21 +158,21 @@ func VCSRepositoriesListH(w http.ResponseWriter, r *http.Request) {
 
 	vendorInfo := client.GetVendorInfo()
 
-	oaModel, err := ctx.Storage.Vendor().Get(r.Context(), vendorInfo.Vendor)
+	oaModel, err := storage.Vendor().Get(r.Context(), vendorInfo.Vendor)
 	if err != nil {
-		ctx.Log.Error(err)
+		log.Error(err)
 		errors.HTTP.InternalServerError(w)
 	}
 
 	token, modify, err := client.RefreshToken(oaModel.Token)
 	if err != nil {
-		ctx.Log.Error(err)
+		log.Error(err)
 		errors.HTTP.InternalServerError(w)
 	}
 
 	u, err := client.GetUser(token)
 	if err != nil {
-		ctx.Log.Error(err)
+		log.Error(err)
 		errors.HTTP.InternalServerError(w)
 	}
 
@@ -174,8 +184,8 @@ func VCSRepositoriesListH(w http.ResponseWriter, r *http.Request) {
 		oaModel.Token = token
 		oaModel.Username = u.Username
 
-		if err = ctx.Storage.Vendor().Update(r.Context(), oaModel); err != nil {
-			ctx.Log.Error(err)
+		if err = storage.Vendor().Update(r.Context(), oaModel); err != nil {
+			log.Error(err)
 			errors.HTTP.InternalServerError(w)
 		}
 	}
@@ -184,7 +194,7 @@ func VCSRepositoriesListH(w http.ResponseWriter, r *http.Request) {
 
 	repos, err := client.ListRepositories(token, u.Username, false)
 	if err != nil {
-		ctx.Log.Error(err)
+		log.Error(err)
 		errors.HTTP.InternalServerError(w)
 		return
 	}
@@ -193,24 +203,28 @@ func VCSRepositoriesListH(w http.ResponseWriter, r *http.Request) {
 	rp.Convert(repos)
 	response, err := rp.ToJson()
 
-	w.WriteHeader(200)
-	w.Write(response)
+	w.WriteHeader(http.StatusOK)
+	if _, err := w.Write(response); err != nil {
+		c.Get().GetLogger().Error("Error: write response", err.Error())
+		return
+	}
 }
 
-func VCSBranchesListH(w http.ResponseWriter, r *http.Request) {
+func VCSBranchListH(w http.ResponseWriter, r *http.Request) {
 
 	var (
-		client interfaces.IVCS
-		ctx    = c.Get()
-		params = utils.Vars(r)
-		vendor = params[`vendor`]
-		repo   = r.URL.Query().Get(`repo`)
+		log     = c.Get().GetLogger()
+		storage = c.Get().GetStorage()
+		client  interfaces.IVCS
+		params  = utils.Vars(r)
+		vendor  = params[`vendor`]
+		repo    = r.URL.Query().Get(`repo`)
 	)
 
 	clientID, clientSecretID, redirectURI := config.Get().GetVendorConfig(vendor)
 
 	if clientID == "" || clientSecretID == "" {
-		ctx.Log.Error("Error: user unauthorized")
+		log.Error("Error: user unauthorized")
 		errors.HTTP.Unauthorized(w)
 		return
 	}
@@ -224,7 +238,7 @@ func VCSBranchesListH(w http.ResponseWriter, r *http.Request) {
 	case "gitlab":
 		client = vendors.GetGitLab(clientID, clientSecretID, redirectURI)
 	default:
-		ctx.Log.Error("vendor is not supported yet")
+		log.Error("vendor is not supported yet")
 		errors.BadParameter("vendor").Http(w)
 		return
 	}
@@ -233,21 +247,21 @@ func VCSBranchesListH(w http.ResponseWriter, r *http.Request) {
 
 	vendorInfo := client.GetVendorInfo()
 
-	oaModel, err := ctx.Storage.Vendor().Get(r.Context(), vendorInfo.Vendor)
+	oaModel, err := storage.Vendor().Get(r.Context(), vendorInfo.Vendor)
 	if err != nil {
-		ctx.Log.Error(err)
+		log.Error(err)
 		errors.HTTP.InternalServerError(w)
 	}
 
 	token, modify, err := client.RefreshToken(oaModel.Token)
 	if err != nil {
-		ctx.Log.Error(err)
+		log.Error(err)
 		errors.HTTP.InternalServerError(w)
 	}
 
 	u, err := client.GetUser(token)
 	if err != nil {
-		ctx.Log.Error(err)
+		log.Error(err)
 		errors.HTTP.InternalServerError(w)
 	}
 
@@ -258,8 +272,8 @@ func VCSBranchesListH(w http.ResponseWriter, r *http.Request) {
 		oaModel.Token = token
 		oaModel.Username = u.Username
 
-		if err = ctx.Storage.Vendor().Update(r.Context(), oaModel); err != nil {
-			ctx.Log.Error(err)
+		if err = storage.Vendor().Update(r.Context(), oaModel); err != nil {
+			log.Error(err)
 			errors.HTTP.InternalServerError(w)
 		}
 	}
@@ -268,7 +282,7 @@ func VCSBranchesListH(w http.ResponseWriter, r *http.Request) {
 
 	branches, err := client.ListBranches(token, u.Username, repo)
 	if err != nil {
-		ctx.Log.Error(err)
+		log.Error(err)
 		errors.HTTP.InternalServerError(w)
 		return
 	}
@@ -277,6 +291,80 @@ func VCSBranchesListH(w http.ResponseWriter, r *http.Request) {
 	br.Convert(branches)
 	response, err := br.ToJson()
 
-	w.WriteHeader(200)
-	w.Write(response)
+	w.WriteHeader(http.StatusOK)
+	if _, err := w.Write(response); err != nil {
+		c.Get().GetLogger().Error("Error: write response", err.Error())
+		return
+	}
+}
+
+func DockerRepositorySearchH(w http.ResponseWriter, r *http.Request) {
+
+	var (
+		log    = c.Get().GetLogger()
+		params = r.URL.Query()
+		name   = params.Get("name")
+	)
+
+	log.Debug("Search docker repository handler")
+
+	repoListModel, err := docker.GetRepository(name)
+	if err != nil {
+		log.Error(err)
+		errors.HTTP.InternalServerError(w)
+		return
+	}
+
+	response, err := repoListModel.ToJson()
+	if err != nil {
+		log.Error("Error: convert struct to json", err.Error())
+		errors.HTTP.InternalServerError(w)
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+	if _, err := w.Write(response); err != nil {
+		c.Get().GetLogger().Error("Error: write response", err.Error())
+		return
+	}
+}
+
+func DockerRepositoryTagListH(w http.ResponseWriter, r *http.Request) {
+
+	var (
+		log    = c.Get().GetLogger()
+		params = r.URL.Query()
+		owner  = params.Get("owner")
+		name   = params.Get("name")
+	)
+
+	log.Debug("List docker repository tags handler")
+
+	tagListModel, err := docker.ListTag(owner, name)
+	if err != nil {
+		log.Error(err)
+		errors.HTTP.InternalServerError(w)
+		return
+	}
+
+	response, err := tagListModel.ToJson()
+	if err != nil {
+		log.Error("Error: convert struct to json", err.Error())
+		errors.HTTP.InternalServerError(w)
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+	if _, err := w.Write(response); err != nil {
+		c.Get().GetLogger().Error("Error: write response", err.Error())
+		return
+	}
+}
+
+func IntegrationsH(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusOK)
+	if _, err := w.Write([]byte{}); err != nil {
+		c.Get().GetLogger().Error("Error: write response", err.Error())
+		return
+	}
 }

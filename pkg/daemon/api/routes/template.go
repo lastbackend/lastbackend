@@ -16,10 +16,17 @@
 // from Last.Backend LLC.
 //
 
-package config
+package routes
 
-var _cfg Config
+import (
+	c "github.com/lastbackend/lastbackend/pkg/daemon/context"
+	"net/http"
+)
 
-func Get() *Config {
-	return &_cfg
+func TemplateListH(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusOK)
+	if _, err := w.Write([]byte{}); err != nil {
+		c.Get().GetLogger().Error("Error: write response", err.Error())
+		return
+	}
 }

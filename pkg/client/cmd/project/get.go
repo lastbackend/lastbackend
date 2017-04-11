@@ -20,18 +20,19 @@ package project
 
 import (
 	p "github.com/lastbackend/lastbackend/pkg/apis/views/v1/project"
-	"github.com/lastbackend/lastbackend/pkg/client/context"
+	c "github.com/lastbackend/lastbackend/pkg/client/context"
 	"github.com/lastbackend/lastbackend/pkg/errors"
 )
 
 func GetCmd(name string) {
 
-	var ctx = context.Get()
+	var (
+		log = c.Get().GetLogger()
+	)
 
 	project, err := Get(name)
-
 	if err != nil {
-		ctx.Log.Error(err)
+		log.Error(err)
 		return
 	}
 
@@ -42,7 +43,7 @@ func Get(name string) (*p.Project, error) {
 
 	var (
 		err     error
-		ctx     = context.Get()
+		http    = c.Get().GetHttpClient()
 		er      = new(errors.Http)
 		project = new(p.Project)
 	)
@@ -51,10 +52,9 @@ func Get(name string) (*p.Project, error) {
 		return nil, errors.BadParameter("name").Err()
 	}
 
-	_, _, err = ctx.HTTP.
+	_, _, err = http.
 		GET("/project/"+name).
 		AddHeader("Content-Type", "application/json").
-		AddHeader("Authorization", "Bearer "+ctx.Token).
 		Request(&project, er)
 	if err != nil {
 		return nil, errors.New(err.Error())

@@ -35,30 +35,30 @@ import (
 func ProjectListH(w http.ResponseWriter, r *http.Request) {
 
 	var (
-		err error
-		ctx = c.Get()
+		err     error
+		log     = c.Get().GetLogger()
+		storage = c.Get().GetStorage()
 	)
 
-	ctx.Log.Debug("List project handler")
+	log.Debug("List project handler")
 
-	projectList, err := ctx.Storage.Project().List(r.Context())
+	projectList, err := storage.Project().List(r.Context())
 	if err != nil {
-		ctx.Log.Error("Error: find projects by user", err)
+		log.Error("Error: find projects by user", err)
 		errors.HTTP.InternalServerError(w)
 		return
 	}
 
 	response, err := v1.NewProjectList(projectList).ToJson()
 	if err != nil {
-		ctx.Log.Error("Error: convert struct to json", err.Error())
+		log.Error("Error: convert struct to json", err.Error())
 		errors.HTTP.InternalServerError(w)
 		return
 	}
 
 	w.WriteHeader(http.StatusOK)
-	_, err = w.Write(response)
-	if err != nil {
-		ctx.Log.Error("Error: write response", err.Error())
+	if _, err = w.Write(response); err != nil {
+		log.Error("Error: write response", err.Error())
 		return
 	}
 }
@@ -67,21 +67,22 @@ func ProjectInfoH(w http.ResponseWriter, r *http.Request) {
 
 	var (
 		err       error
+		log       = c.Get().GetLogger()
+		storage   = c.Get().GetStorage()
 		project   *types.Project
-		ctx       = c.Get()
 		params    = utils.Vars(r)
 		projectID = params["project"]
 	)
 
-	ctx.Log.Info("Get project handler")
+	log.Info("Get project handler")
 
 	if validator.IsUUID(projectID) {
-		project, err = ctx.Storage.Project().GetByID(r.Context(), projectID)
+		project, err = storage.Project().GetByID(r.Context(), projectID)
 	} else {
-		project, err = ctx.Storage.Project().GetByName(r.Context(), projectID)
+		project, err = storage.Project().GetByName(r.Context(), projectID)
 	}
 	if err != nil {
-		ctx.Log.Error("Error: find project by id", err.Error())
+		log.Error("Error: find project by id", err.Error())
 		errors.HTTP.InternalServerError(w)
 		return
 	}
@@ -92,15 +93,14 @@ func ProjectInfoH(w http.ResponseWriter, r *http.Request) {
 
 	response, err := v1.NewProject(project).ToJson()
 	if err != nil {
-		ctx.Log.Error("Error: convert struct to json", err.Error())
+		log.Error("Error: convert struct to json", err.Error())
 		errors.HTTP.InternalServerError(w)
 		return
 	}
 
 	w.WriteHeader(http.StatusOK)
-	_, err = w.Write(response)
-	if err != nil {
-		ctx.Log.Error("Error: write response", err.Error())
+	if _, err = w.Write(response); err != nil {
+		log.Error("Error: write response", err.Error())
 		return
 	}
 
@@ -114,12 +114,12 @@ type projectCreateS struct {
 func (s *projectCreateS) decodeAndValidate(reader io.Reader) *errors.Err {
 
 	var (
-		ctx = c.Get()
+		log = c.Get().GetLogger()
 	)
 
 	body, err := ioutil.ReadAll(reader)
 	if err != nil {
-		ctx.Log.Error(err)
+		log.Error(err)
 		return errors.New("user").Unknown(err)
 	}
 
@@ -144,22 +144,23 @@ func (s *projectCreateS) decodeAndValidate(reader io.Reader) *errors.Err {
 func ProjectCreateH(w http.ResponseWriter, r *http.Request) {
 
 	var (
-		ctx = c.Get()
+		log     = c.Get().GetLogger()
+		storage = c.Get().GetStorage()
 	)
 
-	ctx.Log.Debug("Create project handler")
+	log.Debug("Create project handler")
 
 	// request body struct
 	rq := new(projectCreateS)
 	if err := rq.decodeAndValidate(r.Body); err != nil {
-		ctx.Log.Error("Error: validation incomming data", err)
+		log.Error("Error: validation incomming data", err)
 		errors.New("Invalid incomming data").Unknown().Http(w)
 		return
 	}
 
-	project, err := ctx.Storage.Project().GetByName(r.Context(), rq.Name)
+	project, err := storage.Project().GetByName(r.Context(), rq.Name)
 	if err != nil {
-		ctx.Log.Error("Error: check exists by name", err.Error())
+		log.Error("Error: check exists by name", err.Error())
 		errors.HTTP.InternalServerError(w)
 		return
 	}
@@ -169,24 +170,23 @@ func ProjectCreateH(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	project, err = ctx.Storage.Project().Insert(r.Context(), rq.Name, rq.Description)
+	project, err = storage.Project().Insert(r.Context(), rq.Name, rq.Description)
 	if err != nil {
-		ctx.Log.Error("Error: insert project to db", err)
+		log.Error("Error: insert project to db", err)
 		errors.HTTP.InternalServerError(w)
 		return
 	}
 
 	response, err := v1.NewProject(project).ToJson()
 	if err != nil {
-		ctx.Log.Error("Error: convert struct to json", err.Error())
+		log.Error("Error: convert struct to json", err.Error())
 		errors.HTTP.InternalServerError(w)
 		return
 	}
 
 	w.WriteHeader(http.StatusOK)
-	_, err = w.Write(response)
-	if err != nil {
-		ctx.Log.Error("Error: write response", err.Error())
+	if _, err = w.Write(response); err != nil {
+		log.Error("Error: write response", err.Error())
 		return
 	}
 }
@@ -199,12 +199,12 @@ type projectUpdateS struct {
 func (s *projectUpdateS) decodeAndValidate(reader io.Reader) *errors.Err {
 
 	var (
-		ctx = c.Get()
+		log = c.Get().GetLogger()
 	)
 
 	body, err := ioutil.ReadAll(reader)
 	if err != nil {
-		ctx.Log.Error(err)
+		log.Error(err)
 		return errors.New("user").Unknown(err)
 	}
 
@@ -230,29 +230,30 @@ func ProjectUpdateH(w http.ResponseWriter, r *http.Request) {
 
 	var (
 		err          error
+		log          = c.Get().GetLogger()
+		storage      = c.Get().GetStorage()
 		project      = new(types.Project)
-		ctx          = c.Get()
 		params       = utils.Vars(r)
 		projectParam = params["project"]
 	)
 
-	ctx.Log.Debug("Update project handler")
+	log.Debug("Update project handler")
 
 	// request body struct
 	rq := new(projectUpdateS)
 	if err := rq.decodeAndValidate(r.Body); err != nil {
-		ctx.Log.Error("Error: validation incomming data", err)
+		log.Error("Error: validation incomming data", err)
 		errors.New("Invalid incomming data").Unknown().Http(w)
 		return
 	}
 
 	if validator.IsUUID(projectParam) {
-		project, err = ctx.Storage.Project().GetByID(r.Context(), projectParam)
+		project, err = storage.Project().GetByID(r.Context(), projectParam)
 	} else {
-		project, err = ctx.Storage.Project().GetByName(r.Context(), projectParam)
+		project, err = storage.Project().GetByName(r.Context(), projectParam)
 	}
 	if err != nil {
-		ctx.Log.Error("Error: check exists by name", err.Error())
+		log.Error("Error: check exists by name", err.Error())
 		errors.HTTP.InternalServerError(w)
 		return
 	}
@@ -260,23 +261,23 @@ func ProjectUpdateH(w http.ResponseWriter, r *http.Request) {
 	project.Meta.Name = rq.Name
 	project.Meta.Description = rq.Description
 
-	project, err = ctx.Storage.Project().Update(r.Context(), project)
+	project, err = storage.Project().Update(r.Context(), project)
 	if err != nil {
-		ctx.Log.Error("Error: update project to db", err)
+		log.Error("Error: update project to db", err)
 		errors.HTTP.InternalServerError(w)
 		return
 	}
 
 	response, err := v1.NewProject(project).ToJson()
 	if err != nil {
-		ctx.Log.Error("Error: convert struct to json", err.Error())
+		log.Error("Error: convert struct to json", err.Error())
 		errors.HTTP.InternalServerError(w)
 		return
 	}
 
 	w.WriteHeader(http.StatusOK)
 	if _, err = w.Write(response); err != nil {
-		ctx.Log.Error("Error: write response", err.Error())
+		log.Error("Error: write response", err.Error())
 		return
 	}
 }
@@ -285,21 +286,22 @@ func ProjectRemoveH(w http.ResponseWriter, r *http.Request) {
 
 	var (
 		err          error
-		ctx          = c.Get()
+		log          = c.Get().GetLogger()
+		storage      = c.Get().GetStorage()
 		project      = new(types.Project)
 		params       = utils.Vars(r)
 		projectParam = params["project"]
 	)
 
-	ctx.Log.Info("Remove project")
+	log.Info("Remove project")
 
 	if validator.IsUUID(projectParam) {
-		project, err = ctx.Storage.Project().GetByID(r.Context(), projectParam)
+		project, err = storage.Project().GetByID(r.Context(), projectParam)
 	} else {
-		project, err = ctx.Storage.Project().GetByName(r.Context(), projectParam)
+		project, err = storage.Project().GetByName(r.Context(), projectParam)
 	}
 	if err != nil {
-		ctx.Log.Error("Error: find project by name", err.Error())
+		log.Error("Error: find project by name", err.Error())
 		errors.HTTP.InternalServerError(w)
 		return
 	}
@@ -311,44 +313,38 @@ func ProjectRemoveH(w http.ResponseWriter, r *http.Request) {
 	// Todo: remove all services by project id
 	// Todo: remove all activity by project id
 
-	//err = ctx.Storage.Service().RemoveByProject(session.Username, projectParam)
+	//err = storage.Service().RemoveByProject(session.Username, projectParam)
 	//if err != nil {
-	//	ctx.Log.Error("Error: remove services from db", err)
+	//	log.Error("Error: remove services from db", err)
 	//	e.HTTP.InternalServerError(w)
 	//	return
 	//}
 
-	//err = ctx.Storage.Activity().RemoveByProject(session.Username, projectParam)
+	//err = storage.Activity().RemoveByProject(session.Username, projectParam)
 	//if err != nil {
-	//	ctx.Log.Error("Error: remove activity from db", err)
+	//	log.Error("Error: remove activity from db", err)
 	//	e.HTTP.InternalServerError(w)
 	//	return
 	//}
 
-	err = ctx.Storage.Project().Remove(r.Context(), project.Meta.ID)
+	err = storage.Project().Remove(r.Context(), project.Meta.ID)
 	if err != nil {
-		ctx.Log.Error("Error: remove project from db", err)
+		log.Error("Error: remove project from db", err)
 		errors.HTTP.InternalServerError(w)
 		return
 	}
 
 	w.WriteHeader(http.StatusOK)
-	_, err = w.Write([]byte{})
-	if err != nil {
-		ctx.Log.Error("Error: write response", err.Error())
+	if _, err = w.Write([]byte{}); err != nil {
+		log.Error("Error: write response", err.Error())
 		return
 	}
 }
 
 func ProjectActivityListH(w http.ResponseWriter, r *http.Request) {
-	var (
-		err error
-		ctx = c.Get()
-	)
 	w.WriteHeader(http.StatusOK)
-	_, err = w.Write([]byte(`[]`))
-	if err != nil {
-		ctx.Log.Error("Error: write response", err.Error())
+	if _, err := w.Write([]byte(`[]`)); err != nil {
+		c.Get().GetLogger().Error("Error: write response", err.Error())
 		return
 	}
 }

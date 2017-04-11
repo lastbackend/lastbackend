@@ -44,6 +44,7 @@ Structure
 # helpers information data layer
 /lastbackend/helper/projects/<name>: <project id>
 /lastbackend/helper/projects/<project id>/services/<name>: <service id>
+/lastbackend/helper/pods/<pod id>: <project id>:<service id>
 ```
 
 ### Структуры данных

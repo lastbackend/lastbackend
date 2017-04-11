@@ -74,7 +74,16 @@ func DecodeBase64(s string) string {
 // 	* git@github.com:lastbackend/lastbackend.git
 func GitUrlParse(url string) (*source, error) {
 
-	var match []string = regexp.MustCompile(`^(?:ssh|git|http(?:s)?)(?:@|:\/\/(?:.+@)?)((\w+)\.\w+)(?:\/|:)(.+)(?:\/)(.+)(?:\..+)$`).FindStringSubmatch(url)
+	var (
+		parse  = strings.Split(url, "#")
+		branch = "master"
+	)
+
+	if len(parse) == 2 {
+		branch = parse[1]
+	}
+
+	var match []string = regexp.MustCompile(`^(?:ssh|git|http(?:s)?)(?:@|:\/\/(?:.+@)?)((\w+)\.\w+)(?:\/|:)(.+)(?:\/)(.+)(?:\..+)$`).FindStringSubmatch(parse[0])
 
 	if len(match) < 5 {
 		return nil, errors.New("can't parse url")
@@ -86,6 +95,7 @@ func GitUrlParse(url string) (*source, error) {
 		Vendor:   match[2],
 		Owner:    match[3],
 		Repo:     match[4],
+		Branch:   branch,
 	}, nil
 
 }

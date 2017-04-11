@@ -29,25 +29,26 @@ import (
 func HookExecuteH(w http.ResponseWriter, r *http.Request) {
 
 	var (
+		log       = context.Get().GetLogger()
+		storage   = context.Get().GetStorage()
 		hookModel *types.Hook
-		ctx       = context.Get()
 		params    = utils.Vars(r)
 		hookParam = params["token"]
 	)
 
-	ctx.Log.Debug("Get hook execute handler")
+	log.Debug("Get hook execute handler")
 
-	hookModel, err := ctx.Storage.Hook().GetByToken(r.Context(), hookParam)
+	hookModel, err := storage.Hook().GetByToken(r.Context(), hookParam)
 	if err != nil || hookModel == nil {
-		ctx.Log.Error("Error: get hook by token", err.Error())
+		log.Error("Error: get hook by token", err.Error())
 		errors.HTTP.BadRequest(w)
 		return
 	}
 
 	if hookModel.Service != "" {
-		serviceModel, err := ctx.Storage.Service().GetByID(r.Context(), hookModel.Project, hookModel.Service)
+		serviceModel, err := storage.Service().GetByID(r.Context(), hookModel.Project, hookModel.Service)
 		if err != nil && serviceModel == nil {
-			ctx.Log.Error("Error: get service by name", err.Error())
+			log.Error("Error: get service by name", err.Error())
 			errors.HTTP.BadRequest(w)
 			return
 		}
@@ -62,9 +63,8 @@ func HookExecuteH(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.WriteHeader(http.StatusOK)
-	_, err = w.Write([]byte{})
-	if err != nil {
-		ctx.Log.Error("Error: write response", err.Error())
+	if _, err = w.Write([]byte{}); err != nil {
+		log.Error("Error: write response", err.Error())
 		return
 	}
 }

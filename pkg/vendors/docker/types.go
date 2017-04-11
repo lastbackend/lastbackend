@@ -16,14 +16,14 @@
 // from Last.Backend LLC.
 //
 
-package types
+package docker
 
 import (
 	"encoding/json"
 	"time"
 )
 
-type DockerRepository struct {
+type Repository struct {
 	StarCount int64  `json:"star_count"`
 	PullCount int64  `json:"pull_count"`
 	Hub       string `json:"hub"`
@@ -34,9 +34,32 @@ type DockerRepository struct {
 	Official  bool   `json:"official"`
 }
 
-type DockerRepositoryList []DockerRepository
+type RepositoryList []Repository
 
-type DockerTag struct {
+func (obj *Repository) ToJson() ([]byte, error) {
+	buf, err := json.Marshal(obj)
+	if err != nil {
+		return nil, err
+	}
+
+	return buf, nil
+}
+
+func (list *RepositoryList) ToJson() ([]byte, error) {
+
+	if list == nil {
+		return []byte(`[]`), nil
+	}
+
+	buf, err := json.Marshal(list)
+	if err != nil {
+		return nil, err
+	}
+
+	return buf, nil
+}
+
+type Tag struct {
 	Name        string    `json:"name"`
 	ID          int64     `json:"id"`
 	Size        int64     `json:"size"`
@@ -49,14 +72,14 @@ type DockerTag struct {
 	LastUpdated time.Time `json:"last_updated"`
 }
 
-type DockerTagList struct {
-	Name  string      `json:"name"`
-	Owner string      `json:"owner"`
-	Tags  []DockerTag `json:"tags"`
+type TagList struct {
+	Name  string `json:"name"`
+	Owner string `json:"owner"`
+	Tags  []Tag  `json:"tags"`
 }
 
-func (s *DockerRepository) ToJson() ([]byte, error) {
-	buf, err := json.Marshal(s)
+func (obj *Tag) ToJson() ([]byte, error) {
+	buf, err := json.Marshal(obj)
 	if err != nil {
 		return nil, err
 	}
@@ -64,36 +87,13 @@ func (s *DockerRepository) ToJson() ([]byte, error) {
 	return buf, nil
 }
 
-func (s *DockerRepositoryList) ToJson() ([]byte, error) {
+func (list *TagList) ToJson() ([]byte, error) {
 
-	if s == nil {
-		return []byte("[]"), nil
+	if list == nil {
+		return []byte(`[]`), nil
 	}
 
-	buf, err := json.Marshal(s)
-	if err != nil {
-		return nil, err
-	}
-
-	return buf, nil
-}
-
-func (s *DockerTag) ToJson() ([]byte, error) {
-	buf, err := json.Marshal(s)
-	if err != nil {
-		return nil, err
-	}
-
-	return buf, nil
-}
-
-func (s *DockerTagList) ToJson() ([]byte, error) {
-
-	if s == nil {
-		return []byte("[]"), nil
-	}
-
-	buf, err := json.Marshal(s)
+	buf, err := json.Marshal(list)
 	if err != nil {
 		return nil, err
 	}

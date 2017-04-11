@@ -17,3 +17,16 @@
 //
 
 package routes
+
+import (
+	c "github.com/lastbackend/lastbackend/pkg/daemon/context"
+	"net/http"
+)
+
+func StatusH(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusOK)
+	if _, err := w.Write([]byte{}); err != nil {
+		c.Get().GetLogger().Error("Error: write response", err.Error())
+		return
+	}
+}

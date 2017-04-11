@@ -28,32 +28,32 @@ import (
 func BuildListH(w http.ResponseWriter, r *http.Request) {
 
 	var (
-		ctx = context.Get()
+		log     = context.Get().GetLogger()
+		storage = context.Get().GetStorage()
 	)
 
-	ctx.Log.Debug("Get boold list handler")
+	log.Debug("Get boold list handler")
 
 	// TODO: replace to valid image uuid
 	var uuid string
 
-	builds, err := ctx.Storage.Build().ListByImage(r.Context(), uuid)
+	builds, err := storage.Build().ListByImage(r.Context(), uuid)
 	if err != nil {
-		ctx.Log.Error(err)
+		log.Error(err)
 		errors.HTTP.InternalServerError(w)
 		return
 	}
 
-	buf, er := json.Marshal(builds)
-	if er != nil {
-		ctx.Log.Error(er.Error())
+	buf, err := json.Marshal(builds)
+	if err != nil {
+		log.Error(err.Error())
 		errors.HTTP.InternalServerError(w)
 		return
 	}
 
 	w.WriteHeader(http.StatusOK)
-	_, er = w.Write(buf)
-	if er != nil {
-		ctx.Log.Error("Error: write response", er.Error())
+	if _, err = w.Write(buf); err != nil {
+		log.Error("Error: write response", err.Error())
 		return
 	}
 }

@@ -21,7 +21,7 @@ package service
 import (
 	"github.com/lastbackend/lastbackend/pkg/apis/types"
 	s "github.com/lastbackend/lastbackend/pkg/apis/views/v1/service"
-	"github.com/lastbackend/lastbackend/pkg/client/context"
+	c "github.com/lastbackend/lastbackend/pkg/client/context"
 	"github.com/lastbackend/lastbackend/pkg/editor"
 	"github.com/lastbackend/lastbackend/pkg/errors"
 	"gopkg.in/yaml.v2"
@@ -30,52 +30,54 @@ import (
 
 func UpdateCmd(name string) {
 
-	var ctx = context.Get()
+	var (
+		log = c.Get().GetLogger()
+	)
 
 	serviceModel, _, err := Inspect(name)
 	if err != nil {
-		ctx.Log.Error(err)
+		log.Error(err)
 		return
 	}
 
 	config, err := GetConfig(serviceModel)
 	if err != nil {
-		ctx.Log.Error(err)
+		log.Error(err)
 		return
 	}
 
 	err = Update(name, *config)
 	if err != nil {
-		ctx.Log.Error(err)
+		log.Error(err)
 		return
 	}
 
-	ctx.Log.Info("Successful")
+	log.Info("Successful")
 }
 
 func Update(name string, config types.ServiceUpdateConfig) error {
 
 	var (
 		err     error
-		ctx     = context.Get()
+		http    = c.Get().GetHttpClient()
+		storage = c.Get().GetStorage()
 		er      = new(errors.Http)
 		project = new(types.Project)
 		res     = new(types.Project)
 	)
 
-	err = ctx.Storage.Get("project", project)
+	err = storage.Get("project", project)
 	if err != nil {
 		return errors.New(err.Error())
 	}
 
-	if project.Name == "" {
+	if project.Meta.Name == "" {
 		return errors.New("Project didn't select")
 	}
 
-	_, _, err = ctx.HTTP.
-		PUT("/project/"+project.Name+"/service/"+name).
+	_, _, err = http.
+		PUT("/project/"+project.Meta.Name+"/service/"+name).
 		AddHeader("Content-Type", "application/json").
-		AddHeader("Authorization", "Bearer "+ctx.Token).
 		BodyJSON(config).
 		Request(&res, er)
 

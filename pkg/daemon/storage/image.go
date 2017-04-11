@@ -20,10 +20,8 @@ package storage
 
 import (
 	"context"
-	"fmt"
-
 	"github.com/lastbackend/lastbackend/pkg/apis/types"
-	"github.com/lastbackend/lastbackend/pkg/storage/store"
+	"github.com/lastbackend/lastbackend/pkg/daemon/storage/store"
 	"github.com/satori/go.uuid"
 	"strings"
 	"time"
@@ -40,36 +38,39 @@ type ImageStorage struct {
 
 func (s *ImageStorage) Get(ctx context.Context, name string) (*types.Image, error) {
 
+	image := new(types.Image)
+
 	client, destroy, err := s.Client()
 	if err != nil {
 		return nil, err
 	}
 	defer destroy()
 
-	key := s.util.Key(ctx, imageStorage, name)
-	meta := types.ImageMeta{}
-	if err := client.Get(ctx, key, meta); err != nil {
+	keyMeta := s.util.Key(ctx, imageStorage, strings.Replace(name, "/", ":", -1), "meta")
+	if err := client.Get(ctx, keyMeta, &image.Meta); err != nil {
 		if err.Error() == store.ErrKeyNotFound {
 			return nil, nil
 		}
 		return nil, err
 	}
 
-	image := new(types.Image)
-	image.Meta = meta
+	keySource := s.util.Key(ctx, imageStorage, image.Name, "source")
+	if err := client.Get(ctx, keySource, &image.Source); err != nil {
+		if err.Error() == store.ErrKeyExists {
+			return nil, nil
+		}
+		return nil, err
+	}
+
 	return image, nil
 }
 
 // Insert new image into storage
 func (s *ImageStorage) Insert(ctx context.Context, name string, source *types.ImageSource) (*types.Image, error) {
 
-	var (
-		image  = new(types.Image)
-		vendor = strings.Split(source.Hub, ".")[0]
-	)
-
+	image := new(types.Image)
 	image.Meta.ID = uuid.NewV4().String()
-	image.Meta.Name = fmt.Sprintf("%s:%s-1", name, vendor)
+	image.Meta.Name = name
 	image.Source = *source
 	image.Meta.Created = time.Now()
 	image.Meta.Updated = time.Now()
@@ -81,7 +82,8 @@ func (s *ImageStorage) Insert(ctx context.Context, name string, source *types.Im
 	defer destroy()
 
 	tx := client.Begin(ctx)
-	keyMeta := s.util.Key(ctx, imageStorage, image.Meta.Name, "meta")
+
+	keyMeta := s.util.Key(ctx, imageStorage, strings.Replace(name, "/", ":", -1), "meta")
 	if err := tx.Create(keyMeta, image.Meta, 0); err != nil {
 		if err.Error() == store.ErrKeyExists {
 			return nil, nil
