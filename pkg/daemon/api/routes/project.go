@@ -42,7 +42,7 @@ func ProjectListH(w http.ResponseWriter, r *http.Request) {
 
 	log.Debug("List project handler")
 
-	projectList, err := storage.Project().List(r.Context())
+	projectList, err := storage.Namespace().List(r.Context())
 	if err != nil {
 		log.Error("Error: find projects by user", err)
 		errors.HTTP.InternalServerError(w)
@@ -77,9 +77,9 @@ func ProjectInfoH(w http.ResponseWriter, r *http.Request) {
 	log.Info("Get project handler")
 
 	if validator.IsUUID(projectID) {
-		project, err = storage.Project().GetByID(r.Context(), projectID)
+		project, err = storage.Namespace().GetByID(r.Context(), projectID)
 	} else {
-		project, err = storage.Project().GetByName(r.Context(), projectID)
+		project, err = storage.Namespace().GetByName(r.Context(), projectID)
 	}
 	if err != nil {
 		log.Error("Error: find project by id", err.Error())
@@ -158,7 +158,7 @@ func ProjectCreateH(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	project, err := storage.Project().GetByName(r.Context(), rq.Name)
+	project, err := storage.Namespace().GetByName(r.Context(), rq.Name)
 	if err != nil {
 		log.Error("Error: check exists by name", err.Error())
 		errors.HTTP.InternalServerError(w)
@@ -170,7 +170,7 @@ func ProjectCreateH(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	project, err = storage.Project().Insert(r.Context(), rq.Name, rq.Description)
+	project, err = storage.Namespace().Insert(r.Context(), rq.Name, rq.Description)
 	if err != nil {
 		log.Error("Error: insert project to db", err)
 		errors.HTTP.InternalServerError(w)
@@ -248,9 +248,9 @@ func ProjectUpdateH(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if validator.IsUUID(projectParam) {
-		project, err = storage.Project().GetByID(r.Context(), projectParam)
+		project, err = storage.Namespace().GetByID(r.Context(), projectParam)
 	} else {
-		project, err = storage.Project().GetByName(r.Context(), projectParam)
+		project, err = storage.Namespace().GetByName(r.Context(), projectParam)
 	}
 	if err != nil {
 		log.Error("Error: check exists by name", err.Error())
@@ -261,7 +261,7 @@ func ProjectUpdateH(w http.ResponseWriter, r *http.Request) {
 	project.Meta.Name = rq.Name
 	project.Meta.Description = rq.Description
 
-	project, err = storage.Project().Update(r.Context(), project)
+	project, err = storage.Namespace().Update(r.Context(), project)
 	if err != nil {
 		log.Error("Error: update project to db", err)
 		errors.HTTP.InternalServerError(w)
@@ -296,9 +296,9 @@ func ProjectRemoveH(w http.ResponseWriter, r *http.Request) {
 	log.Info("Remove project")
 
 	if validator.IsUUID(projectParam) {
-		project, err = storage.Project().GetByID(r.Context(), projectParam)
+		project, err = storage.Namespace().GetByID(r.Context(), projectParam)
 	} else {
-		project, err = storage.Project().GetByName(r.Context(), projectParam)
+		project, err = storage.Namespace().GetByName(r.Context(), projectParam)
 	}
 	if err != nil {
 		log.Error("Error: find project by name", err.Error())
@@ -327,7 +327,7 @@ func ProjectRemoveH(w http.ResponseWriter, r *http.Request) {
 	//	return
 	//}
 
-	err = storage.Project().Remove(r.Context(), project.Meta.ID)
+	err = storage.Namespace().Remove(r.Context(), project.Meta.ID)
 	if err != nil {
 		log.Error("Error: remove project from db", err)
 		errors.HTTP.InternalServerError(w)

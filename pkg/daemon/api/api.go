@@ -61,7 +61,7 @@ var Routes = []http.Route{
 	// Build handlers
 	{Path: "/build", Method: http.MethodGet, Middleware: []http.Middleware{middleware.Context}, Handler: routes.BuildListH},
 
-	// Project handlers
+	// Namespace handlers
 	{Path: "/project", Method: http.MethodGet, Middleware: []http.Middleware{middleware.Context}, Handler: routes.ProjectListH},
 	{Path: "/project", Method: http.MethodPost, Middleware: []http.Middleware{middleware.Context}, Handler: routes.ProjectCreateH},
 	{Path: "/project/{project}", Method: http.MethodGet, Middleware: []http.Middleware{middleware.Context}, Handler: routes.ProjectInfoH},

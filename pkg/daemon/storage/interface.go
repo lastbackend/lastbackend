@@ -33,7 +33,7 @@ type IStorage interface {
 	Build() IBuild
 	Hook() IHook
 	Image() IImage
-	Project() IProject
+	Project() INamespace
 	Service() IService
 	Vendor() IVendor
 	Volume() IVolume
@@ -62,7 +62,7 @@ type IHook interface {
 	RemoveByService(ctx context.Context, id string) error
 }
 
-type IProject interface {
+type INamespace interface {
 	GetByID(ctx context.Context, id string) (*types.Namespace, error)
 	GetByName(ctx context.Context, name string) (*types.Namespace, error)
 	List(ctx context.Context) (*types.NamespaceList, error)

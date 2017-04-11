@@ -149,9 +149,9 @@ func ServiceCreateH(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if validator.IsUUID(projectParam) {
-		project, err = storage.Project().GetByID(r.Context(), projectParam)
+		project, err = storage.Namespace().GetByID(r.Context(), projectParam)
 	} else {
-		project, err = storage.Project().GetByName(r.Context(), projectParam)
+		project, err = storage.Namespace().GetByName(r.Context(), projectParam)
 	}
 	if err != nil {
 		log.Error("Error: find project by name", err.Error())
@@ -289,9 +289,9 @@ func ServiceUpdateH(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if validator.IsUUID(projectParam) {
-		project, err = storage.Project().GetByID(r.Context(), projectParam)
+		project, err = storage.Namespace().GetByID(r.Context(), projectParam)
 	} else {
-		project, err = storage.Project().GetByName(r.Context(), projectParam)
+		project, err = storage.Namespace().GetByName(r.Context(), projectParam)
 	}
 	if err != nil {
 		log.Error("Error: find project by name", err.Error())
@@ -377,9 +377,9 @@ func ServiceListH(w http.ResponseWriter, r *http.Request) {
 	log.Debug("List service handler")
 
 	if validator.IsUUID(projectParam) {
-		project, err = storage.Project().GetByID(r.Context(), projectParam)
+		project, err = storage.Namespace().GetByID(r.Context(), projectParam)
 	} else {
-		project, err = storage.Project().GetByName(r.Context(), projectParam)
+		project, err = storage.Namespace().GetByName(r.Context(), projectParam)
 	}
 	if err != nil {
 		log.Error("Error: find project by name", err.Error())
@@ -427,9 +427,9 @@ func ServiceInfoH(w http.ResponseWriter, r *http.Request) {
 	log.Debug("Get service handler")
 
 	if validator.IsUUID(projectParam) {
-		project, err = storage.Project().GetByID(r.Context(), projectParam)
+		project, err = storage.Namespace().GetByID(r.Context(), projectParam)
 	} else {
-		project, err = storage.Project().GetByName(r.Context(), projectParam)
+		project, err = storage.Namespace().GetByName(r.Context(), projectParam)
 	}
 	if err != nil {
 		log.Error("Error: find project by name", err.Error())
@@ -485,9 +485,9 @@ func ServiceRemoveH(w http.ResponseWriter, r *http.Request) {
 	log.Info("Remove service")
 
 	if validator.IsUUID(projectParam) {
-		project, err = storage.Project().GetByID(r.Context(), projectParam)
+		project, err = storage.Namespace().GetByID(r.Context(), projectParam)
 	} else {
-		project, err = storage.Project().GetByName(r.Context(), projectParam)
+		project, err = storage.Namespace().GetByName(r.Context(), projectParam)
 	}
 	if err != nil {
 		log.Error("Error: find project by name", err.Error())
