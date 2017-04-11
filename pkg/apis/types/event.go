@@ -28,18 +28,36 @@ type EventList []Event
 type Event struct {
 	// Event meta
 	Meta Meta `json:"meta"`
-	// Activity project
-	Project string `json:"project"`
-	// Activity service
-	Service string `json:"service"`
-	// Activity name
-	Name string `json:"name"`
 	// Activity status
 	Event string `json:"event"`
 	// Activity created time
 	Created time.Time `json:"created"`
 	// Activity updated time
 	Updated time.Time `json:"updated"`
+}
+
+type PodEvent struct {
+	// Event type
+	Event string
+	// Event meta
+	Meta PodMeta
+	// Pod State
+	State PodState
+	// Pod Containers
+	Containers map[string]*Container
+}
+
+type ContainerEvent struct {
+	// Event type
+	Event string
+	// Pod event
+	Pod string
+	// Activity container
+	Container *Container
+}
+
+type HostEvent struct {
+	Event
 }
 
 func (s *Event) ToJson() ([]byte, error) {

@@ -26,7 +26,7 @@ type Container struct {
 	// Container ID
 	ID string `json:"id"`
 	// Image information
-	Image ContainerImage `json:"image"`
+	Image string `json:"image"`
 	// Container current state
 	State string `json:"state"`
 	// Container current state
@@ -37,11 +37,6 @@ type Container struct {
 	Created time.Time `json:"created"`
 	// Container started time
 	Started time.Time `json:"started"`
-}
-
-type ContainerImage struct {
-	ID   string `json:"id"`
-	Name string `json:"name"`
 }
 
 type ContainerSpec struct {
@@ -68,7 +63,7 @@ type ContainerSpec struct {
 	// Container restart policy
 	RestartPolicy ContainerRestartPolicySpec `json:"restart_policy"`
 	// Container volumes mount
-	Volumes []VolumesSpec `json:"volumes"`
+	Volumes []ContainerVolumeSpec `json:"volumes"`
 }
 
 type ContainerNetworkSpec struct {
@@ -112,6 +107,13 @@ type ContainerRestartPolicySpec struct {
 	Attempt int `json:"attempt"`
 }
 
+type ContainerVolumeSpec struct {
+	// Volume name
+	Volume string `json:"volume"`
+	// Container mount path
+	MountPath string `json:"mount_path"`
+}
+
 type ContainerStatusInfo struct {
 	// Container ID on host
 	ID string `json:"cid"`
@@ -127,5 +129,7 @@ type ContainerStatusInfo struct {
 	Updated time.Time `json:"updated"`
 }
 
+const ContainerStateRunning = "running"
+const ContainerStateStopped = "stopped"
 const ContainerStateError = "error"
 const ContainerStatePending = "pending"

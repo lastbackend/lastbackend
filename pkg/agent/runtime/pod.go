@@ -15,12 +15,11 @@
 // is strictly forbidden unless prior written permission is obtained
 // from Last.Backend LLC.
 
-package pod
+package runtime
 
 import (
 	"github.com/lastbackend/lastbackend/pkg/agent/context"
 	"github.com/lastbackend/lastbackend/pkg/apis/types"
-	"github.com/satori/go.uuid"
 	"sync"
 )
 
@@ -30,23 +29,26 @@ type PodManager struct {
 }
 
 func (pm *PodManager) SyncPod(pod *types.Pod) {
-	s := context.Get().GetStorage().Pods()
-	pods := s.GetPods()
+	log := context.Get().GetLogger()
+	log.Debugf("Pod %s sync", pod.Meta.ID)
 
-	p, ok := pods[pod.Meta.ID]
+	p := context.Get().GetStorage().Pods().GetPod(pod.Meta.ID)
 
-	if !ok {
+	if p == nil {
+		log.Debugf("Pod %s not found, create new one", pod.Meta.ID)
 		p := types.NewPod()
-		p.Meta = pod.Meta
-		p.Meta.Spec = uuid.NewV4().String()
-		s.SetPod(p)
-		pm.sync(pod.State, pod.Meta, pod.Spec, pod)
+		p.Meta.ID = pod.Meta.ID
+		context.Get().GetStorage().Pods().SetPod(p)
+		pm.sync(pod.State, pod.Meta, pod.Spec, p)
 		return
 	}
 
-	if p.Meta.Spec != (pod.Meta.Spec) || p.State.State != pod.State.State {
-		pm.sync(pod.State, pod.Meta, pod.Spec, p)
+	log.Debugf("Pod %s found", pod.Meta.ID)
+	if (p.Spec.ID == pod.Spec.ID) && p.State.State == pod.State.State {
+		log.Debugf("Pod %s in correct state", pod.Meta.ID)
+		return
 	}
+	pm.sync(pod.State, pod.Meta, pod.Spec, p)
 }
 
 // meta - new pod meta
@@ -55,8 +57,11 @@ func (pm *PodManager) SyncPod(pod *types.Pod) {
 func (pm *PodManager) sync(state types.PodState, meta types.PodMeta, spec types.PodSpec, pod *types.Pod) {
 	// Create new worker to sync pod
 	// Check if pod worker exists
+	log := context.Get().GetLogger()
+	log.Debugf("Pod %s sync start", pod.Meta.ID)
 	w := pm.workers[pod.Meta.ID]
 	if w == nil {
+		log.Debugf("Pod %s sync create new worker", pod.Meta.ID)
 		w = NewWorker()
 
 		// Start worker watcher
@@ -67,7 +72,7 @@ func (pm *PodManager) sync(state types.PodState, meta types.PodMeta, spec types.
 			pm.lock.Unlock()
 		}()
 	}
-
+	log.Debugf("Pod %s sync proceed", pod.Meta.ID)
 	w.Proceed(state, meta, spec, pod)
 }
 
@@ -89,7 +94,13 @@ func NewPodManager() (*PodManager, error) {
 
 	log.Debug("Restore new pod manager state")
 
-	crii.PodList()
+	pods, err := crii.PodList()
+	if err != nil {
+		return pm, err
+	}
+
+	s := context.Get().GetStorage().Pods()
+	s.SetPods(pods)
 
 	return pm, nil
 }

@@ -14,8 +14,9 @@ type CRI interface {
 	ContainerPause(ID string) error
 	ContainerResume(ID string) error
 	ContainerRemove(ID string, clean bool, force bool) error
+	ContainerInspect(ID string) (*types.Container, string, error)
 
-	PodList() (map[string]*types.Pod, error)
+	PodList() ([]*types.Pod, error)
 
 	ImagePull(spec *types.ImageSpec) (io.ReadCloser, error)
 	ImageRemove(image string) error
@@ -23,4 +24,6 @@ type CRI interface {
 	ImagePush()
 	ImageBuild()
 	ImageList()
+
+	Subscribe() chan types.ContainerEvent
 }

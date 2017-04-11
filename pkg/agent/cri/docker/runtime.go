@@ -1,11 +1,11 @@
 package docker
 
 import (
+	"fmt"
 	"github.com/docker/docker/api"
 	"github.com/docker/docker/client"
 	"github.com/docker/go-connections/tlsconfig"
 	"github.com/lastbackend/lastbackend/pkg/agent/config"
-	"github.com/lastbackend/lastbackend/pkg/agent/context"
 	"net/http"
 	"path/filepath"
 )
@@ -19,14 +19,12 @@ func New(cfg *config.Docker) (*Runtime, error) {
 	var cli *http.Client
 	var err error
 
-	log := context.Get().GetLogger()
-
-	log.Debug("Use docker CRI")
+	fmt.Println("Use docker CRI")
 	r := &Runtime{}
 
 	if *cfg.Certs != "" {
 
-		log.Debugf("Create Docker secure client: %s", *cfg.Certs)
+		fmt.Printf("Create Docker secure client: %s", *cfg.Certs)
 
 		options := tlsconfig.Options{
 			CAFile:             filepath.Join(*cfg.Certs, "ca.pem"),

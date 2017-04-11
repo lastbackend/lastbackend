@@ -19,8 +19,8 @@
 package project
 
 import (
-	p "github.com/lastbackend/lastbackend/pkg/apis/views/v1/project"
 	c "github.com/lastbackend/lastbackend/pkg/client/context"
+	p "github.com/lastbackend/lastbackend/pkg/daemon/api/views/v1/project"
 	"github.com/lastbackend/lastbackend/pkg/errors"
 )
 

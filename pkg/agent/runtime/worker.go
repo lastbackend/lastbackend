@@ -16,9 +16,10 @@
 // from Last.Backend LLC.
 //
 
-package pod
+package runtime
 
 import (
+	"fmt"
 	"github.com/lastbackend/lastbackend/pkg/agent/context"
 	"github.com/lastbackend/lastbackend/pkg/agent/cri"
 	"github.com/lastbackend/lastbackend/pkg/apis/types"
@@ -107,6 +108,8 @@ func (w *Worker) loop() {
 		}
 
 		w.current.exec()
+		w.current = nil
+
 		w.lock.Lock()
 		if w.next != nil {
 			w.current = w.next
@@ -121,10 +124,12 @@ func (t *Task) exec() {
 	log := context.Get().GetLogger()
 	log.Debugf("start task for pod: %s", t.pod.Meta.ID)
 
-	// Set current spec
-	t.pod.Meta.Spec = t.spec.ID
 	// Check spec version
-	if t.meta.Spec != t.pod.Meta.Spec {
+	log.Debugf("pod spec: %s, new spec: %s", t.pod.Spec.ID, t.spec.ID)
+	if t.spec.ID != t.pod.Spec.ID {
+		log.Debugf("spec is differrent, apply new one: %s", t.pod.Meta.Spec)
+		// Set current spec
+		t.pod.Spec.ID = t.spec.ID
 		t.imagesUpdate()
 		t.containersUpdate()
 	}
@@ -143,8 +148,8 @@ func (t *Task) imagesUpdate() {
 
 	// Get images currently used by this pod
 	for _, container := range t.pod.Containers {
-		log.Debugf("Add images as used: %s", container.Image.Name)
-		images[container.Image.Name] = struct{}{}
+		log.Debugf("Add images as used: %s", container.Image)
+		images[container.Image] = struct{}{}
 	}
 
 	// Check imaged we need to pull
@@ -172,7 +177,7 @@ func (t *Task) imagesUpdate() {
 
 	// Clean up unused images
 	for name := range images {
-		log.Debug("Delete unused images: %s", name)
+		log.Debugf("Delete unused images: %s", name)
 		crii.ImageRemove(name)
 	}
 
@@ -186,63 +191,125 @@ func (t *Task) containersUpdate() {
 	log.Debugf("Start containers update process for pod: %s", t.pod.Meta.ID)
 	var err error
 
+	var ids []string
+	var ncs []*types.Container
+
 	// Remove old containers
 	for _, c := range t.pod.Containers {
 		if c.ID != "" {
-			crii.ContainerRemove(c.ID, true, true)
+			ids = append(ids, c.ID)
 		}
-		t.pod.DelContainer(c.ID)
 	}
 
 	// Create new containers
 	for _, spec := range t.spec.Containers {
+		log.Debugf("Container create")
 
 		c := &types.Container{
+			Image:   spec.Image.Name,
 			State:   types.ContainerStatePending,
 			Created: time.Now(),
 		}
 
+		if spec.Labels == nil {
+			spec.Labels = make(map[string]string)
+		}
+
+		spec.Labels["LB_META"] = fmt.Sprintf("%s/%s", t.pod.Meta.ID, t.pod.Spec.ID)
 		c.ID, err = crii.ContainerCreate(spec)
 
 		if err != nil {
+			log.Errorf("Container create error %s", err.Error())
 			c.State = types.ContainerStateError
 			c.Status = err.Error()
-			t.pod.AddContainer(c)
-			continue
+			break
 		}
 
+		log.Debugf("New container created: %s", c.ID)
+		ncs = append(ncs, c)
+	}
+
+	for _, c := range ncs {
 		t.pod.AddContainer(c)
+	}
+
+	for _, id := range ids {
+
+		log.Debugf("Container %s remove", id)
+		err := crii.ContainerRemove(id, true, true)
+		if err != nil {
+			log.Errorf("Container remove error: %s", err.Error())
+		}
+		t.pod.DelContainer(id)
 	}
 
 }
 
 func (t *Task) containersState() {
+	// TODO: wait 5 seconds and recheck container state
+	log := context.Get().GetLogger()
+	log.Debugf("update container state from: %s to %s", t.pod.State.State, t.state.State)
+
+	t.pod.State.State = "provision"
 
 	crii := context.Get().GetCri()
 	// Update containers states
-	if t.pod.State.State == types.PodStateStarted {
+	if t.state.State == types.PodStateStarted || t.state.State == types.PodStateRunning {
 		for _, c := range t.pod.Containers {
-			crii.ContainerStart(c.ID)
+			log.Debugf("Container: %s try to start", c.ID)
+			err := crii.ContainerStart(c.ID)
+			c.State = "running"
+			c.Status = ""
+			if err != nil {
+				log.Errorf("Container: start error: %s", err.Error())
+				c.State = "error"
+				c.Status = err.Error()
+			}
+			log.Debugf("Container: %s started", c.ID)
 			t.pod.SetContainer(c)
+			log.Debugf("Container: %s updated", c.ID)
 		}
+		t.pod.UpdateState()
 		return
 	}
 
-	if t.pod.State.State == types.PodStateStopped {
+	if t.state.State == types.PodStateStopped {
 		for _, c := range t.pod.Containers {
 			timeout := time.Duration(ContainerStopTimeout) * time.Second
-			crii.ContainerStop(c.ID, &timeout)
+			log.Debugf("Container: %s try to stop", c.ID)
+			err := crii.ContainerStop(c.ID, &timeout)
+			c.State = "stopped"
+			c.Status = ""
+			if err != nil {
+				log.Errorf("Container: stop error: %s", err.Error())
+				c.State = "error"
+				c.Status = err.Error()
+			}
+			log.Debugf("Container: %s stopped", c.ID)
 			t.pod.SetContainer(c)
+			log.Debugf("Container: %s updated", c.ID)
 		}
+		t.pod.UpdateState()
 		return
 	}
 
-	if t.pod.State.State == types.PodStateRestarted {
+	if t.state.State == types.PodStateRestarted {
 		for _, c := range t.pod.Containers {
 			timeout := time.Duration(ContainerRestartTimeout) * time.Second
-			crii.ContainerRestart(c.ID, &timeout)
+			log.Debugf("Container: %s try to restart", c.ID)
+			err := crii.ContainerRestart(c.ID, &timeout)
+			c.State = "running"
+			c.Status = ""
+			if err != nil {
+				log.Errorf("Container: restart error: %s", err.Error())
+				c.State = "error"
+				c.Status = err.Error()
+			}
+			log.Debugf("Container: %s restarted", c.ID)
 			t.pod.SetContainer(c)
+			log.Debugf("Container: %s updated", c.ID)
 		}
+		t.pod.UpdateState()
 		return
 	}
 }

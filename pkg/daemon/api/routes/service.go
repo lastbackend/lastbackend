@@ -21,7 +21,7 @@ package routes
 import (
 	"encoding/json"
 	"github.com/lastbackend/lastbackend/pkg/apis/types"
-	"github.com/lastbackend/lastbackend/pkg/apis/views/v1"
+	"github.com/lastbackend/lastbackend/pkg/daemon/api/views/v1"
 	c "github.com/lastbackend/lastbackend/pkg/daemon/context"
 	i "github.com/lastbackend/lastbackend/pkg/daemon/image"
 	"github.com/lastbackend/lastbackend/pkg/errors"
@@ -346,6 +346,8 @@ func ServiceUpdateH(w http.ResponseWriter, r *http.Request) {
 		errors.HTTP.InternalServerError(w)
 		return
 	}
+
+	// TODO: spec generate
 
 	response, err := v1.NewService(service).ToJson()
 	if err != nil {

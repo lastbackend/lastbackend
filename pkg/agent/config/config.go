@@ -19,6 +19,7 @@
 package config
 
 var cfg = &Config{
+	HTTP: &HTTP{},
 	Runtime: &Runtime{
 		Docker: &Docker{},
 	},
