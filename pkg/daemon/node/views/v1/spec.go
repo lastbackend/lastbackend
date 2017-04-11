@@ -1,7 +1,6 @@
 package v1
 
 import (
-	"github.com/lastbackend/lastbackend/pkg/apis/types"
 	"github.com/lastbackend/lastbackend/pkg/daemon/pod/views/v1"
 )
 
