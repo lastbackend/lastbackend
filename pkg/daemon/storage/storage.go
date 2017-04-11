@@ -27,7 +27,7 @@ var _util IUtil
 
 type Storage struct {
 	*VendorStorage
-	*ProjectStorage
+	*NamespaceStorage
 	*ServiceStorage
 	*ImageStorage
 	*BuildStorage
@@ -47,11 +47,11 @@ func (s *Storage) Vendor() IVendor {
 	return s.VendorStorage
 }
 
-func (s *Storage) Project() IProject {
+func (s *Storage) Namespace() INamespace {
 	if s == nil {
 		return nil
 	}
-	return s.ProjectStorage
+	return s.NamespaceStorage
 }
 
 func (s *Storage) Service() IService {
@@ -106,7 +106,7 @@ func Get(config store.Config) (*Storage, error) {
 	}
 
 	store.VendorStorage = newVendorStorage(config, _util)
-	store.ProjectStorage = newProjectStorage(config, _util)
+	store.NamespaceStorage = newNamespaceStorage(config, _util)
 	store.ServiceStorage = newServiceStorage(config, _util)
 	store.ImageStorage = newImageStorage(config, _util)
 	store.BuildStorage = newBuildStorage(config, _util)
