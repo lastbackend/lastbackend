@@ -17,6 +17,7 @@
 //
 
 package project_test
+
 //
 //import (
 //	"encoding/json"
@@ -43,7 +44,7 @@ package project_test
 //	var (
 //		err  error
 //		ctx  = context.Mock()
-//		data = types.Project{
+//		data = types.Namespace{
 //			Name:        "mock_name",
 //			User:        "mock_user",
 //			Description: "sample description",

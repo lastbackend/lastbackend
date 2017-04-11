@@ -28,7 +28,7 @@ import (
 
 const projectStorage = "projects"
 
-// Project Service type for interface in interfaces folder
+// Namespace Service type for interface in interfaces folder
 type ProjectStorage struct {
 	IProject
 	util   IUtil
@@ -36,9 +36,9 @@ type ProjectStorage struct {
 }
 
 // Get project by name
-func (s *ProjectStorage) GetByID(ctx context.Context, id string) (*types.Project, error) {
+func (s *ProjectStorage) GetByID(ctx context.Context, id string) (*types.Namespace, error) {
 
-	project := new(types.Project)
+	project := new(types.Namespace)
 
 	client, destroy, err := s.Client()
 	if err != nil {
@@ -62,7 +62,7 @@ func (s *ProjectStorage) GetByID(ctx context.Context, id string) (*types.Project
 }
 
 // Get project by name
-func (s *ProjectStorage) GetByName(ctx context.Context, name string) (*types.Project, error) {
+func (s *ProjectStorage) GetByName(ctx context.Context, name string) (*types.Namespace, error) {
 
 	var id string
 
@@ -84,7 +84,7 @@ func (s *ProjectStorage) GetByName(ctx context.Context, name string) (*types.Pro
 }
 
 // List projects
-func (s *ProjectStorage) List(ctx context.Context) (*types.ProjectList, error) {
+func (s *ProjectStorage) List(ctx context.Context) (*types.NamespaceList, error) {
 
 	const filter = `\b(.+)projects\/[a-z0-9-]{36}\/meta\b`
 
@@ -107,9 +107,9 @@ func (s *ProjectStorage) List(ctx context.Context) (*types.ProjectList, error) {
 		return nil, nil
 	}
 
-	projectList := new(types.ProjectList)
+	projectList := new(types.NamespaceList)
 	for _, meta := range metaList {
-		project := types.Project{}
+		project := types.Namespace{}
 		project.Meta = meta
 		*projectList = append(*projectList, project)
 	}
@@ -118,10 +118,10 @@ func (s *ProjectStorage) List(ctx context.Context) (*types.ProjectList, error) {
 }
 
 // Insert new project into storage
-func (s *ProjectStorage) Insert(ctx context.Context, name, description string) (*types.Project, error) {
+func (s *ProjectStorage) Insert(ctx context.Context, name, description string) (*types.Namespace, error) {
 	var (
 		id      = uuid.NewV4().String()
-		project = new(types.Project)
+		project = new(types.Namespace)
 	)
 
 	client, destroy, err := s.Client()
@@ -159,7 +159,7 @@ func (s *ProjectStorage) Insert(ctx context.Context, name, description string) (
 }
 
 // Update project model
-func (s *ProjectStorage) Update(ctx context.Context, project *types.Project) (*types.Project, error) {
+func (s *ProjectStorage) Update(ctx context.Context, project *types.Namespace) (*types.Namespace, error) {
 
 	project.Meta.Updated = time.Now()
 

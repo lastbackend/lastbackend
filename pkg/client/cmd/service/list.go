@@ -58,7 +58,7 @@ func List() (*s.ServiceList, string, error) {
 	}
 
 	if p == nil {
-		log.Info("Project didn't select")
+		log.Info("Namespace didn't select")
 		return nil, "", nil
 	}
 

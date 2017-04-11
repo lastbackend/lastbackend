@@ -24,11 +24,11 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/daemon/api/views/v1/service"
 )
 
-func NewProject(obj *types.Project) *project.Project {
+func NewProject(obj *types.Namespace) *project.Project {
 	return project.New(obj)
 }
 
-func NewProjectList(obj *types.ProjectList) *project.ProjectList {
+func NewProjectList(obj *types.NamespaceList) *project.ProjectList {
 	return project.NewList(obj)
 }
 

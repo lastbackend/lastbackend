@@ -29,7 +29,7 @@ import (
 
 const imageStorage string = "images"
 
-// Project Service type for interface in interfaces folder
+// Namespace Service type for interface in interfaces folder
 type ImageStorage struct {
 	IImage
 	util   IUtil

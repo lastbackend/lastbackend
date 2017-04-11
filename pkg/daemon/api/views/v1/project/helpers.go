@@ -24,7 +24,7 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/util/table"
 )
 
-func New(obj *types.Project) *Project {
+func New(obj *types.Namespace) *Project {
 	p := new(Project)
 
 	p.Name = obj.Meta.Name
@@ -48,7 +48,7 @@ func (p *Project) DrawTable() {
 	})
 }
 
-func NewList(obj *types.ProjectList) *ProjectList {
+func NewList(obj *types.NamespaceList) *ProjectList {
 	p := new(ProjectList)
 	if obj == nil {
 		return nil

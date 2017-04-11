@@ -75,7 +75,7 @@ func Remove(name string) error {
 
 	if project != nil {
 		if name == project.Name {
-			err = storage.Set("project", types.Project{})
+			err = storage.Set("project", types.Namespace{})
 			if err != nil {
 				return errors.New(err.Error())
 			}

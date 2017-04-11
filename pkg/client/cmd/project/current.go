@@ -38,7 +38,7 @@ func CurrentCmd() {
 	}
 
 	if project == nil {
-		log.Info("Project didn't select")
+		log.Info("Namespace didn't select")
 		return
 	}
 
