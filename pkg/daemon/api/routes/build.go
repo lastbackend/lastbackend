@@ -44,17 +44,16 @@ func BuildListH(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	buf, er := json.Marshal(builds)
-	if er != nil {
-		log.Error(er.Error())
+	buf, err := json.Marshal(builds)
+	if err != nil {
+		log.Error(err.Error())
 		errors.HTTP.InternalServerError(w)
 		return
 	}
 
 	w.WriteHeader(http.StatusOK)
-	_, er = w.Write(buf)
-	if er != nil {
-		log.Error("Error: write response", er.Error())
+	if _, err = w.Write(buf); err != nil {
+		log.Error("Error: write response", err.Error())
 		return
 	}
 }

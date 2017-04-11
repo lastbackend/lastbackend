@@ -527,3 +527,19 @@ func ServiceRemoveH(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 }
+
+func ServiceActivityListH(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusOK)
+	if _, err := w.Write([]byte(`[]`)); err != nil {
+		c.Get().GetLogger().Error("Error: write response", err.Error())
+		return
+	}
+}
+
+func ServiceLogsH(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusOK)
+	if _, err := w.Write([]byte(`[]`)); err != nil {
+		c.Get().GetLogger().Error("Error: write response", err.Error())
+		return
+	}
+}
