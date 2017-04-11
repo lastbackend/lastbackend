@@ -19,6 +19,7 @@
 package types
 
 import (
+	"encoding/json"
 	"golang.org/x/oauth2"
 )
 
@@ -28,4 +29,24 @@ type Vendor struct {
 	Vendor    string        `json:"vendor"`
 	Host      string        `json:"host"`
 	Token     *oauth2.Token `json:"token"`
+}
+
+func (v *Vendor) ToJson() ([]byte, error) {
+	buf, err := json.Marshal(v)
+	if err != nil {
+		return nil, err
+	}
+
+	return buf, nil
+}
+
+type Vendors map[string]*Vendor
+
+func (v *Vendors) ToJson() ([]byte, error) {
+	buf, err := json.Marshal(v)
+	if err != nil {
+		return nil, err
+	}
+
+	return buf, nil
 }

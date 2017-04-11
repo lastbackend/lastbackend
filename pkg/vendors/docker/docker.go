@@ -21,14 +21,13 @@ package docker
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/lastbackend/lastbackend/pkg/apis/types"
 	"io/ioutil"
 	"net/http"
 	"strings"
 	"time"
 )
 
-func GetRepository(name string) (*types.DockerRepositoryList, error) {
+func GetRepository(name string) (*RepositoryList, error) {
 
 	var page, size int64 = 1, 10
 	var results = struct {
@@ -63,7 +62,7 @@ func GetRepository(name string) (*types.DockerRepositoryList, error) {
 		return nil, err
 	}
 
-	var repos = new(types.DockerRepositoryList)
+	var repos = new(RepositoryList)
 	for _, item := range results.Results {
 
 		var owner, name = "", ""
@@ -77,7 +76,7 @@ func GetRepository(name string) (*types.DockerRepositoryList, error) {
 			name = items[0]
 		}
 
-		*repos = append(*repos, types.DockerRepository{
+		*repos = append(*repos, Repository{
 			StarCount: item.StarCount,
 			PullCount: item.PullCount,
 			Hub:       "index.docker.io",
@@ -92,7 +91,7 @@ func GetRepository(name string) (*types.DockerRepositoryList, error) {
 	return repos, nil
 }
 
-func ListTag(owner, name string) (*types.DockerTagList, error) {
+func ListTag(owner, name string) (*TagList, error) {
 
 	var page, size int64 = 1, 10
 
@@ -131,11 +130,11 @@ func ListTag(owner, name string) (*types.DockerTagList, error) {
 		return nil, err
 	}
 
-	var tags = new(types.DockerTagList)
+	var tags = new(TagList)
 	tags.Owner = owner
 	tags.Name = name
 	for _, item := range results.Results {
-		tags.Tags = append(tags.Tags, types.DockerTag{
+		tags.Tags = append(tags.Tags, Tag{
 			ID:          item.ID,
 			Name:        item.Name,
 			Size:        item.Size,

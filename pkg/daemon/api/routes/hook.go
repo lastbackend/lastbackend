@@ -63,8 +63,7 @@ func HookExecuteH(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.WriteHeader(http.StatusOK)
-	_, err = w.Write([]byte{})
-	if err != nil {
+	if _, err = w.Write([]byte{}); err != nil {
 		log.Error("Error: write response", err.Error())
 		return
 	}
