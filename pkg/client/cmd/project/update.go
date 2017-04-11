@@ -76,7 +76,7 @@ func Update(name, newProjectName, description string) error {
 		http    = c.Get().GetHttpClient()
 		storage = c.Get().GetStorage()
 		er      = new(errors.Http)
-		res     = new(types.Project)
+		res     = new(types.Namespace)
 	)
 
 	_, _, err = http.

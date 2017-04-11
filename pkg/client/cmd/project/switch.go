@@ -39,13 +39,13 @@ func SwitchCmd(name string) {
 	log.Infof("The project `%s` was selected as the current", project.Meta.Name)
 }
 
-func Switch(name string) (*types.Project, error) {
+func Switch(name string) (*types.Namespace, error) {
 
 	var (
 		er      = new(errors.Http)
 		http    = c.Get().GetHttpClient()
 		storage = c.Get().GetStorage()
-		project = new(types.Project)
+		project = new(types.Namespace)
 	)
 
 	_, _, err := http.

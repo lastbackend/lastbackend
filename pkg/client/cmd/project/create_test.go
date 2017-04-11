@@ -17,6 +17,7 @@
 //
 
 package project_test
+
 //
 //import (
 //	"encoding/json"
@@ -44,7 +45,7 @@ package project_test
 //		err error
 //		ctx = context.Mock()
 //
-//		prct = new(types.Project)
+//		prct = new(types.Namespace)
 //	)
 //
 //	ctx.Storage, err = storage.Init()

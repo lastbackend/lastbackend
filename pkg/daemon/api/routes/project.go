@@ -69,7 +69,7 @@ func ProjectInfoH(w http.ResponseWriter, r *http.Request) {
 		err       error
 		log       = c.Get().GetLogger()
 		storage   = c.Get().GetStorage()
-		project   *types.Project
+		project   *types.Namespace
 		params    = utils.Vars(r)
 		projectID = params["project"]
 	)
@@ -232,7 +232,7 @@ func ProjectUpdateH(w http.ResponseWriter, r *http.Request) {
 		err          error
 		log          = c.Get().GetLogger()
 		storage      = c.Get().GetStorage()
-		project      = new(types.Project)
+		project      = new(types.Namespace)
 		params       = utils.Vars(r)
 		projectParam = params["project"]
 	)
@@ -288,7 +288,7 @@ func ProjectRemoveH(w http.ResponseWriter, r *http.Request) {
 		err          error
 		log          = c.Get().GetLogger()
 		storage      = c.Get().GetStorage()
-		project      = new(types.Project)
+		project      = new(types.Namespace)
 		params       = utils.Vars(r)
 		projectParam = params["project"]
 	)

@@ -16,11 +16,10 @@
 // from Last.Backend LLC.
 //
 
-package cmd
+package server
 
 import (
 	"github.com/jawher/mow.cli"
-	"github.com/lastbackend/lastbackend/pkg/daemon/api"
 	"github.com/lastbackend/lastbackend/pkg/daemon/config"
 	"github.com/lastbackend/lastbackend/pkg/daemon/context"
 	"github.com/lastbackend/lastbackend/pkg/daemon/storage"
@@ -178,7 +177,7 @@ func Daemon(cmd *cli.Cmd) {
 		)
 
 		go func() {
-			if err := api.Listen(cfg.HttpServer.Host, cfg.HttpServer.Port); err != nil {
+			if err := Listen(cfg.HttpServer.Host, cfg.HttpServer.Port); err != nil {
 				log.Warnf("Http server start error: %s", err.Error())
 			}
 		}()

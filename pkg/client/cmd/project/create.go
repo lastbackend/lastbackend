@@ -50,7 +50,7 @@ func Create(name, description string) error {
 		err     error
 		http    = c.Get().GetHttpClient()
 		er      = new(errors.Http)
-		project = new(types.Project)
+		project = new(types.Namespace)
 	)
 
 	if len(name) == 0 {

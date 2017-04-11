@@ -16,4 +16,37 @@
 // from Last.Backend LLC.
 //
 
-package queue
+package types
+
+import (
+	"encoding/json"
+)
+
+type NamespaceList []Namespace
+
+type Namespace struct {
+	Meta Meta `json:"meta"`
+}
+
+func (p *Namespace) ToJson() ([]byte, error) {
+	buf, err := json.Marshal(p)
+	if err != nil {
+		return nil, err
+	}
+
+	return buf, nil
+}
+
+func (p *NamespaceList) ToJson() ([]byte, error) {
+
+	if p == nil {
+		return []byte("[]"), nil
+	}
+
+	buf, err := json.Marshal(p)
+	if err != nil {
+		return nil, err
+	}
+
+	return buf, nil
+}

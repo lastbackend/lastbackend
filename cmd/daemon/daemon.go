@@ -21,7 +21,7 @@ package main
 import (
 	"fmt"
 	"github.com/jawher/mow.cli"
-	"github.com/lastbackend/lastbackend/pkg/daemon/cmd"
+	"github.com/lastbackend/lastbackend/pkg/daemon/server"
 	"os"
 )
 
@@ -38,7 +38,7 @@ func main() {
 		}
 	}
 
-	app.Command("daemon", "Run last.backend daemon", cmd.Daemon)
+	app.Command("daemon", "Run last.backend daemon", server.Daemon)
 
 	err := app.Run(os.Args)
 	if err != nil {

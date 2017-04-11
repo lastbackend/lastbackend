@@ -44,7 +44,7 @@ func Remove(name string) error {
 	var (
 		err     error
 		http    = c.Get().GetHttpClient()
-		service = new(types.Project)
+		service = new(types.Namespace)
 		er      = new(errors.Http)
 	)
 

@@ -133,7 +133,7 @@ func ServiceCreateH(w http.ResponseWriter, r *http.Request) {
 		log          = c.Get().GetLogger()
 		storage      = c.Get().GetStorage()
 		image        = new(types.Image)
-		project      = new(types.Project)
+		project      = new(types.Namespace)
 		params       = utils.Vars(r)
 		projectParam = params["project"]
 	)
@@ -271,7 +271,7 @@ func ServiceUpdateH(w http.ResponseWriter, r *http.Request) {
 		err          error
 		log          = c.Get().GetLogger()
 		storage      = c.Get().GetStorage()
-		project      = new(types.Project)
+		project      = new(types.Namespace)
 		service      = new(types.Service)
 		params       = utils.Vars(r)
 		projectParam = params["project"]
@@ -369,7 +369,7 @@ func ServiceListH(w http.ResponseWriter, r *http.Request) {
 		err          error
 		log          = c.Get().GetLogger()
 		storage      = c.Get().GetStorage()
-		project      = new(types.Project)
+		project      = new(types.Namespace)
 		params       = utils.Vars(r)
 		projectParam = params["project"]
 	)
@@ -417,7 +417,7 @@ func ServiceInfoH(w http.ResponseWriter, r *http.Request) {
 		err          error
 		log          = c.Get().GetLogger()
 		storage      = c.Get().GetStorage()
-		project      = new(types.Project)
+		project      = new(types.Namespace)
 		service      = new(types.Service)
 		params       = utils.Vars(r)
 		projectParam = params["project"]
@@ -475,7 +475,7 @@ func ServiceRemoveH(w http.ResponseWriter, r *http.Request) {
 		err          error
 		log          = c.Get().GetLogger()
 		storage      = c.Get().GetStorage()
-		project      = new(types.Project)
+		project      = new(types.Namespace)
 		service      = new(types.Service)
 		params       = utils.Vars(r)
 		projectParam = params["project"]

@@ -27,7 +27,7 @@ type HookList []Hook
 type Hook struct {
 	// Hook Meta
 	Meta Meta `json:"meta"`
-	// Project name
+	// Namespace name
 	Project string `json:"project"`
 	// Hook token
 	Token string `json:"token"`
