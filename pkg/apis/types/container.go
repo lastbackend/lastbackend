@@ -129,5 +129,7 @@ type ContainerStatusInfo struct {
 	Updated time.Time `json:"updated"`
 }
 
+const ContainerStateRunning = "running"
+const ContainerStateStopped = "stopped"
 const ContainerStateError = "error"
 const ContainerStatePending = "pending"

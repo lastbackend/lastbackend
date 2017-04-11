@@ -24,7 +24,7 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/agent/api"
 	"github.com/lastbackend/lastbackend/pkg/agent/config"
 	"github.com/lastbackend/lastbackend/pkg/agent/context"
-	"github.com/lastbackend/lastbackend/pkg/agent/cri"
+	"github.com/lastbackend/lastbackend/pkg/agent/cri/cri"
 	"github.com/lastbackend/lastbackend/pkg/agent/runtime"
 	"github.com/lastbackend/lastbackend/pkg/agent/storage"
 	"github.com/lastbackend/lastbackend/pkg/logger"
@@ -85,7 +85,6 @@ func Agent(cmd *cli.Cmd) {
 
 		var (
 			err  error
-			crii cri.CRI
 			sigs = make(chan os.Signal)
 			done = make(chan bool, 1)
 		)
@@ -95,7 +94,8 @@ func Agent(cmd *cli.Cmd) {
 		ctx.SetStorage(storage.New())
 
 		rntm := runtime.Get()
-		crii, err = rntm.SetCri(cfg.Runtime)
+		crii, err := cri.New(cfg.Runtime)
+
 		if err != nil {
 			ctx.GetLogger().Errorf("Cannot initialize runtime: %s", err.Error())
 		}
@@ -103,6 +103,10 @@ func Agent(cmd *cli.Cmd) {
 		ctx.SetCri(crii)
 
 		if err = rntm.StartPodManager(); err != nil {
+			ctx.GetLogger().Errorf("Cannot initialize pod manager: %s", err.Error())
+		}
+
+		if err = rntm.StartEventListener(); err != nil {
 			ctx.GetLogger().Errorf("Cannot initialize pod manager: %s", err.Error())
 		}
 

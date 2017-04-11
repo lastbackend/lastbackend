@@ -43,11 +43,12 @@ func (r *Runtime) PodList() ([]*types.Pod, error) {
 		pod.Meta.ID = info[0]
 		pod.Spec.ID = info[1]
 
-		inspected, _ := r.client.ContainerInspect(context.Background(), c.ID)
-		if container := GetContainer(c, inspected); container != nil {
-			pod.AddContainer(container)
+		container, _, err := r.ContainerInspect(c.ID)
+		if err != nil || container == nil {
+			continue
 		}
 
+		pod.AddContainer(container)
 	}
 
 	for _, p := range pods {

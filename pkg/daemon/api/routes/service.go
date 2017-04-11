@@ -342,6 +342,8 @@ func ServiceUpdateH(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// TODO: spec generate
+
 	response, err := v1.NewService(service).ToJson()
 	if err != nil {
 		ctx.Log.Error("Error: convert struct to json", err.Error())

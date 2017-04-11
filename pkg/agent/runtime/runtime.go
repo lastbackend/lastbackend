@@ -19,36 +19,29 @@
 package runtime
 
 import (
-	"github.com/lastbackend/lastbackend/pkg/agent/config"
-	"github.com/lastbackend/lastbackend/pkg/agent/cri"
-	"github.com/lastbackend/lastbackend/pkg/agent/cri/docker"
+	"github.com/lastbackend/lastbackend/pkg/agent/context"
 	"github.com/lastbackend/lastbackend/pkg/apis/types"
 )
 
 var runtime Runtime
 
+func init() {
+	runtime = Runtime{
+		pods:   make(chan *types.Pod),
+		events: make(chan *types.Event),
+	}
+}
+
 type Runtime struct {
-	pManager *PodManager
+	pods   chan *types.Pod
+	events chan *types.Event
+
+	pManager  *PodManager
+	eListener *EventListener
 }
 
 func Get() *Runtime {
 	return &runtime
-}
-
-func (r *Runtime) SetCri(cfg *config.Runtime) (cri.CRI, error) {
-	var cri cri.CRI
-	var err error
-
-	switch *cfg.CRI {
-	case "docker":
-		cri, err = docker.New(cfg.Docker)
-	}
-
-	if err != nil {
-		return cri, err
-	}
-
-	return cri, err
 }
 
 func (r *Runtime) StartPodManager() error {
@@ -59,8 +52,34 @@ func (r *Runtime) StartPodManager() error {
 	return nil
 }
 
-func (r *Runtime) Sync(pods []*types.Pod) {
-	for _, pod := range pods {
-		r.pManager.SyncPod(pod)
+func (r *Runtime) StartEventListener() error {
+	var err error
+	if r.eListener, err = NewEventListener(); err != nil {
+		return err
 	}
+
+	return nil
+}
+
+func (r *Runtime) Loop() {
+
+	//for _, pod := range pods {
+	//	r.pManager.SyncPod(pod)
+	//}
+
+	pods, host := r.eListener.Subscribe()
+	go func() {
+		log := context.Get().GetLogger()
+		log.Debug("Runtime: Loop")
+
+		for {
+			select {
+			case pod := <-pods:
+				log.Debugf("Runtime: Loop: send pod update event: %s", pod.Event)
+
+			case host := <-host:
+				log.Debugf("Runtime: Loop: send host update event: %s", host.Event)
+			}
+		}
+	}()
 }
