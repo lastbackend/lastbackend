@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"github.com/lastbackend/lastbackend/pkg/agent/context"
 	"github.com/lastbackend/lastbackend/pkg/agent/runtime"
-	"github.com/lastbackend/lastbackend/pkg/apis/views/v1/node"
+	"github.com/lastbackend/lastbackend/pkg/daemon/api/views/v1/node"
 	"github.com/lastbackend/lastbackend/pkg/errors"
 	"io/ioutil"
 	"net/http"
@@ -33,6 +33,5 @@ func SetPods(w http.ResponseWriter, r *http.Request) {
 
 	patch := node.FromNodeSpec(data)
 	runtime.Get().Sync(patch)
-
 	w.WriteHeader(http.StatusOK)
 }

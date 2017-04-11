@@ -21,10 +21,10 @@ package service
 import "time"
 
 type Service struct {
-	Name        string     `json:"name"`
-	Description string     `json:"description"`
-	Created     time.Time  `json:"created"`
-	Updated     time.Time  `json:"updated"`
+	Name        string      `json:"name"`
+	Description string      `json:"description"`
+	Created     time.Time   `json:"created"`
+	Updated     time.Time   `json:"updated"`
 	Pods        *[]struct{} `json:"pods,omitempty"`
 	Config      *Config     `json:"config,omitempty"`
 }

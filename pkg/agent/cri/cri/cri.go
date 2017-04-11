@@ -2,11 +2,11 @@ package cri
 
 import (
 	"github.com/lastbackend/lastbackend/pkg/agent/config"
-	"github.com/lastbackend/lastbackend/pkg/agent/cri/docker"
 	"github.com/lastbackend/lastbackend/pkg/agent/cri"
+	"github.com/lastbackend/lastbackend/pkg/agent/cri/docker"
 )
 
-func New (cfg *config.Runtime) (cri.CRI, error) {
+func New(cfg *config.Runtime) (cri.CRI, error) {
 	var cri cri.CRI
 	var err error
 

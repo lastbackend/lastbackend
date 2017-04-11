@@ -61,11 +61,13 @@ func (r *Runtime) StartEventListener() error {
 	return nil
 }
 
-func (r *Runtime) Loop() {
+func (r *Runtime) Sync(pods []*types.Pod) {
+	for _, pod := range pods {
+		r.pManager.SyncPod(pod)
+	}
+}
 
-	//for _, pod := range pods {
-	//	r.pManager.SyncPod(pod)
-	//}
+func (r *Runtime) Loop() {
 
 	pods, host := r.eListener.Subscribe()
 	go func() {

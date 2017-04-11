@@ -20,8 +20,8 @@ package v1
 
 import (
 	"github.com/lastbackend/lastbackend/pkg/apis/types"
-	"github.com/lastbackend/lastbackend/pkg/apis/views/v1/project"
-	"github.com/lastbackend/lastbackend/pkg/apis/views/v1/service"
+	"github.com/lastbackend/lastbackend/pkg/daemon/api/views/v1/project"
+	"github.com/lastbackend/lastbackend/pkg/daemon/api/views/v1/service"
 )
 
 func NewProject(obj *types.Project) *project.Project {
