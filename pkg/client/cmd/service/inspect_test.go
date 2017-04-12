@@ -35,7 +35,7 @@ package service_test
 //func TestGet(t *testing.T) {
 //
 //	const (
-//		name  string = "project"
+//		name  string = "namespace"
 //		token string = "mocktoken"
 //	)
 //
@@ -93,7 +93,7 @@ package service_test
 //	defer server.Close()
 //	//------------------------------------------------------------------------------------------
 //
-//	err = ctx.Storage.Set("project", data)
+//	err = ctx.Storage.Set("namespace", data)
 //	if err != nil {
 //		t.Error(err)
 //		return

@@ -25,12 +25,12 @@ import (
 )
 
 type createS struct {
-	Project  string  `json:"project,omitempty"`
-	Name     string  `json:"name,omitempty"`
-	Template string  `json:"template,omitempty"`
-	Image    string  `json:"image,omitempty"`
-	Url      string  `json:"url,omitempty"`
-	Config   *Config `json:"config,omitempty"`
+	Namespace string  `json:"namespace,omitempty"`
+	Name      string  `json:"name,omitempty"`
+	Template  string  `json:"template,omitempty"`
+	Image     string  `json:"image,omitempty"`
+	Url       string  `json:"url,omitempty"`
+	Config    *Config `json:"config,omitempty"`
 }
 
 type Config struct {
@@ -68,25 +68,25 @@ func CreateCmd(name, image, template, url string, scale int) {
 func Create(name, image, template, url string, config *Config) error {
 
 	var (
-		err     error
-		http    = c.Get().GetHttpClient()
-		storage = c.Get().GetStorage()
-		project = new(types.Namespace)
-		er      = new(errors.Http)
-		res     = new(struct{})
+		err       error
+		http      = c.Get().GetHttpClient()
+		storage   = c.Get().GetStorage()
+		namespace = new(types.Namespace)
+		er        = new(errors.Http)
+		res       = new(struct{})
 	)
 
-	err = storage.Get("project", project)
+	err = storage.Get("namespace", namespace)
 	if err != nil {
 		return errors.New(err.Error())
 	}
 
-	if project.Meta.Name == "" {
+	if namespace.Meta.Name == "" {
 		return errors.New("Namespace didn't select")
 	}
 
 	var cfg = createS{}
-	cfg.Project = project.Meta.Name
+	cfg.Namespace = namespace.Meta.Name
 
 	if name != "" {
 		cfg.Name = name

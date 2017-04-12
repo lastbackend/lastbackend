@@ -30,5 +30,5 @@ type util struct {
 const sep = "/"
 
 func (util) Key(ctx context.Context, pattern ...string) string {
-	return strings.Join([]string{sep, strings.Join(pattern, sep)}, sep)
+	return strings.Join([]string{sep, strings.Join(pattern, sep)}, "")
 }

@@ -33,7 +33,7 @@ const (
 	SHA512 Algorithm = "sha512" // sha512 with hex encoding
 
 	// Canonical is the primary digest algorithm used with the distribution
-	// project. Other digests may be used but this one is the primary storage
+	// namespace. Other digests may be used but this one is the primary storage
 	// digest.
 	Canonical = SHA256
 )

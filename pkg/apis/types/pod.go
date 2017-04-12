@@ -76,8 +76,8 @@ type PodMeta struct {
 
 	// Pod owner
 	Owner string `json:"owner"`
-	// Pod project
-	Project string `json:"project"`
+	// Pod namespace
+	Project string `json:"namespace"`
 	// Pod service
 	Service string `json:"service"`
 	// Current Spec ID

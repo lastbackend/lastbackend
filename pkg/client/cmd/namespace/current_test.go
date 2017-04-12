@@ -16,12 +16,12 @@
 // from Last.Backend LLC.
 //
 
-package project_test
+package namespace_test
 
 //
 //import (
 //	"github.com/lastbackend/lastbackend/pkg/apis/types"
-//	"github.com/lastbackend/lastbackend/pkg/client/cmd/project"
+//	"github.com/lastbackend/lastbackend/pkg/client/cmd/namespace"
 //	"github.com/lastbackend/lastbackend/pkg/client/context"
 //	"github.com/lastbackend/lastbackend/pkg/client/storage"
 //	"testing"
@@ -70,13 +70,13 @@ package project_test
 //	}
 //	defer ctx.Storage.Close()
 //
-//	err = ctx.Storage.Set("project", data)
+//	err = ctx.Storage.Set("namespace", data)
 //	if err != nil {
 //		t.Error(err)
 //		return
 //	}
 //
-//	_, err = project.Current()
+//	_, err = namespace.Current()
 //	if err != nil {
 //		t.Error(err)
 //		return

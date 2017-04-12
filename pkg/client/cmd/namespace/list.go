@@ -16,48 +16,46 @@
 // from Last.Backend LLC.
 //
 
-package project
+package namespace
 
 import (
 	c "github.com/lastbackend/lastbackend/pkg/client/context"
-	p "github.com/lastbackend/lastbackend/pkg/daemon/api/views/v1/project"
+	n "github.com/lastbackend/lastbackend/pkg/daemon/namespace/views/v1"
 	"github.com/lastbackend/lastbackend/pkg/errors"
 )
 
-func GetCmd(name string) {
+func ListNamespaceCmd() {
 
 	var (
 		log = c.Get().GetLogger()
 	)
 
-	project, err := Get(name)
+	namspaceList, err := List()
 	if err != nil {
 		log.Error(err)
 		return
 	}
 
-	project.DrawTable()
+	if namspaceList != nil {
+		namspaceList.DrawTable()
+	}
 }
 
-func Get(name string) (*p.Project, error) {
+func List() (*n.NamespaceList, error) {
 
 	var (
-		err     error
-		http    = c.Get().GetHttpClient()
-		er      = new(errors.Http)
-		project = new(p.Project)
+		err           error
+		log           = c.Get().GetLogger()
+		http          = c.Get().GetHttpClient()
+		er            = new(errors.Http)
+		namespaceList = new(n.NamespaceList)
 	)
 
-	if len(name) == 0 {
-		return nil, errors.BadParameter("name").Err()
-	}
-
 	_, _, err = http.
-		GET("/project/"+name).
-		AddHeader("Content-Type", "application/json").
-		Request(&project, er)
+		GET("/namespace").
+		Request(namespaceList, er)
 	if err != nil {
-		return nil, errors.New(err.Error())
+		return nil, err
 	}
 
 	if er.Code == 401 {
@@ -68,5 +66,10 @@ func Get(name string) (*p.Project, error) {
 		return nil, errors.New(er.Message)
 	}
 
-	return project, nil
+	if len(*namespaceList) == 0 {
+		log.Info("You don't have any namespaceList")
+		return nil, nil
+	}
+
+	return namespaceList, nil
 }
