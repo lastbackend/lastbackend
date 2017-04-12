@@ -19,13 +19,18 @@
 package context
 
 import (
+	"context"
 	"github.com/lastbackend/lastbackend/pkg/daemon/config"
-	"github.com/lastbackend/lastbackend/pkg/logger"
 	"github.com/lastbackend/lastbackend/pkg/daemon/storage"
+	"github.com/lastbackend/lastbackend/pkg/logger"
 	"github.com/lastbackend/lastbackend/pkg/util/http"
 )
 
 var _ctx ctx
+
+type Context struct {
+	context.Context
+}
 
 type ctx struct {
 	logger               *logger.Logger

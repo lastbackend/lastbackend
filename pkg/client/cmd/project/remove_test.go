@@ -17,6 +17,7 @@
 //
 
 package project_test
+
 //
 //import (
 //	"github.com/lastbackend/lastbackend/pkg/apis/types"
@@ -41,8 +42,8 @@ package project_test
 //	var (
 //		err          error
 //		ctx          = context.Mock()
-//		projectmodel = new(types.Project)
-//		switchData   = types.Project{
+//		projectmodel = new(types.Namespace)
+//		switchData   = types.Namespace{
 //			Name:        "project",
 //			User:        "mock_user",
 //			Description: "sample description",

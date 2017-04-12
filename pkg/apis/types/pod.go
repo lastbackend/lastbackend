@@ -20,6 +20,7 @@ package types
 
 import (
 	"encoding/json"
+	"fmt"
 	"sync"
 	"time"
 )
@@ -72,7 +73,7 @@ type PodSpec struct {
 	Status string `json:"status"`
 
 	// Containers spec for pod
-	Containers []*ContainerSpec
+	Containers []*ContainerSpec `json:"containers"`
 
 	// Provision create time
 	Created time.Time `json:"created"`
@@ -85,7 +86,6 @@ type PodState struct {
 	State string `json:"state"`
 	// Pod current status
 	Status string `json:"status"`
-	// Pod provision
 }
 
 type PodSecret struct {
@@ -95,28 +95,38 @@ func (p *Pod) AddContainer(c *Container) {
 	p.lock.Lock()
 	defer p.lock.Unlock()
 	p.Containers[c.ID] = c
-	p.CalculateState()
 }
 
 func (p *Pod) SetContainer(c *Container) {
 	p.lock.Lock()
 	defer p.lock.Unlock()
 	p.Containers[c.ID] = c
-	p.CalculateState()
 }
 
 func (p *Pod) DelContainer(ID string) {
 	p.lock.Lock()
 	defer p.lock.Unlock()
 	delete(p.Containers, ID)
-	p.CalculateState()
 }
 
-func (p *Pod) CalculateState() {
+func (p *Pod) UpdateState() {
+
+	p.State.State = ""
+	p.State.Status = ""
+
 	for _, c := range p.Containers {
+
+		if c.State == p.State.State {
+			continue
+		}
 
 		if c.State == "exited" && p.State.Status == "" {
 			p.State.State = "stopped"
+			continue
+		}
+
+		if p.State.State == "" {
+			p.State.State = c.State
 			continue
 		}
 
@@ -127,15 +137,6 @@ func (p *Pod) CalculateState() {
 
 		if c.State == "running" && p.State.Status != "running" {
 			p.State.State = "warning"
-			continue
-		}
-
-		if p.State.State == "" {
-			p.State.State = c.State
-			continue
-		}
-
-		if c.State == p.State.State {
 			continue
 		}
 
@@ -150,8 +151,11 @@ func (p *Pod) CalculateState() {
 		}
 
 	}
+
+	fmt.Println("Pod state: ", p.State.State)
 }
 
+const PodStateRunning = "running"
 const PodStateStarted = "started"
 const PodStateRestarted = "restarted"
 const PodStateStopped = "stopped"

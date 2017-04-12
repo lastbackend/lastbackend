@@ -17,6 +17,7 @@
 //
 
 package service_test
+
 //
 //import (
 //	"github.com/lastbackend/lastbackend/pkg/apis/types"
@@ -42,7 +43,7 @@ package service_test
 //	var (
 //		err  error
 //		ctx  = context.Mock()
-//		data = types.Project{
+//		data = types.Namespace{
 //			Name:        "mock_name",
 //			Created:     time.Now(),
 //			Updated:     time.Now(),

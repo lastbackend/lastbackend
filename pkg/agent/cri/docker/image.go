@@ -19,13 +19,15 @@
 package docker
 
 import (
-	"context"
 	docker "github.com/docker/docker/api/types"
+	"github.com/lastbackend/lastbackend/pkg/agent/context"
 	"github.com/lastbackend/lastbackend/pkg/apis/types"
 	"io"
 )
 
 func (r *Runtime) ImagePull(spec *types.ImageSpec) (io.ReadCloser, error) {
+	log := context.Get().GetLogger()
+	log.Debugf("Docker: Image pull: %s", spec.Name)
 	options := docker.ImagePullOptions{
 		RegistryAuth: spec.Auth,
 	}
@@ -38,6 +40,8 @@ func (r *Runtime) ImageBuild() {}
 
 func (r *Runtime) ImageRemove(ID string) error {
 
+	log := context.Get().GetLogger()
+	log.Debugf("Docker: Image remove: %s", ID)
 	var options docker.ImageRemoveOptions
 
 	options = docker.ImageRemoveOptions{

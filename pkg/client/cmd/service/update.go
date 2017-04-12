@@ -20,8 +20,8 @@ package service
 
 import (
 	"github.com/lastbackend/lastbackend/pkg/apis/types"
-	s "github.com/lastbackend/lastbackend/pkg/apis/views/v1/service"
 	c "github.com/lastbackend/lastbackend/pkg/client/context"
+	s "github.com/lastbackend/lastbackend/pkg/daemon/api/views/v1/service"
 	"github.com/lastbackend/lastbackend/pkg/editor"
 	"github.com/lastbackend/lastbackend/pkg/errors"
 	"gopkg.in/yaml.v2"
@@ -62,8 +62,8 @@ func Update(name string, config types.ServiceUpdateConfig) error {
 		http    = c.Get().GetHttpClient()
 		storage = c.Get().GetStorage()
 		er      = new(errors.Http)
-		project = new(types.Project)
-		res     = new(types.Project)
+		project = new(types.Namespace)
+		res     = new(types.Namespace)
 	)
 
 	err = storage.Get("project", project)
@@ -72,7 +72,7 @@ func Update(name string, config types.ServiceUpdateConfig) error {
 	}
 
 	if project.Meta.Name == "" {
-		return errors.New("Project didn't select")
+		return errors.New("Namespace didn't select")
 	}
 
 	_, _, err = http.

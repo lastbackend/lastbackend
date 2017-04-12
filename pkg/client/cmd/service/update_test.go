@@ -17,6 +17,7 @@
 //
 
 package service_test
+
 //
 //import (
 //	"encoding/json"
@@ -45,7 +46,7 @@ package service_test
 //	var (
 //		err     error
 //		ctx     = context.Mock()
-//		project = types.Project{
+//		project = types.Namespace{
 //			Name:        "mock_name",
 //			Created:     time.Now(),
 //			Updated:     time.Now(),

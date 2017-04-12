@@ -18,7 +18,6 @@
 
 package service
 
-
 import (
 	"github.com/lastbackend/lastbackend/pkg/apis/types"
 	c "github.com/lastbackend/lastbackend/pkg/client/context"
@@ -72,7 +71,7 @@ func Create(name, image, template, url string, config *Config) error {
 		err     error
 		http    = c.Get().GetHttpClient()
 		storage = c.Get().GetStorage()
-		project = new(types.Project)
+		project = new(types.Namespace)
 		er      = new(errors.Http)
 		res     = new(struct{})
 	)
@@ -83,7 +82,7 @@ func Create(name, image, template, url string, config *Config) error {
 	}
 
 	if project.Meta.Name == "" {
-		return errors.New("Project didn't select")
+		return errors.New("Namespace didn't select")
 	}
 
 	var cfg = createS{}
@@ -110,7 +109,7 @@ func Create(name, image, template, url string, config *Config) error {
 	}
 
 	_, _, err = http.
-	POST("/deploy").
+		POST("/deploy").
 		AddHeader("Content-Type", "application/json").
 		BodyJSON(cfg).
 		Request(res, er)
@@ -128,4 +127,3 @@ func Create(name, image, template, url string, config *Config) error {
 
 	return nil
 }
-
