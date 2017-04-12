@@ -46,7 +46,7 @@ package service_test
 //	var (
 //		err     error
 //		ctx     = context.Mock()
-//		project = types.Namespace{
+//		namespace = types.Namespace{
 //			Name:        "mock_name",
 //			Created:     time.Now(),
 //			Updated:     time.Now(),
@@ -115,7 +115,7 @@ package service_test
 //	defer server.Close()
 //	//------------------------------------------------------------------------------------------
 //
-//	err = ctx.Storage.Set("project", project)
+//	err = ctx.Storage.Set("namespace", namespace)
 //	if err != nil {
 //		t.Error(err)
 //		return

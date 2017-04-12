@@ -16,11 +16,11 @@
 // from Last.Backend LLC.
 //
 
-package project
+package namespace
 
 import (
 	c "github.com/lastbackend/lastbackend/pkg/client/context"
-	p "github.com/lastbackend/lastbackend/pkg/daemon/api/views/v1/project"
+	n "github.com/lastbackend/lastbackend/pkg/daemon/namespace/views/v1"
 	"github.com/lastbackend/lastbackend/pkg/errors"
 )
 
@@ -30,33 +30,33 @@ func CurrentCmd() {
 		log = c.Get().GetLogger()
 	)
 
-	project, err := Current()
+	namespace, err := Current()
 
 	if err != nil {
 		log.Error(err)
 		return
 	}
 
-	if project == nil {
+	if namespace == nil {
 		log.Info("Namespace didn't select")
 		return
 	}
 
-	project.DrawTable()
+	namespace.DrawTable()
 }
 
-func Current() (*p.Project, error) {
+func Current() (*n.Namespace, error) {
 
 	var (
-		err     error
-		storage = c.Get().GetStorage()
-		project = new(p.Project)
+		err       error
+		storage   = c.Get().GetStorage()
+		namespace = new(n.Namespace)
 	)
 
-	err = storage.Get("project", project)
+	err = storage.Get("namespace", namespace)
 	if err != nil {
 		return nil, errors.New(err.Error())
 	}
 
-	return project, nil
+	return namespace, nil
 }

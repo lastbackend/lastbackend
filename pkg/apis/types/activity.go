@@ -29,8 +29,8 @@ type ActivityList []Activity
 type Activity struct {
 	// Activity uuid, incremented automatically
 	ID uuid.UUID `json:"id"`
-	// Activity project
-	Project string `json:"project"`
+	// Activity namespace
+	Project string `json:"namespace"`
 	// Activity service
 	Service string `json:"service"`
 	// Activity name

@@ -21,7 +21,7 @@ package service
 import (
 	"github.com/lastbackend/lastbackend/pkg/apis/types"
 	c "github.com/lastbackend/lastbackend/pkg/client/context"
-	s "github.com/lastbackend/lastbackend/pkg/daemon/api/views/v1/service"
+	s "github.com/lastbackend/lastbackend/pkg/daemon/service/views/v1"
 	"github.com/lastbackend/lastbackend/pkg/editor"
 	"github.com/lastbackend/lastbackend/pkg/errors"
 	"gopkg.in/yaml.v2"
@@ -58,25 +58,25 @@ func UpdateCmd(name string) {
 func Update(name string, config types.ServiceUpdateConfig) error {
 
 	var (
-		err     error
-		http    = c.Get().GetHttpClient()
-		storage = c.Get().GetStorage()
-		er      = new(errors.Http)
-		project = new(types.Namespace)
-		res     = new(types.Namespace)
+		err       error
+		http      = c.Get().GetHttpClient()
+		storage   = c.Get().GetStorage()
+		er        = new(errors.Http)
+		namespace = new(types.Namespace)
+		res       = new(types.Namespace)
 	)
 
-	err = storage.Get("project", project)
+	err = storage.Get("namespace", namespace)
 	if err != nil {
 		return errors.New(err.Error())
 	}
 
-	if project.Meta.Name == "" {
+	if namespace.Meta.Name == "" {
 		return errors.New("Namespace didn't select")
 	}
 
 	_, _, err = http.
-		PUT("/project/"+project.Meta.Name+"/service/"+name).
+		PUT("/namespace/"+ namespace.Meta.Name+"/service/"+name).
 		AddHeader("Content-Type", "application/json").
 		BodyJSON(config).
 		Request(&res, er)

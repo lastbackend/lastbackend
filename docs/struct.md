@@ -26,8 +26,8 @@ Structure
 
 /lastbackend/vendors/<vendor>: <vendor (github|bitbucket|gitlab) object>
 
-# project information data layer
-/lastbackend/projects/<project id>/meta: <project info object>
+namespace
+/lastbackend/projects/<project id>/meta: namespace
 /lastbackend/projects/<project id>/services/<service id>/meta: <service info object>
 /lastbackend/projects/<project id>/services/<service id>/config: <service config object>
 /lastbackend/projects/<project id>/services/<service id>/source: <service sources object>
@@ -42,9 +42,9 @@ Structure
 /lastbackend/images/<image id>/builds/<build number>: <build object>
 
 # helpers information data layer
-/lastbackend/helper/projects/<name>: <project id>
+/lastbackend/helper/projects/<name>: namespace
 /lastbackend/helper/projects/<project id>/services/<name>: <service id>
-/lastbackend/helper/pods/<pod id>: <project id>:<service id>
+/lastbackend/helper/pods/<pod id>: namespace
 ```
 
 ### Структуры данных

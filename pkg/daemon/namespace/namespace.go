@@ -1,3 +1,21 @@
+//
+// Last.Backend LLC CONFIDENTIAL
+// __________________
+//
+// [2014] - [2017] Last.Backend LLC
+// All Rights Reserved.
+//
+// NOTICE:  All information contained herein is, and remains
+// the property of Last.Backend LLC and its suppliers,
+// if any.  The intellectual and technical concepts contained
+// herein are proprietary to Last.Backend LLC
+// and its suppliers and may be covered by Russian Federation and Foreign Patents,
+// patents in process, and are protected by trade secret or copyright law.
+// Dissemination of this information or reproduction of this material
+// is strictly forbidden unless prior written permission is obtained
+// from Last.Backend LLC.
+//
+
 package namespace
 
 import (
@@ -48,7 +66,7 @@ func (ns *namespace) Create(rq *request.RequestNamespaceCreateS) (*types.Namespa
 
 	n, err = storage.Namespace().Insert(ns.Context, rq.Name, rq.Description)
 	if err != nil {
-		log.Errorf("Error: insert project to db: %s", err.Error())
+		log.Errorf("Error: insert namespace to db: %s", err.Error())
 		return n, err
 	}
 
@@ -64,7 +82,7 @@ func (ns *namespace) Update(n *types.Namespace) (*types.Namespace, error) {
 
 	n, err = storage.Namespace().Update(ns.Context, n)
 	if err != nil {
-		log.Errorf("Error: update project to db: %s", err.Error())
+		log.Errorf("Error: update namespace to db: %s", err.Error())
 		return n, err
 	}
 
@@ -79,7 +97,7 @@ func (ns *namespace) Remove(id string) error {
 	)
 	err = storage.Namespace().Remove(ns.Context, id)
 	if err != nil {
-		log.Error("Error: remove project from db", err)
+		log.Error("Error: remove namespace from db", err)
 		return err
 	}
 

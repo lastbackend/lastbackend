@@ -16,52 +16,21 @@
 // from Last.Backend LLC.
 //
 
-package project
+package namespace
 
 import (
-	"fmt"
 	"github.com/lastbackend/lastbackend/pkg/apis/types"
 	c "github.com/lastbackend/lastbackend/pkg/client/context"
 	"github.com/lastbackend/lastbackend/pkg/errors"
-	"strings"
-	"time"
 )
 
-type updateS struct {
-	Name string `json:"name"`
-	Desc string `json:"description"`
-}
-
-func UpdateCmd(name, newProjectName, description string) {
+func RemoveCmd(name string) {
 
 	var (
-		log    = c.Get().GetLogger()
-		choice string
+		log = c.Get().GetLogger()
 	)
 
-	if description == "" {
-		log.Info("Description is empty, field will be cleared\n" +
-			"Want to continue? [Y\\n]")
-
-		for {
-			fmt.Scan(&choice)
-
-			switch strings.ToLower(choice) {
-			case "y":
-				break
-			case "n":
-				return
-			default:
-				log.Error("Incorrect input. [Y\n]")
-				continue
-			}
-
-			break
-		}
-	}
-
-	err := Update(name, newProjectName, description)
-	if err != nil {
+	if err := Remove(name); err != nil {
 		log.Error(err)
 		return
 	}
@@ -69,23 +38,26 @@ func UpdateCmd(name, newProjectName, description string) {
 	log.Info("Successful")
 }
 
-func Update(name, newProjectName, description string) error {
+func Remove(name string) error {
 
 	var (
 		err     error
 		http    = c.Get().GetHttpClient()
 		storage = c.Get().GetStorage()
 		er      = new(errors.Http)
-		res     = new(types.Namespace)
+		res     = new(struct{})
 	)
 
+	if len(name) == 0 {
+		return errors.BadParameter("name").Err()
+	}
+
 	_, _, err = http.
-		PUT("/project/"+name).
+		DELETE("/namespace/"+name).
 		AddHeader("Content-Type", "application/json").
-		BodyJSON(updateS{newProjectName, description}).
-		Request(&res, er)
+		Request(res, er)
 	if err != nil {
-		return err
+		return errors.New(err.Error())
 	}
 
 	if er.Code == 401 {
@@ -96,18 +68,14 @@ func Update(name, newProjectName, description string) error {
 		return errors.New(er.Message)
 	}
 
-	project, err := Current()
+	namespace, err := Current()
 	if err != nil {
 		return errors.New(err.Error())
 	}
 
-	if project != nil {
-		if name == project.Name {
-			project.Name = newProjectName
-			project.Description = description
-			project.Updated = time.Now()
-
-			err = storage.Set("project", project)
+	if namespace != nil {
+		if name == namespace.Name {
+			err = storage.Set("namespace", types.Namespace{})
 			if err != nil {
 				return errors.New(err.Error())
 			}

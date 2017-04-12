@@ -16,7 +16,7 @@
 // from Last.Backend LLC.
 //
 
-package project
+package namespace
 
 import (
 	"github.com/lastbackend/lastbackend/pkg/apis/types"
@@ -24,13 +24,19 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/errors"
 )
 
-func RemoveCmd(name string) {
+type createS struct {
+	Name string `json:"name"`
+	Desc string `json:"description"`
+}
+
+func CreateCmd(name, description string) {
 
 	var (
 		log = c.Get().GetLogger()
 	)
 
-	if err := Remove(name); err != nil {
+	err := Create(name, description)
+	if err != nil {
 		log.Error(err)
 		return
 	}
@@ -38,14 +44,13 @@ func RemoveCmd(name string) {
 	log.Info("Successful")
 }
 
-func Remove(name string) error {
+func Create(name, description string) error {
 
 	var (
-		err     error
-		http    = c.Get().GetHttpClient()
-		storage = c.Get().GetStorage()
-		er      = new(errors.Http)
-		res     = new(struct{})
+		err       error
+		http      = c.Get().GetHttpClient()
+		er        = new(errors.Http)
+		namespace = new(types.Namespace)
 	)
 
 	if len(name) == 0 {
@@ -53,11 +58,12 @@ func Remove(name string) error {
 	}
 
 	_, _, err = http.
-		DELETE("/project/"+name).
+		POST("/namespace").
 		AddHeader("Content-Type", "application/json").
-		Request(res, er)
+		BodyJSON(createS{name, description}).
+		Request(&namespace, er)
 	if err != nil {
-		return errors.New(err.Error())
+		return err
 	}
 
 	if er.Code == 401 {
@@ -68,18 +74,9 @@ func Remove(name string) error {
 		return errors.New(er.Message)
 	}
 
-	project, err := Current()
+	namespace, err = Switch(name)
 	if err != nil {
 		return errors.New(err.Error())
-	}
-
-	if project != nil {
-		if name == project.Name {
-			err = storage.Set("project", types.Namespace{})
-			if err != nil {
-				return errors.New(err.Error())
-			}
-		}
 	}
 
 	return nil

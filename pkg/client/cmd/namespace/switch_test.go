@@ -16,13 +16,13 @@
 // from Last.Backend LLC.
 //
 
-package project_test
+package namespace_test
 
 //
 //import (
 //	"encoding/json"
 //	"github.com/lastbackend/lastbackend/pkg/apis/types"
-//	"github.com/lastbackend/lastbackend/pkg/client/cmd/project"
+//	"github.com/lastbackend/lastbackend/pkg/client/cmd/namespace"
 //	"github.com/lastbackend/lastbackend/pkg/client/context"
 //	"github.com/lastbackend/lastbackend/pkg/client/storage"
 //	h "github.com/lastbackend/lastbackend/pkg/util/http"
@@ -106,7 +106,7 @@ package project_test
 //
 //	ctx.HTTP = h.New(server.URL)
 //
-//	_, err = project.Switch(name)
+//	_, err = namespace.Switch(name)
 //	if err != nil {
 //		t.Error(err)
 //		return
