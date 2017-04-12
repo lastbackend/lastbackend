@@ -27,10 +27,6 @@ func ToPodMeta(meta types.PodMeta) PodMeta {
 	return PodMeta{
 		ID:      meta.ID,
 		Labels:  meta.Labels,
-		Owner:   meta.Owner,
-		Project: meta.Project,
-		Service: meta.Service,
-		Spec:    meta.Spec,
 		Created: meta.Created,
 		Updated: meta.Updated,
 	}
@@ -63,10 +59,6 @@ func FromPodMeta(meta PodMeta) types.PodMeta {
 	m := types.PodMeta{}
 	m.ID = meta.ID
 	m.Labels = meta.Labels
-	m.Owner = meta.Owner
-	m.Project = meta.Project
-	m.Service = meta.Service
-	m.Spec = meta.Spec
 	m.Created = meta.Created
 	m.Updated = meta.Updated
 	return m

@@ -75,3 +75,93 @@ func (n *Node) Create(c context.Context, meta *types.NodeMeta, state *types.Node
 
 	return storage.Node().Insert(c, &node.Meta, &node.State)
 }
+
+func (n *Node) PodSpecRemove (c context.Context, hostname string, spec *types.PodNodeSpec) error {
+
+	var (
+		storage = ctx.Get().GetStorage()
+		log     = ctx.Get().GetLogger()
+	)
+
+	node, err := n.Get(c, hostname)
+	if err !=nil {
+		log.Errorf("Node: Pod spec remove: remove pod spec err: %s", err.Error())
+		return err
+	}
+
+	if node == nil {
+		log.Debug("Node: Pod spec remove: node not found")
+		return nil
+	}
+
+	log.Debug("Remove pod spec from node")
+	if err := storage.Node().RemovePod(c, &node.Meta, spec); err != nil {
+		log.Errorf("Node: Pod spec remove: remove pod spec err: %s", err.Error())
+		return err
+	}
+
+	// Update pod node spec
+
+	return nil
+}
+
+func (n *Node) PodSpecUpdate (c context.Context, hostname string, spec *types.PodNodeSpec) error {
+	// Get node by hostname
+	// Update pod node spec
+	var (
+		storage = ctx.Get().GetStorage()
+		log     = ctx.Get().GetLogger()
+	)
+
+	node, err := n.Get(c, hostname)
+	if err !=nil {
+		log.Errorf("Node: Pod spec remove: remove pod spec err: %s", err.Error())
+		return err
+	}
+
+	if node == nil {
+		log.Debug("Node: Pod spec remove: node not found")
+		return nil
+	}
+
+	log.Debug("Remove pod spec from node")
+	if err := storage.Node().UpdatePod(c, &node.Meta, spec); err != nil {
+		log.Errorf("Node: Pod spec remove: remove pod spec err: %s", err.Error())
+		return err
+	}
+
+	// Update pod node spec
+
+	return nil
+}
+
+func (n *Node) Allocate(c context.Context, spec *types.PodNodeSpec) error {
+	var (
+		storage = ctx.Get().GetStorage()
+		node    = new(types.Node)
+		log     = ctx.Get().GetLogger()
+		memory  = int64(0)
+	)
+
+	log.Debug("Allocate Pod to Node")
+
+	nodes, err := storage.Node().List(c)
+	if err != nil {
+		log.Errorf("Node: allocate: get nodes error: %s", err.Error())
+		return err
+	}
+
+	for _, c := range spec.Spec.Containers {
+		memory += c.Quota.Memory
+	}
+
+	for _, node = range *nodes {
+		if node.State.Capacity.Memory > memory {
+			break
+		}
+	}
+
+	node.Spec.Pods = append(node.Spec.Pods, spec)
+
+	return nil
+}

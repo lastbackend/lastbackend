@@ -28,18 +28,29 @@ type ServiceList []Service
 type Service struct {
 	// Service Meta
 	Meta ServiceMeta `json:"meta"`
+	// Service state
+	State ServiceState `json:"state"`
 	// Service custom domains
 	Domains []string `json:"domains"`
 	// Service source info
 	Source *ServiceSource `json:"source,omitempty"`
 	// Service config info
 	Config *ServiceConfig `json:"config,omitempty"`
+	// Pods list
+	Pods []*PodNodeState `json:"pods"`
 }
 
 type ServiceMeta struct {
 	Meta
 	// Service namespace
 	Namespace string `json:"namespace"`
+}
+
+type ServiceState struct {
+	// Service state
+	State string `json:"state"`
+	// Service status
+	Status string `json:"status"`
 }
 
 type ServiceSource struct {
@@ -51,10 +62,10 @@ type ServiceSource struct {
 
 type ServiceConfig struct {
 	Replicas   int      `json:"scale"`
-	Memory     int      `json:"memory"`
+	Memory     int64      `json:"memory"`
 	Region     string   `json:"region"`
 	WorkingDir string   `json:"workdir"`
-	Entrypoint string   `json:"entrypoint"`
+	Entrypoint []string   `json:"entrypoint"`
 	Image      string   `json:"image"`
 	Command    []string `json:"command"`
 	Args       []string `json:"args"`
@@ -97,7 +108,7 @@ func (ServiceConfig) GetDefault() *ServiceConfig {
 type Port struct {
 	Name      string `json:"name"`
 	Protocol  string `json:"protocol"`
-	Container int32  `json:"container"`
+	Container int  `json:"container"`
 	Published bool   `json:"published"`
 }
 

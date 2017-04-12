@@ -22,8 +22,12 @@ import (
 	"context"
 	"github.com/lastbackend/lastbackend/pkg/apis/types"
 	ctx "github.com/lastbackend/lastbackend/pkg/daemon/context"
+	"github.com/lastbackend/lastbackend/pkg/daemon/node"
+	"github.com/lastbackend/lastbackend/pkg/daemon/pod"
 	"github.com/lastbackend/lastbackend/pkg/daemon/service/routes/request"
 	"github.com/lastbackend/lastbackend/pkg/util/validator"
+	"github.com/satori/go.uuid"
+	"time"
 )
 
 type service struct {
@@ -98,6 +102,16 @@ func (s *service) Update(service *types.Service) (*types.Service, error) {
 		return svc, err
 	}
 
+	n := node.New()
+	for _, pod := range svc.Pods {
+		// Get node hostname and update pod spec
+		if err := n.PodSpecUpdate(s.Context, pod.Meta.Hostname, s.GenerateSpec(svc, pod.Meta)); err != nil {
+			log.Errorf("Service: service update: Pod spec upds %s", err.Error())
+			return svc, err
+		}
+
+	}
+
 	return svc, nil
 }
 
@@ -111,6 +125,56 @@ func (s *service) Remove(service *types.Service) error {
 		log.Error("Error: insert service to db", err)
 		return err
 	}
+	return nil
+}
+
+func (s *service) AddPod(service *types.Service) error {
+	var (
+		log     = ctx.Get().GetLogger()
+		storage = ctx.Get().GetStorage()
+	)
+
+	log.Debug("Create new pod state on service")
+
+	pod := new(types.PodNodeState)
+	pod.State.State = "creating"
+	pod.Meta.ID = uuid.NewV4().String()
+	pod.Meta.Created = time.Now()
+	pod.Meta.Updated = time.Now()
+
+	if err := storage.Pod().Insert(s.Context, service.Meta.Namespace, service.Meta.ID, pod); err != nil {
+		log.Errorf("Service: Add Pod: insert into storage error: %s", err.Error())
+		return err
+	}
+
+	service.Pods = append(service.Pods, pod)
+
+	n := node.New()
+	n.Allocate(s.Context, s.GenerateSpec(service, pod.Meta))
+
+	return nil
+}
+
+func (s *service) DelPod(service *types.Service) error {
+
+	var (
+		log     = ctx.Get().GetLogger()
+		pod     *types.PodNodeState
+		storage = ctx.Get().GetStorage()
+	)
+
+	log.Debug("Create new pod state on service")
+
+	for i := len(service.Pods); i >= 0; i-- {
+		pod = service.Pods[i-1]
+		if pod.State.State != "deleting" {
+			break
+		}
+	}
+
+	pod.State.State = "deleting"
+	storage.Pod().Update(s.Context, service.Meta.Namespace, service.Meta.ID, pod)
+
 	return nil
 }
 
@@ -151,4 +215,92 @@ func (s *service) SetPods(c context.Context, pods []types.PodNodeState) error {
 	}
 
 	return nil
+}
+
+func (s *service) Scale(c context.Context, service *types.Service) error {
+	var (
+		log      = ctx.Get().GetLogger()
+		pod      *types.PodNodeState
+		replicas int
+	)
+
+	for i := 0; i < len(service.Pods); i++ {
+		pod = service.Pods[i]
+		if pod.State.State == "deleting" {
+			continue
+		}
+		replicas++
+	}
+
+	if replicas == service.Config.Replicas {
+		log.Debug("Service: Scale: Scale not needed, replicas equal")
+		return nil
+	}
+
+	if replicas < service.Config.Replicas {
+		for i := 0; i < (service.Config.Replicas - replicas); i++ {
+			if err := s.AddPod(service); err != nil {
+				return err
+			}
+		}
+	}
+
+	if replicas > service.Config.Replicas {
+		for i := 0; i < (replicas - service.Config.Replicas); i++ {
+			if err := s.DelPod(service); err != nil {
+				return err
+			}
+		}
+	}
+
+	return nil
+}
+
+func (s *service) GenerateSpec(service *types.Service, pod types.PodMeta) *types.PodNodeSpec {
+
+	var (
+		log = ctx.Get().GetLogger()
+	)
+
+	log.Debug("Generate new node pod spec")
+	var spec = new(types.PodNodeSpec)
+	spec.Meta = pod
+	spec.State.State = "provision"
+
+	spec.Spec.ID = uuid.NewV4().String()
+	spec.Spec.Created = time.Now()
+	spec.Spec.Updated = time.Now()
+
+	cs := new(types.ContainerSpec)
+	cs.Image = types.ImageSpec{
+		Name: service.Config.Image,
+		Pull: true,
+	}
+
+	for _, port := range service.Config.Ports {
+		cs.Ports = append(cs.Ports, types.ContainerPortSpec{
+			ContainerPort: port.Container,
+			Protocol:      port.Protocol,
+		})
+	}
+
+	cs.Command = service.Config.Command
+	cs.Entrypoint = service.Config.Entrypoint
+	cs.Envs = service.Config.EnvVars
+	cs.Args = service.Config.Args
+	cs.Quota = types.ContainerQuotaSpec{
+		Memory: service.Config.Memory,
+	}
+
+	cs.RestartPolicy = types.ContainerRestartPolicySpec{
+		Name:    "always",
+		Attempt: 0,
+	}
+
+	spec.Spec.Containers = append(spec.Spec.Containers, cs)
+
+	var state = new(types.PodState)
+	state.State = service.State.State
+
+	return spec
 }

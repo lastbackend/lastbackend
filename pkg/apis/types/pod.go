@@ -74,14 +74,8 @@ type PodNodeState struct {
 type PodMeta struct {
 	Meta
 
-	// Pod owner
-	Owner string `json:"owner"`
-	// Pod namespace
-	Project string `json:"namespace"`
-	// Pod service
-	Service string `json:"service"`
-	// Current Spec ID
-	Spec string `json:"spec"`
+	// Pod hostname
+	Hostname string `json:"hostname"`
 }
 
 type PodSpec struct {
