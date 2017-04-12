@@ -4,8 +4,8 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/lastbackend/lastbackend/pkg/daemon/context"
 	namespace "github.com/lastbackend/lastbackend/pkg/daemon/namespace/routes"
-	service   "github.com/lastbackend/lastbackend/pkg/daemon/service/routes"
-	vendors   "github.com/lastbackend/lastbackend/pkg/daemon/vendors/routes"
+	service "github.com/lastbackend/lastbackend/pkg/daemon/service/routes"
+	vendors "github.com/lastbackend/lastbackend/pkg/daemon/vendors/routes"
 	"github.com/lastbackend/lastbackend/pkg/util/http"
 )
 
