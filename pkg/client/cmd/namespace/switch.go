@@ -16,7 +16,7 @@
 // from Last.Backend LLC.
 //
 
-package project
+package namespace
 
 import (
 	"github.com/lastbackend/lastbackend/pkg/apis/types"
@@ -30,28 +30,28 @@ func SwitchCmd(name string) {
 		log = c.Get().GetLogger()
 	)
 
-	project, err := Switch(name)
+	namespace, err := Switch(name)
 	if err != nil {
 		log.Error(err)
 		return
 	}
 
-	log.Infof("The project `%s` was selected as the current", project.Meta.Name)
+	log.Infof("The namespace `%s` was selected as the current", namespace.Meta.Name)
 }
 
 func Switch(name string) (*types.Namespace, error) {
 
 	var (
-		er      = new(errors.Http)
-		http    = c.Get().GetHttpClient()
-		storage = c.Get().GetStorage()
-		project = new(types.Namespace)
+		er        = new(errors.Http)
+		http      = c.Get().GetHttpClient()
+		storage   = c.Get().GetStorage()
+		namespace = new(types.Namespace)
 	)
 
 	_, _, err := http.
-		GET("/project/"+name).
+		GET("/namespace/"+name).
 		AddHeader("Content-Type", "application/json").
-		Request(&project, er)
+		Request(&namespace, er)
 
 	if err != nil {
 		return nil, errors.New(err.Error())
@@ -65,10 +65,10 @@ func Switch(name string) (*types.Namespace, error) {
 		return nil, errors.New(er.Message)
 	}
 
-	err = storage.Set("project", project)
+	err = storage.Set("namespace", namespace)
 	if err != nil {
 		return nil, errors.New(err.Error())
 	}
 
-	return project, nil
+	return namespace, nil
 }

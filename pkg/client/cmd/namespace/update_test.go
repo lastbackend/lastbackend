@@ -16,35 +16,39 @@
 // from Last.Backend LLC.
 //
 
-package project_test
+package namespace_test
 
 //
 //import (
+//	"encoding/json"
 //	"github.com/lastbackend/lastbackend/pkg/apis/types"
-//	"github.com/lastbackend/lastbackend/pkg/client/cmd/project"
+//	"github.com/lastbackend/lastbackend/pkg/client/cmd/namespace"
 //	"github.com/lastbackend/lastbackend/pkg/client/context"
 //	"github.com/lastbackend/lastbackend/pkg/client/storage"
 //	h "github.com/lastbackend/lastbackend/pkg/util/http"
 //	"github.com/stretchr/testify/assert"
+//	"io/ioutil"
 //	"net/http"
 //	"net/http/httptest"
 //	"testing"
 //	"time"
 //)
 //
-//func TestRemove(t *testing.T) {
+//func TestUpdate(t *testing.T) {
 //
 //	const (
-//		name  string = "project"
-//		token string = "mocktoken"
+//		name           string = "namespace"
+//		newNamespace string = "newname"
+//		description    string = "new description"
+//		token                 = "mocktoken"
 //	)
 //
 //	var (
 //		err          error
 //		ctx          = context.Mock()
-//		projectmodel = new(types.Namespace)
+//		namespacemodel = new(types.Namespace)
 //		switchData   = types.Namespace{
-//			Name:        "project",
+//			Name:        "namespace",
 //			User:        "mock_user",
 //			Description: "sample description",
 //			Created:     time.Now(),
@@ -74,33 +78,60 @@ package project_test
 //
 //	//------------------------------------------------------------------------------------------
 //	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+//
 //		tk := r.Header.Get("Authorization")
 //		assert.NotEmpty(t, tk, "token should be not empty")
 //		assert.Equal(t, tk, "Bearer "+token, "they should be equal")
 //
+//		body, err := ioutil.ReadAll(r.Body)
+//		if err != nil {
+//			t.Error(err)
+//			return
+//		}
+//
+//		var d = struct {
+//			Name        string `json:"name,omitempty"`
+//			Description string `json:"description,omitempty"`
+//		}{}
+//
+//		err = json.Unmarshal(body, &d)
+//		if err != nil {
+//			t.Error(err)
+//			return
+//		}
+//
+//		assert.Equal(t, d.Name, newNamespace, "they should be equal")
+//		assert.Equal(t, d.Description, description, "they should be equal")
+//
 //		w.WriteHeader(200)
-//		w.Write([]byte{})
+//		_, err = w.Write([]byte(`{"id":"mock", "name":"` + name + `", "description":"` + description + `"}`))
+//		if err != nil {
+//			t.Error(err)
+//			return
+//		}
 //	}))
 //	defer server.Close()
 //	//------------------------------------------------------------------------------------------
 //
-//	err = ctx.Storage.Set("project", switchData)
+//	err = ctx.Storage.Set("namespace", switchData)
 //	if err != nil {
 //		t.Error(err)
 //		return
 //	}
 //
 //	ctx.HTTP = h.New(server.URL)
-//	err = project.Remove(name)
-//	if err != nil {
-//		t.Error(err)
-//	}
-//
-//	err = ctx.Storage.Get("project", projectmodel)
+//	err = namespace.Update(name, newNamespace, description)
 //	if err != nil {
 //		t.Error(err)
 //		return
 //	}
 //
-//	assert.Equal(t, projectmodel.Name, "")
+//	err = ctx.Storage.Get("namespace", namespacemodel)
+//	if err != nil {
+//		t.Error(err)
+//		return
+//	}
+//
+//	assert.Equal(t, namespacemodel.Name, newNamespace)
+//	assert.Equal(t, namespacemodel.Description, description)
 //}

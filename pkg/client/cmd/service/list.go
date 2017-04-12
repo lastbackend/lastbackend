@@ -19,9 +19,9 @@
 package service
 
 import (
-	"github.com/lastbackend/lastbackend/pkg/client/cmd/project"
+	"github.com/lastbackend/lastbackend/pkg/client/cmd/namespace"
 	c "github.com/lastbackend/lastbackend/pkg/client/context"
-	s "github.com/lastbackend/lastbackend/pkg/daemon/api/views/v1/service"
+	s "github.com/lastbackend/lastbackend/pkg/daemon/service/views/v1"
 	"github.com/lastbackend/lastbackend/pkg/errors"
 )
 
@@ -31,14 +31,14 @@ func ListServiceCmd() {
 		log = c.Get().GetLogger()
 	)
 
-	services, projectName, err := List()
+	services, namespace, err := List()
 	if err != nil {
 		log.Error(err)
 		return
 	}
 
 	if services != nil {
-		services.DrawTable(projectName)
+		services.DrawTable(namespace)
 	}
 }
 
@@ -52,7 +52,7 @@ func List() (*s.ServiceList, string, error) {
 		services = new(s.ServiceList)
 	)
 
-	p, err := project.Current()
+	p, err := namespace.Current()
 	if err != nil {
 		return nil, "", errors.New(err.Error())
 	}

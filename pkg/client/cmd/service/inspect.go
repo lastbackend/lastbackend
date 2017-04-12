@@ -19,9 +19,9 @@
 package service
 
 import (
-	"github.com/lastbackend/lastbackend/pkg/client/cmd/project"
+	"github.com/lastbackend/lastbackend/pkg/client/cmd/namespace"
 	c "github.com/lastbackend/lastbackend/pkg/client/context"
-	s "github.com/lastbackend/lastbackend/pkg/daemon/api/views/v1/service"
+	s "github.com/lastbackend/lastbackend/pkg/daemon/service/views/v1"
 	"github.com/lastbackend/lastbackend/pkg/errors"
 )
 
@@ -31,13 +31,13 @@ func InspectCmd(name string) {
 		log = c.Get().GetLogger()
 	)
 
-	service, projectName, err := Inspect(name)
+	service, namespace, err := Inspect(name)
 	if err != nil {
 		log.Error(err)
 		return
 	}
 
-	service.DrawTable(projectName)
+	service.DrawTable(namespace)
 }
 
 func Inspect(name string) (*s.Service, string, error) {
@@ -50,7 +50,7 @@ func Inspect(name string) (*s.Service, string, error) {
 		service = new(s.Service)
 	)
 
-	p, err := project.Current()
+	p, err := namespace.Current()
 	if err != nil {
 		return nil, "", errors.New(err.Error())
 	}
@@ -61,7 +61,7 @@ func Inspect(name string) (*s.Service, string, error) {
 	}
 
 	_, _, err = http.
-		GET("/project/"+p.Name+"/service/"+name).
+		GET("/namespace/"+p.Name+"/service/"+name).
 		Request(service, er)
 
 	if err != nil {

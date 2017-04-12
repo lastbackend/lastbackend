@@ -31,7 +31,7 @@ package service_test
 //func TestLogs(t *testing.T) {
 //
 //	const (
-//		projectName   string = "project"
+//		namespace   string = "namespace"
 //		serviceName   string = "service"
 //		podName       string = "pod"
 //		containerName string = "container"
@@ -68,7 +68,7 @@ package service_test
 //
 //	ctx.HTTP = h.New(server.URL)
 //
-//	_, err = service.Logs(projectName, serviceName, podName, containerName)
+//	_, err = service.Logs(namespace, serviceName, podName, containerName)
 //	if err != nil {
 //		t.Error(err)
 //	}

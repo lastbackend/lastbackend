@@ -49,7 +49,7 @@ func LogsServiceCmd(name string) {
 		choice string = "0"
 	)
 
-	service, projectName, err := Inspect(name)
+	service, namespace, err := Inspect(name)
 	if err != nil {
 		log.Error(err)
 		return
@@ -86,7 +86,7 @@ func LogsServiceCmd(name string) {
 		}
 	}
 
-	reader, err := Logs(projectName, service.Name, m[choice].Pod, m[choice].Container)
+	reader, err := Logs(namespace, service.Name, m[choice].Pod, m[choice].Container)
 	if err != nil {
 		log.Error(err)
 		return
@@ -95,7 +95,7 @@ func LogsServiceCmd(name string) {
 	stream.New(Writer{}).Pipe(reader)
 }
 
-func Logs(project, name, pod, container string) (*io.ReadCloser, error) {
+func Logs(namespace, name, pod, container string) (*io.ReadCloser, error) {
 
 	var (
 		err  error
@@ -104,7 +104,7 @@ func Logs(project, name, pod, container string) (*io.ReadCloser, error) {
 	)
 
 	_, res, err := http.
-		GET("/project/" + project + "/service/" + name + "/logs?pod=" + pod + "&container=" + container).Do()
+		GET("/namespace/" + namespace + "/service/" + name + "/logs?pod=" + pod + "&container=" + container).Do()
 	if err != nil {
 		return nil, errors.New(err.Error())
 	}

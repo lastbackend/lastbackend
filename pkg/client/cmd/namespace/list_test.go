@@ -16,10 +16,10 @@
 // from Last.Backend LLC.
 //
 
-package project_test
+package namespace_test
 //
 //import (
-//	"github.com/lastbackend/lastbackend/pkg/client/cmd/project"
+//	"github.com/lastbackend/lastbackend/pkg/client/cmd/namespace"
 //	"github.com/lastbackend/lastbackend/pkg/client/context"
 //	h "github.com/lastbackend/lastbackend/pkg/util/http"
 //	"github.com/stretchr/testify/assert"
@@ -28,11 +28,12 @@ package project_test
 //	"testing"
 //)
 //
-//func TestGet(t *testing.T) {
+//func TestList(t *testing.T) {
 //
 //	const (
-//		name  string = "project"
-//		token string = "mocktoken"
+//		name        string = "namespace"
+//		description string = "namespace describe"
+//		token       string = "mocktoken"
 //	)
 //
 //	var (
@@ -46,11 +47,12 @@ package project_test
 //	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 //
 //		tk := r.Header.Get("Authorization")
+//
 //		assert.NotEmpty(t, tk, "token should be not empty")
 //		assert.Equal(t, tk, "Bearer "+token, "they should be equal")
 //
 //		w.WriteHeader(200)
-//		_, err := w.Write([]byte(`{"id":"mock", "name":"` + name + `"}`))
+//		_, err := w.Write([]byte(`[{"id":"mock", "name":"` + name + `", "description":"` + description + `"}]`))
 //		if err != nil {
 //			t.Error(err)
 //			return
@@ -61,7 +63,7 @@ package project_test
 //
 //	ctx.HTTP = h.New(server.URL)
 //
-//	_, err = project.Get(name)
+//	_, err = namespace.List()
 //	if err != nil {
 //		t.Error(err)
 //	}

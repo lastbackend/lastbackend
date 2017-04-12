@@ -20,7 +20,7 @@ package client
 
 import (
 	"github.com/jawher/mow.cli"
-	p "github.com/lastbackend/lastbackend/pkg/client/cmd/project"
+	p "github.com/lastbackend/lastbackend/pkg/client/cmd/namespace"
 	s "github.com/lastbackend/lastbackend/pkg/client/cmd/service"
 	"github.com/lastbackend/lastbackend/pkg/client/config"
 	"github.com/lastbackend/lastbackend/pkg/client/context"
@@ -82,8 +82,8 @@ func Run() {
 
 func configure(app *cli.Cli) {
 
-	app.Command("projects", "Display the project list", func(c *cli.Cmd) {
-		c.Action = p.ListProjectCmd
+	app.Command("namespaces", "Display the namespace list", func(c *cli.Cmd) {
+		c.Action = p.ListNamespaceCmd
 	})
 
 	app.Command("services", "Display the service list", func(c *cli.Cmd) {
@@ -121,13 +121,13 @@ func configure(app *cli.Cli) {
 
 	})
 
-	app.Command("project", "", func(c *cli.Cmd) {
+	app.Command("namespace", "", func(c *cli.Cmd) {
 
 		c.Spec = "[NAME]"
 
-		var name = c.String(cli.StringArg{Name: "NAME", Value: "", Desc: "name of your project", HideValue: true})
+		var name = c.String(cli.StringArg{Name: "NAME", Value: "", Desc: "name of your namespace", HideValue: true})
 
-		c.Command("create", "Create new project", func(sc *cli.Cmd) {
+		c.Command("create", "Create new namespace", func(sc *cli.Cmd) {
 
 			sc.Spec = "[--desc]"
 
@@ -143,7 +143,7 @@ func configure(app *cli.Cli) {
 			}
 		})
 
-		c.Command("inspect", "Get project info by name", func(sc *cli.Cmd) {
+		c.Command("inspect", "Get namespace info by name", func(sc *cli.Cmd) {
 			sc.Action = func() {
 				if len(*name) == 0 {
 					c.PrintHelp()
@@ -154,7 +154,7 @@ func configure(app *cli.Cli) {
 			}
 		})
 
-		c.Command("remove", "Remove project by name", func(sc *cli.Cmd) {
+		c.Command("remove", "Remove namespace by name", func(sc *cli.Cmd) {
 			sc.Action = func() {
 				if len(*name) == 0 {
 					c.PrintHelp()
@@ -165,7 +165,7 @@ func configure(app *cli.Cli) {
 			}
 		})
 
-		c.Command("switch", "switch to project", func(sc *cli.Cmd) {
+		c.Command("switch", "switch to namespace", func(sc *cli.Cmd) {
 			sc.Action = func() {
 				if len(*name) == 0 {
 					c.PrintHelp()
@@ -176,12 +176,12 @@ func configure(app *cli.Cli) {
 			}
 		})
 
-		c.Command("update", "if you wish to change name or description of the project", func(sc *cli.Cmd) {
+		c.Command("update", "if you wish to change name or description of the namespace", func(sc *cli.Cmd) {
 
 			sc.Spec = "[--desc][--name]"
 
 			var desc = sc.String(cli.StringOpt{Name: "desc", Value: "", Desc: "set description info", HideValue: true})
-			var newProjectName = sc.String(cli.StringOpt{Name: "name", Value: "", Desc: "set new project name", HideValue: true})
+			var newNamespace = sc.String(cli.StringOpt{Name: "name", Value: "", Desc: "set new namespace name", HideValue: true})
 
 			sc.Action = func() {
 				if len(*name) == 0 {
@@ -189,11 +189,11 @@ func configure(app *cli.Cli) {
 					return
 				}
 
-				p.UpdateCmd(*name, *newProjectName, *desc)
+				p.UpdateCmd(*name, *newNamespace, *desc)
 			}
 		})
 
-		c.Command("current", "information about current project", func(sc *cli.Cmd) {
+		c.Command("current", "information about current namespace", func(sc *cli.Cmd) {
 			sc.Action = func() {
 				if len(*name) != 0 {
 					c.PrintHelp()

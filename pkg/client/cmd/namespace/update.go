@@ -16,26 +16,51 @@
 // from Last.Backend LLC.
 //
 
-package project
+package namespace
 
 import (
+	"fmt"
 	"github.com/lastbackend/lastbackend/pkg/apis/types"
 	c "github.com/lastbackend/lastbackend/pkg/client/context"
 	"github.com/lastbackend/lastbackend/pkg/errors"
+	"strings"
+	"time"
 )
 
-type createS struct {
+type updateS struct {
 	Name string `json:"name"`
 	Desc string `json:"description"`
 }
 
-func CreateCmd(name, description string) {
+func UpdateCmd(name, newNamespace, description string) {
 
 	var (
-		log = c.Get().GetLogger()
+		log    = c.Get().GetLogger()
+		choice string
 	)
 
-	err := Create(name, description)
+	if description == "" {
+		log.Info("Description is empty, field will be cleared\n" +
+			"Want to continue? [Y\\n]")
+
+		for {
+			fmt.Scan(&choice)
+
+			switch strings.ToLower(choice) {
+			case "y":
+				break
+			case "n":
+				return
+			default:
+				log.Error("Incorrect input. [Y\n]")
+				continue
+			}
+
+			break
+		}
+	}
+
+	err := Update(name, newNamespace, description)
 	if err != nil {
 		log.Error(err)
 		return
@@ -44,24 +69,21 @@ func CreateCmd(name, description string) {
 	log.Info("Successful")
 }
 
-func Create(name, description string) error {
+func Update(name, newNamespace, description string) error {
 
 	var (
 		err     error
 		http    = c.Get().GetHttpClient()
+		storage = c.Get().GetStorage()
 		er      = new(errors.Http)
-		project = new(types.Namespace)
+		res     = new(types.Namespace)
 	)
 
-	if len(name) == 0 {
-		return errors.BadParameter("name").Err()
-	}
-
 	_, _, err = http.
-		POST("/project").
+		PUT("/namespace/"+name).
 		AddHeader("Content-Type", "application/json").
-		BodyJSON(createS{name, description}).
-		Request(&project, er)
+		BodyJSON(updateS{newNamespace, description}).
+		Request(&res, er)
 	if err != nil {
 		return err
 	}
@@ -74,9 +96,22 @@ func Create(name, description string) error {
 		return errors.New(er.Message)
 	}
 
-	project, err = Switch(name)
+	namespace, err := Current()
 	if err != nil {
 		return errors.New(err.Error())
+	}
+
+	if namespace != nil {
+		if name == namespace.Name {
+			namespace.Name = newNamespace
+			namespace.Description = description
+			namespace.Updated = time.Now()
+
+			err = storage.Set("namespace", namespace)
+			if err != nil {
+				return errors.New(err.Error())
+			}
+		}
 	}
 
 	return nil

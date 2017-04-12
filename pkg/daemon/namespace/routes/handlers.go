@@ -35,7 +35,7 @@ func NamespaceListH(w http.ResponseWriter, r *http.Request) {
 		log = context.Get().GetLogger()
 	)
 
-	log.Debug("List project handler")
+	log.Debug("List namespace handler")
 
 	ns := namespace.New(r.Context())
 	items, err := ns.List()
@@ -101,7 +101,7 @@ func NamespaceCreateH(w http.ResponseWriter, r *http.Request) {
 		log = context.Get().GetLogger()
 	)
 
-	log.Debug("Create project handler")
+	log.Debug("Create namespace handler")
 
 	// request body struct
 	rq := new(request.RequestNamespaceCreateS)
@@ -120,7 +120,7 @@ func NamespaceCreateH(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if item != nil {
-		errors.New("project").NotUnique("name").Http(w)
+		errors.New("namespace").NotUnique("name").Http(w)
 		return
 	}
 
@@ -148,7 +148,7 @@ func NamespaceUpdateH(w http.ResponseWriter, r *http.Request) {
 		id     = params["namespace"]
 	)
 
-	log.Debug("Update project handler")
+	log.Debug("Update namespace handler")
 
 	// request body struct
 	rq := new(request.RequestNamespaceUpdateS)
@@ -205,18 +205,18 @@ func NamespaceRemoveH(w http.ResponseWriter, r *http.Request) {
 	ns := namespace.New(r.Context())
 	item, err := ns.Get(id)
 	if err != nil {
-		log.Error("Error: find project by name", err.Error())
+		log.Error("Error: find namespace by name", err.Error())
 		errors.HTTP.InternalServerError(w)
 		return
 	}
 
 	if item == nil {
-		errors.New("project").NotFound().Http(w)
+		errors.New("namespace").NotFound().Http(w)
 		return
 	}
 
-	// Todo: remove all services by project id
-	// Todo: remove all activity by project id
+	// Todo: remove all services by namespace id
+	// Todo: remove all activity by namespace id
 
 	//err = storage.Service().RemoveByProject(session.Username, id)
 	//if err != nil {

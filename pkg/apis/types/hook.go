@@ -28,7 +28,7 @@ type Hook struct {
 	// Hook Meta
 	Meta Meta `json:"meta"`
 	// Namespace name
-	Project string `json:"project"`
+	Project string `json:"namespace"`
 	// Hook token
 	Token string `json:"token"`
 	// Hook image to build

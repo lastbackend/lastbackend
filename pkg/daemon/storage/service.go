@@ -36,7 +36,7 @@ type ServiceStorage struct {
 	Client func() (store.IStore, store.DestroyFunc, error)
 }
 
-// Get project by name
+// Get namespace by name
 func (s *ServiceStorage) GetByID(ctx context.Context, projectID, serviceID string) (*types.Service, error) {
 	var service = new(types.Service)
 
@@ -66,7 +66,7 @@ func (s *ServiceStorage) GetByID(ctx context.Context, projectID, serviceID strin
 	return service, nil
 }
 
-// Get project by name
+// Get namespace by name
 func (s *ServiceStorage) GetByName(ctx context.Context, projectID string, name string) (*types.Service, error) {
 	var id string
 
@@ -86,7 +86,7 @@ func (s *ServiceStorage) GetByName(ctx context.Context, projectID string, name s
 	return s.GetByID(ctx, projectID, id)
 }
 
-// List project
+// List namespace
 func (s *ServiceStorage) ListByProject(ctx context.Context, projectID string) (*types.ServiceList, error) {
 
 	const filter = `\b(.+)` + serviceStorage + `\/[a-z0-9-]{36}\/meta\b`
@@ -251,7 +251,7 @@ func (s *ServiceStorage) Remove(ctx context.Context, projectID string, service *
 	return tx.Commit()
 }
 
-// Remove services from project
+// Remove services from namespace
 func (s *ServiceStorage) RemoveByProject(ctx context.Context, projectID string) error {
 
 	client, destroy, err := s.Client()

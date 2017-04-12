@@ -35,7 +35,7 @@ type NamespaceStorage struct {
 	Client func() (store.IStore, store.DestroyFunc, error)
 }
 
-// Get project by name
+// Get namespace by name
 func (s *NamespaceStorage) GetByID(ctx context.Context, id string) (*types.Namespace, error) {
 
 	namespace := new(types.Namespace)
@@ -61,7 +61,7 @@ func (s *NamespaceStorage) GetByID(ctx context.Context, id string) (*types.Names
 	return namespace, nil
 }
 
-// Get project by name
+// Get namespace by name
 func (s *NamespaceStorage) GetByName(ctx context.Context, name string) (*types.Namespace, error) {
 
 	var id string
@@ -117,7 +117,7 @@ func (s *NamespaceStorage) List(ctx context.Context) (*types.NamespaceList, erro
 	return namespaceList, nil
 }
 
-// Insert new project into storage
+// Insert new namespace into storage
 func (s *NamespaceStorage) Insert(ctx context.Context, name, description string) (*types.Namespace, error) {
 	var (
 		id        = uuid.NewV4().String()
@@ -158,7 +158,7 @@ func (s *NamespaceStorage) Insert(ctx context.Context, name, description string)
 	return namespace, nil
 }
 
-// Update project model
+// Update namespace model
 func (s *NamespaceStorage) Update(ctx context.Context, namespace *types.Namespace) (*types.Namespace, error) {
 
 	namespace.Meta.Updated = time.Now()
@@ -206,7 +206,7 @@ func (s *NamespaceStorage) Update(ctx context.Context, namespace *types.Namespac
 	return namespace, nil
 }
 
-// Remove project model
+// Remove namespace model
 func (s *NamespaceStorage) Remove(ctx context.Context, id string) error {
 
 	client, destroy, err := s.Client()

@@ -16,46 +16,48 @@
 // from Last.Backend LLC.
 //
 
-package project
+package namespace
 
 import (
 	c "github.com/lastbackend/lastbackend/pkg/client/context"
-	p "github.com/lastbackend/lastbackend/pkg/daemon/api/views/v1/project"
+	n "github.com/lastbackend/lastbackend/pkg/daemon/namespace/views/v1"
 	"github.com/lastbackend/lastbackend/pkg/errors"
 )
 
-func ListProjectCmd() {
+func GetCmd(name string) {
 
 	var (
 		log = c.Get().GetLogger()
 	)
 
-	projects, err := List()
+	namespace, err := Get(name)
 	if err != nil {
 		log.Error(err)
 		return
 	}
 
-	if projects != nil {
-		projects.DrawTable()
-	}
+	namespace.DrawTable()
 }
 
-func List() (*p.ProjectList, error) {
+func Get(name string) (*n.Namespace, error) {
 
 	var (
-		err      error
-		log      = c.Get().GetLogger()
-		http     = c.Get().GetHttpClient()
-		er       = new(errors.Http)
-		projects = new(p.ProjectList)
+		err       error
+		http      = c.Get().GetHttpClient()
+		er        = new(errors.Http)
+		namespace = new(n.Namespace)
 	)
 
+	if len(name) == 0 {
+		return nil, errors.BadParameter("name").Err()
+	}
+
 	_, _, err = http.
-		GET("/project").
-		Request(projects, er)
+		GET("/namespace/"+name).
+		AddHeader("Content-Type", "application/json").
+		Request(&namespace, er)
 	if err != nil {
-		return nil, err
+		return nil, errors.New(err.Error())
 	}
 
 	if er.Code == 401 {
@@ -66,10 +68,5 @@ func List() (*p.ProjectList, error) {
 		return nil, errors.New(er.Message)
 	}
 
-	if len(*projects) == 0 {
-		log.Info("You don't have any projects")
-		return nil, nil
-	}
-
-	return projects, nil
+	return namespace, nil
 }
