@@ -18,13 +18,31 @@
 
 package v1
 
-import "github.com/lastbackend/lastbackend/pkg/apis/types"
+import (
+	"encoding/json"
+	"github.com/lastbackend/lastbackend/pkg/apis/types"
+)
 
-func NewVendor(obj *types.Vendor) *Vendor {
-	return New(obj)
+func New(obj *types.Vendor) *Vendor {
+	v := new(Vendor)
+	v.Vendor = obj.Vendor
+	v.Username = obj.Username
+	v.Host = obj.Host
+	return v
 }
 
-func NewVendorList(obj map[string]*types.Vendor) *VendorList {
-	return NewList(obj)
+func (obj *Vendor) ToJson() ([]byte, error) {
+	return json.Marshal(obj)
 }
 
+func NewList(obj map[string]*types.Vendor) *VendorList {
+	v := make(VendorList)
+	for index, item := range obj {
+		v[index] = NewVendor(item)
+	}
+	return &v
+}
+
+func (obj *VendorList) ToJson() ([]byte, error) {
+	return json.Marshal(obj)
+}
