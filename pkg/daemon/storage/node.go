@@ -87,7 +87,6 @@ func (s *NodeStorage) Get(ctx context.Context, hostname string) (*types.Node, er
 	}
 
 	keyState := s.util.Key(ctx, nodeStorage, hostname, "state")
-	fmt.Println(keyState)
 	if err := client.Get(ctx, keyState, &node.State); err != nil {
 		if err.Error() == store.ErrKeyNotFound {
 			return nil, nil
@@ -102,8 +101,6 @@ func (s *NodeStorage) Get(ctx context.Context, hostname string) (*types.Node, er
 		}
 		return nil, err
 	}
-
-	fmt.Println(node)
 
 	return node, nil
 }
