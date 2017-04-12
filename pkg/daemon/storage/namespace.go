@@ -86,7 +86,7 @@ func (s *NamespaceStorage) GetByName(ctx context.Context, name string) (*types.N
 // List projects
 func (s *NamespaceStorage) List(ctx context.Context) (*types.NamespaceList, error) {
 
-	const filter = `\b(.+)projects\/[a-z0-9-]{36}\/meta\b`
+	const filter = `\b(.+)` + namespaceStorage + `\/[a-z0-9-]{36}\/meta\b`
 
 	client, destroy, err := s.Client()
 	if err != nil {

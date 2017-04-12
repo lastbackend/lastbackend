@@ -89,7 +89,7 @@ func (s *ServiceStorage) GetByName(ctx context.Context, projectID string, name s
 // List project
 func (s *ServiceStorage) ListByProject(ctx context.Context, projectID string) (*types.ServiceList, error) {
 
-	const filter = `\b(.+)services\/[a-z0-9-]{36}\/meta\b`
+	const filter = `\b(.+)` + serviceStorage + `\/[a-z0-9-]{36}\/meta\b`
 
 	client, destroy, err := s.Client()
 	if err != nil {

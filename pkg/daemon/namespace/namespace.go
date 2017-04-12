@@ -8,19 +8,20 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/util/validator"
 )
 
-type Namespace struct {
+type namespace struct {
+	Context context.Context
 }
 
-func New() *Namespace {
-	return new(Namespace)
+func New(ctx context.Context) *namespace {
+	return &namespace{ctx}
 }
 
-func (ns *Namespace) List(c context.Context) (*types.NamespaceList, error) {
+func (ns *namespace) List() (*types.NamespaceList, error) {
 	var storage = ctx.Get().GetStorage()
-	return storage.Namespace().List(c)
+	return storage.Namespace().List(ns.Context)
 }
 
-func (ns *Namespace) Get(c context.Context, id string) (*types.Namespace, error) {
+func (ns *namespace) Get(id string) (*types.Namespace, error) {
 	var (
 		err     error
 		storage = ctx.Get().GetStorage()
@@ -28,15 +29,15 @@ func (ns *Namespace) Get(c context.Context, id string) (*types.Namespace, error)
 	)
 
 	if validator.IsUUID(id) {
-		n, err = storage.Namespace().GetByID(c, id)
+		n, err = storage.Namespace().GetByID(ns.Context, id)
 	} else {
-		n, err = storage.Namespace().GetByName(c, id)
+		n, err = storage.Namespace().GetByName(ns.Context, id)
 	}
 
 	return n, err
 }
 
-func (ns *Namespace) Create(c context.Context, rq *request.RequestNamespaceCreateS) (*types.Namespace, error) {
+func (ns *namespace) Create(rq *request.RequestNamespaceCreateS) (*types.Namespace, error) {
 
 	var (
 		err     error
@@ -45,7 +46,7 @@ func (ns *Namespace) Create(c context.Context, rq *request.RequestNamespaceCreat
 		n       *types.Namespace
 	)
 
-	n, err = storage.Namespace().Insert(c, rq.Name, rq.Description)
+	n, err = storage.Namespace().Insert(ns.Context, rq.Name, rq.Description)
 	if err != nil {
 		log.Errorf("Error: insert project to db: %s", err.Error())
 		return n, err
@@ -54,14 +55,14 @@ func (ns *Namespace) Create(c context.Context, rq *request.RequestNamespaceCreat
 	return n, nil
 }
 
-func (ns *Namespace) Update(c context.Context, n *types.Namespace) (*types.Namespace, error) {
+func (ns *namespace) Update(n *types.Namespace) (*types.Namespace, error) {
 	var (
 		err     error
 		log     = ctx.Get().GetLogger()
 		storage = ctx.Get().GetStorage()
 	)
 
-	n, err = storage.Namespace().Update(c, n)
+	n, err = storage.Namespace().Update(ns.Context, n)
 	if err != nil {
 		log.Errorf("Error: update project to db: %s", err.Error())
 		return n, err
@@ -70,13 +71,13 @@ func (ns *Namespace) Update(c context.Context, n *types.Namespace) (*types.Names
 	return n, nil
 }
 
-func (ns *Namespace) Remove(c context.Context, id string) error {
+func (ns *namespace) Remove(id string) error {
 	var (
 		err     error
 		log     = ctx.Get().GetLogger()
 		storage = ctx.Get().GetStorage()
 	)
-	err = storage.Namespace().Remove(c, id)
+	err = storage.Namespace().Remove(ns.Context, id)
 	if err != nil {
 		log.Error("Error: remove project from db", err)
 		return err

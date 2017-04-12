@@ -8,19 +8,24 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/util/validator"
 )
 
-type Service struct {
+type service struct {
+	Context   context.Context
+	Namespace string
 }
 
-func New() *Service {
-	return new(Service)
+func New(ctx context.Context, namespace string) *service {
+	return &service{
+		Context:   ctx,
+		Namespace: namespace,
+	}
 }
 
-func (s *Service) List(c context.Context, namespace string) (*types.ServiceList, error) {
+func (s *service) List() (*types.ServiceList, error) {
 	var storage = ctx.Get().GetStorage()
-	return storage.Service().ListByProject(c, namespace)
+	return storage.Service().ListByProject(s.Context, s.Namespace)
 }
 
-func (s *Service) Get(c context.Context, namespace, service string) (*types.Service, error) {
+func (s *service) Get(service string) (*types.Service, error) {
 
 	var (
 		err     error
@@ -30,9 +35,9 @@ func (s *Service) Get(c context.Context, namespace, service string) (*types.Serv
 	)
 
 	if validator.IsUUID(service) {
-		svc, err = storage.Service().GetByID(c, namespace, service)
+		svc, err = storage.Service().GetByID(s.Context, s.Namespace, service)
 	} else {
-		svc, err = storage.Service().GetByName(c, namespace, service)
+		svc, err = storage.Service().GetByName(s.Context, s.Namespace, service)
 	}
 
 	if err != nil {
@@ -43,7 +48,7 @@ func (s *Service) Get(c context.Context, namespace, service string) (*types.Serv
 	return svc, nil
 }
 
-func (s *Service) Create(c context.Context, namespace string, rq *request.RequestServiceCreateS) (*types.Service, error) {
+func (s *service) Create(rq *request.RequestServiceCreateS) (*types.Service, error) {
 
 	var (
 		err     error
@@ -52,7 +57,7 @@ func (s *Service) Create(c context.Context, namespace string, rq *request.Reques
 		svc     *types.Service
 	)
 
-	svc, err = storage.Service().Insert(c, namespace, rq.Name, rq.Description, rq.Config)
+	svc, err = storage.Service().Insert(s.Context, s.Namespace, rq.Name, rq.Description, rq.Config)
 	if err != nil {
 		log.Errorf("Error: insert service to db : %s", err.Error())
 		return svc, err
@@ -61,7 +66,7 @@ func (s *Service) Create(c context.Context, namespace string, rq *request.Reques
 	return svc, nil
 }
 
-func (s *Service) Update(c context.Context, namespace string, service *types.Service) (*types.Service, error) {
+func (s *service) Update(service *types.Service) (*types.Service, error) {
 	var (
 		err     error
 		log     = ctx.Get().GetLogger()
@@ -69,7 +74,7 @@ func (s *Service) Update(c context.Context, namespace string, service *types.Ser
 		svc     *types.Service
 	)
 
-	svc, err = storage.Service().Update(c, namespace, service)
+	svc, err = storage.Service().Update(s.Context, s.Namespace, service)
 	if err != nil {
 		log.Error("Error: insert service to db", err)
 		return svc, err
@@ -78,13 +83,13 @@ func (s *Service) Update(c context.Context, namespace string, service *types.Ser
 	return svc, nil
 }
 
-func (s *Service) Remove(c context.Context, namespace string, service *types.Service) error {
+func (s *service) Remove(service *types.Service) error {
 	var (
 		log     = ctx.Get().GetLogger()
 		storage = ctx.Get().GetStorage()
 	)
 
-	if err := storage.Service().Remove(c, namespace, service); err != nil {
+	if err := storage.Service().Remove(s.Context, s.Namespace, service); err != nil {
 		log.Error("Error: insert service to db", err)
 		return err
 	}
