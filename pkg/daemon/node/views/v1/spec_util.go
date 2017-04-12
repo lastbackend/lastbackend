@@ -24,9 +24,9 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/daemon/pod/views/v1"
 )
 
-func ToNodeSpec(obj []*types.Pod) Spec {
-	spec := Spec{}
-	for _, pod := range obj {
+func ToNodeSpec(obj types.NodeSpec) *Spec {
+	spec := &Spec{}
+	for _, pod := range obj.Pods {
 		spec.Pods = append(spec.Pods, v1.Pod{
 			Meta:  v1.ToPodMeta(pod.Meta),
 			Spec:  v1.ToPodSpec(pod.Spec),
@@ -36,16 +36,21 @@ func ToNodeSpec(obj []*types.Pod) Spec {
 	return spec
 }
 
-func FromNodeSpec(spec Spec) []*types.Pod {
-	var pods []*types.Pod
-	for _, s := range spec.Pods {
-		pod := types.NewPod()
-		pod.Meta = v1.FromPodMeta(s.Meta)
-		pod.Spec = v1.FromPodSpec(s.Spec)
-		pod.State = v1.FromPodState(s.State)
-		pods = append(pods, pod)
+func FromNodeSpec(spec Spec) *types.NodeSpec {
+
+	var s = new(types.NodeSpec)
+	for _, item := range spec.Pods {
+
+		pod := new(types.PodNodeSpec)
+
+		pod.Meta = v1.FromPodMeta(item.Meta)
+		pod.Spec = v1.FromPodSpec(item.Spec)
+		pod.State = v1.FromPodState(item.State)
+
+		s.Pods = append(s.Pods, pod)
 	}
-	return pods
+
+	return s
 }
 
 func (obj *Spec) ToJson() ([]byte, error) {

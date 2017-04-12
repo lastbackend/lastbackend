@@ -27,13 +27,19 @@ type ServiceList []Service
 
 type Service struct {
 	// Service Meta
-	Meta Meta `json:"meta"`
+	Meta ServiceMeta `json:"meta"`
 	// Service custom domains
 	Domains []string `json:"domains"`
 	// Service source info
 	Source *ServiceSource `json:"source,omitempty"`
 	// Service config info
 	Config *ServiceConfig `json:"config,omitempty"`
+}
+
+type ServiceMeta struct {
+	Meta
+	// Service namespace
+	Namespace string `json:"namespace"`
 }
 
 type ServiceSource struct {

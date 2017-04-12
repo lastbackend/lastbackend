@@ -16,40 +16,36 @@
 // from Last.Backend LLC.
 //
 
-package routes
+package request
 
 import (
 	"encoding/json"
-	"github.com/lastbackend/lastbackend/pkg/agent/context"
-	"github.com/lastbackend/lastbackend/pkg/agent/runtime"
-	"github.com/lastbackend/lastbackend/pkg/daemon/api/views/v1/node"
+	"github.com/lastbackend/lastbackend/pkg/daemon/context"
+	"github.com/lastbackend/lastbackend/pkg/daemon/node/views/v1"
 	"github.com/lastbackend/lastbackend/pkg/errors"
+	"io"
 	"io/ioutil"
-	"net/http"
 )
 
-func SetPods(w http.ResponseWriter, r *http.Request) {
+type RequestNodeEventS struct {
+	v1.Event
+}
 
-	log := context.Get().GetLogger()
-	log.Debug("Set pods to agent")
+func (s *RequestNodeEventS) DecodeAndValidate(reader io.Reader) *errors.Err {
+	var (
+		log = context.Get().GetLogger()
+	)
 
-	body, err := ioutil.ReadAll(r.Body)
+	body, err := ioutil.ReadAll(reader)
 	if err != nil {
 		log.Error(err)
-		errors.New("Invalid incomming data").Unknown().Http(w)
-		return
+		return errors.New("node event").Unknown(err)
 	}
 
-	data := node.Spec{}
-
-	err = json.Unmarshal(body, &data)
+	err = json.Unmarshal(body, s)
 	if err != nil {
-		log.Error(err)
-		errors.New("Invalid incomming data").Unknown().Http(w)
-		return
+		return errors.New("node").IncorrectJSON(err)
 	}
 
-	patch := node.FromNodeSpec(data)
-	runtime.Get().Sync(patch)
-	w.WriteHeader(http.StatusOK)
+	return nil
 }

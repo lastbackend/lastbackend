@@ -17,6 +17,7 @@
 //
 
 package service_test
+
 //
 //import (
 //	"github.com/lastbackend/lastbackend/pkg/client/cmd/service"

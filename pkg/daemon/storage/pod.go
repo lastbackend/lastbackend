@@ -1,0 +1,149 @@
+//
+// Last.Backend LLC CONFIDENTIAL
+// __________________
+//
+// [2014] - [2017] Last.Backend LLC
+// All Rights Reserved.
+//
+// NOTICE:  All information contained herein is, and remains
+// the property of Last.Backend LLC and its suppliers,
+// if any.  The intellectual and technical concepts contained
+// herein are proprietary to Last.Backend LLC
+// and its suppliers and may be covered by Russian Federation and Foreign Patents,
+// patents in process, and are protected by trade secret or copyright law.
+// Dissemination of this information or reproduction of this material
+// is strictly forbidden unless prior written permission is obtained
+// from Last.Backend LLC.
+//
+
+package storage
+
+import (
+	"context"
+	"github.com/lastbackend/lastbackend/pkg/apis/types"
+	"github.com/lastbackend/lastbackend/pkg/daemon/storage/store"
+)
+
+const podStorage = "pod"
+
+// Namespace Service type for interface in interfaces folder
+type PodStorage struct {
+	IPod
+	util   IUtil
+	Client func() (store.IStore, store.DestroyFunc, error)
+}
+
+func (s *PodStorage) GetByID(ctx context.Context, namespace, service, id string) (*types.PodNodeState, error) {
+
+	var pod = new(types.PodNodeState)
+
+	client, destroy, err := s.Client()
+	if err != nil {
+		return nil, err
+	}
+	defer destroy()
+
+	keyMeta := s.util.Key(ctx, namespaceStorage, namespace, serviceStorage, service, podStorage, id)
+	if err := client.Get(ctx, keyMeta, &pod); err != nil {
+		if err.Error() == store.ErrKeyNotFound {
+			return nil, nil
+		}
+		return nil, err
+	}
+
+	return pod, nil
+}
+
+func (s *PodStorage) ListByService(ctx context.Context, namespace, service string) ([]*types.PodNodeState, error) {
+	client, destroy, err := s.Client()
+	if err != nil {
+		return nil, err
+	}
+	defer destroy()
+
+	keyServiceList := s.util.Key(ctx, namespaceStorage, namespace, serviceStorage, service, podStorage)
+	pods := []*types.PodNodeState{}
+	if err := client.List(ctx, keyServiceList, "", &pods); err != nil {
+		if err.Error() == store.ErrKeyNotFound {
+			return nil, nil
+		}
+		return nil, err
+	}
+
+	if pods == nil {
+		return nil, nil
+	}
+
+	return pods, nil
+}
+
+func (s *PodStorage) Insert(ctx context.Context, namespace, service string, pod *types.PodNodeState) error {
+
+	client, destroy, err := s.Client()
+	if err != nil {
+		return err
+	}
+	defer destroy()
+
+	tx := client.Begin(ctx)
+
+	keyMeta := s.util.Key(ctx, namespaceStorage, namespace, serviceStorage, service, podStorage, pod.Meta.ID)
+	if err := tx.Create(keyMeta, pod, 0); err != nil {
+		return err
+	}
+
+	keyHelper := s.util.Key(ctx, "helper", serviceStorage, "pods", pod.Meta.ID)
+	if err := tx.Create(keyHelper, &keyMeta, 0); err != nil {
+		return err
+	}
+
+	if err := tx.Commit(); err != nil {
+		return err
+	}
+
+	return nil
+
+}
+
+func (s *PodStorage) Update(ctx context.Context, namespace, service string, pod *types.PodNodeState) error {
+	client, destroy, err := s.Client()
+	if err != nil {
+		return err
+	}
+	defer destroy()
+
+	tx := client.Begin(ctx)
+
+	keyMeta := s.util.Key(ctx, namespaceStorage, namespace, serviceStorage, service, podStorage, pod.Meta.ID)
+	if err := tx.Update(keyMeta, pod, 0); err != nil {
+		return err
+	}
+
+	if err := tx.Commit(); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (s *PodStorage) Remove(ctx context.Context, namespace, service string, pod *types.PodNodeState) error {
+	client, destroy, err := s.Client()
+	if err != nil {
+		return err
+	}
+	defer destroy()
+
+	tx := client.Begin(ctx)
+
+	keyMeta := s.util.Key(ctx, namespaceStorage, namespace, serviceStorage, service, podStorage, pod.Meta.ID)
+	tx.Delete(keyMeta)
+
+	keyHelper := s.util.Key(ctx, "helper", serviceStorage, "pods", pod.Meta.ID)
+	tx.Delete(keyHelper)
+
+	if err := tx.Commit(); err != nil {
+		return err
+	}
+
+	return nil
+}

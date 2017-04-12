@@ -36,7 +36,9 @@ const (
 )
 
 type RawReq struct {
+	tls      bool
 	host     string
+	port     int
 	rawURL   string
 	method   string
 	header   http.Header
@@ -45,14 +47,22 @@ type RawReq struct {
 }
 
 func New(host string) *RawReq {
-	return &RawReq{
+	raw := &RawReq{
+		tls:    false,
 		host:   host,
 		header: http.Header{},
 	}
+
+	if raw.tls {
+		raw.host = fmt.Sprintf("https://%s", raw.host)
+	} else {
+		raw.host = fmt.Sprintf("http://%s", raw.host)
+	}
+
+	return raw
 }
 
 func (r *RawReq) Request(successV, failureV interface{}) (req *http.Request, resp *http.Response, err error) {
-
 	req, err = r.getRequest()
 	if err != nil {
 		return nil, nil, err

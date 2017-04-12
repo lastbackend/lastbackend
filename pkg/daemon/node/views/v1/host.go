@@ -18,23 +18,17 @@
 
 package v1
 
-import "time"
-
-type Host struct {
-	Meta      HostMeta    `json:"meta"`
-	CRI       CRIMeta     `json:"cri"`
-	CPU       HostCPU     `json:"cpu"`
-	Memory    HostMemory  `json:"memory"`
-	Network   HostNetwork `json:"network"`
-	Storage   HostStorage `json:"storage"`
-	Timestamp time.Time   `json:"timestamp"`
-}
-
-type HostMeta struct {
+type Meta struct {
 	Hostname     string `json:"hostname"`
 	OSName       string `json:"os_name"`
 	OSType       string `json:"os_type"`
 	Architecture string `json:"architecture"`
+
+	CRI     CRIMeta     `json:"cri"`
+	CPU     HostCPU     `json:"cpu"`
+	Memory  HostMemory  `json:"memory"`
+	Network HostNetwork `json:"network"`
+	Storage HostStorage `json:"storage"`
 }
 
 type CRIMeta struct {
