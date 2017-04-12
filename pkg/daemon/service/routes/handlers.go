@@ -22,8 +22,8 @@ func ServiceListH(w http.ResponseWriter, r *http.Request) {
 	)
 
 	log.Debug("List service handler")
-	ns := namespace.New()
-	item, err := ns.Get(r.Context(), id)
+	ns := namespace.New(r.Context())
+	item, err := ns.Get(id)
 	if err != nil {
 		log.Error("Error: find namespace by id", err.Error())
 		errors.HTTP.InternalServerError(w)
@@ -34,8 +34,8 @@ func ServiceListH(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	s := service.New()
-	items, err := s.List(r.Context(), item.Meta.ID)
+	s := service.New(r.Context(), item.Meta.ID)
+	items, err := s.List()
 	if err != nil {
 		log.Error("Error: find service list by user", err)
 		errors.HTTP.InternalServerError(w)
@@ -60,15 +60,14 @@ func ServiceInfoH(w http.ResponseWriter, r *http.Request) {
 	var (
 		err error
 		log = context.Get().GetLogger()
-
 		nid = utils.Vars(r)["namespace"]
 		sid = utils.Vars(r)["service"]
 	)
 
 	log.Debug("Get service handler")
 
-	ns := namespace.New()
-	item, err := ns.Get(r.Context(), nid)
+	ns := namespace.New(r.Context())
+	item, err := ns.Get(nid)
 	if err != nil {
 		log.Error("Error: find namespace by id", err.Error())
 		errors.HTTP.InternalServerError(w)
@@ -79,8 +78,8 @@ func ServiceInfoH(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	s := service.New()
-	svc, err := s.Get(r.Context(), item.Meta.Name, sid)
+	s := service.New(r.Context(), item.Meta.ID)
+	svc, err := s.Get(sid)
 	if err != nil {
 		log.Error("Error: find service by id", err.Error())
 		errors.HTTP.InternalServerError(w)
@@ -124,8 +123,8 @@ func ServiceCreateH(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	ns := namespace.New()
-	item, err := ns.Get(r.Context(), nid)
+	ns := namespace.New(r.Context())
+	item, err := ns.Get(nid)
 	if err != nil {
 		log.Error("Error: find namespace by id", err.Error())
 		errors.HTTP.InternalServerError(w)
@@ -136,8 +135,8 @@ func ServiceCreateH(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	s := service.New()
-	svc, err := s.Get(r.Context(), item.Meta.ID, sid)
+	s := service.New(r.Context(), item.Meta.ID)
+	svc, err := s.Get(sid)
 	if err != nil {
 		log.Error("Error: find service by id", err.Error())
 		errors.HTTP.InternalServerError(w)
@@ -181,7 +180,7 @@ func ServiceCreateH(w http.ResponseWriter, r *http.Request) {
 		rq.Config.Image = rq.Image
 	}
 
-	svc, err = s.Create(r.Context(), item.Meta.ID, rq)
+	svc, err = s.Create(rq)
 	if err != nil {
 		log.Error("Error: insert service to db", err)
 		errors.HTTP.InternalServerError(w)
@@ -221,8 +220,8 @@ func ServiceUpdateH(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	ns := namespace.New()
-	item, err := ns.Get(r.Context(), nid)
+	ns := namespace.New(r.Context())
+	item, err := ns.Get(nid)
 	if err != nil {
 		log.Error("Error: find namespace by id", err.Error())
 		errors.HTTP.InternalServerError(w)
@@ -233,8 +232,8 @@ func ServiceUpdateH(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	s := service.New()
-	svc, err := s.Get(r.Context(), item.Meta.ID, sid)
+	s := service.New(r.Context(), item.Meta.ID)
+	svc, err := s.Get(sid)
 	if err != nil {
 		log.Error("Error: find service by id", err.Error())
 		errors.HTTP.InternalServerError(w)
@@ -265,7 +264,7 @@ func ServiceUpdateH(w http.ResponseWriter, r *http.Request) {
 		svc.Domains = *rq.Domains
 	}
 
-	svc, err = s.Update(r.Context(), nid, svc)
+	svc, err = s.Update(svc)
 	if err != nil {
 		log.Error("Error: insert service to db", err)
 		errors.HTTP.InternalServerError(w)
@@ -298,8 +297,8 @@ func ServiceRemoveH(w http.ResponseWriter, r *http.Request) {
 
 	log.Info("Remove service")
 
-	ns := namespace.New()
-	item, err := ns.Get(r.Context(), nid)
+	ns := namespace.New(r.Context())
+	item, err := ns.Get(nid)
 	if err != nil {
 		log.Error("Error: find namespace by id", err.Error())
 		errors.HTTP.InternalServerError(w)
@@ -310,8 +309,8 @@ func ServiceRemoveH(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	s := service.New()
-	svc, err := s.Get(r.Context(), item.Meta.Name, sid)
+	s := service.New(r.Context(), item.Meta.ID)
+	svc, err := s.Get(sid)
 	if err != nil {
 		log.Error("Error: find service by id", err.Error())
 		errors.HTTP.InternalServerError(w)
@@ -324,7 +323,7 @@ func ServiceRemoveH(w http.ResponseWriter, r *http.Request) {
 
 	// Todo: remove all activity by service name
 
-	if err := s.Remove(r.Context(), item.Meta.ID, svc); err != nil {
+	if err := s.Remove(svc); err != nil {
 		log.Error("Error: remove service from db", err)
 		errors.HTTP.InternalServerError(w)
 		return

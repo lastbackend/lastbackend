@@ -16,19 +16,4 @@
 // from Last.Backend LLC.
 //
 
-package storage
-
-import (
-	"context"
-	"strings"
-)
-
-type util struct {
-	IUtil
-}
-
-const sep = "/"
-
-func (util) Key(ctx context.Context, pattern ...string) string {
-	return strings.Join([]string{sep, strings.Join(pattern, sep)}, "")
-}
+package template

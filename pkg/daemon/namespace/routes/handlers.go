@@ -37,8 +37,8 @@ func NamespaceListH(w http.ResponseWriter, r *http.Request) {
 
 	log.Debug("List project handler")
 
-	ns := namespace.New()
-	items, err := ns.List(r.Context())
+	ns := namespace.New(r.Context())
+	items, err := ns.List()
 	if err != nil {
 		log.Error("Error: find namespcaes", err)
 		errors.HTTP.InternalServerError(w)
@@ -68,8 +68,8 @@ func NamespaceInfoH(w http.ResponseWriter, r *http.Request) {
 	)
 
 	log.Info("Get namespace handler")
-	ns := namespace.New()
-	item, err := ns.Get(r.Context(), id)
+	ns := namespace.New(r.Context())
+	item, err := ns.Get(id)
 	if err != nil {
 		log.Error("Error: find namespace by id", err.Error())
 		errors.HTTP.InternalServerError(w)
@@ -111,8 +111,8 @@ func NamespaceCreateH(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	ns := namespace.New()
-	item, err := ns.Get(r.Context(), rq.Name)
+	ns := namespace.New(r.Context())
+	item, err := ns.Get(rq.Name)
 	if err != nil {
 		log.Error("Error: check exists by name", err.Error())
 		errors.HTTP.InternalServerError(w)
@@ -124,7 +124,7 @@ func NamespaceCreateH(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	n, err := ns.Create(r.Context(), rq)
+	n, err := ns.Create(rq)
 	response, err := v1.NewNamespace(n).ToJson()
 	if err != nil {
 		log.Error("Error: convert struct to json", err.Error())
@@ -158,8 +158,8 @@ func NamespaceUpdateH(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	ns := namespace.New()
-	item, err := ns.Get(r.Context(), id)
+	ns := namespace.New(r.Context())
+	item, err := ns.Get(id)
 	if err != nil {
 		log.Error("Error: check exists by name", err.Error())
 		errors.HTTP.InternalServerError(w)
@@ -174,7 +174,7 @@ func NamespaceUpdateH(w http.ResponseWriter, r *http.Request) {
 	item.Meta.Name = rq.Name
 	item.Meta.Description = rq.Description
 
-	item, err = ns.Update(r.Context(), item)
+	item, err = ns.Update(item)
 	if err != nil {
 		errors.HTTP.InternalServerError(w)
 	}
@@ -202,8 +202,8 @@ func NamespaceRemoveH(w http.ResponseWriter, r *http.Request) {
 	)
 
 	log.Info("Remove namespace")
-	ns := namespace.New()
-	item, err := ns.Get(r.Context(), id)
+	ns := namespace.New(r.Context())
+	item, err := ns.Get(id)
 	if err != nil {
 		log.Error("Error: find project by name", err.Error())
 		errors.HTTP.InternalServerError(w)
@@ -232,7 +232,7 @@ func NamespaceRemoveH(w http.ResponseWriter, r *http.Request) {
 	//	return
 	//}
 
-	ns.Remove(r.Context(), item.Meta.ID)
+	ns.Remove(item.Meta.ID)
 	if err != nil {
 		errors.HTTP.InternalServerError(w)
 		return
