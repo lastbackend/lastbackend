@@ -114,7 +114,7 @@ func (s *service) Remove(service *types.Service) error {
 	return nil
 }
 
-func (s *Service) SetPods(c context.Context, pods []types.PodNodeState) error {
+func (s *service) SetPods(c context.Context, pods []types.PodNodeState) error {
 	var (
 		log     = ctx.Get().GetLogger()
 		storage = ctx.Get().GetStorage()
