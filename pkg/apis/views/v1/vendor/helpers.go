@@ -16,35 +16,33 @@
 // from Last.Backend LLC.
 //
 
-package v1
+package vendor
 
 import (
+	"encoding/json"
 	"github.com/lastbackend/lastbackend/pkg/apis/types"
-	"github.com/lastbackend/lastbackend/pkg/apis/views/v1/project"
-	"github.com/lastbackend/lastbackend/pkg/apis/views/v1/service"
-	"github.com/lastbackend/lastbackend/pkg/apis/views/v1/vendor"
 )
 
-func NewProject(obj *types.Project) *project.Project {
-	return project.New(obj)
+func New(obj *types.Vendor) *Vendor {
+	v := new(Vendor)
+	v.Vendor = obj.Vendor
+	v.Username = obj.Username
+	v.Host = obj.Host
+	return v
 }
 
-func NewProjectList(obj *types.ProjectList) *project.ProjectList {
-	return project.NewList(obj)
+func (obj *Vendor) ToJson() ([]byte, error) {
+	return json.Marshal(obj)
 }
 
-func NewService(obj *types.Service) *service.Service {
-	return service.New(obj)
+func NewList(obj map[string]*types.Vendor) *VendorList {
+	v := make(VendorList)
+	for index, item := range obj {
+		v[index] = New(item)
+	}
+	return &v
 }
 
-func NewServiceList(obj *types.ServiceList) *service.ServiceList {
-	return service.NewList(obj)
-}
-
-func NewVendor(obj *types.Vendor) *vendor.Vendor {
-	return vendor.New(obj)
-}
-
-func NewVendorList(obj map[string]*types.Vendor) *vendor.VendorList {
-	return vendor.NewList(obj)
+func (obj *VendorList) ToJson() ([]byte, error) {
+	return json.Marshal(obj)
 }

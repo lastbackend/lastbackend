@@ -107,7 +107,7 @@ func (s *serviceCreateS) decodeAndValidate(reader io.Reader) *errors.Err {
 			Hub:    source.Hub,
 			Owner:  source.Owner,
 			Repo:   source.Repo,
-			Branch: "master",
+			Branch: source.Branch,
 		}
 	}
 
