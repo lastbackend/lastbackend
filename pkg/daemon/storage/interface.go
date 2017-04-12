@@ -72,13 +72,22 @@ type INamespace interface {
 }
 
 type IService interface {
-	GetByID(ctx context.Context, project, id string) (*types.Service, error)
-	GetByName(ctx context.Context, project string, name string) (*types.Service, error)
-	ListByProject(ctx context.Context, project string) (*types.ServiceList, error)
-	Insert(ctx context.Context, project string, name, description string, config *types.ServiceConfig) (*types.Service, error)
-	Update(ctx context.Context, project string, service *types.Service) (*types.Service, error)
-	Remove(ctx context.Context, project string, service *types.Service) error
-	RemoveByProject(ctx context.Context, project string) error
+	GetByID(ctx context.Context, namespace, id string) (*types.Service, error)
+	GetByName(ctx context.Context, namespace string, name string) (*types.Service, error)
+	GetByPodID(ctx context.Context, uuid string) (*types.Service, error)
+	ListByProject(ctx context.Context, namespace string) (*types.ServiceList, error)
+	Insert(ctx context.Context, namespace string, name, description string, config *types.ServiceConfig) (*types.Service, error)
+	Update(ctx context.Context, namespace string, service *types.Service) (*types.Service, error)
+	Remove(ctx context.Context, namespace string, service *types.Service) error
+	RemoveByProject(ctx context.Context, namespace string) error
+}
+
+type IPod interface {
+	GetByID(ctx context.Context, namespace, service, id string) (*types.PodNodeState, error)
+	ListByService(ctx context.Context, namespace, service string) ([]*types.PodNodeState, error)
+	Insert(ctx context.Context, namespace, service string, pod *types.PodNodeState) error
+	Update(ctx context.Context, namespace, service string, pod *types.PodNodeState) error
+	Remove(ctx context.Context, namespace, service string, pod *types.PodNodeState) error
 }
 
 type IImage interface {
@@ -100,4 +109,20 @@ type IVolume interface {
 	ListByProject(ctx context.Context, project string) (*types.VolumeList, error)
 	Insert(ctx context.Context, volume *types.Volume) (*types.Volume, error)
 	Remove(ctx context.Context, id string) error
+}
+
+type INode interface {
+	List(ctx context.Context) (*types.NodeList, error)
+
+	Get(ctx context.Context, hostname string) (*types.Node, error)
+	Insert(ctx context.Context, meta *types.NodeMeta, state *types.NodeState) (*types.Node, error)
+
+	UpdateMeta(ctx context.Context, meta *types.NodeMeta) error
+	UpdateState(ctx context.Context, meta *types.NodeMeta, node *types.NodeState) error
+
+	InsertPod(ctx context.Context, meta *types.NodeMeta, pod *types.PodNodeSpec) error
+	UpdatePod(ctx context.Context, meta *types.NodeMeta, pod *types.PodNodeSpec) error
+	RemovePod(ctx context.Context, meta *types.NodeMeta, pod *types.PodNodeSpec) error
+
+	Remove(ctx context.Context, meta *types.NodeMeta) error
 }

@@ -27,6 +27,8 @@ import (
 
 type PodList []*Pod
 
+type PodNodeStateList []*PodNodeState
+
 func (pl *PodList) ToJson() []byte {
 	j, _ := json.Marshal(pl)
 	return j
@@ -49,6 +51,24 @@ type Pod struct {
 	Containers map[string]*Container `json:"containers"`
 	// Secrets
 	Secrets map[string]*PodSecret `json:"secrets"`
+}
+
+type PodNodeSpec struct {
+	// Pod Meta
+	Meta PodMeta `json:"meta"`
+	// Pod state
+	State PodState `json:"state"`
+	// Pod spec
+	Spec PodSpec `json:"spec"`
+}
+
+type PodNodeState struct {
+	// Pod Meta
+	Meta PodMeta `json:"meta"`
+	// Pod state
+	State PodState `json:"state"`
+	// Containers status info
+	Containers map[string]*Container `json:"containers"`
 }
 
 type PodMeta struct {

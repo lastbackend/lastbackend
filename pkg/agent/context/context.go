@@ -20,9 +20,10 @@ package context
 
 import (
 	"github.com/lastbackend/lastbackend/pkg/agent/config"
-	"github.com/lastbackend/lastbackend/pkg/agent/cri"
+	"github.com/lastbackend/lastbackend/pkg/agent/runtime/cri"
 	"github.com/lastbackend/lastbackend/pkg/agent/storage"
 	"github.com/lastbackend/lastbackend/pkg/logger"
+	"github.com/lastbackend/lastbackend/pkg/util/http"
 	"golang.org/x/net/context"
 )
 
@@ -37,6 +38,7 @@ type ctx struct {
 	logger  *logger.Logger
 	config  *config.Config
 	storage *storage.Storage
+	http    *http.RawReq
 }
 
 func (c *ctx) SetLogger(log *logger.Logger) {
@@ -69,6 +71,14 @@ func (c *ctx) SetStorage(s *storage.Storage) {
 
 func (c *ctx) GetStorage() *storage.Storage {
 	return c.storage
+}
+
+func (c *ctx) SetHttpClient(http *http.RawReq) {
+	c.http = http
+}
+
+func (c *ctx) GetHttpClient() *http.RawReq {
+	return c.http
 }
 
 func Background() context.Context {

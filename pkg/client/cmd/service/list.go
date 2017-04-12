@@ -21,7 +21,7 @@ package service
 import (
 	"github.com/lastbackend/lastbackend/pkg/client/cmd/project"
 	c "github.com/lastbackend/lastbackend/pkg/client/context"
-	s "github.com/lastbackend/lastbackend/pkg/daemon/api/views/v1/service"
+	s "github.com/lastbackend/lastbackend/pkg/daemon/service/views/v1"
 	"github.com/lastbackend/lastbackend/pkg/errors"
 )
 

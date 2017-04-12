@@ -16,16 +16,36 @@
 // from Last.Backend LLC.
 //
 
-package config
+package request
 
-var cfg = &Config{
-	HTTP:   &HTTP{},
-	Daemon: &Daemon{},
-	Runtime: &Runtime{
-		Docker: &Docker{},
-	},
+import (
+	"encoding/json"
+	"github.com/lastbackend/lastbackend/pkg/daemon/context"
+	"github.com/lastbackend/lastbackend/pkg/daemon/node/views/v1"
+	"github.com/lastbackend/lastbackend/pkg/errors"
+	"io"
+	"io/ioutil"
+)
+
+type RequestNodeEventS struct {
+	v1.Event
 }
 
-func Get() *Config {
-	return cfg
+func (s *RequestNodeEventS) DecodeAndValidate(reader io.Reader) *errors.Err {
+	var (
+		log = context.Get().GetLogger()
+	)
+
+	body, err := ioutil.ReadAll(reader)
+	if err != nil {
+		log.Error(err)
+		return errors.New("node event").Unknown(err)
+	}
+
+	err = json.Unmarshal(body, s)
+	if err != nil {
+		return errors.New("node").IncorrectJSON(err)
+	}
+
+	return nil
 }

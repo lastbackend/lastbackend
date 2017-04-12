@@ -36,8 +36,8 @@ type ServiceStorage struct {
 	Client func() (store.IStore, store.DestroyFunc, error)
 }
 
-// Get project by name
-func (s *ServiceStorage) GetByID(ctx context.Context, projectID, serviceID string) (*types.Service, error) {
+// Get service by id
+func (s *ServiceStorage) GetByID(ctx context.Context, namespaceID, serviceID string) (*types.Service, error) {
 	var service = new(types.Service)
 
 	client, destroy, err := s.Client()
@@ -46,8 +46,8 @@ func (s *ServiceStorage) GetByID(ctx context.Context, projectID, serviceID strin
 	}
 	defer destroy()
 
-	keyMeta := s.util.Key(ctx, namespaceStorage, projectID, serviceStorage, serviceID, "meta")
-	service.Meta = types.Meta{}
+	keyMeta := s.util.Key(ctx, namespaceStorage, namespaceID, serviceStorage, serviceID, "meta")
+	service.Meta = types.ServiceMeta{}
 	if err := client.Get(ctx, keyMeta, &service.Meta); err != nil {
 		if err.Error() == store.ErrKeyNotFound {
 			return nil, nil
@@ -55,7 +55,7 @@ func (s *ServiceStorage) GetByID(ctx context.Context, projectID, serviceID strin
 		return nil, err
 	}
 
-	keyConfig := s.util.Key(ctx, namespaceStorage, projectID, serviceStorage, serviceID, "config")
+	keyConfig := s.util.Key(ctx, namespaceStorage, namespaceID, serviceStorage, serviceID, "config")
 	service.Config = new(types.ServiceConfig)
 	if err := client.Get(ctx, keyConfig, service.Config); err != nil {
 		if err.Error() == store.ErrKeyNotFound {
@@ -66,8 +66,48 @@ func (s *ServiceStorage) GetByID(ctx context.Context, projectID, serviceID strin
 	return service, nil
 }
 
-// Get project by name
-func (s *ServiceStorage) GetByName(ctx context.Context, projectID string, name string) (*types.Service, error) {
+func (s *ServiceStorage) GetByPodID(ctx context.Context, uuid string) (*types.Service, error) {
+	var key string
+	var service = new(types.Service)
+
+	client, destroy, err := s.Client()
+	if err != nil {
+		return nil, err
+	}
+
+	defer destroy()
+
+	UUIDkey := s.util.Key(ctx, "helper", "pod", uuid)
+	if err := client.Get(ctx, UUIDkey, &key); err != nil {
+		if err.Error() == store.ErrKeyNotFound {
+			return nil, nil
+		}
+		return nil, err
+	}
+
+	keyMeta := s.util.Key(ctx, key, "meta")
+	service.Meta = types.ServiceMeta{}
+	if err := client.Get(ctx, keyMeta, &service.Meta); err != nil {
+		if err.Error() == store.ErrKeyNotFound {
+			return nil, nil
+		}
+		return nil, err
+	}
+
+	keyConfig := s.util.Key(ctx, key, "config")
+	service.Config = new(types.ServiceConfig)
+	if err := client.Get(ctx, keyConfig, service.Config); err != nil {
+		if err.Error() == store.ErrKeyNotFound {
+			return nil, nil
+		}
+		return nil, err
+	}
+
+	return service, nil
+}
+
+// Get service by name
+func (s *ServiceStorage) GetByName(ctx context.Context, namespaceID string, name string) (*types.Service, error) {
 	var id string
 
 	client, destroy, err := s.Client()
@@ -76,18 +116,18 @@ func (s *ServiceStorage) GetByName(ctx context.Context, projectID string, name s
 	}
 	defer destroy()
 
-	key := s.util.Key(ctx, "helper", namespaceStorage, projectID, serviceStorage, name)
+	key := s.util.Key(ctx, "helper", namespaceStorage, namespaceID, serviceStorage, name)
 	if err := client.Get(ctx, key, &id); err != nil {
 		if err.Error() == store.ErrKeyNotFound {
 			return nil, nil
 		}
 		return nil, err
 	}
-	return s.GetByID(ctx, projectID, id)
+	return s.GetByID(ctx, namespaceID, id)
 }
 
-// List project
-func (s *ServiceStorage) ListByProject(ctx context.Context, projectID string) (*types.ServiceList, error) {
+// List services
+func (s *ServiceStorage) ListByProject(ctx context.Context, namespaceID string) (*types.ServiceList, error) {
 
 	const filter = `\b(.+)services\/[a-z0-9-]{36}\/meta\b`
 
@@ -97,7 +137,7 @@ func (s *ServiceStorage) ListByProject(ctx context.Context, projectID string) (*
 	}
 	defer destroy()
 
-	keyServiceList := s.util.Key(ctx, namespaceStorage, projectID, serviceStorage)
+	keyServiceList := s.util.Key(ctx, namespaceStorage, namespaceID, serviceStorage)
 	metaList := []types.Meta{}
 	if err := client.List(ctx, keyServiceList, filter, &metaList); err != nil {
 		if err.Error() == store.ErrKeyNotFound {
@@ -127,18 +167,19 @@ func (s *ServiceStorage) ListByProject(ctx context.Context, projectID string) (*
 }
 
 // Insert new service into storage
-func (s *ServiceStorage) Insert(ctx context.Context, projectID string, name, description string, config *types.ServiceConfig) (*types.Service, error) {
+func (s *ServiceStorage) Insert(ctx context.Context, namespaceID string, name, description string, config *types.ServiceConfig) (*types.Service, error) {
 	var (
 		service = new(types.Service)
 	)
 
-	service.Meta = types.Meta{
-		ID:          uuid.NewV4().String(),
-		Name:        name,
-		Description: description,
-		Updated:     time.Now(),
-		Created:     time.Now(),
-	}
+	service.Meta = types.ServiceMeta{}
+
+	service.Meta.ID = uuid.NewV4().String()
+	service.Meta.Namespace = namespaceID
+	service.Meta.Name = name
+	service.Meta.Description = description
+	service.Meta.Updated = time.Now()
+	service.Meta.Created = time.Now()
 
 	service.Config = config
 
@@ -150,17 +191,17 @@ func (s *ServiceStorage) Insert(ctx context.Context, projectID string, name, des
 
 	tx := client.Begin(ctx)
 
-	keyHelper := s.util.Key(ctx, "helper", namespaceStorage, projectID, serviceStorage, name)
+	keyHelper := s.util.Key(ctx, "helper", namespaceStorage, namespaceID, serviceStorage, name)
 	if err := tx.Create(keyHelper, &service.Meta.ID, 0); err != nil {
 		return nil, err
 	}
 
-	keyMeta := s.util.Key(ctx, namespaceStorage, projectID, serviceStorage, service.Meta.ID, "meta")
+	keyMeta := s.util.Key(ctx, namespaceStorage, namespaceID, serviceStorage, service.Meta.ID, "meta")
 	if err := tx.Create(keyMeta, &service.Meta, 0); err != nil {
 		return nil, err
 	}
 
-	keyConfig := s.util.Key(ctx, namespaceStorage, projectID, serviceStorage, service.Meta.ID, "config")
+	keyConfig := s.util.Key(ctx, namespaceStorage, namespaceID, serviceStorage, service.Meta.ID, "config")
 	if err := tx.Create(keyConfig, config, 0); err != nil {
 		return nil, err
 	}
@@ -241,6 +282,9 @@ func (s *ServiceStorage) Remove(ctx context.Context, projectID string, service *
 
 	fmt.Println(meta)
 	tx := client.Begin(ctx)
+
+	keyUUIDHelper := s.util.Key(context.Background(), "helper", serviceStorage, service.Meta.ID)
+	tx.Delete(keyUUIDHelper)
 
 	keyHelper := s.util.Key(ctx, "helper", namespaceStorage, projectID, serviceStorage, meta.Name)
 	tx.Delete(keyHelper)

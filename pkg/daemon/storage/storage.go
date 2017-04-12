@@ -34,6 +34,8 @@ type Storage struct {
 	*HookStorage
 	*VolumeStorage
 	*ActivityStorage
+	*NodeStorage
+	*PodStorage
 }
 
 func SetUtil(u IUtil) {
@@ -96,6 +98,20 @@ func (s *Storage) Activity() IActivity {
 	return s.ActivityStorage
 }
 
+func (s *Storage) Node() INode {
+	if s == nil {
+		return nil
+	}
+	return s.NodeStorage
+}
+
+func (s *Storage) Pod() IPod {
+	if s == nil {
+		return nil
+	}
+	return s.PodStorage
+}
+
 func Get(config store.Config) (*Storage, error) {
 
 	var store = new(Storage)
@@ -113,6 +129,7 @@ func Get(config store.Config) (*Storage, error) {
 	store.HookStorage = newHookStorage(config, _util)
 	store.VolumeStorage = newVolumeStorage(config, _util)
 	store.ActivityStorage = newActivityStorage(config, _util)
+	store.NodeStorage = newNodeStorage(config, _util)
 
 	return store, nil
 }

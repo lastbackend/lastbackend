@@ -16,32 +16,15 @@
 // from Last.Backend LLC.
 //
 
-package api
+package routes
 
 import (
-	"github.com/gorilla/mux"
-	"github.com/lastbackend/lastbackend/pkg/agent/api/routes"
-	"github.com/lastbackend/lastbackend/pkg/agent/context"
 	"github.com/lastbackend/lastbackend/pkg/util/http"
 	"github.com/lastbackend/lastbackend/pkg/util/http/middleware"
 )
 
-func Listen(host string, port int) error {
-
-	log := context.Get().GetLogger()
-	log.Debug("Listen HTTP server")
-
-	router := mux.NewRouter()
-	router.Methods("OPTIONS").HandlerFunc(http.Headers)
-	for _, route := range Routes {
-		log.Debugf("Init route: %s", route.Path)
-		router.Handle(route.Path, http.Handle(route.Handler, route.Middleware...)).Methods(route.Method)
-	}
-	return http.Listen(host, port, router)
-}
-
 var Routes = []http.Route{
 	// Vendor handlers
 	{Path: "/patch", Method: http.MethodPut, Middleware: []http.Middleware{middleware.Context},
-		Handler: routes.SetPods},
+		Handler: SetPods},
 }

@@ -2,8 +2,8 @@ package cri
 
 import (
 	"github.com/lastbackend/lastbackend/pkg/agent/config"
-	"github.com/lastbackend/lastbackend/pkg/agent/cri"
-	"github.com/lastbackend/lastbackend/pkg/agent/cri/docker"
+	"github.com/lastbackend/lastbackend/pkg/agent/runtime/cri"
+	"github.com/lastbackend/lastbackend/pkg/agent/runtime/cri/docker"
 )
 
 func New(cfg *config.Runtime) (cri.CRI, error) {

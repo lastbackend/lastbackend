@@ -27,10 +27,12 @@ type EventList []Event
 
 type Event struct {
 	// Event meta
-	Meta Meta `json:"meta"`
-	// Activity status
-	Event string `json:"event"`
+	Meta NodeMeta `json:"meta"`
+	// Node state
+	State NodeState `json:"state"`
 	// Activity created time
+	Pods []PodNodeState `json:"pods"`
+	// Event created time
 	Created time.Time `json:"created"`
 	// Activity updated time
 	Updated time.Time `json:"updated"`

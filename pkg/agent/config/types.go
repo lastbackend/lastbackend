@@ -23,6 +23,7 @@ type Config struct {
 	Debug   *bool
 	Runtime *Runtime
 	HTTP    *HTTP
+	Daemon  *Daemon
 }
 
 type Runtime struct {
@@ -33,6 +34,11 @@ type Runtime struct {
 type Docker struct {
 	Host, Certs, Version *string
 	TLS                  *bool
+}
+
+type Daemon struct {
+	Host *string
+	Port *int
 }
 
 type HTTP struct {

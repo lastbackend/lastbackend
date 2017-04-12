@@ -21,7 +21,7 @@ package main
 import (
 	"github.com/Sirupsen/logrus"
 	"github.com/jawher/mow.cli"
-	"github.com/lastbackend/lastbackend/pkg/agent/cmd"
+	"github.com/lastbackend/lastbackend/pkg/agent/daemon"
 	"os"
 )
 
@@ -40,7 +40,7 @@ func main() {
 		}
 	}
 
-	app.Command("daemon", "Run last.backend daemon", cmd.Agent)
+	app.Command("daemon", "Run last.backend daemon", daemon.Agent)
 
 	er = app.Run(os.Args)
 	if er != nil {

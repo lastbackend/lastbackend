@@ -16,21 +16,22 @@
 // from Last.Backend LLC.
 //
 
-package cmd
+package daemon
 
 import (
 	"github.com/Sirupsen/logrus"
 	"github.com/jawher/mow.cli"
-	"github.com/lastbackend/lastbackend/pkg/agent/api"
 	"github.com/lastbackend/lastbackend/pkg/agent/config"
 	"github.com/lastbackend/lastbackend/pkg/agent/context"
-	"github.com/lastbackend/lastbackend/pkg/agent/cri/cri"
+	"github.com/lastbackend/lastbackend/pkg/agent/runtime/cri/cri"
 	"github.com/lastbackend/lastbackend/pkg/agent/runtime"
 	"github.com/lastbackend/lastbackend/pkg/agent/storage"
 	"github.com/lastbackend/lastbackend/pkg/logger"
 	"os"
 	"os/signal"
 	"syscall"
+	"github.com/lastbackend/lastbackend/pkg/util/http"
+	"fmt"
 )
 
 func Agent(cmd *cli.Cmd) {
@@ -73,8 +74,18 @@ func Agent(cmd *cli.Cmd) {
 	})
 
 	cfg.HTTP.Port = cmd.Int(cli.IntOpt{
-		Name: "port", Value: 2967, Desc: "HTTP server listen port",
+		Name: "port", Value: 2966, Desc: "HTTP server listen port",
 		EnvVar: "LB_AGENT_PORT", HideValue: true,
+	})
+
+	cfg.Daemon.Host = cmd.String(cli.StringOpt{
+		Name: "host", Value: "127.0.0.1", Desc: "Daemon host",
+		EnvVar: "LB_DAEMON_HOST", HideValue: true,
+	})
+
+	cfg.Daemon.Port = cmd.Int(cli.IntOpt{
+		Name: "daemon-port", Value: 2967, Desc: "Daemon port",
+		EnvVar: "LB_DAEMON_PORT", HideValue: true,
 	})
 
 	cmd.Before = func() {
@@ -92,6 +103,7 @@ func Agent(cmd *cli.Cmd) {
 		ctx.SetConfig(cfg)
 		ctx.SetLogger(logger.New(*cfg.Debug, 9))
 		ctx.SetStorage(storage.New())
+		ctx.SetHttpClient(http.New(fmt.Sprintf("%s:%d", *cfg.Daemon.Host, *cfg.Daemon.Port)))
 
 		rntm := runtime.Get()
 		crii, err := cri.New(cfg.Runtime)
@@ -110,8 +122,10 @@ func Agent(cmd *cli.Cmd) {
 			ctx.GetLogger().Errorf("Cannot initialize pod manager: %s", err.Error())
 		}
 
+		rntm.Loop()
+
 		go func() {
-			if err := api.Listen(*cfg.HTTP.Host, *cfg.HTTP.Port); err != nil {
+			if err := Listen(*cfg.HTTP.Host, *cfg.HTTP.Port); err != nil {
 				ctx.GetLogger().Warnf("Http server start error: %s", err.Error())
 			}
 		}()
