@@ -4,9 +4,9 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/lastbackend/lastbackend/pkg/daemon/context"
 	namespace "github.com/lastbackend/lastbackend/pkg/daemon/namespace/routes"
+	node "github.com/lastbackend/lastbackend/pkg/daemon/node/routes"
 	service "github.com/lastbackend/lastbackend/pkg/daemon/service/routes"
 	vendors "github.com/lastbackend/lastbackend/pkg/daemon/vendors/routes"
-	node "github.com/lastbackend/lastbackend/pkg/daemon/node/routes"
 	"github.com/lastbackend/lastbackend/pkg/util/http"
 )
 
@@ -40,7 +40,6 @@ func Listen(host string, port int) error {
 		log.Debugf("Init route: %s", route.Path)
 		router.Handle(route.Path, http.Handle(route.Handler, route.Middleware...)).Methods(route.Method)
 	}
-
 
 	return http.Listen(host, port, router)
 }

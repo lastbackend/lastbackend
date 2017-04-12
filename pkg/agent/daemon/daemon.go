@@ -19,19 +19,19 @@
 package daemon
 
 import (
+	"fmt"
 	"github.com/Sirupsen/logrus"
 	"github.com/jawher/mow.cli"
 	"github.com/lastbackend/lastbackend/pkg/agent/config"
 	"github.com/lastbackend/lastbackend/pkg/agent/context"
-	"github.com/lastbackend/lastbackend/pkg/agent/runtime/cri/cri"
 	"github.com/lastbackend/lastbackend/pkg/agent/runtime"
+	"github.com/lastbackend/lastbackend/pkg/agent/runtime/cri/cri"
 	"github.com/lastbackend/lastbackend/pkg/agent/storage"
 	"github.com/lastbackend/lastbackend/pkg/logger"
+	"github.com/lastbackend/lastbackend/pkg/util/http"
 	"os"
 	"os/signal"
 	"syscall"
-	"github.com/lastbackend/lastbackend/pkg/util/http"
-	"fmt"
 )
 
 func Agent(cmd *cli.Cmd) {
