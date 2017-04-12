@@ -22,6 +22,7 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/apis/types"
 	"github.com/lastbackend/lastbackend/pkg/daemon/config"
 	c "github.com/lastbackend/lastbackend/pkg/daemon/context"
+	"github.com/lastbackend/lastbackend/pkg/daemon/vendors/views/v1"
 	"github.com/lastbackend/lastbackend/pkg/errors"
 	"github.com/lastbackend/lastbackend/pkg/util/http/utils"
 	"github.com/lastbackend/lastbackend/pkg/vendors"
@@ -362,8 +363,29 @@ func DockerRepositoryTagListH(w http.ResponseWriter, r *http.Request) {
 }
 
 func IntegrationsH(w http.ResponseWriter, r *http.Request) {
+	var (
+		log     = c.Get().GetLogger()
+		storage = c.Get().GetStorage()
+	)
+
+	log.Debug("Integration service handler")
+
+	vendors, err := storage.Vendor().List(r.Context())
+	if err != nil {
+		log.Error(err.Error())
+		errors.HTTP.InternalServerError(w)
+		return
+	}
+
+	response, err := v1.NewVendorList(vendors).ToJson()
+	if err != nil {
+		log.Error("Error: convert struct to json", err.Error())
+		errors.HTTP.InternalServerError(w)
+		return
+	}
+
 	w.WriteHeader(http.StatusOK)
-	if _, err := w.Write([]byte{}); err != nil {
+	if _, err := w.Write(response); err != nil {
 		c.Get().GetLogger().Error("Error: write response", err.Error())
 		return
 	}

@@ -18,13 +18,11 @@
 
 package v1
 
-import "github.com/lastbackend/lastbackend/pkg/apis/types"
-
-func NewVendor(obj *types.Vendor) *Vendor {
-	return New(obj)
+type Vendor struct {
+	Username string `json:"username"`
+	Vendor   string `json:"vendor"`
+	Host     string `json:"host"`
 }
 
-func NewVendorList(obj map[string]*types.Vendor) *VendorList {
-	return NewList(obj)
-}
+type VendorList map[string]*Vendor
 
