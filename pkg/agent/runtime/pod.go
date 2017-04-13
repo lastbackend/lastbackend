@@ -28,7 +28,7 @@ type PodManager struct {
 	workers map[string]*Worker
 }
 
-func (pm *PodManager) SyncPod(pod *types.Pod) {
+func (pm *PodManager) SyncPod(pod *types.PodNodeSpec) {
 	log := context.Get().GetLogger()
 	log.Debugf("Pod %s sync", pod.Meta.ID)
 

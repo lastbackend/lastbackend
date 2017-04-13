@@ -16,4 +16,15 @@
 // from Last.Backend LLC.
 //
 
-package node
+package routes
+
+import (
+	"github.com/lastbackend/lastbackend/pkg/util/http"
+	"github.com/lastbackend/lastbackend/pkg/util/http/middleware"
+)
+
+var Routes = []http.Route{
+	// Vendor handlers
+	{Path: "/patch", Method: http.MethodPut, Middleware: []http.Middleware{middleware.Context},
+		Handler: SetPods},
+}

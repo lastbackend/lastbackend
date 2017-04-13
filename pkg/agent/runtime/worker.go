@@ -21,7 +21,7 @@ package runtime
 import (
 	"fmt"
 	"github.com/lastbackend/lastbackend/pkg/agent/context"
-	"github.com/lastbackend/lastbackend/pkg/agent/cri"
+	"github.com/lastbackend/lastbackend/pkg/agent/runtime/cri"
 	"github.com/lastbackend/lastbackend/pkg/apis/types"
 	"sync"
 	"time"

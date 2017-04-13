@@ -76,7 +76,7 @@ func Update(name string, config types.ServiceUpdateConfig) error {
 	}
 
 	_, _, err = http.
-		PUT("/namespace/"+ namespace.Meta.Name+"/service/"+name).
+		PUT("/namespace/"+namespace.Meta.Name+"/service/"+name).
 		AddHeader("Content-Type", "application/json").
 		BodyJSON(config).
 		Request(&res, er)

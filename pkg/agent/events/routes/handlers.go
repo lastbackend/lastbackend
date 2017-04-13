@@ -50,6 +50,6 @@ func SetPods(w http.ResponseWriter, r *http.Request) {
 	}
 
 	patch := v1.FromNodeSpec(data)
-	runtime.Get().Sync(patch)
+	runtime.Get().Sync(patch.Pods)
 	w.WriteHeader(http.StatusOK)
 }

@@ -113,3 +113,42 @@ func (s *service) Remove(service *types.Service) error {
 	}
 	return nil
 }
+
+func (s *service) SetPods(c context.Context, pods []types.PodNodeState) error {
+	var (
+		log     = ctx.Get().GetLogger()
+		storage = ctx.Get().GetStorage()
+	)
+
+	for _, pod := range pods {
+		svc, err := storage.Service().GetByPodID(c, pod.Meta.ID)
+		if err != nil {
+			log.Errorf("Error: get pod from db: %s", err)
+			return err
+		}
+
+		if svc == nil {
+			continue
+		}
+
+		if p, e := storage.Pod().GetByID(c, svc.Meta.Namespace, svc.Meta.ID, pod.Meta.ID); p == nil || e != nil {
+
+			if err != nil {
+				log.Errorf("Error: get pod from db: %s", err)
+				return err
+			}
+
+			if p == nil {
+				log.Warnf("Pod not found, skip setting: %s", pod.Meta.ID)
+			}
+
+		}
+
+		if err := storage.Pod().Update(c, svc.Meta.Namespace, svc.Meta.ID, &pod); err != nil {
+			log.Errorf("Error: set pod to db: %s", err)
+			return err
+		}
+	}
+
+	return nil
+}

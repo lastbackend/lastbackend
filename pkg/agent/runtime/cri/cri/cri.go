@@ -16,25 +16,26 @@
 // from Last.Backend LLC.
 //
 
-package routes
+package cri
 
 import (
-	"github.com/Sirupsen/logrus"
-	"net/http"
+	"github.com/lastbackend/lastbackend/pkg/agent/config"
+	"github.com/lastbackend/lastbackend/pkg/agent/runtime/cri"
+	"github.com/lastbackend/lastbackend/pkg/agent/runtime/cri/docker"
 )
 
-func VersionGetR(w http.ResponseWriter, r *http.Request) {
+func New(cfg *config.Runtime) (cri.CRI, error) {
+	var cri cri.CRI
+	var err error
 
-	var (
-		err error
-	)
-
-	logrus.Debug("Get user handler")
-
-	w.WriteHeader(http.StatusOK)
-	_, err = w.Write([]byte("{}"))
-	if err != nil {
-		logrus.Error("Error: write response", err.Error())
-		return
+	switch *cfg.CRI {
+	case "docker":
+		cri, err = docker.New(cfg.Docker)
 	}
+
+	if err != nil {
+		return cri, err
+	}
+
+	return cri, err
 }

@@ -20,7 +20,9 @@ package runtime
 
 import (
 	"github.com/lastbackend/lastbackend/pkg/agent/context"
+	"github.com/lastbackend/lastbackend/pkg/agent/events"
 	"github.com/lastbackend/lastbackend/pkg/apis/types"
+	"time"
 )
 
 var runtime Runtime
@@ -61,7 +63,7 @@ func (r *Runtime) StartEventListener() error {
 	return nil
 }
 
-func (r *Runtime) Sync(pods []*types.Pod) {
+func (r *Runtime) Sync(pods []*types.PodNodeSpec) {
 	for _, pod := range pods {
 		r.pManager.SyncPod(pod)
 	}
@@ -69,10 +71,23 @@ func (r *Runtime) Sync(pods []*types.Pod) {
 
 func (r *Runtime) Loop() {
 
+	log := context.Get().GetLogger()
+	log.Debug("Runtime: start Loop")
+
+	e := events.New()
+	e.Send(events.NewEvent())
+
 	pods, host := r.eListener.Subscribe()
 	go func() {
 		log := context.Get().GetLogger()
 		log.Debug("Runtime: Loop")
+		ticker := time.NewTicker(time.Second * 5)
+
+		go func() {
+			for _ = range ticker.C {
+				e.Send(events.NewEvent())
+			}
+		}()
 
 		for {
 			select {
