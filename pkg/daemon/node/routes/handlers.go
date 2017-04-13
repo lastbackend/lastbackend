@@ -19,6 +19,7 @@
 package routes
 
 import (
+	"encoding/json"
 	"github.com/lastbackend/lastbackend/pkg/apis/types"
 	"github.com/lastbackend/lastbackend/pkg/daemon/context"
 	"github.com/lastbackend/lastbackend/pkg/daemon/node"
@@ -27,7 +28,6 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/daemon/service"
 	"github.com/lastbackend/lastbackend/pkg/errors"
 	"net/http"
-	"encoding/json"
 )
 
 func NodeEventH(w http.ResponseWriter, r *http.Request) {
