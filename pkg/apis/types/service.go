@@ -44,6 +44,8 @@ type ServiceMeta struct {
 	Meta
 	// Service namespace
 	Namespace string `json:"namespace"`
+	// Service region
+	Region string `json:"region,omitempty"`
 }
 
 type ServiceState struct {
@@ -63,11 +65,9 @@ type ServiceSource struct {
 type ServiceConfig struct {
 	Replicas   int      `json:"replicas"`
 	Memory     int64    `json:"memory"`
-	Region     string   `json:"region"`
 	Entrypoint []string `json:"entrypoint"`
 	Image      string   `json:"image"`
 	Command    []string `json:"command"`
-	Args       []string `json:"args"`
 	EnvVars    []string `json:"env"`
 	Ports      []Port   `json:"ports"`
 }
@@ -75,7 +75,7 @@ type ServiceConfig struct {
 func (c *ServiceConfig) Update(patch *ServiceConfig) error {
 
 	if patch.Replicas < 0 {
-		return errors.New("The value of the `scale` parameter must be at least 1")
+		return errors.New("The value of the `replicas` parameter must be at least 1")
 	}
 	c.Replicas = patch.Replicas
 
@@ -87,7 +87,6 @@ func (c *ServiceConfig) Update(patch *ServiceConfig) error {
 	c.Entrypoint = patch.Entrypoint
 	c.Image = patch.Image
 	c.Command = patch.Command
-	c.Args = patch.Args
 
 	c.Ports = patch.Ports
 
@@ -137,7 +136,7 @@ func (s *ServiceList) ToJson() ([]byte, error) {
 type ServiceUpdateConfig struct {
 	Name        *string            `json:"name,omitempty" yaml:"name,omitempty"`
 	Description *string            `json:"description,omitempty" yaml:"description,omitempty"`
-	Replicas    *int32             `json:"scale,omitempty" yaml:"scale,omitempty"`
+	Replicas    *int32             `json:"replicas,omitempty" yaml:"replicas,omitempty"`
 	Containers  *[]ContainerConfig `json:"containers,omitempty" yaml:"containers,omitempty"`
 }
 

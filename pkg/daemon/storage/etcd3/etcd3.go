@@ -47,7 +47,10 @@ func SetDebug() {
 func printf(format string, a ...interface{}) {
 	if debug {
 		t := time.Now()
-		d := fmt.Sprintf("%d-%02d-%02d %02d:%02d:%02d", t.Year(), t.Month(), t.Day(), t.Hour(), t.Minute(), t.Second())
+		d := fmt.Sprintf("%d-%02d-%02d %02d:%02d:%02d",
+			t.Year(), t.Month(), t.Day(),
+			t.Hour(), t.Minute(), t.Second())
+
 		fmt.Printf(fmt.Sprintf("DEBU[%s] %s\n", d, format), a...)
 	}
 }
