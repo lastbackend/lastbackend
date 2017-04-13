@@ -147,3 +147,12 @@ func (s *PodStorage) Remove(ctx context.Context, namespace, service string, pod 
 
 	return nil
 }
+
+func newPodStorage(config store.Config, util IUtil) *PodStorage {
+	s := new(PodStorage)
+	s.util = util
+	s.Client = func() (store.IStore, store.DestroyFunc, error) {
+		return New(config)
+	}
+	return s
+}

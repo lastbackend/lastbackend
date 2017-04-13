@@ -29,7 +29,7 @@ import (
 
 var Util IUtil = util{}
 
-func Create(ctx context.Context, registry string, source *types.ServiceSource) (*types.Image, error) {
+func Create(ctx context.Context, registry string, source types.ServiceSource) (*types.Image, error) {
 
 	var (
 		log     = c.Get().GetLogger()
@@ -39,7 +39,7 @@ func Create(ctx context.Context, registry string, source *types.ServiceSource) (
 	log.Debug("Create image")
 
 	name := Util.Name(ctx, registry, source.Repo)
-	isource := &types.ImageSource{
+	isource := types.ImageSource{
 		Hub:   source.Hub,
 		Owner: source.Owner,
 		Repo:  source.Repo,
@@ -51,13 +51,13 @@ func Create(ctx context.Context, registry string, source *types.ServiceSource) (
 		return nil, err
 	}
 	if img == nil {
-		img, err = storage.Image().Insert(ctx, name, isource)
+		img, err = storage.Image().Insert(ctx, name, &isource)
 		if err != nil {
 			return nil, err
 		}
 	}
 
-	_, err = build.Create(ctx, img.Meta.Name, source)
+	_, err = build.Create(ctx, img.Meta.Name, &source)
 	if err != nil {
 		return nil, err
 	}

@@ -127,7 +127,7 @@ func (t *Task) exec() {
 	// Check spec version
 	log.Debugf("pod spec: %s, new spec: %s", t.pod.Spec.ID, t.spec.ID)
 	if t.spec.ID != t.pod.Spec.ID {
-		log.Debugf("spec is differrent, apply new one: %s", t.pod.Meta.Spec)
+		log.Debugf("spec is differrent, apply new one: %s", t.pod.Spec.ID)
 		// Set current spec
 		t.pod.Spec.ID = t.spec.ID
 		t.imagesUpdate()

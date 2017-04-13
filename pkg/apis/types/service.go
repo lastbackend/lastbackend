@@ -28,18 +28,29 @@ type ServiceList []Service
 type Service struct {
 	// Service Meta
 	Meta ServiceMeta `json:"meta"`
+	// Service state
+	State ServiceState `json:"state"`
 	// Service custom domains
 	Domains []string `json:"domains"`
 	// Service source info
-	Source *ServiceSource `json:"source,omitempty"`
+	Source ServiceSource `json:"source,omitempty"`
 	// Service config info
-	Config *ServiceConfig `json:"config,omitempty"`
+	Config ServiceConfig `json:"config,omitempty"`
+	// Pods list
+	Pods []*Pod `json:"pods"`
 }
 
 type ServiceMeta struct {
 	Meta
 	// Service namespace
 	Namespace string `json:"namespace"`
+}
+
+type ServiceState struct {
+	// Service state
+	State string `json:"state"`
+	// Service status
+	Status string `json:"status"`
 }
 
 type ServiceSource struct {
@@ -50,11 +61,10 @@ type ServiceSource struct {
 }
 
 type ServiceConfig struct {
-	Replicas   int      `json:"scale"`
-	Memory     int      `json:"memory"`
+	Replicas   int      `json:"replicas"`
+	Memory     int64    `json:"memory"`
 	Region     string   `json:"region"`
-	WorkingDir string   `json:"workdir"`
-	Entrypoint string   `json:"entrypoint"`
+	Entrypoint []string `json:"entrypoint"`
 	Image      string   `json:"image"`
 	Command    []string `json:"command"`
 	Args       []string `json:"args"`
@@ -74,7 +84,6 @@ func (c *ServiceConfig) Update(patch *ServiceConfig) error {
 	}
 	c.Memory = patch.Memory
 
-	c.WorkingDir = patch.WorkingDir
 	c.Entrypoint = patch.Entrypoint
 	c.Image = patch.Image
 	c.Command = patch.Command
@@ -88,8 +97,9 @@ func (c *ServiceConfig) Update(patch *ServiceConfig) error {
 	return nil
 }
 
-func (ServiceConfig) GetDefault() *ServiceConfig {
-	var config = new(ServiceConfig)
+func (ServiceConfig) GetDefault() ServiceConfig {
+	var config = ServiceConfig{}
+	config.Replicas = 1
 	config.Memory = 256
 	return config
 }
@@ -97,7 +107,7 @@ func (ServiceConfig) GetDefault() *ServiceConfig {
 type Port struct {
 	Name      string `json:"name"`
 	Protocol  string `json:"protocol"`
-	Container int32  `json:"container"`
+	Container int    `json:"container"`
 	Published bool   `json:"published"`
 }
 

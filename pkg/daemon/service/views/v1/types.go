@@ -31,7 +31,7 @@ type Service struct {
 
 type Config struct {
 	Replicas int    `json:"scale,omitempty"`
-	Memory   int    `json:"memory,omitempty"`
+	Memory   int64  `json:"memory,omitempty"`
 	Image    string `json:"image,omitempty"`
 	Region   string `json:"region,omitempty"`
 }
