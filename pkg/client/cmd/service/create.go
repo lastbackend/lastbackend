@@ -35,21 +35,21 @@ type createS struct {
 }
 
 type Config struct {
-	Scale int `json:"scale,omitempty"`
+	Replicas int `json:"replicas,omitempty"`
 	//Ports   []string `json:"ports,omitempty"`
 	//EnvVars     []string `json:"env,omitempty"`
 	//Volumes []string `json:"volumes,omitempty"`
 }
 
-func CreateCmd(name, image, template, url string, scale int) {
+func CreateCmd(name, image, template, url string, replicas int) {
 
 	var (
 		config *Config
 	)
 
-	if scale != 0 /* || len(env) != 0 || len(ports) != 0 || len(volumes) != 0 */ {
+	if replicas != 0 /* || len(env) != 0 || len(ports) != 0 || len(volumes) != 0 */ {
 		config = new(Config)
-		config.Scale = scale
+		config.Replicas = replicas
 		//config.EnvVars = env
 		//config.Ports = ports
 		//config.Volumes = volumes

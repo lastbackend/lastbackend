@@ -21,17 +21,17 @@ package v1
 import "time"
 
 type Service struct {
-	Name        string      `json:"name"`
-	Namespace   string      `json:"namespace"`
-	Description string      `json:"description"`
-	Created     time.Time   `json:"created"`
-	Updated     time.Time   `json:"updated"`
-	Pods        *[]struct{} `json:"pods,omitempty"`
-	Config      *Config     `json:"config,omitempty"`
+	Name        string     `json:"name"`
+	Description string     `json:"description"`
+	Created     time.Time  `json:"created"`
+	Updated     time.Time  `json:"updated"`
+	Pods        []struct{} `json:"pods"`
+	Config      Config     `json:"config"`
+	Region      string     `json:"region,omitempty"`
 }
 
 type Config struct {
-	Replicas int    `json:"scale,omitempty"`
+	Replicas int    `json:"replicas,omitempty"`
 	Memory   int64  `json:"memory,omitempty"`
 	Image    string `json:"image,omitempty"`
 	Region   string `json:"region,omitempty"`

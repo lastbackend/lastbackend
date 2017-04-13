@@ -19,7 +19,6 @@
 package routes
 
 import (
-	"github.com/lastbackend/lastbackend/pkg/apis/types"
 	"github.com/lastbackend/lastbackend/pkg/daemon/context"
 	"github.com/lastbackend/lastbackend/pkg/daemon/image"
 	"github.com/lastbackend/lastbackend/pkg/daemon/namespace"
@@ -180,10 +179,8 @@ func ServiceCreateH(w http.ResponseWriter, r *http.Request) {
 	//}
 
 	// Patch config if exists custom configurations
-	//if rq.Config. != nil {
+	//if len(rq.Config). != 0 {
 	// TODO: If have custom config, then need patch this config
-	//} else {
-	rq.Config = types.ServiceConfig{}.GetDefault()
 	//}
 
 	if rq.Source.Hub != "" {
@@ -193,9 +190,9 @@ func ServiceCreateH(w http.ResponseWriter, r *http.Request) {
 			errors.HTTP.InternalServerError(w)
 			return
 		}
-		rq.Config.Image = img.Meta.Name
+		rq.Config["image"] = img.Meta.Name
 	} else {
-		rq.Config.Image = rq.Image
+		rq.Config["image"] = rq.Image
 	}
 
 	svc, err = s.Create(rq)
@@ -262,27 +259,7 @@ func ServiceUpdateH(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if rq.Name != "" {
-		svc.Meta.Name = rq.Name
-	}
-
-	if rq.Description != "" {
-		svc.Meta.Description = rq.Description
-	}
-
-	if rq.Config != nil {
-		if err := svc.Config.Update(rq.Config); err != nil {
-			log.Error("Error: update service config", err.Error())
-			errors.New("service").BadParameter("config", err).Http(w)
-			return
-		}
-	}
-
-	if rq.Domains != nil {
-		svc.Domains = *rq.Domains
-	}
-
-	svc, err = s.Update(svc)
+	svc, err = s.Update(svc, rq)
 	if err != nil {
 		log.Error("Error: update service error", err)
 		errors.HTTP.InternalServerError(w)
