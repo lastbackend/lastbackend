@@ -25,4 +25,3 @@ type Vendor struct {
 }
 
 type VendorList map[string]*Vendor
-

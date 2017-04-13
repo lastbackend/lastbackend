@@ -257,9 +257,9 @@ func NamespaceActivityListH(w http.ResponseWriter, _ *http.Request) {
 func NamespaceEventSubscribeH(w http.ResponseWriter, r *http.Request) {
 
 	var (
-		err     error
-		log     = context.Get().GetLogger()
-		hub     = context.Get().GetWssHub()
+		err error
+		log = context.Get().GetLogger()
+		hub = context.Get().GetWssHub()
 	)
 
 	if r.Method != "GET" {

@@ -19,6 +19,7 @@
 package routes
 
 import (
+	"github.com/lastbackend/lastbackend/pkg/apis/types"
 	"github.com/lastbackend/lastbackend/pkg/daemon/context"
 	"github.com/lastbackend/lastbackend/pkg/daemon/node"
 	"github.com/lastbackend/lastbackend/pkg/daemon/node/routes/request"
@@ -63,7 +64,7 @@ func NodeEventH(w http.ResponseWriter, r *http.Request) {
 		n.SetState(r.Context(), item)
 	}
 
-	s := service.New(r.Context(), "")
+	s := service.New(r.Context(), types.Meta{})
 	if err := s.SetPods(r.Context(), rq.Pods); err != nil {
 		log.Errorf("Error: set pods err %s", err.Error())
 		errors.HTTP.InternalServerError(w)

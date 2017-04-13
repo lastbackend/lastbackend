@@ -31,13 +31,11 @@ func New(obj *types.Service) *Service {
 	s.Updated = obj.Meta.Updated
 	s.Created = obj.Meta.Created
 
-	if obj.Config != nil {
-		s.Config = new(Config)
-		s.Config.Region = obj.Config.Region
-		s.Config.Memory = obj.Config.Memory
-		s.Config.Replicas = obj.Config.Replicas
-		s.Config.Image = obj.Config.Image
-	}
+	s.Config = new(Config)
+	s.Config.Region = obj.Config.Region
+	s.Config.Memory = obj.Config.Memory
+	s.Config.Replicas = obj.Config.Replicas
+	s.Config.Image = obj.Config.Image
 
 	return s
 }

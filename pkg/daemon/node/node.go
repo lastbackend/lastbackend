@@ -20,6 +20,7 @@ package node
 
 import (
 	"context"
+	"errors"
 	"github.com/lastbackend/lastbackend/pkg/apis/types"
 	ctx "github.com/lastbackend/lastbackend/pkg/daemon/context"
 )
@@ -31,7 +32,7 @@ func New() *Node {
 	return new(Node)
 }
 
-func (n *Node) List(c context.Context) (*types.NodeList, error) {
+func (n *Node) List(c context.Context) ([]*types.Node, error) {
 	var storage = ctx.Get().GetStorage()
 	return storage.Node().List(c)
 }
@@ -74,4 +75,98 @@ func (n *Node) Create(c context.Context, meta *types.NodeMeta, state *types.Node
 	node.State = *state
 
 	return storage.Node().Insert(c, &node.Meta, &node.State)
+}
+
+func (n *Node) PodSpecRemove(c context.Context, hostname string, spec *types.PodNodeSpec) error {
+
+	var (
+		storage = ctx.Get().GetStorage()
+		log     = ctx.Get().GetLogger()
+	)
+
+	node, err := n.Get(c, hostname)
+	if err != nil {
+		log.Errorf("Node: Pod spec remove: remove pod spec err: %s", err.Error())
+		return err
+	}
+
+	if node == nil {
+		log.Debug("Node: Pod spec remove: node not found")
+		return nil
+	}
+
+	log.Debug("Remove pod spec from node")
+	if err := storage.Node().RemovePod(c, &node.Meta, spec); err != nil {
+		log.Errorf("Node: Pod spec remove: remove pod spec err: %s", err.Error())
+		return err
+	}
+
+	// Update pod node spec
+
+	return nil
+}
+
+func (n *Node) PodSpecUpdate(c context.Context, hostname string, spec *types.PodNodeSpec) error {
+	// Get node by hostname
+	// Update pod node spec
+	var (
+		storage = ctx.Get().GetStorage()
+		log     = ctx.Get().GetLogger()
+	)
+
+	node, err := n.Get(c, hostname)
+	if err != nil {
+		log.Errorf("Node: Pod spec remove: remove pod spec err: %s", err.Error())
+		return err
+	}
+
+	if node == nil {
+		log.Debug("Node: Pod spec remove: node not found")
+		return nil
+	}
+
+	log.Debug("Remove pod spec from node")
+	if err := storage.Node().UpdatePod(c, &node.Meta, spec); err != nil {
+		log.Errorf("Node: Pod spec remove: remove pod spec err: %s", err.Error())
+		return err
+	}
+
+	// Update pod node spec
+
+	return nil
+}
+
+func (n *Node) Allocate(c context.Context, spec types.PodSpec) (*types.Node, error) {
+
+	var (
+		node    *types.Node
+		storage = ctx.Get().GetStorage()
+		log     = ctx.Get().GetLogger()
+		memory  = int64(0)
+	)
+
+	log.Debug("Allocate Pod to Node")
+
+	nodes, err := storage.Node().List(c)
+	if err != nil {
+		log.Errorf("Node: allocate: get nodes error: %s", err.Error())
+		return nil, err
+	}
+
+	for _, c := range spec.Containers {
+		memory += c.Quota.Memory
+	}
+
+	for _, node = range nodes {
+		if node.State.Capacity.Memory > memory {
+			break
+		}
+	}
+
+	if node == nil {
+		log.Error("Node: Allocate: Available node not found")
+		return nil, errors.New("Available node not found")
+	}
+
+	return node, nil
 }

@@ -75,11 +75,11 @@ type IService interface {
 	GetByID(ctx context.Context, namespace, id string) (*types.Service, error)
 	GetByName(ctx context.Context, namespace string, name string) (*types.Service, error)
 	GetByPodID(ctx context.Context, uuid string) (*types.Service, error)
-	ListByProject(ctx context.Context, namespace string) (*types.ServiceList, error)
-	Insert(ctx context.Context, namespace string, name, description string, config *types.ServiceConfig) (*types.Service, error)
-	Update(ctx context.Context, namespace string, service *types.Service) (*types.Service, error)
-	Remove(ctx context.Context, namespace string, service *types.Service) error
-	RemoveByProject(ctx context.Context, namespace string) error
+	ListByNamespace(ctx context.Context, namespace string) (*types.ServiceList, error)
+	Insert(ctx context.Context, service *types.Service) (*types.Service, error)
+	Update(ctx context.Context, service *types.Service) (*types.Service, error)
+	Remove(ctx context.Context, service *types.Service) error
+	RemoveByNamespace(ctx context.Context, namespace string) error
 }
 
 type IPod interface {
@@ -112,7 +112,7 @@ type IVolume interface {
 }
 
 type INode interface {
-	List(ctx context.Context) (*types.NodeList, error)
+	List(ctx context.Context) ([]*types.Node, error)
 
 	Get(ctx context.Context, hostname string) (*types.Node, error)
 	Insert(ctx context.Context, meta *types.NodeMeta, state *types.NodeState) (*types.Node, error)

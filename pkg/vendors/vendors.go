@@ -19,11 +19,11 @@
 package vendors
 
 import (
-	"github.com/lastbackend/lastbackend/pkg/vendors/slack"
-	"github.com/lastbackend/lastbackend/pkg/vendors/wechat"
 	"github.com/lastbackend/lastbackend/pkg/vendors/bitbucket"
 	"github.com/lastbackend/lastbackend/pkg/vendors/github"
 	"github.com/lastbackend/lastbackend/pkg/vendors/gitlab"
+	"github.com/lastbackend/lastbackend/pkg/vendors/slack"
+	"github.com/lastbackend/lastbackend/pkg/vendors/wechat"
 )
 
 func GetGitHub(clientID, clientSecretID, redirectURI string) *github.GitHub {

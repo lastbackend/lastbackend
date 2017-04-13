@@ -19,18 +19,18 @@
 package server
 
 import (
+	c "context"
 	"github.com/jawher/mow.cli"
 	"github.com/lastbackend/lastbackend/pkg/daemon/config"
 	"github.com/lastbackend/lastbackend/pkg/daemon/context"
 	"github.com/lastbackend/lastbackend/pkg/daemon/storage"
+	"github.com/lastbackend/lastbackend/pkg/daemon/storage/etcd3"
 	"github.com/lastbackend/lastbackend/pkg/logger"
 	"github.com/lastbackend/lastbackend/pkg/util/http"
 	"github.com/lastbackend/lastbackend/pkg/wss"
 	"os"
 	"os/signal"
 	"syscall"
-	c "context"
-	"github.com/lastbackend/lastbackend/pkg/daemon/storage/etcd3"
 )
 
 func Daemon(cmd *cli.Cmd) {
