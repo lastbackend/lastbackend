@@ -21,6 +21,7 @@ package v1
 import (
 	"encoding/json"
 	"github.com/lastbackend/lastbackend/pkg/apis/types"
+	"strings"
 )
 
 func New(obj *types.Service) *Service {
@@ -33,6 +34,7 @@ func New(obj *types.Service) *Service {
 	s.Created = obj.Meta.Created
 
 	s.Config.Memory = obj.Config.Memory
+	s.Config.Command = strings.Join(obj.Config.Command, " ")
 	s.Config.Replicas = obj.Config.Replicas
 	s.Config.Image = obj.Config.Image
 
