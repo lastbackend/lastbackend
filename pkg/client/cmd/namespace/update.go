@@ -35,12 +35,11 @@ type updateS struct {
 func UpdateCmd(name, newNamespace, description string) {
 
 	var (
-		log    = c.Get().GetLogger()
 		choice string
 	)
 
 	if description == "" {
-		log.Info("Description is empty, field will be cleared\n" +
+		fmt.Println("Description is empty, field will be cleared\n" +
 			"Want to continue? [Y\\n]")
 
 		for {
@@ -52,7 +51,7 @@ func UpdateCmd(name, newNamespace, description string) {
 			case "n":
 				return
 			default:
-				log.Error("Incorrect input. [Y\n]")
+				fmt.Print("Incorrect input. [Y\n]")
 				continue
 			}
 
@@ -62,11 +61,11 @@ func UpdateCmd(name, newNamespace, description string) {
 
 	err := Update(name, newNamespace, description)
 	if err != nil {
-		log.Error(err)
+		fmt.Print(err)
 		return
 	}
 
-	log.Info("Successful")
+	fmt.Print("Successful")
 }
 
 func Update(name, newNamespace, description string) error {

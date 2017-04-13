@@ -67,7 +67,7 @@ func (obj *NamespaceList) ToJson() ([]byte, error) {
 }
 
 func (projects *NamespaceList) DrawTable() {
-	t := table.New([]string{"ID", "Name", "Description", "Created", "Updated"})
+	t := table.New([]string{"Name", "Description", "Created", "Updated"})
 	t.VisibleHeader = true
 
 	for _, p := range *projects {

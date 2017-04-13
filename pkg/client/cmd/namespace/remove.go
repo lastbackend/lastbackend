@@ -19,23 +19,19 @@
 package namespace
 
 import (
-	"github.com/lastbackend/lastbackend/pkg/apis/types"
+	"fmt"
 	c "github.com/lastbackend/lastbackend/pkg/client/context"
 	"github.com/lastbackend/lastbackend/pkg/errors"
 )
 
 func RemoveCmd(name string) {
 
-	var (
-		log = c.Get().GetLogger()
-	)
-
 	if err := Remove(name); err != nil {
-		log.Error(err)
+		fmt.Print(err)
 		return
 	}
 
-	log.Info("Successful")
+	fmt.Print("Successful")
 }
 
 func Remove(name string) error {
@@ -75,7 +71,7 @@ func Remove(name string) error {
 
 	if namespace != nil {
 		if name == namespace.Name {
-			err = storage.Set("namespace", types.Namespace{})
+			err = storage.Set("namespace", nil)
 			if err != nil {
 				return errors.New(err.Error())
 			}

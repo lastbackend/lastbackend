@@ -19,6 +19,7 @@
 package namespace
 
 import (
+	"fmt"
 	c "github.com/lastbackend/lastbackend/pkg/client/context"
 	n "github.com/lastbackend/lastbackend/pkg/daemon/namespace/views/v1"
 	"github.com/lastbackend/lastbackend/pkg/errors"
@@ -26,13 +27,9 @@ import (
 
 func GetCmd(name string) {
 
-	var (
-		log = c.Get().GetLogger()
-	)
-
 	namespace, err := Get(name)
 	if err != nil {
-		log.Error(err)
+		fmt.Print(err)
 		return
 	}
 

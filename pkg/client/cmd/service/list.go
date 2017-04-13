@@ -19,7 +19,8 @@
 package service
 
 import (
-	"github.com/lastbackend/lastbackend/pkg/client/cmd/namespace"
+	"fmt"
+	n "github.com/lastbackend/lastbackend/pkg/client/cmd/namespace"
 	c "github.com/lastbackend/lastbackend/pkg/client/context"
 	s "github.com/lastbackend/lastbackend/pkg/daemon/service/views/v1"
 	"github.com/lastbackend/lastbackend/pkg/errors"
@@ -27,13 +28,9 @@ import (
 
 func ListServiceCmd() {
 
-	var (
-		log = c.Get().GetLogger()
-	)
-
 	services, namespace, err := List()
 	if err != nil {
-		log.Error(err)
+		fmt.Print(err)
 		return
 	}
 
@@ -46,19 +43,18 @@ func List() (*s.ServiceList, string, error) {
 
 	var (
 		err      error
-		log      = c.Get().GetLogger()
 		http     = c.Get().GetHttpClient()
 		er       = new(errors.Http)
 		services = new(s.ServiceList)
 	)
 
-	p, err := namespace.Current()
+	p, err := n.Current()
 	if err != nil {
 		return nil, "", errors.New(err.Error())
 	}
 
 	if p == nil {
-		log.Info("Namespace didn't select")
+		fmt.Print("Namespace didn't select")
 		return nil, "", nil
 	}
 
@@ -78,7 +74,7 @@ func List() (*s.ServiceList, string, error) {
 	}
 
 	if len(*services) == 0 {
-		log.Info("You don't have any services")
+		fmt.Print("You don't have any services")
 		return nil, "", nil
 	}
 

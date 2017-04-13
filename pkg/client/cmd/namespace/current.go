@@ -19,6 +19,7 @@
 package namespace
 
 import (
+	"fmt"
 	c "github.com/lastbackend/lastbackend/pkg/client/context"
 	n "github.com/lastbackend/lastbackend/pkg/daemon/namespace/views/v1"
 	"github.com/lastbackend/lastbackend/pkg/errors"
@@ -26,19 +27,15 @@ import (
 
 func CurrentCmd() {
 
-	var (
-		log = c.Get().GetLogger()
-	)
-
 	namespace, err := Current()
 
 	if err != nil {
-		log.Error(err)
+		fmt.Print(err)
 		return
 	}
 
 	if namespace == nil {
-		log.Info("Namespace didn't select")
+		fmt.Print("Namespace didn't select")
 		return
 	}
 
@@ -50,10 +47,10 @@ func Current() (*n.Namespace, error) {
 	var (
 		err       error
 		storage   = c.Get().GetStorage()
-		namespace = new(n.Namespace)
+		namespace *n.Namespace
 	)
 
-	err = storage.Get("namespace", namespace)
+	err = storage.Get("namespace", &namespace)
 	if err != nil {
 		return nil, errors.New(err.Error())
 	}
