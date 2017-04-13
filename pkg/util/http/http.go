@@ -21,7 +21,7 @@ package http
 import (
 	"fmt"
 	"net/http"
-//	"time"
+	//	"time"
 )
 
 func Handle(h http.HandlerFunc, middleware ...Middleware) http.HandlerFunc {

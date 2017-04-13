@@ -76,7 +76,7 @@ func (n *Node) Create(c context.Context, meta *types.NodeMeta, state *types.Node
 	return storage.Node().Insert(c, &node.Meta, &node.State)
 }
 
-func (n *Node) PodSpecRemove (c context.Context, hostname string, spec *types.PodNodeSpec) error {
+func (n *Node) PodSpecRemove(c context.Context, hostname string, spec *types.PodNodeSpec) error {
 
 	var (
 		storage = ctx.Get().GetStorage()
@@ -84,7 +84,7 @@ func (n *Node) PodSpecRemove (c context.Context, hostname string, spec *types.Po
 	)
 
 	node, err := n.Get(c, hostname)
-	if err !=nil {
+	if err != nil {
 		log.Errorf("Node: Pod spec remove: remove pod spec err: %s", err.Error())
 		return err
 	}
@@ -105,7 +105,7 @@ func (n *Node) PodSpecRemove (c context.Context, hostname string, spec *types.Po
 	return nil
 }
 
-func (n *Node) PodSpecUpdate (c context.Context, hostname string, spec *types.PodNodeSpec) error {
+func (n *Node) PodSpecUpdate(c context.Context, hostname string, spec *types.PodNodeSpec) error {
 	// Get node by hostname
 	// Update pod node spec
 	var (
@@ -114,7 +114,7 @@ func (n *Node) PodSpecUpdate (c context.Context, hostname string, spec *types.Po
 	)
 
 	node, err := n.Get(c, hostname)
-	if err !=nil {
+	if err != nil {
 		log.Errorf("Node: Pod spec remove: remove pod spec err: %s", err.Error())
 		return err
 	}

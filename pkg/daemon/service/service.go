@@ -84,9 +84,9 @@ func (s *service) Create(rq *request.RequestServiceCreateS) (*types.Service, err
 	}
 
 	log.Debugf("Service: Create: add pods : %d", rq.Config.Replicas)
-	for i:=0; i<rq.Config.Replicas; i++ {
+	for i := 0; i < rq.Config.Replicas; i++ {
 		log.Debug("Service: Create: add new pod")
-		if err := s.AddPod(svc); err !=nil {
+		if err := s.AddPod(svc); err != nil {
 			log.Errorf("Service: Create: add new pod error: %s", err.Error())
 			return svc, err
 		}
