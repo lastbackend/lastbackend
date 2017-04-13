@@ -33,6 +33,7 @@ type Service struct {
 type Config struct {
 	Replicas int    `json:"replicas,omitempty"`
 	Memory   int64  `json:"memory,omitempty"`
+	Command  string `json:"command,omitempty"`
 	Image    string `json:"image,omitempty"`
 	Region   string `json:"region,omitempty"`
 }
