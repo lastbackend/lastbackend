@@ -181,9 +181,9 @@ func ServiceCreateH(w http.ResponseWriter, r *http.Request) {
 
 	// Patch config if exists custom configurations
 	//if rq.Config. != nil {
-		// TODO: If have custom config, then need patch this config
+	// TODO: If have custom config, then need patch this config
 	//} else {
-		rq.Config = types.ServiceConfig{}.GetDefault()
+	rq.Config = types.ServiceConfig{}.GetDefault()
 	//}
 
 	if rq.Source.Hub != "" {

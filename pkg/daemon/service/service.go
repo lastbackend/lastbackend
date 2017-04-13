@@ -25,9 +25,9 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/daemon/node"
 	"github.com/lastbackend/lastbackend/pkg/daemon/service/routes/request"
 	"github.com/lastbackend/lastbackend/pkg/util/validator"
+	"github.com/prometheus/common/log"
 	"github.com/satori/go.uuid"
 	"time"
-	"github.com/prometheus/common/log"
 )
 
 type service struct {
@@ -150,7 +150,7 @@ func (s *service) Remove(service *types.Service) error {
 func (s *service) AddPod(service *types.Service) error {
 
 	var (
-		log     = ctx.Get().GetLogger()
+		log = ctx.Get().GetLogger()
 	)
 
 	log.Debug("Create new pod state on service")
@@ -178,8 +178,8 @@ func (s *service) AddPod(service *types.Service) error {
 func (s *service) DelPod(service *types.Service) error {
 
 	var (
-		log     = ctx.Get().GetLogger()
-		pod     *types.Pod
+		log = ctx.Get().GetLogger()
+		pod *types.Pod
 	)
 
 	log.Debug("Create new pod state on service")
@@ -257,7 +257,7 @@ func (s *service) Scale(c context.Context, service *types.Service) (*types.Servi
 	if replicas < service.Config.Replicas {
 		for i := 0; i < (service.Config.Replicas - replicas); i++ {
 			if err := s.AddPod(service); err != nil {
-				return service,  err
+				return service, err
 			}
 		}
 	}

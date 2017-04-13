@@ -20,9 +20,9 @@ package node
 
 import (
 	"context"
+	"errors"
 	"github.com/lastbackend/lastbackend/pkg/apis/types"
 	ctx "github.com/lastbackend/lastbackend/pkg/daemon/context"
-	"errors"
 )
 
 type Node struct {
