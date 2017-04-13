@@ -19,17 +19,18 @@
 package server
 
 import (
+	c "context"
 	"github.com/jawher/mow.cli"
 	"github.com/lastbackend/lastbackend/pkg/daemon/config"
 	"github.com/lastbackend/lastbackend/pkg/daemon/context"
 	"github.com/lastbackend/lastbackend/pkg/daemon/storage"
+	"github.com/lastbackend/lastbackend/pkg/daemon/storage/etcd3"
 	"github.com/lastbackend/lastbackend/pkg/logger"
 	"github.com/lastbackend/lastbackend/pkg/util/http"
 	"github.com/lastbackend/lastbackend/pkg/wss"
 	"os"
 	"os/signal"
 	"syscall"
-	c "context"
 )
 
 func Daemon(cmd *cli.Cmd) {
@@ -117,6 +118,9 @@ func Daemon(cmd *cli.Cmd) {
 		strg, err := storage.Get(cfg.GetEtcdDB())
 		if err != nil {
 			panic(err)
+		}
+		if cfg.Debug {
+			etcd3.SetDebug()
 		}
 		ctx.SetStorage(strg)
 

@@ -20,8 +20,8 @@ package config
 
 // The structure of the config to run the daemon
 type Config struct {
-	Debug       bool
-	SecretToken string
+	Debug            bool
+	SecretToken      string
 	TemplateRegistry struct {
 		Host string
 	}

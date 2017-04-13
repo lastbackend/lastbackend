@@ -22,6 +22,7 @@ import "time"
 
 type Service struct {
 	Name        string      `json:"name"`
+	Namespace   string      `json:"namespace"`
 	Description string      `json:"description"`
 	Created     time.Time   `json:"created"`
 	Updated     time.Time   `json:"updated"`

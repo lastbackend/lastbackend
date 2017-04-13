@@ -27,4 +27,3 @@ func NewVendor(obj *types.Vendor) *Vendor {
 func NewVendorList(obj map[string]*types.Vendor) *VendorList {
 	return NewList(obj)
 }
-
