@@ -31,6 +31,7 @@ import (
 	"reflect"
 	"strconv"
 	"time"
+	"strings"
 )
 
 type service struct {
@@ -81,6 +82,8 @@ func (s *service) Create(rq *request.RequestServiceCreateS) (*types.Service, err
 		svc     = new(types.Service)
 	)
 
+	log.Debug("Service: create new service")
+
 	svc.Meta = types.ServiceMeta{}
 	svc.Meta.ID = uuid.NewV4().String()
 	svc.Meta.Name = rq.Name
@@ -125,7 +128,7 @@ func (s *service) Update(service *types.Service, rq *request.RequestServiceUpdat
 		svc     *types.Service
 	)
 
-	log.Debug("Service: Update: update start")
+	log.Debug("Service: update service info and config")
 
 	if rq.Name != "" {
 		service.Meta.Name = rq.Name
@@ -378,7 +381,7 @@ func updateConfig(opts map[string]interface{}, config *types.ServiceConfig) erro
 func patchConfig(opts map[string]interface{}, config *types.ServiceConfig) error {
 
 	config.Replicas = int(1)
-	config.Memory   = int64(32)
+	config.Memory = int64(32)
 
 	if val, ok := opts["replicas"]; ok {
 		switch reflect.ValueOf(val).Kind() {
@@ -396,7 +399,6 @@ func patchConfig(opts map[string]interface{}, config *types.ServiceConfig) error
 	}
 
 	if val, ok := opts["memory"]; ok {
-
 		switch reflect.ValueOf(val).Kind() {
 		case reflect.Float64:
 			config.Memory = int64(val.(float64))
@@ -425,18 +427,24 @@ func patchConfig(opts map[string]interface{}, config *types.ServiceConfig) error
 	}
 
 	if val, ok := opts["command"]; ok {
-		if err := json.Unmarshal([]byte(val.(string)), &config.Command); err != nil {
+		if reflect.ValueOf(val).Kind() != reflect.String {
 			return errors.New("command incorrect format")
 		}
+		config.Command = strings.Split(val.(string), " ")
 	}
 
 	if val, ok := opts["env"]; ok {
-		if err := json.Unmarshal([]byte(val.(string)), &config.EnvVars); err != nil {
+		if reflect.ValueOf(val).Kind() != reflect.String {
 			return errors.New("env incorrect format")
 		}
+		// TODO: Validate format data (key=val,key=val)
+		config.Command = strings.Split(val.(string), " ")
 	}
 
-	if val, ok := opts["ports"]; ok && reflect.ValueOf(val).Kind() == reflect.Struct {
+	if val, ok := opts["ports"]; ok {
+		if reflect.ValueOf(val).Kind() == reflect.String {
+			return errors.New("ports incorrect format")
+		}
 		if err := json.Unmarshal([]byte(val.(string)), &config.Ports); err != nil {
 			return errors.New("ports incorrect format")
 		}
