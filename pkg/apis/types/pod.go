@@ -19,24 +19,11 @@
 package types
 
 import (
-	"encoding/json"
 	"fmt"
 	"sync"
 	"time"
 )
 
-type PodList []*Pod
-
-type PodNodeStateList []*PodNodeState
-
-func (pl *PodList) ToJson() []byte {
-	j, _ := json.Marshal(pl)
-	return j
-}
-
-type PodMap struct {
-	Items map[string]*Pod `json:"pods"`
-}
 
 type Pod struct {
 	lock sync.RWMutex
@@ -71,6 +58,7 @@ type PodNodeState struct {
 	Containers map[string]*Container `json:"containers"`
 }
 
+
 type PodMeta struct {
 	Meta
 
@@ -102,8 +90,18 @@ type PodState struct {
 	Status string `json:"status"`
 }
 
-type PodSecret struct {
+type PodSecret struct {}
+
+type PodCRIMeta struct {
+	Type    string `json:"type"`
+	Version string `json:"version"`
 }
+
+type PodNetwork struct {
+	Interface string   `json:"interface,omitempty"`
+	IP        []string `json:"ip,omitempty"`
+}
+
 
 func (p *Pod) AddContainer(c *Container) {
 	p.lock.Lock()

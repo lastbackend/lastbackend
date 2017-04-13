@@ -16,15 +16,10 @@
 // from Last.Backend LLC.
 //
 
-package v1
+package system
 
-import (
-	"github.com/lastbackend/lastbackend/pkg/apis/types"
-	"time"
-)
+import "os"
 
-type Event struct {
-	Meta      types.NodeMeta  `json:"meta"`
-	Pods      []types.Pod     `json:"pods"`
-	Timestamp time.Time       `json:"timestamp"`
+func GetHostname () (string, error) {
+	return os.Hostname()
 }

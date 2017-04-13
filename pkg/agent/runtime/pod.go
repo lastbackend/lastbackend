@@ -28,6 +28,21 @@ type PodManager struct {
 	workers map[string]*Worker
 }
 
+func (pm *PodManager) GetPodList() ([]*types.Pod) {
+	pods := context.Get().GetStorage().Pods().GetPods()
+	list := []*types.Pod{}
+
+	for _, pod := range pods {
+		list = append(list, pod)
+	}
+
+	return list
+}
+
+func (pm *PodManager) GetPods() (map[string]*types.Pod) {
+	return context.Get().GetStorage().Pods().GetPods()
+}
+
 func (pm *PodManager) SyncPod(pod *types.PodNodeSpec) {
 	log := context.Get().GetLogger()
 	log.Debugf("Pod %s sync", pod.Meta.ID)
@@ -51,9 +66,6 @@ func (pm *PodManager) SyncPod(pod *types.PodNodeSpec) {
 	pm.sync(pod.State, pod.Meta, pod.Spec, p)
 }
 
-// meta - new pod meta
-// spec - new pod spec
-// pod - current pod information
 func (pm *PodManager) sync(state types.PodState, meta types.PodMeta, spec types.PodSpec, pod *types.Pod) {
 	// Create new worker to sync pod
 	// Check if pod worker exists

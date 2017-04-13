@@ -74,8 +74,7 @@ func (r *Runtime) Loop() {
 	log := context.Get().GetLogger()
 	log.Debug("Runtime: start Loop")
 
-	e := events.New()
-	e.Send(events.NewEvent())
+	events.New().Send(events.NewEvent(true, GetNodeMeta() , r.pManager.GetPodList()))
 
 	pods, host := r.eListener.Subscribe()
 	go func() {
@@ -85,7 +84,9 @@ func (r *Runtime) Loop() {
 
 		go func() {
 			for _ = range ticker.C {
-				spec, err := e.Send(events.NewEvent())
+				spec, err := 	events.New().Send(events.NewEvent(true,
+					GetNodeMeta() , r.pManager.GetPodList()))
+
 				if err != nil {
 					log.Errorf("Runtime: send event error: %s", err.Error())
 					continue

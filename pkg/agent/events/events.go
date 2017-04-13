@@ -23,6 +23,7 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/apis/types"
 	"github.com/lastbackend/lastbackend/pkg/daemon/node/views/v1"
 	"github.com/lastbackend/lastbackend/pkg/errors"
+	"time"
 )
 
 type Event struct {
@@ -32,10 +33,12 @@ func New() *Event {
 	return new(Event)
 }
 
-func NewEvent() *types.Event {
+func NewEvent(initial bool, meta types.NodeMeta, pods []*types.Pod) *types.Event {
 	var event = new(types.Event)
-	event.Meta.Hostname = "local"
-	event.State.Allocated.Pods = 1
+	event.Initial = initial
+	event.Meta = meta
+	event.Pods = pods
+	event.Timestamp = time.Now()
 	return event
 }
 

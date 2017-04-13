@@ -32,6 +32,17 @@ type Pod struct {
 	State PodState `json:"state"`
 }
 
+type PodInfo struct {
+	// Pod Meta
+	Meta PodMeta `json:"meta"`
+	// Container spec
+	Spec PodSpec `json:"spec"`
+	// Pod state
+	State PodState `json:"state"`
+	// Pod containers
+	Containers []v1.Container `json:"containers"`
+}
+
 type PodState struct {
 	// Pod current state
 	State string `json:"state"`

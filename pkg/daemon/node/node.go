@@ -149,7 +149,8 @@ func (n *Node) Allocate(c context.Context, spec types.PodSpec) (*types.Node, err
 	}
 
 	for _, node = range nodes {
-		if node.Meta.State.Capacity.Memory > memory {
+		log.Debugf("Node: Allocate: available memory %d", node.Meta.State.Capacity)
+		if node.Meta.State.Capacity.Memory  > memory {
 			break
 		}
 	}
