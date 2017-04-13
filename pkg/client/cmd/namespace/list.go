@@ -63,8 +63,7 @@ func List() (*n.NamespaceList, error) {
 	}
 
 	if len(*namespaceList) == 0 {
-		fmt.Print("You don't have any namespace")
-		return nil, nil
+		return nil, errors.New("You don't have any namespace")
 	}
 
 	return namespaceList, nil

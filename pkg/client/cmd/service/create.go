@@ -19,8 +19,9 @@
 package service
 
 import (
-	"github.com/lastbackend/lastbackend/pkg/apis/types"
+	"fmt"
 	c "github.com/lastbackend/lastbackend/pkg/client/context"
+	n "github.com/lastbackend/lastbackend/pkg/daemon/namespace/views/v1"
 	"github.com/lastbackend/lastbackend/pkg/errors"
 )
 
@@ -43,7 +44,6 @@ type Config struct {
 func CreateCmd(name, image, template, url string, scale int) {
 
 	var (
-		log    = c.Get().GetLogger()
 		config *Config
 	)
 
@@ -57,7 +57,7 @@ func CreateCmd(name, image, template, url string, scale int) {
 
 	err := Create(name, image, template, url, config)
 	if err != nil {
-		log.Error(err)
+		fmt.Print(err)
 		return
 	}
 
@@ -71,7 +71,7 @@ func Create(name, image, template, url string, config *Config) error {
 		err       error
 		http      = c.Get().GetHttpClient()
 		storage   = c.Get().GetStorage()
-		namespace = new(types.Namespace)
+		namespace = new(n.Namespace)
 		er        = new(errors.Http)
 		res       = new(struct{})
 	)
@@ -81,12 +81,12 @@ func Create(name, image, template, url string, config *Config) error {
 		return errors.New(err.Error())
 	}
 
-	if namespace.Meta.Name == "" {
+	if namespace.Name == "" {
 		return errors.New("Namespace didn't select")
 	}
 
 	var cfg = createS{}
-	cfg.Namespace = namespace.Meta.Name
+	cfg.Namespace = namespace.Name
 
 	if name != "" {
 		cfg.Name = name
@@ -109,7 +109,7 @@ func Create(name, image, template, url string, config *Config) error {
 	}
 
 	_, _, err = http.
-		POST("/deploy").
+		POST("/namespace/"+namespace.Name+"/service").
 		AddHeader("Content-Type", "application/json").
 		BodyJSON(cfg).
 		Request(res, er)
