@@ -28,6 +28,5 @@ type Config struct {
 	KeyFile   string
 	CertFile  string
 	CAFile    string
-	Quorum    bool
 	Codec     serializer.Codec
 }

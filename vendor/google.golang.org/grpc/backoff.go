@@ -19,7 +19,7 @@ var (
 // backoffStrategy defines the methodology for backing off after a grpc
 // connection failure.
 //
-// This is unexported until the gRPC namespace decides whether or not to allow
+// This is unexported until the gRPC project decides whether or not to allow
 // alternative backoff strategies. Once a decision is made, this type and its
 // method may be exported.
 type backoffStrategy interface {
