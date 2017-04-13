@@ -53,10 +53,16 @@ func NodeEventH(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Error("Error: find node by hostname", err.Error())
 		errors.HTTP.InternalServerError(w)
+		return
 	}
 
 	if item == nil {
 		item, err = n.Create(r.Context(), &rq.Meta, &rq.State)
+		if err != nil {
+			log.Error("Error: can not create node", err.Error())
+			errors.HTTP.InternalServerError(w)
+			return
+		}
 	} else {
 		item.Meta = rq.Meta
 		item.State = rq.State
