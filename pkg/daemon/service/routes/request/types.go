@@ -31,14 +31,14 @@ import (
 )
 
 type RequestServiceCreateS struct {
-	Name        string              `json:"name"`
-	Description string              `json:"description"`
-	Registry    string              `json:"registry"`
-	Region      string              `json:"region"`
-	Template    string              `json:"template"`
-	Image       string              `json:"image"`
-	Url         string              `json:"url"`
-	Config      types.ServiceConfig `json:"config,omitempty"`
+	Name        string                 `json:"name"`
+	Description string                 `json:"description"`
+	Registry    string                 `json:"registry"`
+	Region      string                 `json:"region"`
+	Template    string                 `json:"template"`
+	Image       string                 `json:"image"`
+	Url         string                 `json:"url"`
+	Config      map[string]interface{} `json:"config"`
 	Source      types.ServiceSource
 }
 
@@ -49,15 +49,16 @@ type resources struct {
 
 func (s *RequestServiceCreateS) DecodeAndValidate(reader io.Reader) *errors.Err {
 
-	var (
-		log = context.Get().GetLogger()
-	)
+	s.Config = make(map[string]interface{})
+	log := context.Get().GetLogger()
 
 	body, err := ioutil.ReadAll(reader)
 	if err != nil {
 		log.Error(err)
 		return errors.New("user").Unknown(err)
 	}
+
+	log.Debug(string(body))
 
 	err = json.Unmarshal(body, s)
 	if err != nil {
@@ -123,17 +124,16 @@ func (s *RequestServiceCreateS) DecodeAndValidate(reader io.Reader) *errors.Err 
 }
 
 type RequestServiceUpdateS struct {
-	Name        string               `json:"name"`
-	Description string               `json:"description"`
-	Config      *types.ServiceConfig `json:"config,omitempty"`
-	Domains     *[]string            `json:"domains,omitempty"`
+	Name        string                 `json:"name"`
+	Description string                 `json:"description"`
+	Config      map[string]interface{} `json:"config"`
+	Domains     []string               `json:"domains"`
 }
 
 func (s *RequestServiceUpdateS) DecodeAndValidate(reader io.Reader) *errors.Err {
 
-	var (
-		log = context.Get().GetLogger()
-	)
+	s.Config = make(map[string]interface{})
+	log := context.Get().GetLogger()
 
 	body, err := ioutil.ReadAll(reader)
 	if err != nil {
@@ -147,9 +147,6 @@ func (s *RequestServiceUpdateS) DecodeAndValidate(reader io.Reader) *errors.Err 
 	}
 
 	s.Name = strings.ToLower(s.Name)
-	if s.Config.Replicas == 0 {
-		s.Config.Replicas = 1
-	}
 
 	if s.Name != "" {
 		s.Name = strings.ToLower(s.Name)

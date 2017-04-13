@@ -25,14 +25,13 @@ import (
 
 func New(obj *types.Service) *Service {
 	s := new(Service)
+
 	s.Name = obj.Meta.Name
-	s.Namespace = obj.Meta.Namespace
 	s.Description = obj.Meta.Description
+	s.Region = obj.Meta.Region
 	s.Updated = obj.Meta.Updated
 	s.Created = obj.Meta.Created
 
-	s.Config = new(Config)
-	s.Config.Region = obj.Config.Region
 	s.Config.Memory = obj.Config.Memory
 	s.Config.Replicas = obj.Config.Replicas
 	s.Config.Image = obj.Config.Image

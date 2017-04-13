@@ -19,7 +19,6 @@
 package routes
 
 import (
-	"encoding/json"
 	"github.com/lastbackend/lastbackend/pkg/apis/types"
 	"github.com/lastbackend/lastbackend/pkg/daemon/context"
 	"github.com/lastbackend/lastbackend/pkg/daemon/node"
@@ -49,19 +48,21 @@ func NodeEventH(w http.ResponseWriter, r *http.Request) {
 
 	n := node.New()
 
-	ns, _ := n.List(r.Context())
-	jn, _ := json.Marshal(ns)
-	log.Debug(string(jn))
-
 	log.Debugf("try to find node by hostname: %s", rq.Meta.Hostname)
 	item, err := n.Get(r.Context(), rq.Meta.Hostname)
 	if err != nil {
 		log.Error("Error: find node by hostname", err.Error())
 		errors.HTTP.InternalServerError(w)
+		return
 	}
 
 	if item == nil {
 		item, err = n.Create(r.Context(), &rq.Meta)
+		if err != nil {
+			log.Error("Error: can not create node", err.Error())
+			errors.HTTP.InternalServerError(w)
+			return
+		}
 	} else {
 		item.Meta = rq.Meta
 		n.SetMeta(r.Context(), item)
@@ -73,8 +74,6 @@ func NodeEventH(w http.ResponseWriter, r *http.Request) {
 		errors.HTTP.InternalServerError(w)
 		return
 	}
-
-	log.Debugf("Pods: len %d", len(item.Spec.Pods))
 
 	response, err := v1.NewSpec(item).ToJson()
 	if err != nil {
