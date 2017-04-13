@@ -19,7 +19,6 @@
 package etcd3
 
 import (
-	"fmt"
 	"github.com/coreos/etcd/clientv3"
 	"github.com/lastbackend/lastbackend/pkg/util/serializer"
 	"golang.org/x/net/context"
@@ -41,7 +40,6 @@ type TxResponse struct {
 //TODO: add compare parameters as argument
 func (t *tx) Create(key string, objPtr interface{}, ttl uint64) error {
 	key = path.Join(t.pathPrefix, key)
-	fmt.Println("Create", key)
 	t.cmp = append(t.cmp, clientv3.Compare(clientv3.ModRevision(key), "=", 0))
 	data, err := serializer.Encode(t.codec, objPtr)
 	if err != nil {
@@ -57,7 +55,6 @@ func (t *tx) Create(key string, objPtr interface{}, ttl uint64) error {
 
 func (t *tx) Update(key string, objPtr interface{}, ttl uint64) error {
 	key = path.Join(t.pathPrefix, key)
-	fmt.Println("Update", key)
 	t.cmp = append(t.cmp, clientv3.Compare(clientv3.ModRevision(key), "!=", 0))
 	data, err := serializer.Encode(t.codec, objPtr)
 	if err != nil {
@@ -74,14 +71,12 @@ func (t *tx) Update(key string, objPtr interface{}, ttl uint64) error {
 //TODO: add compare parameters as argument
 func (t *tx) Delete(key string) {
 	key = path.Join(t.pathPrefix, key)
-	fmt.Println("Delete", key)
 	t.ops = append(t.ops, clientv3.OpDelete(key))
 }
 
 //TODO: add compare parameters as argument
 func (t *tx) DeleteDir(key string) {
 	key = path.Join(t.pathPrefix, key)
-	fmt.Println("Delete", key)
 	t.ops = append(t.ops, clientv3.OpDelete(key, clientv3.WithPrefix()))
 }
 

@@ -23,7 +23,6 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/apis/types"
 	ctx "github.com/lastbackend/lastbackend/pkg/daemon/context"
 	"github.com/lastbackend/lastbackend/pkg/daemon/node"
-	"github.com/lastbackend/lastbackend/pkg/daemon/pod"
 	"github.com/lastbackend/lastbackend/pkg/daemon/service/routes/request"
 	"github.com/lastbackend/lastbackend/pkg/util/validator"
 	"github.com/satori/go.uuid"
@@ -73,16 +72,24 @@ func (s *service) Get(service string) (*types.Service, error) {
 func (s *service) Create(rq *request.RequestServiceCreateS) (*types.Service, error) {
 
 	var (
-		err     error
 		log     = ctx.Get().GetLogger()
 		storage = ctx.Get().GetStorage()
 		svc     *types.Service
 	)
 
-	svc, err = storage.Service().Insert(s.Context, s.Namespace, rq.Name, rq.Description, rq.Config)
+	svc, err := storage.Service().Insert(s.Context, s.Namespace, rq.Name, rq.Description, rq.Config)
 	if err != nil {
 		log.Errorf("Error: insert service to db : %s", err.Error())
 		return svc, err
+	}
+
+	log.Debugf("Service: Create: add pods : %d", rq.Config.Replicas)
+	for i:=0; i<rq.Config.Replicas; i++ {
+		log.Debug("Service: Create: add new pod")
+		if err := s.AddPod(svc); err !=nil {
+			log.Errorf("Service: Create: add new pod error: %s", err.Error())
+			return svc, err
+		}
 	}
 
 	return svc, nil

@@ -147,6 +147,9 @@ func (s *RequestServiceUpdateS) DecodeAndValidate(reader io.Reader) *errors.Err 
 	}
 
 	s.Name = strings.ToLower(s.Name)
+	if s.Config.Replicas == 0 {
+		s.Config.Replicas = 1
+	}
 
 	if s.Name != "" {
 		s.Name = strings.ToLower(s.Name)

@@ -136,9 +136,10 @@ func (n *Node) PodSpecUpdate (c context.Context, hostname string, spec *types.Po
 }
 
 func (n *Node) Allocate(c context.Context, spec *types.PodNodeSpec) error {
+
 	var (
+		node    types.Node
 		storage = ctx.Get().GetStorage()
-		node    = new(types.Node)
 		log     = ctx.Get().GetLogger()
 		memory  = int64(0)
 	)

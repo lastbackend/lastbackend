@@ -130,6 +130,7 @@ func Get(config store.Config) (*Storage, error) {
 	store.VolumeStorage = newVolumeStorage(config, _util)
 	store.ActivityStorage = newActivityStorage(config, _util)
 	store.NodeStorage = newNodeStorage(config, _util)
+	store.PodStorage = newPodStorage(config, _util)
 
 	return store, nil
 }
