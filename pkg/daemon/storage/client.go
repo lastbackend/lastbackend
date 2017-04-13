@@ -49,11 +49,7 @@ func createEtcd3Storage(c store.Config) (store.IStore, store.DestroyFunc, error)
 		client.Close()
 	}
 
-	if c.Quorum {
-		return etcd3.New(client, c.Codec, c.Prefix), destroyFunc, nil
-	}
-
-	return etcd3.NewWithNoQuorumRead(client, c.Codec, c.Prefix), destroyFunc, nil
+	return etcd3.New(client, c.Codec, c.Prefix), destroyFunc, nil
 }
 
 func getTLSConfig(certFile, keyFile, caFile string) (*tls.Config, error) {

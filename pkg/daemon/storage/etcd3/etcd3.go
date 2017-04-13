@@ -26,21 +26,11 @@ import (
 )
 
 func New(client *clientv3.Client, codec serializer.Codec, prefix string) s.IStore {
-	return newStore(client, true, codec, prefix)
-}
-
-func NewWithNoQuorumRead(client *clientv3.Client, codec serializer.Codec, prefix string) s.IStore {
-	return newStore(client, false, codec, prefix)
-}
-
-func newStore(client *clientv3.Client, quorumRead bool, codec serializer.Codec, prefix string) *store {
 	var result = &store{
 		client:     client,
 		codec:      codec,
 		pathPrefix: path.Join("/", prefix),
 	}
-	if !quorumRead {
-		result.opts = append(result.opts, clientv3.WithSerializable())
-	}
+	result.opts = append(result.opts, clientv3.WithSerializable())
 	return result
 }

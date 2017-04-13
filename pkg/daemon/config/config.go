@@ -22,28 +22,9 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/daemon/storage/store"
 	"github.com/lastbackend/lastbackend/pkg/util/serializer"
 	"github.com/lastbackend/lastbackend/pkg/util/serializer/json"
-	"gopkg.in/yaml.v2"
-	"io/ioutil"
 )
 
 var _cfg = new(Config)
-
-func (Config) Configure(path string) error {
-
-	// Parsing config file
-	buf, err := ioutil.ReadFile(path)
-	if err != nil {
-		return err
-	}
-	_cfg.HttpServer.Port = 3000
-	_cfg.HttpServer.Host = "0.0.0.0"
-	return yaml.Unmarshal(buf, &_cfg)
-}
-
-func Set(c *Config) *Config {
-	_cfg = c
-	return _cfg
-}
 
 func Get() *Config {
 	return _cfg
@@ -57,28 +38,6 @@ func (c *Config) GetEtcdDB() store.Config {
 		KeyFile:   c.Etcd.TLS.Key,
 		CertFile:  c.Etcd.TLS.Cert,
 		CAFile:    c.Etcd.TLS.CA,
-		Quorum:    c.Etcd.Quorum,
 		Codec:     serializer.NewSerializer(json.Encoder{}, json.Decoder{}),
 	}
-}
-
-func (c *Config) GetVendorConfig(vendor string) (string, string, string) {
-
-	var clientID, clientSecretID, redirectURI string
-
-	switch vendor {
-	case "github":
-		clientID = c.VCS.Github.Client.ID
-		clientSecretID = c.VCS.Github.Client.SecretID
-	case "gitlab":
-		clientID = c.VCS.Gitlab.Client.ID
-		clientSecretID = c.VCS.Gitlab.Client.SecretID
-		redirectURI = c.VCS.Gitlab.RedirectUri
-	case "bitbucket":
-		clientID = c.VCS.Bitbucket.Client.ID
-		clientSecretID = c.VCS.Bitbucket.Client.SecretID
-		redirectURI = c.VCS.Bitbucket.RedirectUri
-	}
-
-	return clientID, clientSecretID, redirectURI
 }

@@ -24,6 +24,7 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/daemon/storage"
 	"github.com/lastbackend/lastbackend/pkg/logger"
 	"github.com/lastbackend/lastbackend/pkg/util/http"
+	"github.com/lastbackend/lastbackend/pkg/wss"
 )
 
 var _ctx ctx
@@ -37,6 +38,7 @@ type ctx struct {
 	storage              *storage.Storage
 	config               *config.Config
 	httpTemplateRegistry *http.RawReq
+	wssHub               *wss.Hub
 }
 
 func Get() *ctx {
@@ -73,4 +75,12 @@ func (c *ctx) SetHttpTemplateRegistry(http *http.RawReq) {
 
 func (c *ctx) GetHttpTemplateRegistry() *http.RawReq {
 	return c.httpTemplateRegistry
+}
+
+func (c *ctx) SetWssHub(hub *wss.Hub) {
+	c.wssHub = hub
+}
+
+func (c *ctx) GetWssHub() *wss.Hub {
+	return c.wssHub
 }
