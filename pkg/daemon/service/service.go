@@ -187,7 +187,7 @@ func (s *service) AddPod(service *types.Service) error {
 	log.Debug("Create new pod state on service")
 
 	pod := new(types.Pod)
-	pod.State.State = "creating"
+	pod.State.State = "running"
 	pod.Meta.ID = uuid.NewV4().String()
 	pod.Meta.Created = time.Now()
 	pod.Meta.Updated = time.Now()

@@ -57,7 +57,7 @@ func NodeEventH(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if item == nil {
-		item, err = n.Create(r.Context(), &rq.Meta, &rq.State)
+		item, err = n.Create(r.Context(), &rq.Meta)
 		if err != nil {
 			log.Error("Error: can not create node", err.Error())
 			errors.HTTP.InternalServerError(w)
@@ -65,9 +65,7 @@ func NodeEventH(w http.ResponseWriter, r *http.Request) {
 		}
 	} else {
 		item.Meta = rq.Meta
-		item.State = rq.State
 		n.SetMeta(r.Context(), item)
-		n.SetState(r.Context(), item)
 	}
 
 	s := service.New(r.Context(), types.Meta{})
