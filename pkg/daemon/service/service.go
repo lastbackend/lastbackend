@@ -25,7 +25,6 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/daemon/node"
 	"github.com/lastbackend/lastbackend/pkg/daemon/service/routes/request"
 	"github.com/lastbackend/lastbackend/pkg/util/validator"
-	"github.com/prometheus/common/log"
 	"github.com/satori/go.uuid"
 	"time"
 )
@@ -108,14 +107,14 @@ func (s *service) Create(rq *request.RequestServiceCreateS) (*types.Service, err
 
 func (s *service) Update(service *types.Service) (*types.Service, error) {
 
-	log.Debug("Service: Update: update start")
-
 	var (
 		err     error
 		log     = ctx.Get().GetLogger()
 		storage = ctx.Get().GetStorage()
 		svc     *types.Service
 	)
+
+	log.Debug("Service: Update: update start")
 
 	// Update pod spec
 	spec := s.GenerateSpec(service)
