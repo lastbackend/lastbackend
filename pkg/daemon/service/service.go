@@ -26,7 +26,10 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/daemon/node"
 	"github.com/lastbackend/lastbackend/pkg/daemon/service/routes/request"
 	"github.com/lastbackend/lastbackend/pkg/util/validator"
+	"github.com/pkg/errors"
 	"github.com/satori/go.uuid"
+	"reflect"
+	"strconv"
 	"time"
 )
 
@@ -364,7 +367,7 @@ func updateConfig(opts map[string]interface{}, config *types.ServiceConfig) erro
 	}
 
 	tmp := make(map[string]interface{})
-	for k,v := range opts {
+	for k, v := range opts {
 		tmp[k] = v
 	}
 	delete(tmp, "image")
@@ -375,42 +378,65 @@ func updateConfig(opts map[string]interface{}, config *types.ServiceConfig) erro
 func patchConfig(opts map[string]interface{}, config *types.ServiceConfig) error {
 
 	if val, ok := opts["replicas"]; ok {
-		config.Replicas = int(val.(float64))
-	} else {
 		config.Replicas = int(1)
+		switch reflect.ValueOf(val).Kind() {
+		case reflect.Float64:
+			config.Replicas = int(val.(float64))
+		case reflect.String:
+			i, err := strconv.Atoi(val.(string))
+			if err != nil {
+				return err
+			}
+			config.Replicas = i
+		default:
+			return errors.New("replicas incorrect format")
+		}
 	}
 
 	if val, ok := opts["memory"]; ok {
-		config.Memory = int64(val.(float64))
-	} else {
 		config.Memory = int64(32)
+		switch reflect.ValueOf(val).Kind() {
+		case reflect.Float64:
+			config.Memory = int64(val.(float64))
+		case reflect.String:
+			i, err := strconv.ParseInt(val.(string), 10, 64)
+			if err != nil {
+				return err
+			}
+			config.Memory = i
+		default:
+			return errors.New("memory incorrect format")
+		}
 	}
 
 	if val, ok := opts["image"]; ok {
+		if reflect.ValueOf(val).Kind() != reflect.String {
+			return errors.New("image incorrect format")
+		}
 		config.Image = val.(string)
 	}
 
 	if val, ok := opts["entrypoint"]; ok {
 		if err := json.Unmarshal([]byte(val.(string)), &config.Entrypoint); err != nil {
-			return err
+			return errors.New("entrypoint incorrect format")
 		}
 	}
 
 	if val, ok := opts["command"]; ok {
 		if err := json.Unmarshal([]byte(val.(string)), &config.Command); err != nil {
-			return err
+			return errors.New("command incorrect format")
 		}
 	}
 
 	if val, ok := opts["env"]; ok {
 		if err := json.Unmarshal([]byte(val.(string)), &config.EnvVars); err != nil {
-			return err
+			return errors.New("env incorrect format")
 		}
 	}
 
-	if val, ok := opts["ports"]; ok {
+	if val, ok := opts["ports"]; ok && reflect.ValueOf(val).Kind() == reflect.Struct {
 		if err := json.Unmarshal([]byte(val.(string)), &config.Ports); err != nil {
-			return err
+			return errors.New("ports incorrect format")
 		}
 	}
 
