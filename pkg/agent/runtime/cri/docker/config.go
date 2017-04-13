@@ -63,7 +63,7 @@ func GetHostConfig(spec *types.ContainerSpec) *container.HostConfig {
 	}
 
 	resources := container.Resources{
-		Memory:    spec.Quota.Memory,
+		Memory:    spec.Quota.Memory * 1024 * 1024,
 		CPUShares: spec.Quota.CPUShares,
 	}
 

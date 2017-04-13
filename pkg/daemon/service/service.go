@@ -377,8 +377,10 @@ func updateConfig(opts map[string]interface{}, config *types.ServiceConfig) erro
 
 func patchConfig(opts map[string]interface{}, config *types.ServiceConfig) error {
 
+	config.Replicas = int(1)
+	config.Memory   = int64(32)
+
 	if val, ok := opts["replicas"]; ok {
-		config.Replicas = int(1)
 		switch reflect.ValueOf(val).Kind() {
 		case reflect.Float64:
 			config.Replicas = int(val.(float64))
@@ -394,7 +396,7 @@ func patchConfig(opts map[string]interface{}, config *types.ServiceConfig) error
 	}
 
 	if val, ok := opts["memory"]; ok {
-		config.Memory = int64(32)
+
 		switch reflect.ValueOf(val).Kind() {
 		case reflect.Float64:
 			config.Memory = int64(val.(float64))
