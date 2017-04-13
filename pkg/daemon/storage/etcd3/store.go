@@ -144,8 +144,21 @@ func (s *store) Map(ctx context.Context, key, keyRegexFilter string, mapOutPtr i
 	items := make(map[string]buffer, len(getResp.Kvs))
 	for _, kv := range getResp.Kvs {
 		if (keyRegexFilter == "") || r.MatchString(string(kv.Key)) {
-			key := strings.Split(string(kv.Key), "/")
-			items[key[len(key)-1]] = buffer(kv.Value)
+
+			var (
+				key   []string
+				index string
+			)
+
+			match := r.FindStringSubmatch(string(kv.Key))
+			if len(match) > 1 {
+				index = match[1]
+			} else {
+				key = strings.Split(string(kv.Key), "/")
+				index = key[len(key)-1]
+			}
+
+			items[index] = buffer(kv.Value)
 		}
 
 	}

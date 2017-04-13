@@ -115,10 +115,9 @@ type INode interface {
 	List(ctx context.Context) ([]*types.Node, error)
 
 	Get(ctx context.Context, hostname string) (*types.Node, error)
-	Insert(ctx context.Context, meta *types.NodeMeta, state *types.NodeState) (*types.Node, error)
+	Insert(ctx context.Context, meta *types.NodeMeta) (*types.Node, error)
 
 	UpdateMeta(ctx context.Context, meta *types.NodeMeta) error
-	UpdateState(ctx context.Context, meta *types.NodeMeta, node *types.NodeState) error
 
 	InsertPod(ctx context.Context, meta *types.NodeMeta, pod *types.PodNodeSpec) error
 	UpdatePod(ctx context.Context, meta *types.NodeMeta, pod *types.PodNodeSpec) error

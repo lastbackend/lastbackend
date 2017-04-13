@@ -27,6 +27,7 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/daemon/service"
 	"github.com/lastbackend/lastbackend/pkg/errors"
 	"net/http"
+	"encoding/json"
 )
 
 func NodeEventH(w http.ResponseWriter, r *http.Request) {
@@ -48,6 +49,10 @@ func NodeEventH(w http.ResponseWriter, r *http.Request) {
 
 	n := node.New()
 
+	ns, _ := n.List(r.Context())
+	jn, _ := json.Marshal(ns)
+	log.Debug(string(jn))
+
 	log.Debugf("try to find node by hostname: %s", rq.Meta.Hostname)
 	item, err := n.Get(r.Context(), rq.Meta.Hostname)
 	if err != nil {
@@ -56,12 +61,10 @@ func NodeEventH(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if item == nil {
-		item, err = n.Create(r.Context(), &rq.Meta, &rq.State)
+		item, err = n.Create(r.Context(), &rq.Meta)
 	} else {
 		item.Meta = rq.Meta
-		item.State = rq.State
 		n.SetMeta(r.Context(), item)
-		n.SetState(r.Context(), item)
 	}
 
 	s := service.New(r.Context(), types.Meta{})
@@ -70,6 +73,8 @@ func NodeEventH(w http.ResponseWriter, r *http.Request) {
 		errors.HTTP.InternalServerError(w)
 		return
 	}
+
+	log.Debugf("Pods: len %d", len(item.Spec.Pods))
 
 	response, err := v1.NewSpec(item).ToJson()
 	if err != nil {

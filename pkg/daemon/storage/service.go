@@ -207,7 +207,7 @@ func (s *ServiceStorage) Insert(ctx context.Context, service *types.Service) (*t
 			return nil, err
 		}
 
-		KeyNodePod := s.util.Key(ctx, nodeStorage, pod.Meta.Hostname, "pods", pod.Meta.ID)
+		KeyNodePod := s.util.Key(ctx, nodeStorage, pod.Meta.Hostname, "spec", "pods", pod.Meta.ID)
 		if err := tx.Create(KeyNodePod, &types.PodNodeSpec{
 			Meta:  pod.Meta,
 			State: pod.State,
@@ -278,7 +278,7 @@ func (s *ServiceStorage) Update(ctx context.Context, service *types.Service) (*t
 			return nil, err
 		}
 
-		KeyNodePod := s.util.Key(ctx, nodeStorage, pod.Meta.Hostname, "pods", pod.Meta.ID)
+		KeyNodePod := s.util.Key(ctx, nodeStorage, pod.Meta.Hostname, "spec", "pods", pod.Meta.ID)
 		if err := tx.Update(KeyNodePod, &types.PodNodeSpec{
 			Meta:  pod.Meta,
 			State: pod.State,
@@ -331,7 +331,7 @@ func (s *ServiceStorage) Remove(ctx context.Context, service *types.Service) err
 		KeyPod := s.util.Key(ctx, namespaceStorage, namespace, serviceStorage, service.Meta.ID, "pods", pod.Meta.ID)
 		tx.Delete(KeyPod)
 
-		KeyNodePod := s.util.Key(ctx, nodeStorage, pod.Meta.Hostname, "pods", pod.Meta.ID)
+		KeyNodePod := s.util.Key(ctx, nodeStorage, pod.Meta.Hostname, "spec", "pods", pod.Meta.ID)
 		tx.Delete(KeyNodePod)
 	}
 
