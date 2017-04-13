@@ -20,7 +20,7 @@ package service
 
 import (
 	"fmt"
-	"github.com/lastbackend/lastbackend/pkg/client/cmd/namespace"
+	nspace "github.com/lastbackend/lastbackend/pkg/client/cmd/namespace"
 	c "github.com/lastbackend/lastbackend/pkg/client/context"
 	s "github.com/lastbackend/lastbackend/pkg/daemon/service/views/v1"
 	"github.com/lastbackend/lastbackend/pkg/errors"
@@ -43,23 +43,21 @@ func Inspect(name string) (*s.Service, string, error) {
 		err     error
 		http    = c.Get().GetHttpClient()
 		er      = new(errors.Http)
-		service = new(s.Service)
+		service *s.Service
 	)
 
-	p, err := namespace.Current()
+	namespace, err := nspace.Current()
 	if err != nil {
 		return nil, "", errors.New(err.Error())
 	}
 
-	if p == nil {
-		fmt.Print("Namespace didn't select")
-		return nil, "", nil
+	if namespace == nil {
+		return nil, "", errors.New("Namespace didn't select")
 	}
 
 	_, _, err = http.
-		GET("/namespace/"+p.Name+"/service/"+name).
-		Request(service, er)
-
+		GET("/namespace/"+namespace.Name+"/service/"+name).
+		Request(&service, er)
 	if err != nil {
 		return nil, "", errors.New(err.Error())
 	}
@@ -72,5 +70,5 @@ func Inspect(name string) (*s.Service, string, error) {
 		return nil, "", errors.New(er.Message)
 	}
 
-	return service, p.Name, nil
+	return service, namespace.Name, nil
 }

@@ -45,22 +45,21 @@ func List() (*s.ServiceList, string, error) {
 		err      error
 		http     = c.Get().GetHttpClient()
 		er       = new(errors.Http)
-		services = new(s.ServiceList)
+		services *s.ServiceList
 	)
 
-	p, err := n.Current()
+	namespace, err := n.Current()
 	if err != nil {
 		return nil, "", errors.New(err.Error())
 	}
 
-	if p == nil {
-		fmt.Print("Namespace didn't select")
-		return nil, "", nil
+	if namespace == nil {
+		return nil, "", errors.New("Namespace didn't select")
 	}
 
 	_, _, err = http.
-		GET("/p/"+p.Name+"/service").
-		Request(services, er)
+		GET("/namespace/"+namespace.Name+"/service").
+		Request(&services, er)
 	if err != nil {
 		return nil, "", errors.New(err.Error())
 	}
@@ -74,9 +73,8 @@ func List() (*s.ServiceList, string, error) {
 	}
 
 	if len(*services) == 0 {
-		fmt.Print("You don't have any services")
-		return nil, "", nil
+		return nil, "", errors.New("You don't have any services")
 	}
 
-	return services, p.Name, nil
+	return services, namespace.Name, nil
 }

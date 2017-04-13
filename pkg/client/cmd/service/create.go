@@ -23,6 +23,7 @@ import (
 	c "github.com/lastbackend/lastbackend/pkg/client/context"
 	n "github.com/lastbackend/lastbackend/pkg/daemon/namespace/views/v1"
 	"github.com/lastbackend/lastbackend/pkg/errors"
+	"log"
 )
 
 type createS struct {
@@ -124,6 +125,8 @@ func Create(name, image, template, url string, config *Config) error {
 	if er.Code != 0 {
 		return errors.New(er.Message)
 	}
+
+	log.Println(res)
 
 	return nil
 }

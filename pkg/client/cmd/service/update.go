@@ -21,6 +21,7 @@ package service
 import (
 	"github.com/lastbackend/lastbackend/pkg/apis/types"
 	c "github.com/lastbackend/lastbackend/pkg/client/context"
+	n "github.com/lastbackend/lastbackend/pkg/daemon/namespace/views/v1"
 	s "github.com/lastbackend/lastbackend/pkg/daemon/service/views/v1"
 	"github.com/lastbackend/lastbackend/pkg/editor"
 	"github.com/lastbackend/lastbackend/pkg/errors"
@@ -62,7 +63,7 @@ func Update(name string, config types.ServiceUpdateConfig) error {
 		http      = c.Get().GetHttpClient()
 		storage   = c.Get().GetStorage()
 		er        = new(errors.Http)
-		namespace = new(types.Namespace)
+		namespace *n.Namespace
 		res       = new(types.Namespace)
 	)
 
@@ -71,16 +72,15 @@ func Update(name string, config types.ServiceUpdateConfig) error {
 		return errors.New(err.Error())
 	}
 
-	if namespace.Meta.Name == "" {
+	if namespace.Name == "" {
 		return errors.New("Namespace didn't select")
 	}
 
 	_, _, err = http.
-		PUT("/namespace/"+namespace.Meta.Name+"/service/"+name).
+		PUT("/namespace/"+namespace.Name+"/service/"+name).
 		AddHeader("Content-Type", "application/json").
 		BodyJSON(config).
 		Request(&res, er)
-
 	if err != nil {
 		return err
 	}

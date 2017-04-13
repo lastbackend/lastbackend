@@ -21,6 +21,7 @@ package v1
 import (
 	"encoding/json"
 	"github.com/lastbackend/lastbackend/pkg/apis/types"
+	"github.com/lastbackend/lastbackend/pkg/util/table"
 )
 
 func New(obj *types.Service) *Service {
@@ -55,27 +56,19 @@ func NewList(obj *types.ServiceList) *ServiceList {
 }
 
 func (s *Service) DrawTable(projectName string) {
-	//table.PrintHorizontal(map[string]interface{}{
-	//	"ID":      s.ID,
-	//	"NAME":    s.Name,
-	//	"PROJECT": projectName,
-	//	"PODS":    len(s.Spec.PodList),
-	//})
-	//
-	//t := table.New([]string{" ", "NAME", "STATUS", "CONTAINERS"})
-	//t.VisibleHeader = true
-	//
-	//for _, pod := range s.Spec.PodList {
-	//	t.AddRow(map[string]interface{}{
-	//		" ":          "",
-	//		"NAME":       pod.Name,
-	//		"STATUS":     pod.Status,
-	//		"CONTAINERS": len(pod.ContainerList),
-	//	})
-	//}
-	//t.AddRow(map[string]interface{}{})
-	//
-	//t.Print()
+	t := table.New([]string{"Name", "Description", "Created", "Updated"})
+	t.VisibleHeader = true
+
+	t.AddRow(map[string]interface{}{
+		"Name":        s.Name,
+		"Description": s.Description,
+		"Created":     s.Created.String()[:10],
+		"Updated":     s.Updated.String()[:10],
+	})
+
+	t.AddRow(map[string]interface{}{})
+
+	t.Print()
 }
 
 func (obj *ServiceList) ToJson() ([]byte, error) {
@@ -86,33 +79,19 @@ func (obj *ServiceList) ToJson() ([]byte, error) {
 }
 
 func (s *ServiceList) DrawTable(projectName string) {
-	//for _, s := range *s {
-	//
-	//	t := make(map[string]interface{})
-	//	t["ID"] = s.ID
-	//	t["NAME"] = s.Name
-	//
-	//	if s.Spec != nil {
-	//		t["PODS"] = len(s.Spec.PodList)
-	//	}
-	//
-	//	table.PrintHorizontal(t)
-	//
-	//	if s.Spec != nil {
-	//		for _, pod := range s.Spec.PodList {
-	//			tpods := table.New([]string{" ", "NAME", "STATUS", "CONTAINERS"})
-	//			tpods.VisibleHeader = true
-	//
-	//			tpods.AddRow(map[string]interface{}{
-	//				" ":          "",
-	//				"NAME":       pod.Name,
-	//				"STATUS":     pod.Status,
-	//				"CONTAINERS": len(pod.ContainerList),
-	//			})
-	//			tpods.Print()
-	//		}
-	//	}
-	//
-	//	fmt.Print("\n\n")
-	//}
+	t := table.New([]string{"Name", "Description", "Created", "Updated"})
+	t.VisibleHeader = true
+
+	for _, ss := range *s {
+		t.AddRow(map[string]interface{}{
+			"Name":        ss.Name,
+			"Description": ss.Description,
+			"Created":     ss.Created.String()[:10],
+			"Updated":     ss.Updated.String()[:10],
+		})
+	}
+
+	t.AddRow(map[string]interface{}{})
+
+	t.Print()
 }
