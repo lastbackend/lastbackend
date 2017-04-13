@@ -26,6 +26,7 @@ import (
 func New(obj *types.Service) *Service {
 	s := new(Service)
 	s.Name = obj.Meta.Name
+	s.Namespace = obj.Meta.Namespace
 	s.Description = obj.Meta.Description
 	s.Updated = obj.Meta.Updated
 	s.Created = obj.Meta.Created

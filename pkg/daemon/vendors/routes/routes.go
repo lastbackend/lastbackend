@@ -20,7 +20,7 @@ package routes
 
 import (
 	"github.com/lastbackend/lastbackend/pkg/util/http"
-	//"github.com/lastbackend/lastbackend/pkg/util/http/middleware"
+	"github.com/lastbackend/lastbackend/pkg/util/http/middleware"
 )
 
 var Routes = []http.Route{
@@ -29,6 +29,6 @@ var Routes = []http.Route{
 //	{Path: "/vendor/{vendor}/oauth/{code}", Method: http.MethodPost, Middleware: []http.Middleware{middleware.Context}, Handler: OAuthConnectH},
 //	{Path: "/vendor/{vendor}/repos", Method: http.MethodGet, Middleware: []http.Middleware{middleware.Context}, Handler: VCSRepositoryListH},
 //	{Path: "/vendor/{vendor}/branches", Method: http.MethodGet, Middleware: []http.Middleware{middleware.Context}, Handler: VCSBranchListH},
-//	{Path: "/vendor/docker/search", Method: http.MethodGet, Middleware: []http.Middleware{middleware.Context}, Handler: DockerRepositorySearchH},
-//	{Path: "/vendor/docker/tags", Method: http.MethodGet, Middleware: []http.Middleware{middleware.Context}, Handler: DockerRepositoryTagListH},
+	{Path: "/vendor/docker/search", Method: http.MethodGet, Middleware: []http.Middleware{middleware.Context}, Handler: DockerRepositorySearchH},
+	{Path: "/vendor/docker/tags", Method: http.MethodGet, Middleware: []http.Middleware{middleware.Context}, Handler: DockerRepositoryTagListH},
 }

@@ -30,6 +30,7 @@ import (
 	"os/signal"
 	"syscall"
 	c "context"
+	"github.com/lastbackend/lastbackend/pkg/daemon/storage/etcd3"
 )
 
 func Daemon(cmd *cli.Cmd) {
@@ -117,6 +118,9 @@ func Daemon(cmd *cli.Cmd) {
 		strg, err := storage.Get(cfg.GetEtcdDB())
 		if err != nil {
 			panic(err)
+		}
+		if cfg.Debug {
+			etcd3.SetDebug()
 		}
 		ctx.SetStorage(strg)
 

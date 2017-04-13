@@ -17,20 +17,14 @@
 //
 
 package routes
-//
-//import (
-//	"github.com/lastbackend/lastbackend/pkg/apis/types"
-//	"github.com/lastbackend/lastbackend/pkg/daemon/config"
-//	c "github.com/lastbackend/lastbackend/pkg/daemon/context"
-//	"github.com/lastbackend/lastbackend/pkg/daemon/vendors/views/v1"
-//	"github.com/lastbackend/lastbackend/pkg/errors"
-//	"github.com/lastbackend/lastbackend/pkg/util/http/utils"
-//	"github.com/lastbackend/lastbackend/pkg/vendors"
-//	"github.com/lastbackend/lastbackend/pkg/vendors/docker"
-//	"github.com/lastbackend/lastbackend/pkg/vendors/interfaces"
-//	"net/http"
-//)
-//
+
+import (
+	c "github.com/lastbackend/lastbackend/pkg/daemon/context"
+	"github.com/lastbackend/lastbackend/pkg/errors"
+	"github.com/lastbackend/lastbackend/pkg/vendors/docker"
+	"net/http"
+)
+
 //// Авторизация сторонних сервисов для платформы
 //func OAuthConnectH(w http.ResponseWriter, r *http.Request) {
 //
@@ -298,71 +292,71 @@ package routes
 //		return
 //	}
 //}
-//
-//func DockerRepositorySearchH(w http.ResponseWriter, r *http.Request) {
-//
-//	var (
-//		log    = c.Get().GetLogger()
-//		params = r.URL.Query()
-//		name   = params.Get("name")
-//	)
-//
-//	log.Debug("Search docker repository handler")
-//
-//	repoListModel, err := docker.GetRepository(name)
-//	if err != nil {
-//		log.Error(err)
-//		errors.HTTP.InternalServerError(w)
-//		return
-//	}
-//
-//	response, err := repoListModel.ToJson()
-//	if err != nil {
-//		log.Error("Error: convert struct to json", err.Error())
-//		errors.HTTP.InternalServerError(w)
-//		return
-//	}
-//
-//	w.WriteHeader(http.StatusOK)
-//	if _, err := w.Write(response); err != nil {
-//		c.Get().GetLogger().Error("Error: write response", err.Error())
-//		return
-//	}
-//}
-//
-//func DockerRepositoryTagListH(w http.ResponseWriter, r *http.Request) {
-//
-//	var (
-//		log    = c.Get().GetLogger()
-//		params = r.URL.Query()
-//		owner  = params.Get("owner")
-//		name   = params.Get("name")
-//	)
-//
-//	log.Debug("List docker repository tags handler")
-//
-//	tagListModel, err := docker.ListTag(owner, name)
-//	if err != nil {
-//		log.Error(err)
-//		errors.HTTP.InternalServerError(w)
-//		return
-//	}
-//
-//	response, err := tagListModel.ToJson()
-//	if err != nil {
-//		log.Error("Error: convert struct to json", err.Error())
-//		errors.HTTP.InternalServerError(w)
-//		return
-//	}
-//
-//	w.WriteHeader(http.StatusOK)
-//	if _, err := w.Write(response); err != nil {
-//		c.Get().GetLogger().Error("Error: write response", err.Error())
-//		return
-//	}
-//}
-//
-//func IntegrationsH(w http.ResponseWriter, r *http.Request) {
+
+func DockerRepositorySearchH(w http.ResponseWriter, r *http.Request) {
+
+	var (
+		log    = c.Get().GetLogger()
+		params = r.URL.Query()
+		name   = params.Get("name")
+	)
+
+	log.Debug("Search docker repository handler")
+
+	repoListModel, err := docker.GetRepository(name)
+	if err != nil {
+		log.Error(err)
+		errors.HTTP.InternalServerError(w)
+		return
+	}
+
+	response, err := repoListModel.ToJson()
+	if err != nil {
+		log.Error("Error: convert struct to json", err.Error())
+		errors.HTTP.InternalServerError(w)
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+	if _, err := w.Write(response); err != nil {
+		c.Get().GetLogger().Error("Error: write response", err.Error())
+		return
+	}
+}
+
+func DockerRepositoryTagListH(w http.ResponseWriter, r *http.Request) {
+
+	var (
+		log    = c.Get().GetLogger()
+		params = r.URL.Query()
+		owner  = params.Get("owner")
+		name   = params.Get("name")
+	)
+
+	log.Debug("List docker repository tags handler")
+
+	tagListModel, err := docker.ListTag(owner, name)
+	if err != nil {
+		log.Error(err)
+		errors.HTTP.InternalServerError(w)
+		return
+	}
+
+	response, err := tagListModel.ToJson()
+	if err != nil {
+		log.Error("Error: convert struct to json", err.Error())
+		errors.HTTP.InternalServerError(w)
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+	if _, err := w.Write(response); err != nil {
+		c.Get().GetLogger().Error("Error: write response", err.Error())
+		return
+	}
+}
+
+// func IntegrationsH(w http.ResponseWriter, r *http.Request) {
 //	var (
 //		log     = c.Get().GetLogger()
 //		storage = c.Get().GetStorage()
