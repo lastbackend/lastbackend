@@ -25,9 +25,11 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/daemon/storage"
 	"github.com/lastbackend/lastbackend/pkg/logger"
 	"github.com/lastbackend/lastbackend/pkg/util/http"
+	"github.com/lastbackend/lastbackend/pkg/wss"
 	"os"
 	"os/signal"
 	"syscall"
+	c "context"
 )
 
 func Daemon(cmd *cli.Cmd) {
@@ -91,46 +93,6 @@ func Daemon(cmd *cli.Cmd) {
 		Name: "etcd-tls-ca", Desc: "Etcd tls ca",
 		EnvVar: "ETCD-TLS-CA", Value: "", HideValue: true,
 	})
-	var etcdQuorum = cmd.Bool(cli.BoolOpt{
-		Name: "etcd-quorum", Desc: "Etcd quoru",
-		EnvVar: "ETCD-QUORUM", Value: false, HideValue: true,
-	})
-	var vcsGithubClientID = cmd.String(cli.StringOpt{
-		Name: "vcs-github-client-id", Desc: "The client ID you received from GitHub when you registered",
-		EnvVar: "VCS-GITHUB-CLIENT-ID", Value: "", HideValue: true,
-	})
-	var vcsGithubSecretID = cmd.String(cli.StringOpt{
-		Name: "vcs-github-client-secretid", Desc: "The client secret you received from GitHub when you registered",
-		EnvVar: "VCS-GITHUB-CLIENT-SECRETID", Value: "", HideValue: true,
-	})
-	var vcsGithubRedirectUri = cmd.String(cli.StringOpt{
-		Name: "vcs-github-redirect-url", Desc: "The URL in your application where users will be sent after authorization",
-		EnvVar: "VCS-GITHUB-REDIRECT-URL", Value: "", HideValue: true,
-	})
-	var vcsBitbucketClientID = cmd.String(cli.StringOpt{
-		Name: "vcs-bitbucket-client-id", Desc: "The client ID you received from Bitbucket when you registered",
-		EnvVar: "VCS-BITBUCKET-CLIENT", Value: "", HideValue: true,
-	})
-	var vcsBitbucketSecretID = cmd.String(cli.StringOpt{
-		Name: "vcs-bitbucket-client-secretid", Desc: "The client secret you received from Bitbucket when you registered",
-		EnvVar: "VCS-BITBUCKET-CLIENT-SECRETID", Value: "", HideValue: true,
-	})
-	var vcsBitbucketRedirectUri = cmd.String(cli.StringOpt{
-		Name: "vcs-bitbucket-redirect-url", Desc: "The URL in your application where users will be sent after authorization",
-		EnvVar: "VCS-BITBUCKET-REDIRECT-URL", Value: "", HideValue: true,
-	})
-	var vcsGitlabClientID = cmd.String(cli.StringOpt{
-		Name: "vcs-gitlab-client-id", Desc: "The client ID you received from GitLab when you registered",
-		EnvVar: "VCS-GITLAB-CLIENT", Value: "", HideValue: true,
-	})
-	var vcsGitlabSecretID = cmd.String(cli.StringOpt{
-		Name: "vcs-gitlab-client-secretid", Desc: "The client secret you received from GitLab when you registered",
-		EnvVar: "VCS-GITLAB-CLIENT-SECRETID", Value: "", HideValue: true,
-	})
-	var vcsGitlabRedirectUri = cmd.String(cli.StringOpt{
-		Name: "vcs-gitlab-redirect-url", Desc: "The URL in your application where users will be sent after authorization",
-		EnvVar: "VCS-GITLAB-REDIRECT-URL", Value: "", HideValue: true,
-	})
 
 	cmd.Before = func() {
 
@@ -147,25 +109,24 @@ func Daemon(cmd *cli.Cmd) {
 		cfg.Etcd.TLS.Key = *etcdTlsKey
 		cfg.Etcd.TLS.Cert = *etcdTlsSert
 		cfg.Etcd.TLS.CA = *etcdTlsCA
-		cfg.Etcd.Quorum = *etcdQuorum
-		cfg.VCS.Github.Client.ID = *vcsGithubClientID
-		cfg.VCS.Github.Client.SecretID = *vcsGithubSecretID
-		cfg.VCS.Github.RedirectUri = *vcsGithubRedirectUri
-		cfg.VCS.Bitbucket.Client.ID = *vcsBitbucketClientID
-		cfg.VCS.Bitbucket.Client.SecretID = *vcsBitbucketSecretID
-		cfg.VCS.Bitbucket.RedirectUri = *vcsBitbucketRedirectUri
-		cfg.VCS.Gitlab.Client.ID = *vcsGitlabClientID
-		cfg.VCS.Gitlab.Client.SecretID = *vcsGitlabSecretID
-		cfg.VCS.Gitlab.RedirectUri = *vcsGitlabRedirectUri
 
 		ctx.SetConfig(cfg)
 		ctx.SetHttpTemplateRegistry(http.New(cfg.TemplateRegistry.Host))
 		ctx.SetLogger(logger.New(cfg.Debug, 9))
+		ctx.SetWssHub(new(wss.Hub))
 		strg, err := storage.Get(cfg.GetEtcdDB())
 		if err != nil {
 			panic(err)
 		}
 		ctx.SetStorage(strg)
+
+		ns, err := ctx.GetStorage().Namespace().GetByName(c.Background(), "demo")
+		if err != nil {
+			ctx.GetLogger().Error(err)
+			return
+		}
+
+		ctx.GetLogger().Debug(ns)
 	}
 
 	cmd.Action = func() {

@@ -22,7 +22,7 @@ import (
 	"encoding/json"
 	"github.com/lastbackend/lastbackend/pkg/agent/context"
 	"github.com/lastbackend/lastbackend/pkg/agent/runtime"
-	"github.com/lastbackend/lastbackend/pkg/daemon/api/views/v1/node"
+	"github.com/lastbackend/lastbackend/pkg/daemon/node/views/v1"
 	"github.com/lastbackend/lastbackend/pkg/errors"
 	"io/ioutil"
 	"net/http"
@@ -40,7 +40,7 @@ func SetPods(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	data := node.Spec{}
+	data := v1.Spec{}
 
 	err = json.Unmarshal(body, &data)
 	if err != nil {
@@ -49,7 +49,7 @@ func SetPods(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	patch := node.FromNodeSpec(data)
+	patch := v1.FromNodeSpec(data)
 	runtime.Get().Sync(patch)
 	w.WriteHeader(http.StatusOK)
 }

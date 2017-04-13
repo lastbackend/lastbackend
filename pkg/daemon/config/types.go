@@ -46,27 +46,4 @@ type Config struct {
 		Username string
 		Password string
 	}
-	VCS struct {
-		Github struct {
-			Client struct {
-				ID       string
-				SecretID string
-			}
-			RedirectUri string
-		}
-		Bitbucket struct {
-			Client struct {
-				ID       string
-				SecretID string
-			}
-			RedirectUri string
-		}
-		Gitlab struct {
-			Client struct {
-				ID       string
-				SecretID string
-			}
-			RedirectUri string
-		}
-	}
 }

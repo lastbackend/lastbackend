@@ -25,6 +25,7 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/daemon/namespace/views/v1"
 	"github.com/lastbackend/lastbackend/pkg/errors"
 	"github.com/lastbackend/lastbackend/pkg/util/http/utils"
+	"github.com/lastbackend/lastbackend/pkg/wss"
 	"net/http"
 )
 
@@ -251,4 +252,32 @@ func NamespaceActivityListH(w http.ResponseWriter, _ *http.Request) {
 		context.Get().GetLogger().Error("Error: write response", err.Error())
 		return
 	}
+}
+
+func NamespaceEventSubscribeH(w http.ResponseWriter, r *http.Request) {
+
+	var (
+		err     error
+		log     = context.Get().GetLogger()
+		hub     = context.Get().GetWssHub()
+	)
+
+	if r.Method != "GET" {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	conn, err := wss.Upgrader.Upgrade(w, r, nil)
+	if err != nil {
+		log.Error(err)
+		return
+	}
+
+	client := &wss.Client{Hub: hub, Conn: conn, Send: make(chan []byte, 256)}
+	client.Hub.Register <- client
+
+	// TODO: Watch events
+
+	go client.WritePump()
+	client.ReadPump()
 }
