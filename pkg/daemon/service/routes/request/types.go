@@ -38,8 +38,8 @@ type RequestServiceCreateS struct {
 	Template    string               `json:"template"`
 	Image       string               `json:"image"`
 	Url         string               `json:"url"`
-	Config      *types.ServiceConfig `json:"config,omitempty"`
-	Source      *types.ServiceSource
+	Config      types.ServiceConfig `json:"config,omitempty"`
+	Source      types.ServiceSource
 }
 
 type resources struct {
@@ -99,7 +99,7 @@ func (s *RequestServiceCreateS) DecodeAndValidate(reader io.Reader) *errors.Err 
 			s.Name = source.Repo
 		}
 
-		s.Source = &types.ServiceSource{
+		s.Source = types.ServiceSource{
 			Hub:    source.Hub,
 			Owner:  source.Owner,
 			Repo:   source.Repo,

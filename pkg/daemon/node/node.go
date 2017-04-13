@@ -22,6 +22,7 @@ import (
 	"context"
 	"github.com/lastbackend/lastbackend/pkg/apis/types"
 	ctx "github.com/lastbackend/lastbackend/pkg/daemon/context"
+	"errors"
 )
 
 type Node struct {
@@ -31,7 +32,7 @@ func New() *Node {
 	return new(Node)
 }
 
-func (n *Node) List(c context.Context) (*types.NodeList, error) {
+func (n *Node) List(c context.Context) ([]*types.Node, error) {
 	var storage = ctx.Get().GetStorage()
 	return storage.Node().List(c)
 }
@@ -135,10 +136,10 @@ func (n *Node) PodSpecUpdate(c context.Context, hostname string, spec *types.Pod
 	return nil
 }
 
-func (n *Node) Allocate(c context.Context, spec *types.PodNodeSpec) error {
+func (n *Node) Allocate(c context.Context, spec types.PodSpec) (*types.Node, error) {
 
 	var (
-		node    types.Node
+		node    *types.Node
 		storage = ctx.Get().GetStorage()
 		log     = ctx.Get().GetLogger()
 		memory  = int64(0)
@@ -149,20 +150,23 @@ func (n *Node) Allocate(c context.Context, spec *types.PodNodeSpec) error {
 	nodes, err := storage.Node().List(c)
 	if err != nil {
 		log.Errorf("Node: allocate: get nodes error: %s", err.Error())
-		return err
+		return nil, err
 	}
 
-	for _, c := range spec.Spec.Containers {
+	for _, c := range spec.Containers {
 		memory += c.Quota.Memory
 	}
 
-	for _, node = range *nodes {
+	for _, node = range nodes {
 		if node.State.Capacity.Memory > memory {
 			break
 		}
 	}
 
-	node.Spec.Pods = append(node.Spec.Pods, spec)
+	if node == nil {
+		log.Error("Node: Allocate: Available node not found")
+		return nil, errors.New("Available node not found")
+	}
 
-	return nil
+	return node, nil
 }

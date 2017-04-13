@@ -27,14 +27,15 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/util/validator"
 	"github.com/satori/go.uuid"
 	"time"
+	"github.com/prometheus/common/log"
 )
 
 type service struct {
 	Context   context.Context
-	Namespace string
+	Namespace types.Meta
 }
 
-func New(ctx context.Context, namespace string) *service {
+func New(ctx context.Context, namespace types.Meta) *service {
 	return &service{
 		Context:   ctx,
 		Namespace: namespace,
@@ -43,7 +44,7 @@ func New(ctx context.Context, namespace string) *service {
 
 func (s *service) List() (*types.ServiceList, error) {
 	var storage = ctx.Get().GetStorage()
-	return storage.Service().ListByProject(s.Context, s.Namespace)
+	return storage.Service().ListByNamespace(s.Context, s.Namespace.ID)
 }
 
 func (s *service) Get(service string) (*types.Service, error) {
@@ -56,9 +57,9 @@ func (s *service) Get(service string) (*types.Service, error) {
 	)
 
 	if validator.IsUUID(service) {
-		svc, err = storage.Service().GetByID(s.Context, s.Namespace, service)
+		svc, err = storage.Service().GetByID(s.Context, s.Namespace.ID, service)
 	} else {
-		svc, err = storage.Service().GetByName(s.Context, s.Namespace, service)
+		svc, err = storage.Service().GetByName(s.Context, s.Namespace.ID, service)
 	}
 
 	if err != nil {
@@ -74,14 +75,18 @@ func (s *service) Create(rq *request.RequestServiceCreateS) (*types.Service, err
 	var (
 		log     = ctx.Get().GetLogger()
 		storage = ctx.Get().GetStorage()
-		svc     *types.Service
+		svc     = new(types.Service)
 	)
 
-	svc, err := storage.Service().Insert(s.Context, s.Namespace, rq.Name, rq.Description, rq.Config)
-	if err != nil {
-		log.Errorf("Error: insert service to db : %s", err.Error())
-		return svc, err
-	}
+	svc.Meta = types.ServiceMeta{}
+	svc.Meta.ID = uuid.NewV4().String()
+	svc.Meta.Name = rq.Name
+	svc.Meta.Namespace = s.Namespace.Name
+	svc.Meta.Description = rq.Description
+	svc.Meta.Updated = time.Now()
+	svc.Meta.Created = time.Now()
+
+	svc.Config = rq.Config
 
 	log.Debugf("Service: Create: add pods : %d", rq.Config.Replicas)
 	for i := 0; i < rq.Config.Replicas; i++ {
@@ -92,10 +97,19 @@ func (s *service) Create(rq *request.RequestServiceCreateS) (*types.Service, err
 		}
 	}
 
+	svc, err := storage.Service().Insert(s.Context, svc)
+	if err != nil {
+		log.Errorf("Error: insert service to db : %s", err.Error())
+		return svc, err
+	}
+
 	return svc, nil
 }
 
 func (s *service) Update(service *types.Service) (*types.Service, error) {
+
+	log.Debug("Service: Update: update start")
+
 	var (
 		err     error
 		log     = ctx.Get().GetLogger()
@@ -103,20 +117,18 @@ func (s *service) Update(service *types.Service) (*types.Service, error) {
 		svc     *types.Service
 	)
 
-	svc, err = storage.Service().Update(s.Context, s.Namespace, service)
+	// Update pod spec
+	spec := s.GenerateSpec(service)
+	log.Debugf("Service: Update: pods count: %d", len(service.Pods))
+	for _, pod := range service.Pods {
+		log.Debugf("Service: Update: pod %s update", pod.Meta.ID)
+		pod.Spec = spec
+	}
+
+	svc, err = storage.Service().Update(s.Context, service)
 	if err != nil {
 		log.Error("Error: insert service to db", err)
 		return svc, err
-	}
-
-	n := node.New()
-	for _, pod := range svc.Pods {
-		// Get node hostname and update pod spec
-		if err := n.PodSpecUpdate(s.Context, pod.Meta.Hostname, s.GenerateSpec(svc, pod.Meta)); err != nil {
-			log.Errorf("Service: service update: Pod spec upds %s", err.Error())
-			return svc, err
-		}
-
 	}
 
 	return svc, nil
@@ -128,7 +140,7 @@ func (s *service) Remove(service *types.Service) error {
 		storage = ctx.Get().GetStorage()
 	)
 
-	if err := storage.Service().Remove(s.Context, s.Namespace, service); err != nil {
+	if err := storage.Service().Remove(s.Context, service); err != nil {
 		log.Error("Error: insert service to db", err)
 		return err
 	}
@@ -136,28 +148,29 @@ func (s *service) Remove(service *types.Service) error {
 }
 
 func (s *service) AddPod(service *types.Service) error {
+
 	var (
 		log     = ctx.Get().GetLogger()
-		storage = ctx.Get().GetStorage()
 	)
 
 	log.Debug("Create new pod state on service")
 
-	pod := new(types.PodNodeState)
+	pod := new(types.Pod)
 	pod.State.State = "creating"
 	pod.Meta.ID = uuid.NewV4().String()
 	pod.Meta.Created = time.Now()
 	pod.Meta.Updated = time.Now()
+	pod.Spec = s.GenerateSpec(service)
 
-	if err := storage.Pod().Insert(s.Context, service.Meta.Namespace, service.Meta.ID, pod); err != nil {
-		log.Errorf("Service: Add Pod: insert into storage error: %s", err.Error())
+	n, err := node.New().Allocate(s.Context, pod.Spec)
+	if err != nil {
 		return err
 	}
 
-	service.Pods = append(service.Pods, pod)
+	log.Debugf("Service: Add pod: Node meta: %s", n.Meta)
+	pod.Meta.Hostname = n.Meta.Hostname
 
-	n := node.New()
-	n.Allocate(s.Context, s.GenerateSpec(service, pod.Meta))
+	service.Pods = append(service.Pods, pod)
 
 	return nil
 }
@@ -166,8 +179,7 @@ func (s *service) DelPod(service *types.Service) error {
 
 	var (
 		log     = ctx.Get().GetLogger()
-		pod     *types.PodNodeState
-		storage = ctx.Get().GetStorage()
+		pod     *types.Pod
 	)
 
 	log.Debug("Create new pod state on service")
@@ -180,8 +192,6 @@ func (s *service) DelPod(service *types.Service) error {
 	}
 
 	pod.State.State = "deleting"
-	storage.Pod().Update(s.Context, service.Meta.Namespace, service.Meta.ID, pod)
-
 	return nil
 }
 
@@ -224,10 +234,10 @@ func (s *service) SetPods(c context.Context, pods []types.PodNodeState) error {
 	return nil
 }
 
-func (s *service) Scale(c context.Context, service *types.Service) error {
+func (s *service) Scale(c context.Context, service *types.Service) (*types.Service, error) {
 	var (
 		log      = ctx.Get().GetLogger()
-		pod      *types.PodNodeState
+		pod      *types.Pod
 		replicas int
 	)
 
@@ -241,13 +251,13 @@ func (s *service) Scale(c context.Context, service *types.Service) error {
 
 	if replicas == service.Config.Replicas {
 		log.Debug("Service: Scale: Scale not needed, replicas equal")
-		return nil
+		return service, nil
 	}
 
 	if replicas < service.Config.Replicas {
 		for i := 0; i < (service.Config.Replicas - replicas); i++ {
 			if err := s.AddPod(service); err != nil {
-				return err
+				return service,  err
 			}
 		}
 	}
@@ -255,28 +265,30 @@ func (s *service) Scale(c context.Context, service *types.Service) error {
 	if replicas > service.Config.Replicas {
 		for i := 0; i < (replicas - service.Config.Replicas); i++ {
 			if err := s.DelPod(service); err != nil {
-				return err
+				return service, err
 			}
 		}
 	}
 
-	return nil
+	svc, err := s.Update(service)
+	if err != nil {
+		log.Errorf("Service: Scale: error scale: %s", err.Error())
+		return service, err
+	}
+	return svc, nil
 }
 
-func (s *service) GenerateSpec(service *types.Service, pod types.PodMeta) *types.PodNodeSpec {
+func (s *service) GenerateSpec(service *types.Service) types.PodSpec {
 
 	var (
 		log = ctx.Get().GetLogger()
 	)
 
 	log.Debug("Generate new node pod spec")
-	var spec = new(types.PodNodeSpec)
-	spec.Meta = pod
-	spec.State.State = "provision"
-
-	spec.Spec.ID = uuid.NewV4().String()
-	spec.Spec.Created = time.Now()
-	spec.Spec.Updated = time.Now()
+	var spec = types.PodSpec{}
+	spec.ID = uuid.NewV4().String()
+	spec.Created = time.Now()
+	spec.Updated = time.Now()
 
 	cs := new(types.ContainerSpec)
 	cs.Image = types.ImageSpec{
@@ -304,7 +316,7 @@ func (s *service) GenerateSpec(service *types.Service, pod types.PodMeta) *types
 		Attempt: 0,
 	}
 
-	spec.Spec.Containers = append(spec.Spec.Containers, cs)
+	spec.Containers = append(spec.Containers, cs)
 
 	var state = new(types.PodState)
 	state.State = service.State.State

@@ -18,7 +18,7 @@
 
 package types
 
-type NodeList []Node
+type NodeList []*Node
 
 type Node struct {
 	// Node metadata

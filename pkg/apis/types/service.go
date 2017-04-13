@@ -33,11 +33,11 @@ type Service struct {
 	// Service custom domains
 	Domains []string `json:"domains"`
 	// Service source info
-	Source *ServiceSource `json:"source,omitempty"`
+	Source ServiceSource `json:"source,omitempty"`
 	// Service config info
-	Config *ServiceConfig `json:"config,omitempty"`
+	Config ServiceConfig `json:"config,omitempty"`
 	// Pods list
-	Pods []*PodNodeState `json:"pods"`
+	Pods []*Pod `json:"pods"`
 }
 
 type ServiceMeta struct {
@@ -97,8 +97,8 @@ func (c *ServiceConfig) Update(patch *ServiceConfig) error {
 	return nil
 }
 
-func (ServiceConfig) GetDefault() *ServiceConfig {
-	var config = new(ServiceConfig)
+func (ServiceConfig) GetDefault() ServiceConfig {
+	var config = ServiceConfig{}
 	config.Replicas = 1
 	config.Memory = 256
 	return config

@@ -52,7 +52,7 @@ func ServiceListH(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	s := service.New(r.Context(), item.Meta.ID)
+	s := service.New(r.Context(), item.Meta)
 	items, err := s.List()
 	if err != nil {
 		log.Error("Error: find service list by user", err)
@@ -96,7 +96,7 @@ func ServiceInfoH(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	s := service.New(r.Context(), item.Meta.ID)
+	s := service.New(r.Context(), item.Meta)
 	svc, err := s.Get(sid)
 	if err != nil {
 		log.Error("Error: find service by id", err.Error())
@@ -153,7 +153,7 @@ func ServiceCreateH(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	s := service.New(r.Context(), item.Meta.ID)
+	s := service.New(r.Context(), item.Meta)
 	svc, err := s.Get(sid)
 	if err != nil {
 		log.Error("Error: find service by id", err.Error())
@@ -180,13 +180,13 @@ func ServiceCreateH(w http.ResponseWriter, r *http.Request) {
 	//}
 
 	// Patch config if exists custom configurations
-	if rq.Config != nil {
+	//if rq.Config. != nil {
 		// TODO: If have custom config, then need patch this config
-	} else {
+	//} else {
 		rq.Config = types.ServiceConfig{}.GetDefault()
-	}
+	//}
 
-	if rq.Source != nil {
+	if rq.Source.Hub != "" {
 		img, err := image.Create(r.Context(), rq.Registry, rq.Source)
 		if err != nil {
 			log.Error("Error: insert service to db", err)
@@ -250,7 +250,7 @@ func ServiceUpdateH(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	s := service.New(r.Context(), item.Meta.ID)
+	s := service.New(r.Context(), item.Meta)
 	svc, err := s.Get(sid)
 	if err != nil {
 		log.Error("Error: find service by id", err.Error())
@@ -273,7 +273,7 @@ func ServiceUpdateH(w http.ResponseWriter, r *http.Request) {
 	if rq.Config != nil {
 		if err := svc.Config.Update(rq.Config); err != nil {
 			log.Error("Error: update service config", err.Error())
-			errors.New("service").BadParameter("config", err)
+			errors.New("service").BadParameter("config", err).Http(w)
 			return
 		}
 	}
@@ -284,7 +284,7 @@ func ServiceUpdateH(w http.ResponseWriter, r *http.Request) {
 
 	svc, err = s.Update(svc)
 	if err != nil {
-		log.Error("Error: insert service to db", err)
+		log.Error("Error: update service error", err)
 		errors.HTTP.InternalServerError(w)
 		return
 	}
@@ -327,7 +327,7 @@ func ServiceRemoveH(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	s := service.New(r.Context(), item.Meta.ID)
+	s := service.New(r.Context(), item.Meta)
 	svc, err := s.Get(sid)
 	if err != nil {
 		log.Error("Error: find service by id", err.Error())

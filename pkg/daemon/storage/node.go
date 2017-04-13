@@ -37,8 +37,7 @@ type NodeStorage struct {
 	Client func() (store.IStore, store.DestroyFunc, error)
 }
 
-func (s *NodeStorage) List(ctx context.Context) (*types.NodeList, error) {
-	const filter = `\b(.+)projects\/[a-z0-9-]{36}\/meta\b`
+func (s *NodeStorage) List(ctx context.Context) ([]*types.Node, error) {
 
 	client, destroy, err := s.Client()
 	if err != nil {
@@ -47,26 +46,15 @@ func (s *NodeStorage) List(ctx context.Context) (*types.NodeList, error) {
 	defer destroy()
 
 	key := s.util.Key(ctx, nodeStorage)
-	metaList := []types.NodeMeta{}
-	if err := client.List(ctx, key, filter, &metaList); err != nil {
+	list := []*types.Node{}
+	if err := client.List(ctx, key, "", &list); err != nil {
 		if err.Error() == store.ErrKeyNotFound {
 			return nil, nil
 		}
 		return nil, err
 	}
 
-	if metaList == nil {
-		return nil, nil
-	}
-
-	nodeList := new(types.NodeList)
-	for _, meta := range metaList {
-		node := types.Node{}
-		node.Meta = meta
-		*nodeList = append(*nodeList, node)
-	}
-
-	return nodeList, nil
+	return list, nil
 }
 
 func (s *NodeStorage) Get(ctx context.Context, hostname string) (*types.Node, error) {
