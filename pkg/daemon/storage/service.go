@@ -287,13 +287,18 @@ func (s *ServiceStorage) Update(ctx context.Context, service *types.Service) (*t
 
 	for _, pod := range service.Pods {
 
+		keyHelper := s.util.Key(ctx, "helper", serviceStorage, "pods", pod.Meta.ID)
+		if err := tx.Upsert(keyHelper, s.util.Key(ctx, namespaceStorage, namespace, serviceStorage, service.Meta.ID), 0); err != nil {
+			return nil, err
+		}
+
 		KeyPod := s.util.Key(ctx, namespaceStorage, namespace, serviceStorage, service.Meta.ID, "pods", pod.Meta.ID)
-		if err := tx.Update(KeyPod, &pod, 0); err != nil {
+		if err := tx.Upsert(KeyPod, &pod, 0); err != nil {
 			return nil, err
 		}
 
 		KeyNodePod := s.util.Key(ctx, nodeStorage, pod.Meta.Hostname, "spec", "pods", pod.Meta.ID)
-		if err := tx.Update(KeyNodePod, &types.PodNodeSpec{
+		if err := tx.Upsert(KeyNodePod, &types.PodNodeSpec{
 			Meta:  pod.Meta,
 			Spec:  pod.Spec,
 		}, 0); err != nil {

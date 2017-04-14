@@ -153,11 +153,14 @@ func (s *service) Update(service *types.Service, rq *request.RequestServiceUpdat
 		pod.Spec = spec
 	}
 
+	s.Scale(s.Context, service)
+
 	svc, err = storage.Service().Update(s.Context, service)
 	if err != nil {
 		log.Error("Error: insert service to db", err)
 		return svc, err
 	}
+
 
 	return svc, nil
 }
@@ -268,13 +271,13 @@ func (s *service) SetPods(c context.Context, pods []types.Pod) error {
 	return nil
 }
 
-func (s *service) Scale(c context.Context, service *types.Service) (*types.Service, error) {
+func (s *service) Scale(c context.Context, service *types.Service) (error) {
 	var (
 		log      = ctx.Get().GetLogger()
-		storage  = ctx.Get().GetStorage()
 		pod      *types.Pod
 		replicas int
 	)
+
 
 	for i := 0; i < len(service.Pods); i++ {
 		pod = service.Pods[i]
@@ -284,34 +287,32 @@ func (s *service) Scale(c context.Context, service *types.Service) (*types.Servi
 		replicas++
 	}
 
+	log.Debugf("Service: Scale: current replicas: %d", replicas)
+
 	if replicas == service.Config.Replicas {
 		log.Debug("Service: Replicas not needed, replicas equal")
-		return service, nil
+		return nil
 	}
 
 	if replicas < service.Config.Replicas {
+		log.Debug("Service: Replicas: create a new replicas")
 		for i := 0; i < (service.Config.Replicas - replicas); i++ {
 			if err := s.AddPod(service); err != nil {
-				return service, err
+				return err
 			}
 		}
 	}
 
 	if replicas > service.Config.Replicas {
+		log.Debug("Service: Replicas: remove  unneeded replicas")
 		for i := 0; i < (replicas - service.Config.Replicas); i++ {
 			if err := s.DelPod(service); err != nil {
-				return service, err
+				return  err
 			}
 		}
 	}
 
-	svc, err := storage.Service().Update(s.Context, service)
-	if err != nil {
-		log.Error("Error: insert service to db", err)
-		return svc, err
-	}
-
-	return svc, nil
+	return nil
 }
 
 func (s *service) GenerateSpec(service *types.Service) types.PodSpec {
