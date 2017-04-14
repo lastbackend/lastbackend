@@ -49,7 +49,7 @@ image:
 	docker build -t lastbackend/lastbackend -f ./images/lastbackend/Dockerfile .
 
 run-daemon:
-	go run cmd/daemon/daemon.go daemon -d -c ./contrib/config.yml
+	go run cmd/daemon/daemon.go daemon -d
 
 run-agent:
 	go run cmd/agent/agent.go daemon -d

@@ -38,12 +38,12 @@ type RequestServiceCreateS struct {
 	Template    string        `json:"template"`
 	Image       string        `json:"image"`
 	Url         string        `json:"url"`
-	Config      ServiceConfig `json:"config"`
+	Config      *ServiceConfig `json:"config"`
+	Replicas    *int            `json:"replicas,omitempty"`
 	Source      types.ServiceSource
 }
 
 type ServiceConfig struct {
-	Replicas   *int      `json:"replicas,omitempty"`
 	Memory     *int64    `json:"memory,omitempty"`
 	Entrypoint *string   `json:"entrypoint,omitempty"`
 	Command    *string   `json:"command,omitempty"`
@@ -144,7 +144,8 @@ func (s *RequestServiceCreateS) DecodeAndValidate(reader io.Reader) *errors.Err 
 type RequestServiceUpdateS struct {
 	Name        string        `json:"name"`
 	Description string        `json:"description"`
-	Config      ServiceConfig `json:"config"`
+	Replicas    *int            `json:"replicas"`
+	Config      *ServiceConfig `json:"config"`
 	Domains     []string      `json:"domains"`
 }
 

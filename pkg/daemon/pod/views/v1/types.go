@@ -28,8 +28,6 @@ type Pod struct {
 	Meta PodMeta `json:"meta"`
 	// Container spec
 	Spec PodSpec `json:"spec"`
-	// Pod state
-	State PodState `json:"state"`
 }
 
 type PodInfo struct {

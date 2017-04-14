@@ -70,7 +70,7 @@ func (r *Runtime) ContainerRemove(ID string, clean bool, force bool) error {
 	})
 }
 
-func (r *Runtime) ContainerInspect(ID string) (*types.Container, string, error) {
+func (r *Runtime) ContainerInspect(ID string) (*types.Container, error) {
 	log := context.Get().GetLogger()
 	log.Debug("Docker: Container Inspect")
 
@@ -80,18 +80,19 @@ func (r *Runtime) ContainerInspect(ID string) (*types.Container, string, error) 
 	info, err := r.client.ContainerInspect(context.Background(), ID)
 	if err != nil {
 		log.Errorf("Docker: Container Inspect error: %s", err.Error())
-		return container, pod, err
+		return container, err
 	}
 
 	meta, ok := info.Config.Labels["LB_META"]
 	if !ok {
 		log.Debug("Docker: Container Meta not found")
-		return container, pod, nil
+		return container, nil
 	}
 
 	pod = strings.Split(meta, "/")[0]
 	container = &types.Container{
 		ID:    info.ID,
+		Pod:   pod,
 		Image: info.Config.Image,
 		State: info.State.Status,
 	}
@@ -99,5 +100,5 @@ func (r *Runtime) ContainerInspect(ID string) (*types.Container, string, error) 
 	container.Created, _ = time.Parse(time.RFC3339Nano, info.Created)
 	container.Started, _ = time.Parse(time.RFC3339Nano, info.State.StartedAt)
 
-	return container, pod, nil
+	return container, nil
 }

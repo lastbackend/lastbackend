@@ -21,6 +21,7 @@ package types
 import (
 	"sync"
 	"time"
+	"fmt"
 )
 
 
@@ -196,12 +197,19 @@ func (p *Pod) UpdateState() {
 		}
 	}
 
+	if len(p.Containers) == 0 {
+		p.Meta.State.State = PodStateDeleted
+	}
+
+	fmt.Println("pod state:", p.Meta.State.State)
 }
 
-const PodStateRunning = "running"
-const PodStateStarted = "started"
+const PodStateRunning   = "running"
+const PodStateStarted   = "started"
 const PodStateRestarted = "restarted"
-const PodStateStopped = "stopped"
+const PodStateStopped   = "stopped"
+const PodStateDeleting  = "deleting"
+const PodStateDeleted   = "deleted"
 
 func NewPod() *Pod {
 	return &Pod{

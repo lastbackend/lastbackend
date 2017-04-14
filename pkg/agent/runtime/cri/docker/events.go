@@ -26,7 +26,13 @@ import (
 )
 
 func (r *Runtime) Subscribe() chan types.ContainerEvent {
+
+	var (
+		container *types.Container
+	)
+
 	log := context.Get().GetLogger()
+	s   := context.Get().GetStorage().Pods()
 	log.Debug("Create new event listener subscribe")
 
 	var ch = make(chan types.ContainerEvent)
@@ -41,16 +47,14 @@ func (r *Runtime) Subscribe() chan types.ContainerEvent {
 					continue
 				}
 
-				log.Debugf("Proceed container update: %s", e.ID)
-				container, pod, err := r.ContainerInspect(e.ID)
-				if err != nil || container == nil {
+				container = s.GetContainer(e.ID)
+				if container == nil {
 					continue
 				}
 
-				log.Debugf("Contaniner %s update in pod %s", container.ID, pod)
+				log.Debugf("Contaniner %s update in pod %s", container.ID, container.Pod)
 
 				ch <- types.ContainerEvent{
-					Pod:       pod,
 					Event:     e.Action,
 					Container: container,
 				}

@@ -145,13 +145,22 @@ func (s *PodStorage) Remove(ctx context.Context, namespace, service string, pod 
 	}
 	defer destroy()
 
+	var ns string
+	keyNamespace := s.util.Key(ctx, "helper", namespaceStorage, namespace)
+	if err := client.Get(ctx, keyNamespace, &ns); err != nil {
+		return err
+	}
+
 	tx := client.Begin(ctx)
 
-	keyMeta := s.util.Key(ctx, namespaceStorage, namespace, serviceStorage, service, podStorage, pod.Meta.ID)
+	keyMeta := s.util.Key(ctx, namespaceStorage, ns, serviceStorage, service, podStorage, pod.Meta.ID)
 	tx.Delete(keyMeta)
 
 	keyHelper := s.util.Key(ctx, "helper", serviceStorage, "pods", pod.Meta.ID)
 	tx.Delete(keyHelper)
+
+	KeyNodePod := s.util.Key(ctx, nodeStorage, pod.Meta.Hostname, "spec", "pods", pod.Meta.ID)
+	tx.Delete(KeyNodePod)
 
 	if err := tx.Commit(); err != nil {
 		return err

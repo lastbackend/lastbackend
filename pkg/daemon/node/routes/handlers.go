@@ -46,8 +46,14 @@ func NodeEventH(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	n := node.New()
+	s := service.New(r.Context(), types.Meta{})
+	if err := s.SetPods(r.Context(), rq.Pods); err != nil {
+		log.Errorf("Error: set pods err %s", err.Error())
+		errors.HTTP.InternalServerError(w)
+		return
+	}
 
+	n := node.New()
 	log.Debugf("try to find node by hostname: %s", rq.Meta.Hostname)
 	item, err := n.Get(r.Context(), rq.Meta.Hostname)
 	if err != nil {
@@ -66,13 +72,6 @@ func NodeEventH(w http.ResponseWriter, r *http.Request) {
 	} else {
 		item.Meta = rq.Meta
 		n.SetMeta(r.Context(), item)
-	}
-
-	s := service.New(r.Context(), types.Meta{})
-	if err := s.SetPods(r.Context(), rq.Pods); err != nil {
-		log.Errorf("Error: set pods err %s", err.Error())
-		errors.HTTP.InternalServerError(w)
-		return
 	}
 
 	response, err := v1.NewSpec(item).ToJson()

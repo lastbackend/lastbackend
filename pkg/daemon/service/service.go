@@ -20,7 +20,6 @@ package service
 
 import (
 	"context"
-	"encoding/json"
 	"github.com/lastbackend/lastbackend/pkg/apis/types"
 	ctx "github.com/lastbackend/lastbackend/pkg/daemon/context"
 	"github.com/lastbackend/lastbackend/pkg/daemon/node"
@@ -90,6 +89,11 @@ func (s *service) Create(rq *request.RequestServiceCreateS) (*types.Service, err
 	svc.Meta.Updated = time.Now()
 	svc.Meta.Created = time.Now()
 
+	svc.Meta.Replicas = 1
+	if rq.Replicas == nil {
+		svc.Meta.Replicas = *rq.Replicas
+	}
+
 	config, err := createConfig(rq.Config)
 	if err != nil {
 		log.Errorf("Error: create config from request opts : %s", err.Error())
@@ -139,19 +143,28 @@ func (s *service) Update(service *types.Service, rq *request.RequestServiceUpdat
 		service.Domains = rq.Domains
 	}
 
-	if err := updateConfig(rq.Config, &service.Config); err != nil {
-		log.Error("Error: update service config from request opts", err)
-		return svc, err
+	if rq.Replicas != nil {
+		log.Debugf("Service: Update: set replicas: %d", *rq.Replicas)
+		service.Meta.Replicas = *rq.Replicas
 	}
 
-	// Update pod spec
-	spec := s.GenerateSpec(service)
+	if rq.Config != nil {
+		if err := updateConfig(rq.Config, &service.Config); err != nil {
+			log.Error("Error: update service config from request opts", err)
+			return svc, err
+		}
 
-	log.Debugf("Service: Update: pods count: %d", len(service.Pods))
-	for _, pod := range service.Pods {
-		log.Debugf("Service: Update: pod %s update", pod.Meta.ID)
-		pod.Spec = spec
+		// Update pod spec
+		spec := s.GenerateSpec(service)
+
+		log.Debugf("Service: Update: pods count: %d", len(service.Pods))
+		for _, pod := range service.Pods {
+			log.Debugf("Service: Update: pod %s update", pod.Meta.ID)
+			pod.Spec = spec
+		}
+
 	}
+
 
 	s.Scale(s.Context, service)
 
@@ -160,7 +173,6 @@ func (s *service) Update(service *types.Service, rq *request.RequestServiceUpdat
 		log.Error("Error: insert service to db", err)
 		return svc, err
 	}
-
 
 	return svc, nil
 }
@@ -191,7 +203,12 @@ func (s *service) AddPod(service *types.Service) error {
 	pod.Meta.ID = uuid.NewV4().String()
 	pod.Meta.Created = time.Now()
 	pod.Meta.Updated = time.Now()
-	pod.Spec = s.GenerateSpec(service)
+
+	if len(service.Pods) > 0 {
+		pod.Spec = service.Pods[0].Spec
+	} else {
+		pod.Spec = s.GenerateSpec(service)
+	}
 
 	n, err := node.New().Allocate(s.Context, pod.Spec)
 	if err != nil {
@@ -234,9 +251,6 @@ func (s *service) SetPods(c context.Context, pods []types.Pod) error {
 
 	for _, pod := range pods {
 
-		jp, _ := json.Marshal(pod)
-		log.Debug("Pods update", string(jp))
-
 		svc, err := storage.Service().GetByPodID(c, pod.Meta.ID)
 		if err != nil {
 			log.Errorf("Error: get pod from db: %s", err)
@@ -262,6 +276,16 @@ func (s *service) SetPods(c context.Context, pods []types.Pod) error {
 		p.Containers = pod.Containers
 		p.Meta.State = pod.Meta.State
 
+		if p.Meta.State.State == "deleted" {
+			log.Debugf("Service: Set pods: remove deleted pod: %s", p.Meta.ID)
+			if err := storage.Pod().Remove(c, svc.Meta.Namespace, svc.Meta.ID, p); err != nil {
+				log.Errorf("Error: set pod to db: %s", err)
+				return err
+			}
+
+			return nil
+		}
+
 		if err := storage.Pod().Update(c, svc.Meta.Namespace, svc.Meta.ID, p); err != nil {
 			log.Errorf("Error: set pod to db: %s", err)
 			return err
@@ -271,13 +295,12 @@ func (s *service) SetPods(c context.Context, pods []types.Pod) error {
 	return nil
 }
 
-func (s *service) Scale(c context.Context, service *types.Service) (error) {
+func (s *service) Scale(c context.Context, service *types.Service) error {
 	var (
 		log      = ctx.Get().GetLogger()
 		pod      *types.Pod
 		replicas int
 	)
-
 
 	for i := 0; i < len(service.Pods); i++ {
 		pod = service.Pods[i]
@@ -289,25 +312,25 @@ func (s *service) Scale(c context.Context, service *types.Service) (error) {
 
 	log.Debugf("Service: Scale: current replicas: %d", replicas)
 
-	if replicas == service.Config.Replicas {
+	if replicas == service.Meta.Replicas {
 		log.Debug("Service: Replicas not needed, replicas equal")
 		return nil
 	}
 
-	if replicas < service.Config.Replicas {
+	if replicas < service.Meta.Replicas {
 		log.Debug("Service: Replicas: create a new replicas")
-		for i := 0; i < (service.Config.Replicas - replicas); i++ {
+		for i := 0; i < (service.Meta.Replicas - replicas); i++ {
 			if err := s.AddPod(service); err != nil {
 				return err
 			}
 		}
 	}
 
-	if replicas > service.Config.Replicas {
+	if replicas > service.Meta.Replicas {
 		log.Debug("Service: Replicas: remove  unneeded replicas")
-		for i := 0; i < (replicas - service.Config.Replicas); i++ {
+		for i := 0; i < (replicas - service.Meta.Replicas); i++ {
 			if err := s.DelPod(service); err != nil {
-				return  err
+				return err
 			}
 		}
 	}
@@ -355,12 +378,12 @@ func (s *service) GenerateSpec(service *types.Service) types.PodSpec {
 	spec.Containers = append(spec.Containers, cs)
 
 	var state = new(types.PodState)
-	state.State = service.State.State
+	state.State = service.Meta.State.State
 
 	return spec
 }
 
-func createConfig(opts request.ServiceConfig) (*types.ServiceConfig, error) {
+func createConfig(opts *request.ServiceConfig) (*types.ServiceConfig, error) {
 	config := new(types.ServiceConfig)
 	if err := patchConfig(opts, config); err != nil {
 		return nil, err
@@ -368,21 +391,16 @@ func createConfig(opts request.ServiceConfig) (*types.ServiceConfig, error) {
 	return config, nil
 }
 
-func updateConfig(opts request.ServiceConfig, config *types.ServiceConfig) error {
+func updateConfig(opts *request.ServiceConfig, config *types.ServiceConfig) error {
 	if config == nil {
 		config = new(types.ServiceConfig)
 	}
 	return patchConfig(opts, config)
 }
 
-func patchConfig(opts request.ServiceConfig, config *types.ServiceConfig) error {
+func patchConfig(opts *request.ServiceConfig, config *types.ServiceConfig) error {
 
-	config.Replicas = int(1)
 	config.Memory = int64(32)
-
-	if opts.Replicas != nil {
-		config.Replicas = *opts.Replicas
-	}
 
 	if opts.Memory != nil {
 		config.Memory = *opts.Memory
