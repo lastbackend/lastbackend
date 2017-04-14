@@ -44,7 +44,6 @@ type Task struct {
 	close chan bool
 	done  chan bool
 
-	state types.PodState
 	meta  types.PodMeta
 	spec  types.PodSpec
 
@@ -57,11 +56,10 @@ func NewWorker() *Worker {
 	}
 }
 
-func NewTask(state types.PodState, meta types.PodMeta, spec types.PodSpec, pod *types.Pod) *Task {
+func NewTask(meta types.PodMeta, spec types.PodSpec, pod *types.Pod) *Task {
 	log := context.Get().GetLogger()
 	log.Debugf("Create new task for pod: %s", pod.Meta.ID)
 	return &Task{
-		state: state,
 		meta:  meta,
 		spec:  spec,
 		pod:   pod,
@@ -70,7 +68,7 @@ func NewTask(state types.PodState, meta types.PodMeta, spec types.PodSpec, pod *
 	}
 }
 
-func (w *Worker) Proceed(state types.PodState, meta types.PodMeta, spec types.PodSpec, p *types.Pod) {
+func (w *Worker) Proceed(meta types.PodMeta, spec types.PodSpec, p *types.Pod) {
 	log := context.Get().GetLogger()
 	log.Debugf("Proceed new task for pod: %s", p.Meta.ID)
 
@@ -80,7 +78,7 @@ func (w *Worker) Proceed(state types.PodState, meta types.PodMeta, spec types.Po
 		w.next = nil
 	}
 
-	t := NewTask(state, meta, spec, p)
+	t := NewTask(meta, spec, p)
 
 	// Update next task for execution
 	if w.current != nil {
@@ -248,13 +246,13 @@ func (t *Task) containersUpdate() {
 func (t *Task) containersState() {
 	// TODO: wait 5 seconds and recheck container state
 	log := context.Get().GetLogger()
-	log.Debugf("update container state from: %s to %s", t.pod.State.State, t.state.State)
+	log.Debugf("update container state from: %s to %s", t.pod.Meta.State.State, t.meta.State.State)
 
-	t.pod.State.State = "provision"
+	t.pod.Meta.State.State = "provision"
 
 	crii := context.Get().GetCri()
 	// Update containers states
-	if t.state.State == types.PodStateStarted || t.state.State == types.PodStateRunning {
+	if t.meta.State.State == types.PodStateStarted || t.meta.State.State == types.PodStateRunning {
 		for _, c := range t.pod.Containers {
 			log.Debugf("Container: %s try to start", c.ID)
 			err := crii.ContainerStart(c.ID)
@@ -273,7 +271,7 @@ func (t *Task) containersState() {
 		return
 	}
 
-	if t.state.State == types.PodStateStopped {
+	if t.meta.State.State == types.PodStateStopped {
 		for _, c := range t.pod.Containers {
 			timeout := time.Duration(ContainerStopTimeout) * time.Second
 			log.Debugf("Container: %s try to stop", c.ID)
@@ -293,7 +291,7 @@ func (t *Task) containersState() {
 		return
 	}
 
-	if t.state.State == types.PodStateRestarted {
+	if t.meta.State.State == types.PodStateRestarted {
 		for _, c := range t.pod.Containers {
 			timeout := time.Duration(ContainerRestartTimeout) * time.Second
 			log.Debugf("Container: %s try to restart", c.ID)
