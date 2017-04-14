@@ -35,10 +35,22 @@ type Pod struct {
 type PodInfo struct {
 	// Pod Meta
 	Meta PodMeta `json:"meta"`
-	// Pod state
-	State PodState `json:"state"`
 	// Pod containers
 	Containers []v1.Container `json:"containers"`
+}
+
+
+type PodMeta struct {
+	// Meta id
+	ID string `json:"id"`
+	// Meta labels
+	Labels map[string]string `json:"lables"`
+	// Pod state
+	State PodState `json:"state"`
+	// Meta created time
+	Created time.Time `json:"created"`
+	// Meta updated time
+	Updated time.Time `json:"updated"`
 }
 
 type PodState struct {
@@ -46,17 +58,21 @@ type PodState struct {
 	State string `json:"state"`
 	// Pod current status
 	Status string `json:"status"`
+	// Container total
+	Containers PodContainersState `json:"containers"`
 }
 
-type PodMeta struct {
-	// Meta id
-	ID string `json:"id"`
-	// Meta labels
-	Labels map[string]string `json:"lables"`
-	// Meta created time
-	Created time.Time `json:"created"`
-	// Meta updated time
-	Updated time.Time `json:"updated"`
+type PodContainersState struct {
+	// Total containers
+	Total int `json:"total"`
+	// Total running containers
+	Running int `json:"running"`
+	// Total created containers
+	Created int `json:"created"`
+	// Total stopped containers
+	Stopped int `json:"stopped"`
+	// Total errored containers
+	Errored int `json:"errored"`
 }
 
 type PodSpec struct {

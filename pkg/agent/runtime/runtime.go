@@ -104,7 +104,6 @@ func (r *Runtime) Loop() {
 
 				events.New().Send(events.NewEvent(true, GetNodeMeta() , append(ps, &types.Pod{
 					Meta: pod.Meta,
-					State: pod.State,
 					Containers: pod.Containers,
 				})))
 

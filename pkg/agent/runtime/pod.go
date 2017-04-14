@@ -54,19 +54,19 @@ func (pm *PodManager) SyncPod(pod *types.PodNodeSpec) {
 		p := types.NewPod()
 		p.Meta.ID = pod.Meta.ID
 		context.Get().GetStorage().Pods().SetPod(p)
-		pm.sync(pod.State, pod.Meta, pod.Spec, p)
+		pm.sync(pod.Meta, pod.Spec, p)
 		return
 	}
 
 	log.Debugf("Pod %s found", pod.Meta.ID)
-	if (p.Spec.ID == pod.Spec.ID) && p.State.State == pod.State.State {
+	if (p.Spec.ID == pod.Spec.ID) && p.Meta.State.State == pod.Meta.State.State {
 		log.Debugf("Pod %s in correct state", pod.Meta.ID)
 		return
 	}
-	pm.sync(pod.State, pod.Meta, pod.Spec, p)
+	pm.sync(pod.Meta, pod.Spec, p)
 }
 
-func (pm *PodManager) sync(state types.PodState, meta types.PodMeta, spec types.PodSpec, pod *types.Pod) {
+func (pm *PodManager) sync(meta types.PodMeta, spec types.PodSpec, pod *types.Pod) {
 	// Create new worker to sync pod
 	// Check if pod worker exists
 	log := context.Get().GetLogger()
@@ -85,7 +85,7 @@ func (pm *PodManager) sync(state types.PodState, meta types.PodMeta, spec types.
 		}()
 	}
 	log.Debugf("Pod %s sync proceed", pod.Meta.ID)
-	w.Proceed(state, meta, spec, pod)
+	w.Proceed(meta, spec, pod)
 }
 
 func NewPodManager() (*PodManager, error) {

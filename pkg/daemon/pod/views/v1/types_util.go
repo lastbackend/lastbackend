@@ -26,7 +26,6 @@ import (
 func ToPodInfo(pod *types.Pod) PodInfo {
 	info := PodInfo{
 		Meta : ToPodMeta(pod.Meta),
-		State: ToPodState(pod.State),
 	}
 
 	for _, c := range pod.Containers {
@@ -40,6 +39,7 @@ func ToPodMeta(meta types.PodMeta) PodMeta {
 	return PodMeta{
 		ID:      meta.ID,
 		Labels:  meta.Labels,
+		State: ToPodState(meta.State),
 		Created: meta.Created,
 		Updated: meta.Updated,
 	}
@@ -65,12 +65,20 @@ func ToPodState(state types.PodState) PodState {
 	return PodState{
 		State:  state.State,
 		Status: state.Status,
+		Containers: PodContainersState{
+			Total:   state.Containers.Total,
+			Running: state.Containers.Running,
+			Created: state.Containers.Created,
+			Stopped: state.Containers.Stopped,
+			Errored: state.Containers.Errored,
+		},
 	}
 }
 
 func FromPodMeta(meta PodMeta) types.PodMeta {
 	m := types.PodMeta{}
 	m.ID = meta.ID
+	m.State = FromPodState(meta.State)
 	m.Labels = meta.Labels
 	m.Created = meta.Created
 	m.Updated = meta.Updated

@@ -41,8 +41,6 @@ type PodEvent struct {
 	Event string
 	// Event meta
 	Meta PodMeta
-	// Pod State
-	State PodState
 	// Pod Containers
 	Containers map[string]*Container
 }

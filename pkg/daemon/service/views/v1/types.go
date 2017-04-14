@@ -28,8 +28,8 @@ type Service struct {
 	Description string       `json:"description"`
 	Created     time.Time    `json:"created"`
 	Updated     time.Time    `json:"updated"`
-	Pods        []v1.PodInfo `json:"pods"`
-	Config      Config       `json:"config"`
+	Pods        []v1.PodInfo `json:"pods,omitempty"`
+	Config      Config       `json:"config,omitempty"`
 	Region      string       `json:"region,omitempty"`
 }
 

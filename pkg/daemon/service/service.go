@@ -187,7 +187,7 @@ func (s *service) AddPod(service *types.Service) error {
 	log.Debug("Create new pod state on service")
 
 	pod := new(types.Pod)
-	pod.State.State = "running"
+	pod.Meta.State.State = "running"
 	pod.Meta.ID = uuid.NewV4().String()
 	pod.Meta.Created = time.Now()
 	pod.Meta.Updated = time.Now()
@@ -217,12 +217,12 @@ func (s *service) DelPod(service *types.Service) error {
 
 	for i := len(service.Pods); i >= 0; i-- {
 		pod = service.Pods[i-1]
-		if pod.State.State != "deleting" {
+		if pod.Meta.State.State != "deleting" {
 			break
 		}
 	}
 
-	pod.State.State = "deleting"
+	pod.Meta.State.State = "deleting"
 	return nil
 }
 
@@ -260,7 +260,7 @@ func (s *service) SetPods(c context.Context, pods []types.Pod) error {
 		}
 
 		p.Containers = pod.Containers
-		p.State = pod.State
+		p.Meta.State = pod.Meta.State
 
 		if err := storage.Pod().Update(c, svc.Meta.Namespace, svc.Meta.ID, p); err != nil {
 			log.Errorf("Error: set pod to db: %s", err)
@@ -281,7 +281,7 @@ func (s *service) Scale(c context.Context, service *types.Service) (*types.Servi
 
 	for i := 0; i < len(service.Pods); i++ {
 		pod = service.Pods[i]
-		if pod.State.State == "deleting" {
+		if pod.Meta.State.State == "deleting" {
 			continue
 		}
 		replicas++
