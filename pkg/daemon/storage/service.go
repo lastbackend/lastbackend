@@ -23,7 +23,6 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/apis/types"
 	"github.com/lastbackend/lastbackend/pkg/daemon/storage/store"
 	"time"
-	"fmt"
 )
 
 const serviceStorage string = "services"
