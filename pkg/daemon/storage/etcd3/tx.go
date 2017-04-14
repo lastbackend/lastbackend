@@ -70,6 +70,21 @@ func (t *tx) Update(key string, obj interface{}, ttl uint64) error {
 	return nil
 }
 
+func (t *tx) Upsert(key string, obj interface{}, ttl uint64) error {
+	key = path.Join(t.pathPrefix, key)
+	printf("UPSERT: %s", key)
+	data, err := serializer.Encode(t.codec, obj)
+	if err != nil {
+		return err
+	}
+	opts, err := t.ttlOpts(int64(ttl))
+	if err != nil {
+		return err
+	}
+	t.ops = append(t.ops, clientv3.OpPut(key, string(data), opts...))
+	return nil
+}
+
 //TODO: add compare parameters as argument
 func (t *tx) Delete(key string) {
 	key = path.Join(t.pathPrefix, key)
