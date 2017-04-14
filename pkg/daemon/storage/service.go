@@ -280,8 +280,8 @@ func (s *ServiceStorage) Update(ctx context.Context, service *types.Service) (*t
 		return nil, err
 	}
 
-	keyMeta = s.util.Key(ctx, namespaceStorage, namespace, serviceStorage, service.Meta.ID, "config")
-	if err := tx.Update(keyMeta, service.Config, 0); err != nil {
+	keyConfig := s.util.Key(ctx, namespaceStorage, namespace, serviceStorage, service.Meta.ID, "config")
+	if err := tx.Update(keyConfig, service.Config, 0); err != nil {
 		return nil, err
 	}
 

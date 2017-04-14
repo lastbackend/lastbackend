@@ -31,15 +31,32 @@ import (
 )
 
 type RequestServiceCreateS struct {
-	Name        string                 `json:"name"`
-	Description string                 `json:"description"`
-	Registry    string                 `json:"registry"`
-	Region      string                 `json:"region"`
-	Template    string                 `json:"template"`
-	Image       string                 `json:"image"`
-	Url         string                 `json:"url"`
-	Config      map[string]interface{} `json:"config"`
+	Name        string        `json:"name"`
+	Description string        `json:"description"`
+	Registry    string        `json:"registry"`
+	Region      string        `json:"region"`
+	Template    string        `json:"template"`
+	Image       string        `json:"image"`
+	Url         string        `json:"url"`
+	Config      ServiceConfig `json:"config"`
 	Source      types.ServiceSource
+}
+
+type ServiceConfig struct {
+	Replicas   *int      `json:"replicas,omitempty"`
+	Memory     *int64    `json:"memory,omitempty"`
+	Entrypoint *string   `json:"entrypoint,omitempty"`
+	Command    *string   `json:"command,omitempty"`
+	Image      *string   `json:"image,omitempty"`
+	EnvVars    *[]string `json:"env,omitempty"`
+	Ports      *[]Port   `json:"ports,omitempty"`
+}
+
+type Port struct {
+	Protocol  string `json:"protocol"`
+	External  int    `json:"external"`
+	Internal  int    `json:"internal"`
+	Published bool   `json:"published"`
 }
 
 type resources struct {
@@ -49,7 +66,6 @@ type resources struct {
 
 func (s *RequestServiceCreateS) DecodeAndValidate(reader io.Reader) *errors.Err {
 
-	s.Config = make(map[string]interface{})
 	log := context.Get().GetLogger()
 
 	body, err := ioutil.ReadAll(reader)
@@ -120,19 +136,20 @@ func (s *RequestServiceCreateS) DecodeAndValidate(reader io.Reader) *errors.Err 
 		return errors.New("service").BadParameter("name")
 	}
 
+	// TODO: Need validate data format in config
+
 	return nil
 }
 
 type RequestServiceUpdateS struct {
-	Name        string                 `json:"name"`
-	Description string                 `json:"description"`
-	Config      map[string]interface{} `json:"config"`
-	Domains     []string               `json:"domains"`
+	Name        string        `json:"name"`
+	Description string        `json:"description"`
+	Config      ServiceConfig `json:"config"`
+	Domains     []string      `json:"domains"`
 }
 
 func (s *RequestServiceUpdateS) DecodeAndValidate(reader io.Reader) *errors.Err {
 
-	s.Config = make(map[string]interface{})
 	log := context.Get().GetLogger()
 
 	body, err := ioutil.ReadAll(reader)
@@ -155,6 +172,8 @@ func (s *RequestServiceUpdateS) DecodeAndValidate(reader io.Reader) *errors.Err 
 			return errors.New("service").BadParameter("name")
 		}
 	}
+
+	// TODO: Need validate data format in config
 
 	return nil
 }
