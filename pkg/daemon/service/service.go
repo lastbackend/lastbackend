@@ -30,8 +30,9 @@ import (
 	"github.com/satori/go.uuid"
 	"reflect"
 	"strconv"
-	"time"
 	"strings"
+	"time"
+	"fmt"
 )
 
 type service struct {
@@ -155,6 +156,8 @@ func (s *service) Update(service *types.Service, rq *request.RequestServiceUpdat
 		log.Debugf("Service: Update: pod %s update", pod.Meta.ID)
 		pod.Spec = spec
 	}
+
+	fmt.Println("4 ::: >>>>", service.Config.EnvVars)
 
 	svc, err = storage.Service().Update(s.Context, service)
 	if err != nil {
@@ -373,7 +376,6 @@ func updateConfig(opts map[string]interface{}, config *types.ServiceConfig) erro
 	for k, v := range opts {
 		tmp[k] = v
 	}
-	delete(tmp, "image")
 
 	return patchConfig(tmp, config)
 }
@@ -434,20 +436,32 @@ func patchConfig(opts map[string]interface{}, config *types.ServiceConfig) error
 	}
 
 	if val, ok := opts["env"]; ok {
-		if reflect.ValueOf(val).Kind() != reflect.String {
+		v := reflect.ValueOf(val)
+		if v.Kind() != reflect.Slice {
 			return errors.New("env incorrect format")
 		}
 		// TODO: Validate format data (key=val,key=val)
-		config.Command = strings.Split(val.(string), " ")
+		ret := make([]string, v.Len())
+		for i := 0; i < v.Len(); i++ {
+			ret[i] = v.Index(i).Interface().(string)
+		}
+		config.EnvVars = ret
+		fmt.Println("3 ::: >>>>", config.EnvVars)
 	}
 
 	if val, ok := opts["ports"]; ok {
-		if reflect.ValueOf(val).Kind() == reflect.String {
+		v := reflect.ValueOf(val)
+		if v.Kind() == reflect.Slice {
 			return errors.New("ports incorrect format")
 		}
-		if err := json.Unmarshal([]byte(val.(string)), &config.Ports); err != nil {
-			return errors.New("ports incorrect format")
+		ret := make([]types.Port, v.Len())
+		for i := 0; i < v.Len(); i++ {
+			ret[i] = v.Index(i).Interface().(types.Port)
 		}
+		config.Ports = ret
+		//if err := json.Unmarshal([]byte(val.(string)), &config.Ports); err != nil {
+		//	return errors.New("ports incorrect format")
+		//}
 	}
 
 	return nil
