@@ -20,19 +20,14 @@ package service
 
 import (
 	"context"
-	"encoding/json"
 	"github.com/lastbackend/lastbackend/pkg/apis/types"
 	ctx "github.com/lastbackend/lastbackend/pkg/daemon/context"
 	"github.com/lastbackend/lastbackend/pkg/daemon/node"
 	"github.com/lastbackend/lastbackend/pkg/daemon/service/routes/request"
 	"github.com/lastbackend/lastbackend/pkg/util/validator"
-	"github.com/pkg/errors"
 	"github.com/satori/go.uuid"
-	"reflect"
-	"strconv"
 	"strings"
 	"time"
-	"fmt"
 )
 
 type service struct {
@@ -156,8 +151,6 @@ func (s *service) Update(service *types.Service, rq *request.RequestServiceUpdat
 		log.Debugf("Service: Update: pod %s update", pod.Meta.ID)
 		pod.Spec = spec
 	}
-
-	fmt.Println("4 ::: >>>>", service.Config.EnvVars)
 
 	svc, err = storage.Service().Update(s.Context, service)
 	if err != nil {
@@ -359,7 +352,7 @@ func (s *service) GenerateSpec(service *types.Service) types.PodSpec {
 	return spec
 }
 
-func createConfig(opts map[string]interface{}) (*types.ServiceConfig, error) {
+func createConfig(opts request.ServiceConfig) (*types.ServiceConfig, error) {
 	config := new(types.ServiceConfig)
 	if err := patchConfig(opts, config); err != nil {
 		return nil, err
@@ -367,101 +360,52 @@ func createConfig(opts map[string]interface{}) (*types.ServiceConfig, error) {
 	return config, nil
 }
 
-func updateConfig(opts map[string]interface{}, config *types.ServiceConfig) error {
+func updateConfig(opts request.ServiceConfig, config *types.ServiceConfig) error {
 	if config == nil {
 		config = new(types.ServiceConfig)
 	}
-
-	tmp := make(map[string]interface{})
-	for k, v := range opts {
-		tmp[k] = v
-	}
-
-	return patchConfig(tmp, config)
+	return patchConfig(opts, config)
 }
 
-func patchConfig(opts map[string]interface{}, config *types.ServiceConfig) error {
+func patchConfig(opts request.ServiceConfig, config *types.ServiceConfig) error {
 
 	config.Replicas = int(1)
 	config.Memory = int64(32)
 
-	if val, ok := opts["replicas"]; ok {
-		switch reflect.ValueOf(val).Kind() {
-		case reflect.Float64:
-			config.Replicas = int(val.(float64))
-		case reflect.String:
-			i, err := strconv.Atoi(val.(string))
-			if err != nil {
-				return err
-			}
-			config.Replicas = i
-		default:
-			return errors.New("replicas incorrect format")
-		}
+	if opts.Replicas != nil {
+		config.Replicas = *opts.Replicas
 	}
 
-	if val, ok := opts["memory"]; ok {
-		switch reflect.ValueOf(val).Kind() {
-		case reflect.Float64:
-			config.Memory = int64(val.(float64))
-		case reflect.String:
-			i, err := strconv.ParseInt(val.(string), 10, 64)
-			if err != nil {
-				return err
-			}
-			config.Memory = i
-		default:
-			return errors.New("memory incorrect format")
-		}
+	if opts.Memory != nil {
+		config.Memory = *opts.Memory
 	}
 
-	if val, ok := opts["image"]; ok {
-		if reflect.ValueOf(val).Kind() != reflect.String {
-			return errors.New("image incorrect format")
-		}
-		config.Image = val.(string)
+	if opts.Command != nil {
+		config.Command = strings.Split(*opts.Command, " ")
 	}
 
-	if val, ok := opts["entrypoint"]; ok {
-		if err := json.Unmarshal([]byte(val.(string)), &config.Entrypoint); err != nil {
-			return errors.New("entrypoint incorrect format")
-		}
+	if opts.Image != nil {
+		config.Image = *opts.Image
 	}
 
-	if val, ok := opts["command"]; ok {
-		if reflect.ValueOf(val).Kind() != reflect.String {
-			return errors.New("command incorrect format")
-		}
-		config.Command = strings.Split(val.(string), " ")
+	if opts.Entrypoint != nil {
+		config.Entrypoint = strings.Split(*opts.Entrypoint, " ")
 	}
 
-	if val, ok := opts["env"]; ok {
-		v := reflect.ValueOf(val)
-		if v.Kind() != reflect.Slice {
-			return errors.New("env incorrect format")
-		}
-		// TODO: Validate format data (key=val,key=val)
-		ret := make([]string, v.Len())
-		for i := 0; i < v.Len(); i++ {
-			ret[i] = v.Index(i).Interface().(string)
-		}
-		config.EnvVars = ret
-		fmt.Println("3 ::: >>>>", config.EnvVars)
+	if opts.EnvVars != nil {
+		config.EnvVars = *opts.EnvVars
 	}
 
-	if val, ok := opts["ports"]; ok {
-		v := reflect.ValueOf(val)
-		if v.Kind() == reflect.Slice {
-			return errors.New("ports incorrect format")
+	if opts.Ports != nil {
+		config.Ports = []types.Port{}
+		for _, val := range *opts.Ports {
+			config.Ports = append(config.Ports, types.Port{
+				Protocol:  val.Protocol,
+				Container: val.Internal,
+				Host:      val.External,
+				Published: val.Published,
+			})
 		}
-		ret := make([]types.Port, v.Len())
-		for i := 0; i < v.Len(); i++ {
-			ret[i] = v.Index(i).Interface().(types.Port)
-		}
-		config.Ports = ret
-		//if err := json.Unmarshal([]byte(val.(string)), &config.Ports); err != nil {
-		//	return errors.New("ports incorrect format")
-		//}
 	}
 
 	return nil

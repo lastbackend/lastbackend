@@ -33,9 +33,9 @@ type Service struct {
 	// Service custom domains
 	Domains []string `json:"domains"`
 	// Service source info
-	Source ServiceSource `json:"source,omitempty"`
+	Source ServiceSource `json:"source"`
 	// Service config info
-	Config ServiceConfig `json:"config,omitempty"`
+	Config ServiceConfig `json:"config"`
 	// Pods list
 	Pods []*Pod `json:"pods"`
 }
@@ -104,9 +104,9 @@ func (ServiceConfig) GetDefault() ServiceConfig {
 }
 
 type Port struct {
-	Name      string `json:"name"`
 	Protocol  string `json:"protocol"`
-	Container int    `json:"container"`
+	Container int    `json:"internal"`
+	Host      int    `json:"external"`
 	Published bool   `json:"published"`
 }
 

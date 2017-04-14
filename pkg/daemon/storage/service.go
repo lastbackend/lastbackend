@@ -23,6 +23,7 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/apis/types"
 	"github.com/lastbackend/lastbackend/pkg/daemon/storage/store"
 	"time"
+	"fmt"
 )
 
 const serviceStorage string = "services"
@@ -267,19 +268,19 @@ func (s *ServiceStorage) Update(ctx context.Context, service *types.Service) (*t
 		return nil, err
 	}
 
-	keyMeta = s.util.Key(ctx, namespaceStorage, namespace, serviceStorage, service.Meta.ID, "config")
-	if err := tx.Update(keyMeta, service.Config, 0); err != nil {
+	keyConfig := s.util.Key(ctx, namespaceStorage, namespace, serviceStorage, service.Meta.ID, "config")
+	if err := tx.Update(keyConfig, service.Config, 0); err != nil {
 		return nil, err
 	}
 
 	for _, pod := range service.Pods {
-		KeyPod := s.util.Key(ctx, namespaceStorage, namespace, serviceStorage, service.Meta.ID, "pods", pod.Meta.ID)
-		if err := tx.Update(KeyPod, &pod, 0); err != nil {
+		keyPod := s.util.Key(ctx, namespaceStorage, namespace, serviceStorage, service.Meta.ID, "pods", pod.Meta.ID)
+		if err := tx.Update(keyPod, &pod, 0); err != nil {
 			return nil, err
 		}
 
-		KeyNodePod := s.util.Key(ctx, nodeStorage, pod.Meta.Hostname, "spec", "pods", pod.Meta.ID)
-		if err := tx.Update(KeyNodePod, &types.PodNodeSpec{
+		keyNodePod := s.util.Key(ctx, nodeStorage, pod.Meta.Hostname, "spec", "pods", pod.Meta.ID)
+		if err := tx.Update(keyNodePod, &types.PodNodeSpec{
 			Meta:  pod.Meta,
 			State: pod.State,
 			Spec:  pod.Spec,

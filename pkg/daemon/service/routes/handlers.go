@@ -190,9 +190,9 @@ func ServiceCreateH(w http.ResponseWriter, r *http.Request) {
 			errors.HTTP.InternalServerError(w)
 			return
 		}
-		rq.Config["image"] = img.Meta.Name
+		rq.Config.Image = &img.Meta.Name
 	} else {
-		rq.Config["image"] = rq.Image
+		rq.Config.Image = &rq.Image
 	}
 
 	svc, err = s.Create(rq)
