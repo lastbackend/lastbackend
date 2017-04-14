@@ -67,7 +67,6 @@ func (el *EventListener) Listen() {
 
 					el.pods <- &types.PodEvent{
 						Meta:       pod.Meta,
-						State:      pod.State,
 						Containers: pod.Containers,
 					}
 

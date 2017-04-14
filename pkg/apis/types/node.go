@@ -29,6 +29,10 @@ type Node struct {
 	Spec NodeSpec `json:"spec"`
 }
 
+type NodeCRI struct {
+
+}
+
 type NodeMeta struct {
 	Meta
 
@@ -42,16 +46,6 @@ type NodeMeta struct {
 
 	// Node state info
 	State NodeState `json:"state"`
-}
-
-type PodCRIMeta struct {
-	Type    string `json:"type"`
-	Version string `json:"version"`
-}
-
-type PodNetwork struct {
-	Interface string   `json:"interface,omitempty"`
-	IP        []string `json:"ip,omitempty"`
 }
 
 type NodeState struct {

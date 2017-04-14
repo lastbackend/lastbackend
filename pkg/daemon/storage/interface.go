@@ -83,11 +83,11 @@ type IService interface {
 }
 
 type IPod interface {
-	GetByID(ctx context.Context, namespace, service, id string) (*types.PodNodeState, error)
-	ListByService(ctx context.Context, namespace, service string) ([]*types.PodNodeState, error)
-	Insert(ctx context.Context, namespace, service string, pod *types.PodNodeState) error
-	Update(ctx context.Context, namespace, service string, pod *types.PodNodeState) error
-	Remove(ctx context.Context, namespace, service string, pod *types.PodNodeState) error
+	GetByID(ctx context.Context, namespace, service, id string) (*types.Pod, error)
+	ListByService(ctx context.Context, namespace, service string) ([]*types.Pod, error)
+	Insert(ctx context.Context, namespace, service string, pod *types.Pod) error
+	Update(ctx context.Context, namespace, service string, pod *types.Pod) error
+	Remove(ctx context.Context, namespace, service string, pod *types.Pod) error
 }
 
 type IImage interface {

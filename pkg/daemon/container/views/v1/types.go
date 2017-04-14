@@ -18,7 +18,27 @@
 
 package v1
 
-import "github.com/lastbackend/lastbackend/pkg/daemon/image/views/v1"
+import (
+	"github.com/lastbackend/lastbackend/pkg/daemon/image/views/v1"
+	"time"
+)
+
+type Container struct {
+	// Container ID
+	ID string `json:"id"`
+	// Image information
+	Image string `json:"image"`
+	// Container current state
+	State string `json:"state"`
+	// Container current state
+	Status string `json:"status"`
+	// Container ports mapping
+	Ports map[string]int
+	// Container created time
+	Created time.Time `json:"created"`
+	// Container started time
+	Started time.Time `json:"started"`
+}
 
 type ContainerSpec struct {
 	// Image spec
