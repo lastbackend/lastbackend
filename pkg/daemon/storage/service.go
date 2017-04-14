@@ -106,6 +106,15 @@ func (s *ServiceStorage) GetByPodID(ctx context.Context, uuid string) (*types.Se
 		return nil, err
 	}
 
+	keyPods := s.util.Key(ctx, key, "pods")
+	if err := client.List(ctx, keyPods, "", &service.Pods); err != nil {
+		if err.Error() == store.ErrKeyNotFound {
+			return nil, nil
+		}
+		return nil, err
+	}
+
+
 	return service, nil
 }
 

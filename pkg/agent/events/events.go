@@ -73,8 +73,5 @@ func (e *Event) Send(event *types.Event) (*types.NodeSpec, error) {
 		return nil, errors.New(er.Message)
 	}
 
-	s, _ := spec.ToJson()
-	log.Debug(string(s))
-
 	return v1.FromNodeSpec(spec), nil
 }

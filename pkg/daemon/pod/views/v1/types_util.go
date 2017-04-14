@@ -23,6 +23,19 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/daemon/container/views/v1"
 )
 
+func ToPodInfo(pod *types.Pod) PodInfo {
+	info := PodInfo{
+		Meta : ToPodMeta(pod.Meta),
+		State: ToPodState(pod.State),
+	}
+
+	for _, c := range pod.Containers {
+		info.Containers = append(info.Containers, v1.ToContainer(c))
+	}
+
+	return info
+}
+
 func ToPodMeta(meta types.PodMeta) PodMeta {
 	return PodMeta{
 		ID:      meta.ID,

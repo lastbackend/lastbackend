@@ -35,8 +35,6 @@ type Pod struct {
 type PodInfo struct {
 	// Pod Meta
 	Meta PodMeta `json:"meta"`
-	// Container spec
-	Spec PodSpec `json:"spec"`
 	// Pod state
 	State PodState `json:"state"`
 	// Pod containers
@@ -55,14 +53,6 @@ type PodMeta struct {
 	ID string `json:"id"`
 	// Meta labels
 	Labels map[string]string `json:"lables"`
-	// Pod owner
-	Owner string `json:"owner"`
-	// Pod namespace
-	Project string `json:"namespace"`
-	// Pod service
-	Service string `json:"service"`
-	// Current Spec ID
-	Spec string `json:"spec"`
 	// Meta created time
 	Created time.Time `json:"created"`
 	// Meta updated time

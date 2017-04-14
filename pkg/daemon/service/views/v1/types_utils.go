@@ -22,6 +22,7 @@ import (
 	"encoding/json"
 	"github.com/lastbackend/lastbackend/pkg/apis/types"
 	"strings"
+	"github.com/lastbackend/lastbackend/pkg/daemon/pod/views/v1"
 )
 
 func New(obj *types.Service) *Service {
@@ -37,6 +38,10 @@ func New(obj *types.Service) *Service {
 	s.Config.Command = strings.Join(obj.Config.Command, " ")
 	s.Config.Replicas = obj.Config.Replicas
 	s.Config.Image = obj.Config.Image
+
+	for _, pod := range obj.Pods {
+		s.Pods = append(s.Pods, v1.ToPodInfo(pod))
+	}
 
 	return s
 }

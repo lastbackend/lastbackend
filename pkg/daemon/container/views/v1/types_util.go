@@ -23,6 +23,18 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/daemon/image/views/v1"
 )
 
+func ToContainer (c *types.Container) Container {
+	return Container{
+		ID: c.ID,
+		State: c.State,
+		Status: c.Status,
+		Image: c.Image,
+		Ports: c.Ports,
+		Created: c.Created,
+		Started: c.Started,
+	}
+}
+
 func ToContainerSpec(spec types.ContainerSpec) ContainerSpec {
 	s := ContainerSpec{
 		Image:         v1.ToImageSpec(spec.Image),
