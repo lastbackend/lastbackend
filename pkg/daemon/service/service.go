@@ -90,6 +90,7 @@ func (s *service) Create(rq *request.RequestServiceCreateS) (*types.Service, err
 	svc.Meta.Created = time.Now()
 
 	svc.Meta.Replicas = 1
+	svc.Pods = make(map[string]*types.Pod)
 
 	if rq.Replicas != nil && *rq.Replicas > 0 {
 		svc.Meta.Replicas = *rq.Replicas
@@ -185,6 +186,14 @@ func (s *service) Remove(service *types.Service) error {
 	)
 
 	service.Meta.State.State = "deleting"
+
+	if len(service.Pods) == 0 {
+		if err := storage.Service().Remove(s.Context, service); err != nil {
+			log.Error("Error: insert service to db", err)
+			return err
+		}
+		return nil
+	}
 
 	for _, pod := range service.Pods {
 		pod.Meta.State.State = "deleting"
