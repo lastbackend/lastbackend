@@ -96,12 +96,8 @@ func (s *NodeStorage) Get(ctx context.Context, hostname string) (*types.Node, er
 		return nil, err
 	}
 
-	if len(pods) > 0 {
-		fmt.Println(pods)
-		for _, pod := range pods {
-			node.Spec.Pods = append(node.Spec.Pods, &pod)
-		}
-
+	for _, pod := range pods {
+		node.Spec.Pods = append(node.Spec.Pods, pod)
 	}
 
 	return node, nil

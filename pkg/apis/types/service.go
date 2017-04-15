@@ -28,8 +28,6 @@ type ServiceList []Service
 type Service struct {
 	// Service Meta
 	Meta ServiceMeta `json:"meta"`
-	// Service state
-	State ServiceState `json:"state"`
 	// Service custom domains
 	Domains []string `json:"domains"`
 	// Service source info
@@ -37,11 +35,15 @@ type Service struct {
 	// Service config info
 	Config ServiceConfig `json:"config"`
 	// Pods list
-	Pods []*Pod `json:"pods"`
+	Pods map[string]*Pod `json:"pods"`
 }
 
 type ServiceMeta struct {
 	Meta
+	// Service replicas
+	Replicas int `json:"replicas"`
+	// Service state
+	State ServiceState `json:"state"`
 	// Service namespace
 	Namespace string `json:"namespace"`
 	// Service region
@@ -53,6 +55,21 @@ type ServiceState struct {
 	State string `json:"state"`
 	// Service status
 	Status string `json:"status"`
+	// Service pods state
+	Pods ServicePodsState `json:"pods"`
+}
+
+type ServicePodsState struct {
+	// Total containers
+	Total int `json:"total"`
+	// Total running containers
+	Running int `json:"running"`
+	// Total created containers
+	Created int `json:"created"`
+	// Total stopped containers
+	Stopped int `json:"stopped"`
+	// Total errored containers
+	Errored int `json:"errored"`
 }
 
 type ServiceSource struct {

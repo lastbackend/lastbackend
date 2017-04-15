@@ -19,7 +19,6 @@
 package runtime
 
 import (
-	"encoding/json"
 	"github.com/lastbackend/lastbackend/pkg/agent/context"
 	"github.com/lastbackend/lastbackend/pkg/apis/types"
 )
@@ -56,12 +55,12 @@ func (el *EventListener) Listen() {
 					}
 
 					log.Debugf("Runtime: New event %s type proceed", event.Event)
-					pod := pods.GetPod(event.Pod)
+					pod := pods.GetPod(event.Container.Pod)
 					if pod == nil {
-						log.Debugf("Runtime: Pod %s not found", event.Pod)
+						log.Debugf("Runtime: Pod %s not found", event.Container.Pod)
 						continue
 					}
-					log.Debugf("Runtime: Pod %s found > update container", event.Pod)
+					log.Debugf("Runtime: Pod %s found > update container", event.Container.Pod)
 					pod.SetContainer(event.Container)
 					pod.UpdateState()
 
@@ -69,9 +68,6 @@ func (el *EventListener) Listen() {
 						Meta:       pod.Meta,
 						Containers: pod.Containers,
 					}
-
-					jp, _ := json.Marshal(pod)
-					log.Debug(string(jp))
 				}
 			}
 		}

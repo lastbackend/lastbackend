@@ -21,6 +21,7 @@ package runtime
 import (
 	"fmt"
 	"github.com/lastbackend/lastbackend/pkg/agent/context"
+	"github.com/lastbackend/lastbackend/pkg/agent/events"
 	"github.com/lastbackend/lastbackend/pkg/agent/runtime/cri"
 	"github.com/lastbackend/lastbackend/pkg/apis/types"
 	"sync"
@@ -44,8 +45,8 @@ type Task struct {
 	close chan bool
 	done  chan bool
 
-	meta  types.PodMeta
-	spec  types.PodSpec
+	meta types.PodMeta
+	spec types.PodSpec
 
 	pod *types.Pod
 }
@@ -119,11 +120,27 @@ func (w *Worker) loop() {
 
 func (t *Task) exec() {
 
+	defer func () {
+		ps := []*types.Pod{}
+		events.New().Send(events.NewEvent(true, GetNodeMeta(), append(ps, &types.Pod{
+			Meta:       t.pod.Meta,
+			Containers: t.pod.Containers,
+		})))
+	}()
+
 	log := context.Get().GetLogger()
 	log.Debugf("start task for pod: %s", t.pod.Meta.ID)
 
 	// Check spec version
 	log.Debugf("pod spec: %s, new spec: %s", t.pod.Spec.ID, t.spec.ID)
+
+	if t.meta.State.State == "deleting" {
+		// Delete pod
+		t.containersState()
+		log.Debugf("done task for pod: %s", t.pod.Meta.ID)
+		return
+	}
+
 	if t.spec.ID != t.pod.Spec.ID {
 		log.Debugf("spec is differrent, apply new one: %s", t.pod.Spec.ID)
 		// Set current spec
@@ -132,9 +149,13 @@ func (t *Task) exec() {
 		t.containersUpdate()
 	}
 
+	if len(t.pod.Containers) != len(t.spec.Containers) {
+		t.containersUpdate()
+	}
+
 	// check container state
 	t.containersState()
-	log.Debugf("done task for pod: %s", t.pod.Meta.ID)
+
 }
 
 func (t *Task) imagesUpdate() {
@@ -190,7 +211,6 @@ func (t *Task) containersUpdate() {
 	var err error
 
 	var ids []string
-	var ncs []*types.Container
 
 	// Remove old containers
 	for _, c := range t.pod.Containers {
@@ -204,6 +224,7 @@ func (t *Task) containersUpdate() {
 		log.Debugf("Container create")
 
 		c := &types.Container{
+			Pod:     t.pod.Meta.ID,
 			Image:   spec.Image.Name,
 			State:   types.ContainerStatePending,
 			Created: time.Now(),
@@ -224,10 +245,6 @@ func (t *Task) containersUpdate() {
 		}
 
 		log.Debugf("New container created: %s", c.ID)
-		ncs = append(ncs, c)
-	}
-
-	for _, c := range ncs {
 		t.pod.AddContainer(c)
 	}
 
@@ -241,16 +258,45 @@ func (t *Task) containersUpdate() {
 		t.pod.DelContainer(id)
 	}
 
+	t.pod.UpdateState()
+
 }
 
 func (t *Task) containersState() {
 	// TODO: wait 5 seconds and recheck container state
 	log := context.Get().GetLogger()
+	crii := context.Get().GetCri()
+
 	log.Debugf("update container state from: %s to %s", t.pod.Meta.State.State, t.meta.State.State)
+
+	if t.meta.State.State == types.PodStateDeleting {
+		log.Debugf("Pod %s delete %d containers", t.pod.Meta.ID, len(t.pod.Containers))
+
+		if len(t.pod.Containers) == 0 {
+			t.pod.UpdateState()
+			return
+		}
+
+		for _, c := range t.pod.Containers {
+			log.Debugf("Container: %s try to delete", c.ID)
+			err := crii.ContainerRemove(c.ID, true, true)
+			c.State = "deleted"
+			c.Status = ""
+			if err != nil {
+				log.Errorf("Container: delete error: %s", err.Error())
+				c.State = "error"
+				c.Status = err.Error()
+			}
+			log.Debugf("Container: %s deleted", c.ID)
+			t.pod.DelContainer(c.ID)
+			log.Debugf("Container: %s deleted", c.ID)
+		}
+		t.pod.UpdateState()
+		return
+	}
 
 	t.pod.Meta.State.State = "provision"
 
-	crii := context.Get().GetCri()
 	// Update containers states
 	if t.meta.State.State == types.PodStateStarted || t.meta.State.State == types.PodStateRunning {
 		for _, c := range t.pod.Containers {

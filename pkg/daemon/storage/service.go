@@ -37,6 +37,7 @@ type ServiceStorage struct {
 // Get service by id
 func (s *ServiceStorage) GetByID(ctx context.Context, namespaceID, serviceID string) (*types.Service, error) {
 	var service = new(types.Service)
+	service.Pods = make(map[string]*types.Pod)
 
 	client, destroy, err := s.Client()
 	if err != nil {
@@ -61,7 +62,7 @@ func (s *ServiceStorage) GetByID(ctx context.Context, namespaceID, serviceID str
 	}
 
 	keyPods := s.util.Key(ctx, namespaceStorage, namespaceID, serviceStorage, serviceID, "pods")
-	if err := client.List(ctx, keyPods, "", &service.Pods); err != nil {
+	if err := client.Map(ctx, keyPods, "", service.Pods); err != nil {
 		if err.Error() == store.ErrKeyNotFound {
 			return nil, nil
 		}
@@ -71,9 +72,11 @@ func (s *ServiceStorage) GetByID(ctx context.Context, namespaceID, serviceID str
 	return service, nil
 }
 
+// Get service by Pod ID
 func (s *ServiceStorage) GetByPodID(ctx context.Context, uuid string) (*types.Service, error) {
 	var key string
 	var service = new(types.Service)
+	service.Pods = make(map[string]*types.Pod)
 
 	client, destroy, err := s.Client()
 	if err != nil {
@@ -107,7 +110,7 @@ func (s *ServiceStorage) GetByPodID(ctx context.Context, uuid string) (*types.Se
 	}
 
 	keyPods := s.util.Key(ctx, key, "pods")
-	if err := client.List(ctx, keyPods, "", &service.Pods); err != nil {
+	if err := client.Map(ctx, keyPods, "", service.Pods); err != nil {
 		if err.Error() == store.ErrKeyNotFound {
 			return nil, nil
 		}
@@ -150,7 +153,7 @@ func (s *ServiceStorage) ListByNamespace(ctx context.Context, namespaceID string
 	defer destroy()
 
 	keyServiceList := s.util.Key(ctx, namespaceStorage, namespaceID, serviceStorage)
-	metaList := []types.Meta{}
+	metaList := []types.ServiceMeta{}
 	if err := client.List(ctx, keyServiceList, filter, &metaList); err != nil {
 		if err.Error() == store.ErrKeyNotFound {
 			return nil, nil
@@ -165,13 +168,7 @@ func (s *ServiceStorage) ListByNamespace(ctx context.Context, namespaceID string
 	serviceList := new(types.ServiceList)
 	for _, meta := range metaList {
 		service := types.Service{}
-		service.Meta.ID = meta.ID
-		service.Meta.Name = meta.Name
-		service.Meta.Description = meta.Description
-		service.Meta.Labels = meta.Labels
-		service.Meta.Created = meta.Created
-		service.Meta.Updated = meta.Updated
-
+		service.Meta = meta
 		*serviceList = append(*serviceList, service)
 	}
 

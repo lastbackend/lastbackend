@@ -40,7 +40,7 @@ func FromNodeSpec(spec Spec) *types.NodeSpec {
 	var s = new(types.NodeSpec)
 	for _, item := range spec.Pods {
 
-		pod := new(types.PodNodeSpec)
+		pod := types.PodNodeSpec{}
 
 		pod.Meta = v1.FromPodMeta(item.Meta)
 		pod.Spec = v1.FromPodSpec(item.Spec)

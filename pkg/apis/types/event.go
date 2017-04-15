@@ -48,8 +48,6 @@ type PodEvent struct {
 type ContainerEvent struct {
 	// Event type
 	Event string
-	// Pod event
-	Pod string
 	// Activity container
 	Container *Container
 }

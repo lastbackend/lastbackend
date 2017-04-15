@@ -28,7 +28,7 @@ type PodManager struct {
 	workers map[string]*Worker
 }
 
-func (pm *PodManager) GetPodList() ([]*types.Pod) {
+func (pm *PodManager) GetPodList() []*types.Pod {
 	pods := context.Get().GetStorage().Pods().GetPods()
 	list := []*types.Pod{}
 
@@ -39,11 +39,11 @@ func (pm *PodManager) GetPodList() ([]*types.Pod) {
 	return list
 }
 
-func (pm *PodManager) GetPods() (map[string]*types.Pod) {
+func (pm *PodManager) GetPods() map[string]*types.Pod {
 	return context.Get().GetStorage().Pods().GetPods()
 }
 
-func (pm *PodManager) SyncPod(pod *types.PodNodeSpec) {
+func (pm *PodManager) SyncPod(pod types.PodNodeSpec) {
 	log := context.Get().GetLogger()
 	log.Debugf("Pod %s sync", pod.Meta.ID)
 
@@ -59,6 +59,11 @@ func (pm *PodManager) SyncPod(pod *types.PodNodeSpec) {
 	}
 
 	log.Debugf("Pod %s found", pod.Meta.ID)
+	if len(p.Containers) != len(pod.Spec.Containers) {
+		pm.sync(pod.Meta, pod.Spec, p)
+		return
+	}
+
 	if (p.Spec.ID == pod.Spec.ID) && p.Meta.State.State == pod.Meta.State.State {
 		log.Debugf("Pod %s in correct state", pod.Meta.ID)
 		return
@@ -111,6 +116,7 @@ func NewPodManager() (*PodManager, error) {
 		return pm, err
 	}
 
+	log.Debugf("Runtime: new pods manager: restore state: %s pods found", len(pods))
 	s := context.Get().GetStorage().Pods()
 	s.SetPods(pods)
 

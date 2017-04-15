@@ -63,7 +63,7 @@ func (r *Runtime) StartEventListener() error {
 	return nil
 }
 
-func (r *Runtime) Sync(pods []*types.PodNodeSpec) {
+func (r *Runtime) Sync(pods []types.PodNodeSpec) {
 	for _, pod := range pods {
 		r.pManager.SyncPod(pod)
 	}
