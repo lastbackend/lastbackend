@@ -136,6 +136,9 @@ func (s *RequestServiceCreateS) DecodeAndValidate(reader io.Reader) *errors.Err 
 		return errors.New("service").BadParameter("name")
 	}
 
+	if s.Config == nil {
+		s.Config = &ServiceConfig{}
+	}
 	// TODO: Need validate data format in config
 
 	return nil

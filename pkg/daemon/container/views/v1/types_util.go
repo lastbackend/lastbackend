@@ -24,15 +24,21 @@ import (
 )
 
 func ToContainer (c *types.Container) Container {
-	return Container{
+	container := Container{
 		ID: c.ID,
 		State: c.State,
 		Status: c.Status,
 		Image: c.Image,
-		Ports: c.Ports,
 		Created: c.Created,
 		Started: c.Started,
 	}
+
+	container.Ports = make(map[string]int, len(c.Ports))
+	if len(c.Ports) != 0 {
+		container.Ports =  c.Ports
+	}
+
+	return container
 }
 
 func ToContainerSpec(spec types.ContainerSpec) ContainerSpec {

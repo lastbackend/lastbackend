@@ -28,6 +28,11 @@ func ToPodInfo(pod *types.Pod) PodInfo {
 		Meta : ToPodMeta(pod.Meta),
 	}
 
+	if len(pod.Containers) == 0 {
+		info.Containers = make([]v1.Container, 0)
+		return info
+	}
+
 	for _, c := range pod.Containers {
 		info.Containers = append(info.Containers, v1.ToContainer(c))
 	}
@@ -36,13 +41,19 @@ func ToPodInfo(pod *types.Pod) PodInfo {
 }
 
 func ToPodMeta(meta types.PodMeta) PodMeta {
-	return PodMeta{
+	m := PodMeta{
 		ID:      meta.ID,
 		Labels:  meta.Labels,
 		State: ToPodState(meta.State),
 		Created: meta.Created,
 		Updated: meta.Updated,
 	}
+
+	if len(m.Labels) == 0 {
+		m.Labels = make(map[string]string)
+	}
+
+	return m
 }
 
 func ToPodSpec(spec types.PodSpec) PodSpec {

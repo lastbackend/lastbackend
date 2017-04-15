@@ -28,16 +28,21 @@ import (
 func New(obj *types.Service) *Service {
 	s := new(Service)
 
-	s.Name = obj.Meta.Name
-	s.Description = obj.Meta.Description
-	s.Region = obj.Meta.Region
-	s.Updated = obj.Meta.Updated
-	s.Created = obj.Meta.Created
+	s.Meta.Name = obj.Meta.Name
+	s.Meta.Description = obj.Meta.Description
+	s.Meta.Region = obj.Meta.Region
+	s.Meta.Updated = obj.Meta.Updated
+	s.Meta.Created = obj.Meta.Created
+	s.Meta.Replicas = obj.Meta.Replicas
 
 	s.Config.Memory = obj.Config.Memory
 	s.Config.Command = strings.Join(obj.Config.Command, " ")
-	s.Config.Replicas = obj.Config.Replicas
 	s.Config.Image = obj.Config.Image
+
+	if len(obj.Pods) == 0 {
+		s.Pods = make([]v1.PodInfo, 0)
+		return s
+	}
 
 	for _, pod := range obj.Pods {
 		s.Pods = append(s.Pods, v1.ToPodInfo(pod))

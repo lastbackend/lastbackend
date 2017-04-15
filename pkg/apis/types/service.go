@@ -35,7 +35,7 @@ type Service struct {
 	// Service config info
 	Config ServiceConfig `json:"config"`
 	// Pods list
-	Pods []*Pod `json:"pods"`
+	Pods map[string]*Pod `json:"pods"`
 }
 
 type ServiceMeta struct {
