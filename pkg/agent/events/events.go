@@ -23,6 +23,7 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/apis/types"
 	"github.com/lastbackend/lastbackend/pkg/daemon/node/views/v1"
 	"github.com/lastbackend/lastbackend/pkg/errors"
+	"time"
 )
 
 type Event struct {
@@ -32,21 +33,23 @@ func New() *Event {
 	return new(Event)
 }
 
-func NewEvent() *types.Event {
+func NewEvent(initial bool, meta types.NodeMeta, pods []*types.Pod) *types.Event {
 	var event = new(types.Event)
-	event.Meta.Hostname = "local"
-	event.State.Allocated.Pods = 1
+	event.Initial = initial
+	event.Meta = meta
+	event.Pods = pods
+	event.Timestamp = time.Now()
 	return event
 }
 
-func (e *Event) Send(event *types.Event) error {
+func (e *Event) Send(event *types.Event) (*types.NodeSpec, error) {
 
 	var (
 		er       = new(errors.Http)
 		http     = context.Get().GetHttpClient()
 		log      = context.Get().GetLogger()
 		endpoint = "/node/event"
-		spec     = new(v1.Spec)
+		spec     = v1.Spec{}
 	)
 
 	log.Debugf("Send event request to: %s", endpoint)
@@ -54,24 +57,21 @@ func (e *Event) Send(event *types.Event) error {
 		PUT(endpoint).
 		AddHeader("Content-Type", "application/json").
 		BodyJSON(event).
-		Request(spec, er)
+		Request(&spec, er)
 	if err != nil {
 		log.Errorf("Send request error: %s", err.Error())
-		return err
+		return nil, err
 	}
 
 	if er.Code == 401 {
 		log.Error("401")
-		return nil
+		return nil, nil
 	}
 
 	if er.Code != 0 {
 		log.Error(er.Code)
-		return errors.New(er.Message)
+		return nil, errors.New(er.Message)
 	}
 
-	s, _ := spec.ToJson()
-	log.Debug(string(s))
-
-	return nil
+	return v1.FromNodeSpec(spec), nil
 }

@@ -28,7 +28,6 @@ import (
 )
 
 const nodeStorage = "node"
-const nodeStateTTL = 3000
 
 // Namespace Service type for interface in interfaces folder
 type NodeStorage struct {
@@ -39,6 +38,8 @@ type NodeStorage struct {
 
 func (s *NodeStorage) List(ctx context.Context) ([]*types.Node, error) {
 
+	const filter = `\b(.+)` + nodeStorage + `\/[\w\d.]*\/meta\b`
+
 	client, destroy, err := s.Client()
 	if err != nil {
 		return nil, err
@@ -46,12 +47,24 @@ func (s *NodeStorage) List(ctx context.Context) ([]*types.Node, error) {
 	defer destroy()
 
 	key := s.util.Key(ctx, nodeStorage)
-	list := []*types.Node{}
-	if err := client.List(ctx, key, "", &list); err != nil {
+	metaList := []types.NodeMeta{}
+
+	if err := client.List(ctx, key, filter, &metaList); err != nil {
 		if err.Error() == store.ErrKeyNotFound {
 			return nil, nil
 		}
 		return nil, err
+	}
+
+	if metaList == nil {
+		return nil, nil
+	}
+
+	var list []*types.Node
+	for _, meta := range metaList {
+		node := types.Node{}
+		node.Meta = meta
+		list = append(list, &node)
 	}
 
 	return list, nil
@@ -74,26 +87,23 @@ func (s *NodeStorage) Get(ctx context.Context, hostname string) (*types.Node, er
 		return nil, err
 	}
 
-	keyState := s.util.Key(ctx, nodeStorage, hostname, "state")
-	if err := client.Get(ctx, keyState, &node.State); err != nil {
+	keySpec := s.util.Key(ctx, nodeStorage, hostname, "spec", "pods")
+	pods := make(map[string]types.PodNodeSpec)
+	if err := client.Map(ctx, keySpec, "", pods); err != nil {
 		if err.Error() == store.ErrKeyNotFound {
 			return nil, nil
 		}
 		return nil, err
 	}
 
-	keySpec := s.util.Key(ctx, nodeStorage, hostname, "spec")
-	if err := client.List(ctx, keySpec, "", &node.Spec.Pods); err != nil {
-		if err.Error() == store.ErrKeyNotFound {
-			return nil, nil
-		}
-		return nil, err
+	for _, pod := range pods {
+		node.Spec.Pods = append(node.Spec.Pods, pod)
 	}
 
 	return node, nil
 }
 
-func (s *NodeStorage) Insert(ctx context.Context, meta *types.NodeMeta, state *types.NodeState) (*types.Node, error) {
+func (s *NodeStorage) Insert(ctx context.Context, meta *types.NodeMeta) (*types.Node, error) {
 
 	var (
 		id   = uuid.NewV4().String()
@@ -114,23 +124,9 @@ func (s *NodeStorage) Insert(ctx context.Context, meta *types.NodeMeta, state *t
 	node.Meta.Updated = time.Now()
 	node.Meta.Created = time.Now()
 
-	node.State = *state
-
 	keyMeta := s.util.Key(ctx, nodeStorage, node.Meta.Hostname, "meta")
 	if err := tx.Create(keyMeta, node.Meta, 0); err != nil {
 		fmt.Println("meta", err.Error())
-		return nil, err
-	}
-
-	keyState := s.util.Key(ctx, nodeStorage, node.Meta.Hostname, "state")
-	if err := tx.Create(keyState, node.State, nodeStateTTL); err != nil {
-		fmt.Println("state", err.Error())
-		return nil, err
-	}
-
-	keySpec := s.util.Key(ctx, nodeStorage, node.Meta.Hostname, "spec")
-	if err := tx.Create(keySpec, node.Spec, 0); err != nil {
-		fmt.Println("spec", err.Error())
 		return nil, err
 	}
 
@@ -163,33 +159,6 @@ func (s *NodeStorage) UpdateMeta(ctx context.Context, meta *types.NodeMeta) erro
 
 	return nil
 
-}
-
-func (s *NodeStorage) UpdateState(ctx context.Context, meta *types.NodeMeta, state *types.NodeState) error {
-	meta.Updated = time.Now()
-
-	client, destroy, err := s.Client()
-	if err != nil {
-		return err
-	}
-	defer destroy()
-
-	tx := client.Begin(ctx)
-	keyMeta := s.util.Key(ctx, nodeStorage, meta.Hostname, "meta")
-	if err := tx.Update(keyMeta, meta, 0); err != nil {
-		return err
-	}
-
-	keyState := s.util.Key(ctx, nodeStorage, meta.Hostname, "state")
-	if err := tx.Update(keyState, state, nodeStateTTL); err != nil {
-		return err
-	}
-
-	if err := tx.Commit(); err != nil {
-		return err
-	}
-
-	return nil
 }
 
 func (s *NodeStorage) InsertPod(ctx context.Context, meta *types.NodeMeta, pod *types.PodNodeSpec) error {

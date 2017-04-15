@@ -63,7 +63,7 @@ func (r *Runtime) StartEventListener() error {
 	return nil
 }
 
-func (r *Runtime) Sync(pods []*types.PodNodeSpec) {
+func (r *Runtime) Sync(pods []types.PodNodeSpec) {
 	for _, pod := range pods {
 		r.pManager.SyncPod(pod)
 	}
@@ -74,8 +74,7 @@ func (r *Runtime) Loop() {
 	log := context.Get().GetLogger()
 	log.Debug("Runtime: start Loop")
 
-	e := events.New()
-	e.Send(events.NewEvent())
+	events.New().Send(events.NewEvent(true, GetNodeMeta() , r.pManager.GetPodList()))
 
 	pods, host := r.eListener.Subscribe()
 	go func() {
@@ -85,7 +84,15 @@ func (r *Runtime) Loop() {
 
 		go func() {
 			for _ = range ticker.C {
-				e.Send(events.NewEvent())
+				spec, err := 	events.New().Send(events.NewEvent(false,
+					GetNodeMeta() , []*types.Pod{}))
+
+				if err != nil {
+					log.Errorf("Runtime: send event error: %s", err.Error())
+					continue
+				}
+
+				r.Sync(spec.Pods)
 			}
 		}()
 
@@ -93,6 +100,12 @@ func (r *Runtime) Loop() {
 			select {
 			case pod := <-pods:
 				log.Debugf("Runtime: Loop: send pod update event: %s", pod.Event)
+				ps := []*types.Pod{}
+
+				events.New().Send(events.NewEvent(true, GetNodeMeta() , append(ps, &types.Pod{
+					Meta: pod.Meta,
+					Containers: pod.Containers,
+				})))
 
 			case host := <-host:
 				log.Debugf("Runtime: Loop: send host update event: %s", host.Event)

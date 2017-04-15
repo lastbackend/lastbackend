@@ -53,15 +53,7 @@ func (n *Node) SetMeta(c context.Context, node *types.Node) error {
 	return storage.Node().UpdateMeta(c, &node.Meta)
 }
 
-func (n *Node) SetState(c context.Context, node *types.Node) error {
-	var (
-		storage = ctx.Get().GetStorage()
-	)
-
-	return storage.Node().UpdateState(c, &node.Meta, &node.State)
-}
-
-func (n *Node) Create(c context.Context, meta *types.NodeMeta, state *types.NodeState) (*types.Node, error) {
+func (n *Node) Create(c context.Context, meta *types.NodeMeta) (*types.Node, error) {
 
 	var (
 		storage = ctx.Get().GetStorage()
@@ -72,9 +64,8 @@ func (n *Node) Create(c context.Context, meta *types.NodeMeta, state *types.Node
 	log.Debug("Create new Node")
 
 	node.Meta = *meta
-	node.State = *state
 
-	return storage.Node().Insert(c, &node.Meta, &node.State)
+	return storage.Node().Insert(c, &node.Meta)
 }
 
 func (n *Node) PodSpecRemove(c context.Context, hostname string, spec *types.PodNodeSpec) error {
@@ -158,7 +149,8 @@ func (n *Node) Allocate(c context.Context, spec types.PodSpec) (*types.Node, err
 	}
 
 	for _, node = range nodes {
-		if node.State.Capacity.Memory > memory {
+		log.Debugf("Node: Allocate: available memory %d", node.Meta.State.Capacity)
+		if node.Meta.State.Capacity.Memory  > memory {
 			break
 		}
 	}

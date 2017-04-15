@@ -37,6 +37,7 @@ type ServiceStorage struct {
 // Get service by id
 func (s *ServiceStorage) GetByID(ctx context.Context, namespaceID, serviceID string) (*types.Service, error) {
 	var service = new(types.Service)
+	service.Pods = make(map[string]*types.Pod)
 
 	client, destroy, err := s.Client()
 	if err != nil {
@@ -61,7 +62,7 @@ func (s *ServiceStorage) GetByID(ctx context.Context, namespaceID, serviceID str
 	}
 
 	keyPods := s.util.Key(ctx, namespaceStorage, namespaceID, serviceStorage, serviceID, "pods")
-	if err := client.List(ctx, keyPods, "", &service.Pods); err != nil {
+	if err := client.Map(ctx, keyPods, "", service.Pods); err != nil {
 		if err.Error() == store.ErrKeyNotFound {
 			return nil, nil
 		}
@@ -71,9 +72,11 @@ func (s *ServiceStorage) GetByID(ctx context.Context, namespaceID, serviceID str
 	return service, nil
 }
 
+// Get service by Pod ID
 func (s *ServiceStorage) GetByPodID(ctx context.Context, uuid string) (*types.Service, error) {
 	var key string
 	var service = new(types.Service)
+	service.Pods = make(map[string]*types.Pod)
 
 	client, destroy, err := s.Client()
 	if err != nil {
@@ -82,8 +85,8 @@ func (s *ServiceStorage) GetByPodID(ctx context.Context, uuid string) (*types.Se
 
 	defer destroy()
 
-	UUIDkey := s.util.Key(ctx, "helper", "pod", uuid)
-	if err := client.Get(ctx, UUIDkey, &key); err != nil {
+	keyHelper := s.util.Key(ctx, "helper", serviceStorage, "pods", uuid)
+	if err := client.Get(ctx, keyHelper, &key); err != nil {
 		if err.Error() == store.ErrKeyNotFound {
 			return nil, nil
 		}
@@ -99,12 +102,21 @@ func (s *ServiceStorage) GetByPodID(ctx context.Context, uuid string) (*types.Se
 	}
 
 	keyConfig := s.util.Key(ctx, key, "config")
-	if err := client.Get(ctx, keyConfig, service.Config); err != nil {
+	if err := client.Get(ctx, keyConfig, &service.Config); err != nil {
 		if err.Error() == store.ErrKeyNotFound {
 			return nil, nil
 		}
 		return nil, err
 	}
+
+	keyPods := s.util.Key(ctx, key, "pods")
+	if err := client.Map(ctx, keyPods, "", service.Pods); err != nil {
+		if err.Error() == store.ErrKeyNotFound {
+			return nil, nil
+		}
+		return nil, err
+	}
+
 
 	return service, nil
 }
@@ -141,7 +153,7 @@ func (s *ServiceStorage) ListByNamespace(ctx context.Context, namespaceID string
 	defer destroy()
 
 	keyServiceList := s.util.Key(ctx, namespaceStorage, namespaceID, serviceStorage)
-	metaList := []types.Meta{}
+	metaList := []types.ServiceMeta{}
 	if err := client.List(ctx, keyServiceList, filter, &metaList); err != nil {
 		if err.Error() == store.ErrKeyNotFound {
 			return nil, nil
@@ -156,13 +168,7 @@ func (s *ServiceStorage) ListByNamespace(ctx context.Context, namespaceID string
 	serviceList := new(types.ServiceList)
 	for _, meta := range metaList {
 		service := types.Service{}
-		service.Meta.ID = meta.ID
-		service.Meta.Name = meta.Name
-		service.Meta.Description = meta.Description
-		service.Meta.Labels = meta.Labels
-		service.Meta.Created = meta.Created
-		service.Meta.Updated = meta.Updated
-
+		service.Meta = meta
 		*serviceList = append(*serviceList, service)
 	}
 
@@ -207,10 +213,14 @@ func (s *ServiceStorage) Insert(ctx context.Context, service *types.Service) (*t
 			return nil, err
 		}
 
-		KeyNodePod := s.util.Key(ctx, nodeStorage, pod.Meta.Hostname, "pods", pod.Meta.ID)
+		keyHelper := s.util.Key(ctx, "helper", serviceStorage, "pods", pod.Meta.ID)
+		if err := tx.Create(keyHelper, s.util.Key(ctx, namespaceStorage, namespace, serviceStorage, service.Meta.ID), 0); err != nil {
+			return nil, err
+		}
+
+		KeyNodePod := s.util.Key(ctx, nodeStorage, pod.Meta.Hostname, "spec", "pods", pod.Meta.ID)
 		if err := tx.Create(KeyNodePod, &types.PodNodeSpec{
 			Meta:  pod.Meta,
-			State: pod.State,
 			Spec:  pod.Spec,
 		}, 0); err != nil {
 			return nil, err
@@ -267,21 +277,26 @@ func (s *ServiceStorage) Update(ctx context.Context, service *types.Service) (*t
 		return nil, err
 	}
 
-	keyMeta = s.util.Key(ctx, namespaceStorage, namespace, serviceStorage, service.Meta.ID, "config")
-	if err := tx.Update(keyMeta, service.Config, 0); err != nil {
+	keyConfig := s.util.Key(ctx, namespaceStorage, namespace, serviceStorage, service.Meta.ID, "config")
+	if err := tx.Update(keyConfig, service.Config, 0); err != nil {
 		return nil, err
 	}
 
 	for _, pod := range service.Pods {
-		KeyPod := s.util.Key(ctx, namespaceStorage, namespace, serviceStorage, service.Meta.ID, "pods", pod.Meta.ID)
-		if err := tx.Update(KeyPod, &pod, 0); err != nil {
+
+		keyHelper := s.util.Key(ctx, "helper", serviceStorage, "pods", pod.Meta.ID)
+		if err := tx.Upsert(keyHelper, s.util.Key(ctx, namespaceStorage, namespace, serviceStorage, service.Meta.ID), 0); err != nil {
 			return nil, err
 		}
 
-		KeyNodePod := s.util.Key(ctx, nodeStorage, pod.Meta.Hostname, "pods", pod.Meta.ID)
-		if err := tx.Update(KeyNodePod, &types.PodNodeSpec{
+		KeyPod := s.util.Key(ctx, namespaceStorage, namespace, serviceStorage, service.Meta.ID, "pods", pod.Meta.ID)
+		if err := tx.Upsert(KeyPod, &pod, 0); err != nil {
+			return nil, err
+		}
+
+		KeyNodePod := s.util.Key(ctx, nodeStorage, pod.Meta.Hostname, "spec", "pods", pod.Meta.ID)
+		if err := tx.Upsert(KeyNodePod, &types.PodNodeSpec{
 			Meta:  pod.Meta,
-			State: pod.State,
 			Spec:  pod.Spec,
 		}, 0); err != nil {
 			return nil, err
@@ -328,10 +343,14 @@ func (s *ServiceStorage) Remove(ctx context.Context, service *types.Service) err
 	tx.Delete(keyHelper)
 
 	for _, pod := range service.Pods {
+
+		keyHelper := s.util.Key(ctx, "helper", serviceStorage, "pods", pod.Meta.ID)
+		tx.Delete(keyHelper)
+
 		KeyPod := s.util.Key(ctx, namespaceStorage, namespace, serviceStorage, service.Meta.ID, "pods", pod.Meta.ID)
 		tx.Delete(KeyPod)
 
-		KeyNodePod := s.util.Key(ctx, nodeStorage, pod.Meta.Hostname, "pods", pod.Meta.ID)
+		KeyNodePod := s.util.Key(ctx, nodeStorage, pod.Meta.Hostname, "spec", "pods", pod.Meta.ID)
 		tx.Delete(KeyNodePod)
 	}
 

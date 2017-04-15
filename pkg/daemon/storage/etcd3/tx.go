@@ -38,11 +38,11 @@ type TxResponse struct {
 }
 
 //TODO: add compare parameters as argument
-func (t *tx) Create(key string, objPtr interface{}, ttl uint64) error {
+func (t *tx) Create(key string, obj interface{}, ttl uint64) error {
 	key = path.Join(t.pathPrefix, key)
 	printf("CREATE: %s", key)
 	t.cmp = append(t.cmp, clientv3.Compare(clientv3.ModRevision(key), "=", 0))
-	data, err := serializer.Encode(t.codec, objPtr)
+	data, err := serializer.Encode(t.codec, obj)
 	if err != nil {
 		return err
 	}
@@ -54,11 +54,26 @@ func (t *tx) Create(key string, objPtr interface{}, ttl uint64) error {
 	return nil
 }
 
-func (t *tx) Update(key string, objPtr interface{}, ttl uint64) error {
+func (t *tx) Update(key string, obj interface{}, ttl uint64) error {
 	key = path.Join(t.pathPrefix, key)
 	printf("UPDATE: %s", key)
 	t.cmp = append(t.cmp, clientv3.Compare(clientv3.ModRevision(key), "!=", 0))
-	data, err := serializer.Encode(t.codec, objPtr)
+	data, err := serializer.Encode(t.codec, obj)
+	if err != nil {
+		return err
+	}
+	opts, err := t.ttlOpts(int64(ttl))
+	if err != nil {
+		return err
+	}
+	t.ops = append(t.ops, clientv3.OpPut(key, string(data), opts...))
+	return nil
+}
+
+func (t *tx) Upsert(key string, obj interface{}, ttl uint64) error {
+	key = path.Join(t.pathPrefix, key)
+	printf("UPSERT: %s", key)
+	data, err := serializer.Encode(t.codec, obj)
 	if err != nil {
 		return err
 	}

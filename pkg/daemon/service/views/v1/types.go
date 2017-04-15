@@ -18,21 +18,29 @@
 
 package v1
 
-import "time"
+import (
+	"time"
+	"github.com/lastbackend/lastbackend/pkg/daemon/pod/views/v1"
+)
 
 type Service struct {
-	Name        string     `json:"name"`
-	Description string     `json:"description"`
-	Created     time.Time  `json:"created"`
-	Updated     time.Time  `json:"updated"`
-	Pods        []struct{} `json:"pods"`
-	Config      Config     `json:"config"`
-	Region      string     `json:"region,omitempty"`
+	Meta 				ServiceMeta  `json:"meta"`
+	Pods        []v1.PodInfo `json:"pods,omitempty"`
+	Config      Config       `json:"config,omitempty"`
+}
+
+type ServiceMeta struct {
+	Name        string       `json:"name"`
+	Description string       `json:"description"`
+	Region      string       `json:"region"`
+	Replicas 	  int          `json:"replicas,omitempty"`
+	Created     time.Time    `json:"created"`
+	Updated     time.Time    `json:"updated"`
 }
 
 type Config struct {
-	Replicas int    `json:"replicas,omitempty"`
 	Memory   int64  `json:"memory,omitempty"`
+	Command  string `json:"command,omitempty"`
 	Image    string `json:"image,omitempty"`
 	Region   string `json:"region,omitempty"`
 }

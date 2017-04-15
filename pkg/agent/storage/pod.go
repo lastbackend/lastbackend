@@ -24,11 +24,34 @@ import (
 
 type PodStorage struct {
 	lock sync.RWMutex
+	stats PodStorageStats
+	containers map[string]*types.Container
 	pods map[string]*types.Pod
+}
+
+type PodStorageStats struct {
+	pods int
+	containers int
+}
+
+func (ps *PodStorage) GetPodsCount() int {
+	return ps.stats.pods
+}
+
+func (ps *PodStorage) GetContainersCount() int {
+	return ps.stats.containers
 }
 
 func (ps *PodStorage) GetPods() map[string]*types.Pod {
 	return ps.pods
+}
+
+func (ps *PodStorage) GetContainer(id string) *types.Container {
+	c, ok := ps.containers[id]
+	if !ok {
+		return nil
+	}
+	return c
 }
 
 func (ps *PodStorage) GetPod(id string) *types.Pod {
@@ -44,33 +67,58 @@ func (ps *PodStorage) AddPod(pod *types.Pod) {
 	defer ps.lock.Unlock()
 
 	ps.pods[pod.Meta.ID] = pod
+	ps.stats.pods++
+	ps.stats.containers += len(pod.Containers)
+
+	for _, c := range pod.Containers {
+		ps.containers[c.ID] = c
+	}
 }
 
 func (ps *PodStorage) SetPod(pod *types.Pod) {
 	ps.lock.Lock()
 	defer ps.lock.Unlock()
 
+	c := 0
+	_, ok := ps.pods[pod.Meta.ID]
+	if ok {
+		c = len(ps.pods[pod.Meta.ID].Containers)
+	}
+
 	ps.pods[pod.Meta.ID] = pod
+	ps.stats.containers += len(pod.Containers)-c
+	for _, c := range pod.Containers {
+		ps.containers[c.ID] = c
+	}
 }
 
-func (ps *PodStorage) DetPod(pod *types.Pod) {
+func (ps *PodStorage) DelPod(pod *types.Pod) {
 	ps.lock.Lock()
 	defer ps.lock.Unlock()
+
+	if p, ok := ps.pods[pod.Meta.ID]; ok {
+		ps.stats.containers--
+		for _, c := range p.Containers {
+			delete(ps.containers, c.ID)
+		}
+	}
+
 	delete(ps.pods, pod.Meta.ID)
+	ps.stats.pods--
 }
 
 func (ps *PodStorage) SetPods(pods []*types.Pod) {
-	ps.lock.Lock()
-	defer ps.lock.Unlock()
-
 	for _, pod := range pods {
-		ps.pods[pod.Meta.ID] = pod
+		ps.AddPod(pod)
 	}
 }
 
 func NewPodStorage() *PodStorage {
 	pods := make(map[string]*types.Pod)
+	containers := make(map[string]*types.Container)
 	return &PodStorage{
+		stats: PodStorageStats{},
+		containers : containers,
 		pods: pods,
 	}
 }

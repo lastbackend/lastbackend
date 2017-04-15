@@ -18,6 +18,8 @@
 
 package types
 
+type NodeMapState map[string]*NodeState
+
 type NodeList []*Node
 
 type Node struct {
@@ -25,8 +27,10 @@ type Node struct {
 	Meta NodeMeta `json:"meta"`
 	// Node spec info
 	Spec NodeSpec `json:"spec"`
-	// Node state info
-	State NodeState `json:"state"`
+}
+
+type NodeCRI struct {
+
 }
 
 type NodeMeta struct {
@@ -39,16 +43,9 @@ type NodeMeta struct {
 
 	CRI     PodCRIMeta `json:"cri"`
 	Network PodNetwork `json:"network"`
-}
 
-type PodCRIMeta struct {
-	Type    string `json:"type"`
-	Version string `json:"version"`
-}
-
-type PodNetwork struct {
-	Interface string   `json:"interface,omitempty"`
-	IP        []string `json:"ip,omitempty"`
+	// Node state info
+	State NodeState `json:"state"`
 }
 
 type NodeState struct {
@@ -73,5 +70,5 @@ type NodeResources struct {
 
 type NodeSpec struct {
 	// Pod spec for node
-	Pods []*PodNodeSpec `json:"pods"`
+	Pods []PodNodeSpec `json:"pods"`
 }

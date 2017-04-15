@@ -23,13 +23,37 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/daemon/container/views/v1"
 )
 
+func ToPodInfo(pod *types.Pod) PodInfo {
+	info := PodInfo{
+		Meta : ToPodMeta(pod.Meta),
+	}
+
+	if len(pod.Containers) == 0 {
+		info.Containers = make([]v1.Container, 0)
+		return info
+	}
+
+	for _, c := range pod.Containers {
+		info.Containers = append(info.Containers, v1.ToContainer(c))
+	}
+
+	return info
+}
+
 func ToPodMeta(meta types.PodMeta) PodMeta {
-	return PodMeta{
+	m := PodMeta{
 		ID:      meta.ID,
 		Labels:  meta.Labels,
+		State: ToPodState(meta.State),
 		Created: meta.Created,
 		Updated: meta.Updated,
 	}
+
+	if len(m.Labels) == 0 {
+		m.Labels = make(map[string]string)
+	}
+
+	return m
 }
 
 func ToPodSpec(spec types.PodSpec) PodSpec {
@@ -52,12 +76,20 @@ func ToPodState(state types.PodState) PodState {
 	return PodState{
 		State:  state.State,
 		Status: state.Status,
+		Containers: PodContainersState{
+			Total:   state.Containers.Total,
+			Running: state.Containers.Running,
+			Created: state.Containers.Created,
+			Stopped: state.Containers.Stopped,
+			Errored: state.Containers.Errored,
+		},
 	}
 }
 
 func FromPodMeta(meta PodMeta) types.PodMeta {
 	m := types.PodMeta{}
 	m.ID = meta.ID
+	m.State = FromPodState(meta.State)
 	m.Labels = meta.Labels
 	m.Created = meta.Created
 	m.Updated = meta.Updated

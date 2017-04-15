@@ -26,16 +26,14 @@ import (
 type EventList []Event
 
 type Event struct {
+	// Mark event as initial
+	Initial bool `json:"initial"`
 	// Event meta
 	Meta NodeMeta `json:"meta"`
-	// Node state
-	State NodeState `json:"state"`
 	// Activity created time
-	Pods []PodNodeState `json:"pods"`
+	Pods []*Pod `json:"pods"`
 	// Event created time
-	Created time.Time `json:"created"`
-	// Activity updated time
-	Updated time.Time `json:"updated"`
+	Timestamp time.Time `json:"timestamp"`
 }
 
 type PodEvent struct {
@@ -43,8 +41,6 @@ type PodEvent struct {
 	Event string
 	// Event meta
 	Meta PodMeta
-	// Pod State
-	State PodState
 	// Pod Containers
 	Containers map[string]*Container
 }
@@ -52,8 +48,6 @@ type PodEvent struct {
 type ContainerEvent struct {
 	// Event type
 	Event string
-	// Pod event
-	Pod string
 	// Activity container
 	Container *Container
 }
