@@ -74,7 +74,7 @@ func (r *Runtime) Loop() {
 	log := context.Get().GetLogger()
 	log.Debug("Runtime: start Loop")
 
-	events.New().Send(events.NewEvent(true, GetNodeMeta() , r.pManager.GetPodList()))
+	events.New().Send(events.NewEvent(true, GetNodeMeta(), r.pManager.GetPodList()))
 
 	pods, host := r.eListener.Subscribe()
 	go func() {
@@ -84,8 +84,8 @@ func (r *Runtime) Loop() {
 
 		go func() {
 			for _ = range ticker.C {
-				spec, err := 	events.New().Send(events.NewEvent(false,
-					GetNodeMeta() , []*types.Pod{}))
+				spec, err := events.New().Send(events.NewEvent(false,
+					GetNodeMeta(), []*types.Pod{}))
 
 				if err != nil {
 					log.Errorf("Runtime: send event error: %s", err.Error())
@@ -102,8 +102,8 @@ func (r *Runtime) Loop() {
 				log.Debugf("Runtime: Loop: send pod update event: %s", pod.Event)
 				ps := []*types.Pod{}
 
-				events.New().Send(events.NewEvent(true, GetNodeMeta() , append(ps, &types.Pod{
-					Meta: pod.Meta,
+				events.New().Send(events.NewEvent(true, GetNodeMeta(), append(ps, &types.Pod{
+					Meta:       pod.Meta,
 					Containers: pod.Containers,
 				})))
 

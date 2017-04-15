@@ -30,7 +30,6 @@ type Node struct {
 }
 
 type NodeCRI struct {
-
 }
 
 type NodeMeta struct {

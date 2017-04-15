@@ -28,8 +28,8 @@ func ToNodeSpec(obj types.NodeSpec) *Spec {
 	spec := &Spec{}
 	for _, pod := range obj.Pods {
 		spec.Pods = append(spec.Pods, v1.Pod{
-			Meta:  v1.ToPodMeta(pod.Meta),
-			Spec:  v1.ToPodSpec(pod.Spec),
+			Meta: v1.ToPodMeta(pod.Meta),
+			Spec: v1.ToPodSpec(pod.Spec),
 		})
 	}
 	return spec

@@ -49,6 +49,7 @@ func Init() (*DB, error) {
 	if err != nil {
 		return nil, err
 	}
+    defer d.Close()
 
 	return d, nil
 }

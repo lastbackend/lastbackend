@@ -117,7 +117,6 @@ func (s *ServiceStorage) GetByPodID(ctx context.Context, uuid string) (*types.Se
 		return nil, err
 	}
 
-
 	return service, nil
 }
 
@@ -220,8 +219,8 @@ func (s *ServiceStorage) Insert(ctx context.Context, service *types.Service) (*t
 
 		KeyNodePod := s.util.Key(ctx, nodeStorage, pod.Meta.Hostname, "spec", "pods", pod.Meta.ID)
 		if err := tx.Create(KeyNodePod, &types.PodNodeSpec{
-			Meta:  pod.Meta,
-			Spec:  pod.Spec,
+			Meta: pod.Meta,
+			Spec: pod.Spec,
 		}, 0); err != nil {
 			return nil, err
 		}
@@ -296,8 +295,8 @@ func (s *ServiceStorage) Update(ctx context.Context, service *types.Service) (*t
 
 		KeyNodePod := s.util.Key(ctx, nodeStorage, pod.Meta.Hostname, "spec", "pods", pod.Meta.ID)
 		if err := tx.Upsert(KeyNodePod, &types.PodNodeSpec{
-			Meta:  pod.Meta,
-			Spec:  pod.Spec,
+			Meta: pod.Meta,
+			Spec: pod.Spec,
 		}, 0); err != nil {
 			return nil, err
 		}

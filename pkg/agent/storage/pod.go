@@ -23,14 +23,14 @@ import (
 )
 
 type PodStorage struct {
-	lock sync.RWMutex
-	stats PodStorageStats
+	lock       sync.RWMutex
+	stats      PodStorageStats
 	containers map[string]*types.Container
-	pods map[string]*types.Pod
+	pods       map[string]*types.Pod
 }
 
 type PodStorageStats struct {
-	pods int
+	pods       int
 	containers int
 }
 
@@ -86,7 +86,7 @@ func (ps *PodStorage) SetPod(pod *types.Pod) {
 	}
 
 	ps.pods[pod.Meta.ID] = pod
-	ps.stats.containers += len(pod.Containers)-c
+	ps.stats.containers += len(pod.Containers) - c
 	for _, c := range pod.Containers {
 		ps.containers[c.ID] = c
 	}
@@ -117,8 +117,8 @@ func NewPodStorage() *PodStorage {
 	pods := make(map[string]*types.Pod)
 	containers := make(map[string]*types.Container)
 	return &PodStorage{
-		stats: PodStorageStats{},
-		containers : containers,
-		pods: pods,
+		stats:      PodStorageStats{},
+		containers: containers,
+		pods:       pods,
 	}
 }

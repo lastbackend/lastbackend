@@ -23,19 +23,19 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/daemon/image/views/v1"
 )
 
-func ToContainer (c *types.Container) Container {
+func ToContainer(c *types.Container) Container {
 	container := Container{
-		ID: c.ID,
-		State: c.State,
-		Status: c.Status,
-		Image: c.Image,
+		ID:      c.ID,
+		State:   c.State,
+		Status:  c.Status,
+		Image:   c.Image,
 		Created: c.Created,
 		Started: c.Started,
 	}
 
 	container.Ports = make(map[string]int, len(c.Ports))
 	if len(c.Ports) != 0 {
-		container.Ports =  c.Ports
+		container.Ports = c.Ports
 	}
 
 	return container

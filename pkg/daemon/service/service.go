@@ -167,7 +167,6 @@ func (s *service) Update(service *types.Service, rq *request.RequestServiceUpdat
 
 	}
 
-
 	s.Scale(s.Context, service)
 
 	svc, err = storage.Service().Update(s.Context, service)
@@ -329,7 +328,6 @@ func (s *service) Scale(c context.Context, service *types.Service) error {
 			replicas++
 		}
 	}
-
 
 	log.Debugf("Service: Scale: current replicas: %d", replicas)
 

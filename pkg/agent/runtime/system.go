@@ -19,17 +19,17 @@
 package runtime
 
 import (
-	"github.com/lastbackend/lastbackend/pkg/apis/types"
-	"time"
-	"github.com/lastbackend/lastbackend/pkg/agent/utils/system"
-	"github.com/shirou/gopsutil/mem"
-	"github.com/lastbackend/lastbackend/pkg/agent/context"
 	"fmt"
+	"github.com/lastbackend/lastbackend/pkg/agent/context"
+	"github.com/lastbackend/lastbackend/pkg/agent/utils/system"
+	"github.com/lastbackend/lastbackend/pkg/apis/types"
+	"github.com/shirou/gopsutil/mem"
+	"time"
 )
 
 const MinContainerMemory = 32
 
-func GetNodeMeta () types.NodeMeta {
+func GetNodeMeta() types.NodeMeta {
 	var meta = types.NodeMeta{}
 
 	meta.Created = time.Now()
@@ -41,31 +41,31 @@ func GetNodeMeta () types.NodeMeta {
 	return meta
 }
 
-func GetNodeCapacity () types.NodeResources {
+func GetNodeCapacity() types.NodeResources {
 
 	vmStat, err := mem.VirtualMemory()
 	if err != nil {
 		fmt.Errorf("Get memory err: %s", err.Error())
 	}
-	m := vmStat.Total / 1024 /1024
+	m := vmStat.Total / 1024 / 1024
 	capacity := types.NodeResources{
-		Memory: int64(m),
-		Pods: int(m/MinContainerMemory),
-		Containers: int(m/MinContainerMemory),
+		Memory:     int64(m),
+		Pods:       int(m / MinContainerMemory),
+		Containers: int(m / MinContainerMemory),
 	}
 	return capacity
 }
 
-func GetNodeAllocation () types.NodeResources {
+func GetNodeAllocation() types.NodeResources {
 	vmStat, err := mem.VirtualMemory()
 	if err != nil {
 		fmt.Errorf("Get memory err: %s", err.Error())
 	}
-	m := vmStat.Free / 1024 /1024
-	s:= context.Get().GetStorage().Pods()
+	m := vmStat.Free / 1024 / 1024
+	s := context.Get().GetStorage().Pods()
 	allocation := types.NodeResources{
-		Memory: int64(m),
-		Pods: s.GetPodsCount(),
+		Memory:     int64(m),
+		Pods:       s.GetPodsCount(),
 		Containers: s.GetContainersCount(),
 	}
 	return allocation

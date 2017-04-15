@@ -24,7 +24,7 @@ import (
 )
 
 type Event struct {
-	Meta      types.NodeMeta  `json:"meta"`
-	Pods      []types.Pod     `json:"pods"`
-	Timestamp time.Time       `json:"timestamp"`
+	Meta      types.NodeMeta `json:"meta"`
+	Pods      []types.Pod    `json:"pods"`
+	Timestamp time.Time      `json:"timestamp"`
 }

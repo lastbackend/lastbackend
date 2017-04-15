@@ -20,12 +20,12 @@ package request
 
 import (
 	"encoding/json"
+	"fmt"
 	"github.com/lastbackend/lastbackend/pkg/daemon/context"
 	"github.com/lastbackend/lastbackend/pkg/daemon/node/views/v1"
 	"github.com/lastbackend/lastbackend/pkg/errors"
 	"io"
 	"io/ioutil"
-	"fmt"
 )
 
 type RequestNodeEventS struct {

@@ -120,7 +120,7 @@ func (w *Worker) loop() {
 
 func (t *Task) exec() {
 
-	defer func () {
+	defer func() {
 		ps := []*types.Pod{}
 		events.New().Send(events.NewEvent(true, GetNodeMeta(), append(ps, &types.Pod{
 			Meta:       t.pod.Meta,

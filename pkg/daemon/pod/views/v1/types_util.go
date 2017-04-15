@@ -25,7 +25,7 @@ import (
 
 func ToPodInfo(pod *types.Pod) PodInfo {
 	info := PodInfo{
-		Meta : ToPodMeta(pod.Meta),
+		Meta: ToPodMeta(pod.Meta),
 	}
 
 	if len(pod.Containers) == 0 {
@@ -44,7 +44,7 @@ func ToPodMeta(meta types.PodMeta) PodMeta {
 	m := PodMeta{
 		ID:      meta.ID,
 		Labels:  meta.Labels,
-		State: ToPodState(meta.State),
+		State:   ToPodState(meta.State),
 		Created: meta.Created,
 		Updated: meta.Updated,
 	}
