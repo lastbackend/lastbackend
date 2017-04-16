@@ -69,42 +69,58 @@ func NewList(obj *types.ServiceList) *ServiceList {
 }
 
 func (s *Service) DrawTable(namespaceName string) {
-	table.PrintHorizontal(map[string]interface{}{
+	serviceTable := table.New([]string{"NAME", "DESCRIPTION", "NAMESPACE",
+		"REPLICAS", "MEMORY", "IMAGE", "CREATED", "UPDATED"})
+	podsTable := table.New([]string{"ID", "STATE", "STATUS", "TOTAL",
+		"RUNNING", "CREATED",
+		"STOPPED", "ERRORED", "CREATED POD", "UPDATED POD"})
+	containersTable := table.New([]string{"ID", "IMAGE", "STATE",
+		"STATUS", "CREATE", "UPDATED"})
+
+	serviceTable.VisibleHeader = true
+	podsTable.VisibleHeader = true
+	containersTable.VisibleHeader = true
+
+	serviceTable.AddRow(map[string]interface{}{
 		"NAME":        s.Meta.Name,
 		"DESCRIPTION": s.Meta.Description,
 		"NAMESPACE":   namespaceName,
 		"REPLICAS":    s.Meta.Replicas,
 		"MEMORY":      s.Config.Memory,
 		"IMAGE":       s.Config.Image,
-		"CREATED":     s.Meta.Created,
-		"UPDATED":     s.Meta.Updated,
+		"CREATED":     s.Meta.Created.String()[:10],
+		"UPDATED":     s.Meta.Updated.String()[:10],
 	})
+	serviceTable.Print()
 
-	fmt.Println("\n\tPODS")
+	fmt.Println("\n\nPODS")
 	for _, pod := range s.Pods {
-		table.PrintHorizontal(map[string]interface{}{
-			"\tID":                 pod.Meta.ID,
-			"\tSTATE":              pod.Meta.State.State,
-			"\tSTATUS":             pod.Meta.State.Status,
-			"\tTOTAL CONTAINERS":   pod.Meta.State.Containers.Total,
-			"\tRUNNING CONTAINERS": pod.Meta.State.Containers.Running,
-			"\tCREATED CONTAINERS": pod.Meta.State.Containers.Created,
-			"\tSTOPPED CONTAINERS": pod.Meta.State.Containers.Stopped,
-			"\tERRORED CONTAINERS": pod.Meta.State.Containers.Errored,
+		podsTable.AddRow(map[string]interface{}{
+			"ID":          pod.Meta.ID,
+			"STATE":       pod.Meta.State.State,
+			"STATUS":      pod.Meta.State.Status,
+			"TOTAL":       pod.Meta.State.Containers.Total,
+			"RUNNING":     pod.Meta.State.Containers.Running,
+			"CREATED":     pod.Meta.State.Containers.Created,
+			"STOPPED":     pod.Meta.State.Containers.Stopped,
+			"ERRORED":     pod.Meta.State.Containers.Errored,
+			"CREATED POD": pod.Meta.Created.String()[:10],
+			"UPDATED POD": pod.Meta.Updated.String()[:10],
 		})
+		podsTable.Print()
 
-		fmt.Println("\n\t\tCONTAINERS")
+		fmt.Println("CONTAINERS")
 		for _, container := range pod.Containers {
-			table.PrintHorizontal(map[string]interface{}{
-				"\t\tID":      container.ID,
-				"\t\tIMAGE":   container.Image,
-				"\t\tSTATE":   container.State,
-				"\t\tSTATUS":  container.Status,
-				"\t\tPORTS":   container.Ports,
-				"\t\tCREATED": container.Created,
-				"\t\tSTARTED": container.Started,
+			containersTable.AddRow(map[string]interface{}{
+				"ID":      container.ID[:12],
+				"IMAGE":   container.Image,
+				"STATE":   container.State,
+				"STATUS":  container.Status,
+				"CREATED": container.Created.String()[:10],
+				"STARTED": container.Started.String()[:10],
 			})
 		}
+		containersTable.Print()
 	}
 }
 
