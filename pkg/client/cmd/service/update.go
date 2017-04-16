@@ -98,6 +98,7 @@ func Update(name string, config types.ServiceUpdateConfig) error {
 
 func GetConfig(service *s.Service) (*types.ServiceUpdateConfig, error) {
 
+    // need var config = service.Config
 	var config = struct{}{}
 
 	buf, err := yaml.Marshal(config)

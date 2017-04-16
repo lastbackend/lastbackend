@@ -27,6 +27,7 @@ import (
 )
 
 func RemoveCmd(name string) {
+
 	err := Remove(name)
 	if err != nil {
 		fmt.Print(err)

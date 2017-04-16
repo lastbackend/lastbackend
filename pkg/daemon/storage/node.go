@@ -38,7 +38,7 @@ type NodeStorage struct {
 
 func (s *NodeStorage) List(ctx context.Context) ([]*types.Node, error) {
 
-	const filter = `\b(.+)` + nodeStorage + `\/[\w\d.]*\/meta\b`
+	const filter = `\b(.+)` + nodeStorage + `\/[\w\d._-]*\/meta\b`
 
 	client, destroy, err := s.Client()
 	if err != nil {
