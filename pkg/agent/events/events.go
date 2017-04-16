@@ -33,9 +33,26 @@ func New() *Event {
 	return new(Event)
 }
 
-func NewEvent(initial bool, meta types.NodeMeta, pods []*types.Pod) *types.Event {
+func NewTickerEvent(meta types.NodeMeta) *types.Event {
 	var event = new(types.Event)
-	event.Initial = initial
+	event.Ticker = true
+	event.Meta = meta
+	event.Pods = make([]*types.Pod, 0)
+	event.Timestamp = time.Now()
+	return event
+}
+
+func NewInitialEvent(meta types.NodeMeta, pods []*types.Pod) *types.Event {
+	var event = new(types.Event)
+	event.Initial = true
+	event.Meta = meta
+	event.Pods = pods
+	event.Timestamp = time.Now()
+	return event
+}
+
+func NewEvent(meta types.NodeMeta, pods []*types.Pod) *types.Event {
+	var event = new(types.Event)
 	event.Meta = meta
 	event.Pods = pods
 	event.Timestamp = time.Now()

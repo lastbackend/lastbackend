@@ -27,6 +27,7 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/util/http/utils"
 	"github.com/lastbackend/lastbackend/pkg/wss"
 	"net/http"
+	"github.com/lastbackend/lastbackend/pkg/daemon/storage/store"
 )
 
 func NamespaceListH(w http.ResponseWriter, r *http.Request) {
@@ -71,11 +72,13 @@ func NamespaceInfoH(w http.ResponseWriter, r *http.Request) {
 	log.Info("Get namespace handler")
 	ns := namespace.New(r.Context())
 	item, err := ns.Get(id)
+
 	if err != nil {
 		log.Error("Error: find namespace by id", err.Error())
 		errors.HTTP.InternalServerError(w)
 		return
 	}
+
 	if item == nil {
 		errors.New("namespace").NotFound().Http(w)
 		return
@@ -114,13 +117,13 @@ func NamespaceCreateH(w http.ResponseWriter, r *http.Request) {
 
 	ns := namespace.New(r.Context())
 	item, err := ns.Get(rq.Name)
-	if err != nil {
+	if err != nil && err.Error() != store.ErrKeyNotFound {
 		log.Error("Error: check exists by name", err.Error())
 		errors.HTTP.InternalServerError(w)
 		return
 	}
 
-	if item != nil {
+	if item.Meta.ID != "" {
 		errors.New("namespace").NotUnique("name").Http(w)
 		return
 	}

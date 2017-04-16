@@ -29,6 +29,7 @@ func ToNodeSpec(obj types.NodeSpec) *Spec {
 	for _, pod := range obj.Pods {
 		spec.Pods = append(spec.Pods, v1.Pod{
 			Meta:  v1.ToPodMeta(pod.Meta),
+			State:  v1.ToPodState(pod.State),
 			Spec:  v1.ToPodSpec(pod.Spec),
 		})
 	}
@@ -38,14 +39,16 @@ func ToNodeSpec(obj types.NodeSpec) *Spec {
 func FromNodeSpec(spec Spec) *types.NodeSpec {
 
 	var s = new(types.NodeSpec)
+	s.Pods = make(map[string]types.PodNodeSpec)
 	for _, item := range spec.Pods {
 
 		pod := types.PodNodeSpec{}
 
-		pod.Meta = v1.FromPodMeta(item.Meta)
-		pod.Spec = v1.FromPodSpec(item.Spec)
+		pod.Meta  = v1.FromPodMeta(item.Meta)
+		pod.State = v1.FromPodState(item.State)
+		pod.Spec  = v1.FromPodSpec(item.Spec)
 
-		s.Pods = append(s.Pods, pod)
+		s.Pods[pod.Meta.ID] = pod
 	}
 
 	return s

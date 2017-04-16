@@ -24,26 +24,26 @@ import (
 	c "github.com/lastbackend/lastbackend/pkg/daemon/context"
 )
 
-func Create(ctx context.Context, imageName string, source *types.ServiceSource) (*types.Build, error) {
+func Create(ctx context.Context, imageName string, source *types.ImageSource) (*types.Build, error) {
 	var (
 		log     = c.Get().GetLogger()
 		storage = c.Get().GetStorage()
-		err     error
 	)
 
 	log.Debug("Create build")
 
-	bsource := &types.BuildSource{
-		Hub:   source.Hub,
-		Owner: source.Owner,
-		Repo:  source.Repo,
-		Tag:   source.Branch,
+	build := types.Build{
+		Source: types.BuildSource{
+			Hub:   source.Hub,
+			Owner: source.Owner,
+			Repo:  source.Repo,
+			Tag:   source.Tag,
+		},
 	}
 
-	bld, err := storage.Build().Insert(ctx, imageName, bsource)
-	if err != nil {
-		return nil, err
+	if err := storage.Build().Insert(ctx, imageName, &build); err != nil {
+		return &build, err
 	}
 
-	return bld, nil
+	return &build, nil
 }

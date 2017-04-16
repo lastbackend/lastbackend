@@ -24,7 +24,7 @@ type Registry struct {
 	// Registry Meta
 	Meta Meta `json:"meta"`
 	// Registry authentication information
-	Auth *RegistryAuth `json:"auth,omitempty"`
+	Auth RegistryAuth `json:"auth,omitempty"`
 	// Meta created time
 	Created time.Time `json:"created"`
 	// Meta updated time

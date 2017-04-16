@@ -24,6 +24,6 @@ func NewService(obj *types.Service) *Service {
 	return New(obj)
 }
 
-func NewServiceList(obj *types.ServiceList) *ServiceList {
+func NewServiceList(obj types.ServiceList) *ServiceList {
 	return NewList(obj)
 }

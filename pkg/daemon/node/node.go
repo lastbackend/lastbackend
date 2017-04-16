@@ -32,7 +32,7 @@ func New() *Node {
 	return new(Node)
 }
 
-func (n *Node) List(c context.Context) ([]*types.Node, error) {
+func (n *Node) List(c context.Context) ([]types.Node, error) {
 	var storage = ctx.Get().GetStorage()
 	return storage.Node().List(c)
 }
@@ -42,7 +42,12 @@ func (n *Node) Get(c context.Context, hostname string) (*types.Node, error) {
 		storage = ctx.Get().GetStorage()
 	)
 
-	return storage.Node().Get(c, hostname)
+	node, err := storage.Node().Get(c, hostname)
+	if err != nil {
+		return nil, err
+	}
+
+	return &node, nil
 }
 
 func (n *Node) SetMeta(c context.Context, node *types.Node) error {
@@ -64,8 +69,11 @@ func (n *Node) Create(c context.Context, meta *types.NodeMeta) (*types.Node, err
 	log.Debug("Create new Node")
 
 	node.Meta = *meta
+	if err := storage.Node().Insert(c, node); err != nil {
+		return node, err
+	}
 
-	return storage.Node().Insert(c, &node.Meta)
+	return node, nil
 }
 
 func (n *Node) PodSpecRemove(c context.Context, hostname string, spec *types.PodNodeSpec) error {
@@ -79,11 +87,6 @@ func (n *Node) PodSpecRemove(c context.Context, hostname string, spec *types.Pod
 	if err != nil {
 		log.Errorf("Node: Pod spec remove: remove pod spec err: %s", err.Error())
 		return err
-	}
-
-	if node == nil {
-		log.Debug("Node: Pod spec remove: node not found")
-		return nil
 	}
 
 	log.Debug("Remove pod spec from node")
@@ -111,11 +114,6 @@ func (n *Node) PodSpecUpdate(c context.Context, hostname string, spec *types.Pod
 		return err
 	}
 
-	if node == nil {
-		log.Debug("Node: Pod spec remove: node not found")
-		return nil
-	}
-
 	log.Debug("Remove pod spec from node")
 	if err := storage.Node().UpdatePod(c, &node.Meta, spec); err != nil {
 		log.Errorf("Node: Pod spec remove: remove pod spec err: %s", err.Error())
@@ -130,7 +128,7 @@ func (n *Node) PodSpecUpdate(c context.Context, hostname string, spec *types.Pod
 func (n *Node) Allocate(c context.Context, spec types.PodSpec) (*types.Node, error) {
 
 	var (
-		node    *types.Node
+		node    types.Node
 		storage = ctx.Get().GetStorage()
 		log     = ctx.Get().GetLogger()
 		memory  = int64(0)
@@ -155,10 +153,10 @@ func (n *Node) Allocate(c context.Context, spec types.PodSpec) (*types.Node, err
 		}
 	}
 
-	if node == nil {
+	if node.Meta.Hostname == "" {
 		log.Error("Node: Allocate: Available node not found")
 		return nil, errors.New("Available node not found")
 	}
 
-	return node, nil
+	return &node, nil
 }

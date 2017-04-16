@@ -22,7 +22,6 @@ import (
 	"context"
 	"github.com/lastbackend/lastbackend/pkg/apis/types"
 	"github.com/lastbackend/lastbackend/pkg/daemon/storage/store"
-	"github.com/satori/go.uuid"
 	"time"
 )
 
@@ -36,57 +35,51 @@ type NamespaceStorage struct {
 }
 
 // Get namespace by name
-func (s *NamespaceStorage) GetByID(ctx context.Context, id string) (*types.Namespace, error) {
+func (s *NamespaceStorage) GetByID(ctx context.Context, id string) (types.Namespace, error) {
 
-	namespace := new(types.Namespace)
+	const filter = `\b(.+)` + namespaceStorage + `\/[a-z0-9-]{36}\/(meta)\b`
+	namespace := types.Namespace{}
 
 	client, destroy, err := s.Client()
 	if err != nil {
-		return nil, err
+		return namespace, err
 	}
 	defer destroy()
 
-	key := s.util.Key(ctx, namespaceStorage, id, "meta")
-	meta := &types.Meta{}
-
-	if err := client.Get(ctx, key, meta); err != nil {
-		if err.Error() == store.ErrKeyNotFound {
-			return nil, nil
-		}
-		return nil, err
+	key := s.util.Key(ctx, namespaceStorage, id)
+	if err := client.Map(ctx, key, filter, &namespace); err != nil {
+		return namespace, err
 	}
-
-	namespace.Meta = *meta
 
 	return namespace, nil
 }
 
 // Get namespace by name
-func (s *NamespaceStorage) GetByName(ctx context.Context, name string) (*types.Namespace, error) {
+func (s *NamespaceStorage) GetByName(ctx context.Context, name string) (types.Namespace, error) {
 
-	var id string
+	var (
+		namespace types.Namespace
+		id string
+	)
 
 	client, destroy, err := s.Client()
 	if err != nil {
-		return nil, err
+		return namespace, err
 	}
 	defer destroy()
 
 	key := s.util.Key(ctx, "helper", namespaceStorage, name)
 	if err := client.Get(ctx, key, &id); err != nil {
-		if err.Error() == store.ErrKeyNotFound {
-			return nil, nil
-		}
-		return nil, err
+		return namespace, err
 	}
 
 	return s.GetByID(ctx, id)
 }
 
 // List projects
-func (s *NamespaceStorage) List(ctx context.Context) (*types.NamespaceList, error) {
+func (s *NamespaceStorage) List(ctx context.Context) ([]types.Namespace, error) {
 
-	const filter = `\b(.+)` + namespaceStorage + `\/[a-z0-9-]{36}\/meta\b`
+	const filter = `\b(.+)` + namespaceStorage + `\/[a-z0-9-]{36}\/(meta)\b`
 
 	client, destroy, err := s.Client()
 	if err != nil {
@@ -95,87 +88,58 @@ func (s *NamespaceStorage) List(ctx context.Context) (*types.NamespaceList, erro
 	defer destroy()
 
 	key := s.util.Key(ctx, namespaceStorage)
-	metaList := []types.Meta{}
-	if err := client.List(ctx, key, filter, &metaList); err != nil {
-		if err.Error() == store.ErrKeyNotFound {
-			return nil, nil
-		}
+	namespaces := []types.Namespace{}
+	if err := client.List(ctx, key, filter, &namespaces); err != nil {
 		return nil, err
 	}
 
-	if metaList == nil {
-		return nil, nil
-	}
-
-	namespaceList := new(types.NamespaceList)
-	for _, meta := range metaList {
-		project := types.Namespace{}
-		project.Meta = meta
-		*namespaceList = append(*namespaceList, project)
-	}
-
-	return namespaceList, nil
+	return namespaces, nil
 }
 
 // Insert new namespace into storage
-func (s *NamespaceStorage) Insert(ctx context.Context, name, description string) (*types.Namespace, error) {
-	var (
-		id        = uuid.NewV4().String()
-		namespace = new(types.Namespace)
-	)
+func (s *NamespaceStorage) Insert(ctx context.Context, namespace *types.Namespace) error {
 
 	client, destroy, err := s.Client()
 	if err != nil {
-		return nil, err
+		return err
 	}
 	defer destroy()
 
 	tx := client.Begin(ctx)
 
-	keyHelper := s.util.Key(ctx, "helper", namespaceStorage, name)
-	if err := tx.Create(keyHelper, id, 0); err != nil {
-		return nil, err
+	keyHelper := s.util.Key(ctx, "helper", namespaceStorage, namespace.Meta.Name)
+	if err := tx.Create(keyHelper, namespace.Meta.ID, 0); err != nil {
+		return err
 	}
 
-	namespace.Meta = types.Meta{
-		ID:          id,
-		Name:        name,
-		Description: description,
-		Labels:      map[string]string{"tier": "namespace"},
-		Updated:     time.Now(),
-		Created:     time.Now(),
-	}
 
-	keyMeta := s.util.Key(ctx, namespaceStorage, id, "meta")
+	keyMeta := s.util.Key(ctx, namespaceStorage, namespace.Meta.ID, "meta")
 	if err := tx.Create(keyMeta, namespace.Meta, 0); err != nil {
-		return nil, err
+		return err
 	}
 
 	if err := tx.Commit(); err != nil {
-		return nil, err
+		return err
 	}
 
-	return namespace, nil
+	return nil
 }
 
 // Update namespace model
-func (s *NamespaceStorage) Update(ctx context.Context, namespace *types.Namespace) (*types.Namespace, error) {
+func (s *NamespaceStorage) Update(ctx context.Context, namespace *types.Namespace) error {
 
 	namespace.Meta.Updated = time.Now()
 
 	client, destroy, err := s.Client()
 	if err != nil {
-		return namespace, err
+		return err
 	}
 	defer destroy()
 
 	keyMeta := s.util.Key(ctx, namespaceStorage, namespace.Meta.ID, "meta")
 	pmeta := new(types.Meta)
 	if err := client.Get(ctx, keyMeta, pmeta); err != nil {
-		if err.Error() == store.ErrKeyNotFound {
-			return nil, nil
-		}
-		return nil, err
+		return err
 	}
 
 	meta := types.Meta{}
@@ -190,20 +154,20 @@ func (s *NamespaceStorage) Update(ctx context.Context, namespace *types.Namespac
 
 		keyHelper2 := s.util.Key(ctx, "helper", namespaceStorage, namespace.Meta.Name)
 		if err := tx.Create(keyHelper2, namespace.Meta.ID, 0); err != nil {
-			return namespace, err
+			return err
 		}
 	}
 
 	keyMeta = s.util.Key(ctx, namespaceStorage, namespace.Meta.ID, "meta")
 	if err := tx.Update(keyMeta, meta, 0); err != nil {
-		return namespace, err
+		return err
 	}
 
 	if err := tx.Commit(); err != nil {
-		return nil, err
+		return err
 	}
 
-	return namespace, nil
+	return nil
 }
 
 // Remove namespace model

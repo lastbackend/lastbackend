@@ -47,10 +47,12 @@ func NodeEventH(w http.ResponseWriter, r *http.Request) {
 	}
 
 	s := service.New(r.Context(), types.Meta{})
-	if err := s.SetPods(r.Context(), rq.Pods); err != nil {
-		log.Errorf("Error: set pods err %s", err.Error())
-		errors.HTTP.InternalServerError(w)
-		return
+	if len(rq.Pods) > 0 {
+		if err := s.SetPods(r.Context(), rq.Pods); err != nil {
+			log.Errorf("Error: set pods err %s", err.Error())
+			errors.HTTP.InternalServerError(w)
+			return
+		}
 	}
 
 	n := node.New()
@@ -75,6 +77,7 @@ func NodeEventH(w http.ResponseWriter, r *http.Request) {
 	}
 
 	response, err := v1.NewSpec(item).ToJson()
+	log.Debug(string(response))
 	if err != nil {
 		log.Error("Error: convert struct to json", err.Error())
 		errors.HTTP.InternalServerError(w)

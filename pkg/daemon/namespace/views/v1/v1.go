@@ -24,6 +24,6 @@ func NewNamespace(obj *types.Namespace) *Namespace {
 	return New(obj)
 }
 
-func NewNamespaceList(obj *types.NamespaceList) *NamespaceList {
+func NewNamespaceList(obj types.NamespaceList) *NamespaceList {
 	return NewList(obj)
 }
