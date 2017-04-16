@@ -32,7 +32,7 @@ type Image struct {
 	// Image name
 	Name string `json:"name"`
 	// Image tag lists
-	Tags []string `json:"tags"`
+	Tag string `json:"tags"`
 
 	// Image registry info
 	Registry Registry `json:"registry"`

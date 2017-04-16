@@ -61,27 +61,25 @@ func (s *VendorStorage) Insert(ctx context.Context, owner, name, host, serviceID
 	return client.Update(ctx, key, vm, nil, 0)
 }
 
-func (s *VendorStorage) Get(ctx context.Context, vendorName string) (*types.Vendor, error) {
+func (s *VendorStorage) Get(ctx context.Context, vendorName string) (types.Vendor, error) {
 
+	vendor := types.Vendor{}
 	client, destroy, err := s.Client()
 	if err != nil {
-		return nil, err
+		return vendor, err
 	}
 	defer destroy()
 
 	key := s.util.Key(ctx, vendorStorage, vendorName)
-	vendor := new(types.Vendor)
+
 	if err := client.Get(ctx, key, &vendor); err != nil {
-		if err.Error() == store.ErrKeyNotFound {
-			return nil, nil
-		}
-		return nil, err
+		return vendor, err
 	}
 
 	return vendor, nil
 }
 
-func (s *VendorStorage) List(ctx context.Context) (map[string]*types.Vendor, error) {
+func (s *VendorStorage) List(ctx context.Context) (map[string]types.Vendor, error) {
 
 	client, destroy, err := s.Client()
 	if err != nil {
@@ -90,12 +88,9 @@ func (s *VendorStorage) List(ctx context.Context) (map[string]*types.Vendor, err
 	defer destroy()
 
 	key := s.util.Key(ctx, vendorStorage)
-	vendors := make(map[string]*types.Vendor)
+	vendors := make(map[string]types.Vendor)
 	if err := client.Map(ctx, key, ``, vendors); err != nil {
-		if err.Error() == store.ErrKeyNotFound {
-			return nil, nil
-		}
-		return nil, err
+		return vendors, err
 	}
 
 	return vendors, nil
@@ -111,8 +106,8 @@ func (s *VendorStorage) Remove(ctx context.Context, vendorName string) error {
 
 	key := s.util.Key(ctx, vendorStorage, vendorName)
 	err = client.Delete(ctx, key)
-	if err != nil && err.Error() == store.ErrKeyNotFound {
-		return nil
+	if err != nil {
+		return err
 	}
 
 	return nil

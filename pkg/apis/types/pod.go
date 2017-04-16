@@ -30,6 +30,8 @@ type Pod struct {
 
 	// Pod Meta
 	Meta PodMeta `json:"meta"`
+	// Pod state
+	State PodState `json:"state"`
 	// Container spec
 	Spec PodSpec `json:"spec"`
 	// Containers status info
@@ -41,6 +43,8 @@ type Pod struct {
 type PodNodeSpec struct {
 	// Pod Meta
 	Meta PodMeta `json:"meta"`
+	// Pod state
+	State PodState `json:"state"`
 	// Pod spec
 	Spec PodSpec `json:"spec"`
 }
@@ -55,8 +59,6 @@ type PodNodeState struct {
 
 type PodMeta struct {
 	Meta
-	// Pod state
-	State PodState `json:"state"`
 	// Pod hostname
 	Hostname string `json:"hostname"`
 }
@@ -133,75 +135,75 @@ func (p *Pod) DelContainer(ID string) {
 
 func (p *Pod) UpdateState() {
 
-	p.Meta.State.State = ""
-	p.Meta.State.Status = ""
-	p.Meta.State.Containers = PodContainersState{}
+	p.State.State = ""
+	p.State.Status = ""
+	p.State.Containers = PodContainersState{}
 
 	for _, c := range p.Containers {
-		p.Meta.State.Containers.Total++
+		p.State.Containers.Total++
 
 		if c.State == "created" {
-			p.Meta.State.Containers.Created++
+			p.State.Containers.Created++
 		}
 
 		if c.State == "running" {
-			p.Meta.State.Containers.Running++
+			p.State.Containers.Running++
 		}
 
 		if c.State == "stopped" {
-			p.Meta.State.Containers.Stopped++
+			p.State.Containers.Stopped++
 		}
 
 		if c.State == "exited" {
-			p.Meta.State.Containers.Stopped++
+			p.State.Containers.Stopped++
 		}
 
 		if c.State == "error" {
-			p.Meta.State.Containers.Errored++
+			p.State.Containers.Errored++
 		}
 
-		if c.State == p.Meta.State.State {
+		if c.State == p.State.State {
 			continue
 		}
 
-		if c.State == "exited" && p.Meta.State.Status == "" {
-			p.Meta.State.State = "stopped"
+		if c.State == "exited" && p.State.Status == "" {
+			p.State.State = "stopped"
 			continue
 		}
 
-		if p.Meta.State.State == "" {
-			p.Meta.State.State = c.State
+		if p.State.State == "" {
+			p.State.State = c.State
 			continue
 		}
 
-		if c.State == "exited" && p.Meta.State.Status != "stopped" {
-			p.Meta.State.State = "warning"
+		if c.State == "exited" && p.State.Status != "stopped" {
+			p.State.State = "warning"
 			continue
 		}
 
-		if c.State == "running" && p.Meta.State.Status != "running" {
-			p.Meta.State.State = "warning"
+		if c.State == "running" && p.State.Status != "running" {
+			p.State.State = "warning"
 			continue
 		}
 
-		if p.Meta.State.State == "error" {
+		if p.State.State == "error" {
 			continue
 		}
 
 
 		if c.State == "error" {
-			p.Meta.State.Containers.Errored++
-			p.Meta.State.State = c.State
-			p.Meta.State.Status = c.Status
+			p.State.Containers.Errored++
+			p.State.State = c.State
+			p.State.Status = c.Status
 			continue
 		}
 	}
 
 	if len(p.Containers) == 0 {
-		p.Meta.State.State = PodStateDeleted
+		p.State.State = PodStateDeleted
 	}
 
-	fmt.Println("pod state:", p.Meta.State.State)
+	fmt.Println("pod state:", p.State.State)
 }
 
 const PodStateRunning   = "running"

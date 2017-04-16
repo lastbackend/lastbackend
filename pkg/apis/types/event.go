@@ -28,6 +28,8 @@ type EventList []Event
 type Event struct {
 	// Mark event as initial
 	Initial bool `json:"initial"`
+	// Mark event as initial
+	Ticker bool `json:"ticker"`
 	// Event meta
 	Meta NodeMeta `json:"meta"`
 	// Activity created time

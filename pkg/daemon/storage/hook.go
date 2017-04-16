@@ -34,28 +34,32 @@ type HookStorage struct {
 }
 
 // Get hooks by image
-func (s *HookStorage) GetByToken(ctx context.Context, token string) (*types.Hook, error) {
-	return nil, nil
+func (s *HookStorage) GetByToken(ctx context.Context, token string) (types.Hook, error) {
+	var hook = types.Hook{}
+	return hook, nil
 }
 
 // Get hooks by image
-func (s *HookStorage) List(ctx context.Context, id string) (*types.HookList, error) {
-	return nil, nil
+func (s *HookStorage) List(ctx context.Context, id string) ([]types.Hook, error) {
+	var hooks = []types.Hook{}
+	return hooks, nil
 }
 
 // Get hooks by image
-func (s *HookStorage) ListByImage(ctx context.Context, id string) (*types.HookList, error) {
-	return nil, nil
+func (s *HookStorage) ListByImage(ctx context.Context, id string) ([]types.Hook, error) {
+	var hooks = []types.Hook{}
+	return hooks, nil
 }
 
 // Get hooks by service
-func (s *HookStorage) ListByService(ctx context.Context, id string) (*types.HookList, error) {
-	return nil, nil
+func (s *HookStorage) ListByService(ctx context.Context, id string) ([]types.Hook, error) {
+	var hooks = []types.Hook{}
+	return hooks, nil
 }
 
 // Insert new hook into storage
-func (s *HookStorage) Insert(ctx context.Context, hook *types.Hook) (*types.Hook, error) {
-	return nil, nil
+func (s *HookStorage) Insert(ctx context.Context, hook *types.Hook) error {
+	return nil
 }
 
 // Remove  hook by service id from storage

@@ -20,11 +20,9 @@ package image
 
 import (
 	"context"
-	"fmt"
 	"github.com/lastbackend/lastbackend/pkg/apis/types"
 	"github.com/lastbackend/lastbackend/pkg/daemon/build"
 	c "github.com/lastbackend/lastbackend/pkg/daemon/context"
-	"strings"
 )
 
 var Util IUtil = util{}
@@ -34,75 +32,63 @@ func Create(ctx context.Context, registry string, source types.ServiceSource) (*
 	var (
 		log     = c.Get().GetLogger()
 		storage = c.Get().GetStorage()
+		image   = types.Image{}
 	)
 
 	log.Debug("Create image")
+	image.Meta.SetDefault()
+	image.Meta.Name = Util.Name(ctx, registry, source.Repo)
 
-	name := Util.Name(ctx, registry, source.Repo)
-	isource := types.ImageSource{
+	image.Source = types.ImageSource{
 		Hub:   source.Hub,
 		Owner: source.Owner,
 		Repo:  source.Repo,
 		Tag:   source.Branch,
 	}
 
-	img, err := storage.Image().Get(ctx, name)
-	if err != nil {
-		return nil, err
+	if err := storage.Image().Insert(ctx, &image); err != nil {
+		return &image, err
 	}
-	if img == nil {
-		img, err = storage.Image().Insert(ctx, name, &isource)
-		if err != nil {
-			return nil, err
+
+	if _, err := build.Create(ctx, image.Meta.Name, &image.Source); err != nil {
+		return &image, err
+	}
+
+	auth := Util.RegistryAuth(ctx, image.Meta.Name)
+	if auth != nil {
+		image.Registry.Auth = types.RegistryAuth{
+			Server : auth.Server,
+			Username : auth.Username,
+			Password : auth.Password,
 		}
 	}
 
-	_, err = build.Create(ctx, img.Meta.Name, &source)
-	if err != nil {
-		return nil, err
-	}
-
-	img, err = storage.Image().Get(ctx, img.Meta.Name)
-	if err != nil {
-		return nil, err
-	}
-
-	img.Meta.Name = fmt.Sprintf("%s:%s-%d", img.Meta.Name, strings.Split(img.Source.Hub, ".")[0], img.Meta.Builds)
-
-	auth := Util.RegistryAuth(ctx, name)
-	if auth != nil {
-		img.Registry.Auth = new(types.RegistryAuth)
-		img.Registry.Auth.Server = auth.Server
-		img.Registry.Auth.Username = auth.Username
-		img.Registry.Auth.Password = auth.Password
-	}
-
-	return img, nil
+	return &image, nil
 }
 
-func Get(ctx context.Context, namespace string) (*types.Image, error) {
+func Get(ctx context.Context, reqistry string, source types.ServiceSource) (*types.Image, error) {
 
 	var (
 		log     = c.Get().GetLogger()
 		storage = c.Get().GetStorage()
-		name    = strings.Split(namespace, ":")[0]
 	)
 
 	log.Debug("Get image")
+	name := Util.Name(ctx, reqistry, source.Repo)
 
-	img, err := storage.Image().Get(ctx, name)
+	image, err := storage.Image().Get(ctx, name)
 	if err != nil {
 		return nil, err
 	}
-	img.Meta.Name = fmt.Sprintf("%s:%s-%d", img.Meta.Name, strings.Split(img.Source.Hub, ".")[0], img.Meta.Builds)
 
-	auth := Util.RegistryAuth(ctx, name)
+	auth := Util.RegistryAuth(ctx, image.Meta.Name)
 	if auth != nil {
-		img.Registry.Auth = new(types.RegistryAuth)
-		img.Registry.Auth.Server = auth.Server
-		img.Registry.Auth.Username = auth.Username
-		img.Registry.Auth.Password = auth.Password
+		image.Registry.Auth = types.RegistryAuth{
+			Server : auth.Server,
+			Username : auth.Username,
+			Password : auth.Password,
+		}
 	}
 
-	return img, nil
+	return &image, nil
 }
