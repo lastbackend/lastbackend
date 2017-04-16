@@ -49,12 +49,12 @@ func Init() (*DB, error) {
 	if err != nil {
 		return nil, err
 	}
-    defer d.Close()
 
 	return d, nil
 }
 
 func (d *DB) Get(fieldname string, iface interface{}) error {
+	defer d.Close()
 
 	err := d.db.View(func(tx *bolt.Tx) error {
 		bucket := tx.Bucket([]byte("storage"))
@@ -82,6 +82,7 @@ func (d *DB) Get(fieldname string, iface interface{}) error {
 }
 
 func (d *DB) Set(fieldname string, iface interface{}) error {
+	defer d.Close()
 
 	err := d.db.Update(func(tx *bolt.Tx) error {
 		bucket, err := tx.CreateBucketIfNotExists([]byte("storage"))

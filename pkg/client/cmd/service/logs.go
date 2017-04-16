@@ -86,7 +86,7 @@ func LogsServiceCmd(name string) {
 		}
 	}
 
-	reader, err := Logs(namespace, service.Name, m[choice].Pod, m[choice].Container)
+	reader, err := Logs(namespace, service.Meta.Name, m[choice].Pod, m[choice].Container)
 	if err != nil {
 		log.Error(err)
 		return
