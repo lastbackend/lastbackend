@@ -52,7 +52,7 @@ func Current() (*n.Namespace, error) {
 
 	err = storage.Get("namespace", &namespace)
 	if err != nil {
-		return nil, errors.New(err.Error())
+		return nil, errors.UnknownMessage
 	}
 
 	return namespace, nil

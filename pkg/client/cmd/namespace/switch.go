@@ -33,7 +33,7 @@ func SwitchCmd(name string) {
 		return
 	}
 
-	fmt.Printf("The namaspace `%s` was selected as the current", namespace.Name)
+	fmt.Printf("The namespace `%s` was selected as the current", namespace.Name)
 }
 
 func Switch(name string) (*n.Namespace, error) {
@@ -50,7 +50,7 @@ func Switch(name string) (*n.Namespace, error) {
 		AddHeader("Content-Type", "application/json").
 		Request(&namespace, er)
 	if err != nil {
-		return nil, errors.New(err.Error())
+		return nil, errors.New(er.Message)
 	}
 
 	if er.Code == 401 {
@@ -63,7 +63,7 @@ func Switch(name string) (*n.Namespace, error) {
 
 	err = storage.Set("namespace", namespace)
 	if err != nil {
-		return nil, errors.New(err.Error())
+		return nil, errors.UnknownMessage
 	}
 
 	return namespace, nil

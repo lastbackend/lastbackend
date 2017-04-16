@@ -34,7 +34,7 @@ func RemoveCmd(name string) {
 		return
 	}
 
-	fmt.Print("Successful")
+	fmt.Print("Service `" + name + "` succesfully removed")
 }
 
 func Remove(name string) error {

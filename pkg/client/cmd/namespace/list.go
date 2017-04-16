@@ -51,7 +51,7 @@ func List() (*n.NamespaceList, error) {
 		GET("/namespace").
 		Request(namespaceList, er)
 	if err != nil {
-		return nil, err
+		return nil, errors.New(er.Message)
 	}
 
 	if er.Code == 401 {

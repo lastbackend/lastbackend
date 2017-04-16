@@ -54,7 +54,7 @@ func Get(name string) (*n.Namespace, error) {
 		AddHeader("Content-Type", "application/json").
 		Request(&namespace, er)
 	if err != nil {
-		return nil, errors.New(err.Error())
+		return nil, errors.New(er.Message)
 	}
 
 	if er.Code == 401 {

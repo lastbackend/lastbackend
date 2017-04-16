@@ -38,7 +38,7 @@ func CreateCmd(name, description string) {
 		return
 	}
 
-	fmt.Print("Successful")
+	fmt.Print("Namespace `" + name + "` is created")
 }
 
 func Create(name, description string) error {
@@ -60,7 +60,7 @@ func Create(name, description string) error {
 		BodyJSON(createS{name, description}).
 		Request(&namespace, er)
 	if err != nil {
-		return err
+		return errors.New(er.Message)
 	}
 
 	if er.Code == 401 {

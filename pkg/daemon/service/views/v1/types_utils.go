@@ -20,8 +20,10 @@ package v1
 
 import (
 	"encoding/json"
+	"fmt"
 	"github.com/lastbackend/lastbackend/pkg/apis/types"
 	"github.com/lastbackend/lastbackend/pkg/daemon/pod/views/v1"
+	"github.com/lastbackend/lastbackend/pkg/util/table"
 	"strings"
 )
 
@@ -66,28 +68,44 @@ func NewList(obj *types.ServiceList) *ServiceList {
 	return s
 }
 
-func (s *Service) DrawTable(projectName string) {
-	//table.PrintHorizontal(map[string]interface{}{
-	//	"ID":      s.ID,
-	//	"NAME":    s.Name,
-	//	"PROJECT": projectName,
-	//	"PODS":    len(s.Spec.PodList),
-	//})
-	//
-	//t := table.New([]string{" ", "NAME", "STATUS", "CONTAINERS"})
-	//t.VisibleHeader = true
-	//
-	//for _, pod := range s.Spec.PodList {
-	//	t.AddRow(map[string]interface{}{
-	//		" ":          "",
-	//		"NAME":       pod.Name,
-	//		"STATUS":     pod.Status,
-	//		"CONTAINERS": len(pod.ContainerList),
-	//	})
-	//}
-	//t.AddRow(map[string]interface{}{})
-	//
-	//t.Print()
+func (s *Service) DrawTable(namespaceName string) {
+	table.PrintHorizontal(map[string]interface{}{
+		"NAME":        s.Meta.Name,
+		"DESCRIPTION": s.Meta.Description,
+		"NAMESPACE":   namespaceName,
+		"REPLICAS":    s.Meta.Replicas,
+		"MEMORY":      s.Config.Memory,
+		"IMAGE":       s.Config.Image,
+		"CREATED":     s.Meta.Created,
+		"UPDATED":     s.Meta.Updated,
+	})
+
+	fmt.Println("\n\tPODS")
+	for _, pod := range s.Pods {
+		table.PrintHorizontal(map[string]interface{}{
+			"\tID":                 pod.Meta.ID,
+			"\tSTATE":              pod.Meta.State.State,
+			"\tSTATUS":             pod.Meta.State.Status,
+			"\tTOTAL CONTAINERS":   pod.Meta.State.Containers.Total,
+			"\tRUNNING CONTAINERS": pod.Meta.State.Containers.Running,
+			"\tCREATED CONTAINERS": pod.Meta.State.Containers.Created,
+			"\tSTOPPED CONTAINERS": pod.Meta.State.Containers.Stopped,
+			"\tERRORED CONTAINERS": pod.Meta.State.Containers.Errored,
+		})
+
+		fmt.Println("\n\t\tCONTAINERS")
+		for _, container := range pod.Containers {
+			table.PrintHorizontal(map[string]interface{}{
+				"\t\tID":      container.ID,
+				"\t\tIMAGE":   container.Image,
+				"\t\tSTATE":   container.State,
+				"\t\tSTATUS":  container.Status,
+				"\t\tPORTS":   container.Ports,
+				"\t\tCREATED": container.Created,
+				"\t\tSTARTED": container.Started,
+			})
+		}
+	}
 }
 
 func (obj *ServiceList) ToJson() ([]byte, error) {
@@ -97,34 +115,22 @@ func (obj *ServiceList) ToJson() ([]byte, error) {
 	return json.Marshal(obj)
 }
 
-func (s *ServiceList) DrawTable(projectName string) {
-	//for _, s := range *s {
-	//
-	//	t := make(map[string]interface{})
-	//	t["ID"] = s.ID
-	//	t["NAME"] = s.Name
-	//
-	//	if s.Spec != nil {
-	//		t["PODS"] = len(s.Spec.PodList)
-	//	}
-	//
-	//	table.PrintHorizontal(t)
-	//
-	//	if s.Spec != nil {
-	//		for _, pod := range s.Spec.PodList {
-	//			tpods := table.New([]string{" ", "NAME", "STATUS", "CONTAINERS"})
-	//			tpods.VisibleHeader = true
-	//
-	//			tpods.AddRow(map[string]interface{}{
-	//				" ":          "",
-	//				"NAME":       pod.Name,
-	//				"STATUS":     pod.Status,
-	//				"CONTAINERS": len(pod.ContainerList),
-	//			})
-	//			tpods.Print()
-	//		}
-	//	}
-	//
-	//	fmt.Print("\n\n")
-	//}
+func (sl *ServiceList) DrawTable(namespaceName string) {
+	t := table.New([]string{"NAME", "DESCRIPTION", "REPLICAS", "CREATED", "UPDATED"})
+	t.VisibleHeader = true
+
+	fmt.Println("NAMESPACE: ", namespaceName)
+	for _, s := range *sl {
+		t.AddRow(map[string]interface{}{
+			"NAME":        s.Meta.Name,
+			"DESCRIPTION": s.Meta.Description,
+			"REPLICAS":    s.Meta.Replicas,
+			"CREATED":     s.Meta.Created.String()[:10],
+			"UPDATED":     s.Meta.Updated.String()[:10],
+		})
+	}
+
+	t.AddRow(map[string]interface{}{})
+
+	t.Print()
 }

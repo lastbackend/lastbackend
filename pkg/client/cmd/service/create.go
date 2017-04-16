@@ -23,7 +23,6 @@ import (
 	c "github.com/lastbackend/lastbackend/pkg/client/context"
 	n "github.com/lastbackend/lastbackend/pkg/daemon/namespace/views/v1"
 	"github.com/lastbackend/lastbackend/pkg/errors"
-	"log"
 )
 
 type createS struct {
@@ -64,6 +63,8 @@ func CreateCmd(name, image, template, url string, replicas int) {
 
 	// TODO: Waiting for start service
 	// TODO: Show spinner
+
+	fmt.Print("Service `" + name + "` is succesfully created")
 }
 
 func Create(name, image, template, url string, config *Config) error {
@@ -115,7 +116,7 @@ func Create(name, image, template, url string, config *Config) error {
 		BodyJSON(cfg).
 		Request(res, er)
 	if err != nil {
-		return err
+		return errors.New(er.Message)
 	}
 
 	if er.Code == 401 {
@@ -125,8 +126,6 @@ func Create(name, image, template, url string, config *Config) error {
 	if er.Code != 0 {
 		return errors.New(er.Message)
 	}
-
-	log.Println(res)
 
 	return nil
 }

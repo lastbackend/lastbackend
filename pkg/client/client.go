@@ -222,27 +222,27 @@ func configure(app *cli.Cli) {
 			}
 		})
 
-		c.Command("update", "if you wish to change configuration of the service", func(sc *cli.Cmd) {
-			sc.Action = func() {
-				if len(*name) == 0 {
-					c.PrintHelp()
-					return
-				}
+		//c.Command("update", "if you wish to change configuration of the service", func(sc *cli.Cmd) {
+		//	sc.Action = func() {
+		//		if len(*name) == 0 {
+		//			c.PrintHelp()
+		//			return
+		//		}
+		//
+		//		s.UpdateCmd(*name)
+		//	}
+		//})
 
-				s.UpdateCmd(*name)
-			}
-		})
-
-		c.Command("logs", "show service logs", func(sc *cli.Cmd) {
-			sc.Action = func() {
-				if len(*name) == 0 {
-					c.PrintHelp()
-					return
-				}
-
-				s.LogsServiceCmd(*name)
-			}
-		})
+		//c.Command("logs", "show service logs", func(sc *cli.Cmd) {
+		//	sc.Action = func() {
+		//		if len(*name) == 0 {
+		//			c.PrintHelp()
+		//			return
+		//		}
+		//
+		//		s.LogsServiceCmd(*name)
+		//	}
+		//})
 
 		c.Command("remove", "remove an existing service", func(sc *cli.Cmd) {
 			sc.Action = func() {

@@ -31,7 +31,7 @@ func RemoveCmd(name string) {
 		return
 	}
 
-	fmt.Print("Successful")
+	fmt.Print("namespace `" + name + "` is successfully removed")
 }
 
 func Remove(name string) error {
@@ -53,7 +53,7 @@ func Remove(name string) error {
 		AddHeader("Content-Type", "application/json").
 		Request(res, er)
 	if err != nil {
-		return errors.New(err.Error())
+		return errors.New(er.Message)
 	}
 
 	if er.Code == 401 {
@@ -73,7 +73,7 @@ func Remove(name string) error {
 		if name == namespace.Name {
 			err = storage.Set("namespace", nil)
 			if err != nil {
-				return errors.New(err.Error())
+				return errors.UnknownMessage
 			}
 		}
 	}

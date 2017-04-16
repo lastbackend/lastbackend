@@ -18,105 +18,105 @@
 
 package service
 
-import (
-	"github.com/lastbackend/lastbackend/pkg/apis/types"
-	c "github.com/lastbackend/lastbackend/pkg/client/context"
-	n "github.com/lastbackend/lastbackend/pkg/daemon/namespace/views/v1"
-	s "github.com/lastbackend/lastbackend/pkg/daemon/service/views/v1"
-	"github.com/lastbackend/lastbackend/pkg/editor"
-	"github.com/lastbackend/lastbackend/pkg/errors"
-	"gopkg.in/yaml.v2"
-	"strings"
-)
-
-func UpdateCmd(name string) {
-
-	var (
-		log = c.Get().GetLogger()
-	)
-
-	serviceModel, _, err := Inspect(name)
-	if err != nil {
-		log.Error(err)
-		return
-	}
-
-	config, err := GetConfig(serviceModel)
-	if err != nil {
-		log.Error(err)
-		return
-	}
-
-	err = Update(name, *config)
-	if err != nil {
-		log.Error(err)
-		return
-	}
-
-	log.Info("Successful")
-}
-
-func Update(name string, config types.ServiceUpdateConfig) error {
-
-	var (
-		err       error
-		http      = c.Get().GetHttpClient()
-		storage   = c.Get().GetStorage()
-		er        = new(errors.Http)
-		namespace *n.Namespace
-		res       = new(types.Namespace)
-	)
-
-	err = storage.Get("namespace", namespace)
-	if err != nil {
-		return errors.New(err.Error())
-	}
-
-	if namespace.Name == "" {
-		return errors.New("Namespace didn't select")
-	}
-
-	_, _, err = http.
-		PUT("/namespace/"+namespace.Name+"/service/"+name).
-		AddHeader("Content-Type", "application/json").
-		BodyJSON(config).
-		Request(&res, er)
-	if err != nil {
-		return err
-	}
-
-	if er.Code == 401 {
-		return errors.NotLoggedMessage
-	}
-
-	if er.Code != 0 {
-		return errors.New(er.Message)
-	}
-
-	return nil
-}
-
-func GetConfig(service *s.Service) (*types.ServiceUpdateConfig, error) {
-
-	// need var config = service.Config
-	var config = struct{}{}
-
-	buf, err := yaml.Marshal(config)
-	if err != nil {
-		return nil, err
-	}
-
-	// TODO: To allow for the possibility of naming the session re-editing
-	res, err := editor.Run(strings.NewReader(string(buf)))
-	if err != nil {
-		return nil, err
-	}
-
-	err = res.FromYAML(&config)
-	if err != nil {
-		// TODO: When is have error parse yaml. Ask question about reopen config for correct this
-		return nil, err
-	}
-
-	return &types.ServiceUpdateConfig{}, nil
-}
+//import (
+//	"github.com/lastbackend/lastbackend/pkg/apis/types"
+//	c "github.com/lastbackend/lastbackend/pkg/client/context"
+//	n "github.com/lastbackend/lastbackend/pkg/daemon/namespace/views/v1"
+//	s "github.com/lastbackend/lastbackend/pkg/daemon/service/views/v1"
+//	"github.com/lastbackend/lastbackend/pkg/editor"
+//	"github.com/lastbackend/lastbackend/pkg/errors"
+//	"gopkg.in/yaml.v2"
+//	"strings"
+//)
+//
+//func UpdateCmd(name string) {
+//
+//	var (
+//		log = c.Get().GetLogger()
+//	)
+//
+//	serviceModel, _, err := Inspect(name)
+//	if err != nil {
+//		log.Error(err)
+//		return
+//	}
+//
+//	config, err := GetConfig(serviceModel)
+//	if err != nil {
+//		log.Error(err)
+//		return
+//	}
+//
+//	err = Update(name, *config)
+//	if err != nil {
+//		log.Error(err)
+//		return
+//	}
+//
+//	log.Info("Successful")
+//}
+//
+//func Update(name string, config types.ServiceUpdateConfig) error {
+//
+//	var (
+//		err       error
+//		http      = c.Get().GetHttpClient()
+//		storage   = c.Get().GetStorage()
+//		er        = new(errors.Http)
+//		namespace *n.Namespace
+//		res       = new(types.Namespace)
+//	)
+//
+//	err = storage.Get("namespace", namespace)
+//	if err != nil {
+//		return errors.New(err.Error())
+//	}
+//
+//	if namespace.Name == "" {
+//		return errors.New("Namespace didn't select")
+//	}
+//
+//	_, _, err = http.
+//		PUT("/namespace/"+namespace.Name+"/service/"+name).
+//		AddHeader("Content-Type", "application/json").
+//		BodyJSON(config).
+//		Request(&res, er)
+//	if err != nil {
+//		return err
+//	}
+//
+//	if er.Code == 401 {
+//		return errors.NotLoggedMessage
+//	}
+//
+//	if er.Code != 0 {
+//		return errors.New(er.Message)
+//	}
+//
+//	return nil
+//}
+//
+//func GetConfig(service *s.Service) (*types.ServiceUpdateConfig, error) {
+//
+//	// need var config = service.Config
+//	var config = struct{}{}
+//
+//	buf, err := yaml.Marshal(config)
+//	if err != nil {
+//		return nil, err
+//	}
+//
+//	// TODO: To allow for the possibility of naming the session re-editing
+//	res, err := editor.Run(strings.NewReader(string(buf)))
+//	if err != nil {
+//		return nil, err
+//	}
+//
+//	err = res.FromYAML(&config)
+//	if err != nil {
+//		// TODO: When is have error parse yaml. Ask question about reopen config for correct this
+//		return nil, err
+//	}
+//
+//	return &types.ServiceUpdateConfig{}, nil
+//}
