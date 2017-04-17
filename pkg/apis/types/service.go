@@ -38,6 +38,25 @@ type Service struct {
 	Pods map[string]*Pod `json:"pods"`
 }
 
+
+type ServiceCreateSpec struct {
+	// Service Meta
+	Meta ServiceMeta `json:"meta"`
+	// Service source info
+	Source ServiceSource `json:"source"`
+	// Service config info
+	Config ServiceConfig `json:"config"`
+}
+
+type ServiceUpdateSpec struct {
+	// Service Meta
+	Meta ServiceMeta `json:"meta"`
+	// Service source info
+	Source ServiceSource `json:"source"`
+	// Service config info
+	Config ServiceConfig `json:"config"`
+}
+
 type ServiceMeta struct {
 	Meta
 	// Service replicas

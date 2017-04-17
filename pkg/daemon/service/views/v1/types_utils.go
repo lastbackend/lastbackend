@@ -30,6 +30,7 @@ func New(obj *types.Service) *Service {
 
 	s.Meta.Name = obj.Meta.Name
 	s.Meta.Description = obj.Meta.Description
+	s.Meta.Namespace = obj.Meta.Namespace
 	s.Meta.Region = obj.Meta.Region
 	s.Meta.Updated = obj.Meta.Updated
 	s.Meta.Created = obj.Meta.Created

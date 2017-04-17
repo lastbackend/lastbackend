@@ -29,11 +29,13 @@ type Service struct {
 	Config      Config       `json:"config,omitempty"`
 }
 
+
 type ServiceMeta struct {
 	Name        string       `json:"name"`
 	Description string       `json:"description"`
 	Region      string       `json:"region"`
 	Replicas 	  int          `json:"replicas,omitempty"`
+	Namespace   string       `json:"namespace"`
 	Created     time.Time    `json:"created"`
 	Updated     time.Time    `json:"updated"`
 }

@@ -28,7 +28,6 @@ import (
 	"strings"
 	"time"
 	"github.com/lastbackend/lastbackend/pkg/daemon/storage/store"
-	"encoding/json"
 )
 
 type service struct {
@@ -177,9 +176,6 @@ func (s *service) Update(service *types.Service, rq *request.RequestServiceUpdat
 	}
 
 	s.Scale(s.Context, service)
-
-	js, _ := json.Marshal(service.Pods)
-	log.Debug(string(js))
 
 	if err = storage.Service().Update(s.Context, service); err != nil {
 		log.Error("Error: insert service to db", err)
@@ -408,6 +404,16 @@ func (s *service) GenerateSpec(service *types.Service) types.PodSpec {
 	state.State = service.Meta.State.State
 
 	return spec
+}
+
+func (s *service) Watch(service chan *types.Service) {
+	var (
+		log     = ctx.Get().GetLogger()
+		storage = ctx.Get().GetStorage()
+	)
+
+	log.Debug("Service: Watch")
+	storage.Service().Watch(s.Context, s.Namespace.Name, service)
 }
 
 func createConfig(opts *request.ServiceConfig) (*types.ServiceConfig, error) {

@@ -30,6 +30,7 @@ import (
 	"reflect"
 	"regexp"
 	"strings"
+	"fmt"
 )
 
 type store struct {
@@ -266,6 +267,25 @@ func (s *store) Begin(ctx context.Context) st.ITx {
 		context: ctx,
 		txn:     s.client.KV.Txn(ctx),
 	}
+}
+
+func (s *store) Watch(ctx context.Context, key, filter string, f func(string)) error {
+	key = path.Join(s.pathPrefix, key)
+	if !strings.HasSuffix(key, "/") {
+		key += "/"
+	}
+
+	rch := s.client.Watch(context.Background(), key , clientv3.WithPrefix())
+	for wresp := range rch {
+		for _, ev := range wresp.Events {
+			r, _ := regexp.Compile(filter)
+			if (filter != "") && !r.MatchString(string(ev.Kv.Key)) {
+				continue
+			}
+			f(string(ev.Kv.Key))
+		}
+	}
+	return nil
 }
 
 func decode(s serializer.Codec, value []byte, out interface{}) error {

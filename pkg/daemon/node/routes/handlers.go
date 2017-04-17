@@ -77,7 +77,6 @@ func NodeEventH(w http.ResponseWriter, r *http.Request) {
 	}
 
 	response, err := v1.NewSpec(item).ToJson()
-	log.Debug(string(response))
 	if err != nil {
 		log.Error("Error: convert struct to json", err.Error())
 		errors.HTTP.InternalServerError(w)

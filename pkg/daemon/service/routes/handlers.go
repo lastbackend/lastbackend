@@ -29,6 +29,7 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/util/http/utils"
 	"net/http"
 	"github.com/lastbackend/lastbackend/pkg/daemon/storage/store"
+	"github.com/lastbackend/lastbackend/pkg/apis/types"
 )
 
 func ServiceListH(w http.ResponseWriter, r *http.Request) {
@@ -121,6 +122,58 @@ func ServiceInfoH(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 }
+
+
+func ServiceWatchH(w http.ResponseWriter, r *http.Request) {
+	var (
+		err error
+		log = context.Get().GetLogger()
+		nid = utils.Vars(r)["namespace"]
+	)
+
+	log.Debug("Get service handler")
+
+	ns := namespace.New(r.Context())
+	item, err := ns.Get(nid)
+	if err != nil {
+		log.Error("Error: find namespace by id", err.Error())
+		errors.HTTP.InternalServerError(w)
+		return
+	}
+	if item == nil {
+		errors.New("namespace").NotFound().Http(w)
+		return
+	}
+
+	s := service.New(r.Context(), item.Meta)
+
+	service := make(chan *types.Service)
+
+	go func() {
+	select {
+		case s:= <- service:
+			{
+				log.Debug(s.Meta.Name, "changed")
+			}
+	}
+	}()
+
+	s.Watch(service)
+	select {}
+
+	if err != nil {
+		log.Error("Error: convert struct to json", err.Error())
+		errors.HTTP.InternalServerError(w)
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+	if _, err = w.Write([]byte("")); err != nil {
+		log.Error("Error: write response", err.Error())
+		return
+	}
+}
+
 
 func ServiceCreateH(w http.ResponseWriter, r *http.Request) {
 
