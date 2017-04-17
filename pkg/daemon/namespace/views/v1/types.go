@@ -23,10 +23,14 @@ import (
 )
 
 type Namespace struct {
+	Meta NamespaceMeta `json:"meta"`
+}
+
+type NamespaceMeta struct {
 	Name        string    `json:"name"`
 	Description string    `json:"description"`
 	Created     time.Time `json:"created"`
 	Updated     time.Time `json:"updated"`
 }
 
-type NamespaceList []Namespace
+type NamespaceList []*Namespace

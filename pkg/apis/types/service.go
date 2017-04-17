@@ -23,7 +23,7 @@ import (
 	"errors"
 )
 
-type ServiceList []Service
+type ServiceList []*Service
 
 type Service struct {
 	// Service Meta

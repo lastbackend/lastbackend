@@ -45,4 +45,4 @@ type Config struct {
 	Region  string `json:"region,omitempty"`
 }
 
-type ServiceList []Service
+type ServiceList []*Service

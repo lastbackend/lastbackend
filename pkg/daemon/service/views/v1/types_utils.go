@@ -28,7 +28,7 @@ import (
 )
 
 func New(obj *types.Service) *Service {
-	s := new(Service)
+	s := Service{}
 
 	s.Meta.Name = obj.Meta.Name
 	s.Meta.Description = obj.Meta.Description
@@ -43,29 +43,29 @@ func New(obj *types.Service) *Service {
 
 	if len(obj.Pods) == 0 {
 		s.Pods = make([]v1.PodInfo, 0)
-		return s
+		return &s
 	}
 
 	for _, pod := range obj.Pods {
 		s.Pods = append(s.Pods, v1.ToPodInfo(pod))
 	}
 
-	return s
+	return &s
 }
 
 func (obj *Service) ToJson() ([]byte, error) {
 	return json.Marshal(obj)
 }
 
-func NewList(obj *types.ServiceList) *ServiceList {
-	s := new(ServiceList)
+func NewList(obj types.ServiceList) *ServiceList {
+	s := ServiceList{}
 	if obj == nil {
 		return nil
 	}
-	for _, v := range *obj {
-		*s = append(*s, *New(&v))
+	for _, v := range obj {
+		s = append(s, New(v))
 	}
-	return s
+	return &s
 }
 
 func (s *Service) DrawTable(namespaceName string) {

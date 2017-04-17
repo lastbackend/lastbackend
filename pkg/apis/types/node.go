@@ -69,5 +69,5 @@ type NodeResources struct {
 
 type NodeSpec struct {
 	// Pod spec for node
-	Pods []PodNodeSpec `json:"pods"`
+	Pods map[string]PodNodeSpec `json:"pods"`
 }

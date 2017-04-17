@@ -26,6 +26,8 @@ import (
 type Pod struct {
 	// Pod Meta
 	Meta PodMeta `json:"meta"`
+	// Pod state
+	State PodState `json:"state"`
 	// Container spec
 	Spec PodSpec `json:"spec"`
 }
@@ -33,6 +35,8 @@ type Pod struct {
 type PodInfo struct {
 	// Pod Meta
 	Meta PodMeta `json:"meta"`
+	// Pod state
+	State PodState `json:"state"`
 	// Pod containers
 	Containers []v1.Container `json:"containers"`
 }
@@ -42,8 +46,6 @@ type PodMeta struct {
 	ID string `json:"id"`
 	// Meta labels
 	Labels map[string]string `json:"lables"`
-	// Pod state
-	State PodState `json:"state"`
 	// Meta created time
 	Created time.Time `json:"created"`
 	// Meta updated time
