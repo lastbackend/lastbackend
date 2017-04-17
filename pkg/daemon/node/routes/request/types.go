@@ -25,7 +25,6 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/errors"
 	"io"
 	"io/ioutil"
-	"fmt"
 )
 
 type RequestNodeEventS struct {
@@ -42,8 +41,6 @@ func (s *RequestNodeEventS) DecodeAndValidate(reader io.Reader) *errors.Err {
 		log.Error(err)
 		return errors.New("node event").Unknown(err)
 	}
-
-	fmt.Println(string(body))
 
 	err = json.Unmarshal(body, s)
 	if err != nil {

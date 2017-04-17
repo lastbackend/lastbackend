@@ -28,6 +28,14 @@ type Namespace struct {
 	Meta Meta `json:"meta"`
 }
 
+type NamespaceCreateSpec struct {
+	Meta Meta `json:"meta"`
+}
+
+type NamespaceUpdateSpec struct {
+	Meta Meta `json:"meta"`
+}
+
 func (p *Namespace) ToJson() ([]byte, error) {
 	buf, err := json.Marshal(p)
 	if err != nil {

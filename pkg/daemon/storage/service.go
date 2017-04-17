@@ -24,6 +24,7 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/daemon/storage/store"
 	"time"
 	"fmt"
+	"regexp"
 )
 
 const serviceStorage string = "services"
@@ -336,6 +337,34 @@ func (s *ServiceStorage) RemoveByNamespace(ctx context.Context, namespace string
 		return err
 	}
 
+	return nil
+}
+
+func (s *ServiceStorage) Watch(ctx context.Context, namespace string, service chan *types.Service) error {
+	const filter = `\b.+` + namespaceStorage + `\/([a-z0-9-]{36})\/`  + serviceStorage + `\/([a-z0-9-]{36})\/pods\b`
+	client, destroy, err := s.Client()
+	if err != nil {
+		return err
+	}
+	defer destroy()
+
+	var ns string
+	keyNamespace := s.util.Key(ctx, "helper", namespaceStorage, namespace)
+	if err := client.Get(ctx, keyNamespace, &ns); err != nil {
+		return err
+	}
+
+	r, _ := regexp.Compile(filter)
+	key := s.util.Key(ctx, namespaceStorage, ns, serviceStorage)
+	client.Watch(ctx, key, filter, func(key string) {
+		keys := r.FindStringSubmatch(key)
+		if len(keys) < 3 {
+			return
+		}
+		if svc, err := s.GetByID(ctx, keys[1], keys[2]); err == nil {
+			service <- &svc
+		}
+	})
 	return nil
 }
 
