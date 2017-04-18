@@ -57,9 +57,9 @@ func Create(ctx context.Context, registry string, source types.ServiceSource) (*
 	auth := Util.RegistryAuth(ctx, image.Meta.Name)
 	if auth != nil {
 		image.Registry.Auth = types.RegistryAuth{
-			Server : auth.Server,
-			Username : auth.Username,
-			Password : auth.Password,
+			Server:   auth.Server,
+			Username: auth.Username,
+			Password: auth.Password,
 		}
 	}
 
@@ -84,11 +84,11 @@ func Get(ctx context.Context, reqistry string, source types.ServiceSource) (*typ
 	auth := Util.RegistryAuth(ctx, image.Meta.Name)
 	if auth != nil {
 		image.Registry.Auth = types.RegistryAuth{
-			Server : auth.Server,
-			Username : auth.Username,
-			Password : auth.Password,
+			Server:   auth.Server,
+			Username: auth.Username,
+			Password: auth.Password,
 		}
 	}
 
-	return &image, nil
+	return image, nil
 }

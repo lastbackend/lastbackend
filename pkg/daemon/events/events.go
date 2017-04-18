@@ -43,6 +43,10 @@ func (e *Events) Listen() {
 			select {
 			case s := <-service:
 				{
+					if s == nil {
+						continue
+					}
+
 					log.Debugf("%s changed", s.Meta.Name)
 					if obj, err := v1.New(s).ToJson(); err == nil {
 						if room := hub.GetRoom("lastbackend"); room != nil {

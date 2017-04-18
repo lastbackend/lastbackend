@@ -37,13 +37,13 @@ func (s *ActivityStorage) Insert(ctx context.Context, activity *types.Activity) 
 	return nil
 }
 
-func (s *ActivityStorage) ListProjectActivity(ctx context.Context, projectID string) ([]types.Activity, error) {
-	var activities = []types.Activity{}
+func (s *ActivityStorage) ListProjectActivity(ctx context.Context, projectID string) ([]*types.Activity, error) {
+	var activities = []*types.Activity{}
 	return activities, nil
 }
 
-func (s *ActivityStorage) ListServiceActivity(ctx context.Context, serviceID string) ([]types.Activity, error) {
-	var activities = []types.Activity{}
+func (s *ActivityStorage) ListServiceActivity(ctx context.Context, serviceID string) ([]*types.Activity, error) {
+	var activities = []*types.Activity{}
 	return activities, nil
 }
 

@@ -167,6 +167,11 @@ func (s *store) Map(ctx context.Context, key, keyRegexFilter string, mapOutPtr i
 		}
 
 	}
+
+	if len(items) == 0 {
+		return errors.New(st.ErrKeyNotFound)
+	}
+
 	return decodeMap(s.codec, items, mapOutPtr)
 }
 
@@ -315,8 +320,8 @@ func decodeList(codec serializer.Codec, items map[string]map[string]buffer, list
 }
 
 func decodeMap(codec serializer.Codec, items map[string]buffer, mapOut interface{}) error {
-	v := reflect.ValueOf(mapOut)
 
+	v := reflect.ValueOf(mapOut)
 	if v.Kind() == reflect.Map {
 		for key, item := range items {
 			var obj = reflect.New(v.Type().Elem()).Interface().(interface{})

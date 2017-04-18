@@ -35,49 +35,48 @@ type NamespaceStorage struct {
 }
 
 // Get namespace by name
-func (s *NamespaceStorage) GetByID(ctx context.Context, id string) (types.Namespace, error) {
+func (s *NamespaceStorage) GetByID(ctx context.Context, id string) (*types.Namespace, error) {
 
 	const filter = `\b(.+)` + namespaceStorage + `\/[a-z0-9-]{36}\/(meta)\b`
-	namespace := types.Namespace{}
+	namespace := new(types.Namespace)
 
 	client, destroy, err := s.Client()
 	if err != nil {
-		return namespace, err
+		return nil, err
 	}
 	defer destroy()
 
 	key := s.util.Key(ctx, namespaceStorage, id)
-	if err := client.Map(ctx, key, filter, &namespace); err != nil {
-		return namespace, err
+	if err := client.Map(ctx, key, filter, namespace); err != nil {
+		return nil, err
 	}
 
 	return namespace, nil
 }
 
 // Get namespace by name
-func (s *NamespaceStorage) GetByName(ctx context.Context, name string) (types.Namespace, error) {
+func (s *NamespaceStorage) GetByName(ctx context.Context, name string) (*types.Namespace, error) {
 
 	var (
-		namespace types.Namespace
 		id string
 	)
 
 	client, destroy, err := s.Client()
 	if err != nil {
-		return namespace, err
+		return nil, err
 	}
 	defer destroy()
 
 	key := s.util.Key(ctx, "helper", namespaceStorage, name)
 	if err := client.Get(ctx, key, &id); err != nil {
-		return namespace, err
+		return nil, err
 	}
 
 	return s.GetByID(ctx, id)
 }
 
 // List projects
-func (s *NamespaceStorage) List(ctx context.Context) ([]types.Namespace, error) {
+func (s *NamespaceStorage) List(ctx context.Context) ([]*types.Namespace, error) {
 
 	const filter = `\b(.+)` + namespaceStorage + `\/[a-z0-9-]{36}\/(meta)\b`
 
@@ -88,7 +87,7 @@ func (s *NamespaceStorage) List(ctx context.Context) ([]types.Namespace, error) 
 	defer destroy()
 
 	key := s.util.Key(ctx, namespaceStorage)
-	namespaces := []types.Namespace{}
+	namespaces := []*types.Namespace{}
 	if err := client.List(ctx, key, filter, &namespaces); err != nil {
 		return nil, err
 	}
@@ -111,7 +110,6 @@ func (s *NamespaceStorage) Insert(ctx context.Context, namespace *types.Namespac
 	if err := tx.Create(keyHelper, namespace.Meta.ID, 0); err != nil {
 		return err
 	}
-
 
 	keyMeta := s.util.Key(ctx, namespaceStorage, namespace.Meta.ID, "meta")
 	if err := tx.Create(keyMeta, namespace.Meta, 0); err != nil {

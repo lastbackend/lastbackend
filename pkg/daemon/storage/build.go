@@ -36,23 +36,23 @@ type BuildStorage struct {
 }
 
 // Get build model by id
-func (s *BuildStorage) GetByID(ctx context.Context, imageID, id string) (types.Build, error) {
-	build := types.Build{}
+func (s *BuildStorage) GetByID(ctx context.Context, imageID, id string) (*types.Build, error) {
+	build := &types.Build{}
 	return build, nil
 }
 
 // Get builds by image
-func (s *BuildStorage) ListByImage(ctx context.Context, id string) ([]types.Build, error) {
-	builds := []types.Build{}
+func (s *BuildStorage) ListByImage(ctx context.Context, id string) ([]*types.Build, error) {
+	builds := []*types.Build{}
 	return builds, nil
 }
 
 // Insert new build into storage
-func (s *BuildStorage) Insert(ctx context.Context, imageName string, build *types.Build)  error {
+func (s *BuildStorage) Insert(ctx context.Context, imageName string, build *types.Build) error {
 
 	client, destroy, err := s.Client()
 	if err != nil {
-		return  err
+		return err
 	}
 	defer destroy()
 
@@ -61,7 +61,7 @@ func (s *BuildStorage) Insert(ctx context.Context, imageName string, build *type
 	keyImageMeta := s.util.Key(ctx, imageStorage, iname, "meta")
 	imeta := new(types.ImageMeta)
 	if err := client.Get(ctx, keyImageMeta, imeta); err != nil {
-		return  err
+		return err
 	}
 
 	tx := client.Begin(ctx)

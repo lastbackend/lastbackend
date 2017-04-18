@@ -18,8 +18,6 @@
 
 package wss
 
-import "fmt"
-
 type Room struct {
 	// Registered clients.
 	Clients map[*Client]bool
@@ -28,13 +26,11 @@ type Room struct {
 }
 
 func (r *Room) AddClient(client *Client) {
-	fmt.Println("Add new websocket client")
 	r.Clients[client] = true
 }
 
 func (r *Room) DelClient(client *Client) {
 	if _, ok := r.Clients[client]; ok {
-		fmt.Println("Delete websocket client")
 		close(client.Send)
 		delete(r.Clients, client)
 	}
@@ -44,13 +40,8 @@ func (r *Room) Listen() {
 	for {
 		select {
 		case message := <-r.Broadcast:
-
-			fmt.Println("receive new message for broadcast")
-			fmt.Printf("Total connected clients: %d \n", len(r.Clients))
 			for client := range r.Clients {
-				fmt.Println("send client message")
 				client.Send <- message
-				fmt.Println("message update sended")
 			}
 		}
 	}

@@ -25,12 +25,13 @@ type NodeList []*Node
 type Node struct {
 	// Node metadata
 	Meta NodeMeta `json:"meta"`
+	// Node state
+	State NodeState `json:"state"`
 	// Node spec info
 	Spec NodeSpec `json:"spec"`
 }
 
 type NodeCRI struct {
-
 }
 
 type NodeMeta struct {

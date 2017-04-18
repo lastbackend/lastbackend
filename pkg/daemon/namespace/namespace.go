@@ -36,7 +36,7 @@ func New(ctx context.Context) *namespace {
 func (ns *namespace) List() (types.NamespaceList, error) {
 	var (
 		storage = ctx.Get().GetStorage()
-		list = types.NamespaceList{}
+		list    = types.NamespaceList{}
 	)
 
 	items, err := storage.Namespace().List(ns.Context)
@@ -46,7 +46,7 @@ func (ns *namespace) List() (types.NamespaceList, error) {
 
 	for _, item := range items {
 		var ns = item
-		list = append(list, &ns)
+		list = append(list, ns)
 	}
 
 	return list, nil
@@ -58,7 +58,7 @@ func (ns *namespace) Get(id string) (*types.Namespace, error) {
 	)
 
 	n, err := storage.Namespace().GetByName(ns.Context, id)
-	return &n, err
+	return n, err
 }
 
 func (ns *namespace) Create(rq *request.RequestNamespaceCreateS) (*types.Namespace, error) {
