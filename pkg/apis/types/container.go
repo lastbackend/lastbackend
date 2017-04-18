@@ -42,6 +42,7 @@ type Container struct {
 }
 
 type ContainerSpec struct {
+	Meta ContainerMetaSpec `json:"meta"`
 	// Image spec
 	Image ImageSpec `json:"image"`
 	// Network spec
@@ -66,6 +67,10 @@ type ContainerSpec struct {
 	RestartPolicy ContainerRestartPolicySpec `json:"restart_policy"`
 	// Container volumes mount
 	Volumes []ContainerVolumeSpec `json:"volumes"`
+}
+
+type ContainerMetaSpec struct {
+	Meta
 }
 
 type ContainerNetworkSpec struct {
