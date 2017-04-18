@@ -58,7 +58,7 @@ func List() (*s.ServiceList, string, error) {
 	}
 
 	_, _, err = http.
-		GET("/namespace/"+namespace.Name+"/service").
+		GET("/namespace/"+namespace.Meta.Name+"/service").
 		Request(&services, er)
 	if err != nil {
 		return nil, "", errors.New(err.Error())
@@ -76,5 +76,5 @@ func List() (*s.ServiceList, string, error) {
 		return nil, "", errors.New("You don't have any services")
 	}
 
-	return services, namespace.Name, nil
+	return services, namespace.Meta.Name, nil
 }

@@ -56,7 +56,7 @@ func Inspect(name string) (*s.Service, string, error) {
 	}
 
 	_, _, err = http.
-		GET("/namespace/"+namespace.Name+"/service/"+name).
+		GET("/namespace/"+namespace.Meta.Name+"/service/"+name).
 		Request(&service, er)
 	if err != nil {
 		return nil, "", errors.New(er.Message)
@@ -70,5 +70,5 @@ func Inspect(name string) (*s.Service, string, error) {
 		return nil, "", errors.New(er.Message)
 	}
 
-	return service, namespace.Name, nil
+	return service, namespace.Meta.Name, nil
 }

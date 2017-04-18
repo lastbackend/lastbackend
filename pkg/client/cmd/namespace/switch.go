@@ -33,7 +33,7 @@ func SwitchCmd(name string) {
 		return
 	}
 
-	fmt.Printf("The namespace `%s` was selected as the current", namespace.Name)
+	fmt.Printf("The namespace `%s` was selected as the current", namespace.Meta.Name)
 }
 
 func Switch(name string) (*n.Namespace, error) {

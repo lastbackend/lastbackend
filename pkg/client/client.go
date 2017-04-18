@@ -92,12 +92,6 @@ func configure(app *cli.Cli) {
 
 	app.Command("deploy", "Deploy management", func(c *cli.Cmd) {
 
-		//c.Command("it", "deploy local sources", func(sc *cli.Cmd) {
-		//	sc.Action = func() {
-		//		// TODO: Deploy it command for deploy local sources in LB host
-		//	}
-		//})
-
 		c.Spec = "[URL][-t][-i][-n][--replicas]" // [-e][-p][-v]
 
 		var url = c.String(cli.StringArg{Name: "URL", Value: "", Desc: "git repo url", HideValue: true})
@@ -222,16 +216,23 @@ func configure(app *cli.Cli) {
 			}
 		})
 
-		//c.Command("update", "if you wish to change configuration of the service", func(sc *cli.Cmd) {
-		//	sc.Action = func() {
-		//		if len(*name) == 0 {
-		//			c.PrintHelp()
-		//			return
-		//		}
-		//
-		//		s.UpdateCmd(*name)
-		//	}
-		//})
+		c.Command("update", "if you wish to change configuration of the service", func(sc *cli.Cmd) {
+
+			sc.Spec = "[--desc][--nname][--replicas]"
+
+			var desc = sc.String(cli.StringOpt{Name: "desc", Value: "", Desc: "set description", HideValue: true})
+			var nname = sc.String(cli.StringOpt{Name: "nname", Value: "", Desc: "set new name", HideValue: true})
+			var replicas = sc.Int(cli.IntOpt{Name: "replicas", Value: 0, Desc: "set replicas number", HideValue: true})
+
+			sc.Action = func() {
+				if len(*name) == 0 {
+					c.PrintHelp()
+					return
+				}
+
+				s.UpdateCmd(*name, *nname, *desc, *replicas)
+			}
+		})
 
 		//c.Command("logs", "show service logs", func(sc *cli.Cmd) {
 		//	sc.Action = func() {

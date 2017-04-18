@@ -23,10 +23,10 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/daemon/namespace"
 	"github.com/lastbackend/lastbackend/pkg/daemon/namespace/routes/request"
 	"github.com/lastbackend/lastbackend/pkg/daemon/namespace/views/v1"
+	"github.com/lastbackend/lastbackend/pkg/daemon/storage/store"
 	"github.com/lastbackend/lastbackend/pkg/errors"
 	"github.com/lastbackend/lastbackend/pkg/util/http/utils"
 	"net/http"
-	"github.com/lastbackend/lastbackend/pkg/daemon/storage/store"
 )
 
 func NamespaceListH(w http.ResponseWriter, r *http.Request) {
@@ -71,15 +71,14 @@ func NamespaceInfoH(w http.ResponseWriter, r *http.Request) {
 	log.Info("Get namespace handler")
 	ns := namespace.New(r.Context())
 	item, err := ns.Get(id)
-
 	if err != nil {
+		if item == nil {
+			errors.New("namespace").NotFound().Http(w)
+			return
+		}
+
 		log.Error("Error: find namespace by id", err.Error())
 		errors.HTTP.InternalServerError(w)
-		return
-	}
-
-	if item == nil {
-		errors.New("namespace").NotFound().Http(w)
 		return
 	}
 
@@ -121,8 +120,7 @@ func NamespaceCreateH(w http.ResponseWriter, r *http.Request) {
 		errors.HTTP.InternalServerError(w)
 		return
 	}
-
-	if item.Meta.ID != "" {
+	if item != nil {
 		errors.New("namespace").NotUnique("name").Http(w)
 		return
 	}
@@ -164,13 +162,13 @@ func NamespaceUpdateH(w http.ResponseWriter, r *http.Request) {
 	ns := namespace.New(r.Context())
 	item, err := ns.Get(id)
 	if err != nil {
+		if item == nil {
+			errors.New("namespace").NotFound().Http(w)
+			return
+		}
+
 		log.Error("Error: check exists by name", err.Error())
 		errors.HTTP.InternalServerError(w)
-		return
-	}
-
-	if item == nil {
-		errors.New("namespace").NotFound().Http(w)
 		return
 	}
 
@@ -208,13 +206,13 @@ func NamespaceRemoveH(w http.ResponseWriter, r *http.Request) {
 	ns := namespace.New(r.Context())
 	item, err := ns.Get(id)
 	if err != nil {
-		log.Error("Error: find namespace by name", err.Error())
-		errors.HTTP.InternalServerError(w)
-		return
-	}
+		if item == nil {
+			errors.New("namespace").NotFound().Http(w)
+			return
+		}
 
-	if item == nil {
-		errors.New("namespace").NotFound().Http(w)
+		log.Error("Error: find namespace by name ", err.Error())
+		errors.HTTP.InternalServerError(w)
 		return
 	}
 

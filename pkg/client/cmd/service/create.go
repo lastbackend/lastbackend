@@ -83,12 +83,12 @@ func Create(name, image, template, url string, config *Config) error {
 		return errors.New(err.Error())
 	}
 
-	if namespace.Name == "" {
+	if namespace.Meta.Name == "" {
 		return errors.New("Namespace didn't select")
 	}
 
 	var cfg = createS{}
-	cfg.Namespace = namespace.Name
+	cfg.Namespace = namespace.Meta.Name
 
 	if name != "" {
 		cfg.Name = name
@@ -111,7 +111,7 @@ func Create(name, image, template, url string, config *Config) error {
 	}
 
 	_, _, err = http.
-		POST("/namespace/"+namespace.Name+"/service").
+		POST("/namespace/"+namespace.Meta.Name+"/service").
 		AddHeader("Content-Type", "application/json").
 		BodyJSON(cfg).
 		Request(res, er)

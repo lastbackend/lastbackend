@@ -40,7 +40,6 @@ type Service struct {
 	Pods map[string]*Pod `json:"pods"`
 }
 
-
 type ServiceCreateSpec struct {
 	// Service Meta
 	Meta ServiceMeta `json:"meta"`
@@ -172,7 +171,7 @@ func (s *ServiceList) ToJson() ([]byte, error) {
 type ServiceUpdateConfig struct {
 	Name        *string            `json:"name,omitempty" yaml:"name,omitempty"`
 	Description *string            `json:"description,omitempty" yaml:"description,omitempty"`
-	Replicas    *int32             `json:"replicas,omitempty" yaml:"replicas,omitempty"`
+	Replicas    *int               `json:"replicas,omitempty" yaml:"replicas,omitempty"`
 	Containers  *[]ContainerConfig `json:"containers,omitempty" yaml:"containers,omitempty"`
 }
 

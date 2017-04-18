@@ -20,7 +20,7 @@ package v1
 
 import (
 	"encoding/json"
-	"fmt"
+	fmt "fmt"
 	"github.com/lastbackend/lastbackend/pkg/apis/types"
 	"github.com/lastbackend/lastbackend/pkg/daemon/pod/views/v1"
 	"github.com/lastbackend/lastbackend/pkg/util/table"
@@ -94,34 +94,38 @@ func (s *Service) DrawTable(namespaceName string) {
 	})
 	serviceTable.Print()
 
-	fmt.Println("\n\nPODS")
-	for _, pod := range s.Pods {
-		podsTable.AddRow(map[string]interface{}{
-			"ID":          pod.Meta.ID,
-			"STATE":       pod.State.State,
-			"STATUS":      pod.State.Status,
-			"TOTAL":       pod.State.Containers.Total,
-			"RUNNING":     pod.State.Containers.Running,
-			"CREATED":     pod.State.Containers.Created,
-			"STOPPED":     pod.State.Containers.Stopped,
-			"ERRORED":     pod.State.Containers.Errored,
-			"CREATED POD": pod.Meta.Created.String()[:10],
-			"UPDATED POD": pod.Meta.Updated.String()[:10],
-		})
-		podsTable.Print()
-
-		fmt.Println("CONTAINERS")
-		for _, container := range pod.Containers {
-			containersTable.AddRow(map[string]interface{}{
-				"ID":      container.ID[:12],
-				"IMAGE":   container.Image,
-				"STATE":   container.State,
-				"STATUS":  container.Status,
-				"CREATED": container.Created.String()[:10],
-				"STARTED": container.Started.String()[:10],
+	if s.Pods != nil {
+		fmt.Println("\n\nPODS")
+		for _, pod := range s.Pods {
+			podsTable.AddRow(map[string]interface{}{
+				"ID":          pod.Meta.ID,
+				"STATE":       pod.State.State,
+				"STATUS":      pod.State.Status,
+				"TOTAL":       pod.State.Containers.Total,
+				"RUNNING":     pod.State.Containers.Running,
+				"CREATED":     pod.State.Containers.Created,
+				"STOPPED":     pod.State.Containers.Stopped,
+				"ERRORED":     pod.State.Containers.Errored,
+				"CREATED POD": pod.Meta.Created.String()[:10],
+				"UPDATED POD": pod.Meta.Updated.String()[:10],
 			})
+			podsTable.Print()
+
+			if pod.Containers != nil {
+				fmt.Println("CONTAINERS")
+				for _, container := range pod.Containers {
+					containersTable.AddRow(map[string]interface{}{
+						"ID":      container.ID[:12],
+						"IMAGE":   container.Image,
+						"STATE":   container.State,
+						"STATUS":  container.Status,
+						"CREATED": container.Created.String()[:10],
+						"STARTED": container.Started.String()[:10],
+					})
+				}
+				containersTable.Print()
+			}
 		}
-		containersTable.Print()
 	}
 }
 

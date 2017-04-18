@@ -25,7 +25,7 @@ import (
 
 func ToPodInfo(pod *types.Pod) PodInfo {
 	info := PodInfo{
-		Meta : ToPodMeta(pod.Meta),
+		Meta:  ToPodMeta(pod.Meta),
 		State: ToPodState(pod.State),
 	}
 

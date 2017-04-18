@@ -101,10 +101,10 @@ func Update(name, newName, description string) error {
 	}
 
 	if namespace != nil {
-		if name == namespace.Name {
-			namespace.Name = newName
-			namespace.Description = description
-			namespace.Updated = time.Now()
+		if name == namespace.Meta.Name {
+			namespace.Meta.Name = newName
+			namespace.Meta.Description = description
+			namespace.Meta.Updated = time.Now()
 
 			err = storage.Set("namespace", namespace)
 			if err != nil {

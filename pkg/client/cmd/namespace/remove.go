@@ -70,7 +70,7 @@ func Remove(name string) error {
 	}
 
 	if namespace != nil {
-		if name == namespace.Name {
+		if name == namespace.Meta.Name {
 			err = storage.Set("namespace", nil)
 			if err != nil {
 				return errors.UnknownMessage

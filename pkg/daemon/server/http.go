@@ -21,11 +21,11 @@ package server
 import (
 	"github.com/gorilla/mux"
 	"github.com/lastbackend/lastbackend/pkg/daemon/context"
+	events "github.com/lastbackend/lastbackend/pkg/daemon/events/routes"
 	namespace "github.com/lastbackend/lastbackend/pkg/daemon/namespace/routes"
 	node "github.com/lastbackend/lastbackend/pkg/daemon/node/routes"
 	service "github.com/lastbackend/lastbackend/pkg/daemon/service/routes"
 	vendors "github.com/lastbackend/lastbackend/pkg/daemon/vendors/routes"
-	events "github.com/lastbackend/lastbackend/pkg/daemon/events/routes"
 	"github.com/lastbackend/lastbackend/pkg/util/http"
 )
 

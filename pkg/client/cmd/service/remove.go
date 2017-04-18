@@ -52,7 +52,7 @@ func Remove(name string) error {
 	}
 
 	_, _, err = http.
-		DELETE("/namespace/"+namespace.Name+"/service/"+name).
+		DELETE("/namespace/"+namespace.Meta.Name+"/service/"+name).
 		Request(service, er)
 	if err != nil {
 		return errors.New(err.Error())
