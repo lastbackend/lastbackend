@@ -76,7 +76,7 @@ func (r *Runtime) Loop() {
 	log := context.Get().GetLogger()
 	log.Debug("Runtime: start Loop")
 
-	spec, err := events.New().Send(events.NewInitialEvent(GetNodeMeta() , r.pManager.GetPodList()))
+	spec, err := events.New().Send(events.NewInitialEvent(GetNodeMeta(), r.pManager.GetPodList()))
 	if err != nil {
 		log.Errorf("Send initial event error %s", err.Error())
 	}
@@ -90,7 +90,7 @@ func (r *Runtime) Loop() {
 
 		go func() {
 			for _ = range ticker.C {
-				spec, err := 	events.New().Send(events.NewTickerEvent(GetNodeMeta()))
+				spec, err := events.New().Send(events.NewTickerEvent(GetNodeMeta()))
 
 				if err != nil {
 					log.Errorf("Runtime: send event error: %s", err.Error())
@@ -107,9 +107,9 @@ func (r *Runtime) Loop() {
 				log.Debugf("Runtime: Loop: send pod update event: %s", pod.Event)
 				ps := []*types.Pod{}
 
-				_, err := 	events.New().Send(events.NewEvent(GetNodeMeta() , append(ps, &types.Pod{
-					Meta: pod.Meta,
-					State: pod.State,
+				spec, err := events.New().Send(events.NewEvent(GetNodeMeta(), append(ps, &types.Pod{
+					Meta:       pod.Meta,
+					State:      pod.State,
 					Containers: pod.Containers,
 				})))
 
@@ -119,7 +119,7 @@ func (r *Runtime) Loop() {
 				}
 
 				log.Debugf("pod contaienrs length: %d", len(pod.Containers))
-				//r.Sync(spec.Pods)
+				r.Sync(spec.Pods)
 
 			case host := <-host:
 				log.Debugf("Runtime: Loop: send host update event: %s", host.Event)
