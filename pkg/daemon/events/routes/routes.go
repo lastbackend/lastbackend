@@ -24,11 +24,6 @@ import (
 )
 
 var Routes = []http.Route{
-	// Namespace handlers
-	{Path: "/namespace", Method: http.MethodGet, Middleware: []http.Middleware{middleware.Context}, Handler: NamespaceListH},
-	{Path: "/namespace", Method: http.MethodPost, Middleware: []http.Middleware{middleware.Context}, Handler: NamespaceCreateH},
-	{Path: "/namespace/{namespace}", Method: http.MethodGet, Middleware: []http.Middleware{middleware.Context}, Handler: NamespaceInfoH},
-	{Path: "/namespace/{namespace}", Method: http.MethodPut, Middleware: []http.Middleware{middleware.Context}, Handler: NamespaceUpdateH},
-	{Path: "/namespace/{namespace}", Method: http.MethodDelete, Middleware: []http.Middleware{middleware.Context}, Handler: NamespaceRemoveH},
-	{Path: "/namespace/{namespace}/activity", Method: http.MethodGet, Middleware: []http.Middleware{middleware.Context}, Handler: NamespaceActivityListH},
+	// Events handlers
+	{Path: "/events", Method: http.MethodGet, Middleware: []http.Middleware{middleware.Context}, Handler: EventSubscribeH},
 }

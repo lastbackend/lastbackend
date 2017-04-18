@@ -54,6 +54,19 @@ func (ps *PodStorage) GetContainer(id string) *types.Container {
 	return c
 }
 
+func (ps *PodStorage) AddContainer(c *types.Container) {
+	ps.lock.Lock()
+	defer ps.lock.Unlock()
+	ps.containers[c.ID] = c
+}
+
+func (ps *PodStorage) DelContainer(id string) {
+	ps.lock.Lock()
+	defer ps.lock.Unlock()
+
+	delete (ps.containers, id)
+}
+
 func (ps *PodStorage) GetPod(id string) *types.Pod {
 	pod, ok := ps.pods[id]
 	if !ok {
@@ -79,14 +92,14 @@ func (ps *PodStorage) SetPod(pod *types.Pod) {
 	ps.lock.Lock()
 	defer ps.lock.Unlock()
 
-	c := 0
-	_, ok := ps.pods[pod.Meta.ID]
-	if ok {
-		c = len(ps.pods[pod.Meta.ID].Containers)
+	if p, ok := ps.pods[pod.Meta.ID]; ok {
+		ps.stats.containers--
+		for _, c := range p.Containers {
+			delete(ps.containers, c.ID)
+		}
 	}
 
 	ps.pods[pod.Meta.ID] = pod
-	ps.stats.containers += len(pod.Containers)-c
 	for _, c := range pod.Containers {
 		ps.containers[c.ID] = c
 	}

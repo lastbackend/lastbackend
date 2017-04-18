@@ -80,7 +80,7 @@ type IService interface {
 	Update(ctx context.Context, service *types.Service)  error
 	Remove(ctx context.Context, service *types.Service) error
 	RemoveByNamespace(ctx context.Context, namespace string) error
-	Watch(ctx context.Context, namespace string, service chan *types.Service) error
+	Watch(ctx context.Context, service chan *types.Service) error
 }
 
 type IPod interface {

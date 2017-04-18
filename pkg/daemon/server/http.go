@@ -25,6 +25,7 @@ import (
 	node "github.com/lastbackend/lastbackend/pkg/daemon/node/routes"
 	service "github.com/lastbackend/lastbackend/pkg/daemon/service/routes"
 	vendors "github.com/lastbackend/lastbackend/pkg/daemon/vendors/routes"
+	events "github.com/lastbackend/lastbackend/pkg/daemon/events/routes"
 	"github.com/lastbackend/lastbackend/pkg/util/http"
 )
 
@@ -55,6 +56,11 @@ func Listen(host string, port int) error {
 	}
 
 	for _, route := range node.Routes {
+		log.Debugf("Init route: %s", route.Path)
+		router.Handle(route.Path, http.Handle(route.Handler, route.Middleware...)).Methods(route.Method)
+	}
+
+	for _, route := range events.Routes {
 		log.Debugf("Init route: %s", route.Path)
 		router.Handle(route.Path, http.Handle(route.Handler, route.Middleware...)).Methods(route.Method)
 	}

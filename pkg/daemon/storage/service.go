@@ -22,9 +22,8 @@ import (
 	"context"
 	"github.com/lastbackend/lastbackend/pkg/apis/types"
 	"github.com/lastbackend/lastbackend/pkg/daemon/storage/store"
-	"time"
-	"fmt"
 	"regexp"
+	"time"
 )
 
 const serviceStorage string = "services"
@@ -39,7 +38,7 @@ type ServiceStorage struct {
 // Get service by id
 func (s *ServiceStorage) GetByID(ctx context.Context, namespaceID, serviceID string) (types.Service, error) {
 
-	const filter = `\b(.+)`+ serviceStorage + `\/[a-z0-9-]{36}\/(meta|config)\b`
+	const filter = `\b(.+)` + serviceStorage + `\/[a-z0-9-]{36}\/(meta|config)\b`
 	var service = types.Service{}
 	//service.Pods = make(map[string]*types.Pod)
 
@@ -67,7 +66,7 @@ func (s *ServiceStorage) GetByID(ctx context.Context, namespaceID, serviceID str
 
 // Get service by Pod ID
 func (s *ServiceStorage) GetByPodID(ctx context.Context, uuid string) (types.Service, error) {
-	const filter = `\b(.+)`+ serviceStorage + `\/[a-z0-9-]{36}\/(meta|config)\b`
+	const filter = `\b(.+)` + serviceStorage + `\/[a-z0-9-]{36}\/(meta|config)\b`
 
 	var key string
 	var service = types.Service{}
@@ -89,7 +88,6 @@ func (s *ServiceStorage) GetByPodID(ctx context.Context, uuid string) (types.Ser
 		return service, err
 	}
 
-
 	keyPods := s.util.Key(ctx, key, "pods")
 	if err := client.Map(ctx, keyPods, "", &service.Pods); err != nil {
 		return service, err
@@ -101,7 +99,7 @@ func (s *ServiceStorage) GetByPodID(ctx context.Context, uuid string) (types.Ser
 // Get service by name
 func (s *ServiceStorage) GetByName(ctx context.Context, namespaceID string, name string) (types.Service, error) {
 	var (
-		id string
+		id      string
 		service types.Service
 	)
 
@@ -185,8 +183,8 @@ func (s *ServiceStorage) Insert(ctx context.Context, service *types.Service) err
 
 		KeyNodePod := s.util.Key(ctx, nodeStorage, pod.Meta.Hostname, "spec", "pods", pod.Meta.ID)
 		if err := tx.Create(KeyNodePod, &types.PodNodeSpec{
-			Meta: pod.Meta,
-			Spec: pod.Spec,
+			Meta:  pod.Meta,
+			Spec:  pod.Spec,
 			State: pod.State,
 		}, 0); err != nil {
 			return err
@@ -259,10 +257,9 @@ func (s *ServiceStorage) Update(ctx context.Context, service *types.Service) err
 
 		KeyNodePod := s.util.Key(ctx, nodeStorage, pod.Meta.Hostname, "spec", "pods", pod.Meta.ID)
 
-		fmt.Println(">>>", pod.State.State)
 		if err := tx.Upsert(KeyNodePod, &types.PodNodeSpec{
-			Meta: pod.Meta,
-			Spec: pod.Spec,
+			Meta:  pod.Meta,
+			Spec:  pod.Spec,
 			State: pod.State,
 		}, 0); err != nil {
 			return err
@@ -340,31 +337,28 @@ func (s *ServiceStorage) RemoveByNamespace(ctx context.Context, namespace string
 	return nil
 }
 
-func (s *ServiceStorage) Watch(ctx context.Context, namespace string, service chan *types.Service) error {
-	const filter = `\b.+` + namespaceStorage + `\/([a-z0-9-]{36})\/`  + serviceStorage + `\/([a-z0-9-]{36})\/pods\b`
+func (s *ServiceStorage) Watch(ctx context.Context, service chan *types.Service) error {
+	const filter = `\b.+` + namespaceStorage + `\/([a-z0-9-]{36})\/` + serviceStorage + `\/([a-z0-9-]{36})\/pods/.+\b`
 	client, destroy, err := s.Client()
 	if err != nil {
 		return err
 	}
 	defer destroy()
 
-	var ns string
-	keyNamespace := s.util.Key(ctx, "helper", namespaceStorage, namespace)
-	if err := client.Get(ctx, keyNamespace, &ns); err != nil {
-		return err
-	}
-
 	r, _ := regexp.Compile(filter)
-	key := s.util.Key(ctx, namespaceStorage, ns, serviceStorage)
-	client.Watch(ctx, key, filter, func(key string) {
+	key := s.util.Key(ctx, namespaceStorage)
+	cb := func(key string) {
 		keys := r.FindStringSubmatch(key)
 		if len(keys) < 3 {
 			return
 		}
+
 		if svc, err := s.GetByID(ctx, keys[1], keys[2]); err == nil {
 			service <- &svc
 		}
-	})
+	}
+
+	client.Watch(ctx, key, filter, cb)
 	return nil
 }
 

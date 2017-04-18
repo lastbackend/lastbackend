@@ -30,7 +30,6 @@ import (
 	"reflect"
 	"regexp"
 	"strings"
-	"fmt"
 )
 
 type store struct {
@@ -125,7 +124,7 @@ func (s *store) List(ctx context.Context, key, keyRegexFilter string, listOutPtr
 	items := make(map[string]map[string]buffer)
 	for _, kv := range getResp.Kvs {
 		keys := strings.Split(string(kv.Key), "/")
-		node  := keys[len(keys)-2]
+		node := keys[len(keys)-2]
 		field := keys[len(keys)-1]
 
 		if (keyRegexFilter != "") && !r.MatchString(string(kv.Key)) {
@@ -136,7 +135,7 @@ func (s *store) List(ctx context.Context, key, keyRegexFilter string, listOutPtr
 			items[node] = make(map[string]buffer)
 		}
 
-		items[node][field]=kv.Value
+		items[node][field] = kv.Value
 	}
 
 	return decodeList(s.codec, items, listOutPtr)
@@ -173,7 +172,6 @@ func (s *store) Map(ctx context.Context, key, keyRegexFilter string, mapOutPtr i
 
 func (s *store) MapList(ctx context.Context, key string, keyRegexFilter string, mapOutPtr interface{}) error {
 
-
 	key = path.Join(s.pathPrefix, key)
 	if !strings.HasSuffix(key, "/") {
 		key += "/"
@@ -190,7 +188,7 @@ func (s *store) MapList(ctx context.Context, key string, keyRegexFilter string, 
 	for _, kv := range getResp.Kvs {
 		keys := strings.Split(string(kv.Key), "/")
 		field := keys[len(keys)-1]
-		node  := keys[len(keys)-2]
+		node := keys[len(keys)-2]
 
 		if (keyRegexFilter != "") && !r.MatchString(string(kv.Key)) {
 			continue
@@ -200,7 +198,7 @@ func (s *store) MapList(ctx context.Context, key string, keyRegexFilter string, 
 			items[node] = make(map[string]buffer)
 		}
 
-		items[node][field]=kv.Value
+		items[node][field] = kv.Value
 	}
 
 	return decodeMapList(s.codec, items, mapOutPtr)
@@ -275,16 +273,16 @@ func (s *store) Watch(ctx context.Context, key, filter string, f func(string)) e
 		key += "/"
 	}
 
-	rch := s.client.Watch(context.Background(), key , clientv3.WithPrefix())
+	rch := s.client.Watch(context.Background(), key, clientv3.WithPrefix())
 	for wresp := range rch {
 		for _, ev := range wresp.Events {
 			r, _ := regexp.Compile(filter)
-			if (filter != "") && !r.MatchString(string(ev.Kv.Key)) {
-				continue
+			if (filter == "") || r.MatchString(string(ev.Kv.Key)) {
+				go f(string(ev.Kv.Key))
 			}
-			f(string(ev.Kv.Key))
 		}
 	}
+
 	return nil
 }
 
@@ -361,10 +359,10 @@ func decodeMapList(codec serializer.Codec, items map[string]map[string]buffer, m
 	return nil
 }
 
-func joinJSON(item map[string]buffer ) []byte {
-	current :=0
-	total   := len(item)
-	buffer  := []byte("{")
+func joinJSON(item map[string]buffer) []byte {
+	current := 0
+	total := len(item)
+	buffer := []byte("{")
 	for field, data := range item {
 		current++
 		buffer = append(buffer, []byte("\"")...)

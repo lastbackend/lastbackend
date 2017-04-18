@@ -84,3 +84,7 @@ func (c *ctx) SetWssHub(hub *wss.Hub) {
 func (c *ctx) GetWssHub() *wss.Hub {
 	return c.wssHub
 }
+
+func (c *ctx) Background() context.Context {
+	return context.Background()
+}
