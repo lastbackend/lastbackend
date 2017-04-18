@@ -29,12 +29,12 @@ Structure
 namespace
 /lastbackend/projects/<project id>/meta: namespace
 /lastbackend/projects/<project id>/services/<service id>/meta: <service info object>
-/lastbackend/projects/<project id>/services/<service id>/config: <service config object>
 /lastbackend/projects/<project id>/services/<service id>/source: <service sources object>
 /lastbackend/projects/<project id>/services/<service id>/domains: <service domains object>
 /lastbackend/projects/<project id>/services/<service id>/image: <image name>
 /lastbackend/projects/<project id>/services/<service id>/containers/<container id>: <service container object>
 /lastbackend/projects/<project id>/services/<service id>/builds/<build number>: <service build object>
+/lastbackend/projects/<project id>/services/<service id>/specs/<spec number>: <service spec object>
 
 # image information data layer
 /lastbackend/images/<image id>/meta: <image info object>

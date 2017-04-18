@@ -87,7 +87,7 @@ func ServiceInfoH(w http.ResponseWriter, r *http.Request) {
 	ns := namespace.New(r.Context())
 	item, err := ns.Get(nid)
 	if err != nil {
-		log.Error("Error: find namespace by id", err.Error())
+		log.Errorf("Error: find namespace by id: %s", err.Error())
 		errors.HTTP.InternalServerError(w)
 		return
 	}
@@ -99,7 +99,7 @@ func ServiceInfoH(w http.ResponseWriter, r *http.Request) {
 	s := service.New(r.Context(), item.Meta)
 	svc, err := s.Get(sid)
 	if err != nil {
-		log.Error("Error: find service by id", err.Error())
+		log.Errorf("Error: find service by id: %s", err.Error())
 		errors.HTTP.InternalServerError(w)
 		return
 	}
@@ -214,7 +214,7 @@ func ServiceCreateH(w http.ResponseWriter, r *http.Request) {
 	//}
 
 	// Patch config if exists custom configurations
-	//if len(rq.Config). != 0 {
+	//if len(rq.Spec). != 0 {
 	// TODO: If have custom config, then need patch this config
 	//}
 
@@ -234,9 +234,9 @@ func ServiceCreateH(w http.ResponseWriter, r *http.Request) {
 			}
 		}
 
-		rq.Config.Image = &img.Meta.Name
+		rq.Spec.Image = &img.Meta.Name
 	} else {
-		rq.Config.Image = &rq.Image
+		rq.Spec.Image = &rq.Image
 	}
 
 	svc, err = s.Create(rq)
@@ -386,6 +386,167 @@ func ServiceLogsH(w http.ResponseWriter, _ *http.Request) {
 	w.WriteHeader(http.StatusOK)
 	if _, err := w.Write([]byte(`[]`)); err != nil {
 		context.Get().GetLogger().Error("Error: write response", err.Error())
+		return
+	}
+}
+
+func ServiceSpecCreateH(w http.ResponseWriter, r *http.Request) {
+	var (
+		err error
+		log = context.Get().GetLogger()
+		nid = utils.Vars(r)["namespace"]
+		sid = utils.Vars(r)["service"]
+	)
+
+	// request body struct
+	rq := new(request.RequestServiceSpecCreateS)
+	if err := rq.DecodeAndValidate(r.Body); err != nil {
+		log.Error("Error: validation incomming data", err)
+		errors.New("Invalid incomming data").Unknown().Http(w)
+		return
+	}
+
+	ns := namespace.New(r.Context())
+	item, err := ns.Get(nid)
+	if err != nil {
+		log.Error("Error: find namespace by id", err.Error())
+		errors.HTTP.InternalServerError(w)
+		return
+	}
+	if item == nil {
+		errors.New("namespace").NotFound().Http(w)
+		return
+	}
+
+	s := service.New(r.Context(), item.Meta)
+	svc, err := s.Get(sid)
+	if err != nil {
+		log.Error("Error: find service by id", err.Error())
+		errors.HTTP.InternalServerError(w)
+		return
+	}
+	if svc == nil {
+		errors.New("service").NotFound().Http(w)
+		return
+	}
+
+	if err = s.AddSpec(svc, rq); err != nil {
+		log.Error("Error: add spec to service error", err)
+		errors.HTTP.InternalServerError(w)
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+	if _, err = w.Write([]byte{}); err != nil {
+		log.Error("Error: write response", err.Error())
+		return
+	}
+}
+
+func ServiceSpecUpdateH(w http.ResponseWriter, r *http.Request) {
+	var (
+		err error
+		log = context.Get().GetLogger()
+		nid = utils.Vars(r)["namespace"]
+		sid = utils.Vars(r)["service"]
+		spid = utils.Vars(r)["spec"]
+	)
+
+	// request body struct
+	rq := new(request.RequestServiceSpecUpdateS)
+	if err := rq.DecodeAndValidate(r.Body); err != nil {
+		log.Error("Error: validation incomming data", err)
+		errors.New("Invalid incomming data").Unknown().Http(w)
+		return
+	}
+
+	ns := namespace.New(r.Context())
+	item, err := ns.Get(nid)
+	if err != nil {
+		log.Error("Error: find namespace by id", err.Error())
+		errors.HTTP.InternalServerError(w)
+		return
+	}
+	if item == nil {
+		errors.New("namespace").NotFound().Http(w)
+		return
+	}
+
+	s := service.New(r.Context(), item.Meta)
+	svc, err := s.Get(sid)
+	if err != nil {
+		log.Error("Error: find service by id", err.Error())
+		errors.HTTP.InternalServerError(w)
+		return
+	}
+	if svc == nil {
+		errors.New("service").NotFound().Http(w)
+		return
+	}
+
+	if err = s.SetSpec(svc, spid, rq); err != nil {
+		log.Error("Error: update service spec error", err)
+		errors.HTTP.InternalServerError(w)
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+	if _, err = w.Write([]byte{}); err != nil {
+		log.Error("Error: write response", err.Error())
+		return
+	}
+}
+
+func ServiceSpecRemoveH(w http.ResponseWriter, r *http.Request) {
+	var (
+		err error
+		log = context.Get().GetLogger()
+		nid = utils.Vars(r)["namespace"]
+		sid = utils.Vars(r)["service"]
+		spid = utils.Vars(r)["spec"]
+	)
+
+	// request body struct
+	rq := new(request.RequestServiceUpdateS)
+	if err := rq.DecodeAndValidate(r.Body); err != nil {
+		log.Error("Error: validation incomming data", err)
+		errors.New("Invalid incomming data").Unknown().Http(w)
+		return
+	}
+
+	ns := namespace.New(r.Context())
+	item, err := ns.Get(nid)
+	if err != nil {
+		log.Error("Error: find namespace by id", err.Error())
+		errors.HTTP.InternalServerError(w)
+		return
+	}
+	if item == nil {
+		errors.New("namespace").NotFound().Http(w)
+		return
+	}
+
+	s := service.New(r.Context(), item.Meta)
+	svc, err := s.Get(sid)
+	if err != nil {
+		log.Error("Error: find service by id", err.Error())
+		errors.HTTP.InternalServerError(w)
+		return
+	}
+	if svc == nil {
+		errors.New("service").NotFound().Http(w)
+		return
+	}
+
+	if err = s.DelSpec(svc, spid); err != nil {
+		log.Error("Error: remove spec from service error", err)
+		errors.HTTP.InternalServerError(w)
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+	if _, err = w.Write([]byte{}); err != nil {
+		log.Error("Error: write response", err.Error())
 		return
 	}
 }
