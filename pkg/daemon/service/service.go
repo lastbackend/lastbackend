@@ -399,8 +399,8 @@ func (s *service) DelSpec(service *types.Service, id string) error {
 		return nil
 	}
 
-	if err := storage.Service().RemoveSpec(s.Context, service.Meta.Namespace, service.Meta.Namespace, service.Spec[id]); err != nil {
-		log.Errorf("Error: insert service spec to db : %s", err.Error())
+	if err := storage.Service().RemoveSpec(s.Context, service.Meta.Namespace, service.Meta.Name, service.Spec[id]); err != nil {
+		log.Errorf("Error: remove service spec to db : %s", err.Error())
 		return err
 	}
 
@@ -422,26 +422,31 @@ func (s *service) GenerateSpec(service *types.Service) types.PodSpec {
 	spec.Created = time.Now()
 	spec.Updated = time.Now()
 
-	for _, config := range service.Spec {
+	for _, spc := range service.Spec {
 
 		cs := new(types.ContainerSpec)
+
+		cs.Meta.SetDefault()
+		cs.Meta.ID = spc.Meta.ID
+		cs.Meta.Labels = spc.Meta.Labels
+
 		cs.Image = types.ImageSpec{
-			Name: config.Image,
+			Name: spc.Image,
 			Pull: true,
 		}
 
-		for _, port := range config.Ports {
+		for _, port := range spc.Ports {
 			cs.Ports = append(cs.Ports, types.ContainerPortSpec{
 				ContainerPort: port.Container,
 				Protocol:      port.Protocol,
 			})
 		}
 
-		cs.Command = config.Command
-		cs.Entrypoint = config.Entrypoint
-		cs.Envs = config.EnvVars
+		cs.Command = spc.Command
+		cs.Entrypoint = spc.Entrypoint
+		cs.Envs = spc.EnvVars
 		cs.Quota = types.ContainerQuotaSpec{
-			Memory: config.Memory,
+			Memory: spc.Memory,
 		}
 
 		cs.RestartPolicy = types.ContainerRestartPolicySpec{
