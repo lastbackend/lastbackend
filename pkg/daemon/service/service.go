@@ -191,7 +191,7 @@ func (s *service) Remove(service *types.Service) error {
 		storage = ctx.Get().GetStorage()
 	)
 
-	service.Meta.State.State = "deleting"
+	service.State.State = "deleting"
 
 	if len(service.Pods) == 0 {
 		if err := storage.Service().Remove(s.Context, service); err != nil {
@@ -274,7 +274,7 @@ func (s *service) SetPods(c context.Context, pods []types.Pod) error {
 	)
 
 	for _, pod := range pods {
-
+		log.Debugf("update pod state: %s", pod.Meta.ID)
 		svc, err := storage.Service().GetByPodID(c, pod.Meta.ID)
 		if err != nil {
 			log.Errorf("Error: get service by pod ID %s from db: %s", pod.Meta.ID, err.Error())
@@ -288,10 +288,7 @@ func (s *service) SetPods(c context.Context, pods []types.Pod) error {
 
 		if e != nil {
 			log.Errorf("Error: get pod from db: %s", e.Error())
-			if err.Error() == store.ErrKeyNotFound {
-				continue
-			}
-			return err
+			continue
 		}
 
 		p.Containers = pod.Containers
@@ -305,7 +302,7 @@ func (s *service) SetPods(c context.Context, pods []types.Pod) error {
 			}
 			delete(svc.Pods, p.Meta.ID)
 
-			if len(svc.Pods) == 0 && svc.Meta.State.State == "deleting" {
+			if len(svc.Pods) == 0 && svc.State.State == "deleting" {
 				storage.Service().Remove(c, &svc)
 			}
 
@@ -401,19 +398,9 @@ func (s *service) GenerateSpec(service *types.Service) types.PodSpec {
 	spec.Containers = append(spec.Containers, cs)
 
 	var state = new(types.PodState)
-	state.State = service.Meta.State.State
+	state.State = service.State.State
 
 	return spec
-}
-
-func (s *service) Watch(service chan *types.Service) {
-	var (
-		log     = ctx.Get().GetLogger()
-		storage = ctx.Get().GetStorage()
-	)
-
-	log.Debug("Service: Watch")
-	storage.Service().Watch(s.Context, s.Namespace.Name, service)
 }
 
 func createConfig(opts *request.ServiceConfig) (*types.ServiceConfig, error) {

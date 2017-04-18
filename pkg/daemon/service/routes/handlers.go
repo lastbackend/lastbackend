@@ -29,7 +29,6 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/util/http/utils"
 	"net/http"
 	"github.com/lastbackend/lastbackend/pkg/daemon/storage/store"
-	"github.com/lastbackend/lastbackend/pkg/apis/types"
 )
 
 func ServiceListH(w http.ResponseWriter, r *http.Request) {
@@ -144,22 +143,6 @@ func ServiceWatchH(w http.ResponseWriter, r *http.Request) {
 		errors.New("namespace").NotFound().Http(w)
 		return
 	}
-
-	s := service.New(r.Context(), item.Meta)
-
-	service := make(chan *types.Service)
-
-	go func() {
-	select {
-		case s:= <- service:
-			{
-				log.Debug(s.Meta.Name, "changed")
-			}
-	}
-	}()
-
-	s.Watch(service)
-	select {}
 
 	if err != nil {
 		log.Error("Error: convert struct to json", err.Error())

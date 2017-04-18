@@ -111,3 +111,13 @@ func (ns *namespace) Remove(id string) error {
 
 	return nil
 }
+
+func (ns *namespace) Watch(service chan *types.Service) {
+	var (
+		log     = ctx.Get().GetLogger()
+		storage = ctx.Get().GetStorage().Service()
+	)
+
+	log.Debug("Namespace: Watch")
+	storage.Watch(ns.Context, service)
+}

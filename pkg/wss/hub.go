@@ -18,48 +18,67 @@
 
 package wss
 
+import (
+	"github.com/gorilla/websocket"
+	"fmt"
+)
+
 type Hub struct {
-	// Registered clients.
-	Clients map[*Client]bool
+	Rooms map[string]*Room
+}
 
-	// Inbound messages from the clients.
-	Broadcast chan []byte
+func (h *Hub) NewConnection(id string, conn *websocket.Conn) *Client {
+	var room *Room
+	fmt.Println("create new connection client")
+	room = h.GetRoom(id)
+	if room == nil {
+		fmt.Println("create new room for client")
+		room = h.AddRoom(id)
+	}
 
-	// Register requests from the clients.
-	Register chan *Client
+	fmt.Println("add client to room")
+	client := &Client{
+		Room: room,
+		Conn: conn,
+		Send: make(chan []byte, 256),
+	}
 
-	// Unregister requests from clients.
-	Unregister chan *Client
+	room.AddClient(client)
+	return client
+}
+
+func (h *Hub) DelConection(id string, client *Client) {
+	fmt.Println("try delete client from room")
+	if room, ok := h.Rooms[id]; ok {
+		fmt.Println("delete client from room")
+		room.DelClient(client)
+	}
+}
+
+func (h *Hub) AddRoom (id string) *Room {
+	fmt.Println("create new room")
+	h.Rooms[id] = NewRoom()
+	go func () {
+		h.Rooms[id].Listen()
+	}()
+	return h.Rooms[id]
+}
+
+func (h *Hub) GetRoom (id string) *Room {
+	if room, ok := h.Rooms[id]; ok {
+		return room
+	}
+	return nil
+}
+
+func (h *Hub) DelRoom (id string) {
+	if len(h.Rooms[id].Clients) == 0 {
+		delete(h.Rooms, id)
+	}
 }
 
 func NewHub() *Hub {
 	return &Hub{
-		Broadcast:  make(chan []byte),
-		Register:   make(chan *Client),
-		Unregister: make(chan *Client),
-		Clients:    make(map[*Client]bool),
-	}
-}
-
-func (h *Hub) Run() {
-	for {
-		select {
-		case client := <-h.Register:
-			h.Clients[client] = true
-		case client := <-h.Unregister:
-			if _, ok := h.Clients[client]; ok {
-				delete(h.Clients, client)
-				close(client.Send)
-			}
-		case message := <-h.Broadcast:
-			for client := range h.Clients {
-				select {
-				case client.Send <- message:
-				default:
-					close(client.Send)
-					delete(h.Clients, client)
-				}
-			}
-		}
+		Rooms:    make(map[string]*Room),
 	}
 }

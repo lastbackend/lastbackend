@@ -28,6 +28,8 @@ type ServiceList []*Service
 type Service struct {
 	// Service Meta
 	Meta ServiceMeta `json:"meta"`
+	// Service state
+	State ServiceState `json:"state"`
 	// Service custom domains
 	Domains []string `json:"domains"`
 	// Service source info
@@ -61,8 +63,6 @@ type ServiceMeta struct {
 	Meta
 	// Service replicas
 	Replicas int `json:"replicas"`
-	// Service state
-	State ServiceState `json:"state"`
 	// Service namespace
 	Namespace string `json:"namespace"`
 	// Service region
