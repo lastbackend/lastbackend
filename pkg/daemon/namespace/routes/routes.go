@@ -31,5 +31,4 @@ var Routes = []http.Route{
 	{Path: "/namespace/{namespace}", Method: http.MethodPut, Middleware: []http.Middleware{middleware.Context}, Handler: NamespaceUpdateH},
 	{Path: "/namespace/{namespace}", Method: http.MethodDelete, Middleware: []http.Middleware{middleware.Context}, Handler: NamespaceRemoveH},
 	{Path: "/namespace/{namespace}/activity", Method: http.MethodGet, Middleware: []http.Middleware{middleware.Context}, Handler: NamespaceActivityListH},
-	{Path: "/namespace/{namespace}/subscribe/{token}", Method: http.MethodGet, Middleware: []http.Middleware{middleware.Context}, Handler: NamespaceEventSubscribeH},
 }

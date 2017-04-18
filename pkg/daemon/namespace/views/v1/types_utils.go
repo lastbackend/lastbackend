@@ -25,57 +25,59 @@ import (
 )
 
 func New(obj *types.Namespace) *Namespace {
-	p := new(Namespace)
-
-	p.Name = obj.Meta.Name
-	p.Description = obj.Meta.Description
-	p.Updated = obj.Meta.Updated
-	p.Created = obj.Meta.Created
-
-	return p
+	p := Namespace{}
+	p.Meta.Name = obj.Meta.Name
+	p.Meta.Description = obj.Meta.Description
+	p.Meta.Created = obj.Meta.Created
+	p.Meta.Updated = obj.Meta.Updated
+	return &p
 }
 
-func (obj *Namespace) ToJson() ([]byte, error) {
-	return json.Marshal(obj)
+func (n *Namespace) ToJson() ([]byte, error) {
+	return json.Marshal(n)
 }
 
-func (p *Namespace) DrawTable() {
+func (n *Namespace) DrawTable() {
 	table.PrintHorizontal(map[string]interface{}{
-		"NAME":        p.Name,
-		"DESCRIPTION": p.Description,
-		"CREATED":     p.Created,
-		"UPDATED":     p.Updated,
+		"Name":        n.Meta.Name,
+		"Description": n.Meta.Description,
+		"Created":     n.Meta.Created,
+		"Updated":     n.Meta.Updated,
 	})
 }
 
-func NewList(obj *types.NamespaceList) *NamespaceList {
-	p := new(NamespaceList)
+
+func NewList(obj types.NamespaceList) *NamespaceList {
+	p := NamespaceList{}
 	if obj == nil {
 		return nil
 	}
-	for _, v := range *obj {
-		*p = append(*p, *New(&v))
+
+	for _, v := range obj {
+		p = append(p, New(v))
 	}
-	return p
+	return &p
 }
 
-func (obj *NamespaceList) ToJson() ([]byte, error) {
-	if obj == nil || len(*obj) == 0 {
+func (ns *NamespaceList) ToJson() ([]byte, error) {
+
+	if ns == nil || len(*ns) == 0 {
 		return []byte("[]"), nil
 	}
-	return json.Marshal(obj)
+
+	return json.Marshal(ns)
 }
 
-func (projects *NamespaceList) DrawTable() {
-	t := table.New([]string{"NAME", "DESCRIPTION", "CREATED", "UPDATED"})
+func (ns *NamespaceList) DrawTable() {
+	t := table.New([]string{"ID", "Name", "Description", "Created", "Updated"})
 	t.VisibleHeader = true
 
-	for _, p := range *projects {
+	for _, p := range *ns {
 		t.AddRow(map[string]interface{}{
-			"NAME":        p.Name,
-			"DESCRIPTION": p.Description,
-			"CREATED":     p.Created.String()[:10],
-			"UPDATED":     p.Updated.String()[:10],
+			"Name":        p.Meta.Name,
+			"Description": p.Meta.Description,
+			"Created":     p.Meta.Created.String()[:10],
+			"Updated":     p.Meta.Updated.String()[:10],
 		})
 	}
 

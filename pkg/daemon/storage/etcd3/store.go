@@ -121,12 +121,23 @@ func (s *store) List(ctx context.Context, key, keyRegexFilter string, listOutPtr
 		return err
 	}
 	r, _ := regexp.Compile(keyRegexFilter)
-	items := make([]buffer, 0, len(getResp.Kvs))
+	items := make(map[string]map[string]buffer)
 	for _, kv := range getResp.Kvs {
-		if r.MatchString(string(kv.Key)) {
-			items = append(items, buffer(kv.Value))
+		keys := strings.Split(string(kv.Key), "/")
+		node := keys[len(keys)-2]
+		field := keys[len(keys)-1]
+
+		if (keyRegexFilter != "") && !r.MatchString(string(kv.Key)) {
+			continue
 		}
+
+		if len(items[node]) == 0 {
+			items[node] = make(map[string]buffer)
+		}
+
+		items[node][field] = kv.Value
 	}
+
 	return decodeList(s.codec, items, listOutPtr)
 }
 
@@ -150,19 +161,52 @@ func (s *store) Map(ctx context.Context, key, keyRegexFilter string, mapOutPtr i
 				index string
 			)
 
-			match := r.FindStringSubmatch(string(kv.Key))
-			if len(match) > 1 {
-				index = match[1]
-			} else {
-				key = strings.Split(string(kv.Key), "/")
-				index = key[len(key)-1]
-			}
-
+			key = strings.Split(string(kv.Key), "/")
+			index = key[len(key)-1]
 			items[index] = buffer(kv.Value)
 		}
 
 	}
+
+	if len(items) == 0 {
+		return errors.New(st.ErrKeyNotFound)
+	}
+
 	return decodeMap(s.codec, items, mapOutPtr)
+}
+
+func (s *store) MapList(ctx context.Context, key string, keyRegexFilter string, mapOutPtr interface{}) error {
+
+	key = path.Join(s.pathPrefix, key)
+	if !strings.HasSuffix(key, "/") {
+		key += "/"
+	}
+	printf("Map list: %s", key)
+	getResp, err := s.client.KV.Get(ctx, key, clientv3.WithPrefix())
+
+	if err != nil {
+		return err
+	}
+
+	r, _ := regexp.Compile(keyRegexFilter)
+	items := make(map[string]map[string]buffer)
+	for _, kv := range getResp.Kvs {
+		keys := strings.Split(string(kv.Key), "/")
+		field := keys[len(keys)-1]
+		node := keys[len(keys)-2]
+
+		if (keyRegexFilter != "") && !r.MatchString(string(kv.Key)) {
+			continue
+		}
+
+		if len(items[node]) == 0 {
+			items[node] = make(map[string]buffer)
+		}
+
+		items[node][field] = kv.Value
+	}
+
+	return decodeMapList(s.codec, items, mapOutPtr)
 }
 
 func (s *store) Update(ctx context.Context, key string, obj, outPtr interface{}, ttl uint64) error {
@@ -228,6 +272,25 @@ func (s *store) Begin(ctx context.Context) st.ITx {
 	}
 }
 
+func (s *store) Watch(ctx context.Context, key, filter string, f func(string)) error {
+	key = path.Join(s.pathPrefix, key)
+	if !strings.HasSuffix(key, "/") {
+		key += "/"
+	}
+
+	rch := s.client.Watch(context.Background(), key, clientv3.WithPrefix())
+	for wresp := range rch {
+		for _, ev := range wresp.Events {
+			r, _ := regexp.Compile(filter)
+			if (filter == "") || r.MatchString(string(ev.Kv.Key)) {
+				go f(string(ev.Kv.Key))
+			}
+		}
+	}
+
+	return nil
+}
+
 func decode(s serializer.Codec, value []byte, out interface{}) error {
 	if _, err := converter.EnforcePtr(out); err != nil {
 		panic("Error: unable to convert output object to pointer")
@@ -235,36 +298,89 @@ func decode(s serializer.Codec, value []byte, out interface{}) error {
 	return serializer.Decode(s, value, out)
 }
 
-func decodeList(codec serializer.Codec, items []buffer, listOut interface{}) error {
+func decodeList(codec serializer.Codec, items map[string]map[string]buffer, listOut interface{}) error {
 	v, err := converter.EnforcePtr(listOut)
 	if err != nil || (v.Kind() != reflect.Slice) {
 		panic("Error: need ptr slice")
 	}
+
 	for _, item := range items {
+
 		var obj = reflect.New(v.Type().Elem()).Interface().(interface{})
-		err := serializer.Decode(codec, item, obj)
+		err := serializer.Decode(codec, joinJSON(item), obj)
 		if err != nil {
 			return err
 		}
+
 		v.Set(reflect.Append(v, reflect.ValueOf(obj).Elem()))
+
 	}
+
 	return nil
 }
 
 func decodeMap(codec serializer.Codec, items map[string]buffer, mapOut interface{}) error {
+
+	v := reflect.ValueOf(mapOut)
+	if v.Kind() == reflect.Map {
+		for key, item := range items {
+			var obj = reflect.New(v.Type().Elem()).Interface().(interface{})
+			err := serializer.Decode(codec, item, obj)
+			if err != nil {
+				return err
+			}
+			v.SetMapIndex(reflect.ValueOf(key), reflect.ValueOf(obj).Elem())
+		}
+
+		return nil
+	}
+
+	err := serializer.Decode(codec, joinJSON(items), mapOut)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func decodeMapList(codec serializer.Codec, items map[string]map[string]buffer, mapOut interface{}) error {
 	v := reflect.ValueOf(mapOut)
 	if v.Kind() != reflect.Map {
 		panic("Error: need map")
 	}
+
 	for key, item := range items {
+
 		var obj = reflect.New(v.Type().Elem()).Interface().(interface{})
-		err := serializer.Decode(codec, item, obj)
+		err := serializer.Decode(codec, joinJSON(item), obj)
 		if err != nil {
 			return err
 		}
+
 		v.SetMapIndex(reflect.ValueOf(key), reflect.ValueOf(obj).Elem())
+		delete(items, key)
 	}
+
 	return nil
+}
+
+func joinJSON(item map[string]buffer) []byte {
+	current := 0
+	total := len(item)
+	buffer := []byte("{")
+	for field, data := range item {
+		current++
+		buffer = append(buffer, []byte("\"")...)
+		buffer = append(buffer, []byte(field)...)
+		buffer = append(buffer, []byte("\":")...)
+		buffer = append(buffer, data...)
+		if current != total {
+			buffer = append(buffer, []byte(",")...)
+		}
+	}
+
+	buffer = append(buffer, []byte("}")...)
+	return buffer
 }
 
 func (s *store) ttlOpts(ctx context.Context, ttl int64) ([]clientv3.OpOption, error) {

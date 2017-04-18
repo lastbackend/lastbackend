@@ -39,10 +39,17 @@ func (n *Node) List(c context.Context) ([]*types.Node, error) {
 
 func (n *Node) Get(c context.Context, hostname string) (*types.Node, error) {
 	var (
+		log     = ctx.Get().GetLogger()
 		storage = ctx.Get().GetStorage()
 	)
 
-	return storage.Node().Get(c, hostname)
+	log.Debug("Node: Get node info")
+	node, err := storage.Node().Get(c, hostname)
+	if err != nil {
+		return nil, err
+	}
+
+	return node, nil
 }
 
 func (n *Node) SetMeta(c context.Context, node *types.Node) error {
@@ -53,7 +60,15 @@ func (n *Node) SetMeta(c context.Context, node *types.Node) error {
 	return storage.Node().UpdateMeta(c, &node.Meta)
 }
 
-func (n *Node) Create(c context.Context, meta *types.NodeMeta) (*types.Node, error) {
+func (n *Node) SetState(c context.Context, node *types.Node) error {
+	var (
+		storage = ctx.Get().GetStorage()
+	)
+
+	return storage.Node().UpdateState(c, node)
+}
+
+func (n *Node) Create(c context.Context, meta *types.NodeMeta, state *types.NodeState) (*types.Node, error) {
 
 	var (
 		storage = ctx.Get().GetStorage()
@@ -64,8 +79,13 @@ func (n *Node) Create(c context.Context, meta *types.NodeMeta) (*types.Node, err
 	log.Debug("Create new Node")
 
 	node.Meta = *meta
+	node.State = *state
 
-	return storage.Node().Insert(c, &node.Meta)
+	if err := storage.Node().Insert(c, node); err != nil {
+		return node, err
+	}
+
+	return node, nil
 }
 
 func (n *Node) PodSpecRemove(c context.Context, hostname string, spec *types.PodNodeSpec) error {
@@ -79,11 +99,6 @@ func (n *Node) PodSpecRemove(c context.Context, hostname string, spec *types.Pod
 	if err != nil {
 		log.Errorf("Node: Pod spec remove: remove pod spec err: %s", err.Error())
 		return err
-	}
-
-	if node == nil {
-		log.Debug("Node: Pod spec remove: node not found")
-		return nil
 	}
 
 	log.Debug("Remove pod spec from node")
@@ -109,11 +124,6 @@ func (n *Node) PodSpecUpdate(c context.Context, hostname string, spec *types.Pod
 	if err != nil {
 		log.Errorf("Node: Pod spec remove: remove pod spec err: %s", err.Error())
 		return err
-	}
-
-	if node == nil {
-		log.Debug("Node: Pod spec remove: node not found")
-		return nil
 	}
 
 	log.Debug("Remove pod spec from node")
@@ -155,7 +165,7 @@ func (n *Node) Allocate(c context.Context, spec types.PodSpec) (*types.Node, err
 		}
 	}
 
-	if node == nil {
+	if node.Meta.Hostname == "" {
 		log.Error("Node: Allocate: Available node not found")
 		return nil, errors.New("Available node not found")
 	}

@@ -16,21 +16,35 @@
 // from Last.Backend LLC.
 //
 
-package v1
+package routes
 
 import (
-	"time"
+	"github.com/lastbackend/lastbackend/pkg/daemon/context"
+	"github.com/lastbackend/lastbackend/pkg/wss"
+	"net/http"
 )
 
-type Namespace struct {
-	Meta NamespaceMeta `json:"meta"`
+func EventSubscribeH(w http.ResponseWriter, r *http.Request) {
+	var (
+		err error
+		log = context.Get().GetLogger()
+		hub = context.Get().GetWssHub()
+	)
+
+	if r.Method != "GET" {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	conn, err := wss.Upgrader.Upgrade(w, r, nil)
+	if err != nil {
+		log.Error(err)
+		return
+	}
+
+	log.Debug("New websockets connection")
+	client := hub.NewConnection("lastbackend", conn)
+	log.Debug("Websockets connection ready to receive data")
+	client.WritePump()
 }
 
-type NamespaceMeta struct {
-	Name        string    `json:"name"`
-	Description string    `json:"description"`
-	Created     time.Time `json:"created"`
-	Updated     time.Time `json:"updated"`
-}
-
-type NamespaceList []*Namespace

@@ -25,8 +25,8 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/daemon/namespace/views/v1"
 	"github.com/lastbackend/lastbackend/pkg/errors"
 	"github.com/lastbackend/lastbackend/pkg/util/http/utils"
-	"github.com/lastbackend/lastbackend/pkg/wss"
 	"net/http"
+	"github.com/lastbackend/lastbackend/pkg/daemon/storage/store"
 )
 
 func NamespaceListH(w http.ResponseWriter, r *http.Request) {
@@ -71,11 +71,13 @@ func NamespaceInfoH(w http.ResponseWriter, r *http.Request) {
 	log.Info("Get namespace handler")
 	ns := namespace.New(r.Context())
 	item, err := ns.Get(id)
+
 	if err != nil {
 		log.Error("Error: find namespace by id", err.Error())
 		errors.HTTP.InternalServerError(w)
 		return
 	}
+
 	if item == nil {
 		errors.New("namespace").NotFound().Http(w)
 		return
@@ -114,13 +116,13 @@ func NamespaceCreateH(w http.ResponseWriter, r *http.Request) {
 
 	ns := namespace.New(r.Context())
 	item, err := ns.Get(rq.Name)
-	if err != nil {
+	if err != nil && err.Error() != store.ErrKeyNotFound {
 		log.Error("Error: check exists by name", err.Error())
 		errors.HTTP.InternalServerError(w)
 		return
 	}
 
-	if item != nil {
+	if item.Meta.ID != "" {
 		errors.New("namespace").NotUnique("name").Http(w)
 		return
 	}
@@ -252,32 +254,4 @@ func NamespaceActivityListH(w http.ResponseWriter, _ *http.Request) {
 		context.Get().GetLogger().Error("Error: write response", err.Error())
 		return
 	}
-}
-
-func NamespaceEventSubscribeH(w http.ResponseWriter, r *http.Request) {
-
-	var (
-		err error
-		log = context.Get().GetLogger()
-		hub = context.Get().GetWssHub()
-	)
-
-	if r.Method != "GET" {
-		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
-		return
-	}
-
-	conn, err := wss.Upgrader.Upgrade(w, r, nil)
-	if err != nil {
-		log.Error(err)
-		return
-	}
-
-	client := &wss.Client{Hub: hub, Conn: conn, Send: make(chan []byte, 256)}
-	client.Hub.Register <- client
-
-	// TODO: Watch events
-
-	go client.WritePump()
-	client.ReadPump()
 }

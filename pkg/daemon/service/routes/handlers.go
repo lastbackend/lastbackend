@@ -28,6 +28,7 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/errors"
 	"github.com/lastbackend/lastbackend/pkg/util/http/utils"
 	"net/http"
+	"github.com/lastbackend/lastbackend/pkg/daemon/storage/store"
 )
 
 func ServiceListH(w http.ResponseWriter, r *http.Request) {
@@ -121,6 +122,42 @@ func ServiceInfoH(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+
+func ServiceWatchH(w http.ResponseWriter, r *http.Request) {
+	var (
+		err error
+		log = context.Get().GetLogger()
+		nid = utils.Vars(r)["namespace"]
+	)
+
+	log.Debug("Get service handler")
+
+	ns := namespace.New(r.Context())
+	item, err := ns.Get(nid)
+	if err != nil {
+		log.Error("Error: find namespace by id", err.Error())
+		errors.HTTP.InternalServerError(w)
+		return
+	}
+	if item == nil {
+		errors.New("namespace").NotFound().Http(w)
+		return
+	}
+
+	if err != nil {
+		log.Error("Error: convert struct to json", err.Error())
+		errors.HTTP.InternalServerError(w)
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+	if _, err = w.Write([]byte("")); err != nil {
+		log.Error("Error: write response", err.Error())
+		return
+	}
+}
+
+
 func ServiceCreateH(w http.ResponseWriter, r *http.Request) {
 
 	var (
@@ -154,12 +191,12 @@ func ServiceCreateH(w http.ResponseWriter, r *http.Request) {
 
 	s := service.New(r.Context(), item.Meta)
 	svc, err := s.Get(sid)
-	if err != nil {
+	if err != nil && err.Error() != store.ErrKeyNotFound {
 		log.Error("Error: find service by id", err.Error())
 		errors.HTTP.InternalServerError(w)
 		return
 	}
-	if svc != nil {
+	if svc != nil && svc.Meta.ID != "" {
 		errors.New("service").NotUnique("name").Http(w)
 		return
 	}
@@ -184,12 +221,21 @@ func ServiceCreateH(w http.ResponseWriter, r *http.Request) {
 	//}
 
 	if rq.Source.Hub != "" {
-		img, err := image.Create(r.Context(), rq.Registry, rq.Source)
-		if err != nil {
-			log.Error("Error: insert service to db", err)
-			errors.HTTP.InternalServerError(w)
+
+		img, err := image.Get(r.Context(), rq.Registry, rq.Source)
+		if err != nil && err.Error() != store.ErrKeyNotFound {
 			return
 		}
+
+		if err != nil && err.Error() == store.ErrKeyNotFound {
+			img, err = image.Create(r.Context(), rq.Registry, rq.Source)
+			if err != nil {
+				log.Error("Error: insert service to db", err)
+				errors.HTTP.InternalServerError(w)
+				return
+			}
+		}
+
 		rq.Config.Image = &img.Meta.Name
 	} else {
 		rq.Config.Image = &rq.Image
@@ -259,8 +305,7 @@ func ServiceUpdateH(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	svc, err = s.Update(svc, rq)
-	if err != nil {
+	if err = s.Update(svc, rq); err != nil {
 		log.Error("Error: update service error", err)
 		errors.HTTP.InternalServerError(w)
 		return
@@ -331,7 +376,7 @@ func ServiceRemoveH(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func ServiceActivityListH(w http.ResponseWriter, r *http.Request) {
+func ServiceActivityListH(w http.ResponseWriter, _ *http.Request) {
 	w.WriteHeader(http.StatusOK)
 	if _, err := w.Write([]byte(`[]`)); err != nil {
 		context.Get().GetLogger().Error("Error: write response", err.Error())
@@ -339,7 +384,7 @@ func ServiceActivityListH(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func ServiceLogsH(w http.ResponseWriter, r *http.Request) {
+func ServiceLogsH(w http.ResponseWriter, _ *http.Request) {
 	w.WriteHeader(http.StatusOK)
 	if _, err := w.Write([]byte(`[]`)); err != nil {
 		context.Get().GetLogger().Error("Error: write response", err.Error())

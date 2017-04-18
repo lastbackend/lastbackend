@@ -25,6 +25,8 @@ type NodeList []*Node
 type Node struct {
 	// Node metadata
 	Meta NodeMeta `json:"meta"`
+	// Node state
+	State NodeState `json:"state"`
 	// Node spec info
 	Spec NodeSpec `json:"spec"`
 }
@@ -69,5 +71,5 @@ type NodeResources struct {
 
 type NodeSpec struct {
 	// Pod spec for node
-	Pods []PodNodeSpec `json:"pods"`
+	Pods map[string]PodNodeSpec `json:"pods"`
 }

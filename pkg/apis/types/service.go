@@ -23,11 +23,13 @@ import (
 	"errors"
 )
 
-type ServiceList []Service
+type ServiceList []*Service
 
 type Service struct {
 	// Service Meta
 	Meta ServiceMeta `json:"meta"`
+	// Service state
+	State ServiceState `json:"state"`
 	// Service custom domains
 	Domains []string `json:"domains"`
 	// Service source info
@@ -38,12 +40,29 @@ type Service struct {
 	Pods map[string]*Pod `json:"pods"`
 }
 
+
+type ServiceCreateSpec struct {
+	// Service Meta
+	Meta ServiceMeta `json:"meta"`
+	// Service source info
+	Source ServiceSource `json:"source"`
+	// Service config info
+	Config ServiceConfig `json:"config"`
+}
+
+type ServiceUpdateSpec struct {
+	// Service Meta
+	Meta ServiceMeta `json:"meta"`
+	// Service source info
+	Source ServiceSource `json:"source"`
+	// Service config info
+	Config ServiceConfig `json:"config"`
+}
+
 type ServiceMeta struct {
 	Meta
 	// Service replicas
 	Replicas int `json:"replicas"`
-	// Service state
-	State ServiceState `json:"state"`
 	// Service namespace
 	Namespace string `json:"namespace"`
 	// Service region

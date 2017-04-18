@@ -19,8 +19,6 @@
 package wss
 
 import (
-	"bytes"
-	"fmt"
 	"github.com/gorilla/websocket"
 	"net/http"
 	"time"
@@ -42,7 +40,6 @@ const (
 
 var (
 	newline = []byte{'\n'}
-	space   = []byte{' '}
 )
 
 var Upgrader = websocket.Upgrader{
@@ -55,39 +52,11 @@ var Upgrader = websocket.Upgrader{
 
 // Client is an middleman between the websocket connection and the hub.
 type Client struct {
-	Hub *Hub
-
+	Room *Room
 	// The websocket connection.
 	Conn *websocket.Conn
-
 	// Buffered channel of outbound messages.
 	Send chan []byte
-}
-
-// readPump pumps messages from the websocket connection to the hub.
-func (c *Client) ReadPump() {
-
-	defer func() {
-		c.Hub.Unregister <- c
-		c.Conn.Close()
-	}()
-
-	//c.Conn.SetReadLimit(maxMessageSize)
-	c.Conn.SetReadDeadline(time.Now().Add(pongWait))
-	c.Conn.SetPongHandler(func(string) error { c.Conn.SetReadDeadline(time.Now().Add(pongWait)); return nil })
-
-	for {
-		_, message, err := c.Conn.ReadMessage()
-		if err != nil {
-			if websocket.IsUnexpectedCloseError(err, websocket.CloseGoingAway) {
-				fmt.Printf("error: %v", err)
-			}
-			break
-		}
-
-		message = bytes.TrimSpace(bytes.Replace(message, newline, space, -1))
-		c.Hub.Broadcast <- message
-	}
 }
 
 // write writes a message with the given message type and payload.
@@ -108,7 +77,6 @@ func (c *Client) WritePump() {
 	for {
 		select {
 		case message, ok := <-c.Send:
-
 			if !ok {
 				// The hub closed the channel.
 				c.Write(websocket.CloseMessage, []byte{})
@@ -116,26 +84,14 @@ func (c *Client) WritePump() {
 			}
 
 			c.Conn.SetWriteDeadline(time.Now().Add(writeWait))
-			w, err := c.Conn.NextWriter(websocket.TextMessage)
-			if err != nil {
+			if err := c.Write(websocket.TextMessage, message); err != nil {
+				c.Room.DelClient(c)
 				return
 			}
 
-			w.Write(message)
-
-			// Add queued chat messages to the current websocket message.
-			n := len(c.Send)
-
-			for i := 0; i < n; i++ {
-				w.Write(newline)
-				w.Write(<-c.Send)
-			}
-
-			if err := w.Close(); err != nil {
-				return
-			}
 		case <-ticker.C:
 			if err := c.Write(websocket.PingMessage, []byte{}); err != nil {
+				c.Room.DelClient(c)
 				return
 			}
 		}

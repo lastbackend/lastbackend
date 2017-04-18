@@ -22,9 +22,17 @@ import (
 	"encoding/json"
 )
 
-type NamespaceList []Namespace
+type NamespaceList []*Namespace
 
 type Namespace struct {
+	Meta Meta `json:"meta"`
+}
+
+type NamespaceCreateSpec struct {
+	Meta Meta `json:"meta"`
+}
+
+type NamespaceUpdateSpec struct {
 	Meta Meta `json:"meta"`
 }
 

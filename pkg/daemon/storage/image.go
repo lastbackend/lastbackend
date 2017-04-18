@@ -22,9 +22,7 @@ import (
 	"context"
 	"github.com/lastbackend/lastbackend/pkg/apis/types"
 	"github.com/lastbackend/lastbackend/pkg/daemon/storage/store"
-	"github.com/satori/go.uuid"
 	"strings"
-	"time"
 )
 
 const imageStorage string = "images"
@@ -42,73 +40,54 @@ func (s *ImageStorage) Get(ctx context.Context, name string) (*types.Image, erro
 
 	client, destroy, err := s.Client()
 	if err != nil {
-		return nil, err
+		return image, err
 	}
 	defer destroy()
 
 	keyMeta := s.util.Key(ctx, imageStorage, strings.Replace(name, "/", ":", -1), "meta")
 	if err := client.Get(ctx, keyMeta, &image.Meta); err != nil {
-		if err.Error() == store.ErrKeyNotFound {
-			return nil, nil
-		}
-		return nil, err
+		return image, err
 	}
 
 	keySource := s.util.Key(ctx, imageStorage, image.Name, "source")
 	if err := client.Get(ctx, keySource, &image.Source); err != nil {
-		if err.Error() == store.ErrKeyExists {
-			return nil, nil
-		}
-		return nil, err
+		return image, err
 	}
 
 	return image, nil
 }
 
 // Insert new image into storage
-func (s *ImageStorage) Insert(ctx context.Context, name string, source *types.ImageSource) (*types.Image, error) {
-
-	image := new(types.Image)
-	image.Meta.ID = uuid.NewV4().String()
-	image.Meta.Name = name
-	image.Source = *source
-	image.Meta.Created = time.Now()
-	image.Meta.Updated = time.Now()
+func (s *ImageStorage) Insert(ctx context.Context, image *types.Image) error {
 
 	client, destroy, err := s.Client()
 	if err != nil {
-		return nil, err
+		return err
 	}
 	defer destroy()
 
 	tx := client.Begin(ctx)
 
-	keyMeta := s.util.Key(ctx, imageStorage, strings.Replace(name, "/", ":", -1), "meta")
-	if err := tx.Create(keyMeta, image.Meta, 0); err != nil {
-		if err.Error() == store.ErrKeyExists {
-			return nil, nil
-		}
-		return nil, err
+	keyMeta := s.util.Key(ctx, imageStorage, strings.Replace(image.Meta.Name, "/", ":", -1), "meta")
+	if err := tx.Create(keyMeta, &image.Meta, 0); err != nil {
+		return err
 	}
 
-	keySource := s.util.Key(ctx, imageStorage, image.Name, "source")
-	if err := tx.Create(keySource, image.Source, 0); err != nil {
-		if err.Error() == store.ErrKeyExists {
-			return nil, nil
-		}
-		return nil, err
+	keySource := s.util.Key(ctx, imageStorage, image.Meta.Name, "source")
+	if err := tx.Create(keySource, &image.Source, 0); err != nil {
+		return err
 	}
 
 	if err := tx.Commit(); err != nil {
-		return nil, err
+		return err
 	}
 
-	return image, nil
+	return nil
 }
 
 // Update build model
-func (s *ImageStorage) Update(ctx context.Context, image *types.Image) (*types.Image, error) {
-	return nil, nil
+func (s *ImageStorage) Update(ctx context.Context, image *types.Image) error {
+	return nil
 }
 
 func newImageStorage(config store.Config, util IUtil) *ImageStorage {

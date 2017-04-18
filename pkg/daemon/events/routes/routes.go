@@ -16,21 +16,14 @@
 // from Last.Backend LLC.
 //
 
-package v1
+package routes
 
 import (
-	"time"
+	"github.com/lastbackend/lastbackend/pkg/util/http"
+	"github.com/lastbackend/lastbackend/pkg/util/http/middleware"
 )
 
-type Namespace struct {
-	Meta NamespaceMeta `json:"meta"`
+var Routes = []http.Route{
+	// Events handlers
+	{Path: "/events", Method: http.MethodGet, Middleware: []http.Middleware{middleware.Context}, Handler: EventSubscribeH},
 }
-
-type NamespaceMeta struct {
-	Name        string    `json:"name"`
-	Description string    `json:"description"`
-	Created     time.Time `json:"created"`
-	Updated     time.Time `json:"updated"`
-}
-
-type NamespaceList []*Namespace

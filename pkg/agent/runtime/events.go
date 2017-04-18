@@ -50,9 +50,6 @@ func (el *EventListener) Listen() {
 			case event := <-events:
 				{
 					log.Debugf("Runtime: New event receive: %s", event.Event)
-					if (event.Event != "start") && (event.Event != "stop") {
-						continue
-					}
 
 					log.Debugf("Runtime: New event %s type proceed", event.Event)
 					pod := pods.GetPod(event.Container.Pod)
@@ -60,8 +57,18 @@ func (el *EventListener) Listen() {
 						log.Debugf("Runtime: Pod %s not found", event.Container.Pod)
 						continue
 					}
-					log.Debugf("Runtime: Pod %s found > update container", event.Container.Pod)
-					pod.SetContainer(event.Container)
+
+					if event.Event == "destroy" {
+						log.Debugf("Runtime: Pod %s found > delete container", event.Container.Pod)
+						pods.DelContainer(event.Container.ID)
+						pod.DelContainer(event.Container.ID)
+					}
+
+					if (event.Event == "start") || (event.Event == "stop") || (event.Event == "restart") {
+						log.Debugf("Runtime: Pod %s found > update container", event.Container.Pod)
+						pod.SetContainer(event.Container)
+					}
+
 					pod.UpdateState()
 
 					el.pods <- &types.PodEvent{

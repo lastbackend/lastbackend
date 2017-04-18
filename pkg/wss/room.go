@@ -16,21 +16,40 @@
 // from Last.Backend LLC.
 //
 
-package v1
+package wss
 
-import (
-	"time"
-)
-
-type Namespace struct {
-	Meta NamespaceMeta `json:"meta"`
+type Room struct {
+	// Registered clients.
+	Clients map[*Client]bool
+	// Outbound messages to the clients.
+	Broadcast chan []byte
 }
 
-type NamespaceMeta struct {
-	Name        string    `json:"name"`
-	Description string    `json:"description"`
-	Created     time.Time `json:"created"`
-	Updated     time.Time `json:"updated"`
+func (r *Room) AddClient(client *Client) {
+	r.Clients[client] = true
 }
 
-type NamespaceList []*Namespace
+func (r *Room) DelClient(client *Client) {
+	if _, ok := r.Clients[client]; ok {
+		close(client.Send)
+		delete(r.Clients, client)
+	}
+}
+
+func (r *Room) Listen() {
+	for {
+		select {
+		case message := <-r.Broadcast:
+			for client := range r.Clients {
+				client.Send <- message
+			}
+		}
+	}
+}
+
+func NewRoom() *Room {
+	return &Room{
+		Broadcast: make(chan []byte),
+		Clients:   make(map[*Client]bool),
+	}
+}

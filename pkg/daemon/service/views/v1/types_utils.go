@@ -28,10 +28,11 @@ import (
 )
 
 func New(obj *types.Service) *Service {
-	s := new(Service)
+	s := Service{}
 
 	s.Meta.Name = obj.Meta.Name
 	s.Meta.Description = obj.Meta.Description
+	s.Meta.Namespace = obj.Meta.Namespace
 	s.Meta.Region = obj.Meta.Region
 	s.Meta.Updated = obj.Meta.Updated
 	s.Meta.Created = obj.Meta.Created
@@ -43,29 +44,29 @@ func New(obj *types.Service) *Service {
 
 	if len(obj.Pods) == 0 {
 		s.Pods = make([]v1.PodInfo, 0)
-		return s
+		return &s
 	}
 
 	for _, pod := range obj.Pods {
 		s.Pods = append(s.Pods, v1.ToPodInfo(pod))
 	}
 
-	return s
+	return &s
 }
 
 func (obj *Service) ToJson() ([]byte, error) {
 	return json.Marshal(obj)
 }
 
-func NewList(obj *types.ServiceList) *ServiceList {
-	s := new(ServiceList)
+func NewList(obj types.ServiceList) *ServiceList {
+	s := ServiceList{}
 	if obj == nil {
 		return nil
 	}
-	for _, v := range *obj {
-		*s = append(*s, *New(&v))
+	for _, v := range obj {
+		s = append(s, New(v))
 	}
-	return s
+	return &s
 }
 
 func (s *Service) DrawTable(namespaceName string) {
@@ -97,13 +98,13 @@ func (s *Service) DrawTable(namespaceName string) {
 	for _, pod := range s.Pods {
 		podsTable.AddRow(map[string]interface{}{
 			"ID":          pod.Meta.ID,
-			"STATE":       pod.Meta.State.State,
-			"STATUS":      pod.Meta.State.Status,
-			"TOTAL":       pod.Meta.State.Containers.Total,
-			"RUNNING":     pod.Meta.State.Containers.Running,
-			"CREATED":     pod.Meta.State.Containers.Created,
-			"STOPPED":     pod.Meta.State.Containers.Stopped,
-			"ERRORED":     pod.Meta.State.Containers.Errored,
+			"STATE":       pod.State.State,
+			"STATUS":      pod.State.Status,
+			"TOTAL":       pod.State.Containers.Total,
+			"RUNNING":     pod.State.Containers.Running,
+			"CREATED":     pod.State.Containers.Created,
+			"STOPPED":     pod.State.Containers.Stopped,
+			"ERRORED":     pod.State.Containers.Errored,
 			"CREATED POD": pod.Meta.Created.String()[:10],
 			"UPDATED POD": pod.Meta.Updated.String()[:10],
 		})

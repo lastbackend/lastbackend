@@ -19,7 +19,6 @@
 package server
 
 import (
-	c "context"
 	"github.com/jawher/mow.cli"
 	"github.com/lastbackend/lastbackend/pkg/daemon/config"
 	"github.com/lastbackend/lastbackend/pkg/daemon/context"
@@ -30,6 +29,7 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
+	"github.com/lastbackend/lastbackend/pkg/daemon/events"
 )
 
 func Daemon(cmd *cli.Cmd) {
@@ -111,22 +111,16 @@ func Daemon(cmd *cli.Cmd) {
 		cfg.Etcd.TLS.CA = *etcdTlsCA
 
 		ctx.SetConfig(cfg)
-		ctx.SetHttpTemplateRegistry(http.New(cfg.TemplateRegistry.Host))
 		ctx.SetLogger(logger.New(cfg.Debug, 9))
-		ctx.SetWssHub(new(wss.Hub))
+
 		strg, err := storage.Get(cfg.GetEtcdDB())
 		if err != nil {
 			panic(err)
 		}
 		ctx.SetStorage(strg)
+		ctx.SetWssHub(wss.NewHub())
 
-		ns, err := ctx.GetStorage().Namespace().GetByName(c.Background(), "demo")
-		if err != nil {
-			ctx.GetLogger().Error(err)
-			return
-		}
-
-		ctx.GetLogger().Debug(ns)
+		ctx.SetHttpTemplateRegistry(http.New(cfg.TemplateRegistry.Host))
 	}
 
 	cmd.Action = func() {
@@ -136,12 +130,16 @@ func Daemon(cmd *cli.Cmd) {
 			sigs = make(chan os.Signal)
 			done = make(chan bool, 1)
 		)
+		go func () {
+			events.NewEventListener().Listen()
+		}()
 
 		go func() {
 			if err := Listen(cfg.HttpServer.Host, cfg.HttpServer.Port); err != nil {
 				log.Warnf("Http server start error: %s", err.Error())
 			}
 		}()
+
 
 		// Handle SIGINT and SIGTERM.
 		signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)

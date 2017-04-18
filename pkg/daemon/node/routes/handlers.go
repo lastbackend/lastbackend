@@ -47,25 +47,28 @@ func NodeEventH(w http.ResponseWriter, r *http.Request) {
 	}
 
 	s := service.New(r.Context(), types.Meta{})
-	if err := s.SetPods(r.Context(), rq.Pods); err != nil {
-		log.Errorf("Error: set pods err %s", err.Error())
-		errors.HTTP.InternalServerError(w)
-		return
+	if len(rq.Pods) > 0 {
+		if err := s.SetPods(r.Context(), rq.Pods); err != nil {
+			log.Errorf("Error: set pods err %s", err.Error())
+			errors.HTTP.InternalServerError(w)
+			return
+		}
 	}
 
 	n := node.New()
 	log.Debugf("try to find node by hostname: %s", rq.Meta.Hostname)
 	item, err := n.Get(r.Context(), rq.Meta.Hostname)
 	if err != nil {
-		log.Error("Error: find node by hostname", err.Error())
+		log.Errorf("Error: find node by hostname: %s", err.Error())
 		errors.HTTP.InternalServerError(w)
 		return
 	}
 
 	if item == nil {
-		item, err = n.Create(r.Context(), &rq.Meta)
+		log.Debug("Node not found, create a new one")
+		item, err = n.Create(r.Context(), &rq.Meta, &rq.State)
 		if err != nil {
-			log.Error("Error: can not create node", err.Error())
+			log.Errorf("Error: can not create node: %s", err.Error())
 			errors.HTTP.InternalServerError(w)
 			return
 		}

@@ -63,6 +63,7 @@ func (s *VendorStorage) Insert(ctx context.Context, owner, name, host, serviceID
 
 func (s *VendorStorage) Get(ctx context.Context, vendorName string) (*types.Vendor, error) {
 
+	vendor := new(types.Vendor)
 	client, destroy, err := s.Client()
 	if err != nil {
 		return nil, err
@@ -70,11 +71,8 @@ func (s *VendorStorage) Get(ctx context.Context, vendorName string) (*types.Vend
 	defer destroy()
 
 	key := s.util.Key(ctx, vendorStorage, vendorName)
-	vendor := new(types.Vendor)
-	if err := client.Get(ctx, key, &vendor); err != nil {
-		if err.Error() == store.ErrKeyNotFound {
-			return nil, nil
-		}
+
+	if err := client.Get(ctx, key, vendor); err != nil {
 		return nil, err
 	}
 
@@ -92,10 +90,7 @@ func (s *VendorStorage) List(ctx context.Context) (map[string]*types.Vendor, err
 	key := s.util.Key(ctx, vendorStorage)
 	vendors := make(map[string]*types.Vendor)
 	if err := client.Map(ctx, key, ``, vendors); err != nil {
-		if err.Error() == store.ErrKeyNotFound {
-			return nil, nil
-		}
-		return nil, err
+		return vendors, err
 	}
 
 	return vendors, nil
@@ -111,8 +106,8 @@ func (s *VendorStorage) Remove(ctx context.Context, vendorName string) error {
 
 	key := s.util.Key(ctx, vendorStorage, vendorName)
 	err = client.Delete(ctx, key)
-	if err != nil && err.Error() == store.ErrKeyNotFound {
-		return nil
+	if err != nil {
+		return err
 	}
 
 	return nil

@@ -42,13 +42,18 @@ func (r *Runtime) Subscribe() chan types.ContainerEvent {
 			select {
 			case e := <-es:
 
-				log.Debugf("Event type: %s", e.Type)
+				log.Debugf("Event type: %s action: %s", e.Type, e.Action)
 				if e.Type != events.ContainerEventType {
+					continue
+				}
+
+				if (e.Action == "created") || (e.Action == "kill") {
 					continue
 				}
 
 				container = s.GetContainer(e.ID)
 				if container == nil {
+					log.Debugf("Container not found")
 					continue
 				}
 

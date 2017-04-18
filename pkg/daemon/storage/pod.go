@@ -46,15 +46,12 @@ func (s *PodStorage) GetByID(ctx context.Context, namespace, service, id string)
 	var ns string
 	keyNamespace := s.util.Key(ctx, "helper", namespaceStorage, namespace)
 	if err := client.Get(ctx, keyNamespace, &ns); err != nil {
-		return nil, err
+		return pod, err
 	}
 
 	keyMeta := s.util.Key(ctx, namespaceStorage, ns, serviceStorage, service, podStorage, id)
-	if err := client.Get(ctx, keyMeta, &pod); err != nil {
-		if err.Error() == store.ErrKeyNotFound {
-			return nil, nil
-		}
-		return nil, err
+	if err := client.Get(ctx, keyMeta, pod); err != nil {
+		return pod, err
 	}
 
 	return pod, nil
@@ -70,14 +67,7 @@ func (s *PodStorage) ListByService(ctx context.Context, namespace, service strin
 	keyServiceList := s.util.Key(ctx, namespaceStorage, namespace, serviceStorage, service, podStorage)
 	pods := []*types.Pod{}
 	if err := client.List(ctx, keyServiceList, "", &pods); err != nil {
-		if err.Error() == store.ErrKeyNotFound {
-			return nil, nil
-		}
-		return nil, err
-	}
-
-	if pods == nil {
-		return nil, nil
+		return pods, err
 	}
 
 	return pods, nil
