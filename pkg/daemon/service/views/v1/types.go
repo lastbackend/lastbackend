@@ -19,14 +19,16 @@
 package v1
 
 import (
+	"github.com/lastbackend/lastbackend/pkg/apis/types"
 	"github.com/lastbackend/lastbackend/pkg/daemon/pod/views/v1"
+	"strings"
 	"time"
 )
 
 type Service struct {
-	Meta   ServiceMeta  `json:"meta"`
-	Pods   []v1.PodInfo `json:"pods,omitempty"`
-	Config Config       `json:"config,omitempty"`
+	Meta ServiceMeta  `json:"meta"`
+	Pods []v1.PodInfo `json:"pods,omitempty"`
+	Spec []SpecInfo   `json:"spec,omitempty"`
 }
 
 type ServiceMeta struct {
@@ -39,11 +41,48 @@ type ServiceMeta struct {
 	Updated     time.Time `json:"updated"`
 }
 
-type Config struct {
-	Memory  int64  `json:"memory,omitempty"`
-	Command string `json:"command,omitempty"`
-	Image   string `json:"image,omitempty"`
-	Region  string `json:"region,omitempty"`
+type SpecInfo struct {
+	Meta    SpecMeta `json:"meta,omitempty"`
+	Memory  int64    `json:"memory,omitempty"`
+	Command string   `json:"command,omitempty"`
+	Image   string   `json:"image,omitempty"`
+	Region  string   `json:"region,omitempty"`
+}
+
+type SpecMeta struct {
+	// Meta id
+	ID string `json:"id"`
+	// Meta labels
+	Labels map[string]string `json:"labels"`
+	// Meta created time
+	Created time.Time `json:"created"`
+	// Meta updated time
+	Updated time.Time `json:"updated"`
 }
 
 type ServiceList []*Service
+
+func ToSpecInfo(spec *types.ServiceSpec) SpecInfo {
+	info := SpecInfo{
+		Meta:    ToSpecMeta(spec.Meta),
+		Memory:  spec.Memory,
+		Command: strings.Join(spec.Command, " "),
+	}
+
+	return info
+}
+
+func ToSpecMeta(meta types.SpecMeta) SpecMeta {
+	m := SpecMeta{
+		ID:      meta.ID,
+		Labels:  meta.Labels,
+		Created: meta.Created,
+		Updated: meta.Updated,
+	}
+
+	if len(m.Labels) == 0 {
+		m.Labels = make(map[string]string)
+	}
+
+	return m
+}

@@ -35,7 +35,7 @@ type Service struct {
 	// Service source info
 	Source ServiceSource `json:"source"`
 	// Service config info
-	Config ServiceConfig `json:"config"`
+	Spec map[string]*ServiceSpec `json:"spec"`
 	// Pods list
 	Pods map[string]*Pod `json:"pods"`
 }
@@ -46,7 +46,7 @@ type ServiceCreateSpec struct {
 	// Service source info
 	Source ServiceSource `json:"source"`
 	// Service config info
-	Config ServiceConfig `json:"config"`
+	Config ServiceSpec `json:"config"`
 }
 
 type ServiceUpdateSpec struct {
@@ -55,7 +55,7 @@ type ServiceUpdateSpec struct {
 	// Service source info
 	Source ServiceSource `json:"source"`
 	// Service config info
-	Config ServiceConfig `json:"config"`
+	Config ServiceSpec `json:"config"`
 }
 
 type ServiceMeta struct {
@@ -97,7 +97,12 @@ type ServiceSource struct {
 	Branch string `json:"branch"`
 }
 
-type ServiceConfig struct {
+type SpecMeta struct {
+	Meta
+}
+
+type ServiceSpec struct {
+	Meta       SpecMeta `json:"meta"`
 	Replicas   int      `json:"replicas"`
 	Memory     int64    `json:"memory"`
 	Entrypoint []string `json:"entrypoint"`
@@ -107,7 +112,7 @@ type ServiceConfig struct {
 	Ports      []Port   `json:"ports"`
 }
 
-func (c *ServiceConfig) Update(patch *ServiceConfig) error {
+func (c *ServiceSpec) Update(patch *ServiceSpec) error {
 
 	if patch.Replicas < 0 {
 		return errors.New("The value of the `replicas` parameter must be at least 1")
@@ -131,8 +136,8 @@ func (c *ServiceConfig) Update(patch *ServiceConfig) error {
 	return nil
 }
 
-func (ServiceConfig) GetDefault() ServiceConfig {
-	var config = ServiceConfig{}
+func (ServiceSpec) GetDefault() ServiceSpec {
+	var config = ServiceSpec{}
 	config.Replicas = 1
 	config.Memory = 256
 	return config
