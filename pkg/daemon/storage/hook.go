@@ -34,26 +34,26 @@ type HookStorage struct {
 }
 
 // Get hooks by image
-func (s *HookStorage) GetByToken(ctx context.Context, token string) (types.Hook, error) {
-	var hook = types.Hook{}
+func (s *HookStorage) GetByToken(ctx context.Context, token string) (*types.Hook, error) {
+	var hook = new(types.Hook)
 	return hook, nil
 }
 
 // Get hooks by image
-func (s *HookStorage) List(ctx context.Context, id string) ([]types.Hook, error) {
-	var hooks = []types.Hook{}
+func (s *HookStorage) List(ctx context.Context, id string) ([]*types.Hook, error) {
+	var hooks = []*types.Hook{}
 	return hooks, nil
 }
 
 // Get hooks by image
-func (s *HookStorage) ListByImage(ctx context.Context, id string) ([]types.Hook, error) {
-	var hooks = []types.Hook{}
+func (s *HookStorage) ListByImage(ctx context.Context, id string) ([]*types.Hook, error) {
+	var hooks = []*types.Hook{}
 	return hooks, nil
 }
 
 // Get hooks by service
-func (s *HookStorage) ListByService(ctx context.Context, id string) ([]types.Hook, error) {
-	var hooks = []types.Hook{}
+func (s *HookStorage) ListByService(ctx context.Context, id string) ([]*types.Hook, error) {
+	var hooks = []*types.Hook{}
 	return hooks, nil
 }
 

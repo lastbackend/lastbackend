@@ -36,21 +36,21 @@ type ServiceStorage struct {
 }
 
 // Get service by id
-func (s *ServiceStorage) GetByID(ctx context.Context, namespaceID, serviceID string) (types.Service, error) {
+func (s *ServiceStorage) GetByID(ctx context.Context, namespaceID, serviceID string) (*types.Service, error) {
 
 	const filter = `\b(.+)` + serviceStorage + `\/[a-z0-9-]{36}\/(meta|config)\b`
-	var service = types.Service{}
-	//service.Pods = make(map[string]*types.Pod)
+	var service = new(types.Service)
+	service.Pods = make(map[string]*types.Pod)
 
 	client, destroy, err := s.Client()
 	if err != nil {
-		return service, err
+		return nil, err
 	}
 	defer destroy()
 
 	key := s.util.Key(ctx, namespaceStorage, namespaceID, serviceStorage, serviceID)
-	if err := client.Map(ctx, key, filter, &service); err != nil {
-		return service, err
+	if err := client.Map(ctx, key, filter, service); err != nil {
+		return nil, err
 	}
 
 	keyPods := s.util.Key(ctx, namespaceStorage, namespaceID, serviceStorage, serviceID, "pods")
@@ -58,67 +58,67 @@ func (s *ServiceStorage) GetByID(ctx context.Context, namespaceID, serviceID str
 		if err.Error() == store.ErrKeyNotFound {
 			return service, nil
 		}
-		return service, err
+		return nil, err
 	}
 
 	return service, nil
 }
 
 // Get service by Pod ID
-func (s *ServiceStorage) GetByPodID(ctx context.Context, uuid string) (types.Service, error) {
+func (s *ServiceStorage) GetByPodID(ctx context.Context, uuid string) (*types.Service, error) {
 	const filter = `\b(.+)` + serviceStorage + `\/[a-z0-9-]{36}\/(meta|config)\b`
 
 	var key string
-	var service = types.Service{}
+	var service = new(types.Service)
 	service.Pods = make(map[string]*types.Pod)
 
 	client, destroy, err := s.Client()
 	if err != nil {
-		return service, err
+		return nil, err
 	}
 
 	defer destroy()
 
 	keyHelper := s.util.Key(ctx, "helper", serviceStorage, "pods", uuid)
 	if err := client.Get(ctx, keyHelper, &key); err != nil {
-		return service, err
+		return nil, err
 	}
 
-	if err := client.Map(ctx, key, filter, &service); err != nil {
-		return service, err
+	if err := client.Map(ctx, key, filter, service); err != nil {
+		return nil, err
 	}
 
 	keyPods := s.util.Key(ctx, key, "pods")
 	if err := client.Map(ctx, keyPods, "", &service.Pods); err != nil {
-		return service, err
+		return nil, err
 	}
 
 	return service, nil
 }
 
 // Get service by name
-func (s *ServiceStorage) GetByName(ctx context.Context, namespaceID string, name string) (types.Service, error) {
+func (s *ServiceStorage) GetByName(ctx context.Context, namespaceID string, name string) (*types.Service, error) {
+
 	var (
-		id      string
-		service types.Service
+		id string
 	)
 
 	client, destroy, err := s.Client()
 	if err != nil {
-		return service, err
+		return nil, err
 	}
 	defer destroy()
 
 	key := s.util.Key(ctx, "helper", namespaceStorage, namespaceID, serviceStorage, name)
 	if err := client.Get(ctx, key, &id); err != nil {
-		return service, err
+		return nil, err
 	}
 
 	return s.GetByID(ctx, namespaceID, id)
 }
 
 // List services
-func (s *ServiceStorage) ListByNamespace(ctx context.Context, namespaceID string) ([]types.Service, error) {
+func (s *ServiceStorage) ListByNamespace(ctx context.Context, namespaceID string) ([]*types.Service, error) {
 
 	const filter = `\b(.+)` + serviceStorage + `\/[a-z0-9-]{36}\/(meta|config|state)\b`
 
@@ -128,7 +128,7 @@ func (s *ServiceStorage) ListByNamespace(ctx context.Context, namespaceID string
 	}
 	defer destroy()
 
-	var services = []types.Service{}
+	var services = []*types.Service{}
 
 	keyServices := s.util.Key(ctx, namespaceStorage, namespaceID, serviceStorage)
 	if err := client.List(ctx, keyServices, filter, &services); err != nil {
@@ -354,7 +354,7 @@ func (s *ServiceStorage) Watch(ctx context.Context, service chan *types.Service)
 		}
 
 		if svc, err := s.GetByID(ctx, keys[1], keys[2]); err == nil {
-			service <- &svc
+			service <- svc
 		}
 	}
 

@@ -41,7 +41,6 @@ type PodInfo struct {
 	Containers []v1.Container `json:"containers"`
 }
 
-
 type PodMeta struct {
 	// Meta id
 	ID string `json:"id"`

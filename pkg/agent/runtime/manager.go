@@ -71,7 +71,7 @@ func (pm *PodManager) SyncPod(pod types.PodNodeSpec) {
 	pm.sync(pod.Meta, pod.State, pod.Spec, p)
 }
 
-func (pm *PodManager) sync( meta types.PodMeta, state types.PodState, spec types.PodSpec, pod *types.Pod) {
+func (pm *PodManager) sync(meta types.PodMeta, state types.PodState, spec types.PodSpec, pod *types.Pod) {
 	// Create new worker to sync pod
 	// Check if pod worker exists
 	log := context.Get().GetLogger()

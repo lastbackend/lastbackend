@@ -35,18 +35,17 @@ type NodeStorage struct {
 	Client func() (store.IStore, store.DestroyFunc, error)
 }
 
-func (s *NodeStorage) List(ctx context.Context) ([]types.Node, error) {
+func (s *NodeStorage) List(ctx context.Context) ([]*types.Node, error) {
 
 	const filter = `\b(.+)` + nodeStorage + `\/(.+)\/(meta|state)\b`
-
+	nodes := []*types.Node{}
 	client, destroy, err := s.Client()
 	if err != nil {
-		return nil, err
+		return nodes, err
 	}
 	defer destroy()
 
 	key := s.util.Key(ctx, nodeStorage)
-	nodes := []types.Node{}
 
 	if err := client.List(ctx, key, filter, &nodes); err != nil {
 		return nil, err
@@ -55,31 +54,44 @@ func (s *NodeStorage) List(ctx context.Context) ([]types.Node, error) {
 	return nodes, nil
 }
 
-func (s *NodeStorage) Get(ctx context.Context, hostname string) (types.Node, error) {
-	const filter = `\b(.+)`+ nodeStorage + `\/(.+)\/(meta|state)\b`
-	node := types.Node{}
-	node.Spec.Pods = make(map[string]types.PodNodeSpec)
+func (s *NodeStorage) Get(ctx context.Context, hostname string) (*types.Node, error) {
+
+	const filter = `\b.+` + nodeStorage + `\/.+\/(meta|state)\b`
+
+	var (
+		node = new(types.Node)
+	)
 
 	client, destroy, err := s.Client()
 	if err != nil {
-		return node, err
+		return nil, err
 	}
 	defer destroy()
 
-	key:= s.util.Key(ctx, nodeStorage, hostname)
-	if err := client.Map(ctx, key, filter, &node); err != nil {
-		return node, err
+	key := s.util.Key(ctx, nodeStorage, hostname)
+	if err := client.Map(ctx, key, filter, node); err != nil {
+
+		if err.Error() == store.ErrKeyNotFound {
+			return nil, nil
+		}
+
+		return nil, err
 	}
 
+	node.Spec.Pods = make(map[string]types.PodNodeSpec)
 	keySpec := s.util.Key(ctx, nodeStorage, hostname, "spec", "pods")
 	if err := client.Map(ctx, keySpec, "", node.Spec.Pods); err != nil {
-		return node, err
+		if err.Error() == store.ErrKeyNotFound {
+			return node, nil
+		}
+
+		return nil, err
 	}
 
 	return node, nil
 }
 
-func (s *NodeStorage) Insert(ctx context.Context, node *types.Node)  error {
+func (s *NodeStorage) Insert(ctx context.Context, node *types.Node) error {
 
 	client, destroy, err := s.Client()
 	if err != nil {
@@ -95,12 +107,18 @@ func (s *NodeStorage) Insert(ctx context.Context, node *types.Node)  error {
 		return err
 	}
 
+	keyState := s.util.Key(ctx, nodeStorage, node.Meta.Hostname, "state")
+	if err := tx.Create(keyState, &node.State, 0); err != nil {
+		fmt.Println("meta", err.Error())
+		return err
+	}
+
 	if err := tx.Commit(); err != nil {
 		fmt.Println("commit", err.Error())
 		return err
 	}
 
-	return  nil
+	return nil
 }
 
 func (s *NodeStorage) UpdateMeta(ctx context.Context, meta *types.NodeMeta) error {
@@ -124,6 +142,32 @@ func (s *NodeStorage) UpdateMeta(ctx context.Context, meta *types.NodeMeta) erro
 
 	return nil
 
+}
+
+func (s *NodeStorage) UpdateState(ctx context.Context, node *types.Node) error {
+	node.Meta.Updated = time.Now()
+
+	client, destroy, err := s.Client()
+	if err != nil {
+		return err
+	}
+	defer destroy()
+
+	tx := client.Begin(ctx)
+	keyMeta := s.util.Key(ctx, nodeStorage, node.Meta.Hostname, "meta")
+	if err := tx.Update(keyMeta, &node.Meta, 0); err != nil {
+		return err
+	}
+
+	keyState := s.util.Key(ctx, nodeStorage, node.Meta.Hostname, "state")
+	if err := tx.Update(keyState, &node.Meta, 0); err != nil {
+		return err
+	}
+	if err := tx.Commit(); err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func (s *NodeStorage) InsertPod(ctx context.Context, meta *types.NodeMeta, pod *types.PodNodeSpec) error {

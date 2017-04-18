@@ -33,13 +33,13 @@ type PodStorage struct {
 	Client func() (store.IStore, store.DestroyFunc, error)
 }
 
-func (s *PodStorage) GetByID(ctx context.Context, namespace, service, id string) (types.Pod, error) {
+func (s *PodStorage) GetByID(ctx context.Context, namespace, service, id string) (*types.Pod, error) {
 
-	var pod = types.Pod{}
+	var pod = new(types.Pod)
 
 	client, destroy, err := s.Client()
 	if err != nil {
-		return pod, err
+		return nil, err
 	}
 	defer destroy()
 
@@ -50,14 +50,14 @@ func (s *PodStorage) GetByID(ctx context.Context, namespace, service, id string)
 	}
 
 	keyMeta := s.util.Key(ctx, namespaceStorage, ns, serviceStorage, service, podStorage, id)
-	if err := client.Get(ctx, keyMeta, &pod); err != nil {
+	if err := client.Get(ctx, keyMeta, pod); err != nil {
 		return pod, err
 	}
 
 	return pod, nil
 }
 
-func (s *PodStorage) ListByService(ctx context.Context, namespace, service string) ([]types.Pod, error) {
+func (s *PodStorage) ListByService(ctx context.Context, namespace, service string) ([]*types.Pod, error) {
 	client, destroy, err := s.Client()
 	if err != nil {
 		return nil, err
@@ -65,7 +65,7 @@ func (s *PodStorage) ListByService(ctx context.Context, namespace, service strin
 	defer destroy()
 
 	keyServiceList := s.util.Key(ctx, namespaceStorage, namespace, serviceStorage, service, podStorage)
-	pods := []types.Pod{}
+	pods := []*types.Pod{}
 	if err := client.List(ctx, keyServiceList, "", &pods); err != nil {
 		return pods, err
 	}

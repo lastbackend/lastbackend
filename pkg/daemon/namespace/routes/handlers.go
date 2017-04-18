@@ -23,10 +23,10 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/daemon/namespace"
 	"github.com/lastbackend/lastbackend/pkg/daemon/namespace/routes/request"
 	"github.com/lastbackend/lastbackend/pkg/daemon/namespace/views/v1"
+	"github.com/lastbackend/lastbackend/pkg/daemon/storage/store"
 	"github.com/lastbackend/lastbackend/pkg/errors"
 	"github.com/lastbackend/lastbackend/pkg/util/http/utils"
 	"net/http"
-	"github.com/lastbackend/lastbackend/pkg/daemon/storage/store"
 )
 
 func NamespaceListH(w http.ResponseWriter, r *http.Request) {
@@ -121,8 +121,7 @@ func NamespaceCreateH(w http.ResponseWriter, r *http.Request) {
 		errors.HTTP.InternalServerError(w)
 		return
 	}
-
-	if item.Meta.ID != "" {
+	if item != nil {
 		errors.New("namespace").NotUnique("name").Http(w)
 		return
 	}
@@ -168,7 +167,6 @@ func NamespaceUpdateH(w http.ResponseWriter, r *http.Request) {
 		errors.HTTP.InternalServerError(w)
 		return
 	}
-
 	if item == nil {
 		errors.New("namespace").NotFound().Http(w)
 		return

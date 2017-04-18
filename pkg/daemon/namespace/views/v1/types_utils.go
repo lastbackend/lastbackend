@@ -46,7 +46,6 @@ func (n *Namespace) DrawTable() {
 	})
 }
 
-
 func NewList(obj types.NamespaceList) *NamespaceList {
 	p := NamespaceList{}
 	if obj == nil {

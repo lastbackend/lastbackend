@@ -23,14 +23,14 @@ import (
 )
 
 type PodStorage struct {
-	lock sync.RWMutex
-	stats PodStorageStats
+	lock       sync.RWMutex
+	stats      PodStorageStats
 	containers map[string]*types.Container
-	pods map[string]*types.Pod
+	pods       map[string]*types.Pod
 }
 
 type PodStorageStats struct {
-	pods int
+	pods       int
 	containers int
 }
 
@@ -64,7 +64,7 @@ func (ps *PodStorage) DelContainer(id string) {
 	ps.lock.Lock()
 	defer ps.lock.Unlock()
 
-	delete (ps.containers, id)
+	delete(ps.containers, id)
 }
 
 func (ps *PodStorage) GetPod(id string) *types.Pod {
@@ -130,8 +130,8 @@ func NewPodStorage() *PodStorage {
 	pods := make(map[string]*types.Pod)
 	containers := make(map[string]*types.Container)
 	return &PodStorage{
-		stats: PodStorageStats{},
-		containers : containers,
-		pods: pods,
+		stats:      PodStorageStats{},
+		containers: containers,
+		pods:       pods,
 	}
 }

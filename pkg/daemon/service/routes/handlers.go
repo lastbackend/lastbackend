@@ -25,10 +25,10 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/daemon/service"
 	"github.com/lastbackend/lastbackend/pkg/daemon/service/routes/request"
 	"github.com/lastbackend/lastbackend/pkg/daemon/service/views/v1"
+	"github.com/lastbackend/lastbackend/pkg/daemon/storage/store"
 	"github.com/lastbackend/lastbackend/pkg/errors"
 	"github.com/lastbackend/lastbackend/pkg/util/http/utils"
 	"net/http"
-	"github.com/lastbackend/lastbackend/pkg/daemon/storage/store"
 )
 
 func ServiceListH(w http.ResponseWriter, r *http.Request) {
@@ -122,7 +122,6 @@ func ServiceInfoH(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-
 func ServiceWatchH(w http.ResponseWriter, r *http.Request) {
 	var (
 		err error
@@ -156,7 +155,6 @@ func ServiceWatchH(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 }
-
 
 func ServiceCreateH(w http.ResponseWriter, r *http.Request) {
 
@@ -196,7 +194,7 @@ func ServiceCreateH(w http.ResponseWriter, r *http.Request) {
 		errors.HTTP.InternalServerError(w)
 		return
 	}
-	if svc != nil && svc.Meta.ID != "" {
+	if svc != nil {
 		errors.New("service").NotUnique("name").Http(w)
 		return
 	}

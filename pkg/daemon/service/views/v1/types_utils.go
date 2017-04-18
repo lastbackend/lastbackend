@@ -21,8 +21,8 @@ package v1
 import (
 	"encoding/json"
 	"github.com/lastbackend/lastbackend/pkg/apis/types"
-	"strings"
 	"github.com/lastbackend/lastbackend/pkg/daemon/pod/views/v1"
+	"strings"
 )
 
 func New(obj *types.Service) *Service {

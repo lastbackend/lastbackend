@@ -29,25 +29,23 @@ import (
 const ContainerRestartTimeout = 10 // seconds
 const ContainerStopTimeout = 10    // seconds
 
-
 type Task struct {
 	close chan bool
 	done  chan bool
 
-
-	meta types.PodMeta
+	meta  types.PodMeta
 	state types.PodState
-	spec types.PodSpec
+	spec  types.PodSpec
 
 	pod *types.Pod
 }
 
 func (t *Task) exec() {
 
-	defer func () {
+	defer func() {
 		events.New().Send(events.NewEvent(GetNodeMeta(), append([]*types.Pod{}, &types.Pod{
-			Meta:  t.pod.Meta,
-			State: t.pod.State,
+			Meta:       t.pod.Meta,
+			State:      t.pod.State,
 			Containers: t.pod.Containers,
 		})))
 	}()

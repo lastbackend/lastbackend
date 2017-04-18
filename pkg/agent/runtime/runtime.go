@@ -63,6 +63,26 @@ func (r *Runtime) StartEventListener() error {
 	return nil
 }
 
+func (r *Runtime) Recovery(pods map[string]types.PodNodeSpec) {
+
+	log := context.Get().GetLogger()
+	ps := context.Get().GetStorage().Pods().GetPods()
+
+	for _, pod := range ps {
+		if _, ok := pods[pod.Meta.ID]; !ok {
+			log.Debugf("Mark pod %s for removable", pod.Meta.ID)
+			pods[pod.Meta.ID] = types.PodNodeSpec{
+				Meta: pod.Meta,
+				State: types.PodState{
+					State: types.PodStateDeleting,
+				},
+			}
+		}
+	}
+
+	r.Sync(pods)
+}
+
 func (r *Runtime) Sync(pods map[string]types.PodNodeSpec) {
 	log := context.Get().GetLogger()
 	log.Debug("Runtime: start sync")
@@ -79,6 +99,10 @@ func (r *Runtime) Loop() {
 	spec, err := events.New().Send(events.NewInitialEvent(GetNodeMeta(), r.pManager.GetPodList()))
 	if err != nil {
 		log.Errorf("Send initial event error %s", err.Error())
+	}
+
+	if spec != nil {
+		r.Recovery(spec.Pods)
 	}
 
 	pods, host := r.eListener.Subscribe()
@@ -126,6 +150,4 @@ func (r *Runtime) Loop() {
 			}
 		}
 	}()
-
-	r.Sync(spec.Pods)
 }

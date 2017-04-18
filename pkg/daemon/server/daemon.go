@@ -22,6 +22,7 @@ import (
 	"github.com/jawher/mow.cli"
 	"github.com/lastbackend/lastbackend/pkg/daemon/config"
 	"github.com/lastbackend/lastbackend/pkg/daemon/context"
+	"github.com/lastbackend/lastbackend/pkg/daemon/events"
 	"github.com/lastbackend/lastbackend/pkg/daemon/storage"
 	"github.com/lastbackend/lastbackend/pkg/logger"
 	"github.com/lastbackend/lastbackend/pkg/util/http"
@@ -29,7 +30,6 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
-	"github.com/lastbackend/lastbackend/pkg/daemon/events"
 )
 
 func Daemon(cmd *cli.Cmd) {
@@ -130,7 +130,7 @@ func Daemon(cmd *cli.Cmd) {
 			sigs = make(chan os.Signal)
 			done = make(chan bool, 1)
 		)
-		go func () {
+		go func() {
 			events.NewEventListener().Listen()
 		}()
 
@@ -139,7 +139,6 @@ func Daemon(cmd *cli.Cmd) {
 				log.Warnf("Http server start error: %s", err.Error())
 			}
 		}()
-
 
 		// Handle SIGINT and SIGTERM.
 		signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)

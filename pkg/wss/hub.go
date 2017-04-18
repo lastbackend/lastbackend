@@ -20,7 +20,6 @@ package wss
 
 import (
 	"github.com/gorilla/websocket"
-	"fmt"
 )
 
 type Hub struct {
@@ -29,14 +28,11 @@ type Hub struct {
 
 func (h *Hub) NewConnection(id string, conn *websocket.Conn) *Client {
 	var room *Room
-	fmt.Println("create new connection client")
 	room = h.GetRoom(id)
 	if room == nil {
-		fmt.Println("create new room for client")
 		room = h.AddRoom(id)
 	}
 
-	fmt.Println("add client to room")
 	client := &Client{
 		Room: room,
 		Conn: conn,
@@ -47,31 +43,28 @@ func (h *Hub) NewConnection(id string, conn *websocket.Conn) *Client {
 	return client
 }
 
-func (h *Hub) DelConnection(id string, client *Client) {
-	fmt.Println("try delete client from room")
+func (h *Hub) DelConection(id string, client *Client) {
 	if room, ok := h.Rooms[id]; ok {
-		fmt.Println("delete client from room")
 		room.DelClient(client)
 	}
 }
 
-func (h *Hub) AddRoom (id string) *Room {
-	fmt.Println("create new room")
+func (h *Hub) AddRoom(id string) *Room {
 	h.Rooms[id] = NewRoom()
-	go func () {
+	go func() {
 		h.Rooms[id].Listen()
 	}()
 	return h.Rooms[id]
 }
 
-func (h *Hub) GetRoom (id string) *Room {
+func (h *Hub) GetRoom(id string) *Room {
 	if room, ok := h.Rooms[id]; ok {
 		return room
 	}
 	return nil
 }
 
-func (h *Hub) DelRoom (id string) {
+func (h *Hub) DelRoom(id string) {
 	if len(h.Rooms[id].Clients) == 0 {
 		delete(h.Rooms, id)
 	}
@@ -79,6 +72,6 @@ func (h *Hub) DelRoom (id string) {
 
 func NewHub() *Hub {
 	return &Hub{
-		Rooms:    make(map[string]*Room),
+		Rooms: make(map[string]*Room),
 	}
 }

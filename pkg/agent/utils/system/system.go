@@ -20,6 +20,6 @@ package system
 
 import "os"
 
-func GetHostname () (string, error) {
+func GetHostname() (string, error) {
 	return os.Hostname()
 }

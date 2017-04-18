@@ -33,13 +33,12 @@ type VolumeStorage struct {
 	Client func() (store.IStore, store.DestroyFunc, error)
 }
 
-func (s *VolumeStorage) GetByID(ctx context.Context, id string) (types.Volume, error) {
-	volume := types.Volume{}
-	return volume, nil
+func (s *VolumeStorage) GetByID(ctx context.Context, id string) (*types.Volume, error) {
+	return nil, nil
 }
 
-func (s *VolumeStorage) ListByProject(ctx context.Context, id string) ([]types.Volume, error) {
-	volumes := []types.Volume{}
+func (s *VolumeStorage) ListByProject(ctx context.Context, id string) ([]*types.Volume, error) {
+	volumes := []*types.Volume{}
 	return volumes, nil
 }
 
