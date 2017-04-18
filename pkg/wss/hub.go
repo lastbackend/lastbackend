@@ -47,7 +47,7 @@ func (h *Hub) NewConnection(id string, conn *websocket.Conn) *Client {
 	return client
 }
 
-func (h *Hub) DelConection(id string, client *Client) {
+func (h *Hub) DelConnection(id string, client *Client) {
 	fmt.Println("try delete client from room")
 	if room, ok := h.Rooms[id]; ok {
 		fmt.Println("delete client from room")
