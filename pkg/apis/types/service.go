@@ -40,7 +40,6 @@ type Service struct {
 	Pods map[string]*Pod `json:"pods"`
 }
 
-
 type ServiceCreateSpec struct {
 	// Service Meta
 	Meta ServiceMeta `json:"meta"`

@@ -19,8 +19,8 @@
 package types
 
 import (
-	"time"
 	"github.com/satori/go.uuid"
+	"time"
 )
 
 type Meta struct {
@@ -38,7 +38,7 @@ type Meta struct {
 	Updated time.Time `json:"updated"`
 }
 
-func (m *Meta) SetDefault () {
+func (m *Meta) SetDefault() {
 	m.ID = uuid.NewV4().String()
 	m.Labels = make(map[string]string)
 	m.Created = time.Now()

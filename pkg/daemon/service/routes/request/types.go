@@ -31,15 +31,15 @@ import (
 )
 
 type RequestServiceCreateS struct {
-	Name        string        `json:"name"`
-	Description string        `json:"description"`
-	Registry    string        `json:"registry"`
-	Region      string        `json:"region"`
-	Template    string        `json:"template"`
-	Image       string        `json:"image"`
-	Url         string        `json:"url"`
+	Name        string         `json:"name"`
+	Description string         `json:"description"`
+	Registry    string         `json:"registry"`
+	Region      string         `json:"region"`
+	Template    string         `json:"template"`
+	Image       string         `json:"image"`
+	Url         string         `json:"url"`
 	Config      *ServiceConfig `json:"config"`
-	Replicas    *int            `json:"replicas,omitempty"`
+	Replicas    *int           `json:"replicas,omitempty"`
 	Source      types.ServiceSource
 }
 
@@ -145,11 +145,11 @@ func (s *RequestServiceCreateS) DecodeAndValidate(reader io.Reader) *errors.Err 
 }
 
 type RequestServiceUpdateS struct {
-	Name        string        `json:"name"`
-	Description string        `json:"description"`
-	Replicas    *int            `json:"replicas"`
+	Name        string         `json:"name"`
+	Description string         `json:"description"`
+	Replicas    *int           `json:"replicas"`
 	Config      *ServiceConfig `json:"config"`
-	Domains     []string      `json:"domains"`
+	Domains     []string       `json:"domains"`
 }
 
 func (s *RequestServiceUpdateS) DecodeAndValidate(reader io.Reader) *errors.Err {

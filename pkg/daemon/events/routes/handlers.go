@@ -47,4 +47,3 @@ func EventSubscribeH(w http.ResponseWriter, r *http.Request) {
 	log.Debug("Websockets connection ready to receive data")
 	client.WritePump()
 }
-

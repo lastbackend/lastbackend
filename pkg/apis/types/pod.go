@@ -19,11 +19,10 @@
 package types
 
 import (
+	"fmt"
 	"sync"
 	"time"
-	"fmt"
 )
-
 
 type Pod struct {
 	lock sync.RWMutex
@@ -55,7 +54,6 @@ type PodNodeState struct {
 	// Containers status info
 	Containers map[string]*Container `json:"containers"`
 }
-
 
 type PodMeta struct {
 	Meta
@@ -102,7 +100,7 @@ type PodContainersState struct {
 	Errored int `json:"errored"`
 }
 
-type PodSecret struct {}
+type PodSecret struct{}
 
 type PodCRIMeta struct {
 	Type    string `json:"type"`
@@ -113,7 +111,6 @@ type PodNetwork struct {
 	Interface string   `json:"interface,omitempty"`
 	IP        []string `json:"ip,omitempty"`
 }
-
 
 func (p *Pod) AddContainer(c *Container) {
 	p.lock.Lock()
@@ -190,7 +187,6 @@ func (p *Pod) UpdateState() {
 			continue
 		}
 
-
 		if c.State == "error" {
 			p.State.Containers.Errored++
 			p.State.State = c.State
@@ -206,12 +202,12 @@ func (p *Pod) UpdateState() {
 	fmt.Println("pod state:", p.State.State)
 }
 
-const PodStateRunning   = "running"
-const PodStateStarted   = "started"
+const PodStateRunning = "running"
+const PodStateStarted = "started"
 const PodStateRestarted = "restarted"
-const PodStateStopped   = "stopped"
-const PodStateDeleting  = "deleting"
-const PodStateDeleted   = "deleted"
+const PodStateStopped = "stopped"
+const PodStateDeleting = "deleting"
+const PodStateDeleted = "deleted"
 
 func NewPod() *Pod {
 	return &Pod{

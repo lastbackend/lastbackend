@@ -32,7 +32,7 @@ func (r *Runtime) Subscribe() chan types.ContainerEvent {
 	)
 
 	log := context.Get().GetLogger()
-	s   := context.Get().GetStorage().Pods()
+	s := context.Get().GetStorage().Pods()
 	log.Debug("Create new event listener subscribe")
 
 	var ch = make(chan types.ContainerEvent)
