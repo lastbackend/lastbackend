@@ -34,9 +34,9 @@ type ImageStorage struct {
 	Client func() (store.IStore, store.DestroyFunc, error)
 }
 
-func (s *ImageStorage) Get(ctx context.Context, name string) (types.Image, error) {
+func (s *ImageStorage) Get(ctx context.Context, name string) (*types.Image, error) {
 
-	image := types.Image{}
+	image := new(types.Image)
 
 	client, destroy, err := s.Client()
 	if err != nil {
@@ -62,7 +62,7 @@ func (s *ImageStorage) Insert(ctx context.Context, image *types.Image) error {
 
 	client, destroy, err := s.Client()
 	if err != nil {
-		return  err
+		return err
 	}
 	defer destroy()
 

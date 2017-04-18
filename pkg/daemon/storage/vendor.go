@@ -61,25 +61,25 @@ func (s *VendorStorage) Insert(ctx context.Context, owner, name, host, serviceID
 	return client.Update(ctx, key, vm, nil, 0)
 }
 
-func (s *VendorStorage) Get(ctx context.Context, vendorName string) (types.Vendor, error) {
+func (s *VendorStorage) Get(ctx context.Context, vendorName string) (*types.Vendor, error) {
 
-	vendor := types.Vendor{}
+	vendor := new(types.Vendor)
 	client, destroy, err := s.Client()
 	if err != nil {
-		return vendor, err
+		return nil, err
 	}
 	defer destroy()
 
 	key := s.util.Key(ctx, vendorStorage, vendorName)
 
-	if err := client.Get(ctx, key, &vendor); err != nil {
-		return vendor, err
+	if err := client.Get(ctx, key, vendor); err != nil {
+		return nil, err
 	}
 
 	return vendor, nil
 }
 
-func (s *VendorStorage) List(ctx context.Context) (map[string]types.Vendor, error) {
+func (s *VendorStorage) List(ctx context.Context) (map[string]*types.Vendor, error) {
 
 	client, destroy, err := s.Client()
 	if err != nil {
@@ -88,7 +88,7 @@ func (s *VendorStorage) List(ctx context.Context) (map[string]types.Vendor, erro
 	defer destroy()
 
 	key := s.util.Key(ctx, vendorStorage)
-	vendors := make(map[string]types.Vendor)
+	vendors := make(map[string]*types.Vendor)
 	if err := client.Map(ctx, key, ``, vendors); err != nil {
 		return vendors, err
 	}

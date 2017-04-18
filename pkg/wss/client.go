@@ -19,7 +19,6 @@
 package wss
 
 import (
-	"fmt"
 	"github.com/gorilla/websocket"
 	"net/http"
 	"time"
@@ -78,18 +77,14 @@ func (c *Client) WritePump() {
 	for {
 		select {
 		case message, ok := <-c.Send:
-			fmt.Println("New message to send")
 			if !ok {
-				fmt.Println("not ok")
 				// The hub closed the channel.
 				c.Write(websocket.CloseMessage, []byte{})
 				return
 			}
 
 			c.Conn.SetWriteDeadline(time.Now().Add(writeWait))
-			fmt.Println("write message to connection")
 			if err := c.Write(websocket.TextMessage, message); err != nil {
-				fmt.Printf("Write message err: %s \n", err.Error())
 				c.Room.DelClient(c)
 				return
 			}

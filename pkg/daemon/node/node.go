@@ -32,22 +32,24 @@ func New() *Node {
 	return new(Node)
 }
 
-func (n *Node) List(c context.Context) ([]types.Node, error) {
+func (n *Node) List(c context.Context) ([]*types.Node, error) {
 	var storage = ctx.Get().GetStorage()
 	return storage.Node().List(c)
 }
 
 func (n *Node) Get(c context.Context, hostname string) (*types.Node, error) {
 	var (
+		log     = ctx.Get().GetLogger()
 		storage = ctx.Get().GetStorage()
 	)
 
+	log.Debug("Node: Get node info")
 	node, err := storage.Node().Get(c, hostname)
 	if err != nil {
 		return nil, err
 	}
 
-	return &node, nil
+	return node, nil
 }
 
 func (n *Node) SetMeta(c context.Context, node *types.Node) error {
@@ -58,7 +60,15 @@ func (n *Node) SetMeta(c context.Context, node *types.Node) error {
 	return storage.Node().UpdateMeta(c, &node.Meta)
 }
 
-func (n *Node) Create(c context.Context, meta *types.NodeMeta) (*types.Node, error) {
+func (n *Node) SetState(c context.Context, node *types.Node) error {
+	var (
+		storage = ctx.Get().GetStorage()
+	)
+
+	return storage.Node().UpdateState(c, node)
+}
+
+func (n *Node) Create(c context.Context, meta *types.NodeMeta, state *types.NodeState) (*types.Node, error) {
 
 	var (
 		storage = ctx.Get().GetStorage()
@@ -69,6 +79,8 @@ func (n *Node) Create(c context.Context, meta *types.NodeMeta) (*types.Node, err
 	log.Debug("Create new Node")
 
 	node.Meta = *meta
+	node.State = *state
+
 	if err := storage.Node().Insert(c, node); err != nil {
 		return node, err
 	}
@@ -128,7 +140,7 @@ func (n *Node) PodSpecUpdate(c context.Context, hostname string, spec *types.Pod
 func (n *Node) Allocate(c context.Context, spec types.PodSpec) (*types.Node, error) {
 
 	var (
-		node    types.Node
+		node    *types.Node
 		storage = ctx.Get().GetStorage()
 		log     = ctx.Get().GetLogger()
 		memory  = int64(0)
@@ -148,7 +160,7 @@ func (n *Node) Allocate(c context.Context, spec types.PodSpec) (*types.Node, err
 
 	for _, node = range nodes {
 		log.Debugf("Node: Allocate: available memory %d", node.Meta.State.Capacity)
-		if node.Meta.State.Capacity.Memory  > memory {
+		if node.Meta.State.Capacity.Memory > memory {
 			break
 		}
 	}
@@ -158,5 +170,5 @@ func (n *Node) Allocate(c context.Context, spec types.PodSpec) (*types.Node, err
 		return nil, errors.New("Available node not found")
 	}
 
-	return &node, nil
+	return node, nil
 }

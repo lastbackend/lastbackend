@@ -24,10 +24,10 @@ import (
 	ctx "github.com/lastbackend/lastbackend/pkg/daemon/context"
 	"github.com/lastbackend/lastbackend/pkg/daemon/node"
 	"github.com/lastbackend/lastbackend/pkg/daemon/service/routes/request"
+	"github.com/lastbackend/lastbackend/pkg/daemon/storage/store"
 	"github.com/satori/go.uuid"
 	"strings"
 	"time"
-	"github.com/lastbackend/lastbackend/pkg/daemon/storage/store"
 )
 
 type service struct {
@@ -55,7 +55,7 @@ func (s *service) List() (types.ServiceList, error) {
 
 	for _, item := range items {
 		var service = item
-		list = append(list, &service)
+		list = append(list, service)
 	}
 
 	return list, nil
@@ -64,20 +64,18 @@ func (s *service) List() (types.ServiceList, error) {
 func (s *service) Get(service string) (*types.Service, error) {
 
 	var (
-		err     error
 		log     = ctx.Get().GetLogger()
 		storage = ctx.Get().GetStorage()
-		svc     types.Service
 	)
 
-	svc, err = storage.Service().GetByName(s.Context, s.Namespace.ID, service)
+	svc, err := storage.Service().GetByName(s.Context, s.Namespace.ID, service)
 
 	if err != nil {
 		log.Error("Error: find service by name", err.Error())
-		return &svc, err
+		return nil, err
 	}
 
-	return &svc, nil
+	return svc, nil
 }
 
 func (s *service) Create(rq *request.RequestServiceCreateS) (*types.Service, error) {
@@ -296,20 +294,20 @@ func (s *service) SetPods(c context.Context, pods []types.Pod) error {
 
 		if p.State.State == "deleted" {
 			log.Debugf("Service: Set pods: remove deleted pod: %s", p.Meta.ID)
-			if err := storage.Pod().Remove(c, svc.Meta.Namespace, svc.Meta.ID, &p); err != nil {
+			if err := storage.Pod().Remove(c, svc.Meta.Namespace, svc.Meta.ID, p); err != nil {
 				log.Errorf("Error: set pod to db: %s", err)
 				return err
 			}
 			delete(svc.Pods, p.Meta.ID)
 
 			if len(svc.Pods) == 0 && svc.State.State == "deleting" {
-				storage.Service().Remove(c, &svc)
+				storage.Service().Remove(c, svc)
 			}
 
 			return nil
 		}
 
-		if err := storage.Pod().Update(c, svc.Meta.Namespace, svc.Meta.ID, &p); err != nil {
+		if err := storage.Pod().Update(c, svc.Meta.Namespace, svc.Meta.ID, p); err != nil {
 			log.Errorf("Error: set pod to db: %s", err)
 			return err
 		}
