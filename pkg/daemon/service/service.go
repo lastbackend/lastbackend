@@ -20,6 +20,7 @@ package service
 
 import (
 	"context"
+	"encoding/json"
 	"github.com/lastbackend/lastbackend/pkg/apis/types"
 	ctx "github.com/lastbackend/lastbackend/pkg/daemon/context"
 	"github.com/lastbackend/lastbackend/pkg/daemon/node"
@@ -353,12 +354,17 @@ func (s *service) AddSpec(service *types.Service, rq *request.RequestServiceSpec
 		return err
 	}
 
-	if err = storage.Service().InsertSpec(s.Context, service.Meta.Namespace, service.Meta.Name, spec); err != nil {
-		log.Errorf("Error: insert service spec to db : %s", err.Error())
-		return err
+	service.Spec[spec.Meta.ID] = spec
+
+	for _, pod := range service.Pods {
+		pod.Spec = s.GenerateSpec(service)
+		service.Pods[pod.Meta.ID] = pod
 	}
 
-	service.Spec[spec.Meta.ID] = spec
+	if err := storage.Service().Update(s.Context, service); err != nil {
+		log.Errorf("Error: AddSpec: update service spec to db : %s", err.Error())
+		return err
+	}
 
 	return nil
 }
@@ -376,12 +382,17 @@ func (s *service) SetSpec(service *types.Service, id string, rq *request.Request
 
 	updateSpec(rq, spec)
 
-	if err := storage.Service().UpdateSpec(s.Context, service.Meta.Namespace, service.Meta.Name, spec); err != nil {
-		log.Errorf("Error: update service spec to db : %s", err.Error())
-		return err
+	service.Spec[spec.Meta.ID] = spec
+
+	for _, pod := range service.Pods {
+		pod.Spec = s.GenerateSpec(service)
+		service.Pods[pod.Meta.ID] = pod
 	}
 
-	service.Spec[spec.Meta.ID] = spec
+	if err := storage.Service().Update(s.Context, service); err != nil {
+		log.Errorf("Error: AddSpec: update service spec to db : %s", err.Error())
+		return err
+	}
 
 	return nil
 }
@@ -389,9 +400,13 @@ func (s *service) SetSpec(service *types.Service, id string, rq *request.Request
 func (s *service) DelSpec(service *types.Service, id string) error {
 
 	var (
-		log     = ctx.Get().GetLogger()
+		log = ctx.Get().GetLogger()
 		storage = ctx.Get().GetStorage()
 	)
+
+	buf, _ := json.Marshal(service)
+
+	log.Info(string(buf))
 
 	log.Debug("Delete spec service")
 
@@ -399,12 +414,17 @@ func (s *service) DelSpec(service *types.Service, id string) error {
 		return nil
 	}
 
-	if err := storage.Service().RemoveSpec(s.Context, service.Meta.Namespace, service.Meta.Name, service.Spec[id]); err != nil {
-		log.Errorf("Error: remove service spec to db : %s", err.Error())
-		return err
+	delete(service.Spec, id)
+
+	for _, pod := range service.Pods {
+		pod.Spec = s.GenerateSpec(service)
+		service.Pods[pod.Meta.ID] = pod
 	}
 
-	delete(service.Spec, id)
+	if err := storage.Service().Update(s.Context, service); err != nil {
+		log.Errorf("Error: AddSpec: update service spec to db : %s", err.Error())
+		return err
+	}
 
 	return nil
 }
