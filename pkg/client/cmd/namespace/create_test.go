@@ -36,8 +36,8 @@ import (
 func TestCreate(t *testing.T) {
 
 	const (
-		name        string = "test name"
-		description string = "test description"
+		tName = "test name"
+		tDesc = "test description"
 	)
 
 	var (
@@ -50,6 +50,9 @@ func TestCreate(t *testing.T) {
 	storage, err := s.Init()
 	assert.NoError(t, err)
 	ctx.SetStorage(storage)
+	defer func() {
+		storage.Clear()
+	}()
 
 	// ----------
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -64,13 +67,13 @@ func TestCreate(t *testing.T) {
 		err = json.Unmarshal(body, &d)
 		assert.NoError(t, err)
 
-		assert.Equal(t, name, d.Name)
-		assert.Equal(t, description, d.Description)
+		assert.Equal(t, tName, d.Name)
+		assert.Equal(t, tDesc, d.Description)
 
 		aaaa, err := json.Marshal(n.Namespace{
 			Meta: n.NamespaceMeta{
-				Name:        name,
-				Description: description,
+				Name:        tName,
+				Description: tDesc,
 			},
 		})
 		assert.NoError(t, err)
@@ -84,12 +87,12 @@ func TestCreate(t *testing.T) {
 
 	ctx.SetHttpClient(h.New(server.URL[7:]))
 
-	err = namespace.Create(name, description)
+	err = namespace.Create(tName, tDesc)
 	assert.NoError(t, err)
 
 	err = storage.Get("namespace", prct)
 	assert.NoError(t, err)
 
-	assert.Equal(t, name, prct.Meta.Name)
-	assert.Equal(t, description, prct.Meta.Description)
+	assert.Equal(t, tName, prct.Meta.Name)
+	assert.Equal(t, tDesc, prct.Meta.Description)
 }
