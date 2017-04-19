@@ -25,7 +25,6 @@ import (
 	n "github.com/lastbackend/lastbackend/pkg/daemon/namespace/views/v1"
 	h "github.com/lastbackend/lastbackend/pkg/util/http"
 	"github.com/stretchr/testify/assert"
-	"log"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -76,7 +75,6 @@ func TestRemove(t *testing.T) {
 	assert.NoError(t, err)
 
 	err = storage.Get(storageName, nspace)
-	log.Println(nspace)
 	assert.NoError(t, err)
 	assert.Equal(t, "", nspace.Meta.Name)
 }
