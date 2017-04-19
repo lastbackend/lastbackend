@@ -58,15 +58,16 @@ func ToPodMeta(meta types.PodMeta) PodMeta {
 
 func ToPodSpec(spec types.PodSpec) PodSpec {
 	s := PodSpec{
-		ID:      spec.ID,
-		State:   spec.State,
-		Status:  spec.Status,
-		Created: spec.Created,
-		Updated: spec.Updated,
+		ID:         spec.ID,
+		State:      spec.State,
+		Status:     spec.Status,
+		Created:    spec.Created,
+		Updated:    spec.Updated,
+		Containers: make(map[string]v1.ContainerSpec),
 	}
 
 	for _, c := range spec.Containers {
-		s.Containers = append(s.Containers, v1.ToContainerSpec(*c))
+		s.Containers[c.Meta.ID] = v1.ToContainerSpec(c)
 	}
 
 	return s
@@ -90,12 +91,12 @@ func FromPodMeta(meta PodMeta) types.PodMeta {
 
 func FromPodSpec(spec PodSpec) types.PodSpec {
 	s := types.PodSpec{
-		ID:      spec.ID,
-		State:   spec.State,
-		Status:  spec.Status,
+		ID:         spec.ID,
+		State:      spec.State,
+		Status:     spec.Status,
 		Containers: make(map[string]*types.ContainerSpec),
-		Created: spec.Created,
-		Updated: spec.Updated,
+		Created:    spec.Created,
+		Updated:    spec.Updated,
 	}
 
 	for _, c := range spec.Containers {

@@ -58,6 +58,11 @@ func (pm *PodManager) SyncPod(pod types.PodNodeSpec) {
 		return
 	}
 
+	if p.Spec.State != types.StateReady {
+		log.Debugf("Pod %s is not in %s state (%s) > skip sync", p.Meta.ID, types.StateReady, p.State.State)
+		return
+	}
+
 	log.Debugf("Pod %s found", pod.Meta.ID)
 	if len(p.Containers) != len(pod.Spec.Containers) {
 		pm.sync(pod.Meta, pod.State, pod.Spec, p)
@@ -85,8 +90,8 @@ func (pm *PodManager) sync(meta types.PodMeta, state types.PodState, spec types.
 		go func() {
 			<-w.done
 			pm.lock.Lock()
+			defer pm.lock.Unlock()
 			delete(pm.workers, pod.Meta.ID)
-			pm.lock.Unlock()
 		}()
 	}
 	log.Debugf("Pod %s sync proceed", pod.Meta.ID)

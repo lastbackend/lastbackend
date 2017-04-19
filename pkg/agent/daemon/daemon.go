@@ -32,6 +32,7 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
+	"github.com/lastbackend/lastbackend/pkg/agent/events/listener"
 )
 
 func Agent(cmd *cli.Cmd) {
@@ -100,13 +101,15 @@ func Agent(cmd *cli.Cmd) {
 			done = make(chan bool, 1)
 		)
 
+		rntm := runtime.Get()
+		crii, err := cri.New(cfg.Runtime)
+
 		ctx.SetConfig(cfg)
 		ctx.SetLogger(logger.New(*cfg.Debug, 9))
 		ctx.SetStorage(storage.New())
-		ctx.SetHttpClient(http.New(fmt.Sprintf("%s:%d", *cfg.Daemon.Host, *cfg.Daemon.Port)))
 
-		rntm := runtime.Get()
-		crii, err := cri.New(cfg.Runtime)
+		ctx.SetHttpClient(http.New(fmt.Sprintf("%s:%d", *cfg.Daemon.Host, *cfg.Daemon.Port)))
+		ctx.SetEventListener(listener.New(ctx.GetHttpClient(), rntm.GetSpecChan()))
 
 		if err != nil {
 			ctx.GetLogger().Errorf("Cannot initialize runtime: %s", err.Error())
@@ -122,8 +125,7 @@ func Agent(cmd *cli.Cmd) {
 			ctx.GetLogger().Errorf("Cannot initialize pod manager: %s", err.Error())
 		}
 
-		rntm.Init()
-
+		rntm.Loop()
 		go func() {
 			if err := Listen(*cfg.HTTP.Host, *cfg.HTTP.Port); err != nil {
 				ctx.GetLogger().Warnf("Http server start error: %s", err.Error())

@@ -116,7 +116,6 @@ func (p *Pod) DelContainer(ID string) {
 
 func (p *Pod) UpdateState() {
 
-	p.State.State = ""
 	p.State.Status = ""
 
 	for _, c := range p.Containers {
@@ -156,7 +155,7 @@ func (p *Pod) UpdateState() {
 		}
 	}
 
-	if len(p.Containers) == 0 {
+	if len(p.Containers) == 0 && p.State.State == StateDestroy {
 		p.State.State = StateDestroyed
 	}
 

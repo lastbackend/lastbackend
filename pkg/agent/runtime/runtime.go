@@ -31,6 +31,7 @@ func init() {
 	runtime = Runtime{
 		pods:   make(chan *types.Pod),
 		events: make(chan *types.Event),
+		spec: make(chan *types.NodeSpec),
 	}
 }
 
@@ -40,10 +41,16 @@ type Runtime struct {
 
 	pManager  *PodManager
 	eListener *EventListener
+
+	spec chan *types.NodeSpec
 }
 
 func Get() *Runtime {
 	return &runtime
+}
+
+func (r *Runtime) GetSpecChan() chan *types.NodeSpec {
+	return r.spec
 }
 
 func (r *Runtime) StartPodManager() error {
@@ -91,39 +98,42 @@ func (r *Runtime) Sync(pods map[string]types.PodNodeSpec) {
 	}
 }
 
-func (r *Runtime) Init() {
+func (r *Runtime) Loop() {
 
 	log := context.Get().GetLogger()
 	log.Debug("Runtime: start Loop")
 
-	spec, err := events.New().Send(events.NewInitialEvent(r.pManager.GetPodList()))
-	if err != nil {
-		log.Errorf("Send initial event error %s", err.Error())
-	}
-
-	if spec != nil {
-		r.Recovery(spec.Pods)
-	}
+	var recovery = false
 
 	go r.HeartBeat()
 	go r.Events()
+
+	go func() {
+		for {
+			select {
+			case spec:= <-r.spec:
+				log.Debug("Runtime: Loop: new spec received")
+				if !recovery {
+					recovery = true
+					log.Debug("Runtime: Loop: recovery state")
+					r.Recovery(spec.Pods)
+				} else {
+					log.Debug("Runtime: Loop: sync pods")
+					r.Sync(spec.Pods)
+				}
+
+			}
+
+		}
+	} ()
+
+	events.NewInitialEvent(r.pManager.GetPodList())
 }
 
 func (r *Runtime) HeartBeat() {
-
-	log := context.Get().GetLogger()
-
 	ticker := time.NewTicker(time.Second * 10)
-
 	for _ = range ticker.C {
-		spec, err := events.New().Send(events.NewTickerEvent())
-
-		if err != nil {
-			log.Errorf("Runtime: send event error: %s", err.Error())
-			continue
-		}
-
-		r.Sync(spec.Pods)
+		events.NewTickerEvent()
 	}
 }
 
@@ -137,17 +147,7 @@ func (r *Runtime) Events() {
 		select {
 		case e := <-ev:
 			log.Debugf("Runtime: Loop: send pod update event: %s", e.Event)
-			spec, err := events.SendPodState(e.Pod)
-			if err != nil {
-				log.Errorf("Runtime: send event error: %s", err.Error())
-				continue
-			}
-
-			if e.Pod.Spec.State == types.StateReady {
-				log.Debugf("Pod %s is in %s state > run sync", e.Pod.Meta.ID, types.StateReady)
-				r.Sync(spec.Pods)
-			}
-
+			events.SendPodState(e.Pod)
 		case host := <-host:
 			log.Debugf("Runtime: Loop: send host update event: %s", host.Event)
 		}

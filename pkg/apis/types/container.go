@@ -44,6 +44,7 @@ type Container struct {
 }
 
 type ContainerSpec struct {
+	// Container meta spec
 	Meta ContainerSpecMeta `json:"meta"`
 	// Image spec
 	Image ImageSpec `json:"image"`
