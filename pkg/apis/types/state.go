@@ -17,3 +17,32 @@
 //
 
 package types
+
+const StateWaiting   = "waiting"
+const StateProvision = "provision"
+const StateWarning   = "warning"
+const StateReady     = "ready"
+
+
+const StateStart   = "start"
+const StateStarted = "started"
+
+const StateStop    = "stop"
+const StateStopped = "stopped"
+
+const StateRestart = "restart"
+const StateRestarted = "restarted"
+
+const StateDestroy = "destroy"
+const StateDestroyed = "destroyed"
+
+const StateExited = "exited"
+const StateRunning = "running"
+const StateError = "error"
+
+const EventStateStart = "start"
+const EventStateStop = "stop"
+const EventStateRestart = "restart"
+const EventStateDestroy = "destroy"
+const EventStateCreated = "created"
+const EventStateKill = "kill"

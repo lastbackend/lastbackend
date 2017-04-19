@@ -25,8 +25,10 @@ import (
 type Container struct {
 	// Container ID
 	ID string `json:"id"`
-	// Container ID
+	// Container Pod ID
 	Pod string `json:"pod"`
+	// Spec ID
+	Spec string `json:"spec"`
 	// Image information
 	Image string `json:"image"`
 	// Container current state
@@ -42,6 +44,7 @@ type Container struct {
 }
 
 type ContainerSpec struct {
+	Meta ContainerSpecMeta `json:"meta"`
 	// Image spec
 	Image ImageSpec `json:"image"`
 	// Network spec
@@ -66,6 +69,10 @@ type ContainerSpec struct {
 	RestartPolicy ContainerRestartPolicySpec `json:"restart_policy"`
 	// Container volumes mount
 	Volumes []ContainerVolumeSpec `json:"volumes"`
+}
+
+type ContainerSpecMeta struct {
+	Meta
 }
 
 type ContainerNetworkSpec struct {

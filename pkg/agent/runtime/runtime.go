@@ -74,7 +74,7 @@ func (r *Runtime) Recovery(pods map[string]types.PodNodeSpec) {
 			pods[pod.Meta.ID] = types.PodNodeSpec{
 				Meta: pod.Meta,
 				State: types.PodState{
-					State: types.PodStateDeleting,
+					State: types.StateDestroy,
 				},
 			}
 		}
@@ -91,12 +91,12 @@ func (r *Runtime) Sync(pods map[string]types.PodNodeSpec) {
 	}
 }
 
-func (r *Runtime) Loop() {
+func (r *Runtime) Init() {
 
 	log := context.Get().GetLogger()
 	log.Debug("Runtime: start Loop")
 
-	spec, err := events.New().Send(events.NewInitialEvent(GetNodeMeta(), r.pManager.GetPodList()))
+	spec, err := events.New().Send(events.NewInitialEvent(r.pManager.GetPodList()))
 	if err != nil {
 		log.Errorf("Send initial event error %s", err.Error())
 	}
@@ -105,49 +105,51 @@ func (r *Runtime) Loop() {
 		r.Recovery(spec.Pods)
 	}
 
-	pods, host := r.eListener.Subscribe()
+	go r.HeartBeat()
+	go r.Events()
+}
 
-	go func() {
-		log := context.Get().GetLogger()
-		log.Debug("Runtime: Loop")
-		ticker := time.NewTicker(time.Second * 10)
+func (r *Runtime) HeartBeat() {
 
-		go func() {
-			for _ = range ticker.C {
-				spec, err := events.New().Send(events.NewTickerEvent(GetNodeMeta()))
+	log := context.Get().GetLogger()
 
-				if err != nil {
-					log.Errorf("Runtime: send event error: %s", err.Error())
-					continue
-				}
+	ticker := time.NewTicker(time.Second * 10)
 
-				r.Sync(spec.Pods)
-			}
-		}()
+	for _ = range ticker.C {
+		spec, err := events.New().Send(events.NewTickerEvent())
 
-		for {
-			select {
-			case pod := <-pods:
-				log.Debugf("Runtime: Loop: send pod update event: %s", pod.Event)
-				ps := []*types.Pod{}
-
-				spec, err := events.New().Send(events.NewEvent(GetNodeMeta(), append(ps, &types.Pod{
-					Meta:       pod.Meta,
-					State:      pod.State,
-					Containers: pod.Containers,
-				})))
-
-				if err != nil {
-					log.Errorf("Runtime: send event error: %s", err.Error())
-					continue
-				}
-
-				log.Debugf("pod contaienrs length: %d", len(pod.Containers))
-				r.Sync(spec.Pods)
-
-			case host := <-host:
-				log.Debugf("Runtime: Loop: send host update event: %s", host.Event)
-			}
+		if err != nil {
+			log.Errorf("Runtime: send event error: %s", err.Error())
+			continue
 		}
-	}()
+
+		r.Sync(spec.Pods)
+	}
+}
+
+func (r *Runtime) Events() {
+
+	log := context.Get().GetLogger()
+	log.Debug("Runtime: Events listener")
+	ev, host := r.eListener.Subscribe()
+
+	for {
+		select {
+		case e := <-ev:
+			log.Debugf("Runtime: Loop: send pod update event: %s", e.Event)
+			spec, err := events.SendPodState(e.Pod)
+			if err != nil {
+				log.Errorf("Runtime: send event error: %s", err.Error())
+				continue
+			}
+
+			if e.Pod.Spec.State == types.StateReady {
+				log.Debugf("Pod %s is in %s state > run sync", e.Pod.Meta.ID, types.StateReady)
+				r.Sync(spec.Pods)
+			}
+
+		case host := <-host:
+			log.Debugf("Runtime: Loop: send host update event: %s", host.Event)
+		}
+	}
 }

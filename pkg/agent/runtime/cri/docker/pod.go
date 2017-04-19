@@ -60,11 +60,13 @@ func (r *Runtime) PodList() ([]*types.Pod, error) {
 		}
 		pod.Meta.ID = info[0]
 		pod.Spec.ID = info[1]
+		pod.Spec.Containers = make(map[string]*types.ContainerSpec)
 
 		container, err := r.ContainerInspect(c.ID)
 		if err != nil || container == nil {
 			continue
 		}
+		pod.Spec.Containers[container.Spec] = new(types.ContainerSpec)
 
 		pod.AddContainer(container)
 	}

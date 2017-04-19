@@ -31,7 +31,6 @@ type EventListener struct {
 func (el *EventListener) Subscribe() (chan *types.PodEvent, chan *types.HostEvent) {
 	log := context.Get().GetLogger()
 	log.Debug("Runtime: EventListener: Subscribe")
-
 	return el.pods, el.host
 }
 
@@ -40,7 +39,6 @@ func (el *EventListener) Listen() {
 	log.Debug("Runtime: EventListener: Listen")
 
 	pods := context.Get().GetStorage().Pods()
-
 	crii := context.Get().GetCri()
 
 	events := crii.Subscribe()
@@ -49,7 +47,6 @@ func (el *EventListener) Listen() {
 			select {
 			case event := <-events:
 				{
-					log.Debugf("Runtime: New event receive: %s", event.Event)
 
 					log.Debugf("Runtime: New event %s type proceed", event.Event)
 					pod := pods.GetPod(event.Container.Pod)
@@ -58,22 +55,28 @@ func (el *EventListener) Listen() {
 						continue
 					}
 
-					if event.Event == "destroy" {
+					if event.Event == types.StateDestroy {
 						log.Debugf("Runtime: Pod %s found > delete container", event.Container.Pod)
-						pods.DelContainer(event.Container.ID)
 						pod.DelContainer(event.Container.ID)
 					}
 
-					if (event.Event == "start") || (event.Event == "stop") || (event.Event == "restart") {
-						log.Debugf("Runtime: Pod %s found > update container", event.Container.Pod)
+					if event.Event == types.StateStart {
+						pod.SetContainer(event.Container)
+					}
+
+					if event.Event == types.StateStop {
+						pod.SetContainer(event.Container)
+					}
+
+					if event.Event == types.StateRestart {
 						pod.SetContainer(event.Container)
 					}
 
 					pod.UpdateState()
 
 					el.pods <- &types.PodEvent{
-						Meta:       pod.Meta,
-						Containers: pod.Containers,
+						Event: event.Event,
+						Pod:    pod,
 					}
 				}
 			}

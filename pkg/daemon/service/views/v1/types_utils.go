@@ -20,11 +20,10 @@ package v1
 
 import (
 	"encoding/json"
-	fmt "fmt"
+	"fmt"
 	"github.com/lastbackend/lastbackend/pkg/apis/types"
 	"github.com/lastbackend/lastbackend/pkg/daemon/pod/views/v1"
 	"github.com/lastbackend/lastbackend/pkg/util/table"
-	"strings"
 )
 
 func New(obj *types.Service) *Service {
@@ -38,9 +37,14 @@ func New(obj *types.Service) *Service {
 	s.Meta.Created = obj.Meta.Created
 	s.Meta.Replicas = obj.Meta.Replicas
 
-	s.Config.Memory = obj.Config.Memory
-	s.Config.Command = strings.Join(obj.Config.Command, " ")
-	s.Config.Image = obj.Config.Image
+	if len(obj.Spec) == 0 {
+		s.Spec = make([]SpecInfo, 0)
+		return &s
+	}
+
+	for _, spec := range obj.Spec {
+		s.Spec = append(s.Spec, ToSpecInfo(spec))
+	}
 
 	if len(obj.Pods) == 0 {
 		s.Pods = make([]v1.PodInfo, 0)
@@ -87,8 +91,8 @@ func (s *Service) DrawTable(namespaceName string) {
 		"DESCRIPTION": s.Meta.Description,
 		"NAMESPACE":   namespaceName,
 		"REPLICAS":    s.Meta.Replicas,
-		"MEMORY":      s.Config.Memory,
-		"IMAGE":       s.Config.Image,
+		"MEMORY":      s.Spec[0].Memory,
+		"IMAGE":       s.Spec[0].Image,
 		"CREATED":     s.Meta.Created.String()[:10],
 		"UPDATED":     s.Meta.Updated.String()[:10],
 	})

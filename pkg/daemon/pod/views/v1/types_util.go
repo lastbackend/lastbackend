@@ -76,13 +76,6 @@ func ToPodState(state types.PodState) PodState {
 	return PodState{
 		State:  state.State,
 		Status: state.Status,
-		Containers: PodContainersState{
-			Total:   state.Containers.Total,
-			Running: state.Containers.Running,
-			Created: state.Containers.Created,
-			Stopped: state.Containers.Stopped,
-			Errored: state.Containers.Errored,
-		},
 	}
 }
 
@@ -100,12 +93,13 @@ func FromPodSpec(spec PodSpec) types.PodSpec {
 		ID:      spec.ID,
 		State:   spec.State,
 		Status:  spec.Status,
+		Containers: make(map[string]*types.ContainerSpec),
 		Created: spec.Created,
 		Updated: spec.Updated,
 	}
 
 	for _, c := range spec.Containers {
-		s.Containers = append(s.Containers, v1.FromContainerSpec(c))
+		s.Containers[c.Meta.ID] = v1.FromContainerSpec(c)
 	}
 
 	return s

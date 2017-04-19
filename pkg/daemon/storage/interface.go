@@ -73,7 +73,7 @@ type INamespace interface {
 
 type IService interface {
 	GetByID(ctx context.Context, namespace, id string) (*types.Service, error)
-	GetByName(ctx context.Context, namespace string, name string) (*types.Service, error)
+	GetByName(ctx context.Context, namespace, name string) (*types.Service, error)
 	GetByPodID(ctx context.Context, uuid string) (*types.Service, error)
 	ListByNamespace(ctx context.Context, namespace string) ([]*types.Service, error)
 	Insert(ctx context.Context, service *types.Service) error
@@ -81,6 +81,9 @@ type IService interface {
 	Remove(ctx context.Context, service *types.Service) error
 	RemoveByNamespace(ctx context.Context, namespace string) error
 	Watch(ctx context.Context, service chan *types.Service) error
+	InsertSpec(ctx context.Context, namespace, service string, spec *types.ServiceSpec) error
+	UpdateSpec(ctx context.Context, namespace, service string, spec *types.ServiceSpec) error
+	RemoveSpec(ctx context.Context, namespace, service string, spec *types.ServiceSpec) error
 }
 
 type IPod interface {

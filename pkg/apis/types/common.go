@@ -27,11 +27,11 @@ type Meta struct {
 	// Meta id
 	ID string `json:"id"`
 	// Meta name
-	Name string `json:"name"`
+	Name string `json:"name,omitempty"`
 	// Meta description
 	Description string `json:"description,omitempty"`
 	// Meta labels
-	Labels map[string]string `json:"lables"`
+	Labels map[string]string `json:"lables,omitempty"`
 	// Meta created time
 	Created time.Time `json:"created"`
 	// Meta updated time

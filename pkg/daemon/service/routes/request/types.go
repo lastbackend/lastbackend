@@ -31,19 +31,20 @@ import (
 )
 
 type RequestServiceCreateS struct {
-	Name        string         `json:"name"`
-	Description string         `json:"description"`
-	Registry    string         `json:"registry"`
-	Region      string         `json:"region"`
-	Template    string         `json:"template"`
-	Image       string         `json:"image"`
-	Url         string         `json:"url"`
-	Config      *ServiceConfig `json:"config"`
-	Replicas    *int           `json:"replicas,omitempty"`
+	Name        string                     `json:"name"`
+	Description string                     `json:"description"`
+	Registry    string                     `json:"registry"`
+	Region      string                     `json:"region"`
+	Template    string                     `json:"template"`
+	Image       string                     `json:"image"`
+	Url         string                     `json:"url"`
+	Replicas    *int                       `json:"replicas,omitempty"`
+	Spec        *RequestServiceSpecCreateS `json:"spec"`
 	Source      types.ServiceSource
 }
 
-type ServiceConfig struct {
+type ServiceSpec struct {
+	ID         *int64    `json:"id,omitempty"`
 	Memory     *int64    `json:"memory,omitempty"`
 	Entrypoint *string   `json:"entrypoint,omitempty"`
 	Command    *string   `json:"command,omitempty"`
@@ -136,8 +137,8 @@ func (s *RequestServiceCreateS) DecodeAndValidate(reader io.Reader) *errors.Err 
 		return errors.New("service").BadParameter("name")
 	}
 
-	if s.Config == nil {
-		s.Config = &ServiceConfig{}
+	if s.Spec == nil {
+		s.Spec = new(RequestServiceSpecCreateS)
 	}
 	// TODO: Need validate data format in config
 
@@ -145,11 +146,11 @@ func (s *RequestServiceCreateS) DecodeAndValidate(reader io.Reader) *errors.Err 
 }
 
 type RequestServiceUpdateS struct {
-	Name        string         `json:"name"`
-	Description string         `json:"description"`
-	Replicas    *int           `json:"replicas"`
-	Config      *ServiceConfig `json:"config"`
-	Domains     []string       `json:"domains"`
+	Name        string       `json:"name"`
+	Description string       `json:"description"`
+	Replicas    *int         `json:"replicas"`
+	Spec        *ServiceSpec `json:"spec"`
+	Domains     []string     `json:"domains"`
 }
 
 func (s *RequestServiceUpdateS) DecodeAndValidate(reader io.Reader) *errors.Err {
@@ -178,6 +179,50 @@ func (s *RequestServiceUpdateS) DecodeAndValidate(reader io.Reader) *errors.Err 
 	}
 
 	// TODO: Need validate data format in config
+
+	return nil
+}
+
+type RequestServiceSpecCreateS struct {
+	ServiceSpec
+}
+
+func (s *RequestServiceSpecCreateS) DecodeAndValidate(reader io.Reader) *errors.Err {
+
+	log := context.Get().GetLogger()
+
+	body, err := ioutil.ReadAll(reader)
+	if err != nil {
+		log.Error(err)
+		return errors.New("user").Unknown(err)
+	}
+
+	err = json.Unmarshal(body, s)
+	if err != nil {
+		return errors.New("service").IncorrectJSON(err)
+	}
+
+	return nil
+}
+
+type RequestServiceSpecUpdateS struct {
+	ServiceSpec
+}
+
+func (s *RequestServiceSpecUpdateS) DecodeAndValidate(reader io.Reader) *errors.Err {
+
+	log := context.Get().GetLogger()
+
+	body, err := ioutil.ReadAll(reader)
+	if err != nil {
+		log.Error(err)
+		return errors.New("user").Unknown(err)
+	}
+
+	err = json.Unmarshal(body, s)
+	if err != nil {
+		return errors.New("service").IncorrectJSON(err)
+	}
 
 	return nil
 }

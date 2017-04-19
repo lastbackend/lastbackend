@@ -33,7 +33,7 @@ type Container struct {
 	// Container current state
 	Status string `json:"status"`
 	// Container ports mapping
-	Ports map[string]int
+	Ports map[string]int `json:"ports"`
 	// Container created time
 	Created time.Time `json:"created"`
 	// Container started time
@@ -41,6 +41,7 @@ type Container struct {
 }
 
 type ContainerSpec struct {
+	Meta ContainerSpecMeta `json:"meta"`
 	// Image spec
 	Image v1.ImageSpec `json:"image"`
 	// Network spec
@@ -65,6 +66,21 @@ type ContainerSpec struct {
 	RestartPolicy ContainerRestartPolicySpec `json:"restart_policy"`
 	// Container volumes mount
 	Volumes []ContainerVolumeSpec `json:"volumes"`
+}
+
+type ContainerSpecMeta struct {
+	// Meta id
+	ID string `json:"id"`
+	// Meta name
+	Name string `json:"name,omitempty"`
+	// Meta description
+	Description string `json:"description,omitempty"`
+	// Meta labels
+	Labels map[string]string `json:"lables,omitempty"`
+	// Meta created time
+	Created time.Time `json:"created"`
+	// Meta updated time
+	Updated time.Time `json:"updated"`
 }
 
 type ContainerNetworkSpec struct {
