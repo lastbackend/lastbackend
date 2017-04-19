@@ -24,6 +24,7 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/apis/types"
 	"github.com/lastbackend/lastbackend/pkg/daemon/pod/views/v1"
 	"github.com/lastbackend/lastbackend/pkg/util/table"
+	"strings"
 )
 
 func New(obj *types.Service) *Service {
@@ -58,6 +59,46 @@ func New(obj *types.Service) *Service {
 	return &s
 }
 
+func ToSpecInfo(spec *types.ServiceSpec) SpecInfo {
+	info := SpecInfo{
+		Meta:    ToSpecMeta(spec.Meta),
+		Memory:  spec.Memory,
+		Command: strings.Join(spec.Command, " "),
+		Image:   spec.Image,
+		EnvVars: spec.EnvVars,
+	}
+
+	info.EnvVars = make([]string, len(spec.EnvVars))
+	info.EnvVars = append(info.EnvVars, spec.EnvVars...)
+
+	info.Ports = make([]Port, len(spec.Ports))
+	for _, port := range spec.Ports {
+		info.Ports = append(info.Ports, Port{
+			External:  port.Host,
+			Internal:  port.Container,
+			Published: port.Published,
+			Protocol:  port.Protocol,
+		})
+	}
+
+	return info
+}
+
+func ToSpecMeta(meta types.SpecMeta) SpecMeta {
+	m := SpecMeta{
+		ID:      meta.ID,
+		Labels:  meta.Labels,
+		Created: meta.Created,
+		Updated: meta.Updated,
+	}
+
+	if len(m.Labels) == 0 {
+		m.Labels = make(map[string]string)
+	}
+
+	return m
+}
+
 func (obj *Service) ToJson() ([]byte, error) {
 	return json.Marshal(obj)
 }
@@ -75,12 +116,12 @@ func NewList(obj types.ServiceList) *ServiceList {
 
 func (s *Service) DrawTable(namespaceName string) {
 	serviceTable := table.New([]string{"NAME", "DESCRIPTION", "NAMESPACE",
-		"REPLICAS", "MEMORY", "IMAGE", "CREATED", "UPDATED"})
+																		 "REPLICAS", "MEMORY", "IMAGE", "CREATED", "UPDATED"})
 	podsTable := table.New([]string{"ID", "STATE", "STATUS", "TOTAL",
-		"RUNNING", "CREATED",
-		"STOPPED", "ERRORED", "CREATED POD", "UPDATED POD"})
+																	"RUNNING", "CREATED",
+																	"STOPPED", "ERRORED", "CREATED POD", "UPDATED POD"})
 	containersTable := table.New([]string{"ID", "IMAGE", "STATE",
-		"STATUS", "CREATE", "UPDATED"})
+																				"STATUS", "CREATE", "UPDATED"})
 
 	serviceTable.VisibleHeader = true
 	podsTable.VisibleHeader = true

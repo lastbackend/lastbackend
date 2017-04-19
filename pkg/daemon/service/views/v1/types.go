@@ -19,9 +19,7 @@
 package v1
 
 import (
-	"github.com/lastbackend/lastbackend/pkg/apis/types"
 	"github.com/lastbackend/lastbackend/pkg/daemon/pod/views/v1"
-	"strings"
 	"time"
 )
 
@@ -42,11 +40,19 @@ type ServiceMeta struct {
 }
 
 type SpecInfo struct {
-	Meta    SpecMeta `json:"meta,omitempty"`
-	Memory  int64    `json:"memory,omitempty"`
-	Command string   `json:"command,omitempty"`
-	Image   string   `json:"image,omitempty"`
-	Region  string   `json:"region,omitempty"`
+	Meta       SpecMeta `json:"meta"`
+	Memory     int64    `json:"memory"`
+	Command    string   `json:"command"`
+	Image      string   `json:"image"`
+	EnvVars    []string `json:"env"`
+	Ports      []Port   `json:"ports"`
+}
+
+type Port struct {
+	Protocol  string `json:"protocol"`
+	External  int    `json:"external"`
+	Internal  int    `json:"internal"`
+	Published bool   `json:"published"`
 }
 
 type SpecMeta struct {
@@ -61,28 +67,3 @@ type SpecMeta struct {
 }
 
 type ServiceList []*Service
-
-func ToSpecInfo(spec *types.ServiceSpec) SpecInfo {
-	info := SpecInfo{
-		Meta:    ToSpecMeta(spec.Meta),
-		Memory:  spec.Memory,
-		Command: strings.Join(spec.Command, " "),
-	}
-
-	return info
-}
-
-func ToSpecMeta(meta types.SpecMeta) SpecMeta {
-	m := SpecMeta{
-		ID:      meta.ID,
-		Labels:  meta.Labels,
-		Created: meta.Created,
-		Updated: meta.Updated,
-	}
-
-	if len(m.Labels) == 0 {
-		m.Labels = make(map[string]string)
-	}
-
-	return m
-}
