@@ -19,6 +19,7 @@
 package namespace
 
 import (
+	"fmt"
 	c "github.com/lastbackend/lastbackend/pkg/client/context"
 	n "github.com/lastbackend/lastbackend/pkg/daemon/namespace/views/v1"
 	"github.com/lastbackend/lastbackend/pkg/errors"
@@ -26,13 +27,9 @@ import (
 
 func ListNamespaceCmd() {
 
-	var (
-		log = c.Get().GetLogger()
-	)
-
 	namspaceList, err := List()
 	if err != nil {
-		log.Error(err)
+		fmt.Print(err)
 		return
 	}
 
@@ -45,7 +42,6 @@ func List() (*n.NamespaceList, error) {
 
 	var (
 		err           error
-		log           = c.Get().GetLogger()
 		http          = c.Get().GetHttpClient()
 		er            = new(errors.Http)
 		namespaceList = new(n.NamespaceList)
@@ -55,7 +51,7 @@ func List() (*n.NamespaceList, error) {
 		GET("/namespace").
 		Request(namespaceList, er)
 	if err != nil {
-		return nil, err
+		return nil, errors.New(er.Message)
 	}
 
 	if er.Code == 401 {
@@ -67,8 +63,7 @@ func List() (*n.NamespaceList, error) {
 	}
 
 	if len(*namespaceList) == 0 {
-		log.Info("You don't have any namespaceList")
-		return nil, nil
+		return nil, errors.New("You don't have any namespace")
 	}
 
 	return namespaceList, nil

@@ -19,24 +19,22 @@
 package service
 
 import (
+	"fmt"
 	"github.com/lastbackend/lastbackend/pkg/apis/types"
+	nspace "github.com/lastbackend/lastbackend/pkg/client/cmd/namespace"
 	c "github.com/lastbackend/lastbackend/pkg/client/context"
 	"github.com/lastbackend/lastbackend/pkg/errors"
 )
 
 func RemoveCmd(name string) {
 
-	var (
-		log = c.Get().GetLogger()
-	)
-
 	err := Remove(name)
 	if err != nil {
-		log.Error(err)
+		fmt.Print(err)
 		return
 	}
 
-	log.Info("Successful")
+	fmt.Print("Service `" + name + "` succesfully removed")
 }
 
 func Remove(name string) error {
@@ -48,10 +46,14 @@ func Remove(name string) error {
 		er      = new(errors.Http)
 	)
 
-	_, _, err = http.
-		DELETE("/service/"+name).
-		Request(service, er)
+	namespace, err := nspace.Current()
+	if err != nil {
+		return errors.New(err.Error())
+	}
 
+	_, _, err = http.
+		DELETE("/namespace/"+namespace.Meta.Name+"/service/"+name).
+		Request(service, er)
 	if err != nil {
 		return errors.New(err.Error())
 	}

@@ -89,8 +89,15 @@ func (r *Runtime) ContainerInspect(ID string) (*types.Container, error) {
 		return container, nil
 	}
 
-	pod = strings.Split(meta, "/")[0]
-	spc = strings.Split(meta, "/")[2]
+	match := strings.Split(meta, "/")
+
+	if len(match) < 3 {
+		return nil, nil
+	}
+
+	pod = match[0]
+	spc = match[2]
+
 	container = &types.Container{
 		ID:    info.ID,
 		Pod:   pod,

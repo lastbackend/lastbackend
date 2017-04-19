@@ -43,12 +43,13 @@ func ServiceListH(w http.ResponseWriter, r *http.Request) {
 	ns := namespace.New(r.Context())
 	item, err := ns.Get(id)
 	if err != nil {
+		if item == nil {
+			errors.New("namespace").NotFound().Http(w)
+			return
+		}
+
 		log.Error("Error: find namespace by id", err.Error())
 		errors.HTTP.InternalServerError(w)
-		return
-	}
-	if item == nil {
-		errors.New("namespace").NotFound().Http(w)
 		return
 	}
 
@@ -87,24 +88,26 @@ func ServiceInfoH(w http.ResponseWriter, r *http.Request) {
 	ns := namespace.New(r.Context())
 	item, err := ns.Get(nid)
 	if err != nil {
-		log.Errorf("Error: find namespace by id: %s", err.Error())
+		if item == nil {
+			errors.New("namespace").NotFound().Http(w)
+			return
+		}
+
+        log.Errorf("Error: find namespace by id: %s", err.Error())
 		errors.HTTP.InternalServerError(w)
-		return
-	}
-	if item == nil {
-		errors.New("namespace").NotFound().Http(w)
 		return
 	}
 
 	s := service.New(r.Context(), item.Meta)
 	svc, err := s.Get(sid)
 	if err != nil {
-		log.Errorf("Error: find service by id: %s", err.Error())
+        if svc == nil {
+            errors.New("service").NotFound().Http(w)
+            return
+        }
+
+        log.Errorf("Error: find service by id: %s", err.Error())
 		errors.HTTP.InternalServerError(w)
-		return
-	}
-	if svc == nil {
-		errors.New("service").NotFound().Http(w)
 		return
 	}
 
@@ -134,12 +137,13 @@ func ServiceWatchH(w http.ResponseWriter, r *http.Request) {
 	ns := namespace.New(r.Context())
 	item, err := ns.Get(nid)
 	if err != nil {
+		if item == nil {
+			errors.New("namespace").NotFound().Http(w)
+			return
+		}
+
 		log.Error("Error: find namespace by id", err.Error())
 		errors.HTTP.InternalServerError(w)
-		return
-	}
-	if item == nil {
-		errors.New("namespace").NotFound().Http(w)
 		return
 	}
 
@@ -178,12 +182,13 @@ func ServiceCreateH(w http.ResponseWriter, r *http.Request) {
 	ns := namespace.New(r.Context())
 	item, err := ns.Get(nid)
 	if err != nil {
+		if item == nil {
+			errors.New("namespace").NotFound().Http(w)
+			return
+		}
+
 		log.Error("Error: find namespace by id", err.Error())
 		errors.HTTP.InternalServerError(w)
-		return
-	}
-	if item == nil {
-		errors.New("namespace").NotFound().Http(w)
 		return
 	}
 
@@ -282,24 +287,26 @@ func ServiceUpdateH(w http.ResponseWriter, r *http.Request) {
 	ns := namespace.New(r.Context())
 	item, err := ns.Get(nid)
 	if err != nil {
+		if item == nil {
+			errors.New("namespace").NotFound().Http(w)
+			return
+		}
+
 		log.Error("Error: find namespace by id", err.Error())
 		errors.HTTP.InternalServerError(w)
-		return
-	}
-	if item == nil {
-		errors.New("namespace").NotFound().Http(w)
 		return
 	}
 
 	s := service.New(r.Context(), item.Meta)
 	svc, err := s.Get(sid)
 	if err != nil {
+        if svc == nil {
+            errors.New("service").NotFound().Http(w)
+            return
+        }
+
 		log.Error("Error: find service by id", err.Error())
 		errors.HTTP.InternalServerError(w)
-		return
-	}
-	if svc == nil {
-		errors.New("service").NotFound().Http(w)
 		return
 	}
 
@@ -350,12 +357,13 @@ func ServiceRemoveH(w http.ResponseWriter, r *http.Request) {
 	s := service.New(r.Context(), item.Meta)
 	svc, err := s.Get(sid)
 	if err != nil {
+		if svc == nil {
+			errors.New("service").NotFound().Http(w)
+			return
+		}
+
 		log.Error("Error: find service by id", err.Error())
 		errors.HTTP.InternalServerError(w)
-		return
-	}
-	if svc == nil {
-		errors.New("service").NotFound().Http(w)
 		return
 	}
 

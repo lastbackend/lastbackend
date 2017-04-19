@@ -19,8 +19,9 @@
 package namespace
 
 import (
-	"github.com/lastbackend/lastbackend/pkg/apis/types"
+	"fmt"
 	c "github.com/lastbackend/lastbackend/pkg/client/context"
+	n "github.com/lastbackend/lastbackend/pkg/daemon/namespace/views/v1"
 	"github.com/lastbackend/lastbackend/pkg/errors"
 )
 
@@ -31,17 +32,13 @@ type createS struct {
 
 func CreateCmd(name, description string) {
 
-	var (
-		log = c.Get().GetLogger()
-	)
-
 	err := Create(name, description)
 	if err != nil {
-		log.Error(err)
+		fmt.Print(err)
 		return
 	}
 
-	log.Info("Successful")
+	fmt.Print("Namespace `" + name + "` is created")
 }
 
 func Create(name, description string) error {
@@ -50,7 +47,7 @@ func Create(name, description string) error {
 		err       error
 		http      = c.Get().GetHttpClient()
 		er        = new(errors.Http)
-		namespace = new(types.Namespace)
+		namespace = new(n.Namespace)
 	)
 
 	if len(name) == 0 {
@@ -63,7 +60,7 @@ func Create(name, description string) error {
 		BodyJSON(createS{name, description}).
 		Request(&namespace, er)
 	if err != nil {
-		return err
+		return errors.New(er.Message)
 	}
 
 	if er.Code == 401 {
