@@ -30,8 +30,9 @@ import (
 func TestCurrent(t *testing.T) {
 
 	const (
-		tName string = "test name"
-		tDesc        = "test description"
+		tName       = "test name"
+		tDesc       = "test description"
+		storageName = "test"
 	)
 
 	var (
@@ -53,7 +54,7 @@ func TestCurrent(t *testing.T) {
 		storage.Clear()
 	})()
 
-	err = storage.Set("test", data)
+	err = storage.Set(storageName, data)
 	assert.NoError(t, err)
 
 	nspace, err := namespace.Current()

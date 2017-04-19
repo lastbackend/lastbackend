@@ -36,8 +36,9 @@ import (
 func TestCreate(t *testing.T) {
 
 	const (
-		tName = "test name"
-		tDesc = "test description"
+		tName       = "test name"
+		tDesc       = "test description"
+		storageName = "test"
 	)
 
 	var (
@@ -90,7 +91,7 @@ func TestCreate(t *testing.T) {
 	err = namespace.Create(tName, tDesc)
 	assert.NoError(t, err)
 
-	err = storage.Get("test", prct)
+	err = storage.Get(storageName, prct)
 	assert.NoError(t, err)
 
 	assert.Equal(t, tName, prct.Meta.Name)

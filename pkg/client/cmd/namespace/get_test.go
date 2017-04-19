@@ -33,8 +33,8 @@ import (
 func TestGet(t *testing.T) {
 
 	const (
-		tName string = "test name"
-		tDesc        = "test description"
+		tName = "test name"
+		tDesc = "test description"
 	)
 
 	var (

@@ -33,11 +33,11 @@ import (
 func TestList(t *testing.T) {
 
 	const (
-		tName1 string = "test name1"
-		tDesc1        = "test description1"
+		tName1 = "test name1"
+		tDesc1 = "test description1"
 
-		tName2 string = "test name2"
-		tDesc2        = "test description2"
+		tName2 = "test name2"
+		tDesc2 = "test description2"
 	)
 
 	var (
