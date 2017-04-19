@@ -122,7 +122,7 @@ func Agent(cmd *cli.Cmd) {
 			ctx.GetLogger().Errorf("Cannot initialize pod manager: %s", err.Error())
 		}
 
-		rntm.Loop()
+		rntm.Init()
 
 		go func() {
 			if err := Listen(*cfg.HTTP.Host, *cfg.HTTP.Port); err != nil {

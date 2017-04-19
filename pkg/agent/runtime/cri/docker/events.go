@@ -47,7 +47,7 @@ func (r *Runtime) Subscribe() chan types.ContainerEvent {
 					continue
 				}
 
-				if (e.Action == "created") || (e.Action == "kill") {
+				if (e.Action == types.EventStateCreated) || (e.Action == types.EventStateKill) {
 					continue
 				}
 

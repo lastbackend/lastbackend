@@ -19,7 +19,6 @@
 package types
 
 import (
-	"fmt"
 	"sync"
 	"time"
 )
@@ -70,7 +69,7 @@ type PodSpec struct {
 	Status string `json:"status"`
 
 	// Containers spec for pod
-	Containers []*ContainerSpec `json:"containers"`
+	Containers map[string]*ContainerSpec `json:"containers"`
 
 	// Provision create time
 	Created time.Time `json:"created"`
@@ -83,21 +82,6 @@ type PodState struct {
 	State string `json:"state"`
 	// Pod current status
 	Status string `json:"status"`
-	// Container total
-	Containers PodContainersState `json:"containers"`
-}
-
-type PodContainersState struct {
-	// Total containers
-	Total int `json:"total"`
-	// Total running containers
-	Running int `json:"running"`
-	// Total created containers
-	Created int `json:"created"`
-	// Total stopped containers
-	Stopped int `json:"stopped"`
-	// Total errored containers
-	Errored int `json:"errored"`
 }
 
 type PodSecret struct{}
@@ -134,37 +118,15 @@ func (p *Pod) UpdateState() {
 
 	p.State.State = ""
 	p.State.Status = ""
-	p.State.Containers = PodContainersState{}
 
 	for _, c := range p.Containers {
-		p.State.Containers.Total++
-
-		if c.State == "created" {
-			p.State.Containers.Created++
-		}
-
-		if c.State == "running" {
-			p.State.Containers.Running++
-		}
-
-		if c.State == "stopped" {
-			p.State.Containers.Stopped++
-		}
-
-		if c.State == "exited" {
-			p.State.Containers.Stopped++
-		}
-
-		if c.State == "error" {
-			p.State.Containers.Errored++
-		}
 
 		if c.State == p.State.State {
 			continue
 		}
 
-		if c.State == "exited" && p.State.Status == "" {
-			p.State.State = "stopped"
+		if c.State == StateExited && p.State.Status == "" {
+			p.State.State = StateStopped
 			continue
 		}
 
@@ -173,22 +135,21 @@ func (p *Pod) UpdateState() {
 			continue
 		}
 
-		if c.State == "exited" && p.State.Status != "stopped" {
-			p.State.State = "warning"
+		if c.State == StateExited && p.State.Status != StateStopped {
+			p.State.State = StateWarning
 			continue
 		}
 
-		if c.State == "running" && p.State.Status != "running" {
-			p.State.State = "warning"
+		if c.State == StateRunning && p.State.Status != StateRunning {
+			p.State.State = StateWarning
 			continue
 		}
 
-		if p.State.State == "error" {
+		if p.State.State == StateError {
 			continue
 		}
 
-		if c.State == "error" {
-			p.State.Containers.Errored++
+		if c.State == StateError {
 			p.State.State = c.State
 			p.State.Status = c.Status
 			continue
@@ -196,18 +157,10 @@ func (p *Pod) UpdateState() {
 	}
 
 	if len(p.Containers) == 0 {
-		p.State.State = PodStateDeleted
+		p.State.State = StateDestroyed
 	}
 
-	fmt.Println("pod state:", p.State.State)
 }
-
-const PodStateRunning = "running"
-const PodStateStarted = "started"
-const PodStateRestarted = "restarted"
-const PodStateStopped = "stopped"
-const PodStateDeleting = "deleting"
-const PodStateDeleted = "deleted"
 
 func NewPod() *Pod {
 	return &Pod{

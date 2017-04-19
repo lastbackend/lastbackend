@@ -24,6 +24,7 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/daemon/node/views/v1"
 	"github.com/lastbackend/lastbackend/pkg/errors"
 	"time"
+	"github.com/lastbackend/lastbackend/pkg/agent/system"
 )
 
 type Event struct {
@@ -33,30 +34,40 @@ func New() *Event {
 	return new(Event)
 }
 
-func NewTickerEvent(meta types.NodeMeta) *types.Event {
+func NewTickerEvent() *types.Event {
 	var event = new(types.Event)
 	event.Ticker = true
-	event.Meta = meta
+	event.Meta =  system.GetNodeMeta()
 	event.Pods = make([]*types.Pod, 0)
 	event.Timestamp = time.Now()
 	return event
 }
 
-func NewInitialEvent(meta types.NodeMeta, pods []*types.Pod) *types.Event {
+func NewInitialEvent(pods []*types.Pod) *types.Event {
 	var event = new(types.Event)
 	event.Initial = true
-	event.Meta = meta
+	event.Meta =  system.GetNodeMeta()
 	event.Pods = pods
 	event.Timestamp = time.Now()
 	return event
 }
 
-func NewEvent(meta types.NodeMeta, pods []*types.Pod) *types.Event {
+func NewEvent(pods []*types.Pod) *types.Event {
 	var event = new(types.Event)
-	event.Meta = meta
+	event.Meta = system.GetNodeMeta()
 	event.Pods = pods
 	event.Timestamp = time.Now()
 	return event
+}
+
+func SendPodState(pod *types.Pod) (*types.NodeSpec, error) {
+	p := types.Pod{
+		Meta:       pod.Meta,
+		State:      pod.State,
+		Containers: pod.Containers,
+	}
+	e := new(Event)
+	return e.Send(NewEvent(append([]*types.Pod{}, &p)))
 }
 
 func (e *Event) Send(event *types.Event) (*types.NodeSpec, error) {
