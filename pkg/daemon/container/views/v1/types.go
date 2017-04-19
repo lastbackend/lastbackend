@@ -26,6 +26,8 @@ import (
 type Container struct {
 	// Container ID
 	ID string `json:"id"`
+	// Spec ID
+	Spec string `json:"spec"`
 	// Image information
 	Image string `json:"image"`
 	// Container current state

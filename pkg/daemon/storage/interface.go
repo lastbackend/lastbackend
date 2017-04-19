@@ -81,9 +81,6 @@ type IService interface {
 	Remove(ctx context.Context, service *types.Service) error
 	RemoveByNamespace(ctx context.Context, namespace string) error
 	Watch(ctx context.Context, service chan *types.Service) error
-	InsertSpec(ctx context.Context, namespace, service string, spec *types.ServiceSpec) error
-	UpdateSpec(ctx context.Context, namespace, service string, spec *types.ServiceSpec) error
-	RemoveSpec(ctx context.Context, namespace, service string, spec *types.ServiceSpec) error
 }
 
 type IPod interface {

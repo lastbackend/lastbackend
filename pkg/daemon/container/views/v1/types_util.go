@@ -26,6 +26,7 @@ import (
 func ToContainer(c *types.Container) Container {
 	container := Container{
 		ID:      c.ID,
+		Spec:    c.Spec,
 		State:   c.State,
 		Status:  c.Status,
 		Image:   c.Image,

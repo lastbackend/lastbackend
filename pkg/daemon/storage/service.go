@@ -249,6 +249,29 @@ func (s *ServiceStorage) Update(ctx context.Context, service *types.Service) err
 		return err
 	}
 
+	specs := make(map[string]*types.ServiceSpec)
+	keySpecs := s.util.Key(ctx, namespaceStorage, namespace, serviceStorage, service.Meta.ID, "specs")
+	if err := client.Map(ctx, keySpecs, "", specs); err != nil {
+		if err.Error() != store.ErrKeyNotFound {
+			return err
+		}
+	}
+
+	for id := range specs {
+		if _, ok := service.Spec[id]; ok {
+			continue
+		}
+		keySpec := s.util.Key(ctx, namespaceStorage, namespace, serviceStorage, service.Meta.ID, "specs", id)
+		tx.DeleteDir(keySpec)
+	}
+
+	for id, spec := range service.Spec {
+		keySpec := s.util.Key(ctx, namespaceStorage, namespace, serviceStorage, service.Meta.ID, "specs", id)
+		if err := tx.Upsert(keySpec, &spec, 0); err != nil {
+			return err
+		}
+	}
+
 	for _, pod := range service.Pods {
 
 		keyHelper := s.util.Key(ctx, "helper", serviceStorage, "pods", pod.Meta.ID)
@@ -262,7 +285,6 @@ func (s *ServiceStorage) Update(ctx context.Context, service *types.Service) err
 		}
 
 		KeyNodePod := s.util.Key(ctx, nodeStorage, pod.Meta.Hostname, "spec", "pods", pod.Meta.ID)
-
 		if err := tx.Upsert(KeyNodePod, &types.PodNodeSpec{
 			Meta:  pod.Meta,
 			Spec:  pod.Spec,
@@ -369,87 +391,6 @@ func (s *ServiceStorage) Watch(ctx context.Context, service chan *types.Service)
 
 	client.Watch(ctx, key, filter, cb)
 	return nil
-}
-
-func (s *ServiceStorage) InsertSpec(ctx context.Context, namespace, service string, spec *types.ServiceSpec) error {
-
-	var (
-		nid string
-		sid string
-	)
-
-	client, destroy, err := s.Client()
-	if err != nil {
-		return err
-	}
-	defer destroy()
-
-	keyNamespace := s.util.Key(ctx, "helper", namespaceStorage, namespace)
-	if err := client.Get(ctx, keyNamespace, &nid); err != nil {
-		return err
-	}
-
-	keyService := s.util.Key(ctx, "helper", namespaceStorage, nid, serviceStorage, service)
-	if err := client.Get(ctx, keyService, &sid); err != nil {
-		return err
-	}
-
-	key := s.util.Key(ctx, namespaceStorage, nid, serviceStorage, sid, "specs", spec.Meta.ID)
-	return client.Create(ctx, key, spec, nil, 0)
-}
-
-func (s *ServiceStorage) UpdateSpec(ctx context.Context, namespace, service string, spec *types.ServiceSpec) error {
-
-	var (
-		nid string
-		sid string
-	)
-
-	client, destroy, err := s.Client()
-	if err != nil {
-		return err
-	}
-	defer destroy()
-
-	keyNamespace := s.util.Key(ctx, "helper", namespaceStorage, namespace)
-	if err := client.Get(ctx, keyNamespace, &nid); err != nil {
-		return err
-	}
-
-	keyService := s.util.Key(ctx, "helper", namespaceStorage, nid, serviceStorage, service)
-	if err := client.Get(ctx, keyService, &sid); err != nil {
-		return err
-	}
-
-	key := s.util.Key(ctx, namespaceStorage, nid, serviceStorage, sid, "specs", spec.Meta.ID)
-	return client.Update(ctx, key, spec, nil, 0)
-}
-
-func (s *ServiceStorage) RemoveSpec(ctx context.Context, namespace, service string, spec *types.ServiceSpec) error {
-
-	var (
-		nid string
-		sid string
-	)
-
-	client, destroy, err := s.Client()
-	if err != nil {
-		return err
-	}
-	defer destroy()
-
-	keyNamespace := s.util.Key(ctx, "helper", namespaceStorage, namespace)
-	if err := client.Get(ctx, keyNamespace, &nid); err != nil {
-		return err
-	}
-
-	keyService := s.util.Key(ctx, "helper", namespaceStorage, nid, serviceStorage, service)
-	if err := client.Get(ctx, keyService, &sid); err != nil {
-		return err
-	}
-
-	key := s.util.Key(ctx, namespaceStorage, nid, serviceStorage, sid, "specs", spec.Meta.ID)
-	return client.DeleteDir(ctx, key)
 }
 
 func newServiceStorage(config store.Config, util IUtil) *ServiceStorage {
