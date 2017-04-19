@@ -171,7 +171,7 @@ func (s *service) Remove(service *types.Service) error {
 		storage = ctx.Get().GetStorage()
 	)
 
-	service.State.State = "deleting"
+	service.State.State = types.StateDestroy
 
 	if len(service.Pods) == 0 {
 		if err := storage.Service().Remove(s.Context, service); err != nil {
@@ -182,7 +182,7 @@ func (s *service) Remove(service *types.Service) error {
 	}
 
 	for _, pod := range service.Pods {
-		pod.State.State = "deleting"
+		pod.State.State = types.StateDestroy
 	}
 
 	if err := storage.Service().Update(s.Context, service); err != nil {
@@ -205,7 +205,7 @@ func (s *service) AddPod(service *types.Service) error {
 	pod.Meta.ID = uuid.NewV4().String()
 	pod.Meta.Created = time.Now()
 	pod.Meta.Updated = time.Now()
-	pod.State.State = "running"
+	pod.State.State = types.StateRunning
 
 	if len(service.Pods) > 0 {
 		for _, p := range service.Pods {
@@ -237,9 +237,9 @@ func (s *service) DelPod(service *types.Service) error {
 	log.Debug("Delete pod service")
 
 	for _, pod := range service.Pods {
-		if pod.State.State != "deleting" {
+		if pod.State.State != types.StateDestroy {
 			log.Debugf("Mark pod for deletion: %s", pod.Meta.ID)
-			pod.State.State = "deleting"
+			pod.State.State = types.StateDestroy
 			break
 		}
 	}
@@ -274,7 +274,7 @@ func (s *service) SetPods(pods []types.Pod) error {
 		p.Containers = pod.Containers
 		p.State = pod.State
 
-		if p.State.State == "deleted" {
+		if p.State.State == types.StateDestroyed {
 			log.Debugf("Service: Set pods: remove deleted pod: %s", p.Meta.ID)
 			if err := storage.Pod().Remove(s.Context, svc.Meta.Namespace, svc.Meta.ID, p); err != nil {
 				log.Errorf("Error: set pod to db: %s", err)
@@ -282,7 +282,7 @@ func (s *service) SetPods(pods []types.Pod) error {
 			}
 			delete(svc.Pods, p.Meta.ID)
 
-			if len(svc.Pods) == 0 && svc.State.State == "deleting" {
+			if len(svc.Pods) == 0 && svc.State.State == types.StateDestroy {
 				storage.Service().Remove(s.Context, svc)
 			}
 
@@ -305,7 +305,7 @@ func (s *service) Scale(service *types.Service) error {
 	)
 
 	for _, pod := range service.Pods {
-		if pod.State.State != "deleting" {
+		if pod.State.State != types.StateDestroy {
 			replicas++
 		}
 	}
@@ -421,6 +421,7 @@ func (s *service) GenerateSpec(service *types.Service) types.PodSpec {
 	spec.ID = uuid.NewV4().String()
 	spec.Created = time.Now()
 	spec.Updated = time.Now()
+	spec.Containers = make(map[string]*types.ContainerSpec)
 
 	for _, spc := range service.Spec {
 
@@ -454,7 +455,7 @@ func (s *service) GenerateSpec(service *types.Service) types.PodSpec {
 			Attempt: 0,
 		}
 
-		spec.Containers = append(spec.Containers, cs)
+		spec.Containers[cs.Meta.ID] = cs
 	}
 
 	var state = new(types.PodState)

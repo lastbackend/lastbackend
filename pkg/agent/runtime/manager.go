@@ -116,7 +116,7 @@ func NewPodManager() (*PodManager, error) {
 		return pm, err
 	}
 
-	log.Debugf("Runtime: new pods manager: restore state: %s pods found", len(pods))
+	log.Debugf("Runtime: new pods manager: restore state: %d pods found", len(pods))
 	s := context.Get().GetStorage().Pods()
 	s.SetPods(pods)
 

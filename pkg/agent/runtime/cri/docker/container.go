@@ -75,7 +75,7 @@ func (r *Runtime) ContainerInspect(ID string) (*types.Container, error) {
 	log.Debug("Docker: Container Inspect")
 
 	var container *types.Container
-	var pod string
+	var pod, spc string
 
 	info, err := r.client.ContainerInspect(context.Background(), ID)
 	if err != nil {
@@ -90,9 +90,11 @@ func (r *Runtime) ContainerInspect(ID string) (*types.Container, error) {
 	}
 
 	pod = strings.Split(meta, "/")[0]
+	spc = strings.Split(meta, "/")[2]
 	container = &types.Container{
 		ID:    info.ID,
 		Pod:   pod,
+		Spec:  spc,
 		Image: info.Config.Image,
 		State: info.State.Status,
 	}
