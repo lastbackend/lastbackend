@@ -25,6 +25,5 @@ import (
 
 var Routes = []http.Route{
 	// Vendor handlers
-	{Path: "/patch", Method: http.MethodPut, Middleware: []http.Middleware{middleware.Context},
-		Handler: SetPods},
+	{Path: "/patch", Method: http.MethodPut, Middleware: []http.Middleware{middleware.Context}, Handler: SetPods},
 }
