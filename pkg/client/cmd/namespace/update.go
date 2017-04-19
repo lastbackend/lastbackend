@@ -32,15 +32,14 @@ type updateS struct {
 	Desc string `json:"description"`
 }
 
-func UpdateCmd(name, newNamespace, description string) {
+func UpdateCmd(name, newName, description string) {
 
 	var (
-		log    = c.Get().GetLogger()
 		choice string
 	)
 
 	if description == "" {
-		log.Info("Description is empty, field will be cleared\n" +
+		fmt.Println("Description is empty, field will be cleared\n" +
 			"Want to continue? [Y\\n]")
 
 		for {
@@ -52,7 +51,7 @@ func UpdateCmd(name, newNamespace, description string) {
 			case "n":
 				return
 			default:
-				log.Error("Incorrect input. [Y\n]")
+				fmt.Print("Incorrect input. [Y\n]")
 				continue
 			}
 
@@ -60,16 +59,16 @@ func UpdateCmd(name, newNamespace, description string) {
 		}
 	}
 
-	err := Update(name, newNamespace, description)
+	err := Update(name, newName, description)
 	if err != nil {
-		log.Error(err)
+		fmt.Print(err)
 		return
 	}
 
-	log.Info("Successful")
+	fmt.Print("Namespace `" + name + "` is succesfully updated")
 }
 
-func Update(name, newNamespace, description string) error {
+func Update(name, newName, description string) error {
 
 	var (
 		err     error
@@ -82,10 +81,10 @@ func Update(name, newNamespace, description string) error {
 	_, _, err = http.
 		PUT("/namespace/"+name).
 		AddHeader("Content-Type", "application/json").
-		BodyJSON(updateS{newNamespace, description}).
+		BodyJSON(updateS{newName, description}).
 		Request(&res, er)
 	if err != nil {
-		return err
+		return errors.New(er.Message)
 	}
 
 	if er.Code == 401 {
@@ -102,14 +101,14 @@ func Update(name, newNamespace, description string) error {
 	}
 
 	if namespace != nil {
-		if name == namespace.Name {
-			namespace.Name = newNamespace
-			namespace.Description = description
-			namespace.Updated = time.Now()
+		if name == namespace.Meta.Name {
+			namespace.Meta.Name = newName
+			namespace.Meta.Description = description
+			namespace.Meta.Updated = time.Now()
 
 			err = storage.Set("namespace", namespace)
 			if err != nil {
-				return errors.New(err.Error())
+				return errors.UnknownMessage
 			}
 		}
 	}

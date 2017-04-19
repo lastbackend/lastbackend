@@ -19,42 +19,38 @@
 package namespace
 
 import (
-	"github.com/lastbackend/lastbackend/pkg/apis/types"
+	"fmt"
 	c "github.com/lastbackend/lastbackend/pkg/client/context"
+	n "github.com/lastbackend/lastbackend/pkg/daemon/namespace/views/v1"
 	"github.com/lastbackend/lastbackend/pkg/errors"
 )
 
 func SwitchCmd(name string) {
 
-	var (
-		log = c.Get().GetLogger()
-	)
-
 	namespace, err := Switch(name)
 	if err != nil {
-		log.Error(err)
+		fmt.Print(err)
 		return
 	}
 
-	log.Infof("The namespace `%s` was selected as the current", namespace.Meta.Name)
+	fmt.Printf("The namespace `%s` was selected as the current", namespace.Meta.Name)
 }
 
-func Switch(name string) (*types.Namespace, error) {
+func Switch(name string) (*n.Namespace, error) {
 
 	var (
 		er        = new(errors.Http)
 		http      = c.Get().GetHttpClient()
 		storage   = c.Get().GetStorage()
-		namespace = new(types.Namespace)
+		namespace = new(n.Namespace)
 	)
 
 	_, _, err := http.
 		GET("/namespace/"+name).
 		AddHeader("Content-Type", "application/json").
 		Request(&namespace, er)
-
 	if err != nil {
-		return nil, errors.New(err.Error())
+		return nil, errors.New(er.Message)
 	}
 
 	if er.Code == 401 {
@@ -67,7 +63,7 @@ func Switch(name string) (*types.Namespace, error) {
 
 	err = storage.Set("namespace", namespace)
 	if err != nil {
-		return nil, errors.New(err.Error())
+		return nil, errors.UnknownMessage
 	}
 
 	return namespace, nil

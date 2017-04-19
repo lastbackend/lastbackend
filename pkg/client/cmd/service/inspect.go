@@ -19,7 +19,8 @@
 package service
 
 import (
-	"github.com/lastbackend/lastbackend/pkg/client/cmd/namespace"
+	"fmt"
+	nspace "github.com/lastbackend/lastbackend/pkg/client/cmd/namespace"
 	c "github.com/lastbackend/lastbackend/pkg/client/context"
 	s "github.com/lastbackend/lastbackend/pkg/daemon/service/views/v1"
 	"github.com/lastbackend/lastbackend/pkg/errors"
@@ -27,13 +28,9 @@ import (
 
 func InspectCmd(name string) {
 
-	var (
-		log = c.Get().GetLogger()
-	)
-
 	service, namespace, err := Inspect(name)
 	if err != nil {
-		log.Error(err)
+		fmt.Print(err)
 		return
 	}
 
@@ -44,28 +41,25 @@ func Inspect(name string) (*s.Service, string, error) {
 
 	var (
 		err     error
-		log     = c.Get().GetLogger()
 		http    = c.Get().GetHttpClient()
 		er      = new(errors.Http)
-		service = new(s.Service)
+		service *s.Service
 	)
 
-	p, err := namespace.Current()
+	namespace, err := nspace.Current()
 	if err != nil {
 		return nil, "", errors.New(err.Error())
 	}
 
-	if p == nil {
-		log.Info("Namespace didn't select")
-		return nil, "", nil
+	if namespace == nil {
+		return nil, "", errors.New("Namespace didn't select")
 	}
 
 	_, _, err = http.
-		GET("/namespace/"+p.Name+"/service/"+name).
-		Request(service, er)
-
+		GET("/namespace/"+namespace.Meta.Name+"/service/"+name).
+		Request(&service, er)
 	if err != nil {
-		return nil, "", errors.New(err.Error())
+		return nil, "", errors.New(er.Message)
 	}
 
 	if er.Code == 401 {
@@ -76,5 +70,5 @@ func Inspect(name string) (*s.Service, string, error) {
 		return nil, "", errors.New(er.Message)
 	}
 
-	return service, p.Name, nil
+	return service, namespace.Meta.Name, nil
 }
