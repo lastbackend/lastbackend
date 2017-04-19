@@ -29,13 +29,16 @@ import (
 
 func TestCurrent(t *testing.T) {
 
+	const (
+		tName string = "test name"
+		tDesc        = "test description"
+	)
+
 	var (
 		err error
 		ctx = context.Mock()
 
-		tName = "test name"
-		tDesc = "test description"
-		data  = n.Namespace{
+		data = n.Namespace{
 			Meta: n.NamespaceMeta{
 				Name:        tName,
 				Description: tDesc,
