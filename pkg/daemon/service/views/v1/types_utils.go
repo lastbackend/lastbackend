@@ -22,6 +22,7 @@ import (
 	"encoding/json"
 	"github.com/lastbackend/lastbackend/pkg/apis/types"
 	"github.com/lastbackend/lastbackend/pkg/daemon/pod/views/v1"
+	"strings"
 )
 
 func New(obj *types.Service) *Service {
@@ -132,4 +133,44 @@ func (s *ServiceList) DrawTable(projectName string) {
 	//
 	//	fmt.Print("\n\n")
 	//}
+}
+
+func ToSpecInfo(spec *types.ServiceSpec) SpecInfo {
+	info := SpecInfo{
+		Meta:    ToSpecMeta(spec.Meta),
+		Memory:  spec.Memory,
+		Command: strings.Join(spec.Command, " "),
+		Image:   spec.Image,
+		EnvVars: spec.EnvVars,
+	}
+
+	info.EnvVars = make([]string, len(spec.EnvVars))
+	info.EnvVars = append(info.EnvVars, spec.EnvVars...)
+
+	info.Ports = make([]Port, len(spec.Ports))
+	for _, port := range spec.Ports {
+		info.Ports = append(info.Ports, Port{
+			External:  port.Host,
+			Internal:  port.Container,
+			Published: port.Published,
+			Protocol:  port.Protocol,
+		})
+	}
+
+	return info
+}
+
+func ToSpecMeta(meta types.SpecMeta) SpecMeta {
+	m := SpecMeta{
+		ID:      meta.ID,
+		Labels:  meta.Labels,
+		Created: meta.Created,
+		Updated: meta.Updated,
+	}
+
+	if len(m.Labels) == 0 {
+		m.Labels = make(map[string]string)
+	}
+
+	return m
 }
