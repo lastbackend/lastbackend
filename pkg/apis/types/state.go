@@ -18,16 +18,15 @@
 
 package types
 
-const StateWaiting   = "waiting"
+const StateWaiting = "waiting"
 const StateProvision = "provision"
-const StateWarning   = "warning"
-const StateReady     = "ready"
+const StateWarning = "warning"
+const StateReady = "ready"
 
-
-const StateStart   = "start"
+const StateStart = "start"
 const StateStarted = "started"
 
-const StateStop    = "stop"
+const StateStop = "stop"
 const StateStopped = "stopped"
 
 const StateRestart = "restart"

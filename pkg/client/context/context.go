@@ -32,7 +32,8 @@ func Get() *ctx {
 }
 
 func Mock() *ctx {
-	_ctx.mock = true
+    _ctx.mock = true
+
 	return &_ctx
 }
 

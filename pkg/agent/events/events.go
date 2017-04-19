@@ -20,11 +20,11 @@ package events
 
 import (
 	"github.com/lastbackend/lastbackend/pkg/agent/context"
+	"github.com/lastbackend/lastbackend/pkg/agent/system"
 	"github.com/lastbackend/lastbackend/pkg/apis/types"
 	"github.com/lastbackend/lastbackend/pkg/daemon/node/views/v1"
 	"github.com/lastbackend/lastbackend/pkg/errors"
 	"time"
-	"github.com/lastbackend/lastbackend/pkg/agent/system"
 )
 
 type Event struct {
@@ -37,7 +37,7 @@ func New() *Event {
 func NewTickerEvent() *types.Event {
 	var event = new(types.Event)
 	event.Ticker = true
-	event.Meta =  system.GetNodeMeta()
+	event.Meta = system.GetNodeMeta()
 	event.Pods = make([]*types.Pod, 0)
 	event.Timestamp = time.Now()
 	return event
@@ -46,7 +46,7 @@ func NewTickerEvent() *types.Event {
 func NewInitialEvent(pods []*types.Pod) *types.Event {
 	var event = new(types.Event)
 	event.Initial = true
-	event.Meta =  system.GetNodeMeta()
+	event.Meta = system.GetNodeMeta()
 	event.Pods = pods
 	event.Timestamp = time.Now()
 	return event

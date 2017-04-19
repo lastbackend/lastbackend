@@ -90,12 +90,12 @@ func FromPodMeta(meta PodMeta) types.PodMeta {
 
 func FromPodSpec(spec PodSpec) types.PodSpec {
 	s := types.PodSpec{
-		ID:      spec.ID,
-		State:   spec.State,
-		Status:  spec.Status,
+		ID:         spec.ID,
+		State:      spec.State,
+		Status:     spec.Status,
 		Containers: make(map[string]*types.ContainerSpec),
-		Created: spec.Created,
-		Updated: spec.Updated,
+		Created:    spec.Created,
+		Updated:    spec.Updated,
 	}
 
 	for _, c := range spec.Containers {

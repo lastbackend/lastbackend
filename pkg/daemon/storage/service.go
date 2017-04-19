@@ -384,7 +384,6 @@ func (s *ServiceStorage) InsertSpec(ctx context.Context, namespace, service stri
 	}
 	defer destroy()
 
-
 	keyNamespace := s.util.Key(ctx, "helper", namespaceStorage, namespace)
 	if err := client.Get(ctx, keyNamespace, &nid); err != nil {
 		return err
