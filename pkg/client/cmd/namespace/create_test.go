@@ -24,7 +24,7 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/client/cmd/namespace"
 	"github.com/lastbackend/lastbackend/pkg/client/context"
 	s "github.com/lastbackend/lastbackend/pkg/client/storage"
-	n "github.com/lastbackend/lastbackend/pkg/daemon/namespace/views/v1"
+    n "github.com/lastbackend/lastbackend/pkg/daemon/namespace/views/v1"
 	h "github.com/lastbackend/lastbackend/pkg/util/http"
 	"github.com/stretchr/testify/assert"
 	"io/ioutil"
@@ -54,7 +54,7 @@ func TestCreate(t *testing.T) {
 		storage.Clear()
 	}()
 
-	// ----------
+	//------------------------------------------------------------------------------------------
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		body, err := ioutil.ReadAll(r.Body)
 		assert.NoError(t, err)
@@ -70,7 +70,7 @@ func TestCreate(t *testing.T) {
 		assert.Equal(t, tName, d.Name)
 		assert.Equal(t, tDesc, d.Description)
 
-		aaaa, err := json.Marshal(n.Namespace{
+		nspaceJSON, err := json.Marshal(n.Namespace{
 			Meta: n.NamespaceMeta{
 				Name:        tName,
 				Description: tDesc,
@@ -79,18 +79,18 @@ func TestCreate(t *testing.T) {
 		assert.NoError(t, err)
 
 		w.WriteHeader(200)
-		_, err = w.Write(aaaa)
+		_, err = w.Write(nspaceJSON)
 		assert.NoError(t, err)
 	}))
 	defer server.Close()
-	// ----------
+	//------------------------------------------------------------------------------------------
 
 	ctx.SetHttpClient(h.New(server.URL[7:]))
 
 	err = namespace.Create(tName, tDesc)
 	assert.NoError(t, err)
 
-	err = storage.Get("namespace", prct)
+	err = storage.Get("test", prct)
 	assert.NoError(t, err)
 
 	assert.Equal(t, tName, prct.Meta.Name)

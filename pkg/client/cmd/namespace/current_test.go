@@ -50,7 +50,7 @@ func TestCurrent(t *testing.T) {
 		storage.Clear()
 	})()
 
-	err = storage.Set("namespace", data)
+	err = storage.Set("test", data)
 	assert.NoError(t, err)
 
 	nspace, err := namespace.Current()

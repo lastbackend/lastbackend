@@ -50,10 +50,17 @@ func Current() (*n.Namespace, error) {
 		namespace *n.Namespace
 	)
 
-	err = storage.Get("namespace", &namespace)
-	if err != nil {
-		return nil, errors.UnknownMessage
-	}
+    if c.Get().IsMock() {
+        err = storage.Get("test", &namespace)
+        if err != nil {
+            return nil, errors.UnknownMessage
+        }
+    } else {
+        err = storage.Get("namespace", &namespace)
+        if err != nil {
+            return nil, errors.UnknownMessage
+        }
+    }
 
 	return namespace, nil
 }

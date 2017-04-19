@@ -76,3 +76,11 @@ func (c *ctx) SetConfig(cfg *config.Config) {
 func (c *ctx) GetConfig() *config.Config {
 	return c.config
 }
+
+func (c *ctx) IsMock() bool {
+	if c.mock {
+		return true
+	}
+
+	return false
+}
