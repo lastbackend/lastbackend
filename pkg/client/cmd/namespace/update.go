@@ -106,9 +106,16 @@ func Update(name, newName, description string) error {
 			namespace.Meta.Description = description
 			namespace.Meta.Updated = time.Now()
 
-			err = storage.Set("namespace", namespace)
-			if err != nil {
-				return errors.UnknownMessage
+			if c.Get().IsMock() {
+				err = storage.Set("test", namespace)
+				if err != nil {
+					return errors.UnknownMessage
+				}
+			} else {
+				err = storage.Set("namespace", namespace)
+				if err != nil {
+					return errors.UnknownMessage
+				}
 			}
 		}
 	}

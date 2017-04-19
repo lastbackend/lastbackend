@@ -43,7 +43,7 @@ func TestRemove(t *testing.T) {
 		ctx    = context.Mock()
 		nspace = &n.Namespace{}
 
-		switchData = n.Namespace{
+		data = n.Namespace{
 			Meta: n.NamespaceMeta{
 				Name:        tName,
 				Description: tDesc,
@@ -68,7 +68,7 @@ func TestRemove(t *testing.T) {
 
 	ctx.SetHttpClient(h.New(server.URL[7:]))
 
-	err = storage.Set(storageName, switchData)
+	err = storage.Set(storageName, data)
 	assert.NoError(t, err)
 
 	err = namespace.Remove(tName)
