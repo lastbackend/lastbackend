@@ -143,12 +143,12 @@ func (t *Task) containersCreate() {
 	log.Debugf("Start containers creation process for pod: %s", t.pod.Meta.ID)
 
 	// Create new containers
-	for _, spec := range t.spec.Containers {
+	for id, spec := range t.spec.Containers {
 		log.Debugf("Container create")
 
 		c := types.Container{
 			Pod:     t.pod.Meta.ID,
-			Spec:    spec.Meta.ID,
+			Spec:    id,
 			Image:   spec.Image.Name,
 			State:   types.ContainerStatePending,
 			Created: time.Now(),
@@ -183,14 +183,14 @@ func (t *Task) containersRemove() {
 
 	log.Debugf("Start containers removable process for pod: %s", t.pod.Meta.ID)
 
-	for _, spec := range t.spec.Containers {
-		log.Debugf("Add spec %s to valid", spec.Meta.ID)
-		specs[spec.Meta.ID] = false
+	for id := range t.spec.Containers {
+		log.Debugf("Add spec %s to valid", id)
+		specs[id] = false
 	}
 
 	// Remove old containers
 	for _, c := range t.pod.Containers {
-
+		log.Debugf("Container %s has spec %s", c.ID, c.Spec)
 		if _, ok := specs[c.Spec]; !ok || specs[c.Spec] == true {
 			log.Debugf("Container %s needs to be removed", c.ID)
 			err := crii.ContainerRemove(c.ID, true, true)
@@ -199,12 +199,10 @@ func (t *Task) containersRemove() {
 			}
 
 			t.pod.DelContainer(c.ID)
-			specs[c.Spec] = true
 			continue
 		}
 
-
-
+		specs[c.Spec] = true
 	}
 
 }
