@@ -43,8 +43,8 @@ func TestList(t *testing.T) {
 		sName2 = "service name2"
 		sDesc2 = "service desc2"
 
-        storageName = "test"
-    )
+		storageName = "test"
+	)
 
 	var (
 		err error

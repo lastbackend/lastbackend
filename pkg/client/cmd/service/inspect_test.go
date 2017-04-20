@@ -40,8 +40,8 @@ func TestGet(t *testing.T) {
 		sName = "service name"
 		sDesc = "service desc"
 
-        storageName = "test"
-    )
+		storageName = "test"
+	)
 
 	var (
 		err error
