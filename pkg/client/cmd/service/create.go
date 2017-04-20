@@ -78,9 +78,16 @@ func Create(name, image, template, url string, config *Config) error {
 		res       = new(struct{})
 	)
 
-	err = storage.Get("namespace", namespace)
-	if err != nil {
-		return errors.New(err.Error())
+	if c.Get().IsMock() {
+		err = storage.Get("test", namespace)
+		if err != nil {
+			return errors.New(err.Error())
+		}
+	} else {
+		err = storage.Get("namespace", namespace)
+		if err != nil {
+			return errors.New(err.Error())
+		}
 	}
 
 	if namespace.Meta.Name == "" {

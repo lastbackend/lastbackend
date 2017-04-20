@@ -17,3 +17,84 @@
 //
 
 package service_test
+
+import (
+	"encoding/json"
+	"github.com/lastbackend/lastbackend/pkg/client/cmd/service"
+	"github.com/lastbackend/lastbackend/pkg/client/context"
+	s "github.com/lastbackend/lastbackend/pkg/client/storage"
+	n "github.com/lastbackend/lastbackend/pkg/daemon/namespace/views/v1"
+	sm "github.com/lastbackend/lastbackend/pkg/daemon/service/views/v1"
+	h "github.com/lastbackend/lastbackend/pkg/util/http"
+	"github.com/stretchr/testify/assert"
+	"io/ioutil"
+	"net/http"
+	"net/http/httptest"
+	"testing"
+)
+
+func TestCreate(t *testing.T) {
+
+	const (
+		nName = "nspace name"
+
+		sName = "service name"
+		sDesc = "service desc"
+
+		storageName = "test"
+	)
+
+	var (
+		err error
+		ctx = context.Mock()
+
+		data = n.Namespace{
+			Meta: n.NamespaceMeta{
+				Name: nName,
+			},
+		}
+	)
+
+	storage, err := s.Init()
+	assert.NoError(t, err)
+	ctx.SetStorage(storage)
+	defer func() {
+		storage.Clear()
+	}()
+
+	//------------------------------------------------------------------------------------------
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		body, err := ioutil.ReadAll(r.Body)
+		assert.NoError(t, err)
+
+		var d = struct {
+			Name string `json:"name,omitempty"`
+		}{}
+
+		err = json.Unmarshal(body, &d)
+		assert.NoError(t, err)
+
+		assert.Equal(t, sName, d.Name)
+
+		nspaceJSON, err := json.Marshal(sm.Service{
+			Meta: sm.ServiceMeta{
+				Name:        sName,
+				Description: sDesc,
+			},
+		})
+		assert.NoError(t, err)
+
+		w.WriteHeader(200)
+		_, err = w.Write(nspaceJSON)
+		assert.NoError(t, err)
+	}))
+	defer server.Close()
+	//------------------------------------------------------------------------------------------
+
+	storage.Set(storageName, data)
+
+	ctx.SetHttpClient(h.New(server.URL[7:]))
+
+	err = service.Create(sName, "redis", "", "", nil)
+	assert.NoError(t, err)
+}

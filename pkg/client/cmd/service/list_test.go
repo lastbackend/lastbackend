@@ -42,7 +42,9 @@ func TestList(t *testing.T) {
 
 		sName2 = "service name2"
 		sDesc2 = "service desc2"
-	)
+
+        storageName = "test"
+    )
 
 	var (
 		err error
@@ -88,7 +90,7 @@ func TestList(t *testing.T) {
 	defer server.Close()
 	//------------------------------------------------------------------------------------------
 
-	err = storage.Set("test", data)
+	err = storage.Set(storageName, data)
 	assert.NoError(t, err)
 
 	ctx.SetHttpClient(h.New(server.URL[7:]))

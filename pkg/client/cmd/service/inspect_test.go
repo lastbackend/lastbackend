@@ -39,7 +39,9 @@ func TestGet(t *testing.T) {
 
 		sName = "service name"
 		sDesc = "service desc"
-	)
+
+        storageName = "test"
+    )
 
 	var (
 		err error
@@ -77,7 +79,7 @@ func TestGet(t *testing.T) {
 	defer server.Close()
 	//------------------------------------------------------------------------------------------
 
-	err = storage.Set("test", data)
+	err = storage.Set(storageName, data)
 	assert.NoError(t, err)
 
 	ctx.SetHttpClient(h.New(server.URL[7:]))
