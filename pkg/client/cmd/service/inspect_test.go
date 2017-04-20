@@ -20,14 +20,13 @@ package service_test
 
 import (
 	"encoding/json"
-	"github.com/lastbackend/lastbackend/pkg/client/cmd/namespace"
 	"github.com/lastbackend/lastbackend/pkg/client/cmd/service"
 	"github.com/lastbackend/lastbackend/pkg/client/context"
 	s "github.com/lastbackend/lastbackend/pkg/client/storage"
 	n "github.com/lastbackend/lastbackend/pkg/daemon/namespace/views/v1"
+	sm "github.com/lastbackend/lastbackend/pkg/daemon/service/views/v1"
 	h "github.com/lastbackend/lastbackend/pkg/util/http"
 	"github.com/stretchr/testify/assert"
-	"log"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -40,6 +39,8 @@ func TestGet(t *testing.T) {
 
 		sName = "service name"
 		sDesc = "service desc"
+
+		storageName = "test"
 	)
 
 	var (
@@ -63,8 +64,8 @@ func TestGet(t *testing.T) {
 	//------------------------------------------------------------------------------------------
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 
-		nspaceJSON, err := json.Marshal(n.Namespace{
-			Meta: n.NamespaceMeta{
+		nspaceJSON, err := json.Marshal(sm.Service{
+			Meta: sm.ServiceMeta{
 				Name:        sName,
 				Description: sDesc,
 			},
@@ -78,10 +79,8 @@ func TestGet(t *testing.T) {
 	defer server.Close()
 	//------------------------------------------------------------------------------------------
 
-	err = storage.Set("test", data)
+	err = storage.Set(storageName, data)
 	assert.NoError(t, err)
-
-	log.Println(namespace.Current())
 
 	ctx.SetHttpClient(h.New(server.URL[7:]))
 

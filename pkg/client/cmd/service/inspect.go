@@ -50,7 +50,6 @@ func Inspect(name string) (*s.Service, string, error) {
 	if err != nil {
 		return nil, "", errors.New(err.Error())
 	}
-
 	if namespace == nil {
 		return nil, "", errors.New("Namespace didn't select")
 	}

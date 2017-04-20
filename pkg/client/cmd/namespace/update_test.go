@@ -73,7 +73,6 @@ func TestUpdate(t *testing.T) {
 			Name        string `json:"name"`
 			Description string `json:"description"`
 		}
-
 		err = json.Unmarshal(body, &rData)
 		assert.NoError(t, err)
 
@@ -98,7 +97,7 @@ func TestUpdate(t *testing.T) {
 	err = namespace.Update(tName, nName, nDesc)
 	assert.NoError(t, err)
 
-	err = storage.Get("test", data)
+	err = storage.Get(storageName, data)
 	assert.NoError(t, err)
 	assert.Equal(t, data.Meta.Name, nName)
 	assert.Equal(t, data.Meta.Description, nDesc)
