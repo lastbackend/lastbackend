@@ -31,7 +31,7 @@ func init() {
 	runtime = Runtime{
 		pods:   make(chan *types.Pod),
 		events: make(chan *types.Event),
-		spec: make(chan *types.NodeSpec),
+		spec:   make(chan *types.NodeSpec),
 	}
 }
 
@@ -83,6 +83,9 @@ func (r *Runtime) Recovery(pods map[string]types.PodNodeSpec) {
 				State: types.PodState{
 					State: types.StateDestroy,
 				},
+				Spec: types.PodSpec{
+					State: types.StateDestroy,
+				},
 			}
 		}
 	}
@@ -111,7 +114,7 @@ func (r *Runtime) Loop() {
 	go func() {
 		for {
 			select {
-			case spec:= <-r.spec:
+			case spec := <-r.spec:
 				log.Debug("Runtime: Loop: new spec received")
 				if !recovery {
 					recovery = true
@@ -121,11 +124,10 @@ func (r *Runtime) Loop() {
 					log.Debug("Runtime: Loop: sync pods")
 					r.Sync(spec.Pods)
 				}
-
 			}
 
 		}
-	} ()
+	}()
 
 	events.NewInitialEvent(r.pManager.GetPodList())
 }

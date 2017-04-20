@@ -60,7 +60,6 @@ func (r *Runtime) PodList() ([]*types.Pod, error) {
 		}
 		pod.Meta.ID = info[0]
 		pod.Spec.ID = info[1]
-		pod.Spec.State = types.StateReady
 		pod.Spec.Containers = make(map[string]*types.ContainerSpec)
 
 		container, err := r.ContainerInspect(c.ID)
@@ -68,6 +67,9 @@ func (r *Runtime) PodList() ([]*types.Pod, error) {
 			continue
 		}
 		pod.Spec.Containers[container.Spec] = new(types.ContainerSpec)
+
+		pod.State.Provision = false
+		pod.State.Ready = true
 
 		pod.AddContainer(container)
 	}

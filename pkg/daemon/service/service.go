@@ -206,7 +206,7 @@ func (s *service) AddPod(service *types.Service) error {
 	pod.Meta.ID = uuid.NewV4().String()
 	pod.Meta.Created = time.Now()
 	pod.Meta.Updated = time.Now()
-	pod.State.State = types.StateRunning
+	pod.Spec.State = types.StateStarted
 
 	if len(service.Pods) > 0 {
 		for _, p := range service.Pods {
@@ -238,9 +238,9 @@ func (s *service) DelPod(service *types.Service) error {
 	log.Debug("Delete pod service")
 
 	for _, pod := range service.Pods {
-		if pod.State.State != types.StateDestroy {
+		if pod.Spec.State != types.StateDestroy {
 			log.Debugf("Mark pod for deletion: %s", pod.Meta.ID)
-			pod.State.State = types.StateDestroy
+			pod.Spec.State = types.StateDestroy
 			break
 		}
 	}
@@ -255,11 +255,12 @@ func (s *service) SetPods(pods []types.Pod) error {
 	)
 
 	for _, pod := range pods {
-		log.Debugf("update pod state: %s", pod.Meta.ID)
+		log.Debugf("update pod %s state: %s", pod.Meta.ID, pod.State.State)
 		svc, err := storage.Service().GetByPodID(s.Context, pod.Meta.ID)
 		if err != nil {
 			log.Errorf("Error: get service by pod ID %s from db: %s", pod.Meta.ID, err.Error())
 			if err.Error() == store.ErrKeyNotFound {
+				log.Debugf("Pod %s not found", pod.Meta.ID)
 				continue
 			}
 			return err
@@ -306,7 +307,7 @@ func (s *service) Scale(service *types.Service) error {
 	)
 
 	for _, pod := range service.Pods {
-		if pod.State.State != types.StateDestroy {
+		if pod.Spec.State != types.StateDestroy {
 			replicas++
 		}
 	}
@@ -382,9 +383,15 @@ func (s *service) SetSpec(service *types.Service, id string, rq *request.Request
 
 	updateSpec(rq, spec)
 
+	delete(service.Spec, id)
 	service.Spec[spec.Meta.ID] = spec
 
 	for _, pod := range service.Pods {
+
+		if pod.Spec.State == types.StateDestroy {
+			continue
+		}
+
 		pod.Spec = s.GenerateSpec(service)
 		service.Pods[pod.Meta.ID] = pod
 	}
@@ -400,7 +407,7 @@ func (s *service) SetSpec(service *types.Service, id string, rq *request.Request
 func (s *service) DelSpec(service *types.Service, id string) error {
 
 	var (
-		log = ctx.Get().GetLogger()
+		log     = ctx.Get().GetLogger()
 		storage = ctx.Get().GetStorage()
 	)
 
@@ -478,8 +485,7 @@ func (s *service) GenerateSpec(service *types.Service) types.PodSpec {
 		spec.Containers[cs.Meta.ID] = cs
 	}
 
-	var state = new(types.PodState)
-	state.State = service.State.State
+	spec.State = types.StateStarted
 
 	return spec
 }
@@ -531,6 +537,8 @@ func updateSpec(opts *request.RequestServiceSpecUpdateS, spec *types.ServiceSpec
 	if spec == nil {
 		return errors.New("Error: spec is nil")
 	}
+
+	spec.Meta.ID = uuid.NewV4().String()
 
 	spec.Memory = int64(32)
 

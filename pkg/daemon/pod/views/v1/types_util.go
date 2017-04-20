@@ -77,6 +77,8 @@ func ToPodState(state types.PodState) PodState {
 	return PodState{
 		State:  state.State,
 		Status: state.Status,
+		Provision: state.Provision,
+		Ready: state.Ready,
 	}
 }
 
@@ -110,5 +112,7 @@ func FromPodState(state PodState) types.PodState {
 	return types.PodState{
 		State:  state.State,
 		Status: state.Status,
+		Provision: state.Provision,
+		Ready: state.Ready,
 	}
 }

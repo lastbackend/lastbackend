@@ -146,11 +146,6 @@ func (s *Service) DrawTable(namespaceName string) {
 				"ID":          pod.Meta.ID,
 				"STATE":       pod.State.State,
 				"STATUS":      pod.State.Status,
-				"TOTAL":       pod.State.Containers.Total,
-				"RUNNING":     pod.State.Containers.Running,
-				"CREATED":     pod.State.Containers.Created,
-				"STOPPED":     pod.State.Containers.Stopped,
-				"ERRORED":     pod.State.Containers.Errored,
 				"CREATED POD": pod.Meta.Created.String()[:10],
 				"UPDATED POD": pod.Meta.Updated.String()[:10],
 			})

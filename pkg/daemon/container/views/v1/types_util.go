@@ -147,7 +147,7 @@ func FromContainerSpec(spec ContainerSpec) *types.ContainerSpec {
 
 func FromContainerSpecMeta(meta ContainerSpecMeta) types.ContainerSpecMeta {
 	m := types.ContainerSpecMeta{}
-	meta.ID = m.ID
+	m.ID = meta.ID
 	return m
 }
 

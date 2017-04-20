@@ -82,6 +82,10 @@ type PodState struct {
 	State string `json:"state"`
 	// Pod current status
 	Status string `json:"status"`
+	// Pod Provision state
+	Provision bool
+	// Pod ready state
+	Ready bool
 }
 
 type PodSecret struct{}
@@ -119,43 +123,81 @@ func (p *Pod) UpdateState() {
 	p.State.Status = ""
 
 	for _, c := range p.Containers {
-
-		if c.State == p.State.State {
-			continue
-		}
-
-		if c.State == StateExited && p.State.Status == "" {
-			p.State.State = StateStopped
-			continue
-		}
-
-		if p.State.State == "" {
-			p.State.State = c.State
-			continue
-		}
-
-		if c.State == StateExited && p.State.Status != StateStopped {
-			p.State.State = StateWarning
-			continue
-		}
-
-		if c.State == StateRunning && p.State.Status != StateRunning {
-			p.State.State = StateWarning
-			continue
-		}
-
-		if p.State.State == StateError {
-			continue
-		}
-
-		if c.State == StateError {
-			p.State.State = c.State
+		switch c.State {
+		case StateStarted:
+			switch p.State.State {
+			case "":
+				p.State.State = StateStarted
+			case StateStarted:
+				p.State.State = StateStarted
+			case StateError:
+				p.State.State = StateError
+			case StateDestroy:
+				p.State.State = StateDestroy
+			default:
+				p.State.State = StateWarning
+			}
+		case StateRunning:
+			switch p.State.State {
+			case "":
+				p.State.State = StateStarted
+			case StateStarted:
+				p.State.State = StateStarted
+			case StateError:
+				p.State.State = StateError
+			case StateDestroy:
+				p.State.State = StateDestroy
+			default:
+				p.State.State = StateWarning
+			}
+		case StateStopped:
+			switch p.State.State {
+			case "":
+				p.State.State = StateStopped
+			case StateStopped:
+				p.State.State = StateStopped
+			case StateDestroy:
+				p.State.State = StateDestroy
+			case StateError:
+				p.State.State = StateError
+			default:
+				p.State.State = StateWarning
+			}
+		case StateRestarted:
+			switch p.State.State {
+			case "":
+				p.State.State = StateStarted
+			case StateStarted:
+				p.State.State = StateStarted
+			case StateDestroy:
+				p.State.State = StateDestroy
+			case StateError:
+				p.State.State = StateError
+			default:
+				p.State.State = StateWarning
+			}
+		case StateDestroyed:
+			p.State.State = StateDestroy
+		case StateExited:
+			switch p.State.State {
+			case "":
+				p.State.State = StateStopped
+			case StateStopped:
+				p.State.State = StateStopped
+			case StateDestroy:
+				p.State.State = StateDestroy
+			case StateError:
+				p.State.State = StateError
+			default:
+				p.State.State = StateWarning
+			}
+		case StateError:
+			p.State.State = StateError
 			p.State.Status = c.Status
-			continue
 		}
 	}
 
-	if len(p.Containers) == 0 && p.State.State == StateDestroy {
+	if len(p.Containers) == 0 && p.Spec.State == StateDestroy {
 		p.State.State = StateDestroyed
 	}
 
