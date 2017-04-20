@@ -135,8 +135,8 @@ func (t *Task) imagesUpdate() {
 func (t *Task) containersCreate() {
 
 	var (
-		err error
-		log = context.Get().GetLogger()
+		err  error
+		log  = context.Get().GetLogger()
 		crii = context.Get().GetCri()
 	)
 
@@ -176,8 +176,8 @@ func (t *Task) containersCreate() {
 func (t *Task) containersRemove() {
 
 	var (
-		log = context.Get().GetLogger()
-		crii = context.Get().GetCri()
+		log   = context.Get().GetLogger()
+		crii  = context.Get().GetCri()
 		specs = make(map[string]bool)
 	)
 

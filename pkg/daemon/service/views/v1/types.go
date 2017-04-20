@@ -40,12 +40,12 @@ type ServiceMeta struct {
 }
 
 type SpecInfo struct {
-	Meta       SpecMeta `json:"meta"`
-	Memory     int64    `json:"memory"`
-	Command    string   `json:"command"`
-	Image      string   `json:"image"`
-	EnvVars    []string `json:"env"`
-	Ports      []Port   `json:"ports"`
+	Meta    SpecMeta `json:"meta"`
+	Memory  int64    `json:"memory"`
+	Command string   `json:"command"`
+	Image   string   `json:"image"`
+	EnvVars []string `json:"env"`
+	Ports   []Port   `json:"ports"`
 }
 
 type Port struct {

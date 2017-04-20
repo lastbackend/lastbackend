@@ -114,12 +114,12 @@ func NewList(obj types.ServiceList) *ServiceList {
 
 func (s *Service) DrawTable(namespaceName string) {
 	serviceTable := table.New([]string{"NAME", "DESCRIPTION", "NAMESPACE",
-																		 "REPLICAS", "MEMORY", "IMAGE", "CREATED", "UPDATED"})
+		"REPLICAS", "MEMORY", "IMAGE", "CREATED", "UPDATED"})
 	podsTable := table.New([]string{"ID", "STATE", "STATUS", "TOTAL",
-																	"RUNNING", "CREATED",
-																	"STOPPED", "ERRORED", "CREATED POD", "UPDATED POD"})
+		"RUNNING", "CREATED",
+		"STOPPED", "ERRORED", "CREATED POD", "UPDATED POD"})
 	containersTable := table.New([]string{"ID", "IMAGE", "STATE",
-																				"STATUS", "CREATE", "UPDATED"})
+		"STATUS", "CREATE", "UPDATED"})
 
 	serviceTable.VisibleHeader = true
 	podsTable.VisibleHeader = true

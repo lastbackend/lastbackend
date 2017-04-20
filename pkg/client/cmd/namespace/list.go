@@ -41,15 +41,15 @@ func ListNamespaceCmd() {
 func List() (*n.NamespaceList, error) {
 
 	var (
-		err           error
-		http          = c.Get().GetHttpClient()
-		er            = new(errors.Http)
-		namespaceList = new(n.NamespaceList)
+		err        error
+		http       = c.Get().GetHttpClient()
+		er         = new(errors.Http)
+		nspaceList = new(n.NamespaceList)
 	)
 
 	_, _, err = http.
 		GET("/namespace").
-		Request(namespaceList, er)
+		Request(nspaceList, er)
 	if err != nil {
 		return nil, errors.New(er.Message)
 	}
@@ -62,9 +62,9 @@ func List() (*n.NamespaceList, error) {
 		return nil, errors.New(er.Message)
 	}
 
-	if len(*namespaceList) == 0 {
+	if len(*nspaceList) == 0 {
 		return nil, errors.New("You don't have any namespace")
 	}
 
-	return namespaceList, nil
+	return nspaceList, nil
 }

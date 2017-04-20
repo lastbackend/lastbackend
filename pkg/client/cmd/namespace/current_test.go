@@ -18,67 +18,47 @@
 
 package namespace_test
 
-//
-//import (
-//	"github.com/lastbackend/lastbackend/pkg/apis/types"
-//	"github.com/lastbackend/lastbackend/pkg/client/cmd/namespace"
-//	"github.com/lastbackend/lastbackend/pkg/client/context"
-//	"github.com/lastbackend/lastbackend/pkg/client/storage"
-//	"testing"
-//	"time"
-//)
-//
-//func TestCurrent(t *testing.T) {
-//
-//	const token = "mocktoken"
-//
-//	var (
-//		err  error
-//		ctx  = context.Mock()
-//		data = types.Namespace{
-//			Name:        "mock_name",
-//			Created:     time.Now(),
-//			Updated:     time.Now(),
-//			User:        "mock_demo",
-//			Description: "sample description",
-//		}
-//	)
-//
-//	ctx.Storage, err = storage.Init()
-//	if err != nil {
-//		t.Error(err)
-//		return
-//	}
-//	defer (func() {
-//		err = ctx.Storage.Clear()
-//		if err != nil {
-//			t.Error(err)
-//			return
-//		}
-//		err = ctx.Storage.Close()
-//		if err != nil {
-//			t.Error(err)
-//			return
-//		}
-//	})()
-//
-//	ctx.Token = token
-//
-//	if err != nil {
-//		t.Error(err)
-//		return
-//	}
-//	defer ctx.Storage.Close()
-//
-//	err = ctx.Storage.Set("namespace", data)
-//	if err != nil {
-//		t.Error(err)
-//		return
-//	}
-//
-//	_, err = namespace.Current()
-//	if err != nil {
-//		t.Error(err)
-//		return
-//	}
-//}
+import (
+	"github.com/lastbackend/lastbackend/pkg/client/cmd/namespace"
+	"github.com/lastbackend/lastbackend/pkg/client/context"
+	s "github.com/lastbackend/lastbackend/pkg/client/storage"
+	n "github.com/lastbackend/lastbackend/pkg/daemon/namespace/views/v1"
+	"github.com/stretchr/testify/assert"
+	"testing"
+)
+
+func TestCurrent(t *testing.T) {
+
+	const (
+		tName       = "test name"
+		tDesc       = "test description"
+		storageName = "test"
+	)
+
+	var (
+		err error
+		ctx = context.Mock()
+
+		data = n.Namespace{
+			Meta: n.NamespaceMeta{
+				Name:        tName,
+				Description: tDesc,
+			},
+		}
+	)
+
+	storage, err := s.Init()
+	assert.NoError(t, err)
+	ctx.SetStorage(storage)
+	defer (func() {
+		storage.Clear()
+	})()
+
+	err = storage.Set(storageName, data)
+	assert.NoError(t, err)
+
+	nspace, err := namespace.Current()
+	assert.NoError(t, err)
+	assert.Equal(t, tName, nspace.Meta.Name)
+	assert.Equal(t, tDesc, nspace.Meta.Description)
+}

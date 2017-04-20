@@ -61,9 +61,16 @@ func Switch(name string) (*n.Namespace, error) {
 		return nil, errors.New(er.Message)
 	}
 
-	err = storage.Set("namespace", namespace)
-	if err != nil {
-		return nil, errors.UnknownMessage
+	if c.Get().IsMock() {
+		err = storage.Set("test", namespace)
+		if err != nil {
+			return nil, errors.UnknownMessage
+		}
+	} else {
+		err = storage.Set("namespace", namespace)
+		if err != nil {
+			return nil, errors.UnknownMessage
+		}
 	}
 
 	return namespace, nil
