@@ -144,8 +144,8 @@ func (s *service) Update(service *types.Service, rq *request.RequestServiceUpdat
 		service.Meta.Name = rq.Name
 	}
 
-	if rq.Description != "" {
-		service.Meta.Description = rq.Description
+	if rq.Description != nil {
+		service.Meta.Description = *rq.Description
 	}
 
 	if rq.Domains != nil {
@@ -400,7 +400,7 @@ func (s *service) SetSpec(service *types.Service, id string, rq *request.Request
 func (s *service) DelSpec(service *types.Service, id string) error {
 
 	var (
-		log = ctx.Get().GetLogger()
+		log     = ctx.Get().GetLogger()
 		storage = ctx.Get().GetStorage()
 	)
 

@@ -147,7 +147,7 @@ func (s *RequestServiceCreateS) DecodeAndValidate(reader io.Reader) *errors.Err 
 
 type RequestServiceUpdateS struct {
 	Name        string       `json:"name"`
-	Description string       `json:"description"`
+	Description *string      `json:"description"`
 	Replicas    *int         `json:"replicas"`
 	Spec        *ServiceSpec `json:"spec"`
 	Domains     []string     `json:"domains"`
