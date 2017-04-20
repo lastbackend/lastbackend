@@ -57,8 +57,10 @@ type PodState struct {
 	State string `json:"state"`
 	// Pod current status
 	Status string `json:"status"`
-	// Container total
-	Containers PodContainersState `json:"containers"`
+	// Pod provision flag
+	Provision bool `json:"provision"`
+	// Pod ready flag
+	Ready bool `json:"ready"`
 }
 
 type PodContainersState struct {
@@ -83,7 +85,7 @@ type PodSpec struct {
 	Status string `json:"status"`
 
 	// Containers spec for pod
-	Containers []v1.ContainerSpec `json:"containers"`
+	Containers map[string]v1.ContainerSpec `json:"containers"`
 
 	// Provision create time
 	Created time.Time `json:"created"`

@@ -106,6 +106,15 @@ func (r *Runtime) ContainerInspect(ID string) (*types.Container, error) {
 		State: info.State.Status,
 	}
 
+	switch info.State.Status {
+	case types.StateCreated: container.State = types.StateCreated
+	case types.StateStarted: container.State = types.StateStarted
+	case types.StateRunning: container.State = types.StateStarted
+	case types.StateStopped: container.State = types.StateStopped
+	case types.StateExited: container.State = types.StateStopped
+	case types.StateError: container.State = types.StateError
+	}
+
 	container.Created, _ = time.Parse(time.RFC3339Nano, info.Created)
 	container.Started, _ = time.Parse(time.RFC3339Nano, info.State.StartedAt)
 

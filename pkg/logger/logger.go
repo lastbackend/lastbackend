@@ -35,7 +35,7 @@ func New(debug bool, skip int) *Logger {
 	l.log.Formatter = getJSONFormatter()
 
 	l.log.Hooks.Add(hooks.SyslogHook{})
-	l.log.Hooks.Add(hooks.ContextHook{skip})
+	//l.log.Hooks.Add(hooks.ContextHook{skip})
 
 	if debug {
 		l.SetDebugLevel()

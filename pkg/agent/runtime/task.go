@@ -50,11 +50,15 @@ func (t *Task) exec() {
 		pod = context.Get().GetStorage().Pods()
 	)
 
-	t.pod.Spec.State = types.StateProvision
+	t.pod.State.Provision = true
+	t.pod.Spec.State = t.spec.State
+
 	events.SendPodState(t.pod)
 
 	defer func() {
-		t.pod.Spec.State = types.StateReady
+		t.pod.State.Provision = false
+		t.pod.State.Ready = true
+
 		pod.SetPod(t.pod)
 		events.SendPodState(t.pod)
 		log.Debugf("Task [%s]: done task for pod: %s", t.id, t.pod.Meta.ID)
@@ -65,7 +69,7 @@ func (t *Task) exec() {
 	// Check spec version
 	log.Debugf("Task [%s]: pod spec: %s, new spec: %s", t.id, t.pod.Spec.ID, t.spec.ID)
 
-	if t.state.State == types.StateDestroy {
+	if t.spec.State == types.StateDestroy {
 		log.Debugf("Task [%s]: pod is marked for deletion: %s", t.id, t.pod.Meta.ID)
 		t.containersStateManage()
 		return
@@ -98,7 +102,7 @@ func (t *Task) imagesUpdate() {
 
 	// Get images currently used by this pod
 	for _, container := range t.pod.Containers {
-		log.Debugf("Add images as used: %s", container.Image)
+		log.Debugf("Task [%s]: add images as used: %s", t.id, container.Image)
 		images[container.Image] = struct{}{}
 	}
 
@@ -108,25 +112,25 @@ func (t *Task) imagesUpdate() {
 		// Check image exists and not need to be pulled
 		if _, ok := images[spec.Image.Name]; ok {
 
-			log.Debugf("Image exists in prev spec: %s", spec.Image.Name)
+			log.Debugf("Task [%s]: image exists in prev spec: %s", t.id, spec.Image.Name)
 			// Check if image need to be updated
 			if !spec.Image.Pull {
-				log.Debugf("Image not needed to pull: %s", spec.Image.Name)
+				log.Debugf("Task [%s]: image not needed to pull: %s", t.id, spec.Image.Name)
 				delete(images, spec.Image.Name)
 				continue
 			}
 
-			log.Debugf("Delete images from unused: %s", spec.Image.Name)
+			log.Debugf("Task [%s]: image delete from unused: %s", t.id, spec.Image.Name)
 			delete(images, spec.Image.Name)
 		}
 
-		log.Debugf("Image update needed: %s", spec.Image.Name)
+		log.Debugf("Task [%s]: image start pull: %s", t.id, spec.Image.Name)
 		crii.ImagePull(&spec.Image)
 	}
 
 	// Clean up unused images
 	for name := range images {
-		log.Debugf("Delete unused images: %s", name)
+		log.Debugf("Task [%s]: delete unused images: %s", t.id, name)
 		crii.ImageRemove(name)
 	}
 
@@ -140,11 +144,11 @@ func (t *Task) containersCreate() {
 		crii = context.Get().GetCri()
 	)
 
-	log.Debugf("Start containers creation process for pod: %s", t.pod.Meta.ID)
+	log.Debugf("Task [%s]: containers creation process started for pod: %s", t.id, t.pod.Meta.ID)
 
 	// Create new containers
 	for id, spec := range t.spec.Containers {
-		log.Debugf("Container create")
+		log.Debugf("Task [%s]: container struct create", t.id)
 
 		c := types.Container{
 			Pod:     t.pod.Meta.ID,
@@ -158,17 +162,17 @@ func (t *Task) containersCreate() {
 			spec.Labels = make(map[string]string)
 		}
 
-		spec.Labels["LB_META"] = fmt.Sprintf("%s/%s/s", t.pod.Meta.ID, t.pod.Spec.ID, spec.Meta.ID)
+		spec.Labels["LB_META"] = fmt.Sprintf("%s/%s/%s", t.pod.Meta.ID, t.pod.Spec.ID, spec.Meta.ID)
 		c.ID, err = crii.ContainerCreate(spec)
 
 		if err != nil {
-			log.Errorf("Container create error %s", err.Error())
+			log.Errorf("Task [%s]: container create error %s", t.id, err.Error())
 			c.State = types.ContainerStateError
 			c.Status = err.Error()
 			break
 		}
 
-		log.Debugf("New container created: %s", c.ID)
+		log.Debugf("Task [%s]: new container created: %s", t.id, c.ID)
 		t.pod.AddContainer(&c)
 	}
 }
@@ -181,21 +185,21 @@ func (t *Task) containersRemove() {
 		specs = make(map[string]bool)
 	)
 
-	log.Debugf("Start containers removable process for pod: %s", t.pod.Meta.ID)
+	log.Debugf("Task [%s]: start containers removable process for pod: %s", t.id, t.pod.Meta.ID)
 
 	for id := range t.spec.Containers {
-		log.Debugf("Add spec %s to valid", id)
+		log.Debugf("Task [%s]: add spec %s to valid", t.id, id)
 		specs[id] = false
 	}
 
 	// Remove old containers
 	for _, c := range t.pod.Containers {
-		log.Debugf("Container %s has spec %s", c.ID, c.Spec)
+		log.Debugf("Task [%s]: container %s has spec %s", t.id, c.ID, c.Spec)
 		if _, ok := specs[c.Spec]; !ok || specs[c.Spec] == true {
-			log.Debugf("Container %s needs to be removed", c.ID)
+			log.Debugf("Task [%s]: container %s needs to be removed", t.id, c.ID)
 			err := crii.ContainerRemove(c.ID, true, true)
 			if err != nil {
-				log.Errorf("Container remove error: %s", err.Error())
+				log.Errorf("Task [%s]: container remove error: %s", t.id, err.Error())
 			}
 
 			t.pod.DelContainer(c.ID)
@@ -214,10 +218,10 @@ func (t *Task) containersStateManage() {
 
 	defer t.pod.UpdateState()
 
-	log.Debugf("update container state from: %s to %s", t.pod.State.State, t.state.State)
+	log.Debugf("Task [%s]: containers state update from: %s to %s", t.id, t.pod.State.State, t.spec.State)
 
-	if t.state.State == types.StateDestroy {
-		log.Debugf("Pod %s delete %d containers", t.pod.Meta.ID, len(t.pod.Containers))
+	if t.spec.State == types.StateDestroy {
+		log.Debugf("Task [%s]: pod %s delete %d containers", t.id, t.pod.Meta.ID, len(t.pod.Containers))
 
 		for _, c := range t.pod.Containers {
 
@@ -237,24 +241,25 @@ func (t *Task) containersStateManage() {
 	}
 
 	// Update containers states
-	if t.state.State == types.StateStart || t.state.State == types.StateRunning {
+	if t.spec.State == types.StateStarted  {
 		for _, c := range t.pod.Containers {
-			log.Debugf("Container: %s try to start", c.ID)
+			log.Debugf("Task [%s]: container: %s try to start", t.id, c.ID)
 			err := crii.ContainerStart(c.ID)
-			c.State = types.StateRunning
+			c.State = types.StateStarted
 			c.Status = ""
 
 			if err != nil {
+				log.Errorf("Task [%s]: container: %s start failed: %s", t.id, c.ID, err.Error())
 				c.State = types.StateError
 				c.Status = err.Error()
 			}
-
+			log.Debugf("Task [%s]: container: %s started", t.id, c.ID)
 			t.pod.SetContainer(c)
 		}
 		return
 	}
 
-	if t.state.State == types.StateStop {
+	if t.spec.State == types.StateStopped {
 		timeout := time.Duration(ContainerStopTimeout) * time.Second
 
 		for _, c := range t.pod.Containers {
@@ -265,30 +270,31 @@ func (t *Task) containersStateManage() {
 			c.Status = ""
 
 			if err != nil {
-				log.Errorf("Container: stop error: %s", err.Error())
+				log.Errorf("Task [%s]: container: stop error: %s", t.id, err.Error())
 				c.State = "error"
 				c.Status = err.Error()
 			}
+			log.Debugf("Task [%s]: container: %s stopped", t.id, c.ID)
 			t.pod.SetContainer(c)
 		}
 
 		return
 	}
 
-	if t.state.State == types.StateRestart {
+	if t.spec.State == types.StateRestarted {
 		timeout := time.Duration(ContainerRestartTimeout) * time.Second
 
 		for _, c := range t.pod.Containers {
 
 			err := crii.ContainerRestart(c.ID, &timeout)
-			c.State = types.StateRunning
+			c.State = types.StateStarted
 			c.Status = ""
 
 			if err != nil {
 				c.State = "error"
 				c.Status = err.Error()
 			}
-
+			log.Debugf("Task [%s]: container: %s restarted", t.id, c.ID)
 			t.pod.SetContainer(c)
 		}
 		return

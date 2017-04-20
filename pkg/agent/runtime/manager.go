@@ -52,22 +52,40 @@ func (pm *PodManager) SyncPod(pod types.PodNodeSpec) {
 	if p == nil {
 		log.Debugf("Pod %s not found, create new one", pod.Meta.ID)
 		p := types.NewPod()
-		p.Meta.ID = pod.Meta.ID
+		p.Meta = pod.Meta
 		context.Get().GetStorage().Pods().SetPod(p)
 		pm.sync(pod.Meta, pod.State, pod.Spec, p)
 		return
 	}
 
+	if p.State.Provision  {
+		log.Debugf("Pod %s is not in %s state > skip sync", p.Meta.ID, types.StateReady)
+		return
+	}
+
 	log.Debugf("Pod %s found", pod.Meta.ID)
-	if len(p.Containers) != len(pod.Spec.Containers) {
+	if len(p.Containers) !=len(p.Containers)  {
+
+		log.Debugf("Pod %s containers len different from spec count %d(%d)", pod.Meta.ID, len(p.Containers),
+			len(p.Containers))
+
 		pm.sync(pod.Meta, pod.State, pod.Spec, p)
 		return
 	}
 
-	if (p.Spec.ID == pod.Spec.ID) && p.State.State == pod.State.State {
+	if (p.Spec.ID == pod.Spec.ID) && p.Spec.State == pod.Spec.State {
 		log.Debugf("Pod %s in correct state", pod.Meta.ID)
 		return
 	}
+
+	if p.Spec.ID != pod.Spec.ID {
+		log.Debugf("Pod %s need to spec update: %s (%s) ", pod.Meta.ID, pod.Spec.ID, p.Spec.ID)
+	}
+
+	if p.Spec.State != pod.Spec.State {
+		log.Debugf("Pod %s need to change state to: %s (%s) ", pod.Meta.ID, pod.Spec.State, p.Spec.State)
+	}
+
 	pm.sync(pod.Meta, pod.State, pod.Spec, p)
 }
 
@@ -76,32 +94,34 @@ func (pm *PodManager) sync(meta types.PodMeta, state types.PodState, spec types.
 	// Check if pod worker exists
 	log := context.Get().GetLogger()
 	log.Debugf("Pod %s sync start", pod.Meta.ID)
-	w := pm.workers[pod.Meta.ID]
-	if w == nil {
+	w, ok := pm.workers[pod.Meta.ID]
+
+	if !ok {
 		log.Debugf("Pod %s sync create new worker", pod.Meta.ID)
 		w = NewWorker()
+		w.pod = pod.Meta.ID
+		pm.lock.Lock()
+		pm.workers[pod.Meta.ID] = w
+		pm.lock.Unlock()
 
 		// Start worker watcher
 		go func() {
 			<-w.done
+			log.Debugf("Pod %s worker deletion", pod.Meta.ID)
 			pm.lock.Lock()
 			delete(pm.workers, pod.Meta.ID)
 			pm.lock.Unlock()
 		}()
 	}
+
 	log.Debugf("Pod %s sync proceed", pod.Meta.ID)
 	w.Proceed(meta, state, spec, pod)
 }
 
 func NewPodManager() (*PodManager, error) {
+
 	log := context.Get().GetLogger()
 	log.Debug("Create new pod manager")
-
-	//	s := context.Get().GetStorage().Pods()
-
-	var (
-	//	err error
-	)
 
 	crii := context.Get().GetCri()
 

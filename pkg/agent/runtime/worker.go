@@ -28,6 +28,7 @@ import (
 type Worker struct {
 	lock sync.RWMutex
 
+	pod     string
 	cri     cri.CRI
 	current *Task
 	next    *Task
@@ -40,19 +41,22 @@ func (w *Worker) Proceed(meta types.PodMeta, state types.PodState, spec types.Po
 	log.Debugf("Proceed new task for pod: %s", p.Meta.ID)
 
 	// Clean next task if exists
-	if w.next != nil {
-		w.next.clean()
-		w.next = nil
-	}
 
 	t := NewTask(meta, state, spec, p)
+
+	if w.next != nil {
+		w.lock.Lock()
+		log.Debugf("Worker: Replace tasks: %s > %s", w.next.id, t.id)
+		w.next.clean()
+		w.next = nil
+		w.lock.Unlock()
+	}
 
 	// Update next task for execution
 	if w.current != nil {
 		w.lock.Lock()
 		w.next = t
 		w.lock.Unlock()
-		w.current.finish()
 		return
 	}
 
@@ -66,13 +70,16 @@ func (w *Worker) Proceed(meta types.PodMeta, state types.PodState, spec types.Po
 }
 
 func (w *Worker) loop() {
+	log := context.Get().GetLogger()
 	for {
 		if w.current == nil {
 			w.done <- true
 			return
 		}
 
+		log.Debugf("Worker: Task [%s]: prepared for execution", w.current.id)
 		w.current.exec()
+		log.Debugf("Worker: Task [%s]: executed", w.current.id)
 		w.current = nil
 
 		w.lock.Lock()

@@ -42,7 +42,7 @@ func ToContainer(c *types.Container) Container {
 	return container
 }
 
-func ToContainerSpec(spec types.ContainerSpec) ContainerSpec {
+func ToContainerSpec(spec *types.ContainerSpec) ContainerSpec {
 	s := ContainerSpec{
 		Meta:          ToContainerSpecMeta(spec.Meta),
 		Image:         v1.ToImageSpec(spec.Image),
@@ -147,7 +147,7 @@ func FromContainerSpec(spec ContainerSpec) *types.ContainerSpec {
 
 func FromContainerSpecMeta(meta ContainerSpecMeta) types.ContainerSpecMeta {
 	m := types.ContainerSpecMeta{}
-	meta.ID = m.ID
+	m.ID = meta.ID
 	return m
 }
 

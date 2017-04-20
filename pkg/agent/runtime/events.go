@@ -55,20 +55,20 @@ func (el *EventListener) Listen() {
 						continue
 					}
 
-					if event.Event == types.StateDestroy {
+					if event.Event == types.EventStateDestroy {
 						log.Debugf("Runtime: Pod %s found > delete container", event.Container.Pod)
 						pod.DelContainer(event.Container.ID)
 					}
 
-					if event.Event == types.StateStart {
+					if event.Event == types.EventStateStart {
 						pod.SetContainer(event.Container)
 					}
 
-					if event.Event == types.StateStop {
+					if event.Event == types.EventStateStop {
 						pod.SetContainer(event.Container)
 					}
 
-					if event.Event == types.StateRestart {
+					if event.Event == types.EventStateRestart {
 						pod.SetContainer(event.Container)
 					}
 

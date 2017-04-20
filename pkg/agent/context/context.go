@@ -25,6 +25,7 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/logger"
 	"github.com/lastbackend/lastbackend/pkg/util/http"
 	"golang.org/x/net/context"
+	"github.com/lastbackend/lastbackend/pkg/agent/events/listener"
 )
 
 var _ctx ctx
@@ -39,6 +40,7 @@ type ctx struct {
 	config  *config.Config
 	storage *storage.Storage
 	http    *http.RawReq
+	event   *listener.EventListener
 }
 
 func (c *ctx) SetLogger(log *logger.Logger) {
@@ -79,6 +81,14 @@ func (c *ctx) SetHttpClient(http *http.RawReq) {
 
 func (c *ctx) GetHttpClient() *http.RawReq {
 	return c.http
+}
+
+func (c *ctx) SetEventListener (el *listener.EventListener) {
+	c.event = el
+}
+
+func (c *ctx) GetEventListener () *listener.EventListener {
+	return c.event
 }
 
 func Background() context.Context {

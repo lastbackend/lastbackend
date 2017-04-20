@@ -22,84 +22,47 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/agent/context"
 	"github.com/lastbackend/lastbackend/pkg/agent/system"
 	"github.com/lastbackend/lastbackend/pkg/apis/types"
-	"github.com/lastbackend/lastbackend/pkg/daemon/node/views/v1"
-	"github.com/lastbackend/lastbackend/pkg/errors"
 	"time"
 )
 
-type Event struct {
-}
-
-func New() *Event {
-	return new(Event)
-}
-
-func NewTickerEvent() *types.Event {
+func NewTickerEvent() {
 	var event = new(types.Event)
 	event.Ticker = true
 	event.Meta = system.GetNodeMeta()
 	event.Pods = make([]*types.Pod, 0)
 	event.Timestamp = time.Now()
-	return event
+
+	context.Get().GetEventListener().Send(event)
+	return
 }
 
-func NewInitialEvent(pods []*types.Pod) *types.Event {
+func NewInitialEvent(pods []*types.Pod) {
 	var event = new(types.Event)
 	event.Initial = true
 	event.Meta = system.GetNodeMeta()
 	event.Pods = pods
 	event.Timestamp = time.Now()
-	return event
+
+	context.Get().GetEventListener().Send(event)
+	return
 }
 
-func NewEvent(pods []*types.Pod) *types.Event {
+func NewEvent(pods []*types.Pod) {
 	var event = new(types.Event)
 	event.Meta = system.GetNodeMeta()
 	event.Pods = pods
 	event.Timestamp = time.Now()
-	return event
+	context.Get().GetEventListener().Send(event)
+	return
 }
 
-func SendPodState(pod *types.Pod) (*types.NodeSpec, error) {
+func SendPodState(pod *types.Pod) {
 	p := types.Pod{
 		Meta:       pod.Meta,
 		State:      pod.State,
 		Containers: pod.Containers,
 	}
-	e := new(Event)
-	return e.Send(NewEvent(append([]*types.Pod{}, &p)))
+	NewEvent(append([]*types.Pod{}, &p))
 }
 
-func (e *Event) Send(event *types.Event) (*types.NodeSpec, error) {
 
-	var (
-		er       = new(errors.Http)
-		http     = context.Get().GetHttpClient()
-		log      = context.Get().GetLogger()
-		endpoint = "/node/event"
-		spec     = v1.Spec{}
-	)
-
-	log.Debugf("Send event request to: %s", endpoint)
-	_, _, err := http.
-		PUT(endpoint).
-		AddHeader("Content-Type", "application/json").
-		BodyJSON(event).
-		Request(&spec, er)
-	if err != nil {
-		log.Errorf("Send request error: %s", err.Error())
-		return nil, err
-	}
-
-	if er.Code == 401 {
-		log.Error("401")
-		return nil, nil
-	}
-
-	if er.Code != 0 {
-		log.Error(er.Code)
-		return nil, errors.New(er.Message)
-	}
-
-	return v1.FromNodeSpec(spec), nil
-}

@@ -68,6 +68,9 @@ func (r *Runtime) PodList() ([]*types.Pod, error) {
 		}
 		pod.Spec.Containers[container.Spec] = new(types.ContainerSpec)
 
+		pod.State.Provision = false
+		pod.State.Ready = true
+
 		pod.AddContainer(container)
 	}
 
