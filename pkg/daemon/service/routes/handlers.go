@@ -93,7 +93,7 @@ func ServiceInfoH(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-        log.Errorf("Error: find namespace by id: %s", err.Error())
+		log.Errorf("Error: find namespace by id: %s", err.Error())
 		errors.HTTP.InternalServerError(w)
 		return
 	}
@@ -101,12 +101,12 @@ func ServiceInfoH(w http.ResponseWriter, r *http.Request) {
 	s := service.New(r.Context(), item.Meta)
 	svc, err := s.Get(sid)
 	if err != nil {
-        if svc == nil {
-            errors.New("service").NotFound().Http(w)
-            return
-        }
+		if svc == nil {
+			errors.New("service").NotFound().Http(w)
+			return
+		}
 
-        log.Errorf("Error: find service by id: %s", err.Error())
+		log.Errorf("Error: find service by id: %s", err.Error())
 		errors.HTTP.InternalServerError(w)
 		return
 	}
@@ -300,10 +300,10 @@ func ServiceUpdateH(w http.ResponseWriter, r *http.Request) {
 	s := service.New(r.Context(), item.Meta)
 	svc, err := s.Get(sid)
 	if err != nil {
-        if svc == nil {
-            errors.New("service").NotFound().Http(w)
-            return
-        }
+		if svc == nil {
+			errors.New("service").NotFound().Http(w)
+			return
+		}
 
 		log.Error("Error: find service by id", err.Error())
 		errors.HTTP.InternalServerError(w)
@@ -453,10 +453,10 @@ func ServiceSpecCreateH(w http.ResponseWriter, r *http.Request) {
 
 func ServiceSpecUpdateH(w http.ResponseWriter, r *http.Request) {
 	var (
-		err error
-		log = context.Get().GetLogger()
-		nid = utils.Vars(r)["namespace"]
-		sid = utils.Vars(r)["service"]
+		err  error
+		log  = context.Get().GetLogger()
+		nid  = utils.Vars(r)["namespace"]
+		sid  = utils.Vars(r)["service"]
 		spid = utils.Vars(r)["spec"]
 	)
 
@@ -507,10 +507,10 @@ func ServiceSpecUpdateH(w http.ResponseWriter, r *http.Request) {
 
 func ServiceSpecRemoveH(w http.ResponseWriter, r *http.Request) {
 	var (
-		err error
-		log = context.Get().GetLogger()
-		nid = utils.Vars(r)["namespace"]
-		sid = utils.Vars(r)["service"]
+		err  error
+		log  = context.Get().GetLogger()
+		nid  = utils.Vars(r)["namespace"]
+		sid  = utils.Vars(r)["service"]
 		spid = utils.Vars(r)["spec"]
 	)
 

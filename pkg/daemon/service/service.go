@@ -144,8 +144,8 @@ func (s *service) Update(service *types.Service, rq *request.RequestServiceUpdat
 		service.Meta.Name = rq.Name
 	}
 
-	if rq.Description != "" {
-		service.Meta.Description = rq.Description
+	if rq.Description != nil {
+		service.Meta.Description = *rq.Description
 	}
 
 	if rq.Domains != nil {

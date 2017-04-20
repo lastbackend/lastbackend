@@ -40,7 +40,6 @@ func New(obj *types.Service) *Service {
 
 	if len(obj.Spec) == 0 {
 		s.Spec = make([]SpecInfo, 0)
-		return &s
 	}
 
 	for _, spec := range obj.Spec {
@@ -49,7 +48,6 @@ func New(obj *types.Service) *Service {
 
 	if len(obj.Pods) == 0 {
 		s.Pods = make([]v1.PodInfo, 0)
-		return &s
 	}
 
 	for _, pod := range obj.Pods {
@@ -60,6 +58,7 @@ func New(obj *types.Service) *Service {
 }
 
 func ToSpecInfo(spec *types.ServiceSpec) SpecInfo {
+
 	info := SpecInfo{
 		Meta:    ToSpecMeta(spec.Meta),
 		Memory:  spec.Memory,
@@ -68,17 +67,16 @@ func ToSpecInfo(spec *types.ServiceSpec) SpecInfo {
 		EnvVars: spec.EnvVars,
 	}
 
-	info.EnvVars = make([]string, len(spec.EnvVars))
-	info.EnvVars = append(info.EnvVars, spec.EnvVars...)
+	info.EnvVars = append([]string{}, spec.EnvVars...)
 
 	info.Ports = make([]Port, len(spec.Ports))
-	for _, port := range spec.Ports {
-		info.Ports = append(info.Ports, Port{
+	for index, port := range spec.Ports {
+		info.Ports[index] = Port{
 			External:  port.Host,
 			Internal:  port.Container,
 			Published: port.Published,
 			Protocol:  port.Protocol,
-		})
+		}
 	}
 
 	return info
@@ -116,12 +114,12 @@ func NewList(obj types.ServiceList) *ServiceList {
 
 func (s *Service) DrawTable(namespaceName string) {
 	serviceTable := table.New([]string{"NAME", "DESCRIPTION", "NAMESPACE",
-																		 "REPLICAS", "MEMORY", "IMAGE", "CREATED", "UPDATED"})
+		"REPLICAS", "MEMORY", "IMAGE", "CREATED", "UPDATED"})
 	podsTable := table.New([]string{"ID", "STATE", "STATUS", "TOTAL",
-																	"RUNNING", "CREATED",
-																	"STOPPED", "ERRORED", "CREATED POD", "UPDATED POD"})
+		"RUNNING", "CREATED",
+		"STOPPED", "ERRORED", "CREATED POD", "UPDATED POD"})
 	containersTable := table.New([]string{"ID", "IMAGE", "STATE",
-																				"STATUS", "CREATE", "UPDATED"})
+		"STATUS", "CREATE", "UPDATED"})
 
 	serviceTable.VisibleHeader = true
 	podsTable.VisibleHeader = true

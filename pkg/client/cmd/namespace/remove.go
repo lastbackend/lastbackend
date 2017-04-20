@@ -71,7 +71,13 @@ func Remove(name string) error {
 
 	if namespace != nil {
 		if name == namespace.Meta.Name {
-			err = storage.Set("namespace", nil)
+			var sName string
+			if c.Get().IsMock() {
+				sName = "test"
+			} else {
+				sName = "namespace"
+			}
+			err = storage.Set(sName, nil)
 			if err != nil {
 				return errors.UnknownMessage
 			}

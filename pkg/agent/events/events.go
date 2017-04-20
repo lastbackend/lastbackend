@@ -20,15 +20,15 @@ package events
 
 import (
 	"github.com/lastbackend/lastbackend/pkg/agent/context"
+	"github.com/lastbackend/lastbackend/pkg/agent/system"
 	"github.com/lastbackend/lastbackend/pkg/apis/types"
 	"time"
-	"github.com/lastbackend/lastbackend/pkg/agent/system"
 )
 
 func NewTickerEvent() {
 	var event = new(types.Event)
 	event.Ticker = true
-	event.Meta =  system.GetNodeMeta()
+	event.Meta = system.GetNodeMeta()
 	event.Pods = make([]*types.Pod, 0)
 	event.Timestamp = time.Now()
 
@@ -39,7 +39,7 @@ func NewTickerEvent() {
 func NewInitialEvent(pods []*types.Pod) {
 	var event = new(types.Event)
 	event.Initial = true
-	event.Meta =  system.GetNodeMeta()
+	event.Meta = system.GetNodeMeta()
 	event.Pods = pods
 	event.Timestamp = time.Now()
 

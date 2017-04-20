@@ -18,93 +18,87 @@
 
 package service_test
 
-//
-//import (
-//	"github.com/lastbackend/lastbackend/pkg/apis/types"
-//	"github.com/lastbackend/lastbackend/pkg/client/cmd/service"
-//	"github.com/lastbackend/lastbackend/pkg/client/context"
-//	"github.com/lastbackend/lastbackend/pkg/client/storage"
-//	h "github.com/lastbackend/lastbackend/pkg/util/http"
-//	"github.com/stretchr/testify/assert"
-//	"net/http"
-//	"net/http/httptest"
-//	"testing"
-//	"time"
-//)
-//
-//func TestList(t *testing.T) {
-//
-//	const (
-//		name        string = "service"
-//		description string = "service describe"
-//		token       string = "mocktoken"
-//	)
-//
-//	var (
-//		err  error
-//		ctx  = context.Mock()
-//		data = types.Namespace{
-//			Name:        "mock_name",
-//			Created:     time.Now(),
-//			Updated:     time.Now(),
-//			User:        "mock_demo",
-//			Description: "sample description",
-//		}
-//	)
-//
-//	ctx.Storage, err = storage.Init()
-//	if err != nil {
-//		t.Error(err)
-//		return
-//	}
-//	defer (func() {
-//		err = ctx.Storage.Clear()
-//		if err != nil {
-//			t.Error(err)
-//			return
-//		}
-//		err = ctx.Storage.Close()
-//		if err != nil {
-//			t.Error(err)
-//			return
-//		}
-//	})()
-//	if err != nil {
-//		t.Error(err)
-//		return
-//	}
-//	defer ctx.Storage.Close()
-//
-//	ctx.Token = token
-//
-//	//------------------------------------------------------------------------------------------
-//	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-//
-//		tk := r.Header.Get("Authorization")
-//
-//		assert.NotEmpty(t, tk, "token should be not empty")
-//		assert.Equal(t, tk, "Bearer "+token, "they should be equal")
-//
-//		w.WriteHeader(200)
-//		_, err := w.Write([]byte(`[{"id":"mock", "name":"` + name + `", "description":"` + description + `"}]`))
-//		if err != nil {
-//			t.Error(err)
-//			return
-//		}
-//	}))
-//	defer server.Close()
-//	//------------------------------------------------------------------------------------------
-//
-//	err = ctx.Storage.Set("namespace", data)
-//	if err != nil {
-//		t.Error(err)
-//		return
-//	}
-//
-//	ctx.HTTP = h.New(server.URL)
-//
-//	_, _, err = service.List()
-//	if err != nil {
-//		t.Error(err)
-//	}
-//}
+import (
+	"encoding/json"
+	"github.com/lastbackend/lastbackend/pkg/client/cmd/service"
+	"github.com/lastbackend/lastbackend/pkg/client/context"
+	s "github.com/lastbackend/lastbackend/pkg/client/storage"
+	n "github.com/lastbackend/lastbackend/pkg/daemon/namespace/views/v1"
+	sm "github.com/lastbackend/lastbackend/pkg/daemon/service/views/v1"
+	h "github.com/lastbackend/lastbackend/pkg/util/http"
+	"github.com/stretchr/testify/assert"
+	"net/http"
+	"net/http/httptest"
+	"testing"
+)
+
+func TestList(t *testing.T) {
+
+	const (
+		nName = "nspace name"
+
+		sName1 = "service name1"
+		sDesc1 = "service desc1"
+
+		sName2 = "service name2"
+		sDesc2 = "service desc2"
+
+		storageName = "test"
+	)
+
+	var (
+		err error
+		ctx = context.Mock()
+
+		data = n.Namespace{
+			Meta: n.NamespaceMeta{
+				Name: nName,
+			},
+		}
+	)
+
+	storage, err := s.Init()
+	assert.NoError(t, err)
+	ctx.SetStorage(storage)
+	defer func() {
+		storage.Clear()
+	}()
+
+	//------------------------------------------------------------------------------------------
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+
+		nspaceJSON, err := json.Marshal(sm.ServiceList{
+			&sm.Service{
+				Meta: sm.ServiceMeta{
+					Name:        sName1,
+					Description: sDesc1,
+				},
+			},
+			&sm.Service{
+				Meta: sm.ServiceMeta{
+					Name:        sName2,
+					Description: sDesc2,
+				},
+			},
+		})
+		assert.NoError(t, err)
+
+		w.WriteHeader(200)
+		_, err = w.Write(nspaceJSON)
+		assert.NoError(t, err)
+	}))
+	defer server.Close()
+	//------------------------------------------------------------------------------------------
+
+	err = storage.Set(storageName, data)
+	assert.NoError(t, err)
+
+	ctx.SetHttpClient(h.New(server.URL[7:]))
+
+	sl, _, err := service.List()
+	assert.NoError(t, err)
+	assert.Equal(t, sName1, (*sl)[0].Meta.Name)
+	assert.Equal(t, sDesc1, (*sl)[0].Meta.Description)
+	assert.Equal(t, sName2, (*sl)[1].Meta.Name)
+	assert.Equal(t, sDesc2, (*sl)[1].Meta.Description)
+}

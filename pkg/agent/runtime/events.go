@@ -76,7 +76,7 @@ func (el *EventListener) Listen() {
 
 					el.pods <- &types.PodEvent{
 						Event: event.Event,
-						Pod:    pod,
+						Pod:   pod,
 					}
 				}
 			}
