@@ -30,8 +30,6 @@ type Service struct {
 	Meta ServiceMeta `json:"meta"`
 	// Service state
 	State ServiceState `json:"state"`
-	// Service custom domains
-	Domains []string `json:"domains"`
 	// Service source info
 	Source ServiceSource `json:"source"`
 	// Service config info

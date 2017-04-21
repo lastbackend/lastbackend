@@ -24,9 +24,9 @@ import (
 )
 
 type Service struct {
-	Meta ServiceMeta  `json:"meta"`
-	Pods []v1.PodInfo `json:"pods,omitempty"`
-	Spec []SpecInfo   `json:"spec,omitempty"`
+	Meta    ServiceMeta  `json:"meta"`
+	Pods    []v1.PodInfo `json:"pods,omitempty"`
+	Spec    []SpecInfo   `json:"spec,omitempty"`
 }
 
 type ServiceMeta struct {

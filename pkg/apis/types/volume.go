@@ -18,8 +18,6 @@
 
 package types
 
-import ()
-
 type VolumeList []Volume
 
 type Volume struct {

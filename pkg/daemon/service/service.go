@@ -148,10 +148,6 @@ func (s *service) Update(service *types.Service, rq *request.RequestServiceUpdat
 		service.Meta.Description = *rq.Description
 	}
 
-	if rq.Domains != nil {
-		service.Domains = rq.Domains
-	}
-
 	if rq.Replicas != nil {
 		log.Debugf("Service: Update: set replicas: %d", *rq.Replicas)
 		service.Meta.Replicas = *rq.Replicas
@@ -359,6 +355,8 @@ func (s *service) AddSpec(service *types.Service, rq *request.RequestServiceSpec
 
 	for _, pod := range service.Pods {
 		pod.Spec = s.GenerateSpec(service)
+		pod.State.Provision = true
+		pod.State.Ready = false
 		service.Pods[pod.Meta.ID] = pod
 	}
 
@@ -393,6 +391,8 @@ func (s *service) SetSpec(service *types.Service, id string, rq *request.Request
 		}
 
 		pod.Spec = s.GenerateSpec(service)
+		pod.State.Provision = true
+		pod.State.Ready = false
 		service.Pods[pod.Meta.ID] = pod
 	}
 
@@ -425,6 +425,8 @@ func (s *service) DelSpec(service *types.Service, id string) error {
 
 	for _, pod := range service.Pods {
 		pod.Spec = s.GenerateSpec(service)
+		pod.State.Provision = true
+		pod.State.Ready = false
 		service.Pods[pod.Meta.ID] = pod
 	}
 
