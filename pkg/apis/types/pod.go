@@ -83,9 +83,9 @@ type PodState struct {
 	// Pod current status
 	Status string `json:"status"`
 	// Pod Provision state
-	Provision bool
+	Provision bool `json:"provision"`
 	// Pod ready state
-	Ready bool
+	Ready bool `json:"created"`
 }
 
 type PodSecret struct{}

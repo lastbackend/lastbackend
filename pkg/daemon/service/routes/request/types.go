@@ -150,7 +150,6 @@ type RequestServiceUpdateS struct {
 	Description *string      `json:"description"`
 	Replicas    *int         `json:"replicas"`
 	Spec        *ServiceSpec `json:"spec"`
-	Domains     []string     `json:"domains"`
 }
 
 func (s *RequestServiceUpdateS) DecodeAndValidate(reader io.Reader) *errors.Err {
