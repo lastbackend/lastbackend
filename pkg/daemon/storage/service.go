@@ -38,7 +38,7 @@ type ServiceStorage struct {
 // Get service by id
 func (s *ServiceStorage) GetByID(ctx context.Context, namespaceID, serviceID string) (*types.Service, error) {
 
-	const filter = `\b(.+)` + serviceStorage + `\/[a-z0-9-]{36}\/(meta)\b`
+	const filter = `\b(.+)` + serviceStorage + `\/[a-z0-9-]{36}\/(meta|state)\b`
 	var service = new(types.Service)
 	service.Spec = make(map[string]*types.ServiceSpec)
 	service.Pods = make(map[string]*types.Pod)
@@ -124,6 +124,63 @@ func (s *ServiceStorage) GetByName(ctx context.Context, namespaceID string, name
 	}
 
 	return s.GetByID(ctx, namespaceID, id)
+}
+
+// Get service by name
+func (s *ServiceStorage) UpdateState(ctx context.Context, service *types.Service) error {
+
+	client, destroy, err := s.Client()
+	if err != nil {
+		return err
+	}
+	defer destroy()
+
+	service.State.Resources = types.ServiceResourcesState{}
+
+	for _,s := range service.Spec {
+		service.State.Resources.Memory+= int(s.Memory)*service.Meta.Replicas
+	}
+
+	service.State.Replicas = types.ServiceReplicasState{}
+
+	for _, p := range service.Pods {
+		service.State.Replicas.Total++
+		switch p.State.State {
+		case types.StateCreated: service.State.Replicas.Created++
+		case types.StateStarted: service.State.Replicas.Running++
+		case types.StateStopped: service.State.Replicas.Stopped++
+		case types.StateError: service.State.Replicas.Errored++
+		}
+
+		if p.State.Provision {
+			service.State.Replicas.Provision++
+		}
+
+		if p.State.Ready {
+			service.State.Replicas.Ready++
+		}
+	}
+
+	var namespace string
+	keyNamespace := s.util.Key(ctx, "helper", namespaceStorage, service.Meta.Namespace)
+	if err := client.Get(ctx, keyNamespace, &namespace); err != nil {
+		return err
+	}
+
+	tx := client.Begin(ctx)
+
+	keyState := s.util.Key(ctx, namespaceStorage, namespace, serviceStorage, service.Meta.ID, "state")
+	if err := tx.Upsert(keyState, service.State, 0); err != nil {
+		return err
+	}
+
+	if err := tx.Commit(); err != nil {
+		return err
+	}
+
+	return nil
+
+
 }
 
 // List services
@@ -385,8 +442,10 @@ func (s *ServiceStorage) Watch(ctx context.Context, service chan *types.Service)
 		}
 
 		if svc, err := s.GetByID(ctx, keys[1], keys[2]); err == nil {
+			s.UpdateState(ctx, svc)
 			service <- svc
 		}
+
 	}
 
 	client.Watch(ctx, key, filter, cb)

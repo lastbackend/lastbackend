@@ -24,9 +24,43 @@ import (
 )
 
 type Service struct {
+	State ServiceState `json:"state"`
 	Meta ServiceMeta  `json:"meta"`
 	Pods []v1.PodInfo `json:"pods,omitempty"`
 	Spec []SpecInfo   `json:"spec,omitempty"`
+}
+
+type ServiceState struct {
+	// Service state
+	State string `json:"state"`
+	// Service status
+	Status string `json:"status"`
+	// Service resources
+	Resources ServiceResourcesState `json:"resources"`
+	// Replicas state
+	Replicas ServiceReplicasState `json:"replicas"`
+}
+
+type ServiceResourcesState struct {
+	// Total containers
+	Memory int `json:"memory"`
+}
+
+type ServiceReplicasState struct {
+	// Total pods
+	Total int `json:"total"`
+	// Total pods provision
+	Provision int `json:"provision"`
+	// Total pods provision
+	Ready int `json:"ready"`
+	// Total running pods
+	Running int `json:"running"`
+	// Total created pods
+	Created int `json:"created"`
+	// Total stopped pods
+	Stopped int `json:"stopped"`
+	// Total errored pods
+	Errored int `json:"errored"`
 }
 
 type ServiceMeta struct {
@@ -58,6 +92,10 @@ type Port struct {
 type SpecMeta struct {
 	// Meta id
 	ID string `json:"id"`
+	// Parent meta id
+	Parent string `json:"parent"`
+	// Revision version
+	Revision int `json:"revision"`
 	// Meta labels
 	Labels map[string]string `json:"labels"`
 	// Meta created time

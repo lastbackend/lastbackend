@@ -39,6 +39,10 @@ func (el *EventListener) Loop() {
 			if err != nil {
 				// TODO: try to send after a small timeout
 			}
+			if spec == nil {
+				continue
+			}
+
 			el.spec <- spec
 		}
 	}

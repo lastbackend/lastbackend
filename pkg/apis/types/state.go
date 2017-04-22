@@ -18,7 +18,7 @@
 
 package types
 
-const StateWaiting   = "waiting"
+const StateProvision = "provision"
 const StateWarning   = "warning"
 const StateReady     = "ready"
 

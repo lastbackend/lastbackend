@@ -122,6 +122,9 @@ func (s *service) Create(rq *request.RequestServiceCreateS) (*types.Service, err
 		}
 	}
 
+	s.StateUpdate(&svc)
+	s.ResourcesUpdate(&svc)
+
 	if err = storage.Service().Insert(s.Context, &svc); err != nil {
 		log.Errorf("Error: insert service to db : %s", err.Error())
 		return &svc, err
@@ -157,6 +160,9 @@ func (s *service) Update(service *types.Service, rq *request.RequestServiceUpdat
 		service.Meta.Replicas = *rq.Replicas
 		s.Scale(service)
 	}
+
+	s.StateUpdate(service)
+	s.ResourcesUpdate(service)
 
 	if err = storage.Service().Update(s.Context, service); err != nil {
 		log.Error("Error: insert service to db", err)
@@ -206,6 +212,7 @@ func (s *service) AddPod(service *types.Service) error {
 	pod.Meta.ID = uuid.NewV4().String()
 	pod.Meta.Created = time.Now()
 	pod.Meta.Updated = time.Now()
+	pod.State.Provision = true
 	pod.Spec.State = types.StateStarted
 
 	if len(service.Pods) > 0 {
@@ -240,7 +247,13 @@ func (s *service) DelPod(service *types.Service) error {
 	for _, pod := range service.Pods {
 		if pod.Spec.State != types.StateDestroy {
 			log.Debugf("Mark pod for deletion: %s", pod.Meta.ID)
+			pod.State.Provision = true
 			pod.Spec.State = types.StateDestroy
+
+			for _, c := range pod.Containers {
+				c.State = types.StateProvision
+			}
+
 			break
 		}
 	}
@@ -249,6 +262,7 @@ func (s *service) DelPod(service *types.Service) error {
 }
 
 func (s *service) SetPods(pods []types.Pod) error {
+
 	var (
 		log     = ctx.Get().GetLogger()
 		storage = ctx.Get().GetStorage()
@@ -295,10 +309,45 @@ func (s *service) SetPods(pods []types.Pod) error {
 			log.Errorf("Error: set pod to db: %s", err)
 			return err
 		}
+
 	}
 
 	return nil
 }
+
+func (s *service) StateUpdate(service *types.Service) {
+
+	service.State.Replicas = types.ServiceReplicasState{}
+
+	for _, p := range service.Pods {
+		service.State.Replicas.Total++
+		switch p.State.State {
+		case types.StateCreated: service.State.Replicas.Created++
+		case types.StateStarted: service.State.Replicas.Running++
+		case types.StateStopped: service.State.Replicas.Stopped++
+		case types.StateError: service.State.Replicas.Errored++
+		}
+
+		if p.State.Provision {
+			service.State.Replicas.Provision++
+		}
+
+		if p.State.Ready {
+			service.State.Replicas.Ready++
+		}
+	}
+
+}
+func (s *service) ResourcesUpdate(service *types.Service) {
+
+	service.State.Resources = types.ServiceResourcesState{}
+
+	for _, s := range service.Spec {
+		service.State.Resources.Memory += int(s.Memory)*service.Meta.Replicas
+	}
+
+}
+
 
 func (s *service) Scale(service *types.Service) error {
 	var (
@@ -393,6 +442,12 @@ func (s *service) SetSpec(service *types.Service, id string, rq *request.Request
 		}
 
 		pod.Spec = s.GenerateSpec(service)
+		pod.State.Provision = true
+
+		for _, c := range pod.Containers {
+			c.State = types.StateProvision
+		}
+
 		service.Pods[pod.Meta.ID] = pod
 	}
 
@@ -426,6 +481,10 @@ func (s *service) DelSpec(service *types.Service, id string) error {
 	for _, pod := range service.Pods {
 		pod.Spec = s.GenerateSpec(service)
 		service.Pods[pod.Meta.ID] = pod
+
+		for _, c := range pod.Containers {
+			c.State = types.StateProvision
+		}
 	}
 
 	if err := storage.Service().Update(s.Context, service); err != nil {
@@ -457,6 +516,8 @@ func (s *service) GenerateSpec(service *types.Service) types.PodSpec {
 		cs.Meta.SetDefault()
 		cs.Meta.ID = spc.Meta.ID
 		cs.Meta.Labels = spc.Meta.Labels
+		cs.Meta.Created = time.Now()
+		cs.Meta.Updated = time.Now()
 
 		cs.Image = types.ImageSpec{
 			Name: spc.Image,
@@ -538,7 +599,9 @@ func updateSpec(opts *request.RequestServiceSpecUpdateS, spec *types.ServiceSpec
 		return errors.New("Error: spec is nil")
 	}
 
+	spec.Meta.Parent = spec.Meta.ID
 	spec.Meta.ID = uuid.NewV4().String()
+	spec.Meta.Revision++
 
 	spec.Memory = int64(32)
 

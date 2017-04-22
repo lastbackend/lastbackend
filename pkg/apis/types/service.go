@@ -73,20 +73,31 @@ type ServiceState struct {
 	State string `json:"state"`
 	// Service status
 	Status string `json:"status"`
-	// Service pods state
-	Pods ServicePodsState `json:"pods"`
+	// Service resources
+	Resources ServiceResourcesState `json:"resources"`
+	// Replicas state
+	Replicas ServiceReplicasState `json:"replicas"`
 }
 
-type ServicePodsState struct {
+type ServiceResourcesState struct {
 	// Total containers
+	Memory int `json:"memory"`
+}
+
+type ServiceReplicasState struct {
+	// Total pods
 	Total int `json:"total"`
-	// Total running containers
+	// Total pods provision
+	Provision int `json:"provision"`
+	// Total pods provision
+	Ready int `json:"ready"`
+	// Total running pods
 	Running int `json:"running"`
-	// Total created containers
+	// Total created pods
 	Created int `json:"created"`
-	// Total stopped containers
+	// Total stopped pods
 	Stopped int `json:"stopped"`
-	// Total errored containers
+	// Total errored pods
 	Errored int `json:"errored"`
 }
 
@@ -99,6 +110,8 @@ type ServiceSource struct {
 
 type SpecMeta struct {
 	Meta
+	Revision int    `json:"revision"`
+	Parent   string `json:"parent"`
 }
 
 type ServiceSpec struct {
