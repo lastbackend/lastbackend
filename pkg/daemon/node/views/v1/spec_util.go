@@ -39,7 +39,7 @@ func ToNodeSpec(obj types.NodeSpec) *Spec {
 func FromNodeSpec(spec Spec) *types.NodeSpec {
 
 	var s = new(types.NodeSpec)
-	s.Pods = make(map[string]types.PodNodeSpec)
+	s.Pods = make(map[string]types.PodNodeSpec, len(spec.Pods))
 	for _, item := range spec.Pods {
 
 		pod := types.PodNodeSpec{}

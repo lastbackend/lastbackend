@@ -68,6 +68,9 @@ func (ps *PodStorage) DelContainer(id string) {
 }
 
 func (ps *PodStorage) GetPod(id string) *types.Pod {
+	ps.lock.Lock()
+	defer ps.lock.Unlock()
+
 	pod, ok := ps.pods[id]
 	if !ok {
 		return nil

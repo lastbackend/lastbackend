@@ -37,6 +37,7 @@ func New(obj *types.Service) *Service {
 	s.Meta.Updated = obj.Meta.Updated
 	s.Meta.Created = obj.Meta.Created
 	s.Meta.Replicas = obj.Meta.Replicas
+	s.State = ToState(obj.State)
 
 	if len(obj.Spec) == 0 {
 		s.Spec = make([]SpecInfo, 0)
@@ -84,10 +85,12 @@ func ToSpecInfo(spec *types.ServiceSpec) SpecInfo {
 
 func ToSpecMeta(meta types.SpecMeta) SpecMeta {
 	m := SpecMeta{
-		ID:      meta.ID,
-		Labels:  meta.Labels,
-		Created: meta.Created,
-		Updated: meta.Updated,
+		ID:       meta.ID,
+		Parent:   meta.Parent,
+		Revision: meta.Revision,
+		Labels:   meta.Labels,
+		Created:  meta.Created,
+		Updated:  meta.Updated,
 	}
 
 	if len(m.Labels) == 0 {
@@ -95,6 +98,25 @@ func ToSpecMeta(meta types.SpecMeta) SpecMeta {
 	}
 
 	return m
+}
+
+func ToState(state types.ServiceState) ServiceState {
+	return ServiceState{
+		State: state.State,
+		Status: state.Status,
+		Replicas: ServiceReplicasState{
+			Total: state.Replicas.Total,
+			Provision: state.Replicas.Provision,
+			Ready: state.Replicas.Ready,
+			Created: state.Replicas.Created,
+			Running: state.Replicas.Running,
+			Stopped: state.Replicas.Stopped,
+			Errored: state.Replicas.Errored,
+		},
+		Resources: ServiceResourcesState{
+			Memory: state.Resources.Memory,
+		},
+	}
 }
 
 func (obj *Service) ToJson() ([]byte, error) {

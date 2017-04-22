@@ -82,7 +82,7 @@ func (t *Task) exec() {
 		t.containersCreate()
 	}
 
-	if len(t.pod.Containers) != len(t.spec.Containers) {
+	if len(t.pod.Containers) < len(t.spec.Containers) {
 		log.Debugf("Task [%s]: containers count mismatch: %d (%d)", t.id, len(t.pod.Containers), len(t.spec.Containers))
 		t.containersCreate()
 	}
@@ -181,7 +181,6 @@ func (t *Task) containersRemove() {
 
 	var (
 		log   = context.Get().GetLogger()
-		crii  = context.Get().GetCri()
 		specs = make(map[string]bool)
 	)
 
@@ -196,13 +195,7 @@ func (t *Task) containersRemove() {
 	for _, c := range t.pod.Containers {
 		log.Debugf("Task [%s]: container %s has spec %s", t.id, c.ID, c.Spec)
 		if _, ok := specs[c.Spec]; !ok || specs[c.Spec] == true {
-			log.Debugf("Task [%s]: container %s needs to be removed", t.id, c.ID)
-			err := crii.ContainerRemove(c.ID, true, true)
-			if err != nil {
-				log.Errorf("Task [%s]: container remove error: %s", t.id, err.Error())
-			}
-
-			t.pod.DelContainer(c.ID)
+			t.containerDestroy(c)
 			continue
 		}
 
@@ -214,91 +207,100 @@ func (t *Task) containersRemove() {
 func (t *Task) containersStateManage() {
 
 	log := context.Get().GetLogger()
-	crii := context.Get().GetCri()
-
 	defer t.pod.UpdateState()
 
 	log.Debugf("Task [%s]: containers state update from: %s to %s", t.id, t.pod.State.State, t.spec.State)
 
-	if t.spec.State == types.StateDestroy {
-		log.Debugf("Task [%s]: pod %s delete %d containers", t.id, t.pod.Meta.ID, len(t.pod.Containers))
-
-		for _, c := range t.pod.Containers {
-
-			err := crii.ContainerRemove(c.ID, true, true)
-			c.State = types.StateDestroyed
-			c.Status = ""
-
-			if err != nil {
-				c.State = types.StateError
-				c.Status = err.Error()
-			}
-
-			t.pod.DelContainer(c.ID)
+	for _, c := range t.pod.Containers {
+		if _, ok := t.spec.Containers[c.Spec]; !ok {
+			//	t.containerDestroy(c)
+			continue
 		}
 
-		return
-	}
-
-	// Update containers states
-	if t.spec.State == types.StateStarted  {
-		for _, c := range t.pod.Containers {
-			log.Debugf("Task [%s]: container: %s try to start", t.id, c.ID)
-			err := crii.ContainerStart(c.ID)
-			c.State = types.StateStarted
-			c.Status = ""
-
-			if err != nil {
-				log.Errorf("Task [%s]: container: %s start failed: %s", t.id, c.ID, err.Error())
-				c.State = types.StateError
-				c.Status = err.Error()
-			}
-			log.Debugf("Task [%s]: container: %s started", t.id, c.ID)
-			t.pod.SetContainer(c)
+		switch t.spec.State {
+		case types.StateDestroy:
+			t.containerDestroy(c)
+		case types.StateStarted:
+			t.containerStart(c)
+		case types.StateStopped:
+			t.containerStop(c)
+		case types.StateRestarted:
+			t.containerRestart(c)
 		}
-		return
 	}
 
-	if t.spec.State == types.StateStopped {
-		timeout := time.Duration(ContainerStopTimeout) * time.Second
+}
 
-		for _, c := range t.pod.Containers {
+func (t *Task) containerStart(c *types.Container) {
+	log := context.Get().GetLogger()
+	crii := context.Get().GetCri()
 
-			err := crii.ContainerStop(c.ID, &timeout)
+	log.Debugf("Task [%s]: container: %s try to start", t.id, c.ID)
+	err := crii.ContainerStart(c.ID)
+	c.State = types.StateStarted
+	c.Status = ""
 
-			c.State = types.StateStopped
-			c.Status = ""
+	if err != nil {
+		log.Errorf("Task [%s]: container: %s start failed: %s", t.id, c.ID, err.Error())
+		c.State = types.StateError
+		c.Status = err.Error()
+	}
+	log.Debugf("Task [%s]: container: %s started", t.id, c.ID)
+	t.pod.SetContainer(c)
+}
 
-			if err != nil {
-				log.Errorf("Task [%s]: container: stop error: %s", t.id, err.Error())
-				c.State = "error"
-				c.Status = err.Error()
-			}
-			log.Debugf("Task [%s]: container: %s stopped", t.id, c.ID)
-			t.pod.SetContainer(c)
-		}
+func (t *Task) containerStop(c *types.Container) {
+	log := context.Get().GetLogger()
+	crii := context.Get().GetCri()
 
-		return
+	timeout := time.Duration(ContainerStopTimeout) * time.Second
+	err := crii.ContainerStop(c.ID, &timeout)
+
+	c.State = types.StateStopped
+	c.Status = ""
+
+	if err != nil {
+		log.Errorf("Task [%s]: container: stop error: %s", t.id, err.Error())
+		c.State = "error"
+		c.Status = err.Error()
+	}
+	log.Debugf("Task [%s]: container: %s stopped", t.id, c.ID)
+	t.pod.SetContainer(c)
+}
+
+func (t *Task) containerRestart(c *types.Container) {
+	log := context.Get().GetLogger()
+	crii := context.Get().GetCri()
+
+	timeout := time.Duration(ContainerRestartTimeout) * time.Second
+
+	err := crii.ContainerRestart(c.ID, &timeout)
+	c.State = types.StateStarted
+	c.Status = ""
+
+	if err != nil {
+		c.State = "error"
+		c.Status = err.Error()
+	}
+	log.Debugf("Task [%s]: container: %s restarted", t.id, c.ID)
+	t.pod.SetContainer(c)
+}
+
+func (t *Task) containerDestroy(c *types.Container) {
+	log := context.Get().GetLogger()
+	crii := context.Get().GetCri()
+
+	log.Debugf("Task [%s]: pod %s delete %d containers", t.id, t.pod.Meta.ID, len(t.pod.Containers))
+	err := crii.ContainerRemove(c.ID, true, true)
+	c.State = types.StateDestroyed
+	c.Status = ""
+
+	if err != nil {
+		c.State = types.StateError
+		c.Status = err.Error()
 	}
 
-	if t.spec.State == types.StateRestarted {
-		timeout := time.Duration(ContainerRestartTimeout) * time.Second
-
-		for _, c := range t.pod.Containers {
-
-			err := crii.ContainerRestart(c.ID, &timeout)
-			c.State = types.StateStarted
-			c.Status = ""
-
-			if err != nil {
-				c.State = "error"
-				c.Status = err.Error()
-			}
-			log.Debugf("Task [%s]: container: %s restarted", t.id, c.ID)
-			t.pod.SetContainer(c)
-		}
-		return
-	}
+	t.pod.DelContainer(c.ID)
 }
 
 func (t *Task) finish() {
