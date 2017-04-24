@@ -24,10 +24,10 @@ import (
 )
 
 type Service struct {
+	Meta  ServiceMeta  `json:"meta"`
 	State ServiceState `json:"state"`
-	Meta ServiceMeta  `json:"meta"`
-	Pods []v1.PodInfo `json:"pods,omitempty"`
-	Spec []SpecInfo   `json:"spec,omitempty"`
+	Pods  []v1.PodInfo `json:"pods,omitempty"`
+	Spec  []SpecInfo   `json:"spec,omitempty"`
 }
 
 type ServiceState struct {

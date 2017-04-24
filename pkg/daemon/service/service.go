@@ -244,6 +244,7 @@ func (s *service) DelPod(service *types.Service) error {
 		if pod.Spec.State != types.StateDestroy {
 			log.Debugf("Mark pod for deletion: %s", pod.Meta.ID)
 			pod.State.Provision = true
+			pod.State.Ready = false
 			pod.Spec.State = types.StateDestroy
 
 			for _, c := range pod.Containers {
