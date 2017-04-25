@@ -335,6 +335,7 @@ func (s *service) StateUpdate(service *types.Service) {
 	}
 
 }
+
 func (s *service) ResourcesUpdate(service *types.Service) {
 
 	service.State.Resources = types.ServiceResourcesState{}
@@ -344,7 +345,6 @@ func (s *service) ResourcesUpdate(service *types.Service) {
 	}
 
 }
-
 
 func (s *service) Scale(service *types.Service) error {
 	var (
