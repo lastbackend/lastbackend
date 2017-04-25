@@ -64,7 +64,7 @@ func (pm *PodManager) SyncPod(pod types.PodNodeSpec) {
 	}
 
 	log.Debugf("Pod %s found", pod.Meta.ID)
-	if len(p.Containers) !=len(p.Containers)  {
+	if len(pod.Spec.Containers) != len(p.Containers)  {
 
 		log.Debugf("Pod %s containers len different from spec count %d(%d)", pod.Meta.ID, len(p.Containers),
 			len(p.Containers))
