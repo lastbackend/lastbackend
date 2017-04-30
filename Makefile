@@ -52,6 +52,7 @@ run-daemon:
 	go run cmd/daemon/daemon.go daemon -d
 
 run-agent:
-	go run cmd/agent/agent.go daemon -d
+	go run cmd/agent/agent.go daemon -d --hostname=node-00
+
 
 

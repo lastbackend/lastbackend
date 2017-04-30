@@ -24,7 +24,7 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/client/cmd/service"
 	"github.com/lastbackend/lastbackend/pkg/client/context"
 	s "github.com/lastbackend/lastbackend/pkg/client/storage"
-	n "github.com/lastbackend/lastbackend/pkg/daemon/namespace/views/v1"
+	n "github.com/lastbackend/lastbackend/pkg/api/namespace/views/v1"
 	h "github.com/lastbackend/lastbackend/pkg/util/http"
 	"github.com/stretchr/testify/assert"
 	"io/ioutil"

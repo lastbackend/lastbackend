@@ -115,7 +115,7 @@ func (pm *PodManager) sync(meta types.PodMeta, state types.PodState, spec types.
 	}
 
 	log.Debugf("Pod %s sync proceed", pod.Meta.ID)
-	w.Proceed(meta, state, spec, pod)
+	w.Provision(meta, state, spec, pod)
 }
 
 func NewPodManager() (*PodManager, error) {
@@ -131,7 +131,7 @@ func NewPodManager() (*PodManager, error) {
 
 	log.Debug("Restore new pod manager state")
 
-	pods, err := crii.PodList()
+	pods, err := crii.PodList(context.Get())
 	if err != nil {
 		return pm, err
 	}
