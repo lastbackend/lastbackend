@@ -40,7 +40,7 @@ type IStore interface {
 	Update(ctx context.Context, key string, obj, outPtr interface{}, ttl uint64) error
 	Delete(ctx context.Context, key string) error
 	DeleteDir(ctx context.Context, key string) error
-	Watch(ctx context.Context, key, filter string, f func(string)) error
+	Watch(ctx context.Context, key, filter string, f func(action, key string)) error
 	Begin(ctx context.Context) ITx
 }
 

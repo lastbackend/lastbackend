@@ -73,7 +73,7 @@ func (s *ImageStorage) Insert(ctx context.Context, image *types.Image) error {
 		return err
 	}
 
-	keySource := s.util.Key(ctx, imageStorage, image.Meta.Name, "source")
+	keySource := s.util.Key(ctx, imageStorage, strings.Replace(image.Meta.Name, "/", ":", -1), "source")
 	if err := tx.Create(keySource, &image.Source, 0); err != nil {
 		return err
 	}

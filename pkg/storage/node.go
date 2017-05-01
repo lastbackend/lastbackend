@@ -24,6 +24,7 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/apis/types"
 	"github.com/lastbackend/lastbackend/pkg/storage/store"
 	"time"
+	"regexp"
 )
 
 const nodeStorage = "node"
@@ -264,6 +265,29 @@ func (s *NodeStorage) Remove(ctx context.Context, node *types.Node) error {
 		return err
 	}
 
+	return nil
+}
+
+func (s *NodeStorage) Watch(ctx context.Context, service chan *types.Node) error {
+	const filter = `\b.+` + nodeStorage + `\/(.+)\/alive\b`
+
+	client, destroy, err := s.Client()
+	if err != nil {
+		return err
+	}
+	defer destroy()
+
+	r, _ := regexp.Compile(filter)
+	key := s.util.Key(ctx, nodeStorage)
+	cb := func(action, key string) {
+		keys := r.FindStringSubmatch(key)
+		if len(keys) < 2 {
+			return
+		}
+
+	}
+
+	client.Watch(ctx, key, filter, cb)
 	return nil
 }
 

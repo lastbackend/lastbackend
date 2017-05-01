@@ -79,6 +79,7 @@ func (s *service) Get(service string) (*types.Service, error) {
 	return svc, nil
 }
 
+// TODO: check available names
 func (s *service) Create(rq *request.RequestServiceCreateS) (*types.Service, error) {
 
 	var (

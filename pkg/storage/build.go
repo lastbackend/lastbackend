@@ -71,7 +71,7 @@ func (s *BuildStorage) Insert(ctx context.Context, imageName string, build *type
 		return err
 	}
 
-	keyMeta := s.util.Key(ctx, imageStorage, iname, buildStorage, fmt.Sprintf("%d", build.Meta.Created.Unix()))
+	keyMeta := s.util.Key(ctx, imageStorage, iname, buildStorage, fmt.Sprintf("%d", imeta.Builds))
 
 	if err := tx.Create(keyMeta, build, 0); err != nil {
 		return err

@@ -272,7 +272,7 @@ func (s *store) Begin(ctx context.Context) st.ITx {
 	}
 }
 
-func (s *store) Watch(ctx context.Context, key, filter string, f func(string)) error {
+func (s *store) Watch(ctx context.Context, key, filter string, f func(string, string)) error {
 	key = path.Join(s.pathPrefix, key)
 	if !strings.HasSuffix(key, "/") {
 		key += "/"
@@ -283,7 +283,7 @@ func (s *store) Watch(ctx context.Context, key, filter string, f func(string)) e
 		for _, ev := range wresp.Events {
 			r, _ := regexp.Compile(filter)
 			if (filter == "") || r.MatchString(string(ev.Kv.Key)) {
-				go f(string(ev.Kv.Key))
+				go f(ev.Type.String(), string(ev.Kv.Key))
 			}
 		}
 	}

@@ -435,7 +435,7 @@ func (s *ServiceStorage) PodsWatch(ctx context.Context, service chan *types.Serv
 
 	r, _ := regexp.Compile(filter)
 	key := s.util.Key(ctx, namespaceStorage)
-	cb := func(key string) {
+	cb := func(action, key string) {
 		keys := r.FindStringSubmatch(key)
 		if len(keys) < 3 {
 			return
@@ -451,6 +451,34 @@ func (s *ServiceStorage) PodsWatch(ctx context.Context, service chan *types.Serv
 	client.Watch(ctx, key, filter, cb)
 	return nil
 }
+
+func (s *ServiceStorage) BuildsWatch(ctx context.Context, service chan *types.Service) error {
+	const filter = `\b.+` + namespaceStorage + `\/([a-z0-9-]{36})\/` + serviceStorage + `\/([a-z0-9-]{36})\/builds/.+\b`
+	client, destroy, err := s.Client()
+	if err != nil {
+		return err
+	}
+	defer destroy()
+
+	r, _ := regexp.Compile(filter)
+	key := s.util.Key(ctx, namespaceStorage)
+	cb := func(action, key string) {
+		keys := r.FindStringSubmatch(key)
+		if len(keys) < 3 {
+			return
+		}
+
+		if svc, err := s.GetByID(ctx, keys[1], keys[2]); err == nil {
+			s.UpdateState(ctx, svc)
+			service <- svc
+		}
+
+	}
+
+	client.Watch(ctx, key, filter, cb)
+	return nil
+}
+
 
 func newServiceStorage(config store.Config, util IUtil) *ServiceStorage {
 	s := new(ServiceStorage)
