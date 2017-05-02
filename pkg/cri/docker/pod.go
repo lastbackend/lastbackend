@@ -37,7 +37,6 @@ func (r *Runtime) PodList(ctx context.Context) ([]*types.Pod, error) {
 	items, err := r.client.ContainerList(ctx.Background(), docker.ContainerListOptions{
 		All: true,
 	})
-
 	if err != nil {
 		return list, err
 	}

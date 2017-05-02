@@ -58,13 +58,13 @@ func (pm *PodManager) SyncPod(pod types.PodNodeSpec) {
 		return
 	}
 
-	if p.State.Provision  {
+	if p.State.Provision {
 		log.Debugf("Pod %s is not in %s state > skip sync", p.Meta.ID, types.StateReady)
 		return
 	}
 
 	log.Debugf("Pod %s found", pod.Meta.ID)
-	if len(pod.Spec.Containers) != len(p.Containers)  {
+	if len(pod.Spec.Containers) != len(p.Containers) {
 
 		log.Debugf("Pod %s containers len different from spec count %d(%d)", pod.Meta.ID, len(p.Containers),
 			len(p.Containers))

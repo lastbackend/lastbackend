@@ -19,14 +19,14 @@
 package context
 
 import (
+	"context"
 	"github.com/lastbackend/lastbackend/pkg/agent/config"
-	"github.com/lastbackend/lastbackend/pkg/cri"
+	"github.com/lastbackend/lastbackend/pkg/agent/events/listener"
 	"github.com/lastbackend/lastbackend/pkg/agent/storage"
+	_c "github.com/lastbackend/lastbackend/pkg/context"
+	"github.com/lastbackend/lastbackend/pkg/cri"
 	"github.com/lastbackend/lastbackend/pkg/logger"
 	"github.com/lastbackend/lastbackend/pkg/util/http"
-	"context"
-	"github.com/lastbackend/lastbackend/pkg/agent/events/listener"
-	_c "github.com/lastbackend/lastbackend/pkg/context"
 )
 
 var _ctx ctx
@@ -62,8 +62,8 @@ func (c *ctx) GetConfig() *config.Config {
 	return c.config
 }
 
-func (c *ctx) SetCri(_cri cri.CRI) {
-	c.cri = _cri
+func (c *ctx) SetCri(cri cri.CRI) {
+	c.cri = cri
 }
 
 func (c *ctx) GetCri() cri.CRI {
@@ -86,14 +86,14 @@ func (c *ctx) GetHttpClient() *http.RawReq {
 	return c.http
 }
 
-func (c *ctx) SetEventListener (el *listener.EventListener) {
+func (c *ctx) SetEventListener(el *listener.EventListener) {
 	c.event = el
 }
 
-func (c *ctx) GetEventListener () *listener.EventListener {
+func (c *ctx) GetEventListener() *listener.EventListener {
 	return c.event
 }
 
-func Background() context.Context {
+func (c *ctx) Background() context.Context {
 	return context.Background()
 }

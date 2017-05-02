@@ -22,20 +22,14 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/config"
 	"github.com/lastbackend/lastbackend/pkg/cri"
 	"github.com/lastbackend/lastbackend/pkg/cri/docker"
+	"github.com/pkg/errors"
 )
 
 func New(cfg config.Runtime) (cri.CRI, error) {
-	var cri cri.CRI
-	var err error
-
 	switch cfg.CRI {
 	case "docker":
-		cri, err = docker.New(cfg.Docker)
+		return docker.New(cfg.Docker)
+	default:
+		return nil, errors.New(`container runtime interface not support`)
 	}
-
-	if err != nil {
-		return cri, err
-	}
-
-	return cri, err
 }
