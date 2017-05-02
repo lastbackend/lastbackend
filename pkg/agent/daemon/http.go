@@ -28,7 +28,7 @@ import (
 func Listen(host string, port int) error {
 
 	log := context.Get().GetLogger()
-	log.Debug("Listen HTTP server")
+	log.Debug("Listen API server")
 
 	router := mux.NewRouter()
 	router.Methods("OPTIONS").HandlerFunc(http.Headers)

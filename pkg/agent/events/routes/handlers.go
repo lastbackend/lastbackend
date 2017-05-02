@@ -22,7 +22,7 @@ import (
 	"encoding/json"
 	"github.com/lastbackend/lastbackend/pkg/agent/context"
 	"github.com/lastbackend/lastbackend/pkg/agent/runtime"
-	"github.com/lastbackend/lastbackend/pkg/daemon/node/views/v1"
+	"github.com/lastbackend/lastbackend/pkg/api/node/views/v1"
 	"github.com/lastbackend/lastbackend/pkg/errors"
 	"io/ioutil"
 	"net/http"

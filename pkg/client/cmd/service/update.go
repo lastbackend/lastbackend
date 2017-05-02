@@ -23,7 +23,7 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/apis/types"
 	nspace "github.com/lastbackend/lastbackend/pkg/client/cmd/namespace"
 	c "github.com/lastbackend/lastbackend/pkg/client/context"
-	n "github.com/lastbackend/lastbackend/pkg/daemon/namespace/views/v1"
+	n "github.com/lastbackend/lastbackend/pkg/api/namespace/views/v1"
 	"github.com/lastbackend/lastbackend/pkg/errors"
 )
 

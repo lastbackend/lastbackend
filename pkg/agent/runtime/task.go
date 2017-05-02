@@ -20,11 +20,12 @@ package runtime
 
 import (
 	"fmt"
+	"time"
+
 	"github.com/lastbackend/lastbackend/pkg/agent/context"
 	"github.com/lastbackend/lastbackend/pkg/agent/events"
 	"github.com/lastbackend/lastbackend/pkg/apis/types"
 	"github.com/satori/go.uuid"
-	"time"
 )
 
 const ContainerRestartTimeout = 10 // seconds
@@ -43,7 +44,7 @@ type Task struct {
 	pod *types.Pod
 }
 
-func (t *Task) exec() {
+func (t *Task) start() {
 
 	var (
 		log = context.Get().GetLogger()
@@ -125,13 +126,13 @@ func (t *Task) imagesUpdate() {
 		}
 
 		log.Debugf("Task [%s]: image start pull: %s", t.id, spec.Image.Name)
-		crii.ImagePull(&spec.Image)
+		crii.ImagePull(context.Get(), &spec.Image)
 	}
 
 	// Clean up unused images
 	for name := range images {
 		log.Debugf("Task [%s]: delete unused images: %s", t.id, name)
-		crii.ImageRemove(name)
+		crii.ImageRemove(context.Get(), name)
 	}
 
 }
@@ -163,7 +164,7 @@ func (t *Task) containersCreate() {
 		}
 
 		spec.Labels["LB_META"] = fmt.Sprintf("%s/%s/%s", t.pod.Meta.ID, t.pod.Spec.ID, spec.Meta.ID)
-		c.ID, err = crii.ContainerCreate(spec)
+		c.ID, err = crii.ContainerCreate(context.Get(), spec)
 
 		if err != nil {
 			log.Errorf("Task [%s]: container create error %s", t.id, err.Error())
@@ -236,7 +237,7 @@ func (t *Task) containerStart(c *types.Container) {
 	crii := context.Get().GetCri()
 
 	log.Debugf("Task [%s]: container: %s try to start", t.id, c.ID)
-	err := crii.ContainerStart(c.ID)
+	err := crii.ContainerStart(context.Get(), c.ID)
 	c.State = types.StateStarted
 	c.Status = ""
 
@@ -254,7 +255,7 @@ func (t *Task) containerStop(c *types.Container) {
 	crii := context.Get().GetCri()
 
 	timeout := time.Duration(ContainerStopTimeout) * time.Second
-	err := crii.ContainerStop(c.ID, &timeout)
+	err := crii.ContainerStop(context.Get(), c.ID, &timeout)
 
 	c.State = types.StateStopped
 	c.Status = ""
@@ -274,7 +275,7 @@ func (t *Task) containerRestart(c *types.Container) {
 
 	timeout := time.Duration(ContainerRestartTimeout) * time.Second
 
-	err := crii.ContainerRestart(c.ID, &timeout)
+	err := crii.ContainerRestart(context.Get(), c.ID, &timeout)
 	c.State = types.StateStarted
 	c.Status = ""
 
@@ -291,7 +292,7 @@ func (t *Task) containerDestroy(c *types.Container) {
 	crii := context.Get().GetCri()
 
 	log.Debugf("Task [%s]: pod %s delete %d containers", t.id, t.pod.Meta.ID, len(t.pod.Containers))
-	err := crii.ContainerRemove(c.ID, true, true)
+	err := crii.ContainerRemove(context.Get(), c.ID, true, true)
 	c.State = types.StateDestroyed
 	c.Status = ""
 

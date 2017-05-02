@@ -18,30 +18,13 @@
 
 package config
 
+import "github.com/lastbackend/lastbackend/pkg/config"
+
 // The structure of the config to run the daemon
 type Config struct {
-	Debug   *bool
-	Runtime *Runtime
-	HTTP    *HTTP
-	Daemon  *Daemon
-}
 
-type Runtime struct {
-	CRI    *string
-	Docker *Docker
-}
-
-type Docker struct {
-	Host, Certs, Version *string
-	TLS                  *bool
-}
-
-type Daemon struct {
-	Host *string
-	Port *int
-}
-
-type HTTP struct {
-	Host *string
-	Port *int
+	Debug   		bool
+	Host    		config.Host
+	Runtime 		config.Runtime
+	APIServer   config.APIServer
 }

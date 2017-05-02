@@ -22,7 +22,7 @@ import (
 	"fmt"
 	nspace "github.com/lastbackend/lastbackend/pkg/client/cmd/namespace"
 	c "github.com/lastbackend/lastbackend/pkg/client/context"
-	s "github.com/lastbackend/lastbackend/pkg/daemon/service/views/v1"
+	s "github.com/lastbackend/lastbackend/pkg/api/service/views/v1"
 	"github.com/lastbackend/lastbackend/pkg/errors"
 )
 

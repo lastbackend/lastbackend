@@ -22,7 +22,7 @@ import (
 	"encoding/json"
 	"github.com/lastbackend/lastbackend/pkg/client/cmd/namespace"
 	"github.com/lastbackend/lastbackend/pkg/client/context"
-	n "github.com/lastbackend/lastbackend/pkg/daemon/namespace/views/v1"
+	n "github.com/lastbackend/lastbackend/pkg/api/namespace/views/v1"
 	h "github.com/lastbackend/lastbackend/pkg/util/http"
 	"github.com/stretchr/testify/assert"
 	"net/http"

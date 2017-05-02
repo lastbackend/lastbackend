@@ -20,12 +20,13 @@ package context
 
 import (
 	"github.com/lastbackend/lastbackend/pkg/agent/config"
-	"github.com/lastbackend/lastbackend/pkg/agent/runtime/cri"
+	"github.com/lastbackend/lastbackend/pkg/cri"
 	"github.com/lastbackend/lastbackend/pkg/agent/storage"
 	"github.com/lastbackend/lastbackend/pkg/logger"
 	"github.com/lastbackend/lastbackend/pkg/util/http"
-	"golang.org/x/net/context"
+	"context"
 	"github.com/lastbackend/lastbackend/pkg/agent/events/listener"
+	_c "github.com/lastbackend/lastbackend/pkg/context"
 )
 
 var _ctx ctx
@@ -35,6 +36,8 @@ func Get() *ctx {
 }
 
 type ctx struct {
+	_c.Context
+
 	cri     cri.CRI
 	logger  *logger.Logger
 	config  *config.Config

@@ -41,7 +41,7 @@ func (el *EventListener) Listen() {
 	pods := context.Get().GetStorage().Pods()
 	crii := context.Get().GetCri()
 
-	events := crii.Subscribe()
+	events := crii.Subscribe(context.Get(), context.Get().GetStorage().PodStorage)
 	go func() {
 		for {
 			select {

@@ -25,16 +25,24 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/apis/types"
 	"github.com/shirou/gopsutil/mem"
 	"time"
+	"github.com/lastbackend/lastbackend/pkg/agent/config"
 )
 
 const MinContainerMemory = 32
 
 func GetNodeMeta() types.NodeMeta {
+	var cfg  = config.Get().Host
 	var meta = types.NodeMeta{}
 
 	meta.Created = time.Now()
 	meta.Updated = time.Now()
-	meta.Hostname, _ = system.GetHostname()
+
+	if cfg.Hostname != nil {
+		meta.Hostname = *cfg.Hostname
+	} else {
+		meta.Hostname, _ = system.GetHostname()
+	}
+
 	meta.State.Capacity = GetNodeCapacity()
 	meta.State.Allocated = GetNodeAllocation()
 
