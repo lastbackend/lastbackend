@@ -39,7 +39,7 @@ type ETCD struct {
 }
 
 type Host struct {
-	Hostname *string
+	Hostname string
 }
 
 type Runtime struct {

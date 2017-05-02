@@ -23,8 +23,8 @@ import (
 	"fmt"
 	"github.com/lastbackend/lastbackend/pkg/apis/types"
 	"github.com/lastbackend/lastbackend/pkg/storage/store"
-	"time"
 	"regexp"
+	"time"
 )
 
 const nodeStorage = "node"
@@ -37,7 +37,6 @@ type NodeStorage struct {
 }
 
 func (s *NodeStorage) List(ctx context.Context) ([]*types.Node, error) {
-
 	const filter = `\b(.+)` + nodeStorage + `\/(.+)\/(meta|state)\b`
 	nodes := []*types.Node{}
 	client, destroy, err := s.Client()
@@ -47,11 +46,9 @@ func (s *NodeStorage) List(ctx context.Context) ([]*types.Node, error) {
 	defer destroy()
 
 	key := s.util.Key(ctx, nodeStorage)
-
 	if err := client.List(ctx, key, filter, &nodes); err != nil {
 		return nil, err
 	}
-
 	return nodes, nil
 }
 

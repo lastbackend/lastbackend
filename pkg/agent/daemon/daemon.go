@@ -19,20 +19,20 @@
 package daemon
 
 import (
+	"fmt"
 	"github.com/Sirupsen/logrus"
 	"github.com/jawher/mow.cli"
 	"github.com/lastbackend/lastbackend/pkg/agent/config"
 	"github.com/lastbackend/lastbackend/pkg/agent/context"
+	"github.com/lastbackend/lastbackend/pkg/agent/events/listener"
 	"github.com/lastbackend/lastbackend/pkg/agent/runtime"
-	"github.com/lastbackend/lastbackend/pkg/cri/cri"
 	"github.com/lastbackend/lastbackend/pkg/agent/storage"
+	"github.com/lastbackend/lastbackend/pkg/cri/cri"
 	"github.com/lastbackend/lastbackend/pkg/logger"
 	"github.com/lastbackend/lastbackend/pkg/util/http"
 	"os"
 	"os/signal"
 	"syscall"
-	"github.com/lastbackend/lastbackend/pkg/agent/events/listener"
-	"fmt"
 )
 
 func Agent(cmd *cli.Cmd) {
@@ -75,14 +75,13 @@ func Agent(cmd *cli.Cmd) {
 	})
 
 	cfg.APIServer.Port = *cmd.Int(cli.IntOpt{
-		Name: "port", Value: 2966, Desc: "API server listen port",
+		Name: "port", Value: 2967, Desc: "API server listen port",
 		EnvVar: "LB_AGENT_PORT", HideValue: true,
 	})
 
-
-	cfg.Host.Hostname = cmd.String(cli.StringOpt{
-		Name: "hostname", Desc: "Agent hostname",
-		EnvVar: "LB_HOSTName", HideValue: true,
+	cfg.Host.Hostname = *cmd.String(cli.StringOpt{
+		Name: "hostname", Value: "", Desc: "Agent hostname",
+		EnvVar: "LB_HOSTNAME", HideValue: true,
 	})
 
 	cmd.Before = func() {
@@ -99,6 +98,9 @@ func Agent(cmd *cli.Cmd) {
 
 		rntm := runtime.Get()
 		crii, err := cri.New(cfg.Runtime)
+		if err != nil {
+			ctx.GetLogger().Errorf("Cannot initialize runtime: %s", err.Error())
+		}
 
 		ctx.SetConfig(cfg)
 		ctx.SetLogger(logger.New(cfg.Debug, 9))
@@ -106,10 +108,6 @@ func Agent(cmd *cli.Cmd) {
 
 		ctx.SetHttpClient(http.New(fmt.Sprintf("%s:%d", cfg.APIServer.Host, cfg.APIServer.Port)))
 		ctx.SetEventListener(listener.New(ctx.GetHttpClient(), rntm.GetSpecChan()))
-
-		if err != nil {
-			ctx.GetLogger().Errorf("Cannot initialize runtime: %s", err.Error())
-		}
 
 		ctx.SetCri(crii)
 

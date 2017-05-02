@@ -322,10 +322,14 @@ func (s *service) StateUpdate(service *types.Service) {
 	for _, p := range service.Pods {
 		service.State.Replicas.Total++
 		switch p.State.State {
-		case types.StateCreated: service.State.Replicas.Created++
-		case types.StateStarted: service.State.Replicas.Running++
-		case types.StateStopped: service.State.Replicas.Stopped++
-		case types.StateError: service.State.Replicas.Errored++
+		case types.StateCreated:
+			service.State.Replicas.Created++
+		case types.StateStarted:
+			service.State.Replicas.Running++
+		case types.StateStopped:
+			service.State.Replicas.Stopped++
+		case types.StateError:
+			service.State.Replicas.Errored++
 		}
 
 		if p.State.Provision {
@@ -344,7 +348,7 @@ func (s *service) ResourcesUpdate(service *types.Service) {
 	service.State.Resources = types.ServiceResourcesState{}
 
 	for _, s := range service.Spec {
-		service.State.Resources.Memory += int(s.Memory)*service.Meta.Replicas
+		service.State.Resources.Memory += int(s.Memory) * service.Meta.Replicas
 	}
 
 }

@@ -19,9 +19,9 @@
 package listener
 
 import (
+	"github.com/lastbackend/lastbackend/pkg/api/node/views/v1"
 	"github.com/lastbackend/lastbackend/pkg/apis/types"
 	"github.com/lastbackend/lastbackend/pkg/errors"
-	"github.com/lastbackend/lastbackend/pkg/api/node/views/v1"
 	"github.com/lastbackend/lastbackend/pkg/util/http"
 )
 
@@ -48,7 +48,7 @@ func (el *EventListener) Loop() {
 	}
 }
 
-func (el *EventListener) request (event *types.Event) (*types.NodeSpec, error) {
+func (el *EventListener) request(event *types.Event) (*types.NodeSpec, error) {
 	var (
 		er       = new(errors.Http)
 		endpoint = "/node/event"
@@ -60,6 +60,7 @@ func (el *EventListener) request (event *types.Event) (*types.NodeSpec, error) {
 		AddHeader("Content-Type", "application/json").
 		BodyJSON(event).
 		Request(&spec, er)
+
 	if err != nil {
 		return nil, err
 	}
@@ -75,14 +76,14 @@ func (el *EventListener) request (event *types.Event) (*types.NodeSpec, error) {
 	return v1.FromNodeSpec(spec), nil
 }
 
-func (el *EventListener) Send(event *types.Event)  {
+func (el *EventListener) Send(event *types.Event) {
 	el.events <- event
 }
 
 func New(http *http.RawReq, spec chan *types.NodeSpec) *EventListener {
 	el := new(EventListener)
-	el.http   = http
-	el.spec   = spec
+	el.http = http
+	el.spec = spec
 	el.events = make(chan *types.Event)
 
 	go el.Loop()
