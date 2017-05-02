@@ -165,7 +165,7 @@ func (n *Node) Allocate(c context.Context, spec types.PodSpec) (*types.Node, err
 		}
 	}
 
-	if node.Meta.Hostname == "" {
+	if node == nil {
 		log.Error("Node: Allocate: Available node not found")
 		return nil, errors.New("Available node not found")
 	}
