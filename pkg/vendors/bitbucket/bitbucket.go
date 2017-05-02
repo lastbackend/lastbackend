@@ -23,7 +23,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/lastbackend/lastbackend/pkg/vendors/interfaces"
+	"github.com/lastbackend/lastbackend/pkg/vendors/types"
 	"golang.org/x/oauth2"
 	"io"
 	"io/ioutil"
@@ -33,84 +33,32 @@ import (
 	"time"
 )
 
-// const
-
 const (
 	API_V1_URL = "https://bitbucket.org"
 	API_V2_URL = "https://api.bitbucket.org"
-	TOKEN_URL  = "https://bitbucket.org/site/oauth2/access_token"
 )
 
-// Model
-
 type BitBucket struct {
-	proto interfaces.OAuth2
+	types.Vendor
 }
 
-// IVendor
-
-func GetClient(clientID, clientSecretID, redirectURI string) *BitBucket {
-	return &BitBucket{proto: interfaces.OAuth2{ClientID: clientID, ClientSecret: clientSecretID, RedirectUri: redirectURI}}
+func GetClient(token string) *BitBucket {
+	c := new(BitBucket)
+	c.Token = &oauth2.Token{AccessToken: token}
+	c.Name = "bitbucket"
+	c.Host = "bitbucket.org"
+	return c
 }
 
-func (BitBucket) GetVendorInfo() *interfaces.Vendor {
-	return &interfaces.Vendor{Vendor: "bitbucket", Host: "bitbucket.org"}
+func (b *BitBucket) VendorInfo() *types.Vendor {
+	return &b.Vendor
 }
 
-// IOAuth2 func
-
-func (g BitBucket) GetToken(code string) (*oauth2.Token, error) {
-
-	token, err := g.getOAuth2Config().Exchange(oauth2.NoContext, code)
-	if err != nil {
-		return nil, err
-	}
-
-	return token, nil
-}
-
-func (g BitBucket) RefreshToken(token *oauth2.Token) (*oauth2.Token, bool, error) {
+func (b *BitBucket) GetUser() (*types.User, error) {
 
 	var err error
 
-	if !token.Expiry.Before(time.Now()) || token.RefreshToken == "" {
-		return token, false, nil
-	}
-
-	restoredToken := &oauth2.Token{
-		RefreshToken: token.RefreshToken,
-	}
-
-	c := g.getOAuth2Config().Client(oauth2.NoContext, restoredToken)
-
-	newToken, err := c.Transport.(*oauth2.Transport).Source.Token()
-	if err != nil {
-		return nil, false, err
-	}
-
-	return newToken, true, nil
-}
-
-// IOAuth2 - Private functions
-
-func (g BitBucket) getOAuth2Config() *oauth2.Config {
-	return &oauth2.Config{
-		ClientID:     g.proto.ClientID,
-		ClientSecret: g.proto.ClientSecret,
-		RedirectURL:  g.proto.RedirectUri,
-		Endpoint: oauth2.Endpoint{
-			TokenURL: TOKEN_URL,
-		},
-	}
-}
-
-// IVCS func
-
-func (BitBucket) GetUser(token *oauth2.Token) (*interfaces.User, error) {
-
-	var err error
-
-	client := oauth2.NewClient(oauth2.NoContext, oauth2.StaticTokenSource(token))
+	client := oauth2.NewClient(oauth2.NoContext, oauth2.StaticTokenSource(b.Token))
 
 	payload := struct {
 		Username string `json:"username"`
@@ -130,7 +78,7 @@ func (BitBucket) GetUser(token *oauth2.Token) (*interfaces.User, error) {
 		return nil, err
 	}
 
-	var user = new(interfaces.User)
+	var user = new(types.User)
 
 	user.Username = payload.Username
 	user.ServiceID = payload.ID
@@ -165,7 +113,7 @@ func (BitBucket) GetUser(token *oauth2.Token) (*interfaces.User, error) {
 	return user, nil
 }
 
-func (BitBucket) ListRepositories(token *oauth2.Token, username string, org bool) (*interfaces.VCSRepositories, error) {
+func (b *BitBucket) ListRepositories(username string, org bool) (*types.VCSRepositories, error) {
 
 	var res *http.Response
 	var err error
@@ -180,7 +128,7 @@ func (BitBucket) ListRepositories(token *oauth2.Token, username string, org bool
 		} `json:"values"`
 	}{}
 
-	client := oauth2.NewClient(oauth2.NoContext, oauth2.StaticTokenSource(token))
+	client := oauth2.NewClient(oauth2.NoContext, oauth2.StaticTokenSource(b.Token))
 
 	var uri = fmt.Sprintf("%s/2.0/repositories?role=owner", API_V2_URL)
 	if org {
@@ -197,10 +145,10 @@ func (BitBucket) ListRepositories(token *oauth2.Token, username string, org bool
 		return nil, err
 	}
 
-	var repositories = new(interfaces.VCSRepositories)
+	var repositories = new(types.VCSRepositories)
 
 	for _, repo := range payload.Repos {
-		repository := new(interfaces.VCSRepository)
+		repository := new(types.VCSRepository)
 
 		repository.Name = repo.Name
 		repository.Description = repo.Description
@@ -211,9 +159,9 @@ func (BitBucket) ListRepositories(token *oauth2.Token, username string, org bool
 	return repositories, nil
 }
 
-func (BitBucket) ListBranches(token *oauth2.Token, owner, repo string) (*interfaces.VCSBranches, error) {
+func (b *BitBucket) ListBranches(owner, repo string) (*types.VCSBranches, error) {
 
-	var branches = new(interfaces.VCSBranches)
+	var branches = new(types.VCSBranches)
 
 	repo = strings.ToLower(repo)
 	owner = strings.ToLower(owner)
@@ -225,7 +173,7 @@ func (BitBucket) ListBranches(token *oauth2.Token, owner, repo string) (*interfa
 		} `json:"values"`
 	}{}
 
-	client := oauth2.NewClient(oauth2.NoContext, oauth2.StaticTokenSource(token))
+	client := oauth2.NewClient(oauth2.NoContext, oauth2.StaticTokenSource(b.Token))
 
 	var uri = fmt.Sprintf("%s/2.0/repositories/%s/%s/refs/branches?pagelen=100", API_V2_URL, owner, repo)
 
@@ -240,7 +188,7 @@ func (BitBucket) ListBranches(token *oauth2.Token, owner, repo string) (*interfa
 
 	for _, br := range payload.Branches {
 		if br.Type == "branch" {
-			branch := new(interfaces.VCSBranch)
+			branch := new(types.VCSBranch)
 
 			branch.Name = br.Name
 			*branches = append(*branches, *branch)
@@ -250,7 +198,7 @@ func (BitBucket) ListBranches(token *oauth2.Token, owner, repo string) (*interfa
 	return branches, nil
 }
 
-func (BitBucket) GetLastCommitOfBranch(token *oauth2.Token, owner, repo, branch string) (*interfaces.Commit, error) {
+func (b *BitBucket) GetLastCommitOfBranch(owner, repo, branch string) (*types.Commit, error) {
 
 	repo = strings.ToLower(repo)
 	owner = strings.ToLower(owner)
@@ -270,7 +218,7 @@ func (BitBucket) GetLastCommitOfBranch(token *oauth2.Token, owner, repo, branch 
 		} `json:"values"`
 	}{}
 
-	client := oauth2.NewClient(oauth2.NoContext, oauth2.StaticTokenSource(token))
+	client := oauth2.NewClient(oauth2.NoContext, oauth2.StaticTokenSource(b.Token))
 
 	var uri = fmt.Sprintf("%s/2.0/repositories/%s/%s/commits/%s", API_V2_URL, owner, repo, branch)
 
@@ -295,7 +243,7 @@ func (BitBucket) GetLastCommitOfBranch(token *oauth2.Token, owner, repo, branch 
 		return nil, nil
 	}
 
-	var commit = new(interfaces.Commit)
+	var commit = new(types.Commit)
 	commit.Username = payload.Commits[0].Author.User.Username
 	commit.Hash = payload.Commits[0].Hash
 	commit.Message = payload.Commits[0].Message
@@ -305,12 +253,12 @@ func (BitBucket) GetLastCommitOfBranch(token *oauth2.Token, owner, repo, branch 
 	return commit, nil
 }
 
-func (BitBucket) GetReadme(token *oauth2.Token, owner string, repo string) (string, error) {
+func (b *BitBucket) GetReadme(owner string, repo string) (string, error) {
 
 	repo = strings.ToLower(repo)
 	owner = strings.ToLower(owner)
 
-	client := oauth2.NewClient(oauth2.NoContext, oauth2.StaticTokenSource(token))
+	client := oauth2.NewClient(oauth2.NoContext, oauth2.StaticTokenSource(b.Token))
 
 	var uri = fmt.Sprintf("%s/1.0/repositories/%s/%s/raw/master/README.md", API_V1_URL, owner, repo)
 
@@ -332,7 +280,7 @@ func (BitBucket) GetReadme(token *oauth2.Token, owner string, repo string) (stri
 	return string(content), nil
 }
 
-func (BitBucket) PushPayload(data []byte) (*interfaces.VCSBranch, error) {
+func (b *BitBucket) PushPayload(data []byte) (*types.VCSBranch, error) {
 
 	var err error
 
@@ -363,9 +311,9 @@ func (BitBucket) PushPayload(data []byte) (*interfaces.VCSBranch, error) {
 
 	r, _ := regexp.Compile("<(.+)>$")
 
-	branch := new(interfaces.VCSBranch)
+	branch := new(types.VCSBranch)
 	branch.Name = payload.Push.Changes[0].New.Name
-	branch.LastCommit = interfaces.Commit{
+	branch.LastCommit = types.Commit{
 		Hash:     payload.Push.Changes[0].Commits[0].Hash,
 		Date:     payload.Push.Changes[0].Commits[0].Date,
 		Username: payload.Push.Changes[0].Commits[0].Author.User.Username,
@@ -376,7 +324,7 @@ func (BitBucket) PushPayload(data []byte) (*interfaces.VCSBranch, error) {
 	return branch, nil
 }
 
-func (BitBucket) CreateHook(token *oauth2.Token, hookID, owner, repo, host string) (*string, error) {
+func (b *BitBucket) CreateHook(hookID, owner, repo, host string) (*string, error) {
 
 	repo = strings.ToLower(repo)
 	owner = strings.ToLower(owner)
@@ -402,7 +350,7 @@ func (BitBucket) CreateHook(token *oauth2.Token, hookID, owner, repo, host strin
 		return nil, err
 	}
 
-	client := oauth2.NewClient(oauth2.NoContext, oauth2.StaticTokenSource(token))
+	client := oauth2.NewClient(oauth2.NoContext, oauth2.StaticTokenSource(b.Token))
 
 	var uri = fmt.Sprintf("%s/2.0/repositories/%s/%s/hooks", API_V2_URL, owner, repo)
 
@@ -424,14 +372,14 @@ func (BitBucket) CreateHook(token *oauth2.Token, hookID, owner, repo, host strin
 	return &id, nil
 }
 
-func (BitBucket) RemoveHook(token *oauth2.Token, hookID, owner, repo string) error {
+func (b *BitBucket) RemoveHook(hookID, owner, repo string) error {
 
 	var err error
 
 	repo = strings.ToLower(repo)
 	owner = strings.ToLower(owner)
 
-	client := oauth2.NewClient(oauth2.NoContext, oauth2.StaticTokenSource(token))
+	client := oauth2.NewClient(oauth2.NoContext, oauth2.StaticTokenSource(b.Token))
 
 	var uri = fmt.Sprintf("%s/2.0/repositories/%s/%s/hooks/%s", API_V2_URL, owner, repo, hookID)
 

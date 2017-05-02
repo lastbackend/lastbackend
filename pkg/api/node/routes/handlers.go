@@ -91,3 +91,34 @@ func NodeEventH(w http.ResponseWriter, r *http.Request) {
 	}
 
 }
+
+func NodeListH(w http.ResponseWriter, r *http.Request) {
+
+	var (
+		err error
+		log = context.Get().GetLogger()
+	)
+
+	log.Debug("Node list handler")
+
+	n := node.New()
+	nodes, err := n.List(r.Context())
+	if err != nil {
+		log.Errorf("Error: get list nodes: %s", err.Error())
+		errors.HTTP.InternalServerError(w)
+		return
+	}
+
+	response, err := v1.NewNodeList(nodes).ToJson()
+	if err != nil {
+		log.Error("Error: convert struct to json", err.Error())
+		errors.HTTP.InternalServerError(w)
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+	if _, err := w.Write(response); err != nil {
+		log.Error("Error: write response", err.Error())
+		return
+	}
+}
