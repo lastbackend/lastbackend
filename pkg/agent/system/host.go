@@ -20,25 +20,25 @@ package system
 
 import (
 	"fmt"
+	"github.com/lastbackend/lastbackend/pkg/agent/config"
 	"github.com/lastbackend/lastbackend/pkg/agent/context"
 	"github.com/lastbackend/lastbackend/pkg/agent/utils/system"
 	"github.com/lastbackend/lastbackend/pkg/apis/types"
 	"github.com/shirou/gopsutil/mem"
 	"time"
-	"github.com/lastbackend/lastbackend/pkg/agent/config"
 )
 
 const MinContainerMemory = 32
 
 func GetNodeMeta() types.NodeMeta {
-	var cfg  = config.Get().Host
+	var cfg = config.Get().Host
 	var meta = types.NodeMeta{}
 
 	meta.Created = time.Now()
 	meta.Updated = time.Now()
 
-	if cfg.Hostname != nil {
-		meta.Hostname = *cfg.Hostname
+	if cfg.Hostname != "" {
+		meta.Hostname = cfg.Hostname
 	} else {
 		meta.Hostname, _ = system.GetHostname()
 	}

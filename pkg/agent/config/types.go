@@ -22,7 +22,6 @@ import "github.com/lastbackend/lastbackend/pkg/config"
 
 // The structure of the config to run the daemon
 type Config struct {
-
 	Debug   		bool
 	Host    		config.Host
 	Runtime 		config.Runtime
