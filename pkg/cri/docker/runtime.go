@@ -34,11 +34,13 @@ type Runtime struct {
 
 func New(cfg config.Docker) (*Runtime, error) {
 
-	var cli *http.Client
-	var err error
+	var (
+		err error
+		cli *http.Client
+		r   = new(Runtime)
+	)
 
 	fmt.Println("Use docker CRI")
-	r := &Runtime{}
 
 	if cfg.Certs != "" {
 
@@ -75,7 +77,7 @@ func New(cfg config.Docker) (*Runtime, error) {
 
 	r.client, err = client.NewClient(host, version, cli, nil)
 	if err != nil {
-		return r, err
+		return nil, err
 	}
 
 	return r, nil
