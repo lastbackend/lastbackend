@@ -26,7 +26,6 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/vendors/types"
 	"golang.org/x/oauth2"
 	"io"
-	"io/ioutil"
 	"net/http"
 	"regexp"
 	"strings"
@@ -34,8 +33,7 @@ import (
 )
 
 const (
-	API_V1_URL = "https://bitbucket.org"
-	API_V2_URL = "https://api.bitbucket.org"
+	API_URL = "https://api.bitbucket.org"
 )
 
 type BitBucket struct {
@@ -58,22 +56,20 @@ func (b *BitBucket) GetUser() (*types.User, error) {
 
 	var err error
 
-	client := oauth2.NewClient(oauth2.NoContext, oauth2.StaticTokenSource(b.Token))
-
 	payload := struct {
 		Username string `json:"username"`
 		ID       string `json:"uuid"`
 	}{}
 
-	var uri = fmt.Sprintf("%s/2.0/user", API_V2_URL)
+	var uri = fmt.Sprintf("https://%s@api.bitbucket.org/2.0/user", b.Token.AccessToken)
 
-	resUser, err := client.Get(uri)
-
+	res, err := http.Get(uri)
 	if err != nil {
 		return nil, err
 	}
+	defer res.Body.Close()
 
-	err = json.NewDecoder(resUser.Body).Decode(&payload)
+	err = json.NewDecoder(res.Body).Decode(&payload)
 	if err != nil {
 		return nil, err
 	}
@@ -83,39 +79,11 @@ func (b *BitBucket) GetUser() (*types.User, error) {
 	user.Username = payload.Username
 	user.ServiceID = payload.ID
 
-	emailsResponse := struct {
-		Emails []struct {
-			Email     string `json:"email"`
-			Confirmed bool   `json:"is_confirmed"`
-			Primary   bool   `json:"is_primary"`
-		} `json:"values"`
-	}{}
-
-	uri = fmt.Sprintf("%s/2.0/user/emails", API_V2_URL)
-
-	resEmails, err := client.Get(uri)
-	if err != nil {
-		return nil, err
-	}
-
-	err = json.NewDecoder(resEmails.Body).Decode(&emailsResponse)
-	if err != nil {
-		return nil, err
-	}
-
-	for _, email := range emailsResponse.Emails {
-		if email.Confirmed == true && email.Primary == true {
-			user.Email = email.Email
-			break
-		}
-	}
-
 	return user, nil
 }
 
 func (b *BitBucket) ListRepositories(username string, org bool) (*types.VCSRepositories, error) {
 
-	var res *http.Response
 	var err error
 
 	username = strings.ToLower(username)
@@ -128,17 +96,13 @@ func (b *BitBucket) ListRepositories(username string, org bool) (*types.VCSRepos
 		} `json:"values"`
 	}{}
 
-	client := oauth2.NewClient(oauth2.NoContext, oauth2.StaticTokenSource(b.Token))
+	var uri = fmt.Sprintf("https://%s@api.bitbucket.org/2.0/repositories?role=owner", b.Token.AccessToken)
 
-	var uri = fmt.Sprintf("%s/2.0/repositories?role=owner", API_V2_URL)
-	if org {
-		uri = fmt.Sprintf("%s/2.0/repositories/%s?role=admin&pagelen=100", API_V2_URL, username)
-	}
-
-	res, err = client.Get(uri)
+	res, err := http.Get(uri)
 	if err != nil {
 		return nil, err
 	}
+	defer res.Body.Close()
 
 	err = json.NewDecoder(res.Body).Decode(&payload)
 	if err != nil {
@@ -173,16 +137,16 @@ func (b *BitBucket) ListBranches(owner, repo string) (*types.VCSBranches, error)
 		} `json:"values"`
 	}{}
 
-	client := oauth2.NewClient(oauth2.NoContext, oauth2.StaticTokenSource(b.Token))
+	var uri = fmt.Sprintf("https://%s@api.bitbucket.org/2.0/repositories/%s/%s/refs/branches?pagelen=100", b.Token.AccessToken, owner, repo)
 
-	var uri = fmt.Sprintf("%s/2.0/repositories/%s/%s/refs/branches?pagelen=100", API_V2_URL, owner, repo)
-
-	res, err := client.Get(uri)
+	res, err := http.Get(uri)
 	if err != nil {
 		return nil, err
 	}
+	defer res.Body.Close()
 
-	if err = json.NewDecoder(res.Body).Decode(&payload); err != nil {
+	err = json.NewDecoder(res.Body).Decode(&payload)
+	if err != nil {
 		return nil, err
 	}
 
@@ -198,86 +162,74 @@ func (b *BitBucket) ListBranches(owner, repo string) (*types.VCSBranches, error)
 	return branches, nil
 }
 
-func (b *BitBucket) GetLastCommitOfBranch(owner, repo, branch string) (*types.Commit, error) {
+func (b *BitBucket) CreateHook(hookID, owner, repo, host string) (*string, error) {
 
 	repo = strings.ToLower(repo)
 	owner = strings.ToLower(owner)
-	branch = strings.ToLower(branch)
 
 	payload := struct {
-		Commits []struct {
-			Hash   string `json:"hash"`
-			Author struct {
-				Raw  string `json:"raw"`
-				User struct {
-					Username string `json:"username"`
-				} `json:"user"`
-			} `json:"author"`
-			Date    time.Time `json:"date"`
-			Message string    `json:"message"`
-		} `json:"values"`
+		ID    string `json:"uuid"`
+		Error struct {
+			Message string `json:"message"`
+		} `json:"error,omitempty"`
 	}{}
 
-	client := oauth2.NewClient(oauth2.NoContext, oauth2.StaticTokenSource(b.Token))
+	body := struct {
+		Description string   `json:"description"`
+		URL         string   `json:"url"`
+		Active      bool     `json:"active"`
+		Events      []string `json:"events"`
+	}{"web", fmt.Sprintf(`%s/hook/bitbucket/process/%s`, host, hookID), true, []string{"repo:push", "pullrequest:approved", "pullrequest:created"}}
 
-	var uri = fmt.Sprintf("%s/2.0/repositories/%s/%s/commits/%s", API_V2_URL, owner, repo, branch)
-
-	res, err := client.Get(uri)
+	var buf io.ReadWriter
+	buf = new(bytes.Buffer)
+	err := json.NewEncoder(buf).Encode(body)
 	if err != nil {
 		return nil, err
 	}
 
-	if err = json.NewDecoder(res.Body).Decode(&payload); err != nil {
+	var uri = fmt.Sprintf("https://%s@api.bitbucket.org/2.0/repositories/%s/%s/hooks", b.Token.AccessToken, owner, repo)
+
+	res, err := http.Post(uri, "application/json", buf)
+	if err != nil {
+		return nil, err
+	}
+	defer res.Body.Close()
+
+	err = json.NewDecoder(res.Body).Decode(&payload)
+	if err != nil {
 		return nil, err
 	}
 
-	// Another regular expression: <(\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,6}\b)>$
-	r, _ := regexp.Compile("<(.+)>$")
-
-	if len(payload.Commits) == 0 {
-		err = errors.New("Repo has no commits")
-		return nil, err
+	if payload.Error.Message != "" {
+		return nil, errors.New(payload.Error.Message)
 	}
 
-	if len(payload.Commits) == 0 {
-		return nil, nil
-	}
+	id := payload.ID
 
-	var commit = new(types.Commit)
-	commit.Username = payload.Commits[0].Author.User.Username
-	commit.Hash = payload.Commits[0].Hash
-	commit.Message = payload.Commits[0].Message
-	commit.Date = payload.Commits[0].Date
-	commit.Email = r.FindStringSubmatch(payload.Commits[0].Author.Raw)[1]
-
-	return commit, nil
+	return &id, nil
 }
 
-func (b *BitBucket) GetReadme(owner string, repo string) (string, error) {
+func (b *BitBucket) RemoveHook(hookID, owner, repo string) error {
+
+	var err error
 
 	repo = strings.ToLower(repo)
 	owner = strings.ToLower(owner)
 
-	client := oauth2.NewClient(oauth2.NoContext, oauth2.StaticTokenSource(b.Token))
+	var uri = fmt.Sprintf("https://%s@api.bitbucket.org/2.0/repositories/%s/%s/hooks/%s", b.Token.AccessToken, owner, repo, hookID)
 
-	var uri = fmt.Sprintf("%s/1.0/repositories/%s/%s/raw/master/README.md", API_V1_URL, owner, repo)
-
-	res, err := client.Get(uri)
+	req, err := http.NewRequest(http.MethodDelete, uri, nil)
 	if err != nil {
-		return "", err
+		return err
 	}
 
-	var content string
-
-	if res.StatusCode == 200 {
-		buf, err := ioutil.ReadAll(res.Body)
-		if err != nil {
-			return "", err
-		}
-		content = string(buf)
+	res, err := http.DefaultClient.Do(req)
+	if err != nil {
+		return err
 	}
-
-	return string(content), nil
+	defer res.Body.Close()
+	return nil
 }
 
 func (b *BitBucket) PushPayload(data []byte) (*types.VCSBranch, error) {
@@ -322,74 +274,4 @@ func (b *BitBucket) PushPayload(data []byte) (*types.VCSBranch, error) {
 	}
 
 	return branch, nil
-}
-
-func (b *BitBucket) CreateHook(hookID, owner, repo, host string) (*string, error) {
-
-	repo = strings.ToLower(repo)
-	owner = strings.ToLower(owner)
-
-	payload := struct {
-		ID    string `json:"uuid"`
-		Error struct {
-			Message string `json:"message"`
-		} `json:"error,omitempty"`
-	}{}
-
-	body := struct {
-		Description string   `json:"description"`
-		URL         string   `json:"url"`
-		Active      bool     `json:"active"`
-		Events      []string `json:"events"`
-	}{"web", fmt.Sprintf(`%s/hook/bitbucket/process/%s`, host, hookID), true, []string{"repo:push", "pullrequest:approved", "pullrequest:created"}}
-
-	var buf io.ReadWriter
-	buf = new(bytes.Buffer)
-	err := json.NewEncoder(buf).Encode(body)
-	if err != nil {
-		return nil, err
-	}
-
-	client := oauth2.NewClient(oauth2.NoContext, oauth2.StaticTokenSource(b.Token))
-
-	var uri = fmt.Sprintf("%s/2.0/repositories/%s/%s/hooks", API_V2_URL, owner, repo)
-
-	res, err := client.Post(uri, "application/json", buf)
-	if err != nil {
-		return nil, err
-	}
-
-	if err = json.NewDecoder(res.Body).Decode(&payload); err != nil {
-		return nil, err
-	}
-
-	if payload.Error.Message != "" {
-		return nil, errors.New(payload.Error.Message)
-	}
-
-	id := payload.ID
-
-	return &id, nil
-}
-
-func (b *BitBucket) RemoveHook(hookID, owner, repo string) error {
-
-	var err error
-
-	repo = strings.ToLower(repo)
-	owner = strings.ToLower(owner)
-
-	client := oauth2.NewClient(oauth2.NoContext, oauth2.StaticTokenSource(b.Token))
-
-	var uri = fmt.Sprintf("%s/2.0/repositories/%s/%s/hooks/%s", API_V2_URL, owner, repo, hookID)
-
-	req, err := http.NewRequest("DELETE", uri, nil)
-	req.Header.Set("Content-Type", "application/json")
-
-	_, err = client.Do(req)
-	if err != nil {
-		return err
-	}
-
-	return nil
 }
