@@ -42,7 +42,7 @@ type GitHub struct {
 
 func GetClient(token string) *GitHub {
 	c := new(GitHub)
-	c.Token = &oauth2.Token{AccessToken: token, TokenType: "Bearer"}
+	c.Token = &oauth2.Token{AccessToken: token}
 	c.Name = "github"
 	c.Host = "github.com"
 	return c
@@ -77,32 +77,6 @@ func (g *GitHub) GetUser() (*types.User, error) {
 	var user = new(types.User)
 	user.Username = payload.Username
 	user.ServiceID = strconv.FormatInt(payload.ID, 10)
-
-	emailsResponse := []struct {
-		Email     string `json:"email"`
-		Confirmed bool   `json:"verified"`
-		Primary   bool   `json:"primary"`
-	}{}
-
-	uri = fmt.Sprintf("%s/user/emails?access_token=%s", API_URL, g.Token.AccessToken)
-
-	res, err = http.Get(uri)
-	if err != nil {
-		return nil, err
-	}
-	defer res.Body.Close()
-
-	err = json.NewDecoder(res.Body).Decode(&payload)
-	if err != nil {
-		return nil, err
-	}
-
-	for _, email := range emailsResponse {
-		if email.Confirmed == true && email.Primary == true {
-			user.Email = email.Email
-			break
-		}
-	}
 
 	return user, nil
 }

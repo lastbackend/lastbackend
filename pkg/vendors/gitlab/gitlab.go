@@ -53,7 +53,7 @@ type CommitResponse struct {
 
 func GetClient(token string) *GitLab {
 	c := new(GitLab)
-	c.Token = &oauth2.Token{AccessToken: token, TokenType: "Baarer"}
+	c.Token = &oauth2.Token{AccessToken: token}
 	c.Name = "gitlab"
 	c.Host = "gitlab.com"
 	return c
@@ -88,7 +88,6 @@ func (g *GitLab) GetUser() (*types.User, error) {
 
 	var user = new(types.User)
 	user.Username = payload.Username
-	user.Email = payload.Email
 	user.ServiceID = strconv.FormatInt(payload.ID, 10)
 
 	return user, nil

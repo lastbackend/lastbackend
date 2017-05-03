@@ -32,7 +32,6 @@ type Vendor struct {
 type User struct {
 	Username  string
 	ServiceID string
-	Email     string
 }
 
 type VCSRepository struct {

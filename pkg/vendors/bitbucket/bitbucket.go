@@ -33,8 +33,7 @@ import (
 )
 
 const (
-	API_V1_URL = "https://bitbucket.org"
-	API_V2_URL = "https://api.bitbucket.org"
+	API_URL = "https://api.bitbucket.org"
 )
 
 type BitBucket struct {
@@ -43,7 +42,7 @@ type BitBucket struct {
 
 func GetClient(token string) *BitBucket {
 	c := new(BitBucket)
-	c.Token = &oauth2.Token{AccessToken: token, TokenType: "Baarer"}
+	c.Token = &oauth2.Token{AccessToken: token}
 	c.Name = "bitbucket"
 	c.Host = "bitbucket.org"
 	return c
@@ -62,7 +61,7 @@ func (b *BitBucket) GetUser() (*types.User, error) {
 		ID       string `json:"uuid"`
 	}{}
 
-	var uri = fmt.Sprintf("%s%s:x-oauth-basic/2.0/user", API_V2_URL, b.Token.AccessToken)
+	var uri = fmt.Sprintf("https://%s@api.bitbucket.org/2.0/user", b.Token.AccessToken)
 
 	res, err := http.Get(uri)
 	if err != nil {
@@ -79,34 +78,6 @@ func (b *BitBucket) GetUser() (*types.User, error) {
 
 	user.Username = payload.Username
 	user.ServiceID = payload.ID
-
-	emailsResponse := struct {
-		Emails []struct {
-			Email     string `json:"email"`
-			Confirmed bool   `json:"is_confirmed"`
-			Primary   bool   `json:"is_primary"`
-		} `json:"values"`
-	}{}
-
-	uri = fmt.Sprintf("%s%s:x-oauth-basic/2.0/user/emails", API_V2_URL, b.Token.AccessToken)
-
-	res, err = http.Get(uri)
-	if err != nil {
-		return nil, err
-	}
-	defer res.Body.Close()
-
-	err = json.NewDecoder(res.Body).Decode(&payload)
-	if err != nil {
-		return nil, err
-	}
-
-	for _, email := range emailsResponse.Emails {
-		if email.Confirmed == true && email.Primary == true {
-			user.Email = email.Email
-			break
-		}
-	}
 
 	return user, nil
 }
@@ -125,7 +96,7 @@ func (b *BitBucket) ListRepositories(username string, org bool) (*types.VCSRepos
 		} `json:"values"`
 	}{}
 
-	var uri = fmt.Sprintf("%s%s:x-oauth-basic/2.0/repositories?role=owner", API_V2_URL, b.Token.AccessToken)
+	var uri = fmt.Sprintf("https://%s@api.bitbucket.org/2.0/repositories?role=owner", b.Token.AccessToken)
 
 	res, err := http.Get(uri)
 	if err != nil {
@@ -166,7 +137,7 @@ func (b *BitBucket) ListBranches(owner, repo string) (*types.VCSBranches, error)
 		} `json:"values"`
 	}{}
 
-	var uri = fmt.Sprintf("%s%s:x-oauth-basic/2.0/repositories/%s/%s/refs/branches?pagelen=100", API_V2_URL, b.Token.AccessToken, owner, repo)
+	var uri = fmt.Sprintf("https://%s@api.bitbucket.org/2.0/repositories/%s/%s/refs/branches?pagelen=100", b.Token.AccessToken, owner, repo)
 
 	res, err := http.Get(uri)
 	if err != nil {
@@ -197,7 +168,7 @@ func (b *BitBucket) CreateHook(hookID, owner, repo, host string) (*string, error
 	owner = strings.ToLower(owner)
 
 	payload := struct {
-		ID string `json:"uuid"`
+		ID    string `json:"uuid"`
 		Error struct {
 			Message string `json:"message"`
 		} `json:"error,omitempty"`
@@ -217,7 +188,7 @@ func (b *BitBucket) CreateHook(hookID, owner, repo, host string) (*string, error
 		return nil, err
 	}
 
-	var uri = fmt.Sprintf("%s%s:x-oauth-basic/2.0/repositories/%s/%s/hooks", API_V2_URL, b.Token.AccessToken, owner, repo)
+	var uri = fmt.Sprintf("https://%s@api.bitbucket.org/2.0/repositories/%s/%s/hooks", b.Token.AccessToken, owner, repo)
 
 	res, err := http.Post(uri, "application/json", buf)
 	if err != nil {
@@ -246,7 +217,7 @@ func (b *BitBucket) RemoveHook(hookID, owner, repo string) error {
 	repo = strings.ToLower(repo)
 	owner = strings.ToLower(owner)
 
-	var uri = fmt.Sprintf("%s%s:x-oauth-basic/2.0/repositories/%s/%s/hooks/%s", API_V2_URL, b.Token.AccessToken, owner, repo, hookID)
+	var uri = fmt.Sprintf("https://%s@api.bitbucket.org/2.0/repositories/%s/%s/hooks/%s", b.Token.AccessToken, owner, repo, hookID)
 
 	req, err := http.NewRequest(http.MethodDelete, uri, nil)
 	if err != nil {
@@ -275,7 +246,7 @@ func (b *BitBucket) PushPayload(data []byte) (*types.VCSBranch, error) {
 					Hash    string    `json:"hash"`
 					Message string    `json:"message"`
 					Date    time.Time `json:"date"`
-					Author struct {
+					Author  struct {
 						User struct {
 							Username string `json:"username"`
 						} `json:"user"`
