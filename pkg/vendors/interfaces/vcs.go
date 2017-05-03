@@ -27,9 +27,7 @@ type IVCS interface {
 	GetUser() (*types.User, error)
 	ListRepositories(username string, org bool) (*types.VCSRepositories, error)
 	ListBranches(owner, repo string) (*types.VCSBranches, error)
-	GetLastCommitOfBranch(owner, repo, branch string) (*types.Commit, error)
-	GetReadme(owner string, repo string) (string, error)
-	PushPayload(data []byte) (*types.VCSBranch, error)
 	CreateHook(id, owner, repo, host string) (*string, error)
 	RemoveHook(id, owner, repo string) error
+	PushPayload(data []byte) (*types.VCSBranch, error)
 }

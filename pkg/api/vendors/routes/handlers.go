@@ -176,6 +176,19 @@ func VCSRepositoryListH(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	switch vendor {
+	case "github":
+		client = vendors.GetGitHub(vndr.Token.AccessToken)
+	case "bitbucket":
+		client = vendors.GetBitBucket(vndr.Token.AccessToken)
+	case "gitlab":
+		client = vendors.GetGitLab(vndr.Token.AccessToken)
+	default:
+		log.Error("vendor is not supported yet")
+		errors.BadParameter("vendor").Http(w)
+		return
+	}
+
 	repos, err := client.ListRepositories(vndr.Username, false)
 	if err != nil {
 		log.Error(err)
@@ -209,6 +222,19 @@ func VCSBranchListH(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Error(err.Error())
 		errors.HTTP.InternalServerError(w)
+		return
+	}
+
+	switch vendor {
+	case "github":
+		client = vendors.GetGitHub(vndr.Token.AccessToken)
+	case "bitbucket":
+		client = vendors.GetBitBucket(vndr.Token.AccessToken)
+	case "gitlab":
+		client = vendors.GetGitLab(vndr.Token.AccessToken)
+	default:
+		log.Error("vendor is not supported yet")
+		errors.BadParameter("vendor").Http(w)
 		return
 	}
 

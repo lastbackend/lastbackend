@@ -20,8 +20,8 @@ package request
 
 import (
 	"encoding/json"
-	"github.com/lastbackend/lastbackend/pkg/apis/types"
 	"github.com/lastbackend/lastbackend/pkg/api/context"
+	"github.com/lastbackend/lastbackend/pkg/apis/types"
 	"github.com/lastbackend/lastbackend/pkg/errors"
 	"github.com/lastbackend/lastbackend/pkg/util/converter"
 	"github.com/lastbackend/lastbackend/pkg/util/validator"
@@ -104,11 +104,14 @@ func (s *RequestServiceCreateS) DecodeAndValidate(reader io.Reader) *errors.Err 
 	}
 
 	if s.Url != "" {
-		if !validator.IsGitUrl(s.Url) {
+
+		match := strings.Split(s.Url, "#")
+
+		if !validator.IsGitUrl(match[0]) {
 			return errors.New("service").BadParameter("url")
 		}
 
-		source, err := converter.GitUrlParse(s.Url)
+		source, err := converter.GitUrlParse(match[0])
 		if err != nil {
 			return errors.New("service").BadParameter("url")
 		}
@@ -117,11 +120,15 @@ func (s *RequestServiceCreateS) DecodeAndValidate(reader io.Reader) *errors.Err 
 			s.Name = source.Repo
 		}
 
+		if len(match) > 1 {
+			source.Branch = match[len(match)-1]
+		}
+
 		s.Source = types.ServiceSource{
 			Hub:    source.Hub,
 			Owner:  source.Owner,
 			Repo:   source.Repo,
-			Branch: "master",
+			Branch: source.Branch,
 		}
 	}
 

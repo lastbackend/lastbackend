@@ -26,7 +26,6 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/vendors/types"
 	"golang.org/x/oauth2"
 	"io"
-	"io/ioutil"
 	"net/http"
 	"strconv"
 	"strings"
@@ -54,7 +53,7 @@ type CommitResponse struct {
 
 func GetClient(token string) *GitLab {
 	c := new(GitLab)
-	c.Token = &oauth2.Token{AccessToken: token}
+	c.Token = &oauth2.Token{AccessToken: token, TokenType: "Baarer"}
 	c.Name = "gitlab"
 	c.Host = "gitlab.com"
 	return c
@@ -74,22 +73,15 @@ func (g *GitLab) GetUser() (*types.User, error) {
 		ID       int64  `json:"id"`
 	}{}
 
-	client := oauth2.NewClient(oauth2.NoContext, oauth2.StaticTokenSource(g.Token))
+	var uri = fmt.Sprintf("%s/api/v3/user?private_token=%s", API_URL, g.Token.AccessToken)
 
-	var uri = fmt.Sprintf("%s/api/v3/user", API_URL)
-
-	resUser, err := client.Get(uri)
+	res, err := http.Get(uri)
 	if err != nil {
 		return nil, err
 	}
+	defer res.Body.Close()
 
-	x := []byte{}
-	_, err = resUser.Body.Read(x)
-	if err != nil {
-		return nil, err
-	}
-
-	err = json.NewDecoder(resUser.Body).Decode(&payload)
+	err = json.NewDecoder(res.Body).Decode(&payload)
 	if err != nil {
 		return nil, err
 	}
@@ -111,16 +103,16 @@ func (g *GitLab) ListRepositories(username string, org bool) (*types.VCSReposito
 		DefaultBranch string  `json:"default_branch"`
 	}{}
 
-	client := oauth2.NewClient(oauth2.NoContext, oauth2.StaticTokenSource(g.Token))
+	var uri = fmt.Sprintf("%s/api/v3/projects?private_token=%s", API_URL, g.Token.AccessToken)
 
-	var uri = fmt.Sprintf("%s/api/v3/projects", API_URL)
-
-	res, err := client.Get(uri)
+	res, err := http.Get(uri)
 	if err != nil {
 		return nil, err
 	}
+	defer res.Body.Close()
 
-	if err := json.NewDecoder(res.Body).Decode(&payload); err != nil {
+	err = json.NewDecoder(res.Body).Decode(&payload)
+	if err != nil {
 		return nil, err
 	}
 
@@ -151,17 +143,17 @@ func (g *GitLab) ListBranches(owner, repo string) (*types.VCSBranches, error) {
 		Name string `json:"name"`
 	}{}
 
-	client := oauth2.NewClient(oauth2.NoContext, oauth2.StaticTokenSource(g.Token))
+	var uri = fmt.Sprintf("%s/api/v3/projects/%s%%2F%s/repository/branches?private_token=%s", API_URL, owner, repo, g.Token.AccessToken)
 
-	var uri = fmt.Sprintf("%s/api/v3/projects/%s%%2F%s/repository/branches", API_URL, owner, repo)
-
-	res, err := client.Get(uri)
+	res, err := http.Get(uri)
 	if err != nil {
-		return nil, nil
+		return nil, err
 	}
+	defer res.Body.Close()
 
-	if err = json.NewDecoder(res.Body).Decode(&payload); err != nil {
-		return nil, nil
+	err = json.NewDecoder(res.Body).Decode(&payload)
+	if err != nil {
+		return nil, err
 	}
 
 	var branches = new(types.VCSBranches)
@@ -177,69 +169,71 @@ func (g *GitLab) ListBranches(owner, repo string) (*types.VCSBranches, error) {
 	return branches, nil
 }
 
-func (g *GitLab) GetLastCommitOfBranch(owner, repo, branch string) (*types.Commit, error) {
+func (g *GitLab) CreateHook(hookID, owner, repo, host string) (*string, error) {
 
 	owner = strings.ToLower(owner)
 	repo = strings.ToLower(repo)
-	branch = strings.ToLower(branch)
+	name := owner + "%2F" + repo
 
-	branchResponse := struct {
-		Name   string `json:"name"`
-		Commit struct {
-			Hash           string    `json:"id"`
-			Message        string    `json:"message"`
-			CommitterEmail string    `json:"committer_email"`
-			CommitterName  string    `json:"committer_name"`
-			CommitterDate  time.Time `json:"committed_date"`
-		} `json:"commit"`
+	payload := struct {
+		ID    int64  `json:"id"`
+		Error string `json:"error,omitempty"`
 	}{}
 
-	client := oauth2.NewClient(oauth2.NoContext, oauth2.StaticTokenSource(g.Token))
+	body := struct {
+		ID  string `json:"id"`
+		URL string `json:"url"`
+	}{name, fmt.Sprintf("%s/hook/gitlab/process/%s", host, hookID)}
 
-	var uri = fmt.Sprintf("%s/api/v3/projects/%s%%2F%s/repository/branches/%s", API_URL, owner, repo, branch)
+	var buf io.ReadWriter
+	buf = new(bytes.Buffer)
+	if err := json.NewEncoder(buf).Encode(body); err != nil {
+		return nil, nil
+	}
 
-	res, err := client.Get(uri)
+	var uri = fmt.Sprintf("%s/api/v3/projects/%s/hooks?private_token=%s", API_URL, name, g.Token.AccessToken)
+
+	res, err := http.Post(uri, "application/json", buf)
+	if err != nil {
+		return nil, err
+	}
+	defer res.Body.Close()
+
+	err = json.NewDecoder(res.Body).Decode(&payload)
 	if err != nil {
 		return nil, err
 	}
 
-	if err = json.NewDecoder(res.Body).Decode(&branchResponse); err != nil {
-		return nil, err
+	if payload.Error != "" {
+		return nil, errors.New(payload.Error)
 	}
 
-	var commit = new(types.Commit)
+	id := strconv.FormatInt(int64(payload.ID), 10)
 
-	commit.Hash = branchResponse.Commit.Hash
-	commit.Date = branchResponse.Commit.CommitterDate
-	commit.Message = branchResponse.Commit.Message
-	commit.Username = branchResponse.Commit.CommitterName // TODO: Get username
-	commit.Email = branchResponse.Commit.CommitterEmail
-
-	return commit, nil
+	return &id, nil
 }
 
-func (g *GitLab) GetReadme(owner string, repo string) (string, error) {
+func (g *GitLab) RemoveHook(id, owner, repo string) error {
 
-	repo = strings.ToLower(repo)
+	var err error
+
 	owner = strings.ToLower(owner)
+	repo = strings.ToLower(repo)
 
-	client := oauth2.NewClient(oauth2.NoContext, oauth2.StaticTokenSource(g.Token))
+	var uri = fmt.Sprintf("%s/api/v3/projects/%s%%2F%s/hooks/%s?private_token=%s", API_URL, owner, repo, id, g.Token.AccessToken)
 
-	var uri = fmt.Sprintf(`%s/%s/%s/raw/master/README.md`, API_URL, owner, repo)
-
-	res, err := client.Get(uri)
+	req, err := http.NewRequest(http.MethodDelete, uri, nil)
 	if err != nil {
-		return "", nil
+		return err
 	}
 
-	var content string
-
-	if res.StatusCode == 200 {
-		buf, _ := ioutil.ReadAll(res.Body)
-		content = string(buf)
+	res, err := http.DefaultClient.Do(req)
+	if err != nil {
+		return err
 	}
+	defer res.Body.Close()
 
-	return string(content), nil
+	return nil
 }
 
 func (g *GitLab) PushPayload(data []byte) (*types.VCSBranch, error) {
@@ -278,70 +272,4 @@ func (g *GitLab) PushPayload(data []byte) (*types.VCSBranch, error) {
 	}
 
 	return branch, nil
-}
-
-func (g *GitLab) CreateHook(hookID, owner, repo, host string) (*string, error) {
-
-	owner = strings.ToLower(owner)
-	repo = strings.ToLower(repo)
-	name := owner + "%2F" + repo
-
-	payload := struct {
-		ID    int64  `json:"id"`
-		Error string `json:"error,omitempty"`
-	}{}
-
-	body := struct {
-		ID  string `json:"id"`
-		URL string `json:"url"`
-	}{name, fmt.Sprintf("%s/hook/gitlab/process/%s", host, hookID)}
-
-	var buf io.ReadWriter
-	buf = new(bytes.Buffer)
-	if err := json.NewEncoder(buf).Encode(body); err != nil {
-		return nil, nil
-	}
-
-	client := oauth2.NewClient(oauth2.NoContext, oauth2.StaticTokenSource(g.Token))
-
-	var uri = fmt.Sprintf("%s/api/v3/projects/%s/hooks", API_URL, name)
-
-	res, err := client.Post(uri, "application/json", buf)
-	if err != nil {
-		return nil, nil
-	}
-
-	if err = json.NewDecoder(res.Body).Decode(&payload); err != nil {
-		return nil, err
-	}
-
-	if payload.Error != "" {
-		return nil, errors.New(payload.Error)
-	}
-
-	id := strconv.FormatInt(int64(payload.ID), 10)
-
-	return &id, nil
-}
-
-func (g *GitLab) RemoveHook(id, owner, repo string) error {
-
-	var err error
-
-	owner = strings.ToLower(owner)
-	repo = strings.ToLower(repo)
-
-	client := oauth2.NewClient(oauth2.NoContext, oauth2.StaticTokenSource(g.Token))
-
-	var uri = fmt.Sprintf("%s/api/v3/projects/%s%%2F%s/hooks/%s", API_URL, owner, repo, id)
-
-	req, err := http.NewRequest("DELETE", uri, nil)
-	req.Header.Set("Content-Type", "application/json")
-
-	_, err = client.Do(req)
-	if err != nil {
-		return err
-	}
-
-	return nil
 }

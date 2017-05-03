@@ -24,7 +24,6 @@ import (
 	"errors"
 	"fmt"
 	"github.com/lastbackend/lastbackend/pkg/vendors/types"
-	"github.com/lastbackend/lastbackend/pkg/vendors/utils"
 	"golang.org/x/oauth2"
 	"io"
 	"net/http"
@@ -57,22 +56,20 @@ func (g *GitHub) GetUser() (*types.User, error) {
 
 	var err error
 
-	client := oauth2.NewClient(oauth2.NoContext, oauth2.StaticTokenSource(g.Token))
-
 	payload := struct {
 		Username string `json:"login"`
 		ID       int64  `json:"id"`
 	}{}
 
-	var uri = fmt.Sprintf("%s/user", API_URL)
+	var uri = fmt.Sprintf("%s/user?access_token=%s", API_URL, g.Token.AccessToken)
 
-	resUser, err := client.Get(uri)
-
+	res, err := http.Get(uri)
 	if err != nil {
 		return nil, err
 	}
+	defer res.Body.Close()
 
-	err = json.NewDecoder(resUser.Body).Decode(&payload)
+	err = json.NewDecoder(res.Body).Decode(&payload)
 	if err != nil {
 		return nil, err
 	}
@@ -87,14 +84,15 @@ func (g *GitHub) GetUser() (*types.User, error) {
 		Primary   bool   `json:"primary"`
 	}{}
 
-	uri = fmt.Sprintf("%s/user/emails", API_URL)
+	uri = fmt.Sprintf("%s/user/emails?access_token=%s", API_URL, g.Token.AccessToken)
 
-	resEmails, err := client.Get(uri)
+	res, err = http.Get(uri)
 	if err != nil {
 		return nil, err
 	}
+	defer res.Body.Close()
 
-	err = json.NewDecoder(resEmails.Body).Decode(&emailsResponse)
+	err = json.NewDecoder(res.Body).Decode(&payload)
 	if err != nil {
 		return nil, err
 	}
@@ -111,7 +109,6 @@ func (g *GitHub) GetUser() (*types.User, error) {
 
 func (g *GitHub) ListRepositories(username string, org bool) (*types.VCSRepositories, error) {
 
-	var res *http.Response
 	var err error
 
 	username = strings.ToLower(username)
@@ -123,19 +120,16 @@ func (g *GitHub) ListRepositories(username string, org bool) (*types.VCSReposito
 		DefaultBranch string `json:"default_branch"`
 	}{}
 
-	client := oauth2.NewClient(oauth2.NoContext, oauth2.StaticTokenSource(g.Token))
+	var uri = fmt.Sprintf("%s/user/repos?access_token=%s&per_page=99&type=owner", API_URL, g.Token.AccessToken)
 
-	var uri = fmt.Sprintf("%s/user/repos?per_page=99&type=owner", API_URL)
-	if org {
-		uri = fmt.Sprintf("%s/orgs/%s/repos?per_page=99", API_URL, username)
-	}
-
-	res, err = client.Get(uri)
+	res, err := http.Get(uri)
 	if err != nil {
 		return nil, err
 	}
+	defer res.Body.Close()
 
-	if err = json.NewDecoder(res.Body).Decode(&payload); err != nil {
+	err = json.NewDecoder(res.Body).Decode(&payload)
+	if err != nil {
 		return nil, err
 	}
 
@@ -166,16 +160,17 @@ func (g *GitHub) ListBranches(owner, repo string) (*types.VCSBranches, error) {
 		Name string `json:"name"`
 	}{}
 
-	client := oauth2.NewClient(oauth2.NoContext, oauth2.StaticTokenSource(g.Token))
+	var uri = fmt.Sprintf("%s/repos/%s/%s/branches?access_token=%s", API_URL, owner, repo, g.Token.AccessToken)
 
-	res, err := client.Get(fmt.Sprintf("%s/repos/%s/%s/branches", API_URL, owner, repo))
-
+	res, err := http.Get(uri)
 	if err != nil {
-		return nil, nil
+		return nil, err
 	}
+	defer res.Body.Close()
 
-	if err = json.NewDecoder(res.Body).Decode(&payload); err != nil {
-		return nil, nil
+	err = json.NewDecoder(res.Body).Decode(&payload)
+	if err != nil {
+		return nil, err
 	}
 
 	var branches = new(types.VCSBranches)
@@ -188,121 +183,6 @@ func (g *GitHub) ListBranches(owner, repo string) (*types.VCSBranches, error) {
 	}
 
 	return branches, nil
-}
-
-func (g *GitHub) GetLastCommitOfBranch(owner, repo, branch string) (*types.Commit, error) {
-
-	repo = strings.ToLower(repo)
-	owner = strings.ToLower(owner)
-	branch = strings.ToLower(branch)
-
-	branchResponse := struct {
-		Commit struct {
-			Hash   string `json:"sha"`
-			Commit struct {
-				Message   string `json:"message"`
-				Committer struct {
-					Date  time.Time `json:"date"`
-					Email string    `json:"email"`
-				} `json:"committer"`
-			} `json:"commit"`
-			Committer struct {
-				Login string `json:"login"`
-			} `json:"committer"`
-		} `json:"commit"`
-	}{}
-
-	client := oauth2.NewClient(oauth2.NoContext, oauth2.StaticTokenSource(g.Token))
-
-	var uri = fmt.Sprintf("%s/repos/%s/%s/branches/%s", API_URL, owner, repo, branch)
-
-	res, err := client.Get(uri)
-
-	if err != nil {
-		return nil, err
-	}
-
-	if err = json.NewDecoder(res.Body).Decode(&branchResponse); err != nil {
-		return nil, err
-	}
-
-	var commit = new(types.Commit)
-
-	commit.Hash = branchResponse.Commit.Hash
-	commit.Date = branchResponse.Commit.Commit.Committer.Date
-	commit.Message = branchResponse.Commit.Commit.Message
-	commit.Username = branchResponse.Commit.Committer.Login
-	commit.Email = branchResponse.Commit.Commit.Committer.Email
-
-	return commit, nil
-}
-
-func (g *GitHub) GetReadme(owner string, repo string) (string, error) {
-
-	var err error
-
-	repo = strings.ToLower(repo)
-	owner = strings.ToLower(owner)
-
-	payload := struct {
-		Content string `json:"content"`
-	}{}
-
-	client := oauth2.NewClient(oauth2.NoContext, oauth2.StaticTokenSource(g.Token))
-
-	var uri = fmt.Sprintf(`%s/repos/%s/%s/readme`, API_URL, owner, repo)
-
-	res, err := client.Get(uri)
-	if err != nil {
-		return "", nil
-	}
-
-	res.Header.Add("Accept", "application/vnd.github.VERSION.raw")
-
-	if err = json.NewDecoder(res.Body).Decode(&payload); err != nil {
-		return "", nil
-	}
-
-	if payload.Content != "" {
-		payload.Content = utils.DecodeBase64(payload.Content)
-	}
-
-	return payload.Content, nil
-}
-
-func (g *GitHub) PushPayload(data []byte) (*types.VCSBranch, error) {
-
-	var err error
-
-	payload := struct {
-		Ref    string `json:"ref"`
-		Commit struct {
-			ID        string    `json:"id"`
-			Message   string    `json:"message"`
-			Date      time.Time `json:"timestamp"`
-			Committer struct {
-				Username string `json:"username"`
-				Email    string `json:"email"`
-			} `json:"committer"`
-		} `json:"head_commit"`
-	}{}
-
-	if err = json.Unmarshal(data, &payload); err != nil {
-		return nil, nil
-	}
-
-	var branch = new(types.VCSBranch)
-
-	branch.Name = strings.Split(payload.Ref, "/")[2]
-	branch.LastCommit = types.Commit{
-		Username: payload.Commit.Committer.Username,
-		Email:    payload.Commit.Committer.Email,
-		Hash:     payload.Commit.ID,
-		Message:  payload.Commit.Message,
-		Date:     payload.Commit.Date,
-	}
-
-	return branch, nil
 }
 
 func (g *GitHub) CreateHook(id, owner, repo, host string) (*string, error) {
@@ -330,16 +210,16 @@ func (g *GitHub) CreateHook(id, owner, repo, host string) (*string, error) {
 		return nil, nil
 	}
 
-	client := oauth2.NewClient(oauth2.NoContext, oauth2.StaticTokenSource(g.Token))
+	var uri = fmt.Sprintf("%s/repos/%s/%s/hooks?access_token=%s", API_URL, owner, repo, g.Token.AccessToken)
 
-	var uri = fmt.Sprintf("%s/repos/%s/%s/hooks", API_URL, owner, repo)
-
-	res, err := client.Post(uri, "application/json", buf)
+	res, err := http.Post(uri, "application/json", buf)
 	if err != nil {
-		return nil, nil
+		return nil, err
 	}
+	defer res.Body.Close()
 
-	if err = json.NewDecoder(res.Body).Decode(&payload); err != nil {
+	err = json.NewDecoder(res.Body).Decode(&payload)
+	if err != nil {
 		return nil, err
 	}
 
@@ -357,17 +237,52 @@ func (g *GitHub) RemoveHook(id, owner, repo string) error {
 	repo = strings.ToLower(repo)
 	owner = strings.ToLower(owner)
 
-	client := oauth2.NewClient(oauth2.NoContext, oauth2.StaticTokenSource(g.Token))
+	var uri = fmt.Sprintf(`%s/repos/%s/%s/hooks/%s?access_token=%s`, API_URL, owner, repo, id, g.Token.AccessToken)
 
-	var uri = fmt.Sprintf(`%s/repos/%s/%s/hooks/%s`, API_URL, owner, repo, id)
-
-	req, err := http.NewRequest("DELETE", uri, nil)
-	req.Header.Set("Content-Type", "application/json")
-
-	_, err = client.Do(req)
+	req, err := http.NewRequest(http.MethodDelete, uri, nil)
 	if err != nil {
 		return err
 	}
 
+	res, err := http.DefaultClient.Do(req)
+	if err != nil {
+		return err
+	}
+	defer res.Body.Close()
 	return nil
+}
+
+func (g *GitHub) PushPayload(data []byte) (*types.VCSBranch, error) {
+
+	var err error
+
+	payload := struct {
+		Ref string `json:"ref"`
+		Commit struct {
+			ID      string    `json:"id"`
+			Message string    `json:"message"`
+			Date    time.Time `json:"timestamp"`
+			Committer struct {
+				Username string `json:"username"`
+				Email    string `json:"email"`
+			} `json:"committer"`
+		} `json:"head_commit"`
+	}{}
+
+	if err = json.Unmarshal(data, &payload); err != nil {
+		return nil, nil
+	}
+
+	var branch = new(types.VCSBranch)
+
+	branch.Name = strings.Split(payload.Ref, "/")[2]
+	branch.LastCommit = types.Commit{
+		Username: payload.Commit.Committer.Username,
+		Email:    payload.Commit.Committer.Email,
+		Hash:     payload.Commit.ID,
+		Message:  payload.Commit.Message,
+		Date:     payload.Commit.Date,
+	}
+
+	return branch, nil
 }

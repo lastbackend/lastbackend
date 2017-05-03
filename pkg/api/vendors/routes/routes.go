@@ -25,10 +25,10 @@ import (
 
 var Routes = []http.Route{
 	{Path: "/vendor", Method: http.MethodGet, Middleware: []http.Middleware{middleware.Context}, Handler: VendorsH},
+	{Path: "/vendor/docker/search", Method: http.MethodGet, Middleware: []http.Middleware{middleware.Context}, Handler: DockerRepositorySearchH},
+	{Path: "/vendor/docker/tags", Method: http.MethodGet, Middleware: []http.Middleware{middleware.Context}, Handler: DockerRepositoryTagListH},
 	{Path: "/vendor/{vendor}/{token}", Method: http.MethodPost, Middleware: []http.Middleware{middleware.Context}, Handler: VendorConnectH},
 	{Path: "/vendor/{vendor}", Method: http.MethodDelete, Middleware: []http.Middleware{middleware.Context}, Handler: VendorDisconnectH},
 	{Path: "/vendor/{vendor}/repos", Method: http.MethodGet, Middleware: []http.Middleware{middleware.Context}, Handler: VCSRepositoryListH},
 	{Path: "/vendor/{vendor}/branches", Method: http.MethodGet, Middleware: []http.Middleware{middleware.Context}, Handler: VCSBranchListH},
-	{Path: "/vendor/docker/search", Method: http.MethodGet, Middleware: []http.Middleware{middleware.Context}, Handler: DockerRepositorySearchH},
-	{Path: "/vendor/docker/tags", Method: http.MethodGet, Middleware: []http.Middleware{middleware.Context}, Handler: DockerRepositoryTagListH},
 }
