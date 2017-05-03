@@ -23,25 +23,39 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/apis/types"
 )
 
-func New(obj *types.Vendor) *Vendor {
-	v := new(Vendor)
-	v.Username = obj.Username
-	v.Host = obj.Host
-	return v
+func New(obj *types.Node) *Node {
+	n := Node{}
+	n.Meta = ToNodeMeta(obj.Meta)
+	return &n
 }
 
-func (obj *Vendor) ToJson() ([]byte, error) {
+func ToNodeMeta(meta types.NodeMeta) NodeMeta {
+	n := NodeMeta{
+		Hostname:     meta.Hostname,
+		OSType:       meta.OSType,
+		OSName:       meta.OSName,
+		Architecture: meta.Architecture,
+		Created:      meta.Created,
+		Updated:      meta.Updated,
+	}
+	return n
+}
+
+func (obj *Node) ToJson() ([]byte, error) {
 	return json.Marshal(obj)
 }
 
-func NewList(obj map[string]*types.Vendor) *VendorList {
-	v := make(VendorList)
-	for index, item := range obj {
-		v[index] = NewVendor(item)
+func NewList(obj types.NodeList) *NodeList {
+	n := NodeList{}
+	if obj == nil {
+		return nil
 	}
-	return &v
+	for _, v := range obj {
+		n = append(n, New(v))
+	}
+	return &n
 }
 
-func (obj *VendorList) ToJson() ([]byte, error) {
+func (obj *NodeList) ToJson() ([]byte, error) {
 	return json.Marshal(obj)
 }

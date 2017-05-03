@@ -37,11 +37,17 @@ func GetNodeMeta() types.NodeMeta {
 	meta.Created = time.Now()
 	meta.Updated = time.Now()
 
+	info := system.GetOsInfo()
+
 	if cfg.Hostname != "" {
 		meta.Hostname = cfg.Hostname
 	} else {
-		meta.Hostname, _ = system.GetHostname()
+		meta.Hostname = info.Hostname
 	}
+
+	meta.OSType = info.GoOS
+	meta.OSName = fmt.Sprintf("%s %s", info.OS, info.Core)
+	meta.Architecture = info.Platform
 
 	meta.State.Capacity = GetNodeCapacity()
 	meta.State.Allocated = GetNodeAllocation()

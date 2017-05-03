@@ -16,13 +16,14 @@
 // from Last.Backend LLC.
 //
 
-package interfaces
+package types
 
-import "golang.org/x/oauth2"
-
-type IAuth interface {
-	IVendor
-	IOAuth2
-
-	GetUser(token *oauth2.Token) (*User, error)
+type OsInfo struct {
+	GoOS     string
+	Core     string
+	Kernel   string
+	Platform string
+	OS       string
+	Hostname string
+	CPUs     int
 }

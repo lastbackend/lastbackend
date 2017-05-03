@@ -23,7 +23,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/lastbackend/lastbackend/pkg/vendors/interfaces"
+	"github.com/lastbackend/lastbackend/pkg/vendors/types"
 	"golang.org/x/oauth2"
 	"io"
 	"io/ioutil"
@@ -33,20 +33,13 @@ import (
 	"time"
 )
 
-// const
-
 const (
-	API_URL   = "https://gitlab.com"
-	TOKEN_URL = "https://gitlab.com/oauth/token"
+	API_URL = "https://gitlab.com"
 )
 
-// Model
-
 type GitLab struct {
-	proto interfaces.OAuth2
+	types.Vendor
 }
-
-// Types
 
 type CommitResponse struct {
 	ID        int64     `json:"project_id"`
@@ -59,66 +52,19 @@ type CommitResponse struct {
 	} `json:"author"`
 }
 
-// IVendor
-
-func GetClient(clientID, clientSecretID, redirectURI string) *GitLab {
-	return &GitLab{proto: interfaces.OAuth2{ClientID: clientID, ClientSecret: clientSecretID, RedirectUri: redirectURI}}
+func GetClient(token string) *GitLab {
+	c := new(GitLab)
+	c.Token = &oauth2.Token{AccessToken: token}
+	c.Name = "gitlab"
+	c.Host = "gitlab.com"
+	return c
 }
 
-func (GitLab) GetVendorInfo() *interfaces.Vendor {
-	return &interfaces.Vendor{Vendor: "gitlab", Host: "gitlab.com"}
+func (g *GitLab) VendorInfo() *types.Vendor {
+	return &g.Vendor
 }
 
-// IOAuth2 func
-
-func (g GitLab) GetToken(code string) (*oauth2.Token, error) {
-
-	token, err := g.getOAuth2Config().Exchange(oauth2.NoContext, code)
-	if err != nil {
-		return nil, err
-	}
-
-	return token, nil
-}
-
-func (g GitLab) RefreshToken(token *oauth2.Token) (*oauth2.Token, bool, error) {
-
-	var err error
-
-	if !token.Expiry.Before(time.Now()) || token.RefreshToken == "" {
-		return token, false, nil
-	}
-
-	restoredToken := &oauth2.Token{
-		RefreshToken: token.RefreshToken,
-	}
-
-	c := g.getOAuth2Config().Client(oauth2.NoContext, restoredToken)
-
-	newToken, err := c.Transport.(*oauth2.Transport).Source.Token()
-	if err != nil {
-		return nil, false, err
-	}
-
-	return newToken, true, nil
-}
-
-// IOAuth2 - Private functions
-
-func (g GitLab) getOAuth2Config() *oauth2.Config {
-	return &oauth2.Config{
-		ClientID:     g.proto.ClientID,
-		ClientSecret: g.proto.ClientSecret,
-		RedirectURL:  g.proto.RedirectUri,
-		Endpoint: oauth2.Endpoint{
-			TokenURL: TOKEN_URL,
-		},
-	}
-}
-
-// IVCS func
-
-func (GitLab) GetUser(token *oauth2.Token) (*interfaces.User, error) {
+func (g *GitLab) GetUser() (*types.User, error) {
 
 	var err error
 
@@ -128,7 +74,7 @@ func (GitLab) GetUser(token *oauth2.Token) (*interfaces.User, error) {
 		ID       int64  `json:"id"`
 	}{}
 
-	client := oauth2.NewClient(oauth2.NoContext, oauth2.StaticTokenSource(token))
+	client := oauth2.NewClient(oauth2.NoContext, oauth2.StaticTokenSource(g.Token))
 
 	var uri = fmt.Sprintf("%s/api/v3/user", API_URL)
 
@@ -148,7 +94,7 @@ func (GitLab) GetUser(token *oauth2.Token) (*interfaces.User, error) {
 		return nil, err
 	}
 
-	var user = new(interfaces.User)
+	var user = new(types.User)
 	user.Username = payload.Username
 	user.Email = payload.Email
 	user.ServiceID = strconv.FormatInt(payload.ID, 10)
@@ -156,7 +102,7 @@ func (GitLab) GetUser(token *oauth2.Token) (*interfaces.User, error) {
 	return user, nil
 }
 
-func (GitLab) ListRepositories(token *oauth2.Token, username string, org bool) (*interfaces.VCSRepositories, error) {
+func (g *GitLab) ListRepositories(username string, org bool) (*types.VCSRepositories, error) {
 
 	payload := []struct {
 		Name          string  `json:"name"`
@@ -165,7 +111,7 @@ func (GitLab) ListRepositories(token *oauth2.Token, username string, org bool) (
 		DefaultBranch string  `json:"default_branch"`
 	}{}
 
-	client := oauth2.NewClient(oauth2.NoContext, oauth2.StaticTokenSource(token))
+	client := oauth2.NewClient(oauth2.NoContext, oauth2.StaticTokenSource(g.Token))
 
 	var uri = fmt.Sprintf("%s/api/v3/projects", API_URL)
 
@@ -178,10 +124,10 @@ func (GitLab) ListRepositories(token *oauth2.Token, username string, org bool) (
 		return nil, err
 	}
 
-	var repositories = new(interfaces.VCSRepositories)
+	var repositories = new(types.VCSRepositories)
 
 	for _, repo := range payload {
-		repository := new(interfaces.VCSRepository)
+		repository := new(types.VCSRepository)
 
 		repository.Name = repo.Name
 		repository.Private = !repo.Public
@@ -196,7 +142,7 @@ func (GitLab) ListRepositories(token *oauth2.Token, username string, org bool) (
 	return repositories, nil
 }
 
-func (GitLab) ListBranches(token *oauth2.Token, owner, repo string) (*interfaces.VCSBranches, error) {
+func (g *GitLab) ListBranches(owner, repo string) (*types.VCSBranches, error) {
 
 	owner = strings.ToLower(owner)
 	repo = strings.ToLower(repo)
@@ -205,7 +151,7 @@ func (GitLab) ListBranches(token *oauth2.Token, owner, repo string) (*interfaces
 		Name string `json:"name"`
 	}{}
 
-	client := oauth2.NewClient(oauth2.NoContext, oauth2.StaticTokenSource(token))
+	client := oauth2.NewClient(oauth2.NoContext, oauth2.StaticTokenSource(g.Token))
 
 	var uri = fmt.Sprintf("%s/api/v3/projects/%s%%2F%s/repository/branches", API_URL, owner, repo)
 
@@ -218,10 +164,10 @@ func (GitLab) ListBranches(token *oauth2.Token, owner, repo string) (*interfaces
 		return nil, nil
 	}
 
-	var branches = new(interfaces.VCSBranches)
+	var branches = new(types.VCSBranches)
 
 	for _, br := range payload {
-		branch := new(interfaces.VCSBranch)
+		branch := new(types.VCSBranch)
 
 		branch.Name = br.Name
 
@@ -231,7 +177,7 @@ func (GitLab) ListBranches(token *oauth2.Token, owner, repo string) (*interfaces
 	return branches, nil
 }
 
-func (GitLab) GetLastCommitOfBranch(token *oauth2.Token, owner, repo, branch string) (*interfaces.Commit, error) {
+func (g *GitLab) GetLastCommitOfBranch(owner, repo, branch string) (*types.Commit, error) {
 
 	owner = strings.ToLower(owner)
 	repo = strings.ToLower(repo)
@@ -248,7 +194,7 @@ func (GitLab) GetLastCommitOfBranch(token *oauth2.Token, owner, repo, branch str
 		} `json:"commit"`
 	}{}
 
-	client := oauth2.NewClient(oauth2.NoContext, oauth2.StaticTokenSource(token))
+	client := oauth2.NewClient(oauth2.NoContext, oauth2.StaticTokenSource(g.Token))
 
 	var uri = fmt.Sprintf("%s/api/v3/projects/%s%%2F%s/repository/branches/%s", API_URL, owner, repo, branch)
 
@@ -261,7 +207,7 @@ func (GitLab) GetLastCommitOfBranch(token *oauth2.Token, owner, repo, branch str
 		return nil, err
 	}
 
-	var commit = new(interfaces.Commit)
+	var commit = new(types.Commit)
 
 	commit.Hash = branchResponse.Commit.Hash
 	commit.Date = branchResponse.Commit.CommitterDate
@@ -272,12 +218,12 @@ func (GitLab) GetLastCommitOfBranch(token *oauth2.Token, owner, repo, branch str
 	return commit, nil
 }
 
-func (GitLab) GetReadme(token *oauth2.Token, owner string, repo string) (string, error) {
+func (g *GitLab) GetReadme(owner string, repo string) (string, error) {
 
 	repo = strings.ToLower(repo)
 	owner = strings.ToLower(owner)
 
-	client := oauth2.NewClient(oauth2.NoContext, oauth2.StaticTokenSource(token))
+	client := oauth2.NewClient(oauth2.NoContext, oauth2.StaticTokenSource(g.Token))
 
 	var uri = fmt.Sprintf(`%s/%s/%s/raw/master/README.md`, API_URL, owner, repo)
 
@@ -296,7 +242,7 @@ func (GitLab) GetReadme(token *oauth2.Token, owner string, repo string) (string,
 	return string(content), nil
 }
 
-func (GitLab) PushPayload(data []byte) (*interfaces.VCSBranch, error) {
+func (g *GitLab) PushPayload(data []byte) (*types.VCSBranch, error) {
 
 	var err error
 
@@ -320,10 +266,10 @@ func (GitLab) PushPayload(data []byte) (*interfaces.VCSBranch, error) {
 		}
 	}
 
-	var branch = new(interfaces.VCSBranch)
+	var branch = new(types.VCSBranch)
 
 	branch.Name = strings.Split(payload.Ref, "/")[2]
-	branch.LastCommit = interfaces.Commit{
+	branch.LastCommit = types.Commit{
 		Username: commit.Committer.Username,
 		Email:    commit.Committer.Email,
 		Hash:     commit.Hash,
@@ -334,7 +280,7 @@ func (GitLab) PushPayload(data []byte) (*interfaces.VCSBranch, error) {
 	return branch, nil
 }
 
-func (GitLab) CreateHook(token *oauth2.Token, hookID, owner, repo, host string) (*string, error) {
+func (g *GitLab) CreateHook(hookID, owner, repo, host string) (*string, error) {
 
 	owner = strings.ToLower(owner)
 	repo = strings.ToLower(repo)
@@ -356,7 +302,7 @@ func (GitLab) CreateHook(token *oauth2.Token, hookID, owner, repo, host string) 
 		return nil, nil
 	}
 
-	client := oauth2.NewClient(oauth2.NoContext, oauth2.StaticTokenSource(token))
+	client := oauth2.NewClient(oauth2.NoContext, oauth2.StaticTokenSource(g.Token))
 
 	var uri = fmt.Sprintf("%s/api/v3/projects/%s/hooks", API_URL, name)
 
@@ -378,14 +324,14 @@ func (GitLab) CreateHook(token *oauth2.Token, hookID, owner, repo, host string) 
 	return &id, nil
 }
 
-func (GitLab) RemoveHook(token *oauth2.Token, id, owner, repo string) error {
+func (g *GitLab) RemoveHook(id, owner, repo string) error {
 
 	var err error
 
 	owner = strings.ToLower(owner)
 	repo = strings.ToLower(repo)
 
-	client := oauth2.NewClient(oauth2.NoContext, oauth2.StaticTokenSource(token))
+	client := oauth2.NewClient(oauth2.NoContext, oauth2.StaticTokenSource(g.Token))
 
 	var uri = fmt.Sprintf("%s/api/v3/projects/%s%%2F%s/hooks/%s", API_URL, owner, repo, id)
 

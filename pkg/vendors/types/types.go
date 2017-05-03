@@ -16,13 +16,50 @@
 // from Last.Backend LLC.
 //
 
-package interfaces
+package types
+
+import (
+	"golang.org/x/oauth2"
+	"time"
+)
 
 type Vendor struct {
-	Vendor string
-	Host   string
+	Host  string
+	Name  string
+	Token *oauth2.Token
 }
 
-type IVendor interface {
-	GetVendorInfo() *Vendor
+type User struct {
+	Username  string
+	ServiceID string
+	Email     string
 }
+
+type VCSRepository struct {
+	Name          string
+	Description   string
+	Private       bool
+	DefaultBranch string
+	Permissions   struct {
+		Admin bool
+	}
+}
+
+type VCSRepositories []VCSRepository
+
+type VCSBranch struct {
+	Name       string
+	LastCommit Commit
+}
+
+type VCSBranches []VCSBranch
+
+type Commit struct {
+	Username string
+	Hash     string
+	Message  string
+	Date     time.Time
+	Email    string
+}
+
+type Commits []Commit

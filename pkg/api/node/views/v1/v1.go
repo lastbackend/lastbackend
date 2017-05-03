@@ -18,8 +18,18 @@
 
 package v1
 
-import "github.com/lastbackend/lastbackend/pkg/apis/types"
+import (
+	"github.com/lastbackend/lastbackend/pkg/apis/types"
+)
 
 func NewSpec(node *types.Node) *Spec {
 	return ToNodeSpec(node.Spec)
+}
+
+func NewNode(obj *types.Node) *Node {
+	return New(obj)
+}
+
+func NewNodeList(obj types.NodeList) *NodeList {
+	return NewList(obj)
 }

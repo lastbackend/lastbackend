@@ -23,7 +23,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/lastbackend/lastbackend/pkg/vendors/interfaces"
+	"github.com/lastbackend/lastbackend/pkg/vendors/types"
 	"github.com/lastbackend/lastbackend/pkg/vendors/utils"
 	"golang.org/x/oauth2"
 	"io"
@@ -33,83 +33,31 @@ import (
 	"time"
 )
 
-// const
-
 const (
-	API_URL   = "https://api.github.com"
-	TOKEN_URL = "https://github.com/login/oauth/access_token"
+	API_URL = "https://api.github.com"
 )
 
-// Model
-
 type GitHub struct {
-	proto interfaces.OAuth2
+	types.Vendor
 }
 
-// IVendor
-
-func GetClient(clientID, clientSecretID, redirectURI string) *GitHub {
-	return &GitHub{proto: interfaces.OAuth2{ClientID: clientID, ClientSecret: clientSecretID, RedirectUri: redirectURI}}
+func GetClient(token string) *GitHub {
+	c := new(GitHub)
+	c.Token = &oauth2.Token{AccessToken: token, TokenType: "Bearer"}
+	c.Name = "github"
+	c.Host = "github.com"
+	return c
 }
 
-func (GitHub) GetVendorInfo() *interfaces.Vendor {
-	return &interfaces.Vendor{Vendor: "github", Host: "github.com"}
+func (g *GitHub) VendorInfo() *types.Vendor {
+	return &g.Vendor
 }
 
-// IOAuth2 func
-
-func (g GitHub) GetToken(code string) (*oauth2.Token, error) {
-
-	token, err := g.getOAuth2Config().Exchange(oauth2.NoContext, code)
-	if err != nil {
-		return nil, err
-	}
-
-	return token, nil
-}
-
-func (g GitHub) RefreshToken(token *oauth2.Token) (*oauth2.Token, bool, error) {
+func (g *GitHub) GetUser() (*types.User, error) {
 
 	var err error
 
-	if !token.Expiry.Before(time.Now()) || token.RefreshToken == "" {
-		return token, false, nil
-	}
-
-	restoredToken := &oauth2.Token{
-		RefreshToken: token.RefreshToken,
-	}
-
-	c := g.getOAuth2Config().Client(oauth2.NoContext, restoredToken)
-
-	newToken, err := c.Transport.(*oauth2.Transport).Source.Token()
-	if err != nil {
-		return nil, false, err
-	}
-
-	return newToken, true, nil
-}
-
-// IOAuth2 - Private functions
-
-func (g GitHub) getOAuth2Config() *oauth2.Config {
-	return &oauth2.Config{
-		ClientID:     g.proto.ClientID,
-		ClientSecret: g.proto.ClientSecret,
-		RedirectURL:  g.proto.RedirectUri,
-		Endpoint: oauth2.Endpoint{
-			TokenURL: TOKEN_URL,
-		},
-	}
-}
-
-// IVCS func
-
-func (GitHub) GetUser(token *oauth2.Token) (*interfaces.User, error) {
-
-	var err error
-
-	client := oauth2.NewClient(oauth2.NoContext, oauth2.StaticTokenSource(token))
+	client := oauth2.NewClient(oauth2.NoContext, oauth2.StaticTokenSource(g.Token))
 
 	payload := struct {
 		Username string `json:"login"`
@@ -129,7 +77,7 @@ func (GitHub) GetUser(token *oauth2.Token) (*interfaces.User, error) {
 		return nil, err
 	}
 
-	var user = new(interfaces.User)
+	var user = new(types.User)
 	user.Username = payload.Username
 	user.ServiceID = strconv.FormatInt(payload.ID, 10)
 
@@ -161,7 +109,7 @@ func (GitHub) GetUser(token *oauth2.Token) (*interfaces.User, error) {
 	return user, nil
 }
 
-func (GitHub) ListRepositories(token *oauth2.Token, username string, org bool) (*interfaces.VCSRepositories, error) {
+func (g *GitHub) ListRepositories(username string, org bool) (*types.VCSRepositories, error) {
 
 	var res *http.Response
 	var err error
@@ -175,7 +123,7 @@ func (GitHub) ListRepositories(token *oauth2.Token, username string, org bool) (
 		DefaultBranch string `json:"default_branch"`
 	}{}
 
-	client := oauth2.NewClient(oauth2.NoContext, oauth2.StaticTokenSource(token))
+	client := oauth2.NewClient(oauth2.NoContext, oauth2.StaticTokenSource(g.Token))
 
 	var uri = fmt.Sprintf("%s/user/repos?per_page=99&type=owner", API_URL)
 	if org {
@@ -191,10 +139,10 @@ func (GitHub) ListRepositories(token *oauth2.Token, username string, org bool) (
 		return nil, err
 	}
 
-	var repositories = new(interfaces.VCSRepositories)
+	var repositories = new(types.VCSRepositories)
 
 	for _, repo := range payload {
-		repository := new(interfaces.VCSRepository)
+		repository := new(types.VCSRepository)
 
 		repository.Name = repo.Name
 		repository.Description = repo.Description
@@ -207,7 +155,7 @@ func (GitHub) ListRepositories(token *oauth2.Token, username string, org bool) (
 	return repositories, nil
 }
 
-func (GitHub) ListBranches(token *oauth2.Token, owner, repo string) (*interfaces.VCSBranches, error) {
+func (g *GitHub) ListBranches(owner, repo string) (*types.VCSBranches, error) {
 
 	var err error
 
@@ -218,7 +166,7 @@ func (GitHub) ListBranches(token *oauth2.Token, owner, repo string) (*interfaces
 		Name string `json:"name"`
 	}{}
 
-	client := oauth2.NewClient(oauth2.NoContext, oauth2.StaticTokenSource(token))
+	client := oauth2.NewClient(oauth2.NoContext, oauth2.StaticTokenSource(g.Token))
 
 	res, err := client.Get(fmt.Sprintf("%s/repos/%s/%s/branches", API_URL, owner, repo))
 
@@ -230,10 +178,10 @@ func (GitHub) ListBranches(token *oauth2.Token, owner, repo string) (*interfaces
 		return nil, nil
 	}
 
-	var branches = new(interfaces.VCSBranches)
+	var branches = new(types.VCSBranches)
 
 	for _, br := range payload {
-		branch := new(interfaces.VCSBranch)
+		branch := new(types.VCSBranch)
 
 		branch.Name = br.Name
 		*branches = append(*branches, *branch)
@@ -242,7 +190,7 @@ func (GitHub) ListBranches(token *oauth2.Token, owner, repo string) (*interfaces
 	return branches, nil
 }
 
-func (GitHub) GetLastCommitOfBranch(token *oauth2.Token, owner, repo, branch string) (*interfaces.Commit, error) {
+func (g *GitHub) GetLastCommitOfBranch(owner, repo, branch string) (*types.Commit, error) {
 
 	repo = strings.ToLower(repo)
 	owner = strings.ToLower(owner)
@@ -264,7 +212,7 @@ func (GitHub) GetLastCommitOfBranch(token *oauth2.Token, owner, repo, branch str
 		} `json:"commit"`
 	}{}
 
-	client := oauth2.NewClient(oauth2.NoContext, oauth2.StaticTokenSource(token))
+	client := oauth2.NewClient(oauth2.NoContext, oauth2.StaticTokenSource(g.Token))
 
 	var uri = fmt.Sprintf("%s/repos/%s/%s/branches/%s", API_URL, owner, repo, branch)
 
@@ -278,7 +226,7 @@ func (GitHub) GetLastCommitOfBranch(token *oauth2.Token, owner, repo, branch str
 		return nil, err
 	}
 
-	var commit = new(interfaces.Commit)
+	var commit = new(types.Commit)
 
 	commit.Hash = branchResponse.Commit.Hash
 	commit.Date = branchResponse.Commit.Commit.Committer.Date
@@ -289,7 +237,7 @@ func (GitHub) GetLastCommitOfBranch(token *oauth2.Token, owner, repo, branch str
 	return commit, nil
 }
 
-func (GitHub) GetReadme(token *oauth2.Token, owner string, repo string) (string, error) {
+func (g *GitHub) GetReadme(owner string, repo string) (string, error) {
 
 	var err error
 
@@ -300,7 +248,7 @@ func (GitHub) GetReadme(token *oauth2.Token, owner string, repo string) (string,
 		Content string `json:"content"`
 	}{}
 
-	client := oauth2.NewClient(oauth2.NoContext, oauth2.StaticTokenSource(token))
+	client := oauth2.NewClient(oauth2.NoContext, oauth2.StaticTokenSource(g.Token))
 
 	var uri = fmt.Sprintf(`%s/repos/%s/%s/readme`, API_URL, owner, repo)
 
@@ -322,7 +270,7 @@ func (GitHub) GetReadme(token *oauth2.Token, owner string, repo string) (string,
 	return payload.Content, nil
 }
 
-func (GitHub) PushPayload(data []byte) (*interfaces.VCSBranch, error) {
+func (g *GitHub) PushPayload(data []byte) (*types.VCSBranch, error) {
 
 	var err error
 
@@ -343,10 +291,10 @@ func (GitHub) PushPayload(data []byte) (*interfaces.VCSBranch, error) {
 		return nil, nil
 	}
 
-	var branch = new(interfaces.VCSBranch)
+	var branch = new(types.VCSBranch)
 
 	branch.Name = strings.Split(payload.Ref, "/")[2]
-	branch.LastCommit = interfaces.Commit{
+	branch.LastCommit = types.Commit{
 		Username: payload.Commit.Committer.Username,
 		Email:    payload.Commit.Committer.Email,
 		Hash:     payload.Commit.ID,
@@ -357,7 +305,7 @@ func (GitHub) PushPayload(data []byte) (*interfaces.VCSBranch, error) {
 	return branch, nil
 }
 
-func (GitHub) CreateHook(token *oauth2.Token, id, owner, repo, host string) (*string, error) {
+func (g *GitHub) CreateHook(id, owner, repo, host string) (*string, error) {
 
 	repo = strings.ToLower(repo)
 	owner = strings.ToLower(owner)
@@ -382,7 +330,7 @@ func (GitHub) CreateHook(token *oauth2.Token, id, owner, repo, host string) (*st
 		return nil, nil
 	}
 
-	client := oauth2.NewClient(oauth2.NoContext, oauth2.StaticTokenSource(token))
+	client := oauth2.NewClient(oauth2.NoContext, oauth2.StaticTokenSource(g.Token))
 
 	var uri = fmt.Sprintf("%s/repos/%s/%s/hooks", API_URL, owner, repo)
 
@@ -404,12 +352,12 @@ func (GitHub) CreateHook(token *oauth2.Token, id, owner, repo, host string) (*st
 	return &id, nil
 }
 
-func (GitHub) RemoveHook(token *oauth2.Token, id, owner, repo string) error {
+func (g *GitHub) RemoveHook(id, owner, repo string) error {
 
 	repo = strings.ToLower(repo)
 	owner = strings.ToLower(owner)
 
-	client := oauth2.NewClient(oauth2.NoContext, oauth2.StaticTokenSource(token))
+	client := oauth2.NewClient(oauth2.NoContext, oauth2.StaticTokenSource(g.Token))
 
 	var uri = fmt.Sprintf(`%s/repos/%s/%s/hooks/%s`, API_URL, owner, repo, id)
 

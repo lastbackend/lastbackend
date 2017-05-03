@@ -20,7 +20,7 @@ package types
 
 import (
 	"encoding/json"
-	"github.com/lastbackend/lastbackend/pkg/vendors/interfaces"
+	"github.com/lastbackend/lastbackend/pkg/vendors/types"
 )
 
 type VCSRepository struct {
@@ -30,7 +30,7 @@ type VCSRepository struct {
 	DefaultBranch string `json:"default_branch"`
 }
 
-func (r *VCSRepository) Convert(repository *interfaces.VCSRepository) {
+func (r *VCSRepository) Convert(repository *types.VCSRepository) {
 
 	if repository == nil {
 		return
@@ -53,7 +53,7 @@ func (r *VCSRepository) ToJson() ([]byte, error) {
 
 type VCSRepositoryList []VCSRepository
 
-func (r *VCSRepositoryList) Convert(repositories *interfaces.VCSRepositories) {
+func (r *VCSRepositoryList) Convert(repositories *types.VCSRepositories) {
 
 	if repositories == nil {
 		return
@@ -83,7 +83,7 @@ type VCSBranch struct {
 	Name string `json:"name"`
 }
 
-func (b *VCSBranch) Convert(branch *interfaces.VCSBranch) {
+func (b *VCSBranch) Convert(branch *types.VCSBranch) {
 
 	if branch == nil {
 		return
@@ -103,7 +103,7 @@ func (b *VCSBranch) ToJson() ([]byte, error) {
 
 type VCSBranchList []VCSBranch
 
-func (b *VCSBranchList) Convert(branches *interfaces.VCSBranches) {
+func (b *VCSBranchList) Convert(branches *types.VCSBranches) {
 
 	if branches == nil {
 		return

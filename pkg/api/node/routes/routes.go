@@ -25,4 +25,5 @@ import (
 
 var Routes = []http.Route{
 	{Path: "/node/event", Method: http.MethodPut, Middleware: []http.Middleware{middleware.Context}, Handler: NodeEventH},
+	{Path: "/node", Method: http.MethodGet, Middleware: []http.Middleware{middleware.Context}, Handler: NodeListH},
 }
