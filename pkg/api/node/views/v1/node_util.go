@@ -26,7 +26,6 @@ import (
 func New(obj *types.Node) *Node {
 	n := Node{}
 	n.Meta = ToNodeMeta(obj.Meta)
-	n.State = ToNodeState(obj.State)
 	return &n
 }
 
@@ -34,13 +33,12 @@ func ToNodeMeta(meta types.NodeMeta) NodeMeta {
 	n := NodeMeta{
 		Hostname:     meta.Hostname,
 		OSType:       meta.OSType,
+		OSName:       meta.OSName,
 		Architecture: meta.Architecture,
+		Created:      meta.Created,
+		Updated:      meta.Updated,
 	}
 	return n
-}
-
-func ToNodeState(state types.NodeState) NodeState {
-	return NodeState{}
 }
 
 func (obj *Node) ToJson() ([]byte, error) {

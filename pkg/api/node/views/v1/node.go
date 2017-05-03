@@ -18,6 +18,8 @@
 
 package v1
 
+import "time"
+
 type Node struct {
 	Meta  NodeMeta  `json:"meta"`
 	State NodeState `json:"state"`
@@ -33,6 +35,9 @@ type NodeMeta struct {
 	Memory  NodeMemory  `json:"memory"`
 	Network NodeNetwork `json:"network"`
 	Storage NodeStorage `json:"storage"`
+
+	Created time.Time `json:"created"`
+	Updated time.Time `json:"updated"`
 }
 
 type NodeCPU struct {

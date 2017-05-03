@@ -16,18 +16,14 @@
 // from Last.Backend LLC.
 //
 
-package system
+package types
 
-import (
-	_os "github.com/lastbackend/lastbackend/pkg/agent/utils/system/os"
-	"github.com/lastbackend/lastbackend/pkg/agent/utils/system/types"
-	"os"
-)
-
-func GetHostname() (string, error) {
-	return os.Hostname()
-}
-
-func GetOsInfo() *types.OsInfo {
-	return _os.GetInfo()
+type OsInfo struct {
+	GoOS     string
+	Core     string
+	Kernel   string
+	Platform string
+	OS       string
+	Hostname string
+	CPUs     int
 }
