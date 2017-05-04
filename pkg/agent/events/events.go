@@ -29,6 +29,7 @@ func NewTickerEvent() {
 	var event = new(types.Event)
 	event.Ticker = true
 	event.Meta = system.GetNodeMeta()
+	event.State = system.GetNodeState()
 	event.Pods = make([]*types.Pod, 0)
 	event.Timestamp = time.Now()
 
@@ -40,6 +41,7 @@ func NewInitialEvent(pods []*types.Pod) {
 	var event = new(types.Event)
 	event.Initial = true
 	event.Meta = system.GetNodeMeta()
+	event.State = system.GetNodeState()
 	event.Pods = pods
 	event.Timestamp = time.Now()
 
@@ -50,6 +52,7 @@ func NewInitialEvent(pods []*types.Pod) {
 func NewEvent(pods []*types.Pod) {
 	var event = new(types.Event)
 	event.Meta = system.GetNodeMeta()
+	event.State = system.GetNodeState()
 	event.Pods = pods
 	event.Timestamp = time.Now()
 	context.Get().GetEventListener().Send(event)

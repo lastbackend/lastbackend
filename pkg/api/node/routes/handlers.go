@@ -19,12 +19,12 @@
 package routes
 
 import (
-	"github.com/lastbackend/lastbackend/pkg/apis/types"
 	"github.com/lastbackend/lastbackend/pkg/api/context"
 	"github.com/lastbackend/lastbackend/pkg/api/node"
 	"github.com/lastbackend/lastbackend/pkg/api/node/routes/request"
 	"github.com/lastbackend/lastbackend/pkg/api/node/views/v1"
 	"github.com/lastbackend/lastbackend/pkg/api/service"
+	"github.com/lastbackend/lastbackend/pkg/apis/types"
 	"github.com/lastbackend/lastbackend/pkg/errors"
 	"net/http"
 )
@@ -55,9 +55,9 @@ func NodeEventH(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	n := node.New()
+	n := node.New(r.Context())
 	log.Debugf("try to find node by hostname: %s", rq.Meta.Hostname)
-	item, err := n.Get(r.Context(), rq.Meta.Hostname)
+	item, err := n.Get(rq.Meta.Hostname)
 	if err != nil {
 		log.Errorf("Error: find node by hostname: %s", err.Error())
 		errors.HTTP.InternalServerError(w)
@@ -66,7 +66,7 @@ func NodeEventH(w http.ResponseWriter, r *http.Request) {
 
 	if item == nil {
 		log.Debug("Node not found, create a new one")
-		item, err = n.Create(r.Context(), &rq.Meta, &rq.State)
+		item, err = n.Create(&rq.Meta, &rq.State)
 		if err != nil {
 			log.Errorf("Error: can not create node: %s", err.Error())
 			errors.HTTP.InternalServerError(w)
@@ -74,7 +74,9 @@ func NodeEventH(w http.ResponseWriter, r *http.Request) {
 		}
 	} else {
 		item.Meta = rq.Meta
-		n.SetMeta(r.Context(), item)
+		n.SetMeta(item)
+		item.State = rq.State
+		n.SetState(item)
 	}
 
 	response, err := v1.NewSpec(item).ToJson()
@@ -101,8 +103,8 @@ func NodeListH(w http.ResponseWriter, r *http.Request) {
 
 	log.Debug("Node list handler")
 
-	n := node.New()
-	nodes, err := n.List(r.Context())
+	n := node.New(r.Context())
+	nodes, err := n.List()
 	if err != nil {
 		log.Errorf("Error: get list nodes: %s", err.Error())
 		errors.HTTP.InternalServerError(w)

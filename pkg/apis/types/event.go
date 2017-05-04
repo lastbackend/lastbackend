@@ -32,6 +32,8 @@ type Event struct {
 	Ticker bool `json:"ticker"`
 	// Event meta
 	Meta NodeMeta `json:"meta"`
+	// Event meta
+	State NodeState `json:"state"`
 	// Activity created time
 	Pods []*Pod `json:"pods"`
 	// Event created time
