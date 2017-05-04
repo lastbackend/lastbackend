@@ -21,9 +21,15 @@ package v1
 import "time"
 
 type Node struct {
-	Meta  NodeMeta  `json:"meta"`
+	// Node metadata
+	Alive bool `json:"alive"`
+	// Node metadata
+	Meta NodeMeta `json:"meta"`
+	// Node state
 	State NodeState `json:"state"`
 }
+
+type NodeList []*Node
 
 type NodeMeta struct {
 	Hostname     string `json:"hostname"`
@@ -31,38 +37,28 @@ type NodeMeta struct {
 	OSType       string `json:"os_type"`
 	Architecture string `json:"architecture"`
 
-	CPU     NodeCPU     `json:"cpu"`
-	Memory  NodeMemory  `json:"memory"`
-	Network NodeNetwork `json:"network"`
-	Storage NodeStorage `json:"storage"`
-
+	// Meta created time
 	Created time.Time `json:"created"`
+	// Meta updated time
 	Updated time.Time `json:"updated"`
 }
 
-type NodeCPU struct {
-	Name  string `json:"name"`
-	Cores int64  `json:"cores"`
-}
-
-type NodeMemory struct {
-	Total     int64 `json:"total"`
-	Used      int64 `json:"used"`
-	Available int64 `json:"available"`
-}
-
-type NodeNetwork struct {
-	Interface string   `json:"interface,omitempty"`
-	IP        []string `json:"ip,omitempty"`
-}
-
-type NodeStorage struct {
-	Available string `json:"available"`
-	Used      string `json:"used"`
-	Total     string `json:"total"`
-}
-
 type NodeState struct {
+	// Node Capacity
+	Capacity NodeResources `json:"capacity"`
+	// Node Allocated
+	Allocated NodeResources `json:"allocated"`
 }
 
-type NodeList []*Node
+type NodeResources struct {
+	// Node total containers
+	Containers int `json:"containers"`
+	// Node total pods
+	Pods int `json:"pods"`
+	// Node total memory
+	Memory int64 `json:"memory"`
+	// Node total cpu
+	Cpu int `json:"cpu"`
+	// Node storage
+	Storage int `json:"storage"`
+}

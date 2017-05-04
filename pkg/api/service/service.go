@@ -223,7 +223,7 @@ func (s *service) AddPod(service *types.Service) error {
 		pod.Spec = s.GenerateSpec(service)
 	}
 
-	n, err := node.New().Allocate(s.Context, pod.Spec)
+	n, err := node.New(s.Context).Allocate(pod.Spec)
 	if err != nil {
 		return err
 	}

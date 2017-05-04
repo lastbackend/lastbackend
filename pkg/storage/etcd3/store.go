@@ -48,7 +48,6 @@ func (s *store) Count(ctx context.Context, key, keyRegexFilter string) (int, err
 	if !strings.HasSuffix(key, "/") {
 		key += "/"
 	}
-	printf("COUNT: %s", key)
 	getResp, err := s.client.KV.Get(ctx, key, clientv3.WithPrefix())
 	if err != nil {
 		return 0, err
@@ -74,7 +73,6 @@ func (s *store) Create(ctx context.Context, key string, obj, outPtr interface{},
 		return err
 	}
 	key = path.Join(s.pathPrefix, key)
-	printf("CREATE: %s", key)
 	opts, err := s.ttlOpts(ctx, int64(ttl))
 	if err != nil {
 		return err
@@ -99,7 +97,6 @@ func (s *store) Create(ctx context.Context, key string, obj, outPtr interface{},
 
 func (s *store) Get(ctx context.Context, key string, outPtr interface{}) error {
 	key = path.Join(s.pathPrefix, key)
-	printf("GET: %s", key)
 	res, err := s.client.KV.Get(ctx, key, s.opts...)
 	if err != nil {
 		return err
@@ -115,7 +112,6 @@ func (s *store) List(ctx context.Context, key, keyRegexFilter string, listOutPtr
 	if !strings.HasSuffix(key, "/") {
 		key += "/"
 	}
-	printf("LIST: %s", key)
 	getResp, err := s.client.KV.Get(ctx, key, clientv3.WithPrefix())
 	if err != nil {
 		return err
@@ -146,7 +142,6 @@ func (s *store) Map(ctx context.Context, key, keyRegexFilter string, mapOutPtr i
 	if !strings.HasSuffix(key, "/") {
 		key += "/"
 	}
-	printf("MAP: %s", key)
 	getResp, err := s.client.KV.Get(ctx, key, clientv3.WithPrefix())
 	if err != nil {
 		return err
@@ -181,7 +176,6 @@ func (s *store) MapList(ctx context.Context, key string, keyRegexFilter string, 
 	if !strings.HasSuffix(key, "/") {
 		key += "/"
 	}
-	printf("Map list: %s", key)
 	getResp, err := s.client.KV.Get(ctx, key, clientv3.WithPrefix())
 
 	if err != nil {
@@ -215,7 +209,6 @@ func (s *store) Update(ctx context.Context, key string, obj, outPtr interface{},
 		return err
 	}
 	key = path.Join(s.pathPrefix, key)
-	printf("UPDATE: %s", key)
 	opts, err := s.ttlOpts(ctx, int64(ttl))
 	if err != nil {
 		return err
@@ -241,7 +234,6 @@ func (s *store) Update(ctx context.Context, key string, obj, outPtr interface{},
 
 func (s *store) Delete(ctx context.Context, key string) error {
 	key = path.Join(s.pathPrefix, key)
-	printf("DELETE: %s", key)
 	_, err := s.client.KV.Txn(ctx).
 		Then(clientv3.OpGet(key), clientv3.OpDelete(key)).
 		Commit()
@@ -253,7 +245,6 @@ func (s *store) Delete(ctx context.Context, key string) error {
 
 func (s *store) DeleteDir(ctx context.Context, key string) error {
 	key = path.Join(s.pathPrefix, key)
-	printf("DELETEDIR: %s", key)
 	_, err := s.client.KV.Txn(ctx).
 		Then(clientv3.OpDelete(key, clientv3.WithPrefix())).
 		Commit()
@@ -264,7 +255,6 @@ func (s *store) DeleteDir(ctx context.Context, key string) error {
 }
 
 func (s *store) Begin(ctx context.Context) st.ITx {
-	printf("BEGIN")
 	return &tx{
 		store:   s,
 		context: ctx,

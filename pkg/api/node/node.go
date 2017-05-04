@@ -21,30 +21,31 @@ package node
 import (
 	"context"
 	"errors"
-	"github.com/lastbackend/lastbackend/pkg/apis/types"
 	ctx "github.com/lastbackend/lastbackend/pkg/api/context"
+	"github.com/lastbackend/lastbackend/pkg/apis/types"
 )
 
-type Node struct {
+type node struct {
+	Context context.Context
 }
 
-func New() *Node {
-	return new(Node)
+func New(ctx context.Context) *node {
+	return &node{Context: ctx}
 }
 
-func (n *Node) List(c context.Context) ([]*types.Node, error) {
+func (n *node) List() ([]*types.Node, error) {
 	var storage = ctx.Get().GetStorage()
-	return storage.Node().List(c)
+	return storage.Node().List(n.Context)
 }
 
-func (n *Node) Get(c context.Context, hostname string) (*types.Node, error) {
+func (n *node) Get(hostname string) (*types.Node, error) {
 	var (
 		log     = ctx.Get().GetLogger()
 		storage = ctx.Get().GetStorage()
 	)
 
 	log.Debug("Node: Get node info")
-	node, err := storage.Node().Get(c, hostname)
+	node, err := storage.Node().Get(n.Context, hostname)
 	if err != nil {
 		return nil, err
 	}
@@ -52,23 +53,23 @@ func (n *Node) Get(c context.Context, hostname string) (*types.Node, error) {
 	return node, nil
 }
 
-func (n *Node) SetMeta(c context.Context, node *types.Node) error {
+func (n *node) SetMeta(node *types.Node) error {
 	var (
 		storage = ctx.Get().GetStorage()
 	)
 
-	return storage.Node().UpdateMeta(c, &node.Meta)
+	return storage.Node().UpdateMeta(n.Context, node)
 }
 
-func (n *Node) SetState(c context.Context, node *types.Node) error {
+func (n *node) SetState(node *types.Node) error {
 	var (
 		storage = ctx.Get().GetStorage()
 	)
 
-	return storage.Node().UpdateState(c, node)
+	return storage.Node().UpdateState(n.Context, node)
 }
 
-func (n *Node) Create(c context.Context, meta *types.NodeMeta, state *types.NodeState) (*types.Node, error) {
+func (n *node) Create(meta *types.NodeMeta, state *types.NodeState) (*types.Node, error) {
 
 	var (
 		storage = ctx.Get().GetStorage()
@@ -81,28 +82,28 @@ func (n *Node) Create(c context.Context, meta *types.NodeMeta, state *types.Node
 	node.Meta = *meta
 	node.State = *state
 
-	if err := storage.Node().Insert(c, node); err != nil {
+	if err := storage.Node().Insert(n.Context, node); err != nil {
 		return node, err
 	}
 
 	return node, nil
 }
 
-func (n *Node) PodSpecRemove(c context.Context, hostname string, spec *types.PodNodeSpec) error {
+func (n *node) PodSpecRemove(hostname string, spec *types.PodNodeSpec) error {
 
 	var (
 		storage = ctx.Get().GetStorage()
 		log     = ctx.Get().GetLogger()
 	)
 
-	node, err := n.Get(c, hostname)
+	node, err := n.Get(hostname)
 	if err != nil {
 		log.Errorf("Node: Pod spec remove: remove pod spec err: %s", err.Error())
 		return err
 	}
 
 	log.Debug("Remove pod spec from node")
-	if err := storage.Node().RemovePod(c, &node.Meta, spec); err != nil {
+	if err := storage.Node().RemovePod(n.Context, &node.Meta, spec); err != nil {
 		log.Errorf("Node: Pod spec remove: remove pod spec err: %s", err.Error())
 		return err
 	}
@@ -112,7 +113,7 @@ func (n *Node) PodSpecRemove(c context.Context, hostname string, spec *types.Pod
 	return nil
 }
 
-func (n *Node) PodSpecUpdate(c context.Context, hostname string, spec *types.PodNodeSpec) error {
+func (n *node) PodSpecUpdate(hostname string, spec *types.PodNodeSpec) error {
 	// Get node by hostname
 	// Update pod node spec
 	var (
@@ -120,14 +121,14 @@ func (n *Node) PodSpecUpdate(c context.Context, hostname string, spec *types.Pod
 		log     = ctx.Get().GetLogger()
 	)
 
-	node, err := n.Get(c, hostname)
+	node, err := n.Get(hostname)
 	if err != nil {
 		log.Errorf("Node: Pod spec remove: remove pod spec err: %s", err.Error())
 		return err
 	}
 
 	log.Debug("Remove pod spec from node")
-	if err := storage.Node().UpdatePod(c, &node.Meta, spec); err != nil {
+	if err := storage.Node().UpdatePod(n.Context, &node.Meta, spec); err != nil {
 		log.Errorf("Node: Pod spec remove: remove pod spec err: %s", err.Error())
 		return err
 	}
@@ -137,7 +138,7 @@ func (n *Node) PodSpecUpdate(c context.Context, hostname string, spec *types.Pod
 	return nil
 }
 
-func (n *Node) Allocate(c context.Context, spec types.PodSpec) (*types.Node, error) {
+func (n *node) Allocate(spec types.PodSpec) (*types.Node, error) {
 
 	var (
 		node    *types.Node
@@ -148,7 +149,7 @@ func (n *Node) Allocate(c context.Context, spec types.PodSpec) (*types.Node, err
 
 	log.Debug("Allocate Pod to Node")
 
-	nodes, err := storage.Node().List(c)
+	nodes, err := storage.Node().List(n.Context)
 	if err != nil {
 		log.Errorf("Node: allocate: get nodes error: %s", err.Error())
 		return nil, err
@@ -159,8 +160,8 @@ func (n *Node) Allocate(c context.Context, spec types.PodSpec) (*types.Node, err
 	}
 
 	for _, node = range nodes {
-		log.Debugf("Node: Allocate: available memory %d", node.Meta.State.Capacity)
-		if node.Meta.State.Capacity.Memory > memory {
+		log.Debugf("Node: Allocate: available memory %d", node.State.Capacity)
+		if node.State.Capacity.Memory > memory {
 			break
 		}
 	}

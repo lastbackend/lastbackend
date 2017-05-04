@@ -27,7 +27,10 @@ import (
 	"time"
 )
 
-const nodeStorage = "node"
+const (
+	nodeStorage = "node"
+	timeout = 10
+)
 
 // Namespace Service type for interface in interfaces folder
 type NodeStorage struct {
@@ -37,7 +40,7 @@ type NodeStorage struct {
 }
 
 func (s *NodeStorage) List(ctx context.Context) ([]*types.Node, error) {
-	const filter = `\b(.+)` + nodeStorage + `\/(.+)\/(meta|state)\b`
+	const filter = `\b(.+)` + nodeStorage + `\/(.+)\/(meta|state|alive)\b`
 	nodes := []*types.Node{}
 	client, destroy, err := s.Client()
 	if err != nil {
@@ -54,7 +57,7 @@ func (s *NodeStorage) List(ctx context.Context) ([]*types.Node, error) {
 
 func (s *NodeStorage) Get(ctx context.Context, hostname string) (*types.Node, error) {
 
-	const filter = `\b.+` + nodeStorage + `\/.+\/(meta|state)\b`
+	const filter = `\b.+` + nodeStorage + `\/.+\/(meta|state|alive)\b`
 
 	var (
 		node = new(types.Node)
@@ -91,6 +94,9 @@ func (s *NodeStorage) Get(ctx context.Context, hostname string) (*types.Node, er
 
 func (s *NodeStorage) Insert(ctx context.Context, node *types.Node) error {
 
+	node.Meta.Created = time.Now()
+	node.Meta.Updated = time.Now()
+
 	client, destroy, err := s.Client()
 	if err != nil {
 		return err
@@ -111,6 +117,12 @@ func (s *NodeStorage) Insert(ctx context.Context, node *types.Node) error {
 		return err
 	}
 
+	keyAvailable := s.util.Key(ctx, nodeStorage, node.Meta.Hostname, "alive")
+	if err := tx.Create(keyAvailable, true, timeout); err != nil {
+		fmt.Println("alive", err.Error())
+		return err
+	}
+
 	if err := tx.Commit(); err != nil {
 		fmt.Println("commit", err.Error())
 		return err
@@ -119,8 +131,8 @@ func (s *NodeStorage) Insert(ctx context.Context, node *types.Node) error {
 	return nil
 }
 
-func (s *NodeStorage) UpdateMeta(ctx context.Context, meta *types.NodeMeta) error {
-	meta.Updated = time.Now()
+func (s *NodeStorage) UpdateMeta(ctx context.Context, node *types.Node) error {
+	node.Meta.Updated = time.Now()
 
 	client, destroy, err := s.Client()
 	if err != nil {
@@ -129,8 +141,14 @@ func (s *NodeStorage) UpdateMeta(ctx context.Context, meta *types.NodeMeta) erro
 	defer destroy()
 
 	tx := client.Begin(ctx)
-	keyMeta := s.util.Key(ctx, nodeStorage, meta.Hostname, "meta")
-	if err := tx.Update(keyMeta, meta, 0); err != nil {
+	keyMeta := s.util.Key(ctx, nodeStorage, node.Meta.Hostname, "meta")
+	if err := tx.Update(keyMeta, node.Meta, 0); err != nil {
+		return err
+	}
+
+	keyAvailable := s.util.Key(ctx, nodeStorage, node.Meta.Hostname, "alive")
+	if err := tx.Upsert(keyAvailable, true, timeout); err != nil {
+		fmt.Println("available", err.Error())
 		return err
 	}
 
@@ -158,10 +176,16 @@ func (s *NodeStorage) UpdateState(ctx context.Context, node *types.Node) error {
 	}
 
 	keyState := s.util.Key(ctx, nodeStorage, node.Meta.Hostname, "state")
-	if err := tx.Update(keyState, &node.Meta, 0); err != nil {
+	if err := tx.Update(keyState, &node.State, 0); err != nil {
 		return err
 	}
 	if err := tx.Commit(); err != nil {
+		return err
+	}
+
+	keyAvailable := s.util.Key(ctx, nodeStorage, node.Meta.Hostname, "alive")
+	if err := tx.Upsert(keyAvailable, true, timeout); err != nil {
+		fmt.Println("available", err.Error())
 		return err
 	}
 

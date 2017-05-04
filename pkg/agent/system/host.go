@@ -49,10 +49,16 @@ func GetNodeMeta() types.NodeMeta {
 	meta.OSName = fmt.Sprintf("%s %s", info.OS, info.Core)
 	meta.Architecture = info.Platform
 
-	meta.State.Capacity = GetNodeCapacity()
-	meta.State.Allocated = GetNodeAllocation()
-
 	return meta
+}
+
+func GetNodeState() types.NodeState {
+	var state = types.NodeState{}
+
+	state.Capacity = GetNodeCapacity()
+	state.Allocated = GetNodeAllocation()
+
+	return state
 }
 
 func GetNodeCapacity() types.NodeResources {

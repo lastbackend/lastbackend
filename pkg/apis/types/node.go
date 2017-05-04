@@ -27,6 +27,8 @@ type Node struct {
 	Meta NodeMeta `json:"meta"`
 	// Node state
 	State NodeState `json:"state"`
+	// Node alive
+	Alive bool `json:"alive"`
 	// Node spec info
 	Spec NodeSpec `json:"spec"`
 }
@@ -44,9 +46,6 @@ type NodeMeta struct {
 
 	CRI     PodCRIMeta `json:"cri"`
 	Network PodNetwork `json:"network"`
-
-	// Node state info
-	State NodeState `json:"state"`
 }
 
 type NodeState struct {
