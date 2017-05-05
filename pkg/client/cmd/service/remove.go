@@ -30,30 +30,30 @@ func RemoveCmd(name string) {
 
 	err := Remove(name)
 	if err != nil {
-		fmt.Print(err)
+		fmt.Println(err)
 		return
 	}
 
-	fmt.Print("Service `" + name + "` succesfully removed")
+	fmt.Println("Service `" + name + "` succesfully removed")
 }
 
 func Remove(name string) error {
 
 	var (
-		err     error
-		http    = c.Get().GetHttpClient()
-		service = new(types.Namespace)
-		er      = new(errors.Http)
+		err  error
+		http = c.Get().GetHttpClient()
+		srv  = new(types.Namespace)
+		er   = new(errors.Http)
 	)
 
-	namespace, err := nspace.Current()
+	ns, err := nspace.Current()
 	if err != nil {
 		return errors.New(err.Error())
 	}
 
 	_, _, err = http.
-		DELETE("/namespace/"+namespace.Meta.Name+"/service/"+name).
-		Request(service, er)
+		DELETE(fmt.Sprintf("/namespace/%s/service/%s", ns.Meta.Name, name)).
+		Request(srv, er)
 	if err != nil {
 		return errors.New(err.Error())
 	}

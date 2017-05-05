@@ -40,7 +40,7 @@ func Mock() *ctx {
 type ctx struct {
 	logger  *logger.Logger
 	http    *http.RawReq
-	storage *storage.DB
+	storage *storage.Storage
 	config  *config.Config
 	mock    bool
 }
@@ -61,11 +61,11 @@ func (c *ctx) GetHttpClient() *http.RawReq {
 	return c.http
 }
 
-func (c *ctx) SetStorage(storage *storage.DB) {
+func (c *ctx) SetStorage(storage *storage.Storage) {
 	c.storage = storage
 }
 
-func (c *ctx) GetStorage() *storage.DB {
+func (c *ctx) GetStorage() *storage.Storage {
 	return c.storage
 }
 

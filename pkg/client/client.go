@@ -24,10 +24,10 @@ import (
 	s "github.com/lastbackend/lastbackend/pkg/client/cmd/service"
 	"github.com/lastbackend/lastbackend/pkg/client/config"
 	"github.com/lastbackend/lastbackend/pkg/client/context"
-	"github.com/lastbackend/lastbackend/pkg/client/storage"
 	"github.com/lastbackend/lastbackend/pkg/logger"
 	"github.com/lastbackend/lastbackend/pkg/util/http"
 	"os"
+	"github.com/lastbackend/lastbackend/pkg/client/storage"
 )
 
 func Run() {
@@ -42,10 +42,11 @@ func Run() {
 
 	app.Version("v version", "0.3.0")
 
-	app.Spec = "[-d][-H]"
+	app.Spec = "[-d][-H][--tls]"
 
 	var debug = app.Bool(cli.BoolOpt{Name: "d debug", Value: false, Desc: "enable debug mode"})
 	var host = app.String(cli.StringOpt{Name: "H host", Value: "https://api.lastbackend.com", Desc: "host for rest api", HideValue: true})
+	var tls = app.Bool(cli.BoolOpt{Name: "tls", Value: false, Desc: "enable tls", HideValue: true})
 	var help = app.Bool(cli.BoolOpt{Name: "h help", Value: false, Desc: "show the help info and exit", HideValue: true})
 
 	app.Before = func() {
@@ -61,9 +62,18 @@ func Run() {
 		}
 
 		ctx.SetLogger(logger.New(cfg.Debug, 8))
-		ctx.SetHttpClient(http.New(cfg.ApiHost))
 
-		strg, err := storage.Init()
+		if cfg.ApiHost == "https://api.lastbackend.com" {
+			*tls = true
+		}
+
+		hcli, err := http.New(cfg.ApiHost, &http.ReqOpts{TLS: *tls})
+		if err != nil {
+			return
+		}
+		ctx.SetHttpClient(hcli)
+
+		strg, err := storage.Get()
 		if err != nil {
 			ctx.GetLogger().Panic("Error: init local storage", err.Error())
 			return

@@ -20,46 +20,46 @@ package service
 
 import (
 	"fmt"
+	s "github.com/lastbackend/lastbackend/pkg/api/service/views/v1"
 	n "github.com/lastbackend/lastbackend/pkg/client/cmd/namespace"
 	c "github.com/lastbackend/lastbackend/pkg/client/context"
-	s "github.com/lastbackend/lastbackend/pkg/api/service/views/v1"
 	"github.com/lastbackend/lastbackend/pkg/errors"
 )
 
 func ListServiceCmd() {
 
-	services, namespace, err := List()
+	srvList, ns, err := List()
 	if err != nil {
 		fmt.Print(err)
 		return
 	}
 
-	if services != nil {
-		services.DrawTable(namespace)
+	if srvList != nil {
+		srvList.DrawTable(ns)
 	}
 }
 
 func List() (*s.ServiceList, string, error) {
 
 	var (
-		err      error
-		http     = c.Get().GetHttpClient()
-		er       = new(errors.Http)
-		services *s.ServiceList
+		err     error
+		http    = c.Get().GetHttpClient()
+		er      = new(errors.Http)
+		srvList *s.ServiceList
 	)
 
-	namespace, err := n.Current()
+	ns, err := n.Current()
 	if err != nil {
 		return nil, "", errors.New(err.Error())
 	}
 
-	if namespace == nil {
+	if ns == nil {
 		return nil, "", errors.New("Namespace didn't select")
 	}
 
 	_, _, err = http.
-		GET("/namespace/"+namespace.Meta.Name+"/service").
-		Request(&services, er)
+		GET(fmt.Sprintf("/namespace/%s/service", ns.Meta.Name)).
+		Request(&srvList, er)
 	if err != nil {
 		return nil, "", errors.New(err.Error())
 	}
@@ -72,9 +72,9 @@ func List() (*s.ServiceList, string, error) {
 		return nil, "", errors.New(er.Message)
 	}
 
-	if len(*services) == 0 {
+	if len(*srvList) == 0 {
 		return nil, "", errors.New("You don't have any services")
 	}
 
-	return services, namespace.Meta.Name, nil
+	return srvList, ns.Meta.Name, nil
 }

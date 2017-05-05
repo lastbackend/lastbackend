@@ -20,29 +20,29 @@ package namespace
 
 import (
 	"fmt"
-	c "github.com/lastbackend/lastbackend/pkg/client/context"
 	n "github.com/lastbackend/lastbackend/pkg/api/namespace/views/v1"
+	c "github.com/lastbackend/lastbackend/pkg/client/context"
 	"github.com/lastbackend/lastbackend/pkg/errors"
 )
 
 func GetCmd(name string) {
 
-	namespace, err := Get(name)
+	ns, err := Get(name)
 	if err != nil {
 		fmt.Print(err)
 		return
 	}
 
-	namespace.DrawTable()
+	ns.DrawTable()
 }
 
 func Get(name string) (*n.Namespace, error) {
 
 	var (
-		err       error
-		http      = c.Get().GetHttpClient()
-		er        = new(errors.Http)
-		namespace = new(n.Namespace)
+		err  error
+		http = c.Get().GetHttpClient()
+		er   = new(errors.Http)
+		ns   = new(n.Namespace)
 	)
 
 	if len(name) == 0 {
@@ -50,9 +50,9 @@ func Get(name string) (*n.Namespace, error) {
 	}
 
 	_, _, err = http.
-		GET("/namespace/"+name).
+		GET(fmt.Sprintf("/namespace/%s", name)).
 		AddHeader("Content-Type", "application/json").
-		Request(&namespace, er)
+		Request(&ns, er)
 	if err != nil {
 		return nil, errors.New(er.Message)
 	}
@@ -65,5 +65,5 @@ func Get(name string) (*n.Namespace, error) {
 		return nil, errors.New(er.Message)
 	}
 
-	return namespace, nil
+	return ns, nil
 }

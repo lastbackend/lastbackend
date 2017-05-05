@@ -27,11 +27,11 @@ import (
 func RemoveCmd(name string) {
 
 	if err := Remove(name); err != nil {
-		fmt.Print(err)
+		fmt.Println(err)
 		return
 	}
 
-	fmt.Print("namespace `" + name + "` is successfully removed")
+	fmt.Println(fmt.Sprintf("Namespace `%s` is successfully removed", name))
 }
 
 func Remove(name string) error {
@@ -49,7 +49,7 @@ func Remove(name string) error {
 	}
 
 	_, _, err = http.
-		DELETE("/namespace/"+name).
+		DELETE(fmt.Sprintf("/namespace/%s", name)).
 		AddHeader("Content-Type", "application/json").
 		Request(res, er)
 	if err != nil {
@@ -64,23 +64,14 @@ func Remove(name string) error {
 		return errors.New(er.Message)
 	}
 
-	namespace, err := Current()
+	ns, err := Current()
 	if err != nil {
 		return errors.New(err.Error())
 	}
 
-	if namespace != nil {
-		if name == namespace.Meta.Name {
-			var sName string
-			if c.Get().IsMock() {
-				sName = "test"
-			} else {
-				sName = "namespace"
-			}
-			err = storage.Set(sName, nil)
-			if err != nil {
-				return errors.UnknownMessage
-			}
+	if ns != nil && name == ns.Meta.Name {
+		if err := storage.Namespace().Remove(); err != nil {
+			return errors.UnknownMessage
 		}
 	}
 

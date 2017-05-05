@@ -26,3 +26,4 @@ import (
 func Vars(r *http.Request) map[string]string {
 	return mux.Vars(r)
 }
+

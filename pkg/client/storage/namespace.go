@@ -16,42 +16,40 @@
 // from Last.Backend LLC.
 //
 
-package namespace
+package storage
 
 import (
-	"fmt"
 	n "github.com/lastbackend/lastbackend/pkg/api/namespace/views/v1"
-	c "github.com/lastbackend/lastbackend/pkg/client/context"
-	"github.com/lastbackend/lastbackend/pkg/errors"
+	"github.com/lastbackend/lastbackend/pkg/client/storage/db"
 )
 
-func CurrentCmd() {
+const namespaceStorage = "namespace"
 
-	ns, err := Current()
-	if err != nil {
-		fmt.Print(err)
-		return
-	}
-
-	if ns == nil {
-		fmt.Print("Namespace didn't select")
-		return
-	}
-
-	ns.DrawTable()
+// Namespace Service type for interface in interfaces folder
+type NamespaceStorage struct {
+	INamespace
+	client *db.DB
 }
 
-func Current() (*n.Namespace, error) {
+// Insert namespace
+func (s *NamespaceStorage) Save(namespace *n.Namespace) error {
+	return s.client.Set(namespaceStorage, namespace)
+}
 
-	var (
-		err     error
-		storage = c.Get().GetStorage()
-	)
+// Get namespace
+func (s *NamespaceStorage) Load() (*n.Namespace, error) {
+	var ns = new(n.Namespace)
+	err := s.client.Get(namespaceStorage, ns)
+	return ns, err
+}
 
-	ns, err := storage.Namespace().Load()
-	if err != nil {
-		return nil, errors.UnknownMessage
-	}
+// Remove namespace
+func (s *NamespaceStorage) Remove() error {
+	return s.client.Set(namespaceStorage, nil)
+}
 
-	return ns, nil
+func newNamespaceStorage(client *db.DB) *NamespaceStorage {
+	s := new(NamespaceStorage)
+	s.client = client
+	return s
 }

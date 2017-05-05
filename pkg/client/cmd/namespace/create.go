@@ -20,8 +20,8 @@ package namespace
 
 import (
 	"fmt"
-	c "github.com/lastbackend/lastbackend/pkg/client/context"
 	n "github.com/lastbackend/lastbackend/pkg/api/namespace/views/v1"
+	c "github.com/lastbackend/lastbackend/pkg/client/context"
 	"github.com/lastbackend/lastbackend/pkg/errors"
 	"log"
 )
@@ -35,20 +35,20 @@ func CreateCmd(name, description string) {
 
 	err := Create(name, description)
 	if err != nil {
-		fmt.Print(err)
+		fmt.Println(err)
 		return
 	}
 
-	fmt.Print("Namespace `" + name + "` is created")
+	fmt.Println(fmt.Sprintf("Namespace `%s` is created", name))
 }
 
 func Create(name, description string) error {
 
 	var (
-		err       error
-		http      = c.Get().GetHttpClient()
-		er        = new(errors.Http)
-		namespace = new(n.Namespace)
+		err  error
+		http = c.Get().GetHttpClient()
+		er   = new(errors.Http)
+		ns   = new(n.Namespace)
 	)
 
 	if len(name) == 0 {
@@ -59,7 +59,7 @@ func Create(name, description string) error {
 		POST("/namespace").
 		AddHeader("Content-Type", "application/json").
 		BodyJSON(createS{name, description}).
-		Request(&namespace, er)
+		Request(&ns, er)
 	if err != nil {
 		log.Println(err)
 		return errors.New(er.Message)
@@ -73,7 +73,7 @@ func Create(name, description string) error {
 		return errors.New(er.Message)
 	}
 
-	namespace, err = Switch(name)
+	ns, err = Switch(name)
 	if err != nil {
 		return errors.New(err.Error())
 	}

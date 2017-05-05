@@ -106,7 +106,11 @@ func Agent(cmd *cli.Cmd) {
 		ctx.SetLogger(logger.New(cfg.Debug, 9))
 		ctx.SetStorage(storage.New())
 
-		ctx.SetHttpClient(http.New(fmt.Sprintf("%s:%d", cfg.APIServer.Host, cfg.APIServer.Port)))
+		client, err := http.New(fmt.Sprintf("%s:%d", cfg.APIServer.Host, cfg.APIServer.Port), &http.ReqOpts{})
+		if err != nil {
+			ctx.GetLogger().Errorf("Cannot initialize http client: %s", err.Error())
+		}
+		ctx.SetHttpClient(client)
 		ctx.SetEventListener(listener.New(ctx.GetHttpClient(), rntm.GetSpecChan()))
 
 		ctx.SetCri(crii)

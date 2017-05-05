@@ -20,8 +20,8 @@ package service
 
 import (
 	"fmt"
-	c "github.com/lastbackend/lastbackend/pkg/client/context"
 	n "github.com/lastbackend/lastbackend/pkg/api/namespace/views/v1"
+	c "github.com/lastbackend/lastbackend/pkg/client/context"
 	"github.com/lastbackend/lastbackend/pkg/errors"
 )
 
@@ -57,45 +57,38 @@ func CreateCmd(name, image, template, url string, replicas int) {
 
 	err := Create(name, image, template, url, config)
 	if err != nil {
-		fmt.Print(err)
+		fmt.Println(err)
 		return
 	}
 
 	// TODO: Waiting for start service
 	// TODO: Show spinner
 
-	fmt.Print("Service `" + name + "` is succesfully created")
+	fmt.Println("Service `" + name + "` is succesfully created")
 }
 
 func Create(name, image, template, url string, config *Config) error {
 
 	var (
-		err       error
-		http      = c.Get().GetHttpClient()
-		storage   = c.Get().GetStorage()
-		namespace = new(n.Namespace)
-		er        = new(errors.Http)
-		res       = new(struct{})
+		err     error
+		http    = c.Get().GetHttpClient()
+		storage = c.Get().GetStorage()
+		ns      = new(n.Namespace)
+		er      = new(errors.Http)
+		res     = new(struct{})
 	)
 
-	if c.Get().IsMock() {
-		err = storage.Get("test", namespace)
-		if err != nil {
-			return errors.New(err.Error())
-		}
-	} else {
-		err = storage.Get("namespace", namespace)
-		if err != nil {
-			return errors.New(err.Error())
-		}
+	ns, err = storage.Namespace().Load()
+	if err != nil {
+		return errors.New(err.Error())
 	}
 
-	if namespace.Meta.Name == "" {
+	if ns.Meta.Name == "" {
 		return errors.New("Namespace didn't select")
 	}
 
 	var cfg = createS{}
-	cfg.Namespace = namespace.Meta.Name
+	cfg.Namespace = ns.Meta.Name
 
 	if name != "" {
 		cfg.Name = name
@@ -118,7 +111,7 @@ func Create(name, image, template, url string, config *Config) error {
 	}
 
 	_, _, err = http.
-		POST("/namespace/"+namespace.Meta.Name+"/service").
+		POST(fmt.Sprintf("/namespace/%s/service", ns.Meta.Name)).
 		AddHeader("Content-Type", "application/json").
 		BodyJSON(cfg).
 		Request(res, er)
