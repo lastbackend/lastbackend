@@ -16,42 +16,18 @@
 // from Last.Backend LLC.
 //
 
-package namespace
+package storage
 
 import (
-	"fmt"
 	n "github.com/lastbackend/lastbackend/pkg/api/namespace/views/v1"
-	c "github.com/lastbackend/lastbackend/pkg/client/context"
-	"github.com/lastbackend/lastbackend/pkg/errors"
 )
 
-func CurrentCmd() {
-
-	ns, err := Current()
-	if err != nil {
-		fmt.Print(err)
-		return
-	}
-
-	if ns == nil {
-		fmt.Print("Namespace didn't select")
-		return
-	}
-
-	ns.DrawTable()
+type IStorage interface {
+	Namespace() INamespace
 }
 
-func Current() (*n.Namespace, error) {
-
-	var (
-		err     error
-		storage = c.Get().GetStorage()
-	)
-
-	ns, err := storage.Namespace().Load()
-	if err != nil {
-		return nil, errors.UnknownMessage
-	}
-
-	return ns, nil
+type INamespace interface {
+	Save(ns *n.Namespace) error
+	Load() (*n.Namespace, error)
+	Remove() error
 }

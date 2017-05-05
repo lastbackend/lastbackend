@@ -61,14 +61,14 @@ func NewList(obj types.NamespaceList) *NamespaceList {
 func (ns *NamespaceList) ToJson() ([]byte, error) {
 
 	if ns == nil || len(*ns) == 0 {
-		return []byte("[]"), nil
+		return make([]byte, 0), nil
 	}
 
 	return json.Marshal(ns)
 }
 
 func (ns *NamespaceList) DrawTable() {
-	t := table.New([]string{"NAME", "DESCRIPTION", "REPLICAS", "CREATED", "UPDATED"})
+	t := table.New([]string{"NAME", "DESCRIPTION", "CREATED", "UPDATED"})
 	t.VisibleHeader = true
 
 	for _, n := range *ns {

@@ -20,43 +20,43 @@ package service
 
 import (
 	"fmt"
+	s "github.com/lastbackend/lastbackend/pkg/api/service/views/v1"
 	nspace "github.com/lastbackend/lastbackend/pkg/client/cmd/namespace"
 	c "github.com/lastbackend/lastbackend/pkg/client/context"
-	s "github.com/lastbackend/lastbackend/pkg/api/service/views/v1"
 	"github.com/lastbackend/lastbackend/pkg/errors"
 )
 
 func InspectCmd(name string) {
 
-	service, namespace, err := Inspect(name)
+	srv, ns, err := Inspect(name)
 	if err != nil {
-		fmt.Print(err)
+		fmt.Println(err)
 		return
 	}
 
-	service.DrawTable(namespace)
+	srv.DrawTable(ns)
 }
 
 func Inspect(name string) (*s.Service, string, error) {
 
 	var (
-		err     error
-		http    = c.Get().GetHttpClient()
-		er      = new(errors.Http)
-		service *s.Service
+		err  error
+		http = c.Get().GetHttpClient()
+		er   = new(errors.Http)
+		srv  *s.Service
 	)
 
-	namespace, err := nspace.Current()
+	ns, err := nspace.Current()
 	if err != nil {
 		return nil, "", errors.New(err.Error())
 	}
-	if namespace == nil {
+	if ns == nil {
 		return nil, "", errors.New("Namespace didn't select")
 	}
 
 	_, _, err = http.
-		GET("/namespace/"+namespace.Meta.Name+"/service/"+name).
-		Request(&service, er)
+		GET(fmt.Sprintf("/namespace/%s/service/%s", ns.Meta.Name, name)).
+		Request(&srv, er)
 	if err != nil {
 		return nil, "", errors.New(er.Message)
 	}
@@ -69,5 +69,5 @@ func Inspect(name string) (*s.Service, string, error) {
 		return nil, "", errors.New(er.Message)
 	}
 
-	return service, namespace.Meta.Name, nil
+	return srv, ns.Meta.Name, nil
 }

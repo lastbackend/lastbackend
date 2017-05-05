@@ -27,31 +27,32 @@ import (
 
 func ListNamespaceCmd() {
 
-	namspaceList, err := List()
+	nsList, err := List()
 	if err != nil {
-		fmt.Print(err)
+		fmt.Println(err)
 		return
 	}
 
-	if namspaceList != nil {
-		namspaceList.DrawTable()
+	if nsList != nil {
+		nsList.DrawTable()
 	}
 }
 
 func List() (*n.NamespaceList, error) {
 
 	var (
-		err        error
-		http       = c.Get().GetHttpClient()
-		er         = new(errors.Http)
-		nspaceList = new(n.NamespaceList)
+		err    error
+		http   = c.Get().GetHttpClient()
+		er     = new(errors.Http)
+		nsList = new(n.NamespaceList)
 	)
 
 	_, _, err = http.
 		GET("/namespace").
-		Request(nspaceList, er)
+		Request(nsList, er)
 	if err != nil {
-		return nil, errors.New(er.Message)
+		fmt.Println(err)
+		return nil, errors.New(err.Error())
 	}
 
 	if er.Code == 401 {
@@ -62,9 +63,9 @@ func List() (*n.NamespaceList, error) {
 		return nil, errors.New(er.Message)
 	}
 
-	if len(*nspaceList) == 0 {
+	if len(*nsList) == 0 {
 		return nil, errors.New("You don't have any namespace")
 	}
 
-	return nspaceList, nil
+	return nsList, nil
 }

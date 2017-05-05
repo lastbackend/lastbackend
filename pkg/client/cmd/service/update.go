@@ -20,10 +20,10 @@ package service
 
 import (
 	"fmt"
+	n "github.com/lastbackend/lastbackend/pkg/api/namespace/views/v1"
 	"github.com/lastbackend/lastbackend/pkg/apis/types"
 	nspace "github.com/lastbackend/lastbackend/pkg/client/cmd/namespace"
 	c "github.com/lastbackend/lastbackend/pkg/client/context"
-	n "github.com/lastbackend/lastbackend/pkg/api/namespace/views/v1"
 	"github.com/lastbackend/lastbackend/pkg/errors"
 )
 
@@ -31,21 +31,21 @@ func UpdateCmd(name, nname, desc string, replicas int) {
 
 	err := Update(name, nname, desc, replicas)
 	if err != nil {
-		fmt.Print(err)
+		fmt.Println(err)
 		return
 	}
 
-	fmt.Print("Service `" + name + "` successfully updated")
+	fmt.Println("Service `" + name + "` successfully updated")
 }
 
 func Update(name, nname, desc string, replicas int) error {
 
 	var (
-		err       error
-		http      = c.Get().GetHttpClient()
-		er        = new(errors.Http)
-		namespace *n.Namespace
-		res       = new(types.Namespace)
+		err  error
+		http = c.Get().GetHttpClient()
+		er   = new(errors.Http)
+		ns   *n.Namespace
+		res  = new(types.Namespace)
 	)
 
 	if !c.Get().IsMock() {
@@ -73,16 +73,16 @@ func Update(name, nname, desc string, replicas int) error {
 		Replicas:    &replicas,
 	}
 
-	namespace, err = nspace.Current()
+	ns, err = nspace.Current()
 	if err != nil {
 		return errors.New(err.Error())
 	}
-	if namespace == nil {
+	if ns == nil {
 		return errors.New("Namespace didn't select")
 	}
 
 	_, _, err = http.
-		PUT("/namespace/"+namespace.Meta.Name+"/service/"+name).
+		PUT(fmt.Sprintf("/namespace/%s/service/%s", ns.Meta.Name, name)).
 		AddHeader("Content-Type", "application/json").
 		BodyJSON(cfg).
 		Request(&res, er)

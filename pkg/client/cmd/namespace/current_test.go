@@ -17,48 +17,48 @@
 //
 
 package namespace_test
-
-import (
-	"github.com/lastbackend/lastbackend/pkg/client/cmd/namespace"
-	"github.com/lastbackend/lastbackend/pkg/client/context"
-	s "github.com/lastbackend/lastbackend/pkg/client/storage"
-	n "github.com/lastbackend/lastbackend/pkg/api/namespace/views/v1"
-	"github.com/stretchr/testify/assert"
-	"testing"
-)
-
-func TestCurrent(t *testing.T) {
-
-	const (
-		tName       = "test name"
-		tDesc       = "test description"
-		storageName = "test"
-	)
-
-	var (
-		err error
-		ctx = context.Mock()
-
-		data = n.Namespace{
-			Meta: n.NamespaceMeta{
-				Name:        tName,
-				Description: tDesc,
-			},
-		}
-	)
-
-	storage, err := s.Init()
-	assert.NoError(t, err)
-	ctx.SetStorage(storage)
-	defer (func() {
-		storage.Clear()
-	})()
-
-	err = storage.Set(storageName, data)
-	assert.NoError(t, err)
-
-	nspace, err := namespace.Current()
-	assert.NoError(t, err)
-	assert.Equal(t, tName, nspace.Meta.Name)
-	assert.Equal(t, tDesc, nspace.Meta.Description)
-}
+//
+//import (
+//	"github.com/lastbackend/lastbackend/pkg/client/cmd/namespace"
+//	"github.com/lastbackend/lastbackend/pkg/client/context"
+//	s "github.com/lastbackend/lastbackend/pkg/client/storage"
+//	n "github.com/lastbackend/lastbackend/pkg/api/namespace/views/v1"
+//	"github.com/stretchr/testify/assert"
+//	"testing"
+//)
+//
+//func TestCurrent(t *testing.T) {
+//
+//	const (
+//		tName       = "test name"
+//		tDesc       = "test description"
+//		storageName = "test"
+//	)
+//
+//	var (
+//		err error
+//		ctx = context.Mock()
+//
+//		data = n.Namespace{
+//			Meta: n.NamespaceMeta{
+//				Name:        tName,
+//				Description: tDesc,
+//			},
+//		}
+//	)
+//
+//	storage, err := s.Init()
+//	assert.NoError(t, err)
+//	ctx.SetStorage(storage)
+//	defer (func() {
+//		storage.Clear()
+//	})()
+//
+//	err = storage.Set(storageName, data)
+//	assert.NoError(t, err)
+//
+//	nspace, err := namespace.Current()
+//	assert.NoError(t, err)
+//	assert.Equal(t, tName, nspace.Meta.Name)
+//	assert.Equal(t, tDesc, nspace.Meta.Description)
+//}

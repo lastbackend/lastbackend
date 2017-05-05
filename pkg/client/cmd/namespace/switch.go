@@ -20,35 +20,35 @@ package namespace
 
 import (
 	"fmt"
-	c "github.com/lastbackend/lastbackend/pkg/client/context"
 	n "github.com/lastbackend/lastbackend/pkg/api/namespace/views/v1"
+	c "github.com/lastbackend/lastbackend/pkg/client/context"
 	"github.com/lastbackend/lastbackend/pkg/errors"
 )
 
 func SwitchCmd(name string) {
 
-	namespace, err := Switch(name)
+	ns, err := Switch(name)
 	if err != nil {
-		fmt.Print(err)
+		fmt.Println(err)
 		return
 	}
 
-	fmt.Printf("The namespace `%s` was selected as the current", namespace.Meta.Name)
+	fmt.Printf("The namespace `%s` was selected as the current\n", ns.Meta.Name)
 }
 
 func Switch(name string) (*n.Namespace, error) {
 
 	var (
-		er        = new(errors.Http)
-		http      = c.Get().GetHttpClient()
-		storage   = c.Get().GetStorage()
-		namespace = new(n.Namespace)
+		er      = new(errors.Http)
+		http    = c.Get().GetHttpClient()
+		storage = c.Get().GetStorage()
+		ns      = new(n.Namespace)
 	)
 
 	_, _, err := http.
-		GET("/namespace/"+name).
+		GET(fmt.Sprintf("/namespace/%s", name)).
 		AddHeader("Content-Type", "application/json").
-		Request(&namespace, er)
+		Request(&ns, er)
 	if err != nil {
 		return nil, errors.New(er.Message)
 	}
@@ -61,16 +61,9 @@ func Switch(name string) (*n.Namespace, error) {
 		return nil, errors.New(er.Message)
 	}
 
-	var sName string
-	if c.Get().IsMock() {
-		sName = "test"
-	} else {
-		sName = "namespace"
-	}
-	err = storage.Set(sName, &namespace)
-	if err != nil {
+	if err := storage.Namespace().Save(ns); err != nil {
 		return nil, errors.UnknownMessage
 	}
 
-	return namespace, nil
+	return ns, nil
 }

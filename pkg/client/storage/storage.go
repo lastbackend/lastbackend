@@ -19,105 +19,29 @@
 package storage
 
 import (
-	"encoding/json"
-	"os"
-	"path"
-
-	"github.com/boltdb/bolt"
-	"github.com/lastbackend/lastbackend/pkg/util/filesystem"
-	"github.com/lastbackend/lastbackend/pkg/util/homedir"
+	"github.com/lastbackend/lastbackend/pkg/client/storage/db"
 )
 
-type DB struct {
-	db *bolt.DB
+type Storage struct {
+	*NamespaceStorage
 }
 
-func Init() (*DB, error) {
+func (s *Storage) Namespace() INamespace {
+	if s == nil {
+		return nil
+	}
+	return s.NamespaceStorage
+}
 
-	var (
-		err error
-		d   = new(DB)
-	)
+func Get() (*Storage, error) {
 
-	dir := path.Join(homedir.HomeDir(), string(os.PathSeparator), ".lb")
-	err = filesystem.MkDir(dir, 0755)
+	client, err := db.Init()
 	if err != nil {
 		return nil, err
 	}
 
-	d.db, err = bolt.Open(path.Join(dir, string(os.PathSeparator), "lb.db"), 0755, nil)
-	if err != nil {
-		return nil, err
-	}
+	store := new(Storage)
+	store.NamespaceStorage = newNamespaceStorage(client)
 
-	return d, nil
-}
-
-func (d *DB) Get(fieldname string, iface interface{}) error {
-
-	err := d.db.View(func(tx *bolt.Tx) error {
-		bucket := tx.Bucket([]byte("storage"))
-		if bucket == nil {
-			return nil
-		}
-
-		buf := bucket.Get([]byte(fieldname))
-		if buf == nil {
-			return nil
-		}
-
-		err := json.Unmarshal(buf, iface)
-		if err != nil {
-			return err
-		}
-
-		return nil
-	})
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func (d *DB) Set(fieldname string, iface interface{}) error {
-
-	err := d.db.Update(func(tx *bolt.Tx) error {
-		bucket, err := tx.CreateBucketIfNotExists([]byte("storage"))
-		if err != nil {
-			return err
-		}
-
-		buf, err := json.Marshal(&iface)
-		if err != nil {
-			return err
-		}
-
-		err = bucket.Put([]byte(fieldname), buf)
-		if err != nil {
-			return err
-		}
-
-		return nil
-	})
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func (d *DB) Clear() error {
-	d.Close()
-
-	err := os.RemoveAll(path.Join(homedir.HomeDir(), string(os.PathSeparator), ".lb"))
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func (d *DB) Close() error {
-	return d.db.Close()
+	return store, nil
 }

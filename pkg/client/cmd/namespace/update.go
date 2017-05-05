@@ -79,7 +79,7 @@ func Update(name, newName, description string) error {
 	)
 
 	_, _, err = http.
-		PUT("/namespace/"+name).
+		PUT(fmt.Sprintf("/namespace/%s", name)).
 		AddHeader("Content-Type", "application/json").
 		BodyJSON(updateS{newName, description}).
 		Request(&res, er)
@@ -95,27 +95,19 @@ func Update(name, newName, description string) error {
 		return errors.New(er.Message)
 	}
 
-	namespace, err := Current()
+	ns, err := Current()
 	if err != nil {
 		return errors.New(err.Error())
 	}
 
-	if namespace != nil {
-		if name == namespace.Meta.Name {
-			namespace.Meta.Name = newName
-			namespace.Meta.Description = description
-			namespace.Meta.Updated = time.Now()
+	if ns != nil && name == ns.Meta.Name {
+		ns.Meta.Name = newName
+		ns.Meta.Description = description
+		ns.Meta.Updated = time.Now()
 
-			var sName string
-			if c.Get().IsMock() {
-				sName = "test"
-			} else {
-				sName = "namespace"
-			}
-			err = storage.Set(sName, &namespace)
-			if err != nil {
-				return errors.UnknownMessage
-			}
+		err = storage.Namespace().Save(ns)
+		if err != nil {
+			return errors.UnknownMessage
 		}
 	}
 

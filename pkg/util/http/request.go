@@ -20,9 +20,11 @@ package http
 
 import (
 	"bytes"
+	"crypto/tls"
 	"encoding/json"
 	"errors"
 	"fmt"
+	_url "github.com/lastbackend/lastbackend/pkg/util/url"
 	"io"
 	"net/http"
 	"net/url"
@@ -36,30 +38,39 @@ const (
 )
 
 type RawReq struct {
-	tls      bool
 	host     string
 	port     int
 	rawURL   string
 	method   string
+	tls      bool
 	header   http.Header
 	bodyJSON interface{}
 	body     io.ReadCloser
 }
 
-func New(host string) *RawReq {
+type ReqOpts struct {
+	TLS bool
+}
+
+func New(host string, opts *ReqOpts) (*RawReq, error) {
 	raw := &RawReq{
-		tls:    false,
 		host:   host,
 		header: http.Header{},
 	}
 
-	if raw.tls {
-		raw.host = fmt.Sprintf("https://%s", raw.host)
-	} else {
-		raw.host = fmt.Sprintf("http://%s", raw.host)
+	if opts != nil {
+		raw.tls = opts.TLS
 	}
 
-	return raw
+	u, err := _url.Parse(raw.host)
+	if err != nil {
+		fmt.Println(err.Error())
+		return nil, err
+	}
+
+	raw.host = u.String()
+
+	return raw, nil
 }
 
 func (r *RawReq) Request(successV, failureV interface{}) (req *http.Request, resp *http.Response, err error) {
@@ -70,7 +81,15 @@ func (r *RawReq) Request(successV, failureV interface{}) (req *http.Request, res
 
 	req.Cookies()
 
-	resp, err = http.DefaultClient.Do(req)
+	client := http.DefaultClient
+	if r.tls {
+		tr := &http.Transport{
+			TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+		}
+		client = &http.Client{Transport: tr}
+	}
+
+	resp, err = client.Do(req)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -92,7 +111,15 @@ func (r *RawReq) Do() (req *http.Request, resp *http.Response, err error) {
 
 	req.Cookies()
 
-	resp, err = http.DefaultClient.Do(req)
+	client := http.DefaultClient
+	if r.tls {
+		tr := &http.Transport{
+			TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+		}
+		client = &http.Client{Transport: tr}
+	}
+
+	resp, err = client.Do(req)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -173,6 +200,7 @@ func (r RawReq) clear() (err error) {
 		return err
 	}
 
+	r.tls = false
 	r.method = ""
 	r.rawURL = ""
 	r.bodyJSON = nil
