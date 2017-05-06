@@ -16,50 +16,34 @@
 // from Last.Backend LLC.
 //
 
-package context
+package mock
 
 import (
-	"github.com/lastbackend/lastbackend/pkg/client/config"
+	"github.com/lastbackend/lastbackend/pkg/client/storage/db"
 	"github.com/lastbackend/lastbackend/pkg/client/storage"
-	"github.com/lastbackend/lastbackend/pkg/util/http"
 )
 
-var _ctx ctx
-
-func Get() *ctx {
-	return &_ctx
+type Storage struct {
+	*NamespaceStorage
 }
 
-func Mock() *ctx {
-	return &_ctx
+func (s *Storage) Namespace() storage.INamespace {
+	if s == nil {
+		return nil
+	}
+	return s.NamespaceStorage
 }
 
-type ctx struct {
-	config  *config.Config
-	http    *http.RawReq
-	storage storage.IStorage
+func Get() (*Storage, error) {
+
+	client, err := db.Init()
+	if err != nil {
+		return nil, err
+	}
+
+	store := new(Storage)
+	store.NamespaceStorage = newNamespaceStorage(client)
+
+	return store, nil
 }
 
-func (c *ctx) SetHttpClient(http *http.RawReq) {
-	c.http = http
-}
-
-func (c *ctx) GetHttpClient() *http.RawReq {
-	return c.http
-}
-
-func (c *ctx) SetStorage(storage storage.IStorage) {
-	c.storage = storage
-}
-
-func (c *ctx) GetStorage() storage.IStorage {
-	return c.storage
-}
-
-func (c *ctx) SetConfig(cfg *config.Config) {
-	c.config = cfg
-}
-
-func (c *ctx) GetConfig() *config.Config {
-	return c.config
-}

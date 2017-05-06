@@ -19,16 +19,18 @@
 package client
 
 import (
+	"fmt"
 	"github.com/jawher/mow.cli"
 	p "github.com/lastbackend/lastbackend/pkg/client/cmd/namespace"
 	s "github.com/lastbackend/lastbackend/pkg/client/cmd/service"
 	"github.com/lastbackend/lastbackend/pkg/client/config"
 	"github.com/lastbackend/lastbackend/pkg/client/context"
-	"github.com/lastbackend/lastbackend/pkg/logger"
+	"github.com/lastbackend/lastbackend/pkg/client/storage"
 	"github.com/lastbackend/lastbackend/pkg/util/http"
 	"os"
-	"github.com/lastbackend/lastbackend/pkg/client/storage"
 )
+
+const DEFAULT_HOST = "https://api.lastbackend.com"
 
 func Run() {
 
@@ -45,7 +47,7 @@ func Run() {
 	app.Spec = "[-d][-H][--tls]"
 
 	var debug = app.Bool(cli.BoolOpt{Name: "d debug", Value: false, Desc: "enable debug mode"})
-	var host = app.String(cli.StringOpt{Name: "H host", Value: "https://api.lastbackend.com", Desc: "host for rest api", HideValue: true})
+	var host = app.String(cli.StringOpt{Name: "H host", Value: DEFAULT_HOST, Desc: "host for rest api", HideValue: true})
 	var tls = app.Bool(cli.BoolOpt{Name: "tls", Value: false, Desc: "enable tls", HideValue: true})
 	var help = app.Bool(cli.BoolOpt{Name: "h help", Value: false, Desc: "show the help info and exit", HideValue: true})
 
@@ -61,9 +63,7 @@ func Run() {
 			cfg.Debug = *debug
 		}
 
-		ctx.SetLogger(logger.New(cfg.Debug, 8))
-
-		if cfg.ApiHost == "https://api.lastbackend.com" {
+		if cfg.ApiHost == DEFAULT_HOST {
 			*tls = true
 		}
 
@@ -75,7 +75,7 @@ func Run() {
 
 		strg, err := storage.Get()
 		if err != nil {
-			ctx.GetLogger().Panic("Error: init local storage", err.Error())
+			panic(fmt.Sprintf("Error: init local storage %s", err.Error()))
 			return
 		}
 		ctx.SetStorage(strg)
@@ -85,7 +85,7 @@ func Run() {
 
 	err = app.Run(os.Args)
 	if err != nil {
-		ctx.GetLogger().Panic("Error: run application", err.Error())
+		panic(fmt.Sprintf("Error: run application %s", err.Error()))
 		return
 	}
 }
