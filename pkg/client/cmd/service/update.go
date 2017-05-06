@@ -48,23 +48,21 @@ func Update(name, nname, desc string, replicas int) error {
 		res  = new(types.Namespace)
 	)
 
-	if !c.Get().IsMock() {
-		service, _, err := Inspect(name)
-		if err != nil {
-			return errors.New(err.Error())
-		}
+	srv, _, err := Inspect(name)
+	if err != nil {
+		return errors.New(err.Error())
+	}
 
-		if nname == "" {
-			nname = service.Meta.Name
-		}
+	if nname == "" {
+		nname = srv.Meta.Name
+	}
 
-		if desc == "" {
-			desc = service.Meta.Description
-		}
+	if desc == "" {
+		desc = srv.Meta.Description
+	}
 
-		if replicas == 0 {
-			replicas = service.Meta.Replicas
-		}
+	if replicas == 0 {
+		replicas = srv.Meta.Replicas
 	}
 
 	cfg := types.ServiceUpdateConfig{

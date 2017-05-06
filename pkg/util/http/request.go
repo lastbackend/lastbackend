@@ -158,6 +158,23 @@ func (r *RawReq) getRequest() (*http.Request, error) {
 	return req, nil
 }
 
+func (r RawReq) clear() (err error) {
+
+	err = r.body.Close()
+	if err != nil {
+		return err
+	}
+
+	r.tls = false
+	r.method = ""
+	r.rawURL = ""
+	r.bodyJSON = nil
+	r.header = nil
+	r.body = nil
+
+	return nil
+}
+
 func decodeResponseJSON(resp *http.Response, successV, failureV interface{}) error {
 
 	if code := resp.StatusCode; 200 <= code && code <= 299 {
@@ -193,19 +210,3 @@ func decodeResponseBodyJSON(resp *http.Response, v interface{}) error {
 	return err
 }
 
-func (r RawReq) clear() (err error) {
-
-	err = r.body.Close()
-	if err != nil {
-		return err
-	}
-
-	r.tls = false
-	r.method = ""
-	r.rawURL = ""
-	r.bodyJSON = nil
-	r.header = nil
-	r.body = nil
-
-	return nil
-}
