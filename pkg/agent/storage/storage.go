@@ -17,19 +17,17 @@
 
 package storage
 
-import "github.com/lastbackend/lastbackend/pkg/pod"
-
 type Storage struct {
-	PodStorage *pod.PodStorage
+	PodStorage *PodStorage
 }
 
 func New() *Storage {
 	return &Storage{
-		PodStorage: pod.NewPodStorage(),
+		PodStorage: NewPodStorage(),
 	}
 }
 
 // Return pods storage
-func (s *Storage) Pods() *pod.PodStorage {
+func (s *Storage) Pods() *PodStorage {
 	return s.PodStorage
 }

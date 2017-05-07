@@ -16,20 +16,42 @@
 // from Last.Backend LLC.
 //
 
-package scheduler
+package namespace
 
-// watch service pods
-// generate new spec after new pod creation
-// allocate node for new spec
+import (
+	"fmt"
+	n "github.com/lastbackend/lastbackend/pkg/api/namespace/views/v1"
+	c "github.com/lastbackend/lastbackend/pkg/cli/context"
+	"github.com/lastbackend/lastbackend/pkg/errors"
+)
 
-// watch nodes online states, if node goes offline
-// more than 30 seconds, move specs to another node
+func CurrentCmd() {
 
-// node/<hostname>/alive
-// node/<hostname>/spec/pod
+	ns, err := Current()
+	if err != nil {
+		fmt.Print(err)
+		return
+	}
 
-// watch builders online states, if builder goes offline
-// more than 30 seconds, move build to another builder
+	if ns == nil {
+		fmt.Print("Namespace didn't select")
+		return
+	}
 
-// builder/elected:<hostname>
-// builder/builds/<id>:<state>
+	ns.DrawTable()
+}
+
+func Current() (*n.Namespace, error) {
+
+	var (
+		err     error
+		storage = c.Get().GetStorage()
+	)
+
+	ns, err := storage.Namespace().Load()
+	if err != nil {
+		return nil, errors.UnknownMessage
+	}
+
+	return ns, nil
+}

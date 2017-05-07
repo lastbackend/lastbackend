@@ -19,11 +19,9 @@
 package context
 
 import (
-	"context"
-	"github.com/lastbackend/lastbackend/pkg/builder/config"
-	"github.com/lastbackend/lastbackend/pkg/agent/runtime/cri"
-	"github.com/lastbackend/lastbackend/pkg/logger"
-	_c "github.com/lastbackend/lastbackend/pkg/context"
+	"github.com/lastbackend/lastbackend/pkg/cli/config"
+	"github.com/lastbackend/lastbackend/pkg/cli/storage"
+	"github.com/lastbackend/lastbackend/pkg/util/http"
 )
 
 var _ctx ctx
@@ -32,19 +30,30 @@ func Get() *ctx {
 	return &_ctx
 }
 
+func Mock() *ctx {
+	return &_ctx
+}
+
 type ctx struct {
-	_c.Context
-	cri     cri.CRI
-	logger  *logger.Logger
 	config  *config.Config
+	http    *http.RawReq
+	storage storage.IStorage
 }
 
-func (c *ctx) SetLogger(log *logger.Logger) {
-	c.logger = log
+func (c *ctx) SetHttpClient(http *http.RawReq) {
+	c.http = http
 }
 
-func (c *ctx) GetLogger() *logger.Logger {
-	return c.logger
+func (c *ctx) GetHttpClient() *http.RawReq {
+	return c.http
+}
+
+func (c *ctx) SetStorage(storage storage.IStorage) {
+	c.storage = storage
+}
+
+func (c *ctx) GetStorage() storage.IStorage {
+	return c.storage
 }
 
 func (c *ctx) SetConfig(cfg *config.Config) {
@@ -53,16 +62,4 @@ func (c *ctx) SetConfig(cfg *config.Config) {
 
 func (c *ctx) GetConfig() *config.Config {
 	return c.config
-}
-
-func (c *ctx) SetCri(_cri cri.CRI) {
-	c.cri = _cri
-}
-
-func (c *ctx) GetCri() cri.CRI {
-	return c.cri
-}
-
-func (c *ctx) Background() context.Context {
-	return context.Background()
 }
