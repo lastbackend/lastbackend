@@ -22,7 +22,7 @@ import (
 	"sync"
 	"github.com/lastbackend/lastbackend/pkg/apis/types"
 	"github.com/lastbackend/lastbackend/pkg/builder/context"
-	"github.com/lastbackend/lastbackend/pkg/cri"
+	"github.com/lastbackend/lastbackend/pkg/agent/runtime/cri"
 )
 
 type Worker struct {

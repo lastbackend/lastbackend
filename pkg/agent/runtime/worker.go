@@ -20,7 +20,7 @@ package runtime
 
 import (
 	"github.com/lastbackend/lastbackend/pkg/agent/context"
-	"github.com/lastbackend/lastbackend/pkg/cri"
+	"github.com/lastbackend/lastbackend/pkg/agent/runtime/cri"
 	"github.com/lastbackend/lastbackend/pkg/apis/types"
 	"sync"
 )

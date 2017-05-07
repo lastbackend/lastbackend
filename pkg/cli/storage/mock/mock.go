@@ -16,20 +16,34 @@
 // from Last.Backend LLC.
 //
 
-package scheduler
+package mock
 
-// watch service pods
-// generate new spec after new pod creation
-// allocate node for new spec
+import (
+	"github.com/lastbackend/lastbackend/pkg/cli/storage/db"
+	"github.com/lastbackend/lastbackend/pkg/cli/storage"
+)
 
-// watch nodes online states, if node goes offline
-// more than 30 seconds, move specs to another node
+type Storage struct {
+	*NamespaceStorage
+}
 
-// node/<hostname>/alive
-// node/<hostname>/spec/pod
+func (s *Storage) Namespace() storage.INamespace {
+	if s == nil {
+		return nil
+	}
+	return s.NamespaceStorage
+}
 
-// watch builders online states, if builder goes offline
-// more than 30 seconds, move build to another builder
+func Get() (*Storage, error) {
 
-// builder/elected:<hostname>
-// builder/builds/<id>:<state>
+	client, err := db.Init()
+	if err != nil {
+		return nil, err
+	}
+
+	store := new(Storage)
+	store.NamespaceStorage = newNamespaceStorage(client)
+
+	return store, nil
+}
+

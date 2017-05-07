@@ -16,20 +16,20 @@
 // from Last.Backend LLC.
 //
 
-package scheduler
+package cri
 
-// watch service pods
-// generate new spec after new pod creation
-// allocate node for new spec
+import (
+	"github.com/lastbackend/lastbackend/pkg/config"
+	"github.com/lastbackend/lastbackend/pkg/agent/runtime/cri"
+	"github.com/lastbackend/lastbackend/pkg/agent/runtime/cri/docker"
+	"github.com/pkg/errors"
+)
 
-// watch nodes online states, if node goes offline
-// more than 30 seconds, move specs to another node
-
-// node/<hostname>/alive
-// node/<hostname>/spec/pod
-
-// watch builders online states, if builder goes offline
-// more than 30 seconds, move build to another builder
-
-// builder/elected:<hostname>
-// builder/builds/<id>:<state>
+func New(cfg config.Runtime) (cri.CRI, error) {
+	switch cfg.CRI {
+	case "docker":
+		return docker.New(cfg.Docker)
+	default:
+		return nil, errors.New(`container runtime interface not support`)
+	}
+}

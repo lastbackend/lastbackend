@@ -16,20 +16,12 @@
 // from Last.Backend LLC.
 //
 
-package scheduler
+package main
 
-// watch service pods
-// generate new spec after new pod creation
-// allocate node for new spec
+import (
+	"github.com/lastbackend/lastbackend/pkg/cli"
+)
 
-// watch nodes online states, if node goes offline
-// more than 30 seconds, move specs to another node
-
-// node/<hostname>/alive
-// node/<hostname>/spec/pod
-
-// watch builders online states, if builder goes offline
-// more than 30 seconds, move build to another builder
-
-// builder/elected:<hostname>
-// builder/builds/<id>:<state>
+func main() {
+	cli.Run()
+}

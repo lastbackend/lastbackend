@@ -16,20 +16,33 @@
 // from Last.Backend LLC.
 //
 
-package scheduler
+package main
 
-// watch service pods
-// generate new spec after new pod creation
-// allocate node for new spec
+import (
+	"os"
+	"fmt"
+	"github.com/jawher/mow.cli"
+	 api "github.com/lastbackend/lastbackend/pkg/api/server"
+)
 
-// watch nodes online states, if node goes offline
-// more than 30 seconds, move specs to another node
+func main() {
+	app := cli.App("lb", "apps cloud hosting with integrated deployment tools")
 
-// node/<hostname>/alive
-// node/<hostname>/spec/pod
+	app.Version("v version", "0.3.0")
 
-// watch builders online states, if builder goes offline
-// more than 30 seconds, move build to another builder
+	var help = app.Bool(cli.BoolOpt{Name: "h help", Value: false, Desc: "Show the help info and exit", HideValue: true})
 
-// builder/elected:<hostname>
-// builder/builds/<id>:<state>
+	app.Before = func() {
+		if *help {
+			app.PrintLongHelp()
+		}
+	}
+
+	app.Command("api", "Run last.backend daemon", api.Daemon)
+
+	err := app.Run(os.Args)
+	if err != nil {
+		fmt.Errorf("Error: run application: %s", err.Error())
+		return
+	}
+}

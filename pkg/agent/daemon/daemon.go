@@ -27,7 +27,7 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/agent/events/listener"
 	"github.com/lastbackend/lastbackend/pkg/agent/runtime"
 	"github.com/lastbackend/lastbackend/pkg/agent/storage"
-	"github.com/lastbackend/lastbackend/pkg/cri/cri"
+	"github.com/lastbackend/lastbackend/pkg/agent/runtime/cri/cri"
 	"github.com/lastbackend/lastbackend/pkg/logger"
 	"github.com/lastbackend/lastbackend/pkg/util/http"
 	"os"
