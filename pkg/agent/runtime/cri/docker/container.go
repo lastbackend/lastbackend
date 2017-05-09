@@ -20,8 +20,9 @@ package docker
 
 import (
 	docker "github.com/docker/docker/api/types"
-	"github.com/lastbackend/lastbackend/pkg/context"
 	"github.com/lastbackend/lastbackend/pkg/apis/types"
+	"github.com/lastbackend/lastbackend/pkg/context"
+	"io"
 	"strings"
 	"time"
 )
@@ -70,6 +71,16 @@ func (r *Runtime) ContainerRemove(ctx context.Context, ID string, clean bool, fo
 	})
 }
 
+func (r *Runtime) ContainerLogs(ctx context.Context, ID string, stdout, stderr, follow bool) (io.ReadCloser, error) {
+	return r.client.ContainerLogs(ctx.Background(), ID, docker.ContainerLogsOptions{
+		ShowStdout: stdout,
+		ShowStderr: stderr,
+		Follow:     follow,
+		Timestamps: true,
+		Details:    true,
+	})
+}
+
 func (r *Runtime) ContainerInspect(ctx context.Context, ID string) (*types.Container, error) {
 	log := ctx.GetLogger()
 	log.Debug("Docker: Container Inspect")
@@ -107,12 +118,18 @@ func (r *Runtime) ContainerInspect(ctx context.Context, ID string) (*types.Conta
 	}
 
 	switch info.State.Status {
-	case types.StateCreated: container.State = types.StateCreated
-	case types.StateStarted: container.State = types.StateStarted
-	case types.StateRunning: container.State = types.StateStarted
-	case types.StateStopped: container.State = types.StateStopped
-	case types.StateExited: container.State = types.StateStopped
-	case types.StateError: container.State = types.StateError
+	case types.StateCreated:
+		container.State = types.StateCreated
+	case types.StateStarted:
+		container.State = types.StateStarted
+	case types.StateRunning:
+		container.State = types.StateStarted
+	case types.StateStopped:
+		container.State = types.StateStopped
+	case types.StateExited:
+		container.State = types.StateStopped
+	case types.StateError:
+		container.State = types.StateError
 	}
 
 	container.Created, _ = time.Parse(time.RFC3339Nano, info.Created)

@@ -26,8 +26,8 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/agent/context"
 	"github.com/lastbackend/lastbackend/pkg/agent/events/listener"
 	"github.com/lastbackend/lastbackend/pkg/agent/runtime"
-	"github.com/lastbackend/lastbackend/pkg/agent/storage"
 	"github.com/lastbackend/lastbackend/pkg/agent/runtime/cri/cri"
+	"github.com/lastbackend/lastbackend/pkg/agent/storage"
 	"github.com/lastbackend/lastbackend/pkg/logger"
 	"github.com/lastbackend/lastbackend/pkg/util/http"
 	"os"
@@ -75,7 +75,7 @@ func Agent(cmd *cli.Cmd) {
 	})
 
 	cfg.APIServer.Port = *cmd.Int(cli.IntOpt{
-		Name: "port", Value: 2967, Desc: "API server listen port",
+		Name: "port", Value: 2968, Desc: "API server listen port",
 		EnvVar: "LB_AGENT_PORT", HideValue: true,
 	})
 
@@ -124,6 +124,12 @@ func Agent(cmd *cli.Cmd) {
 		}
 
 		rntm.Loop()
+
+		go func() {
+			if err := Listen(cfg.APIServer.Host, cfg.APIServer.Port); err != nil {
+				ctx.GetLogger().Warnf("Http server start error: %s", err.Error())
+			}
+		}()
 
 		// Handle SIGINT and SIGTERM.
 		signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)

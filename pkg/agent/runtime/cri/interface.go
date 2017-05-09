@@ -19,11 +19,11 @@
 package cri
 
 import (
+	"github.com/lastbackend/lastbackend/pkg/agent/storage"
 	"github.com/lastbackend/lastbackend/pkg/apis/types"
 	"github.com/lastbackend/lastbackend/pkg/context"
 	"io"
 	"time"
-	"github.com/lastbackend/lastbackend/pkg/agent/storage"
 )
 
 type CRI interface {
@@ -35,6 +35,7 @@ type CRI interface {
 	ContainerResume(ctx context.Context, ID string) error
 	ContainerRemove(ctx context.Context, ID string, clean bool, force bool) error
 	ContainerInspect(ctx context.Context, ID string) (*types.Container, error)
+	ContainerLogs(ctx context.Context, ID string, stdout, stderr, follow bool) (io.ReadCloser, error)
 
 	PodList(ctx context.Context) ([]*types.Pod, error)
 
