@@ -20,74 +20,70 @@ package context
 
 import (
 	"context"
+		_c "github.com/lastbackend/lastbackend/pkg/common/context"
 	"github.com/lastbackend/lastbackend/pkg/api/config"
 	"github.com/lastbackend/lastbackend/pkg/storage"
 	"github.com/lastbackend/lastbackend/pkg/logger"
 	"github.com/lastbackend/lastbackend/pkg/util/http"
-	"github.com/lastbackend/lastbackend/pkg/wss"
-	_c "github.com/lastbackend/lastbackend/pkg/context"
+	"github.com/lastbackend/lastbackend/pkg/sockets"
 )
 
-var _ctx ctx
+var _ctx Context
 
 type Context struct {
-	context.Context
-}
-
-type ctx struct {
 	_c.Context
 
 	logger               *logger.Logger
 	storage              *storage.Storage
 	config               *config.Config
 	httpTemplateRegistry *http.RawReq
-	wssHub               *wss.Hub
+	wssHub               *sockets.Hub
 }
 
-func Get() *ctx {
+func Get() *Context {
 	return &_ctx
 }
 
-func (c *ctx) SetLogger(log *logger.Logger) {
+func (c *Context) SetLogger(log *logger.Logger) {
 	c.logger = log
 }
 
-func (c *ctx) GetLogger() *logger.Logger {
+func (c *Context) GetLogger() *logger.Logger {
 	return c.logger
 }
 
-func (c *ctx) SetConfig(cfg *config.Config) {
+func (c *Context) SetConfig(cfg *config.Config) {
 	c.config = cfg
 }
 
-func (c *ctx) GetConfig() *config.Config {
+func (c *Context) GetConfig() *config.Config {
 	return c.config
 }
 
-func (c *ctx) SetStorage(storage *storage.Storage) {
+func (c *Context) SetStorage(storage *storage.Storage) {
 	c.storage = storage
 }
 
-func (c *ctx) GetStorage() *storage.Storage {
+func (c *Context) GetStorage() *storage.Storage {
 	return c.storage
 }
 
-func (c *ctx) SetHttpTemplateRegistry(http *http.RawReq) {
+func (c *Context) SetHttpTemplateRegistry(http *http.RawReq) {
 	c.httpTemplateRegistry = http
 }
 
-func (c *ctx) GetHttpTemplateRegistry() *http.RawReq {
+func (c *Context) GetHttpTemplateRegistry() *http.RawReq {
 	return c.httpTemplateRegistry
 }
 
-func (c *ctx) SetWssHub(hub *wss.Hub) {
+func (c *Context) SetWssHub(hub *sockets.Hub) {
 	c.wssHub = hub
 }
 
-func (c *ctx) GetWssHub() *wss.Hub {
+func (c *Context) GetWssHub() *sockets.Hub {
 	return c.wssHub
 }
 
-func (c *ctx) Background() context.Context {
+func (c *Context) Background() context.Context {
 	return context.Background()
 }

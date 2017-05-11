@@ -21,7 +21,7 @@ package service
 import (
 	"context"
 	"encoding/json"
-	"github.com/lastbackend/lastbackend/pkg/apis/types"
+	"github.com/lastbackend/lastbackend/pkg/common/types"
 	ctx "github.com/lastbackend/lastbackend/pkg/api/context"
 	"github.com/lastbackend/lastbackend/pkg/api/node"
 	"github.com/lastbackend/lastbackend/pkg/api/service/routes/request"

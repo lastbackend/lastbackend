@@ -38,9 +38,10 @@ type IStore interface {
 	Map(ctx context.Context, key, keyRegexpFilter string, mapObj interface{}) error
 	MapList(ctx context.Context, key, filter string, mapObj interface{}) error
 	Update(ctx context.Context, key string, obj, outPtr interface{}, ttl uint64) error
+	Upsert(ctx context.Context, key string, obj, out interface{}, ttl uint64) error
 	Delete(ctx context.Context, key string) error
 	DeleteDir(ctx context.Context, key string) error
-	Watch(ctx context.Context, key, filter string, f func(action, key string)) error
+	Watch(ctx context.Context, key, filter string, f func(action, key string, val []byte)) error
 	Begin(ctx context.Context) ITx
 }
 

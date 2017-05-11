@@ -22,9 +22,19 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/storage/store"
 	"github.com/lastbackend/lastbackend/pkg/util/serializer"
 	"github.com/lastbackend/lastbackend/pkg/util/serializer/json"
+	"github.com/lastbackend/lastbackend/pkg/common/config"
 )
 
 var _cfg = new(Config)
+
+func Set(cfg *config.Config) *Config{
+	_cfg.Debug = cfg.Debug
+	_cfg.Token = cfg.Token
+	_cfg.Etcd = cfg.Etcd
+	_cfg.Registry = cfg.Registry
+	_cfg.APIServer = cfg.APIServer
+	return _cfg
+}
 
 func Get() *Config {
 	return _cfg
@@ -34,10 +44,10 @@ func Get() *Config {
 func (c *Config) GetEtcdDB() store.Config {
 	return store.Config{
 		Prefix:    "lastbackend",
-		Endpoints: c.Etcd.Endpoints,
-		KeyFile:   c.Etcd.TLS.Key,
-		CertFile:  c.Etcd.TLS.Cert,
-		CAFile:    c.Etcd.TLS.CA,
+		Endpoints: *c.Etcd.Endpoints,
+		KeyFile:   *c.Etcd.TLS.Key,
+		CertFile:  *c.Etcd.TLS.Cert,
+		CAFile:    *c.Etcd.TLS.CA,
 		Codec:     serializer.NewSerializer(json.Encoder{}, json.Decoder{}),
 	}
 }

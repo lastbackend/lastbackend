@@ -21,7 +21,7 @@ package routes
 import (
 	"encoding/json"
 	"github.com/lastbackend/lastbackend/pkg/api/context"
-	"github.com/lastbackend/lastbackend/pkg/errors"
+	"github.com/lastbackend/lastbackend/pkg/common/errors"
 	"net/http"
 )
 

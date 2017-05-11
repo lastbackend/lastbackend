@@ -18,7 +18,7 @@
 
 package v1
 
-import "github.com/lastbackend/lastbackend/pkg/apis/types"
+import "github.com/lastbackend/lastbackend/pkg/common/types"
 
 func NewNamespace(obj *types.Namespace) *Namespace {
 	return New(obj)

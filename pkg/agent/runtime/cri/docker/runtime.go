@@ -23,7 +23,7 @@ import (
 	"github.com/docker/docker/api"
 	"github.com/docker/docker/client"
 	"github.com/docker/go-connections/tlsconfig"
-	"github.com/lastbackend/lastbackend/pkg/config"
+	"github.com/lastbackend/lastbackend/pkg/common/config"
 	"net/http"
 	"path/filepath"
 )

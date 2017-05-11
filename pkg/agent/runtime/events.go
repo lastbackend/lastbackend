@@ -20,7 +20,7 @@ package runtime
 
 import (
 	"github.com/lastbackend/lastbackend/pkg/agent/context"
-	"github.com/lastbackend/lastbackend/pkg/apis/types"
+	"github.com/lastbackend/lastbackend/pkg/common/types"
 )
 
 type EventListener struct {
@@ -38,10 +38,10 @@ func (el *EventListener) Listen() {
 	log := context.Get().GetLogger()
 	log.Debug("Runtime: EventListener: Listen")
 
-	pods := context.Get().GetStorage().Pods()
+	pods := context.Get().GetCache().Pods()
 	crii := context.Get().GetCri()
 
-	events := crii.Subscribe(context.Get(), context.Get().GetStorage().PodStorage)
+	events := crii.Subscribe(context.Get(), context.Get().GetCache().PodCache)
 	go func() {
 		for {
 			select {

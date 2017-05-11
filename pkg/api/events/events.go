@@ -20,7 +20,7 @@ package events
 
 import (
 	"fmt"
-	"github.com/lastbackend/lastbackend/pkg/apis/types"
+	"github.com/lastbackend/lastbackend/pkg/common/types"
 	"github.com/lastbackend/lastbackend/pkg/api/context"
 	"github.com/lastbackend/lastbackend/pkg/api/namespace"
 	"github.com/lastbackend/lastbackend/pkg/api/service/views/v1"

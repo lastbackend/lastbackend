@@ -21,7 +21,7 @@ package storage
 import (
 	"context"
 	"fmt"
-	"github.com/lastbackend/lastbackend/pkg/apis/types"
+	"github.com/lastbackend/lastbackend/pkg/common/types"
 	"github.com/lastbackend/lastbackend/pkg/storage/store"
 	"regexp"
 	"time"
@@ -300,7 +300,7 @@ func (s *NodeStorage) Watch(ctx context.Context, service chan *types.Node) error
 
 	r, _ := regexp.Compile(filter)
 	key := s.util.Key(ctx, nodeStorage)
-	cb := func(action, key string) {
+	cb := func(action, key string, _ []byte) {
 		keys := r.FindStringSubmatch(key)
 		if len(keys) < 2 {
 			return

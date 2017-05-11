@@ -22,11 +22,11 @@ import (
 	"context"
 	"github.com/lastbackend/lastbackend/pkg/agent/config"
 	"github.com/lastbackend/lastbackend/pkg/agent/events/listener"
-	"github.com/lastbackend/lastbackend/pkg/agent/storage"
-	_c "github.com/lastbackend/lastbackend/pkg/context"
+	_c "github.com/lastbackend/lastbackend/pkg/common/context"
 	"github.com/lastbackend/lastbackend/pkg/agent/runtime/cri"
 	"github.com/lastbackend/lastbackend/pkg/logger"
 	"github.com/lastbackend/lastbackend/pkg/util/http"
+	"github.com/lastbackend/lastbackend/pkg/cache"
 )
 
 var _ctx ctx
@@ -41,7 +41,7 @@ type ctx struct {
 	cri     cri.CRI
 	logger  *logger.Logger
 	config  *config.Config
-	storage *storage.Storage
+	storage *cache.Cache
 	http    *http.RawReq
 	event   *listener.EventListener
 }
@@ -70,11 +70,11 @@ func (c *ctx) GetCri() cri.CRI {
 	return c.cri
 }
 
-func (c *ctx) SetStorage(s *storage.Storage) {
+func (c *ctx) SetCache(s *cache.Cache) {
 	c.storage = s
 }
 
-func (c *ctx) GetStorage() *storage.Storage {
+func (c *ctx) GetCache() *cache.Cache {
 	return c.storage
 }
 

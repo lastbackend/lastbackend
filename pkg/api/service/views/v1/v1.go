@@ -18,7 +18,7 @@
 
 package v1
 
-import "github.com/lastbackend/lastbackend/pkg/apis/types"
+import "github.com/lastbackend/lastbackend/pkg/common/types"
 
 func NewService(obj *types.Service) *Service {
 	return New(obj)

@@ -20,7 +20,7 @@ package storage
 
 import (
 	"context"
-	"github.com/lastbackend/lastbackend/pkg/apis/types"
+	"github.com/lastbackend/lastbackend/pkg/common/types"
 	"golang.org/x/oauth2"
 )
 
@@ -35,6 +35,7 @@ type IStorage interface {
 	Image() IImage
 	Project() INamespace
 	Service() IService
+	System() ISystem
 	Vendor() IVendor
 	Volume() IVolume
 }
@@ -80,6 +81,8 @@ type IService interface {
 	Update(ctx context.Context, service *types.Service) error
 	Remove(ctx context.Context, service *types.Service) error
 	RemoveByNamespace(ctx context.Context, namespace string) error
+
+	SpecWatch(ctx context.Context, service chan *types.Service) error
 	PodsWatch(ctx context.Context, service chan *types.Service) error
 	BuildsWatch(ctx context.Context, service chan *types.Service) error
 }
@@ -127,4 +130,12 @@ type INode interface {
 	RemovePod(ctx context.Context, meta *types.NodeMeta, pod *types.PodNodeSpec) error
 
 	Remove(ctx context.Context, meta *types.Node) error
+}
+
+type ISystem interface {
+	ProcessSet(ctx context.Context, process *types.Process) error
+
+	Elect (ctx context.Context, process *types.Process) (bool, error)
+	ElectUpdate (ctx context.Context, process *types.Process) error
+	ElectWait (ctx context.Context, process *types.Process, lead chan bool) error
 }

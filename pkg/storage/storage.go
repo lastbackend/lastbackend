@@ -36,6 +36,7 @@ type Storage struct {
 	*ActivityStorage
 	*NodeStorage
 	*PodStorage
+	*SystemStorage
 }
 
 func SetUtil(u IUtil) {
@@ -112,6 +113,13 @@ func (s *Storage) Pod() IPod {
 	return s.PodStorage
 }
 
+func (s *Storage) System() ISystem {
+		if s == nil {
+		return nil
+	}
+	return s.SystemStorage
+}
+
 func Get(config store.Config) (*Storage, error) {
 
 	var store = new(Storage)
@@ -131,7 +139,7 @@ func Get(config store.Config) (*Storage, error) {
 	store.ActivityStorage = newActivityStorage(config, _util)
 	store.NodeStorage = newNodeStorage(config, _util)
 	store.PodStorage = newPodStorage(config, _util)
-
+	store.SystemStorage = newSystemStorage(config, _util)
 	return store, nil
 }
 

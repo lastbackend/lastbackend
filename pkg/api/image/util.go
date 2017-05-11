@@ -21,7 +21,7 @@ package image
 import (
 	"context"
 	"fmt"
-	"github.com/lastbackend/lastbackend/pkg/apis/types"
+	"github.com/lastbackend/lastbackend/pkg/common/types"
 	c "github.com/lastbackend/lastbackend/pkg/api/context"
 	"strings"
 )
@@ -33,11 +33,11 @@ type util struct {
 func (util) Name(_ context.Context, hub, name string) string {
 	cfg := c.Get().GetConfig()
 	namespace := name
-	if cfg.Registry.Username != "" {
+	if cfg.Registry.Username != nil {
 		namespace = fmt.Sprintf("%s/%s", cfg.Registry.Username, namespace)
 	}
-	if cfg.Registry.Server != "" {
-		server := cfg.Registry.Server
+	if cfg.Registry.Server != nil {
+		server := *cfg.Registry.Server
 		switch true {
 		case strings.HasPrefix(server, "http://") == true:
 			server = server[7:]
@@ -52,8 +52,8 @@ func (util) Name(_ context.Context, hub, name string) string {
 func (util) RegistryAuth(_ context.Context, _ string) *types.RegistryAuth {
 	cfg := c.Get().GetConfig()
 	return &types.RegistryAuth{
-		Username: cfg.Registry.Username,
-		Password: cfg.Registry.Password,
-		Server:   cfg.Registry.Server,
+		Username: *cfg.Registry.Username,
+		Password: *cfg.Registry.Password,
+		Server:   *cfg.Registry.Server,
 	}
 }

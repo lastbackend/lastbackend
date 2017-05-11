@@ -19,7 +19,7 @@
 package v1
 
 import (
-	"github.com/lastbackend/lastbackend/pkg/apis/types"
+	"github.com/lastbackend/lastbackend/pkg/common/types"
 	"github.com/lastbackend/lastbackend/pkg/api/container/views/v1"
 )
 

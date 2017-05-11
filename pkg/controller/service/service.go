@@ -17,3 +17,9 @@
 //
 
 package service
+
+import "github.com/lastbackend/lastbackend/pkg/common/types"
+
+func GeneratePods(s *types.Service) {
+
+}

@@ -20,7 +20,7 @@ package image
 
 import (
 	"context"
-	"github.com/lastbackend/lastbackend/pkg/apis/types"
+	"github.com/lastbackend/lastbackend/pkg/common/types"
 )
 
 type IUtil interface {

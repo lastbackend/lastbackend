@@ -21,7 +21,7 @@ package v1
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/lastbackend/lastbackend/pkg/apis/types"
+	"github.com/lastbackend/lastbackend/pkg/common/types"
 	"github.com/lastbackend/lastbackend/pkg/api/pod/views/v1"
 	"github.com/lastbackend/lastbackend/pkg/util/table"
 	"strings"

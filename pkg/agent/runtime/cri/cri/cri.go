@@ -19,7 +19,7 @@
 package cri
 
 import (
-	"github.com/lastbackend/lastbackend/pkg/config"
+	"github.com/lastbackend/lastbackend/pkg/common/config"
 	"github.com/lastbackend/lastbackend/pkg/agent/runtime/cri"
 	"github.com/lastbackend/lastbackend/pkg/agent/runtime/cri/docker"
 	"github.com/pkg/errors"

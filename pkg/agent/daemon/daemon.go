@@ -27,12 +27,12 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/agent/events/listener"
 	"github.com/lastbackend/lastbackend/pkg/agent/runtime"
 	"github.com/lastbackend/lastbackend/pkg/agent/runtime/cri/cri"
-	"github.com/lastbackend/lastbackend/pkg/agent/storage"
 	"github.com/lastbackend/lastbackend/pkg/logger"
 	"github.com/lastbackend/lastbackend/pkg/util/http"
 	"os"
 	"os/signal"
 	"syscall"
+	"github.com/lastbackend/lastbackend/pkg/cache"
 )
 
 func Agent(cmd *cli.Cmd) {
@@ -69,13 +69,13 @@ func Agent(cmd *cli.Cmd) {
 		EnvVar: "LB_CRI", HideValue: true,
 	})
 
-	cfg.APIServer.Host = *cmd.String(cli.StringOpt{
+	cfg.APIServer.Host = cmd.String(cli.StringOpt{
 		Name: "host", Value: "0.0.0.0", Desc: "API server listen address",
 		EnvVar: "LB_AGENT_HOST", HideValue: true,
 	})
 
-	cfg.APIServer.Port = *cmd.Int(cli.IntOpt{
-		Name: "port", Value: 2968, Desc: "API server listen port",
+	cfg.APIServer.Port = cmd.Int(cli.IntOpt{
+		Name: "port", Value: 2967, Desc: "API server listen port",
 		EnvVar: "LB_AGENT_PORT", HideValue: true,
 	})
 
@@ -104,9 +104,9 @@ func Agent(cmd *cli.Cmd) {
 
 		ctx.SetConfig(cfg)
 		ctx.SetLogger(logger.New(cfg.Debug, 9))
-		ctx.SetStorage(storage.New())
+		ctx.SetCache(cache.New())
 
-		client, err := http.New(fmt.Sprintf("%s:%d", cfg.APIServer.Host, cfg.APIServer.Port), &http.ReqOpts{})
+		client, err := http.New(fmt.Sprintf("%s:%d", *cfg.APIServer.Host, *cfg.APIServer.Port), &http.ReqOpts{})
 		if err != nil {
 			ctx.GetLogger().Errorf("Cannot initialize http client: %s", err.Error())
 		}
@@ -126,7 +126,8 @@ func Agent(cmd *cli.Cmd) {
 		rntm.Loop()
 
 		go func() {
-			if err := Listen(cfg.APIServer.Host, cfg.APIServer.Port); err != nil {
+			//TODO: Add another config variable to agent HTTP
+			if err := Listen(*cfg.APIServer.Host, *cfg.APIServer.Port); err != nil {
 				ctx.GetLogger().Warnf("Http server start error: %s", err.Error())
 			}
 		}()
