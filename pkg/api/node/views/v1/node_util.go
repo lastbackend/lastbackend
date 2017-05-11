@@ -20,7 +20,7 @@ package v1
 
 import (
 	"encoding/json"
-	"github.com/lastbackend/lastbackend/pkg/apis/types"
+	"github.com/lastbackend/lastbackend/pkg/common/types"
 )
 
 func New(obj *types.Node) *Node {

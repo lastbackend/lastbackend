@@ -21,7 +21,7 @@ package namespace
 import (
 	"fmt"
 	c "github.com/lastbackend/lastbackend/pkg/cli/context"
-	"github.com/lastbackend/lastbackend/pkg/errors"
+	"github.com/lastbackend/lastbackend/pkg/common/errors"
 )
 
 func RemoveCmd(name string) {

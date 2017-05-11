@@ -19,11 +19,11 @@
 package cri
 
 import (
-	"github.com/lastbackend/lastbackend/pkg/apis/types"
-	"github.com/lastbackend/lastbackend/pkg/context"
+	"github.com/lastbackend/lastbackend/pkg/common/types"
+	"github.com/lastbackend/lastbackend/pkg/common/context"
 	"io"
 	"time"
-	"github.com/lastbackend/lastbackend/pkg/agent/storage"
+	"github.com/lastbackend/lastbackend/pkg/cache"
 )
 
 type CRI interface {
@@ -45,5 +45,5 @@ type CRI interface {
 	ImageBuild(ctx context.Context)
 	ImageList(ctx context.Context)
 
-	Subscribe(ctx context.Context, stg *storage.PodStorage) chan types.ContainerEvent
+	Subscribe(ctx context.Context, stg *cache.PodCache) chan types.ContainerEvent
 }

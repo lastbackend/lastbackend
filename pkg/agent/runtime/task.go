@@ -24,7 +24,7 @@ import (
 
 	"github.com/lastbackend/lastbackend/pkg/agent/context"
 	"github.com/lastbackend/lastbackend/pkg/agent/events"
-	"github.com/lastbackend/lastbackend/pkg/apis/types"
+	"github.com/lastbackend/lastbackend/pkg/common/types"
 	"github.com/satori/go.uuid"
 )
 
@@ -48,7 +48,7 @@ func (t *Task) start() {
 
 	var (
 		log = context.Get().GetLogger()
-		pod = context.Get().GetStorage().Pods()
+		pod = context.Get().GetCache().Pods()
 	)
 
 	t.pod.State.Provision = true

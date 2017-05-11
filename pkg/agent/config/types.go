@@ -18,7 +18,7 @@
 
 package config
 
-import "github.com/lastbackend/lastbackend/pkg/config"
+import "github.com/lastbackend/lastbackend/pkg/common/config"
 
 // The structure of the config to run the daemon
 type Config struct {

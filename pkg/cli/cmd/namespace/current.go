@@ -22,7 +22,7 @@ import (
 	"fmt"
 	n "github.com/lastbackend/lastbackend/pkg/api/namespace/views/v1"
 	c "github.com/lastbackend/lastbackend/pkg/cli/context"
-	"github.com/lastbackend/lastbackend/pkg/errors"
+	"github.com/lastbackend/lastbackend/pkg/common/errors"
 )
 
 func CurrentCmd() {

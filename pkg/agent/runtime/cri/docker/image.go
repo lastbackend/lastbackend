@@ -20,8 +20,8 @@ package docker
 
 import (
 	docker "github.com/docker/docker/api/types"
-	"github.com/lastbackend/lastbackend/pkg/context"
-	"github.com/lastbackend/lastbackend/pkg/apis/types"
+	"github.com/lastbackend/lastbackend/pkg/common/context"
+	"github.com/lastbackend/lastbackend/pkg/common/types"
 	"io"
 )
 

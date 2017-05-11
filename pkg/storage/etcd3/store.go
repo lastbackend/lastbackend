@@ -232,6 +232,33 @@ func (s *store) Update(ctx context.Context, key string, obj, outPtr interface{},
 	return nil
 }
 
+func (s *store) Upsert(ctx context.Context, key string, obj, outPtr interface{}, ttl uint64) error {
+	data, err := serializer.Encode(s.codec, obj)
+	if err != nil {
+		return err
+	}
+	key = path.Join(s.pathPrefix, key)
+	opts, err := s.ttlOpts(ctx, int64(ttl))
+	if err != nil {
+		return err
+	}
+	txnResp, err := s.client.KV.Txn(ctx).
+		Then(clientv3.OpPut(key, string(data), opts...)).Commit()
+	if err != nil {
+		return err
+	}
+	if !txnResp.Succeeded {
+		return errors.New(st.ErrKeyExists)
+	}
+	if validator.IsNil(outPtr) {
+		return nil
+	}
+	if outPtr != nil {
+		return decode(s.codec, data, outPtr)
+	}
+	return nil
+}
+
 func (s *store) Delete(ctx context.Context, key string) error {
 	key = path.Join(s.pathPrefix, key)
 	_, err := s.client.KV.Txn(ctx).
@@ -262,18 +289,14 @@ func (s *store) Begin(ctx context.Context) st.ITx {
 	}
 }
 
-func (s *store) Watch(ctx context.Context, key, filter string, f func(string, string)) error {
+func (s *store) Watch(ctx context.Context, key, filter string, f func(string, string, []byte)) error {
 	key = path.Join(s.pathPrefix, key)
-	if !strings.HasSuffix(key, "/") {
-		key += "/"
-	}
-
+	r, _ := regexp.Compile(filter)
 	rch := s.client.Watch(context.Background(), key, clientv3.WithPrefix())
 	for wresp := range rch {
 		for _, ev := range wresp.Events {
-			r, _ := regexp.Compile(filter)
 			if (filter == "") || r.MatchString(string(ev.Kv.Key)) {
-				go f(ev.Type.String(), string(ev.Kv.Key))
+				go f(ev.Type.String(), string(ev.Kv.Key), ev.Kv.Value)
 			}
 		}
 	}

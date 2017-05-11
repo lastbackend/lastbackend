@@ -20,7 +20,7 @@ package storage
 
 import (
 	"context"
-	"github.com/lastbackend/lastbackend/pkg/apis/types"
+	"github.com/lastbackend/lastbackend/pkg/common/types"
 	"github.com/lastbackend/lastbackend/pkg/storage/store"
 	"regexp"
 	"time"
@@ -425,6 +425,32 @@ func (s *ServiceStorage) RemoveByNamespace(ctx context.Context, namespace string
 	return nil
 }
 
+func (s *ServiceStorage) SpecWatch(ctx context.Context, service chan *types.Service) error {
+	const filter = `\b.+` + namespaceStorage + `\/([a-z0-9-]{36})\/` + serviceStorage + `\/([a-z0-9-]{36})\/spec/.+\b`
+	client, destroy, err := s.Client()
+	if err != nil {
+		return err
+	}
+	defer destroy()
+
+	r, _ := regexp.Compile(filter)
+	key := s.util.Key(ctx, namespaceStorage)
+	cb := func(action, key string, _ []byte) {
+		keys := r.FindStringSubmatch(key)
+		if len(keys) < 3 {
+			return
+		}
+
+		if svc, err := s.GetByID(ctx, keys[1], keys[2]); err == nil {
+			service <- svc
+		}
+
+	}
+
+	client.Watch(ctx, key, filter, cb)
+	return nil
+}
+
 func (s *ServiceStorage) PodsWatch(ctx context.Context, service chan *types.Service) error {
 	const filter = `\b.+` + namespaceStorage + `\/([a-z0-9-]{36})\/` + serviceStorage + `\/([a-z0-9-]{36})\/pods/.+\b`
 	client, destroy, err := s.Client()
@@ -435,7 +461,7 @@ func (s *ServiceStorage) PodsWatch(ctx context.Context, service chan *types.Serv
 
 	r, _ := regexp.Compile(filter)
 	key := s.util.Key(ctx, namespaceStorage)
-	cb := func(action, key string) {
+	cb := func(action, key string, _ []byte) {
 		keys := r.FindStringSubmatch(key)
 		if len(keys) < 3 {
 			return
@@ -462,7 +488,7 @@ func (s *ServiceStorage) BuildsWatch(ctx context.Context, service chan *types.Se
 
 	r, _ := regexp.Compile(filter)
 	key := s.util.Key(ctx, namespaceStorage)
-	cb := func(action, key string) {
+	cb := func(action, key string, _ []byte) {
 		keys := r.FindStringSubmatch(key)
 		if len(keys) < 3 {
 			return

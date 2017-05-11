@@ -20,7 +20,7 @@ package routes
 
 import (
 	"github.com/lastbackend/lastbackend/pkg/api/context"
-	"github.com/lastbackend/lastbackend/pkg/wss"
+	"github.com/lastbackend/lastbackend/pkg/sockets"
 	"net/http"
 )
 
@@ -36,7 +36,7 @@ func EventSubscribeH(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	conn, err := wss.Upgrader.Upgrade(w, r, nil)
+	conn, err := sockets.Upgrader.Upgrade(w, r, nil)
 	if err != nil {
 		log.Error(err)
 		return

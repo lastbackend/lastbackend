@@ -21,7 +21,7 @@ package runtime
 import (
 	"github.com/lastbackend/lastbackend/pkg/agent/context"
 	"github.com/lastbackend/lastbackend/pkg/agent/events"
-	"github.com/lastbackend/lastbackend/pkg/apis/types"
+	"github.com/lastbackend/lastbackend/pkg/common/types"
 	"time"
 )
 
@@ -73,7 +73,7 @@ func (r *Runtime) StartEventListener() error {
 func (r *Runtime) Recovery(pods map[string]types.PodNodeSpec) {
 
 	log := context.Get().GetLogger()
-	ps := context.Get().GetStorage().Pods().GetPods()
+	ps := context.Get().GetCache().Pods().GetPods()
 
 	for _, pod := range ps {
 		if _, ok := pods[pod.Meta.ID]; !ok {

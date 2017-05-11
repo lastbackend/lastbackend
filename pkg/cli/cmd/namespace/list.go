@@ -22,7 +22,7 @@ import (
 	"fmt"
 	c "github.com/lastbackend/lastbackend/pkg/cli/context"
 	n "github.com/lastbackend/lastbackend/pkg/api/namespace/views/v1"
-	"github.com/lastbackend/lastbackend/pkg/errors"
+	"github.com/lastbackend/lastbackend/pkg/common/errors"
 )
 
 func ListNamespaceCmd() {
