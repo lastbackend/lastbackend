@@ -75,7 +75,7 @@ func Agent(cmd *cli.Cmd) {
 	})
 
 	cfg.APIServer.Port = *cmd.Int(cli.IntOpt{
-		Name: "port", Value: 2968, Desc: "API server listen port",
+		Name: "port", Value: 2967, Desc: "API server listen port",
 		EnvVar: "LB_AGENT_PORT", HideValue: true,
 	})
 
