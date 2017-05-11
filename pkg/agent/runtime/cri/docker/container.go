@@ -24,6 +24,7 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/common/types"
 	"strings"
 	"time"
+	"io"
 )
 
 func (r *Runtime) ContainerCreate(ctx context.Context, spec *types.ContainerSpec) (string, error) {
