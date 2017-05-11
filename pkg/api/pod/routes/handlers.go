@@ -17,35 +17,3 @@
 //
 
 package routes
-
-import (
-	"github.com/gorilla/mux"
-	"github.com/lastbackend/lastbackend/pkg/api/context"
-	"github.com/lastbackend/lastbackend/pkg/api/pod"
-	"github.com/lastbackend/lastbackend/pkg/errors"
-	"net/http"
-)
-
-func GetLogsH(w http.ResponseWriter, r *http.Request) {
-	var (
-		log      = context.Get().GetLogger()
-		pid      = mux.Vars(r)["pod"]
-		cid      = mux.Vars(r)["container"]
-		notify   = w.(http.CloseNotifier).CloseNotify()
-		doneChan = make(chan bool, 1)
-	)
-
-	log.Debug("Get pod logs")
-
-	go func() {
-		<-notify
-		log.Debug("HTTP connection just closed.")
-		doneChan <- true
-	}()
-
-	if err := pod.Logs(r.Context(), pid, cid, w, doneChan); err != nil {
-		log.Errorf("Error: get pod logs err %s", err.Error())
-		errors.HTTP.InternalServerError(w)
-		return
-	}
-}

@@ -43,13 +43,7 @@ func (s *PodStorage) GetByID(ctx context.Context, namespace, service, id string)
 	}
 	defer destroy()
 
-	var ns string
-	keyNamespace := s.util.Key(ctx, "helper", namespaceStorage, namespace)
-	if err := client.Get(ctx, keyNamespace, &ns); err != nil {
-		return pod, err
-	}
-
-	keyMeta := s.util.Key(ctx, namespaceStorage, ns, serviceStorage, service, podStorage, id)
+	keyMeta := s.util.Key(ctx, namespaceStorage, namespace, serviceStorage, service, podStorage, id)
 	if err := client.Get(ctx, keyMeta, pod); err != nil {
 		return pod, err
 	}

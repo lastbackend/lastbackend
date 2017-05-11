@@ -17,13 +17,3 @@
 //
 
 package routes
-
-import (
-	"github.com/lastbackend/lastbackend/pkg/util/http"
-	"github.com/lastbackend/lastbackend/pkg/util/http/middleware"
-)
-
-var Routes = []http.Route{
-	// Container handlers
-	{Path: "/pod/{pod}/container/{container}/logs", Method: http.MethodGet, Middleware: []http.Middleware{middleware.Context}, Handler: GetLogsH},
-}

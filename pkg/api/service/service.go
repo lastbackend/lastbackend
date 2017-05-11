@@ -21,13 +21,18 @@ package service
 import (
 	"context"
 	"encoding/json"
-	"github.com/lastbackend/lastbackend/pkg/common/types"
+	"fmt"
 	ctx "github.com/lastbackend/lastbackend/pkg/api/context"
+	"github.com/lastbackend/lastbackend/pkg/api/namespace"
 	"github.com/lastbackend/lastbackend/pkg/api/node"
 	"github.com/lastbackend/lastbackend/pkg/api/service/routes/request"
+	"github.com/lastbackend/lastbackend/pkg/common/types"
 	"github.com/lastbackend/lastbackend/pkg/storage/store"
+	h "github.com/lastbackend/lastbackend/pkg/util/http"
 	"github.com/pkg/errors"
 	"github.com/satori/go.uuid"
+	"io"
+	"net/http"
 	"strings"
 	"time"
 )
@@ -280,8 +285,17 @@ func (s *service) SetPods(pods []types.Pod) error {
 			return err
 		}
 
-		p, e := storage.Pod().GetByID(s.Context, svc.Meta.Namespace, svc.Meta.ID, pod.Meta.ID)
+		ns := namespace.New(s.Context)
+		item, err := ns.Get(svc.Meta.Namespace)
+		if err != nil {
+			log.Error("Error: find namespace by id", err.Error())
+			return err
+		}
+		if item == nil {
+			return err
+		}
 
+		p, e := storage.Pod().GetByID(s.Context, item.Meta.ID, svc.Meta.ID, pod.Meta.ID)
 		if e != nil {
 			log.Errorf("Error: get pod from db: %s", e.Error())
 			continue
@@ -558,6 +572,85 @@ func (s *service) GenerateSpec(service *types.Service) types.PodSpec {
 	spec.State = types.StateStarted
 
 	return spec
+}
+
+func Logs(c context.Context, namespace, service, pod, container string, stream io.Writer, done chan bool) error {
+
+	const buffer_size = 1024
+
+	var (
+		log      = ctx.Get().GetLogger()
+		storage  = ctx.Get().GetStorage()
+		buffer   = make([]byte, buffer_size)
+		doneChan = make(chan bool, 1)
+	)
+
+	log.Debug("Service: get service logs")
+
+	p, err := storage.Pod().GetByID(c, namespace, service, pod)
+	if err != nil {
+		return err
+	}
+
+	n, err := storage.Node().Get(c, p.Meta.Hostname)
+	if err != nil {
+		return err
+	}
+
+	// TODO: Get port from node
+	client, err := h.New(n.Meta.Hostname+":2968", &h.ReqOpts{TLS: false})
+	if err != nil {
+		return err
+	}
+
+	_, res, err := client.
+		GET(fmt.Sprintf("/container/%s/logs", container)).Do()
+	if err != nil {
+		return err
+	}
+
+	go func() {
+		for {
+			select {
+			case <-doneChan:
+				res.Body.Close()
+				return
+			default:
+				n, err := res.Body.Read(buffer)
+				if err != nil {
+					log.Errorf("Error read bytes from stream %s", err)
+					res.Body.Close()
+					return
+				}
+
+				_, err = func(p []byte) (n int, err error) {
+					n, err = stream.Write(p)
+					if err != nil {
+						log.Errorf("Error write bytes from stream %s", err)
+						return n, err
+					}
+					if f, ok := stream.(http.Flusher); ok {
+						f.Flush()
+					}
+					return n, nil
+				}(buffer[0:n])
+				if err != nil {
+					log.Errorf("Error written to stream %s", err)
+					return
+				}
+
+				for i := 0; i < n; i++ {
+					buffer[i] = 0
+				}
+			}
+		}
+	}()
+
+	<-done
+
+	close(doneChan)
+
+	return nil
 }
 
 func createSpec(opts *request.RequestServiceSpecCreateS) (*types.ServiceSpec, error) {
