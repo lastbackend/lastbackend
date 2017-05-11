@@ -19,10 +19,10 @@
 package builder
 
 import (
-	"github.com/lastbackend/lastbackend/pkg/apis/types"
+	"github.com/lastbackend/lastbackend/pkg/common/types"
 	"github.com/satori/go.uuid"
 	"github.com/lastbackend/lastbackend/pkg/builder/context"
-	"github.com/lastbackend/lastbackend/pkg/config"
+	"github.com/lastbackend/lastbackend/pkg/common/config"
 )
 
 type Task struct {

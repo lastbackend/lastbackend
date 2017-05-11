@@ -26,7 +26,7 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/api/service/routes/request"
 	"github.com/lastbackend/lastbackend/pkg/api/service/views/v1"
 	"github.com/lastbackend/lastbackend/pkg/storage/store"
-	"github.com/lastbackend/lastbackend/pkg/errors"
+	"github.com/lastbackend/lastbackend/pkg/common/errors"
 	"github.com/lastbackend/lastbackend/pkg/util/http/utils"
 	"net/http"
 )

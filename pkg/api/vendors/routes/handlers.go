@@ -21,8 +21,8 @@ package routes
 import (
 	c "github.com/lastbackend/lastbackend/pkg/api/context"
 	"github.com/lastbackend/lastbackend/pkg/api/vendors/views/v1"
-	"github.com/lastbackend/lastbackend/pkg/apis/types"
-	"github.com/lastbackend/lastbackend/pkg/errors"
+	"github.com/lastbackend/lastbackend/pkg/common/types"
+	"github.com/lastbackend/lastbackend/pkg/common/errors"
 	"github.com/lastbackend/lastbackend/pkg/util/http/utils"
 	"github.com/lastbackend/lastbackend/pkg/vendors"
 	"github.com/lastbackend/lastbackend/pkg/vendors/docker"

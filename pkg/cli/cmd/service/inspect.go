@@ -23,7 +23,7 @@ import (
 	s "github.com/lastbackend/lastbackend/pkg/api/service/views/v1"
 	nspace "github.com/lastbackend/lastbackend/pkg/cli/cmd/namespace"
 	c "github.com/lastbackend/lastbackend/pkg/cli/context"
-	"github.com/lastbackend/lastbackend/pkg/errors"
+	"github.com/lastbackend/lastbackend/pkg/common/errors"
 )
 
 func InspectCmd(name string) {

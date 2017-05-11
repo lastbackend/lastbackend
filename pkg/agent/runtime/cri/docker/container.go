@@ -20,11 +20,11 @@ package docker
 
 import (
 	docker "github.com/docker/docker/api/types"
-	"github.com/lastbackend/lastbackend/pkg/apis/types"
-	"github.com/lastbackend/lastbackend/pkg/context"
-	"io"
+	"github.com/lastbackend/lastbackend/pkg/common/context"
+	"github.com/lastbackend/lastbackend/pkg/common/types"
 	"strings"
 	"time"
+	"io"
 )
 
 func (r *Runtime) ContainerCreate(ctx context.Context, spec *types.ContainerSpec) (string, error) {

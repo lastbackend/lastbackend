@@ -1,0 +1,91 @@
+//
+// Last.Backend LLC CONFIDENTIAL
+// __________________
+//
+// [2014] - [2017] Last.Backend LLC
+// All Rights Reserved.
+//
+// NOTICE:  All information contained herein is, and remains
+// the property of Last.Backend LLC and its suppliers,
+// if any.  The intellectual and technical concepts contained
+// herein are proprietary to Last.Backend LLC
+// and its suppliers and may be covered by Russian Federation and Foreign Patents,
+// patents in process, and are protected by trade secret or copyright law.
+// Dissemination of this information or reproduction of this material
+// is strictly forbidden unless prior written permission is obtained
+// from Last.Backend LLC.
+//
+
+package runtime
+
+import (
+	"github.com/lastbackend/lastbackend/pkg/system"
+	"github.com/lastbackend/lastbackend/pkg/common/types"
+	"github.com/lastbackend/lastbackend/pkg/controller/context"
+)
+
+// watch service state and specs
+// generate pods by specs
+
+// watch service builds
+// generate build spec after build creation
+
+// watch service build state
+// update pods after build passed state
+
+type Runtime struct {
+	context *context.Context
+	process *system.Process
+
+	active bool
+}
+
+
+func NewRuntime (ctx *context.Context) *Runtime {
+	r := new(Runtime)
+	r.context = ctx
+	r.process = new(system.Process)
+	r.process.Register(ctx, types.KindController)
+	return r
+}
+
+
+func (r *Runtime) Loop () {
+
+	var (
+		log = r.context.GetLogger()
+		lead = make (chan bool)
+	)
+
+	log.Debug("Contoller: Runtime: Loop")
+
+	go func (){
+		for {
+			select {
+			case l := <-lead:
+				{
+					if l {
+						if r.active {
+							log.Debug("Controller: Runtime: is already marked as lead -> skip")
+							continue
+						}
+						r.active = true
+						log.Debug("Controller: Runtime: Mark as lead")
+
+					} else {
+						if !r.active {
+							log.Debug("Controller: Runtime: is already marked as slave -> skip")
+							continue
+						}
+						log.Debug("Controller: Runtime: Mark as slave")
+						r.active = false
+					}
+				}
+			}
+		}
+	}()
+
+	if err := r.process.WaitElected(lead); err != nil {
+		log.Errorf("Controller: Runtime: Elect Wait error: %s", err.Error())
+	}
+}

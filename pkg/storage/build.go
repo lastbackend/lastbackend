@@ -21,7 +21,7 @@ package storage
 import (
 	"context"
 	"fmt"
-	"github.com/lastbackend/lastbackend/pkg/apis/types"
+	"github.com/lastbackend/lastbackend/pkg/common/types"
 	"github.com/lastbackend/lastbackend/pkg/storage/store"
 	"strings"
 )

@@ -22,8 +22,8 @@ import (
 	"fmt"
 	"github.com/lastbackend/lastbackend/pkg/agent/config"
 	"github.com/lastbackend/lastbackend/pkg/agent/context"
-	"github.com/lastbackend/lastbackend/pkg/agent/utils/system"
-	"github.com/lastbackend/lastbackend/pkg/apis/types"
+	"github.com/lastbackend/lastbackend/pkg/util/system"
+	"github.com/lastbackend/lastbackend/pkg/common/types"
 	"github.com/shirou/gopsutil/mem"
 	"time"
 )
@@ -82,7 +82,7 @@ func GetNodeAllocation() types.NodeResources {
 		fmt.Errorf("Get memory err: %s", err.Error())
 	}
 	m := vmStat.Free / 1024 / 1024
-	s := context.Get().GetStorage().Pods()
+	s := context.Get().GetCache().Pods()
 	allocation := types.NodeResources{
 		Memory:     int64(m),
 		Pods:       s.GetPodsCount(),

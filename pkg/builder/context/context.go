@@ -21,22 +21,27 @@ package context
 import (
 	"context"
 	"github.com/lastbackend/lastbackend/pkg/builder/config"
-	"github.com/lastbackend/lastbackend/pkg/agent/runtime/cri"
+	"github.com/lastbackend/lastbackend/pkg/storage"
 	"github.com/lastbackend/lastbackend/pkg/logger"
-	_c "github.com/lastbackend/lastbackend/pkg/context"
+	_c "github.com/lastbackend/lastbackend/pkg/common/context"
 )
 
 var _ctx ctx
 
-func Get() *ctx {
-	return &_ctx
+type Context struct {
+	context.Context
 }
 
 type ctx struct {
 	_c.Context
-	cri     cri.CRI
-	logger  *logger.Logger
-	config  *config.Config
+
+	logger               *logger.Logger
+	storage              *storage.Storage
+	config               *config.Config
+}
+
+func Get() *ctx {
+	return &_ctx
 }
 
 func (c *ctx) SetLogger(log *logger.Logger) {
@@ -55,12 +60,12 @@ func (c *ctx) GetConfig() *config.Config {
 	return c.config
 }
 
-func (c *ctx) SetCri(_cri cri.CRI) {
-	c.cri = _cri
+func (c *ctx) SetStorage(storage *storage.Storage) {
+	c.storage = storage
 }
 
-func (c *ctx) GetCri() cri.CRI {
-	return c.cri
+func (c *ctx) GetStorage() *storage.Storage {
+	return c.storage
 }
 
 func (c *ctx) Background() context.Context {

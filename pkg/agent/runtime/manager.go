@@ -19,7 +19,7 @@ package runtime
 
 import (
 	"github.com/lastbackend/lastbackend/pkg/agent/context"
-	"github.com/lastbackend/lastbackend/pkg/apis/types"
+	"github.com/lastbackend/lastbackend/pkg/common/types"
 	"sync"
 )
 
@@ -29,7 +29,7 @@ type PodManager struct {
 }
 
 func (pm *PodManager) GetPodList() []*types.Pod {
-	pods := context.Get().GetStorage().Pods().GetPods()
+	pods := context.Get().GetCache().Pods().GetPods()
 	list := []*types.Pod{}
 
 	for _, pod := range pods {
@@ -40,20 +40,20 @@ func (pm *PodManager) GetPodList() []*types.Pod {
 }
 
 func (pm *PodManager) GetPods() map[string]*types.Pod {
-	return context.Get().GetStorage().Pods().GetPods()
+	return context.Get().GetCache().Pods().GetPods()
 }
 
 func (pm *PodManager) SyncPod(pod types.PodNodeSpec) {
 	log := context.Get().GetLogger()
 	log.Debugf("Pod %s sync", pod.Meta.ID)
 
-	p := context.Get().GetStorage().Pods().GetPod(pod.Meta.ID)
+	p := context.Get().GetCache().Pods().GetPod(pod.Meta.ID)
 
 	if p == nil {
 		log.Debugf("Pod %s not found, create new one", pod.Meta.ID)
 		p := types.NewPod()
 		p.Meta = pod.Meta
-		context.Get().GetStorage().Pods().SetPod(p)
+		context.Get().GetCache().Pods().SetPod(p)
 		pm.sync(pod.Meta, pod.State, pod.Spec, p)
 		return
 	}
@@ -137,7 +137,7 @@ func NewPodManager() (*PodManager, error) {
 	}
 
 	log.Debugf("Runtime: new pods manager: restore state: %d pods found", len(pods))
-	s := context.Get().GetStorage().Pods()
+	s := context.Get().GetCache().Pods()
 	s.SetPods(pods)
 
 	return pm, nil

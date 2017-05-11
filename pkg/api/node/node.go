@@ -22,7 +22,7 @@ import (
 	"context"
 	"errors"
 	ctx "github.com/lastbackend/lastbackend/pkg/api/context"
-	"github.com/lastbackend/lastbackend/pkg/apis/types"
+	"github.com/lastbackend/lastbackend/pkg/common/types"
 )
 
 type node struct {

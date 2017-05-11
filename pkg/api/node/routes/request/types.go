@@ -22,7 +22,7 @@ import (
 	"encoding/json"
 	"github.com/lastbackend/lastbackend/pkg/api/context"
 	"github.com/lastbackend/lastbackend/pkg/api/node/views/v1"
-	"github.com/lastbackend/lastbackend/pkg/errors"
+	"github.com/lastbackend/lastbackend/pkg/common/errors"
 	"io"
 	"io/ioutil"
 )
