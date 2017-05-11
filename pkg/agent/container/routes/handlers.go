@@ -16,27 +16,35 @@
 // from Last.Backend LLC.
 //
 
-package daemon
+package routes
 
 import (
 	"github.com/gorilla/mux"
-	container "github.com/lastbackend/lastbackend/pkg/agent/container/routes"
+	"github.com/lastbackend/lastbackend/pkg/agent/container"
 	"github.com/lastbackend/lastbackend/pkg/agent/context"
-	"github.com/lastbackend/lastbackend/pkg/util/http"
+	"github.com/lastbackend/lastbackend/pkg/errors"
+	"net/http"
 )
 
-func Listen(host string, port int) error {
+func GetLogsH(w http.ResponseWriter, r *http.Request) {
+	var (
+		log      = context.Get().GetLogger()
+		cid      = mux.Vars(r)["container"]
+		notify   = w.(http.CloseNotifier).CloseNotify()
+		doneChan = make(chan bool, 1)
+	)
 
-	log := context.Get().GetLogger()
-	log.Debug("Listen API server")
+	log.Debug("Get container logs")
 
-	router := mux.NewRouter()
-	router.Methods("OPTIONS").HandlerFunc(http.Headers)
+	go func() {
+		<-notify
+		log.Debug("HTTP connection just closed.")
+		doneChan <- true
+	}()
 
-	for _, route := range container.Routes {
-		log.Debugf("Init route: %s", route.Path)
-		router.Handle(route.Path, http.Handle(route.Handler, route.Middleware...)).Methods(route.Method)
+	if err := container.Logs(cid, true, w, doneChan); err != nil {
+		log.Errorf("Error: get container logs err %s", err.Error())
+		errors.HTTP.InternalServerError(w)
+		return
 	}
-
-	return http.Listen(host, port, router)
 }

@@ -125,6 +125,13 @@ func Agent(cmd *cli.Cmd) {
 
 		rntm.Loop()
 
+		go func() {
+			//TODO: Add another config variable to agent HTTP
+			if err := Listen(*cfg.APIServer.Host, *cfg.APIServer.Port); err != nil {
+				ctx.GetLogger().Warnf("Http server start error: %s", err.Error())
+			}
+		}()
+
 		// Handle SIGINT and SIGTERM.
 		signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)
 
