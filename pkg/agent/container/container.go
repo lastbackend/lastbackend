@@ -53,13 +53,15 @@ func Logs(cid string, follow bool, stream io.Writer, done chan bool) error {
 			default:
 				n, err := req.Read(buffer)
 				if err != nil {
+					log.Errorf("Error read bytes from stream %s", err)
 					req.Close()
-					break
+					return
 				}
 
 				_, err = func(p []byte) (n int, err error) {
 					n, err = stream.Write(p)
 					if err != nil {
+						log.Errorf("Error write bytes to stream %s", err)
 						return n, err
 					}
 					if f, ok := stream.(http.Flusher); ok {

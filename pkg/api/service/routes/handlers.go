@@ -25,8 +25,8 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/api/service"
 	"github.com/lastbackend/lastbackend/pkg/api/service/routes/request"
 	"github.com/lastbackend/lastbackend/pkg/api/service/views/v1"
-	"github.com/lastbackend/lastbackend/pkg/storage/store"
 	"github.com/lastbackend/lastbackend/pkg/common/errors"
+	"github.com/lastbackend/lastbackend/pkg/storage/store"
 	"github.com/lastbackend/lastbackend/pkg/util/http/utils"
 	"net/http"
 )
@@ -390,14 +390,6 @@ func ServiceActivityListH(w http.ResponseWriter, _ *http.Request) {
 	}
 }
 
-func ServiceLogsH(w http.ResponseWriter, _ *http.Request) {
-	w.WriteHeader(http.StatusOK)
-	if _, err := w.Write([]byte(`[]`)); err != nil {
-		context.Get().GetLogger().Error("Error: write response", err.Error())
-		return
-	}
-}
-
 func ServiceSpecCreateH(w http.ResponseWriter, r *http.Request) {
 	var (
 		err error
@@ -555,6 +547,56 @@ func ServiceSpecRemoveH(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 	if _, err = w.Write([]byte{}); err != nil {
 		log.Error("Error: write response", err.Error())
+		return
+	}
+}
+
+func ServiceLogsH(w http.ResponseWriter, r *http.Request) {
+	var (
+		log      = context.Get().GetLogger()
+		nid      = utils.Vars(r)["namespace"]
+		sid      = utils.Vars(r)["service"]
+		pid      = r.URL.Query().Get("pod")
+		cid      = r.URL.Query().Get("container")
+		notify   = w.(http.CloseNotifier).CloseNotify()
+		doneChan = make(chan bool, 1)
+	)
+
+	log.Debug("Get service logs")
+
+	ns := namespace.New(r.Context())
+	item, err := ns.Get(nid)
+	if err != nil {
+		log.Error("Error: find namespace by id", err.Error())
+		errors.HTTP.InternalServerError(w)
+		return
+	}
+	if item == nil {
+		errors.New("namespace").NotFound().Http(w)
+		return
+	}
+
+	s := service.New(r.Context(), item.Meta)
+	svc, err := s.Get(sid)
+	if err != nil {
+		log.Error("Error: find service by id", err.Error())
+		errors.HTTP.InternalServerError(w)
+		return
+	}
+	if svc == nil {
+		errors.New("service").NotFound().Http(w)
+		return
+	}
+
+	go func() {
+		<-notify
+		log.Debug("HTTP connection just closed.")
+		doneChan <- true
+	}()
+
+	if err := service.Logs(r.Context(), item.Meta.ID, svc.Meta.ID, pid, cid, w, doneChan); err != nil {
+		log.Errorf("Error: get service logs err %s", err.Error())
+		errors.HTTP.InternalServerError(w)
 		return
 	}
 }

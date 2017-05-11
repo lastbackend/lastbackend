@@ -22,8 +22,9 @@ import "github.com/lastbackend/lastbackend/pkg/common/config"
 
 // The structure of the config to run the daemon
 type Config struct {
-	Debug   		bool
-	Host    		config.Host
-	Runtime 		config.Runtime
-	APIServer   config.APIServer
+	Debug      bool
+	Host       config.Host
+	Runtime    config.Runtime
+	HTTPServer config.HTTPServer
+	APIServer  config.APIServer
 }

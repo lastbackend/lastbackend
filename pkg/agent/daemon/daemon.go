@@ -27,12 +27,12 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/agent/events/listener"
 	"github.com/lastbackend/lastbackend/pkg/agent/runtime"
 	"github.com/lastbackend/lastbackend/pkg/agent/runtime/cri/cri"
+	"github.com/lastbackend/lastbackend/pkg/cache"
 	"github.com/lastbackend/lastbackend/pkg/logger"
 	"github.com/lastbackend/lastbackend/pkg/util/http"
 	"os"
 	"os/signal"
 	"syscall"
-	"github.com/lastbackend/lastbackend/pkg/cache"
 )
 
 func Agent(cmd *cli.Cmd) {
@@ -43,6 +43,16 @@ func Agent(cmd *cli.Cmd) {
 	cmd.Spec = ""
 
 	cfg.Debug = *cmd.Bool(cli.BoolOpt{Name: "d debug", Value: false, Desc: "Enable debug mode"})
+
+	cfg.HTTPServer.Host = cmd.String(cli.StringOpt{
+		Name: "host", Value: "", Desc: "Agent API server listen address",
+		EnvVar: "HOST", HideValue: true,
+	})
+
+	cfg.HTTPServer.Port = cmd.Int(cli.IntOpt{
+		Name: "port", Value: 2968, Desc: "Agent API server listen port",
+		EnvVar: "PORT", HideValue: true,
+	})
 
 	cfg.Runtime.Docker.Host = *cmd.String(cli.StringOpt{
 		Name: "docker-host", Value: "", Desc: "Provide path to Docker daemon",
@@ -70,13 +80,13 @@ func Agent(cmd *cli.Cmd) {
 	})
 
 	cfg.APIServer.Host = cmd.String(cli.StringOpt{
-		Name: "host", Value: "0.0.0.0", Desc: "API server listen address",
-		EnvVar: "LB_AGENT_HOST", HideValue: true,
+		Name: "api-host", Value: "0.0.0.0", Desc: "API server listen address",
+		EnvVar: "LB_API_HOST", HideValue: true,
 	})
 
 	cfg.APIServer.Port = cmd.Int(cli.IntOpt{
-		Name: "port", Value: 2967, Desc: "API server listen port",
-		EnvVar: "LB_AGENT_PORT", HideValue: true,
+		Name: "api-port", Value: 2967, Desc: "API server listen port",
+		EnvVar: "LB_API_PORT", HideValue: true,
 	})
 
 	cfg.Host.Hostname = *cmd.String(cli.StringOpt{
@@ -126,8 +136,7 @@ func Agent(cmd *cli.Cmd) {
 		rntm.Loop()
 
 		go func() {
-			//TODO: Add another config variable to agent HTTP
-			if err := Listen(*cfg.APIServer.Host, *cfg.APIServer.Port); err != nil {
+			if err := Listen(*cfg.HTTPServer.Host, *cfg.HTTPServer.Port); err != nil {
 				ctx.GetLogger().Warnf("Http server start error: %s", err.Error())
 			}
 		}()

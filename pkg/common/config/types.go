@@ -28,6 +28,11 @@ type Config struct {
 	Registry Registry
 }
 
+type HTTPServer struct {
+	Host *string
+	Port *int
+}
+
 type APIServer struct {
 	Host *string
 	Port *int
