@@ -77,7 +77,7 @@ func NamespaceInfoH(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		log.Error("Error: find namespace by id", err.Error())
+		log.Error("Error: find namespace by name", err.Error())
 		errors.HTTP.InternalServerError(w)
 		return
 	}
@@ -233,7 +233,7 @@ func NamespaceRemoveH(w http.ResponseWriter, r *http.Request) {
 	//	return
 	//}
 
-	ns.Remove(item.Meta.ID)
+	ns.Remove(item.Meta.Name)
 	if err != nil {
 		errors.HTTP.InternalServerError(w)
 		return

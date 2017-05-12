@@ -57,7 +57,7 @@ func (r *Runtime) PodList(ctx context.Context) ([]*types.Pod, error) {
 			pod = types.NewPod()
 			pods[info[0]] = pod
 		}
-		pod.Meta.ID = info[0]
+		pod.Meta.Name = info[0]
 		pod.Spec.ID = info[1]
 		pod.Spec.Containers = make(map[string]*types.ContainerSpec)
 

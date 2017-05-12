@@ -74,6 +74,7 @@ type ContainerSpec struct {
 
 type ContainerSpecMeta struct {
 	Meta
+	ID string `json:"id"`
 }
 
 type ContainerNetworkSpec struct {

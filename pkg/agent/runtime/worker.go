@@ -38,7 +38,7 @@ type Worker struct {
 
 func (w *Worker) Provision(meta types.PodMeta, state types.PodState, spec types.PodSpec, p *types.Pod) {
 	log := context.Get().GetLogger()
-	log.Debugf("Provision new task for pod: %s", p.Meta.ID)
+	log.Debugf("Provision new task for pod: %s", p.Meta.Name)
 
 	// Clean next task if exists
 

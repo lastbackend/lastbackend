@@ -45,12 +45,12 @@ func (pm *PodManager) GetPods() map[string]*types.Pod {
 
 func (pm *PodManager) SyncPod(pod types.PodNodeSpec) {
 	log := context.Get().GetLogger()
-	log.Debugf("Pod %s sync", pod.Meta.ID)
+	log.Debugf("Pod %s sync", pod.Meta.Name)
 
-	p := context.Get().GetCache().Pods().GetPod(pod.Meta.ID)
+	p := context.Get().GetCache().Pods().GetPod(pod.Meta.Name)
 
 	if p == nil {
-		log.Debugf("Pod %s not found, create new one", pod.Meta.ID)
+		log.Debugf("Pod %s not found, create new one", pod.Meta.Name)
 		p := types.NewPod()
 		p.Meta = pod.Meta
 		context.Get().GetCache().Pods().SetPod(p)
@@ -59,14 +59,14 @@ func (pm *PodManager) SyncPod(pod types.PodNodeSpec) {
 	}
 
 	if p.State.Provision {
-		log.Debugf("Pod %s is not in %s state > skip sync", p.Meta.ID, types.StateReady)
+		log.Debugf("Pod %s is not in %s state > skip sync", p.Meta.Name, types.StateReady)
 		return
 	}
 
-	log.Debugf("Pod %s found", pod.Meta.ID)
+	log.Debugf("Pod %s found", pod.Meta.Name)
 	if len(pod.Spec.Containers) != len(p.Containers) {
 
-		log.Debugf("Pod %s containers len different from spec count %d(%d)", pod.Meta.ID, len(p.Containers),
+		log.Debugf("Pod %s containers len different from spec count %d(%d)", pod.Meta.Name, len(p.Containers),
 			len(p.Containers))
 
 		pm.sync(pod.Meta, pod.State, pod.Spec, p)
@@ -74,16 +74,16 @@ func (pm *PodManager) SyncPod(pod types.PodNodeSpec) {
 	}
 
 	if (p.Spec.ID == pod.Spec.ID) && p.Spec.State == pod.Spec.State {
-		log.Debugf("Pod %s in correct state", pod.Meta.ID)
+		log.Debugf("Pod %s in correct state", pod.Meta.Name)
 		return
 	}
 
 	if p.Spec.ID != pod.Spec.ID {
-		log.Debugf("Pod %s need to spec update: %s (%s) ", pod.Meta.ID, pod.Spec.ID, p.Spec.ID)
+		log.Debugf("Pod %s need to spec update: %s (%s) ", pod.Meta.Name, pod.Spec.ID, p.Spec.ID)
 	}
 
 	if p.Spec.State != pod.Spec.State {
-		log.Debugf("Pod %s need to change state to: %s (%s) ", pod.Meta.ID, pod.Spec.State, p.Spec.State)
+		log.Debugf("Pod %s need to change state to: %s (%s) ", pod.Meta.Name, pod.Spec.State, p.Spec.State)
 	}
 
 	pm.sync(pod.Meta, pod.State, pod.Spec, p)
@@ -93,28 +93,28 @@ func (pm *PodManager) sync(meta types.PodMeta, state types.PodState, spec types.
 	// Create new worker to sync pod
 	// Check if pod worker exists
 	log := context.Get().GetLogger()
-	log.Debugf("Pod %s sync start", pod.Meta.ID)
-	w, ok := pm.workers[pod.Meta.ID]
+	log.Debugf("Pod %s sync start", pod.Meta.Name)
+	w, ok := pm.workers[pod.Meta.Name]
 
 	if !ok {
-		log.Debugf("Pod %s sync create new worker", pod.Meta.ID)
+		log.Debugf("Pod %s sync create new worker", pod.Meta.Name)
 		w = NewWorker()
-		w.pod = pod.Meta.ID
+		w.pod = pod.Meta.Name
 		pm.lock.Lock()
-		pm.workers[pod.Meta.ID] = w
+		pm.workers[pod.Meta.Name] = w
 		pm.lock.Unlock()
 
 		// Start worker watcher
 		go func() {
 			<-w.done
-			log.Debugf("Pod %s worker deletion", pod.Meta.ID)
+			log.Debugf("Pod %s worker deletion", pod.Meta.Name)
 			pm.lock.Lock()
-			delete(pm.workers, pod.Meta.ID)
+			delete(pm.workers, pod.Meta.Name)
 			pm.lock.Unlock()
 		}()
 	}
 
-	log.Debugf("Pod %s sync proceed", pod.Meta.ID)
+	log.Debugf("Pod %s sync proceed", pod.Meta.Name)
 	w.Provision(meta, state, spec, pod)
 }
 

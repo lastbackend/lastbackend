@@ -76,9 +76,9 @@ func (r *Runtime) Recovery(pods map[string]types.PodNodeSpec) {
 	ps := context.Get().GetCache().Pods().GetPods()
 
 	for _, pod := range ps {
-		if _, ok := pods[pod.Meta.ID]; !ok {
-			log.Debugf("Mark pod %s for removable", pod.Meta.ID)
-			pods[pod.Meta.ID] = types.PodNodeSpec{
+		if _, ok := pods[pod.Meta.Name]; !ok {
+			log.Debugf("Mark pod %s for removable", pod.Meta.Name)
+			pods[pod.Meta.Name] = types.PodNodeSpec{
 				Meta: pod.Meta,
 				State: types.PodState{
 					State: types.StateDestroy,
