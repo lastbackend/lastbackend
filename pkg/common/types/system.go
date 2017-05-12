@@ -33,7 +33,9 @@ type Process struct {
 
 type ProcessMeta struct {
 	// Include default Meta struct
-	Meta
+	Meta `json:"id"`
+
+	ID string `json:"id"`
 
 	// Process PID
 	PID int `json:"pid"`

@@ -75,8 +75,6 @@ func (s *RequestServiceCreateS) DecodeAndValidate(reader io.Reader) *errors.Err 
 		return errors.New("user").Unknown(err)
 	}
 
-	log.Debug(string(body))
-
 	err = json.Unmarshal(body, s)
 	if err != nil {
 		return errors.New("service").IncorrectJSON(err)

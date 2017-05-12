@@ -108,8 +108,9 @@ type ServiceSource struct {
 
 type SpecMeta struct {
 	Meta
-	Revision int    `json:"revision"`
+	ID       string `json:"id"`
 	Parent   string `json:"parent"`
+	Revision int    `json:"revision"`
 }
 
 type ServiceSpec struct {

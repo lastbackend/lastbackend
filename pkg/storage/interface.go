@@ -64,7 +64,6 @@ type IHook interface {
 }
 
 type INamespace interface {
-	GetByID(ctx context.Context, id string) (*types.Namespace, error)
 	GetByName(ctx context.Context, name string) (*types.Namespace, error)
 	List(ctx context.Context) ([]*types.Namespace, error)
 	Insert(ctx context.Context, namespace *types.Namespace) error
@@ -73,9 +72,8 @@ type INamespace interface {
 }
 
 type IService interface {
-	GetByID(ctx context.Context, namespace, id string) (*types.Service, error)
 	GetByName(ctx context.Context, namespace, name string) (*types.Service, error)
-	GetByPodID(ctx context.Context, uuid string) (*types.Service, error)
+	GetByPodName(ctx context.Context, name string) (*types.Service, error)
 	ListByNamespace(ctx context.Context, namespace string) ([]*types.Service, error)
 	Insert(ctx context.Context, service *types.Service) error
 	Update(ctx context.Context, service *types.Service) error
@@ -88,7 +86,7 @@ type IService interface {
 }
 
 type IPod interface {
-	GetByID(ctx context.Context, namespace, service, id string) (*types.Pod, error)
+	GetByName(ctx context.Context, namespace, service, name string) (*types.Pod, error)
 	ListByService(ctx context.Context, namespace, service string) ([]*types.Pod, error)
 	Insert(ctx context.Context, namespace, service string, pod *types.Pod) error
 	Update(ctx context.Context, namespace, service string, pod *types.Pod) error
@@ -111,7 +109,7 @@ type IVendor interface {
 
 type IVolume interface {
 	GetByToken(ctx context.Context, token string) (*types.Volume, error)
-	ListByProject(ctx context.Context, project string) ([]*types.Volume, error)
+	ListByNamespace(ctx context.Context, namespace string) ([]*types.Volume, error)
 	Insert(ctx context.Context, volume *types.Volume) error
 	Remove(ctx context.Context, id string) error
 }
@@ -135,7 +133,7 @@ type INode interface {
 type ISystem interface {
 	ProcessSet(ctx context.Context, process *types.Process) error
 
-	Elect (ctx context.Context, process *types.Process) (bool, error)
-	ElectUpdate (ctx context.Context, process *types.Process) error
-	ElectWait (ctx context.Context, process *types.Process, lead chan bool) error
+	Elect(ctx context.Context, process *types.Process) (bool, error)
+	ElectUpdate(ctx context.Context, process *types.Process) error
+	ElectWait(ctx context.Context, process *types.Process, lead chan bool) error
 }
