@@ -18,8 +18,5 @@
 
 package service
 
-import "github.com/lastbackend/lastbackend/pkg/common/types"
+import "github.com/satori/go.uuid"
 
-func GeneratePods(s *types.Service) {
-
-}

@@ -24,6 +24,7 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/storage/store"
 	"regexp"
 	"time"
+	"fmt"
 )
 
 const serviceStorage string = "services"
@@ -238,6 +239,11 @@ func (s *ServiceStorage) Insert(ctx context.Context, service *types.Service) err
 		}
 	}
 
+	keyServiceController := s.util.Key(ctx, systemStorage, types.KindController, "services", fmt.Sprintf("%s:%s", namespace, service.Meta.ID))
+	if err := tx.Create(keyServiceController, &service.State.State, 0); err != nil {
+		return err
+	}
+
 	for _, pod := range service.Pods {
 		KeyPod := s.util.Key(ctx, namespaceStorage, namespace, serviceStorage, service.Meta.ID, "pods", pod.Meta.ID)
 		if err := tx.Create(KeyPod, &pod, 0); err != nil {
@@ -422,6 +428,32 @@ func (s *ServiceStorage) RemoveByNamespace(ctx context.Context, namespace string
 		return err
 	}
 
+	return nil
+}
+
+func (s *ServiceStorage) ServiceWatch(ctx context.Context, service chan *types.Service) error {
+	const filter = `\b.+` + systemStorage + `\/` + types.KindController + `\/services\/\/([a-z0-9-]{36}):([a-z0-9-]{36})\b`
+	client, destroy, err := s.Client()
+	if err != nil {
+		return err
+	}
+	defer destroy()
+
+	r, _ := regexp.Compile(filter)
+	key := s.util.Key(ctx, systemStorage, types.KindController, "services")
+	cb := func(action, key string, _ []byte) {
+		keys := r.FindStringSubmatch(key)
+		if len(keys) < 3 {
+			return
+		}
+
+		if svc, err := s.GetByID(ctx, keys[1], keys[2]); err == nil {
+			service <- svc
+		}
+
+	}
+
+	client.Watch(ctx, key, filter, cb)
 	return nil
 }
 

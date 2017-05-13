@@ -160,7 +160,6 @@ func (s *service) Update(service *types.Service, rq *request.RequestServiceUpdat
 	if rq.Replicas != nil {
 		log.Debugf("Service: Update: set replicas: %d", *rq.Replicas)
 		service.Meta.Replicas = *rq.Replicas
-		s.Scale(service)
 	}
 
 	s.StateUpdate(service)
