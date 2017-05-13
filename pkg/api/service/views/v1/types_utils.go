@@ -21,8 +21,8 @@ package v1
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/lastbackend/lastbackend/pkg/common/types"
 	"github.com/lastbackend/lastbackend/pkg/api/pod/views/v1"
+	"github.com/lastbackend/lastbackend/pkg/common/types"
 	"github.com/lastbackend/lastbackend/pkg/util/table"
 	"strings"
 )
@@ -102,16 +102,16 @@ func ToSpecMeta(meta types.SpecMeta) SpecMeta {
 
 func ToState(state types.ServiceState) ServiceState {
 	return ServiceState{
-		State: state.State,
+		State:  state.State,
 		Status: state.Status,
 		Replicas: ServiceReplicasState{
-			Total: state.Replicas.Total,
+			Total:     state.Replicas.Total,
 			Provision: state.Replicas.Provision,
-			Ready: state.Replicas.Ready,
-			Created: state.Replicas.Created,
-			Running: state.Replicas.Running,
-			Stopped: state.Replicas.Stopped,
-			Errored: state.Replicas.Errored,
+			Ready:     state.Replicas.Ready,
+			Created:   state.Replicas.Created,
+			Running:   state.Replicas.Running,
+			Stopped:   state.Replicas.Stopped,
+			Errored:   state.Replicas.Errored,
 		},
 		Resources: ServiceResourcesState{
 			Memory: state.Resources.Memory,
@@ -136,12 +136,12 @@ func NewList(obj types.ServiceList) *ServiceList {
 
 func (s *Service) DrawTable(namespaceName string) {
 	serviceTable := table.New([]string{"NAME", "DESCRIPTION", "NAMESPACE",
-																		 "REPLICAS", "MEMORY", "IMAGE", "CREATED", "UPDATED"})
+		"REPLICAS", "MEMORY", "IMAGE", "CREATED", "UPDATED"})
 	podsTable := table.New([]string{"ID", "STATE", "STATUS", "TOTAL",
-																	"RUNNING", "CREATED",
-																	"STOPPED", "ERRORED", "CREATED POD", "UPDATED POD"})
+		"RUNNING", "CREATED",
+		"STOPPED", "ERRORED", "CREATED POD", "UPDATED POD"})
 	containersTable := table.New([]string{"ID", "IMAGE", "STATE",
-																				"STATUS", "CREATE", "UPDATED"})
+		"STATUS", "CREATE", "UPDATED"})
 
 	serviceTable.VisibleHeader = true
 	podsTable.VisibleHeader = true
@@ -163,7 +163,7 @@ func (s *Service) DrawTable(namespaceName string) {
 		fmt.Println("\n\nPODS")
 		for _, pod := range s.Pods {
 			podsTable.AddRow(map[string]interface{}{
-				"ID":          pod.Meta.ID,
+				"NAME":        pod.Meta.Name,
 				"STATE":       pod.State.State,
 				"STATUS":      pod.State.Status,
 				"CREATED POD": pod.Meta.Created.String()[:10],

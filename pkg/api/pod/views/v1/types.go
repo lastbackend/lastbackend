@@ -43,7 +43,7 @@ type PodInfo struct {
 
 type PodMeta struct {
 	// Meta id
-	ID string `json:"id"`
+	Name string `json:"name"`
 	// Meta labels
 	Labels map[string]string `json:"lables"`
 	// Meta created time

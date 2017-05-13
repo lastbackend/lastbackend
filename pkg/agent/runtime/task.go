@@ -62,16 +62,16 @@ func (t *Task) start() {
 
 		pod.SetPod(t.pod)
 		events.SendPodState(t.pod)
-		log.Debugf("Task [%s]: done task for pod: %s", t.id, t.pod.Meta.ID)
+		log.Debugf("Task [%s]: done task for pod: %s", t.id, t.pod.Meta.Name)
 	}()
 
-	log.Debugf("Task [%s]: start task for pod: %s", t.id, t.pod.Meta.ID)
+	log.Debugf("Task [%s]: start task for pod: %s", t.id, t.pod.Meta.Name)
 
 	// Check spec version
 	log.Debugf("Task [%s]: pod spec: %s, new spec: %s", t.id, t.pod.Spec.ID, t.spec.ID)
 
 	if t.spec.State == types.StateDestroy {
-		log.Debugf("Task [%s]: pod is marked for deletion: %s", t.id, t.pod.Meta.ID)
+		log.Debugf("Task [%s]: pod is marked for deletion: %s", t.id, t.pod.Meta.Name)
 		t.containersStateManage()
 		return
 	}
@@ -145,14 +145,14 @@ func (t *Task) containersCreate() {
 		crii = context.Get().GetCri()
 	)
 
-	log.Debugf("Task [%s]: containers creation process started for pod: %s", t.id, t.pod.Meta.ID)
+	log.Debugf("Task [%s]: containers creation process started for pod: %s", t.id, t.pod.Meta.Name)
 
 	// Create new containers
 	for id, spec := range t.spec.Containers {
 		log.Debugf("Task [%s]: container struct create", t.id)
 
 		c := types.Container{
-			Pod:     t.pod.Meta.ID,
+			Pod:     t.pod.Meta.Name,
 			Spec:    id,
 			Image:   spec.Image.Name,
 			State:   types.ContainerStatePending,
@@ -163,7 +163,7 @@ func (t *Task) containersCreate() {
 			spec.Labels = make(map[string]string)
 		}
 
-		spec.Labels["LB_META"] = fmt.Sprintf("%s/%s/%s", t.pod.Meta.ID, t.pod.Spec.ID, spec.Meta.ID)
+		spec.Labels["LB_META"] = fmt.Sprintf("%s/%s/%s", t.pod.Meta.Name, t.pod.Spec.ID, spec.Meta.ID)
 		c.ID, err = crii.ContainerCreate(context.Get(), spec)
 
 		if err != nil {
@@ -185,7 +185,7 @@ func (t *Task) containersRemove() {
 		specs = make(map[string]bool)
 	)
 
-	log.Debugf("Task [%s]: start containers removable process for pod: %s", t.id, t.pod.Meta.ID)
+	log.Debugf("Task [%s]: start containers removable process for pod: %s", t.id, t.pod.Meta.Name)
 
 	for id := range t.spec.Containers {
 		log.Debugf("Task [%s]: add spec %s to valid", t.id, id)
@@ -291,7 +291,7 @@ func (t *Task) containerDestroy(c *types.Container) {
 	log := context.Get().GetLogger()
 	crii := context.Get().GetCri()
 
-	log.Debugf("Task [%s]: pod %s delete %d containers", t.id, t.pod.Meta.ID, len(t.pod.Containers))
+	log.Debugf("Task [%s]: pod %s delete %d containers", t.id, t.pod.Meta.Name, len(t.pod.Containers))
 	err := crii.ContainerRemove(context.Get(), c.ID, true, true)
 	c.State = types.StateDestroyed
 	c.Status = ""
@@ -315,7 +315,7 @@ func (t *Task) clean() {
 func NewTask(meta types.PodMeta, state types.PodState, spec types.PodSpec, pod *types.Pod) *Task {
 	log := context.Get().GetLogger()
 	uuid := uuid.NewV4().String()
-	log.Debugf("Task [%s]: Create new task for pod: %s", uuid, pod.Meta.ID)
+	log.Debugf("Task [%s]: Create new task for pod: %s", uuid, pod.Meta.Name)
 	log.Debugf("Task [%s]: Container spec count: %d", uuid, len(spec.Containers))
 
 	return &Task{

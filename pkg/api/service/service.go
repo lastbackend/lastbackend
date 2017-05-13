@@ -55,7 +55,7 @@ func (s *service) List() (types.ServiceList, error) {
 		list    = types.ServiceList{}
 	)
 
-	items, err := storage.Service().ListByNamespace(s.Context, s.Namespace.ID)
+	items, err := storage.Service().ListByNamespace(s.Context, s.Namespace.Name)
 	if err != nil {
 		return list, err
 	}
@@ -75,7 +75,7 @@ func (s *service) Get(service string) (*types.Service, error) {
 		storage = ctx.Get().GetStorage()
 	)
 
-	svc, err := storage.Service().GetByName(s.Context, s.Namespace.ID, service)
+	svc, err := storage.Service().GetByName(s.Context, s.Namespace.Name, service)
 	if err != nil {
 		log.Errorf("Error: find service by name: %s", err.Error())
 		return nil, err
@@ -212,7 +212,7 @@ func (s *service) AddPod(service *types.Service) error {
 
 	pod := types.Pod{}
 
-	pod.Meta.ID = uuid.NewV4().String()
+	pod.Meta.Name = fmt.Sprintf("%s-%d", service.Meta.Name, time.Now().Unix())
 	pod.Meta.Created = time.Now()
 	pod.Meta.Updated = time.Now()
 	pod.State.Provision = true
@@ -234,7 +234,7 @@ func (s *service) AddPod(service *types.Service) error {
 
 	log.Debugf("Service: Add pod: Node meta: %s", n.Meta)
 	pod.Meta.Hostname = n.Meta.Hostname
-	service.Pods[pod.Meta.ID] = &pod
+	service.Pods[pod.Meta.Name] = &pod
 
 	return nil
 }
@@ -249,7 +249,7 @@ func (s *service) DelPod(service *types.Service) error {
 
 	for _, pod := range service.Pods {
 		if pod.Spec.State != types.StateDestroy {
-			log.Debugf("Mark pod for deletion: %s", pod.Meta.ID)
+			log.Debugf("Mark pod for deletion: %s", pod.Meta.Name)
 			pod.State.Provision = true
 			pod.State.Ready = false
 			pod.Spec.State = types.StateDestroy
@@ -273,12 +273,12 @@ func (s *service) SetPods(pods []types.Pod) error {
 	)
 
 	for _, pod := range pods {
-		log.Debugf("update pod %s state: %s", pod.Meta.ID, pod.State.State)
-		svc, err := storage.Service().GetByPodID(s.Context, pod.Meta.ID)
+		log.Debugf("update pod %s state: %s", pod.Meta.Name, pod.State.State)
+		svc, err := storage.Service().GetByPodName(s.Context, pod.Meta.Name)
 		if err != nil {
-			log.Errorf("Error: get service by pod ID %s from db: %s", pod.Meta.ID, err.Error())
+			log.Errorf("Error: get service by pod name %s from db: %s", pod.Meta.Name, err.Error())
 			if err.Error() == store.ErrKeyNotFound {
-				log.Debugf("Pod %s not found", pod.Meta.ID)
+				log.Debugf("Pod %s not found", pod.Meta.Name)
 				continue
 			}
 			return err
@@ -287,14 +287,14 @@ func (s *service) SetPods(pods []types.Pod) error {
 		ns := namespace.New(s.Context)
 		item, err := ns.Get(svc.Meta.Namespace)
 		if err != nil {
-			log.Error("Error: find namespace by id", err.Error())
+			log.Error("Error: find namespace by name", err.Error())
 			return err
 		}
 		if item == nil {
 			return err
 		}
 
-		p, e := storage.Pod().GetByID(s.Context, item.Meta.ID, svc.Meta.ID, pod.Meta.ID)
+		p, e := storage.Pod().GetByName(s.Context, item.Meta.Name, svc.Meta.Name, pod.Meta.Name)
 		if e != nil {
 			log.Errorf("Error: get pod from db: %s", e.Error())
 			continue
@@ -304,12 +304,12 @@ func (s *service) SetPods(pods []types.Pod) error {
 		p.State = pod.State
 
 		if p.State.State == types.StateDestroyed {
-			log.Debugf("Service: Set pods: remove deleted pod: %s", p.Meta.ID)
-			if err := storage.Pod().Remove(s.Context, svc.Meta.Namespace, svc.Meta.ID, p); err != nil {
+			log.Debugf("Service: Set pods: remove deleted pod: %s", p.Meta.Name)
+			if err := storage.Pod().Remove(s.Context, item.Meta.Name, svc.Meta.Name, p); err != nil {
 				log.Errorf("Error: set pod to db: %s", err)
 				return err
 			}
-			delete(svc.Pods, p.Meta.ID)
+			delete(svc.Pods, p.Meta.Name)
 
 			if len(svc.Pods) == 0 && svc.State.State == types.StateDestroy {
 				storage.Service().Remove(s.Context, svc)
@@ -318,7 +318,7 @@ func (s *service) SetPods(pods []types.Pod) error {
 			return nil
 		}
 
-		if err := storage.Pod().Update(s.Context, svc.Meta.Namespace, svc.Meta.ID, p); err != nil {
+		if err := storage.Pod().Update(s.Context, item.Meta.Name, svc.Meta.Name, p); err != nil {
 			log.Errorf("Error: set pod to db: %s", err)
 			return err
 		}
@@ -427,7 +427,7 @@ func (s *service) AddSpec(service *types.Service, rq *request.RequestServiceSpec
 		pod.Spec = s.GenerateSpec(service)
 		pod.State.Provision = true
 		pod.State.Ready = false
-		service.Pods[pod.Meta.ID] = pod
+		service.Pods[pod.Meta.Name] = pod
 	}
 
 	if err := storage.Service().Update(s.Context, service); err != nil {
@@ -468,7 +468,7 @@ func (s *service) SetSpec(service *types.Service, id string, rq *request.Request
 			c.State = types.StateProvision
 		}
 
-		service.Pods[pod.Meta.ID] = pod
+		service.Pods[pod.Meta.Name] = pod
 	}
 
 	if err := storage.Service().Update(s.Context, service); err != nil {
@@ -502,7 +502,7 @@ func (s *service) DelSpec(service *types.Service, id string) error {
 		pod.Spec = s.GenerateSpec(service)
 		pod.State.Provision = true
 		pod.State.Ready = false
-		service.Pods[pod.Meta.ID] = pod
+		service.Pods[pod.Meta.Name] = pod
 
 		for _, c := range pod.Containers {
 			c.State = types.StateProvision
@@ -536,7 +536,8 @@ func (s *service) GenerateSpec(service *types.Service) types.PodSpec {
 		cs := new(types.ContainerSpec)
 
 		cs.Meta.SetDefault()
-		cs.Meta.ID = spc.Meta.ID
+		cs.Meta.ID = uuid.NewV4().String()
+		cs.Meta.Name = spc.Meta.Name
 		cs.Meta.Labels = spc.Meta.Labels
 		cs.Meta.Created = time.Now()
 		cs.Meta.Updated = time.Now()
@@ -586,10 +587,12 @@ func Logs(c context.Context, namespace, service, pod, container string, stream i
 
 	log.Debug("Service: get service logs")
 
-	p, err := storage.Pod().GetByID(c, namespace, service, pod)
+	p, err := storage.Pod().GetByName(c, namespace, service, pod)
 	if err != nil {
 		return err
 	}
+
+	// Todo: check container in pod
 
 	n, err := storage.Node().Get(c, p.Meta.Hostname)
 	if err != nil {
@@ -656,6 +659,8 @@ func createSpec(opts *request.RequestServiceSpecCreateS) (*types.ServiceSpec, er
 
 	spec := new(types.ServiceSpec)
 	spec.Meta.SetDefault()
+
+	spec.Meta.ID = uuid.NewV4().String()
 
 	spec.Memory = int64(32)
 

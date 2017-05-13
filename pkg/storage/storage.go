@@ -20,6 +20,7 @@ package storage
 
 import (
 	"github.com/lastbackend/lastbackend/pkg/storage/store"
+	"strings"
 )
 
 // Util helpers
@@ -118,6 +119,10 @@ func (s *Storage) System() ISystem {
 		return nil
 	}
 	return s.SystemStorage
+}
+
+func keyPrepare(args ...string) string {
+	return strings.Join([]string(args), "/")
 }
 
 func Get(config store.Config) (*Storage, error) {

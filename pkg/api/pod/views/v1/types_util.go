@@ -19,8 +19,8 @@
 package v1
 
 import (
-	"github.com/lastbackend/lastbackend/pkg/common/types"
 	"github.com/lastbackend/lastbackend/pkg/api/container/views/v1"
+	"github.com/lastbackend/lastbackend/pkg/common/types"
 )
 
 func ToPodInfo(pod *types.Pod) PodInfo {
@@ -43,7 +43,7 @@ func ToPodInfo(pod *types.Pod) PodInfo {
 
 func ToPodMeta(meta types.PodMeta) PodMeta {
 	m := PodMeta{
-		ID:      meta.ID,
+		Name:    meta.Name,
 		Labels:  meta.Labels,
 		Created: meta.Created,
 		Updated: meta.Updated,
@@ -75,16 +75,16 @@ func ToPodSpec(spec types.PodSpec) PodSpec {
 
 func ToPodState(state types.PodState) PodState {
 	return PodState{
-		State:  state.State,
-		Status: state.Status,
+		State:     state.State,
+		Status:    state.Status,
 		Provision: state.Provision,
-		Ready: state.Ready,
+		Ready:     state.Ready,
 	}
 }
 
 func FromPodMeta(meta PodMeta) types.PodMeta {
 	m := types.PodMeta{}
-	m.ID = meta.ID
+	m.Name = meta.Name
 	m.Labels = meta.Labels
 	m.Created = meta.Created
 	m.Updated = meta.Updated
@@ -110,9 +110,9 @@ func FromPodSpec(spec PodSpec) types.PodSpec {
 
 func FromPodState(state PodState) types.PodState {
 	return types.PodState{
-		State:  state.State,
-		Status: state.Status,
+		State:     state.State,
+		Status:    state.Status,
 		Provision: state.Provision,
-		Ready: state.Ready,
+		Ready:     state.Ready,
 	}
 }

@@ -48,7 +48,7 @@ func FromNodeSpec(spec Spec) *types.NodeSpec {
 		pod.State = v1.FromPodState(item.State)
 		pod.Spec = v1.FromPodSpec(item.Spec)
 
-		s.Pods[pod.Meta.ID] = pod
+		s.Pods[pod.Meta.Name] = pod
 	}
 
 	return s

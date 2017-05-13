@@ -58,7 +58,7 @@ func (s *BuildStorage) Insert(ctx context.Context, imageName string, build *type
 
 	iname := strings.Replace(imageName, "/", ":", -1)
 
-	keyImageMeta := s.util.Key(ctx, imageStorage, iname, "meta")
+	keyImageMeta := keyPrepare(imageStorage, iname, "meta")
 	imeta := new(types.ImageMeta)
 	if err := client.Get(ctx, keyImageMeta, imeta); err != nil {
 		return err
@@ -71,7 +71,7 @@ func (s *BuildStorage) Insert(ctx context.Context, imageName string, build *type
 		return err
 	}
 
-	keyMeta := s.util.Key(ctx, imageStorage, iname, buildStorage, fmt.Sprintf("%d", imeta.Builds))
+	keyMeta := keyPrepare(imageStorage, iname, buildStorage, fmt.Sprintf("%d", imeta.Builds))
 
 	if err := tx.Create(keyMeta, build, 0); err != nil {
 		return err

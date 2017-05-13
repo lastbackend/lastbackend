@@ -84,7 +84,7 @@ func (ps *PodCache) AddPod(pod *types.Pod) {
 	ps.lock.Lock()
 	defer ps.lock.Unlock()
 
-	ps.pods[pod.Meta.ID] = pod
+	ps.pods[pod.Meta.Name] = pod
 	ps.stats.pods++
 	ps.stats.containers += len(pod.Containers)
 
@@ -97,14 +97,14 @@ func (ps *PodCache) SetPod(pod *types.Pod) {
 	ps.lock.Lock()
 	defer ps.lock.Unlock()
 
-	if p, ok := ps.pods[pod.Meta.ID]; ok {
+	if p, ok := ps.pods[pod.Meta.Name]; ok {
 		ps.stats.containers--
 		for _, c := range p.Containers {
 			delete(ps.containers, c.ID)
 		}
 	}
 
-	ps.pods[pod.Meta.ID] = pod
+	ps.pods[pod.Meta.Name] = pod
 	for _, c := range pod.Containers {
 		ps.containers[c.ID] = c
 	}
@@ -114,14 +114,14 @@ func (ps *PodCache) DelPod(pod *types.Pod) {
 	ps.lock.Lock()
 	defer ps.lock.Unlock()
 
-	if p, ok := ps.pods[pod.Meta.ID]; ok {
+	if p, ok := ps.pods[pod.Meta.Name]; ok {
 		ps.stats.containers--
 		for _, c := range p.Containers {
 			delete(ps.containers, c.ID)
 		}
 	}
 
-	delete(ps.pods, pod.Meta.ID)
+	delete(ps.pods, pod.Meta.Name)
 	ps.stats.pods--
 }
 
