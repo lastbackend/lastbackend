@@ -34,7 +34,7 @@ func Provision (svc *types.Service) error {
 		replicas int
 	)
 
-	log.Debugf("Service Contoller: provision pod: %s/%s", svc.Meta.Namespace, svc.Meta.Name)
+	log.Debugf("Service Contoller: provision service: %s/%s", svc.Meta.Namespace, svc.Meta.Name)
 
 	for _, pod := range svc.Pods {
 		if pod.Spec.State != types.StateDestroy {
@@ -71,7 +71,7 @@ func Provision (svc *types.Service) error {
 		log.Debug("Service: provision pods")
 		pod.PodSetSpec(p, svc.Spec)
 		log.Debug("Service: save new pod spec")
-		if err := stg.Pod().Upsert(context.Get().Background(), svc.Meta.Namespace, svc.Meta.Name, p); err != nil {
+		if err := stg.Pod().Upsert(context.Get().Background(), svc.Meta.Namespace, p); err != nil {
 			log.Errorf("Service: save pod spec error: %s", err.Error())
 			return err
 		}

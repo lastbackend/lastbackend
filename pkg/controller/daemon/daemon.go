@@ -42,7 +42,7 @@ func Daemon(_cfg *_cfg.Config ) {
 		done = make(chan bool, 1)
 	)
 
-	log.Info("Start State Contoller")
+	log.Info("Start State Controller")
 
 	ctx.SetConfig(cfg)
 	ctx.SetLogger(log)

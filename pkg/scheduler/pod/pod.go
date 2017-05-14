@@ -17,3 +17,21 @@
 //
 
 package pod
+
+import (
+	"github.com/lastbackend/lastbackend/pkg/common/types"
+	"github.com/lastbackend/lastbackend/pkg/scheduler/context"
+)
+
+func Provision (p *types.Pod) {
+
+	var (
+		log      = context.Get().GetLogger()
+	)
+
+	log.Debugf("Generate pod spec: %s", p.Meta.Name)
+
+
+
+	log.Debugf("Allocate node for pod: %s", p.Meta.Name)
+}

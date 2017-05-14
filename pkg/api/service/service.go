@@ -284,7 +284,7 @@ func (s *service) SetPods(pods []types.Pod) error {
 			return err
 		}
 
-		p, e := storage.Pod().GetByName(s.Context, item.Meta.Name, svc.Meta.Name, pod.Meta.Name)
+		p, e := storage.Pod().GetByName(s.Context, item.Meta.Name, pod.Meta.Name)
 		if e != nil {
 			log.Errorf("Error: get pod from db: %s", e.Error())
 			continue
@@ -295,7 +295,7 @@ func (s *service) SetPods(pods []types.Pod) error {
 
 		if p.State.State == types.StateDestroyed {
 			log.Debugf("Service: Set pods: remove deleted pod: %s", p.Meta.Name)
-			if err := storage.Pod().Remove(s.Context, item.Meta.Name, svc.Meta.Name, p); err != nil {
+			if err := storage.Pod().Remove(s.Context, item.Meta.Name, p); err != nil {
 				log.Errorf("Error: set pod to db: %s", err)
 				return err
 			}
@@ -308,7 +308,7 @@ func (s *service) SetPods(pods []types.Pod) error {
 			return nil
 		}
 
-		if err := storage.Pod().Update(s.Context, item.Meta.Name, svc.Meta.Name, p); err != nil {
+		if err := storage.Pod().Update(s.Context, item.Meta.Name, p); err != nil {
 			log.Errorf("Error: set pod to db: %s", err)
 			return err
 		}
@@ -535,7 +535,7 @@ func Logs(c context.Context, namespace, service, pod, container string, stream i
 
 	log.Debug("Service: get service logs")
 
-	p, err := storage.Pod().GetByName(c, namespace, service, pod)
+	p, err := storage.Pod().GetByName(c, service, pod)
 	if err != nil {
 		return err
 	}

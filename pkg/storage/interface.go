@@ -87,11 +87,13 @@ type IService interface {
 }
 
 type IPod interface {
-	GetByName(ctx context.Context, namespace, service, name string) (*types.Pod, error)
+	GetByName(ctx context.Context, namespace, name string) (*types.Pod, error)
+	ListByNamespace(ctx context.Context, namespace string) (map[string]*types.Pod, error)
 	ListByService(ctx context.Context, namespace, service string) ([]*types.Pod, error)
-	Upsert(ctx context.Context, namespace, service string, pod *types.Pod) error
-	Update(ctx context.Context, namespace, service string, pod *types.Pod) error
-	Remove(ctx context.Context, namespace, service string, pod *types.Pod) error
+	Upsert(ctx context.Context, namespace string, pod *types.Pod) error
+	Update(ctx context.Context, namespace string, pod *types.Pod) error
+	Remove(ctx context.Context, namespace string, pod *types.Pod) error
+	Watch(ctx context.Context, pod chan *types.Pod) error
 }
 
 type IImage interface {
