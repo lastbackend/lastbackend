@@ -80,6 +80,7 @@ type IService interface {
 	Remove(ctx context.Context, service *types.Service) error
 	RemoveByNamespace(ctx context.Context, namespace string) error
 
+	Watch(ctx context.Context, service chan *types.Service) error
 	SpecWatch(ctx context.Context, service chan *types.Service) error
 	PodsWatch(ctx context.Context, service chan *types.Service) error
 	BuildsWatch(ctx context.Context, service chan *types.Service) error
@@ -88,7 +89,7 @@ type IService interface {
 type IPod interface {
 	GetByName(ctx context.Context, namespace, service, name string) (*types.Pod, error)
 	ListByService(ctx context.Context, namespace, service string) ([]*types.Pod, error)
-	Insert(ctx context.Context, namespace, service string, pod *types.Pod) error
+	Upsert(ctx context.Context, namespace, service string, pod *types.Pod) error
 	Update(ctx context.Context, namespace, service string, pod *types.Pod) error
 	Remove(ctx context.Context, namespace, service string, pod *types.Pod) error
 }

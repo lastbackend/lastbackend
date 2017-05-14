@@ -29,7 +29,6 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/common/types"
 	"github.com/lastbackend/lastbackend/pkg/storage/store"
 	h "github.com/lastbackend/lastbackend/pkg/util/http"
-	"github.com/pkg/errors"
 	"github.com/satori/go.uuid"
 	"io"
 	"net/http"
@@ -104,34 +103,23 @@ func (s *service) Create(rq *request.RequestServiceCreateS) (*types.Service, err
 	svc.Meta.Description = rq.Description
 
 	svc.Meta.Replicas = 1
+	svc.State.State = types.StateProvision
+
 	svc.Pods = make(map[string]*types.Pod)
 
 	if rq.Replicas != nil && *rq.Replicas > 0 {
 		svc.Meta.Replicas = *rq.Replicas
 	}
 
-	spec, err := createSpec(rq.Spec)
-	if err != nil {
-		log.Errorf("Error: create spec from request opts : %s", err.Error())
-		return &svc, err
-	}
+	spec := generateSpec(rq.Spec, nil)
 
 	svc.Spec = make(map[string]*types.ServiceSpec)
 	svc.Spec[uuid.NewV4().String()] = spec
 
-	log.Debugf("Service: Create: add pods : %d", svc.Meta.Replicas)
-	for i := 0; i < svc.Meta.Replicas; i++ {
-		log.Debug("Service: Create: add new pod")
-		if err := s.AddPod(&svc); err != nil {
-			log.Errorf("Service: Create: add new pod error: %s", err.Error())
-			return &svc, err
-		}
-	}
-
 	s.StateUpdate(&svc)
 	s.ResourcesUpdate(&svc)
 
-	if err = storage.Service().Insert(s.Context, &svc); err != nil {
+	if err := storage.Service().Insert(s.Context, &svc); err != nil {
 		log.Errorf("Error: insert service to db : %s", err.Error())
 		return &svc, err
 	}
@@ -161,6 +149,8 @@ func (s *service) Update(service *types.Service, rq *request.RequestServiceUpdat
 		log.Debugf("Service: Update: set replicas: %d", *rq.Replicas)
 		service.Meta.Replicas = *rq.Replicas
 	}
+
+	service.State.State = types.StateProvision
 
 	s.StateUpdate(service)
 	s.ResourcesUpdate(service)
@@ -406,7 +396,7 @@ func (s *service) Scale(service *types.Service) error {
 	return nil
 }
 
-func (s *service) AddSpec(service *types.Service, rq *request.RequestServiceSpecCreateS) error {
+func (s *service) AddSpec(service *types.Service, rq *request.RequestServiceSpecS) error {
 
 	var (
 		log     = ctx.Get().GetLogger()
@@ -415,20 +405,8 @@ func (s *service) AddSpec(service *types.Service, rq *request.RequestServiceSpec
 
 	log.Debug("Add spec service")
 
-	spec, err := createSpec(rq)
-	if err != nil {
-		log.Errorf("Error: create spec from request opts : %s", err.Error())
-		return err
-	}
-
+	spec := generateSpec(rq, nil)
 	service.Spec[spec.Meta.ID] = spec
-
-	for _, pod := range service.Pods {
-		pod.Spec = s.GenerateSpec(service)
-		pod.State.Provision = true
-		pod.State.Ready = false
-		service.Pods[pod.Meta.Name] = pod
-	}
 
 	if err := storage.Service().Update(s.Context, service); err != nil {
 		log.Errorf("Error: AddSpec: update service spec to db : %s", err.Error())
@@ -438,7 +416,7 @@ func (s *service) AddSpec(service *types.Service, rq *request.RequestServiceSpec
 	return nil
 }
 
-func (s *service) SetSpec(service *types.Service, id string, rq *request.RequestServiceSpecUpdateS) error {
+func (s *service) SetSpec(service *types.Service, id string, rq *request.RequestServiceSpecS) error {
 
 	var (
 		log     = ctx.Get().GetLogger()
@@ -447,29 +425,10 @@ func (s *service) SetSpec(service *types.Service, id string, rq *request.Request
 
 	log.Debug("Set spec service")
 
-	spec := service.Spec[id]
-
-	updateSpec(rq, spec)
-
-	delete(service.Spec, id)
+	spec := generateSpec(rq, service.Spec[id])
 	service.Spec[spec.Meta.ID] = spec
-
-	for _, pod := range service.Pods {
-
-		if pod.Spec.State == types.StateDestroy {
-			continue
-		}
-
-		pod.Spec = s.GenerateSpec(service)
-		pod.State.Provision = true
-		pod.State.Ready = false
-
-		for _, c := range pod.Containers {
-			c.State = types.StateProvision
-		}
-
-		service.Pods[pod.Meta.Name] = pod
-	}
+	service.State.State = types.StateProvision
+	delete(service.Spec, spec.Meta.Parent)
 
 	if err := storage.Service().Update(s.Context, service); err != nil {
 		log.Errorf("Error: AddSpec: update service spec to db : %s", err.Error())
@@ -497,17 +456,6 @@ func (s *service) DelSpec(service *types.Service, id string) error {
 	}
 
 	delete(service.Spec, id)
-
-	for _, pod := range service.Pods {
-		pod.Spec = s.GenerateSpec(service)
-		pod.State.Provision = true
-		pod.State.Ready = false
-		service.Pods[pod.Meta.Name] = pod
-
-		for _, c := range pod.Containers {
-			c.State = types.StateProvision
-		}
-	}
 
 	if err := storage.Service().Update(s.Context, service); err != nil {
 		log.Errorf("Error: AddSpec: update service spec to db : %s", err.Error())
@@ -655,39 +603,42 @@ func Logs(c context.Context, namespace, service, pod, container string, stream i
 	return nil
 }
 
-func createSpec(opts *request.RequestServiceSpecCreateS) (*types.ServiceSpec, error) {
+func generateSpec(opts *request.RequestServiceSpecS, spec *types.ServiceSpec) *types.ServiceSpec {
 
-	spec := new(types.ServiceSpec)
-	spec.Meta.SetDefault()
+	s := types.ServiceSpec {}
+	if spec != nil {
+		s = *spec
+		s.Meta.Parent = spec.Meta.ID
+	}
 
-	spec.Meta.ID = uuid.NewV4().String()
-
-	spec.Memory = int64(32)
+	s.Meta.SetDefault()
+	s.Meta.ID = uuid.NewV4().String()
+	s.Memory = int64(32)
 
 	if opts.Memory != nil {
-		spec.Memory = *opts.Memory
+		s.Memory = *opts.Memory
 	}
 
 	if opts.Command != nil {
-		spec.Command = strings.Split(*opts.Command, " ")
+		s.Command = strings.Split(*opts.Command, " ")
 	}
 
 	if opts.Image != nil {
-		spec.Image = *opts.Image
+		s.Image = *opts.Image
 	}
 
 	if opts.Entrypoint != nil {
-		spec.Entrypoint = strings.Split(*opts.Entrypoint, " ")
+		s.Entrypoint = strings.Split(*opts.Entrypoint, " ")
 	}
 
 	if opts.EnvVars != nil {
-		spec.EnvVars = *opts.EnvVars
+		s.EnvVars = *opts.EnvVars
 	}
 
 	if opts.Ports != nil {
-		spec.Ports = []types.Port{}
+		s.Ports = []types.Port{}
 		for _, val := range *opts.Ports {
-			spec.Ports = append(spec.Ports, types.Port{
+			s.Ports = append(s.Ports, types.Port{
 				Protocol:  val.Protocol,
 				Container: val.Internal,
 				Host:      val.External,
@@ -696,52 +647,5 @@ func createSpec(opts *request.RequestServiceSpecCreateS) (*types.ServiceSpec, er
 		}
 	}
 
-	return spec, nil
-}
-
-func updateSpec(opts *request.RequestServiceSpecUpdateS, spec *types.ServiceSpec) error {
-
-	if spec == nil {
-		return errors.New("Error: spec is nil")
-	}
-
-	spec.Meta.Parent = spec.Meta.ID
-	spec.Meta.ID = uuid.NewV4().String()
-	spec.Meta.Revision++
-
-	spec.Memory = int64(32)
-
-	if opts.Memory != nil {
-		spec.Memory = *opts.Memory
-	}
-
-	if opts.Command != nil {
-		spec.Command = strings.Split(*opts.Command, " ")
-	}
-
-	if opts.Image != nil {
-		spec.Image = *opts.Image
-	}
-
-	if opts.Entrypoint != nil {
-		spec.Entrypoint = strings.Split(*opts.Entrypoint, " ")
-	}
-
-	if opts.EnvVars != nil {
-		spec.EnvVars = *opts.EnvVars
-	}
-
-	if opts.Ports != nil {
-		spec.Ports = []types.Port{}
-		for _, val := range *opts.Ports {
-			spec.Ports = append(spec.Ports, types.Port{
-				Protocol:  val.Protocol,
-				Container: val.Internal,
-				Host:      val.External,
-				Published: val.Published,
-			})
-		}
-	}
-
-	return nil
+	return &s
 }

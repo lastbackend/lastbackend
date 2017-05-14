@@ -24,7 +24,8 @@ import (
 )
 
 type ServiceController struct {
-	context context.Context
+	context *context.Context
+	services chan *types.Service
 	active bool
 }
 
@@ -33,38 +34,68 @@ func (sc *ServiceController) Watch () {
 	var (
 		log = sc.context.GetLogger()
 		stg = sc.context.GetStorage()
-		svc = make (chan *types.Service)
 	)
 
 	log.Debug("Controller:ServiceController: start watch")
 	go func(){
 		for {
 			select {
-			case s := <- svc : {
+			case s := <- sc.services : {
 				if !sc.active {
+					log.Debug("Controller:ServiceController: skip management couse it is in slave mode")
 					continue
 				}
 
-
+				log.Debugf("Service needs to be provisioned: %s:%s", s.Meta.Namespace, s.Meta.Name )
+				Provision(s)
 			}
 			}
 		}
 	}()
-	stg.Service().SpecWatch(sc.context.Background(), svc)
+	stg.Service().SpecWatch(sc.context.Background(), sc.services)
 }
 
 func (sc *ServiceController) Pause () {
-
+	sc.active = false
 }
 
 func (sc *ServiceController) Resume () {
 
+	var (
+		log = sc.context.GetLogger()
+		stg = sc.context.GetStorage()
+	)
+
+	sc.active = true
+
+	log.Debug("Service: start check services states")
+	nss, err := stg.Namespace().List(sc.context.Background())
+	if err != nil {
+		log.Errorf("Service: Get namespaces list err: %s", err.Error())
+	}
+
+	for _, ns := range nss {
+		svcs, err := stg.Service().ListByNamespace(sc.context.Background(), ns.Meta.Name)
+		if err != nil {
+			log.Errorf("Service: Get services list err: %s", err.Error())
+		}
+
+		for _, svc := range svcs {
+			svc, err := stg.Service().GetByName(sc.context.Background(),svc.Meta.Namespace, svc.Meta.Name)
+			if err != nil {
+				log.Errorf("Service: Get service err: %s", err.Error())
+			}
+			sc.services <- svc
+		}
+	}
 }
 
 
-func NewServiceController (ctx context.Context) *ServiceController {
+func NewServiceController (ctx *context.Context) *ServiceController {
 	sc := new(ServiceController)
+	sc.context = ctx
 	sc.active = false
+	sc.services = make (chan *types.Service)
 
 	return sc
 }

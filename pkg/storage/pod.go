@@ -43,7 +43,7 @@ func (s *PodStorage) GetByName(ctx context.Context, namespace, service, name str
 	}
 	defer destroy()
 
-	keyMeta := keyPrepare(podStorage, namespace, service, name)
+	keyMeta := keyCreate(podStorage, namespace, service, name)
 	if err := client.Get(ctx, keyMeta, pod); err != nil {
 		return pod, err
 	}
@@ -58,7 +58,7 @@ func (s *PodStorage) ListByService(ctx context.Context, namespace, service strin
 	}
 	defer destroy()
 
-	keyServiceList := keyPrepare(podStorage, namespace, service)
+	keyServiceList := keyCreate(podStorage, namespace, service)
 	pods := []*types.Pod{}
 	if err := client.List(ctx, keyServiceList, "", &pods); err != nil {
 		return pods, err
@@ -67,7 +67,7 @@ func (s *PodStorage) ListByService(ctx context.Context, namespace, service strin
 	return pods, nil
 }
 
-func (s *PodStorage) Insert(ctx context.Context, namespace, service string, pod *types.Pod) error {
+func (s *PodStorage) Upsert(ctx context.Context, namespace, service string, pod *types.Pod) error {
 
 	client, destroy, err := s.Client()
 	if err != nil {
@@ -75,8 +75,8 @@ func (s *PodStorage) Insert(ctx context.Context, namespace, service string, pod 
 	}
 	defer destroy()
 
-	keyMeta := keyPrepare(podStorage, namespace, service, pod.Meta.Name)
-	if err := client.Create(ctx, keyMeta, pod, nil, 0); err != nil {
+	keyMeta := keyCreate(podStorage, namespace, service, pod.Meta.Name)
+	if err := client.Upsert(ctx, keyMeta, pod, nil, 0); err != nil {
 		return err
 	}
 
@@ -91,7 +91,7 @@ func (s *PodStorage) Update(ctx context.Context, namespace, service string, pod 
 	}
 	defer destroy()
 
-	keyMeta := keyPrepare(podStorage, namespace, service, pod.Meta.Name)
+	keyMeta := keyCreate(podStorage, namespace, service, pod.Meta.Name)
 	if err := client.Update(ctx, keyMeta, pod, nil, 0); err != nil {
 		return err
 	}
@@ -108,10 +108,10 @@ func (s *PodStorage) Remove(ctx context.Context, namespace, service string, pod 
 
 	tx := client.Begin(ctx)
 
-	keyMeta := keyPrepare(podStorage, namespace, service, pod.Meta.Name)
+	keyMeta := keyCreate(podStorage, namespace, service, pod.Meta.Name)
 	tx.Delete(keyMeta)
 
-	KeyNodePod := keyPrepare(nodeStorage, pod.Meta.Hostname, "spec", "pods", pod.Meta.Name)
+	KeyNodePod := keyCreate(nodeStorage, pod.Meta.Hostname, "spec", "pods", pod.Meta.Name)
 	tx.Delete(KeyNodePod)
 
 	if err := tx.Commit(); err != nil {

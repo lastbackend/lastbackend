@@ -89,7 +89,7 @@ func (s *VendorStorage) List(ctx context.Context) (map[string]*types.Vendor, err
 
 	key := s.util.Key(ctx, vendorStorage)
 	vendors := make(map[string]*types.Vendor)
-	if err := client.Map(ctx, key, ``, vendors); err != nil && err.Error() != "keyPrepare not found" {
+	if err := client.Map(ctx, key, ``, vendors); err != nil && err.Error() != "keyCreate not found" {
 		return vendors, err
 	}
 	return vendors, nil

@@ -22,6 +22,7 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/system"
 	"github.com/lastbackend/lastbackend/pkg/common/types"
 	"github.com/lastbackend/lastbackend/pkg/controller/context"
+	"github.com/lastbackend/lastbackend/pkg/controller/service"
 )
 
 // watch service state and specs
@@ -36,6 +37,7 @@ import (
 type Runtime struct {
 	context *context.Context
 	process *system.Process
+	sc *service.ServiceController
 
 	active bool
 }
@@ -46,6 +48,8 @@ func NewRuntime (ctx *context.Context) *Runtime {
 	r.context = ctx
 	r.process = new(system.Process)
 	r.process.Register(ctx, types.KindController)
+	r.sc = service.NewServiceController(ctx)
+	go r.sc.Watch()
 	return r
 }
 
@@ -72,6 +76,8 @@ func (r *Runtime) Loop () {
 						r.active = true
 						log.Debug("Controller: Runtime: Mark as lead")
 
+						r.sc.Resume()
+
 					} else {
 						if !r.active {
 							log.Debug("Controller: Runtime: is already marked as slave -> skip")
@@ -79,6 +85,8 @@ func (r *Runtime) Loop () {
 						}
 						log.Debug("Controller: Runtime: Mark as slave")
 						r.active = false
+
+						r.sc.Pause()
 					}
 				}
 			}

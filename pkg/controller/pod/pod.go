@@ -23,10 +23,11 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/controller/context"
 	"time"
 	"github.com/satori/go.uuid"
+	"fmt"
+	"strings"
 )
 
-func PodClone (p *types.Pod) *types.Pod {
-
+func PodCreate(svc *types.Service) *types.Pod {
 	var (
 		log = context.Get().GetLogger()
 	)
@@ -35,38 +36,41 @@ func PodClone (p *types.Pod) *types.Pod {
 
 	pod := new(types.Pod)
 	pod.Meta.SetDefault()
+	pod.Meta.Name = podNameGenerate(svc)
 	pod.State.Provision = true
-	pod.Spec = p.Spec
 
 	return pod
 }
 
-func PodCreate(spec map[string]*types.ServiceSpec) *types.Pod {
-	var (
-		log = context.Get().GetLogger()
-	)
-
-	log.Debug("Create new pod state on service")
-
-	pod := new(types.Pod)
-	pod.Meta.SetDefault()
-	pod.State.Provision = true
-	pod.Spec = podSpecGenerate(spec)
-
-	return pod
-}
-
-func PodUpdate(p *types.Pod, spec map[string]*types.ServiceSpec) {
+func PodSetSpec(p *types.Pod, spec map[string]*types.ServiceSpec) {
 
 	var (
 		log = context.Get().GetLogger()
+		ids = make(map[string]struct{})
 	)
 
-	log.Debug("Pod update")
+	for id := range spec {
+		ids[id]= struct{}{}
+	}
 
-	p.Meta.Updated = time.Now()
-	p.Spec = podSpecGenerate(spec)
+	if p.Spec.State == types.StateDestroy {
+		return
+	}
 
+	if len(p.Spec.Containers) != len(spec) {
+		p.Spec = podSpecGenerate(spec)
+		p.Meta.Updated = time.Now()
+		return
+	}
+
+	for id := range p.Spec.Containers {
+		if _, ok := ids[id]; !ok {
+			log.Debug("Pod update")
+			p.Spec = podSpecGenerate(spec)
+			p.Meta.Updated = time.Now()
+			return
+		}
+	}
 }
 
 func PodRemove(p *types.Pod) {
@@ -78,10 +82,11 @@ func PodRemove(p *types.Pod) {
 	log.Debugf("Mark pod for deletion: %s", p.Meta.Name)
 	p.State.Provision = true
 	p.State.Ready = false
+	p.State.State = types.StateDestroy
 	p.Spec.State = types.StateDestroy
 
 	for _, c := range p.Containers {
-		c.State = types.StateProvision
+		c.State = types.StateDestroy
 	}
 }
 
@@ -134,4 +139,18 @@ func podSpecGenerate(spec map[string]*types.ServiceSpec) types.PodSpec {
 	s.State = types.StateStarted
 
 	return s
+}
+
+func podNameGenerate(svc *types.Service) string {
+	var name, hash string
+	for {
+
+		hash = strings.Split(uuid.NewV4().String(), "-")[4]
+		name = fmt.Sprintf("%s-%s-%s", svc.Meta.Namespace, svc.Meta.Name, hash[5:])
+		if _, ok := svc.Pods[name];!ok {
+			break
+		}
+	}
+
+	return name
 }

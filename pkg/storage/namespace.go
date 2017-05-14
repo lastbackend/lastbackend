@@ -46,7 +46,7 @@ func (s *NamespaceStorage) GetByName(ctx context.Context, name string) (*types.N
 	}
 	defer destroy()
 
-	keyNamespace := keyPrepare(namespaceStorage, name)
+	keyNamespace := keyCreate(namespaceStorage, name)
 	if err := client.Map(ctx, keyNamespace, filter, namespace); err != nil {
 		return nil, err
 	}
@@ -65,7 +65,7 @@ func (s *NamespaceStorage) List(ctx context.Context) ([]*types.Namespace, error)
 	}
 	defer destroy()
 
-	keyNamespaces := keyPrepare(namespaceStorage)
+	keyNamespaces := keyCreate(namespaceStorage)
 	namespaces := []*types.Namespace{}
 	if err := client.List(ctx, keyNamespaces, filter, &namespaces); err != nil {
 		return nil, err
@@ -83,7 +83,7 @@ func (s *NamespaceStorage) Insert(ctx context.Context, namespace *types.Namespac
 	}
 	defer destroy()
 
-	keyMeta := keyPrepare(namespaceStorage, namespace.Meta.Name, "meta")
+	keyMeta := keyCreate(namespaceStorage, namespace.Meta.Name, "meta")
 	if err := client.Create(ctx, keyMeta, namespace.Meta, nil, 0); err != nil {
 		return err
 	}
@@ -106,7 +106,7 @@ func (s *NamespaceStorage) Update(ctx context.Context, namespace *types.Namespac
 	meta = namespace.Meta
 	meta.Updated = time.Now()
 
-	keyMeta := keyPrepare(namespaceStorage, namespace.Meta.Name, "meta")
+	keyMeta := keyCreate(namespaceStorage, namespace.Meta.Name, "meta")
 	if err := client.Update(ctx, keyMeta, meta, nil, 0); err != nil {
 		return err
 	}
@@ -123,7 +123,7 @@ func (s *NamespaceStorage) Remove(ctx context.Context, name string) error {
 	}
 	defer destroy()
 
-	keyNamespace := keyPrepare(namespaceStorage, name)
+	keyNamespace := keyCreate(namespaceStorage, name)
 	client.DeleteDir(ctx, keyNamespace)
 
 	return nil
