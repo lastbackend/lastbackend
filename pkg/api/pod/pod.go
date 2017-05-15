@@ -17,3 +17,90 @@
 //
 
 package pod
+
+import (
+	"context"
+	"github.com/lastbackend/lastbackend/pkg/storage/store"
+	ctx "github.com/lastbackend/lastbackend/pkg/api/context"
+	"github.com/lastbackend/lastbackend/pkg/common/types"
+	"github.com/lastbackend/lastbackend/pkg/api/namespace"
+	"strings"
+)
+
+type pod struct {
+	Context   context.Context
+	Namespace types.Meta
+}
+
+func (p *pod) Set(pod types.Pod) error {
+
+	var (
+		log     = ctx.Get().GetLogger()
+		storage = ctx.Get().GetStorage()
+	)
+
+	log.Debugf("update pod %s state: %s", pod.Meta.Name, pod.State.State)
+
+	parts := strings.Split(pod.Meta.Name, ":")
+	if len(parts) < 3 {
+		log.Errorf("Can not parse pod name: %s", pod.Meta.Name)
+		return nil
+	}
+
+	svc, err := storage.Service().GetByName(p.Context, parts[0], parts[1])
+	if err != nil {
+		log.Errorf("Error: get service by pod name %s from db: %s", pod.Meta.Name, err.Error())
+		if err.Error() == store.ErrKeyNotFound {
+			log.Debugf("Pod %s not found", pod.Meta.Name)
+			return nil
+		}
+		return err
+	}
+
+	ns := namespace.New(p.Context)
+	item, err := ns.Get(svc.Meta.Namespace)
+	if err != nil {
+		log.Error("Error: find namespace by name", err.Error())
+		return err
+	}
+	if item == nil {
+		return err
+	}
+
+	pd, e := storage.Pod().GetByName(p.Context, item.Meta.Name, pod.Meta.Name)
+	if e != nil {
+		log.Errorf("Error: get pod from db: %s", e.Error())
+		return err
+	}
+
+	pd.Containers = pod.Containers
+	pd.State = pod.State
+
+	if pd.State.State == types.StateDestroyed {
+		log.Debugf("Service: Set pods: remove deleted pod: %s", pd.Meta.Name)
+		if err := storage.Pod().Remove(p.Context, item.Meta.Name, pd); err != nil {
+			log.Errorf("Error: set pod to db: %s", err)
+			return err
+		}
+		delete(svc.Pods, pd.Meta.Name)
+
+		if len(svc.Pods) == 0 && svc.State.State == types.StateDestroy {
+			storage.Service().Remove(p.Context, svc)
+		}
+
+		return nil
+	}
+
+	if err := storage.Pod().Update(p.Context, item.Meta.Name, pd); err != nil {
+		log.Errorf("Error: set pod to db: %s", err)
+		return err
+	}
+
+	return nil
+}
+
+func New(ctx context.Context) *pod {
+	return &pod{
+		Context:   ctx,
+	}
+}

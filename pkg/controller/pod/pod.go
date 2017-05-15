@@ -146,7 +146,7 @@ func podNameGenerate(svc *types.Service) string {
 	for {
 
 		hash = strings.Split(uuid.NewV4().String(), "-")[4]
-		name = fmt.Sprintf("%s-%s-%s", svc.Meta.Namespace, svc.Meta.Name, hash[5:])
+		name = fmt.Sprintf("%s:%s:%s", svc.Meta.Namespace, svc.Meta.Name, hash[5:])
 		if _, ok := svc.Pods[name];!ok {
 			break
 		}
