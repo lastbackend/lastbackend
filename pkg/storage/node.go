@@ -307,6 +307,9 @@ func (s *NodeStorage) Watch(ctx context.Context, node chan *types.Node) error {
 		}
 
 		n, _ := s.Get(ctx, keys[1])
+		if n == nil {
+			return
+		}
 
 		// TODO: check previous node alive state to prevent multi calls
 		if action == "PUT" {
