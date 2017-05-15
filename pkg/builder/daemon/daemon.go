@@ -27,17 +27,17 @@ import (
 	"os/signal"
 	"syscall"
 
-	"os"
-	"github.com/lastbackend/lastbackend/pkg/storage"
 	"github.com/lastbackend/lastbackend/pkg/builder/runtime"
+	"github.com/lastbackend/lastbackend/pkg/storage"
+	"os"
 )
 
-func Daemon(_cfg *_cfg.Config ) {
+func Daemon(_cfg *_cfg.Config) {
 
 	var (
-		ctx = context.Get()
-		cfg = config.Set(_cfg)
-		log = logger.New(*cfg.Debug, 9)
+		ctx  = context.Get()
+		cfg  = config.Set(_cfg)
+		log  = logger.New(*cfg.Debug, 9)
 		sigs = make(chan os.Signal)
 		done = make(chan bool, 1)
 	)

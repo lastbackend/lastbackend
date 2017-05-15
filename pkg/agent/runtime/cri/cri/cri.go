@@ -19,14 +19,19 @@
 package cri
 
 import (
-	"github.com/lastbackend/lastbackend/pkg/common/config"
 	"github.com/lastbackend/lastbackend/pkg/agent/runtime/cri"
 	"github.com/lastbackend/lastbackend/pkg/agent/runtime/cri/docker"
+	"github.com/lastbackend/lastbackend/pkg/common/config"
 	"github.com/pkg/errors"
 )
 
 func New(cfg config.Runtime) (cri.CRI, error) {
-	switch cfg.CRI {
+	var cri string
+	if cfg.CRI != nil {
+		cri = *cfg.CRI
+	}
+
+	switch cri {
 	case "docker":
 		return docker.New(cfg.Docker)
 	default:

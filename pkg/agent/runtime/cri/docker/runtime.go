@@ -42,15 +42,15 @@ func New(cfg config.Docker) (*Runtime, error) {
 
 	fmt.Println("Use docker CRI")
 
-	if cfg.Certs != "" {
+	if cfg.Certs != nil && *cfg.Certs != "" {
 
 		fmt.Printf("Create Docker secure client: %s", cfg.Certs)
 
 		options := tlsconfig.Options{
-			CAFile:             filepath.Join(cfg.Certs, "ca.pem"),
-			CertFile:           filepath.Join(cfg.Certs, "cert.pem"),
-			KeyFile:            filepath.Join(cfg.Certs, "key.pem"),
-			InsecureSkipVerify: cfg.TLS,
+			CAFile:             filepath.Join(*cfg.Certs, "ca.pem"),
+			CertFile:           filepath.Join(*cfg.Certs, "cert.pem"),
+			KeyFile:            filepath.Join(*cfg.Certs, "key.pem"),
+			InsecureSkipVerify: *cfg.TLS,
 		}
 
 		tlsc, err := tlsconfig.Client(options)
@@ -65,14 +65,14 @@ func New(cfg config.Docker) (*Runtime, error) {
 		}
 	}
 
-	host := cfg.Host
-	if host == "" {
-		host = client.DefaultDockerHost
+	host := client.DefaultDockerHost
+	if cfg.Host != nil && *cfg.Host != "" {
+		host = *cfg.Host
 	}
 
-	version := cfg.Version
-	if version == "" {
-		version = api.DefaultVersion
+	version := api.DefaultVersion
+	if cfg.Host != nil && *cfg.Host != "" {
+		version = *cfg.Version
 	}
 
 	r.client, err = client.NewClient(host, version, cli, nil)

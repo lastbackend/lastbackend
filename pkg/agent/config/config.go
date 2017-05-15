@@ -18,8 +18,21 @@
 
 package config
 
-var cfg = new(Config)
+import (
+	"github.com/lastbackend/lastbackend/pkg/common/config"
+)
+
+var _cfg = new(Config)
+
+func Set(cfg *config.Config) *Config {
+	_cfg.Debug = cfg.Debug
+	_cfg.Host = cfg.Host
+	_cfg.Runtime = cfg.Runtime
+	_cfg.APIServer = cfg.APIServer
+	_cfg.AgentServer = cfg.AgentServer
+	return _cfg
+}
 
 func Get() *Config {
-	return cfg
+	return _cfg
 }

@@ -40,7 +40,7 @@ func main() {
 		}
 	}
 
-	app.Command("daemon", "Run last.backend daemon", daemon.Agent)
+	app.Command("daemon", "Run last.backend daemon", daemon.Daemon)
 
 	er = app.Run(os.Args)
 	if er != nil {
