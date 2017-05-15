@@ -45,9 +45,9 @@ func main() {
 
 	app.Spec = "[APP...] [OPTIONS]"
 
-	cfg.Debug = app.Bool(cli.BoolOpt{
-		Name:   "d debug", Desc: "Enable debug mode",
-		EnvVar: "DEBUG", Value: false, HideValue: true,
+	cfg.LogLevel = app.Int(cli.IntOpt{
+		Name:   "debug", Desc: "Debug level mode",
+		EnvVar: "DEBUG", Value: 0, HideValue: true,
 	})
 
 	var apps = app.Strings(cli.StringsArg{

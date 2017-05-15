@@ -22,9 +22,9 @@ import "github.com/lastbackend/lastbackend/pkg/common/config"
 
 // The structure of the config to run the daemon
 type Config struct {
-	Debug       *bool
-	Token       *string
-	Etcd 				config.ETCD
-	APIServer   config.APIServer
-	Registry    config.Registry
+	LogLevel  *int
+	Token     *string
+	Etcd      config.ETCD
+	APIServer config.APIServer
+	Registry  config.Registry
 }

@@ -40,14 +40,10 @@ func Daemon(_cfg *_cfg.Config) {
 	var (
 		ctx  = context.Get()
 		cfg  = config.Set(_cfg)
-		log  = logger.New("Agent")
+		log  = logger.New("Agent", *cfg.LogLevel)
 		sigs = make(chan os.Signal)
 		done = make(chan bool, 1)
 	)
-
-	if *cfg.Debug {
-		log.SetDebugLevel()
-	}
 
 	log.Info("Start Agent")
 

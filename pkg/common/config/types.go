@@ -19,7 +19,7 @@
 package config
 
 type Config struct {
-	Debug       *bool
+	LogLevel    *int
 	Token       *string
 	Etcd        ETCD
 	Registry    Registry

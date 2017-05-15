@@ -25,23 +25,29 @@ import (
 	"os"
 )
 
+var l *Logger
+
 type Logger struct {
-	name string
-	log  *logrus.Logger
+	name  string
+	level Level
+	log   *logrus.Logger
 }
 
-func New(name string) *Logger {
-	l := new(Logger)
+type Level int
+
+func New(name string, level int) *Logger {
+	l = new(Logger)
 	l.name = name
+	l.level = Level(level)
 	l.log = logrus.New()
 	l.log.Out = os.Stdout
 	l.log.Formatter = getJSONFormatter()
-	return l
-}
 
-func (l *Logger) SetDebugLevel() *Logger {
-	l.log.Level = logrus.DebugLevel
-	l.log.Formatter = getTextFormatter(l.name)
+	if level > 0 {
+		l.log.Level = logrus.DebugLevel
+		l.log.Formatter = getTextFormatter(l.name)
+	}
+
 	return l
 }
 
@@ -101,6 +107,10 @@ func (l *Logger) Panic(args ...interface{}) {
 
 func (l *Logger) Panicf(format string, args ...interface{}) {
 	l.log.Panicf(format, args...)
+}
+
+func (l *Logger) V(level Level) Verbose {
+	return Verbose(l.level >= level)
 }
 
 func getJSONFormatter() *logrus.JSONFormatter {

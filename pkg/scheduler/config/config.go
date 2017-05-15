@@ -28,7 +28,7 @@ import (
 var _cfg = new(Config)
 
 func Set(cfg *config.Config) *Config{
-	_cfg.Debug = cfg.Debug
+	_cfg.LogLevel = cfg.LogLevel
 	_cfg.Token = cfg.Token
 	_cfg.Etcd  = cfg.Etcd
 	return _cfg

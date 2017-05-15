@@ -27,24 +27,20 @@ import (
 	"os/signal"
 	"syscall"
 
-	"os"
-	"github.com/lastbackend/lastbackend/pkg/storage"
 	"github.com/lastbackend/lastbackend/pkg/controller/runtime"
+	"github.com/lastbackend/lastbackend/pkg/storage"
+	"os"
 )
 
-func Daemon(_cfg *_cfg.Config ) {
+func Daemon(_cfg *_cfg.Config) {
 
 	var (
-		ctx = context.Get()
-		cfg = config.Set(_cfg)
-		log = logger.New("Controller")
+		ctx  = context.Get()
+		cfg  = config.Set(_cfg)
+		log  = logger.New("Controller", *cfg.LogLevel)
 		sigs = make(chan os.Signal)
 		done = make(chan bool, 1)
 	)
-
-	if *cfg.Debug {
-		log.SetDebugLevel()
-	}
 
 	log.Info("Start State Controller")
 
@@ -59,7 +55,7 @@ func Daemon(_cfg *_cfg.Config ) {
 
 	// Initialize Runtime
 	r := runtime.NewRuntime(ctx)
-  r.Loop()
+	r.Loop()
 	// Handle SIGINT and SIGTERM.
 	signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)
 
