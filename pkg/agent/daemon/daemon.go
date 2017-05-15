@@ -130,7 +130,7 @@ func Agent(cmd *cli.Cmd) {
 		}
 
 		if err = rntm.StartEventListener(); err != nil {
-			ctx.GetLogger().Errorf("Cannot initialize pod manager: %s", err.Error())
+			ctx.GetLogger().Errorf("Cannot initialize event listener: %s", err.Error())
 		}
 
 		rntm.Loop()

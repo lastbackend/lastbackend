@@ -26,13 +26,9 @@ import (
 	_c "github.com/lastbackend/lastbackend/pkg/common/context"
 )
 
-var _ctx ctx
+var _ctx Context
 
 type Context struct {
-	context.Context
-}
-
-type ctx struct {
 	_c.Context
 
 	logger               *logger.Logger
@@ -40,34 +36,34 @@ type ctx struct {
 	config               *config.Config
 }
 
-func Get() *ctx {
+func Get() *Context {
 	return &_ctx
 }
 
-func (c *ctx) SetLogger(log *logger.Logger) {
+func (c *Context) SetLogger(log *logger.Logger) {
 	c.logger = log
 }
 
-func (c *ctx) GetLogger() *logger.Logger {
+func (c *Context) GetLogger() *logger.Logger {
 	return c.logger
 }
 
-func (c *ctx) SetConfig(cfg *config.Config) {
+func (c *Context) SetConfig(cfg *config.Config) {
 	c.config = cfg
 }
 
-func (c *ctx) GetConfig() *config.Config {
+func (c *Context) GetConfig() *config.Config {
 	return c.config
 }
 
-func (c *ctx) SetStorage(storage *storage.Storage) {
+func (c *Context) SetStorage(storage *storage.Storage) {
 	c.storage = storage
 }
 
-func (c *ctx) GetStorage() *storage.Storage {
+func (c *Context) GetStorage() *storage.Storage {
 	return c.storage
 }
 
-func (c *ctx) Background() context.Context {
+func (c *Context) Background() context.Context {
 	return context.Background()
 }

@@ -121,7 +121,7 @@ func (s *Storage) System() ISystem {
 	return s.SystemStorage
 }
 
-func keyPrepare(args ...string) string {
+func keyCreate(args ...string) string {
 	return strings.Join([]string(args), "/")
 }
 

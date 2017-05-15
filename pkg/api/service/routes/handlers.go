@@ -399,7 +399,7 @@ func ServiceSpecCreateH(w http.ResponseWriter, r *http.Request) {
 	)
 
 	// request body struct
-	rq := new(request.RequestServiceSpecCreateS)
+	rq := new(request.RequestServiceSpecS)
 	if err := rq.DecodeAndValidate(r.Body); err != nil {
 		log.Error("Error: validation incomming data", err)
 		errors.New("Invalid incomming data").Unknown().Http(w)
@@ -436,8 +436,15 @@ func ServiceSpecCreateH(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	response, err := v1.NewService(svc).ToJson()
+	if err != nil {
+		log.Error("Error: convert struct to json", err.Error())
+		errors.HTTP.InternalServerError(w)
+		return
+	}
+
 	w.WriteHeader(http.StatusOK)
-	if _, err = w.Write([]byte{}); err != nil {
+	if _, err = w.Write(response); err != nil {
 		log.Error("Error: write response", err.Error())
 		return
 	}
@@ -453,7 +460,7 @@ func ServiceSpecUpdateH(w http.ResponseWriter, r *http.Request) {
 	)
 
 	// request body struct
-	rq := new(request.RequestServiceSpecUpdateS)
+	rq := new(request.RequestServiceSpecS)
 	if err := rq.DecodeAndValidate(r.Body); err != nil {
 		log.Error("Error: validation incomming data", err)
 		errors.New("Invalid incomming data").Unknown().Http(w)
@@ -490,8 +497,15 @@ func ServiceSpecUpdateH(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	response, err := v1.NewService(svc).ToJson()
+	if err != nil {
+		log.Error("Error: convert struct to json", err.Error())
+		errors.HTTP.InternalServerError(w)
+		return
+	}
+
 	w.WriteHeader(http.StatusOK)
-	if _, err = w.Write([]byte{}); err != nil {
+	if _, err = w.Write(response); err != nil {
 		log.Error("Error: write response", err.Error())
 		return
 	}
@@ -544,8 +558,15 @@ func ServiceSpecRemoveH(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	response, err := v1.NewService(svc).ToJson()
+	if err != nil {
+		log.Error("Error: convert struct to json", err.Error())
+		errors.HTTP.InternalServerError(w)
+		return
+	}
+
 	w.WriteHeader(http.StatusOK)
-	if _, err = w.Write([]byte{}); err != nil {
+	if _, err = w.Write(response); err != nil {
 		log.Error("Error: write response", err.Error())
 		return
 	}

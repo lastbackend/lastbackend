@@ -30,6 +30,7 @@ const (
 	StatusIncorrectXml  = "Incorrect XML"
 	StatusIncorrectJson = "Incorrect json"
 	StatusNotUnique     = "Not Unique"
+	NodeNotFound        = "Node not found"
 )
 
 type Err struct {

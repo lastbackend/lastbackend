@@ -119,6 +119,7 @@ func (s *store) List(ctx context.Context, key, keyRegexFilter string, listOutPtr
 	r, _ := regexp.Compile(keyRegexFilter)
 	items := make(map[string]map[string]buffer)
 	for _, kv := range getResp.Kvs {
+
 		keys := strings.Split(string(kv.Key), "/")
 		node := keys[len(keys)-2]
 		field := keys[len(keys)-1]
@@ -139,9 +140,6 @@ func (s *store) List(ctx context.Context, key, keyRegexFilter string, listOutPtr
 
 func (s *store) Map(ctx context.Context, key, keyRegexFilter string, mapOutPtr interface{}) error {
 	key = path.Join(s.pathPrefix, key)
-	if !strings.HasSuffix(key, "/") {
-		key += "/"
-	}
 	getResp, err := s.client.KV.Get(ctx, key, clientv3.WithPrefix())
 	if err != nil {
 		return err

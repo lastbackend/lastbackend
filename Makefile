@@ -48,11 +48,7 @@ endif
 image:
 	docker build -t lastbackend/lastbackend -f ./images/lastbackend/Dockerfile .
 
-run-daemon:
-	go run cmd/daemon/daemon.go daemon -d
-
-run-agent:
-	go run cmd/agent/agent.go daemon -d --hostname=node-00
-
+run:
+	go run cmd/kit/kit.go -d --http-port=5000
 
 

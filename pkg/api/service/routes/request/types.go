@@ -39,7 +39,7 @@ type RequestServiceCreateS struct {
 	Image       string                     `json:"image"`
 	Url         string                     `json:"url"`
 	Replicas    *int                       `json:"replicas,omitempty"`
-	Spec        *RequestServiceSpecCreateS `json:"spec"`
+	Spec        *RequestServiceSpecS `json:"spec"`
 	Source      types.ServiceSource
 }
 
@@ -143,7 +143,7 @@ func (s *RequestServiceCreateS) DecodeAndValidate(reader io.Reader) *errors.Err 
 	}
 
 	if s.Spec == nil {
-		s.Spec = new(RequestServiceSpecCreateS)
+		s.Spec = new(RequestServiceSpecS)
 	}
 	// TODO: Need validate data format in config
 
@@ -187,40 +187,18 @@ func (s *RequestServiceUpdateS) DecodeAndValidate(reader io.Reader) *errors.Err 
 	return nil
 }
 
-type RequestServiceSpecCreateS struct {
+type RequestServiceSpecS struct {
 	ServiceSpec
 }
 
-func (s *RequestServiceSpecCreateS) DecodeAndValidate(reader io.Reader) *errors.Err {
+func (s *RequestServiceSpecS) DecodeAndValidate(reader io.Reader) *errors.Err {
 
 	log := context.Get().GetLogger()
 
 	body, err := ioutil.ReadAll(reader)
 	if err != nil {
 		log.Error(err)
-		return errors.New("user").Unknown(err)
-	}
-
-	err = json.Unmarshal(body, s)
-	if err != nil {
-		return errors.New("service").IncorrectJSON(err)
-	}
-
-	return nil
-}
-
-type RequestServiceSpecUpdateS struct {
-	ServiceSpec
-}
-
-func (s *RequestServiceSpecUpdateS) DecodeAndValidate(reader io.Reader) *errors.Err {
-
-	log := context.Get().GetLogger()
-
-	body, err := ioutil.ReadAll(reader)
-	if err != nil {
-		log.Error(err)
-		return errors.New("user").Unknown(err)
+		return errors.New("service").Unknown(err)
 	}
 
 	err = json.Unmarshal(body, s)

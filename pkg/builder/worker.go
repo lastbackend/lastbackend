@@ -76,7 +76,7 @@ func (w *Worker) loop() {
 
 }
 
-func NewWorker(cri *cri.CRI) *Worker {
+func NewWorker(cri cri.CRI) *Worker {
 
 	var (
 		w   = new (Worker)

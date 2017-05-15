@@ -43,7 +43,7 @@ func (s *SystemStorage) ProcessSet(ctx context.Context, process *types.Process) 
 	}
 	defer destroy()
 
-	keyMember := keyPrepare(systemStorage, process.Meta.Kind, "process", process.Meta.Hostname)
+	keyMember := keyCreate(systemStorage, process.Meta.Kind, "process", process.Meta.Hostname)
 	err = client.Upsert(ctx, keyMember, process, nil, systemLeadTTL)
 	if err != nil {
 		return err
@@ -66,7 +66,7 @@ func (s *SystemStorage) Elect (ctx context.Context, process *types.Process) (boo
 	}
 	defer destroy()
 
-	key := keyPrepare(systemStorage, process.Meta.Kind, "lead")
+	key := keyCreate(systemStorage, process.Meta.Kind, "lead")
 	err = client.Get(ctx, key, &id)
 	if err != nil && (err.Error() != store.ErrKeyNotFound) {
 		return lead, err
@@ -100,7 +100,7 @@ func (s *SystemStorage) ElectUpdate (ctx context.Context, process *types.Process
 	}
 	defer destroy()
 
-	key := keyPrepare(systemStorage, process.Meta.Kind, "lead")
+	key := keyCreate(systemStorage, process.Meta.Kind, "lead")
 	err = client.Get(ctx, key, &id)
 	if err != nil && err.Error() != store.ErrKeyNotFound {
 		return err
@@ -125,7 +125,7 @@ func (s *SystemStorage) ElectWait (ctx context.Context, process *types.Process, 
 	}
 	defer destroy()
 
-	key := keyPrepare(systemStorage, process.Meta.Kind, "lead")
+	key := keyCreate(systemStorage, process.Meta.Kind, "lead")
 
 	cb := func (action, key string, val []byte) {
 

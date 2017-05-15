@@ -37,7 +37,6 @@ type Meta struct {
 }
 
 func (m *Meta) SetDefault() {
-	//m.ID = uuid.NewV4().String()
 	m.Labels = make(map[string]string)
 	m.Created = time.Now()
 	m.Updated = time.Now()
