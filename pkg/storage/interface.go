@@ -131,6 +131,7 @@ type INode interface {
 	RemovePod(ctx context.Context, meta *types.NodeMeta, pod *types.PodNodeSpec) error
 
 	Remove(ctx context.Context, meta *types.Node) error
+	Watch(ctx context.Context, node chan *types.Node) error
 }
 
 type ISystem interface {

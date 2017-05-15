@@ -29,7 +29,7 @@ import (
 
 const (
 	nodeStorage = "node"
-	timeout = 10
+	timeout = 15
 )
 
 // Namespace Service type for interface in interfaces folder
@@ -289,8 +289,8 @@ func (s *NodeStorage) Remove(ctx context.Context, node *types.Node) error {
 	return nil
 }
 
-func (s *NodeStorage) Watch(ctx context.Context, service chan *types.Node) error {
-	const filter = `\b.+` + nodeStorage + `\/.+\/alive\b`
+func (s *NodeStorage) Watch(ctx context.Context, node chan *types.Node) error {
+	const filter = `\b.+` + nodeStorage + `\/(.+)\/alive\b`
 
 	client, destroy, err := s.Client()
 	if err != nil {
@@ -306,6 +306,22 @@ func (s *NodeStorage) Watch(ctx context.Context, service chan *types.Node) error
 			return
 		}
 
+		n, _ := s.Get(ctx, keys[1])
+
+		// TODO: check previous node alive state to prevent multi calls
+		if action == "PUT" {
+			n.Alive = true
+			node <- n
+			return
+		}
+
+		if action == "DELETE" {
+			n.Alive = false
+			node <- n
+			return
+		}
+
+		return
 	}
 
 	client.Watch(ctx, key, filter, cb)

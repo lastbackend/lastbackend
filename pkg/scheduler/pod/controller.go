@@ -21,15 +21,20 @@ package pod
 import (
 	"github.com/lastbackend/lastbackend/pkg/common/types"
 	"github.com/lastbackend/lastbackend/pkg/scheduler/context"
+	"github.com/lastbackend/lastbackend/pkg/cache"
+	"github.com/lastbackend/lastbackend/pkg/common/errors"
 )
 
 type PodController struct {
 	context *context.Context
 	pods chan *types.Pod
+
+	pending *cache.PodCache
+
 	active bool
 }
 
-func (pc *PodController) Watch () {
+func (pc *PodController) Watch (node chan *types.Node) {
 	var (
 		log = pc.context.GetLogger()
 		stg = pc.context.GetStorage()
@@ -39,14 +44,33 @@ func (pc *PodController) Watch () {
 	go func(){
 		for {
 			select {
-			case p := <- pc.pods : {
-				if !pc.active {
-					log.Debug("Scheduler:PodController: skip management cause it is in slave mode")
-					continue
-				}
+			case p := <-pc.pods:
+				{
+					if !pc.active {
+						log.Debug("Scheduler:PodController: skip management cause it is in slave mode")
+						pc.pending.DelPod(p)
+						continue
+					}
 
-				log.Debugf("Pod needs to be allocated to node: %s", p.Meta.Name )
-				Provision(p)
+					log.Debugf("Pod needs to be allocated to node: %s", p.Meta.Name)
+					if err := Provision(p); err != nil {
+						if err.Error() == errors.NodeNotFound {
+							pc.pending.AddPod(p)
+						}
+					}
+					pc.pending.DelPod(p)
+				}
+			}
+		}
+	}()
+
+	go func () {
+		for {
+			select {
+			case _ = <- node: {
+				for _, p := range pc.pending.GetPods() {
+					pc.pods <- p
+				}
 			}
 			}
 		}
@@ -95,5 +119,6 @@ func NewPodController (ctx *context.Context) *PodController {
 	sc.active = false
 	sc.pods = make (chan *types.Pod)
 
+	sc.pending = cache.NewPodCache()
 	return sc
 }

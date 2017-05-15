@@ -23,6 +23,7 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/system"
 	"github.com/lastbackend/lastbackend/pkg/common/types"
 	"github.com/lastbackend/lastbackend/pkg/scheduler/pod"
+	"github.com/lastbackend/lastbackend/pkg/scheduler/node"
 )
 
 // watch service state and specs
@@ -40,6 +41,7 @@ type Runtime struct {
 	process *system.Process
 
 	pc *pod.PodController
+	nc *node.NodeController
 
 	active bool
 }
@@ -50,8 +52,13 @@ func NewRuntime (ctx *context.Context) *Runtime {
 	r.context = ctx
 	r.process = new(system.Process)
 	r.process.Register(ctx, types.KindScheduler)
+
 	r.pc = pod.NewPodController(ctx)
-	go r.pc.Watch()
+	r.nc = node.NewNodeController(ctx)
+
+	n := make (chan *types.Node)
+	go r.pc.Watch(n)
+	go r.nc.Watch(n)
 
 	return r
 }
