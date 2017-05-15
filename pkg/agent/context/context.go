@@ -22,11 +22,11 @@ import (
 	"context"
 	"github.com/lastbackend/lastbackend/pkg/agent/config"
 	"github.com/lastbackend/lastbackend/pkg/agent/events/listener"
-	_c "github.com/lastbackend/lastbackend/pkg/common/context"
 	"github.com/lastbackend/lastbackend/pkg/agent/runtime/cri"
+	"github.com/lastbackend/lastbackend/pkg/cache"
+	_c "github.com/lastbackend/lastbackend/pkg/common/context"
 	"github.com/lastbackend/lastbackend/pkg/logger"
 	"github.com/lastbackend/lastbackend/pkg/util/http"
-	"github.com/lastbackend/lastbackend/pkg/cache"
 )
 
 var _ctx ctx

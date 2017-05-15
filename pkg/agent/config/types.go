@@ -22,7 +22,7 @@ import "github.com/lastbackend/lastbackend/pkg/common/config"
 
 // The structure of the config to run the daemon
 type Config struct {
-	Debug       *bool
+	LogLevel    *int
 	Host        config.Host
 	Runtime     config.Runtime
 	AgentServer config.AgentServer

@@ -188,7 +188,6 @@ func (s *service) Remove(service *types.Service) error {
 	return nil
 }
 
-
 func (s *service) StateUpdate(service *types.Service) {
 
 	service.State.Replicas = types.ServiceReplicasState{}
@@ -226,7 +225,6 @@ func (s *service) ResourcesUpdate(service *types.Service) {
 	}
 
 }
-
 
 func (s *service) AddSpec(service *types.Service, rq *request.RequestServiceSpecS) error {
 
@@ -380,7 +378,7 @@ func Logs(c context.Context, namespace, service, pod, container string, stream i
 
 func generateSpec(opts *request.RequestServiceSpecS, spec *types.ServiceSpec) *types.ServiceSpec {
 
-	s := types.ServiceSpec {}
+	s := types.ServiceSpec{}
 	if spec != nil {
 		s = *spec
 		s.Meta.Parent = spec.Meta.ID

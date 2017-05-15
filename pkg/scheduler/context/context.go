@@ -20,10 +20,10 @@ package context
 
 import (
 	"context"
+	_c "github.com/lastbackend/lastbackend/pkg/common/context"
+	"github.com/lastbackend/lastbackend/pkg/logger"
 	"github.com/lastbackend/lastbackend/pkg/scheduler/config"
 	"github.com/lastbackend/lastbackend/pkg/storage"
-	"github.com/lastbackend/lastbackend/pkg/logger"
-	_c "github.com/lastbackend/lastbackend/pkg/common/context"
 )
 
 var _ctx Context
@@ -31,9 +31,9 @@ var _ctx Context
 type Context struct {
 	_c.Context
 
-	logger               *logger.Logger
-	storage              *storage.Storage
-	config               *config.Config
+	logger  *logger.Logger
+	storage *storage.Storage
+	config  *config.Config
 }
 
 func Get() *Context {

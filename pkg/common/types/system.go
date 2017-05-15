@@ -18,11 +18,10 @@
 
 package types
 
-const KindAPIServer  = "api-server"
+const KindAPIServer = "api-server"
 const KindController = "controller"
 const KindScheduler = "scheduler"
 const KindBuilder = "builder"
-
 
 type Process struct {
 	// Process Meta

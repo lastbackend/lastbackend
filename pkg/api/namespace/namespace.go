@@ -20,9 +20,9 @@ package namespace
 
 import (
 	"context"
-	"github.com/lastbackend/lastbackend/pkg/common/types"
 	ctx "github.com/lastbackend/lastbackend/pkg/api/context"
 	"github.com/lastbackend/lastbackend/pkg/api/namespace/routes/request"
+	"github.com/lastbackend/lastbackend/pkg/common/types"
 )
 
 type namespace struct {

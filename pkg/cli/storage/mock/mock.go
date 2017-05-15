@@ -19,8 +19,8 @@
 package mock
 
 import (
-	"github.com/lastbackend/lastbackend/pkg/cli/storage/db"
 	"github.com/lastbackend/lastbackend/pkg/cli/storage"
+	"github.com/lastbackend/lastbackend/pkg/cli/storage/db"
 )
 
 type Storage struct {
@@ -46,4 +46,3 @@ func Get() (*Storage, error) {
 
 	return store, nil
 }
-

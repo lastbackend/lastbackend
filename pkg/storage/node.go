@@ -29,7 +29,7 @@ import (
 
 const (
 	nodeStorage = "node"
-	timeout = 15
+	timeout     = 15
 )
 
 // Namespace Service type for interface in interfaces folder

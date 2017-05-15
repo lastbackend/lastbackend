@@ -19,29 +19,29 @@
 package pod
 
 import (
-	"github.com/lastbackend/lastbackend/pkg/common/types"
-	"github.com/lastbackend/lastbackend/pkg/scheduler/context"
 	"github.com/lastbackend/lastbackend/pkg/cache"
 	"github.com/lastbackend/lastbackend/pkg/common/errors"
+	"github.com/lastbackend/lastbackend/pkg/common/types"
+	"github.com/lastbackend/lastbackend/pkg/scheduler/context"
 )
 
 type PodController struct {
 	context *context.Context
-	pods chan *types.Pod
+	pods    chan *types.Pod
 
 	pending *cache.PodCache
 
 	active bool
 }
 
-func (pc *PodController) Watch (node chan *types.Node) {
+func (pc *PodController) Watch(node chan *types.Node) {
 	var (
 		log = pc.context.GetLogger()
 		stg = pc.context.GetStorage()
 	)
 
 	log.Debug("Scheduler:PodController: start watch")
-	go func(){
+	go func() {
 		for {
 			select {
 			case p := <-pc.pods:
@@ -64,14 +64,15 @@ func (pc *PodController) Watch (node chan *types.Node) {
 		}
 	}()
 
-	go func () {
+	go func() {
 		for {
 			select {
-			case _ = <- node: {
-				for _, p := range pc.pending.GetPods() {
-					pc.pods <- p
+			case _ = <-node:
+				{
+					for _, p := range pc.pending.GetPods() {
+						pc.pods <- p
+					}
 				}
-			}
 			}
 		}
 	}()
@@ -79,11 +80,11 @@ func (pc *PodController) Watch (node chan *types.Node) {
 	stg.Pod().Watch(pc.context.Background(), pc.pods)
 }
 
-func (pc *PodController) Pause () {
+func (pc *PodController) Pause() {
 	pc.active = false
 }
 
-func (pc *PodController) Resume () {
+func (pc *PodController) Resume() {
 
 	var (
 		log = pc.context.GetLogger()
@@ -113,11 +114,11 @@ func (pc *PodController) Resume () {
 	}
 }
 
-func NewPodController (ctx *context.Context) *PodController {
+func NewPodController(ctx *context.Context) *PodController {
 	sc := new(PodController)
 	sc.context = ctx
 	sc.active = false
-	sc.pods = make (chan *types.Pod)
+	sc.pods = make(chan *types.Pod)
 
 	sc.pending = cache.NewPodCache()
 	return sc

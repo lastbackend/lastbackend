@@ -20,8 +20,8 @@ package v1
 
 import (
 	"encoding/json"
-	"github.com/lastbackend/lastbackend/pkg/common/types"
 	"github.com/lastbackend/lastbackend/pkg/api/pod/views/v1"
+	"github.com/lastbackend/lastbackend/pkg/common/types"
 )
 
 func ToNodeSpec(obj types.NodeSpec) *Spec {

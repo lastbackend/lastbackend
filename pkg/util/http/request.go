@@ -209,4 +209,3 @@ func decodeResponseBodyJSON(resp *http.Response, v interface{}) error {
 	}
 	return err
 }
-

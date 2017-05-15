@@ -19,9 +19,8 @@
 package types
 
 const StateProvision = "provision"
-const StateWarning   = "warning"
-const StateReady     = "ready"
-
+const StateWarning = "warning"
+const StateReady = "ready"
 
 const StateCreated = "created"
 const StateStarted = "started"

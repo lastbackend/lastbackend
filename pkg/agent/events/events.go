@@ -67,5 +67,3 @@ func SendPodState(pod *types.Pod) {
 	}
 	NewEvent(append([]*types.Pod{}, &p))
 }
-
-

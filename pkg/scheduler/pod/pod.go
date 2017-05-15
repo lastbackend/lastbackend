@@ -19,19 +19,19 @@
 package pod
 
 import (
+	"github.com/lastbackend/lastbackend/pkg/common/errors"
 	"github.com/lastbackend/lastbackend/pkg/common/types"
 	"github.com/lastbackend/lastbackend/pkg/scheduler/context"
-	"github.com/lastbackend/lastbackend/pkg/common/errors"
 )
 
-func Provision (p *types.Pod) error {
+func Provision(p *types.Pod) error {
 
 	var (
 		log = context.Get().GetLogger()
 		stg = context.Get().GetStorage()
 
-		node    *types.Node
-		memory  = int64(0)
+		node   *types.Node
+		memory = int64(0)
 	)
 
 	log.Debugf("Allocate node for pod: %s", p.Meta.Name)

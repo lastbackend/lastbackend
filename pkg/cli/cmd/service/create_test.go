@@ -20,11 +20,11 @@ package service_test
 
 import (
 	"encoding/json"
+	n "github.com/lastbackend/lastbackend/pkg/api/namespace/views/v1"
+	sm "github.com/lastbackend/lastbackend/pkg/api/service/views/v1"
 	"github.com/lastbackend/lastbackend/pkg/cli/cmd/service"
 	"github.com/lastbackend/lastbackend/pkg/cli/context"
 	storage "github.com/lastbackend/lastbackend/pkg/cli/storage/mock"
-	n "github.com/lastbackend/lastbackend/pkg/api/namespace/views/v1"
-	sm "github.com/lastbackend/lastbackend/pkg/api/service/views/v1"
 	h "github.com/lastbackend/lastbackend/pkg/util/http"
 	"github.com/stretchr/testify/assert"
 	"io/ioutil"

@@ -21,24 +21,23 @@ package daemon
 import (
 	_cfg "github.com/lastbackend/lastbackend/pkg/common/config"
 
+	"github.com/lastbackend/lastbackend/pkg/logger"
 	"github.com/lastbackend/lastbackend/pkg/scheduler/config"
 	"github.com/lastbackend/lastbackend/pkg/scheduler/context"
 	"github.com/lastbackend/lastbackend/pkg/scheduler/runtime"
-	"github.com/lastbackend/lastbackend/pkg/logger"
 	"os/signal"
 	"syscall"
 
-	"os"
 	"github.com/lastbackend/lastbackend/pkg/storage"
-
+	"os"
 )
 
-func Daemon(_cfg *_cfg.Config ) {
+func Daemon(_cfg *_cfg.Config) {
 
 	var (
-		ctx = context.Get()
-		cfg = config.Set(_cfg)
-		log = logger.New(*cfg.Debug, 9)
+		ctx  = context.Get()
+		cfg  = config.Set(_cfg)
+		log  = logger.New("Scheduler", *cfg.LogLevel)
 		sigs = make(chan os.Signal)
 		done = make(chan bool, 1)
 	)

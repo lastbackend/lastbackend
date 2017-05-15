@@ -20,34 +20,45 @@ package logger
 
 import (
 	"github.com/Sirupsen/logrus"
+	"github.com/lastbackend/lastbackend/pkg/logger/formatter"
 	"github.com/lastbackend/lastbackend/pkg/logger/hooks"
 	"os"
 )
 
+var l *Logger
+
 type Logger struct {
-	log *logrus.Logger
+	name  string
+	level Level
+	log   *logrus.Logger
 }
 
-func New(debug bool, skip int) *Logger {
-	l := new(Logger)
+type Level int
+
+func New(name string, level int) *Logger {
+	l = new(Logger)
+	l.name = name
+	l.level = Level(level)
 	l.log = logrus.New()
 	l.log.Out = os.Stdout
 	l.log.Formatter = getJSONFormatter()
 
-	l.log.Hooks.Add(hooks.SyslogHook{})
-	//l.log.Hooks.Add(hooks.ContextHook{skip})
-
-	if debug {
-		l.SetDebugLevel()
-		l.Debug("Logger debug mode enabled")
+	if level > 0 {
+		l.log.Level = logrus.DebugLevel
+		l.log.Formatter = getTextFormatter(l.name)
 	}
 
 	return l
 }
 
-func (l *Logger) SetDebugLevel() {
-	l.log.Level = logrus.DebugLevel
-	l.log.Formatter = getTextFormatter()
+func (l *Logger) EnableFileInfo(skip int) *Logger {
+	l.log.Hooks.Add(hooks.ContextHook{skip})
+	return l
+}
+
+func (l *Logger) EnableSyslogInfo(skip int) *Logger {
+	l.log.Hooks.Add(hooks.SyslogHook{})
+	return l
 }
 
 func (l *Logger) Debug(args ...interface{}) {
@@ -64,6 +75,14 @@ func (l *Logger) Info(args ...interface{}) {
 
 func (l *Logger) Infof(format string, args ...interface{}) {
 	l.log.Infof(format, args...)
+}
+
+func (l *Logger) Warn(args ...interface{}) {
+	l.log.Warn(args...)
+}
+
+func (l *Logger) Warnf(format string, args ...interface{}) {
+	l.log.Warnf(format, args...)
 }
 
 func (l *Logger) Error(args ...interface{}) {
@@ -90,24 +109,19 @@ func (l *Logger) Panicf(format string, args ...interface{}) {
 	l.log.Panicf(format, args...)
 }
 
-func (l *Logger) Warn(args ...interface{}) {
-	l.log.Warn(args...)
-}
-
-func (l *Logger) Warnf(format string, args ...interface{}) {
-	l.log.Warnf(format, args...)
-}
-
-func getTextFormatter() *logrus.TextFormatter {
-	var formatter = new(logrus.TextFormatter)
-	formatter.TimestampFormat = "2006-01-02 15:04:05"
-	formatter.ForceColors = true
-	formatter.FullTimestamp = true
-	return formatter
+func (l *Logger) V(level Level) Verbose {
+	return Verbose(l.level >= level)
 }
 
 func getJSONFormatter() *logrus.JSONFormatter {
 	var formatter = new(logrus.JSONFormatter)
 	formatter.TimestampFormat = "2006-01-02 15:04:05"
 	return formatter
+}
+
+func getTextFormatter(name string) *formatter.TextFormatter {
+	var f = new(formatter.TextFormatter)
+	f.TimestampFormat = "2006-01-02 15:04:05"
+	f.Name = name
+	return f
 }

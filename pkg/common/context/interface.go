@@ -19,15 +19,15 @@
 package context
 
 import (
-	"github.com/lastbackend/lastbackend/pkg/logger"
 	"context"
-	"github.com/lastbackend/lastbackend/pkg/storage"
 	"github.com/lastbackend/lastbackend/pkg/cache"
+	"github.com/lastbackend/lastbackend/pkg/logger"
+	"github.com/lastbackend/lastbackend/pkg/storage"
 )
 
 type Context interface {
 	GetLogger() *logger.Logger
 	GetStorage() *storage.Storage
-	GetCache () *cache.Cache
+	GetCache() *cache.Cache
 	Background() context.Context
 }

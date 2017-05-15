@@ -20,9 +20,9 @@ package storage
 
 import (
 	"context"
+	"encoding/json"
 	"github.com/lastbackend/lastbackend/pkg/common/types"
 	"github.com/lastbackend/lastbackend/pkg/storage/store"
-	"encoding/json"
 )
 
 const systemStorage = "system"
@@ -52,11 +52,11 @@ func (s *SystemStorage) ProcessSet(ctx context.Context, process *types.Process) 
 	return nil
 }
 
-func (s *SystemStorage) Elect (ctx context.Context, process *types.Process) (bool, error) {
+func (s *SystemStorage) Elect(ctx context.Context, process *types.Process) (bool, error) {
 
 	var (
-		id  string
-		err error
+		id   string
+		err  error
 		lead bool
 	)
 
@@ -87,7 +87,7 @@ func (s *SystemStorage) Elect (ctx context.Context, process *types.Process) (boo
 	return lead, nil
 }
 
-func (s *SystemStorage) ElectUpdate (ctx context.Context, process *types.Process) error {
+func (s *SystemStorage) ElectUpdate(ctx context.Context, process *types.Process) error {
 
 	var (
 		id  string
@@ -112,13 +112,13 @@ func (s *SystemStorage) ElectUpdate (ctx context.Context, process *types.Process
 
 	err = client.Update(ctx, key, &process.Meta.ID, nil, systemLeadTTL)
 	if err != nil {
-		return  err
+		return err
 	}
 
-	return  nil
+	return nil
 }
 
-func (s *SystemStorage) ElectWait (ctx context.Context, process *types.Process, lead chan bool) error {
+func (s *SystemStorage) ElectWait(ctx context.Context, process *types.Process, lead chan bool) error {
 	client, destroy, err := s.Client()
 	if err != nil {
 		return err
@@ -127,7 +127,7 @@ func (s *SystemStorage) ElectWait (ctx context.Context, process *types.Process, 
 
 	key := keyCreate(systemStorage, process.Meta.Kind, "lead")
 
-	cb := func (action, key string, val []byte) {
+	cb := func(action, key string, val []byte) {
 
 		if action == "PUT" {
 

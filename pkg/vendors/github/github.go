@@ -231,11 +231,11 @@ func (g *GitHub) PushPayload(data []byte) (*types.VCSBranch, error) {
 	var err error
 
 	payload := struct {
-		Ref string `json:"ref"`
+		Ref    string `json:"ref"`
 		Commit struct {
-			ID      string    `json:"id"`
-			Message string    `json:"message"`
-			Date    time.Time `json:"timestamp"`
+			ID        string    `json:"id"`
+			Message   string    `json:"message"`
+			Date      time.Time `json:"timestamp"`
 			Committer struct {
 				Username string `json:"username"`
 				Email    string `json:"email"`

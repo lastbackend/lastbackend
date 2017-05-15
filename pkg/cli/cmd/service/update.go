@@ -21,10 +21,10 @@ package service
 import (
 	"fmt"
 	n "github.com/lastbackend/lastbackend/pkg/api/namespace/views/v1"
-	"github.com/lastbackend/lastbackend/pkg/common/types"
 	nspace "github.com/lastbackend/lastbackend/pkg/cli/cmd/namespace"
 	c "github.com/lastbackend/lastbackend/pkg/cli/context"
 	"github.com/lastbackend/lastbackend/pkg/common/errors"
+	"github.com/lastbackend/lastbackend/pkg/common/types"
 )
 
 func UpdateCmd(name, nname, desc string, replicas int) {

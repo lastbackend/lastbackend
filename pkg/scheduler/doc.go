@@ -22,7 +22,6 @@ package scheduler
 // generate new spec after new pod creation
 // allocate node for new spec
 
-
 // watch nodes online states, if node goes offline
 // more than 30 seconds, move specs to another node
 

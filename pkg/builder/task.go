@@ -19,10 +19,10 @@
 package builder
 
 import (
-	"github.com/lastbackend/lastbackend/pkg/common/types"
-	"github.com/satori/go.uuid"
 	"github.com/lastbackend/lastbackend/pkg/builder/context"
 	"github.com/lastbackend/lastbackend/pkg/common/config"
+	"github.com/lastbackend/lastbackend/pkg/common/types"
+	"github.com/satori/go.uuid"
 )
 
 type Task struct {
@@ -67,9 +67,8 @@ func NewTask(build types.Build) *Task {
 
 	return &Task{
 		id:    uuid,
-		build:  build,
+		build: build,
 		done:  make(chan bool),
 		close: make(chan bool),
 	}
 }
-

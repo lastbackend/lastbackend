@@ -40,7 +40,7 @@ func Daemon(_cfg *_cfg.Config) {
 	var (
 		ctx  = context.Get()
 		cfg  = config.Set(_cfg)
-		log  = logger.New(*cfg.Debug, 9)
+		log  = logger.New("Agent", *cfg.LogLevel)
 		sigs = make(chan os.Signal)
 		done = make(chan bool, 1)
 	)
@@ -54,7 +54,7 @@ func Daemon(_cfg *_cfg.Config) {
 	}
 
 	ctx.SetConfig(cfg)
-	ctx.SetLogger(logger.New(*_cfg.Debug, 9))
+	ctx.SetLogger(log)
 	ctx.SetCache(cache.New())
 
 	var host string = "0.0.0.0"

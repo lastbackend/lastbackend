@@ -25,7 +25,7 @@ import (
 var _cfg = new(Config)
 
 func Set(cfg *config.Config) *Config {
-	_cfg.Debug = cfg.Debug
+	_cfg.LogLevel = cfg.LogLevel
 	_cfg.Host = cfg.Host
 	_cfg.Runtime = cfg.Runtime
 	_cfg.APIServer = cfg.APIServer

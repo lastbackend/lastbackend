@@ -20,9 +20,9 @@ package namespace
 
 import (
 	"fmt"
-	"github.com/lastbackend/lastbackend/pkg/common/types"
 	c "github.com/lastbackend/lastbackend/pkg/cli/context"
 	"github.com/lastbackend/lastbackend/pkg/common/errors"
+	"github.com/lastbackend/lastbackend/pkg/common/types"
 	"strings"
 	"time"
 )
