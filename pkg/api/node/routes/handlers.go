@@ -90,7 +90,6 @@ func NodeEventH(w http.ResponseWriter, r *http.Request) {
 		log.Error("Error: write response", err.Error())
 		return
 	}
-
 }
 
 func NodeListH(w http.ResponseWriter, r *http.Request) {

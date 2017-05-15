@@ -64,8 +64,8 @@ func (pm *PodManager) SyncPod(pod types.PodNodeSpec) {
 	}
 
 	log.Debugf("Pod %s found", pod.Meta.Name)
-	if len(pod.Spec.Containers) != len(p.Containers) {
 
+	if len(pod.Spec.Containers) != len(p.Containers) {
 		log.Debugf("Pod %s containers len different from spec count %d(%d)", pod.Meta.Name, len(p.Containers),
 			len(p.Containers))
 
@@ -95,7 +95,6 @@ func (pm *PodManager) sync(meta types.PodMeta, state types.PodState, spec types.
 	log := context.Get().GetLogger()
 	log.Debugf("Pod %s sync start", pod.Meta.Name)
 	w, ok := pm.workers[pod.Meta.Name]
-
 	if !ok {
 		log.Debugf("Pod %s sync create new worker", pod.Meta.Name)
 		w = NewWorker()

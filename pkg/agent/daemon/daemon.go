@@ -82,7 +82,7 @@ func Daemon(_cfg *_cfg.Config) {
 	rntm.Loop()
 
 	go func() {
-		if err := Listen(*cfg.APIServer.Host, *cfg.APIServer.Port); err != nil {
+		if err := Listen(*cfg.AgentServer.Host, *cfg.AgentServer.Port); err != nil {
 			log.Warnf("Http agent server start error: %s", err.Error())
 		}
 	}()

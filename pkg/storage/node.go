@@ -179,13 +179,14 @@ func (s *NodeStorage) UpdateState(ctx context.Context, node *types.Node) error {
 	if err := tx.Update(keyState, &node.State, 0); err != nil {
 		return err
 	}
-	if err := tx.Commit(); err != nil {
-		return err
-	}
 
 	keyAvailable := keyCreate(nodeStorage, node.Meta.Hostname, "alive")
 	if err := tx.Upsert(keyAvailable, true, timeout); err != nil {
 		fmt.Println("available", err.Error())
+		return err
+	}
+
+	if err := tx.Commit(); err != nil {
 		return err
 	}
 

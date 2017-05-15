@@ -23,6 +23,7 @@ import (
 	ctx "github.com/lastbackend/lastbackend/pkg/api/context"
 	"github.com/lastbackend/lastbackend/pkg/api/namespace/routes/request"
 	"github.com/lastbackend/lastbackend/pkg/common/types"
+	"github.com/lastbackend/lastbackend/pkg/storage/store"
 )
 
 type namespace struct {
@@ -54,11 +55,16 @@ func (ns *namespace) List() (types.NamespaceList, error) {
 
 func (ns *namespace) Get(id string) (*types.Namespace, error) {
 	var (
+		log     = ctx.Get().GetLogger()
 		storage = ctx.Get().GetStorage()
 	)
 
 	n, err := storage.Namespace().GetByName(ns.Context, id)
-	return n, err
+	if err != nil && err.Error() != store.ErrKeyNotFound {
+		log.Errorf("Error: insert namespace to db: %s", err.Error())
+		return nil, err
+	}
+	return n, nil
 }
 
 func (ns *namespace) Create(rq *request.RequestNamespaceCreateS) (*types.Namespace, error) {

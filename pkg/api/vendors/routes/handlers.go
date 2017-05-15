@@ -23,6 +23,7 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/api/vendors/views/v1"
 	"github.com/lastbackend/lastbackend/pkg/common/errors"
 	"github.com/lastbackend/lastbackend/pkg/common/types"
+	"github.com/lastbackend/lastbackend/pkg/storage/store"
 	"github.com/lastbackend/lastbackend/pkg/util/http/utils"
 	"github.com/lastbackend/lastbackend/pkg/vendors"
 	"github.com/lastbackend/lastbackend/pkg/vendors/docker"
@@ -39,7 +40,7 @@ func VendorsH(w http.ResponseWriter, r *http.Request) {
 	log.Debug("Get vendor services handler")
 
 	vendors, err := storage.Vendor().List(r.Context())
-	if err != nil {
+	if err != nil && err.Error() != store.ErrKeyNotFound {
 		log.Error(err.Error())
 		errors.HTTP.InternalServerError(w)
 		return

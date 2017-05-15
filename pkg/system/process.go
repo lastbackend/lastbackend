@@ -88,7 +88,7 @@ func (c *Process) HeartBeat() {
 	)
 
 	log.Debugf("System: Process: Start HeartBeat for: %s", c.process.Meta.Kind)
-	ticker := time.NewTicker(time.Second * heartBeatInterval)
+	ticker := time.NewTicker(heartBeatInterval * time.Second)
 	for range ticker.C {
 		// Update process state
 		log.Debug("System: Process: Beat")

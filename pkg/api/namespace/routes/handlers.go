@@ -72,13 +72,12 @@ func NamespaceInfoH(w http.ResponseWriter, r *http.Request) {
 	ns := namespace.New(r.Context())
 	item, err := ns.Get(id)
 	if err != nil {
-		if item == nil {
-			errors.New("namespace").NotFound().Http(w)
-			return
-		}
-
 		log.Error("Error: find namespace by name", err.Error())
 		errors.HTTP.InternalServerError(w)
+		return
+	}
+	if item == nil {
+		errors.New("namespace").NotFound().Http(w)
 		return
 	}
 
@@ -162,13 +161,12 @@ func NamespaceUpdateH(w http.ResponseWriter, r *http.Request) {
 	ns := namespace.New(r.Context())
 	item, err := ns.Get(id)
 	if err != nil {
-		if item == nil {
-			errors.New("namespace").NotFound().Http(w)
-			return
-		}
-
 		log.Error("Error: check exists by name", err.Error())
 		errors.HTTP.InternalServerError(w)
+		return
+	}
+	if item == nil {
+		errors.New("namespace").NotFound().Http(w)
 		return
 	}
 
@@ -206,13 +204,12 @@ func NamespaceRemoveH(w http.ResponseWriter, r *http.Request) {
 	ns := namespace.New(r.Context())
 	item, err := ns.Get(id)
 	if err != nil {
-		if item == nil {
-			errors.New("namespace").NotFound().Http(w)
-			return
-		}
-
 		log.Error("Error: find namespace by name ", err.Error())
 		errors.HTTP.InternalServerError(w)
+		return
+	}
+	if item == nil {
+		errors.New("namespace").NotFound().Http(w)
 		return
 	}
 

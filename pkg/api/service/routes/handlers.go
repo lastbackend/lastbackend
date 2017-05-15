@@ -101,13 +101,12 @@ func ServiceInfoH(w http.ResponseWriter, r *http.Request) {
 	s := service.New(r.Context(), item.Meta)
 	svc, err := s.Get(sid)
 	if err != nil {
-		if svc == nil {
-			errors.New("service").NotFound().Http(w)
-			return
-		}
-
 		log.Errorf("Error: find service by name: %s", err.Error())
 		errors.HTTP.InternalServerError(w)
+		return
+	}
+	if svc == nil {
+		errors.New("service").NotFound().Http(w)
 		return
 	}
 
@@ -174,7 +173,7 @@ func ServiceCreateH(w http.ResponseWriter, r *http.Request) {
 	// request body struct
 	rq := new(request.RequestServiceCreateS)
 	if err := rq.DecodeAndValidate(r.Body); err != nil {
-		log.Error("Error: validation incomming data", err)
+		log.Errorf("Error: validation incomming data: %s", err)
 		errors.New("Invalid incomming data").Unknown().Http(w)
 		return
 	}
@@ -182,20 +181,19 @@ func ServiceCreateH(w http.ResponseWriter, r *http.Request) {
 	ns := namespace.New(r.Context())
 	item, err := ns.Get(nid)
 	if err != nil {
-		if item == nil {
-			errors.New("namespace").NotFound().Http(w)
-			return
-		}
-
 		log.Error("Error: find namespace by name", err.Error())
 		errors.HTTP.InternalServerError(w)
+		return
+	}
+	if item == nil {
+		errors.New("namespace").NotFound().Http(w)
 		return
 	}
 
 	s := service.New(r.Context(), item.Meta)
 	svc, err := s.Get(sid)
-	if err != nil && err.Error() != store.ErrKeyNotFound {
-		log.Error("Error: find service by name", err.Error())
+	if err != nil {
+		log.Errorf("Error: find service by name: %s", err.Error())
 		errors.HTTP.InternalServerError(w)
 		return
 	}
@@ -203,7 +201,6 @@ func ServiceCreateH(w http.ResponseWriter, r *http.Request) {
 		errors.New("service").NotUnique("name").Http(w)
 		return
 	}
-
 	// Load template from registry
 	if rq.Template != "" {
 		// TODO: Send request for get template config from registry
@@ -300,13 +297,12 @@ func ServiceUpdateH(w http.ResponseWriter, r *http.Request) {
 	s := service.New(r.Context(), item.Meta)
 	svc, err := s.Get(sid)
 	if err != nil {
-		if svc == nil {
-			errors.New("service").NotFound().Http(w)
-			return
-		}
-
 		log.Error("Error: find service by name", err.Error())
 		errors.HTTP.InternalServerError(w)
+		return
+	}
+	if svc == nil {
+		errors.New("service").NotFound().Http(w)
 		return
 	}
 
@@ -357,13 +353,12 @@ func ServiceRemoveH(w http.ResponseWriter, r *http.Request) {
 	s := service.New(r.Context(), item.Meta)
 	svc, err := s.Get(sid)
 	if err != nil {
-		if svc == nil {
-			errors.New("service").NotFound().Http(w)
-			return
-		}
-
 		log.Error("Error: find service by name", err.Error())
 		errors.HTTP.InternalServerError(w)
+		return
+	}
+	if svc == nil {
+		errors.New("service").NotFound().Http(w)
 		return
 	}
 
