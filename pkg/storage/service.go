@@ -63,7 +63,7 @@ func (s *ServiceStorage) GetByName(ctx context.Context, namespace, name string) 
 		return nil, err
 	}
 
-	keyPods := keyCreate(podStorage, namespace, fmt.Sprintf("%s-%s", namespace, name))
+	keyPods := keyCreate(podStorage, namespace, fmt.Sprintf("%s:%s", namespace, name))
 	if err := client.Map(ctx, keyPods, "", &service.Pods); err != nil {
 		if err.Error() == store.ErrKeyNotFound {
 			return service, nil
