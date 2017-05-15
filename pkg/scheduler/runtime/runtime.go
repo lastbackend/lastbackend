@@ -68,7 +68,7 @@ func (r *Runtime) Loop() {
 		lead = make(chan bool)
 	)
 
-	log.Debug("Scheduler: Runtime: Loop")
+	log.Debug(" Runtime: Loop")
 
 	go func() {
 		for {
@@ -77,19 +77,19 @@ func (r *Runtime) Loop() {
 				{
 					if l {
 						if r.active {
-							log.Debug("Scheduler: Runtime: is already marked as lead -> skip")
+							log.Debug(" Runtime: is already marked as lead -> skip")
 							continue
 						}
 						r.active = true
-						log.Debug("Scheduler: Runtime: Mark as lead")
+						log.Debug(" Runtime: Mark as lead")
 						r.pc.Resume()
 
 					} else {
 						if !r.active {
-							log.Debug("Scheduler: Runtime: is already marked as slave -> skip")
+							log.Debug(" Runtime: is already marked as slave -> skip")
 							continue
 						}
-						log.Debug("Scheduler: Runtime: Mark as slave")
+						log.Debug(" Runtime: Mark as slave")
 						r.active = false
 						r.pc.Pause()
 					}
@@ -99,6 +99,6 @@ func (r *Runtime) Loop() {
 	}()
 
 	if err := r.process.WaitElected(lead); err != nil {
-		log.Errorf("Controller: Runtime: Elect Wait error: %s", err.Error())
+		log.Errorf("Runtime: Elect Wait error: %s", err.Error())
 	}
 }

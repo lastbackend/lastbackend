@@ -40,14 +40,14 @@ func (pc *PodController) Watch(node chan *types.Node) {
 		stg = pc.context.GetStorage()
 	)
 
-	log.Debug("Scheduler:PodController: start watch")
+	log.Debug("PodController: start watch")
 	go func() {
 		for {
 			select {
 			case p := <-pc.pods:
 				{
 					if !pc.active {
-						log.Debug("Scheduler:PodController: skip management cause it is in slave mode")
+						log.Debug("PodController: skip management cause it is in slave mode")
 						pc.pending.DelPod(p)
 						continue
 					}
@@ -93,17 +93,17 @@ func (pc *PodController) Resume() {
 
 	pc.active = true
 
-	log.Debug("Scheduler:PodController: start check pods state")
+	log.Debug("PodController: start check pods state")
 	nss, err := stg.Namespace().List(pc.context.Background())
 	if err != nil {
-		log.Errorf("Scheduler:PodController: Get namespaces list err: %s", err.Error())
+		log.Errorf("PodController: Get namespaces list err: %s", err.Error())
 	}
 
 	for _, ns := range nss {
 		log.Debugf("Get pods in namespace: %s", ns.Meta.Name)
 		pods, err := stg.Pod().ListByNamespace(pc.context.Background(), ns.Meta.Name)
 		if err != nil {
-			log.Errorf("Scheduler:PodController: Get pods list err: %s", err.Error())
+			log.Errorf("PodController: Get pods list err: %s", err.Error())
 		}
 
 		for _, p := range pods {

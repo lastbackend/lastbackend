@@ -35,14 +35,14 @@ func (sc *ServiceController) Watch() {
 		stg = sc.context.GetStorage()
 	)
 
-	log.Debug("Controller:ServiceController: start watch")
+	log.Debug("ServiceController: start watch")
 	go func() {
 		for {
 			select {
 			case s := <-sc.services:
 				{
 					if !sc.active {
-						log.Debug("Controller:ServiceController: skip management couse it is in slave mode")
+						log.Debug("ServiceController: skip management couse it is in slave mode")
 						continue
 					}
 

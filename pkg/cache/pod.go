@@ -131,11 +131,9 @@ func (ps *PodCache) SetPods(pods []*types.Pod) {
 }
 
 func NewPodCache() *PodCache {
-	pods := make(map[string]*types.Pod)
-	containers := make(map[string]*types.Container)
 	return &PodCache{
 		stats:      PodCacheStats{},
-		containers: containers,
-		pods:       pods,
+		containers: make(map[string]*types.Container),
+		pods:       make(map[string]*types.Pod),
 	}
 }

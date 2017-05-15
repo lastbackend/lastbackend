@@ -25,6 +25,7 @@ import (
 	ctx "github.com/lastbackend/lastbackend/pkg/api/context"
 	"github.com/lastbackend/lastbackend/pkg/api/service/routes/request"
 	"github.com/lastbackend/lastbackend/pkg/common/types"
+	"github.com/lastbackend/lastbackend/pkg/storage/store"
 	h "github.com/lastbackend/lastbackend/pkg/util/http"
 	"github.com/satori/go.uuid"
 	"io"
@@ -71,11 +72,10 @@ func (s *service) Get(service string) (*types.Service, error) {
 	)
 
 	svc, err := storage.Service().GetByName(s.Context, s.Namespace.Name, service)
-	if err != nil {
+	if err != nil && err.Error() != store.ErrKeyNotFound {
 		log.Errorf("Error: find service by name: %s", err.Error())
 		return nil, err
 	}
-
 	return svc, nil
 }
 
