@@ -22,8 +22,8 @@ import (
 	"fmt"
 	"github.com/lastbackend/lastbackend/pkg/agent/config"
 	"github.com/lastbackend/lastbackend/pkg/agent/context"
-	"github.com/lastbackend/lastbackend/pkg/util/system"
 	"github.com/lastbackend/lastbackend/pkg/common/types"
+	"github.com/lastbackend/lastbackend/pkg/util/system"
 	"github.com/shirou/gopsutil/mem"
 	"time"
 )
@@ -39,8 +39,8 @@ func GetNodeMeta() types.NodeMeta {
 
 	info := system.GetOsInfo()
 
-	if cfg.Hostname != "" {
-		meta.Hostname = cfg.Hostname
+	if cfg.Hostname != nil && *cfg.Hostname != "" {
+		meta.Hostname = *cfg.Hostname
 	} else {
 		meta.Hostname = info.Hostname
 	}

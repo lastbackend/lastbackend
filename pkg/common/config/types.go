@@ -18,19 +18,16 @@
 
 package config
 
-
 type Config struct {
-	Debug *bool
-	Token *string
-	APIServer APIServer
+	Debug       *bool
+	Token       *string
+	Etcd        ETCD
+	Registry    Registry
+	APIServer   APIServer
 	ProxyServer ProxyServer
-	Etcd ETCD
-	Registry Registry
-}
-
-type HTTPServer struct {
-	Host *string
-	Port *int
+	AgentServer AgentServer
+	Runtime     Runtime
+	Host        Host
 }
 
 type APIServer struct {
@@ -50,23 +47,28 @@ type ETCD struct {
 		Cert *string
 		CA   *string
 	}
-	Quorum bool
+	Quorum *bool
 }
 
 type Host struct {
-	Hostname string
+	Hostname *string
 }
 
 type Runtime struct {
-	CRI    string
+	CRI    *string
 	Docker Docker
 }
 
 type Docker struct {
-	Host, Certs, Version string
-	TLS                  bool
+	Host, Certs, Version *string
+	TLS                  *bool
 }
 
 type Registry struct {
 	Server, Username, Password *string
+}
+
+type AgentServer struct {
+	Host *string
+	Port *int
 }

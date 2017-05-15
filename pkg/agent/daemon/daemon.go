@@ -19,9 +19,9 @@
 package daemon
 
 import (
+	_cfg "github.com/lastbackend/lastbackend/pkg/common/config"
+
 	"fmt"
-	"github.com/Sirupsen/logrus"
-	"github.com/jawher/mow.cli"
 	"github.com/lastbackend/lastbackend/pkg/agent/config"
 	"github.com/lastbackend/lastbackend/pkg/agent/context"
 	"github.com/lastbackend/lastbackend/pkg/agent/events/listener"
@@ -35,128 +35,73 @@ import (
 	"syscall"
 )
 
-func Agent(cmd *cli.Cmd) {
+func Daemon(_cfg *_cfg.Config) {
 
-	var ctx = context.Get()
-	var cfg = config.Get()
+	var (
+		ctx  = context.Get()
+		cfg  = config.Set(_cfg)
+		log  = logger.New(*cfg.Debug, 9)
+		sigs = make(chan os.Signal)
+		done = make(chan bool, 1)
+	)
 
-	cmd.Spec = ""
+	log.Info("Start Agent")
 
-	cfg.Debug = *cmd.Bool(cli.BoolOpt{Name: "d debug", Value: false, Desc: "Enable debug mode"})
-
-	cfg.HTTPServer.Host = cmd.String(cli.StringOpt{
-		Name: "host", Value: "", Desc: "Agent API server listen address",
-		EnvVar: "HOST", HideValue: true,
-	})
-
-	cfg.HTTPServer.Port = cmd.Int(cli.IntOpt{
-		Name: "port", Value: 2968, Desc: "Agent API server listen port",
-		EnvVar: "PORT", HideValue: true,
-	})
-
-	cfg.Runtime.Docker.Host = *cmd.String(cli.StringOpt{
-		Name: "docker-host", Value: "", Desc: "Provide path to Docker daemon",
-		EnvVar: "DOCKER_HOST", HideValue: true,
-	})
-
-	cfg.Runtime.Docker.Certs = *cmd.String(cli.StringOpt{
-		Name: "docker-certs", Value: "", Desc: "Provide path to Docker certificates",
-		EnvVar: "DOCKER_CERT_PATH", HideValue: true,
-	})
-
-	cfg.Runtime.Docker.Version = *cmd.String(cli.StringOpt{
-		Name: "docker-api-version", Value: "", Desc: "Docker daemon API version",
-		EnvVar: "DOCKER_API_VERSION", HideValue: true,
-	})
-
-	cfg.Runtime.Docker.TLS = *cmd.Bool(cli.BoolOpt{
-		Name: "docker-tls", Value: false, Desc: "Use secure connection to docker daemon",
-		EnvVar: "DOCKER_TLS_VERIFY", HideValue: true,
-	})
-
-	cfg.Runtime.CRI = *cmd.String(cli.StringOpt{
-		Name: "cri", Value: "docker", Desc: "Default container runtime interface",
-		EnvVar: "LB_CRI", HideValue: true,
-	})
-
-	cfg.APIServer.Host = cmd.String(cli.StringOpt{
-		Name: "api-host", Value: "0.0.0.0", Desc: "API server listen address",
-		EnvVar: "LB_API_HOST", HideValue: true,
-	})
-
-	cfg.APIServer.Port = cmd.Int(cli.IntOpt{
-		Name: "api-port", Value: 2967, Desc: "API server listen port",
-		EnvVar: "LB_API_PORT", HideValue: true,
-	})
-
-	cfg.Host.Hostname = *cmd.String(cli.StringOpt{
-		Name: "hostname", Value: "", Desc: "Agent hostname",
-		EnvVar: "LB_HOSTNAME", HideValue: true,
-	})
-
-	cmd.Before = func() {
-
+	rntm := runtime.Get()
+	crii, err := cri.New(cfg.Runtime)
+	if err != nil {
+		ctx.GetLogger().Errorf("Cannot initialize runtime: %s", err.Error())
 	}
 
-	cmd.Action = func() {
+	ctx.SetConfig(cfg)
+	ctx.SetLogger(logger.New(*_cfg.Debug, 9))
+	ctx.SetCache(cache.New())
 
-		var (
-			err  error
-			sigs = make(chan os.Signal)
-			done = make(chan bool, 1)
-		)
-
-		rntm := runtime.Get()
-		crii, err := cri.New(cfg.Runtime)
-		if err != nil {
-			ctx.GetLogger().Errorf("Cannot initialize runtime: %s", err.Error())
-		}
-
-		ctx.SetConfig(cfg)
-		ctx.SetLogger(logger.New(cfg.Debug, 9))
-		ctx.SetCache(cache.New())
-
-		client, err := http.New(fmt.Sprintf("%s:%d", *cfg.APIServer.Host, *cfg.APIServer.Port), &http.ReqOpts{})
-		if err != nil {
-			ctx.GetLogger().Errorf("Cannot initialize http client: %s", err.Error())
-		}
-		ctx.SetHttpClient(client)
-		ctx.SetEventListener(listener.New(ctx.GetHttpClient(), rntm.GetSpecChan()))
-
-		ctx.SetCri(crii)
-
-		if err = rntm.StartPodManager(); err != nil {
-			ctx.GetLogger().Errorf("Cannot initialize pod manager: %s", err.Error())
-		}
-
-		if err = rntm.StartEventListener(); err != nil {
-			ctx.GetLogger().Errorf("Cannot initialize event listener: %s", err.Error())
-		}
-
-		rntm.Loop()
-
-		go func() {
-			if err := Listen(*cfg.HTTPServer.Host, *cfg.HTTPServer.Port); err != nil {
-				ctx.GetLogger().Warnf("Http server start error: %s", err.Error())
-			}
-		}()
-
-		// Handle SIGINT and SIGTERM.
-		signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)
-
-		go func() {
-			for {
-				select {
-				case <-sigs:
-					done <- true
-					return
-				}
-			}
-		}()
-
-		<-done
-
-		logrus.Info("Handle SIGINT and SIGTERM.")
+	var host string = "0.0.0.0"
+	if cfg.APIServer.Host != nil && *cfg.APIServer.Host != "" {
+		host = *cfg.APIServer.Host
 	}
+
+	client, err := http.New(fmt.Sprintf("%s:%d", host, *cfg.APIServer.Port), &http.ReqOpts{})
+	if err != nil {
+		ctx.GetLogger().Errorf("Cannot initialize http client: %s", err.Error())
+	}
+	ctx.SetHttpClient(client)
+	ctx.SetEventListener(listener.New(ctx.GetHttpClient(), rntm.GetSpecChan()))
+
+	ctx.SetCri(crii)
+
+	if err = rntm.StartPodManager(); err != nil {
+		ctx.GetLogger().Errorf("Cannot initialize pod manager: %s", err.Error())
+	}
+
+	if err = rntm.StartEventListener(); err != nil {
+		ctx.GetLogger().Errorf("Cannot initialize event listener: %s", err.Error())
+	}
+
+	rntm.Loop()
+
+	go func() {
+		if err := Listen(*cfg.APIServer.Host, *cfg.APIServer.Port); err != nil {
+			log.Warnf("Http agent server start error: %s", err.Error())
+		}
+	}()
+
+	// Handle SIGINT and SIGTERM.
+	signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)
+
+	go func() {
+		for {
+			select {
+			case <-sigs:
+				done <- true
+				return
+			}
+		}
+	}()
+
+	<-done
+
+	log.Info("Handle SIGINT and SIGTERM.")
 
 }
