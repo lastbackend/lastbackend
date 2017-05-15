@@ -37,14 +37,14 @@ func (nc *NodeController) Watch(node chan *types.Node) {
 		stg = nc.context.GetStorage()
 	)
 
-	log.Debug("Scheduler:PodController: start watch")
+	log.Debug("PodController: start watch")
 	go func() {
 		for {
 			select {
 			case n := <-nc.nodes:
 				{
 					if !nc.active {
-						log.Debug("Scheduler:NodeController: skip management cause it is in slave mode")
+						log.Debug("NodeController: skip management cause it is in slave mode")
 						continue
 					}
 
@@ -76,7 +76,7 @@ func (nc *NodeController) Resume() {
 	)
 
 	nc.active = true
-	log.Debug("Scheduler:NodeController: start check pods state")
+	log.Debug("NodeController: start check pods state")
 }
 
 func NewNodeController(ctx *context.Context) *NodeController {

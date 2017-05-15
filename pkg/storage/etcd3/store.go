@@ -45,9 +45,6 @@ type buffer []byte
 
 func (s *store) Count(ctx context.Context, key, keyRegexFilter string) (int, error) {
 	key = path.Join(s.pathPrefix, key)
-	if !strings.HasSuffix(key, "/") {
-		key += "/"
-	}
 	getResp, err := s.client.KV.Get(ctx, key, clientv3.WithPrefix())
 	if err != nil {
 		return 0, err

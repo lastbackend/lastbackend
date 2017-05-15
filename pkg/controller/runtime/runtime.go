@@ -68,20 +68,20 @@ func (r *Runtime) Loop() {
 				{
 					if l {
 						if r.active {
-							log.Debug("Controller: Runtime: is already marked as lead -> skip")
+							log.Debug("Runtime: is already marked as lead -> skip")
 							continue
 						}
 						r.active = true
-						log.Debug("Controller: Runtime: Mark as lead")
+						log.Debug("Runtime: Mark as lead")
 
 						r.sc.Resume()
 
 					} else {
 						if !r.active {
-							log.Debug("Controller: Runtime: is already marked as slave -> skip")
+							log.Debug("Runtime: is already marked as slave -> skip")
 							continue
 						}
-						log.Debug("Controller: Runtime: Mark as slave")
+						log.Debug("Runtime: Mark as slave")
 						r.active = false
 
 						r.sc.Pause()
@@ -92,6 +92,6 @@ func (r *Runtime) Loop() {
 	}()
 
 	if err := r.process.WaitElected(lead); err != nil {
-		log.Errorf("Controller: Runtime: Elect Wait error: %s", err.Error())
+		log.Errorf("Runtime: Elect Wait error: %s", err.Error())
 	}
 }
