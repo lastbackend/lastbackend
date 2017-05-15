@@ -20,9 +20,9 @@ package namespace_test
 
 import (
 	"encoding/json"
+	n "github.com/lastbackend/lastbackend/pkg/api/namespace/views/v1"
 	"github.com/lastbackend/lastbackend/pkg/cli/cmd/namespace"
 	"github.com/lastbackend/lastbackend/pkg/cli/context"
-	n "github.com/lastbackend/lastbackend/pkg/api/namespace/views/v1"
 	h "github.com/lastbackend/lastbackend/pkg/util/http"
 	"github.com/stretchr/testify/assert"
 	"net/http"

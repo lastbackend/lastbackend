@@ -19,8 +19,8 @@
 package v1
 
 import (
-	"github.com/lastbackend/lastbackend/pkg/common/types"
 	"github.com/lastbackend/lastbackend/pkg/api/image/views/v1"
+	"github.com/lastbackend/lastbackend/pkg/common/types"
 )
 
 func ToContainer(c *types.Container) Container {

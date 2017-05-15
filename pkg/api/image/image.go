@@ -20,9 +20,9 @@ package image
 
 import (
 	"context"
-	"github.com/lastbackend/lastbackend/pkg/common/types"
 	"github.com/lastbackend/lastbackend/pkg/api/build"
 	c "github.com/lastbackend/lastbackend/pkg/api/context"
+	"github.com/lastbackend/lastbackend/pkg/common/types"
 )
 
 var Util IUtil = util{}

@@ -25,12 +25,12 @@ import (
 
 type NodeController struct {
 	context *context.Context
-	nodes chan *types.Node
+	nodes   chan *types.Node
 
 	active bool
 }
 
-func (nc *NodeController) Watch (node chan *types.Node) {
+func (nc *NodeController) Watch(node chan *types.Node) {
 
 	var (
 		log = nc.context.GetLogger()
@@ -38,25 +38,26 @@ func (nc *NodeController) Watch (node chan *types.Node) {
 	)
 
 	log.Debug("Scheduler:PodController: start watch")
-	go func(){
+	go func() {
 		for {
 			select {
-			case n := <- nc.nodes : {
-				if !nc.active {
-					log.Debug("Scheduler:NodeController: skip management cause it is in slave mode")
-					continue
+			case n := <-nc.nodes:
+				{
+					if !nc.active {
+						log.Debug("Scheduler:NodeController: skip management cause it is in slave mode")
+						continue
+					}
+
+					log.Debugf("Node check state: %s", n.Meta.Name)
+					if n.Alive {
+						log.Debugf("Node set alive, try to provision on it pods: %s", n.Meta.Name)
+						node <- n
+						continue
+					}
+
+					log.Debugf("Node set offline, try to move all pods to another")
+
 				}
-
-				log.Debugf("Node check state: %s", n.Meta.Name)
-				if n.Alive {
-					log.Debugf("Node set alive, try to provision on it pods: %s", n.Meta.Name)
-					node <- n
-					continue
-				}
-
-				log.Debugf("Node set offline, try to move all pods to another")
-
-			}
 			}
 		}
 	}()
@@ -64,11 +65,11 @@ func (nc *NodeController) Watch (node chan *types.Node) {
 	stg.Node().Watch(nc.context.Background(), nc.nodes)
 }
 
-func (nc *NodeController) Pause () {
+func (nc *NodeController) Pause() {
 	nc.active = false
 }
 
-func (nc *NodeController) Resume () {
+func (nc *NodeController) Resume() {
 
 	var (
 		log = nc.context.GetLogger()
@@ -78,11 +79,11 @@ func (nc *NodeController) Resume () {
 	log.Debug("Scheduler:NodeController: start check pods state")
 }
 
-func NewNodeController (ctx *context.Context) *NodeController {
+func NewNodeController(ctx *context.Context) *NodeController {
 	sc := new(NodeController)
 	sc.context = ctx
 	sc.active = false
-	sc.nodes = make (chan *types.Node)
+	sc.nodes = make(chan *types.Node)
 
 	return sc
 }

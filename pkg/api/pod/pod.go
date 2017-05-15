@@ -20,10 +20,10 @@ package pod
 
 import (
 	"context"
-	"github.com/lastbackend/lastbackend/pkg/storage/store"
 	ctx "github.com/lastbackend/lastbackend/pkg/api/context"
-	"github.com/lastbackend/lastbackend/pkg/common/types"
 	"github.com/lastbackend/lastbackend/pkg/api/namespace"
+	"github.com/lastbackend/lastbackend/pkg/common/types"
+	"github.com/lastbackend/lastbackend/pkg/storage/store"
 	"strings"
 )
 
@@ -101,6 +101,6 @@ func (p *pod) Set(pod types.Pod) error {
 
 func New(ctx context.Context) *pod {
 	return &pod{
-		Context:   ctx,
+		Context: ctx,
 	}
 }

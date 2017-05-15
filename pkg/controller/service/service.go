@@ -24,9 +24,7 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/controller/pod"
 )
 
-func Provision (svc *types.Service) error {
-
-
+func Provision(svc *types.Service) error {
 
 	var (
 		log      = context.Get().GetLogger()
@@ -45,7 +43,7 @@ func Provision (svc *types.Service) error {
 	if replicas < svc.Meta.Replicas {
 		log.Debug("Service: Replicas: create a new replicas")
 		for i := 0; i < (svc.Meta.Replicas - replicas); i++ {
-			p:= pod.PodCreate(svc)
+			p := pod.PodCreate(svc)
 			svc.Pods[p.Meta.Name] = p
 		}
 	}
@@ -63,7 +61,7 @@ func Provision (svc *types.Service) error {
 			if len(names) > 0 {
 				pod.PodRemove(svc.Pods[names[len(names)-1]])
 			}
-			names = names[0:len(names)-1]
+			names = names[0 : len(names)-1]
 		}
 	}
 

@@ -19,15 +19,15 @@
 package config
 
 import (
+	"github.com/lastbackend/lastbackend/pkg/common/config"
 	"github.com/lastbackend/lastbackend/pkg/storage/store"
 	"github.com/lastbackend/lastbackend/pkg/util/serializer"
 	"github.com/lastbackend/lastbackend/pkg/util/serializer/json"
-	"github.com/lastbackend/lastbackend/pkg/common/config"
 )
 
 var _cfg = new(Config)
 
-func Set(cfg *config.Config) *Config{
+func Set(cfg *config.Config) *Config {
 	_cfg.LogLevel = cfg.LogLevel
 	_cfg.Token = cfg.Token
 	_cfg.Etcd = cfg.Etcd

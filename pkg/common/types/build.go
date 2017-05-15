@@ -35,7 +35,6 @@ type Build struct {
 
 type BuildMeta struct {
 	Meta
-
 }
 
 type BuildStatus struct {

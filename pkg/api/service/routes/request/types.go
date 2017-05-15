@@ -21,8 +21,8 @@ package request
 import (
 	"encoding/json"
 	"github.com/lastbackend/lastbackend/pkg/api/context"
-	"github.com/lastbackend/lastbackend/pkg/common/types"
 	"github.com/lastbackend/lastbackend/pkg/common/errors"
+	"github.com/lastbackend/lastbackend/pkg/common/types"
 	"github.com/lastbackend/lastbackend/pkg/util/converter"
 	"github.com/lastbackend/lastbackend/pkg/util/validator"
 	"io"
@@ -31,14 +31,14 @@ import (
 )
 
 type RequestServiceCreateS struct {
-	Name        string                     `json:"name"`
-	Description string                     `json:"description"`
-	Registry    string                     `json:"registry"`
-	Region      string                     `json:"region"`
-	Template    string                     `json:"template"`
-	Image       string                     `json:"image"`
-	Url         string                     `json:"url"`
-	Replicas    *int                       `json:"replicas,omitempty"`
+	Name        string               `json:"name"`
+	Description string               `json:"description"`
+	Registry    string               `json:"registry"`
+	Region      string               `json:"region"`
+	Template    string               `json:"template"`
+	Image       string               `json:"image"`
+	Url         string               `json:"url"`
+	Replicas    *int                 `json:"replicas,omitempty"`
 	Spec        *RequestServiceSpecS `json:"spec"`
 	Source      types.ServiceSource
 }

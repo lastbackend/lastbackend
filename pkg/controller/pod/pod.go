@@ -19,12 +19,12 @@
 package pod
 
 import (
+	"fmt"
 	"github.com/lastbackend/lastbackend/pkg/common/types"
 	"github.com/lastbackend/lastbackend/pkg/controller/context"
-	"time"
 	"github.com/satori/go.uuid"
-	"fmt"
 	"strings"
+	"time"
 )
 
 func PodCreate(svc *types.Service) *types.Pod {
@@ -50,7 +50,7 @@ func PodSetSpec(p *types.Pod, spec map[string]*types.ServiceSpec) {
 	)
 
 	for id := range spec {
-		ids[id]= struct{}{}
+		ids[id] = struct{}{}
 	}
 
 	if p.Spec.State == types.StateDestroy {
@@ -147,7 +147,7 @@ func podNameGenerate(svc *types.Service) string {
 
 		hash = strings.Split(uuid.NewV4().String(), "-")[4]
 		name = fmt.Sprintf("%s:%s:%s", svc.Meta.Namespace, svc.Meta.Name, hash[5:])
-		if _, ok := svc.Pods[name];!ok {
+		if _, ok := svc.Pods[name]; !ok {
 			break
 		}
 	}

@@ -19,47 +19,47 @@
 package service
 
 import (
-	"github.com/lastbackend/lastbackend/pkg/controller/context"
 	"github.com/lastbackend/lastbackend/pkg/common/types"
+	"github.com/lastbackend/lastbackend/pkg/controller/context"
 )
 
 type ServiceController struct {
-	context *context.Context
+	context  *context.Context
 	services chan *types.Service
-	active bool
+	active   bool
 }
 
-
-func (sc *ServiceController) Watch () {
+func (sc *ServiceController) Watch() {
 	var (
 		log = sc.context.GetLogger()
 		stg = sc.context.GetStorage()
 	)
 
 	log.Debug("Controller:ServiceController: start watch")
-	go func(){
+	go func() {
 		for {
 			select {
-			case s := <- sc.services : {
-				if !sc.active {
-					log.Debug("Controller:ServiceController: skip management couse it is in slave mode")
-					continue
-				}
+			case s := <-sc.services:
+				{
+					if !sc.active {
+						log.Debug("Controller:ServiceController: skip management couse it is in slave mode")
+						continue
+					}
 
-				log.Debugf("Service needs to be provisioned: %s:%s", s.Meta.Namespace, s.Meta.Name )
-				Provision(s)
-			}
+					log.Debugf("Service needs to be provisioned: %s:%s", s.Meta.Namespace, s.Meta.Name)
+					Provision(s)
+				}
 			}
 		}
 	}()
 	stg.Service().SpecWatch(sc.context.Background(), sc.services)
 }
 
-func (sc *ServiceController) Pause () {
+func (sc *ServiceController) Pause() {
 	sc.active = false
 }
 
-func (sc *ServiceController) Resume () {
+func (sc *ServiceController) Resume() {
 
 	var (
 		log = sc.context.GetLogger()
@@ -81,7 +81,7 @@ func (sc *ServiceController) Resume () {
 		}
 
 		for _, svc := range svcs {
-			svc, err := stg.Service().GetByName(sc.context.Background(),svc.Meta.Namespace, svc.Meta.Name)
+			svc, err := stg.Service().GetByName(sc.context.Background(), svc.Meta.Namespace, svc.Meta.Name)
 			if err != nil {
 				log.Errorf("Service: Get service err: %s", err.Error())
 			}
@@ -90,12 +90,11 @@ func (sc *ServiceController) Resume () {
 	}
 }
 
-
-func NewServiceController (ctx *context.Context) *ServiceController {
+func NewServiceController(ctx *context.Context) *ServiceController {
 	sc := new(ServiceController)
 	sc.context = ctx
 	sc.active = false
-	sc.services = make (chan *types.Service)
+	sc.services = make(chan *types.Service)
 
 	return sc
 }

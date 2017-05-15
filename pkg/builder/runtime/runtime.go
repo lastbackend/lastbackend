@@ -18,7 +18,6 @@
 
 package runtime
 
-
 // watch service state and specs
 // generate pods by specs
 
@@ -28,12 +27,9 @@ package runtime
 // watch service build state
 // update pods after build passed state
 
-
 type Runtime struct {
-
 }
 
-
-func NewRuntime () *Runtime {
-	return new (Runtime)
+func NewRuntime() *Runtime {
+	return new(Runtime)
 }

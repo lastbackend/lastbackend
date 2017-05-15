@@ -20,12 +20,12 @@ package context
 
 import (
 	"context"
-		_c "github.com/lastbackend/lastbackend/pkg/common/context"
 	"github.com/lastbackend/lastbackend/pkg/api/config"
-	"github.com/lastbackend/lastbackend/pkg/storage"
+	_c "github.com/lastbackend/lastbackend/pkg/common/context"
 	"github.com/lastbackend/lastbackend/pkg/logger"
-	"github.com/lastbackend/lastbackend/pkg/util/http"
 	"github.com/lastbackend/lastbackend/pkg/sockets"
+	"github.com/lastbackend/lastbackend/pkg/storage"
+	"github.com/lastbackend/lastbackend/pkg/util/http"
 )
 
 var _ctx Context

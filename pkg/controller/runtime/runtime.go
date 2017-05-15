@@ -19,10 +19,10 @@
 package runtime
 
 import (
-	"github.com/lastbackend/lastbackend/pkg/system"
 	"github.com/lastbackend/lastbackend/pkg/common/types"
 	"github.com/lastbackend/lastbackend/pkg/controller/context"
 	"github.com/lastbackend/lastbackend/pkg/controller/service"
+	"github.com/lastbackend/lastbackend/pkg/system"
 )
 
 // watch service state and specs
@@ -37,13 +37,12 @@ import (
 type Runtime struct {
 	context *context.Context
 	process *system.Process
-	sc *service.ServiceController
+	sc      *service.ServiceController
 
 	active bool
 }
 
-
-func NewRuntime (ctx *context.Context) *Runtime {
+func NewRuntime(ctx *context.Context) *Runtime {
 	r := new(Runtime)
 	r.context = ctx
 	r.process = new(system.Process)
@@ -53,17 +52,16 @@ func NewRuntime (ctx *context.Context) *Runtime {
 	return r
 }
 
-
-func (r *Runtime) Loop () {
+func (r *Runtime) Loop() {
 
 	var (
-		log = r.context.GetLogger()
-		lead = make (chan bool)
+		log  = r.context.GetLogger()
+		lead = make(chan bool)
 	)
 
 	log.Debug("Contoller: Runtime: Loop")
 
-	go func (){
+	go func() {
 		for {
 			select {
 			case l := <-lead:

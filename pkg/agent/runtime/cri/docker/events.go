@@ -21,9 +21,9 @@ package docker
 import (
 	docker "github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/events"
+	"github.com/lastbackend/lastbackend/pkg/cache"
 	"github.com/lastbackend/lastbackend/pkg/common/context"
 	"github.com/lastbackend/lastbackend/pkg/common/types"
-	"github.com/lastbackend/lastbackend/pkg/cache"
 )
 
 func (r *Runtime) Subscribe(ctx context.Context, stg *cache.PodCache) chan types.ContainerEvent {

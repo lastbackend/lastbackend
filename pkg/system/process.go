@@ -19,28 +19,26 @@
 package system
 
 import (
-	"github.com/lastbackend/lastbackend/pkg/common/types"
-	"time"
 	"encoding/base64"
-	"github.com/lastbackend/lastbackend/pkg/util/system"
-	"github.com/lastbackend/lastbackend/pkg/common/context"
 	"fmt"
-	"strings"
+	"github.com/lastbackend/lastbackend/pkg/common/context"
+	"github.com/lastbackend/lastbackend/pkg/common/types"
+	"github.com/lastbackend/lastbackend/pkg/util/system"
 	"strconv"
+	"strings"
+	"time"
 )
 
 // HeartBeat Interval
 const heartBeatInterval = 10 // in seconds
 
-type Process struct{
+type Process struct {
 	// Process operations context
 	ctx context.Context
 
 	// Managed process
 	process *types.Process
-
 }
-
 
 // Process register function
 // The main purpose is to register process in the system
@@ -48,10 +46,10 @@ type Process struct{
 func (c *Process) Register(ctx context.Context, kind string) (*types.Process, error) {
 
 	var (
-		err  error
+		err error
 
-		log  = ctx.GetLogger()
-		stg  = ctx.GetStorage()
+		log = ctx.GetLogger()
+		stg = ctx.GetStorage()
 
 		item = new(types.Process)
 	)
@@ -65,13 +63,13 @@ func (c *Process) Register(ctx context.Context, kind string) (*types.Process, er
 		return item, err
 	}
 
-  item.Meta.PID = system.GetPid()
-	item.Meta.ID  = encodeID(item)
+	item.Meta.PID = system.GetPid()
+	item.Meta.ID = encodeID(item)
 
 	c.ctx = ctx
 	c.process = item
 
-  if err := stg.System().ProcessSet(c.ctx.Background(), c.process); err != nil {
+	if err := stg.System().ProcessSet(c.ctx.Background(), c.process); err != nil {
 		log.Errorf("System: Process: Register: %s", err.Error())
 		return item, err
 	}
@@ -85,8 +83,8 @@ func (c *Process) Register(ctx context.Context, kind string) (*types.Process, er
 func (c *Process) HeartBeat() {
 
 	var (
-		log  = c.ctx.GetLogger()
-		stg  = c.ctx.GetStorage()
+		log = c.ctx.GetLogger()
+		stg = c.ctx.GetStorage()
 	)
 
 	log.Debugf("System: Process: Start HeartBeat for: %s", c.process.Meta.Kind)
@@ -108,11 +106,11 @@ func (c *Process) HeartBeat() {
 
 // WaitElected function used for election waiting if
 // master/replicas type of process used
-func (c *Process) WaitElected (lead chan bool) error {
+func (c *Process) WaitElected(lead chan bool) error {
 	var (
-		log  = c.ctx.GetLogger()
-		stg  = c.ctx.GetStorage()
-		ld   = make(chan bool)
+		log = c.ctx.GetLogger()
+		stg = c.ctx.GetStorage()
+		ld  = make(chan bool)
 	)
 
 	log.Debug("System: Process: Wait for election")
@@ -128,10 +126,10 @@ func (c *Process) WaitElected (lead chan bool) error {
 		lead <- true
 	}
 
-	go func (){
+	go func() {
 		for {
 			select {
-			case l := <- ld:
+			case l := <-ld:
 				c.process.Meta.Lead = l
 				c.process.Meta.Slave = !l
 				lead <- l
@@ -141,7 +139,6 @@ func (c *Process) WaitElected (lead chan bool) error {
 
 	return stg.System().ElectWait(c.ctx.Background(), c.process, ld)
 }
-
 
 // Encode unique ID from pid and process hostname
 func encodeID(c *types.Process) string {
@@ -153,9 +150,9 @@ func encodeID(c *types.Process) string {
 func decodeID(id string) (int, string, error) {
 
 	var (
-		key []byte
-		pid int
-		err error
+		key      []byte
+		pid      int
+		err      error
 		hostname string
 	)
 

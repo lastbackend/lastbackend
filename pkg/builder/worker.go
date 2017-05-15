@@ -19,10 +19,10 @@
 package builder
 
 import (
-	"sync"
-	"github.com/lastbackend/lastbackend/pkg/common/types"
-	"github.com/lastbackend/lastbackend/pkg/builder/context"
 	"github.com/lastbackend/lastbackend/pkg/agent/runtime/cri"
+	"github.com/lastbackend/lastbackend/pkg/builder/context"
+	"github.com/lastbackend/lastbackend/pkg/common/types"
+	"sync"
 )
 
 type Worker struct {
@@ -79,11 +79,11 @@ func (w *Worker) loop() {
 func NewWorker(cri cri.CRI) *Worker {
 
 	var (
-		w   = new (Worker)
+		w = new(Worker)
 	)
 
 	w.done = make(chan bool)
-	w.cri  = cri
+	w.cri = cri
 
 	return w
 }

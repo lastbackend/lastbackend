@@ -20,8 +20,8 @@ package mock
 
 import (
 	n "github.com/lastbackend/lastbackend/pkg/api/namespace/views/v1"
-	"github.com/lastbackend/lastbackend/pkg/cli/storage/db"
 	"github.com/lastbackend/lastbackend/pkg/cli/storage"
+	"github.com/lastbackend/lastbackend/pkg/cli/storage/db"
 )
 
 const namespaceStorage = "mocknamespace"
@@ -54,4 +54,3 @@ func newNamespaceStorage(client *db.DB) *NamespaceStorage {
 	s.client = client
 	return s
 }
-

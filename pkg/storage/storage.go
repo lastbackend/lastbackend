@@ -115,7 +115,7 @@ func (s *Storage) Pod() IPod {
 }
 
 func (s *Storage) System() ISystem {
-		if s == nil {
+	if s == nil {
 		return nil
 	}
 	return s.SystemStorage

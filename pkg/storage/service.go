@@ -20,11 +20,11 @@ package storage
 
 import (
 	"context"
+	"fmt"
 	"github.com/lastbackend/lastbackend/pkg/common/types"
 	"github.com/lastbackend/lastbackend/pkg/storage/store"
 	"regexp"
 	"time"
-	"fmt"
 )
 
 const serviceStorage string = "services"

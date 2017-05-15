@@ -28,7 +28,7 @@ func GetHostname() (string, error) {
 	return os.Hostname()
 }
 
-func GetPid () int {
+func GetPid() int {
 	return os.Getpid()
 }
 

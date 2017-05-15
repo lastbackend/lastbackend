@@ -36,7 +36,7 @@ func (r *Runtime) ImagePull(ctx context.Context, spec *types.ImageSpec) (io.Read
 
 func (r *Runtime) ImagePush(ctx context.Context) {}
 
-func (r *Runtime) ImageBuild(ctx context.Context,) {}
+func (r *Runtime) ImageBuild(ctx context.Context) {}
 
 func (r *Runtime) ImageRemove(ctx context.Context, ID string) error {
 
