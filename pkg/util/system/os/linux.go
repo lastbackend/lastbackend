@@ -27,14 +27,13 @@ import (
 	"os/exec"
 	"runtime"
 	"strings"
-	"time"
 )
 
 func GetInfo() *types.OsInfo {
 	info := strings.Replace(info(), "\n", "", -1)
 	info = strings.Replace(info, "\r\n", "", -1)
 	data := strings.Split(info, " ")
-	hostname, _ := info.Hostname()
+	hostname, _ := os.Hostname()
 
 	return &types.OsInfo{
 		Kernel:   data[0],
