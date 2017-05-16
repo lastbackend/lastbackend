@@ -24,7 +24,7 @@ build:
 	echo "Building Last.Backend platform"
 	GOOS=linux  go build -ldflags "-X main.Version=$(VERSION)" -o build/linux/$(NAME_KIT) cmd/kit/kit.go
 	GOOS=darwin go build -ldflags "-X main.Version=$(VERSION)" -o build/darwin/$(NAME_KIT) cmd/kit/kit.go
-echo "Building Last.Backend CLI"
+	echo "Building Last.Backend CLI"
 	GOOS=linux  go build -ldflags "-X main.Version=$(VERSION)" -o build/linux/$(NAME_CLI) cmd/cli/cli.go
 	GOOS=darwin go build -ldflags "-X main.Version=$(VERSION)" -o build/darwin/$(NAME_CLI) cmd/cli/cli.go
 
