@@ -45,4 +45,4 @@ RUN rm -rf /go/pkg \
 
 EXPOSE 2967
 
-CMD ["/usr/local/bin/lbd", "daemon", "-c", "/etc/lastbackend/config.yml", "-d"]
+CMD ["/usr/local/bin/lbd", "-d"]
