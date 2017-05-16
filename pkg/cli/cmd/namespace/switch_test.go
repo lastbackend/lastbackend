@@ -17,62 +17,62 @@
 //
 
 package namespace_test
-
-import (
-	"encoding/json"
-	n "github.com/lastbackend/lastbackend/pkg/api/namespace/views/v1"
-	"github.com/lastbackend/lastbackend/pkg/cli/cmd/namespace"
-	"github.com/lastbackend/lastbackend/pkg/cli/context"
-	storage "github.com/lastbackend/lastbackend/pkg/cli/storage/mock"
-	h "github.com/lastbackend/lastbackend/pkg/util/http"
-	"github.com/stretchr/testify/assert"
-	"net/http"
-	"net/http/httptest"
-	"testing"
-)
-
-func TestSwitch(t *testing.T) {
-	const (
-		tName = "test name"
-		tDesc = "test description"
-	)
-
-	var (
-		err error
-		ctx = context.Mock()
-
-		data = n.Namespace{
-			Meta: n.NamespaceMeta{
-				Name:        tName,
-				Description: tDesc,
-			},
-		}
-	)
-
-	strg, err := storage.Get()
-	assert.NoError(t, err)
-	ctx.SetStorage(strg)
-	defer strg.Namespace().Remove()
-
-	//------------------------------------------------------------------------------------------
-	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-
-		buff, err := json.Marshal(data)
-		assert.NoError(t, err)
-
-		w.WriteHeader(200)
-		_, err = w.Write(buff)
-		assert.NoError(t, err)
-	}))
-	defer server.Close()
-	//------------------------------------------------------------------------------------------
-
-	client, err := h.New(server.URL, &h.ReqOpts{})
-	assert.NoError(t, err)
-	ctx.SetHttpClient(client)
-
-	nspace, err := namespace.Switch(tName)
-	assert.NoError(t, err)
-	assert.Equal(t, tName, nspace.Meta.Name)
-	assert.Equal(t, tDesc, nspace.Meta.Description)
-}
+//
+//import (
+//	"encoding/json"
+//	n "github.com/lastbackend/lastbackend/pkg/api/namespace/views/v1"
+//	"github.com/lastbackend/lastbackend/pkg/cli/cmd/namespace"
+//	"github.com/lastbackend/lastbackend/pkg/cli/context"
+//	storage "github.com/lastbackend/lastbackend/pkg/cli/storage/mock"
+//	h "github.com/lastbackend/lastbackend/pkg/util/http"
+//	"github.com/stretchr/testify/assert"
+//	"net/http"
+//	"net/http/httptest"
+//	"testing"
+//)
+//
+//func TestSwitch(t *testing.T) {
+//	const (
+//		tName = "test name"
+//		tDesc = "test description"
+//	)
+//
+//	var (
+//		err error
+//		ctx = context.Mock()
+//
+//		data = n.Namespace{
+//			Meta: n.NamespaceMeta{
+//				Name:        tName,
+//				Description: tDesc,
+//			},
+//		}
+//	)
+//
+//	strg, err := storage.Get()
+//	assert.NoError(t, err)
+//	ctx.SetStorage(strg)
+//	defer strg.Namespace().Remove()
+//
+//	//------------------------------------------------------------------------------------------
+//	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+//
+//		buff, err := json.Marshal(data)
+//		assert.NoError(t, err)
+//
+//		w.WriteHeader(200)
+//		_, err = w.Write(buff)
+//		assert.NoError(t, err)
+//	}))
+//	defer server.Close()
+//	//------------------------------------------------------------------------------------------
+//
+//	client, err := h.New(server.URL, &h.ReqOpts{})
+//	assert.NoError(t, err)
+//	ctx.SetHttpClient(client)
+//
+//	nspace, err := namespace.Switch(tName)
+//	assert.NoError(t, err)
+//	assert.Equal(t, tName, nspace.Meta.Name)
+//	assert.Equal(t, tDesc, nspace.Meta.Description)
+//}

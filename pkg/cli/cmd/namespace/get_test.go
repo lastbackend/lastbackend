@@ -17,54 +17,54 @@
 //
 
 package namespace_test
-
-import (
-	"encoding/json"
-	n "github.com/lastbackend/lastbackend/pkg/api/namespace/views/v1"
-	"github.com/lastbackend/lastbackend/pkg/cli/cmd/namespace"
-	"github.com/lastbackend/lastbackend/pkg/cli/context"
-	h "github.com/lastbackend/lastbackend/pkg/util/http"
-	"github.com/stretchr/testify/assert"
-	"net/http"
-	"net/http/httptest"
-	"testing"
-)
-
-func TestGet(t *testing.T) {
-
-	const (
-		tName = "test name"
-		tDesc = "test description"
-	)
-
-	var (
-		err error
-		ctx = context.Mock()
-	)
-
-	//------------------------------------------------------------------------------------------
-	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		nspaceJSON, err := json.Marshal(n.Namespace{
-			Meta: n.NamespaceMeta{
-				Name:        tName,
-				Description: tDesc,
-			},
-		})
-		assert.NoError(t, err)
-
-		w.WriteHeader(200)
-		_, err = w.Write(nspaceJSON)
-		assert.NoError(t, err)
-	}))
-	defer server.Close()
-	//------------------------------------------------------------------------------------------
-
-	client, err := h.New(server.URL, &h.ReqOpts{})
-	assert.NoError(t, err)
-	ctx.SetHttpClient(client)
-
-	ns, err := namespace.Get(tName)
-	assert.NoError(t, err)
-	assert.Equal(t, tName, ns.Meta.Name)
-	assert.Equal(t, tDesc, ns.Meta.Description)
-}
+//
+//import (
+//	"encoding/json"
+//	n "github.com/lastbackend/lastbackend/pkg/api/namespace/views/v1"
+//	"github.com/lastbackend/lastbackend/pkg/cli/cmd/namespace"
+//	"github.com/lastbackend/lastbackend/pkg/cli/context"
+//	h "github.com/lastbackend/lastbackend/pkg/util/http"
+//	"github.com/stretchr/testify/assert"
+//	"net/http"
+//	"net/http/httptest"
+//	"testing"
+//)
+//
+//func TestGet(t *testing.T) {
+//
+//	const (
+//		tName = "test name"
+//		tDesc = "test description"
+//	)
+//
+//	var (
+//		err error
+//		ctx = context.Mock()
+//	)
+//
+//	//------------------------------------------------------------------------------------------
+//	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+//		nspaceJSON, err := json.Marshal(n.Namespace{
+//			Meta: n.NamespaceMeta{
+//				Name:        tName,
+//				Description: tDesc,
+//			},
+//		})
+//		assert.NoError(t, err)
+//
+//		w.WriteHeader(200)
+//		_, err = w.Write(nspaceJSON)
+//		assert.NoError(t, err)
+//	}))
+//	defer server.Close()
+//	//------------------------------------------------------------------------------------------
+//
+//	client, err := h.New(server.URL, &h.ReqOpts{})
+//	assert.NoError(t, err)
+//	ctx.SetHttpClient(client)
+//
+//	ns, err := namespace.Get(tName)
+//	assert.NoError(t, err)
+//	assert.Equal(t, tName, ns.Meta.Name)
+//	assert.Equal(t, tDesc, ns.Meta.Description)
+//}

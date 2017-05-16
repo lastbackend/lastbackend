@@ -17,57 +17,57 @@
 //
 
 package service_test
-
-import (
-	n "github.com/lastbackend/lastbackend/pkg/api/namespace/views/v1"
-	"github.com/lastbackend/lastbackend/pkg/cli/cmd/service"
-	"github.com/lastbackend/lastbackend/pkg/cli/context"
-	storage "github.com/lastbackend/lastbackend/pkg/cli/storage/mock"
-	h "github.com/lastbackend/lastbackend/pkg/util/http"
-	"github.com/stretchr/testify/assert"
-	"net/http"
-	"net/http/httptest"
-	"testing"
-)
-
-func TestRemove(t *testing.T) {
-
-	const (
-		sName = "service name"
-		nName = "namespace name"
-	)
-
-	var (
-		err error
-		ctx = context.Mock()
-
-		ns = &n.Namespace{
-			Meta: n.NamespaceMeta{
-				Name: nName,
-			},
-		}
-	)
-
-	strg, err := storage.Get()
-	assert.NoError(t, err)
-	ctx.SetStorage(strg)
-	defer strg.Namespace().Remove()
-
-	//------------------------------------------------------------------------------------------
-	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.WriteHeader(200)
-		w.Write([]byte{})
-	}))
-	defer server.Close()
-	//------------------------------------------------------------------------------------------
-
-	strg.Namespace().Save(ns)
-	assert.NoError(t, err)
-
-	client, err := h.New(server.URL, &h.ReqOpts{})
-	assert.NoError(t, err)
-	ctx.SetHttpClient(client)
-
-	err = service.Remove(sName)
-	assert.NoError(t, err)
-}
+//
+//import (
+//	n "github.com/lastbackend/lastbackend/pkg/api/namespace/views/v1"
+//	"github.com/lastbackend/lastbackend/pkg/cli/cmd/service"
+//	"github.com/lastbackend/lastbackend/pkg/cli/context"
+//	storage "github.com/lastbackend/lastbackend/pkg/cli/storage/mock"
+//	h "github.com/lastbackend/lastbackend/pkg/util/http"
+//	"github.com/stretchr/testify/assert"
+//	"net/http"
+//	"net/http/httptest"
+//	"testing"
+//)
+//
+//func TestRemove(t *testing.T) {
+//
+//	const (
+//		sName = "service name"
+//		nName = "namespace name"
+//	)
+//
+//	var (
+//		err error
+//		ctx = context.Mock()
+//
+//		ns = &n.Namespace{
+//			Meta: n.NamespaceMeta{
+//				Name: nName,
+//			},
+//		}
+//	)
+//
+//	strg, err := storage.Get()
+//	assert.NoError(t, err)
+//	ctx.SetStorage(strg)
+//	defer strg.Namespace().Remove()
+//
+//	//------------------------------------------------------------------------------------------
+//	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+//		w.WriteHeader(200)
+//		w.Write([]byte{})
+//	}))
+//	defer server.Close()
+//	//------------------------------------------------------------------------------------------
+//
+//	strg.Namespace().Save(ns)
+//	assert.NoError(t, err)
+//
+//	client, err := h.New(server.URL, &h.ReqOpts{})
+//	assert.NoError(t, err)
+//	ctx.SetHttpClient(client)
+//
+//	err = service.Remove(sName)
+//	assert.NoError(t, err)
+//}
