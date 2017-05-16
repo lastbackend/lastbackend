@@ -20,15 +20,11 @@ package service
 
 import (
 	"context"
-	"fmt"
 	ctx "github.com/lastbackend/lastbackend/pkg/api/context"
 	"github.com/lastbackend/lastbackend/pkg/api/service/routes/request"
 	"github.com/lastbackend/lastbackend/pkg/common/types"
 	"github.com/lastbackend/lastbackend/pkg/storage/store"
-	h "github.com/lastbackend/lastbackend/pkg/util/http"
 	"github.com/satori/go.uuid"
-	"io"
-	"net/http"
 	"strings"
 )
 
@@ -184,6 +180,7 @@ func (s *service) Remove(service *types.Service) error {
 		log.Error("Error: insert service to db", err)
 		return err
 	}
+
 	return nil
 }
 
@@ -286,87 +283,6 @@ func (s *service) DelSpec(service *types.Service, id string) error {
 		log.Errorf("Error: AddSpec: update service spec to db : %s", err.Error())
 		return err
 	}
-
-	return nil
-}
-
-func Logs(c context.Context, namespace, service, pod, container string, stream io.Writer, done chan bool) error {
-
-	const buffer_size = 1024
-
-	var (
-		log      = ctx.Get().GetLogger()
-		storage  = ctx.Get().GetStorage()
-		buffer   = make([]byte, buffer_size)
-		doneChan = make(chan bool, 1)
-	)
-
-	log.Debug("Service: get service logs")
-
-	p, err := storage.Pod().GetByName(c, service, pod)
-	if err != nil {
-		return err
-	}
-
-	// Todo: check container in pod
-
-	n, err := storage.Node().Get(c, p.Meta.Hostname)
-	if err != nil {
-		return err
-	}
-
-	// TODO: Get port from node
-	client, err := h.New(n.Meta.Hostname+":2968", &h.ReqOpts{TLS: false})
-	if err != nil {
-		return err
-	}
-
-	_, res, err := client.
-	GET(fmt.Sprintf("/container/%s/logs", container)).Do()
-	if err != nil {
-		return err
-	}
-
-	go func() {
-		for {
-			select {
-			case <-doneChan:
-				res.Body.Close()
-				return
-			default:
-				n, err := res.Body.Read(buffer)
-				if err != nil {
-					log.Errorf("Error read bytes from stream %s", err)
-					res.Body.Close()
-					return
-				}
-
-				_, err = func(p []byte) (n int, err error) {
-					n, err = stream.Write(p)
-					if err != nil {
-						log.Errorf("Error write bytes from stream %s", err)
-						return n, err
-					}
-					if f, ok := stream.(http.Flusher); ok {
-						f.Flush()
-					}
-					return n, nil
-				}(buffer[0:n])
-				if err != nil {
-					log.Errorf("Error written to stream %s", err)
-					return
-				}
-
-				for i := 0; i < n; i++ {
-					buffer[i] = 0
-				}
-			}
-		}
-	}()
-
-	<-done
-
-	close(doneChan)
 
 	return nil
 }

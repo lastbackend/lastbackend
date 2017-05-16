@@ -24,6 +24,7 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/common/types"
 	"github.com/lastbackend/lastbackend/pkg/storage/store"
 	"regexp"
+	"strings"
 	"time"
 )
 
@@ -74,13 +75,11 @@ func (s *ServiceStorage) GetByName(ctx context.Context, namespace, name string) 
 	return service, nil
 }
 
-// Get service by Pod ID
+// Get service by pod name
 func (s *ServiceStorage) GetByPodName(ctx context.Context, name string) (*types.Service, error) {
-	const filter = `\b.+` + serviceStorage + `\/.+\/(?:meta)\b`
 
-	var key string
-	var service = new(types.Service)
-	service.Pods = make(map[string]*types.Pod)
+	var match = strings.Split(name, ":")
+	var pod = new(types.Pod)
 
 	client, destroy, err := s.Client()
 	if err != nil {
@@ -88,21 +87,12 @@ func (s *ServiceStorage) GetByPodName(ctx context.Context, name string) (*types.
 	}
 	defer destroy()
 
-	keyHelper := keyCreate("pods", "helper", name)
-	if err := client.Get(ctx, keyHelper, &key); err != nil {
+	key := keyCreate(podStorage, match[0], name)
+	if err := client.Get(ctx, key, pod); err != nil {
 		return nil, err
 	}
 
-	if err := client.Map(ctx, key, filter, service); err != nil {
-		return nil, err
-	}
-
-	keyPods := keyCreate(podStorage, service.Meta.Namespace, service.Meta.Name)
-	if err := client.Map(ctx, keyPods, "", &service.Pods); err != nil {
-		return nil, err
-	}
-
-	return service, nil
+	return s.GetByName(ctx, match[0], match[1])
 }
 
 // Get service by name
@@ -368,7 +358,7 @@ func (s *ServiceStorage) SpecWatch(ctx context.Context, service chan *types.Serv
 }
 
 func (s *ServiceStorage) PodsWatch(ctx context.Context, service chan *types.Service) error {
-	const filter = `\b\/` + podStorage + `\/.+\/.+\/.+\b`
+	const filter = `\b\/` + podStorage + `\/(.+)/(.+)\b`
 	client, destroy, err := s.Client()
 	if err != nil {
 		return err
@@ -376,18 +366,18 @@ func (s *ServiceStorage) PodsWatch(ctx context.Context, service chan *types.Serv
 	defer destroy()
 
 	r, _ := regexp.Compile(filter)
-	key := keyCreate(serviceStorage)
+	key := keyCreate(podStorage)
 	cb := func(action, key string, _ []byte) {
 		keys := r.FindStringSubmatch(key)
 		if len(keys) < 3 {
 			return
 		}
 
-		if svc, err := s.GetByName(ctx, keys[1], keys[2]); err == nil {
-			s.UpdateState(ctx, svc)
-			service <- svc
+		if s, err := s.GetByPodName(ctx, keys[2]); err == nil {
+			service <- s
+		} else {
+			fmt.Println(err)
 		}
-
 	}
 
 	client.Watch(ctx, key, filter, cb)
@@ -395,7 +385,7 @@ func (s *ServiceStorage) PodsWatch(ctx context.Context, service chan *types.Serv
 }
 
 func (s *ServiceStorage) BuildsWatch(ctx context.Context, service chan *types.Service) error {
-	const filter = `\b.+` + buildStorage + `\/.+\/.+\/.+\b`
+	const filter = `\b.+` + buildStorage + `\/(.+)\/(.+)\/.+\b`
 	client, destroy, err := s.Client()
 	if err != nil {
 		return err

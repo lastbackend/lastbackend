@@ -22,6 +22,7 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/api/context"
 	"github.com/lastbackend/lastbackend/pkg/api/image"
 	"github.com/lastbackend/lastbackend/pkg/api/namespace"
+	"github.com/lastbackend/lastbackend/pkg/api/pod"
 	"github.com/lastbackend/lastbackend/pkg/api/service"
 	"github.com/lastbackend/lastbackend/pkg/api/service/routes/request"
 	"github.com/lastbackend/lastbackend/pkg/api/service/views/v1"
@@ -43,13 +44,12 @@ func ServiceListH(w http.ResponseWriter, r *http.Request) {
 	ns := namespace.New(r.Context())
 	item, err := ns.Get(id)
 	if err != nil {
-		if item == nil {
-			errors.New("namespace").NotFound().Http(w)
-			return
-		}
-
 		log.Error("Error: find namespace by name", err.Error())
 		errors.HTTP.InternalServerError(w)
+		return
+	}
+	if item == nil {
+		errors.New("namespace").NotFound().Http(w)
 		return
 	}
 
@@ -88,13 +88,12 @@ func ServiceInfoH(w http.ResponseWriter, r *http.Request) {
 	ns := namespace.New(r.Context())
 	item, err := ns.Get(nid)
 	if err != nil {
-		if item == nil {
-			errors.New("namespace").NotFound().Http(w)
-			return
-		}
-
 		log.Errorf("Error: find namespace by name: %s", err.Error())
 		errors.HTTP.InternalServerError(w)
+		return
+	}
+	if item == nil {
+		errors.New("namespace").NotFound().Http(w)
 		return
 	}
 
@@ -119,41 +118,6 @@ func ServiceInfoH(w http.ResponseWriter, r *http.Request) {
 
 	w.WriteHeader(http.StatusOK)
 	if _, err = w.Write(response); err != nil {
-		log.Error("Error: write response", err.Error())
-		return
-	}
-}
-
-func ServiceWatchH(w http.ResponseWriter, r *http.Request) {
-	var (
-		err error
-		log = context.Get().GetLogger()
-		nid = utils.Vars(r)["namespace"]
-	)
-
-	log.Debug("Get service handler")
-
-	ns := namespace.New(r.Context())
-	item, err := ns.Get(nid)
-	if err != nil {
-		if item == nil {
-			errors.New("namespace").NotFound().Http(w)
-			return
-		}
-
-		log.Error("Error: find namespace by name", err.Error())
-		errors.HTTP.InternalServerError(w)
-		return
-	}
-
-	if err != nil {
-		log.Error("Error: convert struct to json", err.Error())
-		errors.HTTP.InternalServerError(w)
-		return
-	}
-
-	w.WriteHeader(http.StatusOK)
-	if _, err = w.Write([]byte("")); err != nil {
 		log.Error("Error: write response", err.Error())
 		return
 	}
@@ -284,13 +248,12 @@ func ServiceUpdateH(w http.ResponseWriter, r *http.Request) {
 	ns := namespace.New(r.Context())
 	item, err := ns.Get(nid)
 	if err != nil {
-		if item == nil {
-			errors.New("namespace").NotFound().Http(w)
-			return
-		}
-
 		log.Error("Error: find namespace by name", err.Error())
 		errors.HTTP.InternalServerError(w)
+		return
+	}
+	if item == nil {
+		errors.New("namespace").NotFound().Http(w)
 		return
 	}
 
@@ -312,7 +275,6 @@ func ServiceUpdateH(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// TODO: spec generate
 	response, err := v1.NewService(svc).ToJson()
 	if err != nil {
 		log.Error("Error: convert struct to json", err.Error())
@@ -331,7 +293,6 @@ func ServiceRemoveH(w http.ResponseWriter, r *http.Request) {
 	var (
 		err error
 		log = context.Get().GetLogger()
-
 		nid = utils.Vars(r)["namespace"]
 		sid = utils.Vars(r)["service"]
 	)
@@ -610,7 +571,7 @@ func ServiceLogsH(w http.ResponseWriter, r *http.Request) {
 		doneChan <- true
 	}()
 
-	if err := service.Logs(r.Context(), item.Meta.Name, svc.Meta.Name, pid, cid, w, doneChan); err != nil {
+	if err := pod.Logs(r.Context(), item.Meta.Name, pid, cid, w, doneChan); err != nil {
 		log.Errorf("Error: get service logs err %s", err.Error())
 		errors.HTTP.InternalServerError(w)
 		return

@@ -124,6 +124,6 @@ func (ns *namespace) Watch(service chan *types.Service) {
 		storage = ctx.Get().GetStorage().Service()
 	)
 
-	log.Debug("Namespace: Watch")
+	log.Debug("Service: Watch")
 	storage.PodsWatch(ns.Context, service)
 }
