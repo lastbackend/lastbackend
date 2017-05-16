@@ -9,7 +9,7 @@ Please, read the following article: https://guides.github.com/activities/contrib
 
 ## Benefits for active contributors
 
-**20% discount on Last.Backend servers**
+**Limited free Last.Backend cloud resources**
 
 ## Coding Style
 
@@ -24,7 +24,7 @@ Great materials to read:
 
 ## Reporting issues
 
-1. Tell us version of Last.Backend
+1. Tell us version of Last.Backend you use
 2. Include the steps required to reproduce the problem, if possible
 
 ## Maintainers
