@@ -123,40 +123,6 @@ func ServiceInfoH(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func ServiceWatchH(w http.ResponseWriter, r *http.Request) {
-	var (
-		err error
-		log = context.Get().GetLogger()
-		nid = utils.Vars(r)["namespace"]
-	)
-
-	log.Debug("Get service handler")
-
-	ns := namespace.New(r.Context())
-	item, err := ns.Get(nid)
-	if err != nil {
-		log.Error("Error: find namespace by name", err.Error())
-		errors.HTTP.InternalServerError(w)
-		return
-	}
-	if item == nil {
-		errors.New("namespace").NotFound().Http(w)
-		return
-	}
-
-	if err != nil {
-		log.Error("Error: convert struct to json", err.Error())
-		errors.HTTP.InternalServerError(w)
-		return
-	}
-
-	w.WriteHeader(http.StatusOK)
-	if _, err = w.Write([]byte("")); err != nil {
-		log.Error("Error: write response", err.Error())
-		return
-	}
-}
-
 func ServiceCreateH(w http.ResponseWriter, r *http.Request) {
 
 	var (
@@ -309,7 +275,6 @@ func ServiceUpdateH(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// TODO: spec generate
 	response, err := v1.NewService(svc).ToJson()
 	if err != nil {
 		log.Error("Error: convert struct to json", err.Error())

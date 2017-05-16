@@ -180,6 +180,7 @@ func (s *service) Remove(service *types.Service) error {
 		log.Error("Error: insert service to db", err)
 		return err
 	}
+
 	return nil
 }
 

@@ -26,16 +26,17 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/common/types"
 )
 
-type Events struct {
-}
+type Events struct{}
 
 func (e *Events) Listen() {
+
 	var (
 		log = context.Get().GetLogger()
 		hub = context.Get().GetWssHub()
+		ctx = context.Get().Background()
 	)
 
-	ns := namespace.New(context.Get().Background())
+	ns := namespace.New(ctx)
 	service := make(chan *types.Service)
 
 	go func() {

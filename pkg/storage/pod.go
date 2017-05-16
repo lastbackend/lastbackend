@@ -139,6 +139,7 @@ func (s *PodStorage) Remove(ctx context.Context, namespace string, pod *types.Po
 }
 
 func (s *PodStorage) Watch(ctx context.Context, pod chan *types.Pod) error {
+
 	const filter = `\b\/` + podStorage + `\/(.+)/(.+)\b`
 	client, destroy, err := s.Client()
 	if err != nil {
@@ -157,7 +158,6 @@ func (s *PodStorage) Watch(ctx context.Context, pod chan *types.Pod) error {
 		if p, err := s.GetByName(ctx, keys[1], keys[2]); err == nil {
 			pod <- p
 		}
-
 	}
 
 	client.Watch(ctx, key, filter, cb)
