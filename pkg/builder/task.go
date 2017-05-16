@@ -45,10 +45,10 @@ func (t *Task) start() {
 
 	defer func() {
 		// send build end event
-		log.Debugf("Task [%s]: done task for build: %s", t.id, t.build.Meta.ID)
+		log.Debugf("Task [%s]: done task for build: %s", t.id, t.build.Meta.Name)
 	}()
 
-	log.Debugf("Task [%s]: start task for build: %s", t.id, t.build.Meta.ID)
+	log.Debugf("Task [%s]: start task for build: %s", t.id, t.build.Meta.Name)
 
 }
 

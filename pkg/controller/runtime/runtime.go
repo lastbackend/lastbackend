@@ -47,8 +47,10 @@ func NewRuntime(ctx *context.Context) *Runtime {
 	r.context = ctx
 	r.process = new(system.Process)
 	r.process.Register(ctx, types.KindController)
+
 	r.sc = service.NewServiceController(ctx)
 	go r.sc.Watch()
+
 	return r
 }
 
@@ -67,23 +69,27 @@ func (r *Runtime) Loop() {
 			case l := <-lead:
 				{
 					if l {
+
 						if r.active {
 							log.Debug("Runtime: is already marked as lead -> skip")
 							continue
 						}
-						r.active = true
+
 						log.Debug("Runtime: Mark as lead")
 
+						r.active = true
 						r.sc.Resume()
 
 					} else {
+
 						if !r.active {
 							log.Debug("Runtime: is already marked as slave -> skip")
 							continue
 						}
-						log.Debug("Runtime: Mark as slave")
-						r.active = false
 
+						log.Debug("Runtime: Mark as slave")
+
+						r.active = false
 						r.sc.Pause()
 					}
 				}

@@ -108,6 +108,8 @@ func podSpecGenerate(spec map[string]*types.ServiceSpec) types.PodSpec {
 
 		cs := new(types.ContainerSpec)
 		cs.Meta.SetDefault()
+		cs.Meta.ID = spc.Meta.ID
+		cs.Meta.Labels = spc.Meta.Labels
 
 		cs.Image = types.ImageSpec{
 			Name: spc.Image,

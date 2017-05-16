@@ -20,7 +20,6 @@ package service
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	ctx "github.com/lastbackend/lastbackend/pkg/api/context"
 	"github.com/lastbackend/lastbackend/pkg/api/service/routes/request"
@@ -275,10 +274,6 @@ func (s *service) DelSpec(service *types.Service, id string) error {
 		storage = ctx.Get().GetStorage()
 	)
 
-	buf, _ := json.Marshal(service)
-
-	log.Info(string(buf))
-
 	log.Debug("Delete spec service")
 
 	if _, ok := service.Spec[id]; !ok {
@@ -327,7 +322,7 @@ func Logs(c context.Context, namespace, service, pod, container string, stream i
 	}
 
 	_, res, err := client.
-		GET(fmt.Sprintf("/container/%s/logs", container)).Do()
+	GET(fmt.Sprintf("/container/%s/logs", container)).Do()
 	if err != nil {
 		return err
 	}

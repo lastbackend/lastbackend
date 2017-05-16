@@ -38,7 +38,7 @@ type Worker struct {
 
 func (w *Worker) NewBuild(build *types.Build) {
 	log := context.Get().GetLogger()
-	log.Debugf("Create new build: %s", build.Meta.ID)
+	log.Debugf("Create new build: %s", build.Meta.Name)
 	// Add new build to build queue
 
 	// Run goroutine with current task

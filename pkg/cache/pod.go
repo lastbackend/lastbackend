@@ -83,6 +83,11 @@ func (ps *PodCache) AddPod(pod *types.Pod) {
 	ps.lock.Lock()
 	defer ps.lock.Unlock()
 
+	if _, ok := ps.pods[pod.Meta.Name]; ok {
+		ps.SetPod(pod)
+		return
+	}
+
 	ps.pods[pod.Meta.Name] = pod
 	ps.stats.pods++
 	ps.stats.containers += len(pod.Containers)
