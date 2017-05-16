@@ -48,7 +48,6 @@ func (pm *PodManager) SyncPod(pod types.PodNodeSpec) {
 	log.Debugf("Pod %s sync", pod.Meta.Name)
 
 	p := context.Get().GetCache().Pods().GetPod(pod.Meta.Name)
-
 	if p == nil {
 		log.Debugf("Pod %s not found, create new one", pod.Meta.Name)
 		p := types.NewPod()

@@ -47,7 +47,9 @@ func (sc *ServiceController) Watch() {
 					}
 
 					log.Debugf("Service needs to be provisioned: %s:%s", s.Meta.Namespace, s.Meta.Name)
-					Provision(s)
+					if err := Provision(s); err != nil {
+						log.Errorf("Error: ServiceController: Service provision: %s", err.Error())
+					}
 				}
 			}
 		}
@@ -95,6 +97,5 @@ func NewServiceController(ctx *context.Context) *ServiceController {
 	sc.context = ctx
 	sc.active = false
 	sc.services = make(chan *types.Service)
-
 	return sc
 }

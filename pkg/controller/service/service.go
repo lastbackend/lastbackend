@@ -34,8 +34,8 @@ func Provision(svc *types.Service) error {
 
 	log.Debugf("Service Contoller: provision service: %s/%s", svc.Meta.Namespace, svc.Meta.Name)
 
-	for _, pod := range svc.Pods {
-		if pod.Spec.State != types.StateDestroy {
+	for _, p := range svc.Pods {
+		if p.Spec.State != types.StateDestroy {
 			replicas++
 		}
 	}
