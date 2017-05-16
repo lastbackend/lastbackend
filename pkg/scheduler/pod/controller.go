@@ -52,13 +52,36 @@ func (pc *PodController) Watch(node chan *types.Node) {
 						continue
 					}
 
-					log.Debugf("Pod needs to be allocated to node: %s", p.Meta.Name)
-					if err := Provision(p); err != nil {
-						if err.Error() == errors.NodeNotFound {
-							pc.pending.AddPod(p)
+					// If pod state set to provision then need run provision action
+					if p.State.Provision {
+						log.Debugf("PodController: pod needs to be allocated to node: %s", p.Meta.Name)
+						if err := Provision(p); err != nil {
+							if err.Error() != errors.NodeNotFound {
+								pc.pending.AddPod(p)
+							} else {
+								log.Errorf("Error: PodController: pod provision: %s", err.Error())
+							}
+							continue
 						}
+
+						pc.pending.DelPod(p)
+						continue
 					}
-					pc.pending.DelPod(p)
+
+					// If pod state not set in provision and status
+					// destroyed then need remove pod from node
+					if p.State.State == types.StateDestroy {
+						if err := Remove(p); err != nil {
+							log.Errorf("Error: PodController: remove pod from node: %s", err.Error())
+						}
+						continue
+					}
+
+					// If pod state not set in provision and status
+					// not destroyed then need update pod for node
+					if err := Update(p); err != nil {
+						log.Errorf("Error: PodController: update pod to node: %s", err.Error())
+					}
 				}
 			}
 		}
@@ -119,7 +142,6 @@ func NewPodController(ctx *context.Context) *PodController {
 	sc.context = ctx
 	sc.active = false
 	sc.pods = make(chan *types.Pod)
-
 	sc.pending = cache.NewPodCache()
 	return sc
 }

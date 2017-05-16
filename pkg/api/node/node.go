@@ -20,7 +20,6 @@ package node
 
 import (
 	"context"
-	"errors"
 	ctx "github.com/lastbackend/lastbackend/pkg/api/context"
 	"github.com/lastbackend/lastbackend/pkg/common/types"
 )
@@ -84,91 +83,6 @@ func (n *node) Create(meta *types.NodeMeta, state *types.NodeState) (*types.Node
 
 	if err := storage.Node().Insert(n.Context, node); err != nil {
 		return node, err
-	}
-
-	return node, nil
-}
-
-func (n *node) PodSpecRemove(hostname string, spec *types.PodNodeSpec) error {
-
-	var (
-		storage = ctx.Get().GetStorage()
-		log     = ctx.Get().GetLogger()
-	)
-
-	node, err := n.Get(hostname)
-	if err != nil {
-		log.Errorf("Node: Pod spec remove: remove pod spec err: %s", err.Error())
-		return err
-	}
-
-	log.Debug("Remove pod spec from node")
-	if err := storage.Node().RemovePod(n.Context, &node.Meta, spec); err != nil {
-		log.Errorf("Node: Pod spec remove: remove pod spec err: %s", err.Error())
-		return err
-	}
-
-	// Update pod node spec
-
-	return nil
-}
-
-func (n *node) PodSpecUpdate(hostname string, spec *types.PodNodeSpec) error {
-	// Get node by hostname
-	// Update pod node spec
-	var (
-		storage = ctx.Get().GetStorage()
-		log     = ctx.Get().GetLogger()
-	)
-
-	node, err := n.Get(hostname)
-	if err != nil {
-		log.Errorf("Node: Pod spec remove: remove pod spec err: %s", err.Error())
-		return err
-	}
-
-	log.Debug("Remove pod spec from node")
-	if err := storage.Node().UpdatePod(n.Context, &node.Meta, spec); err != nil {
-		log.Errorf("Node: Pod spec remove: remove pod spec err: %s", err.Error())
-		return err
-	}
-
-	// Update pod node spec
-
-	return nil
-}
-
-func (n *node) Allocate(spec types.PodSpec) (*types.Node, error) {
-
-	var (
-		node    *types.Node
-		storage = ctx.Get().GetStorage()
-		log     = ctx.Get().GetLogger()
-		memory  = int64(0)
-	)
-
-	log.Debug("Allocate Pod to Node")
-
-	nodes, err := storage.Node().List(n.Context)
-	if err != nil {
-		log.Errorf("Node: allocate: get nodes error: %s", err.Error())
-		return nil, err
-	}
-
-	for _, c := range spec.Containers {
-		memory += c.Quota.Memory
-	}
-
-	for _, node = range nodes {
-		log.Debugf("Node: Allocate: available memory %d", node.State.Capacity)
-		if node.State.Capacity.Memory > memory {
-			break
-		}
-	}
-
-	if node == nil {
-		log.Error("Node: Allocate: Available node not found")
-		return nil, errors.New("Available node not found")
 	}
 
 	return node, nil

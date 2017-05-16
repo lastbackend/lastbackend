@@ -26,8 +26,7 @@ import (
 type NodeController struct {
 	context *context.Context
 	nodes   chan *types.Node
-
-	active bool
+	active  bool
 }
 
 func (nc *NodeController) Watch(node chan *types.Node) {
@@ -84,6 +83,5 @@ func NewNodeController(ctx *context.Context) *NodeController {
 	sc.context = ctx
 	sc.active = false
 	sc.nodes = make(chan *types.Node)
-
 	return sc
 }

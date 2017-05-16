@@ -56,6 +56,7 @@ func Daemon(_cfg *_cfg.Config) {
 	// Initialize Runtime
 	r := runtime.NewRuntime(ctx)
 	r.Loop()
+
 	// Handle SIGINT and SIGTERM.
 	signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)
 

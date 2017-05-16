@@ -55,6 +55,7 @@ func NewEvent(pods []*types.Pod) {
 	event.State = system.GetNodeState()
 	event.Pods = pods
 	event.Timestamp = time.Now()
+
 	context.Get().GetEventListener().Send(event)
 	return
 }
@@ -65,5 +66,6 @@ func SendPodState(pod *types.Pod) {
 		State:      pod.State,
 		Containers: pod.Containers,
 	}
+
 	NewEvent(append([]*types.Pod{}, &p))
 }

@@ -29,6 +29,8 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/storage/store"
 	"github.com/lastbackend/lastbackend/pkg/util/http/utils"
 	"net/http"
+	"encoding/json"
+	"fmt"
 )
 
 func ServiceListH(w http.ResponseWriter, r *http.Request) {
@@ -110,12 +112,17 @@ func ServiceInfoH(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	buf, _ := json.Marshal(svc)
+	fmt.Println(string(buf))
+
 	response, err := v1.NewService(svc).ToJson()
 	if err != nil {
 		log.Error("Error: convert struct to json", err.Error())
 		errors.HTTP.InternalServerError(w)
 		return
 	}
+
+	fmt.Println(string(response))
 
 	w.WriteHeader(http.StatusOK)
 	if _, err = w.Write(response); err != nil {
