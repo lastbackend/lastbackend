@@ -1,19 +1,23 @@
 [![Go Report Card](https://goreportcard.com/badge/github.com/lastbackend/lastbackend)](https://goreportcard.com/report/github.com/lastbackend/lastbackend)
 [![GoDoc](https://godoc.org/github.com/lastbackend/lastbackend?status.png)](https://godoc.org/github.com/lastbackend/lastbackend)
 [![Travis](https://travis-ci.org/lastbackend/lastbackend.svg?branch=master)](https://travis-ci.org/lastbackend/lastbackend)
-[![Join the chat at freenode:lastbackend](https://img.shields.io/badge/irc-freenode%3A%20%23lastbackend-blue.svg)](http://webchat.freenode.net/?channels=%23lastbackend)
+[![Slack](https://slack.lastbackend.com/badge.svg)](https://slack.lastbackend.com/)
 [![Licensed under Apache License version 2.0](https://img.shields.io/github/license/lastbackend/lastbackend.svg?maxAge=2592000)](https://www.apache.org/licenses/LICENSE-2.0)
 [![StackShare](https://img.shields.io/badge/tech-stack-0690fa.svg?style=flat)](https://stackshare.io/last-backend/last-backend)
 
-![alt text](docs/assets/logo.png?raw=true "Image")
+![alt text](docs/assets/last.backend-ce.png?raw=true "Image")
 
 ## Last.Backend: the apps cloud hosting for fast apps deploying, you don't need to manage.
 
-Last.Backend is an open-source platform, which allows you build a personal cloud on your servers based on kubernetes technology.
+Last.Backend is an open-source platform, which allows you build a personal cloud on your servers based on containers technology.
 
 Last.Backend fetches code from current directory, request or repo, build it and deploy it to server.
-Last.Backend uses powerful containers, that means that your app will be run anywhere, from your development environment on your laptop to any large scale cloud hosting.
-You can run deploy it daemon on the host where you want to deploy your applications (it can be local or remote), run CLI with this host and your applications will be deployed on specified host.  
+Last.Backend uses powerful container technology, that means that your app will be run anywhere, from your development environment on your laptop to any large scale cloud hosting.
+You can connect to lastbackend platform the host where you want to deploy your applications, run CLI command or UI and your applications will be deployed.  
+
+**Note:** Last.Backend is on activelly development stage, please be care of using it.
+
+Join us in Slack [![Slack](https://slack.lastbackend.com/badge.svg)](https://slack.lastbackend.com/)
 
 This project has [Roadmap](ROADMAP.md), feel free to offer your features. 
 
@@ -49,6 +53,8 @@ ___
 4. Deploying application with url/hub (like docker hub)
 5. Deploying scheduling
 6. Deploying services like redis, rabbitmq, mysql, etc.
+7. Developer-friendly UI
+8. CLI tool for remote management
 
 ___
 
