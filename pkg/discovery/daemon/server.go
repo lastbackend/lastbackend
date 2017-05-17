@@ -24,7 +24,7 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/util/dns"
 )
 
-func Listen(protocol string, port int) (*dns.DNS, error) {
+func Listen(port int) (*dns.DNS, error) {
 
 	var log = context.Get().GetLogger()
 
@@ -35,10 +35,21 @@ func Listen(protocol string, port int) (*dns.DNS, error) {
 	d.AddHandler(`local.`, resources.LocalR)
 	d.AddHandler(`.`, resources.OtherR)
 
-	log.Debugf(`Start discovery %s service on %d port`, protocol, port)
-	if err := d.Start(protocol, port, nil); err != nil {
-		return nil, err
-	}
+	go func() {
+		log.Debugf(`Start discovery %s service on %d port`, dns.TCP, port)
+		if err := d.Start(dns.TCP, port, nil); err != nil {
+			log.Errorf(`Start discovery %s service on %d port error: %s`, dns.TCP, port, err.Error())
+			return
+		}
+	}()
+
+	go func() {
+		log.Debugf(`Start discovery %s service on %d port`, dns.UDP, port)
+		if err := d.Start(dns.UDP, port, nil); err != nil {
+			log.Errorf(`Start discovery %s service on %d port error: %s`, dns.TCP, port, err.Error())
+			return
+		}
+	}()
 
 	return &d, nil
 }

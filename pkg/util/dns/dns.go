@@ -23,6 +23,11 @@ import (
 	"github.com/miekg/dns"
 )
 
+const (
+	UDP = "udp"
+	TCP = "tcp"
+)
+
 type DNS struct {
 	servers []*dns.Server
 }

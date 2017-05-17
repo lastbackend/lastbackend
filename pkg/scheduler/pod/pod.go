@@ -67,7 +67,7 @@ func Provision(p *types.Pod) error {
 	}
 
 	if err := stg.Node().InsertPod(ctx, &node.Meta, spec); err != nil {
-		log.Errorf("Node: Pod spec remove: insert spec to node err: %s", err.Error())
+		log.Errorf("Node: Pod spec add: insert spec to node err: %s", err.Error())
 		return err
 	}
 

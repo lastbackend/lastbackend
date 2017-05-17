@@ -26,7 +26,6 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/storage/store"
 	"github.com/satori/go.uuid"
 	"strings"
-	"fmt"
 )
 
 type service struct {
@@ -112,12 +111,6 @@ func (s *service) Create(rq *request.RequestServiceCreateS) (*types.Service, err
 	s.ResourcesUpdate(&svc)
 
 	if err := storage.Service().Insert(s.Context, &svc); err != nil {
-		log.Errorf("Error: insert service to db : %s", err.Error())
-		return &svc, err
-	}
-
-	endpoint := fmt.Sprintf("%s-%s.%s", svc.Meta.Name, svc.Meta.Namespace, *ctx.Get().GetConfig().SystemDomain)
-	if err := storage.Endpoint().Insert(s.Context, endpoint, []string{}); err != nil {
 		log.Errorf("Error: insert service to db : %s", err.Error())
 		return &svc, err
 	}

@@ -78,6 +78,7 @@ func (p *pod) Set(pod types.Pod) error {
 	}
 
 	pd.Containers = pod.Containers
+	pd.Meta = pod.Meta
 	pd.State = pod.State
 
 	if pd.State.State == types.StateDestroyed {
@@ -127,8 +128,8 @@ func Logs(c context.Context, namespace, pod, container string, stream io.Writer,
 		return err
 	}
 
-	// TODO: Get port from node
-	client, err := h.New(n.Meta.Hostname+":2968", &h.ReqOpts{TLS: false})
+	uri := fmt.Sprintf("%s:%d", n.Meta.IP, n.Meta.Port)
+	client, err := h.New(uri, &h.ReqOpts{TLS: false})
 	if err != nil {
 		return err
 	}

@@ -23,6 +23,7 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/discovery/cache"
 	"github.com/lastbackend/lastbackend/pkg/discovery/config"
 	"github.com/lastbackend/lastbackend/pkg/discovery/context"
+	"github.com/lastbackend/lastbackend/pkg/discovery/domain"
 	"github.com/lastbackend/lastbackend/pkg/logger"
 	"github.com/lastbackend/lastbackend/pkg/storage"
 	"os"
@@ -52,15 +53,14 @@ func Daemon(_cfg *_cfg.Config) {
 	}
 	ctx.SetStorage(stg)
 
-	go func() {
-		if _, err := Listen("tcp", *cfg.DiscoveryServer.Port); err != nil {
-			log.Warnf("Discovery tcp server start error: %s", err.Error())
-		}
-	}()
+	sd, err := Listen(*cfg.DiscoveryServer.Port)
+	if err != nil {
+		log.Warnf("Start discovery server error: %s", err.Error())
+	}
 
 	go func() {
-		if _, err := Listen("upd", *cfg.DiscoveryServer.Port); err != nil {
-			log.Warnf("Discovery upd server start error: %s", err.Error())
+		if err := domain.Watch(); err != nil {
+			log.Warnf("Watch domain error: %s", err.Error())
 		}
 	}()
 
@@ -78,6 +78,8 @@ func Daemon(_cfg *_cfg.Config) {
 	}()
 
 	<-done
+
+	sd.Shutdown()
 
 	log.Info("Handle SIGINT and SIGTERM.")
 }

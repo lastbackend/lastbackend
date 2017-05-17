@@ -34,19 +34,7 @@ func New() *Cache {
 	return c
 }
 
-func (c *Cache) Insert(domain string, ips []net.IP) error {
-	c.storage[domain] = ips
-	return nil
-}
-
-func (c *Cache) Remove(domain string) error {
-	if _, ok := c.storage[domain]; ok {
-		delete(c.storage, domain)
-	}
-	return nil
-}
-
-func (c *Cache) IPList(domain string) []net.IP {
+func (c *Cache) Get(domain string) []net.IP {
 	d, ok := c.storage[domain]
 	if !ok || len(d) == 0 {
 		return nil
@@ -55,4 +43,16 @@ func (c *Cache) IPList(domain string) []net.IP {
 		d = append(d[1:len(d)], d[0:1]...)
 	}
 	return d
+}
+
+func (c *Cache) Set(domain string, ips []net.IP) error {
+	c.storage[domain] = ips
+	return nil
+}
+
+func (c *Cache) Del(domain string) error {
+	if _, ok := c.storage[domain]; ok {
+		delete(c.storage, domain)
+	}
+	return nil
 }

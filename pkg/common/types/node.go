@@ -40,6 +40,8 @@ type NodeMeta struct {
 	Meta
 
 	Hostname     string `json:"hostname"`
+	Port         int    `json:"port"`
+	IP           string `json:"ip"`
 	OSName       string `json:"os_name"`
 	OSType       string `json:"os_type"`
 	Architecture string `json:"architecture"`

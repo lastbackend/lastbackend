@@ -63,10 +63,10 @@ func LocalR(w dns.ResponseWriter, r *dns.Msg) {
 					q.Name += "."
 				}
 
-				log.Debugf("Find ip addresses for domain: ", q.Name[37:])
+				log.Debugf("Find ip addresses for domain: ", q.Name)
 
 				// Generate A and AAAA records
-				ips, err := domain.GetIPList(util.Trim(q.Name[37:], `.`))
+				ips, err := domain.Get(util.Trim(q.Name, `.`))
 				if err != nil {
 					log.Error(err)
 					w.WriteMsg(m)

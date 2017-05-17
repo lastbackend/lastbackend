@@ -147,5 +147,5 @@ type IEndpoint interface {
 	Insert(ctx context.Context, name string, ips []string) error
 	Update(ctx context.Context, name string, ips []string) error
 	Remove(ctx context.Context, name string) error
-	Watch(ctx context.Context, ips chan []string) error
+	Watch(ctx context.Context, name chan string) error
 }

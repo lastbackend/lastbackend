@@ -20,9 +20,61 @@ package domain
 
 import (
 	"github.com/lastbackend/lastbackend/pkg/discovery/context"
+	"github.com/lastbackend/lastbackend/pkg/storage/store"
 	"github.com/lastbackend/lastbackend/pkg/util"
 	"net"
 )
+
+func Get(domain string) ([]net.IP, error) {
+
+	var (
+		err     error
+		log     = context.Get().GetLogger()
+		storage = context.Get().GetStorage()
+		cache   = context.Get().GetCache()
+		data    = []string{}
+	)
+
+	log.Debugf(`Domain: Get ip list from cache %s`, domain)
+
+	var ips = cache.Get(domain)
+
+	if ips != nil && len(ips) != 0 {
+		return ips, nil
+	}
+
+	if len(data) == 0 {
+		log.Debugf(`Domain: Try find to db %s`, domain)
+
+		result, err := storage.Endpoint().Get(context.Get().Background(), domain)
+		if err != nil {
+			log.Error(err)
+			return nil, err
+		}
+
+		for _, ip := range result {
+			data = append(data, ip)
+		}
+	}
+
+	data = util.RemoveDuplicates(data)
+
+	ips, err = util.ConvertStringIPToNetIP(data)
+	if err != nil {
+		log.Errorf("Domain: convert ips to net ips error %s", err.Error())
+		return ips, err
+	}
+
+	log.Debug(`ips`, ips)
+
+	cache.Lock()
+	cache.Set(domain, ips)
+	cache.Unlock()
+
+	log.Debugf(`Domain: Get ip list from cache for %s successfully: %v`, domain, data)
+
+	return ips, nil
+}
 
 func Update(domain string) error {
 
@@ -34,7 +86,7 @@ func Update(domain string) error {
 		data    = []string{}
 	)
 
-	log.Debug(`Update domain in cache `, domain)
+	log.Debugf(`Domain: Update domain %s in cache `, domain)
 
 	result, err := storage.Endpoint().Get(context.Get().Background(), domain)
 	if err != nil {
@@ -55,10 +107,10 @@ func Update(domain string) error {
 	}
 
 	cache.Lock()
-	cache.Insert(domain, ips)
+	cache.Set(domain, ips)
 	cache.Unlock()
 
-	log.Debug(`Update domain in cache successfully `, domain)
+	log.Debugf(`Domain: Update domain %s in cache successfully `, domain)
 
 	return nil
 }
@@ -71,66 +123,59 @@ func Remove(domain string) error {
 		cache = context.Get().GetCache()
 	)
 
-	log.Debug(`Remove domain from cache `, domain)
+	log.Debugf(`Domain: Remove domain %s from cache `, domain)
 
-	err = cache.Remove(domain)
+	err = cache.Del(domain)
 	if err != nil {
 		log.Error(err)
 		return err
 	}
 
-	log.Debug(`Remove domain from cache successfully `, domain)
+	log.Debugf(`Domain: Remove domain %s from cache successfully `, domain)
 
 	return nil
 }
 
-func GetIPList(domain string) ([]net.IP, error) {
-
+func Watch() error {
 	var (
-		err     error
 		log     = context.Get().GetLogger()
-		storage = context.Get().GetStorage()
+		storage = context.Get().GetStorage().Endpoint()
 		cache   = context.Get().GetCache()
-		data    = []string{}
+		event   = make(chan string, 1)
 	)
 
-	log.Debug(`Get ip list from cache `, domain)
+	log.Debug("Domain: Endpoint: Watch")
 
-	var ips = cache.IPList(domain)
+	go func() {
+		for {
+			select {
+			case endpoint := <-event:
+				{
+					i, err := storage.Get(context.Get().Background(), endpoint)
+					if err != nil && err.Error() != store.ErrKeyNotFound {
+						if err = cache.Del(endpoint); err != nil {
+							log.Errorf("Domain: remove ips from cache error %s", err.Error())
+						}
+						continue
+					} else {
+						log.Errorf("Domain: get ips for domain error %s", err.Error())
+						continue
+					}
 
-	if ips != nil && len(ips) != 0 {
-		return ips, nil
-	}
+					ips, err := util.ConvertStringIPToNetIP(i)
+					if err != nil {
+						log.Errorf("Domain: convert ips to net ips error %s", err.Error())
+						continue
+					}
 
-	if len(data) == 0 {
-		log.Debug(`Try find to db `, domain)
-
-		result, err := storage.Endpoint().Get(context.Get().Background(), domain)
-		if err != nil {
-			log.Error(err)
-			return nil, err
+					if err = cache.Set(endpoint, ips); err != nil {
+						log.Errorf("Domain: save ips to cache error %s", err.Error())
+						continue
+					}
+				}
+			}
 		}
+	}()
 
-		for _, ip := range result {
-			data = append(data, ip)
-		}
-	}
-
-	data = util.RemoveDuplicates(data)
-
-	ips, err = util.ConvertStringIPToNetIP(data)
-	if err != nil {
-		log.Error(err)
-		return nil, err
-	}
-
-	log.Debug(`ips`, ips)
-
-	cache.Lock()
-	cache.Insert(domain, ips)
-	cache.Unlock()
-
-	log.Debug(`Get ip list from cache successfully `, domain, data)
-
-	return ips, nil
+	return storage.Watch(context.Get().Background(), event)
 }

@@ -20,7 +20,6 @@ package storage
 
 import (
 	"context"
-	"fmt"
 	"github.com/lastbackend/lastbackend/pkg/storage/store"
 	"regexp"
 )
@@ -45,7 +44,7 @@ func (s *EndpointStorage) Get(ctx context.Context, name string) ([]string, error
 
 	endpoints := []string{}
 	key := keyCreate(endpointStorage, name)
-	if err := client.Map(ctx, key, "", endpoints); err != nil {
+	if err := client.Get(ctx, key, &endpoints); err != nil {
 		return nil, err
 	}
 
@@ -102,7 +101,7 @@ func (s *EndpointStorage) Remove(ctx context.Context, name string) error {
 }
 
 // Watch endpoint model
-func (s *EndpointStorage) Watch(ctx context.Context, ips chan []string) error {
+func (s *EndpointStorage) Watch(ctx context.Context, enndpoint chan string) error {
 	const filter = `\b.+` + endpointStorage + `\/(.+)\b`
 	client, destroy, err := s.Client()
 	if err != nil {
@@ -114,15 +113,10 @@ func (s *EndpointStorage) Watch(ctx context.Context, ips chan []string) error {
 	key := keyCreate(endpointStorage)
 	cb := func(action, key string, _ []byte) {
 		keys := r.FindStringSubmatch(key)
-		if len(keys) < 3 {
+		if len(keys) < 2 {
 			return
 		}
-
-		if s, err := s.Get(ctx, keys[1]); err == nil {
-			ips <- s
-		} else {
-			fmt.Println(err)
-		}
+		enndpoint <- keys[1]
 	}
 
 	client.Watch(ctx, key, filter, cb)
