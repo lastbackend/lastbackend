@@ -31,9 +31,7 @@ func Set(cfg *config.Config) *Config {
 	_cfg.LogLevel = cfg.LogLevel
 	_cfg.Token = cfg.Token
 	_cfg.Etcd = cfg.Etcd
-	_cfg.Registry = cfg.Registry
-	_cfg.APIServer = cfg.APIServer
-	_cfg.SystemDomain = cfg.SystemDomain
+	_cfg.DiscoveryServer = cfg.DiscoveryServer
 	return _cfg
 }
 

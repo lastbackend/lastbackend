@@ -18,14 +18,15 @@
 
 package config
 
-import "github.com/lastbackend/lastbackend/pkg/common/config"
+import (
+	"github.com/lastbackend/lastbackend/pkg/common/config"
+)
 
 // The structure of the config to run the daemon
 type Config struct {
-	LogLevel     *int
-	Token        *string
-	SystemDomain *string
-	Etcd         config.ETCD
-	APIServer    config.APIServer
-	Registry     config.Registry
+	LogLevel        *int
+	Token           *string
+	SystemDomain    *string
+	Etcd            config.ETCD
+	DiscoveryServer config.DiscoveryServer
 }

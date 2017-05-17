@@ -16,16 +16,29 @@
 // from Last.Backend LLC.
 //
 
-package config
+package daemon
 
-import "github.com/lastbackend/lastbackend/pkg/common/config"
+import (
+	"github.com/lastbackend/lastbackend/pkg/discovery/context"
+	"github.com/lastbackend/lastbackend/pkg/discovery/domain/resources"
+	"github.com/lastbackend/lastbackend/pkg/util/dns"
+)
 
-// The structure of the config to run the daemon
-type Config struct {
-	LogLevel     *int
-	Token        *string
-	SystemDomain *string
-	Etcd         config.ETCD
-	APIServer    config.APIServer
-	Registry     config.Registry
+func Listen(protocol string, port int) (*dns.DNS, error) {
+
+	var log = context.Get().GetLogger()
+
+	var d = dns.DNS{}
+
+	log.Debug(`Init discovery resources`)
+
+	d.AddHandler(`local.`, resources.LocalR)
+	d.AddHandler(`.`, resources.OtherR)
+
+	log.Debugf(`Start discovery %s service on %d port`, protocol, port)
+	if err := d.Start(protocol, port, nil); err != nil {
+		return nil, err
+	}
+
+	return &d, nil
 }

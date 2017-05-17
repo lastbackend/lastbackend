@@ -141,3 +141,11 @@ type ISystem interface {
 	ElectUpdate(ctx context.Context, process *types.Process) error
 	ElectWait(ctx context.Context, process *types.Process, lead chan bool) error
 }
+
+type IEndpoint interface {
+	Get(ctx context.Context, name string) ([]string, error)
+	Insert(ctx context.Context, name string, ips []string) error
+	Update(ctx context.Context, name string, ips []string) error
+	Remove(ctx context.Context, name string) error
+	Watch(ctx context.Context, ips chan []string) error
+}
