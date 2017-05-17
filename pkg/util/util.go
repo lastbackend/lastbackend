@@ -17,21 +17,3 @@
 //
 
 package util
-
-import (
-	"github.com/lastbackend/lastbackend/pkg/util/converter"
-	"reflect"
-)
-
-// SetZeroValue would set the object of objPtr to zero value of its type.
-func SetZeroValue(objPtr interface{}) error {
-
-	v, err := converter.EnforcePtr(objPtr)
-	if err != nil {
-		return err
-	}
-
-	v.Set(reflect.Zero(v.Type()))
-
-	return nil
-}
