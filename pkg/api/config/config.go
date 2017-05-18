@@ -33,7 +33,6 @@ func Set(cfg *config.Config) *Config {
 	_cfg.Etcd = cfg.Etcd
 	_cfg.Registry = cfg.Registry
 	_cfg.APIServer = cfg.APIServer
-	_cfg.SystemDomain = cfg.SystemDomain
 	return _cfg
 }
 

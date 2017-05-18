@@ -20,7 +20,7 @@ package resources
 
 import (
 	"github.com/lastbackend/lastbackend/pkg/discovery/context"
-	"github.com/lastbackend/lastbackend/pkg/discovery/domain"
+	"github.com/lastbackend/lastbackend/pkg/discovery/endpoint"
 	"github.com/lastbackend/lastbackend/pkg/util"
 	"github.com/miekg/dns"
 	"time"
@@ -66,7 +66,7 @@ func LocalR(w dns.ResponseWriter, r *dns.Msg) {
 				log.Debugf("Find ip addresses for domain: ", q.Name)
 
 				// Generate A and AAAA records
-				ips, err := domain.Get(util.Trim(q.Name, `.`))
+				ips, err := endpoint.Get(util.Trim(q.Name, `.`))
 				if err != nil {
 					log.Error(err)
 					w.WriteMsg(m)

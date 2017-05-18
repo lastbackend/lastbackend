@@ -24,7 +24,6 @@ import "github.com/lastbackend/lastbackend/pkg/common/config"
 type Config struct {
 	LogLevel     *int
 	Token        *string
-	SystemDomain *string
 	Etcd         config.ETCD
 	APIServer    config.APIServer
 	Registry     config.Registry

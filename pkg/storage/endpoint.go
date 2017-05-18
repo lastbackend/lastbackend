@@ -51,25 +51,8 @@ func (s *EndpointStorage) Get(ctx context.Context, name string) ([]string, error
 	return endpoints, nil
 }
 
-// Insert new endpoint into storage
-func (s *EndpointStorage) Insert(ctx context.Context, name string, ips []string) error {
-
-	client, destroy, err := s.Client()
-	if err != nil {
-		return err
-	}
-	defer destroy()
-
-	key := keyCreate(endpointStorage, name)
-	if err := client.Create(ctx, key, ips, nil, 0); err != nil {
-		return err
-	}
-
-	return nil
-}
-
 // Update endpoint model
-func (s *EndpointStorage) Update(ctx context.Context, name string, ips []string) error {
+func (s *EndpointStorage) Upsert(ctx context.Context, name string, ips []string) error {
 
 	client, destroy, err := s.Client()
 	if err != nil {
@@ -78,7 +61,7 @@ func (s *EndpointStorage) Update(ctx context.Context, name string, ips []string)
 	defer destroy()
 
 	key := keyCreate(endpointStorage, name)
-	if err := client.Update(ctx, key, ips, nil, 0); err != nil {
+	if err := client.Upsert(ctx, key, ips, nil, 0); err != nil {
 		return err
 	}
 
@@ -101,7 +84,7 @@ func (s *EndpointStorage) Remove(ctx context.Context, name string) error {
 }
 
 // Watch endpoint model
-func (s *EndpointStorage) Watch(ctx context.Context, enndpoint chan string) error {
+func (s *EndpointStorage) Watch(ctx context.Context, endpoint chan string) error {
 	const filter = `\b.+` + endpointStorage + `\/(.+)\b`
 	client, destroy, err := s.Client()
 	if err != nil {
@@ -116,7 +99,7 @@ func (s *EndpointStorage) Watch(ctx context.Context, enndpoint chan string) erro
 		if len(keys) < 2 {
 			return
 		}
-		enndpoint <- keys[1]
+		endpoint <- keys[1]
 	}
 
 	client.Watch(ctx, key, filter, cb)

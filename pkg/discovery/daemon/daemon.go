@@ -23,7 +23,7 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/discovery/cache"
 	"github.com/lastbackend/lastbackend/pkg/discovery/config"
 	"github.com/lastbackend/lastbackend/pkg/discovery/context"
-	"github.com/lastbackend/lastbackend/pkg/discovery/domain"
+	"github.com/lastbackend/lastbackend/pkg/discovery/endpoint"
 	"github.com/lastbackend/lastbackend/pkg/logger"
 	"github.com/lastbackend/lastbackend/pkg/storage"
 	"os"
@@ -58,11 +58,7 @@ func Daemon(_cfg *_cfg.Config) {
 		log.Warnf("Start discovery server error: %s", err.Error())
 	}
 
-	go func() {
-		if err := domain.Watch(); err != nil {
-			log.Warnf("Watch domain error: %s", err.Error())
-		}
-	}()
+	endpoint.Loop()
 
 	// Handle SIGINT and SIGTERM.
 	signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)

@@ -28,6 +28,12 @@ const (
 	ErrKeyNotFound      = "key not found"
 )
 
+const (
+	EventDelete = "delete"
+	EventUpdate = "update"
+	EventCreate = "create"
+)
+
 type DestroyFunc func()
 
 type IStore interface {

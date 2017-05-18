@@ -32,6 +32,7 @@ func Set(cfg *config.Config) *Config {
 	_cfg.Token = cfg.Token
 	_cfg.Etcd = cfg.Etcd
 	_cfg.DiscoveryServer = cfg.DiscoveryServer
+	_cfg.SystemDomain = cfg.SystemDomain
 	return _cfg
 }
 

@@ -135,7 +135,7 @@ func main() {
 
 	cfg.SystemDomain = app.String(cli.StringOpt{
 		Name: "system-domain", Desc: "Default system domain",
-		EnvVar: "SYSTEM-DOMAIN", Value: "local", HideValue: true,
+		EnvVar: "SYSTEM-DOMAIN", Value: "lblocal", HideValue: true,
 	})
 	cfg.DiscoveryServer.Port = app.Int(cli.IntOpt{
 		Name: "discovery-port", Desc: "Discovery server port",

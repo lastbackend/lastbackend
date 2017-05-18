@@ -20,6 +20,7 @@ package storage
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"github.com/lastbackend/lastbackend/pkg/common/types"
 	"github.com/lastbackend/lastbackend/pkg/storage/store"
@@ -77,22 +78,11 @@ func (s *ServiceStorage) GetByName(ctx context.Context, namespace, name string) 
 
 // Get service by pod name
 func (s *ServiceStorage) GetByPodName(ctx context.Context, name string) (*types.Service, error) {
-
-	var match = strings.Split(name, ":")
-	var pod = new(types.Pod)
-
-	client, destroy, err := s.Client()
-	if err != nil {
-		return nil, err
+	parts := strings.Split(name, ":")
+	if len(parts) < 3 {
+		return nil, errors.New(fmt.Sprintf("can not parse pod name: %s", name))
 	}
-	defer destroy()
-
-	key := keyCreate(podStorage, match[0], name)
-	if err := client.Get(ctx, key, pod); err != nil {
-		return nil, err
-	}
-
-	return s.GetByName(ctx, match[0], match[1])
+	return s.GetByName(ctx, parts[0], parts[1])
 }
 
 // Get service by name
@@ -375,8 +365,6 @@ func (s *ServiceStorage) PodsWatch(ctx context.Context, service chan *types.Serv
 
 		if s, err := s.GetByPodName(ctx, keys[2]); err == nil {
 			service <- s
-		} else {
-			fmt.Println(err)
 		}
 	}
 
