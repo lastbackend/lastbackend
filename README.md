@@ -7,9 +7,9 @@
 
 ![alt text](docs/assets/last.backend-ce.png?raw=true "Image")
 
-## Last.Backend: the apps cloud hosting for fast apps deploying, you don't need to manage.
+## Container orchestration with CI&CD, CLI and amazing UI
 
-Last.Backend is an open-source platform, which allows you build a personal cloud on your servers based on containers technology.
+Last.Backend is an open-source platform, which allows you build and deploy apps on your servers.
 
 Last.Backend fetches code from current directory, request or repo, build it and deploy it to server.
 Last.Backend uses powerful container technology, that means that your app will be run anywhere, from your development environment on your laptop to any large scale cloud hosting.
