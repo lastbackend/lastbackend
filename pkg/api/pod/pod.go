@@ -64,6 +64,10 @@ func (p *pod) Set(pod types.Pod) error {
 		return err
 	}
 
+	if _, ok := svc.Pods[pod.Meta.Name]; !ok {
+		return nil
+	}
+
 	svc.Pods[pod.Meta.Name].Containers = pod.Containers
 	svc.Pods[pod.Meta.Name].Meta = pod.Meta
 	svc.Pods[pod.Meta.Name].State = pod.State
@@ -77,7 +81,7 @@ func (p *pod) Set(pod types.Pod) error {
 		}
 		delete(svc.Pods, pd.Meta.Name)
 
-		if len(svc.Pods) == 0 && svc.State.State == types.StateDestroy {
+		if len(svc.Pods) == 0 && svc.State.State == types.StateDestroyed {
 			if err = storage.Service().Remove(p.Context, svc); err != nil {
 				log.Errorf("Error: remove service from db: %s", err)
 				return err

@@ -51,7 +51,7 @@ func (pc *PodController) Watch(services chan *types.Service) {
 						continue
 					}
 
-					if p == nil || /*!p.State.Provision ||*/ p.Meta.Hostname == "" {
+					if p == nil || p.Meta.Hostname == "" {
 						continue
 					}
 
@@ -79,9 +79,7 @@ func (pc *PodController) Watch(services chan *types.Service) {
 					serviceEndpoint := fmt.Sprintf("%s-%s.%s", srv.Meta.Name, srv.Meta.Namespace, *context.Get().GetConfig().SystemDomain)
 					serviceEndpoint = strings.Replace(serviceEndpoint, ":", "-", -1)
 
-					fmt.Println("pod state", p.State.State, p.State.State == types.StateDestroy)
-
-					if p.State.State == types.StateDestroy {
+					if p.Spec.State == types.StateDestroyed {
 						if err := stg.Endpoint().Remove(context.Get().Background(), endpoint); err != nil {
 							log.Errorf("Endpoint: remove endpoint error %s", err.Error())
 						}

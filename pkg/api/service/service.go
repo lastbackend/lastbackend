@@ -156,7 +156,7 @@ func (s *service) Remove(service *types.Service) error {
 		storage = ctx.Get().GetStorage()
 	)
 
-	service.State.State = types.StateDestroy
+	service.State.State = types.StateDestroyed
 
 	if len(service.Pods) == 0 {
 		if err := storage.Service().Remove(s.Context, service); err != nil {
@@ -169,7 +169,7 @@ func (s *service) Remove(service *types.Service) error {
 	for _, pod := range service.Pods {
 		pod.State.Provision = true
 		pod.State.Ready = false
-		pod.Spec.State = types.StateDestroy
+		pod.Spec.State = types.StateDestroyed
 	}
 
 	if err := storage.Service().Update(s.Context, service); err != nil {

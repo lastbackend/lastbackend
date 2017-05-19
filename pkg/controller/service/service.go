@@ -35,7 +35,7 @@ func Provision(svc *types.Service) error {
 	log.Debugf("Service Controller: provision service: %s/%s", svc.Meta.Namespace, svc.Meta.Name)
 
 	for _, p := range svc.Pods {
-		if p.Spec.State != types.StateDestroy {
+		if p.Spec.State != types.StateDestroyed {
 			replicas++
 		}
 	}
@@ -52,7 +52,7 @@ func Provision(svc *types.Service) error {
 		log.Debug("Service Controller: Replicas: remove  unneeded replicas")
 		names := make([]string, 0, len(svc.Pods))
 		for n, p := range svc.Pods {
-			if p.Spec.State != types.StateDestroy {
+			if p.Spec.State != types.StateDestroyed {
 				names = append(names, n)
 			}
 		}

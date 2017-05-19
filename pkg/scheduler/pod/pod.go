@@ -36,7 +36,7 @@ func Provision(p *types.Pod) error {
 	)
 
 	if p.Meta.Hostname != "" {
-		node, err := stg.Node().Get(ctx, p.Meta.Hostname)
+		n, err := stg.Node().Get(ctx, p.Meta.Hostname)
 		if err != nil {
 			log.Errorf("Node: find node err: %s", err.Error())
 			return err
@@ -48,14 +48,14 @@ func Provision(p *types.Pod) error {
 			Spec:  p.Spec,
 		}
 
-		log.Debug("Remove pod spec from node")
-		if err := stg.Node().RemovePod(ctx, &node.Meta, spec); err != nil {
+		log.Debug("Set pod spec as destroy")
+		if err := stg.Node().UpdatePod(ctx, &n.Meta, spec); err != nil {
 			log.Errorf("Node: remove pod spec err: %s", err.Error())
 			return err
 		}
 	}
 
-	if p.State.State == types.StateDestroy {
+	if p.Spec.State == types.StateDestroyed {
 		return nil
 	}
 

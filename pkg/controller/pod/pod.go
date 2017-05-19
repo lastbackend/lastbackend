@@ -41,7 +41,7 @@ func Create(svc *types.Service) *types.Pod {
 	p.State.Provision = true
 	p.State.Ready = false
 	p.State.State = types.StateCreated
-	p.Spec.State = types.StateCreated
+	p.Spec.State = types.StateStarted
 
 	return p
 }
@@ -56,11 +56,10 @@ func Remove(p *types.Pod) {
 
 	p.State.Provision = true
 	p.State.Ready = false
-	p.State.State = types.StateDestroy
-	p.Spec.State = types.StateDestroy
+	p.Spec.State = types.StateDestroyed
 
 	for _, c := range p.Containers {
-		c.State = types.StateDestroy
+		c.State = types.StateDestroyed
 	}
 }
 
@@ -70,7 +69,7 @@ func SetSpec(p *types.Pod, spec map[string]*types.ServiceSpec) {
 		log = context.Get().GetLogger()
 	)
 
-	if p.Spec.State == types.StateDestroy {
+	if p.Spec.State == types.StateDestroyed {
 		return
 	}
 

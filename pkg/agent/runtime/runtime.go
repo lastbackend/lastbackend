@@ -81,10 +81,10 @@ func (r *Runtime) Recovery(pods map[string]types.PodNodeSpec) {
 			pods[pod.Meta.Name] = types.PodNodeSpec{
 				Meta: pod.Meta,
 				State: types.PodState{
-					State: types.StateDestroy,
+					State: types.StateDestroyed,
 				},
 				Spec: types.PodSpec{
-					State: types.StateDestroy,
+					State: types.StateDestroyed,
 				},
 			}
 		}

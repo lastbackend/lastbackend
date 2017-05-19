@@ -35,7 +35,7 @@ type Activity struct {
 	Service string `json:"service"`
 	// Activity name
 	Name string `json:"name"`
-	// Activity status
+	// Activity event
 	Event string `json:"event"`
 	// Activity created time
 	Created time.Time `json:"created"`

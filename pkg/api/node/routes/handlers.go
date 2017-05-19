@@ -26,8 +26,6 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/api/pod"
 	"github.com/lastbackend/lastbackend/pkg/common/errors"
 	"net/http"
-	"encoding/json"
-	"fmt"
 )
 
 func NodeEventH(w http.ResponseWriter, r *http.Request) {
@@ -46,9 +44,6 @@ func NodeEventH(w http.ResponseWriter, r *http.Request) {
 		errors.New("Invalid incomming data").Unknown().Http(w)
 		return
 	}
-
-	buf, _ := json.Marshal(rq)
-	fmt.Println(">>>> ", string(buf))
 
 	p := pod.New(r.Context())
 	for _, pod := range rq.Pods {

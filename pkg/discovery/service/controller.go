@@ -60,7 +60,7 @@ func (sc *ServiceController) Watch(services chan *types.Service) {
 					hosts := make(map[string]string)
 					ips := []string{}
 					for _, pod := range s.Pods {
-						if _, ok := hosts[pod.Meta.Hostname]; ok || pod.State.State == types.StateDestroy {
+						if _, ok := hosts[pod.Meta.Hostname]; ok || pod.Spec.State == types.StateDestroyed {
 							continue
 						}
 
@@ -74,7 +74,7 @@ func (sc *ServiceController) Watch(services chan *types.Service) {
 						ips = append(ips, node.Meta.IP)
 					}
 
-					if s.State.State == types.StateDestroy {
+					if s.State.State == types.StateDestroyed {
 						if err := stg.Endpoint().Remove(context.Get().Background(), endpoint); err != nil {
 							log.Errorf("Endpoint: remove service endpoint error %s", err.Error())
 						}
