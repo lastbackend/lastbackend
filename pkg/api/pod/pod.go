@@ -64,15 +64,10 @@ func (p *pod) Set(pod types.Pod) error {
 		return err
 	}
 
-	pd, e := storage.Pod().GetByName(p.Context, item.Meta.Name, pod.Meta.Name)
-	if e != nil {
-		log.Errorf("Error: get pod from db: %s", e.Error())
-		return err
-	}
-
-	pd.Containers = pod.Containers
-	pd.Meta = pod.Meta
-	pd.State = pod.State
+	svc.Pods[pod.Meta.Name].Containers = pod.Containers
+	svc.Pods[pod.Meta.Name].Meta = pod.Meta
+	svc.Pods[pod.Meta.Name].State = pod.State
+	pd := svc.Pods[pod.Meta.Name]
 
 	if pd.State.State == types.StateDestroyed {
 		log.Debugf("Service: Set pods: remove deleted pod: %s", pd.Meta.Name)
@@ -94,6 +89,12 @@ func (p *pod) Set(pod types.Pod) error {
 
 	if err := storage.Pod().Update(p.Context, item.Meta.Name, pd); err != nil {
 		log.Errorf("Error: set pod to db: %s", err)
+		return err
+	}
+
+	// Need update data info (state and resources) for this service after update pod info
+	if err := storage.Service().Update(p.Context, svc); err != nil {
+		log.Errorf("Error: update service info to db: %s", err)
 		return err
 	}
 

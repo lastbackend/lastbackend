@@ -87,15 +87,12 @@ func (s *service) Create(rq *request.RequestServiceCreateS) (*types.Service, err
 
 	svc.Meta = types.ServiceMeta{}
 	svc.Meta.SetDefault()
-
 	svc.Meta.Name = rq.Name
 	svc.Meta.Region = rq.Region
 	svc.Meta.Namespace = s.Namespace.Name
 	svc.Meta.Description = rq.Description
-
 	svc.Meta.Replicas = 1
 	svc.State.State = types.StateProvision
-
 	svc.Pods = make(map[string]*types.Pod)
 
 	if rq.Replicas != nil && *rq.Replicas > 0 {
@@ -106,9 +103,6 @@ func (s *service) Create(rq *request.RequestServiceCreateS) (*types.Service, err
 
 	svc.Spec = make(map[string]*types.ServiceSpec)
 	svc.Spec[uuid.NewV4().String()] = spec
-
-	s.StateUpdate(&svc)
-	s.ResourcesUpdate(&svc)
 
 	if err := storage.Service().Insert(s.Context, &svc); err != nil {
 		log.Errorf("Error: insert service to db : %s", err.Error())
@@ -136,18 +130,20 @@ func (s *service) Update(service *types.Service, rq *request.RequestServiceUpdat
 		service.Meta.Description = *rq.Description
 	}
 
-	if rq.Replicas != nil {
+	if rq.Replicas != nil && *rq.Replicas > 0 {
 		log.Debugf("Service: Update: set replicas: %d", *rq.Replicas)
 		service.Meta.Replicas = *rq.Replicas
 	}
 
 	service.State.State = types.StateProvision
 
-	s.StateUpdate(service)
-	s.ResourcesUpdate(service)
-
 	if err = storage.Service().Update(s.Context, service); err != nil {
-		log.Error("Error: insert service to db", err)
+		log.Error("Error: update service info to db", err)
+		return err
+	}
+
+	if err = storage.Service().UpdateSpec(s.Context, service); err != nil {
+		log.Error("Error: update service spec to db", err)
 		return err
 	}
 
@@ -177,46 +173,16 @@ func (s *service) Remove(service *types.Service) error {
 	}
 
 	if err := storage.Service().Update(s.Context, service); err != nil {
-		log.Error("Error: insert service to db", err)
+		log.Error("Error: update service info to db", err)
+		return err
+	}
+
+	if err := storage.Service().UpdateSpec(s.Context, service); err != nil {
+		log.Error("Error: update service spec to db", err)
 		return err
 	}
 
 	return nil
-}
-
-func (s *service) StateUpdate(service *types.Service) {
-
-	service.State.Replicas = types.ServiceReplicasState{}
-
-	for _, p := range service.Pods {
-		service.State.Replicas.Total++
-		switch p.State.State {
-		case types.StateCreated:
-			service.State.Replicas.Created++
-		case types.StateStarted:
-			service.State.Replicas.Running++
-		case types.StateStopped:
-			service.State.Replicas.Stopped++
-		case types.StateError:
-			service.State.Replicas.Errored++
-		}
-
-		if p.State.Provision {
-			service.State.Replicas.Provision++
-		}
-
-		if p.State.Ready {
-			service.State.Replicas.Ready++
-		}
-	}
-
-}
-
-func (s *service) ResourcesUpdate(service *types.Service) {
-	service.State.Resources = types.ServiceResourcesState{}
-	for _, s := range service.Spec {
-		service.State.Resources.Memory += int(s.Memory) * service.Meta.Replicas
-	}
 }
 
 func (s *service) AddSpec(service *types.Service, rq *request.RequestServiceSpecS) error {
@@ -232,6 +198,11 @@ func (s *service) AddSpec(service *types.Service, rq *request.RequestServiceSpec
 	service.Spec[spec.Meta.ID] = spec
 
 	if err := storage.Service().Update(s.Context, service); err != nil {
+		log.Errorf("Error: DelSpec: update service info to db : %s", err.Error())
+		return err
+	}
+
+	if err := storage.Service().UpdateSpec(s.Context, service); err != nil {
 		log.Errorf("Error: AddSpec: update service spec to db : %s", err.Error())
 		return err
 	}
@@ -254,7 +225,12 @@ func (s *service) SetSpec(service *types.Service, id string, rq *request.Request
 	delete(service.Spec, spec.Meta.Parent)
 
 	if err := storage.Service().Update(s.Context, service); err != nil {
-		log.Errorf("Error: AddSpec: update service spec to db : %s", err.Error())
+		log.Errorf("Error: SetSpec: update service info to db : %s", err.Error())
+		return err
+	}
+
+	if err := storage.Service().UpdateSpec(s.Context, service); err != nil {
+		log.Errorf("Error: SetSpec: update service spec to db : %s", err.Error())
 		return err
 	}
 
@@ -277,7 +253,12 @@ func (s *service) DelSpec(service *types.Service, id string) error {
 	delete(service.Spec, id)
 
 	if err := storage.Service().Update(s.Context, service); err != nil {
-		log.Errorf("Error: AddSpec: update service spec to db : %s", err.Error())
+		log.Errorf("Error: DelSpec: update service info to db : %s", err.Error())
+		return err
+	}
+
+	if err := storage.Service().UpdateSpec(s.Context, service); err != nil {
+		log.Errorf("Error: DelSpec: update service spec to db : %s", err.Error())
 		return err
 	}
 

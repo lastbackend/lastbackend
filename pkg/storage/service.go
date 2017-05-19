@@ -85,52 +85,6 @@ func (s *ServiceStorage) GetByPodName(ctx context.Context, name string) (*types.
 	return s.GetByName(ctx, parts[0], parts[1])
 }
 
-// Get service by name
-func (s *ServiceStorage) UpdateState(ctx context.Context, service *types.Service) error {
-
-	client, destroy, err := s.Client()
-	if err != nil {
-		return err
-	}
-	defer destroy()
-
-	service.State.Resources = types.ServiceResourcesState{}
-
-	for _, s := range service.Spec {
-		service.State.Resources.Memory += int(s.Memory) * service.Meta.Replicas
-	}
-
-	service.State.Replicas = types.ServiceReplicasState{}
-
-	for _, p := range service.Pods {
-		service.State.Replicas.Total++
-		switch p.State.State {
-		case types.StateCreated:
-			service.State.Replicas.Created++
-		case types.StateStarted:
-			service.State.Replicas.Running++
-		case types.StateStopped:
-			service.State.Replicas.Stopped++
-		case types.StateError:
-			service.State.Replicas.Errored++
-		}
-
-		if p.State.Provision {
-			service.State.Replicas.Provision++
-		}
-
-		if p.State.Ready {
-			service.State.Replicas.Ready++
-		}
-	}
-	keyState := keyCreate(serviceStorage, service.Meta.Namespace, service.Meta.Name, "state")
-	if err := client.Upsert(ctx, keyState, service.State, nil, 0); err != nil {
-		return err
-	}
-
-	return nil
-}
-
 // List services
 func (s *ServiceStorage) ListByNamespace(ctx context.Context, namespace string) ([]*types.Service, error) {
 
@@ -161,6 +115,10 @@ func (s *ServiceStorage) Insert(ctx context.Context, service *types.Service) err
 	}
 	defer destroy()
 
+	if err := s.updateState(ctx, service); err != nil {
+		return err
+	}
+
 	tx := client.Begin(ctx)
 
 	keyMeta := keyCreate(serviceStorage, service.Meta.Namespace, service.Meta.Name, "meta")
@@ -173,11 +131,6 @@ func (s *ServiceStorage) Insert(ctx context.Context, service *types.Service) err
 		if err := tx.Create(keyConfig, &spec, 0); err != nil {
 			return err
 		}
-	}
-
-	keyServiceController := s.util.Key(ctx, systemStorage, types.KindController, "services", fmt.Sprintf("%s:%s", service.Meta.Namespace, service.Meta.Name))
-	if err := tx.Create(keyServiceController, &service.State.State, 0); err != nil {
-		return err
 	}
 
 	if err := tx.Commit(); err != nil {
@@ -198,18 +151,45 @@ func (s *ServiceStorage) Update(ctx context.Context, service *types.Service) err
 	}
 	defer destroy()
 
-	keyMeta := keyCreate(serviceStorage, service.Meta.Namespace, service.Meta.Name, "meta")
-	smeta := new(types.Meta)
-	if err := client.Get(ctx, keyMeta, smeta); err != nil {
+	if err := s.updateState(ctx, service); err != nil {
 		return err
 	}
 
 	tx := client.Begin(ctx)
 
-	keyMeta = keyCreate(serviceStorage, service.Meta.Namespace, service.Meta.Name, "meta")
+	keyMeta := keyCreate(serviceStorage, service.Meta.Namespace, service.Meta.Name, "meta")
 	if err := tx.Update(keyMeta, service.Meta, 0); err != nil {
 		return err
 	}
+
+	keyState := keyCreate(serviceStorage, service.Meta.Namespace, service.Meta.Name, "state")
+	if err := client.Upsert(ctx, keyState, service.State, nil, 0); err != nil {
+		return err
+	}
+
+	if err := tx.Commit(); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// Update service spec in storage
+func (s *ServiceStorage) UpdateSpec(ctx context.Context, service *types.Service) error {
+
+	service.Meta.Updated = time.Now()
+
+	client, destroy, err := s.Client()
+	if err != nil {
+		return err
+	}
+	defer destroy()
+
+	if err := s.updateState(ctx, service); err != nil {
+		return err
+	}
+
+	tx := client.Begin(ctx)
 
 	specs := make(map[string]*types.ServiceSpec)
 	keySpecs := keyCreate(serviceStorage, service.Meta.Namespace, service.Meta.Name, "specs")
@@ -232,11 +212,6 @@ func (s *ServiceStorage) Update(ctx context.Context, service *types.Service) err
 		if err := tx.Upsert(keySpec, &spec, 0); err != nil {
 			return err
 		}
-	}
-
-	keyServiceController := s.util.Key(ctx, systemStorage, types.KindController, "services", fmt.Sprintf("%s:%s", service.Meta.Namespace, service.Meta.Name))
-	if err := tx.Upsert(keyServiceController, &service.State.State, 0); err != nil {
-		return err
 	}
 
 	if err := tx.Commit(); err != nil {
@@ -312,6 +287,7 @@ func (s *ServiceStorage) Watch(ctx context.Context, service chan *types.Service)
 		}
 
 		if svc, err := s.GetByName(ctx, keys[1], keys[2]); err == nil {
+			s.updateState(ctx, svc)
 			service <- svc
 		}
 
@@ -338,6 +314,7 @@ func (s *ServiceStorage) SpecWatch(ctx context.Context, service chan *types.Serv
 		}
 
 		if svc, err := s.GetByName(ctx, keys[1], keys[2]); err == nil {
+			s.updateState(ctx, svc)
 			service <- svc
 		}
 
@@ -363,8 +340,9 @@ func (s *ServiceStorage) PodsWatch(ctx context.Context, service chan *types.Serv
 			return
 		}
 
-		if s, err := s.GetByPodName(ctx, keys[2]); err == nil {
-			service <- s
+		if svc, err := s.GetByPodName(ctx, keys[2]); err == nil {
+			s.updateState(ctx, svc)
+			service <- svc
 		}
 	}
 
@@ -389,13 +367,62 @@ func (s *ServiceStorage) BuildsWatch(ctx context.Context, service chan *types.Se
 		}
 
 		if svc, err := s.GetByName(ctx, keys[1], keys[2]); err == nil {
-			s.UpdateState(ctx, svc)
+			s.updateState(ctx, svc)
 			service <- svc
 		}
 
 	}
 
 	client.Watch(ctx, key, filter, cb)
+	return nil
+}
+
+// Update service state
+func (s *ServiceStorage) updateState(ctx context.Context, service *types.Service) error {
+
+	client, destroy, err := s.Client()
+	if err != nil {
+		return err
+	}
+	defer destroy()
+
+	// Update service resource info
+	service.State.Resources = types.ServiceResourcesState{}
+
+	for _, s := range service.Spec {
+		service.State.Resources.Memory += int(s.Memory) * service.Meta.Replicas
+	}
+
+	// Update service state info
+	service.State.Replicas = types.ServiceReplicasState{}
+
+	for _, p := range service.Pods {
+		service.State.Replicas.Total++
+		switch p.State.State {
+		case types.StateCreated:
+			service.State.Replicas.Created++
+		case types.StateStarted:
+			service.State.Replicas.Running++
+		case types.StateStopped:
+			service.State.Replicas.Stopped++
+		case types.StateError:
+			service.State.Replicas.Errored++
+		}
+
+		if p.State.Provision {
+			service.State.Replicas.Provision++
+		}
+
+		if p.State.Ready {
+			service.State.Replicas.Ready++
+		}
+	}
+
+	keyState := keyCreate(serviceStorage, service.Meta.Namespace, service.Meta.Name, "state")
+	if err := client.Upsert(ctx, keyState, service.State, nil, 0); err != nil {
+		return err
+	}
+
 	return nil
 }
 

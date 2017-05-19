@@ -42,7 +42,7 @@ func (sc *ServiceController) Watch() {
 			case s := <-sc.services:
 				{
 					if !sc.active {
-						log.Debug("ServiceController: skip management couse it is in slave mode")
+						log.Debug("ServiceController: skip management course it is in slave mode")
 						continue
 					}
 

@@ -77,6 +77,7 @@ type IService interface {
 	ListByNamespace(ctx context.Context, namespace string) ([]*types.Service, error)
 	Insert(ctx context.Context, service *types.Service) error
 	Update(ctx context.Context, service *types.Service) error
+	UpdateSpec(ctx context.Context, service *types.Service) error
 	Remove(ctx context.Context, service *types.Service) error
 	RemoveByNamespace(ctx context.Context, namespace string) error
 

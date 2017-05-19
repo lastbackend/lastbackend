@@ -43,7 +43,7 @@ func Provision(svc *types.Service) error {
 	if replicas < svc.Meta.Replicas {
 		log.Debug("Service Controller: Replicas: create a new replicas")
 		for i := 0; i < (svc.Meta.Replicas - replicas); i++ {
-			p := pod.PodCreate(svc)
+			p := pod.Create(svc)
 			svc.Pods[p.Meta.Name] = p
 		}
 	}
@@ -59,7 +59,7 @@ func Provision(svc *types.Service) error {
 
 		for i := 0; i < (replicas - svc.Meta.Replicas); i++ {
 			if len(names) > 0 {
-				pod.PodRemove(svc.Pods[names[len(names)-1]])
+				pod.Remove(svc.Pods[names[len(names)-1]])
 			}
 			names = names[0 : len(names)-1]
 		}
@@ -67,7 +67,7 @@ func Provision(svc *types.Service) error {
 
 	for _, p := range svc.Pods {
 		log.Debug("Service Controller: provision pods")
-		pod.PodSetSpec(p, svc.Spec)
+		pod.SetSpec(p, svc.Spec)
 		log.Debug("Service Controller: save new pod spec")
 		if err := stg.Pod().Upsert(context.Get().Background(), svc.Meta.Namespace, p); err != nil {
 			log.Errorf("Service Controller: save pod spec error: %s", err.Error())

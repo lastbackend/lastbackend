@@ -20,7 +20,6 @@ package types
 
 import (
 	"encoding/json"
-	"errors"
 )
 
 type ServiceList []*Service
@@ -70,7 +69,7 @@ type ServiceState struct {
 	// Service state
 	State string `json:"state"`
 	// Service status
-	Status string `json:"status"`
+	Status string `json:"status,omitempty"`
 	// Service resources
 	Resources ServiceResourcesState `json:"resources"`
 	// Replicas state
@@ -115,44 +114,12 @@ type SpecMeta struct {
 
 type ServiceSpec struct {
 	Meta       SpecMeta `json:"meta"`
-	Replicas   int      `json:"replicas"`
 	Memory     int64    `json:"memory"`
 	Entrypoint []string `json:"entrypoint"`
 	Image      string   `json:"image"`
 	Command    []string `json:"command"`
 	EnvVars    []string `json:"env"`
 	Ports      []Port   `json:"ports"`
-}
-
-func (c *ServiceSpec) Update(patch *ServiceSpec) error {
-
-	if patch.Replicas < 0 {
-		return errors.New("The value of the `replicas` parameter must be at least 1")
-	}
-	c.Replicas = patch.Replicas
-
-	if patch.Memory < 32 {
-		return errors.New("The value of the `memory` parameter must be at least 32")
-	}
-	c.Memory = patch.Memory
-
-	c.Entrypoint = patch.Entrypoint
-	c.Image = patch.Image
-	c.Command = patch.Command
-
-	c.Ports = patch.Ports
-
-	// TODO: Check valid format env params
-	c.EnvVars = patch.EnvVars
-
-	return nil
-}
-
-func (ServiceSpec) GetDefault() ServiceSpec {
-	var config = ServiceSpec{}
-	config.Replicas = 1
-	config.Memory = 256
-	return config
 }
 
 type Port struct {

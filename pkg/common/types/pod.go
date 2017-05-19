@@ -66,7 +66,7 @@ type PodSpec struct {
 	// Provision state
 	State string `json:"state"`
 	// Provision status
-	Status string `json:"status"`
+	Status string `json:"status,omitempty"`
 
 	// Containers spec for pod
 	Containers map[string]*ContainerSpec `json:"containers"`

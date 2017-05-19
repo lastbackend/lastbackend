@@ -27,59 +27,33 @@ import (
 	"time"
 )
 
-func PodCreate(svc *types.Service) *types.Pod {
+func Create(svc *types.Service) *types.Pod {
+
 	var (
 		log = context.Get().GetLogger()
 	)
 
 	log.Debug("Create new pod state on service")
 
-	pod := new(types.Pod)
-	pod.Meta.SetDefault()
-	pod.Meta.Name = podNameGenerate(svc)
-	pod.State.Provision = true
+	p := new(types.Pod)
+	p.Meta.SetDefault()
+	p.Meta.Name = generateName(svc)
+	p.State.Provision = true
+	p.State.Ready = false
+	p.State.State = types.StateCreated
+	p.Spec.State = types.StateCreated
 
-	return pod
+	return p
 }
 
-func PodSetSpec(p *types.Pod, spec map[string]*types.ServiceSpec) {
-
-	var (
-		log = context.Get().GetLogger()
-		ids = make(map[string]struct{})
-	)
-
-	for id := range spec {
-		ids[id] = struct{}{}
-	}
-
-	if p.Spec.State == types.StateDestroy {
-		return
-	}
-
-	if len(p.Spec.Containers) != len(spec) {
-		p.Spec = podSpecGenerate(spec)
-		p.Meta.Updated = time.Now()
-		return
-	}
-
-	for id := range p.Spec.Containers {
-		if _, ok := ids[id]; !ok {
-			log.Debug("Pod update")
-			p.Spec = podSpecGenerate(spec)
-			p.Meta.Updated = time.Now()
-			return
-		}
-	}
-}
-
-func PodRemove(p *types.Pod) {
+func Remove(p *types.Pod) {
 
 	var (
 		log = context.Get().GetLogger()
 	)
 
 	log.Debugf("Mark pod for deletion: %s", p.Meta.Name)
+
 	p.State.Provision = true
 	p.State.Ready = false
 	p.State.State = types.StateDestroy
@@ -90,13 +64,47 @@ func PodRemove(p *types.Pod) {
 	}
 }
 
-func podSpecGenerate(spec map[string]*types.ServiceSpec) types.PodSpec {
+func SetSpec(p *types.Pod, spec map[string]*types.ServiceSpec) {
 
 	var (
 		log = context.Get().GetLogger()
 	)
 
-	log.Debug("Generate new node pod spec")
+	if p.Spec.State == types.StateDestroy {
+		return
+	}
+
+	ids := make(map[string]struct{})
+	for id := range spec {
+		ids[id] = struct{}{}
+	}
+
+	if len(p.Spec.Containers) != len(spec) {
+		log.Debug("Pod spec update")
+		p.Spec = generateSpec(spec)
+		p.Meta.Updated = time.Now()
+		return
+	}
+
+	for id := range p.Spec.Containers {
+		if _, ok := ids[id]; !ok {
+			log.Debug("Pod spec update")
+			p.Spec = generateSpec(spec)
+			p.State.Provision = true
+			p.State.Ready = false
+			p.Meta.Updated = time.Now()
+			return
+		}
+	}
+}
+
+func generateSpec(spec map[string]*types.ServiceSpec) types.PodSpec {
+
+	var (
+		log = context.Get().GetLogger()
+	)
+
+	log.Debug("Generate new pod spec")
 
 	var s = types.PodSpec{}
 	s.ID = uuid.NewV4().String()
@@ -143,7 +151,7 @@ func podSpecGenerate(spec map[string]*types.ServiceSpec) types.PodSpec {
 	return s
 }
 
-func podNameGenerate(svc *types.Service) string {
+func generateName(svc *types.Service) string {
 	var name, hash string
 	for {
 
