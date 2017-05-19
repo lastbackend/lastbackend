@@ -23,6 +23,8 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/common/errors"
 	"github.com/lastbackend/lastbackend/pkg/common/types"
 	"github.com/lastbackend/lastbackend/pkg/scheduler/context"
+	"fmt"
+	"encoding/json"
 )
 
 type PodController struct {
@@ -46,37 +48,51 @@ func (pc *PodController) Watch(node chan *types.Node) {
 			select {
 			case p := <-pc.pods:
 				{
+
+					buf, _ := json.Marshal(p)
+					fmt.Println("===================================")
+					fmt.Println(string(buf))
+					fmt.Println("===================================")
+
 					if !pc.active {
 						log.Debug("PodController: skip management cause it is in slave mode")
 						pc.pending.DelPod(p)
 						continue
 					}
-
+fmt.Println("::: 1")
 					// If pod state set to provision then need run provision action
 					if p.State.Provision {
+fmt.Println("::: 2")
 						log.Debugf("PodController: pod needs to be allocated to node: %s", p.Meta.Name)
 						if err := Provision(p); err != nil {
+							fmt.Println("::: 3")
 							if err.Error() != errors.NodeNotFound {
+								fmt.Println("::: 4")
 								pc.pending.AddPod(p)
 							} else {
+								fmt.Println("::: 5")
 								log.Errorf("Error: PodController: pod provision: %s", err.Error())
 							}
+							fmt.Println("::: 6")
 							continue
 						}
-
+						fmt.Println("::: 7")
 						pc.pending.DelPod(p)
 						continue
 					}
-
+					fmt.Println("::: 8")
 					// If pod state not set in provision and status
 					// destroyed then need remove pod from node
 					if p.State.State == types.StateDestroy {
+						fmt.Println("::: 9")
 						if err := Remove(p); err != nil {
+							fmt.Println("::: 10")
 							log.Errorf("Error: PodController: remove pod from node: %s", err.Error())
 						}
+						fmt.Println("::: 11")
 						continue
 					}
-
+					fmt.Println("::: 12")
 					// If pod state not set in provision and status
 					// not destroyed then need update pod for node
 					if err := Update(p); err != nil {

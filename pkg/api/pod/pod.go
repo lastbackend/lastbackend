@@ -37,7 +37,6 @@ type pod struct {
 }
 
 func (p *pod) Set(pod types.Pod) error {
-
 	var (
 		log     = ctx.Get().GetLogger()
 		storage = ctx.Get().GetStorage()
@@ -82,8 +81,6 @@ func (p *pod) Set(pod types.Pod) error {
 			return err
 		}
 		delete(svc.Pods, pd.Meta.Name)
-
-		storage.Endpoint().Remove(p.Context, pd.Meta.Name)
 
 		if len(svc.Pods) == 0 && svc.State.State == types.StateDestroy {
 			if err = storage.Service().Remove(p.Context, svc); err != nil {

@@ -14,27 +14,6 @@
 // Dissemination of this information or reproduction of this material
 // is strictly forbidden unless prior written permission is obtained
 // from Last.Backend LLC.
+//
 
-package cache
-
-type Cache struct {
-	PodCache      *PodCache
-	EndpointCache *EndpointCache
-}
-
-func New() *Cache {
-	return &Cache{
-		PodCache:      NewPodCache(),
-		EndpointCache: NewEndpointCache(),
-	}
-}
-
-// Return pods storage
-func (s *Cache) Pods() *PodCache {
-	return s.PodCache
-}
-
-// Return endpoints storage
-func (s *Cache) Endpoints() *EndpointCache {
-	return s.EndpointCache
-}
+package pod

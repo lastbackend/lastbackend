@@ -213,13 +213,10 @@ func (s *service) StateUpdate(service *types.Service) {
 }
 
 func (s *service) ResourcesUpdate(service *types.Service) {
-
 	service.State.Resources = types.ServiceResourcesState{}
-
 	for _, s := range service.Spec {
 		service.State.Resources.Memory += int(s.Memory) * service.Meta.Replicas
 	}
-
 }
 
 func (s *service) AddSpec(service *types.Service, rq *request.RequestServiceSpecS) error {

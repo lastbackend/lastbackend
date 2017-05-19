@@ -19,11 +19,11 @@
 package daemon
 
 import (
+	"github.com/lastbackend/lastbackend/pkg/cache"
 	_cfg "github.com/lastbackend/lastbackend/pkg/common/config"
-	"github.com/lastbackend/lastbackend/pkg/discovery/cache"
 	"github.com/lastbackend/lastbackend/pkg/discovery/config"
 	"github.com/lastbackend/lastbackend/pkg/discovery/context"
-	"github.com/lastbackend/lastbackend/pkg/discovery/endpoint"
+	"github.com/lastbackend/lastbackend/pkg/discovery/runtime"
 	"github.com/lastbackend/lastbackend/pkg/logger"
 	"github.com/lastbackend/lastbackend/pkg/storage"
 	"os"
@@ -58,7 +58,9 @@ func Daemon(_cfg *_cfg.Config) {
 		log.Warnf("Start discovery server error: %s", err.Error())
 	}
 
-	endpoint.Loop()
+	// Initialize Runtime
+	r := runtime.NewRuntime(ctx)
+	r.Loop()
 
 	// Handle SIGINT and SIGTERM.
 	signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)

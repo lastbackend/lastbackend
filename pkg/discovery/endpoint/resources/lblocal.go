@@ -26,13 +26,13 @@ import (
 	"time"
 )
 
-func LocalR(w dns.ResponseWriter, r *dns.Msg) {
+func LbLocalR(w dns.ResponseWriter, r *dns.Msg) {
 
 	var (
 		log = context.Get().GetLogger()
 	)
 
-	log.Debug(`Dns request local.`)
+	log.Debug(`Dns request lblocal.`)
 
 	var (
 		v4 bool

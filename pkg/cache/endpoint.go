@@ -2,7 +2,7 @@
 // Last.Backend LLC CONFIDENTIAL
 // __________________
 //
-// [2014] - [2016] Last.Backend LLC
+// [2014] - [2017] Last.Backend LLC
 // All Rights Reserved.
 //
 // NOTICE:  All information contained herein is, and remains
@@ -23,19 +23,13 @@ import (
 	"sync"
 )
 
-type Cache struct {
-	sync.Mutex
+type EndpointCache struct {
+	lock    sync.RWMutex
 	storage map[string][]net.IP
 }
 
-func New() *Cache {
-	var c = new(Cache)
-	c.storage = make(map[string][]net.IP)
-	return c
-}
-
-func (c *Cache) Get(domain string) []net.IP {
-	d, ok := c.storage[domain]
+func (ec *EndpointCache) Get(domain string) []net.IP {
+	d, ok := ec.storage[domain]
 	if !ok || len(d) == 0 {
 		return nil
 	}
@@ -45,14 +39,24 @@ func (c *Cache) Get(domain string) []net.IP {
 	return d
 }
 
-func (c *Cache) Set(domain string, ips []net.IP) error {
-	c.storage[domain] = ips
+func (ec *EndpointCache) Set(domain string, ips []net.IP) error {
+	ec.lock.Lock()
+	ec.storage[domain] = ips
+	ec.lock.Unlock()
 	return nil
 }
 
-func (c *Cache) Del(domain string) error {
-	if _, ok := c.storage[domain]; ok {
-		delete(c.storage, domain)
+func (ec *EndpointCache) Del(domain string) error {
+	ec.lock.Lock()
+	if _, ok := ec.storage[domain]; ok {
+		delete(ec.storage, domain)
 	}
+	ec.lock.Unlock()
 	return nil
+}
+
+func NewEndpointCache() *EndpointCache {
+	return &EndpointCache{
+		storage: make(map[string][]net.IP),
+	}
 }

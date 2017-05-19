@@ -54,6 +54,7 @@ func (sc *ServiceController) Watch() {
 			}
 		}
 	}()
+
 	stg.Service().SpecWatch(sc.context.Background(), sc.services)
 }
 

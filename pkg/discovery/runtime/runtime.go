@@ -20,9 +20,10 @@ package runtime
 
 import (
 	"github.com/lastbackend/lastbackend/pkg/common/types"
-	"github.com/lastbackend/lastbackend/pkg/scheduler/context"
-	"github.com/lastbackend/lastbackend/pkg/scheduler/node"
-	"github.com/lastbackend/lastbackend/pkg/scheduler/pod"
+	"github.com/lastbackend/lastbackend/pkg/discovery/context"
+	"github.com/lastbackend/lastbackend/pkg/discovery/endpoint"
+	"github.com/lastbackend/lastbackend/pkg/discovery/pod"
+	"github.com/lastbackend/lastbackend/pkg/discovery/service"
 	"github.com/lastbackend/lastbackend/pkg/system"
 )
 
@@ -38,9 +39,9 @@ import (
 type Runtime struct {
 	context *context.Context
 	process *system.Process
-
-	pc *pod.PodController
-	nc *node.NodeController
+	ec      *endpoint.EndpointController
+	sc      *service.ServiceController
+	pc      *pod.PodController
 
 	active bool
 }
@@ -49,14 +50,17 @@ func NewRuntime(ctx *context.Context) *Runtime {
 	r := new(Runtime)
 	r.context = ctx
 	r.process = new(system.Process)
-	r.process.Register(ctx, types.KindScheduler)
+	r.process.Register(ctx, types.KindDiscovery)
 
+	r.ec = endpoint.NewEndpointController(ctx)
+
+	s := make(chan *types.Service)
+	r.sc = service.NewServiceController(ctx)
 	r.pc = pod.NewPodController(ctx)
-	r.nc = node.NewNodeController(ctx)
 
-	n := make(chan *types.Node)
-	go r.pc.Watch(n)
-	go r.nc.Watch(n)
+	go r.ec.Watch()
+	go r.sc.Watch(s)
+	go r.pc.Watch(s)
 
 	return r
 }
@@ -82,8 +86,9 @@ func (r *Runtime) Loop() {
 						}
 						r.active = true
 						log.Debug(" Runtime: Mark as lead")
+						r.ec.Resume()
+						r.sc.Resume()
 						r.pc.Resume()
-						r.nc.Resume()
 
 					} else {
 						if !r.active {
@@ -92,8 +97,9 @@ func (r *Runtime) Loop() {
 						}
 						log.Debug(" Runtime: Mark as slave")
 						r.active = false
+						r.ec.Pause()
+						r.sc.Pause()
 						r.pc.Pause()
-						r.nc.Pause()
 					}
 				}
 			}

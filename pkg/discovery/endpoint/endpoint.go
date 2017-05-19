@@ -19,13 +19,9 @@
 package endpoint
 
 import (
-	"fmt"
-	"github.com/lastbackend/lastbackend/pkg/common/types"
 	"github.com/lastbackend/lastbackend/pkg/discovery/context"
-	"github.com/lastbackend/lastbackend/pkg/storage/store"
 	"github.com/lastbackend/lastbackend/pkg/util"
 	"net"
-	"strings"
 )
 
 func Get(name string) ([]net.IP, error) {
@@ -40,7 +36,7 @@ func Get(name string) ([]net.IP, error) {
 
 	log.Debugf(`Endpoint: Get ip list from cache %s`, name)
 
-	var ips = cache.Get(name)
+	var ips = cache.EndpointCache.Get(name)
 
 	if ips != nil && len(ips) != 0 {
 		return ips, nil
@@ -70,9 +66,7 @@ func Get(name string) ([]net.IP, error) {
 
 	log.Debug(`ips`, ips)
 
-	cache.Lock()
-	cache.Set(name, ips)
-	cache.Unlock()
+	cache.EndpointCache.Set(name, ips)
 
 	log.Debugf(`Endpoint: Get ip list from cache for %s successfully: %v`, name, data)
 
@@ -109,9 +103,7 @@ func Update(name string) error {
 		return err
 	}
 
-	cache.Lock()
-	cache.Set(name, ips)
-	cache.Unlock()
+	cache.EndpointCache.Set(name, ips)
 
 	log.Debugf(`Endpoint: Update name %s in cache successfully `, name)
 
@@ -128,7 +120,7 @@ func Remove(name string) error {
 
 	log.Debugf(`Endpoint: Remove name %s from cache `, name)
 
-	err = cache.Del(name)
+	err = cache.EndpointCache.Del(name)
 	if err != nil {
 		log.Error(err)
 		return err
@@ -137,148 +129,4 @@ func Remove(name string) error {
 	log.Debugf(`Endpoint: Remove name %s from cache successfully `, name)
 
 	return nil
-}
-
-func Loop() {
-	var (
-		log       = context.Get().GetLogger()
-		storage   = context.Get().GetStorage()
-		cache     = context.Get().GetCache()
-		endpoints = make(chan string, 100)
-		services  = make(chan *types.Service, 100)
-		pods      = make(chan *types.Pod, 100)
-	)
-
-	log.Debug("Endpoint: Endpoint: Watch")
-
-	go func() {
-		for {
-			select {
-			case e := <-endpoints:
-				{
-					fmt.Println("===================================")
-					fmt.Println("endpoints", e)
-					fmt.Println("===================================")
-					i, err := storage.Endpoint().Get(context.Get().Background(), e)
-					if err != nil {
-						if err.Error() != store.ErrKeyNotFound {
-							if err = cache.Del(e); err != nil {
-								log.Errorf("Endpoint: remove ips from cache error %s", err.Error())
-							}
-						} else {
-							log.Errorf("Endpoint: get ips for domain error %s", err.Error())
-						}
-						continue
-					}
-
-					ips, err := util.ConvertStringIPToNetIP(i)
-					if err != nil {
-						log.Errorf("Endpoint: convert ips to net ips error %s", err.Error())
-						continue
-					}
-
-					if err = cache.Set(e, ips); err != nil {
-						log.Errorf("Endpoint: save ips to cache error %s", err.Error())
-						continue
-					}
-				}
-			case s := <-services:
-				{
-					fmt.Println("===================================")
-					fmt.Println("service", s)
-					fmt.Println("===================================")
-
-					if s == nil {
-						continue
-					}
-
-					serviceEndpoint := fmt.Sprintf("%s-%s.%s", s.Meta.Name, s.Meta.Namespace, *context.Get().GetConfig().SystemDomain)
-					serviceEndpoint = strings.Replace(serviceEndpoint, ":", "-", -1)
-
-					hosts := make(map[string]string)
-					ips := []string{}
-					for _, pod := range s.Pods {
-						if _, ok := hosts[pod.Meta.Hostname]; ok || pod.State.State == types.StateDestroy {
-							continue
-						}
-
-						node, err := storage.Node().Get(context.Get().Background(), pod.Meta.Hostname)
-						if err != nil {
-							log.Errorf("Endpoint: get node error %s", err.Error())
-							break
-						}
-
-						hosts[pod.Meta.Hostname] = node.Meta.IP
-						ips = append(ips, node.Meta.IP)
-					}
-
-					if s.State.State == types.StateDestroy {
-						if err := storage.Endpoint().Remove(context.Get().Background(), serviceEndpoint); err != nil {
-							log.Errorf("Endpoint: remove service endpoint error %s", err.Error())
-						}
-						continue
-					}
-
-					if err := storage.Endpoint().Upsert(context.Get().Background(), serviceEndpoint, ips); err != nil {
-						log.Errorf("Endpoint: upsert service endpoint error %s", err.Error())
-						continue
-					}
-				}
-			case p := <-pods:
-				{
-					fmt.Println("===================================")
-					fmt.Println("pod", p)
-					fmt.Println("===================================")
-
-					if p == nil || /*!p.State.Provision ||*/ p.Meta.Hostname == "" {
-						continue
-					}
-
-					podEndpoint := fmt.Sprintf("%s.%s", p.Meta.Name, *context.Get().GetConfig().SystemDomain)
-					podEndpoint = strings.Replace(podEndpoint, ":", "-", -1)
-
-					srv, err := storage.Service().GetByPodName(context.Get().Background(), p.Meta.Name)
-					if err != nil {
-						if err.Error() == store.ErrKeyNotFound {
-							if err := storage.Endpoint().Remove(context.Get().Background(), podEndpoint); err != nil {
-								log.Errorf("Endpoint: remove endpoint error %s", err.Error())
-							}
-						} else {
-							log.Errorf("Endpoint: get service error %s", err.Error())
-						}
-						continue
-					}
-
-					node, err := storage.Node().Get(context.Get().Background(), p.Meta.Hostname)
-					if err != nil {
-						log.Errorf("Endpoint: get node error %s", err.Error())
-						break
-					}
-
-					serviceEndpoint := fmt.Sprintf("%s-%s.%s", srv.Meta.Name, srv.Meta.Namespace, *context.Get().GetConfig().SystemDomain)
-					serviceEndpoint = strings.Replace(serviceEndpoint, ":", "-", -1)
-
-					fmt.Println("pod state", p.State.State, p.State.State == types.StateDestroy)
-
-					if p.State.State == types.StateDestroy {
-						if err := storage.Endpoint().Remove(context.Get().Background(), podEndpoint); err != nil {
-							log.Errorf("Endpoint: remove endpoint error %s", err.Error())
-						}
-						continue
-					}
-
-					if err := storage.Endpoint().Upsert(context.Get().Background(), podEndpoint, []string{node.Meta.IP}); err != nil {
-						log.Errorf("Endpoint: upsert endpoint error %s", err.Error())
-						continue
-					}
-
-					services <- srv
-				}
-			}
-		}
-	}()
-
-	go storage.Service().Watch(context.Get().Background(), services)
-	go storage.Pod().Watch(context.Get().Background(), pods)
-	go storage.Endpoint().Watch(context.Get().Background(), endpoints)
 }

@@ -257,12 +257,15 @@ func (s *NodeStorage) RemovePod(ctx context.Context, meta *types.NodeMeta, pod *
 	defer destroy()
 
 	tx := client.Begin(ctx)
+
 	keyMeta := keyCreate(nodeStorage, meta.Hostname, "meta")
+	fmt.Println("## keyMeta", keyMeta)
 	if err := tx.Update(keyMeta, meta, 0); err != nil {
 		return err
 	}
 
 	keyPod := keyCreate(nodeStorage, meta.Hostname, "spec", "pods", pod.Meta.Name)
+	fmt.Println("## keyPod", keyPod)
 	tx.Delete(keyPod)
 
 	if err := tx.Commit(); err != nil {
@@ -279,13 +282,8 @@ func (s *NodeStorage) Remove(ctx context.Context, node *types.Node) error {
 	}
 	defer destroy()
 
-	tx := client.Begin(ctx)
 	key := keyCreate(nodeStorage, node.Meta.Hostname)
-	tx.DeleteDir(key)
-
-	if err := tx.Commit(); err != nil {
-		return err
-	}
+	client.DeleteDir(ctx, key)
 
 	return nil
 }

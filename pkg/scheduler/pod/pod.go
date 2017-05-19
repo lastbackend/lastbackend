@@ -83,7 +83,7 @@ func Update(p *types.Pod) error {
 
 	node, err := stg.Node().Get(ctx, p.Meta.Hostname)
 	if err != nil {
-		log.Errorf("Node: Pod spec remove: find node err: %s", err.Error())
+		log.Errorf("Node: Pod spec update: find node err: %s", err.Error())
 		return err
 	}
 
@@ -93,9 +93,9 @@ func Update(p *types.Pod) error {
 		Spec:  p.Spec,
 	}
 
-	log.Debug("Remove pod spec from node")
+	log.Debug("Update pod spec from node")
 	if err := stg.Node().UpdatePod(ctx, &node.Meta, spec); err != nil {
-		log.Errorf("Node: Pod spec remove: remove pod spec err: %s", err.Error())
+		log.Errorf("Node: Pod spec update: update pod spec err: %s", err.Error())
 		return err
 	}
 

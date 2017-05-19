@@ -32,7 +32,7 @@ func Listen(port int) (*dns.DNS, error) {
 
 	log.Debug(`Init discovery resources`)
 
-	d.AddHandler(`local.`, resources.LocalR)
+	d.AddHandler(`lblocal.`, resources.LbLocalR)
 	d.AddHandler(`.`, resources.OtherR)
 
 	go func() {

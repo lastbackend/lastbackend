@@ -21,7 +21,7 @@ package context
 import (
 	"context"
 	_c "github.com/lastbackend/lastbackend/pkg/common/context"
-	"github.com/lastbackend/lastbackend/pkg/discovery/cache"
+	"github.com/lastbackend/lastbackend/pkg/cache"
 	"github.com/lastbackend/lastbackend/pkg/discovery/config"
 	"github.com/lastbackend/lastbackend/pkg/logger"
 	"github.com/lastbackend/lastbackend/pkg/storage"
