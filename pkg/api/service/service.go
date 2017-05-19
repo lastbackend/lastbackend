@@ -157,6 +157,12 @@ func (s *service) Remove(service *types.Service) error {
 	)
 
 	service.State.State = types.StateDestroyed
+	service.Meta.Replicas = int(0) // Delete all pods
+
+	if err := storage.Service().Update(s.Context, service); err != nil {
+		log.Error("Error: update service info to db", err)
+		return err
+	}
 
 	if len(service.Pods) == 0 {
 		if err := storage.Service().Remove(s.Context, service); err != nil {
@@ -166,19 +172,8 @@ func (s *service) Remove(service *types.Service) error {
 		return nil
 	}
 
-	for _, pod := range service.Pods {
-		pod.State.Provision = true
-		pod.State.Ready = false
-		pod.Spec.State = types.StateDestroyed
-	}
-
-	if err := storage.Service().Update(s.Context, service); err != nil {
-		log.Error("Error: update service info to db", err)
-		return err
-	}
-
 	if err := storage.Service().UpdateSpec(s.Context, service); err != nil {
-		log.Error("Error: update service spec to db", err)
+		log.Error("Error: update service spec info to db", err)
 		return err
 	}
 

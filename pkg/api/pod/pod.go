@@ -46,11 +46,11 @@ func (p *pod) Set(pod types.Pod) error {
 
 	svc, err := storage.Service().GetByPodName(p.Context, pod.Meta.Name)
 	if err != nil {
-		log.Errorf("Error: get service by pod name %s from db: %s", pod.Meta.Name, err.Error())
 		if err.Error() == store.ErrKeyNotFound {
 			log.Debugf("Pod %s not found", pod.Meta.Name)
 			return nil
 		}
+		log.Errorf("Error: get service by pod name %s from db: %s", pod.Meta.Name, err.Error())
 		return err
 	}
 
@@ -64,42 +64,46 @@ func (p *pod) Set(pod types.Pod) error {
 		return err
 	}
 
-	if _, ok := svc.Pods[pod.Meta.Name]; !ok {
-		return nil
-	}
+	// If service has not this pod then skip it
+	if _, ok := svc.Pods[pod.Meta.Name]; ok {
 
-	svc.Pods[pod.Meta.Name].Containers = pod.Containers
-	svc.Pods[pod.Meta.Name].Meta = pod.Meta
-	svc.Pods[pod.Meta.Name].State = pod.State
-	pd := svc.Pods[pod.Meta.Name]
+		svc.Pods[pod.Meta.Name].Containers = pod.Containers
+		svc.Pods[pod.Meta.Name].Meta = pod.Meta
+		svc.Pods[pod.Meta.Name].State = pod.State
+		pd := svc.Pods[pod.Meta.Name]
 
-	if pd.State.State == types.StateDestroyed {
-		log.Debugf("Service: Set pods: remove deleted pod: %s", pd.Meta.Name)
-		if err := storage.Pod().Remove(p.Context, item.Meta.Name, pd); err != nil {
-			log.Errorf("Error: set pod to db: %s", err)
-			return err
-		}
-		delete(svc.Pods, pd.Meta.Name)
+		if pd.State.State == types.StateDestroyed {
+			log.Debugf("Service: Set pods: remove deleted pod: %s", pd.Meta.Name)
+			if err := storage.Pod().Remove(p.Context, item.Meta.Name, pd); err != nil {
+				log.Errorf("Error: set pod to db: %s", err)
+				return err
+			}
+			delete(svc.Pods, pd.Meta.Name)
 
-		if len(svc.Pods) == 0 && svc.State.State == types.StateDestroyed {
-			if err = storage.Service().Remove(p.Context, svc); err != nil {
-				log.Errorf("Error: remove service from db: %s", err)
+		} else {
+			if err := storage.Pod().Update(p.Context, item.Meta.Name, pd); err != nil {
+				log.Errorf("Error: set pod to db: %s", err)
+				return err
+			}
+
+			// Need update data info (state and resources) for this service after update pod info
+			if err := storage.Service().Update(p.Context, svc); err != nil {
+				log.Errorf("Error: update service info to db: %s", err)
 				return err
 			}
 		}
-
-		return nil
 	}
 
-	if err := storage.Pod().Update(p.Context, item.Meta.Name, pd); err != nil {
-		log.Errorf("Error: set pod to db: %s", err)
-		return err
-	}
-
-	// Need update data info (state and resources) for this service after update pod info
-	if err := storage.Service().Update(p.Context, svc); err != nil {
-		log.Errorf("Error: update service info to db: %s", err)
-		return err
+	// Remove service if the state set as destroyed and pods count is zero
+	if len(svc.Pods) == 0 && svc.State.State == types.StateDestroyed {
+		if err = storage.Service().Remove(p.Context, svc); err != nil {
+			if err.Error() == store.ErrKeyNotFound {
+				log.Debugf("Service %s not found", svc.Meta.Name)
+				return nil
+			}
+			log.Errorf("Error: remove service from db: %s", err)
+			return err
+		}
 	}
 
 	return nil

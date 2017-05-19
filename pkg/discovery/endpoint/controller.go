@@ -53,9 +53,9 @@ func (ec *EndpointController) Watch() {
 
 					i, err := stg.Endpoint().Get(context.Get().Background(), e)
 					if err != nil {
-						if err.Error() != store.ErrKeyNotFound {
+						if err.Error() == store.ErrKeyNotFound {
 							if err = ec.cache.Del(e); err != nil {
-								log.Errorf("Endpoint: remove ips from cache error %s", err.Error())
+								log.Debug("Endpoint: remove ips from cache")
 							}
 						} else {
 							log.Errorf("Endpoint: get ips for domain error %s", err.Error())

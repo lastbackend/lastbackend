@@ -45,6 +45,11 @@ func (sc *ServiceController) Watch(services chan *types.Service) {
 			select {
 			case s := <-sc.services:
 				{
+
+					fmt.Println("##########################")
+					fmt.Println(s.State.State, s.Meta.Name)
+					fmt.Println("##########################")
+
 					if !sc.active {
 						log.Debug("ServiceController: skip management cause it is in slave mode")
 						continue
@@ -56,6 +61,13 @@ func (sc *ServiceController) Watch(services chan *types.Service) {
 
 					endpoint := fmt.Sprintf("%s-%s.%s", s.Meta.Name, s.Meta.Namespace, *context.Get().GetConfig().SystemDomain)
 					endpoint = strings.Replace(endpoint, ":", "-", -1)
+
+					if s.State.State == types.StateDestroyed {
+						if err := stg.Endpoint().Remove(context.Get().Background(), endpoint); err != nil {
+							log.Errorf("Endpoint: remove service endpoint error %s", err.Error())
+						}
+						continue
+					}
 
 					hosts := make(map[string]string)
 					ips := []string{}
@@ -72,13 +84,6 @@ func (sc *ServiceController) Watch(services chan *types.Service) {
 
 						hosts[pod.Meta.Hostname] = node.Meta.IP
 						ips = append(ips, node.Meta.IP)
-					}
-
-					if s.State.State == types.StateDestroyed {
-						if err := stg.Endpoint().Remove(context.Get().Background(), endpoint); err != nil {
-							log.Errorf("Endpoint: remove service endpoint error %s", err.Error())
-						}
-						continue
 					}
 
 					if err := stg.Endpoint().Upsert(context.Get().Background(), endpoint, ips); err != nil {
