@@ -19,7 +19,6 @@
 package events
 
 import (
-	"fmt"
 	"github.com/lastbackend/lastbackend/pkg/api/context"
 	"github.com/lastbackend/lastbackend/pkg/api/namespace"
 	"github.com/lastbackend/lastbackend/pkg/api/service/views/v1"
@@ -52,7 +51,6 @@ func (e *Events) Listen() {
 					if obj, err := v1.New(s).ToJson(); err == nil {
 						if room := hub.GetRoom("lastbackend"); room != nil {
 							log.Debug("Room founded, try to broadcast")
-							fmt.Println(string(obj))
 							room.Broadcast <- obj
 						}
 

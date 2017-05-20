@@ -38,6 +38,7 @@ type Storage struct {
 	*NodeStorage
 	*PodStorage
 	*SystemStorage
+	*EndpointStorage
 }
 
 func SetUtil(u IUtil) {
@@ -121,6 +122,13 @@ func (s *Storage) System() ISystem {
 	return s.SystemStorage
 }
 
+func (s *Storage) Endpoint() IEndpoint {
+	if s == nil {
+		return nil
+	}
+	return s.EndpointStorage
+}
+
 func keyCreate(args ...string) string {
 	return strings.Join([]string(args), "/")
 }
@@ -145,6 +153,7 @@ func Get(config store.Config) (*Storage, error) {
 	store.NodeStorage = newNodeStorage(config, _util)
 	store.PodStorage = newPodStorage(config, _util)
 	store.SystemStorage = newSystemStorage(config, _util)
+	store.EndpointStorage = newEndpointStorage(config, _util)
 	return store, nil
 }
 

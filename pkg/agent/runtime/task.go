@@ -70,14 +70,14 @@ func (t *Task) start() {
 	// Check spec version
 	log.Debugf("Task [%s]: pod spec: %s, new spec: %s", t.id, t.pod.Spec.ID, t.spec.ID)
 
-	if t.spec.State == types.StateDestroy {
+	if t.spec.State == types.StateDestroyed {
 		log.Debugf("Task [%s]: pod is marked for deletion: %s", t.id, t.pod.Meta.Name)
 		t.containersStateManage()
 		return
 	}
 
 	if t.spec.ID != t.pod.Spec.ID {
-		log.Debugf("Task [%s]: spec is differrent, apply new one: %s", t.id, t.pod.Spec.ID)
+		log.Debugf("Task [%s]: spec is different, apply new one: %s", t.id, t.pod.Spec.ID)
 		t.pod.Spec.ID = t.spec.ID
 		t.imagesUpdate()
 		t.containersCreate()
@@ -219,7 +219,7 @@ func (t *Task) containersStateManage() {
 		}
 
 		switch t.spec.State {
-		case types.StateDestroy:
+		case types.StateDestroyed:
 			t.containerDestroy(c)
 		case types.StateStarted:
 			t.containerStart(c)

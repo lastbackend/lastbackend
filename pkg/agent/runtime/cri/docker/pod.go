@@ -23,6 +23,7 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/common/context"
 	"github.com/lastbackend/lastbackend/pkg/common/types"
 	"strings"
+	"github.com/lastbackend/lastbackend/pkg/util/system"
 )
 
 func (r *Runtime) PodList(ctx context.Context) ([]*types.Pod, error) {
@@ -57,6 +58,7 @@ func (r *Runtime) PodList(ctx context.Context) ([]*types.Pod, error) {
 			pod = types.NewPod()
 			pods[info[0]] = pod
 		}
+		pod.Meta.Hostname, _ = system.GetHostname()
 		pod.Meta.Name = info[0]
 		pod.Spec.ID = info[1]
 		pod.Spec.Containers = make(map[string]*types.ContainerSpec)

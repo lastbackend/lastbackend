@@ -31,12 +31,35 @@ func Provision(p *types.Pod) error {
 		stg = context.Get().GetStorage()
 		ctx = context.Get().Background()
 
-		node   *types.Node
 		memory = int64(0)
+		node   *types.Node
 	)
 
-	log.Debugf("Allocate node for pod: %s", p.Meta.Name)
+	if p.Meta.Hostname != "" {
+		n, err := stg.Node().Get(ctx, p.Meta.Hostname)
+		if err != nil {
+			log.Errorf("Node: find node err: %s", err.Error())
+			return err
+		}
 
+		spec := &types.PodNodeSpec{
+			Meta:  p.Meta,
+			State: p.State,
+			Spec:  p.Spec,
+		}
+
+		log.Debug("Set pod spec as destroy")
+		if err := stg.Node().UpdatePod(ctx, &n.Meta, spec); err != nil {
+			log.Errorf("Node: remove pod spec err: %s", err.Error())
+			return err
+		}
+	}
+
+	if p.Spec.State == types.StateDestroyed {
+		return nil
+	}
+
+	log.Debugf("Allocate node for pod: %s", p.Meta.Name)
 	nodes, err := stg.Node().List(ctx)
 	if err != nil {
 		log.Errorf("Node: allocate: get nodes error: %s", err.Error())
@@ -67,63 +90,7 @@ func Provision(p *types.Pod) error {
 	}
 
 	if err := stg.Node().InsertPod(ctx, &node.Meta, spec); err != nil {
-		log.Errorf("Node: Pod spec remove: insert spec to node err: %s", err.Error())
-		return err
-	}
-
-	return nil
-}
-
-func Update(p *types.Pod) error {
-	var (
-		stg = context.Get().GetStorage()
-		log = context.Get().GetLogger()
-		ctx = context.Get().Background()
-	)
-
-	node, err := stg.Node().Get(ctx, p.Meta.Hostname)
-	if err != nil {
-		log.Errorf("Node: Pod spec remove: find node err: %s", err.Error())
-		return err
-	}
-
-	spec := &types.PodNodeSpec{
-		Meta:  p.Meta,
-		State: p.State,
-		Spec:  p.Spec,
-	}
-
-	log.Debug("Remove pod spec from node")
-	if err := stg.Node().UpdatePod(ctx, &node.Meta, spec); err != nil {
-		log.Errorf("Node: Pod spec remove: remove pod spec err: %s", err.Error())
-		return err
-	}
-
-	return nil
-}
-
-func Remove(p *types.Pod) error {
-	var (
-		stg = context.Get().GetStorage()
-		log = context.Get().GetLogger()
-		ctx = context.Get().Background()
-	)
-
-	node, err := stg.Node().Get(ctx, p.Meta.Hostname)
-	if err != nil {
-		log.Errorf("Node: Pod spec remove: find node err: %s", err.Error())
-		return err
-	}
-
-	spec := &types.PodNodeSpec{
-		Meta:  p.Meta,
-		State: p.State,
-		Spec:  p.Spec,
-	}
-
-	log.Debug("Remove pod spec from node")
-	if err := stg.Node().RemovePod(ctx, &node.Meta, spec); err != nil {
-		log.Errorf("Node: Pod spec remove: remove pod spec err: %s", err.Error())
+		log.Errorf("Node: Pod spec add: insert spec to node err: %s", err.Error())
 		return err
 	}
 

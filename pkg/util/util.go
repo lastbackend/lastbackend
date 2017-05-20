@@ -17,3 +17,43 @@
 //
 
 package util
+
+import (
+	"net"
+	"strings"
+)
+
+func RemoveDuplicates(data []string) []string {
+	// Use map to record duplicates as we find them.
+	encountered := map[string]bool{}
+	result := []string{}
+
+	for v := range data {
+		if encountered[data[v]] == true {
+			// Do not add duplicate.
+		} else {
+			// Record this element as an encountered element.
+			encountered[data[v]] = true
+			// Append to result slice.
+			result = append(result, data[v])
+		}
+	}
+
+	// Return the new slice.
+	return result
+}
+
+func Trim(s, suffix string) string {
+	if strings.HasSuffix(s, suffix) {
+		s = s[:len(s)-len(suffix)]
+	}
+	return s
+}
+
+func ConvertStringIPToNetIP(data []string) ([]net.IP, error) {
+	var ips = []net.IP{}
+	for i := range data {
+		ips = append(ips, net.ParseIP(data[i]))
+	}
+	return ips, nil
+}

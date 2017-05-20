@@ -22,6 +22,7 @@ const KindAPIServer = "api-server"
 const KindController = "controller"
 const KindScheduler = "scheduler"
 const KindBuilder = "builder"
+const KindDiscovery = "discovery"
 
 type Process struct {
 	// Process Meta

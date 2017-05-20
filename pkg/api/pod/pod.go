@@ -26,9 +26,9 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/common/types"
 	"github.com/lastbackend/lastbackend/pkg/storage/store"
 	h "github.com/lastbackend/lastbackend/pkg/util/http"
+	"github.com/pkg/errors"
 	"io"
 	"net/http"
-	"strings"
 )
 
 type pod struct {
@@ -37,7 +37,6 @@ type pod struct {
 }
 
 func (p *pod) Set(pod types.Pod) error {
-
 	var (
 		log     = ctx.Get().GetLogger()
 		storage = ctx.Get().GetStorage()
@@ -45,19 +44,13 @@ func (p *pod) Set(pod types.Pod) error {
 
 	log.Debugf("update pod %s state: %s", pod.Meta.Name, pod.State.State)
 
-	parts := strings.Split(pod.Meta.Name, ":")
-	if len(parts) < 3 {
-		log.Errorf("Can not parse pod name: %s", pod.Meta.Name)
-		return nil
-	}
-
-	svc, err := storage.Service().GetByName(p.Context, parts[0], parts[1])
+	svc, err := storage.Service().GetByPodName(p.Context, pod.Meta.Name)
 	if err != nil {
-		log.Errorf("Error: get service by pod name %s from db: %s", pod.Meta.Name, err.Error())
 		if err.Error() == store.ErrKeyNotFound {
 			log.Debugf("Pod %s not found", pod.Meta.Name)
 			return nil
 		}
+		log.Errorf("Error: get service by pod name %s from db: %s", pod.Meta.Name, err.Error())
 		return err
 	}
 
@@ -71,39 +64,52 @@ func (p *pod) Set(pod types.Pod) error {
 		return err
 	}
 
-	pd, e := storage.Pod().GetByName(p.Context, item.Meta.Name, pod.Meta.Name)
-	if e != nil {
-		log.Errorf("Error: get pod from db: %s", e.Error())
-		return err
+	// If service has not this pod then skip it
+	if _, ok := svc.Pods[pod.Meta.Name]; ok {
+
+		svc.Pods[pod.Meta.Name].Containers = pod.Containers
+		svc.Pods[pod.Meta.Name].Meta = pod.Meta
+		svc.Pods[pod.Meta.Name].State = pod.State
+		pd := svc.Pods[pod.Meta.Name]
+
+		if pd.State.State == types.StateDestroyed {
+			log.Debugf("Service: Set pods: remove deleted pod: %s", pd.Meta.Name)
+			if err := storage.Pod().Remove(p.Context, item.Meta.Name, pd); err != nil {
+				log.Errorf("Error: set pod to db: %s", err)
+				return err
+			}
+			delete(svc.Pods, pd.Meta.Name)
+
+		} else {
+			if err := storage.Pod().Update(p.Context, item.Meta.Name, pd); err != nil {
+				log.Errorf("Error: set pod to db: %s", err)
+				return err
+			}
+
+			// Need update data info (state and resources) for this service after update pod info
+			if err := storage.Service().Update(p.Context, svc); err != nil {
+				log.Errorf("Error: update service info to db: %s", err)
+				return err
+			}
+		}
 	}
 
-	pd.Containers = pod.Containers
-	pd.State = pod.State
-
-	if pd.State.State == types.StateDestroyed {
-		log.Debugf("Service: Set pods: remove deleted pod: %s", pd.Meta.Name)
-		if err := storage.Pod().Remove(p.Context, item.Meta.Name, pd); err != nil {
-			log.Errorf("Error: set pod to db: %s", err)
+	// Remove service if the state set as destroyed and pods count is zero
+	if len(svc.Pods) == 0 && svc.State.State == types.StateDestroyed {
+		if err = storage.Service().Remove(p.Context, svc); err != nil {
+			if err.Error() == store.ErrKeyNotFound {
+				log.Debugf("Service %s not found", svc.Meta.Name)
+				return nil
+			}
+			log.Errorf("Error: remove service from db: %s", err)
 			return err
 		}
-		delete(svc.Pods, pd.Meta.Name)
-
-		if len(svc.Pods) == 0 && svc.State.State == types.StateDestroy {
-			storage.Service().Remove(p.Context, svc)
-		}
-
-		return nil
-	}
-
-	if err := storage.Pod().Update(p.Context, item.Meta.Name, pd); err != nil {
-		log.Errorf("Error: set pod to db: %s", err)
-		return err
 	}
 
 	return nil
 }
 
-func Logs(c context.Context, namespace, pod, container string, stream io.Writer, done chan bool) error {
+func Logs(c context.Context, ns, pod, container string, stream io.Writer, done chan bool) error {
 
 	const buffer_size = 1024
 
@@ -116,25 +122,63 @@ func Logs(c context.Context, namespace, pod, container string, stream io.Writer,
 
 	log.Debug("Service: get service logs")
 
-	p, err := storage.Pod().GetByName(c, namespace, pod)
+	svc, err := storage.Service().GetByPodName(c, pod)
 	if err != nil {
+		log.Errorf("Error: get service by pod name %s from db: %s", pod, err.Error())
+		if err.Error() == store.ErrKeyNotFound {
+			log.Debugf("Pod %s not found", pod)
+			return nil
+		}
 		return err
 	}
 
-	// Todo: check container in pod
+	_ns := namespace.New(c)
+	item, err := _ns.Get(svc.Meta.Namespace)
+	if err != nil {
+		log.Error("Error: find namespace by name", err.Error())
+		return err
+	}
+	if item == nil {
+		return err
+	}
+
+	if ns != item.Meta.Name {
+		log.Error("Error: access denied")
+		return errors.New("access denied")
+	}
+
+	p, e := storage.Pod().GetByName(c, item.Meta.Name, pod)
+	if e != nil {
+		log.Errorf("Error: get pod from db: %s", e.Error())
+		return err
+	}
+
+	var cnt string
+	for c := range p.Containers {
+		if c == container {
+			cnt = container
+			break
+		}
+	}
+	if cnt == "" {
+		log.Error("Error: access denied")
+		return errors.New("access denied")
+	}
+
 	n, err := storage.Node().Get(c, p.Meta.Hostname)
 	if err != nil {
+		log.Error("Error: find namespace by name", err.Error())
 		return err
 	}
 
-	// TODO: Get port from node
-	client, err := h.New(n.Meta.Hostname+":2968", &h.ReqOpts{TLS: false})
+	uri := fmt.Sprintf("%s:%d", n.Meta.IP, n.Meta.Port)
+	client, err := h.New(uri, &h.ReqOpts{TLS: false})
 	if err != nil {
 		return err
 	}
 
 	_, res, err := client.
-		GET(fmt.Sprintf("/container/%s/logs", container)).Do()
+		GET(fmt.Sprintf("/container/%s/logs", cnt)).Do()
 	if err != nil {
 		return err
 	}

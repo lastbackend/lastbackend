@@ -77,6 +77,7 @@ type IService interface {
 	ListByNamespace(ctx context.Context, namespace string) ([]*types.Service, error)
 	Insert(ctx context.Context, service *types.Service) error
 	Update(ctx context.Context, service *types.Service) error
+	UpdateSpec(ctx context.Context, service *types.Service) error
 	Remove(ctx context.Context, service *types.Service) error
 	RemoveByNamespace(ctx context.Context, namespace string) error
 
@@ -140,4 +141,11 @@ type ISystem interface {
 	Elect(ctx context.Context, process *types.Process) (bool, error)
 	ElectUpdate(ctx context.Context, process *types.Process) error
 	ElectWait(ctx context.Context, process *types.Process, lead chan bool) error
+}
+
+type IEndpoint interface {
+	Get(ctx context.Context, name string) ([]string, error)
+	Upsert(ctx context.Context, name string, ips []string) error
+	Remove(ctx context.Context, name string) error
+	Watch(ctx context.Context, endpoint chan string) error
 }

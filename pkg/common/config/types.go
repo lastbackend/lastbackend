@@ -19,15 +19,17 @@
 package config
 
 type Config struct {
-	LogLevel    *int
-	Token       *string
-	Etcd        ETCD
-	Registry    Registry
-	APIServer   APIServer
-	ProxyServer ProxyServer
-	AgentServer AgentServer
-	Runtime     Runtime
-	Host        Host
+	LogLevel        *int
+	Token           *string
+	SystemDomain    *string
+	Etcd            ETCD
+	Registry        Registry
+	APIServer       APIServer
+	ProxyServer     ProxyServer
+	AgentServer     AgentServer
+	DiscoveryServer DiscoveryServer
+	Runtime         Runtime
+	Host            Host
 }
 
 type APIServer struct {
@@ -70,5 +72,9 @@ type Registry struct {
 
 type AgentServer struct {
 	Host *string
+	Port *int
+}
+
+type DiscoveryServer struct {
 	Port *int
 }

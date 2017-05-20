@@ -52,36 +52,22 @@ func (pc *PodController) Watch(node chan *types.Node) {
 						continue
 					}
 
-					// If pod state set to provision then need run provision action
-					if p.State.Provision {
-						log.Debugf("PodController: pod needs to be allocated to node: %s", p.Meta.Name)
-						if err := Provision(p); err != nil {
-							if err.Error() != errors.NodeNotFound {
-								pc.pending.AddPod(p)
-							} else {
-								log.Errorf("Error: PodController: pod provision: %s", err.Error())
-							}
-							continue
-						}
-
-						pc.pending.DelPod(p)
+					// If pod state not set to provision then need skip
+					if !p.State.Provision {
 						continue
 					}
 
-					// If pod state not set in provision and status
-					// destroyed then need remove pod from node
-					if p.State.State == types.StateDestroy {
-						if err := Remove(p); err != nil {
-							log.Errorf("Error: PodController: remove pod from node: %s", err.Error())
+					log.Debugf("PodController: provision for pod: %s", p.Meta.Name)
+					if err := Provision(p); err != nil {
+						if err.Error() != errors.NodeNotFound {
+							pc.pending.AddPod(p)
+						} else {
+							log.Errorf("PodController: pod provision err: %s", err.Error())
 						}
 						continue
 					}
 
-					// If pod state not set in provision and status
-					// not destroyed then need update pod for node
-					if err := Update(p); err != nil {
-						log.Errorf("Error: PodController: update pod to node: %s", err.Error())
-					}
+					pc.pending.DelPod(p)
 				}
 			}
 		}
@@ -123,7 +109,7 @@ func (pc *PodController) Resume() {
 	}
 
 	for _, ns := range nss {
-		log.Debugf("Get pods in namespace: %s", ns.Meta.Name)
+		log.Debugf("PodController: Get pods in namespace: %s", ns.Meta.Name)
 		pods, err := stg.Pod().ListByNamespace(pc.context.Background(), ns.Meta.Name)
 		if err != nil {
 			log.Errorf("PodController: Get pods list err: %s", err.Error())

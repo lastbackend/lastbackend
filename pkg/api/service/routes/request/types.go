@@ -145,6 +145,11 @@ func (s *RequestServiceCreateS) DecodeAndValidate(reader io.Reader) *errors.Err 
 	if s.Spec == nil {
 		s.Spec = new(RequestServiceSpecS)
 	}
+
+	if s.Replicas != nil && *s.Replicas < 1 {
+		*s.Replicas = 1
+	}
+
 	// TODO: Need validate data format in config
 
 	return nil
@@ -180,6 +185,10 @@ func (s *RequestServiceUpdateS) DecodeAndValidate(reader io.Reader) *errors.Err 
 		if len(s.Name) < 4 && len(s.Name) > 64 && !validator.IsServiceName(s.Name) {
 			return errors.New("service").BadParameter("name")
 		}
+	}
+
+	if s.Replicas != nil && *s.Replicas < 1 {
+		*s.Replicas = 1
 	}
 
 	// TODO: Need validate data format in config

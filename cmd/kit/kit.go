@@ -21,16 +21,17 @@ package main
 import (
 	"fmt"
 	"github.com/jawher/mow.cli"
+	"github.com/lastbackend/lastbackend/pkg/common/config"
+	"os"
+	"os/signal"
+	"syscall"
+
 	agent "github.com/lastbackend/lastbackend/pkg/agent/daemon"
 	api "github.com/lastbackend/lastbackend/pkg/api/daemon"
 	builder "github.com/lastbackend/lastbackend/pkg/builder/daemon"
 	controller "github.com/lastbackend/lastbackend/pkg/controller/daemon"
+	discovery "github.com/lastbackend/lastbackend/pkg/discovery/daemon"
 	scheduler "github.com/lastbackend/lastbackend/pkg/scheduler/daemon"
-	"os"
-
-	"github.com/lastbackend/lastbackend/pkg/common/config"
-	"os/signal"
-	"syscall"
 )
 
 func main() {
@@ -132,6 +133,15 @@ func main() {
 		EnvVar: "LB_HOSTNAME", HideValue: true,
 	})
 
+	cfg.SystemDomain = app.String(cli.StringOpt{
+		Name: "system-domain", Desc: "Default system domain",
+		EnvVar: "SYSTEM-DOMAIN", Value: "lblocal", HideValue: true,
+	})
+	cfg.DiscoveryServer.Port = app.Int(cli.IntOpt{
+		Name: "discovery-port", Desc: "Discovery server port",
+		EnvVar: "DISCOVERY-PORT", Value: 53, HideValue: true,
+	})
+
 	var help = app.Bool(cli.BoolOpt{
 		Name:      "h help",
 		Value:     false,
@@ -180,6 +190,10 @@ func main() {
 
 				if app == "agent" {
 					go agent.Daemon(&cfg)
+				}
+
+				if app == "discovery" {
+					go discovery.Daemon(&cfg)
 				}
 			}
 		}

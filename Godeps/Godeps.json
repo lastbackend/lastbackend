@@ -262,6 +262,10 @@
 			"Rev": "14207d285c6c197daabb5c9793d63e7af9ab2d50"
 		},
 		{
+			"ImportPath": "github.com/miekg/dns",
+			"Rev": "f282f80e243cc2bf8f6410c30d821b93b794e168"
+		},
+		{
 			"ImportPath": "github.com/opencontainers/go-digest",
 			"Comment": "v1.0.0-rc0",
 			"Rev": "aa2ec055abd10d26d539eb630a92241b781ce4bc"

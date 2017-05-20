@@ -18,16 +18,23 @@
 package cache
 
 type Cache struct {
-	PodCache *PodCache
+	PodCache      *PodCache
+	EndpointCache *EndpointCache
 }
 
 func New() *Cache {
 	return &Cache{
-		PodCache: NewPodCache(),
+		PodCache:      NewPodCache(),
+		EndpointCache: NewEndpointCache(),
 	}
 }
 
 // Return pods storage
 func (s *Cache) Pods() *PodCache {
 	return s.PodCache
+}
+
+// Return endpoints storage
+func (s *Cache) Endpoints() *EndpointCache {
+	return s.EndpointCache
 }

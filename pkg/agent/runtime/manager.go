@@ -20,6 +20,7 @@ package runtime
 import (
 	"github.com/lastbackend/lastbackend/pkg/agent/context"
 	"github.com/lastbackend/lastbackend/pkg/common/types"
+	"github.com/lastbackend/lastbackend/pkg/util/system"
 	"sync"
 )
 
@@ -44,6 +45,7 @@ func (pm *PodManager) GetPods() map[string]*types.Pod {
 }
 
 func (pm *PodManager) SyncPod(pod types.PodNodeSpec) {
+
 	log := context.Get().GetLogger()
 	log.Debugf("Pod %s sync", pod.Meta.Name)
 
@@ -52,6 +54,7 @@ func (pm *PodManager) SyncPod(pod types.PodNodeSpec) {
 		log.Debugf("Pod %s not found, create new one", pod.Meta.Name)
 		p := types.NewPod()
 		p.Meta = pod.Meta
+		p.Meta.Hostname, _ = system.GetHostname()
 		context.Get().GetCache().Pods().SetPod(p)
 		pm.sync(pod.Meta, pod.State, pod.Spec, p)
 		return
@@ -72,7 +75,7 @@ func (pm *PodManager) SyncPod(pod types.PodNodeSpec) {
 		return
 	}
 
-	if (p.Spec.ID == pod.Spec.ID) && p.Spec.State == pod.Spec.State {
+	if (p.Spec.ID == pod.Spec.ID) && (p.Spec.State == pod.Spec.State) {
 		log.Debugf("Pod %s in correct state", pod.Meta.Name)
 		return
 	}
@@ -119,12 +122,12 @@ func (pm *PodManager) sync(meta types.PodMeta, state types.PodState, spec types.
 func NewPodManager() (*PodManager, error) {
 
 	log := context.Get().GetLogger()
+
 	log.Debug("Create new pod manager")
 
 	crii := context.Get().GetCri()
 
 	pm := &PodManager{}
-
 	pm.workers = make(map[string]*Worker)
 
 	log.Debug("Restore new pod manager state")

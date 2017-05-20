@@ -83,6 +83,7 @@ func (r *Runtime) Loop() {
 						r.active = true
 						log.Debug(" Runtime: Mark as lead")
 						r.pc.Resume()
+						r.nc.Resume()
 
 					} else {
 						if !r.active {
@@ -92,6 +93,7 @@ func (r *Runtime) Loop() {
 						log.Debug(" Runtime: Mark as slave")
 						r.active = false
 						r.pc.Pause()
+						r.nc.Pause()
 					}
 				}
 			}

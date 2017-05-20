@@ -34,7 +34,7 @@ type Container struct {
 	// Container current state
 	State string `json:"state"`
 	// Container current state
-	Status string `json:"status"`
+	Status string `json:"status,omitempty"`
 	// Container ports mapping
 	Ports map[string]int `json:"ports"`
 	// Container created time

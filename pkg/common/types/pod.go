@@ -66,7 +66,7 @@ type PodSpec struct {
 	// Provision state
 	State string `json:"state"`
 	// Provision status
-	Status string `json:"status"`
+	Status string `json:"status,omitempty"`
 
 	// Containers spec for pod
 	Containers map[string]*ContainerSpec `json:"containers"`
@@ -81,7 +81,7 @@ type PodState struct {
 	// Pod current state
 	State string `json:"state"`
 	// Pod current status
-	Status string `json:"status"`
+	Status string `json:"status,omitempty"`
 	// Pod Provision state
 	Provision bool `json:"provision"`
 	// Pod ready state
@@ -132,8 +132,6 @@ func (p *Pod) UpdateState() {
 				p.State.State = StateStarted
 			case StateError:
 				p.State.State = StateError
-			case StateDestroy:
-				p.State.State = StateDestroy
 			default:
 				p.State.State = StateWarning
 			}
@@ -145,8 +143,6 @@ func (p *Pod) UpdateState() {
 				p.State.State = StateStarted
 			case StateError:
 				p.State.State = StateError
-			case StateDestroy:
-				p.State.State = StateDestroy
 			default:
 				p.State.State = StateWarning
 			}
@@ -156,8 +152,6 @@ func (p *Pod) UpdateState() {
 				p.State.State = StateStopped
 			case StateStopped:
 				p.State.State = StateStopped
-			case StateDestroy:
-				p.State.State = StateDestroy
 			case StateError:
 				p.State.State = StateError
 			default:
@@ -169,23 +163,17 @@ func (p *Pod) UpdateState() {
 				p.State.State = StateStarted
 			case StateStarted:
 				p.State.State = StateStarted
-			case StateDestroy:
-				p.State.State = StateDestroy
 			case StateError:
 				p.State.State = StateError
 			default:
 				p.State.State = StateWarning
 			}
-		case StateDestroyed:
-			p.State.State = StateDestroy
 		case StateExited:
 			switch p.State.State {
 			case "":
 				p.State.State = StateStopped
 			case StateStopped:
 				p.State.State = StateStopped
-			case StateDestroy:
-				p.State.State = StateDestroy
 			case StateError:
 				p.State.State = StateError
 			default:
@@ -197,7 +185,7 @@ func (p *Pod) UpdateState() {
 		}
 	}
 
-	if len(p.Containers) == 0 && p.Spec.State == StateDestroy {
+	if len(p.Containers) == 0 && p.Spec.State == StateDestroyed {
 		p.State.State = StateDestroyed
 	}
 

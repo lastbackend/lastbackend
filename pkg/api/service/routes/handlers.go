@@ -137,8 +137,8 @@ func ServiceCreateH(w http.ResponseWriter, r *http.Request) {
 	// request body struct
 	rq := new(request.RequestServiceCreateS)
 	if err := rq.DecodeAndValidate(r.Body); err != nil {
-		log.Errorf("Error: validation incomming data: %s", err)
-		errors.New("Invalid incomming data").Unknown().Http(w)
+		log.Errorf("Error: validation incoming data: %s", err)
+		errors.New("Invalid incoming data").Unknown().Http(w)
 		return
 	}
 
@@ -240,8 +240,8 @@ func ServiceUpdateH(w http.ResponseWriter, r *http.Request) {
 	// request body struct
 	rq := new(request.RequestServiceUpdateS)
 	if err := rq.DecodeAndValidate(r.Body); err != nil {
-		log.Error("Error: validation incomming data", err)
-		errors.New("Invalid incomming data").Unknown().Http(w)
+		log.Error("Error: validation incoming data", err)
+		errors.New("Invalid incoming data").Unknown().Http(w)
 		return
 	}
 
@@ -357,8 +357,8 @@ func ServiceSpecCreateH(w http.ResponseWriter, r *http.Request) {
 	// request body struct
 	rq := new(request.RequestServiceSpecS)
 	if err := rq.DecodeAndValidate(r.Body); err != nil {
-		log.Error("Error: validation incomming data", err)
-		errors.New("Invalid incomming data").Unknown().Http(w)
+		log.Error("Error: validation incoming data", err)
+		errors.New("Invalid incoming data").Unknown().Http(w)
 		return
 	}
 
@@ -418,8 +418,8 @@ func ServiceSpecUpdateH(w http.ResponseWriter, r *http.Request) {
 	// request body struct
 	rq := new(request.RequestServiceSpecS)
 	if err := rq.DecodeAndValidate(r.Body); err != nil {
-		log.Error("Error: validation incomming data", err)
-		errors.New("Invalid incomming data").Unknown().Http(w)
+		log.Error("Error: validation incoming data", err)
+		errors.New("Invalid incoming data").Unknown().Http(w)
 		return
 	}
 
@@ -479,8 +479,8 @@ func ServiceSpecRemoveH(w http.ResponseWriter, r *http.Request) {
 	// request body struct
 	rq := new(request.RequestServiceUpdateS)
 	if err := rq.DecodeAndValidate(r.Body); err != nil {
-		log.Error("Error: validation incomming data", err)
-		errors.New("Invalid incomming data").Unknown().Http(w)
+		log.Error("Error: validation incoming data", err)
+		errors.New("Invalid incoming data").Unknown().Http(w)
 		return
 	}
 

@@ -31,7 +31,7 @@ import (
 const MinContainerMemory = 32
 
 func GetNodeMeta() types.NodeMeta {
-	var cfg = config.Get().Host
+	var cfg = config.Get()
 	var meta = types.NodeMeta{}
 
 	meta.Created = time.Now()
@@ -39,10 +39,17 @@ func GetNodeMeta() types.NodeMeta {
 
 	info := system.GetOsInfo()
 
-	if cfg.Hostname != nil && *cfg.Hostname != "" {
-		meta.Hostname = *cfg.Hostname
+	if cfg.Host.Hostname != nil && *cfg.Host.Hostname != "" {
+		meta.Hostname = *cfg.Host.Hostname
 	} else {
 		meta.Hostname = info.Hostname
+	}
+
+	meta.Port = *cfg.AgentServer.Port
+	if ip, err := system.GetExternalIP(); err != nil {
+		fmt.Errorf("Get external ip err: %s", err.Error())
+	} else {
+		meta.IP = ip
 	}
 
 	meta.OSType = info.GoOS

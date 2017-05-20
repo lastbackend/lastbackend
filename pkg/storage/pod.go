@@ -160,8 +160,7 @@ func (s *PodStorage) Watch(ctx context.Context, pod chan *types.Pod) error {
 		}
 	}
 
-	client.Watch(ctx, key, filter, cb)
-	return nil
+	return client.Watch(ctx, key, filter, cb)
 }
 
 func newPodStorage(config store.Config, util IUtil) *PodStorage {
