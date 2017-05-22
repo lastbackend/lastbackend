@@ -43,6 +43,4 @@ image:
 	docker build -t lastbackend/lastbackend -f ./images/lastbackend/Dockerfile .
 
 run:
-	go run cmd/kit/kit.go -d
-
-
+	go run cmd/kit/kit.go --debug=3
