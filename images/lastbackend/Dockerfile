@@ -25,7 +25,7 @@ RUN set -ex \
 	&& cd /usr/local/go/src \
 	&& ./make.bash \
 	\
-	&& rm -rf /*.patch \
+	&& rm -rf /*.patch
 
 ENV GOPATH /go
 ENV GOROOT /usr/local/go
@@ -43,5 +43,4 @@ RUN rm -rf /go/pkg \
     && rm -rf /var/cache/apk/*
 
 EXPOSE 2967
-
-CMD ["/usr/local/bin/lbd", "-d"]
+ENTRYPOINT ["/usr/local/bin/lastbackend"]
