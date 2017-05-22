@@ -28,6 +28,7 @@ type Service struct {
 	State ServiceState `json:"state"`
 	Pods  []v1.PodInfo `json:"pods,omitempty"`
 	Spec  []SpecInfo   `json:"spec,omitempty"`
+	DNS   ServiceDNS   `json:"dns,omitempty"`
 }
 
 type ServiceState struct {
@@ -64,13 +65,22 @@ type ServiceReplicasState struct {
 }
 
 type ServiceMeta struct {
-	Name        string    `json:"name"`
-	Description string    `json:"description"`
-	Region      string    `json:"region"`
-	Replicas    int       `json:"replicas,omitempty"`
-	Namespace   string    `json:"namespace"`
-	Created     time.Time `json:"created"`
-	Updated     time.Time `json:"updated"`
+	// Meta name
+	Name string `json:"name"`
+	// Meta description
+	Description string `json:"description"`
+	// Meta labels
+	Labels    map[string]string `json:"labels"`
+	Region    string            `json:"region,omitempty"`
+	Replicas  int               `json:"replicas"`
+	Namespace string            `json:"namespace"`
+	Created   time.Time         `json:"created"`
+	Updated   time.Time         `json:"updated"`
+}
+
+type ServiceDNS struct {
+	Primary   string `json:"primary"`
+	Secondary string `json:"secondary"`
 }
 
 type SpecInfo struct {

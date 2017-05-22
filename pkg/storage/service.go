@@ -42,7 +42,11 @@ type ServiceStorage struct {
 func (s *ServiceStorage) GetByName(ctx context.Context, namespace, name string) (*types.Service, error) {
 
 	const filter = `\b.+` + serviceStorage + `\/.+\/(?:meta|state)\b`
-	var service = new(types.Service)
+	var (
+		filterServiceEndpoint = `\b.+` + endpointStorage + `\/` + name + `-` + namespace + `\..+\b`
+		endpoints             = make(map[string][]string)
+		service               = new(types.Service)
+	)
 	service.Spec = make(map[string]*types.ServiceSpec)
 	service.Pods = make(map[string]*types.Pod)
 
@@ -71,6 +75,29 @@ func (s *ServiceStorage) GetByName(ctx context.Context, namespace, name string) 
 			return service, nil
 		}
 		return nil, err
+	}
+
+	for _, pod := range service.Pods {
+		name := strings.Replace(pod.Meta.Name, ":", "-", -1)
+		filterPodEndpoint := `\b.+` + endpointStorage + `\/` + name + `\..+\b`
+		endpoints := make(map[string][]string)
+		keyEndpoints := keyCreate(endpointStorage)
+		if err := client.Map(ctx, keyEndpoints, filterPodEndpoint, endpoints); err != nil && err.Error() != store.ErrKeyNotFound {
+			return nil, err
+		}
+
+		for pod.Meta.Endpoint = range endpoints {
+			break
+		}
+	}
+
+	keyEndpoints := keyCreate(endpointStorage)
+	if err := client.Map(ctx, keyEndpoints, filterServiceEndpoint, endpoints); err != nil && err.Error() != store.ErrKeyNotFound {
+		return nil, err
+	}
+
+	for service.DNS.Primary = range endpoints {
+		break
 	}
 
 	return service, nil

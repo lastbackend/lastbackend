@@ -168,6 +168,7 @@ func main() {
 			go scheduler.Daemon(&cfg)
 			go builder.Daemon(&cfg)
 			go agent.Daemon(&cfg)
+			go discovery.Daemon(&cfg)
 		} else {
 
 			for _, app := range *apps {

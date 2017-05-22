@@ -44,8 +44,10 @@ type PodInfo struct {
 type PodMeta struct {
 	// Meta id
 	Name string `json:"name"`
+	// Meta endpoint
+	Endpoint string `json:"endpoint"`
 	// Meta labels
-	Labels map[string]string `json:"lables"`
+	Labels map[string]string `json:"labels"`
 	// Meta created time
 	Created time.Time `json:"created"`
 	// Meta updated time

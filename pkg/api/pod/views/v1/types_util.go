@@ -43,10 +43,11 @@ func ToPodInfo(pod *types.Pod) PodInfo {
 
 func ToPodMeta(meta types.PodMeta) PodMeta {
 	m := PodMeta{
-		Name:    meta.Name,
-		Labels:  meta.Labels,
-		Created: meta.Created,
-		Updated: meta.Updated,
+		Name:     meta.Name,
+		Endpoint: meta.Endpoint,
+		Labels:   meta.Labels,
+		Created:  meta.Created,
+		Updated:  meta.Updated,
 	}
 
 	if len(m.Labels) == 0 {

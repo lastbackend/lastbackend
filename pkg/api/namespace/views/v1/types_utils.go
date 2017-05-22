@@ -28,6 +28,7 @@ func New(obj *types.Namespace) *Namespace {
 	p := Namespace{}
 	p.Meta.Name = obj.Meta.Name
 	p.Meta.Description = obj.Meta.Description
+	p.Meta.Labels = obj.Meta.Labels
 	p.Meta.Created = obj.Meta.Created
 	p.Meta.Updated = obj.Meta.Updated
 	return &p

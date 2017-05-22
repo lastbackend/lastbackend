@@ -56,6 +56,8 @@ type PodNodeState struct {
 
 type PodMeta struct {
 	Meta
+	// Pod endpoint
+	Endpoint string `json:"endpoint"`
 	// Pod hostname
 	Hostname string `json:"hostname"`
 }

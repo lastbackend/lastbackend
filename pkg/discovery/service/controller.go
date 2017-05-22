@@ -46,10 +46,6 @@ func (sc *ServiceController) Watch(services chan *types.Service) {
 			case s := <-sc.services:
 				{
 
-					fmt.Println("##########################")
-					fmt.Println(s.State.State, s.Meta.Name)
-					fmt.Println("##########################")
-
 					if !sc.active {
 						log.Debug("ServiceController: skip management cause it is in slave mode")
 						continue
