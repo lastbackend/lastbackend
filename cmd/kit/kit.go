@@ -52,7 +52,7 @@ func main() {
 	})
 
 	var apps = app.Strings(cli.StringsArg{
-		Name: "APP", Desc: "schoose particular application to run [api, controller, scheduler, builder, agent]",
+		Name: "APP", Desc: "choose particular application to run [api, controller, scheduler, builder, discovery, agent]",
 		HideValue: true,
 	})
 
