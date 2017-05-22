@@ -32,6 +32,8 @@ type Pod struct {
 	State PodState `json:"state"`
 	// Container spec
 	Spec PodSpec `json:"spec"`
+	// Pod node
+	Node PodNode `json:"node"`
 	// Containers status info
 	Containers map[string]*Container `json:"containers"`
 	// Secrets
@@ -58,7 +60,10 @@ type PodMeta struct {
 	Meta
 	// Pod endpoint
 	Endpoint string `json:"endpoint"`
-	// Pod hostname
+}
+
+type PodNode struct {
+	ID       string `json:"id"`
 	Hostname string `json:"hostname"`
 }
 

@@ -20,13 +20,14 @@ package docker
 
 import (
 	docker "github.com/docker/docker/api/types"
+	ctx "github.com/lastbackend/lastbackend/pkg/agent/context"
 	"github.com/lastbackend/lastbackend/pkg/common/context"
 	"github.com/lastbackend/lastbackend/pkg/common/types"
-	"strings"
 	"github.com/lastbackend/lastbackend/pkg/util/system"
+	"strings"
 )
 
-func (r *Runtime) PodList(ctx context.Context) ([]*types.Pod, error) {
+func (r *Runtime) PodList(c context.Context) ([]*types.Pod, error) {
 
 	var (
 		err  error
@@ -35,18 +36,18 @@ func (r *Runtime) PodList(ctx context.Context) ([]*types.Pod, error) {
 
 	pods := make(map[string]*types.Pod)
 
-	items, err := r.client.ContainerList(ctx.Background(), docker.ContainerListOptions{
+	items, err := r.client.ContainerList(c.Background(), docker.ContainerListOptions{
 		All: true,
 	})
 	if err != nil {
 		return list, err
 	}
 
-	for _, c := range items {
+	for _, container := range items {
 
 		// Check container is managed by LB
 		// Meta: owner/namespace/service/pod/spec
-		label, ok := c.Labels["LB_META"]
+		label, ok := container.Labels["LB_META"]
 		if !ok {
 			continue
 		}
@@ -58,12 +59,13 @@ func (r *Runtime) PodList(ctx context.Context) ([]*types.Pod, error) {
 			pod = types.NewPod()
 			pods[info[0]] = pod
 		}
-		pod.Meta.Hostname, _ = system.GetHostname()
+		pod.Node.Hostname, _ = system.GetHostname()
+		pod.Node.ID = *ctx.Get().GetID()
 		pod.Meta.Name = info[0]
 		pod.Spec.ID = info[1]
 		pod.Spec.Containers = make(map[string]*types.ContainerSpec)
 
-		container, err := r.ContainerInspect(ctx, c.ID)
+		container, err := r.ContainerInspect(c, container.ID)
 		if err != nil || container == nil {
 			continue
 		}

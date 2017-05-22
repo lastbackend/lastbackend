@@ -189,11 +189,6 @@ func (s *ServiceStorage) Update(ctx context.Context, service *types.Service) err
 		return err
 	}
 
-	keyState := keyCreate(serviceStorage, service.Meta.Namespace, service.Meta.Name, "state")
-	if err := client.Upsert(ctx, keyState, service.State, nil, 0); err != nil {
-		return err
-	}
-
 	if err := tx.Commit(); err != nil {
 		return err
 	}

@@ -69,6 +69,8 @@ type ServiceMeta struct {
 	Name string `json:"name"`
 	// Meta description
 	Description string `json:"description"`
+	// Meta Hook
+	Hook string `json:"hook"`
 	// Meta labels
 	Labels    map[string]string `json:"labels"`
 	Region    string            `json:"region,omitempty"`

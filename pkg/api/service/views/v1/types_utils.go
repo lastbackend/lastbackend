@@ -38,6 +38,7 @@ func New(obj *types.Service) *Service {
 	s.Meta.Updated = obj.Meta.Updated
 	s.Meta.Created = obj.Meta.Created
 	s.Meta.Replicas = obj.Meta.Replicas
+	s.Meta.Hook = obj.Meta.Hook
 	s.State = ToState(obj.State)
 
 	s.DNS.Primary = obj.DNS.Primary

@@ -26,44 +26,59 @@ import (
 
 const hookStorage string = "hooks"
 
-// Service Build type for interface in interfaces folder
+// Service Hook type for interface in interfaces folder
 type HookStorage struct {
 	IHook
 	util   IUtil
 	Client func() (store.IStore, store.DestroyFunc, error)
 }
 
-// Get hooks by image
-func (s *HookStorage) GetByToken(ctx context.Context, token string) (*types.Hook, error) {
+// Get hooks by id
+func (s *HookStorage) Get(ctx context.Context, id string) (*types.Hook, error) {
 	var hook = new(types.Hook)
+
+	client, destroy, err := s.Client()
+	if err != nil {
+		return nil, err
+	}
+	defer destroy()
+
+	keyMeta := s.util.Key(ctx, hookStorage, id)
+	if err := client.Get(ctx, keyMeta, &hook); err != nil {
+		return nil, err
+	}
+
 	return hook, nil
-}
-
-// Get hooks by image
-func (s *HookStorage) List(ctx context.Context, id string) ([]*types.Hook, error) {
-	var hooks = []*types.Hook{}
-	return hooks, nil
-}
-
-// Get hooks by image
-func (s *HookStorage) ListByImage(ctx context.Context, id string) ([]*types.Hook, error) {
-	var hooks = []*types.Hook{}
-	return hooks, nil
-}
-
-// Get hooks by service
-func (s *HookStorage) ListByService(ctx context.Context, id string) ([]*types.Hook, error) {
-	var hooks = []*types.Hook{}
-	return hooks, nil
 }
 
 // Insert new hook into storage
 func (s *HookStorage) Insert(ctx context.Context, hook *types.Hook) error {
+
+	client, destroy, err := s.Client()
+	if err != nil {
+		return err
+	}
+	defer destroy()
+
+	key := s.util.Key(ctx, hookStorage, hook.Meta.ID)
+	if err := client.Create(ctx, key, hook, nil, 0); err != nil {
+		return err
+	}
+
 	return nil
 }
 
-// Remove  hook by service id from storage
-func (s *HookStorage) RemoveByService(ctx context.Context, id string) error {
+// Remove hook by id from storage
+func (s *HookStorage) Remove(ctx context.Context, id string) error {
+
+	client, destroy, err := s.Client()
+	if err != nil {
+		return err
+	}
+	defer destroy()
+
+	key := keyCreate(hookStorage, id)
+	client.DeleteDir(ctx, key)
 
 	return nil
 }

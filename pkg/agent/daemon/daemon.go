@@ -48,6 +48,15 @@ func Daemon(_cfg *_cfg.Config) {
 	log.Info("Start Agent")
 
 	rntm := runtime.Get()
+
+	id, err := rntm.Register()
+	if err != nil {
+		log.Errorf("Agent can not be registered: %s", err.Error())
+		return
+	}
+
+	ctx.SetID(id)
+
 	crii, err := cri.New(cfg.Runtime)
 	if err != nil {
 		ctx.GetLogger().Errorf("Cannot initialize runtime: %s", err.Error())

@@ -22,10 +22,21 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/agent/context"
 	"github.com/lastbackend/lastbackend/pkg/agent/events"
 	"github.com/lastbackend/lastbackend/pkg/common/types"
+	"github.com/lastbackend/lastbackend/pkg/util/homedir"
+	"github.com/pkg/errors"
+	"github.com/satori/go.uuid"
+	"io/ioutil"
+	"os"
+	"path/filepath"
+	"strings"
 	"time"
 )
 
-var runtime Runtime
+var (
+	runtime Runtime
+
+	ErrPermissionDenied = errors.New("You will need to run the agent as an administrator.")
+)
 
 func init() {
 	runtime = Runtime{
@@ -51,6 +62,39 @@ func Get() *Runtime {
 
 func (r *Runtime) GetSpecChan() chan *types.NodeSpec {
 	return r.spec
+}
+
+func (r *Runtime) Register() (*string, error) {
+
+	var (
+		id   string
+		path = filepath.Join(homedir.HomeDir() + string(filepath.Separator) + "lastabckend")
+	)
+
+	if err := os.MkdirAll(path, 0755); err != nil {
+		if os.IsPermission(err) {
+			return nil, ErrPermissionDenied
+		}
+		return nil, err
+	}
+
+	filePath := filepath.Join(strings.Join([]string{path, ".lastbackend"}, string(filepath.Separator)))
+	if _, err := os.Stat(filePath); os.IsNotExist(err) {
+		id = strings.Replace(uuid.NewV4().String(), "-", "", -1)
+		// write the whole body at once
+		if err := ioutil.WriteFile(filePath, []byte(id), 0644); err != nil {
+			return nil, err
+		}
+	} else {
+		// read the whole file at once
+		b, err := ioutil.ReadFile(filePath)
+		if err != nil {
+			panic(err)
+		}
+		id = string(b)
+	}
+
+	return &id, nil
 }
 
 func (r *Runtime) StartPodManager() error {

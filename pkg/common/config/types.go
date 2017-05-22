@@ -54,6 +54,7 @@ type ETCD struct {
 
 type Host struct {
 	Hostname *string
+	IP       *string
 }
 
 type Runtime struct {

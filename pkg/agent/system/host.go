@@ -20,7 +20,6 @@ package system
 
 import (
 	"fmt"
-	"github.com/lastbackend/lastbackend/pkg/agent/config"
 	"github.com/lastbackend/lastbackend/pkg/agent/context"
 	"github.com/lastbackend/lastbackend/pkg/common/types"
 	"github.com/lastbackend/lastbackend/pkg/util/system"
@@ -31,9 +30,13 @@ import (
 const MinContainerMemory = 32
 
 func GetNodeMeta() types.NodeMeta {
-	var cfg = config.Get()
-	var meta = types.NodeMeta{}
+	var (
+		cfg  = context.Get().GetConfig()
+		id   = context.Get().GetID()
+		meta = types.NodeMeta{}
+	)
 
+	meta.ID = *id
 	meta.Created = time.Now()
 	meta.Updated = time.Now()
 
@@ -46,10 +49,16 @@ func GetNodeMeta() types.NodeMeta {
 	}
 
 	meta.Port = *cfg.AgentServer.Port
-	if ip, err := system.GetExternalIP(); err != nil {
-		fmt.Errorf("Get external ip err: %s", err.Error())
+
+	// Overwrite ip
+	if cfg.Host.IP != nil && *cfg.Host.IP != "" {
+		meta.IP = *cfg.Host.IP
 	} else {
-		meta.IP = ip
+		if ip, err := system.GetExternalIP(); err != nil {
+			fmt.Errorf("Get external ip err: %s", err.Error())
+		} else {
+			meta.IP = ip
+		}
 	}
 
 	meta.OSType = info.GoOS

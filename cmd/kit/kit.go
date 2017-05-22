@@ -101,12 +101,20 @@ func main() {
 	})
 
 	cfg.AgentServer.Host = app.String(cli.StringOpt{
-		Name: "host", Value: "", Desc: "Agent API server listen address",
-		EnvVar: "HOST", HideValue: true,
+		Name: "lb-host", Value: "", Desc: "Agent API server listen address",
+		EnvVar: "LB_HOST", HideValue: true,
 	})
 	cfg.AgentServer.Port = app.Int(cli.IntOpt{
-		Name: "port", Value: 2968, Desc: "Agent API server listen port",
-		EnvVar: "PORT", HideValue: true,
+		Name: "lb-port", Value: 2968, Desc: "Agent API server listen port",
+		EnvVar: "LB_PORT", HideValue: true,
+	})
+	cfg.Host.Hostname = app.String(cli.StringOpt{
+		Name: "lb-hostname", Value: "", Desc: "Agent hostname",
+		EnvVar: "LB_HOSTNAME", HideValue: true,
+	})
+	cfg.Host.IP = app.String(cli.StringOpt{
+		Name: "lb-overwrite-ip", Value: "", Desc: "Agent host ip",
+		EnvVar: "LB_OVERWRITE_IP", HideValue: true,
 	})
 	cfg.Runtime.Docker.Host = app.String(cli.StringOpt{
 		Name: "docker-host", Value: "", Desc: "Provide path to Docker daemon",
@@ -128,18 +136,14 @@ func main() {
 		Name: "cri", Value: "docker", Desc: "Default container runtime interface",
 		EnvVar: "LB_CRI", HideValue: true,
 	})
-	cfg.Host.Hostname = app.String(cli.StringOpt{
-		Name: "hostname", Value: "", Desc: "Agent hostname",
-		EnvVar: "LB_HOSTNAME", HideValue: true,
-	})
 
 	cfg.SystemDomain = app.String(cli.StringOpt{
 		Name: "system-domain", Desc: "Default system domain",
-		EnvVar: "SYSTEM-DOMAIN", Value: "lblocal", HideValue: true,
+		EnvVar: "SYSTEM_DOMAIN", Value: "lblocal", HideValue: true,
 	})
 	cfg.DiscoveryServer.Port = app.Int(cli.IntOpt{
 		Name: "discovery-port", Desc: "Discovery server port",
-		EnvVar: "DISCOVERY-PORT", Value: 53, HideValue: true,
+		EnvVar: "DISCOVERY_PORT", Value: 53, HideValue: true,
 	})
 
 	var help = app.Bool(cli.BoolOpt{

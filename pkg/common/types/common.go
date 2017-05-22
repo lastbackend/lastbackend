@@ -29,7 +29,7 @@ type Meta struct {
 	// Meta description
 	Description string `json:"description,omitempty"`
 	// Meta labels
-	Labels map[string]string `json:"labels"`
+	Labels map[string]string `json:"labels,omitempty"`
 	// Meta created time
 	Created time.Time `json:"created"`
 	// Meta updated time

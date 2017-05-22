@@ -65,6 +65,8 @@ type ServiceMeta struct {
 	Namespace string `json:"namespace"`
 	// Service region
 	Region string `json:"region,omitempty"`
+	//Service hook
+	Hook string `json:"hook"`
 }
 
 type ServiceState struct {

@@ -16,23 +16,11 @@
 // from Last.Backend LLC.
 //
 
-package types
-
-type HookList []Hook
+package v1
 
 type Hook struct {
-	// Hook Meta
 	Meta HookMeta `json:"meta"`
-	// Hook service to build images
-	Service string `json:"service"`
-	// Namespace name
-	Namespace string `json:"namespace"`
-	// Hook image to build
-	Image string `json:"image"`
 }
 
 type HookMeta struct {
-	Meta
-	// Hook ID
-	ID string `json:"id"`
 }

@@ -64,6 +64,7 @@ func SendPodState(pod *types.Pod) {
 	p := types.Pod{
 		Meta:       pod.Meta,
 		State:      pod.State,
+		Node:       pod.Node,
 		Containers: pod.Containers,
 	}
 

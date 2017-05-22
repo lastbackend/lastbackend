@@ -170,7 +170,7 @@ func (s *PodStorage) Remove(ctx context.Context, namespace string, pod *types.Po
 	keyMeta := keyCreate(podStorage, namespace, pod.Meta.Name)
 	tx.Delete(keyMeta)
 
-	KeyNodePod := keyCreate(nodeStorage, pod.Meta.Hostname, "spec", "pods", pod.Meta.Name)
+	KeyNodePod := keyCreate(nodeStorage, pod.Node.ID, "spec", "pods", pod.Meta.Name)
 	tx.Delete(KeyNodePod)
 
 	if err := tx.Commit(); err != nil {

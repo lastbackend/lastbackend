@@ -70,6 +70,7 @@ func (p *pod) Set(pod types.Pod) error {
 		svc.Pods[pod.Meta.Name].Containers = pod.Containers
 		svc.Pods[pod.Meta.Name].Meta = pod.Meta
 		svc.Pods[pod.Meta.Name].State = pod.State
+		svc.Pods[pod.Meta.Name].Node = pod.Node
 		pd := svc.Pods[pod.Meta.Name]
 
 		if pd.State.State == types.StateDestroyed {
@@ -96,6 +97,10 @@ func (p *pod) Set(pod types.Pod) error {
 
 	// Remove service if the state set as destroyed and pods count is zero
 	if len(svc.Pods) == 0 && svc.State.State == types.StateDestroyed {
+		if err = storage.Hook().Remove(p.Context, svc.Meta.Hook); err != nil && err.Error() != store.ErrKeyNotFound {
+			log.Errorf("Error: remove service hook from db: %s", err)
+			return err
+		}
 		if err = storage.Service().Remove(p.Context, svc); err != nil {
 			if err.Error() == store.ErrKeyNotFound {
 				log.Debugf("Service %s not found", svc.Meta.Name)
@@ -165,7 +170,7 @@ func Logs(c context.Context, ns, pod, container string, stream io.Writer, done c
 		return errors.New("access denied")
 	}
 
-	n, err := storage.Node().Get(c, p.Meta.Hostname)
+	n, err := storage.Node().Get(c, p.Node.ID)
 	if err != nil {
 		log.Error("Error: find namespace by name", err.Error())
 		return err

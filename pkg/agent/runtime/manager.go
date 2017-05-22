@@ -47,6 +47,7 @@ func (pm *PodManager) GetPods() map[string]*types.Pod {
 func (pm *PodManager) SyncPod(pod types.PodNodeSpec) {
 
 	log := context.Get().GetLogger()
+
 	log.Debugf("Pod %s sync", pod.Meta.Name)
 
 	p := context.Get().GetCache().Pods().GetPod(pod.Meta.Name)
@@ -54,7 +55,8 @@ func (pm *PodManager) SyncPod(pod types.PodNodeSpec) {
 		log.Debugf("Pod %s not found, create new one", pod.Meta.Name)
 		p := types.NewPod()
 		p.Meta = pod.Meta
-		p.Meta.Hostname, _ = system.GetHostname()
+		p.Node.Hostname, _ = system.GetHostname()
+		p.Node.ID = *context.Get().GetID()
 		context.Get().GetCache().Pods().SetPod(p)
 		pm.sync(pod.Meta, pod.State, pod.Spec, p)
 		return
