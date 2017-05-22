@@ -62,11 +62,11 @@ func main() {
 	})
 
 	cfg.APIServer.Host = app.String(cli.StringOpt{
-		Name: "http-host", Desc: "Http server host",
+		Name: "http-server-host", Desc: "Http server host",
 		EnvVar: "HTTP-SERVER-HOST", Value: "", HideValue: true,
 	})
 	cfg.APIServer.Port = app.Int(cli.IntOpt{
-		Name: "http-port", Desc: "Http server port",
+		Name: "http-server-port", Desc: "Http server port",
 		EnvVar: "HTTP-SERVER-PORT", Value: 2967, HideValue: true,
 	})
 
@@ -101,20 +101,20 @@ func main() {
 	})
 
 	cfg.AgentServer.Host = app.String(cli.StringOpt{
-		Name: "lb-host", Value: "", Desc: "Agent API server listen address",
-		EnvVar: "LB_HOST", HideValue: true,
+		Name: "host", Value: "", Desc: "Agent API server listen address",
+		EnvVar: "HOST", HideValue: true,
 	})
 	cfg.AgentServer.Port = app.Int(cli.IntOpt{
-		Name: "lb-port", Value: 2968, Desc: "Agent API server listen port",
-		EnvVar: "LB_PORT", HideValue: true,
+		Name: "port", Value: 2968, Desc: "Agent API server listen port",
+		EnvVar: "PORT", HideValue: true,
 	})
 	cfg.Host.Hostname = app.String(cli.StringOpt{
-		Name: "lb-hostname", Value: "", Desc: "Agent hostname",
-		EnvVar: "LB_HOSTNAME", HideValue: true,
+		Name: "hostname", Value: "", Desc: "Agent hostname",
+		EnvVar: "HOSTNAME", HideValue: true,
 	})
 	cfg.Host.IP = app.String(cli.StringOpt{
-		Name: "lb-overwrite-ip", Value: "", Desc: "Agent host ip",
-		EnvVar: "LB_OVERWRITE_IP", HideValue: true,
+		Name: "overwrite-ip", Value: "", Desc: "Agent host ip",
+		EnvVar: "OVERWRITE_IP", HideValue: true,
 	})
 	cfg.Runtime.Docker.Host = app.String(cli.StringOpt{
 		Name: "docker-host", Value: "", Desc: "Provide path to Docker daemon",
@@ -134,7 +134,7 @@ func main() {
 	})
 	cfg.Runtime.CRI = app.String(cli.StringOpt{
 		Name: "cri", Value: "docker", Desc: "Default container runtime interface",
-		EnvVar: "LB_CRI", HideValue: true,
+		EnvVar: "CRI", HideValue: true,
 	})
 
 	cfg.SystemDomain = app.String(cli.StringOpt{

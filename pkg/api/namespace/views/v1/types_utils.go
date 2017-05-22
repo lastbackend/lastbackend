@@ -42,8 +42,8 @@ func (n *Namespace) DrawTable() {
 	table.PrintHorizontal(map[string]interface{}{
 		"NAME":        n.Meta.Name,
 		"DESCRIPTION": n.Meta.Description,
-		"CREATED":     n.Meta.Created,
-		"UPDATED":     n.Meta.Updated,
+		"CREATED":     n.Meta.Created.String()[:10],
+		"UPDATED":     n.Meta.Updated.String()[:10],
 	})
 }
 

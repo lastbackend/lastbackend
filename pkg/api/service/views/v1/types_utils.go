@@ -140,13 +140,9 @@ func NewList(obj types.ServiceList) *ServiceList {
 }
 
 func (s *Service) DrawTable(namespaceName string) {
-	serviceTable := table.New([]string{"NAME", "DESCRIPTION", "NAMESPACE",
-		"REPLICAS", "MEMORY", "IMAGE", "CREATED", "UPDATED"})
-	podsTable := table.New([]string{"ID", "STATE", "STATUS", "TOTAL",
-		"RUNNING", "CREATED",
-		"STOPPED", "ERRORED", "CREATED POD", "UPDATED POD"})
-	containersTable := table.New([]string{"ID", "IMAGE", "STATE",
-		"STATUS", "CREATE", "UPDATED"})
+	serviceTable := table.New([]string{"NAME", "DESCRIPTION", "NAMESPACE", "REPLICAS", "MEMORY", "IMAGE", "CREATED", "UPDATED"})
+	podsTable := table.New([]string{"ID", "STATE", "TOTAL", "RUNNING", "CREATED", "STOPPED", "ERRORED", "CREATED", "UPDATED"})
+	containersTable := table.New([]string{"ID", "IMAGE", "STATE", "CREATE", "UPDATED"})
 
 	serviceTable.VisibleHeader = true
 	podsTable.VisibleHeader = true
@@ -168,13 +164,15 @@ func (s *Service) DrawTable(namespaceName string) {
 		fmt.Println("\n\nPODS")
 		for _, pod := range s.Pods {
 			podsTable.AddRow(map[string]interface{}{
-				"NAME":        pod.Meta.Name,
-				"STATE":       pod.State.State,
-				"STATUS":      pod.State.Status,
-				"CREATED POD": pod.Meta.Created.String()[:10],
-				"UPDATED POD": pod.Meta.Updated.String()[:10],
+				"NAME":    pod.Meta.Name,
+				"STATE":   pod.State.State,
+				"CREATED": pod.Meta.Created.String()[:10],
+				"UPDATED": pod.Meta.Updated.String()[:10],
 			})
+
 			podsTable.Print()
+
+			fmt.Println()
 
 			if pod.Containers != nil {
 				fmt.Println("CONTAINERS")
@@ -183,11 +181,11 @@ func (s *Service) DrawTable(namespaceName string) {
 						"ID":      container.ID[:12],
 						"IMAGE":   container.Image,
 						"STATE":   container.State,
-						"STATUS":  container.Status,
 						"CREATED": container.Created.String()[:10],
 						"STARTED": container.Started.String()[:10],
 					})
 				}
+
 				containersTable.Print()
 			}
 		}

@@ -80,7 +80,7 @@ func Create(name, image, template, url string, config *Config) error {
 
 	ns, err = storage.Namespace().Load()
 	if err != nil {
-		return errors.New(err.Error())
+		return err
 	}
 
 	if ns.Meta.Name == "" {

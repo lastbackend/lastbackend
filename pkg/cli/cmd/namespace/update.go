@@ -97,7 +97,7 @@ func Update(name, newName, description string) error {
 
 	ns, err := Current()
 	if err != nil {
-		return errors.New(err.Error())
+		return err
 	}
 
 	if ns != nil && name == ns.Meta.Name {

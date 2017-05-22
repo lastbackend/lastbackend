@@ -48,7 +48,7 @@ func Inspect(name string) (*s.Service, string, error) {
 
 	ns, err := nspace.Current()
 	if err != nil {
-		return nil, "", errors.New(err.Error())
+		return nil, "", err
 	}
 	if ns == nil {
 		return nil, "", errors.New("Namespace didn't select")

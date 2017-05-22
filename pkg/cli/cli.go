@@ -244,16 +244,16 @@ func configure(app *cli.Cli) {
 			}
 		})
 
-		//c.Command("logs", "show service logs", func(sc *cli.Cmd) {
-		//	sc.Action = func() {
-		//		if len(*name) == 0 {
-		//			c.PrintHelp()
-		//			return
-		//		}
-		//
-		//		s.LogsServiceCmd(*name)
-		//	}
-		//})
+		c.Command("logs", "show service logs", func(sc *cli.Cmd) {
+			sc.Action = func() {
+				if len(*name) == 0 {
+					c.PrintHelp()
+					return
+				}
+
+				s.LogsServiceCmd(*name)
+			}
+		})
 
 		c.Command("remove", "remove an existing service", func(sc *cli.Cmd) {
 			sc.Action = func() {

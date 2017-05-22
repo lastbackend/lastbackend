@@ -75,7 +75,7 @@ func Create(name, description string) error {
 
 	ns, err = Switch(name)
 	if err != nil {
-		return errors.New(err.Error())
+		return err
 	}
 
 	return nil
