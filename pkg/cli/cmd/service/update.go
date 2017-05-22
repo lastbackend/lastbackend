@@ -50,7 +50,7 @@ func Update(name, nname, desc string, replicas int) error {
 
 	srv, _, err := Inspect(name)
 	if err != nil {
-		return errors.New(err.Error())
+		return err
 	}
 
 	if nname == "" {
@@ -73,7 +73,7 @@ func Update(name, nname, desc string, replicas int) error {
 
 	ns, err = nspace.Current()
 	if err != nil {
-		return errors.New(err.Error())
+		return err
 	}
 	if ns == nil {
 		return errors.New("Namespace didn't select")
@@ -85,7 +85,7 @@ func Update(name, nname, desc string, replicas int) error {
 		BodyJSON(cfg).
 		Request(&res, er)
 	if err != nil {
-		return errors.New(err.Error())
+		return err
 	}
 
 	if er.Code == 401 {

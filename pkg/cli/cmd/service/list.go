@@ -50,7 +50,7 @@ func List() (*s.ServiceList, string, error) {
 
 	ns, err := n.Current()
 	if err != nil {
-		return nil, "", errors.New(err.Error())
+		return nil, "", err
 	}
 
 	if ns == nil {
@@ -61,7 +61,7 @@ func List() (*s.ServiceList, string, error) {
 		GET(fmt.Sprintf("/namespace/%s/service", ns.Meta.Name)).
 		Request(&srvList, er)
 	if err != nil {
-		return nil, "", errors.New(err.Error())
+		return nil, "", err
 	}
 
 	if er.Code == 401 {

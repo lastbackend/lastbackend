@@ -48,14 +48,14 @@ func Remove(name string) error {
 
 	ns, err := nspace.Current()
 	if err != nil {
-		return errors.New(err.Error())
+		return err
 	}
 
 	_, _, err = http.
 		DELETE(fmt.Sprintf("/namespace/%s/service/%s", ns.Meta.Name, name)).
 		Request(srv, er)
 	if err != nil {
-		return errors.New(err.Error())
+		return err
 	}
 
 	if er.Code == 401 {

@@ -52,7 +52,7 @@ func List() (*n.NamespaceList, error) {
 		Request(nsList, er)
 	if err != nil {
 		fmt.Println(err)
-		return nil, errors.New(err.Error())
+		return nil, err
 	}
 
 	if er.Code == 401 {
