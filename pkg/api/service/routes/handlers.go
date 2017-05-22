@@ -129,7 +129,6 @@ func ServiceCreateH(w http.ResponseWriter, r *http.Request) {
 		err error
 		log = context.Get().GetLogger()
 		nid = utils.Vars(r)["namespace"]
-		sid = utils.Vars(r)["service"]
 	)
 
 	log.Debug("Create service handler")
@@ -141,7 +140,6 @@ func ServiceCreateH(w http.ResponseWriter, r *http.Request) {
 		errors.New("Invalid incoming data").Unknown().Http(w)
 		return
 	}
-
 	ns := namespace.New(r.Context())
 	item, err := ns.Get(nid)
 	if err != nil {
@@ -155,7 +153,7 @@ func ServiceCreateH(w http.ResponseWriter, r *http.Request) {
 	}
 
 	s := service.New(r.Context(), item.Meta)
-	svc, err := s.Get(sid)
+	svc, err := s.Get(rq.Name)
 	if err != nil {
 		log.Errorf("Error: find service by name: %s", err.Error())
 		errors.HTTP.InternalServerError(w)
