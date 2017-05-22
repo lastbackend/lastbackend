@@ -23,6 +23,7 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/common/types"
 	"github.com/lastbackend/lastbackend/pkg/storage/store"
 	"regexp"
+	"strings"
 )
 
 const podStorage = "pods"
@@ -36,7 +37,12 @@ type PodStorage struct {
 
 func (s *PodStorage) GetByName(ctx context.Context, namespace, name string) (*types.Pod, error) {
 
-	var pod = new(types.Pod)
+	var (
+		pod            = new(types.Pod)
+		podName        = strings.Replace(pod.Meta.Name, ":", "-", -1)
+		filterEndpoint = `\b.+` + endpointStorage + `\/` + podName + `\..+\b`
+		endpoints      = make(map[string][]string)
+	)
 
 	client, destroy, err := s.Client()
 	if err != nil {
@@ -47,6 +53,15 @@ func (s *PodStorage) GetByName(ctx context.Context, namespace, name string) (*ty
 	keyMeta := keyCreate(podStorage, namespace, name)
 	if err := client.Get(ctx, keyMeta, pod); err != nil {
 		return pod, err
+	}
+
+	keyEndpoints := keyCreate(endpointStorage)
+	if err := client.Map(ctx, keyEndpoints, filterEndpoint, endpoints); err != nil && err.Error() != store.ErrKeyNotFound {
+		return nil, err
+	}
+
+	for pod.Meta.Endpoint = range endpoints {
+		break
 	}
 
 	return pod, nil
@@ -65,6 +80,20 @@ func (s *PodStorage) ListByNamespace(ctx context.Context, namespace string) (map
 		return pods, err
 	}
 
+	for _, pod := range pods {
+		name := strings.Replace(pod.Meta.Name, ":", "-", -1)
+		filterEndpoint := `\b.+` + endpointStorage + `\/` + name + `\..+\b`
+		endpoints := make(map[string][]string)
+		keyEndpoints := keyCreate(endpointStorage)
+		if err := client.Map(ctx, keyEndpoints, filterEndpoint, endpoints); err != nil && err.Error() != store.ErrKeyNotFound {
+			return nil, err
+		}
+
+		for pod.Meta.Endpoint = range endpoints {
+			break
+		}
+	}
+
 	return pods, nil
 }
 
@@ -79,6 +108,19 @@ func (s *PodStorage) ListByService(ctx context.Context, namespace, service strin
 	pods := []*types.Pod{}
 	if err := client.List(ctx, keyServiceList, "", &pods); err != nil {
 		return pods, err
+	}
+
+	for _, pod := range pods {
+		filterEndpoint := `\b.+` + endpointStorage + `\/` + pod.Meta.Name + `-` + namespace + `\..+\b`
+		endpoints := make(map[string][]string)
+		keyEndpoints := keyCreate(endpointStorage)
+		if err := client.Map(ctx, keyEndpoints, filterEndpoint, endpoints); err != nil && err.Error() != store.ErrKeyNotFound {
+			return nil, err
+		}
+
+		for pod.Meta.Endpoint = range endpoints {
+			break
+		}
 	}
 
 	return pods, nil
@@ -128,7 +170,7 @@ func (s *PodStorage) Remove(ctx context.Context, namespace string, pod *types.Po
 	keyMeta := keyCreate(podStorage, namespace, pod.Meta.Name)
 	tx.Delete(keyMeta)
 
-	KeyNodePod := keyCreate(nodeStorage, pod.Meta.Hostname, "spec", "pods", pod.Meta.Name)
+	KeyNodePod := keyCreate(nodeStorage, pod.Node.ID, "spec", "pods", pod.Meta.Name)
 	tx.Delete(KeyNodePod)
 
 	if err := tx.Commit(); err != nil {

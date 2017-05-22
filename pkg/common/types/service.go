@@ -35,6 +35,8 @@ type Service struct {
 	Spec map[string]*ServiceSpec `json:"spec"`
 	// Pods list
 	Pods map[string]*Pod `json:"pods"`
+	//Service DNS
+	DNS ServiceDNS `json:"dns"`
 }
 
 type ServiceCreateSpec struct {
@@ -63,6 +65,8 @@ type ServiceMeta struct {
 	Namespace string `json:"namespace"`
 	// Service region
 	Region string `json:"region,omitempty"`
+	//Service hook
+	Hook string `json:"hook"`
 }
 
 type ServiceState struct {
@@ -74,6 +78,13 @@ type ServiceState struct {
 	Resources ServiceResourcesState `json:"resources"`
 	// Replicas state
 	Replicas ServiceReplicasState `json:"replicas"`
+}
+
+type ServiceDNS struct {
+	// Service primary dns
+	Primary string `json:"primary"`
+	// Service secondary dns
+	Secondary string `json:"secondary,omitempty"`
 }
 
 type ServiceResourcesState struct {

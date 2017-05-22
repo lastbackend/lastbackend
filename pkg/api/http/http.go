@@ -21,12 +21,14 @@ package http
 import (
 	"github.com/gorilla/mux"
 	"github.com/lastbackend/lastbackend/pkg/api/context"
+	"github.com/lastbackend/lastbackend/pkg/util/http"
+
 	events "github.com/lastbackend/lastbackend/pkg/api/events/routes"
+	hook "github.com/lastbackend/lastbackend/pkg/api/hook/routes"
 	namespace "github.com/lastbackend/lastbackend/pkg/api/namespace/routes"
 	node "github.com/lastbackend/lastbackend/pkg/api/node/routes"
 	service "github.com/lastbackend/lastbackend/pkg/api/service/routes"
 	vendors "github.com/lastbackend/lastbackend/pkg/api/vendors/routes"
-	"github.com/lastbackend/lastbackend/pkg/util/http"
 )
 
 func Listen(host string, port int) error {
@@ -61,6 +63,11 @@ func Listen(host string, port int) error {
 	}
 
 	for _, route := range events.Routes {
+		log.Debugf("Init route: %s", route.Path)
+		router.Handle(route.Path, http.Handle(route.Handler, route.Middleware...)).Methods(route.Method)
+	}
+
+	for _, route := range hook.Routes {
 		log.Debugf("Init route: %s", route.Path)
 		router.Handle(route.Path, http.Handle(route.Handler, route.Middleware...)).Methods(route.Method)
 	}

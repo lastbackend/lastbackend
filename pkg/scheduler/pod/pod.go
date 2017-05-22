@@ -35,8 +35,8 @@ func Provision(p *types.Pod) error {
 		node   *types.Node
 	)
 
-	if p.Meta.Hostname != "" {
-		n, err := stg.Node().Get(ctx, p.Meta.Hostname)
+	if p.Node.ID != "" {
+		n, err := stg.Node().Get(ctx, p.Node.ID)
 		if err != nil {
 			log.Errorf("Node: find node err: %s", err.Error())
 			return err

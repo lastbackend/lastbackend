@@ -46,10 +46,6 @@ func (sc *ServiceController) Watch(services chan *types.Service) {
 			case s := <-sc.services:
 				{
 
-					fmt.Println("##########################")
-					fmt.Println(s.State.State, s.Meta.Name)
-					fmt.Println("##########################")
-
 					if !sc.active {
 						log.Debug("ServiceController: skip management cause it is in slave mode")
 						continue
@@ -72,17 +68,17 @@ func (sc *ServiceController) Watch(services chan *types.Service) {
 					hosts := make(map[string]string)
 					ips := []string{}
 					for _, pod := range s.Pods {
-						if _, ok := hosts[pod.Meta.Hostname]; ok || pod.Spec.State == types.StateDestroyed {
+						if _, ok := hosts[pod.Node.ID]; ok || pod.Spec.State == types.StateDestroyed {
 							continue
 						}
 
-						node, err := stg.Node().Get(context.Get().Background(), pod.Meta.Hostname)
+						node, err := stg.Node().Get(context.Get().Background(), pod.Node.ID)
 						if err != nil {
 							log.Errorf("Endpoint: get node error %s", err.Error())
 							break
 						}
 
-						hosts[pod.Meta.Hostname] = node.Meta.IP
+						hosts[pod.Node.ID] = node.Meta.IP
 						ips = append(ips, node.Meta.IP)
 					}
 

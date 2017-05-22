@@ -56,7 +56,7 @@ func NodeEventH(w http.ResponseWriter, r *http.Request) {
 
 	n := node.New(r.Context())
 	log.Debugf("try to find node by hostname: %s", rq.Meta.Hostname)
-	item, err := n.Get(rq.Meta.Hostname)
+	item, err := n.Get(rq.Meta.ID)
 	if err != nil {
 		log.Errorf("Error: find node by hostname: %s", err.Error())
 		errors.HTTP.InternalServerError(w)

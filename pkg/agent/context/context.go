@@ -39,11 +39,20 @@ type ctx struct {
 	_c.Context
 
 	cri     cri.CRI
+	id      *string
 	logger  *logger.Logger
 	config  *config.Config
 	storage *cache.Cache
 	http    *http.RawReq
 	event   *listener.EventListener
+}
+
+func (c *ctx) SetID(id *string) {
+	c.id = id
+}
+
+func (c *ctx) GetID() *string {
+	return c.id
 }
 
 func (c *ctx) SetLogger(log *logger.Logger) {

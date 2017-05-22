@@ -27,10 +27,14 @@ type Namespace struct {
 }
 
 type NamespaceMeta struct {
-	Name        string    `json:"name"`
-	Description string    `json:"description"`
-	Created     time.Time `json:"created"`
-	Updated     time.Time `json:"updated"`
+	// Meta name
+	Name        string `json:"name"`
+	// Meta description
+	Description string `json:"description"`
+	// Meta labels
+	Labels  map[string]string `json:"labels"`
+	Created time.Time         `json:"created"`
+	Updated time.Time         `json:"updated"`
 }
 
 type NamespaceList []*Namespace

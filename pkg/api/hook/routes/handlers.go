@@ -20,8 +20,9 @@ package routes
 
 import (
 	"github.com/lastbackend/lastbackend/pkg/api/context"
+	"github.com/lastbackend/lastbackend/pkg/api/namespace"
+	"github.com/lastbackend/lastbackend/pkg/api/service"
 	"github.com/lastbackend/lastbackend/pkg/common/errors"
-	"github.com/lastbackend/lastbackend/pkg/common/types"
 	"github.com/lastbackend/lastbackend/pkg/util/http/utils"
 	"net/http"
 )
@@ -31,31 +32,51 @@ func HookExecuteH(w http.ResponseWriter, r *http.Request) {
 	var (
 		log       = context.Get().GetLogger()
 		storage   = context.Get().GetStorage()
-		hookModel *types.Hook
 		params    = utils.Vars(r)
 		hookParam = params["token"]
 	)
 
 	log.Debug("Get hook execute handler")
 
-	hookModel, err := storage.Hook().GetByToken(r.Context(), hookParam)
-	if err != nil || hookModel == nil {
+	hook, err := storage.Hook().Get(r.Context(), hookParam)
+	if err != nil || hook == nil {
 		log.Error("Error: get hook by token", err.Error())
 		errors.HTTP.BadRequest(w)
 		return
 	}
 
-	if hookModel.Service != "" {
-		serviceModel, err := storage.Service().GetByName(r.Context(), hookModel.Project, hookModel.Service)
-		if err != nil && serviceModel == nil {
-			log.Error("Error: get service by name", err.Error())
-			errors.HTTP.BadRequest(w)
+	if hook.Service != "" {
+		ns := namespace.New(r.Context())
+		item, err := ns.Get(hook.Namespace)
+		if err != nil {
+			log.Error("Error: find namespace by name", err.Error())
+			errors.HTTP.InternalServerError(w)
+			return
+		}
+		if item == nil {
+			errors.New("namespace").NotFound().Http(w)
 			return
 		}
 
-		// TODO: REDEPLOY
+		s := service.New(r.Context(), item.Meta)
+		svc, err := s.Get(hook.Service)
+		if err != nil {
+			log.Error("Error: find service by name", err.Error())
+			errors.HTTP.InternalServerError(w)
+			return
+		}
+		if svc == nil {
+			errors.New("service").NotFound().Http(w)
+			return
+		}
 
-	} else if hookModel.Image != "" {
+		if err := s.Redeploy(svc); err != nil {
+			log.Error("Error: redeploy service", err.Error())
+			errors.HTTP.InternalServerError(w)
+			return
+		}
+
+	} else if hook.Image != "" {
 		// TODO: Run rebuild
 	} else {
 		errors.HTTP.BadRequest(w)

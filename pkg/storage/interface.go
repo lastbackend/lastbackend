@@ -55,12 +55,9 @@ type IBuild interface {
 }
 
 type IHook interface {
-	GetByToken(ctx context.Context, token string) (*types.Hook, error)
-	ListByImage(ctx context.Context, id string) ([]*types.Hook, error)
-	ListByService(ctx context.Context, id string) ([]*types.Hook, error)
+	Get(ctx context.Context, id string) (*types.Hook, error)
 	Insert(ctx context.Context, hook *types.Hook) error
 	Remove(ctx context.Context, id string) error
-	RemoveByService(ctx context.Context, id string) error
 }
 
 type INamespace interface {

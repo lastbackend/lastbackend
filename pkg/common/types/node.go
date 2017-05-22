@@ -39,6 +39,7 @@ type NodeCRI struct {
 type NodeMeta struct {
 	Meta
 
+	ID           string `json:"id"`
 	Hostname     string `json:"hostname"`
 	Port         int    `json:"port"`
 	IP           string `json:"ip"`

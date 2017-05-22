@@ -55,7 +55,7 @@ func (s *NodeStorage) List(ctx context.Context) ([]*types.Node, error) {
 	return nodes, nil
 }
 
-func (s *NodeStorage) Get(ctx context.Context, hostname string) (*types.Node, error) {
+func (s *NodeStorage) Get(ctx context.Context, id string) (*types.Node, error) {
 
 	const filter = `\b.+` + nodeStorage + `\/.+\/(?:meta|state|alive)\b`
 
@@ -69,7 +69,7 @@ func (s *NodeStorage) Get(ctx context.Context, hostname string) (*types.Node, er
 	}
 	defer destroy()
 
-	key := keyCreate(nodeStorage, hostname)
+	key := keyCreate(nodeStorage, id)
 	if err := client.Map(ctx, key, filter, node); err != nil {
 
 		if err.Error() == store.ErrKeyNotFound {
@@ -80,7 +80,7 @@ func (s *NodeStorage) Get(ctx context.Context, hostname string) (*types.Node, er
 	}
 
 	node.Spec.Pods = make(map[string]types.PodNodeSpec)
-	keySpec := keyCreate(nodeStorage, hostname, "spec", "pods")
+	keySpec := keyCreate(nodeStorage, id, "spec", "pods")
 	if err := client.Map(ctx, keySpec, "", node.Spec.Pods); err != nil {
 		if err.Error() == store.ErrKeyNotFound {
 			return node, nil
@@ -105,19 +105,19 @@ func (s *NodeStorage) Insert(ctx context.Context, node *types.Node) error {
 
 	tx := client.Begin(ctx)
 
-	keyMeta := keyCreate(nodeStorage, node.Meta.Hostname, "meta")
+	keyMeta := keyCreate(nodeStorage, node.Meta.ID, "meta")
 	if err := tx.Create(keyMeta, &node.Meta, 0); err != nil {
 		fmt.Println("meta", err.Error())
 		return err
 	}
 
-	keyState := keyCreate(nodeStorage, node.Meta.Hostname, "state")
+	keyState := keyCreate(nodeStorage, node.Meta.ID, "state")
 	if err := tx.Create(keyState, &node.State, 0); err != nil {
 		fmt.Println("meta", err.Error())
 		return err
 	}
 
-	keyAvailable := keyCreate(nodeStorage, node.Meta.Hostname, "alive")
+	keyAvailable := keyCreate(nodeStorage, node.Meta.ID, "alive")
 	if err := tx.Create(keyAvailable, true, timeout); err != nil {
 		fmt.Println("alive", err.Error())
 		return err
@@ -141,12 +141,12 @@ func (s *NodeStorage) UpdateMeta(ctx context.Context, node *types.Node) error {
 	defer destroy()
 
 	tx := client.Begin(ctx)
-	keyMeta := keyCreate(nodeStorage, node.Meta.Hostname, "meta")
+	keyMeta := keyCreate(nodeStorage, node.Meta.ID, "meta")
 	if err := tx.Update(keyMeta, node.Meta, 0); err != nil {
 		return err
 	}
 
-	keyAvailable := keyCreate(nodeStorage, node.Meta.Hostname, "alive")
+	keyAvailable := keyCreate(nodeStorage, node.Meta.ID, "alive")
 	if err := tx.Upsert(keyAvailable, true, timeout); err != nil {
 		fmt.Println("available", err.Error())
 		return err
@@ -170,17 +170,17 @@ func (s *NodeStorage) UpdateState(ctx context.Context, node *types.Node) error {
 	defer destroy()
 
 	tx := client.Begin(ctx)
-	keyMeta := keyCreate(nodeStorage, node.Meta.Hostname, "meta")
+	keyMeta := keyCreate(nodeStorage, node.Meta.ID, "meta")
 	if err := tx.Update(keyMeta, &node.Meta, 0); err != nil {
 		return err
 	}
 
-	keyState := keyCreate(nodeStorage, node.Meta.Hostname, "state")
+	keyState := keyCreate(nodeStorage, node.Meta.ID, "state")
 	if err := tx.Update(keyState, &node.State, 0); err != nil {
 		return err
 	}
 
-	keyAvailable := keyCreate(nodeStorage, node.Meta.Hostname, "alive")
+	keyAvailable := keyCreate(nodeStorage, node.Meta.ID, "alive")
 	if err := tx.Upsert(keyAvailable, true, timeout); err != nil {
 		fmt.Println("available", err.Error())
 		return err
@@ -203,12 +203,12 @@ func (s *NodeStorage) InsertPod(ctx context.Context, meta *types.NodeMeta, pod *
 	defer destroy()
 
 	tx := client.Begin(ctx)
-	keyMeta := keyCreate(nodeStorage, meta.Hostname, "meta")
+	keyMeta := keyCreate(nodeStorage, meta.ID, "meta")
 	if err := tx.Update(keyMeta, meta, 0); err != nil {
 		return err
 	}
 
-	keyPod := keyCreate(nodeStorage, meta.Hostname, "spec", "pods", pod.Meta.Name)
+	keyPod := keyCreate(nodeStorage, meta.ID, "spec", "pods", pod.Meta.Name)
 	if err := tx.Create(keyPod, pod, 0); err != nil {
 		return err
 	}
@@ -230,12 +230,12 @@ func (s *NodeStorage) UpdatePod(ctx context.Context, meta *types.NodeMeta, pod *
 	defer destroy()
 
 	tx := client.Begin(ctx)
-	keyMeta := keyCreate(nodeStorage, meta.Hostname, "meta")
+	keyMeta := keyCreate(nodeStorage, meta.ID, "meta")
 	if err := tx.Update(keyMeta, meta, 0); err != nil {
 		return err
 	}
 
-	keyPod := keyCreate(nodeStorage, meta.Hostname, "spec", "pods", pod.Meta.Name)
+	keyPod := keyCreate(nodeStorage, meta.ID, "spec", "pods", pod.Meta.Name)
 	if err := tx.Update(keyPod, pod, 0); err != nil {
 		return err
 	}
@@ -258,12 +258,12 @@ func (s *NodeStorage) RemovePod(ctx context.Context, meta *types.NodeMeta, pod *
 
 	tx := client.Begin(ctx)
 
-	keyMeta := keyCreate(nodeStorage, meta.Hostname, "meta")
+	keyMeta := keyCreate(nodeStorage, meta.ID, "meta")
 	if err := tx.Update(keyMeta, meta, 0); err != nil {
 		return err
 	}
 
-	keyPod := keyCreate(nodeStorage, meta.Hostname, "spec", "pods", pod.Meta.Name)
+	keyPod := keyCreate(nodeStorage, meta.ID, "spec", "pods", pod.Meta.Name)
 	tx.Delete(keyPod)
 
 	if err := tx.Commit(); err != nil {
@@ -280,7 +280,7 @@ func (s *NodeStorage) Remove(ctx context.Context, node *types.Node) error {
 	}
 	defer destroy()
 
-	key := keyCreate(nodeStorage, node.Meta.Hostname)
+	key := keyCreate(nodeStorage, node.Meta.ID)
 	client.DeleteDir(ctx, key)
 
 	return nil

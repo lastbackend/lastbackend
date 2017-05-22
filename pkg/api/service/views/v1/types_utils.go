@@ -33,11 +33,16 @@ func New(obj *types.Service) *Service {
 	s.Meta.Name = obj.Meta.Name
 	s.Meta.Description = obj.Meta.Description
 	s.Meta.Namespace = obj.Meta.Namespace
+	s.Meta.Labels = obj.Meta.Labels
 	s.Meta.Region = obj.Meta.Region
 	s.Meta.Updated = obj.Meta.Updated
 	s.Meta.Created = obj.Meta.Created
 	s.Meta.Replicas = obj.Meta.Replicas
+	s.Meta.Hook = obj.Meta.Hook
 	s.State = ToState(obj.State)
+
+	s.DNS.Primary = obj.DNS.Primary
+	s.DNS.Secondary = obj.DNS.Secondary
 
 	if len(obj.Spec) == 0 {
 		s.Spec = make([]SpecInfo, 0)

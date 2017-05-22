@@ -104,9 +104,22 @@ func (s *service) Create(rq *request.RequestServiceCreateS) (*types.Service, err
 	svc.Spec = make(map[string]*types.ServiceSpec)
 	svc.Spec[uuid.NewV4().String()] = spec
 
+	hook := types.Hook{}
+	hook.Meta.SetDefault()
+	hook.Meta.ID = strings.Replace(uuid.NewV4().String(), "-", "", -1)
+	hook.Namespace = svc.Meta.Namespace
+	hook.Service = svc.Meta.Name
+
+	svc.Meta.Hook = hook.Meta.ID
+
 	if err := storage.Service().Insert(s.Context, &svc); err != nil {
 		log.Errorf("Error: insert service to db : %s", err.Error())
-		return &svc, err
+		return nil, err
+	}
+
+	if err := storage.Hook().Insert(s.Context, &hook); err != nil {
+		log.Errorf("Error: insert service to db : %s", err.Error())
+		return nil, err
 	}
 
 	return &svc, nil
@@ -254,6 +267,40 @@ func (s *service) DelSpec(service *types.Service, id string) error {
 
 	if err := storage.Service().UpdateSpec(s.Context, service); err != nil {
 		log.Errorf("Error: DelSpec: update service spec to db : %s", err.Error())
+		return err
+	}
+
+	return nil
+}
+
+func (s *service) Redeploy(service *types.Service) error {
+
+	var (
+		log     = ctx.Get().GetLogger()
+		storage = ctx.Get().GetStorage()
+	)
+
+	log.Debug("Redeploy service")
+
+	specs := make(map[string]*types.ServiceSpec)
+	service.State.State = types.StateProvision
+	for id := range service.Spec {
+		sp := service.Spec[id]
+		sp.Meta.Parent = id
+		sp.Meta.ID = uuid.NewV4().String()
+		delete(service.Spec, id)
+		specs[sp.Meta.ID] = sp
+	}
+
+	service.Spec = specs
+
+	if err := storage.Service().Update(s.Context, service); err != nil {
+		log.Errorf("Error: Redeploy: update service info to db : %s", err.Error())
+		return err
+	}
+
+	if err := storage.Service().UpdateSpec(s.Context, service); err != nil {
+		log.Error("Error: Redeploy: update service spec to db", err)
 		return err
 	}
 

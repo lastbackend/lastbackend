@@ -155,7 +155,6 @@ func (s *store) Map(ctx context.Context, key, keyRegexFilter string, mapOutPtr i
 			index = key[len(key)-1]
 			items[index] = buffer(kv.Value)
 		}
-
 	}
 
 	if len(items) == 0 {

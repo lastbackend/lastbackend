@@ -51,7 +51,7 @@ func (pc *PodController) Watch(services chan *types.Service) {
 						continue
 					}
 
-					if p == nil || p.Meta.Hostname == "" {
+					if p == nil || p.Node.ID == "" {
 						continue
 					}
 
@@ -70,7 +70,7 @@ func (pc *PodController) Watch(services chan *types.Service) {
 						continue
 					}
 
-					node, err := stg.Node().Get(context.Get().Background(), p.Meta.Hostname)
+					node, err := stg.Node().Get(context.Get().Background(), p.Node.ID)
 					if err != nil {
 						log.Errorf("Endpoint: get node error %s", err.Error())
 						break
