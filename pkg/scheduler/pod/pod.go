@@ -53,7 +53,6 @@ func Provision(p *types.Pod) error {
 			Spec:  p.Spec,
 		}
 
-		log.Debug("Set pod spec as destroy")
 		if err := stg.Node().UpdatePod(ctx, &n.Meta, spec); err != nil {
 			log.Errorf("Node: remove pod spec err: %s", err.Error())
 			return err
