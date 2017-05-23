@@ -42,6 +42,11 @@ func Provision(p *types.Pod) error {
 			return err
 		}
 
+		if n == nil {
+			log.Errorf("Node: not found")
+			return errors.New(errors.NodeNotFound)
+		}
+
 		spec := &types.PodNodeSpec{
 			Meta:  p.Meta,
 			State: p.State,

@@ -58,22 +58,13 @@ func (ps *PodCache) GetContainer(id string) *types.Container {
 func (ps *PodCache) AddContainer(c *types.Container) {
 	ps.lock.Lock()
 	defer ps.lock.Unlock()
-
-	if _, ok := ps.containers[c.ID]; !ok {
-		ps.stats.containers++
-	}
-
-	ps.containers[c.ID] = c
+	ps.addContainer(c)
 }
 
 func (ps *PodCache) DelContainer(id string) {
 	ps.lock.Lock()
 	defer ps.lock.Unlock()
-
-	if _, ok := ps.containers[id]; ok {
-		delete(ps.containers, id)
-		ps.stats.containers--
-	}
+	ps.delContainer(id)
 }
 
 func (ps *PodCache) GetPod(id string) *types.Pod {
@@ -98,7 +89,6 @@ func (ps *PodCache) SetPod(pod *types.Pod) {
 	if p, ok := ps.pods[pod.Meta.Name]; ok {
 		ps.delPod(p)
 	}
-
 	ps.addPod(pod)
 }
 
@@ -120,23 +110,30 @@ func (ps *PodCache) addPod(pod *types.Pod) {
 	ps.pods[pod.Meta.Name] = pod
 	ps.stats.pods++
 	for _, c := range pod.Containers {
-		if _, ok := ps.containers[c.ID]; !ok {
-			ps.stats.containers++
-		}
-		ps.containers[c.ID] = c
+		ps.addContainer(c)
 	}
 }
 
 func (ps *PodCache) delPod(pod *types.Pod) {
 	for _, c := range pod.Containers {
-		if _, ok := ps.containers[c.ID]; ok {
-			delete(ps.containers, c.ID)
-			ps.stats.containers--
-		}
+		ps.delContainer(c.ID)
 	}
-
 	delete(ps.pods, pod.Meta.Name)
 	ps.stats.pods--
+}
+
+func (ps *PodCache) addContainer(c *types.Container) {
+	if _, ok := ps.containers[c.ID]; !ok {
+		ps.stats.containers++
+	}
+	ps.containers[c.ID] = c
+}
+
+func (ps *PodCache) delContainer(id string) {
+	if _, ok := ps.containers[id]; ok {
+		delete(ps.containers, id)
+		ps.stats.containers--
+	}
 }
 
 func NewPodCache() *PodCache {
