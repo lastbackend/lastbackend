@@ -25,7 +25,7 @@ import (
 	"io"
 )
 
-func (r *Runtime) ImagePull(ctx context.Context, spec *types.ImageSpec) (io.ReadCloser, error) {
+func (r *Runtime) ImagePull(ctx context.IContext, spec *types.ImageSpec) (io.ReadCloser, error) {
 	log := ctx.GetLogger()
 	log.Debugf("Docker: Image pull: %s", spec.Name)
 	options := docker.ImagePullOptions{
@@ -34,11 +34,11 @@ func (r *Runtime) ImagePull(ctx context.Context, spec *types.ImageSpec) (io.Read
 	return r.client.ImagePull(ctx.Background(), spec.Name, options)
 }
 
-func (r *Runtime) ImagePush(ctx context.Context) {}
+func (r *Runtime) ImagePush(ctx context.IContext) {}
 
-func (r *Runtime) ImageBuild(ctx context.Context) {}
+func (r *Runtime) ImageBuild(ctx context.IContext) {}
 
-func (r *Runtime) ImageRemove(ctx context.Context, ID string) error {
+func (r *Runtime) ImageRemove(ctx context.IContext, ID string) error {
 
 	log := ctx.GetLogger()
 	log.Debugf("Docker: Image remove: %s", ID)
@@ -53,14 +53,14 @@ func (r *Runtime) ImageRemove(ctx context.Context, ID string) error {
 	return err
 }
 
-func (r *Runtime) ImageList(ctx context.Context) {
+func (r *Runtime) ImageList(ctx context.IContext) {
 	_, err := r.client.ImageList(ctx.Background(), docker.ImageListOptions{All: true})
 	if err != nil {
 		return
 	}
 }
 
-func (r *Runtime) ImageInspect(ctx context.Context, name, tag string) error {
+func (r *Runtime) ImageInspect(ctx context.IContext, name, tag string) error {
 	_, _, err := r.client.ImageInspectWithRaw(ctx.Background(), name)
 	if err != nil {
 		return err

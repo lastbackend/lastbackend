@@ -29,9 +29,9 @@ import (
 var _ctx Context
 
 type Context struct {
-	_c.Context
+	_c.IContext
 
-	logger  *logger.Logger
+	logger  logger.ILogger
 	storage *storage.Storage
 	config  *config.Config
 }
@@ -40,11 +40,11 @@ func Get() *Context {
 	return &_ctx
 }
 
-func (c *Context) SetLogger(log *logger.Logger) {
+func (c *Context) SetLogger(log logger.ILogger) {
 	c.logger = log
 }
 
-func (c *Context) GetLogger() *logger.Logger {
+func (c *Context) GetLogger() logger.ILogger {
 	return c.logger
 }
 

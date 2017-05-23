@@ -27,7 +27,7 @@ import (
 	"strings"
 )
 
-func (r *Runtime) PodList(c context.Context) ([]*types.Pod, error) {
+func (r *Runtime) PodList(c context.IContext) ([]*types.Pod, error) {
 
 	var (
 		err  error

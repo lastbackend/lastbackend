@@ -21,7 +21,9 @@ package storage
 import (
 	"context"
 	"github.com/lastbackend/lastbackend/pkg/common/types"
+	"github.com/lastbackend/lastbackend/pkg/logger"
 	"github.com/lastbackend/lastbackend/pkg/storage/store"
+	"errors"
 )
 
 const volumeStorage string = "volumes"
@@ -29,11 +31,21 @@ const volumeStorage string = "volumes"
 // Volume Service type for interface in interfaces folder
 type VolumeStorage struct {
 	IVolume
+	log    logger.ILogger
 	util   IUtil
 	Client func() (store.IStore, store.DestroyFunc, error)
 }
 
 func (s *VolumeStorage) GetByID(ctx context.Context, id string) (*types.Volume, error) {
+
+	s.log.V(debugLevel).Debugf("Storage: Volume: get by id: %s", id)
+
+	if len(id) == 0 {
+		err := errors.New("id can not be empty")
+		s.log.V(debugLevel).Errorf("Storage: Volume: get volume err: %s", err.Error())
+		return nil, err
+	}
+
 	return nil, nil
 }
 
@@ -52,11 +64,12 @@ func (s *VolumeStorage) Remove(ctx context.Context, id string) error {
 	return nil
 }
 
-func newVolumeStorage(config store.Config, util IUtil) *VolumeStorage {
+func newVolumeStorage(config store.Config, log logger.ILogger, util IUtil) *VolumeStorage {
 	s := new(VolumeStorage)
+	s.log = log
 	s.util = util
 	s.Client = func() (store.IStore, store.DestroyFunc, error) {
-		return New(config)
+		return New(config, log)
 	}
 	return s
 }

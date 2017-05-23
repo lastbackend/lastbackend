@@ -64,7 +64,7 @@ func Daemon(_cfg *_cfg.Config) {
 
 	ctx.SetConfig(cfg)
 	ctx.SetLogger(log)
-	ctx.SetCache(cache.New())
+	ctx.SetCache(cache.New(log))
 
 	var host string = "0.0.0.0"
 	if cfg.APIServer.Host != nil && *cfg.APIServer.Host != "" {

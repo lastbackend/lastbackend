@@ -27,24 +27,24 @@ import (
 )
 
 type CRI interface {
-	ContainerCreate(ctx context.Context, spec *types.ContainerSpec) (string, error)
-	ContainerStart(ctx context.Context, ID string) error
-	ContainerRestart(ctx context.Context, ID string, timeout *time.Duration) error
-	ContainerStop(ctx context.Context, ID string, timeout *time.Duration) error
-	ContainerPause(ctx context.Context, ID string) error
-	ContainerResume(ctx context.Context, ID string) error
-	ContainerRemove(ctx context.Context, ID string, clean bool, force bool) error
-	ContainerInspect(ctx context.Context, ID string) (*types.Container, error)
-	ContainerLogs(ctx context.Context, ID string, stdout, stderr, follow bool) (io.ReadCloser, error)
+	ContainerCreate(ctx context.IContext, spec *types.ContainerSpec) (string, error)
+	ContainerStart(ctx context.IContext, ID string) error
+	ContainerRestart(ctx context.IContext, ID string, timeout *time.Duration) error
+	ContainerStop(ctx context.IContext, ID string, timeout *time.Duration) error
+	ContainerPause(ctx context.IContext, ID string) error
+	ContainerResume(ctx context.IContext, ID string) error
+	ContainerRemove(ctx context.IContext, ID string, clean bool, force bool) error
+	ContainerInspect(ctx context.IContext, ID string) (*types.Container, error)
+	ContainerLogs(ctx context.IContext, ID string, stdout, stderr, follow bool) (io.ReadCloser, error)
 
-	PodList(ctx context.Context) ([]*types.Pod, error)
+	PodList(ctx context.IContext) ([]*types.Pod, error)
 
-	ImagePull(ctx context.Context, spec *types.ImageSpec) (io.ReadCloser, error)
-	ImageRemove(ctx context.Context, image string) error
+	ImagePull(ctx context.IContext, spec *types.ImageSpec) (io.ReadCloser, error)
+	ImageRemove(ctx context.IContext, image string) error
 
-	ImagePush(ctx context.Context)
-	ImageBuild(ctx context.Context)
-	ImageList(ctx context.Context)
+	ImagePush(ctx context.IContext)
+	ImageBuild(ctx context.IContext)
+	ImageList(ctx context.IContext)
 
-	Subscribe(ctx context.Context, stg *cache.PodCache) chan types.ContainerEvent
+	Subscribe(ctx context.IContext, stg *cache.PodCache) chan types.ContainerEvent
 }

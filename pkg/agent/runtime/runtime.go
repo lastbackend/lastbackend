@@ -68,7 +68,7 @@ func (r *Runtime) Register() (*string, error) {
 
 	var (
 		id   string
-		path = filepath.Join(homedir.HomeDir() + string(filepath.Separator) + "lastabckend")
+		path = filepath.Join(homedir.HomeDir() + string(filepath.Separator) + ".lastbackend")
 	)
 
 	if err := os.MkdirAll(path, 0755); err != nil {
@@ -78,7 +78,7 @@ func (r *Runtime) Register() (*string, error) {
 		return nil, err
 	}
 
-	filePath := filepath.Join(strings.Join([]string{path, ".lastbackend"}, string(filepath.Separator)))
+	filePath := filepath.Join(strings.Join([]string{path, ".id"}, string(filepath.Separator)))
 	if _, err := os.Stat(filePath); os.IsNotExist(err) {
 		id = strings.Replace(uuid.NewV4().String(), "-", "", -1)
 		// write the whole body at once

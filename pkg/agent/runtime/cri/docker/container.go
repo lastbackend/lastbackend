@@ -27,7 +27,7 @@ import (
 	"time"
 )
 
-func (r *Runtime) ContainerCreate(ctx context.Context, spec *types.ContainerSpec) (string, error) {
+func (r *Runtime) ContainerCreate(ctx context.IContext, spec *types.ContainerSpec) (string, error) {
 
 	c, err := r.client.ContainerCreate(
 		ctx.Background(),
@@ -44,34 +44,34 @@ func (r *Runtime) ContainerCreate(ctx context.Context, spec *types.ContainerSpec
 	return c.ID, err
 }
 
-func (r *Runtime) ContainerStart(ctx context.Context, ID string) error {
+func (r *Runtime) ContainerStart(ctx context.IContext, ID string) error {
 	return r.client.ContainerStart(ctx.Background(), ID, docker.ContainerStartOptions{})
 }
 
-func (r *Runtime) ContainerRestart(ctx context.Context, ID string, timeout *time.Duration) error {
+func (r *Runtime) ContainerRestart(ctx context.IContext, ID string, timeout *time.Duration) error {
 	return r.client.ContainerRestart(ctx.Background(), ID, timeout)
 }
 
-func (r *Runtime) ContainerStop(ctx context.Context, ID string, timeout *time.Duration) error {
+func (r *Runtime) ContainerStop(ctx context.IContext, ID string, timeout *time.Duration) error {
 	return r.client.ContainerStop(ctx.Background(), ID, timeout)
 }
 
-func (r *Runtime) ContainerPause(ctx context.Context, ID string) error {
+func (r *Runtime) ContainerPause(ctx context.IContext, ID string) error {
 	return r.client.ContainerPause(ctx.Background(), ID)
 }
 
-func (r *Runtime) ContainerResume(ctx context.Context, ID string) error {
+func (r *Runtime) ContainerResume(ctx context.IContext, ID string) error {
 	return r.client.ContainerUnpause(ctx.Background(), ID)
 }
 
-func (r *Runtime) ContainerRemove(ctx context.Context, ID string, clean bool, force bool) error {
+func (r *Runtime) ContainerRemove(ctx context.IContext, ID string, clean bool, force bool) error {
 	return r.client.ContainerRemove(ctx.Background(), ID, docker.ContainerRemoveOptions{
 		RemoveVolumes: clean,
 		Force:         force,
 	})
 }
 
-func (r *Runtime) ContainerLogs(ctx context.Context, ID string, stdout, stderr, follow bool) (io.ReadCloser, error) {
+func (r *Runtime) ContainerLogs(ctx context.IContext, ID string, stdout, stderr, follow bool) (io.ReadCloser, error) {
 	return r.client.ContainerLogs(ctx.Background(), ID, docker.ContainerLogsOptions{
 		ShowStdout: stdout,
 		ShowStderr: stderr,
@@ -81,7 +81,7 @@ func (r *Runtime) ContainerLogs(ctx context.Context, ID string, stdout, stderr, 
 	})
 }
 
-func (r *Runtime) ContainerInspect(ctx context.Context, ID string) (*types.Container, error) {
+func (r *Runtime) ContainerInspect(ctx context.IContext, ID string) (*types.Container, error) {
 	log := ctx.GetLogger()
 	log.Debug("Docker: Container Inspect")
 

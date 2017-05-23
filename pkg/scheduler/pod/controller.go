@@ -128,6 +128,6 @@ func NewPodController(ctx *context.Context) *PodController {
 	sc.context = ctx
 	sc.active = false
 	sc.pods = make(chan *types.Pod)
-	sc.pending = cache.NewPodCache()
+	sc.pending = cache.NewPodCache(ctx.GetLogger())
 	return sc
 }

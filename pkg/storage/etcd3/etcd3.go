@@ -20,13 +20,16 @@ package etcd3
 
 import (
 	"github.com/coreos/etcd/clientv3"
+	"github.com/lastbackend/lastbackend/pkg/logger"
 	s "github.com/lastbackend/lastbackend/pkg/storage/store"
 	"github.com/lastbackend/lastbackend/pkg/util/serializer"
 	"path"
 )
 
-func New(client *clientv3.Client, codec serializer.Codec, prefix string) s.IStore {
+func New(client *clientv3.Client, codec serializer.Codec, prefix string, log logger.ILogger) s.IStore {
+	log.V(s.DebugLevel).Debug("Etcd3: initialization storage")
 	var result = &store{
+		log:        log,
 		client:     client,
 		codec:      codec,
 		pathPrefix: path.Join("/", prefix),

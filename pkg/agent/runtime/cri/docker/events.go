@@ -26,7 +26,7 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/common/types"
 )
 
-func (r *Runtime) Subscribe(ctx context.Context, stg *cache.PodCache) chan types.ContainerEvent {
+func (r *Runtime) Subscribe(ctx context.IContext, stg *cache.PodCache) chan types.ContainerEvent {
 
 	var (
 		container *types.Container
