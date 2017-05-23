@@ -61,19 +61,17 @@ func (s *ServiceStorage) GetByName(ctx context.Context, namespace, name string) 
 		return nil, err
 	}
 
+	if service.Meta.Name == "" {
+		return nil, errors.New(store.ErrKeyNotFound)
+	}
+
 	keySpec := keyCreate(serviceStorage, namespace, name, "specs")
-	if err := client.Map(ctx, keySpec, "", &service.Spec); err != nil {
-		if err.Error() == store.ErrKeyNotFound {
-			return service, nil
-		}
+	if err := client.Map(ctx, keySpec, "", &service.Spec); err != nil && err.Error() != store.ErrKeyNotFound {
 		return nil, err
 	}
 
 	keyPods := keyCreate(podStorage, namespace, fmt.Sprintf("%s:%s", namespace, name))
-	if err := client.Map(ctx, keyPods, "", &service.Pods); err != nil {
-		if err.Error() == store.ErrKeyNotFound {
-			return service, nil
-		}
+	if err := client.Map(ctx, keyPods, "", &service.Pods); err != nil && err.Error() != store.ErrKeyNotFound {
 		return nil, err
 	}
 
