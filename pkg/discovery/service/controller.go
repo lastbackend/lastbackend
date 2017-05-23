@@ -78,6 +78,11 @@ func (sc *ServiceController) Watch(services chan *types.Service) {
 							break
 						}
 
+						if node == nil {
+							log.Errorf("Endpoint: node not found")
+							break
+						}
+
 						hosts[pod.Node.ID] = node.Meta.IP
 						ips = append(ips, node.Meta.IP)
 					}

@@ -60,7 +60,10 @@ func (t *Task) start() {
 		t.pod.State.Provision = false
 		t.pod.State.Ready = true
 
-		pod.SetPod(t.pod)
+		if t.spec.State != types.StateDestroyed {
+			pod.SetPod(t.pod)
+		}
+
 		events.SendPodState(t.pod)
 		log.Debugf("Task [%s]: done task for pod: %s", t.id, t.pod.Meta.Name)
 	}()
@@ -71,6 +74,7 @@ func (t *Task) start() {
 	log.Debugf("Task [%s]: pod spec: %s, new spec: %s", t.id, t.pod.Spec.ID, t.spec.ID)
 
 	if t.spec.State == types.StateDestroyed {
+		pod.DelPod(t.pod)
 		log.Debugf("Task [%s]: pod is marked for deletion: %s", t.id, t.pod.Meta.Name)
 		t.containersStateManage()
 		return

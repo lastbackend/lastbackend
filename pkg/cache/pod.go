@@ -58,14 +58,13 @@ func (ps *PodCache) GetContainer(id string) *types.Container {
 func (ps *PodCache) AddContainer(c *types.Container) {
 	ps.lock.Lock()
 	defer ps.lock.Unlock()
-	ps.containers[c.ID] = c
+	ps.addContainer(c)
 }
 
 func (ps *PodCache) DelContainer(id string) {
 	ps.lock.Lock()
 	defer ps.lock.Unlock()
-
-	delete(ps.containers, id)
+	ps.delContainer(id)
 }
 
 func (ps *PodCache) GetPod(id string) *types.Pod {
@@ -80,21 +79,7 @@ func (ps *PodCache) GetPod(id string) *types.Pod {
 }
 
 func (ps *PodCache) AddPod(pod *types.Pod) {
-	ps.lock.Lock()
-	defer ps.lock.Unlock()
-
-	if _, ok := ps.pods[pod.Meta.Name]; ok {
-		ps.SetPod(pod)
-		return
-	}
-
-	ps.pods[pod.Meta.Name] = pod
-	ps.stats.pods++
-	ps.stats.containers += len(pod.Containers)
-
-	for _, c := range pod.Containers {
-		ps.containers[c.ID] = c
-	}
+	ps.SetPod(pod)
 }
 
 func (ps *PodCache) SetPod(pod *types.Pod) {
@@ -102,36 +87,52 @@ func (ps *PodCache) SetPod(pod *types.Pod) {
 	defer ps.lock.Unlock()
 
 	if p, ok := ps.pods[pod.Meta.Name]; ok {
-		ps.stats.containers--
-		for _, c := range p.Containers {
-			delete(ps.containers, c.ID)
-		}
+		ps.delPod(p)
 	}
-
-	ps.pods[pod.Meta.Name] = pod
-	for _, c := range pod.Containers {
-		ps.containers[c.ID] = c
-	}
+	ps.addPod(pod)
 }
 
 func (ps *PodCache) DelPod(pod *types.Pod) {
 	ps.lock.Lock()
 	defer ps.lock.Unlock()
-
 	if p, ok := ps.pods[pod.Meta.Name]; ok {
-		ps.stats.containers--
-		for _, c := range p.Containers {
-			delete(ps.containers, c.ID)
-		}
+		ps.delPod(p)
 	}
-
-	delete(ps.pods, pod.Meta.Name)
-	ps.stats.pods--
 }
 
 func (ps *PodCache) SetPods(pods []*types.Pod) {
 	for _, pod := range pods {
 		ps.AddPod(pod)
+	}
+}
+
+func (ps *PodCache) addPod(pod *types.Pod) {
+	ps.pods[pod.Meta.Name] = pod
+	ps.stats.pods++
+	for _, c := range pod.Containers {
+		ps.addContainer(c)
+	}
+}
+
+func (ps *PodCache) delPod(pod *types.Pod) {
+	for _, c := range pod.Containers {
+		ps.delContainer(c.ID)
+	}
+	delete(ps.pods, pod.Meta.Name)
+	ps.stats.pods--
+}
+
+func (ps *PodCache) addContainer(c *types.Container) {
+	if _, ok := ps.containers[c.ID]; !ok {
+		ps.stats.containers++
+	}
+	ps.containers[c.ID] = c
+}
+
+func (ps *PodCache) delContainer(id string) {
+	if _, ok := ps.containers[id]; ok {
+		delete(ps.containers, id)
+		ps.stats.containers--
 	}
 }
 

@@ -97,6 +97,7 @@ func (p *pod) Set(pod types.Pod) error {
 
 	// Remove service if the state set as destroyed and pods count is zero
 	if len(svc.Pods) == 0 && svc.State.State == types.StateDestroyed {
+
 		if err = storage.Hook().Remove(p.Context, svc.Meta.Hook); err != nil && err.Error() != store.ErrKeyNotFound {
 			log.Errorf("Error: remove service hook from db: %s", err)
 			return err
@@ -183,7 +184,7 @@ func Logs(c context.Context, ns, pod, container string, stream io.Writer, done c
 	}
 
 	_, res, err := client.
-		GET(fmt.Sprintf("/container/%s/logs", cnt)).Do()
+	GET(fmt.Sprintf("/container/%s/logs", cnt)).Do()
 	if err != nil {
 		return err
 	}

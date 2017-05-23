@@ -42,15 +42,19 @@ func Provision(p *types.Pod) error {
 			return err
 		}
 
+		if n == nil {
+			log.Errorf("Node: not found")
+			return errors.New(errors.NodeNotFound)
+		}
+
 		spec := &types.PodNodeSpec{
 			Meta:  p.Meta,
 			State: p.State,
 			Spec:  p.Spec,
 		}
 
-		log.Debug("Set pod spec as destroy")
 		if err := stg.Node().UpdatePod(ctx, &n.Meta, spec); err != nil {
-			log.Errorf("Node: remove pod spec err: %s", err.Error())
+			log.Errorf("Node: update pod spec err: %s", err.Error())
 			return err
 		}
 	}

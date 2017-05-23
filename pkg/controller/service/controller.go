@@ -46,6 +46,11 @@ func (sc *ServiceController) Watch() {
 						continue
 					}
 
+					if s == nil {
+						log.Debug("ServiceController: skip because service is nil")
+						continue
+					}
+
 					log.Debugf("Service needs to be provisioned: %s:%s", s.Meta.Namespace, s.Meta.Name)
 					if err := Provision(s); err != nil {
 						log.Errorf("Error: ServiceController: Service provision: %s", err.Error())
