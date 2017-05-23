@@ -68,7 +68,7 @@ func (r *Runtime) Loop() {
 		lead = make(chan bool)
 	)
 
-	log.Debug(" Runtime: Loop")
+	log.Debug("Runtime: Loop")
 
 	go func() {
 		for {
