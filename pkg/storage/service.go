@@ -177,6 +177,36 @@ func (s *ServiceStorage) ListByNamespace(ctx context.Context, namespace string) 
 	return services, nil
 }
 
+// Count services
+func (s *ServiceStorage) CountByNamespace(ctx context.Context, namespace string) (int, error) {
+
+	s.log.V(logLevel).Debugf("Storage: Service: count service list in namespace: %s", namespace)
+
+	if len(namespace) == 0 {
+		err := errors.New("namespace can not be empty")
+		s.log.V(logLevel).Errorf("Storage: Service: count service list err: %s", err.Error())
+		return int(0), err
+	}
+
+	const filter = `\b.+` + serviceStorage + `\/.+\/meta\b`
+
+	client, destroy, err := s.Client()
+	if err != nil {
+		s.log.V(logLevel).Errorf("Storage: Service: create client err: %s", err.Error())
+		return int(0), err
+	}
+	defer destroy()
+
+	keyServices := keyCreate(serviceStorage, namespace)
+	count, err := client.Count(ctx, keyServices, filter)
+	if err != nil {
+		s.log.V(logLevel).Errorf("Storage: Service: list services err: %s", err.Error())
+		return int(0), err
+	}
+
+	return count, nil
+}
+
 // Insert new service into storage
 func (s *ServiceStorage) Insert(ctx context.Context, service *types.Service) error {
 

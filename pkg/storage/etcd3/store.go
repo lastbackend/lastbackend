@@ -45,6 +45,31 @@ type store struct {
 // Need for decode array bytes
 type buffer []byte
 
+func (s *store) Count(ctx context.Context, key, keyRegexFilter string) (int, error) {
+	key = path.Join(s.pathPrefix, key)
+
+	s.log.V(st.LogLevel).Debugf("Etcd3: Count: key: %s with filter: %s", key, keyRegexFilter)
+
+	getResp, err := s.client.KV.Get(ctx, key, clientv3.WithPrefix())
+	if err != nil {
+		s.log.V(st.LogLevel).Errorf("Etcd3: Count: request err: %s", err.Error())
+		return 0, err
+	}
+	r, _ := regexp.Compile(keyRegexFilter)
+
+	if len(keyRegexFilter) == 0 {
+		return len(getResp.Kvs), nil
+	}
+
+	count := 0
+	for _, kv := range getResp.Kvs {
+		if r.MatchString(string(kv.Key)) {
+			count++
+		}
+	}
+	return count, nil
+}
+
 func (s *store) Create(ctx context.Context, key string, obj, outPtr interface{}, ttl uint64) error {
 	key = path.Join(s.pathPrefix, key)
 

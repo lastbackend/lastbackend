@@ -220,22 +220,21 @@ func NamespaceRemoveH(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Todo: remove all services by namespace name
-	// Todo: remove all activity by namespace name
+	exist, err := ns.CheckExistServices(name)
+	if err != nil {
+		log.V(logLevel).Errorf("Handler: Namespace: check exists services for namespace `%s` err: %s", name, err.Error())
+		errors.HTTP.InternalServerError(w)
+		return
+	}
+	if exist {
+		err := errors.New("have any services")
+		log.V(logLevel).Errorf("Handler: Namespace: remove namespace `%s` err: %s", name, err.Error())
+		errors.Forbidden().Http(w)
+		return
+	}
 
-	//err = storage.Service().RemoveByProject(session.Username, name)
-	//if err != nil {
-	//	log.V(logLevel).Errorf("Handler: Namespace: remove services from db err: %s", err)
-	//	e.HTTP.InternalServerError(w)
-	//	return
-	//}
-
-	//err = storage.Activity().RemoveByProject(session.Username, name)
-	//if err != nil {
-	//	log.V(logLevel).Errorf("Handler: Namespace: remove namespace activity from db err: %s, err)
-	//	e.HTTP.InternalServerError(w)
-	//	return
-	//}
+	// TODO: remove all services by namespace name
+	// TODO: remove all activity by namespace name
 
 	ns.Remove(item.Meta.Name)
 	if err != nil {

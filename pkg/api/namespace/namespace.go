@@ -82,6 +82,23 @@ func (ns *namespace) Get(name string) (*types.Namespace, error) {
 	return n, nil
 }
 
+func (ns *namespace) CheckExistServices(name string) (bool, error) {
+	var (
+		log     = ctx.Get().GetLogger()
+		storage = ctx.Get().GetStorage()
+	)
+
+	log.V(logLevel).Debugf("Namespace: check exist service for namespace %s", name)
+
+	count, err := storage.Service().CountByNamespace(ns.Context, name)
+	if err != nil {
+		log.V(logLevel).Errorf("Namespace: get service list for namespace `%s` err: %s", name, err.Error())
+		return false, err
+	}
+
+	return count > 0, nil
+}
+
 func (ns *namespace) Create(rq *request.RequestNamespaceCreateS) (*types.Namespace, error) {
 
 	var (

@@ -69,6 +69,7 @@ type INamespace interface {
 }
 
 type IService interface {
+	CountByNamespace(ctx context.Context, namespace string) (int, error)
 	GetByName(ctx context.Context, namespace, name string) (*types.Service, error)
 	GetByPodName(ctx context.Context, name string) (*types.Service, error)
 	ListByNamespace(ctx context.Context, namespace string) ([]*types.Service, error)
