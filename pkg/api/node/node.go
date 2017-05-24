@@ -24,6 +24,8 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/common/types"
 )
 
+const logLevel = 3
+
 type node struct {
 	Context context.Context
 }
@@ -37,15 +39,17 @@ func (n *node) List() ([]*types.Node, error) {
 	return storage.Node().List(n.Context)
 }
 
-func (n *node) Get(hostname string) (*types.Node, error) {
+func (n *node) Get(id string) (*types.Node, error) {
 	var (
 		log     = ctx.Get().GetLogger()
 		storage = ctx.Get().GetStorage()
 	)
 
-	log.Debug("Node: Get node info")
-	node, err := storage.Node().Get(n.Context, hostname)
+	log.V(logLevel).Debugf("Node: get node by id %s", id)
+
+	node, err := storage.Node().Get(n.Context, id)
 	if err != nil {
+		log.V(logLevel).Debugf("Node: get node `%s` err: %s", id, err.Error())
 		return nil, err
 	}
 
@@ -63,17 +67,18 @@ func (n *node) Create(meta *types.NodeMeta, state *types.NodeState) (*types.Node
 
 	var (
 		storage = ctx.Get().GetStorage()
-		node    = new(types.Node)
 		log     = ctx.Get().GetLogger()
+		node    = new(types.Node)
 	)
 
-	log.Debug("Create new Node")
+	log.V(logLevel).Debugf("Node: create node with meta: %#v, state: %#v", meta, state)
 
 	node.Meta = *meta
 	node.State = *state
 
 	if err := storage.Node().Insert(n.Context, node); err != nil {
-		return node, err
+		log.V(logLevel).Debugf("Node: insert node err: %s", err.Error())
+		return nil, err
 	}
 
 	return node, nil
