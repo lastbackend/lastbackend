@@ -102,9 +102,9 @@ func (s *NodeStorage) Get(ctx context.Context, id string) (*types.Node, error) {
 	node.Spec.Pods = make(map[string]types.PodNodeSpec)
 	keySpec := keyCreate(nodeStorage, id, "spec", "pods")
 	if err := client.Map(ctx, keySpec, "", node.Spec.Pods); err != nil {
+		// Return node if pods does not exists
 		if err.Error() == store.ErrKeyNotFound {
-			s.log.V(debugLevel).Warnf("Storage: Node: get node err: %s", err.Error())
-			return nil, nil
+			return node, nil
 		}
 		s.log.V(debugLevel).Errorf("Storage: Node: get node err: %s", err.Error())
 		return nil, err
@@ -115,7 +115,7 @@ func (s *NodeStorage) Get(ctx context.Context, id string) (*types.Node, error) {
 
 func (s *NodeStorage) Insert(ctx context.Context, node *types.Node) error {
 
-	s.log.V(debugLevel).Debug("Storage: Node: insert node: %#v", node)
+	s.log.V(debugLevel).Debugf("Storage: Node: insert node: %#v", node)
 
 	if node == nil {
 		err := errors.New("node can not be nil")
@@ -161,41 +161,13 @@ func (s *NodeStorage) Insert(ctx context.Context, node *types.Node) error {
 	return nil
 }
 
-func (s *NodeStorage) UpdateMeta(ctx context.Context, node *types.Node) error {
+func (s *NodeStorage) Update(ctx context.Context, node *types.Node) error {
 
-	s.log.V(debugLevel).Debug("Storage: Node: update node meta: %#v", node)
-
-	if node == nil {
-		err := errors.New("node can not be nil")
-		s.log.V(debugLevel).Errorf("Storage: Node: update node meta err: %s", err.Error())
-		return err
-	}
-
-	node.Meta.Updated = time.Now()
-
-	client, destroy, err := s.Client()
-	if err != nil {
-		s.log.V(debugLevel).Errorf("Storage: Node: create client err: %s", err.Error())
-		return err
-	}
-	defer destroy()
-
-	keyMeta := keyCreate(nodeStorage, node.Meta.ID, "meta")
-	if err := client.Update(ctx, keyMeta, node.Meta, nil, 0); err != nil {
-		s.log.V(debugLevel).Errorf("Storage: Node: update node meta err: %s", err.Error())
-		return err
-	}
-
-	return nil
-}
-
-func (s *NodeStorage) UpdateState(ctx context.Context, node *types.Node) error {
-
-	s.log.V(debugLevel).Debug("Storage: Node: update node state: %#v", node)
+	s.log.V(debugLevel).Debugf("Storage: Node: update node: %#v", node)
 
 	if node == nil {
 		err := errors.New("node can not be nil")
-		s.log.V(debugLevel).Errorf("Storage: Node: update node state err: %s", err.Error())
+		s.log.V(debugLevel).Errorf("Storage: Node: update node err: %s", err.Error())
 		return err
 	}
 
@@ -209,6 +181,7 @@ func (s *NodeStorage) UpdateState(ctx context.Context, node *types.Node) error {
 	defer destroy()
 
 	tx := client.Begin(ctx)
+
 	keyMeta := keyCreate(nodeStorage, node.Meta.ID, "meta")
 	if err := tx.Update(keyMeta, &node.Meta, 0); err != nil {
 		s.log.V(debugLevel).Errorf("Storage: Node: update node meta err: %s", err.Error())
@@ -237,7 +210,7 @@ func (s *NodeStorage) UpdateState(ctx context.Context, node *types.Node) error {
 
 func (s *NodeStorage) InsertPod(ctx context.Context, meta *types.NodeMeta, pod *types.PodNodeSpec) error {
 
-	s.log.V(debugLevel).Debug("Storage: Node: insert pod in node: %#v", pod)
+	s.log.V(debugLevel).Debugf("Storage: Node: insert pod in node: %#v", pod)
 
 	if meta == nil {
 		err := errors.New("meta can not be nil")
@@ -283,7 +256,7 @@ func (s *NodeStorage) InsertPod(ctx context.Context, meta *types.NodeMeta, pod *
 
 func (s *NodeStorage) UpdatePod(ctx context.Context, meta *types.NodeMeta, pod *types.PodNodeSpec) error {
 
-	s.log.V(debugLevel).Debug("Storage: Node: update pod in node: %#v", pod)
+	s.log.V(debugLevel).Debugf("Storage: Node: update pod in node: %#v", pod)
 
 	if meta == nil {
 		err := errors.New("meta can not be nil")
@@ -329,7 +302,7 @@ func (s *NodeStorage) UpdatePod(ctx context.Context, meta *types.NodeMeta, pod *
 
 func (s *NodeStorage) RemovePod(ctx context.Context, meta *types.NodeMeta, pod *types.PodNodeSpec) error {
 
-	s.log.V(debugLevel).Debug("Storage: Node: remove pod from node: %#v", pod)
+	s.log.V(debugLevel).Debugf("Storage: Node: remove pod from node: %#v", pod)
 
 	if meta == nil {
 		err := errors.New("meta can not be nil")
@@ -373,7 +346,7 @@ func (s *NodeStorage) RemovePod(ctx context.Context, meta *types.NodeMeta, pod *
 
 func (s *NodeStorage) Remove(ctx context.Context, node *types.Node) error {
 
-	s.log.V(debugLevel).Debug("Storage: Node: remove node: %#v", node)
+	s.log.V(debugLevel).Debugf("Storage: Node: remove node: %#v", node)
 
 	if node == nil {
 		err := errors.New("node can not be nil")

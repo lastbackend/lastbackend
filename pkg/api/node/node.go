@@ -52,20 +52,11 @@ func (n *node) Get(hostname string) (*types.Node, error) {
 	return node, nil
 }
 
-func (n *node) SetMeta(node *types.Node) error {
+func (n *node) Update(node *types.Node) error {
 	var (
 		storage = ctx.Get().GetStorage()
 	)
-
-	return storage.Node().UpdateMeta(n.Context, node)
-}
-
-func (n *node) SetState(node *types.Node) error {
-	var (
-		storage = ctx.Get().GetStorage()
-	)
-
-	return storage.Node().UpdateState(n.Context, node)
+	return storage.Node().Update(n.Context, node)
 }
 
 func (n *node) Create(meta *types.NodeMeta, state *types.NodeState) (*types.Node, error) {

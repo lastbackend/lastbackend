@@ -175,6 +175,7 @@ func (s *store) Map(ctx context.Context, key, keyRegexFilter string, mapOutPtr i
 		s.log.V(st.DebugLevel).Errorf("Etcd3: Map: decode data err: %s", err.Error())
 		return err
 	}
+
 	return nil
 }
 

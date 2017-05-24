@@ -93,7 +93,7 @@ func (s *VendorStorage) Get(ctx context.Context, name string) (*types.Vendor, er
 
 func (s *VendorStorage) List(ctx context.Context) (map[string]*types.Vendor, error) {
 
-	s.log.V(debugLevel).Debugf("Storage: Vendor: get vendors list")
+	s.log.V(debugLevel).Debug("Storage: Vendor: get vendors list")
 
 	client, destroy, err := s.Client()
 	if err != nil {
