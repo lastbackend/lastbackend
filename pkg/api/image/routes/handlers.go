@@ -14,33 +14,8 @@
 // Dissemination of this information or reproduction of this material
 // is strictly forbidden unless prior written permission is obtained
 // from Last.Backend LLC.
+//
 
-package cache
+package routes
 
-import "github.com/lastbackend/lastbackend/pkg/logger"
-
-const logLevel = 7
-
-type Cache struct {
-	pods      *PodCache
-	endpoints *EndpointCache
-}
-
-func New(log logger.ILogger) *Cache {
-	log.V(logLevel).Debug("Cache: initialization storage")
-
-	return &Cache{
-		pods:      NewPodCache(log),
-		endpoints: NewEndpointCache(log),
-	}
-}
-
-// Return pods storage
-func (s *Cache) Pods() *PodCache {
-	return s.pods
-}
-
-// Return endpoints storage
-func (s *Cache) Endpoints() *EndpointCache {
-	return s.endpoints
-}
+const logLevel = 2

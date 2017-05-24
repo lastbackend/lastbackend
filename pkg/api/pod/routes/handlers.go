@@ -17,3 +17,5 @@
 //
 
 package routes
+
+const logLevel = 2

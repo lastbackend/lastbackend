@@ -27,23 +27,26 @@ import (
 	"io/ioutil"
 )
 
+const logLevel = 3
+
 type RequestNodeEventS struct {
 	v1.Event
 }
 
 func (s *RequestNodeEventS) DecodeAndValidate(reader io.Reader) *errors.Err {
-	var (
-		log = context.Get().GetLogger()
-	)
+	var log = context.Get().GetLogger()
+
+	log.V(logLevel).Debug("Request: Node: decode and validate event data")
 
 	body, err := ioutil.ReadAll(reader)
 	if err != nil {
-		log.Error(err)
+		log.V(logLevel).Errorf("Request: Node: decode and validate event data err: %s", err.Error())
 		return errors.New("node event").Unknown(err)
 	}
 
 	err = json.Unmarshal(body, s)
 	if err != nil {
+		log.V(logLevel).Errorf("Request: Node: convert struct from json err: %s", err.Error())
 		return errors.New("node").IncorrectJSON(err)
 	}
 

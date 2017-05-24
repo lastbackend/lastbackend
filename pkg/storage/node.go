@@ -43,7 +43,7 @@ type NodeStorage struct {
 
 func (s *NodeStorage) List(ctx context.Context) ([]*types.Node, error) {
 
-	s.log.V(debugLevel).Debugf("Storage: Node: get list nodes")
+	s.log.V(logLevel).Debugf("Storage: Node: get list nodes")
 
 	const filter = `\b.+` + nodeStorage + `\/(.+)\/(?:meta|state|alive)\b`
 
@@ -51,29 +51,29 @@ func (s *NodeStorage) List(ctx context.Context) ([]*types.Node, error) {
 
 	client, destroy, err := s.Client()
 	if err != nil {
-		s.log.V(debugLevel).Errorf("Storage: Node: create client err: %s", err.Error())
+		s.log.V(logLevel).Errorf("Storage: Node: create client err: %s", err.Error())
 		return nil, err
 	}
 	defer destroy()
 
 	key := keyCreate(nodeStorage)
 	if err := client.List(ctx, key, filter, &nodes); err != nil {
-		s.log.V(debugLevel).Errorf("Storage: Node: get nodes list err: %s", err.Error())
+		s.log.V(logLevel).Errorf("Storage: Node: get nodes list err: %s", err.Error())
 		return nil, err
 	}
 
-	s.log.V(debugLevel).Debugf("Storage: Node: get nodes list result: %d", len(nodes))
+	s.log.V(logLevel).Debugf("Storage: Node: get nodes list result: %d", len(nodes))
 
 	return nodes, nil
 }
 
 func (s *NodeStorage) Get(ctx context.Context, id string) (*types.Node, error) {
 
-	s.log.V(debugLevel).Debugf("Storage: Node: get by id: %s", id)
+	s.log.V(logLevel).Debugf("Storage: Node: get by id: %s", id)
 
 	if len(id) == 0 {
 		err := errors.New("id can not be empty")
-		s.log.V(debugLevel).Errorf("Storage: Node: get node err: %s", err.Error())
+		s.log.V(logLevel).Errorf("Storage: Node: get node err: %s", err.Error())
 		return nil, err
 	}
 
@@ -91,7 +91,7 @@ func (s *NodeStorage) Get(ctx context.Context, id string) (*types.Node, error) {
 		if err.Error() == store.ErrKeyNotFound {
 			return nil, nil
 		}
-		s.log.V(debugLevel).Errorf("Storage: Node: create client err: %s", err.Error())
+		s.log.V(logLevel).Errorf("Storage: Node: create client err: %s", err.Error())
 		return nil, err
 	}
 
@@ -106,7 +106,7 @@ func (s *NodeStorage) Get(ctx context.Context, id string) (*types.Node, error) {
 		if err.Error() == store.ErrKeyNotFound {
 			return node, nil
 		}
-		s.log.V(debugLevel).Errorf("Storage: Node: get node err: %s", err.Error())
+		s.log.V(logLevel).Errorf("Storage: Node: get node err: %s", err.Error())
 		return nil, err
 	}
 
@@ -115,11 +115,11 @@ func (s *NodeStorage) Get(ctx context.Context, id string) (*types.Node, error) {
 
 func (s *NodeStorage) Insert(ctx context.Context, node *types.Node) error {
 
-	s.log.V(debugLevel).Debugf("Storage: Node: insert node: %#v", node)
+	s.log.V(logLevel).Debugf("Storage: Node: insert node: %#v", node)
 
 	if node == nil {
 		err := errors.New("node can not be nil")
-		s.log.V(debugLevel).Errorf("Storage: Node: insert node err: %s", err.Error())
+		s.log.V(logLevel).Errorf("Storage: Node: insert node err: %s", err.Error())
 		return err
 	}
 
@@ -128,7 +128,7 @@ func (s *NodeStorage) Insert(ctx context.Context, node *types.Node) error {
 
 	client, destroy, err := s.Client()
 	if err != nil {
-		s.log.V(debugLevel).Errorf("Storage: Node: create client err: %s", err.Error())
+		s.log.V(logLevel).Errorf("Storage: Node: create client err: %s", err.Error())
 		return err
 	}
 	defer destroy()
@@ -137,24 +137,24 @@ func (s *NodeStorage) Insert(ctx context.Context, node *types.Node) error {
 
 	keyMeta := keyCreate(nodeStorage, node.Meta.ID, "meta")
 	if err := tx.Create(keyMeta, &node.Meta, 0); err != nil {
-		s.log.V(debugLevel).Errorf("Storage: Node: create meta err: %s", err.Error())
+		s.log.V(logLevel).Errorf("Storage: Node: create meta err: %s", err.Error())
 		return err
 	}
 
 	keyState := keyCreate(nodeStorage, node.Meta.ID, "state")
 	if err := tx.Create(keyState, &node.State, 0); err != nil {
-		s.log.V(debugLevel).Errorf("Storage: Node: create state err: %s", err.Error())
+		s.log.V(logLevel).Errorf("Storage: Node: create state err: %s", err.Error())
 		return err
 	}
 
 	keyAvailable := keyCreate(nodeStorage, node.Meta.ID, "alive")
 	if err := tx.Create(keyAvailable, true, timeout); err != nil {
-		s.log.V(debugLevel).Errorf("Storage: Node: create alive err: %s", err.Error())
+		s.log.V(logLevel).Errorf("Storage: Node: create alive err: %s", err.Error())
 		return err
 	}
 
 	if err := tx.Commit(); err != nil {
-		s.log.V(debugLevel).Errorf("Storage: Node: commit transaction err: %s", err.Error())
+		s.log.V(logLevel).Errorf("Storage: Node: commit transaction err: %s", err.Error())
 		return err
 	}
 
@@ -163,11 +163,11 @@ func (s *NodeStorage) Insert(ctx context.Context, node *types.Node) error {
 
 func (s *NodeStorage) Update(ctx context.Context, node *types.Node) error {
 
-	s.log.V(debugLevel).Debugf("Storage: Node: update node: %#v", node)
+	s.log.V(logLevel).Debugf("Storage: Node: update node: %#v", node)
 
 	if node == nil {
 		err := errors.New("node can not be nil")
-		s.log.V(debugLevel).Errorf("Storage: Node: update node err: %s", err.Error())
+		s.log.V(logLevel).Errorf("Storage: Node: update node err: %s", err.Error())
 		return err
 	}
 
@@ -175,7 +175,7 @@ func (s *NodeStorage) Update(ctx context.Context, node *types.Node) error {
 
 	client, destroy, err := s.Client()
 	if err != nil {
-		s.log.V(debugLevel).Errorf("Storage: Node: create client err: %s", err.Error())
+		s.log.V(logLevel).Errorf("Storage: Node: create client err: %s", err.Error())
 		return err
 	}
 	defer destroy()
@@ -184,24 +184,24 @@ func (s *NodeStorage) Update(ctx context.Context, node *types.Node) error {
 
 	keyMeta := keyCreate(nodeStorage, node.Meta.ID, "meta")
 	if err := tx.Update(keyMeta, &node.Meta, 0); err != nil {
-		s.log.V(debugLevel).Errorf("Storage: Node: update node meta err: %s", err.Error())
+		s.log.V(logLevel).Errorf("Storage: Node: update node meta err: %s", err.Error())
 		return err
 	}
 
 	keyState := keyCreate(nodeStorage, node.Meta.ID, "state")
 	if err := tx.Update(keyState, &node.State, 0); err != nil {
-		s.log.V(debugLevel).Errorf("Storage: Node: update node state err: %s", err.Error())
+		s.log.V(logLevel).Errorf("Storage: Node: update node state err: %s", err.Error())
 		return err
 	}
 
 	keyAvailable := keyCreate(nodeStorage, node.Meta.ID, "alive")
 	if err := tx.Upsert(keyAvailable, true, timeout); err != nil {
-		s.log.V(debugLevel).Errorf("Storage: Node: upsert node alive err: %s", err.Error())
+		s.log.V(logLevel).Errorf("Storage: Node: upsert node alive err: %s", err.Error())
 		return err
 	}
 
 	if err := tx.Commit(); err != nil {
-		s.log.V(debugLevel).Errorf("Storage: Node: commit transaction err: %s", err.Error())
+		s.log.V(logLevel).Errorf("Storage: Node: commit transaction err: %s", err.Error())
 		return err
 	}
 
@@ -210,17 +210,17 @@ func (s *NodeStorage) Update(ctx context.Context, node *types.Node) error {
 
 func (s *NodeStorage) InsertPod(ctx context.Context, meta *types.NodeMeta, pod *types.PodNodeSpec) error {
 
-	s.log.V(debugLevel).Debugf("Storage: Node: insert pod in node: %#v", pod)
+	s.log.V(logLevel).Debugf("Storage: Node: insert pod in node: %#v", pod)
 
 	if meta == nil {
 		err := errors.New("meta can not be nil")
-		s.log.V(debugLevel).Errorf("Storage: Node: insert pod in node err: %s", err.Error())
+		s.log.V(logLevel).Errorf("Storage: Node: insert pod in node err: %s", err.Error())
 		return err
 	}
 
 	if pod == nil {
 		err := errors.New("pod can not be nil")
-		s.log.V(debugLevel).Errorf("Storage: Node: insert node in pod err: %s", err.Error())
+		s.log.V(logLevel).Errorf("Storage: Node: insert node in pod err: %s", err.Error())
 		return err
 	}
 
@@ -228,7 +228,7 @@ func (s *NodeStorage) InsertPod(ctx context.Context, meta *types.NodeMeta, pod *
 
 	client, destroy, err := s.Client()
 	if err != nil {
-		s.log.V(debugLevel).Errorf("Storage: Node: create client err: %s", err.Error())
+		s.log.V(logLevel).Errorf("Storage: Node: create client err: %s", err.Error())
 		return err
 	}
 	defer destroy()
@@ -236,18 +236,18 @@ func (s *NodeStorage) InsertPod(ctx context.Context, meta *types.NodeMeta, pod *
 	tx := client.Begin(ctx)
 	keyMeta := keyCreate(nodeStorage, meta.ID, "meta")
 	if err := tx.Update(keyMeta, meta, 0); err != nil {
-		s.log.V(debugLevel).Errorf("Storage: Node: update node meta err: %s", err.Error())
+		s.log.V(logLevel).Errorf("Storage: Node: update node meta err: %s", err.Error())
 		return err
 	}
 
 	keyPod := keyCreate(nodeStorage, meta.ID, "spec", "pods", pod.Meta.Name)
 	if err := tx.Create(keyPod, pod, 0); err != nil {
-		s.log.V(debugLevel).Errorf("Storage: Node: create pod for node err: %s", err.Error())
+		s.log.V(logLevel).Errorf("Storage: Node: create pod for node err: %s", err.Error())
 		return err
 	}
 
 	if err := tx.Commit(); err != nil {
-		s.log.V(debugLevel).Errorf("Storage: Node: commit transaction err: %s", err.Error())
+		s.log.V(logLevel).Errorf("Storage: Node: commit transaction err: %s", err.Error())
 		return err
 	}
 
@@ -256,17 +256,17 @@ func (s *NodeStorage) InsertPod(ctx context.Context, meta *types.NodeMeta, pod *
 
 func (s *NodeStorage) UpdatePod(ctx context.Context, meta *types.NodeMeta, pod *types.PodNodeSpec) error {
 
-	s.log.V(debugLevel).Debugf("Storage: Node: update pod in node: %#v", pod)
+	s.log.V(logLevel).Debugf("Storage: Node: update pod in node: %#v", pod)
 
 	if meta == nil {
 		err := errors.New("meta can not be nil")
-		s.log.V(debugLevel).Errorf("Storage: Node: update pod in node err: %s", err.Error())
+		s.log.V(logLevel).Errorf("Storage: Node: update pod in node err: %s", err.Error())
 		return err
 	}
 
 	if pod == nil {
 		err := errors.New("pod can not be nil")
-		s.log.V(debugLevel).Errorf("Storage: Node: update pod in node err: %s", err.Error())
+		s.log.V(logLevel).Errorf("Storage: Node: update pod in node err: %s", err.Error())
 		return err
 	}
 
@@ -274,7 +274,7 @@ func (s *NodeStorage) UpdatePod(ctx context.Context, meta *types.NodeMeta, pod *
 
 	client, destroy, err := s.Client()
 	if err != nil {
-		s.log.V(debugLevel).Errorf("Storage: Node: create client err: %s", err.Error())
+		s.log.V(logLevel).Errorf("Storage: Node: create client err: %s", err.Error())
 		return err
 	}
 	defer destroy()
@@ -282,18 +282,18 @@ func (s *NodeStorage) UpdatePod(ctx context.Context, meta *types.NodeMeta, pod *
 	tx := client.Begin(ctx)
 	keyMeta := keyCreate(nodeStorage, meta.ID, "meta")
 	if err := tx.Update(keyMeta, meta, 0); err != nil {
-		s.log.V(debugLevel).Errorf("Storage: Node: update node meta err: %s", err.Error())
+		s.log.V(logLevel).Errorf("Storage: Node: update node meta err: %s", err.Error())
 		return err
 	}
 
 	keyPod := keyCreate(nodeStorage, meta.ID, "spec", "pods", pod.Meta.Name)
 	if err := tx.Update(keyPod, pod, 0); err != nil {
-		s.log.V(debugLevel).Errorf("Storage: Node: update node spec pods err: %s", err.Error())
+		s.log.V(logLevel).Errorf("Storage: Node: update node spec pods err: %s", err.Error())
 		return err
 	}
 
 	if err := tx.Commit(); err != nil {
-		s.log.V(debugLevel).Errorf("Storage: Node: commit transaction err: %s", err.Error())
+		s.log.V(logLevel).Errorf("Storage: Node: commit transaction err: %s", err.Error())
 		return err
 	}
 
@@ -302,17 +302,17 @@ func (s *NodeStorage) UpdatePod(ctx context.Context, meta *types.NodeMeta, pod *
 
 func (s *NodeStorage) RemovePod(ctx context.Context, meta *types.NodeMeta, pod *types.PodNodeSpec) error {
 
-	s.log.V(debugLevel).Debugf("Storage: Node: remove pod from node: %#v", pod)
+	s.log.V(logLevel).Debugf("Storage: Node: remove pod from node: %#v", pod)
 
 	if meta == nil {
 		err := errors.New("meta can not be nil")
-		s.log.V(debugLevel).Errorf("Storage: Node: remove pod from node err: %s", err.Error())
+		s.log.V(logLevel).Errorf("Storage: Node: remove pod from node err: %s", err.Error())
 		return err
 	}
 
 	if pod == nil {
 		err := errors.New("pod can not be nil")
-		s.log.V(debugLevel).Errorf("Storage: Node: remove pod from node err: %s", err.Error())
+		s.log.V(logLevel).Errorf("Storage: Node: remove pod from node err: %s", err.Error())
 		return err
 	}
 
@@ -320,7 +320,7 @@ func (s *NodeStorage) RemovePod(ctx context.Context, meta *types.NodeMeta, pod *
 
 	client, destroy, err := s.Client()
 	if err != nil {
-		s.log.V(debugLevel).Errorf("Storage: Node: create client err: %s", err.Error())
+		s.log.V(logLevel).Errorf("Storage: Node: create client err: %s", err.Error())
 		return err
 	}
 	defer destroy()
@@ -329,7 +329,7 @@ func (s *NodeStorage) RemovePod(ctx context.Context, meta *types.NodeMeta, pod *
 
 	keyMeta := keyCreate(nodeStorage, meta.ID, "meta")
 	if err := tx.Update(keyMeta, meta, 0); err != nil {
-		s.log.V(debugLevel).Errorf("Storage: Node: update node meta err: %s", err.Error())
+		s.log.V(logLevel).Errorf("Storage: Node: update node meta err: %s", err.Error())
 		return err
 	}
 
@@ -337,7 +337,7 @@ func (s *NodeStorage) RemovePod(ctx context.Context, meta *types.NodeMeta, pod *
 	tx.Delete(keyPod)
 
 	if err := tx.Commit(); err != nil {
-		s.log.V(debugLevel).Errorf("Storage: Node: commit transaction err: %s", err.Error())
+		s.log.V(logLevel).Errorf("Storage: Node: commit transaction err: %s", err.Error())
 		return err
 	}
 
@@ -346,24 +346,24 @@ func (s *NodeStorage) RemovePod(ctx context.Context, meta *types.NodeMeta, pod *
 
 func (s *NodeStorage) Remove(ctx context.Context, node *types.Node) error {
 
-	s.log.V(debugLevel).Debugf("Storage: Node: remove node: %#v", node)
+	s.log.V(logLevel).Debugf("Storage: Node: remove node: %#v", node)
 
 	if node == nil {
 		err := errors.New("node can not be nil")
-		s.log.V(debugLevel).Errorf("Storage: Node: remove node err: %s", err.Error())
+		s.log.V(logLevel).Errorf("Storage: Node: remove node err: %s", err.Error())
 		return err
 	}
 
 	client, destroy, err := s.Client()
 	if err != nil {
-		s.log.V(debugLevel).Errorf("Storage: Node: create client err: %s", err.Error())
+		s.log.V(logLevel).Errorf("Storage: Node: create client err: %s", err.Error())
 		return err
 	}
 	defer destroy()
 
 	key := keyCreate(nodeStorage, node.Meta.ID)
 	if err := client.DeleteDir(ctx, key); err != nil {
-		s.log.V(debugLevel).Errorf("Storage: Node: remove node err: %s", err.Error())
+		s.log.V(logLevel).Errorf("Storage: Node: remove node err: %s", err.Error())
 		return err
 	}
 
@@ -372,13 +372,13 @@ func (s *NodeStorage) Remove(ctx context.Context, node *types.Node) error {
 
 func (s *NodeStorage) Watch(ctx context.Context, node chan *types.Node) error {
 
-	s.log.V(debugLevel).Debug("Storage: Node: watch node")
+	s.log.V(logLevel).Debug("Storage: Node: watch node")
 
 	const filter = `\b.+` + nodeStorage + `\/(.+)\/alive\b`
 
 	client, destroy, err := s.Client()
 	if err != nil {
-		s.log.V(debugLevel).Errorf("Storage: Node: create client err: %s", err.Error())
+		s.log.V(logLevel).Errorf("Storage: Node: create client err: %s", err.Error())
 		return err
 	}
 	defer destroy()
@@ -413,7 +413,7 @@ func (s *NodeStorage) Watch(ctx context.Context, node chan *types.Node) error {
 	}
 
 	if err := client.Watch(ctx, key, filter, cb); err != nil {
-		s.log.V(debugLevel).Errorf("Storage: Node: watch node err: %s", err.Error())
+		s.log.V(logLevel).Errorf("Storage: Node: watch node err: %s", err.Error())
 		return err
 	}
 

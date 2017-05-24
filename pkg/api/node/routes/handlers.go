@@ -28,6 +28,8 @@ import (
 	"net/http"
 )
 
+const logLevel = 2
+
 func NodeEventH(w http.ResponseWriter, r *http.Request) {
 
 	var (
@@ -35,58 +37,65 @@ func NodeEventH(w http.ResponseWriter, r *http.Request) {
 		log = context.Get().GetLogger()
 	)
 
-	log.Debug("Node event handler")
+	log.V(logLevel).Debug("Handler: Node: event handling")
 
 	// request body struct
 	rq := new(request.RequestNodeEventS)
 	if err := rq.DecodeAndValidate(r.Body); err != nil {
-		log.Error("Error: validation incomming data", err)
-		errors.New("Invalid incomming data").Unknown().Http(w)
+		log.V(logLevel).Errorf("Handler: Node: validation incoming data err: %s", err.Err().Error())
+		errors.New("Invalid incoming data").Unknown().Http(w)
 		return
 	}
 
 	p := pod.New(r.Context())
-	for _, pod := range rq.Pods {
-		if err := p.Set(pod); err != nil {
-			log.Errorf("Error: set pods err %s", err.Error())
+	for _, item := range rq.Pods {
+		if err := p.Set(item); err != nil {
+			log.V(logLevel).Errorf("Handler: Node: set pods err: %s", err.Error())
 			errors.HTTP.InternalServerError(w)
 			return
 		}
 	}
 
+	log.V(logLevel).Debugf("Handler: Node: try to find node by id: %s", rq.Meta.ID)
+
 	n := node.New(r.Context())
-	log.Debugf("try to find node by hostname: %s", rq.Meta.Hostname)
 	item, err := n.Get(rq.Meta.ID)
 	if err != nil {
-		log.Errorf("Error: find node by hostname: %s", err.Error())
+		log.V(logLevel).Errorf("Handler: Node: get node by id  `%s` err: %s", rq.Meta.ID, err.Error())
 		errors.HTTP.InternalServerError(w)
 		return
 	}
 
 	if item == nil {
-		log.Debug("Node not found, create a new one")
+		log.V(logLevel).Debug("Handler: Node: node not found, create a new one")
+
 		item, err = n.Create(&rq.Meta, &rq.State)
 		if err != nil {
-			log.Errorf("Error: can not create node: %s", err.Error())
+			log.V(logLevel).Errorf("Handler: Node: create node err: %s", err.Error())
 			errors.HTTP.InternalServerError(w)
 			return
 		}
 	} else {
+		log.V(logLevel).Debug("Handler: Node: update node")
+
 		item.Meta = rq.Meta
 		item.State = rq.State
-		n.Update(item)
+		if err := n.Update(item); err != nil {
+			log.V(logLevel).Errorf("Handler: Node: update node err: %s", err.Error())
+			return
+		}
 	}
 
 	response, err := v1.NewSpec(item).ToJson()
 	if err != nil {
-		log.Error("Error: convert struct to json", err.Error())
+		log.Error("Handler: Node: convert struct to json err: %s", err.Error())
 		errors.HTTP.InternalServerError(w)
 		return
 	}
 
 	w.WriteHeader(http.StatusOK)
 	if _, err := w.Write(response); err != nil {
-		log.Error("Error: write response", err.Error())
+		log.Error("Handler: Node: write response err: %s", err.Error())
 		return
 	}
 }
@@ -98,26 +107,26 @@ func NodeListH(w http.ResponseWriter, r *http.Request) {
 		log = context.Get().GetLogger()
 	)
 
-	log.Debug("Node list handler")
+	log.V(logLevel).Debug("Handler: Node: list node")
 
 	n := node.New(r.Context())
 	nodes, err := n.List()
 	if err != nil {
-		log.Errorf("Error: get list nodes: %s", err.Error())
+		log.V(logLevel).Errorf("Handler: Node: get nodes list err: %s", err.Error())
 		errors.HTTP.InternalServerError(w)
 		return
 	}
 
 	response, err := v1.NewNodeList(nodes).ToJson()
 	if err != nil {
-		log.Error("Error: convert struct to json", err.Error())
+		log.V(logLevel).Errorf("Handler: Node: convert struct to json err: %s", err.Error())
 		errors.HTTP.InternalServerError(w)
 		return
 	}
 
 	w.WriteHeader(http.StatusOK)
 	if _, err := w.Write(response); err != nil {
-		log.Error("Error: write response", err.Error())
+		log.Error("Handler: Node: write response err: %s", err.Error())
 		return
 	}
 }

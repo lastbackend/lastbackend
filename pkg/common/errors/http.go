@@ -119,6 +119,14 @@ func (Http) getUnauthorized() *Http {
 	}
 }
 
+func (Http) getForbidden() *Http {
+	return &Http{
+		Code:    http.StatusForbidden,
+		Status:  http.StatusText(http.StatusForbidden),
+		Message: "Forbidden",
+	}
+}
+
 func (Http) getUnknown() *Http {
 	return &Http{
 		Code:    http.StatusInternalServerError,

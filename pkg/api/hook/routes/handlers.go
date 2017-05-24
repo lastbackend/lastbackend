@@ -27,6 +27,8 @@ import (
 	"net/http"
 )
 
+const logLevel = 2
+
 func HookExecuteH(w http.ResponseWriter, r *http.Request) {
 
 	var (
@@ -36,20 +38,23 @@ func HookExecuteH(w http.ResponseWriter, r *http.Request) {
 		hookParam = params["token"]
 	)
 
-	log.Debug("Get hook execute handler")
+	log.V(logLevel).Debug("Handler: Hook: execute hook")
 
 	hook, err := storage.Hook().Get(r.Context(), hookParam)
 	if err != nil || hook == nil {
-		log.Error("Error: get hook by token", err.Error())
+		log.V(logLevel).Errorf("Handler: Hook: get hook `%s` err: %s", hookParam, err.Error())
 		errors.HTTP.BadRequest(w)
 		return
 	}
 
 	if hook.Service != "" {
+
+		log.V(logLevel).Debugf("Handler: Hook: get service %s", hook.Service)
+
 		ns := namespace.New(r.Context())
 		item, err := ns.Get(hook.Namespace)
 		if err != nil {
-			log.Error("Error: find namespace by name", err.Error())
+			log.V(logLevel).Errorf("Handler: Hook: get namespace `%s` err: %s", hook.Namespace, err.Error())
 			errors.HTTP.InternalServerError(w)
 			return
 		}
@@ -61,24 +66,29 @@ func HookExecuteH(w http.ResponseWriter, r *http.Request) {
 		s := service.New(r.Context(), item.Meta)
 		svc, err := s.Get(hook.Service)
 		if err != nil {
-			log.Error("Error: find service by name", err.Error())
+			log.V(logLevel).Errorf("Handler: Hook: get service `%s` in namespace `%s` err: %s", hook.Service, hook.Namespace, err.Error())
 			errors.HTTP.InternalServerError(w)
 			return
 		}
 		if svc == nil {
+			log.V(logLevel).Warnf("Handler: Hook: service `%s` in namespace `%s` not found", hook.Service, hook.Namespace)
 			errors.New("service").NotFound().Http(w)
 			return
 		}
 
 		if err := s.Redeploy(svc); err != nil {
-			log.Error("Error: redeploy service", err.Error())
+			log.V(logLevel).Errorf("Handler: Hook: redeploy service `%s` err: %s", hook.Service, err.Error())
 			errors.HTTP.InternalServerError(w)
 			return
 		}
 
 	} else if hook.Image != "" {
+
+		log.V(logLevel).Debugf("Handler: Hook: get image %s", hook.Image)
+
 		// TODO: Run rebuild
 	} else {
+		log.V(logLevel).Error("Handler: Hook: unknown type hook")
 		errors.HTTP.BadRequest(w)
 		return
 	}

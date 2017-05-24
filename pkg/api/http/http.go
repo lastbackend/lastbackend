@@ -31,44 +31,46 @@ import (
 	vendors "github.com/lastbackend/lastbackend/pkg/api/vendors/routes"
 )
 
+const logLevel = 2
+
 func Listen(host string, port int) error {
 
 	var (
 		log = context.Get().GetLogger()
 	)
 
-	log.Debug("Listen HTTP server")
+	log.V(logLevel).Debug("Listen HTTP server")
 
 	router := mux.NewRouter()
 	router.Methods("OPTIONS").HandlerFunc(http.Headers)
 
 	for _, route := range namespace.Routes {
-		log.Debugf("Init route: %s", route.Path)
+		log.V(logLevel).Debugf("Init route: %s", route.Path)
 		router.Handle(route.Path, http.Handle(route.Handler, route.Middleware...)).Methods(route.Method)
 	}
 
 	for _, route := range service.Routes {
-		log.Debugf("Init route: %s", route.Path)
+		log.V(logLevel).Debugf("Init route: %s", route.Path)
 		router.Handle(route.Path, http.Handle(route.Handler, route.Middleware...)).Methods(route.Method)
 	}
 
 	for _, route := range vendors.Routes {
-		log.Debugf("Init route: %s", route.Path)
+		log.V(logLevel).Debugf("Init route: %s", route.Path)
 		router.Handle(route.Path, http.Handle(route.Handler, route.Middleware...)).Methods(route.Method)
 	}
 
 	for _, route := range node.Routes {
-		log.Debugf("Init route: %s", route.Path)
+		log.V(logLevel).Debugf("Init route: %s", route.Path)
 		router.Handle(route.Path, http.Handle(route.Handler, route.Middleware...)).Methods(route.Method)
 	}
 
 	for _, route := range events.Routes {
-		log.Debugf("Init route: %s", route.Path)
+		log.V(logLevel).Debugf("Init route: %s", route.Path)
 		router.Handle(route.Path, http.Handle(route.Handler, route.Middleware...)).Methods(route.Method)
 	}
 
 	for _, route := range hook.Routes {
-		log.Debugf("Init route: %s", route.Path)
+		log.V(logLevel).Debugf("Init route: %s", route.Path)
 		router.Handle(route.Path, http.Handle(route.Handler, route.Middleware...)).Methods(route.Method)
 	}
 

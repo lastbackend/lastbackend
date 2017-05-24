@@ -31,6 +31,7 @@ const (
 	StatusIncorrectJson = "Incorrect json"
 	StatusNotUnique     = "Not Unique"
 	NodeNotFound        = "Node not found"
+	StatusForbidden     = "Forbidden"
 )
 
 type Err struct {
@@ -62,6 +63,14 @@ func IncorrectXML(e ...error) *Err {
 		Code:   StatusIncorrectXml,
 		origin: getError("incorrect xml", e...),
 		http:   HTTP.getIncorrectJSON(),
+	}
+}
+
+func Forbidden(e ...error) *Err {
+	return &Err{
+		Code:   StatusForbidden,
+		origin: getError("forbidden", e...),
+		http:   HTTP.getForbidden(),
 	}
 }
 
@@ -142,10 +151,18 @@ func (e *err) IncorrectXML(err ...error) *Err {
 	}
 }
 
+func (e *err) Forbidden(err ...error) *Err {
+	return &Err{
+		Code:   StatusForbidden,
+		origin: getError(joinNameAndMessage(e.s, "forbidden"), err...),
+		http:   HTTP.getForbidden(),
+	}
+}
+
 func (e *err) Unknown(err ...error) *Err {
 	return &Err{
 		Code:   StatusUnknown,
-		origin: getError(joinNameAndMessage(e.s, "unknow error"), err...),
+		origin: getError(joinNameAndMessage(e.s, "unknown error"), err...),
 		http:   HTTP.getUnknown(),
 	}
 }

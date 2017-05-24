@@ -24,7 +24,7 @@ import (
 	"strings"
 )
 
-const debugLevel = 5
+const logLevel = 5
 
 // Util helpers
 var _util IUtil

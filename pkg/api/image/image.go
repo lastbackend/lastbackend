@@ -25,6 +25,8 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/common/types"
 )
 
+const logLevel = 3
+
 var Util IUtil = util{}
 
 func Create(ctx context.Context, registry string, source types.ServiceSource) (*types.Image, error) {
@@ -35,7 +37,8 @@ func Create(ctx context.Context, registry string, source types.ServiceSource) (*
 		image   = types.Image{}
 	)
 
-	log.Debug("Create image")
+	log.V(logLevel).Debugf("Image: create new image with registry: %s and source: %#v", registry, source)
+
 	image.Meta.SetDefault()
 	image.Meta.Name = Util.Name(ctx, registry, source.Repo)
 
@@ -47,10 +50,12 @@ func Create(ctx context.Context, registry string, source types.ServiceSource) (*
 	}
 
 	if err := storage.Image().Insert(ctx, &image); err != nil {
+		log.V(logLevel).Debugf("Image: insert image err: %s", err.Error())
 		return &image, err
 	}
 
 	if _, err := build.Create(ctx, image.Meta.Name, &image.Source); err != nil {
+		log.V(logLevel).Debugf("Image: create build err: %s", err.Error())
 		return &image, err
 	}
 
@@ -66,18 +71,20 @@ func Create(ctx context.Context, registry string, source types.ServiceSource) (*
 	return &image, nil
 }
 
-func Get(ctx context.Context, reqistry string, source types.ServiceSource) (*types.Image, error) {
+func Get(ctx context.Context, registry string, source types.ServiceSource) (*types.Image, error) {
 
 	var (
 		log     = c.Get().GetLogger()
 		storage = c.Get().GetStorage()
 	)
 
-	log.Debug("Get image")
-	name := Util.Name(ctx, reqistry, source.Repo)
+	log.V(logLevel).Debugf("Image: get image by registry: %s and source: %#v", registry, source)
+
+	name := Util.Name(ctx, registry, source.Repo)
 
 	image, err := storage.Image().Get(ctx, name)
 	if err != nil {
+		log.V(logLevel).Debugf("Image: create build err: %s", err.Error())
 		return nil, err
 	}
 

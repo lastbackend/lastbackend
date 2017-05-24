@@ -36,7 +36,7 @@ func SetPods(w http.ResponseWriter, r *http.Request) {
 	body, err := ioutil.ReadAll(r.Body)
 	if err != nil {
 		log.Error(err)
-		errors.New("Invalid incomming data").Unknown().Http(w)
+		errors.New("Invalid incoming data").Unknown().Http(w)
 		return
 	}
 
@@ -45,7 +45,7 @@ func SetPods(w http.ResponseWriter, r *http.Request) {
 	err = json.Unmarshal(body, &data)
 	if err != nil {
 		log.Error(err)
-		errors.New("Invalid incomming data").Unknown().Http(w)
+		errors.New("Invalid incoming data").Unknown().Http(w)
 		return
 	}
 

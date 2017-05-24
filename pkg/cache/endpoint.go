@@ -31,7 +31,7 @@ type EndpointCache struct {
 }
 
 func (ec *EndpointCache) Get(domain string) []net.IP {
-	ec.log.V(debugLevel).Debugf("Cache: EndpointCache: get ips for domain: %s", domain)
+	ec.log.V(logLevel).Debugf("Cache: EndpointCache: get ips for domain: %s", domain)
 
 	d, ok := ec.storage[domain]
 	if !ok || len(d) == 0 {
@@ -41,7 +41,7 @@ func (ec *EndpointCache) Get(domain string) []net.IP {
 }
 
 func (ec *EndpointCache) Set(domain string, ips []net.IP) error {
-	ec.log.V(debugLevel).Debugf("Cache: EndpointCache: set ips for domain: %s", domain)
+	ec.log.V(logLevel).Debugf("Cache: EndpointCache: set ips for domain: %s", domain)
 
 	ec.lock.Lock()
 	ec.storage[domain] = ips
@@ -50,7 +50,7 @@ func (ec *EndpointCache) Set(domain string, ips []net.IP) error {
 }
 
 func (ec *EndpointCache) Del(domain string) error {
-	ec.log.V(debugLevel).Debugf("Cache: EndpointCache: del domain: %s", domain)
+	ec.log.V(logLevel).Debugf("Cache: EndpointCache: del domain: %s", domain)
 
 	ec.lock.Lock()
 	if _, ok := ec.storage[domain]; ok {
@@ -61,7 +61,7 @@ func (ec *EndpointCache) Del(domain string) error {
 }
 
 func NewEndpointCache(log logger.ILogger) *EndpointCache {
-	log.V(debugLevel).Debug("Cache: EndpointCache: initialization storage")
+	log.V(logLevel).Debug("Cache: EndpointCache: initialization storage")
 	return &EndpointCache{
 		log:     log,
 		storage: make(map[string][]net.IP),
