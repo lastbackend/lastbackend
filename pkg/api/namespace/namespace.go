@@ -116,7 +116,7 @@ func (ns *namespace) Create(rq *request.RequestNamespaceCreateS) (*types.Namespa
 
 	if err = storage.Namespace().Insert(ns.Context, &nsp); err != nil {
 		log.V(logLevel).Errorf("Namespace: insert namespace err: %s", err.Error())
-		return &nsp, err
+		return nil, err
 	}
 
 	return &nsp, nil
