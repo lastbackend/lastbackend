@@ -26,6 +26,8 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/storage/store"
 )
 
+const logLevel = 3
+
 type namespace struct {
 	Context context.Context
 }
@@ -37,13 +39,19 @@ func New(ctx context.Context) *namespace {
 func (ns *namespace) List() (types.NamespaceList, error) {
 	var (
 		storage = ctx.Get().GetStorage()
+		log     = ctx.Get().GetLogger()
 		list    = types.NamespaceList{}
 	)
 
+	log.V(logLevel).Debug("Namespace: list namespace")
+
 	items, err := storage.Namespace().List(ns.Context)
 	if err != nil {
+		log.V(logLevel).Error("Namespace: list namespace err: %s", err.Error())
 		return list, err
 	}
+
+	log.V(logLevel).Debugf("Namespace: list namespace result: %d", len(items))
 
 	for _, item := range items {
 		var ns = item
@@ -53,17 +61,24 @@ func (ns *namespace) List() (types.NamespaceList, error) {
 	return list, nil
 }
 
-func (ns *namespace) Get(id string) (*types.Namespace, error) {
+func (ns *namespace) Get(name string) (*types.Namespace, error) {
 	var (
 		log     = ctx.Get().GetLogger()
 		storage = ctx.Get().GetStorage()
 	)
 
-	n, err := storage.Namespace().GetByName(ns.Context, id)
-	if err != nil && err.Error() != store.ErrKeyNotFound {
-		log.Errorf("Error: insert namespace to db: %s", err.Error())
+	log.V(logLevel).Debugf("Namespace: get namespace %s", name)
+
+	n, err := storage.Namespace().GetByName(ns.Context, name)
+	if err != nil {
+		if err.Error() == store.ErrKeyNotFound {
+			log.V(logLevel).Warnf("Namespace: namespace by name `%s` not found", name)
+			return nil, nil
+		}
+		log.V(logLevel).Errorf("Namespace: get namespace by name `%s` err: %s", name, err.Error())
 		return nil, err
 	}
+
 	return n, nil
 }
 
@@ -75,17 +90,19 @@ func (ns *namespace) Create(rq *request.RequestNamespaceCreateS) (*types.Namespa
 		storage = ctx.Get().GetStorage()
 	)
 
-	var namespace = types.Namespace{}
-	namespace.Meta.SetDefault()
-	namespace.Meta.Name = rq.Name
-	namespace.Meta.Description = rq.Description
+	log.V(logLevel).Debugf("Namespace: create namespace %#v", rq)
 
-	if err = storage.Namespace().Insert(ns.Context, &namespace); err != nil {
-		log.Errorf("Error: insert namespace to db: %s", err.Error())
-		return &namespace, err
+	var nsp = types.Namespace{}
+	nsp.Meta.SetDefault()
+	nsp.Meta.Name = rq.Name
+	nsp.Meta.Description = rq.Description
+
+	if err = storage.Namespace().Insert(ns.Context, &nsp); err != nil {
+		log.V(logLevel).Errorf("Namespace: insert namespace err: %s", err.Error())
+		return &nsp, err
 	}
 
-	return &namespace, nil
+	return &nsp, nil
 }
 
 func (ns *namespace) Update(n *types.Namespace) (*types.Namespace, error) {
@@ -95,35 +112,46 @@ func (ns *namespace) Update(n *types.Namespace) (*types.Namespace, error) {
 		storage = ctx.Get().GetStorage()
 	)
 
+	log.V(logLevel).Debugf("Namespace: update namespace %#v", n)
+
 	if err = storage.Namespace().Update(ns.Context, n); err != nil {
-		log.Errorf("Error: update namespace to db: %s", err.Error())
+		log.V(logLevel).Errorf("Namespace: update namespace err: %s", err.Error())
 		return n, err
 	}
 
 	return n, nil
 }
 
-func (ns *namespace) Remove(id string) error {
+func (ns *namespace) Remove(name string) error {
 	var (
 		err     error
 		log     = ctx.Get().GetLogger()
 		storage = ctx.Get().GetStorage()
 	)
-	err = storage.Namespace().Remove(ns.Context, id)
+
+	log.V(logLevel).Debugf("Namespace: remove namespace %s", name)
+
+	err = storage.Namespace().Remove(ns.Context, name)
 	if err != nil {
-		log.Error("Error: remove namespace from db", err)
+		log.V(logLevel).Errorf("Namespace: remove namespace err: %s", err.Error())
 		return err
 	}
 
 	return nil
 }
 
-func (ns *namespace) Watch(service chan *types.Service) {
+func (ns *namespace) WatchService(service chan *types.Service) error {
 	var (
 		log     = ctx.Get().GetLogger()
 		storage = ctx.Get().GetStorage().Service()
 	)
 
-	log.Debug("Service: Watch")
-	storage.PodsWatch(ns.Context, service)
+	log.V(logLevel).Debugf("Namespace: watch services in namespace")
+
+	if err := storage.PodsWatch(ns.Context, service); err != nil {
+		log.V(logLevel).Errorf("Namespace: watch services in namespace err: %s", err.Error())
+		return err
+	}
+
+	return nil
 }

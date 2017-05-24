@@ -38,11 +38,11 @@ type VolumeStorage struct {
 
 func (s *VolumeStorage) GetByID(ctx context.Context, id string) (*types.Volume, error) {
 
-	s.log.V(debugLevel).Debugf("Storage: Volume: get by id: %s", id)
+	s.log.V(logLevel).Debugf("Storage: Volume: get by id: %s", id)
 
 	if len(id) == 0 {
 		err := errors.New("id can not be empty")
-		s.log.V(debugLevel).Errorf("Storage: Volume: get volume err: %s", err.Error())
+		s.log.V(logLevel).Errorf("Storage: Volume: get volume err: %s", err.Error())
 		return nil, err
 	}
 

@@ -25,18 +25,25 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/common/types"
 )
 
+const (
+	logLevel    = 1
+	defaultRoom = "lastbackend"
+)
+
 type Events struct{}
 
-func (e *Events) Listen() {
+func (e *Events) Listen() error {
 
 	var (
 		log = context.Get().GetLogger()
 		hub = context.Get().GetWssHub()
 		ctx = context.Get().Background()
+
+		ns      = namespace.New(ctx)
+		service = make(chan *types.Service)
 	)
 
-	ns := namespace.New(ctx)
-	service := make(chan *types.Service)
+	log.V(logLevel).Debug("Events: start events listener")
 
 	go func() {
 		for {
@@ -47,21 +54,27 @@ func (e *Events) Listen() {
 						continue
 					}
 
-					log.Debugf("%s changed", s.Meta.Name)
+					log.V(logLevel).Debugf("Events: service %s changed", s.Meta.Name)
+
 					if obj, err := v1.New(s).ToJson(); err == nil {
-						if room := hub.GetRoom("lastbackend"); room != nil {
-							log.Debug("Room founded, try to broadcast")
+						if room := hub.GetRoom(defaultRoom); room != nil {
+							log.V(logLevel).Debug("Events: room founded, try to broadcast")
 							room.Broadcast <- obj
 						}
 
 					}
-					log.Debug("Send update finished")
+					log.V(logLevel).Debug("Events: send update finished")
 				}
 			}
 		}
 	}()
 
-	ns.Watch(service)
+	if err := ns.WatchService(service); err != nil {
+		log.V(logLevel).Errorf("Events: watch services in namespace err: %s", err.Error())
+		return err
+	}
+
+	return nil
 }
 
 func NewEventListener() *Events {

@@ -40,8 +40,8 @@ func NodeEventH(w http.ResponseWriter, r *http.Request) {
 	// request body struct
 	rq := new(request.RequestNodeEventS)
 	if err := rq.DecodeAndValidate(r.Body); err != nil {
-		log.Error("Error: validation incomming data", err)
-		errors.New("Invalid incomming data").Unknown().Http(w)
+		log.Errorf("Error: validation incoming data err: %s", err.Err().Error())
+		errors.New("Invalid incoming data").Unknown().Http(w)
 		return
 	}
 
@@ -110,7 +110,7 @@ func NodeListH(w http.ResponseWriter, r *http.Request) {
 
 	response, err := v1.NewNodeList(nodes).ToJson()
 	if err != nil {
-		log.Error("Error: convert struct to json", err.Error())
+		log.Errorf ("Error: convert struct to json err: %s", err.Error())
 		errors.HTTP.InternalServerError(w)
 		return
 	}

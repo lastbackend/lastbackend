@@ -19,7 +19,7 @@ package cache
 
 import "github.com/lastbackend/lastbackend/pkg/logger"
 
-const debugLevel = 7
+const logLevel = 7
 
 type Cache struct {
 	pods      *PodCache
@@ -27,7 +27,7 @@ type Cache struct {
 }
 
 func New(log logger.ILogger) *Cache {
-	log.V(debugLevel).Debug("Cache: initialization storage")
+	log.V(logLevel).Debug("Cache: initialization storage")
 
 	return &Cache{
 		pods:      NewPodCache(log),

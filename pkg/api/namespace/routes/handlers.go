@@ -29,6 +29,8 @@ import (
 	"net/http"
 )
 
+const logLevel = 2
+
 func NamespaceListH(w http.ResponseWriter, r *http.Request) {
 
 	var (
@@ -36,26 +38,26 @@ func NamespaceListH(w http.ResponseWriter, r *http.Request) {
 		log = context.Get().GetLogger()
 	)
 
-	log.Debug("List namespace handler")
+	log.V(logLevel).Debug("Handler: Namespace: list namespace")
 
 	ns := namespace.New(r.Context())
 	items, err := ns.List()
 	if err != nil {
-		log.Error("Error: find namespcaes", err)
+		log.V(logLevel).Errorf("Handler: Namespace: find namespace list err: %s", err.Error())
 		errors.HTTP.InternalServerError(w)
 		return
 	}
 
 	response, err := v1.NewNamespaceList(items).ToJson()
 	if err != nil {
-		log.Error("Error: convert struct to json", err.Error())
+		log.V(logLevel).Errorf("Handler: Namespace: convert struct to json err: ", err.Error())
 		errors.HTTP.InternalServerError(w)
 		return
 	}
 
 	w.WriteHeader(http.StatusOK)
 	if _, err = w.Write(response); err != nil {
-		log.Error("Error: write response", err.Error())
+		log.V(logLevel).Errorf("Handler: Namespace: write response err: %s", err.Error())
 		return
 	}
 }
@@ -63,37 +65,37 @@ func NamespaceListH(w http.ResponseWriter, r *http.Request) {
 func NamespaceInfoH(w http.ResponseWriter, r *http.Request) {
 
 	var (
-		err error
-		log = context.Get().GetLogger()
-		id  = utils.Vars(r)["namespace"]
+		log  = context.Get().GetLogger()
+		name = utils.Vars(r)["namespace"]
 	)
 
-	log.Info("Get namespace handler")
+	log.V(logLevel).Debugf("Handler: Namespace: get namespace `%s`", name)
+
 	ns := namespace.New(r.Context())
-	item, err := ns.Get(id)
+	item, err := ns.Get(name)
 	if err != nil {
-		log.Error("Error: find namespace by name", err.Error())
+		log.V(logLevel).Errorf("Handler: Namespace: find namespace by name `%s` err: %s", name, err.Error())
 		errors.HTTP.InternalServerError(w)
 		return
 	}
 	if item == nil {
+		log.Warnf("Handler: Namespace: namespace `%s` not found", name)
 		errors.New("namespace").NotFound().Http(w)
 		return
 	}
 
 	response, err := v1.NewNamespace(item).ToJson()
 	if err != nil {
-		log.Error("Error: convert struct to json", err.Error())
+		log.V(logLevel).Errorf("Handler: Namespace: convert struct to json err: %s", err.Error())
 		errors.HTTP.InternalServerError(w)
 		return
 	}
 
 	w.WriteHeader(http.StatusOK)
 	if _, err = w.Write(response); err != nil {
-		log.Error("Error: write response", err.Error())
+		log.V(logLevel).Errorf("Handler: Namespace: write response err: %s", err.Error())
 		return
 	}
-
 }
 
 func NamespaceCreateH(w http.ResponseWriter, r *http.Request) {
@@ -102,24 +104,25 @@ func NamespaceCreateH(w http.ResponseWriter, r *http.Request) {
 		log = context.Get().GetLogger()
 	)
 
-	log.Debug("Create namespace handler")
+	log.V(logLevel).Debug("Handler: Namespace: create namespace")
 
 	// request body struct
 	rq := new(request.RequestNamespaceCreateS)
 	if err := rq.DecodeAndValidate(r.Body); err != nil {
-		log.Error("Error: validation incomming data", err)
-		errors.New("Invalid incomming data").Unknown().Http(w)
+		log.V(logLevel).Errorf("Handler: Namespace: validation incoming data err: %s", err.Err().Error())
+		errors.New("Invalid incoming data").Unknown().Http(w)
 		return
 	}
 
 	ns := namespace.New(r.Context())
 	item, err := ns.Get(rq.Name)
 	if err != nil && err.Error() != store.ErrKeyNotFound {
-		log.Error("Error: check exists by name", err.Error())
+		log.V(logLevel).Errorf("Handler: Namespace: check exists by name", err.Error())
 		errors.HTTP.InternalServerError(w)
 		return
 	}
 	if item != nil {
+		log.Warnf("Handler: Namespace: name `%s` not unique", rq.Name)
 		errors.New("namespace").NotUnique("name").Http(w)
 		return
 	}
@@ -127,14 +130,14 @@ func NamespaceCreateH(w http.ResponseWriter, r *http.Request) {
 	n, err := ns.Create(rq)
 	response, err := v1.NewNamespace(n).ToJson()
 	if err != nil {
-		log.Error("Error: convert struct to json", err.Error())
+		log.V(logLevel).Errorf("Handler: Namespace: convert struct to json err: %s", err.Error())
 		errors.HTTP.InternalServerError(w)
 		return
 	}
 
 	w.WriteHeader(http.StatusOK)
 	if _, err = w.Write(response); err != nil {
-		log.Error("Error: write response", err.Error())
+		log.V(logLevel).Errorf("Handler: Namespace: write response err: %s", err.Error())
 		return
 	}
 }
@@ -145,27 +148,28 @@ func NamespaceUpdateH(w http.ResponseWriter, r *http.Request) {
 		err    error
 		log    = context.Get().GetLogger()
 		params = utils.Vars(r)
-		id     = params["namespace"]
+		name   = params["namespace"]
 	)
 
-	log.Debug("Update namespace handler")
+	log.V(logLevel).Debugf("Handler: Namespace: update namespace `%s`", name)
 
 	// request body struct
 	rq := new(request.RequestNamespaceUpdateS)
 	if err := rq.DecodeAndValidate(r.Body); err != nil {
-		log.Error("Error: validation incomming data", err)
-		errors.New("Invalid incomming data").Unknown().Http(w)
+		log.V(logLevel).Errorf("Handler: Namespace: validation incoming data", err)
+		errors.New("Invalid incoming data").Unknown().Http(w)
 		return
 	}
 
 	ns := namespace.New(r.Context())
-	item, err := ns.Get(id)
+	item, err := ns.Get(name)
 	if err != nil {
-		log.Error("Error: check exists by name", err.Error())
+		log.V(logLevel).Errorf("Handler: Namespace: check exists by name `%s` err: %s", name, err.Error())
 		errors.HTTP.InternalServerError(w)
 		return
 	}
 	if item == nil {
+		log.Warnf("Handler: Namespace: namespace name `%s` not found", name)
 		errors.New("namespace").NotFound().Http(w)
 		return
 	}
@@ -175,19 +179,20 @@ func NamespaceUpdateH(w http.ResponseWriter, r *http.Request) {
 
 	item, err = ns.Update(item)
 	if err != nil {
+		log.V(logLevel).Errorf("Handler: Namespace: update namespace `%s` err: %s", name, err.Error())
 		errors.HTTP.InternalServerError(w)
 	}
 
 	response, err := v1.NewNamespace(item).ToJson()
 	if err != nil {
-		log.Error("Error: convert struct to json", err.Error())
+		log.V(logLevel).Errorf("Handler: Namespace: convert struct to json err: %s", err.Error())
 		errors.HTTP.InternalServerError(w)
 		return
 	}
 
 	w.WriteHeader(http.StatusOK)
 	if _, err = w.Write(response); err != nil {
-		log.Error("Error: write response", err.Error())
+		log.V(logLevel).Errorf("Handler: Namespace: write response err: %s", err.Error())
 		return
 	}
 }
@@ -195,58 +200,69 @@ func NamespaceUpdateH(w http.ResponseWriter, r *http.Request) {
 func NamespaceRemoveH(w http.ResponseWriter, r *http.Request) {
 
 	var (
-		err error
-		log = context.Get().GetLogger()
-		id  = utils.Vars(r)["namespace"]
+		err  error
+		log  = context.Get().GetLogger()
+		name = utils.Vars(r)["namespace"]
 	)
 
-	log.Info("Remove namespace")
+	log.V(logLevel).Debugf("Handler: Namespace: remove namespace %s", name)
+
 	ns := namespace.New(r.Context())
-	item, err := ns.Get(id)
+	item, err := ns.Get(name)
 	if err != nil {
-		log.Error("Error: find namespace by name ", err.Error())
+		log.V(logLevel).Errorf("Handler: Namespace: find namespace by name `%s` err: %s", name, err.Error())
 		errors.HTTP.InternalServerError(w)
 		return
 	}
 	if item == nil {
+		log.Warnf("Handler: Namespace: namespace name `%s` not found", name)
 		errors.New("namespace").NotFound().Http(w)
 		return
 	}
 
-	// Todo: remove all services by namespace id
-	// Todo: remove all activity by namespace id
+	// Todo: remove all services by namespace name
+	// Todo: remove all activity by namespace name
 
-	//err = storage.Service().RemoveByProject(session.Username, id)
+	//err = storage.Service().RemoveByProject(session.Username, name)
 	//if err != nil {
-	//	log.Error("Error: remove services from db", err)
+	//	log.V(logLevel).Errorf("Handler: Namespace: remove services from db err: %s", err)
 	//	e.HTTP.InternalServerError(w)
 	//	return
 	//}
 
-	//err = storage.Activity().RemoveByProject(session.Username, id)
+	//err = storage.Activity().RemoveByProject(session.Username, name)
 	//if err != nil {
-	//	log.Error("Error: remove activity from db", err)
+	//	log.V(logLevel).Errorf("Handler: Namespace: remove namespace activity from db err: %s, err)
 	//	e.HTTP.InternalServerError(w)
 	//	return
 	//}
 
 	ns.Remove(item.Meta.Name)
 	if err != nil {
+		log.V(logLevel).Errorf("Handler: Namespace: remove namespace `%s` err: %s", name, err.Error())
 		errors.HTTP.InternalServerError(w)
 		return
 	}
 
 	w.WriteHeader(http.StatusOK)
 	if _, err = w.Write([]byte{}); err != nil {
-		log.Error("Error: write response", err.Error())
+		log.V(logLevel).Errorf("Handler: Namespace: write response err: %s", err.Error())
 		return
 	}
 }
 
-func NamespaceActivityListH(w http.ResponseWriter, _ *http.Request) {
+func NamespaceActivityListH(w http.ResponseWriter, r *http.Request) {
+
+	var (
+		log  = context.Get().GetLogger()
+		name = utils.Vars(r)["namespace"]
+	)
+
+	log.V(logLevel).Debugf("Handler: Namespace: list namespace `%s` activity", name)
+
 	w.WriteHeader(http.StatusOK)
 	if _, err := w.Write([]byte(`[]`)); err != nil {
-		context.Get().GetLogger().Error("Error: write response", err.Error())
+		log.V(logLevel).Errorf("Handler: Namespace: write response err: %s", err.Error())
 		return
 	}
 }

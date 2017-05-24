@@ -40,17 +40,17 @@ type PodStorage struct {
 
 func (s *PodStorage) GetByName(ctx context.Context, namespace, name string) (*types.Pod, error) {
 
-	s.log.V(debugLevel).Debugf("Storage: Pod: get by name: %s in namespace: %s", name, namespace)
+	s.log.V(logLevel).Debugf("Storage: Pod: get by name: %s in namespace: %s", name, namespace)
 
 	if len(namespace) == 0 {
 		err := errors.New("namespace can not be empty")
-		s.log.V(debugLevel).Errorf("Storage: Pod: get pod err: %s", err.Error())
+		s.log.V(logLevel).Errorf("Storage: Pod: get pod err: %s", err.Error())
 		return nil, err
 	}
 
 	if len(name) == 0 {
 		err := errors.New("name can not be empty")
-		s.log.V(debugLevel).Errorf("Storage: Pod: get pod err: %s", err.Error())
+		s.log.V(logLevel).Errorf("Storage: Pod: get pod err: %s", err.Error())
 		return nil, err
 	}
 
@@ -63,14 +63,14 @@ func (s *PodStorage) GetByName(ctx context.Context, namespace, name string) (*ty
 
 	client, destroy, err := s.Client()
 	if err != nil {
-		s.log.V(debugLevel).Errorf("Storage: Pod: create client err: %s", err.Error())
+		s.log.V(logLevel).Errorf("Storage: Pod: create client err: %s", err.Error())
 		return nil, err
 	}
 	defer destroy()
 
 	keyMeta := keyCreate(podStorage, namespace, name)
 	if err := client.Get(ctx, keyMeta, pod); err != nil {
-		s.log.V(debugLevel).Errorf("Storage: Pod: get pod `%s` err: %s", name, err.Error())
+		s.log.V(logLevel).Errorf("Storage: Pod: get pod `%s` err: %s", name, err.Error())
 		return nil, err
 	}
 
@@ -80,7 +80,7 @@ func (s *PodStorage) GetByName(ctx context.Context, namespace, name string) (*ty
 
 	keyEndpoints := keyCreate(endpointStorage)
 	if err := client.Map(ctx, keyEndpoints, filterEndpoint, endpoints); err != nil && err.Error() != store.ErrKeyNotFound {
-		s.log.V(debugLevel).Errorf("Storage: Pod: map endpoints err: %s", err.Error())
+		s.log.V(logLevel).Errorf("Storage: Pod: map endpoints err: %s", err.Error())
 		return nil, err
 	}
 
@@ -93,17 +93,17 @@ func (s *PodStorage) GetByName(ctx context.Context, namespace, name string) (*ty
 
 func (s *PodStorage) ListByNamespace(ctx context.Context, namespace string) (map[string]*types.Pod, error) {
 
-	s.log.V(debugLevel).Debugf("Storage: Pod: get pods list in namespace: %s", namespace)
+	s.log.V(logLevel).Debugf("Storage: Pod: get pods list in namespace: %s", namespace)
 
 	if len(namespace) == 0 {
 		err := errors.New("namespace can not be empty")
-		s.log.V(debugLevel).Errorf("Storage: Pod: get pod err: %s", err.Error())
+		s.log.V(logLevel).Errorf("Storage: Pod: get pod err: %s", err.Error())
 		return nil, err
 	}
 
 	client, destroy, err := s.Client()
 	if err != nil {
-		s.log.V(debugLevel).Errorf("Storage: Pod: create client err: %s", err.Error())
+		s.log.V(logLevel).Errorf("Storage: Pod: create client err: %s", err.Error())
 		return nil, err
 	}
 	defer destroy()
@@ -111,7 +111,7 @@ func (s *PodStorage) ListByNamespace(ctx context.Context, namespace string) (map
 	pods := make(map[string]*types.Pod)
 	keyList := keyCreate(podStorage, namespace)
 	if err := client.Map(ctx, keyList, "", &pods); err != nil {
-		s.log.V(debugLevel).Errorf("Storage: Pod: map pods in namespace `%s` err: %s", namespace, err.Error())
+		s.log.V(logLevel).Errorf("Storage: Pod: map pods in namespace `%s` err: %s", namespace, err.Error())
 		return pods, err
 	}
 
@@ -121,7 +121,7 @@ func (s *PodStorage) ListByNamespace(ctx context.Context, namespace string) (map
 		endpoints := make(map[string][]string)
 		keyEndpoints := keyCreate(endpointStorage)
 		if err := client.Map(ctx, keyEndpoints, filterEndpoint, endpoints); err != nil && err.Error() != store.ErrKeyNotFound {
-			s.log.V(debugLevel).Errorf("Storage: Pod: map endpoints err: %s", err.Error())
+			s.log.V(logLevel).Errorf("Storage: Pod: map endpoints err: %s", err.Error())
 			return pods, err
 		}
 
@@ -135,23 +135,23 @@ func (s *PodStorage) ListByNamespace(ctx context.Context, namespace string) (map
 
 func (s *PodStorage) ListByService(ctx context.Context, namespace, service string) ([]*types.Pod, error) {
 
-	s.log.V(debugLevel).Debugf("Storage: Pod: get pods list by service: %s in namespace: %s", service, namespace)
+	s.log.V(logLevel).Debugf("Storage: Pod: get pods list by service: %s in namespace: %s", service, namespace)
 
 	if len(namespace) == 0 {
 		err := errors.New("namespace can not be empty")
-		s.log.V(debugLevel).Errorf("Storage: Pod: get pods list  err: %s", err.Error())
+		s.log.V(logLevel).Errorf("Storage: Pod: get pods list  err: %s", err.Error())
 		return nil, err
 	}
 
 	if len(service) == 0 {
 		err := errors.New("service can not be empty")
-		s.log.V(debugLevel).Errorf("Storage: Pod: get pods list err: %s", err.Error())
+		s.log.V(logLevel).Errorf("Storage: Pod: get pods list err: %s", err.Error())
 		return nil, err
 	}
 
 	client, destroy, err := s.Client()
 	if err != nil {
-		s.log.V(debugLevel).Errorf("Storage: Pod: create client err: %s", err.Error())
+		s.log.V(logLevel).Errorf("Storage: Pod: create client err: %s", err.Error())
 		return nil, err
 	}
 	defer destroy()
@@ -159,7 +159,7 @@ func (s *PodStorage) ListByService(ctx context.Context, namespace, service strin
 	pods := make([]*types.Pod, 0)
 	keyServiceList := keyCreate(podStorage, namespace, service)
 	if err := client.List(ctx, keyServiceList, "", &pods); err != nil {
-		s.log.V(debugLevel).Errorf("Storage: Pod: pods list err: %s", err.Error())
+		s.log.V(logLevel).Errorf("Storage: Pod: pods list err: %s", err.Error())
 		return nil, err
 	}
 
@@ -168,7 +168,7 @@ func (s *PodStorage) ListByService(ctx context.Context, namespace, service strin
 		endpoints := make(map[string][]string)
 		keyEndpoints := keyCreate(endpointStorage)
 		if err := client.Map(ctx, keyEndpoints, filterEndpoint, endpoints); err != nil && err.Error() != store.ErrKeyNotFound {
-			s.log.V(debugLevel).Errorf("Storage: Pod: map endpoints err: %s", err.Error())
+			s.log.V(logLevel).Errorf("Storage: Pod: map endpoints err: %s", err.Error())
 			return nil, err
 		}
 
@@ -182,30 +182,30 @@ func (s *PodStorage) ListByService(ctx context.Context, namespace, service strin
 
 func (s *PodStorage) Upsert(ctx context.Context, namespace string, pod *types.Pod) error {
 
-	s.log.V(debugLevel).Debugf("Storage: Pod: upsert pod: %#v in namespace: %s", pod, namespace)
+	s.log.V(logLevel).Debugf("Storage: Pod: upsert pod: %#v in namespace: %s", pod, namespace)
 
 	if len(namespace) == 0 {
 		err := errors.New("namespace can not be empty")
-		s.log.V(debugLevel).Errorf("Storage: Pod: upsert pod list  err: %s", err.Error())
+		s.log.V(logLevel).Errorf("Storage: Pod: upsert pod list  err: %s", err.Error())
 		return err
 	}
 
 	if pod == nil {
 		err := errors.New("pod can not be nil")
-		s.log.V(debugLevel).Errorf("Storage: Pod: upsert pod list err: %s", err.Error())
+		s.log.V(logLevel).Errorf("Storage: Pod: upsert pod list err: %s", err.Error())
 		return err
 	}
 
 	client, destroy, err := s.Client()
 	if err != nil {
-		s.log.V(debugLevel).Errorf("Storage: Pod: create client err: %s", err.Error())
+		s.log.V(logLevel).Errorf("Storage: Pod: create client err: %s", err.Error())
 		return err
 	}
 	defer destroy()
 
 	keyMeta := keyCreate(podStorage, namespace, pod.Meta.Name)
 	if err := client.Upsert(ctx, keyMeta, pod, nil, 0); err != nil {
-		s.log.V(debugLevel).Errorf("Storage: Pod: upsert pod err: %s", err.Error())
+		s.log.V(logLevel).Errorf("Storage: Pod: upsert pod err: %s", err.Error())
 		return err
 	}
 
@@ -214,23 +214,23 @@ func (s *PodStorage) Upsert(ctx context.Context, namespace string, pod *types.Po
 
 func (s *PodStorage) Update(ctx context.Context, namespace string, pod *types.Pod) error {
 
-	s.log.V(debugLevel).Debugf("Storage: Pod: update pod: %#v in namespace: %s", pod, namespace)
+	s.log.V(logLevel).Debugf("Storage: Pod: update pod: %#v in namespace: %s", pod, namespace)
 
 	if len(namespace) == 0 {
 		err := errors.New("namespace can not be empty")
-		s.log.V(debugLevel).Errorf("Storage: Pod: update pod list  err: %s", err.Error())
+		s.log.V(logLevel).Errorf("Storage: Pod: update pod list  err: %s", err.Error())
 		return err
 	}
 
 	if pod == nil {
 		err := errors.New("pod can not be nil")
-		s.log.V(debugLevel).Errorf("Storage: Pod: update pod list err: %s", err.Error())
+		s.log.V(logLevel).Errorf("Storage: Pod: update pod list err: %s", err.Error())
 		return err
 	}
 
 	client, destroy, err := s.Client()
 	if err != nil {
-		s.log.V(debugLevel).Errorf("Storage: Pod: create client err: %s", err.Error())
+		s.log.V(logLevel).Errorf("Storage: Pod: create client err: %s", err.Error())
 		return err
 	}
 	defer destroy()
@@ -238,7 +238,7 @@ func (s *PodStorage) Update(ctx context.Context, namespace string, pod *types.Po
 	keyMeta := keyCreate(podStorage, namespace, pod.Meta.Name)
 
 	if err := client.Update(ctx, keyMeta, pod, nil, 0); err != nil {
-		s.log.V(debugLevel).Errorf("Storage: Pod: update pod err: %s", err.Error())
+		s.log.V(logLevel).Errorf("Storage: Pod: update pod err: %s", err.Error())
 		return err
 	}
 
@@ -247,23 +247,23 @@ func (s *PodStorage) Update(ctx context.Context, namespace string, pod *types.Po
 
 func (s *PodStorage) Remove(ctx context.Context, namespace string, pod *types.Pod) error {
 
-	s.log.V(debugLevel).Debugf("Storage: Pod: remove pod: %#v in namespace: %s", pod, namespace)
+	s.log.V(logLevel).Debugf("Storage: Pod: remove pod: %#v in namespace: %s", pod, namespace)
 
 	if len(namespace) == 0 {
 		err := errors.New("namespace can not be empty")
-		s.log.V(debugLevel).Errorf("Storage: Pod: remove pod list  err: %s", err.Error())
+		s.log.V(logLevel).Errorf("Storage: Pod: remove pod list  err: %s", err.Error())
 		return err
 	}
 
 	if pod == nil {
 		err := errors.New("pod can not be nil")
-		s.log.V(debugLevel).Errorf("Storage: Pod: remove pod list err: %s", err.Error())
+		s.log.V(logLevel).Errorf("Storage: Pod: remove pod list err: %s", err.Error())
 		return err
 	}
 
 	client, destroy, err := s.Client()
 	if err != nil {
-		s.log.V(debugLevel).Errorf("Storage: Pod: create client err: %s", err.Error())
+		s.log.V(logLevel).Errorf("Storage: Pod: create client err: %s", err.Error())
 		return err
 	}
 	defer destroy()
@@ -277,7 +277,7 @@ func (s *PodStorage) Remove(ctx context.Context, namespace string, pod *types.Po
 	tx.Delete(KeyNodePod)
 
 	if err := tx.Commit(); err != nil {
-		s.log.V(debugLevel).Errorf("Storage: Pod: commit transaction err: %s", err.Error())
+		s.log.V(logLevel).Errorf("Storage: Pod: commit transaction err: %s", err.Error())
 		return err
 	}
 
@@ -286,12 +286,12 @@ func (s *PodStorage) Remove(ctx context.Context, namespace string, pod *types.Po
 
 func (s *PodStorage) Watch(ctx context.Context, pod chan *types.Pod) error {
 
-	s.log.V(debugLevel).Debug("Storage: Pod: watch pod")
+	s.log.V(logLevel).Debug("Storage: Pod: watch pod")
 
 	const filter = `\b\/` + podStorage + `\/(.+)/(.+)\b`
 	client, destroy, err := s.Client()
 	if err != nil {
-		s.log.V(debugLevel).Errorf("Storage: Pod: create client err: %s", err.Error())
+		s.log.V(logLevel).Errorf("Storage: Pod: create client err: %s", err.Error())
 		return err
 	}
 	defer destroy()
@@ -310,7 +310,7 @@ func (s *PodStorage) Watch(ctx context.Context, pod chan *types.Pod) error {
 	}
 
 	if err := client.Watch(ctx, key, filter, cb); err != nil {
-		s.log.V(debugLevel).Errorf("Storage: Pod: watch pod err: %s", err.Error())
+		s.log.V(logLevel).Errorf("Storage: Pod: watch pod err: %s", err.Error())
 		return err
 	}
 

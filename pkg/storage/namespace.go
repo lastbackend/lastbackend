@@ -40,17 +40,17 @@ type NamespaceStorage struct {
 // Get namespace by name
 func (s *NamespaceStorage) GetByName(ctx context.Context, name string) (*types.Namespace, error) {
 
-	s.log.V(debugLevel).Debugf("Storage: Namespace: get by name: %s", name)
+	s.log.V(logLevel).Debugf("Storage: Namespace: get by name: %s", name)
 
 	if len(name) == 0 {
 		err := errors.New("name can not be empty")
-		s.log.V(debugLevel).Errorf("Storage: Namespace: get namespace err: %s", err.Error())
+		s.log.V(logLevel).Errorf("Storage: Namespace: get namespace err: %s", err.Error())
 		return nil, err
 	}
 
 	client, destroy, err := s.Client()
 	if err != nil {
-		s.log.V(debugLevel).Errorf("Storage: Namespace: create client err: %s", err.Error())
+		s.log.V(logLevel).Errorf("Storage: Namespace: create client err: %s", err.Error())
 		return nil, err
 	}
 	defer destroy()
@@ -58,7 +58,7 @@ func (s *NamespaceStorage) GetByName(ctx context.Context, name string) (*types.N
 	namespace := new(types.Namespace)
 	keyMeta := s.util.Key(ctx, namespaceStorage, name, "meta")
 	if err := client.Get(ctx, keyMeta, &namespace.Meta); err != nil {
-		s.log.V(debugLevel).Errorf("Storage: Namespace: get namespace `%s` meta err: %s", name, err.Error())
+		s.log.V(logLevel).Errorf("Storage: Namespace: get namespace `%s` meta err: %s", name, err.Error())
 		return nil, err
 	}
 	return namespace, nil
@@ -67,13 +67,13 @@ func (s *NamespaceStorage) GetByName(ctx context.Context, name string) (*types.N
 // List projects
 func (s *NamespaceStorage) List(ctx context.Context) ([]*types.Namespace, error) {
 
-	s.log.V(debugLevel).Debug("Storage: Namespace: get namespace list")
+	s.log.V(logLevel).Debug("Storage: Namespace: get namespace list")
 
 	const filter = `\b(.+)` + namespaceStorage + `\/.+\/(meta)\b`
 
 	client, destroy, err := s.Client()
 	if err != nil {
-		s.log.V(debugLevel).Errorf("Storage: Namespace: create client err: %s", err.Error())
+		s.log.V(logLevel).Errorf("Storage: Namespace: create client err: %s", err.Error())
 		return nil, err
 	}
 	defer destroy()
@@ -81,11 +81,11 @@ func (s *NamespaceStorage) List(ctx context.Context) ([]*types.Namespace, error)
 	namespaces := []*types.Namespace{}
 	keyNamespaces := keyCreate(namespaceStorage)
 	if err := client.List(ctx, keyNamespaces, filter, &namespaces); err != nil {
-		s.log.V(debugLevel).Errorf("Storage: Namespace: get namespaces list err: %s", err.Error())
+		s.log.V(logLevel).Errorf("Storage: Namespace: get namespaces list err: %s", err.Error())
 		return nil, err
 	}
 
-	s.log.V(debugLevel).Debugf("Storage: Namespace: get namespace list result: %d", len(namespaces))
+	s.log.V(logLevel).Debugf("Storage: Namespace: get namespace list result: %d", len(namespaces))
 
 	return namespaces, nil
 }
@@ -93,24 +93,24 @@ func (s *NamespaceStorage) List(ctx context.Context) ([]*types.Namespace, error)
 // Insert new namespace into storage
 func (s *NamespaceStorage) Insert(ctx context.Context, namespace *types.Namespace) error {
 
-	s.log.V(debugLevel).Debug("Storage: Namespace: insert namespace: %#v", namespace)
+	s.log.V(logLevel).Debug("Storage: Namespace: insert namespace: %#v", namespace)
 
 	if namespace == nil {
 		err := errors.New("namespace can not be nil")
-		s.log.V(debugLevel).Errorf("Storage: Namespace: insert namespace err: %s", err.Error())
+		s.log.V(logLevel).Errorf("Storage: Namespace: insert namespace err: %s", err.Error())
 		return err
 	}
 
 	client, destroy, err := s.Client()
 	if err != nil {
-		s.log.V(debugLevel).Errorf("Storage: Namespace: create client err: %s", err.Error())
+		s.log.V(logLevel).Errorf("Storage: Namespace: create client err: %s", err.Error())
 		return err
 	}
 	defer destroy()
 
 	keyMeta := keyCreate(namespaceStorage, namespace.Meta.Name, "meta")
 	if err := client.Create(ctx, keyMeta, namespace.Meta, nil, 0); err != nil {
-		s.log.V(debugLevel).Errorf("Storage: Namespace: insert namespace err: %s", err.Error())
+		s.log.V(logLevel).Errorf("Storage: Namespace: insert namespace err: %s", err.Error())
 		return err
 	}
 
@@ -120,11 +120,11 @@ func (s *NamespaceStorage) Insert(ctx context.Context, namespace *types.Namespac
 // Update namespace model
 func (s *NamespaceStorage) Update(ctx context.Context, namespace *types.Namespace) error {
 
-	s.log.V(debugLevel).Debugf("Storage: Namespace: update namespace: %#v", namespace)
+	s.log.V(logLevel).Debugf("Storage: Namespace: update namespace: %#v", namespace)
 
 	if namespace == nil {
 		err := errors.New("namespace can not be nil")
-		s.log.V(debugLevel).Errorf("Storage: Namespace: update namespace err: %s", err.Error())
+		s.log.V(logLevel).Errorf("Storage: Namespace: update namespace err: %s", err.Error())
 		return err
 	}
 
@@ -132,7 +132,7 @@ func (s *NamespaceStorage) Update(ctx context.Context, namespace *types.Namespac
 
 	client, destroy, err := s.Client()
 	if err != nil {
-		s.log.V(debugLevel).Errorf("Storage: Namespace: create client err: %s", err.Error())
+		s.log.V(logLevel).Errorf("Storage: Namespace: create client err: %s", err.Error())
 		return err
 	}
 	defer destroy()
@@ -143,7 +143,7 @@ func (s *NamespaceStorage) Update(ctx context.Context, namespace *types.Namespac
 
 	keyMeta := keyCreate(namespaceStorage, namespace.Meta.Name, "meta")
 	if err := client.Update(ctx, keyMeta, meta, nil, 0); err != nil {
-		s.log.V(debugLevel).Errorf("Storage: Namespace: update namespace meta err: %s", err.Error())
+		s.log.V(logLevel).Errorf("Storage: Namespace: update namespace meta err: %s", err.Error())
 		return err
 	}
 
@@ -153,24 +153,24 @@ func (s *NamespaceStorage) Update(ctx context.Context, namespace *types.Namespac
 // Remove namespace model
 func (s *NamespaceStorage) Remove(ctx context.Context, name string) error {
 
-	s.log.V(debugLevel).Debugf("Storage: Namespace: remove namespace: %s", name)
+	s.log.V(logLevel).Debugf("Storage: Namespace: remove namespace: %s", name)
 
 	if len(name) == 0 {
 		err := errors.New("name can not be empty")
-		s.log.V(debugLevel).Errorf("Storage: Namespace: remove namespace err: %s", err.Error())
+		s.log.V(logLevel).Errorf("Storage: Namespace: remove namespace err: %s", err.Error())
 		return err
 	}
 
 	client, destroy, err := s.Client()
 	if err != nil {
-		s.log.V(debugLevel).Errorf("Storage: Namespace: create client err: %s", err.Error())
+		s.log.V(logLevel).Errorf("Storage: Namespace: create client err: %s", err.Error())
 		return err
 	}
 	defer destroy()
 
 	keyNamespace := keyCreate(namespaceStorage, name)
 	if err := client.DeleteDir(ctx, keyNamespace); err != nil {
-		s.log.V(debugLevel).Errorf("Storage: Namespace: remove namespace `%s` err: %s", name, err.Error())
+		s.log.V(logLevel).Errorf("Storage: Namespace: remove namespace `%s` err: %s", name, err.Error())
 		return err
 	}
 

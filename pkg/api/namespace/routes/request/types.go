@@ -28,6 +28,8 @@ import (
 	"strings"
 )
 
+const logLevel = 3
+
 type RequestNamespaceCreateS struct {
 	Name        string `json:"name"`
 	Description string `json:"description"`
@@ -35,28 +37,31 @@ type RequestNamespaceCreateS struct {
 
 func (s *RequestNamespaceCreateS) DecodeAndValidate(reader io.Reader) *errors.Err {
 
-	var (
-		log = context.Get().GetLogger()
-	)
+	var log = context.Get().GetLogger()
+
+	log.V(logLevel).Debug("Request: Namespace: decode and validate data for creating")
 
 	body, err := ioutil.ReadAll(reader)
 	if err != nil {
-		log.Error(err)
+		log.V(logLevel).Errorf("Request: Namespace: decode and validate data for creating err: %s", err.Error())
 		return errors.New("user").Unknown(err)
 	}
 
 	err = json.Unmarshal(body, s)
 	if err != nil {
+		log.V(logLevel).Errorf("Request: Namespace: convert struct from json err: %s", err.Error())
 		return errors.New("namespace").IncorrectJSON(err)
 	}
 
 	if s.Name == "" {
+		log.V(logLevel).Error("Request: Namespace: parameter name can not be empty")
 		return errors.New("namespace").BadParameter("name")
 	}
 
 	s.Name = strings.ToLower(s.Name)
 
 	if len(s.Name) < 4 && len(s.Name) > 64 && !validator.IsProjectName(s.Name) {
+		log.V(logLevel).Error("Request: Namespace: parameter name not valid")
 		return errors.New("namespace").BadParameter("name")
 	}
 
@@ -70,28 +75,31 @@ type RequestNamespaceUpdateS struct {
 
 func (s *RequestNamespaceUpdateS) DecodeAndValidate(reader io.Reader) *errors.Err {
 
-	var (
-		log = context.Get().GetLogger()
-	)
+	var log = context.Get().GetLogger()
+
+	log.V(logLevel).Debug("Request: Namespace: decode and validate data for updating")
 
 	body, err := ioutil.ReadAll(reader)
 	if err != nil {
-		log.Error(err)
+		log.V(logLevel).Errorf("Request: Namespace: decode and validate data for updating err: %s", err.Error())
 		return errors.New("user").Unknown(err)
 	}
 
 	err = json.Unmarshal(body, s)
 	if err != nil {
+		log.V(logLevel).Errorf("Request: Namespace: convert struct from json err: %s", err.Error())
 		return errors.New("namespace").IncorrectJSON(err)
 	}
 
 	if s.Name == "" {
+		log.V(logLevel).Error("Request: Namespace: parameter name can not be empty")
 		return errors.New("namespace").BadParameter("name")
 	}
 
 	s.Name = strings.ToLower(s.Name)
 
 	if len(s.Name) < 4 && len(s.Name) > 64 && !validator.IsProjectName(s.Name) {
+		log.V(logLevel).Error("Request: Namespace: parameter name not valid")
 		return errors.New("namespace").BadParameter("name")
 	}
 

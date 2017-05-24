@@ -22,7 +22,7 @@ import (
 	"golang.org/x/net/context"
 )
 
-const DebugLevel = 7
+const LogLevel = 7
 
 const (
 	ErrKeyExists        = "key exists"

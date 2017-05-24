@@ -40,24 +40,24 @@ type SystemStorage struct {
 
 func (s *SystemStorage) ProcessSet(ctx context.Context, process *types.Process) error {
 
-	s.log.V(debugLevel).Debugf("Storage: System: set process: %#v", process)
+	s.log.V(logLevel).Debugf("Storage: System: set process: %#v", process)
 
 	if process == nil {
 		err := errors.New("process can not be empty")
-		s.log.V(debugLevel).Errorf("Storage: System: set process err: %s", err.Error())
+		s.log.V(logLevel).Errorf("Storage: System: set process err: %s", err.Error())
 		return err
 	}
 
 	client, destroy, err := s.Client()
 	if err != nil {
-		s.log.V(debugLevel).Errorf("Storage: System: create client err: %s", err.Error())
+		s.log.V(logLevel).Errorf("Storage: System: create client err: %s", err.Error())
 		return err
 	}
 	defer destroy()
 
 	keyMember := keyCreate(systemStorage, process.Meta.Kind, "process", process.Meta.Hostname)
 	if err := client.Upsert(ctx, keyMember, process, nil, systemLeadTTL); err != nil {
-		s.log.V(debugLevel).Errorf("Storage: System: upsert process err: %s", err.Error())
+		s.log.V(logLevel).Errorf("Storage: System: upsert process err: %s", err.Error())
 		return err
 	}
 
@@ -66,11 +66,11 @@ func (s *SystemStorage) ProcessSet(ctx context.Context, process *types.Process) 
 
 func (s *SystemStorage) Elect(ctx context.Context, process *types.Process) (bool, error) {
 
-	s.log.V(debugLevel).Debugf("Storage: System: elect process: %#v", process)
+	s.log.V(logLevel).Debugf("Storage: System: elect process: %#v", process)
 
 	if process == nil {
 		err := errors.New("process can not be empty")
-		s.log.V(debugLevel).Errorf("Storage: System: elect process err: %s", err.Error())
+		s.log.V(logLevel).Errorf("Storage: System: elect process err: %s", err.Error())
 		return false, err
 	}
 
@@ -82,7 +82,7 @@ func (s *SystemStorage) Elect(ctx context.Context, process *types.Process) (bool
 
 	client, destroy, err := s.Client()
 	if err != nil {
-		s.log.V(debugLevel).Errorf("Storage: System: create client err: %s", err.Error())
+		s.log.V(logLevel).Errorf("Storage: System: create client err: %s", err.Error())
 		return false, err
 	}
 	defer destroy()
@@ -90,7 +90,7 @@ func (s *SystemStorage) Elect(ctx context.Context, process *types.Process) (bool
 	key := keyCreate(systemStorage, process.Meta.Kind, "lead")
 	err = client.Get(ctx, key, &id)
 	if err != nil && (err.Error() != store.ErrKeyNotFound) {
-		s.log.V(debugLevel).Errorf("Storage: System: get process lead info err: %s", err.Error())
+		s.log.V(logLevel).Errorf("Storage: System: get process lead info err: %s", err.Error())
 		return false, err
 	}
 
@@ -101,7 +101,7 @@ func (s *SystemStorage) Elect(ctx context.Context, process *types.Process) (bool
 	if err.Error() == store.ErrKeyNotFound {
 		err = client.Create(ctx, key, &process.Meta.ID, nil, systemLeadTTL)
 		if err != nil && err.Error() != store.ErrKeyExists {
-			s.log.V(debugLevel).Errorf("Storage: System: create process ttl err: %s", err.Error())
+			s.log.V(logLevel).Errorf("Storage: System: create process ttl err: %s", err.Error())
 			return false, err
 		}
 		lead = true
@@ -112,11 +112,11 @@ func (s *SystemStorage) Elect(ctx context.Context, process *types.Process) (bool
 
 func (s *SystemStorage) ElectUpdate(ctx context.Context, process *types.Process) error {
 
-	s.log.V(debugLevel).Debugf("Storage: System: elect update process: %#v", process)
+	s.log.V(logLevel).Debugf("Storage: System: elect update process: %#v", process)
 
 	if process == nil {
 		err := errors.New("process can not be empty")
-		s.log.V(debugLevel).Errorf("Storage: System: elect update process err: %s", err.Error())
+		s.log.V(logLevel).Errorf("Storage: System: elect update process err: %s", err.Error())
 		return err
 	}
 
@@ -127,7 +127,7 @@ func (s *SystemStorage) ElectUpdate(ctx context.Context, process *types.Process)
 
 	client, destroy, err := s.Client()
 	if err != nil {
-		s.log.V(debugLevel).Errorf("Storage: System: create client err: %s", err.Error())
+		s.log.V(logLevel).Errorf("Storage: System: create client err: %s", err.Error())
 		return err
 	}
 	defer destroy()
@@ -135,7 +135,7 @@ func (s *SystemStorage) ElectUpdate(ctx context.Context, process *types.Process)
 	key := keyCreate(systemStorage, process.Meta.Kind, "lead")
 	err = client.Get(ctx, key, &id)
 	if err != nil && err.Error() != store.ErrKeyNotFound {
-		s.log.V(debugLevel).Errorf("Storage: System: get process lead err: %s", err.Error())
+		s.log.V(logLevel).Errorf("Storage: System: get process lead err: %s", err.Error())
 		return err
 	}
 
@@ -144,7 +144,7 @@ func (s *SystemStorage) ElectUpdate(ctx context.Context, process *types.Process)
 	}
 
 	if err := client.Update(ctx, key, &process.Meta.ID, nil, systemLeadTTL); err != nil {
-		s.log.V(debugLevel).Errorf("Storage: System: update process ttl err: %s", err.Error())
+		s.log.V(logLevel).Errorf("Storage: System: update process ttl err: %s", err.Error())
 		return err
 	}
 
@@ -153,11 +153,11 @@ func (s *SystemStorage) ElectUpdate(ctx context.Context, process *types.Process)
 
 func (s *SystemStorage) ElectWait(ctx context.Context, process *types.Process, lead chan bool) error {
 
-	s.log.V(debugLevel).Debug("Storage: System: elect wait process")
+	s.log.V(logLevel).Debug("Storage: System: elect wait process")
 
 	client, destroy, err := s.Client()
 	if err != nil {
-		s.log.V(debugLevel).Errorf("Storage: System: create client err: %s", err.Error())
+		s.log.V(logLevel).Errorf("Storage: System: create client err: %s", err.Error())
 		return err
 	}
 	defer destroy()
@@ -180,13 +180,13 @@ func (s *SystemStorage) ElectWait(ctx context.Context, process *types.Process, l
 		if action == "DELETE" {
 			_, err := s.Elect(ctx, process)
 			if err != nil {
-				s.log.V(debugLevel).Errorf("Storage: System: elect process err: %s", err.Error())
+				s.log.V(logLevel).Errorf("Storage: System: elect process err: %s", err.Error())
 			}
 		}
 	}
 
 	if err := client.Watch(ctx, key, "", cb); err != nil {
-		s.log.V(debugLevel).Errorf("Storage: System: watch process err: %s", err.Error())
+		s.log.V(logLevel).Errorf("Storage: System: watch process err: %s", err.Error())
 		return err
 	}
 
