@@ -32,6 +32,8 @@ import (
 	"net/http"
 )
 
+const logLevel = 2
+
 func ServiceListH(w http.ResponseWriter, r *http.Request) {
 
 	var (
@@ -40,15 +42,17 @@ func ServiceListH(w http.ResponseWriter, r *http.Request) {
 		id  = utils.Vars(r)["namespace"]
 	)
 
-	log.Debug("List service handler")
+	log.V(logLevel).Debugf("Handler: Service: list services in namespace `%s`", id)
+
 	ns := namespace.New(r.Context())
 	item, err := ns.Get(id)
 	if err != nil {
-		log.Error("Error: find namespace by name", err.Error())
+		log.V(logLevel).Errorf("Handler: Service: get namespace by name `%s` err: %s", id, err.Error())
 		errors.HTTP.InternalServerError(w)
 		return
 	}
 	if item == nil {
+		log.V(logLevel).Warnf("Handler: Service: namespace `%s` not found", id)
 		errors.New("namespace").NotFound().Http(w)
 		return
 	}
@@ -56,21 +60,21 @@ func ServiceListH(w http.ResponseWriter, r *http.Request) {
 	s := service.New(r.Context(), item.Meta)
 	items, err := s.List()
 	if err != nil {
-		log.Error("Error: find service list by user", err)
+		log.V(logLevel).Errorf("Handler: Service: get service list in namespace `%s` err: %s", item.Meta.Name, err.Error())
 		errors.HTTP.InternalServerError(w)
 		return
 	}
 
 	response, err := v1.NewServiceList(items).ToJson()
 	if err != nil {
-		log.Error("Error: convert struct to json", err.Error())
+		log.V(logLevel).Errorf("Handler: Service: convert struct to json err: %s", err.Error())
 		errors.HTTP.InternalServerError(w)
 		return
 	}
 
 	w.WriteHeader(http.StatusOK)
 	if _, err := w.Write(response); err != nil {
-		log.Error("Error: write response", err.Error())
+		log.V(logLevel).Errorf("Handler: Service: write response err: %s", err.Error())
 		return
 	}
 }
@@ -83,16 +87,17 @@ func ServiceInfoH(w http.ResponseWriter, r *http.Request) {
 		sid = utils.Vars(r)["service"]
 	)
 
-	log.Debug("Get service handler")
+	log.V(logLevel).Debugf("Handler: Service: get service `%s` in namespace `%s`", sid, nid)
 
 	ns := namespace.New(r.Context())
 	item, err := ns.Get(nid)
 	if err != nil {
-		log.Errorf("Error: find namespace by name: %s", err.Error())
+		log.V(logLevel).Errorf("Handler: Service: get namespace by name `%s` err: %s", nid, err.Error())
 		errors.HTTP.InternalServerError(w)
 		return
 	}
 	if item == nil {
+		log.V(logLevel).Warnf("Handler: Service: namespace `%s` not found", nid)
 		errors.New("namespace").NotFound().Http(w)
 		return
 	}
@@ -100,25 +105,26 @@ func ServiceInfoH(w http.ResponseWriter, r *http.Request) {
 	s := service.New(r.Context(), item.Meta)
 	svc, err := s.Get(sid)
 	if err != nil {
-		log.Errorf("Error: find service by name: %s", err.Error())
+		log.V(logLevel).Errorf("Handler: Service: get service by name `%s` in namespace `%s` err: %s", sid, item.Meta.Name, err.Error())
 		errors.HTTP.InternalServerError(w)
 		return
 	}
 	if svc == nil {
+		log.V(logLevel).Warnf("Handler: Service: service `%s` in namespace `%s` not found", sid, item.Meta.Name)
 		errors.New("service").NotFound().Http(w)
 		return
 	}
 
 	response, err := v1.NewService(svc).ToJson()
 	if err != nil {
-		log.Error("Error: convert struct to json", err.Error())
+		log.V(logLevel).Errorf("Handler: Service: convert struct to json err: %s", err.Error())
 		errors.HTTP.InternalServerError(w)
 		return
 	}
 
 	w.WriteHeader(http.StatusOK)
 	if _, err = w.Write(response); err != nil {
-		log.Error("Error: write response", err.Error())
+		log.V(logLevel).Errorf("Handler: Service: write response err: %s", err.Error())
 		return
 	}
 }
@@ -131,23 +137,24 @@ func ServiceCreateH(w http.ResponseWriter, r *http.Request) {
 		nid = utils.Vars(r)["namespace"]
 	)
 
-	log.Debug("Create service handler")
+	log.V(logLevel).Debug("Handler: Service: create service")
 
 	// request body struct
 	rq := new(request.RequestServiceCreateS)
 	if err := rq.DecodeAndValidate(r.Body); err != nil {
-		log.Errorf("Error: validation incoming data: %s", err)
+		log.V(logLevel).Errorf("Handler: Service: validation incoming data err: %s", err.Err().Error())
 		errors.New("Invalid incoming data").Unknown().Http(w)
 		return
 	}
 	ns := namespace.New(r.Context())
 	item, err := ns.Get(nid)
 	if err != nil {
-		log.Error("Error: find namespace by name", err.Error())
+		log.V(logLevel).Errorf("Handler: Service: get namespace by name `%s` err: %s", nid, err.Error())
 		errors.HTTP.InternalServerError(w)
 		return
 	}
 	if item == nil {
+		log.V(logLevel).Warnf("Handler: Service: namespace `%s` not found", nid)
 		errors.New("namespace").NotFound().Http(w)
 		return
 	}
@@ -155,11 +162,12 @@ func ServiceCreateH(w http.ResponseWriter, r *http.Request) {
 	s := service.New(r.Context(), item.Meta)
 	svc, err := s.Get(rq.Name)
 	if err != nil {
-		log.Errorf("Error: find service by name: %s", err.Error())
+		log.V(logLevel).Errorf("Handler: Service: get service by name `%s` in namespace `%s` err: %s", rq.Name, item.Meta.Name, err.Error())
 		errors.HTTP.InternalServerError(w)
 		return
 	}
 	if svc != nil {
+		log.V(logLevel).Warnf("Handler: Service: service name `%s` in namespace `%s` not unique", rq.Name, item.Meta.Name)
 		errors.New("service").NotUnique("name").Http(w)
 		return
 	}
@@ -186,13 +194,14 @@ func ServiceCreateH(w http.ResponseWriter, r *http.Request) {
 
 		img, err := image.Get(r.Context(), rq.Registry, rq.Source)
 		if err != nil && err.Error() != store.ErrKeyNotFound {
+			log.V(logLevel).Errorf("Handler: Service: get image err: %s", err.Error())
 			return
 		}
 
 		if err != nil && err.Error() == store.ErrKeyNotFound {
 			img, err = image.Create(r.Context(), rq.Registry, rq.Source)
 			if err != nil {
-				log.Error("Error: insert service to db", err)
+				log.V(logLevel).Errorf("Handler: Service: create image err: %s", err.Error())
 				errors.HTTP.InternalServerError(w)
 				return
 			}
@@ -205,21 +214,21 @@ func ServiceCreateH(w http.ResponseWriter, r *http.Request) {
 
 	svc, err = s.Create(rq)
 	if err != nil {
-		log.Error("Error: insert service to db", err)
+		log.V(logLevel).Errorf("Handler: Service: create service err: %s", err.Error())
 		errors.HTTP.InternalServerError(w)
 		return
 	}
 
 	response, err := v1.NewService(svc).ToJson()
 	if err != nil {
-		log.Error("Error: convert struct to json", err.Error())
+		log.V(logLevel).Errorf("Handler: Service: convert struct to json err: %s", err.Error())
 		errors.HTTP.InternalServerError(w)
 		return
 	}
 
 	w.WriteHeader(http.StatusOK)
 	if _, err = w.Write(response); err != nil {
-		log.Error("Error: write response", err.Error())
+		log.V(logLevel).Errorf("Handler: Service: write response err: %s", err.Error())
 		return
 	}
 }
@@ -233,12 +242,12 @@ func ServiceUpdateH(w http.ResponseWriter, r *http.Request) {
 		sid = utils.Vars(r)["service"]
 	)
 
-	log.Debug("Update service handler")
+	log.V(logLevel).Debugf("Handler: Service: update service `%s` in namespace `%s`", sid, nid)
 
 	// request body struct
 	rq := new(request.RequestServiceUpdateS)
 	if err := rq.DecodeAndValidate(r.Body); err != nil {
-		log.Error("Error: validation incoming data", err)
+		log.V(logLevel).Errorf("Handler: Service: validation incoming data err: %s", err.Err().Error())
 		errors.New("Invalid incoming data").Unknown().Http(w)
 		return
 	}
@@ -246,11 +255,12 @@ func ServiceUpdateH(w http.ResponseWriter, r *http.Request) {
 	ns := namespace.New(r.Context())
 	item, err := ns.Get(nid)
 	if err != nil {
-		log.Error("Error: find namespace by name", err.Error())
+		log.V(logLevel).Errorf("Handler: Service: get namespace by name `%s` err: %s", nid, err.Error())
 		errors.HTTP.InternalServerError(w)
 		return
 	}
 	if item == nil {
+		log.V(logLevel).Warnf("Handler: Service: namespace `%s` not found", nid)
 		errors.New("namespace").NotFound().Http(w)
 		return
 	}
@@ -258,31 +268,32 @@ func ServiceUpdateH(w http.ResponseWriter, r *http.Request) {
 	s := service.New(r.Context(), item.Meta)
 	svc, err := s.Get(sid)
 	if err != nil {
-		log.Error("Error: find service by name", err.Error())
+		log.V(logLevel).Errorf("Handler: Service: get service by name `%s` in namespace `%s` err: %s", rq.Name, item.Meta.Name, err.Error())
 		errors.HTTP.InternalServerError(w)
 		return
 	}
 	if svc == nil {
+		log.V(logLevel).Warnf("Handler: Service: service name `%s` in namespace `%s` not found", sid, item.Meta.Name)
 		errors.New("service").NotFound().Http(w)
 		return
 	}
 
 	if err = s.Update(svc, rq); err != nil {
-		log.Error("Error: update service error", err)
+		log.V(logLevel).Errorf("Handler: Service: update service err: %s", err.Error())
 		errors.HTTP.InternalServerError(w)
 		return
 	}
 
 	response, err := v1.NewService(svc).ToJson()
 	if err != nil {
-		log.Error("Error: convert struct to json", err.Error())
+		log.V(logLevel).Errorf("Handler: Service: convert struct to json err: %s", err.Error())
 		errors.HTTP.InternalServerError(w)
 		return
 	}
 
 	w.WriteHeader(http.StatusOK)
 	if _, err = w.Write(response); err != nil {
-		log.Error("Error: write response", err.Error())
+		log.V(logLevel).Errorf("Handler: Service: write response err: %s", err.Error())
 		return
 	}
 }
@@ -295,16 +306,17 @@ func ServiceRemoveH(w http.ResponseWriter, r *http.Request) {
 		sid = utils.Vars(r)["service"]
 	)
 
-	log.Info("Remove service")
+	log.V(logLevel).Debugf("Handler: Service: remove service `%s` from namespace `%s`", sid, nid)
 
 	ns := namespace.New(r.Context())
 	item, err := ns.Get(nid)
 	if err != nil {
-		log.Error("Error: find namespace by name", err.Error())
+		log.V(logLevel).Errorf("Handler: Service: get namespace by name `%s` err: %s", nid, err.Error())
 		errors.HTTP.InternalServerError(w)
 		return
 	}
 	if item == nil {
+		log.V(logLevel).Warnf("Handler: Service: namespace `%s` not found", nid)
 		errors.New("namespace").NotFound().Http(w)
 		return
 	}
@@ -312,34 +324,27 @@ func ServiceRemoveH(w http.ResponseWriter, r *http.Request) {
 	s := service.New(r.Context(), item.Meta)
 	svc, err := s.Get(sid)
 	if err != nil {
-		log.Error("Error: find service by name", err.Error())
+		log.V(logLevel).Errorf("Handler: Service: get service by name `%s` in namespace `%s` err: %s", sid, item.Meta.Name, err.Error())
 		errors.HTTP.InternalServerError(w)
 		return
 	}
 	if svc == nil {
+		log.V(logLevel).Warnf("Handler: Service: service name `%s` in namespace `%s` not found", sid, item.Meta.Name)
 		errors.New("service").NotFound().Http(w)
 		return
 	}
 
-	// Todo: remove all activity by service name
+	// TODO: remove all activity by service name
 
 	if err := s.Remove(svc); err != nil {
-		log.Error("Error: remove service from db", err)
+		log.V(logLevel).Errorf("Handler: Service: remove service err: %s", err.Error())
 		errors.HTTP.InternalServerError(w)
 		return
 	}
 
 	w.WriteHeader(http.StatusOK)
 	if _, err := w.Write([]byte{}); err != nil {
-		log.Error("Error: write response", err.Error())
-		return
-	}
-}
-
-func ServiceActivityListH(w http.ResponseWriter, _ *http.Request) {
-	w.WriteHeader(http.StatusOK)
-	if _, err := w.Write([]byte(`[]`)); err != nil {
-		context.Get().GetLogger().Error("Error: write response", err.Error())
+		log.V(logLevel).Errorf("Handler: Service: write response err: %s", err.Error())
 		return
 	}
 }
@@ -352,10 +357,12 @@ func ServiceSpecCreateH(w http.ResponseWriter, r *http.Request) {
 		sid = utils.Vars(r)["service"]
 	)
 
+	log.V(logLevel).Debug("Handler: Service: create spec for service `%s` in namespace `%s`", sid, nid)
+
 	// request body struct
 	rq := new(request.RequestServiceSpecS)
 	if err := rq.DecodeAndValidate(r.Body); err != nil {
-		log.Error("Error: validation incoming data", err)
+		log.V(logLevel).Errorf("Handler: Service: validation incoming data err: %s", err.Err().Error())
 		errors.New("Invalid incoming data").Unknown().Http(w)
 		return
 	}
@@ -363,11 +370,12 @@ func ServiceSpecCreateH(w http.ResponseWriter, r *http.Request) {
 	ns := namespace.New(r.Context())
 	item, err := ns.Get(nid)
 	if err != nil {
-		log.Error("Error: find namespace by name", err.Error())
+		log.V(logLevel).Errorf("Handler: Service: get namespace by name `%s` err: %s", nid, err.Error())
 		errors.HTTP.InternalServerError(w)
 		return
 	}
 	if item == nil {
+		log.V(logLevel).Warnf("Handler: Service: namespace `%s` not found", nid)
 		errors.New("namespace").NotFound().Http(w)
 		return
 	}
@@ -375,31 +383,32 @@ func ServiceSpecCreateH(w http.ResponseWriter, r *http.Request) {
 	s := service.New(r.Context(), item.Meta)
 	svc, err := s.Get(sid)
 	if err != nil {
-		log.Error("Error: find service by name", err.Error())
+		log.V(logLevel).Errorf("Handler: Service: get service `%s` in namespace by name `%s` err: %s", sid, nid, err.Error())
 		errors.HTTP.InternalServerError(w)
 		return
 	}
 	if svc == nil {
+		log.V(logLevel).Warnf("Handler: Service: service name `%s` in namespace `%s` not found", sid, item.Meta.Name)
 		errors.New("service").NotFound().Http(w)
 		return
 	}
 
 	if err = s.AddSpec(svc, rq); err != nil {
-		log.Error("Error: add spec to service error", err)
+		log.V(logLevel).Errorf("Handler: Service: create spec for service `%s` in namespace by name `%s` err: %s", sid, nid, err.Error())
 		errors.HTTP.InternalServerError(w)
 		return
 	}
 
 	response, err := v1.NewService(svc).ToJson()
 	if err != nil {
-		log.Error("Error: convert struct to json", err.Error())
+		log.V(logLevel).Errorf("Handler: Service: convert struct to json err: %s", err.Error())
 		errors.HTTP.InternalServerError(w)
 		return
 	}
 
 	w.WriteHeader(http.StatusOK)
 	if _, err = w.Write(response); err != nil {
-		log.Error("Error: write response", err.Error())
+		log.V(logLevel).Errorf("Handler: Service: write response err: %s", err.Error())
 		return
 	}
 }
@@ -413,10 +422,12 @@ func ServiceSpecUpdateH(w http.ResponseWriter, r *http.Request) {
 		spid = utils.Vars(r)["spec"]
 	)
 
+	log.V(logLevel).Debug("Handler: Service: update spec for service `%s` in namespace `%s`", sid, nid)
+
 	// request body struct
 	rq := new(request.RequestServiceSpecS)
 	if err := rq.DecodeAndValidate(r.Body); err != nil {
-		log.Error("Error: validation incoming data", err)
+		log.V(logLevel).Errorf("Handler: Service: validation incoming data err: %s", err.Err().Error())
 		errors.New("Invalid incoming data").Unknown().Http(w)
 		return
 	}
@@ -424,11 +435,12 @@ func ServiceSpecUpdateH(w http.ResponseWriter, r *http.Request) {
 	ns := namespace.New(r.Context())
 	item, err := ns.Get(nid)
 	if err != nil {
-		log.Error("Error: find namespace by name", err.Error())
+		log.V(logLevel).Errorf("Handler: Service: get namespace by name `%s` err: %s", nid, err.Error())
 		errors.HTTP.InternalServerError(w)
 		return
 	}
 	if item == nil {
+		log.V(logLevel).Warnf("Handler: Service: namespace `%s` not found", nid)
 		errors.New("namespace").NotFound().Http(w)
 		return
 	}
@@ -436,31 +448,32 @@ func ServiceSpecUpdateH(w http.ResponseWriter, r *http.Request) {
 	s := service.New(r.Context(), item.Meta)
 	svc, err := s.Get(sid)
 	if err != nil {
-		log.Error("Error: find service by name", err.Error())
+		log.V(logLevel).Errorf("Handler: Service: get service `%s` in namespace by name `%s` err: %s", sid, nid, err.Error())
 		errors.HTTP.InternalServerError(w)
 		return
 	}
 	if svc == nil {
+		log.V(logLevel).Warnf("Handler: Service: service name `%s` in namespace `%s` not found", sid, item.Meta.Name)
 		errors.New("service").NotFound().Http(w)
 		return
 	}
 
 	if err = s.SetSpec(svc, spid, rq); err != nil {
-		log.Error("Error: update service spec error", err)
+		log.V(logLevel).Errorf("Handler: Service: create spec for service `%s` in namespace by name `%s` err: %s", sid, nid, err.Error())
 		errors.HTTP.InternalServerError(w)
 		return
 	}
 
 	response, err := v1.NewService(svc).ToJson()
 	if err != nil {
-		log.Error("Error: convert struct to json", err.Error())
+		log.V(logLevel).Errorf("Handler: Service: convert struct to json err: %s", err.Error())
 		errors.HTTP.InternalServerError(w)
 		return
 	}
 
 	w.WriteHeader(http.StatusOK)
 	if _, err = w.Write(response); err != nil {
-		log.Error("Error: write response", err.Error())
+		log.V(logLevel).Errorf("Handler: Service: write response err: %s", err.Error())
 		return
 	}
 }
@@ -474,10 +487,12 @@ func ServiceSpecRemoveH(w http.ResponseWriter, r *http.Request) {
 		spid = utils.Vars(r)["spec"]
 	)
 
+	log.V(logLevel).Debug("Handler: Service: remove spec from service `%s` in namespace `%s`", sid, nid)
+
 	// request body struct
 	rq := new(request.RequestServiceUpdateS)
 	if err := rq.DecodeAndValidate(r.Body); err != nil {
-		log.Error("Error: validation incoming data", err)
+		log.V(logLevel).Errorf("Handler: Service: validation incoming data err: %s", err.Err().Error())
 		errors.New("Invalid incoming data").Unknown().Http(w)
 		return
 	}
@@ -485,11 +500,12 @@ func ServiceSpecRemoveH(w http.ResponseWriter, r *http.Request) {
 	ns := namespace.New(r.Context())
 	item, err := ns.Get(nid)
 	if err != nil {
-		log.Error("Error: find namespace by name", err.Error())
+		log.V(logLevel).Errorf("Handler: Service: get namespace by name `%s` err: %s", nid, err.Error())
 		errors.HTTP.InternalServerError(w)
 		return
 	}
 	if item == nil {
+		log.V(logLevel).Warnf("Handler: Service: namespace `%s` not found", nid)
 		errors.New("namespace").NotFound().Http(w)
 		return
 	}
@@ -497,31 +513,32 @@ func ServiceSpecRemoveH(w http.ResponseWriter, r *http.Request) {
 	s := service.New(r.Context(), item.Meta)
 	svc, err := s.Get(sid)
 	if err != nil {
-		log.Error("Error: find service by name", err.Error())
+		log.V(logLevel).Errorf("Handler: Service: get service `%s` in namespace by name `%s` err: %s", sid, nid, err.Error())
 		errors.HTTP.InternalServerError(w)
 		return
 	}
 	if svc == nil {
+		log.V(logLevel).Warnf("Handler: Service: service name `%s` in namespace `%s` not found", sid, item.Meta.Name)
 		errors.New("service").NotFound().Http(w)
 		return
 	}
 
 	if err = s.DelSpec(svc, spid); err != nil {
-		log.Error("Error: remove spec from service error", err)
+		log.V(logLevel).Errorf("Handler: Service: remove spec from service `%s` in namespace by name `%s` err: %s", sid, nid, err.Error())
 		errors.HTTP.InternalServerError(w)
 		return
 	}
 
 	response, err := v1.NewService(svc).ToJson()
 	if err != nil {
-		log.Error("Error: convert struct to json", err.Error())
+		log.V(logLevel).Errorf("Handler: Service: convert struct to json err: %s", err.Error())
 		errors.HTTP.InternalServerError(w)
 		return
 	}
 
 	w.WriteHeader(http.StatusOK)
 	if _, err = w.Write(response); err != nil {
-		log.Error("Error: write response", err.Error())
+		log.V(logLevel).Errorf("Handler: Service: write response err: %s", err.Error())
 		return
 	}
 }
@@ -537,16 +554,17 @@ func ServiceLogsH(w http.ResponseWriter, r *http.Request) {
 		doneChan = make(chan bool, 1)
 	)
 
-	log.Debug("Get service logs")
+	log.V(logLevel).Debug("Handler: Service: get logs for service `%s` in namespace `%s`", sid, nid)
 
 	ns := namespace.New(r.Context())
 	item, err := ns.Get(nid)
 	if err != nil {
-		log.Error("Error: find namespace by name", err.Error())
+		log.V(logLevel).Errorf("Handler: Service: get namespace by name `%s` err: %s", nid, err.Error())
 		errors.HTTP.InternalServerError(w)
 		return
 	}
 	if item == nil {
+		log.V(logLevel).Warnf("Handler: Service: namespace `%s` not found", nid)
 		errors.New("namespace").NotFound().Http(w)
 		return
 	}
@@ -559,6 +577,7 @@ func ServiceLogsH(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if svc == nil {
+		log.V(logLevel).Warnf("Handler: Service: service name `%s` in namespace `%s` not found", sid, item.Meta.Name)
 		errors.New("service").NotFound().Http(w)
 		return
 	}
@@ -570,8 +589,25 @@ func ServiceLogsH(w http.ResponseWriter, r *http.Request) {
 	}()
 
 	if err := pod.Logs(r.Context(), item.Meta.Name, pid, cid, w, doneChan); err != nil {
-		log.Errorf("Error: get service logs err %s", err.Error())
+		log.V(logLevel).Warnf("Handler: Service: get logs for service`%s` in namespace `%s` err: ", sid, item.Meta.Name, err.Error())
 		errors.HTTP.InternalServerError(w)
+		return
+	}
+}
+
+func ServiceActivityListH(w http.ResponseWriter, r *http.Request) {
+
+	var (
+		log = context.Get().GetLogger()
+		nid = utils.Vars(r)["namespace"]
+		sid = utils.Vars(r)["service"]
+	)
+
+	log.V(logLevel).Debug("Handler: Service: get activities for service `%s` in namespace `%s`", sid, nid)
+
+	w.WriteHeader(http.StatusOK)
+	if _, err := w.Write([]byte(`[]`)); err != nil {
+		log.V(logLevel).Errorf("Handler: Service: write response err: %s", err.Error())
 		return
 	}
 }

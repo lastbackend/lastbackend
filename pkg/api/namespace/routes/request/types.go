@@ -44,7 +44,7 @@ func (s *RequestNamespaceCreateS) DecodeAndValidate(reader io.Reader) *errors.Er
 	body, err := ioutil.ReadAll(reader)
 	if err != nil {
 		log.V(logLevel).Errorf("Request: Namespace: decode and validate data for creating err: %s", err.Error())
-		return errors.New("user").Unknown(err)
+		return errors.New("namespace").Unknown(err)
 	}
 
 	err = json.Unmarshal(body, s)
@@ -82,7 +82,7 @@ func (s *RequestNamespaceUpdateS) DecodeAndValidate(reader io.Reader) *errors.Er
 	body, err := ioutil.ReadAll(reader)
 	if err != nil {
 		log.V(logLevel).Errorf("Request: Namespace: decode and validate data for updating err: %s", err.Error())
-		return errors.New("user").Unknown(err)
+		return errors.New("namespace").Unknown(err)
 	}
 
 	err = json.Unmarshal(body, s)

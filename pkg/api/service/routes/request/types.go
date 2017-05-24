@@ -30,6 +30,8 @@ import (
 	"strings"
 )
 
+const logLevel = 3
+
 type RequestServiceCreateS struct {
 	Name        string               `json:"name"`
 	Description string               `json:"description"`
@@ -69,18 +71,22 @@ func (s *RequestServiceCreateS) DecodeAndValidate(reader io.Reader) *errors.Err 
 
 	log := context.Get().GetLogger()
 
+	log.V(logLevel).Debug("Request: Service: decode and validate data for creating")
+
 	body, err := ioutil.ReadAll(reader)
 	if err != nil {
-		log.Error(err)
-		return errors.New("user").Unknown(err)
+		log.V(logLevel).Errorf("Request: Service: decode and validate data for creating err: %s", err.Error())
+		return errors.New("service").Unknown(err)
 	}
 
 	err = json.Unmarshal(body, s)
 	if err != nil {
+		log.V(logLevel).Errorf("Request: Service: convert struct from json err: %s", err.Error())
 		return errors.New("service").IncorrectJSON(err)
 	}
 
 	if s.Template == "" && s.Image == "" && s.Url == "" {
+		log.V(logLevel).Error("Request: Service: One of the following parameters(template, image, url) is required")
 		return errors.New("service").BadParameter("template,image,url")
 	}
 
@@ -93,6 +99,7 @@ func (s *RequestServiceCreateS) DecodeAndValidate(reader io.Reader) *errors.Err 
 	if s.Image != "" && s.Url == "" {
 		source, err := converter.DockerNamespaceParse(s.Image)
 		if err != nil {
+			log.V(logLevel).Errorf("Request: Service: parameter image not valid err: %s", err.Error())
 			return errors.New("service").BadParameter("image")
 		}
 
@@ -106,11 +113,13 @@ func (s *RequestServiceCreateS) DecodeAndValidate(reader io.Reader) *errors.Err 
 		match := strings.Split(s.Url, "#")
 
 		if !validator.IsGitUrl(match[0]) {
+			log.V(logLevel).Error("Request: Service: parameter url not valid")
 			return errors.New("service").BadParameter("url")
 		}
 
 		source, err := converter.GitUrlParse(match[0])
 		if err != nil {
+			log.V(logLevel).Error("Request: Service: parameter url not valid err: %s", err.Error())
 			return errors.New("service").BadParameter("url")
 		}
 
@@ -133,12 +142,14 @@ func (s *RequestServiceCreateS) DecodeAndValidate(reader io.Reader) *errors.Err 
 	s.Name = strings.ToLower(s.Name)
 
 	if s.Name == "" {
+		log.V(logLevel).Error("Request: Service: parameter name can not be empty")
 		return errors.New("service").BadParameter("name")
 	}
 
 	s.Name = strings.ToLower(s.Name)
 
 	if len(s.Name) < 4 && len(s.Name) > 64 && !validator.IsServiceName(s.Name) {
+		log.V(logLevel).Error("Request: Namespace: parameter name not valid")
 		return errors.New("service").BadParameter("name")
 	}
 
@@ -166,14 +177,17 @@ func (s *RequestServiceUpdateS) DecodeAndValidate(reader io.Reader) *errors.Err 
 
 	log := context.Get().GetLogger()
 
+	log.V(logLevel).Debug("Request: Service: decode and validate data for updating")
+
 	body, err := ioutil.ReadAll(reader)
 	if err != nil {
-		log.Error(err)
-		return errors.New("user").Unknown(err)
+		log.V(logLevel).Errorf("Request: Service: decode and validate data for creating err: %s", err.Error())
+		return errors.New("service").Unknown(err)
 	}
 
 	err = json.Unmarshal(body, s)
 	if err != nil {
+		log.V(logLevel).Errorf("Request: Service: convert struct from json err: %s", err.Error())
 		return errors.New("service").IncorrectJSON(err)
 	}
 
@@ -183,6 +197,7 @@ func (s *RequestServiceUpdateS) DecodeAndValidate(reader io.Reader) *errors.Err 
 		s.Name = strings.ToLower(s.Name)
 
 		if len(s.Name) < 4 && len(s.Name) > 64 && !validator.IsServiceName(s.Name) {
+			log.V(logLevel).Error("Request: Namespace: parameter name not valid")
 			return errors.New("service").BadParameter("name")
 		}
 	}
@@ -204,14 +219,17 @@ func (s *RequestServiceSpecS) DecodeAndValidate(reader io.Reader) *errors.Err {
 
 	log := context.Get().GetLogger()
 
+	log.V(logLevel).Debug("Request: Service: decode and validate data for service spec")
+
 	body, err := ioutil.ReadAll(reader)
 	if err != nil {
-		log.Error(err)
+		log.V(logLevel).Errorf("Request: Service: decode and validate data for service spec err: %s", err.Error())
 		return errors.New("service").Unknown(err)
 	}
 
 	err = json.Unmarshal(body, s)
 	if err != nil {
+		log.V(logLevel).Errorf("Request: Service: convert struct from json err: %s", err.Error())
 		return errors.New("service").IncorrectJSON(err)
 	}
 

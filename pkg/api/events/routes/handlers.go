@@ -24,12 +24,19 @@ import (
 	"net/http"
 )
 
+const (
+	logLevel      = 2
+	defaultClient = "lastbackend"
+)
+
 func EventSubscribeH(w http.ResponseWriter, r *http.Request) {
 	var (
 		err error
 		log = context.Get().GetLogger()
 		hub = context.Get().GetWssHub()
 	)
+
+	log.V(logLevel).Debug("Handler: Event: subscribe on events")
 
 	if r.Method != "GET" {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
@@ -38,12 +45,15 @@ func EventSubscribeH(w http.ResponseWriter, r *http.Request) {
 
 	conn, err := sockets.Upgrader.Upgrade(w, r, nil)
 	if err != nil {
-		log.Error(err)
+		log.V(logLevel).Errorf("Handler: Event: upgrade socker err: %s", err.Error())
 		return
 	}
 
-	log.Debug("New websockets connection")
-	client := hub.NewConnection("lastbackend", conn)
-	log.Debug("Websockets connection ready to receive data")
+	log.V(logLevel).Debug("Handler: Event: new websocket connection")
+
+	client := hub.NewConnection(defaultClient, conn)
+
+	log.V(logLevel).Debug("Handler: Event: connection ready to receive data")
+
 	client.WritePump()
 }

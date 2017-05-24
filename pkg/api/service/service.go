@@ -28,6 +28,8 @@ import (
 	"strings"
 )
 
+const logLevel = 3
+
 type service struct {
 	Context   context.Context
 	Namespace types.Meta
@@ -42,18 +44,24 @@ func New(ctx context.Context, namespace types.Meta) *service {
 
 func (s *service) List() (types.ServiceList, error) {
 	var (
+		log     = ctx.Get().GetLogger()
 		storage = ctx.Get().GetStorage()
 		list    = types.ServiceList{}
 	)
 
+	log.V(logLevel).Debug("Service: list service")
+
 	items, err := storage.Service().ListByNamespace(s.Context, s.Namespace.Name)
 	if err != nil {
-		return list, err
+		log.V(logLevel).Error("Service: list service err: %s", err.Error())
+		return nil, err
 	}
 
+	log.V(logLevel).Debugf("Service: list service result: %d", len(items))
+
 	for _, item := range items {
-		var service = item
-		list = append(list, service)
+		var srv = item
+		list = append(list, srv)
 	}
 
 	return list, nil
@@ -66,9 +74,15 @@ func (s *service) Get(service string) (*types.Service, error) {
 		storage = ctx.Get().GetStorage()
 	)
 
+	log.V(logLevel).Debugf("Service: get service %s", service)
+
 	svc, err := storage.Service().GetByName(s.Context, s.Namespace.Name, service)
-	if err != nil && err.Error() != store.ErrKeyNotFound {
-		log.Errorf("Error: find service by name: %s", err.Error())
+	if err != nil {
+		if err.Error() == store.ErrKeyNotFound {
+			log.V(logLevel).Warnf("Service: service by name `%s` not found", service)
+			return nil, nil
+		}
+		log.V(logLevel).Errorf("Service: get service by name `%s` err: %s", service, err.Error())
 		return nil, err
 	}
 	return svc, nil
@@ -83,7 +97,7 @@ func (s *service) Create(rq *request.RequestServiceCreateS) (*types.Service, err
 		svc     = types.Service{}
 	)
 
-	log.Debug("Service: create new service")
+	log.V(logLevel).Debugf("Service: create service %#v", rq)
 
 	svc.Meta = types.ServiceMeta{}
 	svc.Meta.SetDefault()
@@ -113,12 +127,12 @@ func (s *service) Create(rq *request.RequestServiceCreateS) (*types.Service, err
 	svc.Meta.Hook = hook.Meta.ID
 
 	if err := storage.Service().Insert(s.Context, &svc); err != nil {
-		log.Errorf("Error: insert service to db : %s", err.Error())
+		log.V(logLevel).Errorf("Service: insert service err: %s", err.Error())
 		return nil, err
 	}
 
 	if err := storage.Hook().Insert(s.Context, &hook); err != nil {
-		log.Errorf("Error: insert service to db : %s", err.Error())
+		log.V(logLevel).Errorf("Service: insert service hook err: %s", err.Error())
 		return nil, err
 	}
 
@@ -133,7 +147,7 @@ func (s *service) Update(service *types.Service, rq *request.RequestServiceUpdat
 		storage = ctx.Get().GetStorage()
 	)
 
-	log.Debug("Service: update service info and config")
+	log.V(logLevel).Debugf("Service: update service %#v -> %#v", service, rq)
 
 	if rq.Name != "" {
 		service.Meta.Name = rq.Name
@@ -144,19 +158,19 @@ func (s *service) Update(service *types.Service, rq *request.RequestServiceUpdat
 	}
 
 	if rq.Replicas != nil && *rq.Replicas > 0 {
-		log.Debugf("Service: Update: set replicas: %d", *rq.Replicas)
+		log.Warnf("Service: set replicas: %d", *rq.Replicas)
 		service.Meta.Replicas = *rq.Replicas
 	}
 
 	service.State.State = types.StateProvision
 
 	if err = storage.Service().Update(s.Context, service); err != nil {
-		log.Error("Error: update service info to db", err)
+		log.V(logLevel).Errorf("Service: update service err: %s", err.Error())
 		return err
 	}
 
 	if err = storage.Service().UpdateSpec(s.Context, service); err != nil {
-		log.Error("Error: update service spec to db", err)
+		log.V(logLevel).Errorf("Service: update service spec err: %s", err.Error())
 		return err
 	}
 
@@ -169,24 +183,26 @@ func (s *service) Remove(service *types.Service) error {
 		storage = ctx.Get().GetStorage()
 	)
 
+	log.V(logLevel).Debugf("Service: remove service %#v", service)
+
 	service.State.State = types.StateDestroyed
 	service.Meta.Replicas = int(0) // Delete all pods
 
 	if err := storage.Service().Update(s.Context, service); err != nil {
-		log.Error("Error: update service info to db", err)
+		log.V(logLevel).Errorf("Service: update service state err: %s", err.Error())
 		return err
 	}
 
 	if len(service.Pods) == 0 {
 		if err := storage.Service().Remove(s.Context, service); err != nil {
-			log.Error("Error: insert service to db", err)
+			log.V(logLevel).Errorf("Service: remove service err: %s", err.Error())
 			return err
 		}
 		return nil
 	}
 
 	if err := storage.Service().UpdateSpec(s.Context, service); err != nil {
-		log.Error("Error: update service spec info to db", err)
+		log.V(logLevel).Errorf("Service: update service spec err: %s", err.Error())
 		return err
 	}
 
@@ -200,18 +216,18 @@ func (s *service) AddSpec(service *types.Service, rq *request.RequestServiceSpec
 		storage = ctx.Get().GetStorage()
 	)
 
-	log.Debug("Add spec service")
+	log.V(logLevel).Debugf("Service: add service `%s` spec from data %#v", service.Meta.Name, rq)
 
 	spec := generateSpec(rq, nil)
 	service.Spec[spec.Meta.ID] = spec
 
 	if err := storage.Service().Update(s.Context, service); err != nil {
-		log.Errorf("Error: DelSpec: update service info to db : %s", err.Error())
+		log.V(logLevel).Errorf("Service: update service err: %s", err.Error())
 		return err
 	}
 
 	if err := storage.Service().UpdateSpec(s.Context, service); err != nil {
-		log.Errorf("Error: AddSpec: update service spec to db : %s", err.Error())
+		log.V(logLevel).Errorf("Service: update service spec err: %s", err.Error())
 		return err
 	}
 
@@ -225,7 +241,7 @@ func (s *service) SetSpec(service *types.Service, id string, rq *request.Request
 		storage = ctx.Get().GetStorage()
 	)
 
-	log.Debug("Set spec service")
+	log.V(logLevel).Debugf("Service: set service `%s` spec %s from data %#v", service.Meta.Name, id, rq)
 
 	spec := generateSpec(rq, service.Spec[id])
 	service.Spec[spec.Meta.ID] = spec
@@ -233,12 +249,12 @@ func (s *service) SetSpec(service *types.Service, id string, rq *request.Request
 	delete(service.Spec, spec.Meta.Parent)
 
 	if err := storage.Service().Update(s.Context, service); err != nil {
-		log.Errorf("Error: SetSpec: update service info to db : %s", err.Error())
+		log.V(logLevel).Errorf("Service: update service err: %s", err.Error())
 		return err
 	}
 
 	if err := storage.Service().UpdateSpec(s.Context, service); err != nil {
-		log.Errorf("Error: SetSpec: update service spec to db : %s", err.Error())
+		log.V(logLevel).Errorf("Service: update service spec err: %s", err.Error())
 		return err
 	}
 
@@ -252,7 +268,7 @@ func (s *service) DelSpec(service *types.Service, id string) error {
 		storage = ctx.Get().GetStorage()
 	)
 
-	log.Debug("Delete spec service")
+	log.V(logLevel).Debugf("Service: delete service `%s` spec %#v", service.Meta.Name, id)
 
 	if _, ok := service.Spec[id]; !ok {
 		return nil
@@ -261,12 +277,12 @@ func (s *service) DelSpec(service *types.Service, id string) error {
 	delete(service.Spec, id)
 
 	if err := storage.Service().Update(s.Context, service); err != nil {
-		log.Errorf("Error: DelSpec: update service info to db : %s", err.Error())
+		log.V(logLevel).Errorf("Service: update service err: %s", err.Error())
 		return err
 	}
 
 	if err := storage.Service().UpdateSpec(s.Context, service); err != nil {
-		log.Errorf("Error: DelSpec: update service spec to db : %s", err.Error())
+		log.V(logLevel).Errorf("Service: update service spec err: %s", err.Error())
 		return err
 	}
 
@@ -280,7 +296,7 @@ func (s *service) Redeploy(service *types.Service) error {
 		storage = ctx.Get().GetStorage()
 	)
 
-	log.Debug("Redeploy service")
+	log.V(logLevel).Debugf("Service: redeploy service %#v", service)
 
 	specs := make(map[string]*types.ServiceSpec)
 	service.State.State = types.StateProvision
@@ -295,12 +311,12 @@ func (s *service) Redeploy(service *types.Service) error {
 	service.Spec = specs
 
 	if err := storage.Service().Update(s.Context, service); err != nil {
-		log.Errorf("Error: Redeploy: update service info to db : %s", err.Error())
+		log.V(logLevel).Errorf("Service: update service err: %s", err.Error())
 		return err
 	}
 
 	if err := storage.Service().UpdateSpec(s.Context, service); err != nil {
-		log.Error("Error: Redeploy: update service spec to db", err)
+		log.V(logLevel).Errorf("Service: update service spec err: %s", err.Error())
 		return err
 	}
 
