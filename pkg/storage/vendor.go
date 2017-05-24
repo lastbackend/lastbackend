@@ -20,7 +20,9 @@ package storage
 
 import (
 	"context"
+	"errors"
 	"github.com/lastbackend/lastbackend/pkg/common/types"
+	"github.com/lastbackend/lastbackend/pkg/logger"
 	"github.com/lastbackend/lastbackend/pkg/storage/store"
 	"golang.org/x/oauth2"
 )
@@ -30,11 +32,15 @@ const vendorStorage = "vendors"
 // Service vendor type for interface in interfaces folder
 type VendorStorage struct {
 	IVendor
+	log    logger.ILogger
 	util   IUtil
 	Client func() (store.IStore, store.DestroyFunc, error)
 }
 
 func (s *VendorStorage) Insert(ctx context.Context, owner, name, host, serviceID string, token *oauth2.Token) error {
+
+	s.log.V(debugLevel).Debugf("Storage: Vendor: insert vendor owner: %s, name: %s, host: %s, serviceID: %s, token: %#v",
+		owner, name, host, serviceID, token)
 
 	vm := new(types.Vendor)
 	vm.Username = owner
@@ -45,34 +51,40 @@ func (s *VendorStorage) Insert(ctx context.Context, owner, name, host, serviceID
 
 	client, destroy, err := s.Client()
 	if err != nil {
+		s.log.V(debugLevel).Errorf("Storage: Vendor: create client err: %s", err.Error())
 		return err
 	}
 	defer destroy()
 
 	key := s.util.Key(ctx, vendorStorage, name)
-	err = client.Get(ctx, key, vm)
-	if err != nil && err.Error() != store.ErrKeyNotFound {
+	if err := client.Upsert(ctx, key, vm, nil, 0); err != nil {
+		s.log.V(debugLevel).Errorf("Storage: Vendor: upsert vendor info err: %s", err.Error())
 		return err
 	}
-	if err != nil && err.Error() == store.ErrKeyNotFound {
-		return client.Create(ctx, key, vm, nil, 0)
-	}
-
-	return client.Update(ctx, key, vm, nil, 0)
+	return nil
 }
 
-func (s *VendorStorage) Get(ctx context.Context, vendorName string) (*types.Vendor, error) {
+func (s *VendorStorage) Get(ctx context.Context, name string) (*types.Vendor, error) {
 
-	vendor := new(types.Vendor)
+	s.log.V(debugLevel).Debugf("Storage: Vendor: get by name: %s", name)
+
+	if len(name) == 0 {
+		err := errors.New("name can not be empty")
+		s.log.V(debugLevel).Errorf("Storage: Vendor: get name err: %s", err.Error())
+		return nil, err
+	}
+
 	client, destroy, err := s.Client()
 	if err != nil {
+		s.log.V(debugLevel).Errorf("Storage: Vendor: create client err: %s", err.Error())
 		return nil, err
 	}
 	defer destroy()
 
-	key := s.util.Key(ctx, vendorStorage, vendorName)
-
+	vendor := new(types.Vendor)
+	key := s.util.Key(ctx, vendorStorage, name)
 	if err := client.Get(ctx, key, vendor); err != nil {
+		s.log.V(debugLevel).Errorf("Storage: Vendor: get vendor info err: %s", err.Error())
 		return nil, err
 	}
 
@@ -81,42 +93,57 @@ func (s *VendorStorage) Get(ctx context.Context, vendorName string) (*types.Vend
 
 func (s *VendorStorage) List(ctx context.Context) (map[string]*types.Vendor, error) {
 
+	s.log.V(debugLevel).Debugf("Storage: Vendor: get vendors list")
+
 	client, destroy, err := s.Client()
 	if err != nil {
+		s.log.V(debugLevel).Errorf("Storage: Vendor: create client err: %s", err.Error())
 		return nil, err
 	}
 	defer destroy()
 
 	key := s.util.Key(ctx, vendorStorage)
 	vendors := make(map[string]*types.Vendor)
-	if err := client.Map(ctx, key, ``, vendors); err != nil && err.Error() != "keyCreate not found" {
-		return vendors, err
+	if err := client.Map(ctx, key, ``, vendors); err != nil && err.Error() != store.ErrKeyNotFound {
+		s.log.V(debugLevel).Errorf("Storage: Vendor: map vendors err: %s", err.Error())
+		return nil, err
 	}
+
 	return vendors, nil
 }
 
-func (s *VendorStorage) Remove(ctx context.Context, vendorName string) error {
+func (s *VendorStorage) Remove(ctx context.Context, name string) error {
+
+	s.log.V(debugLevel).Debugf("Storage: Vendor: remove vendor by name: %s", name)
+
+	if len(name) == 0 {
+		err := errors.New("name can not be empty")
+		s.log.V(debugLevel).Errorf("Storage: Vendor: remove vendor by name err: %s", err.Error())
+		return err
+	}
 
 	client, destroy, err := s.Client()
 	if err != nil {
+		s.log.V(debugLevel).Errorf("Storage: Vendor: create client err: %s", err.Error())
 		return err
 	}
 	defer destroy()
 
-	key := s.util.Key(ctx, vendorStorage, vendorName)
-	err = client.Delete(ctx, key)
-	if err != nil {
+	key := s.util.Key(ctx, vendorStorage, name)
+	if err := client.Delete(ctx, key); err != nil {
+		s.log.V(debugLevel).Errorf("Storage: Vendor: delete vendor err: %s", err.Error())
 		return err
 	}
 
 	return nil
 }
 
-func newVendorStorage(config store.Config, util IUtil) *VendorStorage {
+func newVendorStorage(config store.Config, log logger.ILogger, util IUtil) *VendorStorage {
 	s := new(VendorStorage)
+	s.log = log
 	s.util = util
 	s.Client = func() (store.IStore, store.DestroyFunc, error) {
-		return New(config)
+		return New(config, log)
 	}
 	return s
 }

@@ -24,6 +24,7 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/common/types"
 	"github.com/lastbackend/lastbackend/pkg/storage/store"
 	"strings"
+	"github.com/lastbackend/lastbackend/pkg/logger"
 )
 
 const buildStorage string = "builds"
@@ -31,6 +32,7 @@ const buildStorage string = "builds"
 // Service Build type for interface in interfaces folder
 type BuildStorage struct {
 	IBuild
+	log logger.ILogger
 	util   IUtil
 	Client func() (store.IStore, store.DestroyFunc, error)
 }
@@ -58,8 +60,8 @@ func (s *BuildStorage) Insert(ctx context.Context, imageName string, build *type
 
 	iname := strings.Replace(imageName, "/", ":", -1)
 
-	keyImageMeta := keyCreate(imageStorage, iname, "meta")
 	imeta := new(types.ImageMeta)
+	keyImageMeta := keyCreate(imageStorage, iname, "meta")
 	if err := client.Get(ctx, keyImageMeta, imeta); err != nil {
 		return err
 	}
@@ -84,11 +86,11 @@ func (s *BuildStorage) Insert(ctx context.Context, imageName string, build *type
 	return nil
 }
 
-func newBuildStorage(config store.Config, util IUtil) *BuildStorage {
+func newBuildStorage(config store.Config, log logger.ILogger, util IUtil) *BuildStorage {
 	s := new(BuildStorage)
 	s.util = util
 	s.Client = func() (store.IStore, store.DestroyFunc, error) {
-		return New(config)
+		return New(config, log)
 	}
 	return s
 }

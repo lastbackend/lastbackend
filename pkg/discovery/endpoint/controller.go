@@ -55,22 +55,22 @@ func (ec *EndpointController) Watch() {
 					if err != nil {
 						if err.Error() == store.ErrKeyNotFound {
 							if err = ec.cache.Del(e); err != nil {
-								log.Debug("Endpoint: remove ips from cache")
+								log.Debug("endpoints: remove ips from cache")
 							}
 						} else {
-							log.Errorf("Endpoint: get ips for domain error %s", err.Error())
+							log.Errorf("endpoints: get ips for domain error %s", err.Error())
 						}
 						continue
 					}
 
 					ips, err := util.ConvertStringIPToNetIP(i)
 					if err != nil {
-						log.Errorf("Endpoint: convert ips to net ips error %s", err.Error())
+						log.Errorf("endpoints: convert ips to net ips error %s", err.Error())
 						continue
 					}
 
 					if err = ec.cache.Set(e, ips); err != nil {
-						log.Errorf("Endpoint: save ips to cache error %s", err.Error())
+						log.Errorf("endpoints: save ips to cache error %s", err.Error())
 						continue
 					}
 				}
@@ -94,6 +94,6 @@ func NewEndpointController(ctx *context.Context) *EndpointController {
 	sc.context = ctx
 	sc.active = false
 	sc.endpoints = make(chan string)
-	sc.cache = ctx.GetCache().EndpointCache
+	sc.cache = ctx.GetCache().Endpoints()
 	return sc
 }

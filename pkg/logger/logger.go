@@ -28,6 +28,8 @@ import (
 var l *Logger
 
 type Logger struct {
+	ILogger
+
 	name  string
 	level Level
 	log   *logrus.Logger

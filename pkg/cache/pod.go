@@ -20,10 +20,12 @@ package cache
 
 import (
 	"github.com/lastbackend/lastbackend/pkg/common/types"
+	"github.com/lastbackend/lastbackend/pkg/logger"
 	"sync"
 )
 
 type PodCache struct {
+	log        logger.ILogger
 	lock       sync.RWMutex
 	stats      PodCacheStats
 	containers map[string]*types.Container
@@ -36,18 +38,22 @@ type PodCacheStats struct {
 }
 
 func (ps *PodCache) GetPodsCount() int {
+	ps.log.V(debugLevel).Debugf("Cache: PodCache: get pods count: %d", ps.stats.pods)
 	return ps.stats.pods
 }
 
 func (ps *PodCache) GetContainersCount() int {
+	ps.log.V(debugLevel).Debugf("Cache: PodCache: get containers count: %d", ps.stats.containers)
 	return ps.stats.containers
 }
 
 func (ps *PodCache) GetPods() map[string]*types.Pod {
+	ps.log.V(debugLevel).Debug("Cache: PodCache: get pods")
 	return ps.pods
 }
 
 func (ps *PodCache) GetContainer(id string) *types.Container {
+	ps.log.V(debugLevel).Debugf("Cache: PodCache: get container: %s", id)
 	c, ok := ps.containers[id]
 	if !ok {
 		return nil
@@ -56,21 +62,23 @@ func (ps *PodCache) GetContainer(id string) *types.Container {
 }
 
 func (ps *PodCache) AddContainer(c *types.Container) {
+	ps.log.V(debugLevel).Debugf("Cache: PodCache: add container: %#v", c)
 	ps.lock.Lock()
 	defer ps.lock.Unlock()
 	ps.addContainer(c)
 }
 
 func (ps *PodCache) DelContainer(id string) {
+	ps.log.V(debugLevel).Debugf("Cache: PodCache: del container: %s", id)
 	ps.lock.Lock()
 	defer ps.lock.Unlock()
 	ps.delContainer(id)
 }
 
 func (ps *PodCache) GetPod(id string) *types.Pod {
+	ps.log.V(debugLevel).Debugf("Cache: PodCache: get pod: %s", id)
 	ps.lock.Lock()
 	defer ps.lock.Unlock()
-
 	pod, ok := ps.pods[id]
 	if !ok {
 		return nil
@@ -79,10 +87,12 @@ func (ps *PodCache) GetPod(id string) *types.Pod {
 }
 
 func (ps *PodCache) AddPod(pod *types.Pod) {
+	ps.log.V(debugLevel).Debugf("Cache: PodCache: add pod: %#v", pod)
 	ps.SetPod(pod)
 }
 
 func (ps *PodCache) SetPod(pod *types.Pod) {
+	ps.log.V(debugLevel).Debugf("Cache: PodCache: set pod: %#v", pod)
 	ps.lock.Lock()
 	defer ps.lock.Unlock()
 
@@ -93,6 +103,7 @@ func (ps *PodCache) SetPod(pod *types.Pod) {
 }
 
 func (ps *PodCache) DelPod(pod *types.Pod) {
+	ps.log.V(debugLevel).Debugf("Cache: PodCache: del pod: %#v", pod)
 	ps.lock.Lock()
 	defer ps.lock.Unlock()
 	if p, ok := ps.pods[pod.Meta.Name]; ok {
@@ -101,6 +112,7 @@ func (ps *PodCache) DelPod(pod *types.Pod) {
 }
 
 func (ps *PodCache) SetPods(pods []*types.Pod) {
+	ps.log.V(debugLevel).Debugf("Cache: PodCache: set pods: %#v", pods)
 	for _, pod := range pods {
 		ps.AddPod(pod)
 	}
@@ -136,8 +148,11 @@ func (ps *PodCache) delContainer(id string) {
 	}
 }
 
-func NewPodCache() *PodCache {
+func NewPodCache(log logger.ILogger) *PodCache {
+	log.V(debugLevel).Debug("Cache: PodCache: initialization storage")
+
 	return &PodCache{
+		log:        log,
 		stats:      PodCacheStats{},
 		containers: make(map[string]*types.Container),
 		pods:       make(map[string]*types.Pod),

@@ -36,11 +36,11 @@ func Get() *ctx {
 }
 
 type ctx struct {
-	_c.Context
+	_c.IContext
 
 	cri     cri.CRI
 	id      *string
-	logger  *logger.Logger
+	logger  logger.ILogger
 	config  *config.Config
 	storage *cache.Cache
 	http    *http.RawReq
@@ -55,11 +55,11 @@ func (c *ctx) GetID() *string {
 	return c.id
 }
 
-func (c *ctx) SetLogger(log *logger.Logger) {
+func (c *ctx) SetLogger(log logger.ILogger) {
 	c.logger = log
 }
 
-func (c *ctx) GetLogger() *logger.Logger {
+func (c *ctx) GetLogger() logger.ILogger {
 	return c.logger
 }
 

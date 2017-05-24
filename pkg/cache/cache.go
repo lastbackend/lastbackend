@@ -17,24 +17,30 @@
 
 package cache
 
+import "github.com/lastbackend/lastbackend/pkg/logger"
+
+const debugLevel = 7
+
 type Cache struct {
-	PodCache      *PodCache
-	EndpointCache *EndpointCache
+	pods      *PodCache
+	endpoints *EndpointCache
 }
 
-func New() *Cache {
+func New(log logger.ILogger) *Cache {
+	log.V(debugLevel).Debug("Cache: initialization storage")
+
 	return &Cache{
-		PodCache:      NewPodCache(),
-		EndpointCache: NewEndpointCache(),
+		pods:      NewPodCache(log),
+		endpoints: NewEndpointCache(log),
 	}
 }
 
 // Return pods storage
 func (s *Cache) Pods() *PodCache {
-	return s.PodCache
+	return s.pods
 }
 
 // Return endpoints storage
 func (s *Cache) Endpoints() *EndpointCache {
-	return s.EndpointCache
+	return s.endpoints
 }

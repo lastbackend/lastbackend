@@ -22,6 +22,7 @@ import (
 	"context"
 	"github.com/lastbackend/lastbackend/pkg/common/types"
 	"github.com/lastbackend/lastbackend/pkg/storage/store"
+	"github.com/lastbackend/lastbackend/pkg/logger"
 )
 
 const hookStorage string = "hooks"
@@ -29,6 +30,7 @@ const hookStorage string = "hooks"
 // Service Hook type for interface in interfaces folder
 type HookStorage struct {
 	IHook
+	log logger.ILogger
 	util   IUtil
 	Client func() (store.IStore, store.DestroyFunc, error)
 }
@@ -61,11 +63,7 @@ func (s *HookStorage) Insert(ctx context.Context, hook *types.Hook) error {
 	defer destroy()
 
 	key := s.util.Key(ctx, hookStorage, hook.Meta.ID)
-	if err := client.Create(ctx, key, hook, nil, 0); err != nil {
-		return err
-	}
-
-	return nil
+	return client.Create(ctx, key, hook, nil, 0)
 }
 
 // Remove hook by id from storage
@@ -78,16 +76,15 @@ func (s *HookStorage) Remove(ctx context.Context, id string) error {
 	defer destroy()
 
 	key := keyCreate(hookStorage, id)
-	client.DeleteDir(ctx, key)
-
-	return nil
+	return client.DeleteDir(ctx, key)
 }
 
-func newHookStorage(config store.Config, util IUtil) *HookStorage {
+func newHookStorage(config store.Config, log logger.ILogger, util IUtil) *HookStorage {
 	s := new(HookStorage)
+	s.log = log
 	s.util = util
 	s.Client = func() (store.IStore, store.DestroyFunc, error) {
-		return New(config)
+		return New(config, log)
 	}
 	return s
 }

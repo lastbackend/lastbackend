@@ -34,7 +34,7 @@ const heartBeatInterval = 10 // in seconds
 
 type Process struct {
 	// Process operations context
-	ctx context.Context
+	ctx context.IContext
 
 	// Managed process
 	process *types.Process
@@ -43,7 +43,7 @@ type Process struct {
 // Process register function
 // The main purpose is to register process in the system
 // If we need to distribution and need master/replicas, use WaitElected function
-func (c *Process) Register(ctx context.Context, kind string) (*types.Process, error) {
+func (c *Process) Register(ctx context.IContext, kind string) (*types.Process, error) {
 
 	var (
 		err  error

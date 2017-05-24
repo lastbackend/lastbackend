@@ -34,16 +34,16 @@ func Get(name string) ([]net.IP, error) {
 		data    = []string{}
 	)
 
-	log.Debugf(`Endpoint: Get ip list from cache %s`, name)
+	log.Debugf(`endpoints: Get ip list from cache %s`, name)
 
-	var ips = cache.EndpointCache.Get(name)
+	var ips = cache.Endpoints().Get(name)
 
 	if ips != nil && len(ips) != 0 {
 		return ips, nil
 	}
 
 	if len(data) == 0 {
-		log.Debugf(`Endpoint: Try find to db %s`, name)
+		log.Debugf(`endpoints: Try find to db %s`, name)
 
 		result, err := storage.Endpoint().Get(context.Get().Background(), name)
 		if err != nil {
@@ -60,15 +60,15 @@ func Get(name string) ([]net.IP, error) {
 
 	ips, err = util.ConvertStringIPToNetIP(data)
 	if err != nil {
-		log.Errorf("Endpoint: convert ips to net ips error %s", err.Error())
+		log.Errorf("endpoints: convert ips to net ips error %s", err.Error())
 		return ips, err
 	}
 
 	log.Debug(`ips`, ips)
 
-	cache.EndpointCache.Set(name, ips)
+	cache.Endpoints().Set(name, ips)
 
-	log.Debugf(`Endpoint: Get ip list from cache for %s successfully: %v`, name, data)
+	log.Debugf(`endpoints: Get ip list from cache for %s successfully: %v`, name, data)
 
 	return ips, nil
 }
@@ -83,7 +83,7 @@ func Update(name string) error {
 		data    = []string{}
 	)
 
-	log.Debugf(`Endpoint: Update name %s in cache `, name)
+	log.Debugf(`endpoints: Update name %s in cache `, name)
 
 	result, err := storage.Endpoint().Get(context.Get().Background(), name)
 	if err != nil {
@@ -103,9 +103,9 @@ func Update(name string) error {
 		return err
 	}
 
-	cache.EndpointCache.Set(name, ips)
+	cache.Endpoints().Set(name, ips)
 
-	log.Debugf(`Endpoint: Update name %s in cache successfully `, name)
+	log.Debugf(`endpoints: Update name %s in cache successfully `, name)
 
 	return nil
 }
@@ -118,15 +118,15 @@ func Remove(name string) error {
 		cache = context.Get().GetCache()
 	)
 
-	log.Debugf(`Endpoint: Remove name %s from cache `, name)
+	log.Debugf(`endpoints: Remove name %s from cache `, name)
 
-	err = cache.EndpointCache.Del(name)
+	err = cache.Endpoints().Del(name)
 	if err != nil {
 		log.Error(err)
 		return err
 	}
 
-	log.Debugf(`Endpoint: Remove name %s from cache successfully `, name)
+	log.Debugf(`endpoints: Remove name %s from cache successfully `, name)
 
 	return nil
 }

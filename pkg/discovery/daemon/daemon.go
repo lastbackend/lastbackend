@@ -45,9 +45,9 @@ func Daemon(_cfg *_cfg.Config) {
 
 	ctx.SetConfig(cfg)
 	ctx.SetLogger(log)
-	ctx.SetCache(cache.New())
+	ctx.SetCache(cache.New(log))
 
-	stg, err := storage.Get(cfg.GetEtcdDB())
+	stg, err := storage.Get(cfg.GetEtcdDB(), log)
 	if err != nil {
 		panic(err)
 	}

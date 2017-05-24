@@ -19,9 +19,12 @@
 package storage
 
 import (
+	"github.com/lastbackend/lastbackend/pkg/logger"
 	"github.com/lastbackend/lastbackend/pkg/storage/store"
 	"strings"
 )
+
+const debugLevel = 5
 
 // Util helpers
 var _util IUtil
@@ -133,7 +136,7 @@ func keyCreate(args ...string) string {
 	return strings.Join([]string(args), "/")
 }
 
-func Get(config store.Config) (*Storage, error) {
+func Get(config store.Config, log logger.ILogger) (*Storage, error) {
 
 	var store = new(Storage)
 
@@ -142,21 +145,25 @@ func Get(config store.Config) (*Storage, error) {
 		_util = new(util)
 	}
 
-	store.VendorStorage = newVendorStorage(config, _util)
-	store.NamespaceStorage = newNamespaceStorage(config, _util)
-	store.ServiceStorage = newServiceStorage(config, _util)
-	store.ImageStorage = newImageStorage(config, _util)
-	store.BuildStorage = newBuildStorage(config, _util)
-	store.HookStorage = newHookStorage(config, _util)
-	store.VolumeStorage = newVolumeStorage(config, _util)
-	store.ActivityStorage = newActivityStorage(config, _util)
-	store.NodeStorage = newNodeStorage(config, _util)
-	store.PodStorage = newPodStorage(config, _util)
-	store.SystemStorage = newSystemStorage(config, _util)
-	store.EndpointStorage = newEndpointStorage(config, _util)
+	store.VendorStorage = newVendorStorage(config, log, _util)
+	store.NamespaceStorage = newNamespaceStorage(config, log, _util)
+	store.ServiceStorage = newServiceStorage(config, log, _util)
+	store.ImageStorage = newImageStorage(config, log, _util)
+	store.BuildStorage = newBuildStorage(config, log, _util)
+	store.HookStorage = newHookStorage(config, log, _util)
+	store.VolumeStorage = newVolumeStorage(config, log, _util)
+	store.ActivityStorage = newActivityStorage(config, log, _util)
+	store.NodeStorage = newNodeStorage(config, log, _util)
+	store.PodStorage = newPodStorage(config, log, _util)
+	store.SystemStorage = newSystemStorage(config, log, _util)
+	store.EndpointStorage = newEndpointStorage(config, log, _util)
 	return store, nil
 }
 
-func New(c store.Config) (store.IStore, store.DestroyFunc, error) {
-	return createEtcd3Storage(c)
+func SetLogger() {
+
+}
+
+func New(c store.Config, log logger.ILogger) (store.IStore, store.DestroyFunc, error) {
+	return createEtcd3Storage(c, log)
 }
