@@ -73,9 +73,8 @@ func NodeEventH(w http.ResponseWriter, r *http.Request) {
 		}
 	} else {
 		item.Meta = rq.Meta
-		n.SetMeta(item)
 		item.State = rq.State
-		n.SetState(item)
+		n.Update(item)
 	}
 
 	response, err := v1.NewSpec(item).ToJson()

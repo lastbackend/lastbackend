@@ -121,7 +121,7 @@ func (s *EndpointStorage) Remove(ctx context.Context, name string) error {
 // Watch endpoint model
 func (s *EndpointStorage) Watch(ctx context.Context, endpoint chan string) error {
 
-	s.log.V(debugLevel).Debugf("Storage: Endpoint: watch endpoint")
+	s.log.V(debugLevel).Debug("Storage: Endpoint: watch endpoint")
 
 	const filter = `\b.+` + endpointStorage + `\/(.+)\b`
 	client, destroy, err := s.Client()

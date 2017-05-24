@@ -286,7 +286,7 @@ func (s *PodStorage) Remove(ctx context.Context, namespace string, pod *types.Po
 
 func (s *PodStorage) Watch(ctx context.Context, pod chan *types.Pod) error {
 
-	s.log.V(debugLevel).Debugf("Storage: Pod: watch pod")
+	s.log.V(debugLevel).Debug("Storage: Pod: watch pod")
 
 	const filter = `\b\/` + podStorage + `\/(.+)/(.+)\b`
 	client, destroy, err := s.Client()

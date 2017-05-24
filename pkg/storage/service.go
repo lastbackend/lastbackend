@@ -381,7 +381,7 @@ func (s *ServiceStorage) RemoveByNamespace(ctx context.Context, namespace string
 
 func (s *ServiceStorage) Watch(ctx context.Context, service chan *types.Service) error {
 
-	s.log.V(debugLevel).Debugf("Storage: Service: watch service")
+	s.log.V(debugLevel).Debug("Storage: Service: watch service")
 
 	const filter = `\/` + systemStorage + `\/` + types.KindController + `\/services\/([a-z0-9_-]+):([a-z0-9_-]+)\b`
 	client, destroy, err := s.Client()
@@ -414,7 +414,7 @@ func (s *ServiceStorage) Watch(ctx context.Context, service chan *types.Service)
 
 func (s *ServiceStorage) SpecWatch(ctx context.Context, service chan *types.Service) error {
 
-	s.log.V(debugLevel).Debugf("Storage: Service: watch service by spec")
+	s.log.V(debugLevel).Debug("Storage: Service: watch service by spec")
 
 	const filter = `\b\/` + serviceStorage + `\/(.+)\/(.+)\/specs/.+\b`
 	client, destroy, err := s.Client()
@@ -449,7 +449,7 @@ func (s *ServiceStorage) SpecWatch(ctx context.Context, service chan *types.Serv
 
 func (s *ServiceStorage) PodsWatch(ctx context.Context, service chan *types.Service) error {
 
-	s.log.V(debugLevel).Debugf("Storage: Service: watch service by pod")
+	s.log.V(debugLevel).Debug("Storage: Service: watch service by pod")
 
 	const filter = `\b\/` + podStorage + `\/(.+)/(.+)\b`
 	client, destroy, err := s.Client()
@@ -483,7 +483,7 @@ func (s *ServiceStorage) PodsWatch(ctx context.Context, service chan *types.Serv
 
 func (s *ServiceStorage) BuildsWatch(ctx context.Context, service chan *types.Service) error {
 
-	s.log.V(debugLevel).Debugf("Storage: Service: watch service by build")
+	s.log.V(debugLevel).Debug("Storage: Service: watch service by build")
 
 	const filter = `\b.+` + buildStorage + `\/(.+)\/(.+)\/.+\b`
 	client, destroy, err := s.Client()

@@ -121,8 +121,7 @@ type INode interface {
 	Get(ctx context.Context, hostname string) (*types.Node, error)
 	Insert(ctx context.Context, node *types.Node) error
 
-	UpdateMeta(ctx context.Context, node *types.Node) error
-	UpdateState(ctx context.Context, node *types.Node) error
+	Update(ctx context.Context, node *types.Node) error
 
 	InsertPod(ctx context.Context, meta *types.NodeMeta, pod *types.PodNodeSpec) error
 	UpdatePod(ctx context.Context, meta *types.NodeMeta, pod *types.PodNodeSpec) error

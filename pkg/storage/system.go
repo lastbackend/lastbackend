@@ -153,7 +153,7 @@ func (s *SystemStorage) ElectUpdate(ctx context.Context, process *types.Process)
 
 func (s *SystemStorage) ElectWait(ctx context.Context, process *types.Process, lead chan bool) error {
 
-	s.log.V(debugLevel).Debugf("Storage: System: elect wait process")
+	s.log.V(debugLevel).Debug("Storage: System: elect wait process")
 
 	client, destroy, err := s.Client()
 	if err != nil {

@@ -120,7 +120,7 @@ func (s *NamespaceStorage) Insert(ctx context.Context, namespace *types.Namespac
 // Update namespace model
 func (s *NamespaceStorage) Update(ctx context.Context, namespace *types.Namespace) error {
 
-	s.log.V(debugLevel).Debug("Storage: Namespace: update namespace: %#v", namespace)
+	s.log.V(debugLevel).Debugf("Storage: Namespace: update namespace: %#v", namespace)
 
 	if namespace == nil {
 		err := errors.New("namespace can not be nil")
@@ -153,7 +153,7 @@ func (s *NamespaceStorage) Update(ctx context.Context, namespace *types.Namespac
 // Remove namespace model
 func (s *NamespaceStorage) Remove(ctx context.Context, name string) error {
 
-	s.log.V(debugLevel).Debug("Storage: Namespace: remove namespace: %s", name)
+	s.log.V(debugLevel).Debugf("Storage: Namespace: remove namespace: %s", name)
 
 	if len(name) == 0 {
 		err := errors.New("name can not be empty")
