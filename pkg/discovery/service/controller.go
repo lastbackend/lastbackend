@@ -38,7 +38,7 @@ func (sc *ServiceController) Watch(services chan *types.Service) {
 		stg = sc.context.GetStorage()
 	)
 
-	log.Debug("ServiceController: start watch")
+	log.V(logLevel).Debug("ServiceController: start watch")
 
 	go func() {
 		for {
@@ -47,7 +47,7 @@ func (sc *ServiceController) Watch(services chan *types.Service) {
 				{
 
 					if !sc.active {
-						log.Debug("ServiceController: skip management cause it is in slave mode")
+						log.V(logLevel).Debug("ServiceController: skip management cause it is in slave mode")
 						continue
 					}
 
@@ -60,7 +60,7 @@ func (sc *ServiceController) Watch(services chan *types.Service) {
 
 					if s.State.State == types.StateDestroyed {
 						if err := stg.Endpoint().Remove(context.Get().Background(), endpoint); err != nil {
-							log.Errorf("Endpoint: remove service endpoint error %s", err.Error())
+							log.V(logLevel).Errorf("ServiceController: remove service endpoint error %s", err.Error())
 						}
 						continue
 					}
@@ -74,12 +74,12 @@ func (sc *ServiceController) Watch(services chan *types.Service) {
 
 						node, err := stg.Node().Get(context.Get().Background(), pod.Node.ID)
 						if err != nil {
-							log.Errorf("Endpoint: get node error %s", err.Error())
+							log.V(logLevel).Errorf("ServiceController: get node error %s", err.Error())
 							break
 						}
 
 						if node == nil {
-							log.Errorf("Endpoint: node not found")
+							log.V(logLevel).Errorf("ServiceController: node not found")
 							break
 						}
 
@@ -88,7 +88,7 @@ func (sc *ServiceController) Watch(services chan *types.Service) {
 					}
 
 					if err := stg.Endpoint().Upsert(context.Get().Background(), endpoint, ips); err != nil {
-						log.Errorf("Endpoint: upsert service endpoint error %s", err.Error())
+						log.V(logLevel).Errorf("ServiceController: upsert service endpoint error %s", err.Error())
 						continue
 					}
 				}
@@ -111,10 +111,12 @@ func (sc *ServiceController) Watch(services chan *types.Service) {
 }
 
 func (sc *ServiceController) Pause() {
+	sc.context.GetLogger().Debugf("ServiceController: pause")
 	sc.active = false
 }
 
 func (sc *ServiceController) Resume() {
+	sc.context.GetLogger().Debugf("ServiceController: pause")
 	sc.active = true
 }
 

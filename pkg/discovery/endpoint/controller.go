@@ -39,38 +39,39 @@ func (ec *EndpointController) Watch() {
 		stg = ec.context.GetStorage()
 	)
 
-	log.Debug("EndpointController: start watch")
+	log.V(logLevel).Debug("EndpointController: start watch")
+
 	go func() {
 		for {
 			select {
-			case e := <-ec.endpoints:
+			case name := <-ec.endpoints:
 				{
 
 					if !ec.active {
-						log.Debug("EndpointController: skip management cause it is in slave mode")
+						log.V(logLevel).Debug("EndpointController: skip management cause it is in slave mode")
 						continue
 					}
 
-					i, err := stg.Endpoint().Get(context.Get().Background(), e)
+					i, err := stg.Endpoint().Get(context.Get().Background(), name)
 					if err != nil {
 						if err.Error() == store.ErrKeyNotFound {
-							if err = ec.cache.Del(e); err != nil {
-								log.Debug("endpoints: remove ips from cache")
+							if err = ec.cache.Del(name); err != nil {
+								log.V(logLevel).Debugf("EndpointController: remove endpoint `%s` ips from cache", name)
 							}
 						} else {
-							log.Errorf("endpoints: get ips for domain error %s", err.Error())
+							log.V(logLevel).Errorf("EndpointController: get endpoint `%s` ips for domain err: %s", name, err.Error())
 						}
 						continue
 					}
 
 					ips, err := util.ConvertStringIPToNetIP(i)
 					if err != nil {
-						log.Errorf("endpoints: convert ips to net ips error %s", err.Error())
+						log.V(logLevel).Errorf("EndpointController: convert endpoint `%s` ips to net ips err: %s", name, err.Error())
 						continue
 					}
 
-					if err = ec.cache.Set(e, ips); err != nil {
-						log.Errorf("endpoints: save ips to cache error %s", err.Error())
+					if err = ec.cache.Set(name, ips); err != nil {
+						log.V(logLevel).Errorf("EndpointController: save endpoint `%s` ips to cache err: %s", name, err.Error())
 						continue
 					}
 				}
@@ -82,10 +83,12 @@ func (ec *EndpointController) Watch() {
 }
 
 func (ec *EndpointController) Pause() {
+	ec.context.GetLogger().Debugf("EndpointController: pause")
 	ec.active = false
 }
 
 func (ec *EndpointController) Resume() {
+	ec.context.GetLogger().Debugf("EndpointController: resume")
 	ec.active = true
 }
 
