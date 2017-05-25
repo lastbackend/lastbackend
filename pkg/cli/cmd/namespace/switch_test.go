@@ -17,6 +17,7 @@
 //
 
 package namespace_test
+
 //
 //import (
 //	"encoding/json"

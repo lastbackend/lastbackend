@@ -17,6 +17,7 @@
 //
 
 package namespace_test
+
 //
 //import (
 //	n "github.com/lastbackend/lastbackend/pkg/api/namespace/views/v1"

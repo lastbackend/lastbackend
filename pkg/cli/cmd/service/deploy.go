@@ -41,7 +41,7 @@ type Config struct {
 	//Volumes []string `json:"volumes,omitempty"`
 }
 
-func CreateCmd(name, image, template, url string, replicas int) {
+func DeployCmd(name, image, template, url string, replicas int) {
 
 	var (
 		config *Config
@@ -55,7 +55,7 @@ func CreateCmd(name, image, template, url string, replicas int) {
 		//config.Volumes = volumes
 	}
 
-	err := Create(name, image, template, url, config)
+	err := Deploy(name, image, template, url, config)
 	if err != nil {
 		fmt.Println(err)
 		return
@@ -67,7 +67,7 @@ func CreateCmd(name, image, template, url string, replicas int) {
 	fmt.Println("Service `" + name + "` is succesfully created")
 }
 
-func Create(name, image, template, url string, config *Config) error {
+func Deploy(name, image, template, url string, config *Config) error {
 
 	var (
 		err     error

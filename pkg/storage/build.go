@@ -22,9 +22,9 @@ import (
 	"context"
 	"fmt"
 	"github.com/lastbackend/lastbackend/pkg/common/types"
+	"github.com/lastbackend/lastbackend/pkg/logger"
 	"github.com/lastbackend/lastbackend/pkg/storage/store"
 	"strings"
-	"github.com/lastbackend/lastbackend/pkg/logger"
 )
 
 const buildStorage string = "builds"
@@ -32,7 +32,7 @@ const buildStorage string = "builds"
 // Service Build type for interface in interfaces folder
 type BuildStorage struct {
 	IBuild
-	log logger.ILogger
+	log    logger.ILogger
 	util   IUtil
 	Client func() (store.IStore, store.DestroyFunc, error)
 }

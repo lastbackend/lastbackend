@@ -28,7 +28,7 @@ type Namespace struct {
 
 type NamespaceMeta struct {
 	// Meta name
-	Name        string `json:"name"`
+	Name string `json:"name"`
 	// Meta description
 	Description string `json:"description"`
 	// Meta labels

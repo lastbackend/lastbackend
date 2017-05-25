@@ -120,7 +120,7 @@ func configure(app *cli.Cli) {
 				return
 			}
 
-			s.CreateCmd(*name, *image, *template, *url, *replicas)
+			s.DeployCmd(*name, *image, *template, *url, *replicas)
 		}
 
 	})
