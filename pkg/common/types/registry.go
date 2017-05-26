@@ -22,13 +22,19 @@ import "time"
 
 type Registry struct {
 	// Registry Meta
-	Meta Meta `json:"meta"`
+	Meta RegistryMeta `json:"meta"`
 	// Registry authentication information
 	Auth RegistryAuth `json:"auth,omitempty"`
 	// Meta created time
 	Created time.Time `json:"created"`
 	// Meta updated time
 	Updated time.Time `json:"updated"`
+}
+
+type RegistryMeta struct {
+	Meta
+	// Registry id
+	ID string `json:"id,omitempty"`
 }
 
 type RegistryAuth struct {
