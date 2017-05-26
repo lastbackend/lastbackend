@@ -17,3 +17,5 @@
 //
 
 package service
+
+const logLevel = 2

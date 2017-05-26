@@ -37,7 +37,15 @@ import (
 func main() {
 
 	var (
-		cfg config.Config
+		cfg     config.Config
+		daemons = map[string]func(*config.Config){
+			"api":        api.Daemon,
+			"controller": controller.Daemon,
+			"scheduler":  scheduler.Daemon,
+			"builder":    builder.Daemon,
+			"agent":      agent.Daemon,
+			"discovery":  discovery.Daemon,
+		}
 	)
 
 	app := cli.App("", "Infrastructure management toolkit")
@@ -167,38 +175,15 @@ func main() {
 		)
 
 		if len(*apps) == 0 {
-			go api.Daemon(&cfg)
-			go controller.Daemon(&cfg)
-			go scheduler.Daemon(&cfg)
-			go builder.Daemon(&cfg)
-			go agent.Daemon(&cfg)
-			go discovery.Daemon(&cfg)
+			for app := range daemons {
+				fmt.Println("run: ", app)
+				go daemons[app](&cfg)
+			}
 		} else {
-
 			for _, app := range *apps {
-
-				if app == "api" {
-					go api.Daemon(&cfg)
-				}
-
-				if app == "controller" {
-					go controller.Daemon(&cfg)
-				}
-
-				if app == "scheduler" {
-					go scheduler.Daemon(&cfg)
-				}
-
-				if app == "builder" {
-					go builder.Daemon(&cfg)
-				}
-
-				if app == "agent" {
-					go agent.Daemon(&cfg)
-				}
-
-				if app == "discovery" {
-					go discovery.Daemon(&cfg)
+				if _, ok := daemons[app]; ok {
+					fmt.Println("run: ", app)
+					daemons[app](&cfg)
 				}
 			}
 		}
