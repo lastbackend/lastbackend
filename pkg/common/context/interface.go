@@ -27,7 +27,7 @@ import (
 
 type IContext interface {
 	GetLogger() logger.ILogger
-	GetStorage() *storage.Storage
+	GetStorage() storage.IStorage
 	GetCache() *cache.Cache
 	Background() context.Context
 }

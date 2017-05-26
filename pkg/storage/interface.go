@@ -33,11 +33,14 @@ type IStorage interface {
 	Build() IBuild
 	Hook() IHook
 	Image() IImage
-	Project() INamespace
+	Namespace() INamespace
 	Service() IService
+	Pod() IPod
+	Node() INode
 	System() ISystem
 	Vendor() IVendor
 	Volume() IVolume
+	Endpoint() IEndpoint
 }
 
 type IActivity interface {
