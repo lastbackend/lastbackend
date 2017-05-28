@@ -27,6 +27,8 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/system"
 )
 
+const debugLevel = 2
+
 // watch service state and specs
 // generate pods by specs
 
@@ -72,7 +74,7 @@ func (r *Runtime) Loop() {
 		lead = make(chan bool)
 	)
 
-	log.Debug(" Runtime: Loop")
+	log.V(debugLevel).Debug("Runtime: Loop")
 
 	go func() {
 		for {
@@ -81,21 +83,21 @@ func (r *Runtime) Loop() {
 				{
 					if l {
 						if r.active {
-							log.Debug(" Runtime: is already marked as lead -> skip")
+							log.V(debugLevel).Debug("Runtime: is already marked as lead -> skip")
 							continue
 						}
 						r.active = true
-						log.Debug(" Runtime: Mark as lead")
+						log.V(debugLevel).Debug("Runtime: Mark as lead")
 						r.ec.Resume()
 						r.sc.Resume()
 						r.pc.Resume()
 
 					} else {
 						if !r.active {
-							log.Debug(" Runtime: is already marked as slave -> skip")
+							log.V(debugLevel).Debug("Runtime: is already marked as slave -> skip")
 							continue
 						}
-						log.Debug(" Runtime: Mark as slave")
+						log.V(debugLevel).Debug("Runtime: Mark as slave")
 						r.active = false
 						r.ec.Pause()
 						r.sc.Pause()
@@ -107,6 +109,6 @@ func (r *Runtime) Loop() {
 	}()
 
 	if err := r.process.WaitElected(lead); err != nil {
-		log.Errorf("Runtime: Elect Wait error: %s", err.Error())
+		log.V(debugLevel).Errorf("Runtime: Elect Wait err: %s", err.Error())
 	}
 }

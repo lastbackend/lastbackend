@@ -39,7 +39,8 @@ func (pc *PodController) Watch(services chan *types.Service) {
 		stg = pc.context.GetStorage()
 	)
 
-	log.Debug("PodController: start watch")
+	log.V(logLevel).Debug("PodController: start watch")
+
 	go func() {
 		for {
 			select {
@@ -47,7 +48,7 @@ func (pc *PodController) Watch(services chan *types.Service) {
 				{
 
 					if !pc.active {
-						log.Debug("PodController: skip management cause it is in slave mode")
+						log.V(logLevel).Debug("PodController: skip management cause it is in slave mode")
 						continue
 					}
 
@@ -62,17 +63,17 @@ func (pc *PodController) Watch(services chan *types.Service) {
 					if err != nil {
 						if err.Error() == store.ErrKeyNotFound {
 							if err := stg.Endpoint().Remove(context.Get().Background(), endpoint); err != nil {
-								log.Errorf("Endpoint: remove endpoint error %s", err.Error())
+								log.V(logLevel).Errorf("PodController: remove endpoint err: %s", err.Error())
 							}
 						} else {
-							log.Errorf("Endpoint: get service error %s", err.Error())
+							log.V(logLevel).Errorf("PodController: get service err: %s", err.Error())
 						}
 						continue
 					}
 
 					node, err := stg.Node().Get(context.Get().Background(), p.Node.ID)
 					if err != nil {
-						log.Errorf("Endpoint: get node error %s", err.Error())
+						log.V(logLevel).Errorf("PodController: get node err: %s", err.Error())
 						break
 					}
 
@@ -81,13 +82,13 @@ func (pc *PodController) Watch(services chan *types.Service) {
 
 					if p.Spec.State == types.StateDestroyed {
 						if err := stg.Endpoint().Remove(context.Get().Background(), endpoint); err != nil {
-							log.Errorf("Endpoint: remove endpoint error %s", err.Error())
+							log.V(logLevel).Errorf("PodController: remove endpoint err: %s", err.Error())
 						}
 						continue
 					}
 
 					if err := stg.Endpoint().Upsert(context.Get().Background(), endpoint, []string{node.Meta.IP}); err != nil {
-						log.Errorf("Endpoint: upsert endpoint error %s", err.Error())
+						log.V(logLevel).Errorf("PodController: upsert endpoint err: %s", err.Error())
 						continue
 					}
 

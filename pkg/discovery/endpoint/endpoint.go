@@ -24,6 +24,8 @@ import (
 	"net"
 )
 
+const logLevel = 2
+
 func Get(name string) ([]net.IP, error) {
 
 	var (
@@ -34,7 +36,7 @@ func Get(name string) ([]net.IP, error) {
 		data    = []string{}
 	)
 
-	log.Debugf(`endpoints: Get ip list from cache %s`, name)
+	log.V(logLevel).Debugf("Endpoint: get endpoint `%s` ip list from cache", name)
 
 	var ips = cache.Endpoints().Get(name)
 
@@ -43,11 +45,11 @@ func Get(name string) ([]net.IP, error) {
 	}
 
 	if len(data) == 0 {
-		log.Debugf(`endpoints: Try find to db %s`, name)
+		log.V(logLevel).Debugf("Endpoint: try find endpoint `%s` in storage", name)
 
 		result, err := storage.Endpoint().Get(context.Get().Background(), name)
 		if err != nil {
-			log.Error(err)
+			log.V(logLevel).Errorf("Endpoint: get endpoint `%s` from storage err: %s", name, err.Error())
 			return nil, err
 		}
 
@@ -60,15 +62,16 @@ func Get(name string) ([]net.IP, error) {
 
 	ips, err = util.ConvertStringIPToNetIP(data)
 	if err != nil {
-		log.Errorf("endpoints: convert ips to net ips error %s", err.Error())
+		log.Errorf("Endpoint: convert endpoint `%s` ips to net ips err: %s", name, err.Error())
 		return ips, err
 	}
 
-	log.Debug(`ips`, ips)
+	if err := cache.Endpoints().Set(name, ips); err != nil {
+		log.V(logLevel).Errorf("Endpoint: set endpoint `%s` to cache err: %s", name, err.Error())
+		return nil, err
+	}
 
-	cache.Endpoints().Set(name, ips)
-
-	log.Debugf(`endpoints: Get ip list from cache for %s successfully: %v`, name, data)
+	log.V(logLevel).Debugf("Endpoint: get ip list from cache for `%s` successfully: %v", name, data)
 
 	return ips, nil
 }
@@ -83,11 +86,11 @@ func Update(name string) error {
 		data    = []string{}
 	)
 
-	log.Debugf(`endpoints: Update name %s in cache `, name)
+	log.V(logLevel).Debugf("Endpoint: update name `%s` in cache", name)
 
 	result, err := storage.Endpoint().Get(context.Get().Background(), name)
 	if err != nil {
-		log.Error(err)
+		log.V(logLevel).Errorf("Endpoint: get endpoint `%s` from storage err: %s", name, err.Error())
 		return err
 	}
 
@@ -99,13 +102,16 @@ func Update(name string) error {
 
 	ips, err := util.ConvertStringIPToNetIP(data)
 	if err != nil {
-		log.Error(err)
+		log.V(logLevel).Errorf("Endpoint: convert endpoint `%s` ip tp net.IP err: %s", name, err.Error())
 		return err
 	}
 
-	cache.Endpoints().Set(name, ips)
+	if err := cache.Endpoints().Set(name, ips); err != nil {
+		log.V(logLevel).Errorf("Endpoint: set endpoint `%s` to cache err: %s", name, err.Error())
+		return err
+	}
 
-	log.Debugf(`endpoints: Update name %s in cache successfully `, name)
+	log.V(logLevel).Debugf("Endpoint: update name `%s` in cache successfully ", name)
 
 	return nil
 }
@@ -118,15 +124,15 @@ func Remove(name string) error {
 		cache = context.Get().GetCache()
 	)
 
-	log.Debugf(`endpoints: Remove name %s from cache `, name)
+	log.V(logLevel).Debugf("Endpoint: remove name `%s` from cache", name)
 
 	err = cache.Endpoints().Del(name)
 	if err != nil {
-		log.Error(err)
+		log.V(logLevel).Errorf("Endpoint: delete endpoint `%s` from cache err: %s", name, err.Error())
 		return err
 	}
 
-	log.Debugf(`endpoints: Remove name %s from cache successfully `, name)
+	log.V(logLevel).Debugf("Endpoint: remove name `%s` from cache successfully", name)
 
 	return nil
 }
