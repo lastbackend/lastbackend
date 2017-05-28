@@ -1,0 +1,788 @@
+== Last.Backend API
+
+The LB Origin API exposes operations for managing a Last.Backend cluster, including namespace management, services, image and source builds, HTTP(s) routing, and dns management.
+
+=== Namespace
+
+==== Object structure
+
+*Parameters:*
+
+|===
+|Name |Type |Description 
+
+|name |string |namespace name 
+|description |string |namespace description 
+|created |string |information about when the namespace was created 
+|updated |string |information about when the namespace was last updated 
+|===
+
+[source,json]
+----
+{
+  "meta": {
+    "name": "test-ns",
+    "description": "this description info about this namespace",
+    "created": "2017-01-20T22:13:04.596267094+03:00",
+    "updated": "2017-03-11T10:10:04.506267142+03:00"
+  }
+}
+----
+
+
+==== Create
+
+*Request parameters:*
+
+Body:
+
+* name - namespace unique name
+* description - namespace description info
+
+*Response parameters:*
+
+Status codes:
+
+* 200 – ok
+* 400 – incorrect json
+* 406 – bad parameter
+* 500 – server error
+
+Errors:
+
+* INCORRECT_JSON
+* BAD_PARAMETER_NAME
+* NAME_NOT_UNIQUE
+
+*`REQUEST`*
+[source,json]
+----
+POST /namespace HTTP/1.1
+{
+  "name": "test-ns",
+  "description": "this description info about this namespace"
+}
+----
+
+*`RESPONSE`*
+[source,json]
+----
+HTTP/1.1 200 OK
+Content-Type: application/json
+{
+  "meta": {
+    "name": "test-ns",
+    "description": "this description info about this namespace",
+    "created": "2017-01-20T22:13:04.596267094+03:00",
+    "updated": "2017-03-11T10:10:04.506267142+03:00"
+  }
+}
+----
+
+'''
+
+==== Get
+
+*Request parameters:*
+
+Query:
+
+* namespace - namespace unique name
+
+*Response parameters:*
+
+Status codes:
+
+* 200 – ok
+* 404 – not found
+* 500 – server error
+
+Errors:
+
+* NAMESPACE_NOT_FOUND
+* INTERNAL_SERVER_ERROR
+
+*`REQUEST`*
+[source,bash]
+----
+GET /namespace/{namespace} HTTP/1.1
+----
+
+*`RESPONSE`*
+[source,json]
+----
+HTTP/1.1 200 OK
+Content-Type: application/json
+{
+  "meta": {
+    "name": "test-ns",
+    "description": "this description info about this namespace",
+    "created": "2017-01-20T22:13:04.596267094+03:00",
+    "updated": "2017-03-11T10:10:04.506267142+03:00"
+  }
+}
+----
+
+==== List
+
+*Response parameters:*
+
+Status codes:
+
+* 200 – ok
+* 500 – server error
+
+Errors:
+
+* INTERNAL_SERVER_ERROR
+
+*`REQUEST`*
+[source,bash]
+----
+GET /namespace HTTP/1.1
+----
+
+*`RESPONSE`*
+[source,json]
+----
+HTTP/1.1 200 OK
+Content-Type: application/json
+[{
+   "meta": {
+     "name": "test-ns",
+     "description": "this description info about this namespace",
+     "created": "2017-01-20T22:13:04.596267094+03:00",
+     "updated": "2017-03-11T10:10:04.506267142+03:00"
+   }
+}]
+----
+
+==== Update
+
+*Request parameters:*
+
+Query:
+
+* namespace - namespace unique name
+
+Body:
+
+* description - namespace description info
+
+*Response parameters:*
+
+Status codes:
+
+* 200 – ok
+* 400 – incorrect json
+* 500 – server error
+
+Errors:
+
+* INCORRECT_JSON
+* INTERNAL_SERVER_ERROR
+
+*`REQUEST`*
+[source,json]
+----
+PUT /namespace/{namespace} HTTP/1.1
+{
+  "description": "this new description info about this namespace"
+}
+----
+
+*`RESPONSE`*
+[source,json]
+----
+HTTP/1.1 200 OK
+Content-Type: application/json
+{
+   "meta": {
+     "name": "test-ns",
+     "description": "this new description info about this namespace",
+     "created": "2017-01-20T22:13:04.596267094+03:00",
+     "updated": "2017-05-11T10:10:04.506267142+03:00"
+   }
+ }
+----
+
+'''
+
+==== Remove
+
+*Request parameters:*
+
+Query:
+
+* namespace - namespace unique name
+
+*Response parameters:*
+
+Status codes:
+
+* 200 – ok
+* 404 – not found
+* 500 – server error
+
+Errors:
+
+* NAMESPACE_NOT_FOUND
+* INTERNAL_SERVER_ERROR
+
+*`REQUEST`*
+[source,bash]
+----
+DELETE /namespace/{namespace} HTTP/1.1
+----
+
+*`RESPONSE`*
+[source,bash]
+----
+HTTP/1.1 200 OK
+----
+
+==== Activity (coming soon)
+
+*Request parameters:*
+
+Query:
+
+* namespace - namespace unique name
+
+*Response parameters:*
+
+Status codes:
+
+* 200 – ok
+* 404 – not found
+* 500 – server error
+
+Errors:
+
+* NAMESPACE_NOT_FOUND
+* INTERNAL_SERVER_ERROR
+
+*`REQUEST`*
+[source,bash]
+----
+GET /namespace/{namespace}/activity HTTP/1.1
+----
+
+*`RESPONSE`*
+[source,json]
+----
+HTTP/1.1 200 OK
+Content-Type: application/json
+[]
+----
+
+***
+***
+
+=== Service
+
+==== Object structure
+
+*Parameters:*
+
+|===
+|Name |Type |Description 
+
+|namespace |string |namespace unique identificator 
+|name |string |service name 
+|description |string |service description 
+|replicas |int |pod count in service 
+|===
+
+[source,json]
+----
+{
+  "meta": {
+    "name": "redis",
+    "description": "demo description",
+    "replicas": 1,
+    "namespace": "demo",
+    "created": "2017-05-20T22:43:33.101059484+03:00",
+    "updated": "2017-05-20T22:43:33.101059607+03:00"
+  },
+  "state": {
+    "state": "started",
+    "status": "",
+    "resources": {
+      "memory": 64
+    },
+    "replicas": {
+      "total": 0,
+      "provision": 0,
+      "ready": 0,
+      "running": 1,
+      "created": 0,
+      "stopped": 0,
+      "errored": 0
+    }
+  },
+  "spec": [
+    {
+      "meta": {
+        "id": "e2864bc8-3970-4a81-ab0e-6d6e40811c1b",
+        "parent": "",
+        "revision": 0,
+        "labels": {},
+        "created": "2017-05-20T22:43:33.101063214+03:00",
+        "updated": "2017-05-20T22:43:33.101063261+03:00"
+      },
+      "memory": 64,
+      "command": "",
+      "image": "redis",
+      "env": null,
+      "ports": []
+    }
+  ]
+}
+----
+
+
+==== Create
+
+*Request parameters:*
+
+Query:
+
+* namespace - namespace unique name
+
+Body:
+
+* name - unique name in namespace
+* memory - limit memory size for service
+
+*Response parameters:*
+
+Status codes:
+
+* 200 – ok
+* 400 – incorrect json
+* 404 – not found
+* 406 – bad parameter
+* 500 – server error
+
+Errors:
+
+* TEMPLATE_NOT_FOUND
+* INCORRECT_JSON
+* BAD_PARAMETER_NAME
+* BAD_PARAMETER_NAMESPACE
+* BAD_PARAMETER_TEMPLATE_NAME
+* NAME_NOT_UNIQUE
+* INTERNAL_SERVER_ERROR
+
+*`REQUEST`*
+[source,json]
+----
+POST /namespace/{namespace}/service HTTP/1.1
+{
+  "name": "test-dervice",
+  "description": "demo description",
+  "image": "redis",
+  "spec": {
+    "memory": 64
+  }
+}
+----
+
+*`RESPONSE`*
+[source,json]
+----
+HTTP/1.1 200 OK
+Content-Type: application/json
+{
+  "meta": {
+    "name": "redis",
+    "description": "demo description",
+    "replicas": 1,
+    "namespace": "demo",
+    "created": "2017-05-20T22:43:33.101059484+03:00",
+    "updated": "2017-05-20T22:43:33.101059607+03:00"
+  },
+  "state": {
+    "state": "started",
+    "status": "",
+    "resources": {
+      "memory": 64
+    },
+    "replicas": {
+      "total": 0,
+      "provision": 0,
+      "ready": 0,
+      "running": 1,
+      "created": 0,
+      "stopped": 0,
+      "errored": 0
+    }
+  },
+  "spec": [
+    {
+      "meta": {
+        "id": "e2864bc8-3970-4a81-ab0e-6d6e40811c1b",
+        "parent": "",
+        "revision": 0,
+        "labels": {},
+        "created": "2017-05-20T22:43:33.101063214+03:00",
+        "updated": "2017-05-20T22:43:33.101063261+03:00"
+      },
+      "memory": 64,
+      "command": "",
+      "image": "redis",
+      "env": null,
+      "ports": []
+    }
+  ]
+}
+----
+
+==== Get
+
+*Request parameters:*
+
+Query:
+
+* namespace - namespace unique name
+* service - service unique name
+
+*Response parameters:*
+
+Status codes:
+
+* 200 – ok
+* 404 – not found
+* 500 – server error
+
+Errors:
+
+* SERVICE_NOT_FOUND
+* INTERNAL_SERVER_ERROR
+
+*`REQUEST`*
+[source,bash]
+----
+GET /namespace/{namespace}/service/{service} HTTP/1.1
+----
+
+*`RESPONSE`*
+[source,json]
+----
+HTTP/1.1 200 OK
+Content-Type: application/json
+{
+  "meta": {
+    "name": "redis",
+    "description": "demo description",
+    "replicas": 1,
+    "namespace": "demo",
+    "created": "2017-05-20T22:43:33.101059484+03:00",
+    "updated": "2017-05-20T22:43:33.101059607+03:00"
+  },
+  "state": {
+    "state": "started",
+    "status": "",
+    "resources": {
+      "memory": 64
+    },
+    "replicas": {
+      "total": 0,
+      "provision": 0,
+      "ready": 0,
+      "running": 1,
+      "created": 0,
+      "stopped": 0,
+      "errored": 0
+    }
+  },
+  "spec": [
+    {
+      "meta": {
+        "id": "e2864bc8-3970-4a81-ab0e-6d6e40811c1b",
+        "parent": "",
+        "revision": 0,
+        "labels": {},
+        "created": "2017-05-20T22:43:33.101063214+03:00",
+        "updated": "2017-05-20T22:43:33.101063261+03:00"
+      },
+      "memory": 64,
+      "command": "",
+      "image": "redis",
+      "env": null,
+      "ports": []
+    }
+  ]
+}
+----
+
+==== List
+
+*Response parameters:*
+
+Query:
+
+* namespace - namespace unique name
+
+Status codes:
+
+* 200 – ok
+* 500 – server error
+
+Errors:
+
+* INTERNAL_SERVER_ERROR
+
+*`REQUEST`*
+[source,bash]
+----
+GET /namespace/{namespace}/service HTTP/1.1
+----
+
+*`RESPONSE`*
+[source,json]
+----
+HTTP/1.1 200 OK
+Content-Type: application/json
+[{
+   "meta": {
+     "name": "redis",
+     "description": "demo description",
+     "replicas": 1,
+     "namespace": "demo",
+     "created": "2017-05-20T22:43:33.101059484+03:00",
+     "updated": "2017-05-20T22:43:33.101059607+03:00"
+   },
+   "state": {
+     "state": "started",
+     "status": "",
+     "resources": {
+       "memory": 64
+     },
+     "replicas": {
+       "total": 0,
+       "provision": 0,
+       "ready": 0,
+       "running": 1,
+       "created": 0,
+       "stopped": 0,
+       "errored": 0
+     }
+   },
+   "spec": [
+     {
+       "meta": {
+         "id": "e2864bc8-3970-4a81-ab0e-6d6e40811c1b",
+         "parent": "",
+         "revision": 0,
+         "labels": {},
+         "created": "2017-05-20T22:43:33.101063214+03:00",
+         "updated": "2017-05-20T22:43:33.101063261+03:00"
+       },
+       "memory": 64,
+       "command": "",
+       "image": "redis",
+       "env": null,
+       "ports": []
+     }
+   ]
+}]
+----
+
+==== Update
+
+*Request parameters:*
+
+Query:
+
+* namespace - namespace unique name
+* service - service unique name
+
+Body:
+
+* description - newservice description
+
+*Response parameters:*
+
+Status codes:
+
+* 200 – ok
+* 400 – incorrect json
+* 404 – not found
+* 406 – bad parameter
+* 500 – server error
+
+Errors:
+
+* TEMPLATE_NOT_FOUND
+* INCORRECT_JSON
+* INTERNAL_SERVER_ERROR
+
+*`REQUEST`*
+[source,json]
+----
+PUT /namespace/{namespace}/service/{service} HTTP/1.1
+{
+  "description": "new demo description"
+}
+----
+
+*`RESPONSE`*
+[source,json]
+----
+HTTP/1.1 200 OK
+Content-Type: application/json
+{
+  "meta": {
+    "name": "redis",
+    "description": "new demo description",
+    "replicas": 1,
+    "namespace": "demo",
+    "created": "2017-05-20T22:43:33.101059484+03:00",
+    "updated": "2017-05-20T22:43:33.101059607+03:00"
+  },
+  "state": {
+    "state": "started",
+    "status": "",
+    "resources": {
+      "memory": 64
+    },
+    "replicas": {
+      "total": 0,
+      "provision": 0,
+      "ready": 0,
+      "running": 1,
+      "created": 0,
+      "stopped": 0,
+      "errored": 0
+    }
+  },
+  "spec": [
+    {
+      "meta": {
+        "id": "e2864bc8-3970-4a81-ab0e-6d6e40811c1b",
+        "parent": "",
+        "revision": 0,
+        "labels": {},
+        "created": "2017-05-20T22:43:33.101063214+03:00",
+        "updated": "2017-05-20T22:43:33.101063261+03:00"
+      },
+      "memory": 64,
+      "command": "",
+      "image": "redis",
+      "env": null,
+      "ports": []
+    }
+  ]
+}
+----
+
+==== Remove
+
+*Request parameters:*
+
+Query:
+
+* namespace - namespace unique name
+* service - service unique name
+
+*Response parameters:*
+
+Status codes:
+
+* 200 – ok
+* 404 – not found
+* 500 – server error
+
+Errors:
+
+* SERVICE_NOT_FOUND
+* INTERNAL_SERVER_ERROR
+
+*`REQUEST`*
+[source,bash]
+----
+DELETE /namespace/{namespace}/service/{service} HTTP/1.1
+----
+
+*`RESPONSE`*
+[source,bash]
+----
+HTTP/1.1 200 OK
+----
+
+==== Logs
+
+*Request parameters:*
+
+Query:
+
+* namespace - unique unique name
+* service - unique unique name
+* pod - pod unique name
+* container - container id
+
+*Response parameters:*
+
+Status codes:
+
+* 200 – ok
+* 404 – not found
+* 500 – server error
+
+Errors:
+
+* NAMESPACE_NOT_FOUND
+* SERVICE_NOT_FOUND
+* INTERNAL_SERVER_ERROR
+
+*`REQUEST`*
+[source,bash]
+----
+GET /namespace/{namespace}/service/{service}/logs?pod={pod}&amp;container={container} HTTP/1.1
+----
+
+*`RESPONSE`*
+[source,bash]
+----
+{stream}
+----
+
+
+==== Activity (coming soon)
+
+*Request parameters:*
+
+Query:
+
+* namespace - unique unique name
+* service - unique unique name
+
+*Response parameters:*
+
+Status codes:
+
+* 200 – ok
+* 404 – not found
+* 500 – server error
+
+Errors: 
+
+* NAMESPACE_NOT_FOUND
+* SERVICE_NOT_FOUND
+* INTERNAL_SERVER_ERROR
+
+*`REQUEST`*
+[source,bash]
+----
+GET /namespace/{namespace}/service/{service}/activity HTTP/1.1
+----
+
+*`RESPONSE`*
+[source,json]
+----
+HTTP/1.1 200 OK
+Content-Type: application/json
+[]
+----

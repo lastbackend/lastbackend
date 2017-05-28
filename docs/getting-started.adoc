@@ -1,0 +1,26 @@
+== Getting Started
+
+image:assets/infrastructure.png[Last.Backend]
+
+=== Build
+
+[source,bash]
+----
+$ go get github.com/lastbackend/lastbackend
+$ cd ${GOPATH:-~/go}/src/github.com/lastbackend/lastbackend
+$ make deps && make build && make install
+----
+
+=== Use
+
+==== Daemon
+[source,bash]
+----
+$ lbd
+----
+
+==== Command line client
+[source,bash]
+----
+$ lbc --help
+----

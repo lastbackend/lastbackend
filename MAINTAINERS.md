@@ -5,7 +5,7 @@
 Once you've made pull request and yor changes applied - you automatically becomes project maintainer.
 Please add yourself into this list with your pull request.
 
-## Example
+## List
 
 - undassa
     - Name: Alexander Kaloshin
@@ -14,7 +14,3 @@ Please add yourself into this list with your pull request.
 - unloop
     - Name: Konstantin Pastor
     - Email: konstantin@lastbackend.com
-
-## List
-
-
