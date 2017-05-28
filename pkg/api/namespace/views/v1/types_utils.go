@@ -39,10 +39,16 @@ func (n *Namespace) ToJson() ([]byte, error) {
 }
 
 func (n *Namespace) DrawTable() {
+	var labels []string
+
+	for _, v := range n.Meta.Labels {
+		labels = append(labels, v)
+	}
+
 	table.PrintHorizontal(map[string]interface{}{
 		"NAME":        n.Meta.Name,
 		"DESCRIPTION": n.Meta.Description,
-		"LABELS":      n.Meta.Labels,
+		"LABELS":      labels,
 		"CREATED":     n.Meta.Created.String()[:10],
 		"UPDATED":     n.Meta.Updated.String()[:10],
 	})
@@ -74,10 +80,16 @@ func (ns *NamespaceList) DrawTable() {
 	t.VisibleHeader = true
 
 	for _, n := range *ns {
+		var labels []string
+
+		for _, v := range n.Meta.Labels {
+			labels = append(labels, v)
+		}
+
 		t.AddRow(map[string]interface{}{
 			"NAME":        n.Meta.Name,
 			"DESCRIPTION": n.Meta.Description,
-			"LABELS":      n.Meta.Labels,
+			"LABELS":      labels,
 			"CREATED":     n.Meta.Created.String()[:10],
 			"UPDATED":     n.Meta.Updated.String()[:10],
 		})

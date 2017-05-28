@@ -23,6 +23,7 @@ import (
 	n "github.com/lastbackend/lastbackend/pkg/api/namespace/views/v1"
 	c "github.com/lastbackend/lastbackend/pkg/cli/context"
 	"github.com/lastbackend/lastbackend/pkg/common/errors"
+	"github.com/lastbackend/lastbackend/pkg/common/types"
 	"time"
 )
 
@@ -45,7 +46,11 @@ type Config struct {
 func DeployCmd(name, image, template, url string, replicas int) {
 
 	var (
-		config *Config
+		config  *Config
+
+        // for spinner
+		i       = 0
+		spinner = []string{"/", "|", "\\", "|"}
 	)
 
 	if replicas != 0 /* || len(env) != 0 || len(ports) != 0 || len(volumes) != 0 */ {
@@ -71,11 +76,17 @@ func DeployCmd(name, image, template, url string, replicas int) {
 			return
 		}
 
-		if srv.State.State == "" {
-			break
+		if srv.State.State == types.StateProvision {
+			i++
+			if i == 3 {
+				i = 0
+			}
+
+			fmt.Printf("Waiting for start service %v\r", spinner[i])
+			continue
 		}
 
-		fmt.Printf("Waiting for start service\nService state:%v\r", srv.State.State)
+		break
 	}
 
 	fmt.Println("Service `" + name + "` is succesfully created")
