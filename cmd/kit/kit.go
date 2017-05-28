@@ -79,16 +79,25 @@ func main() {
 	})
 
 	cfg.Registry.Server = app.String(cli.StringOpt{
-		Name: "registry-server", Desc: "Http server port",
-		EnvVar: "REGISTRY-SERVER", Value: "hub.registry.net", HideValue: true,
+		Name:   "registry-server-host", Desc: "Registry server host",
+		EnvVar: "REGISTRY-SERVER-HOST", Value: "hub.registry.net", HideValue: true,
 	})
 	cfg.Registry.Username = app.String(cli.StringOpt{
-		Name: "registry-username", Desc: "Http server port",
+		Name:   "registry-username", Desc: "Registry username",
 		EnvVar: "REGISTRY-USERNAME", Value: "demo", HideValue: true,
 	})
 	cfg.Registry.Password = app.String(cli.StringOpt{
-		Name: "registry-password", Desc: "Http server port",
+		Name:   "registry-password", Desc: "Registry password",
 		EnvVar: "REGISTRY-PASSWORD", Value: "IU1yxkTD", HideValue: true,
+	})
+
+	cfg.ProxyServer.Host = app.String(cli.StringOpt{
+		Name: "http-server-host", Desc: "Proxy server host",
+		EnvVar: "HTTP-SERVER-HOST", Value: "", HideValue: true,
+	})
+	cfg.ProxyServer.Port = app.Int(cli.IntOpt{
+		Name: "proxy-server-port", Desc: "Proxy server port",
+		EnvVar: "PROXY-SERVER-PORT", Value: 2966, HideValue: true,
 	})
 
 	cfg.Etcd.Endpoints = app.Strings(cli.StringsOpt{

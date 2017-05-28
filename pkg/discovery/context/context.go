@@ -33,7 +33,7 @@ type Context struct {
 	_c.IContext
 
 	logger  logger.ILogger
-	storage *storage.Storage
+	storage storage.IStorage
 	cache   *cache.Cache
 	config  *config.Config
 }
@@ -58,11 +58,11 @@ func (c *Context) GetConfig() *config.Config {
 	return c.config
 }
 
-func (c *Context) SetStorage(storage *storage.Storage) {
+func (c *Context) SetStorage(storage storage.IStorage) {
 	c.storage = storage
 }
 
-func (c *Context) GetStorage() *storage.Storage {
+func (c *Context) GetStorage() storage.IStorage {
 	return c.storage
 }
 
