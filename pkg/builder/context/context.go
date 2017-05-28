@@ -36,7 +36,7 @@ type ctx struct {
 	_c.IContext
 
 	logger  logger.ILogger
-	storage *storage.Storage
+	storage storage.IStorage
 	config  *config.Config
 }
 
@@ -60,11 +60,11 @@ func (c *ctx) GetConfig() *config.Config {
 	return c.config
 }
 
-func (c *ctx) SetStorage(storage *storage.Storage) {
+func (c *ctx) SetStorage(storage storage.IStorage) {
 	c.storage = storage
 }
 
-func (c *ctx) GetStorage() *storage.Storage {
+func (c *ctx) GetStorage() storage.IStorage {
 	return c.storage
 }
 
