@@ -29,3 +29,6 @@ _testmain.go
 *.iml
 *.srl
 
+build
+docs/output
+coverage.txt
