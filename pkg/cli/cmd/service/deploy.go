@@ -23,6 +23,7 @@ import (
 	n "github.com/lastbackend/lastbackend/pkg/api/namespace/views/v1"
 	c "github.com/lastbackend/lastbackend/pkg/cli/context"
 	"github.com/lastbackend/lastbackend/pkg/common/errors"
+	"time"
 )
 
 type createS struct {
@@ -61,8 +62,21 @@ func DeployCmd(name, image, template, url string, replicas int) {
 		return
 	}
 
-	// TODO: Waiting for start service
-	// TODO: Show spinner
+	// spinner
+	// waiting for start service
+	for range time.Tick(time.Millisecond * 500) {
+		srv, _, err := Inspect(name)
+		if err != nil {
+			fmt.Println(err)
+			return
+		}
+
+		if srv.State.State == "" {
+			break
+		}
+
+		fmt.Printf("Waiting for start service\nService state:%v\r", srv.State.State)
+	}
 
 	fmt.Println("Service `" + name + "` is succesfully created")
 }
