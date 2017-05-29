@@ -25,6 +25,7 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/common/errors"
 	"github.com/lastbackend/lastbackend/pkg/common/types"
 	"time"
+    "log"
 )
 
 type createS struct {
@@ -75,6 +76,8 @@ func DeployCmd(name, image, template, url string, replicas int) {
 			fmt.Println(err)
 			return
 		}
+
+        log.Println(srv)
 
 		if srv.State.State == types.StateProvision {
 			i++

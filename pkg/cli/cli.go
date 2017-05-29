@@ -107,10 +107,10 @@ func configure(app *cli.Cli) {
 		var url = c.String(cli.StringArg{Name: "URL", Value: "", Desc: "git repo url", HideValue: true})
 		var name = c.String(cli.StringOpt{Name: "n name", Desc: "service name", HideValue: true})
 		var image = c.String(cli.StringOpt{Name: "i image", Desc: "docker image name", HideValue: true})
-		var template = c.String(cli.StringOpt{Name: "t tempalte", Desc: "tempalte name", HideValue: true})
+		var template = c.String(cli.StringOpt{Name: "t template", Desc: "tempalte name", HideValue: true})
 
 		var replicas = c.Int(cli.IntOpt{Name: "replicas", Desc: "service replicas", HideValue: true})
-		//var env = c.Strings(cli.StringsOpt{Name: "e", Desc: "enviroment", HideValue:true})
+		//var env = c.Strings(cli.StringsOpt{Name: "e", Desc: "environment", HideValue:true})
 		//var ports = c.Strings(cli.StringsOpt{Name: "p", Desc: "ports", HideValue:true})
 		//var volumes = c.Strings(cli.StringsOpt{Name: "v", Desc: "volumes", HideValue:true})
 

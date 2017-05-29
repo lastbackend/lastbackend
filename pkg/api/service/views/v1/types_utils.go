@@ -200,7 +200,7 @@ func (obj *ServiceList) ToJson() ([]byte, error) {
 }
 
 func (sl *ServiceList) DrawTable(namespaceName string) {
-	t := table.New([]string{"NAME", "DESCRIPTION", "REPLICAS", "CREATED", "UPDATED"})
+	t := table.New([]string{"NAME", "DESCRIPTION", "REPLICAS", "STATE", "CREATED", "UPDATED"})
 	t.VisibleHeader = true
 
 	fmt.Println("NAMESPACE: ", namespaceName)
@@ -209,6 +209,7 @@ func (sl *ServiceList) DrawTable(namespaceName string) {
 			"NAME":        s.Meta.Name,
 			"DESCRIPTION": s.Meta.Description,
 			"REPLICAS":    s.Meta.Replicas,
+			"STATE":       s.State.State,
 			"CREATED":     s.Meta.Created.String()[:10],
 			"UPDATED":     s.Meta.Updated.String()[:10],
 		})
