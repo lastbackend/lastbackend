@@ -23,6 +23,6 @@ deploy:
   - provider: pages
     local_dir: docs/output
     skip_cleanup: true
-    github_token: $GITHUB_TOKEN # Set in travis-ci.org dashboard
+    github_token: $GH_TOKEN # Set in travis-ci.org dashboard
     on:
       branch: master
