@@ -113,4 +113,5 @@ func Daemon(_cfg *_cfg.Config) {
 
 	log.Info("Handle SIGINT and SIGTERM.")
 
+	return
 }

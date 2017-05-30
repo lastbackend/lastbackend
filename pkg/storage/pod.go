@@ -34,7 +34,6 @@ const podStorage = "pods"
 type PodStorage struct {
 	IPod
 	log    logger.ILogger
-	util   IUtil
 	Client func() (store.IStore, store.DestroyFunc, error)
 }
 
@@ -317,10 +316,9 @@ func (s *PodStorage) Watch(ctx context.Context, pod chan *types.Pod) error {
 	return nil
 }
 
-func newPodStorage(config store.Config, log logger.ILogger, util IUtil) *PodStorage {
+func newPodStorage(config store.Config, log logger.ILogger) *PodStorage {
 	s := new(PodStorage)
 	s.log = log
-	s.util = util
 	s.Client = func() (store.IStore, store.DestroyFunc, error) {
 		return New(config, log)
 	}

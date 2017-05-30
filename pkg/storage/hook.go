@@ -32,7 +32,6 @@ const hookStorage string = "hooks"
 type HookStorage struct {
 	IHook
 	log    logger.ILogger
-	util   IUtil
 	Client func() (store.IStore, store.DestroyFunc, error)
 }
 
@@ -55,7 +54,7 @@ func (s *HookStorage) Get(ctx context.Context, id string) (*types.Hook, error) {
 	defer destroy()
 
 	hook := new(types.Hook)
-	keyMeta := s.util.Key(ctx, hookStorage, id)
+	keyMeta := keyCreate(hookStorage, id)
 	if err := client.Get(ctx, keyMeta, &hook); err != nil {
 		s.log.V(logLevel).Errorf("Storage: Hook: get hook meta err: %s", err.Error())
 		return nil, err
@@ -82,7 +81,7 @@ func (s *HookStorage) Insert(ctx context.Context, hook *types.Hook) error {
 	}
 	defer destroy()
 
-	key := s.util.Key(ctx, hookStorage, hook.Meta.ID)
+	key := keyCreate(hookStorage, hook.Meta.ID)
 	if err := client.Create(ctx, key, hook, nil, 0); err != nil {
 		s.log.V(logLevel).Errorf("Storage: Hook: create hook err: %s", err.Error())
 		return err
@@ -117,10 +116,9 @@ func (s *HookStorage) Remove(ctx context.Context, id string) error {
 	return nil
 }
 
-func newHookStorage(config store.Config, log logger.ILogger, util IUtil) *HookStorage {
+func newHookStorage(config store.Config, log logger.ILogger) *HookStorage {
 	s := new(HookStorage)
 	s.log = log
-	s.util = util
 	s.Client = func() (store.IStore, store.DestroyFunc, error) {
 		return New(config, log)
 	}

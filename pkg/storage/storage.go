@@ -26,9 +26,6 @@ import (
 
 const logLevel = 5
 
-// Util helpers
-var _util IUtil
-
 type Storage struct {
 	*VendorStorage
 	*NamespaceStorage
@@ -42,10 +39,6 @@ type Storage struct {
 	*PodStorage
 	*SystemStorage
 	*EndpointStorage
-}
-
-func SetUtil(u IUtil) {
-	_util = u
 }
 
 func (s *Storage) Vendor() IVendor {
@@ -137,31 +130,20 @@ func keyCreate(args ...string) string {
 }
 
 func Get(config store.Config, log logger.ILogger) (*Storage, error) {
-
-	var store = new(Storage)
-
-	if _util == nil {
-		// Set default util helpers
-		_util = new(util)
-	}
-
-	store.VendorStorage = newVendorStorage(config, log, _util)
-	store.NamespaceStorage = newNamespaceStorage(config, log, _util)
-	store.ServiceStorage = newServiceStorage(config, log, _util)
-	store.ImageStorage = newImageStorage(config, log, _util)
-	store.BuildStorage = newBuildStorage(config, log, _util)
-	store.HookStorage = newHookStorage(config, log, _util)
-	store.VolumeStorage = newVolumeStorage(config, log, _util)
-	store.ActivityStorage = newActivityStorage(config, log, _util)
-	store.NodeStorage = newNodeStorage(config, log, _util)
-	store.PodStorage = newPodStorage(config, log, _util)
-	store.SystemStorage = newSystemStorage(config, log, _util)
-	store.EndpointStorage = newEndpointStorage(config, log, _util)
-	return store, nil
-}
-
-func SetLogger() {
-
+	s := new(Storage)
+	s.VendorStorage = newVendorStorage(config, log)
+	s.NamespaceStorage = newNamespaceStorage(config, log)
+	s.ServiceStorage = newServiceStorage(config, log)
+	s.ImageStorage = newImageStorage(config, log)
+	s.BuildStorage = newBuildStorage(config, log)
+	s.HookStorage = newHookStorage(config, log)
+	s.VolumeStorage = newVolumeStorage(config, log)
+	s.ActivityStorage = newActivityStorage(config, log)
+	s.NodeStorage = newNodeStorage(config, log)
+	s.PodStorage = newPodStorage(config, log)
+	s.SystemStorage = newSystemStorage(config, log)
+	s.EndpointStorage = newEndpointStorage(config, log)
+	return s, nil
 }
 
 func New(c store.Config, log logger.ILogger) (store.IStore, store.DestroyFunc, error) {

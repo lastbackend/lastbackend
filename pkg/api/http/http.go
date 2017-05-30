@@ -33,15 +33,6 @@ import (
 
 const logLevel = 2
 
-// Extends routes variable
-var routes = make([]http.Route, 0)
-
-func AddRoutes(r ...[]http.Route) {
-	for i := range r {
-		routes = append(routes, r[i]...)
-	}
-}
-
 func Listen(host string, port int) error {
 
 	var (
@@ -79,11 +70,6 @@ func Listen(host string, port int) error {
 	}
 
 	for _, route := range hook.Routes {
-		log.V(logLevel).Debugf("Init route: %s", route.Path)
-		router.Handle(route.Path, http.Handle(route.Handler, route.Middleware...)).Methods(route.Method)
-	}
-
-	for _, route := range routes {
 		log.V(logLevel).Debugf("Init route: %s", route.Path)
 		router.Handle(route.Path, http.Handle(route.Handler, route.Middleware...)).Methods(route.Method)
 	}

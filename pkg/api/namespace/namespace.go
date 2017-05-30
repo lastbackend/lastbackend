@@ -21,12 +21,16 @@ package namespace
 import (
 	"context"
 	ctx "github.com/lastbackend/lastbackend/pkg/api/context"
+	ins "github.com/lastbackend/lastbackend/pkg/api/namespace/interfaces"
 	"github.com/lastbackend/lastbackend/pkg/api/namespace/routes/request"
+	u "github.com/lastbackend/lastbackend/pkg/api/namespace/utils"
 	"github.com/lastbackend/lastbackend/pkg/common/types"
 	"github.com/lastbackend/lastbackend/pkg/storage/store"
 )
 
 const logLevel = 3
+
+var utils ins.IUtil = new(u.Util)
 
 type namespace struct {
 	Context context.Context
@@ -34,6 +38,10 @@ type namespace struct {
 
 func New(ctx context.Context) *namespace {
 	return &namespace{ctx}
+}
+
+func SetUtils(u ins.IUtil) {
+	utils = u
 }
 
 func (ns *namespace) List() (types.NamespaceList, error) {
@@ -111,7 +119,7 @@ func (ns *namespace) Create(rq *request.RequestNamespaceCreateS) (*types.Namespa
 
 	var nsp = types.Namespace{}
 	nsp.Meta.SetDefault()
-	nsp.Meta.Name = rq.Name
+	nsp.Meta.Name = utils.NameCreate(ns.Context, rq.Name)
 	nsp.Meta.Description = rq.Description
 
 	if err = storage.Namespace().Insert(ns.Context, &nsp); err != nil {
