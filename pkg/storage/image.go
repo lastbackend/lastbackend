@@ -38,11 +38,11 @@ type ImageStorage struct {
 
 func (s *ImageStorage) Get(ctx context.Context, name string) (*types.Image, error) {
 
-	s.log.V(logLevel).Debugf("Storage: Image: get by name: %s", name)
+	s.log.V(logLevel).Debugf("Storage: Image: get image by name: %s", name)
 
 	if len(name) == 0 {
 		err := errors.New("name can not be empty")
-		s.log.V(logLevel).Errorf("Storage: Image: get namespace err: %s", err.Error())
+		s.log.V(logLevel).Errorf("Storage: Image: get image err: %s", err.Error())
 		return nil, err
 	}
 

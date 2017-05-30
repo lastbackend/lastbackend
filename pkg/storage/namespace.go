@@ -55,11 +55,12 @@ func (s *NamespaceStorage) GetByName(ctx context.Context, name string) (*types.N
 	defer destroy()
 
 	namespace := new(types.Namespace)
-	keyMeta := keyCreate(namespaceStorage, namespace.Meta.Name, "meta")
+	keyMeta := keyCreate(namespaceStorage, name, "meta")
 	if err := client.Get(ctx, keyMeta, &namespace.Meta); err != nil {
 		s.log.V(logLevel).Errorf("Storage: Namespace: get namespace `%s` meta err: %s", name, err.Error())
 		return nil, err
 	}
+
 	return namespace, nil
 }
 

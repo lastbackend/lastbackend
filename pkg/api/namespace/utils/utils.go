@@ -28,7 +28,7 @@ type Util struct {
 	ins.IUtil
 }
 
-const sep = ":"
+const sep = "-"
 
 func (Util) NameCreate(ctx context.Context, pattern ...string) string {
 	return strings.Join(pattern, sep)
