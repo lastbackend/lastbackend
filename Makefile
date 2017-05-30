@@ -16,7 +16,7 @@ deps:
 
 test:
 	@echo "Testing Last.Backend"
-	@sh ./test/test.sh
+	@sh ./hack/run-coverage.sh
 
 build:
 	echo "Pre-building configuration"

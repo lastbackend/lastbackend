@@ -1,0 +1,117 @@
+== Last.Backend CLI
+
+The LB CLI exposes commands for managing your services, as well as lower level tools to interact with each component of your system.
+This topic guides you through getting started with the CLI, including installation and logging in to create your first namespace.
+
+=== Namespace
+
+==== Creating new namespace
+
+You can create a new namespace using the next command:
+[source,bash]
+----
+$ lbc namespace <namespace_name> --description="<description>" create
+----
+
+==== View a namespace info
+
+To get a namespace info:
+[source,bash]
+----
+$ lbc namespace <namespace_name> inspect
+Name demo
+Created 2016-11-28
+Updated 2016-11-28
+----
+
+==== Viewing namespaces
+
+When viewing namespaces, you are restricted to seeing only the namespaces you have access to view based on the authorization policy.
+To view a namespaces info:
+[source,bash]
+----
+$ lbc namespaces
+Name          Created     Updated
+demo          2016-11-28  2016-11-28
+test-namespace  2016-11-26  2016-11-26
+----
+
+==== Switch namespace
+
+To switch a namespace:
+[source,bash]
+----
+$ lbc namespace <namespace_name> switch
+The namespace <namespace_name> was selected as the current
+----
+
+==== Current namespace
+
+To view current a namespace:
+[source,bash]
+----
+$ lbc namespace current
+Name  Created     Updated
+test  2016-11-28  2016-11-28
+----
+
+==== Update namespace
+
+To update a namespace:
+[source,bash]
+----
+$ lbc namespace <namespace_name> update --desc=<new_description>
+Successful
+----
+
+==== Deleting a namespace
+
+When you delete a namespace, the server updates the namespace status to Terminating from Active. The server then clears all content from a namespace that is Terminating before finally removing the namespace.
+While a namespace is in Terminating status, a user cannot add new content to the namespace.
+To delete a namespace:
+[source,bash]
+----
+$ lbc namespace <namespace_name> remove
+----
+
+=== Service
+
+==== View a service info
+
+To view a service info:
+[source,bash]
+----
+$ lbc service <namespace_name> inspect
+Name  Created     Updated
+demo  2016-11-29  2016-11-30
+----
+
+==== Viewing services
+
+When viewing services, you are restricted to seeing only the services you have access to view based on the authorization policy and the selected namespace.
+To view a services info:
+[source,bash]
+----
+$ lbc services
+Name  Created     Updated
+demo  2016-11-29  2016-11-30
+----
+
+==== Deleting a service
+
+When you delete a service, the server updates the service status to Terminating from Active. The server then clears all content from a service that is Terminating before finally removing the service.
+To delete a service:
+[source,bash]
+----
+$ lbc service <namespace_name> remove
+----
+
+==== Deploy a service
+
+Deploy service(s) from template or from git repo url
+
+To deploy:
+[source,bash]
+----
+$ lbc deploy redis
+----
