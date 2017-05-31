@@ -16,18 +16,12 @@
 // from Last.Backend LLC.
 //
 
-package utils
+package interfaces
 
 import (
-	"github.com/gorilla/mux"
-	"net/http"
 	"context"
 )
 
-func Vars(r *http.Request) map[string]string {
-	return mux.Vars(r)
-}
-
-func SetContext(r *http.Request, name string, val interface{}) *http.Request {
-	return r.WithContext(context.WithValue(r.Context(), name, val))
+type IUtil interface {
+	NameCreate(ctx context.Context, pattern ...string) string
 }

@@ -33,17 +33,16 @@ const imageStorage string = "images"
 type ImageStorage struct {
 	IImage
 	log    logger.ILogger
-	util   IUtil
 	Client func() (store.IStore, store.DestroyFunc, error)
 }
 
 func (s *ImageStorage) Get(ctx context.Context, name string) (*types.Image, error) {
 
-	s.log.V(logLevel).Debugf("Storage: Image: get by name: %s", name)
+	s.log.V(logLevel).Debugf("Storage: Image: get image by name: %s", name)
 
 	if len(name) == 0 {
 		err := errors.New("name can not be empty")
-		s.log.V(logLevel).Errorf("Storage: Image: get namespace err: %s", err.Error())
+		s.log.V(logLevel).Errorf("Storage: Image: get image err: %s", err.Error())
 		return nil, err
 	}
 
@@ -55,13 +54,13 @@ func (s *ImageStorage) Get(ctx context.Context, name string) (*types.Image, erro
 	defer destroy()
 
 	image := new(types.Image)
-	keyMeta := s.util.Key(ctx, imageStorage, strings.Replace(name, "/", ":", -1), "meta")
+	keyMeta := keyCreate(imageStorage, strings.Replace(name, "/", ":", -1), "meta")
 	if err := client.Get(ctx, keyMeta, &image.Meta); err != nil {
 		s.log.V(logLevel).Errorf("Storage: Pod: get image meta err: %s", err.Error())
 		return nil, err
 	}
 
-	keySource := s.util.Key(ctx, imageStorage, image.Name, "source")
+	keySource := keyCreate(imageStorage, image.Name, "source")
 	if err := client.Get(ctx, keySource, &image.Source); err != nil {
 		s.log.V(logLevel).Errorf("Storage: Pod: get image source err: %s", err.Error())
 		return nil, err
@@ -90,13 +89,13 @@ func (s *ImageStorage) Insert(ctx context.Context, image *types.Image) error {
 
 	tx := client.Begin(ctx)
 
-	keyMeta := s.util.Key(ctx, imageStorage, strings.Replace(image.Meta.Name, "/", ":", -1), "meta")
+	keyMeta := keyCreate(imageStorage, strings.Replace(image.Meta.Name, "/", ":", -1), "meta")
 	if err := tx.Create(keyMeta, &image.Meta, 0); err != nil {
 		s.log.V(logLevel).Errorf("Storage: Image: create image meta err: %s", err.Error())
 		return err
 	}
 
-	keySource := s.util.Key(ctx, imageStorage, strings.Replace(image.Meta.Name, "/", ":", -1), "source")
+	keySource := keyCreate(imageStorage, strings.Replace(image.Meta.Name, "/", ":", -1), "source")
 	if err := tx.Create(keySource, &image.Source, 0); err != nil {
 		s.log.V(logLevel).Errorf("Storage: Image: create image source err: %s", err.Error())
 		return err
@@ -124,10 +123,9 @@ func (s *ImageStorage) Update(ctx context.Context, image *types.Image) error {
 	return nil
 }
 
-func newImageStorage(config store.Config, log logger.ILogger, util IUtil) *ImageStorage {
+func newImageStorage(config store.Config, log logger.ILogger) *ImageStorage {
 	s := new(ImageStorage)
 	s.log = log
-	s.util = util
 	s.Client = func() (store.IStore, store.DestroyFunc, error) {
 		return New(config, log)
 	}

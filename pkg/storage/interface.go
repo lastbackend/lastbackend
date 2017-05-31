@@ -24,10 +24,6 @@ import (
 	"golang.org/x/oauth2"
 )
 
-type IUtil interface {
-	Key(ctx context.Context, pattern ...string) string
-}
-
 type IStorage interface {
 	Activity() IActivity
 	Build() IBuild

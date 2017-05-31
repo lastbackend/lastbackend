@@ -37,7 +37,6 @@ const (
 type NodeStorage struct {
 	INode
 	log    logger.ILogger
-	util   IUtil
 	Client func() (store.IStore, store.DestroyFunc, error)
 }
 
@@ -420,10 +419,9 @@ func (s *NodeStorage) Watch(ctx context.Context, node chan *types.Node) error {
 	return nil
 }
 
-func newNodeStorage(config store.Config, log logger.ILogger, util IUtil) *NodeStorage {
+func newNodeStorage(config store.Config, log logger.ILogger) *NodeStorage {
 	s := new(NodeStorage)
 	s.log = log
-	s.util = util
 	s.Client = func() (store.IStore, store.DestroyFunc, error) {
 		return New(config, log)
 	}

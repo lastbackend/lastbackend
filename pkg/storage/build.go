@@ -33,7 +33,6 @@ const buildStorage string = "builds"
 type BuildStorage struct {
 	IBuild
 	log logger.ILogger
-	util   IUtil
 	Client func() (store.IStore, store.DestroyFunc, error)
 }
 
@@ -86,9 +85,8 @@ func (s *BuildStorage) Insert(ctx context.Context, imageName string, build *type
 	return nil
 }
 
-func newBuildStorage(config store.Config, log logger.ILogger, util IUtil) *BuildStorage {
+func newBuildStorage(config store.Config, log logger.ILogger) *BuildStorage {
 	s := new(BuildStorage)
-	s.util = util
 	s.Client = func() (store.IStore, store.DestroyFunc, error) {
 		return New(config, log)
 	}

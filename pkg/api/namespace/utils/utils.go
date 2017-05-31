@@ -16,19 +16,20 @@
 // from Last.Backend LLC.
 //
 
-package storage
+package utils
 
 import (
 	"context"
+	ins "github.com/lastbackend/lastbackend/pkg/api/namespace/interfaces"
 	"strings"
 )
 
-type util struct {
-	IUtil
+type Util struct {
+	ins.IUtil
 }
 
-const sep = "/"
+const sep = "-"
 
-func (util) Key(ctx context.Context, pattern ...string) string {
-	return strings.Join([]string{sep, strings.Join(pattern, sep)}, "")
+func (Util) NameCreate(ctx context.Context, pattern ...string) string {
+	return strings.Join(pattern, sep)
 }

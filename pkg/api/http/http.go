@@ -34,59 +34,35 @@ import (
 const logLevel = 2
 
 // Extends routes variable
-var routes = make([]http.Route, 0)
+var Routes = make([]http.Route, 0)
 
 func AddRoutes(r ...[]http.Route) {
 	for i := range r {
-		routes = append(routes, r[i]...)
+		Routes = append(Routes, r[i]...)
 	}
+}
+
+func init() {
+	AddRoutes(events.Routes)
+	AddRoutes(hook.Routes)
+	AddRoutes(namespace.Routes)
+	AddRoutes(node.Routes)
+	AddRoutes(service.Routes)
+	AddRoutes(vendors.Routes)
 }
 
 func Listen(host string, port int) error {
 
-	var (
-		log = context.Get().GetLogger()
-	)
+	log := context.Get().GetLogger()
+	log.V(logLevel).Debug("HTTP: listen HTTP server")
 
-	log.V(logLevel).Debug("Listen HTTP server")
+	r := mux.NewRouter()
+	r.Methods("OPTIONS").HandlerFunc(http.Headers)
 
-	router := mux.NewRouter()
-	router.Methods("OPTIONS").HandlerFunc(http.Headers)
-
-	for _, route := range namespace.Routes {
-		log.V(logLevel).Debugf("Init route: %s", route.Path)
-		router.Handle(route.Path, http.Handle(route.Handler, route.Middleware...)).Methods(route.Method)
+	for _, route := range Routes {
+		log.V(logLevel).Debugf("HTTP: init route: %s", route.Path)
+		r.Handle(route.Path, http.Handle(route.Handler, route.Middleware...)).Methods(route.Method)
 	}
 
-	for _, route := range service.Routes {
-		log.V(logLevel).Debugf("Init route: %s", route.Path)
-		router.Handle(route.Path, http.Handle(route.Handler, route.Middleware...)).Methods(route.Method)
-	}
-
-	for _, route := range vendors.Routes {
-		log.V(logLevel).Debugf("Init route: %s", route.Path)
-		router.Handle(route.Path, http.Handle(route.Handler, route.Middleware...)).Methods(route.Method)
-	}
-
-	for _, route := range node.Routes {
-		log.V(logLevel).Debugf("Init route: %s", route.Path)
-		router.Handle(route.Path, http.Handle(route.Handler, route.Middleware...)).Methods(route.Method)
-	}
-
-	for _, route := range events.Routes {
-		log.V(logLevel).Debugf("Init route: %s", route.Path)
-		router.Handle(route.Path, http.Handle(route.Handler, route.Middleware...)).Methods(route.Method)
-	}
-
-	for _, route := range hook.Routes {
-		log.V(logLevel).Debugf("Init route: %s", route.Path)
-		router.Handle(route.Path, http.Handle(route.Handler, route.Middleware...)).Methods(route.Method)
-	}
-
-	for _, route := range routes {
-		log.V(logLevel).Debugf("Init route: %s", route.Path)
-		router.Handle(route.Path, http.Handle(route.Handler, route.Middleware...)).Methods(route.Method)
-	}
-
-	return http.Listen(host, port, router)
+	return http.Listen(host, port, r)
 }

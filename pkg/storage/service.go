@@ -36,7 +36,6 @@ const serviceStorage string = "services"
 type ServiceStorage struct {
 	IService
 	log    logger.ILogger
-	util   IUtil
 	Client func() (store.IStore, store.DestroyFunc, error)
 }
 
@@ -371,7 +370,7 @@ func (s *ServiceStorage) Remove(ctx context.Context, service *types.Service) err
 	keyService := keyCreate(serviceStorage, service.Meta.Namespace, service.Meta.Name)
 	tx.DeleteDir(keyService)
 
-	keyServiceController := s.util.Key(ctx, systemStorage, types.KindController, "services", fmt.Sprintf("%s:%s", service.Meta.Namespace, service.Meta.Name))
+	keyServiceController := keyCreate(systemStorage, types.KindController, "services", fmt.Sprintf("%s:%s", service.Meta.Namespace, service.Meta.Name))
 	tx.Delete(keyServiceController)
 
 	if err := tx.Commit(); err != nil {
@@ -601,7 +600,7 @@ func (s *ServiceStorage) updateState(ctx context.Context, service *types.Service
 		return err
 	}
 
-	keyServiceController := s.util.Key(ctx, systemStorage, types.KindController, "services", fmt.Sprintf("%s:%s", service.Meta.Namespace, service.Meta.Name))
+	keyServiceController := keyCreate(systemStorage, types.KindController, "services", fmt.Sprintf("%s:%s", service.Meta.Namespace, service.Meta.Name))
 	if err := client.Upsert(ctx, keyServiceController, &service.State.State, nil, 0); err != nil {
 		s.log.V(logLevel).Errorf("Storage: Service: upsert services controller err: %s", err.Error())
 		return err
@@ -610,10 +609,9 @@ func (s *ServiceStorage) updateState(ctx context.Context, service *types.Service
 	return nil
 }
 
-func newServiceStorage(config store.Config, log logger.ILogger, util IUtil) *ServiceStorage {
+func newServiceStorage(config store.Config, log logger.ILogger) *ServiceStorage {
 	s := new(ServiceStorage)
 	s.log = log
-	s.util = util
 	s.Client = func() (store.IStore, store.DestroyFunc, error) {
 		return New(config, log)
 	}
