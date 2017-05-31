@@ -29,6 +29,7 @@ _testmain.go
 *.iml
 *.srl
 
-build
-docs/output
+build/
+vendor/*/
+docs/output/
 coverage.txt
