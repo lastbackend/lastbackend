@@ -14,10 +14,14 @@ script:
   - make build
 
 after_success:
-- ./hack/build-docs.sh
+  - make docs
 
 notifications:
   slack: lastbackend:0e7apir97phOrZbD12RJ9v0P
+
+cache:
+  directories:
+    - vendor
 
 deploy:
   - provider: pages
