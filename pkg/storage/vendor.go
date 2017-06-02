@@ -33,7 +33,6 @@ const vendorStorage = "vendors"
 type VendorStorage struct {
 	IVendor
 	log    logger.ILogger
-	util   IUtil
 	Client func() (store.IStore, store.DestroyFunc, error)
 }
 
@@ -56,7 +55,7 @@ func (s *VendorStorage) Insert(ctx context.Context, owner, name, host, serviceID
 	}
 	defer destroy()
 
-	key := s.util.Key(ctx, vendorStorage, name)
+	key := keyCreate(vendorStorage, name)
 	if err := client.Upsert(ctx, key, vm, nil, 0); err != nil {
 		s.log.V(logLevel).Errorf("Storage: Vendor: upsert vendor info err: %s", err.Error())
 		return err
@@ -82,7 +81,7 @@ func (s *VendorStorage) Get(ctx context.Context, name string) (*types.Vendor, er
 	defer destroy()
 
 	vendor := new(types.Vendor)
-	key := s.util.Key(ctx, vendorStorage, name)
+	key := keyCreate(vendorStorage, name)
 	if err := client.Get(ctx, key, vendor); err != nil {
 		s.log.V(logLevel).Errorf("Storage: Vendor: get vendor info err: %s", err.Error())
 		return nil, err
@@ -102,7 +101,7 @@ func (s *VendorStorage) List(ctx context.Context) (map[string]*types.Vendor, err
 	}
 	defer destroy()
 
-	key := s.util.Key(ctx, vendorStorage)
+	key := keyCreate(vendorStorage)
 	vendors := make(map[string]*types.Vendor)
 	if err := client.Map(ctx, key, ``, vendors); err != nil && err.Error() != store.ErrKeyNotFound {
 		s.log.V(logLevel).Errorf("Storage: Vendor: map vendors err: %s", err.Error())
@@ -129,7 +128,7 @@ func (s *VendorStorage) Remove(ctx context.Context, name string) error {
 	}
 	defer destroy()
 
-	key := s.util.Key(ctx, vendorStorage, name)
+	key := keyCreate(vendorStorage, name)
 	if err := client.Delete(ctx, key); err != nil {
 		s.log.V(logLevel).Errorf("Storage: Vendor: delete vendor err: %s", err.Error())
 		return err
@@ -138,10 +137,9 @@ func (s *VendorStorage) Remove(ctx context.Context, name string) error {
 	return nil
 }
 
-func newVendorStorage(config store.Config, log logger.ILogger, util IUtil) *VendorStorage {
+func newVendorStorage(config store.Config, log logger.ILogger) *VendorStorage {
 	s := new(VendorStorage)
 	s.log = log
-	s.util = util
 	s.Client = func() (store.IStore, store.DestroyFunc, error) {
 		return New(config, log)
 	}

@@ -14,15 +14,19 @@ script:
   - make build
 
 after_success:
-- ./hack/build-docs.sh
+  - make docs
 
 notifications:
   slack: lastbackend:0e7apir97phOrZbD12RJ9v0P
+
+cache:
+  directories:
+    - vendor
 
 deploy:
   - provider: pages
     local_dir: docs/output
     skip_cleanup: true
-    github_token: $GITHUB_TOKEN # Set in travis-ci.org dashboard
+    github_token: $GH_TOKEN # Set in travis-ci.org dashboard
     on:
       branch: master

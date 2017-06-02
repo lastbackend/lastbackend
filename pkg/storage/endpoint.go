@@ -32,7 +32,6 @@ const endpointStorage = "endpoints"
 type EndpointStorage struct {
 	IEndpoint
 	log    logger.ILogger
-	util   IUtil
 	Client func() (store.IStore, store.DestroyFunc, error)
 }
 
@@ -148,10 +147,9 @@ func (s *EndpointStorage) Watch(ctx context.Context, endpoint chan string) error
 	return nil
 }
 
-func newEndpointStorage(config store.Config, log logger.ILogger, util IUtil) *EndpointStorage {
+func newEndpointStorage(config store.Config, log logger.ILogger) *EndpointStorage {
 	s := new(EndpointStorage)
 	s.log = log
-	s.util = util
 	s.Client = func() (store.IStore, store.DestroyFunc, error) {
 		return New(config, log)
 	}

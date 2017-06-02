@@ -32,7 +32,6 @@ const volumeStorage string = "volumes"
 type VolumeStorage struct {
 	IVolume
 	log    logger.ILogger
-	util   IUtil
 	Client func() (store.IStore, store.DestroyFunc, error)
 }
 
@@ -64,10 +63,9 @@ func (s *VolumeStorage) Remove(ctx context.Context, id string) error {
 	return nil
 }
 
-func newVolumeStorage(config store.Config, log logger.ILogger, util IUtil) *VolumeStorage {
+func newVolumeStorage(config store.Config, log logger.ILogger) *VolumeStorage {
 	s := new(VolumeStorage)
 	s.log = log
-	s.util = util
 	s.Client = func() (store.IStore, store.DestroyFunc, error) {
 		return New(config, log)
 	}

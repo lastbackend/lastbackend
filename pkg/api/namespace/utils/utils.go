@@ -19,15 +19,17 @@
 package utils
 
 import (
-	"github.com/gorilla/mux"
-	"net/http"
 	"context"
+	ins "github.com/lastbackend/lastbackend/pkg/api/namespace/interfaces"
+	"strings"
 )
 
-func Vars(r *http.Request) map[string]string {
-	return mux.Vars(r)
+type Util struct {
+	ins.IUtil
 }
 
-func SetContext(r *http.Request, name string, val interface{}) *http.Request {
-	return r.WithContext(context.WithValue(r.Context(), name, val))
+const sep = "-"
+
+func (Util) NameCreate(ctx context.Context, pattern ...string) string {
+	return strings.Join(pattern, sep)
 }

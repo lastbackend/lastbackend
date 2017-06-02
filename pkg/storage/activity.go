@@ -21,8 +21,8 @@ package storage
 import (
 	"context"
 	"github.com/lastbackend/lastbackend/pkg/common/types"
-	"github.com/lastbackend/lastbackend/pkg/logger"
 	"github.com/lastbackend/lastbackend/pkg/storage/store"
+	"github.com/lastbackend/lastbackend/pkg/logger"
 )
 
 const activityStorage string = "activities"
@@ -30,8 +30,7 @@ const activityStorage string = "activities"
 // Activity Service type for interface in interfaces folder
 type ActivityStorage struct {
 	IActivity
-	log    logger.ILogger
-	util   IUtil
+	log logger.ILogger
 	Client func() (store.IStore, store.DestroyFunc, error)
 }
 
@@ -57,9 +56,8 @@ func (s *ActivityStorage) RemoveByService(ctx context.Context, serviceID string)
 	return nil
 }
 
-func newActivityStorage(config store.Config, log logger.ILogger, util IUtil) *ActivityStorage {
+func newActivityStorage(config store.Config, log logger.ILogger) *ActivityStorage {
 	s := new(ActivityStorage)
-	s.util = util
 	s.Client = func() (store.IStore, store.DestroyFunc, error) {
 		return New(config, log)
 	}

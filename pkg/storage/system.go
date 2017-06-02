@@ -34,7 +34,6 @@ const systemLeadTTL = 11
 type SystemStorage struct {
 	ISystem
 	log    logger.ILogger
-	util   IUtil
 	Client func() (store.IStore, store.DestroyFunc, error)
 }
 
@@ -193,10 +192,9 @@ func (s *SystemStorage) ElectWait(ctx context.Context, process *types.Process, l
 	return nil
 }
 
-func newSystemStorage(config store.Config, log logger.ILogger, util IUtil) *SystemStorage {
+func newSystemStorage(config store.Config, log logger.ILogger) *SystemStorage {
 	s := new(SystemStorage)
 	s.log = log
-	s.util = util
 	s.Client = func() (store.IStore, store.DestroyFunc, error) {
 		return New(config, log)
 	}

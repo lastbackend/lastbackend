@@ -34,7 +34,6 @@ const podStorage = "pods"
 type PodStorage struct {
 	IPod
 	log    logger.ILogger
-	util   IUtil
 	Client func() (store.IStore, store.DestroyFunc, error)
 }
 
@@ -112,7 +111,7 @@ func (s *PodStorage) ListByNamespace(ctx context.Context, namespace string) (map
 	keyList := keyCreate(podStorage, namespace)
 	if err := client.Map(ctx, keyList, "", &pods); err != nil {
 		s.log.V(logLevel).Errorf("Storage: Pod: map pods in namespace `%s` err: %s", namespace, err.Error())
-		return pods, err
+		return nil, err
 	}
 
 	for _, pod := range pods {
@@ -122,7 +121,7 @@ func (s *PodStorage) ListByNamespace(ctx context.Context, namespace string) (map
 		keyEndpoints := keyCreate(endpointStorage)
 		if err := client.Map(ctx, keyEndpoints, filterEndpoint, endpoints); err != nil && err.Error() != store.ErrKeyNotFound {
 			s.log.V(logLevel).Errorf("Storage: Pod: map endpoints err: %s", err.Error())
-			return pods, err
+			return nil, err
 		}
 
 		for pod.Meta.Endpoint = range endpoints {
@@ -317,10 +316,9 @@ func (s *PodStorage) Watch(ctx context.Context, pod chan *types.Pod) error {
 	return nil
 }
 
-func newPodStorage(config store.Config, log logger.ILogger, util IUtil) *PodStorage {
+func newPodStorage(config store.Config, log logger.ILogger) *PodStorage {
 	s := new(PodStorage)
 	s.log = log
-	s.util = util
 	s.Client = func() (store.IStore, store.DestroyFunc, error) {
 		return New(config, log)
 	}

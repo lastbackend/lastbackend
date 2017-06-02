@@ -33,7 +33,6 @@ const namespaceStorage = "namespaces"
 type NamespaceStorage struct {
 	INamespace
 	log    logger.ILogger
-	util   IUtil
 	Client func() (store.IStore, store.DestroyFunc, error)
 }
 
@@ -56,11 +55,12 @@ func (s *NamespaceStorage) GetByName(ctx context.Context, name string) (*types.N
 	defer destroy()
 
 	namespace := new(types.Namespace)
-	keyMeta := s.util.Key(ctx, namespaceStorage, name, "meta")
+	keyMeta := keyCreate(namespaceStorage, name, "meta")
 	if err := client.Get(ctx, keyMeta, &namespace.Meta); err != nil {
 		s.log.V(logLevel).Errorf("Storage: Namespace: get namespace `%s` meta err: %s", name, err.Error())
 		return nil, err
 	}
+
 	return namespace, nil
 }
 
@@ -177,10 +177,9 @@ func (s *NamespaceStorage) Remove(ctx context.Context, name string) error {
 	return nil
 }
 
-func newNamespaceStorage(config store.Config, log logger.ILogger, util IUtil) *NamespaceStorage {
+func newNamespaceStorage(config store.Config, log logger.ILogger) *NamespaceStorage {
 	s := new(NamespaceStorage)
 	s.log = log
-	s.util = util
 	s.Client = func() (store.IStore, store.DestroyFunc, error) {
 		return New(config, log)
 	}
