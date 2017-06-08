@@ -4,6 +4,14 @@ image:assets/infrastructure.png[Last.Backend]
 
 === Build
 
+==== Prerequisites
+
+- Go 1.7 or higher
+- Go docker client v17.03
+- Go etcd client for v3
+- Git
+
+
 [source,bash]
 ----
 $ go get github.com/lastbackend/lastbackend
