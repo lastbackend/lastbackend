@@ -61,7 +61,7 @@ func CreateCmd(name, image, template, url string, replicas int) {
 		return
 	}
 
-	// TODO: Waiting for start service + // spinner
+	// TODO: Waiting for start service
 	// TODO: Show spinner
 
 	fmt.Println("Service `" + name + "` is succesfully created")
