@@ -23,9 +23,6 @@ import (
 	n "github.com/lastbackend/lastbackend/pkg/api/namespace/views/v1"
 	c "github.com/lastbackend/lastbackend/pkg/cli/context"
 	"github.com/lastbackend/lastbackend/pkg/common/errors"
-	"github.com/lastbackend/lastbackend/pkg/common/types"
-	"time"
-    "log"
 )
 
 type createS struct {
@@ -44,14 +41,10 @@ type Config struct {
 	//Volumes []string `json:"volumes,omitempty"`
 }
 
-func DeployCmd(name, image, template, url string, replicas int) {
+func CreateCmd(name, image, template, url string, replicas int) {
 
 	var (
-		config  *Config
-
-        // for spinner
-		i       = 0
-		spinner = []string{"/", "|", "\\", "|"}
+		config *Config
 	)
 
 	if replicas != 0 /* || len(env) != 0 || len(ports) != 0 || len(volumes) != 0 */ {
@@ -62,40 +55,19 @@ func DeployCmd(name, image, template, url string, replicas int) {
 		//config.Volumes = volumes
 	}
 
-	err := Deploy(name, image, template, url, config)
+	err := Create(name, image, template, url, config)
 	if err != nil {
 		fmt.Println(err)
 		return
 	}
 
-	// spinner
-	// waiting for start service
-	for range time.Tick(time.Millisecond * 500) {
-		srv, _, err := Inspect(name)
-		if err != nil {
-			fmt.Println(err)
-			return
-		}
-
-        log.Println(srv)
-
-		if srv.State.State == types.StateProvision {
-			i++
-			if i == 3 {
-				i = 0
-			}
-
-			fmt.Printf("Waiting for start service %v\r", spinner[i])
-			continue
-		}
-
-		break
-	}
+	// TODO: Waiting for start service + // spinner
+	// TODO: Show spinner
 
 	fmt.Println("Service `" + name + "` is succesfully created")
 }
 
-func Deploy(name, image, template, url string, config *Config) error {
+func Create(name, image, template, url string, config *Config) error {
 
 	var (
 		err     error

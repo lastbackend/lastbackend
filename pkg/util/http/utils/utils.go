@@ -19,9 +19,9 @@
 package utils
 
 import (
+	"context"
 	"github.com/gorilla/mux"
 	"net/http"
-	"context"
 )
 
 func Vars(r *http.Request) map[string]string {
