@@ -20,10 +20,10 @@ package storage
 
 import (
 	"context"
+	"errors"
 	"github.com/lastbackend/lastbackend/pkg/common/types"
 	"github.com/lastbackend/lastbackend/pkg/logger"
 	"github.com/lastbackend/lastbackend/pkg/storage/store"
-	"errors"
 )
 
 const volumeStorage string = "volumes"

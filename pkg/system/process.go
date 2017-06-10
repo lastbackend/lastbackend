@@ -46,10 +46,10 @@ type Process struct {
 func (c *Process) Register(ctx context.IContext, kind string) (*types.Process, error) {
 
 	var (
-		err  error
+		err error
 
-		log  = ctx.GetLogger()
-		stg  = ctx.GetStorage()
+		log = ctx.GetLogger()
+		stg = ctx.GetStorage()
 
 		item = new(types.Process)
 	)

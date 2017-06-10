@@ -34,55 +34,55 @@ func main() {
 	app.Spec = "[OPTIONS]"
 
 	cfg.LogLevel = app.Int(cli.IntOpt{
-		Name:   "debug", Desc: "Debug level mode",
+		Name: "debug", Desc: "Debug level mode",
 		EnvVar: "DEBUG", Value: 0, HideValue: true,
 	})
 
 	app.Version("v version", "0.3.0")
 
 	cfg.APIServer.Host = app.String(cli.StringOpt{
-		Name:   "http-server-host", Desc: "Http server host",
+		Name: "http-server-host", Desc: "Http server host",
 		EnvVar: "HTTP-SERVER-HOST", Value: "", HideValue: true,
 	})
 	cfg.APIServer.Port = app.Int(cli.IntOpt{
-		Name:   "http-server-port", Desc: "Http server port",
+		Name: "http-server-port", Desc: "Http server port",
 		EnvVar: "HTTP-SERVER-PORT", Value: 2967, HideValue: true,
 	})
 
 	cfg.AgentServer.Host = app.String(cli.StringOpt{
-		Name:   "host", Value: "", Desc: "Agent API server listen address",
+		Name: "host", Value: "", Desc: "Agent API server listen address",
 		EnvVar: "HOST", HideValue: true,
 	})
 	cfg.AgentServer.Port = app.Int(cli.IntOpt{
-		Name:   "port", Value: 2968, Desc: "Agent API server listen port",
+		Name: "port", Value: 2968, Desc: "Agent API server listen port",
 		EnvVar: "PORT", HideValue: true,
 	})
 	cfg.Host.Hostname = app.String(cli.StringOpt{
-		Name:   "hostname", Value: "", Desc: "Agent hostname",
+		Name: "hostname", Value: "", Desc: "Agent hostname",
 		EnvVar: "HOSTNAME", HideValue: true,
 	})
 	cfg.Host.IP = app.String(cli.StringOpt{
-		Name:   "overwrite-ip", Value: "", Desc: "Agent host ip",
+		Name: "overwrite-ip", Value: "", Desc: "Agent host ip",
 		EnvVar: "OVERWRITE_IP", HideValue: true,
 	})
 	cfg.Runtime.Docker.Host = app.String(cli.StringOpt{
-		Name:   "docker-host", Value: "", Desc: "Provide path to Docker daemon",
+		Name: "docker-host", Value: "", Desc: "Provide path to Docker daemon",
 		EnvVar: "DOCKER_HOST", HideValue: true,
 	})
 	cfg.Runtime.Docker.Certs = app.String(cli.StringOpt{
-		Name:   "docker-certs", Value: "", Desc: "Provide path to Docker certificates",
+		Name: "docker-certs", Value: "", Desc: "Provide path to Docker certificates",
 		EnvVar: "DOCKER_CERT_PATH", HideValue: true,
 	})
 	cfg.Runtime.Docker.Version = app.String(cli.StringOpt{
-		Name:   "docker-api-version", Value: "", Desc: "Docker daemon API version",
+		Name: "docker-api-version", Value: "", Desc: "Docker daemon API version",
 		EnvVar: "DOCKER_API_VERSION", HideValue: true,
 	})
 	cfg.Runtime.Docker.TLS = app.Bool(cli.BoolOpt{
-		Name:   "docker-tls", Value: false, Desc: "Use secure connection to docker daemon",
+		Name: "docker-tls", Value: false, Desc: "Use secure connection to docker daemon",
 		EnvVar: "DOCKER_TLS_VERIFY", HideValue: true,
 	})
 	cfg.Runtime.CRI = app.String(cli.StringOpt{
-		Name:   "cri", Value: "docker", Desc: "Default container runtime interface",
+		Name: "cri", Value: "docker", Desc: "Default container runtime interface",
 		EnvVar: "CRI", HideValue: true,
 	})
 

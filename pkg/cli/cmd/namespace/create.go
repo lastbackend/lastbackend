@@ -23,7 +23,6 @@ import (
 	n "github.com/lastbackend/lastbackend/pkg/api/namespace/views/v1"
 	c "github.com/lastbackend/lastbackend/pkg/cli/context"
 	"github.com/lastbackend/lastbackend/pkg/common/errors"
-	"log"
 )
 
 type createS struct {
@@ -61,7 +60,6 @@ func Create(name, description string) error {
 		BodyJSON(createS{name, description}).
 		Request(&ns, er)
 	if err != nil {
-		log.Println(err)
 		return errors.New(er.Message)
 	}
 

@@ -55,111 +55,111 @@ func main() {
 	app.Spec = "[APP...] [OPTIONS]"
 
 	cfg.LogLevel = app.Int(cli.IntOpt{
-		Name:   "debug", Desc: "Debug level mode",
+		Name: "debug", Desc: "Debug level mode",
 		EnvVar: "DEBUG", Value: 0, HideValue: true,
 	})
 
 	var apps = app.Strings(cli.StringsArg{
-		Name:      "APP", Desc: "choose particular application to run [api, controller, scheduler, builder, discovery, agent]",
+		Name: "APP", Desc: "choose particular application to run [api, controller, scheduler, builder, discovery, agent]",
 		HideValue: true,
 	})
 
 	cfg.Token = app.String(cli.StringOpt{
-		Name:   "token", Desc: "Secret token for signature",
+		Name: "token", Desc: "Secret token for signature",
 		EnvVar: "SECRET-TOKEN", Value: "b8tX!ae4", HideValue: true,
 	})
 
 	cfg.APIServer.Host = app.String(cli.StringOpt{
-		Name:   "http-server-host", Desc: "Http server host",
+		Name: "http-server-host", Desc: "Http server host",
 		EnvVar: "HTTP-SERVER-HOST", Value: "", HideValue: true,
 	})
 	cfg.APIServer.Port = app.Int(cli.IntOpt{
-		Name:   "http-server-port", Desc: "Http server port",
+		Name: "http-server-port", Desc: "Http server port",
 		EnvVar: "HTTP-SERVER-PORT", Value: 2967, HideValue: true,
 	})
 
 	cfg.Registry.Server = app.String(cli.StringOpt{
-		Name:   "registry-server-host", Desc: "Registry server host",
+		Name: "registry-server-host", Desc: "Registry server host",
 		EnvVar: "REGISTRY-SERVER-HOST", Value: "hub.registry.net", HideValue: true,
 	})
 	cfg.Registry.Username = app.String(cli.StringOpt{
-		Name:   "registry-username", Desc: "Registry username",
+		Name: "registry-username", Desc: "Registry username",
 		EnvVar: "REGISTRY-USERNAME", Value: "demo", HideValue: true,
 	})
 	cfg.Registry.Password = app.String(cli.StringOpt{
-		Name:   "registry-password", Desc: "Registry password",
+		Name: "registry-password", Desc: "Registry password",
 		EnvVar: "REGISTRY-PASSWORD", Value: "IU1yxkTD", HideValue: true,
 	})
 
 	cfg.ProxyServer.Host = app.String(cli.StringOpt{
-		Name:   "http-server-host", Desc: "Proxy server host",
+		Name: "http-server-host", Desc: "Proxy server host",
 		EnvVar: "HTTP-SERVER-HOST", Value: "", HideValue: true,
 	})
 	cfg.ProxyServer.Port = app.Int(cli.IntOpt{
-		Name:   "proxy-server-port", Desc: "Proxy server port",
+		Name: "proxy-server-port", Desc: "Proxy server port",
 		EnvVar: "PROXY-SERVER-PORT", Value: 2966, HideValue: true,
 	})
 
 	cfg.Etcd.Endpoints = app.Strings(cli.StringsOpt{
-		Name:   "etcd-endpoints", Desc: "Set etcd endpoints list",
+		Name: "etcd-endpoints", Desc: "Set etcd endpoints list",
 		EnvVar: "ETCD-ENDPOINTS", Value: []string{"localhost:2379"}, HideValue: true,
 	})
 	cfg.Etcd.TLS.Key = app.String(cli.StringOpt{
-		Name:   "etcd-tls-key", Desc: "Etcd tls key",
+		Name: "etcd-tls-key", Desc: "Etcd tls key",
 		EnvVar: "ETCD-TLS-KEY", Value: "", HideValue: true,
 	})
 	cfg.Etcd.TLS.Cert = app.String(cli.StringOpt{
-		Name:   "etcd-tls-cert", Desc: "Etcd tls cert",
+		Name: "etcd-tls-cert", Desc: "Etcd tls cert",
 		EnvVar: "ETCD-TLS-CERT", Value: "", HideValue: true,
 	})
 	cfg.Etcd.TLS.CA = app.String(cli.StringOpt{
-		Name:   "etcd-tls-ca", Desc: "Etcd tls ca",
+		Name: "etcd-tls-ca", Desc: "Etcd tls ca",
 		EnvVar: "ETCD-TLS-CA", Value: "", HideValue: true,
 	})
 
 	cfg.AgentServer.Host = app.String(cli.StringOpt{
-		Name:   "host", Value: "", Desc: "Agent API server listen address",
+		Name: "host", Value: "", Desc: "Agent API server listen address",
 		EnvVar: "HOST", HideValue: true,
 	})
 	cfg.AgentServer.Port = app.Int(cli.IntOpt{
-		Name:   "port", Value: 2968, Desc: "Agent API server listen port",
+		Name: "port", Value: 2968, Desc: "Agent API server listen port",
 		EnvVar: "PORT", HideValue: true,
 	})
 	cfg.Host.Hostname = app.String(cli.StringOpt{
-		Name:   "hostname", Value: "", Desc: "Agent hostname",
+		Name: "hostname", Value: "", Desc: "Agent hostname",
 		EnvVar: "HOSTNAME", HideValue: true,
 	})
 	cfg.Host.IP = app.String(cli.StringOpt{
-		Name:   "overwrite-ip", Value: "", Desc: "Agent host ip",
+		Name: "overwrite-ip", Value: "", Desc: "Agent host ip",
 		EnvVar: "OVERWRITE_IP", HideValue: true,
 	})
 	cfg.Runtime.Docker.Host = app.String(cli.StringOpt{
-		Name:   "docker-host", Value: "", Desc: "Provide path to Docker daemon",
+		Name: "docker-host", Value: "", Desc: "Provide path to Docker daemon",
 		EnvVar: "DOCKER_HOST", HideValue: true,
 	})
 	cfg.Runtime.Docker.Certs = app.String(cli.StringOpt{
-		Name:   "docker-certs", Value: "", Desc: "Provide path to Docker certificates",
+		Name: "docker-certs", Value: "", Desc: "Provide path to Docker certificates",
 		EnvVar: "DOCKER_CERT_PATH", HideValue: true,
 	})
 	cfg.Runtime.Docker.Version = app.String(cli.StringOpt{
-		Name:   "docker-api-version", Value: "", Desc: "Docker daemon API version",
+		Name: "docker-api-version", Value: "", Desc: "Docker daemon API version",
 		EnvVar: "DOCKER_API_VERSION", HideValue: true,
 	})
 	cfg.Runtime.Docker.TLS = app.Bool(cli.BoolOpt{
-		Name:   "docker-tls", Value: false, Desc: "Use secure connection to docker daemon",
+		Name: "docker-tls", Value: false, Desc: "Use secure connection to docker daemon",
 		EnvVar: "DOCKER_TLS_VERIFY", HideValue: true,
 	})
 	cfg.Runtime.CRI = app.String(cli.StringOpt{
-		Name:   "cri", Value: "docker", Desc: "Default container runtime interface",
+		Name: "cri", Value: "docker", Desc: "Default container runtime interface",
 		EnvVar: "CRI", HideValue: true,
 	})
 
 	cfg.SystemDomain = app.String(cli.StringOpt{
-		Name:   "system-domain", Desc: "Default system domain",
+		Name: "system-domain", Desc: "Default system domain",
 		EnvVar: "SYSTEM_DOMAIN", Value: "lblocal", HideValue: true,
 	})
 	cfg.DiscoveryServer.Port = app.Int(cli.IntOpt{
-		Name:   "discovery-port", Desc: "Discovery server port",
+		Name: "discovery-port", Desc: "Discovery server port",
 		EnvVar: "DISCOVERY_PORT", Value: 53, HideValue: true,
 	})
 

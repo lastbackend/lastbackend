@@ -39,9 +39,16 @@ func (n *Namespace) ToJson() ([]byte, error) {
 }
 
 func (n *Namespace) DrawTable() {
+	var labels []string
+
+	for _, v := range n.Meta.Labels {
+		labels = append(labels, v)
+	}
+
 	table.PrintHorizontal(map[string]interface{}{
 		"NAME":        n.Meta.Name,
 		"DESCRIPTION": n.Meta.Description,
+		"LABELS":      labels,
 		"CREATED":     n.Meta.Created.String()[:10],
 		"UPDATED":     n.Meta.Updated.String()[:10],
 	})
@@ -69,13 +76,20 @@ func (ns *NamespaceList) ToJson() ([]byte, error) {
 }
 
 func (ns *NamespaceList) DrawTable() {
-	t := table.New([]string{"NAME", "DESCRIPTION", "CREATED", "UPDATED"})
+	t := table.New([]string{"NAME", "DESCRIPTION", "LABELS", "CREATED", "UPDATED"})
 	t.VisibleHeader = true
 
 	for _, n := range *ns {
+		var labels []string
+
+		for _, v := range n.Meta.Labels {
+			labels = append(labels, v)
+		}
+
 		t.AddRow(map[string]interface{}{
 			"NAME":        n.Meta.Name,
 			"DESCRIPTION": n.Meta.Description,
+			"LABELS":      labels,
 			"CREATED":     n.Meta.Created.String()[:10],
 			"UPDATED":     n.Meta.Updated.String()[:10],
 		})
