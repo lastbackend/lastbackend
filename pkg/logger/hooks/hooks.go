@@ -19,8 +19,7 @@
 package hooks
 
 import (
-	"github.com/Sirupsen/logrus"
-	"github.com/lastbackend/lastbackend/pkg/logger/hooks/os"
+	"github.com/sirupsen/logrus"
 	"path"
 	"runtime"
 	"strings"
@@ -45,7 +44,7 @@ func (h ContextHook) Fire(entry *logrus.Entry) error {
 	for i := 0; i < cnt; i++ {
 		fu := runtime.FuncForPC(pc[i] - 1)
 		name := fu.Name()
-		if !strings.Contains(name, "github.com/Sirupsen/logrus") {
+		if !strings.Contains(name, "github.com/sirupsen/logrus") {
 			file, line := fu.FileLine(pc[i] - 1)
 			entry.Data["func"] = path.Base(name)
 			entry.Data["file"] = file
@@ -54,18 +53,4 @@ func (h ContextHook) Fire(entry *logrus.Entry) error {
 		}
 	}
 	return nil
-}
-
-type SyslogHook struct {
-	Tag     string
-	Network string
-	Raddr   string
-}
-
-func (SyslogHook) Levels() []logrus.Level {
-	return logrus.AllLevels
-}
-
-func (h SyslogHook) Fire(entry *logrus.Entry) error {
-	return os.SyslogHook(entry, h.Network, h.Raddr, h.Tag)
 }
