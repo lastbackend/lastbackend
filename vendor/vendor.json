@@ -9,6 +9,12 @@
 			"revisionTime": "2017-07-30T20:26:45Z"
 		},
 		{
+			"checksumSHA1": "Ac0sHflTyYX4PmgBEJ+POSTyd5o=",
+			"path": "github.com/boltdb/bolt",
+			"revision": "fa5367d20c994db73282594be0146ab221657943",
+			"revisionTime": "2017-09-07T20:20:52Z"
+		},
+		{
 			"checksumSHA1": "7BC2/27NId9xaPDB5w3nWN2mn9A=",
 			"path": "github.com/coreos/etcd/auth/authpb",
 			"revision": "6930e471ed55ef89641a658b9fcb777295d5055b",
@@ -301,6 +307,12 @@
 			"path": "github.com/sirupsen/logrus",
 			"revision": "89742aefa4b206dcf400792f3bd35b542998eb3b",
 			"revisionTime": "2017-08-22T13:27:46Z"
+		},
+		{
+			"checksumSHA1": "XYXw2KJliJzdpECTWSpJfRaFoq8=",
+			"path": "github.com/unloop/gopipe",
+			"revision": "aca87f166889b8e546d391bd834677bc89de1b75",
+			"revisionTime": "2016-12-22T13:25:17Z"
 		},
 		{
 			"checksumSHA1": "UWjVYmoHlIfHzVIskELHiJQtMOI=",
