@@ -23,15 +23,14 @@ import (
 	"github.com/jawher/mow.cli"
 	"github.com/lastbackend/lastbackend/pkg/common/config"
 	"os"
-	"os/signal"
-	"syscall"
-
 	agent "github.com/lastbackend/lastbackend/pkg/agent/daemon"
 	api "github.com/lastbackend/lastbackend/pkg/api/daemon"
 	builder "github.com/lastbackend/lastbackend/pkg/builder/daemon"
 	controller "github.com/lastbackend/lastbackend/pkg/controller/daemon"
 	discovery "github.com/lastbackend/lastbackend/pkg/discovery/daemon"
 	scheduler "github.com/lastbackend/lastbackend/pkg/scheduler/daemon"
+	"os/signal"
+	"syscall"
 )
 
 func main() {
@@ -214,7 +213,7 @@ func main() {
 
 	err := app.Run(os.Args)
 	if err != nil {
-		fmt.Errorf("Error: run application: %s", err.Error())
+		fmt.Errorf("Error: run application: %s", err)
 		return
 	}
 }

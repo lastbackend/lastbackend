@@ -61,7 +61,7 @@ func Daemon(_cfg *_cfg.Config) {
 
 	go func() {
 		if err := http.Listen(*cfg.APIServer.Host, *cfg.APIServer.Port); err != nil {
-			log.Warnf("Http server start error: %s", err.Error())
+			log.Warnf("Http server start error: %s", err)
 		}
 	}()
 
@@ -79,6 +79,4 @@ func Daemon(_cfg *_cfg.Config) {
 	}()
 
 	<-done
-
-	log.Info("Handle SIGINT and SIGTERM.")
 }
