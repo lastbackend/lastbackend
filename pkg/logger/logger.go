@@ -19,7 +19,7 @@
 package logger
 
 import (
-	"github.com/Sirupsen/logrus"
+	"github.com/sirupsen/logrus"
 	"github.com/lastbackend/lastbackend/pkg/logger/formatter"
 	"github.com/lastbackend/lastbackend/pkg/logger/hooks"
 	"os"
@@ -55,11 +55,6 @@ func New(name string, level int) *Logger {
 
 func (l *Logger) EnableFileInfo(skip int) *Logger {
 	l.log.Hooks.Add(hooks.ContextHook{skip})
-	return l
-}
-
-func (l *Logger) EnableSyslogInfo(skip int) *Logger {
-	l.log.Hooks.Add(hooks.SyslogHook{})
 	return l
 }
 
