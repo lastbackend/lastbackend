@@ -19,9 +19,9 @@
 package logger
 
 import (
-	"github.com/sirupsen/logrus"
 	"github.com/lastbackend/lastbackend/pkg/logger/formatter"
 	"github.com/lastbackend/lastbackend/pkg/logger/hooks"
+	"github.com/sirupsen/logrus"
 	"os"
 )
 
