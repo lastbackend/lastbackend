@@ -28,6 +28,7 @@ _testmain.go
 *.prof
 *.iml
 *.srl
+*.DS_Store
 
 /build/
 vendor/*/
