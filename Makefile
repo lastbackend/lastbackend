@@ -1,6 +1,6 @@
 .PHONY : default deps test build install docs
 
-NAME_KIT = lastbackend
+NAME_KIT = lbd
 NAME_CLI = lbc
 
 HARDWARE = $(shell uname -m)
