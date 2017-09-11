@@ -19,20 +19,16 @@
 package resources
 
 import (
-	"github.com/lastbackend/lastbackend/pkg/discovery/context"
 	"github.com/lastbackend/lastbackend/pkg/discovery/endpoint"
 	"github.com/lastbackend/lastbackend/pkg/util"
 	"github.com/miekg/dns"
 	"time"
+	"github.com/lastbackend/lastbackend/pkg/log"
 )
 
 const logLevel = 3
 
 func LbLocalR(w dns.ResponseWriter, r *dns.Msg) {
-
-	var (
-		log = context.Get().GetLogger()
-	)
 
 	log.V(logLevel).Debug("Resource: dns request lblocal.")
 

@@ -25,6 +25,7 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/discovery/pod"
 	"github.com/lastbackend/lastbackend/pkg/discovery/service"
 	"github.com/lastbackend/lastbackend/pkg/system"
+	"github.com/lastbackend/lastbackend/pkg/log"
 )
 
 const debugLevel = 2
@@ -70,7 +71,6 @@ func NewRuntime(ctx *context.Context) *Runtime {
 func (r *Runtime) Loop() {
 
 	var (
-		log  = r.context.GetLogger()
 		lead = make(chan bool)
 	)
 

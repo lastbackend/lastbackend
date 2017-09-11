@@ -1,77 +1,77 @@
 == Last.Backend CLI
 
 The LB CLI exposes commands for managing your services, as well as lower level tools to interact with each component of your system.
-This topic guides you through getting started with the CLI, including installation and logging in to create your first namespace.
+This topic guides you through getting started with the CLI, including installation and logging in to create your first app.
 
-=== Namespace
+=== Application
 
-==== Creating new namespace
+==== Creating new app
 
-You can create a new namespace using the next command:
+You can create a new app using the next command:
 [source,bash]
 ----
-$ lbc namespace <namespace_name> --description="<description>" create
+$ lbc app <app_name> --description="<description>" create
 ----
 
-==== View a namespace info
+==== View a app info
 
-To get a namespace info:
+To get a app info:
 [source,bash]
 ----
-$ lbc namespace <namespace_name> inspect
+$ lbc app <app_name> inspect
 Name demo
 Created 2016-11-28
 Updated 2016-11-28
 ----
 
-==== Viewing namespaces
+==== Viewing apps
 
-When viewing namespaces, you are restricted to seeing only the namespaces you have access to view based on the authorization policy.
-To view a namespaces info:
+When viewing apps, you are restricted to seeing only the apps you have access to view based on the authorization policy.
+To view a apps info:
 [source,bash]
 ----
-$ lbc namespaces
+$ lbc apps
 Name          Created     Updated
 demo          2016-11-28  2016-11-28
-test-namespace  2016-11-26  2016-11-26
+test-app  2016-11-26  2016-11-26
 ----
 
-==== Switch namespace
+==== Switch app
 
-To switch a namespace:
+To switch a app:
 [source,bash]
 ----
-$ lbc namespace <namespace_name> switch
-The namespace <namespace_name> was selected as the current
+$ lbc app <app_name> switch
+The app <app_name> was selected as the current
 ----
 
-==== Current namespace
+==== Current app
 
-To view current a namespace:
+To view current a app:
 [source,bash]
 ----
-$ lbc namespace current
+$ lbc app current
 Name  Created     Updated
 test  2016-11-28  2016-11-28
 ----
 
-==== Update namespace
+==== Update app
 
-To update a namespace:
+To update a app:
 [source,bash]
 ----
-$ lbc namespace <namespace_name> update --desc=<new_description>
+$ lbc app <app_name> update --desc=<new_description>
 Successful
 ----
 
-==== Deleting a namespace
+==== Deleting a app
 
-When you delete a namespace, the server updates the namespace status to Terminating from Active. The server then clears all content from a namespace that is Terminating before finally removing the namespace.
-While a namespace is in Terminating status, a user cannot add new content to the namespace.
-To delete a namespace:
+When you delete a app, the server updates the app status to Terminating from Active. The server then clears all content from a app that is Terminating before finally removing the app.
+While a app is in Terminating status, a user cannot add new content to the app.
+To delete a app:
 [source,bash]
 ----
-$ lbc namespace <namespace_name> remove
+$ lbc app <app_name> remove
 ----
 
 === Service
@@ -81,14 +81,14 @@ $ lbc namespace <namespace_name> remove
 To view a service info:
 [source,bash]
 ----
-$ lbc service <namespace_name> inspect
+$ lbc service <app_name> inspect
 Name  Created     Updated
 demo  2016-11-29  2016-11-30
 ----
 
 ==== Viewing services
 
-When viewing services, you are restricted to seeing only the services you have access to view based on the authorization policy and the selected namespace.
+When viewing services, you are restricted to seeing only the services you have access to view based on the authorization policy and the selected app.
 To view a services info:
 [source,bash]
 ----
@@ -103,7 +103,7 @@ When you delete a service, the server updates the service status to Terminating 
 To delete a service:
 [source,bash]
 ----
-$ lbc service <namespace_name> remove
+$ lbc service <app_name> remove
 ----
 
 ==== Deploy a service

@@ -19,10 +19,10 @@
 package runtime
 
 import (
-	"github.com/lastbackend/lastbackend/pkg/agent/context"
 	"github.com/lastbackend/lastbackend/pkg/agent/runtime/cri"
 	"github.com/lastbackend/lastbackend/pkg/common/types"
 	"sync"
+	"github.com/lastbackend/lastbackend/pkg/log"
 )
 
 type Worker struct {
@@ -37,7 +37,6 @@ type Worker struct {
 }
 
 func (w *Worker) Provision(meta types.PodMeta, state types.PodState, spec types.PodSpec, p *types.Pod) {
-	log := context.Get().GetLogger()
 	log.Debugf("Provision new task for pod: %s", p.Meta.Name)
 
 	// Clean next task if exists
@@ -70,7 +69,6 @@ func (w *Worker) Provision(meta types.PodMeta, state types.PodState, spec types.
 }
 
 func (w *Worker) loop() {
-	log := context.Get().GetLogger()
 	for {
 		if w.current == nil {
 			w.done <- true

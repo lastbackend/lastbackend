@@ -22,7 +22,6 @@ import (
 	"context"
 	"github.com/lastbackend/lastbackend/pkg/builder/config"
 	_c "github.com/lastbackend/lastbackend/pkg/common/context"
-	"github.com/lastbackend/lastbackend/pkg/logger"
 	"github.com/lastbackend/lastbackend/pkg/storage"
 )
 
@@ -35,21 +34,12 @@ type Context struct {
 type ctx struct {
 	_c.IContext
 
-	logger  logger.ILogger
 	storage storage.IStorage
 	config  *config.Config
 }
 
 func Get() *ctx {
 	return &_ctx
-}
-
-func (c *ctx) SetLogger(log logger.ILogger) {
-	c.logger = log
-}
-
-func (c *ctx) GetLogger() logger.ILogger {
-	return c.logger
 }
 
 func (c *ctx) SetConfig(cfg *config.Config) {

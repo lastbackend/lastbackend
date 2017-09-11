@@ -21,6 +21,7 @@ package runtime
 import (
 	"github.com/lastbackend/lastbackend/pkg/agent/context"
 	"github.com/lastbackend/lastbackend/pkg/common/types"
+	"github.com/lastbackend/lastbackend/pkg/log"
 )
 
 type EventListener struct {
@@ -29,13 +30,11 @@ type EventListener struct {
 }
 
 func (el *EventListener) Subscribe() (chan *types.PodEvent, chan *types.HostEvent) {
-	log := context.Get().GetLogger()
 	log.Debug("Runtime: EventListener: Subscribe")
 	return el.pods, el.host
 }
 
 func (el *EventListener) Listen() {
-	log := context.Get().GetLogger()
 	log.Debug("Runtime: EventListener: Listen")
 
 	pods := context.Get().GetCache().Pods()
@@ -86,7 +85,6 @@ func (el *EventListener) Listen() {
 
 func NewEventListener() (*EventListener, error) {
 
-	log := context.Get().GetLogger()
 	log.Debug("Create new event listener")
 	el := &EventListener{
 		pods: make(chan *types.PodEvent),

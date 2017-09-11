@@ -20,11 +20,11 @@ package request
 
 import (
 	"encoding/json"
-	"github.com/lastbackend/lastbackend/pkg/api/context"
 	"github.com/lastbackend/lastbackend/pkg/api/node/views/v1"
 	"github.com/lastbackend/lastbackend/pkg/common/errors"
 	"io"
 	"io/ioutil"
+	"github.com/lastbackend/lastbackend/pkg/log"
 )
 
 const logLevel = 3
@@ -34,7 +34,6 @@ type RequestNodeEventS struct {
 }
 
 func (s *RequestNodeEventS) DecodeAndValidate(reader io.Reader) *errors.Err {
-	var log = context.Get().GetLogger()
 
 	log.V(logLevel).Debug("Request: Node: decode and validate event data")
 

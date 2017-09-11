@@ -22,13 +22,12 @@ import (
 	"crypto/tls"
 	"github.com/coreos/etcd/clientv3"
 	"github.com/coreos/etcd/pkg/transport"
-	"github.com/lastbackend/lastbackend/pkg/logger"
 	"github.com/lastbackend/lastbackend/pkg/storage/etcd3"
 	"github.com/lastbackend/lastbackend/pkg/storage/store"
 	"time"
 )
 
-func createEtcd3Storage(c store.Config, log logger.ILogger) (store.IStore, store.DestroyFunc, error) {
+func createEtcd3Storage(c store.Config) (store.IStore, store.DestroyFunc, error) {
 
 	tlsConfig, err := getTLSConfig(c.CertFile, c.KeyFile, c.CAFile)
 	if err != nil {
@@ -50,7 +49,7 @@ func createEtcd3Storage(c store.Config, log logger.ILogger) (store.IStore, store
 		client.Close()
 	}
 
-	return etcd3.New(client, c.Codec, c.Prefix, log), destroyFunc, nil
+	return etcd3.New(client, c.Codec, c.Prefix), destroyFunc, nil
 }
 
 func getTLSConfig(certFile, keyFile, caFile string) (*tls.Config, error) {

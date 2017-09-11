@@ -21,7 +21,6 @@ package etcd3
 import (
 	"errors"
 	"github.com/coreos/etcd/clientv3"
-	"github.com/lastbackend/lastbackend/pkg/logger"
 	st "github.com/lastbackend/lastbackend/pkg/storage/store"
 	"github.com/lastbackend/lastbackend/pkg/util/converter"
 	"github.com/lastbackend/lastbackend/pkg/util/serializer"
@@ -31,10 +30,10 @@ import (
 	"reflect"
 	"regexp"
 	"strings"
+	"github.com/lastbackend/lastbackend/pkg/log"
 )
 
 type store struct {
-	log        logger.ILogger
 	debug      bool
 	client     *clientv3.Client
 	opts       []clientv3.OpOption
@@ -48,11 +47,11 @@ type buffer []byte
 func (s *store) Count(ctx context.Context, key, keyRegexFilter string) (int, error) {
 	key = path.Join(s.pathPrefix, key)
 
-	s.log.V(st.LogLevel).Debugf("Etcd3: Count: key: %s with filter: %s", key, keyRegexFilter)
+	log.V(st.LogLevel).Debugf("Etcd3: Count: key: %s with filter: %s", key, keyRegexFilter)
 
 	getResp, err := s.client.KV.Get(ctx, key, clientv3.WithPrefix())
 	if err != nil {
-		s.log.V(st.LogLevel).Errorf("Etcd3: Count: request err: %s", err.Error())
+		log.V(st.LogLevel).Errorf("Etcd3: Count: request err: %s", err.Error())
 		return 0, err
 	}
 	r, _ := regexp.Compile(keyRegexFilter)
@@ -73,34 +72,34 @@ func (s *store) Count(ctx context.Context, key, keyRegexFilter string) (int, err
 func (s *store) Create(ctx context.Context, key string, obj, outPtr interface{}, ttl uint64) error {
 	key = path.Join(s.pathPrefix, key)
 
-	s.log.V(st.LogLevel).Debugf("Etcd3: Create: key: %s, ttl: %d, val: %#v", key, ttl, obj)
+	log.V(st.LogLevel).Debugf("Etcd3: Create: key: %s, ttl: %d, val: %#v", key, ttl, obj)
 
 	data, err := serializer.Encode(s.codec, obj)
 	if err != nil {
-		s.log.V(st.LogLevel).Errorf("Etcd3: Create: encode data err: %s", err.Error())
+		log.V(st.LogLevel).Errorf("Etcd3: Create: encode data err: %s", err.Error())
 		return err
 	}
 	opts, err := s.ttlOpts(ctx, int64(ttl))
 	if err != nil {
-		s.log.V(st.LogLevel).Errorf("Etcd3: Create: create ttl option err: %s", err.Error())
+		log.V(st.LogLevel).Errorf("Etcd3: Create: create ttl option err: %s", err.Error())
 		return err
 	}
 	txnResp, err := s.client.KV.Txn(ctx).
 		If(clientv3.Compare(clientv3.ModRevision(key), "=", 0)).
 		Then(clientv3.OpPut(key, string(data), opts...)).Commit()
 	if err != nil {
-		s.log.V(st.LogLevel).Errorf("Etcd3: Create: request err: %s", err.Error())
+		log.V(st.LogLevel).Errorf("Etcd3: Create: request err: %s", err.Error())
 		return err
 	}
 	if !txnResp.Succeeded {
 		return errors.New(st.ErrKeyExists)
 	}
 	if validator.IsNil(outPtr) {
-		s.log.V(st.LogLevel).Warn("Etcd3: Create: output struct is nil")
+		log.V(st.LogLevel).Warn("Etcd3: Create: output struct is nil")
 		return nil
 	} else {
 		if err := decode(s.codec, data, outPtr); err != nil {
-			s.log.V(st.LogLevel).Errorf("Etcd3: Create: decode data err: %s", err.Error())
+			log.V(st.LogLevel).Errorf("Etcd3: Create: decode data err: %s", err.Error())
 			return err
 		}
 	}
@@ -110,18 +109,18 @@ func (s *store) Create(ctx context.Context, key string, obj, outPtr interface{},
 func (s *store) Get(ctx context.Context, key string, outPtr interface{}) error {
 	key = path.Join(s.pathPrefix, key)
 
-	s.log.V(st.LogLevel).Debugf("Etcd3: Get: key: %s", key)
+	log.V(st.LogLevel).Debugf("Etcd3: Get: key: %s", key)
 
 	res, err := s.client.KV.Get(ctx, key, s.opts...)
 	if err != nil {
-		s.log.V(st.LogLevel).Errorf("Etcd3: Get: request err: %s", err.Error())
+		log.V(st.LogLevel).Errorf("Etcd3: Get: request err: %s", err.Error())
 		return err
 	}
 	if len(res.Kvs) == 0 {
 		return errors.New(st.ErrKeyNotFound)
 	}
 	if err := decode(s.codec, res.Kvs[0].Value, outPtr); err != nil {
-		s.log.V(st.LogLevel).Errorf("Etcd3: Get: decode data err: %s", err.Error())
+		log.V(st.LogLevel).Errorf("Etcd3: Get: decode data err: %s", err.Error())
 		return err
 	}
 	return nil
@@ -130,7 +129,7 @@ func (s *store) Get(ctx context.Context, key string, outPtr interface{}) error {
 func (s *store) List(ctx context.Context, key, keyRegexFilter string, listOutPtr interface{}) error {
 	key = path.Join(s.pathPrefix, key)
 
-	s.log.V(st.LogLevel).Debugf("Etcd3: List: key: %s with filter: %s", key, keyRegexFilter)
+	log.V(st.LogLevel).Debugf("Etcd3: List: key: %s with filter: %s", key, keyRegexFilter)
 
 	if !strings.HasSuffix(key, "/") {
 		key += "/"
@@ -138,7 +137,7 @@ func (s *store) List(ctx context.Context, key, keyRegexFilter string, listOutPtr
 
 	getResp, err := s.client.KV.Get(ctx, key, clientv3.WithPrefix())
 	if err != nil {
-		s.log.V(st.LogLevel).Errorf("Etcd3: List: request err: %s", err.Error())
+		log.V(st.LogLevel).Errorf("Etcd3: List: request err: %s", err.Error())
 		return err
 	}
 
@@ -160,7 +159,7 @@ func (s *store) List(ctx context.Context, key, keyRegexFilter string, listOutPtr
 	}
 
 	if err := decodeList(s.codec, items, listOutPtr); err != nil {
-		s.log.V(st.LogLevel).Errorf("Etcd3: List: decode data err: %s", err.Error())
+		log.V(st.LogLevel).Errorf("Etcd3: List: decode data err: %s", err.Error())
 		return err
 	}
 	return nil
@@ -169,11 +168,11 @@ func (s *store) List(ctx context.Context, key, keyRegexFilter string, listOutPtr
 func (s *store) Map(ctx context.Context, key, keyRegexFilter string, mapOutPtr interface{}) error {
 	key = path.Join(s.pathPrefix, key)
 
-	s.log.V(st.LogLevel).Debugf("Etcd3: Map: key: %s with filter: %s", key, keyRegexFilter)
+	log.V(st.LogLevel).Debugf("Etcd3: Map: key: %s with filter: %s", key, keyRegexFilter)
 
 	getResp, err := s.client.KV.Get(ctx, key, clientv3.WithPrefix())
 	if err != nil {
-		s.log.V(st.LogLevel).Errorf("Etcd3: Map: request err: %s", err.Error())
+		log.V(st.LogLevel).Errorf("Etcd3: Map: request err: %s", err.Error())
 		return err
 	}
 	r, _ := regexp.Compile(keyRegexFilter)
@@ -197,7 +196,7 @@ func (s *store) Map(ctx context.Context, key, keyRegexFilter string, mapOutPtr i
 	}
 
 	if err := decodeMap(s.codec, items, mapOutPtr); err != nil {
-		s.log.V(st.LogLevel).Errorf("Etcd3: Map: decode data err: %s", err.Error())
+		log.V(st.LogLevel).Errorf("Etcd3: Map: decode data err: %s", err.Error())
 		return err
 	}
 
@@ -207,14 +206,14 @@ func (s *store) Map(ctx context.Context, key, keyRegexFilter string, mapOutPtr i
 func (s *store) MapList(ctx context.Context, key string, keyRegexFilter string, mapOutPtr interface{}) error {
 	key = path.Join(s.pathPrefix, key)
 
-	s.log.V(st.LogLevel).Debugf("Etcd3: MapList: key: %s with filter: %s", key, keyRegexFilter)
+	log.V(st.LogLevel).Debugf("Etcd3: MapList: key: %s with filter: %s", key, keyRegexFilter)
 
 	if !strings.HasSuffix(key, "/") {
 		key += "/"
 	}
 	getResp, err := s.client.KV.Get(ctx, key, clientv3.WithPrefix())
 	if err != nil {
-		s.log.V(st.LogLevel).Errorf("Etcd3: MapList: request err: %s", err.Error())
+		log.V(st.LogLevel).Errorf("Etcd3: MapList: request err: %s", err.Error())
 		return err
 	}
 
@@ -237,7 +236,7 @@ func (s *store) MapList(ctx context.Context, key string, keyRegexFilter string, 
 	}
 
 	if err := decodeMapList(s.codec, items, mapOutPtr); err != nil {
-		s.log.V(st.LogLevel).Errorf("Etcd3: MapList: decode data err: %s", err.Error())
+		log.V(st.LogLevel).Errorf("Etcd3: MapList: decode data err: %s", err.Error())
 		return err
 	}
 	return nil
@@ -246,16 +245,16 @@ func (s *store) MapList(ctx context.Context, key string, keyRegexFilter string, 
 func (s *store) Update(ctx context.Context, key string, obj, outPtr interface{}, ttl uint64) error {
 	key = path.Join(s.pathPrefix, key)
 
-	s.log.V(st.LogLevel).Debugf("Etcd3: Update: key: %s, ttl: %d, val: %#v", key, ttl, obj)
+	log.V(st.LogLevel).Debugf("Etcd3: Update: key: %s, ttl: %d, val: %#v", key, ttl, obj)
 
 	data, err := serializer.Encode(s.codec, obj)
 	if err != nil {
-		s.log.V(st.LogLevel).Errorf("Etcd3: Update: encode data err: %s", err.Error())
+		log.V(st.LogLevel).Errorf("Etcd3: Update: encode data err: %s", err.Error())
 		return err
 	}
 	opts, err := s.ttlOpts(ctx, int64(ttl))
 	if err != nil {
-		s.log.V(st.LogLevel).Errorf("Etcd3: Update: create ttl option err: %s", err.Error())
+		log.V(st.LogLevel).Errorf("Etcd3: Update: create ttl option err: %s", err.Error())
 		return err
 	}
 	txnResp, err := s.client.KV.Txn(ctx).
@@ -263,19 +262,19 @@ func (s *store) Update(ctx context.Context, key string, obj, outPtr interface{},
 		Then(clientv3.OpPut(key, string(data), opts...)).
 		Commit()
 	if err != nil {
-		s.log.V(st.LogLevel).Errorf("Etcd3: Update: request err: %s", err.Error())
+		log.V(st.LogLevel).Errorf("Etcd3: Update: request err: %s", err.Error())
 		return err
 	}
 	if !txnResp.Succeeded {
 		return errors.New(st.ErrKeyNotFound)
 	}
 	if validator.IsNil(outPtr) {
-		s.log.V(st.LogLevel).Warn("Etcd3: Update: output struct is nil")
+		log.V(st.LogLevel).Warn("Etcd3: Update: output struct is nil")
 		return nil
 	}
 	if outPtr != nil {
 		if err := decode(s.codec, data, outPtr); err != nil {
-			s.log.V(st.LogLevel).Errorf("Etcd3: Update: decode data err: %s", err.Error())
+			log.V(st.LogLevel).Errorf("Etcd3: Update: decode data err: %s", err.Error())
 			return err
 		}
 	}
@@ -285,34 +284,34 @@ func (s *store) Update(ctx context.Context, key string, obj, outPtr interface{},
 func (s *store) Upsert(ctx context.Context, key string, obj, outPtr interface{}, ttl uint64) error {
 	key = path.Join(s.pathPrefix, key)
 
-	s.log.V(st.LogLevel).Debugf("Etcd3: Upsert: key: %s, ttl: %d, val: %#v", key, ttl, obj)
+	log.V(st.LogLevel).Debugf("Etcd3: Upsert: key: %s, ttl: %d, val: %#v", key, ttl, obj)
 
 	data, err := serializer.Encode(s.codec, obj)
 	if err != nil {
-		s.log.V(st.LogLevel).Errorf("Etcd3: Upsert: encode data err: %s", err.Error())
+		log.V(st.LogLevel).Errorf("Etcd3: Upsert: encode data err: %s", err.Error())
 		return err
 	}
 	opts, err := s.ttlOpts(ctx, int64(ttl))
 	if err != nil {
-		s.log.V(st.LogLevel).Errorf("Etcd3: Upsert: create ttl option err: %s", err.Error())
+		log.V(st.LogLevel).Errorf("Etcd3: Upsert: create ttl option err: %s", err.Error())
 		return err
 	}
 	txnResp, err := s.client.KV.Txn(ctx).
 		Then(clientv3.OpPut(key, string(data), opts...)).Commit()
 	if err != nil {
-		s.log.V(st.LogLevel).Errorf("Etcd3: Upsert: request err: %s", err.Error())
+		log.V(st.LogLevel).Errorf("Etcd3: Upsert: request err: %s", err.Error())
 		return err
 	}
 	if !txnResp.Succeeded {
 		return errors.New(st.ErrKeyExists)
 	}
 	if validator.IsNil(outPtr) {
-		s.log.V(st.LogLevel).Warn("Etcd3: Upsert: output struct is nil")
+		log.V(st.LogLevel).Warn("Etcd3: Upsert: output struct is nil")
 		return nil
 	}
 	if outPtr != nil {
 		if err := decode(s.codec, data, outPtr); err != nil {
-			s.log.V(st.LogLevel).Errorf("Etcd3: Upsert: decode data err: %s", err.Error())
+			log.V(st.LogLevel).Errorf("Etcd3: Upsert: decode data err: %s", err.Error())
 			return err
 		}
 	}
@@ -322,13 +321,13 @@ func (s *store) Upsert(ctx context.Context, key string, obj, outPtr interface{},
 func (s *store) Delete(ctx context.Context, key string) error {
 	key = path.Join(s.pathPrefix, key)
 
-	s.log.V(st.LogLevel).Debugf("Etcd3: Delete: key: %s", key)
+	log.V(st.LogLevel).Debugf("Etcd3: Delete: key: %s", key)
 
 	_, err := s.client.KV.Txn(ctx).
 		Then(clientv3.OpGet(key), clientv3.OpDelete(key)).
 		Commit()
 	if err != nil {
-		s.log.V(st.LogLevel).Errorf("Etcd3: Delete: request err: %s", err.Error())
+		log.V(st.LogLevel).Errorf("Etcd3: Delete: request err: %s", err.Error())
 		return err
 	}
 	return nil
@@ -337,13 +336,13 @@ func (s *store) Delete(ctx context.Context, key string) error {
 func (s *store) DeleteDir(ctx context.Context, key string) error {
 	key = path.Join(s.pathPrefix, key)
 
-	s.log.V(st.LogLevel).Debugf("Etcd3: DeleteDir: key: %s", key)
+	log.V(st.LogLevel).Debugf("Etcd3: DeleteDir: key: %s", key)
 
 	_, err := s.client.KV.Txn(ctx).
 		Then(clientv3.OpDelete(key, clientv3.WithPrefix())).
 		Commit()
 	if err != nil {
-		s.log.V(st.LogLevel).Errorf("Etcd3: DeleteDir: request err: %s", err.Error())
+		log.V(st.LogLevel).Errorf("Etcd3: DeleteDir: request err: %s", err.Error())
 		return err
 	}
 	return nil
@@ -351,7 +350,7 @@ func (s *store) DeleteDir(ctx context.Context, key string) error {
 
 func (s *store) Begin(ctx context.Context) st.ITx {
 
-	s.log.V(st.LogLevel).Debugf("Etcd3: Begin")
+	log.V(st.LogLevel).Debugf("Etcd3: Begin")
 
 	t := new(tx)
 	t.store = s
@@ -363,7 +362,7 @@ func (s *store) Begin(ctx context.Context) st.ITx {
 func (s *store) Watch(ctx context.Context, key, keyRegexFilter string, f func(string, string, []byte)) error {
 	key = path.Join(s.pathPrefix, key)
 
-	s.log.V(st.LogLevel).Debugf("Etcd3: WatchService: key: %s", key)
+	log.V(st.LogLevel).Debugf("Etcd3: WatchService: key: %s", key)
 
 	r, _ := regexp.Compile(keyRegexFilter)
 	rch := s.client.Watch(context.Background(), key, clientv3.WithPrefix())

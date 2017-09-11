@@ -20,9 +20,10 @@ package events
 
 import (
 	"github.com/lastbackend/lastbackend/pkg/api/context"
-	"github.com/lastbackend/lastbackend/pkg/api/namespace"
+	"github.com/lastbackend/lastbackend/pkg/api/app"
 	"github.com/lastbackend/lastbackend/pkg/api/service/views/v1"
 	"github.com/lastbackend/lastbackend/pkg/common/types"
+	"github.com/lastbackend/lastbackend/pkg/log"
 )
 
 const (
@@ -35,11 +36,10 @@ type Events struct{}
 func (e *Events) Listen() error {
 
 	var (
-		log = context.Get().GetLogger()
 		hub = context.Get().GetWssHub()
 		ctx = context.Get().Background()
 
-		ns      = namespace.New(ctx)
+		ns      = app.New(ctx)
 		service = make(chan *types.Service)
 	)
 
@@ -70,7 +70,7 @@ func (e *Events) Listen() error {
 	}()
 
 	if err := ns.WatchService(service); err != nil {
-		log.V(logLevel).Errorf("Events: watch services in namespace err: %s", err.Error())
+		log.V(logLevel).Errorf("Events: watch services in app err: %s", err.Error())
 		return err
 	}
 

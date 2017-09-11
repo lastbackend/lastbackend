@@ -20,7 +20,7 @@ package service
 
 import (
 	"fmt"
-	nspace "github.com/lastbackend/lastbackend/pkg/cli/cmd/namespace"
+	nspace "github.com/lastbackend/lastbackend/pkg/cli/cmd/app"
 	c "github.com/lastbackend/lastbackend/pkg/cli/context"
 	"github.com/lastbackend/lastbackend/pkg/common/errors"
 	"github.com/lastbackend/lastbackend/pkg/common/types"
@@ -42,7 +42,7 @@ func Remove(name string) error {
 	var (
 		err  error
 		http = c.Get().GetHttpClient()
-		srv  = new(types.Namespace)
+		srv  = new(types.App)
 		er   = new(errors.Http)
 	)
 
@@ -52,7 +52,7 @@ func Remove(name string) error {
 	}
 
 	_, _, err = http.
-		DELETE(fmt.Sprintf("/namespace/%s/service/%s", ns.Meta.Name, name)).
+		DELETE(fmt.Sprintf("/app/%s/service/%s", ns.Meta.Name, name)).
 		Request(srv, er)
 	if err != nil {
 		return err

@@ -32,9 +32,9 @@ type util struct {
 
 func (util) Name(_ context.Context, hub, name string) string {
 	cfg := c.Get().GetConfig()
-	namespace := name
+	app := name
 	if cfg.Registry.Username != nil {
-		namespace = fmt.Sprintf("%s/%s", cfg.Registry.Username, namespace)
+		app = fmt.Sprintf("%s/%s", cfg.Registry.Username, app)
 	}
 	if cfg.Registry.Server != nil {
 		server := *cfg.Registry.Server
@@ -44,9 +44,9 @@ func (util) Name(_ context.Context, hub, name string) string {
 		case strings.HasPrefix(server, "https://") == true:
 			server = server[8:]
 		}
-		namespace = fmt.Sprintf("%s/%s", server, namespace)
+		app = fmt.Sprintf("%s/%s", server, app)
 	}
-	return namespace
+	return app
 }
 
 func (util) RegistryAuth(_ context.Context, _ string) *types.RegistryAuth {

@@ -29,7 +29,8 @@ type IStorage interface {
 	Build() IBuild
 	Hook() IHook
 	Image() IImage
-	Namespace() INamespace
+	App() IApp
+	Repo() IRepo
 	Service() IService
 	Pod() IPod
 	Node() INode
@@ -59,24 +60,32 @@ type IHook interface {
 	Remove(ctx context.Context, id string) error
 }
 
-type INamespace interface {
-	GetByName(ctx context.Context, name string) (*types.Namespace, error)
-	List(ctx context.Context) ([]*types.Namespace, error)
-	Insert(ctx context.Context, namespace *types.Namespace) error
-	Update(ctx context.Context, project *types.Namespace) error
+type IApp interface {
+	GetByName(ctx context.Context, name string) (*types.App, error)
+	List(ctx context.Context) ([]*types.App, error)
+	Insert(ctx context.Context, app *types.App) error
+	Update(ctx context.Context, project *types.App) error
+	Remove(ctx context.Context, id string) error
+}
+
+type IRepo interface {
+	GetByName(ctx context.Context, name string) (*types.Repo, error)
+	List(ctx context.Context) ([]*types.Repo, error)
+	Insert(ctx context.Context, app *types.Repo) error
+	Update(ctx context.Context, project *types.Repo) error
 	Remove(ctx context.Context, id string) error
 }
 
 type IService interface {
-	CountByNamespace(ctx context.Context, namespace string) (int, error)
-	GetByName(ctx context.Context, namespace, name string) (*types.Service, error)
+	CountByApp(ctx context.Context, app string) (int, error)
+	GetByName(ctx context.Context, app, name string) (*types.Service, error)
 	GetByPodName(ctx context.Context, name string) (*types.Service, error)
-	ListByNamespace(ctx context.Context, namespace string) ([]*types.Service, error)
+	ListByApp(ctx context.Context, app string) ([]*types.Service, error)
 	Insert(ctx context.Context, service *types.Service) error
 	Update(ctx context.Context, service *types.Service) error
 	UpdateSpec(ctx context.Context, service *types.Service) error
 	Remove(ctx context.Context, service *types.Service) error
-	RemoveByNamespace(ctx context.Context, namespace string) error
+	RemoveByApp(ctx context.Context, app string) error
 
 	Watch(ctx context.Context, service chan *types.Service) error
 	SpecWatch(ctx context.Context, service chan *types.Service) error
@@ -85,12 +94,12 @@ type IService interface {
 }
 
 type IPod interface {
-	GetByName(ctx context.Context, namespace, name string) (*types.Pod, error)
-	ListByNamespace(ctx context.Context, namespace string) (map[string]*types.Pod, error)
-	ListByService(ctx context.Context, namespace, service string) ([]*types.Pod, error)
-	Upsert(ctx context.Context, namespace string, pod *types.Pod) error
-	Update(ctx context.Context, namespace string, pod *types.Pod) error
-	Remove(ctx context.Context, namespace string, pod *types.Pod) error
+	GetByName(ctx context.Context, app, name string) (*types.Pod, error)
+	ListByApp(ctx context.Context, app string) (map[string]*types.Pod, error)
+	ListByService(ctx context.Context, app, service string) ([]*types.Pod, error)
+	Upsert(ctx context.Context, app string, pod *types.Pod) error
+	Update(ctx context.Context, app string, pod *types.Pod) error
+	Remove(ctx context.Context, app string, pod *types.Pod) error
 	Watch(ctx context.Context, pod chan *types.Pod) error
 }
 
@@ -110,7 +119,7 @@ type IVendor interface {
 
 type IVolume interface {
 	GetByToken(ctx context.Context, token string) (*types.Volume, error)
-	ListByNamespace(ctx context.Context, namespace string) ([]*types.Volume, error)
+	ListByApp(ctx context.Context, app string) ([]*types.Volume, error)
 	Insert(ctx context.Context, volume *types.Volume) error
 	Remove(ctx context.Context, id string) error
 }

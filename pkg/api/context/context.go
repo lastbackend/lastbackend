@@ -22,7 +22,6 @@ import (
 	"context"
 	"github.com/lastbackend/lastbackend/pkg/api/config"
 	_c "github.com/lastbackend/lastbackend/pkg/common/context"
-	"github.com/lastbackend/lastbackend/pkg/logger"
 	"github.com/lastbackend/lastbackend/pkg/sockets"
 	"github.com/lastbackend/lastbackend/pkg/storage"
 	"github.com/lastbackend/lastbackend/pkg/util/http"
@@ -33,7 +32,6 @@ var _ctx Context
 type Context struct {
 	_c.IContext
 
-	logger               logger.ILogger
 	storage              storage.IStorage
 	config               *config.Config
 	httpTemplateRegistry *http.RawReq
@@ -42,14 +40,6 @@ type Context struct {
 
 func Get() *Context {
 	return &_ctx
-}
-
-func (c *Context) SetLogger(log logger.ILogger) {
-	c.logger = log
-}
-
-func (c *Context) GetLogger() logger.ILogger {
-	return c.logger
 }
 
 func (c *Context) SetConfig(cfg *config.Config) {

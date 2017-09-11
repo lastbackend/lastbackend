@@ -21,14 +21,13 @@ package routes
 import (
 	"github.com/gorilla/mux"
 	"github.com/lastbackend/lastbackend/pkg/agent/container"
-	"github.com/lastbackend/lastbackend/pkg/agent/context"
 	"github.com/lastbackend/lastbackend/pkg/common/errors"
 	"net/http"
+	"github.com/lastbackend/lastbackend/pkg/log"
 )
 
 func GetLogsH(w http.ResponseWriter, r *http.Request) {
 	var (
-		log      = context.Get().GetLogger()
 		cid      = mux.Vars(r)["container"]
 		notify   = w.(http.CloseNotifier).CloseNotify()
 		doneChan = make(chan bool, 1)

@@ -29,11 +29,11 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/vendors/docker"
 	"github.com/lastbackend/lastbackend/pkg/vendors/interfaces"
 	"net/http"
+	"github.com/lastbackend/lastbackend/pkg/log"
 )
 
 func VendorsH(w http.ResponseWriter, r *http.Request) {
 	var (
-		log     = c.Get().GetLogger()
 		storage = c.Get().GetStorage()
 	)
 
@@ -55,7 +55,7 @@ func VendorsH(w http.ResponseWriter, r *http.Request) {
 
 	w.WriteHeader(http.StatusOK)
 	if _, err := w.Write(response); err != nil {
-		c.Get().GetLogger().Error("Error: write response", err.Error())
+		log.Error("Error: write response", err.Error())
 		return
 	}
 }
@@ -63,7 +63,6 @@ func VendorsH(w http.ResponseWriter, r *http.Request) {
 func VendorConnectH(w http.ResponseWriter, r *http.Request) {
 
 	var (
-		log     = c.Get().GetLogger()
 		storage = c.Get().GetStorage()
 		params  = utils.Vars(r)
 		vendor  = params[`vendor`]
@@ -117,7 +116,7 @@ func VendorConnectH(w http.ResponseWriter, r *http.Request) {
 
 	w.WriteHeader(http.StatusOK)
 	if _, err := w.Write(response); err != nil {
-		c.Get().GetLogger().Error("Error: write response", err.Error())
+		log.Error("Error: write response", err.Error())
 		return
 	}
 }
@@ -125,7 +124,6 @@ func VendorConnectH(w http.ResponseWriter, r *http.Request) {
 func VendorDisconnectH(w http.ResponseWriter, r *http.Request) {
 
 	var (
-		log     = c.Get().GetLogger()
 		storage = c.Get().GetStorage()
 		params  = utils.Vars(r)
 		vendor  = params[`vendor`]
@@ -155,7 +153,7 @@ func VendorDisconnectH(w http.ResponseWriter, r *http.Request) {
 
 	w.WriteHeader(http.StatusOK)
 	if _, err := w.Write(response); err != nil {
-		c.Get().GetLogger().Error("Error: write response", err.Error())
+		log.Error("Error: write response", err.Error())
 		return
 	}
 }
@@ -163,7 +161,6 @@ func VendorDisconnectH(w http.ResponseWriter, r *http.Request) {
 func VCSRepositoryListH(w http.ResponseWriter, r *http.Request) {
 
 	var (
-		log     = c.Get().GetLogger()
 		storage = c.Get().GetStorage()
 		client  interfaces.IVCS
 		params  = utils.Vars(r)
@@ -203,7 +200,7 @@ func VCSRepositoryListH(w http.ResponseWriter, r *http.Request) {
 
 	w.WriteHeader(http.StatusOK)
 	if _, err := w.Write(response); err != nil {
-		c.Get().GetLogger().Error("Error: write response", err.Error())
+		log.Error("Error: write response", err.Error())
 		return
 	}
 }
@@ -211,7 +208,6 @@ func VCSRepositoryListH(w http.ResponseWriter, r *http.Request) {
 func VCSBranchListH(w http.ResponseWriter, r *http.Request) {
 
 	var (
-		log     = c.Get().GetLogger()
 		storage = c.Get().GetStorage()
 		client  interfaces.IVCS
 		params  = utils.Vars(r)
@@ -252,7 +248,7 @@ func VCSBranchListH(w http.ResponseWriter, r *http.Request) {
 
 	w.WriteHeader(http.StatusOK)
 	if _, err := w.Write(response); err != nil {
-		c.Get().GetLogger().Error("Error: write response", err.Error())
+		log.Error("Error: write response", err.Error())
 		return
 	}
 }
@@ -260,7 +256,6 @@ func VCSBranchListH(w http.ResponseWriter, r *http.Request) {
 func DockerRepositorySearchH(w http.ResponseWriter, r *http.Request) {
 
 	var (
-		log    = c.Get().GetLogger()
 		params = r.URL.Query()
 		name   = params.Get("name")
 	)
@@ -283,7 +278,7 @@ func DockerRepositorySearchH(w http.ResponseWriter, r *http.Request) {
 
 	w.WriteHeader(http.StatusOK)
 	if _, err := w.Write(response); err != nil {
-		c.Get().GetLogger().Error("Error: write response", err.Error())
+		log.Error("Error: write response", err.Error())
 		return
 	}
 }
@@ -291,7 +286,6 @@ func DockerRepositorySearchH(w http.ResponseWriter, r *http.Request) {
 func DockerRepositoryTagListH(w http.ResponseWriter, r *http.Request) {
 
 	var (
-		log    = c.Get().GetLogger()
 		params = r.URL.Query()
 		owner  = params.Get("owner")
 		name   = params.Get("name")
@@ -315,7 +309,7 @@ func DockerRepositoryTagListH(w http.ResponseWriter, r *http.Request) {
 
 	w.WriteHeader(http.StatusOK)
 	if _, err := w.Write(response); err != nil {
-		c.Get().GetLogger().Error("Error: write response", err.Error())
+		log.Error("Error: write response", err.Error())
 		return
 	}
 }

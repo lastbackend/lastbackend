@@ -46,7 +46,7 @@ func (r *Runtime) PodList(c context.IContext) ([]*types.Pod, error) {
 	for _, container := range items {
 
 		// Check container is managed by LB
-		// Meta: owner/namespace/service/pod/spec
+		// Meta: owner/app/service/pod/spec
 		label, ok := container.Labels["LB_META"]
 		if !ok {
 			continue

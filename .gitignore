@@ -30,7 +30,7 @@ _testmain.go
 *.srl
 *.DS_Store
 
-build/
+/build/
 vendor/*/
 docs/output/
 coverage.txt

@@ -20,15 +20,16 @@ package http
 
 import (
 	"github.com/gorilla/mux"
-	"github.com/lastbackend/lastbackend/pkg/api/context"
 	"github.com/lastbackend/lastbackend/pkg/util/http"
 
 	events "github.com/lastbackend/lastbackend/pkg/api/events/routes"
 	hook "github.com/lastbackend/lastbackend/pkg/api/hook/routes"
-	namespace "github.com/lastbackend/lastbackend/pkg/api/namespace/routes"
+	app "github.com/lastbackend/lastbackend/pkg/api/app/routes"
 	node "github.com/lastbackend/lastbackend/pkg/api/node/routes"
+	repo "github.com/lastbackend/lastbackend/pkg/api/repo/routes"
 	service "github.com/lastbackend/lastbackend/pkg/api/service/routes"
 	vendors "github.com/lastbackend/lastbackend/pkg/api/vendors/routes"
+	"github.com/lastbackend/lastbackend/pkg/log"
 )
 
 const logLevel = 2
@@ -45,15 +46,15 @@ func AddRoutes(r ...[]http.Route) {
 func init() {
 	AddRoutes(events.Routes)
 	AddRoutes(hook.Routes)
-	AddRoutes(namespace.Routes)
+	AddRoutes(app.Routes)
 	AddRoutes(node.Routes)
+	AddRoutes(repo.Routes)
 	AddRoutes(service.Routes)
 	AddRoutes(vendors.Routes)
 }
 
 func Listen(host string, port int) error {
 
-	log := context.Get().GetLogger()
 	log.V(logLevel).Debug("HTTP: listen HTTP server")
 
 	r := mux.NewRouter()

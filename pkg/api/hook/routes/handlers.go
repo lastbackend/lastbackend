@@ -20,11 +20,12 @@ package routes
 
 import (
 	"github.com/lastbackend/lastbackend/pkg/api/context"
-	"github.com/lastbackend/lastbackend/pkg/api/namespace"
+	"github.com/lastbackend/lastbackend/pkg/api/app"
 	"github.com/lastbackend/lastbackend/pkg/api/service"
 	"github.com/lastbackend/lastbackend/pkg/common/errors"
 	"github.com/lastbackend/lastbackend/pkg/util/http/utils"
 	"net/http"
+	"github.com/lastbackend/lastbackend/pkg/log"
 )
 
 const logLevel = 2
@@ -32,7 +33,6 @@ const logLevel = 2
 func HookExecuteH(w http.ResponseWriter, r *http.Request) {
 
 	var (
-		log       = context.Get().GetLogger()
 		storage   = context.Get().GetStorage()
 		params    = utils.Vars(r)
 		hookParam = params["token"]
@@ -51,27 +51,27 @@ func HookExecuteH(w http.ResponseWriter, r *http.Request) {
 
 		log.V(logLevel).Debugf("Handler: Hook: get service %s", hook.Service)
 
-		ns := namespace.New(r.Context())
-		item, err := ns.Get(hook.Namespace)
+		ns := app.New(r.Context())
+		item, err := ns.Get(hook.App)
 		if err != nil {
-			log.V(logLevel).Errorf("Handler: Hook: get namespace `%s` err: %s", hook.Namespace, err.Error())
+			log.V(logLevel).Errorf("Handler: Hook: get app `%s` err: %s", hook.App, err.Error())
 			errors.HTTP.InternalServerError(w)
 			return
 		}
 		if item == nil {
-			errors.New("namespace").NotFound().Http(w)
+			errors.New("app").NotFound().Http(w)
 			return
 		}
 
 		s := service.New(r.Context(), item.Meta)
 		svc, err := s.Get(hook.Service)
 		if err != nil {
-			log.V(logLevel).Errorf("Handler: Hook: get service `%s` in namespace `%s` err: %s", hook.Service, hook.Namespace, err.Error())
+			log.V(logLevel).Errorf("Handler: Hook: get service `%s` in app `%s` err: %s", hook.Service, hook.App, err.Error())
 			errors.HTTP.InternalServerError(w)
 			return
 		}
 		if svc == nil {
-			log.V(logLevel).Warnf("Handler: Hook: service `%s` in namespace `%s` not found", hook.Service, hook.Namespace)
+			log.V(logLevel).Warnf("Handler: Hook: service `%s` in app `%s` not found", hook.Service, hook.App)
 			errors.New("service").NotFound().Http(w)
 			return
 		}

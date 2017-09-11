@@ -30,6 +30,7 @@ import (
 	"path/filepath"
 	"strings"
 	"time"
+	"github.com/lastbackend/lastbackend/pkg/log"
 )
 
 var (
@@ -116,7 +117,6 @@ func (r *Runtime) StartEventListener() error {
 
 func (r *Runtime) Recovery(pods map[string]types.PodNodeSpec) {
 
-	log := context.Get().GetLogger()
 	ps := context.Get().GetCache().Pods().GetPods()
 
 	for _, pod := range ps {
@@ -138,7 +138,6 @@ func (r *Runtime) Recovery(pods map[string]types.PodNodeSpec) {
 }
 
 func (r *Runtime) Sync(pods map[string]types.PodNodeSpec) {
-	log := context.Get().GetLogger()
 	log.Debug("Runtime: start sync")
 	for _, pod := range pods {
 		r.pManager.SyncPod(pod)
@@ -147,7 +146,6 @@ func (r *Runtime) Sync(pods map[string]types.PodNodeSpec) {
 
 func (r *Runtime) Loop() {
 
-	log := context.Get().GetLogger()
 	log.Debug("Runtime: start Loop")
 
 	var recovery = false
@@ -185,7 +183,6 @@ func (r *Runtime) HeartBeat() {
 
 func (r *Runtime) Events() {
 
-	log := context.Get().GetLogger()
 	log.Debug("Runtime: Events listener")
 	ev, host := r.eListener.Subscribe()
 

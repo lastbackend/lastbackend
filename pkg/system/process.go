@@ -27,6 +27,7 @@ import (
 	"strconv"
 	"strings"
 	"time"
+	"github.com/lastbackend/lastbackend/pkg/log"
 )
 
 // HeartBeat Interval
@@ -47,10 +48,7 @@ func (c *Process) Register(ctx context.IContext, kind string) (*types.Process, e
 
 	var (
 		err error
-
-		log = ctx.GetLogger()
 		stg = ctx.GetStorage()
-
 		item = new(types.Process)
 	)
 
@@ -83,7 +81,6 @@ func (c *Process) Register(ctx context.IContext, kind string) (*types.Process, e
 func (c *Process) HeartBeat() {
 
 	var (
-		log = c.ctx.GetLogger()
 		stg = c.ctx.GetStorage()
 	)
 
@@ -108,7 +105,6 @@ func (c *Process) HeartBeat() {
 // master/replicas type of process used
 func (c *Process) WaitElected(lead chan bool) error {
 	var (
-		log = c.ctx.GetLogger()
 		stg = c.ctx.GetStorage()
 		ld  = make(chan bool)
 	)

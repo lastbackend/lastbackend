@@ -21,6 +21,7 @@ package node
 import (
 	"github.com/lastbackend/lastbackend/pkg/common/types"
 	"github.com/lastbackend/lastbackend/pkg/scheduler/context"
+	"github.com/lastbackend/lastbackend/pkg/log"
 )
 
 type NodeController struct {
@@ -32,7 +33,6 @@ type NodeController struct {
 func (nc *NodeController) Watch(node chan *types.Node) {
 
 	var (
-		log = nc.context.GetLogger()
 		stg = nc.context.GetStorage()
 	)
 
@@ -69,10 +69,6 @@ func (nc *NodeController) Pause() {
 }
 
 func (nc *NodeController) Resume() {
-
-	var (
-		log = nc.context.GetLogger()
-	)
 
 	nc.active = true
 	log.Debug("NodeController: start check pods state")

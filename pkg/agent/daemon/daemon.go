@@ -28,23 +28,25 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/agent/runtime"
 	"github.com/lastbackend/lastbackend/pkg/agent/runtime/cri/cri"
 	"github.com/lastbackend/lastbackend/pkg/cache"
-	"github.com/lastbackend/lastbackend/pkg/logger"
+	"github.com/lastbackend/lastbackend/pkg/log"
 	"github.com/lastbackend/lastbackend/pkg/util/http"
 	"os"
 	"os/signal"
 	"syscall"
 )
 
+const app = "agent"
+
 func Daemon(_cfg *_cfg.Config) {
 
 	var (
 		ctx  = context.Get()
 		cfg  = config.Set(_cfg)
-		log  = logger.New("Agent", *cfg.LogLevel)
 		sigs = make(chan os.Signal)
 		done = make(chan bool, 1)
 	)
 
+	log.New(app, *cfg.LogLevel)
 	log.Info("Start Agent")
 
 	rntm := runtime.Get()
@@ -59,12 +61,11 @@ func Daemon(_cfg *_cfg.Config) {
 
 	crii, err := cri.New(cfg.Runtime)
 	if err != nil {
-		ctx.GetLogger().Errorf("Cannot initialize runtime: %s", err.Error())
+		log.Errorf("Cannot initialize runtime: %s", err.Error())
 	}
 
 	ctx.SetConfig(cfg)
-	ctx.SetLogger(log)
-	ctx.SetCache(cache.New(log))
+	ctx.SetCache(cache.New())
 
 	var host string = "0.0.0.0"
 	if cfg.APIServer.Host != nil && *cfg.APIServer.Host != "" {
@@ -73,7 +74,7 @@ func Daemon(_cfg *_cfg.Config) {
 
 	client, err := http.New(fmt.Sprintf("%s:%d", host, *cfg.APIServer.Port), &http.ReqOpts{})
 	if err != nil {
-		ctx.GetLogger().Errorf("Cannot initialize http client: %s", err.Error())
+		log.Errorf("Cannot initialize http client: %s", err.Error())
 	}
 	ctx.SetHttpClient(client)
 	ctx.SetEventListener(listener.New(ctx.GetHttpClient(), rntm.GetSpecChan()))
@@ -81,11 +82,11 @@ func Daemon(_cfg *_cfg.Config) {
 	ctx.SetCri(crii)
 
 	if err = rntm.StartPodManager(); err != nil {
-		ctx.GetLogger().Errorf("Cannot initialize pod manager: %s", err.Error())
+		log.Errorf("Cannot initialize pod manager: %s", err.Error())
 	}
 
 	if err = rntm.StartEventListener(); err != nil {
-		ctx.GetLogger().Errorf("Cannot initialize event listener: %s", err.Error())
+		log.Errorf("Cannot initialize event listener: %s", err.Error())
 	}
 
 	rntm.Loop()

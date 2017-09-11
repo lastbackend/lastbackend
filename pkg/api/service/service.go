@@ -26,32 +26,32 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/storage/store"
 	"github.com/satori/go.uuid"
 	"strings"
+	"github.com/lastbackend/lastbackend/pkg/log"
 )
 
 const logLevel = 3
 
 type service struct {
-	Context   context.Context
-	Namespace types.Meta
+	Context context.Context
+	App     types.Meta
 }
 
-func New(ctx context.Context, namespace types.Meta) *service {
+func New(ctx context.Context, app types.Meta) *service {
 	return &service{
-		Context:   ctx,
-		Namespace: namespace,
+		Context: ctx,
+		App:     app,
 	}
 }
 
 func (s *service) List() (types.ServiceList, error) {
 	var (
-		log     = ctx.Get().GetLogger()
 		storage = ctx.Get().GetStorage()
 		list    = types.ServiceList{}
 	)
 
 	log.V(logLevel).Debug("Service: list service")
 
-	items, err := storage.Service().ListByNamespace(s.Context, s.Namespace.Name)
+	items, err := storage.Service().ListByApp(s.Context, s.App.Name)
 	if err != nil {
 		log.V(logLevel).Error("Service: list service err: %s", err.Error())
 		return nil, err
@@ -70,13 +70,12 @@ func (s *service) List() (types.ServiceList, error) {
 func (s *service) Get(service string) (*types.Service, error) {
 
 	var (
-		log     = ctx.Get().GetLogger()
 		storage = ctx.Get().GetStorage()
 	)
 
 	log.V(logLevel).Debugf("Service: get service %s", service)
 
-	svc, err := storage.Service().GetByName(s.Context, s.Namespace.Name, service)
+	svc, err := storage.Service().GetByName(s.Context, s.App.Name, service)
 	if err != nil {
 		if err.Error() == store.ErrKeyNotFound {
 			log.V(logLevel).Warnf("Service: service by name `%s` not found", service)
@@ -92,7 +91,6 @@ func (s *service) Get(service string) (*types.Service, error) {
 func (s *service) Create(rq *request.RequestServiceCreateS) (*types.Service, error) {
 
 	var (
-		log     = ctx.Get().GetLogger()
 		storage = ctx.Get().GetStorage()
 		svc     = types.Service{}
 	)
@@ -103,7 +101,7 @@ func (s *service) Create(rq *request.RequestServiceCreateS) (*types.Service, err
 	svc.Meta.SetDefault()
 	svc.Meta.Name = rq.Name
 	svc.Meta.Region = rq.Region
-	svc.Meta.Namespace = s.Namespace.Name
+	svc.Meta.App = s.App.Name
 	svc.Meta.Description = rq.Description
 	svc.Meta.Replicas = 1
 	svc.State.State = types.StateProvision
@@ -121,7 +119,7 @@ func (s *service) Create(rq *request.RequestServiceCreateS) (*types.Service, err
 	hook := types.Hook{}
 	hook.Meta.SetDefault()
 	hook.Meta.ID = strings.Replace(uuid.NewV4().String(), "-", "", -1)
-	hook.Namespace = svc.Meta.Namespace
+	hook.App = svc.Meta.App
 	hook.Service = svc.Meta.Name
 
 	svc.Meta.Hook = hook.Meta.ID
@@ -143,7 +141,6 @@ func (s *service) Update(service *types.Service, rq *request.RequestServiceUpdat
 
 	var (
 		err     error
-		log     = ctx.Get().GetLogger()
 		storage = ctx.Get().GetStorage()
 	)
 
@@ -179,7 +176,6 @@ func (s *service) Update(service *types.Service, rq *request.RequestServiceUpdat
 
 func (s *service) Remove(service *types.Service) error {
 	var (
-		log     = ctx.Get().GetLogger()
 		storage = ctx.Get().GetStorage()
 	)
 
@@ -212,7 +208,6 @@ func (s *service) Remove(service *types.Service) error {
 func (s *service) AddSpec(service *types.Service, rq *request.RequestServiceSpecS) error {
 
 	var (
-		log     = ctx.Get().GetLogger()
 		storage = ctx.Get().GetStorage()
 	)
 
@@ -237,7 +232,6 @@ func (s *service) AddSpec(service *types.Service, rq *request.RequestServiceSpec
 func (s *service) SetSpec(service *types.Service, id string, rq *request.RequestServiceSpecS) error {
 
 	var (
-		log     = ctx.Get().GetLogger()
 		storage = ctx.Get().GetStorage()
 	)
 
@@ -264,7 +258,6 @@ func (s *service) SetSpec(service *types.Service, id string, rq *request.Request
 func (s *service) DelSpec(service *types.Service, id string) error {
 
 	var (
-		log     = ctx.Get().GetLogger()
 		storage = ctx.Get().GetStorage()
 	)
 
@@ -292,7 +285,6 @@ func (s *service) DelSpec(service *types.Service, id string) error {
 func (s *service) Redeploy(service *types.Service) error {
 
 	var (
-		log     = ctx.Get().GetLogger()
 		storage = ctx.Get().GetStorage()
 	)
 

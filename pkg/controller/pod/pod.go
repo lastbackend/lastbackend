@@ -21,17 +21,13 @@ package pod
 import (
 	"fmt"
 	"github.com/lastbackend/lastbackend/pkg/common/types"
-	"github.com/lastbackend/lastbackend/pkg/controller/context"
 	"github.com/satori/go.uuid"
 	"strings"
 	"time"
+	"github.com/lastbackend/lastbackend/pkg/log"
 )
 
 func Create(svc *types.Service) *types.Pod {
-
-	var (
-		log = context.Get().GetLogger()
-	)
 
 	log.Debug("Create new pod state on service")
 
@@ -48,10 +44,6 @@ func Create(svc *types.Service) *types.Pod {
 
 func Remove(p *types.Pod) {
 
-	var (
-		log = context.Get().GetLogger()
-	)
-
 	log.Debugf("Mark pod for deletion: %s", p.Meta.Name)
 
 	p.State.Provision = true
@@ -64,10 +56,6 @@ func Remove(p *types.Pod) {
 }
 
 func SetSpec(p *types.Pod, spec map[string]*types.ServiceSpec) {
-
-	var (
-		log = context.Get().GetLogger()
-	)
 
 	if p.Spec.State == types.StateDestroyed {
 		return
@@ -98,10 +86,6 @@ func SetSpec(p *types.Pod, spec map[string]*types.ServiceSpec) {
 }
 
 func generateSpec(spec map[string]*types.ServiceSpec) types.PodSpec {
-
-	var (
-		log = context.Get().GetLogger()
-	)
 
 	log.Debug("Generate new pod spec")
 
@@ -155,7 +139,7 @@ func generateName(svc *types.Service) string {
 	for {
 
 		hash = strings.Split(uuid.NewV4().String(), "-")[4]
-		name = fmt.Sprintf("%s:%s:%s", svc.Meta.Namespace, svc.Meta.Name, hash[5:])
+		name = fmt.Sprintf("%s:%s:%s", svc.Meta.App, svc.Meta.Name, hash[5:])
 		if _, ok := svc.Pods[name]; !ok {
 			break
 		}

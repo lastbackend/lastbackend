@@ -22,13 +22,14 @@ import (
 	"context"
 	"fmt"
 	ctx "github.com/lastbackend/lastbackend/pkg/api/context"
-	"github.com/lastbackend/lastbackend/pkg/api/namespace"
+	"github.com/lastbackend/lastbackend/pkg/api/app"
 	"github.com/lastbackend/lastbackend/pkg/common/types"
 	"github.com/lastbackend/lastbackend/pkg/storage/store"
 	h "github.com/lastbackend/lastbackend/pkg/util/http"
 	"github.com/pkg/errors"
 	"io"
 	"net/http"
+	"github.com/lastbackend/lastbackend/pkg/log"
 )
 
 const logLevel = 3
@@ -40,7 +41,6 @@ type pod struct {
 
 func (p *pod) Set(pod types.Pod) error {
 	var (
-		log     = ctx.Get().GetLogger()
 		storage = ctx.Get().GetStorage()
 	)
 
@@ -56,23 +56,23 @@ func (p *pod) Set(pod types.Pod) error {
 		return err
 	}
 
-	ns := namespace.New(p.Context)
-	item, err := ns.Get(svc.Meta.Namespace)
+	ns := app.New(p.Context)
+	item, err := ns.Get(svc.Meta.App)
 	if err != nil {
-		log.V(logLevel).Errorf("Pod: get namespace `%s` err: %s", pod.Meta.Name, err.Error())
+		log.V(logLevel).Errorf("Pod: get app `%s` err: %s", pod.Meta.Name, err.Error())
 		return err
 	}
 	if item == nil {
-		log.V(logLevel).Warnf("Pod: namespace `%s` not found", pod.Meta.Name, err.Error())
+		log.V(logLevel).Warnf("Pod: app `%s` not found", pod.Meta.Name, err.Error())
 		return nil
 	}
 
-	log.V(logLevel).Debugf("Pod: find pod `%s` in service %s", pod.Meta.Name, svc.Meta.Namespace)
+	log.V(logLevel).Debugf("Pod: find pod `%s` in service %s", pod.Meta.Name, svc.Meta.App)
 
 	// If service has not this pod then skip it
 	if _, ok := svc.Pods[pod.Meta.Name]; ok {
 
-		log.V(logLevel).Debugf("Pod: update pod %s in service %s", pod.Meta.Name, svc.Meta.Namespace)
+		log.V(logLevel).Debugf("Pod: update pod %s in service %s", pod.Meta.Name, svc.Meta.App)
 
 		svc.Pods[pod.Meta.Name].Containers = pod.Containers
 		svc.Pods[pod.Meta.Name].Meta = pod.Meta
@@ -108,7 +108,7 @@ func (p *pod) Set(pod types.Pod) error {
 			}
 		}
 	} else {
-		log.V(logLevel).Warnf("Pod: pod %s in service %s not found", pod.Meta.Name, svc.Meta.Namespace)
+		log.V(logLevel).Warnf("Pod: pod %s in service %s not found", pod.Meta.Name, svc.Meta.App)
 	}
 
 	log.V(logLevel).Debugf("Pod: сheck the possibility of removing the service %s", svc.Meta.Name)
@@ -140,13 +140,12 @@ func Logs(c context.Context, ns, pod, container string, stream io.Writer, done c
 	const buffer_size = 1024
 
 	var (
-		log      = ctx.Get().GetLogger()
 		storage  = ctx.Get().GetStorage()
 		buffer   = make([]byte, buffer_size)
 		doneChan = make(chan bool, 1)
 	)
 
-	log.V(logLevel).Debugf("Pod: get container `%s` logs for pod `%s` in namespace `%s`", container, pod, ns)
+	log.V(logLevel).Debugf("Pod: get container `%s` logs for pod `%s` in app `%s`", container, pod, ns)
 
 	svc, err := storage.Service().GetByPodName(c, pod)
 	if err != nil {
@@ -154,23 +153,23 @@ func Logs(c context.Context, ns, pod, container string, stream io.Writer, done c
 			log.V(logLevel).Debugf("Pod: pod `%s` with container `%s` not found", pod, c)
 			return nil
 		}
-		log.V(logLevel).Errorf("Pod: get container `%s` logs for pod `%s` in namespace `%s` err: %s", container, pod, ns, err.Error())
+		log.V(logLevel).Errorf("Pod: get container `%s` logs for pod `%s` in app `%s` err: %s", container, pod, ns, err.Error())
 		return err
 	}
 
-	_ns := namespace.New(c)
-	item, err := _ns.Get(svc.Meta.Namespace)
+	_ns := app.New(c)
+	item, err := _ns.Get(svc.Meta.App)
 	if err != nil {
-		log.V(logLevel).Errorf("Pod: get namespace `%s` err: %s", svc.Meta.Namespace, err.Error())
+		log.V(logLevel).Errorf("Pod: get app `%s` err: %s", svc.Meta.App, err.Error())
 		return err
 	}
 	if item == nil {
-		log.V(logLevel).Warnf("Pod: namespace `%s` not found", svc.Meta.Namespace, err.Error())
+		log.V(logLevel).Warnf("Pod: app `%s` not found", svc.Meta.App, err.Error())
 		return err
 	}
 
 	if ns != item.Meta.Name {
-		log.V(logLevel).Errorf("Pod: namespace `%s` not found", ns)
+		log.V(logLevel).Errorf("Pod: app `%s` not found", ns)
 		return err
 	}
 

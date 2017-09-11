@@ -26,6 +26,7 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/agent/events"
 	"github.com/lastbackend/lastbackend/pkg/common/types"
 	"github.com/satori/go.uuid"
+	"github.com/lastbackend/lastbackend/pkg/log"
 )
 
 const ContainerRestartTimeout = 10 // seconds
@@ -47,7 +48,6 @@ type Task struct {
 func (t *Task) start() {
 
 	var (
-		log = context.Get().GetLogger()
 		pod = context.Get().GetCache().Pods()
 	)
 
@@ -99,7 +99,6 @@ func (t *Task) start() {
 
 func (t *Task) imagesUpdate() {
 
-	log := context.Get().GetLogger()
 	crii := context.Get().GetCri()
 
 	// Check images states
@@ -145,7 +144,6 @@ func (t *Task) containersCreate() {
 
 	var (
 		err  error
-		log  = context.Get().GetLogger()
 		crii = context.Get().GetCri()
 	)
 
@@ -185,7 +183,6 @@ func (t *Task) containersCreate() {
 func (t *Task) containersRemove() {
 
 	var (
-		log   = context.Get().GetLogger()
 		specs = make(map[string]bool)
 	)
 
@@ -211,7 +208,6 @@ func (t *Task) containersRemove() {
 
 func (t *Task) containersStateManage() {
 
-	log := context.Get().GetLogger()
 	defer t.pod.UpdateState()
 
 	log.Debugf("Task [%s]: containers state update from: %s to %s", t.id, t.pod.State.State, t.spec.State)
@@ -237,7 +233,6 @@ func (t *Task) containersStateManage() {
 }
 
 func (t *Task) containerStart(c *types.Container) {
-	log := context.Get().GetLogger()
 	crii := context.Get().GetCri()
 
 	log.Debugf("Task [%s]: container: %s try to start", t.id, c.ID)
@@ -255,7 +250,6 @@ func (t *Task) containerStart(c *types.Container) {
 }
 
 func (t *Task) containerStop(c *types.Container) {
-	log := context.Get().GetLogger()
 	crii := context.Get().GetCri()
 
 	timeout := time.Duration(ContainerStopTimeout) * time.Second
@@ -274,7 +268,6 @@ func (t *Task) containerStop(c *types.Container) {
 }
 
 func (t *Task) containerRestart(c *types.Container) {
-	log := context.Get().GetLogger()
 	crii := context.Get().GetCri()
 
 	timeout := time.Duration(ContainerRestartTimeout) * time.Second
@@ -292,7 +285,6 @@ func (t *Task) containerRestart(c *types.Container) {
 }
 
 func (t *Task) containerDestroy(c *types.Container) {
-	log := context.Get().GetLogger()
 	crii := context.Get().GetCri()
 
 	log.Debugf("Task [%s]: pod %s delete %d containers", t.id, t.pod.Meta.Name, len(t.pod.Containers))
@@ -317,7 +309,6 @@ func (t *Task) clean() {
 }
 
 func NewTask(meta types.PodMeta, state types.PodState, spec types.PodSpec, pod *types.Pod) *Task {
-	log := context.Get().GetLogger()
 	uuid := uuid.NewV4().String()
 	log.Debugf("Task [%s]: Create new task for pod: %s", uuid, pod.Meta.Name)
 	log.Debugf("Task [%s]: Container spec count: %d", uuid, len(spec.Containers))

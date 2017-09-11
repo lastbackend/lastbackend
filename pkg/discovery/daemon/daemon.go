@@ -24,30 +24,31 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/discovery/config"
 	"github.com/lastbackend/lastbackend/pkg/discovery/context"
 	"github.com/lastbackend/lastbackend/pkg/discovery/runtime"
-	"github.com/lastbackend/lastbackend/pkg/logger"
 	"github.com/lastbackend/lastbackend/pkg/storage"
 	"os"
 	"os/signal"
 	"syscall"
+	"github.com/lastbackend/lastbackend/pkg/log"
 )
+
+const app = "discovery"
 
 func Daemon(_cfg *_cfg.Config) {
 
 	var (
 		ctx  = context.Get()
 		cfg  = config.Set(_cfg)
-		log  = logger.New("Discovery", *cfg.LogLevel)
 		sigs = make(chan os.Signal)
 		done = make(chan bool, 1)
 	)
 
+	log.New(app, *cfg.LogLevel)
 	log.Info("Start service discovery")
 
 	ctx.SetConfig(cfg)
-	ctx.SetLogger(log)
-	ctx.SetCache(cache.New(log))
+	ctx.SetCache(cache.New())
 
-	stg, err := storage.Get(cfg.GetEtcdDB(), log)
+	stg, err := storage.Get(cfg.GetEtcdDB())
 	if err != nil {
 		panic(err)
 	}

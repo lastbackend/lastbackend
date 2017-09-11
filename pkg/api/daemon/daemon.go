@@ -25,7 +25,7 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/api/context"
 	"github.com/lastbackend/lastbackend/pkg/api/events"
 	"github.com/lastbackend/lastbackend/pkg/api/http"
-	"github.com/lastbackend/lastbackend/pkg/logger"
+	"github.com/lastbackend/lastbackend/pkg/log"
 	"github.com/lastbackend/lastbackend/pkg/sockets"
 	"github.com/lastbackend/lastbackend/pkg/storage"
 	"os"
@@ -33,22 +33,23 @@ import (
 	"syscall"
 )
 
+const app = "api"
+
 func Daemon(_cfg *_cfg.Config) {
 
 	var (
 		ctx  = context.Get()
 		cfg  = config.Set(_cfg)
-		log  = logger.New("API", *cfg.LogLevel)
 		sigs = make(chan os.Signal)
 		done = make(chan bool, 1)
 	)
 
+	log.New(app, *cfg.LogLevel)
 	log.Info("Start API server")
 
 	ctx.SetConfig(cfg)
-	ctx.SetLogger(log)
 
-	stg, err := storage.Get(cfg.GetEtcdDB(), log)
+	stg, err := storage.Get(cfg.GetEtcdDB())
 	if err != nil {
 		panic(err)
 	}

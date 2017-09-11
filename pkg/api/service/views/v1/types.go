@@ -72,12 +72,12 @@ type ServiceMeta struct {
 	// Meta Hook
 	Hook string `json:"hook"`
 	// Meta labels
-	Labels    map[string]string `json:"labels"`
-	Region    string            `json:"region,omitempty"`
-	Replicas  int               `json:"replicas"`
-	Namespace string            `json:"namespace"`
-	Created   time.Time         `json:"created"`
-	Updated   time.Time         `json:"updated"`
+	Labels   map[string]string `json:"labels"`
+	Region   string            `json:"region,omitempty"`
+	Replicas int               `json:"replicas"`
+	App      string            `json:"app"`
+	Created  time.Time         `json:"created"`
+	Updated  time.Time         `json:"updated"`
 }
 
 type ServiceDNS struct {

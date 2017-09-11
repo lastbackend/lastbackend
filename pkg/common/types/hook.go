@@ -21,14 +21,10 @@ package types
 type HookList []Hook
 
 type Hook struct {
-	// Hook Meta
-	Meta HookMeta `json:"meta"`
-	// Hook service to build images
-	Service string `json:"service"`
-	// Namespace name
-	Namespace string `json:"namespace"`
-	// Hook image to build
-	Image string `json:"image"`
+	Meta    HookMeta `json:"meta"`
+	Service string   `json:"service"`
+	App     string   `json:"app"`
+	Image   string   `json:"image"`
 }
 
 type HookMeta struct {

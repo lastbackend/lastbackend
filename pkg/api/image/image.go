@@ -23,6 +23,7 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/api/build"
 	c "github.com/lastbackend/lastbackend/pkg/api/context"
 	"github.com/lastbackend/lastbackend/pkg/common/types"
+	"github.com/lastbackend/lastbackend/pkg/log"
 )
 
 const logLevel = 3
@@ -32,7 +33,6 @@ var Util IUtil = util{}
 func Create(ctx context.Context, registry string, source types.ServiceSource) (*types.Image, error) {
 
 	var (
-		log     = c.Get().GetLogger()
 		storage = c.Get().GetStorage()
 		image   = types.Image{}
 	)
@@ -74,7 +74,6 @@ func Create(ctx context.Context, registry string, source types.ServiceSource) (*
 func Get(ctx context.Context, registry string, source types.ServiceSource) (*types.Image, error) {
 
 	var (
-		log     = c.Get().GetLogger()
 		storage = c.Get().GetStorage()
 	)
 

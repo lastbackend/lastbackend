@@ -21,12 +21,10 @@ package context
 import (
 	"context"
 	"github.com/lastbackend/lastbackend/pkg/cache"
-	"github.com/lastbackend/lastbackend/pkg/logger"
 	"github.com/lastbackend/lastbackend/pkg/storage"
 )
 
 type IContext interface {
-	GetLogger() logger.ILogger
 	GetStorage() storage.IStorage
 	GetCache() *cache.Cache
 	Background() context.Context

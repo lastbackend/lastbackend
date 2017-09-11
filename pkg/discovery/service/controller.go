@@ -23,6 +23,7 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/common/types"
 	"github.com/lastbackend/lastbackend/pkg/discovery/context"
 	"strings"
+	"github.com/lastbackend/lastbackend/pkg/log"
 )
 
 type ServiceController struct {
@@ -34,7 +35,6 @@ type ServiceController struct {
 
 func (sc *ServiceController) Watch(services chan *types.Service) {
 	var (
-		log = sc.context.GetLogger()
 		stg = sc.context.GetStorage()
 	)
 
@@ -55,7 +55,7 @@ func (sc *ServiceController) Watch(services chan *types.Service) {
 						continue
 					}
 
-					endpoint := fmt.Sprintf("%s-%s.%s", s.Meta.Name, s.Meta.Namespace, *context.Get().GetConfig().SystemDomain)
+					endpoint := fmt.Sprintf("%s-%s.%s", s.Meta.Name, s.Meta.App, *context.Get().GetConfig().SystemDomain)
 					endpoint = strings.Replace(endpoint, ":", "-", -1)
 
 					if s.State.State == types.StateDestroyed {
@@ -111,12 +111,12 @@ func (sc *ServiceController) Watch(services chan *types.Service) {
 }
 
 func (sc *ServiceController) Pause() {
-	sc.context.GetLogger().Debugf("ServiceController: pause")
+	log.V(logLevel).Debugf("ServiceController: pause")
 	sc.active = false
 }
 
 func (sc *ServiceController) Resume() {
-	sc.context.GetLogger().Debugf("ServiceController: pause")
+	log.V(logLevel).Debugf("ServiceController: pause")
 	sc.active = true
 }
 

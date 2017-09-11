@@ -23,6 +23,7 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/common/errors"
 	"github.com/lastbackend/lastbackend/pkg/common/types"
 	"github.com/lastbackend/lastbackend/pkg/scheduler/context"
+	"github.com/lastbackend/lastbackend/pkg/log"
 )
 
 type PodController struct {
@@ -36,7 +37,6 @@ type PodController struct {
 
 func (pc *PodController) Watch(node chan *types.Node) {
 	var (
-		log = pc.context.GetLogger()
 		stg = pc.context.GetStorage()
 	)
 
@@ -96,21 +96,20 @@ func (pc *PodController) Pause() {
 func (pc *PodController) Resume() {
 
 	var (
-		log = pc.context.GetLogger()
 		stg = pc.context.GetStorage()
 	)
 
 	pc.active = true
 
 	log.Debug("PodController: start check pods state")
-	nss, err := stg.Namespace().List(pc.context.Background())
+	apps, err := stg.App().List(pc.context.Background())
 	if err != nil {
-		log.Errorf("PodController: Get namespaces list err: %s", err.Error())
+		log.Errorf("PodController: Get apps list err: %s", err.Error())
 	}
 
-	for _, ns := range nss {
-		log.Debugf("PodController: Get pods in namespace: %s", ns.Meta.Name)
-		pods, err := stg.Pod().ListByNamespace(pc.context.Background(), ns.Meta.Name)
+	for _, ns := range apps {
+		log.Debugf("PodController: Get pods in app: %s", ns.Meta.Name)
+		pods, err := stg.Pod().ListByApp(pc.context.Background(), ns.Meta.Name)
 		if err != nil {
 			log.Errorf("PodController: Get pods list err: %s", err.Error())
 		}
@@ -128,6 +127,6 @@ func NewPodController(ctx *context.Context) *PodController {
 	sc.context = ctx
 	sc.active = false
 	sc.pods = make(chan *types.Pod)
-	sc.pending = cache.NewPodCache(ctx.GetLogger())
+	sc.pending = cache.NewPodCache()
 	return sc
 }

@@ -21,6 +21,7 @@ package service
 import (
 	"github.com/lastbackend/lastbackend/pkg/common/types"
 	"github.com/lastbackend/lastbackend/pkg/controller/context"
+	"github.com/lastbackend/lastbackend/pkg/log"
 )
 
 type ServiceController struct {
@@ -31,7 +32,6 @@ type ServiceController struct {
 
 func (sc *ServiceController) Watch() {
 	var (
-		log = sc.context.GetLogger()
 		stg = sc.context.GetStorage()
 	)
 
@@ -51,7 +51,7 @@ func (sc *ServiceController) Watch() {
 						continue
 					}
 
-					log.Debugf("Service needs to be provisioned: %s:%s", s.Meta.Namespace, s.Meta.Name)
+					log.Debugf("Service needs to be provisioned: %s:%s", s.Meta.App, s.Meta.Name)
 					if err := Provision(s); err != nil {
 						log.Errorf("Error: ServiceController: Service provision: %s", err.Error())
 					}
@@ -70,26 +70,25 @@ func (sc *ServiceController) Pause() {
 func (sc *ServiceController) Resume() {
 
 	var (
-		log = sc.context.GetLogger()
 		stg = sc.context.GetStorage()
 	)
 
 	sc.active = true
 
 	log.Debug("Service: start check services states")
-	nss, err := stg.Namespace().List(sc.context.Background())
+	nss, err := stg.App().List(sc.context.Background())
 	if err != nil {
 		log.Errorf("Service: Get namespaces list err: %s", err.Error())
 	}
 
 	for _, ns := range nss {
-		svcs, err := stg.Service().ListByNamespace(sc.context.Background(), ns.Meta.Name)
+		svcs, err := stg.Service().ListByApp(sc.context.Background(), ns.Meta.Name)
 		if err != nil {
 			log.Errorf("Service: Get services list err: %s", err.Error())
 		}
 
 		for _, svc := range svcs {
-			svc, err := stg.Service().GetByName(sc.context.Background(), svc.Meta.Namespace, svc.Meta.Name)
+			svc, err := stg.Service().GetByName(sc.context.Background(), svc.Meta.App, svc.Meta.Name)
 			if err != nil {
 				log.Errorf("Service: Get service err: %s", err.Error())
 			}

@@ -1,8 +1,8 @@
 == Last.Backend API
 
-The LB Origin API exposes operations for managing a Last.Backend cluster, including namespace management, services, image and source builds, HTTP(s) routing, and dns management.
+The LB Origin API exposes operations for managing a Last.Backend cluster, including app management, services, image and source builds, HTTP(s) routing, and dns management.
 
-=== Namespace
+=== Application
 
 ==== Object structure
 
@@ -11,10 +11,10 @@ The LB Origin API exposes operations for managing a Last.Backend cluster, includ
 |===
 |Name |Type |Description 
 
-|name |string |namespace name 
-|description |string |namespace description 
-|created |string |information about when the namespace was created 
-|updated |string |information about when the namespace was last updated 
+|name |string |app name
+|description |string |app description
+|created |string |information about when the app was created
+|updated |string |information about when the app was last updated
 |===
 
 [source,json]
@@ -22,7 +22,7 @@ The LB Origin API exposes operations for managing a Last.Backend cluster, includ
 {
   "meta": {
     "name": "test-ns",
-    "description": "this description info about this namespace",
+    "description": "this description info about this app",
     "created": "2017-01-20T22:13:04.596267094+03:00",
     "updated": "2017-03-11T10:10:04.506267142+03:00"
   }
@@ -36,8 +36,8 @@ The LB Origin API exposes operations for managing a Last.Backend cluster, includ
 
 Body:
 
-* name - namespace unique name
-* description - namespace description info
+* name - app unique name
+* description - app description info
 
 *Response parameters:*
 
@@ -57,10 +57,10 @@ Errors:
 *`REQUEST`*
 [source,json]
 ----
-POST /namespace HTTP/1.1
+POST /app HTTP/1.1
 {
   "name": "test-ns",
-  "description": "this description info about this namespace"
+  "description": "this description info about this app"
 }
 ----
 
@@ -72,7 +72,7 @@ Content-Type: application/json
 {
   "meta": {
     "name": "test-ns",
-    "description": "this description info about this namespace",
+    "description": "this description info about this app",
     "created": "2017-01-20T22:13:04.596267094+03:00",
     "updated": "2017-03-11T10:10:04.506267142+03:00"
   }
@@ -87,7 +87,7 @@ Content-Type: application/json
 
 Query:
 
-* namespace - namespace unique name
+* app - app unique name
 
 *Response parameters:*
 
@@ -99,13 +99,13 @@ Status codes:
 
 Errors:
 
-* NAMESPACE_NOT_FOUND
+* APP_NOT_FOUND
 * INTERNAL_SERVER_ERROR
 
 *`REQUEST`*
 [source,bash]
 ----
-GET /namespace/{namespace} HTTP/1.1
+GET /app/{app} HTTP/1.1
 ----
 
 *`RESPONSE`*
@@ -116,7 +116,7 @@ Content-Type: application/json
 {
   "meta": {
     "name": "test-ns",
-    "description": "this description info about this namespace",
+    "description": "this description info about this app",
     "created": "2017-01-20T22:13:04.596267094+03:00",
     "updated": "2017-03-11T10:10:04.506267142+03:00"
   }
@@ -139,7 +139,7 @@ Errors:
 *`REQUEST`*
 [source,bash]
 ----
-GET /namespace HTTP/1.1
+GET /app HTTP/1.1
 ----
 
 *`RESPONSE`*
@@ -150,7 +150,7 @@ Content-Type: application/json
 [{
    "meta": {
      "name": "test-ns",
-     "description": "this description info about this namespace",
+     "description": "this description info about this app",
      "created": "2017-01-20T22:13:04.596267094+03:00",
      "updated": "2017-03-11T10:10:04.506267142+03:00"
    }
@@ -163,11 +163,11 @@ Content-Type: application/json
 
 Query:
 
-* namespace - namespace unique name
+* app - app unique name
 
 Body:
 
-* description - namespace description info
+* description - app description info
 
 *Response parameters:*
 
@@ -185,9 +185,9 @@ Errors:
 *`REQUEST`*
 [source,json]
 ----
-PUT /namespace/{namespace} HTTP/1.1
+PUT /app/{app} HTTP/1.1
 {
-  "description": "this new description info about this namespace"
+  "description": "this new description info about this app"
 }
 ----
 
@@ -199,7 +199,7 @@ Content-Type: application/json
 {
    "meta": {
      "name": "test-ns",
-     "description": "this new description info about this namespace",
+     "description": "this new description info about this app",
      "created": "2017-01-20T22:13:04.596267094+03:00",
      "updated": "2017-05-11T10:10:04.506267142+03:00"
    }
@@ -214,7 +214,7 @@ Content-Type: application/json
 
 Query:
 
-* namespace - namespace unique name
+* app - app unique name
 
 *Response parameters:*
 
@@ -226,13 +226,13 @@ Status codes:
 
 Errors:
 
-* NAMESPACE_NOT_FOUND
+* APP_NOT_FOUND
 * INTERNAL_SERVER_ERROR
 
 *`REQUEST`*
 [source,bash]
 ----
-DELETE /namespace/{namespace} HTTP/1.1
+DELETE /app/{app} HTTP/1.1
 ----
 
 *`RESPONSE`*
@@ -247,7 +247,7 @@ HTTP/1.1 200 OK
 
 Query:
 
-* namespace - namespace unique name
+* app - app unique name
 
 *Response parameters:*
 
@@ -259,13 +259,13 @@ Status codes:
 
 Errors:
 
-* NAMESPACE_NOT_FOUND
+* APP_NOT_FOUND
 * INTERNAL_SERVER_ERROR
 
 *`REQUEST`*
 [source,bash]
 ----
-GET /namespace/{namespace}/activity HTTP/1.1
+GET /app/{app}/activity HTTP/1.1
 ----
 
 *`RESPONSE`*
@@ -288,7 +288,7 @@ Content-Type: application/json
 |===
 |Name |Type |Description 
 
-|namespace |string |namespace unique identificator 
+|app |string |app unique identificator
 |name |string |service name 
 |description |string |service description 
 |replicas |int |pod count in service 
@@ -301,7 +301,7 @@ Content-Type: application/json
     "name": "redis",
     "description": "demo description",
     "replicas": 1,
-    "namespace": "demo",
+    "app": "demo",
     "created": "2017-05-20T22:43:33.101059484+03:00",
     "updated": "2017-05-20T22:43:33.101059607+03:00"
   },
@@ -348,11 +348,11 @@ Content-Type: application/json
 
 Query:
 
-* namespace - namespace unique name
+* app - app unique name
 
 Body:
 
-* name - unique name in namespace
+* name - unique name in app
 * memory - limit memory size for service
 
 *Response parameters:*
@@ -370,7 +370,7 @@ Errors:
 * TEMPLATE_NOT_FOUND
 * INCORRECT_JSON
 * BAD_PARAMETER_NAME
-* BAD_PARAMETER_NAMESPACE
+* BAD_PARAMETER_APP
 * BAD_PARAMETER_TEMPLATE_NAME
 * NAME_NOT_UNIQUE
 * INTERNAL_SERVER_ERROR
@@ -378,7 +378,7 @@ Errors:
 *`REQUEST`*
 [source,json]
 ----
-POST /namespace/{namespace}/service HTTP/1.1
+POST /app/{app}/service HTTP/1.1
 {
   "name": "test-dervice",
   "description": "demo description",
@@ -399,7 +399,7 @@ Content-Type: application/json
     "name": "redis",
     "description": "demo description",
     "replicas": 1,
-    "namespace": "demo",
+    "app": "demo",
     "created": "2017-05-20T22:43:33.101059484+03:00",
     "updated": "2017-05-20T22:43:33.101059607+03:00"
   },
@@ -445,7 +445,7 @@ Content-Type: application/json
 
 Query:
 
-* namespace - namespace unique name
+* app - app unique name
 * service - service unique name
 
 *Response parameters:*
@@ -464,7 +464,7 @@ Errors:
 *`REQUEST`*
 [source,bash]
 ----
-GET /namespace/{namespace}/service/{service} HTTP/1.1
+GET /app/{app}/service/{service} HTTP/1.1
 ----
 
 *`RESPONSE`*
@@ -477,7 +477,7 @@ Content-Type: application/json
     "name": "redis",
     "description": "demo description",
     "replicas": 1,
-    "namespace": "demo",
+    "app": "demo",
     "created": "2017-05-20T22:43:33.101059484+03:00",
     "updated": "2017-05-20T22:43:33.101059607+03:00"
   },
@@ -523,7 +523,7 @@ Content-Type: application/json
 
 Query:
 
-* namespace - namespace unique name
+* app - app unique name
 
 Status codes:
 
@@ -537,7 +537,7 @@ Errors:
 *`REQUEST`*
 [source,bash]
 ----
-GET /namespace/{namespace}/service HTTP/1.1
+GET /app/{app}/service HTTP/1.1
 ----
 
 *`RESPONSE`*
@@ -550,7 +550,7 @@ Content-Type: application/json
      "name": "redis",
      "description": "demo description",
      "replicas": 1,
-     "namespace": "demo",
+     "app": "demo",
      "created": "2017-05-20T22:43:33.101059484+03:00",
      "updated": "2017-05-20T22:43:33.101059607+03:00"
    },
@@ -596,7 +596,7 @@ Content-Type: application/json
 
 Query:
 
-* namespace - namespace unique name
+* app - app unique name
 * service - service unique name
 
 Body:
@@ -622,7 +622,7 @@ Errors:
 *`REQUEST`*
 [source,json]
 ----
-PUT /namespace/{namespace}/service/{service} HTTP/1.1
+PUT /app/{app}/service/{service} HTTP/1.1
 {
   "description": "new demo description"
 }
@@ -638,7 +638,7 @@ Content-Type: application/json
     "name": "redis",
     "description": "new demo description",
     "replicas": 1,
-    "namespace": "demo",
+    "app": "demo",
     "created": "2017-05-20T22:43:33.101059484+03:00",
     "updated": "2017-05-20T22:43:33.101059607+03:00"
   },
@@ -684,7 +684,7 @@ Content-Type: application/json
 
 Query:
 
-* namespace - namespace unique name
+* app - app unique name
 * service - service unique name
 
 *Response parameters:*
@@ -703,7 +703,7 @@ Errors:
 *`REQUEST`*
 [source,bash]
 ----
-DELETE /namespace/{namespace}/service/{service} HTTP/1.1
+DELETE /app/{app}/service/{service} HTTP/1.1
 ----
 
 *`RESPONSE`*
@@ -718,7 +718,7 @@ HTTP/1.1 200 OK
 
 Query:
 
-* namespace - unique unique name
+* app - unique unique name
 * service - unique unique name
 * pod - pod unique name
 * container - container id
@@ -733,14 +733,14 @@ Status codes:
 
 Errors:
 
-* NAMESPACE_NOT_FOUND
+* APP_NOT_FOUND
 * SERVICE_NOT_FOUND
 * INTERNAL_SERVER_ERROR
 
 *`REQUEST`*
 [source,bash]
 ----
-GET /namespace/{namespace}/service/{service}/logs?pod={pod}&amp;container={container} HTTP/1.1
+GET /app/{app}/service/{service}/logs?pod={pod}&amp;container={container} HTTP/1.1
 ----
 
 *`RESPONSE`*
@@ -756,7 +756,7 @@ GET /namespace/{namespace}/service/{service}/logs?pod={pod}&amp;container={conta
 
 Query:
 
-* namespace - unique unique name
+* app - unique unique name
 * service - unique unique name
 
 *Response parameters:*
@@ -769,14 +769,14 @@ Status codes:
 
 Errors: 
 
-* NAMESPACE_NOT_FOUND
+* APP_NOT_FOUND
 * SERVICE_NOT_FOUND
 * INTERNAL_SERVER_ERROR
 
 *`REQUEST`*
 [source,bash]
 ----
-GET /namespace/{namespace}/service/{service}/activity HTTP/1.1
+GET /app/{app}/service/{service}/activity HTTP/1.1
 ----
 
 *`RESPONSE`*

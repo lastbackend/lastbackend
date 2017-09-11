@@ -20,7 +20,6 @@ package request
 
 import (
 	"encoding/json"
-	"github.com/lastbackend/lastbackend/pkg/api/context"
 	"github.com/lastbackend/lastbackend/pkg/common/errors"
 	"github.com/lastbackend/lastbackend/pkg/common/types"
 	"github.com/lastbackend/lastbackend/pkg/util/converter"
@@ -28,6 +27,7 @@ import (
 	"io"
 	"io/ioutil"
 	"strings"
+	"github.com/lastbackend/lastbackend/pkg/log"
 )
 
 const logLevel = 3
@@ -68,8 +68,6 @@ type resources struct {
 }
 
 func (s *RequestServiceCreateS) DecodeAndValidate(reader io.Reader) *errors.Err {
-
-	log := context.Get().GetLogger()
 
 	log.V(logLevel).Debug("Request: Service: decode and validate data for creating")
 
@@ -149,7 +147,7 @@ func (s *RequestServiceCreateS) DecodeAndValidate(reader io.Reader) *errors.Err 
 	s.Name = strings.ToLower(s.Name)
 
 	if len(s.Name) < 4 && len(s.Name) > 64 && !validator.IsServiceName(s.Name) {
-		log.V(logLevel).Error("Request: Namespace: parameter name not valid")
+		log.V(logLevel).Error("Request: App: parameter name not valid")
 		return errors.New("service").BadParameter("name")
 	}
 
@@ -175,8 +173,6 @@ type RequestServiceUpdateS struct {
 
 func (s *RequestServiceUpdateS) DecodeAndValidate(reader io.Reader) *errors.Err {
 
-	log := context.Get().GetLogger()
-
 	log.V(logLevel).Debug("Request: Service: decode and validate data for updating")
 
 	body, err := ioutil.ReadAll(reader)
@@ -197,7 +193,7 @@ func (s *RequestServiceUpdateS) DecodeAndValidate(reader io.Reader) *errors.Err 
 		s.Name = strings.ToLower(s.Name)
 
 		if len(s.Name) < 4 && len(s.Name) > 64 && !validator.IsServiceName(s.Name) {
-			log.V(logLevel).Error("Request: Namespace: parameter name not valid")
+			log.V(logLevel).Error("Request: App: parameter name not valid")
 			return errors.New("service").BadParameter("name")
 		}
 	}
@@ -216,8 +212,6 @@ type RequestServiceSpecS struct {
 }
 
 func (s *RequestServiceSpecS) DecodeAndValidate(reader io.Reader) *errors.Err {
-
-	log := context.Get().GetLogger()
 
 	log.V(logLevel).Debug("Request: Service: decode and validate data for service spec")
 
