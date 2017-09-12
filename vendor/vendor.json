@@ -255,6 +255,24 @@
 			"revisionTime": "2017-08-20T16:57:35Z"
 		},
 		{
+			"checksumSHA1": "sQFZgiTaymQgnBv9w5Yqzf3MbGI=",
+			"path": "github.com/lastbackend/enterprise/pkg/log/formatter",
+			"revision": "8d1f41129ccb8dc0adfb61a6ef3a97e3c233a0f1",
+			"revisionTime": "2017-09-11T14:18:22Z"
+		},
+		{
+			"checksumSHA1": "NbtA/L8kwohL82IIkDPQN4VI9+Q=",
+			"path": "github.com/lastbackend/enterprise/pkg/log/hooks",
+			"revision": "8d1f41129ccb8dc0adfb61a6ef3a97e3c233a0f1",
+			"revisionTime": "2017-09-11T14:18:22Z"
+		},
+		{
+			"checksumSHA1": "znz9el0kRcOisDK78jUAtZDL/wQ=",
+			"path": "github.com/lastbackend/enterprise/pkg/log/logger",
+			"revision": "8d1f41129ccb8dc0adfb61a6ef3a97e3c233a0f1",
+			"revisionTime": "2017-09-11T14:18:22Z"
+		},
+		{
 			"checksumSHA1": "b64yVZEKG21+a/xvcKEvqfai1ik=",
 			"path": "github.com/mattn/go-runewidth",
 			"revision": "97311d9f7767e3d6f422ea06661bc2c7a19e8a5d",

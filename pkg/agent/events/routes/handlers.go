@@ -26,11 +26,11 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/common/errors"
 	"io/ioutil"
 	"net/http"
+	"github.com/lastbackend/lastbackend/pkg/log"
 )
 
 func SetPods(w http.ResponseWriter, r *http.Request) {
 
-	log := context.Get().GetLogger()
 	log.Debug("Set pods to agent")
 
 	body, err := ioutil.ReadAll(r.Body)

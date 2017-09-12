@@ -23,6 +23,7 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/builder/context"
 	"github.com/lastbackend/lastbackend/pkg/common/types"
 	"sync"
+	"github.com/lastbackend/lastbackend/pkg/log"
 )
 
 type Worker struct {
@@ -37,7 +38,6 @@ type Worker struct {
 }
 
 func (w *Worker) NewBuild(build *types.Build) {
-	log := context.Get().GetLogger()
 	log.Debugf("Create new build: %s", build.Meta.Name)
 	// Add new build to build queue
 
@@ -49,7 +49,6 @@ func (w *Worker) provision() error {
 
 	var (
 		err error
-		log = context.Get().GetLogger()
 	)
 
 	spec := types.ContainerSpec{
