@@ -22,6 +22,7 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/common/types"
 	"github.com/lastbackend/lastbackend/pkg/util/system"
 	"sync"
+	"github.com/lastbackend/lastbackend/pkg/log"
 )
 
 type PodManager struct {
@@ -46,7 +47,6 @@ func (pm *PodManager) GetPods() map[string]*types.Pod {
 
 func (pm *PodManager) SyncPod(pod types.PodNodeSpec) {
 
-	log := context.Get().GetLogger()
 
 	log.Debugf("Pod %s sync", pod.Meta.Name)
 
@@ -96,7 +96,6 @@ func (pm *PodManager) SyncPod(pod types.PodNodeSpec) {
 func (pm *PodManager) sync(meta types.PodMeta, state types.PodState, spec types.PodSpec, pod *types.Pod) {
 	// Create new worker to sync pod
 	// Check if pod worker exists
-	log := context.Get().GetLogger()
 	log.Debugf("Pod %s sync start", pod.Meta.Name)
 	w, ok := pm.workers[pod.Meta.Name]
 	if !ok {
@@ -123,7 +122,6 @@ func (pm *PodManager) sync(meta types.PodMeta, state types.PodState, spec types.
 
 func NewPodManager() (*PodManager, error) {
 
-	log := context.Get().GetLogger()
 
 	log.Debug("Create new pod manager")
 

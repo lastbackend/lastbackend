@@ -24,6 +24,7 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/cache"
 	"github.com/lastbackend/lastbackend/pkg/common/context"
 	"github.com/lastbackend/lastbackend/pkg/common/types"
+	"github.com/lastbackend/lastbackend/pkg/log"
 )
 
 func (r *Runtime) Subscribe(ctx context.IContext, stg *cache.PodCache) chan types.ContainerEvent {
@@ -32,7 +33,6 @@ func (r *Runtime) Subscribe(ctx context.IContext, stg *cache.PodCache) chan type
 		container *types.Container
 	)
 
-	log := ctx.GetLogger()
 	log.Debug("Create new event listener subscribe")
 
 	var ch = make(chan types.ContainerEvent)

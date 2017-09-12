@@ -21,13 +21,12 @@ package daemon
 import (
 	"github.com/gorilla/mux"
 	container "github.com/lastbackend/lastbackend/pkg/agent/container/routes"
-	"github.com/lastbackend/lastbackend/pkg/agent/context"
 	"github.com/lastbackend/lastbackend/pkg/util/http"
+	"github.com/lastbackend/lastbackend/pkg/log"
 )
 
 func Listen(host string, port int) error {
 
-	log := context.Get().GetLogger()
 	log.Debug("Listen API server")
 
 	router := mux.NewRouter()

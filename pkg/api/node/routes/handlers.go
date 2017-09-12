@@ -19,13 +19,13 @@
 package routes
 
 import (
-	"github.com/lastbackend/lastbackend/pkg/api/context"
 	"github.com/lastbackend/lastbackend/pkg/api/node"
 	"github.com/lastbackend/lastbackend/pkg/api/node/routes/request"
 	"github.com/lastbackend/lastbackend/pkg/api/node/views/v1"
 	"github.com/lastbackend/lastbackend/pkg/api/pod"
 	"github.com/lastbackend/lastbackend/pkg/common/errors"
 	"net/http"
+	"github.com/lastbackend/lastbackend/pkg/log"
 )
 
 const logLevel = 2
@@ -34,7 +34,6 @@ func NodeEventH(w http.ResponseWriter, r *http.Request) {
 
 	var (
 		err error
-		log = context.Get().GetLogger()
 	)
 
 	log.V(logLevel).Debug("Handler: Node: event handling")
@@ -104,7 +103,6 @@ func NodeListH(w http.ResponseWriter, r *http.Request) {
 
 	var (
 		err error
-		log = context.Get().GetLogger()
 	)
 
 	log.V(logLevel).Debug("Handler: Node: list node")

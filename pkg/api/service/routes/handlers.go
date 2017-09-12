@@ -19,9 +19,8 @@
 package routes
 
 import (
-	"github.com/lastbackend/lastbackend/pkg/api/context"
 	"github.com/lastbackend/lastbackend/pkg/api/image"
-	"github.com/lastbackend/lastbackend/pkg/api/namespace"
+	"github.com/lastbackend/lastbackend/pkg/api/app"
 	"github.com/lastbackend/lastbackend/pkg/api/pod"
 	"github.com/lastbackend/lastbackend/pkg/api/service"
 	"github.com/lastbackend/lastbackend/pkg/api/service/routes/request"
@@ -30,6 +29,7 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/storage/store"
 	"github.com/lastbackend/lastbackend/pkg/util/http/utils"
 	"net/http"
+	"github.com/lastbackend/lastbackend/pkg/log"
 )
 
 const logLevel = 2
@@ -38,29 +38,28 @@ func ServiceListH(w http.ResponseWriter, r *http.Request) {
 
 	var (
 		err error
-		log = context.Get().GetLogger()
-		id  = utils.Vars(r)["namespace"]
+		id  = utils.Vars(r)["app"]
 	)
 
-	log.V(logLevel).Debugf("Handler: Service: list services in namespace `%s`", id)
+	log.V(logLevel).Debugf("Handler: Service: list services in app `%s`", id)
 
-	ns := namespace.New(r.Context())
+	ns := app.New(r.Context())
 	item, err := ns.Get(id)
 	if err != nil {
-		log.V(logLevel).Errorf("Handler: Service: get namespace by name `%s` err: %s", id, err.Error())
+		log.V(logLevel).Errorf("Handler: Service: get app by name `%s` err: %s", id, err.Error())
 		errors.HTTP.InternalServerError(w)
 		return
 	}
 	if item == nil {
-		log.V(logLevel).Warnf("Handler: Service: namespace `%s` not found", id)
-		errors.New("namespace").NotFound().Http(w)
+		log.V(logLevel).Warnf("Handler: Service: app `%s` not found", id)
+		errors.New("app").NotFound().Http(w)
 		return
 	}
 
 	s := service.New(r.Context(), item.Meta)
 	items, err := s.List()
 	if err != nil {
-		log.V(logLevel).Errorf("Handler: Service: get service list in namespace `%s` err: %s", item.Meta.Name, err.Error())
+		log.V(logLevel).Errorf("Handler: Service: get service list in app `%s` err: %s", item.Meta.Name, err.Error())
 		errors.HTTP.InternalServerError(w)
 		return
 	}
@@ -82,35 +81,34 @@ func ServiceListH(w http.ResponseWriter, r *http.Request) {
 func ServiceInfoH(w http.ResponseWriter, r *http.Request) {
 	var (
 		err error
-		log = context.Get().GetLogger()
-		nid = utils.Vars(r)["namespace"]
+		nid = utils.Vars(r)["app"]
 		sid = utils.Vars(r)["service"]
 	)
 
-	log.V(logLevel).Debugf("Handler: Service: get service `%s` in namespace `%s`", sid, nid)
+	log.V(logLevel).Debugf("Handler: Service: get service `%s` in app `%s`", sid, nid)
 
-	ns := namespace.New(r.Context())
+	ns := app.New(r.Context())
 	item, err := ns.Get(nid)
 	if err != nil {
-		log.V(logLevel).Errorf("Handler: Service: get namespace by name `%s` err: %s", nid, err.Error())
+		log.V(logLevel).Errorf("Handler: Service: get app by name `%s` err: %s", nid, err.Error())
 		errors.HTTP.InternalServerError(w)
 		return
 	}
 	if item == nil {
-		log.V(logLevel).Warnf("Handler: Service: namespace `%s` not found", nid)
-		errors.New("namespace").NotFound().Http(w)
+		log.V(logLevel).Warnf("Handler: Service: app `%s` not found", nid)
+		errors.New("app").NotFound().Http(w)
 		return
 	}
 
 	s := service.New(r.Context(), item.Meta)
 	svc, err := s.Get(sid)
 	if err != nil {
-		log.V(logLevel).Errorf("Handler: Service: get service by name `%s` in namespace `%s` err: %s", sid, item.Meta.Name, err.Error())
+		log.V(logLevel).Errorf("Handler: Service: get service by name `%s` in app `%s` err: %s", sid, item.Meta.Name, err.Error())
 		errors.HTTP.InternalServerError(w)
 		return
 	}
 	if svc == nil {
-		log.V(logLevel).Warnf("Handler: Service: service `%s` in namespace `%s` not found", sid, item.Meta.Name)
+		log.V(logLevel).Warnf("Handler: Service: service `%s` in app `%s` not found", sid, item.Meta.Name)
 		errors.New("service").NotFound().Http(w)
 		return
 	}
@@ -133,8 +131,7 @@ func ServiceCreateH(w http.ResponseWriter, r *http.Request) {
 
 	var (
 		err error
-		log = context.Get().GetLogger()
-		nid = utils.Vars(r)["namespace"]
+		nid = utils.Vars(r)["app"]
 	)
 
 	log.V(logLevel).Debug("Handler: Service: create service")
@@ -146,28 +143,28 @@ func ServiceCreateH(w http.ResponseWriter, r *http.Request) {
 		errors.New("Invalid incoming data").Unknown().Http(w)
 		return
 	}
-	ns := namespace.New(r.Context())
+	ns := app.New(r.Context())
 	item, err := ns.Get(nid)
 	if err != nil {
-		log.V(logLevel).Errorf("Handler: Service: get namespace by name `%s` err: %s", nid, err.Error())
+		log.V(logLevel).Errorf("Handler: Service: get app by name `%s` err: %s", nid, err.Error())
 		errors.HTTP.InternalServerError(w)
 		return
 	}
 	if item == nil {
-		log.V(logLevel).Warnf("Handler: Service: namespace `%s` not found", nid)
-		errors.New("namespace").NotFound().Http(w)
+		log.V(logLevel).Warnf("Handler: Service: app `%s` not found", nid)
+		errors.New("app").NotFound().Http(w)
 		return
 	}
 
 	s := service.New(r.Context(), item.Meta)
 	svc, err := s.Get(rq.Name)
 	if err != nil {
-		log.V(logLevel).Errorf("Handler: Service: get service by name `%s` in namespace `%s` err: %s", rq.Name, item.Meta.Name, err.Error())
+		log.V(logLevel).Errorf("Handler: Service: get service by name `%s` in app `%s` err: %s", rq.Name, item.Meta.Name, err.Error())
 		errors.HTTP.InternalServerError(w)
 		return
 	}
 	if svc != nil {
-		log.V(logLevel).Warnf("Handler: Service: service name `%s` in namespace `%s` not unique", rq.Name, item.Meta.Name)
+		log.V(logLevel).Warnf("Handler: Service: service name `%s` in app `%s` not unique", rq.Name, item.Meta.Name)
 		errors.New("service").NotUnique("name").Http(w)
 		return
 	}
@@ -237,12 +234,11 @@ func ServiceUpdateH(w http.ResponseWriter, r *http.Request) {
 
 	var (
 		err error
-		log = context.Get().GetLogger()
-		nid = utils.Vars(r)["namespace"]
+		nid = utils.Vars(r)["app"]
 		sid = utils.Vars(r)["service"]
 	)
 
-	log.V(logLevel).Debugf("Handler: Service: update service `%s` in namespace `%s`", sid, nid)
+	log.V(logLevel).Debugf("Handler: Service: update service `%s` in app `%s`", sid, nid)
 
 	// request body struct
 	rq := new(request.RequestServiceUpdateS)
@@ -252,28 +248,28 @@ func ServiceUpdateH(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	ns := namespace.New(r.Context())
+	ns := app.New(r.Context())
 	item, err := ns.Get(nid)
 	if err != nil {
-		log.V(logLevel).Errorf("Handler: Service: get namespace by name `%s` err: %s", nid, err.Error())
+		log.V(logLevel).Errorf("Handler: Service: get app by name `%s` err: %s", nid, err.Error())
 		errors.HTTP.InternalServerError(w)
 		return
 	}
 	if item == nil {
-		log.V(logLevel).Warnf("Handler: Service: namespace `%s` not found", nid)
-		errors.New("namespace").NotFound().Http(w)
+		log.V(logLevel).Warnf("Handler: Service: app `%s` not found", nid)
+		errors.New("app").NotFound().Http(w)
 		return
 	}
 
 	s := service.New(r.Context(), item.Meta)
 	svc, err := s.Get(sid)
 	if err != nil {
-		log.V(logLevel).Errorf("Handler: Service: get service by name `%s` in namespace `%s` err: %s", rq.Name, item.Meta.Name, err.Error())
+		log.V(logLevel).Errorf("Handler: Service: get service by name `%s` in app `%s` err: %s", rq.Name, item.Meta.Name, err.Error())
 		errors.HTTP.InternalServerError(w)
 		return
 	}
 	if svc == nil {
-		log.V(logLevel).Warnf("Handler: Service: service name `%s` in namespace `%s` not found", sid, item.Meta.Name)
+		log.V(logLevel).Warnf("Handler: Service: service name `%s` in app `%s` not found", sid, item.Meta.Name)
 		errors.New("service").NotFound().Http(w)
 		return
 	}
@@ -301,35 +297,34 @@ func ServiceUpdateH(w http.ResponseWriter, r *http.Request) {
 func ServiceRemoveH(w http.ResponseWriter, r *http.Request) {
 	var (
 		err error
-		log = context.Get().GetLogger()
-		nid = utils.Vars(r)["namespace"]
+		nid = utils.Vars(r)["app"]
 		sid = utils.Vars(r)["service"]
 	)
 
-	log.V(logLevel).Debugf("Handler: Service: remove service `%s` from namespace `%s`", sid, nid)
+	log.V(logLevel).Debugf("Handler: Service: remove service `%s` from app `%s`", sid, nid)
 
-	ns := namespace.New(r.Context())
+	ns := app.New(r.Context())
 	item, err := ns.Get(nid)
 	if err != nil {
-		log.V(logLevel).Errorf("Handler: Service: get namespace by name `%s` err: %s", nid, err.Error())
+		log.V(logLevel).Errorf("Handler: Service: get app by name `%s` err: %s", nid, err.Error())
 		errors.HTTP.InternalServerError(w)
 		return
 	}
 	if item == nil {
-		log.V(logLevel).Warnf("Handler: Service: namespace `%s` not found", nid)
-		errors.New("namespace").NotFound().Http(w)
+		log.V(logLevel).Warnf("Handler: Service: app `%s` not found", nid)
+		errors.New("app").NotFound().Http(w)
 		return
 	}
 
 	s := service.New(r.Context(), item.Meta)
 	svc, err := s.Get(sid)
 	if err != nil {
-		log.V(logLevel).Errorf("Handler: Service: get service by name `%s` in namespace `%s` err: %s", sid, item.Meta.Name, err.Error())
+		log.V(logLevel).Errorf("Handler: Service: get service by name `%s` in app `%s` err: %s", sid, item.Meta.Name, err.Error())
 		errors.HTTP.InternalServerError(w)
 		return
 	}
 	if svc == nil {
-		log.V(logLevel).Warnf("Handler: Service: service name `%s` in namespace `%s` not found", sid, item.Meta.Name)
+		log.V(logLevel).Warnf("Handler: Service: service name `%s` in app `%s` not found", sid, item.Meta.Name)
 		errors.New("service").NotFound().Http(w)
 		return
 	}
@@ -352,12 +347,11 @@ func ServiceRemoveH(w http.ResponseWriter, r *http.Request) {
 func ServiceSpecCreateH(w http.ResponseWriter, r *http.Request) {
 	var (
 		err error
-		log = context.Get().GetLogger()
-		nid = utils.Vars(r)["namespace"]
+		nid = utils.Vars(r)["app"]
 		sid = utils.Vars(r)["service"]
 	)
 
-	log.V(logLevel).Debug("Handler: Service: create spec for service `%s` in namespace `%s`", sid, nid)
+	log.V(logLevel).Debug("Handler: Service: create spec for service `%s` in app `%s`", sid, nid)
 
 	// request body struct
 	rq := new(request.RequestServiceSpecS)
@@ -367,34 +361,34 @@ func ServiceSpecCreateH(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	ns := namespace.New(r.Context())
+	ns := app.New(r.Context())
 	item, err := ns.Get(nid)
 	if err != nil {
-		log.V(logLevel).Errorf("Handler: Service: get namespace by name `%s` err: %s", nid, err.Error())
+		log.V(logLevel).Errorf("Handler: Service: get app by name `%s` err: %s", nid, err.Error())
 		errors.HTTP.InternalServerError(w)
 		return
 	}
 	if item == nil {
-		log.V(logLevel).Warnf("Handler: Service: namespace `%s` not found", nid)
-		errors.New("namespace").NotFound().Http(w)
+		log.V(logLevel).Warnf("Handler: Service: app `%s` not found", nid)
+		errors.New("app").NotFound().Http(w)
 		return
 	}
 
 	s := service.New(r.Context(), item.Meta)
 	svc, err := s.Get(sid)
 	if err != nil {
-		log.V(logLevel).Errorf("Handler: Service: get service `%s` in namespace by name `%s` err: %s", sid, nid, err.Error())
+		log.V(logLevel).Errorf("Handler: Service: get service `%s` in app by name `%s` err: %s", sid, nid, err.Error())
 		errors.HTTP.InternalServerError(w)
 		return
 	}
 	if svc == nil {
-		log.V(logLevel).Warnf("Handler: Service: service name `%s` in namespace `%s` not found", sid, item.Meta.Name)
+		log.V(logLevel).Warnf("Handler: Service: service name `%s` in app `%s` not found", sid, item.Meta.Name)
 		errors.New("service").NotFound().Http(w)
 		return
 	}
 
 	if err = s.AddSpec(svc, rq); err != nil {
-		log.V(logLevel).Errorf("Handler: Service: create spec for service `%s` in namespace by name `%s` err: %s", sid, nid, err.Error())
+		log.V(logLevel).Errorf("Handler: Service: create spec for service `%s` in app by name `%s` err: %s", sid, nid, err.Error())
 		errors.HTTP.InternalServerError(w)
 		return
 	}
@@ -416,13 +410,12 @@ func ServiceSpecCreateH(w http.ResponseWriter, r *http.Request) {
 func ServiceSpecUpdateH(w http.ResponseWriter, r *http.Request) {
 	var (
 		err  error
-		log  = context.Get().GetLogger()
-		nid  = utils.Vars(r)["namespace"]
+		nid  = utils.Vars(r)["app"]
 		sid  = utils.Vars(r)["service"]
 		spid = utils.Vars(r)["spec"]
 	)
 
-	log.V(logLevel).Debug("Handler: Service: update spec for service `%s` in namespace `%s`", sid, nid)
+	log.V(logLevel).Debug("Handler: Service: update spec for service `%s` in app `%s`", sid, nid)
 
 	// request body struct
 	rq := new(request.RequestServiceSpecS)
@@ -432,34 +425,34 @@ func ServiceSpecUpdateH(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	ns := namespace.New(r.Context())
+	ns := app.New(r.Context())
 	item, err := ns.Get(nid)
 	if err != nil {
-		log.V(logLevel).Errorf("Handler: Service: get namespace by name `%s` err: %s", nid, err.Error())
+		log.V(logLevel).Errorf("Handler: Service: get app by name `%s` err: %s", nid, err.Error())
 		errors.HTTP.InternalServerError(w)
 		return
 	}
 	if item == nil {
-		log.V(logLevel).Warnf("Handler: Service: namespace `%s` not found", nid)
-		errors.New("namespace").NotFound().Http(w)
+		log.V(logLevel).Warnf("Handler: Service: app `%s` not found", nid)
+		errors.New("app").NotFound().Http(w)
 		return
 	}
 
 	s := service.New(r.Context(), item.Meta)
 	svc, err := s.Get(sid)
 	if err != nil {
-		log.V(logLevel).Errorf("Handler: Service: get service `%s` in namespace by name `%s` err: %s", sid, nid, err.Error())
+		log.V(logLevel).Errorf("Handler: Service: get service `%s` in app by name `%s` err: %s", sid, nid, err.Error())
 		errors.HTTP.InternalServerError(w)
 		return
 	}
 	if svc == nil {
-		log.V(logLevel).Warnf("Handler: Service: service name `%s` in namespace `%s` not found", sid, item.Meta.Name)
+		log.V(logLevel).Warnf("Handler: Service: service name `%s` in app `%s` not found", sid, item.Meta.Name)
 		errors.New("service").NotFound().Http(w)
 		return
 	}
 
 	if err = s.SetSpec(svc, spid, rq); err != nil {
-		log.V(logLevel).Errorf("Handler: Service: create spec for service `%s` in namespace by name `%s` err: %s", sid, nid, err.Error())
+		log.V(logLevel).Errorf("Handler: Service: create spec for service `%s` in app by name `%s` err: %s", sid, nid, err.Error())
 		errors.HTTP.InternalServerError(w)
 		return
 	}
@@ -481,13 +474,12 @@ func ServiceSpecUpdateH(w http.ResponseWriter, r *http.Request) {
 func ServiceSpecRemoveH(w http.ResponseWriter, r *http.Request) {
 	var (
 		err  error
-		log  = context.Get().GetLogger()
-		nid  = utils.Vars(r)["namespace"]
+		nid  = utils.Vars(r)["app"]
 		sid  = utils.Vars(r)["service"]
 		spid = utils.Vars(r)["spec"]
 	)
 
-	log.V(logLevel).Debug("Handler: Service: remove spec from service `%s` in namespace `%s`", sid, nid)
+	log.V(logLevel).Debug("Handler: Service: remove spec from service `%s` in app `%s`", sid, nid)
 
 	// request body struct
 	rq := new(request.RequestServiceUpdateS)
@@ -497,34 +489,34 @@ func ServiceSpecRemoveH(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	ns := namespace.New(r.Context())
+	ns := app.New(r.Context())
 	item, err := ns.Get(nid)
 	if err != nil {
-		log.V(logLevel).Errorf("Handler: Service: get namespace by name `%s` err: %s", nid, err.Error())
+		log.V(logLevel).Errorf("Handler: Service: get app by name `%s` err: %s", nid, err.Error())
 		errors.HTTP.InternalServerError(w)
 		return
 	}
 	if item == nil {
-		log.V(logLevel).Warnf("Handler: Service: namespace `%s` not found", nid)
-		errors.New("namespace").NotFound().Http(w)
+		log.V(logLevel).Warnf("Handler: Service: app `%s` not found", nid)
+		errors.New("app").NotFound().Http(w)
 		return
 	}
 
 	s := service.New(r.Context(), item.Meta)
 	svc, err := s.Get(sid)
 	if err != nil {
-		log.V(logLevel).Errorf("Handler: Service: get service `%s` in namespace by name `%s` err: %s", sid, nid, err.Error())
+		log.V(logLevel).Errorf("Handler: Service: get service `%s` in app by name `%s` err: %s", sid, nid, err.Error())
 		errors.HTTP.InternalServerError(w)
 		return
 	}
 	if svc == nil {
-		log.V(logLevel).Warnf("Handler: Service: service name `%s` in namespace `%s` not found", sid, item.Meta.Name)
+		log.V(logLevel).Warnf("Handler: Service: service name `%s` in app `%s` not found", sid, item.Meta.Name)
 		errors.New("service").NotFound().Http(w)
 		return
 	}
 
 	if err = s.DelSpec(svc, spid); err != nil {
-		log.V(logLevel).Errorf("Handler: Service: remove spec from service `%s` in namespace by name `%s` err: %s", sid, nid, err.Error())
+		log.V(logLevel).Errorf("Handler: Service: remove spec from service `%s` in app by name `%s` err: %s", sid, nid, err.Error())
 		errors.HTTP.InternalServerError(w)
 		return
 	}
@@ -545,8 +537,7 @@ func ServiceSpecRemoveH(w http.ResponseWriter, r *http.Request) {
 
 func ServiceLogsH(w http.ResponseWriter, r *http.Request) {
 	var (
-		log      = context.Get().GetLogger()
-		nid      = utils.Vars(r)["namespace"]
+		nid      = utils.Vars(r)["app"]
 		sid      = utils.Vars(r)["service"]
 		pid      = r.URL.Query().Get("pod")
 		cid      = r.URL.Query().Get("container")
@@ -554,18 +545,18 @@ func ServiceLogsH(w http.ResponseWriter, r *http.Request) {
 		doneChan = make(chan bool, 1)
 	)
 
-	log.V(logLevel).Debug("Handler: Service: get logs for service `%s` in namespace `%s`", sid, nid)
+	log.V(logLevel).Debug("Handler: Service: get logs for service `%s` in app `%s`", sid, nid)
 
-	ns := namespace.New(r.Context())
+	ns := app.New(r.Context())
 	item, err := ns.Get(nid)
 	if err != nil {
-		log.V(logLevel).Errorf("Handler: Service: get namespace by name `%s` err: %s", nid, err.Error())
+		log.V(logLevel).Errorf("Handler: Service: get app by name `%s` err: %s", nid, err.Error())
 		errors.HTTP.InternalServerError(w)
 		return
 	}
 	if item == nil {
-		log.V(logLevel).Warnf("Handler: Service: namespace `%s` not found", nid)
-		errors.New("namespace").NotFound().Http(w)
+		log.V(logLevel).Warnf("Handler: Service: app `%s` not found", nid)
+		errors.New("app").NotFound().Http(w)
 		return
 	}
 
@@ -577,7 +568,7 @@ func ServiceLogsH(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if svc == nil {
-		log.V(logLevel).Warnf("Handler: Service: service name `%s` in namespace `%s` not found", sid, item.Meta.Name)
+		log.V(logLevel).Warnf("Handler: Service: service name `%s` in app `%s` not found", sid, item.Meta.Name)
 		errors.New("service").NotFound().Http(w)
 		return
 	}
@@ -589,7 +580,7 @@ func ServiceLogsH(w http.ResponseWriter, r *http.Request) {
 	}()
 
 	if err := pod.Logs(r.Context(), item.Meta.Name, pid, cid, w, doneChan); err != nil {
-		log.V(logLevel).Warnf("Handler: Service: get logs for service`%s` in namespace `%s` err: ", sid, item.Meta.Name, err.Error())
+		log.V(logLevel).Warnf("Handler: Service: get logs for service`%s` in app `%s` err: ", sid, item.Meta.Name, err.Error())
 		errors.HTTP.InternalServerError(w)
 		return
 	}
@@ -598,12 +589,11 @@ func ServiceLogsH(w http.ResponseWriter, r *http.Request) {
 func ServiceActivityListH(w http.ResponseWriter, r *http.Request) {
 
 	var (
-		log = context.Get().GetLogger()
-		nid = utils.Vars(r)["namespace"]
+		nid = utils.Vars(r)["app"]
 		sid = utils.Vars(r)["service"]
 	)
 
-	log.V(logLevel).Debug("Handler: Service: get activities for service `%s` in namespace `%s`", sid, nid)
+	log.V(logLevel).Debug("Handler: Service: get activities for service `%s` in app `%s`", sid, nid)
 
 	w.WriteHeader(http.StatusOK)
 	if _, err := w.Write([]byte(`[]`)); err != nil {

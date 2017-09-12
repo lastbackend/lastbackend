@@ -24,6 +24,7 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/discovery/context"
 	"github.com/lastbackend/lastbackend/pkg/storage/store"
 	"strings"
+	"github.com/lastbackend/lastbackend/pkg/log"
 )
 
 type PodController struct {
@@ -35,7 +36,6 @@ type PodController struct {
 
 func (pc *PodController) Watch(services chan *types.Service) {
 	var (
-		log = pc.context.GetLogger()
 		stg = pc.context.GetStorage()
 	)
 
@@ -77,7 +77,7 @@ func (pc *PodController) Watch(services chan *types.Service) {
 						break
 					}
 
-					serviceEndpoint := fmt.Sprintf("%s-%s.%s", srv.Meta.Name, srv.Meta.Namespace, *context.Get().GetConfig().SystemDomain)
+					serviceEndpoint := fmt.Sprintf("%s-%s.%s", srv.Meta.Name, srv.Meta.App, *context.Get().GetConfig().SystemDomain)
 					serviceEndpoint = strings.Replace(serviceEndpoint, ":", "-", -1)
 
 					if p.Spec.State == types.StateDestroyed {

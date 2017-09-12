@@ -23,31 +23,32 @@ import (
 
 	"github.com/lastbackend/lastbackend/pkg/builder/config"
 	"github.com/lastbackend/lastbackend/pkg/builder/context"
-	"github.com/lastbackend/lastbackend/pkg/logger"
 	"os/signal"
 	"syscall"
 
 	"github.com/lastbackend/lastbackend/pkg/builder/runtime"
 	"github.com/lastbackend/lastbackend/pkg/storage"
 	"os"
+	"github.com/lastbackend/lastbackend/pkg/log"
 )
+
+const app = "builder"
 
 func Daemon(_cfg *_cfg.Config) {
 
 	var (
 		ctx  = context.Get()
 		cfg  = config.Set(_cfg)
-		log  = logger.New("Builder", *cfg.LogLevel)
 		sigs = make(chan os.Signal)
 		done = make(chan bool, 1)
 	)
 
+	log.New(app, *cfg.LogLevel)
 	log.Info("Start Builder")
 
 	ctx.SetConfig(cfg)
-	ctx.SetLogger(log)
 
-	stg, err := storage.Get(cfg.GetEtcdDB(), log)
+	stg, err := storage.Get(cfg.GetEtcdDB())
 	if err != nil {
 		panic(err)
 	}

@@ -21,21 +21,21 @@ package service
 import (
 	"fmt"
 	s "github.com/lastbackend/lastbackend/pkg/api/service/views/v1"
-	n "github.com/lastbackend/lastbackend/pkg/cli/cmd/namespace"
+	n "github.com/lastbackend/lastbackend/pkg/cli/cmd/app"
 	c "github.com/lastbackend/lastbackend/pkg/cli/context"
 	"github.com/lastbackend/lastbackend/pkg/common/errors"
 )
 
 func ListServiceCmd() {
 
-	srvList, ns, err := List()
+	srvList, app, err := List()
 	if err != nil {
 		fmt.Print(err)
 		return
 	}
 
 	if srvList != nil {
-		srvList.DrawTable(ns)
+		srvList.DrawTable(app)
 	}
 }
 
@@ -48,17 +48,17 @@ func List() (*s.ServiceList, string, error) {
 		srvList *s.ServiceList
 	)
 
-	ns, err := n.Current()
+	app, err := n.Current()
 	if err != nil {
 		return nil, "", err
 	}
 
-	if ns == nil {
-		return nil, "", errors.New("Namespace didn't select")
+	if app == nil {
+		return nil, "", errors.New("App didn't select")
 	}
 
 	_, _, err = http.
-		GET(fmt.Sprintf("/namespace/%s/service", ns.Meta.Name)).
+		GET(fmt.Sprintf("/app/%s/service", app.Meta.Name)).
 		Request(&srvList, er)
 	if err != nil {
 		return nil, "", err
@@ -76,5 +76,5 @@ func List() (*s.ServiceList, string, error) {
 		return nil, "", errors.New("You don't have any services")
 	}
 
-	return srvList, ns.Meta.Name, nil
+	return srvList, app.Meta.Name, nil
 }

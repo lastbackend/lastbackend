@@ -22,17 +22,17 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/common/types"
 	"github.com/lastbackend/lastbackend/pkg/controller/context"
 	"github.com/lastbackend/lastbackend/pkg/controller/pod"
+	"github.com/lastbackend/lastbackend/pkg/log"
 )
 
 func Provision(svc *types.Service) error {
 
 	var (
-		log      = context.Get().GetLogger()
 		stg      = context.Get().GetStorage()
 		replicas int
 	)
 
-	log.Debugf("Service Controller: provision service: %s/%s", svc.Meta.Namespace, svc.Meta.Name)
+	log.Debugf("Service Controller: provision service: %s/%s", svc.Meta.App, svc.Meta.Name)
 
 	for _, p := range svc.Pods {
 		if p.Spec.State != types.StateDestroyed {
@@ -69,7 +69,7 @@ func Provision(svc *types.Service) error {
 		log.Debug("Service Controller: provision pods")
 		pod.SetSpec(p, svc.Spec)
 		log.Debug("Service Controller: save new pod spec")
-		if err := stg.Pod().Upsert(context.Get().Background(), svc.Meta.Namespace, p); err != nil {
+		if err := stg.Pod().Upsert(context.Get().Background(), svc.Meta.App, p); err != nil {
 			log.Errorf("Service Controller: save pod spec error: %s", err.Error())
 			return err
 		}

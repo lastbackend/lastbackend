@@ -41,23 +41,6 @@ func IsBool(s string) bool {
 	return false
 }
 
-func IsEmail(s string) bool {
-	return govalidator.IsEmail(s)
-}
-
-func IsUsername(s string) bool {
-	reg, _ := regexp.Compile("[A-Za-z0-9]+(?:[_-][A-Za-z0-9]+)*")
-	str := reg.FindStringSubmatch(s)
-	if len(str) == 1 && str[0] == s && len(s) >= 4 && len(s) <= 64 {
-		return true
-	}
-	return false
-}
-
-func IsPassword(s string) bool {
-	return len(s) > 6
-}
-
 func IsDockerNamespace(s string) bool {
 	// Todo: check valid docker namespace
 	return true
@@ -72,7 +55,16 @@ func IsServiceName(s string) bool {
 	return false
 }
 
-func IsProjectName(s string) bool {
+func IsRepoName(s string) bool {
+	reg, _ := regexp.Compile("[a-z0-9]+(?:[._-][a-z0-9]+)*")
+	str := reg.FindStringSubmatch(s)
+	if len(str) == 1 && str[0] == s && len(s) > 0 {
+		return true
+	}
+	return false
+}
+
+func IsAppName(s string) bool {
 	reg, _ := regexp.Compile("[a-z]+(?:[_-][a-z0-9]+)*")
 	str := reg.FindStringSubmatch(s)
 	if len(str) == 1 && str[0] == s && len(s) >= 4 && len(s) <= 64 {

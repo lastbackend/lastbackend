@@ -23,6 +23,7 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/common/config"
 	"github.com/lastbackend/lastbackend/pkg/common/types"
 	"github.com/satori/go.uuid"
+	"github.com/lastbackend/lastbackend/pkg/log"
 )
 
 type Task struct {
@@ -36,10 +37,6 @@ type Task struct {
 }
 
 func (t *Task) start() {
-
-	var (
-		log = context.Get().GetLogger()
-	)
 
 	// send build start event
 
@@ -61,7 +58,6 @@ func (t *Task) clean() {
 }
 
 func NewTask(build types.Build) *Task {
-	log := context.Get().GetLogger()
 	uuid := uuid.NewV4().String()
 	log.Debugf("Task [%s]: Container spec count: %d", uuid)
 

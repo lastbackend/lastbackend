@@ -22,6 +22,7 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/discovery/context"
 	"github.com/lastbackend/lastbackend/pkg/util"
 	"net"
+	"github.com/lastbackend/lastbackend/pkg/log"
 )
 
 const logLevel = 2
@@ -30,7 +31,6 @@ func Get(name string) ([]net.IP, error) {
 
 	var (
 		err     error
-		log     = context.Get().GetLogger()
 		storage = context.Get().GetStorage()
 		cache   = context.Get().GetCache()
 		data    = []string{}
@@ -80,7 +80,6 @@ func Update(name string) error {
 
 	var (
 		err     error
-		log     = context.Get().GetLogger()
 		storage = context.Get().GetStorage()
 		cache   = context.Get().GetCache()
 		data    = []string{}
@@ -120,7 +119,6 @@ func Remove(name string) error {
 
 	var (
 		err   error
-		log   = context.Get().GetLogger()
 		cache = context.Get().GetCache()
 	)
 

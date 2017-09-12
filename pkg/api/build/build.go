@@ -22,11 +22,11 @@ import (
 	"context"
 	c "github.com/lastbackend/lastbackend/pkg/api/context"
 	"github.com/lastbackend/lastbackend/pkg/common/types"
+	"github.com/lastbackend/lastbackend/pkg/log"
 )
 
 func Create(ctx context.Context, imageName string, source *types.ImageSource) (*types.Build, error) {
 	var (
-		log     = c.Get().GetLogger()
 		storage = c.Get().GetStorage()
 	)
 

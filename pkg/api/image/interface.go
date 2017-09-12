@@ -25,5 +25,5 @@ import (
 
 type IUtil interface {
 	Name(ctx context.Context, hub, name string) string
-	RegistryAuth(ctx context.Context, namespace string) *types.RegistryAuth
+	RegistryAuth(ctx context.Context, app string) *types.RegistryAuth
 }

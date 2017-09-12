@@ -22,9 +22,9 @@ import (
 	"context"
 	"errors"
 	"github.com/lastbackend/lastbackend/pkg/common/types"
-	"github.com/lastbackend/lastbackend/pkg/logger"
 	"github.com/lastbackend/lastbackend/pkg/storage/store"
 	"strings"
+	"github.com/lastbackend/lastbackend/pkg/log"
 )
 
 const imageStorage string = "images"
@@ -32,23 +32,22 @@ const imageStorage string = "images"
 // Image Service type for interface in interfaces folder
 type ImageStorage struct {
 	IImage
-	log    logger.ILogger
 	Client func() (store.IStore, store.DestroyFunc, error)
 }
 
 func (s *ImageStorage) Get(ctx context.Context, name string) (*types.Image, error) {
 
-	s.log.V(logLevel).Debugf("Storage: Image: get image by name: %s", name)
+	log.V(logLevel).Debugf("Storage: Image: get image by name: %s", name)
 
 	if len(name) == 0 {
 		err := errors.New("name can not be empty")
-		s.log.V(logLevel).Errorf("Storage: Image: get image err: %s", err.Error())
+		log.V(logLevel).Errorf("Storage: Image: get image err: %s", err.Error())
 		return nil, err
 	}
 
 	client, destroy, err := s.Client()
 	if err != nil {
-		s.log.V(logLevel).Errorf("Storage: Image: create client err: %s", err.Error())
+		log.V(logLevel).Errorf("Storage: Image: create client err: %s", err.Error())
 		return nil, err
 	}
 	defer destroy()
@@ -56,13 +55,13 @@ func (s *ImageStorage) Get(ctx context.Context, name string) (*types.Image, erro
 	image := new(types.Image)
 	keyMeta := keyCreate(imageStorage, strings.Replace(name, "/", ":", -1), "meta")
 	if err := client.Get(ctx, keyMeta, &image.Meta); err != nil {
-		s.log.V(logLevel).Errorf("Storage: Pod: get image meta err: %s", err.Error())
+		log.V(logLevel).Errorf("Storage: Pod: get image meta err: %s", err.Error())
 		return nil, err
 	}
 
 	keySource := keyCreate(imageStorage, image.Name, "source")
 	if err := client.Get(ctx, keySource, &image.Source); err != nil {
-		s.log.V(logLevel).Errorf("Storage: Pod: get image source err: %s", err.Error())
+		log.V(logLevel).Errorf("Storage: Pod: get image source err: %s", err.Error())
 		return nil, err
 	}
 
@@ -72,17 +71,17 @@ func (s *ImageStorage) Get(ctx context.Context, name string) (*types.Image, erro
 // Insert new image into storage
 func (s *ImageStorage) Insert(ctx context.Context, image *types.Image) error {
 
-	s.log.V(logLevel).Debugf("Storage: Image: insert image: %#v", image)
+	log.V(logLevel).Debugf("Storage: Image: insert image: %#v", image)
 
 	if image == nil {
 		err := errors.New("image can not be empty")
-		s.log.V(logLevel).Errorf("Storage: Image: insert image err: %s", err.Error())
+		log.V(logLevel).Errorf("Storage: Image: insert image err: %s", err.Error())
 		return err
 	}
 
 	client, destroy, err := s.Client()
 	if err != nil {
-		s.log.V(logLevel).Errorf("Storage: Image: create client err: %s", err.Error())
+		log.V(logLevel).Errorf("Storage: Image: create client err: %s", err.Error())
 		return err
 	}
 	defer destroy()
@@ -91,18 +90,18 @@ func (s *ImageStorage) Insert(ctx context.Context, image *types.Image) error {
 
 	keyMeta := keyCreate(imageStorage, strings.Replace(image.Meta.Name, "/", ":", -1), "meta")
 	if err := tx.Create(keyMeta, &image.Meta, 0); err != nil {
-		s.log.V(logLevel).Errorf("Storage: Image: create image meta err: %s", err.Error())
+		log.V(logLevel).Errorf("Storage: Image: create image meta err: %s", err.Error())
 		return err
 	}
 
 	keySource := keyCreate(imageStorage, strings.Replace(image.Meta.Name, "/", ":", -1), "source")
 	if err := tx.Create(keySource, &image.Source, 0); err != nil {
-		s.log.V(logLevel).Errorf("Storage: Image: create image source err: %s", err.Error())
+		log.V(logLevel).Errorf("Storage: Image: create image source err: %s", err.Error())
 		return err
 	}
 
 	if err := tx.Commit(); err != nil {
-		s.log.V(logLevel).Errorf("Storage: Image: commit transaction err: %s", err.Error())
+		log.V(logLevel).Errorf("Storage: Image: commit transaction err: %s", err.Error())
 		return err
 	}
 
@@ -112,22 +111,21 @@ func (s *ImageStorage) Insert(ctx context.Context, image *types.Image) error {
 // Update build model
 func (s *ImageStorage) Update(ctx context.Context, image *types.Image) error {
 
-	s.log.V(logLevel).Debugf("Storage: Image: update image: %#v", image)
+	log.V(logLevel).Debugf("Storage: Image: update image: %#v", image)
 
 	if image == nil {
 		err := errors.New("image can not be empty")
-		s.log.V(logLevel).Errorf("Storage: Image: update image err: %s", err.Error())
+		log.V(logLevel).Errorf("Storage: Image: update image err: %s", err.Error())
 		return err
 	}
 
 	return nil
 }
 
-func newImageStorage(config store.Config, log logger.ILogger) *ImageStorage {
+func newImageStorage(config store.Config) *ImageStorage {
 	s := new(ImageStorage)
-	s.log = log
 	s.Client = func() (store.IStore, store.DestroyFunc, error) {
-		return New(config, log)
+		return New(config)
 	}
 	return s
 }

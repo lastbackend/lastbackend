@@ -22,6 +22,7 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/agent/context"
 	"io"
 	"net/http"
+	"github.com/lastbackend/lastbackend/pkg/log"
 )
 
 const buffer_size = 1024
@@ -32,7 +33,6 @@ func Logs(cid string, follow bool, stream io.Writer, done chan bool) error {
 		stdout   = bool(true)
 		stderr   = bool(true)
 		cri      = context.Get().GetCri()
-		log      = context.Get().GetLogger()
 		buffer   = make([]byte, buffer_size)
 		doneChan = make(chan bool, 1)
 	)

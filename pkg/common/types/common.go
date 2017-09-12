@@ -21,7 +21,11 @@ package types
 import (
 	//"github.com/satori/go.uuid"
 	"time"
+	"encoding/json"
 )
+
+const EmptyString = ""
+const EmptyStringSlice = "[]"
 
 type Meta struct {
 	// Meta name
@@ -40,4 +44,20 @@ func (m *Meta) SetDefault() {
 	m.Labels = make(map[string]string)
 	m.Created = time.Now()
 	m.Updated = time.Now()
+}
+
+type StringSlice []string
+
+func (s *StringSlice) ToJson() string {
+	if s == nil {
+		return EmptyStringSlice
+	}
+	res, err := json.Marshal(s)
+	if err != nil {
+		return EmptyStringSlice
+	}
+	if string(res) == "null" {
+		return EmptyStringSlice
+	}
+	return string(res)
 }

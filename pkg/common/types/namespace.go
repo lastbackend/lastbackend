@@ -22,21 +22,21 @@ import (
 	"encoding/json"
 )
 
-type NamespaceList []*Namespace
+type AppList []*App
 
-type Namespace struct {
+type App struct {
 	Meta Meta `json:"meta"`
 }
 
-type NamespaceCreateSpec struct {
+type AppCreateSpec struct {
 	Meta Meta `json:"meta"`
 }
 
-type NamespaceUpdateSpec struct {
+type AppUpdateSpec struct {
 	Meta Meta `json:"meta"`
 }
 
-func (p *Namespace) ToJson() ([]byte, error) {
+func (p *App) ToJson() ([]byte, error) {
 	buf, err := json.Marshal(p)
 	if err != nil {
 		return nil, err
@@ -45,7 +45,7 @@ func (p *Namespace) ToJson() ([]byte, error) {
 	return buf, nil
 }
 
-func (p *NamespaceList) ToJson() ([]byte, error) {
+func (p *AppList) ToJson() ([]byte, error) {
 
 	if p == nil {
 		return []byte("[]"), nil

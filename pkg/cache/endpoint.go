@@ -19,19 +19,18 @@
 package cache
 
 import (
-	"github.com/lastbackend/lastbackend/pkg/logger"
 	"net"
 	"sync"
+	"github.com/lastbackend/lastbackend/pkg/log"
 )
 
 type EndpointCache struct {
-	log     logger.ILogger
 	lock    sync.RWMutex
 	storage map[string][]net.IP
 }
 
 func (ec *EndpointCache) Get(domain string) []net.IP {
-	ec.log.V(logLevel).Debugf("Cache: EndpointCache: get ips for domain: %s", domain)
+	log.V(logLevel).Debugf("Cache: EndpointCache: get ips for domain: %s", domain)
 
 	d, ok := ec.storage[domain]
 	if !ok || len(d) == 0 {
@@ -41,7 +40,7 @@ func (ec *EndpointCache) Get(domain string) []net.IP {
 }
 
 func (ec *EndpointCache) Set(domain string, ips []net.IP) error {
-	ec.log.V(logLevel).Debugf("Cache: EndpointCache: set ips for domain: %s", domain)
+	log.V(logLevel).Debugf("Cache: EndpointCache: set ips for domain: %s", domain)
 
 	ec.lock.Lock()
 	ec.storage[domain] = ips
@@ -50,7 +49,7 @@ func (ec *EndpointCache) Set(domain string, ips []net.IP) error {
 }
 
 func (ec *EndpointCache) Del(domain string) error {
-	ec.log.V(logLevel).Debugf("Cache: EndpointCache: del domain: %s", domain)
+	log.V(logLevel).Debugf("Cache: EndpointCache: del domain: %s", domain)
 
 	ec.lock.Lock()
 	if _, ok := ec.storage[domain]; ok {
@@ -60,10 +59,9 @@ func (ec *EndpointCache) Del(domain string) error {
 	return nil
 }
 
-func NewEndpointCache(log logger.ILogger) *EndpointCache {
+func NewEndpointCache() *EndpointCache {
 	log.V(logLevel).Debug("Cache: EndpointCache: initialization storage")
 	return &EndpointCache{
-		log:     log,
 		storage: make(map[string][]net.IP),
 	}
 }

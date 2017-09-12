@@ -22,12 +22,12 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/common/errors"
 	"github.com/lastbackend/lastbackend/pkg/common/types"
 	"github.com/lastbackend/lastbackend/pkg/scheduler/context"
+	"github.com/lastbackend/lastbackend/pkg/log"
 )
 
 func Provision(p *types.Pod) error {
 
 	var (
-		log = context.Get().GetLogger()
 		stg = context.Get().GetStorage()
 		ctx = context.Get().Background()
 

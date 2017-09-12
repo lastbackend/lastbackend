@@ -21,9 +21,9 @@ package storage
 import (
 	"context"
 	"errors"
-	"github.com/lastbackend/lastbackend/pkg/logger"
 	"github.com/lastbackend/lastbackend/pkg/storage/store"
 	"regexp"
+	"github.com/lastbackend/lastbackend/pkg/log"
 )
 
 const endpointStorage = "endpoints"
@@ -31,24 +31,23 @@ const endpointStorage = "endpoints"
 // Endpoint Service type for interface in interfaces folder
 type EndpointStorage struct {
 	IEndpoint
-	log    logger.ILogger
 	Client func() (store.IStore, store.DestroyFunc, error)
 }
 
 // Get endpoints by domain name
 func (s *EndpointStorage) Get(ctx context.Context, name string) ([]string, error) {
 
-	s.log.V(logLevel).Debugf("Storage: Endpoint: get endpoint by name: %s", name)
+	log.V(logLevel).Debugf("Storage: Endpoint: get endpoint by name: %s", name)
 
 	if len(name) == 0 {
 		err := errors.New("name can not be nil")
-		s.log.V(logLevel).Errorf("Storage: Endpoint: get endpoint by name err: %s", err.Error())
+		log.V(logLevel).Errorf("Storage: Endpoint: get endpoint by name err: %s", err.Error())
 		return nil, err
 	}
 
 	client, destroy, err := s.Client()
 	if err != nil {
-		s.log.V(logLevel).Errorf("Storage: Endpoint: create client err: %s", err.Error())
+		log.V(logLevel).Errorf("Storage: Endpoint: create client err: %s", err.Error())
 		return nil, err
 	}
 	defer destroy()
@@ -56,7 +55,7 @@ func (s *EndpointStorage) Get(ctx context.Context, name string) ([]string, error
 	endpoints := []string{}
 	key := keyCreate(endpointStorage, name)
 	if err := client.Get(ctx, key, &endpoints); err != nil {
-		s.log.V(logLevel).Errorf("Storage: Endpoint: get endpoint err: %s", err.Error())
+		log.V(logLevel).Errorf("Storage: Endpoint: get endpoint err: %s", err.Error())
 		return nil, err
 	}
 
@@ -66,24 +65,24 @@ func (s *EndpointStorage) Get(ctx context.Context, name string) ([]string, error
 // Update endpoint model
 func (s *EndpointStorage) Upsert(ctx context.Context, name string, ips []string) error {
 
-	s.log.V(logLevel).Debugf("Storage: Endpoint: update endpoint by name: %s with ips: %#v", name, ips)
+	log.V(logLevel).Debugf("Storage: Endpoint: update endpoint by name: %s with ips: %#v", name, ips)
 
 	if len(name) == 0 {
 		err := errors.New("name can not be nil")
-		s.log.V(logLevel).Errorf("Storage: Endpoint: update endpoint err: %s", err.Error())
+		log.V(logLevel).Errorf("Storage: Endpoint: update endpoint err: %s", err.Error())
 		return err
 	}
 
 	client, destroy, err := s.Client()
 	if err != nil {
-		s.log.V(logLevel).Errorf("Storage: Endpoint: create client err: %s", err.Error())
+		log.V(logLevel).Errorf("Storage: Endpoint: create client err: %s", err.Error())
 		return err
 	}
 	defer destroy()
 
 	key := keyCreate(endpointStorage, name)
 	if err := client.Upsert(ctx, key, ips, nil, 0); err != nil {
-		s.log.V(logLevel).Errorf("Storage: Endpoint: upsert endpoint err: %s", err.Error())
+		log.V(logLevel).Errorf("Storage: Endpoint: upsert endpoint err: %s", err.Error())
 		return err
 	}
 
@@ -93,24 +92,24 @@ func (s *EndpointStorage) Upsert(ctx context.Context, name string, ips []string)
 // Remove endpoint model
 func (s *EndpointStorage) Remove(ctx context.Context, name string) error {
 
-	s.log.V(logLevel).Debugf("Storage: Endpoint: remove endpoint by name: %s", name)
+	log.V(logLevel).Debugf("Storage: Endpoint: remove endpoint by name: %s", name)
 
 	if len(name) == 0 {
 		err := errors.New("name can not be nil")
-		s.log.V(logLevel).Errorf("Storage: Endpoint: remove endpoint err: %s", err.Error())
+		log.V(logLevel).Errorf("Storage: Endpoint: remove endpoint err: %s", err.Error())
 		return err
 	}
 
 	client, destroy, err := s.Client()
 	if err != nil {
-		s.log.V(logLevel).Errorf("Storage: Endpoint: create client err: %s", err.Error())
+		log.V(logLevel).Errorf("Storage: Endpoint: create client err: %s", err.Error())
 		return err
 	}
 	defer destroy()
 
 	key := keyCreate(endpointStorage, name)
 	if err := client.DeleteDir(ctx, key); err != nil {
-		s.log.V(logLevel).Errorf("Storage: Endpoint: delete dir endpoint err: %s", err.Error())
+		log.V(logLevel).Errorf("Storage: Endpoint: delete dir endpoint err: %s", err.Error())
 		return err
 	}
 
@@ -120,7 +119,7 @@ func (s *EndpointStorage) Remove(ctx context.Context, name string) error {
 // WatchSetvice endpoint model
 func (s *EndpointStorage) Watch(ctx context.Context, endpoint chan string) error {
 
-	s.log.V(logLevel).Debug("Storage: Endpoint: watch endpoint")
+	log.V(logLevel).Debug("Storage: Endpoint: watch endpoint")
 
 	const filter = `\b.+` + endpointStorage + `\/(.+)\b`
 	client, destroy, err := s.Client()
@@ -140,18 +139,17 @@ func (s *EndpointStorage) Watch(ctx context.Context, endpoint chan string) error
 	}
 
 	if err := client.Watch(ctx, key, filter, cb); err != nil {
-		s.log.V(logLevel).Errorf("Storage: Endpoint: watch endpoint err: %s", err.Error())
+		log.V(logLevel).Errorf("Storage: Endpoint: watch endpoint err: %s", err.Error())
 		return err
 	}
 
 	return nil
 }
 
-func newEndpointStorage(config store.Config, log logger.ILogger) *EndpointStorage {
+func newEndpointStorage(config store.Config) *EndpointStorage {
 	s := new(EndpointStorage)
-	s.log = log
 	s.Client = func() (store.IStore, store.DestroyFunc, error) {
-		return New(config, log)
+		return New(config)
 	}
 	return s
 }

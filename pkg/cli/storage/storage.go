@@ -23,14 +23,14 @@ import (
 )
 
 type Storage struct {
-	*NamespaceStorage
+	*AppStorage
 }
 
-func (s *Storage) Namespace() INamespace {
+func (s *Storage) App() IApp {
 	if s == nil {
 		return nil
 	}
-	return s.NamespaceStorage
+	return s.AppStorage
 }
 
 func Get() (*Storage, error) {
@@ -41,7 +41,7 @@ func Get() (*Storage, error) {
 	}
 
 	store := new(Storage)
-	store.NamespaceStorage = newNamespaceStorage(client)
+	store.AppStorage = newAppStorage(client)
 
 	return store, nil
 }

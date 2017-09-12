@@ -23,10 +23,10 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/common/context"
 	"github.com/lastbackend/lastbackend/pkg/common/types"
 	"io"
+	"github.com/lastbackend/lastbackend/pkg/log"
 )
 
 func (r *Runtime) ImagePull(ctx context.IContext, spec *types.ImageSpec) (io.ReadCloser, error) {
-	log := ctx.GetLogger()
 	log.Debugf("Docker: Image pull: %s", spec.Name)
 	options := docker.ImagePullOptions{
 		RegistryAuth: spec.Auth,
@@ -40,7 +40,6 @@ func (r *Runtime) ImageBuild(ctx context.IContext) {}
 
 func (r *Runtime) ImageRemove(ctx context.IContext, ID string) error {
 
-	log := ctx.GetLogger()
 	log.Debugf("Docker: Image remove: %s", ID)
 	var options docker.ImageRemoveOptions
 

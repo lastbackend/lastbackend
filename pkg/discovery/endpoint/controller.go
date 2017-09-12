@@ -23,6 +23,7 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/discovery/context"
 	"github.com/lastbackend/lastbackend/pkg/storage/store"
 	"github.com/lastbackend/lastbackend/pkg/util"
+	"github.com/lastbackend/lastbackend/pkg/log"
 )
 
 type EndpointController struct {
@@ -35,7 +36,6 @@ type EndpointController struct {
 
 func (ec *EndpointController) Watch() {
 	var (
-		log = ec.context.GetLogger()
 		stg = ec.context.GetStorage()
 	)
 
@@ -83,12 +83,12 @@ func (ec *EndpointController) Watch() {
 }
 
 func (ec *EndpointController) Pause() {
-	ec.context.GetLogger().Debugf("EndpointController: pause")
+	log.Debugf("EndpointController: pause")
 	ec.active = false
 }
 
 func (ec *EndpointController) Resume() {
-	ec.context.GetLogger().Debugf("EndpointController: resume")
+	log.Debugf("EndpointController: resume")
 	ec.active = true
 }
 

@@ -32,7 +32,7 @@ func New(obj *types.Service) *Service {
 
 	s.Meta.Name = obj.Meta.Name
 	s.Meta.Description = obj.Meta.Description
-	s.Meta.Namespace = obj.Meta.Namespace
+	s.Meta.App = obj.Meta.App
 	s.Meta.Labels = obj.Meta.Labels
 	s.Meta.Region = obj.Meta.Region
 	s.Meta.Updated = obj.Meta.Updated
@@ -139,8 +139,8 @@ func NewList(obj types.ServiceList) *ServiceList {
 	return &s
 }
 
-func (s *Service) DrawTable(namespaceName string) {
-	serviceTable := table.New([]string{"NAME", "DESCRIPTION", "NAMESPACE", "REPLICAS", "MEMORY", "IMAGE", "CREATED", "UPDATED"})
+func (s *Service) DrawTable(appName string) {
+	serviceTable := table.New([]string{"NAME", "DESCRIPTION", "APP", "REPLICAS", "MEMORY", "IMAGE", "CREATED", "UPDATED"})
 	podsTable := table.New([]string{"ID", "STATE", "TOTAL", "RUNNING", "CREATED", "STOPPED", "ERRORED", "CREATED", "UPDATED"})
 	containersTable := table.New([]string{"ID", "IMAGE", "STATE", "CREATE", "UPDATED"})
 
@@ -151,7 +151,7 @@ func (s *Service) DrawTable(namespaceName string) {
 	serviceTable.AddRow(map[string]interface{}{
 		"NAME":        s.Meta.Name,
 		"DESCRIPTION": s.Meta.Description,
-		"NAMESPACE":   namespaceName,
+		"APP":         appName,
 		"REPLICAS":    s.Meta.Replicas,
 		"MEMORY":      s.Spec[0].Memory,
 		"IMAGE":       s.Spec[0].Image,
@@ -199,11 +199,11 @@ func (obj *ServiceList) ToJson() ([]byte, error) {
 	return json.Marshal(obj)
 }
 
-func (sl *ServiceList) DrawTable(namespaceName string) {
+func (sl *ServiceList) DrawTable(appName string) {
 	t := table.New([]string{"NAME", "DESCRIPTION", "REPLICAS", "STATE", "CREATED", "UPDATED"})
 	t.VisibleHeader = true
 
-	fmt.Println("NAMESPACE: ", namespaceName)
+	fmt.Println("APP: ", appName)
 	for _, s := range *sl {
 		t.AddRow(map[string]interface{}{
 			"NAME":        s.Meta.Name,

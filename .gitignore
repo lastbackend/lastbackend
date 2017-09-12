@@ -28,8 +28,9 @@ _testmain.go
 *.prof
 *.iml
 *.srl
+*.DS_Store
 
-build/
+/build/
 vendor/*/
 docs/output/
 coverage.txt

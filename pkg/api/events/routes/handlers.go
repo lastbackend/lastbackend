@@ -22,6 +22,7 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/api/context"
 	"github.com/lastbackend/lastbackend/pkg/sockets"
 	"net/http"
+	"github.com/lastbackend/lastbackend/pkg/log"
 )
 
 const (
@@ -32,7 +33,6 @@ const (
 func EventSubscribeH(w http.ResponseWriter, r *http.Request) {
 	var (
 		err error
-		log = context.Get().GetLogger()
 		hub = context.Get().GetWssHub()
 	)
 

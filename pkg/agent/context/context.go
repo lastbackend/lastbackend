@@ -25,7 +25,6 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/agent/runtime/cri"
 	"github.com/lastbackend/lastbackend/pkg/cache"
 	_c "github.com/lastbackend/lastbackend/pkg/common/context"
-	"github.com/lastbackend/lastbackend/pkg/logger"
 	"github.com/lastbackend/lastbackend/pkg/util/http"
 )
 
@@ -40,7 +39,6 @@ type ctx struct {
 
 	cri     cri.CRI
 	id      *string
-	logger  logger.ILogger
 	config  *config.Config
 	storage *cache.Cache
 	http    *http.RawReq
@@ -53,14 +51,6 @@ func (c *ctx) SetID(id *string) {
 
 func (c *ctx) GetID() *string {
 	return c.id
-}
-
-func (c *ctx) SetLogger(log logger.ILogger) {
-	c.logger = log
-}
-
-func (c *ctx) GetLogger() logger.ILogger {
-	return c.logger
 }
 
 func (c *ctx) SetConfig(cfg *config.Config) {

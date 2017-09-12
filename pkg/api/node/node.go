@@ -22,6 +22,7 @@ import (
 	"context"
 	ctx "github.com/lastbackend/lastbackend/pkg/api/context"
 	"github.com/lastbackend/lastbackend/pkg/common/types"
+	"github.com/lastbackend/lastbackend/pkg/log"
 )
 
 const logLevel = 3
@@ -41,7 +42,6 @@ func (n *node) List() ([]*types.Node, error) {
 
 func (n *node) Get(id string) (*types.Node, error) {
 	var (
-		log     = ctx.Get().GetLogger()
 		storage = ctx.Get().GetStorage()
 	)
 
@@ -67,7 +67,6 @@ func (n *node) Create(meta *types.NodeMeta, state *types.NodeState) (*types.Node
 
 	var (
 		storage = ctx.Get().GetStorage()
-		log     = ctx.Get().GetLogger()
 		node    = new(types.Node)
 	)
 

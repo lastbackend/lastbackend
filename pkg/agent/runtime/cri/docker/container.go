@@ -25,6 +25,7 @@ import (
 	"io"
 	"strings"
 	"time"
+	"github.com/lastbackend/lastbackend/pkg/log"
 )
 
 func (r *Runtime) ContainerCreate(ctx context.IContext, spec *types.ContainerSpec) (string, error) {
@@ -82,7 +83,6 @@ func (r *Runtime) ContainerLogs(ctx context.IContext, ID string, stdout, stderr,
 }
 
 func (r *Runtime) ContainerInspect(ctx context.IContext, ID string) (*types.Container, error) {
-	log := ctx.GetLogger()
 	log.Debug("Docker: Container Inspect")
 
 	var container *types.Container

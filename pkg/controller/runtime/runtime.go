@@ -23,6 +23,7 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/controller/context"
 	"github.com/lastbackend/lastbackend/pkg/controller/service"
 	"github.com/lastbackend/lastbackend/pkg/system"
+	"github.com/lastbackend/lastbackend/pkg/log"
 )
 
 // watch service state and specs
@@ -57,7 +58,6 @@ func NewRuntime(ctx *context.Context) *Runtime {
 func (r *Runtime) Loop() {
 
 	var (
-		log  = r.context.GetLogger()
 		lead = make(chan bool)
 	)
 

@@ -26,5 +26,5 @@ type Volume struct {
 	// Volume name
 	Name string `json:"name"`
 	// Volume uuid, incremented automatically
-	Project string `json:"namespace"`
+	App string `json:"app"`
 }

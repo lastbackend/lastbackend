@@ -19,14 +19,12 @@
 package daemon
 
 import (
-	"github.com/lastbackend/lastbackend/pkg/discovery/context"
 	"github.com/lastbackend/lastbackend/pkg/discovery/endpoint/resources"
 	"github.com/lastbackend/lastbackend/pkg/util/dns"
+	"github.com/lastbackend/lastbackend/pkg/log"
 )
 
 func Listen(port int) (*dns.DNS, error) {
-
-	var log = context.Get().GetLogger()
 
 	var d = dns.DNS{}
 

@@ -21,7 +21,7 @@ package service
 import (
 	"fmt"
 	s "github.com/lastbackend/lastbackend/pkg/api/service/views/v1"
-	nspace "github.com/lastbackend/lastbackend/pkg/cli/cmd/namespace"
+	a "github.com/lastbackend/lastbackend/pkg/cli/cmd/app"
 	c "github.com/lastbackend/lastbackend/pkg/cli/context"
 	"github.com/lastbackend/lastbackend/pkg/common/errors"
 )
@@ -46,16 +46,16 @@ func Inspect(name string) (*s.Service, string, error) {
 		srv  *s.Service
 	)
 
-	ns, err := nspace.Current()
+	a, err := a.Current()
 	if err != nil {
 		return nil, "", err
 	}
-	if ns == nil {
-		return nil, "", errors.New("Namespace didn't select")
+	if a == nil {
+		return nil, "", errors.New("App didn't select")
 	}
 
 	_, _, err = http.
-		GET(fmt.Sprintf("/namespace/%s/service/%s", ns.Meta.Name, name)).
+		GET(fmt.Sprintf("/app/%s/service/%s", a.Meta.Name, name)).
 		Request(&srv, er)
 	if err != nil {
 		return nil, "", errors.New(er.Message)
@@ -69,5 +69,5 @@ func Inspect(name string) (*s.Service, string, error) {
 		return nil, "", errors.New(er.Message)
 	}
 
-	return srv, ns.Meta.Name, nil
+	return srv, a.Meta.Name, nil
 }

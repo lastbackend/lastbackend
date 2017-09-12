@@ -61,8 +61,8 @@ type ServiceMeta struct {
 	Meta
 	// Service replicas
 	Replicas int `json:"replicas"`
-	// Service namespace
-	Namespace string `json:"namespace"`
+	// Service app
+	App string `json:"app"`
 	// Service region
 	Region string `json:"region,omitempty"`
 	//Service hook
