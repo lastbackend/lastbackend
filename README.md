@@ -2,6 +2,7 @@
 [![GoDoc](https://godoc.org/github.com/lastbackend/lastbackend?status.png)](https://godoc.org/github.com/lastbackend/lastbackend)
 [![Travis](https://travis-ci.org/lastbackend/lastbackend.svg?branch=master)](https://travis-ci.org/lastbackend/lastbackend)
 [![Slack](https://slack.lastbackend.com/badge.svg)](https://slack.lastbackend.com/)
+[![Gitter](https://badges.gitter.im/lastbackend/lastbackend.svg)](https://gitter.im/lastbackend/lastbackend?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge)
 [![Licensed under Apache License version 2.0](https://img.shields.io/github/license/lastbackend/lastbackend.svg?maxAge=2592000)](https://www.apache.org/licenses/LICENSE-2.0)
 [![StackShare](https://img.shields.io/badge/tech-stack-0690fa.svg?style=flat)](https://stackshare.io/last-backend/last-backend)
 
@@ -17,7 +18,7 @@ You can connect to lastbackend platform the host where you want to deploy your a
 
 **Note:** Last.Backend is on activelly development stage, please be care of using it.
 
-Join us in Slack [![Slack](https://slack.lastbackend.com/badge.svg)](https://slack.lastbackend.com/)
+Join us in Gitter [![Gitter](https://badges.gitter.im/lastbackend/lastbackend.svg)](https://gitter.im/lastbackend/lastbackend?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge) or Slack [![Slack](https://slack.lastbackend.com/badge.svg)](https://slack.lastbackend.com/)
 
 This project has [Roadmap](ROADMAP.md), feel free to offer your features. 
 
