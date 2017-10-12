@@ -19,10 +19,6 @@ after_success:
 notifications:
   slack: lastbackend:0e7apir97phOrZbD12RJ9v0P
 
-cache:
-  directories:
-    - vendor
-
 deploy:
   - provider: pages
     local_dir: docs/output
