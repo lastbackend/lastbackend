@@ -21,11 +21,12 @@ package storage
 import (
 	"context"
 	"errors"
-	"github.com/lastbackend/lastbackend/pkg/common/types"
-	"github.com/lastbackend/lastbackend/pkg/storage/store"
 	"regexp"
 	"strings"
+
+	"github.com/lastbackend/lastbackend/pkg/common/types"
 	"github.com/lastbackend/lastbackend/pkg/log"
+	"github.com/lastbackend/lastbackend/pkg/storage/store"
 )
 
 const podStorage = "pods"
@@ -89,7 +90,7 @@ func (s *PodStorage) GetByName(ctx context.Context, app, name string) (*types.Po
 	return pod, nil
 }
 
-func (s *PodStorage) ListByNamespace(ctx context.Context, app string) (map[string]*types.Pod, error) {
+func (s *PodStorage) ListByApp(ctx context.Context, app string) (map[string]*types.Pod, error) {
 
 	log.V(logLevel).Debugf("Storage: Pod: get pods list in app: %s", app)
 
