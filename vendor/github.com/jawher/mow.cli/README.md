@@ -244,10 +244,10 @@ In this function, you can add options and arguments by calling the same methods 
 You would also assign a function to the Action field of the Cmd struct for it to be executed when the command is invoked.
 ```go
 docker.Command("run", "Run a command in a new container", func(cmd *cli.Cmd) {
-    detached := cmd.BoolOpt("d detach", false, "Detached mode: run the container in the background and print the new container ID", nil)
-    memory := cmd.StringOpt("m memory", "", "Memory limit (format: <number><optional unit>, where unit = b, k, m or g)", nil)
+    detached := cmd.BoolOpt("d detach", false, "Detached mode: run the container in the background and print the new container ID")
+    memory := cmd.StringOpt("m memory", "", "Memory limit (format: <number><optional unit>, where unit = b, k, m or g)")
 
-    image := cmd.StringArg("IMAGE", "", "", nil)
+    image := cmd.StringArg("IMAGE", "", "")
 
     cmd.Action = func() {
         if *detached {

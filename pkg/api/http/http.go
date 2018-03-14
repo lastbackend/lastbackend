@@ -20,57 +20,55 @@ package http
 
 import (
 	"github.com/gorilla/mux"
-	"github.com/lastbackend/lastbackend/pkg/api/context"
 	"github.com/lastbackend/lastbackend/pkg/util/http"
 
-	events "github.com/lastbackend/lastbackend/pkg/api/events/routes"
-	hook "github.com/lastbackend/lastbackend/pkg/api/hook/routes"
-	namespace "github.com/lastbackend/lastbackend/pkg/api/namespace/routes"
-	node "github.com/lastbackend/lastbackend/pkg/api/node/routes"
-	service "github.com/lastbackend/lastbackend/pkg/api/service/routes"
-	vendors "github.com/lastbackend/lastbackend/pkg/api/vendors/routes"
+	"github.com/lastbackend/lastbackend/pkg/api/http/hook"
+	"github.com/lastbackend/lastbackend/pkg/api/http/namespace"
+	"github.com/lastbackend/lastbackend/pkg/api/http/node"
+	"github.com/lastbackend/lastbackend/pkg/api/http/service"
+	"github.com/lastbackend/lastbackend/pkg/api/http/cluster"
+	"github.com/lastbackend/lastbackend/pkg/api/http/route"
+	"github.com/lastbackend/lastbackend/pkg/api/http/deployment"
+	"github.com/lastbackend/lastbackend/pkg/log"
 )
+const logLevel = 2
+
+// Extends routes variable
+var Routes = make([]http.Route, 0)
+
+func AddRoutes(r ...[]http.Route) {
+	for i := range r {
+		Routes = append(Routes, r[i]...)
+	}
+}
+
+func init() {
+
+	// Cluster
+	AddRoutes(cluster.Routes)
+	AddRoutes(node.Routes)
+
+	// Namespace
+	AddRoutes(namespace.Routes)
+	AddRoutes(service.Routes)
+	AddRoutes(deployment.Routes)
+	AddRoutes(route.Routes)
+
+	// Hooks
+	AddRoutes(hook.Routes)
+}
 
 func Listen(host string, port int) error {
 
-	var (
-		log = context.Get().GetLogger()
-	)
+	log.V(logLevel).Debugf("HTTP: listen HTTP server on %s:%d", host, port)
 
-	log.Debug("Listen HTTP server")
+	r := mux.NewRouter()
+	r.Methods("OPTIONS").HandlerFunc(http.Headers)
 
-	router := mux.NewRouter()
-	router.Methods("OPTIONS").HandlerFunc(http.Headers)
-
-	for _, route := range namespace.Routes {
-		log.Debugf("Init route: %s", route.Path)
-		router.Handle(route.Path, http.Handle(route.Handler, route.Middleware...)).Methods(route.Method)
+	for _, route := range Routes {
+		log.V(logLevel).Debugf("HTTP: init route: %s", route.Path)
+		r.Handle(route.Path, http.Handle(route.Handler, route.Middleware...)).Methods(route.Method)
 	}
 
-	for _, route := range service.Routes {
-		log.Debugf("Init route: %s", route.Path)
-		router.Handle(route.Path, http.Handle(route.Handler, route.Middleware...)).Methods(route.Method)
-	}
-
-	for _, route := range vendors.Routes {
-		log.Debugf("Init route: %s", route.Path)
-		router.Handle(route.Path, http.Handle(route.Handler, route.Middleware...)).Methods(route.Method)
-	}
-
-	for _, route := range node.Routes {
-		log.Debugf("Init route: %s", route.Path)
-		router.Handle(route.Path, http.Handle(route.Handler, route.Middleware...)).Methods(route.Method)
-	}
-
-	for _, route := range events.Routes {
-		log.Debugf("Init route: %s", route.Path)
-		router.Handle(route.Path, http.Handle(route.Handler, route.Middleware...)).Methods(route.Method)
-	}
-
-	for _, route := range hook.Routes {
-		log.Debugf("Init route: %s", route.Path)
-		router.Handle(route.Path, http.Handle(route.Handler, route.Middleware...)).Methods(route.Method)
-	}
-
-	return http.Listen(host, port, router)
+	return http.Listen(host, port, r)
 }

@@ -15,13 +15,14 @@
 package clientv3
 
 import (
+	"context"
 	"sync"
 	"time"
 
 	"github.com/coreos/etcd/etcdserver/api/v3rpc/rpctypes"
 	pb "github.com/coreos/etcd/etcdserver/etcdserverpb"
-	"golang.org/x/net/context"
-	"google.golang.org/grpc"
+
+	"google.golang.org/grpc/metadata"
 )
 
 type (
@@ -29,7 +30,7 @@ type (
 	LeaseID             int64
 )
 
-// LeaseGrantResponse is used to convert the protobuf grant response.
+// LeaseGrantResponse wraps the protobuf message LeaseGrantResponse.
 type LeaseGrantResponse struct {
 	*pb.ResponseHeader
 	ID    LeaseID
@@ -37,14 +38,14 @@ type LeaseGrantResponse struct {
 	Error string
 }
 
-// LeaseKeepAliveResponse is used to convert the protobuf keepalive response.
+// LeaseKeepAliveResponse wraps the protobuf message LeaseKeepAliveResponse.
 type LeaseKeepAliveResponse struct {
 	*pb.ResponseHeader
 	ID  LeaseID
 	TTL int64
 }
 
-// LeaseTimeToLiveResponse is used to convert the protobuf lease timetolive response.
+// LeaseTimeToLiveResponse wraps the protobuf message LeaseTimeToLiveResponse.
 type LeaseTimeToLiveResponse struct {
 	*pb.ResponseHeader
 	ID LeaseID `json:"id"`
@@ -59,6 +60,18 @@ type LeaseTimeToLiveResponse struct {
 	Keys [][]byte `json:"keys"`
 }
 
+// LeaseStatus represents a lease status.
+type LeaseStatus struct {
+	ID LeaseID `json:"id"`
+	// TODO: TTL int64
+}
+
+// LeaseLeasesResponse wraps the protobuf message LeaseLeasesResponse.
+type LeaseLeasesResponse struct {
+	*pb.ResponseHeader
+	Leases []LeaseStatus `json:"leases"`
+}
+
 const (
 	// defaultTTL is the assumed lease TTL used for the first keepalive
 	// deadline before the actual TTL is known to the client.
@@ -67,6 +80,9 @@ const (
 	leaseResponseChSize = 16
 	// NoLease is a lease ID for the absence of a lease.
 	NoLease LeaseID = 0
+
+	// retryConnWait is how long to wait before retrying request due to an error
+	retryConnWait = 500 * time.Millisecond
 )
 
 // ErrKeepAliveHalted is returned if client keep alive loop halts with an unexpected error.
@@ -94,10 +110,13 @@ type Lease interface {
 	// TimeToLive retrieves the lease information of the given lease ID.
 	TimeToLive(ctx context.Context, id LeaseID, opts ...LeaseOption) (*LeaseTimeToLiveResponse, error)
 
+	// Leases retrieves all leases.
+	Leases(ctx context.Context) (*LeaseLeasesResponse, error)
+
 	// KeepAlive keeps the given lease alive forever.
 	KeepAlive(ctx context.Context, id LeaseID) (<-chan *LeaseKeepAliveResponse, error)
 
-	// KeepAliveOnce renews the lease once. In most of the cases, Keepalive
+	// KeepAliveOnce renews the lease once. In most of the cases, KeepAlive
 	// should be used instead of KeepAliveOnce.
 	KeepAliveOnce(ctx context.Context, id LeaseID) (*LeaseKeepAliveResponse, error)
 
@@ -157,61 +176,61 @@ func NewLeaseFromLeaseClient(remote pb.LeaseClient, keepAliveTimeout time.Durati
 	if l.firstKeepAliveTimeout == time.Second {
 		l.firstKeepAliveTimeout = defaultTTL
 	}
-	l.stopCtx, l.stopCancel = context.WithCancel(context.Background())
+	reqLeaderCtx := WithRequireLeader(context.Background())
+	l.stopCtx, l.stopCancel = context.WithCancel(reqLeaderCtx)
 	return l
 }
 
 func (l *lessor) Grant(ctx context.Context, ttl int64) (*LeaseGrantResponse, error) {
-	for {
-		r := &pb.LeaseGrantRequest{TTL: ttl}
-		resp, err := l.remote.LeaseGrant(ctx, r)
-		if err == nil {
-			gresp := &LeaseGrantResponse{
-				ResponseHeader: resp.GetHeader(),
-				ID:             LeaseID(resp.ID),
-				TTL:            resp.TTL,
-				Error:          resp.Error,
-			}
-			return gresp, nil
+	r := &pb.LeaseGrantRequest{TTL: ttl}
+	resp, err := l.remote.LeaseGrant(ctx, r)
+	if err == nil {
+		gresp := &LeaseGrantResponse{
+			ResponseHeader: resp.GetHeader(),
+			ID:             LeaseID(resp.ID),
+			TTL:            resp.TTL,
+			Error:          resp.Error,
 		}
-		if isHaltErr(ctx, err) {
-			return nil, toErr(ctx, err)
-		}
+		return gresp, nil
 	}
+	return nil, toErr(ctx, err)
 }
 
 func (l *lessor) Revoke(ctx context.Context, id LeaseID) (*LeaseRevokeResponse, error) {
-	for {
-		r := &pb.LeaseRevokeRequest{ID: int64(id)}
-		resp, err := l.remote.LeaseRevoke(ctx, r)
-
-		if err == nil {
-			return (*LeaseRevokeResponse)(resp), nil
-		}
-		if isHaltErr(ctx, err) {
-			return nil, toErr(ctx, err)
-		}
+	r := &pb.LeaseRevokeRequest{ID: int64(id)}
+	resp, err := l.remote.LeaseRevoke(ctx, r)
+	if err == nil {
+		return (*LeaseRevokeResponse)(resp), nil
 	}
+	return nil, toErr(ctx, err)
 }
 
 func (l *lessor) TimeToLive(ctx context.Context, id LeaseID, opts ...LeaseOption) (*LeaseTimeToLiveResponse, error) {
-	for {
-		r := toLeaseTimeToLiveRequest(id, opts...)
-		resp, err := l.remote.LeaseTimeToLive(ctx, r, grpc.FailFast(false))
-		if err == nil {
-			gresp := &LeaseTimeToLiveResponse{
-				ResponseHeader: resp.GetHeader(),
-				ID:             LeaseID(resp.ID),
-				TTL:            resp.TTL,
-				GrantedTTL:     resp.GrantedTTL,
-				Keys:           resp.Keys,
-			}
-			return gresp, nil
+	r := toLeaseTimeToLiveRequest(id, opts...)
+	resp, err := l.remote.LeaseTimeToLive(ctx, r)
+	if err == nil {
+		gresp := &LeaseTimeToLiveResponse{
+			ResponseHeader: resp.GetHeader(),
+			ID:             LeaseID(resp.ID),
+			TTL:            resp.TTL,
+			GrantedTTL:     resp.GrantedTTL,
+			Keys:           resp.Keys,
 		}
-		if isHaltErr(ctx, err) {
-			return nil, toErr(ctx, err)
-		}
+		return gresp, nil
 	}
+	return nil, toErr(ctx, err)
+}
+
+func (l *lessor) Leases(ctx context.Context) (*LeaseLeasesResponse, error) {
+	resp, err := l.remote.LeaseLeases(ctx, &pb.LeaseLeasesRequest{})
+	if err == nil {
+		leases := make([]LeaseStatus, len(resp.Leases))
+		for i := range resp.Leases {
+			leases[i] = LeaseStatus{ID: LeaseID(resp.Leases[i].ID)}
+		}
+		return &LeaseLeasesResponse{ResponseHeader: resp.GetHeader(), Leases: leases}, nil
+	}
+	return nil, toErr(ctx, err)
 }
 
 func (l *lessor) KeepAlive(ctx context.Context, id LeaseID) (<-chan *LeaseKeepAliveResponse, error) {
@@ -309,11 +328,50 @@ func (l *lessor) keepAliveCtxCloser(id LeaseID, ctx context.Context, donec <-cha
 	}
 }
 
+// closeRequireLeader scans keepAlives for ctxs that have require leader
+// and closes the associated channels.
+func (l *lessor) closeRequireLeader() {
+	l.mu.Lock()
+	defer l.mu.Unlock()
+	for _, ka := range l.keepAlives {
+		reqIdxs := 0
+		// find all required leader channels, close, mark as nil
+		for i, ctx := range ka.ctxs {
+			md, ok := metadata.FromOutgoingContext(ctx)
+			if !ok {
+				continue
+			}
+			ks := md[rpctypes.MetadataRequireLeaderKey]
+			if len(ks) < 1 || ks[0] != rpctypes.MetadataHasLeader {
+				continue
+			}
+			close(ka.chs[i])
+			ka.chs[i] = nil
+			reqIdxs++
+		}
+		if reqIdxs == 0 {
+			continue
+		}
+		// remove all channels that required a leader from keepalive
+		newChs := make([]chan<- *LeaseKeepAliveResponse, len(ka.chs)-reqIdxs)
+		newCtxs := make([]context.Context, len(newChs))
+		newIdx := 0
+		for i := range ka.chs {
+			if ka.chs[i] == nil {
+				continue
+			}
+			newChs[newIdx], newCtxs[newIdx] = ka.chs[i], ka.ctxs[newIdx]
+			newIdx++
+		}
+		ka.chs, ka.ctxs = newChs, newCtxs
+	}
+}
+
 func (l *lessor) keepAliveOnce(ctx context.Context, id LeaseID) (*LeaseKeepAliveResponse, error) {
 	cctx, cancel := context.WithCancel(ctx)
 	defer cancel()
 
-	stream, err := l.remote.LeaseKeepAlive(cctx, grpc.FailFast(false))
+	stream, err := l.remote.LeaseKeepAlive(cctx)
 	if err != nil {
 		return nil, toErr(ctx, err)
 	}
@@ -342,32 +400,50 @@ func (l *lessor) recvKeepAliveLoop() (gerr error) {
 		close(l.donec)
 		l.loopErr = gerr
 		for _, ka := range l.keepAlives {
-			ka.Close()
+			ka.close()
 		}
 		l.keepAlives = make(map[LeaseID]*keepAlive)
 		l.mu.Unlock()
 	}()
 
-	stream, serr := l.resetRecv()
-	for serr == nil {
-		resp, err := stream.Recv()
+	for {
+		stream, err := l.resetRecv()
 		if err != nil {
-			if isHaltErr(l.stopCtx, err) {
+			if canceledByCaller(l.stopCtx, err) {
 				return err
 			}
-			stream, serr = l.resetRecv()
-			continue
+		} else {
+			for {
+				resp, err := stream.Recv()
+				if err != nil {
+					if canceledByCaller(l.stopCtx, err) {
+						return err
+					}
+
+					if toErr(l.stopCtx, err) == rpctypes.ErrNoLeader {
+						l.closeRequireLeader()
+					}
+					break
+				}
+
+				l.recvKeepAlive(resp)
+			}
 		}
-		l.recvKeepAlive(resp)
+
+		select {
+		case <-time.After(retryConnWait):
+			continue
+		case <-l.stopCtx.Done():
+			return l.stopCtx.Err()
+		}
 	}
-	return serr
 }
 
-// resetRecv opens a new lease stream and starts sending LeaseKeepAliveRequests
+// resetRecv opens a new lease stream and starts sending keep alive requests.
 func (l *lessor) resetRecv() (pb.Lease_LeaseKeepAliveClient, error) {
 	sctx, cancel := context.WithCancel(l.stopCtx)
-	stream, err := l.remote.LeaseKeepAlive(sctx, grpc.FailFast(false))
-	if err = toErr(sctx, err); err != nil {
+	stream, err := l.remote.LeaseKeepAlive(sctx)
+	if err != nil {
 		cancel()
 		return nil, err
 	}
@@ -375,7 +451,6 @@ func (l *lessor) resetRecv() (pb.Lease_LeaseKeepAliveClient, error) {
 	l.mu.Lock()
 	defer l.mu.Unlock()
 	if l.stream != nil && l.streamCancel != nil {
-		l.stream.CloseSend()
 		l.streamCancel()
 	}
 
@@ -405,7 +480,7 @@ func (l *lessor) recvKeepAlive(resp *pb.LeaseKeepAliveResponse) {
 	if karesp.TTL <= 0 {
 		// lease expired; close all keep alive channels
 		delete(l.keepAlives, karesp.ID)
-		ka.Close()
+		ka.close()
 		return
 	}
 
@@ -435,7 +510,7 @@ func (l *lessor) deadlineLoop() {
 		for id, ka := range l.keepAlives {
 			if ka.deadline.Before(now) {
 				// waited too long for response; lease may be expired
-				ka.Close()
+				ka.close()
 				delete(l.keepAlives, id)
 			}
 		}
@@ -443,7 +518,7 @@ func (l *lessor) deadlineLoop() {
 	}
 }
 
-// sendKeepAliveLoop sends LeaseKeepAliveRequests for the lifetime of a lease stream
+// sendKeepAliveLoop sends keep alive requests for the lifetime of the given stream.
 func (l *lessor) sendKeepAliveLoop(stream pb.Lease_LeaseKeepAliveClient) {
 	for {
 		var tosend []LeaseID
@@ -477,7 +552,7 @@ func (l *lessor) sendKeepAliveLoop(stream pb.Lease_LeaseKeepAliveClient) {
 	}
 }
 
-func (ka *keepAlive) Close() {
+func (ka *keepAlive) close() {
 	close(ka.donec)
 	for _, ch := range ka.chs {
 		close(ch)

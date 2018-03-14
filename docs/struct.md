@@ -1,154 +1,108 @@
 Structure
 =========
 
-### Сценарий основных действий в платформе
+### Default work-flow 
 
-Действия с проектом (имя проекта должно быть уникально в рамках пользователя)
-- Создать проект
-- Получить список проектов
-- Получить проект по id/name
-- Обновить информацию по проекту по id/name
-- Удалить проект по id/name
+Namespace management (namespace name should be unique per cluster)
+- Create namespace 
+- Get namespaces list
+- Get namespace by name
+- Get namespace info by name
+- Remove namespace by name
+
+Service management (service name should be unique per namespace)
+- Create service 
+- Get services list by namespace
+- Get service info by namespace
+- Update service info by name
+- Remove service by name
 
 
-Действия с сервисом (имя сервиса должно быть уникально в рамках проекта).
-- Создать сервис
-- Получить список сервисов по project_id/name
-- Получить сервис по id/name
-- Обновить информацию по сервису по id/name
-- Удалить сервис по id/name
+### ETCD v3 storage tree
 
-
-### Дерево хранения данных в etc
-
-```yaml
+```generic
 /lastbackend
 
+integrations:
 /lastbackend/vendors/<vendor>: <vendor (github|bitbucket|gitlab) object>
 
-namespace
-/lastbackend/projects/<project id>/meta: namespace
-/lastbackend/projects/<project id>/services/<service id>/meta: <service info object>
-/lastbackend/projects/<project id>/services/<service id>/source: <service sources object>
-/lastbackend/projects/<project id>/services/<service id>/domains: <service domains object>
-/lastbackend/projects/<project id>/services/<service id>/image: <image name>
-/lastbackend/projects/<project id>/services/<service id>/containers/<container id>: <service container object>
-/lastbackend/projects/<project id>/services/<service id>/builds/<build number>: <service build object>
-/lastbackend/projects/<project id>/services/<service id>/specs/<spec number>: <service spec object>
+namespace:
+/lastbackend/namespace/<namespace name>/meta: <namespace meta object> 
+/lastbackend/namespace/<namespace name>/spec: <namespace spec object>
+/lastbackend/namespace/<namespace name>/stat: <namespace stat object>
 
-# image information data layer
-/lastbackend/images/<image id>/meta: <image info object>
-/lastbackend/images/<image id>/source: <image source object>
-/lastbackend/images/<image id>/builds/<build number>: <build object>
+service:
+/lastbackend/service/<service name>/meta: <service meta object>
+/lastbackend/service/<service name>/spec: <service spec object>
+/lastbackend/service/<service name>/stat: <service stat object>
 
-# helpers information data layer
-/lastbackend/helper/projects/<name>: namespace
-/lastbackend/helper/projects/<project id>/services/<name>: <service id>
-/lastbackend/helper/pods/<pod id>: namespace
+deployment:
+/lastbackend/deployment/<deployment name>/meta: <deployment meta object>
+/lastbackend/deployment/<deployment name>/spec: <deployment spec object>
+/lastbackend/deployment/<deployment name>/stat: <deployment stat object>
+
+pod:
+/lastbackend/pod/<pod name>/meta: <pod meta object>
+/lastbackend/pod/<pod name>/spec: <pod spec object>
+/lastbackend/pod/<pod name>/stat: <pod stat object>
+
+volume:
+/lastbackend/volume/<volume name>/meta: <volume meta object>
+/lastbackend/volume/<volume name>/spec: <volume spec object>
+/lastbackend/volume/<volume name>/stat: <volume stat object>
+
+secret:
+/lastbackend/secret/<secret name>/meta: <secret meta object>
+/lastbackend/secret/<secret name>/data: <secret data object>
+
+route:
+/lastbackend/route/<route name>/meta: <route meta object>
+/lastbackend/route/<route name>/spec: <route spec object>
+/lastbackend/route/<route name>/stat: <route stat object>
+
+discovery:
+/lastbackend/discovery/<endpoint>: <endpoint spec object>
+
+
+cluster:
+/lastbackend/cluster/meta: <cluster meta object>
+/lastbackend/cluster/stat: <cluster stat object>
+
+subnets:
+/lastbackend/cluster/snet/<node hostname>/meta: <subnet meta object>
+/lastbackend/cluster/snet/<node hostname>/spec: <subnet spec object>
+
+nodes:
+/lastbackend/cluster/node/<node hostname>/meta: <node meta object>
+/lastbackend/cluster/node/<node hostname>/stat: <node stat object>
+/lastbackend/cluster/node/<node hostname>/beat: <node beat object> 
+/lastbackend/cluster/node/<node hostname>/spec/pod/<pod name>: <pod spec object>
+/lastbackend/cluster/node/<node hostname>/spec/route/<route name>: <route spec object>
+/lastbackend/cluster/node/<node hostname>/spec/volume/<volume name>: <volume spec object>
+
+system:
+
+/lastbackend/system
+/lastbackend/system/controller
+/lastbackend/system/controller/lead
+/lastbackend/system/controller/process/<system hostname>
+/lastbackend/system/controller/queue/service/<service name>: <service stat object>
+/lastbackend/system/controller/queue/deployment/<deployment name>: <deployment stat object>
+/lastbackend/system/controller/queue/volume/<volume name>: <volume stat object>
+/lastbackend/system/controller/queue/route/<route name>: <route stat object>
+
+/lastbackend/system/scheduler
+/lastbackend/system/scheduler/lead
+/lastbackend/system/scheduler/process/<system hostname>
+/lastbackend/system/scheduler/pod/<pod name>: <pod stat object>
+/lastbackend/system/scheduler/volume/<volume name>: <volume stat object>
+/lastbackend/system/scheduler/route/<route name>: <volume stat object>
 ```
 
-### Структуры данных
+### Structures
 
-Image info object
-```json
-{
-  "name": "hub.lastbackend.com/lastbackend/hello-world",
-  "description": "hello-world description",
-  "created": "Wed Mar 01 2017 17:13:08 GMT+03:00",
-  "updated": "Wed Mar 01 2017 17:13:08 GMT+03:00"
-}
-```
 
-Image source object
-```json
-{
-  "hub":"github.com",
-  "owner":"lastbackend",
-  "repo":"proxy",
-  "branch":"master"
-}
-```
-
-Build object
-```json
-{
-  "commit": "a454517a3c5c657cc71548b874d023f2e2d8915b",
-  "commitMessage": "Merge pull request #218",
-  "committer": "unloop",
-  "status": "failed",
-  "message": "clone repo failed",
-  "created": "Wed Mar 01 2017 17:13:08 GMT+03:00",
-  "updated": "Wed Mar 01 2017 17:13:08 GMT+03:00"
-}
-```
-
-Registry account object
-```json
-{
- "email": "",
- "password": "",
- "username": "",
- "host": "hub.lastbackend.com"
-}
-```
-
-Vendor map
-```json
-{
-  "github": {},
-  "bitbucket": {},
-  "gitlab": {},
-  "slack": {}
-}
-
-```
-
-Vendor github object
-```json
-{
-  "vendor": "github",
-  "host": "github.com",
-  "username": "unloop",
-  "email": "pastor.konstantin@gmail.com",
-  "service_id":  "1877907",
-  "token": "a4f29b4c1a7fa86e8b1f308ffec6feeea979f98e",
-  "token_type": "bearer",
-  "updated": "Tue Mar 14 2017 12:49:45 GMT+03:00",
-  "created": "Tue Mar 14 2017 12:49:45 GMT+03:00"
-}
-```
-
-Vendor bitbucket object
-```json
-{
-  "vendor": "bitbucket",
-  "host": "bitbucket.org",
-  "username": "unloop",
-  "email": "pastor.konstantin@gmail.com",
-  "service_id":  "1877907",
-  "token": "NqFQPmgsa4QQ9StW2R",
-  "token_type": "bearer",
-  "updated": "Tue Mar 14 2017 12:49:45 GMT+03:00",
-  "created": "Tue Mar 14 2017 12:49:45 GMT+03:00"
-}
-```
-Vendor gitlab object
-```json
-{
-  "vendor": "githlab",
-  "host": "gitlab.com",
-  "username": "unloop",
-  "email": "pastor.konstantin@gmail.com",
-  "service_id":  "1877907",
-  "token": "1f0af717251950dbd4d73154fdf0a474a5c5119adad999683f5b450c460726aa",
-  "token_type": "bearer",
-  "expiry": "Tue Mar 14 2017 12:49:45 GMT+03:00",
-  "updated": "Tue Mar 14 2017 12:49:45 GMT+03:00",
-  "created": "Tue Mar 14 2017 12:49:45 GMT+03:00"
-}
-```
-
-Project info object
+Namespace info object
 ```json
 {
   "name": "demo",

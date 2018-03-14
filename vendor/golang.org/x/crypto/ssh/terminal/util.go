@@ -14,11 +14,13 @@
 // 	        panic(err)
 // 	}
 // 	defer terminal.Restore(0, oldState)
-package terminal
+package terminal // import "golang.org/x/crypto/ssh/terminal"
 
 import (
 	"syscall"
 	"unsafe"
+
+	"golang.org/x/sys/unix"
 )
 
 // State contains the state of a terminal.
@@ -50,6 +52,8 @@ func MakeRaw(fd int) (*State, error) {
 	newState.Lflag &^= syscall.ECHO | syscall.ECHONL | syscall.ICANON | syscall.ISIG | syscall.IEXTEN
 	newState.Cflag &^= syscall.CSIZE | syscall.PARENB
 	newState.Cflag |= syscall.CS8
+	newState.Cc[unix.VMIN] = 1
+	newState.Cc[unix.VTIME] = 0
 	if _, _, err := syscall.Syscall6(syscall.SYS_IOCTL, uintptr(fd), ioctlWriteTermios, uintptr(unsafe.Pointer(&newState)), 0, 0, 0); err != 0 {
 		return nil, err
 	}

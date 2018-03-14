@@ -21,12 +21,14 @@ package system
 import (
 	"encoding/base64"
 	"fmt"
-	"github.com/lastbackend/lastbackend/pkg/common/context"
-	"github.com/lastbackend/lastbackend/pkg/common/types"
 	"github.com/lastbackend/lastbackend/pkg/util/system"
 	"strconv"
 	"strings"
 	"time"
+	"context"
+	"github.com/lastbackend/lastbackend/pkg/distribution/types"
+	"github.com/lastbackend/lastbackend/pkg/log"
+	"github.com/lastbackend/lastbackend/pkg/storage"
 )
 
 // HeartBeat Interval
@@ -35,7 +37,8 @@ const heartBeatInterval = 10 // in seconds
 type Process struct {
 	// Process operations context
 	ctx context.Context
-
+	// Process storage
+	storage storage.Storage
 	// Managed process
 	process *types.Process
 }
@@ -43,14 +46,10 @@ type Process struct {
 // Process register function
 // The main purpose is to register process in the system
 // If we need to distribution and need master/replicas, use WaitElected function
-func (c *Process) Register(ctx context.Context, kind string) (*types.Process, error) {
+func (c *Process) Register(ctx context.Context, kind string, stg storage.Storage) (*types.Process, error) {
 
 	var (
 		err  error
-
-		log  = ctx.GetLogger()
-		stg  = ctx.GetStorage()
-
 		item = new(types.Process)
 	)
 
@@ -66,10 +65,10 @@ func (c *Process) Register(ctx context.Context, kind string) (*types.Process, er
 	item.Meta.PID = system.GetPid()
 	item.Meta.ID = encodeID(item)
 
-	c.ctx = ctx
 	c.process = item
+	c.storage = stg
 
-	if err := stg.System().ProcessSet(c.ctx.Background(), c.process); err != nil {
+	if err := c.storage.System().ProcessSet(context.Background(), c.process); err != nil {
 		log.Errorf("System: Process: Register: %s", err.Error())
 		return item, err
 	}
@@ -82,23 +81,18 @@ func (c *Process) Register(ctx context.Context, kind string) (*types.Process, er
 // and master election ttl option
 func (c *Process) HeartBeat() {
 
-	var (
-		log = c.ctx.GetLogger()
-		stg = c.ctx.GetStorage()
-	)
-
 	log.Debugf("System: Process: Start HeartBeat for: %s", c.process.Meta.Kind)
 	ticker := time.NewTicker(heartBeatInterval * time.Second)
 	for range ticker.C {
 		// Update process state
 		log.Debug("System: Process: Beat")
-		if err := stg.System().ProcessSet(c.ctx.Background(), c.process); err != nil {
+		if err := c.storage.System().ProcessSet(context.Background(), c.process); err != nil {
 
 		}
 		// Check election
 		if c.process.Meta.Lead {
 			log.Debug("System: Process: Beat: Lead TTL update")
-			stg.System().ElectUpdate(c.ctx.Background(), c.process)
+			c.storage.System().ElectUpdate(context.Background(), c.process)
 		}
 
 	}
@@ -108,13 +102,11 @@ func (c *Process) HeartBeat() {
 // master/replicas type of process used
 func (c *Process) WaitElected(lead chan bool) error {
 	var (
-		log = c.ctx.GetLogger()
-		stg = c.ctx.GetStorage()
 		ld  = make(chan bool)
 	)
 
 	log.Debug("System: Process: Wait for election")
-	l, err := stg.System().Elect(c.ctx.Background(), c.process)
+	l, err := c.storage.System().Elect(context.Background(), c.process)
 	if err != nil {
 		return err
 	}
@@ -137,7 +129,7 @@ func (c *Process) WaitElected(lead chan bool) error {
 		}
 	}()
 
-	return stg.System().ElectWait(c.ctx.Background(), c.process, ld)
+	return c.storage.System().ElectWait(context.Background(), c.process, ld)
 }
 
 // Encode unique ID from pid and process hostname

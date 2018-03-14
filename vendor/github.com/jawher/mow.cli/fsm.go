@@ -142,11 +142,17 @@ func dot(s *state, visited map[*state]bool) []string {
 type parseContext struct {
 	args          map[*arg][]string
 	opts          map[*opt][]string
+	excludedOpts  map[*opt]struct{}
 	rejectOptions bool
 }
 
 func newParseContext() parseContext {
-	return parseContext{map[*arg][]string{}, map[*opt][]string{}, false}
+	return parseContext{
+		args:          map[*arg][]string{},
+		opts:          map[*opt][]string{},
+		excludedOpts:  map[*opt]struct{}{},
+		rejectOptions: false,
+	}
 }
 
 func (pc parseContext) merge(o parseContext) {
@@ -170,8 +176,7 @@ func (s *state) parse(args []string) error {
 	}
 
 	for opt, vs := range pc.opts {
-		multiValued, ok := opt.value.(multiValued)
-		if ok && opt.valueSetFromEnv {
+		if multiValued, ok := opt.value.(multiValued); ok {
 			multiValued.Clear()
 			opt.valueSetFromEnv = false
 		}
@@ -187,8 +192,7 @@ func (s *state) parse(args []string) error {
 	}
 
 	for arg, vs := range pc.args {
-		multiValued, ok := arg.value.(multiValued)
-		if ok && arg.valueSetFromEnv {
+		if multiValued, ok := arg.value.(multiValued); ok {
 			multiValued.Clear()
 			arg.valueSetFromEnv = false
 		}

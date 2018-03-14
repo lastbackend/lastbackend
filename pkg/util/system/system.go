@@ -20,8 +20,8 @@ package system
 
 import (
 	"errors"
-	_os "github.com/lastbackend/lastbackend/pkg/util/system/os"
-	"github.com/lastbackend/lastbackend/pkg/util/system/types"
+	_os "github.com/lastbackend/genesis/pkg/util/system/os"
+	"github.com/lastbackend/genesis/pkg/util/system/types"
 	"net"
 	"os"
 )
@@ -38,7 +38,7 @@ func GetOsInfo() *types.OsInfo {
 	return _os.GetInfo()
 }
 
-func GetExternalIP() (string, error) {
+func GetNodeIP() (string, error) {
 	ifaces, err := net.Interfaces()
 	if err != nil {
 		return "", err

@@ -19,11 +19,13 @@
 package runtime
 
 import (
-	"github.com/lastbackend/lastbackend/pkg/common/types"
-	"github.com/lastbackend/lastbackend/pkg/scheduler/context"
-	"github.com/lastbackend/lastbackend/pkg/scheduler/node"
-	"github.com/lastbackend/lastbackend/pkg/scheduler/pod"
+	"github.com/lastbackend/lastbackend/pkg/distribution/types"
+	"github.com/lastbackend/lastbackend/pkg/scheduler/runtime/node"
+	"github.com/lastbackend/lastbackend/pkg/scheduler/runtime/pod"
 	"github.com/lastbackend/lastbackend/pkg/system"
+	"github.com/lastbackend/lastbackend/pkg/log"
+	"context"
+	"github.com/lastbackend/lastbackend/pkg/scheduler/envs"
 )
 
 // watch service state and specs
@@ -36,7 +38,6 @@ import (
 // update pods after build passed state
 
 type Runtime struct {
-	context *context.Context
 	process *system.Process
 
 	pc *pod.PodController
@@ -45,11 +46,10 @@ type Runtime struct {
 	active bool
 }
 
-func NewRuntime(ctx *context.Context) *Runtime {
+func NewRuntime(ctx context.Context) *Runtime {
 	r := new(Runtime)
-	r.context = ctx
 	r.process = new(system.Process)
-	r.process.Register(ctx, types.KindScheduler)
+	r.process.Register(ctx, types.KindScheduler, envs.Get().GetStorage())
 
 	r.pc = pod.NewPodController(ctx)
 	r.nc = node.NewNodeController(ctx)
@@ -64,11 +64,10 @@ func NewRuntime(ctx *context.Context) *Runtime {
 func (r *Runtime) Loop() {
 
 	var (
-		log  = r.context.GetLogger()
 		lead = make(chan bool)
 	)
 
-	log.Debug(" Runtime: Loop")
+	log.Debug("Runtime: Loop")
 
 	go func() {
 		for {

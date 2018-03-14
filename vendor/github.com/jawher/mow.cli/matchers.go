@@ -227,8 +227,14 @@ func (om optsMatcher) try(args []string, c *parseContext) (bool, []string) {
 		return false, args
 	}
 	for _, o := range om.options {
+		if _, exclude := c.excludedOpts[o]; exclude {
+			continue
+		}
 		if ok, nargs := (&optMatcher{theOne: o, optionsIdx: om.optionsIndex}).match(args, c); ok {
-			return ok, nargs
+			if o.valueSetFromEnv {
+				c.excludedOpts[o] = struct{}{}
+			}
+			return true, nargs
 		}
 	}
 	return false, args

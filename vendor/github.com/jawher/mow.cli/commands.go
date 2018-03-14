@@ -104,7 +104,7 @@ the last argument, init, is a function that will be called by mow.cli to further
 (sub) command, e.g. to add options, arguments and the code to execute
 */
 func (c *Cmd) Command(name, desc string, init CmdInitializer) {
-	aliases := strings.Split(name, " ")
+	aliases := strings.Fields(name)
 	c.commands = append(c.commands, &Cmd{
 		ErrorHandling: c.ErrorHandling,
 		name:          aliases[0],
@@ -275,18 +275,20 @@ func (c *Cmd) doInit() error {
 }
 
 func (c *Cmd) onError(err error) {
-	if err != nil {
-		switch c.ErrorHandling {
-		case flag.ExitOnError:
-			exiter(2)
-		case flag.PanicOnError:
-			panic(err)
-		}
-	} else {
+	if err == errHelpRequested || err == errVersionRequested {
 		if c.ErrorHandling == flag.ExitOnError {
-			exiter(2)
+			exiter(0)
 		}
+		return
 	}
+
+	switch c.ErrorHandling {
+	case flag.ExitOnError:
+		exiter(2)
+	case flag.PanicOnError:
+		panic(err)
+	}
+
 }
 
 /*
@@ -389,7 +391,7 @@ func (c *Cmd) formatDescription(desc, envVar string) string {
 	if len(envVar) > 0 {
 		b.WriteString(" (")
 		sep := ""
-		for _, envVal := range strings.Split(envVar, " ") {
+		for _, envVal := range strings.Fields(envVar) {
 			b.WriteString(fmt.Sprintf("%s$%s", sep, envVal))
 			sep = " "
 		}
@@ -401,7 +403,7 @@ func (c *Cmd) formatDescription(desc, envVar string) string {
 func (c *Cmd) parse(args []string, entry, inFlow, outFlow *step) error {
 	if c.helpRequested(args) {
 		c.PrintLongHelp()
-		c.onError(nil)
+		c.onError(errHelpRequested)
 		return nil
 	}
 
@@ -471,24 +473,22 @@ func (c *Cmd) parse(args []string, entry, inFlow, outFlow *step) error {
 
 }
 
-func (c *Cmd) isArgSet(args []string, searchArgs []string) bool {
-	for _, arg := range args {
-		for _, sub := range c.commands {
-			if sub.isAlias(arg) {
-				return false
-			}
-		}
-		for _, searchArg := range searchArgs {
-			if arg == searchArg {
-				return true
-			}
+func (c *Cmd) helpRequested(args []string) bool {
+	return c.isFlagSet(args, []string{"-h", "--help"})
+}
+
+func (c *Cmd) isFlagSet(args []string, searchArgs []string) bool {
+	if len(args) == 0 {
+		return false
+	}
+
+	arg := args[0]
+	for _, searchArg := range searchArgs {
+		if arg == searchArg {
+			return true
 		}
 	}
 	return false
-}
-
-func (c *Cmd) helpRequested(args []string) bool {
-	return c.isArgSet(args, []string{"-h", "--help"})
 }
 
 func (c *Cmd) getOptsAndArgs(args []string) int {

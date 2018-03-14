@@ -2,7 +2,7 @@
 // Last.Backend LLC CONFIDENTIAL
 // __________________
 //
-// [2014] - [2017] Last.Backend LLC
+// [2014] - [2018] Last.Backend LLC
 // All Rights Reserved.
 //
 // NOTICE:  All information contained herein is, and remains
@@ -19,10 +19,13 @@
 package runtime
 
 import (
-	"github.com/lastbackend/lastbackend/pkg/common/types"
-	"github.com/lastbackend/lastbackend/pkg/controller/context"
-	"github.com/lastbackend/lastbackend/pkg/controller/service"
 	"github.com/lastbackend/lastbackend/pkg/system"
+	"github.com/lastbackend/lastbackend/pkg/log"
+	"github.com/lastbackend/lastbackend/pkg/controller/runtime/service"
+	"context"
+	"github.com/lastbackend/lastbackend/pkg/distribution/types"
+	"github.com/lastbackend/lastbackend/pkg/controller/envs"
+	"github.com/lastbackend/lastbackend/pkg/controller/runtime/deployment"
 )
 
 // watch service state and specs
@@ -34,22 +37,25 @@ import (
 // watch service build state
 // update pods after build passed state
 
+
+
 type Runtime struct {
-	context *context.Context
 	process *system.Process
 	sc      *service.ServiceController
+	dc      *deployment.DeploymentController
 
 	active bool
 }
 
-func NewRuntime(ctx *context.Context) *Runtime {
+func NewRuntime(ctx context.Context) *Runtime {
 	r := new(Runtime)
-	r.context = ctx
 	r.process = new(system.Process)
-	r.process.Register(ctx, types.KindController)
+	r.process.Register(ctx, types.KindController, envs.Get().GetStorage())
 
 	r.sc = service.NewServiceController(ctx)
+	r.dc = deployment.NewDeploymentController(ctx)
 	go r.sc.Watch()
+	go r.dc.Watch()
 
 	return r
 }
@@ -57,7 +63,6 @@ func NewRuntime(ctx *context.Context) *Runtime {
 func (r *Runtime) Loop() {
 
 	var (
-		log  = r.context.GetLogger()
 		lead = make(chan bool)
 	)
 

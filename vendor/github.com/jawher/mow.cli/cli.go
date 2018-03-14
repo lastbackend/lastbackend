@@ -67,14 +67,14 @@ func (cli *Cli) parse(args []string, entry, inFlow, outFlow *step) error {
 	// After that, we just call Cmd.parse() for the default behavior
 	if cli.versionSetAndRequested(args) {
 		cli.PrintVersion()
-		exiter(0)
+		cli.onError(errVersionRequested)
 		return nil
 	}
 	return cli.Cmd.parse(args, entry, inFlow, outFlow)
 }
 
 func (cli *Cli) versionSetAndRequested(args []string) bool {
-	return cli.version != nil && cli.isArgSet(args, cli.version.option.names)
+	return cli.version != nil && cli.isFlagSet(args, cli.version.option.names)
 }
 
 /*
@@ -103,11 +103,9 @@ func (cli *Cli) Run(args []string) error {
 }
 
 /*
-ActionCommand(myFun) is syntactic sugar for
-func(cmd *cli.Cmd) { cmd.Action = myFun }
+ActionCommand is a convenience function to configure a command with an action.
 
-cmd.CommandAction(_, _, myFun } is syntactic sugar for
-cmd.Command(_, _, func(cmd *cli.Cmd) { cmd.Action = myFun })
+cmd.ActionCommand(_, _, myFun } is equivalent to cmd.Command(_, _, func(cmd *cli.Cmd) { cmd.Action = myFun })
 */
 func ActionCommand(action func()) CmdInitializer {
 	return func(cmd *Cmd) {

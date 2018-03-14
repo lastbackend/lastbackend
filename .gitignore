@@ -1,31 +1,31 @@
-# Compiled Object files, Static and Dynamic libs (Shared Objects)
-*.o
-*.a
-*.so
+## Compiled Object files, Static and Dynamic libs (Shared Objects)
+ *.o
+ *.a
+ *.so
 
-# Folders
-_obj
-_test
-.idea
-.vagrant
-contrib/vagrant/ssl
-rethinkdb_data
+ # Folders
+ _obj
+ _test
+ .idea
+ .vagrant
+ contrib/vagrant/ssl
+ rethinkdb_data
 
-# Architecture specific extensions/prefixes
-*.[568vq]
-[568vq].out
+ # Architecture specific extensions/prefixes
+ *.[568vq]
+ [568vq].out
 
-*.cgo1.go
-*.cgo2.c
-_cgo_defun.c
-_cgo_gotypes.go
-_cgo_export.*
+ *.cgo1.go
+ *.cgo2.c
+ _cgo_defun.c
+ _cgo_gotypes.go
+ _cgo_export.*
 
-_testmain.go
+ _testmain.go
 
-*.exe
-*.test
-*.prof
-*.iml
-*.srl
-
+ *.exe
+ *.test
+ *.prof
+ *.iml
+ *.srl
+ *.DS_Store

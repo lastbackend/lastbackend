@@ -2,7 +2,7 @@
 // Last.Backend LLC CONFIDENTIAL
 // __________________
 //
-// [2014] - [2017] Last.Backend LLC
+// [2014] - [2018] Last.Backend LLC
 // All Rights Reserved.
 //
 // NOTICE:  All information contained herein is, and remains
@@ -19,6 +19,7 @@
 package cache
 
 import (
+	"github.com/lastbackend/lastbackend/pkg/log"
 	"net"
 	"sync"
 )
@@ -29,17 +30,18 @@ type EndpointCache struct {
 }
 
 func (ec *EndpointCache) Get(domain string) []net.IP {
+	log.V(logLevel).Debugf("Cache: EndpointCache: get ips for domain: %s", domain)
+
 	d, ok := ec.storage[domain]
 	if !ok || len(d) == 0 {
 		return nil
-	}
-	if len(d) > 1 {
-		d = append(d[1:len(d)], d[0:1]...)
 	}
 	return d
 }
 
 func (ec *EndpointCache) Set(domain string, ips []net.IP) error {
+	log.V(logLevel).Debugf("Cache: EndpointCache: set ips for domain: %s", domain)
+
 	ec.lock.Lock()
 	ec.storage[domain] = ips
 	ec.lock.Unlock()
@@ -47,6 +49,8 @@ func (ec *EndpointCache) Set(domain string, ips []net.IP) error {
 }
 
 func (ec *EndpointCache) Del(domain string) error {
+	log.V(logLevel).Debugf("Cache: EndpointCache: del domain: %s", domain)
+
 	ec.lock.Lock()
 	if _, ok := ec.storage[domain]; ok {
 		delete(ec.storage, domain)
@@ -56,6 +60,7 @@ func (ec *EndpointCache) Del(domain string) error {
 }
 
 func NewEndpointCache() *EndpointCache {
+	log.V(logLevel).Debug("Cache: EndpointCache: initialization storage")
 	return &EndpointCache{
 		storage: make(map[string][]net.IP),
 	}

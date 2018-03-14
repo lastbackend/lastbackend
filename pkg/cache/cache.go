@@ -2,7 +2,7 @@
 // Last.Backend LLC CONFIDENTIAL
 // __________________
 //
-// [2014] - [2017] Last.Backend LLC
+// [2014] - [2018] Last.Backend LLC
 // All Rights Reserved.
 //
 // NOTICE:  All information contained herein is, and remains
@@ -17,24 +17,30 @@
 
 package cache
 
+import "github.com/lastbackend/lastbackend/pkg/log"
+
+const logLevel = 7
+
 type Cache struct {
-	PodCache      *PodCache
-	EndpointCache *EndpointCache
+	pods      *PodCache
+	endpoints *EndpointCache
 }
 
 func New() *Cache {
+	log.V(logLevel).Debug("Cache: initialization storage")
+
 	return &Cache{
-		PodCache:      NewPodCache(),
-		EndpointCache: NewEndpointCache(),
+		pods:      NewPodCache(),
+		endpoints: NewEndpointCache(),
 	}
 }
 
 // Return pods storage
 func (s *Cache) Pods() *PodCache {
-	return s.PodCache
+	return s.pods
 }
 
 // Return endpoints storage
 func (s *Cache) Endpoints() *EndpointCache {
-	return s.EndpointCache
+	return s.endpoints
 }

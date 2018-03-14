@@ -36,7 +36,7 @@ const (
 
 type DestroyFunc func()
 
-type IStore interface {
+type Store interface {
 	Count(ctx context.Context, key, keyRegexFilter string) (int, error)
 	Create(ctx context.Context, key string, obj, out interface{}, ttl uint64) error
 	Get(ctx context.Context, key string, objPtr interface{}) error
@@ -48,10 +48,10 @@ type IStore interface {
 	Delete(ctx context.Context, key string) error
 	DeleteDir(ctx context.Context, key string) error
 	Watch(ctx context.Context, key, filter string, f func(action, key string, val []byte)) error
-	Begin(ctx context.Context) ITx
+	Begin(ctx context.Context) TX
 }
 
-type ITx interface {
+type TX interface {
 	Create(key string, obj interface{}, ttl uint64) error
 	Update(key string, obj interface{}, ttl uint64) error
 	Upsert(key string, obj interface{}, ttl uint64) error

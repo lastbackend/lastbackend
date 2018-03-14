@@ -2,7 +2,7 @@
 // Last.Backend LLC CONFIDENTIAL
 // __________________
 //
-// [2014] - [2017] Last.Backend LLC
+// [2014] - [2018] Last.Backend LLC
 // All Rights Reserved.
 //
 // NOTICE:  All information contained herein is, and remains
@@ -19,144 +19,12 @@
 package storage
 
 import (
-	"github.com/lastbackend/lastbackend/pkg/storage/store"
-	"strings"
+	"github.com/lastbackend/lastbackend/pkg/storage/etcd"
 )
 
-// Util helpers
-var _util IUtil
-
-type Storage struct {
-	*VendorStorage
-	*NamespaceStorage
-	*ServiceStorage
-	*ImageStorage
-	*BuildStorage
-	*HookStorage
-	*VolumeStorage
-	*ActivityStorage
-	*NodeStorage
-	*PodStorage
-	*SystemStorage
-	*EndpointStorage
-}
-
-func SetUtil(u IUtil) {
-	_util = u
-}
-
-func (s *Storage) Vendor() IVendor {
-	if s == nil {
-		return nil
+func Get(driver string) (Storage, error) {
+	switch driver {
+	default:
+		return etcd.New()
 	}
-	return s.VendorStorage
-}
-
-func (s *Storage) Namespace() INamespace {
-	if s == nil {
-		return nil
-	}
-	return s.NamespaceStorage
-}
-
-func (s *Storage) Service() IService {
-	if s == nil {
-		return nil
-	}
-	return s.ServiceStorage
-}
-
-func (s *Storage) Image() IImage {
-	if s == nil {
-		return nil
-	}
-	return s.ImageStorage
-}
-
-func (s *Storage) Build() IBuild {
-	if s == nil {
-		return nil
-	}
-	return s.BuildStorage
-}
-
-func (s *Storage) Hook() IHook {
-	if s == nil {
-		return nil
-	}
-	return s.HookStorage
-}
-
-func (s *Storage) Volume() IVolume {
-	if s == nil {
-		return nil
-	}
-	return s.VolumeStorage
-}
-
-func (s *Storage) Activity() IActivity {
-	if s == nil {
-		return nil
-	}
-	return s.ActivityStorage
-}
-
-func (s *Storage) Node() INode {
-	if s == nil {
-		return nil
-	}
-	return s.NodeStorage
-}
-
-func (s *Storage) Pod() IPod {
-	if s == nil {
-		return nil
-	}
-	return s.PodStorage
-}
-
-func (s *Storage) System() ISystem {
-	if s == nil {
-		return nil
-	}
-	return s.SystemStorage
-}
-
-func (s *Storage) Endpoint() IEndpoint {
-	if s == nil {
-		return nil
-	}
-	return s.EndpointStorage
-}
-
-func keyCreate(args ...string) string {
-	return strings.Join([]string(args), "/")
-}
-
-func Get(config store.Config) (*Storage, error) {
-
-	var store = new(Storage)
-
-	if _util == nil {
-		// Set default util helpers
-		_util = new(util)
-	}
-
-	store.VendorStorage = newVendorStorage(config, _util)
-	store.NamespaceStorage = newNamespaceStorage(config, _util)
-	store.ServiceStorage = newServiceStorage(config, _util)
-	store.ImageStorage = newImageStorage(config, _util)
-	store.BuildStorage = newBuildStorage(config, _util)
-	store.HookStorage = newHookStorage(config, _util)
-	store.VolumeStorage = newVolumeStorage(config, _util)
-	store.ActivityStorage = newActivityStorage(config, _util)
-	store.NodeStorage = newNodeStorage(config, _util)
-	store.PodStorage = newPodStorage(config, _util)
-	store.SystemStorage = newSystemStorage(config, _util)
-	store.EndpointStorage = newEndpointStorage(config, _util)
-	return store, nil
-}
-
-func New(c store.Config) (store.IStore, store.DestroyFunc, error) {
-	return createEtcd3Storage(c)
 }
