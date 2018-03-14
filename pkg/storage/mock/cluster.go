@@ -2,7 +2,7 @@
 // Last.Backend LLC CONFIDENTIAL
 // __________________
 //
-// [2014] - [2018] Last.Backend LLC
+// [2014] - [2017] Last.Backend LLC
 // All Rights Reserved.
 //
 // NOTICE:  All information contained herein is, and remains
@@ -16,27 +16,29 @@
 // from Last.Backend LLC.
 //
 
-package events
+package mock
 
 import (
-	"net/http"
-
-	"github.com/lastbackend/lastbackend/pkg/log"
+	"context"
+	"github.com/lastbackend/lastbackend/pkg/distribution/types"
+	"github.com/lastbackend/lastbackend/pkg/storage/storage"
 )
 
-const (
-	logLevel      = 2
-	defaultClient = "lastbackend"
-)
+type ClusterStorage struct {
+	storage.Cluster
+}
 
-//EventSubscribeH - realtime events handler
-func EventSubscribeH(w http.ResponseWriter, r *http.Request) {
+const clusterStorage = "cluster"
 
-	log.V(logLevel).Debug("Handler: Event: subscribe on events")
+func (s *ClusterStorage) Info(ctx context.Context) (*types.Cluster, error) {
+	return new(types.Cluster), nil
+}
 
-	if r.Method != "GET" {
-		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
-		return
-	}
+func (s *ClusterStorage) Update(ctx context.Context, cluster *types.Cluster) error {
+	return nil
+}
 
+func newClusterStorage() *ClusterStorage {
+	s := new(ClusterStorage)
+	return s
 }

@@ -113,7 +113,7 @@ func GetHostConfig(spec *types.SpecTemplateContainer) *container.HostConfig {
 func GetNetworkConfig(spec *types.SpecTemplateContainer) *network.NetworkingConfig {
 
 	cfg := &network.NetworkingConfig{
-		//EndpointsConfig: make(map[string]*network.EndpointSettings),
+	//EndpointsConfig: make(map[string]*network.EndpointSettings),
 	}
 
 	//endpoint := &network.EndpointSettings{

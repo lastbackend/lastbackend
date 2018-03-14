@@ -32,7 +32,7 @@ import (
 type NamespaceList []*Namespace
 
 type Namespace struct {
-	Meta      NamespaceMeta      `json:"meta" yaml:"meta"`
+	Meta      NamespaceMeta      `json:"meta"`
 	Env       NamespaceEnvs      `json:"env"`
 	Resources NamespaceResources `json:"resources"`
 	Quotas    NamespaceQuotas    `json:"quotas,omitempty"`
@@ -47,7 +47,7 @@ type NamespaceEnv struct {
 }
 
 type NamespaceMeta struct {
-	Meta     `yaml:",inline"`
+	Meta            `yaml:",inline"`
 	Endpoint string `json:"endpoint"`
 	Type     string `json:"type"`
 }

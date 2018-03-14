@@ -26,8 +26,6 @@ import (
 	"strings"
 )
 
-const logLevel = 2
-
 // Auth - authentication middleware
 func Authenticate(h http.HandlerFunc) http.HandlerFunc {
 
@@ -57,7 +55,6 @@ func Authenticate(h http.HandlerFunc) http.HandlerFunc {
 				return
 			}
 			token = auth[1]
-
 		} else {
 			errors.HTTP.Unauthorized(w)
 			return

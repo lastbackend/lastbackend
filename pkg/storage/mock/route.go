@@ -2,7 +2,7 @@
 // Last.Backend LLC CONFIDENTIAL
 // __________________
 //
-// [2014] - [2018] Last.Backend LLC
+// [2014] - [2017] Last.Backend LLC
 // All Rights Reserved.
 //
 // NOTICE:  All information contained herein is, and remains
@@ -16,27 +16,19 @@
 // from Last.Backend LLC.
 //
 
-package events
+package mock
 
 import (
-	"net/http"
-
-	"github.com/lastbackend/lastbackend/pkg/log"
+	"github.com/lastbackend/lastbackend/pkg/storage/storage"
 )
 
-const (
-	logLevel      = 2
-	defaultClient = "lastbackend"
-)
+const routeStorage = "routes"
 
-//EventSubscribeH - realtime events handler
-func EventSubscribeH(w http.ResponseWriter, r *http.Request) {
+type RouteStorage struct {
+	storage.Route
+}
 
-	log.V(logLevel).Debug("Handler: Event: subscribe on events")
-
-	if r.Method != "GET" {
-		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
-		return
-	}
-
+func newRouteStorage() *RouteStorage {
+	s := new(RouteStorage)
+	return s
 }

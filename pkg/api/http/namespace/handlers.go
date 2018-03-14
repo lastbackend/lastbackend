@@ -67,14 +67,20 @@ func NamespaceInfoH(w http.ResponseWriter, r *http.Request) {
 
 	log.V(logLevel).Debugf("Handler: Namespace: get namespace `%s`", nid)
 
-	if r.Context().Value("namespace") == nil {
-		errors.HTTP.Forbidden(w)
+	var nsm = distribution.NewNamespaceModel(r.Context(), envs.Get().GetStorage())
+
+	ns, err := nsm.Get(nid)
+	if err != nil {
+		log.V(logLevel).Errorf("Handler: Namespace: get namespace", err)
+		errors.HTTP.InternalServerError(w)
 		return
 	}
-
-	var (
-		ns = r.Context().Value("namespace").(*types.Namespace)
-	)
+	if ns == nil {
+		err := errors.New("namespace not found")
+		log.V(logLevel).Errorf("Handler: Namespace: get namespace", err)
+		errors.New("namespace").NotFound().Http(w)
+		return
+	}
 
 	response, err := v.V1().Namespace().New(ns).ToJson()
 	if err != nil {
@@ -165,6 +171,7 @@ func NamespaceUpdateH(w http.ResponseWriter, r *http.Request) {
 	if err := nsm.Update(ns, opts); err != nil {
 		log.V(logLevel).Errorf("Handler: Namespace: update namespace `%s` err: %s", nid, err)
 		errors.HTTP.InternalServerError(w)
+		return
 	}
 
 	response, err := v.V1().Namespace().New(ns).ToJson()

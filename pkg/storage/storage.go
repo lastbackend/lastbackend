@@ -20,6 +20,7 @@ package storage
 
 import (
 	"github.com/lastbackend/lastbackend/pkg/storage/etcd"
+	"github.com/lastbackend/lastbackend/pkg/storage/mock"
 )
 
 func Get(driver string) (Storage, error) {
@@ -27,4 +28,8 @@ func Get(driver string) (Storage, error) {
 	default:
 		return etcd.New()
 	}
+}
+
+func GetMock() (Storage, error) {
+	return mock.New()
 }
