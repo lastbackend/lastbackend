@@ -2,7 +2,7 @@
 // Last.Backend LLC CONFIDENTIAL
 // __________________
 //
-// [2014] - [2017] Last.Backend LLC
+// [2014] - [2018] Last.Backend LLC
 // All Rights Reserved.
 //
 // NOTICE:  All information contained herein is, and remains
@@ -26,10 +26,14 @@ var l *logger.Logger
 
 const def = ""
 
+func init() {
+	l = logger.New(3)
+}
+
 // Initialize loggers map
 
-func New(name string, level int) *logger.Logger {
-	l = logger.New(name, level)
+func New(level int) *logger.Logger {
+	l.SetLevel(level)
 	return l
 }
 

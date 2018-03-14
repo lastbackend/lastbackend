@@ -19,10 +19,11 @@
 package endpoint
 
 import (
-	"github.com/lastbackend/lastbackend/pkg/discovery/context"
+	"context"
+	"github.com/lastbackend/lastbackend/pkg/discovery/envs"
+	"github.com/lastbackend/lastbackend/pkg/log"
 	"github.com/lastbackend/lastbackend/pkg/util"
 	"net"
-	"github.com/lastbackend/lastbackend/pkg/log"
 )
 
 const logLevel = 2
@@ -30,10 +31,58 @@ const logLevel = 2
 func Get(name string) ([]net.IP, error) {
 
 	var (
-		err     error
-		storage = context.Get().GetStorage()
-		cache   = context.Get().GetCache()
-		data    = []string{}
+		err   error
+		stg   = envs.Get().GetStorage()
+		cache = envs.Get().GetCache()
+		data  = []string{}
+	)
+
+	log.Debugf(`Endpoint: Get ip list from cache %s`, name)
+
+	var ips = cache.Endpoints().Get(name)
+
+	if ips != nil && len(ips) != 0 {
+		return ips, nil
+	}
+
+	if len(data) == 0 {
+		log.Debugf(`Endpoint: Try find to db %s`, name)
+
+		result, err := stg.Endpoint().Get(context.Background(), name)
+		if err != nil {
+			log.Error(err)
+			return nil, err
+		}
+
+		for _, ip := range result {
+			data = append(data, ip)
+		}
+	}
+
+	data = util.RemoveDuplicates(data)
+
+	ips, err = util.ConvertStringIPToNetIP(data)
+	if err != nil {
+		log.Errorf("Endpoint: convert ips to net ips error %s", err.Error())
+		return ips, err
+	}
+
+	log.Debug(`ips`, ips)
+
+	cache.Endpoints().Set(name, ips)
+
+	log.Debugf(`Endpoint: Get ip list from cache for %s successfully: %v`, name, data)
+
+	return ips, nil
+}
+
+func GetForService(name string) ([]net.IP, error) {
+
+	var (
+		err error
+		//storage = envs.Get().GetStorage()
+		cache = envs.Get().GetCache()
+		data  = make([]string, 0)
 	)
 
 	log.V(logLevel).Debugf("Endpoint: get endpoint `%s` ip list from cache", name)
@@ -47,14 +96,17 @@ func Get(name string) ([]net.IP, error) {
 	if len(data) == 0 {
 		log.V(logLevel).Debugf("Endpoint: try find endpoint `%s` in storage", name)
 
-		result, err := storage.Endpoint().Get(context.Get().Background(), name)
-		if err != nil {
-			log.V(logLevel).Errorf("Endpoint: get endpoint `%s` from storage err: %s", name, err.Error())
-			return nil, err
-		}
+		//namespace := ""
+		//service   := ""
+		//
+		//result, err := storage.Pod().ListByService(context.Background(), namespace, service)
+		//if err != nil {
+		//	log.V(logLevel).Errorf("Endpoint: get endpoint `%s` from storage err: %s", name, err)
+		//	return nil, err
+		//}
 
-		for _, ip := range result {
-			data = append(data, ip)
+		for _, ip := range ips {
+			data = append(data, ip.String())
 		}
 	}
 
@@ -62,14 +114,67 @@ func Get(name string) ([]net.IP, error) {
 
 	ips, err = util.ConvertStringIPToNetIP(data)
 	if err != nil {
-		log.Errorf("Endpoint: convert endpoint `%s` ips to net ips err: %s", name, err.Error())
+		log.Errorf("Endpoint: convert endpoint `%s` ips to net ips err: %s", name, err)
 		return ips, err
 	}
 
-	if err := cache.Endpoints().Set(name, ips); err != nil {
-		log.V(logLevel).Errorf("Endpoint: set endpoint `%s` to cache err: %s", name, err.Error())
-		return nil, err
+	// TODO: Update cache and add expire
+	//if err := cache.Endpoint().Set(name, ips); err != nil {
+	//	log.V(logLevel).Errorf("Endpoint: set endpoint `%s` to cache err: %s", name, err)
+	//	return nil, err
+	//}
+
+	log.V(logLevel).Debugf("Endpoint: get ip list from cache for `%s` successfully: %v", name, data)
+
+	return ips, nil
+}
+
+func GetForRoute(name string) ([]net.IP, error) {
+
+	var (
+		err error
+		//storage = envs.Get().GetStorage()
+		cache = envs.Get().GetCache()
+		data  = make([]string, 0)
+	)
+
+	log.V(logLevel).Debugf("Endpoint: get endpoint `%s` ip list from cache", name)
+
+	var ips = cache.Endpoints().Get(name)
+
+	if ips != nil && len(ips) != 0 {
+		return make([]net.IP, 0), nil
 	}
+
+	if len(data) == 0 {
+		log.V(logLevel).Debugf("Endpoint: try find endpoint `%s` in storage", name)
+
+		//namespace := ""
+		//
+		//result, err := storage.Route().Get(context.Background(), namespace, name)
+		//if err != nil {
+		//	log.V(logLevel).Errorf("Endpoint: get endpoint `%s` from storage err: %s", name, err)
+		//	return nil, err
+		//}
+
+		for _, ip := range ips {
+			data = append(data, ip.String())
+		}
+	}
+
+	data = util.RemoveDuplicates(data)
+
+	ips, err = util.ConvertStringIPToNetIP(data)
+	if err != nil {
+		log.Errorf("Endpoint: convert endpoint `%s` ips to net ips err: %s", name, err)
+		return ips, err
+	}
+
+	// TODO: Update cache and add expire
+	//if err := cache.Endpoint().Set(name, ips); err != nil {
+	//	log.V(logLevel).Errorf("Endpoint: set endpoint `%s` to cache err: %s", name, err)
+	//	return nil, err
+	//}
 
 	log.V(logLevel).Debugf("Endpoint: get ip list from cache for `%s` successfully: %v", name, data)
 
@@ -79,17 +184,17 @@ func Get(name string) ([]net.IP, error) {
 func Update(name string) error {
 
 	var (
-		err     error
-		storage = context.Get().GetStorage()
-		cache   = context.Get().GetCache()
-		data    = []string{}
+		err   error
+		stg   = envs.Get().GetStorage()
+		cache = envs.Get().GetCache()
+		data  = []string{}
 	)
 
-	log.V(logLevel).Debugf("Endpoint: update name `%s` in cache", name)
+	log.Debugf(`Endpoint: Update name %s in cache `, name)
 
-	result, err := storage.Endpoint().Get(context.Get().Background(), name)
+	result, err := stg.Endpoint().Get(context.Background(), name)
 	if err != nil {
-		log.V(logLevel).Errorf("Endpoint: get endpoint `%s` from storage err: %s", name, err.Error())
+		log.Error(err)
 		return err
 	}
 
@@ -101,16 +206,13 @@ func Update(name string) error {
 
 	ips, err := util.ConvertStringIPToNetIP(data)
 	if err != nil {
-		log.V(logLevel).Errorf("Endpoint: convert endpoint `%s` ip tp net.IP err: %s", name, err.Error())
+		log.Error(err)
 		return err
 	}
 
-	if err := cache.Endpoints().Set(name, ips); err != nil {
-		log.V(logLevel).Errorf("Endpoint: set endpoint `%s` to cache err: %s", name, err.Error())
-		return err
-	}
+	cache.Endpoints().Set(name, ips)
 
-	log.V(logLevel).Debugf("Endpoint: update name `%s` in cache successfully ", name)
+	log.Debugf(`Endpoint: Update name %s in cache successfully `, name)
 
 	return nil
 }
@@ -119,18 +221,18 @@ func Remove(name string) error {
 
 	var (
 		err   error
-		cache = context.Get().GetCache()
+		cache = envs.Get().GetCache()
 	)
 
-	log.V(logLevel).Debugf("Endpoint: remove name `%s` from cache", name)
+	log.Debugf(`Endpoint: Remove name %s from cache `, name)
 
 	err = cache.Endpoints().Del(name)
 	if err != nil {
-		log.V(logLevel).Errorf("Endpoint: delete endpoint `%s` from cache err: %s", name, err.Error())
+		log.Error(err)
 		return err
 	}
 
-	log.V(logLevel).Debugf("Endpoint: remove name `%s` from cache successfully", name)
+	log.Debugf(`Endpoint: Remove name %s from cache successfully `, name)
 
 	return nil
 }

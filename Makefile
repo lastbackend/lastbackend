@@ -28,18 +28,13 @@ build:
 	@echo "== Building Last.Backend platform"
 	GOOS=linux  go build -ldflags "-X main.Version=$(VERSION)" -o build/linux/$(NAME_KIT) cmd/kit/kit.go
 	GOOS=darwin go build -ldflags "-X main.Version=$(VERSION)" -o build/darwin/$(NAME_KIT) cmd/kit/kit.go
-	@echo "== Building Last.Backend CLI"
-	GOOS=linux  go build -ldflags "-X main.Version=$(VERSION)" -o build/linux/$(NAME_CLI) cmd/cli/cli.go
-	GOOS=darwin go build -ldflags "-X main.Version=$(VERSION)" -o build/darwin/$(NAME_CLI) cmd/cli/cli.go
 
 install:
 	@echo "Install Last.Backend, ${OS} version:= ${VERSION}"
 ifeq ($(OS),Linux)
-	mv build/linux/$(NAME_CLI) /usr/local/bin/$(NAME_CLI)
 	mv build/linux/$(NAME_KIT) /usr/local/bin/$(NAME_KIT)
 endif
 ifeq ($(OS) ,Darwin)
-	mv build/darwin/$(NAME_CLI) /usr/local/bin/$(NAME_CLI)
 	mv build/darwin/$(NAME_KIT) /usr/local/bin/$(NAME_KIT)
 endif
 

@@ -2,7 +2,7 @@
 // Last.Backend LLC CONFIDENTIAL
 // __________________
 //
-// [2014] - [2017] Last.Backend LLC
+// [2014] - [2018] Last.Backend LLC
 // All Rights Reserved.
 //
 // NOTICE:  All information contained herein is, and remains
@@ -19,7 +19,7 @@
 package cache
 
 import (
-	"github.com/lastbackend/lastbackend/pkg/common/types"
+	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 	"github.com/lastbackend/lastbackend/pkg/log"
 	"sync"
 )
@@ -65,13 +65,21 @@ func (ps *PodCache) AddContainer(c *types.Container) {
 	ps.lock.Lock()
 	defer ps.lock.Unlock()
 	ps.addContainer(c)
+
 }
 
-func (ps *PodCache) DelContainer(id string) {
-	log.V(logLevel).Debugf("Cache: PodCache: del container: %s", id)
+func (ps *PodCache) SetContainer(c *types.Container) {
+	log.V(logLevel).Debugf("Cache: PodCache: set container: %#v", c)
 	ps.lock.Lock()
 	defer ps.lock.Unlock()
-	ps.delContainer(id)
+	ps.setContainer(c)
+}
+
+func (ps *PodCache) DelContainer(c *types.Container) {
+	log.V(logLevel).Debugf("Cache: PodCache: del container: %s", c.ID)
+	ps.lock.Lock()
+	defer ps.lock.Unlock()
+	ps.delContainer(c)
 }
 
 func (ps *PodCache) GetPod(id string) *types.Pod {
@@ -120,15 +128,9 @@ func (ps *PodCache) SetPods(pods []*types.Pod) {
 func (ps *PodCache) addPod(pod *types.Pod) {
 	ps.pods[pod.Meta.Name] = pod
 	ps.stats.pods++
-	for _, c := range pod.Containers {
-		ps.addContainer(c)
-	}
 }
 
 func (ps *PodCache) delPod(pod *types.Pod) {
-	for _, c := range pod.Containers {
-		ps.delContainer(c.ID)
-	}
 	delete(ps.pods, pod.Meta.Name)
 	ps.stats.pods--
 }
@@ -140,9 +142,16 @@ func (ps *PodCache) addContainer(c *types.Container) {
 	ps.containers[c.ID] = c
 }
 
-func (ps *PodCache) delContainer(id string) {
-	if _, ok := ps.containers[id]; ok {
-		delete(ps.containers, id)
+func (ps *PodCache) setContainer(c *types.Container) {
+	if _, ok := ps.containers[c.ID]; !ok {
+		ps.stats.containers++
+	}
+	ps.containers[c.ID] = c
+}
+
+func (ps *PodCache) delContainer(c *types.Container) {
+	if _, ok := ps.containers[c.ID]; ok {
+		delete(ps.containers, c.ID)
 		ps.stats.containers--
 	}
 }

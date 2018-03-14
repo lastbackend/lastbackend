@@ -20,137 +20,23 @@ package storage
 
 import (
 	"context"
-	"github.com/lastbackend/lastbackend/pkg/common/types"
-	"golang.org/x/oauth2"
+	"github.com/lastbackend/lastbackend/pkg/storage/storage"
 )
 
-type IStorage interface {
-	Activity() IActivity
-	Build() IBuild
-	Hook() IHook
-	Image() IImage
-	App() IApp
-	Repo() IRepo
-	Service() IService
-	Pod() IPod
-	Node() INode
-	System() ISystem
-	Vendor() IVendor
-	Volume() IVolume
-	Endpoint() IEndpoint
+type Util interface {
+	Key(ctx context.Context, pattern ...string) string
 }
 
-type IActivity interface {
-	Insert(ctx context.Context, activity *types.Activity) error
-	ListProjectActivity(ctx context.Context, id string) ([]*types.Activity, error)
-	ListServiceActivity(ctx context.Context, id string) ([]*types.Activity, error)
-	RemoveByProject(ctx context.Context, id string) error
-	RemoveByService(ctx context.Context, id string) error
-}
-
-type IBuild interface {
-	GetByID(ctx context.Context, imageID, id string) (*types.Build, error)
-	ListByImage(ctx context.Context, id string) ([]*types.Build, error)
-	Insert(ctx context.Context, image string, build *types.Build) error
-}
-
-type IHook interface {
-	Get(ctx context.Context, id string) (*types.Hook, error)
-	Insert(ctx context.Context, hook *types.Hook) error
-	Remove(ctx context.Context, id string) error
-}
-
-type IApp interface {
-	GetByName(ctx context.Context, name string) (*types.App, error)
-	List(ctx context.Context) ([]*types.App, error)
-	Insert(ctx context.Context, app *types.App) error
-	Update(ctx context.Context, project *types.App) error
-	Remove(ctx context.Context, id string) error
-}
-
-type IRepo interface {
-	GetByName(ctx context.Context, name string) (*types.Repo, error)
-	List(ctx context.Context) ([]*types.Repo, error)
-	Insert(ctx context.Context, app *types.Repo) error
-	Update(ctx context.Context, project *types.Repo) error
-	Remove(ctx context.Context, id string) error
-}
-
-type IService interface {
-	CountByApp(ctx context.Context, app string) (int, error)
-	GetByName(ctx context.Context, app, name string) (*types.Service, error)
-	GetByPodName(ctx context.Context, name string) (*types.Service, error)
-	ListByApp(ctx context.Context, app string) ([]*types.Service, error)
-	Insert(ctx context.Context, service *types.Service) error
-	Update(ctx context.Context, service *types.Service) error
-	UpdateSpec(ctx context.Context, service *types.Service) error
-	Remove(ctx context.Context, service *types.Service) error
-	RemoveByApp(ctx context.Context, app string) error
-
-	Watch(ctx context.Context, service chan *types.Service) error
-	SpecWatch(ctx context.Context, service chan *types.Service) error
-	PodsWatch(ctx context.Context, service chan *types.Service) error
-	BuildsWatch(ctx context.Context, service chan *types.Service) error
-}
-
-type IPod interface {
-	GetByName(ctx context.Context, app, name string) (*types.Pod, error)
-	ListByApp(ctx context.Context, app string) (map[string]*types.Pod, error)
-	ListByService(ctx context.Context, app, service string) ([]*types.Pod, error)
-	Upsert(ctx context.Context, app string, pod *types.Pod) error
-	Update(ctx context.Context, app string, pod *types.Pod) error
-	Remove(ctx context.Context, app string, pod *types.Pod) error
-	Watch(ctx context.Context, pod chan *types.Pod) error
-}
-
-type IImage interface {
-	Get(ctx context.Context, name string) (*types.Image, error)
-	Insert(ctx context.Context, source *types.Image) error
-	Update(ctx context.Context, image *types.Image) error
-}
-
-type IVendor interface {
-	Insert(ctx context.Context, owner, name, host, serviceID string, token *oauth2.Token) error
-	Get(ctx context.Context, name string) (*types.Vendor, error)
-	List(ctx context.Context) (map[string]*types.Vendor, error)
-	Update(ctx context.Context, vendor *types.Vendor) error
-	Remove(ctx context.Context, vendorName string) error
-}
-
-type IVolume interface {
-	GetByToken(ctx context.Context, token string) (*types.Volume, error)
-	ListByApp(ctx context.Context, app string) ([]*types.Volume, error)
-	Insert(ctx context.Context, volume *types.Volume) error
-	Remove(ctx context.Context, id string) error
-}
-
-type INode interface {
-	List(ctx context.Context) ([]*types.Node, error)
-
-	Get(ctx context.Context, hostname string) (*types.Node, error)
-	Insert(ctx context.Context, node *types.Node) error
-
-	Update(ctx context.Context, node *types.Node) error
-
-	InsertPod(ctx context.Context, meta *types.NodeMeta, pod *types.PodNodeSpec) error
-	UpdatePod(ctx context.Context, meta *types.NodeMeta, pod *types.PodNodeSpec) error
-	RemovePod(ctx context.Context, meta *types.NodeMeta, pod *types.PodNodeSpec) error
-
-	Remove(ctx context.Context, meta *types.Node) error
-	Watch(ctx context.Context, node chan *types.Node) error
-}
-
-type ISystem interface {
-	ProcessSet(ctx context.Context, process *types.Process) error
-
-	Elect(ctx context.Context, process *types.Process) (bool, error)
-	ElectUpdate(ctx context.Context, process *types.Process) error
-	ElectWait(ctx context.Context, process *types.Process, lead chan bool) error
-}
-
-type IEndpoint interface {
-	Get(ctx context.Context, name string) ([]string, error)
-	Upsert(ctx context.Context, name string, ips []string) error
-	Remove(ctx context.Context, name string) error
-	Watch(ctx context.Context, endpoint chan string) error
+type Storage interface {
+	Cluster() storage.Cluster
+	Hook() storage.Hook
+	Namespace() storage.Namespace
+	Deployment() storage.Deployment
+	Service() storage.Service
+	Route() storage.Route
+	System() storage.System
+	Pod() storage.Pod
+	Volume() storage.Volume
+	Node() storage.Node
+	Endpoint() storage.Endpoint
 }

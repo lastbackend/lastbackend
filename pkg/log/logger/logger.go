@@ -2,7 +2,7 @@
 // Last.Backend LLC CONFIDENTIAL
 // __________________
 //
-// [2014] - [2017] Last.Backend LLC
+// [2014] - [2018] Last.Backend LLC
 // All Rights Reserved.
 //
 // NOTICE:  All information contained herein is, and remains
@@ -34,9 +34,8 @@ type Logger struct {
 
 type Level int
 
-func New(name string, level int) *Logger {
+func New(level int) *Logger {
 	var l = new(Logger)
-	l.name = name
 	l.level = Level(level)
 	l.log = logrus.New()
 	l.log.Out = os.Stdout
@@ -47,10 +46,19 @@ func New(name string, level int) *Logger {
 
 	if level >= 0 {
 		l.log.Level = logrus.DebugLevel
-		l.log.Formatter = getTextFormatter(l.name)
+		l.log.Formatter = getTextFormatter()
 	}
 
 	return l
+}
+
+func (l *Logger) SetLevel(level int) {
+
+	l.level = Level(level)
+	if level >= 0 {
+		l.log.Level = logrus.DebugLevel
+		l.log.Formatter = getTextFormatter()
+	}
 }
 
 func (l *Logger) EnableFileInfo(skip int) *Logger {
@@ -112,17 +120,13 @@ func (l *Logger) V(level Level) Verbose {
 }
 
 func getJSONFormatter() *logrus.JSONFormatter {
-	var formatter = new(logrus.JSONFormatter)
-	formatter.TimestampFormat = "2006-01-02 15:04:05"
-	return formatter
+	var f = new(logrus.JSONFormatter)
+	f.TimestampFormat = "2006-01-02 15:04:05"
+	return f
 }
 
-func getTextFormatter(name string) *formatter.TextFormatter {
+func getTextFormatter() *formatter.TextFormatter {
 	var f = new(formatter.TextFormatter)
 	f.TimestampFormat = "2006-01-02 15:04:05"
-
-	if name != "" {
-		f.Name = name
-	}
 	return f
 }
