@@ -19,10 +19,9 @@
 package events
 
 import (
-	"github.com/lastbackend/lastbackend/pkg/api/envs"
-	"github.com/lastbackend/lastbackend/pkg/log"
-	"github.com/lastbackend/lastbackend/pkg/sockets"
 	"net/http"
+
+	"github.com/lastbackend/lastbackend/pkg/log"
 )
 
 const (
@@ -30,31 +29,14 @@ const (
 	defaultClient = "lastbackend"
 )
 
+//EventSubscribeH - realtime events handler
 func EventSubscribeH(w http.ResponseWriter, r *http.Request) {
 
 	log.V(logLevel).Debug("Handler: Event: subscribe on events")
-
-	var (
-		err error
-		hub = envs.Get().GetWssHub()
-	)
 
 	if r.Method != "GET" {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 		return
 	}
 
-	conn, err := sockets.Upgrader.Upgrade(w, r, nil)
-	if err != nil {
-		log.V(logLevel).Errorf("Handler: Event: upgrade socker err: %s", err)
-		return
-	}
-
-	log.V(logLevel).Debug("Handler: Event: new websocket connection")
-
-	client := hub.NewConnection(defaultClient, conn)
-
-	log.V(logLevel).Debug("Handler: Event: connection ready to receive data")
-
-	client.WritePump()
 }
