@@ -17,11 +17,3 @@
 //
 
 package mock
-
-import (
-	"github.com/lastbackend/lastbackend/pkg/storage/storage"
-)
-
-type NodeStorage struct {
-	storage.Node
-}

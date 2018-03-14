@@ -23,7 +23,6 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/util/http/middleware"
 )
 
-// Routes map - handle all routes for events
 var Routes = []http.Route{
 	// Events handlers
 	{Path: "/events", Method: http.MethodGet, Middleware: []http.Middleware{middleware.Context}, Handler: EventSubscribeH},

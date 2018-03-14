@@ -17,9 +17,3 @@
 //
 
 package mock
-
-import "github.com/lastbackend/lastbackend/pkg/storage/storage"
-
-type EndpointStorage struct {
-	storage.Endpoint
-}

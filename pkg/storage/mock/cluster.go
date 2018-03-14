@@ -17,25 +17,3 @@
 //
 
 package mock
-
-import (
-	"context"
-
-	"github.com/lastbackend/lastbackend/pkg/distribution/types"
-	"github.com/lastbackend/lastbackend/pkg/storage/storage"
-)
-
-// ClusterStorage database mock structure
-type ClusterStorage struct {
-	storage.Cluster
-}
-
-// Info - return cluster info from storage
-func (*ClusterStorage) Info(ctx context.Context) (*types.Cluster, error) {
-	panic("implement me")
-}
-
-// Update - update cluster info in storage
-func (*ClusterStorage) Update(ctx context.Context, cluster *types.Cluster) error {
-	panic("implement me")
-}
