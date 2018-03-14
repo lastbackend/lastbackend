@@ -1062,30 +1062,6 @@
 			"revisionTime": "2017-10-10T08:14:17Z"
 		},
 		{
-			"checksumSHA1": "BHGg/qtOLaMJt9tNO8pF3FE187I=",
-			"path": "gopkg.in/gorethink/gorethink.v3",
-			"revision": "7f5bdfd858bb064d80559b2a32b86669c5de5d3b",
-			"revisionTime": "2017-09-28T17:27:53Z"
-		},
-		{
-			"checksumSHA1": "yjQTriVMAzKdR8CKhDFQMbgrFvg=",
-			"path": "gopkg.in/gorethink/gorethink.v3/encoding",
-			"revision": "7f5bdfd858bb064d80559b2a32b86669c5de5d3b",
-			"revisionTime": "2017-09-28T17:27:53Z"
-		},
-		{
-			"checksumSHA1": "aWKVb1QHxeor0el0wybSLEd4pBc=",
-			"path": "gopkg.in/gorethink/gorethink.v3/ql2",
-			"revision": "7f5bdfd858bb064d80559b2a32b86669c5de5d3b",
-			"revisionTime": "2017-09-28T17:27:53Z"
-		},
-		{
-			"checksumSHA1": "E5k29XlUCWLvucxkOimNHtozB7g=",
-			"path": "gopkg.in/gorethink/gorethink.v3/types",
-			"revision": "7f5bdfd858bb064d80559b2a32b86669c5de5d3b",
-			"revisionTime": "2017-09-28T17:27:53Z"
-		},
-		{
 			"checksumSHA1": "RDJpJQwkF012L6m/2BJizyOksNw=",
 			"path": "gopkg.in/yaml.v2",
 			"revision": "eb3733d160e74a9c7e442f435eb3bea458e1d19f",
