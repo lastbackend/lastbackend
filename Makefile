@@ -1,11 +1,9 @@
-.PHONY : default deps test build install docs
+.PHONY : default deps test build image docs
 
-NAME_KIT = lbd
-NAME_CLI = lbc
+export VERSION = 0.9.0
 
 HARDWARE = $(shell uname -m)
 OS := $(shell uname)
-VERSION ?= 0.9.0
 
 default: deps test build
 
@@ -26,20 +24,24 @@ build:
 	@echo "== Pre-building configuration"
 	mkdir -p build/linux && mkdir -p build/darwin
 	@echo "== Building Last.Backend platform"
-	GOOS=linux  go build -ldflags "-X main.Version=$(VERSION)" -o build/linux/$(NAME_KIT) cmd/kit/kit.go
-	GOOS=darwin go build -ldflags "-X main.Version=$(VERSION)" -o build/darwin/$(NAME_KIT) cmd/kit/kit.go
+	@bash ./hack/build-cross.sh
 
 install:
-	@echo "Install Last.Backend, ${OS} version:= ${VERSION}"
-ifeq ($(OS),Linux)
-	mv build/linux/$(NAME_KIT) /usr/local/bin/$(NAME_KIT)
-endif
-ifeq ($(OS) ,Darwin)
-	mv build/darwin/$(NAME_KIT) /usr/local/bin/$(NAME_KIT)
-endif
+	@echo "== Install binaries"
+	@bash ./hack/install-cross.sh
 
 image:
-	docker build -t lastbackend/lastbackend -f ./images/lastbackend/Dockerfile .
+	@echo "== Pre-building configuration"
+	@sh ./hack/build-images.sh
 
-run:
-	go run cmd/kit/kit.go --debug=3
+vendor-add:
+	@echo "== Add mission vendors"
+	@govendor add +external
+
+run-kit:
+	@echo "== Run kit daemon all in one"
+	@go run ./cmd/kit/kit.go $(app) --config=./contrib/config.yml
+
+run-node:
+	@echo "== Run node"
+	@go run ./cmd/node/node.go --config=./contrib/config.yml
