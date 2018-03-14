@@ -63,6 +63,12 @@
 			"revisionTime": "2018-03-14T12:22:59Z"
 		},
 		{
+			"checksumSHA1": "XThyw/FZ+eIbebe6zQrpJuIxHgw=",
+			"path": "github.com/coreos/go-iptables/iptables",
+			"revision": "b5b1876b170881a8259f036445ee89c8669db386",
+			"revisionTime": "2018-02-21T14:29:34Z"
+		},
+		{
 			"checksumSHA1": "d50/+u/LFlXvEV10HiEoXB9OsGg=",
 			"origin": "github.com/coreos/etcd/vendor/github.com/coreos/go-systemd/journal",
 			"path": "github.com/coreos/go-systemd/journal",
@@ -500,6 +506,24 @@
 			"path": "github.com/stretchr/testify/assert",
 			"revision": "b89eecf5ca5db6d3ba60b237ffe3df7bafb7662f",
 			"revisionTime": "2018-03-03T13:51:14Z"
+		},
+		{
+			"checksumSHA1": "v78jfRq2M/MDXChpGsHaV76o/2M=",
+			"path": "github.com/vishvananda/netlink",
+			"revision": "5236321576c0c97ab02c078e60f9b1c5c1828807",
+			"revisionTime": "2018-02-23T16:59:06Z"
+		},
+		{
+			"checksumSHA1": "WQzkzzCn8pwstWgO4o41T0czyT4=",
+			"path": "github.com/vishvananda/netlink/nl",
+			"revision": "5236321576c0c97ab02c078e60f9b1c5c1828807",
+			"revisionTime": "2018-02-23T16:59:06Z"
+		},
+		{
+			"checksumSHA1": "qf37dJzNS2iXycH62ukEw+cleZY=",
+			"path": "github.com/vishvananda/netns",
+			"revision": "be1fbeda19366dea804f00efff2dd73a1642fdcc",
+			"revisionTime": "2017-11-10T22:28:10Z"
 		},
 		{
 			"checksumSHA1": "UWjVYmoHlIfHzVIskELHiJQtMOI=",
