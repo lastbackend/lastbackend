@@ -22,13 +22,13 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/lastbackend/lastbackend/pkg/util/http"
 
-	events "github.com/lastbackend/lastbackend/pkg/api/events/routes"
-	hook "github.com/lastbackend/lastbackend/pkg/api/hook/routes"
-	app "github.com/lastbackend/lastbackend/pkg/api/app/routes"
-	node "github.com/lastbackend/lastbackend/pkg/api/node/routes"
-	repo "github.com/lastbackend/lastbackend/pkg/api/repo/routes"
-	service "github.com/lastbackend/lastbackend/pkg/api/service/routes"
-	vendors "github.com/lastbackend/lastbackend/pkg/api/vendors/routes"
+	"github.com/lastbackend/lastbackend/pkg/api/http/cluster"
+	"github.com/lastbackend/lastbackend/pkg/api/http/deployment"
+	"github.com/lastbackend/lastbackend/pkg/api/http/hook"
+	"github.com/lastbackend/lastbackend/pkg/api/http/namespace"
+	"github.com/lastbackend/lastbackend/pkg/api/http/node"
+	"github.com/lastbackend/lastbackend/pkg/api/http/route"
+	"github.com/lastbackend/lastbackend/pkg/api/http/service"
 	"github.com/lastbackend/lastbackend/pkg/log"
 )
 
@@ -44,18 +44,24 @@ func AddRoutes(r ...[]http.Route) {
 }
 
 func init() {
-	AddRoutes(events.Routes)
-	AddRoutes(hook.Routes)
-	AddRoutes(app.Routes)
+
+	// Cluster
+	AddRoutes(cluster.Routes)
 	AddRoutes(node.Routes)
-	AddRoutes(repo.Routes)
+
+	// Namespace
+	AddRoutes(namespace.Routes)
 	AddRoutes(service.Routes)
-	AddRoutes(vendors.Routes)
+	AddRoutes(deployment.Routes)
+	AddRoutes(route.Routes)
+
+	// Hooks
+	AddRoutes(hook.Routes)
 }
 
 func Listen(host string, port int) error {
 
-	log.V(logLevel).Debug("HTTP: listen HTTP server")
+	log.V(logLevel).Debugf("HTTP: listen HTTP server on %s:%d", host, port)
 
 	r := mux.NewRouter()
 	r.Methods("OPTIONS").HandlerFunc(http.Headers)

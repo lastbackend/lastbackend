@@ -1,0 +1,58 @@
+---
+
+# Runtime
+verbose: 7
+token: lstbknd
+ssl: true
+
+# Etcd database
+etcd:
+ endpoints:
+  "127.0.0.1:2379"
+
+# Domain
+domain:
+  internal: "lb.local"
+  external: "lstbknd.io"
+
+git:
+  uri: "git.lstbknd.net"
+
+api:
+  host: 0.0.0.0
+  port: 2967
+  uri: "api.lstbknd.net"
+  tls: true
+
+dns:
+  host: 0.0.0.0
+  port: 53
+  default_ip: "127.0.0.1"
+
+node:
+  token: "cluster-token"
+  cri:
+    type: "docker"
+  cni:
+    type: "vxlan"
+  volume: "/var/lib/lastbackend/"
+
+builder:
+  workers: 2
+  logs: /opt/logs/
+  docker:
+    host: "172.17.0.1"
+  extra_hosts:
+
+# Runtime
+runtime:
+  type: "docker"
+#  docker:
+#    certs: "/opt/ssl/"
+
+# Registry
+registry:
+  host: "hub.lstbknd.net"
+  key: "/opt/ssl/lstbknd.net.key"
+  issuer: "api.lstbknd.net"
+  service: "hub.lstbknd.net"

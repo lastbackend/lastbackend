@@ -38,7 +38,7 @@ func GetOsInfo() *types.OsInfo {
 	return _os.GetInfo()
 }
 
-func GetExternalIP() (string, error) {
+func GetNodeIP() (string, error) {
 	ifaces, err := net.Interfaces()
 	if err != nil {
 		return "", err

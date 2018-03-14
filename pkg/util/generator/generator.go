@@ -2,7 +2,7 @@
 // Last.Backend LLC CONFIDENTIAL
 // __________________
 //
-// [2014] - [2017] Last.Backend LLC
+// [2014] - [2018] Last.Backend LLC
 // All Rights Reserved.
 //
 // NOTICE:  All information contained herein is, and remains
@@ -26,7 +26,6 @@ import (
 	"github.com/satori/go.uuid"
 	"golang.org/x/crypto/bcrypt"
 	"io"
-	mathrand "math/rand"
 	"strings"
 	"time"
 )
@@ -34,7 +33,8 @@ import (
 const RANDOM_PASS_LEN = 10
 
 func GetUUIDV4() string {
-	return uuid.NewV4().String()
+	u, _ := uuid.NewV4()
+	return u.String()
 }
 
 func UnixTimestamp() int {
@@ -84,18 +84,7 @@ func GenerateGravatar(email string) string {
 	return fmt.Sprintf("%x", m.Sum(nil))
 }
 
-func GenerateRandomPassword() (string, error) {
-	mathrand.Seed(time.Now().UTC().UnixNano())
-	const chars = "abcdefghijklmnopqrstuvwxyz0123456789"
-
-	result := make([]byte, RANDOM_PASS_LEN)
-	for i := 0; i < RANDOM_PASS_LEN; i++ {
-		result[i] = chars[mathrand.Intn(len(chars))]
-	}
-	return string(result), nil
-}
-
-func GenerateToken(n int) string {
+func GenerateRandomString(n int) string {
 
 	var str string
 	var index int

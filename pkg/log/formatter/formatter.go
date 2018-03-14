@@ -2,7 +2,7 @@
 // Last.Backend LLC CONFIDENTIAL
 // __________________
 //
-// [2014] - [2017] Last.Backend LLC
+// [2014] - [2018] Last.Backend LLC
 // All Rights Reserved.
 //
 // NOTICE:  All information contained herein is, and remains
@@ -91,9 +91,9 @@ func (f *TextFormatter) print(b *bytes.Buffer, entry *logrus.Entry, keys []strin
 	levelText := strings.ToUpper(entry.Level.String())[0:4]
 
 	if f.DisableTimestamp {
-		fmt.Fprintf(b, "\x1b[%dm%s\x1b[0m[%s] ==> %-44s ", levelColor, levelText, f.Name, entry.Message)
+		fmt.Fprintf(b, "\x1b[%dm%s\x1b[0m %-44s ", levelColor, levelText, entry.Message)
 	} else {
-		fmt.Fprintf(b, "\x1b[%dm%s\x1b[0m[%s][%s] ==> %-44s ", levelColor, levelText, entry.Time.Format(timestampFormat), f.Name, entry.Message)
+		fmt.Fprintf(b, "\x1b[%dm%s\x1b[0m[%s] %-44s ", levelColor, levelText, entry.Time.Format(timestampFormat), entry.Message)
 	}
 
 	for _, k := range keys {

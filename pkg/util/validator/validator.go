@@ -2,7 +2,7 @@
 // Last.Backend LLC CONFIDENTIAL
 // __________________
 //
-// [2014] - [2017] Last.Backend LLC
+// [2014] - [2018] Last.Backend LLC
 // All Rights Reserved.
 //
 // NOTICE:  All information contained herein is, and remains
@@ -41,9 +41,30 @@ func IsBool(s string) bool {
 	return false
 }
 
-func IsDockerNamespace(s string) bool {
-	// Todo: check valid docker namespace
-	return true
+func IsEmail(s string) bool {
+	return govalidator.IsEmail(s)
+}
+
+func IsUsername(s string) bool {
+	reg, _ := regexp.Compile("[A-Za-z0-9]+(?:[_-][A-Za-z0-9]+)*")
+	str := reg.FindStringSubmatch(s)
+	if len(str) == 1 && str[0] == s && len(s) >= 4 && len(s) <= 64 {
+		return true
+	}
+	return false
+}
+
+func IsPassword(s string) bool {
+	return len(s) > 6
+}
+
+func IsNamespaceName(s string) bool {
+	reg, _ := regexp.Compile("[a-z]+(?:[_-][a-z0-9]+)*")
+	str := reg.FindStringSubmatch(s)
+	if len(str) == 1 && str[0] == s && len(s) >= 4 && len(s) <= 64 {
+		return true
+	}
+	return false
 }
 
 func IsServiceName(s string) bool {
@@ -142,8 +163,8 @@ func IsPublicKey(key string) bool {
 
 // Check incoming string on git valid utl
 // Ex:
-// 	* https://github.com/lastbackend/lastbackend.git
-// 	* git@github.com:lastbackend/lastbackend.git
+// 	* https://github.com/lastbackend/enterprise.git
+// 	* git@github.com:lastbackend/enterprise.git
 func IsGitUrl(url string) bool {
 	res, err := regexp.MatchString(`^(?:ssh|git|http(?:s)?)(?:@|:\/\/(?:.+@)?)((\w+)\.\w+)(?:\/|:)(.+)(?:\/)(.+)(?:\..+)$`, url)
 	if err != nil {
@@ -153,26 +174,35 @@ func IsGitUrl(url string) bool {
 	return res
 }
 
-func validateDockerRepositoryName(repositoryName string) error {
+func validateDockerRepoName(repoName string) error {
 	var (
-		namespace string
-		name      string
+		app  string
+		name string
 	)
-	nameParts := strings.SplitN(repositoryName, "/", 2)
+	nameParts := strings.SplitN(repoName, "/", 2)
 	if len(nameParts) < 2 {
-		namespace = "library"
+		app = "library"
 		name = nameParts[0]
 	} else {
-		namespace = nameParts[0]
+		app = nameParts[0]
 		name = nameParts[1]
 	}
-	validNamespace := regexp.MustCompile(`^([a-z0-9_]{4,30})$`)
-	if !validNamespace.MatchString(namespace) {
-		return fmt.Errorf("Invalid namespace name (%s), only [a-z0-9_] are allowed, size between 4 and 30", namespace)
+	validApp := regexp.MustCompile(`^([a-z0-9_]{4,30})$`)
+	if !validApp.MatchString(app) {
+		return fmt.Errorf("invalid app name (%s), only [a-z0-9_] are allowed, size between 4 and 30", app)
 	}
 	validRepo := regexp.MustCompile(`^([a-zA-Z0-9-_.]+)$`)
 	if !validRepo.MatchString(name) {
-		return fmt.Errorf("Invalid repository name (%s), only [a-zA-Z0-9-_.] are allowed", name)
+		return fmt.Errorf("invalid repo name (%s), only [a-zA-Z0-9-_.] are allowed", name)
 	}
 	return nil
+}
+
+func IsValueInList(value string, list []string) bool {
+	for _, v := range list {
+		if v == value {
+			return true
+		}
+	}
+	return false
 }

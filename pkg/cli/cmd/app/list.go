@@ -48,7 +48,7 @@ func List() (*a.AppList, error) {
 	)
 
 	_, _, err = http.
-	GET("/app").
+		GET("/app").
 		Request(appList, er)
 	if err != nil {
 		fmt.Println(err)
