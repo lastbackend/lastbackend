@@ -17,3 +17,9 @@
 //
 
 package mock
+
+import "github.com/lastbackend/lastbackend/pkg/storage/storage"
+
+type SystemStorage struct {
+	storage.System
+}

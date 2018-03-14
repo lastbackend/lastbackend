@@ -16,15 +16,19 @@
 // from Last.Backend LLC.
 //
 
-package events
+package main
 
-import (
-	"github.com/lastbackend/lastbackend/pkg/util/http"
-	"github.com/lastbackend/lastbackend/pkg/util/http/middleware"
-)
+import "testing"
 
-// Routes map - handle all routes for events
-var Routes = []http.Route{
-	// Events handlers
-	{Path: "/events", Method: http.MethodGet, Middleware: []http.Middleware{middleware.Context}, Handler: EventSubscribeH},
+func Test_main(t *testing.T) {
+	tests := []struct {
+		name string
+	}{
+	// TODO: Add test cases.
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			main()
+		})
+	}
 }

@@ -17,3 +17,22 @@
 //
 
 package mock
+
+import "context"
+
+type Storage struct {
+	context.Context
+	context.CancelFunc
+
+	*ClusterStorage
+	*DeploymentStorage
+	*HookStorage
+	*NodeStorage
+	*NamespaceStorage
+	*PodStorage
+	*ServiceStorage
+	*RouteStorage
+	*VolumeStorage
+	*EndpointStorage
+	*SystemStorage
+}

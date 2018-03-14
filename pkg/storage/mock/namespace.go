@@ -17,3 +17,11 @@
 //
 
 package mock
+
+import (
+	"github.com/lastbackend/lastbackend/pkg/storage/storage"
+)
+
+type NamespaceStorage struct {
+	storage.Namespace
+}
