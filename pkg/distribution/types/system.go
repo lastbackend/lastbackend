@@ -21,7 +21,7 @@ package types
 import "time"
 
 var (
-	SecretAccessToken         = ""
+	SecretAccessToken = ""
 )
 
 const KindAPIServer = "api"

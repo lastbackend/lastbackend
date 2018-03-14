@@ -26,9 +26,9 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/log"
 	"github.com/lastbackend/lastbackend/pkg/storage"
 	"github.com/lastbackend/lastbackend/pkg/util/generator"
+	"github.com/spf13/viper"
 	"strings"
 	"time"
-	"github.com/spf13/viper"
 )
 
 type IPod interface {
@@ -51,7 +51,7 @@ type Pod struct {
 func (p *Pod) Get(namespace, name string) (*types.Pod, error) {
 	log.V(logLevel).Debugf("Pod: get by name %s", name)
 
-	pod, err := p.storage.Pod().Get(p.context, namespace,name)
+	pod, err := p.storage.Pod().Get(p.context, namespace, name)
 	if err != nil {
 		log.V(logLevel).Debugf("Pod: get Pod `%s` err: %s", name, err)
 		return nil, err
@@ -68,7 +68,7 @@ func (p *Pod) Create(deployment *types.Deployment) (*types.Pod, error) {
 	pod.Meta.Name = strings.Split(generator.GetUUIDV4(), "-")[4][5:]
 	pod.Meta.SelfLink = fmt.Sprintf("%s/pod/%s", deployment.Meta.SelfLink, pod.Meta.Name)
 	pod.Meta.Deployment = deployment.Meta.Name
-	pod.Meta.Service    = deployment.Meta.Service
+	pod.Meta.Service = deployment.Meta.Service
 	pod.Meta.Namespace = deployment.Meta.Namespace
 
 	pod.MarkAsInitialized()

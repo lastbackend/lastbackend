@@ -19,8 +19,8 @@
 package distribution
 
 import (
-	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 	"context"
+	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 	"github.com/lastbackend/lastbackend/pkg/storage"
 )
 
@@ -36,18 +36,18 @@ type Process struct {
 	storage.Storage
 }
 
-func (p *Process) ProcessSet (process *types.Process) error {
+func (p *Process) ProcessSet(process *types.Process) error {
 	return p.Storage.System().ProcessSet(p.context, process)
 }
 
-func (p *Process) Elect (process *types.Process) (bool, error) {
+func (p *Process) Elect(process *types.Process) (bool, error) {
 	return p.Storage.System().Elect(p.context, process)
 }
 
-func (p *Process) ElectWait (process *types.Process, l chan bool) error {
+func (p *Process) ElectWait(process *types.Process, l chan bool) error {
 	return p.Storage.System().ElectWait(p.context, process, l)
 }
 
-func (p *Process) ElectUpdate (process *types.Process) error {
+func (p *Process) ElectUpdate(process *types.Process) error {
 	return p.Storage.System().ElectUpdate(p.context, process)
 }

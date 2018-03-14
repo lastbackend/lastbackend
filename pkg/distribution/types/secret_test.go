@@ -31,7 +31,6 @@ func TestHash(t *testing.T) {
 	namespace := "483705e8-0ae0-453f-a973-8b79457ca23a"
 	id := "483705e8-0ae0-453f-a973-8b79457ca22a"
 
-
 	var asset = Secret{}
 	asset.Meta.ID = id
 	asset.Meta.NamespaceID = namespace

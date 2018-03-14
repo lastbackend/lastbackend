@@ -26,12 +26,12 @@ import (
 )
 
 type createS struct {
-	App string  `json:"app,omitempty"`
-	Name      string  `json:"name,omitempty"`
-	Template  string  `json:"template,omitempty"`
-	Image     string  `json:"image,omitempty"`
-	Url       string  `json:"url,omitempty"`
-	Config    *Config `json:"config,omitempty"`
+	App      string  `json:"app,omitempty"`
+	Name     string  `json:"name,omitempty"`
+	Template string  `json:"template,omitempty"`
+	Image    string  `json:"image,omitempty"`
+	Url      string  `json:"url,omitempty"`
+	Config   *Config `json:"config,omitempty"`
 }
 
 type Config struct {

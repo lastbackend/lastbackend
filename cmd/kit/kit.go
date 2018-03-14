@@ -26,9 +26,9 @@ import (
 
 	"github.com/lastbackend/lastbackend/pkg/api"
 	"github.com/lastbackend/lastbackend/pkg/controller"
-	"github.com/lastbackend/lastbackend/pkg/scheduler"
 	"github.com/lastbackend/lastbackend/pkg/discovery"
 	"github.com/lastbackend/lastbackend/pkg/log"
+	"github.com/lastbackend/lastbackend/pkg/scheduler"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"

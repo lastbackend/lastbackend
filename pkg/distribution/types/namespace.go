@@ -47,9 +47,9 @@ type NamespaceEnv struct {
 }
 
 type NamespaceMeta struct {
-	Meta `yaml:",inline"`
-	Endpoint  string `json:"endpoint"`
-	Type      string `json:"type"`
+	Meta     `yaml:",inline"`
+	Endpoint string `json:"endpoint"`
+	Type     string `json:"type"`
 }
 
 type NamespaceResources struct {

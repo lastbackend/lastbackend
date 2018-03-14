@@ -19,15 +19,15 @@
 package deployment
 
 import (
-	"github.com/lastbackend/lastbackend/pkg/distribution/types"
-	"github.com/lastbackend/lastbackend/pkg/controller/envs"
-	"github.com/lastbackend/lastbackend/pkg/log"
 	"context"
+	"github.com/lastbackend/lastbackend/pkg/controller/envs"
+	"github.com/lastbackend/lastbackend/pkg/distribution/types"
+	"github.com/lastbackend/lastbackend/pkg/log"
 )
 
 type DeploymentController struct {
 	deployment chan *types.Deployment
-	active   bool
+	active     bool
 }
 
 func (dc *DeploymentController) Watch() {

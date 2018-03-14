@@ -119,9 +119,9 @@ func RouteCreateH(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var (
-		sm  = distribution.NewServiceModel(r.Context(), envs.Get().GetStorage())
-		rm  = distribution.NewRouteModel(r.Context(), envs.Get().GetStorage())
-		ns  = r.Context().Value("namespace").(*types.Namespace)
+		sm = distribution.NewServiceModel(r.Context(), envs.Get().GetStorage())
+		rm = distribution.NewRouteModel(r.Context(), envs.Get().GetStorage())
+		ns = r.Context().Value("namespace").(*types.Namespace)
 	)
 
 	// request body struct
@@ -175,9 +175,9 @@ func RouteUpdateH(w http.ResponseWriter, r *http.Request) {
 	log.V(logLevel).Debugf("Handler: Route: update route `%s`", nid)
 
 	var (
-		sm  = distribution.NewServiceModel(r.Context(), envs.Get().GetStorage())
-		rm  = distribution.NewRouteModel(r.Context(), envs.Get().GetStorage())
-		ns  = r.Context().Value("namespace").(*types.Namespace)
+		sm = distribution.NewServiceModel(r.Context(), envs.Get().GetStorage())
+		rm = distribution.NewRouteModel(r.Context(), envs.Get().GetStorage())
+		ns = r.Context().Value("namespace").(*types.Namespace)
 	)
 
 	// request body struct
@@ -244,8 +244,8 @@ func RouteRemoveH(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var (
-		rm  = distribution.NewRouteModel(r.Context(), envs.Get().GetStorage())
-		ns  = r.Context().Value("namespace").(*types.Namespace)
+		rm = distribution.NewRouteModel(r.Context(), envs.Get().GetStorage())
+		ns = r.Context().Value("namespace").(*types.Namespace)
 	)
 
 	rs, err := rm.Get(ns.Meta.Name, rid)

@@ -105,7 +105,6 @@ func NamespaceCreateH(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-
 	item, err := nsm.Get(opts.Name)
 	if err != nil {
 		log.V(logLevel).Errorf("Handler: Namespace: check exists by name err: %s", err)

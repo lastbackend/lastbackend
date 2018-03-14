@@ -21,7 +21,6 @@ package v1
 const logLevel = 5
 
 type IView interface {
-
 	Cluster() *ClusterView
 	Node() *NodeView
 
@@ -31,11 +30,9 @@ type IView interface {
 	Deployment() *DeploymentView
 	Pod() *PodView
 	Container() *ContainerView
-
 }
 
 type View struct{}
-
 
 func (View) Cluster() *ClusterView {
 	return new(ClusterView)

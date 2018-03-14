@@ -19,11 +19,11 @@
 package pod
 
 import (
+	"context"
+	"github.com/lastbackend/lastbackend/pkg/api/envs"
 	"github.com/lastbackend/lastbackend/pkg/distribution/errors"
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 	"github.com/lastbackend/lastbackend/pkg/log"
-	"github.com/lastbackend/lastbackend/pkg/api/envs"
-	"context"
 )
 
 func Provision(p *types.Pod) error {
@@ -53,7 +53,7 @@ func Provision(p *types.Pod) error {
 		}
 	}
 
-	if p.State.Destroy{
+	if p.State.Destroy {
 		return nil
 	}
 

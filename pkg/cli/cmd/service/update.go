@@ -42,10 +42,10 @@ func Update(name, nname, desc string, replicas int) error {
 
 	var (
 		err  error
-		http  = c.Get().GetHttpClient()
-		er      = new(errors.Http)
+		http = c.Get().GetHttpClient()
+		er   = new(errors.Http)
 		app  *av.App
-		res    = new(types.App)
+		res  = new(types.App)
 	)
 
 	srv, _, err := Inspect(name)

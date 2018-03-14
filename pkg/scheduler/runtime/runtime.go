@@ -19,13 +19,13 @@
 package runtime
 
 import (
+	"context"
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
+	"github.com/lastbackend/lastbackend/pkg/log"
+	"github.com/lastbackend/lastbackend/pkg/scheduler/envs"
 	"github.com/lastbackend/lastbackend/pkg/scheduler/runtime/node"
 	"github.com/lastbackend/lastbackend/pkg/scheduler/runtime/pod"
 	"github.com/lastbackend/lastbackend/pkg/system"
-	"github.com/lastbackend/lastbackend/pkg/log"
-	"context"
-	"github.com/lastbackend/lastbackend/pkg/scheduler/envs"
 )
 
 // watch service state and specs

@@ -25,6 +25,6 @@ type Config struct {
 		Cert string `yaml:"cert"`
 		CA   string `yaml:"ca"`
 	} `yaml:"tls"`
-	Quorum bool `yaml:"quorum"`
+	Quorum bool   `yaml:"quorum"`
 	Prefix string `yaml:"prefix"`
 }

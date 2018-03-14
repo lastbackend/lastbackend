@@ -29,16 +29,12 @@ import (
 // node is successful accepted and each hour
 func NewInfoEvent(ctx context.Context) error {
 
-
-
 	return nil
 }
 
 // NewStateEvent - send node state event after
 // node is successful accepted and each hour
 func NewStateEvent(ctx context.Context) error {
-
-
 
 	return nil
 }
@@ -53,7 +49,6 @@ func NewPodStateEvent(ctx context.Context, pod *types.Pod) error {
 	}
 
 	log.Debugf("Event: Pod state event state: %s", pod.Meta.Name)
-
 
 	return nil
 }

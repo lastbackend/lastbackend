@@ -33,7 +33,7 @@ func (r *Runtime) ImagePull(ctx context.Context, spec *types.SpecTemplateContain
 
 	options := docker.ImagePullOptions{
 		RegistryAuth: spec.Auth,
-		PrivilegeFunc: func () (string, error) {
+		PrivilegeFunc: func() (string, error) {
 			panic(0)
 			return "", errors.New("Access denied")
 		},

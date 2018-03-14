@@ -19,15 +19,15 @@
 package node
 
 import (
+	"context"
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 	"github.com/lastbackend/lastbackend/pkg/log"
 	"github.com/lastbackend/lastbackend/pkg/scheduler/envs"
-	"context"
 )
 
 type NodeController struct {
-	nodes   chan *types.Node
-	active  bool
+	nodes  chan *types.Node
+	active bool
 }
 
 func (nc *NodeController) Watch(node chan *types.Node) {

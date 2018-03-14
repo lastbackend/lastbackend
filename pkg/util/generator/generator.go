@@ -33,7 +33,8 @@ import (
 const RANDOM_PASS_LEN = 10
 
 func GetUUIDV4() string {
-	return uuid.NewV4().String()
+	u, _ := uuid.NewV4()
+	return u.String()
 }
 
 func UnixTimestamp() int {

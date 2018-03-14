@@ -19,12 +19,12 @@
 package pod
 
 import (
-	"strings"
 	"fmt"
-	"github.com/lastbackend/lastbackend/pkg/log"
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
-	"time"
+	"github.com/lastbackend/lastbackend/pkg/log"
 	"github.com/satori/go.uuid"
+	"strings"
+	"time"
 )
 
 func Create(svc *types.Service) *types.Pod {

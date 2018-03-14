@@ -9,7 +9,6 @@ _test
 .idea
 .vagrant
 contrib/vagrant/ssl
-rethinkdb_data
 
 # Architecture specific extensions/prefixes
 *.[568vq]

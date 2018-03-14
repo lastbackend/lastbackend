@@ -49,8 +49,8 @@ type ServiceMeta struct {
 }
 
 type ServiceEndpoint struct {
-	Name      string `json:"name"`
-	Main      bool   `json:"main"`
+	Name string `json:"name"`
+	Main bool   `json:"main"`
 }
 
 type ServiceState struct {

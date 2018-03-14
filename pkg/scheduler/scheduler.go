@@ -19,17 +19,16 @@
 package scheduler
 
 import (
-
 	"github.com/lastbackend/lastbackend/pkg/scheduler/runtime"
 	"os/signal"
 	"syscall"
 
-	"github.com/lastbackend/lastbackend/pkg/storage"
-	"os"
+	"context"
 	"github.com/lastbackend/lastbackend/pkg/log"
 	"github.com/lastbackend/lastbackend/pkg/scheduler/envs"
+	"github.com/lastbackend/lastbackend/pkg/storage"
 	"github.com/spf13/viper"
-	"context"
+	"os"
 )
 
 const app = "scheduler"

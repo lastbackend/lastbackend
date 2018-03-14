@@ -20,10 +20,10 @@ package v3
 
 import (
 	"github.com/coreos/etcd/clientv3"
+	"github.com/lastbackend/lastbackend/pkg/log"
 	"github.com/lastbackend/lastbackend/pkg/util/serializer"
 	"golang.org/x/net/context"
 	"path"
-	"github.com/lastbackend/lastbackend/pkg/log"
 )
 
 type tx struct {

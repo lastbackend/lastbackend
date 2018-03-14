@@ -19,10 +19,10 @@
 package etcd
 
 import (
-	"github.com/lastbackend/lastbackend/pkg/storage/storage"
 	"context"
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 	"github.com/lastbackend/lastbackend/pkg/log"
+	"github.com/lastbackend/lastbackend/pkg/storage/storage"
 	"github.com/lastbackend/lastbackend/pkg/storage/store"
 )
 
@@ -57,15 +57,14 @@ func (s *ClusterStorage) Info(ctx context.Context) (*types.Cluster, error) {
 	return cluster, nil
 }
 
-func (s *ClusterStorage) Update(ctx context.Context, cluster *types.Cluster)  error {
+func (s *ClusterStorage) Update(ctx context.Context, cluster *types.Cluster) error {
 
 	log.V(logLevel).Debugf("Storage: cluster: update: #v", cluster)
 
 	return nil
 }
 
-
-func newClusterStorage () *ClusterStorage{
+func newClusterStorage() *ClusterStorage {
 	s := new(ClusterStorage)
 	return s
 }

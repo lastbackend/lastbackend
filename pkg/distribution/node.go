@@ -32,7 +32,7 @@ type INode interface {
 	Create() (*types.Node, error)
 	Get(name string) (*types.Node, error)
 	Update(node *types.Node, opts *types.NodeUpdateOptions) error
-	SetAvailable(name string)  error
+	SetAvailable(name string) error
 	SetUnavailable(name string) error
 	SetState(node *types.Node, state types.NodeState) (*types.Node, error)
 	SetInfo(node *types.Node, info types.NodeInfo) error

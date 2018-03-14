@@ -70,7 +70,6 @@ type ServiceQuotas struct {
 }
 
 type ServiceSourcesRepo struct {
-
 }
 
 type ServiceStats struct {

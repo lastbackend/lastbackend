@@ -32,10 +32,9 @@ import (
 func GetConfig(spec *types.SpecTemplateContainer) *container.Config {
 
 	var volumes map[string]struct{}
-	var ports nat.PortSet
 
-	ports = make(map[nat.Port]struct{})
-	volumes = make(map[string]struct{})
+	ports := make(nat.PortSet, 0)
+	volumes = make(map[string]struct{}, 0)
 
 	for _, p := range spec.Ports {
 		port := nat.Port(strconv.Itoa(p.ContainerPort))
@@ -75,7 +74,7 @@ func GetHostConfig(spec *types.SpecTemplateContainer) *container.HostConfig {
 	}
 
 	var (
-		ports  nat.PortMap
+		ports  = make(nat.PortMap, 0)
 		mounts []mount.Mount
 		binds  []string
 		links  []string

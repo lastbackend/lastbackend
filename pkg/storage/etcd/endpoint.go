@@ -21,9 +21,9 @@ package etcd
 import (
 	"context"
 	"errors"
-	"regexp"
 	"github.com/lastbackend/lastbackend/pkg/log"
 	"github.com/lastbackend/lastbackend/pkg/storage/storage"
+	"regexp"
 )
 
 const endpointStorage = "endpoints"

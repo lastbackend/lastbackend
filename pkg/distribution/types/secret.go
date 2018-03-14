@@ -30,7 +30,7 @@ type Secret struct {
 }
 
 type SecretMeta struct {
-	Meta `yaml:",inline"`
+	Meta      `yaml:",inline"`
 	Namespace string `json:"namespace"`
 }
 

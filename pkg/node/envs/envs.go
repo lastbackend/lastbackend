@@ -32,10 +32,10 @@ func Get() *Env {
 }
 
 type Env struct {
-	cri    cri.CRI
-	cni    cni.CNI
-	cache  *cache.Cache
-	state  *state.State
+	cri   cri.CRI
+	cni   cni.CNI
+	cache *cache.Cache
+	state *state.State
 }
 
 func (c *Env) SetCri(cri cri.CRI) {

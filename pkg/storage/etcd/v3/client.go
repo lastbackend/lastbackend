@@ -19,17 +19,17 @@
 package v3
 
 import (
+	"context"
 	"crypto/tls"
 	"github.com/coreos/etcd/clientv3"
 	"github.com/coreos/etcd/pkg/transport"
-	s "github.com/lastbackend/lastbackend/pkg/storage/store"
-	"time"
-	"github.com/spf13/viper"
 	"github.com/lastbackend/lastbackend/pkg/log"
+	s "github.com/lastbackend/lastbackend/pkg/storage/store"
 	"github.com/lastbackend/lastbackend/pkg/util/serializer"
 	"github.com/lastbackend/lastbackend/pkg/util/serializer/json"
+	"github.com/spf13/viper"
 	"path"
-	"context"
+	"time"
 )
 
 func GetClient(_ context.Context) (s.Store, s.DestroyFunc, error) {
@@ -60,7 +60,7 @@ func GetClient(_ context.Context) (s.Store, s.DestroyFunc, error) {
 		client.Close()
 	}
 
-	codec  := serializer.NewSerializer(json.Encoder{}, json.Decoder{})
+	codec := serializer.NewSerializer(json.Encoder{}, json.Decoder{})
 	var st = &store{
 		client:     client,
 		codec:      codec,

@@ -21,6 +21,7 @@ package v3
 import (
 	"errors"
 	"github.com/coreos/etcd/clientv3"
+	"github.com/lastbackend/lastbackend/pkg/log"
 	st "github.com/lastbackend/lastbackend/pkg/storage/store"
 	"github.com/lastbackend/lastbackend/pkg/util/converter"
 	"github.com/lastbackend/lastbackend/pkg/util/serializer"
@@ -30,7 +31,6 @@ import (
 	"reflect"
 	"regexp"
 	"strings"
-	"github.com/lastbackend/lastbackend/pkg/log"
 )
 
 type store struct {
@@ -475,9 +475,9 @@ func (s *store) ttlOpts(ctx context.Context, ttl int64) ([]clientv3.OpOption, er
 func GetStore(client *clientv3.Client, opts []clientv3.OpOption, codec serializer.Codec, pathPrefix string, debug bool) *store {
 	return &store{
 		client:     client,
-		opts: opts,
+		opts:       opts,
 		codec:      codec,
 		pathPrefix: pathPrefix,
-		debug: debug,
+		debug:      debug,
 	}
 }

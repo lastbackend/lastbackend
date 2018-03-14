@@ -26,7 +26,7 @@ type RouteStorage struct {
 	storage.Route
 }
 
-func newRouteStorage () *RouteStorage{
+func newRouteStorage() *RouteStorage {
 	s := new(RouteStorage)
 	return s
 }

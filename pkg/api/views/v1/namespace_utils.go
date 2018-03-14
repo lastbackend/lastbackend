@@ -70,9 +70,9 @@ func (r *Namespace) ToResources(obj types.NamespaceResources) NamespaceResources
 
 func (r *Namespace) ToQuotas(obj types.NamespaceQuotas) NamespaceQuotas {
 	return NamespaceQuotas{
-		Disabled:    obj.Disabled,
-		RAM:    obj.RAM,
-		Routes: obj.Routes,
+		Disabled: obj.Disabled,
+		RAM:      obj.RAM,
+		Routes:   obj.Routes,
 	}
 }
 

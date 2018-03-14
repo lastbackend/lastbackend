@@ -24,11 +24,11 @@ import (
 	"os/signal"
 	"syscall"
 
+	"context"
 	"github.com/lastbackend/lastbackend/pkg/controller/runtime"
 	"github.com/lastbackend/lastbackend/pkg/storage"
 	"github.com/spf13/viper"
 	"os"
-	"context"
 )
 
 func Daemon() bool {
@@ -48,7 +48,7 @@ func Daemon() bool {
 	env.SetStorage(stg)
 
 	// Initialize Runtime
-	r:=runtime.NewRuntime(context.Background())
+	r := runtime.NewRuntime(context.Background())
 	r.Loop()
 
 	// Handle SIGINT and SIGTERM.

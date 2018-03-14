@@ -21,11 +21,11 @@ package v1
 import (
 	"time"
 
-	"github.com/lastbackend/lastbackend/pkg/distribution/types"
-	"io"
-	"github.com/lastbackend/lastbackend/pkg/log"
-	"io/ioutil"
 	"encoding/json"
+	"github.com/lastbackend/lastbackend/pkg/distribution/types"
+	"github.com/lastbackend/lastbackend/pkg/log"
+	"io"
+	"io/ioutil"
 )
 
 type Deployment struct {
@@ -102,7 +102,6 @@ type DeploymentReplicasInfo struct {
 	Stopped   int `json:"stopped"`
 	Errored   int `json:"errored"`
 }
-
 
 type RequestDeploymentScaleOptions struct {
 	Replicas *int `json:"replicas"`

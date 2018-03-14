@@ -23,7 +23,6 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/log"
 )
 
-
 func (s *PodState) GetPodsCount() int {
 	log.V(logLevel).Debugf("Cache: PodCache: get pods count: %d", s.stats.pods)
 	return s.stats.pods

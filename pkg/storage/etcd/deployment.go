@@ -19,16 +19,15 @@
 package etcd
 
 import (
-	"github.com/lastbackend/lastbackend/pkg/storage/storage"
-	"regexp"
 	"context"
+	"fmt"
+	"github.com/lastbackend/lastbackend/pkg/distribution/errors"
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 	"github.com/lastbackend/lastbackend/pkg/log"
-	"fmt"
+	"github.com/lastbackend/lastbackend/pkg/storage/storage"
 	"github.com/lastbackend/lastbackend/pkg/storage/store"
-	"github.com/lastbackend/lastbackend/pkg/distribution/errors"
+	"regexp"
 )
-
 
 const deploymentStorage string = "deployments"
 
@@ -128,7 +127,6 @@ func (s *DeploymentStorage) updateState(ctx context.Context, deployment *types.D
 	return nil
 }
 
-
 func (s *DeploymentStorage) SpecWatch(ctx context.Context, deployment chan *types.Deployment) error {
 
 	log.V(logLevel).Debug("Storage: Deployment: watch deployment by spec")
@@ -164,7 +162,7 @@ func (s *DeploymentStorage) SpecWatch(ctx context.Context, deployment chan *type
 	return nil
 }
 
-func newDeploymentStorage () *DeploymentStorage{
+func newDeploymentStorage() *DeploymentStorage {
 	s := new(DeploymentStorage)
 	return s
 }

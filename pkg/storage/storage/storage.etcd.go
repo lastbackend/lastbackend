@@ -23,7 +23,6 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 )
 
-
 type Hook interface {
 	Get(ctx context.Context, id string) (*types.Hook, error)
 	Insert(ctx context.Context, hook *types.Hook) error

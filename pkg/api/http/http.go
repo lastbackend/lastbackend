@@ -22,15 +22,16 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/lastbackend/lastbackend/pkg/util/http"
 
+	"github.com/lastbackend/lastbackend/pkg/api/http/cluster"
+	"github.com/lastbackend/lastbackend/pkg/api/http/deployment"
 	"github.com/lastbackend/lastbackend/pkg/api/http/hook"
 	"github.com/lastbackend/lastbackend/pkg/api/http/namespace"
 	"github.com/lastbackend/lastbackend/pkg/api/http/node"
-	"github.com/lastbackend/lastbackend/pkg/api/http/service"
-	"github.com/lastbackend/lastbackend/pkg/api/http/cluster"
 	"github.com/lastbackend/lastbackend/pkg/api/http/route"
-	"github.com/lastbackend/lastbackend/pkg/api/http/deployment"
+	"github.com/lastbackend/lastbackend/pkg/api/http/service"
 	"github.com/lastbackend/lastbackend/pkg/log"
 )
+
 const logLevel = 2
 
 // Extends routes variable

@@ -61,9 +61,8 @@ func NodeUpdateH(w http.ResponseWriter, r *http.Request) {
 
 	log.V(logLevel).Debugf("Handler: Node: update node `%s`", nid)
 
-
 	var (
-		nm  = distribution.NewNodeModel(r.Context(), envs.Get().GetStorage())
+		nm = distribution.NewNodeModel(r.Context(), envs.Get().GetStorage())
 	)
 
 	// request body struct
@@ -106,13 +105,11 @@ func NodeGetH(w http.ResponseWriter, r *http.Request) {
 
 	log.V(logLevel).Debug("Handler: Node: list node")
 
-
 	var (
 		nm  = distribution.NewNodeModel(r.Context(), envs.Get().GetStorage())
 		cid = utils.Vars(r)["cluster"]
 		nid = utils.Vars(r)["node"]
 	)
-
 
 	n, err := nm.Get(nid)
 	if err != nil {
@@ -144,9 +141,8 @@ func NodeListH(w http.ResponseWriter, r *http.Request) {
 
 	log.V(logLevel).Debug("Handler: Node: list node")
 
-
 	var (
-		nm  = distribution.NewNodeModel(r.Context(), envs.Get().GetStorage())
+		nm = distribution.NewNodeModel(r.Context(), envs.Get().GetStorage())
 	)
 
 	nodes, err := nm.List()

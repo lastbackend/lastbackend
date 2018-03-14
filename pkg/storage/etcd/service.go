@@ -23,12 +23,12 @@ import (
 	"errors"
 	"fmt"
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
+	"github.com/lastbackend/lastbackend/pkg/log"
+	"github.com/lastbackend/lastbackend/pkg/storage/storage"
 	"github.com/lastbackend/lastbackend/pkg/storage/store"
 	"regexp"
 	"strings"
 	"time"
-	"github.com/lastbackend/lastbackend/pkg/log"
-	"github.com/lastbackend/lastbackend/pkg/storage/storage"
 )
 
 const serviceStorage string = "services"
@@ -228,13 +228,11 @@ func (s *ServiceStorage) Insert(ctx context.Context, service *types.Service) err
 		return err
 	}
 
-
 	keyConfig := keyCreate(serviceStorage, service.Meta.Namespace, service.Meta.Name, "spec")
 	if err := tx.Create(keyConfig, service.Spec, 0); err != nil {
 		log.V(logLevel).Errorf("Storage: Service: create spec err: %s", err.Error())
 		return err
 	}
-
 
 	if err := tx.Commit(); err != nil {
 		log.V(logLevel).Errorf("Storage: Service: commit transaction err: %s", err.Error())
@@ -317,7 +315,6 @@ func (s *ServiceStorage) UpdateSpec(ctx context.Context, service *types.Service)
 		log.V(logLevel).Errorf("Storage: Service: upsert spec err: %s", err.Error())
 		return err
 	}
-
 
 	if err := tx.Commit(); err != nil {
 		log.V(logLevel).Errorf("Storage: Service: commit transaction err: %s", err.Error())

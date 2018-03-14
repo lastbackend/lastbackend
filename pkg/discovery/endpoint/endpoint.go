@@ -19,14 +19,14 @@
 package endpoint
 
 import (
-	"github.com/lastbackend/lastbackend/pkg/util"
-	"net"
+	"context"
 	"github.com/lastbackend/lastbackend/pkg/discovery/envs"
 	"github.com/lastbackend/lastbackend/pkg/log"
-	"context"
+	"github.com/lastbackend/lastbackend/pkg/util"
+	"net"
 )
 
-const logLevel =2
+const logLevel = 2
 
 func Get(name string) ([]net.IP, error) {
 
@@ -79,10 +79,10 @@ func Get(name string) ([]net.IP, error) {
 func GetForService(name string) ([]net.IP, error) {
 
 	var (
-		err     error
+		err error
 		//storage = envs.Get().GetStorage()
-		cache   = envs.Get().GetCache()
-		data    = make([]string, 0)
+		cache = envs.Get().GetCache()
+		data  = make([]string, 0)
 	)
 
 	log.V(logLevel).Debugf("Endpoint: get endpoint `%s` ip list from cache", name)
@@ -132,10 +132,10 @@ func GetForService(name string) ([]net.IP, error) {
 func GetForRoute(name string) ([]net.IP, error) {
 
 	var (
-		err     error
+		err error
 		//storage = envs.Get().GetStorage()
-		cache   = envs.Get().GetCache()
-		data    = make([]string, 0)
+		cache = envs.Get().GetCache()
+		data  = make([]string, 0)
 	)
 
 	log.V(logLevel).Debugf("Endpoint: get endpoint `%s` ip list from cache", name)
@@ -148,8 +148,6 @@ func GetForRoute(name string) ([]net.IP, error) {
 
 	if len(data) == 0 {
 		log.V(logLevel).Debugf("Endpoint: try find endpoint `%s` in storage", name)
-
-
 
 		//namespace := ""
 		//
@@ -186,10 +184,10 @@ func GetForRoute(name string) ([]net.IP, error) {
 func Update(name string) error {
 
 	var (
-		err     error
+		err   error
 		stg   = envs.Get().GetStorage()
 		cache = envs.Get().GetCache()
-		data    = []string{}
+		data  = []string{}
 	)
 
 	log.Debugf(`Endpoint: Update name %s in cache `, name)

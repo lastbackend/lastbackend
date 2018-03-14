@@ -19,16 +19,16 @@
 package system
 
 import (
+	"context"
 	"encoding/base64"
 	"fmt"
+	"github.com/lastbackend/lastbackend/pkg/distribution/types"
+	"github.com/lastbackend/lastbackend/pkg/log"
+	"github.com/lastbackend/lastbackend/pkg/storage"
 	"github.com/lastbackend/lastbackend/pkg/util/system"
 	"strconv"
 	"strings"
 	"time"
-	"context"
-	"github.com/lastbackend/lastbackend/pkg/distribution/types"
-	"github.com/lastbackend/lastbackend/pkg/log"
-	"github.com/lastbackend/lastbackend/pkg/storage"
 )
 
 // HeartBeat Interval
@@ -102,7 +102,7 @@ func (c *Process) HeartBeat() {
 // master/replicas type of process used
 func (c *Process) WaitElected(lead chan bool) error {
 	var (
-		ld  = make(chan bool)
+		ld = make(chan bool)
 	)
 
 	log.Debug("System: Process: Wait for election")

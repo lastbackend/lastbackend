@@ -42,11 +42,11 @@ type Cluster struct {
 type ClusterMeta struct {
 	Meta
 
-	Region    string `json:"region"`
-	Token     string `json:"token"`
-	Provider  string `json:"provider"`
-	Shared    bool   `json:"shared"`
-	Main      bool   `json:"main"`
+	Region   string `json:"region"`
+	Token    string `json:"token"`
+	Provider string `json:"provider"`
+	Shared   bool   `json:"shared"`
+	Main     bool   `json:"main"`
 }
 
 type ClusterState struct {

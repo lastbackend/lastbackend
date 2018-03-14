@@ -28,9 +28,7 @@ import (
 // Remove deployment if no active pods present and deployment is marked for destroy
 func Provision(d *types.Deployment) error {
 
-	var (
-
-	)
+	var ()
 
 	log.Debugf("Deployment Controller: provision deployment: %s/%s", d.Meta.Namespace, d.Meta.Name)
 
@@ -41,18 +39,18 @@ func Provision(d *types.Deployment) error {
 	return nil
 }
 
-func Create () error {
+func Create() error {
 	return nil
 }
 
-func Cancel () error {
+func Cancel() error {
 	return nil
 }
 
-func Remove () error {
+func Remove() error {
 	return nil
 }
 
-func Destroy () error {
+func Destroy() error {
 	return nil
 }

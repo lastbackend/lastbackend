@@ -23,9 +23,9 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/log"
 	"github.com/lastbackend/lastbackend/pkg/util"
 	"github.com/miekg/dns"
-	"time"
-	"net"
 	"github.com/spf13/viper"
+	"net"
+	"time"
 )
 
 func LbLocal(w dns.ResponseWriter, r *dns.Msg) {

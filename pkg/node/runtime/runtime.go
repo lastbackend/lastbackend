@@ -32,7 +32,6 @@ import (
 
 type Runtime struct{}
 
-
 func Restore(ctx context.Context) {
 	network.Restore(ctx)
 	router.Restore(ctx)
@@ -59,7 +58,6 @@ func Provision(ctx context.Context, spec types.NodeNamespace) {
 	}
 
 }
-
 
 func Subscribe(ctx context.Context) {
 

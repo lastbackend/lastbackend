@@ -19,13 +19,13 @@
 package runtime
 
 import (
-	"github.com/lastbackend/lastbackend/pkg/system"
-	"github.com/lastbackend/lastbackend/pkg/log"
-	"github.com/lastbackend/lastbackend/pkg/controller/runtime/service"
 	"context"
-	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 	"github.com/lastbackend/lastbackend/pkg/controller/envs"
 	"github.com/lastbackend/lastbackend/pkg/controller/runtime/deployment"
+	"github.com/lastbackend/lastbackend/pkg/controller/runtime/service"
+	"github.com/lastbackend/lastbackend/pkg/distribution/types"
+	"github.com/lastbackend/lastbackend/pkg/log"
+	"github.com/lastbackend/lastbackend/pkg/system"
 )
 
 // watch service state and specs
@@ -36,8 +36,6 @@ import (
 
 // watch service build state
 // update pods after build passed state
-
-
 
 type Runtime struct {
 	process *system.Process

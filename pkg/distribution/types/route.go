@@ -36,11 +36,11 @@ type Route struct {
 }
 
 type RouteMeta struct {
-	Meta `yaml:",inline"`
-	Domain      string `json:"domain" yaml:"domain"`
-	Hash        string `json:"hash" yaml:"hash"`
+	Meta      `yaml:",inline"`
+	Domain    string `json:"domain" yaml:"domain"`
+	Hash      string `json:"hash" yaml:"hash"`
 	Namespace string `json:"namespace" yaml:"namespace"`
-	Security    bool   `json:"security" yaml:"security"`
+	Security  bool   `json:"security" yaml:"security"`
 }
 
 type RouteState struct {

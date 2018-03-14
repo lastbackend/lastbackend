@@ -19,19 +19,17 @@
 package etcd
 
 import (
-
 	"context"
 	"github.com/lastbackend/lastbackend/pkg/log"
+	"github.com/lastbackend/lastbackend/pkg/storage/etcd/v3"
 	"github.com/lastbackend/lastbackend/pkg/storage/storage"
 	"github.com/lastbackend/lastbackend/pkg/storage/store"
 	"strings"
-	"github.com/lastbackend/lastbackend/pkg/storage/etcd/v3"
 )
 
 const logLevel = 5
 
 type Storage struct {
-
 	context.Context
 	context.CancelFunc
 
@@ -124,7 +122,6 @@ func (s *Storage) System() storage.System {
 	}
 	return s.SystemStorage
 }
-
 
 func keyCreate(args ...string) string {
 	return strings.Join([]string(args), "/")

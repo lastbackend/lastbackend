@@ -26,8 +26,8 @@ import (
 
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 	"github.com/lastbackend/lastbackend/pkg/log"
-	"github.com/lastbackend/lastbackend/pkg/storage/store"
 	"github.com/lastbackend/lastbackend/pkg/storage/storage"
+	"github.com/lastbackend/lastbackend/pkg/storage/store"
 )
 
 const podStorage = "pods"
@@ -208,7 +208,6 @@ func (s *PodStorage) Upsert(ctx context.Context, pod *types.Pod) error {
 func (s *PodStorage) Update(ctx context.Context, pod *types.Pod) error {
 
 	log.V(logLevel).Debugf("Storage: Pod: update pod: %#v in app: %s", pod, pod.Meta.Namespace)
-
 
 	if pod == nil {
 		err := errors.New("pod can not be nil")

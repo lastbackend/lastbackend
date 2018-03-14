@@ -86,13 +86,12 @@ type NetworkState struct {
 }
 
 type VolumesState struct {
-	lock       sync.RWMutex
+	lock    sync.RWMutex
 	volumes map[string]types.Volume
 }
 
-
 type SecretsState struct {
-	lock       sync.RWMutex
+	lock    sync.RWMutex
 	secrets map[string]types.Secret
 }
 

@@ -63,7 +63,7 @@ func ServiceListH(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	response, err := v.V1().Service().NewList(items,  dl).ToJson()
+	response, err := v.V1().Service().NewList(items, dl).ToJson()
 	if err != nil {
 		log.V(logLevel).Errorf("Handler: Service: convert struct to json err: %s", err.Error())
 		errors.HTTP.InternalServerError(w)
@@ -142,15 +142,14 @@ func ServiceCreateH(w http.ResponseWriter, r *http.Request) {
 
 	log.V(logLevel).Debugf("Handler: Service: create service in namespace `%s`", nid)
 
-
 	if r.Context().Value("namespace") == nil {
 		errors.HTTP.Forbidden(w)
 		return
 	}
 
 	var (
-		sm  = distribution.NewServiceModel(r.Context(), envs.Get().GetStorage())
-		ns  = r.Context().Value("namespace").(*types.Namespace)
+		sm = distribution.NewServiceModel(r.Context(), envs.Get().GetStorage())
+		ns = r.Context().Value("namespace").(*types.Namespace)
 	)
 
 	opts := new(types.ServiceCreateOptions)
@@ -162,7 +161,7 @@ func ServiceCreateH(w http.ResponseWriter, r *http.Request) {
 
 	// Check memory limit reachable
 	if !ns.Quotas.Disabled && opts.Spec.Memory != nil {
-		if ns.Quotas.RAM < ns.Resources.RAM+(int64(*opts.Replicas) * *opts.Spec.Memory) {
+		if ns.Quotas.RAM < ns.Resources.RAM+(int64(*opts.Replicas)**opts.Spec.Memory) {
 			log.V(logLevel).Warnf("Handler: Service: limit quotes reachable")
 			errors.New("service").BadParameter("memory").Http(w)
 			return
@@ -188,8 +187,7 @@ func ServiceCreateH(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-
-	response, err := v.V1().Service().New(srv,nil, nil).ToJson()
+	response, err := v.V1().Service().New(srv, nil, nil).ToJson()
 	if err != nil {
 		log.V(logLevel).Errorf("Handler: Service: convert struct to json err: %s", err.Error())
 		errors.HTTP.InternalServerError(w)
@@ -216,8 +214,8 @@ func ServiceUpdateH(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var (
-		sm  = distribution.NewServiceModel(r.Context(), envs.Get().GetStorage())
-		ns  = r.Context().Value("namespace").(*types.Namespace)
+		sm = distribution.NewServiceModel(r.Context(), envs.Get().GetStorage())
+		ns = r.Context().Value("namespace").(*types.Namespace)
 	)
 
 	// request body struct
@@ -242,7 +240,7 @@ func ServiceUpdateH(w http.ResponseWriter, r *http.Request) {
 
 	// Check memory limit reachable
 	if !ns.Quotas.Disabled && opts.Spec.Memory != nil {
-		if ns.Quotas.RAM < ns.Resources.RAM+(int64(svc.Spec.Replicas) * *opts.Spec.Memory) {
+		if ns.Quotas.RAM < ns.Resources.RAM+(int64(svc.Spec.Replicas)**opts.Spec.Memory) {
 			log.V(logLevel).Warnf("Handler: Service: limit quotes reachable")
 			errors.New("service").BadParameter("memory").Http(w)
 			return
@@ -283,8 +281,8 @@ func ServiceRemoveH(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var (
-		sm  = distribution.NewServiceModel(r.Context(), envs.Get().GetStorage())
-		ns  = r.Context().Value("namespace").(*types.Namespace)
+		sm = distribution.NewServiceModel(r.Context(), envs.Get().GetStorage())
+		ns = r.Context().Value("namespace").(*types.Namespace)
 	)
 
 	svc, err := sm.Get(ns.Meta.Name, sid)

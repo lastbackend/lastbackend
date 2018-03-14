@@ -56,8 +56,7 @@ func ClusterUpdateH(w http.ResponseWriter, r *http.Request) {
 
 	log.V(logLevel).Debugf("Handler: Cluster: update cluster `%s`", name)
 
-	var (
-	)
+	var ()
 
 	// request body struct
 	opts := new(types.ClusterUpdateOptions)
@@ -66,7 +65,6 @@ func ClusterUpdateH(w http.ResponseWriter, r *http.Request) {
 		errors.New("Invalid incoming data").Unknown().Http(w)
 		return
 	}
-
 
 	response, err := v.V1().Cluster().New(nil).ToJson()
 	if err != nil {
@@ -88,10 +86,7 @@ func ClusterRemoveH(w http.ResponseWriter, r *http.Request) {
 
 	log.V(logLevel).Debugf("Handler: Cluster: remove cluster %s", name)
 
-	var (
-
-	)
-
+	var ()
 
 	response, err := v.V1().Cluster().New(nil).ToJson()
 	if err != nil {

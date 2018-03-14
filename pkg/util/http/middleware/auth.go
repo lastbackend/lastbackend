@@ -21,9 +21,9 @@ package middleware
 import (
 	"github.com/lastbackend/lastbackend/pkg/distribution/errors"
 	"github.com/lastbackend/lastbackend/pkg/util/http/utils"
+	"github.com/spf13/viper"
 	"net/http"
 	"strings"
-	"github.com/spf13/viper"
 )
 
 const logLevel = 2
@@ -62,8 +62,6 @@ func Authenticate(h http.HandlerFunc) http.HandlerFunc {
 			errors.HTTP.Unauthorized(w)
 			return
 		}
-
-
 
 		if token != t {
 			errors.HTTP.Unauthorized(w)

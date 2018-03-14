@@ -109,7 +109,7 @@ type NodeResources struct {
 
 type NodeUpdateOptions struct {
 	Description *string `json:"description"`
-	ExternalIP *struct {
+	ExternalIP  *struct {
 		Rewrite bool   `json:"rewrite"`
 		IP      string `json:"ip"`
 	} `json:"external_ip"`

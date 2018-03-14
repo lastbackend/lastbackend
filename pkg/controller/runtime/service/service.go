@@ -19,11 +19,11 @@
 package service
 
 import (
-	"github.com/lastbackend/lastbackend/pkg/distribution/types"
-	"github.com/lastbackend/lastbackend/pkg/log"
-	"github.com/lastbackend/lastbackend/pkg/distribution"
 	"context"
 	"github.com/lastbackend/lastbackend/pkg/controller/envs"
+	"github.com/lastbackend/lastbackend/pkg/distribution"
+	"github.com/lastbackend/lastbackend/pkg/distribution/types"
+	"github.com/lastbackend/lastbackend/pkg/log"
 )
 
 // Provision service
@@ -38,8 +38,6 @@ func Provision(svc *types.Service) error {
 	log.Debugf("Service Controller: provision service: %s/%s", svc.Meta.Namespace, svc.Meta.Name)
 
 	// Check service is marked for destroy
-
-
 
 	// Get all deployments per service
 
