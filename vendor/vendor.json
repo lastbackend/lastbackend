@@ -445,48 +445,6 @@
 			"revisionTime": "2017-11-29T23:28:51Z"
 		},
 		{
-			"checksumSHA1": "vDo/+vKpAcvYYWxfyvo6HBawNsw=",
-			"path": "github.com/lastbackend/genesis/pkg/log",
-			"revision": "0e565a24fa8d34a599ae90aa0fa06a31784459ae",
-			"revisionTime": "2018-03-05T15:18:43Z"
-		},
-		{
-			"checksumSHA1": "wUnxl5J2dbqhpFdzGcFhTqh2txE=",
-			"path": "github.com/lastbackend/genesis/pkg/log/formatter",
-			"revision": "0e565a24fa8d34a599ae90aa0fa06a31784459ae",
-			"revisionTime": "2018-03-05T15:18:43Z"
-		},
-		{
-			"checksumSHA1": "BXVgTz3+uEtyYZDDrC8+horaD+g=",
-			"path": "github.com/lastbackend/genesis/pkg/log/hooks",
-			"revision": "0e565a24fa8d34a599ae90aa0fa06a31784459ae",
-			"revisionTime": "2018-03-05T15:18:43Z"
-		},
-		{
-			"checksumSHA1": "pVg61Dv1IG3++KxaUP3+xsJwsVo=",
-			"path": "github.com/lastbackend/genesis/pkg/log/logger",
-			"revision": "0e565a24fa8d34a599ae90aa0fa06a31784459ae",
-			"revisionTime": "2018-03-05T15:18:43Z"
-		},
-		{
-			"checksumSHA1": "m37CIZvUT4sHa1mr3fdIsdK4pcQ=",
-			"path": "github.com/lastbackend/genesis/pkg/util/stream/backend",
-			"revision": "0e565a24fa8d34a599ae90aa0fa06a31784459ae",
-			"revisionTime": "2018-03-05T15:18:43Z"
-		},
-		{
-			"checksumSHA1": "covO6VfVphRDfXaUt1ikXKvnBfY=",
-			"path": "github.com/lastbackend/genesis/pkg/util/system/os",
-			"revision": "0e565a24fa8d34a599ae90aa0fa06a31784459ae",
-			"revisionTime": "2018-03-05T15:18:43Z"
-		},
-		{
-			"checksumSHA1": "ugGveMZnCFCGXw9WwG0VyHzk1II=",
-			"path": "github.com/lastbackend/genesis/pkg/util/system/types",
-			"revision": "0e565a24fa8d34a599ae90aa0fa06a31784459ae",
-			"revisionTime": "2018-03-05T15:18:43Z"
-		},
-		{
 			"checksumSHA1": "/mlelB9eP/TxbND7uBtxVrLF1Ik=",
 			"path": "github.com/lib/pq",
 			"revision": "b77235e3890a962fe8a6f8c4c7198679ca7814e7",

@@ -20,7 +20,7 @@ package backend
 
 import (
 	"github.com/gorilla/websocket"
-	"github.com/lastbackend/genesis/pkg/log"
+	"github.com/lastbackend/lastbackend/pkg/log"
 	"net/http"
 	"sync"
 	"time"
