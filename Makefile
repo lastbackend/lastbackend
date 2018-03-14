@@ -32,11 +32,9 @@ build:
 install:
 	@echo "Install Last.Backend, ${OS} version:= ${VERSION}"
 ifeq ($(OS),Linux)
-	mv build/linux/$(NAME_CLI) /usr/local/bin/$(NAME_CLI)
 	mv build/linux/$(NAME_KIT) /usr/local/bin/$(NAME_KIT)
 endif
 ifeq ($(OS) ,Darwin)
-	mv build/darwin/$(NAME_CLI) /usr/local/bin/$(NAME_CLI)
 	mv build/darwin/$(NAME_KIT) /usr/local/bin/$(NAME_KIT)
 endif
 
