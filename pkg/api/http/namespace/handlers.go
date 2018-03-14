@@ -67,14 +67,16 @@ func NamespaceInfoH(w http.ResponseWriter, r *http.Request) {
 
 	log.V(logLevel).Debugf("Handler: Namespace: get namespace `%s`", nid)
 
-	if r.Context().Value("namespace") == nil {
-		errors.HTTP.Forbidden(w)
-		return
-	}
+	//if r.Context().Value("namespace") == nil {
+	//	errors.HTTP.Forbidden(w)
+	//	return
+	//}
+	//
+	//var (
+	//	ns = r.Context().Value("namespace").(*types.Namespace)
+	//)
 
-	var (
-		ns = r.Context().Value("namespace").(*types.Namespace)
-	)
+	ns := new(types.Namespace)
 
 	response, err := v.V1().Namespace().New(ns).ToJson()
 	if err != nil {

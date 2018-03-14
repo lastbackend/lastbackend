@@ -17,3 +17,46 @@
 //
 
 package mock
+
+import (
+	"context"
+	"github.com/lastbackend/lastbackend/pkg/distribution/types"
+	"github.com/lastbackend/lastbackend/pkg/storage/storage"
+)
+
+const namespaceStorage = "namespace"
+
+// Namespace Service type for interface in interfaces folder
+type NamespaceStorage struct {
+	storage.Namespace
+}
+
+// Get namespace by name
+func (s *NamespaceStorage) GetByName(ctx context.Context, name string) (*types.Namespace, error) {
+	return new(types.Namespace), nil
+}
+
+// List projects
+func (s *NamespaceStorage) List(ctx context.Context) ([]*types.Namespace, error) {
+	return make([]*types.Namespace, 0), nil
+}
+
+// Insert new namespace into storage
+func (s *NamespaceStorage) Insert(ctx context.Context, namespace *types.Namespace) error {
+	return nil
+}
+
+// Update namespace model
+func (s *NamespaceStorage) Update(ctx context.Context, namespace *types.Namespace) error {
+	return nil
+}
+
+// Remove namespace model
+func (s *NamespaceStorage) Remove(ctx context.Context, name string) error {
+	return nil
+}
+
+func newNamespaceStorage() *NamespaceStorage {
+	s := new(NamespaceStorage)
+	return s
+}

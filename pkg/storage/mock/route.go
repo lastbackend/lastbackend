@@ -17,3 +17,18 @@
 //
 
 package mock
+
+import (
+	"github.com/lastbackend/lastbackend/pkg/storage/storage"
+)
+
+const routeStorage = "routes"
+
+type RouteStorage struct {
+	storage.Route
+}
+
+func newRouteStorage() *RouteStorage {
+	s := new(RouteStorage)
+	return s
+}

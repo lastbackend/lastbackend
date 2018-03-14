@@ -17,3 +17,49 @@
 //
 
 package mock
+
+import (
+	"context"
+	"github.com/lastbackend/lastbackend/pkg/distribution/types"
+	"github.com/lastbackend/lastbackend/pkg/storage/storage"
+)
+
+const podStorage = "pods"
+
+// Pod Service type for interface in interfaces folder
+type PodStorage struct {
+	storage.Pod
+}
+
+func (s *PodStorage) GetByName(ctx context.Context, app, name string) (*types.Pod, error) {
+	return new(types.Pod), nil
+}
+
+func (s *PodStorage) ListByNamespace(ctx context.Context, app string) ([]*types.Pod, error) {
+	return make([]*types.Pod, 0), nil
+}
+
+func (s *PodStorage) ListByService(ctx context.Context, namespace, service string) ([]*types.Pod, error) {
+	return make([]*types.Pod, 0), nil
+}
+
+func (s *PodStorage) Upsert(ctx context.Context, pod *types.Pod) error {
+	return nil
+}
+
+func (s *PodStorage) Update(ctx context.Context, pod *types.Pod) error {
+	return nil
+}
+
+func (s *PodStorage) Remove(ctx context.Context, pod *types.Pod) error {
+	return nil
+}
+
+func (s *PodStorage) Watch(ctx context.Context, pod chan *types.Pod) error {
+	return nil
+}
+
+func newPodStorage() *PodStorage {
+	s := new(PodStorage)
+	return s
+}

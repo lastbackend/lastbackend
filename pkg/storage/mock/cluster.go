@@ -17,3 +17,28 @@
 //
 
 package mock
+
+import (
+	"context"
+	"github.com/lastbackend/lastbackend/pkg/distribution/types"
+	"github.com/lastbackend/lastbackend/pkg/storage/storage"
+)
+
+type ClusterStorage struct {
+	storage.Cluster
+}
+
+const clusterStorage = "cluster"
+
+func (s *ClusterStorage) Info(ctx context.Context) (*types.Cluster, error) {
+	return new(types.Cluster), nil
+}
+
+func (s *ClusterStorage) Update(ctx context.Context, cluster *types.Cluster) error {
+	return nil
+}
+
+func newClusterStorage() *ClusterStorage {
+	s := new(ClusterStorage)
+	return s
+}

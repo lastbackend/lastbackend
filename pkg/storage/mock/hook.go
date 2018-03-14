@@ -17,3 +17,36 @@
 //
 
 package mock
+
+import (
+	"context"
+	"github.com/lastbackend/lastbackend/pkg/distribution/types"
+	"github.com/lastbackend/lastbackend/pkg/storage/storage"
+)
+
+const hookStorage string = "hooks"
+
+// Service Hook type for interface in interfaces folder
+type HookStorage struct {
+	storage.Hook
+}
+
+// Get hooks by id
+func (s *HookStorage) Get(ctx context.Context, id string) (*types.Hook, error) {
+	return new(types.Hook), nil
+}
+
+// Insert new hook into storage
+func (s *HookStorage) Insert(ctx context.Context, hook *types.Hook) error {
+	return nil
+}
+
+// Remove hook by id from storage
+func (s *HookStorage) Remove(ctx context.Context, id string) error {
+	return nil
+}
+
+func newHookStorage() *HookStorage {
+	s := new(HookStorage)
+	return s
+}

@@ -17,3 +17,34 @@
 //
 
 package mock
+
+import (
+	"context"
+	"github.com/lastbackend/lastbackend/pkg/distribution/types"
+	"github.com/lastbackend/lastbackend/pkg/storage/storage"
+)
+
+const deploymentStorage string = "deployments"
+
+type DeploymentStorage struct {
+	storage.Deployment
+}
+
+// Get deployment by name
+func (s *DeploymentStorage) Get(ctx context.Context, namespace, name string) (*types.Deployment, error) {
+	return new(types.Deployment), nil
+}
+
+// Update deployment state
+func (s *DeploymentStorage) updateState(ctx context.Context, deployment *types.Deployment) error {
+	return nil
+}
+
+func (s *DeploymentStorage) SpecWatch(ctx context.Context, deployment chan *types.Deployment) error {
+	return nil
+}
+
+func newDeploymentStorage() *DeploymentStorage {
+	s := new(DeploymentStorage)
+	return s
+}

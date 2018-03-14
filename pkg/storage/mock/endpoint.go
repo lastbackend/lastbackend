@@ -17,3 +17,40 @@
 //
 
 package mock
+
+import (
+	"context"
+	"github.com/lastbackend/lastbackend/pkg/storage/storage"
+)
+
+const endpointStorage = "endpoints"
+
+// Endpoint Service type for interface in interfaces folder
+type EndpointStorage struct {
+	storage.Endpoint
+}
+
+// Get endpoints by domain name
+func (s *EndpointStorage) Get(ctx context.Context, name string) ([]string, error) {
+	return make([]string, 0), nil
+}
+
+// Update endpoint model
+func (s *EndpointStorage) Upsert(ctx context.Context, name string, ips []string) error {
+	return nil
+}
+
+// Remove endpoint model
+func (s *EndpointStorage) Remove(ctx context.Context, name string) error {
+	return nil
+}
+
+// WatchSetvice endpoint model
+func (s *EndpointStorage) Watch(ctx context.Context, endpoint chan string) error {
+	return nil
+}
+
+func newEndpointStorage() *EndpointStorage {
+	s := new(EndpointStorage)
+	return s
+}
