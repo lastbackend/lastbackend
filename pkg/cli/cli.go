@@ -21,7 +21,7 @@ package cli
 import (
 	"fmt"
 	"github.com/jawher/mow.cli"
-	p "github.com/lastbackend/lastbackend/pkg/cli/cmd/namespace"
+	p "github.com/lastbackend/lastbackend/pkg/cli/cmd/app"
 	s "github.com/lastbackend/lastbackend/pkg/cli/cmd/service"
 	"github.com/lastbackend/lastbackend/pkg/cli/config"
 	"github.com/lastbackend/lastbackend/pkg/cli/context"
@@ -92,8 +92,8 @@ func Run() {
 
 func configure(app *cli.Cli) {
 
-	app.Command("namespaces", "Display the namespace list", func(c *cli.Cmd) {
-		c.Action = p.ListNamespaceCmd
+	app.Command("apps", "Display the app list", func(c *cli.Cmd) {
+		c.Action = p.ListAppCmd
 	})
 
 	app.Command("services", "Display the service list", func(c *cli.Cmd) {
@@ -107,10 +107,10 @@ func configure(app *cli.Cli) {
 		var url = c.String(cli.StringArg{Name: "URL", Value: "", Desc: "git repo url", HideValue: true})
 		var name = c.String(cli.StringOpt{Name: "n name", Desc: "service name", HideValue: true})
 		var image = c.String(cli.StringOpt{Name: "i image", Desc: "docker image name", HideValue: true})
-		var template = c.String(cli.StringOpt{Name: "t tempalte", Desc: "tempalte name", HideValue: true})
+		var template = c.String(cli.StringOpt{Name: "t template", Desc: "tempalte name", HideValue: true})
 
 		var replicas = c.Int(cli.IntOpt{Name: "replicas", Desc: "service replicas", HideValue: true})
-		//var env = c.Strings(cli.StringsOpt{Name: "e", Desc: "enviroment", HideValue:true})
+		//var env = c.Strings(cli.StringsOpt{Name: "e", Desc: "environment", HideValue:true})
 		//var ports = c.Strings(cli.StringsOpt{Name: "p", Desc: "ports", HideValue:true})
 		//var volumes = c.Strings(cli.StringsOpt{Name: "v", Desc: "volumes", HideValue:true})
 
@@ -125,13 +125,13 @@ func configure(app *cli.Cli) {
 
 	})
 
-	app.Command("namespace", "", func(c *cli.Cmd) {
+	app.Command("app", "", func(c *cli.Cmd) {
 
 		c.Spec = "[NAME]"
 
-		var name = c.String(cli.StringArg{Name: "NAME", Value: "", Desc: "name of your namespace", HideValue: true})
+		var name = c.String(cli.StringArg{Name: "NAME", Value: "", Desc: "name of your app", HideValue: true})
 
-		c.Command("create", "Create new namespace", func(sc *cli.Cmd) {
+		c.Command("create", "Create new app", func(sc *cli.Cmd) {
 
 			sc.Spec = "[--desc]"
 
@@ -147,7 +147,7 @@ func configure(app *cli.Cli) {
 			}
 		})
 
-		c.Command("inspect", "Get namespace info by name", func(sc *cli.Cmd) {
+		c.Command("inspect", "Get app info by name", func(sc *cli.Cmd) {
 			sc.Action = func() {
 				if len(*name) == 0 {
 					c.PrintHelp()
@@ -158,7 +158,7 @@ func configure(app *cli.Cli) {
 			}
 		})
 
-		c.Command("remove", "Remove namespace by name", func(sc *cli.Cmd) {
+		c.Command("remove", "Remove app by name", func(sc *cli.Cmd) {
 			sc.Action = func() {
 				if len(*name) == 0 {
 					c.PrintHelp()
@@ -169,7 +169,7 @@ func configure(app *cli.Cli) {
 			}
 		})
 
-		c.Command("switch", "switch to namespace", func(sc *cli.Cmd) {
+		c.Command("switch", "switch to app", func(sc *cli.Cmd) {
 			sc.Action = func() {
 				if len(*name) == 0 {
 					c.PrintHelp()
@@ -180,12 +180,12 @@ func configure(app *cli.Cli) {
 			}
 		})
 
-		c.Command("update", "if you wish to change name or description of the namespace", func(sc *cli.Cmd) {
+		c.Command("update", "if you wish to change name or description of the app", func(sc *cli.Cmd) {
 
 			sc.Spec = "[--desc][--name]"
 
 			var desc = sc.String(cli.StringOpt{Name: "desc", Value: "", Desc: "set description info", HideValue: true})
-			var newNamespace = sc.String(cli.StringOpt{Name: "name", Value: "", Desc: "set new namespace name", HideValue: true})
+			var newApp = sc.String(cli.StringOpt{Name: "name", Value: "", Desc: "set new app name", HideValue: true})
 
 			sc.Action = func() {
 				if len(*name) == 0 {
@@ -193,11 +193,11 @@ func configure(app *cli.Cli) {
 					return
 				}
 
-				p.UpdateCmd(*name, *newNamespace, *desc)
+				p.UpdateCmd(*name, *newApp, *desc)
 			}
 		})
 
-		c.Command("current", "information about current namespace", func(sc *cli.Cmd) {
+		c.Command("current", "information about current app", func(sc *cli.Cmd) {
 			sc.Action = func() {
 				if len(*name) != 0 {
 					c.PrintHelp()

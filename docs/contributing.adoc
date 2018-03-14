@@ -1,0 +1,65 @@
+== Contributing
+
+=== How to Contribute
+
+The Last.Backend project is Apache 2.0 licensed and accepts contributions via GitHub pull requests.
+This document outlines some of the conventions on commit message formatting, contact points for developers and other resources to make getting your contribution accepted.
+
+==== How to contribute to open source on GitHub
+
+Please, read the https://guides.github.com/activities/contributing-to-open-source/[contributing to open source], before contributing.
+
+==== Benefits for active contributors
+
+**Limited free Last.Backend cloud resources**
+
+==== Coding Style
+
+1. All code should be formatted with `gofmt`
+2. All code should follow the guidelines covered in Effective Go and Go Code Review Comments.
+3. Comment the code. Tell us the why, the history and the context.
+4. Variable name length should not be too long.
+
+Great materials to read:
+
+* https://golang.org/doc/effective_go.html[Effective Go]
+* https://blog.golang.org[The Go Blog]
+* https://github.com/golang/go/wiki/CodeReviewComments[Code Review Comments]
+
+Great tools to use:
+
+- https://github.com/kisielk/errcheck[ErrCheck] - a program for checking for unchecked errors in Go programs.
+- https://github.com/golang/lint[GoLint] - a linter for Go source code.
+
+==== Reporting issues
+
+1. Tell us version of Last.Backend you use
+2. Include the steps required to reproduce the problem, if possible
+
+=== The Roadmap
+
+The Last.Backend project roadmap lives in https://github.com/lastbackend/lastbackend/projects/5[github project].
+
+=== Support
+
+While there are many different channels that you can use to get hold of us (Issues, Forums/Mailing lists),
+you can help make sure that we are efficient in getting you the help that you need.
+
+Before opening a new issue, it's helpful to search the project - it's likely that another user has already reported the issue you're facing,
+or it's a known issue that we're already aware of.
+
+If you need support, start with the troubleshooting guide and work your way through the process that we've outlined.
+
+That said, if you have questions, reach out to us one way or another. We don't bite!
+
+
+=== Documentation
+
+Locally can be generated with:
+
+[source,bash]
+----
+$ docker run --rm -v `pwd`/docs/:/documents/      \
+    asciidoctor/docker-asciidoctor                \
+    asciidoctor -D /documents/output/ index.adoc
+----

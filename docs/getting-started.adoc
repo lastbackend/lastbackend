@@ -1,0 +1,34 @@
+== Getting Started
+
+image:assets/infrastructure.png[Last.Backend]
+
+=== Build
+
+==== Prerequisites
+
+- Go 1.7 or higher
+- Go docker client v17.03
+- Go etcd client for v3
+- Git
+
+
+[source,bash]
+----
+$ go get github.com/lastbackend/lastbackend
+$ cd ${GOPATH:-~/go}/src/github.com/lastbackend/lastbackend
+$ make deps && make build && make install
+----
+
+=== Use
+
+==== Daemon
+[source,bash]
+----
+$ lbd
+----
+
+==== Command line client
+[source,bash]
+----
+$ lbc --help
+----

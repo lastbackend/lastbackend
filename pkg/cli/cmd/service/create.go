@@ -20,13 +20,13 @@ package service
 
 import (
 	"fmt"
-	n "github.com/lastbackend/lastbackend/pkg/api/namespace/views/v1"
+	a "github.com/lastbackend/lastbackend/pkg/api/app/views/v1"
 	c "github.com/lastbackend/lastbackend/pkg/cli/context"
 	"github.com/lastbackend/lastbackend/pkg/common/errors"
 )
 
 type createS struct {
-	Namespace string  `json:"namespace,omitempty"`
+	App string  `json:"app,omitempty"`
 	Name      string  `json:"name,omitempty"`
 	Template  string  `json:"template,omitempty"`
 	Image     string  `json:"image,omitempty"`
@@ -73,22 +73,22 @@ func Create(name, image, template, url string, config *Config) error {
 		err     error
 		http    = c.Get().GetHttpClient()
 		storage = c.Get().GetStorage()
-		ns      = new(n.Namespace)
+		app     = new(a.App)
 		er      = new(errors.Http)
 		res     = new(struct{})
 	)
 
-	ns, err = storage.Namespace().Load()
+	app, err = storage.App().Load()
 	if err != nil {
 		return err
 	}
 
-	if ns.Meta.Name == "" {
-		return errors.New("Namespace didn't select")
+	if app.Meta.Name == "" {
+		return errors.New("App didn't select")
 	}
 
 	var cfg = createS{}
-	cfg.Namespace = ns.Meta.Name
+	cfg.App = app.Meta.Name
 
 	if name != "" {
 		cfg.Name = name
@@ -111,7 +111,7 @@ func Create(name, image, template, url string, config *Config) error {
 	}
 
 	_, _, err = http.
-		POST(fmt.Sprintf("/namespace/%s/service", ns.Meta.Name)).
+		POST(fmt.Sprintf("/app/%s/service", app.Meta.Name)).
 		AddHeader("Content-Type", "application/json").
 		BodyJSON(cfg).
 		Request(res, er)

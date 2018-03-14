@@ -1,0 +1,117 @@
+== Last.Backend CLI
+
+The LB CLI exposes commands for managing your services, as well as lower level tools to interact with each component of your system.
+This topic guides you through getting started with the CLI, including installation and logging in to create your first app.
+
+=== Application
+
+==== Creating new app
+
+You can create a new app using the next command:
+[source,bash]
+----
+$ lbc app <app_name> --description="<description>" create
+----
+
+==== View a app info
+
+To get a app info:
+[source,bash]
+----
+$ lbc app <app_name> inspect
+Name demo
+Created 2016-11-28
+Updated 2016-11-28
+----
+
+==== Viewing apps
+
+When viewing apps, you are restricted to seeing only the apps you have access to view based on the authorization policy.
+To view a apps info:
+[source,bash]
+----
+$ lbc apps
+Name          Created     Updated
+demo          2016-11-28  2016-11-28
+test-app  2016-11-26  2016-11-26
+----
+
+==== Switch app
+
+To switch a app:
+[source,bash]
+----
+$ lbc app <app_name> switch
+The app <app_name> was selected as the current
+----
+
+==== Current app
+
+To view current a app:
+[source,bash]
+----
+$ lbc app current
+Name  Created     Updated
+test  2016-11-28  2016-11-28
+----
+
+==== Update app
+
+To update a app:
+[source,bash]
+----
+$ lbc app <app_name> update --desc=<new_description>
+Successful
+----
+
+==== Deleting a app
+
+When you delete a app, the server updates the app status to Terminating from Active. The server then clears all content from a app that is Terminating before finally removing the app.
+While a app is in Terminating status, a user cannot add new content to the app.
+To delete a app:
+[source,bash]
+----
+$ lbc app <app_name> remove
+----
+
+=== Service
+
+==== View a service info
+
+To view a service info:
+[source,bash]
+----
+$ lbc service <app_name> inspect
+Name  Created     Updated
+demo  2016-11-29  2016-11-30
+----
+
+==== Viewing services
+
+When viewing services, you are restricted to seeing only the services you have access to view based on the authorization policy and the selected app.
+To view a services info:
+[source,bash]
+----
+$ lbc services
+Name  Created     Updated
+demo  2016-11-29  2016-11-30
+----
+
+==== Deleting a service
+
+When you delete a service, the server updates the service status to Terminating from Active. The server then clears all content from a service that is Terminating before finally removing the service.
+To delete a service:
+[source,bash]
+----
+$ lbc service <app_name> remove
+----
+
+==== Deploy a service
+
+Deploy service(s) from template or from git repo url
+
+To deploy:
+[source,bash]
+----
+$ lbc deploy redis
+----

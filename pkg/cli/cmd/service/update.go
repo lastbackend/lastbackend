@@ -20,8 +20,8 @@ package service
 
 import (
 	"fmt"
-	n "github.com/lastbackend/lastbackend/pkg/api/namespace/views/v1"
-	nspace "github.com/lastbackend/lastbackend/pkg/cli/cmd/namespace"
+	av "github.com/lastbackend/lastbackend/pkg/api/app/views/v1"
+	a "github.com/lastbackend/lastbackend/pkg/cli/cmd/app"
 	c "github.com/lastbackend/lastbackend/pkg/cli/context"
 	"github.com/lastbackend/lastbackend/pkg/common/errors"
 	"github.com/lastbackend/lastbackend/pkg/common/types"
@@ -42,10 +42,10 @@ func Update(name, nname, desc string, replicas int) error {
 
 	var (
 		err  error
-		http = c.Get().GetHttpClient()
-		er   = new(errors.Http)
-		ns   *n.Namespace
-		res  = new(types.Namespace)
+		http  = c.Get().GetHttpClient()
+		er      = new(errors.Http)
+		app  *av.App
+		res    = new(types.App)
 	)
 
 	srv, _, err := Inspect(name)
@@ -71,16 +71,16 @@ func Update(name, nname, desc string, replicas int) error {
 		Replicas:    &replicas,
 	}
 
-	ns, err = nspace.Current()
+	app, err = a.Current()
 	if err != nil {
 		return err
 	}
-	if ns == nil {
-		return errors.New("Namespace didn't select")
+	if app == nil {
+		return errors.New("App didn't select")
 	}
 
 	_, _, err = http.
-		PUT(fmt.Sprintf("/namespace/%s/service/%s", ns.Meta.Name, name)).
+		PUT(fmt.Sprintf("/app/%s/service/%s", app.Meta.Name, name)).
 		AddHeader("Content-Type", "application/json").
 		BodyJSON(cfg).
 		Request(&res, er)

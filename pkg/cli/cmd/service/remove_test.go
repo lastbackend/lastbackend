@@ -17,9 +17,10 @@
 //
 
 package service_test
+
 //
 //import (
-//	n "github.com/lastbackend/lastbackend/pkg/api/namespace/views/v1"
+//	n "github.com/lastbackend/lastbackend/pkg/api/app/views/v1"
 //	"github.com/lastbackend/lastbackend/pkg/cli/cmd/service"
 //	"github.com/lastbackend/lastbackend/pkg/cli/context"
 //	storage "github.com/lastbackend/lastbackend/pkg/cli/storage/mock"
@@ -34,15 +35,15 @@ package service_test
 //
 //	const (
 //		sName = "service name"
-//		nName = "namespace name"
+//		nName = "app name"
 //	)
 //
 //	var (
 //		err error
 //		ctx = context.Mock()
 //
-//		ns = &n.Namespace{
-//			Meta: n.NamespaceMeta{
+//		ns = &n.App{
+//			Meta: n.AppMeta{
 //				Name: nName,
 //			},
 //		}
@@ -51,7 +52,7 @@ package service_test
 //	strg, err := storage.Get()
 //	assert.NoError(t, err)
 //	ctx.SetStorage(strg)
-//	defer strg.Namespace().Remove()
+//	defer strg.App().Remove()
 //
 //	//------------------------------------------------------------------------------------------
 //	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -61,7 +62,7 @@ package service_test
 //	defer server.Close()
 //	//------------------------------------------------------------------------------------------
 //
-//	strg.Namespace().Save(ns)
+//	strg.App().Save(ns)
 //	assert.NoError(t, err)
 //
 //	client, err := h.New(server.URL, &h.ReqOpts{})

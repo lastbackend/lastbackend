@@ -22,16 +22,12 @@ import (
 	"golang.org/x/net/context"
 )
 
+const LogLevel = 7
+
 const (
 	ErrKeyExists        = "key exists"
 	ErrOperationFailure = "operation failure"
 	ErrKeyNotFound      = "key not found"
-)
-
-const (
-	EventDelete = "delete"
-	EventUpdate = "update"
-	EventCreate = "create"
 )
 
 type DestroyFunc func()

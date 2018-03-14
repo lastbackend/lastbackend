@@ -17,3 +17,5 @@
 //
 
 package pod
+
+const logLevel = 2
