@@ -508,16 +508,16 @@
 			"revisionTime": "2018-03-03T13:51:14Z"
 		},
 		{
-			"checksumSHA1": "v78jfRq2M/MDXChpGsHaV76o/2M=",
+			"checksumSHA1": "m0YuGCADsfNHgq1WbS4dLLc1g60=",
 			"path": "github.com/vishvananda/netlink",
-			"revision": "5236321576c0c97ab02c078e60f9b1c5c1828807",
-			"revisionTime": "2018-02-23T16:59:06Z"
+			"revision": "c27b7f7359fa2461b8e2a4c42021eb549ccc8ff0",
+			"revisionTime": "2018-01-31T00:34:33Z"
 		},
 		{
-			"checksumSHA1": "WQzkzzCn8pwstWgO4o41T0czyT4=",
+			"checksumSHA1": "IhcRdAGtwckV0wquYtDXf/JjSRw=",
 			"path": "github.com/vishvananda/netlink/nl",
-			"revision": "5236321576c0c97ab02c078e60f9b1c5c1828807",
-			"revisionTime": "2018-02-23T16:59:06Z"
+			"revision": "c27b7f7359fa2461b8e2a4c42021eb549ccc8ff0",
+			"revisionTime": "2018-01-31T00:34:33Z"
 		},
 		{
 			"checksumSHA1": "qf37dJzNS2iXycH62ukEw+cleZY=",
@@ -665,7 +665,7 @@
 			"revisionTime": "2018-03-09T13:25:59Z"
 		},
 		{
-			"checksumSHA1": "HXB0d4aXM+NMa/ERLgPzbM6+qig=",
+			"checksumSHA1": "Oc5sDMNebQzLgM8bzVjk8nSl1EM=",
 			"path": "golang.org/x/sys/unix",
 			"revision": "a13efeb2fd213cf4be7227992aa54519af3b2ac0",
 			"revisionTime": "2017-11-23T10:22:21Z"
