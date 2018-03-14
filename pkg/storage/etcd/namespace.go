@@ -20,11 +20,11 @@ package etcd
 
 import (
 	"context"
+	"github.com/lastbackend/lastbackend/pkg/distribution/errors"
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
-	"github.com/pkg/errors"
-	"time"
 	"github.com/lastbackend/lastbackend/pkg/log"
 	"github.com/lastbackend/lastbackend/pkg/storage/storage"
+	"time"
 )
 
 const namespaceStorage = "namespace"
