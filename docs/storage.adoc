@@ -1,6 +1,6 @@
 == Last.Backend Storage
 
-### Default work-flow
+===== Default work-flow
 
 .Ordered Namespace management (namespace name should be unique per cluster)
 . Create namespace
@@ -8,7 +8,6 @@
 . Get namespace by name
 . Get namespace info by name
 . Remove namespace by name
-
 
 .Ordered Service management (service name should be unique per namespace)
 . Create service
