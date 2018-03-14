@@ -31,6 +31,7 @@ import (
 	"os"
 )
 
+// Daemon - controller entrypoint
 func Daemon() bool {
 
 	var (
