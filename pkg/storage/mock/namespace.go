@@ -22,6 +22,7 @@ import (
 	"context"
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 	"github.com/lastbackend/lastbackend/pkg/storage/storage"
+	"fmt"
 )
 
 const namespaceStorage = "namespace"
@@ -33,7 +34,7 @@ type NamespaceStorage struct {
 
 // Get namespace by name
 func (s *NamespaceStorage) GetByName(ctx context.Context, name string) (*types.Namespace, error) {
-	return new(types.Namespace), nil
+	return getByName(name), nil
 }
 
 // List projects
@@ -59,4 +60,35 @@ func (s *NamespaceStorage) Remove(ctx context.Context, name string) error {
 func newNamespaceStorage() *NamespaceStorage {
 	s := new(NamespaceStorage)
 	return s
+}
+
+/* ============================================================================================================== */
+/* =============================================== HELPER METHODS =============================================== */
+/* ============================================================================================================== */
+
+func createNamespace(name, description string) *types.Namespace {
+	ns := new(types.Namespace)
+	ns.Meta.SetDefault()
+	ns.Meta.Name = name
+	ns.Meta.Description = description
+	ns.Meta.Endpoint = fmt.Sprintf("%s.demo.io", name)
+	ns.Meta.SelfLink = fmt.Sprintf("/%s", name)
+	ns.Env = make(types.NamespaceEnvs, 0)
+	return ns
+}
+
+func getByName(name string) *types.Namespace {
+	switch name {
+	case "demo":
+		ns := createNamespace(name, "demo description")
+		ns.Env = make(types.NamespaceEnvs, 0)
+		ns.Resources.RAM = 128
+		ns.Resources.Routes = 1
+		ns.Quotas.Routes = 1
+		ns.Quotas.RAM = 256
+		ns.Labels = map[string]string{"ns": "demo"}
+		return ns
+	default:
+		return nil
+	}
 }

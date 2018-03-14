@@ -19,32 +19,31 @@
 package namespace
 
 import (
+	"encoding/json"
+	"fmt"
+	"github.com/gorilla/mux"
 	"github.com/lastbackend/lastbackend/pkg/api/envs"
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
+	"github.com/lastbackend/lastbackend/pkg/storage/mock"
+	"github.com/lastbackend/lastbackend/pkg/util/http/middleware"
+	"github.com/spf13/viper"
+	"github.com/stretchr/testify/assert"
+	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
 	"testing"
-	"github.com/gorilla/mux"
-	"io/ioutil"
-	"encoding/json"
-	"github.com/stretchr/testify/assert"
-	"github.com/lastbackend/lastbackend/pkg/util/http/middleware"
-	"github.com/lastbackend/lastbackend/pkg/storage/mock"
-	"fmt"
-	"github.com/spf13/viper"
 )
 
 const (
-	token           = "demotoken"
-	accountUsername = "demo"
-	namespaceID     = "00000000-0000-0000-0000-000000000002"
-	namespaceName   = "sandbox"
+	token         = "demotoken"
+	namespaceName = "demo"
 )
 
 func TestNamespaceGet(t *testing.T) {
 
 	strg, _ := mock.New()
 	envs.Get().SetStorage(strg)
+	viper.Set("verbose", 0)
 	viper.Set("security.token", token)
 
 	// Create a request to pass to our handler. We don't have any query parameters for now, so we'll
@@ -60,7 +59,6 @@ func TestNamespaceGet(t *testing.T) {
 	// Set url vars for mux
 	req = mux.SetURLVars(req, map[string]string{
 		"namespace": namespaceName,
-		"owner":     accountUsername,
 	})
 
 	// We create a ResponseRecorder (which satisfies http.ResponseWriter) to record the response.
