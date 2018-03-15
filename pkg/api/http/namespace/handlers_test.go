@@ -34,6 +34,7 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/storage"
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 	"strings"
+	"github.com/lastbackend/lastbackend/pkg/distribution/errors"
 )
 
 const (
@@ -64,6 +65,9 @@ func TestNamespaceGet(t *testing.T) {
 		description  string
 		expectedBody string
 		expectedCode int
+		want         *v1.Namespace
+		wantErr      *errors.Http
+		isErr        bool
 	}{
 		{
 			url:          fmt.Sprintf("/namespace/%s", namespaceExistsName),
@@ -116,16 +120,24 @@ func TestNamespaceGet(t *testing.T) {
 		// Check the status code is what we expect.
 		assert.Equal(t, tc.expectedCode, res.Code, tc.description)
 
-		if res.Code == http.StatusOK {
+		body, err := ioutil.ReadAll(res.Body)
+		assert.NoError(t, err)
 
-			body, err := ioutil.ReadAll(res.Body)
-			assert.NoError(t, err)
+		if res.Code == http.StatusOK {
 
 			ns := new(v1.Namespace)
 			err = json.Unmarshal(body, ns)
 			assert.NoError(t, err)
 
+			fmt.Println(">>>>>>>>", ns.Meta.Name)
+
 			// TODO: check response data with expectedBody
+		} else {
+			e := new(errors.Http)
+			err = json.Unmarshal(body, e)
+			assert.NoError(t, err)
+
+			fmt.Println(">>>>>>>>", e.Code, e.Status, e.Message)
 		}
 	}
 
