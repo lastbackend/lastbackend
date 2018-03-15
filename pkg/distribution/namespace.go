@@ -110,21 +110,6 @@ func (n *Namespace) Update(namespace *types.Namespace, opts *types.NamespaceUpda
 		namespace.Meta.Description = *opts.Description
 	}
 
-	if opts.Name != nil {
-		namespace.Meta.Name = *opts.Name
-	}
-
-	if opts.Env != nil {
-		envs := make(types.NamespaceEnvs, 0)
-		for _, e := range *opts.Env {
-			match := strings.Split(e, "=")
-			env := types.NamespaceEnv{Name: match[0], Value: match[1]}
-			envs = append(envs, env)
-		}
-
-		namespace.Env = envs
-	}
-
 	if err := n.storage.Namespace().Update(n.context, namespace); err != nil {
 		log.V(logLevel).Errorf("Namespace: update Namespace err: %s", err.Error())
 		return err

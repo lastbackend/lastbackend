@@ -85,7 +85,6 @@ func (n *NamespaceList) ToJson() ([]byte, error) {
 type NamespaceCreateOptions struct {
 	Name        string                  `json:"name"`
 	Description string                  `json:"description"`
-	Cluster     *string                 `json:"cluster"`
 	Quotas      *NamespaceQuotasOptions `json:"quotas"`
 }
 
@@ -117,18 +116,11 @@ func (s *NamespaceCreateOptions) DecodeAndValidate(reader io.Reader) *errors.Err
 		return errors.New("namespace").BadParameter("name")
 	}
 
-	if s.Cluster == nil {
-		log.V(logLevel).Error("Request: Namespace: parameter cluster can not be empty")
-		return errors.New("namespace").BadParameter("cluster")
-	}
-
 	return nil
 }
 
 type NamespaceUpdateOptions struct {
-	Name        *string                 `json:"name"`
 	Description *string                 `json:"description"`
-	Env         *[]string               `json:"env"`
 	Quotas      *NamespaceQuotasOptions `json:"quotas"`
 }
 
@@ -152,28 +144,6 @@ func (s *NamespaceUpdateOptions) DecodeAndValidate(reader io.Reader) *errors.Err
 	if err != nil {
 		log.V(logLevel).Errorf("Request: Namespace: convert struct from json err: %s", err)
 		return errors.New("namespace").IncorrectJSON(err)
-	}
-
-	if s.Name != nil && *s.Name == "" {
-		log.V(logLevel).Error("Request: Namespace: parameter name can not be empty")
-		return errors.New("namespace").BadParameter("name")
-	}
-
-	if s.Name != nil {
-		*s.Name = strings.ToLower(*s.Name)
-
-		if len(*s.Name) < 4 && len(*s.Name) > 64 && !validator.IsNamespaceName(*s.Name) {
-			log.V(logLevel).Error("Request: Namespace: parameter name not valid")
-			return errors.New("namespace").BadParameter("name")
-		}
-	}
-
-	if s.Env != nil {
-		// TODO: check env data
-	}
-
-	if s.Quotas != nil {
-		// TODO: check quotas data
 	}
 
 	return nil

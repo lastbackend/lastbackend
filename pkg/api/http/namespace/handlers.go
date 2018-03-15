@@ -118,7 +118,7 @@ func NamespaceCreateH(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if item != nil {
-		log.Warnf("Handler: Namespace: name `%s` not unique", opts.Name)
+		log.V(logLevel).Errorf("Handler: Namespace: name `%s` not unique", opts.Name)
 		errors.New("namespace").NotUnique("name").Http(w)
 		return
 	}
@@ -150,14 +150,8 @@ func NamespaceUpdateH(w http.ResponseWriter, r *http.Request) {
 
 	log.V(logLevel).Debugf("Handler: Namespace: update namespace `%s`", nid)
 
-	if r.Context().Value("namespace") == nil {
-		errors.HTTP.Forbidden(w)
-		return
-	}
-
 	var (
 		nsm = distribution.NewNamespaceModel(r.Context(), envs.Get().GetStorage())
-		ns  = r.Context().Value("namespace").(*types.Namespace)
 	)
 
 	// request body struct
@@ -165,6 +159,18 @@ func NamespaceUpdateH(w http.ResponseWriter, r *http.Request) {
 	if err := opts.DecodeAndValidate(r.Body); err != nil {
 		log.V(logLevel).Errorf("Handler: Namespace: validation incoming data err: %s", err.Err())
 		errors.New("Invalid incoming data").Unknown().Http(w)
+		return
+	}
+
+	ns, err := nsm.Get(nid)
+	if err != nil {
+		log.V(logLevel).Errorf("Handler: Namespace: get namespace err: %s", err)
+		errors.HTTP.InternalServerError(w)
+		return
+	}
+	if ns == nil {
+		log.V(logLevel).Errorf("Handler: Namespace: namespace `%s` not found", nid)
+		errors.New("namespace").NotFound().Http(w)
 		return
 	}
 
@@ -194,21 +200,23 @@ func NamespaceRemoveH(w http.ResponseWriter, r *http.Request) {
 
 	log.V(logLevel).Debugf("Handler: Namespace: remove namespace %s", nid)
 
-	if r.Context().Value("namespace") == nil {
-		errors.HTTP.Forbidden(w)
-		return
-	}
-
-	if r.Context().Value("sandbox") != nil && r.Context().Value("sandbox").(bool) {
-		errors.New("namespace").Forbidden().Http(w)
-		return
-	}
-
 	var (
 		nsm = distribution.NewNamespaceModel(r.Context(), envs.Get().GetStorage())
 		sm  = distribution.NewServiceModel(r.Context(), envs.Get().GetStorage())
-		ns  = r.Context().Value("namespace").(*types.Namespace)
 	)
+
+	ns, err := nsm.Get(nid)
+	if err != nil {
+		log.V(logLevel).Errorf("Handler: Namespace: get namespace", err)
+		errors.HTTP.InternalServerError(w)
+		return
+	}
+	if ns == nil {
+		err := errors.New("namespace not found")
+		log.V(logLevel).Errorf("Handler: Namespace: get namespace", err)
+		errors.New("namespace").NotFound().Http(w)
+		return
+	}
 
 	exists, err := sm.List(ns.Meta.Name)
 	if len(exists) > 0 {
