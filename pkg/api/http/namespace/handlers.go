@@ -107,7 +107,7 @@ func NamespaceCreateH(w http.ResponseWriter, r *http.Request) {
 	opts := new(types.NamespaceCreateOptions)
 	if err := opts.DecodeAndValidate(r.Body); err != nil {
 		log.V(logLevel).Errorf("Handler: Namespace: validation incoming data err: %s", err.Err())
-		errors.New("Invalid incoming data").Unknown().Http(w)
+		err.Http(w)
 		return
 	}
 
@@ -158,7 +158,7 @@ func NamespaceUpdateH(w http.ResponseWriter, r *http.Request) {
 	opts := new(types.NamespaceUpdateOptions)
 	if err := opts.DecodeAndValidate(r.Body); err != nil {
 		log.V(logLevel).Errorf("Handler: Namespace: validation incoming data err: %s", err.Err())
-		errors.New("Invalid incoming data").Unknown().Http(w)
+		err.Http(w)
 		return
 	}
 
