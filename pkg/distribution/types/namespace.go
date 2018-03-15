@@ -111,7 +111,7 @@ func (s *NamespaceCreateOptions) DecodeAndValidate(reader io.Reader) *errors.Err
 
 	s.Name = strings.ToLower(s.Name)
 
-	if len(s.Name) < 4 && len(s.Name) > 64 && !validator.IsNamespaceName(s.Name) {
+	if len(s.Name) < 4 || len(s.Name) > 64 || !validator.IsNamespaceName(s.Name) {
 		log.V(logLevel).Error("Request: Namespace: parameter name not valid")
 		return errors.New("namespace").BadParameter("name")
 	}
