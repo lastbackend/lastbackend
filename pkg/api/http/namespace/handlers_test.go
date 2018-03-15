@@ -24,7 +24,6 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/lastbackend/lastbackend/pkg/api/envs"
 	"github.com/lastbackend/lastbackend/pkg/api/views/v1"
-	"github.com/lastbackend/lastbackend/pkg/storage/mock"
 	"github.com/lastbackend/lastbackend/pkg/util/http/middleware"
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/assert"
@@ -32,6 +31,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"testing"
+	"github.com/lastbackend/lastbackend/pkg/storage"
 )
 
 const (
@@ -48,32 +48,41 @@ func setRequestVars(r *mux.Router, req *http.Request) {
 	req = mux.SetURLVars(req, match.Vars)
 }
 
-// Testing NamespaceInfoH handler of a status 404
+// Testing NamespaceInfoH handler
 func TestNamespaceGet(t *testing.T) {
 
-	strg, _ := mock.New()
+	strg, _ := storage.GetMock()
 	envs.Get().SetStorage(strg)
 	viper.Set("verbose", 0)
 
 	tests := []struct {
-		name         string
-		description  string
 		url          string
-		token        string
+		headers      map[string]string
+		handler      func(http.ResponseWriter, *http.Request)
+		description  string
 		expectedBody string
 		expectedCode int
 	}{
 		{
-			name:         namespaceExistsName,
-			description:  http.StatusText(http.StatusOK),
 			url:          fmt.Sprintf("/namespace/%s", namespaceExistsName),
+			handler:      NamespaceInfoH,
+			description:  "successfully",
 			expectedCode: http.StatusOK,
 		},
 		{
-			name:         namespaceNotExistsName,
-			description:  http.StatusText(http.StatusNotFound),
-			url:          fmt.Sprintf("/namespace/%s", namespaceNotExistsName),
-			expectedBody: "{\"code\":404,\"status\":\"Not Found\",\"message\":\"Not found\"}",
+			url: fmt.Sprintf("/namespace/%s", namespaceExistsName),
+			headers: map[string]string{
+				"Authorization": fmt.Sprintf("Bearer %s", token),
+			},
+			handler:      middleware.Authenticate(NamespaceInfoH),
+			description:  "successfully",
+			expectedCode: http.StatusOK,
+		},
+		{
+			url:         fmt.Sprintf("/namespace/%s", namespaceNotExistsName),
+			handler:     NamespaceInfoH,
+			description: "namespace not found",
+			//expectedBody: "{\"code\":404,\"status\":\"Not Found\",\"message\":\"Not found\"}",
 			expectedCode: http.StatusNotFound,
 		},
 	}
@@ -85,8 +94,14 @@ func TestNamespaceGet(t *testing.T) {
 		req, err := http.NewRequest("GET", tc.url, nil)
 		assert.NoError(t, err)
 
+		if tc.headers != nil {
+			for key, val := range tc.headers {
+				req.Header.Set(key, val)
+			}
+		}
+
 		r := mux.NewRouter()
-		r.HandleFunc("/namespace/{namespace}", NamespaceInfoH)
+		r.HandleFunc("/namespace/{namespace}", tc.handler)
 
 		setRequestVars(r, req)
 
@@ -109,48 +124,83 @@ func TestNamespaceGet(t *testing.T) {
 			err = json.Unmarshal(body, ns)
 			assert.NoError(t, err)
 
-			assert.Equal(t, ns.Meta.Name, tc.name, "they should be equal")
+			// TODO: check response data with expectedBody
 		}
 	}
 
 }
 
-// Testing NamespaceInfoH handler of a successful request (status 200)
-func TestNamespaceGetWithAuthenticateMiddleware(t *testing.T) {
+// Testing NamespaceInfoH handler
+func TestNamespaceList(t *testing.T) {
 
-	strg, _ := mock.New()
+	strg, _ := storage.GetMock()
 	envs.Get().SetStorage(strg)
 	viper.Set("verbose", 0)
-	viper.Set("security.token", token)
 
-	// Create assert request to pass to our handler. We don't have any query parameters for now, so we'll
-	// pass 'nil' as the third parameter.
-	req, err := http.NewRequest("GET", fmt.Sprintf("/namespace/%s", namespaceExistsName), nil)
-	assert.NoError(t, err)
+	tests := []struct {
+		url          string
+		headers      map[string]string
+		handler      func(http.ResponseWriter, *http.Request)
+		description  string
+		expectedBody string
+		expectedCode int
+	}{
+		{
+			url:          "/namespace",
+			handler:      NamespaceListH,
+			description:  "successfully",
+			expectedCode: http.StatusOK,
+		},
+		{
+			url: fmt.Sprintf("/namespace/%s", namespaceNotExistsName),
+			headers: map[string]string{
+				"Authorization": fmt.Sprintf("Bearer %s", token),
+			},
+			handler:      NamespaceListH,
+			description:  "successfully",
+			expectedCode: http.StatusNotFound,
+		},
+	}
 
-	// Our handler might also expect an API access token.
-	req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", token))
+	for _, tc := range tests {
 
-	r := mux.NewRouter()
-	r.HandleFunc("/namespace/{namespace}", middleware.Authenticate(NamespaceInfoH))
+		// Create assert request to pass to our handler. We don't have any query parameters for now, so we'll
+		// pass 'nil' as the third parameter.
+		req, err := http.NewRequest("GET", tc.url, nil)
+		assert.NoError(t, err)
 
-	setRequestVars(r, req)
+		if tc.headers != nil {
+			for key, val := range tc.headers {
+				req.Header.Set(key, val)
+			}
+		}
 
-	// We create assert ResponseRecorder (which satisfies http.ResponseWriter) to record the response.
-	res := httptest.NewRecorder()
+		r := mux.NewRouter()
+		r.HandleFunc("/namespace", tc.handler)
 
-	// Our handlers satisfy http.Handler, so we can call their ServeHTTP method
-	// directly and pass in our Request and ResponseRecorder.
-	r.ServeHTTP(res, req)
+		setRequestVars(r, req)
 
-	// Check the status code is what we expect.
-	assert.Equal(t, http.StatusOK, res.Code, fmt.Sprintf("handler returned wrong status code: got %v want %v", res.Code, http.StatusOK))
+		// We create assert ResponseRecorder (which satisfies http.ResponseWriter) to record the response.
+		res := httptest.NewRecorder()
 
-	body, err := ioutil.ReadAll(res.Body)
-	assert.NoError(t, err)
+		// Our handlers satisfy http.Handler, so we can call their ServeHTTP method
+		// directly and pass in our Request and ResponseRecorder.
+		r.ServeHTTP(res, req)
 
-	ns := new(v1.Namespace)
-	err = json.Unmarshal(body, ns)
-	assert.NoError(t, err)
-	assert.Equal(t, ns.Meta.Name, namespaceExistsName, "they should be equal")
+		// Check the status code is what we expect.
+		assert.Equal(t, tc.expectedCode, res.Code, tc.description)
+
+		if res.Code == http.StatusOK {
+
+			body, err := ioutil.ReadAll(res.Body)
+			assert.NoError(t, err)
+
+			ns := new(v1.NamespaceList)
+			err = json.Unmarshal(body, ns)
+			assert.NoError(t, err)
+
+			// TODO: check response data with expectedBody
+		}
+	}
+
 }
