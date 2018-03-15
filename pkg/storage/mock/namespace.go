@@ -23,6 +23,8 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 	"github.com/lastbackend/lastbackend/pkg/storage/storage"
 	"fmt"
+	"github.com/lastbackend/lastbackend/pkg/distribution/errors"
+	"github.com/lastbackend/lastbackend/pkg/storage/store"
 )
 
 const namespaceStorage = "namespace"
@@ -44,7 +46,7 @@ func (s *NamespaceStorage) List(ctx context.Context) ([]*types.Namespace, error)
 
 // Insert new namespace into storage
 func (s *NamespaceStorage) Insert(ctx context.Context, namespace *types.Namespace) error {
-	return nil
+	return insertNamespace(namespace)
 }
 
 // Update namespace model
@@ -58,8 +60,7 @@ func (s *NamespaceStorage) Remove(ctx context.Context, name string) error {
 }
 
 func newNamespaceStorage() *NamespaceStorage {
-	s := new(NamespaceStorage)
-	return s
+	return new(NamespaceStorage)
 }
 
 /* ============================================================================================================== */
@@ -91,6 +92,15 @@ func getByName(name string) *types.Namespace {
 		ns.Quotas.RAM = 256
 		ns.Labels = map[string]string{"ns": "demo"}
 		return ns
+	default:
+		return nil
+	}
+}
+
+func insertNamespace(namespace *types.Namespace) error {
+	switch namespace.Meta.Name {
+	case "demo":
+		return errors.New(store.ErrKeyExists)
 	default:
 		return nil
 	}
