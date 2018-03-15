@@ -25,17 +25,13 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/storage"
 )
 
-type ICluster interface {
-	Info() (*types.Cluster, error)
-	Update(cluster *types.Cluster, opts *types.ClusterUpdateOptions) error
-}
-
+// Cluster - distribution model
 type Cluster struct {
 	context context.Context
 	storage storage.Storage
 }
 
-// Find cluster by id or name
+// Info - get cluster info
 func (c *Cluster) Info() (*types.Cluster, error) {
 
 	var ()
@@ -55,6 +51,7 @@ func (c *Cluster) Info() (*types.Cluster, error) {
 	return cl, nil
 }
 
+// Update - update cluster stats data and meta information
 func (c *Cluster) Update(cluster *types.Cluster, opts *types.ClusterUpdateOptions) error {
 
 	var (
@@ -78,6 +75,7 @@ func (c *Cluster) Update(cluster *types.Cluster, opts *types.ClusterUpdateOption
 	return nil
 }
 
-func NewClusterModel(ctx context.Context, stg storage.Storage) ICluster {
+// NewClusterModel - return new cluster model
+func NewClusterModel(ctx context.Context, stg storage.Storage) *Cluster {
 	return &Cluster{ctx, stg}
 }

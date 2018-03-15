@@ -23,9 +23,10 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 	"github.com/lastbackend/lastbackend/pkg/storage/storage"
 	"fmt"
+	"github.com/lastbackend/lastbackend/pkg/distribution/errors"
 )
 
-const namespaceStorage = "namespace"
+var data map[string]*types.Namespace
 
 // Namespace Service type for interface in interfaces folder
 type NamespaceStorage struct {
@@ -34,6 +35,11 @@ type NamespaceStorage struct {
 
 // Get namespace by name
 func (s *NamespaceStorage) GetByName(ctx context.Context, name string) (*types.Namespace, error) {
+
+	if ns, ok := data[name]; !ok {
+		return nil, errors.New("n")
+	}
+
 	return getByName(name), nil
 }
 
@@ -44,6 +50,7 @@ func (s *NamespaceStorage) List(ctx context.Context) ([]*types.Namespace, error)
 
 // Insert new namespace into storage
 func (s *NamespaceStorage) Insert(ctx context.Context, namespace *types.Namespace) error {
+	data[namespace.Meta.Name] = namespace
 	return nil
 }
 

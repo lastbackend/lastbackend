@@ -19,28 +19,22 @@
 package mock
 
 import (
-	"context"
-	"github.com/lastbackend/lastbackend/pkg/distribution/types"
-	"github.com/lastbackend/lastbackend/pkg/storage/storage"
+	"reflect"
+	"testing"
 )
 
-// ClusterStorage - mock storage for cluster
-type ClusterStorage struct {
-	storage.Cluster
-}
-
-// Info - return  cluster info from mock storage
-func (s *ClusterStorage) Info(ctx context.Context) (*types.Cluster, error) {
-	return new(types.Cluster), nil
-}
-
-// Update cluster info into mock storage
-func (s *ClusterStorage) Update(ctx context.Context, cluster *types.Cluster) error {
-	return nil
-}
-
-// newClusterStorage - return new mock cluster interface
-func newClusterStorage() storage.Cluster {
-	s := new(ClusterStorage)
-	return s
+func Test_newRouteStorage(t *testing.T) {
+	tests := []struct {
+		name string
+		want *RouteStorage
+	}{
+	// TODO: Add test cases.
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := newRouteStorage(); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("newRouteStorage() = %v, want %v", got, tt.want)
+			}
+		})
+	}
 }

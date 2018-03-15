@@ -21,17 +21,18 @@ package namespace
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/gorilla/mux"
-	"github.com/lastbackend/lastbackend/pkg/api/envs"
-	"github.com/lastbackend/lastbackend/pkg/api/views/v1"
-	"github.com/lastbackend/lastbackend/pkg/util/http/middleware"
-	"github.com/spf13/viper"
-	"github.com/stretchr/testify/assert"
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
 	"testing"
+
+	"github.com/gorilla/mux"
+	"github.com/lastbackend/lastbackend/pkg/api/envs"
+	"github.com/lastbackend/lastbackend/pkg/api/views/v1"
 	"github.com/lastbackend/lastbackend/pkg/storage"
+	"github.com/lastbackend/lastbackend/pkg/util/http/middleware"
+	"github.com/spf13/viper"
+	"github.com/stretchr/testify/assert"
 )
 
 const (
@@ -53,6 +54,9 @@ func TestNamespaceGet(t *testing.T) {
 
 	strg, _ := storage.GetMock()
 	envs.Get().SetStorage(strg)
+	strg.Namespace().Insert()
+
+
 	viper.Set("verbose", 0)
 
 	tests := []struct {
