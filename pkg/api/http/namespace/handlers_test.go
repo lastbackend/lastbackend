@@ -51,6 +51,8 @@ func setRequestVars(r *mux.Router, req *http.Request) {
 // Testing NamespaceInfoH handler of a successful request (status 200)
 func TestNamespaceGetWithoutMiddleware(t *testing.T) {
 
+	a := assert.New(t)
+
 	strg, _ := mock.New()
 	envs.Get().SetStorage(strg)
 	viper.Set("verbose", 0)
@@ -58,9 +60,7 @@ func TestNamespaceGetWithoutMiddleware(t *testing.T) {
 	// Create a request to pass to our handler. We don't have any query parameters for now, so we'll
 	// pass 'nil' as the third parameter.
 	req, err := http.NewRequest("GET", fmt.Sprintf("/namespace/%s", namespaceExistsName), nil)
-	if err != nil {
-		t.Fatal(err)
-	}
+	a.NoError(err)
 
 	r := mux.NewRouter()
 	r.HandleFunc("/namespace/{namespace}", NamespaceInfoH)
@@ -69,17 +69,13 @@ func TestNamespaceGetWithoutMiddleware(t *testing.T) {
 
 	// We create a ResponseRecorder (which satisfies http.ResponseWriter) to record the response.
 	res := httptest.NewRecorder()
-	//handler := middleware.Authenticate(NamespaceInfoH)
 
 	// Our handlers satisfy http.Handler, so we can call their ServeHTTP method
 	// directly and pass in our Request and ResponseRecorder.
 	r.ServeHTTP(res, req)
 
 	// Check the status code is what we expect.
-	if status := res.Code; status != http.StatusOK {
-		t.Errorf("handler returned wrong status code: got %v want %v", status, http.StatusOK)
-		return
-	}
+	a.Equal(http.StatusNotFound, res.Code, fmt.Sprintf("handler returned wrong status code: got %v want %v", res.Code, http.StatusOK))
 
 	body, err := ioutil.ReadAll(res.Body)
 	if err != nil {
@@ -89,16 +85,14 @@ func TestNamespaceGetWithoutMiddleware(t *testing.T) {
 
 	ns := new(v1.Namespace)
 	err = json.Unmarshal(body, ns)
-	if err != nil {
-		t.Errorf("convert struct from json err: %s", err)
-		return
-	}
-
-	assert.Equal(t, ns.Meta.Name, namespaceExistsName, "they should be equal")
+	a.NoError(err)
+	a.Equal(t, ns.Meta.Name, namespaceExistsName, "they should be equal")
 }
 
 // Testing NamespaceInfoH handler of a successful request (status 200)
 func TestNamespaceGetWithAuthenticateMiddleware(t *testing.T) {
+
+	a := assert.New(t)
 
 	strg, _ := mock.New()
 	envs.Get().SetStorage(strg)
@@ -108,9 +102,7 @@ func TestNamespaceGetWithAuthenticateMiddleware(t *testing.T) {
 	// Create a request to pass to our handler. We don't have any query parameters for now, so we'll
 	// pass 'nil' as the third parameter.
 	req, err := http.NewRequest("GET", fmt.Sprintf("/namespace/%s", namespaceExistsName), nil)
-	if err != nil {
-		t.Fatal(err)
-	}
+	a.NoError(err)
 
 	// Our handler might also expect an API access token.
 	req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", token))
@@ -122,36 +114,27 @@ func TestNamespaceGetWithAuthenticateMiddleware(t *testing.T) {
 
 	// We create a ResponseRecorder (which satisfies http.ResponseWriter) to record the response.
 	res := httptest.NewRecorder()
-	//handler := middleware.Authenticate(NamespaceInfoH)
 
 	// Our handlers satisfy http.Handler, so we can call their ServeHTTP method
 	// directly and pass in our Request and ResponseRecorder.
 	r.ServeHTTP(res, req)
 
 	// Check the status code is what we expect.
-	if status := res.Code; status != http.StatusOK {
-		t.Errorf("handler returned wrong status code: got %v want %v", status, http.StatusOK)
-		return
-	}
+	a.Equal(http.StatusNotFound, res.Code, fmt.Sprintf("handler returned wrong status code: got %v want %v", res.Code, http.StatusOK))
 
 	body, err := ioutil.ReadAll(res.Body)
-	if err != nil {
-		t.Errorf("read body err: %s", err)
-		return
-	}
+	a.NoError(err)
 
 	ns := new(v1.Namespace)
 	err = json.Unmarshal(body, ns)
-	if err != nil {
-		t.Errorf("convert struct from json err: %s", err)
-		return
-	}
-
-	assert.Equal(t, ns.Meta.Name, namespaceExistsName, "they should be equal")
+	a.NoError(err)
+	a.Equal(t, ns.Meta.Name, namespaceExistsName, "they should be equal")
 }
 
 // Testing NamespaceInfoH handler of a status 404
 func TestNamespaceGetCheckStatusNotFound(t *testing.T) {
+
+	a := assert.New(t)
 
 	strg, _ := mock.New()
 	envs.Get().SetStorage(strg)
@@ -160,9 +143,7 @@ func TestNamespaceGetCheckStatusNotFound(t *testing.T) {
 	// Create a request to pass to our handler. We don't have any query parameters for now, so we'll
 	// pass 'nil' as the third parameter.
 	req, err := http.NewRequest("GET", fmt.Sprintf("/namespace/%s", namespaceNotExistsName), nil)
-	if err != nil {
-		t.Fatal(err)
-	}
+	a.NoError(err)
 
 	r := mux.NewRouter()
 	r.HandleFunc("/namespace/{namespace}", NamespaceInfoH)
@@ -171,15 +152,11 @@ func TestNamespaceGetCheckStatusNotFound(t *testing.T) {
 
 	// We create a ResponseRecorder (which satisfies http.ResponseWriter) to record the response.
 	res := httptest.NewRecorder()
-	//handler := middleware.Authenticate(NamespaceInfoH)
 
 	// Our handlers satisfy http.Handler, so we can call their ServeHTTP method
 	// directly and pass in our Request and ResponseRecorder.
 	r.ServeHTTP(res, req)
 
 	// Check the status code is what we expect.
-	if status := res.Code; status != http.StatusNotFound {
-		t.Errorf("handler returned wrong status code: got %v want %v", status, http.StatusOK)
-		return
-	}
+	a.Equal(http.StatusNotFound, res.Code, fmt.Sprintf("handler returned wrong status code: got %v want %v", res.Code, http.StatusOK))
 }
