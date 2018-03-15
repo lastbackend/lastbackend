@@ -16,15 +16,13 @@
 // from Last.Backend LLC.
 //
 
-package namespace
+package namespace_test
 
 import (
 	"encoding/json"
 	"fmt"
 	"github.com/gorilla/mux"
 	"github.com/lastbackend/lastbackend/pkg/api/envs"
-	"github.com/lastbackend/lastbackend/pkg/api/views/v1"
-	"github.com/lastbackend/lastbackend/pkg/util/http/middleware"
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/assert"
 	"io/ioutil"
@@ -34,13 +32,9 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/storage"
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 	"strings"
-	"github.com/lastbackend/lastbackend/pkg/distribution/errors"
-)
-
-const (
-	token                  = "demotoken"
-	namespaceExistsName    = "demo"
-	namespaceNotExistsName = "notexistsname"
+	"context"
+	"github.com/lastbackend/lastbackend/pkg/api/views"
+	"github.com/lastbackend/lastbackend/pkg/api/http/namespace"
 )
 
 func setRequestVars(r *mux.Router, req *http.Request) {
@@ -58,6 +52,19 @@ func TestNamespaceGet(t *testing.T) {
 	envs.Get().SetStorage(strg)
 	viper.Set("verbose", 0)
 
+	ns := new(types.Namespace)
+	ns.Meta.SetDefault()
+	ns.Meta.Name = "demo"
+	ns.Meta.Description = "demo description"
+	ns.Quotas.Routes = int(2)
+	ns.Quotas.RAM = int64(256)
+
+	err := envs.Get().GetStorage().Namespace().Insert(context.Background(), ns)
+	assert.NoError(t, err)
+
+	v, err := views.V1().Namespace().New(ns).ToJson()
+	assert.NoError(t, err)
+
 	tests := []struct {
 		url          string
 		headers      map[string]string
@@ -65,30 +72,20 @@ func TestNamespaceGet(t *testing.T) {
 		description  string
 		expectedBody string
 		expectedCode int
-		want         *v1.Namespace
-		wantErr      *errors.Http
-		isErr        bool
 	}{
 		{
-			url:          fmt.Sprintf("/namespace/%s", namespaceExistsName),
-			handler:      NamespaceInfoH,
-			description:  "successfully",
-			expectedCode: http.StatusOK,
-		},
-		{
-			url: fmt.Sprintf("/namespace/%s", namespaceExistsName),
-			headers: map[string]string{
-				"Authorization": fmt.Sprintf("Bearer %s", token),
-			},
-			handler:      middleware.Authenticate(NamespaceInfoH),
-			description:  "successfully",
-			expectedCode: http.StatusOK,
-		},
-		{
-			url:          fmt.Sprintf("/namespace/%s", namespaceNotExistsName),
-			handler:      NamespaceInfoH,
+			url:          fmt.Sprintf("/namespace/%s", "armagedon"),
+			handler:      namespace.NamespaceInfoH,
 			description:  "namespace not found",
+			expectedBody: "{\"code\":404,\"status\":\"Not Found\",\"message\":\"Namespace not found\"}",
 			expectedCode: http.StatusNotFound,
+		},
+		{
+			url:          fmt.Sprintf("/namespace/%s", ns.Meta.Name),
+			handler:      namespace.NamespaceInfoH,
+			description:  "successfully",
+			expectedBody: string(v),
+			expectedCode: http.StatusOK,
 		},
 	}
 
@@ -124,20 +121,9 @@ func TestNamespaceGet(t *testing.T) {
 		assert.NoError(t, err)
 
 		if res.Code == http.StatusOK {
-
-			ns := new(v1.Namespace)
-			err = json.Unmarshal(body, ns)
-			assert.NoError(t, err)
-
-			fmt.Println(">>>>>>>>", ns.Meta.Name)
-
-			// TODO: check response data with expectedBody
+			assert.Equal(t, tc.expectedBody, string(v), tc.description)
 		} else {
-			e := new(errors.Http)
-			err = json.Unmarshal(body, e)
-			assert.NoError(t, err)
-
-			fmt.Println(">>>>>>>>", e.Code, e.Status, e.Message)
+			assert.Equal(t, tc.expectedBody, string(body), tc.description)
 		}
 	}
 
@@ -150,6 +136,31 @@ func TestNamespaceList(t *testing.T) {
 	envs.Get().SetStorage(strg)
 	viper.Set("verbose", 0)
 
+	nsl := make(types.NamespaceList, 0)
+	ns1 := new(types.Namespace)
+	ns1.Meta.SetDefault()
+	ns1.Meta.Name = "demo"
+	ns1.Meta.Description = "demo description"
+	ns1.Quotas.Routes = int(2)
+	ns1.Quotas.RAM = int64(256)
+
+	ns2 := new(types.Namespace)
+	ns2.Meta.SetDefault()
+	ns2.Meta.Name = "demo"
+	ns2.Meta.Description = "demo description"
+	ns2.Quotas.Routes = int(2)
+	ns2.Quotas.RAM = int64(256)
+
+	err := envs.Get().GetStorage().Namespace().Insert(context.Background(), ns1)
+	assert.NoError(t, err)
+	nsl = append(nsl, ns1)
+	err = envs.Get().GetStorage().Namespace().Insert(context.Background(), ns2)
+	assert.NoError(t, err)
+	nsl = append(nsl, ns2)
+
+	v, err := views.V1().Namespace().NewList(nsl).ToJson()
+	assert.NoError(t, err)
+
 	tests := []struct {
 		url          string
 		headers      map[string]string
@@ -160,18 +171,10 @@ func TestNamespaceList(t *testing.T) {
 	}{
 		{
 			url:          "/namespace",
-			handler:      NamespaceListH,
+			handler:      namespace.NamespaceListH,
 			description:  "successfully",
+			expectedBody: string(v),
 			expectedCode: http.StatusOK,
-		},
-		{
-			url: fmt.Sprintf("/namespace/%s", namespaceNotExistsName),
-			headers: map[string]string{
-				"Authorization": fmt.Sprintf("Bearer %s", token),
-			},
-			handler:      NamespaceListH,
-			description:  "successfully",
-			expectedCode: http.StatusNotFound,
 		},
 	}
 
@@ -203,16 +206,13 @@ func TestNamespaceList(t *testing.T) {
 		// Check the status code is what we expect.
 		assert.Equal(t, tc.expectedCode, res.Code, tc.description)
 
+		body, err := ioutil.ReadAll(res.Body)
+		assert.NoError(t, err)
+
 		if res.Code == http.StatusOK {
-
-			body, err := ioutil.ReadAll(res.Body)
-			assert.NoError(t, err)
-
-			ns := new(v1.NamespaceList)
-			err = json.Unmarshal(body, ns)
-			assert.NoError(t, err)
-
-			// TODO: check response data with expectedBody
+			assert.Equal(t, tc.expectedBody, string(v), tc.description)
+		} else {
+			assert.Equal(t, tc.expectedBody, string(body), tc.description)
 		}
 	}
 
@@ -242,6 +242,19 @@ func TestNamespaceCreate(t *testing.T) {
 	envs.Get().SetStorage(strg)
 	viper.Set("verbose", 0)
 
+	ns := new(types.Namespace)
+	ns.Meta.SetDefault()
+	ns.Meta.Name = "demo"
+	ns.Meta.Description = "demo description"
+	ns.Quotas.Routes = int(2)
+	ns.Quotas.RAM = int64(256)
+
+	err := envs.Get().GetStorage().Namespace().Insert(context.Background(), ns)
+	assert.NoError(t, err)
+
+	v, err := views.V1().Namespace().New(ns).ToJson()
+	assert.NoError(t, err)
+
 	tests := []struct {
 		name         string
 		url          string
@@ -253,31 +266,22 @@ func TestNamespaceCreate(t *testing.T) {
 		expectedCode int
 	}{
 		{
-			name:         "check create namespace success",
-			description:  "successfully",
-			url:          "/namespace",
-			handler:      NamespaceCreateH,
-			data:         createNamespaceCreateOptions("test", "", &types.NamespaceQuotasOptions{RAM: 2, Routes: 1}).toJson(),
-			expectedCode: http.StatusOK,
-		},
-		{
-			name:        "check create namespace success with auth middleware",
-			description: "successfully",
-			url:         "/namespace",
-			headers: map[string]string{
-				"Authorization": fmt.Sprintf("Bearer %s", token),
-			},
-			handler:      middleware.Authenticate(NamespaceCreateH),
-			data:         createNamespaceCreateOptions("test", "", &types.NamespaceQuotasOptions{RAM: 2, Routes: 1}).toJson(),
-			expectedCode: http.StatusOK,
-		},
-		{
 			name:         "check create namespace success if name already exists",
 			description:  "namespace already exists",
 			url:          "/namespace",
-			handler:      NamespaceCreateH,
+			handler:      namespace.NamespaceCreateH,
 			data:         createNamespaceCreateOptions("demo", "", nil).toJson(),
+			expectedBody: "{\"code\":400,\"status\":\"Not Unique\",\"message\":\"Name is already in use\"}",
 			expectedCode: http.StatusBadRequest,
+		},
+		{
+			name:         "check create namespace success",
+			description:  "successfully",
+			url:          "/namespace",
+			handler:      namespace.NamespaceCreateH,
+			data:         createNamespaceCreateOptions("test", "", &types.NamespaceQuotasOptions{RAM: 2, Routes: 1}).toJson(),
+			expectedBody: string(v),
+			expectedCode: http.StatusOK,
 		},
 	}
 
@@ -310,7 +314,14 @@ func TestNamespaceCreate(t *testing.T) {
 			// Check the status code is what we expect.
 			assert.Equal(t, tc.expectedCode, res.Code, tc.description)
 
-			// TODO: check response data with expectedBody
+			body, err := ioutil.ReadAll(res.Body)
+			assert.NoError(t, err)
+
+			if res.Code == http.StatusOK {
+				assert.Equal(t, tc.expectedBody, string(v), tc.description)
+			} else {
+				assert.Equal(t, tc.expectedBody, string(body), tc.description)
+			}
 
 		})
 	}
@@ -340,6 +351,28 @@ func TestNamespaceUpdate(t *testing.T) {
 	envs.Get().SetStorage(strg)
 	viper.Set("verbose", 0)
 
+	ns1 := new(types.Namespace)
+	ns1.Meta.SetDefault()
+	ns1.Meta.Name = "demo"
+	ns1.Meta.Description = "demo description"
+	ns1.Quotas.Routes = int(2)
+	ns1.Quotas.RAM = int64(256)
+
+	ns2 := new(types.Namespace)
+	ns2.Meta.SetDefault()
+	ns2.Meta.Name = "demo"
+	ns2.Meta.Description = "demo description"
+	ns2.Quotas.Routes = int(2)
+	ns2.Quotas.RAM = int64(256)
+	ns2.Resources.Routes = int(2)
+	ns2.Resources.RAM = int64(256)
+
+	err := envs.Get().GetStorage().Namespace().Insert(context.Background(), ns1)
+	assert.NoError(t, err)
+
+	v, err := views.V1().Namespace().New(ns2).ToJson()
+	assert.NoError(t, err)
+
 	tests := []struct {
 		url          string
 		headers      map[string]string
@@ -350,28 +383,20 @@ func TestNamespaceUpdate(t *testing.T) {
 		expectedCode int
 	}{
 		{
-			url:          fmt.Sprintf("/namespace/%s", namespaceExistsName),
-			handler:      NamespaceUpdateH,
-			description:  "successfully",
-			data:         createNamespaceUpdateOptions(nil, &types.NamespaceQuotasOptions{RAM: 2, Routes: 1}).toJson(),
-			expectedCode: http.StatusOK,
-		},
-		{
-			url: fmt.Sprintf("/namespace/%s", namespaceExistsName),
-			headers: map[string]string{
-				"Authorization": fmt.Sprintf("Bearer %s", token),
-			},
-			handler:      middleware.Authenticate(NamespaceUpdateH),
-			description:  "successfully",
-			data:         createNamespaceUpdateOptions(nil, &types.NamespaceQuotasOptions{RAM: 2, Routes: 1}).toJson(),
-			expectedCode: http.StatusOK,
-		},
-		{
-			url:          fmt.Sprintf("/namespace/%s", namespaceNotExistsName),
-			handler:      NamespaceUpdateH,
+			url:          fmt.Sprintf("/namespace/%s", "test"),
+			handler:      namespace.NamespaceUpdateH,
 			description:  "namespace not exists",
 			data:         createNamespaceUpdateOptions(nil, nil).toJson(),
+			expectedBody: "{\"code\":404,\"status\":\"Not Found\",\"message\":\"Namespace not found\"}",
 			expectedCode: http.StatusNotFound,
+		},
+		{
+			url:          fmt.Sprintf("/namespace/%s", ns2.Meta.Name),
+			handler:      namespace.NamespaceUpdateH,
+			description:  "successfully",
+			data:         createNamespaceUpdateOptions(nil, &types.NamespaceQuotasOptions{RAM: ns2.Resources.RAM, Routes: ns2.Resources.Routes}).toJson(),
+			expectedBody: string(v),
+			expectedCode: http.StatusOK,
 		},
 	}
 
@@ -403,7 +428,14 @@ func TestNamespaceUpdate(t *testing.T) {
 		// Check the status code is what we expect.
 		assert.Equal(t, tc.expectedCode, res.Code, tc.description)
 
-		// TODO: check response data with expectedBody
+		body, err := ioutil.ReadAll(res.Body)
+		assert.NoError(t, err)
+
+		if res.Code == http.StatusOK {
+			assert.Equal(t, tc.expectedBody, string(v), tc.description)
+		} else {
+			assert.Equal(t, tc.expectedBody, string(body), tc.description)
+		}
 
 	}
 
@@ -416,6 +448,16 @@ func TestNamespaceRemove(t *testing.T) {
 	envs.Get().SetStorage(strg)
 	viper.Set("verbose", 0)
 
+	ns := new(types.Namespace)
+	ns.Meta.SetDefault()
+	ns.Meta.Name = "demo"
+	ns.Meta.Description = "demo description"
+	ns.Quotas.Routes = int(2)
+	ns.Quotas.RAM = int64(256)
+
+	err := envs.Get().GetStorage().Namespace().Insert(context.Background(), ns)
+	assert.NoError(t, err)
+
 	tests := []struct {
 		url          string
 		headers      map[string]string
@@ -425,24 +467,16 @@ func TestNamespaceRemove(t *testing.T) {
 		expectedCode int
 	}{
 		{
-			url:          fmt.Sprintf("/namespace/%s", namespaceExistsName),
-			handler:      NamespaceRemoveH,
+			url:          fmt.Sprintf("/namespace/%s", ns.Meta.Name),
+			handler:      namespace.NamespaceRemoveH,
 			description:  "successfully",
 			expectedCode: http.StatusOK,
 		},
 		{
-			url: fmt.Sprintf("/namespace/%s", namespaceExistsName),
-			headers: map[string]string{
-				"Authorization": fmt.Sprintf("Bearer %s", token),
-			},
-			handler:      middleware.Authenticate(NamespaceRemoveH),
-			description:  "successfully",
-			expectedCode: http.StatusOK,
-		},
-		{
-			url:          fmt.Sprintf("/namespace/%s", namespaceNotExistsName),
-			handler:      NamespaceRemoveH,
+			url:          fmt.Sprintf("/namespace/%s", ns.Meta.Name),
+			handler:      namespace.NamespaceRemoveH,
 			description:  "namespace not found",
+			expectedBody: "{\"code\":404,\"status\":\"Not Found\",\"message\":\"Namespace not found\"}",
 			expectedCode: http.StatusNotFound,
 		},
 	}
@@ -475,7 +509,14 @@ func TestNamespaceRemove(t *testing.T) {
 		// Check the status code is what we expect.
 		assert.Equal(t, tc.expectedCode, res.Code, tc.description)
 
-		// TODO: check response data with expectedBody
+		body, err := ioutil.ReadAll(res.Body)
+		assert.NoError(t, err)
+
+		if res.Code == http.StatusOK {
+			assert.Equal(t, tc.expectedBody, "", tc.description)
+		} else {
+			assert.Equal(t, tc.expectedBody, string(body), tc.description)
+		}
 
 	}
 

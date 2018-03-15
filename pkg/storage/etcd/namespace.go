@@ -26,6 +26,7 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 	"github.com/lastbackend/lastbackend/pkg/log"
 	"github.com/lastbackend/lastbackend/pkg/storage/storage"
+	"github.com/lastbackend/lastbackend/pkg/storage/store"
 )
 
 const namespaceStorage = "namespace"
@@ -55,9 +56,15 @@ func (s *NamespaceStorage) GetByName(ctx context.Context, name string) (*types.N
 
 	namespace := new(types.Namespace)
 	keyMeta := keyCreate(namespaceStorage, name, "meta")
-	if err := client.Get(ctx, keyMeta, &namespace.Meta); err != nil {
+	err = client.Get(ctx, keyMeta, &namespace.Meta)
+	switch true {
+	case err != nil && err.Error() != store.ErrKeyNotFound:
 		log.V(logLevel).Errorf("Storage: Namespace: get namespace `%s` meta err: %s", name, err.Error())
 		return nil, err
+	case err != nil && err.Error() == store.ErrKeyNotFound:
+		fallthrough
+	case (err == nil && namespace == nil) || err != nil:
+		return nil, nil
 	}
 
 	return namespace, nil
@@ -77,9 +84,18 @@ func (s *NamespaceStorage) List(ctx context.Context) ([]*types.Namespace, error)
 	}
 	defer destroy()
 
-	namespaces := []*types.Namespace{}
+	namespaces := make([]*types.Namespace, 0)
 	keyNamespaces := keyCreate(namespaceStorage)
-	if err := client.List(ctx, keyNamespaces, filter, &namespaces); err != nil {
+	err = client.List(ctx, keyNamespaces, filter, &namespaces)
+	switch true {
+	case err != nil && err.Error() != store.ErrKeyNotFound:
+		log.V(logLevel).Errorf("Storage: Namespace: get namespace list err: %s", err.Error())
+		return nil, err
+	case err != nil && err.Error() == store.ErrKeyNotFound:
+		return make([]*types.Namespace, 0), nil
+	}
+
+	if err != nil {
 		log.V(logLevel).Errorf("Storage: Namespace: get namespaces list err: %s", err.Error())
 		return nil, err
 	}
@@ -164,7 +180,7 @@ func (s *NamespaceStorage) Remove(ctx context.Context, name string) error {
 	defer destroy()
 
 	keyNamespace := keyCreate(namespaceStorage, name)
-	if err := client.DeleteDir(ctx, keyNamespace); err != nil {
+	if err := client.DeleteDir(ctx, keyNamespace); err != nil && err.Error() != store.ErrKeyNotFound {
 		log.V(logLevel).Errorf("Storage: Namespace: remove namespace `%s` err: %s", name, err.Error())
 		return err
 	}
