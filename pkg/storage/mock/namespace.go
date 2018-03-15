@@ -39,7 +39,7 @@ func (s *NamespaceStorage) GetByName(ctx context.Context, name string) (*types.N
 
 // List projects
 func (s *NamespaceStorage) List(ctx context.Context) ([]*types.Namespace, error) {
-	return make([]*types.Namespace, 0), nil
+	return []*types.Namespace{getByName("demo")}, nil
 }
 
 // Insert new namespace into storage
