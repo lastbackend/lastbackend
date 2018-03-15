@@ -22,8 +22,7 @@ import (
 	"context"
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 	"github.com/lastbackend/lastbackend/pkg/storage/storage"
-	"fmt"
-	"github.com/lastbackend/lastbackend/pkg/distribution/errors"
+	"errors"
 	"github.com/lastbackend/lastbackend/pkg/storage/store"
 )
 
@@ -31,77 +30,60 @@ const namespaceStorage = "namespace"
 
 // Namespace Service type for interface in interfaces folder
 type NamespaceStorage struct {
+	data map[string]*types.Namespace
 	storage.Namespace
 }
 
 // Get namespace by name
 func (s *NamespaceStorage) GetByName(ctx context.Context, name string) (*types.Namespace, error) {
-	return getByName(name), nil
+	if ns, ok := s.data[name]; !ok {
+		return nil, errors.New(store.ErrKeyNotFound)
+	} else {
+		return ns, nil
+	}
 }
 
 // List projects
 func (s *NamespaceStorage) List(ctx context.Context) ([]*types.Namespace, error) {
-	return []*types.Namespace{getByName("demo")}, nil
+	list := make([]*types.Namespace, 0)
+	for _, ns := range s.data {
+		list = append(list, ns)
+	}
+	return list, nil
 }
 
 // Insert new namespace into storage
 func (s *NamespaceStorage) Insert(ctx context.Context, namespace *types.Namespace) error {
-	return insertNamespace(namespace)
+	if _, ok := s.data[namespace.Meta.Name]; ok {
+		return errors.New(store.ErrKeyExists)
+	} else {
+		s.data[namespace.Meta.Name] = namespace
+		return nil
+	}
 }
 
 // Update namespace model
 func (s *NamespaceStorage) Update(ctx context.Context, namespace *types.Namespace) error {
-	return nil
+	if _, ok := s.data[namespace.Meta.Name]; !ok {
+		return errors.New(store.ErrKeyNotFound)
+	} else {
+		s.data[namespace.Meta.Name] = namespace
+		return nil
+	}
 }
 
 // Remove namespace model
 func (s *NamespaceStorage) Remove(ctx context.Context, name string) error {
-	return nil
+	if _, ok := s.data[name]; !ok {
+		return errors.New(store.ErrKeyNotFound)
+	} else {
+		delete(s.data, name)
+		return nil
+	}
 }
 
 func newNamespaceStorage() *NamespaceStorage {
-	return new(NamespaceStorage)
-}
-
-/* ============================================================================================================== */
-/* =============================================== HELPER METHODS =============================================== */
-/* ============================================================================================================== */
-
-func createNamespace(name, description string) *types.Namespace {
-	ns := new(types.Namespace)
-	ns.Meta.SetDefault()
-	ns.Meta.Name = name
-	ns.Meta.Description = description
-	ns.Meta.Endpoint = fmt.Sprintf("%s.demo.io", name)
-	ns.Meta.SelfLink = fmt.Sprintf("/%s", name)
-	ns.Env = make(types.NamespaceEnvs, 0)
-	return ns
-}
-
-func getByName(name string) *types.Namespace {
-	switch name {
-	case "demo":
-		ns := createNamespace(name, "demo description")
-		ns.Env = types.NamespaceEnvs{
-			types.NamespaceEnv{Name: "DEBUG", Value: "true"},
-			types.NamespaceEnv{Name: "NODE_ENV", Value: "development"},
-		}
-		ns.Resources.RAM = 128
-		ns.Resources.Routes = 1
-		ns.Quotas.Routes = 1
-		ns.Quotas.RAM = 256
-		ns.Labels = map[string]string{"ns": "demo"}
-		return ns
-	default:
-		return nil
-	}
-}
-
-func insertNamespace(namespace *types.Namespace) error {
-	switch namespace.Meta.Name {
-	case "demo":
-		return errors.New(store.ErrKeyExists)
-	default:
-		return nil
-	}
+	s := new(NamespaceStorage)
+	s.data = make(map[string]*types.Namespace)
+	return s
 }
