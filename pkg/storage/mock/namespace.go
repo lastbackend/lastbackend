@@ -81,7 +81,10 @@ func getByName(name string) *types.Namespace {
 	switch name {
 	case "demo":
 		ns := createNamespace(name, "demo description")
-		ns.Env = make(types.NamespaceEnvs, 0)
+		ns.Env = types.NamespaceEnvs{
+			types.NamespaceEnv{Name: "DEBUG", Value: "true"},
+			types.NamespaceEnv{Name: "NODE_ENV", Value: "development"},
+		}
 		ns.Resources.RAM = 128
 		ns.Resources.Routes = 1
 		ns.Quotas.Routes = 1
