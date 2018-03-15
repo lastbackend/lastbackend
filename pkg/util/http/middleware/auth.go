@@ -30,9 +30,7 @@ import (
 func Authenticate(h http.HandlerFunc) http.HandlerFunc {
 
 	return func(w http.ResponseWriter, r *http.Request) {
-
 		t := viper.GetString("security.token")
-
 		if t == "" {
 			h.ServeHTTP(w, r)
 			return
@@ -40,7 +38,6 @@ func Authenticate(h http.HandlerFunc) http.HandlerFunc {
 
 		var token string
 		var params = utils.Vars(r)
-
 		if _, ok := r.URL.Query()["x-lastbackend-token"]; ok {
 			token = r.URL.Query().Get("x-lastbackend-token")
 		} else if _, ok := params["x-lastbackend-token"]; ok {
