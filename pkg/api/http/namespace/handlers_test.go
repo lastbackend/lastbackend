@@ -48,61 +48,85 @@ func setRequestVars(r *mux.Router, req *http.Request) {
 	req = mux.SetURLVars(req, match.Vars)
 }
 
-// Testing NamespaceInfoH handler of a successful request (status 200)
-func TestNamespaceGetWithoutMiddleware(t *testing.T) {
-
-	a := assert.New(t)
+// Testing NamespaceInfoH handler of a status 404
+func TestNamespaceGet(t *testing.T) {
 
 	strg, _ := mock.New()
 	envs.Get().SetStorage(strg)
 	viper.Set("verbose", 0)
 
-	// Create a request to pass to our handler. We don't have any query parameters for now, so we'll
-	// pass 'nil' as the third parameter.
-	req, err := http.NewRequest("GET", fmt.Sprintf("/namespace/%s", namespaceExistsName), nil)
-	a.NoError(err)
-
-	r := mux.NewRouter()
-	r.HandleFunc("/namespace/{namespace}", NamespaceInfoH)
-
-	setRequestVars(r, req)
-
-	// We create a ResponseRecorder (which satisfies http.ResponseWriter) to record the response.
-	res := httptest.NewRecorder()
-
-	// Our handlers satisfy http.Handler, so we can call their ServeHTTP method
-	// directly and pass in our Request and ResponseRecorder.
-	r.ServeHTTP(res, req)
-
-	// Check the status code is what we expect.
-	a.Equal(http.StatusNotFound, res.Code, fmt.Sprintf("handler returned wrong status code: got %v want %v", res.Code, http.StatusOK))
-
-	body, err := ioutil.ReadAll(res.Body)
-	if err != nil {
-		t.Errorf("read body err: %s", err)
-		return
+	tests := []struct {
+		name         string
+		description  string
+		url          string
+		token        string
+		expectedBody string
+		expectedCode int
+	}{
+		{
+			name:         namespaceExistsName,
+			description:  http.StatusText(http.StatusOK),
+			url:          fmt.Sprintf("/namespace/%s", namespaceExistsName),
+			expectedCode: http.StatusOK,
+		},
+		{
+			name:         namespaceNotExistsName,
+			description:  http.StatusText(http.StatusNotFound),
+			url:          fmt.Sprintf("/namespace/%s", namespaceNotExistsName),
+			expectedBody: "{\"code\":404,\"status\":\"Not Found\",\"message\":\"Not found\"}",
+			expectedCode: http.StatusNotFound,
+		},
 	}
 
-	ns := new(v1.Namespace)
-	err = json.Unmarshal(body, ns)
-	a.NoError(err)
-	a.Equal(t, ns.Meta.Name, namespaceExistsName, "they should be equal")
+	for _, tc := range tests {
+
+		// Create assert request to pass to our handler. We don't have any query parameters for now, so we'll
+		// pass 'nil' as the third parameter.
+		req, err := http.NewRequest("GET", tc.url, nil)
+		assert.NoError(t, err)
+
+		r := mux.NewRouter()
+		r.HandleFunc("/namespace/{namespace}", NamespaceInfoH)
+
+		setRequestVars(r, req)
+
+		// We create assert ResponseRecorder (which satisfies http.ResponseWriter) to record the response.
+		res := httptest.NewRecorder()
+
+		// Our handlers satisfy http.Handler, so we can call their ServeHTTP method
+		// directly and pass in our Request and ResponseRecorder.
+		r.ServeHTTP(res, req)
+
+		// Check the status code is what we expect.
+		assert.Equal(t, tc.expectedCode, res.Code, tc.description)
+
+		if res.Code == http.StatusOK {
+
+			body, err := ioutil.ReadAll(res.Body)
+			assert.NoError(t, err)
+
+			ns := new(v1.Namespace)
+			err = json.Unmarshal(body, ns)
+			assert.NoError(t, err)
+
+			assert.Equal(t, ns.Meta.Name, tc.name, "they should be equal")
+		}
+	}
+
 }
 
 // Testing NamespaceInfoH handler of a successful request (status 200)
 func TestNamespaceGetWithAuthenticateMiddleware(t *testing.T) {
-
-	a := assert.New(t)
 
 	strg, _ := mock.New()
 	envs.Get().SetStorage(strg)
 	viper.Set("verbose", 0)
 	viper.Set("security.token", token)
 
-	// Create a request to pass to our handler. We don't have any query parameters for now, so we'll
+	// Create assert request to pass to our handler. We don't have any query parameters for now, so we'll
 	// pass 'nil' as the third parameter.
 	req, err := http.NewRequest("GET", fmt.Sprintf("/namespace/%s", namespaceExistsName), nil)
-	a.NoError(err)
+	assert.NoError(t, err)
 
 	// Our handler might also expect an API access token.
 	req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", token))
@@ -112,7 +136,7 @@ func TestNamespaceGetWithAuthenticateMiddleware(t *testing.T) {
 
 	setRequestVars(r, req)
 
-	// We create a ResponseRecorder (which satisfies http.ResponseWriter) to record the response.
+	// We create assert ResponseRecorder (which satisfies http.ResponseWriter) to record the response.
 	res := httptest.NewRecorder()
 
 	// Our handlers satisfy http.Handler, so we can call their ServeHTTP method
@@ -120,43 +144,13 @@ func TestNamespaceGetWithAuthenticateMiddleware(t *testing.T) {
 	r.ServeHTTP(res, req)
 
 	// Check the status code is what we expect.
-	a.Equal(http.StatusNotFound, res.Code, fmt.Sprintf("handler returned wrong status code: got %v want %v", res.Code, http.StatusOK))
+	assert.Equal(t, http.StatusOK, res.Code, fmt.Sprintf("handler returned wrong status code: got %v want %v", res.Code, http.StatusOK))
 
 	body, err := ioutil.ReadAll(res.Body)
-	a.NoError(err)
+	assert.NoError(t, err)
 
 	ns := new(v1.Namespace)
 	err = json.Unmarshal(body, ns)
-	a.NoError(err)
-	a.Equal(t, ns.Meta.Name, namespaceExistsName, "they should be equal")
-}
-
-// Testing NamespaceInfoH handler of a status 404
-func TestNamespaceGetCheckStatusNotFound(t *testing.T) {
-
-	a := assert.New(t)
-
-	strg, _ := mock.New()
-	envs.Get().SetStorage(strg)
-	viper.Set("verbose", 0)
-
-	// Create a request to pass to our handler. We don't have any query parameters for now, so we'll
-	// pass 'nil' as the third parameter.
-	req, err := http.NewRequest("GET", fmt.Sprintf("/namespace/%s", namespaceNotExistsName), nil)
-	a.NoError(err)
-
-	r := mux.NewRouter()
-	r.HandleFunc("/namespace/{namespace}", NamespaceInfoH)
-
-	setRequestVars(r, req)
-
-	// We create a ResponseRecorder (which satisfies http.ResponseWriter) to record the response.
-	res := httptest.NewRecorder()
-
-	// Our handlers satisfy http.Handler, so we can call their ServeHTTP method
-	// directly and pass in our Request and ResponseRecorder.
-	r.ServeHTTP(res, req)
-
-	// Check the status code is what we expect.
-	a.Equal(http.StatusNotFound, res.Code, fmt.Sprintf("handler returned wrong status code: got %v want %v", res.Code, http.StatusOK))
+	assert.NoError(t, err)
+	assert.Equal(t, ns.Meta.Name, namespaceExistsName, "they should be equal")
 }

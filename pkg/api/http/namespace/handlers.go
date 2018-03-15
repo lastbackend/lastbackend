@@ -28,7 +28,6 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/log"
 	"github.com/lastbackend/lastbackend/pkg/util/http/utils"
 	"net/http"
-	"fmt"
 )
 
 const logLevel = 2
@@ -65,8 +64,6 @@ func NamespaceListH(w http.ResponseWriter, r *http.Request) {
 func NamespaceInfoH(w http.ResponseWriter, r *http.Request) {
 
 	nid := utils.Vars(r)["namespace"]
-
-	fmt.Println(">>>>>>>>>>>>", nid)
 
 	log.V(logLevel).Debugf("Handler: Namespace: get namespace `%s`", nid)
 

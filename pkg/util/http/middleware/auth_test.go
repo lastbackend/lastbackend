@@ -40,8 +40,6 @@ func GetTestHandler() http.HandlerFunc {
 // Testing NamespaceInfoH handler of a successful request (status 200)
 func TestAuthenticateMiddleware(t *testing.T) {
 
-	a := assert.New(t)
-
 	const token = "demotoken"
 
 	viper.Set("security.token", token)
@@ -90,9 +88,9 @@ func TestAuthenticateMiddleware(t *testing.T) {
 		handler.ServeHTTP(res, req)
 
 		b, err := ioutil.ReadAll(res.Body)
-		a.NoError(err)
+		assert.NoError(t, err)
 
-		a.Equal(tc.expectedCode, res.Code, tc.description)
-		a.Equal(tc.expectedBody, string(b), tc.description)
+		assert.Equal(t, tc.expectedCode, res.Code, tc.description)
+		assert.Equal(t, tc.expectedBody, string(b), tc.description)
 	}
 }
