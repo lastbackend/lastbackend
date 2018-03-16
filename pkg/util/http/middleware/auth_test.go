@@ -16,7 +16,7 @@
 // from Last.Backend LLC.
 //
 
-package middleware
+package middleware_test
 
 import (
 	"testing"
@@ -27,6 +27,7 @@ import (
 	"github.com/spf13/viper"
 	"fmt"
 	"io/ioutil"
+	"github.com/lastbackend/lastbackend/pkg/util/http/middleware"
 )
 
 // GetTestHandler returns a http.HandlerFunc for testing http middleware
@@ -67,7 +68,7 @@ func TestAuthenticateMiddleware(t *testing.T) {
 		},
 	}
 
-	handler := Authenticate(GetTestHandler())
+	handler := middleware.Authenticate(GetTestHandler())
 	ts := httptest.NewServer(handler)
 	defer ts.Close()
 

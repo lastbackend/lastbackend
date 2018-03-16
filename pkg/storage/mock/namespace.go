@@ -22,8 +22,6 @@ import (
 	"context"
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 	"github.com/lastbackend/lastbackend/pkg/storage/storage"
-	"errors"
-	"github.com/lastbackend/lastbackend/pkg/storage/store"
 )
 
 const namespaceStorage = "namespace"
@@ -36,11 +34,10 @@ type NamespaceStorage struct {
 
 // Get namespace by name
 func (s *NamespaceStorage) GetByName(ctx context.Context, name string) (*types.Namespace, error) {
-	if ns, ok := s.data[name]; !ok {
-		return nil, errors.New(store.ErrKeyNotFound)
-	} else {
+	if ns, ok := s.data[name]; ok {
 		return ns, nil
 	}
+	return nil, nil
 }
 
 // List projects
@@ -54,32 +51,26 @@ func (s *NamespaceStorage) List(ctx context.Context) ([]*types.Namespace, error)
 
 // Insert new namespace into storage
 func (s *NamespaceStorage) Insert(ctx context.Context, namespace *types.Namespace) error {
-	if _, ok := s.data[namespace.Meta.Name]; ok {
-		return errors.New(store.ErrKeyExists)
-	} else {
+	if _, ok := s.data[namespace.Meta.Name]; !ok {
 		s.data[namespace.Meta.Name] = namespace
-		return nil
 	}
+	return nil
 }
 
 // Update namespace model
 func (s *NamespaceStorage) Update(ctx context.Context, namespace *types.Namespace) error {
-	if _, ok := s.data[namespace.Meta.Name]; !ok {
-		return errors.New(store.ErrKeyNotFound)
-	} else {
+	if _, ok := s.data[namespace.Meta.Name]; ok {
 		s.data[namespace.Meta.Name] = namespace
-		return nil
 	}
+	return nil
 }
 
 // Remove namespace model
 func (s *NamespaceStorage) Remove(ctx context.Context, name string) error {
-	if _, ok := s.data[name]; !ok {
-		return errors.New(store.ErrKeyNotFound)
-	} else {
+	if _, ok := s.data[name]; ok {
 		delete(s.data, name)
-		return nil
 	}
+	return nil
 }
 
 func newNamespaceStorage() *NamespaceStorage {
