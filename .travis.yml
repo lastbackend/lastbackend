@@ -10,6 +10,9 @@ go:
 install:
   - make deps
 
+test:
+  - make test
+
 script:
   - make build
 
