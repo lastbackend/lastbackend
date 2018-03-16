@@ -2,7 +2,7 @@
 // Last.Backend LLC CONFIDENTIAL
 // __________________
 //
-// [2014] - [2017] Last.Backend LLC
+// [2014] - [2018] Last.Backend LLC
 // All Rights Reserved.
 //
 // NOTICE:  All information contained herein is, and remains
@@ -23,14 +23,14 @@ import (
 )
 
 type Storage struct {
-	*AppStorage
+	*NamespaceStorage
 }
 
-func (s *Storage) App() IApp {
+func (s *Storage) Namespace() INspace {
 	if s == nil {
 		return nil
 	}
-	return s.AppStorage
+	return s.NamespaceStorage
 }
 
 func Get() (*Storage, error) {
@@ -41,7 +41,8 @@ func Get() (*Storage, error) {
 	}
 
 	store := new(Storage)
-	store.AppStorage = newAppStorage(client)
+
+	store.NamespaceStorage = newNamespaceStorage(client)
 
 	return store, nil
 }

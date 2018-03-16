@@ -9,6 +9,12 @@
 			"revisionTime": "2018-01-15T10:24:50Z"
 		},
 		{
+			"checksumSHA1": "20Pind5XCrfZL/F0oibWfd9gotA=",
+			"path": "github.com/boltdb/bolt",
+			"revision": "fd01fc79c553a8e99d512a07e8e0c63d4a3ccfc5",
+			"revisionTime": "2018-03-02T18:00:52Z"
+		},
+		{
 			"checksumSHA1": "SVDbxtq6zlRJ/mB0EAau/f9r4Hc=",
 			"path": "github.com/coreos/etcd/auth/authpb",
 			"revision": "892939f82f79f1d526c3dc2ea67cc9d2e6437188",
@@ -382,6 +388,12 @@
 			"path": "github.com/magiconair/properties",
 			"revision": "2c9e9502788518c97fe44e8955cd069417ee89df",
 			"revisionTime": "2018-02-17T13:45:45Z"
+		},
+		{
+			"checksumSHA1": "A/hIVM4h5YznSJfpfp+divDCuxo=",
+			"path": "github.com/mattn/go-runewidth",
+			"revision": "a9d6d1e4dc51df2130326793d49971f238839169",
+			"revisionTime": "2018-03-04T23:54:28Z"
 		},
 		{
 			"checksumSHA1": "XTeOihCDhjG6ltUKExoJ2uEzShk=",

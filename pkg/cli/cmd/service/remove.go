@@ -2,7 +2,7 @@
 // Last.Backend LLC CONFIDENTIAL
 // __________________
 //
-// [2014] - [2017] Last.Backend LLC
+// [2014] - [2018] Last.Backend LLC
 // All Rights Reserved.
 //
 // NOTICE:  All information contained herein is, and remains
@@ -20,10 +20,10 @@ package service
 
 import (
 	"fmt"
-	nspace "github.com/lastbackend/lastbackend/pkg/cli/cmd/app"
+
+	n "github.com/lastbackend/lastbackend/pkg/cli/cmd/namespace"
 	c "github.com/lastbackend/lastbackend/pkg/cli/context"
-	"github.com/lastbackend/lastbackend/pkg/common/errors"
-	"github.com/lastbackend/lastbackend/pkg/common/types"
+	e "github.com/lastbackend/lastbackend/pkg/distribution/errors"
 )
 
 func RemoveCmd(name string) {
@@ -42,28 +42,32 @@ func Remove(name string) error {
 	var (
 		err  error
 		http = c.Get().GetHttpClient()
-		srv  = new(types.App)
-		er   = new(errors.Http)
+		res  = new(struct{})
+		er   = new(e.Http)
 	)
 
-	ns, err := nspace.Current()
+	ns, err := n.Current()
 	if err != nil {
 		return err
+	}
+	if ns.Meta == nil {
+		return e.New("Workspace didn't select")
 	}
 
 	_, _, err = http.
-		DELETE(fmt.Sprintf("/app/%s/service/%s", ns.Meta.Name, name)).
-		Request(srv, er)
+		DELETE(fmt.Sprintf("/namespace/%s/service/%s", ns.Meta.Name, name)).
+		AddHeader("Content-Type", "application/json").
+		Request(&res, er)
 	if err != nil {
-		return err
+		return e.UnknownMessage
 	}
 
 	if er.Code == 401 {
-		return errors.NotLoggedMessage
+		return e.NotLoggedMessage
 	}
 
 	if er.Code != 0 {
-		return errors.New(er.Message)
+		return e.New(er.Message)
 	}
 
 	return nil

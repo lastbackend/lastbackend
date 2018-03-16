@@ -30,5 +30,6 @@ _testmain.go
 
 vendor/*/
 docs/output/
-coverage.txt
 /build/
+coverage.txt
+/profile.out

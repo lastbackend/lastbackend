@@ -2,7 +2,7 @@
 // Last.Backend LLC CONFIDENTIAL
 // __________________
 //
-// [2014] - [2017] Last.Backend LLC
+// [2014] - [2018] Last.Backend LLC
 // All Rights Reserved.
 //
 // NOTICE:  All information contained herein is, and remains
@@ -16,65 +16,71 @@
 // from Last.Backend LLC.
 //
 
-package app
+package namespace
 
 import (
 	"fmt"
-	n "github.com/lastbackend/lastbackend/pkg/api/app/views/v1"
+
 	c "github.com/lastbackend/lastbackend/pkg/cli/context"
-	"github.com/lastbackend/lastbackend/pkg/common/errors"
+	v "github.com/lastbackend/lastbackend/pkg/cli/view"
+	e "github.com/lastbackend/lastbackend/pkg/distribution/errors"
 )
 
-type createS struct {
-	Name string `json:"name"`
-	Desc string `json:"description"`
-}
+func ListCmd() {
 
-func CreateCmd(name, description string) {
-
-	err := Create(name, description)
+	nCurrent, nsList, err := List()
 	if err != nil {
 		fmt.Println(err)
 		return
 	}
 
-	fmt.Println(fmt.Sprintf("App `%s` is created", name))
+	nsList.Print(nCurrent)
 }
 
-func Create(name, description string) error {
+func List() (string, *v.NamespaceList, error) {
 
 	var (
-		err  error
-		http = c.Get().GetHttpClient()
-		er   = new(errors.Http)
-		a    = new(n.App)
+		err      error
+		http     = c.Get().GetHttpClient()
+		er       = new(e.Http)
+		response = new(v.NamespaceList)
 	)
 
-	if len(name) == 0 {
-		return errors.BadParameter("name").Err()
-	}
-
 	_, _, err = http.
-		POST("/app").
+		GET("/namespace").
 		AddHeader("Content-Type", "application/json").
-		BodyJSON(createS{name, description}).
-		Request(&a, er)
+		Request(response, er)
 	if err != nil {
-		return errors.New(er.Message)
+		return "", nil, e.UnknownMessage
 	}
 
 	if er.Code == 401 {
-		return errors.NotLoggedMessage
+		return "", nil, e.NotLoggedMessage
+	}
+
+	if er.Code == 404 {
+		return "", nil, e.New(er.Message)
+	}
+
+	if er.Code == 500 {
+		return "", nil, e.UnknownMessage
 	}
 
 	if er.Code != 0 {
-		return errors.New(er.Message)
+		return "", nil, e.New(er.Message)
 	}
 
-	a, err = Switch(name)
+	if len(*response) == 0 {
+		return "", nil, e.New("You don't have any workspace")
+	}
+
+	ns, err := Current()
 	if err != nil {
-		return err
+		return "", nil, err
+	}
+	if ns.Meta != nil {
+		return ns.Meta.Name, response, nil
 	}
 
-	return nil
+	return "", response, nil
 }

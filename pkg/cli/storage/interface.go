@@ -2,7 +2,7 @@
 // Last.Backend LLC CONFIDENTIAL
 // __________________
 //
-// [2014] - [2017] Last.Backend LLC
+// [2014] - [2018] Last.Backend LLC
 // All Rights Reserved.
 //
 // NOTICE:  All information contained herein is, and remains
@@ -19,15 +19,15 @@
 package storage
 
 import (
-	n "github.com/lastbackend/lastbackend/pkg/api/app/views/v1"
+	v "github.com/lastbackend/lastbackend/pkg/cli/view"
 )
 
 type IStorage interface {
-	App() IApp
+	Namespace() INspace
 }
 
-type IApp interface {
-	Save(ns *n.App) error
-	Load() (*n.App, error)
+type INspace interface {
+	Save(ns *v.Namespace) error
+	Load() (*v.Namespace, error)
 	Remove() error
 }

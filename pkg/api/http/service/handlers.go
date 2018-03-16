@@ -38,16 +38,24 @@ func ServiceListH(w http.ResponseWriter, r *http.Request) {
 
 	log.V(logLevel).Debugf("Handler: Service: list services in %s", nid)
 
-	if r.Context().Value("namespace") == nil {
-		errors.HTTP.Forbidden(w)
+	var (
+		sm  = distribution.NewServiceModel(r.Context(), envs.Get().GetStorage())
+		nsm = distribution.NewNamespaceModel(r.Context(), envs.Get().GetStorage())
+		dm  = distribution.NewDeploymentModel(r.Context(), envs.Get().GetStorage())
+	)
+
+	ns, err := nsm.Get(nid)
+	if err != nil {
+		log.V(logLevel).Errorf("Handler: Service: get namespace", err)
+		errors.HTTP.InternalServerError(w)
 		return
 	}
-
-	var (
-		sm = distribution.NewServiceModel(r.Context(), envs.Get().GetStorage())
-		dm = distribution.NewDeploymentModel(r.Context(), envs.Get().GetStorage())
-		ns = r.Context().Value("namespace").(*types.Namespace)
-	)
+	if ns == nil {
+		err := errors.New("namespace not found")
+		log.V(logLevel).Errorf("Handler: Service: get namespace", err)
+		errors.New("namespace").NotFound().Http(w)
+		return
+	}
 
 	items, err := sm.List(ns.Meta.Name)
 	if err != nil {
@@ -84,17 +92,25 @@ func ServiceInfoH(w http.ResponseWriter, r *http.Request) {
 
 	log.V(logLevel).Debugf("Handler: Service: get service `%s` in namespace `%s`", sid, nid)
 
-	if r.Context().Value("namespace") == nil {
-		errors.HTTP.Forbidden(w)
-		return
-	}
-
 	var (
 		sm  = distribution.NewServiceModel(r.Context(), envs.Get().GetStorage())
+		nsm = distribution.NewNamespaceModel(r.Context(), envs.Get().GetStorage())
 		dm  = distribution.NewDeploymentModel(r.Context(), envs.Get().GetStorage())
 		pdm = distribution.NewPodModel(r.Context(), envs.Get().GetStorage())
-		ns  = r.Context().Value("namespace").(*types.Namespace)
 	)
+
+	ns, err := nsm.Get(nid)
+	if err != nil {
+		log.V(logLevel).Errorf("Handler: Service: get namespace", err)
+		errors.HTTP.InternalServerError(w)
+		return
+	}
+	if ns == nil {
+		err := errors.New("namespace not found")
+		log.V(logLevel).Errorf("Handler: Service: get namespace", err)
+		errors.New("namespace").NotFound().Http(w)
+		return
+	}
 
 	srv, err := sm.Get(ns.Meta.Name, sid)
 	if err != nil {
@@ -142,30 +158,29 @@ func ServiceCreateH(w http.ResponseWriter, r *http.Request) {
 
 	log.V(logLevel).Debugf("Handler: Service: create service in namespace `%s`", nid)
 
-	if r.Context().Value("namespace") == nil {
-		errors.HTTP.Forbidden(w)
-		return
-	}
-
 	var (
-		sm = distribution.NewServiceModel(r.Context(), envs.Get().GetStorage())
-		ns = r.Context().Value("namespace").(*types.Namespace)
+		nsm = distribution.NewNamespaceModel(r.Context(), envs.Get().GetStorage())
+		sm  = distribution.NewServiceModel(r.Context(), envs.Get().GetStorage())
 	)
 
 	opts := new(types.ServiceCreateOptions)
 	if err := opts.DecodeAndValidate(r.Body); err != nil {
 		log.V(logLevel).Errorf("Handler: Service: validation incoming data err: %s", err.Err())
-		errors.New("Invalid incoming data").Unknown().Http(w)
+		err.Http(w)
 		return
 	}
 
-	// Check memory limit reachable
-	if !ns.Quotas.Disabled && opts.Spec.Memory != nil {
-		if ns.Quotas.RAM < ns.Resources.RAM+(int64(*opts.Replicas)**opts.Spec.Memory) {
-			log.V(logLevel).Warnf("Handler: Service: limit quotes reachable")
-			errors.New("service").BadParameter("memory").Http(w)
-			return
-		}
+	ns, err := nsm.Get(nid)
+	if err != nil {
+		log.V(logLevel).Errorf("Handler: Service: get namespace", err)
+		errors.HTTP.InternalServerError(w)
+		return
+	}
+	if ns == nil {
+		err := errors.New("namespace not found")
+		log.V(logLevel).Errorf("Handler: Service: get namespace", err)
+		errors.New("namespace").NotFound().Http(w)
+		return
 	}
 
 	srv, err := sm.Get(ns.Meta.Name, *opts.Name)
@@ -208,21 +223,29 @@ func ServiceUpdateH(w http.ResponseWriter, r *http.Request) {
 
 	log.V(logLevel).Debugf("Handler: Service: update service `%s` in namespace `%s`", sid, nid)
 
-	if r.Context().Value("namespace") == nil {
-		errors.HTTP.Forbidden(w)
-		return
-	}
-
 	var (
-		sm = distribution.NewServiceModel(r.Context(), envs.Get().GetStorage())
-		ns = r.Context().Value("namespace").(*types.Namespace)
+		nsm = distribution.NewNamespaceModel(r.Context(), envs.Get().GetStorage())
+		sm  = distribution.NewServiceModel(r.Context(), envs.Get().GetStorage())
 	)
 
 	// request body struct
 	opts := new(types.ServiceUpdateOptions)
 	if err := opts.DecodeAndValidate(r.Body); err != nil {
 		log.V(logLevel).Errorf("Handler: Service: validation incoming data err: %s", err.Err())
-		errors.New("Invalid incoming data").Unknown().Http(w)
+		err.Http(w)
+		return
+	}
+
+	ns, err := nsm.Get(nid)
+	if err != nil {
+		log.V(logLevel).Errorf("Handler: Service: get namespace", err)
+		errors.HTTP.InternalServerError(w)
+		return
+	}
+	if ns == nil {
+		err := errors.New("namespace not found")
+		log.V(logLevel).Errorf("Handler: Service: get namespace", err)
+		errors.New("namespace").NotFound().Http(w)
 		return
 	}
 
@@ -236,15 +259,6 @@ func ServiceUpdateH(w http.ResponseWriter, r *http.Request) {
 		log.V(logLevel).Warnf("Handler: Service: service name `%s` in namespace `%s` not found", sid, ns.Meta.Name)
 		errors.New("service").NotFound().Http(w)
 		return
-	}
-
-	// Check memory limit reachable
-	if !ns.Quotas.Disabled && opts.Spec.Memory != nil {
-		if ns.Quotas.RAM < ns.Resources.RAM+(int64(svc.Spec.Replicas)**opts.Spec.Memory) {
-			log.V(logLevel).Warnf("Handler: Service: limit quotes reachable")
-			errors.New("service").BadParameter("memory").Http(w)
-			return
-		}
 	}
 
 	srv, err := sm.Update(svc, opts)
@@ -275,15 +289,23 @@ func ServiceRemoveH(w http.ResponseWriter, r *http.Request) {
 
 	log.V(logLevel).Debugf("Handler: Service: remove service `%s` from app `%s`", sid, nid)
 
-	if r.Context().Value("namespace") == nil {
-		errors.HTTP.Forbidden(w)
+	var (
+		nsm = distribution.NewNamespaceModel(r.Context(), envs.Get().GetStorage())
+		sm  = distribution.NewServiceModel(r.Context(), envs.Get().GetStorage())
+	)
+
+	ns, err := nsm.Get(nid)
+	if err != nil {
+		log.V(logLevel).Errorf("Handler: Service: get namespace", err)
+		errors.HTTP.InternalServerError(w)
 		return
 	}
-
-	var (
-		sm = distribution.NewServiceModel(r.Context(), envs.Get().GetStorage())
-		ns = r.Context().Value("namespace").(*types.Namespace)
-	)
+	if ns == nil {
+		err := errors.New("namespace not found")
+		log.V(logLevel).Errorf("Handler: Service: get namespace", err)
+		errors.New("namespace").NotFound().Http(w)
+		return
+	}
 
 	svc, err := sm.Get(ns.Meta.Name, sid)
 	if err != nil {

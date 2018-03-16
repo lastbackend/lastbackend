@@ -2,7 +2,7 @@
 // Last.Backend LLC CONFIDENTIAL
 // __________________
 //
-// [2014] - [2017] Last.Backend LLC
+// [2014] - [2018] Last.Backend LLC
 // All Rights Reserved.
 //
 // NOTICE:  All information contained herein is, and remains
@@ -16,54 +16,38 @@
 // from Last.Backend LLC.
 //
 
-package app
+package cluster
 
 import (
-	"fmt"
-	a "github.com/lastbackend/lastbackend/pkg/api/app/views/v1"
 	c "github.com/lastbackend/lastbackend/pkg/cli/context"
-	"github.com/lastbackend/lastbackend/pkg/common/errors"
+	v "github.com/lastbackend/lastbackend/pkg/cli/view"
+	e "github.com/lastbackend/lastbackend/pkg/distribution/errors"
 )
 
-func GetCmd(name string) {
-
-	ns, err := Get(name)
-	if err != nil {
-		fmt.Print(err)
-		return
-	}
-
-	ns.DrawTable()
-}
-
-func Get(name string) (*a.App, error) {
+func List() (*v.ClusterList, error) {
 
 	var (
-		err  error
-		http = c.Get().GetHttpClient()
-		er   = new(errors.Http)
-		app  = new(a.App)
+		err      error
+		http     = c.Get().GetHttpClient()
+		er       = new(e.Http)
+		response = new(v.ClusterList)
 	)
 
-	if len(name) == 0 {
-		return nil, errors.BadParameter("name").Err()
-	}
-
 	_, _, err = http.
-		GET(fmt.Sprintf("/app/%s", name)).
+		GET("/cluster").
 		AddHeader("Content-Type", "application/json").
-		Request(&app, er)
+		Request(response, er)
 	if err != nil {
-		return nil, errors.New(er.Message)
+		return nil, e.UnknownMessage
 	}
 
 	if er.Code == 401 {
-		return nil, errors.NotLoggedMessage
+		return nil, e.NotLoggedMessage
 	}
 
 	if er.Code != 0 {
-		return nil, errors.New(er.Message)
+		return nil, e.New(er.Message)
 	}
 
-	return app, nil
+	return response, nil
 }
