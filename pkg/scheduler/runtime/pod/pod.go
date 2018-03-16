@@ -47,7 +47,7 @@ func Provision(p *types.Pod) error {
 			return errors.New(errors.NodeNotFound)
 		}
 
-		if err := stg.Node().UpdatePod(context.Background(), &n.Meta, p); err != nil {
+		if err := stg.Node().InsertPod(context.Background(), n, p); err != nil {
 			log.Errorf("Node: update pod spec err: %s", err.Error())
 			return err
 		}
@@ -70,7 +70,7 @@ func Provision(p *types.Pod) error {
 
 	for _, n := range nodes {
 		log.Debugf("Node: Allocate: available memory %d", n.State.Capacity)
-		if n.State.Capacity.Memory > memory && n.Alive {
+		if n.State.Capacity.Memory > memory && n.Online {
 			node = n
 			break
 		}
@@ -81,7 +81,7 @@ func Provision(p *types.Pod) error {
 		return errors.New(errors.NodeNotFound)
 	}
 
-	if err := stg.Node().InsertPod(context.Background(), &node.Meta, p); err != nil {
+	if err := stg.Node().InsertPod(context.Background(), node, p); err != nil {
 		log.Errorf("Node: Pod spec add: insert spec to node err: %s", err.Error())
 		return err
 	}

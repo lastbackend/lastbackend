@@ -25,7 +25,7 @@ import (
 
 const endpointStorage = "endpoints"
 
-// Endpoint Service type for interface in interfaces folder
+// EndpointStorage type for interface in interfaces folder
 type EndpointStorage struct {
 	storage.Endpoint
 }
@@ -35,7 +35,7 @@ func (s *EndpointStorage) Get(ctx context.Context, name string) ([]string, error
 	return make([]string, 0), nil
 }
 
-// Update endpoint model
+// Upsert endpoint model
 func (s *EndpointStorage) Upsert(ctx context.Context, name string, ips []string) error {
 	return nil
 }
@@ -45,7 +45,7 @@ func (s *EndpointStorage) Remove(ctx context.Context, name string) error {
 	return nil
 }
 
-// WatchSetvice endpoint model
+// Watch endpoint model
 func (s *EndpointStorage) Watch(ctx context.Context, endpoint chan string) error {
 	return nil
 }

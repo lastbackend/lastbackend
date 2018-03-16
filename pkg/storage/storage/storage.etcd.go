@@ -20,6 +20,7 @@ package storage
 
 import (
 	"context"
+
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 )
 
@@ -78,14 +79,15 @@ type Pod interface {
 }
 
 type Volume interface {
-	GetByToken(ctx context.Context, token string) (*types.Volume, error)
+	Get(ctx context.Context, token string) (*types.Volume, error)
 	ListByNamespace(ctx context.Context, namespace string) ([]*types.Volume, error)
 	Insert(ctx context.Context, volume *types.Volume) error
 	Remove(ctx context.Context, id string) error
 }
 
 type Cluster interface {
-	Info(ctx context.Context) (*types.Cluster, error)
+	Insert(ctx context.Context, cluster *types.Cluster) error
+	Get(ctx context.Context) (*types.Cluster, error)
 	Update(ctx context.Context, cluster *types.Cluster) error
 }
 
@@ -101,14 +103,19 @@ type Node interface {
 	SetInfo(ctx context.Context, node *types.Node) error
 	SetNetwork(ctx context.Context, node *types.Node) error
 
-	SetAvailable(ctx context.Context, node *types.Node) error
-	SetUnavailable(ctx context.Context, node *types.Node) error
+	SetOnline(ctx context.Context, node *types.Node) error
+	SetOffline(ctx context.Context, node *types.Node) error
 
-	InsertPod(ctx context.Context, meta *types.NodeMeta, pod *types.Pod) error
-	UpdatePod(ctx context.Context, meta *types.NodeMeta, pod *types.Pod) error
-	RemovePod(ctx context.Context, meta *types.NodeMeta, pod *types.Pod) error
+	InsertPod(ctx context.Context, node *types.Node, pod *types.Pod) error
+	RemovePod(ctx context.Context, node *types.Node, pod *types.Pod) error
 
-	Remove(ctx context.Context, name string) error
+	InsertVolume(ctx context.Context, node *types.Node, volume *types.Volume) error
+	RemoveVolume(ctx context.Context, node *types.Node, volume *types.Volume) error
+
+	InsertRoute(ctx context.Context, node *types.Node, route *types.Route) error
+	RemoveRoute(ctx context.Context, node *types.Node, route *types.Route) error
+
+	Remove(ctx context.Context, node *types.Node) error
 	Watch(ctx context.Context, node chan *types.Node) error
 }
 

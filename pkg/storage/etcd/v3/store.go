@@ -94,7 +94,7 @@ func (s *store) Create(ctx context.Context, key string, obj, outPtr interface{},
 		return err
 	}
 	if !txnResp.Succeeded {
-		return errors.New(st.ErrKeyExists)
+		return errors.New(st.ErrEntityExists)
 	}
 	if validator.IsNil(outPtr) {
 		log.V(logLevel).Warn("Etcd3: Create: output struct is nil")
@@ -119,7 +119,7 @@ func (s *store) Get(ctx context.Context, key string, outPtr interface{}) error {
 		return err
 	}
 	if len(res.Kvs) == 0 {
-		return errors.New(st.ErrKeyNotFound)
+		return errors.New(st.ErrEntityNotFound)
 	}
 	if err := decode(s.codec, res.Kvs[0].Value, outPtr); err != nil {
 		log.V(logLevel).Errorf("Etcd3: Get: decode data err: %s", err.Error())
@@ -194,7 +194,7 @@ func (s *store) Map(ctx context.Context, key, keyRegexFilter string, mapOutPtr i
 	}
 
 	if len(items) == 0 {
-		return errors.New(st.ErrKeyNotFound)
+		return errors.New(st.ErrEntityNotFound)
 	}
 
 	if err := decodeMap(s.codec, items, mapOutPtr); err != nil {
@@ -268,7 +268,7 @@ func (s *store) Update(ctx context.Context, key string, obj, outPtr interface{},
 		return err
 	}
 	if !txnResp.Succeeded {
-		return errors.New(st.ErrKeyNotFound)
+		return errors.New(st.ErrEntityNotFound)
 	}
 	if validator.IsNil(outPtr) {
 		log.V(logLevel).Warn("Etcd3: Update: output struct is nil")
@@ -305,7 +305,7 @@ func (s *store) Upsert(ctx context.Context, key string, obj, outPtr interface{},
 		return err
 	}
 	if !txnResp.Succeeded {
-		return errors.New(st.ErrKeyExists)
+		return errors.New(st.ErrEntityExists)
 	}
 	if validator.IsNil(outPtr) {
 		log.V(logLevel).Warn("Etcd3: Upsert: output struct is nil")

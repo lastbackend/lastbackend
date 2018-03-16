@@ -44,142 +44,142 @@ type Pod struct {
 	// Lock map
 	lock sync.RWMutex
 	// Pod Meta
-	Meta PodMeta `json:"meta"`
+	Meta PodMeta `json:"meta" yaml:"meta"`
 	// Pod state
-	State PodState `json:"state"`
+	State PodState `json:"state" yaml:"state"`
 	// Pod Spec
-	Spec SpecTemplate `json:"spec"`
+	Spec PodSpec `json:"spec" yaml:"spec"`
 	// Containers status info
-	Status PodStatus `json:"status"`
+	Status PodStatus `json:"status" yaml:"status"`
 }
 
 type PodMeta struct {
-	Meta
+	Meta `yaml:",inline"`
 	// Pod SelfLink
-	SelfLink string `json:"self_link"`
-	// Pod deployment name
-	Deployment string `json:"deployment"`
-	// Pod service name
-	Namespace string `json:"namespace"`
-	// Pod service name
-	Service string `json:"service"`
-	// Pod node
-	Node string `json:"node"`
+	SelfLink string `json:"self_link" yaml:"self_link"`
+	// Pod deployment
+	Deployment string `json:"deployment" yaml:"deployment"`
+	// Pod service
+	Service string `json:"service" yaml:"service"`
+	// Pod service id
+	Namespace string `json:"namespace" yaml:"namespace"`
+	// Pod node hostname
+	Node string `json:"node" yaml:"node"`
 	// Pod status
-	Status string `json:"status"`
-	// Pod endpoint
-	Endpoint string `json:"endpoint"`
+	Status string `json:"status" yaml:"status"`
+	// Endpoint
+	Endpoint string `json:"endpoint" yaml:"endpoint"`
 }
 
 type PodState struct {
 	// Pod state scheduled
-	Scheduled bool `json:"scheduled"`
+	Scheduled bool `json:"scheduled" yaml:"scheduled"`
 	// Pod state provision
-	Provision bool `json:"provision"`
+	Provision bool `json:"provision" yaml:"provision"`
 	// Pod state error
-	Error bool `json:"error"`
+	Error bool `json:"error" yaml:"error"`
 	// Pod state created
-	Created bool `json:"created"`
+	Created bool `json:"created" yaml:"created"`
 	// Pod state created
-	Pulling bool `json:"pulling"`
+	Pulling bool `json:"pulling" yaml:"pulling"`
 	// Pod state started
-	Running bool `json:"started"`
+	Running bool `json:"started" yaml:"started"`
 	// Pod state stopped
-	Stopped bool `json:"stopped"`
+	Stopped bool `json:"stopped" yaml:"stopped"`
 	// Pod state destroy
-	Destroy bool `json:"destroy"`
+	Destroy bool `json:"destroy" yaml:"destroy"`
 }
 
 type PodStatus struct {
 	// Pod stage
-	Stage string `json:"stage"`
+	Stage string `json:"stage" yaml:"stage"`
 	// Pod state message
-	Message string `json:"message"`
+	Message string `json:"message" yaml:"message"`
 	// Pod steps
-	Steps PodSteps `json:"steps"`
+	Steps PodSteps `json:"steps" yaml:"steps"`
 	// Pod network
-	Network PodNetwork `json:"network"`
+	Network PodNetwork `json:"network" yaml:"network"`
 	// Pod containers
-	Containers map[string]*PodContainer `json:"containers"`
+	Containers map[string]*PodContainer `json:"containers" yaml:"containers"`
 }
 
 type PodSteps map[string]PodStep
 
 type PodStep struct {
 	// Pod step ready
-	Ready bool `json:"ready"`
+	Ready bool `json:"ready" yaml:"ready"`
 	// Pod step timestamp
-	Timestamp time.Time `json:"timestamp"`
+	Timestamp time.Time `json:"timestamp" yaml:"timestamp"`
 }
 
 type PodNetwork struct {
 	// Pod host IP
-	HostIP string `json:"host_ip"`
+	HostIP string `json:"host_ip" yaml:"host_ip"`
 	// Pod IP
-	PodIP string `json:"pod_ip"`
+	PodIP string `json:"pod_ip" yaml:"pod_ip"`
 }
 
 type PodContainer struct {
 	// Pod container ID
-	ID string `json:"id"`
+	ID string `json:"id" yaml:"id"`
 	// Pod ID
-	Pod string `json:"pod"`
+	Pod string `json:"pod" yaml:"pod"`
 	// Pod container name
-	Name string `json:"name"`
+	Name string `json:"name" yaml:"name"`
 	// Pod container state
-	State PodContainerState `json:"state"`
+	State PodContainerState `json:"state" yaml:"state"`
 	// Pod container ready
-	Ready bool `json:"ready"`
+	Ready bool `json:"ready" yaml:"ready"`
 	// Pod container restart count
-	Restart int `json:"restared"`
+	Restart int `json:"restared" yaml:"restared"`
 	// Pod container image meta
-	Image PodContainerImage `json:"image"`
+	Image PodContainerImage `json:"image" yaml:"image"`
 }
 
 type PodContainerImage struct {
 	// Pod container image ID
-	ID string `json:"id"`
+	ID string `json:"id" yaml:"id"`
 	// Pod container image name
-	Name string `json:"name"`
+	Name string `json:"name" yaml:"name"`
 }
 
 type PodContainerState struct {
 	// Container create state
-	Created PodContainerStateCreated `json:"created"`
+	Created PodContainerStateCreated `json:"created" yaml:"created"`
 
 	// Container started state
-	Started PodContainerStateStarted `json:"started"`
+	Started PodContainerStateStarted `json:"started" yaml:"started"`
 
 	// Container stopped state
-	Stopped PodContainerStateStopped `json:"stopped"`
+	Stopped PodContainerStateStopped `json:"stopped" yaml:"stopped"`
 
 	// Container error state
-	Error PodContainerStateError `json:"error"`
+	Error PodContainerStateError `json:"error" yaml:"error"`
 }
 
 type PodContainerStateCreated struct {
-	Created time.Time `json:"created"`
+	Created time.Time `json:"created" yaml:"created"`
 }
 
 type PodContainerStateStarted struct {
-	Started   bool      `json:"started"`
-	Timestamp time.Time `json:"timestamp"`
+	Started   bool      `json:"started" yaml:"started"`
+	Timestamp time.Time `json:"timestamp" yaml:"timestamp"`
 }
 
 type PodContainerStateStopped struct {
-	Stopped bool                  `json:"stopped"`
-	Exit    PodContainerStateExit `json:"exit"`
+	Stopped bool                  `json:"stopped" yaml:"stopped"`
+	Exit    PodContainerStateExit `json:"exit" yaml:"exit"`
 }
 
 type PodContainerStateError struct {
-	Error   bool                  `json:"error"`
-	Message string                `json:"message"`
-	Exit    PodContainerStateExit `json:"exit"`
+	Error   bool                  `json:"error" yaml:"error"`
+	Message string                `json:"message" yaml:"message"`
+	Exit    PodContainerStateExit `json:"exit" yaml:"exit"`
 }
 
 type PodContainerStateExit struct {
-	Code      int       `json:"code"`
-	Timestamp time.Time `json:"timestamp"`
+	Code      int       `json:"code" yaml:"code"`
+	Timestamp time.Time `json:"timestamp" yaml:"timestamp"`
 }
 
 func NewPod() *Pod {

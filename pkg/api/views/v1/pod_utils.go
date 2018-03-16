@@ -63,7 +63,7 @@ func (pv *PodView) toState(pod types.PodState) PodState {
 	}
 }
 
-func (pv *PodView) toSpec(pod types.SpecTemplate) PodSpec {
+func (pv *PodView) toSpec(pod types.PodSpec) PodSpec {
 	return PodSpec{
 		Volumes:     pod.Volumes,
 		Containers:  pod.Containers,

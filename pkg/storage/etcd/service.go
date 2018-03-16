@@ -80,17 +80,17 @@ func (s *ServiceStorage) Get(ctx context.Context, app, name string) (*types.Serv
 	}
 
 	if service.Meta.Name == "" {
-		return nil, errors.New(store.ErrKeyNotFound)
+		return nil, errors.New(store.ErrEntityNotFound)
 	}
 
 	keySpec := keyCreate(serviceStorage, app, name, "spec")
-	if err := client.Map(ctx, keySpec, "", &service.Spec); err != nil && err.Error() != store.ErrKeyNotFound {
+	if err := client.Map(ctx, keySpec, "", &service.Spec); err != nil && err.Error() != store.ErrEntityNotFound {
 		log.V(logLevel).Errorf("Storage: Service: Map service `%s` spec err: %s", name, err.Error())
 		return nil, err
 	}
 
 	keyPods := keyCreate(podStorage, app, fmt.Sprintf("%s:%s", app, name))
-	if err := client.Map(ctx, keyPods, "", &service.Deployments); err != nil && err.Error() != store.ErrKeyNotFound {
+	if err := client.Map(ctx, keyPods, "", &service.Deployments); err != nil && err.Error() != store.ErrEntityNotFound {
 		log.V(logLevel).Errorf("Storage: Service: Map service `%s` pods err: %s", name, err.Error())
 		return nil, err
 	}
@@ -100,14 +100,14 @@ func (s *ServiceStorage) Get(ctx context.Context, app, name string) (*types.Serv
 		filterPodEndpoint := `\b.+` + endpointStorage + `\/` + name + `\..+\b`
 		endpoints := make(map[string][]string)
 		keyEndpoints := keyCreate(endpointStorage)
-		if err := client.Map(ctx, keyEndpoints, filterPodEndpoint, endpoints); err != nil && err.Error() != store.ErrKeyNotFound {
+		if err := client.Map(ctx, keyEndpoints, filterPodEndpoint, endpoints); err != nil && err.Error() != store.ErrEntityNotFound {
 			log.V(logLevel).Errorf("Storage: Service: map endpoints for pod err: %s", name, err.Error())
 			return nil, err
 		}
 	}
 
 	keyEndpoints := keyCreate(endpointStorage)
-	if err := client.Map(ctx, keyEndpoints, filterServiceEndpoint, endpoints); err != nil && err.Error() != store.ErrKeyNotFound {
+	if err := client.Map(ctx, keyEndpoints, filterServiceEndpoint, endpoints); err != nil && err.Error() != store.ErrEntityNotFound {
 		log.V(logLevel).Errorf("Storage: Service: map service endpoint `%s` meta err: %s", name, err.Error())
 		return nil, err
 	}
@@ -305,7 +305,7 @@ func (s *ServiceStorage) UpdateSpec(ctx context.Context, service *types.Service)
 
 	keySpec := keyCreate(serviceStorage, service.Meta.Namespace, service.Meta.Name, "spec")
 	if err := client.Map(ctx, keySpec, "", service.Spec); err != nil {
-		if err.Error() != store.ErrKeyNotFound {
+		if err.Error() != store.ErrEntityNotFound {
 			log.V(logLevel).Errorf("Storage: Service: map spec err: %s", err.Error())
 			return err
 		}

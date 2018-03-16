@@ -26,7 +26,7 @@ import (
 const ContainerRolePrimary = "primary"
 const ContainerRoleSlave = "slave"
 
-type SpecTemplate struct {
+type PodSpec struct {
 	// Template Volume
 	Volumes SpecTemplateVolumes `json:"volumes"`
 	// Template main container
@@ -285,7 +285,7 @@ func (s *SpecTemplateContainerEnvs) ToLinuxFormat() []string {
 	return env
 }
 
-func (s *SpecTemplate) SetDefault() {
+func (s *PodSpec) SetDefault() {
 	// Set default configurations
 
 	s.Containers = make(SpecTemplateContainers, 1)

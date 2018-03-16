@@ -28,9 +28,8 @@ type RouteView struct{}
 
 func (rv *RouteView) New(obj *types.Route) *Route {
 	r := Route{}
-	r.ID = obj.Meta.Name
 	r.Meta = r.ToMeta(obj.Meta)
-	r.Rules = r.ToRules(obj.Rules)
+	r.Spec  = r.ToSpec(obj.Spec)
 	r.State = r.ToState(obj.State)
 	return &r
 }
@@ -42,7 +41,7 @@ func (p *Route) ToJson() ([]byte, error) {
 func (r *Route) ToMeta(obj types.RouteMeta) RouteMeta {
 	meta := RouteMeta{}
 	meta.Domain = obj.Domain
-	meta.NamespaceID = obj.Namespace
+	meta.Namespace = obj.Namespace
 	meta.Security = obj.Security
 	meta.Updated = obj.Updated
 	meta.Created = obj.Created
@@ -50,16 +49,9 @@ func (r *Route) ToMeta(obj types.RouteMeta) RouteMeta {
 	return meta
 }
 
-func (r *Route) ToRules(obj []*types.RouteRule) []*RouteRule {
-	rules := make([]*RouteRule, 0)
-	for _, rule := range obj {
-		rules = append(rules, &RouteRule{
-			Path:    rule.Path,
-			Port:    rule.Port,
-			Service: rule.Service,
-		})
-	}
-	return rules
+func (r *Route) ToSpec(obj types.RouteSpec) RouteSpec {
+	spec := RouteSpec{}
+	return spec
 }
 
 func (r *Route) ToState(obj types.RouteState) RouteState {

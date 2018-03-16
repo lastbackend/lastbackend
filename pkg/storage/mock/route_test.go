@@ -2,7 +2,7 @@
 // Last.Backend LLC CONFIDENTIAL
 // __________________
 //
-// [2014] - [2018] Last.Backend LLC
+// [2014] - [2017] Last.Backend LLC
 // All Rights Reserved.
 //
 // NOTICE:  All information contained herein is, and remains
@@ -16,27 +16,34 @@
 // from Last.Backend LLC.
 //
 
-package types
+package mock
 
-type VolumeList []Volume
+import (
+	"reflect"
+	"testing"
+	"github.com/lastbackend/lastbackend/pkg/distribution/types"
+)
 
-type Volume struct {
-	// Volume meta
-	Meta VolumeMeta `json:"meta" yaml:"meta"`
-	// Volume stat
-	Stat VolumeStat `json:"stat" yaml:"stat"`
-	// Volume spec
-	Spec VolumeSpec `json:"spec" yaml:"spec"`
+func Test_newRouteStorage(t *testing.T) {
+	tests := []struct {
+		name string
+		want *RouteStorage
+	}{
+	// TODO: Add test cases.
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := newRouteStorage(); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("newRouteStorage() = %v, want %v", got, tt.want)
+			}
+		})
+	}
 }
 
-type VolumeMeta struct {
-	Meta
-}
+func getRouteAsset(name, desc string) types.Route {
+	p := types.Route{}
+	p.Meta.Name = name
+	p.Meta.Description = desc
 
-type VolumeStat struct {
-
-}
-
-type VolumeSpec struct {
-
+	return p
 }

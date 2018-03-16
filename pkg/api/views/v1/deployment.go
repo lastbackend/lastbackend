@@ -82,7 +82,7 @@ type DeploymentSpec struct {
 	Triggers types.SpecTriggers `json:"triggers"`
 	Replicas int                `json:"replicas"`
 	Selector types.SpecSelector `json:"selector"`
-	Template types.SpecTemplate `json:"template"`
+	Template types.PodSpec      `json:"template"`
 }
 
 type DeploymentStateInfo struct {

@@ -38,7 +38,7 @@ type INode interface {
 	SetInfo(node *types.Node, info types.NodeInfo) error
 	SetNetwork(node *types.Node, network types.Subnet) error
 	GetSpec(name string) (types.NodeSpec, error)
-	Remove(name string) error
+	Remove(node *types.Node) error
 }
 
 type Node struct {
@@ -57,7 +57,7 @@ func (n *Node) Create() (*types.Node, error) {
 	ni := new(types.Node)
 	ni.Meta.Labels = make(map[string]string, 0)
 	ni.Meta.Token = generator.GenerateRandomString(32)
-	ni.State.Online = true
+	ni.Online = true
 
 	if err := n.storage.Node().Insert(n.context, ni); err != nil {
 		log.Debugf("Node: insert node err: %s", err)
@@ -118,7 +118,7 @@ func (n *Node) SetAvailable(name string) error {
 		return nil
 	}
 
-	if err := n.storage.Node().SetAvailable(n.context, node); err != nil {
+	if err := n.storage.Node().SetOnline(n.context, node); err != nil {
 		log.Errorf("Set node online state error: %s", err)
 		return err
 	}
@@ -144,7 +144,7 @@ func (n *Node) SetUnavailable(name string) error {
 		return nil
 	}
 
-	if err := n.storage.Node().SetUnavailable(n.context, node); err != nil {
+	if err := n.storage.Node().SetOffline(n.context, node); err != nil {
 		log.Errorf("Set node offline state error: %s", err)
 		return err
 	}
@@ -194,11 +194,12 @@ func (n *Node) GetSpec(name string) (types.NodeSpec, error) {
 	return spec, nil
 }
 
-func (n *Node) Remove(name string) error {
+func (n *Node) Remove(node *types.Node) error {
 
-	log.V(logLevel).Debugf("Node: remove Node %s", name)
+	log.V(logLevel).Debugf("Node: remove Node %s", node.Meta.Name)
 
-	if err := n.storage.Node().Remove(n.context, name); err != nil {
+
+	if err := n.storage.Node().Remove(n.context, node); err != nil {
 		log.V(logLevel).Debugf("Node: remove Node err: %s", err)
 		return err
 	}

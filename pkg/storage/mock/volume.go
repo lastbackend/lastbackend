@@ -54,3 +54,4 @@ func newVolumeStorage(config store.Config) *VolumeStorage {
 	s := new(VolumeStorage)
 	return s
 }
+

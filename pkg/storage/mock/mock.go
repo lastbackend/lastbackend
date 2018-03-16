@@ -20,11 +20,12 @@ package mock
 
 import (
 	"context"
+	"strings"
+
 	"github.com/lastbackend/lastbackend/pkg/log"
 	"github.com/lastbackend/lastbackend/pkg/storage/etcd/v3"
 	"github.com/lastbackend/lastbackend/pkg/storage/storage"
 	"github.com/lastbackend/lastbackend/pkg/storage/store"
-	"strings"
 )
 
 const logLevel = 5
