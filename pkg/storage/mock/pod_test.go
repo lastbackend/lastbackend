@@ -50,7 +50,7 @@ func TestPodStorage_GetByName(t *testing.T) {
 			s := &PodStorage{
 				Pod: tt.fields.Pod,
 			}
-			got, err := s.GetByName(tt.args.ctx, tt.args.app, tt.args.name)
+			got, err := s.Get(tt.args.ctx, tt.args.app, tt.args.name)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("PodStorage.GetByName() error = %v, wantErr %v", err, tt.wantErr)
 				return

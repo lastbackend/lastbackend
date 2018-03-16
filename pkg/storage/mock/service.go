@@ -66,7 +66,7 @@ func (s *ServiceStorage) Insert(ctx context.Context, service *types.Service) err
 		s.data[service.Meta.Namespace] = make(map[string]*types.Service)
 	}
 	if _, ok := s.data[service.Meta.Namespace][service.Meta.Name]; ok {
-		return errors.New(store.ErrKeyExists)
+		return errors.New(store.ErrEntityNotFound)
 	} else {
 		s.data[service.Meta.Namespace][service.Meta.Name] = service
 	}

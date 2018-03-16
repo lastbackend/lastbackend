@@ -48,7 +48,7 @@ func (nc *NodeController) Watch(node chan *types.Node) {
 					}
 
 					log.Debugf("Node check state: %s", n.Meta.Name)
-					if n.Alive {
+					if n.Online {
 						log.Debugf("Node set alive, try to provision on it pods: %s", n.Meta.Name)
 						node <- n
 						continue

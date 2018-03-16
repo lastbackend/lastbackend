@@ -49,7 +49,7 @@ func TestNamespaceStorage_GetByName(t *testing.T) {
 			s := &NamespaceStorage{
 				Namespace: tt.fields.Namespace,
 			}
-			got, err := s.GetByName(tt.args.ctx, tt.args.name)
+			got, err := s.Get(tt.args.ctx, tt.args.name)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("NamespaceStorage.GetByName() error = %v, wantErr %v", err, tt.wantErr)
 				return

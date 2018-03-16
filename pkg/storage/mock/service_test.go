@@ -50,7 +50,7 @@ func TestServiceStorage_GetByName(t *testing.T) {
 			s := &ServiceStorage{
 				Service: tt.fields.Service,
 			}
-			got, err := s.GetByName(tt.args.ctx, tt.args.app, tt.args.name)
+			got, err := s.Get(tt.args.ctx, tt.args.app, tt.args.name)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("ServiceStorage.GetByName() error = %v, wantErr %v", err, tt.wantErr)
 				return
