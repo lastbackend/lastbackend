@@ -2,7 +2,7 @@
 // Last.Backend LLC CONFIDENTIAL
 // __________________
 //
-// [2014] - [2017] Last.Backend LLC
+// [2014] - [2018] Last.Backend LLC
 // All Rights Reserved.
 //
 // NOTICE:  All information contained herein is, and remains
@@ -39,7 +39,7 @@ type ServiceStorage struct {
 }
 
 // Get service by name
-func (s *ServiceStorage) GetByName(ctx context.Context, app, name string) (*types.Service, error) {
+func (s *ServiceStorage) Get(ctx context.Context, app, name string) (*types.Service, error) {
 
 	log.V(logLevel).Debugf("Storage: Service: get by name: %s in app: %s", name, app)
 
@@ -133,7 +133,7 @@ func (s *ServiceStorage) GetByPodName(ctx context.Context, name string) (*types.
 		return nil, err
 	}
 
-	return s.GetByName(ctx, parts[0], parts[1])
+	return s.Get(ctx, parts[0], parts[1])
 }
 
 // List services
@@ -405,7 +405,7 @@ func (s *ServiceStorage) Watch(ctx context.Context, service chan *types.Service)
 			return
 		}
 
-		if svc, err := s.GetByName(ctx, keys[1], keys[2]); err == nil {
+		if svc, err := s.Get(ctx, keys[1], keys[2]); err == nil {
 			service <- svc
 		}
 	}
@@ -438,7 +438,7 @@ func (s *ServiceStorage) SpecWatch(ctx context.Context, service chan *types.Serv
 			return
 		}
 
-		if svc, err := s.GetByName(ctx, keys[1], keys[2]); err == nil {
+		if svc, err := s.Get(ctx, keys[1], keys[2]); err == nil {
 			s.updateState(ctx, svc)
 			service <- svc
 		}

@@ -2,7 +2,7 @@
 // Last.Backend LLC CONFIDENTIAL
 // __________________
 //
-// [2014] - [2017] Last.Backend LLC
+// [2014] - [2018] Last.Backend LLC
 // All Rights Reserved.
 //
 // NOTICE:  All information contained herein is, and remains
@@ -37,7 +37,7 @@ type PodStorage struct {
 	storage.Pod
 }
 
-func (s *PodStorage) GetByName(ctx context.Context, app, name string) (*types.Pod, error) {
+func (s *PodStorage) Get(ctx context.Context, app, name string) (*types.Pod, error) {
 
 	log.V(logLevel).Debugf("Storage: Pod: get by name: %s in app: %s", name, app)
 
@@ -285,7 +285,7 @@ func (s *PodStorage) Watch(ctx context.Context, pod chan *types.Pod) error {
 			return
 		}
 
-		if p, err := s.GetByName(ctx, keys[1], keys[2]); err == nil {
+		if p, err := s.Get(ctx, keys[1], keys[2]); err == nil {
 			pod <- p
 		}
 	}

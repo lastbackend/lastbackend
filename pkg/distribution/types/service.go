@@ -128,9 +128,9 @@ type ServiceCreateOptions struct {
 }
 
 type ServiceUpdateOptions struct {
-	Name        *string             `json:"name"`
 	Description *string             `json:"description"`
 	Sources     *string             `json:"sources"`
+	Replicas    *int                `json:"replicas"`
 	Spec        *ServiceOptionsSpec `json:"spec"`
 }
 
@@ -182,19 +182,31 @@ func (s *ServiceCreateOptions) DecodeAndValidate(reader io.Reader) *errors.Err {
 
 	*s.Name = strings.ToLower(*s.Name)
 
-	if len(*s.Name) < 4 && len(*s.Name) > 64 && !validator.IsServiceName(*s.Name) {
+	if len(*s.Name) < 4 || len(*s.Name) > 64 || !validator.IsServiceName(*s.Name) {
 		log.V(logLevel).Error("Request: Service: parameter name not valid")
 		return errors.New("service").BadParameter("name")
+	}
+
+	if s.Spec == nil {
+		s.Spec = new(ServiceOptionsSpec)
 	}
 
 	if s.Spec.Memory == nil {
 		memory := int64(DEFAULT_SERVICE_MEMORY)
 		s.Spec.Memory = &memory
+	} else if *s.Spec.Memory < DEFAULT_SERVICE_MEMORY {
+		log.V(logLevel).Error("Request: Service: parameter memory not valid")
+		return errors.New("service").BadParameter("memory")
 	}
+
+	// TODO: check another spec parameters
 
 	if s.Replicas == nil {
 		replicas := int(DEFAULT_SERVICE_REPLICAS)
 		s.Replicas = &replicas
+	} else if *s.Replicas < 1 {
+		log.V(logLevel).Error("Request: Service: parameter replicas not valid")
+		return errors.New("service").BadParameter("replicas")
 	}
 
 	return nil
@@ -214,6 +226,20 @@ func (s *ServiceUpdateOptions) DecodeAndValidate(reader io.Reader) *errors.Err {
 	if err != nil {
 		log.V(logLevel).Errorf("Request: Service: convert struct from json err: %s", err)
 		return errors.New("service").IncorrectJSON(err)
+	}
+
+	if s.Spec != nil {
+		if s.Spec.Memory != nil && *s.Spec.Memory < DEFAULT_SERVICE_MEMORY {
+			log.V(logLevel).Error("Request: Service: parameter memory not valid")
+			return errors.New("service").BadParameter("memory")
+		}
+
+		// TODO: check another spec parameters
+	}
+
+	if s.Replicas != nil && *s.Replicas < 1 {
+		log.V(logLevel).Error("Request: Service: parameter replicas not valid")
+		return errors.New("service").BadParameter("replicas")
 	}
 
 	return nil

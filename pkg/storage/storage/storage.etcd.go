@@ -30,7 +30,7 @@ type Hook interface {
 }
 
 type Namespace interface {
-	GetByName(ctx context.Context, name string) (*types.Namespace, error)
+	Get(ctx context.Context, name string) (*types.Namespace, error)
 	List(ctx context.Context) ([]*types.Namespace, error)
 	Insert(ctx context.Context, namespace *types.Namespace) error
 	Update(ctx context.Context, project *types.Namespace) error

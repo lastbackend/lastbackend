@@ -2,7 +2,7 @@
 // Last.Backend LLC CONFIDENTIAL
 // __________________
 //
-// [2014] - [2017] Last.Backend LLC
+// [2014] - [2018] Last.Backend LLC
 // All Rights Reserved.
 //
 // NOTICE:  All information contained herein is, and remains
@@ -92,6 +92,11 @@ func (s *DeploymentStorage) Get(ctx context.Context, namespace, name string) (*t
 	}
 
 	return deployment, nil
+}
+
+// Get deployments by service name
+func (s *DeploymentStorage) ListByService(ctx context.Context, namespace, service string) ([]*types.Deployment, error) {
+	return make([]*types.Deployment, 0), nil
 }
 
 // Update deployment state

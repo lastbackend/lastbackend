@@ -2,7 +2,7 @@
 // Last.Backend LLC CONFIDENTIAL
 // __________________
 //
-// [2014] - [2017] Last.Backend LLC
+// [2014] - [2018] Last.Backend LLC
 // All Rights Reserved.
 //
 // NOTICE:  All information contained herein is, and remains
@@ -22,18 +22,27 @@ import (
 	"context"
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 	"github.com/lastbackend/lastbackend/pkg/storage/storage"
+	"github.com/lastbackend/lastbackend/pkg/distribution/errors"
+	"github.com/lastbackend/lastbackend/pkg/storage/store"
 )
 
 const serviceStorage string = "services"
 
 // Service Service type for interface in interfaces folder
 type ServiceStorage struct {
+	data map[string]map[string]*types.Service
 	storage.Service
 }
 
 // Get service by name
-func (s *ServiceStorage) GetByName(ctx context.Context, app, name string) (*types.Service, error) {
-	return new(types.Service), nil
+func (s *ServiceStorage) Get(ctx context.Context, namespace, name string) (*types.Service, error) {
+	if _, ok := s.data[namespace]; !ok {
+		return nil, nil
+	}
+	if srv, ok := s.data[namespace][name]; ok {
+		return srv, nil
+	}
+	return nil, nil
 }
 
 // Get service by pod name
@@ -42,17 +51,25 @@ func (s *ServiceStorage) GetByPodName(ctx context.Context, name string) (*types.
 }
 
 // List services
-func (s *ServiceStorage) ListByNamespace(ctx context.Context, app string) ([]*types.Service, error) {
+func (s *ServiceStorage) ListByNamespace(ctx context.Context, namespace string) ([]*types.Service, error) {
 	return make([]*types.Service, 0), nil
 }
 
 // Count services
-func (s *ServiceStorage) CountByNamespace(ctx context.Context, app string) (int, error) {
+func (s *ServiceStorage) CountByNamespace(ctx context.Context, namespace string) (int, error) {
 	return 0, nil
 }
 
 // Insert new service into storage
 func (s *ServiceStorage) Insert(ctx context.Context, service *types.Service) error {
+	if _, ok := s.data[service.Meta.Namespace]; !ok {
+		s.data[service.Meta.Namespace] = make(map[string]*types.Service)
+	}
+	if _, ok := s.data[service.Meta.Namespace][service.Meta.Name]; ok {
+		return errors.New(store.ErrKeyExists)
+	} else {
+		s.data[service.Meta.Namespace][service.Meta.Name] = service
+	}
 	return nil
 }
 
@@ -71,8 +88,8 @@ func (s *ServiceStorage) Remove(ctx context.Context, service *types.Service) err
 	return nil
 }
 
-// Remove services from app
-func (s *ServiceStorage) RemoveByNamespace(ctx context.Context, app string) error {
+// Remove services from namespace
+func (s *ServiceStorage) RemoveByNamespace(ctx context.Context, namespace string) error {
 	return nil
 }
 
@@ -95,5 +112,6 @@ func (s *ServiceStorage) updateState(ctx context.Context, service *types.Service
 
 func newServiceStorage() *ServiceStorage {
 	s := new(ServiceStorage)
+	s.data = make(map[string]map[string]*types.Service)
 	return s
 }
