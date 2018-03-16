@@ -42,8 +42,15 @@ func NodeRemoveH(w http.ResponseWriter, r *http.Request) {
 		nid = utils.Vars(r)["node"]
 	)
 
-	if err := nm.Remove(nid); err != nil {
-		log.V(logLevel).Errorf("Handler: Node: create node err: %s", err)
+	n, err := nm.Get(nid)
+	if err != nil {
+		log.V(logLevel).Errorf("Handler: Node: remove node err: %s", err)
+		errors.HTTP.InternalServerError(w)
+		return
+	}
+
+	if err := nm.Remove(n); err != nil {
+		log.V(logLevel).Errorf("Handler: Node: remove node err: %s", err)
 		errors.HTTP.InternalServerError(w)
 		return
 	}
