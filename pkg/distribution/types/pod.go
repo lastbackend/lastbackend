@@ -23,7 +23,6 @@ import (
 	"time"
 )
 
-
 const PodStepInitialized = "initialized"
 const PodStepScheduled = "scheduled"
 const PodStepPull = "pull"
@@ -58,14 +57,18 @@ type PodMeta struct {
 	Meta
 	// Pod SelfLink
 	SelfLink string `json:"self_link"`
-	// Pod deployment id
-	DeploymentID string `json:"deployment"`
-	// Pod service id
-	NamespaceID string `json:"namespace"`
-	// Pod node id
-	NodeID string `json:"node"`
+	// Pod deployment name
+	Deployment string `json:"deployment"`
+	// Pod service name
+	Namespace string `json:"namespace"`
+	// Pod service name
+	Service string `json:"service"`
+	// Pod node
+	Node string `json:"node"`
 	// Pod status
 	Status string `json:"status"`
+	// Pod endpoint
+	Endpoint string `json:"endpoint"`
 }
 
 type PodState struct {
