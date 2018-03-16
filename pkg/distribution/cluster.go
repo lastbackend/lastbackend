@@ -38,7 +38,7 @@ func (c *Cluster) Info() (*types.Cluster, error) {
 
 	log.V(logLevel).Debug("Cluster: get cluster info")
 
-	cl, err := c.storage.Cluster().Info(c.context)
+	cl, err := c.storage.Cluster().Get(c.context)
 	if err != nil {
 		log.V(logLevel).Errorf("Cluster: get cluster info err: %s", err)
 		return nil, err

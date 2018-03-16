@@ -21,18 +21,21 @@ package v1
 import "time"
 
 type Route struct {
-	ID    string       `json:"id"`
 	Meta  RouteMeta    `json:"meta"`
-	Rules []*RouteRule `json:"rules"`
+	Spec  RouteSpec 	 `json:"spec"`
 	State RouteState   `json:"state"`
 }
 
 type RouteMeta struct {
 	Domain      string    `json:"domain"`
-	NamespaceID string    `json:"namespace"`
+	Namespace   string    `json:"namespace"`
 	Security    bool      `json:"security"`
 	Updated     time.Time `json:"updated"`
 	Created     time.Time `json:"created"`
+}
+
+type RouteSpec struct {
+
 }
 
 type RouteRule struct {

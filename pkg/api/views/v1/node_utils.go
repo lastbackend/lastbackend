@@ -57,7 +57,6 @@ func (n *NodeView) ToNodeInfo(info types.NodeInfo) NodeInfo {
 
 func (n *NodeView) ToNodeState(state types.NodeState) NodeState {
 	return NodeState{
-		Online: state.Online,
 		Capacity: NodeResources{
 			Containers: state.Capacity.Containers,
 			Pods:       state.Capacity.Pods,

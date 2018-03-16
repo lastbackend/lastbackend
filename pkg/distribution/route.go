@@ -115,15 +115,15 @@ func (n *Route) Create(namespace *types.Namespace, services []*types.Service, op
 		ss[service.Meta.Name] = service
 	}
 
-	route.Rules = make([]*types.RouteRule, 0)
-	for _, rule := range opts.Rules {
-		route.Rules = append(route.Rules, &types.RouteRule{
-			Service:  *rule.Service,
-			Port:     *rule.Port,
-			Path:     rule.Path,
-			Endpoint: ss[*rule.Service].Meta.Endpoint,
-		})
-	}
+	//route.Rules = make([]*types.RouteRule, 0)
+	//for _, rule := range opts.Rules {
+	//	route.Rules = append(route.Rules, &types.RouteRule{
+	//		Service:  *rule.Service,
+	//		Port:     *rule.Port,
+	//		Path:     rule.Path,
+	//		Endpoint: ss[*rule.Service].Meta.Endpoint,
+	//	})
+	//}
 
 	if err := n.storage.Route().Insert(n.context, &route); err != nil {
 		log.V(logLevel).Errorf("Route: insert Route err: %s", err)
@@ -149,24 +149,24 @@ func (n *Route) Update(route *types.Route, namespace *types.Namespace, services 
 		ss[service.Meta.Name] = service
 	}
 
-	route.Rules = make([]*types.RouteRule, 0)
-	for _, rule := range opts.Rules {
-
-		var svc *types.Service
-		for _, s := range services {
-			if *rule.Service == s.Meta.Name {
-				svc = s
-				break
-			}
-		}
-
-		route.Rules = append(route.Rules, &types.RouteRule{
-			Service:  *rule.Service,
-			Port:     *rule.Port,
-			Path:     rule.Path,
-			Endpoint: svc.Meta.Endpoint,
-		})
-	}
+	//route.Rules = make([]*types.RouteRule, 0)
+	//for _, rule := range opts.Rules {
+	//
+	//	var svc *types.Service
+	//	for _, s := range services {
+	//		if *rule.Service == s.Meta.Name {
+	//			svc = s
+	//			break
+	//		}
+	//	}
+	//
+	//	route.Rules = append(route.Rules, &types.RouteRule{
+	//		Service:  *rule.Service,
+	//		Port:     *rule.Port,
+	//		Path:     rule.Path,
+	//		Endpoint: svc.Meta.Endpoint,
+	//	})
+	//}
 
 	if len(opts.Domain) == 0 {
 		route.Meta.Domain = strings.Join([]string{generator.GenerateRandomString(5), namespace.Meta.Endpoint}, "-")
