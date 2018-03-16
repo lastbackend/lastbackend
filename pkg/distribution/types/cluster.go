@@ -20,10 +20,11 @@ package types
 
 import (
 	"encoding/json"
-	"github.com/lastbackend/lastbackend/pkg/distribution/errors"
-	"github.com/lastbackend/lastbackend/pkg/log"
 	"io"
 	"io/ioutil"
+
+	"github.com/lastbackend/lastbackend/pkg/distribution/errors"
+	"github.com/lastbackend/lastbackend/pkg/log"
 )
 
 const (
@@ -50,14 +51,16 @@ type ClusterMeta struct {
 }
 
 type ClusterState struct {
-	Nodes struct {
-		Total   int `json:"total"`
-		Online  int `json:"online"`
-		Offline int `json:"offline"`
-	} `json:"nodes"`
-	Capacity  ClusterResources `json:"capacity"`
-	Allocated ClusterResources `json:"allocated"`
-	Deleted   bool             `json:"deleted"`
+	Nodes     ClusterStateNodes `json:"nodes"`
+	Capacity  ClusterResources  `json:"capacity"`
+	Allocated ClusterResources  `json:"allocated"`
+	Deleted   bool              `json:"deleted"`
+}
+
+type ClusterStateNodes struct {
+	Total   int `json:"total"`
+	Online  int `json:"online"`
+	Offline int `json:"offline"`
 }
 
 type ClusterResources struct {
