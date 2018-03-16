@@ -19,6 +19,7 @@
 package envs
 
 import (
+	"github.com/lastbackend/lastbackend/pkg/api/client"
 	"github.com/lastbackend/lastbackend/pkg/storage"
 	"github.com/lastbackend/lastbackend/pkg/util/http"
 )
@@ -28,6 +29,7 @@ var e Env
 type Env struct {
 	storage              storage.Storage
 	httpTemplateRegistry *http.RawReq
+	client               client.Client
 }
 
 func Get() *Env {
@@ -36,6 +38,14 @@ func Get() *Env {
 
 func (c *Env) SetStorage(storage storage.Storage) {
 	c.storage = storage
+}
+
+func (c *Env) SetClient(client client.Client) {
+	c.client = client
+}
+
+func (c *Env) GetClient() client.Client {
+	return c.client
 }
 
 func (c *Env) GetStorage() storage.Storage {
