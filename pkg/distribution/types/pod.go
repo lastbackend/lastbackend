@@ -48,7 +48,7 @@ type Pod struct {
 	// Pod state
 	State PodState `json:"state" yaml:"state"`
 	// Pod Spec
-	Spec SpecTemplate `json:"spec" yaml:"spec"`
+	Spec PodSpec `json:"spec" yaml:"spec"`
 	// Containers status info
 	Status PodStatus `json:"status" yaml:"status"`
 }

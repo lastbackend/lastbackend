@@ -171,3 +171,11 @@ func Test_newVolumeStorage(t *testing.T) {
 		})
 	}
 }
+
+func getVolumeAsset(name, desc string) types.Volume {
+	p := types.Volume{}
+	p.Meta.Name = name
+	p.Meta.Description = desc
+
+	return p
+}

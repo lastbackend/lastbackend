@@ -81,8 +81,8 @@ func TestClusterStorage_Insert(t *testing.T) {
 	}
 }
 
-// Test cluster storage info return method
-func TestClusterStorage_Info(t *testing.T) {
+// Test cluster storage get return method
+func TestClusterStorage_Get(t *testing.T) {
 
 	var (
 		stg = newClusterStorage()
@@ -117,19 +117,19 @@ func TestClusterStorage_Info(t *testing.T) {
 	for _, tt := range tests {
 
 		if err := stg.Insert(ctx, &c); err != nil {
-			t.Errorf("ClusterStorage.Info() storage setup error = %v", err)
+			t.Errorf("ClusterStorage.Get() storage setup error = %v", err)
 			return
 		}
 
 		t.Run(tt.name, func(t *testing.T) {
 
-			got, err := tt.fields.stg.Info(tt.args.ctx)
+			got, err := tt.fields.stg.Get(tt.args.ctx)
 			if (err != nil) != tt.wantErr {
-				t.Errorf("ClusterStorage.Info() error = %v, wantErr %v", err, tt.wantErr)
+				t.Errorf("ClusterStorage.Get() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
 			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("ClusterStorage.Info() = %v, want %v", got, tt.want)
+				t.Errorf("ClusterStorage.Get() = %v, want %v", got, tt.want)
 			}
 		})
 	}
@@ -140,8 +140,8 @@ func TestClusterStorage_Update(t *testing.T) {
 	var (
 		stg = newClusterStorage()
 		ctx = context.Background()
-		c1   = getClusterAsset("test1")
-		c2   = getClusterAsset("test2")
+		c1  = getClusterAsset("test1")
+		c2  = getClusterAsset("test2")
 	)
 
 	type fields struct {
@@ -149,7 +149,7 @@ func TestClusterStorage_Update(t *testing.T) {
 	}
 
 	type args struct {
-		ctx context.Context
+		ctx     context.Context
 		cluster *types.Cluster
 	}
 
@@ -189,19 +189,22 @@ func TestClusterStorage_Update(t *testing.T) {
 
 			err := tt.fields.stg.Update(tt.args.ctx, tt.args.cluster)
 			if err != nil {
+				if !tt.wantErr {
+					t.Errorf("ClusterStorage.Update() error = %v, want no error", err.Error())
+					return
+				}
 				if tt.wantErr && tt.err != err.Error() {
-					t.Errorf("ClusterStorage.Update() = %v, want %v", err, tt.err)
+					t.Errorf("ClusterStorage.Update() error = %v, want %v", err, tt.err)
 					return
 				}
 				return
-			} else {
-				if tt.wantErr {
-					t.Errorf("ClusterStorage.Update() error = %v, wantErr %v", err, tt.err)
-					return
-				}
+			}
+			if tt.wantErr {
+				t.Errorf("ClusterStorage.Update() error = %v, wantErr %v", err, tt.err)
+				return
 			}
 
-			got, _ := tt.fields.stg.Info(tt.args.ctx)
+			got, _ := tt.fields.stg.Get(tt.args.ctx)
 			if !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("ClusterStorage.Update() = %v, want %v", got, tt.want)
 			}
@@ -212,7 +215,6 @@ func TestClusterStorage_Update(t *testing.T) {
 
 // Test storage initialization
 func Test_newClusterStorage(t *testing.T) {
-
 
 	tests := []struct {
 		name string

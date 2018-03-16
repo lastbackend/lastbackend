@@ -87,7 +87,7 @@ type Volume interface {
 
 type Cluster interface {
 	Insert(ctx context.Context, cluster *types.Cluster) error
-	Info(ctx context.Context) (*types.Cluster, error)
+	Get(ctx context.Context) (*types.Cluster, error)
 	Update(ctx context.Context, cluster *types.Cluster) error
 }
 
@@ -103,8 +103,8 @@ type Node interface {
 	SetInfo(ctx context.Context, node *types.Node) error
 	SetNetwork(ctx context.Context, node *types.Node) error
 
-	SetAvailable(ctx context.Context, node *types.Node) error
-	SetUnavailable(ctx context.Context, node *types.Node) error
+	SetOnline(ctx context.Context, node *types.Node) error
+	SetOffline(ctx context.Context, node *types.Node) error
 
 	InsertPod(ctx context.Context, node *types.Node, pod *types.Pod) error
 	RemovePod(ctx context.Context, node *types.Node, pod *types.Pod) error

@@ -25,11 +25,11 @@ import (
 const LogLevel = 7
 
 const (
-	ErrKeyExists        		= "key exists"
-	ErrOperationFailure 		= "operation failure"
-	ErrKeyNotFound      		= "key not found"
-	ErrStructArgIsNil   		= "input structure is nil"
-	ErrStructArgIsInvalid   = "input structure is nil"
+	ErrEntityExists       = "entity exists"
+	ErrOperationFailure   = "operation failure"
+	ErrEntityNotFound     = "entity not found"
+	ErrStructArgIsNil     = "input structure is nil"
+	ErrStructArgIsInvalid = "input structure is invalid"
 )
 
 type DestroyFunc func()

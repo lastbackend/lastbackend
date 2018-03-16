@@ -18,6 +18,8 @@
 
 package types
 
+const NetworkTypeVxLAN = "vxlan"
+
 type Subnet struct {
 	// Node network type
 	Type string `json:"type"`

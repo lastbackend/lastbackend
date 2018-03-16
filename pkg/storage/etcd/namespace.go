@@ -58,10 +58,10 @@ func (s *NamespaceStorage) GetByName(ctx context.Context, name string) (*types.N
 	keyMeta := keyCreate(namespaceStorage, name, "meta")
 	err = client.Get(ctx, keyMeta, &namespace.Meta)
 	switch true {
-	case err != nil && err.Error() != store.ErrKeyNotFound:
+	case err != nil && err.Error() != store.ErrEntityNotFound:
 		log.V(logLevel).Errorf("Storage: Namespace: get namespace `%s` meta err: %s", name, err.Error())
 		return nil, err
-	case err != nil && err.Error() == store.ErrKeyNotFound:
+	case err != nil && err.Error() == store.ErrEntityNotFound:
 		fallthrough
 	case (err == nil && namespace == nil) || err != nil:
 		return nil, nil
@@ -88,10 +88,10 @@ func (s *NamespaceStorage) List(ctx context.Context) ([]*types.Namespace, error)
 	keyNamespaces := keyCreate(namespaceStorage)
 	err = client.List(ctx, keyNamespaces, filter, &namespaces)
 	switch true {
-	case err != nil && err.Error() != store.ErrKeyNotFound:
+	case err != nil && err.Error() != store.ErrEntityNotFound:
 		log.V(logLevel).Errorf("Storage: Namespace: get namespace list err: %s", err.Error())
 		return nil, err
-	case err != nil && err.Error() == store.ErrKeyNotFound:
+	case err != nil && err.Error() == store.ErrEntityNotFound:
 		return make([]*types.Namespace, 0), nil
 	}
 
@@ -180,7 +180,7 @@ func (s *NamespaceStorage) Remove(ctx context.Context, name string) error {
 	defer destroy()
 
 	keyNamespace := keyCreate(namespaceStorage, name)
-	if err := client.DeleteDir(ctx, keyNamespace); err != nil && err.Error() != store.ErrKeyNotFound {
+	if err := client.DeleteDir(ctx, keyNamespace); err != nil && err.Error() != store.ErrEntityNotFound {
 		log.V(logLevel).Errorf("Storage: Namespace: remove namespace `%s` err: %s", name, err.Error())
 		return err
 	}

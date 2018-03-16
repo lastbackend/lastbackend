@@ -32,7 +32,7 @@ import (
 type Route struct {
 	Meta  RouteMeta    `json:"meta" yaml:"meta"`
 	State RouteState   `json:"state" yaml:"state"`
-	Rules []*RouteRule `json:"rules" yaml:"rules"`
+	Spec  RouteSpec    `json:"spec" yaml:"spec"`
 }
 
 type RouteMeta struct {
@@ -46,6 +46,10 @@ type RouteMeta struct {
 type RouteState struct {
 	Destroy   bool `json:"destroy" yaml:"destroy"`
 	Provision bool `json:"provision" yaml:"provision"`
+}
+
+type RouteSpec struct {
+	Rules []*RouteRule `json:"rules" yaml:"rules"`
 }
 
 type RouteRule struct {
@@ -118,7 +122,7 @@ func (s *Route) GetRouteConfig() *RouterConfig {
 
 	RouterConfig.Upstreams = make([]*UpstreamServer, 0)
 	RouterConfig.Server.Locations = make([]*RoteLocation, 0)
-	for _, rule := range s.Rules {
+	for _, rule := range s.Spec.Rules {
 
 		id := generator.GetUUIDV4()
 

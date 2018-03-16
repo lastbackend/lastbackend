@@ -21,6 +21,7 @@ package mock
 import (
 	"reflect"
 	"testing"
+	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 )
 
 func Test_newRouteStorage(t *testing.T) {
@@ -37,4 +38,12 @@ func Test_newRouteStorage(t *testing.T) {
 			}
 		})
 	}
+}
+
+func getRouteAsset(name, desc string) types.Route {
+	p := types.Route{}
+	p.Meta.Name = name
+	p.Meta.Description = desc
+
+	return p
 }

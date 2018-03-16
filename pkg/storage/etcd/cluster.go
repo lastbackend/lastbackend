@@ -47,7 +47,7 @@ func (s *ClusterStorage) Info(ctx context.Context) (*types.Cluster, error) {
 	cluster := new(types.Cluster)
 	key := keyCreate(clusterStorage)
 	if err := client.Map(ctx, key, filter, cluster); err != nil {
-		if err.Error() == store.ErrKeyNotFound {
+		if err.Error() == store.ErrEntityNotFound {
 			return nil, nil
 		}
 		log.V(logLevel).Errorf("Storage: Node: create client err: %s", err.Error())

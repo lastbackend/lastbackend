@@ -22,5 +22,21 @@ type VolumeList []Volume
 
 type Volume struct {
 	// Volume meta
-	Meta Meta `json:"meta" yaml:"id"`
+	Meta VolumeMeta `json:"meta" yaml:"meta"`
+	// Volume stat
+	Stat VolumeStat `json:"stat" yaml:"stat"`
+	// Volume spec
+	Spec VolumeSpec `json:"spec" yaml:"spec"`
+}
+
+type VolumeMeta struct {
+	Meta
+}
+
+type VolumeStat struct {
+
+}
+
+type VolumeSpec struct {
+
 }

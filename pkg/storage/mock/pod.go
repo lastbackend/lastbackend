@@ -22,6 +22,8 @@ import (
 	"context"
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 	"github.com/lastbackend/lastbackend/pkg/storage/storage"
+	"github.com/lastbackend/lastbackend/pkg/storage/store"
+	"github.com/lastbackend/lastbackend/pkg/distribution/errors"
 )
 
 const podStorage = "pods"
@@ -29,6 +31,7 @@ const podStorage = "pods"
 // Pod Service type for interface in interfaces folder
 type PodStorage struct {
 	storage.Pod
+	data map[string]*types.Pod
 }
 
 func (s *PodStorage) GetByName(ctx context.Context, app, name string) (*types.Pod, error) {
@@ -62,4 +65,29 @@ func (s *PodStorage) Watch(ctx context.Context, pod chan *types.Pod) error {
 func newPodStorage() *PodStorage {
 	s := new(PodStorage)
 	return s
+}
+
+func (s *PodStorage) checkPodArgument(pod *types.Pod) error {
+	if pod == nil {
+		return errors.New(store.ErrStructArgIsNil)
+	}
+
+	if pod.Meta.Name == "" {
+		return errors.New(store.ErrStructArgIsInvalid)
+	}
+
+	return nil
+}
+
+func (s *PodStorage) checkPodExists(pod *types.Pod) error {
+
+	if err := s.checkPodArgument(pod); err != nil {
+		return err
+	}
+
+	if _, ok := s.data[pod.Meta.Name]; !ok {
+		return errors.New(store.ErrEntityNotFound)
+	}
+
+	return nil
 }

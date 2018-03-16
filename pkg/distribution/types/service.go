@@ -64,7 +64,7 @@ type ServiceSpec struct {
 	Strategy SpecStrategy  `json:"strategy"`
 	Triggers SpecTriggers  `json:"triggers"`
 	Selector SpecSelector  `json:"selector"`
-	Template SpecTemplate  `json:"template"`
+	Template PodSpec       `json:"template"`
 	Quotas   ServiceQuotas `json:"quotas"`
 }
 

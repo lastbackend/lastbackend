@@ -25,15 +25,28 @@ import (
 
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 	"github.com/lastbackend/lastbackend/pkg/storage/storage"
+	"github.com/lastbackend/lastbackend/pkg/storage/store"
 )
 
 func TestNodeStorage_List(t *testing.T) {
+	var (
+		stg = newNodeStorage()
+		ctx = context.Background()
+		n1  = getNodeAsset("test1", "", true)
+		n2  = getNodeAsset("test2", "", false)
+		nl  = make([]*types.Node, 0)
+	)
+
+	nl = append(nl, &n1, &n2)
+
 	type fields struct {
-		Node storage.Node
+		stg storage.Node
 	}
+
 	type args struct {
 		ctx context.Context
 	}
+
 	tests := []struct {
 		name    string
 		fields  fields
@@ -41,14 +54,25 @@ func TestNodeStorage_List(t *testing.T) {
 		want    []*types.Node
 		wantErr bool
 	}{
-	// TODO: Add test cases.
+		{
+			"get node list success",
+			fields{stg},
+			args{ctx},
+			nl,
+			false,
+		},
 	}
+
+	for _, n := range nl {
+		if err := stg.Insert(ctx, n); err != nil {
+			t.Errorf("NodeStorage.List() storage setup error = %v", err)
+			return
+		}
+	}
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			s := &NodeStorage{
-				Node: tt.fields.Node,
-			}
-			got, err := s.List(tt.args.ctx)
+			got, err := stg.List(tt.args.ctx)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("NodeStorage.List() error = %v, wantErr %v", err, tt.wantErr)
 				return
@@ -61,213 +85,1435 @@ func TestNodeStorage_List(t *testing.T) {
 }
 
 func TestNodeStorage_Get(t *testing.T) {
+
+	var (
+		stg = newNodeStorage()
+		ctx = context.Background()
+		n   = getNodeAsset("test", "", true)
+	)
+
 	type fields struct {
-		Node storage.Node
+		stg storage.Node
 	}
+
 	type args struct {
-		ctx context.Context
-		id  string
+		ctx  context.Context
+		name string
 	}
+
 	tests := []struct {
 		name    string
 		fields  fields
 		args    args
 		want    *types.Node
 		wantErr bool
+		err     string
 	}{
-	// TODO: Add test cases.
+		{
+			"get node info failed",
+			fields{stg},
+			args{ctx, "test2"},
+			&n,
+			true,
+			store.ErrEntityNotFound,
+		},
+		{
+			"get node info successful",
+			fields{stg},
+			args{ctx, "test"},
+			&n,
+			false,
+			"",
+		},
 	}
+
 	for _, tt := range tests {
+
+		if err := stg.Insert(ctx, &n); err != nil {
+			t.Errorf("NodeStorage.Info() storage setup error = %v", err)
+			return
+		}
+
 		t.Run(tt.name, func(t *testing.T) {
-			s := &NodeStorage{
-				Node: tt.fields.Node,
-			}
-			got, err := s.Get(tt.args.ctx, tt.args.id)
-			if (err != nil) != tt.wantErr {
-				t.Errorf("NodeStorage.Get() error = %v, wantErr %v", err, tt.wantErr)
+
+			got, err := tt.fields.stg.Get(tt.args.ctx, tt.args.name)
+
+			if err != nil {
+				if tt.wantErr && tt.err != err.Error() {
+					t.Errorf("NodeStorage.Get() = %v, want %v", err, tt.err)
+					return
+				}
 				return
 			}
+
+			if tt.wantErr {
+				t.Errorf("NodeStorage.Get() error = %v, wantErr %v", err, tt.err)
+				return
+			}
+
 			if !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("NodeStorage.Get() = %v, want %v", got, tt.want)
 			}
+
 		})
 	}
 }
 
 func TestNodeStorage_Insert(t *testing.T) {
+
+	var (
+		stg = newNodeStorage()
+		ctx = context.Background()
+		n1   = getNodeAsset("test", "", true)
+		n2   = getNodeAsset("", "", true)
+	)
+
 	type fields struct {
-		Node storage.Node
+		stg storage.Node
 	}
+
 	type args struct {
 		ctx  context.Context
 		node *types.Node
 	}
+
 	tests := []struct {
 		name    string
 		fields  fields
 		args    args
+		want    *types.Node
 		wantErr bool
+		err     string
 	}{
-	// TODO: Add test cases.
+		{
+			"test successful insert",
+			fields{stg},
+			args{ctx, &n1},
+			&n1,
+			false,
+			"",
+		},
+		{
+			"test failed insert",
+			fields{stg},
+			args{ctx, nil},
+			&n1,
+			true,
+			store.ErrStructArgIsNil,
+		},
+		{
+			"test failed insert",
+			fields{stg},
+			args{ctx, &n2},
+			&n1,
+			true,
+			store.ErrStructArgIsInvalid,
+		},
 	}
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			s := &NodeStorage{
-				Node: tt.fields.Node,
+			err := tt.fields.stg.Insert(tt.args.ctx, tt.args.node)
+			if err != nil {
+				if !tt.wantErr {
+					t.Errorf("NodeStorage.Insert() error = %v, want no error", err.Error())
+					return
+				}
+
+				if tt.wantErr && tt.err != err.Error() {
+					t.Errorf("NodeStorage.Insert() error = %v, want %v", err.Error(), tt.err)
+					return
+				}
+
+				return
 			}
-			if err := s.Insert(tt.args.ctx, tt.args.node); (err != nil) != tt.wantErr {
-				t.Errorf("NodeStorage.Insert() error = %v, wantErr %v", err, tt.wantErr)
+
+			if tt.wantErr {
+				t.Errorf("NodeStorage.Insert() error = %v, want %v", err.Error(), tt.err)
+				return
 			}
 		})
 	}
 }
 
 func TestNodeStorage_Update(t *testing.T) {
+	var (
+		stg = newNodeStorage()
+		ctx = context.Background()
+		n1  = getNodeAsset("test1", "", true)
+		n2  = getNodeAsset("test1", "desc", true)
+		n3  = getNodeAsset("test2", "", false)
+	)
+
 	type fields struct {
-		Node storage.Node
+		stg storage.Node
 	}
+
 	type args struct {
 		ctx  context.Context
 		node *types.Node
 	}
+
 	tests := []struct {
 		name    string
 		fields  fields
 		args    args
+		want    *types.Node
 		wantErr bool
+		err     string
 	}{
-	// TODO: Add test cases.
+		{
+			"test successful update",
+			fields{stg},
+			args{ctx, &n2},
+			&n2,
+			false,
+			"",
+		},
+		{
+			"test failed update: nil structure",
+			fields{stg},
+			args{ctx, nil},
+			&n1,
+			true,
+			store.ErrStructArgIsNil,
+		},
+		{
+			"test failed update: entity not found",
+			fields{stg},
+			args{ctx, &n3},
+			&n1,
+			true,
+			store.ErrEntityNotFound,
+		},
 	}
+
+	stg.Insert(ctx, &n1)
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			s := &NodeStorage{
-				Node: tt.fields.Node,
+			err := tt.fields.stg.Update(tt.args.ctx, tt.args.node)
+			if err != nil {
+				if !tt.wantErr {
+					t.Errorf("NodeStorage.Update() error = %v, want no error", err.Error())
+					return
+				}
+
+				if tt.wantErr && tt.err != err.Error() {
+					t.Errorf("NodeStorage.Update() error = %v, want %v", err.Error(), tt.err)
+					return
+				}
+
+				return
 			}
-			if err := s.Update(tt.args.ctx, tt.args.node); (err != nil) != tt.wantErr {
-				t.Errorf("NodeStorage.Update() error = %v, wantErr %v", err, tt.wantErr)
+
+			if tt.wantErr {
+				t.Errorf("NodeStorage.Update() error = %v, want %v", err.Error(), tt.err)
+				return
 			}
+
+			got, _ := tt.fields.stg.Get(tt.args.ctx, tt.args.node.Meta.Name)
+			if !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("NodeStorage.Update() = %v, want %v", got, tt.want)
+				return
+			}
+
+		})
+	}
+}
+
+func TestNodeStorage_SetState(t *testing.T) {
+
+	var (
+		stg = newNodeStorage()
+		ctx = context.Background()
+		n1  = getNodeAsset("test1", "", true)
+		n2  = getNodeAsset("test1", "", true)
+		n3  = getNodeAsset("test2", "", false)
+	)
+
+	n2.State.Capacity.Containers++
+
+	type fields struct {
+		stg storage.Node
+	}
+
+	type args struct {
+		ctx  context.Context
+		node *types.Node
+	}
+
+	tests := []struct {
+		name    string
+		fields  fields
+		args    args
+		want    *types.Node
+		wantErr bool
+		err     string
+	}{
+		{
+			"test successful update",
+			fields{stg},
+			args{ctx, &n2},
+			&n2,
+			false,
+			"",
+		},
+		{
+			"test failed update: nil structure",
+			fields{stg},
+			args{ctx, nil},
+			&n1,
+			true,
+			store.ErrStructArgIsNil,
+		},
+		{
+			"test failed update: entity not found",
+			fields{stg},
+			args{ctx, &n3},
+			&n1,
+			true,
+			store.ErrEntityNotFound,
+		},
+	}
+
+	stg.Insert(ctx, &n1)
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			err := tt.fields.stg.SetState(tt.args.ctx, tt.args.node)
+			if err != nil {
+				if !tt.wantErr {
+					t.Errorf("NodeStorage.SetState() error = %v, want no error", err.Error())
+					return
+				}
+
+				if tt.wantErr && tt.err != err.Error() {
+					t.Errorf("NodeStorage.SetState() error = %v, want %v", err.Error(), tt.err)
+					return
+				}
+
+				return
+			}
+
+			if tt.wantErr {
+				t.Errorf("NodeStorage.SetState() error = %v, want %v", err.Error(), tt.err)
+				return
+			}
+
+			got, _ := tt.fields.stg.Get(tt.args.ctx, tt.args.node.Meta.Name)
+			if !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("NodeStorage.SetState() = %v, want %v", got, tt.want)
+				return
+			}
+
+		})
+	}
+}
+
+func TestNodeStorage_SetInfo(t *testing.T) {
+
+	var (
+		stg = newNodeStorage()
+		ctx = context.Background()
+		n1  = getNodeAsset("test1", "", true)
+		n2  = getNodeAsset("test1", "", true)
+		n3  = getNodeAsset("test2", "", false)
+	)
+
+	n2.Info.Hostname = "demo"
+
+	type fields struct {
+		stg storage.Node
+	}
+
+	type args struct {
+		ctx  context.Context
+		node *types.Node
+	}
+
+	tests := []struct {
+		name    string
+		fields  fields
+		args    args
+		want    *types.Node
+		wantErr bool
+		err     string
+	}{
+		{
+			"test successful update",
+			fields{stg},
+			args{ctx, &n2},
+			&n2,
+			false,
+			"",
+		},
+		{
+			"test failed update: nil structure",
+			fields{stg},
+			args{ctx, nil},
+			&n1,
+			true,
+			store.ErrStructArgIsNil,
+		},
+		{
+			"test failed update: entity not found",
+			fields{stg},
+			args{ctx, &n3},
+			&n1,
+			true,
+			store.ErrEntityNotFound,
+		},
+	}
+
+	stg.Insert(ctx, &n1)
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			err := tt.fields.stg.SetInfo(tt.args.ctx, tt.args.node)
+			if err != nil {
+				if !tt.wantErr {
+					t.Errorf("NodeStorage.SetInfo() error = %v, want no error", err.Error())
+					return
+				}
+
+				if tt.wantErr && tt.err != err.Error() {
+					t.Errorf("NodeStorage.SetInfo() error = %v, want %v", err.Error(), tt.err)
+					return
+				}
+
+				return
+
+			}
+
+			if tt.wantErr {
+				t.Errorf("NodeStorage.SetInfo() error = %v, want %v", err.Error(), tt.err)
+				return
+			}
+
+			got, _ := tt.fields.stg.Get(tt.args.ctx, tt.args.node.Meta.Name)
+			if !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("NodeStorage.SetInfo() = %v, want %v", got, tt.want)
+				return
+			}
+
+		})
+	}
+}
+
+func TestNodeStorage_SetNetwork(t *testing.T) {
+
+	var (
+		stg = newNodeStorage()
+		ctx = context.Background()
+		n1  = getNodeAsset("test1", "", true)
+		n2  = getNodeAsset("test1", "", true)
+		n3  = getNodeAsset("test2", "", false)
+	)
+
+	n2.Network.IFace.Index++
+
+	type fields struct {
+		stg storage.Node
+	}
+
+	type args struct {
+		ctx  context.Context
+		node *types.Node
+	}
+
+	tests := []struct {
+		name    string
+		fields  fields
+		args    args
+		want    *types.Node
+		wantErr bool
+		err     string
+	}{
+		{
+			"test successful update",
+			fields{stg},
+			args{ctx, &n2},
+			&n2,
+			false,
+			"",
+		},
+		{
+			"test failed update: nil structure",
+			fields{stg},
+			args{ctx, nil},
+			&n1,
+			true,
+			store.ErrStructArgIsNil,
+		},
+		{
+			"test failed update: entity not found",
+			fields{stg},
+			args{ctx, &n3},
+			&n1,
+			true,
+			store.ErrEntityNotFound,
+		},
+	}
+
+	stg.Insert(ctx, &n1)
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			err := tt.fields.stg.SetNetwork(tt.args.ctx, tt.args.node)
+			if err != nil {
+				if !tt.wantErr {
+					t.Errorf("NodeStorage.SetNetwork() error = %v, want no error", err.Error())
+					return
+				}
+
+				if tt.wantErr && tt.err != err.Error() {
+					t.Errorf("NodeStorage.SetNetwork() error = %v, want %v", err.Error(), tt.err)
+					return
+				}
+
+				return
+
+			}
+
+			if tt.wantErr {
+				t.Errorf("NodeStorage.SetNetwork() error = %v, want %v", err.Error(), tt.err)
+				return
+			}
+
+			got, _ := tt.fields.stg.Get(tt.args.ctx, tt.args.node.Meta.Name)
+			if !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("NodeStorage.SetNetwork() = %v, want %v", got, tt.want)
+				return
+			}
+
+		})
+	}
+}
+
+func TestNodeStorage_SetOnline(t *testing.T) {
+
+	var (
+		stg = newNodeStorage()
+		ctx = context.Background()
+		n1  = getNodeAsset("test1", "", false)
+		n2  = getNodeAsset("test1", "", true)
+		n3  = getNodeAsset("test2", "", false)
+	)
+
+	type fields struct {
+		stg storage.Node
+	}
+
+	type args struct {
+		ctx  context.Context
+		node *types.Node
+	}
+
+	tests := []struct {
+		name    string
+		fields  fields
+		args    args
+		want    *types.Node
+		wantErr bool
+		err     string
+	}{
+		{
+			"test successful update",
+			fields{stg},
+			args{ctx, &n2},
+			&n2,
+			false,
+			"",
+		},
+		{
+			"test failed update: nil structure",
+			fields{stg},
+			args{ctx, nil},
+			&n1,
+			true,
+			store.ErrStructArgIsNil,
+		},
+		{
+			"test failed update: entity not found",
+			fields{stg},
+			args{ctx, &n3},
+			&n1,
+			true,
+			store.ErrEntityNotFound,
+		},
+	}
+
+	stg.Insert(ctx, &n1)
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			err := tt.fields.stg.SetOnline(tt.args.ctx, tt.args.node)
+			if err != nil {
+				if !tt.wantErr {
+					t.Errorf("NodeStorage.SetOnline() error = %v, want no error", err.Error())
+					return
+				}
+
+				if tt.wantErr && tt.err != err.Error() {
+					t.Errorf("NodeStorage.SetOnline() error = %v, want %v", err.Error(), tt.err)
+					return
+				}
+
+				return
+
+			}
+
+			if tt.wantErr {
+				t.Errorf("NodeStorage.SetOnline() error = %v, want %v", err.Error(), tt.err)
+				return
+			}
+
+			got, _ := tt.fields.stg.Get(tt.args.ctx, tt.args.node.Meta.Name)
+			if !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("NodeStorage.SetOnline() = %v, want %v", got, tt.want)
+				return
+			}
+
+		})
+	}
+}
+
+func TestNodeStorage_SetOffline(t *testing.T) {
+
+	var (
+		stg = newNodeStorage()
+		ctx = context.Background()
+		n1  = getNodeAsset("test1", "", true)
+		n2  = getNodeAsset("test1", "", false)
+		n3  = getNodeAsset("test2", "", false)
+	)
+
+	type fields struct {
+		stg storage.Node
+	}
+
+	type args struct {
+		ctx  context.Context
+		node *types.Node
+	}
+
+	tests := []struct {
+		name    string
+		fields  fields
+		args    args
+		want    *types.Node
+		wantErr bool
+		err     string
+	}{
+		{
+			"test successful update",
+			fields{stg},
+			args{ctx, &n2},
+			&n2,
+			false,
+			"",
+		},
+		{
+			"test failed update: nil structure",
+			fields{stg},
+			args{ctx, nil},
+			&n1,
+			true,
+			store.ErrStructArgIsNil,
+		},
+		{
+			"test failed update: entity not found",
+			fields{stg},
+			args{ctx, &n3},
+			&n1,
+			true,
+			store.ErrEntityNotFound,
+		},
+	}
+
+	stg.Insert(ctx, &n1)
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			err := tt.fields.stg.SetOffline(tt.args.ctx, tt.args.node)
+			if err != nil {
+				if !tt.wantErr {
+					t.Errorf("NodeStorage.SetOnline() error = %v, want no error", err.Error())
+					return
+				}
+
+				if tt.wantErr && tt.err != err.Error() {
+					t.Errorf("NodeStorage.SetOnline() error = %v, want %v", err.Error(), tt.err)
+					return
+				}
+
+				return
+
+			}
+
+			if tt.wantErr {
+				t.Errorf("NodeStorage.SetOnline() error = %v, want %v", err.Error(), tt.err)
+				return
+			}
+
+			got, _ := tt.fields.stg.Get(tt.args.ctx, tt.args.node.Meta.Name)
+			if !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("NodeStorage.SetOnline() = %v, want %v", got, tt.want)
+				return
+			}
+
 		})
 	}
 }
 
 func TestNodeStorage_InsertPod(t *testing.T) {
-	type fields struct {
-		Node storage.Node
-	}
-	type args struct {
-		ctx  context.Context
-		meta *types.NodeMeta
-		pod  *types.Pod
-	}
-	tests := []struct {
-		name    string
-		fields  fields
-		args    args
-		wantErr bool
-	}{
-	// TODO: Add test cases.
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			s := &NodeStorage{
-				Node: tt.fields.Node,
-			}
-			if err := s.InsertPod(tt.args.ctx, tt.args.meta, tt.args.pod); (err != nil) != tt.wantErr {
-				t.Errorf("NodeStorage.InsertPod() error = %v, wantErr %v", err, tt.wantErr)
-			}
-		})
-	}
-}
 
-func TestNodeStorage_UpdatePod(t *testing.T) {
+	var (
+		stg = newNodeStorage()
+		ctx = context.Background()
+		n1  = getNodeAsset("test1", "", true)
+		n2  = getNodeAsset("test1", "", true)
+		n3  = getNodeAsset("test2", "", false)
+		p1  = getPodAsset("test1", "")
+		p2  = getPodAsset("test1", "")
+	)
+
+	n2.Spec.Pods[p1.Meta.Name] = p1.Spec
+	p2.Meta.Name = ""
+
 	type fields struct {
-		Node storage.Node
+		stg storage.Node
 	}
+
 	type args struct {
 		ctx  context.Context
-		meta *types.NodeMeta
+		node *types.Node
 		pod  *types.Pod
 	}
+
 	tests := []struct {
 		name    string
 		fields  fields
 		args    args
+		want    *types.Node
 		wantErr bool
+		err     string
 	}{
-	// TODO: Add test cases.
+		{
+			"test successful pod insert",
+			fields{stg},
+			args{ctx, &n1, &p1},
+			&n2,
+			false,
+			"",
+		},
+		{
+			"test failed update: nil node structure",
+			fields{stg},
+			args{ctx, nil, &p1},
+			&n2,
+			true,
+			store.ErrStructArgIsNil,
+		},
+		{
+			"test failed update: nil pod structure",
+			fields{stg},
+			args{ctx, &n1, nil},
+			&n2,
+			true,
+			store.ErrStructArgIsNil,
+		},
+		{
+			"test failed update: invalid pod structure",
+			fields{stg},
+			args{ctx, &n1, &p2},
+			&n2,
+			true,
+			store.ErrStructArgIsInvalid,
+		},
+		{
+			"test failed update: entity not found",
+			fields{stg},
+			args{ctx, &n3, nil},
+			&n1,
+			true,
+			store.ErrEntityNotFound,
+		},
 	}
+
+	stg.Insert(ctx, &n1)
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			s := &NodeStorage{
-				Node: tt.fields.Node,
+			err := tt.fields.stg.InsertPod(tt.args.ctx, tt.args.node, tt.args.pod)
+			if err != nil {
+				if !tt.wantErr {
+					t.Errorf("NodeStorage.InsertPod() error = %v, want no error", err.Error())
+					return
+				}
+
+				if tt.wantErr && tt.err != err.Error() {
+					t.Errorf("NodeStorage.InsertPod() error = %v, want %v", err.Error(), tt.err)
+					return
+				}
+
+				return
 			}
-			if err := s.UpdatePod(tt.args.ctx, tt.args.meta, tt.args.pod); (err != nil) != tt.wantErr {
-				t.Errorf("NodeStorage.UpdatePod() error = %v, wantErr %v", err, tt.wantErr)
+
+			if tt.wantErr {
+				t.Errorf("NodeStorage.InsertPod() error = %v, want %v", err.Error(), tt.err)
+				return
 			}
+
+			got, _ := tt.fields.stg.Get(tt.args.ctx, tt.args.node.Meta.Name)
+			if !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("NodeStorage.InsertPod() = %v, want %v", got, tt.want)
+				return
+			}
+
 		})
 	}
 }
 
 func TestNodeStorage_RemovePod(t *testing.T) {
+
+	var (
+		stg = newNodeStorage()
+		ctx = context.Background()
+		n1  = getNodeAsset("test1", "", true)
+		n2  = getNodeAsset("test1", "", true)
+		n3  = getNodeAsset("test2", "", false)
+		p1  = getPodAsset("test1", "")
+		p2  = getPodAsset("test2", "")
+	)
+
+	n1.Spec.Pods[p1.Meta.Name] = p1.Spec
+
 	type fields struct {
-		Node storage.Node
+		stg storage.Node
 	}
+
 	type args struct {
 		ctx  context.Context
-		meta *types.NodeMeta
+		node *types.Node
 		pod  *types.Pod
 	}
+
 	tests := []struct {
 		name    string
 		fields  fields
 		args    args
+		want    *types.Node
 		wantErr bool
+		err     string
 	}{
-	// TODO: Add test cases.
+		{
+			"test successful pod remove",
+			fields{stg},
+			args{ctx, &n1, &p1},
+			&n2,
+			false,
+			"",
+		},
+		{
+			"test failed update: nil node structure",
+			fields{stg},
+			args{ctx, nil, &p1},
+			&n2,
+			true,
+			store.ErrStructArgIsNil,
+		},
+		{
+			"test failed update: nil pod structure",
+			fields{stg},
+			args{ctx, &n1, nil},
+			&n2,
+			true,
+			store.ErrStructArgIsNil,
+		},
+		{
+			"test failed update: node not found",
+			fields{stg},
+			args{ctx, &n3, nil},
+			&n1,
+			true,
+			store.ErrEntityNotFound,
+		},
+		{
+			"test failed update: pod not found",
+			fields{stg},
+			args{ctx, &n1, &p2},
+			&n1,
+			true,
+			store.ErrEntityNotFound,
+		},
 	}
+
+	stg.Insert(ctx, &n1)
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			s := &NodeStorage{
-				Node: tt.fields.Node,
+			err := tt.fields.stg.RemovePod(tt.args.ctx, tt.args.node, tt.args.pod)
+			if err != nil {
+				if !tt.wantErr {
+					t.Errorf("NodeStorage.RemovePod() error = %v, want no error", err.Error())
+					return
+				}
+
+				if tt.wantErr && tt.err != err.Error() {
+					t.Errorf("NodeStorage.RemovePod() error = %v, want %v", err.Error(), tt.err)
+					return
+				}
+
+				return
 			}
-			if err := s.RemovePod(tt.args.ctx, tt.args.meta, tt.args.pod); (err != nil) != tt.wantErr {
-				t.Errorf("NodeStorage.RemovePod() error = %v, wantErr %v", err, tt.wantErr)
+
+			if tt.wantErr {
+				t.Errorf("NodeStorage.RemovePod() error = %v, want %v", err.Error(), tt.err)
+				return
 			}
+
+			got, _ := tt.fields.stg.Get(tt.args.ctx, tt.args.node.Meta.Name)
+			if !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("NodeStorage.RemovePod() = %v, want %v", got, tt.want)
+				return
+			}
+
+		})
+	}
+}
+
+func TestNodeStorage_InsertVolume(t *testing.T) {
+
+	var (
+		stg = newNodeStorage()
+		ctx = context.Background()
+		n1  = getNodeAsset("test1", "", true)
+		n2  = getNodeAsset("test1", "", true)
+		n3  = getNodeAsset("test2", "", false)
+		v1  = getVolumeAsset("test1", "")
+		v2  = getVolumeAsset("test1", "")
+	)
+
+	n2.Spec.Volumes[v1.Meta.Name] = v1.Spec
+	v2.Meta.Name = ""
+
+	type fields struct {
+		stg storage.Node
+	}
+
+	type args struct {
+		ctx  context.Context
+		node *types.Node
+		volume  *types.Volume
+	}
+
+	tests := []struct {
+		name    string
+		fields  fields
+		args    args
+		want    *types.Node
+		wantErr bool
+		err     string
+	}{
+		{
+			"test successful volume insert",
+			fields{stg},
+			args{ctx, &n1, &v1},
+			&n2,
+			false,
+			"",
+		},
+		{
+			"test failed update: nil node structure",
+			fields{stg},
+			args{ctx, nil, &v1},
+			&n2,
+			true,
+			store.ErrStructArgIsNil,
+		},
+		{
+			"test failed update: nil volume structure",
+			fields{stg},
+			args{ctx, &n1, nil},
+			&n2,
+			true,
+			store.ErrStructArgIsNil,
+		},
+		{
+			"test failed update: invalid volume structure",
+			fields{stg},
+			args{ctx, &n1, &v2},
+			&n2,
+			true,
+			store.ErrStructArgIsInvalid,
+		},
+		{
+			"test failed update: entity not found",
+			fields{stg},
+			args{ctx, &n3, nil},
+			&n1,
+			true,
+			store.ErrEntityNotFound,
+		},
+	}
+
+	stg.Insert(ctx, &n1)
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			err := tt.fields.stg.InsertVolume(tt.args.ctx, tt.args.node, tt.args.volume)
+			if err != nil {
+				if !tt.wantErr {
+					t.Errorf("NodeStorage.Volume() error = %v, want no error", err.Error())
+					return
+				}
+
+				if tt.wantErr && tt.err != err.Error() {
+					t.Errorf("NodeStorage.Volume() error = %v, want %v", err.Error(), tt.err)
+					return
+				}
+
+				return
+			}
+
+			if tt.wantErr {
+				t.Errorf("NodeStorage.Volume() error = %v, want %v", err.Error(), tt.err)
+				return
+			}
+
+			got, _ := tt.fields.stg.Get(tt.args.ctx, tt.args.node.Meta.Name)
+			if !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("NodeStorage.Volume() = %v, want %v", got, tt.want)
+				return
+			}
+
+		})
+	}
+}
+
+func TestNodeStorage_RemoveVolume(t *testing.T) {
+
+	var (
+		stg = newNodeStorage()
+		ctx = context.Background()
+		n1  = getNodeAsset("test1", "", true)
+		n2  = getNodeAsset("test1", "", true)
+		n3  = getNodeAsset("test2", "", false)
+		v1  = getVolumeAsset("test1", "")
+		v2  = getVolumeAsset("test2", "")
+	)
+
+	n1.Spec.Volumes[v1.Meta.Name] = v1.Spec
+
+	type fields struct {
+		stg storage.Node
+	}
+
+	type args struct {
+		ctx  context.Context
+		node *types.Node
+		volume  *types.Volume
+	}
+
+	tests := []struct {
+		name    string
+		fields  fields
+		args    args
+		want    *types.Node
+		wantErr bool
+		err     string
+	}{
+		{
+			"test successful volume remove",
+			fields{stg},
+			args{ctx, &n1, &v1},
+			&n2,
+			false,
+			"",
+		},
+		{
+			"test failed update: nil node structure",
+			fields{stg},
+			args{ctx, nil, &v1},
+			&n2,
+			true,
+			store.ErrStructArgIsNil,
+		},
+		{
+			"test failed update: nil volume structure",
+			fields{stg},
+			args{ctx, &n1, nil},
+			&n2,
+			true,
+			store.ErrStructArgIsNil,
+		},
+		{
+			"test failed update: node not found",
+			fields{stg},
+			args{ctx, &n3, nil},
+			&n1,
+			true,
+			store.ErrEntityNotFound,
+		},
+		{
+			"test failed update: volume not found",
+			fields{stg},
+			args{ctx, &n1, &v2},
+			&n1,
+			true,
+			store.ErrEntityNotFound,
+		},
+	}
+
+	stg.Insert(ctx, &n1)
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			err := tt.fields.stg.RemoveVolume(tt.args.ctx, tt.args.node, tt.args.volume)
+			if err != nil {
+				if !tt.wantErr {
+					t.Errorf("NodeStorage.RemoveVolume() error = %v, want no error", err.Error())
+					return
+				}
+
+				if tt.wantErr && tt.err != err.Error() {
+					t.Errorf("NodeStorage.RemoveVolume() error = %v, want %v", err.Error(), tt.err)
+					return
+				}
+
+				return
+			}
+
+			if tt.wantErr {
+				t.Errorf("NodeStorage.RemoveVolume() error = %v, want %v", err.Error(), tt.err)
+				return
+			}
+
+			got, _ := tt.fields.stg.Get(tt.args.ctx, tt.args.node.Meta.Name)
+			if !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("NodeStorage.RemoveVolume() = %v, want %v", got, tt.want)
+				return
+			}
+
+		})
+	}
+}
+
+func TestNodeStorage_InsertRoute(t *testing.T) {
+
+	var (
+		stg = newNodeStorage()
+		ctx = context.Background()
+		n1  = getNodeAsset("test1", "", true)
+		n2  = getNodeAsset("test1", "", true)
+		n3  = getNodeAsset("test2", "", false)
+		r1  = getRouteAsset("test1", "")
+		r2  = getRouteAsset("test1", "")
+	)
+
+	n2.Spec.Routes[r1.Meta.Name] = r1.Spec
+	r2.Meta.Name = ""
+
+	type fields struct {
+		stg storage.Node
+	}
+
+	type args struct {
+		ctx  context.Context
+		node *types.Node
+		route  *types.Route
+	}
+
+	tests := []struct {
+		name    string
+		fields  fields
+		args    args
+		want    *types.Node
+		wantErr bool
+		err     string
+	}{
+		{
+			"test successful route insert",
+			fields{stg},
+			args{ctx, &n1, &r1},
+			&n2,
+			false,
+			"",
+		},
+		{
+			"test failed update: nil node structure",
+			fields{stg},
+			args{ctx, nil, &r1},
+			&n2,
+			true,
+			store.ErrStructArgIsNil,
+		},
+		{
+			"test failed update: nil route structure",
+			fields{stg},
+			args{ctx, &n1, nil},
+			&n2,
+			true,
+			store.ErrStructArgIsNil,
+		},
+		{
+			"test failed update: invalid route structure",
+			fields{stg},
+			args{ctx, &n1, &r2},
+			&n2,
+			true,
+			store.ErrStructArgIsInvalid,
+		},
+		{
+			"test failed update: entity not found",
+			fields{stg},
+			args{ctx, &n3, nil},
+			&n1,
+			true,
+			store.ErrEntityNotFound,
+		},
+	}
+
+	stg.Insert(ctx, &n1)
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			err := tt.fields.stg.InsertRoute(tt.args.ctx, tt.args.node, tt.args.route)
+			if err != nil {
+				if !tt.wantErr {
+					t.Errorf("NodeStorage.InsertRoute() error = %v, want no error", err.Error())
+					return
+				}
+
+				if tt.wantErr && tt.err != err.Error() {
+					t.Errorf("NodeStorage.InsertRoute() error = %v, want %v", err.Error(), tt.err)
+					return
+				}
+
+				return
+			}
+
+			if tt.wantErr {
+				t.Errorf("NodeStorage.InsertRoute() error = %v, want %v", err.Error(), tt.err)
+				return
+			}
+
+			got, _ := tt.fields.stg.Get(tt.args.ctx, tt.args.node.Meta.Name)
+			if !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("NodeStorage.InsertRoute() = %v, want %v", got, tt.want)
+				return
+			}
+
+		})
+	}
+}
+
+func TestNodeStorage_RemoveRoute(t *testing.T) {
+
+	var (
+		stg = newNodeStorage()
+		ctx = context.Background()
+		n1  = getNodeAsset("test1", "", true)
+		n2  = getNodeAsset("test1", "", true)
+		n3  = getNodeAsset("test2", "", false)
+		p1  = getRouteAsset("test1", "")
+		p2  = getRouteAsset("test2", "")
+	)
+
+	n1.Spec.Routes[p1.Meta.Name] = p1.Spec
+
+	type fields struct {
+		stg storage.Node
+	}
+
+	type args struct {
+		ctx  context.Context
+		node *types.Node
+		route  *types.Route
+	}
+
+	tests := []struct {
+		name    string
+		fields  fields
+		args    args
+		want    *types.Node
+		wantErr bool
+		err     string
+	}{
+		{
+			"test successful route remove",
+			fields{stg},
+			args{ctx, &n1, &p1},
+			&n2,
+			false,
+			"",
+		},
+		{
+			"test failed update: nil node structure",
+			fields{stg},
+			args{ctx, nil, &p1},
+			&n2,
+			true,
+			store.ErrStructArgIsNil,
+		},
+		{
+			"test failed update: nil route structure",
+			fields{stg},
+			args{ctx, &n1, nil},
+			&n2,
+			true,
+			store.ErrStructArgIsNil,
+		},
+		{
+			"test failed update: node not found",
+			fields{stg},
+			args{ctx, &n3, nil},
+			&n1,
+			true,
+			store.ErrEntityNotFound,
+		},
+		{
+			"test failed update: route not found",
+			fields{stg},
+			args{ctx, &n1, &p2},
+			&n1,
+			true,
+			store.ErrEntityNotFound,
+		},
+	}
+
+	stg.Insert(ctx, &n1)
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			err := tt.fields.stg.RemoveRoute(tt.args.ctx, tt.args.node, tt.args.route)
+			if err != nil {
+				if !tt.wantErr {
+					t.Errorf("NodeStorage.RemoveRoute() error = %v, want no error", err.Error())
+					return
+				}
+
+				if tt.wantErr && tt.err != err.Error() {
+					t.Errorf("NodeStorage.RemoveRoute() error = %v, want %v", err.Error(), tt.err)
+					return
+				}
+
+				return
+			}
+
+			if tt.wantErr {
+				t.Errorf("NodeStorage.RemoveRoute() error = %v, want %v", err.Error(), tt.err)
+				return
+			}
+
+			got, _ := tt.fields.stg.Get(tt.args.ctx, tt.args.node.Meta.Name)
+			if !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("NodeStorage.RemoveRoute() = %v, want %v", got, tt.want)
+				return
+			}
+
 		})
 	}
 }
 
 func TestNodeStorage_Remove(t *testing.T) {
+
+	var (
+		stg = newNodeStorage()
+		ctx = context.Background()
+		n1  = getNodeAsset("test1", "", true)
+		n2  = getNodeAsset("test2", "", true)
+	)
+
+
 	type fields struct {
-		Node storage.Node
+		stg storage.Node
 	}
+
 	type args struct {
 		ctx  context.Context
-		name string
+		node *types.Node
 	}
+
 	tests := []struct {
 		name    string
 		fields  fields
 		args    args
+		want    *types.Node
 		wantErr bool
+		err     string
 	}{
-	// TODO: Add test cases.
+		{
+			"test successful node remove",
+			fields{stg},
+			args{ctx, &n1},
+			&n2,
+			false,
+			store.ErrEntityNotFound,
+		},
+		{
+			"test failed update: nil node structure",
+			fields{stg},
+			args{ctx, nil},
+			&n2,
+			true,
+			store.ErrStructArgIsNil,
+		},
+		{
+			"test failed update: node not found",
+			fields{stg},
+			args{ctx, &n2},
+			&n1,
+			true,
+			store.ErrEntityNotFound,
+		},
 	}
+
+	stg.Insert(ctx, &n1)
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			s := &NodeStorage{
-				Node: tt.fields.Node,
+			err := tt.fields.stg.Remove(tt.args.ctx, tt.args.node)
+			if err != nil {
+				if !tt.wantErr {
+					t.Errorf("NodeStorage.Remove() error = %v, want no error", err.Error())
+					return
+				}
+
+				if tt.wantErr && tt.err != err.Error() {
+					t.Errorf("NodeStorage.Remove() error = %v, want %v", err.Error(), tt.err)
+					return
+				}
+
+				return
 			}
-			if err := s.Remove(tt.args.ctx, tt.args.name); (err != nil) != tt.wantErr {
-				t.Errorf("NodeStorage.Remove() error = %v, wantErr %v", err, tt.wantErr)
+
+			if tt.wantErr {
+				t.Errorf("NodeStorage.Remove() error = %v, want %v", err.Error(), tt.err)
+				return
 			}
+
+			_, err = tt.fields.stg.Get(tt.args.ctx, tt.args.node.Meta.Name)
+			if err == nil || tt.err != err.Error() {
+				t.Errorf("NodeStorage.Remove() = %v, want %v", err, tt.want)
+				return
+			}
+
 		})
 	}
 }
 
 func TestNodeStorage_Watch(t *testing.T) {
+
+	var (
+		stg = newNodeStorage()
+		ctx = context.Background()
+	)
+
 	type fields struct {
-		Node storage.Node
+		stg storage.Node
 	}
 	type args struct {
 		ctx  context.Context
@@ -279,14 +1525,16 @@ func TestNodeStorage_Watch(t *testing.T) {
 		args    args
 		wantErr bool
 	}{
-	// TODO: Add test cases.
+		{
+		"check watch",
+		fields{stg},
+		args{ctx, make(chan *types.Node)},
+		false,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			s := &NodeStorage{
-				Node: tt.fields.Node,
-			}
-			if err := s.Watch(tt.args.ctx, tt.args.node); (err != nil) != tt.wantErr {
+			if err := tt.fields.stg.Watch(tt.args.ctx, tt.args.node); (err != nil) != tt.wantErr {
 				t.Errorf("NodeStorage.Watch() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
@@ -307,4 +1555,55 @@ func Test_newNodeStorage(t *testing.T) {
 			}
 		})
 	}
+}
+
+func getNodeAsset(name, desc string, online bool) types.Node {
+	var n = types.Node{
+		Meta: types.NodeMeta{
+			Region:   "local",
+			Token:    "token",
+			Provider: "local",
+		},
+		Info: types.NodeInfo{
+			Hostname: name,
+		},
+		State: types.NodeState{
+			Capacity: types.NodeResources{
+				Containers: 2,
+				Pods:       2,
+				Memory:     1024,
+				Cpu:        2,
+				Storage:    512,
+			},
+			Allocated: types.NodeResources{
+				Containers: 1,
+				Pods:       1,
+				Memory:     512,
+				Cpu:        1,
+				Storage:    256,
+			},
+		},
+		Spec:  types.NodeSpec{
+			Pods: make(map[string]types.PodSpec),
+			Volumes: make(map[string]types.VolumeSpec),
+			Routes: make(map[string]types.RouteSpec),
+		},
+		Roles: types.NodeRole{},
+		Network: types.Subnet{
+			Type:   types.NetworkTypeVxLAN,
+			Subnet: "10.0.0.1",
+			IFace: types.NetworkInterface{
+				Index: 1,
+				Name:  "lb",
+				Addr:  "10.0.0.1",
+				HAddr: "dc:a9:04:83:0d:eb",
+			},
+		},
+		Online: online,
+	}
+
+	n.Meta.Name = name
+	n.Meta.Description = desc
+
+	return n
 }

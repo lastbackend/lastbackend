@@ -74,11 +74,11 @@ func (s *PodStorage) GetByName(ctx context.Context, app, name string) (*types.Po
 	}
 
 	if pod.Meta.Name == "" {
-		return nil, errors.New(store.ErrKeyNotFound)
+		return nil, errors.New(store.ErrEntityNotFound)
 	}
 
 	keyEndpoints := keyCreate(endpointStorage)
-	if err := client.Map(ctx, keyEndpoints, filterEndpoint, endpoints); err != nil && err.Error() != store.ErrKeyNotFound {
+	if err := client.Map(ctx, keyEndpoints, filterEndpoint, endpoints); err != nil && err.Error() != store.ErrEntityNotFound {
 		log.V(logLevel).Errorf("Storage: Pod: map endpoints err: %s", err.Error())
 		return nil, err
 	}
@@ -119,7 +119,7 @@ func (s *PodStorage) ListByNamespace(ctx context.Context, app string) ([]*types.
 		filterEndpoint := `\b.+` + endpointStorage + `\/` + name + `\..+\b`
 		endpoints := make(map[string][]string)
 		keyEndpoints := keyCreate(endpointStorage)
-		if err := client.Map(ctx, keyEndpoints, filterEndpoint, endpoints); err != nil && err.Error() != store.ErrKeyNotFound {
+		if err := client.Map(ctx, keyEndpoints, filterEndpoint, endpoints); err != nil && err.Error() != store.ErrEntityNotFound {
 			log.V(logLevel).Errorf("Storage: Pod: map endpoints err: %s", err.Error())
 			return nil, err
 		}
@@ -166,7 +166,7 @@ func (s *PodStorage) ListByService(ctx context.Context, namespace, service strin
 		filterEndpoint := `\b.+` + endpointStorage + `\/` + pod.Meta.Name + `-` + namespace + `\..+\b`
 		endpoints := make(map[string][]string)
 		keyEndpoints := keyCreate(endpointStorage)
-		if err := client.Map(ctx, keyEndpoints, filterEndpoint, endpoints); err != nil && err.Error() != store.ErrKeyNotFound {
+		if err := client.Map(ctx, keyEndpoints, filterEndpoint, endpoints); err != nil && err.Error() != store.ErrEntityNotFound {
 			log.V(logLevel).Errorf("Storage: Pod: map endpoints err: %s", err.Error())
 			return nil, err
 		}

@@ -76,17 +76,17 @@ func (s *DeploymentStorage) Get(ctx context.Context, namespace, name string) (*t
 	}
 
 	if deployment.Meta.Name == "" {
-		return nil, errors.New(store.ErrKeyNotFound)
+		return nil, errors.New(store.ErrEntityNotFound)
 	}
 
 	keySpec := keyCreate(deploymentStorage, namespace, name, "spec")
-	if err := client.Map(ctx, keySpec, "", &deployment.Spec); err != nil && err.Error() != store.ErrKeyNotFound {
+	if err := client.Map(ctx, keySpec, "", &deployment.Spec); err != nil && err.Error() != store.ErrEntityNotFound {
 		log.V(logLevel).Errorf("Storage: Deployment: Map deployment `%s` spec err: %s", name, err.Error())
 		return nil, err
 	}
 
 	keyEndpoints := keyCreate(endpointStorage)
-	if err := client.Map(ctx, keyEndpoints, filterDeploymentEndpoint, endpoints); err != nil && err.Error() != store.ErrKeyNotFound {
+	if err := client.Map(ctx, keyEndpoints, filterDeploymentEndpoint, endpoints); err != nil && err.Error() != store.ErrEntityNotFound {
 		log.V(logLevel).Errorf("Storage: Deployment: map deployment endpoint `%s` meta err: %s", name, err.Error())
 		return nil, err
 	}

@@ -33,22 +33,20 @@ type NodeMapState map[string]*NodeState
 type NodeList []*Node
 
 type Node struct {
-	Meta     NodeMeta     `json:"meta"`
-	Info     NodeInfo     `json:"host"`
-	State    NodeState    `json:"state"`
-	Spec     NodeSpec     `json:"usage"`
-	Services NadeServices `json:"services"`
-	Network  Subnet       `json:"network"`
-	Alive    bool         `json:"alive"`
+	Meta    NodeMeta  `json:"meta"`
+	Info    NodeInfo  `json:"host"`
+	State   NodeState `json:"state"`
+	Spec    NodeSpec  `json:"usage"`
+	Roles   NodeRole  `json:"roles"`
+	Network Subnet    `json:"network"`
+	Online  bool      `json:"online"`
 }
 
 type NodeMeta struct {
 	Meta
-	Token     string `json:"token"`
-	ClusterID string `json:"cluster"`
-	GatewayID string `json:"gateway"`
-	Region    string `json:"region"`
-	Provider  string `json:"provider"`
+	Token    string `json:"token"`
+	Region   string `json:"region"`
+	Provider string `json:"provider"`
 }
 
 type NodeInfo struct {
@@ -64,22 +62,17 @@ type NodeInfo struct {
 }
 
 type NodeState struct {
-	// Node online state
-	Online bool `json:"online"`
 	// Node Capacity
 	Capacity NodeResources `json:"capacity"`
 	// Node Allocated
 	Allocated NodeResources `json:"allocated"`
-	// Node Services
-	Services NadeServices `json:"services"`
 }
 
 type NodeSpec struct {
-	Routes  map[string]*Route  `json:"routes"`
-	Network map[string]*Subnet `json:"network"`
-	Pods    map[string]*Pod    `json:"pods"`
-	Volumes map[string]*Volume `json:"volumes"`
-	Secrets map[string]*Secret `json:"secrets"`
+	Routes  map[string]RouteSpec  `json:"routes"`
+	Network map[string]Subnet     `json:"network"`
+	Pods    map[string]PodSpec    `json:"pods"`
+	Volumes map[string]VolumeSpec `json:"volumes"`
 }
 
 type NodeNamespace struct {
@@ -115,12 +108,12 @@ type NodeUpdateOptions struct {
 	} `json:"external_ip"`
 }
 
-type NadeServices struct {
-	Router  NadeServicesRouter `json:"router"`
-	Builder bool               `json:"builder"`
+type NodeRole struct {
+	Router  NodeRoleRouter `json:"router"`
+	Builder bool           `json:"builder"`
 }
 
-type NadeServicesRouter struct {
+type NodeRoleRouter struct {
 	ExternalIP string `json:"external_ip"`
 	Enabled    bool   `json:"enabled"`
 }

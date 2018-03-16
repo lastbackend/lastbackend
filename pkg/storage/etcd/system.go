@@ -87,7 +87,7 @@ func (s *SystemStorage) Elect(ctx context.Context, process *types.Process) (bool
 
 	key := keyCreate(systemStorage, process.Meta.Kind, "lead")
 	err = client.Get(ctx, key, &id)
-	if err != nil && (err.Error() != store.ErrKeyNotFound) {
+	if err != nil && (err.Error() != store.ErrEntityNotFound) {
 		log.V(logLevel).Errorf("Storage: System: get process lead info err: %s", err.Error())
 		return false, err
 	}
@@ -96,9 +96,9 @@ func (s *SystemStorage) Elect(ctx context.Context, process *types.Process) (bool
 		return false, nil
 	}
 
-	if err.Error() == store.ErrKeyNotFound {
+	if err.Error() == store.ErrEntityNotFound {
 		err = client.Create(ctx, key, &process.Meta.ID, nil, systemLeadTTL)
-		if err != nil && err.Error() != store.ErrKeyExists {
+		if err != nil && err.Error() != store.ErrEntityExists {
 			log.V(logLevel).Errorf("Storage: System: create process ttl err: %s", err.Error())
 			return false, err
 		}
@@ -132,7 +132,7 @@ func (s *SystemStorage) ElectUpdate(ctx context.Context, process *types.Process)
 
 	key := keyCreate(systemStorage, process.Meta.Kind, "lead")
 	err = client.Get(ctx, key, &id)
-	if err != nil && err.Error() != store.ErrKeyNotFound {
+	if err != nil && err.Error() != store.ErrEntityNotFound {
 		log.V(logLevel).Errorf("Storage: System: get process lead err: %s", err.Error())
 		return err
 	}

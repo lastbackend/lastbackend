@@ -258,3 +258,11 @@ func Test_newPodStorage(t *testing.T) {
 		})
 	}
 }
+
+func getPodAsset(name, desc string) types.Pod {
+	p := types.Pod{}
+	p.Meta.Name = name
+	p.Meta.Description = desc
+
+	return p
+}

@@ -45,7 +45,7 @@ func (s *ClusterStorage) Insert(ctx context.Context, cluster *types.Cluster) err
 }
 
 // Info - return  cluster info from mock storage
-func (s *ClusterStorage) Info(ctx context.Context) (*types.Cluster, error) {
+func (s *ClusterStorage) Get(ctx context.Context) (*types.Cluster, error) {
 	return &s.data, nil
 }
 

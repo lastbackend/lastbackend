@@ -86,7 +86,7 @@ func (s *NodeStorage) Get(ctx context.Context, id string) (*types.Node, error) {
 	node := new(types.Node)
 	key := keyCreate(nodeStorage, id)
 	if err := client.Map(ctx, key, filter, node); err != nil {
-		if err.Error() == store.ErrKeyNotFound {
+		if err.Error() == store.ErrEntityNotFound {
 			return nil, nil
 		}
 		log.V(logLevel).Errorf("Storage: Node: create client err: %s", err.Error())
@@ -94,14 +94,14 @@ func (s *NodeStorage) Get(ctx context.Context, id string) (*types.Node, error) {
 	}
 
 	if node.Meta.Name == "" {
-		return nil, errors.New(store.ErrKeyNotFound)
+		return nil, errors.New(store.ErrEntityNotFound)
 	}
 
-	node.Spec.Pods = make(map[string]*types.Pod)
+	node.Spec.Pods = make(map[string]types.PodSpec)
 	keySpec := keyCreate(nodeStorage, id, "spec", "pods")
 	if err := client.Map(ctx, keySpec, "", node.Spec.Pods); err != nil {
 		// Return node if pods does not exists
-		if err.Error() == store.ErrKeyNotFound {
+		if err.Error() == store.ErrEntityNotFound {
 			return node, nil
 		}
 		log.V(logLevel).Errorf("Storage: Node: get node err: %s", err.Error())
@@ -396,13 +396,13 @@ func (s *NodeStorage) Watch(ctx context.Context, node chan *types.Node) error {
 
 		// TODO: check previous node alive state to prevent multi calls
 		if action == "PUT" {
-			n.Alive = true
+			n.Online = true
 			node <- n
 			return
 		}
 
 		if action == "DELETE" {
-			n.Alive = false
+			n.Online = false
 			node <- n
 			return
 		}
