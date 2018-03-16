@@ -52,7 +52,6 @@ func TestServiceInfo(t *testing.T) {
 	err := envs.Get().GetStorage().Namespace().Insert(context.Background(), ns1)
 	assert.NoError(t, err)
 
-
 	err = envs.Get().GetStorage().Service().Insert(context.Background(), s1)
 	assert.NoError(t, err)
 
@@ -158,7 +157,9 @@ func TestServiceList(t *testing.T) {
 	err = envs.Get().GetStorage().Service().Insert(context.Background(), s2)
 	assert.NoError(t, err)
 
-	v, err := views.V1().Service().New(s2, make([]*types.Deployment, 0), make([]*types.Pod, 0)).ToJson()
+	sl := types.ServiceList{s1, s2}
+
+	v, err := views.V1().Service().NewList(sl, make([]*types.Deployment, 0)).ToJson()
 	assert.NoError(t, err)
 
 	tests := []struct {

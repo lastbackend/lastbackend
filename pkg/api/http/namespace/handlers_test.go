@@ -124,16 +124,16 @@ func TestNamespaceList(t *testing.T) {
 	envs.Get().SetStorage(strg)
 	viper.Set("verbose", 0)
 
-	nsl := make(types.NamespaceList, 0)
 	ns1 := getDefaultNamespace("demo")
 	ns2 := getDefaultNamespace("test")
 
 	err := envs.Get().GetStorage().Namespace().Insert(context.Background(), ns1)
 	assert.NoError(t, err)
-	nsl = append(nsl, ns1)
+
 	err = envs.Get().GetStorage().Namespace().Insert(context.Background(), ns2)
 	assert.NoError(t, err)
-	nsl = append(nsl, ns2)
+
+	nsl := types.NamespaceList{ns1, ns2}
 
 	v, err := views.V1().Namespace().NewList(nsl).ToJson()
 	assert.NoError(t, err)

@@ -41,6 +41,8 @@ type Service struct {
 	Deployments map[string]*Deployment `json:"deployments"`
 }
 
+type ServiceList []*Service
+
 type ServiceMeta struct {
 	Meta
 	Namespace string `json:"namespace"`
