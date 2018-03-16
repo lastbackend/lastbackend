@@ -31,7 +31,7 @@ type Hook interface {
 }
 
 type Namespace interface {
-	GetByName(ctx context.Context, name string) (*types.Namespace, error)
+	Get(ctx context.Context, name string) (*types.Namespace, error)
 	List(ctx context.Context) ([]*types.Namespace, error)
 	Insert(ctx context.Context, namespace *types.Namespace) error
 	Update(ctx context.Context, project *types.Namespace) error
@@ -79,7 +79,7 @@ type Pod interface {
 }
 
 type Volume interface {
-	GetByToken(ctx context.Context, token string) (*types.Volume, error)
+	Get(ctx context.Context, token string) (*types.Volume, error)
 	ListByNamespace(ctx context.Context, namespace string) ([]*types.Volume, error)
 	Insert(ctx context.Context, volume *types.Volume) error
 	Remove(ctx context.Context, id string) error
@@ -106,11 +106,16 @@ type Node interface {
 	SetAvailable(ctx context.Context, node *types.Node) error
 	SetUnavailable(ctx context.Context, node *types.Node) error
 
-	InsertPod(ctx context.Context, meta *types.NodeMeta, pod *types.Pod) error
-	UpdatePod(ctx context.Context, meta *types.NodeMeta, pod *types.Pod) error
-	RemovePod(ctx context.Context, meta *types.NodeMeta, pod *types.Pod) error
+	InsertPod(ctx context.Context, node *types.Node, pod *types.Pod) error
+	RemovePod(ctx context.Context, node *types.Node, pod *types.Pod) error
 
-	Remove(ctx context.Context, name string) error
+	InsertVolume(ctx context.Context, node *types.Node, volume *types.Volume) error
+	RemoveVolume(ctx context.Context, node *types.Node, volume *types.Volume) error
+
+	InsertRoute(ctx context.Context, node *types.Node, route *types.Route) error
+	RemoveRoute(ctx context.Context, node *types.Node, route *types.Route) error
+
+	Remove(ctx context.Context, node *types.Node) error
 	Watch(ctx context.Context, node chan *types.Node) error
 }
 
