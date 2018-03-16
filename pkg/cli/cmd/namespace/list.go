@@ -16,54 +16,71 @@
 // from Last.Backend LLC.
 //
 
-package app
+package namespace
 
 import (
 	"fmt"
-	n "github.com/lastbackend/lastbackend/pkg/api/app/views/v1"
+
 	c "github.com/lastbackend/lastbackend/pkg/cli/context"
-	"github.com/lastbackend/lastbackend/pkg/common/errors"
+	v "github.com/lastbackend/lastbackend/pkg/cli/view"
+	e "github.com/lastbackend/lastbackend/pkg/distribution/errors"
 )
 
-func SwitchCmd(name string) {
+func ListCmd() {
 
-	ns, err := Switch(name)
+	nCurrent, nsList, err := List()
 	if err != nil {
 		fmt.Println(err)
 		return
 	}
 
-	fmt.Printf("The app `%s` was selected as the current\n", ns.Meta.Name)
+	nsList.Print(nCurrent)
 }
 
-func Switch(name string) (*n.App, error) {
+func List() (string, *v.NamespaceList, error) {
 
 	var (
-		er      = new(errors.Http)
-		http    = c.Get().GetHttpClient()
-		storage = c.Get().GetStorage()
-		a       = new(n.App)
+		err      error
+		http     = c.Get().GetHttpClient()
+		er       = new(e.Http)
+		response = new(v.NamespaceList)
 	)
 
-	_, _, err := http.
-		GET(fmt.Sprintf("/app/%s", name)).
+	_, _, err = http.
+		GET("/namespace").
 		AddHeader("Content-Type", "application/json").
-		Request(&a, er)
+		Request(response, er)
 	if err != nil {
-		return nil, errors.New(er.Message)
+		return "", nil, e.UnknownMessage
 	}
 
 	if er.Code == 401 {
-		return nil, errors.NotLoggedMessage
+		return "", nil, e.NotLoggedMessage
+	}
+
+	if er.Code == 404 {
+		return "", nil, e.New(er.Message)
+	}
+
+	if er.Code == 500 {
+		return "", nil, e.UnknownMessage
 	}
 
 	if er.Code != 0 {
-		return nil, errors.New(er.Message)
+		return "", nil, e.New(er.Message)
 	}
 
-	if err := storage.App().Save(a); err != nil {
-		return nil, errors.UnknownMessage
+	if len(*response) == 0 {
+		return "", nil, e.New("You don't have any workspace")
 	}
 
-	return a, nil
+	ns, err := Current()
+	if err != nil {
+		return "", nil, err
+	}
+	if ns.Meta != nil {
+		return ns.Meta.Name, response, nil
+	}
+
+	return "", response, nil
 }

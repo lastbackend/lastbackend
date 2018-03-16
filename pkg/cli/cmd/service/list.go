@@ -20,61 +20,60 @@ package service
 
 import (
 	"fmt"
-	s "github.com/lastbackend/lastbackend/pkg/api/service/views/v1"
-	n "github.com/lastbackend/lastbackend/pkg/cli/cmd/app"
+
+	n "github.com/lastbackend/lastbackend/pkg/cli/cmd/namespace"
 	c "github.com/lastbackend/lastbackend/pkg/cli/context"
-	"github.com/lastbackend/lastbackend/pkg/common/errors"
+	v "github.com/lastbackend/lastbackend/pkg/cli/view"
+	e "github.com/lastbackend/lastbackend/pkg/distribution/errors"
 )
 
 func ListServiceCmd() {
 
-	srvList, app, err := List()
+	srvList, ns, err := List()
 	if err != nil {
-		fmt.Print(err)
+		fmt.Println(err)
 		return
 	}
 
-	if srvList != nil {
-		srvList.DrawTable(app)
-	}
+	srvList.Print(ns)
 }
 
-func List() (*s.ServiceList, string, error) {
+func List() (v.ServiceList, string, error) {
 
 	var (
-		err     error
-		http    = c.Get().GetHttpClient()
-		er      = new(errors.Http)
-		srvList *s.ServiceList
+		err      error
+		http     = c.Get().GetHttpClient()
+		er       = new(e.Http)
+		response v.ServiceList
 	)
 
-	app, err := n.Current()
+	ns, err := n.Current()
 	if err != nil {
 		return nil, "", err
 	}
-
-	if app == nil {
-		return nil, "", errors.New("App didn't select")
+	if ns.Meta == nil {
+		return nil, "", e.New("Workspace didn't select")
 	}
 
 	_, _, err = http.
-		GET(fmt.Sprintf("/app/%s/service", app.Meta.Name)).
-		Request(&srvList, er)
+		AddHeader("Content-Type", "application/json").
+		GET(fmt.Sprintf("/namespace/%s/service", ns.Meta.Name)).
+		Request(&response, er)
 	if err != nil {
-		return nil, "", err
+		return nil, "", e.UnknownMessage
 	}
 
 	if er.Code == 401 {
-		return nil, "", errors.NotLoggedMessage
+		return nil, "", e.NotLoggedMessage
 	}
 
 	if er.Code != 0 {
-		return nil, "", errors.New(er.Message)
+		return nil, "", e.New(er.Message)
 	}
 
-	if len(*srvList) == 0 {
-		return nil, "", errors.New("You don't have any services")
+	if len(response) == 0 {
+		return nil, "", e.New("You don't have any services")
 	}
 
-	return srvList, app.Meta.Name, nil
+	return response, ns.Meta.Name, nil
 }

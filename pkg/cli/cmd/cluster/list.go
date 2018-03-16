@@ -16,56 +16,38 @@
 // from Last.Backend LLC.
 //
 
-package app
+package cluster
 
 import (
-	"fmt"
-	a "github.com/lastbackend/lastbackend/pkg/api/app/views/v1"
 	c "github.com/lastbackend/lastbackend/pkg/cli/context"
-	"github.com/lastbackend/lastbackend/pkg/common/errors"
+	v "github.com/lastbackend/lastbackend/pkg/cli/view"
+	e "github.com/lastbackend/lastbackend/pkg/distribution/errors"
 )
 
-func ListAppCmd() {
-
-	nsList, err := List()
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
-
-	if nsList != nil {
-		nsList.DrawTable()
-	}
-}
-
-func List() (*a.AppList, error) {
+func List() (*v.ClusterList, error) {
 
 	var (
-		err     error
-		http    = c.Get().GetHttpClient()
-		er      = new(errors.Http)
-		appList = new(a.AppList)
+		err      error
+		http     = c.Get().GetHttpClient()
+		er       = new(e.Http)
+		response = new(v.ClusterList)
 	)
 
 	_, _, err = http.
-		GET("/app").
-		Request(appList, er)
+		GET("/cluster").
+		AddHeader("Content-Type", "application/json").
+		Request(response, er)
 	if err != nil {
-		fmt.Println(err)
-		return nil, err
+		return nil, e.UnknownMessage
 	}
 
 	if er.Code == 401 {
-		return nil, errors.NotLoggedMessage
+		return nil, e.NotLoggedMessage
 	}
 
 	if er.Code != 0 {
-		return nil, errors.New(er.Message)
+		return nil, e.New(er.Message)
 	}
 
-	if len(*appList) == 0 {
-		return nil, errors.New("You don't have any app")
-	}
-
-	return appList, nil
+	return response, nil
 }

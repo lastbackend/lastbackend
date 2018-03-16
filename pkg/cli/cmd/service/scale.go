@@ -21,45 +21,65 @@ package service
 import (
 	"fmt"
 
-	n "github.com/lastbackend/lastbackend/pkg/cli/cmd/namespace"
+	ns "github.com/lastbackend/lastbackend/pkg/cli/cmd/namespace"
 	c "github.com/lastbackend/lastbackend/pkg/cli/context"
 	e "github.com/lastbackend/lastbackend/pkg/distribution/errors"
 )
 
-func RemoveCmd(name string) {
+type ScaleS struct {
+	Replicas int64 `json:"replicas"`
+}
 
-	err := Remove(name)
+func ScaleCmd(name string, replicas int64) {
+
+	err := Scale(name, replicas)
 	if err != nil {
 		fmt.Println(err)
 		return
 	}
 
-	fmt.Println("Service `" + name + "` succesfully removed")
+	fmt.Println("Service `" + name + "` is succesfully scaled")
 }
 
-func Remove(name string) error {
+func Scale(name string, replicas int64) error {
 
 	var (
-		err  error
-		http = c.Get().GetHttpClient()
-		res  = new(struct{})
-		er   = new(e.Http)
+		err      error
+		http     = c.Get().GetHttpClient()
+		er       = new(e.Http)
+		response = new(struct{})
 	)
 
-	ns, err := n.Current()
+	n, err := ns.Current()
 	if err != nil {
 		return err
 	}
-	if ns.Meta == nil {
+	if n.Meta == nil {
 		return e.New("Workspace didn't select")
 	}
 
-	_, _, err = http.
-		DELETE(fmt.Sprintf("/namespace/%s/service/%s", ns.Meta.Name, name)).
-		AddHeader("Content-Type", "application/json").
-		Request(&res, er)
+	s, err := Inspect(name)
 	if err != nil {
-		return e.UnknownMessage
+		return err
+	}
+	if len(s.Deployments) == 0 {
+		return e.New("Service now is not deployed")
+	}
+
+	var deployment = ""
+	for _, d := range s.Deployments {
+		if d.State.Active {
+			deployment = d.ID
+		}
+	}
+
+	_, _, err = http.
+		PUT(fmt.Sprintf("/namespace/%s/service/%s/deployment/%s", n.Meta.Name, s.Meta.Name, deployment)).
+		AddHeader("Content-Type", "application/json").
+		BodyJSON(ScaleS{Replicas: replicas}).
+		Request(response, er)
+	if err != nil {
+		return e.New(er.Message)
 	}
 
 	if er.Code == 401 {

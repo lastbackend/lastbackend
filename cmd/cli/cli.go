@@ -16,4 +16,12 @@
 // from Last.Backend LLC.
 //
 
-package service_test
+package main
+
+import (
+	"github.com/lastbackend/lastbackend/pkg/cli/cmd"
+)
+
+func main() {
+	cmd.Execute()
+}

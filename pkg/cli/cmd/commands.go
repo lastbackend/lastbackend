@@ -16,33 +16,42 @@
 // from Last.Backend LLC.
 //
 
-package storage
+package cmd
 
 import (
-	"github.com/lastbackend/lastbackend/pkg/cli/storage/db"
+	"github.com/spf13/cobra"
+
+	"fmt"
 )
 
-type Storage struct {
-	*NamespaceStorage
+var versionCmd = &cobra.Command{
+	Use:   "version",
+	Short: "Client version",
+	Run: func(cmd *cobra.Command, args []string) {
+		fmt.Println(RootCmd.Use + " " + version)
+	},
 }
 
-func (s *Storage) Namespace() INspace {
-	if s == nil {
-		return nil
-	}
-	return s.NamespaceStorage
+var workspace = &cobra.Command{
+	Use:   "workspace",
+	Short: "Manage your workspaces and create",
+	Run: func(cmd *cobra.Command, args []string) {
+		cmd.Help()
+	},
 }
 
-func Get() (*Storage, error) {
+var service = &cobra.Command{
+	Use:   "service",
+	Short: "Manage service",
+	Run: func(cmd *cobra.Command, args []string) {
+		cmd.Help()
+	},
+}
 
-	client, err := db.Init()
-	if err != nil {
-		return nil, err
-	}
-
-	store := new(Storage)
-
-	store.NamespaceStorage = newNamespaceStorage(client)
-
-	return store, nil
+var repo = &cobra.Command{
+	Use:   "repo",
+	Short: "Manage repo(registry)",
+	Run: func(cmd *cobra.Command, args []string) {
+		cmd.Help()
+	},
 }

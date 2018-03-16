@@ -16,64 +16,62 @@
 // from Last.Backend LLC.
 //
 
-package app
+package namespace
 
 import (
 	"fmt"
+
 	c "github.com/lastbackend/lastbackend/pkg/cli/context"
-	"github.com/lastbackend/lastbackend/pkg/common/errors"
+	v "github.com/lastbackend/lastbackend/pkg/cli/view"
+	e "github.com/lastbackend/lastbackend/pkg/distribution/errors"
 )
 
-func RemoveCmd(name string) {
+func SelectCmd(name string) {
 
-	if err := Remove(name); err != nil {
+	ns, err := Select(name)
+	if err != nil {
 		fmt.Println(err)
 		return
 	}
 
-	fmt.Println(fmt.Sprintf("App `%s` is successfully removed", name))
+	fmt.Printf("The workspace `%s` was selected as the current\n", ns.Meta.Name)
 }
 
-func Remove(name string) error {
+func Select(name string) (*v.Namespace, error) {
 
 	var (
-		err     error
-		http    = c.Get().GetHttpClient()
-		storage = c.Get().GetStorage()
-		er      = new(errors.Http)
-		res     = new(struct{})
+		er       = new(e.Http)
+		http     = c.Get().GetHttpClient()
+		storage  = c.Get().GetStorage()
+		response = new(v.Namespace)
 	)
-
-	if len(name) == 0 {
-		return errors.BadParameter("name").Err()
-	}
-
-	_, _, err = http.
-		DELETE(fmt.Sprintf("/app/%s", name)).
+	_, _, err := http.
+		GET(fmt.Sprintf("/namespace/%s", name)).
 		AddHeader("Content-Type", "application/json").
-		Request(res, er)
+		Request(&response, er)
 	if err != nil {
-		return errors.New(er.Message)
+		return nil, e.UnknownMessage
 	}
 
 	if er.Code == 401 {
-		return errors.NotLoggedMessage
+		return nil, e.NotLoggedMessage
+	}
+
+	if er.Code == 404 {
+		return nil, e.New(er.Message)
+	}
+
+	if er.Code == 500 {
+		return nil, e.UnknownMessage
 	}
 
 	if er.Code != 0 {
-		return errors.New(er.Message)
+		return nil, e.New(er.Message)
 	}
 
-	app, err := Current()
-	if err != nil {
-		return err
+	if err := storage.Namespace().Save(response); err != nil {
+		return nil, e.UnknownMessage
 	}
 
-	if app != nil && name == app.Meta.Name {
-		if err := storage.App().Remove(); err != nil {
-			return errors.UnknownMessage
-		}
-	}
-
-	return nil
+	return response, nil
 }

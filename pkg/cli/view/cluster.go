@@ -16,4 +16,9 @@
 // from Last.Backend LLC.
 //
 
-package service_test
+package view
+
+type ClusterList []*Cluster
+type Cluster struct {
+	ID string `json:"id"`
+}

@@ -16,64 +16,68 @@
 // from Last.Backend LLC.
 //
 
-package app
+package namespace
 
 import (
 	"fmt"
-	n "github.com/lastbackend/lastbackend/pkg/api/app/views/v1"
+
 	c "github.com/lastbackend/lastbackend/pkg/cli/context"
-	"github.com/lastbackend/lastbackend/pkg/common/errors"
+	e "github.com/lastbackend/lastbackend/pkg/distribution/errors"
 )
 
-type createS struct {
-	Name string `json:"name"`
-	Desc string `json:"description"`
-}
+func RemoveCmd(name string) {
 
-func CreateCmd(name, description string) {
-
-	err := Create(name, description)
-	if err != nil {
+	if err := Remove(name); err != nil {
 		fmt.Println(err)
 		return
 	}
 
-	fmt.Println(fmt.Sprintf("App `%s` is created", name))
+	fmt.Println(fmt.Sprintf("Workspace `%s` is successfully removed", name))
 }
 
-func Create(name, description string) error {
+func Remove(name string) error {
 
 	var (
-		err  error
-		http = c.Get().GetHttpClient()
-		er   = new(errors.Http)
-		a    = new(n.App)
+		err     error
+		http    = c.Get().GetHttpClient()
+		storage = c.Get().GetStorage()
+		er      = new(e.Http)
+		res     = new(struct{})
 	)
 
-	if len(name) == 0 {
-		return errors.BadParameter("name").Err()
-	}
-
 	_, _, err = http.
-		POST("/app").
+		DELETE(fmt.Sprintf("/namespace/%s", name)).
 		AddHeader("Content-Type", "application/json").
-		BodyJSON(createS{name, description}).
-		Request(&a, er)
+		Request(res, er)
 	if err != nil {
-		return errors.New(er.Message)
+		return e.UnknownMessage
 	}
 
 	if er.Code == 401 {
-		return errors.NotLoggedMessage
+		return e.NotLoggedMessage
+	}
+
+	if er.Code == 404 {
+		return e.New(er.Message)
+	}
+
+	if er.Code == 500 {
+		return e.UnknownMessage
 	}
 
 	if er.Code != 0 {
-		return errors.New(er.Message)
+		return e.New(er.Message)
 	}
 
-	a, err = Switch(name)
+	ns, err := Current()
 	if err != nil {
 		return err
+	}
+
+	if ns != nil && ns.Meta.Name == name {
+		if err := storage.Namespace().Remove(); err != nil {
+			return e.UnknownMessage
+		}
 	}
 
 	return nil

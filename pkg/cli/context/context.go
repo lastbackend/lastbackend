@@ -31,13 +31,16 @@ func Get() *ctx {
 }
 
 func Mock() *ctx {
+	_ctx.mock = true
 	return &_ctx
 }
 
 type ctx struct {
-	config  *config.Config
-	http    *http.RawReq
 	storage storage.IStorage
+	http    *http.RawReq
+	config  *config.Config
+	token   *string
+	mock    bool
 }
 
 func (c *ctx) SetHttpClient(http *http.RawReq) {
@@ -54,6 +57,14 @@ func (c *ctx) SetStorage(storage storage.IStorage) {
 
 func (c *ctx) GetStorage() storage.IStorage {
 	return c.storage
+}
+
+func (c *ctx) SetSessionToken(token string) {
+	c.token = &token
+}
+
+func (c *ctx) GetSessionToken() *string {
+	return c.token
 }
 
 func (c *ctx) SetConfig(cfg *config.Config) {

@@ -18,7 +18,7 @@
 
 package config
 
-// The structure of the config to run the client
+// The structure of the _cfg to run the client
 type Config struct {
 	Debug   bool
 	ApiHost string

@@ -16,58 +16,77 @@
 // from Last.Backend LLC.
 //
 
-package service
+package namespace
 
 import (
 	"fmt"
 
-	n "github.com/lastbackend/lastbackend/pkg/cli/cmd/namespace"
+	cl "github.com/lastbackend/lastbackend/pkg/cli/cmd/cluster"
 	c "github.com/lastbackend/lastbackend/pkg/cli/context"
+	v "github.com/lastbackend/lastbackend/pkg/cli/view"
 	e "github.com/lastbackend/lastbackend/pkg/distribution/errors"
 )
 
-func RemoveCmd(name string) {
+type createS struct {
+	Name        string `json:"name"`
+	Description string `json:"description"`
+	Cluster     string `json:"cluster"`
+}
 
-	err := Remove(name)
+func CreateCmd(name, desc string) {
+
+	err := Create(name, desc)
 	if err != nil {
 		fmt.Println(err)
 		return
 	}
 
-	fmt.Println("Service `" + name + "` succesfully removed")
+	fmt.Println(fmt.Sprintf("Workspace `%s` is created", name))
 }
 
-func Remove(name string) error {
+func Create(name, desc string) error {
 
 	var (
-		err  error
-		http = c.Get().GetHttpClient()
-		res  = new(struct{})
-		er   = new(e.Http)
+		err      error
+		http     = c.Get().GetHttpClient()
+		er       = new(e.Http)
+		clusters = new(v.ClusterList)
+		response *v.Namespace
+		storage  = c.Get().GetStorage()
 	)
 
-	ns, err := n.Current()
+	clusters, err = cl.List()
 	if err != nil {
 		return err
 	}
-	if ns.Meta == nil {
-		return e.New("Workspace didn't select")
-	}
 
 	_, _, err = http.
-		DELETE(fmt.Sprintf("/namespace/%s/service/%s", ns.Meta.Name, name)).
+		POST("/namespace").
 		AddHeader("Content-Type", "application/json").
-		Request(&res, er)
+		BodyJSON(createS{name, desc, (*clusters)[0].ID}).
+		Request(&response, er)
 	if err != nil {
-		return e.UnknownMessage
+		return e.New(er.Message)
 	}
 
 	if er.Code == 401 {
 		return e.NotLoggedMessage
 	}
 
+	if er.Code == 404 {
+		return e.New("Not found")
+	}
+
+	if er.Code == 500 {
+		return e.UnknownMessage
+	}
+
 	if er.Code != 0 {
 		return e.New(er.Message)
+	}
+
+	if err := storage.Namespace().Save(response); err != nil {
+		return e.UnknownMessage
 	}
 
 	return nil

@@ -16,42 +16,4 @@
 // from Last.Backend LLC.
 //
 
-package app
-
-import (
-	"fmt"
-	a "github.com/lastbackend/lastbackend/pkg/api/app/views/v1"
-	c "github.com/lastbackend/lastbackend/pkg/cli/context"
-	"github.com/lastbackend/lastbackend/pkg/common/errors"
-)
-
-func CurrentCmd() {
-
-	app, err := Current()
-	if err != nil {
-		fmt.Print(err)
-		return
-	}
-
-	if app == nil {
-		fmt.Print("App didn't select")
-		return
-	}
-
-	app.DrawTable()
-}
-
-func Current() (*a.App, error) {
-
-	var (
-		err     error
-		storage = c.Get().GetStorage()
-	)
-
-	app, err := storage.App().Load()
-	if err != nil {
-		return nil, errors.UnknownMessage
-	}
-
-	return app, nil
-}
+package namespace_test

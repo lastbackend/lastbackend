@@ -16,60 +16,89 @@
 // from Last.Backend LLC.
 //
 
-package service
+package namespace
 
 import (
 	"fmt"
 
-	n "github.com/lastbackend/lastbackend/pkg/cli/cmd/namespace"
 	c "github.com/lastbackend/lastbackend/pkg/cli/context"
 	v "github.com/lastbackend/lastbackend/pkg/cli/view"
 	e "github.com/lastbackend/lastbackend/pkg/distribution/errors"
 )
 
-func InspectCmd(name string) {
+func CurrentCmd(name string) {
 
-	srv, err := Inspect(name)
-	if err != nil {
-		fmt.Println(err)
-		return
+	if name == "" {
+		ns, err := Current()
+		if err != nil {
+			fmt.Println(err)
+			return
+		}
+
+		if ns.Meta.Name == "" {
+			fmt.Print("Workspace didn't select")
+			return
+		}
+
+		ns.Print()
+	} else {
+		ns, err := Get(name)
+		if err != nil {
+			fmt.Println(err)
+			return
+		}
+
+		ns.Print()
 	}
-
-	srv.Print()
 }
 
-func Inspect(name string) (*v.Service, error) {
+func Get(name string) (*v.Namespace, error) {
 
 	var (
-		err  error
-		http = c.Get().GetHttpClient()
-		er   = new(e.Http)
-		srv  *v.Service
+		err      error
+		http     = c.Get().GetHttpClient()
+		er       = new(e.Http)
+		response = new(v.Namespace)
 	)
 
-	ns, err := n.Current()
-	if err != nil {
-		return nil, err
-	}
-	if ns.Meta == nil {
-		return nil, e.New("Workspace didn't select")
-	}
-
 	_, _, err = http.
-		GET(fmt.Sprintf("/namespace/%s/service/%s", ns.Meta.Name, name)).
+		GET(fmt.Sprintf("/namespace/%s", name)).
 		AddHeader("Content-Type", "application/json").
-		Request(&srv, er)
+		Request(&response, er)
 	if err != nil {
-		return nil, e.New(er.Message)
+		return nil, e.UnknownMessage
 	}
 
 	if er.Code == 401 {
 		return nil, e.NotLoggedMessage
 	}
 
+	if er.Code == 404 {
+		return nil, e.New(er.Message)
+	}
+
+	if er.Code == 500 {
+		return nil, e.UnknownMessage
+	}
+
 	if er.Code != 0 {
 		return nil, e.New(er.Message)
 	}
 
-	return srv, nil
+	return response, nil
+}
+
+func Current() (*v.Namespace, error) {
+
+	var (
+		err     error
+		storage = c.Get().GetStorage()
+	)
+
+	ns, err := storage.Namespace().Load()
+	if err != nil {
+		return nil, e.UnknownMessage
+	}
+
+	return ns, nil
 }

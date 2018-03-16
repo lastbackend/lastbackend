@@ -16,4 +16,4 @@
 // from Last.Backend LLC.
 //
 
-package service_test
+package cluster_test

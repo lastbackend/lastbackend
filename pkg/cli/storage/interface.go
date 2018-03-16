@@ -19,15 +19,15 @@
 package storage
 
 import (
-	n "github.com/lastbackend/lastbackend/pkg/api/app/views/v1"
+	v "github.com/lastbackend/lastbackend/pkg/cli/view"
 )
 
 type IStorage interface {
-	App() IApp
+	Namespace() INspace
 }
 
-type IApp interface {
-	Save(ns *n.App) error
-	Load() (*n.App, error)
+type INspace interface {
+	Save(ns *v.Namespace) error
+	Load() (*v.Namespace, error)
 	Remove() error
 }

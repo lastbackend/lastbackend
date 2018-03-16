@@ -19,38 +19,38 @@
 package mock
 
 import (
-	a "github.com/lastbackend/lastbackend/pkg/api/app/views/v1"
 	"github.com/lastbackend/lastbackend/pkg/cli/storage"
-	"github.com/lastbackend/lastbackend/pkg/cli/storage/db"
+	"github.com/lastbackend/lastbackend/pkg/cli/storage/mock/mockdb"
+	v "github.com/lastbackend/lastbackend/pkg/cli/view"
 )
 
-const appStorage = "mockapp"
+const nsStorage = "mockns"
 
-// App Service type for interface in interfaces folder
-type AppStorage struct {
-	storage.IApp
-	client *db.DB
+// Namespace type for interface in interfaces folder
+type NamespaceStorage struct {
+	storage.INspace
+	client *mockdb.DB
 }
 
-// Insert app
-func (s *AppStorage) Save(app *a.App) error {
-	return s.client.Set(appStorage, app)
+// Insert namespace
+func (s *NamespaceStorage) Save(app *v.Namespace) error {
+	return s.client.Set(nsStorage, app)
 }
 
-// Get app
-func (s *AppStorage) Load() (*a.App, error) {
-	var ns = new(a.App)
-	err := s.client.Get(appStorage, ns)
-	return ns, err
+// Get namespace
+func (s *NamespaceStorage) Load() (*v.Namespace, error) {
+	var data = new(v.Namespace)
+	err := s.client.Get(nsStorage, data)
+	return data, err
 }
 
-// Remove app
-func (s *AppStorage) Remove() error {
-	return s.client.Set(appStorage, nil)
+// Destroy namespace
+func (s *NamespaceStorage) Remove() error {
+	return s.client.Set(nsStorage, nil)
 }
 
-func newAppStorage(client *db.DB) *AppStorage {
-	s := new(AppStorage)
+func newNamespaceStorage(client *mockdb.DB) *NamespaceStorage {
+	s := new(NamespaceStorage)
 	s.client = client
 	return s
 }

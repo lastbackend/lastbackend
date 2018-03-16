@@ -20,6 +20,7 @@ package service_test
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"github.com/gorilla/mux"
 	"github.com/lastbackend/lastbackend/pkg/api/envs"
@@ -32,9 +33,8 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
-	"testing"
 	"strings"
-	"encoding/json"
+	"testing"
 )
 
 // Testing ServiceInfoH handler

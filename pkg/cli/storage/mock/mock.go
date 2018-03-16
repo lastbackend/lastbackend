@@ -20,29 +20,30 @@ package mock
 
 import (
 	"github.com/lastbackend/lastbackend/pkg/cli/storage"
-	"github.com/lastbackend/lastbackend/pkg/cli/storage/db"
+	"github.com/lastbackend/lastbackend/pkg/cli/storage/mock/mockdb"
 )
 
 type Storage struct {
-	*AppStorage
+	*NamespaceStorage
 }
 
-func (s *Storage) App() storage.IApp {
+func (s *Storage) Namespace() storage.INspace {
 	if s == nil {
 		return nil
 	}
-	return s.AppStorage
+	return s.NamespaceStorage
 }
 
 func Get() (*Storage, error) {
 
-	client, err := db.Init()
+	client, err := mockdb.Init()
 	if err != nil {
 		return nil, err
 	}
 
 	store := new(Storage)
-	store.AppStorage = newAppStorage(client)
+
+	store.NamespaceStorage = newNamespaceStorage(client)
 
 	return store, nil
 }

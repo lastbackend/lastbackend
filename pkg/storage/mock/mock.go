@@ -18,7 +18,6 @@
 
 package mock
 
-
 import (
 	"context"
 	"github.com/lastbackend/lastbackend/pkg/log"

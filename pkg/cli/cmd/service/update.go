@@ -20,16 +20,26 @@ package service
 
 import (
 	"fmt"
-	av "github.com/lastbackend/lastbackend/pkg/api/app/views/v1"
-	a "github.com/lastbackend/lastbackend/pkg/cli/cmd/app"
+
+	n "github.com/lastbackend/lastbackend/pkg/cli/cmd/namespace"
 	c "github.com/lastbackend/lastbackend/pkg/cli/context"
-	"github.com/lastbackend/lastbackend/pkg/common/errors"
-	"github.com/lastbackend/lastbackend/pkg/common/types"
+	v "github.com/lastbackend/lastbackend/pkg/cli/view"
+	e "github.com/lastbackend/lastbackend/pkg/distribution/errors"
 )
 
-func UpdateCmd(name, nname, desc string, replicas int) {
+type updateS struct {
+	Name string      `json:"name"`
+	Spec OptionsSpec `json:"spec"`
+}
 
-	err := Update(name, nname, desc, replicas)
+type OptionsSpec struct {
+	Replicas int64 `json:"replicas,omitempty"`
+	Memory   int64 `json:"memory,omitempty"`
+}
+
+func UpdateCmd(name string, memory int64) {
+
+	err := Update(name, memory)
 	if err != nil {
 		fmt.Println(err)
 		return
@@ -38,62 +48,53 @@ func UpdateCmd(name, nname, desc string, replicas int) {
 	fmt.Println("Service `" + name + "` successfully updated")
 }
 
-func Update(name, nname, desc string, replicas int) error {
+func Update(name string, memory int64) error {
 
 	var (
-		err  error
-		http = c.Get().GetHttpClient()
-		er   = new(errors.Http)
-		app  *av.App
-		res  = new(types.App)
+		err      error
+		http     = c.Get().GetHttpClient()
+		er       = new(e.Http)
+		response = new(v.Service)
 	)
 
-	srv, _, err := Inspect(name)
+	srv, err := Inspect(name)
 	if err != nil {
 		return err
 	}
 
-	if nname == "" {
-		nname = srv.Meta.Name
+	var cfg = updateS{}
+
+	if memory != 0 {
+		cfg.Spec.Memory = memory
+	} else {
+		cfg.Spec.Memory = srv.Spec.Memory
 	}
 
-	if desc == "" {
-		desc = srv.Meta.Description
-	}
+	cfg.Name = srv.Meta.Name
 
-	if replicas == 0 {
-		replicas = srv.Meta.Replicas
-	}
-
-	cfg := types.ServiceUpdateConfig{
-		Name:        &nname,
-		Description: &desc,
-		Replicas:    &replicas,
-	}
-
-	app, err = a.Current()
+	ns, err := n.Current()
 	if err != nil {
 		return err
 	}
-	if app == nil {
-		return errors.New("App didn't select")
+	if ns.Meta == nil {
+		return e.New("Workspace didn't select")
 	}
 
 	_, _, err = http.
-		PUT(fmt.Sprintf("/app/%s/service/%s", app.Meta.Name, name)).
+		PUT(fmt.Sprintf("/namespace/%s/service/%s", ns.Meta.Name, name)).
 		AddHeader("Content-Type", "application/json").
 		BodyJSON(cfg).
-		Request(&res, er)
+		Request(&response, er)
 	if err != nil {
-		return err
+		return e.UnknownMessage
 	}
 
 	if er.Code == 401 {
-		return errors.NotLoggedMessage
+		return e.NotLoggedMessage
 	}
 
 	if er.Code != 0 {
-		return errors.New(er.Message)
+		return e.New(er.Message)
 	}
 
 	return nil

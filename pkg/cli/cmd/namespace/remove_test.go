@@ -16,4 +16,4 @@
 // from Last.Backend LLC.
 //
 
-package service_test
+package namespace_test
