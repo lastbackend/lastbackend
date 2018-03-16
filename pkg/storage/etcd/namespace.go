@@ -2,7 +2,7 @@
 // Last.Backend LLC CONFIDENTIAL
 // __________________
 //
-// [2014] - [2017] Last.Backend LLC
+// [2014] - [2018] Last.Backend LLC
 // All Rights Reserved.
 //
 // NOTICE:  All information contained herein is, and remains
@@ -37,7 +37,7 @@ type NamespaceStorage struct {
 }
 
 // Get namespace by name
-func (s *NamespaceStorage) GetByName(ctx context.Context, name string) (*types.Namespace, error) {
+func (s *NamespaceStorage) Get(ctx context.Context, name string) (*types.Namespace, error) {
 
 	log.V(logLevel).Debugf("Storage: Namespace: get by name: %s", name)
 

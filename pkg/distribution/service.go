@@ -99,12 +99,6 @@ func (s *Service) Create(namespace *types.Namespace, opts *types.ServiceCreateOp
 		service.Spec.Replicas = types.DEFAULT_SERVICE_REPLICAS
 	}
 
-	ramQuota := types.DEFAULT_SERVICE_MEMORY * int64(service.Spec.Replicas)
-	if opts.Spec.Memory != nil {
-		ramQuota = *opts.Spec.Memory * int64(service.Spec.Replicas)
-	}
-	service.Spec.Quotas.RAM = &ramQuota
-
 	c := types.SpecTemplateContainer{}
 	c.SetDefault()
 	c.Role = types.ContainerRolePrimary
@@ -131,10 +125,6 @@ func (s *Service) Update(service *types.Service, opts *types.ServiceUpdateOption
 		opts = new(types.ServiceUpdateOptions)
 	}
 
-	if opts.Name != nil {
-		service.Meta.Name = *opts.Name
-	}
-
 	if opts.Description != nil {
 		service.Meta.Description = *opts.Description
 	}
@@ -143,11 +133,9 @@ func (s *Service) Update(service *types.Service, opts *types.ServiceUpdateOption
 		patchSpec(&service.Spec, *opts.Spec)
 	}
 
-	ramQuota := types.DEFAULT_SERVICE_MEMORY * int64(service.Spec.Replicas)
-	if opts.Spec.Memory != nil {
-		ramQuota = *opts.Spec.Memory * int64(service.Spec.Replicas)
+	if opts.Replicas != nil {
+		service.Spec.Replicas = *opts.Replicas
 	}
-	service.Spec.Quotas.RAM = &ramQuota
 
 	if err := s.storage.Service().Update(s.context, service); err != nil {
 		log.V(logLevel).Errorf("Service: update service err: %s", err)

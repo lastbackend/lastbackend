@@ -2,7 +2,7 @@
 // Last.Backend LLC CONFIDENTIAL
 // __________________
 //
-// [2014] - [2017] Last.Backend LLC
+// [2014] - [2018] Last.Backend LLC
 // All Rights Reserved.
 //
 // NOTICE:  All information contained herein is, and remains
@@ -16,19 +16,20 @@
 // from Last.Backend LLC.
 //
 
-package types
+package types_test
 
 import (
+	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 	"github.com/stretchr/testify/assert"
 	"testing"
 )
 
 func TestEqual(t *testing.T) {
 
-	var network = &Subnet{
+	var network = &types.Subnet{
 		Type:   "vxlan",
 		Subnet: "10.0.0.0/24",
-		IFace: NetworkInterface{
+		IFace: types.NetworkInterface{
 			Index: 1,
 			Name:  "lb.1",
 			Addr:  "10.0.0.1",
@@ -37,10 +38,10 @@ func TestEqual(t *testing.T) {
 		Addr: "10.0.0.0",
 	}
 
-	var asset = &Subnet{
+	var asset = &types.Subnet{
 		Type:   "vxlan",
 		Subnet: "10.0.0.0/24",
-		IFace: NetworkInterface{
+		IFace: types.NetworkInterface{
 			Index: 1,
 			Name:  "lb.1",
 			Addr:  "10.0.0.1",
@@ -54,10 +55,10 @@ func TestEqual(t *testing.T) {
 
 func TestNotEqual(t *testing.T) {
 
-	var network = &Subnet{
+	var network = &types.Subnet{
 		Type:   "vxlan",
 		Subnet: "10.0.0.0/24",
-		IFace: NetworkInterface{
+		IFace: types.NetworkInterface{
 			Index: 1,
 			Name:  "lb.1",
 			Addr:  "10.0.0.1",
@@ -66,12 +67,12 @@ func TestNotEqual(t *testing.T) {
 		Addr: "10.0.0.0",
 	}
 
-	var assets = make(map[string]*Subnet)
+	var assets = make(map[string]*types.Subnet)
 
-	assets["type"] = &Subnet{
+	assets["type"] = &types.Subnet{
 		Type:   "vlan",
 		Subnet: "10.0.0.0/24",
-		IFace: NetworkInterface{
+		IFace: types.NetworkInterface{
 			Index: 1,
 			Name:  "lb.1",
 			Addr:  "10.0.0.1",
@@ -80,10 +81,10 @@ func TestNotEqual(t *testing.T) {
 		Addr: "10.0.0.0",
 	}
 
-	assets["subnet"] = &Subnet{
+	assets["subnet"] = &types.Subnet{
 		Type:   "vxlan",
 		Subnet: "10.0.0.0/22",
-		IFace: NetworkInterface{
+		IFace: types.NetworkInterface{
 			Index: 1,
 			Name:  "lb.1",
 			Addr:  "10.0.0.1",
@@ -92,10 +93,10 @@ func TestNotEqual(t *testing.T) {
 		Addr: "10.0.0.0",
 	}
 
-	assets["subnet & type"] = &Subnet{
+	assets["subnet & type"] = &types.Subnet{
 		Type:   "vlan",
 		Subnet: "10.0.0.0/22",
-		IFace: NetworkInterface{
+		IFace: types.NetworkInterface{
 			Index: 1,
 			Name:  "lb.1",
 			Addr:  "10.0.0.1",
@@ -104,10 +105,10 @@ func TestNotEqual(t *testing.T) {
 		Addr: "10.0.0.0",
 	}
 
-	assets["iface index"] = &Subnet{
+	assets["iface index"] = &types.Subnet{
 		Type:   "vxlan",
 		Subnet: "10.0.0.0/24",
-		IFace: NetworkInterface{
+		IFace: types.NetworkInterface{
 			Index: 2,
 			Name:  "lb.1",
 			Addr:  "10.0.0.1",
@@ -116,10 +117,10 @@ func TestNotEqual(t *testing.T) {
 		Addr: "10.0.0.0",
 	}
 
-	assets["iface index & type"] = &Subnet{
+	assets["iface index & type"] = &types.Subnet{
 		Type:   "vxlan",
 		Subnet: "10.0.0.0/24",
-		IFace: NetworkInterface{
+		IFace: types.NetworkInterface{
 			Index: 2,
 			Name:  "lb.1",
 			Addr:  "10.0.0.1",
@@ -128,10 +129,10 @@ func TestNotEqual(t *testing.T) {
 		Addr: "10.0.0.0",
 	}
 
-	assets["iface index & subnet"] = &Subnet{
+	assets["iface index & subnet"] = &types.Subnet{
 		Type:   "vxlan",
 		Subnet: "10.0.0.0/24",
-		IFace: NetworkInterface{
+		IFace: types.NetworkInterface{
 			Index: 2,
 			Name:  "lb.1",
 			Addr:  "10.0.0.1",
@@ -140,10 +141,10 @@ func TestNotEqual(t *testing.T) {
 		Addr: "10.0.0.0",
 	}
 
-	assets["iface name"] = &Subnet{
+	assets["iface name"] = &types.Subnet{
 		Type:   "vxlan",
 		Subnet: "10.0.0.0/24",
-		IFace: NetworkInterface{
+		IFace: types.NetworkInterface{
 			Index: 1,
 			Name:  "lb.0",
 			Addr:  "10.0.0.1",
@@ -152,10 +153,10 @@ func TestNotEqual(t *testing.T) {
 		Addr: "10.0.0.0",
 	}
 
-	assets["iface addr"] = &Subnet{
+	assets["iface addr"] = &types.Subnet{
 		Type:   "vxlan",
 		Subnet: "10.0.0.0/24",
-		IFace: NetworkInterface{
+		IFace: types.NetworkInterface{
 			Index: 1,
 			Name:  "lb.1",
 			Addr:  "10.0.0.2",
@@ -164,10 +165,10 @@ func TestNotEqual(t *testing.T) {
 		Addr: "10.0.0.0",
 	}
 
-	assets["iface haddr"] = &Subnet{
+	assets["iface haddr"] = &types.Subnet{
 		Type:   "vxlan",
 		Subnet: "10.0.0.0/24",
-		IFace: NetworkInterface{
+		IFace: types.NetworkInterface{
 			Index: 1,
 			Name:  "lb.1",
 			Addr:  "10.0.0.1",
@@ -176,10 +177,10 @@ func TestNotEqual(t *testing.T) {
 		Addr: "10.0.0.0",
 	}
 
-	assets["addr"] = &Subnet{
+	assets["addr"] = &types.Subnet{
 		Type:   "vxlan",
 		Subnet: "10.0.0.0/24",
-		IFace: NetworkInterface{
+		IFace: types.NetworkInterface{
 			Index: 1,
 			Name:  "lb.1",
 			Addr:  "10.0.0.1",

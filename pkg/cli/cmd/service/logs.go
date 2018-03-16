@@ -2,7 +2,7 @@
 // Last.Backend LLC CONFIDENTIAL
 // __________________
 //
-// [2014] - [2017] Last.Backend LLC
+// [2014] - [2018] Last.Backend LLC
 // All Rights Reserved.
 //
 // NOTICE:  All information contained herein is, and remains
@@ -19,13 +19,14 @@
 package service
 
 import (
+	"encoding/json"
 	"fmt"
-	"github.com/lastbackend/lastbackend/pkg/cli/context"
-	"github.com/lastbackend/lastbackend/pkg/common/errors"
-	"github.com/unloop/gopipe"
-	"io"
 	"strconv"
 	"strings"
+
+	"github.com/gorilla/websocket"
+	n "github.com/lastbackend/lastbackend/pkg/cli/cmd/namespace"
+	e "github.com/lastbackend/lastbackend/pkg/distribution/errors"
 )
 
 type mapInfo map[string]serviceInfo
@@ -34,46 +35,43 @@ type serviceInfo struct {
 	Container string
 }
 
-type Writer struct {
-	io.Writer
-}
-
-func (Writer) Write(p []byte) (int, error) {
-	return fmt.Print(string(p))
-}
-
 func LogsServiceCmd(name string) {
 
 	var (
-		choice string = "0"
+		choice = "0"
 	)
 
-	service, app, err := Inspect(name)
+	service, err := Inspect(name)
 	if err != nil {
 		fmt.Println(err)
 		return
 	}
 
 	var m = make(mapInfo)
-	var index int = 0
+	var index = 0
 
-	fmt.Println("Contaner logs:\n")
+	fmt.Println("Service: ", service.Meta.Name)
+	fmt.Println("Container logs: ")
 
-	for _, pod := range service.Pods {
-		for _, container := range pod.Containers {
-			fmt.Printf("[%d] %s\n", index, container.ID)
+	for _, dep := range service.Deployments {
+		for _, pod := range dep.Pods {
+			for _, con := range *pod.Status.Containers {
 
-			m[strconv.Itoa(index)] = serviceInfo{
-				Pod:       pod.Meta.Name,
-				Container: container.ID,
+				fmt.Printf("[%d] %s\n", index, con.ID)
+
+				m[strconv.Itoa(index)] = serviceInfo{
+					Pod:       pod.ID,
+					Container: con.ID,
+				}
+				index++
 			}
+
 		}
-		index++
 	}
 
 	if len(m) > 1 {
 		for {
-			fmt.Print("\nEnter container number for watch log or ^C for Exit: ")
+			fmt.Print("\nEnter container number to watch the log or do ^C to Exit: ")
 			fmt.Scan(&choice)
 			choice = strings.ToLower(choice)
 
@@ -81,40 +79,59 @@ func LogsServiceCmd(name string) {
 				break
 			}
 
-			fmt.Println("Number not correct!")
+			fmt.Println("Number isn't correct!")
 		}
 	}
 
-	reader, err := Logs(app, service.Meta.Name, m[choice].Pod, m[choice].Container)
+	err = Logs(name, m[choice].Pod, m[choice].Container)
 	if err != nil {
 		fmt.Println(err)
 		return
 	}
 
-	stream.New(Writer{}).Pipe(reader)
 }
 
-func Logs(app, name, pod, container string) (*io.ReadCloser, error) {
+func Logs(name, pod, container string) error {
 
 	var (
-		err  error
-		http = context.Get().GetHttpClient()
-		er   = new(errors.Http)
+		err error
+		URL = "wss://wss.lstbknd.net"
 	)
 
-	_, res, err := http.
-		GET("/app/" + app + "/service/" + name + "/logs?pod=" + pod + "&container=" + container).Do()
+	var dialer *websocket.Dialer
+
+	ns, err := n.Current()
 	if err != nil {
-		return nil, err
+		return e.UnknownMessage
 	}
 
-	if er.Code == 401 {
-		return nil, errors.NotLoggedMessage
+	if ns.Meta == nil {
+		return e.New("Workspace didn't select")
 	}
 
-	if er.Code != 0 {
-		return nil, errors.New(er.Message)
+	url := fmt.Sprintf("%s/namespace/%s/service/%s/%s/%s/logs", URL, ns.Meta.Name, name, pod, container)
+
+	conn, _, err := dialer.Dial(url, nil)
+	if err != nil {
+		return e.UnknownMessage
 	}
 
-	return &res.Body, nil
+	for {
+
+		var dat map[string]interface{}
+
+		_, message, err := conn.ReadMessage()
+		if err != nil {
+			fmt.Println("read:", err)
+			return err
+		}
+
+		if err := json.Unmarshal(message, &dat); err != nil {
+			return e.UnknownMessage
+		}
+
+		fmt.Printf("%s\n", dat["data"].(string))
+	}
+
+	return nil
 }

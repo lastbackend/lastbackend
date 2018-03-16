@@ -2,7 +2,7 @@
 // Last.Backend LLC CONFIDENTIAL
 // __________________
 //
-// [2014] - [2017] Last.Backend LLC
+// [2014] - [2018] Last.Backend LLC
 // All Rights Reserved.
 //
 // NOTICE:  All information contained herein is, and remains
@@ -31,7 +31,7 @@ type PodStorage struct {
 	storage.Pod
 }
 
-func (s *PodStorage) GetByName(ctx context.Context, app, name string) (*types.Pod, error) {
+func (s *PodStorage) Get(ctx context.Context, app, name string) (*types.Pod, error) {
 	return new(types.Pod), nil
 }
 

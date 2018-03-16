@@ -2,7 +2,7 @@
 // Last.Backend LLC CONFIDENTIAL
 // __________________
 //
-// [2014] - [2017] Last.Backend LLC
+// [2014] - [2018] Last.Backend LLC
 // All Rights Reserved.
 //
 // NOTICE:  All information contained herein is, and remains
@@ -60,14 +60,12 @@ func (d *DB) Get(fieldname string, iface interface{}) error {
 		if bucket == nil {
 			return nil
 		}
-
 		buf := bucket.Get([]byte(fieldname))
 		if buf == nil {
 			return nil
 		}
 
-		err := json.Unmarshal(buf, iface)
-		if err != nil {
+		if err := json.Unmarshal(buf, iface); err != nil {
 			return err
 		}
 
@@ -88,7 +86,7 @@ func (d *DB) Set(fieldname string, iface interface{}) error {
 			return err
 		}
 
-		buf, err := json.Marshal(&iface)
+		buf, err := json.Marshal(iface)
 		if err != nil {
 			return err
 		}

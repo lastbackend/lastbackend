@@ -19,15 +19,15 @@
 package middleware_test
 
 import (
-	"testing"
-	"net/http"
-	"github.com/stretchr/testify/assert"
-	"net/http/httptest"
 	"bytes"
-	"github.com/spf13/viper"
 	"fmt"
-	"io/ioutil"
 	"github.com/lastbackend/lastbackend/pkg/util/http/middleware"
+	"github.com/spf13/viper"
+	"github.com/stretchr/testify/assert"
+	"io/ioutil"
+	"net/http"
+	"net/http/httptest"
+	"testing"
 )
 
 // GetTestHandler returns a http.HandlerFunc for testing http middleware

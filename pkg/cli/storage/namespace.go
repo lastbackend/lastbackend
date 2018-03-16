@@ -2,7 +2,7 @@
 // Last.Backend LLC CONFIDENTIAL
 // __________________
 //
-// [2014] - [2017] Last.Backend LLC
+// [2014] - [2018] Last.Backend LLC
 // All Rights Reserved.
 //
 // NOTICE:  All information contained herein is, and remains
@@ -16,41 +16,40 @@
 // from Last.Backend LLC.
 //
 
-package mock
+package storage
 
 import (
-	a "github.com/lastbackend/lastbackend/pkg/api/app/views/v1"
-	"github.com/lastbackend/lastbackend/pkg/cli/storage"
 	"github.com/lastbackend/lastbackend/pkg/cli/storage/db"
+	v "github.com/lastbackend/lastbackend/pkg/cli/view"
 )
 
-const appStorage = "mockapp"
+const nsStorage = "namespace"
 
-// App Service type for interface in interfaces folder
-type AppStorage struct {
-	storage.IApp
+// Namespace type for interface in interfaces folder
+type NamespaceStorage struct {
+	INspace
 	client *db.DB
 }
 
-// Insert app
-func (s *AppStorage) Save(app *a.App) error {
-	return s.client.Set(appStorage, app)
+// Insert namespace
+func (s *NamespaceStorage) Save(data *v.Namespace) error {
+	return s.client.Set(nsStorage, data)
 }
 
-// Get app
-func (s *AppStorage) Load() (*a.App, error) {
-	var ns = new(a.App)
-	err := s.client.Get(appStorage, ns)
-	return ns, err
+// Get namespace
+func (s *NamespaceStorage) Load() (*v.Namespace, error) {
+	var data = new(v.Namespace)
+	err := s.client.Get(nsStorage, data)
+	return data, err
 }
 
-// Remove app
-func (s *AppStorage) Remove() error {
-	return s.client.Set(appStorage, nil)
+// Destroy namespace
+func (s *NamespaceStorage) Remove() error {
+	return s.client.Set(nsStorage, nil)
 }
 
-func newAppStorage(client *db.DB) *AppStorage {
-	s := new(AppStorage)
+func newNamespaceStorage(client *db.DB) *NamespaceStorage {
+	s := new(NamespaceStorage)
 	s.client = client
 	return s
 }

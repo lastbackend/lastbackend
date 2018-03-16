@@ -60,7 +60,7 @@ func (n *Namespace) Get(name string) (*types.Namespace, error) {
 
 	log.V(logLevel).Debugf("Namespace: Get: get namespace %s", name)
 
-	namespace, err := n.storage.Namespace().GetByName(n.context, name)
+	namespace, err := n.storage.Namespace().Get(n.context, name)
 	if err != nil {
 		log.V(logLevel).Errorf("Namespace: Get: get namespace by name `%s` err: %s", name, err.Error())
 		return nil, err

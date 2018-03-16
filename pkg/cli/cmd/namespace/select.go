@@ -2,7 +2,7 @@
 // Last.Backend LLC CONFIDENTIAL
 // __________________
 //
-// [2014] - [2017] Last.Backend LLC
+// [2014] - [2018] Last.Backend LLC
 // All Rights Reserved.
 //
 // NOTICE:  All information contained herein is, and remains
@@ -16,54 +16,62 @@
 // from Last.Backend LLC.
 //
 
-package app
+package namespace
 
 import (
 	"fmt"
-	n "github.com/lastbackend/lastbackend/pkg/api/app/views/v1"
+
 	c "github.com/lastbackend/lastbackend/pkg/cli/context"
-	"github.com/lastbackend/lastbackend/pkg/common/errors"
+	v "github.com/lastbackend/lastbackend/pkg/cli/view"
+	e "github.com/lastbackend/lastbackend/pkg/distribution/errors"
 )
 
-func SwitchCmd(name string) {
+func SelectCmd(name string) {
 
-	ns, err := Switch(name)
+	ns, err := Select(name)
 	if err != nil {
 		fmt.Println(err)
 		return
 	}
 
-	fmt.Printf("The app `%s` was selected as the current\n", ns.Meta.Name)
+	fmt.Printf("The workspace `%s` was selected as the current\n", ns.Meta.Name)
 }
 
-func Switch(name string) (*n.App, error) {
+func Select(name string) (*v.Namespace, error) {
 
 	var (
-		er      = new(errors.Http)
-		http    = c.Get().GetHttpClient()
-		storage = c.Get().GetStorage()
-		a       = new(n.App)
+		er       = new(e.Http)
+		http     = c.Get().GetHttpClient()
+		storage  = c.Get().GetStorage()
+		response = new(v.Namespace)
 	)
-
 	_, _, err := http.
-		GET(fmt.Sprintf("/app/%s", name)).
+		GET(fmt.Sprintf("/namespace/%s", name)).
 		AddHeader("Content-Type", "application/json").
-		Request(&a, er)
+		Request(&response, er)
 	if err != nil {
-		return nil, errors.New(er.Message)
+		return nil, e.UnknownMessage
 	}
 
 	if er.Code == 401 {
-		return nil, errors.NotLoggedMessage
+		return nil, e.NotLoggedMessage
+	}
+
+	if er.Code == 404 {
+		return nil, e.New(er.Message)
+	}
+
+	if er.Code == 500 {
+		return nil, e.UnknownMessage
 	}
 
 	if er.Code != 0 {
-		return nil, errors.New(er.Message)
+		return nil, e.New(er.Message)
 	}
 
-	if err := storage.App().Save(a); err != nil {
-		return nil, errors.UnknownMessage
+	if err := storage.Namespace().Save(response); err != nil {
+		return nil, e.UnknownMessage
 	}
 
-	return a, nil
+	return response, nil
 }

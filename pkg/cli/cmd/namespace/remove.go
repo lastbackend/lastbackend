@@ -2,7 +2,7 @@
 // Last.Backend LLC CONFIDENTIAL
 // __________________
 //
-// [2014] - [2017] Last.Backend LLC
+// [2014] - [2018] Last.Backend LLC
 // All Rights Reserved.
 //
 // NOTICE:  All information contained herein is, and remains
@@ -16,12 +16,13 @@
 // from Last.Backend LLC.
 //
 
-package app
+package namespace
 
 import (
 	"fmt"
+
 	c "github.com/lastbackend/lastbackend/pkg/cli/context"
-	"github.com/lastbackend/lastbackend/pkg/common/errors"
+	e "github.com/lastbackend/lastbackend/pkg/distribution/errors"
 )
 
 func RemoveCmd(name string) {
@@ -31,7 +32,7 @@ func RemoveCmd(name string) {
 		return
 	}
 
-	fmt.Println(fmt.Sprintf("App `%s` is successfully removed", name))
+	fmt.Println(fmt.Sprintf("Workspace `%s` is successfully removed", name))
 }
 
 func Remove(name string) error {
@@ -40,38 +41,42 @@ func Remove(name string) error {
 		err     error
 		http    = c.Get().GetHttpClient()
 		storage = c.Get().GetStorage()
-		er      = new(errors.Http)
+		er      = new(e.Http)
 		res     = new(struct{})
 	)
 
-	if len(name) == 0 {
-		return errors.BadParameter("name").Err()
-	}
-
 	_, _, err = http.
-		DELETE(fmt.Sprintf("/app/%s", name)).
+		DELETE(fmt.Sprintf("/namespace/%s", name)).
 		AddHeader("Content-Type", "application/json").
 		Request(res, er)
 	if err != nil {
-		return errors.New(er.Message)
+		return e.UnknownMessage
 	}
 
 	if er.Code == 401 {
-		return errors.NotLoggedMessage
+		return e.NotLoggedMessage
+	}
+
+	if er.Code == 404 {
+		return e.New(er.Message)
+	}
+
+	if er.Code == 500 {
+		return e.UnknownMessage
 	}
 
 	if er.Code != 0 {
-		return errors.New(er.Message)
+		return e.New(er.Message)
 	}
 
-	app, err := Current()
+	ns, err := Current()
 	if err != nil {
 		return err
 	}
 
-	if app != nil && name == app.Meta.Name {
-		if err := storage.App().Remove(); err != nil {
-			return errors.UnknownMessage
+	if ns != nil && ns.Meta.Name == name {
+		if err := storage.Namespace().Remove(); err != nil {
+			return e.UnknownMessage
 		}
 	}
 

@@ -2,7 +2,7 @@
 // Last.Backend LLC CONFIDENTIAL
 // __________________
 //
-// [2014] - [2017] Last.Backend LLC
+// [2014] - [2018] Last.Backend LLC
 // All Rights Reserved.
 //
 // NOTICE:  All information contained herein is, and remains
@@ -19,50 +19,38 @@
 package namespace_test
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"github.com/gorilla/mux"
 	"github.com/lastbackend/lastbackend/pkg/api/envs"
+	"github.com/lastbackend/lastbackend/pkg/api/http/namespace"
+	"github.com/lastbackend/lastbackend/pkg/api/views"
+	"github.com/lastbackend/lastbackend/pkg/distribution/types"
+	"github.com/lastbackend/lastbackend/pkg/storage"
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/assert"
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
-	"testing"
-	"github.com/lastbackend/lastbackend/pkg/storage"
-	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 	"strings"
-	"context"
-	"github.com/lastbackend/lastbackend/pkg/api/views"
-	"github.com/lastbackend/lastbackend/pkg/api/http/namespace"
+	"testing"
 )
 
-func setRequestVars(r *mux.Router, req *http.Request) {
-	var match mux.RouteMatch
-	// Take the request and match it
-	r.Match(req, &match)
-	// Push the variable onto the context
-	req = mux.SetURLVars(req, match.Vars)
-}
-
 // Testing NamespaceInfoH handler
-func TestNamespaceGet(t *testing.T) {
+func TestNamespaceInfo(t *testing.T) {
 
 	strg, _ := storage.GetMock()
 	envs.Get().SetStorage(strg)
 	viper.Set("verbose", 0)
 
-	ns := new(types.Namespace)
-	ns.Meta.SetDefault()
-	ns.Meta.Name = "demo"
-	ns.Meta.Description = "demo description"
-	ns.Quotas.Routes = int(2)
-	ns.Quotas.RAM = int64(256)
+	ns1 := getDefaultNamespace("demo")
+	ns2 := getDefaultNamespace("test")
 
-	err := envs.Get().GetStorage().Namespace().Insert(context.Background(), ns)
+	err := envs.Get().GetStorage().Namespace().Insert(context.Background(), ns1)
 	assert.NoError(t, err)
 
-	v, err := views.V1().Namespace().New(ns).ToJson()
+	v, err := views.V1().Namespace().New(ns1).ToJson()
 	assert.NoError(t, err)
 
 	tests := []struct {
@@ -74,14 +62,14 @@ func TestNamespaceGet(t *testing.T) {
 		expectedCode int
 	}{
 		{
-			url:          fmt.Sprintf("/namespace/%s", "armagedon"),
+			url:          fmt.Sprintf("/namespace/%s", ns2.Meta.Name),
 			handler:      namespace.NamespaceInfoH,
 			description:  "namespace not found",
 			expectedBody: "{\"code\":404,\"status\":\"Not Found\",\"message\":\"Namespace not found\"}",
 			expectedCode: http.StatusNotFound,
 		},
 		{
-			url:          fmt.Sprintf("/namespace/%s", ns.Meta.Name),
+			url:          fmt.Sprintf("/namespace/%s", ns1.Meta.Name),
 			handler:      namespace.NamespaceInfoH,
 			description:  "successfully",
 			expectedBody: string(v),
@@ -136,27 +124,16 @@ func TestNamespaceList(t *testing.T) {
 	envs.Get().SetStorage(strg)
 	viper.Set("verbose", 0)
 
-	nsl := make(types.NamespaceList, 0)
-	ns1 := new(types.Namespace)
-	ns1.Meta.SetDefault()
-	ns1.Meta.Name = "demo"
-	ns1.Meta.Description = "demo description"
-	ns1.Quotas.Routes = int(2)
-	ns1.Quotas.RAM = int64(256)
-
-	ns2 := new(types.Namespace)
-	ns2.Meta.SetDefault()
-	ns2.Meta.Name = "demo"
-	ns2.Meta.Description = "demo description"
-	ns2.Quotas.Routes = int(2)
-	ns2.Quotas.RAM = int64(256)
+	ns1 := getDefaultNamespace("demo")
+	ns2 := getDefaultNamespace("test")
 
 	err := envs.Get().GetStorage().Namespace().Insert(context.Background(), ns1)
 	assert.NoError(t, err)
-	nsl = append(nsl, ns1)
+
 	err = envs.Get().GetStorage().Namespace().Insert(context.Background(), ns2)
 	assert.NoError(t, err)
-	nsl = append(nsl, ns2)
+
+	nsl := types.NamespaceList{ns1, ns2}
 
 	v, err := views.V1().Namespace().NewList(nsl).ToJson()
 	assert.NoError(t, err)
@@ -242,12 +219,7 @@ func TestNamespaceCreate(t *testing.T) {
 	envs.Get().SetStorage(strg)
 	viper.Set("verbose", 0)
 
-	ns := new(types.Namespace)
-	ns.Meta.SetDefault()
-	ns.Meta.Name = "demo"
-	ns.Meta.Description = "demo description"
-	ns.Quotas.Routes = int(2)
-	ns.Quotas.RAM = int64(256)
+	ns := getDefaultNamespace("demo")
 
 	err := envs.Get().GetStorage().Namespace().Insert(context.Background(), ns)
 	assert.NoError(t, err)
@@ -369,21 +341,8 @@ func TestNamespaceUpdate(t *testing.T) {
 	envs.Get().SetStorage(strg)
 	viper.Set("verbose", 0)
 
-	ns1 := new(types.Namespace)
-	ns1.Meta.SetDefault()
-	ns1.Meta.Name = "demo"
-	ns1.Meta.Description = "demo description"
-	ns1.Quotas.Routes = int(2)
-	ns1.Quotas.RAM = int64(256)
-
-	ns2 := new(types.Namespace)
-	ns2.Meta.SetDefault()
-	ns2.Meta.Name = "demo"
-	ns2.Meta.Description = "demo description"
-	ns2.Quotas.Routes = int(2)
-	ns2.Quotas.RAM = int64(256)
-	ns2.Resources.Routes = int(2)
-	ns2.Resources.RAM = int64(256)
+	ns1 := getDefaultNamespace("demo")
+	ns2 := getDefaultNamespace("test")
 
 	err := envs.Get().GetStorage().Namespace().Insert(context.Background(), ns1)
 	assert.NoError(t, err)
@@ -401,7 +360,7 @@ func TestNamespaceUpdate(t *testing.T) {
 		expectedCode int
 	}{
 		{
-			url:          fmt.Sprintf("/namespace/%s", "test"),
+			url:          fmt.Sprintf("/namespace/%s", ns2.Meta.Name),
 			handler:      namespace.NamespaceUpdateH,
 			description:  "namespace not exists",
 			data:         createNamespaceUpdateOptions(nil, nil).toJson(),
@@ -410,14 +369,14 @@ func TestNamespaceUpdate(t *testing.T) {
 		},
 		{
 			description:  "successfully",
-			url:          fmt.Sprintf("/namespace/%s", ns2.Meta.Name),
+			url:          fmt.Sprintf("/namespace/%s", ns1.Meta.Name),
 			handler:      namespace.NamespaceUpdateH,
 			data:         "{description:demo}",
 			expectedBody: "{\"code\":400,\"status\":\"Incorrect json\",\"message\":\"Incorrect json\"}",
 			expectedCode: http.StatusBadRequest,
 		},
 		{
-			url:          fmt.Sprintf("/namespace/%s", ns2.Meta.Name),
+			url:          fmt.Sprintf("/namespace/%s", ns1.Meta.Name),
 			handler:      namespace.NamespaceUpdateH,
 			description:  "successfully",
 			data:         createNamespaceUpdateOptions(nil, &types.NamespaceQuotasOptions{RAM: ns2.Resources.RAM, Routes: ns2.Resources.Routes}).toJson(),
@@ -474,12 +433,7 @@ func TestNamespaceRemove(t *testing.T) {
 	envs.Get().SetStorage(strg)
 	viper.Set("verbose", 0)
 
-	ns := new(types.Namespace)
-	ns.Meta.SetDefault()
-	ns.Meta.Name = "demo"
-	ns.Meta.Description = "demo description"
-	ns.Quotas.Routes = int(2)
-	ns.Quotas.RAM = int64(256)
+	ns := getDefaultNamespace("demo")
 
 	err := envs.Get().GetStorage().Namespace().Insert(context.Background(), ns)
 	assert.NoError(t, err)
@@ -538,12 +492,37 @@ func TestNamespaceRemove(t *testing.T) {
 		body, err := ioutil.ReadAll(res.Body)
 		assert.NoError(t, err)
 
-		if res.Code == http.StatusOK {
-			assert.Equal(t, tc.expectedBody, "", tc.description)
-		} else {
-			assert.Equal(t, tc.expectedBody, string(body), tc.description)
-		}
+		assert.Equal(t, tc.expectedBody, string(body), tc.description)
 
 	}
 
+}
+
+func getDefaultNamespace(name string) *types.Namespace {
+	res := new(types.Namespace)
+	switch name {
+	case "demo":
+		res.Meta.SetDefault()
+		res.Meta.Name = "demo"
+		res.Meta.Description = "demo description"
+		res.Quotas.Routes = int(2)
+		res.Quotas.RAM = int64(256)
+	case "test":
+		res.Meta.SetDefault()
+		res.Meta.Name = "test"
+		res.Meta.Description = "test description"
+		res.Quotas.Routes = int(1)
+		res.Quotas.RAM = int64(128)
+	default:
+		res = nil
+	}
+	return res
+}
+
+func setRequestVars(r *mux.Router, req *http.Request) {
+	var match mux.RouteMatch
+	// Take the request and match it
+	r.Match(req, &match)
+	// Push the variable onto the context
+	req = mux.SetURLVars(req, match.Vars)
 }

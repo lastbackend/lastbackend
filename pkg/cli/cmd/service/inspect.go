@@ -2,7 +2,7 @@
 // Last.Backend LLC CONFIDENTIAL
 // __________________
 //
-// [2014] - [2017] Last.Backend LLC
+// [2014] - [2018] Last.Backend LLC
 // All Rights Reserved.
 //
 // NOTICE:  All information contained herein is, and remains
@@ -20,54 +20,56 @@ package service
 
 import (
 	"fmt"
-	s "github.com/lastbackend/lastbackend/pkg/api/service/views/v1"
-	a "github.com/lastbackend/lastbackend/pkg/cli/cmd/app"
+
+	n "github.com/lastbackend/lastbackend/pkg/cli/cmd/namespace"
 	c "github.com/lastbackend/lastbackend/pkg/cli/context"
-	"github.com/lastbackend/lastbackend/pkg/common/errors"
+	v "github.com/lastbackend/lastbackend/pkg/cli/view"
+	e "github.com/lastbackend/lastbackend/pkg/distribution/errors"
 )
 
 func InspectCmd(name string) {
 
-	srv, ns, err := Inspect(name)
+	srv, err := Inspect(name)
 	if err != nil {
 		fmt.Println(err)
 		return
 	}
 
-	srv.DrawTable(ns)
+	srv.Print()
 }
 
-func Inspect(name string) (*s.Service, string, error) {
+func Inspect(name string) (*v.Service, error) {
 
 	var (
 		err  error
 		http = c.Get().GetHttpClient()
-		er   = new(errors.Http)
-		srv  *s.Service
+		er   = new(e.Http)
+		srv  *v.Service
 	)
 
-	a, err := a.Current()
+	ns, err := n.Current()
 	if err != nil {
-		return nil, "", err
+		return nil, err
 	}
-	if a == nil {
-		return nil, "", errors.New("App didn't select")
+	if ns.Meta == nil {
+		return nil, e.New("Workspace didn't select")
 	}
 
 	_, _, err = http.
-		GET(fmt.Sprintf("/app/%s/service/%s", a.Meta.Name, name)).
+		GET(fmt.Sprintf("/namespace/%s/service/%s", ns.Meta.Name, name)).
+		AddHeader("Content-Type", "application/json").
 		Request(&srv, er)
 	if err != nil {
-		return nil, "", errors.New(er.Message)
+		return nil, e.New(er.Message)
 	}
 
 	if er.Code == 401 {
-		return nil, "", errors.NotLoggedMessage
+		return nil, e.NotLoggedMessage
 	}
 
 	if er.Code != 0 {
-		return nil, "", errors.New(er.Message)
+		return nil, e.New(er.Message)
 	}
 
-	return srv, a.Meta.Name, nil
+	return srv, nil
 }

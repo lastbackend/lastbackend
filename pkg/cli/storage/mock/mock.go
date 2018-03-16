@@ -2,7 +2,7 @@
 // Last.Backend LLC CONFIDENTIAL
 // __________________
 //
-// [2014] - [2017] Last.Backend LLC
+// [2014] - [2018] Last.Backend LLC
 // All Rights Reserved.
 //
 // NOTICE:  All information contained herein is, and remains
@@ -20,29 +20,30 @@ package mock
 
 import (
 	"github.com/lastbackend/lastbackend/pkg/cli/storage"
-	"github.com/lastbackend/lastbackend/pkg/cli/storage/db"
+	"github.com/lastbackend/lastbackend/pkg/cli/storage/mock/mockdb"
 )
 
 type Storage struct {
-	*AppStorage
+	*NamespaceStorage
 }
 
-func (s *Storage) App() storage.IApp {
+func (s *Storage) Namespace() storage.INspace {
 	if s == nil {
 		return nil
 	}
-	return s.AppStorage
+	return s.NamespaceStorage
 }
 
 func Get() (*Storage, error) {
 
-	client, err := db.Init()
+	client, err := mockdb.Init()
 	if err != nil {
 		return nil, err
 	}
 
 	store := new(Storage)
-	store.AppStorage = newAppStorage(client)
+
+	store.NamespaceStorage = newNamespaceStorage(client)
 
 	return store, nil
 }
