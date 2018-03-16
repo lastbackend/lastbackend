@@ -20,6 +20,7 @@ package storage
 
 import (
 	"context"
+
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 )
 
@@ -85,6 +86,7 @@ type Volume interface {
 }
 
 type Cluster interface {
+	Insert(ctx context.Context, cluster *types.Cluster) error
 	Info(ctx context.Context) (*types.Cluster, error)
 	Update(ctx context.Context, cluster *types.Cluster) error
 }

@@ -28,6 +28,7 @@ const (
 	ErrKeyExists        = "key exists"
 	ErrOperationFailure = "operation failure"
 	ErrKeyNotFound      = "key not found"
+	ErrStructArgIsNil   = "input structure is nil"
 )
 
 type DestroyFunc func()

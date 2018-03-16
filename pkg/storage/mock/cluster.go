@@ -20,27 +20,47 @@ package mock
 
 import (
 	"context"
+	"errors"
+
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 	"github.com/lastbackend/lastbackend/pkg/storage/storage"
+	"github.com/lastbackend/lastbackend/pkg/storage/store"
 )
 
 // ClusterStorage - mock storage for cluster
 type ClusterStorage struct {
 	storage.Cluster
+	data types.Cluster
+}
+
+// Insert - insert new cluster object into mock storage
+func (s *ClusterStorage) Insert(ctx context.Context, cluster *types.Cluster) error {
+
+	if cluster == nil {
+		return errors.New(store.ErrStructArgIsNil)
+	}
+
+	s.data = *cluster
+	return nil
 }
 
 // Info - return  cluster info from mock storage
 func (s *ClusterStorage) Info(ctx context.Context) (*types.Cluster, error) {
-	return new(types.Cluster), nil
+	return &s.data, nil
 }
 
 // Update cluster info into mock storage
 func (s *ClusterStorage) Update(ctx context.Context, cluster *types.Cluster) error {
+	if cluster == nil {
+		return errors.New(store.ErrStructArgIsNil)
+	}
+
+	s.data = *cluster
 	return nil
 }
 
 // newClusterStorage - return new mock cluster interface
-func newClusterStorage() storage.Cluster {
+func newClusterStorage() *ClusterStorage {
 	s := new(ClusterStorage)
 	return s
 }
