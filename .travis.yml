@@ -5,12 +5,12 @@ services:
   - docker
 
 go:
-  - 1.10
+  - 1.10.x
 
 install:
   - make deps
 
-test:
+before_script:
   - make test
 
 script:
