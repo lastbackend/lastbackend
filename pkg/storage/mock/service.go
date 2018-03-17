@@ -19,99 +19,140 @@
 package mock
 
 import (
-	"context"
-	"github.com/lastbackend/lastbackend/pkg/distribution/errors"
-	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 	"github.com/lastbackend/lastbackend/pkg/storage/storage"
 	"github.com/lastbackend/lastbackend/pkg/storage/store"
+	"fmt"
+	"strings"
+	"context"
+	"github.com/lastbackend/lastbackend/pkg/distribution/types"
+	"github.com/lastbackend/lastbackend/pkg/distribution/errors"
 )
 
-const serviceStorage string = "services"
-
-// Service Service type for interface in interfaces folder
 type ServiceStorage struct {
-	data map[string]map[string]*types.Service
 	storage.Service
+	data map[string]*types.Service
 }
 
 // Get service by name
-func (s *ServiceStorage) Get(ctx context.Context, namespace, name string) (*types.Service, error) {
-	if _, ok := s.data[namespace]; !ok {
-		return nil, nil
+func (s *ServiceStorage) Get(ctx context.Context, name string) (*types.Service, error) {
+	if ns, ok := s.data[name]; ok {
+		return ns, nil
 	}
-	if srv, ok := s.data[namespace][name]; ok {
-		return srv, nil
+	return nil, errors.New(store.ErrEntityNotFound)
+}
+
+// Get services by namespace name
+func (s *ServiceStorage) ListByNamespace(ctx context.Context, namespace string) (map[string]*types.Service, error) {
+	list := make(map[string]*types.Service, 0)
+
+	prefix := fmt.Sprintf("%s:", namespace)
+	for _, d := range s.data {
+
+		if strings.HasPrefix(d.Meta.Name, prefix) {
+			list[d.Meta.Name] = d
+		}
 	}
-	return nil, nil
+
+	return list, nil
 }
 
-// Get service by pod name
-func (s *ServiceStorage) GetByPodName(ctx context.Context, name string) (*types.Service, error) {
-	return new(types.Service), nil
-}
-
-// List services
-func (s *ServiceStorage) ListByNamespace(ctx context.Context, namespace string) ([]*types.Service, error) {
-	return make([]*types.Service, 0), nil
-}
-
-// Count services
-func (s *ServiceStorage) CountByNamespace(ctx context.Context, namespace string) (int, error) {
-	return 0, nil
-}
-
-// Insert new service into storage
-func (s *ServiceStorage) Insert(ctx context.Context, service *types.Service) error {
-	if _, ok := s.data[service.Meta.Namespace]; !ok {
-		s.data[service.Meta.Namespace] = make(map[string]*types.Service)
+// Update service state
+func (s *ServiceStorage) SetState(ctx context.Context, service *types.Service) error {
+	if err := s.checkServiceExists(service); err != nil {
+		return err
 	}
-	if _, ok := s.data[service.Meta.Namespace][service.Meta.Name]; ok {
-		return errors.New(store.ErrEntityNotFound)
-	} else {
-		s.data[service.Meta.Namespace][service.Meta.Name] = service
-	}
-	return nil
-}
 
-// Update service in storage
-func (s *ServiceStorage) Update(ctx context.Context, service *types.Service) error {
-	return nil
-}
-
-// Update service spec in storage
-func (s *ServiceStorage) UpdateSpec(ctx context.Context, service *types.Service) error {
-	return nil
-}
-
-// Remove service model
-func (s *ServiceStorage) Remove(ctx context.Context, service *types.Service) error {
-	return nil
-}
-
-// Remove services from namespace
-func (s *ServiceStorage) RemoveByNamespace(ctx context.Context, namespace string) error {
-	return nil
-}
-
-func (s *ServiceStorage) Watch(ctx context.Context, service chan *types.Service) error {
-	return nil
-}
-
-func (s *ServiceStorage) SpecWatch(ctx context.Context, service chan *types.Service) error {
-	return nil
-}
-
-func (s *ServiceStorage) PodsWatch(ctx context.Context, service chan *types.Service) error {
+	s.data[service.Meta.Name].State = service.State
 	return nil
 }
 
 // Update service state
-func (s *ServiceStorage) updateState(ctx context.Context, service *types.Service) error {
+func (s *ServiceStorage) SetSpec(ctx context.Context, service *types.Service) error {
+	if err := s.checkServiceExists(service); err != nil {
+		return err
+	}
+
+	s.data[service.Meta.Name].Spec = service.Spec
 	return nil
 }
 
+// Insert new service
+func (s *ServiceStorage) Insert(ctx context.Context, service *types.Service) error {
+
+	if err := s.checkServiceArgument(service); err != nil {
+		return err
+	}
+
+	s.data[service.Meta.Name] = service
+
+	return nil
+}
+
+// Update service info
+func (s *ServiceStorage) Update(ctx context.Context, service *types.Service) error {
+
+	if err := s.checkServiceExists(service); err != nil {
+		return err
+	}
+
+	s.data[service.Meta.Name] = service
+
+	return nil
+}
+
+// Remove service from storage
+func (s *ServiceStorage) Remove(ctx context.Context, service *types.Service) error {
+
+	if err := s.checkServiceExists(service); err != nil {
+		return err
+	}
+
+	delete(s.data, service.Meta.Name)
+
+	return nil
+}
+
+// Watch service changes
+func (s *ServiceStorage) Watch(ctx context.Context, service chan *types.Service) error {
+	return nil
+}
+
+// Watch service spec changes
+func (s *ServiceStorage) WatchSpec(ctx context.Context, service chan *types.Service) error {
+	return nil
+}
+
+// newServiceStorage returns new storage
 func newServiceStorage() *ServiceStorage {
 	s := new(ServiceStorage)
-	s.data = make(map[string]map[string]*types.Service)
+	s.data = make(map[string]*types.Service)
 	return s
+}
+
+// checkServiceArgument - check if argument is valid for manipulations
+func (s *ServiceStorage) checkServiceArgument(service *types.Service) error {
+
+	if service == nil {
+		return errors.New(store.ErrStructArgIsNil)
+	}
+
+	if service.Meta.Name == "" {
+		return errors.New(store.ErrStructArgIsInvalid)
+	}
+
+	return nil
+}
+
+// checkServiceArgument - check if service exists in store
+func (s *ServiceStorage) checkServiceExists(service *types.Service) error {
+
+	if err := s.checkServiceArgument(service); err != nil {
+		return err
+	}
+
+	if _, ok := s.data[service.Meta.Name]; !ok {
+		return errors.New(store.ErrEntityNotFound)
+	}
+
+	return nil
 }

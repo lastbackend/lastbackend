@@ -34,10 +34,11 @@ func TestNodeStorage_List(t *testing.T) {
 		ctx = context.Background()
 		n1  = getNodeAsset("test1", "", true)
 		n2  = getNodeAsset("test2", "", false)
-		nl  = make([]*types.Node, 0)
+		nl  = make(map[string]*types.Node, 0)
 	)
 
-	nl = append(nl, &n1, &n2)
+	nl[n1.Meta.Name] = &n1
+	nl[n2.Meta.Name] = &n2
 
 	type fields struct {
 		stg storage.Node
@@ -51,7 +52,7 @@ func TestNodeStorage_List(t *testing.T) {
 		name    string
 		fields  fields
 		args    args
-		want    []*types.Node
+		want    map[string]*types.Node
 		wantErr bool
 	}{
 		{
@@ -770,13 +771,16 @@ func TestNodeStorage_SetOffline(t *testing.T) {
 func TestNodeStorage_InsertPod(t *testing.T) {
 
 	var (
+		ns  = "ns"
+		svc = "svc"
+		dp  = "dp"
 		stg = newNodeStorage()
 		ctx = context.Background()
 		n1  = getNodeAsset("test1", "", true)
 		n2  = getNodeAsset("test1", "", true)
 		n3  = getNodeAsset("test2", "", false)
-		p1  = getPodAsset("test1", "")
-		p2  = getPodAsset("test1", "")
+		p1  = getPodAsset(ns, svc, dp,"test1", "")
+		p2  = getPodAsset(ns, svc, dp,"test1", "")
 	)
 
 	n2.Spec.Pods[p1.Meta.Name] = p1.Spec
@@ -879,13 +883,16 @@ func TestNodeStorage_InsertPod(t *testing.T) {
 func TestNodeStorage_RemovePod(t *testing.T) {
 
 	var (
+		ns  = "ns"
+		svc = "svc"
+		dp  = "dp"
 		stg = newNodeStorage()
 		ctx = context.Background()
 		n1  = getNodeAsset("test1", "", true)
 		n2  = getNodeAsset("test1", "", true)
 		n3  = getNodeAsset("test2", "", false)
-		p1  = getPodAsset("test1", "")
-		p2  = getPodAsset("test2", "")
+		p1  = getPodAsset(ns, svc, dp,"test1", "")
+		p2  = getPodAsset(ns, svc, dp,"test2", "")
 	)
 
 	n1.Spec.Pods[p1.Meta.Name] = p1.Spec
@@ -987,13 +994,14 @@ func TestNodeStorage_RemovePod(t *testing.T) {
 func TestNodeStorage_InsertVolume(t *testing.T) {
 
 	var (
+		ns  = "ns"
 		stg = newNodeStorage()
 		ctx = context.Background()
 		n1  = getNodeAsset("test1", "", true)
 		n2  = getNodeAsset("test1", "", true)
 		n3  = getNodeAsset("test2", "", false)
-		v1  = getVolumeAsset("test1", "")
-		v2  = getVolumeAsset("test1", "")
+		v1  = getVolumeAsset(ns,"test1", "")
+		v2  = getVolumeAsset(ns,"test1", "")
 	)
 
 	n2.Spec.Volumes[v1.Meta.Name] = v1.Spec
@@ -1096,13 +1104,14 @@ func TestNodeStorage_InsertVolume(t *testing.T) {
 func TestNodeStorage_RemoveVolume(t *testing.T) {
 
 	var (
+		ns  = "ns"
 		stg = newNodeStorage()
 		ctx = context.Background()
 		n1  = getNodeAsset("test1", "", true)
 		n2  = getNodeAsset("test1", "", true)
 		n3  = getNodeAsset("test2", "", false)
-		v1  = getVolumeAsset("test1", "")
-		v2  = getVolumeAsset("test2", "")
+		v1  = getVolumeAsset(ns,"test1", "")
+		v2  = getVolumeAsset(ns,"test2", "")
 	)
 
 	n1.Spec.Volumes[v1.Meta.Name] = v1.Spec
@@ -1204,13 +1213,14 @@ func TestNodeStorage_RemoveVolume(t *testing.T) {
 func TestNodeStorage_InsertRoute(t *testing.T) {
 
 	var (
+		ns  = "ns"
 		stg = newNodeStorage()
 		ctx = context.Background()
 		n1  = getNodeAsset("test1", "", true)
 		n2  = getNodeAsset("test1", "", true)
 		n3  = getNodeAsset("test2", "", false)
-		r1  = getRouteAsset("test1", "")
-		r2  = getRouteAsset("test1", "")
+		r1  = getRouteAsset(ns,"test1", "")
+		r2  = getRouteAsset(ns,"test1", "")
 	)
 
 	n2.Spec.Routes[r1.Meta.Name] = r1.Spec
@@ -1313,13 +1323,14 @@ func TestNodeStorage_InsertRoute(t *testing.T) {
 func TestNodeStorage_RemoveRoute(t *testing.T) {
 
 	var (
+		ns  = "ns"
 		stg = newNodeStorage()
 		ctx = context.Background()
 		n1  = getNodeAsset("test1", "", true)
 		n2  = getNodeAsset("test1", "", true)
 		n3  = getNodeAsset("test2", "", false)
-		p1  = getRouteAsset("test1", "")
-		p2  = getRouteAsset("test2", "")
+		p1  = getRouteAsset(ns,"test1", "")
+		p2  = getRouteAsset(ns,"test2", "")
 	)
 
 	n1.Spec.Routes[p1.Meta.Name] = p1.Spec
@@ -1544,10 +1555,13 @@ func TestNodeStorage_Watch(t *testing.T) {
 func Test_newNodeStorage(t *testing.T) {
 	tests := []struct {
 		name string
-		want *NodeStorage
+		want storage.Node
 	}{
-	// TODO: Add test cases.
+		{"initialize storage",
+			newNodeStorage(),
+		},
 	}
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			if got := newNodeStorage(); !reflect.DeepEqual(got, tt.want) {

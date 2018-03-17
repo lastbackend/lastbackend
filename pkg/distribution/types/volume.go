@@ -24,17 +24,19 @@ type Volume struct {
 	// Volume meta
 	Meta VolumeMeta `json:"meta" yaml:"meta"`
 	// Volume stat
-	Stat VolumeStat `json:"stat" yaml:"stat"`
+	State VolumeState `json:"stat" yaml:"stat"`
 	// Volume spec
 	Spec VolumeSpec `json:"spec" yaml:"spec"`
 }
 
 type VolumeMeta struct {
 	Meta
+	Namespace string `json:"namespace"`
 }
 
-type VolumeStat struct {
-
+type VolumeState struct {
+	Provision bool `json:"provision"`
+	Ready bool `json:"ready"`
 }
 
 type VolumeSpec struct {

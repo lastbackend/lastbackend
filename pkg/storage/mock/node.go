@@ -33,15 +33,8 @@ type NodeStorage struct {
 	data map[string]*types.Node
 }
 
-func (s *NodeStorage) List(ctx context.Context) ([]*types.Node, error) {
-
-	nl := make([]*types.Node, 0)
-
-	for _, n := range s.data {
-		nl = append(nl, n)
-	}
-
-	return nl, nil
+func (s *NodeStorage) List(ctx context.Context) (map[string]*types.Node, error) {
+	return s.data, nil
 }
 
 func (s *NodeStorage) Get(ctx context.Context, name string) (*types.Node, error) {

@@ -26,7 +26,7 @@ import (
 )
 
 type IHook interface {
-	Get(id string) (*types.Hook, error)
+	Get(id string) (*types.Trigger, error)
 }
 
 type Hook struct {
@@ -34,13 +34,13 @@ type Hook struct {
 	storage storage.Storage
 }
 
-func (h *Hook) Get(id string) (*types.Hook, error) {
+func (h *Hook) Get(id string) (*types.Trigger, error) {
 
-	log.V(logLevel).Debugf("Hook: Get: get Hook by id %s", id)
+	log.V(logLevel).Debugf("Trigger: Get: get Trigger by id %s", id)
 
-	hook, err := h.storage.Hook().Get(h.context, id)
+	hook, err := h.storage.Trigger().Get(h.context, id)
 	if err != nil {
-		log.V(logLevel).Errorf("Hook: Get: create Hook err: %s", err)
+		log.V(logLevel).Errorf("Trigger: Get: create Trigger err: %s", err)
 		return nil, err
 	}
 

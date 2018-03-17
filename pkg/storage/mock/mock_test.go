@@ -24,50 +24,22 @@ import (
 	"testing"
 
 	"github.com/lastbackend/lastbackend/pkg/storage/storage"
-	"github.com/lastbackend/lastbackend/pkg/storage/store"
 )
 
 func TestStorage_Cluster(t *testing.T) {
-	type fields struct {
-		Context           context.Context
-		CancelFunc        context.CancelFunc
-		ClusterStorage    *ClusterStorage
-		DeploymentStorage *DeploymentStorage
-		EndpointStorage   *EndpointStorage
-		HookStorage       *HookStorage
-		NodeStorage       *NodeStorage
-		NamespaceStorage  *NamespaceStorage
-		PodStorage        *PodStorage
-		ServiceStorage    *ServiceStorage
-		RouteStorage      *RouteStorage
-		VolumeStorage     *VolumeStorage
-		SystemStorage     *SystemStorage
-	}
+
 	tests := []struct {
-		name   string
-		fields fields
-		want   storage.Cluster
+		name string
+		want storage.Cluster
 	}{
-	// TODO: Add test cases.
+		{"cluster storage",
+			newClusterStorage(),
+		},
 	}
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			s := &Storage{
-				Context:           tt.fields.Context,
-				CancelFunc:        tt.fields.CancelFunc,
-				ClusterStorage:    tt.fields.ClusterStorage,
-				DeploymentStorage: tt.fields.DeploymentStorage,
-				EndpointStorage:   tt.fields.EndpointStorage,
-				HookStorage:       tt.fields.HookStorage,
-				NodeStorage:       tt.fields.NodeStorage,
-				NamespaceStorage:  tt.fields.NamespaceStorage,
-				PodStorage:        tt.fields.PodStorage,
-				ServiceStorage:    tt.fields.ServiceStorage,
-				RouteStorage:      tt.fields.RouteStorage,
-				VolumeStorage:     tt.fields.VolumeStorage,
-				SystemStorage:     tt.fields.SystemStorage,
-			}
-			if got := s.Cluster(); !reflect.DeepEqual(got, tt.want) {
+			if got, err := New(); (err != nil) || !reflect.DeepEqual(got.Cluster(), tt.want) {
 				t.Errorf("Storage.Cluster() = %v, want %v", got, tt.want)
 			}
 		})
@@ -75,140 +47,56 @@ func TestStorage_Cluster(t *testing.T) {
 }
 
 func TestStorage_Deployment(t *testing.T) {
-	type fields struct {
-		Context           context.Context
-		CancelFunc        context.CancelFunc
-		ClusterStorage    *ClusterStorage
-		DeploymentStorage *DeploymentStorage
-		EndpointStorage   *EndpointStorage
-		HookStorage       *HookStorage
-		NodeStorage       *NodeStorage
-		NamespaceStorage  *NamespaceStorage
-		PodStorage        *PodStorage
-		ServiceStorage    *ServiceStorage
-		RouteStorage      *RouteStorage
-		VolumeStorage     *VolumeStorage
-		SystemStorage     *SystemStorage
-	}
 	tests := []struct {
-		name   string
-		fields fields
-		want   storage.Deployment
+		name string
+		want storage.Deployment
 	}{
-	// TODO: Add test cases.
+		{"Deployment storage",
+			newDeploymentStorage(),
+		},
 	}
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			s := &Storage{
-				Context:           tt.fields.Context,
-				CancelFunc:        tt.fields.CancelFunc,
-				ClusterStorage:    tt.fields.ClusterStorage,
-				DeploymentStorage: tt.fields.DeploymentStorage,
-				EndpointStorage:   tt.fields.EndpointStorage,
-				HookStorage:       tt.fields.HookStorage,
-				NodeStorage:       tt.fields.NodeStorage,
-				NamespaceStorage:  tt.fields.NamespaceStorage,
-				PodStorage:        tt.fields.PodStorage,
-				ServiceStorage:    tt.fields.ServiceStorage,
-				RouteStorage:      tt.fields.RouteStorage,
-				VolumeStorage:     tt.fields.VolumeStorage,
-				SystemStorage:     tt.fields.SystemStorage,
-			}
-			if got := s.Deployment(); !reflect.DeepEqual(got, tt.want) {
+			if got, err := New(); (err != nil) || !reflect.DeepEqual(got.Deployment(), tt.want) {
 				t.Errorf("Storage.Deployment() = %v, want %v", got, tt.want)
 			}
 		})
 	}
 }
 
-func TestStorage_Hook(t *testing.T) {
-	type fields struct {
-		Context           context.Context
-		CancelFunc        context.CancelFunc
-		ClusterStorage    *ClusterStorage
-		DeploymentStorage *DeploymentStorage
-		EndpointStorage   *EndpointStorage
-		HookStorage       *HookStorage
-		NodeStorage       *NodeStorage
-		NamespaceStorage  *NamespaceStorage
-		PodStorage        *PodStorage
-		ServiceStorage    *ServiceStorage
-		RouteStorage      *RouteStorage
-		VolumeStorage     *VolumeStorage
-		SystemStorage     *SystemStorage
-	}
+func TestStorage_Trigger(t *testing.T) {
 	tests := []struct {
-		name   string
-		fields fields
-		want   storage.Hook
+		name string
+		want storage.Trigger
 	}{
-	// TODO: Add test cases.
+		{"cluster storage",
+			newTriggerStorage(),
+		},
 	}
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			s := &Storage{
-				Context:           tt.fields.Context,
-				CancelFunc:        tt.fields.CancelFunc,
-				ClusterStorage:    tt.fields.ClusterStorage,
-				DeploymentStorage: tt.fields.DeploymentStorage,
-				EndpointStorage:   tt.fields.EndpointStorage,
-				HookStorage:       tt.fields.HookStorage,
-				NodeStorage:       tt.fields.NodeStorage,
-				NamespaceStorage:  tt.fields.NamespaceStorage,
-				PodStorage:        tt.fields.PodStorage,
-				ServiceStorage:    tt.fields.ServiceStorage,
-				RouteStorage:      tt.fields.RouteStorage,
-				VolumeStorage:     tt.fields.VolumeStorage,
-				SystemStorage:     tt.fields.SystemStorage,
-			}
-			if got := s.Hook(); !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("Storage.Hook() = %v, want %v", got, tt.want)
+			if got, err := New(); (err != nil) || !reflect.DeepEqual(got.Trigger(), tt.want) {
+				t.Errorf("Storage.Trigger() = %v, want %v", got, tt.want)
 			}
 		})
 	}
 }
 
 func TestStorage_Node(t *testing.T) {
-	type fields struct {
-		Context           context.Context
-		CancelFunc        context.CancelFunc
-		ClusterStorage    *ClusterStorage
-		DeploymentStorage *DeploymentStorage
-		EndpointStorage   *EndpointStorage
-		HookStorage       *HookStorage
-		NodeStorage       *NodeStorage
-		NamespaceStorage  *NamespaceStorage
-		PodStorage        *PodStorage
-		ServiceStorage    *ServiceStorage
-		RouteStorage      *RouteStorage
-		VolumeStorage     *VolumeStorage
-		SystemStorage     *SystemStorage
-	}
 	tests := []struct {
-		name   string
-		fields fields
-		want   storage.Node
+		name string
+		want storage.Node
 	}{
-	// TODO: Add test cases.
+		{"Node storage",
+			newNodeStorage(),
+		},
 	}
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			s := &Storage{
-				Context:           tt.fields.Context,
-				CancelFunc:        tt.fields.CancelFunc,
-				ClusterStorage:    tt.fields.ClusterStorage,
-				DeploymentStorage: tt.fields.DeploymentStorage,
-				EndpointStorage:   tt.fields.EndpointStorage,
-				HookStorage:       tt.fields.HookStorage,
-				NodeStorage:       tt.fields.NodeStorage,
-				NamespaceStorage:  tt.fields.NamespaceStorage,
-				PodStorage:        tt.fields.PodStorage,
-				ServiceStorage:    tt.fields.ServiceStorage,
-				RouteStorage:      tt.fields.RouteStorage,
-				VolumeStorage:     tt.fields.VolumeStorage,
-				SystemStorage:     tt.fields.SystemStorage,
-			}
-			if got := s.Node(); !reflect.DeepEqual(got, tt.want) {
+			if got, err := New(); (err != nil) || !reflect.DeepEqual(got.Node(), tt.want) {
 				t.Errorf("Storage.Node() = %v, want %v", got, tt.want)
 			}
 		})
@@ -216,46 +104,18 @@ func TestStorage_Node(t *testing.T) {
 }
 
 func TestStorage_Namespace(t *testing.T) {
-	type fields struct {
-		Context           context.Context
-		CancelFunc        context.CancelFunc
-		ClusterStorage    *ClusterStorage
-		DeploymentStorage *DeploymentStorage
-		EndpointStorage   *EndpointStorage
-		HookStorage       *HookStorage
-		NodeStorage       *NodeStorage
-		NamespaceStorage  *NamespaceStorage
-		PodStorage        *PodStorage
-		ServiceStorage    *ServiceStorage
-		RouteStorage      *RouteStorage
-		VolumeStorage     *VolumeStorage
-		SystemStorage     *SystemStorage
-	}
 	tests := []struct {
-		name   string
-		fields fields
-		want   storage.Namespace
+		name string
+		want storage.Namespace
 	}{
-	// TODO: Add test cases.
+		{"Namespace storage",
+			newNamespaceStorage(),
+		},
 	}
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			s := &Storage{
-				Context:           tt.fields.Context,
-				CancelFunc:        tt.fields.CancelFunc,
-				ClusterStorage:    tt.fields.ClusterStorage,
-				DeploymentStorage: tt.fields.DeploymentStorage,
-				EndpointStorage:   tt.fields.EndpointStorage,
-				HookStorage:       tt.fields.HookStorage,
-				NodeStorage:       tt.fields.NodeStorage,
-				NamespaceStorage:  tt.fields.NamespaceStorage,
-				PodStorage:        tt.fields.PodStorage,
-				ServiceStorage:    tt.fields.ServiceStorage,
-				RouteStorage:      tt.fields.RouteStorage,
-				VolumeStorage:     tt.fields.VolumeStorage,
-				SystemStorage:     tt.fields.SystemStorage,
-			}
-			if got := s.Namespace(); !reflect.DeepEqual(got, tt.want) {
+			if got, err := New(); (err != nil) || !reflect.DeepEqual(got.Namespace(), tt.want) {
 				t.Errorf("Storage.Namespace() = %v, want %v", got, tt.want)
 			}
 		})
@@ -263,46 +123,18 @@ func TestStorage_Namespace(t *testing.T) {
 }
 
 func TestStorage_Route(t *testing.T) {
-	type fields struct {
-		Context           context.Context
-		CancelFunc        context.CancelFunc
-		ClusterStorage    *ClusterStorage
-		DeploymentStorage *DeploymentStorage
-		EndpointStorage   *EndpointStorage
-		HookStorage       *HookStorage
-		NodeStorage       *NodeStorage
-		NamespaceStorage  *NamespaceStorage
-		PodStorage        *PodStorage
-		ServiceStorage    *ServiceStorage
-		RouteStorage      *RouteStorage
-		VolumeStorage     *VolumeStorage
-		SystemStorage     *SystemStorage
-	}
 	tests := []struct {
-		name   string
-		fields fields
-		want   storage.Route
+		name string
+		want storage.Route
 	}{
-	// TODO: Add test cases.
+		{"Route storage",
+			newRouteStorage(),
+		},
 	}
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			s := &Storage{
-				Context:           tt.fields.Context,
-				CancelFunc:        tt.fields.CancelFunc,
-				ClusterStorage:    tt.fields.ClusterStorage,
-				DeploymentStorage: tt.fields.DeploymentStorage,
-				EndpointStorage:   tt.fields.EndpointStorage,
-				HookStorage:       tt.fields.HookStorage,
-				NodeStorage:       tt.fields.NodeStorage,
-				NamespaceStorage:  tt.fields.NamespaceStorage,
-				PodStorage:        tt.fields.PodStorage,
-				ServiceStorage:    tt.fields.ServiceStorage,
-				RouteStorage:      tt.fields.RouteStorage,
-				VolumeStorage:     tt.fields.VolumeStorage,
-				SystemStorage:     tt.fields.SystemStorage,
-			}
-			if got := s.Route(); !reflect.DeepEqual(got, tt.want) {
+			if got, err := New(); (err != nil) || !reflect.DeepEqual(got.Route(), tt.want) {
 				t.Errorf("Storage.Route() = %v, want %v", got, tt.want)
 			}
 		})
@@ -310,46 +142,18 @@ func TestStorage_Route(t *testing.T) {
 }
 
 func TestStorage_Pod(t *testing.T) {
-	type fields struct {
-		Context           context.Context
-		CancelFunc        context.CancelFunc
-		ClusterStorage    *ClusterStorage
-		DeploymentStorage *DeploymentStorage
-		EndpointStorage   *EndpointStorage
-		HookStorage       *HookStorage
-		NodeStorage       *NodeStorage
-		NamespaceStorage  *NamespaceStorage
-		PodStorage        *PodStorage
-		ServiceStorage    *ServiceStorage
-		RouteStorage      *RouteStorage
-		VolumeStorage     *VolumeStorage
-		SystemStorage     *SystemStorage
-	}
 	tests := []struct {
-		name   string
-		fields fields
-		want   storage.Pod
+		name string
+		want storage.Pod
 	}{
-	// TODO: Add test cases.
+		{"Pod storage",
+			newPodStorage(),
+		},
 	}
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			s := &Storage{
-				Context:           tt.fields.Context,
-				CancelFunc:        tt.fields.CancelFunc,
-				ClusterStorage:    tt.fields.ClusterStorage,
-				DeploymentStorage: tt.fields.DeploymentStorage,
-				EndpointStorage:   tt.fields.EndpointStorage,
-				HookStorage:       tt.fields.HookStorage,
-				NodeStorage:       tt.fields.NodeStorage,
-				NamespaceStorage:  tt.fields.NamespaceStorage,
-				PodStorage:        tt.fields.PodStorage,
-				ServiceStorage:    tt.fields.ServiceStorage,
-				RouteStorage:      tt.fields.RouteStorage,
-				VolumeStorage:     tt.fields.VolumeStorage,
-				SystemStorage:     tt.fields.SystemStorage,
-			}
-			if got := s.Pod(); !reflect.DeepEqual(got, tt.want) {
+			if got, err := New(); (err != nil) || !reflect.DeepEqual(got.Pod(), tt.want) {
 				t.Errorf("Storage.Pod() = %v, want %v", got, tt.want)
 			}
 		})
@@ -357,46 +161,18 @@ func TestStorage_Pod(t *testing.T) {
 }
 
 func TestStorage_Service(t *testing.T) {
-	type fields struct {
-		Context           context.Context
-		CancelFunc        context.CancelFunc
-		ClusterStorage    *ClusterStorage
-		DeploymentStorage *DeploymentStorage
-		EndpointStorage   *EndpointStorage
-		HookStorage       *HookStorage
-		NodeStorage       *NodeStorage
-		NamespaceStorage  *NamespaceStorage
-		PodStorage        *PodStorage
-		ServiceStorage    *ServiceStorage
-		RouteStorage      *RouteStorage
-		VolumeStorage     *VolumeStorage
-		SystemStorage     *SystemStorage
-	}
 	tests := []struct {
-		name   string
-		fields fields
-		want   storage.Service
+		name string
+		want storage.Service
 	}{
-	// TODO: Add test cases.
+		{"Service storage",
+			newServiceStorage(),
+		},
 	}
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			s := &Storage{
-				Context:           tt.fields.Context,
-				CancelFunc:        tt.fields.CancelFunc,
-				ClusterStorage:    tt.fields.ClusterStorage,
-				DeploymentStorage: tt.fields.DeploymentStorage,
-				EndpointStorage:   tt.fields.EndpointStorage,
-				HookStorage:       tt.fields.HookStorage,
-				NodeStorage:       tt.fields.NodeStorage,
-				NamespaceStorage:  tt.fields.NamespaceStorage,
-				PodStorage:        tt.fields.PodStorage,
-				ServiceStorage:    tt.fields.ServiceStorage,
-				RouteStorage:      tt.fields.RouteStorage,
-				VolumeStorage:     tt.fields.VolumeStorage,
-				SystemStorage:     tt.fields.SystemStorage,
-			}
-			if got := s.Service(); !reflect.DeepEqual(got, tt.want) {
+			if got, err := New(); (err != nil) || !reflect.DeepEqual(got.Service(), tt.want) {
 				t.Errorf("Storage.Service() = %v, want %v", got, tt.want)
 			}
 		})
@@ -404,140 +180,38 @@ func TestStorage_Service(t *testing.T) {
 }
 
 func TestStorage_Volume(t *testing.T) {
-	type fields struct {
-		Context           context.Context
-		CancelFunc        context.CancelFunc
-		ClusterStorage    *ClusterStorage
-		DeploymentStorage *DeploymentStorage
-		EndpointStorage   *EndpointStorage
-		HookStorage       *HookStorage
-		NodeStorage       *NodeStorage
-		NamespaceStorage  *NamespaceStorage
-		PodStorage        *PodStorage
-		ServiceStorage    *ServiceStorage
-		RouteStorage      *RouteStorage
-		VolumeStorage     *VolumeStorage
-		SystemStorage     *SystemStorage
-	}
 	tests := []struct {
-		name   string
-		fields fields
-		want   storage.Volume
+		name string
+		want storage.Volume
 	}{
-	// TODO: Add test cases.
+		{"Volume storage",
+			newVolumeStorage(),
+		},
 	}
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			s := &Storage{
-				Context:           tt.fields.Context,
-				CancelFunc:        tt.fields.CancelFunc,
-				ClusterStorage:    tt.fields.ClusterStorage,
-				DeploymentStorage: tt.fields.DeploymentStorage,
-				EndpointStorage:   tt.fields.EndpointStorage,
-				HookStorage:       tt.fields.HookStorage,
-				NodeStorage:       tt.fields.NodeStorage,
-				NamespaceStorage:  tt.fields.NamespaceStorage,
-				PodStorage:        tt.fields.PodStorage,
-				ServiceStorage:    tt.fields.ServiceStorage,
-				RouteStorage:      tt.fields.RouteStorage,
-				VolumeStorage:     tt.fields.VolumeStorage,
-				SystemStorage:     tt.fields.SystemStorage,
-			}
-			if got := s.Volume(); !reflect.DeepEqual(got, tt.want) {
+			if got, err := New(); (err != nil) || !reflect.DeepEqual(got.Volume(), tt.want) {
 				t.Errorf("Storage.Volume() = %v, want %v", got, tt.want)
 			}
 		})
 	}
 }
 
-func TestStorage_Endpoint(t *testing.T) {
-	type fields struct {
-		Context           context.Context
-		CancelFunc        context.CancelFunc
-		ClusterStorage    *ClusterStorage
-		DeploymentStorage *DeploymentStorage
-		EndpointStorage   *EndpointStorage
-		HookStorage       *HookStorage
-		NodeStorage       *NodeStorage
-		NamespaceStorage  *NamespaceStorage
-		PodStorage        *PodStorage
-		ServiceStorage    *ServiceStorage
-		RouteStorage      *RouteStorage
-		VolumeStorage     *VolumeStorage
-		SystemStorage     *SystemStorage
-	}
-	tests := []struct {
-		name   string
-		fields fields
-		want   storage.Endpoint
-	}{
-	// TODO: Add test cases.
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			s := &Storage{
-				Context:           tt.fields.Context,
-				CancelFunc:        tt.fields.CancelFunc,
-				ClusterStorage:    tt.fields.ClusterStorage,
-				DeploymentStorage: tt.fields.DeploymentStorage,
-				EndpointStorage:   tt.fields.EndpointStorage,
-				HookStorage:       tt.fields.HookStorage,
-				NodeStorage:       tt.fields.NodeStorage,
-				NamespaceStorage:  tt.fields.NamespaceStorage,
-				PodStorage:        tt.fields.PodStorage,
-				ServiceStorage:    tt.fields.ServiceStorage,
-				RouteStorage:      tt.fields.RouteStorage,
-				VolumeStorage:     tt.fields.VolumeStorage,
-				SystemStorage:     tt.fields.SystemStorage,
-			}
-			if got := s.Endpoint(); !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("Storage.Endpoint() = %v, want %v", got, tt.want)
-			}
-		})
-	}
-}
 
 func TestStorage_System(t *testing.T) {
-	type fields struct {
-		Context           context.Context
-		CancelFunc        context.CancelFunc
-		ClusterStorage    *ClusterStorage
-		DeploymentStorage *DeploymentStorage
-		EndpointStorage   *EndpointStorage
-		HookStorage       *HookStorage
-		NodeStorage       *NodeStorage
-		NamespaceStorage  *NamespaceStorage
-		PodStorage        *PodStorage
-		ServiceStorage    *ServiceStorage
-		RouteStorage      *RouteStorage
-		VolumeStorage     *VolumeStorage
-		SystemStorage     *SystemStorage
-	}
 	tests := []struct {
-		name   string
-		fields fields
-		want   storage.System
+		name string
+		want storage.System
 	}{
-	// TODO: Add test cases.
+		{"System storage",
+			newSystemStorage(),
+		},
 	}
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			s := &Storage{
-				Context:           tt.fields.Context,
-				CancelFunc:        tt.fields.CancelFunc,
-				ClusterStorage:    tt.fields.ClusterStorage,
-				DeploymentStorage: tt.fields.DeploymentStorage,
-				EndpointStorage:   tt.fields.EndpointStorage,
-				HookStorage:       tt.fields.HookStorage,
-				NodeStorage:       tt.fields.NodeStorage,
-				NamespaceStorage:  tt.fields.NamespaceStorage,
-				PodStorage:        tt.fields.PodStorage,
-				ServiceStorage:    tt.fields.ServiceStorage,
-				RouteStorage:      tt.fields.RouteStorage,
-				VolumeStorage:     tt.fields.VolumeStorage,
-				SystemStorage:     tt.fields.SystemStorage,
-			}
-			if got := s.System(); !reflect.DeepEqual(got, tt.want) {
+			if got, err := New(); (err != nil) || !reflect.DeepEqual(got.System(), tt.want) {
 				t.Errorf("Storage.System() = %v, want %v", got, tt.want)
 			}
 		})
@@ -553,7 +227,14 @@ func Test_keyCreate(t *testing.T) {
 		args args
 		want string
 	}{
-	// TODO: Add test cases.
+		{"key test",
+			args{[]string{"test","test"}},
+			"test/test",
+		},
+		{"key demo",
+			args{[]string{"test","demo"}},
+			"test/demo",
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -564,40 +245,22 @@ func Test_keyCreate(t *testing.T) {
 	}
 }
 
-func TestNew(t *testing.T) {
-	tests := []struct {
-		name    string
-		want    *Storage
-		wantErr bool
-	}{
-	// TODO: Add test cases.
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			got, err := New()
-			if (err != nil) != tt.wantErr {
-				t.Errorf("New() error = %v, wantErr %v", err, tt.wantErr)
-				return
-			}
-			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("New() = %v, want %v", got, tt.want)
-			}
-		})
-	}
-}
-
 func Test_getClient(t *testing.T) {
+
+
+
 	type args struct {
 		ctx context.Context
 	}
 	tests := []struct {
 		name    string
 		args    args
-		want    store.Store
-		want1   store.DestroyFunc
 		wantErr bool
 	}{
-	// TODO: Add test cases.
+		{"test get client dummy",
+			args{context.Background()},
+			false,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -606,11 +269,12 @@ func Test_getClient(t *testing.T) {
 				t.Errorf("getClient() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
-			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("getClient() got = %v, want %v", got, tt.want)
+			if got != nil {
+				t.Errorf("getClient() got = %v, want nil", got)
 			}
-			if !reflect.DeepEqual(got1, tt.want1) {
-				t.Errorf("getClient() got1 = %v, want %v", got1, tt.want1)
+
+			if got1 != nil {
+				t.Errorf("getClient() got1 = %v, want nil", got1)
 			}
 		})
 	}

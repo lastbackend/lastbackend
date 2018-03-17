@@ -22,9 +22,9 @@ import (
 	"context"
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 	"github.com/lastbackend/lastbackend/pkg/storage/storage"
+	"github.com/lastbackend/lastbackend/pkg/storage/store"
+	"github.com/lastbackend/lastbackend/pkg/distribution/errors"
 )
-
-const namespaceStorage = "namespace"
 
 // Namespace Service type for interface in interfaces folder
 type NamespaceStorage struct {
@@ -37,39 +37,45 @@ func (s *NamespaceStorage) Get(ctx context.Context, name string) (*types.Namespa
 	if ns, ok := s.data[name]; ok {
 		return ns, nil
 	}
-	return nil, nil
+	return nil, errors.New(store.ErrEntityNotFound)
 }
 
 // List projects
-func (s *NamespaceStorage) List(ctx context.Context) ([]*types.Namespace, error) {
-	list := make([]*types.Namespace, 0)
-	for _, ns := range s.data {
-		list = append(list, ns)
-	}
-	return list, nil
+func (s *NamespaceStorage) List(ctx context.Context) (map[string]*types.Namespace, error) {
+	return s.data, nil
 }
 
 // Insert new namespace into storage
 func (s *NamespaceStorage) Insert(ctx context.Context, namespace *types.Namespace) error {
-	if _, ok := s.data[namespace.Meta.Name]; !ok {
-		s.data[namespace.Meta.Name] = namespace
+
+	if err := s.checkNamespaceArgument(namespace); err != nil {
+		return err
 	}
+
+	s.data[namespace.Meta.Name] = namespace
+
 	return nil
 }
 
 // Update namespace model
 func (s *NamespaceStorage) Update(ctx context.Context, namespace *types.Namespace) error {
-	if _, ok := s.data[namespace.Meta.Name]; ok {
-		s.data[namespace.Meta.Name] = namespace
+
+	if err := s.checkNamespaceExists(namespace); err != nil {
+		return err
 	}
+
+	s.data[namespace.Meta.Name] = namespace
 	return nil
 }
 
 // Remove namespace model
-func (s *NamespaceStorage) Remove(ctx context.Context, name string) error {
-	if _, ok := s.data[name]; ok {
-		delete(s.data, name)
+func (s *NamespaceStorage) Remove(ctx context.Context, namespace *types.Namespace) error {
+
+	if err := s.checkNamespaceExists(namespace); err != nil {
+		return err
 	}
+
+	delete(s.data, namespace.Meta.Name)
 	return nil
 }
 
@@ -77,4 +83,29 @@ func newNamespaceStorage() *NamespaceStorage {
 	s := new(NamespaceStorage)
 	s.data = make(map[string]*types.Namespace)
 	return s
+}
+
+func (s *NamespaceStorage) checkNamespaceArgument(namespace *types.Namespace) error {
+	if namespace == nil {
+		return errors.New(store.ErrStructArgIsNil)
+	}
+
+	if namespace.Meta.Name == "" {
+		return errors.New(store.ErrStructArgIsInvalid)
+	}
+
+	return nil
+}
+
+func (s *NamespaceStorage) checkNamespaceExists(namespace *types.Namespace) error {
+
+	if err := s.checkNamespaceArgument(namespace); err != nil {
+		return err
+	}
+
+	if _, ok := s.data[namespace.Meta.Name]; !ok {
+		return errors.New(store.ErrEntityNotFound)
+	}
+
+	return nil
 }

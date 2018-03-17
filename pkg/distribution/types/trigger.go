@@ -18,8 +18,14 @@
 
 package types
 
-type HookList []Hook
+type TriggerList []Trigger
 
-type Hook struct {
-	Meta Meta
+type Trigger struct {
+	Meta TriggerMeta `json:"meta"`
+}
+
+type TriggerMeta struct {
+	Meta
+	Namespace string `json:"namespace"`
+	Service   string `json:"service"`
 }

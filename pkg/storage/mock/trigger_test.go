@@ -19,26 +19,28 @@
 package mock
 
 import (
+	"context"
+	"reflect"
 	"testing"
 
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
-	"github.com/lastbackend/lastbackend/pkg/storage/store"
-	"reflect"
 	"github.com/lastbackend/lastbackend/pkg/storage/storage"
-	"context"
 	"fmt"
+	"github.com/lastbackend/lastbackend/pkg/storage/store"
 )
 
-func TestRouteStorage_Get(t *testing.T) {
+
+func TestTriggerStorage_Get(t *testing.T) {
 	var (
 		ns1 = "ns1"
-		stg = newRouteStorage()
+		svc = "svc"
+		stg = newTriggerStorage()
 		ctx = context.Background()
-		d   = getRouteAsset(ns1,"test", "")
+		d   = getTriggerAsset(ns1, svc,"test", "")
 	)
 
 	type fields struct {
-		stg storage.Route
+		stg storage.Trigger
 	}
 
 	type args struct {
@@ -50,12 +52,12 @@ func TestRouteStorage_Get(t *testing.T) {
 		name    string
 		fields  fields
 		args    args
-		want    *types.Route
+		want    *types.Trigger
 		wantErr bool
 		err     string
 	}{
 		{
-			"get route info failed",
+			"get trigger info failed",
 			fields{stg},
 			args{ctx, "test2"},
 			&d,
@@ -63,7 +65,7 @@ func TestRouteStorage_Get(t *testing.T) {
 			store.ErrEntityNotFound,
 		},
 		{
-			"get route info successful",
+			"get trigger info successful",
 			fields{stg},
 			args{ctx, "test"},
 			&d,
@@ -73,7 +75,7 @@ func TestRouteStorage_Get(t *testing.T) {
 	}
 
 	if err := stg.Insert(ctx, &d); err != nil {
-		t.Errorf("RouteStorage.Info() storage setup error = %v", err)
+		t.Errorf("TriggerStorage.Info() storage setup error = %v", err)
 		return
 	}
 
@@ -87,51 +89,52 @@ func TestRouteStorage_Get(t *testing.T) {
 
 			if err != nil {
 				if tt.wantErr && tt.err != err.Error() {
-					t.Errorf("RouteStorage.Get() = %v, want %v", err, tt.err)
+					t.Errorf("TriggerStorage.Get() = %v, want %v", err, tt.err)
 					return
 				}
 				return
 			}
 
 			if tt.wantErr {
-				t.Errorf("RouteStorage.Get() error = %v, wantErr %v", err, tt.err)
+				t.Errorf("TriggerStorage.Get() error = %v, wantErr %v", err, tt.err)
 				return
 			}
 
 			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("RouteStorage.Get() = %v, want %v", got, tt.want)
+				t.Errorf("TriggerStorage.Get() = %v, want %v", got, tt.want)
 			}
 
 		})
 	}
 }
 
-func TestRouteStorage_ListByNamespace(t *testing.T) {
+func TestTriggerStorage_ListByNamespace(t *testing.T) {
 	var (
 		ns1 = "ns1"
 		ns2 = "ns2"
-		stg = newRouteStorage()
+		svc = "svc"
+		stg = newTriggerStorage()
 		ctx = context.Background()
-		n1  = getRouteAsset(ns1, "test1", "")
-		n2  = getRouteAsset(ns1,"test2", "")
-		n3  = getRouteAsset(ns2,"test1", "")
-		nl= make(map[string]*types.Route, 0)
+		n1  = getTriggerAsset(ns1, svc, "test1", "")
+		n2  = getTriggerAsset(ns1, svc,"test2", "")
+		n3  = getTriggerAsset(ns2, svc,"test1", "")
+		nl= make(map[string]*types.Trigger, 0)
 	)
 
-	nl0 := map[string]*types.Route{}
+	nl0 := map[string]*types.Trigger{}
 	nl0[n1.Meta.Name] = &n1
 	nl0[n2.Meta.Name] = &n2
 	nl0[n3.Meta.Name] = &n3
 
-	nl1 := map[string]*types.Route{}
+	nl1 := map[string]*types.Trigger{}
 	nl1[n1.Meta.Name] = &n1
 	nl1[n2.Meta.Name] = &n2
 
-	nl2  := map[string]*types.Route{}
+	nl2  := map[string]*types.Trigger{}
 	nl2[n3.Meta.Name] = &n3
 
 	type fields struct {
-		stg storage.Route
+		stg storage.Trigger
 	}
 
 	type args struct {
@@ -143,7 +146,7 @@ func TestRouteStorage_ListByNamespace(t *testing.T) {
 		name    string
 		fields  fields
 		args    args
-		want    map[string]*types.Route
+		want    map[string]*types.Trigger
 		wantErr bool
 	}{
 		{
@@ -171,7 +174,7 @@ func TestRouteStorage_ListByNamespace(t *testing.T) {
 
 	for _, n := range nl0 {
 		if err := stg.Insert(ctx, n); err != nil {
-			t.Errorf("RouteStorage.List() storage setup error = %v", err)
+			t.Errorf("TriggerStorage.List() storage setup error = %v", err)
 			return
 		}
 	}
@@ -180,139 +183,144 @@ func TestRouteStorage_ListByNamespace(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			got, err := stg.ListByNamespace(tt.args.ctx, tt.args.ns)
 			if (err != nil) != tt.wantErr {
-				t.Errorf("RouteStorage.List() error = %v, wantErr %v", err, tt.wantErr)
+				t.Errorf("TriggerStorage.List() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
 			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("RouteStorage.List() = %v, want %v", got, tt.want)
+				t.Errorf("TriggerStorage.List() = %v, want %v", got, tt.want)
 			}
 		})
 	}
 }
 
-func TestRouteStorage_SetState(t *testing.T) {
+func TestTriggerStorage_ListByService(t *testing.T) {
 	var (
-		ns1 = "ns1"
-		stg = newRouteStorage()
-		ctx = context.Background()
-		n1  = getRouteAsset(ns1,"test1", "")
-		n2  = getRouteAsset(ns1,"test1", "")
-		n3  = getRouteAsset(ns1,"test2", "")
-		nl= make([]*types.Route, 0)
+		ns1= "ns1"
+		ns2= "ns2"
+		sv1= "svc1"
+		sv2= "svc2"
+		stg= newTriggerStorage()
+		ctx= context.Background()
+		n1= getTriggerAsset(ns1, sv1, "test1", "")
+		n2= getTriggerAsset(ns1, sv1, "test2", "")
+		n3= getTriggerAsset(ns1, sv2, "test1", "")
+		n4= getTriggerAsset(ns2, sv1, "test1", "")
+		n5= getTriggerAsset(ns2, sv1, "test2", "")
+		nl= make(map[string]*types.Trigger, 0)
 	)
 
-	n2.State.Provision = true
-	n2.State.Destroy = true
+	nl0 := map[string]*types.Trigger{}
+	nl0[n1.Meta.Name] = &n1
+	nl0[n2.Meta.Name] = &n2
+	nl0[n3.Meta.Name] = &n3
+	nl0[n4.Meta.Name] = &n4
+	nl0[n5.Meta.Name] = &n5
 
-	nl0 := append(nl, &n1)
+	nl1 := map[string]*types.Trigger{}
+	nl1[n1.Meta.Name] = &n1
+	nl1[n2.Meta.Name] = &n2
+
+	nl2  := map[string]*types.Trigger{}
+	nl2[n3.Meta.Name] = &n3
+
+	nl3  := map[string]*types.Trigger{}
+	nl3[n4.Meta.Name] = &n4
+	nl3[n5.Meta.Name] = &n5
 
 	type fields struct {
-		stg storage.Route
+		stg storage.Trigger
 	}
 
 	type args struct {
-		ctx  context.Context
-		route *types.Route
+		ctx context.Context
+		ns  string
+		svc string
 	}
 
 	tests := []struct {
 		name    string
 		fields  fields
 		args    args
-		want    *types.Route
+		want    map[string]*types.Trigger
 		wantErr bool
-		err     string
 	}{
 		{
-			"test successful update",
+			"get namespace 1 service 1 list success",
 			fields{stg},
-			args{ctx, &n2},
-			&n2,
+			args{ctx, ns1, sv1},
+			nl1,
 			false,
-			"",
 		},
 		{
-			"test failed update: nil structure",
+			"get namespace 1 service 2 list success",
 			fields{stg},
-			args{ctx, nil},
-			&n1,
-			true,
-			store.ErrStructArgIsNil,
+			args{ctx, ns1, sv2},
+			nl2,
+			false,
 		},
 		{
-			"test failed update: entity not found",
+			"get namespace 2 service 1 list success",
 			fields{stg},
-			args{ctx, &n3},
-			&n1,
-			true,
-			store.ErrEntityNotFound,
+			args{ctx, ns2, sv1},
+			nl3,
+			false,
+		},
+		{
+			"get namespace empty list success",
+			fields{stg},
+			args{ctx, "t", "t"},
+			nl,
+			false,
 		},
 	}
 
 	for _, n := range nl0 {
 		if err := stg.Insert(ctx, n); err != nil {
-			t.Errorf("RouteStorage.List() storage setup error = %v", err)
+			t.Errorf("TriggerStorage.List() storage setup error = %v", err)
 			return
 		}
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			err := tt.fields.stg.SetState(tt.args.ctx, tt.args.route)
-			if err != nil {
-				if !tt.wantErr {
-					t.Errorf("RouteStorage.Update() error = %v, want no error", err.Error())
-					return
-				}
-
-				if tt.wantErr && tt.err != err.Error() {
-					t.Errorf("RouteStorage.Update() error = %v, want %v", err.Error(), tt.err)
-					return
-				}
-
+			got, err := stg.ListByService(tt.args.ctx, tt.args.ns, tt.args.svc)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("TriggerStorage.List() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
-
-			if tt.wantErr {
-				t.Errorf("RouteStorage.Update() error = %v, want %v", err.Error(), tt.err)
-				return
-			}
-
-			got, _ := tt.fields.stg.Get(tt.args.ctx, tt.args.route.Meta.Name)
 			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("RouteStorage.Update() = %v, want %v", got, tt.want)
-				return
+				t.Errorf("TriggerStorage.List() = %v, want %v", got, tt.want)
 			}
-
 		})
 	}
 }
 
-func TestRouteStorage_Insert(t *testing.T) {
+func TestTriggerStorage_Insert(t *testing.T) {
 	var (
 		ns1 = "ns1"
-		stg = newRouteStorage()
+		svc = "svc"
+		stg = newTriggerStorage()
 		ctx = context.Background()
-		n1   = getRouteAsset(ns1,"test", "")
-		n2   = getRouteAsset(ns1,"", "",)
+		n1   = getTriggerAsset(ns1, svc,"test", "")
+		n2   = getTriggerAsset(ns1, svc,"", "",)
 	)
 
 	n2.Meta.Name = ""
 
 	type fields struct {
-		stg storage.Route
+		stg storage.Trigger
 	}
 
 	type args struct {
 		ctx  context.Context
-		route *types.Route
+		trigger *types.Trigger
 	}
 
 	tests := []struct {
 		name    string
 		fields  fields
 		args    args
-		want    *types.Route
+		want    *types.Trigger
 		wantErr bool
 		err     string
 	}{
@@ -344,15 +352,15 @@ func TestRouteStorage_Insert(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			err := tt.fields.stg.Insert(tt.args.ctx, tt.args.route)
+			err := tt.fields.stg.Insert(tt.args.ctx, tt.args.trigger)
 			if err != nil {
 				if !tt.wantErr {
-					t.Errorf("RouteStorage.Insert() error = %v, want no error", err.Error())
+					t.Errorf("TriggerStorage.Insert() error = %v, want no error", err.Error())
 					return
 				}
 
 				if tt.wantErr && tt.err != err.Error() {
-					t.Errorf("RouteStorage.Insert() error = %v, want %v", err.Error(), tt.err)
+					t.Errorf("TriggerStorage.Insert() error = %v, want %v", err.Error(), tt.err)
 					return
 				}
 
@@ -360,40 +368,41 @@ func TestRouteStorage_Insert(t *testing.T) {
 			}
 
 			if tt.wantErr {
-				t.Errorf("RouteStorage.Insert() error = %v, want %v", err, tt.err)
+				t.Errorf("TriggerStorage.Insert() error = %v, want %v", err, tt.err)
 				return
 			}
 		})
 	}
 }
 
-func TestRouteStorage_Update(t *testing.T) {
+func TestTriggerStorage_Update(t *testing.T) {
 	var (
 		ns1 = "ns1"
-		stg = newRouteStorage()
+		svc = "svc"
+		stg = newTriggerStorage()
 		ctx = context.Background()
-		n1  = getRouteAsset(ns1,"test1", "")
-		n2  = getRouteAsset(ns1,"test1", "test")
-		n3  = getRouteAsset(ns1,"test2", "")
-		nl= make([]*types.Route, 0)
+		n1  = getTriggerAsset(ns1, svc,"test1", "")
+		n2  = getTriggerAsset(ns1, svc,"test1", "test")
+		n3  = getTriggerAsset(ns1, svc,"test2", "")
+		nl= make([]*types.Trigger, 0)
 	)
 
 	nl0 := append(nl, &n1)
 
 	type fields struct {
-		stg storage.Route
+		stg storage.Trigger
 	}
 
 	type args struct {
 		ctx  context.Context
-		route *types.Route
+		trigger *types.Trigger
 	}
 
 	tests := []struct {
 		name    string
 		fields  fields
 		args    args
-		want    *types.Route
+		want    *types.Trigger
 		wantErr bool
 		err     string
 	}{
@@ -425,22 +434,22 @@ func TestRouteStorage_Update(t *testing.T) {
 
 	for _, n := range nl0 {
 		if err := stg.Insert(ctx, n); err != nil {
-			t.Errorf("RouteStorage.List() storage setup error = %v", err)
+			t.Errorf("TriggerStorage.List() storage setup error = %v", err)
 			return
 		}
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			err := tt.fields.stg.Update(tt.args.ctx, tt.args.route)
+			err := tt.fields.stg.Update(tt.args.ctx, tt.args.trigger)
 			if err != nil {
 				if !tt.wantErr {
-					t.Errorf("RouteStorage.Update() error = %v, want no error", err.Error())
+					t.Errorf("TriggerStorage.Update() error = %v, want no error", err.Error())
 					return
 				}
 
 				if tt.wantErr && tt.err != err.Error() {
-					t.Errorf("RouteStorage.Update() error = %v, want %v", err.Error(), tt.err)
+					t.Errorf("TriggerStorage.Update() error = %v, want %v", err.Error(), tt.err)
 					return
 				}
 
@@ -448,13 +457,13 @@ func TestRouteStorage_Update(t *testing.T) {
 			}
 
 			if tt.wantErr {
-				t.Errorf("RouteStorage.Update() error = %v, want %v", err, tt.err)
+				t.Errorf("TriggerStorage.Update() error = %v, want %v", err, tt.err)
 				return
 			}
 
-			got, _ := tt.fields.stg.Get(tt.args.ctx, tt.args.route.Meta.Name)
+			got, _ := tt.fields.stg.Get(tt.args.ctx, tt.args.trigger.Meta.Name)
 			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("RouteStorage.Update() = %v, want %v", got, tt.want)
+				t.Errorf("TriggerStorage.Update() = %v, want %v", got, tt.want)
 				return
 			}
 
@@ -462,34 +471,35 @@ func TestRouteStorage_Update(t *testing.T) {
 	}
 }
 
-func TestRouteStorage_Remove(t *testing.T) {
+func TestTriggerStorage_Remove(t *testing.T) {
 	var (
 		ns1 = "ns1"
-		stg = newRouteStorage()
+		svc = "svc"
+		stg = newTriggerStorage()
 		ctx = context.Background()
-		n1  = getRouteAsset(ns1,"test1", "")
-		n2  = getRouteAsset(ns1,"test2", "")
+		n1  = getTriggerAsset(ns1, svc,"test1", "")
+		n2  = getTriggerAsset(ns1, svc,"test2", "")
 	)
 
 	type fields struct {
-		stg storage.Route
+		stg storage.Trigger
 	}
 
 	type args struct {
 		ctx  context.Context
-		route *types.Route
+		trigger *types.Trigger
 	}
 
 	tests := []struct {
 		name    string
 		fields  fields
 		args    args
-		want    *types.Route
+		want    *types.Trigger
 		wantErr bool
 		err     string
 	}{
 		{
-			"test successful route remove",
+			"test successful trigger remove",
 			fields{stg},
 			args{ctx, &n1},
 			&n2,
@@ -497,7 +507,7 @@ func TestRouteStorage_Remove(t *testing.T) {
 			store.ErrEntityNotFound,
 		},
 		{
-			"test failed update: nil route structure",
+			"test failed update: nil trigger structure",
 			fields{stg},
 			args{ctx, nil},
 			&n2,
@@ -505,7 +515,7 @@ func TestRouteStorage_Remove(t *testing.T) {
 			store.ErrStructArgIsNil,
 		},
 		{
-			"test failed update: route not found",
+			"test failed update: trigger not found",
 			fields{stg},
 			args{ctx, &n2},
 			&n1,
@@ -518,15 +528,15 @@ func TestRouteStorage_Remove(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			err := tt.fields.stg.Remove(tt.args.ctx, tt.args.route)
+			err := tt.fields.stg.Remove(tt.args.ctx, tt.args.trigger)
 			if err != nil {
 				if !tt.wantErr {
-					t.Errorf("RouteStorage.Remove() error = %v, want no error", err.Error())
+					t.Errorf("TriggerStorage.Remove() error = %v, want no error", err.Error())
 					return
 				}
 
 				if tt.wantErr && tt.err != err.Error() {
-					t.Errorf("RouteStorage.Remove() error = %v, want %v", err.Error(), tt.err)
+					t.Errorf("TriggerStorage.Remove() error = %v, want %v", err.Error(), tt.err)
 					return
 				}
 
@@ -534,13 +544,13 @@ func TestRouteStorage_Remove(t *testing.T) {
 			}
 
 			if tt.wantErr {
-				t.Errorf("RouteStorage.Remove() error = %v, want %v", err, tt.err)
+				t.Errorf("TriggerStorage.Remove() error = %v, want %v", err, tt.err)
 				return
 			}
 
-			_, err = tt.fields.stg.Get(tt.args.ctx, tt.args.route.Meta.Name)
+			_, err = tt.fields.stg.Get(tt.args.ctx, tt.args.trigger.Meta.Name)
 			if err == nil || tt.err != err.Error() {
-				t.Errorf("RouteStorage.Remove() = %v, want %v", err, tt.want)
+				t.Errorf("TriggerStorage.Remove() = %v, want %v", err, tt.want)
 				return
 			}
 
@@ -548,18 +558,18 @@ func TestRouteStorage_Remove(t *testing.T) {
 	}
 }
 
-func TestRouteStorage_Watch(t *testing.T) {
+func TestTriggerStorage_Watch(t *testing.T) {
 	var (
-		stg = newRouteStorage()
+		stg = newTriggerStorage()
 		ctx = context.Background()
 	)
 
 	type fields struct {
-		stg storage.Route
+		stg storage.Trigger
 	}
 	type args struct {
 		ctx  context.Context
-		route chan *types.Route
+		trigger chan *types.Trigger
 	}
 	tests := []struct {
 		name    string
@@ -570,31 +580,31 @@ func TestRouteStorage_Watch(t *testing.T) {
 		{
 			"check watch",
 			fields{stg},
-			args{ctx, make(chan *types.Route)},
+			args{ctx, make(chan *types.Trigger)},
 			false,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if err := tt.fields.stg.Watch(tt.args.ctx, tt.args.route); (err != nil) != tt.wantErr {
-				t.Errorf("RouteStorage.Watch() error = %v, wantErr %v", err, tt.wantErr)
+			if err := tt.fields.stg.Watch(tt.args.ctx, tt.args.trigger); (err != nil) != tt.wantErr {
+				t.Errorf("TriggerStorage.Watch() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
 	}
 }
 
-func TestRouteStorage_WatchSpec(t *testing.T) {
+func TestTriggerStorage_WatchSpec(t *testing.T) {
 	var (
-		stg = newRouteStorage()
+		stg = newTriggerStorage()
 		ctx = context.Background()
 	)
 
 	type fields struct {
-		stg storage.Route
+		stg storage.Trigger
 	}
 	type args struct {
 		ctx  context.Context
-		route chan *types.Route
+		trigger chan *types.Trigger
 	}
 	tests := []struct {
 		name    string
@@ -605,44 +615,46 @@ func TestRouteStorage_WatchSpec(t *testing.T) {
 		{
 			"check watch",
 			fields{stg},
-			args{ctx, make(chan *types.Route)},
+			args{ctx, make(chan *types.Trigger)},
 			false,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if err := tt.fields.stg.WatchSpec(tt.args.ctx, tt.args.route); (err != nil) != tt.wantErr {
-				t.Errorf("RouteStorage.Watch() error = %v, wantErr %v", err, tt.wantErr)
+			if err := tt.fields.stg.WatchSpec(tt.args.ctx, tt.args.trigger); (err != nil) != tt.wantErr {
+				t.Errorf("TriggerStorage.Watch() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
 	}
 }
 
-func Test_newRouteStorage(t *testing.T) {
+func Test_newTriggerStorage(t *testing.T) {
 	tests := []struct {
 		name string
-		want storage.Route
+		want storage.Trigger
 	}{
 		{"initialize storage",
-			newRouteStorage(),
+			newTriggerStorage(),
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := newRouteStorage(); !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("newRouteStorage() = %v, want %v", got, tt.want)
+			if got := newTriggerStorage(); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("newTriggerStorage() = %v, want %v", got, tt.want)
 			}
 		})
 	}
 }
 
-func getRouteAsset(namespace, name, desc string) types.Route {
 
-	var n = types.Route{}
+func getTriggerAsset(namespace, service, name, desc string) types.Trigger {
 
-	n.Meta.Name = fmt.Sprintf("%s:%s", namespace,name)
+	var n = types.Trigger{}
+
+	n.Meta.Name = fmt.Sprintf("%s:%s:%s", namespace,service,name)
 	n.Meta.Namespace = namespace
+	n.Meta.Service = service
 	n.Meta.Description = desc
 
 	return n
