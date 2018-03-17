@@ -2,7 +2,7 @@
 // Last.Backend LLC CONFIDENTIAL
 // __________________
 //
-// [2014] - [2017] Last.Backend LLC
+// [2014] - [2018] Last.Backend LLC
 // All Rights Reserved.
 //
 // NOTICE:  All information contained herein is, and remains
@@ -16,24 +16,4 @@
 // from Last.Backend LLC.
 //
 
-package client
-
-import (
-	"context"
-
-	"github.com/lastbackend/lastbackend/pkg/api/client/interfaces"
-	"github.com/lastbackend/lastbackend/pkg/api/views/v1"
-)
-
-type NamespaceClient struct {
-	interfaces.Namespace
-}
-
-func (s *NamespaceClient) List(ctx context.Context) (*v1.NamespaceList, error) {
-	return nil, nil
-}
-
-func newNamespaceClient() *NamespaceClient {
-	s := new(NamespaceClient)
-	return s
-}
+package cluster

@@ -2,7 +2,7 @@
 // Last.Backend LLC CONFIDENTIAL
 // __________________
 //
-// [2014] - [2017] Last.Backend LLC
+// [2014] - [2018] Last.Backend LLC
 // All Rights Reserved.
 //
 // NOTICE:  All information contained herein is, and remains
@@ -16,9 +16,11 @@
 // from Last.Backend LLC.
 //
 
-package mock
+package core
 
 import (
+	"context"
+
 	"github.com/lastbackend/lastbackend/pkg/api/client/interfaces"
 )
 
@@ -33,7 +35,8 @@ func (s *Client) Namespace() interfaces.Namespace {
 	return s.NamespaceClient
 }
 
-func New() (*Client, error) {
+func New(ctx context.Context) (*Client, error) {
+
 	s := new(Client)
 
 	s.NamespaceClient = newNamespaceClient()

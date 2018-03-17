@@ -16,30 +16,34 @@
 // from Last.Backend LLC.
 //
 
-package mock
+package core
 
 import (
 	"context"
-
-	"github.com/lastbackend/lastbackend/pkg/api/client/interfaces"
-	"github.com/lastbackend/lastbackend/pkg/api/views/v1"
+	"io/ioutil"
+	"net/http"
 )
 
-type NamespaceClient struct {
-	data map[string]*v1.Namespace
-	interfaces.Namespace
+type Request struct {
+	ctx context.Context
 }
 
-func (s *NamespaceClient) List(ctx context.Context) (*v1.NamespaceList, error) {
-	list := make(v1.NamespaceList, 0)
-	for _, ns := range s.data {
-		list = append(list, ns)
+func (r *Request) Get() ([]byte, error) {
+
+	res, err := http.Get(r.ctx.Value("host").(string))
+	if err != nil {
+		return nil, err
 	}
-	return &list, nil
+	defer res.Body.Close()
+
+	body, err := ioutil.ReadAll(res.Body)
+	if err != nil {
+		return nil, err
+	}
+
+	return body, nil
 }
 
-func newNamespaceClient() *NamespaceClient {
-	s := new(NamespaceClient)
-	s.data = make(map[string]*v1.Namespace)
-	return s
+func NewRequest(ctx context.Context) *Request {
+	return &Request{ctx}
 }

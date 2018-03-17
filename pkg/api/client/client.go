@@ -19,14 +19,11 @@
 package client
 
 import (
-	"github.com/lastbackend/lastbackend/pkg/api/client/client"
-	"github.com/lastbackend/lastbackend/pkg/api/client/mock"
+	"context"
+
+	"github.com/lastbackend/lastbackend/pkg/api/client/core"
 )
 
-func New() (Client, error) {
-	return client.New()
-}
-
-func Mock() (Client, error) {
-	return mock.New()
+func New(ctx context.Context) (IClient, error) {
+	return core.New(ctx)
 }

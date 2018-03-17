@@ -30,13 +30,11 @@ var CreateWorkspace = &cobra.Command{
 	Use:   "create",
 	Short: "Create new Workspace",
 	Run: func(cmd *cobra.Command, args []string) {
-
 		if len(args) != 1 {
 			cmd.Help()
 			return
 		}
-
-		CreateCmd(args[0], Desc)
+		//CreateCmd(args[0], Desc)
 	},
 }
 
@@ -52,11 +50,10 @@ var InfoWorkspace = &cobra.Command{
 	Use:   "info",
 	Short: "Get Workspace info by Name, if without Name - get current Workspace info",
 	Run: func(cmd *cobra.Command, args []string) {
-
 		if len(args) != 1 {
-			CurrentCmd("")
+			//CurrentCmd("")
 		} else {
-			CurrentCmd(args[0])
+			//CurrentCmd(args[0])
 		}
 	},
 }
@@ -65,13 +62,11 @@ var RemoveWorkspace = &cobra.Command{
 	Use:   "remove",
 	Short: "Remove Workspace by Name",
 	Run: func(cmd *cobra.Command, args []string) {
-
 		if len(args) != 1 {
 			cmd.Help()
 			return
 		}
-
-		RemoveCmd(args[0])
+		//RemoveCmd(args[0])
 	},
 }
 
@@ -79,12 +74,10 @@ var SelectWorkspace = &cobra.Command{
 	Use:   "select",
 	Short: "Select to the Workspace",
 	Run: func(cmd *cobra.Command, args []string) {
-
 		if len(args) != 1 {
 			cmd.Help()
 			return
 		}
-
-		SelectCmd(args[0])
+		//SelectCmd(args[0])
 	},
 }

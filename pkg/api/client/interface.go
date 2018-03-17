@@ -22,6 +22,10 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/api/client/interfaces"
 )
 
-type Client interface {
+type Request interface {
+	Get()
+}
+
+type IClient interface {
 	Namespace() interfaces.Namespace
 }

@@ -17,37 +17,3 @@
 //
 
 package cluster
-
-import (
-	c "github.com/lastbackend/lastbackend/pkg/cli/context"
-	v "github.com/lastbackend/lastbackend/pkg/cli/view"
-	e "github.com/lastbackend/lastbackend/pkg/distribution/errors"
-)
-
-func List() (*v.ClusterList, error) {
-
-	var (
-		err      error
-		http     = c.Get().GetHttpClient()
-		er       = new(e.Http)
-		response = new(v.ClusterList)
-	)
-
-	_, _, err = http.
-		GET("/cluster").
-		AddHeader("Content-Type", "application/json").
-		Request(response, er)
-	if err != nil {
-		return nil, e.UnknownMessage
-	}
-
-	if er.Code == 401 {
-		return nil, e.NotLoggedMessage
-	}
-
-	if er.Code != 0 {
-		return nil, e.New(er.Message)
-	}
-
-	return response, nil
-}
