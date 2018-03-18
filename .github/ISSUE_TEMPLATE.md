@@ -2,7 +2,7 @@
 [issue description]
 
 ##### Version
-[`$ deploy version`]
+[`$ lb version`]
 
 ##### How To Reproduce
 1. [step 1]
