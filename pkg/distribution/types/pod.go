@@ -21,6 +21,7 @@ package types
 import (
 	"sync"
 	"time"
+	"fmt"
 )
 
 const PodStepInitialized = "initialized"
@@ -71,7 +72,14 @@ type PodMeta struct {
 	Endpoint string `json:"endpoint" yaml:"endpoint"`
 }
 
+type PodSpec struct {
+	State    SpecState    `json:"state"`
+	Template SpecTemplate `json:"spec" yaml:"spec"`
+}
+
 type PodState struct {
+	// Pod state ready
+	Ready bool `json:"ready" yaml:"ready"`
 	// Pod state scheduled
 	Scheduled bool `json:"scheduled" yaml:"scheduled"`
 	// Pod state provision
@@ -187,6 +195,13 @@ func NewPod() *Pod {
 	pod.Status.Steps = make(PodSteps, 0)
 	pod.Status.Containers = make(map[string]*PodContainer, 0)
 	return pod
+}
+
+func (p *Pod) SelfLink() string {
+	if p.Meta.SelfLink == "" {
+		p.Meta.SelfLink = fmt.Sprintf("%s:%s:%s:%s", p.Meta.Namespace, p.Meta.Service, p.Meta.Deployment, p.Meta.Name)
+	}
+	return p.Meta.SelfLink
 }
 
 func (p *Pod) MarkAsInitialized() {

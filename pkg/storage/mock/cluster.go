@@ -59,6 +59,12 @@ func (s *ClusterStorage) Update(ctx context.Context, cluster *types.Cluster) err
 	return nil
 }
 
+// Clear database stare
+func (s *ClusterStorage) Clear(ctx context.Context) error {
+	s.data = types.Cluster{}
+	return nil
+}
+
 // newClusterStorage - return new mock cluster interface
 func newClusterStorage() *ClusterStorage {
 	s := new(ClusterStorage)

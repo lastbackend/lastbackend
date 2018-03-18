@@ -19,39 +19,153 @@
 package mock
 
 import (
-	"context"
-	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 	"github.com/lastbackend/lastbackend/pkg/storage/storage"
 	"github.com/lastbackend/lastbackend/pkg/storage/store"
+	"fmt"
+	"strings"
+	"context"
+	"github.com/lastbackend/lastbackend/pkg/distribution/types"
+	"github.com/lastbackend/lastbackend/pkg/distribution/errors"
 )
 
-const volumeStorage string = "volumes"
-
-// Volume Service type for interface in interfaces folder
 type VolumeStorage struct {
 	storage.Volume
+	data map[string]*types.Volume
 }
 
-func (s *VolumeStorage) GetByID(ctx context.Context, id string) (*types.Volume, error) {
-	return new(types.Volume), nil
+// Get volume by name
+func (s *VolumeStorage) Get(ctx context.Context, namespace, name string) (*types.Volume, error) {
+
+	if ns, ok := s.data[s.keyCreate(namespace, name)]; ok {
+		return ns, nil
+	}
+	return nil, errors.New(store.ErrEntityNotFound)
 }
 
-func (s *VolumeStorage) ListByProject(ctx context.Context, id string) ([]*types.Volume, error) {
-	return make([]*types.Volume, 0), nil
+// Get volumes by namespace name
+func (s *VolumeStorage) ListByNamespace(ctx context.Context, namespace string) (map[string]*types.Volume, error) {
+	list := make(map[string]*types.Volume, 0)
+
+	prefix := fmt.Sprintf("%s:", namespace)
+	for _, d := range s.data {
+
+		if strings.HasPrefix(s.keyGet(d), prefix) {
+			list[s.keyGet(d)] = d
+		}
+	}
+
+	return list, nil
 }
 
-// Insert new volume into storage
+// Update volume state
+func (s *VolumeStorage) SetState(ctx context.Context, volume *types.Volume) error {
+	if err := s.checkVolumeExists(volume); err != nil {
+		return err
+	}
+
+	s.data[s.keyGet(volume)].State = volume.State
+	return nil
+}
+
+// Insert new volume
 func (s *VolumeStorage) Insert(ctx context.Context, volume *types.Volume) error {
+
+	if err := s.checkVolumeArgument(volume); err != nil {
+		return err
+	}
+
+	s.data[s.keyGet(volume)] = volume
+
 	return nil
 }
 
-// Remove build model
-func (s *VolumeStorage) Remove(ctx context.Context, id string) error {
+// Update volume info
+func (s *VolumeStorage) Update(ctx context.Context, volume *types.Volume) error {
+
+	if err := s.checkVolumeExists(volume); err != nil {
+		return err
+	}
+
+	s.data[s.keyGet(volume)] = volume
+
 	return nil
 }
 
-func newVolumeStorage(config store.Config) *VolumeStorage {
+// Remove volume from storage
+func (s *VolumeStorage) Remove(ctx context.Context, volume *types.Volume) error {
+
+	if err := s.checkVolumeExists(volume); err != nil {
+		return err
+	}
+
+	delete(s.data, s.keyGet(volume))
+
+	return nil
+}
+
+// Watch volume changes
+func (s *VolumeStorage) Watch(ctx context.Context, volume chan *types.Volume) error {
+	return nil
+}
+
+// Watch volume spec changes
+func (s *VolumeStorage) WatchSpec(ctx context.Context, volume chan *types.Volume) error {
+	return nil
+}
+
+// Watch volume state changes
+func (s *VolumeStorage) WatchState(ctx context.Context, volume chan *types.Volume) error {
+	return nil
+}
+
+// Clear volume storage
+func (s *VolumeStorage) Clear(ctx context.Context) error {
+	s.data = make(map[string]*types.Volume)
+	return nil
+}
+
+// keyCreate util function
+func (s *VolumeStorage) keyCreate (namespace, name string) string {
+	return fmt.Sprintf("%s:%s", namespace, name)
+}
+
+// keyGet util function
+func (s *VolumeStorage) keyGet(v *types.Volume) string {
+	return v.SelfLink()
+}
+
+// newVolumeStorage returns new storage
+func newVolumeStorage() *VolumeStorage {
 	s := new(VolumeStorage)
+	s.data = make(map[string]*types.Volume)
 	return s
+}
+
+// checkVolumeArgument - check if argument is valid for manipulations
+func (s *VolumeStorage) checkVolumeArgument(volume *types.Volume) error {
+
+	if volume == nil {
+		return errors.New(store.ErrStructArgIsNil)
+	}
+
+	if volume.Meta.Name == "" {
+		return errors.New(store.ErrStructArgIsInvalid)
+	}
+
+	return nil
+}
+
+// checkVolumeArgument - check if volume exists in store
+func (s *VolumeStorage) checkVolumeExists(volume *types.Volume) error {
+
+	if err := s.checkVolumeArgument(volume); err != nil {
+		return err
+	}
+
+	if _, ok := s.data[s.keyGet(volume)]; !ok {
+		return errors.New(store.ErrEntityNotFound)
+	}
+
+	return nil
 }
 

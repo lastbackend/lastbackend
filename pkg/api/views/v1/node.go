@@ -28,7 +28,7 @@ type Node struct {
 }
 
 // NodeList - node map list
-type NodeList []*Node
+type NodeList map[string]*Node
 
 // NodeMeta - node metadata structure
 type NodeMeta struct {

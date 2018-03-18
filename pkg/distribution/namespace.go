@@ -26,14 +26,16 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 	"github.com/lastbackend/lastbackend/pkg/log"
 	"github.com/lastbackend/lastbackend/pkg/storage"
+	"github.com/lastbackend/lastbackend/pkg/distribution/errors"
+	"github.com/lastbackend/lastbackend/pkg/storage/store"
 )
 
 type INamespace interface {
-	List() ([]*types.Namespace, error)
+	List() (map[string]*types.Namespace, error)
 	Get(name string) (*types.Namespace, error)
 	Create(opts *types.NamespaceCreateOptions) (*types.Namespace, error)
 	Update(namespace *types.Namespace, opts *types.NamespaceUpdateOptions) error
-	Remove(id string) error
+	Remove(namespace *types.Namespace) error
 }
 
 type Namespace struct {
@@ -41,7 +43,7 @@ type Namespace struct {
 	storage storage.Storage
 }
 
-func (n *Namespace) List() ([]*types.Namespace, error) {
+func (n *Namespace) List() (map[string]*types.Namespace, error) {
 
 	log.V(logLevel).Debug("Namespace: List: list namespace")
 
@@ -58,16 +60,22 @@ func (n *Namespace) List() ([]*types.Namespace, error) {
 
 func (n *Namespace) Get(name string) (*types.Namespace, error) {
 
-	log.V(logLevel).Debugf("Namespace: Get: get namespace %s", name)
+	log.V(logLevel).Infof("Namespace: Get: get namespace %s", name)
+
+	if name == "" {
+		return nil, errors.New(errors.ArgumentIsEmpty)
+	}
 
 	namespace, err := n.storage.Namespace().Get(n.context, name)
 	if err != nil {
+
+		if err.Error() == store.ErrEntityNotFound {
+			log.V(logLevel).Warnf("Namespace: Get: namespace by name `%s` not found", name)
+			return nil, nil
+		}
+
 		log.V(logLevel).Errorf("Namespace: Get: get namespace by name `%s` err: %s", name, err.Error())
 		return nil, err
-	}
-	if namespace == nil {
-		log.V(logLevel).Warnf("Namespace: Get: namespace by name `%s` not found", name)
-		return nil, nil
 	}
 
 	return namespace, nil
@@ -118,11 +126,11 @@ func (n *Namespace) Update(namespace *types.Namespace, opts *types.NamespaceUpda
 	return nil
 }
 
-func (n *Namespace) Remove(id string) error {
+func (n *Namespace) Remove(namespace *types.Namespace) error {
 
-	log.V(logLevel).Debugf("Namespace: Remove: remove namespace %s", id)
+	log.V(logLevel).Debugf("Namespace: Remove: remove namespace %s", namespace.Meta.Name)
 
-	if err := n.storage.Namespace().Remove(n.context, id); err != nil {
+	if err := n.storage.Namespace().Remove(n.context, namespace); err != nil {
 		log.V(logLevel).Errorf("Namespace: remove namespace err: %s", err.Error())
 		return err
 	}

@@ -40,8 +40,8 @@ import (
 type Runtime struct {
 	process *system.Process
 
-	pc *pod.PodController
-	nc *node.NodeController
+	pc *pod.Controller
+	nc *node.Controller
 
 	active bool
 }

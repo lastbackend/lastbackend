@@ -19,6 +19,9 @@
 package deployment
 
 import (
+	"context"
+	"github.com/lastbackend/lastbackend/pkg/controller/envs"
+	"github.com/lastbackend/lastbackend/pkg/distribution"
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 	"github.com/lastbackend/lastbackend/pkg/log"
 )
@@ -28,29 +31,116 @@ import (
 // Remove deployment if no active pods present and deployment is marked for destroy
 func Provision(d *types.Deployment) error {
 
-	var ()
+	var (
+		stg = envs.Get().GetStorage()
+		replicas int
+	)
 
-	log.Debugf("Deployment Controller: provision deployment: %s/%s", d.Meta.Namespace, d.Meta.Name)
+	log.Debugf("controller:deployment:controller:provision: provision service: %s/%s", d.Meta.Namespace, d.Meta.Service, d.Meta.Name)
+
+	// Get all pods by service
+	pm := distribution.NewPodModel(context.Background(), stg)
+	pl, err := pm.ListByDeployment(d.Meta.Namespace, d.Meta.Service, d.Meta.Name)
+	if err != nil {
+		log.Errorf("controller:deployment:controller:provision: get pod list error: %s", err.Error())
+		return err
+	}
 
 	// Check deployment is marked for destroy
+	if d.Spec.State.Destroy {
+		// Mark pod for destroy
+		for _, p := range pl {
+			if err := pm.Destroy(context.Background(), p); err != nil {
+				log.Errorf("controller:deployment:controller:provision: destroy deployment err: %s", err.Error())
+			}
+		}
+		return nil
+	}
 
-	// Get all pods per deployment
+	// Replicas management
+	for _, p := range pl {
+		if !p.Spec.State.Destroy {
+			replicas++
+		}
+	}
 
-	return nil
-}
+	// Create new replicas
+	if replicas < d.Spec.Replicas {
+		log.Debug("controller:deployment:controller:provision: create new pods")
+		for i := 0; i < (d.Spec.Replicas - replicas); i++ {
+			if _, err := pm.Create(d); err != nil {
+				log.Errorf("controller:deployment:controller:provision: create new pod err: %s", err.Error())
+			}
+		}
+	}
 
-func Create() error {
-	return nil
-}
+	// Remove unneeded replicas
+	if replicas > d.Spec.Replicas {
 
-func Cancel() error {
-	return nil
-}
+		count := replicas-d.Spec.Replicas
+		log.Debug("controller:deployment:controller:provision: remove unneeded pods")
 
-func Remove() error {
-	return nil
-}
+		// Remove pods in error state
+		for _, p := range pl {
 
-func Destroy() error {
+			// check replicas needs to be destroyed
+			if count <= 0 {
+				break
+			}
+
+			if p.State.Error {
+				if err := pm.Destroy(context.Background(), p); err != nil {
+					log.Errorf("controller:service:controller:provision: remove pod err: %s", err.Error())
+					continue
+				}
+				count--
+			}
+
+		}
+
+		// Remove pods in provision state
+		for _, p := range pl {
+
+			// check replicas needs to be destroyed
+			if count <= 0 {
+				break
+			}
+
+			if p.State.Provision {
+				if err := pm.Destroy(context.Background(), p); err != nil {
+					log.Errorf("controller:service:controller:provision: remove pod err: %s", err.Error())
+					continue
+				}
+				count--
+			}
+
+		}
+
+		// Remove ready pods
+		for _, p := range pl {
+
+			// check replicas needs to be destroyed
+			if count <= 0 {
+				break
+			}
+
+			if p.State.Ready {
+				if err := pm.Destroy(context.Background(), p); err != nil {
+					log.Errorf("controller:service:controller:provision: remove pod err: %s", err.Error())
+					continue
+				}
+				count--
+			}
+
+		}
+	}
+
+	// Update deployment state
+	d.State.Provision = true
+	if err := distribution.NewDeploymentModel(context.Background(), stg).SetState(d); err != nil {
+		log.Errorf("controller:deployment:controller:provision: deployment set state err: %s", err.Error())
+		return err
+	}
+
 	return nil
 }

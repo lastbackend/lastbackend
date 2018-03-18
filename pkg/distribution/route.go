@@ -30,11 +30,10 @@ import (
 )
 
 type IRoute interface {
-	ListByService(namespace, service string) ([]*types.Route, error)
-	ListByNamespace(namespace string) ([]*types.Route, error)
 	Get(namespace, name string) (*types.Route, error)
-	Create(namespace *types.Namespace, services []*types.Service, opts *types.RouteOptions) (*types.Route, error)
-	Update(route *types.Route, namespace *types.Namespace, services []*types.Service, opts *types.RouteOptions) (*types.Route, error)
+	ListByNamespace(namespace string) (map[string]*types.Route, error)
+	Create(namespace *types.Namespace, services map[string]*types.Service, opts *types.RouteOptions) (*types.Route, error)
+	Update(route *types.Route, namespace *types.Namespace, services map[string]*types.Service, opts *types.RouteOptions) (*types.Route, error)
 	SetState(route *types.Route, state *types.RouteState) error
 	Remove(route *types.Route) error
 }
@@ -42,36 +41,6 @@ type IRoute interface {
 type Route struct {
 	context context.Context
 	storage storage.Storage
-}
-
-func (n *Route) ListByService(namespace, service string) ([]*types.Route, error) {
-
-	log.V(logLevel).Debug("Route: list route")
-
-	items, err := n.storage.Route().ListByService(n.context, namespace, service)
-	if err != nil {
-		log.V(logLevel).Error("Route: list route err: %s", err)
-		return items, err
-	}
-
-	log.V(logLevel).Debugf("Route: list route result: %d", len(items))
-
-	return items, nil
-}
-
-func (n *Route) ListByNamespace(namespace string) ([]*types.Route, error) {
-
-	log.V(logLevel).Debug("Route: list route")
-
-	items, err := n.storage.Route().ListByNamespace(n.context, namespace)
-	if err != nil {
-		log.V(logLevel).Error("Route: list route err: %s", err)
-		return items, err
-	}
-
-	log.V(logLevel).Debugf("Route: list route result: %d", len(items))
-
-	return items, nil
 }
 
 func (n *Route) Get(namespace, name string) (*types.Route, error) {
@@ -87,7 +56,22 @@ func (n *Route) Get(namespace, name string) (*types.Route, error) {
 	return item, nil
 }
 
-func (n *Route) Create(namespace *types.Namespace, services []*types.Service, opts *types.RouteOptions) (*types.Route, error) {
+func (n *Route) ListByNamespace(namespace string) (map[string]*types.Route, error) {
+
+	log.V(logLevel).Debug("Route: list route")
+
+	items, err := n.storage.Route().ListByNamespace(n.context, namespace)
+	if err != nil {
+		log.V(logLevel).Error("Route: list route err: %s", err)
+		return items, err
+	}
+
+	log.V(logLevel).Debugf("Route: list route result: %d", len(items))
+
+	return items, nil
+}
+
+func (n *Route) Create(namespace *types.Namespace, services map[string]*types.Service, opts *types.RouteOptions) (*types.Route, error) {
 
 	log.V(logLevel).Debugf("Route: create route %#v", opts)
 
@@ -115,7 +99,7 @@ func (n *Route) Create(namespace *types.Namespace, services []*types.Service, op
 		ss[service.Meta.Name] = service
 	}
 
-	//route.Rules = make([]*types.RouteRule, 0)
+	//route.Rules = make(map[string]*types.RouteRule, 0)
 	//for _, rule := range opts.Rules {
 	//	route.Rules = append(route.Rules, &types.RouteRule{
 	//		Service:  *rule.Service,
@@ -133,7 +117,7 @@ func (n *Route) Create(namespace *types.Namespace, services []*types.Service, op
 	return &route, nil
 }
 
-func (n *Route) Update(route *types.Route, namespace *types.Namespace, services []*types.Service, opts *types.RouteOptions) (*types.Route, error) {
+func (n *Route) Update(route *types.Route, namespace *types.Namespace, services map[string]*types.Service, opts *types.RouteOptions) (*types.Route, error) {
 
 	log.V(logLevel).Debugf("Route: update route %s", route.Meta.Name)
 
@@ -144,12 +128,7 @@ func (n *Route) Update(route *types.Route, namespace *types.Namespace, services 
 	route.State.Provision = true
 	route.Meta.Hash = generator.GenerateRandomString(5)
 
-	ss := make(map[string]*types.Service)
-	for _, service := range services {
-		ss[service.Meta.Name] = service
-	}
-
-	//route.Rules = make([]*types.RouteRule, 0)
+	//route.Rules = make(map[string]*types.RouteRule, 0)
 	//for _, rule := range opts.Rules {
 	//
 	//	var svc *types.Service

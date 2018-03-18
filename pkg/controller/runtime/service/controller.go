@@ -25,49 +25,53 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/log"
 )
 
-type ServiceController struct {
+type Controller struct {
 	services chan *types.Service
 	active   bool
 }
 
-func (sc *ServiceController) Watch() {
+// Watch services spec changes
+func (sc *Controller) Watch() {
+
 	var (
 		stg = envs.Get().GetStorage()
 	)
 
-	log.Debug("ServiceController: start watch")
+	log.Debug("controller:service:controller: start watch service spec")
 	go func() {
 		for {
 			select {
 			case s := <-sc.services:
 				{
 					if !sc.active {
-						log.Debug("ServiceController: skip management course it is in slave mode")
+						log.Debug("controller:service:controller: skip management course it is in slave mode")
 						continue
 					}
 
 					if s == nil {
-						log.Debug("ServiceController: skip because service is nil")
+						log.Debug("controller:service:controller: skip because service is nil")
 						continue
 					}
 
-					log.Debugf("Service needs to be provisioned: %s:%s", s.Meta.Namespace, s.Meta.Name)
+					log.Debugf("controller:service:controller: Service needs to be provisioned: %s:%s", s.Meta.Namespace, s.Meta.Name)
 					if err := Provision(s); err != nil {
-						log.Errorf("Error: ServiceController: Service provision: %s", err.Error())
+						log.Errorf("controller:service:controller: service provision: %s err: %s", s.Meta.Name, err.Error())
 					}
 				}
 			}
 		}
 	}()
 
-	stg.Service().SpecWatch(context.Background(), sc.services)
+	stg.Service().WatchSpec(context.Background(), sc.services)
 }
 
-func (sc *ServiceController) Pause() {
+// Pause service controller because not lead
+func (sc *Controller) Pause() {
 	sc.active = false
 }
 
-func (sc *ServiceController) Resume() {
+// Resume service controller management
+func (sc *Controller) Resume() {
 
 	var (
 		stg = envs.Get().GetStorage()
@@ -75,30 +79,31 @@ func (sc *ServiceController) Resume() {
 
 	sc.active = true
 
-	log.Debug("Service: start check services states")
+	log.Debug("controller:service:controller:resume start check services states")
 	nss, err := stg.Namespace().List(context.Background())
 	if err != nil {
-		log.Errorf("Service: Get namespaces list err: %s", err.Error())
+		log.Errorf("controller:service:controller:resume get namespaces list err: %s", err.Error())
 	}
 
 	for _, ns := range nss {
 		svcs, err := stg.Service().ListByNamespace(context.Background(), ns.Meta.Name)
 		if err != nil {
-			log.Errorf("Service: Get services list err: %s", err.Error())
+			log.Errorf("controller:service:controller:resume get services list err: %s", err.Error())
 		}
 
 		for _, svc := range svcs {
 			svc, err := stg.Service().Get(context.Background(), svc.Meta.Namespace, svc.Meta.Name)
 			if err != nil {
-				log.Errorf("Service: Get service err: %s", err.Error())
+				log.Errorf("controller:service:controller:resume get service err: %s", err.Error())
 			}
 			sc.services <- svc
 		}
 	}
 }
 
-func NewServiceController(_ context.Context) *ServiceController {
-	sc := new(ServiceController)
+// NewServiceController return new controller instance
+func NewServiceController(_ context.Context) *Controller {
+	sc := new(Controller)
 	sc.active = false
 	sc.services = make(chan *types.Service)
 	return sc

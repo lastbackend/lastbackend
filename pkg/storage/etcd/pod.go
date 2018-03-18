@@ -37,15 +37,10 @@ type PodStorage struct {
 	storage.Pod
 }
 
-func (s *PodStorage) Get(ctx context.Context, app, name string) (*types.Pod, error) {
+func (s *PodStorage) Get(ctx context.Context, namespace, service, deployment, name string) (*types.Pod, error) {
 
-	log.V(logLevel).Debugf("Storage: Pod: get by name: %s in app: %s", name, app)
+	log.V(logLevel).Debugf("Storage: Pod: get by name: %s ", name)
 
-	if len(app) == 0 {
-		err := errors.New("app can not be empty")
-		log.V(logLevel).Errorf("Storage: Pod: get pod err: %s", err.Error())
-		return nil, err
-	}
 
 	if len(name) == 0 {
 		err := errors.New("name can not be empty")
@@ -55,8 +50,8 @@ func (s *PodStorage) Get(ctx context.Context, app, name string) (*types.Pod, err
 
 	var (
 		pod            = new(types.Pod)
-		podName        = strings.Replace(pod.Meta.Name, ":", "-", -1)
-		filterEndpoint = `\b.+` + endpointStorage + `\/` + podName + `\..+\b`
+		//podName        = strings.Replace(pod.Meta.Name, ":", "-", -1)
+		//filterEndpoint = `\b.+` + podStorage + `\/` + podName + `\..+\b`
 		endpoints      = make(map[string][]string)
 	)
 
@@ -67,7 +62,7 @@ func (s *PodStorage) Get(ctx context.Context, app, name string) (*types.Pod, err
 	}
 	defer destroy()
 
-	keyMeta := keyCreate(podStorage, app, name)
+	keyMeta := keyCreate(podStorage, name)
 	if err := client.Get(ctx, keyMeta, pod); err != nil {
 		log.V(logLevel).Errorf("Storage: Pod: get pod `%s` err: %s", name, err.Error())
 		return nil, err
@@ -77,11 +72,11 @@ func (s *PodStorage) Get(ctx context.Context, app, name string) (*types.Pod, err
 		return nil, errors.New(store.ErrEntityNotFound)
 	}
 
-	keyEndpoints := keyCreate(endpointStorage)
-	if err := client.Map(ctx, keyEndpoints, filterEndpoint, endpoints); err != nil && err.Error() != store.ErrEntityNotFound {
-		log.V(logLevel).Errorf("Storage: Pod: map endpoints err: %s", err.Error())
-		return nil, err
-	}
+	//keyEndpoints := keyCreate(podStorage)
+	//if err := client.Map(ctx, keyEndpoints, filterEndpoint, endpoints); err != nil && err.Error() != store.ErrEntityNotFound {
+	//	log.V(logLevel).Errorf("Storage: Pod: map endpoints err: %s", err.Error())
+	//	return nil, err
+	//}
 
 	for pod.Meta.Endpoint = range endpoints {
 		break
@@ -90,7 +85,7 @@ func (s *PodStorage) Get(ctx context.Context, app, name string) (*types.Pod, err
 	return pod, nil
 }
 
-func (s *PodStorage) ListByNamespace(ctx context.Context, app string) ([]*types.Pod, error) {
+func (s *PodStorage) ListByNamespace(ctx context.Context, app string) (map[string]*types.Pod, error) {
 
 	log.V(logLevel).Debugf("Storage: Pod: get pods list in app: %s", app)
 
@@ -107,7 +102,7 @@ func (s *PodStorage) ListByNamespace(ctx context.Context, app string) ([]*types.
 	}
 	defer destroy()
 
-	pods := make([]*types.Pod, 0)
+	pods := make(map[string]*types.Pod, 0)
 	keyList := keyCreate(podStorage, app)
 	if err := client.List(ctx, keyList, "", &pods); err != nil {
 		log.V(logLevel).Errorf("Storage: Pod: map pods in app `%s` err: %s", app, err.Error())
@@ -116,9 +111,9 @@ func (s *PodStorage) ListByNamespace(ctx context.Context, app string) ([]*types.
 
 	for _, pod := range pods {
 		name := strings.Replace(pod.Meta.Name, ":", "-", -1)
-		filterEndpoint := `\b.+` + endpointStorage + `\/` + name + `\..+\b`
+		filterEndpoint := `\b.+` + podStorage + `\/` + name + `\..+\b`
 		endpoints := make(map[string][]string)
-		keyEndpoints := keyCreate(endpointStorage)
+		keyEndpoints := keyCreate(podStorage)
 		if err := client.Map(ctx, keyEndpoints, filterEndpoint, endpoints); err != nil && err.Error() != store.ErrEntityNotFound {
 			log.V(logLevel).Errorf("Storage: Pod: map endpoints err: %s", err.Error())
 			return nil, err
@@ -132,7 +127,7 @@ func (s *PodStorage) ListByNamespace(ctx context.Context, app string) ([]*types.
 	return pods, nil
 }
 
-func (s *PodStorage) ListByService(ctx context.Context, namespace, service string) ([]*types.Pod, error) {
+func (s *PodStorage) ListByService(ctx context.Context, namespace, service string) (map[string]*types.Pod, error) {
 
 	log.V(logLevel).Debugf("Storage: Pod: get pods list by service: %s in app: %s", service, namespace)
 
@@ -155,7 +150,7 @@ func (s *PodStorage) ListByService(ctx context.Context, namespace, service strin
 	}
 	defer destroy()
 
-	pods := make([]*types.Pod, 0)
+	pods := make(map[string]*types.Pod, 0)
 	keyServiceList := keyCreate(podStorage, namespace, service)
 	if err := client.List(ctx, keyServiceList, "", &pods); err != nil {
 		log.V(logLevel).Errorf("Storage: Pod: pods list err: %s", err.Error())
@@ -163,9 +158,9 @@ func (s *PodStorage) ListByService(ctx context.Context, namespace, service strin
 	}
 
 	for _, pod := range pods {
-		filterEndpoint := `\b.+` + endpointStorage + `\/` + pod.Meta.Name + `-` + namespace + `\..+\b`
+		filterEndpoint := `\b.+` + podStorage + `\/` + pod.Meta.Name + `-` + namespace + `\..+\b`
 		endpoints := make(map[string][]string)
-		keyEndpoints := keyCreate(endpointStorage)
+		keyEndpoints := keyCreate(podStorage)
 		if err := client.Map(ctx, keyEndpoints, filterEndpoint, endpoints); err != nil && err.Error() != store.ErrEntityNotFound {
 			log.V(logLevel).Errorf("Storage: Pod: map endpoints err: %s", err.Error())
 			return nil, err
@@ -269,7 +264,7 @@ func (s *PodStorage) Watch(ctx context.Context, pod chan *types.Pod) error {
 
 	log.V(logLevel).Debug("Storage: Pod: watch pod")
 
-	const filter = `\b\/` + podStorage + `\/(.+)/(.+)\b`
+	const filter = `\b\/` + podStorage + `\/(.+)\b`
 	client, destroy, err := getClient(ctx)
 	if err != nil {
 		log.V(logLevel).Errorf("Storage: Pod: create client err: %s", err.Error())
@@ -285,7 +280,7 @@ func (s *PodStorage) Watch(ctx context.Context, pod chan *types.Pod) error {
 			return
 		}
 
-		if p, err := s.Get(ctx, keys[1], keys[2]); err == nil {
+		if p, err := s.Get(ctx, keys[1], keys[2], keys[3], keys[4]); err == nil {
 			pod <- p
 		}
 	}

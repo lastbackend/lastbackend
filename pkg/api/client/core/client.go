@@ -16,37 +16,30 @@
 // from Last.Backend LLC.
 //
 
-package mock
+package core
 
 import (
 	"context"
-	"github.com/lastbackend/lastbackend/pkg/distribution/types"
-	"github.com/lastbackend/lastbackend/pkg/storage/storage"
+
+	"github.com/lastbackend/lastbackend/pkg/api/client/interfaces"
 )
 
-const hookStorage string = "hooks"
-
-// Service Hook type for interface in interfaces folder
-type HookStorage struct {
-	storage.Hook
+type Client struct {
+	*NamespaceClient
 }
 
-// Get hooks by id
-func (s *HookStorage) Get(ctx context.Context, id string) (*types.Hook, error) {
-	return new(types.Hook), nil
+func (s *Client) Namespace() interfaces.Namespace {
+	if s == nil {
+		return nil
+	}
+	return s.NamespaceClient
 }
 
-// Insert new hook into storage
-func (s *HookStorage) Insert(ctx context.Context, hook *types.Hook) error {
-	return nil
-}
+func New(ctx context.Context) (*Client, error) {
 
-// Remove hook by id from storage
-func (s *HookStorage) Remove(ctx context.Context, id string) error {
-	return nil
-}
+	s := new(Client)
 
-func newHookStorage() *HookStorage {
-	s := new(HookStorage)
-	return s
+	s.NamespaceClient = newNamespaceClient()
+
+	return s, nil
 }

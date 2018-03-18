@@ -16,13 +16,4 @@
 // from Last.Backend LLC.
 //
 
-package hook
-
-import (
-	"github.com/lastbackend/lastbackend/pkg/util/http"
-	"github.com/lastbackend/lastbackend/pkg/util/http/middleware"
-)
-
-var Routes = []http.Route{
-	{Path: "/hook/{id}", Method: http.MethodPost, Middleware: []http.Middleware{middleware.Context}, Handler: HookExecuteH},
-}
+package cluster

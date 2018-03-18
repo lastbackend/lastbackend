@@ -36,7 +36,7 @@ type Deployment struct {
 	Sources  DeploymentSources      `json:"sources"`
 	State    DeploymentStateInfo    `json:"state"`
 	Replicas DeploymentReplicasInfo `json:"replicas"`
-	Pods     []PodView              `json:"pods"`
+	Pods     map[string]PodView     `json:"pods"`
 }
 
 type DeploymentMeta struct {
@@ -82,11 +82,10 @@ type DeploymentSpec struct {
 	Triggers types.SpecTriggers `json:"triggers"`
 	Replicas int                `json:"replicas"`
 	Selector types.SpecSelector `json:"selector"`
-	Template types.PodSpec      `json:"template"`
+	Template types.SpecTemplate `json:"template"`
 }
 
 type DeploymentStateInfo struct {
-	Active    bool `json:"active"`
 	Provision bool `json:"provision"`
 	Error     bool `json:"error"`
 	Destroy   bool `json:"destroy"`

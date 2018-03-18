@@ -24,7 +24,7 @@ import (
 
 	"github.com/lastbackend/lastbackend/pkg/api/http/cluster"
 	"github.com/lastbackend/lastbackend/pkg/api/http/deployment"
-	"github.com/lastbackend/lastbackend/pkg/api/http/hook"
+	"github.com/lastbackend/lastbackend/pkg/api/http/trigger"
 	"github.com/lastbackend/lastbackend/pkg/api/http/namespace"
 	"github.com/lastbackend/lastbackend/pkg/api/http/node"
 	"github.com/lastbackend/lastbackend/pkg/api/http/route"
@@ -56,7 +56,7 @@ func init() {
 	AddRoutes(route.Routes)
 
 	// Hooks
-	AddRoutes(hook.Routes)
+	AddRoutes(trigger.Routes)
 }
 
 func Listen(host string, port int) error {

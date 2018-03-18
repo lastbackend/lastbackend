@@ -28,8 +28,14 @@ import (
 )
 
 func TestSystemStorage_ProcessSet(t *testing.T) {
+	var (
+		stg = newSystemStorage()
+		ctx = context.Background()
+		p = types.Process{}
+	)
+
 	type fields struct {
-		System storage.System
+		stg storage.System
 	}
 	type args struct {
 		ctx     context.Context
@@ -41,14 +47,21 @@ func TestSystemStorage_ProcessSet(t *testing.T) {
 		args    args
 		wantErr bool
 	}{
-	// TODO: Add test cases.
+		{"dummy test",
+			fields{stg},
+			args{ctx, &p},
+			false,
+		},
 	}
 	for _, tt := range tests {
+
+		if err := stg.Clear(ctx); err != nil {
+			t.Errorf("SystemStorage.ProcessSet() storage setup error = %v", err)
+			return
+		}
+
 		t.Run(tt.name, func(t *testing.T) {
-			s := &SystemStorage{
-				System: tt.fields.System,
-			}
-			if err := s.ProcessSet(tt.args.ctx, tt.args.process); (err != nil) != tt.wantErr {
+			if err := stg.ProcessSet(tt.args.ctx, tt.args.process); (err != nil) != tt.wantErr {
 				t.Errorf("SystemStorage.ProcessSet() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
@@ -56,8 +69,14 @@ func TestSystemStorage_ProcessSet(t *testing.T) {
 }
 
 func TestSystemStorage_Elect(t *testing.T) {
+	var (
+		stg = newSystemStorage()
+		ctx = context.Background()
+		p = types.Process{}
+	)
+
 	type fields struct {
-		System storage.System
+		stg storage.System
 	}
 	type args struct {
 		ctx     context.Context
@@ -67,31 +86,38 @@ func TestSystemStorage_Elect(t *testing.T) {
 		name    string
 		fields  fields
 		args    args
-		want    bool
 		wantErr bool
 	}{
-	// TODO: Add test cases.
+		{"dummy test",
+			fields{stg},
+			args{ctx, &p},
+			false,
+		},
 	}
 	for _, tt := range tests {
+
+		if err := stg.Clear(ctx); err != nil {
+			t.Errorf("SystemStorage.Elect() storage setup error = %v", err)
+			return
+		}
+
 		t.Run(tt.name, func(t *testing.T) {
-			s := &SystemStorage{
-				System: tt.fields.System,
-			}
-			got, err := s.Elect(tt.args.ctx, tt.args.process)
-			if (err != nil) != tt.wantErr {
+			if b, err := stg.Elect(tt.args.ctx, tt.args.process); !b || (err != nil) != tt.wantErr {
 				t.Errorf("SystemStorage.Elect() error = %v, wantErr %v", err, tt.wantErr)
-				return
-			}
-			if got != tt.want {
-				t.Errorf("SystemStorage.Elect() = %v, want %v", got, tt.want)
 			}
 		})
 	}
 }
 
 func TestSystemStorage_ElectUpdate(t *testing.T) {
+	var (
+		stg = newSystemStorage()
+		ctx = context.Background()
+		p = types.Process{}
+	)
+
 	type fields struct {
-		System storage.System
+		stg storage.System
 	}
 	type args struct {
 		ctx     context.Context
@@ -103,14 +129,21 @@ func TestSystemStorage_ElectUpdate(t *testing.T) {
 		args    args
 		wantErr bool
 	}{
-	// TODO: Add test cases.
+		{"dummy test",
+			fields{stg},
+			args{ctx, &p},
+			false,
+		},
 	}
 	for _, tt := range tests {
+
+		if err := stg.Clear(ctx); err != nil {
+			t.Errorf("SystemStorage.ElectUpdate() storage setup error = %v", err)
+			return
+		}
+
 		t.Run(tt.name, func(t *testing.T) {
-			s := &SystemStorage{
-				System: tt.fields.System,
-			}
-			if err := s.ElectUpdate(tt.args.ctx, tt.args.process); (err != nil) != tt.wantErr {
+			if err := stg.ElectUpdate(tt.args.ctx, tt.args.process); (err != nil) != tt.wantErr {
 				t.Errorf("SystemStorage.ElectUpdate() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
@@ -118,13 +151,19 @@ func TestSystemStorage_ElectUpdate(t *testing.T) {
 }
 
 func TestSystemStorage_ElectWait(t *testing.T) {
+	var (
+		stg = newSystemStorage()
+		ctx = context.Background()
+		p = types.Process{}
+	)
+
 	type fields struct {
-		System storage.System
+		stg storage.System
 	}
 	type args struct {
 		ctx     context.Context
 		process *types.Process
-		lead    chan bool
+		cn      chan bool
 	}
 	tests := []struct {
 		name    string
@@ -132,15 +171,22 @@ func TestSystemStorage_ElectWait(t *testing.T) {
 		args    args
 		wantErr bool
 	}{
-	// TODO: Add test cases.
+		{"dummy test",
+			fields{stg},
+			args{ctx, &p, make(chan bool)},
+			false,
+		},
 	}
 	for _, tt := range tests {
+
+		if err := stg.Clear(ctx); err != nil {
+			t.Errorf("SystemStorage.ElectUpdate() storage setup error = %v", err)
+			return
+		}
+
 		t.Run(tt.name, func(t *testing.T) {
-			s := &SystemStorage{
-				System: tt.fields.System,
-			}
-			if err := s.ElectWait(tt.args.ctx, tt.args.process, tt.args.lead); (err != nil) != tt.wantErr {
-				t.Errorf("SystemStorage.ElectWait() error = %v, wantErr %v", err, tt.wantErr)
+			if err := stg.ElectWait(tt.args.ctx, tt.args.process, tt.args.cn); (err != nil) != tt.wantErr {
+				t.Errorf("SystemStorage.ElectUpdate() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
 	}
@@ -149,10 +195,13 @@ func TestSystemStorage_ElectWait(t *testing.T) {
 func Test_newSystemStorage(t *testing.T) {
 	tests := []struct {
 		name string
-		want *SystemStorage
+		want storage.System
 	}{
-	// TODO: Add test cases.
+		{"initialize storage",
+			newSystemStorage(),
+		},
 	}
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			if got := newSystemStorage(); !reflect.DeepEqual(got, tt.want) {

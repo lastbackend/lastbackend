@@ -19,68 +19,29 @@
 package namespace
 
 import (
+	"context"
 	"fmt"
+	"log"
 
-	c "github.com/lastbackend/lastbackend/pkg/cli/context"
+	"github.com/lastbackend/lastbackend/pkg/api/client"
 	v "github.com/lastbackend/lastbackend/pkg/cli/view"
-	e "github.com/lastbackend/lastbackend/pkg/distribution/errors"
 )
 
 func ListCmd() {
 
-	nCurrent, nsList, err := List()
+	current, list, err := List()
 	if err != nil {
 		fmt.Println(err)
 		return
 	}
 
-	nsList.Print(nCurrent)
+	list.Print(current)
 }
 
 func List() (string, *v.NamespaceList, error) {
 
-	var (
-		err      error
-		http     = c.Get().GetHttpClient()
-		er       = new(e.Http)
-		response = new(v.NamespaceList)
-	)
+	cli, _ := client.New(context.Background())
+	log.Println(cli.Namespace().List(context.Background()))
 
-	_, _, err = http.
-		GET("/namespace").
-		AddHeader("Content-Type", "application/json").
-		Request(response, er)
-	if err != nil {
-		return "", nil, e.UnknownMessage
-	}
-
-	if er.Code == 401 {
-		return "", nil, e.NotLoggedMessage
-	}
-
-	if er.Code == 404 {
-		return "", nil, e.New(er.Message)
-	}
-
-	if er.Code == 500 {
-		return "", nil, e.UnknownMessage
-	}
-
-	if er.Code != 0 {
-		return "", nil, e.New(er.Message)
-	}
-
-	if len(*response) == 0 {
-		return "", nil, e.New("You don't have any workspace")
-	}
-
-	ns, err := Current()
-	if err != nil {
-		return "", nil, err
-	}
-	if ns.Meta != nil {
-		return ns.Meta.Name, response, nil
-	}
-
-	return "", response, nil
+	return "", nil, nil
 }

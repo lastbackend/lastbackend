@@ -22,39 +22,173 @@ import (
 	"context"
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 	"github.com/lastbackend/lastbackend/pkg/storage/storage"
+	"github.com/lastbackend/lastbackend/pkg/storage/store"
+	"github.com/lastbackend/lastbackend/pkg/distribution/errors"
+	"strings"
+	"fmt"
 )
-
-const deploymentStorage string = "deployments"
 
 type DeploymentStorage struct {
 	storage.Deployment
+	data map[string]*types.Deployment
 }
 
 // Get deployment by name
-func (s *DeploymentStorage) Get(ctx context.Context, namespace, name string) (*types.Deployment, error) {
-	return new(types.Deployment), nil
-}
-
-// Get deployments by service name
-func (s *DeploymentStorage) ListByService(ctx context.Context, namespace, service string) ([]*types.Deployment, error) {
-	return make([]*types.Deployment, 0), nil
+func (s *DeploymentStorage) Get(ctx context.Context, namespace, service, name string) (*types.Deployment, error) {
+	if ns, ok := s.data[s.keyCreate(namespace, service, name)]; ok {
+		return ns, nil
+	}
+	return nil, errors.New(store.ErrEntityNotFound)
 }
 
 // Get deployments by namespace name
-func (s *DeploymentStorage) ListByNamespace(ctx context.Context, namespace string) ([]*types.Deployment, error) {
-	return make([]*types.Deployment, 0), nil
+func (s *DeploymentStorage) ListByNamespace(ctx context.Context, namespace string) (map[string]*types.Deployment, error) {
+	list := make(map[string]*types.Deployment, 0)
+
+	prefix := fmt.Sprintf("%s:", namespace)
+	for _, d := range s.data {
+
+		if strings.HasPrefix(s.keyGet(d), prefix) {
+			list[s.keyGet(d)] = d
+		}
+	}
+
+	return list, nil
+}
+
+// Get deployments by service name
+func (s *DeploymentStorage) ListByService(ctx context.Context, namespace, service string) (map[string]*types.Deployment, error) {
+	list := make(map[string]*types.Deployment, 0)
+
+	prefix := fmt.Sprintf("%s:%s:", namespace, service)
+
+	for _, d := range s.data {
+		if strings.HasPrefix(s.keyGet(d), prefix) {
+			list[s.keyGet(d)] = d
+		}
+	}
+
+	return list, nil
 }
 
 // Update deployment state
-func (s *DeploymentStorage) updateState(ctx context.Context, deployment *types.Deployment) error {
+func (s *DeploymentStorage) SetState(ctx context.Context, deployment *types.Deployment) error {
+	if err := s.checkDeploymentExists(deployment); err != nil {
+		return err
+	}
+
+	s.data[s.keyGet(deployment)].State = deployment.State
 	return nil
 }
 
-func (s *DeploymentStorage) SpecWatch(ctx context.Context, deployment chan *types.Deployment) error {
+// Update deployment spec
+func (s *DeploymentStorage) SetSpec(ctx context.Context, deployment *types.Deployment) error {
+	if err := s.checkDeploymentExists(deployment); err != nil {
+		return err
+	}
+
+	s.data[s.keyGet(deployment)].Spec = deployment.Spec
 	return nil
 }
 
+// Insert new deployment
+func (s *DeploymentStorage) Insert(ctx context.Context, deployment *types.Deployment) error {
+
+	if err := s.checkDeploymentArgument(deployment); err != nil {
+		return err
+	}
+
+	s.data[s.keyGet(deployment)] = deployment
+
+	return nil
+}
+
+// Update deployment info
+func (s *DeploymentStorage) Update(ctx context.Context, deployment *types.Deployment) error {
+
+	if err := s.checkDeploymentExists(deployment); err != nil {
+		return err
+	}
+
+	s.data[s.keyGet(deployment)] = deployment
+
+	return nil
+}
+
+// Remove deployment from storage
+func (s *DeploymentStorage) Remove(ctx context.Context, deployment *types.Deployment) error {
+
+	if err := s.checkDeploymentExists(deployment); err != nil {
+		return err
+	}
+
+	delete(s.data, s.keyGet(deployment))
+
+	return nil
+}
+
+// Watch deployment changes
+func (s *DeploymentStorage) Watch(ctx context.Context, deployment chan *types.Deployment) error {
+	return nil
+}
+
+// Watch deployment spec changes
+func (s *DeploymentStorage) WatchSpec(ctx context.Context, deployment chan *types.Deployment) error {
+	return nil
+}
+
+// Watch deployment state changes
+func (s *DeploymentStorage) WatchState(ctx context.Context, deployment chan *types.Deployment) error {
+	return nil
+}
+
+// Clear deployment database
+func (s *DeploymentStorage) Clear(ctx context.Context) error {
+	s.data = make(map[string]*types.Deployment)
+	return nil
+}
+
+// keyCreate util function
+func (s *DeploymentStorage) keyCreate (namespace, service, name string) string {
+	return fmt.Sprintf("%s:%s:%s", namespace, service, name)
+}
+
+// keyGet util function
+func (s *DeploymentStorage) keyGet (d * types.Deployment) string {
+	return d.SelfLink()
+}
+
+// newDeploymentStorage returns new storage
 func newDeploymentStorage() *DeploymentStorage {
 	s := new(DeploymentStorage)
+	s.data = make(map[string]*types.Deployment)
 	return s
+}
+
+// checkDeploymentArgument - check if argument is valid for manipulations
+func (s *DeploymentStorage) checkDeploymentArgument(deployment *types.Deployment) error {
+
+	if deployment == nil {
+		return errors.New(store.ErrStructArgIsNil)
+	}
+
+	if deployment.Meta.Name == "" {
+		return errors.New(store.ErrStructArgIsInvalid)
+	}
+
+	return nil
+}
+
+// checkDeploymentArgument - check if deployment exists in store
+func (s *DeploymentStorage) checkDeploymentExists(deployment *types.Deployment) error {
+
+	if err := s.checkDeploymentArgument(deployment); err != nil {
+		return err
+	}
+
+	if _, ok := s.data[s.keyGet(deployment)]; !ok {
+		return errors.New(store.ErrEntityNotFound)
+	}
+
+	return nil
 }

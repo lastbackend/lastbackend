@@ -25,64 +25,140 @@ import (
 
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 	"github.com/lastbackend/lastbackend/pkg/storage/storage"
+	"github.com/lastbackend/lastbackend/pkg/storage/store"
 )
 
-func TestNamespaceStorage_GetByName(t *testing.T) {
+func TestNamespaceStorage_Get(t *testing.T) {
+	var (
+		stg = newNamespaceStorage()
+		ctx = context.Background()
+		n   = getNamespaceAsset("test", "")
+	)
+
 	type fields struct {
-		Namespace storage.Namespace
+		stg storage.Namespace
 	}
+
 	type args struct {
 		ctx  context.Context
 		name string
 	}
+
 	tests := []struct {
 		name    string
 		fields  fields
 		args    args
 		want    *types.Namespace
 		wantErr bool
+		err     string
 	}{
-	// TODO: Add test cases.
+		{
+			"get namespace info failed",
+			fields{stg},
+			args{ctx, "test2"},
+			&n,
+			true,
+			store.ErrEntityNotFound,
+		},
+		{
+			"get namespace info successful",
+			fields{stg},
+			args{ctx, "test"},
+			&n,
+			false,
+			"",
+		},
 	}
+
 	for _, tt := range tests {
+
+		if err := stg.Clear(ctx); err != nil {
+			t.Errorf("NamespaceStorage.Get() storage setup error = %v", err)
+			return
+		}
+
+		if err := stg.Insert(ctx, &n); err != nil {
+			t.Errorf("NamespaceStorage.Get() storage setup error = %v", err)
+			return
+		}
+
 		t.Run(tt.name, func(t *testing.T) {
-			s := &NamespaceStorage{
-				Namespace: tt.fields.Namespace,
-			}
-			got, err := s.Get(tt.args.ctx, tt.args.name)
-			if (err != nil) != tt.wantErr {
-				t.Errorf("NamespaceStorage.GetByName() error = %v, wantErr %v", err, tt.wantErr)
+
+			got, err := tt.fields.stg.Get(tt.args.ctx, tt.args.name)
+
+			if err != nil {
+				if tt.wantErr && tt.err != err.Error() {
+					t.Errorf("NamespaceStorage.Get() = %v, want %v", err, tt.err)
+					return
+				}
 				return
 			}
-			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("NamespaceStorage.GetByName() = %v, want %v", got, tt.want)
+
+			if tt.wantErr {
+				t.Errorf("NamespaceStorage.Get() error = %v, wantErr %v", err, tt.err)
+				return
 			}
+
+			if !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("NamespaceStorage.Get() = %v, want %v", got, tt.want)
+			}
+
 		})
 	}
 }
 
 func TestNamespaceStorage_List(t *testing.T) {
+	var (
+		stg = newNamespaceStorage()
+		ctx = context.Background()
+		n1  = getNamespaceAsset("test1", "")
+		n2  = getNamespaceAsset("test2", "")
+		nl  = make(map[string]*types.Namespace, 0)
+	)
+
+	nl[n1.Meta.Name] = &n1
+	nl[n2.Meta.Name] = &n2
+
 	type fields struct {
-		Namespace storage.Namespace
+		stg storage.Namespace
 	}
+
 	type args struct {
 		ctx context.Context
 	}
+
 	tests := []struct {
 		name    string
 		fields  fields
 		args    args
-		want    []*types.Namespace
+		want    map[string]*types.Namespace
 		wantErr bool
 	}{
-	// TODO: Add test cases.
+		{
+			"get namespace list success",
+			fields{stg},
+			args{ctx},
+			nl,
+			false,
+		},
 	}
+
 	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			s := &NamespaceStorage{
-				Namespace: tt.fields.Namespace,
+
+		if err := stg.Clear(ctx); err != nil {
+			t.Errorf("NamespaceStorage.List() storage setup error = %v", err)
+			return
+		}
+
+		for _, n := range nl {
+			if err := stg.Insert(ctx, n); err != nil {
+				t.Errorf("NamespaceStorage.List() storage setup error = %v", err)
+				return
 			}
-			got, err := s.List(tt.args.ctx)
+		}
+
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := stg.List(tt.args.ctx)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("NamespaceStorage.List() error = %v, wantErr %v", err, tt.wantErr)
 				return
@@ -95,85 +171,277 @@ func TestNamespaceStorage_List(t *testing.T) {
 }
 
 func TestNamespaceStorage_Insert(t *testing.T) {
+	var (
+		stg = newNamespaceStorage()
+		ctx = context.Background()
+		n1   = getNamespaceAsset("test", "")
+		n2   = getNamespaceAsset("", "",)
+	)
+
 	type fields struct {
-		Namespace storage.Namespace
+		stg storage.Namespace
 	}
+
 	type args struct {
-		ctx       context.Context
+		ctx  context.Context
 		namespace *types.Namespace
 	}
+
 	tests := []struct {
 		name    string
 		fields  fields
 		args    args
+		want    *types.Namespace
 		wantErr bool
+		err     string
 	}{
-	// TODO: Add test cases.
+		{
+			"test successful insert",
+			fields{stg},
+			args{ctx, &n1},
+			&n1,
+			false,
+			"",
+		},
+		{
+			"test failed insert",
+			fields{stg},
+			args{ctx, nil},
+			&n1,
+			true,
+			store.ErrStructArgIsNil,
+		},
+		{
+			"test failed insert",
+			fields{stg},
+			args{ctx, &n2},
+			&n1,
+			true,
+			store.ErrStructArgIsInvalid,
+		},
 	}
+
 	for _, tt := range tests {
+
+		if err := stg.Clear(ctx); err != nil {
+			t.Errorf("NamespaceStorage.Insert() storage setup error = %v", err)
+			return
+		}
+
 		t.Run(tt.name, func(t *testing.T) {
-			s := &NamespaceStorage{
-				Namespace: tt.fields.Namespace,
+			err := tt.fields.stg.Insert(tt.args.ctx, tt.args.namespace)
+			if err != nil {
+				if !tt.wantErr {
+					t.Errorf("NamespaceStorage.Insert() error = %v, want no error", err.Error())
+					return
+				}
+
+				if tt.wantErr && tt.err != err.Error() {
+					t.Errorf("NamespaceStorage.Insert() error = %v, want %v", err.Error(), tt.err)
+					return
+				}
+
+				return
 			}
-			if err := s.Insert(tt.args.ctx, tt.args.namespace); (err != nil) != tt.wantErr {
-				t.Errorf("NamespaceStorage.Insert() error = %v, wantErr %v", err, tt.wantErr)
+
+			if tt.wantErr {
+				t.Errorf("NamespaceStorage.Insert() error = %v, want %v", err.Error(), tt.err)
+				return
 			}
 		})
 	}
 }
 
 func TestNamespaceStorage_Update(t *testing.T) {
+
+	var (
+		stg = newNamespaceStorage()
+		ctx = context.Background()
+		n1  = getNamespaceAsset("test1", "")
+		n2  = getNamespaceAsset("test1", "desc")
+		n3  = getNamespaceAsset("test2", "")
+	)
+
 	type fields struct {
-		Namespace storage.Namespace
+		stg storage.Namespace
 	}
+
 	type args struct {
-		ctx       context.Context
-		namespace *types.Namespace
+		ctx  context.Context
+		naspace *types.Namespace
 	}
+
 	tests := []struct {
 		name    string
 		fields  fields
 		args    args
+		want    *types.Namespace
 		wantErr bool
+		err     string
 	}{
-	// TODO: Add test cases.
+		{
+			"test successful update",
+			fields{stg},
+			args{ctx, &n2},
+			&n2,
+			false,
+			"",
+		},
+		{
+			"test failed update: nil structure",
+			fields{stg},
+			args{ctx, nil},
+			&n1,
+			true,
+			store.ErrStructArgIsNil,
+		},
+		{
+			"test failed update: entity not found",
+			fields{stg},
+			args{ctx, &n3},
+			&n1,
+			true,
+			store.ErrEntityNotFound,
+		},
 	}
+
+
+
 	for _, tt := range tests {
+
+		if err := stg.Clear(ctx); err != nil {
+			t.Errorf("NamespaceStorage.Update() storage setup error = %v", err)
+			return
+		}
+
+		if err := stg.Insert(ctx, &n1); err != nil {
+			t.Errorf("NamespaceStorage.Update() storage setup error = %v", err)
+			return
+		}
+
 		t.Run(tt.name, func(t *testing.T) {
-			s := &NamespaceStorage{
-				Namespace: tt.fields.Namespace,
+			err := tt.fields.stg.Update(tt.args.ctx, tt.args.naspace)
+			if err != nil {
+				if !tt.wantErr {
+					t.Errorf("NamespaceStorage.Update() error = %v, want no error", err.Error())
+					return
+				}
+
+				if tt.wantErr && tt.err != err.Error() {
+					t.Errorf("NamespaceStorage.Update() error = %v, want %v", err.Error(), tt.err)
+					return
+				}
+
+				return
 			}
-			if err := s.Update(tt.args.ctx, tt.args.namespace); (err != nil) != tt.wantErr {
-				t.Errorf("NamespaceStorage.Update() error = %v, wantErr %v", err, tt.wantErr)
+
+			if tt.wantErr {
+				t.Errorf("NamespaceStorage.Update() error = %v, want %v", err.Error(), tt.err)
+				return
 			}
+
+			got, _ := tt.fields.stg.Get(tt.args.ctx, tt.args.naspace.Meta.Name)
+			if !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("NamespaceStorage.Update() = %v, want %v", got, tt.want)
+				return
+			}
+
 		})
 	}
 }
 
 func TestNamespaceStorage_Remove(t *testing.T) {
+
+	var (
+		stg = newNamespaceStorage()
+		ctx = context.Background()
+		n1  = getNamespaceAsset("test1", "")
+		n2  = getNamespaceAsset("test2", "")
+	)
+
+
 	type fields struct {
-		Namespace storage.Namespace
+		stg storage.Namespace
 	}
+
 	type args struct {
 		ctx  context.Context
-		name string
+		namespace *types.Namespace
 	}
+
 	tests := []struct {
 		name    string
 		fields  fields
 		args    args
+		want    *types.Namespace
 		wantErr bool
+		err     string
 	}{
-	// TODO: Add test cases.
+		{
+			"test successful namespace remove",
+			fields{stg},
+			args{ctx, &n1},
+			&n2,
+			false,
+			store.ErrEntityNotFound,
+		},
+		{
+			"test failed update: nil namespace structure",
+			fields{stg},
+			args{ctx, nil},
+			&n2,
+			true,
+			store.ErrStructArgIsNil,
+		},
+		{
+			"test failed update: namespace not found",
+			fields{stg},
+			args{ctx, &n2},
+			&n1,
+			true,
+			store.ErrEntityNotFound,
+		},
 	}
+
 	for _, tt := range tests {
+
+		if err := stg.Clear(ctx); err != nil {
+			t.Errorf("NamespaceStorage.Remove() storage setup error = %v", err)
+			return
+		}
+
+		if err := stg.Insert(ctx, &n1); err != nil {
+			t.Errorf("NamespaceStorage.Remove() storage setup error = %v", err)
+			return
+		}
+
 		t.Run(tt.name, func(t *testing.T) {
-			s := &NamespaceStorage{
-				Namespace: tt.fields.Namespace,
+			err := tt.fields.stg.Remove(tt.args.ctx, tt.args.namespace)
+			if err != nil {
+				if !tt.wantErr {
+					t.Errorf("NamespaceStorage.Remove() error = %v, want no error", err.Error())
+					return
+				}
+
+				if tt.wantErr && tt.err != err.Error() {
+					t.Errorf("NamespaceStorage.Remove() error = %v, want %v", err.Error(), tt.err)
+					return
+				}
+
+				return
 			}
-			if err := s.Remove(tt.args.ctx, tt.args.name); (err != nil) != tt.wantErr {
-				t.Errorf("NamespaceStorage.Remove() error = %v, wantErr %v", err, tt.wantErr)
+
+			if tt.wantErr {
+				t.Errorf("NamespaceStorage.Remove() error = %v, want %v", err.Error(), tt.err)
+				return
 			}
+
+			_, err = tt.fields.stg.Get(tt.args.ctx, tt.args.namespace.Meta.Name)
+			if err == nil || tt.err != err.Error() {
+				t.Errorf("NamespaceStorage.Remove() = %v, want %v", err, tt.want)
+				return
+			}
+
 		})
 	}
 }
@@ -181,10 +449,13 @@ func TestNamespaceStorage_Remove(t *testing.T) {
 func Test_newNamespaceStorage(t *testing.T) {
 	tests := []struct {
 		name string
-		want *NamespaceStorage
+		want storage.Namespace
 	}{
-	// TODO: Add test cases.
+		{"initialize storage",
+			newNamespaceStorage(),
+		},
 	}
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			if got := newNamespaceStorage(); !reflect.DeepEqual(got, tt.want) {
@@ -194,39 +465,11 @@ func Test_newNamespaceStorage(t *testing.T) {
 	}
 }
 
-func Test_createNamespace(t *testing.T) {
-	type args struct {
-		name        string
-		description string
-	}
-	tests := []struct {
-		name string
-		args args
-		want *types.Namespace
-	}{
-	// TODO: Add test cases.
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
+func getNamespaceAsset(name, desc string) types.Namespace {
+	var n = types.Namespace{}
 
-		})
-	}
-}
+	n.Meta.Name = name
+	n.Meta.Description = desc
 
-func Test_getByName(t *testing.T) {
-	type args struct {
-		name string
-	}
-	tests := []struct {
-		name string
-		args args
-		want *types.Namespace
-	}{
-	// TODO: Add test cases.
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-
-		})
-	}
+	return n
 }

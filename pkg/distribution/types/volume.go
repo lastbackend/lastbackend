@@ -18,25 +18,36 @@
 
 package types
 
+import "fmt"
+
 type VolumeList []Volume
 
 type Volume struct {
 	// Volume meta
 	Meta VolumeMeta `json:"meta" yaml:"meta"`
 	// Volume stat
-	Stat VolumeStat `json:"stat" yaml:"stat"`
+	State VolumeState `json:"stat" yaml:"stat"`
 	// Volume spec
 	Spec VolumeSpec `json:"spec" yaml:"spec"`
 }
 
 type VolumeMeta struct {
 	Meta
+	Namespace string `json:"namespace"`
 }
 
-type VolumeStat struct {
-
+type VolumeState struct {
+	Provision bool `json:"provision"`
+	Ready bool `json:"ready"`
 }
 
 type VolumeSpec struct {
 
+}
+
+func (v *Volume) SelfLink() string {
+	if v.Meta.SelfLink == "" {
+		v.Meta.SelfLink = fmt.Sprintf("%s:%s", v.Meta.Namespace, v.Meta.Name)
+	}
+	return v.Meta.SelfLink
 }

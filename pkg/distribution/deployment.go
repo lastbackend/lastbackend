@@ -20,7 +20,6 @@ package distribution
 
 import (
 	"context"
-	"fmt"
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 	"github.com/lastbackend/lastbackend/pkg/log"
 	"github.com/lastbackend/lastbackend/pkg/storage"
@@ -31,12 +30,15 @@ import (
 type IDeployment interface {
 	Create(service *types.Service) (*types.Deployment, error)
 	Get(namespace, service, name string) (*types.Deployment, error)
-	ListByNamespace(namespace string) ([]*types.Deployment, error)
-	ListByService(namespace, service string) ([]*types.Deployment, error)
-	Scale(dt *types.Deployment, opts types.DeploymentOptions) error
+	ListByNamespace(namespace string) (map[string]*types.Deployment, error)
+	ListByService(namespace, service string) (map[string]*types.Deployment, error)
+	SetSpec(dt *types.Deployment, opts types.DeploymentOptions) error
 	SetState(dt *types.Deployment) error
 	Cancel(dt *types.Deployment) error
 	Destroy(dt *types.Deployment) error
+	Remove(dt *types.Deployment) error
+	Watch(dt chan *types.Deployment) error
+	WatchSpec(dt chan *types.Deployment) error
 }
 
 // Deployment - distribution model
@@ -45,18 +47,33 @@ type Deployment struct {
 	storage storage.Storage
 }
 
+// Get deployment info by namespace service and deployment name
+func (d *Deployment) Get(namespace, service, name string) (*types.Deployment, error) {
+
+	log.Debugf("distribution:deployment:get: in namespace %s by name %s", namespace, service, name)
+
+	dt, err := d.storage.Deployment().Get(d.context, namespace, service, name)
+	if err != nil {
+		log.Errorf("distribution:deployment:get: in namespace %s by name %s error:", namespace, service, name, err.Error())
+		return nil, err
+	}
+
+	return dt, nil
+}
+
 // Create new deployment
 func (d *Deployment) Create(service *types.Service) (*types.Deployment, error) {
-	log.Debug("Deployment: Create: generate deployment for service")
+
+	log.Debugf("distribution:deployment:create: distribution create in service: %s", service.Meta.Name)
 
 	deployment := new(types.Deployment)
-	deployment.State.Provision = true
+
 	deployment.Meta.Namespace = service.Meta.Namespace
 	deployment.Meta.Service = service.Meta.Name
 	deployment.Meta.Status = types.StateCreated
 	deployment.Meta.Name = strings.Split(generator.GetUUIDV4(), "-")[4][5:]
-	deployment.Meta.SelfLink = fmt.Sprintf("%s/deployment/%s", service.Meta.SelfLink, deployment.Meta.Name)
-	deployment.Meta.Endpoint = strings.ToLower(fmt.Sprintf("%s/deployment/%s", service.Meta.SelfLink, deployment.Meta.Name))
+
+	deployment.SelfLink()
 
 	deployment.Spec = types.DeploymentSpec{
 		Replicas: service.Spec.Replicas,
@@ -66,36 +83,27 @@ func (d *Deployment) Create(service *types.Service) (*types.Deployment, error) {
 		Selector: service.Spec.Selector,
 	}
 
+	deployment.Spec.Meta.SetDefault()
+	deployment.Spec.Meta.Name = service.Spec.Meta.Name
+
+	deployment.State.SetProvision()
+
 	if err := d.storage.Deployment().Insert(d.context, deployment); err != nil {
-		log.Errorf("Deployment: storage insert error: %s", err.Error())
+		log.Errorf("distribution:deployment:create: distribution create in service: %s err: %s", service.Meta.Name, err.Error())
 		return nil, err
 	}
 
 	return deployment, nil
 }
 
-// Check deployment is in ready stage
-func (d *Deployment) Get(namespace, service, name string) (*types.Deployment, error) {
-
-	log.Debugf("Deployment: get deployment by id: %s/%s/%s", namespace, service, name)
-
-	dt, err := d.storage.Deployment().Get(d.context, namespace, name)
-	if err != nil {
-		log.Errorf("Can not get deployment by id: %s", err.Error())
-		return nil, err
-	}
-
-	return dt, nil
-}
-
 // ListByService - list of deployments by service
-func (d *Deployment) ListByNamespace(namespace string) ([]*types.Deployment, error) {
+func (d *Deployment) ListByNamespace(namespace string) (map[string]*types.Deployment, error) {
 
-	log.Debug("Deployment: List By Service: get deployments list")
+	log.Debug("distribution:deployment:list: in namespace: %s", namespace)
 
 	dl, err := d.storage.Deployment().ListByNamespace(d.context, namespace)
 	if err != nil {
-		log.Errorf("Can not get deployment by id: %s", err.Error())
+		log.Errorf("distribution:deployment:list: in namespace: %s err: %s", namespace, err.Error())
 		return nil, err
 	}
 
@@ -103,13 +111,13 @@ func (d *Deployment) ListByNamespace(namespace string) ([]*types.Deployment, err
 }
 
 // ListByService - list of deployments by service
-func (d *Deployment) ListByService(namespace, service string) ([]*types.Deployment, error) {
+func (d *Deployment) ListByService(namespace, service string) (map[string]*types.Deployment, error) {
 
-	log.Debug("Deployment: List By Service: get deployments list")
+	log.Debug("distribution:deployment:list: in namespace: %s and service %s", namespace, service)
 
 	dl, err := d.storage.Deployment().ListByService(d.context, namespace, service)
 	if err != nil {
-		log.Errorf("Can not get deployment by id: %s", err.Error())
+		log.Errorf("distribution:deployment:list: in namespace: %s and service %s err: %s", namespace, service, err.Error())
 		return nil, err
 	}
 
@@ -117,14 +125,14 @@ func (d *Deployment) ListByService(namespace, service string) ([]*types.Deployme
 }
 
 // Scale deployment
-func (d *Deployment) Scale(dt *types.Deployment, opts types.DeploymentOptions) error {
+func (d *Deployment) SetSpec(dt *types.Deployment, opts types.DeploymentOptions) error {
 
-	log.Debugf("Deployment: SetState for deployment %s", dt.Meta.Name)
+	log.Debugf("distribution:deployment:set: set spec for deployment %s", dt.Meta.Name)
 
 	if dt.Spec.Replicas != opts.Replicas {
 		dt.Spec.Replicas = opts.Replicas
-		if err := d.storage.Deployment().Update(d.context, dt); err != nil {
-			log.Errorf("Can not get deployment by id: %s", err.Error())
+		if err := d.storage.Deployment().SetSpec(d.context, dt); err != nil {
+			log.Errorf("distribution:deployment:set: set spec for deployment %s err: %s", dt.Meta.Name, err.Error())
 			return err
 		}
 	}
@@ -135,10 +143,10 @@ func (d *Deployment) Scale(dt *types.Deployment, opts types.DeploymentOptions) e
 // Set state for deployment
 func (d *Deployment) SetState(dt *types.Deployment) error {
 
-	log.Debugf("Deployment: SetState for deployment %s", dt.Meta.Name)
+	log.Debugf("distribution:deployment:set: set state for deployment %s", dt.Meta.Name)
 
 	if err := d.storage.Deployment().SetState(d.context, dt); err != nil {
-		log.Errorf("Can not get deployment by id: %s", err.Error())
+		log.Errorf("distribution:deployment:set: set state for deployment %s err: %s", dt.Meta.Name, err.Error())
 		return err
 	}
 
@@ -148,20 +156,13 @@ func (d *Deployment) SetState(dt *types.Deployment) error {
 // Cancel deployment
 func (d *Deployment) Cancel(dt *types.Deployment) error {
 
-	log.Debugf("Deployment: Cancel deployment %s", dt.Meta.Name)
+	log.Debugf("distribution:deployment:cancel: cancel deployment %s", dt.Meta.Name)
 
-	dt.State.Active = false
-	dt.State.Cancel = true
-	dt.State.Provision = true
-	dt.Spec.Replicas = 0
-
-	if err := d.storage.Deployment().Update(d.context, dt); err != nil {
-		log.Errorf("Can not set deployment state err: %s", err.Error())
-		return err
-	}
+	// mark deployment for cancel
+	dt.State.SetCancel()
 
 	if err := d.storage.Deployment().SetState(d.context, dt); err != nil {
-		log.Errorf("Can not set deployment state state err: %s", err.Error())
+		log.Debugf("distribution:deployment:cancel: cancel deployment %s err: %s", dt.Meta.Name, err.Error())
 		return err
 	}
 
@@ -171,20 +172,49 @@ func (d *Deployment) Cancel(dt *types.Deployment) error {
 // Destroy deployment
 func (d *Deployment) Destroy(dt *types.Deployment) error {
 
-	log.Debugf("Deployment: Destroy deployment %s", dt.Meta.Name)
+	log.Debugf("distribution:deployment:destroy: destroy deployment %s", dt.Meta.Name)
 
-	dt.State.Active = false
-	dt.State.Destroy = true
-	dt.State.Provision = true
-	dt.Spec.Replicas = 0
+	// mark deployment for destroy
+	dt.State.SetDestroy()
 
-	if err := d.storage.Deployment().Update(d.context, dt); err != nil {
-		log.Errorf("Can not set deployment state err: %s", err.Error())
+	if err := d.storage.Deployment().SetState(d.context, dt); err != nil {
+		log.Debugf("distribution:deployment:destroy: destroy deployment %s err: %s", dt.Meta.Name, err.Error())
 		return err
 	}
 
-	if err := d.storage.Deployment().SetState(d.context, dt); err != nil {
-		log.Errorf("Can not set deployment state state err: %s", err.Error())
+	return nil
+}
+
+// Destroy deployment
+func (d *Deployment) Remove(dt *types.Deployment) error {
+
+	log.Debugf("distribution:deployment:remove: remove deployment %s", dt.Meta.Name)
+	if err := d.storage.Deployment().Remove(d.context, dt); err != nil {
+		log.Debugf("distribution:deployment:remove: remove deployment %s err: %s", dt.Meta.Name, err.Error())
+		return err
+	}
+
+	return nil
+}
+
+// Watch deployment changes
+func (d *Deployment) Watch(dt chan *types.Deployment) error {
+
+	log.Debug("distribution:deployment:watch: watch deployments")
+	if err := d.storage.Deployment().Watch(d.context, dt); err != nil {
+		log.Debugf("distribution:deployment:watch: watch deployment err: %s", err.Error())
+		return err
+	}
+
+	return nil
+}
+
+// Watch deployment by spec changing
+func (d *Deployment) WatchSpec(dt chan *types.Deployment) error {
+
+	log.Debug("distribution:deployment:watch: watch deployments by spec changes")
+	if err := d.storage.Deployment().WatchSpec(d.context, dt); err != nil {
+		log.Debugf("distribution:deployment:watch: watch deployment by spec changes err: %s", err.Error())
 		return err
 	}
 

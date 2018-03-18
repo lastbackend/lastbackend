@@ -2,7 +2,7 @@
 // Last.Backend LLC CONFIDENTIAL
 // __________________
 //
-// [2014] - [2017] Last.Backend LLC
+// [2014] - [2018] Last.Backend LLC
 // All Rights Reserved.
 //
 // NOTICE:  All information contained herein is, and remains
@@ -16,24 +16,13 @@
 // from Last.Backend LLC.
 //
 
-package client
+package trigger
 
 import (
-	"context"
-
-	"github.com/lastbackend/lastbackend/pkg/api/client/interfaces"
-	"github.com/lastbackend/lastbackend/pkg/api/views/v1"
+	"github.com/lastbackend/lastbackend/pkg/util/http"
+	"github.com/lastbackend/lastbackend/pkg/util/http/middleware"
 )
 
-type NamespaceClient struct {
-	interfaces.Namespace
-}
-
-func (s *NamespaceClient) List(ctx context.Context) (*v1.NamespaceList, error) {
-	return nil, nil
-}
-
-func newNamespaceClient() *NamespaceClient {
-	s := new(NamespaceClient)
-	return s
+var Routes = []http.Route{
+	{Path: "/hook/{id}", Method: http.MethodPost, Middleware: []http.Middleware{middleware.Context}, Handler: HookExecuteH},
 }

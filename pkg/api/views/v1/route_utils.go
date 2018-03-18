@@ -61,14 +61,14 @@ func (r *Route) ToState(obj types.RouteState) RouteState {
 	return state
 }
 
-func (rv RouteView) NewList(obj []*types.Route) *RouteList {
+func (rv RouteView) NewList(obj map[string]*types.Route) *RouteList {
 	if obj == nil {
 		return nil
 	}
 
 	n := make(RouteList, 0)
 	for _, v := range obj {
-		n = append(n, rv.New(v))
+		n[v.Meta.Name] = rv.New(v)
 	}
 	return &n
 }

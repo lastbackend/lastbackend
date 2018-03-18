@@ -39,8 +39,8 @@ import (
 
 type Runtime struct {
 	process *system.Process
-	sc      *service.ServiceController
-	dc      *deployment.DeploymentController
+	sc      *service.Controller
+	dc      *deployment.Controller
 
 	active bool
 }

@@ -25,49 +25,53 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/log"
 )
 
-type DeploymentController struct {
+type Controller struct {
 	deployment chan *types.Deployment
 	active     bool
 }
 
-func (dc *DeploymentController) Watch() {
+// Watch deployment spec changes
+func (dc *Controller) Watch() {
+
 	var (
 		stg = envs.Get().GetStorage()
 	)
 
-	log.Debug("DeploymentController: start watch")
+	log.Debug("controller:deployment:controller: start watch deployment spec")
 	go func() {
 		for {
 			select {
 			case s := <-dc.deployment:
 				{
 					if !dc.active {
-						log.Debug("DeploymentController: skip management course it is in slave mode")
+						log.Debug("controller:deployment:controller: skip management course it is in slave mode")
 						continue
 					}
 
 					if s == nil {
-						log.Debug("DeploymentController: skip because service is nil")
+						log.Debug("controller:deployment:controller: skip because service is nil")
 						continue
 					}
 
-					log.Debugf("Service needs to be provisioned: %s:%s", s.Meta.Namespace, s.Meta.Name)
+					log.Debugf("controller:deployment:controller: Service needs to be provisioned: %s:%s", s.Meta.Namespace, s.Meta.Name)
 					if err := Provision(s); err != nil {
-						log.Errorf("Error: DeploymentController: Service provision: %s", err.Error())
+						log.Errorf("controller:deployment:controller: service provision: %s err: %s", s.Meta.Name, err.Error())
 					}
 				}
 			}
 		}
 	}()
 
-	stg.Deployment().SpecWatch(context.Background(), dc.deployment)
+	stg.Deployment().WatchSpec(context.Background(), dc.deployment)
 }
 
-func (dc *DeploymentController) Pause() {
+// Pause deployment controller because not lead
+func (dc *Controller) Pause() {
 	dc.active = false
 }
 
-func (dc *DeploymentController) Resume() {
+// Resume deployment controller management
+func (dc *Controller) Resume() {
 
 	var (
 		stg = envs.Get().GetStorage()
@@ -75,30 +79,31 @@ func (dc *DeploymentController) Resume() {
 
 	dc.active = true
 
-	log.Debug("Service: start check services states")
+	log.Debug("controller:deployment:controller:resume start check deployment states")
 	nss, err := stg.Namespace().List(context.Background())
 	if err != nil {
-		log.Errorf("Service: Get namespaces list err: %s", err.Error())
+		log.Errorf("controller:deployment:controller:resume get namespaces list err: %s", err.Error())
 	}
 
 	for _, ns := range nss {
 		dl, err := stg.Deployment().ListByNamespace(context.Background(), ns.Meta.Name)
 		if err != nil {
-			log.Errorf("Service: Get services list err: %s", err.Error())
+			log.Errorf("controller:deployment:controller:resume get deployment list err: %s", err.Error())
 		}
 
 		for _, d := range dl {
-			d, err := stg.Deployment().Get(context.Background(), d.Meta.Namespace, d.Meta.Name)
+			d, err := stg.Deployment().Get(context.Background(), d.Meta.Namespace, d.Meta.Service, d.Meta.Name)
 			if err != nil {
-				log.Errorf("Service: Get service err: %s", err.Error())
+				log.Errorf("controller:deployment:controller:resume get deployment err: %s", err.Error())
 			}
 			dc.deployment <- d
 		}
 	}
 }
 
-func NewDeploymentController(_ context.Context) *DeploymentController {
-	sc := new(DeploymentController)
+// NewDeploymentController return new controller instance
+func NewDeploymentController(_ context.Context) *Controller {
+	sc := new(Controller)
 	sc.active = false
 	sc.deployment = make(chan *types.Deployment)
 	return sc

@@ -34,7 +34,7 @@ type Service struct {
 	Spec        ServiceSpec    `json:"spec"`
 	Sources     ServiceSources `json:"sources"`
 	Quotas      ServiceQuotas  `json:"quotas"`
-	Deployments []*Deployment  `json:"deployments"`
+	Deployments map[string]*Deployment  `json:"deployments"`
 }
 
 type ServiceMeta struct {
@@ -86,7 +86,7 @@ type ServiceState struct {
 type ServiceDeployment struct {
 	ID      string `json:"id"`
 	Name    string `json:"name"`
-	Pods    []PodView
+	Pods    map[string]PodView
 	Started time.Time `json:"started"`
 }
 

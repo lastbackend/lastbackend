@@ -50,4 +50,4 @@ type RouteState struct {
 	Provision bool `json:"provision"`
 }
 
-type RouteList []*Route
+type RouteList map[string]*Route

@@ -224,7 +224,7 @@ func NamespaceRemoveH(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = nsm.Remove(ns.Meta.Name)
+	err = nsm.Remove(ns)
 	if err != nil {
 		log.V(logLevel).Errorf("Handler: Namespace: remove namespace err: %s", err)
 		errors.HTTP.InternalServerError(w)

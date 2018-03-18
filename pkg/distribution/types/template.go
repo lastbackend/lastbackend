@@ -28,17 +28,17 @@ import (
 )
 
 type Template struct {
-	ID          string    `json:"id"`
-	RepoID      string    `json:"repo"`
-	Name        string    `json:"name"`
-	Description string    `json:"description"`
-	Type        string    `json:"type"`
-	Main        bool      `json:"main"`
-	Shared      bool      `json:"shared"`
-	Deleted     bool      `json:"deleted"`
-	Spec        PodSpec   `json:"spec"`
-	Created     time.Time `json:"created"`
-	Updated     time.Time `json:"updated"`
+	ID          string       `json:"id"`
+	RepoID      string       `json:"repo"`
+	Name        string       `json:"name"`
+	Description string       `json:"description"`
+	Type        string       `json:"type"`
+	Main        bool         `json:"main"`
+	Shared      bool         `json:"shared"`
+	Deleted     bool         `json:"deleted"`
+	Spec        SpecTemplate `json:"spec"`
+	Created     time.Time    `json:"created"`
+	Updated     time.Time    `json:"updated"`
 }
 
 type TemplateCreateOptions struct {

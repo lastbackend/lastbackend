@@ -78,14 +78,16 @@ func (obj *Node) ToJson() ([]byte, error) {
 	return json.Marshal(obj)
 }
 
-func (n *NodeView) NewList(obj []*types.Node) *NodeList {
+func (n *NodeView) NewList(obj map[string]*types.Node) *NodeList {
 	if obj == nil {
 		return nil
 	}
 	nodes := make(NodeList, 0)
 	for _, v := range obj {
-		nodes = append(nodes, n.New(v))
+		nn := n.New(v)
+		nodes[nn.Meta.ID] = nn
 	}
+
 	return &nodes
 }
 

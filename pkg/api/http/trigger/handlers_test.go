@@ -2,7 +2,7 @@
 // Last.Backend LLC CONFIDENTIAL
 // __________________
 //
-// [2014] - [2017] Last.Backend LLC
+// [2014] - [2018] Last.Backend LLC
 // All Rights Reserved.
 //
 // NOTICE:  All information contained herein is, and remains
@@ -16,30 +16,4 @@
 // from Last.Backend LLC.
 //
 
-package mock
-
-import (
-	"context"
-
-	"github.com/lastbackend/lastbackend/pkg/api/client/interfaces"
-	"github.com/lastbackend/lastbackend/pkg/api/views/v1"
-)
-
-type NamespaceClient struct {
-	data map[string]*v1.Namespace
-	interfaces.Namespace
-}
-
-func (s *NamespaceClient) List(ctx context.Context) (*v1.NamespaceList, error) {
-	list := make(v1.NamespaceList, 0)
-	for _, ns := range s.data {
-		list = append(list, ns)
-	}
-	return &list, nil
-}
-
-func newNamespaceClient() *NamespaceClient {
-	s := new(NamespaceClient)
-	s.data = make(map[string]*v1.Namespace)
-	return s
-}
+package trigger_test

@@ -35,14 +35,13 @@ type Storage struct {
 
 	*ClusterStorage
 	*DeploymentStorage
-	*HookStorage
+	*TriggerStorage
 	*NodeStorage
 	*NamespaceStorage
 	*PodStorage
 	*ServiceStorage
 	*RouteStorage
 	*VolumeStorage
-	*EndpointStorage
 	*SystemStorage
 }
 
@@ -60,11 +59,11 @@ func (s *Storage) Deployment() storage.Deployment {
 	return s.DeploymentStorage
 }
 
-func (s *Storage) Hook() storage.Hook {
+func (s *Storage) Trigger() storage.Trigger {
 	if s == nil {
 		return nil
 	}
-	return s.HookStorage
+	return s.TriggerStorage
 }
 
 func (s *Storage) Node() storage.Node {
@@ -109,12 +108,6 @@ func (s *Storage) Volume() storage.Volume {
 	return s.VolumeStorage
 }
 
-func (s *Storage) Endpoint() storage.Endpoint {
-	if s == nil {
-		return nil
-	}
-	return s.EndpointStorage
-}
 
 func (s *Storage) System() storage.System {
 	if s == nil {
@@ -141,10 +134,9 @@ func New() (*Storage, error) {
 	s.DeploymentStorage = newDeploymentStorage()
 	s.PodStorage = newPodStorage()
 
-	s.HookStorage = newHookStorage()
+	s.TriggerStorage = newTriggerStorage()
 
 	s.RouteStorage = newRouteStorage()
-	s.EndpointStorage = newEndpointStorage()
 	s.SystemStorage = newSystemStorage()
 
 	return s, nil

@@ -16,7 +16,7 @@
 // from Last.Backend LLC.
 //
 
-package hook
+package trigger
 
 import (
 	"github.com/lastbackend/lastbackend/pkg/log"

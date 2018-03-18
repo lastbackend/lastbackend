@@ -88,10 +88,10 @@ func Manage(ctx context.Context, pod *types.Pod) error {
 	// Scale pod ===============================================================
 	//==========================================================================
 
-	if len(pod.Spec.Containers) != len(pods[pod.Meta.Name].Status.Containers) {
+	if len(pod.Spec.Template.Containers) != len(pods[pod.Meta.Name].Status.Containers) {
 
 		log.Debugf("Pod containers not match: %d != %d",
-			len(pod.Spec.Containers), len(pods[pod.Meta.Name].Spec.Containers))
+			len(pod.Spec.Template.Containers), len(pods[pod.Meta.Name].Spec.Template.Containers))
 
 		if task := envs.Get().GetState().Tasks().GetTask(pod); task != nil {
 			log.Debugf("Cancel pod creating: %s", pod.Meta.Name)
@@ -166,8 +166,8 @@ func Create(ctx context.Context, pod *types.Pod) error {
 	envs.Get().GetState().Pods().AddPod(pod)
 	events.NewPodStateEvent(ctx, pod)
 
-	log.Debugf("Have %d containers", len(pod.Spec.Containers))
-	for _, c := range pod.Spec.Containers {
+	log.Debugf("Have %d containers", len(pod.Spec.Template.Containers))
+	for _, c := range pod.Spec.Template.Containers {
 		log.Debug("Pull images for pod if needed")
 		r, err := envs.Get().GetCri().ImagePull(ctx, &c.Image)
 		if err != nil {
@@ -194,7 +194,7 @@ func Create(ctx context.Context, pod *types.Pod) error {
 	envs.Get().GetState().Pods().SetPod(pod)
 	events.NewPodStateEvent(ctx, pod)
 
-	for _, s := range pod.Spec.Containers {
+	for _, s := range pod.Spec.Template.Containers {
 
 		if s.Labels == nil {
 			s.Labels = make(map[string]string)
@@ -339,7 +339,7 @@ func Clean(ctx context.Context, pod *types.Pod) {
 		}
 	}
 
-	for _, c := range pod.Spec.Containers {
+	for _, c := range pod.Spec.Template.Containers {
 		log.Debugf("Try to clean image: %s", c.Image.Name)
 		if err := envs.Get().GetCri().ImageRemove(ctx, c.Image.Name); err != nil {
 			log.Warnf("Can-not remove unnecessary image %s: %s", c.Image.Name, err)

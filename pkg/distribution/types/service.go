@@ -27,6 +27,8 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/distribution/errors"
 	"github.com/lastbackend/lastbackend/pkg/log"
 	"github.com/lastbackend/lastbackend/pkg/util/validator"
+	"fmt"
+	"github.com/satori/uuid"
 )
 
 const (
@@ -41,7 +43,7 @@ type Service struct {
 	Deployments map[string]*Deployment `json:"deployments"`
 }
 
-type ServiceList []*Service
+type ServiceList map[string]*Service
 
 type ServiceMeta struct {
 	Meta
@@ -56,17 +58,21 @@ type ServiceEndpoint struct {
 }
 
 type ServiceState struct {
-	Ready     bool `json:"ready"`
-	Provision bool `json:"provision"`
-	Destroy   bool `json:"destroy"`
+	Ready     bool   `json:"ready"`
+	Provision bool   `json:"provision"`
+	Destroy   bool   `json:"destroy"`
+	Error     bool   `json:"error"`
+	Message   string `json:"message"`
 }
 
 type ServiceSpec struct {
+	Meta     Meta          `json:"meta"`
 	Replicas int           `json:"replicas"`
+	State    SpecState     `json:"state"`
 	Strategy SpecStrategy  `json:"strategy"`
 	Triggers SpecTriggers  `json:"triggers"`
 	Selector SpecSelector  `json:"selector"`
-	Template PodSpec       `json:"template"`
+	Template SpecTemplate  `json:"template"`
 	Quotas   ServiceQuotas `json:"quotas"`
 }
 
@@ -77,8 +83,7 @@ type ServiceSpecStrategy struct {
 	Deadline       int                               `json:"deadline"`
 }
 
-type ServiceSpecStrategyResources struct {
-}
+type ServiceSpecStrategyResources struct{}
 
 type ServiceQuotas struct {
 	RAM *int64 `json:"ram"`
@@ -102,10 +107,80 @@ type ServiceReplicas struct {
 }
 
 func (s *ServiceSpec) SetDefault() {
+	s.Meta.SetDefault()
+	s.Meta.Name = uuid.NewV4().String()
 	s.Replicas = int(1)
 	s.Template.Volumes = make(SpecTemplateVolumes, 0)
 	s.Template.Containers = make(SpecTemplateContainers, 0)
 	s.Triggers = make(SpecTriggers, 0)
+}
+
+func (s *ServiceSpec) Update(spec *ServiceOptionsSpec) {
+
+	if spec == nil {
+		return
+	}
+
+	var (
+		f bool
+		i int
+	)
+
+	s.Meta.Name = uuid.NewV4().String()
+
+	c := SpecTemplateContainer{}
+	for i, t := range s.Template.Containers {
+		if t.Role == ContainerRolePrimary {
+			c = s.Template.Containers[i]
+			f = true
+		}
+	}
+
+	if !f {
+		c.SetDefault()
+		c.Role = ContainerRolePrimary
+	}
+
+	if spec.Command != nil {
+		c.Exec.Command = strings.Split(*spec.Command, " ")
+	}
+
+	if spec.Entrypoint != nil {
+		c.Exec.Entrypoint = strings.Split(*spec.Entrypoint, " ")
+	}
+
+	if spec.Ports != nil {
+		c.Ports = SpecTemplateContainerPorts{}
+		for _, val := range *spec.Ports {
+			c.Ports = append(c.Ports, SpecTemplateContainerPort{
+				Protocol:      val.Protocol,
+				ContainerPort: val.Internal,
+			})
+		}
+	}
+
+	if spec.EnvVars != nil {
+		c.EnvVars = SpecTemplateContainerEnvs{}
+
+		for _, e := range *spec.EnvVars {
+			match := strings.Split(e, "=")
+			env := SpecTemplateContainerEnv{Name: match[0]}
+			if len(match) == 2 {
+				env.Value = match[1]
+			}
+			c.EnvVars = append(c.EnvVars, env)
+		}
+	}
+
+	if spec.Memory != nil {
+		c.Resources.Limits.RAM = *spec.Memory
+	}
+
+	if !f {
+		s.Template.Containers = append(s.Template.Containers, c)
+	} else {
+		s.Template.Containers[i] = c
+	}
 }
 
 type ServiceOptionsSpec struct {
@@ -159,6 +234,13 @@ type ServiceSourcesRepo struct {
 	Tag string `json:"tag"`
 	// Build sources info
 	Build string `json:"build"`
+}
+
+func (s *Service) SelfLink() string {
+	if s.Meta.SelfLink == "" {
+		s.Meta.SelfLink = fmt.Sprintf("%s:%s", s.Meta.Namespace, s.Meta.Name)
+	}
+	return s.Meta.SelfLink
 }
 
 func (s *ServiceCreateOptions) DecodeAndValidate(reader io.Reader) *errors.Err {

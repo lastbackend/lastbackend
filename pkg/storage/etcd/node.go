@@ -39,13 +39,13 @@ type NodeStorage struct {
 	storage.Node
 }
 
-func (s *NodeStorage) List(ctx context.Context) ([]*types.Node, error) {
+func (s *NodeStorage) List(ctx context.Context) (map[string]*types.Node, error) {
 
 	log.V(logLevel).Debugf("Storage: Node: get list nodes")
 
 	const filter = `\b.+` + nodeStorage + `\/(.+)\/(?:meta|state|alive)\b`
 
-	nodes := make([]*types.Node, 0)
+	nodes := make(map[string]*types.Node, 0)
 
 	client, destroy, err := getClient(ctx)
 	if err != nil {
@@ -55,7 +55,7 @@ func (s *NodeStorage) List(ctx context.Context) ([]*types.Node, error) {
 	defer destroy()
 
 	key := keyCreate(nodeStorage)
-	if err := client.List(ctx, key, filter, &nodes); err != nil {
+	if err := client.Map(ctx, key, filter, &nodes); err != nil {
 		log.V(logLevel).Errorf("Storage: Node: get nodes list err: %s", err.Error())
 		return nil, err
 	}

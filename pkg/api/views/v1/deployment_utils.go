@@ -25,7 +25,7 @@ import (
 
 type DeploymentView struct{}
 
-func (dv *DeploymentView) New(obj *types.Deployment, pl []*types.Pod) *Deployment {
+func (dv *DeploymentView) New(obj *types.Deployment, pl map[string]*types.Pod) *Deployment {
 	d := Deployment{}
 	d.ID = obj.Meta.Name
 	d.Meta = d.ToMeta(obj.Meta)
@@ -55,7 +55,6 @@ func (di *Deployment) ToMeta(obj types.DeploymentMeta) DeploymentMeta {
 
 func (di *Deployment) ToState(obj types.DeploymentState) DeploymentStateInfo {
 	return DeploymentStateInfo{
-		Active:    obj.Active,
 		Provision: obj.Provision,
 		Cancel:    obj.Cancel,
 		Error:     obj.Error,
@@ -89,12 +88,12 @@ func (di *Deployment) ToReplicas(obj types.DeploymentReplicas) DeploymentReplica
 	}
 }
 
-func (di *Deployment) ToPods(obj []*types.Pod) []PodView {
-	pods := make([]PodView, 0)
+func (di *Deployment) ToPods(obj map[string]*types.Pod) map[string]PodView {
+	pods := make(map[string]PodView, 0)
 	for _, p := range obj {
 		if p.Meta.Deployment == di.ID {
 			pv := new(PodViewHelper)
-			pods = append(pods, pv.New(p))
+			pods[p.Meta.Name] = pv.New(p)
 		}
 	}
 	return pods

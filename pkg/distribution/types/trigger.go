@@ -2,7 +2,7 @@
 // Last.Backend LLC CONFIDENTIAL
 // __________________
 //
-// [2014] - [2017] Last.Backend LLC
+// [2014] - [2018] Last.Backend LLC
 // All Rights Reserved.
 //
 // NOTICE:  All information contained herein is, and remains
@@ -16,27 +16,25 @@
 // from Last.Backend LLC.
 //
 
-package mock
+package types
 
-import (
-	"github.com/lastbackend/lastbackend/pkg/api/client/interfaces"
-)
+import "fmt"
 
-type Client struct {
-	*NamespaceClient
+type TriggerList []Trigger
+
+type Trigger struct {
+	Meta TriggerMeta `json:"meta"`
 }
 
-func (s *Client) Namespace() interfaces.Namespace {
-	if s == nil {
-		return nil
+type TriggerMeta struct {
+	Meta
+	Namespace string `json:"namespace"`
+	Service   string `json:"service"`
+}
+
+func (t *Trigger) SelfLink() string {
+	if t.Meta.SelfLink == "" {
+		t.Meta.SelfLink = fmt.Sprintf("%s:%s:%s", t.Meta.Namespace, t.Meta.Service, t.Meta.Name)
 	}
-	return s.NamespaceClient
-}
-
-func New() (*Client, error) {
-	s := new(Client)
-
-	s.NamespaceClient = newNamespaceClient()
-
-	return s, nil
+	return t.Meta.SelfLink
 }
