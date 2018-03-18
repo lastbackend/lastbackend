@@ -2,7 +2,7 @@
 // Last.Backend LLC CONFIDENTIAL
 // __________________
 //
-// [2014] - [2018] Last.Backend LLC
+// [2014] - [2017] Last.Backend LLC
 // All Rights Reserved.
 //
 // NOTICE:  All information contained herein is, and remains
@@ -16,32 +16,45 @@
 // from Last.Backend LLC.
 //
 
-package namespace
+package v1
 
 import (
-	"context"
-	"fmt"
-	"log"
+	"crypto/tls"
 
-	"github.com/lastbackend/lastbackend/pkg/api/client"
-	v "github.com/lastbackend/lastbackend/pkg/cli/view"
+	"github.com/coreos/etcd/pkg/transport"
 )
 
-func ListCmd() {
-
-	current, list, err := List()
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
-
-	list.Print(current)
+type Client struct {
+	endpoint string
+	tls      *tls.Config
 }
 
-func List() (string, *v.NamespaceList, error) {
+func Get(conf Config) (*Client, error) {
 
-	cli, _ := client.New(context.Background())
-	log.Println(cli.Namespace().List(context.Background()))
+	tlsConfig, err := getTLSConfig(conf.TLS.Cert, conf.TLS.Key, conf.TLS.CA)
+	if err != nil {
+		return nil, err
+	}
 
-	return "", nil, nil
+	c := &Client{
+		endpoint: conf.Endpoint,
+		tls:      tlsConfig,
+	}
+
+	return c, nil
+}
+
+func getTLSConfig(certFile, keyFile, caFile string) (*tls.Config, error) {
+
+	if len(certFile) == 0 || len(keyFile) == 0 || len(caFile) == 0 {
+		return nil, nil
+	}
+
+	tlsInfo := transport.TLSInfo{
+		CertFile: certFile,
+		KeyFile:  keyFile,
+		CAFile:   caFile,
+	}
+
+	return tlsInfo.ClientConfig()
 }

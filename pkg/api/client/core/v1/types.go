@@ -2,7 +2,7 @@
 // Last.Backend LLC CONFIDENTIAL
 // __________________
 //
-// [2014] - [2018] Last.Backend LLC
+// [2014] - [2017] Last.Backend LLC
 // All Rights Reserved.
 //
 // NOTICE:  All information contained herein is, and remains
@@ -16,4 +16,13 @@
 // from Last.Backend LLC.
 //
 
-package cluster
+package v1
+
+type Config struct {
+	Endpoint string
+	TLS struct {
+		Key  string
+		Cert string
+		CA   string
+	}
+}

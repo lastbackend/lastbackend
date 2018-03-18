@@ -22,10 +22,10 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/lastbackend/lastbackend/pkg/api/client/core/v1"
 	"github.com/lastbackend/lastbackend/pkg/cli/config"
 	"github.com/lastbackend/lastbackend/pkg/cli/context"
 	"github.com/lastbackend/lastbackend/pkg/cli/storage"
-	"github.com/lastbackend/lastbackend/pkg/util/http"
 	"github.com/spf13/cobra"
 )
 
@@ -47,21 +47,9 @@ var RootCmd = &cobra.Command{
 	Short: "Apps cloud hosting with integrated deployment tools",
 	PersistentPreRun: func(cmd *cobra.Command, args []string) {
 
-		cfg.ApiHost = host
-
 		if debug {
 			cfg.Debug = debug
 		}
-
-		if cfg.ApiHost == host {
-			tls = true
-		}
-
-		hcli, err := http.New(cfg.ApiHost, &http.ReqOpts{TLS: tls})
-		if err != nil {
-			return
-		}
-		ctx.SetHttpClient(hcli)
 
 		strg, err := storage.Get()
 		if err != nil {
@@ -82,10 +70,27 @@ func Execute() {
 	}
 }
 
+// init client object
+func InitClient() *v1.Client {
+
+	conf := v1.Config{
+		Endpoint: host,
+	}
+
+	client, err := v1.Get(conf)
+	if err != nil {
+		panic(err)
+	}
+
+	return client
+}
+
 func init() {
 	cobra.OnInitialize()
 
-	RootCmd.Flags().StringVar(&host, "host", "https://api.lstbknd.net", "Host for rest api")
+	RootCmd.Flags().StringVar(&host, "host", "http://api.lstbknd.net", "Host for rest api")
 	RootCmd.Flags().BoolVar(&debug, "debug", false, "Enable debug mode")
-	RootCmd.Flags().BoolVar(&tls, "tls", false, " Enable tls")
+	RootCmd.Flags().BoolVar(&tls, "tls", false, "Enable tls")
+
+	ctx.SetClient(InitClient())
 }

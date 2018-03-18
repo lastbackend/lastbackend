@@ -16,4 +16,14 @@
 // from Last.Backend LLC.
 //
 
-package cluster
+package client
+
+import (
+	"context"
+
+	"github.com/lastbackend/lastbackend/pkg/api/client/core"
+)
+
+func New(ctx context.Context) (IClient, error) {
+	return core.New(ctx)
+}

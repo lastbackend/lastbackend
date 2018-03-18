@@ -2,7 +2,7 @@
 // Last.Backend LLC CONFIDENTIAL
 // __________________
 //
-// [2014] - [2018] Last.Backend LLC
+// [2014] - [2017] Last.Backend LLC
 // All Rights Reserved.
 //
 // NOTICE:  All information contained herein is, and remains
@@ -16,32 +16,40 @@
 // from Last.Backend LLC.
 //
 
-package namespace
+package core
 
 import (
 	"context"
-	"fmt"
-	"log"
+	"encoding/json"
 
-	"github.com/lastbackend/lastbackend/pkg/api/client"
-	v "github.com/lastbackend/lastbackend/pkg/cli/view"
+	"github.com/lastbackend/lastbackend/pkg/api/client/interfaces"
+	"github.com/lastbackend/lastbackend/pkg/api/views/v1"
 )
 
-func ListCmd() {
-
-	current, list, err := List()
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
-
-	list.Print(current)
+type NamespaceClient struct {
+	interfaces.Namespace
 }
 
-func List() (string, *v.NamespaceList, error) {
+func (s *NamespaceClient) List(ctx context.Context) (*v1.NamespaceList, error) {
 
-	cli, _ := client.New(context.Background())
-	log.Println(cli.Namespace().List(context.Background()))
+	var (
+		r  = NewRequest(ctx)
+		nl *v1.NamespaceList
+	)
 
-	return "", nil, nil
+	body, err := r.Get()
+	if err != nil {
+		return nil, err
+	}
+
+	if err := json.Unmarshal(body, nl); err != nil {
+		return nil, err
+	}
+
+	return nl, nil
+}
+
+func newNamespaceClient() *NamespaceClient {
+	s := new(NamespaceClient)
+	return s
 }

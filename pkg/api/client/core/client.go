@@ -16,4 +16,30 @@
 // from Last.Backend LLC.
 //
 
-package cluster
+package core
+
+import (
+	"context"
+
+	"github.com/lastbackend/lastbackend/pkg/api/client/interfaces"
+)
+
+type Client struct {
+	*NamespaceClient
+}
+
+func (s *Client) Namespace() interfaces.Namespace {
+	if s == nil {
+		return nil
+	}
+	return s.NamespaceClient
+}
+
+func New(ctx context.Context) (*Client, error) {
+
+	s := new(Client)
+
+	s.NamespaceClient = newNamespaceClient()
+
+	return s, nil
+}

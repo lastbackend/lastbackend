@@ -20,8 +20,9 @@ package table
 
 import (
 	"fmt"
-	"github.com/mattn/go-runewidth"
 	"strings"
+
+	"github.com/mattn/go-runewidth"
 )
 
 type table struct {

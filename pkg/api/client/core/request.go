@@ -2,7 +2,7 @@
 // Last.Backend LLC CONFIDENTIAL
 // __________________
 //
-// [2014] - [2018] Last.Backend LLC
+// [2014] - [2017] Last.Backend LLC
 // All Rights Reserved.
 //
 // NOTICE:  All information contained herein is, and remains
@@ -16,4 +16,34 @@
 // from Last.Backend LLC.
 //
 
-package cluster
+package core
+
+import (
+	"context"
+	"io/ioutil"
+	"net/http"
+)
+
+type Request struct {
+	ctx context.Context
+}
+
+func (r *Request) Get() ([]byte, error) {
+
+	res, err := http.Get(r.ctx.Value("host").(string))
+	if err != nil {
+		return nil, err
+	}
+	defer res.Body.Close()
+
+	body, err := ioutil.ReadAll(res.Body)
+	if err != nil {
+		return nil, err
+	}
+
+	return body, nil
+}
+
+func NewRequest(ctx context.Context) *Request {
+	return &Request{ctx}
+}

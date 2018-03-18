@@ -19,9 +19,9 @@
 package context
 
 import (
+	"github.com/lastbackend/lastbackend/pkg/api/client/core/v1"
 	"github.com/lastbackend/lastbackend/pkg/cli/config"
 	"github.com/lastbackend/lastbackend/pkg/cli/storage"
-	"github.com/lastbackend/lastbackend/pkg/util/http"
 )
 
 var _ctx ctx
@@ -37,22 +37,22 @@ func Mock() *ctx {
 
 type ctx struct {
 	storage storage.IStorage
-	http    *http.RawReq
 	config  *config.Config
 	token   *string
 	mock    bool
-}
-
-func (c *ctx) SetHttpClient(http *http.RawReq) {
-	c.http = http
-}
-
-func (c *ctx) GetHttpClient() *http.RawReq {
-	return c.http
+	client  *v1.Client
 }
 
 func (c *ctx) SetStorage(storage storage.IStorage) {
 	c.storage = storage
+}
+
+func (c *ctx) SetClient(client *v1.Client) {
+	c.client = client
+}
+
+func (c *ctx) GetClient() *v1.Client {
+	return c.client
 }
 
 func (c *ctx) GetStorage() storage.IStorage {

@@ -16,4 +16,14 @@
 // from Last.Backend LLC.
 //
 
-package cluster
+package interfaces
+
+import (
+	"context"
+
+	"github.com/lastbackend/lastbackend/pkg/api/views/v1"
+)
+
+type Namespace interface {
+	List(ctx context.Context) (*v1.NamespaceList, error)
+}

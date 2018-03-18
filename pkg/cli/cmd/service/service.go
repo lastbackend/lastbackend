@@ -19,8 +19,6 @@
 package service
 
 import (
-	"strconv"
-
 	"github.com/spf13/cobra"
 )
 
@@ -33,7 +31,7 @@ var ListService = &cobra.Command{
 	Use:   "list",
 	Short: "Display the services list",
 	Run: func(cmd *cobra.Command, args []string) {
-		ListServiceCmd()
+		//ListServiceCmd()
 	},
 }
 
@@ -47,13 +45,13 @@ var ScaleService = &cobra.Command{
 			return
 		}
 
-		replicas, err := strconv.ParseInt(args[1], 10, 64)
-		if err != nil {
-			cmd.Help()
-			return
-		}
+		//replicas, err := strconv.ParseInt(args[1], 10, 64)
+		//if err != nil {
+		//	cmd.Help()
+		//	return
+		//}
 
-		ScaleCmd(args[0], replicas)
+		//ScaleCmd(args[0], replicas)
 	},
 }
 
@@ -67,7 +65,7 @@ var InfoService = &cobra.Command{
 			return
 		}
 
-		InspectCmd(args[0])
+		//InspectCmd(args[0])
 	},
 }
 
@@ -81,7 +79,7 @@ var UpdateService = &cobra.Command{
 			return
 		}
 
-		UpdateCmd(args[0], Memory)
+		//UpdateCmd(args[0], Memory)
 	},
 }
 
@@ -95,7 +93,7 @@ var RemoveService = &cobra.Command{
 			return
 		}
 
-		RemoveCmd(args[0])
+		//RemoveCmd(args[0])
 	},
 }
 
@@ -109,7 +107,7 @@ var CreateService = &cobra.Command{
 			return
 		}
 
-		CreateCmd(args[0], Sources, Memory)
+		//CreateCmd(args[0], Sources, Memory)
 	},
 }
 
@@ -123,6 +121,6 @@ var LogsService = &cobra.Command{
 			return
 		}
 
-		LogsServiceCmd(args[0])
+		//LogsServiceCmd(args[0])
 	},
 }

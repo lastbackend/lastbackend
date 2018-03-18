@@ -16,4 +16,16 @@
 // from Last.Backend LLC.
 //
 
-package cluster
+package client
+
+import (
+	"github.com/lastbackend/lastbackend/pkg/api/client/interfaces"
+)
+
+type Request interface {
+	Get()
+}
+
+type IClient interface {
+	Namespace() interfaces.Namespace
+}
