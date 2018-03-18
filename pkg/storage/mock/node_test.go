@@ -857,7 +857,7 @@ func TestNodeStorage_InsertPod(t *testing.T) {
 		p2  = getPodAsset(ns, svc, dp,"test1", "")
 	)
 
-	n2.Spec.Pods[p1.Meta.Name] = p1.Spec
+	n2.Spec.Pods[p1.SelfLink()] = p1.Spec
 	p2.Meta.Name = ""
 
 	type fields struct {

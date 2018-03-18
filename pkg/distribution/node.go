@@ -32,11 +32,18 @@ type INode interface {
 	Create() (*types.Node, error)
 	Get(name string) (*types.Node, error)
 	Update(node *types.Node, opts *types.NodeUpdateOptions) error
-	SetAvailable(name string) error
-	SetUnavailable(name string) error
 	SetState(node *types.Node, state types.NodeState) (*types.Node, error)
 	SetInfo(node *types.Node, info types.NodeInfo) error
 	SetNetwork(node *types.Node, network types.Subnet) error
+	SetOnline(node *types.Node) error
+	SetOffline(node *types.Node) error
+	InsertPod(node *types.Node, pod *types.Pod) error
+	RemovePod(node *types.Node, pod *types.Pod) error
+	InsertVolume(node *types.Node, volume *types.Volume) error
+	RemoveVolume(node *types.Node, volume *types.Volume) error
+	InsertRoute(node *types.Node, route *types.Route) error
+	RemoveRoute(node *types.Node, route *types.Route) error
+
 	GetSpec(name string) (types.NodeSpec, error)
 	Remove(node *types.Node) error
 }
@@ -105,18 +112,7 @@ func (n *Node) Update(node *types.Node, opts *types.NodeUpdateOptions) error {
 	return nil
 }
 
-func (n *Node) SetAvailable(name string) error {
-
-	node, err := n.storage.Node().Get(n.context, name)
-	if err != nil {
-		log.Errorf("Get node id by name error: %s", err)
-		return err
-	}
-
-	if node == nil {
-		log.Debugf("Node not found by provided name: %s", name)
-		return nil
-	}
+func (n *Node) SetOnline(node *types.Node) error {
 
 	if err := n.storage.Node().SetOnline(n.context, node); err != nil {
 		log.Errorf("Set node online state error: %s", err)
@@ -126,23 +122,7 @@ func (n *Node) SetAvailable(name string) error {
 	return nil
 }
 
-func (n *Node) SetUnavailable(name string) error {
-
-	if name == "" {
-		log.Debugf("Node not found: %s", name)
-		return nil
-	}
-
-	node, err := n.storage.Node().Get(n.context, name)
-	if err != nil {
-		log.Errorf("Get node id by token error: %s", err)
-		return err
-	}
-
-	if node == nil {
-		log.Debugf("Node not found: %s", name)
-		return nil
-	}
+func (n *Node) SetOffline(node *types.Node) error {
 
 	if err := n.storage.Node().SetOffline(n.context, node); err != nil {
 		log.Errorf("Set node offline state error: %s", err)
@@ -186,6 +166,31 @@ func (n *Node) SetNetwork(node *types.Node, network types.Subnet) error {
 
 	return nil
 }
+
+func (n *Node) InsertPod(node *types.Node, pod *types.Pod) error {
+	return nil
+}
+
+func (n *Node) RemovePod(node *types.Node, pod *types.Pod) error {
+	return nil
+}
+
+func (n *Node) InsertVolume(node *types.Node, volume *types.Volume) error {
+	return nil
+}
+
+func (n *Node) RemoveVolume(node *types.Node, volume *types.Volume) error {
+	return nil
+}
+
+func (n *Node) InsertRoute(node *types.Node, route *types.Route) error {
+	return nil
+}
+
+func (n *Node) RemoveRoute(node *types.Node, route *types.Route) error {
+	return nil
+}
+
 
 func (n *Node) GetSpec(name string) (types.NodeSpec, error) {
 

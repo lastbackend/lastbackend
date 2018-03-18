@@ -82,7 +82,7 @@ func DeploymentUpdateH(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := dm.Scale(dp, opts); err != nil {
+	if err := dm.SetSpec(dp, opts); err != nil {
 		log.V(logLevel).Errorf("Handler: Deployment: update service err: %s", err)
 		errors.HTTP.InternalServerError(w)
 		return

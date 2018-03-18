@@ -45,15 +45,16 @@ type DeploymentMeta struct {
 }
 
 type DeploymentSpec struct {
+	Meta     Meta         `json:"meta"`
 	Replicas int          `json:"replicas"`
+	State    SpecState    `json:"state"`
 	Strategy SpecStrategy `json:"strategy"`
 	Triggers SpecTriggers `json:"triggers"`
 	Selector SpecSelector `json:"selector"`
-	Template PodSpec      `json:"template"`
+	Template SpecTemplate `json:"template"`
 }
 
 type DeploymentState struct {
-	Active    bool `json:"active"`
 	Ready     bool `json:"ready"`
 	Provision bool `json:"provision"`
 	Error     bool `json:"error"`
@@ -80,4 +81,24 @@ func (d *Deployment) SelfLink () string {
 		d.Meta.SelfLink = fmt.Sprintf("%s:%s:%s", d.Meta.Namespace, d.Meta.Service, d.Meta.Name)
 	}
 	return d.Meta.SelfLink
+}
+
+func (d *DeploymentState) SetProvision () {
+	d.Ready     = false
+	d.Provision = true
+}
+
+func (d *DeploymentState) SetReady () {
+	d.Ready     = true
+	d.Provision = false
+}
+
+func (d *DeploymentState) SetCancel () {
+	d.Ready     = false
+	d.Provision = true
+}
+
+func (d *DeploymentState) SetDestroy () {
+	d.Ready     = false
+	d.Provision = true
 }

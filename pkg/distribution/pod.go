@@ -34,12 +34,13 @@ import (
 type IPod interface {
 	Get(namespace, service, deployment, name string) (*types.Pod, error)
 	Create(deployment *types.Deployment) (*types.Pod, error)
-	ListByDeployment(namespace, service, deployment string) (map[string]*types.Pod, error)
+	ListByNamespace(namespace string) (map[string]*types.Pod, error)
 	ListByService(namespace, service string) (map[string]*types.Pod, error)
-	ListNotBindToNode(namespace string) (map[string]*types.Pod, error)
+	ListByDeployment(namespace, service, deployment string) (map[string]*types.Pod, error)
 	Schedule(pod *types.Pod) (*types.Pod, error)
-	SetState(pod *types.Pod, status types.PodStatus) (*types.Pod, error)
+	SetState(pod *types.Pod) (*types.Pod, error)
 	Destroy(ctx context.Context, pod *types.Pod) error
+	Remove(ctx context.Context, pod *types.Pod) error
 }
 
 type Pod struct {
@@ -47,7 +48,7 @@ type Pod struct {
 	storage storage.Storage
 }
 
-// Get - get pod info
+// Get pod info from storage
 func (p *Pod) Get(namespace, service, deployment, name string) (*types.Pod, error) {
 	log.V(logLevel).Debugf("Pod: get by name %s", name)
 
@@ -60,7 +61,7 @@ func (p *Pod) Get(namespace, service, deployment, name string) (*types.Pod, erro
 	return pod, nil
 }
 
-// Create new pod ̰
+// Create new pod
 func (p *Pod) Create(deployment *types.Deployment) (*types.Pod, error) {
 
 	pod := types.NewPod()
@@ -89,11 +90,11 @@ func (p *Pod) Create(deployment *types.Deployment) (*types.Pod, error) {
 			Server: ips,
 			Search: ips,
 		}
-		pod.Spec.Containers = append(pod.Spec.Containers, s)
+		pod.Spec.Template.Containers = append(pod.Spec.Template.Containers, s)
 	}
 
 	for _, s := range deployment.Spec.Template.Volumes {
-		pod.Spec.Volumes = append(pod.Spec.Volumes, s)
+		pod.Spec.Template.Volumes = append(pod.Spec.Template.Volumes, s)
 	}
 
 	if err := p.storage.Pod().Insert(p.context, pod); err != nil {
@@ -104,21 +105,20 @@ func (p *Pod) Create(deployment *types.Deployment) (*types.Pod, error) {
 	return pod, nil
 }
 
-// List By Deployment
-func (p *Pod) ListByDeployment(namespace, service, deployment string) (map[string]*types.Pod, error) {
-	log.V(logLevel).Debugf("Pod: get pod list by id %s/%s/%s", namespace, service, deployment)
+// ListByNamespace returns pod list in selected namespace
+func (p *Pod) ListByNamespace(namespace string) (map[string]*types.Pod, error) {
+	log.V(logLevel).Debugf("Pod: get pod list by namespace %s", namespace)
 
-	pods, err := p.storage.Pod().ListByDeployment(p.context, namespace, service, deployment)
+	pods, err := p.storage.Pod().ListByNamespace(p.context, namespace)
 	if err != nil {
-		log.V(logLevel).Debugf("Pod: get Pod list by deployment id `%s/%s/%s` err: %s",
-			namespace, service, deployment, err)
+		log.V(logLevel).Debugf("Pod: get Pod list by deployment id `%s` err: %s", namespace, err)
 		return nil, err
 	}
 
 	return pods, nil
 }
 
-// List By Service
+// ListByService returns pod list in selected service
 func (p *Pod) ListByService(namespace, service string) (map[string]*types.Pod, error) {
 	log.V(logLevel).Debugf("Pod: get pod list by service id %s/%s", namespace, service)
 
@@ -131,13 +131,14 @@ func (p *Pod) ListByService(namespace, service string) (map[string]*types.Pod, e
 	return pods, nil
 }
 
-// List By Service
-func (p *Pod) ListNotBindToNode(namespace string) (map[string]*types.Pod, error) {
-	log.V(logLevel).Debugf("Pod: get pods list when not bind to any node")
+// ListByDeployment returns pod list in selected deployment
+func (p *Pod) ListByDeployment(namespace, service, deployment string) (map[string]*types.Pod, error) {
+	log.V(logLevel).Debugf("Pod: get pod list by id %s/%s/%s", namespace, service, deployment)
 
-	pods, err := p.storage.Pod().ListByNamespace(p.context, namespace)
+	pods, err := p.storage.Pod().ListByDeployment(p.context, namespace, service, deployment)
 	if err != nil {
-		log.V(logLevel).Debugf("Pod: get pods list when not bind to any node `%s` err: %s", err)
+		log.V(logLevel).Debugf("Pod: get Pod list by deployment id `%s/%s/%s` err: %s",
+			namespace, service, deployment, err)
 		return nil, err
 	}
 
@@ -177,11 +178,11 @@ func (p *Pod) Schedule(pod *types.Pod) (*types.Pod, error) {
 }
 
 // SetState - set state for pod
-func (p *Pod) SetState(pod *types.Pod, status types.PodStatus) (*types.Pod, error) {
+func (p *Pod) SetState(pod *types.Pod) (*types.Pod, error) {
 
 	log.Debugf("Set state for pod: %s", pod.Meta.Name)
 
-	switch status.Stage {
+	switch pod.Status.Stage {
 	case types.PodStagePull:
 		pod.MarkAsPull()
 	case types.PodStageRunning:
@@ -189,18 +190,17 @@ func (p *Pod) SetState(pod *types.Pod, status types.PodStatus) (*types.Pod, erro
 	case types.PodStageStopped:
 		pod.MarkAsStopped()
 	case types.PodStageError:
-		pod.MarkAsError(errors.New(status.Message))
+		pod.MarkAsError(errors.New(pod.Status.Message))
 	case types.PodStepDestroyed:
 		pod.MarkAsDestroyed()
 	}
 
-	if status.Stage == types.PodStepDestroyed {
+	if pod.Status.Stage == types.PodStepDestroyed {
 		if err := p.storage.Pod().Remove(p.context, pod); err != nil {
 			log.Errorf("Pod remove err: %s", err.Error())
 			return nil, err
 		}
 	} else {
-		pod.Status = status
 		if err := p.storage.Pod().SetState(p.context, pod); err != nil {
 			log.Errorf("Pod set state err: %s", err.Error())
 			return nil, err
@@ -210,9 +210,20 @@ func (p *Pod) SetState(pod *types.Pod, status types.PodStatus) (*types.Pod, erro
 	return pod, nil
 }
 
-// Destroy - destroy pod
+// Destroy pod
 func (p *Pod) Destroy(ctx context.Context, pod *types.Pod) error {
-	if err := p.storage.Pod().Destroy(p.context, pod); err != nil {
+
+	pod.Spec.State.Destroy = true
+	if err := p.storage.Pod().SetSpec(p.context, pod); err != nil {
+		log.Errorf("Mark pod for destroy error: %s", err.Error())
+		return err
+	}
+	return nil
+}
+
+// Remove pod from storage
+func (p *Pod) Remove(ctx context.Context, pod *types.Pod) error {
+	if err := p.storage.Pod().Remove(p.context, pod); err != nil {
 		log.Errorf("Mark pod for destroy error: %s", err.Error())
 		return err
 	}

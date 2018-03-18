@@ -127,7 +127,7 @@ func (s *NodeStorage) InsertPod(ctx context.Context, node *types.Node, pod *type
 		return err
 	}
 
-	s.data[node.Meta.Name].Spec.Pods[pod.Meta.Name] = pod.Spec
+	s.data[node.Meta.Name].Spec.Pods[pod.SelfLink()] = pod.Spec
 
 	return nil
 }

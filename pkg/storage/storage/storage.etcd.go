@@ -45,6 +45,7 @@ type Service interface {
 	Remove(ctx context.Context, service *types.Service) error
 	Watch(ctx context.Context, service chan *types.Service) error
 	WatchSpec(ctx context.Context, service chan *types.Service) error
+	WatchState(ctx context.Context, service chan *types.Service) error
 	Clear(ctx context.Context) error
 }
 
@@ -52,12 +53,14 @@ type Deployment interface {
 	Get(ctx context.Context, namespace, service, name string) (*types.Deployment, error)
 	ListByNamespace(ctx context.Context, namespace string) (map[string]*types.Deployment, error)
 	ListByService(ctx context.Context, namespace, service string) (map[string]*types.Deployment, error)
+	SetSpec(ctx context.Context, d *types.Deployment) error
 	SetState(ctx context.Context, d *types.Deployment) error
 	Insert(ctx context.Context, d *types.Deployment) error
 	Update(ctx context.Context, d *types.Deployment) error
 	Remove(ctx context.Context, d *types.Deployment) error
 	Watch(ctx context.Context, deployment chan *types.Deployment) error
 	WatchSpec(ctx context.Context, deployment chan *types.Deployment) error
+	WatchState(ctx context.Context, deployment chan *types.Deployment) error
 	Clear(ctx context.Context) error
 }
 
@@ -66,14 +69,15 @@ type Pod interface {
 	ListByNamespace(ctx context.Context, namespace string) (map[string]*types.Pod, error)
 	ListByService(ctx context.Context, namespace, service string) (map[string]*types.Pod, error)
 	ListByDeployment(ctx context.Context, namespace, service, deployment string) (map[string]*types.Pod, error)
+	SetSpec(ctx context.Context, pod *types.Pod) error
 	SetState(ctx context.Context, pod *types.Pod) error
 	Insert(ctx context.Context, pod *types.Pod) error
 	Upsert(ctx context.Context, pod *types.Pod) error
 	Update(ctx context.Context, pod *types.Pod) error
-	Destroy(ctx context.Context, pod *types.Pod) error
 	Remove(ctx context.Context, pod *types.Pod) error
 	Watch(ctx context.Context, pod chan *types.Pod) error
 	WatchSpec(ctx context.Context, pod chan *types.Pod) error
+	WatchState(ctx context.Context, pod chan *types.Pod) error
 	Clear(ctx context.Context) error
 }
 
@@ -86,6 +90,7 @@ type Trigger interface {
 	Remove(ctx context.Context, trigger *types.Trigger) error
 	Watch(ctx context.Context, trigger chan *types.Trigger) error
 	WatchSpec(ctx context.Context, trigger chan  *types.Trigger) error
+	WatchState(ctx context.Context, trigger chan  *types.Trigger) error
 	Clear(ctx context.Context) error
 }
 
@@ -98,6 +103,7 @@ type Route interface {
 	Remove(ctx context.Context, route *types.Route) error
 	Watch(ctx context.Context, route chan *types.Route) error
 	WatchSpec(ctx context.Context, route chan *types.Route) error
+	WatchState(ctx context.Context, route chan *types.Route) error
 	Clear(ctx context.Context) error
 }
 
@@ -110,6 +116,7 @@ type Volume interface {
 	Remove(ctx context.Context, volume *types.Volume) error
 	Watch(ctx context.Context, volume chan *types.Volume) error
 	WatchSpec(ctx context.Context, volume chan *types.Volume) error
+	WatchState(ctx context.Context, volume chan *types.Volume) error
 	Clear(ctx context.Context) error
 }
 

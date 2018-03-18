@@ -80,6 +80,16 @@ type PodState struct {
 }
 
 type PodSpec struct {
+	State    PodSpecState    `json:"state"`
+	Template PodSpecTemplate `json:"template"`
+}
+
+type PodSpecState struct {
+	Destroy     bool `json:"destroy"`
+	Maintenance bool `json:"maintenance"`
+}
+
+type PodSpecTemplate struct {
 	// Template Volume
 	Volumes types.SpecTemplateVolumes `json:"volumes"`
 	// Template main container

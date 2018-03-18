@@ -122,6 +122,11 @@ func (s *ServiceStorage) WatchSpec(ctx context.Context, service chan *types.Serv
 	return nil
 }
 
+// Watch service state changes
+func (s *ServiceStorage) WatchState(ctx context.Context, service chan *types.Service) error {
+	return nil
+}
+
 // Clear service storage
 func (s *ServiceStorage) Clear(ctx context.Context) error {
 	s.data = make(map[string]*types.Service)

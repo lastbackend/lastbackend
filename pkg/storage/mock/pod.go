@@ -34,6 +34,7 @@ type PodStorage struct {
 	data map[string]*types.Pod
 }
 
+// Get pod from storage
 func (s *PodStorage) Get(ctx context.Context, namespace, service, deployment, name string) (*types.Pod, error) {
 	if ns, ok := s.data[s.keyCreate(namespace, service, deployment, name)]; ok {
 		return ns, nil
@@ -41,6 +42,7 @@ func (s *PodStorage) Get(ctx context.Context, namespace, service, deployment, na
 	return nil, errors.New(store.ErrEntityNotFound)
 }
 
+// ListByNamespace returns pod list from storage by namespace
 func (s *PodStorage) ListByNamespace(ctx context.Context, namespace string) (map[string]*types.Pod, error) {
 	list := make(map[string]*types.Pod, 0)
 
@@ -55,6 +57,7 @@ func (s *PodStorage) ListByNamespace(ctx context.Context, namespace string) (map
 	return list, nil
 }
 
+// ListByService returns pod list from storage by namespace and service names
 func (s *PodStorage) ListByService(ctx context.Context, namespace, service string) (map[string]*types.Pod, error) {
 	list := make(map[string]*types.Pod, 0)
 
@@ -69,6 +72,7 @@ func (s *PodStorage) ListByService(ctx context.Context, namespace, service strin
 	return list, nil
 }
 
+// ListByDeployment returns pod list from storage by namespace, service and deployment names
 func (s *PodStorage) ListByDeployment(ctx context.Context, namespace, service, deployment string) (map[string]*types.Pod, error) {
 	list := make(map[string]*types.Pod, 0)
 
@@ -83,6 +87,16 @@ func (s *PodStorage) ListByDeployment(ctx context.Context, namespace, service, d
 	return list, nil
 }
 
+// Update deployment spec
+func (s *PodStorage) SetSpec(ctx context.Context, pod *types.Pod) error {
+	if err := s.checkPodExists(pod); err != nil {
+		return err
+	}
+
+	s.data[s.keyGet(pod)].Spec = pod.Spec
+	return nil
+}
+
 // Update deployment state
 func (s *PodStorage) SetState(ctx context.Context, pod *types.Pod) error {
 	if err := s.checkPodExists(pod); err != nil {
@@ -93,6 +107,7 @@ func (s *PodStorage) SetState(ctx context.Context, pod *types.Pod) error {
 	return nil
 }
 
+// Insert new pod into storage
 func (s *PodStorage) Insert(ctx context.Context, pod *types.Pod) error {
 	if err := s.checkPodArgument(pod); err != nil {
 		return err
@@ -102,6 +117,7 @@ func (s *PodStorage) Insert(ctx context.Context, pod *types.Pod) error {
 	return nil
 }
 
+// Update pod in storage
 func (s *PodStorage) Update(ctx context.Context, pod *types.Pod) error {
 
 	if err := s.checkPodExists(pod); err != nil {
@@ -113,6 +129,19 @@ func (s *PodStorage) Update(ctx context.Context, pod *types.Pod) error {
 	return nil
 }
 
+// Remove pod from storage
+func (s *PodStorage) Destroy(ctx context.Context, pod *types.Pod) error {
+
+	if err := s.checkPodExists(pod); err != nil {
+		return err
+	}
+
+	delete(s.data, s.keyGet(pod))
+
+	return nil
+}
+
+// Remove pod from storage
 func (s *PodStorage) Remove(ctx context.Context, pod *types.Pod) error {
 
 	if err := s.checkPodExists(pod); err != nil {
@@ -124,12 +153,18 @@ func (s *PodStorage) Remove(ctx context.Context, pod *types.Pod) error {
 	return nil
 }
 
+// Watch pod changes
 func (s *PodStorage) Watch(ctx context.Context, pod chan *types.Pod) error {
 	return nil
 }
 
 // Watch pod spec changes
 func (s *PodStorage) WatchSpec(ctx context.Context, pod chan *types.Pod) error {
+	return nil
+}
+
+// Watch pod state changes
+func (s *PodStorage) WatchState(ctx context.Context, pod chan *types.Pod) error {
 	return nil
 }
 
@@ -149,12 +184,14 @@ func (s *PodStorage) keyGet (p *types.Pod) string {
 	return p.SelfLink()
 }
 
+// newPodStorage returns new podStorage
 func newPodStorage() *PodStorage {
 	s := new(PodStorage)
 	s.data = make(map[string]*types.Pod)
 	return s
 }
 
+// checkPodArgument method checks pod argument
 func (s *PodStorage) checkPodArgument(pod *types.Pod) error {
 	if pod == nil {
 		return errors.New(store.ErrStructArgIsNil)
@@ -167,6 +204,7 @@ func (s *PodStorage) checkPodArgument(pod *types.Pod) error {
 	return nil
 }
 
+// checkPodArgument method checks if pod exists in storage
 func (s *PodStorage) checkPodExists(pod *types.Pod) error {
 
 	if err := s.checkPodArgument(pod); err != nil {

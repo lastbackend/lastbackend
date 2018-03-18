@@ -112,6 +112,11 @@ func (s *RouteStorage) WatchSpec(ctx context.Context, route chan *types.Route) e
 	return nil
 }
 
+// Watch route state changes
+func (s *RouteStorage) WatchState(ctx context.Context, route chan *types.Route) error {
+	return nil
+}
+
 // Clear route storage
 func (s *RouteStorage) Clear(ctx context.Context) error {
 	s.data = make(map[string]*types.Route)

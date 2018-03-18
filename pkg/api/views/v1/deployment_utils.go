@@ -55,7 +55,6 @@ func (di *Deployment) ToMeta(obj types.DeploymentMeta) DeploymentMeta {
 
 func (di *Deployment) ToState(obj types.DeploymentState) DeploymentStateInfo {
 	return DeploymentStateInfo{
-		Active:    obj.Active,
 		Provision: obj.Provision,
 		Cancel:    obj.Cancel,
 		Error:     obj.Error,

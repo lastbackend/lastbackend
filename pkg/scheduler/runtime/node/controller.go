@@ -25,12 +25,12 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/scheduler/envs"
 )
 
-type NodeController struct {
+type Controller struct {
 	nodes  chan *types.Node
 	active bool
 }
 
-func (nc *NodeController) Watch(node chan *types.Node) {
+func (nc *Controller) Watch(node chan *types.Node) {
 
 	var (
 		stg = envs.Get().GetStorage()
@@ -64,18 +64,17 @@ func (nc *NodeController) Watch(node chan *types.Node) {
 	stg.Node().Watch(context.Background(), nc.nodes)
 }
 
-func (nc *NodeController) Pause() {
+func (nc *Controller) Pause() {
 	nc.active = false
 }
 
-func (nc *NodeController) Resume() {
-
+func (nc *Controller) Resume() {
 	nc.active = true
 	log.Debug("NodeController: start check pods state")
 }
 
-func NewNodeController(_ context.Context) *NodeController {
-	sc := new(NodeController)
+func NewNodeController(_ context.Context) *Controller {
+	sc := new(Controller)
 	sc.active = false
 	sc.nodes = make(chan *types.Node)
 	return sc

@@ -81,6 +81,16 @@ func (s *DeploymentStorage) SetState(ctx context.Context, deployment *types.Depl
 	return nil
 }
 
+// Update deployment spec
+func (s *DeploymentStorage) SetSpec(ctx context.Context, deployment *types.Deployment) error {
+	if err := s.checkDeploymentExists(deployment); err != nil {
+		return err
+	}
+
+	s.data[s.keyGet(deployment)].Spec = deployment.Spec
+	return nil
+}
+
 // Insert new deployment
 func (s *DeploymentStorage) Insert(ctx context.Context, deployment *types.Deployment) error {
 
@@ -127,6 +137,12 @@ func (s *DeploymentStorage) WatchSpec(ctx context.Context, deployment chan *type
 	return nil
 }
 
+// Watch deployment state changes
+func (s *DeploymentStorage) WatchState(ctx context.Context, deployment chan *types.Deployment) error {
+	return nil
+}
+
+// Clear deployment database
 func (s *DeploymentStorage) Clear(ctx context.Context) error {
 	s.data = make(map[string]*types.Deployment)
 	return nil

@@ -35,21 +35,41 @@ func Provision(svc *types.Service) error {
 		stg = envs.Get().GetStorage()
 	)
 
-	log.Debugf("Service Controller: provision service: %s/%s", svc.Meta.Namespace, svc.Meta.Name)
-
-	// Check service is marked for destroy
+	log.Debugf("controller:service:controller:provision: provision service: %s/%s", svc.Meta.Namespace, svc.Meta.Name)
 
 	// Get all deployments per service
-
 	dm := distribution.NewDeploymentModel(context.Background(), stg)
 	dl, err := dm.ListByService(svc.Meta.Namespace, svc.Meta.Name)
 	if err != nil {
-		log.Errorf("Controller: service controller: get deployments list error: %s", err.Error())
+		log.Errorf("controller:service:controller:provision: get deployments list error: %s", err.Error())
 		return err
 	}
 
+	// Destroy parent deployments
 	for _, d := range dl {
-		d.Spec.Template.Termination = 1
+		d.Spec.State.Destroy = true
+		if err := dm.Destroy(d); err != nil {
+			log.Errorf("controller:service:controller:provision: destroy deployment err: %s", err.Error())
+		}
+	}
+
+	// Check service is marked for destroy
+	if svc.Spec.State.Destroy {
+		return nil
+	}
+
+	// Create new deployment
+	if _, err := dm.Create(svc); err != nil {
+		log.Errorf("controller:service:controller:provision: create deployment err: %s", err.Error())
+		svc.State.Error = true
+		svc.State.Message = err.Error()
+	}
+
+	// Update service state
+	svc.State.Provision = true
+	if err := distribution.NewServiceModel(context.Background(), stg).SetState(svc); err != nil {
+		log.Errorf("controller:service:controller:provision: service set state err: %s", err.Error())
+		return err
 	}
 
 	return nil

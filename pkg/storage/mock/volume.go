@@ -113,6 +113,11 @@ func (s *VolumeStorage) WatchSpec(ctx context.Context, volume chan *types.Volume
 	return nil
 }
 
+// Watch volume state changes
+func (s *VolumeStorage) WatchState(ctx context.Context, volume chan *types.Volume) error {
+	return nil
+}
+
 // Clear volume storage
 func (s *VolumeStorage) Clear(ctx context.Context) error {
 	s.data = make(map[string]*types.Volume)

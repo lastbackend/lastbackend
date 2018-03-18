@@ -65,9 +65,15 @@ func (pv *PodView) toState(pod types.PodState) PodState {
 
 func (pv *PodView) toSpec(pod types.PodSpec) PodSpec {
 	return PodSpec{
-		Volumes:     pod.Volumes,
-		Containers:  pod.Containers,
-		Termination: pod.Termination,
+		State: 		PodSpecState{
+			Destroy: pod.State.Destroy,
+			Maintenance: pod.State.Maintenance,
+		},
+		Template: PodSpecTemplate{
+			Containers: pod.Template.Containers,
+			Volumes: pod.Template.Volumes,
+			Termination: pod.Template.Termination,
+		},
 	}
 }
 

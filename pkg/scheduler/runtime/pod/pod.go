@@ -24,6 +24,7 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/distribution/errors"
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 	"github.com/lastbackend/lastbackend/pkg/log"
+	"github.com/lastbackend/lastbackend/pkg/distribution"
 )
 
 func Provision(p *types.Pod) error {
@@ -35,8 +36,10 @@ func Provision(p *types.Pod) error {
 		node   *types.Node
 	)
 
+	nm := distribution.NewNodeModel(context.Background(), stg)
+
 	if p.Meta.Node != "" {
-		n, err := stg.Node().Get(context.Background(), p.Meta.Node)
+		n, err := nm.Get(p.Meta.Node)
 		if err != nil {
 			log.Errorf("Node: find node err: %s", err.Error())
 			return err
@@ -47,24 +50,33 @@ func Provision(p *types.Pod) error {
 			return errors.New(errors.NodeNotFound)
 		}
 
-		if err := stg.Node().InsertPod(context.Background(), n, p); err != nil {
+		if p.Spec.State.Destroy {
+			if err := nm.RemovePod(n, p); err != nil {
+				log.Errorf("Node: update pod spec err: %s", err.Error())
+				return err
+			}
+			return nil
+		}
+
+		if err := nm.InsertPod(n, p); err != nil {
 			log.Errorf("Node: update pod spec err: %s", err.Error())
 			return err
 		}
 	}
 
-	if p.State.Destroy {
+	if p.Spec.State.Destroy {
 		return nil
 	}
 
+
 	log.Debugf("Allocate node for pod: %s", p.Meta.Name)
-	nodes, err := stg.Node().List(context.Background())
+	nodes, err := nm.List()
 	if err != nil {
 		log.Errorf("Node: allocate: get nodes error: %s", err.Error())
 		return err
 	}
 
-	for _, c := range p.Spec.Containers {
+	for _, c := range p.Spec.Template.Containers {
 		memory += c.Resources.Quota.RAM
 	}
 
@@ -78,10 +90,18 @@ func Provision(p *types.Pod) error {
 
 	if node == nil {
 		log.Error("Node: Allocate: Available node not found")
+		p.Status.Stage = types.PodStageError
+		p.Status.Message = errors.NodeNotFound
+
+		if _, err := distribution.NewPodModel(context.Background(), stg).SetState(p); err != nil {
+			log.Errorf("set pod state error: %s", err.Error())
+			return err
+		}
+
 		return errors.New(errors.NodeNotFound)
 	}
 
-	if err := stg.Node().InsertPod(context.Background(), node, p); err != nil {
+	if err := nm.InsertPod(node, p); err != nil {
 		log.Errorf("Node: Pod spec add: insert spec to node err: %s", err.Error())
 		return err
 	}

@@ -932,6 +932,7 @@ func getPodAsset(namespace, service, deployment, name, desc string) types.Pod {
 	p.Meta.Namespace = namespace
 	p.Meta.Service = service
 	p.Meta.Deployment = deployment
+	p.SelfLink()
 
 	return p
 }

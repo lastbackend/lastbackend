@@ -114,6 +114,11 @@ func (s *TriggerStorage) WatchSpec(ctx context.Context, trigger chan *types.Trig
 	return nil
 }
 
+// Watch trigger state changes
+func (s *TriggerStorage) WatchState(ctx context.Context, trigger chan *types.Trigger) error {
+	return nil
+}
+
 // Clear trigger storage
 func (s *TriggerStorage) Clear(ctx context.Context) error {
 	s.data = make(map[string]*types.Trigger)
