@@ -29,7 +29,7 @@ var e Env
 type Env struct {
 	storage              storage.Storage
 	httpTemplateRegistry *http.RawReq
-	client               client.Client
+	client               client.IClient
 }
 
 func Get() *Env {
@@ -40,11 +40,11 @@ func (c *Env) SetStorage(storage storage.Storage) {
 	c.storage = storage
 }
 
-func (c *Env) SetClient(client client.Client) {
+func (c *Env) SetClient(client client.IClient) {
 	c.client = client
 }
 
-func (c *Env) GetClient() client.Client {
+func (c *Env) GetClient() client.IClient {
 	return c.client
 }
 
