@@ -44,10 +44,10 @@ func TestServiceInfo(t *testing.T) {
 	envs.Get().SetStorage(strg)
 	viper.Set("verbose", 0)
 
-	ns1 := getDefaultNamespace("demo")
-	ns2 := getDefaultNamespace("test")
-	s1 := getDefaultService("demo")
-	s2 := getDefaultService("test")
+	ns1 := getNamespaceAsset("demo", "")
+	ns2 := getNamespaceAsset("test", "")
+	s1 := getServiceAsset(ns1.Meta.Name, "demo", "")
+	s2 := getServiceAsset(ns1.Meta.Name, "test", "")
 
 	err := envs.Get().GetStorage().Namespace().Insert(context.Background(), ns1)
 	assert.NoError(t, err)
@@ -55,7 +55,7 @@ func TestServiceInfo(t *testing.T) {
 	err = envs.Get().GetStorage().Service().Insert(context.Background(), s1)
 	assert.NoError(t, err)
 
-	v, err := views.V1().Service().New(s1, make([]*types.Deployment, 0), make([]*types.Pod, 0)).ToJson()
+	v, err := views.V1().Service().New(s1, make(map[string]*types.Deployment, 0), make(map[string]*types.Pod, 0)).ToJson()
 	assert.NoError(t, err)
 
 	tests := []struct {
@@ -143,13 +143,14 @@ func TestServiceList(t *testing.T) {
 	envs.Get().SetStorage(strg)
 	viper.Set("verbose", 0)
 
-	ns1 := getDefaultNamespace("demo")
-	ns2 := getDefaultNamespace("test")
+	ns1 := getNamespaceAsset("demo", "")
+	ns2 := getNamespaceAsset("test", "")
+
 	err := envs.Get().GetStorage().Namespace().Insert(context.Background(), ns1)
 	assert.NoError(t, err)
 
-	s1 := getDefaultService("demo")
-	s2 := getDefaultService("test")
+	s1 := getServiceAsset(ns1.Meta.Name, "demo", "")
+	s2 := getServiceAsset(ns1.Meta.Name, "test", "")
 
 	err = envs.Get().GetStorage().Service().Insert(context.Background(), s1)
 	assert.NoError(t, err)
@@ -157,9 +158,11 @@ func TestServiceList(t *testing.T) {
 	err = envs.Get().GetStorage().Service().Insert(context.Background(), s2)
 	assert.NoError(t, err)
 
-	sl := types.ServiceList{s1, s2}
+	sl := make(types.ServiceList, 0)
+	sl[s1.SelfLink()] = s1
+	sl[s2.SelfLink()] = s2
 
-	v, err := views.V1().Service().NewList(sl, make([]*types.Deployment, 0)).ToJson()
+	v, err := views.V1().Service().NewList(sl, make(map[string]*types.Deployment, 0)).ToJson()
 	assert.NoError(t, err)
 
 	tests := []struct {
@@ -262,18 +265,18 @@ func TestServiceCreate(t *testing.T) {
 	intPointer := func(i int) *int { return &i }
 	int64Pointer := func(i int64) *int64 { return &i }
 
-	ns := getDefaultNamespace("demo")
+	ns := getNamespaceAsset("demo", "")
 
 	err := envs.Get().GetStorage().Namespace().Insert(context.Background(), ns)
 	assert.NoError(t, err)
 
-	s1 := getDefaultService("demo")
-	s2 := getDefaultService("test")
+	s1 := getServiceAsset(ns.Meta.Name, "demo", "")
+	s2 := getServiceAsset(ns.Meta.Name, "test", "")
 
 	err = envs.Get().GetStorage().Service().Insert(context.Background(), s1)
 	assert.NoError(t, err)
 
-	v, err := views.V1().Service().New(s1, make([]*types.Deployment, 0), make([]*types.Pod, 0)).ToJson()
+	v, err := views.V1().Service().New(s1, make(map[string]*types.Deployment, 0), make(map[string]*types.Pod, 0)).ToJson()
 	assert.NoError(t, err)
 
 	tests := []struct {
@@ -424,19 +427,21 @@ func TestServiceUpdate(t *testing.T) {
 	intPointer := func(i int) *int { return &i }
 	int64Pointer := func(i int64) *int64 { return &i }
 
-	ns1 := getDefaultNamespace("demo")
-	ns2 := getDefaultNamespace("test")
+	ns1 := getNamespaceAsset("demo", "")
+	ns2 := getNamespaceAsset("test", "")
+
+
 
 	err := envs.Get().GetStorage().Namespace().Insert(context.Background(), ns1)
 	assert.NoError(t, err)
 
-	s1 := getDefaultService("demo")
-	s2 := getDefaultService("test")
+	s1 := getServiceAsset(ns1.Meta.Name, "demo", "")
+	s2 := getServiceAsset(ns1.Meta.Name, "test", "")
 
 	err = envs.Get().GetStorage().Service().Insert(context.Background(), s1)
 	assert.NoError(t, err)
 
-	v, err := views.V1().Service().New(s1, make([]*types.Deployment, 0), make([]*types.Pod, 0)).ToJson()
+	v, err := views.V1().Service().New(s1, make(map[string]*types.Deployment, 0), make(map[string]*types.Pod, 0)).ToJson()
 	assert.NoError(t, err)
 
 	tests := []struct {
@@ -556,13 +561,15 @@ func TestServiceRemove(t *testing.T) {
 	envs.Get().SetStorage(strg)
 	viper.Set("verbose", 0)
 
-	ns1 := getDefaultNamespace("demo")
-	ns2 := getDefaultNamespace("test")
+	ns1 := getNamespaceAsset("demo", "")
+	ns2 := getNamespaceAsset("test", "")
+
 	err := envs.Get().GetStorage().Namespace().Insert(context.Background(), ns1)
 	assert.NoError(t, err)
 
-	s1 := getDefaultService("demo")
-	s2 := getDefaultService("test")
+	s1 := getServiceAsset(ns1.Meta.Name, "demo", "")
+	s2 := getServiceAsset(ns1.Meta.Name, "test", "")
+
 	err = envs.Get().GetStorage().Service().Insert(context.Background(), s1)
 	assert.NoError(t, err)
 
@@ -613,6 +620,8 @@ func TestServiceRemove(t *testing.T) {
 			if tc.headers != nil {
 				for key, val := range tc.headers {
 					req.Header.Set(key, val)
+
+
 				}
 			}
 
@@ -640,44 +649,22 @@ func TestServiceRemove(t *testing.T) {
 
 }
 
-func getDefaultNamespace(name string) *types.Namespace {
-	res := new(types.Namespace)
-	switch name {
-	case "demo":
-		res.Meta.SetDefault()
-		res.Meta.Name = "demo"
-		res.Meta.Description = "demo description"
-		res.Quotas.Routes = int(2)
-		res.Quotas.RAM = int64(256)
-	case "test":
-		res.Meta.SetDefault()
-		res.Meta.Name = "test"
-		res.Meta.Description = "test description"
-		res.Quotas.Routes = int(1)
-		res.Quotas.RAM = int64(128)
-	default:
-		res = nil
-	}
-	return res
+func getNamespaceAsset(name, desc string) *types.Namespace {
+	var n = types.Namespace{}
+	n.Meta.SetDefault()
+	n.Meta.Name = name
+	n.Meta.Description = desc
+	return &n
 }
 
-func getDefaultService(name string) *types.Service {
-	res := new(types.Service)
-	switch name {
-	case "demo":
-		res.Meta.SetDefault()
-		res.Meta.Name = "demo"
-		res.Meta.Description = "demo description"
-		res.Meta.Namespace = "demo"
-	case "test":
-		res.Meta.SetDefault()
-		res.Meta.Name = "test"
-		res.Meta.Description = "test description"
-		res.Meta.Namespace = "demo"
-	default:
-		res = nil
-	}
-	return res
+func getServiceAsset(namespace, name, desc string) *types.Service {
+	var n = types.Service{}
+
+	n.Meta.SetDefault()
+	n.Meta.Namespace = namespace
+	n.Meta.Name = name
+	n.Meta.Description = desc
+	return &n
 }
 
 func setRequestVars(r *mux.Router, req *http.Request) {

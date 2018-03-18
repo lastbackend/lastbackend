@@ -42,12 +42,19 @@ func TestNamespaceInfo(t *testing.T) {
 
 	strg, _ := storage.GetMock()
 	envs.Get().SetStorage(strg)
-	viper.Set("verbose", 0)
+	viper.Set("verbose", 7)
 
-	ns1 := getDefaultNamespace("demo")
-	ns2 := getDefaultNamespace("test")
+	ns1 := getNamespaceAsset("demo", "")
+	ns2 := getNamespaceAsset("test", "")
 
-	err := envs.Get().GetStorage().Namespace().Insert(context.Background(), ns1)
+	nl  := make(map[string]*types.Namespace)
+	nl[ns1.Meta.Name]=ns1
+	nl[ns2.Meta.Name]=ns2
+
+	err := envs.Get().GetStorage().Namespace().Clear(context.Background())
+	assert.NoError(t, err)
+
+	err = envs.Get().GetStorage().Namespace().Insert(context.Background(), ns1)
 	assert.NoError(t, err)
 
 	v, err := views.V1().Namespace().New(ns1).ToJson()
@@ -124,18 +131,23 @@ func TestNamespaceList(t *testing.T) {
 	envs.Get().SetStorage(strg)
 	viper.Set("verbose", 0)
 
-	ns1 := getDefaultNamespace("demo")
-	ns2 := getDefaultNamespace("test")
+	ns1 := getNamespaceAsset("demo", "")
+	ns2 := getNamespaceAsset("test", "")
 
-	err := envs.Get().GetStorage().Namespace().Insert(context.Background(), ns1)
+	nl  := make(map[string]*types.Namespace)
+	nl[ns1.Meta.Name]=ns1
+	nl[ns2.Meta.Name]=ns2
+
+	err := envs.Get().GetStorage().Namespace().Clear(context.Background())
+	assert.NoError(t, err)
+
+	err = envs.Get().GetStorage().Namespace().Insert(context.Background(), ns1)
 	assert.NoError(t, err)
 
 	err = envs.Get().GetStorage().Namespace().Insert(context.Background(), ns2)
 	assert.NoError(t, err)
 
-	nsl := types.NamespaceList{ns1, ns2}
-
-	v, err := views.V1().Namespace().NewList(nsl).ToJson()
+	v, err := views.V1().Namespace().NewList(nl).ToJson()
 	assert.NoError(t, err)
 
 	tests := []struct {
@@ -219,12 +231,15 @@ func TestNamespaceCreate(t *testing.T) {
 	envs.Get().SetStorage(strg)
 	viper.Set("verbose", 0)
 
-	ns := getDefaultNamespace("demo")
+	ns1 := getNamespaceAsset("demo", "")
 
-	err := envs.Get().GetStorage().Namespace().Insert(context.Background(), ns)
+	err := envs.Get().GetStorage().Namespace().Clear(context.Background())
 	assert.NoError(t, err)
 
-	v, err := views.V1().Namespace().New(ns).ToJson()
+	err = envs.Get().GetStorage().Namespace().Insert(context.Background(), ns1)
+	assert.NoError(t, err)
+
+	v, err := views.V1().Namespace().New(ns1).ToJson()
 	assert.NoError(t, err)
 
 	tests := []struct {
@@ -341,10 +356,16 @@ func TestNamespaceUpdate(t *testing.T) {
 	envs.Get().SetStorage(strg)
 	viper.Set("verbose", 0)
 
-	ns1 := getDefaultNamespace("demo")
-	ns2 := getDefaultNamespace("test")
+	ns1 := getNamespaceAsset("demo", "")
+	ns2 := getNamespaceAsset("demo", "")
+	ns2.Resources.RAM    = 512
+	ns2.Resources.Routes = 2
+	ns3 := getNamespaceAsset("empty", "")
 
-	err := envs.Get().GetStorage().Namespace().Insert(context.Background(), ns1)
+	err := envs.Get().GetStorage().Namespace().Clear(context.Background())
+	assert.NoError(t, err)
+
+	err = envs.Get().GetStorage().Namespace().Insert(context.Background(), ns1)
 	assert.NoError(t, err)
 
 	v, err := views.V1().Namespace().New(ns2).ToJson()
@@ -360,7 +381,7 @@ func TestNamespaceUpdate(t *testing.T) {
 		expectedCode int
 	}{
 		{
-			url:          fmt.Sprintf("/namespace/%s", ns2.Meta.Name),
+			url:          fmt.Sprintf("/namespace/%s", ns3.Meta.Name),
 			handler:      namespace.NamespaceUpdateH,
 			description:  "namespace not exists",
 			data:         createNamespaceUpdateOptions(nil, nil).toJson(),
@@ -433,9 +454,12 @@ func TestNamespaceRemove(t *testing.T) {
 	envs.Get().SetStorage(strg)
 	viper.Set("verbose", 0)
 
-	ns := getDefaultNamespace("demo")
+	ns1 := getNamespaceAsset("demo", "")
 
-	err := envs.Get().GetStorage().Namespace().Insert(context.Background(), ns)
+	err := envs.Get().GetStorage().Namespace().Clear(context.Background())
+	assert.NoError(t, err)
+
+	err = envs.Get().GetStorage().Namespace().Insert(context.Background(), ns1)
 	assert.NoError(t, err)
 
 	tests := []struct {
@@ -447,13 +471,13 @@ func TestNamespaceRemove(t *testing.T) {
 		expectedCode int
 	}{
 		{
-			url:          fmt.Sprintf("/namespace/%s", ns.Meta.Name),
+			url:          fmt.Sprintf("/namespace/%s", ns1.Meta.Name),
 			handler:      namespace.NamespaceRemoveH,
 			description:  "successfully",
 			expectedCode: http.StatusOK,
 		},
 		{
-			url:          fmt.Sprintf("/namespace/%s", ns.Meta.Name),
+			url:          fmt.Sprintf("/namespace/%s", ns1.Meta.Name),
 			handler:      namespace.NamespaceRemoveH,
 			description:  "namespace not found",
 			expectedBody: "{\"code\":404,\"status\":\"Not Found\",\"message\":\"Namespace not found\"}",
@@ -498,25 +522,13 @@ func TestNamespaceRemove(t *testing.T) {
 
 }
 
-func getDefaultNamespace(name string) *types.Namespace {
-	res := new(types.Namespace)
-	switch name {
-	case "demo":
-		res.Meta.SetDefault()
-		res.Meta.Name = "demo"
-		res.Meta.Description = "demo description"
-		res.Quotas.Routes = int(2)
-		res.Quotas.RAM = int64(256)
-	case "test":
-		res.Meta.SetDefault()
-		res.Meta.Name = "test"
-		res.Meta.Description = "test description"
-		res.Quotas.Routes = int(1)
-		res.Quotas.RAM = int64(128)
-	default:
-		res = nil
-	}
-	return res
+func getNamespaceAsset(name, desc string) *types.Namespace {
+	var n = types.Namespace{}
+
+	n.Meta.Name = name
+	n.Meta.Description = desc
+
+	return &n
 }
 
 func setRequestVars(r *mux.Router, req *http.Request) {

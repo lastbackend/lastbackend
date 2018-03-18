@@ -18,6 +18,8 @@
 
 package types
 
+import "fmt"
+
 type VolumeList []Volume
 
 type Volume struct {
@@ -41,4 +43,11 @@ type VolumeState struct {
 
 type VolumeSpec struct {
 
+}
+
+func (v *Volume) SelfLink() string {
+	if v.Meta.SelfLink == "" {
+		v.Meta.SelfLink = fmt.Sprintf("%s:%s", v.Meta.Namespace, v.Meta.Name)
+	}
+	return v.Meta.SelfLink
 }

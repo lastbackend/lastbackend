@@ -25,7 +25,6 @@ import (
 
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 	"github.com/lastbackend/lastbackend/pkg/storage/storage"
-	"fmt"
 	"github.com/lastbackend/lastbackend/pkg/storage/store"
 )
 
@@ -74,18 +73,22 @@ func TestTriggerStorage_Get(t *testing.T) {
 		},
 	}
 
-	if err := stg.Insert(ctx, &d); err != nil {
-		t.Errorf("TriggerStorage.Info() storage setup error = %v", err)
-		return
-	}
-
 	for _, tt := range tests {
 
+		if err := stg.Clear(ctx); err != nil {
+			t.Errorf("TriggerStorage.Get() storage setup error = %v", err)
+			return
+		}
 
+
+		if err := stg.Insert(ctx, &d); err != nil {
+			t.Errorf("TriggerStorage.Get() storage setup error = %v", err)
+			return
+		}
 
 		t.Run(tt.name, func(t *testing.T) {
 
-			got, err := tt.fields.stg.Get(tt.args.ctx, tt.args.name)
+			got, err := tt.fields.stg.Get(tt.args.ctx, ns1, svc, tt.args.name)
 
 			if err != nil {
 				if tt.wantErr && tt.err != err.Error() {
@@ -122,16 +125,16 @@ func TestTriggerStorage_ListByNamespace(t *testing.T) {
 	)
 
 	nl0 := map[string]*types.Trigger{}
-	nl0[n1.Meta.Name] = &n1
-	nl0[n2.Meta.Name] = &n2
-	nl0[n3.Meta.Name] = &n3
+	nl0[stg.keyGet(&n1)] = &n1
+	nl0[stg.keyGet(&n2)] = &n2
+	nl0[stg.keyGet(&n3)] = &n3
 
 	nl1 := map[string]*types.Trigger{}
-	nl1[n1.Meta.Name] = &n1
-	nl1[n2.Meta.Name] = &n2
+	nl1[stg.keyGet(&n1)] = &n1
+	nl1[stg.keyGet(&n2)] = &n2
 
 	nl2  := map[string]*types.Trigger{}
-	nl2[n3.Meta.Name] = &n3
+	nl2[stg.keyGet(&n3)] = &n3
 
 	type fields struct {
 		stg storage.Trigger
@@ -172,22 +175,28 @@ func TestTriggerStorage_ListByNamespace(t *testing.T) {
 		},
 	}
 
-	for _, n := range nl0 {
-		if err := stg.Insert(ctx, n); err != nil {
-			t.Errorf("TriggerStorage.List() storage setup error = %v", err)
+	for _, tt := range tests {
+
+		if err := stg.Clear(ctx); err != nil {
+			t.Errorf("TriggerStorage.ListByNamespace() storage setup error = %v", err)
 			return
 		}
-	}
 
-	for _, tt := range tests {
+		for _, n := range nl0 {
+			if err := stg.Insert(ctx, n); err != nil {
+				t.Errorf("TriggerStorage.ListByNamespace() storage setup error = %v", err)
+				return
+			}
+		}
+
 		t.Run(tt.name, func(t *testing.T) {
 			got, err := stg.ListByNamespace(tt.args.ctx, tt.args.ns)
 			if (err != nil) != tt.wantErr {
-				t.Errorf("TriggerStorage.List() error = %v, wantErr %v", err, tt.wantErr)
+				t.Errorf("TriggerStorage.ListByNamespace() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
 			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("TriggerStorage.List() = %v, want %v", got, tt.want)
+				t.Errorf("TriggerStorage.ListByNamespace() = %v, want %v", got, tt.want)
 			}
 		})
 	}
@@ -210,22 +219,22 @@ func TestTriggerStorage_ListByService(t *testing.T) {
 	)
 
 	nl0 := map[string]*types.Trigger{}
-	nl0[n1.Meta.Name] = &n1
-	nl0[n2.Meta.Name] = &n2
-	nl0[n3.Meta.Name] = &n3
-	nl0[n4.Meta.Name] = &n4
-	nl0[n5.Meta.Name] = &n5
+	nl0[stg.keyGet(&n1)] = &n1
+	nl0[stg.keyGet(&n2)] = &n2
+	nl0[stg.keyGet(&n3)] = &n3
+	nl0[stg.keyGet(&n4)] = &n4
+	nl0[stg.keyGet(&n5)] = &n5
 
 	nl1 := map[string]*types.Trigger{}
-	nl1[n1.Meta.Name] = &n1
-	nl1[n2.Meta.Name] = &n2
+	nl1[stg.keyGet(&n1)] = &n1
+	nl1[stg.keyGet(&n2)] = &n2
 
 	nl2  := map[string]*types.Trigger{}
-	nl2[n3.Meta.Name] = &n3
+	nl2[stg.keyGet(&n3)] = &n3
 
 	nl3  := map[string]*types.Trigger{}
-	nl3[n4.Meta.Name] = &n4
-	nl3[n5.Meta.Name] = &n5
+	nl3[stg.keyGet(&n4)] = &n4
+	nl3[stg.keyGet(&n5)] = &n5
 
 	type fields struct {
 		stg storage.Trigger
@@ -274,22 +283,28 @@ func TestTriggerStorage_ListByService(t *testing.T) {
 		},
 	}
 
-	for _, n := range nl0 {
-		if err := stg.Insert(ctx, n); err != nil {
-			t.Errorf("TriggerStorage.List() storage setup error = %v", err)
+	for _, tt := range tests {
+
+		if err := stg.Clear(ctx); err != nil {
+			t.Errorf("TriggerStorage.ListByService() storage setup error = %v", err)
 			return
 		}
-	}
 
-	for _, tt := range tests {
+		for _, n := range nl0 {
+			if err := stg.Insert(ctx, n); err != nil {
+				t.Errorf("TriggerStorage.ListByService() storage setup error = %v", err)
+				return
+			}
+		}
+
 		t.Run(tt.name, func(t *testing.T) {
 			got, err := stg.ListByService(tt.args.ctx, tt.args.ns, tt.args.svc)
 			if (err != nil) != tt.wantErr {
-				t.Errorf("TriggerStorage.List() error = %v, wantErr %v", err, tt.wantErr)
+				t.Errorf("TriggerStorage.ListByService() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
 			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("TriggerStorage.List() = %v, want %v", got, tt.want)
+				t.Errorf("TriggerStorage.ListByService() = %v, want %v", got, tt.want)
 			}
 		})
 	}
@@ -351,6 +366,12 @@ func TestTriggerStorage_Insert(t *testing.T) {
 	}
 
 	for _, tt := range tests {
+
+		if err := stg.Clear(ctx); err != nil {
+			t.Errorf("TriggerStorage.Insert() storage setup error = %v", err)
+			return
+		}
+
 		t.Run(tt.name, func(t *testing.T) {
 			err := tt.fields.stg.Insert(tt.args.ctx, tt.args.trigger)
 			if err != nil {
@@ -432,14 +453,21 @@ func TestTriggerStorage_Update(t *testing.T) {
 		},
 	}
 
-	for _, n := range nl0 {
-		if err := stg.Insert(ctx, n); err != nil {
-			t.Errorf("TriggerStorage.List() storage setup error = %v", err)
+	for _, tt := range tests {
+
+		if err := stg.Clear(ctx); err != nil {
+			t.Errorf("TriggerStorage.Update() storage setup error = %v", err)
 			return
 		}
-	}
 
-	for _, tt := range tests {
+		for _, n := range nl0 {
+			if err := stg.Insert(ctx, n); err != nil {
+				t.Errorf("TriggerStorage.Update() storage setup error = %v", err)
+				return
+			}
+		}
+
+
 		t.Run(tt.name, func(t *testing.T) {
 			err := tt.fields.stg.Update(tt.args.ctx, tt.args.trigger)
 			if err != nil {
@@ -461,7 +489,7 @@ func TestTriggerStorage_Update(t *testing.T) {
 				return
 			}
 
-			got, _ := tt.fields.stg.Get(tt.args.ctx, tt.args.trigger.Meta.Name)
+			got, _ := tt.fields.stg.Get(tt.args.ctx, ns1, svc, tt.args.trigger.Meta.Name)
 			if !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("TriggerStorage.Update() = %v, want %v", got, tt.want)
 				return
@@ -524,9 +552,18 @@ func TestTriggerStorage_Remove(t *testing.T) {
 		},
 	}
 
-	stg.Insert(ctx, &n1)
-
 	for _, tt := range tests {
+
+		if err := stg.Clear(ctx); err != nil {
+			t.Errorf("TriggerStorage.Remove() storage setup error = %v", err)
+			return
+		}
+
+		if err := stg.Insert(ctx, &n1); err != nil {
+			t.Errorf("TriggerStorage.Remove() storage setup error = %v", err)
+			return
+		}
+
 		t.Run(tt.name, func(t *testing.T) {
 			err := tt.fields.stg.Remove(tt.args.ctx, tt.args.trigger)
 			if err != nil {
@@ -548,7 +585,7 @@ func TestTriggerStorage_Remove(t *testing.T) {
 				return
 			}
 
-			_, err = tt.fields.stg.Get(tt.args.ctx, tt.args.trigger.Meta.Name)
+			_, err = tt.fields.stg.Get(tt.args.ctx, ns1, svc, tt.args.trigger.Meta.Name)
 			if err == nil || tt.err != err.Error() {
 				t.Errorf("TriggerStorage.Remove() = %v, want %v", err, tt.want)
 				return
@@ -652,7 +689,7 @@ func getTriggerAsset(namespace, service, name, desc string) types.Trigger {
 
 	var n = types.Trigger{}
 
-	n.Meta.Name = fmt.Sprintf("%s:%s:%s", namespace,service,name)
+	n.Meta.Name = name
 	n.Meta.Namespace = namespace
 	n.Meta.Service = service
 	n.Meta.Description = desc

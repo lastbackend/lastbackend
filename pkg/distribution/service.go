@@ -27,11 +27,12 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/log"
 	"github.com/lastbackend/lastbackend/pkg/storage"
 	"github.com/spf13/viper"
+	"github.com/lastbackend/lastbackend/pkg/storage/store"
 )
 
 type IService interface {
-	List(id string) ([]*types.Service, error)
 	Get(namespace, service string) (*types.Service, error)
+	List(namespace string) (map[string]*types.Service, error)
 	Create(namespace *types.Namespace, opts *types.ServiceCreateOptions) (*types.Service, error)
 	Update(service *types.Service, opts *types.ServiceUpdateOptions) (*types.Service, error)
 	Destroy(service *types.Service) (*types.Service, error)
@@ -43,18 +44,18 @@ type Service struct {
 	storage storage.Storage
 }
 
-func (s *Service) List(id string) ([]*types.Service, error) {
+func (s *Service) List(namespace string) (map[string]*types.Service, error) {
 
 	log.V(logLevel).Debug("Service: list service")
 
-	items, err := s.storage.Service().ListByNamespace(s.context, id)
+	items, err := s.storage.Service().ListByNamespace(s.context, namespace)
 	if err != nil {
 		log.Debug(1)
-		log.V(logLevel).Error("Service: list service namespace %s err: %s", id, err)
+		log.V(logLevel).Error("Service: list service namespace %s err: %s", namespace, err)
 		return nil, err
 	}
 
-	log.V(logLevel).Debugf("Service: list service namespace %s result: %d", id, len(items))
+	log.V(logLevel).Debugf("Service: list service namespace %s result: %d", namespace, len(items))
 
 	return items, nil
 }
@@ -64,10 +65,13 @@ func (s *Service) Get(namespace, service string) (*types.Service, error) {
 	log.V(logLevel).Debugf("Service: get service %s", service)
 
 	svc, err := s.storage.Service().Get(s.context, namespace, service)
-	if err == nil && svc == nil {
-		return nil, nil
-	}
 	if err != nil {
+
+		if err.Error() == store.ErrEntityNotFound {
+			log.V(logLevel).Warnf("Service: Get: service by name `%s` not found", service)
+			return nil, nil
+		}
+
 		log.V(logLevel).Errorf("Service: get service by name `%s` err: %s", service, err)
 		return nil, err
 	}

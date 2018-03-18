@@ -34,9 +34,9 @@ type TriggerStorage struct {
 	data map[string]*types.Trigger
 }
 
-// Get hooks by id
-func (s *TriggerStorage) Get(ctx context.Context, name string) (*types.Trigger, error) {
-	if ns, ok := s.data[name]; ok {
+// Get trigger by id
+func (s *TriggerStorage) Get(ctx context.Context, namespace, service, name string) (*types.Trigger, error) {
+	if ns, ok := s.data[s.keyCreate(namespace, service, name)]; ok {
 		return ns, nil
 	}
 	return nil, errors.New(store.ErrEntityNotFound)
@@ -48,8 +48,8 @@ func (s *TriggerStorage) ListByNamespace(ctx context.Context, namespace string) 
 	prefix := fmt.Sprintf("%s:", namespace)
 	for _, d := range s.data {
 
-		if strings.HasPrefix(d.Meta.Name, prefix) {
-			list[d.Meta.Name] = d
+		if strings.HasPrefix(s.keyGet(d), prefix) {
+			list[s.keyGet(d)] = d
 		}
 	}
 
@@ -62,22 +62,22 @@ func (s *TriggerStorage) ListByService(ctx context.Context, namespace, service s
 	prefix := fmt.Sprintf("%s:%s:", namespace, service)
 
 	for _, d := range s.data {
-		if strings.HasPrefix(d.Meta.Name, prefix) {
-			list[d.Meta.Name] = d
+		if strings.HasPrefix(s.keyGet(d), prefix) {
+			list[s.keyGet(d)] = d
 		}
 	}
 
 	return list, nil
 }
 
-// Insert new hook into storage
+// Insert new trigger into storage
 func (s *TriggerStorage) Insert(ctx context.Context, trigger *types.Trigger) error {
 
 	if err := s.checkTriggerArgument(trigger); err != nil {
 		return err
 	}
 
-	s.data[trigger.Meta.Name] = trigger
+	s.data[s.keyGet(trigger)] = trigger
 
 	return nil
 }
@@ -89,29 +89,45 @@ func (s *TriggerStorage) Update(ctx context.Context, trigger *types.Trigger) err
 		return err
 	}
 
-	s.data[trigger.Meta.Name] = trigger
+	s.data[s.keyGet(trigger)] = trigger
 
 	return nil
 }
 
-// Remove hook by id from storage
+// Remove trigger by from storage
 func (s *TriggerStorage) Remove(ctx context.Context, trigger *types.Trigger) error {
 	if err := s.checkTriggerExists(trigger); err != nil {
 		return err
 	}
 
-	delete(s.data, trigger.Meta.Name)
+	delete(s.data, s.keyGet(trigger))
 	return nil
 }
 
-// Watch deployment changes
+// Watch trigger changes
 func (s *TriggerStorage) Watch(ctx context.Context, trigger chan *types.Trigger) error {
 	return nil
 }
 
-// Watch deployment spec changes
+// Watch trigger spec changes
 func (s *TriggerStorage) WatchSpec(ctx context.Context, trigger chan *types.Trigger) error {
 	return nil
+}
+
+// Clear trigger storage
+func (s *TriggerStorage) Clear(ctx context.Context) error {
+	s.data = make(map[string]*types.Trigger)
+	return nil
+}
+
+// keyCreate util function
+func (s *TriggerStorage) keyCreate (namespace, service, name string) string {
+	return fmt.Sprintf("%s:%s:%s", namespace, service, name)
+}
+
+// keyGet util function
+func (s *TriggerStorage) keyGet(t *types.Trigger) string {
+	return t.SelfLink()
 }
 
 // newTriggerStorage return new trigger storage
@@ -122,13 +138,13 @@ func newTriggerStorage() *TriggerStorage {
 }
 
 // checkTriggerArgument - check if argument is valid for manipulations
-func (s *TriggerStorage) checkTriggerArgument(deployment *types.Trigger) error {
+func (s *TriggerStorage) checkTriggerArgument(trigger *types.Trigger) error {
 
-	if deployment == nil {
+	if trigger == nil {
 		return errors.New(store.ErrStructArgIsNil)
 	}
 
-	if deployment.Meta.Name == "" {
+	if trigger.Meta.Name == "" {
 		return errors.New(store.ErrStructArgIsInvalid)
 	}
 
@@ -136,13 +152,13 @@ func (s *TriggerStorage) checkTriggerArgument(deployment *types.Trigger) error {
 }
 
 // checkTriggerArgument - check if deployment exists in store
-func (s *TriggerStorage) checkTriggerExists(deployment *types.Trigger) error {
+func (s *TriggerStorage) checkTriggerExists(trigger *types.Trigger) error {
 
-	if err := s.checkTriggerArgument(deployment); err != nil {
+	if err := s.checkTriggerArgument(trigger); err != nil {
 		return err
 	}
 
-	if _, ok := s.data[deployment.Meta.Name]; !ok {
+	if _, ok := s.data[s.keyGet(trigger)]; !ok {
 		return errors.New(store.ErrEntityNotFound)
 	}
 

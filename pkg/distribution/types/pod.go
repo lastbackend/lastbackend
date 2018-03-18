@@ -21,6 +21,7 @@ package types
 import (
 	"sync"
 	"time"
+	"fmt"
 )
 
 const PodStepInitialized = "initialized"
@@ -187,6 +188,13 @@ func NewPod() *Pod {
 	pod.Status.Steps = make(PodSteps, 0)
 	pod.Status.Containers = make(map[string]*PodContainer, 0)
 	return pod
+}
+
+func (p *Pod) SelfLink() string {
+	if p.Meta.SelfLink == "" {
+		p.Meta.SelfLink = fmt.Sprintf("%s:%s:%s:%s", p.Meta.Namespace, p.Meta.Service, p.Meta.Deployment, p.Meta.Name)
+	}
+	return p.Meta.SelfLink
 }
 
 func (p *Pod) MarkAsInitialized() {

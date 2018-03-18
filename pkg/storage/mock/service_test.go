@@ -26,7 +26,6 @@ import (
 	"reflect"
 	"github.com/lastbackend/lastbackend/pkg/storage/storage"
 	"context"
-	"fmt"
 )
 
 func TestServiceStorage_Get(t *testing.T) {
@@ -72,18 +71,22 @@ func TestServiceStorage_Get(t *testing.T) {
 		},
 	}
 
-	if err := stg.Insert(ctx, &d); err != nil {
-		t.Errorf("ServiceStorage.Info() storage setup error = %v", err)
-		return
-	}
 
 	for _, tt := range tests {
 
+		if err := stg.Clear(ctx); err != nil {
+			t.Errorf("ServiceStorage.Get() storage setup error = %v", err)
+			return
+		}
 
+		if err := stg.Insert(ctx, &d); err != nil {
+			t.Errorf("ServiceStorage.Get() storage setup error = %v", err)
+			return
+		}
 
 		t.Run(tt.name, func(t *testing.T) {
 
-			got, err := tt.fields.stg.Get(tt.args.ctx, tt.args.name)
+			got, err := tt.fields.stg.Get(tt.args.ctx, ns1, tt.args.name)
 
 			if err != nil {
 				if tt.wantErr && tt.err != err.Error() {
@@ -119,16 +122,16 @@ func TestServiceStorage_ListByNamespace(t *testing.T) {
 	)
 
 	nl0 := map[string]*types.Service{}
-	nl0[n1.Meta.Name] = &n1
-	nl0[n2.Meta.Name] = &n2
-	nl0[n3.Meta.Name] = &n3
+	nl0[stg.keyGet(&n1)] = &n1
+	nl0[stg.keyGet(&n2)] = &n2
+	nl0[stg.keyGet(&n3)] = &n3
 
 	nl1 := map[string]*types.Service{}
-	nl1[n1.Meta.Name] = &n1
-	nl1[n2.Meta.Name] = &n2
+	nl1[stg.keyGet(&n1)] = &n1
+	nl1[stg.keyGet(&n2)] = &n2
 
 	nl2  := map[string]*types.Service{}
-	nl2[n3.Meta.Name] = &n3
+	nl2[stg.keyGet(&n3)] = &n3
 
 	type fields struct {
 		stg storage.Service
@@ -169,22 +172,28 @@ func TestServiceStorage_ListByNamespace(t *testing.T) {
 		},
 	}
 
-	for _, n := range nl0 {
-		if err := stg.Insert(ctx, n); err != nil {
-			t.Errorf("ServiceStorage.List() storage setup error = %v", err)
+	for _, tt := range tests {
+
+		if err := stg.Clear(ctx); err != nil {
+			t.Errorf("ServiceStorage.ListByNamespace() storage setup error = %v", err)
 			return
 		}
-	}
 
-	for _, tt := range tests {
+		for _, n := range nl0 {
+			if err := stg.Insert(ctx, n); err != nil {
+				t.Errorf("ServiceStorage.ListByNamespace() storage setup error = %v", err)
+				return
+			}
+		}
+
 		t.Run(tt.name, func(t *testing.T) {
 			got, err := stg.ListByNamespace(tt.args.ctx, tt.args.ns)
 			if (err != nil) != tt.wantErr {
-				t.Errorf("ServiceStorage.List() error = %v, wantErr %v", err, tt.wantErr)
+				t.Errorf("ServiceStorage.ListByNamespace() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
 			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("ServiceStorage.List() = %v, want %v", got, tt.want)
+				t.Errorf("ServiceStorage.ListByNamespace() = %v, want %v", got, tt.want)
 			}
 		})
 	}
@@ -249,24 +258,30 @@ func TestServiceStorage_SetState(t *testing.T) {
 		},
 	}
 
-	for _, n := range nl0 {
-		if err := stg.Insert(ctx, n); err != nil {
-			t.Errorf("ServiceStorage.List() storage setup error = %v", err)
+	for _, tt := range tests {
+
+		if err := stg.Clear(ctx); err != nil {
+			t.Errorf("ServiceStorage.SetState() storage setup error = %v", err)
 			return
 		}
-	}
 
-	for _, tt := range tests {
+		for _, n := range nl0 {
+			if err := stg.Insert(ctx, n); err != nil {
+				t.Errorf("ServiceStorage.SetState() storage setup error = %v", err)
+				return
+			}
+		}
+
 		t.Run(tt.name, func(t *testing.T) {
 			err := tt.fields.stg.SetState(tt.args.ctx, tt.args.service)
 			if err != nil {
 				if !tt.wantErr {
-					t.Errorf("ServiceStorage.Update() error = %v, want no error", err.Error())
+					t.Errorf("ServiceStorage.SetState() error = %v, want no error", err.Error())
 					return
 				}
 
 				if tt.wantErr && tt.err != err.Error() {
-					t.Errorf("ServiceStorage.Update() error = %v, want %v", err.Error(), tt.err)
+					t.Errorf("ServiceStorage.SetState() error = %v, want %v", err.Error(), tt.err)
 					return
 				}
 
@@ -274,13 +289,13 @@ func TestServiceStorage_SetState(t *testing.T) {
 			}
 
 			if tt.wantErr {
-				t.Errorf("ServiceStorage.Update() error = %v, want %v", err.Error(), tt.err)
+				t.Errorf("ServiceStorage.SetState() error = %v, want %v", err.Error(), tt.err)
 				return
 			}
 
-			got, _ := tt.fields.stg.Get(tt.args.ctx, tt.args.service.Meta.Name)
+			got, _ := tt.fields.stg.Get(tt.args.ctx, ns1, tt.args.service.Meta.Name)
 			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("ServiceStorage.Update() = %v, want %v", got, tt.want)
+				t.Errorf("ServiceStorage.SetState() = %v, want %v", got, tt.want)
 				return
 			}
 
@@ -346,24 +361,31 @@ func TestServiceStorage_SetSpec(t *testing.T) {
 		},
 	}
 
-	for _, n := range nl0 {
-		if err := stg.Insert(ctx, n); err != nil {
-			t.Errorf("ServiceStorage.List() storage setup error = %v", err)
-			return
-		}
-	}
 
 	for _, tt := range tests {
+
+		if err := stg.Clear(ctx); err != nil {
+			t.Errorf("ServiceStorage.SetSpec() storage setup error = %v", err)
+			return
+		}
+
+		for _, n := range nl0 {
+			if err := stg.Insert(ctx, n); err != nil {
+				t.Errorf("ServiceStorage.SetSpec() storage setup error = %v", err)
+				return
+			}
+		}
+
 		t.Run(tt.name, func(t *testing.T) {
 			err := tt.fields.stg.SetSpec(tt.args.ctx, tt.args.service)
 			if err != nil {
 				if !tt.wantErr {
-					t.Errorf("ServiceStorage.Update() error = %v, want no error", err.Error())
+					t.Errorf("ServiceStorage.SetSpec() error = %v, want no error", err.Error())
 					return
 				}
 
 				if tt.wantErr && tt.err != err.Error() {
-					t.Errorf("ServiceStorage.Update() error = %v, want %v", err.Error(), tt.err)
+					t.Errorf("ServiceStorage.SetSpec() error = %v, want %v", err.Error(), tt.err)
 					return
 				}
 
@@ -371,13 +393,13 @@ func TestServiceStorage_SetSpec(t *testing.T) {
 			}
 
 			if tt.wantErr {
-				t.Errorf("ServiceStorage.Update() error = %v, want %v", err.Error(), tt.err)
+				t.Errorf("ServiceStorage.SetSpec() error = %v, want %v", err.Error(), tt.err)
 				return
 			}
 
-			got, _ := tt.fields.stg.Get(tt.args.ctx, tt.args.service.Meta.Name)
+			got, _ := tt.fields.stg.Get(tt.args.ctx, ns1, tt.args.service.Meta.Name)
 			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("ServiceStorage.Update() = %v, want %v", got, tt.want)
+				t.Errorf("ServiceStorage.SetSpec() = %v, want %v", got, tt.want)
 				return
 			}
 
@@ -440,6 +462,12 @@ func TestServiceStorage_Insert(t *testing.T) {
 	}
 
 	for _, tt := range tests {
+
+		if err := stg.Clear(ctx); err != nil {
+			t.Errorf("ServiceStorage.Insert() storage setup error = %v", err)
+			return
+		}
+
 		t.Run(tt.name, func(t *testing.T) {
 			err := tt.fields.stg.Insert(tt.args.ctx, tt.args.service)
 			if err != nil {
@@ -520,14 +548,20 @@ func TestServiceStorage_Update(t *testing.T) {
 		},
 	}
 
-	for _, n := range nl0 {
-		if err := stg.Insert(ctx, n); err != nil {
-			t.Errorf("ServiceStorage.List() storage setup error = %v", err)
+	for _, tt := range tests {
+
+		if err := stg.Clear(ctx); err != nil {
+			t.Errorf("ServiceStorage.Update() storage setup error = %v", err)
 			return
 		}
-	}
 
-	for _, tt := range tests {
+		for _, n := range nl0 {
+			if err := stg.Insert(ctx, n); err != nil {
+				t.Errorf("ServiceStorage.Update() storage setup error = %v", err)
+				return
+			}
+		}
+
 		t.Run(tt.name, func(t *testing.T) {
 			err := tt.fields.stg.Update(tt.args.ctx, tt.args.service)
 			if err != nil {
@@ -549,7 +583,7 @@ func TestServiceStorage_Update(t *testing.T) {
 				return
 			}
 
-			got, _ := tt.fields.stg.Get(tt.args.ctx, tt.args.service.Meta.Name)
+			got, _ := tt.fields.stg.Get(tt.args.ctx, ns1, tt.args.service.Meta.Name)
 			if !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("ServiceStorage.Update() = %v, want %v", got, tt.want)
 				return
@@ -611,9 +645,19 @@ func TestServiceStorage_Remove(t *testing.T) {
 		},
 	}
 
-	stg.Insert(ctx, &n1)
-
 	for _, tt := range tests {
+
+
+		if err := stg.Clear(ctx); err != nil {
+			t.Errorf("ServiceStorage.Remove() storage setup error = %v", err)
+			return
+		}
+
+		if err := stg.Insert(ctx, &n1); err != nil {
+			t.Errorf("ServiceStorage.Remove() storage setup error = %v", err)
+			return
+		}
+
 		t.Run(tt.name, func(t *testing.T) {
 			err := tt.fields.stg.Remove(tt.args.ctx, tt.args.service)
 			if err != nil {
@@ -635,7 +679,7 @@ func TestServiceStorage_Remove(t *testing.T) {
 				return
 			}
 
-			_, err = tt.fields.stg.Get(tt.args.ctx, tt.args.service.Meta.Name)
+			_, err = tt.fields.stg.Get(tt.args.ctx, ns1, tt.args.service.Meta.Name)
 			if err == nil || tt.err != err.Error() {
 				t.Errorf("ServiceStorage.Remove() = %v, want %v", err, tt.want)
 				return
@@ -738,7 +782,7 @@ func getServiceAsset(namespace, name, desc string) types.Service {
 
 	var n = types.Service{}
 
-	n.Meta.Name = fmt.Sprintf("%s:%s", namespace,name)
+	n.Meta.Name = name
 	n.Meta.Namespace = namespace
 	n.Meta.Description = desc
 

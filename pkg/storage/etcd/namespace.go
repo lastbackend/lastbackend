@@ -71,7 +71,7 @@ func (s *NamespaceStorage) Get(ctx context.Context, name string) (*types.Namespa
 }
 
 // List projects
-func (s *NamespaceStorage) List(ctx context.Context) ([]*types.Namespace, error) {
+func (s *NamespaceStorage) List(ctx context.Context) (map[string]*types.Namespace, error) {
 
 	log.V(logLevel).Debug("Storage: Namespace: get namespace list")
 
@@ -84,7 +84,7 @@ func (s *NamespaceStorage) List(ctx context.Context) ([]*types.Namespace, error)
 	}
 	defer destroy()
 
-	namespaces := make([]*types.Namespace, 0)
+	namespaces := make(map[string]*types.Namespace, 0)
 	keyNamespaces := keyCreate(namespaceStorage)
 	err = client.List(ctx, keyNamespaces, filter, &namespaces)
 	switch true {
@@ -92,7 +92,7 @@ func (s *NamespaceStorage) List(ctx context.Context) ([]*types.Namespace, error)
 		log.V(logLevel).Errorf("Storage: Namespace: get namespace list err: %s", err.Error())
 		return nil, err
 	case err != nil && err.Error() == store.ErrEntityNotFound:
-		return make([]*types.Namespace, 0), nil
+		return make(map[string]*types.Namespace, 0), nil
 	}
 
 	if err != nil {
@@ -162,26 +162,20 @@ func (s *NamespaceStorage) Update(ctx context.Context, namespace *types.Namespac
 }
 
 // Remove namespace model
-func (s *NamespaceStorage) Remove(ctx context.Context, name string) error {
+func (s *NamespaceStorage) Remove(ctx context.Context, namespace *types.Namespace) error {
 
-	log.V(logLevel).Debugf("Storage: Namespace: remove namespace: %s", name)
-
-	if len(name) == 0 {
-		err := errors.New("name can not be empty")
-		log.V(logLevel).Errorf("Storage: Namespace: remove namespace err: %s", err.Error())
-		return err
-	}
+	log.V(logLevel).Debugf("Storage: Namespace: remove namespace: %s", namespace.Meta.Name)
 
 	client, destroy, err := getClient(ctx)
 	if err != nil {
-		log.V(logLevel).Errorf("Storage: Namespace: create client err: %s", err.Error())
+		log.V(logLevel).Errorf("Storage: Namespace: create client err: %s", err.Error( ))
 		return err
 	}
 	defer destroy()
 
-	keyNamespace := keyCreate(namespaceStorage, name)
+	keyNamespace := keyCreate(namespaceStorage, namespace.Meta.Name)
 	if err := client.DeleteDir(ctx, keyNamespace); err != nil && err.Error() != store.ErrEntityNotFound {
-		log.V(logLevel).Errorf("Storage: Namespace: remove namespace `%s` err: %s", name, err.Error())
+		log.V(logLevel).Errorf("Storage: Namespace: remove namespace `%s` err: %s", namespace.Meta.Name, err.Error())
 		return err
 	}
 

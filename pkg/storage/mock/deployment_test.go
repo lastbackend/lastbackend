@@ -26,7 +26,6 @@ import (
 	"reflect"
 	"github.com/lastbackend/lastbackend/pkg/storage/storage"
 	"context"
-	"fmt"
 )
 
 func TestDeploymentStorage_Get(t *testing.T) {
@@ -73,18 +72,23 @@ func TestDeploymentStorage_Get(t *testing.T) {
 		},
 	}
 
-	if err := stg.Insert(ctx, &d); err != nil {
-		t.Errorf("DeploymentStorage.Info() storage setup error = %v", err)
-		return
-	}
+
 
 	for _, tt := range tests {
 
+		if err := stg.Clear(ctx); err != nil {
+			t.Errorf("DeploymentStorage.Get() storage setup error = %v", err)
+			return
+		}
 
+		if err := stg.Insert(ctx, &d); err != nil {
+			t.Errorf("DeploymentStorage.Get() storage setup error = %v", err)
+			return
+		}
 
 		t.Run(tt.name, func(t *testing.T) {
 
-			got, err := tt.fields.stg.Get(tt.args.ctx, tt.args.name)
+			got, err := tt.fields.stg.Get(tt.args.ctx, ns1, svc, tt.args.name)
 
 			if err != nil {
 				if tt.wantErr && tt.err != err.Error() {
@@ -121,16 +125,16 @@ func TestDeploymentStorage_ListByNamespace(t *testing.T) {
 	)
 
 	nl0 := map[string]*types.Deployment{}
-	nl0[n1.Meta.Name] = &n1
-	nl0[n2.Meta.Name] = &n2
-	nl0[n3.Meta.Name] = &n3
+	nl0[stg.keyGet(&n1)] = &n1
+	nl0[stg.keyGet(&n2)] = &n2
+	nl0[stg.keyGet(&n3)] = &n3
 
 	nl1 := map[string]*types.Deployment{}
-	nl1[n1.Meta.Name] = &n1
-	nl1[n2.Meta.Name] = &n2
+	nl1[stg.keyGet(&n1)] = &n1
+	nl1[stg.keyGet(&n2)] = &n2
 
 	nl2  := map[string]*types.Deployment{}
-	nl2[n3.Meta.Name] = &n3
+	nl2[stg.keyGet(&n3)] = &n3
 
 	type fields struct {
 		stg storage.Deployment
@@ -171,14 +175,21 @@ func TestDeploymentStorage_ListByNamespace(t *testing.T) {
 		},
 	}
 
-	for _, n := range nl0 {
-		if err := stg.Insert(ctx, n); err != nil {
-			t.Errorf("DeploymentStorage.List() storage setup error = %v", err)
-			return
-		}
-	}
 
 	for _, tt := range tests {
+
+		if err := stg.Clear(ctx); err != nil {
+			t.Errorf("DeploymentStorage.Get() storage setup error = %v", err)
+			return
+		}
+
+		for _, n := range nl0 {
+			if err := stg.Insert(ctx, n); err != nil {
+				t.Errorf("DeploymentStorage.List() storage setup error = %v", err)
+				return
+			}
+		}
+
 		t.Run(tt.name, func(t *testing.T) {
 			got, err := stg.ListByNamespace(tt.args.ctx, tt.args.ns)
 			if (err != nil) != tt.wantErr {
@@ -209,22 +220,22 @@ func TestDeploymentStorage_ListByService(t *testing.T) {
 	)
 
 	nl0 := map[string]*types.Deployment{}
-	nl0[n1.Meta.Name] = &n1
-	nl0[n2.Meta.Name] = &n2
-	nl0[n3.Meta.Name] = &n3
-	nl0[n4.Meta.Name] = &n4
-	nl0[n5.Meta.Name] = &n5
+	nl0[stg.keyGet(&n1)] = &n1
+	nl0[stg.keyGet(&n2)] = &n2
+	nl0[stg.keyGet(&n3)] = &n3
+	nl0[stg.keyGet(&n4)] = &n4
+	nl0[stg.keyGet(&n5)] = &n5
 
 	nl1 := map[string]*types.Deployment{}
-	nl1[n1.Meta.Name] = &n1
-	nl1[n2.Meta.Name] = &n2
+	nl1[stg.keyGet(&n1)] = &n1
+	nl1[stg.keyGet(&n2)] = &n2
 
 	nl2  := map[string]*types.Deployment{}
-	nl2[n3.Meta.Name] = &n3
+	nl2[stg.keyGet(&n3)] = &n3
 
 	nl3  := map[string]*types.Deployment{}
-	nl3[n4.Meta.Name] = &n4
-	nl3[n5.Meta.Name] = &n5
+	nl3[stg.keyGet(&n4)] = &n4
+	nl3[stg.keyGet(&n5)] = &n5
 
 	type fields struct {
 		stg storage.Deployment
@@ -273,22 +284,28 @@ func TestDeploymentStorage_ListByService(t *testing.T) {
 		},
 	}
 
-	for _, n := range nl0 {
-		if err := stg.Insert(ctx, n); err != nil {
-			t.Errorf("DeploymentStorage.List() storage setup error = %v", err)
+	for _, tt := range tests {
+
+		if err := stg.Clear(ctx); err != nil {
+			t.Errorf("DeploymentStorage.ListByService() storage setup error = %v", err)
 			return
 		}
-	}
 
-	for _, tt := range tests {
+		for _, n := range nl0 {
+			if err := stg.Insert(ctx, n); err != nil {
+				t.Errorf("DeploymentStorage.ListByService() storage setup error = %v", err)
+				return
+			}
+		}
+
 		t.Run(tt.name, func(t *testing.T) {
 			got, err := stg.ListByService(tt.args.ctx, tt.args.ns, tt.args.svc)
 			if (err != nil) != tt.wantErr {
-				t.Errorf("DeploymentStorage.List() error = %v, wantErr %v", err, tt.wantErr)
+				t.Errorf("DeploymentStorage.ListByService() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
 			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("DeploymentStorage.List() = %v, want %v", got, tt.want)
+				t.Errorf("DeploymentStorage.ListByService() = %v, want %v", got, tt.want)
 			}
 		})
 	}
@@ -354,24 +371,30 @@ func TestDeploymentStorage_SetState(t *testing.T) {
 		},
 	}
 
-	for _, n := range nl0 {
-		if err := stg.Insert(ctx, n); err != nil {
-			t.Errorf("DeploymentStorage.List() storage setup error = %v", err)
+	for _, tt := range tests {
+
+		if err := stg.Clear(ctx); err != nil {
+			t.Errorf("DeploymentStorage.SetState() storage setup error = %v", err)
 			return
 		}
-	}
 
-	for _, tt := range tests {
+		for _, n := range nl0 {
+			if err := stg.Insert(ctx, n); err != nil {
+				t.Errorf("DeploymentStorage.SetState() storage setup error = %v", err)
+				return
+			}
+		}
+
 		t.Run(tt.name, func(t *testing.T) {
 			err := tt.fields.stg.SetState(tt.args.ctx, tt.args.deployment)
 			if err != nil {
 				if !tt.wantErr {
-					t.Errorf("DeploymentStorage.Update() error = %v, want no error", err.Error())
+					t.Errorf("DeploymentStorage.SetState() error = %v, want no error", err.Error())
 					return
 				}
 
 				if tt.wantErr && tt.err != err.Error() {
-					t.Errorf("DeploymentStorage.Update() error = %v, want %v", err.Error(), tt.err)
+					t.Errorf("DeploymentStorage.SetState() error = %v, want %v", err.Error(), tt.err)
 					return
 				}
 
@@ -379,13 +402,13 @@ func TestDeploymentStorage_SetState(t *testing.T) {
 			}
 
 			if tt.wantErr {
-				t.Errorf("DeploymentStorage.Update() error = %v, want %v", err.Error(), tt.err)
+				t.Errorf("DeploymentStorage.SetState() error = %v, want %v", err.Error(), tt.err)
 				return
 			}
 
-			got, _ := tt.fields.stg.Get(tt.args.ctx, tt.args.deployment.Meta.Name)
+			got, _ := tt.fields.stg.Get(tt.args.ctx, ns1, svc, tt.args.deployment.Meta.Name)
 			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("DeploymentStorage.Update() = %v, want %v", got, tt.want)
+				t.Errorf("DeploymentStorage.SetState() = %v, want %v", got, tt.want)
 				return
 			}
 
@@ -449,6 +472,12 @@ func TestDeploymentStorage_Insert(t *testing.T) {
 	}
 
 	for _, tt := range tests {
+
+		if err := stg.Clear(ctx); err != nil {
+			t.Errorf("DeploymentStorage.Insert() storage setup error = %v", err)
+			return
+		}
+
 		t.Run(tt.name, func(t *testing.T) {
 			err := tt.fields.stg.Insert(tt.args.ctx, tt.args.deployment)
 			if err != nil {
@@ -530,14 +559,20 @@ func TestDeploymentStorage_Update(t *testing.T) {
 		},
 	}
 
-	for _, n := range nl0 {
-		if err := stg.Insert(ctx, n); err != nil {
-			t.Errorf("DeploymentStorage.List() storage setup error = %v", err)
+	for _, tt := range tests {
+
+		if err := stg.Clear(ctx); err != nil {
+			t.Errorf("DeploymentStorage.Update() storage setup error = %v", err)
 			return
 		}
-	}
 
-	for _, tt := range tests {
+		for _, n := range nl0 {
+			if err := stg.Insert(ctx, n); err != nil {
+				t.Errorf("DeploymentStorage.Update() storage setup error = %v", err)
+				return
+			}
+		}
+
 		t.Run(tt.name, func(t *testing.T) {
 			err := tt.fields.stg.Update(tt.args.ctx, tt.args.deployment)
 			if err != nil {
@@ -559,7 +594,7 @@ func TestDeploymentStorage_Update(t *testing.T) {
 				return
 			}
 
-			got, _ := tt.fields.stg.Get(tt.args.ctx, tt.args.deployment.Meta.Name)
+			got, _ := tt.fields.stg.Get(tt.args.ctx, ns1, svc, tt.args.deployment.Meta.Name)
 			if !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("DeploymentStorage.Update() = %v, want %v", got, tt.want)
 				return
@@ -622,9 +657,18 @@ func TestDeploymentStorage_Remove(t *testing.T) {
 		},
 	}
 
-	stg.Insert(ctx, &n1)
-
 	for _, tt := range tests {
+
+		if err := stg.Clear(ctx); err != nil {
+			t.Errorf("DeploymentStorage.Remove() storage setup error = %v", err)
+			return
+		}
+
+		if err := stg.Insert(ctx, &n1); err != nil {
+			t.Errorf("DeploymentStorage.Remove() storage setup error = %v", err)
+			return
+		}
+
 		t.Run(tt.name, func(t *testing.T) {
 			err := tt.fields.stg.Remove(tt.args.ctx, tt.args.deployment)
 			if err != nil {
@@ -646,7 +690,7 @@ func TestDeploymentStorage_Remove(t *testing.T) {
 				return
 			}
 
-			_, err = tt.fields.stg.Get(tt.args.ctx, tt.args.deployment.Meta.Name)
+			_, err = tt.fields.stg.Get(tt.args.ctx, ns1, svc, tt.args.deployment.Meta.Name)
 			if err == nil || tt.err != err.Error() {
 				t.Errorf("DeploymentStorage.Remove() = %v, want %v", err, tt.want)
 				return
@@ -683,6 +727,12 @@ func TestDeploymentStorage_Watch(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
+
+		if err := stg.Clear(ctx); err != nil {
+			t.Errorf("DeploymentStorage.Watch() storage setup error = %v", err)
+			return
+		}
+
 		t.Run(tt.name, func(t *testing.T) {
 			if err := tt.fields.stg.Watch(tt.args.ctx, tt.args.deployment); (err != nil) != tt.wantErr {
 				t.Errorf("DeploymentStorage.Watch() error = %v, wantErr %v", err, tt.wantErr)
@@ -718,9 +768,15 @@ func TestDeploymentStorage_WatchSpec(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
+
+		if err := stg.Clear(ctx); err != nil {
+			t.Errorf("DeploymentStorage.WatchSpec() storage setup error = %v", err)
+			return
+		}
+
 		t.Run(tt.name, func(t *testing.T) {
 			if err := tt.fields.stg.WatchSpec(tt.args.ctx, tt.args.deployment); (err != nil) != tt.wantErr {
-				t.Errorf("DeploymentStorage.Watch() error = %v, wantErr %v", err, tt.wantErr)
+				t.Errorf("DeploymentStorage.WatchSpec() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
 	}
@@ -749,7 +805,7 @@ func getDeploymentAsset(namespace, service, name, desc string) types.Deployment 
 
 	var n = types.Deployment{}
 
-	n.Meta.Name = fmt.Sprintf("%s:%s:%s", namespace,service,name)
+	n.Meta.Name = name
 	n.Meta.Namespace = namespace
 	n.Meta.Service = service
 	n.Meta.Description = desc

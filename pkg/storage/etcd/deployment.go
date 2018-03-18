@@ -36,15 +36,10 @@ type DeploymentStorage struct {
 }
 
 // Get deployment by name
-func (s *DeploymentStorage) Get(ctx context.Context, namespace, name string) (*types.Deployment, error) {
+func (s *DeploymentStorage) Get(ctx context.Context, namespace, service, name string) (*types.Deployment, error) {
 
-	log.V(logLevel).Debugf("Storage: Deployment: get by name: %s in namespace: %s", name, namespace)
+	log.V(logLevel).Debugf("Storage: Deployment: get by name: %s", name)
 
-	if len(namespace) == 0 {
-		err := errors.New("namespace can not be empty")
-		log.V(logLevel).Errorf("Storage: Deployment: get deployment err: %s", err.Error())
-		return nil, err
-	}
 
 	if len(name) == 0 {
 		err := errors.New("name can not be empty")
@@ -55,8 +50,6 @@ func (s *DeploymentStorage) Get(ctx context.Context, namespace, name string) (*t
 	const filter = `\b.+` + deploymentStorage + `\/.+\/(?:meta|state)\b`
 
 	var (
-		filterDeploymentEndpoint = `\b.+` + endpointStorage + `\/` + name + `-` + namespace + `\..+\b`
-		endpoints                = make(map[string][]string)
 		deployment               = new(types.Deployment)
 	)
 
@@ -69,7 +62,7 @@ func (s *DeploymentStorage) Get(ctx context.Context, namespace, name string) (*t
 	}
 	defer destroy()
 
-	keyDeployment := keyCreate(deploymentStorage, namespace, name)
+	keyDeployment := keyCreate(deploymentStorage, name)
 	if err := client.Map(ctx, keyDeployment, filter, deployment); err != nil {
 		log.V(logLevel).Errorf("Storage: Deployment: map deployment `%s` err: %s", name, err.Error())
 		return nil, err
@@ -79,24 +72,19 @@ func (s *DeploymentStorage) Get(ctx context.Context, namespace, name string) (*t
 		return nil, errors.New(store.ErrEntityNotFound)
 	}
 
-	keySpec := keyCreate(deploymentStorage, namespace, name, "spec")
+	keySpec := keyCreate(deploymentStorage, name, "spec")
 	if err := client.Map(ctx, keySpec, "", &deployment.Spec); err != nil && err.Error() != store.ErrEntityNotFound {
 		log.V(logLevel).Errorf("Storage: Deployment: Map deployment `%s` spec err: %s", name, err.Error())
 		return nil, err
 	}
 
-	keyEndpoints := keyCreate(endpointStorage)
-	if err := client.Map(ctx, keyEndpoints, filterDeploymentEndpoint, endpoints); err != nil && err.Error() != store.ErrEntityNotFound {
-		log.V(logLevel).Errorf("Storage: Deployment: map deployment endpoint `%s` meta err: %s", name, err.Error())
-		return nil, err
-	}
 
 	return deployment, nil
 }
 
 // Get deployments by service name
-func (s *DeploymentStorage) ListByService(ctx context.Context, namespace, service string) ([]*types.Deployment, error) {
-	return make([]*types.Deployment, 0), nil
+func (s *DeploymentStorage) ListByService(ctx context.Context, namespace, service string) (map[string]*types.Deployment, error) {
+	return make(map[string]*types.Deployment, 0), nil
 }
 
 // Update deployment state
@@ -132,11 +120,12 @@ func (s *DeploymentStorage) updateState(ctx context.Context, deployment *types.D
 	return nil
 }
 
+
 func (s *DeploymentStorage) SpecWatch(ctx context.Context, deployment chan *types.Deployment) error {
 
 	log.V(logLevel).Debug("Storage: Deployment: watch deployment by spec")
 
-	const filter = `\b\/` + deploymentStorage + `\/(.+)\/(.+)\/spec/.+\b`
+	const filter = `\b\/` + deploymentStorage + `\/(.+)\/spec/.+\b`
 	client, destroy, err := getClient(ctx)
 	if err != nil {
 		log.V(logLevel).Errorf("Storage: Deployment: create client err: %s", err.Error())
@@ -152,7 +141,7 @@ func (s *DeploymentStorage) SpecWatch(ctx context.Context, deployment chan *type
 			return
 		}
 
-		if d, err := s.Get(ctx, keys[1], keys[2]); err == nil {
+		if d, err := s.Get(ctx, keys[1], keys[2], keys[3]); err == nil {
 			s.updateState(ctx, d)
 			deployment <- d
 		}
@@ -165,6 +154,16 @@ func (s *DeploymentStorage) SpecWatch(ctx context.Context, deployment chan *type
 	}
 
 	return nil
+}
+
+// keyCreate util function
+func (s *DeploymentStorage) keyCreate (namespace, service, name string) string {
+	return fmt.Sprintf("%s:%s:%s", namespace, service, name)
+}
+
+// keyGet util function
+func (s *DeploymentStorage) keyGet (d * types.Deployment) string {
+	return s.keyCreate(d.Meta.Namespace, d.Meta.Service, d.Meta.Name)
 }
 
 func newDeploymentStorage() *DeploymentStorage {

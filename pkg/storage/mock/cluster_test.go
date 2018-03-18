@@ -74,6 +74,12 @@ func TestClusterStorage_Insert(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+
+			if err := stg.Clear(ctx); err != nil {
+				t.Errorf("ClusterStorage.Get() storage setup error = %v", err)
+				return
+			}
+
 			if err := tt.fields.stg.Insert(tt.args.ctx, tt.args.cluster); (err != nil) != tt.wantErr || (tt.wantErr && (err.Error() != tt.err)) {
 				t.Errorf("ClusterStorage.Insert() error = %v, want errorr %v", err, tt.err)
 			}
@@ -115,6 +121,11 @@ func TestClusterStorage_Get(t *testing.T) {
 	}
 
 	for _, tt := range tests {
+
+		if err := stg.Clear(ctx); err != nil {
+			t.Errorf("ClusterStorage.Get() storage setup error = %v", err)
+			return
+		}
 
 		if err := stg.Insert(ctx, &c); err != nil {
 			t.Errorf("ClusterStorage.Get() storage setup error = %v", err)
@@ -179,6 +190,11 @@ func TestClusterStorage_Update(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
+
+		if err := stg.Clear(ctx); err != nil {
+			t.Errorf("ClusterStorage.Update() storage setup error = %v", err)
+			return
+		}
 
 		if err := stg.Insert(ctx, &c1); err != nil {
 			t.Errorf("ClusterStorage.Update() storage setup error = %v", err)

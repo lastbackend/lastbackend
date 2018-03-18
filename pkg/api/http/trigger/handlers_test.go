@@ -16,4 +16,4 @@
 // from Last.Backend LLC.
 //
 
-package hook_test
+package trigger_test

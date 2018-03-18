@@ -24,6 +24,7 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/storage/storage"
 	"github.com/lastbackend/lastbackend/pkg/storage/store"
 	"github.com/lastbackend/lastbackend/pkg/distribution/errors"
+	"fmt"
 )
 
 // Namespace Service type for interface in interfaces folder
@@ -34,7 +35,7 @@ type NamespaceStorage struct {
 
 // Get namespace by name
 func (s *NamespaceStorage) Get(ctx context.Context, name string) (*types.Namespace, error) {
-	if ns, ok := s.data[name]; ok {
+	if ns, ok := s.data[s.keyCreate(name)]; ok {
 		return ns, nil
 	}
 	return nil, errors.New(store.ErrEntityNotFound)
@@ -52,7 +53,7 @@ func (s *NamespaceStorage) Insert(ctx context.Context, namespace *types.Namespac
 		return err
 	}
 
-	s.data[namespace.Meta.Name] = namespace
+	s.data[s.keyGet(namespace)] = namespace
 
 	return nil
 }
@@ -64,7 +65,7 @@ func (s *NamespaceStorage) Update(ctx context.Context, namespace *types.Namespac
 		return err
 	}
 
-	s.data[namespace.Meta.Name] = namespace
+	s.data[s.keyGet(namespace)] = namespace
 	return nil
 }
 
@@ -75,8 +76,24 @@ func (s *NamespaceStorage) Remove(ctx context.Context, namespace *types.Namespac
 		return err
 	}
 
-	delete(s.data, namespace.Meta.Name)
+	delete(s.data, s.keyGet(namespace))
 	return nil
+}
+
+// Clear namespace storage
+func (s *NamespaceStorage) Clear(ctx context.Context) error {
+	s.data = make(map[string]*types.Namespace)
+	return nil
+}
+
+// keyCreate util function
+func (s *NamespaceStorage) keyCreate (name string) string {
+	return fmt.Sprintf("%s", name)
+}
+
+// keyGet util function
+func (s *NamespaceStorage) keyGet (namespace *types.Namespace) string {
+	return namespace.SelfLink()
 }
 
 func newNamespaceStorage() *NamespaceStorage {
@@ -103,7 +120,7 @@ func (s *NamespaceStorage) checkNamespaceExists(namespace *types.Namespace) erro
 		return err
 	}
 
-	if _, ok := s.data[namespace.Meta.Name]; !ok {
+	if _, ok := s.data[s.keyGet(namespace)]; !ok {
 		return errors.New(store.ErrEntityNotFound)
 	}
 

@@ -28,7 +28,7 @@ import (
 )
 
 type INode interface {
-	List() ([]*types.Node, error)
+	List() (map[string]*types.Node, error)
 	Create() (*types.Node, error)
 	Get(name string) (*types.Node, error)
 	Update(node *types.Node, opts *types.NodeUpdateOptions) error
@@ -46,7 +46,7 @@ type Node struct {
 	storage storage.Storage
 }
 
-func (n *Node) List() ([]*types.Node, error) {
+func (n *Node) List() (map[string]*types.Node, error) {
 	return n.storage.Node().List(n.context)
 }
 

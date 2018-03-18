@@ -54,6 +54,12 @@ func TestSystemStorage_ProcessSet(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
+
+		if err := stg.Clear(ctx); err != nil {
+			t.Errorf("SystemStorage.ProcessSet() storage setup error = %v", err)
+			return
+		}
+
 		t.Run(tt.name, func(t *testing.T) {
 			if err := stg.ProcessSet(tt.args.ctx, tt.args.process); (err != nil) != tt.wantErr {
 				t.Errorf("SystemStorage.ProcessSet() error = %v, wantErr %v", err, tt.wantErr)
@@ -89,6 +95,12 @@ func TestSystemStorage_Elect(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
+
+		if err := stg.Clear(ctx); err != nil {
+			t.Errorf("SystemStorage.Elect() storage setup error = %v", err)
+			return
+		}
+
 		t.Run(tt.name, func(t *testing.T) {
 			if b, err := stg.Elect(tt.args.ctx, tt.args.process); !b || (err != nil) != tt.wantErr {
 				t.Errorf("SystemStorage.Elect() error = %v, wantErr %v", err, tt.wantErr)
@@ -124,6 +136,12 @@ func TestSystemStorage_ElectUpdate(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
+
+		if err := stg.Clear(ctx); err != nil {
+			t.Errorf("SystemStorage.ElectUpdate() storage setup error = %v", err)
+			return
+		}
+
 		t.Run(tt.name, func(t *testing.T) {
 			if err := stg.ElectUpdate(tt.args.ctx, tt.args.process); (err != nil) != tt.wantErr {
 				t.Errorf("SystemStorage.ElectUpdate() error = %v, wantErr %v", err, tt.wantErr)
@@ -160,6 +178,12 @@ func TestSystemStorage_ElectWait(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
+
+		if err := stg.Clear(ctx); err != nil {
+			t.Errorf("SystemStorage.ElectUpdate() storage setup error = %v", err)
+			return
+		}
+
 		t.Run(tt.name, func(t *testing.T) {
 			if err := stg.ElectWait(tt.args.ctx, tt.args.process, tt.args.cn); (err != nil) != tt.wantErr {
 				t.Errorf("SystemStorage.ElectUpdate() error = %v, wantErr %v", err, tt.wantErr)

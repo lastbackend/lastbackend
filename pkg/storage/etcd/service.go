@@ -27,7 +27,6 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/storage/storage"
 	"github.com/lastbackend/lastbackend/pkg/storage/store"
 	"regexp"
-	"strings"
 	"time"
 )
 
@@ -39,15 +38,10 @@ type ServiceStorage struct {
 }
 
 // Get service by name
-func (s *ServiceStorage) Get(ctx context.Context, app, name string) (*types.Service, error) {
+func (s *ServiceStorage) Get(ctx context.Context, namespace, name string) (*types.Service, error) {
 
-	log.V(logLevel).Debugf("Storage: Service: get by name: %s in app: %s", name, app)
+	log.V(logLevel).Debugf("Storage: Service: get by name: %s", name)
 
-	if len(app) == 0 {
-		err := errors.New("app can not be empty")
-		log.V(logLevel).Errorf("Storage: Service: get service err: %s", err.Error())
-		return nil, err
-	}
 
 	if len(name) == 0 {
 		err := errors.New("name can not be empty")
@@ -58,8 +52,6 @@ func (s *ServiceStorage) Get(ctx context.Context, app, name string) (*types.Serv
 	const filter = `\b.+` + serviceStorage + `\/.+\/(?:meta|state)\b`
 
 	var (
-		filterServiceEndpoint = `\b.+` + endpointStorage + `\/` + name + `-` + app + `\..+\b`
-		endpoints             = make(map[string][]string)
 		service               = new(types.Service)
 	)
 
@@ -73,7 +65,7 @@ func (s *ServiceStorage) Get(ctx context.Context, app, name string) (*types.Serv
 	}
 	defer destroy()
 
-	keyService := keyCreate(serviceStorage, app, name)
+	keyService := keyCreate(serviceStorage, name)
 	if err := client.Map(ctx, keyService, filter, service); err != nil {
 		log.V(logLevel).Errorf("Storage: Service: map service `%s` err: %s", name, err.Error())
 		return nil, err
@@ -83,69 +75,20 @@ func (s *ServiceStorage) Get(ctx context.Context, app, name string) (*types.Serv
 		return nil, errors.New(store.ErrEntityNotFound)
 	}
 
-	keySpec := keyCreate(serviceStorage, app, name, "spec")
+	keySpec := keyCreate(serviceStorage,  name, "spec")
 	if err := client.Map(ctx, keySpec, "", &service.Spec); err != nil && err.Error() != store.ErrEntityNotFound {
 		log.V(logLevel).Errorf("Storage: Service: Map service `%s` spec err: %s", name, err.Error())
-		return nil, err
-	}
-
-	keyPods := keyCreate(podStorage, app, fmt.Sprintf("%s:%s", app, name))
-	if err := client.Map(ctx, keyPods, "", &service.Deployments); err != nil && err.Error() != store.ErrEntityNotFound {
-		log.V(logLevel).Errorf("Storage: Service: Map service `%s` pods err: %s", name, err.Error())
-		return nil, err
-	}
-
-	for _, d := range service.Deployments {
-		name := strings.Replace(d.Meta.Name, ":", "-", -1)
-		filterPodEndpoint := `\b.+` + endpointStorage + `\/` + name + `\..+\b`
-		endpoints := make(map[string][]string)
-		keyEndpoints := keyCreate(endpointStorage)
-		if err := client.Map(ctx, keyEndpoints, filterPodEndpoint, endpoints); err != nil && err.Error() != store.ErrEntityNotFound {
-			log.V(logLevel).Errorf("Storage: Service: map endpoints for pod err: %s", name, err.Error())
-			return nil, err
-		}
-	}
-
-	keyEndpoints := keyCreate(endpointStorage)
-	if err := client.Map(ctx, keyEndpoints, filterServiceEndpoint, endpoints); err != nil && err.Error() != store.ErrEntityNotFound {
-		log.V(logLevel).Errorf("Storage: Service: map service endpoint `%s` meta err: %s", name, err.Error())
 		return nil, err
 	}
 
 	return service, nil
 }
 
-// Get service by pod name
-func (s *ServiceStorage) GetByPodName(ctx context.Context, name string) (*types.Service, error) {
-
-	log.V(logLevel).Debugf("Storage: Service: get by pod name: %s in app: %s", name)
-
-	if len(name) == 0 {
-		err := errors.New("name can not be empty")
-		log.V(logLevel).Errorf("Storage: Service: get service by pod name err: %s", err.Error())
-		return nil, err
-	}
-
-	parts := strings.Split(name, ":")
-	if len(parts) < 3 {
-		err := errors.New(fmt.Sprintf("can not parse pod name: %s", name))
-		log.V(logLevel).Errorf("Storage: Service: get service by pod name err: %s", err.Error())
-		return nil, err
-	}
-
-	return s.Get(ctx, parts[0], parts[1])
-}
-
 // List services
-func (s *ServiceStorage) ListByNamespace(ctx context.Context, app string) ([]*types.Service, error) {
+func (s *ServiceStorage) ListByNamespace(ctx context.Context, namespace string) (map[string]*types.Service, error) {
 
-	log.V(logLevel).Debugf("Storage: Service: get service list in app: %s", app)
+	log.V(logLevel).Debugf("Storage: Service: get service list in namespace: %s", namespace)
 
-	if len(app) == 0 {
-		err := errors.New("app can not be empty")
-		log.V(logLevel).Errorf("Storage: Service: get service list err: %s", err.Error())
-		return nil, err
-	}
 
 	const filter = `\b.+` + serviceStorage + `\/.+\/(?:meta|state)\b`
 
@@ -156,45 +99,15 @@ func (s *ServiceStorage) ListByNamespace(ctx context.Context, app string) ([]*ty
 	}
 	defer destroy()
 
-	var services = []*types.Service{}
+	var services = map[string]*types.Service{}
 
-	keyServices := keyCreate(serviceStorage, app)
+	keyServices := keyCreate(serviceStorage)
 	if err := client.List(ctx, keyServices, filter, &services); err != nil {
 		log.V(logLevel).Errorf("Storage: Service: list services err: %s", err.Error())
 		return nil, err
 	}
 
 	return services, nil
-}
-
-// Count services
-func (s *ServiceStorage) CountByNamespace(ctx context.Context, app string) (int, error) {
-
-	log.V(logLevel).Debugf("Storage: Service: count service list in app: %s", app)
-
-	if len(app) == 0 {
-		err := errors.New("app can not be empty")
-		log.V(logLevel).Errorf("Storage: Service: count service list err: %s", err.Error())
-		return int(0), err
-	}
-
-	const filter = `\b.+` + serviceStorage + `\/.+\/meta\b`
-
-	client, destroy, err := getClient(ctx)
-	if err != nil {
-		log.V(logLevel).Errorf("Storage: Service: create client err: %s", err.Error())
-		return int(0), err
-	}
-	defer destroy()
-
-	keyServices := keyCreate(serviceStorage, app)
-	count, err := client.Count(ctx, keyServices, filter)
-	if err != nil {
-		log.V(logLevel).Errorf("Storage: Service: list services err: %s", err.Error())
-		return int(0), err
-	}
-
-	return count, nil
 }
 
 // Insert new service into storage
@@ -277,7 +190,7 @@ func (s *ServiceStorage) Update(ctx context.Context, service *types.Service) err
 }
 
 // Update service spec in storage
-func (s *ServiceStorage) UpdateSpec(ctx context.Context, service *types.Service) error {
+func (s *ServiceStorage) SetSpec(ctx context.Context, service *types.Service) error {
 
 	log.V(logLevel).Debugf("Storage: Service: update spec service: %#v", service)
 
@@ -358,33 +271,6 @@ func (s *ServiceStorage) Remove(ctx context.Context, service *types.Service) err
 	return nil
 }
 
-// Remove services from app
-func (s *ServiceStorage) RemoveByNamespace(ctx context.Context, app string) error {
-
-	log.V(logLevel).Debugf("Storage: Service: remove services in app: %s", app)
-
-	if len(app) == 0 {
-		err := errors.New("app can not be nil")
-		log.V(logLevel).Errorf("Storage: Service: remove services in app err: %s", err.Error())
-		return err
-	}
-
-	client, destroy, err := getClient(ctx)
-	if err != nil {
-		log.V(logLevel).Errorf("Storage: Service: create client err: %s", err.Error())
-		return err
-	}
-	defer destroy()
-
-	keyAll := keyCreate(serviceStorage, app)
-	if err := client.DeleteDir(ctx, keyAll); err != nil {
-		log.V(logLevel).Errorf("Storage: Service: delete dir err: %s", err.Error())
-		return err
-	}
-
-	return nil
-}
-
 func (s *ServiceStorage) Watch(ctx context.Context, service chan *types.Service) error {
 
 	log.V(logLevel).Debug("Storage: Service: watch service")
@@ -418,7 +304,7 @@ func (s *ServiceStorage) Watch(ctx context.Context, service chan *types.Service)
 	return nil
 }
 
-func (s *ServiceStorage) SpecWatch(ctx context.Context, service chan *types.Service) error {
+func (s *ServiceStorage) WatchSpec(ctx context.Context, service chan *types.Service) error {
 
 	log.V(logLevel).Debug("Storage: Service: watch service by spec")
 
@@ -453,39 +339,6 @@ func (s *ServiceStorage) SpecWatch(ctx context.Context, service chan *types.Serv
 	return nil
 }
 
-func (s *ServiceStorage) PodsWatch(ctx context.Context, service chan *types.Service) error {
-
-	log.V(logLevel).Debug("Storage: Service: watch service by pod")
-
-	const filter = `\b\/` + podStorage + `\/(.+)/(.+)\b`
-	client, destroy, err := getClient(ctx)
-	if err != nil {
-		log.V(logLevel).Errorf("Storage: Service: create client err: %s", err.Error())
-		return err
-	}
-	defer destroy()
-
-	r, _ := regexp.Compile(filter)
-	key := keyCreate(podStorage)
-	cb := func(action, key string, _ []byte) {
-		keys := r.FindStringSubmatch(key)
-		if len(keys) < 3 {
-			return
-		}
-
-		if svc, err := s.GetByPodName(ctx, keys[2]); err == nil {
-			s.updateState(ctx, svc)
-			service <- svc
-		}
-	}
-
-	if err := client.Watch(ctx, key, filter, cb); err != nil {
-		log.V(logLevel).Errorf("Storage: Service: watch service pod err: %s", err.Error())
-		return err
-	}
-
-	return nil
-}
 
 // Update service state
 func (s *ServiceStorage) updateState(ctx context.Context, service *types.Service) error {

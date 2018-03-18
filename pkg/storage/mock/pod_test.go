@@ -26,7 +26,6 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 	"github.com/lastbackend/lastbackend/pkg/storage/storage"
 	"github.com/lastbackend/lastbackend/pkg/storage/store"
-	"fmt"
 )
 
 func TestPodStorage_Get(t *testing.T) {
@@ -74,18 +73,22 @@ func TestPodStorage_Get(t *testing.T) {
 		},
 	}
 
-	if err := stg.Insert(ctx, &d); err != nil {
-		t.Errorf("PodStorage.Info() storage setup error = %v", err)
-		return
-	}
-
 	for _, tt := range tests {
 
 
+		if err := stg.Clear(ctx); err != nil {
+			t.Errorf("PodStorage.Get() storage setup error = %v", err)
+			return
+		}
+
+		if err := stg.Insert(ctx, &d); err != nil {
+			t.Errorf("PodStorage.Get() storage setup error = %v", err)
+			return
+		}
 
 		t.Run(tt.name, func(t *testing.T) {
 
-			got, err := tt.fields.stg.Get(tt.args.ctx, tt.args.name)
+			got, err := tt.fields.stg.Get(tt.args.ctx, ns1, svc, dp1, tt.args.name)
 
 			if err != nil {
 				if tt.wantErr && tt.err != err.Error() {
@@ -123,16 +126,16 @@ func TestPodStorage_ListByNamespace(t *testing.T) {
 	)
 
 	nl0 := map[string]*types.Pod{}
-	nl0[n1.Meta.Name] = &n1
-	nl0[n2.Meta.Name] = &n2
-	nl0[n3.Meta.Name] = &n3
+	nl0[stg.keyGet(&n1)] = &n1
+	nl0[stg.keyGet(&n2)] = &n2
+	nl0[stg.keyGet(&n3)] = &n3
 
 	nl1 := map[string]*types.Pod{}
-	nl1[n1.Meta.Name] = &n1
-	nl1[n2.Meta.Name] = &n2
+	nl1[stg.keyGet(&n1)] = &n1
+	nl1[stg.keyGet(&n2)] = &n2
 
 	nl2  := map[string]*types.Pod{}
-	nl2[n3.Meta.Name] = &n3
+	nl2[stg.keyGet(&n3)] = &n3
 
 	type fields struct {
 		stg storage.Pod
@@ -173,14 +176,22 @@ func TestPodStorage_ListByNamespace(t *testing.T) {
 		},
 	}
 
-	for _, n := range nl0 {
-		if err := stg.Insert(ctx, n); err != nil {
+
+
+	for _, tt := range tests {
+
+		if err := stg.Clear(ctx); err != nil {
 			t.Errorf("PodStorage.List() storage setup error = %v", err)
 			return
 		}
-	}
 
-	for _, tt := range tests {
+		for _, n := range nl0 {
+			if err := stg.Insert(ctx, n); err != nil {
+				t.Errorf("PodStorage.List() storage setup error = %v", err)
+				return
+			}
+		}
+
 		t.Run(tt.name, func(t *testing.T) {
 			got, err := stg.ListByNamespace(tt.args.ctx, tt.args.ns)
 			if (err != nil) != tt.wantErr {
@@ -212,22 +223,22 @@ func TestPodStorage_ListByService(t *testing.T) {
 	)
 
 	nl0 := map[string]*types.Pod{}
-	nl0[n1.Meta.Name] = &n1
-	nl0[n2.Meta.Name] = &n2
-	nl0[n3.Meta.Name] = &n3
-	nl0[n4.Meta.Name] = &n4
-	nl0[n5.Meta.Name] = &n5
+	nl0[stg.keyGet(&n1)] = &n1
+	nl0[stg.keyGet(&n2)] = &n2
+	nl0[stg.keyGet(&n3)] = &n3
+	nl0[stg.keyGet(&n4)] = &n4
+	nl0[stg.keyGet(&n5)] = &n5
 
 	nl1 := map[string]*types.Pod{}
-	nl1[n1.Meta.Name] = &n1
-	nl1[n2.Meta.Name] = &n2
+	nl1[stg.keyGet(&n1)] = &n1
+	nl1[stg.keyGet(&n2)] = &n2
 
 	nl2  := map[string]*types.Pod{}
-	nl2[n3.Meta.Name] = &n3
+	nl2[stg.keyGet(&n3)] = &n3
 
 	nl3  := map[string]*types.Pod{}
-	nl3[n4.Meta.Name] = &n4
-	nl3[n5.Meta.Name] = &n5
+	nl3[stg.keyGet(&n4)] = &n4
+	nl3[stg.keyGet(&n5)] = &n5
 
 	type fields struct {
 		stg storage.Pod
@@ -276,22 +287,28 @@ func TestPodStorage_ListByService(t *testing.T) {
 		},
 	}
 
-	for _, n := range nl0 {
-		if err := stg.Insert(ctx, n); err != nil {
-			t.Errorf("PodStorage.List() storage setup error = %v", err)
+	for _, tt := range tests {
+
+		if err := stg.Clear(ctx); err != nil {
+			t.Errorf("PodStorage.ListByService() storage setup error = %v", err)
 			return
 		}
-	}
 
-	for _, tt := range tests {
+		for _, n := range nl0 {
+			if err := stg.Insert(ctx, n); err != nil {
+				t.Errorf("PodStorage.ListByService() storage setup error = %v", err)
+				return
+			}
+		}
+
 		t.Run(tt.name, func(t *testing.T) {
 			got, err := stg.ListByService(tt.args.ctx, tt.args.ns, tt.args.svc)
 			if (err != nil) != tt.wantErr {
-				t.Errorf("PodStorage.List() error = %v, wantErr %v", err, tt.wantErr)
+				t.Errorf("PodStorage.ListByService() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
 			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("PodStorage.List() = %v, want %v", got, tt.want)
+				t.Errorf("PodStorage.ListByService() = %v, want %v", got, tt.want)
 			}
 		})
 	}
@@ -318,28 +335,28 @@ func TestPodStorage_ListByDeployment(t *testing.T) {
 	)
 
 	nl0 := map[string]*types.Pod{}
-	nl0[n1.Meta.Name] = &n1
-	nl0[n2.Meta.Name] = &n2
-	nl0[n3.Meta.Name] = &n3
-	nl0[n4.Meta.Name] = &n4
-	nl0[n5.Meta.Name] = &n5
-	nl0[n6.Meta.Name] = &n6
-	nl0[n7.Meta.Name] = &n7
+	nl0[stg.keyGet(&n1)] = &n1
+	nl0[stg.keyGet(&n2)] = &n2
+	nl0[stg.keyGet(&n3)] = &n3
+	nl0[stg.keyGet(&n4)] = &n4
+	nl0[stg.keyGet(&n5)] = &n5
+	nl0[stg.keyGet(&n6)] = &n6
+	nl0[stg.keyGet(&n7)] = &n7
 
 	nl1 := map[string]*types.Pod{}
-	nl1[n1.Meta.Name] = &n1
-	nl1[n2.Meta.Name] = &n2
+	nl1[stg.keyGet(&n1)] = &n1
+	nl1[stg.keyGet(&n2)] = &n2
 
 	nl2  := map[string]*types.Pod{}
-	nl2[n3.Meta.Name] = &n3
+	nl2[stg.keyGet(&n3)] = &n3
 
 	nl3  := map[string]*types.Pod{}
-	nl3[n4.Meta.Name] = &n4
-	nl3[n5.Meta.Name] = &n5
+	nl3[stg.keyGet(&n4)] = &n4
+	nl3[stg.keyGet(&n5)] = &n5
 
 	nl4  := map[string]*types.Pod{}
-	nl4[n6.Meta.Name] = &n6
-	nl4[n7.Meta.Name] = &n7
+	nl4[stg.keyGet(&n6)] = &n6
+	nl4[stg.keyGet(&n7)] = &n7
 
 	type fields struct {
 		stg storage.Pod
@@ -396,22 +413,28 @@ func TestPodStorage_ListByDeployment(t *testing.T) {
 		},
 	}
 
-	for _, n := range nl0 {
-		if err := stg.Insert(ctx, n); err != nil {
-			t.Errorf("PodStorage.List() storage setup error = %v", err)
+	for _, tt := range tests {
+
+		if err := stg.Clear(ctx); err != nil {
+			t.Errorf("PodStorage.ListByDeployment() storage setup error = %v", err)
 			return
 		}
-	}
 
-	for _, tt := range tests {
+		for _, n := range nl0 {
+			if err := stg.Insert(ctx, n); err != nil {
+				t.Errorf("PodStorage.ListByDeployment() storage setup error = %v", err)
+				return
+			}
+		}
+
 		t.Run(tt.name, func(t *testing.T) {
 			got, err := stg.ListByDeployment(tt.args.ctx, tt.args.ns, tt.args.svc, tt.args.dp)
 			if (err != nil) != tt.wantErr {
-				t.Errorf("PodStorage.List() error = %v, wantErr %v", err, tt.wantErr)
+				t.Errorf("PodStorage.ListByDeployment() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
 			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("PodStorage.List() = %v, want %v", got, tt.want)
+				t.Errorf("PodStorage.ListByDeployment() = %v, want %v", got, tt.want)
 			}
 		})
 	}
@@ -478,24 +501,30 @@ func TestPodStorage_SetState(t *testing.T) {
 		},
 	}
 
-	for _, n := range nl0 {
-		if err := stg.Insert(ctx, n); err != nil {
-			t.Errorf("PodStorage.List() storage setup error = %v", err)
+	for _, tt := range tests {
+
+		if err := stg.Clear(ctx); err != nil {
+			t.Errorf("PodStorage.SetState() storage setup error = %v", err)
 			return
 		}
-	}
 
-	for _, tt := range tests {
+		for _, n := range nl0 {
+			if err := stg.Insert(ctx, n); err != nil {
+				t.Errorf("PodStorage.SetState() storage setup error = %v", err)
+				return
+			}
+		}
+
 		t.Run(tt.name, func(t *testing.T) {
 			err := tt.fields.stg.SetState(tt.args.ctx, tt.args.pod)
 			if err != nil {
 				if !tt.wantErr {
-					t.Errorf("PodStorage.Update() error = %v, want no error", err.Error())
+					t.Errorf("PodStorage.SetState() error = %v, want no error", err.Error())
 					return
 				}
 
 				if tt.wantErr && tt.err != err.Error() {
-					t.Errorf("PodStorage.Update() error = %v, want %v", err.Error(), tt.err)
+					t.Errorf("PodStorage.SetState() error = %v, want %v", err.Error(), tt.err)
 					return
 				}
 
@@ -503,13 +532,13 @@ func TestPodStorage_SetState(t *testing.T) {
 			}
 
 			if tt.wantErr {
-				t.Errorf("PodStorage.Update() error = %v, want %v", err.Error(), tt.err)
+				t.Errorf("PodStorage.SetState() error = %v, want %v", err.Error(), tt.err)
 				return
 			}
 
-			got, _ := tt.fields.stg.Get(tt.args.ctx, tt.args.pod.Meta.Name)
+			got, _ := tt.fields.stg.Get(tt.args.ctx, ns1, svc, dp1, tt.args.pod.Meta.Name)
 			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("PodStorage.Update() = %v, want %v", got, tt.want)
+				t.Errorf("PodStorage.SetState() = %v, want %v", got, tt.want)
 				return
 			}
 
@@ -574,6 +603,12 @@ func TestPodStorage_Insert(t *testing.T) {
 	}
 
 	for _, tt := range tests {
+
+		if err := stg.Clear(ctx); err != nil {
+			t.Errorf("PodStorage.SetState() storage setup error = %v", err)
+			return
+		}
+
 		t.Run(tt.name, func(t *testing.T) {
 			err := tt.fields.stg.Insert(tt.args.ctx, tt.args.pod)
 			if err != nil {
@@ -656,14 +691,20 @@ func TestPodStorage_Update(t *testing.T) {
 		},
 	}
 
-	for _, n := range nl0 {
-		if err := stg.Insert(ctx, n); err != nil {
-			t.Errorf("PodStorage.List() storage setup error = %v", err)
+	for _, tt := range tests {
+
+		if err := stg.Clear(ctx); err != nil {
+			t.Errorf("PodStorage.Update() storage setup error = %v", err)
 			return
 		}
-	}
 
-	for _, tt := range tests {
+		for _, n := range nl0 {
+			if err := stg.Insert(ctx, n); err != nil {
+				t.Errorf("PodStorage.Update() storage setup error = %v", err)
+				return
+			}
+		}
+
 		t.Run(tt.name, func(t *testing.T) {
 			err := tt.fields.stg.Update(tt.args.ctx, tt.args.pod)
 			if err != nil {
@@ -685,7 +726,7 @@ func TestPodStorage_Update(t *testing.T) {
 				return
 			}
 
-			got, _ := tt.fields.stg.Get(tt.args.ctx, tt.args.pod.Meta.Name)
+			got, _ := tt.fields.stg.Get(tt.args.ctx, ns1, svc, dp1, tt.args.pod.Meta.Name)
 			if !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("PodStorage.Update() = %v, want %v", got, tt.want)
 				return
@@ -749,9 +790,20 @@ func TestPodStorage_Remove(t *testing.T) {
 		},
 	}
 
-	stg.Insert(ctx, &n1)
+
 
 	for _, tt := range tests {
+
+		if err := stg.Clear(ctx); err != nil {
+			t.Errorf("PodStorage.Remove() storage setup error = %v", err)
+			return
+		}
+
+		if err := stg.Insert(ctx, &n1); err != nil {
+			t.Errorf("PodStorage.Remove() storage setup error = %v", err)
+			return
+		}
+
 		t.Run(tt.name, func(t *testing.T) {
 			err := tt.fields.stg.Remove(tt.args.ctx, tt.args.pod)
 			if err != nil {
@@ -773,7 +825,7 @@ func TestPodStorage_Remove(t *testing.T) {
 				return
 			}
 
-			_, err = tt.fields.stg.Get(tt.args.ctx, tt.args.pod.Meta.Name)
+			_, err = tt.fields.stg.Get(tt.args.ctx, ns1, svc, dp1, tt.args.pod.Meta.Name)
 			if err == nil || tt.err != err.Error() {
 				t.Errorf("PodStorage.Remove() = %v, want %v", err, tt.want)
 				return
@@ -875,7 +927,7 @@ func Test_newPodStorage(t *testing.T) {
 func getPodAsset(namespace, service, deployment, name, desc string) types.Pod {
 	p := types.Pod{}
 
-	p.Meta.Name = fmt.Sprintf("%s:%s:%s:%s", namespace,service,deployment,name)
+	p.Meta.Name = name
 	p.Meta.Description = desc
 	p.Meta.Namespace = namespace
 	p.Meta.Service = service

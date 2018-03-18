@@ -34,8 +34,9 @@ type VolumeStorage struct {
 }
 
 // Get volume by name
-func (s *VolumeStorage) Get(ctx context.Context, name string) (*types.Volume, error) {
-	if ns, ok := s.data[name]; ok {
+func (s *VolumeStorage) Get(ctx context.Context, namespace, name string) (*types.Volume, error) {
+
+	if ns, ok := s.data[s.keyCreate(namespace, name)]; ok {
 		return ns, nil
 	}
 	return nil, errors.New(store.ErrEntityNotFound)
@@ -48,8 +49,8 @@ func (s *VolumeStorage) ListByNamespace(ctx context.Context, namespace string) (
 	prefix := fmt.Sprintf("%s:", namespace)
 	for _, d := range s.data {
 
-		if strings.HasPrefix(d.Meta.Name, prefix) {
-			list[d.Meta.Name] = d
+		if strings.HasPrefix(s.keyGet(d), prefix) {
+			list[s.keyGet(d)] = d
 		}
 	}
 
@@ -62,7 +63,7 @@ func (s *VolumeStorage) SetState(ctx context.Context, volume *types.Volume) erro
 		return err
 	}
 
-	s.data[volume.Meta.Name].State = volume.State
+	s.data[s.keyGet(volume)].State = volume.State
 	return nil
 }
 
@@ -73,7 +74,7 @@ func (s *VolumeStorage) Insert(ctx context.Context, volume *types.Volume) error 
 		return err
 	}
 
-	s.data[volume.Meta.Name] = volume
+	s.data[s.keyGet(volume)] = volume
 
 	return nil
 }
@@ -85,7 +86,7 @@ func (s *VolumeStorage) Update(ctx context.Context, volume *types.Volume) error 
 		return err
 	}
 
-	s.data[volume.Meta.Name] = volume
+	s.data[s.keyGet(volume)] = volume
 
 	return nil
 }
@@ -97,7 +98,7 @@ func (s *VolumeStorage) Remove(ctx context.Context, volume *types.Volume) error 
 		return err
 	}
 
-	delete(s.data, volume.Meta.Name)
+	delete(s.data, s.keyGet(volume))
 
 	return nil
 }
@@ -110,6 +111,22 @@ func (s *VolumeStorage) Watch(ctx context.Context, volume chan *types.Volume) er
 // Watch volume spec changes
 func (s *VolumeStorage) WatchSpec(ctx context.Context, volume chan *types.Volume) error {
 	return nil
+}
+
+// Clear volume storage
+func (s *VolumeStorage) Clear(ctx context.Context) error {
+	s.data = make(map[string]*types.Volume)
+	return nil
+}
+
+// keyCreate util function
+func (s *VolumeStorage) keyCreate (namespace, name string) string {
+	return fmt.Sprintf("%s:%s", namespace, name)
+}
+
+// keyGet util function
+func (s *VolumeStorage) keyGet(v *types.Volume) string {
+	return v.SelfLink()
 }
 
 // newVolumeStorage returns new storage
@@ -140,7 +157,7 @@ func (s *VolumeStorage) checkVolumeExists(volume *types.Volume) error {
 		return err
 	}
 
-	if _, ok := s.data[volume.Meta.Name]; !ok {
+	if _, ok := s.data[s.keyGet(volume)]; !ok {
 		return errors.New(store.ErrEntityNotFound)
 	}
 

@@ -24,16 +24,7 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 )
 
-type Trigger interface {
-	Get(ctx context.Context, name string) (*types.Trigger, error)
-	ListByNamespace(ctx context.Context, namespace string) (map[string]*types.Trigger, error)
-	ListByService(ctx context.Context, namespace, service string) (map[string]*types.Trigger, error)
-	Insert(ctx context.Context, trigger *types.Trigger) error
-	Update(ctx context.Context, trigger *types.Trigger) error
-	Remove(ctx context.Context, trigger *types.Trigger) error
-	Watch(ctx context.Context, trigger chan *types.Trigger) error
-	WatchSpec(ctx context.Context, trigger chan  *types.Trigger) error
-}
+
 
 type Namespace interface {
 	Get(ctx context.Context, name string) (*types.Namespace, error)
@@ -41,10 +32,11 @@ type Namespace interface {
 	Insert(ctx context.Context, namespace *types.Namespace) error
 	Update(ctx context.Context, namespace *types.Namespace) error
 	Remove(ctx context.Context, namespace *types.Namespace) error
+	Clear(ctx context.Context) error
 }
 
 type Service interface {
-	Get(ctx context.Context, name string) (*types.Service, error)
+	Get(ctx context.Context, namespace, name string) (*types.Service, error)
 	ListByNamespace(ctx context.Context, namespace string) (map[string]*types.Service, error)
 	SetState(ctx context.Context, service *types.Service) error
 	SetSpec(ctx context.Context, service *types.Service) error
@@ -53,10 +45,11 @@ type Service interface {
 	Remove(ctx context.Context, service *types.Service) error
 	Watch(ctx context.Context, service chan *types.Service) error
 	WatchSpec(ctx context.Context, service chan *types.Service) error
+	Clear(ctx context.Context) error
 }
 
 type Deployment interface {
-	Get(ctx context.Context, name string) (*types.Deployment, error)
+	Get(ctx context.Context, namespace, service, name string) (*types.Deployment, error)
 	ListByNamespace(ctx context.Context, namespace string) (map[string]*types.Deployment, error)
 	ListByService(ctx context.Context, namespace, service string) (map[string]*types.Deployment, error)
 	SetState(ctx context.Context, d *types.Deployment) error
@@ -65,10 +58,11 @@ type Deployment interface {
 	Remove(ctx context.Context, d *types.Deployment) error
 	Watch(ctx context.Context, deployment chan *types.Deployment) error
 	WatchSpec(ctx context.Context, deployment chan *types.Deployment) error
+	Clear(ctx context.Context) error
 }
 
 type Pod interface {
-	Get(ctx context.Context, name string) (*types.Pod, error)
+	Get(ctx context.Context, namespace, service, deployment, name string) (*types.Pod, error)
 	ListByNamespace(ctx context.Context, namespace string) (map[string]*types.Pod, error)
 	ListByService(ctx context.Context, namespace, service string) (map[string]*types.Pod, error)
 	ListByDeployment(ctx context.Context, namespace, service, deployment string) (map[string]*types.Pod, error)
@@ -80,10 +74,35 @@ type Pod interface {
 	Remove(ctx context.Context, pod *types.Pod) error
 	Watch(ctx context.Context, pod chan *types.Pod) error
 	WatchSpec(ctx context.Context, pod chan *types.Pod) error
+	Clear(ctx context.Context) error
+}
+
+type Trigger interface {
+	Get(ctx context.Context, namespace, service, name string) (*types.Trigger, error)
+	ListByNamespace(ctx context.Context, namespace string) (map[string]*types.Trigger, error)
+	ListByService(ctx context.Context, namespace, service string) (map[string]*types.Trigger, error)
+	Insert(ctx context.Context, trigger *types.Trigger) error
+	Update(ctx context.Context, trigger *types.Trigger) error
+	Remove(ctx context.Context, trigger *types.Trigger) error
+	Watch(ctx context.Context, trigger chan *types.Trigger) error
+	WatchSpec(ctx context.Context, trigger chan  *types.Trigger) error
+	Clear(ctx context.Context) error
+}
+
+type Route interface {
+	Get(ctx context.Context, namespace, name string) (*types.Route, error)
+	ListByNamespace(ctx context.Context, namespace string) (map[string]*types.Route, error)
+	SetState(ctx context.Context, route *types.Route) error
+	Insert(ctx context.Context, route *types.Route) error
+	Update(ctx context.Context, route *types.Route) error
+	Remove(ctx context.Context, route *types.Route) error
+	Watch(ctx context.Context, route chan *types.Route) error
+	WatchSpec(ctx context.Context, route chan *types.Route) error
+	Clear(ctx context.Context) error
 }
 
 type Volume interface {
-	Get(ctx context.Context, name string) (*types.Volume, error)
+	Get(ctx context.Context, namespace, name string) (*types.Volume, error)
 	ListByNamespace(ctx context.Context, namespace string) (map[string]*types.Volume, error)
 	SetState(ctx context.Context, volume *types.Volume) error
 	Insert(ctx context.Context, volume *types.Volume) error
@@ -91,6 +110,7 @@ type Volume interface {
 	Remove(ctx context.Context, volume *types.Volume) error
 	Watch(ctx context.Context, volume chan *types.Volume) error
 	WatchSpec(ctx context.Context, volume chan *types.Volume) error
+	Clear(ctx context.Context) error
 }
 
 type Cluster interface {
@@ -117,23 +137,15 @@ type Node interface {
 	RemoveRoute(ctx context.Context, node *types.Node, route *types.Route) error
 	Remove(ctx context.Context, node *types.Node) error
 	Watch(ctx context.Context, node chan *types.Node) error
+	Clear(ctx context.Context) error
 }
 
 type System interface {
 	ProcessSet(ctx context.Context, process *types.Process) error
-
 	Elect(ctx context.Context, process *types.Process) (bool, error)
 	ElectUpdate(ctx context.Context, process *types.Process) error
 	ElectWait(ctx context.Context, process *types.Process, lead chan bool) error
+	Clear(ctx context.Context) error
 }
 
-type Route interface {
-	Get(ctx context.Context, name string) (*types.Route, error)
-	ListByNamespace(ctx context.Context, namespace string) (map[string]*types.Route, error)
-	SetState(ctx context.Context, route *types.Route) error
-	Insert(ctx context.Context, route *types.Route) error
-	Update(ctx context.Context, route *types.Route) error
-	Remove(ctx context.Context, route *types.Route) error
-	Watch(ctx context.Context, route chan *types.Route) error
-	WatchSpec(ctx context.Context, route chan *types.Route) error
-}
+

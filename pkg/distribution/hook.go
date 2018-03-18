@@ -25,20 +25,20 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/storage"
 )
 
-type IHook interface {
-	Get(id string) (*types.Trigger, error)
+type ITrigger interface {
+	Get(namespace, service, name string) (*types.Trigger, error)
 }
 
-type Hook struct {
+type Trigger struct {
 	context context.Context
 	storage storage.Storage
 }
 
-func (h *Hook) Get(id string) (*types.Trigger, error) {
+func (h *Trigger) Get(namespace, service, name string) (*types.Trigger, error) {
 
-	log.V(logLevel).Debugf("Trigger: Get: get Trigger by id %s", id)
+	log.V(logLevel).Debugf("Trigger: Get: get Trigger by name %s: %s", namespace, name)
 
-	hook, err := h.storage.Trigger().Get(h.context, id)
+	hook, err := h.storage.Trigger().Get(h.context, namespace, service, name)
 	if err != nil {
 		log.V(logLevel).Errorf("Trigger: Get: create Trigger err: %s", err)
 		return nil, err
@@ -47,6 +47,6 @@ func (h *Hook) Get(id string) (*types.Trigger, error) {
 	return hook, nil
 }
 
-func NewHookModel(ctx context.Context, stg storage.Storage) IHook {
-	return &Hook{ctx, stg}
+func NewTriggerModel(ctx context.Context, stg storage.Storage) ITrigger {
+	return &Trigger{ctx, stg}
 }

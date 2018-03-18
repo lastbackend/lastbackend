@@ -19,7 +19,6 @@
 package endpoint
 
 import (
-	"context"
 	"github.com/lastbackend/lastbackend/pkg/discovery/envs"
 	"github.com/lastbackend/lastbackend/pkg/log"
 	"github.com/lastbackend/lastbackend/pkg/util"
@@ -32,7 +31,7 @@ func Get(name string) ([]net.IP, error) {
 
 	var (
 		err   error
-		stg   = envs.Get().GetStorage()
+		//stg   = envs.Get().GetStorage()
 		cache = envs.Get().GetCache()
 		data  = []string{}
 	)
@@ -48,15 +47,15 @@ func Get(name string) ([]net.IP, error) {
 	if len(data) == 0 {
 		log.Debugf(`Endpoint: Try find to db %s`, name)
 
-		result, err := stg.Endpoint().Get(context.Background(), name)
-		if err != nil {
-			log.Error(err)
-			return nil, err
-		}
-
-		for _, ip := range result {
-			data = append(data, ip)
-		}
+		//result, err := stg.Endpoint().Get(context.Background(), name)
+		//if err != nil {
+		//	log.Error(err)
+		//	return nil, err
+		//}
+		//
+		//for _, ip := range result {
+		//	data = append(data, ip)
+		//}
 	}
 
 	data = util.RemoveDuplicates(data)
@@ -185,22 +184,22 @@ func Update(name string) error {
 
 	var (
 		err   error
-		stg   = envs.Get().GetStorage()
+		//stg   = envs.Get().GetStorage()
 		cache = envs.Get().GetCache()
 		data  = []string{}
 	)
 
 	log.Debugf(`Endpoint: Update name %s in cache `, name)
 
-	result, err := stg.Endpoint().Get(context.Background(), name)
-	if err != nil {
-		log.Error(err)
-		return err
-	}
-
-	for _, ip := range result {
-		data = append(data, ip)
-	}
+	//result, err := stg.Endpoint().Get(context.Background(), name)
+	//if err != nil {
+	//	log.Error(err)
+	//	return err
+	//}
+	//
+	//for _, ip := range result {
+	//	data = append(data, ip)
+	//}
 
 	data = util.RemoveDuplicates(data)
 

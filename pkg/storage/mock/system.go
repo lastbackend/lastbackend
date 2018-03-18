@@ -53,6 +53,15 @@ func (s *SystemStorage) ElectWait(ctx context.Context, process *types.Process, l
 	return nil
 }
 
+// Clear system storage
+func (s *SystemStorage) Clear(ctx context.Context) error {
+	s.data = make(map[string]struct {
+		lead    string
+		process string
+	})
+	return nil
+}
+
 func newSystemStorage() *SystemStorage {
 	s := new(SystemStorage)
 	s.data = make(map[string]struct {

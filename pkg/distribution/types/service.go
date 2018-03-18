@@ -27,6 +27,7 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/distribution/errors"
 	"github.com/lastbackend/lastbackend/pkg/log"
 	"github.com/lastbackend/lastbackend/pkg/util/validator"
+	"fmt"
 )
 
 const (
@@ -41,7 +42,7 @@ type Service struct {
 	Deployments map[string]*Deployment `json:"deployments"`
 }
 
-type ServiceList []*Service
+type ServiceList map[string]*Service
 
 type ServiceMeta struct {
 	Meta
@@ -159,6 +160,13 @@ type ServiceSourcesRepo struct {
 	Tag string `json:"tag"`
 	// Build sources info
 	Build string `json:"build"`
+}
+
+func (s *Service) SelfLink() string {
+	if s.Meta.SelfLink == "" {
+		s.Meta.SelfLink = fmt.Sprintf("%s:%s", s.Meta.Namespace, s.Meta.Name)
+	}
+	return s.Meta.SelfLink
 }
 
 func (s *ServiceCreateOptions) DecodeAndValidate(reader io.Reader) *errors.Err {

@@ -34,8 +34,8 @@ type PodStorage struct {
 	data map[string]*types.Pod
 }
 
-func (s *PodStorage) Get(ctx context.Context, name string) (*types.Pod, error) {
-	if ns, ok := s.data[name]; ok {
+func (s *PodStorage) Get(ctx context.Context, namespace, service, deployment, name string) (*types.Pod, error) {
+	if ns, ok := s.data[s.keyCreate(namespace, service, deployment, name)]; ok {
 		return ns, nil
 	}
 	return nil, errors.New(store.ErrEntityNotFound)
@@ -47,8 +47,8 @@ func (s *PodStorage) ListByNamespace(ctx context.Context, namespace string) (map
 	prefix := fmt.Sprintf("%s:", namespace)
 	for _, d := range s.data {
 
-		if strings.HasPrefix(d.Meta.Name, prefix) {
-			list[d.Meta.Name] = d
+		if strings.HasPrefix(s.keyGet(d), prefix) {
+			list[s.keyGet(d)] = d
 		}
 	}
 
@@ -61,8 +61,8 @@ func (s *PodStorage) ListByService(ctx context.Context, namespace, service strin
 	prefix := fmt.Sprintf("%s:%s:", namespace, service)
 
 	for _, d := range s.data {
-		if strings.HasPrefix(d.Meta.Name, prefix) {
-			list[d.Meta.Name] = d
+		if strings.HasPrefix(s.keyGet(d), prefix) {
+			list[s.keyGet(d)] = d
 		}
 	}
 
@@ -75,8 +75,8 @@ func (s *PodStorage) ListByDeployment(ctx context.Context, namespace, service, d
 	prefix := fmt.Sprintf("%s:%s:%s:", namespace, service, deployment)
 
 	for _, d := range s.data {
-		if strings.HasPrefix(d.Meta.Name, prefix) {
-			list[d.Meta.Name] = d
+		if strings.HasPrefix(s.keyGet(d), prefix) {
+			list[s.keyGet(d)] = d
 		}
 	}
 
@@ -89,7 +89,7 @@ func (s *PodStorage) SetState(ctx context.Context, pod *types.Pod) error {
 		return err
 	}
 
-	s.data[pod.Meta.Name].State = pod.State
+	s.data[s.keyGet(pod)].State = pod.State
 	return nil
 }
 
@@ -98,7 +98,7 @@ func (s *PodStorage) Insert(ctx context.Context, pod *types.Pod) error {
 		return err
 	}
 
-	s.data[pod.Meta.Name] = pod
+	s.data[s.keyGet(pod)] = pod
 	return nil
 }
 
@@ -108,7 +108,7 @@ func (s *PodStorage) Update(ctx context.Context, pod *types.Pod) error {
 		return err
 	}
 
-	s.data[pod.Meta.Name] = pod
+	s.data[s.keyGet(pod)] = pod
 
 	return nil
 }
@@ -119,7 +119,7 @@ func (s *PodStorage) Remove(ctx context.Context, pod *types.Pod) error {
 		return err
 	}
 
-	delete(s.data, pod.Meta.Name)
+	delete(s.data, s.keyGet(pod))
 
 	return nil
 }
@@ -131,6 +131,22 @@ func (s *PodStorage) Watch(ctx context.Context, pod chan *types.Pod) error {
 // Watch pod spec changes
 func (s *PodStorage) WatchSpec(ctx context.Context, pod chan *types.Pod) error {
 	return nil
+}
+
+// Clear pod storage
+func (s *PodStorage) Clear(ctx context.Context) error {
+	s.data = make(map[string]*types.Pod)
+	return nil
+}
+
+// keyCreate util function
+func (s *PodStorage) keyCreate (namespace, service, deployment, name string) string {
+	return fmt.Sprintf("%s:%s:%s:%s", namespace, service, deployment, name)
+}
+
+// keyGet util function
+func (s *PodStorage) keyGet (p *types.Pod) string {
+	return p.SelfLink()
 }
 
 func newPodStorage() *PodStorage {
@@ -157,7 +173,7 @@ func (s *PodStorage) checkPodExists(pod *types.Pod) error {
 		return err
 	}
 
-	if _, ok := s.data[pod.Meta.Name]; !ok {
+	if _, ok := s.data[s.keyGet(pod)]; !ok {
 		return errors.New(store.ErrEntityNotFound)
 	}
 

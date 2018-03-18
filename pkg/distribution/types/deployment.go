@@ -18,6 +18,8 @@
 
 package types
 
+import "fmt"
+
 type Deployment struct {
 	Meta DeploymentMeta `json:"meta"`
 	// Deployment spec
@@ -71,4 +73,11 @@ type DeploymentReplicas struct {
 
 type DeploymentOptions struct {
 	Replicas int `json:"replicas"`
+}
+
+func (d *Deployment) SelfLink () string {
+	if d.Meta.SelfLink == "" {
+		d.Meta.SelfLink = fmt.Sprintf("%s:%s:%s", d.Meta.Namespace, d.Meta.Service, d.Meta.Name)
+	}
+	return d.Meta.SelfLink
 }

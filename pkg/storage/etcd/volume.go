@@ -34,11 +34,11 @@ type VolumeStorage struct {
 	storage.Volume
 }
 
-func (s *VolumeStorage) GetByID(ctx context.Context, id string) (*types.Volume, error) {
+func (s *VolumeStorage) GetByID(ctx context.Context, namespace, name string) (*types.Volume, error) {
 
-	log.V(logLevel).Debugf("Storage: Volume: get by id: %s", id)
+	log.V(logLevel).Debugf("Storage: Volume: get by id: %s", name)
 
-	if len(id) == 0 {
+	if len(name) == 0 {
 		err := errors.New("id can not be empty")
 		log.V(logLevel).Errorf("Storage: Volume: get volume err: %s", err.Error())
 		return nil, err
@@ -58,7 +58,7 @@ func (s *VolumeStorage) Insert(ctx context.Context, volume *types.Volume) error 
 }
 
 // Remove build model
-func (s *VolumeStorage) Remove(ctx context.Context, id string) error {
+func (s *VolumeStorage) Remove(ctx context.Context, volume *types.Volume) error {
 	return nil
 }
 

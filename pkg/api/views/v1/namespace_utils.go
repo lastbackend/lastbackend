@@ -80,7 +80,7 @@ func (p *Namespace) ToJson() ([]byte, error) {
 	return json.Marshal(p)
 }
 
-func (nv NamespaceView) NewList(obj []*types.Namespace) *NamespaceList {
+func (nv NamespaceView) NewList(obj map[string]*types.Namespace) *NamespaceList {
 	if obj == nil {
 		return nil
 	}

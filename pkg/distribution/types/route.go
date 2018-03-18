@@ -104,25 +104,32 @@ type RulesOption struct {
 	Port    *int    `json:"port" yaml:"port"`
 }
 
-func (s *Route) GetRouteConfig() *RouterConfig {
+func (r *Route) SelfLink() string {
+	if r.Meta.SelfLink == "" {
+		r.Meta.SelfLink = fmt.Sprintf("%s:%s", r.Meta.Namespace, r.Meta.Name)
+	}
+	return r.Meta.SelfLink
+}
+
+func (r *Route) GetRouteConfig() *RouterConfig {
 	var RouterConfig = new(RouterConfig)
 
-	RouterConfig.ID = s.Meta.Name
-	RouterConfig.Hash = s.Meta.Hash
-	RouterConfig.State = s.State
+	RouterConfig.ID = r.Meta.Name
+	RouterConfig.Hash = r.Meta.Hash
+	RouterConfig.State = r.State
 
-	RouterConfig.Server.Hostname = s.Meta.Domain
+	RouterConfig.Server.Hostname = r.Meta.Domain
 	RouterConfig.Server.Protocol = "http"
 	RouterConfig.Server.Port = 80
 
-	if s.Meta.Security {
+	if r.Meta.Security {
 		RouterConfig.Server.Protocol = "https"
 		RouterConfig.Server.Port = 443
 	}
 
 	RouterConfig.Upstreams = make([]*UpstreamServer, 0)
 	RouterConfig.Server.Locations = make([]*RoteLocation, 0)
-	for _, rule := range s.Spec.Rules {
+	for _, rule := range r.Spec.Rules {
 
 		id := generator.GetUUIDV4()
 

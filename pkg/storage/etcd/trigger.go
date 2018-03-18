@@ -26,21 +26,21 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/storage/storage"
 )
 
-const hookStorage string = "hooks"
+const triggerStorage string = "triggers"
 
 // Service Trigger type for interface in interfaces folder
-type HookStorage struct {
+type TriggerStorage struct {
 	storage.Trigger
 }
 
-// Get hooks by id
-func (s *HookStorage) Get(ctx context.Context, id string) (*types.Trigger, error) {
+// Get triggers by id
+func (s *TriggerStorage) Get(ctx context.Context, namespace, service, name string) (*types.Trigger, error) {
 
-	log.V(logLevel).Debugf("Storage: Trigger: get hook by id: %s", id)
+	log.V(logLevel).Debugf("Storage: Trigger: get trigger by name: %s", name)
 
-	if len(id) == 0 {
+	if len(name) == 0 {
 		err := errors.New("id can not be empty")
-		log.V(logLevel).Errorf("Storage: Trigger: get hook by id err: %s", err.Error())
+		log.V(logLevel).Errorf("Storage: Trigger: get trigger by id err: %s", err.Error())
 		return nil, err
 	}
 
@@ -51,24 +51,24 @@ func (s *HookStorage) Get(ctx context.Context, id string) (*types.Trigger, error
 	}
 	defer destroy()
 
-	hook := new(types.Trigger)
-	keyMeta := keyCreate(hookStorage, id)
-	if err := client.Get(ctx, keyMeta, &hook); err != nil {
-		log.V(logLevel).Errorf("Storage: Trigger: get hook meta err: %s", err.Error())
+	trigger := new(types.Trigger)
+	keyMeta := keyCreate(triggerStorage, name)
+	if err := client.Get(ctx, keyMeta, &trigger); err != nil {
+		log.V(logLevel).Errorf("Storage: Trigger: get trigger meta err: %s", err.Error())
 		return nil, err
 	}
 
-	return hook, nil
+	return trigger, nil
 }
 
-// Insert new hook into storage
-func (s *HookStorage) Insert(ctx context.Context, hook *types.Trigger) error {
+// Insert new trigger into storage
+func (s *TriggerStorage) Insert(ctx context.Context, trigger *types.Trigger) error {
 
-	log.V(logLevel).Debugf("Storage: Trigger: create hook: %#v", hook)
+	log.V(logLevel).Debugf("Storage: Trigger: create trigger: %#v", trigger)
 
-	if hook == nil {
-		err := errors.New("hook can not be nil")
-		log.V(logLevel).Errorf("Storage: Trigger: create hook err: %s", err.Error())
+	if trigger == nil {
+		err := errors.New("trigger can not be nil")
+		log.V(logLevel).Errorf("Storage: Trigger: create trigger err: %s", err.Error())
 		return err
 	}
 
@@ -79,25 +79,19 @@ func (s *HookStorage) Insert(ctx context.Context, hook *types.Trigger) error {
 	}
 	defer destroy()
 
-	key := keyCreate(hookStorage, hook.Meta.Name)
-	if err := client.Create(ctx, key, hook, nil, 0); err != nil {
-		log.V(logLevel).Errorf("Storage: Trigger: create hook err: %s", err.Error())
+	key := keyCreate(triggerStorage, trigger.Meta.Name)
+	if err := client.Create(ctx, key, trigger, nil, 0); err != nil {
+		log.V(logLevel).Errorf("Storage: Trigger: create trigger err: %s", err.Error())
 		return err
 	}
 
 	return nil
 }
 
-// Remove hook by id from storage
-func (s *HookStorage) Remove(ctx context.Context, id string) error {
+// Remove trigger by id from storage
+func (s *TriggerStorage) Remove(ctx context.Context, trigger *types.Trigger) error {
 
-	log.V(logLevel).Debugf("Storage: Trigger: remove hook by id %#v", id)
-
-	if len(id) == 0 {
-		err := errors.New("id can not be nil")
-		log.V(logLevel).Errorf("Storage: Trigger: remove hook err: %s", err.Error())
-		return err
-	}
+	log.V(logLevel).Debugf("Storage: Trigger: remove trigger by id %#v", trigger.Meta.Name)
 
 	client, destroy, err := getClient(ctx)
 	if err != nil {
@@ -106,15 +100,15 @@ func (s *HookStorage) Remove(ctx context.Context, id string) error {
 	}
 	defer destroy()
 
-	key := keyCreate(hookStorage, id)
+	key := keyCreate(triggerStorage, trigger.Meta.Name)
 	if err := client.DeleteDir(ctx, key); err != nil {
-		log.V(logLevel).Errorf("Storage: Trigger: remove hook err: %s", err.Error())
+		log.V(logLevel).Errorf("Storage: Trigger: remove trigger err: %s", err.Error())
 		return err
 	}
 	return nil
 }
 
-func newHookStorage() *HookStorage {
-	s := new(HookStorage)
+func newTriggerStorage() *TriggerStorage {
+	s := new(TriggerStorage)
 	return s
 }

@@ -31,8 +31,8 @@ import (
 type IDeployment interface {
 	Create(service *types.Service) (*types.Deployment, error)
 	Get(namespace, service, name string) (*types.Deployment, error)
-	ListByNamespace(namespace string) ([]*types.Deployment, error)
-	ListByService(namespace, service string) ([]*types.Deployment, error)
+	ListByNamespace(namespace string) (map[string]*types.Deployment, error)
+	ListByService(namespace, service string) (map[string]*types.Deployment, error)
 	Scale(dt *types.Deployment, opts types.DeploymentOptions) error
 	SetState(dt *types.Deployment) error
 	Cancel(dt *types.Deployment) error
@@ -79,7 +79,7 @@ func (d *Deployment) Get(namespace, service, name string) (*types.Deployment, er
 
 	log.Debugf("Deployment: get deployment by id: %s/%s/%s", namespace, service, name)
 
-	dt, err := d.storage.Deployment().Get(d.context, namespace, name)
+	dt, err := d.storage.Deployment().Get(d.context, namespace, service, name)
 	if err != nil {
 		log.Errorf("Can not get deployment by id: %s", err.Error())
 		return nil, err
@@ -89,7 +89,7 @@ func (d *Deployment) Get(namespace, service, name string) (*types.Deployment, er
 }
 
 // ListByService - list of deployments by service
-func (d *Deployment) ListByNamespace(namespace string) ([]*types.Deployment, error) {
+func (d *Deployment) ListByNamespace(namespace string) (map[string]*types.Deployment, error) {
 
 	log.Debug("Deployment: List By Service: get deployments list")
 
@@ -103,7 +103,7 @@ func (d *Deployment) ListByNamespace(namespace string) ([]*types.Deployment, err
 }
 
 // ListByService - list of deployments by service
-func (d *Deployment) ListByService(namespace, service string) ([]*types.Deployment, error) {
+func (d *Deployment) ListByService(namespace, service string) (map[string]*types.Deployment, error) {
 
 	log.Debug("Deployment: List By Service: get deployments list")
 

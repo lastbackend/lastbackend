@@ -60,7 +60,7 @@ func (sc *ServiceController) Watch() {
 		}
 	}()
 
-	stg.Service().SpecWatch(context.Background(), sc.services)
+	stg.Service().WatchSpec(context.Background(), sc.services)
 }
 
 func (sc *ServiceController) Pause() {

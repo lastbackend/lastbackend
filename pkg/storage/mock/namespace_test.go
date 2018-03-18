@@ -72,8 +72,13 @@ func TestNamespaceStorage_Get(t *testing.T) {
 
 	for _, tt := range tests {
 
+		if err := stg.Clear(ctx); err != nil {
+			t.Errorf("NamespaceStorage.Get() storage setup error = %v", err)
+			return
+		}
+
 		if err := stg.Insert(ctx, &n); err != nil {
-			t.Errorf("NamespaceStorage.Info() storage setup error = %v", err)
+			t.Errorf("NamespaceStorage.Get() storage setup error = %v", err)
 			return
 		}
 
@@ -138,14 +143,20 @@ func TestNamespaceStorage_List(t *testing.T) {
 		},
 	}
 
-	for _, n := range nl {
-		if err := stg.Insert(ctx, n); err != nil {
+	for _, tt := range tests {
+
+		if err := stg.Clear(ctx); err != nil {
 			t.Errorf("NamespaceStorage.List() storage setup error = %v", err)
 			return
 		}
-	}
 
-	for _, tt := range tests {
+		for _, n := range nl {
+			if err := stg.Insert(ctx, n); err != nil {
+				t.Errorf("NamespaceStorage.List() storage setup error = %v", err)
+				return
+			}
+		}
+
 		t.Run(tt.name, func(t *testing.T) {
 			got, err := stg.List(tt.args.ctx)
 			if (err != nil) != tt.wantErr {
@@ -211,6 +222,12 @@ func TestNamespaceStorage_Insert(t *testing.T) {
 	}
 
 	for _, tt := range tests {
+
+		if err := stg.Clear(ctx); err != nil {
+			t.Errorf("NamespaceStorage.Insert() storage setup error = %v", err)
+			return
+		}
+
 		t.Run(tt.name, func(t *testing.T) {
 			err := tt.fields.stg.Insert(tt.args.ctx, tt.args.namespace)
 			if err != nil {
@@ -288,9 +305,20 @@ func TestNamespaceStorage_Update(t *testing.T) {
 		},
 	}
 
-	stg.Insert(ctx, &n1)
+
 
 	for _, tt := range tests {
+
+		if err := stg.Clear(ctx); err != nil {
+			t.Errorf("NamespaceStorage.Update() storage setup error = %v", err)
+			return
+		}
+
+		if err := stg.Insert(ctx, &n1); err != nil {
+			t.Errorf("NamespaceStorage.Update() storage setup error = %v", err)
+			return
+		}
+
 		t.Run(tt.name, func(t *testing.T) {
 			err := tt.fields.stg.Update(tt.args.ctx, tt.args.naspace)
 			if err != nil {
@@ -375,9 +403,18 @@ func TestNamespaceStorage_Remove(t *testing.T) {
 		},
 	}
 
-	stg.Insert(ctx, &n1)
-
 	for _, tt := range tests {
+
+		if err := stg.Clear(ctx); err != nil {
+			t.Errorf("NamespaceStorage.Remove() storage setup error = %v", err)
+			return
+		}
+
+		if err := stg.Insert(ctx, &n1); err != nil {
+			t.Errorf("NamespaceStorage.Remove() storage setup error = %v", err)
+			return
+		}
+
 		t.Run(tt.name, func(t *testing.T) {
 			err := tt.fields.stg.Remove(tt.args.ctx, tt.args.namespace)
 			if err != nil {

@@ -34,8 +34,8 @@ type ServiceStorage struct {
 }
 
 // Get service by name
-func (s *ServiceStorage) Get(ctx context.Context, name string) (*types.Service, error) {
-	if ns, ok := s.data[name]; ok {
+func (s *ServiceStorage) Get(ctx context.Context, namespace, name string) (*types.Service, error) {
+	if ns, ok := s.data[s.keyCreate(namespace, name)]; ok {
 		return ns, nil
 	}
 	return nil, errors.New(store.ErrEntityNotFound)
@@ -48,8 +48,8 @@ func (s *ServiceStorage) ListByNamespace(ctx context.Context, namespace string) 
 	prefix := fmt.Sprintf("%s:", namespace)
 	for _, d := range s.data {
 
-		if strings.HasPrefix(d.Meta.Name, prefix) {
-			list[d.Meta.Name] = d
+		if strings.HasPrefix(s.keyGet(d), prefix) {
+			list[s.keyGet(d)] = d
 		}
 	}
 
@@ -62,7 +62,7 @@ func (s *ServiceStorage) SetState(ctx context.Context, service *types.Service) e
 		return err
 	}
 
-	s.data[service.Meta.Name].State = service.State
+	s.data[s.keyCreate(service.Meta.Namespace, service.Meta.Name)].State = service.State
 	return nil
 }
 
@@ -72,7 +72,7 @@ func (s *ServiceStorage) SetSpec(ctx context.Context, service *types.Service) er
 		return err
 	}
 
-	s.data[service.Meta.Name].Spec = service.Spec
+	s.data[s.keyCreate(service.Meta.Namespace, service.Meta.Name)].Spec = service.Spec
 	return nil
 }
 
@@ -83,7 +83,7 @@ func (s *ServiceStorage) Insert(ctx context.Context, service *types.Service) err
 		return err
 	}
 
-	s.data[service.Meta.Name] = service
+	s.data[s.keyCreate(service.Meta.Namespace, service.Meta.Name)] = service
 
 	return nil
 }
@@ -95,7 +95,7 @@ func (s *ServiceStorage) Update(ctx context.Context, service *types.Service) err
 		return err
 	}
 
-	s.data[service.Meta.Name] = service
+	s.data[s.keyCreate(service.Meta.Namespace, service.Meta.Name)] = service
 
 	return nil
 }
@@ -107,7 +107,7 @@ func (s *ServiceStorage) Remove(ctx context.Context, service *types.Service) err
 		return err
 	}
 
-	delete(s.data, service.Meta.Name)
+	delete(s.data, s.keyCreate(service.Meta.Namespace, service.Meta.Name))
 
 	return nil
 }
@@ -120,6 +120,22 @@ func (s *ServiceStorage) Watch(ctx context.Context, service chan *types.Service)
 // Watch service spec changes
 func (s *ServiceStorage) WatchSpec(ctx context.Context, service chan *types.Service) error {
 	return nil
+}
+
+// Clear service storage
+func (s *ServiceStorage) Clear(ctx context.Context) error {
+	s.data = make(map[string]*types.Service)
+	return nil
+}
+
+// keyCreate util function
+func (s *ServiceStorage) keyCreate (namespace, name string) string {
+	return fmt.Sprintf("%s:%s", namespace, name)
+}
+
+// keyGet util function
+func (s *ServiceStorage) keyGet(svc *types.Service) string {
+	return svc.SelfLink()
 }
 
 // newServiceStorage returns new storage
@@ -150,7 +166,7 @@ func (s *ServiceStorage) checkServiceExists(service *types.Service) error {
 		return err
 	}
 
-	if _, ok := s.data[service.Meta.Name]; !ok {
+	if _, ok := s.data[s.keyCreate(service.Meta.Namespace, service.Meta.Name)]; !ok {
 		return errors.New(store.ErrEntityNotFound)
 	}
 

@@ -60,7 +60,7 @@ func (dc *DeploymentController) Watch() {
 		}
 	}()
 
-	stg.Deployment().SpecWatch(context.Background(), dc.deployment)
+	stg.Deployment().WatchSpec(context.Background(), dc.deployment)
 }
 
 func (dc *DeploymentController) Pause() {
@@ -88,7 +88,7 @@ func (dc *DeploymentController) Resume() {
 		}
 
 		for _, d := range dl {
-			d, err := stg.Deployment().Get(context.Background(), d.Meta.Namespace, d.Meta.Name)
+			d, err := stg.Deployment().Get(context.Background(), d.Meta.Namespace, d.Meta.Service, d.Meta.Name)
 			if err != nil {
 				log.Errorf("Service: Get service err: %s", err.Error())
 			}

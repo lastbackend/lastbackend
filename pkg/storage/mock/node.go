@@ -233,6 +233,12 @@ func (s *NodeStorage) Watch(ctx context.Context, node chan *types.Node) error {
 	return nil
 }
 
+// Clear node storage
+func (s *NodeStorage) Clear(ctx context.Context) error {
+	s.data = make(map[string]*types.Node)
+	return nil
+}
+
 func newNodeStorage() *NodeStorage {
 	s := new(NodeStorage)
 	s.data = make(map[string]*types.Node)

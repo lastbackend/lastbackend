@@ -25,7 +25,6 @@ import (
 	"reflect"
 	"github.com/lastbackend/lastbackend/pkg/storage/storage"
 	"context"
-	"fmt"
 )
 
 func TestVolumeStorage_Get(t *testing.T) {
@@ -71,18 +70,22 @@ func TestVolumeStorage_Get(t *testing.T) {
 		},
 	}
 
-	if err := stg.Insert(ctx, &d); err != nil {
-		t.Errorf("VolumeStorage.Info() storage setup error = %v", err)
-		return
-	}
 
 	for _, tt := range tests {
 
+		if err := stg.Clear(ctx); err != nil {
+			t.Errorf("VolumeStorage.Get() storage setup error = %v", err)
+			return
+		}
 
+		if err := stg.Insert(ctx, &d); err != nil {
+			t.Errorf("VolumeStorage.Get() storage setup error = %v", err)
+			return
+		}
 
 		t.Run(tt.name, func(t *testing.T) {
 
-			got, err := tt.fields.stg.Get(tt.args.ctx, tt.args.name)
+			got, err := tt.fields.stg.Get(tt.args.ctx, ns1, tt.args.name)
 
 			if err != nil {
 				if tt.wantErr && tt.err != err.Error() {
@@ -118,16 +121,16 @@ func TestVolumeStorage_ListByNamespace(t *testing.T) {
 	)
 
 	nl0 := map[string]*types.Volume{}
-	nl0[n1.Meta.Name] = &n1
-	nl0[n2.Meta.Name] = &n2
-	nl0[n3.Meta.Name] = &n3
+	nl0[stg.keyGet(&n1)] = &n1
+	nl0[stg.keyGet(&n2)] = &n2
+	nl0[stg.keyGet(&n3)] = &n3
 
 	nl1 := map[string]*types.Volume{}
-	nl1[n1.Meta.Name] = &n1
-	nl1[n2.Meta.Name] = &n2
+	nl1[stg.keyGet(&n1)] = &n1
+	nl1[stg.keyGet(&n2)] = &n2
 
 	nl2  := map[string]*types.Volume{}
-	nl2[n3.Meta.Name] = &n3
+	nl2[stg.keyGet(&n3)] = &n3
 
 	type fields struct {
 		stg storage.Volume
@@ -168,14 +171,21 @@ func TestVolumeStorage_ListByNamespace(t *testing.T) {
 		},
 	}
 
-	for _, n := range nl0 {
-		if err := stg.Insert(ctx, n); err != nil {
+
+	for _, tt := range tests {
+
+		if err := stg.Clear(ctx); err != nil {
 			t.Errorf("VolumeStorage.ListByNamespace() storage setup error = %v", err)
 			return
 		}
-	}
 
-	for _, tt := range tests {
+		for _, n := range nl0 {
+			if err := stg.Insert(ctx, n); err != nil {
+				t.Errorf("VolumeStorage.ListByNamespace() storage setup error = %v", err)
+				return
+			}
+		}
+
 		t.Run(tt.name, func(t *testing.T) {
 			got, err := stg.ListByNamespace(tt.args.ctx, tt.args.ns)
 			if (err != nil) != tt.wantErr {
@@ -248,24 +258,32 @@ func TestVolumeStorage_SetState(t *testing.T) {
 		},
 	}
 
-	for _, n := range nl0 {
-		if err := stg.Insert(ctx, n); err != nil {
-			t.Errorf("VolumeStorage.List() storage setup error = %v", err)
-			return
-		}
-	}
 
 	for _, tt := range tests {
+
+		if err := stg.Clear(ctx); err != nil {
+			t.Errorf("VolumeStorage.SetState() storage setup error = %v", err)
+			return
+		}
+
+
+		for _, n := range nl0 {
+			if err := stg.Insert(ctx, n); err != nil {
+				t.Errorf("VolumeStorage.SetState() storage setup error = %v", err)
+				return
+			}
+		}
+
 		t.Run(tt.name, func(t *testing.T) {
 			err := tt.fields.stg.SetState(tt.args.ctx, tt.args.volume)
 			if err != nil {
 				if !tt.wantErr {
-					t.Errorf("VolumeStorage.Update() error = %v, want no error", err.Error())
+					t.Errorf("VolumeStorage.SetState() error = %v, want no error", err.Error())
 					return
 				}
 
 				if tt.wantErr && tt.err != err.Error() {
-					t.Errorf("VolumeStorage.Update() error = %v, want %v", err.Error(), tt.err)
+					t.Errorf("VolumeStorage.SetState() error = %v, want %v", err.Error(), tt.err)
 					return
 				}
 
@@ -273,13 +291,13 @@ func TestVolumeStorage_SetState(t *testing.T) {
 			}
 
 			if tt.wantErr {
-				t.Errorf("VolumeStorage.Update() error = %v, want %v", err.Error(), tt.err)
+				t.Errorf("VolumeStorage.SetState() error = %v, want %v", err.Error(), tt.err)
 				return
 			}
 
-			got, _ := tt.fields.stg.Get(tt.args.ctx, tt.args.volume.Meta.Name)
+			got, _ := tt.fields.stg.Get(tt.args.ctx, ns1, tt.args.volume.Meta.Name)
 			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("VolumeStorage.Update() = %v, want %v", got, tt.want)
+				t.Errorf("VolumeStorage.SetState() = %v, want %v", got, tt.want)
 				return
 			}
 
@@ -342,6 +360,13 @@ func TestVolumeStorage_Insert(t *testing.T) {
 	}
 
 	for _, tt := range tests {
+
+
+		if err := stg.Clear(ctx); err != nil {
+			t.Errorf("VolumeStorage.Insert() storage setup error = %v", err)
+			return
+		}
+
 		t.Run(tt.name, func(t *testing.T) {
 			err := tt.fields.stg.Insert(tt.args.ctx, tt.args.volume)
 			if err != nil {
@@ -422,14 +447,20 @@ func TestVolumeStorage_Update(t *testing.T) {
 		},
 	}
 
-	for _, n := range nl0 {
-		if err := stg.Insert(ctx, n); err != nil {
-			t.Errorf("VolumeStorage.List() storage setup error = %v", err)
+	for _, tt := range tests {
+
+		if err := stg.Clear(ctx); err != nil {
+			t.Errorf("VolumeStorage.Update() storage setup error = %v", err)
 			return
 		}
-	}
 
-	for _, tt := range tests {
+		for _, n := range nl0 {
+			if err := stg.Insert(ctx, n); err != nil {
+				t.Errorf("VolumeStorage.Update() storage setup error = %v", err)
+				return
+			}
+		}
+
 		t.Run(tt.name, func(t *testing.T) {
 			err := tt.fields.stg.Update(tt.args.ctx, tt.args.volume)
 			if err != nil {
@@ -451,7 +482,7 @@ func TestVolumeStorage_Update(t *testing.T) {
 				return
 			}
 
-			got, _ := tt.fields.stg.Get(tt.args.ctx, tt.args.volume.Meta.Name)
+			got, _ := tt.fields.stg.Get(tt.args.ctx, ns1, tt.args.volume.Meta.Name)
 			if !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("VolumeStorage.Update() = %v, want %v", got, tt.want)
 				return
@@ -513,9 +544,18 @@ func TestVolumeStorage_Remove(t *testing.T) {
 		},
 	}
 
-	stg.Insert(ctx, &n1)
-
 	for _, tt := range tests {
+
+		if err := stg.Clear(ctx); err != nil {
+			t.Errorf("VolumeStorage.Remove() storage setup error = %v", err)
+			return
+		}
+
+		if err := stg.Insert(ctx, &n1); err != nil {
+			t.Errorf("VolumeStorage.Remove() storage setup error = %v", err)
+			return
+		}
+
 		t.Run(tt.name, func(t *testing.T) {
 			err := tt.fields.stg.Remove(tt.args.ctx, tt.args.volume)
 			if err != nil {
@@ -537,7 +577,7 @@ func TestVolumeStorage_Remove(t *testing.T) {
 				return
 			}
 
-			_, err = tt.fields.stg.Get(tt.args.ctx, tt.args.volume.Meta.Name)
+			_, err = tt.fields.stg.Get(tt.args.ctx, ns1, tt.args.volume.Meta.Name)
 			if err == nil || tt.err != err.Error() {
 				t.Errorf("VolumeStorage.Remove() = %v, want %v", err, tt.want)
 				return
@@ -640,7 +680,7 @@ func getVolumeAsset(namespace, name, desc string) types.Volume {
 
 	var n = types.Volume{}
 
-	n.Meta.Name = fmt.Sprintf("%s:%s", namespace,name)
+	n.Meta.Name = name
 	n.Meta.Namespace = namespace
 	n.Meta.Description = desc
 

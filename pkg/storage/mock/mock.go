@@ -107,6 +107,7 @@ func New() (*Storage, error) {
 
 	s.RouteStorage = newRouteStorage()
 	s.SystemStorage = newSystemStorage()
+	s.VolumeStorage = newVolumeStorage()
 
 	return s, nil
 }

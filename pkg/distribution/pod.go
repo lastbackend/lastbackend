@@ -32,11 +32,11 @@ import (
 )
 
 type IPod interface {
-	Get(namespace, name string) (*types.Pod, error)
+	Get(namespace, service, deployment, name string) (*types.Pod, error)
 	Create(deployment *types.Deployment) (*types.Pod, error)
-	ListByDeployment(namespace, service, deployment string) ([]*types.Pod, error)
-	ListByService(namespace, service string) ([]*types.Pod, error)
-	ListNotBindToNode(namespace string) ([]*types.Pod, error)
+	ListByDeployment(namespace, service, deployment string) (map[string]*types.Pod, error)
+	ListByService(namespace, service string) (map[string]*types.Pod, error)
+	ListNotBindToNode(namespace string) (map[string]*types.Pod, error)
 	Schedule(pod *types.Pod) (*types.Pod, error)
 	SetState(pod *types.Pod, status types.PodStatus) (*types.Pod, error)
 	Destroy(ctx context.Context, pod *types.Pod) error
@@ -48,10 +48,10 @@ type Pod struct {
 }
 
 // Get - get pod info
-func (p *Pod) Get(namespace, name string) (*types.Pod, error) {
+func (p *Pod) Get(namespace, service, deployment, name string) (*types.Pod, error) {
 	log.V(logLevel).Debugf("Pod: get by name %s", name)
 
-	pod, err := p.storage.Pod().Get(p.context, namespace, name)
+	pod, err := p.storage.Pod().Get(p.context, namespace, service, deployment, name)
 	if err != nil {
 		log.V(logLevel).Debugf("Pod: get Pod `%s` err: %s", name, err)
 		return nil, err
@@ -105,7 +105,7 @@ func (p *Pod) Create(deployment *types.Deployment) (*types.Pod, error) {
 }
 
 // List By Deployment
-func (p *Pod) ListByDeployment(namespace, service, deployment string) ([]*types.Pod, error) {
+func (p *Pod) ListByDeployment(namespace, service, deployment string) (map[string]*types.Pod, error) {
 	log.V(logLevel).Debugf("Pod: get pod list by id %s/%s/%s", namespace, service, deployment)
 
 	pods, err := p.storage.Pod().ListByDeployment(p.context, namespace, service, deployment)
@@ -119,7 +119,7 @@ func (p *Pod) ListByDeployment(namespace, service, deployment string) ([]*types.
 }
 
 // List By Service
-func (p *Pod) ListByService(namespace, service string) ([]*types.Pod, error) {
+func (p *Pod) ListByService(namespace, service string) (map[string]*types.Pod, error) {
 	log.V(logLevel).Debugf("Pod: get pod list by service id %s/%s", namespace, service)
 
 	pods, err := p.storage.Pod().ListByService(p.context, namespace, service)
@@ -132,7 +132,7 @@ func (p *Pod) ListByService(namespace, service string) ([]*types.Pod, error) {
 }
 
 // List By Service
-func (p *Pod) ListNotBindToNode(namespace string) ([]*types.Pod, error) {
+func (p *Pod) ListNotBindToNode(namespace string) (map[string]*types.Pod, error) {
 	log.V(logLevel).Debugf("Pod: get pods list when not bind to any node")
 
 	pods, err := p.storage.Pod().ListByNamespace(p.context, namespace)

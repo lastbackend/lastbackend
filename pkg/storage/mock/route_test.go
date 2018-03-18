@@ -26,7 +26,6 @@ import (
 	"reflect"
 	"github.com/lastbackend/lastbackend/pkg/storage/storage"
 	"context"
-	"fmt"
 )
 
 func TestRouteStorage_Get(t *testing.T) {
@@ -34,7 +33,7 @@ func TestRouteStorage_Get(t *testing.T) {
 		ns1 = "ns1"
 		stg = newRouteStorage()
 		ctx = context.Background()
-		d   = getRouteAsset(ns1,"test", "")
+		d   = getRouteAsset(ns1, "test", "")
 	)
 
 	type fields struct {
@@ -72,18 +71,21 @@ func TestRouteStorage_Get(t *testing.T) {
 		},
 	}
 
-	if err := stg.Insert(ctx, &d); err != nil {
-		t.Errorf("RouteStorage.Info() storage setup error = %v", err)
-		return
-	}
-
 	for _, tt := range tests {
 
+		if err := stg.Clear(ctx); err != nil {
+			t.Errorf("RouteStorage.Get() storage setup error = %v", err)
+			return
+		}
 
+		if err := stg.Insert(ctx, &d); err != nil {
+			t.Errorf("RouteStorage.Get() storage setup error = %v", err)
+			return
+		}
 
 		t.Run(tt.name, func(t *testing.T) {
 
-			got, err := tt.fields.stg.Get(tt.args.ctx, tt.args.name)
+			got, err := tt.fields.stg.Get(tt.args.ctx, ns1, tt.args.name)
 
 			if err != nil {
 				if tt.wantErr && tt.err != err.Error() {
@@ -113,22 +115,22 @@ func TestRouteStorage_ListByNamespace(t *testing.T) {
 		stg = newRouteStorage()
 		ctx = context.Background()
 		n1  = getRouteAsset(ns1, "test1", "")
-		n2  = getRouteAsset(ns1,"test2", "")
-		n3  = getRouteAsset(ns2,"test1", "")
-		nl= make(map[string]*types.Route, 0)
+		n2  = getRouteAsset(ns1, "test2", "")
+		n3  = getRouteAsset(ns2, "test1", "")
+		nl  = make(map[string]*types.Route, 0)
 	)
 
 	nl0 := map[string]*types.Route{}
-	nl0[n1.Meta.Name] = &n1
-	nl0[n2.Meta.Name] = &n2
-	nl0[n3.Meta.Name] = &n3
+	nl0[stg.keyGet(&n1)] = &n1
+	nl0[stg.keyGet(&n2)] = &n2
+	nl0[stg.keyGet(&n3)] = &n3
 
 	nl1 := map[string]*types.Route{}
-	nl1[n1.Meta.Name] = &n1
-	nl1[n2.Meta.Name] = &n2
+	nl1[stg.keyGet(&n1)] = &n1
+	nl1[stg.keyGet(&n2)] = &n2
 
-	nl2  := map[string]*types.Route{}
-	nl2[n3.Meta.Name] = &n3
+	nl2 := map[string]*types.Route{}
+	nl2[stg.keyGet(&n3)] = &n3
 
 	type fields struct {
 		stg storage.Route
@@ -169,22 +171,28 @@ func TestRouteStorage_ListByNamespace(t *testing.T) {
 		},
 	}
 
-	for _, n := range nl0 {
-		if err := stg.Insert(ctx, n); err != nil {
-			t.Errorf("RouteStorage.List() storage setup error = %v", err)
+	for _, tt := range tests {
+
+		if err := stg.Clear(ctx); err != nil {
+			t.Errorf("RouteStorage.ListByNamespace() storage setup error = %v", err)
 			return
 		}
-	}
 
-	for _, tt := range tests {
+		for _, n := range nl0 {
+			if err := stg.Insert(ctx, n); err != nil {
+				t.Errorf("RouteStorage.ListByNamespace() storage setup error = %v", err)
+				return
+			}
+		}
+
 		t.Run(tt.name, func(t *testing.T) {
 			got, err := stg.ListByNamespace(tt.args.ctx, tt.args.ns)
 			if (err != nil) != tt.wantErr {
-				t.Errorf("RouteStorage.List() error = %v, wantErr %v", err, tt.wantErr)
+				t.Errorf("RouteStorage.ListByNamespace() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
 			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("RouteStorage.List() = %v, want %v", got, tt.want)
+				t.Errorf("RouteStorage.ListByNamespace() = %v, want %v", got, tt.want)
 			}
 		})
 	}
@@ -195,10 +203,10 @@ func TestRouteStorage_SetState(t *testing.T) {
 		ns1 = "ns1"
 		stg = newRouteStorage()
 		ctx = context.Background()
-		n1  = getRouteAsset(ns1,"test1", "")
-		n2  = getRouteAsset(ns1,"test1", "")
-		n3  = getRouteAsset(ns1,"test2", "")
-		nl= make([]*types.Route, 0)
+		n1  = getRouteAsset(ns1, "test1", "")
+		n2  = getRouteAsset(ns1, "test1", "")
+		n3  = getRouteAsset(ns1, "test2", "")
+		nl  = make([]*types.Route, 0)
 	)
 
 	n2.State.Provision = true
@@ -211,7 +219,7 @@ func TestRouteStorage_SetState(t *testing.T) {
 	}
 
 	type args struct {
-		ctx  context.Context
+		ctx   context.Context
 		route *types.Route
 	}
 
@@ -249,24 +257,30 @@ func TestRouteStorage_SetState(t *testing.T) {
 		},
 	}
 
-	for _, n := range nl0 {
-		if err := stg.Insert(ctx, n); err != nil {
-			t.Errorf("RouteStorage.List() storage setup error = %v", err)
+	for _, tt := range tests {
+
+		if err := stg.Clear(ctx); err != nil {
+			t.Errorf("RouteStorage.SetState() storage setup error = %v", err)
 			return
 		}
-	}
 
-	for _, tt := range tests {
+		for _, n := range nl0 {
+			if err := stg.Insert(ctx, n); err != nil {
+				t.Errorf("RouteStorage.SetState() storage setup error = %v", err)
+				return
+			}
+		}
+
 		t.Run(tt.name, func(t *testing.T) {
 			err := tt.fields.stg.SetState(tt.args.ctx, tt.args.route)
 			if err != nil {
 				if !tt.wantErr {
-					t.Errorf("RouteStorage.Update() error = %v, want no error", err.Error())
+					t.Errorf("RouteStorage.SetState() error = %v, want no error", err.Error())
 					return
 				}
 
 				if tt.wantErr && tt.err != err.Error() {
-					t.Errorf("RouteStorage.Update() error = %v, want %v", err.Error(), tt.err)
+					t.Errorf("RouteStorage.SetState() error = %v, want %v", err.Error(), tt.err)
 					return
 				}
 
@@ -274,13 +288,13 @@ func TestRouteStorage_SetState(t *testing.T) {
 			}
 
 			if tt.wantErr {
-				t.Errorf("RouteStorage.Update() error = %v, want %v", err.Error(), tt.err)
+				t.Errorf("RouteStorage.SetState() error = %v, want %v", err.Error(), tt.err)
 				return
 			}
 
-			got, _ := tt.fields.stg.Get(tt.args.ctx, tt.args.route.Meta.Name)
+			got, _ := tt.fields.stg.Get(tt.args.ctx, ns1, tt.args.route.Meta.Name)
 			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("RouteStorage.Update() = %v, want %v", got, tt.want)
+				t.Errorf("RouteStorage.SetState() = %v, want %v", got, tt.want)
 				return
 			}
 
@@ -293,8 +307,8 @@ func TestRouteStorage_Insert(t *testing.T) {
 		ns1 = "ns1"
 		stg = newRouteStorage()
 		ctx = context.Background()
-		n1   = getRouteAsset(ns1,"test", "")
-		n2   = getRouteAsset(ns1,"", "",)
+		n1  = getRouteAsset(ns1, "test", "")
+		n2  = getRouteAsset(ns1, "", "", )
 	)
 
 	n2.Meta.Name = ""
@@ -304,7 +318,7 @@ func TestRouteStorage_Insert(t *testing.T) {
 	}
 
 	type args struct {
-		ctx  context.Context
+		ctx   context.Context
 		route *types.Route
 	}
 
@@ -343,6 +357,12 @@ func TestRouteStorage_Insert(t *testing.T) {
 	}
 
 	for _, tt := range tests {
+
+		if err := stg.Clear(ctx); err != nil {
+			t.Errorf("RouteStorage.ListByNamespace() storage setup error = %v", err)
+			return
+		}
+
 		t.Run(tt.name, func(t *testing.T) {
 			err := tt.fields.stg.Insert(tt.args.ctx, tt.args.route)
 			if err != nil {
@@ -372,10 +392,10 @@ func TestRouteStorage_Update(t *testing.T) {
 		ns1 = "ns1"
 		stg = newRouteStorage()
 		ctx = context.Background()
-		n1  = getRouteAsset(ns1,"test1", "")
-		n2  = getRouteAsset(ns1,"test1", "test")
-		n3  = getRouteAsset(ns1,"test2", "")
-		nl= make([]*types.Route, 0)
+		n1  = getRouteAsset(ns1, "test1", "")
+		n2  = getRouteAsset(ns1, "test1", "test")
+		n3  = getRouteAsset(ns1, "test2", "")
+		nl  = make([]*types.Route, 0)
 	)
 
 	nl0 := append(nl, &n1)
@@ -385,7 +405,7 @@ func TestRouteStorage_Update(t *testing.T) {
 	}
 
 	type args struct {
-		ctx  context.Context
+		ctx   context.Context
 		route *types.Route
 	}
 
@@ -423,14 +443,20 @@ func TestRouteStorage_Update(t *testing.T) {
 		},
 	}
 
-	for _, n := range nl0 {
-		if err := stg.Insert(ctx, n); err != nil {
-			t.Errorf("RouteStorage.List() storage setup error = %v", err)
+	for _, tt := range tests {
+
+		if err := stg.Clear(ctx); err != nil {
+			t.Errorf("RouteStorage.Update() storage setup error = %v", err)
 			return
 		}
-	}
 
-	for _, tt := range tests {
+		for _, n := range nl0 {
+			if err := stg.Insert(ctx, n); err != nil {
+				t.Errorf("RouteStorage.Update() storage setup error = %v", err)
+				return
+			}
+		}
+
 		t.Run(tt.name, func(t *testing.T) {
 			err := tt.fields.stg.Update(tt.args.ctx, tt.args.route)
 			if err != nil {
@@ -452,7 +478,7 @@ func TestRouteStorage_Update(t *testing.T) {
 				return
 			}
 
-			got, _ := tt.fields.stg.Get(tt.args.ctx, tt.args.route.Meta.Name)
+			got, _ := tt.fields.stg.Get(tt.args.ctx, ns1, tt.args.route.Meta.Name)
 			if !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("RouteStorage.Update() = %v, want %v", got, tt.want)
 				return
@@ -467,8 +493,8 @@ func TestRouteStorage_Remove(t *testing.T) {
 		ns1 = "ns1"
 		stg = newRouteStorage()
 		ctx = context.Background()
-		n1  = getRouteAsset(ns1,"test1", "")
-		n2  = getRouteAsset(ns1,"test2", "")
+		n1  = getRouteAsset(ns1, "test1", "")
+		n2  = getRouteAsset(ns1, "test2", "")
 	)
 
 	type fields struct {
@@ -476,7 +502,7 @@ func TestRouteStorage_Remove(t *testing.T) {
 	}
 
 	type args struct {
-		ctx  context.Context
+		ctx   context.Context
 		route *types.Route
 	}
 
@@ -514,9 +540,18 @@ func TestRouteStorage_Remove(t *testing.T) {
 		},
 	}
 
-	stg.Insert(ctx, &n1)
-
 	for _, tt := range tests {
+
+		if err := stg.Clear(ctx); err != nil {
+			t.Errorf("RouteStorage.Remove() storage setup error = %v", err)
+			return
+		}
+
+		if err := stg.Insert(ctx, &n1); err != nil {
+			t.Errorf("RouteStorage.Remove() storage setup error = %v", err)
+			return
+		}
+
 		t.Run(tt.name, func(t *testing.T) {
 			err := tt.fields.stg.Remove(tt.args.ctx, tt.args.route)
 			if err != nil {
@@ -538,7 +573,7 @@ func TestRouteStorage_Remove(t *testing.T) {
 				return
 			}
 
-			_, err = tt.fields.stg.Get(tt.args.ctx, tt.args.route.Meta.Name)
+			_, err = tt.fields.stg.Get(tt.args.ctx, ns1, tt.args.route.Meta.Name)
 			if err == nil || tt.err != err.Error() {
 				t.Errorf("RouteStorage.Remove() = %v, want %v", err, tt.want)
 				return
@@ -558,7 +593,7 @@ func TestRouteStorage_Watch(t *testing.T) {
 		stg storage.Route
 	}
 	type args struct {
-		ctx  context.Context
+		ctx   context.Context
 		route chan *types.Route
 	}
 	tests := []struct {
@@ -593,7 +628,7 @@ func TestRouteStorage_WatchSpec(t *testing.T) {
 		stg storage.Route
 	}
 	type args struct {
-		ctx  context.Context
+		ctx   context.Context
 		route chan *types.Route
 	}
 	tests := []struct {
@@ -641,7 +676,7 @@ func getRouteAsset(namespace, name, desc string) types.Route {
 
 	var n = types.Route{}
 
-	n.Meta.Name = fmt.Sprintf("%s:%s", namespace,name)
+	n.Meta.Name = name
 	n.Meta.Namespace = namespace
 	n.Meta.Description = desc
 

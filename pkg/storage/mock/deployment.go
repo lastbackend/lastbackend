@@ -34,8 +34,8 @@ type DeploymentStorage struct {
 }
 
 // Get deployment by name
-func (s *DeploymentStorage) Get(ctx context.Context, name string) (*types.Deployment, error) {
-	if ns, ok := s.data[name]; ok {
+func (s *DeploymentStorage) Get(ctx context.Context, namespace, service, name string) (*types.Deployment, error) {
+	if ns, ok := s.data[s.keyCreate(namespace, service, name)]; ok {
 		return ns, nil
 	}
 	return nil, errors.New(store.ErrEntityNotFound)
@@ -48,8 +48,8 @@ func (s *DeploymentStorage) ListByNamespace(ctx context.Context, namespace strin
 	prefix := fmt.Sprintf("%s:", namespace)
 	for _, d := range s.data {
 
-		if strings.HasPrefix(d.Meta.Name, prefix) {
-			list[d.Meta.Name] = d
+		if strings.HasPrefix(s.keyGet(d), prefix) {
+			list[s.keyGet(d)] = d
 		}
 	}
 
@@ -63,8 +63,8 @@ func (s *DeploymentStorage) ListByService(ctx context.Context, namespace, servic
 	prefix := fmt.Sprintf("%s:%s:", namespace, service)
 
 	for _, d := range s.data {
-		if strings.HasPrefix(d.Meta.Name, prefix) {
-			list[d.Meta.Name] = d
+		if strings.HasPrefix(s.keyGet(d), prefix) {
+			list[s.keyGet(d)] = d
 		}
 	}
 
@@ -77,7 +77,7 @@ func (s *DeploymentStorage) SetState(ctx context.Context, deployment *types.Depl
 		return err
 	}
 
-	s.data[deployment.Meta.Name].State = deployment.State
+	s.data[s.keyGet(deployment)].State = deployment.State
 	return nil
 }
 
@@ -88,7 +88,7 @@ func (s *DeploymentStorage) Insert(ctx context.Context, deployment *types.Deploy
 		return err
 	}
 
-	s.data[deployment.Meta.Name] = deployment
+	s.data[s.keyGet(deployment)] = deployment
 
 	return nil
 }
@@ -100,7 +100,7 @@ func (s *DeploymentStorage) Update(ctx context.Context, deployment *types.Deploy
 		return err
 	}
 
-	s.data[deployment.Meta.Name] = deployment
+	s.data[s.keyGet(deployment)] = deployment
 
 	return nil
 }
@@ -112,7 +112,7 @@ func (s *DeploymentStorage) Remove(ctx context.Context, deployment *types.Deploy
 		return err
 	}
 
-	delete(s.data, deployment.Meta.Name)
+	delete(s.data, s.keyGet(deployment))
 
 	return nil
 }
@@ -125,6 +125,21 @@ func (s *DeploymentStorage) Watch(ctx context.Context, deployment chan *types.De
 // Watch deployment spec changes
 func (s *DeploymentStorage) WatchSpec(ctx context.Context, deployment chan *types.Deployment) error {
 	return nil
+}
+
+func (s *DeploymentStorage) Clear(ctx context.Context) error {
+	s.data = make(map[string]*types.Deployment)
+	return nil
+}
+
+// keyCreate util function
+func (s *DeploymentStorage) keyCreate (namespace, service, name string) string {
+	return fmt.Sprintf("%s:%s:%s", namespace, service, name)
+}
+
+// keyGet util function
+func (s *DeploymentStorage) keyGet (d * types.Deployment) string {
+	return d.SelfLink()
 }
 
 // newDeploymentStorage returns new storage
@@ -155,7 +170,7 @@ func (s *DeploymentStorage) checkDeploymentExists(deployment *types.Deployment) 
 		return err
 	}
 
-	if _, ok := s.data[deployment.Meta.Name]; !ok {
+	if _, ok := s.data[s.keyGet(deployment)]; !ok {
 		return errors.New(store.ErrEntityNotFound)
 	}
 

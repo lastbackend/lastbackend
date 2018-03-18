@@ -18,6 +18,8 @@
 
 package types
 
+import "fmt"
+
 type TriggerList []Trigger
 
 type Trigger struct {
@@ -28,4 +30,11 @@ type TriggerMeta struct {
 	Meta
 	Namespace string `json:"namespace"`
 	Service   string `json:"service"`
+}
+
+func (t *Trigger) SelfLink() string {
+	if t.Meta.SelfLink == "" {
+		t.Meta.SelfLink = fmt.Sprintf("%s:%s:%s", t.Meta.Namespace, t.Meta.Service, t.Meta.Name)
+	}
+	return t.Meta.SelfLink
 }

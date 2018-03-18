@@ -34,8 +34,8 @@ type RouteStorage struct {
 }
 
 // Get route by name
-func (s *RouteStorage) Get(ctx context.Context, name string) (*types.Route, error) {
-	if ns, ok := s.data[name]; ok {
+func (s *RouteStorage) Get(ctx context.Context, namespace, name string) (*types.Route, error) {
+	if ns, ok := s.data[s.keyCreate(namespace, name)]; ok {
 		return ns, nil
 	}
 	return nil, errors.New(store.ErrEntityNotFound)
@@ -48,8 +48,8 @@ func (s *RouteStorage) ListByNamespace(ctx context.Context, namespace string) (m
 	prefix := fmt.Sprintf("%s:", namespace)
 	for _, d := range s.data {
 
-		if strings.HasPrefix(d.Meta.Name, prefix) {
-			list[d.Meta.Name] = d
+		if strings.HasPrefix(s.keyGet(d), prefix) {
+			list[s.keyGet(d)] = d
 		}
 	}
 
@@ -62,7 +62,7 @@ func (s *RouteStorage) SetState(ctx context.Context, route *types.Route) error {
 		return err
 	}
 
-	s.data[route.Meta.Name].State = route.State
+	s.data[s.keyGet(route)].State = route.State
 	return nil
 }
 
@@ -73,7 +73,7 @@ func (s *RouteStorage) Insert(ctx context.Context, route *types.Route) error {
 		return err
 	}
 
-	s.data[route.Meta.Name] = route
+	s.data[s.keyGet(route)] = route
 
 	return nil
 }
@@ -85,7 +85,7 @@ func (s *RouteStorage) Update(ctx context.Context, route *types.Route) error {
 		return err
 	}
 
-	s.data[route.Meta.Name] = route
+	s.data[s.keyGet(route)] = route
 
 	return nil
 }
@@ -97,7 +97,7 @@ func (s *RouteStorage) Remove(ctx context.Context, route *types.Route) error {
 		return err
 	}
 
-	delete(s.data, route.Meta.Name)
+	delete(s.data, s.keyGet(route))
 
 	return nil
 }
@@ -110,6 +110,22 @@ func (s *RouteStorage) Watch(ctx context.Context, route chan *types.Route) error
 // Watch route spec changes
 func (s *RouteStorage) WatchSpec(ctx context.Context, route chan *types.Route) error {
 	return nil
+}
+
+// Clear route storage
+func (s *RouteStorage) Clear(ctx context.Context) error {
+	s.data = make(map[string]*types.Route)
+	return nil
+}
+
+// keyCreate util function
+func (s *RouteStorage) keyCreate (namespace, name string) string {
+	return fmt.Sprintf("%s:%s", namespace, name)
+}
+
+// keyCreate util function
+func (s *RouteStorage) keyGet (r *types.Route) string {
+	return r.SelfLink()
 }
 
 // newRouteStorage returns new storage
@@ -140,7 +156,7 @@ func (s *RouteStorage) checkRouteExists(route *types.Route) error {
 		return err
 	}
 
-	if _, ok := s.data[route.Meta.Name]; !ok {
+	if _, ok := s.data[s.keyGet(route)]; !ok {
 		return errors.New(store.ErrEntityNotFound)
 	}
 

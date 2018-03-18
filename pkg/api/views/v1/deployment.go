@@ -36,7 +36,7 @@ type Deployment struct {
 	Sources  DeploymentSources      `json:"sources"`
 	State    DeploymentStateInfo    `json:"state"`
 	Replicas DeploymentReplicasInfo `json:"replicas"`
-	Pods     []PodView              `json:"pods"`
+	Pods     map[string]PodView     `json:"pods"`
 }
 
 type DeploymentMeta struct {

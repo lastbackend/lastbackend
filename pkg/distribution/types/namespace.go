@@ -27,6 +27,7 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/distribution/errors"
 	"github.com/lastbackend/lastbackend/pkg/log"
 	"github.com/lastbackend/lastbackend/pkg/util/validator"
+	"fmt"
 )
 
 type NamespaceList []*Namespace
@@ -61,6 +62,13 @@ type NamespaceQuotas struct {
 	RAM      int64 `json:"ram"`
 	Routes   int   `json:"routes"`
 	Disabled bool  `json:"disabled"`
+}
+
+func (n *Namespace) SelfLink () string {
+	if n.Meta.SelfLink == "" {
+		n.Meta.SelfLink = fmt.Sprintf("%s", n.Meta.Name)
+	}
+	return n.Meta.SelfLink
 }
 
 func (n *Namespace) ToJson() ([]byte, error) {

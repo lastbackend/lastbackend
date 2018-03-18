@@ -31,7 +31,7 @@ type ServiceView struct{}
 // SERVICE INFO MODEL
 // ***************************************************
 
-func (sv *ServiceView) New(srv *types.Service, d []*types.Deployment, p []*types.Pod) *Service {
+func (sv *ServiceView) New(srv *types.Service, d map[string]*types.Deployment, p map[string]*types.Pod) *Service {
 	s := new(Service)
 	s.ID = srv.Meta.Name
 	s.Meta = s.ToMeta(srv.Meta)
@@ -109,15 +109,15 @@ func (sv *Service) ToQuotas(obj types.ServiceQuotas) ServiceQuotas {
 	}
 }
 
-func (sv *Service) ToDeployments(obj []*types.Deployment, pods []*types.Pod) []*Deployment {
+func (sv *Service) ToDeployments(obj map[string]*types.Deployment, pods map[string]*types.Pod) map[string]*Deployment {
 
-	deployments := make([]*Deployment, 0)
+	deployments := make(map[string]*Deployment, 0)
 	for _, d := range obj {
 
 		if d.Meta.Service == sv.ID {
 			dv := new(DeploymentView)
 			dp := dv.New(d, pods)
-			deployments = append(deployments, dp)
+			deployments[dp.Meta.Name] = dp
 		}
 
 	}
@@ -128,7 +128,7 @@ func (sv *Service) ToJson() ([]byte, error) {
 	return json.Marshal(sv)
 }
 
-func (sv *ServiceView) NewList(obj []*types.Service, d []*types.Deployment) *ServiceList {
+func (sv *ServiceView) NewList(obj map[string]*types.Service, d map[string]*types.Deployment) *ServiceList {
 	if obj == nil {
 		return nil
 	}

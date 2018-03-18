@@ -25,13 +25,13 @@ import (
 )
 
 const (
-	StatusBadParameter    = "Bad Parameter"
-	StatusUnknown         = "Unknown"
-	StatusIncorrectXml    = "Incorrect XML"
-	StatusIncorrectJson   = "Incorrect json"
-	StatusNotUnique       = "Not Unique"
-	StatusForbidden       = "Forbidden"
-	StatusPaymentRequired = "Payment Required"
+	StatusBadParameter  = "Bad Parameter"
+	StatusUnknown       = "Unknown"
+	StatusIncorrectXml  = "Incorrect XML"
+	StatusIncorrectJson = "Incorrect json"
+	StatusNotUnique     = "Not Unique"
+	StatusForbidden     = "Forbidden"
+	ArgumentIsEmpty     = "ArgumentIsEmpty"
 )
 
 type Err struct {
@@ -156,14 +156,6 @@ func (e *err) Forbidden(err ...error) *Err {
 		Code:   StatusForbidden,
 		origin: getError(joinNameAndMessage(e.s, "forbidden"), err...),
 		http:   HTTP.getForbidden(),
-	}
-}
-
-func (e *err) PaymentRequired(err ...error) *Err {
-	return &Err{
-		Code:   StatusPaymentRequired,
-		origin: getError(joinNameAndMessage(e.s, "payment required"), err...),
-		http:   HTTP.getPaymentrequired(),
 	}
 }
 
