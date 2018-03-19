@@ -26,6 +26,12 @@ import (
 var Routes = []http.Route{
 	{Path: "/cluster/node", Method: http.MethodGet, Middleware: []http.Middleware{middleware.Authenticate}, Handler: NodeListH},
 	{Path: "/cluster/node/{node}", Method: http.MethodGet, Middleware: []http.Middleware{middleware.Authenticate}, Handler: NodeGetH},
+	{Path: "/cluster/node/{node}/spec", Method: http.MethodGet, Middleware: []http.Middleware{middleware.Authenticate}, Handler: NodeGetSpecH},
 	{Path: "/cluster/node/{node}", Method: http.MethodDelete, Middleware: []http.Middleware{middleware.Authenticate}, Handler: NodeRemoveH},
 	{Path: "/cluster/node/{node}", Method: http.MethodPut, Middleware: []http.Middleware{middleware.Authenticate}, Handler: NodeUpdateH},
+	{Path: "/cluster/node/{node}/info", Method: http.MethodPut, Middleware: []http.Middleware{middleware.Authenticate}, Handler: NodeSetInfoH},
+	{Path: "/cluster/node/{node}/state", Method: http.MethodPut, Middleware: []http.Middleware{middleware.Authenticate}, Handler: NodeSetStateH},
+	{Path: "/cluster/node/{node}/state/pod/{pod}", Method: http.MethodPut, Middleware: []http.Middleware{middleware.Authenticate}, Handler: NodeSetPodStateH},
+	{Path: "/cluster/node/{node}/state/volume/{pod}", Method: http.MethodPut, Middleware: []http.Middleware{middleware.Authenticate}, Handler: NodeSetVolumeStateH},
+	{Path: "/cluster/node/{node}/state/route/{pod}", Method: http.MethodPut, Middleware: []http.Middleware{middleware.Authenticate}, Handler: NodeSetRouteStateH},
 }

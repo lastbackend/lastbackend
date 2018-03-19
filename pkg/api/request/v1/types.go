@@ -42,6 +42,21 @@ type NodeUpdateOpts struct {
 type NodeRemoveOpts struct {
 }
 
+type NodeInfoOpts struct {
+}
+
+type NodeStateOpts struct {
+}
+
+type NodePodStateOpts struct {
+}
+
+type NodeVolumeStateOpts struct {
+}
+
+type NodeRouteStateOpts struct {
+}
+
 type RouteCreateOpts struct {
 }
 
