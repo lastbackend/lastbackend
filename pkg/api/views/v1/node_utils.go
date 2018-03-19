@@ -34,7 +34,7 @@ func (nv *NodeView) New(obj *types.Node) *Node {
 	return &n
 }
 
-func (n *NodeView) ToNodeMeta(meta types.NodeMeta) NodeMeta {
+func (nv *NodeView) ToNodeMeta(meta types.NodeMeta) NodeMeta {
 	return NodeMeta{
 		ID:          meta.Name,
 		Description: meta.Description,
@@ -43,7 +43,7 @@ func (n *NodeView) ToNodeMeta(meta types.NodeMeta) NodeMeta {
 	}
 }
 
-func (n *NodeView) ToNodeInfo(info types.NodeInfo) NodeInfo {
+func (nv *NodeView) ToNodeInfo(info types.NodeInfo) NodeInfo {
 	ni := NodeInfo{
 		Hostname:     info.Hostname,
 		OSType:       info.OSType,
@@ -55,7 +55,7 @@ func (n *NodeView) ToNodeInfo(info types.NodeInfo) NodeInfo {
 	return ni
 }
 
-func (n *NodeView) ToNodeState(state types.NodeState) NodeState {
+func (nv *NodeView) ToNodeState(state types.NodeState) NodeState {
 	return NodeState{
 		Capacity: NodeResources{
 			Containers: state.Capacity.Containers,
@@ -78,17 +78,32 @@ func (obj *Node) ToJson() ([]byte, error) {
 	return json.Marshal(obj)
 }
 
-func (n *NodeView) NewList(obj map[string]*types.Node) *NodeList {
+func (nv *NodeView) NewList(obj map[string]*types.Node) *NodeList {
 	if obj == nil {
 		return nil
 	}
 	nodes := make(NodeList, 0)
 	for _, v := range obj {
-		nn := n.New(v)
+		nn := nv.New(v)
 		nodes[nn.Meta.ID] = nn
 	}
 
 	return &nodes
+}
+
+func (nv *NodeView) NewSpec(obj *types.Node) *NodeSpec {
+
+	spec := NodeSpec {}
+
+	if obj == nil {
+		return nil
+	}
+
+	return &spec
+}
+
+func (obj *NodeSpec) ToJson() ([]byte, error) {
+	return json.Marshal(obj)
 }
 
 func (obj *NodeList) ToJson() ([]byte, error) {

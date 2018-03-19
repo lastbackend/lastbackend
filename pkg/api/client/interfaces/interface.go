@@ -50,7 +50,13 @@ type Namespace interface {
 type Node interface {
 	List(ctx context.Context) (*vv1.NodeList, error)
 	Get(ctx context.Context, name string) (*vv1.Node, error)
+	GetSpec(ctx context.Context, name string) (*vv1.NodeSpec, error)
 	Update(ctx context.Context, name string, opts rv1.NodeUpdateOpts) (*vv1.Node, error)
+	SetInfo(ctx context.Context, name string, opts rv1.NodeInfoOpts) error
+	SetState(ctx context.Context, name string, opts rv1.NodeStateOpts) error
+	SetPodState(ctx context.Context, name string, opts rv1.NodeStateOpts) error
+	SetVolumeState(ctx context.Context, name string, opts rv1.NodeStateOpts) error
+	SetRouteState(ctx context.Context, name string, opts rv1.NodeStateOpts) error
 	Remove(ctx context.Context, name string, opts rv1.NodeRemoveOpts) error
 }
 
