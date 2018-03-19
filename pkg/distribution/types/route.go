@@ -30,9 +30,9 @@ import (
 )
 
 type Route struct {
-	Meta  RouteMeta    `json:"meta" yaml:"meta"`
-	State RouteState   `json:"state" yaml:"state"`
-	Spec  RouteSpec    `json:"spec" yaml:"spec"`
+	Meta  RouteMeta  `json:"meta" yaml:"meta"`
+	State RouteState `json:"state" yaml:"state"`
+	Spec  RouteSpec  `json:"spec" yaml:"spec"`
 }
 
 type RouteMeta struct {

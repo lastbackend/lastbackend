@@ -21,7 +21,7 @@ package node
 import (
 	"net/http"
 
-	v "github.com/lastbackend/lastbackend/pkg/api/views"
+	"github.com/lastbackend/lastbackend/pkg/api/types/v1"
 
 	"github.com/lastbackend/lastbackend/pkg/api/envs"
 	"github.com/lastbackend/lastbackend/pkg/distribution"
@@ -32,81 +32,6 @@ import (
 )
 
 const logLevel = 2
-
-func NodeRemoveH(w http.ResponseWriter, r *http.Request) {
-
-	log.V(logLevel).Debug("Handler: Node: create node")
-
-	var (
-		nm  = distribution.NewNodeModel(r.Context(), envs.Get().GetStorage())
-		nid = utils.Vars(r)["node"]
-	)
-
-	n, err := nm.Get(nid)
-	if err != nil {
-		log.V(logLevel).Errorf("Handler: Node: remove node err: %s", err)
-		errors.HTTP.InternalServerError(w)
-		return
-	}
-
-	if err := nm.Remove(n); err != nil {
-		log.V(logLevel).Errorf("Handler: Node: remove node err: %s", err)
-		errors.HTTP.InternalServerError(w)
-		return
-	}
-
-	w.WriteHeader(http.StatusOK)
-	if _, err := w.Write([]byte{}); err != nil {
-		log.Errorf("Handler: Node: write response err: %s", err)
-		return
-	}
-}
-
-func NodeUpdateH(w http.ResponseWriter, r *http.Request) {
-
-	nid := utils.Vars(r)["node"]
-
-	log.V(logLevel).Debugf("Handler: Node: update node `%s`", nid)
-
-	var (
-		nm = distribution.NewNodeModel(r.Context(), envs.Get().GetStorage())
-	)
-
-	// request body struct
-	opts := new(types.NodeUpdateOptions)
-	if err := opts.DecodeAndValidate(r.Body); err != nil {
-		log.V(logLevel).Errorf("Handler: Node: validation incoming data", err)
-		errors.New("Invalid incoming data").Unknown().Http(w)
-		return
-	}
-
-	n, err := nm.Get(nid)
-	if err != nil {
-		log.V(logLevel).Errorf("Handler: Node: get node err: %s", err)
-		errors.HTTP.InternalServerError(w)
-		return
-	}
-
-	err = nm.Update(n, opts)
-	if err != nil {
-		log.V(logLevel).Errorf("Handler: Node: update node `%s` err: %s", nid, err)
-		errors.HTTP.InternalServerError(w)
-		return
-	}
-
-	response, err := v.V1().Node().New(n).ToJson()
-	if err != nil {
-		log.V(logLevel).Errorf("Handler: Node: convert struct to json err: %s", err)
-		errors.HTTP.InternalServerError(w)
-		return
-	}
-
-	w.WriteHeader(http.StatusOK)
-	if _, err = w.Write(response); err != nil {
-		log.V(logLevel).Errorf("Handler: Node: write response err: %s", err)
-		return
-	}
-}
 
 func NodeGetH(w http.ResponseWriter, r *http.Request) {
 
@@ -130,7 +55,7 @@ func NodeGetH(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	response, err := v.V1().Node().New(n).ToJson()
+	response, err := v1.View().Node().New(n).ToJson()
 	if err != nil {
 		log.V(logLevel).Errorf("Handler: Node: convert struct to json err: %s", err)
 		errors.HTTP.InternalServerError(w)
@@ -159,7 +84,7 @@ func NodeListH(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	response, err := v.V1().Node().NewList(nodes).ToJson()
+	response, err := v1.View().Node().NewList(nodes).ToJson()
 	if err != nil {
 		log.V(logLevel).Errorf("Handler: Node: convert struct to json err: %s", err)
 		errors.HTTP.InternalServerError(w)
@@ -168,6 +93,90 @@ func NodeListH(w http.ResponseWriter, r *http.Request) {
 
 	w.WriteHeader(http.StatusOK)
 	if _, err := w.Write(response); err != nil {
+		log.Errorf("Handler: Node: write response err: %s", err)
+		return
+	}
+}
+
+
+func NodeUpdateH(w http.ResponseWriter, r *http.Request) {
+
+	nid := utils.Vars(r)["node"]
+
+	log.V(logLevel).Debugf("Handler: Node: update node `%s`", nid)
+
+	var (
+		nm = distribution.NewNodeModel(r.Context(), envs.Get().GetStorage())
+	)
+
+	// request body struct
+	opts := new(types.NodeUpdateOptions)
+	if err := opts.DecodeAndValidate(r.Body); err != nil {
+		log.V(logLevel).Errorf("Handler: Node: validation incoming data", err)
+		err.Http(w)
+		return
+	}
+
+	n, err := nm.Get(nid)
+	if err != nil {
+		log.V(logLevel).Errorf("Handler: Node: get node err: %s", err)
+		errors.HTTP.InternalServerError(w)
+		return
+	}
+
+	err = nm.Update(n, opts)
+	if err != nil {
+		log.V(logLevel).Errorf("Handler: Node: update node `%s` err: %s", nid, err)
+		errors.HTTP.InternalServerError(w)
+		return
+	}
+
+	response, err := v1.View().Node().New(n).ToJson()
+	if err != nil {
+		log.V(logLevel).Errorf("Handler: Node: convert struct to json err: %s", err)
+		errors.HTTP.InternalServerError(w)
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+	if _, err = w.Write(response); err != nil {
+		log.V(logLevel).Errorf("Handler: Node: write response err: %s", err)
+		return
+	}
+}
+
+func NodeRemoveH(w http.ResponseWriter, r *http.Request) {
+
+	log.V(logLevel).Debug("Handler: Node: create node")
+
+	var (
+		nm  = distribution.NewNodeModel(r.Context(), envs.Get().GetStorage())
+		nid = utils.Vars(r)["node"]
+	)
+
+	// request body struct
+	opts := v1.Request().Node().RemoveOptions()
+	if err := opts.DecodeAndValidate(r.Body); err != nil {
+		log.V(logLevel).Errorf("Handler: Node: validation incoming data err: %s", err)
+		err.Http(w)
+		return
+	}
+
+	n, err := nm.Get(nid)
+	if err != nil {
+		log.V(logLevel).Errorf("Handler: Node: remove node err: %s", err)
+		errors.HTTP.InternalServerError(w)
+		return
+	}
+
+	if err := nm.Remove(n); err != nil {
+		log.V(logLevel).Errorf("Handler: Node: remove node err: %s", err)
+		errors.HTTP.InternalServerError(w)
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+	if _, err := w.Write([]byte{}); err != nil {
 		log.Errorf("Handler: Node: write response err: %s", err)
 		return
 	}

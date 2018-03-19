@@ -21,11 +21,11 @@ package mock
 import (
 	"testing"
 
+	"context"
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
+	"github.com/lastbackend/lastbackend/pkg/storage/storage"
 	"github.com/lastbackend/lastbackend/pkg/storage/store"
 	"reflect"
-	"github.com/lastbackend/lastbackend/pkg/storage/storage"
-	"context"
 )
 
 func TestDeploymentStorage_Get(t *testing.T) {
@@ -34,7 +34,7 @@ func TestDeploymentStorage_Get(t *testing.T) {
 		svc = "svc"
 		stg = newDeploymentStorage()
 		ctx = context.Background()
-		d   = getDeploymentAsset(ns1, svc,"test", "")
+		d   = getDeploymentAsset(ns1, svc, "test", "")
 	)
 
 	type fields struct {
@@ -71,8 +71,6 @@ func TestDeploymentStorage_Get(t *testing.T) {
 			"",
 		},
 	}
-
-
 
 	for _, tt := range tests {
 
@@ -119,9 +117,9 @@ func TestDeploymentStorage_ListByNamespace(t *testing.T) {
 		stg = newDeploymentStorage()
 		ctx = context.Background()
 		n1  = getDeploymentAsset(ns1, svc, "test1", "")
-		n2  = getDeploymentAsset(ns1, svc,"test2", "")
-		n3  = getDeploymentAsset(ns2, svc,"test1", "")
-		nl= make(map[string]*types.Deployment, 0)
+		n2  = getDeploymentAsset(ns1, svc, "test2", "")
+		n3  = getDeploymentAsset(ns2, svc, "test1", "")
+		nl  = make(map[string]*types.Deployment, 0)
 	)
 
 	nl0 := map[string]*types.Deployment{}
@@ -133,7 +131,7 @@ func TestDeploymentStorage_ListByNamespace(t *testing.T) {
 	nl1[stg.keyGet(&n1)] = &n1
 	nl1[stg.keyGet(&n2)] = &n2
 
-	nl2  := map[string]*types.Deployment{}
+	nl2 := map[string]*types.Deployment{}
 	nl2[stg.keyGet(&n3)] = &n3
 
 	type fields struct {
@@ -175,7 +173,6 @@ func TestDeploymentStorage_ListByNamespace(t *testing.T) {
 		},
 	}
 
-
 	for _, tt := range tests {
 
 		if err := stg.Clear(ctx); err != nil {
@@ -205,18 +202,18 @@ func TestDeploymentStorage_ListByNamespace(t *testing.T) {
 
 func TestDeploymentStorage_ListByService(t *testing.T) {
 	var (
-		ns1= "ns1"
-		ns2= "ns2"
-		sv1= "svc1"
-		sv2= "svc2"
-		stg= newDeploymentStorage()
-		ctx= context.Background()
-		n1= getDeploymentAsset(ns1, sv1, "test1", "")
-		n2= getDeploymentAsset(ns1, sv1, "test2", "")
-		n3= getDeploymentAsset(ns1, sv2, "test1", "")
-		n4= getDeploymentAsset(ns2, sv1, "test1", "")
-		n5= getDeploymentAsset(ns2, sv1, "test2", "")
-		nl= make(map[string]*types.Deployment, 0)
+		ns1 = "ns1"
+		ns2 = "ns2"
+		sv1 = "svc1"
+		sv2 = "svc2"
+		stg = newDeploymentStorage()
+		ctx = context.Background()
+		n1  = getDeploymentAsset(ns1, sv1, "test1", "")
+		n2  = getDeploymentAsset(ns1, sv1, "test2", "")
+		n3  = getDeploymentAsset(ns1, sv2, "test1", "")
+		n4  = getDeploymentAsset(ns2, sv1, "test1", "")
+		n5  = getDeploymentAsset(ns2, sv1, "test2", "")
+		nl  = make(map[string]*types.Deployment, 0)
 	)
 
 	nl0 := map[string]*types.Deployment{}
@@ -230,10 +227,10 @@ func TestDeploymentStorage_ListByService(t *testing.T) {
 	nl1[stg.keyGet(&n1)] = &n1
 	nl1[stg.keyGet(&n2)] = &n2
 
-	nl2  := map[string]*types.Deployment{}
+	nl2 := map[string]*types.Deployment{}
 	nl2[stg.keyGet(&n3)] = &n3
 
-	nl3  := map[string]*types.Deployment{}
+	nl3 := map[string]*types.Deployment{}
 	nl3[stg.keyGet(&n4)] = &n4
 	nl3[stg.keyGet(&n5)] = &n5
 
@@ -317,10 +314,10 @@ func TestDeploymentStorage_SetState(t *testing.T) {
 		svc = "svc"
 		stg = newDeploymentStorage()
 		ctx = context.Background()
-		n1  = getDeploymentAsset(ns1, svc,"test1", "")
-		n2  = getDeploymentAsset(ns1, svc,"test1", "")
-		n3  = getDeploymentAsset(ns1, svc,"test2", "")
-		nl= make([]*types.Deployment, 0)
+		n1  = getDeploymentAsset(ns1, svc, "test1", "")
+		n2  = getDeploymentAsset(ns1, svc, "test1", "")
+		n3  = getDeploymentAsset(ns1, svc, "test2", "")
+		nl  = make([]*types.Deployment, 0)
 	)
 
 	n2.State.Provision = true
@@ -333,7 +330,7 @@ func TestDeploymentStorage_SetState(t *testing.T) {
 	}
 
 	type args struct {
-		ctx  context.Context
+		ctx        context.Context
 		deployment *types.Deployment
 	}
 
@@ -422,8 +419,8 @@ func TestDeploymentStorage_Insert(t *testing.T) {
 		svc = "svc"
 		stg = newDeploymentStorage()
 		ctx = context.Background()
-		n1   = getDeploymentAsset(ns1, svc,"test", "")
-		n2   = getDeploymentAsset(ns1, svc,"", "",)
+		n1  = getDeploymentAsset(ns1, svc, "test", "")
+		n2  = getDeploymentAsset(ns1, svc, "", "")
 	)
 
 	n2.Meta.Name = ""
@@ -433,7 +430,7 @@ func TestDeploymentStorage_Insert(t *testing.T) {
 	}
 
 	type args struct {
-		ctx  context.Context
+		ctx        context.Context
 		deployment *types.Deployment
 	}
 
@@ -508,10 +505,10 @@ func TestDeploymentStorage_Update(t *testing.T) {
 		svc = "svc"
 		stg = newDeploymentStorage()
 		ctx = context.Background()
-		n1  = getDeploymentAsset(ns1, svc,"test1", "")
-		n2  = getDeploymentAsset(ns1, svc,"test1", "test")
-		n3  = getDeploymentAsset(ns1, svc,"test2", "")
-		nl= make([]*types.Deployment, 0)
+		n1  = getDeploymentAsset(ns1, svc, "test1", "")
+		n2  = getDeploymentAsset(ns1, svc, "test1", "test")
+		n3  = getDeploymentAsset(ns1, svc, "test2", "")
+		nl  = make([]*types.Deployment, 0)
 	)
 
 	nl0 := append(nl, &n1)
@@ -521,7 +518,7 @@ func TestDeploymentStorage_Update(t *testing.T) {
 	}
 
 	type args struct {
-		ctx  context.Context
+		ctx        context.Context
 		deployment *types.Deployment
 	}
 
@@ -610,8 +607,8 @@ func TestDeploymentStorage_Remove(t *testing.T) {
 		svc = "svc"
 		stg = newDeploymentStorage()
 		ctx = context.Background()
-		n1  = getDeploymentAsset(ns1, svc,"test1", "")
-		n2  = getDeploymentAsset(ns1, svc,"test2", "")
+		n1  = getDeploymentAsset(ns1, svc, "test1", "")
+		n2  = getDeploymentAsset(ns1, svc, "test2", "")
 	)
 
 	type fields struct {
@@ -619,7 +616,7 @@ func TestDeploymentStorage_Remove(t *testing.T) {
 	}
 
 	type args struct {
-		ctx  context.Context
+		ctx        context.Context
 		deployment *types.Deployment
 	}
 
@@ -710,7 +707,7 @@ func TestDeploymentStorage_Watch(t *testing.T) {
 		stg storage.Deployment
 	}
 	type args struct {
-		ctx  context.Context
+		ctx        context.Context
 		deployment chan *types.Deployment
 	}
 	tests := []struct {
@@ -751,7 +748,7 @@ func TestDeploymentStorage_WatchSpec(t *testing.T) {
 		stg storage.Deployment
 	}
 	type args struct {
-		ctx  context.Context
+		ctx        context.Context
 		deployment chan *types.Deployment
 	}
 	tests := []struct {

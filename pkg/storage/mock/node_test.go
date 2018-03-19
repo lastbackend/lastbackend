@@ -136,7 +136,6 @@ func TestNodeStorage_Get(t *testing.T) {
 
 	for _, tt := range tests {
 
-
 		if err := stg.Clear(ctx); err != nil {
 			t.Errorf("NodeStorage.Get() storage setup error = %v", err)
 			return
@@ -177,8 +176,8 @@ func TestNodeStorage_Insert(t *testing.T) {
 	var (
 		stg = newNodeStorage()
 		ctx = context.Background()
-		n1   = getNodeAsset("test", "", true)
-		n2   = getNodeAsset("", "", true)
+		n1  = getNodeAsset("test", "", true)
+		n2  = getNodeAsset("", "", true)
 	)
 
 	type fields struct {
@@ -306,8 +305,6 @@ func TestNodeStorage_Update(t *testing.T) {
 			store.ErrEntityNotFound,
 		},
 	}
-
-
 
 	for _, tt := range tests {
 
@@ -853,8 +850,8 @@ func TestNodeStorage_InsertPod(t *testing.T) {
 		n1  = getNodeAsset("test1", "", true)
 		n2  = getNodeAsset("test1", "", true)
 		n3  = getNodeAsset("test2", "", false)
-		p1  = getPodAsset(ns, svc, dp,"test1", "")
-		p2  = getPodAsset(ns, svc, dp,"test1", "")
+		p1  = getPodAsset(ns, svc, dp, "test1", "")
+		p2  = getPodAsset(ns, svc, dp, "test1", "")
 	)
 
 	n2.Spec.Pods[p1.SelfLink()] = p1.Spec
@@ -974,8 +971,8 @@ func TestNodeStorage_RemovePod(t *testing.T) {
 		n1  = getNodeAsset("test1", "", true)
 		n2  = getNodeAsset("test1", "", true)
 		n3  = getNodeAsset("test2", "", false)
-		p1  = getPodAsset(ns, svc, dp,"test1", "")
-		p2  = getPodAsset(ns, svc, dp,"test2", "")
+		p1  = getPodAsset(ns, svc, dp, "test1", "")
+		p2  = getPodAsset(ns, svc, dp, "test2", "")
 	)
 
 	n1.Spec.Pods[p1.Meta.Name] = p1.Spec
@@ -1092,8 +1089,8 @@ func TestNodeStorage_InsertVolume(t *testing.T) {
 		n1  = getNodeAsset("test1", "", true)
 		n2  = getNodeAsset("test1", "", true)
 		n3  = getNodeAsset("test2", "", false)
-		v1  = getVolumeAsset(ns,"test1", "")
-		v2  = getVolumeAsset(ns,"test1", "")
+		v1  = getVolumeAsset(ns, "test1", "")
+		v2  = getVolumeAsset(ns, "test1", "")
 	)
 
 	n2.Spec.Volumes[v1.Meta.Name] = v1.Spec
@@ -1104,9 +1101,9 @@ func TestNodeStorage_InsertVolume(t *testing.T) {
 	}
 
 	type args struct {
-		ctx  context.Context
-		node *types.Node
-		volume  *types.Volume
+		ctx    context.Context
+		node   *types.Node
+		volume *types.Volume
 	}
 
 	tests := []struct {
@@ -1211,8 +1208,8 @@ func TestNodeStorage_RemoveVolume(t *testing.T) {
 		n1  = getNodeAsset("test1", "", true)
 		n2  = getNodeAsset("test1", "", true)
 		n3  = getNodeAsset("test2", "", false)
-		v1  = getVolumeAsset(ns,"test1", "")
-		v2  = getVolumeAsset(ns,"test2", "")
+		v1  = getVolumeAsset(ns, "test1", "")
+		v2  = getVolumeAsset(ns, "test2", "")
 	)
 
 	n1.Spec.Volumes[v1.Meta.Name] = v1.Spec
@@ -1222,9 +1219,9 @@ func TestNodeStorage_RemoveVolume(t *testing.T) {
 	}
 
 	type args struct {
-		ctx  context.Context
-		node *types.Node
-		volume  *types.Volume
+		ctx    context.Context
+		node   *types.Node
+		volume *types.Volume
 	}
 
 	tests := []struct {
@@ -1279,7 +1276,6 @@ func TestNodeStorage_RemoveVolume(t *testing.T) {
 
 	for _, tt := range tests {
 
-
 		if err := stg.Clear(ctx); err != nil {
 			t.Errorf("NodeStorage.RemoveVolume() storage setup error = %v", err)
 			return
@@ -1330,8 +1326,8 @@ func TestNodeStorage_InsertRoute(t *testing.T) {
 		n1  = getNodeAsset("test1", "", true)
 		n2  = getNodeAsset("test1", "", true)
 		n3  = getNodeAsset("test2", "", false)
-		r1  = getRouteAsset(ns,"test1", "")
-		r2  = getRouteAsset(ns,"test1", "")
+		r1  = getRouteAsset(ns, "test1", "")
+		r2  = getRouteAsset(ns, "test1", "")
 	)
 
 	n2.Spec.Routes[r1.Meta.Name] = r1.Spec
@@ -1342,9 +1338,9 @@ func TestNodeStorage_InsertRoute(t *testing.T) {
 	}
 
 	type args struct {
-		ctx  context.Context
-		node *types.Node
-		route  *types.Route
+		ctx   context.Context
+		node  *types.Node
+		route *types.Route
 	}
 
 	tests := []struct {
@@ -1449,8 +1445,8 @@ func TestNodeStorage_RemoveRoute(t *testing.T) {
 		n1  = getNodeAsset("test1", "", true)
 		n2  = getNodeAsset("test1", "", true)
 		n3  = getNodeAsset("test2", "", false)
-		p1  = getRouteAsset(ns,"test1", "")
-		p2  = getRouteAsset(ns,"test2", "")
+		p1  = getRouteAsset(ns, "test1", "")
+		p2  = getRouteAsset(ns, "test2", "")
 	)
 
 	n1.Spec.Routes[p1.Meta.Name] = p1.Spec
@@ -1460,9 +1456,9 @@ func TestNodeStorage_RemoveRoute(t *testing.T) {
 	}
 
 	type args struct {
-		ctx  context.Context
-		node *types.Node
-		route  *types.Route
+		ctx   context.Context
+		node  *types.Node
+		route *types.Route
 	}
 
 	tests := []struct {
@@ -1566,7 +1562,6 @@ func TestNodeStorage_Remove(t *testing.T) {
 		n1  = getNodeAsset("test1", "", true)
 		n2  = getNodeAsset("test2", "", true)
 	)
-
 
 	type fields struct {
 		stg storage.Node
@@ -1675,10 +1670,10 @@ func TestNodeStorage_Watch(t *testing.T) {
 		wantErr bool
 	}{
 		{
-		"check watch",
-		fields{stg},
-		args{ctx, make(chan *types.Node)},
-		false,
+			"check watch",
+			fields{stg},
+			args{ctx, make(chan *types.Node)},
+			false,
 		},
 	}
 	for _, tt := range tests {
@@ -1735,10 +1730,10 @@ func getNodeAsset(name, desc string, online bool) types.Node {
 				Storage:    256,
 			},
 		},
-		Spec:  types.NodeSpec{
-			Pods: make(map[string]types.PodSpec),
+		Spec: types.NodeSpec{
+			Pods:    make(map[string]types.PodSpec),
 			Volumes: make(map[string]types.VolumeSpec),
-			Routes: make(map[string]types.RouteSpec),
+			Routes:  make(map[string]types.RouteSpec),
 		},
 		Roles: types.NodeRole{},
 		Network: types.Subnet{

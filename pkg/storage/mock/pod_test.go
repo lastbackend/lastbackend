@@ -35,7 +35,7 @@ func TestPodStorage_Get(t *testing.T) {
 		dp1 = "dp1"
 		stg = newPodStorage()
 		ctx = context.Background()
-		d   = getPodAsset(ns1, svc, dp1,"test", "")
+		d   = getPodAsset(ns1, svc, dp1, "test", "")
 	)
 
 	type fields struct {
@@ -74,7 +74,6 @@ func TestPodStorage_Get(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-
 
 		if err := stg.Clear(ctx); err != nil {
 			t.Errorf("PodStorage.Get() storage setup error = %v", err)
@@ -120,9 +119,9 @@ func TestPodStorage_ListByNamespace(t *testing.T) {
 		stg = newPodStorage()
 		ctx = context.Background()
 		n1  = getPodAsset(ns1, svc, dp1, "test1", "")
-		n2  = getPodAsset(ns1, svc, dp1,"test2", "")
+		n2  = getPodAsset(ns1, svc, dp1, "test2", "")
 		n3  = getPodAsset(ns2, svc, dp1, "test1", "")
-		nl= make(map[string]*types.Pod, 0)
+		nl  = make(map[string]*types.Pod, 0)
 	)
 
 	nl0 := map[string]*types.Pod{}
@@ -134,7 +133,7 @@ func TestPodStorage_ListByNamespace(t *testing.T) {
 	nl1[stg.keyGet(&n1)] = &n1
 	nl1[stg.keyGet(&n2)] = &n2
 
-	nl2  := map[string]*types.Pod{}
+	nl2 := map[string]*types.Pod{}
 	nl2[stg.keyGet(&n3)] = &n3
 
 	type fields struct {
@@ -176,8 +175,6 @@ func TestPodStorage_ListByNamespace(t *testing.T) {
 		},
 	}
 
-
-
 	for _, tt := range tests {
 
 		if err := stg.Clear(ctx); err != nil {
@@ -207,19 +204,19 @@ func TestPodStorage_ListByNamespace(t *testing.T) {
 
 func TestPodStorage_ListByService(t *testing.T) {
 	var (
-		ns1= "ns1"
-		ns2= "ns2"
-		sv1= "svc1"
-		sv2= "svc2"
+		ns1 = "ns1"
+		ns2 = "ns2"
+		sv1 = "svc1"
+		sv2 = "svc2"
 		dp1 = "dp1"
-		stg= newPodStorage()
-		ctx= context.Background()
-		n1= getPodAsset(ns1, sv1, dp1, "test1", "")
-		n2= getPodAsset(ns1, sv1, dp1, "test2", "")
-		n3= getPodAsset(ns1, sv2, dp1,"test1", "")
-		n4= getPodAsset(ns2, sv1, dp1,"test1", "")
-		n5= getPodAsset(ns2, sv1, dp1, "test2", "")
-		nl= make(map[string]*types.Pod, 0)
+		stg = newPodStorage()
+		ctx = context.Background()
+		n1  = getPodAsset(ns1, sv1, dp1, "test1", "")
+		n2  = getPodAsset(ns1, sv1, dp1, "test2", "")
+		n3  = getPodAsset(ns1, sv2, dp1, "test1", "")
+		n4  = getPodAsset(ns2, sv1, dp1, "test1", "")
+		n5  = getPodAsset(ns2, sv1, dp1, "test2", "")
+		nl  = make(map[string]*types.Pod, 0)
 	)
 
 	nl0 := map[string]*types.Pod{}
@@ -233,10 +230,10 @@ func TestPodStorage_ListByService(t *testing.T) {
 	nl1[stg.keyGet(&n1)] = &n1
 	nl1[stg.keyGet(&n2)] = &n2
 
-	nl2  := map[string]*types.Pod{}
+	nl2 := map[string]*types.Pod{}
 	nl2[stg.keyGet(&n3)] = &n3
 
-	nl3  := map[string]*types.Pod{}
+	nl3 := map[string]*types.Pod{}
 	nl3[stg.keyGet(&n4)] = &n4
 	nl3[stg.keyGet(&n5)] = &n5
 
@@ -316,22 +313,22 @@ func TestPodStorage_ListByService(t *testing.T) {
 
 func TestPodStorage_ListByDeployment(t *testing.T) {
 	var (
-		ns1= "ns1"
-		ns2= "ns2"
-		sv1= "svc1"
-		sv2= "svc2"
+		ns1 = "ns1"
+		ns2 = "ns2"
+		sv1 = "svc1"
+		sv2 = "svc2"
 		dp1 = "dp1"
 		dp2 = "dp2"
-		stg= newPodStorage()
-		ctx= context.Background()
-		n1= getPodAsset(ns1, sv1, dp1, "test1", "")
-		n2= getPodAsset(ns1, sv1, dp1, "test2", "")
-		n3= getPodAsset(ns1, sv2, dp1,"test1", "")
-		n4= getPodAsset(ns2, sv1, dp1,"test1", "")
-		n5= getPodAsset(ns2, sv1, dp1, "test2", "")
-		n6= getPodAsset(ns2, sv2, dp2, "test1", "")
-		n7= getPodAsset(ns2, sv2, dp2, "test2", "")
-		nl= make(map[string]*types.Pod, 0)
+		stg = newPodStorage()
+		ctx = context.Background()
+		n1  = getPodAsset(ns1, sv1, dp1, "test1", "")
+		n2  = getPodAsset(ns1, sv1, dp1, "test2", "")
+		n3  = getPodAsset(ns1, sv2, dp1, "test1", "")
+		n4  = getPodAsset(ns2, sv1, dp1, "test1", "")
+		n5  = getPodAsset(ns2, sv1, dp1, "test2", "")
+		n6  = getPodAsset(ns2, sv2, dp2, "test1", "")
+		n7  = getPodAsset(ns2, sv2, dp2, "test2", "")
+		nl  = make(map[string]*types.Pod, 0)
 	)
 
 	nl0 := map[string]*types.Pod{}
@@ -347,14 +344,14 @@ func TestPodStorage_ListByDeployment(t *testing.T) {
 	nl1[stg.keyGet(&n1)] = &n1
 	nl1[stg.keyGet(&n2)] = &n2
 
-	nl2  := map[string]*types.Pod{}
+	nl2 := map[string]*types.Pod{}
 	nl2[stg.keyGet(&n3)] = &n3
 
-	nl3  := map[string]*types.Pod{}
+	nl3 := map[string]*types.Pod{}
 	nl3[stg.keyGet(&n4)] = &n4
 	nl3[stg.keyGet(&n5)] = &n5
 
-	nl4  := map[string]*types.Pod{}
+	nl4 := map[string]*types.Pod{}
 	nl4[stg.keyGet(&n6)] = &n6
 	nl4[stg.keyGet(&n7)] = &n7
 
@@ -447,10 +444,10 @@ func TestPodStorage_SetState(t *testing.T) {
 		dp1 = "dp1"
 		stg = newPodStorage()
 		ctx = context.Background()
-		n1  = getPodAsset(ns1, svc, dp1,"test1", "")
+		n1  = getPodAsset(ns1, svc, dp1, "test1", "")
 		n2  = getPodAsset(ns1, svc, dp1, "test1", "")
-		n3  = getPodAsset(ns1, svc, dp1,"test2", "")
-		nl= make([]*types.Pod, 0)
+		n3  = getPodAsset(ns1, svc, dp1, "test2", "")
+		nl  = make([]*types.Pod, 0)
 	)
 
 	n2.State.Provision = true
@@ -463,7 +460,7 @@ func TestPodStorage_SetState(t *testing.T) {
 	}
 
 	type args struct {
-		ctx  context.Context
+		ctx context.Context
 		pod *types.Pod
 	}
 
@@ -553,8 +550,8 @@ func TestPodStorage_Insert(t *testing.T) {
 		dp1 = "dp1"
 		stg = newPodStorage()
 		ctx = context.Background()
-		n1   = getPodAsset(ns1, svc, dp1,"test", "")
-		n2   = getPodAsset(ns1, svc, dp1,"", "",)
+		n1  = getPodAsset(ns1, svc, dp1, "test", "")
+		n2  = getPodAsset(ns1, svc, dp1, "", "")
 	)
 
 	n2.Meta.Name = ""
@@ -564,7 +561,7 @@ func TestPodStorage_Insert(t *testing.T) {
 	}
 
 	type args struct {
-		ctx  context.Context
+		ctx context.Context
 		pod *types.Pod
 	}
 
@@ -640,10 +637,10 @@ func TestPodStorage_Update(t *testing.T) {
 		dp1 = "dp1"
 		stg = newPodStorage()
 		ctx = context.Background()
-		n1  = getPodAsset(ns1, svc, dp1,"test1", "")
-		n2  = getPodAsset(ns1, svc, dp1,"test1", "test")
-		n3  = getPodAsset(ns1, svc, dp1,"test2", "")
-		nl= make([]*types.Pod, 0)
+		n1  = getPodAsset(ns1, svc, dp1, "test1", "")
+		n2  = getPodAsset(ns1, svc, dp1, "test1", "test")
+		n3  = getPodAsset(ns1, svc, dp1, "test2", "")
+		nl  = make([]*types.Pod, 0)
 	)
 
 	nl0 := append(nl, &n1)
@@ -653,7 +650,7 @@ func TestPodStorage_Update(t *testing.T) {
 	}
 
 	type args struct {
-		ctx  context.Context
+		ctx context.Context
 		pod *types.Pod
 	}
 
@@ -743,8 +740,8 @@ func TestPodStorage_Remove(t *testing.T) {
 		dp1 = "dp1"
 		stg = newPodStorage()
 		ctx = context.Background()
-		n1  = getPodAsset(ns1, svc, dp1,"test1", "")
-		n2  = getPodAsset(ns1, svc, dp1,"test2", "")
+		n1  = getPodAsset(ns1, svc, dp1, "test1", "")
+		n2  = getPodAsset(ns1, svc, dp1, "test2", "")
 	)
 
 	type fields struct {
@@ -752,7 +749,7 @@ func TestPodStorage_Remove(t *testing.T) {
 	}
 
 	type args struct {
-		ctx  context.Context
+		ctx context.Context
 		pod *types.Pod
 	}
 
@@ -789,8 +786,6 @@ func TestPodStorage_Remove(t *testing.T) {
 			store.ErrEntityNotFound,
 		},
 	}
-
-
 
 	for _, tt := range tests {
 
@@ -845,7 +840,7 @@ func TestPodStorage_Watch(t *testing.T) {
 		stg storage.Pod
 	}
 	type args struct {
-		ctx  context.Context
+		ctx context.Context
 		pod chan *types.Pod
 	}
 	tests := []struct {
@@ -880,7 +875,7 @@ func TestPodStorage_WatchSpec(t *testing.T) {
 		stg storage.Pod
 	}
 	type args struct {
-		ctx  context.Context
+		ctx context.Context
 		pod chan *types.Pod
 	}
 	tests := []struct {

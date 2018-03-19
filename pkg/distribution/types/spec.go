@@ -26,8 +26,6 @@ import (
 const ContainerRolePrimary = "primary"
 const ContainerRoleSlave = "slave"
 
-
-
 type SpecState struct {
 	Destroy     bool `json:"destroy"`
 	Maintenance bool `json:"maintenance"`

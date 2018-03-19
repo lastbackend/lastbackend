@@ -41,7 +41,6 @@ func (s *PodStorage) Get(ctx context.Context, namespace, service, deployment, na
 
 	log.V(logLevel).Debugf("Storage: Pod: get by name: %s ", name)
 
-
 	if len(name) == 0 {
 		err := errors.New("name can not be empty")
 		log.V(logLevel).Errorf("Storage: Pod: get pod err: %s", err.Error())
@@ -49,10 +48,10 @@ func (s *PodStorage) Get(ctx context.Context, namespace, service, deployment, na
 	}
 
 	var (
-		pod            = new(types.Pod)
+		pod = new(types.Pod)
 		//podName        = strings.Replace(pod.Meta.Name, ":", "-", -1)
 		//filterEndpoint = `\b.+` + podStorage + `\/` + podName + `\..+\b`
-		endpoints      = make(map[string][]string)
+		endpoints = make(map[string][]string)
 	)
 
 	client, destroy, err := getClient(ctx)

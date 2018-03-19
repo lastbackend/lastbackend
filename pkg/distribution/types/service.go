@@ -24,11 +24,12 @@ import (
 	"io/ioutil"
 	"strings"
 
+	"fmt"
 	"github.com/lastbackend/lastbackend/pkg/distribution/errors"
 	"github.com/lastbackend/lastbackend/pkg/log"
 	"github.com/lastbackend/lastbackend/pkg/util/validator"
-	"fmt"
 	"github.com/satori/uuid"
+	"github.com/lastbackend/lastbackend/pkg/api/types/v1/request"
 )
 
 const (
@@ -115,7 +116,7 @@ func (s *ServiceSpec) SetDefault() {
 	s.Triggers = make(SpecTriggers, 0)
 }
 
-func (s *ServiceSpec) Update(spec *ServiceOptionsSpec) {
+func (s *ServiceSpec) Update(spec *request.ServiceOptionsSpec) {
 
 	if spec == nil {
 		return

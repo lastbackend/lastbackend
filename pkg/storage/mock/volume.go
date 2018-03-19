@@ -19,13 +19,13 @@
 package mock
 
 import (
+	"context"
+	"fmt"
+	"github.com/lastbackend/lastbackend/pkg/distribution/errors"
+	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 	"github.com/lastbackend/lastbackend/pkg/storage/storage"
 	"github.com/lastbackend/lastbackend/pkg/storage/store"
-	"fmt"
 	"strings"
-	"context"
-	"github.com/lastbackend/lastbackend/pkg/distribution/types"
-	"github.com/lastbackend/lastbackend/pkg/distribution/errors"
 )
 
 type VolumeStorage struct {
@@ -125,7 +125,7 @@ func (s *VolumeStorage) Clear(ctx context.Context) error {
 }
 
 // keyCreate util function
-func (s *VolumeStorage) keyCreate (namespace, name string) string {
+func (s *VolumeStorage) keyCreate(namespace, name string) string {
 	return fmt.Sprintf("%s:%s", namespace, name)
 }
 
@@ -168,4 +168,3 @@ func (s *VolumeStorage) checkVolumeExists(volume *types.Volume) error {
 
 	return nil
 }
-

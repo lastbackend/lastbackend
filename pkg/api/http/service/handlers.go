@@ -22,10 +22,9 @@ import (
 	"net/http"
 
 	"github.com/lastbackend/lastbackend/pkg/api/envs"
-	v "github.com/lastbackend/lastbackend/pkg/api/views"
+	"github.com/lastbackend/lastbackend/pkg/api/types/v1"
 	"github.com/lastbackend/lastbackend/pkg/distribution"
 	"github.com/lastbackend/lastbackend/pkg/distribution/errors"
-	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 	"github.com/lastbackend/lastbackend/pkg/log"
 	"github.com/lastbackend/lastbackend/pkg/util/http/utils"
 )
@@ -71,7 +70,7 @@ func ServiceListH(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	response, err := v.V1().Service().NewList(items, dl).ToJson()
+	response, err := v1.View().Service().NewList(items, dl).ToJson()
 	if err != nil {
 		log.V(logLevel).Errorf("Handler: Service: convert struct to json err: %s", err.Error())
 		errors.HTTP.InternalServerError(w)
@@ -138,7 +137,7 @@ func ServiceInfoH(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	response, err := v.V1().Service().New(srv, dl, pods).ToJson()
+	response, err := v1.View().Service().New(srv, dl, pods).ToJson()
 	if err != nil {
 		log.V(logLevel).Errorf("Handler: Service: convert struct to json err: %s", err.Error())
 		errors.HTTP.InternalServerError(w)
@@ -163,7 +162,8 @@ func ServiceCreateH(w http.ResponseWriter, r *http.Request) {
 		sm  = distribution.NewServiceModel(r.Context(), envs.Get().GetStorage())
 	)
 
-	opts := new(types.ServiceCreateOptions)
+	// request body struct
+	opts := v1.Request().Service().CreateOptions()
 	if err := opts.DecodeAndValidate(r.Body); err != nil {
 		log.V(logLevel).Errorf("Handler: Service: validation incoming data err: %s", err.Err())
 		err.Http(w)
@@ -202,7 +202,7 @@ func ServiceCreateH(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	response, err := v.V1().Service().New(srv, nil, nil).ToJson()
+	response, err := v1.View().Service().New(srv, nil, nil).ToJson()
 	if err != nil {
 		log.V(logLevel).Errorf("Handler: Service: convert struct to json err: %s", err.Error())
 		errors.HTTP.InternalServerError(w)
@@ -229,7 +229,7 @@ func ServiceUpdateH(w http.ResponseWriter, r *http.Request) {
 	)
 
 	// request body struct
-	opts := new(types.ServiceUpdateOptions)
+	opts := v1.Request().Service().UpdateOptions()
 	if err := opts.DecodeAndValidate(r.Body); err != nil {
 		log.V(logLevel).Errorf("Handler: Service: validation incoming data err: %s", err.Err())
 		err.Http(w)
@@ -268,7 +268,7 @@ func ServiceUpdateH(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	response, err := v.V1().Service().New(srv, nil, nil).ToJson()
+	response, err := v1.View().Service().New(srv, nil, nil).ToJson()
 	if err != nil {
 		log.V(logLevel).Errorf("Handler: Service: convert struct to json err: %s", err.Error())
 		errors.HTTP.InternalServerError(w)
@@ -293,6 +293,14 @@ func ServiceRemoveH(w http.ResponseWriter, r *http.Request) {
 		nsm = distribution.NewNamespaceModel(r.Context(), envs.Get().GetStorage())
 		sm  = distribution.NewServiceModel(r.Context(), envs.Get().GetStorage())
 	)
+
+	// request body struct
+	opts := v1.Request().Service().RemoveOptions()
+	if err := opts.DecodeAndValidate(r.Body); err != nil {
+		log.V(logLevel).Errorf("Handler: Service: validation incoming data err: %s", err.Err())
+		err.Http(w)
+		return
+	}
 
 	ns, err := nsm.Get(nid)
 	if err != nil {

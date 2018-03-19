@@ -19,10 +19,8 @@
 package cluster
 
 import (
-	v "github.com/lastbackend/lastbackend/pkg/api/views"
-
+	"github.com/lastbackend/lastbackend/pkg/api/types/v1"
 	"github.com/lastbackend/lastbackend/pkg/distribution/errors"
-	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 	"github.com/lastbackend/lastbackend/pkg/log"
 	"github.com/lastbackend/lastbackend/pkg/util/http/utils"
 	"net/http"
@@ -36,7 +34,7 @@ func ClusterInfoH(w http.ResponseWriter, r *http.Request) {
 
 	log.V(logLevel).Debugf("Handler: Cluster: get cluster `%s`", name)
 
-	response, err := v.V1().Cluster().New(nil).ToJson()
+	response, err := v1.View().Cluster().New(nil).ToJson()
 	if err != nil {
 		log.V(logLevel).Errorf("Handler: Cluster: convert struct to json err: %s", err)
 		errors.HTTP.InternalServerError(w)
@@ -56,17 +54,14 @@ func ClusterUpdateH(w http.ResponseWriter, r *http.Request) {
 
 	log.V(logLevel).Debugf("Handler: Cluster: update cluster `%s`", name)
 
-	var ()
-
-	// request body struct
-	opts := new(types.ClusterUpdateOptions)
+	opts := v1.Request().Cluster().UpdateOptions()
 	if err := opts.DecodeAndValidate(r.Body); err != nil {
 		log.V(logLevel).Errorf("Handler: Cluster: validation incoming data", err)
-		errors.New("Invalid incoming data").Unknown().Http(w)
+		err.Http(w)
 		return
 	}
 
-	response, err := v.V1().Cluster().New(nil).ToJson()
+	response, err := v1.View().Cluster().New(nil).ToJson()
 	if err != nil {
 		log.V(logLevel).Errorf("Handler: Cluster: convert struct to json err: %s", err)
 		errors.HTTP.InternalServerError(w)
@@ -86,9 +81,14 @@ func ClusterRemoveH(w http.ResponseWriter, r *http.Request) {
 
 	log.V(logLevel).Debugf("Handler: Cluster: remove cluster %s", name)
 
-	var ()
+	opts := v1.Request().Cluster().UpdateOptions()
+	if err := opts.DecodeAndValidate(r.Body); err != nil {
+		log.V(logLevel).Errorf("Handler: Cluster: validation incoming data", err)
+		err.Http(w)
+		return
+	}
 
-	response, err := v.V1().Cluster().New(nil).ToJson()
+	response, err := v1.View().Cluster().New(nil).ToJson()
 	if err != nil {
 		log.V(logLevel).Errorf("Handler: Cluster: convert struct to json err: %s", err)
 		errors.HTTP.InternalServerError(w)

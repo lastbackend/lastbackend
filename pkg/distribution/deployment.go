@@ -25,6 +25,7 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/storage"
 	"github.com/lastbackend/lastbackend/pkg/util/generator"
 	"strings"
+	"github.com/lastbackend/lastbackend/pkg/api/types/v1/request"
 )
 
 type IDeployment interface {
@@ -32,7 +33,7 @@ type IDeployment interface {
 	Get(namespace, service, name string) (*types.Deployment, error)
 	ListByNamespace(namespace string) (map[string]*types.Deployment, error)
 	ListByService(namespace, service string) (map[string]*types.Deployment, error)
-	SetSpec(dt *types.Deployment, opts types.DeploymentOptions) error
+	SetSpec(dt *types.Deployment, opts *request.DeploymentUpdateOptions) error
 	SetState(dt *types.Deployment) error
 	Cancel(dt *types.Deployment) error
 	Destroy(dt *types.Deployment) error
@@ -125,12 +126,12 @@ func (d *Deployment) ListByService(namespace, service string) (map[string]*types
 }
 
 // Scale deployment
-func (d *Deployment) SetSpec(dt *types.Deployment, opts types.DeploymentOptions) error {
+func (d *Deployment) SetSpec(dt *types.Deployment, opts *request.DeploymentUpdateOptions) error {
 
 	log.Debugf("distribution:deployment:set: set spec for deployment %s", dt.Meta.Name)
 
-	if dt.Spec.Replicas != opts.Replicas {
-		dt.Spec.Replicas = opts.Replicas
+	if dt.Spec.Replicas != *opts.Replicas {
+		dt.Spec.Replicas = *opts.Replicas
 		if err := d.storage.Deployment().SetSpec(d.context, dt); err != nil {
 			log.Errorf("distribution:deployment:set: set spec for deployment %s err: %s", dt.Meta.Name, err.Error())
 			return err

@@ -26,15 +26,16 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 	"github.com/lastbackend/lastbackend/pkg/log"
 	"github.com/lastbackend/lastbackend/pkg/storage"
-	"github.com/spf13/viper"
 	"github.com/lastbackend/lastbackend/pkg/storage/store"
+	"github.com/spf13/viper"
+	"github.com/lastbackend/lastbackend/pkg/api/types/v1/request"
 )
 
 type IService interface {
 	Get(namespace, service string) (*types.Service, error)
 	List(namespace string) (map[string]*types.Service, error)
-	Create(namespace *types.Namespace, opts *types.ServiceCreateOptions) (*types.Service, error)
-	Update(service *types.Service, opts *types.ServiceUpdateOptions) (*types.Service, error)
+	Create(namespace *types.Namespace, opts *request.ServiceCreateOptions) (*types.Service, error)
+	Update(service *types.Service, opts *request.ServiceUpdateOptions) (*types.Service, error)
 	Destroy(service *types.Service) (*types.Service, error)
 	Remove(service *types.Service) error
 	SetState(service *types.Service) error
@@ -85,12 +86,12 @@ func (s *Service) List(namespace string) (map[string]*types.Service, error) {
 }
 
 // Create new service model in namespace
-func (s *Service) Create(namespace *types.Namespace, opts *types.ServiceCreateOptions) (*types.Service, error) {
+func (s *Service) Create(namespace *types.Namespace, opts *request.ServiceCreateOptions) (*types.Service, error) {
 
 	log.V(logLevel).Debugf("distribution:service:create: service %#v", opts)
 
 	if opts == nil {
-		opts = new(types.ServiceCreateOptions)
+		opts = new(request.ServiceCreateOptions)
 	}
 
 	// ------------------------------------------------
@@ -129,12 +130,12 @@ func (s *Service) Create(namespace *types.Namespace, opts *types.ServiceCreateOp
 }
 
 // Update service in namespace
-func (s *Service) Update(service *types.Service, opts *types.ServiceUpdateOptions) (*types.Service, error) {
+func (s *Service) Update(service *types.Service, opts *request.ServiceUpdateOptions) (*types.Service, error) {
 
 	log.V(logLevel).Debugf("distribution:service:update: %#v -> %#v", service, opts)
 
 	if opts == nil {
-		opts = new(types.ServiceUpdateOptions)
+		opts = new(request.ServiceUpdateOptions)
 	}
 
 	if opts.Description != nil {
@@ -145,13 +146,9 @@ func (s *Service) Update(service *types.Service, opts *types.ServiceUpdateOption
 		}
 	}
 
-	if opts.Spec != nil || opts.Replicas != nil {
+	if opts.Spec != nil {
 
 		service.Spec.Update(opts.Spec)
-
-		if opts.Replicas != nil && (service.Spec.Replicas != *opts.Replicas) {
-			service.Spec.Replicas = *opts.Replicas
-		}
 
 		if err := s.storage.Service().SetSpec(s.context, service); err != nil {
 			log.V(logLevel).Errorf("distribution:service:update: update service spec err: %s", err)

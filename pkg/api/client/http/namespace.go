@@ -23,18 +23,19 @@ import (
 	"encoding/json"
 
 	"github.com/lastbackend/lastbackend/pkg/api/client/interfaces"
-	"github.com/lastbackend/lastbackend/pkg/api/views/v1"
+	rv1 "github.com/lastbackend/lastbackend/pkg/api/types/v1/request"
+	vv1 "github.com/lastbackend/lastbackend/pkg/api/types/v1/views"
 )
 
 type NamespaceClient struct {
 	interfaces.Namespace
 }
 
-func (s *NamespaceClient) List(ctx context.Context) (*v1.NamespaceList, error) {
+func (s *NamespaceClient) List(ctx context.Context) (*vv1.NamespaceList, error) {
 
 	var (
 		r  = NewRequest(ctx)
-		nl *v1.NamespaceList
+		nl *vv1.NamespaceList
 	)
 
 	body, err := r.Get("namespace")
@@ -47,6 +48,26 @@ func (s *NamespaceClient) List(ctx context.Context) (*v1.NamespaceList, error) {
 	}
 
 	return nl, nil
+}
+
+func Create(ctx context.Context, opts rv1.NamespaceCreateOptions) (*vv1.Namespace, error) {
+	return nil, nil
+}
+
+func List(ctx context.Context) (*vv1.NamespaceList, error) {
+	return nil, nil
+}
+
+func Get(ctx context.Context, name string) (*vv1.Namespace, error) {
+	return nil, nil
+}
+
+func Update(ctx context.Context, name string, opts rv1.NamespaceUpdateOptions) (*vv1.Namespace, error) {
+	return nil, nil
+}
+
+func Remove(ctx context.Context, name string, opts rv1.NamespaceRemoveOptions) error {
+	return nil
 }
 
 func newNamespaceClient() *NamespaceClient {

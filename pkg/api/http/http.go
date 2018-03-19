@@ -24,11 +24,11 @@ import (
 
 	"github.com/lastbackend/lastbackend/pkg/api/http/cluster"
 	"github.com/lastbackend/lastbackend/pkg/api/http/deployment"
-	"github.com/lastbackend/lastbackend/pkg/api/http/trigger"
 	"github.com/lastbackend/lastbackend/pkg/api/http/namespace"
 	"github.com/lastbackend/lastbackend/pkg/api/http/node"
 	"github.com/lastbackend/lastbackend/pkg/api/http/route"
 	"github.com/lastbackend/lastbackend/pkg/api/http/service"
+	"github.com/lastbackend/lastbackend/pkg/api/http/trigger"
 	"github.com/lastbackend/lastbackend/pkg/log"
 )
 
