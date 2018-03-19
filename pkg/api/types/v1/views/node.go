@@ -72,4 +72,3 @@ type NodeSpec struct {
 	Pods    map[string]PodSpec    `json:"pods"`
 	Volumes map[string]VolumeSpec `json:"volumes"`
 }
-

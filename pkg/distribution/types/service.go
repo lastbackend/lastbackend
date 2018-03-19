@@ -22,8 +22,8 @@ import (
 	"strings"
 
 	"fmt"
-	"github.com/satori/uuid"
 	"github.com/lastbackend/lastbackend/pkg/api/types/v1/request"
+	"github.com/satori/uuid"
 )
 
 const (

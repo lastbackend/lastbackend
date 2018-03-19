@@ -19,17 +19,10 @@
 package client
 
 import (
-	"github.com/lastbackend/lastbackend/pkg/api/client/interfaces"
+	"github.com/lastbackend/lastbackend/pkg/api/client/v1"
 )
 
-type IClient interface {
-	Cluster() interfaces.Cluster
-	Deployment() interfaces.Deployment
-	Events() interfaces.Events
-	Namespace() interfaces.Namespace
-	Node() interfaces.Node
-	Route() interfaces.Route
-	Service() interfaces.Service
-	Trigger() interfaces.Trigger
-	Volume() interfaces.Volume
+type IClientV1 interface {
+	Cluster() *v1.ClusterClient
+	Namespace() *v1.NamespaceClient
 }

@@ -25,6 +25,8 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/lastbackend/lastbackend/pkg/api/envs"
 	"github.com/lastbackend/lastbackend/pkg/api/http/service"
+	"github.com/lastbackend/lastbackend/pkg/api/types/v1"
+	"github.com/lastbackend/lastbackend/pkg/api/types/v1/request"
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 	"github.com/lastbackend/lastbackend/pkg/storage"
 	"github.com/spf13/viper"
@@ -34,8 +36,6 @@ import (
 	"net/http/httptest"
 	"strings"
 	"testing"
-	"github.com/lastbackend/lastbackend/pkg/api/types/v1"
-	"github.com/lastbackend/lastbackend/pkg/api/types/v1/request"
 )
 
 // Testing ServiceInfoH handler

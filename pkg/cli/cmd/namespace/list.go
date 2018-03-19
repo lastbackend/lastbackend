@@ -19,11 +19,7 @@
 package namespace
 
 import (
-	"context"
 	"fmt"
-	"log"
-
-	"github.com/lastbackend/lastbackend/pkg/api/client"
 	v "github.com/lastbackend/lastbackend/pkg/cli/view"
 )
 
@@ -39,9 +35,5 @@ func ListCmd() {
 }
 
 func List() (string, *v.NamespaceList, error) {
-
-	cli, _ := client.New(context.Background())
-	log.Println(cli.Namespace().List(context.Background()))
-
 	return "", nil, nil
 }

@@ -19,11 +19,27 @@
 package client
 
 import (
-	"context"
-
 	"github.com/lastbackend/lastbackend/pkg/api/client/http"
+	"github.com/lastbackend/lastbackend/pkg/api/client/v1"
+	"net/url"
 )
 
-func New(ctx context.Context) (IClient, error) {
-	return http.New(ctx)
+func New(endpoint string) (*Client, error) {
+	c := new(Client)
+
+	baseURL, _ := url.Parse(endpoint)
+	client, err := http.NewRESTClient(baseURL)
+	if err != nil {
+		return nil, err
+	}
+	c.client = client
+	return c, nil
+}
+
+type Client struct {
+	client http.Interface
+}
+
+func (c Client) V1() IClientV1 {
+	return v1.New(c.client)
 }

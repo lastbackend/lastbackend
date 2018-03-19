@@ -2,7 +2,7 @@
 // Last.Backend LLC CONFIDENTIAL
 // __________________
 //
-// [2014] - [2017] Last.Backend LLC
+// [2014] - [2018] Last.Backend LLC
 // All Rights Reserved.
 //
 // NOTICE:  All information contained herein is, and remains
@@ -21,37 +21,152 @@ package http
 import (
 	"context"
 	"fmt"
+	"golang.org/x/net/http2"
+	"io"
 	"io/ioutil"
 	"net/http"
+	"net/url"
+	"path"
+	"bytes"
 )
 
 type Request struct {
+	// required
+	client HTTPClient
+	verb   string
+
+	baseURL *url.URL
+
+	pathPrefix string
+	params     url.Values
+	headers    http.Header
+
+	err  error
+	body io.Reader
+
 	ctx context.Context
 }
 
-func (r *Request) Get(endpoint string) ([]byte, error) {
-
-	schema := "http"
-	if r.ctx.Value("https").(bool) {
-		schema = "https"
-	}
-
-	uri := fmt.Sprintf("%s://%s/%s", schema, r.ctx.Value("host").(string), endpoint)
-
-	res, err := http.Get(uri)
-	if err != nil {
-		return nil, err
-	}
-	defer res.Body.Close()
-
-	body, err := ioutil.ReadAll(res.Body)
-	if err != nil {
-		return nil, err
-	}
-
-	return body, nil
+type HTTPClient interface {
+	Do(req *http.Request) (*http.Response, error)
 }
 
-func NewRequest(ctx context.Context) *Request {
-	return &Request{ctx}
+func NewRequest(client HTTPClient, method string, baseURL *url.URL) *Request {
+	pathPrefix := "/"
+
+	if baseURL != nil {
+		pathPrefix = path.Join(pathPrefix, baseURL.Path)
+	}
+
+	r := &Request{
+		client:     client,
+		verb:       method,
+		baseURL:    baseURL,
+		pathPrefix: pathPrefix,
+	}
+	return r
+}
+
+func (r *Request) Body(data []byte) *Request {
+	r.body = bytes.NewReader(data)
+	return r
+}
+
+func (r *Request) AddHeader(key, val string) *Request {
+	r.headers.Add(key, val)
+	return r
+}
+
+func (r *Request) Do() Result {
+	var result Result
+
+	if r.err != nil {
+		return Result{err: r.err}
+	}
+
+	client := r.client
+	if client == nil {
+		client = http.DefaultClient
+	}
+
+	u := r.URL().String()
+	req, err := http.NewRequest(r.verb, u, r.body)
+	if err != nil {
+		return Result{err: r.err}
+	}
+	if r.ctx != nil {
+		req = req.WithContext(r.ctx)
+	}
+	req.Header = r.headers
+
+	resp, err := client.Do(req)
+	if err != nil {
+		return Result{err: r.err}
+	}
+	result = r.transformResponse(resp, req)
+
+	return result
+}
+
+type Result struct {
+	body        []byte
+	contentType string
+	err         error
+	statusCode  int
+}
+
+// Raw returns the raw result.
+func (r Result) Raw() ([]byte, error) {
+	return r.body, r.err
+}
+
+func (r Result) StatusCode(statusCode *int) Result {
+	*statusCode = r.statusCode
+	return r
+}
+
+func (r *Request) transformResponse(resp *http.Response, req *http.Request) Result {
+	var body []byte
+
+	if resp.Body != nil {
+		data, err := ioutil.ReadAll(resp.Body)
+		switch err.(type) {
+		case nil:
+			body = data
+		case http2.StreamError:
+			return Result{
+				err: fmt.Errorf("stream error %#v when reading", err),
+			}
+		default:
+			return Result{
+				err: fmt.Errorf("unexpected error %#v", err),
+			}
+		}
+	}
+	contentType := resp.Header.Get("Content-Type")
+	return Result{
+		body:        body,
+		contentType: contentType,
+		statusCode:  resp.StatusCode,
+	}
+}
+
+func (r *Request) URL() *url.URL {
+	p := r.pathPrefix
+
+	finalURL := &url.URL{}
+	if r.baseURL != nil {
+		*finalURL = *r.baseURL
+	}
+	finalURL.Path = p
+
+	query := url.Values{}
+	for key, values := range r.params {
+		for _, value := range values {
+			query.Add(key, value)
+		}
+	}
+
+	finalURL.RawQuery = query.Encode()
+	return finalURL
 }

@@ -16,37 +16,32 @@
 // from Last.Backend LLC.
 //
 
-package http
+package v1
 
 import (
 	"context"
 
+	"github.com/lastbackend/lastbackend/pkg/api/client/http"
 	"github.com/lastbackend/lastbackend/pkg/api/client/interfaces"
-	rv1 "github.com/lastbackend/lastbackend/pkg/api/types/v1/request"
 	vv1 "github.com/lastbackend/lastbackend/pkg/api/types/v1/views"
 )
 
-type NodeClient struct {
-	interfaces.Node
+type PodClient struct {
+	interfaces.Pod
+	req        http.Interface
+	namespace  string
+	service    string
+	deployment string
 }
 
-func (s *NodeClient) List(ctx context.Context) (*vv1.NodeList, error) {
+func (s *PodClient) List(ctx context.Context) (*vv1.PodList, error) {
 	return nil, nil
 }
 
-func (s *NodeClient) Get(ctx context.Context, name string) (*vv1.Node, error) {
+func (s *PodClient) Get(ctx context.Context, na string) (*vv1.Pod, error) {
 	return nil, nil
 }
 
-func (s *NodeClient) Update(ctx context.Context, name string, opts rv1.NodeUpdateOptions) (*vv1.Node, error) {
-	return nil, nil
-}
-
-func (s *NodeClient) Remove(ctx context.Context, name string, opts rv1.NodeRemoveOptions) error {
-	return nil
-}
-
-func newNodeClient() *NodeClient {
-	s := new(NodeClient)
-	return s
+func newPodClient(req http.Interface, namespace, service, deployment string) *PodClient {
+	return &PodClient{req: req, namespace: namespace, service: service, deployment: deployment}
 }

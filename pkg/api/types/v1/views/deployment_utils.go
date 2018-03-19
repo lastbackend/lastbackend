@@ -88,8 +88,8 @@ func (di *Deployment) ToReplicas(obj types.DeploymentReplicas) DeploymentReplica
 	}
 }
 
-func (di *Deployment) ToPods(obj map[string]*types.Pod) map[string]PodView {
-	pods := make(map[string]PodView, 0)
+func (di *Deployment) ToPods(obj map[string]*types.Pod) map[string]Pod {
+	pods := make(map[string]Pod, 0)
 	for _, p := range obj {
 		if p.Meta.Deployment == di.ID {
 			pv := new(PodViewHelper)

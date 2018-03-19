@@ -93,7 +93,7 @@ func (nv *NodeView) NewList(obj map[string]*types.Node) *NodeList {
 
 func (nv *NodeView) NewSpec(obj *types.Node) *NodeSpec {
 
-	spec := NodeSpec {}
+	spec := NodeSpec{}
 
 	if obj == nil {
 		return nil

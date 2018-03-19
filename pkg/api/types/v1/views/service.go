@@ -86,7 +86,7 @@ type ServiceState struct {
 type ServiceDeployment struct {
 	ID      string `json:"id"`
 	Name    string `json:"name"`
-	Pods    map[string]PodView
+	Pods    map[string]Pod
 	Started time.Time `json:"started"`
 }
 

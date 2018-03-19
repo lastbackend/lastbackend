@@ -19,5 +19,4 @@
 package views
 
 type Subnet struct {
-
 }

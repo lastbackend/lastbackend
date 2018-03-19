@@ -26,11 +26,42 @@ import (
 )
 
 type Cluster interface {
+	Node() Node
+
 	Get(ctx context.Context) (*vv1.ClusterList, error)
 	Update(ctx context.Context, opts *rv1.ClusterUpdateOptions) (*vv1.Cluster, error)
 }
 
+type Namespace interface {
+	Service() Service
+	Volume() Volume
+
+	Create(ctx context.Context, opts rv1.NamespaceCreateOptions) (*vv1.Namespace, error)
+	List(ctx context.Context) (*vv1.NamespaceList, error)
+	Get(ctx context.Context, name string) (*vv1.Namespace, error)
+	Update(ctx context.Context, name string, opts rv1.NamespaceUpdateOptions) (*vv1.Namespace, error)
+	Remove(ctx context.Context, name string, opts rv1.NamespaceRemoveOptions) error
+}
+
+type Service interface {
+	Deployment() Deployment
+	Trigger() Trigger
+
+	Create(ctx context.Context, namespace string, opts *rv1.ServiceCreateOptions) (*vv1.ServiceList, error)
+	List(ctx context.Context, namespace string) (*vv1.ServiceList, error)
+	Get(ctx context.Context, namespace, name string) (*vv1.Service, error)
+	Update(ctx context.Context, namespace, name string, opts *rv1.ServiceUpdateOptions) (*vv1.NamespaceList, error)
+	Remove(ctx context.Context, namespace, name string, opts rv1.ServiceRemoveOptions) error
+}
+
 type Deployment interface {
+	Pod() Pod
+	List(ctx context.Context, namespace, service string) (*vv1.DeploymentList, error)
+	Get(ctx context.Context, namespace, service, deployment string) (*vv1.Deployment, error)
+	Update(ctx context.Context, namespace, service, deployment string, opts *rv1.DeploymentUpdateOptions) (*vv1.Deployment, error)
+}
+
+type Pod interface {
 	List(ctx context.Context, namespace, service string) (*vv1.DeploymentList, error)
 	Get(ctx context.Context, namespace, service, deployment string) (*vv1.Deployment, error)
 	Update(ctx context.Context, namespace, service, deployment string, opts *rv1.DeploymentUpdateOptions) (*vv1.Deployment, error)
@@ -39,15 +70,9 @@ type Deployment interface {
 type Events interface {
 }
 
-type Namespace interface {
-	Create(ctx context.Context, opts rv1.NamespaceCreateOptions) (*vv1.Namespace, error)
-	List(ctx context.Context) (*vv1.NamespaceList, error)
-	Get(ctx context.Context, name string) (*vv1.Namespace, error)
-	Update(ctx context.Context, name string, opts rv1.NamespaceUpdateOptions) (*vv1.Namespace, error)
-	Remove(ctx context.Context, name string, opts rv1.NamespaceRemoveOptions) error
-}
-
 type Node interface {
+	Route() Route
+
 	List(ctx context.Context) (*vv1.NodeList, error)
 	Get(ctx context.Context, name string) (*vv1.Node, error)
 	GetSpec(ctx context.Context, name string) (*vv1.NodeSpec, error)
@@ -66,14 +91,6 @@ type Route interface {
 	Get(ctx context.Context, namespace, name string) (*vv1.Route, error)
 	Update(ctx context.Context, namespace, name string, opts rv1.RouteUpdateOptions) (*vv1.Route, error)
 	Remove(ctx context.Context, namespace, name string, opts rv1.RouteRemoveOptions) error
-}
-
-type Service interface {
-	Create(ctx context.Context, namespace string, opts *rv1.ServiceCreateOptions) (*vv1.ServiceList, error)
-	List(ctx context.Context, namespace string) (*vv1.ServiceList, error)
-	Get(ctx context.Context, namespace, name string) (*vv1.Service, error)
-	Update(ctx context.Context, namespace, name string, opts *rv1.ServiceUpdateOptions) (*vv1.NamespaceList, error)
-	Remove(ctx context.Context, namespace, name string, opts rv1.ServiceRemoveOptions) error
 }
 
 type Trigger interface {

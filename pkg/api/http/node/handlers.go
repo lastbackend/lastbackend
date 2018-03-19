@@ -21,13 +21,13 @@ package node
 import (
 	"net/http"
 
-	"github.com/lastbackend/lastbackend/pkg/api/types/v1"
 	"github.com/lastbackend/lastbackend/pkg/api/envs"
+	"github.com/lastbackend/lastbackend/pkg/api/types/v1"
+	"github.com/lastbackend/lastbackend/pkg/api/types/v1/request"
 	"github.com/lastbackend/lastbackend/pkg/distribution"
 	"github.com/lastbackend/lastbackend/pkg/distribution/errors"
 	"github.com/lastbackend/lastbackend/pkg/log"
 	"github.com/lastbackend/lastbackend/pkg/util/http/utils"
-	"github.com/lastbackend/lastbackend/pkg/api/types/v1/request"
 )
 
 const logLevel = 2

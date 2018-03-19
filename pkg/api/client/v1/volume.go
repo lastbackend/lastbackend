@@ -16,7 +16,7 @@
 // from Last.Backend LLC.
 //
 
-package http
+package v1
 
 import (
 	"context"
@@ -26,23 +26,31 @@ import (
 	vv1 "github.com/lastbackend/lastbackend/pkg/api/types/v1/views"
 )
 
-type DeploymentClient struct {
-	interfaces.Deployment
+type VolumeClient struct {
+	interfaces.Volume
 }
 
-func (s *DeploymentClient) List(ctx context.Context, namespace, service string) (*vv1.DeploymentList, error) {
+func (s *VolumeClient) Create(ctx context.Context, namespace string, opts rv1.VolumeCreateOptions) (*vv1.Volume, error) {
 	return nil, nil
 }
 
-func (s *DeploymentClient) Get(ctx context.Context, namespace, service, deployment string) (*vv1.Deployment, error) {
+func (s *VolumeClient) List(ctx context.Context, namespace string) (*vv1.VolumeList, error) {
 	return nil, nil
 }
 
-func (s *DeploymentClient) Update(ctx context.Context, namespace, service, deployment string, opts *rv1.DeploymentUpdateOptions) (*vv1.Deployment, error) {
+func (s *VolumeClient) Get(ctx context.Context, namespace, name string) (*vv1.Volume, error) {
 	return nil, nil
 }
 
-func newDeploymentClient() *DeploymentClient {
-	s := new(DeploymentClient)
+func (s *VolumeClient) Update(ctx context.Context, namespace, name string, opts rv1.VolumeUpdateOptions) (*vv1.Volume, error) {
+	return nil, nil
+}
+
+func (s *VolumeClient) Remove(ctx context.Context, namespace, name string, opts rv1.VolumeRemoveOptions) error {
+	return nil
+}
+
+func newVolumeClient() *VolumeClient {
+	s := new(VolumeClient)
 	return s
 }

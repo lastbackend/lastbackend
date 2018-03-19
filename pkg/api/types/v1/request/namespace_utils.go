@@ -67,6 +67,10 @@ func (s *NamespaceCreateOptions) DecodeAndValidate(reader io.Reader) *errors.Err
 	return nil
 }
 
+func (s *NamespaceCreateOptions) ToJson() ([]byte, error) {
+	return json.Marshal(s)
+}
+
 func (NamespaceRequest) UpdateOptions() *NamespaceUpdateOptions {
 	return new(NamespaceUpdateOptions)
 }
@@ -98,6 +102,10 @@ func (s *NamespaceUpdateOptions) DecodeAndValidate(reader io.Reader) *errors.Err
 	return nil
 }
 
+func (s *NamespaceUpdateOptions) ToJson() ([]byte, error) {
+	return json.Marshal(s)
+}
+
 func (NamespaceRequest) RemoveOptions() *NamespaceRemoveOptions {
 	return new(NamespaceRemoveOptions)
 }
@@ -119,4 +127,8 @@ func (s *NamespaceRemoveOptions) DecodeAndValidate(reader io.Reader) *errors.Err
 	}
 
 	return nil
+}
+
+func (s *NamespaceRemoveOptions) ToJson() ([]byte, error) {
+	return json.Marshal(s)
 }

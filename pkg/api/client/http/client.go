@@ -19,99 +19,57 @@
 package http
 
 import (
-	"context"
-
-	"github.com/lastbackend/lastbackend/pkg/api/client/interfaces"
+	"github.com/lastbackend/lastbackend/pkg/util/serializer"
+	"net/http"
+	"net/url"
+	"strings"
 )
 
-type Client struct {
-	*ClusterClient
-	*DeploymentClient
-	*EventsClient
-	*NamespaceClient
-	*NodeClient
-	*RouteClient
-	*ServiceClient
-	*TriggerClient
-	*VolumeClient
+// Interface captures the set of operations for generically interacting with Kubernetes REST apis.
+type Interface interface {
+	Do(verb, path string) *Request
+	Post(path string) *Request
+	Put(path string) *Request
+	Get(path string) *Request
+	Delete(path string) *Request
 }
 
-func (s *Client) Cluster() interfaces.Cluster {
-	if s == nil {
-		return nil
+type RESTClient struct {
+	base        *url.URL
+	serializers serializer.Codec
+	Client      *http.Client
+}
+
+func NewRESTClient(baseURL *url.URL) (*RESTClient, error) {
+	base := *baseURL
+
+	if !strings.HasSuffix(base.Path, "/") {
+		base.Path += "/"
 	}
-	return s.ClusterClient
+
+	return &RESTClient{
+		base:   &base,
+		Client: &http.Client{},
+	}, nil
 }
 
-func (s *Client) Deployment() interfaces.Deployment {
-	if s == nil {
-		return nil
-	}
-	return s.DeploymentClient
+func (c *RESTClient) Do(verb string, path string) *Request {
+	c.base.Path = path
+	return NewRequest(c.Client, verb, c.base)
 }
 
-func (s *Client) Events() interfaces.Events {
-	if s == nil {
-		return nil
-	}
-	return s.EventsClient
+func (c *RESTClient) Post(path string) *Request {
+	return c.Do(http.MethodPost, path)
 }
 
-func (s *Client) Namespace() interfaces.Namespace {
-	if s == nil {
-		return nil
-	}
-	return s.NamespaceClient
+func (c *RESTClient) Put(path string) *Request {
+	return c.Do(http.MethodPut, path)
 }
 
-func (s *Client) Node() interfaces.Node {
-	if s == nil {
-		return nil
-	}
-	return s.NodeClient
+func (c *RESTClient) Get(path string) *Request {
+	return c.Do(http.MethodGet, path)
 }
 
-func (s *Client) Route() interfaces.Route {
-	if s == nil {
-		return nil
-	}
-	return s.RouteClient
-}
-
-func (s *Client) Service() interfaces.Service {
-	if s == nil {
-		return nil
-	}
-	return s.ServiceClient
-}
-
-func (s *Client) Trigger() interfaces.Trigger {
-	if s == nil {
-		return nil
-	}
-	return s.TriggerClient
-}
-
-func (s *Client) Volume() interfaces.Volume {
-	if s == nil {
-		return nil
-	}
-	return s.VolumeClient
-}
-
-func New(ctx context.Context) (*Client, error) {
-
-	s := new(Client)
-
-	s.ClusterClient = newClusterClient()
-	s.DeploymentClient = newDeploymentClient()
-	s.EventsClient = newEventsClient()
-	s.NamespaceClient = newNamespaceClient()
-	s.NodeClient = newNodeClient()
-	s.RouteClient = newRouteClient()
-	s.ServiceClient = newServiceClient()
-	s.TriggerClient = newTriggerClient()
-	s.VolumeClient = newVolumeClient()
-
-	return s, nil
+func (c *RESTClient) Delete(path string) *Request {
+	return c.Do(http.MethodDelete, path)
 }

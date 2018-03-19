@@ -28,7 +28,7 @@ type IView interface {
 	Route() *RouteView
 	Service() *ServiceView
 	Deployment() *DeploymentView
-	Pod() *PodView
+	Pod() *Pod
 	Container() *ContainerView
 }
 
@@ -53,8 +53,8 @@ func (View) Service() *ServiceView {
 func (View) Deployment() *DeploymentView {
 	return new(DeploymentView)
 }
-func (View) Pod() *PodView {
-	return new(PodView)
+func (View) Pod() *Pod {
+	return new(Pod)
 }
 func (View) Container() *ContainerView {
 	return new(ContainerView)
