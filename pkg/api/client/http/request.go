@@ -16,40 +16,42 @@
 // from Last.Backend LLC.
 //
 
-package core
+package http
 
 import (
 	"context"
-	"encoding/json"
-
-	"github.com/lastbackend/lastbackend/pkg/api/client/interfaces"
-	"github.com/lastbackend/lastbackend/pkg/api/views/v1"
+	"io/ioutil"
+	"net/http"
+	"fmt"
 )
 
-type NamespaceClient struct {
-	interfaces.Namespace
+type Request struct {
+	ctx context.Context
 }
 
-func (s *NamespaceClient) List(ctx context.Context) (*v1.NamespaceList, error) {
+func (r *Request) Get(endpoint string) ([]byte, error) {
 
-	var (
-		r  = NewRequest(ctx)
-		nl *v1.NamespaceList
-	)
+	schema := "http"
+	if r.ctx.Value("https").(bool) {
+		schema = "https"
+	}
 
-	body, err := r.Get()
+	uri := fmt.Sprintf("%s://%s/%s", schema, r.ctx.Value("host").(string), endpoint)
+
+	res, err := http.Get(uri)
+	if err != nil {
+		return nil, err
+	}
+	defer res.Body.Close()
+
+	body, err := ioutil.ReadAll(res.Body)
 	if err != nil {
 		return nil, err
 	}
 
-	if err := json.Unmarshal(body, nl); err != nil {
-		return nil, err
-	}
-
-	return nl, nil
+	return body, nil
 }
 
-func newNamespaceClient() *NamespaceClient {
-	s := new(NamespaceClient)
-	return s
+func NewRequest(ctx context.Context) *Request {
+	return &Request{ctx}
 }

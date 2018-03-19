@@ -27,5 +27,4 @@ var Routes = []http.Route{
 	// Cluster handlers
 	{Path: "/cluster", Method: http.MethodGet, Middleware: []http.Middleware{middleware.Authenticate}, Handler: ClusterInfoH},
 	{Path: "/cluster", Method: http.MethodPut, Middleware: []http.Middleware{middleware.Authenticate}, Handler: ClusterUpdateH},
-	{Path: "/cluster", Method: http.MethodDelete, Middleware: []http.Middleware{middleware.Authenticate}, Handler: ClusterRemoveH},
 }

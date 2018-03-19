@@ -2,7 +2,7 @@
 // Last.Backend LLC CONFIDENTIAL
 // __________________
 //
-// [2014] - [2017] Last.Backend LLC
+// [2014] - [2018] Last.Backend LLC
 // All Rights Reserved.
 //
 // NOTICE:  All information contained herein is, and remains
@@ -16,34 +16,26 @@
 // from Last.Backend LLC.
 //
 
-package core
+package v1
 
-import (
-	"context"
-	"io/ioutil"
-	"net/http"
-)
+import "time"
 
-type Request struct {
-	ctx context.Context
+type Trigger struct {
+	Meta  TriggerMeta  `json:"meta"`
+	Spec  TriggerSpec  `json:"spec"`
+	State TriggerState `json:"state"`
 }
 
-func (r *Request) Get() ([]byte, error) {
-
-	res, err := http.Get(r.ctx.Value("host").(string))
-	if err != nil {
-		return nil, err
-	}
-	defer res.Body.Close()
-
-	body, err := ioutil.ReadAll(res.Body)
-	if err != nil {
-		return nil, err
-	}
-
-	return body, nil
+type TriggerMeta struct {
+	Name    string    `json:"name"`
+	Updated time.Time `json:"updated"`
+	Created time.Time `json:"created"`
 }
 
-func NewRequest(ctx context.Context) *Request {
-	return &Request{ctx}
+type TriggerSpec struct {
 }
+
+type TriggerState struct {
+}
+
+type TriggerList map[string]*Trigger

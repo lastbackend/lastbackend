@@ -33,6 +33,22 @@ import (
 
 const logLevel = 2
 
+func DeploymentListH(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusOK)
+	if _, err := w.Write([]byte{}); err != nil {
+		log.V(logLevel).Errorf("Handler: Deployment: write response err: %s", err)
+		return
+	}
+}
+
+func DeploymentInfoH(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusOK)
+	if _, err := w.Write([]byte{}); err != nil {
+		log.V(logLevel).Errorf("Handler: Deployment: write response err: %s", err)
+		return
+	}
+}
+
 func DeploymentUpdateH(w http.ResponseWriter, r *http.Request) {
 
 	nid := utils.Vars(r)["namespace"]
@@ -102,7 +118,7 @@ func DeploymentUpdateH(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.WriteHeader(http.StatusOK)
-	if _, err = w.Write(response); err != nil {
+	if _, err := w.Write(response); err != nil {
 		log.V(logLevel).Errorf("Handler: Deployment: write response err: %s", err)
 		return
 	}

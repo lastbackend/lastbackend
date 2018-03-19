@@ -16,14 +16,26 @@
 // from Last.Backend LLC.
 //
 
-package client
+package v1
 
-import (
-	"context"
+import "time"
 
-	"github.com/lastbackend/lastbackend/pkg/api/client/http"
-)
-
-func New(ctx context.Context) (IClient, error) {
-	return http.New(ctx)
+type Volume struct {
+	Meta  VolumeMeta  `json:"meta"`
+	Spec  VolumeSpec  `json:"spec"`
+	State VolumeState `json:"state"`
 }
+
+type VolumeMeta struct {
+	Name    string    `json:"name"`
+	Updated time.Time `json:"updated"`
+	Created time.Time `json:"created"`
+}
+
+type VolumeSpec struct {
+}
+
+type VolumeState struct {
+}
+
+type VolumeList map[string]*Volume

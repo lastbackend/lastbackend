@@ -24,5 +24,7 @@ import (
 )
 
 var Routes = []http.Route{
+	{Path: "/namespace/{namespace}/service/{service}/deployment", Method: http.MethodGet, Middleware: []http.Middleware{middleware.Authenticate}, Handler: DeploymentListH},
+	{Path: "/namespace/{namespace}/service/{service}/deployment/{deployment}", Method: http.MethodGet, Middleware: []http.Middleware{middleware.Authenticate}, Handler: DeploymentInfoH},
 	{Path: "/namespace/{namespace}/service/{service}/deployment/{deployment}", Method: http.MethodPut, Middleware: []http.Middleware{middleware.Authenticate}, Handler: DeploymentUpdateH},
 }
