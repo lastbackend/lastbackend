@@ -32,10 +32,6 @@ import (
 
 const logLevel = 2
 
-
-
-
-
 func NodeGetH(w http.ResponseWriter, r *http.Request) {
 
 	log.V(logLevel).Debug("Handler: Node: list node")

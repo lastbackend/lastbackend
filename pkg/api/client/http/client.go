@@ -26,6 +26,7 @@ import (
 
 type Client struct {
 	*NamespaceClient
+	*NodeClient
 }
 
 func (s *Client) Namespace() interfaces.Namespace {
@@ -35,11 +36,19 @@ func (s *Client) Namespace() interfaces.Namespace {
 	return s.NamespaceClient
 }
 
+func (s *Client) Node() interfaces.Node {
+	if s == nil {
+		return nil
+	}
+	return s.NodeClient
+}
+
 func New(ctx context.Context) (*Client, error) {
 
 	s := new(Client)
 
 	s.NamespaceClient = newNamespaceClient()
+	s.NodeClient = newNodeClient()
 
 	return s, nil
 }

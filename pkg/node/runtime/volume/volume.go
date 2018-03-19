@@ -2,7 +2,7 @@
 // Last.Backend LLC CONFIDENTIAL
 // __________________
 //
-// [2014] - [2018] Last.Backend LLC
+// [2014] - [2017] Last.Backend LLC
 // All Rights Reserved.
 //
 // NOTICE:  All information contained herein is, and remains
@@ -16,17 +16,10 @@
 // from Last.Backend LLC.
 //
 
-package client
+package volume
 
-import (
-	"github.com/lastbackend/lastbackend/pkg/api/client/interfaces"
-)
+import "context"
 
-type Request interface {
-	Get()
-}
-
-type IClient interface {
-	Namespace() interfaces.Namespace
-	Node() interfaces.Node
+func Restore (ctx context.Context) error {
+	return nil
 }

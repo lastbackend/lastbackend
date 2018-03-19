@@ -2,7 +2,7 @@
 // Last.Backend LLC CONFIDENTIAL
 // __________________
 //
-// [2014] - [2018] Last.Backend LLC
+// [2014] - [2017] Last.Backend LLC
 // All Rights Reserved.
 //
 // NOTICE:  All information contained herein is, and remains
@@ -16,17 +16,15 @@
 // from Last.Backend LLC.
 //
 
-package client
+package http
 
-import (
-	"github.com/lastbackend/lastbackend/pkg/api/client/interfaces"
-)
+import "github.com/lastbackend/lastbackend/pkg/api/client/interfaces"
 
-type Request interface {
-	Get()
+type NodeClient struct {
+	interfaces.Node
 }
 
-type IClient interface {
-	Namespace() interfaces.Namespace
-	Node() interfaces.Node
+func newNodeClient() *NodeClient {
+	s := new(NodeClient)
+	return s
 }

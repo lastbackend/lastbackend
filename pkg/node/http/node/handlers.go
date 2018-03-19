@@ -2,7 +2,7 @@
 // Last.Backend LLC CONFIDENTIAL
 // __________________
 //
-// [2014] - [2018] Last.Backend LLC
+// [2014] - [2017] Last.Backend LLC
 // All Rights Reserved.
 //
 // NOTICE:  All information contained herein is, and remains
@@ -16,17 +16,16 @@
 // from Last.Backend LLC.
 //
 
-package client
+package node
 
 import (
-	"github.com/lastbackend/lastbackend/pkg/api/client/interfaces"
+	"net/http"
+	"github.com/lastbackend/lastbackend/pkg/log"
 )
 
-type Request interface {
-	Get()
-}
+const logLevel = 2
 
-type IClient interface {
-	Namespace() interfaces.Namespace
-	Node() interfaces.Node
+func NodeGetH(w http.ResponseWriter, r *http.Request) {
+
+	log.V(logLevel).Debug("Handler: Node: list node")
 }

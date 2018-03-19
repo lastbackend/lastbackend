@@ -2,7 +2,7 @@
 // Last.Backend LLC CONFIDENTIAL
 // __________________
 //
-// [2014] - [2018] Last.Backend LLC
+// [2014] - [2017] Last.Backend LLC
 // All Rights Reserved.
 //
 // NOTICE:  All information contained herein is, and remains
@@ -16,17 +16,15 @@
 // from Last.Backend LLC.
 //
 
-package client
+package pod
 
 import (
-	"github.com/lastbackend/lastbackend/pkg/api/client/interfaces"
+	"github.com/lastbackend/lastbackend/pkg/util/http"
+	"github.com/lastbackend/lastbackend/pkg/util/http/middleware"
 )
 
-type Request interface {
-	Get()
+var Routes = []http.Route{
+	{Path: "/pod/{pod}", Method: http.MethodGet, Middleware: []http.Middleware{middleware.Authenticate}, Handler: PodGetH},
+	{Path: "/pod/{pod}/logs", Method: http.MethodGet, Middleware: []http.Middleware{middleware.Authenticate}, Handler: PodLogsH},
 }
 
-type IClient interface {
-	Namespace() interfaces.Namespace
-	Node() interfaces.Node
-}
