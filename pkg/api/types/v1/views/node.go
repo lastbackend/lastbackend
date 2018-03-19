@@ -65,3 +65,11 @@ type NodeResources struct {
 	Cpu        int   `json:"cpu"`
 	Storage    int   `json:"storage"`
 }
+
+type NodeSpec struct {
+	Routes  map[string]RouteSpec  `json:"routes"`
+	Network map[string]Subnet     `json:"network"`
+	Pods    map[string]PodSpec    `json:"pods"`
+	Volumes map[string]VolumeSpec `json:"volumes"`
+}
+

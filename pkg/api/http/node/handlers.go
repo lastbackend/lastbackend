@@ -22,16 +22,19 @@ import (
 	"net/http"
 
 	"github.com/lastbackend/lastbackend/pkg/api/types/v1"
-
 	"github.com/lastbackend/lastbackend/pkg/api/envs"
 	"github.com/lastbackend/lastbackend/pkg/distribution"
 	"github.com/lastbackend/lastbackend/pkg/distribution/errors"
-	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 	"github.com/lastbackend/lastbackend/pkg/log"
 	"github.com/lastbackend/lastbackend/pkg/util/http/utils"
+	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 )
 
 const logLevel = 2
+
+
+
+
 
 func NodeGetH(w http.ResponseWriter, r *http.Request) {
 
@@ -56,6 +59,42 @@ func NodeGetH(w http.ResponseWriter, r *http.Request) {
 	}
 
 	response, err := v1.View().Node().New(n).ToJson()
+	if err != nil {
+		log.V(logLevel).Errorf("Handler: Node: convert struct to json err: %s", err)
+		errors.HTTP.InternalServerError(w)
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+	if _, err := w.Write(response); err != nil {
+		log.Errorf("Handler: Node: write response err: %s", err)
+		return
+	}
+}
+
+func NodeGetSpecH(w http.ResponseWriter, r *http.Request) {
+
+	log.V(logLevel).Debug("Handler: Node: list node")
+
+	var (
+		nm  = distribution.NewNodeModel(r.Context(), envs.Get().GetStorage())
+		cid = utils.Vars(r)["cluster"]
+		nid = utils.Vars(r)["node"]
+	)
+
+	n, err := nm.Get(nid)
+	if err != nil {
+		log.V(logLevel).Errorf("Handler: Node: get node err: %s", err)
+		errors.HTTP.InternalServerError(w)
+		return
+	}
+	if n == nil {
+		log.V(logLevel).Warnf("Handler: Node: node `%s` not found", cid)
+		errors.New("node").NotFound().Http(w)
+		return
+	}
+
+	response, err := v1.View().Node().NewSpec(n).ToJson()
 	if err != nil {
 		log.V(logLevel).Errorf("Handler: Node: convert struct to json err: %s", err)
 		errors.HTTP.InternalServerError(w)
@@ -97,7 +136,6 @@ func NodeListH(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 }
-
 
 func NodeUpdateH(w http.ResponseWriter, r *http.Request) {
 
@@ -141,6 +179,87 @@ func NodeUpdateH(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 	if _, err = w.Write(response); err != nil {
 		log.V(logLevel).Errorf("Handler: Node: write response err: %s", err)
+		return
+	}
+}
+
+func NodeSetInfoH(w http.ResponseWriter, r *http.Request) {
+
+	log.V(logLevel).Debug("Handler: Node: node set info")
+
+	var (
+		nm = distribution.NewNodeModel(r.Context(), envs.Get().GetStorage())
+	)
+
+	nodes, err := nm.List()
+	if err != nil {
+		log.V(logLevel).Errorf("Handler: Node: get nodes list err: %s", err)
+		errors.HTTP.InternalServerError(w)
+		return
+	}
+
+	response, err := v1.View().Node().NewList(nodes).ToJson()
+	if err != nil {
+		log.V(logLevel).Errorf("Handler: Node: convert struct to json err: %s", err)
+		errors.HTTP.InternalServerError(w)
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+	if _, err := w.Write(response); err != nil {
+		log.Errorf("Handler: Node: write response err: %s", err)
+		return
+	}
+}
+
+func NodeSetStateH(w http.ResponseWriter, r *http.Request) {
+
+	log.V(logLevel).Debug("Handler: Node: node set state")
+
+	var response []byte
+
+	w.WriteHeader(http.StatusOK)
+	if _, err := w.Write(response); err != nil {
+		log.Errorf("Handler: Node: write response err: %s", err)
+		return
+	}
+}
+
+func NodeSetPodStateH(w http.ResponseWriter, r *http.Request) {
+
+	log.V(logLevel).Debug("Handler: Node: node set pod state")
+
+	var response []byte
+
+	w.WriteHeader(http.StatusOK)
+	if _, err := w.Write(response); err != nil {
+		log.Errorf("Handler: Node: write response err: %s", err)
+		return
+	}
+}
+
+func NodeSetVolumeStateH(w http.ResponseWriter, r *http.Request) {
+
+	log.V(logLevel).Debug("Handler: Node: node set volume state")
+
+	var response []byte
+
+	w.WriteHeader(http.StatusOK)
+	if _, err := w.Write(response); err != nil {
+		log.Errorf("Handler: Node: write response err: %s", err)
+		return
+	}
+}
+
+func NodeSetRouteStateH(w http.ResponseWriter, r *http.Request) {
+
+	log.V(logLevel).Debug("Handler: Node: node set route state")
+
+	var response []byte
+
+	w.WriteHeader(http.StatusOK)
+	if _, err := w.Write(response); err != nil {
+		log.Errorf("Handler: Node: write response err: %s", err)
 		return
 	}
 }
