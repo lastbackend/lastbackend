@@ -21,11 +21,11 @@ package mock
 import (
 	"testing"
 
+	"context"
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
+	"github.com/lastbackend/lastbackend/pkg/storage/storage"
 	"github.com/lastbackend/lastbackend/pkg/storage/store"
 	"reflect"
-	"github.com/lastbackend/lastbackend/pkg/storage/storage"
-	"context"
 )
 
 func TestRouteStorage_Get(t *testing.T) {
@@ -308,7 +308,7 @@ func TestRouteStorage_Insert(t *testing.T) {
 		stg = newRouteStorage()
 		ctx = context.Background()
 		n1  = getRouteAsset(ns1, "test", "")
-		n2  = getRouteAsset(ns1, "", "", )
+		n2  = getRouteAsset(ns1, "", "")
 	)
 
 	n2.Meta.Name = ""

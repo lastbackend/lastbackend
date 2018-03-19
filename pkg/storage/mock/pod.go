@@ -20,11 +20,11 @@ package mock
 
 import (
 	"context"
+	"fmt"
+	"github.com/lastbackend/lastbackend/pkg/distribution/errors"
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 	"github.com/lastbackend/lastbackend/pkg/storage/storage"
 	"github.com/lastbackend/lastbackend/pkg/storage/store"
-	"github.com/lastbackend/lastbackend/pkg/distribution/errors"
-	"fmt"
 	"strings"
 )
 
@@ -175,12 +175,12 @@ func (s *PodStorage) Clear(ctx context.Context) error {
 }
 
 // keyCreate util function
-func (s *PodStorage) keyCreate (namespace, service, deployment, name string) string {
+func (s *PodStorage) keyCreate(namespace, service, deployment, name string) string {
 	return fmt.Sprintf("%s:%s:%s:%s", namespace, service, deployment, name)
 }
 
 // keyGet util function
-func (s *PodStorage) keyGet (p *types.Pod) string {
+func (s *PodStorage) keyGet(p *types.Pod) string {
 	return p.SelfLink()
 }
 

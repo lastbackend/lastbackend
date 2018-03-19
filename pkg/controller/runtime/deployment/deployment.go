@@ -32,7 +32,7 @@ import (
 func Provision(d *types.Deployment) error {
 
 	var (
-		stg = envs.Get().GetStorage()
+		stg      = envs.Get().GetStorage()
 		replicas int
 	)
 
@@ -77,7 +77,7 @@ func Provision(d *types.Deployment) error {
 	// Remove unneeded replicas
 	if replicas > d.Spec.Replicas {
 
-		count := replicas-d.Spec.Replicas
+		count := replicas - d.Spec.Replicas
 		log.Debug("controller:deployment:controller:provision: remove unneeded pods")
 
 		// Remove pods in error state

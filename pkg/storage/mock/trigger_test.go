@@ -28,14 +28,13 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/storage/store"
 )
 
-
 func TestTriggerStorage_Get(t *testing.T) {
 	var (
 		ns1 = "ns1"
 		svc = "svc"
 		stg = newTriggerStorage()
 		ctx = context.Background()
-		d   = getTriggerAsset(ns1, svc,"test", "")
+		d   = getTriggerAsset(ns1, svc, "test", "")
 	)
 
 	type fields struct {
@@ -80,7 +79,6 @@ func TestTriggerStorage_Get(t *testing.T) {
 			return
 		}
 
-
 		if err := stg.Insert(ctx, &d); err != nil {
 			t.Errorf("TriggerStorage.Get() storage setup error = %v", err)
 			return
@@ -119,9 +117,9 @@ func TestTriggerStorage_ListByNamespace(t *testing.T) {
 		stg = newTriggerStorage()
 		ctx = context.Background()
 		n1  = getTriggerAsset(ns1, svc, "test1", "")
-		n2  = getTriggerAsset(ns1, svc,"test2", "")
-		n3  = getTriggerAsset(ns2, svc,"test1", "")
-		nl= make(map[string]*types.Trigger, 0)
+		n2  = getTriggerAsset(ns1, svc, "test2", "")
+		n3  = getTriggerAsset(ns2, svc, "test1", "")
+		nl  = make(map[string]*types.Trigger, 0)
 	)
 
 	nl0 := map[string]*types.Trigger{}
@@ -133,7 +131,7 @@ func TestTriggerStorage_ListByNamespace(t *testing.T) {
 	nl1[stg.keyGet(&n1)] = &n1
 	nl1[stg.keyGet(&n2)] = &n2
 
-	nl2  := map[string]*types.Trigger{}
+	nl2 := map[string]*types.Trigger{}
 	nl2[stg.keyGet(&n3)] = &n3
 
 	type fields struct {
@@ -204,18 +202,18 @@ func TestTriggerStorage_ListByNamespace(t *testing.T) {
 
 func TestTriggerStorage_ListByService(t *testing.T) {
 	var (
-		ns1= "ns1"
-		ns2= "ns2"
-		sv1= "svc1"
-		sv2= "svc2"
-		stg= newTriggerStorage()
-		ctx= context.Background()
-		n1= getTriggerAsset(ns1, sv1, "test1", "")
-		n2= getTriggerAsset(ns1, sv1, "test2", "")
-		n3= getTriggerAsset(ns1, sv2, "test1", "")
-		n4= getTriggerAsset(ns2, sv1, "test1", "")
-		n5= getTriggerAsset(ns2, sv1, "test2", "")
-		nl= make(map[string]*types.Trigger, 0)
+		ns1 = "ns1"
+		ns2 = "ns2"
+		sv1 = "svc1"
+		sv2 = "svc2"
+		stg = newTriggerStorage()
+		ctx = context.Background()
+		n1  = getTriggerAsset(ns1, sv1, "test1", "")
+		n2  = getTriggerAsset(ns1, sv1, "test2", "")
+		n3  = getTriggerAsset(ns1, sv2, "test1", "")
+		n4  = getTriggerAsset(ns2, sv1, "test1", "")
+		n5  = getTriggerAsset(ns2, sv1, "test2", "")
+		nl  = make(map[string]*types.Trigger, 0)
 	)
 
 	nl0 := map[string]*types.Trigger{}
@@ -229,10 +227,10 @@ func TestTriggerStorage_ListByService(t *testing.T) {
 	nl1[stg.keyGet(&n1)] = &n1
 	nl1[stg.keyGet(&n2)] = &n2
 
-	nl2  := map[string]*types.Trigger{}
+	nl2 := map[string]*types.Trigger{}
 	nl2[stg.keyGet(&n3)] = &n3
 
-	nl3  := map[string]*types.Trigger{}
+	nl3 := map[string]*types.Trigger{}
 	nl3[stg.keyGet(&n4)] = &n4
 	nl3[stg.keyGet(&n5)] = &n5
 
@@ -316,8 +314,8 @@ func TestTriggerStorage_Insert(t *testing.T) {
 		svc = "svc"
 		stg = newTriggerStorage()
 		ctx = context.Background()
-		n1   = getTriggerAsset(ns1, svc,"test", "")
-		n2   = getTriggerAsset(ns1, svc,"", "",)
+		n1  = getTriggerAsset(ns1, svc, "test", "")
+		n2  = getTriggerAsset(ns1, svc, "", "")
 	)
 
 	n2.Meta.Name = ""
@@ -327,7 +325,7 @@ func TestTriggerStorage_Insert(t *testing.T) {
 	}
 
 	type args struct {
-		ctx  context.Context
+		ctx     context.Context
 		trigger *types.Trigger
 	}
 
@@ -402,10 +400,10 @@ func TestTriggerStorage_Update(t *testing.T) {
 		svc = "svc"
 		stg = newTriggerStorage()
 		ctx = context.Background()
-		n1  = getTriggerAsset(ns1, svc,"test1", "")
-		n2  = getTriggerAsset(ns1, svc,"test1", "test")
-		n3  = getTriggerAsset(ns1, svc,"test2", "")
-		nl= make([]*types.Trigger, 0)
+		n1  = getTriggerAsset(ns1, svc, "test1", "")
+		n2  = getTriggerAsset(ns1, svc, "test1", "test")
+		n3  = getTriggerAsset(ns1, svc, "test2", "")
+		nl  = make([]*types.Trigger, 0)
 	)
 
 	nl0 := append(nl, &n1)
@@ -415,7 +413,7 @@ func TestTriggerStorage_Update(t *testing.T) {
 	}
 
 	type args struct {
-		ctx  context.Context
+		ctx     context.Context
 		trigger *types.Trigger
 	}
 
@@ -467,7 +465,6 @@ func TestTriggerStorage_Update(t *testing.T) {
 			}
 		}
 
-
 		t.Run(tt.name, func(t *testing.T) {
 			err := tt.fields.stg.Update(tt.args.ctx, tt.args.trigger)
 			if err != nil {
@@ -505,8 +502,8 @@ func TestTriggerStorage_Remove(t *testing.T) {
 		svc = "svc"
 		stg = newTriggerStorage()
 		ctx = context.Background()
-		n1  = getTriggerAsset(ns1, svc,"test1", "")
-		n2  = getTriggerAsset(ns1, svc,"test2", "")
+		n1  = getTriggerAsset(ns1, svc, "test1", "")
+		n2  = getTriggerAsset(ns1, svc, "test2", "")
 	)
 
 	type fields struct {
@@ -514,7 +511,7 @@ func TestTriggerStorage_Remove(t *testing.T) {
 	}
 
 	type args struct {
-		ctx  context.Context
+		ctx     context.Context
 		trigger *types.Trigger
 	}
 
@@ -605,7 +602,7 @@ func TestTriggerStorage_Watch(t *testing.T) {
 		stg storage.Trigger
 	}
 	type args struct {
-		ctx  context.Context
+		ctx     context.Context
 		trigger chan *types.Trigger
 	}
 	tests := []struct {
@@ -640,7 +637,7 @@ func TestTriggerStorage_WatchSpec(t *testing.T) {
 		stg storage.Trigger
 	}
 	type args struct {
-		ctx  context.Context
+		ctx     context.Context
 		trigger chan *types.Trigger
 	}
 	tests := []struct {
@@ -683,7 +680,6 @@ func Test_newTriggerStorage(t *testing.T) {
 		})
 	}
 }
-
 
 func getTriggerAsset(namespace, service, name, desc string) types.Trigger {
 

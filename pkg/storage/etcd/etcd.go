@@ -108,7 +108,6 @@ func (s *Storage) Volume() storage.Volume {
 	return s.VolumeStorage
 }
 
-
 func (s *Storage) System() storage.System {
 	if s == nil {
 		return nil

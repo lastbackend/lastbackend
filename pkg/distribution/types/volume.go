@@ -38,11 +38,10 @@ type VolumeMeta struct {
 
 type VolumeState struct {
 	Provision bool `json:"provision"`
-	Ready bool `json:"ready"`
+	Ready     bool `json:"ready"`
 }
 
 type VolumeSpec struct {
-
 }
 
 func (v *Volume) SelfLink() string {

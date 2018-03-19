@@ -22,8 +22,7 @@ import (
 	"net/http"
 
 	"github.com/lastbackend/lastbackend/pkg/api/envs"
-	"github.com/lastbackend/lastbackend/pkg/api/views"
-	"github.com/lastbackend/lastbackend/pkg/api/views/v1"
+	"github.com/lastbackend/lastbackend/pkg/api/types/v1"
 	"github.com/lastbackend/lastbackend/pkg/distribution"
 	"github.com/lastbackend/lastbackend/pkg/distribution/errors"
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
@@ -71,11 +70,10 @@ func DeploymentUpdateH(w http.ResponseWriter, r *http.Request) {
 	)
 
 	// request body struct
-	rq := new(v1.RequestDeploymentScaleOptions)
-	opts, err := rq.DecodeAndValidate(r.Body)
-	if err != nil {
+	opts := v1.Request().Deployment().UpdateOptions()
+	if err := opts.DecodeAndValidate(r.Body); err != nil {
 		log.V(logLevel).Errorf("Handler: Deployment: validation incoming data err: %s", err)
-		errors.New("Invalid incoming data").Unknown().Http(w)
+		err.Http(w)
 		return
 	}
 
@@ -110,7 +108,7 @@ func DeploymentUpdateH(w http.ResponseWriter, r *http.Request) {
 		errors.HTTP.InternalServerError(w)
 	}
 
-	response, err := views.V1().Deployment().New(dp, pl).ToJson()
+	response, err := v1.View().Deployment().New(dp, pl).ToJson()
 	if err != nil {
 		log.V(logLevel).Errorf("Handler: Deployment: convert struct to json err: %s", err)
 		errors.HTTP.InternalServerError(w)

@@ -31,7 +31,7 @@ func TestSystemStorage_ProcessSet(t *testing.T) {
 	var (
 		stg = newSystemStorage()
 		ctx = context.Background()
-		p = types.Process{}
+		p   = types.Process{}
 	)
 
 	type fields struct {
@@ -72,7 +72,7 @@ func TestSystemStorage_Elect(t *testing.T) {
 	var (
 		stg = newSystemStorage()
 		ctx = context.Background()
-		p = types.Process{}
+		p   = types.Process{}
 	)
 
 	type fields struct {
@@ -113,7 +113,7 @@ func TestSystemStorage_ElectUpdate(t *testing.T) {
 	var (
 		stg = newSystemStorage()
 		ctx = context.Background()
-		p = types.Process{}
+		p   = types.Process{}
 	)
 
 	type fields struct {
@@ -154,7 +154,7 @@ func TestSystemStorage_ElectWait(t *testing.T) {
 	var (
 		stg = newSystemStorage()
 		ctx = context.Background()
-		p = types.Process{}
+		p   = types.Process{}
 	)
 
 	type fields struct {

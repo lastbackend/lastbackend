@@ -19,13 +19,13 @@
 package mock
 
 import (
+	"context"
+	"fmt"
+	"github.com/lastbackend/lastbackend/pkg/distribution/errors"
+	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 	"github.com/lastbackend/lastbackend/pkg/storage/storage"
 	"github.com/lastbackend/lastbackend/pkg/storage/store"
-	"fmt"
 	"strings"
-	"context"
-	"github.com/lastbackend/lastbackend/pkg/distribution/types"
-	"github.com/lastbackend/lastbackend/pkg/distribution/errors"
 )
 
 type ServiceStorage struct {
@@ -134,7 +134,7 @@ func (s *ServiceStorage) Clear(ctx context.Context) error {
 }
 
 // keyCreate util function
-func (s *ServiceStorage) keyCreate (namespace, name string) string {
+func (s *ServiceStorage) keyCreate(namespace, name string) string {
 	return fmt.Sprintf("%s:%s", namespace, name)
 }
 

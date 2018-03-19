@@ -18,10 +18,32 @@
 
 package http
 
-import "github.com/lastbackend/lastbackend/pkg/api/client/interfaces"
+import (
+	"context"
+
+	"github.com/lastbackend/lastbackend/pkg/api/client/interfaces"
+	rv1 "github.com/lastbackend/lastbackend/pkg/api/types/v1/request"
+	vv1 "github.com/lastbackend/lastbackend/pkg/api/types/v1/views"
+)
 
 type NodeClient struct {
 	interfaces.Node
+}
+
+func (s *NodeClient) List(ctx context.Context) (*vv1.NodeList, error) {
+	return nil, nil
+}
+
+func (s *NodeClient) Get(ctx context.Context, name string) (*vv1.Node, error) {
+	return nil, nil
+}
+
+func (s *NodeClient) Update(ctx context.Context, name string, opts rv1.NodeUpdateOptions) (*vv1.Node, error) {
+	return nil, nil
+}
+
+func (s *NodeClient) Remove(ctx context.Context, name string, opts rv1.NodeRemoveOptions) error {
+	return nil
 }
 
 func newNodeClient() *NodeClient {

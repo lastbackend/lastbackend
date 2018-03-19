@@ -198,7 +198,6 @@ func TestStorage_Volume(t *testing.T) {
 	}
 }
 
-
 func TestStorage_System(t *testing.T) {
 	tests := []struct {
 		name string
@@ -228,11 +227,11 @@ func Test_keyCreate(t *testing.T) {
 		want string
 	}{
 		{"key test",
-			args{[]string{"test","test"}},
+			args{[]string{"test", "test"}},
 			"test/test",
 		},
 		{"key demo",
-			args{[]string{"test","demo"}},
+			args{[]string{"test", "demo"}},
 			"test/demo",
 		},
 	}
@@ -246,8 +245,6 @@ func Test_keyCreate(t *testing.T) {
 }
 
 func Test_getClient(t *testing.T) {
-
-
 
 	type args struct {
 		ctx context.Context

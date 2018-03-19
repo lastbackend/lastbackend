@@ -63,7 +63,6 @@ func GetState() types.NodeState {
 	state.Capacity = GetCapacity()
 	state.Allocated = GetAllocation()
 
-
 	//state.Services.Router.Enabled = viper.GetBool("node.services.router.enabled")
 	//state.Services.Router.ExternalIP = viper.GetString("node.services.router.external_ip")
 	//state.Services.Builder = viper.GetBool("node.services.builder")

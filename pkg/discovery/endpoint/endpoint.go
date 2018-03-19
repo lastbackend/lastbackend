@@ -30,7 +30,7 @@ const logLevel = 2
 func Get(name string) ([]net.IP, error) {
 
 	var (
-		err   error
+		err error
 		//stg   = envs.Get().GetStorage()
 		cache = envs.Get().GetCache()
 		data  = []string{}
@@ -183,7 +183,7 @@ func GetForRoute(name string) ([]net.IP, error) {
 func Update(name string) error {
 
 	var (
-		err   error
+		err error
 		//stg   = envs.Get().GetStorage()
 		cache = envs.Get().GetCache()
 		data  = []string{}

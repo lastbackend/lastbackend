@@ -24,28 +24,27 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/storage/storage"
 )
 
-
 // App Service type for interface in interfaces folder
 type SystemStorage struct {
 	storage.System
 	data map[string]struct {
-			lead    string
-			process string
-		}
+		lead    string
+		process string
+	}
 }
 
 func (s *SystemStorage) ProcessSet(ctx context.Context, process *types.Process) error {
-	s.data[process.Meta.Kind] = struct{lead,process string}{process:process.Meta.ID}
+	s.data[process.Meta.Kind] = struct{ lead, process string }{process: process.Meta.ID}
 	return nil
 }
 
 func (s *SystemStorage) Elect(ctx context.Context, process *types.Process) (bool, error) {
-	s.data[process.Meta.Kind] = struct{lead,process string}{lead:process.Meta.ID}
+	s.data[process.Meta.Kind] = struct{ lead, process string }{lead: process.Meta.ID}
 	return true, nil
 }
 
 func (s *SystemStorage) ElectUpdate(ctx context.Context, process *types.Process) error {
-	s.data[process.Meta.Kind] = struct{lead,process string}{lead:process.Meta.ID}
+	s.data[process.Meta.Kind] = struct{ lead, process string }{lead: process.Meta.ID}
 	return nil
 }
 

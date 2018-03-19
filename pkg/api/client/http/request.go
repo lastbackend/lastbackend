@@ -20,9 +20,9 @@ package http
 
 import (
 	"context"
+	"fmt"
 	"io/ioutil"
 	"net/http"
-	"fmt"
 )
 
 type Request struct {

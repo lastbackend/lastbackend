@@ -21,10 +21,10 @@ package pod
 import (
 	"context"
 	"github.com/lastbackend/lastbackend/pkg/api/envs"
+	"github.com/lastbackend/lastbackend/pkg/distribution"
 	"github.com/lastbackend/lastbackend/pkg/distribution/errors"
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 	"github.com/lastbackend/lastbackend/pkg/log"
-	"github.com/lastbackend/lastbackend/pkg/distribution"
 )
 
 func Provision(p *types.Pod) error {
@@ -67,7 +67,6 @@ func Provision(p *types.Pod) error {
 	if p.Spec.State.Destroy {
 		return nil
 	}
-
 
 	log.Debugf("Allocate node for pod: %s", p.Meta.Name)
 	nodes, err := nm.List()

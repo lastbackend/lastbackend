@@ -76,29 +76,29 @@ type DeploymentOptions struct {
 	Replicas int `json:"replicas"`
 }
 
-func (d *Deployment) SelfLink () string {
+func (d *Deployment) SelfLink() string {
 	if d.Meta.SelfLink == "" {
 		d.Meta.SelfLink = fmt.Sprintf("%s:%s:%s", d.Meta.Namespace, d.Meta.Service, d.Meta.Name)
 	}
 	return d.Meta.SelfLink
 }
 
-func (d *DeploymentState) SetProvision () {
-	d.Ready     = false
+func (d *DeploymentState) SetProvision() {
+	d.Ready = false
 	d.Provision = true
 }
 
-func (d *DeploymentState) SetReady () {
-	d.Ready     = true
+func (d *DeploymentState) SetReady() {
+	d.Ready = true
 	d.Provision = false
 }
 
-func (d *DeploymentState) SetCancel () {
-	d.Ready     = false
+func (d *DeploymentState) SetCancel() {
+	d.Ready = false
 	d.Provision = true
 }
 
-func (d *DeploymentState) SetDestroy () {
-	d.Ready     = false
+func (d *DeploymentState) SetDestroy() {
+	d.Ready = false
 	d.Provision = true
 }

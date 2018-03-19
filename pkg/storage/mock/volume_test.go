@@ -17,14 +17,15 @@
 //
 
 package mock
+
 import (
 	"testing"
 
+	"context"
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
+	"github.com/lastbackend/lastbackend/pkg/storage/storage"
 	"github.com/lastbackend/lastbackend/pkg/storage/store"
 	"reflect"
-	"github.com/lastbackend/lastbackend/pkg/storage/storage"
-	"context"
 )
 
 func TestVolumeStorage_Get(t *testing.T) {
@@ -32,7 +33,7 @@ func TestVolumeStorage_Get(t *testing.T) {
 		ns1 = "ns1"
 		stg = newVolumeStorage()
 		ctx = context.Background()
-		d   = getVolumeAsset(ns1,"test", "")
+		d   = getVolumeAsset(ns1, "test", "")
 	)
 
 	type fields struct {
@@ -69,7 +70,6 @@ func TestVolumeStorage_Get(t *testing.T) {
 			"",
 		},
 	}
-
 
 	for _, tt := range tests {
 
@@ -115,9 +115,9 @@ func TestVolumeStorage_ListByNamespace(t *testing.T) {
 		stg = newVolumeStorage()
 		ctx = context.Background()
 		n1  = getVolumeAsset(ns1, "test1", "")
-		n2  = getVolumeAsset(ns1,"test2", "")
-		n3  = getVolumeAsset(ns2,"test1", "")
-		nl= make(map[string]*types.Volume, 0)
+		n2  = getVolumeAsset(ns1, "test2", "")
+		n3  = getVolumeAsset(ns2, "test1", "")
+		nl  = make(map[string]*types.Volume, 0)
 	)
 
 	nl0 := map[string]*types.Volume{}
@@ -129,7 +129,7 @@ func TestVolumeStorage_ListByNamespace(t *testing.T) {
 	nl1[stg.keyGet(&n1)] = &n1
 	nl1[stg.keyGet(&n2)] = &n2
 
-	nl2  := map[string]*types.Volume{}
+	nl2 := map[string]*types.Volume{}
 	nl2[stg.keyGet(&n3)] = &n3
 
 	type fields struct {
@@ -171,7 +171,6 @@ func TestVolumeStorage_ListByNamespace(t *testing.T) {
 		},
 	}
 
-
 	for _, tt := range tests {
 
 		if err := stg.Clear(ctx); err != nil {
@@ -204,10 +203,10 @@ func TestVolumeStorage_SetState(t *testing.T) {
 		ns1 = "ns1"
 		stg = newVolumeStorage()
 		ctx = context.Background()
-		n1  = getVolumeAsset(ns1,"test1", "")
-		n2  = getVolumeAsset(ns1,"test1", "")
-		n3  = getVolumeAsset(ns1,"test2", "")
-		nl= make([]*types.Volume, 0)
+		n1  = getVolumeAsset(ns1, "test1", "")
+		n2  = getVolumeAsset(ns1, "test1", "")
+		n3  = getVolumeAsset(ns1, "test2", "")
+		nl  = make([]*types.Volume, 0)
 	)
 
 	n2.State.Provision = true
@@ -220,7 +219,7 @@ func TestVolumeStorage_SetState(t *testing.T) {
 	}
 
 	type args struct {
-		ctx  context.Context
+		ctx    context.Context
 		volume *types.Volume
 	}
 
@@ -258,14 +257,12 @@ func TestVolumeStorage_SetState(t *testing.T) {
 		},
 	}
 
-
 	for _, tt := range tests {
 
 		if err := stg.Clear(ctx); err != nil {
 			t.Errorf("VolumeStorage.SetState() storage setup error = %v", err)
 			return
 		}
-
 
 		for _, n := range nl0 {
 			if err := stg.Insert(ctx, n); err != nil {
@@ -310,8 +307,8 @@ func TestVolumeStorage_Insert(t *testing.T) {
 		ns1 = "ns1"
 		stg = newVolumeStorage()
 		ctx = context.Background()
-		n1   = getVolumeAsset(ns1,"test", "")
-		n2   = getVolumeAsset(ns1,"", "",)
+		n1  = getVolumeAsset(ns1, "test", "")
+		n2  = getVolumeAsset(ns1, "", "")
 	)
 
 	n2.Meta.Name = ""
@@ -321,7 +318,7 @@ func TestVolumeStorage_Insert(t *testing.T) {
 	}
 
 	type args struct {
-		ctx  context.Context
+		ctx    context.Context
 		volume *types.Volume
 	}
 
@@ -361,7 +358,6 @@ func TestVolumeStorage_Insert(t *testing.T) {
 
 	for _, tt := range tests {
 
-
 		if err := stg.Clear(ctx); err != nil {
 			t.Errorf("VolumeStorage.Insert() storage setup error = %v", err)
 			return
@@ -396,10 +392,10 @@ func TestVolumeStorage_Update(t *testing.T) {
 		ns1 = "ns1"
 		stg = newVolumeStorage()
 		ctx = context.Background()
-		n1  = getVolumeAsset(ns1,"test1", "")
-		n2  = getVolumeAsset(ns1,"test1", "test")
-		n3  = getVolumeAsset(ns1,"test2", "")
-		nl= make([]*types.Volume, 0)
+		n1  = getVolumeAsset(ns1, "test1", "")
+		n2  = getVolumeAsset(ns1, "test1", "test")
+		n3  = getVolumeAsset(ns1, "test2", "")
+		nl  = make([]*types.Volume, 0)
 	)
 
 	nl0 := append(nl, &n1)
@@ -409,7 +405,7 @@ func TestVolumeStorage_Update(t *testing.T) {
 	}
 
 	type args struct {
-		ctx  context.Context
+		ctx    context.Context
 		volume *types.Volume
 	}
 
@@ -497,8 +493,8 @@ func TestVolumeStorage_Remove(t *testing.T) {
 		ns1 = "ns1"
 		stg = newVolumeStorage()
 		ctx = context.Background()
-		n1  = getVolumeAsset(ns1,"test1", "")
-		n2  = getVolumeAsset(ns1,"test2", "")
+		n1  = getVolumeAsset(ns1, "test1", "")
+		n2  = getVolumeAsset(ns1, "test2", "")
 	)
 
 	type fields struct {
@@ -506,7 +502,7 @@ func TestVolumeStorage_Remove(t *testing.T) {
 	}
 
 	type args struct {
-		ctx  context.Context
+		ctx    context.Context
 		volume *types.Volume
 	}
 
@@ -597,7 +593,7 @@ func TestVolumeStorage_Watch(t *testing.T) {
 		stg storage.Volume
 	}
 	type args struct {
-		ctx  context.Context
+		ctx    context.Context
 		volume chan *types.Volume
 	}
 	tests := []struct {
@@ -632,7 +628,7 @@ func TestVolumeStorage_WatchSpec(t *testing.T) {
 		stg storage.Volume
 	}
 	type args struct {
-		ctx  context.Context
+		ctx    context.Context
 		volume chan *types.Volume
 	}
 	tests := []struct {

@@ -25,8 +25,36 @@ import (
 )
 
 type Client struct {
+	*ClusterClient
+	*DeploymentClient
+	*EventsClient
 	*NamespaceClient
 	*NodeClient
+	*RouteClient
+	*ServiceClient
+	*TriggerClient
+	*VolumeClient
+}
+
+func (s *Client) Cluster() interfaces.Cluster {
+	if s == nil {
+		return nil
+	}
+	return s.ClusterClient
+}
+
+func (s *Client) Deployment() interfaces.Deployment {
+	if s == nil {
+		return nil
+	}
+	return s.DeploymentClient
+}
+
+func (s *Client) Events() interfaces.Events {
+	if s == nil {
+		return nil
+	}
+	return s.EventsClient
 }
 
 func (s *Client) Namespace() interfaces.Namespace {
@@ -43,12 +71,47 @@ func (s *Client) Node() interfaces.Node {
 	return s.NodeClient
 }
 
+func (s *Client) Route() interfaces.Route {
+	if s == nil {
+		return nil
+	}
+	return s.RouteClient
+}
+
+func (s *Client) Service() interfaces.Service {
+	if s == nil {
+		return nil
+	}
+	return s.ServiceClient
+}
+
+func (s *Client) Trigger() interfaces.Trigger {
+	if s == nil {
+		return nil
+	}
+	return s.TriggerClient
+}
+
+func (s *Client) Volume() interfaces.Volume {
+	if s == nil {
+		return nil
+	}
+	return s.VolumeClient
+}
+
 func New(ctx context.Context) (*Client, error) {
 
 	s := new(Client)
 
+	s.ClusterClient = newClusterClient()
+	s.DeploymentClient = newDeploymentClient()
+	s.EventsClient = newEventsClient()
 	s.NamespaceClient = newNamespaceClient()
 	s.NodeClient = newNodeClient()
+	s.RouteClient = newRouteClient()
+	s.ServiceClient = newServiceClient()
+	s.TriggerClient = newTriggerClient()
+	s.VolumeClient = newVolumeClient()
 
 	return s, nil
 }

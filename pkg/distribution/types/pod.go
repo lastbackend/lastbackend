@@ -19,9 +19,9 @@
 package types
 
 import (
+	"fmt"
 	"sync"
 	"time"
-	"fmt"
 )
 
 const PodStepInitialized = "initialized"

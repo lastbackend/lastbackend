@@ -115,5 +115,5 @@ func New() (*Storage, error) {
 func getClient(_ context.Context) (store.Store, store.DestroyFunc, error) {
 
 	log.V(logLevel).Debug("Etcd3: initialization storage")
-	return nil, nil,  nil
+	return nil, nil, nil
 }

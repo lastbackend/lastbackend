@@ -42,7 +42,6 @@ func (s *ServiceStorage) Get(ctx context.Context, namespace, name string) (*type
 
 	log.V(logLevel).Debugf("Storage: Service: get by name: %s", name)
 
-
 	if len(name) == 0 {
 		err := errors.New("name can not be empty")
 		log.V(logLevel).Errorf("Storage: Service: get service err: %s", err.Error())
@@ -52,7 +51,7 @@ func (s *ServiceStorage) Get(ctx context.Context, namespace, name string) (*type
 	const filter = `\b.+` + serviceStorage + `\/.+\/(?:meta|state)\b`
 
 	var (
-		service               = new(types.Service)
+		service = new(types.Service)
 	)
 
 	service.Spec = types.ServiceSpec{}
@@ -75,7 +74,7 @@ func (s *ServiceStorage) Get(ctx context.Context, namespace, name string) (*type
 		return nil, errors.New(store.ErrEntityNotFound)
 	}
 
-	keySpec := keyCreate(serviceStorage,  name, "spec")
+	keySpec := keyCreate(serviceStorage, name, "spec")
 	if err := client.Map(ctx, keySpec, "", &service.Spec); err != nil && err.Error() != store.ErrEntityNotFound {
 		log.V(logLevel).Errorf("Storage: Service: Map service `%s` spec err: %s", name, err.Error())
 		return nil, err
@@ -88,7 +87,6 @@ func (s *ServiceStorage) Get(ctx context.Context, namespace, name string) (*type
 func (s *ServiceStorage) ListByNamespace(ctx context.Context, namespace string) (map[string]*types.Service, error) {
 
 	log.V(logLevel).Debugf("Storage: Service: get service list in namespace: %s", namespace)
-
 
 	const filter = `\b.+` + serviceStorage + `\/.+\/(?:meta|state)\b`
 
@@ -338,7 +336,6 @@ func (s *ServiceStorage) WatchSpec(ctx context.Context, service chan *types.Serv
 
 	return nil
 }
-
 
 // Update service state
 func (s *ServiceStorage) updateState(ctx context.Context, service *types.Service) error {

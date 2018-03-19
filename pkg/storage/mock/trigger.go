@@ -20,11 +20,11 @@ package mock
 
 import (
 	"context"
+	"fmt"
+	"github.com/lastbackend/lastbackend/pkg/distribution/errors"
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 	"github.com/lastbackend/lastbackend/pkg/storage/storage"
 	"github.com/lastbackend/lastbackend/pkg/storage/store"
-	"github.com/lastbackend/lastbackend/pkg/distribution/errors"
-	"fmt"
 	"strings"
 )
 
@@ -126,7 +126,7 @@ func (s *TriggerStorage) Clear(ctx context.Context) error {
 }
 
 // keyCreate util function
-func (s *TriggerStorage) keyCreate (namespace, service, name string) string {
+func (s *TriggerStorage) keyCreate(namespace, service, name string) string {
 	return fmt.Sprintf("%s:%s:%s", namespace, service, name)
 }
 
