@@ -35,6 +35,7 @@ import (
 	"strings"
 	"testing"
 	"github.com/lastbackend/lastbackend/pkg/api/types/v1"
+	"github.com/lastbackend/lastbackend/pkg/api/types/v1/request"
 )
 
 // Testing ServiceInfoH handler
@@ -236,10 +237,10 @@ func TestServiceList(t *testing.T) {
 }
 
 type ServiceCreateOptions struct {
-	types.ServiceCreateOptions
+	request.ServiceCreateOptions
 }
 
-func createServiceCreateOptions(name, description, sources *string, replicas *int, spec *types.ServiceOptionsSpec) *ServiceCreateOptions {
+func createServiceCreateOptions(name, description, sources *string, replicas *int, spec *request.ServiceOptionsSpec) *ServiceCreateOptions {
 	opts := new(ServiceCreateOptions)
 	opts.Name = name
 	opts.Description = description
@@ -330,7 +331,7 @@ func TestServiceCreate(t *testing.T) {
 			description:  "incorrect memory parameter",
 			url:          fmt.Sprintf("/namespace/%s/service", s1.Meta.Name),
 			handler:      service.ServiceCreateH,
-			data:         createServiceCreateOptions(srtPointer("test"), nil, srtPointer("redis"), intPointer(1), &types.ServiceOptionsSpec{Memory: int64Pointer(127)}).toJson(),
+			data:         createServiceCreateOptions(srtPointer("test"), nil, srtPointer("redis"), intPointer(1), &request.ServiceOptionsSpec{Memory: int64Pointer(127)}).toJson(),
 			expectedBody: "{\"code\":400,\"status\":\"Bad Parameter\",\"message\":\"Bad memory parameter\"}",
 			expectedCode: http.StatusBadRequest,
 		},
@@ -399,13 +400,12 @@ func TestServiceCreate(t *testing.T) {
 }
 
 type ServiceUpdateOptions struct {
-	types.ServiceUpdateOptions
+	request.ServiceUpdateOptions
 }
 
-func createServiceUpdateOptions(description, sources *string, replicas *int, spec *types.ServiceOptionsSpec) *ServiceUpdateOptions {
+func createServiceUpdateOptions(description, sources *string, replicas *int, spec *request.ServiceOptionsSpec) *ServiceUpdateOptions {
 	opts := new(ServiceUpdateOptions)
 	opts.Description = description
-	opts.Replicas = replicas
 	opts.Sources = sources
 	opts.Spec = spec
 	return opts
@@ -484,7 +484,7 @@ func TestServiceUpdate(t *testing.T) {
 			description:  "incorrect memory parameter",
 			url:          fmt.Sprintf("/namespace/%s/service/%s", ns1.Meta.Name, s1.Meta.Name),
 			handler:      service.ServiceUpdateH,
-			data:         createServiceUpdateOptions(nil, srtPointer("redis"), intPointer(1), &types.ServiceOptionsSpec{Memory: int64Pointer(127)}).toJson(),
+			data:         createServiceUpdateOptions(nil, srtPointer("redis"), intPointer(1), &request.ServiceOptionsSpec{Memory: int64Pointer(127)}).toJson(),
 			expectedBody: "{\"code\":400,\"status\":\"Bad Parameter\",\"message\":\"Bad memory parameter\"}",
 			expectedCode: http.StatusBadRequest,
 		},

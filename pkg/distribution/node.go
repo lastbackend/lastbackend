@@ -25,13 +25,14 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 	"github.com/lastbackend/lastbackend/pkg/log"
 	"github.com/lastbackend/lastbackend/pkg/storage"
+	"github.com/lastbackend/lastbackend/pkg/api/types/v1/request"
 )
 
 type INode interface {
 	List() (map[string]*types.Node, error)
 	Create() (*types.Node, error)
 	Get(name string) (*types.Node, error)
-	Update(node *types.Node, opts *types.NodeUpdateOptions) error
+	Update(node *types.Node, opts *request.NodeUpdateOptions) error
 	SetState(node *types.Node, state types.NodeState) (*types.Node, error)
 	SetInfo(node *types.Node, info types.NodeInfo) error
 	SetNetwork(node *types.Node, network types.Subnet) error
@@ -87,25 +88,11 @@ func (n *Node) Get(name string) (*types.Node, error) {
 	return node, nil
 }
 
-func (n *Node) Update(node *types.Node, opts *types.NodeUpdateOptions) error {
-
-	var (
-		err error
-	)
+func (n *Node) Update(node *types.Node, opts *request.NodeUpdateOptions) error {
 
 	log.V(logLevel).Debugf("Node: update Node %#v", node)
 
-	if opts.Description != nil {
-		log.V(logLevel).Debug("Node: update Node meta")
-		node.Meta.Description = *opts.Description
-	}
-
-	if opts.ExternalIP != nil {
-		log.V(logLevel).Debug("Node: update Node external ip")
-		node.Info.ExternalIP = opts.ExternalIP.IP
-	}
-
-	if err = n.storage.Node().Update(n.context, node); err != nil {
+	if err := n.storage.Node().Update(n.context, node); err != nil {
 		log.V(logLevel).Errorf("Node: update Node meta err: %s", err)
 		return err
 	}
