@@ -137,7 +137,7 @@ func (s *NamespaceClient) Update(ctx context.Context, name string, opts rv1.Name
 
 func (s *NamespaceClient) Remove(ctx context.Context, name string, opts rv1.NamespaceRemoveOptions) error {
 
-	s.client.Put(fmt.Sprintf("/namespace/%s", name)).
+	s.client.Delete(fmt.Sprintf("/namespace/%s", name)).
 		AddHeader("Content-Type", "application/json").
 		Do()
 
