@@ -39,6 +39,8 @@ type Deployment struct {
 	Pods     map[string]PodView     `json:"pods"`
 }
 
+type DeploymentList map[string]*Deployment
+
 type DeploymentMeta struct {
 	Name        string `json:"name"`
 	Description string `json:"description"`

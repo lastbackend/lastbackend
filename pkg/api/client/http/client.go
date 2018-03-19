@@ -16,14 +16,30 @@
 // from Last.Backend LLC.
 //
 
-package client
+package http
 
 import (
 	"context"
 
-	"github.com/lastbackend/lastbackend/pkg/api/client/http"
+	"github.com/lastbackend/lastbackend/pkg/api/client/interfaces"
 )
 
-func New(ctx context.Context) (IClient, error) {
-	return http.New(ctx)
+type Client struct {
+	*NamespaceClient
+}
+
+func (s *Client) Namespace() interfaces.Namespace {
+	if s == nil {
+		return nil
+	}
+	return s.NamespaceClient
+}
+
+func New(ctx context.Context) (*Client, error) {
+
+	s := new(Client)
+
+	s.NamespaceClient = newNamespaceClient()
+
+	return s, nil
 }

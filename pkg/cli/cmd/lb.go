@@ -22,7 +22,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/lastbackend/lastbackend/pkg/api/client/core/v1"
+	"github.com/lastbackend/lastbackend/pkg/api/client/http/v1"
 	"github.com/lastbackend/lastbackend/pkg/cli/config"
 	"github.com/lastbackend/lastbackend/pkg/cli/context"
 	"github.com/lastbackend/lastbackend/pkg/cli/storage"
