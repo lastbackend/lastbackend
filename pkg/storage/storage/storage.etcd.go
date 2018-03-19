@@ -24,8 +24,6 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 )
 
-
-
 type Namespace interface {
 	Get(ctx context.Context, name string) (*types.Namespace, error)
 	List(ctx context.Context) (map[string]*types.Namespace, error)
@@ -89,8 +87,8 @@ type Trigger interface {
 	Update(ctx context.Context, trigger *types.Trigger) error
 	Remove(ctx context.Context, trigger *types.Trigger) error
 	Watch(ctx context.Context, trigger chan *types.Trigger) error
-	WatchSpec(ctx context.Context, trigger chan  *types.Trigger) error
-	WatchState(ctx context.Context, trigger chan  *types.Trigger) error
+	WatchSpec(ctx context.Context, trigger chan *types.Trigger) error
+	WatchState(ctx context.Context, trigger chan *types.Trigger) error
 	Clear(ctx context.Context) error
 }
 
@@ -154,5 +152,3 @@ type System interface {
 	ElectWait(ctx context.Context, process *types.Process, lead chan bool) error
 	Clear(ctx context.Context) error
 }
-
-

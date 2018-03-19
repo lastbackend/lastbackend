@@ -20,11 +20,11 @@ package mock
 
 import (
 	"context"
+	"fmt"
+	"github.com/lastbackend/lastbackend/pkg/distribution/errors"
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 	"github.com/lastbackend/lastbackend/pkg/storage/storage"
 	"github.com/lastbackend/lastbackend/pkg/storage/store"
-	"github.com/lastbackend/lastbackend/pkg/distribution/errors"
-	"fmt"
 )
 
 // Namespace Service type for interface in interfaces folder
@@ -87,12 +87,12 @@ func (s *NamespaceStorage) Clear(ctx context.Context) error {
 }
 
 // keyCreate util function
-func (s *NamespaceStorage) keyCreate (name string) string {
+func (s *NamespaceStorage) keyCreate(name string) string {
 	return fmt.Sprintf("%s", name)
 }
 
 // keyGet util function
-func (s *NamespaceStorage) keyGet (namespace *types.Namespace) string {
+func (s *NamespaceStorage) keyGet(namespace *types.Namespace) string {
 	return namespace.SelfLink()
 }
 

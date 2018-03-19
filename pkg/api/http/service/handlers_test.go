@@ -25,7 +25,6 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/lastbackend/lastbackend/pkg/api/envs"
 	"github.com/lastbackend/lastbackend/pkg/api/http/service"
-	"github.com/lastbackend/lastbackend/pkg/api/views"
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 	"github.com/lastbackend/lastbackend/pkg/storage"
 	"github.com/spf13/viper"
@@ -35,6 +34,7 @@ import (
 	"net/http/httptest"
 	"strings"
 	"testing"
+	"github.com/lastbackend/lastbackend/pkg/api/types/v1"
 )
 
 // Testing ServiceInfoH handler
@@ -55,7 +55,7 @@ func TestServiceInfo(t *testing.T) {
 	err = envs.Get().GetStorage().Service().Insert(context.Background(), s1)
 	assert.NoError(t, err)
 
-	v, err := views.V1().Service().New(s1, make(map[string]*types.Deployment, 0), make(map[string]*types.Pod, 0)).ToJson()
+	v, err := v1.View().Service().New(s1, make(map[string]*types.Deployment, 0), make(map[string]*types.Pod, 0)).ToJson()
 	assert.NoError(t, err)
 
 	tests := []struct {
@@ -162,7 +162,7 @@ func TestServiceList(t *testing.T) {
 	sl[s1.SelfLink()] = s1
 	sl[s2.SelfLink()] = s2
 
-	v, err := views.V1().Service().NewList(sl, make(map[string]*types.Deployment, 0)).ToJson()
+	v, err := v1.View().Service().NewList(sl, make(map[string]*types.Deployment, 0)).ToJson()
 	assert.NoError(t, err)
 
 	tests := []struct {
@@ -276,7 +276,7 @@ func TestServiceCreate(t *testing.T) {
 	err = envs.Get().GetStorage().Service().Insert(context.Background(), s1)
 	assert.NoError(t, err)
 
-	v, err := views.V1().Service().New(s1, make(map[string]*types.Deployment, 0), make(map[string]*types.Pod, 0)).ToJson()
+	v, err := v1.View().Service().New(s1, make(map[string]*types.Deployment, 0), make(map[string]*types.Pod, 0)).ToJson()
 	assert.NoError(t, err)
 
 	tests := []struct {
@@ -430,8 +430,6 @@ func TestServiceUpdate(t *testing.T) {
 	ns1 := getNamespaceAsset("demo", "")
 	ns2 := getNamespaceAsset("test", "")
 
-
-
 	err := envs.Get().GetStorage().Namespace().Insert(context.Background(), ns1)
 	assert.NoError(t, err)
 
@@ -441,7 +439,7 @@ func TestServiceUpdate(t *testing.T) {
 	err = envs.Get().GetStorage().Service().Insert(context.Background(), s1)
 	assert.NoError(t, err)
 
-	v, err := views.V1().Service().New(s1, make(map[string]*types.Deployment, 0), make(map[string]*types.Pod, 0)).ToJson()
+	v, err := v1.View().Service().New(s1, make(map[string]*types.Deployment, 0), make(map[string]*types.Pod, 0)).ToJson()
 	assert.NoError(t, err)
 
 	tests := []struct {
@@ -491,15 +489,6 @@ func TestServiceUpdate(t *testing.T) {
 			expectedCode: http.StatusBadRequest,
 		},
 		// TODO: check another spec parameters
-		{
-			name:         "check update service if bad parameter replicas",
-			description:  "incorrect replicas parameter",
-			url:          fmt.Sprintf("/namespace/%s/service/%s", ns1.Meta.Name, s1.Meta.Name),
-			handler:      service.ServiceUpdateH,
-			data:         createServiceUpdateOptions(nil, srtPointer("redis"), intPointer(-1), nil).toJson(),
-			expectedBody: "{\"code\":400,\"status\":\"Bad Parameter\",\"message\":\"Bad replicas parameter\"}",
-			expectedCode: http.StatusBadRequest,
-		},
 		{
 			name:         "check update service success",
 			description:  "successfully",
@@ -620,7 +609,6 @@ func TestServiceRemove(t *testing.T) {
 			if tc.headers != nil {
 				for key, val := range tc.headers {
 					req.Header.Set(key, val)
-
 
 				}
 			}

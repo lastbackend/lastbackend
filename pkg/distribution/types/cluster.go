@@ -18,15 +18,6 @@
 
 package types
 
-import (
-	"encoding/json"
-	"io"
-	"io/ioutil"
-
-	"github.com/lastbackend/lastbackend/pkg/distribution/errors"
-	"github.com/lastbackend/lastbackend/pkg/log"
-)
-
 const (
 	CentralUSRegions = "CU"
 	WestEuropeRegion = "WE"
@@ -69,74 +60,4 @@ type ClusterResources struct {
 	Memory     int64 `json:"memory"`
 	Cpu        int   `json:"cpu"`
 	Storage    int   `json:"storage"`
-}
-
-type ClusterCreateOptions struct {
-	Name        string `json:"name"`
-	Description string `json:"description"`
-}
-
-func (s *ClusterCreateOptions) DecodeAndValidate(reader io.Reader) *errors.Err {
-
-	log.V(logLevel).Debug("Request: Cluster: decode and validate data for creating")
-
-	body, err := ioutil.ReadAll(reader)
-	if err != nil {
-		log.V(logLevel).Errorf("Request: Cluster: decode and validate data for creating err: %s", err)
-		return errors.New("cluster").Unknown(err)
-	}
-
-	err = json.Unmarshal(body, s)
-	if err != nil {
-		log.V(logLevel).Errorf("Request: Cluster: convert struct from json err: %s", err)
-		return errors.New("cluster").IncorrectJSON(err)
-	}
-
-	if s.Name == "" {
-		log.V(logLevel).Error("Request: Cluster: parameter name can not be empty")
-		return errors.New("cluster").BadParameter("name")
-	}
-
-	if len(s.Name) < 4 && len(s.Name) > 64 {
-		log.V(logLevel).Error("Request: Cluster: parameter name not valid")
-		return errors.New("cluster").BadParameter("name")
-	}
-
-	return nil
-}
-
-type ClusterUpdateOptions struct {
-	Name        *string `json:"name"`
-	Description *string `json:"description"`
-}
-
-func (s *ClusterUpdateOptions) DecodeAndValidate(reader io.Reader) *errors.Err {
-
-	log.V(logLevel).Debug("Request: Cluster: decode and validate data for updating")
-
-	body, err := ioutil.ReadAll(reader)
-	if err != nil {
-		log.V(logLevel).Errorf("Request: Cluster: decode and validate data for updating err: %s", err)
-		return errors.New("cluster").Unknown(err)
-	}
-
-	err = json.Unmarshal(body, s)
-	if err != nil {
-		log.V(logLevel).Errorf("Request: Cluster: convert struct from json err: %s", err)
-		return errors.New("cluster").IncorrectJSON(err)
-	}
-
-	if s.Name != nil && *s.Name == "" {
-		log.V(logLevel).Error("Request: Cluster: parameter name can not be empty")
-		return errors.New("cluster").BadParameter("name")
-	}
-
-	if s.Name != nil {
-		if len(*s.Name) < 4 && len(*s.Name) > 64 {
-			log.V(logLevel).Error("Request: Cluster: parameter name not valid")
-			return errors.New("cluster").BadParameter("name")
-		}
-	}
-
-	return nil
 }

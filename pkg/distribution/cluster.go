@@ -23,6 +23,7 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 	"github.com/lastbackend/lastbackend/pkg/log"
 	"github.com/lastbackend/lastbackend/pkg/storage"
+	"github.com/lastbackend/lastbackend/pkg/api/types/v1/request"
 )
 
 // Cluster - distribution model
@@ -52,7 +53,7 @@ func (c *Cluster) Info() (*types.Cluster, error) {
 }
 
 // Update - update cluster stats data and meta information
-func (c *Cluster) Update(cluster *types.Cluster, opts *types.ClusterUpdateOptions) error {
+func (c *Cluster) Update(cluster *types.Cluster, opts *request.ClusterUpdateOptions) error {
 
 	var (
 		err error

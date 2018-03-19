@@ -191,7 +191,6 @@ func (n *Node) RemoveRoute(node *types.Node, route *types.Route) error {
 	return nil
 }
 
-
 func (n *Node) GetSpec(name string) (types.NodeSpec, error) {
 
 	var spec types.NodeSpec
@@ -202,7 +201,6 @@ func (n *Node) GetSpec(name string) (types.NodeSpec, error) {
 func (n *Node) Remove(node *types.Node) error {
 
 	log.V(logLevel).Debugf("Node: remove Node %s", node.Meta.Name)
-
 
 	if err := n.storage.Node().Remove(n.context, node); err != nil {
 		log.V(logLevel).Debugf("Node: remove Node err: %s", err)

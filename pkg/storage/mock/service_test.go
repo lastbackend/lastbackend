@@ -21,11 +21,11 @@ package mock
 import (
 	"testing"
 
+	"context"
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
+	"github.com/lastbackend/lastbackend/pkg/storage/storage"
 	"github.com/lastbackend/lastbackend/pkg/storage/store"
 	"reflect"
-	"github.com/lastbackend/lastbackend/pkg/storage/storage"
-	"context"
 )
 
 func TestServiceStorage_Get(t *testing.T) {
@@ -33,7 +33,7 @@ func TestServiceStorage_Get(t *testing.T) {
 		ns1 = "ns1"
 		stg = newServiceStorage()
 		ctx = context.Background()
-		d   = getServiceAsset(ns1,"test", "")
+		d   = getServiceAsset(ns1, "test", "")
 	)
 
 	type fields struct {
@@ -70,7 +70,6 @@ func TestServiceStorage_Get(t *testing.T) {
 			"",
 		},
 	}
-
 
 	for _, tt := range tests {
 
@@ -116,9 +115,9 @@ func TestServiceStorage_ListByNamespace(t *testing.T) {
 		stg = newServiceStorage()
 		ctx = context.Background()
 		n1  = getServiceAsset(ns1, "test1", "")
-		n2  = getServiceAsset(ns1,"test2", "")
-		n3  = getServiceAsset(ns2,"test1", "")
-		nl= make(map[string]*types.Service, 0)
+		n2  = getServiceAsset(ns1, "test2", "")
+		n3  = getServiceAsset(ns2, "test1", "")
+		nl  = make(map[string]*types.Service, 0)
 	)
 
 	nl0 := map[string]*types.Service{}
@@ -130,7 +129,7 @@ func TestServiceStorage_ListByNamespace(t *testing.T) {
 	nl1[stg.keyGet(&n1)] = &n1
 	nl1[stg.keyGet(&n2)] = &n2
 
-	nl2  := map[string]*types.Service{}
+	nl2 := map[string]*types.Service{}
 	nl2[stg.keyGet(&n3)] = &n3
 
 	type fields struct {
@@ -204,10 +203,10 @@ func TestServiceStorage_SetState(t *testing.T) {
 		ns1 = "ns1"
 		stg = newServiceStorage()
 		ctx = context.Background()
-		n1  = getServiceAsset(ns1,"test1", "")
-		n2  = getServiceAsset(ns1,"test1", "")
-		n3  = getServiceAsset(ns1,"test2", "")
-		nl= make([]*types.Service, 0)
+		n1  = getServiceAsset(ns1, "test1", "")
+		n2  = getServiceAsset(ns1, "test1", "")
+		n3  = getServiceAsset(ns1, "test2", "")
+		nl  = make([]*types.Service, 0)
 	)
 
 	n2.State.Provision = true
@@ -220,7 +219,7 @@ func TestServiceStorage_SetState(t *testing.T) {
 	}
 
 	type args struct {
-		ctx  context.Context
+		ctx     context.Context
 		service *types.Service
 	}
 
@@ -308,10 +307,10 @@ func TestServiceStorage_SetSpec(t *testing.T) {
 		ns1 = "ns1"
 		stg = newServiceStorage()
 		ctx = context.Background()
-		n1  = getServiceAsset(ns1,"test1", "")
-		n2  = getServiceAsset(ns1,"test1", "")
-		n3  = getServiceAsset(ns1,"test2", "")
-		nl= make([]*types.Service, 0)
+		n1  = getServiceAsset(ns1, "test1", "")
+		n2  = getServiceAsset(ns1, "test1", "")
+		n3  = getServiceAsset(ns1, "test2", "")
+		nl  = make([]*types.Service, 0)
 	)
 
 	n2.Spec.Template.Termination = 1
@@ -323,7 +322,7 @@ func TestServiceStorage_SetSpec(t *testing.T) {
 	}
 
 	type args struct {
-		ctx  context.Context
+		ctx     context.Context
 		service *types.Service
 	}
 
@@ -360,7 +359,6 @@ func TestServiceStorage_SetSpec(t *testing.T) {
 			store.ErrEntityNotFound,
 		},
 	}
-
 
 	for _, tt := range tests {
 
@@ -412,8 +410,8 @@ func TestServiceStorage_Insert(t *testing.T) {
 		ns1 = "ns1"
 		stg = newServiceStorage()
 		ctx = context.Background()
-		n1   = getServiceAsset(ns1,"test", "")
-		n2   = getServiceAsset(ns1,"", "",)
+		n1  = getServiceAsset(ns1, "test", "")
+		n2  = getServiceAsset(ns1, "", "")
 	)
 
 	n2.Meta.Name = ""
@@ -423,7 +421,7 @@ func TestServiceStorage_Insert(t *testing.T) {
 	}
 
 	type args struct {
-		ctx  context.Context
+		ctx     context.Context
 		service *types.Service
 	}
 
@@ -497,10 +495,10 @@ func TestServiceStorage_Update(t *testing.T) {
 		ns1 = "ns1"
 		stg = newServiceStorage()
 		ctx = context.Background()
-		n1  = getServiceAsset(ns1,"test1", "")
-		n2  = getServiceAsset(ns1,"test1", "test")
-		n3  = getServiceAsset(ns1,"test2", "")
-		nl= make([]*types.Service, 0)
+		n1  = getServiceAsset(ns1, "test1", "")
+		n2  = getServiceAsset(ns1, "test1", "test")
+		n3  = getServiceAsset(ns1, "test2", "")
+		nl  = make([]*types.Service, 0)
 	)
 
 	nl0 := append(nl, &n1)
@@ -510,7 +508,7 @@ func TestServiceStorage_Update(t *testing.T) {
 	}
 
 	type args struct {
-		ctx  context.Context
+		ctx     context.Context
 		service *types.Service
 	}
 
@@ -598,8 +596,8 @@ func TestServiceStorage_Remove(t *testing.T) {
 		ns1 = "ns1"
 		stg = newServiceStorage()
 		ctx = context.Background()
-		n1  = getServiceAsset(ns1,"test1", "")
-		n2  = getServiceAsset(ns1,"test2", "")
+		n1  = getServiceAsset(ns1, "test1", "")
+		n2  = getServiceAsset(ns1, "test2", "")
 	)
 
 	type fields struct {
@@ -607,7 +605,7 @@ func TestServiceStorage_Remove(t *testing.T) {
 	}
 
 	type args struct {
-		ctx  context.Context
+		ctx     context.Context
 		service *types.Service
 	}
 
@@ -646,7 +644,6 @@ func TestServiceStorage_Remove(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-
 
 		if err := stg.Clear(ctx); err != nil {
 			t.Errorf("ServiceStorage.Remove() storage setup error = %v", err)
@@ -699,7 +696,7 @@ func TestServiceStorage_Watch(t *testing.T) {
 		stg storage.Service
 	}
 	type args struct {
-		ctx  context.Context
+		ctx     context.Context
 		service chan *types.Service
 	}
 	tests := []struct {
@@ -734,7 +731,7 @@ func TestServiceStorage_WatchSpec(t *testing.T) {
 		stg storage.Service
 	}
 	type args struct {
-		ctx  context.Context
+		ctx     context.Context
 		service chan *types.Service
 	}
 	tests := []struct {

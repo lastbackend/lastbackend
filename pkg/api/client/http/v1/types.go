@@ -20,7 +20,7 @@ package v1
 
 type Config struct {
 	Endpoint string
-	TLS struct {
+	TLS      struct {
 		Key  string
 		Cert string
 		CA   string

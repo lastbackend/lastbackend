@@ -25,7 +25,6 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/lastbackend/lastbackend/pkg/api/envs"
 	"github.com/lastbackend/lastbackend/pkg/api/http/namespace"
-	"github.com/lastbackend/lastbackend/pkg/api/views"
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 	"github.com/lastbackend/lastbackend/pkg/storage"
 	"github.com/spf13/viper"
@@ -35,6 +34,8 @@ import (
 	"net/http/httptest"
 	"strings"
 	"testing"
+	"github.com/lastbackend/lastbackend/pkg/api/types/v1"
+	"github.com/lastbackend/lastbackend/pkg/api/types/v1/request"
 )
 
 // Testing NamespaceInfoH handler
@@ -47,9 +48,9 @@ func TestNamespaceInfo(t *testing.T) {
 	ns1 := getNamespaceAsset("demo", "")
 	ns2 := getNamespaceAsset("test", "")
 
-	nl  := make(map[string]*types.Namespace)
-	nl[ns1.Meta.Name]=ns1
-	nl[ns2.Meta.Name]=ns2
+	nl := make(map[string]*types.Namespace)
+	nl[ns1.Meta.Name] = ns1
+	nl[ns2.Meta.Name] = ns2
 
 	err := envs.Get().GetStorage().Namespace().Clear(context.Background())
 	assert.NoError(t, err)
@@ -57,7 +58,7 @@ func TestNamespaceInfo(t *testing.T) {
 	err = envs.Get().GetStorage().Namespace().Insert(context.Background(), ns1)
 	assert.NoError(t, err)
 
-	v, err := views.V1().Namespace().New(ns1).ToJson()
+	v, err := v1.View().Namespace().New(ns1).ToJson()
 	assert.NoError(t, err)
 
 	tests := []struct {
@@ -134,9 +135,9 @@ func TestNamespaceList(t *testing.T) {
 	ns1 := getNamespaceAsset("demo", "")
 	ns2 := getNamespaceAsset("test", "")
 
-	nl  := make(map[string]*types.Namespace)
-	nl[ns1.Meta.Name]=ns1
-	nl[ns2.Meta.Name]=ns2
+	nl := make(map[string]*types.Namespace)
+	nl[ns1.Meta.Name] = ns1
+	nl[ns2.Meta.Name] = ns2
 
 	err := envs.Get().GetStorage().Namespace().Clear(context.Background())
 	assert.NoError(t, err)
@@ -147,7 +148,7 @@ func TestNamespaceList(t *testing.T) {
 	err = envs.Get().GetStorage().Namespace().Insert(context.Background(), ns2)
 	assert.NoError(t, err)
 
-	v, err := views.V1().Namespace().NewList(nl).ToJson()
+	v, err := v1.View().Namespace().NewList(nl).ToJson()
 	assert.NoError(t, err)
 
 	tests := []struct {
@@ -208,10 +209,10 @@ func TestNamespaceList(t *testing.T) {
 }
 
 type NamespaceCreateOptions struct {
-	types.NamespaceCreateOptions
+	request.NamespaceCreateOptions
 }
 
-func createNamespaceCreateOptions(name, description string, quotas *types.NamespaceQuotasOptions) *NamespaceCreateOptions {
+func createNamespaceCreateOptions(name, description string, quotas *request.NamespaceQuotasOptions) *NamespaceCreateOptions {
 	opts := new(NamespaceCreateOptions)
 	opts.Name = name
 	opts.Description = description
@@ -239,7 +240,7 @@ func TestNamespaceCreate(t *testing.T) {
 	err = envs.Get().GetStorage().Namespace().Insert(context.Background(), ns1)
 	assert.NoError(t, err)
 
-	v, err := views.V1().Namespace().New(ns1).ToJson()
+	v, err := v1.View().Namespace().New(ns1).ToJson()
 	assert.NoError(t, err)
 
 	tests := []struct {
@@ -266,7 +267,7 @@ func TestNamespaceCreate(t *testing.T) {
 			description:  "successfully",
 			url:          "/namespace",
 			handler:      namespace.NamespaceCreateH,
-			data:         createNamespaceCreateOptions("__test", "", &types.NamespaceQuotasOptions{RAM: 2, Routes: 1}).toJson(),
+			data:         createNamespaceCreateOptions("__test", "", &request.NamespaceQuotasOptions{RAM: 2, Routes: 1}).toJson(),
 			expectedBody: "{\"code\":400,\"status\":\"Bad Parameter\",\"message\":\"Bad name parameter\"}",
 			expectedCode: http.StatusBadRequest,
 		},
@@ -284,7 +285,7 @@ func TestNamespaceCreate(t *testing.T) {
 			description:  "successfully",
 			url:          "/namespace",
 			handler:      namespace.NamespaceCreateH,
-			data:         createNamespaceCreateOptions("test", "", &types.NamespaceQuotasOptions{RAM: 2, Routes: 1}).toJson(),
+			data:         createNamespaceCreateOptions("test", "", &request.NamespaceQuotasOptions{RAM: 2, Routes: 1}).toJson(),
 			expectedBody: string(v),
 			expectedCode: http.StatusOK,
 		},
@@ -334,10 +335,10 @@ func TestNamespaceCreate(t *testing.T) {
 }
 
 type NamespaceUpdateOptions struct {
-	types.NamespaceUpdateOptions
+	request.NamespaceUpdateOptions
 }
 
-func createNamespaceUpdateOptions(description *string, quotas *types.NamespaceQuotasOptions) *NamespaceUpdateOptions {
+func createNamespaceUpdateOptions(description *string, quotas *request.NamespaceQuotasOptions) *NamespaceUpdateOptions {
 	opts := new(NamespaceUpdateOptions)
 	opts.Description = description
 	opts.Quotas = quotas
@@ -358,7 +359,7 @@ func TestNamespaceUpdate(t *testing.T) {
 
 	ns1 := getNamespaceAsset("demo", "")
 	ns2 := getNamespaceAsset("demo", "")
-	ns2.Resources.RAM    = 512
+	ns2.Resources.RAM = 512
 	ns2.Resources.Routes = 2
 	ns3 := getNamespaceAsset("empty", "")
 
@@ -368,7 +369,7 @@ func TestNamespaceUpdate(t *testing.T) {
 	err = envs.Get().GetStorage().Namespace().Insert(context.Background(), ns1)
 	assert.NoError(t, err)
 
-	v, err := views.V1().Namespace().New(ns2).ToJson()
+	v, err := v1.View().Namespace().New(ns2).ToJson()
 	assert.NoError(t, err)
 
 	tests := []struct {
@@ -400,7 +401,7 @@ func TestNamespaceUpdate(t *testing.T) {
 			url:          fmt.Sprintf("/namespace/%s", ns1.Meta.Name),
 			handler:      namespace.NamespaceUpdateH,
 			description:  "successfully",
-			data:         createNamespaceUpdateOptions(nil, &types.NamespaceQuotasOptions{RAM: ns2.Resources.RAM, Routes: ns2.Resources.Routes}).toJson(),
+			data:         createNamespaceUpdateOptions(nil, &request.NamespaceQuotasOptions{RAM: ns2.Resources.RAM, Routes: ns2.Resources.Routes}).toJson(),
 			expectedBody: string(v),
 			expectedCode: http.StatusOK,
 		},

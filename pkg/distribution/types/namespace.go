@@ -20,13 +20,6 @@ package types
 
 import (
 	"encoding/json"
-	"io"
-	"io/ioutil"
-	"strings"
-
-	"github.com/lastbackend/lastbackend/pkg/distribution/errors"
-	"github.com/lastbackend/lastbackend/pkg/log"
-	"github.com/lastbackend/lastbackend/pkg/util/validator"
 	"fmt"
 )
 
@@ -48,7 +41,7 @@ type NamespaceEnv struct {
 }
 
 type NamespaceMeta struct {
-	Meta     `yaml:",inline"`
+	Meta            `yaml:",inline"`
 	Endpoint string `json:"endpoint"`
 	Type     string `json:"type"`
 }
@@ -64,7 +57,7 @@ type NamespaceQuotas struct {
 	Disabled bool  `json:"disabled"`
 }
 
-func (n *Namespace) SelfLink () string {
+func (n *Namespace) SelfLink() string {
 	if n.Meta.SelfLink == "" {
 		n.Meta.SelfLink = fmt.Sprintf("%s", n.Meta.Name)
 	}
@@ -88,71 +81,4 @@ func (n *NamespaceList) ToJson() ([]byte, error) {
 		return nil, err
 	}
 	return buf, nil
-}
-
-type NamespaceCreateOptions struct {
-	Name        string                  `json:"name"`
-	Description string                  `json:"description"`
-	Quotas      *NamespaceQuotasOptions `json:"quotas"`
-}
-
-func (s *NamespaceCreateOptions) DecodeAndValidate(reader io.Reader) *errors.Err {
-
-	log.V(logLevel).Debug("Request: Namespace: decode and validate data")
-
-	body, err := ioutil.ReadAll(reader)
-	if err != nil {
-		log.V(logLevel).Errorf("Request: Namespace: decode and validate data err: %s", err)
-		return errors.New("namespace").Unknown(err)
-	}
-
-	err = json.Unmarshal(body, s)
-	if err != nil {
-		log.V(logLevel).Errorf("Request: Namespace: convert struct from json err: %s", err)
-		return errors.New("namespace").IncorrectJSON(err)
-	}
-
-	if s.Name == "" {
-		log.V(logLevel).Error("Request: Namespace: parameter name can not be empty")
-		return errors.New("namespace").BadParameter("name")
-	}
-
-	s.Name = strings.ToLower(s.Name)
-
-	if len(s.Name) < 4 || len(s.Name) > 64 || !validator.IsNamespaceName(s.Name) {
-		log.V(logLevel).Error("Request: Namespace: parameter name not valid")
-		return errors.New("namespace").BadParameter("name")
-	}
-
-	return nil
-}
-
-type NamespaceUpdateOptions struct {
-	Description *string                 `json:"description"`
-	Quotas      *NamespaceQuotasOptions `json:"quotas"`
-}
-
-type NamespaceQuotasOptions struct {
-	Disabled bool  `json:"disabled"`
-	RAM      int64 `json:"ram"`
-	Routes   int   `json:"routes"`
-}
-
-func (s *NamespaceUpdateOptions) DecodeAndValidate(reader io.Reader) *errors.Err {
-
-	log.V(logLevel).Debug("Request: Namespace: decode and validate data")
-
-	body, err := ioutil.ReadAll(reader)
-	if err != nil {
-		log.V(logLevel).Errorf("Request: Namespace: decode and validate data err: %s", err)
-		return errors.New("namespace").Unknown(err)
-	}
-
-	err = json.Unmarshal(body, s)
-	if err != nil {
-		log.V(logLevel).Errorf("Request: Namespace: convert struct from json err: %s", err)
-		return errors.New("namespace").IncorrectJSON(err)
-	}
-
-	return nil
 }

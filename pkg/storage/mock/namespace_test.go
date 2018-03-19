@@ -174,8 +174,8 @@ func TestNamespaceStorage_Insert(t *testing.T) {
 	var (
 		stg = newNamespaceStorage()
 		ctx = context.Background()
-		n1   = getNamespaceAsset("test", "")
-		n2   = getNamespaceAsset("", "",)
+		n1  = getNamespaceAsset("test", "")
+		n2  = getNamespaceAsset("", "")
 	)
 
 	type fields struct {
@@ -183,7 +183,7 @@ func TestNamespaceStorage_Insert(t *testing.T) {
 	}
 
 	type args struct {
-		ctx  context.Context
+		ctx       context.Context
 		namespace *types.Namespace
 	}
 
@@ -267,7 +267,7 @@ func TestNamespaceStorage_Update(t *testing.T) {
 	}
 
 	type args struct {
-		ctx  context.Context
+		ctx     context.Context
 		naspace *types.Namespace
 	}
 
@@ -304,8 +304,6 @@ func TestNamespaceStorage_Update(t *testing.T) {
 			store.ErrEntityNotFound,
 		},
 	}
-
-
 
 	for _, tt := range tests {
 
@@ -359,13 +357,12 @@ func TestNamespaceStorage_Remove(t *testing.T) {
 		n2  = getNamespaceAsset("test2", "")
 	)
 
-
 	type fields struct {
 		stg storage.Namespace
 	}
 
 	type args struct {
-		ctx  context.Context
+		ctx       context.Context
 		namespace *types.Namespace
 	}
 

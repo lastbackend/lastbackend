@@ -19,7 +19,7 @@
 package route
 
 import (
-	v "github.com/lastbackend/lastbackend/pkg/api/views"
+	"github.com/lastbackend/lastbackend/pkg/api/types/v1"
 
 	"github.com/lastbackend/lastbackend/pkg/api/envs"
 	"github.com/lastbackend/lastbackend/pkg/distribution"
@@ -53,7 +53,7 @@ func RouteListH(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	response, err := v.V1().Route().NewList(items).ToJson()
+	response, err := v1.View().Route().NewList(items).ToJson()
 	if err != nil {
 		log.V(logLevel).Errorf("Handler: Route: convert struct to json err: %s", err)
 		errors.HTTP.InternalServerError(w)
@@ -95,7 +95,7 @@ func RouteInfoH(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	response, err := v.V1().Route().New(item).ToJson()
+	response, err := v1.View().Route().New(item).ToJson()
 	if err != nil {
 		log.V(logLevel).Errorf("Handler: Route: convert struct to json err: %s", err)
 		errors.HTTP.InternalServerError(w)
@@ -125,7 +125,7 @@ func RouteCreateH(w http.ResponseWriter, r *http.Request) {
 	)
 
 	// request body struct
-	opts := new(types.RouteOptions)
+	opts := v1.Request().Route().CreateOptions()
 	if err := opts.DecodeAndValidate(r.Body); err != nil {
 		log.V(logLevel).Errorf("Handler: Route: validation incoming data err: %s", err.Err())
 		err.Http(w)
@@ -153,7 +153,7 @@ func RouteCreateH(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	response, err := v.V1().Route().New(rs).ToJson()
+	response, err := v1.View().Route().New(rs).ToJson()
 	if err != nil {
 		log.V(logLevel).Errorf("Handler: Route: convert struct to json err: %s", err)
 		errors.HTTP.InternalServerError(w)
@@ -181,10 +181,10 @@ func RouteUpdateH(w http.ResponseWriter, r *http.Request) {
 	)
 
 	// request body struct
-	opts := new(types.RouteOptions)
+	opts := v1.Request().Route().UpdateOptions()
 	if err := opts.DecodeAndValidate(r.Body); err != nil {
 		log.V(logLevel).Errorf("Handler: Route: validation incoming data err: %s", err.Err())
-		errors.New("Invalid incoming data").Unknown().Http(w)
+		err.Http(w)
 		return
 	}
 
@@ -218,7 +218,7 @@ func RouteUpdateH(w http.ResponseWriter, r *http.Request) {
 		errors.HTTP.InternalServerError(w)
 	}
 
-	response, err := v.V1().Route().New(rs).ToJson()
+	response, err := v1.View().Route().New(rs).ToJson()
 	if err != nil {
 		log.V(logLevel).Errorf("Handler: Route: convert struct to json err: %s", err)
 		errors.HTTP.InternalServerError(w)
@@ -247,6 +247,14 @@ func RouteRemoveH(w http.ResponseWriter, r *http.Request) {
 		rm = distribution.NewRouteModel(r.Context(), envs.Get().GetStorage())
 		ns = r.Context().Value("namespace").(*types.Namespace)
 	)
+
+	// request body struct
+	opts := v1.Request().Route().RemoveOptions()
+	if err := opts.DecodeAndValidate(r.Body); err != nil {
+		log.V(logLevel).Errorf("Handler: Route: validation incoming data err: %s", err.Err())
+		err.Http(w)
+		return
+	}
 
 	rs, err := rm.Get(ns.Meta.Name, rid)
 	if err != nil {

@@ -21,7 +21,7 @@ package node
 import (
 	"net/http"
 
-	v "github.com/lastbackend/lastbackend/pkg/api/views"
+	"github.com/lastbackend/lastbackend/pkg/api/types/v1"
 	"github.com/lastbackend/lastbackend/pkg/api/envs"
 	"github.com/lastbackend/lastbackend/pkg/distribution"
 	"github.com/lastbackend/lastbackend/pkg/distribution/errors"
@@ -58,7 +58,7 @@ func NodeGetH(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	response, err := v.V1().Node().New(n).ToJson()
+	response, err := v1.View().Node().New(n).ToJson()
 	if err != nil {
 		log.V(logLevel).Errorf("Handler: Node: convert struct to json err: %s", err)
 		errors.HTTP.InternalServerError(w)
@@ -94,7 +94,7 @@ func NodeGetSpecH(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	response, err := v.V1().Node().NewSpec(n).ToJson()
+	response, err := v1.View().Node().NewSpec(n).ToJson()
 	if err != nil {
 		log.V(logLevel).Errorf("Handler: Node: convert struct to json err: %s", err)
 		errors.HTTP.InternalServerError(w)
@@ -123,7 +123,7 @@ func NodeListH(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	response, err := v.V1().Node().NewList(nodes).ToJson()
+	response, err := v1.View().Node().NewList(nodes).ToJson()
 	if err != nil {
 		log.V(logLevel).Errorf("Handler: Node: convert struct to json err: %s", err)
 		errors.HTTP.InternalServerError(w)
@@ -149,11 +149,11 @@ func NodeUpdateH(w http.ResponseWriter, r *http.Request) {
 
 	// request body struct
 	opts := new(types.NodeUpdateOptions)
-	//if err := opts.DecodeAndValidate(r.Body); err != nil {
-	//	log.V(logLevel).Errorf("Handler: Node: validation incoming data", err)
-	//	errors.New("Invalid incoming data").Unknown().Http(w)
-	//	return
-	//}
+	if err := opts.DecodeAndValidate(r.Body); err != nil {
+		log.V(logLevel).Errorf("Handler: Node: validation incoming data", err)
+		err.Http(w)
+		return
+	}
 
 	n, err := nm.Get(nid)
 	if err != nil {
@@ -169,7 +169,7 @@ func NodeUpdateH(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	response, err := v.V1().Node().New(n).ToJson()
+	response, err := v1.View().Node().New(n).ToJson()
 	if err != nil {
 		log.V(logLevel).Errorf("Handler: Node: convert struct to json err: %s", err)
 		errors.HTTP.InternalServerError(w)
@@ -198,7 +198,7 @@ func NodeSetInfoH(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	response, err := v.V1().Node().NewList(nodes).ToJson()
+	response, err := v1.View().Node().NewList(nodes).ToJson()
 	if err != nil {
 		log.V(logLevel).Errorf("Handler: Node: convert struct to json err: %s", err)
 		errors.HTTP.InternalServerError(w)
@@ -272,6 +272,14 @@ func NodeRemoveH(w http.ResponseWriter, r *http.Request) {
 		nm  = distribution.NewNodeModel(r.Context(), envs.Get().GetStorage())
 		nid = utils.Vars(r)["node"]
 	)
+
+	// request body struct
+	opts := v1.Request().Node().RemoveOptions()
+	if err := opts.DecodeAndValidate(r.Body); err != nil {
+		log.V(logLevel).Errorf("Handler: Node: validation incoming data err: %s", err)
+		err.Http(w)
+		return
+	}
 
 	n, err := nm.Get(nid)
 	if err != nil {

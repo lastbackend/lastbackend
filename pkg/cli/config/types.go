@@ -20,5 +20,5 @@ package config
 
 // The structure of the _cfg to run the client
 type Config struct {
-	Debug   bool
+	Debug bool
 }

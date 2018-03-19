@@ -45,7 +45,7 @@ func IsEmail(s string) bool {
 	return govalidator.IsEmail(s)
 }
 
-func IsUsername(s string) bool {
+func IsNamespaceName(s string) bool {
 	reg, _ := regexp.Compile("[A-Za-z0-9]+(?:[_-][A-Za-z0-9]+)*")
 	str := reg.FindStringSubmatch(s)
 	if len(str) == 1 && str[0] == s && len(s) >= 4 && len(s) <= 64 {
@@ -54,39 +54,8 @@ func IsUsername(s string) bool {
 	return false
 }
 
-func IsPassword(s string) bool {
-	return len(s) > 6
-}
-
-func IsNamespaceName(s string) bool {
-	reg, _ := regexp.Compile("[a-z]+(?:[_-][a-z0-9]+)*")
-	str := reg.FindStringSubmatch(s)
-	if len(str) == 1 && str[0] == s && len(s) >= 4 && len(s) <= 64 {
-		return true
-	}
-	return false
-}
-
 func IsServiceName(s string) bool {
-	reg, _ := regexp.Compile("[a-z]+(?:[_-][a-z0-9]+)*")
-	str := reg.FindStringSubmatch(s)
-	if len(str) == 1 && str[0] == s && len(s) >= 4 && len(s) <= 64 {
-		return true
-	}
-	return false
-}
-
-func IsRepoName(s string) bool {
-	reg, _ := regexp.Compile("[a-z0-9]+(?:[._-][a-z0-9]+)*")
-	str := reg.FindStringSubmatch(s)
-	if len(str) == 1 && str[0] == s && len(s) > 0 {
-		return true
-	}
-	return false
-}
-
-func IsAppName(s string) bool {
-	reg, _ := regexp.Compile("[a-z]+(?:[_-][a-z0-9]+)*")
+	reg, _ := regexp.Compile("[A-Za-z0-9]+(?:[_-][A-Za-z0-9]+)*")
 	str := reg.FindStringSubmatch(s)
 	if len(str) == 1 && str[0] == s && len(s) >= 4 && len(s) <= 64 {
 		return true

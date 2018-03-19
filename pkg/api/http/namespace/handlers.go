@@ -19,12 +19,10 @@
 package namespace
 
 import (
-	v "github.com/lastbackend/lastbackend/pkg/api/views"
-
+	"github.com/lastbackend/lastbackend/pkg/api/types/v1"
 	"github.com/lastbackend/lastbackend/pkg/api/envs"
 	"github.com/lastbackend/lastbackend/pkg/distribution"
 	"github.com/lastbackend/lastbackend/pkg/distribution/errors"
-	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 	"github.com/lastbackend/lastbackend/pkg/log"
 	"github.com/lastbackend/lastbackend/pkg/util/http/utils"
 	"net/http"
@@ -47,7 +45,7 @@ func NamespaceListH(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	response, err := v.V1().Namespace().NewList(items).ToJson()
+	response, err := v1.View().Namespace().NewList(items).ToJson()
 	if err != nil {
 		log.V(logLevel).Errorf("Handler: Namespace: convert struct to json err: %s", err)
 		errors.HTTP.InternalServerError(w)
@@ -82,7 +80,7 @@ func NamespaceInfoH(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	response, err := v.V1().Namespace().New(ns).ToJson()
+	response, err := v1.View().Namespace().New(ns).ToJson()
 	if err != nil {
 		log.V(logLevel).Errorf("Handler: Namespace: convert struct to json err: %s", err)
 		errors.HTTP.InternalServerError(w)
@@ -104,9 +102,10 @@ func NamespaceCreateH(w http.ResponseWriter, r *http.Request) {
 		nsm = distribution.NewNamespaceModel(r.Context(), envs.Get().GetStorage())
 	)
 
-	opts := new(types.NamespaceCreateOptions)
+	// request body struct
+	opts := v1.Request().Namespace().CreateOptions()
 	if err := opts.DecodeAndValidate(r.Body); err != nil {
-		log.V(logLevel).Errorf("Handler: Namespace: validation incoming data err: %s", err.Err())
+		log.V(logLevel).Errorf("Handler: Namespace: validation incoming data err: %s", err)
 		err.Http(w)
 		return
 	}
@@ -130,7 +129,7 @@ func NamespaceCreateH(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	response, err := v.V1().Namespace().New(ns).ToJson()
+	response, err := v1.View().Namespace().New(ns).ToJson()
 	if err != nil {
 		log.V(logLevel).Errorf("Handler: Namespace: convert struct to json err: %s", err)
 		errors.HTTP.InternalServerError(w)
@@ -155,9 +154,9 @@ func NamespaceUpdateH(w http.ResponseWriter, r *http.Request) {
 	)
 
 	// request body struct
-	opts := new(types.NamespaceUpdateOptions)
+	opts := v1.Request().Namespace().UpdateOptions()
 	if err := opts.DecodeAndValidate(r.Body); err != nil {
-		log.V(logLevel).Errorf("Handler: Namespace: validation incoming data err: %s", err.Err())
+		log.V(logLevel).Errorf("Handler: Namespace: validation incoming data err: %s", err)
 		err.Http(w)
 		return
 	}
@@ -180,7 +179,7 @@ func NamespaceUpdateH(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	response, err := v.V1().Namespace().New(ns).ToJson()
+	response, err := v1.View().Namespace().New(ns).ToJson()
 	if err != nil {
 		log.V(logLevel).Errorf("Handler: Namespace: convert struct to json err: %s", err)
 		errors.HTTP.InternalServerError(w)
@@ -204,6 +203,14 @@ func NamespaceRemoveH(w http.ResponseWriter, r *http.Request) {
 		nsm = distribution.NewNamespaceModel(r.Context(), envs.Get().GetStorage())
 		sm  = distribution.NewServiceModel(r.Context(), envs.Get().GetStorage())
 	)
+
+	// request body struct
+	opts := v1.Request().Namespace().RemoveOptions()
+	if err := opts.DecodeAndValidate(r.Body); err != nil {
+		log.V(logLevel).Errorf("Handler: Namespace: validation incoming data err: %s", err)
+		err.Http(w)
+		return
+	}
 
 	ns, err := nsm.Get(nid)
 	if err != nil {

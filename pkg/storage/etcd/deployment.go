@@ -40,7 +40,6 @@ func (s *DeploymentStorage) Get(ctx context.Context, namespace, service, name st
 
 	log.V(logLevel).Debugf("Storage: Deployment: get by name: %s", name)
 
-
 	if len(name) == 0 {
 		err := errors.New("name can not be empty")
 		log.V(logLevel).Errorf("Storage: Deployment: get deployment err: %s", err.Error())
@@ -50,7 +49,7 @@ func (s *DeploymentStorage) Get(ctx context.Context, namespace, service, name st
 	const filter = `\b.+` + deploymentStorage + `\/.+\/(?:meta|state)\b`
 
 	var (
-		deployment               = new(types.Deployment)
+		deployment = new(types.Deployment)
 	)
 
 	deployment.Spec = types.DeploymentSpec{}
@@ -77,7 +76,6 @@ func (s *DeploymentStorage) Get(ctx context.Context, namespace, service, name st
 		log.V(logLevel).Errorf("Storage: Deployment: Map deployment `%s` spec err: %s", name, err.Error())
 		return nil, err
 	}
-
 
 	return deployment, nil
 }
@@ -120,7 +118,6 @@ func (s *DeploymentStorage) updateState(ctx context.Context, deployment *types.D
 	return nil
 }
 
-
 func (s *DeploymentStorage) SpecWatch(ctx context.Context, deployment chan *types.Deployment) error {
 
 	log.V(logLevel).Debug("Storage: Deployment: watch deployment by spec")
@@ -157,12 +154,12 @@ func (s *DeploymentStorage) SpecWatch(ctx context.Context, deployment chan *type
 }
 
 // keyCreate util function
-func (s *DeploymentStorage) keyCreate (namespace, service, name string) string {
+func (s *DeploymentStorage) keyCreate(namespace, service, name string) string {
 	return fmt.Sprintf("%s:%s:%s", namespace, service, name)
 }
 
 // keyGet util function
-func (s *DeploymentStorage) keyGet (d * types.Deployment) string {
+func (s *DeploymentStorage) keyGet(d *types.Deployment) string {
 	return s.keyCreate(d.Meta.Namespace, d.Meta.Service, d.Meta.Name)
 }
 

@@ -168,7 +168,7 @@ func (s *NamespaceStorage) Remove(ctx context.Context, namespace *types.Namespac
 
 	client, destroy, err := getClient(ctx)
 	if err != nil {
-		log.V(logLevel).Errorf("Storage: Namespace: create client err: %s", err.Error( ))
+		log.V(logLevel).Errorf("Storage: Namespace: create client err: %s", err.Error())
 		return err
 	}
 	defer destroy()
