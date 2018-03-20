@@ -25,6 +25,8 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/api/client/interfaces"
 	rv1 "github.com/lastbackend/lastbackend/pkg/api/types/v1/request"
 	vv1 "github.com/lastbackend/lastbackend/pkg/api/types/v1/views"
+	"github.com/lastbackend/lastbackend/pkg/distribution/errors"
+	"encoding/json"
 )
 
 type ClusterClient struct {
@@ -40,12 +42,66 @@ func (s *ClusterClient) Node(hostname ...string) *NodeClient {
 	return newNodeClient(s.client, hst)
 }
 
-func (s *ClusterClient) Get(ctx context.Context) (*vv1.ClusterList, error) {
-	return nil, nil
+func (s *ClusterClient) Get(ctx context.Context) (*vv1.Cluster, error) {
+
+	req := s.client.Get("/cluster").
+		AddHeader("Content-Type", "application/json").
+		Do()
+
+	buf, err := req.Raw()
+	if err != nil {
+		return nil, err
+	}
+
+	if code := req.StatusCode(); 200 > code || code > 299 {
+		var e *errors.Http
+		if err := json.Unmarshal(buf, &e); err != nil {
+			return nil, err
+		}
+		return nil, errors.New(e.Message)
+	}
+
+	var cl *vv1.Cluster
+
+	if err := json.Unmarshal(buf, &cl); err != nil {
+		return nil, err
+	}
+
+	return cl, nil
 }
 
 func (s *ClusterClient) Update(ctx context.Context, opts *rv1.ClusterUpdateOptions) (*vv1.Cluster, error) {
-	return nil, nil
+
+	body, err := opts.ToJson()
+	if err != nil {
+		return nil, err
+	}
+
+	req := s.client.Put("/cluster").
+		AddHeader("Content-Type", "application/json").
+		Body(body).
+		Do()
+
+	buf, err := req.Raw()
+	if err != nil {
+		return nil, err
+	}
+
+	if code := req.StatusCode(); 200 > code || code > 299 {
+		var e *errors.Http
+		if err := json.Unmarshal(buf, &e); err != nil {
+			return nil, err
+		}
+		return nil, errors.New(e.Message)
+	}
+
+	var cl *vv1.Cluster
+
+	if err := json.Unmarshal(buf, &cl); err != nil {
+		return nil, err
+	}
+
+	return cl, nil
 }
 
 func newClusterClient(req http.Interface) *ClusterClient {

@@ -25,35 +25,161 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/api/client/interfaces"
 	rv1 "github.com/lastbackend/lastbackend/pkg/api/types/v1/request"
 	vv1 "github.com/lastbackend/lastbackend/pkg/api/types/v1/views"
+	"fmt"
+	"github.com/lastbackend/lastbackend/pkg/distribution/errors"
+	"encoding/json"
 )
 
 type TriggerClient struct {
 	interfaces.Trigger
-	req       http.Interface
+	client    http.Interface
 	namespace string
 	service   string
+	name      string
 }
 
-func (s *TriggerClient) Create(ctx context.Context, namespace, service string, opts *rv1.TriggerCreateOptions) (*vv1.Trigger, error) {
-	return nil, nil
+func (s *TriggerClient) Create(ctx context.Context, opts *rv1.TriggerCreateOptions) (*vv1.Trigger, error) {
+
+	body, err := opts.ToJson()
+	if err != nil {
+		return nil, err
+	}
+
+	req := s.client.Post(fmt.Sprintf("/namespace/%s/service/%s/trigger", s.namespace, s.service)).
+		AddHeader("Content-Type", "application/json").
+		Body(body).
+		Do()
+
+	if err := req.Error(); err != nil {
+		return nil, err
+	}
+
+	buf, err := req.Raw()
+	if err != nil {
+		return nil, err
+	}
+
+	if code := req.StatusCode(); 200 > code || code > 299 {
+		var e *errors.Http
+		if err := json.Unmarshal(buf, &e); err != nil {
+			return nil, err
+		}
+		return nil, errors.New(e.Message)
+	}
+
+	var ts = new(vv1.Trigger)
+
+	if err := json.Unmarshal(buf, &ts); err != nil {
+		return nil, err
+	}
+
+	return ts, nil
 }
 
-func (s *TriggerClient) List(ctx context.Context, namespace, service string) (*vv1.TriggerList, error) {
-	return nil, nil
+func (s *TriggerClient) List(ctx context.Context) (*vv1.TriggerList, error) {
+
+	req := s.client.Get(fmt.Sprintf("/namespace/%s/service/%s/trigger", s.namespace, s.service)).
+		AddHeader("Content-Type", "application/json").
+		Do()
+
+	buf, err := req.Raw()
+	if err != nil {
+		return nil, err
+	}
+
+	var tl *vv1.TriggerList
+
+	if err := json.Unmarshal(buf, &tl); err != nil {
+		return nil, err
+	}
+
+	return tl, nil
 }
 
-func (s *TriggerClient) Get(ctx context.Context, namespace, service, name string) (*vv1.Trigger, error) {
-	return nil, nil
+func (s *TriggerClient) Get(ctx context.Context) (*vv1.Trigger, error) {
+
+	req := s.client.Get(fmt.Sprintf("/namespace/%s/service/%s/trigger/%s", s.namespace, s.service, s.name)).
+		AddHeader("Content-Type", "application/json").
+		Do()
+
+	buf, err := req.Raw()
+	if err != nil {
+		return nil, err
+	}
+
+	if code := req.StatusCode(); 200 > code || code > 299 {
+		var e *errors.Http
+		if err := json.Unmarshal(buf, &e); err != nil {
+			return nil, err
+		}
+		return nil, errors.New(e.Message)
+	}
+
+	var ts *vv1.Trigger
+
+	if err := json.Unmarshal(buf, &ts); err != nil {
+		return nil, err
+	}
+
+	return ts, nil
 }
 
-func (s *TriggerClient) Update(ctx context.Context, namespace, service, name string, opts *rv1.TriggerUpdateOptions) (*vv1.Trigger, error) {
-	return nil, nil
+func (s *TriggerClient) Update(ctx context.Context, opts *rv1.TriggerUpdateOptions) (*vv1.Trigger, error) {
+
+	body, err := opts.ToJson()
+	if err != nil {
+		return nil, err
+	}
+
+	req := s.client.Put(fmt.Sprintf("/namespace/%s/service/%s/trigger/%s", s.namespace, s.service, s.name)).
+		AddHeader("Content-Type", "application/json").
+		Body(body).
+		Do()
+
+	buf, err := req.Raw()
+	if err != nil {
+		return nil, err
+	}
+
+	if code := req.StatusCode(); 200 > code || code > 299 {
+		var e *errors.Http
+		if err := json.Unmarshal(buf, &e); err != nil {
+			return nil, err
+		}
+		return nil, errors.New(e.Message)
+	}
+
+	var ts *vv1.Trigger
+
+	if err := json.Unmarshal(buf, &ts); err != nil {
+		return nil, err
+	}
+
+	return ts, nil
 }
 
-func (s *TriggerClient) Remove(ctx context.Context, namespace, service, name string, opts *rv1.TriggerRemoveOptions) error {
+func (s *TriggerClient) Remove(ctx context.Context, opts *rv1.TriggerRemoveOptions) error {
+
+	req := s.client.Delete(fmt.Sprintf("/namespace/%s/service/%s/trigger/%s", s.namespace, s.service, s.name)).
+		AddHeader("Content-Type", "application/json").
+		Do()
+
+	buf, err := req.Raw()
+	if err != nil {
+		return err
+	}
+
+	if code := req.StatusCode(); 200 > code || code > 299 {
+		var e *errors.Http
+		if err := json.Unmarshal(buf, &e); err != nil {
+			return err
+		}
+		return errors.New(e.Message)
+	}
+
 	return nil
 }
 
-func newTriggerClient(req http.Interface, namespace, service string) *TriggerClient {
-	return &TriggerClient{req: req, namespace: namespace, service: service}
+func newTriggerClient(req http.Interface, namespace, service, name string) *TriggerClient {
+	return &TriggerClient{client: req, namespace: namespace, service: service, name: name}
 }

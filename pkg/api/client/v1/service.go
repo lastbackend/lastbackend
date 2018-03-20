@@ -25,6 +25,9 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/api/client/interfaces"
 	rv1 "github.com/lastbackend/lastbackend/pkg/api/types/v1/request"
 	vv1 "github.com/lastbackend/lastbackend/pkg/api/types/v1/views"
+	"fmt"
+	"github.com/lastbackend/lastbackend/pkg/distribution/errors"
+	"encoding/json"
 )
 
 type ServiceClient struct {
@@ -35,30 +38,152 @@ type ServiceClient struct {
 }
 
 func (s *ServiceClient) Deployment(name string) *DeploymentClient {
-	return newDeploymentClient(s.client, s.namespace, name)
+	return newDeploymentClient(s.client, s.namespace, s.name, name)
 }
 
 func (s *ServiceClient) Trigger(name string) *TriggerClient {
-	return newTriggerClient(s.client, s.namespace, name)
+	return newTriggerClient(s.client, s.namespace, s.name, name)
 }
 
-func (s *ServiceClient) Create(ctx context.Context, opts *rv1.ServiceCreateOptions) (*vv1.ServiceList, error) {
-	return nil, nil
+func (s *ServiceClient) Create(ctx context.Context, opts *rv1.ServiceCreateOptions) (*vv1.Service, error) {
+
+	body, err := opts.ToJson()
+	if err != nil {
+		return nil, err
+	}
+
+	req := s.client.Post(fmt.Sprintf("/namespace/%s/service", s.namespace)).
+		AddHeader("Content-Type", "application/json").
+		Body(body).
+		Do()
+
+	if err := req.Error(); err != nil {
+		return nil, err
+	}
+
+	buf, err := req.Raw()
+	if err != nil {
+		return nil, err
+	}
+
+	if code := req.StatusCode(); 200 > code || code > 299 {
+		var e *errors.Http
+		if err := json.Unmarshal(buf, &e); err != nil {
+			return nil, err
+		}
+		return nil, errors.New(e.Message)
+	}
+
+	var ss = new(vv1.Service)
+
+	if err := json.Unmarshal(buf, &ss); err != nil {
+		return nil, err
+	}
+
+	return ss, nil
 }
 
 func (s *ServiceClient) List(ctx context.Context) (*vv1.ServiceList, error) {
-	return nil, nil
+
+	req := s.client.Get(fmt.Sprintf("/namespace/%s/service", s.namespace)).
+		AddHeader("Content-Type", "application/json").
+		Do()
+
+	buf, err := req.Raw()
+	if err != nil {
+		return nil, err
+	}
+
+	var sl *vv1.ServiceList
+
+	if err := json.Unmarshal(buf, &sl); err != nil {
+		return nil, err
+	}
+
+	return sl, nil
 }
 
 func (s *ServiceClient) Get(ctx context.Context) (*vv1.Service, error) {
-	return nil, nil
+
+	req := s.client.Get(fmt.Sprintf("/namespace/%s/service/%s", s.namespace, s.name)).
+		AddHeader("Content-Type", "application/json").
+		Do()
+
+	buf, err := req.Raw()
+	if err != nil {
+		return nil, err
+	}
+
+	if code := req.StatusCode(); 200 > code || code > 299 {
+		var e *errors.Http
+		if err := json.Unmarshal(buf, &e); err != nil {
+			return nil, err
+		}
+		return nil, errors.New(e.Message)
+	}
+
+	var ss *vv1.Service
+
+	if err := json.Unmarshal(buf, &ss); err != nil {
+		return nil, err
+	}
+
+	return ss, nil
 }
 
-func (s *ServiceClient) Update(ctx context.Context, opts *rv1.ServiceUpdateOptions) (*vv1.NamespaceList, error) {
-	return nil, nil
+func (s *ServiceClient) Update(ctx context.Context, opts *rv1.ServiceUpdateOptions) (*vv1.Service, error) {
+
+	body, err := opts.ToJson()
+	if err != nil {
+		return nil, err
+	}
+
+	req := s.client.Put(fmt.Sprintf("/namespace/%s/service/%s", s.namespace, s.name)).
+		AddHeader("Content-Type", "application/json").
+		Body(body).
+		Do()
+
+	buf, err := req.Raw()
+	if err != nil {
+		return nil, err
+	}
+
+	if code := req.StatusCode(); 200 > code || code > 299 {
+		var e *errors.Http
+		if err := json.Unmarshal(buf, &e); err != nil {
+			return nil, err
+		}
+		return nil, errors.New(e.Message)
+	}
+
+	var ss *vv1.Service
+
+	if err := json.Unmarshal(buf, &ss); err != nil {
+		return nil, err
+	}
+
+	return ss, nil
 }
 
 func (s *ServiceClient) Remove(ctx context.Context, opts *rv1.ServiceRemoveOptions) error {
+
+	req := s.client.Delete(fmt.Sprintf("/namespace/%s/service/%s", s.namespace, s.name)).
+		AddHeader("Content-Type", "application/json").
+		Do()
+
+	buf, err := req.Raw()
+	if err != nil {
+		return err
+	}
+
+	if code := req.StatusCode(); 200 > code || code > 299 {
+		var e *errors.Http
+		if err := json.Unmarshal(buf, &e); err != nil {
+			return err
+		}
+		return errors.New(e.Message)
+	}
+
 	return nil
 }
 

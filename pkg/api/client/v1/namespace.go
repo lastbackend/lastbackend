@@ -69,11 +69,11 @@ func (s *NamespaceClient) Volume(name ...string) *VolumeClient {
 
 func (s *NamespaceClient) List(ctx context.Context) (*vv1.NamespaceList, error) {
 
-	result := s.client.Get(fmt.Sprintf("/namespace")).
+	req := s.client.Get(fmt.Sprintf("/namespace")).
 		AddHeader("Content-Type", "application/json").
 		Do()
 
-	buf, err := result.Raw()
+	buf, err := req.Raw()
 	if err != nil {
 		return nil, err
 	}

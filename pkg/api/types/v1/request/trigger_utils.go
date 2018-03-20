@@ -54,6 +54,10 @@ func (s *TriggerCreateOptions) DecodeAndValidate(reader io.Reader) *errors.Err {
 	return nil
 }
 
+func (s *TriggerCreateOptions) ToJson() ([]byte, error) {
+	return json.Marshal(s)
+}
+
 func (TriggerRequest) UpdateOptions() *TriggerUpdateOptions {
 	return new(TriggerUpdateOptions)
 }
@@ -78,6 +82,10 @@ func (s *TriggerUpdateOptions) DecodeAndValidate(reader io.Reader) *errors.Err {
 	//TODO: need checking arguments
 
 	return nil
+}
+
+func (s *TriggerUpdateOptions) ToJson() ([]byte, error) {
+	return json.Marshal(s)
 }
 
 func (TriggerRequest) RemoveOptions() *TriggerRemoveOptions {

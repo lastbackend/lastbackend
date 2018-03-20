@@ -28,29 +28,52 @@ import (
 
 type NodeRequest struct{}
 
-
 func (NodeRequest) NodeInfoOptions() *NodeInfoOptions {
 	return new(NodeInfoOptions)
+}
+
+func (s *NodeInfoOptions) ToJson() ([]byte, error) {
+	return json.Marshal(s)
 }
 
 func (NodeRequest) NodeStateOptions() *NodeStateOptions {
 	return new(NodeStateOptions)
 }
 
+func (s *NodeStateOptions) ToJson() ([]byte, error) {
+	return json.Marshal(s)
+}
+
 func (NodeRequest) NodePodStateOptions() *NodePodStateOptions {
 	return new(NodePodStateOptions)
+}
+
+func (s *NodePodStateOptions) ToJson() ([]byte, error) {
+	return json.Marshal(s)
 }
 
 func (NodeRequest) NodeVolumeStateOptions() *NodeVolumeStateOptions {
 	return new(NodeVolumeStateOptions)
 }
 
+func (s *NodeVolumeStateOptions) ToJson() ([]byte, error) {
+	return json.Marshal(s)
+}
+
 func (NodeRequest) NodeRouteStateOptions() *NodeRouteStateOptions {
 	return new(NodeRouteStateOptions)
 }
 
+func (s *NodeRouteStateOptions) ToJson() ([]byte, error) {
+	return json.Marshal(s)
+}
+
 func (NodeRequest) UpdateOptions() *NodeUpdateOptions {
 	return new(NodeUpdateOptions)
+}
+
+func (s *NodeUpdateOptions) ToJson() ([]byte, error) {
+	return json.Marshal(s)
 }
 
 func (s *NodeUpdateOptions) DecodeAndValidate(reader io.Reader) *errors.Err {
