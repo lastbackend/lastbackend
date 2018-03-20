@@ -19,14 +19,12 @@
 package etcd
 
 import (
-	"path/filepath"
 	"github.com/spf13/viper"
-	"strings"
-	"github.com/lastbackend/lastbackend/pkg/log"
 	"testing"
 	"reflect"
 	"github.com/lastbackend/lastbackend/pkg/storage/storage"
 	"context"
+	"github.com/lastbackend/lastbackend/pkg/storage/etcd/v3"
 )
 
 func TestStorage_Cluster(t *testing.T) {
@@ -285,21 +283,8 @@ func Test_getClient(t *testing.T) {
 
 
 func initStorage () {
-	c := "../../../contrib/test/config.yml"
-	abs, err := filepath.Abs(c)
-	if err != nil {
-		log.Errorf("Error reading filepath: %s \n", err)
-	}
-
-	// get the config name
-	base := filepath.Base(abs)
-
-	// get the path
-	path := filepath.Dir(abs)
-
-	viper.SetConfigName(strings.Split(base, ".")[0])
-	viper.AddConfigPath(path)
-	if err := viper.ReadInConfig(); err != nil {
-		log.Fatalf("Failed to read config file: %s\n", err)
-	}
+	cfg := v3.Config{}
+	cfg.Prefix = "lstbknd"
+	cfg.Endpoints = []string{"127.0.0.1:2379"}
+	viper.Set("etcd", cfg)
 }
