@@ -22,82 +22,93 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/api/types/v1"
 	"github.com/lastbackend/lastbackend/pkg/distribution/errors"
 	"github.com/lastbackend/lastbackend/pkg/log"
-	"github.com/lastbackend/lastbackend/pkg/util/http/utils"
 	"net/http"
+	"github.com/lastbackend/lastbackend/pkg/distribution"
+	"github.com/lastbackend/lastbackend/pkg/api/envs"
 )
 
 const logLevel = 2
 
 func ClusterInfoH(w http.ResponseWriter, r *http.Request) {
 
-	name := utils.Vars(r)["cluster"]
+	log.V(logLevel).Debugf("api:handler:cluster:info get cluster")
 
-	log.V(logLevel).Debugf("Handler: Cluster: get cluster `%s`", name)
+	var clm = distribution.NewClusterModel(r.Context(), envs.Get().GetStorage())
 
-	response, err := v1.View().Cluster().New(nil).ToJson()
+	cl, err := clm.Get()
 	if err != nil {
-		log.V(logLevel).Errorf("Handler: Cluster: convert struct to json err: %s", err)
+		log.V(logLevel).Errorf("api:handler:cluster:info get cluster err: %s", err.Error())
+		errors.HTTP.InternalServerError(w)
+		return
+	}
+	if cl == nil {
+		log.V(logLevel).Errorf("api:handler:cluster:info cluster not found")
+		errors.New("cluster").NotFound().Http(w)
+		return
+	}
+
+	response, err := v1.View().Cluster().New(cl).ToJson()
+	if err != nil {
+		log.V(logLevel).Errorf("api:handler:cluster:info convert struct to json err: %s", err.Error())
 		errors.HTTP.InternalServerError(w)
 		return
 	}
 
 	w.WriteHeader(http.StatusOK)
 	if _, err = w.Write(response); err != nil {
-		log.V(logLevel).Errorf("Handler: Cluster: write response err: %s", err)
+		log.V(logLevel).Errorf("api:handler:cluster:info write response err: %s", err.Error())
 		return
 	}
 }
 
 func ClusterUpdateH(w http.ResponseWriter, r *http.Request) {
 
-	name := utils.Vars(r)["cluster"]
-
-	log.V(logLevel).Debugf("Handler: Cluster: update cluster `%s`", name)
+	log.V(logLevel).Debugf("api:handler:cluster:update update cluster")
 
 	opts := v1.Request().Cluster().UpdateOptions()
 	if err := opts.DecodeAndValidate(r.Body); err != nil {
-		log.V(logLevel).Errorf("Handler: Cluster: validation incoming data", err)
+		log.V(logLevel).Errorf("api:handler:cluster:update validation incoming data", err.Err())
 		err.Http(w)
 		return
 	}
 
-	response, err := v1.View().Cluster().New(nil).ToJson()
+	var clm = distribution.NewClusterModel(r.Context(), envs.Get().GetStorage())
+
+	cl, err := clm.Get()
 	if err != nil {
-		log.V(logLevel).Errorf("Handler: Cluster: convert struct to json err: %s", err)
+		log.V(logLevel).Errorf("api:handler:cluster:update get cluster err: %s", err.Error())
+		errors.HTTP.InternalServerError(w)
+		return
+	}
+	if cl == nil {
+		err := errors.New("cluster not found")
+		log.V(logLevel).Errorf("api:handler:cluster:update get cluster err: %s", err.Error())
+		errors.New("cluster").NotFound().Http(w)
+		return
+	}
+
+	err = clm.Update(cl, opts)
+	if err != nil {
+		log.V(logLevel).Errorf("api:handler:cluster:update get cluster err: %s", err.Error())
+		errors.HTTP.InternalServerError(w)
+		return
+	}
+	if cl == nil {
+		log.V(logLevel).Errorf("api:handler:cluster:update cluster not found")
+		errors.New("cluster").NotFound().Http(w)
+		return
+	}
+
+	response, err := v1.View().Cluster().New(cl).ToJson()
+	if err != nil {
+		log.V(logLevel).Errorf("api:handler:cluster:update convert struct to json err: %s", err.Error())
 		errors.HTTP.InternalServerError(w)
 		return
 	}
 
 	w.WriteHeader(http.StatusOK)
 	if _, err = w.Write(response); err != nil {
-		log.V(logLevel).Errorf("Handler: Cluster: write response err: %s", err)
-		return
-	}
-}
-
-func ClusterRemoveH(w http.ResponseWriter, r *http.Request) {
-
-	name := utils.Vars(r)["cluster"]
-
-	log.V(logLevel).Debugf("Handler: Cluster: remove cluster %s", name)
-
-	opts := v1.Request().Cluster().UpdateOptions()
-	if err := opts.DecodeAndValidate(r.Body); err != nil {
-		log.V(logLevel).Errorf("Handler: Cluster: validation incoming data", err)
-		err.Http(w)
-		return
-	}
-
-	response, err := v1.View().Cluster().New(nil).ToJson()
-	if err != nil {
-		log.V(logLevel).Errorf("Handler: Cluster: convert struct to json err: %s", err)
-		errors.HTTP.InternalServerError(w)
-		return
-	}
-
-	w.WriteHeader(http.StatusOK)
-	if _, err = w.Write(response); err != nil {
-		log.V(logLevel).Errorf("Handler: Cluster: write response err: %s", err)
+		log.V(logLevel).Errorf("api:handler:cluster:update write response err: %s", err.Error())
 		return
 	}
 }

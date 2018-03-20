@@ -69,7 +69,6 @@ func (n *Namespace) Get(name string) (*types.Namespace, error) {
 
 	namespace, err := n.storage.Namespace().Get(n.context, name)
 	if err != nil {
-
 		if err.Error() == store.ErrEntityNotFound {
 			log.V(logLevel).Warnf("Namespace: Get: namespace by name `%s` not found", name)
 			return nil, nil

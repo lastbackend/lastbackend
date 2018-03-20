@@ -16,12 +16,4 @@
 // from Last.Backend LLC.
 //
 
-package request
-
-type ClusterUpdateOptions struct {
-	Description *string               `json:"description"`
-	Quotas      *ClusterQuotasOptions `json:"quotas"`
-}
-
-type ClusterQuotasOptions struct {
-}
+package http

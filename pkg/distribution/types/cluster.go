@@ -27,8 +27,9 @@ const (
 type ClusterList []*Cluster
 
 type Cluster struct {
-	Meta  ClusterMeta  `json:"meta"`
-	State ClusterState `json:"state"`
+	Meta   ClusterMeta   `json:"meta"`
+	State  ClusterState  `json:"state"`
+	Quotas ClusterQuotas `json:"quotas"`
 }
 
 type ClusterMeta struct {
@@ -60,4 +61,7 @@ type ClusterResources struct {
 	Memory     int64 `json:"memory"`
 	Cpu        int   `json:"cpu"`
 	Storage    int   `json:"storage"`
+}
+
+type ClusterQuotas struct {
 }
