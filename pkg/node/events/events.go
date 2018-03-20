@@ -24,7 +24,7 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/log"
 	"github.com/pkg/errors"
 	"github.com/lastbackend/lastbackend/pkg/node/envs"
-	"github.com/lastbackend/lastbackend/pkg/api/request/v1"
+	"github.com/lastbackend/lastbackend/pkg/api/types/v1"
 )
 
 // NewInfoEvent - send node info event after
@@ -35,7 +35,7 @@ func NewInfoEvent(ctx context.Context) error {
 		c = envs.Get().GetClient()
 	)
 
-	opts := v1.NodeInfoOpts{}
+	opts := v1.Request().Node().NodeInfoOptions()
 	return c.SetInfo(ctx, opts)
 }
 
@@ -46,7 +46,7 @@ func NewStateEvent(ctx context.Context) error {
 		c = envs.Get().GetClient()
 	)
 
-	opts := v1.NodeStateOpts{}
+	opts := v1.Request().Node().NodeStateOptions()
 	return c.SetState(ctx, opts)
 }
 
@@ -67,7 +67,7 @@ func NewPodStateEvent(ctx context.Context, pod *types.Pod) error {
 	log.Debugf("Event: Pod state event state: %s", pod.Meta.Name)
 
 
-	opts := v1.NodePodStateOpts{}
+	opts := v1.Request().Node().NodePodStateOptions()
 	return c.SetPodState(ctx, opts)
 
 	return nil
@@ -82,17 +82,15 @@ func NewRouteStateEvent(ctx context.Context, route *types.Route) error {
 	)
 
 	if route == nil {
-		log.Errorf("Event: Pod state event: pod is empty")
-		return errors.New("Event: Pod state event: pod is empty")
+		log.Errorf("Event: route state event: pod is empty")
+		return errors.New("Event: route state event: pod is empty")
 	}
 
-	log.Debugf("Event: Pod state event state: %s", route.Meta.Name)
+	log.Debugf("Event: route state event state: %s", route.Meta.Name)
 
 
-	opts := v1.NodePodStateOpts{}
+	opts := v1.Request().Node().NodeRouteStateOptions()
 	return c.SetPodState(ctx, opts)
-
-	return nil
 }
 
 // NewRouteStateEvent - send pod state event after
@@ -104,15 +102,13 @@ func NewVolumeStateEvent(ctx context.Context, volume *types.Volume) error {
 	)
 
 	if volume == nil {
-		log.Errorf("Event: Pod state event: pod is empty")
-		return errors.New("Event: Pod state event: pod is empty")
+		log.Errorf("Event: volume state event: pod is empty")
+		return errors.New("Event: volume state event: pod is empty")
 	}
 
-	log.Debugf("Event: Pod state event state: %s", volume.Meta.Name)
+	log.Debugf("Event: volume state event state: %s", volume.Meta.Name)
 
 
-	opts := v1.NodePodStateOpts{}
+	opts := v1.Request().Node().NodeVolumeStateOptions()
 	return c.SetPodState(ctx, opts)
-
-	return nil
 }

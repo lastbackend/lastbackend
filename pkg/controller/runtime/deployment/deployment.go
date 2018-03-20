@@ -24,6 +24,8 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/distribution"
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 	"github.com/lastbackend/lastbackend/pkg/log"
+	"github.com/lastbackend/lastbackend/pkg/storage/store"
+	"github.com/lastbackend/lastbackend/pkg/distribution/errors"
 )
 
 // Provision deployment
@@ -37,6 +39,15 @@ func Provision(d *types.Deployment) error {
 	)
 
 	log.Debugf("controller:deployment:controller:provision: provision service: %s/%s", d.Meta.Namespace, d.Meta.Service, d.Meta.Name)
+
+	dm := distribution.NewDeploymentModel(context.Background(), stg)
+	if d, err := dm.Get(d.Meta.Namespace, d.Meta.Service, d.Meta.Name); d == nil || err != nil {
+		if d == nil {
+			return errors.New(store.ErrEntityNotFound)
+		}
+		log.Errorf("controller:deployment:controller:provision: get deployment error: %s", err.Error())
+		return err
+	}
 
 	// Get all pods by service
 	pm := distribution.NewPodModel(context.Background(), stg)

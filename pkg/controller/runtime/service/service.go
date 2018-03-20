@@ -24,6 +24,8 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/distribution"
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 	"github.com/lastbackend/lastbackend/pkg/log"
+	"github.com/lastbackend/lastbackend/pkg/storage/store"
+	"github.com/lastbackend/lastbackend/pkg/distribution/errors"
 )
 
 // Provision service
@@ -34,6 +36,15 @@ func Provision(svc *types.Service) error {
 	var (
 		stg = envs.Get().GetStorage()
 	)
+
+	sm := distribution.NewServiceModel(context.Background(), stg)
+	if d, err := sm.Get(svc.Meta.Namespace, svc.Meta.Name); d == nil || err != nil {
+		if d == nil {
+			return errors.New(store.ErrEntityNotFound)
+		}
+		log.Errorf("controller:service:controller:provision: get deployment error: %s", err.Error())
+		return err
+	}
 
 	log.Debugf("controller:service:controller:provision: provision service: %s/%s", svc.Meta.Namespace, svc.Meta.Name)
 
