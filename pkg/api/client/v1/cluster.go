@@ -16,11 +16,12 @@
 // from Last.Backend LLC.
 //
 
-package http
+package v1
 
 import (
 	"context"
 
+	"github.com/lastbackend/lastbackend/pkg/api/client/http"
 	"github.com/lastbackend/lastbackend/pkg/api/client/interfaces"
 	rv1 "github.com/lastbackend/lastbackend/pkg/api/types/v1/request"
 	vv1 "github.com/lastbackend/lastbackend/pkg/api/types/v1/views"
@@ -28,6 +29,11 @@ import (
 
 type ClusterClient struct {
 	interfaces.Cluster
+	client http.Interface
+}
+
+func (s *ClusterClient) Node(ctx context.Context) *NodeClient {
+	return newNodeClient(s.client)
 }
 
 func (s *ClusterClient) Get(ctx context.Context) (*vv1.ClusterList, error) {
@@ -38,7 +44,6 @@ func (s *ClusterClient) Update(ctx context.Context, opts *rv1.ClusterUpdateOptio
 	return nil, nil
 }
 
-func newClusterClient() *ClusterClient {
-	s := new(ClusterClient)
-	return s
+func newClusterClient(req http.Interface) *ClusterClient {
+	return &ClusterClient{client: req}
 }

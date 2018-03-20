@@ -2,7 +2,7 @@
 // Last.Backend LLC CONFIDENTIAL
 // __________________
 //
-// [2014] - [2017] Last.Backend LLC
+// [2014] - [2018] Last.Backend LLC
 // All Rights Reserved.
 //
 // NOTICE:  All information contained herein is, and remains
@@ -18,11 +18,28 @@
 
 package v1
 
-type Config struct {
-	Endpoint string
-	TLS      struct {
-		Key  string
-		Cert string
-		CA   string
+import (
+	"github.com/lastbackend/lastbackend/pkg/api/client/http"
+)
+
+type Client struct {
+	client http.Interface
+}
+
+func (s *Client) Cluster() *ClusterClient {
+	if s == nil {
+		return nil
 	}
+	return newClusterClient(s.client)
+}
+
+func (s *Client) Namespace() *NamespaceClient {
+	if s == nil {
+		return nil
+	}
+	return newNamespaceClient(s.client)
+}
+
+func New(req http.Interface) *Client {
+	return &Client{client: req}
 }

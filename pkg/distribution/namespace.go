@@ -23,12 +23,12 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/lastbackend/lastbackend/pkg/api/types/v1/request"
 	"github.com/lastbackend/lastbackend/pkg/distribution/errors"
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 	"github.com/lastbackend/lastbackend/pkg/log"
 	"github.com/lastbackend/lastbackend/pkg/storage"
 	"github.com/lastbackend/lastbackend/pkg/storage/store"
-	"github.com/lastbackend/lastbackend/pkg/api/types/v1/request"
 )
 
 type INamespace interface {
@@ -69,7 +69,6 @@ func (n *Namespace) Get(name string) (*types.Namespace, error) {
 
 	namespace, err := n.storage.Namespace().Get(n.context, name)
 	if err != nil {
-
 		if err.Error() == store.ErrEntityNotFound {
 			log.V(logLevel).Warnf("Namespace: Get: namespace by name `%s` not found", name)
 			return nil, nil

@@ -16,61 +16,40 @@
 // from Last.Backend LLC.
 //
 
-package http
+package v1
 
 import (
 	"context"
-	"encoding/json"
 
+	"github.com/lastbackend/lastbackend/pkg/api/client/http"
 	"github.com/lastbackend/lastbackend/pkg/api/client/interfaces"
 	rv1 "github.com/lastbackend/lastbackend/pkg/api/types/v1/request"
 	vv1 "github.com/lastbackend/lastbackend/pkg/api/types/v1/views"
 )
 
-type NamespaceClient struct {
-	interfaces.Namespace
+type DeploymentClient struct {
+	interfaces.Deployment
+	req       http.Interface
+	namespace string
+	service   string
 }
 
-func (s *NamespaceClient) List(ctx context.Context) (*vv1.NamespaceList, error) {
-
-	var (
-		r  = NewRequest(ctx)
-		nl *vv1.NamespaceList
-	)
-
-	body, err := r.Get("namespace")
-	if err != nil {
-		return nil, err
-	}
-
-	if err := json.Unmarshal(body, nl); err != nil {
-		return nil, err
-	}
-
-	return nl, nil
+func (s *DeploymentClient) Pod(deployment string) *PodClient {
+	return newPodClient(s.req, s.namespace, s.service, deployment)
 }
 
-func Create(ctx context.Context, opts rv1.NamespaceCreateOptions) (*vv1.Namespace, error) {
+func (s *DeploymentClient) List(ctx context.Context) (*vv1.DeploymentList, error) {
 	return nil, nil
 }
 
-func List(ctx context.Context) (*vv1.NamespaceList, error) {
+func (s *DeploymentClient) Get(ctx context.Context, na string) (*vv1.Deployment, error) {
 	return nil, nil
 }
 
-func Get(ctx context.Context, name string) (*vv1.Namespace, error) {
+func (s *DeploymentClient) Update(ctx context.Context, namespace, service, deployment string, opts *rv1.DeploymentUpdateOptions) (*vv1.Deployment, error) {
 	return nil, nil
 }
 
-func Update(ctx context.Context, name string, opts rv1.NamespaceUpdateOptions) (*vv1.Namespace, error) {
-	return nil, nil
-}
-
-func Remove(ctx context.Context, name string, opts rv1.NamespaceRemoveOptions) error {
-	return nil
-}
-
-func newNamespaceClient() *NamespaceClient {
-	s := new(NamespaceClient)
-	return s
+func newDeploymentClient(req http.Interface, namespace, service string) *DeploymentClient {
+	return &DeploymentClient{req: req, namespace: namespace, service: service}
 }

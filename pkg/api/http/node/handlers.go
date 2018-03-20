@@ -21,20 +21,16 @@ package node
 import (
 	"net/http"
 
-	"github.com/lastbackend/lastbackend/pkg/api/types/v1"
 	"github.com/lastbackend/lastbackend/pkg/api/envs"
+	"github.com/lastbackend/lastbackend/pkg/api/types/v1"
+	"github.com/lastbackend/lastbackend/pkg/api/types/v1/request"
 	"github.com/lastbackend/lastbackend/pkg/distribution"
 	"github.com/lastbackend/lastbackend/pkg/distribution/errors"
 	"github.com/lastbackend/lastbackend/pkg/log"
 	"github.com/lastbackend/lastbackend/pkg/util/http/utils"
-	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 )
 
 const logLevel = 2
-
-
-
-
 
 func NodeGetH(w http.ResponseWriter, r *http.Request) {
 
@@ -148,7 +144,7 @@ func NodeUpdateH(w http.ResponseWriter, r *http.Request) {
 	)
 
 	// request body struct
-	opts := new(types.NodeUpdateOptions)
+	opts := new(request.NodeUpdateOptions)
 	if err := opts.DecodeAndValidate(r.Body); err != nil {
 		log.V(logLevel).Errorf("Handler: Node: validation incoming data", err)
 		err.Http(w)

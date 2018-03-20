@@ -24,33 +24,35 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 )
 
-type PodView struct {
-	// PodView meta id
+type Pod struct {
+	// Pod meta id
 	ID string `json:"id"`
-	// PodView Meta
+	// Pod Meta
 	Meta PodMeta `json:"meta"`
-	// PodView state
+	// Pod state
 	State PodState `json:"state"`
-	// PodView Spec
+	// Pod Spec
 	Spec PodSpec `json:"spec"`
-	// PodView containers
+	// Pod containers
 	Status PodStatus `json:"status"`
 }
+
+type PodList map[string]*Pod
 
 type PodMeta struct {
 	// Meta name
 	Name string `json:"name"`
 	// Meta name
 	Description string `json:"description"`
-	// PodView SelfLink
+	// Pod SelfLink
 	SelfLink string `json:"self_link"`
-	// PodView deployment id
+	// Pod deployment id
 	Deployment string `json:"deployment"`
-	// PodView service id
+	// Pod service id
 	Namespace string `json:"namespace"`
-	// PodView node id
+	// Pod node id
 	Node string `json:"node"`
-	// PodView status
+	// Pod status
 	Status string `json:"status"`
 	// Meta labels
 	Labels map[string]string `json:"labels"`
@@ -61,21 +63,21 @@ type PodMeta struct {
 }
 
 type PodState struct {
-	// PodView state scheduled
+	// Pod state scheduled
 	Scheduled bool `json:"scheduled"`
-	// PodView state provision
+	// Pod state provision
 	Provision bool `json:"provision"`
-	// PodView state error
+	// Pod state error
 	Error bool `json:"error"`
-	// PodView state created
+	// Pod state created
 	Created bool `json:"created"`
-	// PodView state created
+	// Pod state created
 	Pulling bool `json:"pulling"`
-	// PodView state started
+	// Pod state started
 	Running bool `json:"started"`
-	// PodView state stopped
+	// Pod state stopped
 	Stopped bool `json:"stopped"`
-	// PodView state destroy
+	// Pod state destroy
 	Destroy bool `json:"destroy"`
 }
 
@@ -99,34 +101,34 @@ type PodSpecTemplate struct {
 }
 
 type PodStatus struct {
-	// PodView stage
+	// Pod stage
 	Stage string `json:"stage"`
-	// PodView state message
+	// Pod state message
 	Message string `json:"message"`
-	// PodView steps
+	// Pod steps
 	Steps PodSteps `json:"steps"`
-	// PodView network
+	// Pod network
 	Network PodNetwork `json:"network"`
-	// PodView containers
+	// Pod containers
 	Containers PodContainers `json:"containers"`
 }
 
 type PodContainers []PodContainer
 
 type PodContainer struct {
-	// PodView container ID
+	// Pod container ID
 	ID string `json:"id"`
-	// PodView ID
+	// Pod ID
 	Pod string `json:"pod"`
-	// PodView container name
+	// Pod container name
 	Name string `json:"name"`
-	// PodView container state
+	// Pod container state
 	State PodContainerState `json:"state"`
-	// PodView container ready
+	// Pod container ready
 	Ready bool `json:"ready"`
-	// PodView container restart count
+	// Pod container restart count
 	Restart int `json:"restared"`
-	// PodView container image meta
+	// Pod container image meta
 	Image PodContainerImage `json:"image"`
 }
 
@@ -170,9 +172,9 @@ type PodContainerStateExit struct {
 }
 
 type PodContainerImage struct {
-	// PodView container image ID
+	// Pod container image ID
 	ID string `json:"id"`
-	// PodView container image name
+	// Pod container image name
 	Name string `json:"name"`
 }
 

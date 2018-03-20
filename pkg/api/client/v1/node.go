@@ -16,41 +16,38 @@
 // from Last.Backend LLC.
 //
 
-package http
+package v1
 
 import (
 	"context"
 
+	"github.com/lastbackend/lastbackend/pkg/api/client/http"
 	"github.com/lastbackend/lastbackend/pkg/api/client/interfaces"
 	rv1 "github.com/lastbackend/lastbackend/pkg/api/types/v1/request"
 	vv1 "github.com/lastbackend/lastbackend/pkg/api/types/v1/views"
 )
 
-type ServiceClient struct {
-	interfaces.Service
+type NodeClient struct {
+	interfaces.Node
+	client http.Interface
 }
 
-func (s *ServiceClient) Create(ctx context.Context, namespace string, opts *rv1.ServiceCreateOptions) (*vv1.ServiceList, error) {
+func (s *NodeClient) List(ctx context.Context) (*vv1.NodeList, error) {
 	return nil, nil
 }
 
-func (s *ServiceClient) List(ctx context.Context, namespace string) (*vv1.ServiceList, error) {
+func (s *NodeClient) Get(ctx context.Context, name string) (*vv1.Node, error) {
 	return nil, nil
 }
 
-func (s *ServiceClient) Get(ctx context.Context, namespace, name string) (*vv1.Service, error) {
+func (s *NodeClient) Update(ctx context.Context, name string, opts rv1.NodeUpdateOptions) (*vv1.Node, error) {
 	return nil, nil
 }
 
-func (s *ServiceClient) Update(ctx context.Context, namespace, name string, opts *rv1.ServiceUpdateOptions) (*vv1.NamespaceList, error) {
-	return nil, nil
-}
-
-func (s *ServiceClient) Remove(ctx context.Context, namespace, name string, opts rv1.ServiceRemoveOptions) error {
+func (s *NodeClient) Remove(ctx context.Context, name string, opts rv1.NodeRemoveOptions) error {
 	return nil
 }
 
-func newServiceClient() *ServiceClient {
-	s := new(ServiceClient)
-	return s
+func newNodeClient(req http.Interface) *NodeClient {
+	return &NodeClient{client: req}
 }

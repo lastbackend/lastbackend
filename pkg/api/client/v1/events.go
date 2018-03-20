@@ -19,42 +19,14 @@
 package v1
 
 import (
-	"crypto/tls"
-
-	"github.com/coreos/etcd/pkg/transport"
+	"github.com/lastbackend/lastbackend/pkg/api/client/interfaces"
 )
 
-type Client struct {
-	endpoint string
-	tls      *tls.Config
+type EventsClient struct {
+	interfaces.Events
 }
 
-func Get(conf Config) (*Client, error) {
-
-	tlsConfig, err := getTLSConfig(conf.TLS.Cert, conf.TLS.Key, conf.TLS.CA)
-	if err != nil {
-		return nil, err
-	}
-
-	c := &Client{
-		endpoint: conf.Endpoint,
-		tls:      tlsConfig,
-	}
-
-	return c, nil
-}
-
-func getTLSConfig(certFile, keyFile, caFile string) (*tls.Config, error) {
-
-	if len(certFile) == 0 || len(keyFile) == 0 || len(caFile) == 0 {
-		return nil, nil
-	}
-
-	tlsInfo := transport.TLSInfo{
-		CertFile: certFile,
-		KeyFile:  keyFile,
-		CAFile:   caFile,
-	}
-
-	return tlsInfo.ClientConfig()
+func newEventsClient() *EventsClient {
+	s := new(EventsClient)
+	return s
 }

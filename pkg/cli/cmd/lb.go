@@ -22,7 +22,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/lastbackend/lastbackend/pkg/api/client/http/v1"
+	"github.com/lastbackend/lastbackend/pkg/api/client"
 	"github.com/lastbackend/lastbackend/pkg/cli/config"
 	"github.com/lastbackend/lastbackend/pkg/cli/context"
 	"github.com/lastbackend/lastbackend/pkg/cli/storage"
@@ -71,18 +71,12 @@ func Execute() {
 }
 
 // init client object
-func InitClient() *v1.Client {
-
-	conf := v1.Config{
-		Endpoint: host,
-	}
-
-	client, err := v1.Get(conf)
+func InitClient() *client.Client {
+	cli, err := client.New("https://api.lstbknd.net")
 	if err != nil {
 		panic(err)
 	}
-
-	return client
+	return cli
 }
 
 func init() {

@@ -16,7 +16,7 @@
 // from Last.Backend LLC.
 //
 
-package http
+package v1
 
 import (
 	"context"

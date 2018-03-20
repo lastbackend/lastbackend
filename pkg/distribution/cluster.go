@@ -20,10 +20,11 @@ package distribution
 
 import (
 	"context"
+	"github.com/lastbackend/lastbackend/pkg/api/types/v1/request"
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 	"github.com/lastbackend/lastbackend/pkg/log"
 	"github.com/lastbackend/lastbackend/pkg/storage"
-	"github.com/lastbackend/lastbackend/pkg/api/types/v1/request"
+	"github.com/lastbackend/lastbackend/pkg/storage/store"
 )
 
 // Cluster - distribution model
@@ -33,43 +34,35 @@ type Cluster struct {
 }
 
 // Info - get cluster info
-func (c *Cluster) Info() (*types.Cluster, error) {
+func (c *Cluster) Get() (*types.Cluster, error) {
 
-	var ()
+	log.V(logLevel).Debug("api:distribution:cluster:get get info")
 
-	log.V(logLevel).Debug("Cluster: get cluster info")
-
-	cl, err := c.storage.Cluster().Get(c.context)
+	cluster, err := c.storage.Cluster().Get(c.context)
 	if err != nil {
-		log.V(logLevel).Errorf("Cluster: get cluster info err: %s", err)
+		if err.Error() == store.ErrEntityNotFound {
+			log.V(logLevel).Warnf("api:distribution:cluster:get cluster not found")
+			return nil, nil
+		}
+
+		log.V(logLevel).Errorf("api:distribution:cluster:get get cluster err: %s", err.Error())
 		return nil, err
 	}
 
-	if cl == nil {
-		return nil, nil
-	}
-
-	return cl, nil
+	return cluster, nil
 }
 
 // Update - update cluster stats data and meta information
 func (c *Cluster) Update(cluster *types.Cluster, opts *request.ClusterUpdateOptions) error {
 
-	var (
-		err error
-	)
-
-	log.V(logLevel).Debugf("Cluster: update cluster %#v", cluster)
+	log.V(logLevel).Debugf("api:distribution:cluster:update update cluster %#v", cluster)
 
 	if opts.Description != nil {
 		cluster.Meta.Description = *opts.Description
 	}
-	if opts.Name != nil {
-		cluster.Meta.Name = *opts.Name
-	}
 
-	if err = c.storage.Cluster().Update(c.context, cluster); err != nil {
-		log.V(logLevel).Errorf("Cluster: update cluster err: %s", err)
+	if err := c.storage.Cluster().Update(c.context, cluster); err != nil {
+		log.V(logLevel).Errorf("api:distribution:cluster:update update cluster err: %s", err)
 		return err
 	}
 

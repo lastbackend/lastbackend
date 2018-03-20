@@ -20,8 +20,8 @@ package request
 
 import (
 	"encoding/json"
-	"io/ioutil"
 	"io"
+	"io/ioutil"
 
 	"github.com/lastbackend/lastbackend/pkg/distribution/errors"
 )
