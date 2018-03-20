@@ -34,7 +34,7 @@ type SecretClient struct {
 	name      string
 }
 
-func (s *SecretClient) Create(ctx context.Context, opts rv1.SecretCreateOptions) (*vv1.Secret, error) {
+func (s *SecretClient) Create(ctx context.Context, opts *rv1.SecretCreateOptions) (*vv1.Secret, error) {
 	return nil, nil
 }
 
@@ -46,11 +46,11 @@ func (s *SecretClient) Get(ctx context.Context) (*vv1.Secret, error) {
 	return nil, nil
 }
 
-func (s *SecretClient) Update(ctx context.Context, opts rv1.SecretUpdateOptions) (*vv1.Secret, error) {
+func (s *SecretClient) Update(ctx context.Context, opts *rv1.SecretUpdateOptions) (*vv1.Secret, error) {
 	return nil, nil
 }
 
-func (s *SecretClient) Remove(ctx context.Context, opts rv1.SecretRemoveOptions) error {
+func (s *SecretClient) Remove(ctx context.Context, opts *rv1.SecretRemoveOptions) error {
 	return nil
 }
 

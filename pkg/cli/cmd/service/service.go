@@ -27,7 +27,7 @@ var (
 	Memory  int64
 )
 
-var ListService = &cobra.Command{
+var ServiceList = &cobra.Command{
 	Use:   "list",
 	Short: "Display the services list",
 	Run: func(cmd *cobra.Command, args []string) {
@@ -35,7 +35,7 @@ var ListService = &cobra.Command{
 	},
 }
 
-var ScaleService = &cobra.Command{
+var ServiceScale = &cobra.Command{
 	Use:   "scale",
 	Short: "Scale service",
 	Run: func(cmd *cobra.Command, args []string) {
@@ -55,7 +55,7 @@ var ScaleService = &cobra.Command{
 	},
 }
 
-var InfoService = &cobra.Command{
+var ServiceInfo = &cobra.Command{
 	Use:   "info",
 	Short: "Service info by Name",
 	Run: func(cmd *cobra.Command, args []string) {
@@ -69,7 +69,7 @@ var InfoService = &cobra.Command{
 	},
 }
 
-var UpdateService = &cobra.Command{
+var ServiceUpdate = &cobra.Command{
 	Use:   "update",
 	Short: "Change configuration of the service",
 	Run: func(cmd *cobra.Command, args []string) {
@@ -83,7 +83,7 @@ var UpdateService = &cobra.Command{
 	},
 }
 
-var RemoveService = &cobra.Command{
+var ServiceRemove = &cobra.Command{
 	Use:   "remove",
 	Short: "Remove service by Name",
 	Run: func(cmd *cobra.Command, args []string) {
@@ -97,7 +97,7 @@ var RemoveService = &cobra.Command{
 	},
 }
 
-var CreateService = &cobra.Command{
+var ServiceCreate = &cobra.Command{
 	Use:   "create",
 	Short: "Create service",
 	Run: func(cmd *cobra.Command, args []string) {
@@ -111,7 +111,7 @@ var CreateService = &cobra.Command{
 	},
 }
 
-var LogsService = &cobra.Command{
+var ServiceLogs = &cobra.Command{
 	Use:   "logs",
 	Short: "Show service logs",
 	Run: func(cmd *cobra.Command, args []string) {

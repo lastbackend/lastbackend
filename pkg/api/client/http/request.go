@@ -73,6 +73,9 @@ func (r *Request) Body(data []byte) *Request {
 }
 
 func (r *Request) AddHeader(key, val string) *Request {
+	if r.headers == nil {
+		r.headers = make(map[string][]string)
+	}
 	r.headers.Add(key, val)
 	return r
 }

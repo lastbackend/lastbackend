@@ -58,7 +58,7 @@ func (s *ServiceClient) Update(ctx context.Context, opts *rv1.ServiceUpdateOptio
 	return nil, nil
 }
 
-func (s *ServiceClient) Remove(ctx context.Context, opts rv1.ServiceRemoveOptions) error {
+func (s *ServiceClient) Remove(ctx context.Context, opts *rv1.ServiceRemoveOptions) error {
 	return nil
 }
 

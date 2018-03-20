@@ -32,9 +32,9 @@ var versionCmd = &cobra.Command{
 	},
 }
 
-var workspace = &cobra.Command{
-	Use:   "workspace",
-	Short: "Manage your workspaces and create",
+var namespace = &cobra.Command{
+	Use:   "namespace",
+	Short: "Manage your namespace and create",
 	Run: func(cmd *cobra.Command, args []string) {
 		cmd.Help()
 	},

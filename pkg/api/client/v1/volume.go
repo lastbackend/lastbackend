@@ -34,7 +34,7 @@ type VolumeClient struct {
 	name      string
 }
 
-func (s *VolumeClient) Create(ctx context.Context, opts rv1.VolumeCreateOptions) (*vv1.Volume, error) {
+func (s *VolumeClient) Create(ctx context.Context, opts *rv1.VolumeCreateOptions) (*vv1.Volume, error) {
 	return nil, nil
 }
 
@@ -46,11 +46,11 @@ func (s *VolumeClient) Get(ctx context.Context) (*vv1.Volume, error) {
 	return nil, nil
 }
 
-func (s *VolumeClient) Update(ctx context.Context, opts rv1.VolumeUpdateOptions) (*vv1.Volume, error) {
+func (s *VolumeClient) Update(ctx context.Context, opts *rv1.VolumeUpdateOptions) (*vv1.Volume, error) {
 	return nil, nil
 }
 
-func (s *VolumeClient) Remove(ctx context.Context, opts rv1.VolumeRemoveOptions) error {
+func (s *VolumeClient) Remove(ctx context.Context, opts *rv1.VolumeRemoveOptions) error {
 	return nil
 }
 

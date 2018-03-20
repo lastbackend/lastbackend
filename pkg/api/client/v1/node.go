@@ -41,11 +41,11 @@ func (s *NodeClient) Get(ctx context.Context) (*vv1.Node, error) {
 	return nil, nil
 }
 
-func (s *NodeClient) Update(ctx context.Context, opts rv1.NodeUpdateOptions) (*vv1.Node, error) {
+func (s *NodeClient) Update(ctx context.Context, opts *rv1.NodeUpdateOptions) (*vv1.Node, error) {
 	return nil, nil
 }
 
-func (s *NodeClient) Remove(ctx context.Context, opts rv1.NodeRemoveOptions) error {
+func (s *NodeClient) Remove(ctx context.Context, opts *rv1.NodeRemoveOptions) error {
 	return nil
 }
 

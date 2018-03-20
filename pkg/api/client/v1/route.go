@@ -34,7 +34,7 @@ type RouteClient struct {
 	name      string
 }
 
-func (s *RouteClient) Create(ctx context.Context, opts rv1.RouteCreateOptions) (*vv1.Route, error) {
+func (s *RouteClient) Create(ctx context.Context, opts *rv1.RouteCreateOptions) (*vv1.Route, error) {
 	return nil, nil
 }
 
@@ -46,11 +46,11 @@ func (s *RouteClient) Get(ctx context.Context) (*vv1.Route, error) {
 	return nil, nil
 }
 
-func (s *RouteClient) Update(ctx context.Context, opts rv1.RouteUpdateOptions) (*vv1.Route, error) {
+func (s *RouteClient) Update(ctx context.Context, opts *rv1.RouteUpdateOptions) (*vv1.Route, error) {
 	return nil, nil
 }
 
-func (s *RouteClient) Remove(ctx context.Context, opts rv1.RouteRemoveOptions) error {
+func (s *RouteClient) Remove(ctx context.Context, opts *rv1.RouteRemoveOptions) error {
 	return nil
 }
 

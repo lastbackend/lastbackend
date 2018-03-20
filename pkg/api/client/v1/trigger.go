@@ -34,7 +34,7 @@ type TriggerClient struct {
 	service   string
 }
 
-func (s *TriggerClient) Create(ctx context.Context, namespace, service string, opts rv1.TriggerCreateOptions) (*vv1.Trigger, error) {
+func (s *TriggerClient) Create(ctx context.Context, namespace, service string, opts *rv1.TriggerCreateOptions) (*vv1.Trigger, error) {
 	return nil, nil
 }
 
@@ -46,11 +46,11 @@ func (s *TriggerClient) Get(ctx context.Context, namespace, service, name string
 	return nil, nil
 }
 
-func (s *TriggerClient) Update(ctx context.Context, namespace, service, name string, opts rv1.TriggerUpdateOptions) (*vv1.Trigger, error) {
+func (s *TriggerClient) Update(ctx context.Context, namespace, service, name string, opts *rv1.TriggerUpdateOptions) (*vv1.Trigger, error) {
 	return nil, nil
 }
 
-func (s *TriggerClient) Remove(ctx context.Context, namespace, service, name string, opts rv1.TriggerRemoveOptions) error {
+func (s *TriggerClient) Remove(ctx context.Context, namespace, service, name string, opts *rv1.TriggerRemoveOptions) error {
 	return nil
 }
 

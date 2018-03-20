@@ -88,7 +88,7 @@ func (s *NamespaceClient) List(ctx context.Context) (*vv1.NamespaceList, error) 
 	return nl, nil
 }
 
-func (s *NamespaceClient) Create(ctx context.Context, opts rv1.NamespaceCreateOptions) (*vv1.Namespace, error) {
+func (s *NamespaceClient) Create(ctx context.Context, opts *rv1.NamespaceCreateOptions) (*vv1.Namespace, error) {
 
 	var (
 		ns *vv1.Namespace
@@ -137,7 +137,7 @@ func (s *NamespaceClient) Get(ctx context.Context) (*vv1.Namespace, error) {
 	return ns, nil
 }
 
-func (s *NamespaceClient) Update(ctx context.Context, opts rv1.NamespaceUpdateOptions) (*vv1.Namespace, error) {
+func (s *NamespaceClient) Update(ctx context.Context, opts *rv1.NamespaceUpdateOptions) (*vv1.Namespace, error) {
 	var (
 		ns *vv1.Namespace
 	)
@@ -164,7 +164,7 @@ func (s *NamespaceClient) Update(ctx context.Context, opts rv1.NamespaceUpdateOp
 	return ns, nil
 }
 
-func (s *NamespaceClient) Remove(ctx context.Context, opts rv1.NamespaceRemoveOptions) error {
+func (s *NamespaceClient) Remove(ctx context.Context, opts *rv1.NamespaceRemoveOptions) error {
 
 	s.client.Delete(fmt.Sprintf("/namespace/%s", s.name)).
 		AddHeader("Content-Type", "application/json").
