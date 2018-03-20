@@ -743,10 +743,12 @@ func TestVolumeStorage_Watch(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
-		go t.Run(tt.name, func(t *testing.T) {
-			if err := tt.fields.stg.Watch(tt.args.ctx, tt.args.volume); (err != nil) != tt.wantErr {
-				t.Errorf("VolumeStorage.Watch() error = %v, wantErr %v", err, tt.wantErr)
-			}
+		t.Run(tt.name, func(t *testing.T) {
+			go func () {
+				if err := tt.fields.stg.Watch(tt.args.ctx, tt.args.volume); (err != nil) != tt.wantErr {
+					t.Errorf("VolumeStorage.Watch() error = %v, wantErr %v", err, tt.wantErr)
+				}
+			}()
 		})
 	}
 }
@@ -781,10 +783,12 @@ func TestVolumeStorage_WatchSpec(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
-		go t.Run(tt.name, func(t *testing.T) {
-			if err := tt.fields.stg.WatchSpec(tt.args.ctx, tt.args.volume); (err != nil) != tt.wantErr {
-				t.Errorf("VolumeStorage.Watch() error = %v, wantErr %v", err, tt.wantErr)
-			}
+		t.Run(tt.name, func(t *testing.T) {
+			go func () {
+				if err := tt.fields.stg.WatchSpec(tt.args.ctx, tt.args.volume); (err != nil) != tt.wantErr {
+					t.Errorf("VolumeStorage.Watch() error = %v, wantErr %v", err, tt.wantErr)
+				}
+			}()
 		})
 	}
 }

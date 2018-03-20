@@ -38,7 +38,7 @@ func Provision(d *types.Deployment) error {
 		replicas int
 	)
 
-	log.Debugf("controller:deployment:controller:provision: provision service: %s/%s", d.Meta.Namespace, d.Meta.Service, d.Meta.Name)
+	log.Debugf("controller:deployment:controller:provision: provision deployment: %s", d.SelfLink())
 
 	dm := distribution.NewDeploymentModel(context.Background(), stg)
 	if d, err := dm.Get(d.Meta.Namespace, d.Meta.Service, d.Meta.Name); d == nil || err != nil {

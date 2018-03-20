@@ -857,10 +857,12 @@ func TestTriggerStorage_Watch(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
-		go t.Run(tt.name, func(t *testing.T) {
-			if err := tt.fields.stg.Watch(tt.args.ctx, tt.args.trigger); (err != nil) != tt.wantErr {
-				t.Errorf("TriggerStorage.Watch() error = %v, wantErr %v", err, tt.wantErr)
-			}
+		t.Run(tt.name, func(t *testing.T) {
+			go func () {
+				if err := tt.fields.stg.Watch(tt.args.ctx, tt.args.trigger); (err != nil) != tt.wantErr {
+					t.Errorf("TriggerStorage.Watch() error = %v, wantErr %v", err, tt.wantErr)
+				}
+			}()
 		})
 	}
 }
@@ -895,10 +897,12 @@ func TestTriggerStorage_WatchSpec(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
-		go t.Run(tt.name, func(t *testing.T) {
-			if err := tt.fields.stg.WatchSpec(tt.args.ctx, tt.args.trigger); (err != nil) != tt.wantErr {
-				t.Errorf("TriggerStorage.Watch() error = %v, wantErr %v", err, tt.wantErr)
-			}
+		t.Run(tt.name, func(t *testing.T) {
+			go func () {
+				if err := tt.fields.stg.WatchSpec(tt.args.ctx, tt.args.trigger); (err != nil) != tt.wantErr {
+					t.Errorf("TriggerStorage.Watch() error = %v, wantErr %v", err, tt.wantErr)
+				}
+			}()
 		})
 	}
 }

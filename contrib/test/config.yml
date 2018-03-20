@@ -1,7 +1,7 @@
 ---
 
 # Runtime
-verbose: 7
+verbose: 0
 token: lstbknd
 ssl: true
 

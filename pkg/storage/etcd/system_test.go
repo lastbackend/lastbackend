@@ -203,10 +203,12 @@ func TestSystemStorage_ElectWait(t *testing.T) {
 			return
 		}
 
-		go t.Run(tt.name, func(t *testing.T) {
-			if err := stg.ElectWait(tt.args.ctx, tt.args.process, tt.args.cn); (err != nil) != tt.wantErr {
-				t.Errorf("SystemStorage.ElectUpdate() error = %v, wantErr %v", err, tt.wantErr)
-			}
+		t.Run(tt.name, func(t *testing.T) {
+			go func () {
+				if err := stg.ElectWait(tt.args.ctx, tt.args.process, tt.args.cn); (err != nil) != tt.wantErr {
+					t.Errorf("SystemStorage.ElectUpdate() error = %v, wantErr %v", err, tt.wantErr)
+				}
+			}()
 		})
 	}
 }

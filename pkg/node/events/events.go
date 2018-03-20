@@ -69,8 +69,6 @@ func NewPodStateEvent(ctx context.Context, pod *types.Pod) error {
 
 	opts := v1.Request().Node().NodePodStateOptions()
 	return c.SetPodState(ctx, opts)
-
-	return nil
 }
 
 // NewRouteStateEvent - send pod state event after
@@ -90,7 +88,7 @@ func NewRouteStateEvent(ctx context.Context, route *types.Route) error {
 
 
 	opts := v1.Request().Node().NodeRouteStateOptions()
-	return c.SetPodState(ctx, opts)
+	return c.SetRouteState(ctx, opts)
 }
 
 // NewRouteStateEvent - send pod state event after
@@ -110,5 +108,5 @@ func NewVolumeStateEvent(ctx context.Context, volume *types.Volume) error {
 
 
 	opts := v1.Request().Node().NodeVolumeStateOptions()
-	return c.SetPodState(ctx, opts)
+	return c.SetVolumeState(ctx, opts)
 }

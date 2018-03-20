@@ -757,10 +757,12 @@ func TestDeploymentStorage_Watch(t *testing.T) {
 			return
 		}
 
-		go t.Run(tt.name, func(t *testing.T) {
-			if err := tt.fields.stg.Watch(tt.args.ctx, tt.args.deployment); (err != nil) != tt.wantErr {
-				t.Errorf("DeploymentStorage.Watch() error = %v, wantErr %v", err, tt.wantErr)
-			}
+		t.Run(tt.name, func(t *testing.T) {
+			go func () {
+				if err := tt.fields.stg.Watch(tt.args.ctx, tt.args.deployment); (err != nil) != tt.wantErr {
+					t.Errorf("DeploymentStorage.Watch() error = %v, wantErr %v", err, tt.wantErr)
+				}
+			}()
 		})
 	}
 }
@@ -801,10 +803,12 @@ func TestDeploymentStorage_WatchSpec(t *testing.T) {
 			return
 		}
 
-		go t.Run(tt.name, func(t *testing.T) {
-			if err := tt.fields.stg.WatchSpec(tt.args.ctx, tt.args.deployment); (err != nil) != tt.wantErr {
-				t.Errorf("DeploymentStorage.WatchSpec() error = %v, wantErr %v", err, tt.wantErr)
-			}
+		t.Run(tt.name, func(t *testing.T) {
+			go func () {
+				if err := tt.fields.stg.WatchSpec(tt.args.ctx, tt.args.deployment); (err != nil) != tt.wantErr {
+					t.Errorf("DeploymentStorage.WatchSpec() error = %v, wantErr %v", err, tt.wantErr)
+				}
+			}()
 		})
 	}
 }
