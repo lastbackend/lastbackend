@@ -739,11 +739,7 @@ func TestServiceStorage_Watch(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			go func () {
-				if err := tt.fields.stg.Watch(tt.args.ctx, tt.args.service); (err != nil) != tt.wantErr {
-					t.Errorf("ServiceStorage.Watch() error = %v, wantErr %v", err, tt.wantErr)
-				}
-			}()
+
 		})
 	}
 }
@@ -779,11 +775,7 @@ func TestServiceStorage_WatchSpec(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			go func () {
-				if err := tt.fields.stg.WatchSpec(tt.args.ctx, tt.args.service); (err != nil) != tt.wantErr {
-					t.Errorf("ServiceStorage.Watch() error = %v, wantErr %v", err, tt.wantErr)
-				}
-			}()
+
 		})
 	}
 }
