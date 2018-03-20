@@ -31,21 +31,23 @@ import (
 type INode interface {
 	List() (map[string]*types.Node, error)
 	Create() (*types.Node, error)
+
 	Get(name string) (*types.Node, error)
+	GetSpec(name string) (types.NodeSpec, error)
+
 	Update(node *types.Node, opts *request.NodeUpdateOptions) error
 	SetState(node *types.Node, state types.NodeState) (*types.Node, error)
 	SetInfo(node *types.Node, info types.NodeInfo) error
 	SetNetwork(node *types.Node, network types.Subnet) error
 	SetOnline(node *types.Node) error
 	SetOffline(node *types.Node) error
+
 	InsertPod(node *types.Node, pod *types.Pod) error
 	RemovePod(node *types.Node, pod *types.Pod) error
 	InsertVolume(node *types.Node, volume *types.Volume) error
 	RemoveVolume(node *types.Node, volume *types.Volume) error
 	InsertRoute(node *types.Node, route *types.Route) error
 	RemoveRoute(node *types.Node, route *types.Route) error
-
-	GetSpec(name string) (types.NodeSpec, error)
 	Remove(node *types.Node) error
 }
 
@@ -155,10 +157,22 @@ func (n *Node) SetNetwork(node *types.Node, network types.Subnet) error {
 }
 
 func (n *Node) InsertPod(node *types.Node, pod *types.Pod) error {
+
+	if err := n.storage.Node().InsertPod(n.context, node, pod); err != nil {
+		log.Errorf("Set node network error: %s", err)
+		return err
+	}
+
 	return nil
 }
 
 func (n *Node) RemovePod(node *types.Node, pod *types.Pod) error {
+
+	if err := n.storage.Node().RemovePod(n.context, node, pod); err != nil {
+		log.Errorf("Set node network error: %s", err)
+		return err
+	}
+
 	return nil
 }
 

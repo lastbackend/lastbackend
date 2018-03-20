@@ -27,6 +27,15 @@ type NodeInfoOptions struct {
 type NodeStateOptions struct {
 }
 
+type NodePodStateOptions struct {
+}
+
+type NodeVolumeStateOptions struct {
+}
+
+type NodeRouteStateOptions struct {
+}
+
 type NodeRemoveOptions struct {
 	Force bool `json:"force"`
 }

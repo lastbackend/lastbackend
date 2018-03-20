@@ -106,7 +106,7 @@ func Manage(ctx context.Context, route *types.Route) error {
 	}
 
 	if config.State.Destroy {
-		events.NewRouteStateEvent(ctx, config.ID, types.StateDestroyed)
+		events.NewRouteStateEvent(ctx, route)
 		return nil
 	}
 
@@ -115,7 +115,7 @@ func Manage(ctx context.Context, route *types.Route) error {
 		return err
 	}
 
-	events.NewRouteStateEvent(ctx, config.ID, types.StateCreated)
+	events.NewRouteStateEvent(ctx, route)
 
 	return nil
 }

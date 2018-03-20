@@ -40,7 +40,7 @@ func Daemon() bool {
 
 	log.Info("Start API server")
 
-	stg, err := storage.Get(viper.GetString("psql"))
+	stg, err := storage.Get(viper.GetString("etcd"))
 	if err != nil {
 		log.Fatalf("Cannot initialize storage: %v", err)
 	}

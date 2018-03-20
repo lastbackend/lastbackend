@@ -51,11 +51,11 @@ type Deployment struct {
 // Get deployment info by namespace service and deployment name
 func (d *Deployment) Get(namespace, service, name string) (*types.Deployment, error) {
 
-	log.Debugf("distribution:deployment:get: in namespace %s by name %s", namespace, service, name)
+	log.Debugf("distribution:deployment:get: namespace %s and service %s by name %s", namespace, service, name)
 
 	dt, err := d.storage.Deployment().Get(d.context, namespace, service, name)
 	if err != nil {
-		log.Errorf("distribution:deployment:get: in namespace %s by name %s error:", namespace, service, name, err.Error())
+		log.Errorf("distribution:deployment:get: in namespace %s and service %s by name %s error: %s", namespace, service, name, err.Error())
 		return nil, err
 	}
 

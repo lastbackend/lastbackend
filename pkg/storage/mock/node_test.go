@@ -26,6 +26,7 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 	"github.com/lastbackend/lastbackend/pkg/storage/storage"
 	"github.com/lastbackend/lastbackend/pkg/storage/store"
+	"encoding/json"
 )
 
 func TestNodeStorage_List(t *testing.T) {
@@ -165,6 +166,122 @@ func TestNodeStorage_Get(t *testing.T) {
 
 			if !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("NodeStorage.Get() = %v, want %v", got, tt.want)
+			}
+
+		})
+	}
+}
+
+func TestNodeStorage_GetSpec(t *testing.T) {
+
+	var (
+		ns  = "ns"
+		svc = "svc"
+		dp  = "dp"
+		stg = newNodeStorage()
+		ctx = context.Background()
+		n1   = getNodeAsset("test1", "", true)
+		n2   = getNodeAsset("test1", "", true)
+		n3   = getNodeAsset("test2", "", true)
+		p1  = getPodAsset(ns, svc, dp, "test1", "")
+		p2  = getPodAsset(ns, svc, dp, "test2", "")
+	)
+
+	n2.Spec.Pods    = make(map[string]types.PodSpec)
+	n2.Spec.Volumes = make(map[string]types.VolumeSpec)
+	n2.Spec.Routes  = make(map[string]types.RouteSpec)
+
+	n2.Spec.Pods[p1.SelfLink()] = p1.Spec
+	n2.Spec.Pods[p2.SelfLink()] = p2.Spec
+
+	type fields struct {
+		stg storage.Node
+	}
+
+	type args struct {
+		ctx  context.Context
+		node *types.Node
+	}
+
+	tests := []struct {
+		name    string
+		fields  fields
+		args    args
+		want    *types.NodeSpec
+		wantErr bool
+		err     string
+	}{
+		{
+			"get node spec info failed",
+			fields{stg},
+			args{ctx, &n3},
+			&n3.Spec,
+			true,
+			store.ErrEntityNotFound,
+		},
+		{
+			"get node spec info successful",
+			fields{stg},
+			args{ctx, &n1},
+			&n2.Spec,
+			false,
+			"",
+		},
+	}
+
+	for _, tt := range tests {
+
+		if err := stg.Clear(ctx); err != nil {
+			t.Errorf("NodeStorage.Get() storage setup error = %v", err)
+			return
+		}
+
+		if err := stg.Insert(ctx, &n1); err != nil {
+			t.Errorf("NodeStorage.GetSpec() storage setup error = %v", err)
+			return
+		}
+
+		if err := stg.InsertPod(ctx, &n1, &p1); err != nil {
+			t.Errorf("NodeStorage.GetSpec() storage setup error = %v", err)
+			return
+		}
+
+		if err := stg.InsertPod(ctx, &n1, &p2); err != nil {
+			t.Errorf("NodeStorage.GetSpec() storage setup error = %v", err)
+			return
+		}
+
+		t.Run(tt.name, func(t *testing.T) {
+
+			got, err := tt.fields.stg.GetSpec(tt.args.ctx, tt.args.node)
+
+			if err != nil {
+				if tt.wantErr && tt.err != err.Error() {
+					t.Errorf("NodeStorage.Get() = %v, want %v", err, tt.err)
+					return
+				}
+				return
+			}
+
+			if tt.wantErr {
+				t.Errorf("NodeStorage.Get() error = %v, wantErr %v", err, tt.err)
+				return
+			}
+
+			g, err := json.Marshal(got)
+			if err != nil {
+				t.Errorf("NodeStorage.GetSpec() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+
+			e, err := json.Marshal(tt.want)
+			if err != nil {
+				t.Errorf("NodeStorage.GetSpec() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+
+			if !reflect.DeepEqual(g, e) {
+				t.Errorf("NodeStorage.GetSpec() = %v, want %v", string(g), string(e))
 			}
 
 		})
@@ -854,6 +971,14 @@ func TestNodeStorage_InsertPod(t *testing.T) {
 		p2  = getPodAsset(ns, svc, dp, "test1", "")
 	)
 
+	n1.Spec.Pods = make(map[string]types.PodSpec)
+
+	n2.Spec.Pods = make(map[string]types.PodSpec)
+	n2.Spec.Volumes = make(map[string]types.VolumeSpec)
+	n2.Spec.Routes = make(map[string]types.RouteSpec)
+
+	n3.Spec.Pods = make(map[string]types.PodSpec)
+
 	n2.Spec.Pods[p1.SelfLink()] = p1.Spec
 	p2.Meta.Name = ""
 
@@ -950,9 +1075,9 @@ func TestNodeStorage_InsertPod(t *testing.T) {
 				return
 			}
 
-			got, _ := tt.fields.stg.Get(tt.args.ctx, tt.args.node.Meta.Name)
-			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("NodeStorage.InsertPod() = %v, want %v", got, tt.want)
+			got, _ := tt.fields.stg.GetSpec(tt.args.ctx, tt.args.node)
+			if !reflect.DeepEqual(*got, tt.want.Spec) {
+				t.Errorf("NodeStorage.InsertPod() = %v, want %v", got, tt.want.Spec)
 				return
 			}
 
@@ -973,9 +1098,18 @@ func TestNodeStorage_RemovePod(t *testing.T) {
 		n3  = getNodeAsset("test2", "", false)
 		p1  = getPodAsset(ns, svc, dp, "test1", "")
 		p2  = getPodAsset(ns, svc, dp, "test2", "")
+		p3  = getPodAsset(ns, svc, dp, "test2", "")
 	)
 
-	n1.Spec.Pods[p1.Meta.Name] = p1.Spec
+	n1.Spec.Pods = make(map[string]types.PodSpec)
+
+	n2.Spec.Pods = make(map[string]types.PodSpec)
+	n2.Spec.Volumes = make(map[string]types.VolumeSpec)
+	n2.Spec.Routes = make(map[string]types.RouteSpec)
+
+	n3.Spec.Pods = make(map[string]types.PodSpec)
+
+	p2.Meta.Name = ""
 
 	type fields struct {
 		stg storage.Node
@@ -1028,9 +1162,17 @@ func TestNodeStorage_RemovePod(t *testing.T) {
 			store.ErrEntityNotFound,
 		},
 		{
-			"test failed update: pod not found",
+			"test failed update: pod arg is invalid",
 			fields{stg},
 			args{ctx, &n1, &p2},
+			&n1,
+			true,
+			store.ErrStructArgIsInvalid,
+		},
+		{
+			"test failed update: pod not found",
+			fields{stg},
+			args{ctx, &n1, &p3},
 			&n1,
 			true,
 			store.ErrEntityNotFound,
@@ -1045,6 +1187,11 @@ func TestNodeStorage_RemovePod(t *testing.T) {
 		}
 
 		if err := stg.Insert(ctx, &n1); err != nil {
+			t.Errorf("NodeStorage.RemovePod() storage setup error = %v", err)
+			return
+		}
+
+		if err := stg.InsertPod(ctx, &n1, &p1); err != nil {
 			t.Errorf("NodeStorage.RemovePod() storage setup error = %v", err)
 			return
 		}
@@ -1070,9 +1217,9 @@ func TestNodeStorage_RemovePod(t *testing.T) {
 				return
 			}
 
-			got, _ := tt.fields.stg.Get(tt.args.ctx, tt.args.node.Meta.Name)
-			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("NodeStorage.RemovePod() = %v, want %v", got, tt.want)
+			got, _ := tt.fields.stg.GetSpec(tt.args.ctx, tt.args.node)
+			if !reflect.DeepEqual(*got, tt.want.Spec) {
+				t.Errorf("NodeStorage.RemovePod() = %v, want %v", got, tt.want.Spec)
 				return
 			}
 
@@ -1093,7 +1240,15 @@ func TestNodeStorage_InsertVolume(t *testing.T) {
 		v2  = getVolumeAsset(ns, "test1", "")
 	)
 
-	n2.Spec.Volumes[v1.Meta.Name] = v1.Spec
+	n1.Spec.Pods = make(map[string]types.PodSpec)
+
+	n2.Spec.Pods = make(map[string]types.PodSpec)
+	n2.Spec.Volumes = make(map[string]types.VolumeSpec)
+	n2.Spec.Routes = make(map[string]types.RouteSpec)
+
+	n3.Spec.Pods = make(map[string]types.PodSpec)
+
+	n2.Spec.Volumes[v1.SelfLink()] = v1.Spec
 	v2.Meta.Name = ""
 
 	type fields struct {
@@ -1189,10 +1344,26 @@ func TestNodeStorage_InsertVolume(t *testing.T) {
 				return
 			}
 
-			got, _ := tt.fields.stg.Get(tt.args.ctx, tt.args.node.Meta.Name)
-			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("NodeStorage.InsertVolume() = %v, want %v", got, tt.want)
+			got, err := tt.fields.stg.GetSpec(tt.args.ctx, tt.args.node)
+			if err != nil {
+				t.Errorf("NodeStorage.InsertVolume() error = %v, want no error", err.Error())
 				return
+			}
+
+			g, err := json.Marshal(got)
+			if err != nil {
+				t.Errorf("NodeStorage.InsertVolume() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+
+			e, err := json.Marshal(tt.want.Spec)
+			if err != nil {
+				t.Errorf("NodeStorage.InsertVolume() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+
+			if !reflect.DeepEqual(g, e) {
+				t.Errorf("NodeStorage.InsertVolume() = %v, want %v", string(g), string(e))
 			}
 
 		})
@@ -1210,9 +1381,18 @@ func TestNodeStorage_RemoveVolume(t *testing.T) {
 		n3  = getNodeAsset("test2", "", false)
 		v1  = getVolumeAsset(ns, "test1", "")
 		v2  = getVolumeAsset(ns, "test2", "")
+		v3  = getVolumeAsset(ns, "test2", "")
 	)
 
-	n1.Spec.Volumes[v1.Meta.Name] = v1.Spec
+	n1.Spec.Pods = make(map[string]types.PodSpec)
+
+	n2.Spec.Pods = make(map[string]types.PodSpec)
+	n2.Spec.Volumes = make(map[string]types.VolumeSpec)
+	n2.Spec.Routes = make(map[string]types.RouteSpec)
+
+	n3.Spec.Pods = make(map[string]types.PodSpec)
+
+	v2.Meta.Name = ""
 
 	type fields struct {
 		stg storage.Node
@@ -1265,9 +1445,17 @@ func TestNodeStorage_RemoveVolume(t *testing.T) {
 			store.ErrEntityNotFound,
 		},
 		{
-			"test failed update: volume not found",
+			"test failed update: volume arg is invalid",
 			fields{stg},
 			args{ctx, &n1, &v2},
+			&n1,
+			true,
+			store.ErrStructArgIsInvalid,
+		},
+		{
+			"test failed update: volume not found",
+			fields{stg},
+			args{ctx, &n1, &v3},
 			&n1,
 			true,
 			store.ErrEntityNotFound,
@@ -1283,6 +1471,11 @@ func TestNodeStorage_RemoveVolume(t *testing.T) {
 
 		if err := stg.Insert(ctx, &n1); err != nil {
 			t.Errorf("NodeStorage.RemoveVolume() storage setup error = %v", err)
+			return
+		}
+
+		if err := stg.InsertVolume(ctx, &n1, &v1); err != nil {
+			t.Errorf("NodeStorage.RemovePod() storage setup error = %v", err)
 			return
 		}
 
@@ -1307,10 +1500,26 @@ func TestNodeStorage_RemoveVolume(t *testing.T) {
 				return
 			}
 
-			got, _ := tt.fields.stg.Get(tt.args.ctx, tt.args.node.Meta.Name)
-			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("NodeStorage.RemoveVolume() = %v, want %v", got, tt.want)
+			got, err := tt.fields.stg.GetSpec(tt.args.ctx, tt.args.node)
+			if err != nil {
+				t.Errorf("NodeStorage.RemoveVolume() error = %v, want no error", err.Error())
 				return
+			}
+
+			g, err := json.Marshal(got)
+			if err != nil {
+				t.Errorf("NodeStorage.RemoveVolume() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+
+			e, err := json.Marshal(tt.want.Spec)
+			if err != nil {
+				t.Errorf("NodeStorage.RemoveVolume() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+
+			if !reflect.DeepEqual(g, e) {
+				t.Errorf("NodeStorage.RemoveVolume() = %v, want %v", string(g), string(e))
 			}
 
 		})
@@ -1330,7 +1539,15 @@ func TestNodeStorage_InsertRoute(t *testing.T) {
 		r2  = getRouteAsset(ns, "test1", "")
 	)
 
-	n2.Spec.Routes[r1.Meta.Name] = r1.Spec
+	n1.Spec.Pods = make(map[string]types.PodSpec)
+
+	n2.Spec.Pods = make(map[string]types.PodSpec)
+	n2.Spec.Volumes = make(map[string]types.VolumeSpec)
+	n2.Spec.Routes = make(map[string]types.RouteSpec)
+
+	n3.Spec.Pods = make(map[string]types.PodSpec)
+
+	n2.Spec.Routes[r1.SelfLink()] = r1.Spec
 	r2.Meta.Name = ""
 
 	type fields struct {
@@ -1426,10 +1643,26 @@ func TestNodeStorage_InsertRoute(t *testing.T) {
 				return
 			}
 
-			got, _ := tt.fields.stg.Get(tt.args.ctx, tt.args.node.Meta.Name)
-			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("NodeStorage.InsertRoute() = %v, want %v", got, tt.want)
+			got, err := tt.fields.stg.GetSpec(tt.args.ctx, tt.args.node)
+			if err != nil {
+				t.Errorf("NodeStorage.InsertRoute() error = %v, want no error", err.Error())
 				return
+			}
+
+			g, err := json.Marshal(got)
+			if err != nil {
+				t.Errorf("NodeStorage.InsertRoute() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+
+			e, err := json.Marshal(tt.want.Spec)
+			if err != nil {
+				t.Errorf("NodeStorage.InsertRoute() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+
+			if !reflect.DeepEqual(g, e) {
+				t.Errorf("NodeStorage.InsertRoute() = %v, want %v", string(g), string(e))
 			}
 
 		})
@@ -1445,11 +1678,20 @@ func TestNodeStorage_RemoveRoute(t *testing.T) {
 		n1  = getNodeAsset("test1", "", true)
 		n2  = getNodeAsset("test1", "", true)
 		n3  = getNodeAsset("test2", "", false)
-		p1  = getRouteAsset(ns, "test1", "")
-		p2  = getRouteAsset(ns, "test2", "")
+		r1  = getRouteAsset(ns, "test1", "")
+		r2  = getRouteAsset(ns, "test2", "")
+		r3  = getRouteAsset(ns, "test2", "")
 	)
 
-	n1.Spec.Routes[p1.Meta.Name] = p1.Spec
+	n1.Spec.Pods = make(map[string]types.PodSpec)
+
+	n2.Spec.Pods = make(map[string]types.PodSpec)
+	n2.Spec.Volumes = make(map[string]types.VolumeSpec)
+	n2.Spec.Routes = make(map[string]types.RouteSpec)
+
+	n3.Spec.Pods = make(map[string]types.PodSpec)
+
+	r2.Meta.Name = ""
 
 	type fields struct {
 		stg storage.Node
@@ -1472,7 +1714,7 @@ func TestNodeStorage_RemoveRoute(t *testing.T) {
 		{
 			"test successful route remove",
 			fields{stg},
-			args{ctx, &n1, &p1},
+			args{ctx, &n1, &r1},
 			&n2,
 			false,
 			"",
@@ -1480,7 +1722,7 @@ func TestNodeStorage_RemoveRoute(t *testing.T) {
 		{
 			"test failed update: nil node structure",
 			fields{stg},
-			args{ctx, nil, &p1},
+			args{ctx, nil, &r1},
 			&n2,
 			true,
 			store.ErrStructArgIsNil,
@@ -1502,9 +1744,17 @@ func TestNodeStorage_RemoveRoute(t *testing.T) {
 			store.ErrEntityNotFound,
 		},
 		{
+			"test failed update: route arg is invalid",
+			fields{stg},
+			args{ctx, &n1, &r2},
+			&n1,
+			true,
+			store.ErrStructArgIsInvalid,
+		},
+		{
 			"test failed update: route not found",
 			fields{stg},
-			args{ctx, &n1, &p2},
+			args{ctx, &n1, &r3},
 			&n1,
 			true,
 			store.ErrEntityNotFound,
@@ -1520,6 +1770,11 @@ func TestNodeStorage_RemoveRoute(t *testing.T) {
 
 		if err := stg.Insert(ctx, &n1); err != nil {
 			t.Errorf("NodeStorage.RemoveRoute() storage setup error = %v", err)
+			return
+		}
+
+		if err := stg.InsertRoute(ctx, &n1, &r1); err != nil {
+			t.Errorf("NodeStorage.RemovePod() storage setup error = %v", err)
 			return
 		}
 
@@ -1544,10 +1799,26 @@ func TestNodeStorage_RemoveRoute(t *testing.T) {
 				return
 			}
 
-			got, _ := tt.fields.stg.Get(tt.args.ctx, tt.args.node.Meta.Name)
-			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("NodeStorage.RemoveRoute() = %v, want %v", got, tt.want)
+			got, err := tt.fields.stg.GetSpec(tt.args.ctx, tt.args.node)
+			if err != nil {
+				t.Errorf("NodeStorage.RemoveRoute() error = %v, want no error", err.Error())
 				return
+			}
+
+			g, err := json.Marshal(got)
+			if err != nil {
+				t.Errorf("NodeStorage.RemoveRoute() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+
+			e, err := json.Marshal(tt.want.Spec)
+			if err != nil {
+				t.Errorf("NodeStorage.RemoveRoute() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+
+			if !reflect.DeepEqual(g, e) {
+				t.Errorf("NodeStorage.RemoveRoute() = %v, want %v", string(g), string(e))
 			}
 
 		})

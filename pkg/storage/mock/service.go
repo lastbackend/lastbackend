@@ -66,7 +66,7 @@ func (s *ServiceStorage) SetState(ctx context.Context, service *types.Service) e
 	return nil
 }
 
-// Update service state
+// Update service spec
 func (s *ServiceStorage) SetSpec(ctx context.Context, service *types.Service) error {
 	if err := s.checkServiceExists(service); err != nil {
 		return err

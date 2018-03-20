@@ -28,9 +28,9 @@ type NodeList []*Node
 
 type Node struct {
 	Meta    NodeMeta  `json:"meta"`
-	Info    NodeInfo  `json:"host"`
+	Info    NodeInfo  `json:"info"`
 	State   NodeState `json:"state"`
-	Spec    NodeSpec  `json:"usage"`
+	Spec    NodeSpec  `json:"spec"`
 	Roles   NodeRole  `json:"roles"`
 	Network Subnet    `json:"network"`
 	Online  bool      `json:"online"`

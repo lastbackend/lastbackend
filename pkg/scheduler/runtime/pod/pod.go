@@ -20,11 +20,13 @@ package pod
 
 import (
 	"context"
-	"github.com/lastbackend/lastbackend/pkg/api/envs"
+	"github.com/lastbackend/lastbackend/pkg/scheduler/envs"
 	"github.com/lastbackend/lastbackend/pkg/distribution"
 	"github.com/lastbackend/lastbackend/pkg/distribution/errors"
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 	"github.com/lastbackend/lastbackend/pkg/log"
+	"github.com/lastbackend/lastbackend/pkg/storage/store"
+	"sort"
 )
 
 func Provision(p *types.Pod) error {
@@ -35,6 +37,16 @@ func Provision(p *types.Pod) error {
 		memory = int64(0)
 		node   *types.Node
 	)
+
+
+	pm := distribution.NewPodModel(context.Background(), stg)
+	if d, err := pm.Get(p.Meta.Namespace, p.Meta.Service, p.Meta.Deployment, p.Meta.Name); d == nil || err != nil {
+		if d == nil {
+			return errors.New(store.ErrEntityNotFound)
+		}
+		log.Errorf("scheduler:pod:controller:provision: get pod error: %s", err.Error())
+		return err
+	}
 
 	nm := distribution.NewNodeModel(context.Background(), stg)
 
@@ -79,16 +91,48 @@ func Provision(p *types.Pod) error {
 		memory += c.Resources.Quota.RAM
 	}
 
+	var nl []*types.Node
 	for _, n := range nodes {
-		log.Debugf("Node: Allocate: available memory %d", n.State.Capacity)
-		if n.State.Capacity.Memory > memory && n.Online {
-			node = n
-			break
+		nl = append(nl, n)
+	}
+
+	sort.Slice(nl, func(i, j int) bool {
+		n1 := nl[i].State.Capacity.Memory - nl[i].State.Allocated.Memory
+		n2 := nl[j].State.Capacity.Memory - nl[j].State.Allocated.Memory
+		return n2 < n1
+	})
+
+
+	for _, n := range nl {
+
+		if !n.Online {
+			continue
 		}
+
+		ram := n.State.Capacity.Memory - n.State.Allocated.Memory
+		pds := n.State.Capacity.Pods   - n.State.Allocated.Pods
+		cns := n.State.Capacity.Containers   - n.State.Allocated.Containers
+
+		if ram <= memory {
+			continue
+		}
+
+		if pds == 0 {
+			continue
+		}
+
+		if cns <= len(p.Spec.Template.Containers) {
+			continue
+		}
+
+		node = n
+		break
 	}
 
 	if node == nil {
-		log.Error("Node: Allocate: Available node not found")
+
+		log.Debug("Node: Allocate: Available node not found")
+
 		p.Status.Stage = types.PodStageError
 		p.Status.Message = errors.NodeNotFound
 

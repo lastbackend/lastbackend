@@ -24,6 +24,10 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 	"github.com/lastbackend/lastbackend/pkg/log"
 	"github.com/lastbackend/lastbackend/pkg/storage/storage"
+	"fmt"
+	"github.com/lastbackend/lastbackend/pkg/storage/store"
+	"time"
+	"regexp"
 )
 
 const triggerStorage string = "triggers"
@@ -36,52 +40,236 @@ type TriggerStorage struct {
 // Get triggers by id
 func (s *TriggerStorage) Get(ctx context.Context, namespace, service, name string) (*types.Trigger, error) {
 
-	log.V(logLevel).Debugf("Storage: Trigger: get trigger by name: %s", name)
+	log.V(logLevel).Debugf("storage:etcd:trigger:> get by name: %s", name)
 
-	if len(name) == 0 {
-		err := errors.New("id can not be empty")
-		log.V(logLevel).Errorf("Storage: Trigger: get trigger by id err: %s", err.Error())
+	if len(namespace) == 0 {
+		err := errors.New("namespace can not be empty")
+		log.V(logLevel).Errorf("storage:etcd:trigger:> get by name err: %s", err.Error())
 		return nil, err
 	}
 
+	if len(service) == 0 {
+		err := errors.New("service can not be empty")
+		log.V(logLevel).Errorf("storage:etcd:trigger:> get by name err: %s", err.Error())
+		return nil, err
+	}
+
+	if len(name) == 0 {
+		err := errors.New("name can not be empty")
+		log.V(logLevel).Errorf("storage:etcd:trigger:> get by name err: %s", err.Error())
+		return nil, err
+	}
+
+	const filter = `\b.+` + triggerStorage + `\/.+\/(?:meta|state|spec)\b`
+
+	var (
+		trigger = new(types.Trigger)
+	)
+
 	client, destroy, err := getClient(ctx)
 	if err != nil {
-		log.V(logLevel).Errorf("Storage: Trigger: create client err: %s", err.Error())
+		log.V(logLevel).Errorf("storage:etcd:trigger:> create client err: %s", err.Error())
 		return nil, err
 	}
 	defer destroy()
 
-	trigger := new(types.Trigger)
-	keyMeta := keyCreate(triggerStorage, name)
-	if err := client.Get(ctx, keyMeta, &trigger); err != nil {
-		log.V(logLevel).Errorf("Storage: Trigger: get trigger meta err: %s", err.Error())
+	keyTrigger := keyCreate(triggerStorage, s.keyCreate(namespace, service, name))
+	if err := client.Map(ctx, keyTrigger, filter, trigger); err != nil {
+		log.V(logLevel).Errorf("storage:etcd:trigger:> err: %s", name, err.Error())
 		return nil, err
+	}
+
+	if trigger.Meta.Name == "" {
+		return nil, errors.New(store.ErrEntityNotFound)
 	}
 
 	return trigger, nil
 }
 
-// Insert new trigger into storage
-func (s *TriggerStorage) Insert(ctx context.Context, trigger *types.Trigger) error {
+// Get trigger by namespace name
+func (s *TriggerStorage) ListByNamespace(ctx context.Context, namespace string) (map[string]*types.Trigger, error) {
 
-	log.V(logLevel).Debugf("Storage: Trigger: create trigger: %#v", trigger)
+	log.V(logLevel).Debugf("storage:etcd:trigger:> get list by namespace: %s", namespace)
 
-	if trigger == nil {
-		err := errors.New("trigger can not be nil")
-		log.V(logLevel).Errorf("Storage: Trigger: create trigger err: %s", err.Error())
+	if len(namespace) == 0 {
+		err := errors.New("namespace can not be empty")
+		log.V(logLevel).Errorf("storage:etcd:trigger:> get list by name err: %s", err.Error())
+		return nil, err
+	}
+
+	const filter = `\b.+` + triggerStorage + `\/.+\/(?:meta|state|spec)\b`
+
+	var (
+		triggers = make(map[string]*types.Trigger)
+	)
+
+	client, destroy, err := getClient(ctx)
+	if err != nil {
+		log.V(logLevel).Errorf("storage:etcd:trigger:> create client err: %s", err.Error())
+		return nil, err
+	}
+	defer destroy()
+
+	keyTrigger := keyCreate(triggerStorage, fmt.Sprintf("%s:",namespace))
+	if err := client.MapList(ctx, keyTrigger, filter, triggers); err != nil {
+		log.V(logLevel).Errorf("storage:etcd:trigger:> err: %s", namespace, err.Error())
+		return nil, err
+	}
+
+	return triggers, nil
+}
+
+// Get trigger by service name
+func (s *TriggerStorage) ListByService(ctx context.Context, namespace, service string) (map[string]*types.Trigger, error) {
+
+	log.V(logLevel).Debugf("storage:etcd:trigger:> get list by namespace and service: %s:%s", namespace, service)
+
+	if len(namespace) == 0 {
+		err := errors.New("namespace can not be empty")
+		log.V(logLevel).Errorf("storage:etcd:trigger:> get list by namespace and service err: %s", err.Error())
+		return nil, err
+	}
+
+	if len(service) == 0 {
+		err := errors.New("service can not be empty")
+		log.V(logLevel).Errorf("storage:etcd:trigger:> get list by namespace and service err: %s", err.Error())
+		return nil, err
+	}
+
+	const filter = `\b.+` + triggerStorage + `\/.+\/(?:meta|state|spec)\b`
+
+	var (
+		triggers = make(map[string]*types.Trigger)
+	)
+
+	client, destroy, err := getClient(ctx)
+	if err != nil {
+		log.V(logLevel).Errorf("storage:etcd:trigger:>  get list by namespace and service err: %s", err.Error())
+		return nil, err
+	}
+	defer destroy()
+
+	keyTrigger := keyCreate(triggerStorage, fmt.Sprintf("%s:%s:",namespace, service))
+	if err := client.MapList(ctx, keyTrigger, filter, triggers); err != nil {
+		log.V(logLevel).Errorf("storage:etcd:trigger:> err: %s", namespace, err.Error())
+		return nil, err
+	}
+
+	return triggers, nil
+}
+
+// Update trigger state
+func (s *TriggerStorage) SetState(ctx context.Context, trigger *types.Trigger) error {
+
+	log.V(logLevel).Debugf("storage:etcd:trigger:> update trigger state: %#v", trigger)
+
+	if err := s.checkTriggerExists(ctx, trigger); err != nil {
 		return err
 	}
 
 	client, destroy, err := getClient(ctx)
 	if err != nil {
-		log.V(logLevel).Errorf("Storage: Trigger: create client err: %s", err.Error())
+		log.V(logLevel).Errorf("storage:etcd:trigger:>: update trigger err: %s", err.Error())
 		return err
 	}
 	defer destroy()
 
-	key := keyCreate(triggerStorage, trigger.Meta.Name)
-	if err := client.Create(ctx, key, trigger, nil, 0); err != nil {
-		log.V(logLevel).Errorf("Storage: Trigger: create trigger err: %s", err.Error())
+	key := keyCreate(triggerStorage, s.keyGet(trigger), "state")
+	if err := client.Upsert(ctx, key, trigger.State, nil, 0); err != nil {
+		log.V(logLevel).Errorf("storage:etcd:trigger:>: update trigger err: %s", err.Error())
+		return err
+	}
+
+	return nil
+}
+
+// Update trigger state
+func (s *TriggerStorage) SetSpec(ctx context.Context, trigger *types.Trigger) error {
+
+	log.V(logLevel).Debugf("storage:etcd:trigger:> update trigger spec: %#v", trigger)
+
+	if err := s.checkTriggerExists(ctx, trigger); err != nil {
+		return err
+	}
+
+	client, destroy, err := getClient(ctx)
+	if err != nil {
+		log.V(logLevel).Errorf("storage:etcd:trigger:>: update trigger err: %s", err.Error())
+		return err
+	}
+	defer destroy()
+
+	key := keyCreate(triggerStorage, s.keyGet(trigger), "spec")
+	if err := client.Upsert(ctx, key, trigger.State, nil, 0); err != nil {
+		log.V(logLevel).Errorf("storage:etcd:trigger:>: update trigger err: %s", err.Error())
+		return err
+	}
+
+	return nil
+}
+
+// Insert new trigger into storage
+func (s *TriggerStorage) Insert(ctx context.Context, trigger *types.Trigger) error {
+
+	log.V(logLevel).Debugf("storage:etcd:trigger:> insert trigger: %#v", trigger)
+
+	if err := s.checkTriggerArgument(trigger); err != nil {
+		return err
+	}
+
+	client, destroy, err := getClient(ctx)
+	if err != nil {
+		log.V(logLevel).Errorf("storage:etcd:trigger:> insert trigger err: %s", err.Error())
+		return err
+	}
+	defer destroy()
+
+	tx := client.Begin(ctx)
+
+	keyMeta := keyCreate(triggerStorage, s.keyGet(trigger), "meta")
+	if err := tx.Create(keyMeta, trigger.Meta, 0); err != nil {
+		log.V(logLevel).Errorf("storage:etcd:trigger:> insert trigger err: %s", err.Error())
+		return err
+	}
+
+	keyState := keyCreate(triggerStorage, s.keyGet(trigger), "state")
+	if err := tx.Create(keyState, trigger.State, 0); err != nil {
+		log.V(logLevel).Errorf("storage:etcd:trigger:> insert trigger err: %s", err.Error())
+		return err
+	}
+
+	keySpec := keyCreate(triggerStorage, s.keyGet(trigger), "spec")
+	if err := tx.Create(keySpec, trigger.Spec, 0); err != nil {
+		log.V(logLevel).Errorf("storage:etcd:trigger:> insert trigger err: %s", err.Error())
+		return err
+	}
+
+	if err := tx.Commit(); err != nil {
+		log.V(logLevel).Errorf("storage:etcd:trigger:> insert trigger err: %s", err.Error())
+		return err
+	}
+
+	return nil
+}
+
+// Update trigger info
+func (s *TriggerStorage) Update(ctx context.Context, trigger *types.Trigger) error {
+
+	if err := s.checkTriggerExists(ctx, trigger); err != nil {
+		return err
+	}
+
+	trigger.Meta.Updated = time.Now()
+	client, destroy, err := getClient(ctx)
+	if err != nil {
+		log.V(logLevel).Errorf("storage:etcd:trigger:> update trigger err: %s", err.Error())
+		return err
+	}
+	defer destroy()
+
+	keyMeta := keyCreate(triggerStorage, s.keyGet(trigger), "meta")
+	if err := client.Upsert(ctx, keyMeta, trigger.Meta,  nil,0); err != nil {
+		log.V(logLevel).Errorf("storage:etcd:trigger:> update trigger err: %s", err.Error())
 		return err
 	}
 
@@ -91,24 +279,191 @@ func (s *TriggerStorage) Insert(ctx context.Context, trigger *types.Trigger) err
 // Remove trigger by id from storage
 func (s *TriggerStorage) Remove(ctx context.Context, trigger *types.Trigger) error {
 
-	log.V(logLevel).Debugf("Storage: Trigger: remove trigger by id %#v", trigger.Meta.Name)
+	if err := s.checkTriggerExists(ctx, trigger); err != nil {
+		return err
+	}
 
 	client, destroy, err := getClient(ctx)
 	if err != nil {
-		log.V(logLevel).Errorf("Storage: Trigger: create client err: %s", err.Error())
+		log.V(logLevel).Errorf("storage:etcd:trigger:> remove err: %s", err.Error())
 		return err
 	}
 	defer destroy()
 
-	key := keyCreate(triggerStorage, trigger.Meta.Name)
-	if err := client.DeleteDir(ctx, key); err != nil {
-		log.V(logLevel).Errorf("Storage: Trigger: remove trigger err: %s", err.Error())
+	keyMeta := keyCreate(triggerStorage, s.keyGet(trigger))
+	if err := client.DeleteDir(ctx, keyMeta); err != nil {
+		log.V(logLevel).Errorf("storage:etcd:trigger:> remove trigger err: %s", err.Error())
 		return err
 	}
+
 	return nil
+}
+
+// Watch trigger changes
+func (s *TriggerStorage) Watch(ctx context.Context, trigger chan *types.Trigger) error {
+
+	log.V(logLevel).Debug("storage:etcd:trigger:> watch trigger")
+
+	const filter = `\b\/` + triggerStorage + `\/(.+):(.+):(.+)/.+\b`
+	client, destroy, err := getClient(ctx)
+	if err != nil {
+		log.V(logLevel).Errorf("storage:etcd:trigger:> watch trigger err: %s", err.Error())
+		return err
+	}
+	defer destroy()
+
+	r, _ := regexp.Compile(filter)
+	key := keyCreate(triggerStorage)
+	cb := func(action, key string, _ []byte) {
+		keys := r.FindStringSubmatch(key)
+		if len(keys) < 3 {
+			return
+		}
+
+		if d, err := s.Get(ctx, keys[1], keys[2], keys[3]); err == nil {
+			trigger <- d
+		}
+	}
+
+	if err := client.Watch(ctx, key, filter, cb); err != nil {
+		log.V(logLevel).Errorf("storage:etcd:trigger:> watch trigger err: %s", err.Error())
+		return err
+	}
+
+	return nil
+}
+
+// Watch trigger spec changes
+func (s *TriggerStorage) WatchSpec(ctx context.Context, trigger chan *types.Trigger) error {
+
+	log.V(logLevel).Debug("storage:etcd:trigger:> watch trigger by spec")
+
+	const filter = `\b\/` + triggerStorage + `\/(.+):(.+):(.+)/spec\b`
+	client, destroy, err := getClient(ctx)
+	if err != nil {
+		log.V(logLevel).Errorf("storage:etcd:trigger:> watch trigger by spec err: %s", err.Error())
+		return err
+	}
+	defer destroy()
+
+	r, _ := regexp.Compile(filter)
+	key := keyCreate(triggerStorage)
+	cb := func(action, key string, _ []byte) {
+		keys := r.FindStringSubmatch(key)
+		if len(keys) < 3 {
+			return
+		}
+
+		if d, err := s.Get(ctx, keys[1], keys[2], keys[3]); err == nil {
+			trigger <- d
+		}
+	}
+
+	if err := client.Watch(ctx, key, filter, cb); err != nil {
+		log.V(logLevel).Errorf("storage:etcd:trigger:> watch trigger by spec err: %s", err.Error())
+		return err
+	}
+
+	return nil
+}
+
+// Watch trigger state changes
+func (s *TriggerStorage) WatchState(ctx context.Context, trigger chan *types.Trigger) error {
+
+	log.V(logLevel).Debug("storage:etcd:trigger:> watch trigger by spec")
+
+	const filter = `\b\/` + triggerStorage + `\/(.+):(.+):(.+)/state\b`
+	client, destroy, err := getClient(ctx)
+	if err != nil {
+		log.V(logLevel).Errorf("storage:etcd:trigger:> watch trigger by spec err: %s", err.Error())
+		return err
+	}
+	defer destroy()
+
+	r, _ := regexp.Compile(filter)
+	key := keyCreate(triggerStorage)
+	cb := func(action, key string, _ []byte) {
+		keys := r.FindStringSubmatch(key)
+		if len(keys) < 3 {
+			return
+		}
+
+		if d, err := s.Get(ctx, keys[1], keys[2], keys[3]); err == nil {
+			trigger <- d
+		}
+	}
+
+	if err := client.Watch(ctx, key, filter, cb); err != nil {
+		log.V(logLevel).Errorf("storage:etcd:trigger:> watch trigger by spec err: %s", err.Error())
+		return err
+	}
+
+	return nil
+}
+
+// Clear trigger storage
+func (s *TriggerStorage) Clear(ctx context.Context) error {
+
+	log.V(logLevel).Debugf("storage:etcd:trigger:> clear")
+
+	client, destroy, err := getClient(ctx)
+	if err != nil {
+		log.V(logLevel).Errorf("storage:etcd:trigger:> clear err: %s", err.Error())
+		return err
+	}
+	defer destroy()
+
+	if err := client.DeleteDir(ctx, triggerStorage); err != nil {
+		log.V(logLevel).Errorf("storage:etcd:trigger:> clear err: %s", err.Error())
+		return err
+	}
+
+	return nil
+}
+
+// keyCreate util function
+func (s *TriggerStorage) keyCreate(namespace, service, name string) string {
+	return fmt.Sprintf("%s:%s:%s", namespace, service, name)
+}
+
+// keyGet util function
+func (s *TriggerStorage) keyGet(t *types.Trigger) string {
+	return t.SelfLink()
 }
 
 func newTriggerStorage() *TriggerStorage {
 	s := new(TriggerStorage)
 	return s
+}
+
+// checkTriggerArgument - check if argument is valid for manipulations
+func (s *TriggerStorage) checkTriggerArgument(trigger *types.Trigger) error {
+
+	if trigger == nil {
+		return errors.New(store.ErrStructArgIsNil)
+	}
+
+	if trigger.Meta.Name == "" {
+		return errors.New(store.ErrStructArgIsInvalid)
+	}
+
+	return nil
+}
+
+// checkTriggerArgument - check if trigger exists in store
+func (s *TriggerStorage) checkTriggerExists(ctx context.Context, trigger *types.Trigger) error {
+
+	if err := s.checkTriggerArgument(trigger); err != nil {
+		return err
+	}
+
+	log.V(logLevel).Debugf("storage:etcd:trigger:> check trigger exists")
+
+	if _, err := s.Get(ctx, trigger.Meta.Namespace, trigger.Meta.Service, trigger.Meta.Name); err != nil {
+		log.V(logLevel).Debugf("storage:etcd:trigger:> check trigger exists err: %s", err.Error())
+		return err
+	}
+
+
+	return nil
 }

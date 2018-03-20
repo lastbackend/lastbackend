@@ -119,6 +119,14 @@ func keyCreate(args ...string) string {
 	return strings.Join([]string(args), "/")
 }
 
+func keyDirCreate(args ...string) string {
+	key := strings.Join([]string(args), "/")
+	if !strings.HasSuffix(key, "/") {
+		key += "/"
+	}
+	return key
+}
+
 func New() (*Storage, error) {
 
 	log.Debug("Etcd: define storage")
@@ -137,6 +145,7 @@ func New() (*Storage, error) {
 
 	s.RouteStorage = newRouteStorage()
 	s.SystemStorage = newSystemStorage()
+	s.VolumeStorage = newVolumeStorage()
 
 	return s, nil
 }

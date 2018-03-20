@@ -26,7 +26,7 @@ type Volume struct {
 	// Volume meta
 	Meta VolumeMeta `json:"meta" yaml:"meta"`
 	// Volume stat
-	State VolumeState `json:"stat" yaml:"stat"`
+	State VolumeState `json:"state" yaml:"state"`
 	// Volume spec
 	Spec VolumeSpec `json:"spec" yaml:"spec"`
 }
