@@ -16,34 +16,27 @@
 // from Last.Backend LLC.
 //
 
-package v1
+package views
 
-import (
-	"github.com/lastbackend/lastbackend/pkg/api/client/http"
-)
+import "time"
 
-type Client struct {
-	client http.Interface
+type Secret struct {
+	Meta  SecretMeta  `json:"meta"`
+	Spec  SecretSpec  `json:"spec"`
+	State SecretState `json:"state"`
 }
 
-func (s *Client) Cluster() *ClusterClient {
-	if s == nil {
-		return nil
-	}
-	return newClusterClient(s.client)
+type SecretMeta struct {
+	Name      string    `json:"name"`
+	Namespace string    `json:"namespace"`
+	Updated   time.Time `json:"updated"`
+	Created   time.Time `json:"created"`
 }
 
-func (s *Client) Namespace(name ...string) *NamespaceClient {
-	if s == nil {
-		return nil
-	}
-	n := ""
-	if len(name) > 0 {
-		n = name[0]
-	}
-	return newNamespaceClient(s.client, n)
+type SecretSpec struct {
 }
 
-func New(req http.Interface) *Client {
-	return &Client{client: req}
+type SecretState struct {
 }
+
+type SecretList map[string]*Secret

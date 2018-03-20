@@ -24,33 +24,40 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/api/client/interfaces"
 	rv1 "github.com/lastbackend/lastbackend/pkg/api/types/v1/request"
 	vv1 "github.com/lastbackend/lastbackend/pkg/api/types/v1/views"
+	"github.com/lastbackend/lastbackend/pkg/api/client/http"
 )
 
 type VolumeClient struct {
 	interfaces.Volume
+	client    http.Interface
+	namespace string
+	name      string
 }
 
-func (s *VolumeClient) Create(ctx context.Context, namespace string, opts rv1.VolumeCreateOptions) (*vv1.Volume, error) {
+func (s *VolumeClient) Create(ctx context.Context, opts rv1.VolumeCreateOptions) (*vv1.Volume, error) {
 	return nil, nil
 }
 
-func (s *VolumeClient) List(ctx context.Context, namespace string) (*vv1.VolumeList, error) {
+func (s *VolumeClient) List(ctx context.Context) (*vv1.VolumeList, error) {
 	return nil, nil
 }
 
-func (s *VolumeClient) Get(ctx context.Context, namespace, name string) (*vv1.Volume, error) {
+func (s *VolumeClient) Get(ctx context.Context) (*vv1.Volume, error) {
 	return nil, nil
 }
 
-func (s *VolumeClient) Update(ctx context.Context, namespace, name string, opts rv1.VolumeUpdateOptions) (*vv1.Volume, error) {
+func (s *VolumeClient) Update(ctx context.Context, opts rv1.VolumeUpdateOptions) (*vv1.Volume, error) {
 	return nil, nil
 }
 
-func (s *VolumeClient) Remove(ctx context.Context, namespace, name string, opts rv1.VolumeRemoveOptions) error {
+func (s *VolumeClient) Remove(ctx context.Context, opts rv1.VolumeRemoveOptions) error {
 	return nil
 }
 
-func newVolumeClient() *VolumeClient {
+func newVolumeClient(client http.Interface, namespace, name string) *VolumeClient {
 	s := new(VolumeClient)
+	s.client = client
+	s.namespace = namespace
+	s.name = name
 	return s
 }

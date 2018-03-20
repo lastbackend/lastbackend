@@ -25,13 +25,20 @@ import (
 )
 
 type Secret struct {
-	Meta SecretMeta        `json:"meta" yaml:"meta"`
-	Data map[string][]byte `json:"data" yaml:"data"`
+	Meta  SecretMeta  `json:"meta" yaml:"meta"`
+	State SecretState `json:"meta" yaml:"state"`
+	Spec  SecretSpec  `json:"meta" yaml:"spec"`
 }
 
 type SecretMeta struct {
-	Meta      `yaml:",inline"`
-	Namespace string `json:"namespace"`
+	Meta             `yaml:",inline"`
+	Namespace string `json:"namespace" yaml:"namespace"`
+}
+
+type SecretSpec struct {
+}
+
+type SecretState struct {
 }
 
 func (s *Secret) GetHash() string {

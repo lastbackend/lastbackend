@@ -16,34 +16,14 @@
 // from Last.Backend LLC.
 //
 
-package v1
+package request
 
-import (
-	"github.com/lastbackend/lastbackend/pkg/api/client/http"
-)
-
-type Client struct {
-	client http.Interface
+type SecretCreateOptions struct {
 }
 
-func (s *Client) Cluster() *ClusterClient {
-	if s == nil {
-		return nil
-	}
-	return newClusterClient(s.client)
+type SecretUpdateOptions struct {
 }
 
-func (s *Client) Namespace(name ...string) *NamespaceClient {
-	if s == nil {
-		return nil
-	}
-	n := ""
-	if len(name) > 0 {
-		n = name[0]
-	}
-	return newNamespaceClient(s.client, n)
-}
-
-func New(req http.Interface) *Client {
-	return &Client{client: req}
+type SecretRemoveOptions struct {
+	Force bool `json:"force"`
 }

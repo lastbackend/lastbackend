@@ -24,5 +24,5 @@ import (
 
 type IClientV1 interface {
 	Cluster() *v1.ClusterClient
-	Namespace() *v1.NamespaceClient
+	Namespace(name ...string) *v1.NamespaceClient
 }

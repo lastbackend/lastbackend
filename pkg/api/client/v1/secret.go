@@ -21,34 +21,43 @@ package v1
 import (
 	"context"
 
-	"github.com/lastbackend/lastbackend/pkg/api/client/http"
 	"github.com/lastbackend/lastbackend/pkg/api/client/interfaces"
 	rv1 "github.com/lastbackend/lastbackend/pkg/api/types/v1/request"
 	vv1 "github.com/lastbackend/lastbackend/pkg/api/types/v1/views"
+	"github.com/lastbackend/lastbackend/pkg/api/client/http"
 )
 
-type NodeClient struct {
-	interfaces.Node
-	client   http.Interface
-	hostname string
+type SecretClient struct {
+	interfaces.Secret
+	client    http.Interface
+	namespace string
+	name      string
 }
 
-func (s *NodeClient) List(ctx context.Context) (*vv1.NodeList, error) {
+func (s *SecretClient) Create(ctx context.Context, opts rv1.SecretCreateOptions) (*vv1.Secret, error) {
 	return nil, nil
 }
 
-func (s *NodeClient) Get(ctx context.Context) (*vv1.Node, error) {
+func (s *SecretClient) List(ctx context.Context) (*vv1.SecretList, error) {
 	return nil, nil
 }
 
-func (s *NodeClient) Update(ctx context.Context, opts rv1.NodeUpdateOptions) (*vv1.Node, error) {
+func (s *SecretClient) Get(ctx context.Context) (*vv1.Secret, error) {
 	return nil, nil
 }
 
-func (s *NodeClient) Remove(ctx context.Context, opts rv1.NodeRemoveOptions) error {
+func (s *SecretClient) Update(ctx context.Context, opts rv1.SecretUpdateOptions) (*vv1.Secret, error) {
+	return nil, nil
+}
+
+func (s *SecretClient) Remove(ctx context.Context, opts rv1.SecretRemoveOptions) error {
 	return nil
 }
 
-func newNodeClient(req http.Interface, hostname string) *NodeClient {
-	return &NodeClient{client: req, hostname: hostname}
+func newSecretClient(client http.Interface, namespace, name string) *SecretClient {
+	s := new(SecretClient)
+	s.client = client
+	s.namespace = namespace
+	s.name = name
+	return s
 }
