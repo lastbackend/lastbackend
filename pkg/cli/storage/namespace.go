@@ -38,9 +38,11 @@ func (s *NamespaceStorage) Save(data *v.Namespace) error {
 
 // Get namespace
 func (s *NamespaceStorage) Load() (*v.Namespace, error) {
-	var data *v.Namespace
-	err := s.client.Get(nsStorage, data)
-	return data, err
+	var data = new(v.Namespace)
+	if err := s.client.Get(nsStorage, data); err != nil {
+		return nil, err
+	}
+	return data, nil
 }
 
 // Destroy namespace

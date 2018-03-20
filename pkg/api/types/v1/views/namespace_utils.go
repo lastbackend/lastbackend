@@ -29,7 +29,6 @@ type NamespaceView struct{}
 
 func (nv *NamespaceView) New(obj *types.Namespace) *Namespace {
 	n := Namespace{}
-	n.ID = obj.Meta.Name
 	n.Meta = n.ToMeta(obj.Meta)
 	n.Env = n.ToEnv(obj.Env)
 	n.Resources = n.ToResources(obj.Resources)

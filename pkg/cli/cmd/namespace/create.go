@@ -24,7 +24,6 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/api/types/v1/request"
 	"github.com/lastbackend/lastbackend/pkg/cli/context"
 	"github.com/lastbackend/lastbackend/pkg/cli/view"
-	"github.com/lastbackend/lastbackend/pkg/distribution/errors"
 )
 
 func CreateCmd(name, desc string) {
@@ -38,7 +37,6 @@ func CreateCmd(name, desc string) {
 	fmt.Println(fmt.Sprintf("Namespace `%s` is created", name))
 
 	ns.Print()
-
 }
 
 func Create(name, desc string) (*view.Namespace, error) {
@@ -53,13 +51,13 @@ func Create(name, desc string) (*view.Namespace, error) {
 
 	response, err := cli.V1().Namespace().Create(context.Background(), data)
 	if err != nil {
-		return nil, errors.UnknownMessage
+		return nil, err
 	}
 
 	ns := view.FromApiNamespaceView(response)
 
 	if err := stg.Namespace().Save(ns); err != nil {
-		return nil, errors.UnknownMessage
+		return nil, err
 	}
 
 	return ns, nil

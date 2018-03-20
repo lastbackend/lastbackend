@@ -25,22 +25,18 @@ import (
 
 type NamespaceList []*Namespace
 type Namespace struct {
-	Meta *NamespaceMeta `json:"meta"`
+	Meta NamespaceMeta `json:"meta"`
 }
 
 type NamespaceMeta struct {
-	ID          string `json:"id"`
 	Name        string `json:"name"`
 	Description string `json:"description"`
-	ClusterID   string `json:"cluster"`
-	AccountID   string `json:"account"`
-	Owner       string `json:"owner"`
 	Endpoint    string `json:"endpoint"`
 }
 
 func (nl *NamespaceList) Print() {
 
-	t := table.New([]string{"NAME", "DESCRIPTION", "OWNER", "ENDPOINT"})
+	t := table.New([]string{"NAME", "DESCRIPTION", "ENDPOINT"})
 	t.VisibleHeader = true
 
 	for _, n := range *nl {
@@ -48,7 +44,6 @@ func (nl *NamespaceList) Print() {
 
 		data["NAME"] = n.Meta.Name
 		data["DESCRIPTION"] = n.Meta.Description
-		data["OWNER"] = n.Meta.Owner
 		data["ENDPOINT"] = n.Meta.Endpoint
 
 		t.AddRow(data)
@@ -65,7 +60,6 @@ func (n *Namespace) Print() {
 	table.PrintHorizontal(map[string]interface{}{
 		"NAME":        n.Meta.Name,
 		"DESCRIPTION": n.Meta.Description,
-		"OWNER":       n.Meta.Owner,
 		"ENDPOINT":    n.Meta.Endpoint,
 	})
 	println()
@@ -74,6 +68,8 @@ func (n *Namespace) Print() {
 func FromApiNamespaceView(namespace *views.Namespace) *Namespace {
 	var ns = new(Namespace)
 	ns.Meta.Name = namespace.Meta.Name
+	ns.Meta.Description = namespace.Meta.Description
+	ns.Meta.Endpoint = namespace.Meta.Endpoint
 	return ns
 }
 
