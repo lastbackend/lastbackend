@@ -33,6 +33,8 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/node/runtime/cni/cni"
 	"github.com/lastbackend/lastbackend/pkg/node/runtime/cri/cri"
 	"github.com/spf13/viper"
+	"github.com/lastbackend/lastbackend/pkg/distribution/types"
+	"github.com/lastbackend/lastbackend/pkg/node/http"
 )
 
 // Daemon - run node daemon
@@ -62,11 +64,21 @@ func Daemon() {
 	envs.Get().SetCri(cri)
 	envs.Get().SetCNI(cni)
 
-	runtime.Restore(context.Background())
+	r := runtime.NewRuntime(context.Background())
+	r.Restore()
+
 	state.Node().Info = node.GetInfo()
 	state.Node().State = node.GetState()
 
-	runtime.Subscribe(context.Background())
+	r.Subscribe()
+	r.Loop()
+
+	go func() {
+		types.SecretAccessToken = viper.GetString("token")
+		if err := http.Listen(viper.GetString("node.host"), viper.GetInt("node.port")); err != nil {
+			log.Fatalf("Http server start error: %v", err)
+		}
+	}()
 
 	// Handle SIGINT and SIGTERM.
 	signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)

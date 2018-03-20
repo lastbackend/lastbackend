@@ -20,7 +20,6 @@ package distribution
 
 import (
 	"context"
-	"fmt"
 	"github.com/lastbackend/lastbackend/pkg/distribution/errors"
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 	"github.com/lastbackend/lastbackend/pkg/log"
@@ -67,7 +66,6 @@ func (p *Pod) Create(deployment *types.Deployment) (*types.Pod, error) {
 	pod := types.NewPod()
 	pod.Meta.SetDefault()
 	pod.Meta.Name = strings.Split(generator.GetUUIDV4(), "-")[4][5:]
-	pod.Meta.SelfLink = fmt.Sprintf("%s/pod/%s", deployment.Meta.SelfLink, pod.Meta.Name)
 	pod.Meta.Deployment = deployment.Meta.Name
 	pod.Meta.Service = deployment.Meta.Service
 	pod.Meta.Namespace = deployment.Meta.Namespace
@@ -85,7 +83,7 @@ func (p *Pod) Create(deployment *types.Deployment) (*types.Pod, error) {
 
 	for _, s := range deployment.Spec.Template.Containers {
 		s.Labels = make(map[string]string)
-		s.Labels["LB"] = fmt.Sprintf("%s/%s/%s", pod.Meta.Namespace, pod.Meta.Deployment, pod.Meta.Name)
+		s.Labels["LB"] = pod.SelfLink()
 		s.DNS = types.SpecTemplateContainerDNS{
 			Server: ips,
 			Search: ips,

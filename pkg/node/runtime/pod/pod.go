@@ -29,7 +29,7 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/log"
 	"github.com/lastbackend/lastbackend/pkg/node/envs"
 	"github.com/lastbackend/lastbackend/pkg/node/events"
-	"github.com/lastbackend/lastbackend/pkg/util/stream"
+	"net/http"
 )
 
 const BUFFER_SIZE = 1024
@@ -402,7 +402,7 @@ func Restore(ctx context.Context) error {
 	return nil
 }
 
-func Logs(ctx context.Context, id string, follow bool, s *stream.Stream) error {
+func Logs(ctx context.Context, id string, follow bool, s io.Writer) error {
 
 	log.Debugf("Get container [%s] logs streaming", id)
 
@@ -412,8 +412,6 @@ func Logs(ctx context.Context, id string, follow bool, s *stream.Stream) error {
 		done   = make(chan bool, 1)
 	)
 
-	ctx, cfunc := context.WithCancel(ctx)
-
 	req, err := cri.ContainerLogs(ctx, id, true, true, follow)
 	if err != nil {
 		log.Errorf("Error get logs stream %s", err)
@@ -421,13 +419,9 @@ func Logs(ctx context.Context, id string, follow bool, s *stream.Stream) error {
 	}
 	defer func() {
 		log.Debugf("Stop container [%s] logs streaming", id)
-		s.Close()
+		ctx.Done()
 		close(done)
-	}()
-
-	go func() {
-		s.Done()
-		cfunc()
+		req.Close()
 	}()
 
 	go func() {
@@ -451,7 +445,10 @@ func Logs(ctx context.Context, id string, follow bool, s *stream.Stream) error {
 					log.Errorf("Error write bytes to stream %s", err)
 					return n, err
 				}
-				s.Flush()
+
+				if f, ok := s.(http.Flusher); ok {
+					f.Flush()
+				}
 				return n, nil
 			}(buffer[0:n])
 

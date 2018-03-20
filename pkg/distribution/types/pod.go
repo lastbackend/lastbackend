@@ -74,7 +74,7 @@ type PodMeta struct {
 
 type PodSpec struct {
 	State    SpecState    `json:"state"`
-	Template SpecTemplate `json:"spec" yaml:"spec"`
+	Template SpecTemplate `json:"template" yaml:"template"`
 }
 
 type PodState struct {

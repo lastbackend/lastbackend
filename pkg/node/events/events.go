@@ -23,25 +23,41 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 	"github.com/lastbackend/lastbackend/pkg/log"
 	"github.com/pkg/errors"
+	"github.com/lastbackend/lastbackend/pkg/node/envs"
+	"github.com/lastbackend/lastbackend/pkg/api/types/v1"
 )
 
 // NewInfoEvent - send node info event after
 // node is successful accepted and each hour
 func NewInfoEvent(ctx context.Context) error {
 
-	return nil
+	var (
+		c = envs.Get().GetClient()
+	)
+
+	opts := v1.Request().Node().NodeInfoOptions()
+	return c.SetInfo(ctx, opts)
 }
 
 // NewStateEvent - send node state event after
 // node is successful accepted and each hour
 func NewStateEvent(ctx context.Context) error {
+	var (
+		c = envs.Get().GetClient()
+	)
 
-	return nil
+	opts := v1.Request().Node().NodeStateOptions()
+	return c.SetState(ctx, opts)
 }
+
 
 // NewPodStateEvent - send pod state event after
 // node is successful accepted and each hour
 func NewPodStateEvent(ctx context.Context, pod *types.Pod) error {
+
+	var (
+		c = envs.Get().GetClient()
+	)
 
 	if pod == nil {
 		log.Errorf("Event: Pod state event: pod is empty")
@@ -50,19 +66,47 @@ func NewPodStateEvent(ctx context.Context, pod *types.Pod) error {
 
 	log.Debugf("Event: Pod state event state: %s", pod.Meta.Name)
 
-	return nil
+
+	opts := v1.Request().Node().NodePodStateOptions()
+	return c.SetPodState(ctx, opts)
 }
 
 // NewRouteStateEvent - send pod state event after
 // node is successful accepted and each hour
-func NewRouteStateEvent(ctx context.Context, route, status string) error {
+func NewRouteStateEvent(ctx context.Context, route *types.Route) error {
 
-	if route == "" {
-		log.Errorf("Event: Route state event: route is empty")
-		return errors.New("Event: Route state event: route is empty")
+	var (
+		c = envs.Get().GetClient()
+	)
+
+	if route == nil {
+		log.Errorf("Event: route state event: pod is empty")
+		return errors.New("Event: route state event: pod is empty")
 	}
 
-	log.Debugf("Event: Route state event state: %s", route)
+	log.Debugf("Event: route state event state: %s", route.Meta.Name)
 
-	return nil
+
+	opts := v1.Request().Node().NodeRouteStateOptions()
+	return c.SetRouteState(ctx, opts)
+}
+
+// NewRouteStateEvent - send pod state event after
+// node is successful accepted and each hour
+func NewVolumeStateEvent(ctx context.Context, volume *types.Volume) error {
+
+	var (
+		c = envs.Get().GetClient()
+	)
+
+	if volume == nil {
+		log.Errorf("Event: volume state event: pod is empty")
+		return errors.New("Event: volume state event: pod is empty")
+	}
+
+	log.Debugf("Event: volume state event state: %s", volume.Meta.Name)
+
+
+	opts := v1.Request().Node().NodeVolumeStateOptions()
+	return c.SetVolumeState(ctx, opts)
 }

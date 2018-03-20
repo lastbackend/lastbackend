@@ -42,6 +42,7 @@ func (s *TriggerStorage) Get(ctx context.Context, namespace, service, name strin
 	return nil, errors.New(store.ErrEntityNotFound)
 }
 
+// Get trigger by namespace name
 func (s *TriggerStorage) ListByNamespace(ctx context.Context, namespace string) (map[string]*types.Trigger, error) {
 	list := make(map[string]*types.Trigger, 0)
 
@@ -56,6 +57,7 @@ func (s *TriggerStorage) ListByNamespace(ctx context.Context, namespace string) 
 	return list, nil
 }
 
+// Get trigger by service name
 func (s *TriggerStorage) ListByService(ctx context.Context, namespace, service string) (map[string]*types.Trigger, error) {
 	list := make(map[string]*types.Trigger, 0)
 
@@ -78,6 +80,30 @@ func (s *TriggerStorage) Insert(ctx context.Context, trigger *types.Trigger) err
 	}
 
 	s.data[s.keyGet(trigger)] = trigger
+
+	return nil
+}
+
+// Update trigger state
+func (s *TriggerStorage) SetState(ctx context.Context, trigger *types.Trigger) error {
+
+	if err := s.checkTriggerExists(trigger); err != nil {
+		return err
+	}
+
+	s.data[s.keyGet(trigger)].State = trigger.State
+
+	return nil
+}
+
+// Update trigger spec
+func (s *TriggerStorage) SetSpec(ctx context.Context, trigger *types.Trigger) error {
+
+	if err := s.checkTriggerExists(trigger); err != nil {
+		return err
+	}
+
+	s.data[s.keyGet(trigger)].Spec = trigger.Spec
 
 	return nil
 }

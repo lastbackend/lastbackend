@@ -7,8 +7,9 @@ ssl: true
 
 # Etcd database
 etcd:
- endpoints:
-  "127.0.0.1:2379"
+  prefix: lastbackend
+  endpoints:
+    "127.0.0.1:2379"
 
 # Domain
 domain:
@@ -30,6 +31,8 @@ dns:
   default_ip: "127.0.0.1"
 
 node:
+  host: 0.0.0.0
+  port: 2969
   token: "cluster-token"
   cri:
     type: "docker"

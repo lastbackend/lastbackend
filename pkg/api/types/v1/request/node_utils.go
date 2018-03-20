@@ -28,6 +28,27 @@ import (
 
 type NodeRequest struct{}
 
+
+func (NodeRequest) NodeInfoOptions() *NodeInfoOptions {
+	return new(NodeInfoOptions)
+}
+
+func (NodeRequest) NodeStateOptions() *NodeStateOptions {
+	return new(NodeStateOptions)
+}
+
+func (NodeRequest) NodePodStateOptions() *NodePodStateOptions {
+	return new(NodePodStateOptions)
+}
+
+func (NodeRequest) NodeVolumeStateOptions() *NodeVolumeStateOptions {
+	return new(NodeVolumeStateOptions)
+}
+
+func (NodeRequest) NodeRouteStateOptions() *NodeRouteStateOptions {
+	return new(NodeRouteStateOptions)
+}
+
 func (NodeRequest) UpdateOptions() *NodeUpdateOptions {
 	return new(NodeUpdateOptions)
 }

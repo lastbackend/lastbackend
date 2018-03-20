@@ -24,8 +24,6 @@ import (
 
 var l *logger.Logger
 
-const def = ""
-
 func init() {
 	l = logger.New(-1)
 }

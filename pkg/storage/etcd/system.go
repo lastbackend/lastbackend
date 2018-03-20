@@ -191,6 +191,26 @@ func (s *SystemStorage) ElectWait(ctx context.Context, process *types.Process, l
 	return nil
 }
 
+// Clear system storage
+func (s *SystemStorage) Clear(ctx context.Context) error {
+
+	log.V(logLevel).Debugf("storage:etcd:system:> clear")
+
+	client, destroy, err := getClient(ctx)
+	if err != nil {
+		log.V(logLevel).Errorf("storage:etcd:system:> clear err: %s", err.Error())
+		return err
+	}
+	defer destroy()
+
+	if err := client.DeleteDir(ctx, systemStorage); err != nil {
+		log.V(logLevel).Errorf("storage:etcd:system:> clear err: %s", err.Error())
+		return err
+	}
+
+	return nil
+}
+
 func newSystemStorage() *SystemStorage {
 	s := new(SystemStorage)
 	return s

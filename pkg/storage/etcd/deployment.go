@@ -27,9 +27,10 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/storage/storage"
 	"github.com/lastbackend/lastbackend/pkg/storage/store"
 	"regexp"
+	"time"
 )
 
-const deploymentStorage string = "deployments"
+const deploymentStorage = "deployments"
 
 type DeploymentStorage struct {
 	storage.Deployment
@@ -38,32 +39,42 @@ type DeploymentStorage struct {
 // Get deployment by name
 func (s *DeploymentStorage) Get(ctx context.Context, namespace, service, name string) (*types.Deployment, error) {
 
-	log.V(logLevel).Debugf("Storage: Deployment: get by name: %s", name)
+	log.V(logLevel).Debugf("storage:etcd:deployment:> get by name: %s", name)
 
-	if len(name) == 0 {
-		err := errors.New("name can not be empty")
-		log.V(logLevel).Errorf("Storage: Deployment: get deployment err: %s", err.Error())
+	if len(namespace) == 0 {
+		err := errors.New("namespace can not be empty")
+		log.V(logLevel).Errorf("storage:etcd:deployment:> get by name err: %s", err.Error())
 		return nil, err
 	}
 
-	const filter = `\b.+` + deploymentStorage + `\/.+\/(?:meta|state)\b`
+	if len(service) == 0 {
+		err := errors.New("service can not be empty")
+		log.V(logLevel).Errorf("storage:etcd:deployment:> get by name err: %s", err.Error())
+		return nil, err
+	}
+
+	if len(name) == 0 {
+		err := errors.New("name can not be empty")
+		log.V(logLevel).Errorf("storage:etcd:deployment:> get by name err: %s", err.Error())
+		return nil, err
+	}
+
+	const filter = `\b.+` + deploymentStorage + `\/.+\/(?:meta|state|spec)\b`
 
 	var (
 		deployment = new(types.Deployment)
 	)
 
-	deployment.Spec = types.DeploymentSpec{}
-
 	client, destroy, err := getClient(ctx)
 	if err != nil {
-		log.V(logLevel).Errorf("Storage: Deployment: create client err: %s", err.Error())
+		log.V(logLevel).Errorf("storage:etcd:deployment:> create client err: %s", err.Error())
 		return nil, err
 	}
 	defer destroy()
 
-	keyDeployment := keyCreate(deploymentStorage, name)
+	keyDeployment := keyCreate(deploymentStorage, s.keyCreate(namespace, service, name))
 	if err := client.Map(ctx, keyDeployment, filter, deployment); err != nil {
-		log.V(logLevel).Errorf("Storage: Deployment: map deployment `%s` err: %s", name, err.Error())
+		log.V(logLevel).Errorf("storage:etcd:deployment:> err: %s", name, err.Error())
 		return nil, err
 	}
 
@@ -71,61 +82,231 @@ func (s *DeploymentStorage) Get(ctx context.Context, namespace, service, name st
 		return nil, errors.New(store.ErrEntityNotFound)
 	}
 
-	keySpec := keyCreate(deploymentStorage, name, "spec")
-	if err := client.Map(ctx, keySpec, "", &deployment.Spec); err != nil && err.Error() != store.ErrEntityNotFound {
-		log.V(logLevel).Errorf("Storage: Deployment: Map deployment `%s` spec err: %s", name, err.Error())
+	return deployment, nil
+}
+
+// Get deployments by namespace name
+func (s *DeploymentStorage) ListByNamespace(ctx context.Context, namespace string) (map[string]*types.Deployment, error) {
+
+	log.V(logLevel).Debugf("storage:etcd:deployment:> get list by namespace: %s", namespace)
+
+	if len(namespace) == 0 {
+		err := errors.New("namespace can not be empty")
+		log.V(logLevel).Errorf("storage:etcd:deployment:> get list by name err: %s", err.Error())
 		return nil, err
 	}
 
-	return deployment, nil
+	const filter = `\b.+` + deploymentStorage + `\/.+\/(?:meta|state|spec)\b`
+
+	var (
+		deployments = make(map[string]*types.Deployment)
+	)
+
+	client, destroy, err := getClient(ctx)
+	if err != nil {
+		log.V(logLevel).Errorf("storage:etcd:deployment:> create client err: %s", err.Error())
+		return nil, err
+	}
+	defer destroy()
+
+	keyDeployment := keyCreate(deploymentStorage, fmt.Sprintf("%s:",namespace))
+	if err := client.MapList(ctx, keyDeployment, filter, deployments); err != nil {
+		log.V(logLevel).Errorf("storage:etcd:deployment:> err: %s", namespace, err.Error())
+		return nil, err
+	}
+
+	return deployments, nil
 }
 
 // Get deployments by service name
 func (s *DeploymentStorage) ListByService(ctx context.Context, namespace, service string) (map[string]*types.Deployment, error) {
-	return make(map[string]*types.Deployment, 0), nil
+
+	log.V(logLevel).Debugf("storage:etcd:deployment:> get list by namespace and service: %s:%s", namespace, service)
+
+	if len(namespace) == 0 {
+		err := errors.New("namespace can not be empty")
+		log.V(logLevel).Errorf("storage:etcd:deployment:> get list by namespace and service err: %s", err.Error())
+		return nil, err
+	}
+
+	if len(service) == 0 {
+		err := errors.New("service can not be empty")
+		log.V(logLevel).Errorf("storage:etcd:deployment:> get list by namespace and service err: %s", err.Error())
+		return nil, err
+	}
+
+	const filter = `\b.+` + deploymentStorage + `\/.+\/(?:meta|state|spec)\b`
+
+	var (
+		deployments = make(map[string]*types.Deployment)
+	)
+
+	client, destroy, err := getClient(ctx)
+	if err != nil {
+		log.V(logLevel).Errorf("storage:etcd:deployment:>  get list by namespace and service err: %s", err.Error())
+		return nil, err
+	}
+	defer destroy()
+
+	keyDeployment := keyCreate(deploymentStorage, fmt.Sprintf("%s:%s:",namespace, service))
+	if err := client.MapList(ctx, keyDeployment, filter, deployments); err != nil {
+		log.V(logLevel).Errorf("storage:etcd:deployment:> err: %s", namespace, err.Error())
+		return nil, err
+	}
+
+	return deployments, nil
 }
 
 // Update deployment state
-func (s *DeploymentStorage) updateState(ctx context.Context, deployment *types.Deployment) error {
+func (s *DeploymentStorage) SetState(ctx context.Context, deployment *types.Deployment) error {
 
-	log.V(logLevel).Debugf("Storage: Deployment: update deployment state: %#v", deployment)
+	log.V(logLevel).Debugf("storage:etcd:deployment:> update deployment state: %#v", deployment)
 
-	if deployment == nil {
-		err := errors.New("deployment can not be nil")
-		log.V(logLevel).Errorf("Storage: Deployment: update deployment state err: %s", err.Error())
+	if err := s.checkDeploymentExists(ctx, deployment); err != nil {
 		return err
 	}
 
 	client, destroy, err := getClient(ctx)
 	if err != nil {
-		log.V(logLevel).Errorf("Storage: Deployment: create client err: %s", err.Error())
+		log.V(logLevel).Errorf("storage:etcd:deployment:>: update deployment err: %s", err.Error())
 		return err
 	}
 	defer destroy()
 
-	keyState := keyCreate(deploymentStorage, deployment.Meta.Namespace, deployment.Meta.Name, "state")
-	if err := client.Upsert(ctx, keyState, deployment.State, nil, 0); err != nil {
-		log.V(logLevel).Errorf("Storage: Deployment: upsert state err: %s", err.Error())
-		return err
-	}
-
-	keyDeploymentController := keyCreate(systemStorage, types.KindController, deploymentStorage, fmt.Sprintf("%s:%s", deployment.Meta.Namespace, deployment.Meta.Name))
-	if err := client.Upsert(ctx, keyDeploymentController, &deployment.State, nil, 0); err != nil {
-		log.V(logLevel).Errorf("Storage: Deployment: upsert deployments controller err: %s", err.Error())
+	key := keyCreate(deploymentStorage, s.keyGet(deployment), "state")
+	if err := client.Upsert(ctx, key, deployment.State, nil, 0); err != nil {
+		log.V(logLevel).Errorf("storage:etcd:deployment:>: update deployment err: %s", err.Error())
 		return err
 	}
 
 	return nil
 }
 
-func (s *DeploymentStorage) SpecWatch(ctx context.Context, deployment chan *types.Deployment) error {
+// Update deployment state
+func (s *DeploymentStorage) SetSpec(ctx context.Context, deployment *types.Deployment) error {
 
-	log.V(logLevel).Debug("Storage: Deployment: watch deployment by spec")
+	log.V(logLevel).Debugf("storage:etcd:deployment:> update deployment spec: %#v", deployment)
 
-	const filter = `\b\/` + deploymentStorage + `\/(.+)\/spec/.+\b`
+	if err := s.checkDeploymentExists(ctx, deployment); err != nil {
+		return err
+	}
+
 	client, destroy, err := getClient(ctx)
 	if err != nil {
-		log.V(logLevel).Errorf("Storage: Deployment: create client err: %s", err.Error())
+		log.V(logLevel).Errorf("storage:etcd:deployment:>: update deployment err: %s", err.Error())
+		return err
+	}
+	defer destroy()
+
+	key := keyCreate(deploymentStorage, s.keyGet(deployment), "spec")
+	if err := client.Upsert(ctx, key, deployment.State, nil, 0); err != nil {
+		log.V(logLevel).Errorf("storage:etcd:deployment:>: update deployment err: %s", err.Error())
+		return err
+	}
+
+	return nil
+}
+
+// Insert new deployment
+func (s *DeploymentStorage) Insert(ctx context.Context, deployment *types.Deployment) error {
+
+	log.V(logLevel).Debugf("storage:etcd:deployment:> insert deployment: %#v", deployment)
+
+	if err := s.checkDeploymentArgument(deployment); err != nil {
+		return err
+	}
+
+	client, destroy, err := getClient(ctx)
+	if err != nil {
+		log.V(logLevel).Errorf("storage:etcd:deployment:> insert deployment err: %s", err.Error())
+		return err
+	}
+	defer destroy()
+
+	tx := client.Begin(ctx)
+
+	keyMeta := keyCreate(deploymentStorage, s.keyGet(deployment), "meta")
+	if err := tx.Create(keyMeta, deployment.Meta, 0); err != nil {
+		log.V(logLevel).Errorf("storage:etcd:deployment:> insert deployment err: %s", err.Error())
+		return err
+	}
+
+	keyState := keyCreate(deploymentStorage, s.keyGet(deployment), "state")
+	if err := tx.Create(keyState, deployment.State, 0); err != nil {
+		log.V(logLevel).Errorf("storage:etcd:deployment:> insert deployment err: %s", err.Error())
+		return err
+	}
+
+	keySpec := keyCreate(deploymentStorage, s.keyGet(deployment), "spec")
+	if err := tx.Create(keySpec, deployment.Spec, 0); err != nil {
+		log.V(logLevel).Errorf("storage:etcd:deployment:> insert deployment err: %s", err.Error())
+		return err
+	}
+
+	if err := tx.Commit(); err != nil {
+		log.V(logLevel).Errorf("storage:etcd:deployment:> insert deployment err: %s", err.Error())
+		return err
+	}
+
+	return nil
+}
+
+// Update deployment info
+func (s *DeploymentStorage) Update(ctx context.Context, deployment *types.Deployment) error {
+
+	if err := s.checkDeploymentExists(ctx, deployment); err != nil {
+		return err
+	}
+
+	deployment.Meta.Updated = time.Now()
+	client, destroy, err := getClient(ctx)
+	if err != nil {
+		log.V(logLevel).Errorf("storage:etcd:deployment:> update deployment err: %s", err.Error())
+		return err
+	}
+	defer destroy()
+
+	keyMeta := keyCreate(deploymentStorage, s.keyGet(deployment), "meta")
+	if err := client.Upsert(ctx, keyMeta, deployment.Meta,  nil,0); err != nil {
+		log.V(logLevel).Errorf("storage:etcd:deployment:> update deployment err: %s", err.Error())
+		return err
+	}
+
+	return nil
+}
+
+// Remove deployment from storage
+func (s *DeploymentStorage) Remove(ctx context.Context, deployment *types.Deployment) error {
+
+	if err := s.checkDeploymentExists(ctx, deployment); err != nil {
+		return err
+	}
+
+	client, destroy, err := getClient(ctx)
+	if err != nil {
+		log.V(logLevel).Errorf("storage:etcd:deployment:> remove err: %s", err.Error())
+		return err
+	}
+	defer destroy()
+
+	keyMeta := keyCreate(deploymentStorage, s.keyGet(deployment))
+	if err := client.DeleteDir(ctx, keyMeta); err != nil {
+		log.V(logLevel).Errorf("storage:etcd:deployment:> remove deployment err: %s", err.Error())
+		return err
+	}
+
+	return nil
+}
+
+// Watch deployment spec changes
+func (s *DeploymentStorage) Watch(ctx context.Context, deployment chan *types.Deployment) error {
+
+	log.V(logLevel).Debug("storage:etcd:deployment:> watch deployment")
+
+	const filter = `\b\/` + deploymentStorage + `\/(.+):(.+):(.+)/.+\b`
+	client, destroy, err := getClient(ctx)
+	if err != nil {
+		log.V(logLevel).Errorf("storage:etcd:deployment:> watch deployment err: %s", err.Error())
 		return err
 	}
 	defer destroy()
@@ -139,14 +320,100 @@ func (s *DeploymentStorage) SpecWatch(ctx context.Context, deployment chan *type
 		}
 
 		if d, err := s.Get(ctx, keys[1], keys[2], keys[3]); err == nil {
-			s.updateState(ctx, d)
 			deployment <- d
 		}
-
 	}
 
 	if err := client.Watch(ctx, key, filter, cb); err != nil {
-		log.V(logLevel).Errorf("Storage: Deployment: watch deployment spec err: %s", err.Error())
+		log.V(logLevel).Errorf("storage:etcd:deployment:> watch deployment err: %s", err.Error())
+		return err
+	}
+
+	return nil
+}
+
+// Watch deployment spec changes
+func (s *DeploymentStorage) WatchSpec(ctx context.Context, deployment chan *types.Deployment) error {
+
+	log.V(logLevel).Debug("storage:etcd:deployment:> watch deployment by spec")
+
+	const filter = `\b\/` + deploymentStorage + `\/(.+):(.+):(.+)/spec\b`
+	client, destroy, err := getClient(ctx)
+	if err != nil {
+		log.V(logLevel).Errorf("storage:etcd:deployment:> watch deployment by spec err: %s", err.Error())
+		return err
+	}
+	defer destroy()
+
+	r, _ := regexp.Compile(filter)
+	key := keyCreate(deploymentStorage)
+	cb := func(action, key string, _ []byte) {
+		keys := r.FindStringSubmatch(key)
+		if len(keys) < 3 {
+			return
+		}
+
+		if d, err := s.Get(ctx, keys[1], keys[2], keys[3]); err == nil {
+			deployment <- d
+		}
+	}
+
+	if err := client.Watch(ctx, key, filter, cb); err != nil {
+		log.V(logLevel).Errorf("storage:etcd:deployment:> watch deployment by spec err: %s", err.Error())
+		return err
+	}
+
+	return nil
+}
+
+// Watch deployment state changes
+func (s *DeploymentStorage) WatchState(ctx context.Context, deployment chan *types.Deployment) error {
+
+	log.V(logLevel).Debug("storage:etcd:deployment:> watch deployment by spec")
+
+	const filter = `\b\/` + deploymentStorage + `\/(.+):(.+):(.+)/state\b`
+	client, destroy, err := getClient(ctx)
+	if err != nil {
+		log.V(logLevel).Errorf("storage:etcd:deployment:> watch deployment by spec err: %s", err.Error())
+		return err
+	}
+	defer destroy()
+
+	r, _ := regexp.Compile(filter)
+	key := keyCreate(deploymentStorage)
+	cb := func(action, key string, _ []byte) {
+		keys := r.FindStringSubmatch(key)
+		if len(keys) < 3 {
+			return
+		}
+
+		if d, err := s.Get(ctx, keys[1], keys[2], keys[3]); err == nil {
+			deployment <- d
+		}
+	}
+
+	if err := client.Watch(ctx, key, filter, cb); err != nil {
+		log.V(logLevel).Errorf("storage:etcd:deployment:> watch deployment by spec err: %s", err.Error())
+		return err
+	}
+
+	return nil
+}
+
+// Clear deployment database
+func (s *DeploymentStorage) Clear(ctx context.Context) error {
+
+	log.V(logLevel).Debugf("storage:etcd:deployment:> clear")
+
+	client, destroy, err := getClient(ctx)
+	if err != nil {
+		log.V(logLevel).Errorf("storage:etcd:cluster:> clear err: %s", err.Error())
+		return err
+	}
+	defer destroy()
+
+	if err := client.DeleteDir(ctx, deploymentStorage); err != nil {
+		log.V(logLevel).Errorf("storage:etcd:deployment:> clear err: %s", err.Error())
 		return err
 	}
 
@@ -166,4 +433,35 @@ func (s *DeploymentStorage) keyGet(d *types.Deployment) string {
 func newDeploymentStorage() *DeploymentStorage {
 	s := new(DeploymentStorage)
 	return s
+}
+
+// checkDeploymentArgument - check if argument is valid for manipulations
+func (s *DeploymentStorage) checkDeploymentArgument(deployment *types.Deployment) error {
+
+	if deployment == nil {
+		return errors.New(store.ErrStructArgIsNil)
+	}
+
+	if deployment.Meta.Name == "" {
+		return errors.New(store.ErrStructArgIsInvalid)
+	}
+
+	return nil
+}
+
+// checkDeploymentArgument - check if deployment exists in store
+func (s *DeploymentStorage) checkDeploymentExists(ctx context.Context, deployment *types.Deployment) error {
+
+	if err := s.checkDeploymentArgument(deployment); err != nil {
+		return err
+	}
+
+	log.V(logLevel).Debugf("storage:etcd:deployment:> check deployment exists")
+
+	if _, err := s.Get(ctx, deployment.Meta.Namespace, deployment.Meta.Service, deployment.Meta.Name); err != nil {
+		log.V(logLevel).Debugf("storage:etcd:deployment:> check deployment exists err: %s", err.Error())
+		return err
+	}
+
+	return nil
 }

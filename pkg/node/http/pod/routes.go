@@ -2,7 +2,7 @@
 // Last.Backend LLC CONFIDENTIAL
 // __________________
 //
-// [2014] - [2018] Last.Backend LLC
+// [2014] - [2017] Last.Backend LLC
 // All Rights Reserved.
 //
 // NOTICE:  All information contained herein is, and remains
@@ -16,4 +16,15 @@
 // from Last.Backend LLC.
 //
 
-package builder
+package pod
+
+import (
+	"github.com/lastbackend/lastbackend/pkg/util/http"
+	"github.com/lastbackend/lastbackend/pkg/util/http/middleware"
+)
+
+var Routes = []http.Route{
+	{Path: "/pod/{pod}", Method: http.MethodGet, Middleware: []http.Middleware{middleware.Authenticate}, Handler: PodGetH},
+	{Path: "/pod/{pod}/logs", Method: http.MethodGet, Middleware: []http.Middleware{middleware.Authenticate}, Handler: PodLogsH},
+}
+

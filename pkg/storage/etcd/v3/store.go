@@ -206,13 +206,11 @@ func (s *store) Map(ctx context.Context, key, keyRegexFilter string, mapOutPtr i
 }
 
 func (s *store) MapList(ctx context.Context, key string, keyRegexFilter string, mapOutPtr interface{}) error {
+
 	key = path.Join(s.pathPrefix, key)
 
 	log.V(logLevel).Debugf("Etcd3: MapList: key: %s with filter: %s", key, keyRegexFilter)
 
-	if !strings.HasSuffix(key, "/") {
-		key += "/"
-	}
 	getResp, err := s.client.KV.Get(ctx, key, clientv3.WithPrefix())
 	if err != nil {
 		log.V(logLevel).Errorf("Etcd3: MapList: request err: %s", err.Error())
