@@ -16,18 +16,37 @@
 // from Last.Backend LLC.
 //
 
-package storage
+package namespace
 
 import (
-	v "github.com/lastbackend/lastbackend/pkg/cli/view"
+	"fmt"
+
+	"github.com/lastbackend/lastbackend/pkg/cli/context"
+	"github.com/lastbackend/lastbackend/pkg/cli/view"
+	"github.com/lastbackend/lastbackend/pkg/distribution/errors"
 )
 
-type IStorage interface {
-	Namespace() INamespace
+func FetchCmd(name string) {
+
+	ns, err := Fetch(name)
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+
+	ns.Print()
 }
 
-type INamespace interface {
-	Save(ns *v.Namespace) error
-	Load() (*v.Namespace, error)
-	Remove() error
+func Fetch(name string) (*view.Namespace, error) {
+
+	cli := context.Get().GetClient()
+
+	response, err := cli.V1().Namespace(name).Get(context.Background())
+	if err != nil {
+		return nil, errors.UnknownMessage
+	}
+
+	ns := view.FromApiNamespaceView(response)
+
+	return ns, nil
 }

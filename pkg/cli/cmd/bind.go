@@ -42,8 +42,9 @@ func commands() {
 	namespace.AddCommand(
 		ns.NamespaceCreate,
 		ns.NamespaceList,
-		ns.NamespaceInfo,
+		ns.NamespaceFetch,
 		ns.NamespaceRemove,
+		ns.NamespaceCurrent,
 		ns.NamespaceSelect,
 	)
 

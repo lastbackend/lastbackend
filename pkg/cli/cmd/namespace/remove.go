@@ -17,3 +17,37 @@
 //
 
 package namespace
+
+import (
+	"fmt"
+
+	"github.com/lastbackend/lastbackend/pkg/api/types/v1/request"
+	"github.com/lastbackend/lastbackend/pkg/cli/context"
+	"github.com/lastbackend/lastbackend/pkg/distribution/errors"
+)
+
+func RemoveCmd(name string) {
+
+	if err := Remove(name); err != nil {
+		fmt.Println(err)
+		return
+	}
+
+	fmt.Println(fmt.Sprintf("Namespace `%s` is successfully removed", name))
+}
+
+func Remove(name string) error {
+
+	cli := context.Get().GetClient()
+
+	data := &request.NamespaceRemoveOptions{
+		Force: false,
+	}
+
+	err := cli.V1().Namespace(name).Remove(context.Background(), data)
+	if err != nil {
+		return errors.UnknownMessage
+	}
+
+	return nil
+}

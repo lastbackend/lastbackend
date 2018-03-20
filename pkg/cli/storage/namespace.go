@@ -27,7 +27,7 @@ const nsStorage = "namespace"
 
 // Namespace type for interface in interfaces folder
 type NamespaceStorage struct {
-	INspace
+	INamespace
 	client *db.DB
 }
 
@@ -38,7 +38,7 @@ func (s *NamespaceStorage) Save(data *v.Namespace) error {
 
 // Get namespace
 func (s *NamespaceStorage) Load() (*v.Namespace, error) {
-	var data = new(v.Namespace)
+	var data *v.Namespace
 	err := s.client.Get(nsStorage, data)
 	return data, err
 }

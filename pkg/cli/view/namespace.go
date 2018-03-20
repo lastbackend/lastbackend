@@ -19,8 +19,8 @@
 package view
 
 import (
-	"github.com/lastbackend/lastbackend/pkg/util/table"
 	"github.com/lastbackend/lastbackend/pkg/api/types/v1/views"
+	"github.com/lastbackend/lastbackend/pkg/util/table"
 )
 
 type NamespaceList []*Namespace
@@ -38,21 +38,15 @@ type NamespaceMeta struct {
 	Endpoint    string `json:"endpoint"`
 }
 
-func (nl *NamespaceList) Print(namespace string) {
+func (nl *NamespaceList) Print() {
 
 	t := table.New([]string{"NAME", "DESCRIPTION", "OWNER", "ENDPOINT"})
 	t.VisibleHeader = true
 
 	for _, n := range *nl {
-
 		var data = map[string]interface{}{}
 
-		if namespace == n.Meta.Name {
-			data["NAME"] = "* " + n.Meta.Name
-		} else {
-			data["NAME"] = n.Meta.Name
-		}
-
+		data["NAME"] = n.Meta.Name
 		data["DESCRIPTION"] = n.Meta.Description
 		data["OWNER"] = n.Meta.Owner
 		data["ENDPOINT"] = n.Meta.Endpoint
@@ -81,4 +75,13 @@ func FromApiNamespaceView(namespace *views.Namespace) *Namespace {
 	var ns = new(Namespace)
 	ns.Meta.Name = namespace.Meta.Name
 	return ns
+}
+
+func FromApiNamespaceListView(namespaces *views.NamespaceList) *NamespaceList {
+	var nls = make(NamespaceList, 0)
+	for _, namespace := range *namespaces {
+		ns := FromApiNamespaceView(namespace)
+		nls = append(nls, ns)
+	}
+	return &nls
 }

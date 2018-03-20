@@ -17,3 +17,38 @@
 //
 
 package namespace
+
+import (
+	"fmt"
+
+	"github.com/lastbackend/lastbackend/pkg/cli/context"
+	"github.com/lastbackend/lastbackend/pkg/cli/view"
+	"github.com/lastbackend/lastbackend/pkg/distribution/errors"
+)
+
+func SelectCmd(name string) {
+
+	ns, err := Select(name)
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+
+	fmt.Printf("The namespace `%s` was selected as the current\n", ns.Meta.Name)
+}
+
+func Select(name string) (*view.Namespace, error) {
+
+	stg := context.Get().GetStorage()
+
+	ns, err := Fetch(name)
+	if err != nil {
+		return nil, err
+	}
+
+	if err := stg.Namespace().Save(ns); err != nil {
+		return nil, errors.UnknownMessage
+	}
+
+	return ns, nil
+}

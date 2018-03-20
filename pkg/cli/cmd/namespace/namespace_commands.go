@@ -46,16 +46,11 @@ var NamespaceList = &cobra.Command{
 	},
 }
 
-var NamespaceInfo = &cobra.Command{
+var NamespaceFetch = &cobra.Command{
 	Use:   "info",
 	Short: "Get namespace info by Name, if without Name - get current namespace info",
 	Run: func(cmd *cobra.Command, args []string) {
-
-		//if len(args) != 1 {
-		//	CurrentCmd("")
-		//} else {
-		//	CurrentCmd(args[0])
-		//}
+		FetchCmd(args[0])
 	},
 }
 
@@ -69,7 +64,15 @@ var NamespaceRemove = &cobra.Command{
 			return
 		}
 
-		//RemoveCmd(args[0])
+		RemoveCmd(args[0])
+	},
+}
+
+var NamespaceCurrent = &cobra.Command{
+	Use:   "current",
+	Short: "Show current namespace",
+	Run: func(cmd *cobra.Command, args []string) {
+		CurrentCmd()
 	},
 }
 
@@ -83,6 +86,6 @@ var NamespaceSelect = &cobra.Command{
 			return
 		}
 
-		//SelectCmd(args[0])
+		SelectCmd(args[0])
 	},
 }
