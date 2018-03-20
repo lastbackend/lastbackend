@@ -16,30 +16,27 @@
 // from Last.Backend LLC.
 //
 
-package request
+package views
 
-type RouteCreateOptions struct {
-	Subdomain string        `json:"subdomain"`
-	Domain    string        `json:"domain"`
-	Custom    bool          `json:"custom"`
-	Security  bool          `json:"security"`
-	Rules     []RulesOption `json:"rules"`
+import "time"
+
+type Secret struct {
+	Meta  SecretMeta  `json:"meta"`
+	Spec  SecretSpec  `json:"spec"`
+	State SecretState `json:"state"`
 }
 
-type RouteUpdateOptions struct {
-	Subdomain string        `json:"subdomain"`
-	Domain    string        `json:"domain"`
-	Custom    bool          `json:"custom"`
-	Security  bool          `json:"security"`
-	Rules     []RulesOption `json:"rules"`
+type SecretMeta struct {
+	Name      string    `json:"name"`
+	Namespace string    `json:"namespace"`
+	Updated   time.Time `json:"updated"`
+	Created   time.Time `json:"created"`
 }
 
-type RouteRemoveOptions struct {
-	Force bool `json:"force"`
+type SecretSpec struct {
 }
 
-type RulesOption struct {
-	Endpoint *string `json:"endpoint"`
-	Path     string  `json:"path"`
-	Port     *int    `json:"port"`
+type SecretState struct {
 }
+
+type SecretList map[string]*Secret

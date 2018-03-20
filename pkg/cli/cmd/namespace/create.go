@@ -17,3 +17,50 @@
 //
 
 package namespace
+
+import (
+	"fmt"
+
+	c "github.com/lastbackend/lastbackend/pkg/cli/context"
+	e "github.com/lastbackend/lastbackend/pkg/distribution/errors"
+	"github.com/lastbackend/lastbackend/pkg/cli/view"
+	"github.com/lastbackend/lastbackend/pkg/api/types/v1/request"
+	"context"
+)
+
+func CreateCmd(name, desc string) {
+
+	err := Create(name, desc)
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+
+	fmt.Println(fmt.Sprintf("Namespace `%s` is created", name))
+}
+
+func Create(name, desc string) error {
+
+	stg := c.Get().GetStorage()
+	cli := c.Get().GetClient()
+
+	data := &request.NamespaceCreateOptions{
+		Name:        name,
+		Description: desc,
+	}
+
+	response, err := cli.V1().Namespace().Create(context.Background(), data)
+	if err != nil {
+		return e.UnknownMessage
+	}
+
+	ns := view.FromApiNamespaceView(response)
+
+	if err := stg.Namespace().Save(ns); err != nil {
+		return e.UnknownMessage
+	}
+
+	ns.Print()
+
+	return nil
+}

@@ -29,38 +29,39 @@ import (
 
 type ServiceClient struct {
 	interfaces.Service
-	req       http.Interface
+	client       http.Interface
 	namespace string
+	name      string
 }
 
-func (s *ServiceClient) Deployment(service string) *DeploymentClient {
-	return newDeploymentClient(s.req, s.namespace, service)
+func (s *ServiceClient) Deployment(name string) *DeploymentClient {
+	return newDeploymentClient(s.client, s.namespace, name)
 }
 
-func (s *ServiceClient) Trigger(service string) *TriggerClient {
-	return newTriggerClient(s.req, s.namespace, service)
+func (s *ServiceClient) Trigger(name string) *TriggerClient {
+	return newTriggerClient(s.client, s.namespace, name)
 }
 
-func (s *ServiceClient) Create(ctx context.Context, namespace string, opts *rv1.ServiceCreateOptions) (*vv1.ServiceList, error) {
+func (s *ServiceClient) Create(ctx context.Context, opts *rv1.ServiceCreateOptions) (*vv1.ServiceList, error) {
 	return nil, nil
 }
 
-func (s *ServiceClient) List(ctx context.Context, namespace string) (*vv1.ServiceList, error) {
+func (s *ServiceClient) List(ctx context.Context) (*vv1.ServiceList, error) {
 	return nil, nil
 }
 
-func (s *ServiceClient) Get(ctx context.Context, namespace, name string) (*vv1.Service, error) {
+func (s *ServiceClient) Get(ctx context.Context) (*vv1.Service, error) {
 	return nil, nil
 }
 
-func (s *ServiceClient) Update(ctx context.Context, namespace, name string, opts *rv1.ServiceUpdateOptions) (*vv1.NamespaceList, error) {
+func (s *ServiceClient) Update(ctx context.Context, opts *rv1.ServiceUpdateOptions) (*vv1.NamespaceList, error) {
 	return nil, nil
 }
 
-func (s *ServiceClient) Remove(ctx context.Context, namespace, name string, opts rv1.ServiceRemoveOptions) error {
+func (s *ServiceClient) Remove(ctx context.Context, opts *rv1.ServiceRemoveOptions) error {
 	return nil
 }
 
-func newServiceClient(req http.Interface, namespace string) *ServiceClient {
-	return &ServiceClient{req: req, namespace: namespace}
+func newServiceClient(client http.Interface, namespace, name string) *ServiceClient {
+	return &ServiceClient{client: client, namespace: namespace, name: name}
 }

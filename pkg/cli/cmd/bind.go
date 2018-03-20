@@ -19,35 +19,53 @@
 package cmd
 
 import (
-	ws "github.com/lastbackend/lastbackend/pkg/cli/cmd/namespace"
+	ns "github.com/lastbackend/lastbackend/pkg/cli/cmd/namespace"
 	sr "github.com/lastbackend/lastbackend/pkg/cli/cmd/service"
 )
 
 func init() {
+	commands()
+	flags()
+}
 
-	// ------------------------- COMMAND -------------------------
+func commands() {
 
 	// ----- root -----
+	RootCmd.AddCommand(
+		versionCmd,
+		namespace,
+		service,
+		repo,
+	)
 
-	RootCmd.AddCommand(versionCmd, workspace, service, repo)
-
-	// ----- workspace -----
-
-	workspace.AddCommand(ws.CreateWorkspace, ws.ListWorkspace, ws.InfoWorkspace, ws.RemoveWorkspace, ws.SelectWorkspace)
+	// ----- namespace -----
+	namespace.AddCommand(
+		ns.NamespaceCreate,
+		ns.NamespaceList,
+		ns.NamespaceInfo,
+		ns.NamespaceRemove,
+		ns.NamespaceSelect,
+	)
 
 	// ----- service -----
+	service.AddCommand(
+		sr.ServiceList,
+		sr.ServiceInfo,
+		sr.ServiceScale,
+		sr.ServiceUpdate,
+		sr.ServiceRemove,
+		sr.ServiceCreate,
+		sr.ServiceLogs,
+	)
+}
 
-	service.AddCommand(sr.ListService, sr.InfoService, sr.ScaleService, sr.UpdateService, sr.RemoveService, sr.CreateService, sr.LogsService)
+func flags() {
 
-	// ------------------------- FLAGS -------------------------
-
-	// ----- workspace -----
-
-	ws.CreateWorkspace.Flags().StringVarP(&ws.Desc, "desc", "d", "", "Set description")
+	// ----- namespace -----
+	ns.NamespaceCreate.Flags().StringVarP(&ns.Desc, "desc", "d", "", "Set description")
 
 	// ----- service -----
-
-	sr.CreateService.Flags().Int64VarP(&sr.Memory, "memory", "m", 0, "Set memory")
-	sr.CreateService.Flags().StringVarP(&sr.Sources, "sources", "s", "", "Set sources")
-	sr.UpdateService.Flags().Int64VarP(&sr.Memory, "memory", "m", 0, "Set memory")
+	sr.ServiceCreate.Flags().Int64VarP(&sr.Memory, "memory", "m", 0, "Set memory")
+	sr.ServiceCreate.Flags().StringVarP(&sr.Sources, "sources", "s", "", "Set sources")
+	sr.ServiceUpdate.Flags().Int64VarP(&sr.Memory, "memory", "m", 0, "Set memory")
 }

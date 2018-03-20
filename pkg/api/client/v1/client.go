@@ -33,11 +33,15 @@ func (s *Client) Cluster() *ClusterClient {
 	return newClusterClient(s.client)
 }
 
-func (s *Client) Namespace() *NamespaceClient {
+func (s *Client) Namespace(name ...string) *NamespaceClient {
 	if s == nil {
 		return nil
 	}
-	return newNamespaceClient(s.client)
+	n := ""
+	if len(name) > 0 {
+		n = name[0]
+	}
+	return newNamespaceClient(s.client, n)
 }
 
 func New(req http.Interface) *Client {

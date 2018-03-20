@@ -19,6 +19,7 @@
 package http
 
 import (
+	"bytes"
 	"context"
 	"fmt"
 	"golang.org/x/net/http2"
@@ -27,7 +28,6 @@ import (
 	"net/http"
 	"net/url"
 	"path"
-	"bytes"
 )
 
 type Request struct {
@@ -73,6 +73,9 @@ func (r *Request) Body(data []byte) *Request {
 }
 
 func (r *Request) AddHeader(key, val string) *Request {
+	if r.headers == nil {
+		r.headers = make(map[string][]string)
+	}
 	r.headers.Add(key, val)
 	return r
 }
