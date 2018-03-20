@@ -146,6 +146,10 @@ func (s *RouteStorage) checkRouteArgument(route *types.Route) error {
 		return errors.New(store.ErrStructArgIsNil)
 	}
 
+	if route.Meta.Name == "" {
+		return errors.New(store.ErrStructArgIsInvalid)
+	}
+
 	return nil
 }
 
