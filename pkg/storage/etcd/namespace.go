@@ -27,6 +27,7 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/log"
 	"github.com/lastbackend/lastbackend/pkg/storage/storage"
 	"github.com/lastbackend/lastbackend/pkg/storage/store"
+	"fmt"
 )
 
 const namespaceStorage = "namespace"
@@ -39,32 +40,29 @@ type NamespaceStorage struct {
 // Get namespace by name
 func (s *NamespaceStorage) Get(ctx context.Context, name string) (*types.Namespace, error) {
 
-	log.V(logLevel).Debugf("Storage: Namespace: get by name: %s", name)
+	log.V(logLevel).Debugf("storage:etcd:namespace:> get by name: %s", name)
+
+	const filter = `\b.+` + namespaceStorage + `\/.+\/(?:meta|state)\b`
 
 	if len(name) == 0 {
 		err := errors.New("name can not be empty")
-		log.V(logLevel).Errorf("Storage: Namespace: get namespace err: %s", err.Error())
+		log.V(logLevel).Errorf("storage:etcd:namespace:> get by name err: %s", err.Error())
 		return nil, err
 	}
 
 	client, destroy, err := getClient(ctx)
 	if err != nil {
-		log.V(logLevel).Errorf("Storage: Namespace: create client err: %s", err.Error())
+		log.V(logLevel).Errorf("storage:etcd:namespace:> get by name err: %s", err.Error())
 		return nil, err
 	}
 	defer destroy()
 
 	namespace := new(types.Namespace)
-	keyMeta := keyCreate(namespaceStorage, name, "meta")
-	err = client.Get(ctx, keyMeta, &namespace.Meta)
-	switch true {
-	case err != nil && err.Error() != store.ErrEntityNotFound:
-		log.V(logLevel).Errorf("Storage: Namespace: get namespace `%s` meta err: %s", name, err.Error())
+	key := keyDirCreate(namespaceStorage, name)
+
+	if err := client.Map(ctx, key, filter, namespace); err != nil {
+		log.V(logLevel).Errorf("storage:etcd:namespace:> get by name err: %s", err.Error())
 		return nil, err
-	case err != nil && err.Error() == store.ErrEntityNotFound:
-		fallthrough
-	case (err == nil && namespace == nil) || err != nil:
-		return nil, nil
 	}
 
 	return namespace, nil
@@ -73,34 +71,26 @@ func (s *NamespaceStorage) Get(ctx context.Context, name string) (*types.Namespa
 // List projects
 func (s *NamespaceStorage) List(ctx context.Context) (map[string]*types.Namespace, error) {
 
-	log.V(logLevel).Debug("Storage: Namespace: get namespace list")
+	log.V(logLevel).Debugf("storage:etcd:namespace:> get list")
 
-	const filter = `\b(.+)` + namespaceStorage + `\/.+\/(meta)\b`
+	const filter = `\b.+` + namespaceStorage + `\/(.+)\/(?:meta|state|spec)\b`
+
+	var (
+		namespaces = make(map[string]*types.Namespace)
+	)
 
 	client, destroy, err := getClient(ctx)
 	if err != nil {
-		log.V(logLevel).Errorf("Storage: Namespace: create client err: %s", err.Error())
+		log.V(logLevel).Errorf("storage:etcd:namespace:>  get list err: %s", err.Error())
 		return nil, err
 	}
 	defer destroy()
 
-	namespaces := make(map[string]*types.Namespace, 0)
-	keyNamespaces := keyCreate(namespaceStorage)
-	err = client.List(ctx, keyNamespaces, filter, &namespaces)
-	switch true {
-	case err != nil && err.Error() != store.ErrEntityNotFound:
-		log.V(logLevel).Errorf("Storage: Namespace: get namespace list err: %s", err.Error())
-		return nil, err
-	case err != nil && err.Error() == store.ErrEntityNotFound:
-		return make(map[string]*types.Namespace, 0), nil
-	}
-
-	if err != nil {
-		log.V(logLevel).Errorf("Storage: Namespace: get namespaces list err: %s", err.Error())
+	key := keyDirCreate(namespaceStorage)
+	if err := client.MapList(ctx, key, filter, namespaces); err != nil {
+		log.V(logLevel).Errorf("storage:etcd:namespace:>  get list err: %s", err.Error())
 		return nil, err
 	}
-
-	log.V(logLevel).Debugf("Storage: Namespace: get namespace list result: %d", len(namespaces))
 
 	return namespaces, nil
 }
@@ -108,11 +98,9 @@ func (s *NamespaceStorage) List(ctx context.Context) (map[string]*types.Namespac
 // Insert new namespace into storage
 func (s *NamespaceStorage) Insert(ctx context.Context, namespace *types.Namespace) error {
 
-	log.V(logLevel).Debug("Storage: Namespace: insert namespace: %#v", namespace)
+	log.V(logLevel).Debug("storage:etcd:namespace:> insert namespace: %#v", namespace)
 
-	if namespace == nil {
-		err := errors.New("namespace can not be nil")
-		log.V(logLevel).Errorf("Storage: Namespace: insert namespace err: %s", err.Error())
+	if err := s.checkNamespaceArgument(namespace); err != nil {
 		return err
 	}
 
@@ -123,9 +111,9 @@ func (s *NamespaceStorage) Insert(ctx context.Context, namespace *types.Namespac
 	}
 	defer destroy()
 
-	keyMeta := keyCreate(namespaceStorage, namespace.Meta.Name, "meta")
-	if err := client.Create(ctx, keyMeta, namespace.Meta, nil, 0); err != nil {
-		log.V(logLevel).Errorf("Storage: Namespace: insert namespace err: %s", err.Error())
+	key := keyCreate(namespaceStorage, namespace.Meta.Name, "meta")
+	if err := client.Create(ctx, key, namespace.Meta, nil, 0); err != nil {
+		log.V(logLevel).Errorf("storage:etcd:namespace:> insert namespace err: %s", err.Error())
 		return err
 	}
 
@@ -135,26 +123,23 @@ func (s *NamespaceStorage) Insert(ctx context.Context, namespace *types.Namespac
 // Update namespace model
 func (s *NamespaceStorage) Update(ctx context.Context, namespace *types.Namespace) error {
 
-	log.V(logLevel).Debugf("Storage: Namespace: update namespace: %#v", namespace)
+	log.V(logLevel).Debug("storage:etcd:namespace:> update namespace: %#v", namespace)
 
-	if namespace == nil {
-		err := errors.New("namespace can not be nil")
-		log.V(logLevel).Errorf("Storage: Namespace: update namespace err: %s", err.Error())
+	if err := s.checkNamespaceExists(ctx, namespace); err != nil {
 		return err
 	}
 
 	namespace.Meta.Updated = time.Now()
-
 	client, destroy, err := getClient(ctx)
 	if err != nil {
-		log.V(logLevel).Errorf("Storage: Namespace: create client err: %s", err.Error())
+		log.V(logLevel).Errorf("storage:etcd:namespace:> update namespace err: %s", err.Error())
 		return err
 	}
 	defer destroy()
 
-	keyMeta := keyCreate(namespaceStorage, namespace.Meta.Name, "meta")
-	if err := client.Update(ctx, keyMeta, namespace.Meta, nil, 0); err != nil {
-		log.V(logLevel).Errorf("Storage: Namespace: update namespace meta err: %s", err.Error())
+	key := keyCreate(namespaceStorage, namespace.Meta.Name, "meta")
+	if err := client.Update(ctx, key, namespace.Meta, nil, 0); err != nil {
+		log.V(logLevel).Errorf("storage:etcd:namespace:> update namespace err: %s", err.Error())
 		return err
 	}
 
@@ -164,25 +149,88 @@ func (s *NamespaceStorage) Update(ctx context.Context, namespace *types.Namespac
 // Remove namespace model
 func (s *NamespaceStorage) Remove(ctx context.Context, namespace *types.Namespace) error {
 
-	log.V(logLevel).Debugf("Storage: Namespace: remove namespace: %s", namespace.Meta.Name)
+	log.V(logLevel).Debug("storage:etcd:namespace:> remove namespace: %#v", namespace)
+
+	if err := s.checkNamespaceExists(ctx, namespace); err != nil {
+		return err
+	}
 
 	client, destroy, err := getClient(ctx)
 	if err != nil {
-		log.V(logLevel).Errorf("Storage: Namespace: create client err: %s", err.Error())
+		log.V(logLevel).Errorf("storage:etcd:deployment:> remove namespace err: %s", err.Error())
 		return err
 	}
 	defer destroy()
 
-	keyNamespace := keyCreate(namespaceStorage, namespace.Meta.Name)
-	if err := client.DeleteDir(ctx, keyNamespace); err != nil && err.Error() != store.ErrEntityNotFound {
-		log.V(logLevel).Errorf("Storage: Namespace: remove namespace `%s` err: %s", namespace.Meta.Name, err.Error())
+	keyMeta := keyCreate(namespaceStorage, s.keyGet(namespace))
+	if err := client.DeleteDir(ctx, keyMeta); err != nil {
+		log.V(logLevel).Errorf("storage:etcd:deployment:> remove namespace err: %s", err.Error())
 		return err
 	}
 
 	return nil
 }
 
+// Clear namespace storage
+func (s *NamespaceStorage) Clear(ctx context.Context) error {
+
+	log.V(logLevel).Debugf("storage:etcd:namespace:> clear")
+
+	client, destroy, err := getClient(ctx)
+	if err != nil {
+		log.V(logLevel).Errorf("storage:etcd:namespace:> clear err: %s", err.Error())
+		return err
+	}
+	defer destroy()
+
+	if err := client.DeleteDir(ctx, namespaceStorage); err != nil {
+		log.V(logLevel).Errorf("storage:etcd:namespace:> clear err: %s", err.Error())
+		return err
+	}
+
+	return nil
+}
+
+// keyCreate util function
+func (s *NamespaceStorage) keyCreate(name string) string {
+	return fmt.Sprintf("%s", name)
+}
+
+// keyGet util function
+func (s *NamespaceStorage) keyGet(namespace *types.Namespace) string {
+	return namespace.SelfLink()
+}
+
 func newNamespaceStorage() *NamespaceStorage {
 	s := new(NamespaceStorage)
 	return s
+}
+
+func (s *NamespaceStorage) checkNamespaceArgument(namespace *types.Namespace) error {
+	if namespace == nil {
+		return errors.New(store.ErrStructArgIsNil)
+	}
+
+	if namespace.Meta.Name == "" {
+		return errors.New(store.ErrStructArgIsInvalid)
+	}
+
+	return nil
+}
+
+func (s *NamespaceStorage) checkNamespaceExists(ctx context.Context, namespace *types.Namespace) error {
+
+	if err := s.checkNamespaceArgument(namespace); err != nil {
+		return err
+	}
+
+	log.V(logLevel).Debugf("storage:etcd:namespace:> check namespace exists")
+
+	if _, err := s.Get(ctx, namespace.Meta.Name); err != nil {
+		log.V(logLevel).Debugf("storage:etcd:namespace:> check namespace exists err: %s", err.Error())
+		return err
+	}
+
+
+	return nil
 }

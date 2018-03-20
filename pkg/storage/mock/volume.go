@@ -67,6 +67,16 @@ func (s *VolumeStorage) SetState(ctx context.Context, volume *types.Volume) erro
 	return nil
 }
 
+// Update volume state
+func (s *VolumeStorage) SetSpec(ctx context.Context, volume *types.Volume) error {
+	if err := s.checkVolumeExists(volume); err != nil {
+		return err
+	}
+
+	s.data[s.keyGet(volume)].Spec = volume.Spec
+	return nil
+}
+
 // Insert new volume
 func (s *VolumeStorage) Insert(ctx context.Context, volume *types.Volume) error {
 

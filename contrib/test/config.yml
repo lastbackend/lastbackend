@@ -7,7 +7,7 @@ ssl: true
 
 # Etcd database
 etcd:
-  prefix: lastbackend
+  prefix: lstbknd
   endpoints:
     "127.0.0.1:2379"
 

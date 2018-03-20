@@ -16,7 +16,7 @@
 // from Last.Backend LLC.
 //
 
-package mock
+package etcd
 
 import (
 	"context"
@@ -30,11 +30,14 @@ import (
 )
 
 func TestNodeStorage_List(t *testing.T) {
+
+	initStorage()
+
 	var (
 		stg = newNodeStorage()
 		ctx = context.Background()
 		n1  = getNodeAsset("test1", "", true)
-		n2  = getNodeAsset("test2", "", false)
+		n2  = getNodeAsset("test2", "", true)
 		nl  = make(map[string]*types.Node, 0)
 	)
 
@@ -85,14 +88,29 @@ func TestNodeStorage_List(t *testing.T) {
 				t.Errorf("NodeStorage.List() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
-			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("NodeStorage.List() = %v, want %v", got, tt.want)
+
+			g, err := json.Marshal(got)
+			if err != nil {
+				t.Errorf("NodeStorage.List() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+
+			e, err := json.Marshal(tt.want)
+			if err != nil {
+				t.Errorf("NodeStorage.List() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+
+			if !reflect.DeepEqual(g, e) {
+				t.Errorf("NodeStorage.List() = %v, want %v", string(g), string(e))
 			}
 		})
 	}
 }
 
 func TestNodeStorage_Get(t *testing.T) {
+
+	initStorage()
 
 	var (
 		stg = newNodeStorage()
@@ -164,8 +182,20 @@ func TestNodeStorage_Get(t *testing.T) {
 				return
 			}
 
-			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("NodeStorage.Get() = %v, want %v", got, tt.want)
+			g, err := json.Marshal(got)
+			if err != nil {
+				t.Errorf("NodeStorage.Get() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+
+			e, err := json.Marshal(tt.want)
+			if err != nil {
+				t.Errorf("NodeStorage.Get() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+
+			if !reflect.DeepEqual(g, e) {
+				t.Errorf("NodeStorage.Get() = %v, want %v", string(g), string(e))
 			}
 
 		})
@@ -173,6 +203,8 @@ func TestNodeStorage_Get(t *testing.T) {
 }
 
 func TestNodeStorage_GetSpec(t *testing.T) {
+
+	initStorage()
 
 	var (
 		ns  = "ns"
@@ -257,14 +289,14 @@ func TestNodeStorage_GetSpec(t *testing.T) {
 
 			if err != nil {
 				if tt.wantErr && tt.err != err.Error() {
-					t.Errorf("NodeStorage.Get() = %v, want %v", err, tt.err)
+					t.Errorf("NodeStorage.GetSpec() = %v, want %v", err, tt.err)
 					return
 				}
 				return
 			}
 
 			if tt.wantErr {
-				t.Errorf("NodeStorage.Get() error = %v, wantErr %v", err, tt.err)
+				t.Errorf("NodeStorage.GetSpec() error = %v, wantErr %v", err, tt.err)
 				return
 			}
 
@@ -289,6 +321,8 @@ func TestNodeStorage_GetSpec(t *testing.T) {
 }
 
 func TestNodeStorage_Insert(t *testing.T) {
+
+	initStorage()
 
 	var (
 		stg = newNodeStorage()
@@ -364,7 +398,7 @@ func TestNodeStorage_Insert(t *testing.T) {
 			}
 
 			if tt.wantErr {
-				t.Errorf("NodeStorage.Insert() error = %v, want %v", err.Error(), tt.err)
+				t.Errorf("NodeStorage.Insert() error = %v, want %v", err, tt.err)
 				return
 			}
 		})
@@ -372,6 +406,9 @@ func TestNodeStorage_Insert(t *testing.T) {
 }
 
 func TestNodeStorage_Update(t *testing.T) {
+
+	initStorage()
+
 	var (
 		stg = newNodeStorage()
 		ctx = context.Background()
@@ -452,11 +489,12 @@ func TestNodeStorage_Update(t *testing.T) {
 			}
 
 			if tt.wantErr {
-				t.Errorf("NodeStorage.Update() error = %v, want %v", err.Error(), tt.err)
+				t.Errorf("NodeStorage.Update() error = %v, want %v", err, tt.err)
 				return
 			}
 
 			got, _ := tt.fields.stg.Get(tt.args.ctx, tt.args.node.Meta.Name)
+			tt.want.Meta.Updated = got.Meta.Updated
 			if !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("NodeStorage.Update() = %v, want %v", got, tt.want)
 				return
@@ -467,6 +505,8 @@ func TestNodeStorage_Update(t *testing.T) {
 }
 
 func TestNodeStorage_SetState(t *testing.T) {
+
+	initStorage()
 
 	var (
 		stg = newNodeStorage()
@@ -555,6 +595,10 @@ func TestNodeStorage_SetState(t *testing.T) {
 			}
 
 			got, _ := tt.fields.stg.Get(tt.args.ctx, tt.args.node.Meta.Name)
+
+			tt.want.Meta.Created = got.Meta.Created
+			tt.want.Meta.Updated = got.Meta.Updated
+
 			if !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("NodeStorage.SetState() = %v, want %v", got, tt.want)
 				return
@@ -565,6 +609,8 @@ func TestNodeStorage_SetState(t *testing.T) {
 }
 
 func TestNodeStorage_SetInfo(t *testing.T) {
+
+	initStorage()
 
 	var (
 		stg = newNodeStorage()
@@ -654,6 +700,10 @@ func TestNodeStorage_SetInfo(t *testing.T) {
 			}
 
 			got, _ := tt.fields.stg.Get(tt.args.ctx, tt.args.node.Meta.Name)
+
+			tt.want.Meta.Created = got.Meta.Created
+			tt.want.Meta.Updated = got.Meta.Updated
+
 			if !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("NodeStorage.SetInfo() = %v, want %v", got, tt.want)
 				return
@@ -664,6 +714,8 @@ func TestNodeStorage_SetInfo(t *testing.T) {
 }
 
 func TestNodeStorage_SetNetwork(t *testing.T) {
+
+	initStorage()
 
 	var (
 		stg = newNodeStorage()
@@ -753,6 +805,10 @@ func TestNodeStorage_SetNetwork(t *testing.T) {
 			}
 
 			got, _ := tt.fields.stg.Get(tt.args.ctx, tt.args.node.Meta.Name)
+
+			tt.want.Meta.Created = got.Meta.Created
+			tt.want.Meta.Updated = got.Meta.Updated
+
 			if !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("NodeStorage.SetNetwork() = %v, want %v", got, tt.want)
 				return
@@ -763,6 +819,8 @@ func TestNodeStorage_SetNetwork(t *testing.T) {
 }
 
 func TestNodeStorage_SetOnline(t *testing.T) {
+
+	initStorage()
 
 	var (
 		stg = newNodeStorage()
@@ -850,6 +908,10 @@ func TestNodeStorage_SetOnline(t *testing.T) {
 			}
 
 			got, _ := tt.fields.stg.Get(tt.args.ctx, tt.args.node.Meta.Name)
+
+			tt.want.Meta.Created = got.Meta.Created
+			tt.want.Meta.Updated = got.Meta.Updated
+
 			if !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("NodeStorage.SetOnline() = %v, want %v", got, tt.want)
 				return
@@ -860,6 +922,8 @@ func TestNodeStorage_SetOnline(t *testing.T) {
 }
 
 func TestNodeStorage_SetOffline(t *testing.T) {
+
+	initStorage()
 
 	var (
 		stg = newNodeStorage()
@@ -947,6 +1011,10 @@ func TestNodeStorage_SetOffline(t *testing.T) {
 			}
 
 			got, _ := tt.fields.stg.Get(tt.args.ctx, tt.args.node.Meta.Name)
+
+			tt.want.Meta.Created = got.Meta.Created
+			tt.want.Meta.Updated = got.Meta.Updated
+
 			if !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("NodeStorage.SetOffline() = %v, want %v", got, tt.want)
 				return
@@ -957,6 +1025,8 @@ func TestNodeStorage_SetOffline(t *testing.T) {
 }
 
 func TestNodeStorage_InsertPod(t *testing.T) {
+
+	initStorage()
 
 	var (
 		ns  = "ns"
@@ -1071,14 +1141,30 @@ func TestNodeStorage_InsertPod(t *testing.T) {
 			}
 
 			if tt.wantErr {
-				t.Errorf("NodeStorage.InsertPod() error = %v, want %v", err.Error(), tt.err)
+				t.Errorf("NodeStorage.InsertPod() error = %v, want %v", err, tt.err)
 				return
 			}
 
-			got, _ := tt.fields.stg.GetSpec(tt.args.ctx, tt.args.node)
-			if !reflect.DeepEqual(*got, tt.want.Spec) {
-				t.Errorf("NodeStorage.InsertPod() = %v, want %v", got, tt.want.Spec)
+			got, err := tt.fields.stg.GetSpec(tt.args.ctx, tt.args.node)
+			if err != nil {
+				t.Errorf("NodeStorage.InsertPod() error = %v, want no error", err.Error())
 				return
+			}
+
+			g, err := json.Marshal(got)
+			if err != nil {
+				t.Errorf("NodeStorage.InsertPod() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+
+			e, err := json.Marshal(tt.want.Spec)
+			if err != nil {
+				t.Errorf("NodeStorage.InsertPod() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+
+			if !reflect.DeepEqual(g, e) {
+				t.Errorf("NodeStorage.InsertPod() = %v, want %v", string(g), string(e))
 			}
 
 		})
@@ -1086,6 +1172,8 @@ func TestNodeStorage_InsertPod(t *testing.T) {
 }
 
 func TestNodeStorage_RemovePod(t *testing.T) {
+
+	initStorage()
 
 	var (
 		ns  = "ns"
@@ -1217,10 +1305,26 @@ func TestNodeStorage_RemovePod(t *testing.T) {
 				return
 			}
 
-			got, _ := tt.fields.stg.GetSpec(tt.args.ctx, tt.args.node)
-			if !reflect.DeepEqual(*got, tt.want.Spec) {
-				t.Errorf("NodeStorage.RemovePod() = %v, want %v", got, tt.want.Spec)
+			got, err := tt.fields.stg.GetSpec(tt.args.ctx, tt.args.node)
+			if err != nil {
+				t.Errorf("NodeStorage.RemovePod() error = %v, want no error", err.Error())
 				return
+			}
+
+			g, err := json.Marshal(got)
+			if err != nil {
+				t.Errorf("NodeStorage.RemovePod() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+
+			e, err := json.Marshal(tt.want.Spec)
+			if err != nil {
+				t.Errorf("NodeStorage.RemovePod() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+
+			if !reflect.DeepEqual(g, e) {
+				t.Errorf("NodeStorage.RemovePod() = %v, want %v", string(g), string(e))
 			}
 
 		})
@@ -1228,6 +1332,8 @@ func TestNodeStorage_RemovePod(t *testing.T) {
 }
 
 func TestNodeStorage_InsertVolume(t *testing.T) {
+
+	initStorage()
 
 	var (
 		ns  = "ns"
@@ -1371,6 +1477,8 @@ func TestNodeStorage_InsertVolume(t *testing.T) {
 }
 
 func TestNodeStorage_RemoveVolume(t *testing.T) {
+
+	initStorage()
 
 	var (
 		ns  = "ns"
@@ -1528,6 +1636,8 @@ func TestNodeStorage_RemoveVolume(t *testing.T) {
 
 func TestNodeStorage_InsertRoute(t *testing.T) {
 
+	initStorage()
+
 	var (
 		ns  = "ns"
 		stg = newNodeStorage()
@@ -1670,6 +1780,8 @@ func TestNodeStorage_InsertRoute(t *testing.T) {
 }
 
 func TestNodeStorage_RemoveRoute(t *testing.T) {
+
+	initStorage()
 
 	var (
 		ns  = "ns"
@@ -1827,6 +1939,8 @@ func TestNodeStorage_RemoveRoute(t *testing.T) {
 
 func TestNodeStorage_Remove(t *testing.T) {
 
+	initStorage()
+
 	var (
 		stg = newNodeStorage()
 		ctx = context.Background()
@@ -1906,7 +2020,7 @@ func TestNodeStorage_Remove(t *testing.T) {
 			}
 
 			if tt.wantErr {
-				t.Errorf("NodeStorage.Remove() error = %v, want %v", err.Error(), tt.err)
+				t.Errorf("NodeStorage.Remove() error = %v, want %v", err, tt.err)
 				return
 			}
 
@@ -1921,6 +2035,8 @@ func TestNodeStorage_Remove(t *testing.T) {
 }
 
 func TestNodeStorage_Watch(t *testing.T) {
+
+	initStorage()
 
 	var (
 		stg = newNodeStorage()
@@ -1948,7 +2064,7 @@ func TestNodeStorage_Watch(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
+		go t.Run(tt.name, func(t *testing.T) {
 			if err := tt.fields.stg.Watch(tt.args.ctx, tt.args.node); (err != nil) != tt.wantErr {
 				t.Errorf("NodeStorage.Watch() error = %v, wantErr %v", err, tt.wantErr)
 			}
@@ -1984,6 +2100,7 @@ func getNodeAsset(name, desc string, online bool) types.Node {
 		},
 		Info: types.NodeInfo{
 			Hostname: name,
+			InternalIP: "0.0.0.0",
 		},
 		State: types.NodeState{
 			Capacity: types.NodeResources{
@@ -2002,9 +2119,6 @@ func getNodeAsset(name, desc string, online bool) types.Node {
 			},
 		},
 		Spec: types.NodeSpec{
-			Pods:    make(map[string]types.PodSpec),
-			Volumes: make(map[string]types.VolumeSpec),
-			Routes:  make(map[string]types.RouteSpec),
 		},
 		Roles: types.NodeRole{},
 		Network: types.Subnet{

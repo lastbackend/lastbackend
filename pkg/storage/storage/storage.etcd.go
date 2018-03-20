@@ -70,7 +70,6 @@ type Pod interface {
 	SetSpec(ctx context.Context, pod *types.Pod) error
 	SetState(ctx context.Context, pod *types.Pod) error
 	Insert(ctx context.Context, pod *types.Pod) error
-	Upsert(ctx context.Context, pod *types.Pod) error
 	Update(ctx context.Context, pod *types.Pod) error
 	Remove(ctx context.Context, pod *types.Pod) error
 	Watch(ctx context.Context, pod chan *types.Pod) error
@@ -83,6 +82,8 @@ type Trigger interface {
 	Get(ctx context.Context, namespace, service, name string) (*types.Trigger, error)
 	ListByNamespace(ctx context.Context, namespace string) (map[string]*types.Trigger, error)
 	ListByService(ctx context.Context, namespace, service string) (map[string]*types.Trigger, error)
+	SetState(ctx context.Context, trigger *types.Trigger) error
+	SetSpec(ctx context.Context, trigger *types.Trigger) error
 	Insert(ctx context.Context, trigger *types.Trigger) error
 	Update(ctx context.Context, trigger *types.Trigger) error
 	Remove(ctx context.Context, trigger *types.Trigger) error
@@ -109,6 +110,7 @@ type Volume interface {
 	Get(ctx context.Context, namespace, name string) (*types.Volume, error)
 	ListByNamespace(ctx context.Context, namespace string) (map[string]*types.Volume, error)
 	SetState(ctx context.Context, volume *types.Volume) error
+	SetSpec(ctx context.Context, volume *types.Volume) error
 	Insert(ctx context.Context, volume *types.Volume) error
 	Update(ctx context.Context, volume *types.Volume) error
 	Remove(ctx context.Context, volume *types.Volume) error
@@ -127,6 +129,7 @@ type Cluster interface {
 type Node interface {
 	List(ctx context.Context) (map[string]*types.Node, error)
 	Get(ctx context.Context, name string) (*types.Node, error)
+	GetSpec(ctx context.Context, node *types.Node) (*types.NodeSpec, error)
 	Insert(ctx context.Context, node *types.Node) error
 	Update(ctx context.Context, node *types.Node) error
 	SetState(ctx context.Context, node *types.Node) error

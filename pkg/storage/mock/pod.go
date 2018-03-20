@@ -168,6 +168,11 @@ func (s *PodStorage) WatchState(ctx context.Context, pod chan *types.Pod) error 
 	return nil
 }
 
+// Watch pod status changes
+func (s *PodStorage) WatchStatus(ctx context.Context, pod chan *types.Pod) error {
+	return nil
+}
+
 // Clear pod storage
 func (s *PodStorage) Clear(ctx context.Context) error {
 	s.data = make(map[string]*types.Pod)

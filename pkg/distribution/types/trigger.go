@@ -24,12 +24,23 @@ type TriggerList []Trigger
 
 type Trigger struct {
 	Meta TriggerMeta `json:"meta"`
+	Spec TriggerSpec `json:"spec"`
+	State TriggerState `json:"state"`
 }
 
 type TriggerMeta struct {
 	Meta
 	Namespace string `json:"namespace"`
 	Service   string `json:"service"`
+}
+
+type TriggerState struct {
+	Provision bool `json:"provision"`
+	Ready bool `json:"ready"`
+}
+
+type TriggerSpec struct {
+
 }
 
 func (t *Trigger) SelfLink() string {
