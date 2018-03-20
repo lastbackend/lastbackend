@@ -40,7 +40,7 @@ func (p *Route) ToJson() ([]byte, error) {
 
 func (r *Route) ToMeta(obj types.RouteMeta) RouteMeta {
 	meta := RouteMeta{}
-	meta.Domain = obj.Domain
+	meta.Name = obj.Name
 	meta.Namespace = obj.Namespace
 	meta.Security = obj.Security
 	meta.Updated = obj.Updated
@@ -51,6 +51,14 @@ func (r *Route) ToMeta(obj types.RouteMeta) RouteMeta {
 
 func (r *Route) ToSpec(obj types.RouteSpec) RouteSpec {
 	spec := RouteSpec{}
+	spec.Domain = obj.Domain
+	for _, rule := range obj.Rules {
+		spec.Rules = append(spec.Rules, &RouteRule{
+			Path:     rule.Path,
+			Port:     rule.Port,
+			Endpoint: rule.Endpoint,
+		})
+	}
 	return spec
 }
 

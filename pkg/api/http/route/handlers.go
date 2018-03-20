@@ -135,10 +135,17 @@ func RouteCreateH(w http.ResponseWriter, r *http.Request) {
 	nid := utils.Vars(r)["namespace"]
 
 	var (
-		sm  = distribution.NewServiceModel(r.Context(), envs.Get().GetStorage())
 		rm  = distribution.NewRouteModel(r.Context(), envs.Get().GetStorage())
 		nsm = distribution.NewNamespaceModel(r.Context(), envs.Get().GetStorage())
 	)
+
+	// request body struct
+	opts := v1.Request().Route().CreateOptions()
+	if err := opts.DecodeAndValidate(r.Body); err != nil {
+		log.V(logLevel).Errorf("Handler: Route: validation incoming data err: %s", err.Err())
+		err.Http(w)
+		return
+	}
 
 	ns, err := nsm.Get(nid)
 	if err != nil {
@@ -153,29 +160,7 @@ func RouteCreateH(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// request body struct
-	opts := v1.Request().Route().CreateOptions()
-	if err := opts.DecodeAndValidate(r.Body); err != nil {
-		log.V(logLevel).Errorf("Handler: Route: validation incoming data err: %s", err.Err())
-		err.Http(w)
-		return
-	}
-
-	// Check routes limit reachable
-	if !ns.Quotas.Disabled && (ns.Resources.Routes+1) > ns.Quotas.Routes {
-		log.V(logLevel).Warnf("Handler: Route: limit quotes reachable")
-		errors.BadParameter("router").Http(w)
-		return
-	}
-
-	ss, err := sm.List(ns.Meta.Name)
-	if err != nil {
-		log.V(logLevel).Errorf("Handler: Route: get list services err: %s", err)
-		errors.HTTP.InternalServerError(w)
-		return
-	}
-
-	rs, err := rm.Create(ns, ss, opts)
+	rs, err := rm.Create(ns, opts)
 	if err != nil {
 		log.V(logLevel).Errorf("Handler: Route: create route err: %s", ns.Meta.Name, err)
 		errors.HTTP.InternalServerError(w)
@@ -204,7 +189,6 @@ func RouteUpdateH(w http.ResponseWriter, r *http.Request) {
 	log.V(logLevel).Debugf("Handler: Route: update route `%s`", nid)
 
 	var (
-		sm  = distribution.NewServiceModel(r.Context(), envs.Get().GetStorage())
 		rm  = distribution.NewRouteModel(r.Context(), envs.Get().GetStorage())
 		nsm = distribution.NewNamespaceModel(r.Context(), envs.Get().GetStorage())
 	)
@@ -230,31 +214,19 @@ func RouteUpdateH(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	ss, err := sm.List(ns.Meta.Name)
-	if err != nil {
-		log.V(logLevel).Errorf("Handler: Route: check service exists by name `%s` err: %s", ns.Meta.Name, err)
-		errors.HTTP.InternalServerError(w)
-		return
-	}
-	if ss == nil {
-		log.Warnf("Handler: Route: service `%s` not found", ns.Meta.Name)
-		errors.New("service").NotFound().Http(w)
-		return
-	}
-
 	rs, err := rm.Get(ns.Meta.Name, rid)
 	if err != nil {
-		log.V(logLevel).Errorf("Handler: Route: check route exists by name `%s` err: %s", ns.Meta.Name, err)
+		log.V(logLevel).Errorf("Handler: Route: check route exists by selflink `%s` err: %s", ns.Meta.SelfLink, err)
 		errors.HTTP.InternalServerError(w)
 		return
 	}
-	if rs == nil && rs.Meta.Namespace != ns.Meta.Name {
+	if rs == nil {
 		log.V(logLevel).Warnf("Handler: Route: route `%s` not found", rid)
 		errors.New("route").NotFound().Http(w)
 		return
 	}
 
-	rs, err = rm.Update(rs, ns, ss, opts)
+	rs, err = rm.Update(rs, ns, opts)
 	if err != nil {
 		log.V(logLevel).Errorf("Handler: Route: update route `%s` err: %s", ns.Meta.Name, err)
 		errors.HTTP.InternalServerError(w)
@@ -280,11 +252,6 @@ func RouteRemoveH(w http.ResponseWriter, r *http.Request) {
 	rid := utils.Vars(r)["route"]
 
 	log.V(logLevel).Debugf("Handler: Route: remove route %s", rid)
-
-	if r.Context().Value("namespace") == nil {
-		errors.HTTP.Forbidden(w)
-		return
-	}
 
 	var (
 		rm  = distribution.NewRouteModel(r.Context(), envs.Get().GetStorage())
@@ -318,7 +285,7 @@ func RouteRemoveH(w http.ResponseWriter, r *http.Request) {
 		errors.HTTP.InternalServerError(w)
 		return
 	}
-	if rs == nil && rs.Meta.Namespace != ns.Meta.Name {
+	if rs == nil {
 		log.V(logLevel).Warnf("Handler: Route: route `%s` not found", rid)
 		errors.New("route").NotFound().Http(w)
 		return

@@ -19,6 +19,7 @@
 package http
 
 import (
+	"bytes"
 	"context"
 	"fmt"
 	"golang.org/x/net/http2"
@@ -27,7 +28,6 @@ import (
 	"net/http"
 	"net/url"
 	"path"
-	"bytes"
 )
 
 type Request struct {

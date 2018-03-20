@@ -35,8 +35,8 @@ type RouteStorage struct {
 
 // Get route by name
 func (s *RouteStorage) Get(ctx context.Context, namespace, name string) (*types.Route, error) {
-	if ns, ok := s.data[s.keyCreate(namespace, name)]; ok {
-		return ns, nil
+	if r, ok := s.data[s.keyCreate(namespace, name)]; ok {
+		return r, nil
 	}
 	return nil, errors.New(store.ErrEntityNotFound)
 }
@@ -68,7 +68,6 @@ func (s *RouteStorage) SetState(ctx context.Context, route *types.Route) error {
 
 // Insert new route
 func (s *RouteStorage) Insert(ctx context.Context, route *types.Route) error {
-
 	if err := s.checkRouteArgument(route); err != nil {
 		return err
 	}
@@ -145,10 +144,6 @@ func (s *RouteStorage) checkRouteArgument(route *types.Route) error {
 
 	if route == nil {
 		return errors.New(store.ErrStructArgIsNil)
-	}
-
-	if route.Meta.Name == "" {
-		return errors.New(store.ErrStructArgIsInvalid)
 	}
 
 	return nil

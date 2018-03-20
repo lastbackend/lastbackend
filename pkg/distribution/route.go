@@ -20,17 +20,22 @@ package distribution
 
 import (
 	"context"
+	"fmt"
 	"github.com/lastbackend/lastbackend/pkg/api/types/v1/request"
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 	"github.com/lastbackend/lastbackend/pkg/log"
 	"github.com/lastbackend/lastbackend/pkg/storage"
+	"github.com/lastbackend/lastbackend/pkg/storage/store"
+	"github.com/lastbackend/lastbackend/pkg/util/generator"
+	"github.com/spf13/viper"
+	"strings"
 )
 
 type IRoute interface {
 	Get(namespace, name string) (*types.Route, error)
 	ListByNamespace(namespace string) (map[string]*types.Route, error)
-	Create(namespace *types.Namespace, services map[string]*types.Service, opts *request.RouteCreateOptions) (*types.Route, error)
-	Update(route *types.Route, namespace *types.Namespace, services map[string]*types.Service, opts *request.RouteUpdateOptions) (*types.Route, error)
+	Create(namespace *types.Namespace, opts *request.RouteCreateOptions) (*types.Route, error)
+	Update(route *types.Route, namespace *types.Namespace, opts *request.RouteUpdateOptions) (*types.Route, error)
 	SetState(route *types.Route, state *types.RouteState) error
 	Remove(route *types.Route) error
 }
@@ -42,11 +47,17 @@ type Route struct {
 
 func (n *Route) Get(namespace, name string) (*types.Route, error) {
 
-	log.V(logLevel).Debug("Route: get route by id %s/%s", namespace, name)
+	log.V(logLevel).Debug("api:distribution:route: get route by id %s/%s", namespace, name)
 
 	item, err := n.storage.Route().Get(n.context, namespace, name)
 	if err != nil {
-		log.V(logLevel).Error("Route: get route err: %s", err)
+
+		if err.Error() == store.ErrEntityNotFound {
+			log.V(logLevel).Warnf("api:distribution:route:get: in namespace %s by name %s not found", namespace, name)
+			return nil, nil
+		}
+
+		log.V(logLevel).Errorf("api:distribution:route:get: in namespace %s by name %s error: %s", namespace, name, err)
 		return nil, err
 	}
 
@@ -55,101 +66,83 @@ func (n *Route) Get(namespace, name string) (*types.Route, error) {
 
 func (n *Route) ListByNamespace(namespace string) (map[string]*types.Route, error) {
 
-	log.V(logLevel).Debug("Route: list route")
+	log.V(logLevel).Debug("api:distribution:route: list route")
 
 	items, err := n.storage.Route().ListByNamespace(n.context, namespace)
 	if err != nil {
-		log.V(logLevel).Error("Route: list route err: %s", err)
+		log.V(logLevel).Error("api:distribution:route: list route err: %s", err)
 		return items, err
 	}
 
-	log.V(logLevel).Debugf("Route: list route result: %d", len(items))
+	log.V(logLevel).Debugf("api:distribution:route: list route result: %d", len(items))
 
 	return items, nil
 }
 
-func (n *Route) Create(namespace *types.Namespace, services map[string]*types.Service, opts *request.RouteCreateOptions) (*types.Route, error) {
+func (n *Route) Create(namespace *types.Namespace, opts *request.RouteCreateOptions) (*types.Route, error) {
 
-	log.V(logLevel).Debugf("Route: create route %#v", opts)
+	log.V(logLevel).Debugf("api:distribution:route:crete create route %#v", opts)
 
-	var route = types.Route{}
-	//route.Meta.SetDefault()
-	//route.Meta.Namespace = namespace.Meta.Name
-	//route.Meta.Security = opts.Security
-	//route.State.Provision = true
-	//route.Meta.Hash = generator.GenerateRandomString(5)
-	//
-	//if len(opts.Domain) != 0 && opts.Custom {
-	//	route.Meta.Domain = strings.ToLower(opts.Domain)
-	//}
-	//
-	//if len(opts.Domain) == 0 && len(opts.Subdomain) != 0 && !opts.Custom {
-	//	route.Meta.Domain = strings.ToLower(fmt.Sprintf("%s-%s.%s", opts.Subdomain, namespace.Meta.Endpoint, viper.GetString("domain.external")))
-	//}
-	//
-	//if len(opts.Domain) == 0 && len(opts.Subdomain) == 0 && !opts.Custom {
-	//	route.Meta.Domain = strings.ToLower(strings.Join([]string{generator.GenerateRandomString(5), namespace.Meta.Endpoint}, "-"))
-	//}
-	//
-	//ss := make(map[string]*types.Service)
-	//for _, service := range services {
-	//	ss[service.Meta.Name] = service
-	//}
-	//
-	////route.Rules = make(map[string]*types.RouteRule, 0)
-	////for _, rule := range opts.Rules {
-	////	route.Rules = append(route.Rules, &types.RouteRule{
-	////		Service:  *rule.Service,
-	////		Port:     *rule.Port,
-	////		Path:     rule.Path,
-	////		Endpoint: ss[*rule.Service].Meta.Endpoint,
-	////	})
-	////}
+	route := new(types.Route)
+	route.Meta.SetDefault()
+	route.Meta.Name = generator.GenerateRandomString(10)
+	route.Meta.Namespace = namespace.Meta.Name
+	route.Meta.Security = opts.Security
+	route.State.Provision = true
 
-	if err := n.storage.Route().Insert(n.context, &route); err != nil {
-		log.V(logLevel).Errorf("Route: insert Route err: %s", err)
+	if len(opts.Domain) != 0 && opts.Custom {
+		route.Spec.Domain = strings.ToLower(opts.Domain)
+	}
+
+	if len(opts.Domain) == 0 && len(opts.Subdomain) != 0 && !opts.Custom {
+		route.Spec.Domain = strings.ToLower(fmt.Sprintf("%s-%s.%s", opts.Subdomain, namespace.Meta.Endpoint, viper.GetString("domain.external")))
+	}
+
+	if len(opts.Domain) == 0 && len(opts.Subdomain) == 0 && !opts.Custom {
+		route.Spec.Domain = strings.ToLower(strings.Join([]string{generator.GenerateRandomString(5), namespace.Meta.Endpoint}, "-"))
+	}
+
+	route.Spec.Rules = make([]*types.RouteRule, 0)
+	for _, rule := range opts.Rules {
+		route.Spec.Rules = append(route.Spec.Rules, &types.RouteRule{
+			Endpoint: *rule.Endpoint,
+			Port:     *rule.Port,
+			Path:     rule.Path,
+		})
+	}
+
+	if err := n.storage.Route().Insert(n.context, route); err != nil {
+		log.V(logLevel).Errorf("api:distribution:route:crete insert route err: %s", err)
 		return nil, err
 	}
 
-	return &route, nil
+	return route, nil
 }
 
-func (n *Route) Update(route *types.Route, namespace *types.Namespace, services map[string]*types.Service, opts *request.RouteUpdateOptions) (*types.Route, error) {
+func (n *Route) Update(route *types.Route, namespace *types.Namespace, opts *request.RouteUpdateOptions) (*types.Route, error) {
 
-	log.V(logLevel).Debugf("Route: update route %s", route.Meta.Name)
+	log.V(logLevel).Debugf("api:distribution:route:update update route %s", route.Meta.Name)
 
 	route.Meta.SetDefault()
-	//route.Meta.Domain = opts.Domain
-	//route.Meta.Namespace = namespace.Meta.Name
-	//route.Meta.Security = opts.Security
-	//route.State.Provision = true
-	//route.Meta.Hash = generator.GenerateRandomString(5)
+	route.Meta.Security = opts.Security
+	route.State.Provision = true
 
-	//route.Rules = make(map[string]*types.RouteRule, 0)
-	//for _, rule := range opts.Rules {
-	//
-	//	var svc *types.Service
-	//	for _, s := range services {
-	//		if *rule.Service == s.Meta.Name {
-	//			svc = s
-	//			break
-	//		}
-	//	}
-	//
-	//	route.Rules = append(route.Rules, &types.RouteRule{
-	//		Service:  *rule.Service,
-	//		Port:     *rule.Port,
-	//		Path:     rule.Path,
-	//		Endpoint: svc.Meta.Endpoint,
-	//	})
-	//}
+	route.Spec.Domain = opts.Domain
+	route.Spec.Rules = make([]*types.RouteRule, 0)
+	for _, rule := range opts.Rules {
+		route.Spec.Rules = append(route.Spec.Rules, &types.RouteRule{
+			Endpoint: *rule.Endpoint,
+			Port:     *rule.Port,
+			Path:     rule.Path,
+		})
+	}
 
-	//if len(opts.Domain) == 0 {
-	//	route.Meta.Domain = strings.Join([]string{generator.GenerateRandomString(5), namespace.Meta.Endpoint}, "-")
-	//}
+	if len(opts.Domain) == 0 {
+		route.Spec.Domain = strings.Join([]string{generator.GenerateRandomString(5), namespace.Meta.Endpoint}, "-")
+	}
 
 	if err := n.storage.Route().Update(n.context, route); err != nil {
-		log.V(logLevel).Errorf("Route: update route err: %s", err)
+		log.V(logLevel).Errorf("api:distribution:route:update update route err: %s", err)
 		return nil, err
 	}
 
@@ -158,13 +151,13 @@ func (n *Route) Update(route *types.Route, namespace *types.Namespace, services 
 
 func (n *Route) SetState(route *types.Route, state *types.RouteState) error {
 
-	log.V(logLevel).Debugf("Route: set state route %s -> %#v", route.Meta.Name, state)
+	log.V(logLevel).Debugf("api:distribution:route:setstate set state route %s -> %#v", route.Meta.Name, state)
 
 	route.State.Destroy = state.Destroy
 	route.State.Provision = state.Provision
 
 	if err := n.storage.Route().Update(n.context, route); err != nil {
-		log.V(logLevel).Errorf("Route: mark route as destroy err: %s", err)
+		log.V(logLevel).Errorf("api:distribution:route:setstate mark route as destroy err: %s", err)
 		return err
 	}
 
@@ -173,10 +166,10 @@ func (n *Route) SetState(route *types.Route, state *types.RouteState) error {
 
 func (n *Route) Remove(route *types.Route) error {
 
-	log.V(logLevel).Debugf("Route: remove route %#v", route)
+	log.V(logLevel).Debugf("api:distribution:route:remove remove route %#v", route)
 
 	if err := n.storage.Route().Remove(n.context, route); err != nil {
-		log.V(logLevel).Errorf("Route: remove route  err: %s", err)
+		log.V(logLevel).Errorf("api:distribution:route:remove remove route  err: %s", err)
 		return err
 	}
 
