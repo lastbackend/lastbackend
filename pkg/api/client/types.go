@@ -2,7 +2,7 @@
 // Last.Backend LLC CONFIDENTIAL
 // __________________
 //
-// [2014] - [2017] Last.Backend LLC
+// [2014] - [2018] Last.Backend LLC
 // All Rights Reserved.
 //
 // NOTICE:  All information contained herein is, and remains
@@ -16,17 +16,9 @@
 // from Last.Backend LLC.
 //
 
-package http
+package client
 
-import (
-	"github.com/lastbackend/lastbackend/pkg/api/client/interfaces"
-)
-
-type EventsClient struct {
-	interfaces.Events
-}
-
-func newEventsClient() *EventsClient {
-	s := new(EventsClient)
-	return s
+type ConfigOptions struct {
+	Endpoint string
+	TLS      bool
 }

@@ -50,10 +50,6 @@ func (s *ClusterUpdateOptions) DecodeAndValidate(reader io.Reader) *errors.Err {
 	}
 
 	switch true {
-	case s.Name == nil:
-		return errors.New("cluster").BadParameter("name")
-	case len(*s.Name) < 4 && len(*s.Name) > 64:
-		return errors.New("cluster").BadParameter("name")
 	case s.Description != nil && len(*s.Description) > DEFAULT_DESCRIPTION_LIMIT:
 		return errors.New("cluster").BadParameter("description")
 	}

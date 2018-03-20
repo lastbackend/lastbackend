@@ -19,6 +19,9 @@
 package request
 
 type ClusterUpdateOptions struct {
-	Name        *string `json:"name"`
-	Description *string `json:"description"`
+	Description *string               `json:"description"`
+	Quotas      *ClusterQuotasOptions `json:"quotas"`
+}
+
+type ClusterQuotasOptions struct {
 }

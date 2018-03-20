@@ -28,7 +28,6 @@ type ClusterView struct{}
 
 func (cv *ClusterView) New(obj *types.Cluster) *Cluster {
 	c := Cluster{}
-	c.ID = obj.Meta.Name
 	c.Meta = cv.ToClusterMeta(obj.Meta)
 	c.State = cv.ToClusterState(obj.State)
 	return &c

@@ -20,12 +20,6 @@ package types
 
 import (
 	"context"
-	"encoding/json"
-	"io"
-	"io/ioutil"
-
-	"github.com/lastbackend/lastbackend/pkg/distribution/errors"
-	"github.com/lastbackend/lastbackend/pkg/log"
 )
 
 type NodeMapState map[string]*NodeState
@@ -100,14 +94,6 @@ type NodeResources struct {
 	Storage int `json:"storage"`
 }
 
-type NodeUpdateOptions struct {
-	Description *string `json:"description"`
-	ExternalIP  *struct {
-		Rewrite bool   `json:"rewrite"`
-		IP      string `json:"ip"`
-	} `json:"external_ip"`
-}
-
 type NodeRole struct {
 	Router  NodeRoleRouter `json:"router"`
 	Builder bool           `json:"builder"`
@@ -120,23 +106,4 @@ type NodeRoleRouter struct {
 
 type NodeTask struct {
 	Cancel context.CancelFunc
-}
-
-func (s *NodeUpdateOptions) DecodeAndValidate(reader io.Reader) *errors.Err {
-
-	log.V(logLevel).Debug("Request: Node: decode and validate data for updating")
-
-	body, err := ioutil.ReadAll(reader)
-	if err != nil {
-		log.V(logLevel).Errorf("Request: Node: decode and validate data for updating err: %s", err)
-		return errors.New("cluster").Unknown(err)
-	}
-
-	err = json.Unmarshal(body, s)
-	if err != nil {
-		log.V(logLevel).Errorf("Request: Node: convert struct from json err: %s", err)
-		return errors.New("cluster").IncorrectJSON(err)
-	}
-
-	return nil
 }

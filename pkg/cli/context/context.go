@@ -19,7 +19,7 @@
 package context
 
 import (
-	"github.com/lastbackend/lastbackend/pkg/api/client/http/v1"
+	"github.com/lastbackend/lastbackend/pkg/api/client"
 	"github.com/lastbackend/lastbackend/pkg/cli/config"
 	"github.com/lastbackend/lastbackend/pkg/cli/storage"
 )
@@ -40,18 +40,18 @@ type ctx struct {
 	config  *config.Config
 	token   *string
 	mock    bool
-	client  *v1.Client
+	client  *client.Client
 }
 
 func (c *ctx) SetStorage(storage storage.IStorage) {
 	c.storage = storage
 }
 
-func (c *ctx) SetClient(client *v1.Client) {
+func (c *ctx) SetClient(client *client.Client) {
 	c.client = client
 }
 
-func (c *ctx) GetClient() *v1.Client {
+func (c *ctx) GetClient() *client.Client {
 	return c.client
 }
 

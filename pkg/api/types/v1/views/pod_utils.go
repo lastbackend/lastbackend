@@ -24,8 +24,8 @@ import (
 
 type PodViewHelper struct{}
 
-func (pv *PodViewHelper) New(pod *types.Pod) PodView {
-	p := PodView{}
+func (pv *PodViewHelper) New(pod *types.Pod) Pod {
+	p := Pod{}
 	p.ID = pod.Meta.Name
 	p.Meta = p.toMeta(pod.Meta)
 	p.State = p.toState(pod.State)
@@ -34,7 +34,7 @@ func (pv *PodViewHelper) New(pod *types.Pod) PodView {
 	return p
 }
 
-func (pv *PodView) toMeta(pod types.PodMeta) PodMeta {
+func (pv *Pod) toMeta(pod types.PodMeta) PodMeta {
 	meta := PodMeta{}
 	meta.Name = pod.Name
 	meta.Description = pod.Description
@@ -50,7 +50,7 @@ func (pv *PodView) toMeta(pod types.PodMeta) PodMeta {
 	return meta
 }
 
-func (pv *PodView) toState(pod types.PodState) PodState {
+func (pv *Pod) toState(pod types.PodState) PodState {
 	return PodState{
 		Scheduled: pod.Scheduled,
 		Provision: pod.Provision,
@@ -63,7 +63,7 @@ func (pv *PodView) toState(pod types.PodState) PodState {
 	}
 }
 
-func (pv *PodView) toSpec(pod types.PodSpec) PodSpec {
+func (pv *Pod) toSpec(pod types.PodSpec) PodSpec {
 	return PodSpec{
 		State: PodSpecState{
 			Destroy:     pod.State.Destroy,
@@ -77,7 +77,7 @@ func (pv *PodView) toSpec(pod types.PodSpec) PodSpec {
 	}
 }
 
-func (pv *PodView) toStatus(pod types.PodStatus) PodStatus {
+func (pv *Pod) toStatus(pod types.PodStatus) PodStatus {
 	var status = PodStatus{
 		Stage:   pod.Stage,
 		Message: pod.Message,

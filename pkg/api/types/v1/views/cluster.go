@@ -23,7 +23,6 @@ import (
 )
 
 type Cluster struct {
-	ID    string       `json:"id"`
 	Meta  ClusterMeta  `json:"meta"`
 	State ClusterState `json:"state"`
 }

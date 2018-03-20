@@ -16,11 +16,12 @@
 // from Last.Backend LLC.
 //
 
-package http
+package v1
 
 import (
 	"context"
 
+	"github.com/lastbackend/lastbackend/pkg/api/client/http"
 	"github.com/lastbackend/lastbackend/pkg/api/client/interfaces"
 	rv1 "github.com/lastbackend/lastbackend/pkg/api/types/v1/request"
 	vv1 "github.com/lastbackend/lastbackend/pkg/api/types/v1/views"
@@ -28,6 +29,9 @@ import (
 
 type TriggerClient struct {
 	interfaces.Trigger
+	req       http.Interface
+	namespace string
+	service   string
 }
 
 func (s *TriggerClient) Create(ctx context.Context, namespace, service string, opts rv1.TriggerCreateOptions) (*vv1.Trigger, error) {
@@ -50,7 +54,6 @@ func (s *TriggerClient) Remove(ctx context.Context, namespace, service, name str
 	return nil
 }
 
-func newTriggerClient() *TriggerClient {
-	s := new(TriggerClient)
-	return s
+func newTriggerClient(req http.Interface, namespace, service string) *TriggerClient {
+	return &TriggerClient{req: req, namespace: namespace, service: service}
 }
