@@ -27,7 +27,7 @@ type Route struct {
 }
 
 type RouteMeta struct {
-	Domain    string    `json:"domain"`
+	Name      string    `json:"name"`
 	Namespace string    `json:"namespace"`
 	Security  bool      `json:"security"`
 	Updated   time.Time `json:"updated"`
@@ -35,13 +35,14 @@ type RouteMeta struct {
 }
 
 type RouteSpec struct {
+	Domain string       `json:"domain"`
+	Rules  []*RouteRule `json:"rules"`
 }
 
 type RouteRule struct {
 	Path     string `json:"path"`
-	Service  string `json:"service"`
+	Endpoint string `json:"endpoint"`
 	Port     int    `json:"port"`
-	Security bool   `json:"security"`
 }
 
 type RouteState struct {

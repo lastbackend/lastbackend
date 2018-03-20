@@ -24,33 +24,40 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/api/client/interfaces"
 	rv1 "github.com/lastbackend/lastbackend/pkg/api/types/v1/request"
 	vv1 "github.com/lastbackend/lastbackend/pkg/api/types/v1/views"
+	"github.com/lastbackend/lastbackend/pkg/api/client/http"
 )
 
 type RouteClient struct {
 	interfaces.Route
+	client    http.Interface
+	namespace string
+	name      string
 }
 
-func (s *RouteClient) Create(ctx context.Context, namespace string, opts rv1.RouteCreateOptions) (*vv1.Route, error) {
+func (s *RouteClient) Create(ctx context.Context, opts *rv1.RouteCreateOptions) (*vv1.Route, error) {
 	return nil, nil
 }
 
-func (s *RouteClient) List(ctx context.Context, namespace string) (*vv1.RouteList, error) {
+func (s *RouteClient) List(ctx context.Context) (*vv1.RouteList, error) {
 	return nil, nil
 }
 
-func (s *RouteClient) Get(ctx context.Context, namespace, name string) (*vv1.Route, error) {
+func (s *RouteClient) Get(ctx context.Context) (*vv1.Route, error) {
 	return nil, nil
 }
 
-func (s *RouteClient) Update(ctx context.Context, namespace, name string, opts rv1.RouteUpdateOptions) (*vv1.Route, error) {
+func (s *RouteClient) Update(ctx context.Context, opts *rv1.RouteUpdateOptions) (*vv1.Route, error) {
 	return nil, nil
 }
 
-func (s *RouteClient) Remove(ctx context.Context, namespace, name string, opts rv1.RouteRemoveOptions) error {
+func (s *RouteClient) Remove(ctx context.Context, opts *rv1.RouteRemoveOptions) error {
 	return nil
 }
 
-func newRouteClient() *RouteClient {
+func newRouteClient(client http.Interface, namespace, name string) *RouteClient {
 	s := new(RouteClient)
+	s.client = client
+	s.namespace = namespace
+	s.name = name
 	return s
 }

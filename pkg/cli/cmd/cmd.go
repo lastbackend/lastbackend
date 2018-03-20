@@ -71,8 +71,8 @@ func Execute() {
 }
 
 // init client object
-func InitClient() *client.Client {
-	cli, err := client.New("https://api.lstbknd.net")
+func InitClient(apiHost string) *client.Client {
+	cli, err := client.New(apiHost)
 	if err != nil {
 		panic(err)
 	}
@@ -86,5 +86,5 @@ func init() {
 	RootCmd.Flags().BoolVar(&debug, "debug", false, "Enable debug mode")
 	RootCmd.Flags().BoolVar(&tls, "tls", false, "Enable tls")
 
-	ctx.SetClient(InitClient())
+	ctx.SetClient(InitClient("https://api.lstbknd.net"))
 }

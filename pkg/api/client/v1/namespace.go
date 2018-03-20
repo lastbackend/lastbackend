@@ -20,21 +20,50 @@ package v1
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"github.com/lastbackend/lastbackend/pkg/api/client/http"
 	"github.com/lastbackend/lastbackend/pkg/api/client/interfaces"
 	rv1 "github.com/lastbackend/lastbackend/pkg/api/types/v1/request"
 	vv1 "github.com/lastbackend/lastbackend/pkg/api/types/v1/views"
-	"encoding/json"
 )
 
 type NamespaceClient struct {
 	interfaces.Namespace
 	client http.Interface
+	name   string
 }
 
-func (s *NamespaceClient) Service(namespace string) *ServiceClient {
-	return newServiceClient(s.client, namespace)
+func (s *NamespaceClient) Service(name ...string) *ServiceClient {
+	n := ""
+	if len(name) > 0 {
+		n = name[0]
+	}
+	return newServiceClient(s.client, s.name, n)
+}
+
+func (s *NamespaceClient) Secret(name ...string) *SecretClient {
+	n := ""
+	if len(name) > 0 {
+		n = name[0]
+	}
+	return newSecretClient(s.client, s.name, n)
+}
+
+func (s *NamespaceClient) Route(name ...string) *RouteClient {
+	n := ""
+	if len(name) > 0 {
+		n = name[0]
+	}
+	return newRouteClient(s.client, s.name, n)
+}
+
+func (s *NamespaceClient) Volume(name ...string) *VolumeClient {
+	n := ""
+	if len(name) > 0 {
+		n = name[0]
+	}
+	return newVolumeClient(s.client, s.name, n)
 }
 
 func (s *NamespaceClient) List(ctx context.Context) (*vv1.NamespaceList, error) {
@@ -59,7 +88,7 @@ func (s *NamespaceClient) List(ctx context.Context) (*vv1.NamespaceList, error) 
 	return nl, nil
 }
 
-func (s *NamespaceClient) Create(ctx context.Context, opts rv1.NamespaceCreateOptions) (*vv1.Namespace, error) {
+func (s *NamespaceClient) Create(ctx context.Context, opts *rv1.NamespaceCreateOptions) (*vv1.Namespace, error) {
 
 	var (
 		ns *vv1.Namespace
@@ -87,12 +116,12 @@ func (s *NamespaceClient) Create(ctx context.Context, opts rv1.NamespaceCreateOp
 	return ns, nil
 }
 
-func (s *NamespaceClient) Get(ctx context.Context, name string) (*vv1.Namespace, error) {
+func (s *NamespaceClient) Get(ctx context.Context) (*vv1.Namespace, error) {
 	var (
 		ns *vv1.Namespace
 	)
 
-	result := s.client.Get(fmt.Sprintf("/namespace/%s", name)).
+	result := s.client.Get(fmt.Sprintf("/namespace/%s", s.name)).
 		AddHeader("Content-Type", "application/json").
 		Do()
 
@@ -108,7 +137,7 @@ func (s *NamespaceClient) Get(ctx context.Context, name string) (*vv1.Namespace,
 	return ns, nil
 }
 
-func (s *NamespaceClient) Update(ctx context.Context, name string, opts rv1.NamespaceUpdateOptions) (*vv1.Namespace, error) {
+func (s *NamespaceClient) Update(ctx context.Context, opts *rv1.NamespaceUpdateOptions) (*vv1.Namespace, error) {
 	var (
 		ns *vv1.Namespace
 	)
@@ -118,7 +147,7 @@ func (s *NamespaceClient) Update(ctx context.Context, name string, opts rv1.Name
 		return nil, err
 	}
 
-	result := s.client.Put(fmt.Sprintf("/namespace/%s", name)).
+	result := s.client.Put(fmt.Sprintf("/namespace/%s", s.name)).
 		AddHeader("Content-Type", "application/json").
 		Body(body).
 		Do()
@@ -135,15 +164,15 @@ func (s *NamespaceClient) Update(ctx context.Context, name string, opts rv1.Name
 	return ns, nil
 }
 
-func (s *NamespaceClient) Remove(ctx context.Context, name string, opts rv1.NamespaceRemoveOptions) error {
+func (s *NamespaceClient) Remove(ctx context.Context, opts *rv1.NamespaceRemoveOptions) error {
 
-	s.client.Delete(fmt.Sprintf("/namespace/%s", name)).
+	s.client.Delete(fmt.Sprintf("/namespace/%s", s.name)).
 		AddHeader("Content-Type", "application/json").
 		Do()
 
 	return nil
 }
 
-func newNamespaceClient(client http.Interface) *NamespaceClient {
-	return &NamespaceClient{client: client}
+func newNamespaceClient(client http.Interface, name string) *NamespaceClient {
+	return &NamespaceClient{client: client, name: name}
 }

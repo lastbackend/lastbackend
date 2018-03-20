@@ -21,39 +21,43 @@ package v1
 import (
 	"context"
 
-	"github.com/lastbackend/lastbackend/pkg/api/client/http"
 	"github.com/lastbackend/lastbackend/pkg/api/client/interfaces"
 	rv1 "github.com/lastbackend/lastbackend/pkg/api/types/v1/request"
 	vv1 "github.com/lastbackend/lastbackend/pkg/api/types/v1/views"
+	"github.com/lastbackend/lastbackend/pkg/api/client/http"
 )
 
-type TriggerClient struct {
-	interfaces.Trigger
-	req       http.Interface
+type SecretClient struct {
+	interfaces.Secret
+	client    http.Interface
 	namespace string
-	service   string
+	name      string
 }
 
-func (s *TriggerClient) Create(ctx context.Context, namespace, service string, opts *rv1.TriggerCreateOptions) (*vv1.Trigger, error) {
+func (s *SecretClient) Create(ctx context.Context, opts *rv1.SecretCreateOptions) (*vv1.Secret, error) {
 	return nil, nil
 }
 
-func (s *TriggerClient) List(ctx context.Context, namespace, service string) (*vv1.TriggerList, error) {
+func (s *SecretClient) List(ctx context.Context) (*vv1.SecretList, error) {
 	return nil, nil
 }
 
-func (s *TriggerClient) Get(ctx context.Context, namespace, service, name string) (*vv1.Trigger, error) {
+func (s *SecretClient) Get(ctx context.Context) (*vv1.Secret, error) {
 	return nil, nil
 }
 
-func (s *TriggerClient) Update(ctx context.Context, namespace, service, name string, opts *rv1.TriggerUpdateOptions) (*vv1.Trigger, error) {
+func (s *SecretClient) Update(ctx context.Context, opts *rv1.SecretUpdateOptions) (*vv1.Secret, error) {
 	return nil, nil
 }
 
-func (s *TriggerClient) Remove(ctx context.Context, namespace, service, name string, opts *rv1.TriggerRemoveOptions) error {
+func (s *SecretClient) Remove(ctx context.Context, opts *rv1.SecretRemoveOptions) error {
 	return nil
 }
 
-func newTriggerClient(req http.Interface, namespace, service string) *TriggerClient {
-	return &TriggerClient{req: req, namespace: namespace, service: service}
+func newSecretClient(client http.Interface, namespace, name string) *SecretClient {
+	s := new(SecretClient)
+	s.client = client
+	s.namespace = namespace
+	s.name = name
+	return s
 }

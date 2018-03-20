@@ -20,6 +20,7 @@ package view
 
 import (
 	"github.com/lastbackend/lastbackend/pkg/util/table"
+	"github.com/lastbackend/lastbackend/pkg/api/types/v1/views"
 )
 
 type NamespaceList []*Namespace
@@ -74,4 +75,10 @@ func (n *Namespace) Print() {
 		"ENDPOINT":    n.Meta.Endpoint,
 	})
 	println()
+}
+
+func FromApiNamespaceView(namespace *views.Namespace) *Namespace {
+	var ns = new(Namespace)
+	ns.Meta.Name = namespace.Meta.Name
+	return ns
 }

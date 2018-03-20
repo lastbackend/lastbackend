@@ -32,8 +32,12 @@ type ClusterClient struct {
 	client http.Interface
 }
 
-func (s *ClusterClient) Node(ctx context.Context) *NodeClient {
-	return newNodeClient(s.client)
+func (s *ClusterClient) Node(hostname ...string) *NodeClient {
+	hst := ""
+	if len(hostname) > 0 {
+		hst = hostname[0]
+	}
+	return newNodeClient(s.client, hst)
 }
 
 func (s *ClusterClient) Get(ctx context.Context) (*vv1.ClusterList, error) {

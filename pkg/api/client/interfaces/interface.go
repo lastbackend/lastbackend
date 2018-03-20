@@ -26,85 +26,93 @@ import (
 )
 
 type Cluster interface {
-	Node() Node
+	Node(hostname string) Node
 
 	Get(ctx context.Context) (*vv1.ClusterList, error)
-	Update(ctx context.Context, opts *rv1.ClusterUpdateOptions) (*vv1.Cluster, error)
+	Update(ctx context.Context, opts **rv1.ClusterUpdateOptions) (*vv1.Cluster, error)
+}
+
+type Node interface {
+	List(ctx context.Context) (*vv1.NodeList, error)
+	Get(ctx context.Context) (*vv1.Node, error)
+	GetSpec(ctx context.Context) (*vv1.NodeSpec, error)
+	Update(ctx context.Context, opts *rv1.NodeUpdateOptions) (*vv1.Node, error)
+	SetInfo(ctx context.Context, opts *rv1.NodeInfoOptions) error
+	SetState(ctx context.Context, opts *rv1.NodeStateOptions) error
+	SetPodState(ctx context.Context, opts *rv1.NodeStateOptions) error
+	SetVolumeState(ctx context.Context, opts *rv1.NodeStateOptions) error
+	SetRouteState(ctx context.Context, opts *rv1.NodeStateOptions) error
+	Remove(ctx context.Context, opts *rv1.NodeRemoveOptions) error
 }
 
 type Namespace interface {
-	Service() Service
-	Volume() Volume
+	Service(name ...string) Service
+	Secret(name ...string) Secret
+	Volume(name ...string) Volume
+	Route(name ...string) Route
 
-	Create(ctx context.Context, opts rv1.NamespaceCreateOptions) (*vv1.Namespace, error)
+	Create(ctx context.Context, opts *rv1.NamespaceCreateOptions) (*vv1.Namespace, error)
 	List(ctx context.Context) (*vv1.NamespaceList, error)
-	Get(ctx context.Context, name string) (*vv1.Namespace, error)
-	Update(ctx context.Context, name string, opts rv1.NamespaceUpdateOptions) (*vv1.Namespace, error)
-	Remove(ctx context.Context, name string, opts rv1.NamespaceRemoveOptions) error
+	Get(ctx context.Context) (*vv1.Namespace, error)
+	Update(ctx context.Context, opts *rv1.NamespaceUpdateOptions) (*vv1.Namespace, error)
+	Remove(ctx context.Context, opts *rv1.NamespaceRemoveOptions) error
 }
 
 type Service interface {
-	Deployment() Deployment
-	Trigger() Trigger
+	Deployment(name ...string) Deployment
+	Trigger(name ...string) Trigger
 
-	Create(ctx context.Context, namespace string, opts *rv1.ServiceCreateOptions) (*vv1.ServiceList, error)
-	List(ctx context.Context, namespace string) (*vv1.ServiceList, error)
-	Get(ctx context.Context, namespace, name string) (*vv1.Service, error)
-	Update(ctx context.Context, namespace, name string, opts *rv1.ServiceUpdateOptions) (*vv1.NamespaceList, error)
-	Remove(ctx context.Context, namespace, name string, opts rv1.ServiceRemoveOptions) error
+	Create(ctx context.Context, opts **rv1.ServiceCreateOptions) (*vv1.ServiceList, error)
+	List(ctx context.Context) (*vv1.ServiceList, error)
+	Get(ctx context.Context) (*vv1.Service, error)
+	Update(ctx context.Context, opts **rv1.ServiceUpdateOptions) (*vv1.NamespaceList, error)
+	Remove(ctx context.Context, opts *rv1.ServiceRemoveOptions) error
 }
 
 type Deployment interface {
-	Pod() Pod
-	List(ctx context.Context, namespace, service string) (*vv1.DeploymentList, error)
-	Get(ctx context.Context, namespace, service, deployment string) (*vv1.Deployment, error)
-	Update(ctx context.Context, namespace, service, deployment string, opts *rv1.DeploymentUpdateOptions) (*vv1.Deployment, error)
+	Pod(name ...string) Pod
+	List(ctx context.Context) (*vv1.DeploymentList, error)
+	Get(ctx context.Context, deployment string) (*vv1.Deployment, error)
+	Update(ctx context.Context, deployment string, opts **rv1.DeploymentUpdateOptions) (*vv1.Deployment, error)
 }
 
 type Pod interface {
 	List(ctx context.Context, namespace, service string) (*vv1.DeploymentList, error)
-	Get(ctx context.Context, namespace, service, deployment string) (*vv1.Deployment, error)
-	Update(ctx context.Context, namespace, service, deployment string, opts *rv1.DeploymentUpdateOptions) (*vv1.Deployment, error)
+	Get(ctx context.Context, deployment string) (*vv1.Deployment, error)
+	Update(ctx context.Context, deployment string, opts **rv1.DeploymentUpdateOptions) (*vv1.Deployment, error)
 }
 
 type Events interface {
 }
 
-type Node interface {
-	Route() Route
-
-	List(ctx context.Context) (*vv1.NodeList, error)
-	Get(ctx context.Context, name string) (*vv1.Node, error)
-	GetSpec(ctx context.Context, name string) (*vv1.NodeSpec, error)
-	Update(ctx context.Context, name string, opts rv1.NodeUpdateOptions) (*vv1.Node, error)
-	SetInfo(ctx context.Context, name string, opts rv1.NodeInfoOptions) error
-	SetState(ctx context.Context, name string, opts rv1.NodeStateOptions) error
-	SetPodState(ctx context.Context, name string, opts rv1.NodeStateOptions) error
-	SetVolumeState(ctx context.Context, name string, opts rv1.NodeStateOptions) error
-	SetRouteState(ctx context.Context, name string, opts rv1.NodeStateOptions) error
-	Remove(ctx context.Context, name string, opts rv1.NodeRemoveOptions) error
+type Secret interface {
+	Create(ctx context.Context, opts *rv1.SecretCreateOptions) (*vv1.Secret, error)
+	List(ctx context.Context) (*vv1.SecretList, error)
+	Get(ctx context.Context) (*vv1.Secret, error)
+	Update(ctx context.Context, opts *rv1.SecretUpdateOptions) (*vv1.Secret, error)
+	Remove(ctx context.Context, opts *rv1.SecretRemoveOptions) error
 }
 
 type Route interface {
-	Create(ctx context.Context, namespace string, opts rv1.RouteCreateOptions) (*vv1.Route, error)
-	List(ctx context.Context, namespace string) (*vv1.RouteList, error)
-	Get(ctx context.Context, namespace, name string) (*vv1.Route, error)
-	Update(ctx context.Context, namespace, name string, opts rv1.RouteUpdateOptions) (*vv1.Route, error)
-	Remove(ctx context.Context, namespace, name string, opts rv1.RouteRemoveOptions) error
+	Create(ctx context.Context, opts *rv1.RouteCreateOptions) (*vv1.Route, error)
+	List(ctx context.Context) (*vv1.RouteList, error)
+	Get(ctx context.Context) (*vv1.Route, error)
+	Update(ctx context.Context, opts *rv1.RouteUpdateOptions) (*vv1.Route, error)
+	Remove(ctx context.Context, opts *rv1.RouteRemoveOptions) error
 }
 
 type Trigger interface {
-	Create(ctx context.Context, namespace, service string, opts rv1.TriggerCreateOptions) (*vv1.Trigger, error)
-	List(ctx context.Context, namespace, service string) (*vv1.TriggerList, error)
-	Get(ctx context.Context, namespace, service, name string) (*vv1.Trigger, error)
-	Update(ctx context.Context, namespace, service, name string, opts rv1.TriggerUpdateOptions) (*vv1.Trigger, error)
-	Remove(ctx context.Context, namespace, service, name string, opts rv1.TriggerRemoveOptions) error
+	Create(ctx context.Context, opts *rv1.TriggerCreateOptions) (*vv1.Trigger, error)
+	List(ctx context.Context) (*vv1.TriggerList, error)
+	Get(ctx context.Context) (*vv1.Trigger, error)
+	Update(ctx context.Context, opts *rv1.TriggerUpdateOptions) (*vv1.Trigger, error)
+	Remove(ctx context.Context, opts *rv1.TriggerRemoveOptions) error
 }
 
 type Volume interface {
-	Create(ctx context.Context, namespace string, opts rv1.VolumeCreateOptions) (*vv1.Volume, error)
-	List(ctx context.Context, namespace string) (*vv1.VolumeList, error)
-	Get(ctx context.Context, namespace, name string) (*vv1.Volume, error)
-	Update(ctx context.Context, namespace, name string, opts rv1.VolumeUpdateOptions) (*vv1.Volume, error)
-	Remove(ctx context.Context, namespace, name string, opts rv1.VolumeRemoveOptions) error
+	Create(ctx context.Context, opts *rv1.VolumeCreateOptions) (*vv1.Volume, error)
+	List(ctx context.Context) (*vv1.VolumeList, error)
+	Get(ctx context.Context) (*vv1.Volume, error)
+	Update(ctx context.Context, opts *rv1.VolumeUpdateOptions) (*vv1.Volume, error)
+	Remove(ctx context.Context, opts *rv1.VolumeRemoveOptions) error
 }

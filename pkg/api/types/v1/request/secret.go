@@ -18,28 +18,12 @@
 
 package request
 
-type RouteCreateOptions struct {
-	Subdomain string        `json:"subdomain"`
-	Domain    string        `json:"domain"`
-	Custom    bool          `json:"custom"`
-	Security  bool          `json:"security"`
-	Rules     []RulesOption `json:"rules"`
+type SecretCreateOptions struct {
 }
 
-type RouteUpdateOptions struct {
-	Subdomain string        `json:"subdomain"`
-	Domain    string        `json:"domain"`
-	Custom    bool          `json:"custom"`
-	Security  bool          `json:"security"`
-	Rules     []RulesOption `json:"rules"`
+type SecretUpdateOptions struct {
 }
 
-type RouteRemoveOptions struct {
+type SecretRemoveOptions struct {
 	Force bool `json:"force"`
-}
-
-type RulesOption struct {
-	Endpoint *string `json:"endpoint"`
-	Path     string  `json:"path"`
-	Port     *int    `json:"port"`
 }

@@ -22,62 +22,67 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var (
-	Desc string
-)
+var Desc string
 
-var CreateWorkspace = &cobra.Command{
+var NamespaceCreate = &cobra.Command{
 	Use:   "create",
-	Short: "Create new Workspace",
+	Short: "Create new namespace",
 	Run: func(cmd *cobra.Command, args []string) {
+
 		if len(args) != 1 {
 			cmd.Help()
 			return
 		}
-		//CreateCmd(args[0], Desc)
+
+		CreateCmd(args[0], Desc)
 	},
 }
 
-var ListWorkspace = &cobra.Command{
+var NamespaceList = &cobra.Command{
 	Use:   "list",
-	Short: "Display the Workspace list",
+	Short: "Display the Namespace list",
 	Run: func(cmd *cobra.Command, args []string) {
 		ListCmd()
 	},
 }
 
-var InfoWorkspace = &cobra.Command{
+var NamespaceInfo = &cobra.Command{
 	Use:   "info",
-	Short: "Get Workspace info by Name, if without Name - get current Workspace info",
+	Short: "Get namespace info by Name, if without Name - get current namespace info",
 	Run: func(cmd *cobra.Command, args []string) {
-		if len(args) != 1 {
-			//CurrentCmd("")
-		} else {
-			//CurrentCmd(args[0])
-		}
+
+		//if len(args) != 1 {
+		//	CurrentCmd("")
+		//} else {
+		//	CurrentCmd(args[0])
+		//}
 	},
 }
 
-var RemoveWorkspace = &cobra.Command{
+var NamespaceRemove = &cobra.Command{
 	Use:   "remove",
-	Short: "Remove Workspace by Name",
+	Short: "Remove namespace by Name",
 	Run: func(cmd *cobra.Command, args []string) {
+
 		if len(args) != 1 {
 			cmd.Help()
 			return
 		}
+
 		//RemoveCmd(args[0])
 	},
 }
 
-var SelectWorkspace = &cobra.Command{
+var NamespaceSelect = &cobra.Command{
 	Use:   "select",
-	Short: "Select to the Workspace",
+	Short: "Select to the namespace",
 	Run: func(cmd *cobra.Command, args []string) {
+
 		if len(args) != 1 {
 			cmd.Help()
 			return
 		}
+
 		//SelectCmd(args[0])
 	},
 }

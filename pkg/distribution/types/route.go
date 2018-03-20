@@ -35,10 +35,10 @@ type Route struct {
 	Spec  RouteSpec  `json:"spec" yaml:"spec"`
 }
 
+type RouteList map[string]*Route
+
 type RouteMeta struct {
 	Meta      `yaml:",inline"`
-	Domain    string `json:"domain" yaml:"domain"`
-	Hash      string `json:"hash" yaml:"hash"`
 	Namespace string `json:"namespace" yaml:"namespace"`
 	Security  bool   `json:"security" yaml:"security"`
 }
@@ -49,11 +49,11 @@ type RouteState struct {
 }
 
 type RouteSpec struct {
-	Rules []*RouteRule `json:"rules" yaml:"rules"`
+	Domain string       `json:"domain" yaml:"domain"`
+	Rules  []*RouteRule `json:"rules" yaml:"rules"`
 }
 
 type RouteRule struct {
-	Service  string `json:"service" yaml:"service"`
 	Path     string `json:"path" yaml:"path"`
 	Endpoint string `json:"endpoint" yaml:"endpoint"`
 	Port     int    `json:"port" yaml:"port"`
@@ -115,10 +115,9 @@ func (r *Route) GetRouteConfig() *RouterConfig {
 	var RouterConfig = new(RouterConfig)
 
 	RouterConfig.ID = r.Meta.Name
-	RouterConfig.Hash = r.Meta.Hash
 	RouterConfig.State = r.State
 
-	RouterConfig.Server.Hostname = r.Meta.Domain
+	RouterConfig.Server.Hostname = r.Spec.Domain
 	RouterConfig.Server.Protocol = "http"
 	RouterConfig.Server.Port = 80
 

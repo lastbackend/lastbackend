@@ -29,25 +29,26 @@ import (
 
 type NodeClient struct {
 	interfaces.Node
-	client http.Interface
+	client   http.Interface
+	hostname string
 }
 
 func (s *NodeClient) List(ctx context.Context) (*vv1.NodeList, error) {
 	return nil, nil
 }
 
-func (s *NodeClient) Get(ctx context.Context, name string) (*vv1.Node, error) {
+func (s *NodeClient) Get(ctx context.Context) (*vv1.Node, error) {
 	return nil, nil
 }
 
-func (s *NodeClient) Update(ctx context.Context, name string, opts rv1.NodeUpdateOptions) (*vv1.Node, error) {
+func (s *NodeClient) Update(ctx context.Context, opts *rv1.NodeUpdateOptions) (*vv1.Node, error) {
 	return nil, nil
 }
 
-func (s *NodeClient) Remove(ctx context.Context, name string, opts rv1.NodeRemoveOptions) error {
+func (s *NodeClient) Remove(ctx context.Context, opts *rv1.NodeRemoveOptions) error {
 	return nil
 }
 
-func newNodeClient(req http.Interface) *NodeClient {
-	return &NodeClient{client: req}
+func newNodeClient(req http.Interface, hostname string) *NodeClient {
+	return &NodeClient{client: req, hostname: hostname}
 }

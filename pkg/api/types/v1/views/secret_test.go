@@ -24,66 +24,55 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 )
 
-type RouteView struct{}
+type SecretView struct{}
 
-func (rv *RouteView) New(obj *types.Route) *Route {
-	r := Route{}
+func (rv *SecretView) New(obj *types.Secret) *Secret {
+	r := Secret{}
 	r.Meta = r.ToMeta(obj.Meta)
 	r.Spec = r.ToSpec(obj.Spec)
 	r.State = r.ToState(obj.State)
 	return &r
 }
 
-func (p *Route) ToJson() ([]byte, error) {
+func (p *Secret) ToJson() ([]byte, error) {
 	return json.Marshal(p)
 }
 
-func (r *Route) ToMeta(obj types.RouteMeta) RouteMeta {
-	meta := RouteMeta{}
+func (r *Secret) ToMeta(obj types.SecretMeta) SecretMeta {
+	meta := SecretMeta{}
 	meta.Name = obj.Name
 	meta.Namespace = obj.Namespace
-	meta.Security = obj.Security
 	meta.Updated = obj.Updated
 	meta.Created = obj.Created
 
 	return meta
 }
 
-func (r *Route) ToSpec(obj types.RouteSpec) RouteSpec {
-	spec := RouteSpec{}
-	spec.Domain = obj.Domain
-	for _, rule := range obj.Rules {
-		spec.Rules = append(spec.Rules, &RouteRule{
-			Path:     rule.Path,
-			Port:     rule.Port,
-			Endpoint: rule.Endpoint,
-		})
-	}
+func (r *Secret) ToSpec(obj types.SecretSpec) SecretSpec {
+	spec := SecretSpec{}
 	return spec
 }
 
-func (r *Route) ToState(obj types.RouteState) RouteState {
-	state := RouteState{}
-	state.Destroy = obj.Destroy
-	state.Provision = obj.Provision
+func (r *Secret) ToState(obj types.SecretState) SecretState {
+	state := SecretState{}
 	return state
 }
 
-func (rv RouteView) NewList(obj map[string]*types.Route) *RouteList {
+func (rv SecretView) NewList(obj map[string]*types.Secret) *SecretList {
 	if obj == nil {
 		return nil
 	}
 
-	n := make(RouteList, 0)
+	n := make(SecretList, 0)
 	for _, v := range obj {
 		n[v.Meta.Name] = rv.New(v)
 	}
 	return &n
 }
 
-func (n *RouteList) ToJson() ([]byte, error) {
+func (n *SecretList) ToJson() ([]byte, error) {
 	if n == nil {
-		n = &RouteList{}
+		n = &SecretList{}
 	}
 	return json.Marshal(n)
 }
