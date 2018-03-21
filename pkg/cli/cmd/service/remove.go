@@ -17,3 +17,42 @@
 //
 
 package service
+
+import (
+	"fmt"
+
+	"github.com/lastbackend/lastbackend/pkg/api/types/v1/request"
+	"github.com/lastbackend/lastbackend/pkg/cli/context"
+	"github.com/lastbackend/lastbackend/pkg/distribution/errors"
+)
+
+func RemoveCmd(name string) {
+
+	if err := Remove(name); err != nil {
+		fmt.Println(err)
+		return
+	}
+
+	fmt.Println(fmt.Sprintf("Service `%s` is successfully removed", name))
+}
+
+func Remove(name string) error {
+
+	stg := context.Get().GetStorage()
+	cli := context.Get().GetClient()
+
+	data := &request.ServiceRemoveOptions{
+		Force: false,
+	}
+
+	ns, err := stg.Namespace().Load()
+	if err != nil {
+		return err
+	}
+
+	if ns == nil {
+		return errors.New("namespace has not been selected")
+	}
+
+	return cli.V1().Namespace(ns.Meta.Name).Service(name).Remove(context.Background(), data)
+}

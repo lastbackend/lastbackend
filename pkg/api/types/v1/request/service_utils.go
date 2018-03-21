@@ -76,15 +76,19 @@ func (s *ServiceCreateOptions) DecodeAndValidate(reader io.Reader) (*types.Servi
 	opts.Name = s.Name
 	opts.Description = s.Description
 	opts.Sources = s.Sources
-	opts.Spec.Memory = s.Spec.Memory
-	opts.Spec.EnvVars = s.Spec.EnvVars
-	opts.Spec.Entrypoint = s.Spec.Entrypoint
-	opts.Spec.Command = s.Spec.Command
-	for _, port := range *s.Spec.Ports {
-		*opts.Spec.Ports = append(*opts.Spec.Ports, types.ServiceOptionsSpecPort{
-			Internal: port.Internal,
-			Protocol: port.Protocol,
-		})
+
+	if s.Spec != nil {
+		opts.Spec = new(types.ServiceOptionsSpec)
+		opts.Spec.Memory = s.Spec.Memory
+		opts.Spec.EnvVars = s.Spec.EnvVars
+		opts.Spec.Entrypoint = s.Spec.Entrypoint
+		opts.Spec.Command = s.Spec.Command
+		for _, port := range *s.Spec.Ports {
+			*opts.Spec.Ports = append(*opts.Spec.Ports, types.ServiceOptionsSpecPort{
+				Internal: port.Internal,
+				Protocol: port.Protocol,
+			})
+		}
 	}
 
 	return opts, nil
@@ -136,15 +140,19 @@ func (s *ServiceUpdateOptions) DecodeAndValidate(reader io.Reader) (*types.Servi
 	opts.Description = s.Description
 	opts.Description = s.Description
 	opts.Sources = s.Sources
-	opts.Spec.Memory = s.Spec.Memory
-	opts.Spec.EnvVars = s.Spec.EnvVars
-	opts.Spec.Entrypoint = s.Spec.Entrypoint
-	opts.Spec.Command = s.Spec.Command
-	for _, port := range *s.Spec.Ports {
-		*opts.Spec.Ports = append(*opts.Spec.Ports, types.ServiceOptionsSpecPort{
-			Internal: port.Internal,
-			Protocol: port.Protocol,
-		})
+
+	if s.Spec != nil {
+		opts.Spec = new(types.ServiceOptionsSpec)
+		opts.Spec.Memory = s.Spec.Memory
+		opts.Spec.EnvVars = s.Spec.EnvVars
+		opts.Spec.Entrypoint = s.Spec.Entrypoint
+		opts.Spec.Command = s.Spec.Command
+		for _, port := range *s.Spec.Ports {
+			*opts.Spec.Ports = append(*opts.Spec.Ports, types.ServiceOptionsSpecPort{
+				Internal: port.Internal,
+				Protocol: port.Protocol,
+			})
+		}
 	}
 
 	return opts, nil

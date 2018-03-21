@@ -21,6 +21,7 @@ package view
 import (
 	"fmt"
 	"github.com/lastbackend/lastbackend/pkg/util/table"
+	"github.com/lastbackend/lastbackend/pkg/api/types/v1/views"
 )
 
 type ServiceList []*Service
@@ -32,8 +33,9 @@ type Service struct {
 }
 
 type ServiceMeta struct {
-	Name     string `json:"name"`
-	Endpoint string `json:"endpoint"`
+	Name        string `json:"name"`
+	Description string `json:"description"`
+	Endpoint    string `json:"endpoint"`
 }
 
 type ServiceSources struct {
@@ -80,7 +82,7 @@ type DeploymentStateInfo struct {
 	Active bool `json:"active"`
 }
 
-func (sl *ServiceList) Print(namespace string) {
+func (sl *ServiceList) Print() {
 
 	t := table.New([]string{"NAME", "SOURCES", "ENDPOINT", "CMD", "MEMORY", "REPLICAS"})
 	t.VisibleHeader = true
@@ -98,7 +100,6 @@ func (sl *ServiceList) Print(namespace string) {
 
 		t.AddRow(data)
 	}
-	println(" Namespace: ", namespace)
 	println()
 	t.Print()
 	println()
@@ -137,4 +138,20 @@ func (s *ServiceSources) String() string {
 			s.Image.Namespace, s.Image.Tag)
 	}
 	return ""
+}
+
+func FromApiServiceView(service *views.Service) *Service {
+	var item = new(Service)
+	item.Meta.Name = service.Meta.Name
+	item.Meta.Description = service.Meta.Description
+	item.Meta.Endpoint = service.Meta.Endpoint
+	return item
+}
+
+func FromApiServiceListView(services *views.ServiceList) *ServiceList {
+	var items = make(ServiceList, 0)
+	for _, service := range *services {
+		items = append(items, FromApiServiceView(service))
+	}
+	return &items
 }

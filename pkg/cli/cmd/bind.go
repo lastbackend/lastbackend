@@ -25,12 +25,6 @@ import (
 )
 
 func init() {
-	commands()
-	flags()
-}
-
-func commands() {
-
 	// ----- root -----
 	RootCmd.AddCommand(
 		versionCmd,
@@ -56,23 +50,10 @@ func commands() {
 
 	// ----- service -----
 	service.AddCommand(
+		sr.ServiceCreate,
 		sr.ServiceList,
-		sr.ServiceInfo,
-		sr.ServiceScale,
+		sr.ServiceFetch,
 		sr.ServiceUpdate,
 		sr.ServiceRemove,
-		sr.ServiceCreate,
-		sr.ServiceLogs,
 	)
-}
-
-func flags() {
-
-	// ----- namespace -----
-	ns.NamespaceCreate.Flags().StringVarP(&ns.Desc, "desc", "d", "", "Set description")
-
-	// ----- service -----
-	sr.ServiceCreate.Flags().Int64VarP(&sr.Memory, "memory", "m", 0, "Set memory")
-	sr.ServiceCreate.Flags().StringVarP(&sr.Sources, "sources", "s", "", "Set sources")
-	sr.ServiceUpdate.Flags().Int64VarP(&sr.Memory, "memory", "m", 0, "Set memory")
 }
