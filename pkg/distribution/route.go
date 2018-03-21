@@ -37,6 +37,7 @@ type IRoute interface {
 	Create(namespace *types.Namespace, opts *request.RouteCreateOptions) (*types.Route, error)
 	Update(route *types.Route, namespace *types.Namespace, opts *request.RouteUpdateOptions) (*types.Route, error)
 	SetState(route *types.Route, state *types.RouteState) error
+	SetStatus(route *types.Route, status *types.RouteStatus) error
 	Remove(route *types.Route) error
 }
 

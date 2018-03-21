@@ -33,20 +33,120 @@ func (NodeRequest) NodeInfoOptions() *NodeInfoOptions {
 	return new(NodeInfoOptions)
 }
 
+func (s *NodeInfoOptions) DecodeAndValidate(reader io.Reader) *errors.Err {
+
+	if reader == nil {
+		err := errors.New("data body can not be null")
+		return errors.New("node").IncorrectJSON(err)
+	}
+
+	body, err := ioutil.ReadAll(reader)
+	if err != nil {
+		return errors.New("node").Unknown(err)
+	}
+
+	err = json.Unmarshal(body, s)
+	if err != nil {
+		return errors.New("node").IncorrectJSON(err)
+	}
+
+	return nil
+}
+
 func (NodeRequest) NodeStateOptions() *NodeStateOptions {
 	return new(NodeStateOptions)
 }
 
-func (NodeRequest) NodePodStateOptions() *NodePodStateOptions {
-	return new(NodePodStateOptions)
+func (s *NodeStateOptions) DecodeAndValidate(reader io.Reader) *errors.Err {
+
+	if reader == nil {
+		err := errors.New("data body can not be null")
+		return errors.New("node").IncorrectJSON(err)
+	}
+
+	body, err := ioutil.ReadAll(reader)
+	if err != nil {
+		return errors.New("node").Unknown(err)
+	}
+
+	err = json.Unmarshal(body, s)
+	if err != nil {
+		return errors.New("node").IncorrectJSON(err)
+	}
+
+	return nil
 }
 
-func (NodeRequest) NodeVolumeStateOptions() *NodeVolumeStateOptions {
-	return new(NodeVolumeStateOptions)
+func (NodeRequest) NodePodStatusOptions() *NodePodStatusOptions {
+	return new(NodePodStatusOptions)
 }
 
-func (NodeRequest) NodeRouteStateOptions() *NodeRouteStateOptions {
-	return new(NodeRouteStateOptions)
+func (s *NodePodStatusOptions) DecodeAndValidate(reader io.Reader) *errors.Err {
+
+	if reader == nil {
+		err := errors.New("data body can not be null")
+		return errors.New("node").IncorrectJSON(err)
+	}
+
+	body, err := ioutil.ReadAll(reader)
+	if err != nil {
+		return errors.New("node").Unknown(err)
+	}
+
+	err = json.Unmarshal(body, s)
+	if err != nil {
+		return errors.New("node").IncorrectJSON(err)
+	}
+
+	return nil
+}
+
+func (NodeRequest) NodeVolumeStatusOptions() *NodeVolumeStatusOptions {
+	return new(NodeVolumeStatusOptions)
+}
+
+func (s *NodeVolumeStatusOptions) DecodeAndValidate(reader io.Reader) *errors.Err {
+
+	if reader == nil {
+		err := errors.New("data body can not be null")
+		return errors.New("node").IncorrectJSON(err)
+	}
+
+	body, err := ioutil.ReadAll(reader)
+	if err != nil {
+		return errors.New("node").Unknown(err)
+	}
+
+	err = json.Unmarshal(body, s)
+	if err != nil {
+		return errors.New("node").IncorrectJSON(err)
+	}
+
+	return nil
+}
+
+func (NodeRequest) NodeRouteStatusOptions() *NodeRouteStatusOptions {
+	return new(NodeRouteStatusOptions)
+}
+
+func (s *NodeRouteStatusOptions) DecodeAndValidate(reader io.Reader) *errors.Err {
+
+	if reader == nil {
+		err := errors.New("data body can not be null")
+		return errors.New("node").IncorrectJSON(err)
+	}
+
+	body, err := ioutil.ReadAll(reader)
+	if err != nil {
+		return errors.New("node").Unknown(err)
+	}
+
+	err = json.Unmarshal(body, s)
+	if err != nil {
+		return errors.New("node").IncorrectJSON(err)
+	}
+
+	return nil
 }
 
 func (NodeRequest) UpdateOptions() *NodeUpdateOptions {

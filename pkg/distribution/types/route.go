@@ -30,15 +30,16 @@ import (
 )
 
 type Route struct {
-	Meta  RouteMeta  `json:"meta" yaml:"meta"`
-	State RouteState `json:"state" yaml:"state"`
-	Spec  RouteSpec  `json:"spec" yaml:"spec"`
+	Meta   RouteMeta   `json:"meta" yaml:"meta"`
+	State  RouteState  `json:"state" yaml:"state"`
+	Spec   RouteSpec   `json:"spec" yaml:"spec"`
+	Status RouteStatus `json:"status" yaml:"status"`
 }
 
 type RouteList map[string]*Route
 
 type RouteMeta struct {
-	Meta      `yaml:",inline"`
+	Meta             `yaml:",inline"`
 	Namespace string `json:"namespace" yaml:"namespace"`
 	Security  bool   `json:"security" yaml:"security"`
 }
@@ -51,6 +52,13 @@ type RouteState struct {
 type RouteSpec struct {
 	Domain string       `json:"domain" yaml:"domain"`
 	Rules  []*RouteRule `json:"rules" yaml:"rules"`
+}
+
+type RouteStatus struct {
+	// Pod stage
+	Stage string `json:"stage" yaml:"stage"`
+	// Pod state message
+	Message string `json:"message" yaml:"message"`
 }
 
 type RouteRule struct {

@@ -36,8 +36,8 @@ type IPod interface {
 	ListByNamespace(namespace string) (map[string]*types.Pod, error)
 	ListByService(namespace, service string) (map[string]*types.Pod, error)
 	ListByDeployment(namespace, service, deployment string) (map[string]*types.Pod, error)
-	Schedule(pod *types.Pod) (*types.Pod, error)
-	SetState(pod *types.Pod) (*types.Pod, error)
+	SetStatus(pod *types.Pod, state *types.PodStatus) error
+	SetState(pod *types.Pod) error
 	Destroy(ctx context.Context, pod *types.Pod) error
 	Remove(ctx context.Context, pod *types.Pod) error
 }
@@ -143,40 +143,16 @@ func (p *Pod) ListByDeployment(namespace, service, deployment string) (map[strin
 	return pods, nil
 }
 
-// Schedule - schedule pod and bind node on it
-func (p *Pod) Schedule(pod *types.Pod) (*types.Pod, error) {
+// SetState - set state for pod
+func (p *Pod) SetStatus(pod *types.Pod, status *types.PodStatus) error {
 
-	log.Debug("Deployment: Pod Schedule")
+	log.Debugf("Set state for pod: %s", pod.Meta.Name)
 
-	//if err := p.storage.Pod().Bind(p.context, pod); err != nil {
-	//	log.Errorf("Pod bind error: %s", err.Error())
-	//	return nil, err
-	//}
-
-	isBind := len(pod.Meta.Node) != 0
-	pod.State.Scheduled = isBind
-	pod.State.Provision = isBind
-	pod.State.Error = !isBind
-
-	pod.Status.Steps[types.PodStepScheduled] = types.PodStep{
-		Ready:     isBind,
-		Timestamp: time.Now().UTC(),
-	}
-
-	if !isBind {
-		pod.Status.Stage = types.PodStageError
-		pod.Status.Message = "Can not bind node for pod"
-	}
-
-	if err := p.storage.Pod().SetState(p.context, pod); err != nil {
-		return nil, err
-	}
-
-	return pod, nil
+	return nil
 }
 
 // SetState - set state for pod
-func (p *Pod) SetState(pod *types.Pod) (*types.Pod, error) {
+func (p *Pod) SetState(pod *types.Pod) error {
 
 	log.Debugf("Set state for pod: %s", pod.Meta.Name)
 
@@ -196,16 +172,16 @@ func (p *Pod) SetState(pod *types.Pod) (*types.Pod, error) {
 	if pod.Status.Stage == types.PodStepDestroyed {
 		if err := p.storage.Pod().Remove(p.context, pod); err != nil {
 			log.Errorf("Pod remove err: %s", err.Error())
-			return nil, err
+			return err
 		}
 	} else {
 		if err := p.storage.Pod().SetState(p.context, pod); err != nil {
 			log.Errorf("Pod set state err: %s", err.Error())
-			return nil, err
+			return err
 		}
 	}
 
-	return pod, nil
+	return nil
 }
 
 // Destroy pod

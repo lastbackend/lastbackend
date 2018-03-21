@@ -33,10 +33,10 @@ type INode interface {
 	Create() (*types.Node, error)
 
 	Get(name string) (*types.Node, error)
-	GetSpec(name string) (types.NodeSpec, error)
+	GetSpec(node *types.Node) (*types.NodeSpec, error)
 
 	Update(node *types.Node, opts *request.NodeUpdateOptions) error
-	SetState(node *types.Node, state types.NodeState) (*types.Node, error)
+	SetState(node *types.Node, state types.NodeState)  error
 	SetInfo(node *types.Node, info types.NodeInfo) error
 	SetNetwork(node *types.Node, network types.Subnet) error
 	SetOnline(node *types.Node) error
@@ -90,6 +90,19 @@ func (n *Node) Get(name string) (*types.Node, error) {
 	return node, nil
 }
 
+func (n *Node) GetSpec(node *types.Node) (*types.NodeSpec, error) {
+
+	log.V(logLevel).Debugf("Node: get node spec: %s", node.Meta.Name)
+
+	spec, err := n.storage.Node().GetSpec(n.context, node)
+	if err != nil {
+		log.V(logLevel).Debugf("Node: get Node `%s` err: %s", node.Meta.Name, err)
+		return nil, err
+	}
+
+	return spec, nil
+}
+
 func (n *Node) Update(node *types.Node, opts *request.NodeUpdateOptions) error {
 
 	log.V(logLevel).Debugf("Node: update Node %#v", node)
@@ -122,16 +135,16 @@ func (n *Node) SetOffline(node *types.Node) error {
 
 }
 
-func (n *Node) SetState(node *types.Node, state types.NodeState) (*types.Node, error) {
+func (n *Node) SetState(node *types.Node, state types.NodeState)  error {
 
 	node.State = state
 
 	if err := n.storage.Node().SetState(n.context, node); err != nil {
 		log.Errorf("Set node offline state error: %s", err)
-		return nil, err
+		return err
 	}
 
-	return node, nil
+	return nil
 }
 
 func (n *Node) SetInfo(node *types.Node, info types.NodeInfo) error {
@@ -190,13 +203,6 @@ func (n *Node) InsertRoute(node *types.Node, route *types.Route) error {
 
 func (n *Node) RemoveRoute(node *types.Node, route *types.Route) error {
 	return nil
-}
-
-func (n *Node) GetSpec(name string) (types.NodeSpec, error) {
-
-	var spec types.NodeSpec
-
-	return spec, nil
 }
 
 func (n *Node) Remove(node *types.Node) error {
