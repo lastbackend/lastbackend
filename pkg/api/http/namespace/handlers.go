@@ -103,11 +103,11 @@ func NamespaceCreateH(w http.ResponseWriter, r *http.Request) {
 	)
 
 	// request body struct
-	opts := v1.Request().Namespace().CreateOptions()
-	if err := opts.DecodeAndValidate(r.Body); err != nil {
+	opts, e := v1.Request().Namespace().CreateOptions().DecodeAndValidate(r.Body)
+	if e != nil {
 
-		log.V(logLevel).Errorf("Handler: Namespace: validation incoming data err: %s", err)
-		err.Http(w)
+		log.V(logLevel).Errorf("Handler: Namespace: validation incoming data err: %s", e)
+		e.Http(w)
 		return
 	}
 
@@ -155,10 +155,10 @@ func NamespaceUpdateH(w http.ResponseWriter, r *http.Request) {
 	)
 
 	// request body struct
-	opts := v1.Request().Namespace().UpdateOptions()
-	if err := opts.DecodeAndValidate(r.Body); err != nil {
-		log.V(logLevel).Errorf("Handler: Namespace: validation incoming data err: %s", err)
-		err.Http(w)
+	opts, e := v1.Request().Namespace().UpdateOptions().DecodeAndValidate(r.Body)
+	if e != nil {
+		log.V(logLevel).Errorf("Handler: Namespace: validation incoming data err: %s", e)
+		e.Http(w)
 		return
 	}
 
@@ -206,10 +206,10 @@ func NamespaceRemoveH(w http.ResponseWriter, r *http.Request) {
 	)
 
 	// request body struct
-	opts := v1.Request().Namespace().RemoveOptions()
-	if err := opts.DecodeAndValidate(r.Body); err != nil {
-		log.V(logLevel).Errorf("Handler: Namespace: validation incoming data err: %s", err)
-		err.Http(w)
+	_, e := v1.Request().Namespace().RemoveOptions().DecodeAndValidate(r.Body)
+	if e != nil {
+		log.V(logLevel).Errorf("Handler: Namespace: validation incoming data err: %s", e)
+		e.Http(w)
 		return
 	}
 
