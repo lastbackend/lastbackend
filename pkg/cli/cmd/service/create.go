@@ -40,6 +40,11 @@ func CreateCmd(cmd *cobra.Command, args []string) {
 	cmd.Flags().StringVarP(opts.Sources, "sources", "s", "", "Set sources")
 	cmd.Flags().Int64VarP(opts.Spec.Memory, "memory", "m", 0, "Set memory")
 
+	if err := opts.Validate(); err != nil {
+		fmt.Println(err.Attr)
+		return
+	}
+
 	cli := context.Get().GetClient()
 	response, err := cli.V1().Namespace(name).Service().Create(context.Background(), opts)
 	if err != nil {

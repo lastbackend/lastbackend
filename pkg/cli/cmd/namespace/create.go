@@ -39,9 +39,15 @@ func CreateCmd(cmd *cobra.Command, args []string) {
 	cmd.Flags().StringVarP(&opts.Description, "desc", "d", "", "Set description")
 	opts.Name = name
 
+	if err := opts.Validate(); err != nil {
+		fmt.Println(err.Attr)
+		return
+	}
+
 	cli := context.Get().GetClient()
 	response, err := cli.V1().Namespace().Create(context.Background(), opts)
 	if err != nil {
+		fmt.Println(err)
 		return
 	}
 

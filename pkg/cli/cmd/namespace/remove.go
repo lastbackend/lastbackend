@@ -36,6 +36,11 @@ func RemoveCmd(cmd *cobra.Command, args []string) {
 
 	opts := &request.NamespaceRemoveOptions{Force: false}
 
+	if err := opts.Validate(); err != nil {
+		fmt.Println(err.Attr)
+		return
+	}
+
 	cli := context.Get().GetClient()
 	cli.V1().Namespace(name).Remove(context.Background(), opts)
 
