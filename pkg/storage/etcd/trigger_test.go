@@ -2,7 +2,7 @@
 // Last.Backend LLC CONFIDENTIAL
 // __________________
 //
-// [2014] - [2017] Last.Backend LLC
+// [2014] - [2018] Last.Backend LLC
 // All Rights Reserved.
 //
 // NOTICE:  All information contained herein is, and remains
@@ -342,7 +342,7 @@ func TestTriggerStorage_SetState(t *testing.T) {
 	}
 
 	type args struct {
-		ctx    context.Context
+		ctx     context.Context
 		trigger *types.Trigger
 	}
 
@@ -450,7 +450,7 @@ func TestTriggerStorage_SetSpec(t *testing.T) {
 	}
 
 	type args struct {
-		ctx    context.Context
+		ctx     context.Context
 		trigger *types.Trigger
 	}
 

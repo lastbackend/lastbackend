@@ -16,32 +16,47 @@
 // from Last.Backend LLC.
 //
 
-package namespace
+package service
 
 import (
 	"fmt"
 
 	"github.com/lastbackend/lastbackend/pkg/cli/context"
 	"github.com/lastbackend/lastbackend/pkg/cli/view"
+	"errors"
 )
 
-func CurrentCmd() {
+func FetchCmd(name string) {
 
-	ns, err := Current()
+	ss, err := Fetch(name)
 	if err != nil {
 		fmt.Println(err)
 		return
 	}
-	if ns == nil {
-		fmt.Printf("The namespace was not selected\n")
-		return
-	}
 
-	fmt.Printf("The namespace `%s` was selected as the current\n", ns.Meta.Name)
-
-	ns.Print()
+	ss.Print()
 }
 
-func Current() (*view.Namespace, error) {
-	return context.Get().GetStorage().Namespace().Load()
+func Fetch(name string) (*view.Service, error) {
+
+	stg := context.Get().GetStorage()
+	cli := context.Get().GetClient()
+
+	ns, err := stg.Namespace().Load()
+	if err != nil {
+		return nil, err
+	}
+
+	if ns == nil {
+		return nil, errors.New("namespace has not been selected")
+	}
+
+	response, err := cli.V1().Namespace(ns.Meta.Name).Service(name).Get(context.Background())
+	if err != nil {
+		return nil, err
+	}
+
+	ss := view.FromApiServiceView(response)
+
+	return ss, nil
 }

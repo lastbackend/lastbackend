@@ -23,7 +23,6 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/lastbackend/lastbackend/pkg/api/types/v1/request"
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 	"github.com/lastbackend/lastbackend/pkg/log"
 	"github.com/lastbackend/lastbackend/pkg/storage"
@@ -34,8 +33,8 @@ import (
 type IService interface {
 	Get(namespace, service string) (*types.Service, error)
 	List(namespace string) (map[string]*types.Service, error)
-	Create(namespace *types.Namespace, opts *request.ServiceCreateOptions) (*types.Service, error)
-	Update(service *types.Service, opts *request.ServiceUpdateOptions) (*types.Service, error)
+	Create(namespace *types.Namespace, opts *types.ServiceCreateOptions) (*types.Service, error)
+	Update(service *types.Service, opts *types.ServiceUpdateOptions) (*types.Service, error)
 	Destroy(service *types.Service) (*types.Service, error)
 	Remove(service *types.Service) error
 	SetState(service *types.Service) error
@@ -86,12 +85,12 @@ func (s *Service) List(namespace string) (map[string]*types.Service, error) {
 }
 
 // Create new service model in namespace
-func (s *Service) Create(namespace *types.Namespace, opts *request.ServiceCreateOptions) (*types.Service, error) {
+func (s *Service) Create(namespace *types.Namespace, opts *types.ServiceCreateOptions) (*types.Service, error) {
 
 	log.V(logLevel).Debugf("api:distribution:service:create: service %#v", opts)
 
 	if opts == nil {
-		opts = new(request.ServiceCreateOptions)
+		opts = new(types.ServiceCreateOptions)
 	}
 
 	// ------------------------------------------------
@@ -130,12 +129,12 @@ func (s *Service) Create(namespace *types.Namespace, opts *request.ServiceCreate
 }
 
 // Update service in namespace
-func (s *Service) Update(service *types.Service, opts *request.ServiceUpdateOptions) (*types.Service, error) {
+func (s *Service) Update(service *types.Service, opts *types.ServiceUpdateOptions) (*types.Service, error) {
 
 	log.V(logLevel).Debugf("api:distribution:service:update: %#v -> %#v", service, opts)
 
 	if opts == nil {
-		opts = new(request.ServiceUpdateOptions)
+		opts = new(types.ServiceUpdateOptions)
 	}
 
 	if opts.Description != nil {

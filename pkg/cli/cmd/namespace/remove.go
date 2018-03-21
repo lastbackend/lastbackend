@@ -43,10 +43,5 @@ func Remove(name string) error {
 		Force: false,
 	}
 
-	err := cli.V1().Namespace(name).Remove(context.Background(), data)
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return cli.V1().Namespace(name).Remove(context.Background(), data)
 }

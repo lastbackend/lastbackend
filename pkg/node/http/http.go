@@ -2,7 +2,7 @@
 // Last.Backend LLC CONFIDENTIAL
 // __________________
 //
-// [2014] - [2017] Last.Backend LLC
+// [2014] - [2018] Last.Backend LLC
 // All Rights Reserved.
 //
 // NOTICE:  All information contained herein is, and remains
@@ -21,9 +21,9 @@ package http
 import (
 	"github.com/gorilla/mux"
 	"github.com/lastbackend/lastbackend/pkg/log"
-	"github.com/lastbackend/lastbackend/pkg/util/http"
-	"github.com/lastbackend/lastbackend/pkg/node/http/pod"
 	"github.com/lastbackend/lastbackend/pkg/node/http/node"
+	"github.com/lastbackend/lastbackend/pkg/node/http/pod"
+	"github.com/lastbackend/lastbackend/pkg/util/http"
 )
 
 const logLevel = 2

@@ -2,7 +2,7 @@
 // Last.Backend LLC CONFIDENTIAL
 // __________________
 //
-// [2014] - [2017] Last.Backend LLC
+// [2014] - [2018] Last.Backend LLC
 // All Rights Reserved.
 //
 // NOTICE:  All information contained herein is, and remains
@@ -19,15 +19,15 @@
 package service
 
 import (
-	"testing"
+	"context"
+	"encoding/json"
+	"github.com/lastbackend/lastbackend/pkg/controller/envs"
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
+	"github.com/lastbackend/lastbackend/pkg/storage"
+	"github.com/lastbackend/lastbackend/pkg/storage/mock"
 	"github.com/lastbackend/lastbackend/pkg/storage/store"
 	"reflect"
-	"context"
-	"github.com/lastbackend/lastbackend/pkg/storage/mock"
-	"github.com/lastbackend/lastbackend/pkg/storage"
-	"github.com/lastbackend/lastbackend/pkg/controller/envs"
-	"encoding/json"
+	"testing"
 )
 
 func TestProvision(t *testing.T) {
@@ -38,8 +38,8 @@ func TestProvision(t *testing.T) {
 	var (
 		ns1 = "ns1"
 		ctx = context.Background()
-		s1   = getServiceAsset(ns1,  "test1", "")
-		s2   = getServiceAsset(ns1, "test2", "")
+		s1  = getServiceAsset(ns1, "test1", "")
+		s2  = getServiceAsset(ns1, "test2", "")
 	)
 
 	s2.Spec.Replicas = 2
@@ -51,7 +51,7 @@ func TestProvision(t *testing.T) {
 
 	spec.SetDefault()
 
-	s2.Spec.Template.Containers = append(s2.Spec.Template.Containers,spec)
+	s2.Spec.Template.Containers = append(s2.Spec.Template.Containers, spec)
 
 	type fields struct {
 		stg storage.Storage
@@ -127,7 +127,7 @@ func TestProvision(t *testing.T) {
 				return
 			}
 
-			for _, p := range got{
+			for _, p := range got {
 
 				if p.Meta.Namespace != tt.args.service.Meta.Namespace {
 					t.Errorf("Provision() namespace not match = %v, want %v", p.Meta.Namespace, s2.Meta.Namespace)

@@ -29,12 +29,16 @@ var NamespaceCreate = &cobra.Command{
 	Short: "Create new namespace",
 	Run: func(cmd *cobra.Command, args []string) {
 
+		var desc string
+
+		cmd.Flags().StringVarP(&desc, "desc", "d", "", "Set description")
+
 		if len(args) != 1 {
 			cmd.Help()
 			return
 		}
 
-		CreateCmd(args[0], Desc)
+		CreateCmd(args[0], desc)
 	},
 }
 

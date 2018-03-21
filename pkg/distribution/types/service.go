@@ -22,7 +22,6 @@ import (
 	"strings"
 
 	"fmt"
-	"github.com/lastbackend/lastbackend/pkg/api/types/v1/request"
 	"github.com/satori/uuid"
 )
 
@@ -110,7 +109,7 @@ func (s *ServiceSpec) SetDefault() {
 	s.Triggers = make(SpecTriggers, 0)
 }
 
-func (s *ServiceSpec) Update(spec *request.ServiceOptionsSpec) {
+func (s *ServiceSpec) Update(spec *ServiceOptionsSpec) {
 
 	if spec == nil {
 		return
@@ -208,4 +207,35 @@ func (s *Service) SelfLink() string {
 		s.Meta.SelfLink = fmt.Sprintf("%s:%s", s.Meta.Namespace, s.Meta.Name)
 	}
 	return s.Meta.SelfLink
+}
+
+type ServiceCreateOptions struct {
+	Name        *string             `json:"name"`
+	Description *string             `json:"description"`
+	Sources     *string             `json:"sources"`
+	Replicas    *int                `json:"replicas"`
+	Spec        *ServiceOptionsSpec `json:"spec"`
+}
+
+type ServiceUpdateOptions struct {
+	Description *string             `json:"description"`
+	Sources     *string             `json:"sources"`
+	Spec        *ServiceOptionsSpec `json:"spec"`
+}
+
+type ServiceRemoveOptions struct {
+	Force bool `json:"force"`
+}
+
+type ServiceOptionsSpec struct {
+	Memory     *int64                    `json:"memory,omitempty"`
+	Entrypoint *string                   `json:"entrypoint,omitempty"`
+	Command    *string                   `json:"command,omitempty"`
+	EnvVars    *[]string                 `json:"env,omitempty"`
+	Ports      *[]ServiceOptionsSpecPort `json:"ports,omitempty"`
+}
+
+type ServiceOptionsSpecPort struct {
+	Internal int    `json:"internal"`
+	Protocol string `json:"protocol"`
 }

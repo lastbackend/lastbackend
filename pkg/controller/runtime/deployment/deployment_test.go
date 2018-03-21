@@ -2,7 +2,7 @@
 // Last.Backend LLC CONFIDENTIAL
 // __________________
 //
-// [2014] - [2017] Last.Backend LLC
+// [2014] - [2018] Last.Backend LLC
 // All Rights Reserved.
 //
 // NOTICE:  All information contained herein is, and remains
@@ -19,15 +19,15 @@
 package deployment
 
 import (
-	"testing"
+	"context"
+	"encoding/json"
+	"github.com/lastbackend/lastbackend/pkg/controller/envs"
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
+	"github.com/lastbackend/lastbackend/pkg/storage"
+	"github.com/lastbackend/lastbackend/pkg/storage/mock"
 	"github.com/lastbackend/lastbackend/pkg/storage/store"
 	"reflect"
-	"context"
-	"github.com/lastbackend/lastbackend/pkg/storage/mock"
-	"github.com/lastbackend/lastbackend/pkg/storage"
-	"github.com/lastbackend/lastbackend/pkg/controller/envs"
-	"encoding/json"
+	"testing"
 )
 
 func TestProvision(t *testing.T) {
@@ -39,8 +39,8 @@ func TestProvision(t *testing.T) {
 		ns1 = "ns1"
 		svc = "svc"
 		ctx = context.Background()
-		d1   = getDeploymentAsset(ns1, svc, "test1", "")
-		d2   = getDeploymentAsset(ns1, svc, "test2", "")
+		d1  = getDeploymentAsset(ns1, svc, "test1", "")
+		d2  = getDeploymentAsset(ns1, svc, "test2", "")
 	)
 
 	var ips = make([]string, 0)
@@ -59,14 +59,14 @@ func TestProvision(t *testing.T) {
 
 	spec.SetDefault()
 
-	d2.Spec.Template.Containers = append(d2.Spec.Template.Containers,spec)
+	d2.Spec.Template.Containers = append(d2.Spec.Template.Containers, spec)
 
 	type fields struct {
 		stg storage.Storage
 	}
 
 	type args struct {
-		ctx  context.Context
+		ctx        context.Context
 		deployment *types.Deployment
 	}
 
@@ -141,7 +141,7 @@ func TestProvision(t *testing.T) {
 				return
 			}
 
-			for _, p := range got{
+			for _, p := range got {
 
 				if p.Meta.Namespace != tt.args.deployment.Meta.Namespace {
 					t.Errorf("Provision() namespace not match = %v, want %v", p.Meta.Namespace, d2.Meta.Namespace)
@@ -164,7 +164,7 @@ func TestProvision(t *testing.T) {
 				}
 
 				for i, t := range p.Spec.Template.Containers {
-						t.Labels = make(map[string]string)
+					t.Labels = make(map[string]string)
 					p.Spec.Template.Containers[i] = t
 				}
 
