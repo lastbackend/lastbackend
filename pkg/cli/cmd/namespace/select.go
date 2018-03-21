@@ -23,7 +23,6 @@ import (
 
 	"github.com/lastbackend/lastbackend/pkg/cli/context"
 	"github.com/lastbackend/lastbackend/pkg/cli/view"
-	"github.com/lastbackend/lastbackend/pkg/distribution/errors"
 )
 
 func SelectCmd(name string) {
@@ -47,7 +46,7 @@ func Select(name string) (*view.Namespace, error) {
 	}
 
 	if err := stg.Namespace().Save(ns); err != nil {
-		return nil, errors.UnknownMessage
+		return nil, err
 	}
 
 	return ns, nil

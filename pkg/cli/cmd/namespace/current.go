@@ -23,7 +23,6 @@ import (
 
 	"github.com/lastbackend/lastbackend/pkg/cli/context"
 	"github.com/lastbackend/lastbackend/pkg/cli/view"
-	"github.com/lastbackend/lastbackend/pkg/distribution/errors"
 )
 
 func CurrentCmd() {
@@ -49,7 +48,7 @@ func Current() (*view.Namespace, error) {
 
 	ns, err := stg.Namespace().Load()
 	if err != nil {
-		return nil, errors.UnknownMessage
+		return nil, err
 	}
 
 	return ns, nil

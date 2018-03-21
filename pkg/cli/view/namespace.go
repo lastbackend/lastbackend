@@ -34,6 +34,17 @@ type NamespaceMeta struct {
 	Endpoint    string `json:"endpoint"`
 }
 
+func (n *Namespace) Print() {
+
+	println()
+	table.PrintHorizontal(map[string]interface{}{
+		"NAME":        n.Meta.Name,
+		"DESCRIPTION": n.Meta.Description,
+		"ENDPOINT":    n.Meta.Endpoint,
+	})
+	println()
+}
+
 func (nl *NamespaceList) Print() {
 
 	t := table.New([]string{"NAME", "DESCRIPTION", "ENDPOINT"})
@@ -54,30 +65,18 @@ func (nl *NamespaceList) Print() {
 	println()
 }
 
-func (n *Namespace) Print() {
-
-	println()
-	table.PrintHorizontal(map[string]interface{}{
-		"NAME":        n.Meta.Name,
-		"DESCRIPTION": n.Meta.Description,
-		"ENDPOINT":    n.Meta.Endpoint,
-	})
-	println()
-}
-
 func FromApiNamespaceView(namespace *views.Namespace) *Namespace {
-	var ns = new(Namespace)
-	ns.Meta.Name = namespace.Meta.Name
-	ns.Meta.Description = namespace.Meta.Description
-	ns.Meta.Endpoint = namespace.Meta.Endpoint
-	return ns
+	var item = new(Namespace)
+	item.Meta.Name = namespace.Meta.Name
+	item.Meta.Description = namespace.Meta.Description
+	item.Meta.Endpoint = namespace.Meta.Endpoint
+	return item
 }
 
 func FromApiNamespaceListView(namespaces *views.NamespaceList) *NamespaceList {
-	var nls = make(NamespaceList, 0)
+	var items = make(NamespaceList, 0)
 	for _, namespace := range *namespaces {
-		ns := FromApiNamespaceView(namespace)
-		nls = append(nls, ns)
+		items = append(items, FromApiNamespaceView(namespace))
 	}
-	return &nls
+	return &items
 }

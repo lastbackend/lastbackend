@@ -23,7 +23,6 @@ import (
 
 	"github.com/lastbackend/lastbackend/pkg/api/types/v1/request"
 	"github.com/lastbackend/lastbackend/pkg/cli/context"
-	"github.com/lastbackend/lastbackend/pkg/distribution/errors"
 )
 
 func RemoveCmd(name string) {
@@ -46,7 +45,7 @@ func Remove(name string) error {
 
 	err := cli.V1().Namespace(name).Remove(context.Background(), data)
 	if err != nil {
-		return errors.UnknownMessage
+		return err
 	}
 
 	return nil

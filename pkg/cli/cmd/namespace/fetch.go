@@ -23,7 +23,6 @@ import (
 
 	"github.com/lastbackend/lastbackend/pkg/cli/context"
 	"github.com/lastbackend/lastbackend/pkg/cli/view"
-	"github.com/lastbackend/lastbackend/pkg/distribution/errors"
 )
 
 func FetchCmd(name string) {
@@ -43,7 +42,7 @@ func Fetch(name string) (*view.Namespace, error) {
 
 	response, err := cli.V1().Namespace(name).Get(context.Background())
 	if err != nil {
-		return nil, errors.UnknownMessage
+		return nil, err
 	}
 
 	ns := view.FromApiNamespaceView(response)

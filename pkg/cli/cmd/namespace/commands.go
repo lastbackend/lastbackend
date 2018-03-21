@@ -48,7 +48,7 @@ var NamespaceList = &cobra.Command{
 
 var NamespaceFetch = &cobra.Command{
 	Use:   "info",
-	Short: "Get namespace info by Name, if without Name - get current namespace info",
+	Short: "Get namespace info by name",
 	Run: func(cmd *cobra.Command, args []string) {
 		FetchCmd(args[0])
 	},

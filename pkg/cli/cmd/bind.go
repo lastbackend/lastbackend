@@ -19,6 +19,7 @@
 package cmd
 
 import (
+	cs "github.com/lastbackend/lastbackend/pkg/cli/cmd/cluster"
 	ns "github.com/lastbackend/lastbackend/pkg/cli/cmd/namespace"
 	sr "github.com/lastbackend/lastbackend/pkg/cli/cmd/service"
 )
@@ -33,9 +34,14 @@ func commands() {
 	// ----- root -----
 	RootCmd.AddCommand(
 		versionCmd,
+		cluster,
 		namespace,
 		service,
-		repo,
+	)
+
+	// ----- cluster -----
+	cluster.AddCommand(
+		cs.ClusterFetch,
 	)
 
 	// ----- namespace -----
