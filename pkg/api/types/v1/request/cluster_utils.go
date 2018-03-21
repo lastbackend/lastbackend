@@ -32,7 +32,16 @@ func (ClusterRequest) UpdateOptions() *ClusterUpdateOptions {
 	return new(ClusterUpdateOptions)
 }
 
-func (s *ClusterUpdateOptions) DecodeAndValidate(reader io.Reader) *errors.Err {
+func (c *ClusterUpdateOptions) Validate() *errors.Err {
+	switch true {
+	case c.Description != nil && len(*c.Description) > DEFAULT_DESCRIPTION_LIMIT:
+		return errors.New("cluster").BadParameter("description")
+	default:
+		return nil
+	}
+}
+
+func (c *ClusterUpdateOptions) DecodeAndValidate(reader io.Reader) *errors.Err {
 
 	if reader == nil {
 		err := errors.New("data body can not be null")
@@ -44,17 +53,12 @@ func (s *ClusterUpdateOptions) DecodeAndValidate(reader io.Reader) *errors.Err {
 		return errors.New("cluster").Unknown(err)
 	}
 
-	err = json.Unmarshal(body, s)
+	err = json.Unmarshal(body, c)
 	if err != nil {
 		return errors.New("cluster").IncorrectJSON(err)
 	}
 
-	switch true {
-	case s.Description != nil && len(*s.Description) > DEFAULT_DESCRIPTION_LIMIT:
-		return errors.New("cluster").BadParameter("description")
-	}
-
-	return nil
+	return c.Validate()
 }
 
 func (s *ClusterUpdateOptions) ToJson() ([]byte, error) {

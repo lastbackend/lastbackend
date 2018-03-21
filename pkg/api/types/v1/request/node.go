@@ -26,7 +26,7 @@ type NodeUpdateOptions struct {
 
 type NodeInfoOptions struct {
 	// Node hostname
-	Hostname     string `json:"hostname"`
+	Hostname string `json:"hostname"`
 	// Linux architecture
 	Architecture string `json:"architecture"`
 	// OS information
@@ -39,7 +39,7 @@ type NodeInfoOptions struct {
 
 type NodeStatusOptions struct {
 	// Node state capacity
-	Capacity  types.NodeResources `json:"capacity"`
+	Capacity types.NodeResources `json:"capacity"`
 	// Node state allocated
 	Allocated types.NodeResources `json:"allocated"`
 }

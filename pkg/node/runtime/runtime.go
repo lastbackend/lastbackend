@@ -116,7 +116,6 @@ func (r *Runtime) Loop() {
 					log.Errorf("node:runtime:loop:> provision new spec err: %s", err.Error())
 				}
 
-
 			}
 
 			log.Debug("node:runtime:loop:> request new spec")

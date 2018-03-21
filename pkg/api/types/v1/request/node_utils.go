@@ -32,7 +32,11 @@ func (NodeRequest) NodeInfoOptions() *NodeInfoOptions {
 	return new(NodeInfoOptions)
 }
 
-func (s *NodeInfoOptions) DecodeAndValidate(reader io.Reader) *errors.Err {
+func (n *NodeInfoOptions) Validate() *errors.Err {
+	return nil
+}
+
+func (n *NodeInfoOptions) DecodeAndValidate(reader io.Reader) *errors.Err {
 
 	if reader == nil {
 		err := errors.New("data body can not be null")
@@ -44,12 +48,12 @@ func (s *NodeInfoOptions) DecodeAndValidate(reader io.Reader) *errors.Err {
 		return errors.New("node").Unknown(err)
 	}
 
-	err = json.Unmarshal(body, s)
+	err = json.Unmarshal(body, n)
 	if err != nil {
 		return errors.New("node").IncorrectJSON(err)
 	}
 
-	return nil
+	return n.Validate()
 }
 
 func (s *NodeInfoOptions) ToJson() string {
@@ -62,7 +66,11 @@ func (NodeRequest) NodeStatusOptions() *NodeStatusOptions {
 	return new(NodeStatusOptions)
 }
 
-func (s *NodeStatusOptions) DecodeAndValidate(reader io.Reader) *errors.Err {
+func (n *NodeStatusOptions) Validate() *errors.Err {
+	return nil
+}
+
+func (n *NodeStatusOptions) DecodeAndValidate(reader io.Reader) *errors.Err {
 
 	if reader == nil {
 		err := errors.New("data body can not be null")
@@ -74,12 +82,12 @@ func (s *NodeStatusOptions) DecodeAndValidate(reader io.Reader) *errors.Err {
 		return errors.New("node").Unknown(err)
 	}
 
-	err = json.Unmarshal(body, s)
+	err = json.Unmarshal(body, n)
 	if err != nil {
 		return errors.New("node").IncorrectJSON(err)
 	}
 
-	return nil
+	return n.Validate()
 }
 
 func (s *NodeStatusOptions) ToJson() string {
@@ -92,7 +100,11 @@ func (NodeRequest) NodePodStatusOptions() *NodePodStatusOptions {
 	return new(NodePodStatusOptions)
 }
 
-func (s *NodePodStatusOptions) DecodeAndValidate(reader io.Reader) *errors.Err {
+func (n *NodePodStatusOptions) Validate() *errors.Err {
+	return nil
+}
+
+func (n *NodePodStatusOptions) DecodeAndValidate(reader io.Reader) *errors.Err {
 
 	if reader == nil {
 		err := errors.New("data body can not be null")
@@ -104,12 +116,12 @@ func (s *NodePodStatusOptions) DecodeAndValidate(reader io.Reader) *errors.Err {
 		return errors.New("node").Unknown(err)
 	}
 
-	err = json.Unmarshal(body, s)
+	err = json.Unmarshal(body, n)
 	if err != nil {
 		return errors.New("node").IncorrectJSON(err)
 	}
 
-	return nil
+	return n.Validate()
 }
 
 func (s *NodePodStatusOptions) ToJson() string {
@@ -122,7 +134,11 @@ func (NodeRequest) NodeVolumeStatusOptions() *NodeVolumeStatusOptions {
 	return new(NodeVolumeStatusOptions)
 }
 
-func (s *NodeVolumeStatusOptions) DecodeAndValidate(reader io.Reader) *errors.Err {
+func (n *NodeVolumeStatusOptions) Validate() *errors.Err {
+	return nil
+}
+
+func (n *NodeVolumeStatusOptions) DecodeAndValidate(reader io.Reader) *errors.Err {
 
 	if reader == nil {
 		err := errors.New("data body can not be null")
@@ -134,12 +150,12 @@ func (s *NodeVolumeStatusOptions) DecodeAndValidate(reader io.Reader) *errors.Er
 		return errors.New("node").Unknown(err)
 	}
 
-	err = json.Unmarshal(body, s)
+	err = json.Unmarshal(body, n)
 	if err != nil {
 		return errors.New("node").IncorrectJSON(err)
 	}
 
-	return nil
+	return n.Validate()
 }
 
 func (s *NodeVolumeStatusOptions) ToJson() string {
@@ -152,7 +168,11 @@ func (NodeRequest) NodeRouteStatusOptions() *NodeRouteStatusOptions {
 	return new(NodeRouteStatusOptions)
 }
 
-func (s *NodeRouteStatusOptions) DecodeAndValidate(reader io.Reader) *errors.Err {
+func (n *NodeRouteStatusOptions) Validate() *errors.Err {
+	return nil
+}
+
+func (n *NodeRouteStatusOptions) DecodeAndValidate(reader io.Reader) *errors.Err {
 
 	if reader == nil {
 		err := errors.New("data body can not be null")
@@ -164,16 +184,16 @@ func (s *NodeRouteStatusOptions) DecodeAndValidate(reader io.Reader) *errors.Err
 		return errors.New("node").Unknown(err)
 	}
 
-	err = json.Unmarshal(body, s)
+	err = json.Unmarshal(body, n)
 	if err != nil {
 		return errors.New("node").IncorrectJSON(err)
 	}
 
-	return nil
+	return n.Validate()
 }
 
-func (s *NodeRouteStatusOptions) ToJson() string {
-	buf, _ := json.Marshal(s)
+func (n *NodeRouteStatusOptions) ToJson() string {
+	buf, _ := json.Marshal(n)
 	return string(buf)
 }
 
@@ -187,7 +207,11 @@ func (s *NodeUpdateOptions) ToJson() string {
 	return string(buf)
 }
 
-func (s *NodeUpdateOptions) DecodeAndValidate(reader io.Reader) *errors.Err {
+func (n *NodeUpdateOptions) Validate() *errors.Err {
+	return nil
+}
+
+func (n *NodeUpdateOptions) DecodeAndValidate(reader io.Reader) *errors.Err {
 
 	if reader == nil {
 		err := errors.New("data body can not be null")
@@ -199,12 +223,16 @@ func (s *NodeUpdateOptions) DecodeAndValidate(reader io.Reader) *errors.Err {
 		return errors.New("node").Unknown(err)
 	}
 
-	err = json.Unmarshal(body, s)
+	err = json.Unmarshal(body, n)
 	if err != nil {
 		return errors.New("node").IncorrectJSON(err)
 	}
 
-	return nil
+	return n.Validate()
+}
+
+func (n *NodeUpdateOptions) ToJson() ([]byte, error) {
+	return json.Marshal(n)
 }
 
 
@@ -217,7 +245,11 @@ func (s *NodeRemoveOptions) ToJson() string {
 	return string(buf)
 }
 
-func (s *NodeRemoveOptions) DecodeAndValidate(reader io.Reader) *errors.Err {
+func (n *NodeRemoveOptions) Validate() *errors.Err {
+	return nil
+}
+
+func (n *NodeRemoveOptions) DecodeAndValidate(reader io.Reader) *errors.Err {
 
 	if reader == nil {
 		return nil
@@ -228,10 +260,10 @@ func (s *NodeRemoveOptions) DecodeAndValidate(reader io.Reader) *errors.Err {
 		return errors.New("node").Unknown(err)
 	}
 
-	err = json.Unmarshal(body, s)
+	err = json.Unmarshal(body, n)
 	if err != nil {
 		return errors.New("node").IncorrectJSON(err)
 	}
 
-	return nil
+	return n.Validate()
 }

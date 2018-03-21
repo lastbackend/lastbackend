@@ -18,11 +18,8 @@
 
 package request
 
-type VolumeCreateOptions struct {
-}
+type VolumeCreateOptions struct{}
 
-type VolumeUpdateOptions struct {
-}
+type VolumeUpdateOptions struct{}
 
-type VolumeRemoveOptions struct {
-}
+type VolumeRemoveOptions struct{}

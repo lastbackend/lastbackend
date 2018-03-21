@@ -50,13 +50,6 @@ var RootCmd = &cobra.Command{
 		if debug {
 			cfg.Debug = debug
 		}
-
-		strg, err := storage.Get()
-		if err != nil {
-			panic(fmt.Sprintf("Error: init local storage %s", err))
-			return
-		}
-		ctx.SetStorage(strg)
 	},
 }
 
@@ -72,7 +65,13 @@ func Execute() {
 
 // init client object
 func InitClient(apiHost string) *client.Client {
-	cli, err := client.New(apiHost)
+
+	token, err := storage.GetToken()
+	if err != nil {
+		panic("There is no token in .lastbackend in homedir")
+	}
+
+	cli, err := client.New(apiHost, token)
 	if err != nil {
 		panic(err)
 	}

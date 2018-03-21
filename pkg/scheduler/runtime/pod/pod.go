@@ -20,11 +20,11 @@ package pod
 
 import (
 	"context"
-	"github.com/lastbackend/lastbackend/pkg/scheduler/envs"
 	"github.com/lastbackend/lastbackend/pkg/distribution"
 	"github.com/lastbackend/lastbackend/pkg/distribution/errors"
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 	"github.com/lastbackend/lastbackend/pkg/log"
+	"github.com/lastbackend/lastbackend/pkg/scheduler/envs"
 	"github.com/lastbackend/lastbackend/pkg/storage/store"
 	"sort"
 )
@@ -37,7 +37,6 @@ func Provision(p *types.Pod) error {
 		memory = int64(0)
 		node   *types.Node
 	)
-
 
 	pm := distribution.NewPodModel(context.Background(), stg)
 	if d, err := pm.Get(p.Meta.Namespace, p.Meta.Service, p.Meta.Deployment, p.Meta.Name); d == nil || err != nil {
@@ -110,8 +109,8 @@ func Provision(p *types.Pod) error {
 		}
 
 		ram := n.Status.Capacity.Memory - n.Status.Allocated.Memory
-		pds := n.Status.Capacity.Pods   - n.Status.Allocated.Pods
-		cns := n.Status.Capacity.Containers   - n.Status.Allocated.Containers
+		pds := n.Status.Capacity.Pods - n.Status.Allocated.Pods
+		cns := n.Status.Capacity.Containers - n.Status.Allocated.Containers
 
 		if ram <= memory {
 			continue

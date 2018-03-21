@@ -109,7 +109,7 @@ func (s *DeploymentStorage) ListByNamespace(ctx context.Context, namespace strin
 	}
 	defer destroy()
 
-	keyDeployment := keyCreate(deploymentStorage, fmt.Sprintf("%s:",namespace))
+	keyDeployment := keyCreate(deploymentStorage, fmt.Sprintf("%s:", namespace))
 	if err := client.MapList(ctx, keyDeployment, filter, deployments); err != nil {
 		log.V(logLevel).Errorf("storage:etcd:deployment:> err: %s", namespace, err.Error())
 		return nil, err
@@ -148,7 +148,7 @@ func (s *DeploymentStorage) ListByService(ctx context.Context, namespace, servic
 	}
 	defer destroy()
 
-	keyDeployment := keyCreate(deploymentStorage, fmt.Sprintf("%s:%s:",namespace, service))
+	keyDeployment := keyCreate(deploymentStorage, fmt.Sprintf("%s:%s:", namespace, service))
 	if err := client.MapList(ctx, keyDeployment, filter, deployments); err != nil {
 		log.V(logLevel).Errorf("storage:etcd:deployment:> err: %s", namespace, err.Error())
 		return nil, err
@@ -267,7 +267,7 @@ func (s *DeploymentStorage) Update(ctx context.Context, deployment *types.Deploy
 	defer destroy()
 
 	keyMeta := keyCreate(deploymentStorage, s.keyGet(deployment), "meta")
-	if err := client.Upsert(ctx, keyMeta, deployment.Meta,  nil,0); err != nil {
+	if err := client.Upsert(ctx, keyMeta, deployment.Meta, nil, 0); err != nil {
 		log.V(logLevel).Errorf("storage:etcd:deployment:> update deployment err: %s", err.Error())
 		return err
 	}

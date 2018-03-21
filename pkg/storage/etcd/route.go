@@ -19,15 +19,15 @@
 package etcd
 
 import (
-	"github.com/lastbackend/lastbackend/pkg/storage/storage"
-	"fmt"
-	"github.com/lastbackend/lastbackend/pkg/storage/store"
-	"github.com/lastbackend/lastbackend/pkg/distribution/types"
-	"github.com/lastbackend/lastbackend/pkg/distribution/errors"
 	"context"
+	"fmt"
+	"github.com/lastbackend/lastbackend/pkg/distribution/errors"
+	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 	"github.com/lastbackend/lastbackend/pkg/log"
-	"time"
+	"github.com/lastbackend/lastbackend/pkg/storage/storage"
+	"github.com/lastbackend/lastbackend/pkg/storage/store"
 	"regexp"
+	"time"
 )
 
 const routeStorage = "routes"
@@ -102,7 +102,7 @@ func (s *RouteStorage) ListByNamespace(ctx context.Context, namespace string) (m
 	}
 	defer destroy()
 
-	key := keyCreate(routeStorage, fmt.Sprintf("%s:",namespace))
+	key := keyCreate(routeStorage, fmt.Sprintf("%s:", namespace))
 	if err := client.MapList(ctx, key, filter, routes); err != nil {
 		log.V(logLevel).Errorf("storage:etcd:route:> err: %s", namespace, err.Error())
 		return nil, err
@@ -223,7 +223,7 @@ func (s *RouteStorage) Update(ctx context.Context, route *types.Route) error {
 	defer destroy()
 
 	keyMeta := keyCreate(routeStorage, s.keyGet(route), "meta")
-	if err := client.Upsert(ctx, keyMeta, route.Meta,  nil,0); err != nil {
+	if err := client.Upsert(ctx, keyMeta, route.Meta, nil, 0); err != nil {
 		log.V(logLevel).Errorf("storage:etcd:route:> update route err: %s", err.Error())
 		return err
 	}

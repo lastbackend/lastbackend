@@ -19,44 +19,22 @@
 package service
 
 import (
-	"fmt"
-
 	"github.com/lastbackend/lastbackend/pkg/cli/context"
 	"github.com/lastbackend/lastbackend/pkg/cli/view"
-	"github.com/lastbackend/lastbackend/pkg/distribution/errors"
+	"github.com/spf13/cobra"
 )
 
-func ListCmd() {
+func ListCmd(cmd *cobra.Command, args []string) {
 
-	list, err := List()
+	var namespace string
+	cmd.Flags().StringVarP(&namespace, "namespace", "ns", "", "namespace")
+
+	cli := context.Get().GetClient()
+	response, err := cli.V1().Namespace(namespace).Service().List(context.Background())
 	if err != nil {
-		fmt.Println(err)
 		return
 	}
 
+	list := view.FromApiServiceListView(response)
 	list.Print()
-}
-
-func List() (*view.ServiceList, error) {
-
-	stg := context.Get().GetStorage()
-	cli := context.Get().GetClient()
-
-	ns, err := stg.Namespace().Load()
-	if err != nil {
-		return nil, err
-	}
-
-	if ns == nil {
-		return nil, errors.New("namespace has not been selected")
-	}
-
-	response, err := cli.V1().Namespace(ns.Meta.Name).Service().List(context.Background())
-	if err != nil {
-		return nil, err
-	}
-
-	ss := view.FromApiServiceListView(response)
-
-	return ss, nil
 }

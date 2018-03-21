@@ -16,18 +16,26 @@
 // from Last.Backend LLC.
 //
 
-package storage
+package set
 
 import (
-	v "github.com/lastbackend/lastbackend/pkg/cli/view"
+	"fmt"
+
+	"github.com/lastbackend/lastbackend/pkg/cli/storage"
+	"github.com/spf13/cobra"
 )
 
-type IStorage interface {
-	Namespace() INamespace
-}
+func SetTokenCmd(cmd *cobra.Command, args []string) {
 
-type INamespace interface {
-	Save(ns *v.Namespace) error
-	Load() (*v.Namespace, error)
-	Remove() error
+	if len(args) != 1 {
+		cmd.Help()
+		return
+	}
+
+	if err := storage.SetToken(args[0]); err != nil {
+		fmt.Println(err)
+		return
+	}
+
+	fmt.Println("Token successfully setted")
 }

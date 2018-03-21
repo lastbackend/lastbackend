@@ -19,21 +19,20 @@
 package node_test
 
 import (
-	"testing"
-	"github.com/spf13/viper"
-	"github.com/stretchr/testify/assert"
-	"net/http"
+	"context"
 	"fmt"
 	"github.com/gorilla/mux"
-	"net/http/httptest"
-	"io/ioutil"
-	"github.com/lastbackend/lastbackend/pkg/storage"
 	"github.com/lastbackend/lastbackend/pkg/api/envs"
+	"github.com/lastbackend/lastbackend/pkg/api/http/node"
 	"github.com/lastbackend/lastbackend/pkg/api/types/v1"
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
-	"github.com/lastbackend/lastbackend/pkg/api/http/node"
-	"context"
-	"strings"
+	"github.com/lastbackend/lastbackend/pkg/storage"
+	"github.com/spf13/viper"
+	"github.com/stretchr/testify/assert"
+	"io/ioutil"
+	"net/http"
+	"net/http/httptest"
+	"testing"
 )
 
 // Testing NodeList handler
@@ -164,6 +163,7 @@ func TestNodeGetH(t *testing.T) {
 			expectedBody: string(v),
 			expectedCode: http.StatusOK,
 		},
+
 	}
 
 	for _, tc := range tests {

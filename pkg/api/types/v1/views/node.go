@@ -19,8 +19,8 @@
 package views
 
 import (
-	"time"
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
+	"time"
 )
 
 // Node - default node structure

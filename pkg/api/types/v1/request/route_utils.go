@@ -32,7 +32,11 @@ func (RouteRequest) CreateOptions() *RouteCreateOptions {
 	return new(RouteCreateOptions)
 }
 
-func (s *RouteCreateOptions) DecodeAndValidate(reader io.Reader) *errors.Err {
+func (r *RouteCreateOptions) Validate() *errors.Err {
+	return nil
+}
+
+func (r *RouteCreateOptions) DecodeAndValidate(reader io.Reader) *errors.Err {
 
 	if reader == nil {
 		err := errors.New("data body can not be null")
@@ -44,25 +48,27 @@ func (s *RouteCreateOptions) DecodeAndValidate(reader io.Reader) *errors.Err {
 		return errors.New("route").Unknown(err)
 	}
 
-	err = json.Unmarshal(body, s)
+	err = json.Unmarshal(body, r)
 	if err != nil {
 		return errors.New("route").IncorrectJSON(err)
 	}
 
-	//TODO: need checking arguments
-
-	return nil
+	return r.Validate()
 }
 
-func (s *RouteCreateOptions) ToJson() ([]byte, error) {
-	return json.Marshal(s)
+func (r *RouteCreateOptions) ToJson() ([]byte, error) {
+	return json.Marshal(r)
 }
 
 func (RouteRequest) UpdateOptions() *RouteUpdateOptions {
 	return new(RouteUpdateOptions)
 }
 
-func (s *RouteUpdateOptions) DecodeAndValidate(reader io.Reader) *errors.Err {
+func (r *RouteUpdateOptions) Validate() *errors.Err {
+	return nil
+}
+
+func (r *RouteUpdateOptions) DecodeAndValidate(reader io.Reader) *errors.Err {
 
 	if reader == nil {
 		err := errors.New("data body can not be null")
@@ -74,25 +80,27 @@ func (s *RouteUpdateOptions) DecodeAndValidate(reader io.Reader) *errors.Err {
 		return errors.New("route").Unknown(err)
 	}
 
-	err = json.Unmarshal(body, s)
+	err = json.Unmarshal(body, r)
 	if err != nil {
 		return errors.New("route").IncorrectJSON(err)
 	}
 
-	//TODO: need checking arguments
-
-	return nil
+	return r.Validate()
 }
 
-func (s *RouteUpdateOptions) ToJson() ([]byte, error) {
-	return json.Marshal(s)
+func (r *RouteUpdateOptions) ToJson() ([]byte, error) {
+	return json.Marshal(r)
 }
 
 func (RouteRequest) RemoveOptions() *RouteRemoveOptions {
 	return new(RouteRemoveOptions)
 }
 
-func (s *RouteRemoveOptions) DecodeAndValidate(reader io.Reader) *errors.Err {
+func (r *RouteRemoveOptions) Validate() *errors.Err {
+	return nil
+}
+
+func (r *RouteRemoveOptions) DecodeAndValidate(reader io.Reader) *errors.Err {
 
 	if reader == nil {
 		return nil
@@ -103,10 +111,10 @@ func (s *RouteRemoveOptions) DecodeAndValidate(reader io.Reader) *errors.Err {
 		return errors.New("route").Unknown(err)
 	}
 
-	err = json.Unmarshal(body, s)
+	err = json.Unmarshal(body, r)
 	if err != nil {
 		return errors.New("route").IncorrectJSON(err)
 	}
 
-	return nil
+	return r.Validate()
 }

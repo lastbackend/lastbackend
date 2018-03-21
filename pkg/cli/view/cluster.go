@@ -19,8 +19,9 @@
 package view
 
 import (
-	"github.com/lastbackend/lastbackend/pkg/api/types/v1/views"
 	"time"
+
+	"github.com/lastbackend/lastbackend/pkg/api/types/v1/views"
 	"github.com/lastbackend/lastbackend/pkg/util/table"
 )
 

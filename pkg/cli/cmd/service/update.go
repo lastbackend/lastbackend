@@ -24,54 +24,38 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/api/types/v1/request"
 	"github.com/lastbackend/lastbackend/pkg/cli/context"
 	"github.com/lastbackend/lastbackend/pkg/cli/view"
-	"github.com/lastbackend/lastbackend/pkg/distribution/errors"
+	"github.com/spf13/cobra"
 )
 
-func UpdateCmd(name string, desc, sources *string, memory *int64) {
+func UpdateCmd(cmd *cobra.Command, args []string) {
 
-	ss, err := Update(name, desc, sources, memory)
+	if len(args) != 1 {
+		cmd.Help()
+		return
+	}
+	name := args[0]
+
+	var (
+		opts      = &request.ServiceUpdateOptions{}
+		namespace string
+	)
+	cmd.Flags().StringVarP(opts.Description, "desc", "d", "", "Set description")
+	cmd.Flags().Int64VarP(opts.Spec.Memory, "memory", "m", 0, "Set memory")
+	cmd.Flags().StringVarP(opts.Sources, "sources", "s", "", "Set sources")
+	cmd.Flags().StringVarP(&namespace, "namespace", "ns", "", "namespace")
+
+	if err := opts.Validate(); err != nil {
+		fmt.Println(err.Attr)
+		return
+	}
+
+	cli := context.Get().GetClient()
+	response, err := cli.V1().Namespace(namespace).Service(name).Update(context.Background(), opts)
 	if err != nil {
-		fmt.Println(err)
 		return
 	}
 
 	fmt.Println(fmt.Sprintf("Service `%s` is updated", name))
-
-	ss.Print()
-}
-
-func Update(name string, desc, sources *string, memory *int64) (*view.Service, error) {
-
-	stg := context.Get().GetStorage()
-	cli := context.Get().GetClient()
-
-	ns, err := stg.Namespace().Load()
-	if err != nil {
-		return nil, err
-	}
-
-	if ns == nil {
-		return nil, errors.New("namespace has not been selected")
-	}
-
-	data := &request.ServiceUpdateOptions{
-		Description: desc,
-	}
-
-	if sources == nil {
-		data.Sources = sources
-	}
-
-	if memory == nil {
-		data.Spec.Memory = memory
-	}
-
-	response, err := cli.V1().Namespace(ns.Meta.Name).Service(name).Update(context.Background(), data)
-	if err != nil {
-		return nil, err
-	}
-
 	ss := view.FromApiServiceView(response)
-
-	return ss, nil
+	ss.Print()
 }

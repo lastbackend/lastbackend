@@ -20,11 +20,11 @@ package events
 
 import (
 	"context"
+	"github.com/lastbackend/lastbackend/pkg/api/types/v1"
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 	"github.com/lastbackend/lastbackend/pkg/log"
-	"github.com/pkg/errors"
 	"github.com/lastbackend/lastbackend/pkg/node/envs"
-	"github.com/lastbackend/lastbackend/pkg/api/types/v1"
+	"github.com/pkg/errors"
 )
 
 // NewInfoEvent - send node info event after
@@ -67,7 +67,6 @@ func NewPodStatusEvent(ctx context.Context, pod *types.Pod) error {
 
 	log.Debugf("Event: Pod state event state: %s", pod.Meta.Name)
 
-
 	opts := v1.Request().Node().NodePodStatusOptions()
 	return c.SetPodStatus(ctx, opts)
 }
@@ -87,7 +86,6 @@ func NewRouteStatusEvent(ctx context.Context, route *types.Route) error {
 
 	log.Debugf("Event: route state event state: %s", route.Meta.Name)
 
-
 	opts := v1.Request().Node().NodeRouteStatusOptions()
 	return c.SetRouteStatus(ctx, opts)
 }
@@ -106,7 +104,6 @@ func NewVolumeStatusEvent(ctx context.Context, volume *types.Volume) error {
 	}
 
 	log.Debugf("Event: volume state event state: %s", volume.Meta.Name)
-
 
 	opts := v1.Request().Node().NodeVolumeStatusOptions()
 	return c.SetVolumeStatus(ctx, opts)

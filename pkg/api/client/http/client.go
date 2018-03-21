@@ -39,9 +39,10 @@ type RESTClient struct {
 	base        *url.URL
 	serializers serializer.Codec
 	Client      *http.Client
+	token       string
 }
 
-func NewRESTClient(baseURL *url.URL) (*RESTClient, error) {
+func NewRESTClient(baseURL *url.URL, token string) (*RESTClient, error) {
 	base := *baseURL
 
 	if !strings.HasSuffix(base.Path, "/") {
@@ -53,6 +54,7 @@ func NewRESTClient(baseURL *url.URL) (*RESTClient, error) {
 		Client: &http.Client{
 			Timeout: time.Second * 10,
 		},
+		token: token,
 	}, nil
 }
 

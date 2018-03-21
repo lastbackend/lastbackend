@@ -21,12 +21,12 @@ package etcd
 import (
 	"context"
 	"errors"
-	"regexp"
+	"fmt"
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 	"github.com/lastbackend/lastbackend/pkg/log"
 	"github.com/lastbackend/lastbackend/pkg/storage/storage"
 	"github.com/lastbackend/lastbackend/pkg/storage/store"
-	"fmt"
+	"regexp"
 	"time"
 )
 
@@ -109,7 +109,7 @@ func (s *PodStorage) ListByNamespace(ctx context.Context, namespace string) (map
 	}
 	defer destroy()
 
-	key := keyCreate(podStorage, fmt.Sprintf("%s:",namespace))
+	key := keyCreate(podStorage, fmt.Sprintf("%s:", namespace))
 	if err := client.MapList(ctx, key, filter, pods); err != nil {
 		log.V(logLevel).Errorf("storage:etcd:pod:> err: %s", namespace, err.Error())
 		return nil, err
@@ -148,7 +148,7 @@ func (s *PodStorage) ListByService(ctx context.Context, namespace, service strin
 	}
 	defer destroy()
 
-	key := keyCreate(podStorage, fmt.Sprintf("%s:%s:",namespace, service))
+	key := keyCreate(podStorage, fmt.Sprintf("%s:%s:", namespace, service))
 	if err := client.MapList(ctx, key, filter, pods); err != nil {
 		log.V(logLevel).Errorf("storage:etcd:pod:> err: %s", namespace, err.Error())
 		return nil, err
@@ -193,7 +193,7 @@ func (s *PodStorage) ListByDeployment(ctx context.Context, namespace, service, d
 	}
 	defer destroy()
 
-	key := keyCreate(podStorage, fmt.Sprintf("%s:%s:%s:",namespace, service, deployment))
+	key := keyCreate(podStorage, fmt.Sprintf("%s:%s:%s:", namespace, service, deployment))
 	if err := client.MapList(ctx, key, filter, pods); err != nil {
 		log.V(logLevel).Errorf("storage:etcd:pod:> err: %s", err.Error())
 		return nil, err
@@ -313,7 +313,7 @@ func (s *PodStorage) Update(ctx context.Context, pod *types.Pod) error {
 	defer destroy()
 
 	keyMeta := keyCreate(podStorage, s.keyGet(pod), "meta")
-	if err := client.Upsert(ctx, keyMeta, pod.Meta,  nil,0); err != nil {
+	if err := client.Upsert(ctx, keyMeta, pod.Meta, nil, 0); err != nil {
 		log.V(logLevel).Errorf("storage:etcd:pod:> update pod err: %s", err.Error())
 		return err
 	}
@@ -339,7 +339,7 @@ func (s *PodStorage) Destroy(ctx context.Context, pod *types.Pod) error {
 	defer destroy()
 
 	keySpec := keyCreate(podStorage, s.keyGet(pod), "spec")
-	if err := client.Upsert(ctx, keySpec, pod.Spec,  nil,0); err != nil {
+	if err := client.Upsert(ctx, keySpec, pod.Spec, nil, 0); err != nil {
 		log.V(logLevel).Errorf("storage:etcd:pod:> update pod err: %s", err.Error())
 		return err
 	}

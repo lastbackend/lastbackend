@@ -21,12 +21,12 @@ package v1
 import (
 	"context"
 
+	"encoding/json"
+	"fmt"
 	"github.com/lastbackend/lastbackend/pkg/api/client/http"
 	"github.com/lastbackend/lastbackend/pkg/api/client/interfaces"
 	rv1 "github.com/lastbackend/lastbackend/pkg/api/types/v1/request"
 	vv1 "github.com/lastbackend/lastbackend/pkg/api/types/v1/views"
-	"fmt"
-	"encoding/json"
 	"github.com/lastbackend/lastbackend/pkg/distribution/errors"
 )
 
@@ -173,7 +173,7 @@ func (s *RouteClient) Remove(ctx context.Context, opts *rv1.RouteRemoveOptions) 
 		if err := json.Unmarshal(buf, &e); err != nil {
 			return err
 		}
-		return  errors.New(e.Message)
+		return errors.New(e.Message)
 	}
 
 	return nil

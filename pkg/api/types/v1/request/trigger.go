@@ -18,11 +18,8 @@
 
 package request
 
-type TriggerCreateOptions struct {
-}
+type TriggerCreateOptions struct{}
 
-type TriggerUpdateOptions struct {
-}
+type TriggerUpdateOptions struct{}
 
-type TriggerRemoveOptions struct {
-}
+type TriggerRemoveOptions struct{}

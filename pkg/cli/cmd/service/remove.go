@@ -23,36 +23,29 @@ import (
 
 	"github.com/lastbackend/lastbackend/pkg/api/types/v1/request"
 	"github.com/lastbackend/lastbackend/pkg/cli/context"
-	"github.com/lastbackend/lastbackend/pkg/distribution/errors"
+	"github.com/spf13/cobra"
 )
 
-func RemoveCmd(name string) {
+func RemoveCmd(cmd *cobra.Command, args []string) {
 
-	if err := Remove(name); err != nil {
-		fmt.Println(err)
+	if len(args) != 1 {
+		cmd.Help()
+		return
+	}
+	name := args[0]
+
+	var namespace string
+	cmd.Flags().StringVarP(&namespace, "namespace", "ns", "", "namespace")
+
+	opts := &request.ServiceRemoveOptions{Force: false}
+
+	if err := opts.Validate(); err != nil {
+		fmt.Println(err.Attr)
 		return
 	}
 
-	fmt.Println(fmt.Sprintf("Service `%s` is successfully removed", name))
-}
-
-func Remove(name string) error {
-
-	stg := context.Get().GetStorage()
 	cli := context.Get().GetClient()
+	cli.V1().Namespace(namespace).Service(name).Remove(context.Background(), opts)
 
-	data := &request.ServiceRemoveOptions{
-		Force: false,
-	}
-
-	ns, err := stg.Namespace().Load()
-	if err != nil {
-		return err
-	}
-
-	if ns == nil {
-		return errors.New("namespace has not been selected")
-	}
-
-	return cli.V1().Namespace(ns.Meta.Name).Service(name).Remove(context.Background(), data)
+	fmt.Println(fmt.Sprintf("Service `%s` is successfully removed", name))
 }
