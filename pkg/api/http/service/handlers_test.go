@@ -490,10 +490,9 @@ func TestServiceCreate(t *testing.T) {
 
 				got, err := tc.fields.stg.Service().Get(tc.args.ctx, tc.args.namespace.Meta.Name, tc.args.service.Meta.Name)
 				assert.NoError(t, err)
-				got.Meta.Updated = tc.want.Meta.Updated
-				got.Meta.Created = tc.want.Meta.Created
 
 				assert.Equal(t, s3.Meta.Name, got.Meta.Name, tc.description)
+				assert.Equal(t, s3.Meta.Description, got.Meta.Description, tc.description)
 			}
 		})
 	}
