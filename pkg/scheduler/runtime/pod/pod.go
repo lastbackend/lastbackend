@@ -20,11 +20,11 @@ package pod
 
 import (
 	"context"
-	"github.com/lastbackend/lastbackend/pkg/scheduler/envs"
 	"github.com/lastbackend/lastbackend/pkg/distribution"
 	"github.com/lastbackend/lastbackend/pkg/distribution/errors"
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 	"github.com/lastbackend/lastbackend/pkg/log"
+	"github.com/lastbackend/lastbackend/pkg/scheduler/envs"
 	"github.com/lastbackend/lastbackend/pkg/storage/store"
 	"sort"
 )
@@ -37,7 +37,6 @@ func Provision(p *types.Pod) error {
 		memory = int64(0)
 		node   *types.Node
 	)
-
 
 	pm := distribution.NewPodModel(context.Background(), stg)
 	if d, err := pm.Get(p.Meta.Namespace, p.Meta.Service, p.Meta.Deployment, p.Meta.Name); d == nil || err != nil {
@@ -102,7 +101,6 @@ func Provision(p *types.Pod) error {
 		return n2 < n1
 	})
 
-
 	for _, n := range nl {
 
 		if !n.Online {
@@ -110,8 +108,8 @@ func Provision(p *types.Pod) error {
 		}
 
 		ram := n.State.Capacity.Memory - n.State.Allocated.Memory
-		pds := n.State.Capacity.Pods   - n.State.Allocated.Pods
-		cns := n.State.Capacity.Containers   - n.State.Allocated.Containers
+		pds := n.State.Capacity.Pods - n.State.Allocated.Pods
+		cns := n.State.Capacity.Containers - n.State.Allocated.Containers
 
 		if ram <= memory {
 			continue
@@ -136,7 +134,7 @@ func Provision(p *types.Pod) error {
 		p.Status.Stage = types.PodStageError
 		p.Status.Message = errors.NodeNotFound
 
-		if _, err := distribution.NewPodModel(context.Background(), stg).SetState(p); err != nil {
+		if err := distribution.NewPodModel(context.Background(), stg).SetState(p); err != nil {
 			log.Errorf("set pod state error: %s", err.Error())
 			return err
 		}

@@ -18,11 +18,9 @@
 
 package request
 
-type SecretCreateOptions struct {
-}
+type SecretCreateOptions struct{}
 
-type SecretUpdateOptions struct {
-}
+type SecretUpdateOptions struct{}
 
 type SecretRemoveOptions struct {
 	Force bool `json:"force"`

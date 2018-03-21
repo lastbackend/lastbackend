@@ -22,74 +22,26 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var Desc string
-
 var NamespaceCreate = &cobra.Command{
 	Use:   "create",
 	Short: "Create new namespace",
-	Run: func(cmd *cobra.Command, args []string) {
-
-		var desc string
-
-		cmd.Flags().StringVarP(&desc, "desc", "d", "", "Set description")
-
-		if len(args) != 1 {
-			cmd.Help()
-			return
-		}
-
-		CreateCmd(args[0], desc)
-	},
-}
-
-var NamespaceList = &cobra.Command{
-	Use:   "list",
-	Short: "Display the Namespace list",
-	Run: func(cmd *cobra.Command, args []string) {
-		ListCmd()
-	},
+	Run:   CreateCmd,
 }
 
 var NamespaceFetch = &cobra.Command{
 	Use:   "info",
 	Short: "Get namespace info by name",
-	Run: func(cmd *cobra.Command, args []string) {
-		FetchCmd(args[0])
-	},
+	Run:   FetchCmd,
+}
+
+var NamespaceList = &cobra.Command{
+	Use:   "list",
+	Short: "Display the namespace list",
+	Run:   ListCmd,
 }
 
 var NamespaceRemove = &cobra.Command{
 	Use:   "remove",
-	Short: "Remove namespace by Name",
-	Run: func(cmd *cobra.Command, args []string) {
-
-		if len(args) != 1 {
-			cmd.Help()
-			return
-		}
-
-		RemoveCmd(args[0])
-	},
-}
-
-var NamespaceCurrent = &cobra.Command{
-	Use:   "current",
-	Short: "Show current namespace",
-	Run: func(cmd *cobra.Command, args []string) {
-		CurrentCmd()
-	},
-}
-
-var NamespaceSelect = &cobra.Command{
-	Use:   "select",
-	Short: "Select to the namespace",
-	Run: func(cmd *cobra.Command, args []string) {
-
-		if len(args) != 1 {
-			cmd.Help()
-			return
-		}
-
-		SelectCmd(args[0])
-	},
+	Short: "Remove namespace by name",
+	Run:   RemoveCmd,
 }

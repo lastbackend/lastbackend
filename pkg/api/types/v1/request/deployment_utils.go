@@ -32,11 +32,18 @@ func (DeploymentRequest) UpdateOptions() *DeploymentUpdateOptions {
 	return new(DeploymentUpdateOptions)
 }
 
-func (s *DeploymentUpdateOptions) ToJson() ([]byte, error) {
-	return json.Marshal(s)
+func (d *DeploymentUpdateOptions) Validate() *errors.Err {
+	switch true {
+	case d.Replicas == nil:
+		return errors.New("deployment").BadParameter("replicas")
+	case *d.Replicas < 1:
+		return errors.New("deployment").BadParameter("replicas")
+	default:
+		return nil
+	}
 }
 
-func (s *DeploymentUpdateOptions) DecodeAndValidate(reader io.Reader) *errors.Err {
+func (d *DeploymentUpdateOptions) DecodeAndValidate(reader io.Reader) *errors.Err {
 
 	if reader == nil {
 		err := errors.New("data body can not be null")
@@ -48,17 +55,14 @@ func (s *DeploymentUpdateOptions) DecodeAndValidate(reader io.Reader) *errors.Er
 		return errors.New("deployment").Unknown(err)
 	}
 
-	err = json.Unmarshal(body, s)
+	err = json.Unmarshal(body, d)
 	if err != nil {
 		return errors.New("deployment").IncorrectJSON(err)
 	}
 
-	switch true {
-	case s.Replicas == nil:
-		return errors.New("deployment").BadParameter("replicas")
-	case *s.Replicas < 1:
-		return errors.New("deployment").BadParameter("replicas")
-	}
+	return d.Validate()
+}
 
-	return nil
+func (s *DeploymentUpdateOptions) ToJson() ([]byte, error) {
+	return json.Marshal(s)
 }

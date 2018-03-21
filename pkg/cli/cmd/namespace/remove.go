@@ -23,25 +23,26 @@ import (
 
 	"github.com/lastbackend/lastbackend/pkg/api/types/v1/request"
 	"github.com/lastbackend/lastbackend/pkg/cli/context"
+	"github.com/spf13/cobra"
 )
 
-func RemoveCmd(name string) {
+func RemoveCmd(cmd *cobra.Command, args []string) {
 
-	if err := Remove(name); err != nil {
-		fmt.Println(err)
+	if len(args) != 1 {
+		cmd.Help()
+		return
+	}
+	var name = args[0]
+
+	opts := &request.NamespaceRemoveOptions{Force: false}
+
+	if err := opts.Validate(); err != nil {
+		fmt.Println(err.Attr)
 		return
 	}
 
-	fmt.Println(fmt.Sprintf("Namespace `%s` is successfully removed", name))
-}
-
-func Remove(name string) error {
-
 	cli := context.Get().GetClient()
+	cli.V1().Namespace(name).Remove(context.Background(), opts)
 
-	data := &request.NamespaceRemoveOptions{
-		Force: false,
-	}
-
-	return cli.V1().Namespace(name).Remove(context.Background(), data)
+	fmt.Println(fmt.Sprintf("Namespace `%s` is successfully removed", name))
 }

@@ -29,6 +29,8 @@ type Volume struct {
 	State VolumeState `json:"state" yaml:"state"`
 	// Volume spec
 	Spec VolumeSpec `json:"spec" yaml:"spec"`
+	// Volume status
+	Status VolumeStatus `json:"status" yaml:"status"`
 }
 
 type VolumeMeta struct {
@@ -42,6 +44,19 @@ type VolumeState struct {
 }
 
 type VolumeSpec struct {
+}
+
+type VolumeCreateOptions struct {
+}
+
+type VolumeUpdateOptions struct {
+}
+
+type VolumeStatus struct {
+	// volume status stage
+	Stage string `json:"stage" yaml:"stage"`
+	// volume status message
+	Message string `json:"message" yaml:"message"`
 }
 
 func (v *Volume) SelfLink() string {

@@ -19,7 +19,6 @@
 package types
 
 import (
-	"encoding/json"
 	"time"
 )
 
@@ -41,33 +40,20 @@ type Meta struct {
 	Updated time.Time `json:"updated",yaml:"updated"`
 }
 
+type MetaCreateOptions struct {
+	Name        string            `json:"name",yaml:"name"`
+	Description string            `json:"description",yaml:"description"`
+	Labels      map[string]string `json:"labels",yaml:"labels"`
+}
+
+type MetaUpdateOptions struct {
+	Description *string           `json:"description",yaml:"description"`
+	Labels      map[string]string `json:"labels",yaml:"labels"`
+}
+
 func (m *Meta) SetDefault() {
 	m.Labels = make(map[string]string, 0)
 	m.Labels = make(map[string]string, 0)
 	m.Created = time.Now().UTC()
 	m.Updated = time.Now().UTC()
-}
-
-type StringSlice []string
-
-func (s *StringSlice) ToJson() string {
-	if s == nil {
-		return EmptyStringSlice
-	}
-	res, err := json.Marshal(s)
-	if err != nil {
-		return EmptyStringSlice
-	}
-	if string(res) == "null" {
-		return EmptyStringSlice
-	}
-	return string(res)
-}
-
-type Base struct {
-}
-
-func (b *Base) ToJson() string {
-	buf, _ := json.Marshal(b)
-	return string(buf)
 }

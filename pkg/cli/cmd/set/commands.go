@@ -16,32 +16,14 @@
 // from Last.Backend LLC.
 //
 
-package namespace
+package set
 
 import (
-	"fmt"
-
-	"github.com/lastbackend/lastbackend/pkg/cli/context"
-	"github.com/lastbackend/lastbackend/pkg/cli/view"
+	"github.com/spf13/cobra"
 )
 
-func CurrentCmd() {
-
-	ns, err := Current()
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
-	if ns == nil {
-		fmt.Printf("The namespace was not selected\n")
-		return
-	}
-
-	fmt.Printf("The namespace `%s` was selected as the current\n", ns.Meta.Name)
-
-	ns.Print()
-}
-
-func Current() (*view.Namespace, error) {
-	return context.Get().GetStorage().Namespace().Load()
+var SetToken = &cobra.Command{
+	Use:   "token",
+	Short: "Set token to local storage",
+	Run:   SetTokenCmd,
 }

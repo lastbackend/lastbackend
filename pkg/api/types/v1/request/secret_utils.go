@@ -32,6 +32,10 @@ func (SecretRequest) CreateOptions() *SecretCreateOptions {
 	return new(SecretCreateOptions)
 }
 
+func (s *SecretCreateOptions) Validate() *errors.Err {
+	return nil
+}
+
 func (s *SecretCreateOptions) DecodeAndValidate(reader io.Reader) *errors.Err {
 
 	if reader == nil {
@@ -49,9 +53,7 @@ func (s *SecretCreateOptions) DecodeAndValidate(reader io.Reader) *errors.Err {
 		return errors.New("secret").IncorrectJSON(err)
 	}
 
-	//TODO: need checking arguments
-
-	return nil
+	return s.Validate()
 }
 
 func (s *SecretCreateOptions) ToJson() ([]byte, error) {
@@ -60,6 +62,10 @@ func (s *SecretCreateOptions) ToJson() ([]byte, error) {
 
 func (SecretRequest) UpdateOptions() *SecretUpdateOptions {
 	return new(SecretUpdateOptions)
+}
+
+func (s *SecretUpdateOptions) Validate() *errors.Err {
+	return nil
 }
 
 func (s *SecretUpdateOptions) DecodeAndValidate(reader io.Reader) *errors.Err {
@@ -79,9 +85,7 @@ func (s *SecretUpdateOptions) DecodeAndValidate(reader io.Reader) *errors.Err {
 		return errors.New("secret").IncorrectJSON(err)
 	}
 
-	//TODO: need checking arguments
-
-	return nil
+	return s.Validate()
 }
 
 func (s *SecretUpdateOptions) ToJson() ([]byte, error) {
@@ -90,6 +94,10 @@ func (s *SecretUpdateOptions) ToJson() ([]byte, error) {
 
 func (SecretRequest) RemoveOptions() *SecretRemoveOptions {
 	return new(SecretRemoveOptions)
+}
+
+func (s *SecretRemoveOptions) Validate() *errors.Err {
+	return nil
 }
 
 func (s *SecretRemoveOptions) DecodeAndValidate(reader io.Reader) *errors.Err {
@@ -108,5 +116,5 @@ func (s *SecretRemoveOptions) DecodeAndValidate(reader io.Reader) *errors.Err {
 		return errors.New("secret").IncorrectJSON(err)
 	}
 
-	return nil
+	return s.Validate()
 }

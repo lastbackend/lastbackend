@@ -20,8 +20,9 @@ package view
 
 import (
 	"fmt"
-	"github.com/lastbackend/lastbackend/pkg/util/table"
+
 	"github.com/lastbackend/lastbackend/pkg/api/types/v1/views"
+	"github.com/lastbackend/lastbackend/pkg/util/table"
 )
 
 type ServiceList []*Service

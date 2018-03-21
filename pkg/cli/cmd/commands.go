@@ -19,9 +19,9 @@
 package cmd
 
 import (
-	"github.com/spf13/cobra"
-
 	"fmt"
+
+	"github.com/spf13/cobra"
 )
 
 var versionCmd = &cobra.Command{
@@ -29,6 +29,14 @@ var versionCmd = &cobra.Command{
 	Short: "Client version",
 	Run: func(cmd *cobra.Command, args []string) {
 		fmt.Println(RootCmd.Use + " " + version)
+	},
+}
+
+var set = &cobra.Command{
+	Use:   "set",
+	Short: "Manage set vars to your local storage",
+	Run: func(cmd *cobra.Command, args []string) {
+		cmd.Help()
 	},
 }
 

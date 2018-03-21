@@ -34,7 +34,23 @@ func (NamespaceRequest) CreateOptions() *NamespaceCreateOptions {
 	return new(NamespaceCreateOptions)
 }
 
-func (s *NamespaceCreateOptions) DecodeAndValidate(reader io.Reader) *errors.Err {
+func (n *NamespaceCreateOptions) Validate() *errors.Err {
+	switch true {
+	case len(n.Name) == 0:
+		return errors.New("namespace").BadParameter("name")
+	case len(n.Name) < 4 || len(n.Name) > 64:
+		return errors.New("namespace").BadParameter("name")
+	case !validator.IsNamespaceName(strings.ToLower(n.Name)):
+		return errors.New("namespace").BadParameter("name")
+	case len(n.Description) > DEFAULT_DESCRIPTION_LIMIT:
+		return errors.New("namespace").BadParameter("description")
+	default:
+		// TODO: check quotas data
+		return nil
+	}
+}
+
+func (n *NamespaceCreateOptions) DecodeAndValidate(reader io.Reader) *errors.Err {
 
 	if reader == nil {
 		err := errors.New("data body can not be null")
@@ -46,36 +62,33 @@ func (s *NamespaceCreateOptions) DecodeAndValidate(reader io.Reader) *errors.Err
 		return errors.New("namespace").Unknown(err)
 	}
 
-	err = json.Unmarshal(body, s)
+	err = json.Unmarshal(body, n)
 	if err != nil {
 		return errors.New("namespace").IncorrectJSON(err)
 	}
 
-	switch true {
-	case len(s.Name) == 0:
-		return errors.New("namespace").BadParameter("name")
-	case len(s.Name) < 4 || len(s.Name) > 64:
-		return errors.New("namespace").BadParameter("name")
-	case !validator.IsNamespaceName(strings.ToLower(s.Name)):
-		return errors.New("namespace").BadParameter("name")
-	case len(s.Description) > DEFAULT_DESCRIPTION_LIMIT:
-		return errors.New("namespace").BadParameter("description")
-	case s.Quotas != nil:
-		// TODO: check quotas data
-	}
-
-	return nil
+	return n.Validate()
 }
 
-func (s *NamespaceCreateOptions) ToJson() ([]byte, error) {
-	return json.Marshal(s)
+func (n *NamespaceCreateOptions) ToJson() ([]byte, error) {
+	return json.Marshal(n)
 }
 
 func (NamespaceRequest) UpdateOptions() *NamespaceUpdateOptions {
 	return new(NamespaceUpdateOptions)
 }
 
-func (s *NamespaceUpdateOptions) DecodeAndValidate(reader io.Reader) *errors.Err {
+func (n *NamespaceUpdateOptions) Validate() *errors.Err {
+	switch true {
+	case n.Description != nil && len(*n.Description) > DEFAULT_DESCRIPTION_LIMIT:
+		return errors.New("namespace").BadParameter("description")
+	default:
+		// TODO: check quotas data
+		return nil
+	}
+}
+
+func (n *NamespaceUpdateOptions) DecodeAndValidate(reader io.Reader) *errors.Err {
 
 	if reader == nil {
 		err := errors.New("data body can not be null")
@@ -87,30 +100,27 @@ func (s *NamespaceUpdateOptions) DecodeAndValidate(reader io.Reader) *errors.Err
 		return errors.New("namespace").Unknown(err)
 	}
 
-	err = json.Unmarshal(body, s)
+	err = json.Unmarshal(body, n)
 	if err != nil {
 		return errors.New("namespace").IncorrectJSON(err)
 	}
 
-	switch true {
-	case s.Description != nil && len(*s.Description) > DEFAULT_DESCRIPTION_LIMIT:
-		return errors.New("namespace").BadParameter("description")
-	case s.Quotas != nil:
-		// TODO: check quotas data
-	}
-
-	return nil
+	return n.Validate()
 }
 
-func (s *NamespaceUpdateOptions) ToJson() ([]byte, error) {
-	return json.Marshal(s)
+func (n *NamespaceUpdateOptions) ToJson() ([]byte, error) {
+	return json.Marshal(n)
 }
 
 func (NamespaceRequest) RemoveOptions() *NamespaceRemoveOptions {
 	return new(NamespaceRemoveOptions)
 }
 
-func (s *NamespaceRemoveOptions) DecodeAndValidate(reader io.Reader) *errors.Err {
+func (n *NamespaceRemoveOptions) Validate() *errors.Err {
+	return nil
+}
+
+func (n *NamespaceRemoveOptions) DecodeAndValidate(reader io.Reader) *errors.Err {
 
 	if reader == nil {
 		return nil
@@ -121,14 +131,14 @@ func (s *NamespaceRemoveOptions) DecodeAndValidate(reader io.Reader) *errors.Err
 		return errors.New("namespace").Unknown(err)
 	}
 
-	err = json.Unmarshal(body, s)
+	err = json.Unmarshal(body, n)
 	if err != nil {
 		return errors.New("namespace").IncorrectJSON(err)
 	}
 
-	return nil
+	return n.Validate()
 }
 
-func (s *NamespaceRemoveOptions) ToJson() ([]byte, error) {
-	return json.Marshal(s)
+func (n *NamespaceRemoveOptions) ToJson() ([]byte, error) {
+	return json.Marshal(n)
 }

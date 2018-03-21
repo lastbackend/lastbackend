@@ -23,5 +23,4 @@ type ClusterUpdateOptions struct {
 	Quotas      *ClusterQuotasOptions `json:"quotas"`
 }
 
-type ClusterQuotasOptions struct {
-}
+type ClusterQuotasOptions struct{}

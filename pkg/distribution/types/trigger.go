@@ -23,8 +23,8 @@ import "fmt"
 type TriggerList []Trigger
 
 type Trigger struct {
-	Meta TriggerMeta `json:"meta"`
-	Spec TriggerSpec `json:"spec"`
+	Meta  TriggerMeta  `json:"meta"`
+	Spec  TriggerSpec  `json:"spec"`
 	State TriggerState `json:"state"`
 }
 
@@ -36,11 +36,10 @@ type TriggerMeta struct {
 
 type TriggerState struct {
 	Provision bool `json:"provision"`
-	Ready bool `json:"ready"`
+	Ready     bool `json:"ready"`
 }
 
 type TriggerSpec struct {
-
 }
 
 func (t *Trigger) SelfLink() string {

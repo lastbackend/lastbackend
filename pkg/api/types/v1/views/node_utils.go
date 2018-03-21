@@ -91,13 +91,18 @@ func (nv *NodeView) NewList(obj map[string]*types.Node) *NodeList {
 	return &nodes
 }
 
-func (nv *NodeView) NewSpec(obj *types.Node) *NodeSpec {
+func (nv *NodeView) NewSpec(obj *types.NodeSpec) *NodeSpec {
 
 	spec := NodeSpec{}
 
 	if obj == nil {
 		return nil
 	}
+
+	spec.Network = obj.Network
+	spec.Pods = obj.Pods
+	spec.Volumes = obj.Volumes
+	spec.Routes = obj.Routes
 
 	return &spec
 }

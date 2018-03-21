@@ -37,6 +37,7 @@ type IRoute interface {
 	Create(namespace *types.Namespace, opts *request.RouteCreateOptions) (*types.Route, error)
 	Update(route *types.Route, namespace *types.Namespace, opts *request.RouteUpdateOptions) (*types.Route, error)
 	SetState(route *types.Route, state *types.RouteState) error
+	SetStatus(route *types.Route, status *types.RouteStatus) error
 	Remove(route *types.Route) error
 }
 
@@ -160,6 +161,13 @@ func (n *Route) SetState(route *types.Route, state *types.RouteState) error {
 		log.V(logLevel).Errorf("api:distribution:route:setstate mark route as destroy err: %s", err)
 		return err
 	}
+
+	return nil
+}
+
+func (n *Route) SetStatus(route *types.Route, status *types.RouteStatus) error {
+
+	log.V(logLevel).Debugf("api:distribution:route:setstate set state route %s -> %#v", route.Meta.Name, status)
 
 	return nil
 }

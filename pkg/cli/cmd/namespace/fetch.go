@@ -23,29 +23,23 @@ import (
 
 	"github.com/lastbackend/lastbackend/pkg/cli/context"
 	"github.com/lastbackend/lastbackend/pkg/cli/view"
+	"github.com/spf13/cobra"
 )
 
-func FetchCmd(name string) {
+func FetchCmd(cmd *cobra.Command, args []string) {
 
-	ns, err := Fetch(name)
+	if len(args) != 1 {
+		cmd.Help()
+		return
+	}
+
+	cli := context.Get().GetClient()
+	response, err := cli.V1().Namespace(args[0]).Get(context.Background())
 	if err != nil {
 		fmt.Println(err)
 		return
 	}
 
-	ns.Print()
-}
-
-func Fetch(name string) (*view.Namespace, error) {
-
-	cli := context.Get().GetClient()
-
-	response, err := cli.V1().Namespace(name).Get(context.Background())
-	if err != nil {
-		return nil, err
-	}
-
 	ns := view.FromApiNamespaceView(response)
-
-	return ns, nil
+	ns.Print()
 }
