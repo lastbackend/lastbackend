@@ -46,13 +46,10 @@ type VolumeState struct {
 type VolumeSpec struct {
 }
 
-
 type VolumeCreateOptions struct {
-
 }
 
 type VolumeUpdateOptions struct {
-
 }
 
 type VolumeStatus struct {

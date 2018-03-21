@@ -141,7 +141,7 @@ func (s *NamespaceClient) Get(ctx context.Context) (*vv1.Namespace, error) {
 		if err := json.Unmarshal(buf, &e); err != nil {
 			return nil, err
 		}
-		return nil,  errors.New(e.Message)
+		return nil, errors.New(e.Message)
 	}
 
 	var ns *vv1.Namespace
@@ -175,7 +175,7 @@ func (s *NamespaceClient) Update(ctx context.Context, opts *rv1.NamespaceUpdateO
 		if err := json.Unmarshal(buf, &e); err != nil {
 			return nil, err
 		}
-		return nil,  errors.New(e.Message)
+		return nil, errors.New(e.Message)
 	}
 
 	var ns *vv1.Namespace
@@ -203,7 +203,7 @@ func (s *NamespaceClient) Remove(ctx context.Context, opts *rv1.NamespaceRemoveO
 		if err := json.Unmarshal(buf, &e); err != nil {
 			return err
 		}
-		return  errors.New(e.Message)
+		return errors.New(e.Message)
 	}
 
 	return nil

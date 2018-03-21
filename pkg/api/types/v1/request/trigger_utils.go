@@ -32,7 +32,11 @@ func (TriggerRequest) CreateOptions() *TriggerCreateOptions {
 	return new(TriggerCreateOptions)
 }
 
-func (s *TriggerCreateOptions) DecodeAndValidate(reader io.Reader) *errors.Err {
+func (t *TriggerCreateOptions) Validate() *errors.Err {
+	return nil
+}
+
+func (t *TriggerCreateOptions) DecodeAndValidate(reader io.Reader) *errors.Err {
 
 	if reader == nil {
 		err := errors.New("data body can not be null")
@@ -44,25 +48,27 @@ func (s *TriggerCreateOptions) DecodeAndValidate(reader io.Reader) *errors.Err {
 		return errors.New("trigger").Unknown(err)
 	}
 
-	err = json.Unmarshal(body, s)
+	err = json.Unmarshal(body, t)
 	if err != nil {
 		return errors.New("trigger").IncorrectJSON(err)
 	}
 
-	//TODO: need checking arguments
-
-	return nil
+	return t.Validate()
 }
 
-func (s *TriggerCreateOptions) ToJson() ([]byte, error) {
-	return json.Marshal(s)
+func (t *TriggerCreateOptions) ToJson() ([]byte, error) {
+	return json.Marshal(t)
 }
 
 func (TriggerRequest) UpdateOptions() *TriggerUpdateOptions {
 	return new(TriggerUpdateOptions)
 }
 
-func (s *TriggerUpdateOptions) DecodeAndValidate(reader io.Reader) *errors.Err {
+func (t *TriggerUpdateOptions) Validate() *errors.Err {
+	return nil
+}
+
+func (t *TriggerUpdateOptions) DecodeAndValidate(reader io.Reader) *errors.Err {
 
 	if reader == nil {
 		err := errors.New("data body can not be null")
@@ -74,25 +80,27 @@ func (s *TriggerUpdateOptions) DecodeAndValidate(reader io.Reader) *errors.Err {
 		return errors.New("trigger").Unknown(err)
 	}
 
-	err = json.Unmarshal(body, s)
+	err = json.Unmarshal(body, t)
 	if err != nil {
 		return errors.New("trigger").IncorrectJSON(err)
 	}
 
-	//TODO: need checking arguments
-
-	return nil
+	return t.Validate()
 }
 
-func (s *TriggerUpdateOptions) ToJson() ([]byte, error) {
-	return json.Marshal(s)
+func (t *TriggerUpdateOptions) ToJson() ([]byte, error) {
+	return json.Marshal(t)
 }
 
 func (TriggerRequest) RemoveOptions() *TriggerRemoveOptions {
 	return new(TriggerRemoveOptions)
 }
 
-func (s *TriggerRemoveOptions) DecodeAndValidate(reader io.Reader) *errors.Err {
+func (t *TriggerRemoveOptions) Validate() *errors.Err {
+	return nil
+}
+
+func (t *TriggerRemoveOptions) DecodeAndValidate(reader io.Reader) *errors.Err {
 
 	if reader == nil {
 		return nil
@@ -103,10 +111,10 @@ func (s *TriggerRemoveOptions) DecodeAndValidate(reader io.Reader) *errors.Err {
 		return errors.New("trigger").Unknown(err)
 	}
 
-	err = json.Unmarshal(body, s)
+	err = json.Unmarshal(body, t)
 	if err != nil {
 		return errors.New("trigger").IncorrectJSON(err)
 	}
 
-	return nil
+	return t.Validate()
 }

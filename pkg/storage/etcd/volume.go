@@ -21,13 +21,13 @@ package etcd
 import (
 	"context"
 	"errors"
+	"fmt"
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 	"github.com/lastbackend/lastbackend/pkg/log"
 	"github.com/lastbackend/lastbackend/pkg/storage/storage"
-	"fmt"
 	"github.com/lastbackend/lastbackend/pkg/storage/store"
-	"time"
 	"regexp"
+	"time"
 )
 
 const volumeStorage = "volumes"
@@ -103,7 +103,7 @@ func (s *VolumeStorage) ListByNamespace(ctx context.Context, namespace string) (
 	}
 	defer destroy()
 
-	keyVolume := keyCreate(volumeStorage, fmt.Sprintf("%s:",namespace))
+	keyVolume := keyCreate(volumeStorage, fmt.Sprintf("%s:", namespace))
 	if err := client.MapList(ctx, keyVolume, filter, volumes); err != nil {
 		log.V(logLevel).Errorf("storage:etcd:volume:> err: %s", namespace, err.Error())
 		return nil, err
@@ -142,7 +142,7 @@ func (s *VolumeStorage) ListByService(ctx context.Context, namespace, service st
 	}
 	defer destroy()
 
-	keyVolume := keyCreate(volumeStorage, fmt.Sprintf("%s:%s:",namespace, service))
+	keyVolume := keyCreate(volumeStorage, fmt.Sprintf("%s:%s:", namespace, service))
 	if err := client.MapList(ctx, keyVolume, filter, volumes); err != nil {
 		log.V(logLevel).Errorf("storage:etcd:volume:> err: %s", namespace, err.Error())
 		return nil, err
@@ -261,7 +261,7 @@ func (s *VolumeStorage) Update(ctx context.Context, volume *types.Volume) error 
 	defer destroy()
 
 	keyMeta := keyCreate(volumeStorage, s.keyGet(volume), "meta")
-	if err := client.Upsert(ctx, keyMeta, volume.Meta,  nil,0); err != nil {
+	if err := client.Upsert(ctx, keyMeta, volume.Meta, nil, 0); err != nil {
 		log.V(logLevel).Errorf("storage:etcd:volume:> update volume err: %s", err.Error())
 		return err
 	}
@@ -456,7 +456,6 @@ func (s *VolumeStorage) checkVolumeExists(ctx context.Context, volume *types.Vol
 		log.V(logLevel).Debugf("storage:etcd:volume:> check volume exists err: %s", err.Error())
 		return err
 	}
-
 
 	return nil
 }

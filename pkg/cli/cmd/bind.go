@@ -22,6 +22,7 @@ import (
 	cs "github.com/lastbackend/lastbackend/pkg/cli/cmd/cluster"
 	ns "github.com/lastbackend/lastbackend/pkg/cli/cmd/namespace"
 	sr "github.com/lastbackend/lastbackend/pkg/cli/cmd/service"
+	st "github.com/lastbackend/lastbackend/pkg/cli/cmd/set"
 )
 
 func init() {
@@ -38,14 +39,17 @@ func init() {
 		cs.ClusterFetch,
 	)
 
+	// ----- set -----
+	set.AddCommand(
+		st.SetToken,
+	)
+
 	// ----- namespace -----
 	namespace.AddCommand(
 		ns.NamespaceCreate,
 		ns.NamespaceList,
 		ns.NamespaceFetch,
 		ns.NamespaceRemove,
-		ns.NamespaceCurrent,
-		ns.NamespaceSelect,
 	)
 
 	// ----- service -----

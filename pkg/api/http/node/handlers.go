@@ -26,9 +26,9 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/api/types/v1/request"
 	"github.com/lastbackend/lastbackend/pkg/distribution"
 	"github.com/lastbackend/lastbackend/pkg/distribution/errors"
+	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 	"github.com/lastbackend/lastbackend/pkg/log"
 	"github.com/lastbackend/lastbackend/pkg/util/http/utils"
-	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 	"strings"
 )
 
@@ -91,7 +91,7 @@ func NodeGetSpecH(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	spec, err  := nm.GetSpec(n)
+	spec, err := nm.GetSpec(n)
 	if err != nil {
 		log.V(logLevel).Warnf("Handler: Node: node `%s` not found", cid)
 		errors.HTTP.InternalServerError(w)
@@ -192,7 +192,7 @@ func NodeSetInfoH(w http.ResponseWriter, r *http.Request) {
 	log.V(logLevel).Debug("Handler: Node: node set info")
 
 	var (
-		nm = distribution.NewNodeModel(r.Context(), envs.Get().GetStorage())
+		nm  = distribution.NewNodeModel(r.Context(), envs.Get().GetStorage())
 		nid = utils.Vars(r)["node"]
 	)
 
@@ -212,12 +212,12 @@ func NodeSetInfoH(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := nm.SetInfo(node, types.NodeInfo{
-		Hostname: opts.Hostname,
+		Hostname:     opts.Hostname,
 		Architecture: opts.Architecture,
-		OSName: opts.OSName,
-		OSType: opts.OSType,
-		ExternalIP: opts.ExternalIP,
-		InternalIP: opts.InternalIP,
+		OSName:       opts.OSName,
+		OSType:       opts.OSType,
+		ExternalIP:   opts.ExternalIP,
+		InternalIP:   opts.InternalIP,
 	}); err != nil {
 		log.V(logLevel).Errorf("Handler: Node: get nodes list err: %s", err)
 		errors.HTTP.InternalServerError(w)
@@ -236,7 +236,7 @@ func NodeSetStateH(w http.ResponseWriter, r *http.Request) {
 	log.V(logLevel).Debug("Handler: Node: node set state")
 
 	var (
-		nm = distribution.NewNodeModel(r.Context(), envs.Get().GetStorage())
+		nm  = distribution.NewNodeModel(r.Context(), envs.Get().GetStorage())
 		nid = utils.Vars(r)["node"]
 	)
 
@@ -256,7 +256,7 @@ func NodeSetStateH(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := nm.SetState(node, types.NodeState{
-		Capacity: opts.Capacity,
+		Capacity:  opts.Capacity,
 		Allocated: opts.Allocated,
 	}); err != nil {
 		log.V(logLevel).Errorf("Handler: Node: get nodes list err: %s", err)
@@ -274,8 +274,8 @@ func NodeSetStateH(w http.ResponseWriter, r *http.Request) {
 func NodeSetPodStatusH(w http.ResponseWriter, r *http.Request) {
 
 	var (
-		nm = distribution.NewNodeModel(r.Context(), envs.Get().GetStorage())
-		pm = distribution.NewPodModel(r.Context(), envs.Get().GetStorage())
+		nm  = distribution.NewNodeModel(r.Context(), envs.Get().GetStorage())
+		pm  = distribution.NewPodModel(r.Context(), envs.Get().GetStorage())
 		nid = utils.Vars(r)["node"]
 		pid = utils.Vars(r)["pod"]
 	)
@@ -295,14 +295,14 @@ func NodeSetPodStatusH(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	keys:=strings.Split(pid, ":")
+	keys := strings.Split(pid, ":")
 	if len(keys) != 5 {
 		log.V(logLevel).Errorf("Handler: Node: invalid pod selflink err: %s", pid)
 		errors.HTTP.BadRequest(w)
 		return
 	}
 
-	pod, err := pm.Get(keys[1],keys[2],keys[3],keys[4])
+	pod, err := pm.Get(keys[1], keys[2], keys[3], keys[4])
 	if err != nil {
 		log.V(logLevel).Errorf("Handler: Node: pod not found selflink err: %s", pid)
 		errors.HTTP.NotFound(w)
@@ -310,10 +310,10 @@ func NodeSetPodStatusH(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := pm.SetStatus(pod, &types.PodStatus{
-		Stage: opts.Stage,
-		Message: opts.Message,
-		Steps: opts.Steps,
-		Network: opts.Network,
+		Stage:      opts.Stage,
+		Message:    opts.Message,
+		Steps:      opts.Steps,
+		Network:    opts.Network,
 		Containers: opts.Containers,
 	}); err != nil {
 		log.V(logLevel).Errorf("Handler: Node: get nodes list err: %s", err)
@@ -333,8 +333,8 @@ func NodeSetVolumeStatusH(w http.ResponseWriter, r *http.Request) {
 	log.V(logLevel).Debug("Handler: Node: node set volume state")
 
 	var (
-		nm = distribution.NewNodeModel(r.Context(), envs.Get().GetStorage())
-		vm = distribution.NewVolumeModel(r.Context(), envs.Get().GetStorage())
+		nm  = distribution.NewNodeModel(r.Context(), envs.Get().GetStorage())
+		vm  = distribution.NewVolumeModel(r.Context(), envs.Get().GetStorage())
 		nid = utils.Vars(r)["node"]
 		vid = utils.Vars(r)["volume"]
 	)
@@ -354,14 +354,14 @@ func NodeSetVolumeStatusH(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	keys:=strings.Split(vid, ":")
+	keys := strings.Split(vid, ":")
 	if len(keys) != 3 {
 		log.V(logLevel).Errorf("Handler: Node: invalid volume selflink err: %s", vid)
 		errors.HTTP.BadRequest(w)
 		return
 	}
 
-	volume, err := vm.Get(keys[1],keys[2])
+	volume, err := vm.Get(keys[1], keys[2])
 	if err != nil {
 		log.V(logLevel).Errorf("Handler: Node: pod not found selflink err: %s", vid)
 		errors.HTTP.NotFound(w)
@@ -369,7 +369,7 @@ func NodeSetVolumeStatusH(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := vm.SetStatus(volume, &types.VolumeStatus{
-		Stage: opts.Stage,
+		Stage:   opts.Stage,
 		Message: opts.Message,
 	}); err != nil {
 		log.V(logLevel).Errorf("Handler: Node: get nodes list err: %s", err)
@@ -410,14 +410,14 @@ func NodeSetRouteStatusH(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	keys:=strings.Split(vid, ":")
+	keys := strings.Split(vid, ":")
 	if len(keys) != 3 {
 		log.V(logLevel).Errorf("Handler: Node: invalid route selflink err: %s", vid)
 		errors.HTTP.BadRequest(w)
 		return
 	}
 
-	route, err := rm.Get(keys[1],keys[2])
+	route, err := rm.Get(keys[1], keys[2])
 	if err != nil {
 		log.V(logLevel).Errorf("Handler: Node: pod not found selflink err: %s", vid)
 		errors.HTTP.NotFound(w)
@@ -425,7 +425,7 @@ func NodeSetRouteStatusH(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := rm.SetStatus(route, &types.RouteStatus{
-		Stage: opts.Stage,
+		Stage:   opts.Stage,
 		Message: opts.Message,
 	}); err != nil {
 		log.V(logLevel).Errorf("Handler: Node: get nodes list err: %s", err)

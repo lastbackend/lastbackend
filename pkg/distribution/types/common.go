@@ -47,7 +47,7 @@ type MetaCreateOptions struct {
 }
 
 type MetaUpdateOptions struct {
-	Description *string            `json:"description",yaml:"description"`
+	Description *string           `json:"description",yaml:"description"`
 	Labels      map[string]string `json:"labels",yaml:"labels"`
 }
 

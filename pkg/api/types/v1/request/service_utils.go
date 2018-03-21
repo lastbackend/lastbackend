@@ -34,6 +34,30 @@ func (ServiceRequest) CreateOptions() *ServiceCreateOptions {
 	return new(ServiceCreateOptions)
 }
 
+func (s *ServiceCreateOptions) Validate() *errors.Err {
+	switch true {
+	case s.Name == nil:
+		return errors.New("service").BadParameter("name")
+	case !validator.IsServiceName(*s.Name):
+		return errors.New("service").BadParameter("name")
+	case s.Replicas == nil:
+		return errors.New("service").BadParameter("replicas")
+	case s.Replicas != nil && *s.Replicas < DEFAULT_REPLICAS_MIN:
+		return errors.New("service").BadParameter("replicas")
+	case s.Sources == nil:
+		return errors.New("service").BadParameter("source")
+	case s.Description != nil && len(*s.Description) > DEFAULT_DESCRIPTION_LIMIT:
+		return errors.New("service").BadParameter("description")
+	case s.Spec != nil:
+		if s.Spec.Memory != nil && *s.Spec.Memory < DEFAULT_MEMORY_MIN {
+			return errors.New("service").BadParameter("memory")
+		}
+	default:
+		return nil
+	}
+	return nil
+}
+
 func (s *ServiceCreateOptions) DecodeAndValidate(reader io.Reader) (*types.ServiceCreateOptions, *errors.Err) {
 
 	if reader == nil {
@@ -51,25 +75,8 @@ func (s *ServiceCreateOptions) DecodeAndValidate(reader io.Reader) (*types.Servi
 		return nil, errors.New("service").IncorrectJSON(err)
 	}
 
-	switch true {
-	case s.Name == nil:
-		return nil, errors.New("service").BadParameter("name")
-	case !validator.IsServiceName(*s.Name):
-		return nil, errors.New("service").BadParameter("name")
-	case s.Replicas == nil:
-		return nil, errors.New("service").BadParameter("replicas")
-	case s.Replicas != nil && *s.Replicas < DEFAULT_REPLICAS_MIN:
-		return nil, errors.New("service").BadParameter("replicas")
-	case s.Sources == nil:
-		return nil, errors.New("service").BadParameter("source")
-	case s.Description != nil && len(*s.Description) > DEFAULT_DESCRIPTION_LIMIT:
-		return nil, errors.New("service").BadParameter("description")
-	case s.Spec != nil:
-		if s.Spec.Memory != nil && *s.Spec.Memory < DEFAULT_MEMORY_MIN {
-			return nil, errors.New("service").BadParameter("memory")
-		}
-
-		// TODO: need checking anymore arguments
+	if err := s.Validate(); err != nil {
+		return nil, err
 	}
 
 	opts := new(types.ServiceCreateOptions)
@@ -102,8 +109,20 @@ func (ServiceRequest) UpdateOptions() *ServiceUpdateOptions {
 	return new(ServiceUpdateOptions)
 }
 
-func (s *ServiceUpdateOptions) ToJson() ([]byte, error) {
-	return json.Marshal(s)
+func (s *ServiceUpdateOptions) Validate() *errors.Err {
+	switch true {
+	case s.Sources == nil:
+		return errors.New("service").BadParameter("source")
+	case s.Description != nil && len(*s.Description) > DEFAULT_DESCRIPTION_LIMIT:
+		return errors.New("service").BadParameter("description")
+	case s.Spec != nil:
+		if s.Spec.Memory != nil && *s.Spec.Memory < DEFAULT_MEMORY_MIN {
+			return errors.New("service").BadParameter("memory")
+		}
+	default:
+		return nil
+	}
+	return nil
 }
 
 func (s *ServiceUpdateOptions) DecodeAndValidate(reader io.Reader) (*types.ServiceUpdateOptions, *errors.Err) {
@@ -123,17 +142,8 @@ func (s *ServiceUpdateOptions) DecodeAndValidate(reader io.Reader) (*types.Servi
 		return nil, errors.New("service").IncorrectJSON(err)
 	}
 
-	switch true {
-	case s.Sources == nil:
-		return nil, errors.New("service").BadParameter("source")
-	case s.Description != nil && len(*s.Description) > DEFAULT_DESCRIPTION_LIMIT:
-		return nil, errors.New("service").BadParameter("description")
-	case s.Spec != nil:
-		if s.Spec.Memory != nil && *s.Spec.Memory < DEFAULT_MEMORY_MIN {
-			return nil, errors.New("service").BadParameter("memory")
-		}
-
-		// TODO: need checking anymore arguments
+	if err := s.Validate(); err != nil {
+		return nil, err
 	}
 
 	opts := new(types.ServiceUpdateOptions)
@@ -158,8 +168,16 @@ func (s *ServiceUpdateOptions) DecodeAndValidate(reader io.Reader) (*types.Servi
 	return opts, nil
 }
 
+func (s *ServiceUpdateOptions) ToJson() ([]byte, error) {
+	return json.Marshal(s)
+}
+
 func (ServiceRequest) RemoveOptions() *ServiceRemoveOptions {
 	return new(ServiceRemoveOptions)
+}
+
+func (s *ServiceRemoveOptions) Validate() *errors.Err {
+	return nil
 }
 
 func (s *ServiceRemoveOptions) DecodeAndValidate(reader io.Reader) *errors.Err {
@@ -178,5 +196,5 @@ func (s *ServiceRemoveOptions) DecodeAndValidate(reader io.Reader) *errors.Err {
 		return errors.New("service").IncorrectJSON(err)
 	}
 
-	return nil
+	return s.Validate()
 }

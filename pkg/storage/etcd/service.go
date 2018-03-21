@@ -103,7 +103,7 @@ func (s *ServiceStorage) ListByNamespace(ctx context.Context, namespace string) 
 	}
 	defer destroy()
 
-	key := keyCreate(serviceStorage, fmt.Sprintf("%s:",namespace))
+	key := keyCreate(serviceStorage, fmt.Sprintf("%s:", namespace))
 	if err := client.MapList(ctx, key, filter, services); err != nil {
 		log.V(logLevel).Errorf("storage:etcd:service:> err: %s", namespace, err.Error())
 		return nil, err
@@ -224,7 +224,7 @@ func (s *ServiceStorage) Update(ctx context.Context, service *types.Service) err
 	defer destroy()
 
 	keyMeta := keyCreate(serviceStorage, s.keyGet(service), "meta")
-	if err := client.Upsert(ctx, keyMeta, service.Meta,  nil,0); err != nil {
+	if err := client.Upsert(ctx, keyMeta, service.Meta, nil, 0); err != nil {
 		log.V(logLevel).Errorf("storage:etcd:service:> update service err: %s", err.Error())
 		return err
 	}

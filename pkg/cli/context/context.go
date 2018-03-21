@@ -20,9 +20,9 @@ package context
 
 import (
 	"context"
+
 	"github.com/lastbackend/lastbackend/pkg/api/client"
 	"github.com/lastbackend/lastbackend/pkg/cli/config"
-	"github.com/lastbackend/lastbackend/pkg/cli/storage"
 )
 
 var _ctx ctx
@@ -41,15 +41,10 @@ func Mock() *ctx {
 }
 
 type ctx struct {
-	storage storage.IStorage
-	config  *config.Config
-	token   *string
-	mock    bool
-	client  *client.Client
-}
-
-func (c *ctx) SetStorage(storage storage.IStorage) {
-	c.storage = storage
+	config *config.Config
+	token  *string
+	mock   bool
+	client *client.Client
 }
 
 func (c *ctx) SetClient(client *client.Client) {
@@ -58,10 +53,6 @@ func (c *ctx) SetClient(client *client.Client) {
 
 func (c *ctx) GetClient() *client.Client {
 	return c.client
-}
-
-func (c *ctx) GetStorage() storage.IStorage {
-	return c.storage
 }
 
 func (c *ctx) SetSessionToken(token string) {

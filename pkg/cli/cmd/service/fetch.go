@@ -23,40 +23,26 @@ import (
 
 	"github.com/lastbackend/lastbackend/pkg/cli/context"
 	"github.com/lastbackend/lastbackend/pkg/cli/view"
-	"errors"
+	"github.com/spf13/cobra"
 )
 
-func FetchCmd(name string) {
+func FetchCmd(cmd *cobra.Command, args []string) {
 
-	ss, err := Fetch(name)
+	if len(args) != 1 {
+		cmd.Help()
+		return
+	}
+
+	var namespace string
+	cmd.Flags().StringVarP(&namespace, "namespace", "ns", "", "namespace")
+
+	cli := context.Get().GetClient()
+	response, err := cli.V1().Namespace(namespace).Service(args[0]).Get(context.Background())
 	if err != nil {
 		fmt.Println(err)
 		return
 	}
 
-	ss.Print()
-}
-
-func Fetch(name string) (*view.Service, error) {
-
-	stg := context.Get().GetStorage()
-	cli := context.Get().GetClient()
-
-	ns, err := stg.Namespace().Load()
-	if err != nil {
-		return nil, err
-	}
-
-	if ns == nil {
-		return nil, errors.New("namespace has not been selected")
-	}
-
-	response, err := cli.V1().Namespace(ns.Meta.Name).Service(name).Get(context.Background())
-	if err != nil {
-		return nil, err
-	}
-
 	ss := view.FromApiServiceView(response)
-
-	return ss, nil
+	ss.Print()
 }

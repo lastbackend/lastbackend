@@ -21,13 +21,13 @@ package etcd
 import (
 	"context"
 	"errors"
+	"fmt"
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 	"github.com/lastbackend/lastbackend/pkg/log"
 	"github.com/lastbackend/lastbackend/pkg/storage/storage"
-	"fmt"
 	"github.com/lastbackend/lastbackend/pkg/storage/store"
-	"time"
 	"regexp"
+	"time"
 )
 
 const triggerStorage string = "triggers"
@@ -110,7 +110,7 @@ func (s *TriggerStorage) ListByNamespace(ctx context.Context, namespace string) 
 	}
 	defer destroy()
 
-	keyTrigger := keyCreate(triggerStorage, fmt.Sprintf("%s:",namespace))
+	keyTrigger := keyCreate(triggerStorage, fmt.Sprintf("%s:", namespace))
 	if err := client.MapList(ctx, keyTrigger, filter, triggers); err != nil {
 		log.V(logLevel).Errorf("storage:etcd:trigger:> err: %s", namespace, err.Error())
 		return nil, err
@@ -149,7 +149,7 @@ func (s *TriggerStorage) ListByService(ctx context.Context, namespace, service s
 	}
 	defer destroy()
 
-	keyTrigger := keyCreate(triggerStorage, fmt.Sprintf("%s:%s:",namespace, service))
+	keyTrigger := keyCreate(triggerStorage, fmt.Sprintf("%s:%s:", namespace, service))
 	if err := client.MapList(ctx, keyTrigger, filter, triggers); err != nil {
 		log.V(logLevel).Errorf("storage:etcd:trigger:> err: %s", namespace, err.Error())
 		return nil, err
@@ -268,7 +268,7 @@ func (s *TriggerStorage) Update(ctx context.Context, trigger *types.Trigger) err
 	defer destroy()
 
 	keyMeta := keyCreate(triggerStorage, s.keyGet(trigger), "meta")
-	if err := client.Upsert(ctx, keyMeta, trigger.Meta,  nil,0); err != nil {
+	if err := client.Upsert(ctx, keyMeta, trigger.Meta, nil, 0); err != nil {
 		log.V(logLevel).Errorf("storage:etcd:trigger:> update trigger err: %s", err.Error())
 		return err
 	}
@@ -463,7 +463,6 @@ func (s *TriggerStorage) checkTriggerExists(ctx context.Context, trigger *types.
 		log.V(logLevel).Debugf("storage:etcd:trigger:> check trigger exists err: %s", err.Error())
 		return err
 	}
-
 
 	return nil
 }

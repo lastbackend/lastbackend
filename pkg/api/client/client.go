@@ -24,11 +24,15 @@ import (
 	"net/url"
 )
 
-func New(endpoint string) (*Client, error) {
+func New(endpoint, token string) (*Client, error) {
 	c := new(Client)
 
-	baseURL, _ := url.Parse(endpoint)
-	client, err := http.NewRESTClient(baseURL)
+	baseURL, err := url.Parse(endpoint)
+	if err != nil {
+		return nil, err
+	}
+
+	client, err := http.NewRESTClient(baseURL, token)
 	if err != nil {
 		return nil, err
 	}

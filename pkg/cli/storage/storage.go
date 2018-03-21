@@ -19,30 +19,23 @@
 package storage
 
 import (
-	"github.com/lastbackend/lastbackend/pkg/cli/storage/db"
+	"fmt"
+
+	"github.com/lastbackend/lastbackend/pkg/util/filesystem"
+	"github.com/lastbackend/lastbackend/pkg/util/homedir"
 )
 
-type Storage struct {
-	*NamespaceStorage
+var path = fmt.Sprintf("%s/.lastbackend/token", homedir.HomeDir())
+
+func SetToken(token string) error {
+	return filesystem.WriteStrToFile(path, token, 0644)
 }
 
-func (s *Storage) Namespace() INamespace {
-	if s == nil {
-		return nil
-	}
-	return s.NamespaceStorage
-}
+func GetToken() (string, error) {
 
-func Get() (*Storage, error) {
-
-	client, err := db.Init()
+	buf, err := filesystem.ReadFile(path)
 	if err != nil {
-		return nil, err
+		return "", err
 	}
-
-	store := new(Storage)
-
-	store.NamespaceStorage = newNamespaceStorage(client)
-
-	return store, nil
+	return string(buf), nil
 }

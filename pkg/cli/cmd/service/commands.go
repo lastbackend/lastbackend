@@ -22,87 +22,32 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var (
-	Sources string
-	Memory  int64
-)
-
-var ServiceList = &cobra.Command{
-	Use:   "list",
-	Short: "Display the services list",
-	Run: func(cmd *cobra.Command, args []string) {
-		ListCmd()
-	},
+var ServiceCreate = &cobra.Command{
+	Use:   "create",
+	Short: "Create service",
+	Run:   CreateCmd,
 }
 
 var ServiceFetch = &cobra.Command{
 	Use:   "info",
 	Short: "Service info by name",
-	Run: func(cmd *cobra.Command, args []string) {
+	Run:   FetchCmd,
+}
 
-		if len(args) != 1 {
-			cmd.Help()
-			return
-		}
-
-		FetchCmd(args[0])
-	},
+var ServiceList = &cobra.Command{
+	Use:   "list",
+	Short: "Display the services list",
+	Run:   ListCmd,
 }
 
 var ServiceUpdate = &cobra.Command{
 	Use:   "update",
 	Short: "Change configuration of the service",
-	Run: func(cmd *cobra.Command, args []string) {
-
-		var desc *string
-		var memory *int64
-		var sources *string
-
-		cmd.Flags().StringVarP(desc, "desc", "m", "", "Set memory")
-		cmd.Flags().Int64VarP(memory, "memory", "m", 0, "Set memory")
-		cmd.Flags().StringVarP(sources, "sources", "s", "", "Set sources")
-
-		if len(args) != 1 {
-			cmd.Help()
-			return
-		}
-
-		UpdateCmd(args[0], desc, sources, memory)
-	},
+	Run:   UpdateCmd,
 }
 
 var ServiceRemove = &cobra.Command{
 	Use:   "remove",
 	Short: "Remove service by Name",
-	Run: func(cmd *cobra.Command, args []string) {
-
-		if len(args) != 1 {
-			cmd.Help()
-			return
-		}
-
-		RemoveCmd(args[0])
-	},
-}
-
-var ServiceCreate = &cobra.Command{
-	Use:   "create",
-	Short: "Create service",
-	Run: func(cmd *cobra.Command, args []string) {
-
-		var desc *string
-		var memory *int64
-		var sources *string
-
-		cmd.Flags().StringVarP(desc, "desc", "m", "", "Set memory")
-		cmd.Flags().StringVarP(sources, "sources", "s", "", "Set sources")
-		cmd.Flags().Int64VarP(memory, "memory", "m", 0, "Set memory")
-
-		if len(args) != 1 {
-			cmd.Help()
-			return
-		}
-
-		CreateCmd(args[0], desc, sources, memory)
-	},
+	Run:   RemoveCmd,
 }

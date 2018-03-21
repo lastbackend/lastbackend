@@ -35,8 +35,8 @@ type INode interface {
 	Get(name string) (*types.Node, error)
 	GetSpec(node *types.Node) (*types.NodeSpec, error)
 
-	SetMeta(node *types.Node,  meta *types.NodeUpdateMetaOptions) error
-	SetState(node *types.Node, state types.NodeState)  error
+	SetMeta(node *types.Node, meta *types.NodeUpdateMetaOptions) error
+	SetState(node *types.Node, state types.NodeState) error
 	SetInfo(node *types.Node, info types.NodeInfo) error
 	SetNetwork(node *types.Node, network types.Subnet) error
 	SetOnline(node *types.Node) error
@@ -152,7 +152,7 @@ func (n *Node) SetOffline(node *types.Node) error {
 
 }
 
-func (n *Node) SetState(node *types.Node, state types.NodeState)  error {
+func (n *Node) SetState(node *types.Node, state types.NodeState) error {
 
 	node.State = state
 
