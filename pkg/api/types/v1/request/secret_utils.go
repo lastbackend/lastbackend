@@ -54,6 +54,10 @@ func (s *SecretCreateOptions) DecodeAndValidate(reader io.Reader) *errors.Err {
 	return nil
 }
 
+func (s *SecretCreateOptions) ToJson() ([]byte, error) {
+	return json.Marshal(s)
+}
+
 func (SecretRequest) UpdateOptions() *SecretUpdateOptions {
 	return new(SecretUpdateOptions)
 }
@@ -78,6 +82,10 @@ func (s *SecretUpdateOptions) DecodeAndValidate(reader io.Reader) *errors.Err {
 	//TODO: need checking arguments
 
 	return nil
+}
+
+func (s *SecretUpdateOptions) ToJson() ([]byte, error) {
+	return json.Marshal(s)
 }
 
 func (SecretRequest) RemoveOptions() *SecretRemoveOptions {

@@ -20,20 +20,32 @@ package namespace
 
 import (
 	"fmt"
-	v "github.com/lastbackend/lastbackend/pkg/cli/view"
+
+	"github.com/lastbackend/lastbackend/pkg/cli/context"
+	"github.com/lastbackend/lastbackend/pkg/cli/view"
 )
 
 func ListCmd() {
 
-	current, list, err := List()
+	list, err := List()
 	if err != nil {
 		fmt.Println(err)
 		return
 	}
 
-	list.Print(current)
+	list.Print()
 }
 
-func List() (string, *v.NamespaceList, error) {
-	return "", nil, nil
+func List() (*view.NamespaceList, error) {
+
+	cli := context.Get().GetClient()
+
+	response, err := cli.V1().Namespace().List(context.Background())
+	if err != nil {
+		return nil, err
+	}
+
+	list := view.FromApiNamespaceListView(response)
+
+	return list, nil
 }

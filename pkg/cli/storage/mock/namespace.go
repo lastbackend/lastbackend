@@ -28,7 +28,7 @@ const nsStorage = "mockns"
 
 // Namespace type for interface in interfaces folder
 type NamespaceStorage struct {
-	storage.INspace
+	storage.INamespace
 	client *mockdb.DB
 }
 

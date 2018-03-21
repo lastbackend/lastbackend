@@ -28,6 +28,7 @@ import (
 	"net/http"
 	"net/url"
 	"path"
+	"time"
 )
 
 type Request struct {
@@ -64,6 +65,7 @@ func NewRequest(client HTTPClient, method string, baseURL *url.URL) *Request {
 		baseURL:    baseURL,
 		pathPrefix: pathPrefix,
 	}
+
 	return r
 }
 
@@ -89,7 +91,9 @@ func (r *Request) Do() Result {
 
 	client := r.client
 	if client == nil {
-		client = http.DefaultClient
+		client = &http.Client{
+			Timeout: time.Second * 10,
+		}
 	}
 
 	u := r.URL().String()
@@ -97,15 +101,18 @@ func (r *Request) Do() Result {
 	if err != nil {
 		return Result{err: r.err}
 	}
+
 	if r.ctx != nil {
 		req = req.WithContext(r.ctx)
 	}
+
 	req.Header = r.headers
 
 	resp, err := client.Do(req)
 	if err != nil {
 		return Result{err: r.err}
 	}
+
 	result = r.transformResponse(resp, req)
 
 	return result
@@ -123,9 +130,12 @@ func (r Result) Raw() ([]byte, error) {
 	return r.body, r.err
 }
 
-func (r Result) StatusCode(statusCode *int) Result {
-	*statusCode = r.statusCode
-	return r
+func (r Result) StatusCode() int {
+	return r.statusCode
+}
+
+func (r Result) Error() error {
+	return r.err
 }
 
 func (r *Request) transformResponse(resp *http.Response, req *http.Request) Result {
@@ -133,6 +143,7 @@ func (r *Request) transformResponse(resp *http.Response, req *http.Request) Resu
 
 	if resp.Body != nil {
 		data, err := ioutil.ReadAll(resp.Body)
+
 		switch err.(type) {
 		case nil:
 			body = data
@@ -146,6 +157,7 @@ func (r *Request) transformResponse(resp *http.Response, req *http.Request) Resu
 			}
 		}
 	}
+
 	contentType := resp.Header.Get("Content-Type")
 	return Result{
 		body:        body,

@@ -28,7 +28,6 @@ import (
 
 type NodeRequest struct{}
 
-
 func (NodeRequest) NodeInfoOptions() *NodeInfoOptions {
 	return new(NodeInfoOptions)
 }
@@ -149,8 +148,16 @@ func (s *NodeRouteStatusOptions) DecodeAndValidate(reader io.Reader) *errors.Err
 	return nil
 }
 
+func (s *NodeRouteStatusOptions) ToJson() ([]byte, error) {
+	return json.Marshal(s)
+}
+
 func (NodeRequest) UpdateOptions() *NodeUpdateOptions {
 	return new(NodeUpdateOptions)
+}
+
+func (s *NodeUpdateOptions) ToJson() ([]byte, error) {
+	return json.Marshal(s)
 }
 
 func (s *NodeUpdateOptions) DecodeAndValidate(reader io.Reader) *errors.Err {

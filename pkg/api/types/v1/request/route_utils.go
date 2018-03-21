@@ -54,6 +54,10 @@ func (s *RouteCreateOptions) DecodeAndValidate(reader io.Reader) *errors.Err {
 	return nil
 }
 
+func (s *RouteCreateOptions) ToJson() ([]byte, error) {
+	return json.Marshal(s)
+}
+
 func (RouteRequest) UpdateOptions() *RouteUpdateOptions {
 	return new(RouteUpdateOptions)
 }
@@ -78,6 +82,10 @@ func (s *RouteUpdateOptions) DecodeAndValidate(reader io.Reader) *errors.Err {
 	//TODO: need checking arguments
 
 	return nil
+}
+
+func (s *RouteUpdateOptions) ToJson() ([]byte, error) {
+	return json.Marshal(s)
 }
 
 func (RouteRequest) RemoveOptions() *RouteRemoveOptions {

@@ -2,7 +2,7 @@
 // Last.Backend LLC CONFIDENTIAL
 // __________________
 //
-// [2014] - [2017] Last.Backend LLC
+// [2014] - [2018] Last.Backend LLC
 // All Rights Reserved.
 //
 // NOTICE:  All information contained herein is, and remains
@@ -21,10 +21,13 @@ package v1
 import (
 	"context"
 
+	"github.com/lastbackend/lastbackend/pkg/api/client/http"
 	"github.com/lastbackend/lastbackend/pkg/api/client/interfaces"
 	rv1 "github.com/lastbackend/lastbackend/pkg/api/types/v1/request"
 	vv1 "github.com/lastbackend/lastbackend/pkg/api/types/v1/views"
-	"github.com/lastbackend/lastbackend/pkg/api/client/http"
+	"fmt"
+	"encoding/json"
+	"github.com/lastbackend/lastbackend/pkg/distribution/errors"
 )
 
 type SecretClient struct {
@@ -35,22 +38,144 @@ type SecretClient struct {
 }
 
 func (s *SecretClient) Create(ctx context.Context, opts *rv1.SecretCreateOptions) (*vv1.Secret, error) {
-	return nil, nil
+
+	body, err := opts.ToJson()
+	if err != nil {
+		return nil, err
+	}
+
+	req := s.client.Post(fmt.Sprintf("/namespace/%s/secret", s.namespace)).
+		AddHeader("Content-Type", "application/json").
+		Body(body).
+		Do()
+
+	if err := req.Error(); err != nil {
+		return nil, err
+	}
+
+	buf, err := req.Raw()
+	if err != nil {
+		return nil, err
+	}
+
+	if code := req.StatusCode(); 200 > code || code > 299 {
+		var e *errors.Http
+		if err := json.Unmarshal(buf, &e); err != nil {
+			return nil, err
+		}
+		return nil, errors.New(e.Message)
+	}
+
+	var ss = new(vv1.Secret)
+
+	if err := json.Unmarshal(buf, &ss); err != nil {
+		return nil, err
+	}
+
+	return ss, nil
 }
 
 func (s *SecretClient) List(ctx context.Context) (*vv1.SecretList, error) {
-	return nil, nil
+
+	req := s.client.Get(fmt.Sprintf("/namespace/%s/secret", s.namespace)).
+		AddHeader("Content-Type", "application/json").
+		Do()
+
+	buf, err := req.Raw()
+	if err != nil {
+		return nil, err
+	}
+
+	var sl *vv1.SecretList
+
+	if err := json.Unmarshal(buf, &sl); err != nil {
+		return nil, err
+	}
+
+	return sl, nil
 }
 
 func (s *SecretClient) Get(ctx context.Context) (*vv1.Secret, error) {
-	return nil, nil
+
+	req := s.client.Get(fmt.Sprintf("/namespace/%s/secret/%s", s.namespace, s.name)).
+		AddHeader("Content-Type", "application/json").
+		Do()
+
+	buf, err := req.Raw()
+	if err != nil {
+		return nil, err
+	}
+
+	if code := req.StatusCode(); 200 > code || code > 299 {
+		var e *errors.Http
+		if err := json.Unmarshal(buf, &e); err != nil {
+			return nil, err
+		}
+		return nil, errors.New(e.Message)
+	}
+
+	var ss *vv1.Secret
+
+	if err := json.Unmarshal(buf, &ss); err != nil {
+		return nil, err
+	}
+
+	return ss, nil
 }
 
 func (s *SecretClient) Update(ctx context.Context, opts *rv1.SecretUpdateOptions) (*vv1.Secret, error) {
-	return nil, nil
+
+	body, err := opts.ToJson()
+	if err != nil {
+		return nil, err
+	}
+
+	req := s.client.Put(fmt.Sprintf("/namespace/%s/secret/%s", s.namespace, s.name)).
+		AddHeader("Content-Type", "application/json").
+		Body(body).
+		Do()
+
+	buf, err := req.Raw()
+	if err != nil {
+		return nil, err
+	}
+
+	if code := req.StatusCode(); 200 > code || code > 299 {
+		var e *errors.Http
+		if err := json.Unmarshal(buf, &e); err != nil {
+			return nil, err
+		}
+		return nil, errors.New(e.Message)
+	}
+
+	var ss *vv1.Secret
+
+	if err := json.Unmarshal(buf, &ss); err != nil {
+		return nil, err
+	}
+
+	return ss, nil
 }
 
 func (s *SecretClient) Remove(ctx context.Context, opts *rv1.SecretRemoveOptions) error {
+
+	req := s.client.Delete(fmt.Sprintf("/namespace/%s/secret/%s", s.namespace, s.name)).
+		AddHeader("Content-Type", "application/json").
+		Do()
+
+	buf, err := req.Raw()
+	if err != nil {
+		return err
+	}
+
+	if code := req.StatusCode(); 200 > code || code > 299 {
+		var e *errors.Http
+		if err := json.Unmarshal(buf, &e); err != nil {
+			return err
+		}
+		return errors.New(e.Message)
+	}
+
 	return nil
 }
 

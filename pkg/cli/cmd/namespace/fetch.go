@@ -16,4 +16,36 @@
 // from Last.Backend LLC.
 //
 
-package cluster
+package namespace
+
+import (
+	"fmt"
+
+	"github.com/lastbackend/lastbackend/pkg/cli/context"
+	"github.com/lastbackend/lastbackend/pkg/cli/view"
+)
+
+func FetchCmd(name string) {
+
+	ns, err := Fetch(name)
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+
+	ns.Print()
+}
+
+func Fetch(name string) (*view.Namespace, error) {
+
+	cli := context.Get().GetClient()
+
+	response, err := cli.V1().Namespace(name).Get(context.Background())
+	if err != nil {
+		return nil, err
+	}
+
+	ns := view.FromApiNamespaceView(response)
+
+	return ns, nil
+}

@@ -2,7 +2,7 @@
 // Last.Backend LLC CONFIDENTIAL
 // __________________
 //
-// [2014] - [2017] Last.Backend LLC
+// [2014] - [2018] Last.Backend LLC
 // All Rights Reserved.
 //
 // NOTICE:  All information contained herein is, and remains
@@ -24,24 +24,67 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/api/client/http"
 	"github.com/lastbackend/lastbackend/pkg/api/client/interfaces"
 	vv1 "github.com/lastbackend/lastbackend/pkg/api/types/v1/views"
+	"fmt"
+	"encoding/json"
+	"github.com/lastbackend/lastbackend/pkg/distribution/errors"
 )
 
 type PodClient struct {
 	interfaces.Pod
-	req        http.Interface
+	client     http.Interface
 	namespace  string
 	service    string
 	deployment string
 }
 
 func (s *PodClient) List(ctx context.Context) (*vv1.PodList, error) {
-	return nil, nil
+
+	req := s.client.Get(fmt.Sprintf("/namespace/%s/service/%s/deploymet/%s/pod", s.namespace, s.service, s.deployment)).
+		AddHeader("Content-Type", "application/json").
+		Do()
+
+	buf, err := req.Raw()
+	if err != nil {
+		return nil, err
+	}
+
+	var pl *vv1.PodList
+
+	if err := json.Unmarshal(buf, &pl); err != nil {
+		return nil, err
+	}
+
+	return pl, nil
 }
 
-func (s *PodClient) Get(ctx context.Context, na string) (*vv1.Pod, error) {
-	return nil, nil
+func (s *PodClient) Get(ctx context.Context, name string) (*vv1.Pod, error) {
+
+	req := s.client.Get(fmt.Sprintf("/namespace/%s/service/%s/deploymet/%s/pod/%s", s.namespace, s.service, s.deployment, name)).
+		AddHeader("Content-Type", "application/json").
+		Do()
+
+	buf, err := req.Raw()
+	if err != nil {
+		return nil, err
+	}
+
+	if code := req.StatusCode(); 200 > code || code > 299 {
+		var e *errors.Http
+		if err := json.Unmarshal(buf, &e); err != nil {
+			return nil, err
+		}
+		return nil, errors.New(e.Message)
+	}
+
+	var ps *vv1.Pod
+
+	if err := json.Unmarshal(buf, &ps); err != nil {
+		return nil, err
+	}
+
+	return ps, nil
 }
 
-func newPodClient(req http.Interface, namespace, service, deployment string) *PodClient {
-	return &PodClient{req: req, namespace: namespace, service: service, deployment: deployment}
+func newPodClient(client http.Interface, namespace, service, deployment string) *PodClient {
+	return &PodClient{client: client, namespace: namespace, service: service, deployment: deployment}
 }

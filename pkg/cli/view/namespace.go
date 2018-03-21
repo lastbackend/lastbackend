@@ -19,42 +19,42 @@
 package view
 
 import (
-	"github.com/lastbackend/lastbackend/pkg/util/table"
 	"github.com/lastbackend/lastbackend/pkg/api/types/v1/views"
+	"github.com/lastbackend/lastbackend/pkg/util/table"
 )
 
 type NamespaceList []*Namespace
 type Namespace struct {
-	Meta *NamespaceMeta `json:"meta"`
+	Meta NamespaceMeta `json:"meta"`
 }
 
 type NamespaceMeta struct {
-	ID          string `json:"id"`
 	Name        string `json:"name"`
 	Description string `json:"description"`
-	ClusterID   string `json:"cluster"`
-	AccountID   string `json:"account"`
-	Owner       string `json:"owner"`
 	Endpoint    string `json:"endpoint"`
 }
 
-func (nl *NamespaceList) Print(namespace string) {
+func (n *Namespace) Print() {
 
-	t := table.New([]string{"NAME", "DESCRIPTION", "OWNER", "ENDPOINT"})
+	println()
+	table.PrintHorizontal(map[string]interface{}{
+		"NAME":        n.Meta.Name,
+		"DESCRIPTION": n.Meta.Description,
+		"ENDPOINT":    n.Meta.Endpoint,
+	})
+	println()
+}
+
+func (nl *NamespaceList) Print() {
+
+	t := table.New([]string{"NAME", "DESCRIPTION", "ENDPOINT"})
 	t.VisibleHeader = true
 
 	for _, n := range *nl {
-
 		var data = map[string]interface{}{}
 
-		if namespace == n.Meta.Name {
-			data["NAME"] = "* " + n.Meta.Name
-		} else {
-			data["NAME"] = n.Meta.Name
-		}
-
+		data["NAME"] = n.Meta.Name
 		data["DESCRIPTION"] = n.Meta.Description
-		data["OWNER"] = n.Meta.Owner
 		data["ENDPOINT"] = n.Meta.Endpoint
 
 		t.AddRow(data)
@@ -65,20 +65,18 @@ func (nl *NamespaceList) Print(namespace string) {
 	println()
 }
 
-func (n *Namespace) Print() {
-
-	println()
-	table.PrintHorizontal(map[string]interface{}{
-		"NAME":        n.Meta.Name,
-		"DESCRIPTION": n.Meta.Description,
-		"OWNER":       n.Meta.Owner,
-		"ENDPOINT":    n.Meta.Endpoint,
-	})
-	println()
+func FromApiNamespaceView(namespace *views.Namespace) *Namespace {
+	var item = new(Namespace)
+	item.Meta.Name = namespace.Meta.Name
+	item.Meta.Description = namespace.Meta.Description
+	item.Meta.Endpoint = namespace.Meta.Endpoint
+	return item
 }
 
-func FromApiNamespaceView(namespace *views.Namespace) *Namespace {
-	var ns = new(Namespace)
-	ns.Meta.Name = namespace.Meta.Name
-	return ns
+func FromApiNamespaceListView(namespaces *views.NamespaceList) *NamespaceList {
+	var items = make(NamespaceList, 0)
+	for _, namespace := range *namespaces {
+		items = append(items, FromApiNamespaceView(namespace))
+	}
+	return &items
 }

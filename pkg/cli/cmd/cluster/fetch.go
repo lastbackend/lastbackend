@@ -16,18 +16,36 @@
 // from Last.Backend LLC.
 //
 
-package storage
+package cluster
 
 import (
-	v "github.com/lastbackend/lastbackend/pkg/cli/view"
+	"fmt"
+
+	"github.com/lastbackend/lastbackend/pkg/cli/context"
+	"github.com/lastbackend/lastbackend/pkg/cli/view"
 )
 
-type IStorage interface {
-	Namespace() INamespace
+func FetchCmd() {
+
+	cl, err := Fetch()
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+
+	cl.Print()
 }
 
-type INamespace interface {
-	Save(ns *v.Namespace) error
-	Load() (*v.Namespace, error)
-	Remove() error
+func Fetch() (*view.Cluster, error) {
+
+	cli := context.Get().GetClient()
+
+	response, err := cli.V1().Cluster().Get(context.Background())
+	if err != nil {
+		return nil, err
+	}
+
+	cs := view.FromApiClusterView(response)
+
+	return cs, nil
 }
