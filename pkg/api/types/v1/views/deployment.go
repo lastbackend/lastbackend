@@ -31,10 +31,9 @@ import (
 type Deployment struct {
 	ID       string                 `json:"id"`
 	Meta     DeploymentMeta         `json:"meta"`
-	Status   string                 `json:"status"`
+	Status   DeploymentStatusInfo   `json:"status"`
 	Spec     DeploymentSpec         `json:"spec"`
 	Sources  DeploymentSources      `json:"sources"`
-	State    DeploymentStateInfo    `json:"state"`
 	Replicas DeploymentReplicasInfo `json:"replicas"`
 	Pods     map[string]Pod         `json:"pods"`
 }
@@ -57,13 +56,6 @@ type DeploymentMeta struct {
 }
 
 type DeploymentSources struct {
-	// Image sources
-	Image DeploymentSourcesImage `json:"image"`
-	// Deployment source lastbackend repo
-	Repo DeploymentSourcesRepo `json:"repo"`
-}
-
-type DeploymentSourcesImage struct {
 	// Image namespace name
 	Namespace string `json:"namespace"`
 	// Image tag
@@ -72,12 +64,6 @@ type DeploymentSourcesImage struct {
 	Hash string `json:"hash"`
 }
 
-type DeploymentSourcesRepo struct {
-	// Deployment source lastbackend repo ID
-	ID string `json:"id"`
-	// Build sources info
-	Build string `json:"build"`
-}
 
 type DeploymentSpec struct {
 	Strategy types.SpecStrategy `json:"strategy"`
@@ -87,11 +73,9 @@ type DeploymentSpec struct {
 	Template types.SpecTemplate `json:"template"`
 }
 
-type DeploymentStateInfo struct {
-	Provision bool `json:"provision"`
-	Error     bool `json:"error"`
-	Destroy   bool `json:"destroy"`
-	Cancel    bool `json:"cancel"`
+type DeploymentStatusInfo struct {
+	Stage string `json:"stage"`
+	Message string `json:"message"`
 }
 
 type DeploymentReplicasInfo struct {

@@ -21,7 +21,7 @@ package request
 import "github.com/lastbackend/lastbackend/pkg/distribution/types"
 
 type NodeUpdateOptions struct {
-	Meta *types.NodeUpdateMetaOptions
+	Meta *types.NodeUpdateMetaOptions `json:"meta"`
 }
 
 type NodeInfoOptions struct {
@@ -37,7 +37,7 @@ type NodeInfoOptions struct {
 	InternalIP string `json:"internal_ip"`
 }
 
-type NodeStateOptions struct {
+type NodeStatusOptions struct {
 	// Node state capacity
 	Capacity types.NodeResources `json:"capacity"`
 	// Node state allocated

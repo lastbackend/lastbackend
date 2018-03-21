@@ -466,7 +466,7 @@ func TestNodeStorage_Update(t *testing.T) {
 	}
 }
 
-func TestNodeStorage_SetState(t *testing.T) {
+func TestNodeStorage_SetStatus(t *testing.T) {
 
 	var (
 		stg = newNodeStorage()
@@ -476,7 +476,7 @@ func TestNodeStorage_SetState(t *testing.T) {
 		n3  = getNodeAsset("test2", "", false)
 	)
 
-	n2.State.Capacity.Containers++
+	n2.Status.Capacity.Containers++
 
 	type fields struct {
 		stg storage.Node
@@ -524,25 +524,25 @@ func TestNodeStorage_SetState(t *testing.T) {
 	for _, tt := range tests {
 
 		if err := stg.Clear(ctx); err != nil {
-			t.Errorf("NodeStorage.SetState() storage setup error = %v", err)
+			t.Errorf("NodeStorage.SetStatus() storage setup error = %v", err)
 			return
 		}
 
 		if err := stg.Insert(ctx, &n1); err != nil {
-			t.Errorf("NodeStorage.SetState() storage setup error = %v", err)
+			t.Errorf("NodeStorage.SetStatus() storage setup error = %v", err)
 			return
 		}
 
 		t.Run(tt.name, func(t *testing.T) {
-			err := tt.fields.stg.SetState(tt.args.ctx, tt.args.node)
+			err := tt.fields.stg.SetStatus(tt.args.ctx, tt.args.node)
 			if err != nil {
 				if !tt.wantErr {
-					t.Errorf("NodeStorage.SetState() error = %v, want no error", err.Error())
+					t.Errorf("NodeStorage.SetStatus() error = %v, want no error", err.Error())
 					return
 				}
 
 				if tt.wantErr && tt.err != err.Error() {
-					t.Errorf("NodeStorage.SetState() error = %v, want %v", err.Error(), tt.err)
+					t.Errorf("NodeStorage.SetStatus() error = %v, want %v", err.Error(), tt.err)
 					return
 				}
 
@@ -550,13 +550,13 @@ func TestNodeStorage_SetState(t *testing.T) {
 			}
 
 			if tt.wantErr {
-				t.Errorf("NodeStorage.SetState() error = %v, want %v", err.Error(), tt.err)
+				t.Errorf("NodeStorage.SetStatus() error = %v, want %v", err.Error(), tt.err)
 				return
 			}
 
 			got, _ := tt.fields.stg.Get(tt.args.ctx, tt.args.node.Meta.Name)
 			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("NodeStorage.SetState() = %v, want %v", got, tt.want)
+				t.Errorf("NodeStorage.SetStatus() = %v, want %v", got, tt.want)
 				return
 			}
 
@@ -1985,7 +1985,7 @@ func getNodeAsset(name, desc string, online bool) types.Node {
 		Info: types.NodeInfo{
 			Hostname: name,
 		},
-		State: types.NodeState{
+		Status: types.NodeStatus{
 			Capacity: types.NodeResources{
 				Containers: 2,
 				Pods:       2,

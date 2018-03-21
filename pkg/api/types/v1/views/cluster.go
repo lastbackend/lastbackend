@@ -23,8 +23,8 @@ import (
 )
 
 type Cluster struct {
-	Meta  ClusterMeta  `json:"meta"`
-	State ClusterState `json:"state"`
+	Meta  ClusterMeta   `json:"meta"`
+	Status ClusterStatus `json:"status"`
 }
 
 type ClusterMeta struct {
@@ -37,7 +37,7 @@ type ClusterMeta struct {
 	Updated     time.Time         `json:"updated"`
 }
 
-type ClusterState struct {
+type ClusterStatus struct {
 	Nodes struct {
 		Total   int `json:"total"`
 		Online  int `json:"online"`

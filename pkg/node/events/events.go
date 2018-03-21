@@ -40,20 +40,21 @@ func NewInfoEvent(ctx context.Context) error {
 	return c.SetInfo(ctx, opts)
 }
 
-// NewStateEvent - send node state event after
+// NewStatusEvent - send node state event after
 // node is successful accepted and each hour
-func NewStateEvent(ctx context.Context) error {
+func NewStatusEvent(ctx context.Context) error {
 	var (
 		c = envs.Get().GetClient()
 	)
 
-	opts := v1.Request().Node().NodeStateOptions()
-	return c.SetState(ctx, opts)
+	opts := v1.Request().Node().NodeStatusOptions()
+	return c.SetStatus(ctx, opts)
 }
 
-// NewPodStateEvent - send pod state event after
+
+// NewPodStatusEvent - send pod state event after
 // node is successful accepted and each hour
-func NewPodStateEvent(ctx context.Context, pod *types.Pod) error {
+func NewPodStatusEvent(ctx context.Context, pod *types.Pod) error {
 
 	var (
 		c = envs.Get().GetClient()
@@ -67,12 +68,12 @@ func NewPodStateEvent(ctx context.Context, pod *types.Pod) error {
 	log.Debugf("Event: Pod state event state: %s", pod.Meta.Name)
 
 	opts := v1.Request().Node().NodePodStatusOptions()
-	return c.SetPodState(ctx, opts)
+	return c.SetPodStatus(ctx, opts)
 }
 
-// NewRouteStateEvent - send pod state event after
+// NewRouteStatusEvent - send pod state event after
 // node is successful accepted and each hour
-func NewRouteStateEvent(ctx context.Context, route *types.Route) error {
+func NewRouteStatusEvent(ctx context.Context, route *types.Route) error {
 
 	var (
 		c = envs.Get().GetClient()
@@ -86,12 +87,12 @@ func NewRouteStateEvent(ctx context.Context, route *types.Route) error {
 	log.Debugf("Event: route state event state: %s", route.Meta.Name)
 
 	opts := v1.Request().Node().NodeRouteStatusOptions()
-	return c.SetRouteState(ctx, opts)
+	return c.SetRouteStatus(ctx, opts)
 }
 
-// NewRouteStateEvent - send pod state event after
+// NewRouteStatusEvent - send pod state event after
 // node is successful accepted and each hour
-func NewVolumeStateEvent(ctx context.Context, volume *types.Volume) error {
+func NewVolumeStatusEvent(ctx context.Context, volume *types.Volume) error {
 
 	var (
 		c = envs.Get().GetClient()
@@ -105,5 +106,5 @@ func NewVolumeStateEvent(ctx context.Context, volume *types.Volume) error {
 	log.Debugf("Event: volume state event state: %s", volume.Meta.Name)
 
 	opts := v1.Request().Node().NodeVolumeStatusOptions()
-	return c.SetVolumeState(ctx, opts)
+	return c.SetVolumeStatus(ctx, opts)
 }

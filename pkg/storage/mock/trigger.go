@@ -85,13 +85,13 @@ func (s *TriggerStorage) Insert(ctx context.Context, trigger *types.Trigger) err
 }
 
 // Update trigger state
-func (s *TriggerStorage) SetState(ctx context.Context, trigger *types.Trigger) error {
+func (s *TriggerStorage) SetStatus(ctx context.Context, trigger *types.Trigger) error {
 
 	if err := s.checkTriggerExists(trigger); err != nil {
 		return err
 	}
 
-	s.data[s.keyGet(trigger)].State = trigger.State
+	s.data[s.keyGet(trigger)].Status = trigger.Status
 
 	return nil
 }
@@ -141,7 +141,7 @@ func (s *TriggerStorage) WatchSpec(ctx context.Context, trigger chan *types.Trig
 }
 
 // Watch trigger state changes
-func (s *TriggerStorage) WatchState(ctx context.Context, trigger chan *types.Trigger) error {
+func (s *TriggerStorage) WatchStatus(ctx context.Context, trigger chan *types.Trigger) error {
 	return nil
 }
 

@@ -23,7 +23,7 @@ import "time"
 type Route struct {
 	Meta  RouteMeta  `json:"meta"`
 	Spec  RouteSpec  `json:"spec"`
-	State RouteState `json:"state"`
+	Status RouteStatus `json:"status"`
 }
 
 type RouteMeta struct {
@@ -46,9 +46,9 @@ type RouteRule struct {
 	Port     int    `json:"port"`
 }
 
-type RouteState struct {
-	Destroy   bool `json:"destroy"`
-	Provision bool `json:"provision"`
+type RouteStatus struct {
+	Stage string `json:"stage"`
+	Message string `json:"message"`
 }
 
 type RouteList map[string]*Route

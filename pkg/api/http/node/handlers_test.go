@@ -33,6 +33,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"testing"
+	"strings"
 )
 
 // Testing NodeList handler
@@ -163,6 +164,7 @@ func TestNodeGetH(t *testing.T) {
 			expectedBody: string(v),
 			expectedCode: http.StatusOK,
 		},
+
 	}
 
 	for _, tc := range tests {
@@ -393,28 +395,713 @@ func TestNodeRemoveH(t *testing.T) {
 }
 
 func TestNodeUpdateH(t *testing.T) {
+	stg, _ := storage.GetMock()
+	envs.Get().SetStorage(stg)
+	viper.Set("verbose", 0)
+	strPointer := func(s string) *string { return &s }
 
+	var (
+		ctx = context.Background()
+
+		n1 = getNodeAsset("test1", "", true)
+		n2 = getNodeAsset("test2", "", true)
+		uo = v1.Request().Node().UpdateOptions()
+	)
+
+	uo.Meta = &types.NodeUpdateMetaOptions{
+		Provider: strPointer("test"),
+	}
+
+	v, err := v1.View().Node().New(&n1).ToJson()
+	assert.NoError(t, err)
+
+	type args struct {
+		ctx  context.Context
+		node string
+	}
+
+	tests := []struct {
+		name         string
+		args         args
+		headers      map[string]string
+		handler      func(http.ResponseWriter, *http.Request)
+		data         string
+		description  string
+		expectedBody string
+		expectedCode int
+	}{
+		{
+			name:         "checking update node failed: not found",
+			args:         args{ctx, n2.Meta.Name},
+			handler:      node.NodeUpdateH,
+			data:         uo.ToJson(),
+			expectedBody: "{\"code\":404,\"status\":\"Not Found\",\"message\":\"Node not found\"}",
+			expectedCode: http.StatusNotFound,
+		},
+		{
+			name:         "checking update node successfully",
+			args:         args{ctx, n1.Meta.Name},
+			handler:      node.NodeUpdateH,
+			data:         uo.ToJson(),
+			description:  "successfully",
+			expectedBody: string(v),
+			expectedCode: http.StatusOK,
+		},
+	}
+
+	for _, tc := range tests {
+
+		err = envs.Get().GetStorage().Node().Clear(ctx)
+		assert.NoError(t, err)
+
+		err = envs.Get().GetStorage().Node().Insert(ctx, &n1)
+		assert.NoError(t, err)
+
+		t.Run(tc.name, func(t *testing.T) {
+
+			// Create assert request to pass to our handler. We don't have any query parameters for now, so we'll
+			// pass 'nil' as the third parameter.
+			req, err := http.NewRequest("PUT", fmt.Sprintf("/cluster/node/%s", tc.args.node), strings.NewReader(tc.data))
+			assert.NoError(t, err)
+
+			if tc.headers != nil {
+				for key, val := range tc.headers {
+					req.Header.Set(key, val)
+				}
+			}
+
+			r := mux.NewRouter()
+			r.HandleFunc("/cluster/node/{node}", tc.handler)
+
+			setRequestVars(r, req)
+
+			// We create assert ResponseRecorder (which satisfies http.ResponseWriter) to record the response.
+			res := httptest.NewRecorder()
+
+			// Our handlers satisfy http.Handler, so we can call their ServeHTTP method
+			// directly and pass in our Request and ResponseRecorder.
+			r.ServeHTTP(res, req)
+
+			// Check the status code is what we expect.
+			assert.Equal(t, tc.expectedCode, res.Code, tc.description)
+
+			body, err := ioutil.ReadAll(res.Body)
+			assert.NoError(t, err)
+			assert.Equal(t, tc.expectedBody, string(body), tc.description)
+
+			if tc.expectedCode == http.StatusOK {
+				n, err := envs.Get().GetStorage().Node().Get(ctx, tc.args.node)
+				assert.NoError(t, err)
+				assert.Equal(t, *uo.Meta.Provider, n.Meta.Provider, "provider not equal")
+			}
+
+		})
+	}
 }
 
 func TestNodeSetInfoH(t *testing.T) {
+	stg, _ := storage.GetMock()
+	envs.Get().SetStorage(stg)
+	viper.Set("verbose", 0)
 
+	var (
+		err error
+		ctx = context.Background()
+
+		n1 = getNodeAsset("test1", "", true)
+		n2 = getNodeAsset("test2", "", true)
+		uo = v1.Request().Node().NodeInfoOptions()
+	)
+
+	uo.Hostname = "test2"
+	uo.Architecture = "mac"
+
+	type args struct {
+		ctx  context.Context
+		node string
+	}
+
+	tests := []struct {
+		name         string
+		args         args
+		headers      map[string]string
+		handler      func(http.ResponseWriter, *http.Request)
+		data         string
+		description  string
+		expectedBody string
+		expectedCode int
+	}{
+		{
+			name:         "checking update node failed: not found",
+			args:         args{ctx, n2.Meta.Name},
+			handler:      node.NodeSetInfoH,
+			data:         uo.ToJson(),
+			expectedBody: "{\"code\":404,\"status\":\"Not Found\",\"message\":\"Node not found\"}",
+			expectedCode: http.StatusNotFound,
+		},
+		{
+			name:         "checking update node successfully",
+			args:         args{ctx, n1.Meta.Name},
+			handler:      node.NodeSetInfoH,
+			data:         uo.ToJson(),
+			description:  "successfully",
+			expectedBody: "",
+			expectedCode: http.StatusOK,
+		},
+	}
+
+	for _, tc := range tests {
+
+		err = envs.Get().GetStorage().Node().Clear(ctx)
+		assert.NoError(t, err)
+
+		err = envs.Get().GetStorage().Node().Insert(ctx, &n1)
+		assert.NoError(t, err)
+
+		t.Run(tc.name, func(t *testing.T) {
+
+			// Create assert request to pass to our handler. We don't have any query parameters for now, so we'll
+			// pass 'nil' as the third parameter.
+			req, err := http.NewRequest("PUT", fmt.Sprintf("/cluster/node/%s/info", tc.args.node), strings.NewReader(tc.data))
+			assert.NoError(t, err)
+
+			if tc.headers != nil {
+				for key, val := range tc.headers {
+					req.Header.Set(key, val)
+				}
+			}
+
+			r := mux.NewRouter()
+			r.HandleFunc("/cluster/node/{node}/info", tc.handler)
+
+			setRequestVars(r, req)
+
+			// We create assert ResponseRecorder (which satisfies http.ResponseWriter) to record the response.
+			res := httptest.NewRecorder()
+
+			// Our handlers satisfy http.Handler, so we can call their ServeHTTP method
+			// directly and pass in our Request and ResponseRecorder.
+			r.ServeHTTP(res, req)
+
+			// Check the status code is what we expect.
+			assert.Equal(t, tc.expectedCode, res.Code, tc.description)
+
+			body, err := ioutil.ReadAll(res.Body)
+			assert.NoError(t, err)
+			assert.Equal(t, tc.expectedBody, string(body), tc.description)
+
+			if tc.expectedCode == http.StatusOK {
+				n, err := envs.Get().GetStorage().Node().Get(ctx, tc.args.node)
+				assert.NoError(t, err)
+				assert.Equal(t, uo.Hostname, n.Info.Hostname, "hostname not equal")
+				assert.Equal(t, uo.Architecture, n.Info.Architecture, "architecture not equal")
+			}
+
+		})
+	}
 }
 
-func TestNodeSetStateH(t *testing.T) {
+func TestNodeSetStatusH(t *testing.T) {
 
+	stg, _ := storage.GetMock()
+	envs.Get().SetStorage(stg)
+	viper.Set("verbose", 0)
+
+	var (
+		err error
+		ctx = context.Background()
+
+		n1 = getNodeAsset("test1", "", true)
+		n2 = getNodeAsset("test2", "", true)
+		uo = v1.Request().Node().NodeStatusOptions()
+	)
+
+	uo.Capacity.Pods = 20
+	uo.Allocated.Containers = 10
+
+	type args struct {
+		ctx  context.Context
+		node string
+	}
+
+	tests := []struct {
+		name         string
+		args         args
+		headers      map[string]string
+		handler      func(http.ResponseWriter, *http.Request)
+		data         string
+		description  string
+		expectedBody string
+		expectedCode int
+	}{
+		{
+			name:         "checking update node failed: not found",
+			args:         args{ctx, n2.Meta.Name},
+			handler:      node.NodeSetStatusH,
+			data:         uo.ToJson(),
+			expectedBody: "{\"code\":404,\"status\":\"Not Found\",\"message\":\"Node not found\"}",
+			expectedCode: http.StatusNotFound,
+		},
+		{
+			name:         "checking update node successfully",
+			args:         args{ctx, n1.Meta.Name},
+			handler:      node.NodeSetStatusH,
+			data:         uo.ToJson(),
+			description:  "successfully",
+			expectedBody: "",
+			expectedCode: http.StatusOK,
+		},
+	}
+
+	for _, tc := range tests {
+
+		err = envs.Get().GetStorage().Node().Clear(ctx)
+		assert.NoError(t, err)
+
+		err = envs.Get().GetStorage().Node().Insert(ctx, &n1)
+		assert.NoError(t, err)
+
+		t.Run(tc.name, func(t *testing.T) {
+
+			// Create assert request to pass to our handler. We don't have any query parameters for now, so we'll
+			// pass 'nil' as the third parameter.
+			req, err := http.NewRequest("PUT", fmt.Sprintf("/cluster/node/%s/status", tc.args.node), strings.NewReader(tc.data))
+			assert.NoError(t, err)
+
+			if tc.headers != nil {
+				for key, val := range tc.headers {
+					req.Header.Set(key, val)
+				}
+			}
+
+			r := mux.NewRouter()
+			r.HandleFunc("/cluster/node/{node}/status", tc.handler)
+
+			setRequestVars(r, req)
+
+			// We create assert ResponseRecorder (which satisfies http.ResponseWriter) to record the response.
+			res := httptest.NewRecorder()
+
+			// Our handlers satisfy http.Handler, so we can call their ServeHTTP method
+			// directly and pass in our Request and ResponseRecorder.
+			r.ServeHTTP(res, req)
+
+			// Check the status code is what we expect.
+			assert.Equal(t, tc.expectedCode, res.Code, tc.description)
+
+			body, err := ioutil.ReadAll(res.Body)
+			assert.NoError(t, err)
+			assert.Equal(t, tc.expectedBody, string(body), tc.description)
+
+			if tc.expectedCode == http.StatusOK {
+				n, err := envs.Get().GetStorage().Node().Get(ctx, tc.args.node)
+				assert.NoError(t, err)
+				assert.Equal(t, uo.Capacity.Pods, n.Status.Capacity.Pods, "pods not equal")
+				assert.Equal(t, uo.Allocated.Containers, n.Status.Allocated.Containers, "containers not equal")
+			}
+
+		})
+	}
 }
+
 
 func TestNodeSetPodStatusH(t *testing.T) {
 
+	stg, _ := storage.GetMock()
+	envs.Get().SetStorage(stg)
+	viper.Set("verbose", 0)
+
+	var (
+
+		ns  = "ns"
+		svc = "svc"
+		dp  = "dp"
+
+		err error
+		ctx = context.Background()
+
+		n1 = getNodeAsset("test1", "", true)
+		n2 = getNodeAsset("test2", "", true)
+
+		p1  = getPodAsset(ns, svc, dp, "test1", "")
+		p2  = getPodAsset(ns, svc, dp, "test2", "")
+
+		uo = v1.Request().Node().NodePodStatusOptions()
+	)
+
+	uo.Stage = "error"
+	uo.Message = "error message"
+	uo.Containers = make(map[string]*types.PodContainer)
+	uo.Containers["test"] = &types.PodContainer{
+		ID: "container-id",
+		Image: types.PodContainerImage{
+			ID: "image-id",
+			Name: "image-name",
+		},
+	}
+
+	type args struct {
+		ctx  context.Context
+		node string
+		pod  string
+	}
+
+	tests := []struct {
+		name         string
+		args         args
+		headers      map[string]string
+		handler      func(http.ResponseWriter, *http.Request)
+		data         string
+		description  string
+		expectedBody string
+		expectedCode int
+	}{
+		{
+			name:         "checking node set pod state failed: node not found",
+			args:         args{ctx, n2.Meta.Name, p1.SelfLink()},
+			handler:      node.NodeSetPodStatusH,
+			data:         uo.ToJson(),
+			expectedBody: "{\"code\":404,\"status\":\"Not Found\",\"message\":\"Node not found\"}",
+			expectedCode: http.StatusNotFound,
+		},
+		{
+			name:         "checking node set pod state failed: pod not found",
+			args:         args{ctx, n1.Meta.Name, p2.SelfLink()},
+			handler:      node.NodeSetPodStatusH,
+			data:         uo.ToJson(),
+			expectedBody: "{\"code\":404,\"status\":\"Not Found\",\"message\":\"Pod not found\"}",
+			expectedCode: http.StatusNotFound,
+		},
+		{
+			name:         "checking update node successfully",
+			args:         args{ctx, n1.Meta.Name, p1.SelfLink()},
+			handler:      node.NodeSetPodStatusH,
+			data:         uo.ToJson(),
+			description:  "successfully",
+			expectedBody: "",
+			expectedCode: http.StatusOK,
+		},
+	}
+
+	for _, tc := range tests {
+
+		err = envs.Get().GetStorage().Node().Clear(ctx)
+		assert.NoError(t, err)
+
+		err = envs.Get().GetStorage().Node().Insert(ctx, &n1)
+		assert.NoError(t, err)
+
+		err = envs.Get().GetStorage().Pod().Insert(ctx, &p1)
+		assert.NoError(t, err)
+
+		t.Run(tc.name, func(t *testing.T) {
+
+			// Create assert request to pass to our handler. We don't have any query parameters for now, so we'll
+			// pass 'nil' as the third parameter.
+			req, err := http.NewRequest("PUT", fmt.Sprintf("/cluster/node/%s/status/pod/%s", tc.args.node, tc.args.pod), strings.NewReader(tc.data))
+			assert.NoError(t, err)
+
+			if tc.headers != nil {
+				for key, val := range tc.headers {
+					req.Header.Set(key, val)
+				}
+			}
+
+			r := mux.NewRouter()
+			r.HandleFunc("/cluster/node/{node}/status/pod/{pod}", tc.handler)
+
+			setRequestVars(r, req)
+
+			// We create assert ResponseRecorder (which satisfies http.ResponseWriter) to record the response.
+			res := httptest.NewRecorder()
+
+			// Our handlers satisfy http.Handler, so we can call their ServeHTTP method
+			// directly and pass in our Request and ResponseRecorder.
+			r.ServeHTTP(res, req)
+
+			// Check the status code is what we expect.
+			assert.Equal(t, tc.expectedCode, res.Code, tc.description)
+
+			body, err := ioutil.ReadAll(res.Body)
+			assert.NoError(t, err)
+			assert.Equal(t, tc.expectedBody, string(body), tc.description)
+
+			if tc.expectedCode == http.StatusOK {
+				p, err := envs.Get().GetStorage().Pod().Get(ctx, p1.Meta.Namespace, p1.Meta.Service, p1.Meta.Deployment, p1.Meta.Name)
+				assert.NoError(t, err)
+
+				assert.Equal(t, uo.Stage, p.Status.Stage, "pods stage not equal")
+				assert.Equal(t, uo.Message, p.Status.Message, "pods message not equal")
+
+				uo.Containers = make(map[string]*types.PodContainer)
+				uo.Containers["test"] = &types.PodContainer{
+					ID: "container-id",
+					Image: types.PodContainerImage{
+						ID: "image-id",
+						Name: "image-name",
+					},
+				}
+
+				b := assert.NotNil(t, p.Status.Containers["test"], "container 'test' not exists")
+				if !b {
+					return
+				}
+
+				assert.Equal(t, uo.Containers["test"].ID, p.Status.Containers["test"].ID, "container id not equal")
+				assert.Equal(t, uo.Containers["test"].Image.ID, p.Status.Containers["test"].Image.ID, "container image id not equal")
+				assert.Equal(t, uo.Containers["test"].Image.Name, p.Status.Containers["test"].Image.Name, "container image name not equal")
+			}
+
+		})
+	}
 }
 
 func TestNodeSetVolumeStatusH(t *testing.T) {
 
+	stg, _ := storage.GetMock()
+	envs.Get().SetStorage(stg)
+	viper.Set("verbose", 0)
+
+	var (
+
+		ns  = "ns"
+
+		err error
+		ctx = context.Background()
+
+		n1 = getNodeAsset("test1", "", true)
+		n2 = getNodeAsset("test2", "", true)
+
+		vl1 = getVolumeAsset(ns, "test1", "")
+		vl2 = getVolumeAsset(ns,  "test2", "")
+
+		uo = v1.Request().Node().NodeVolumeStatusOptions()
+	)
+
+	uo.Stage = "error"
+	uo.Message = "error message"
+
+	type args struct {
+		ctx    context.Context
+		node   string
+		volume string
+	}
+
+	tests := []struct {
+		name         string
+		args         args
+		headers      map[string]string
+		handler      func(http.ResponseWriter, *http.Request)
+		data         string
+		description  string
+		expectedBody string
+		expectedCode int
+	}{
+		{
+			name:         "checking ndoe set volume state failed: node not found",
+			args:         args{ctx, n2.Meta.Name, vl1.SelfLink()},
+			handler:      node.NodeSetVolumeStatusH,
+			data:         uo.ToJson(),
+			expectedBody: "{\"code\":404,\"status\":\"Not Found\",\"message\":\"Node not found\"}",
+			expectedCode: http.StatusNotFound,
+		},
+		{
+			name:         "checking ndoe set volume state failed: volume not found",
+			args:         args{ctx, n1.Meta.Name, vl2.SelfLink()},
+			handler:      node.NodeSetVolumeStatusH,
+			data:         uo.ToJson(),
+			expectedBody: "{\"code\":404,\"status\":\"Not Found\",\"message\":\"Volume not found\"}",
+			expectedCode: http.StatusNotFound,
+		},
+		{
+			name:         "checking update node successfully",
+			args:         args{ctx, n1.Meta.Name, vl1.SelfLink()},
+			handler:      node.NodeSetVolumeStatusH,
+			data:         uo.ToJson(),
+			description:  "successfully",
+			expectedBody: "",
+			expectedCode: http.StatusOK,
+		},
+	}
+
+	for _, tc := range tests {
+
+		err = envs.Get().GetStorage().Node().Clear(ctx)
+		assert.NoError(t, err)
+
+		err = envs.Get().GetStorage().Node().Insert(ctx, &n1)
+		assert.NoError(t, err)
+
+		err = envs.Get().GetStorage().Volume().Insert(ctx, &vl1)
+		assert.NoError(t, err)
+
+		t.Run(tc.name, func(t *testing.T) {
+
+			// Create assert request to pass to our handler. We don't have any query parameters for now, so we'll
+			// pass 'nil' as the third parameter.
+			req, err := http.NewRequest("PUT", fmt.Sprintf("/cluster/node/%s/status/volume/%s", tc.args.node, tc.args.volume), strings.NewReader(tc.data))
+			assert.NoError(t, err)
+
+			if tc.headers != nil {
+				for key, val := range tc.headers {
+					req.Header.Set(key, val)
+				}
+			}
+
+			r := mux.NewRouter()
+			r.HandleFunc("/cluster/node/{node}/status/volume/{volume}", tc.handler)
+
+			setRequestVars(r, req)
+
+			// We create assert ResponseRecorder (which satisfies http.ResponseWriter) to record the response.
+			res := httptest.NewRecorder()
+
+			// Our handlers satisfy http.Handler, so we can call their ServeHTTP method
+			// directly and pass in our Request and ResponseRecorder.
+			r.ServeHTTP(res, req)
+
+			// Check the status code is what we expect.
+			assert.Equal(t, tc.expectedCode, res.Code, tc.description)
+
+			body, err := ioutil.ReadAll(res.Body)
+			assert.NoError(t, err)
+			assert.Equal(t, tc.expectedBody, string(body), tc.description)
+
+			if tc.expectedCode == http.StatusOK {
+				p, err := envs.Get().GetStorage().Volume().Get(ctx, vl1.Meta.Namespace, vl1.Meta.Name)
+				assert.NoError(t, err)
+
+				assert.Equal(t, uo.Stage, p.Status.Stage, "pods stage not equal")
+				assert.Equal(t, uo.Message, p.Status.Message, "pods message not equal")
+			}
+
+		})
+	}
 }
 
 func TestNodeSetRouteStatusH(t *testing.T) {
 
+	stg, _ := storage.GetMock()
+	envs.Get().SetStorage(stg)
+	viper.Set("verbose", 0)
+
+	var (
+
+		ns  = "ns"
+
+		err error
+		ctx = context.Background()
+
+		n1 = getNodeAsset("test1", "", true)
+		n2 = getNodeAsset("test2", "", true)
+
+		r1 = getRouteAsset(ns, "test1", "")
+		r2 = getRouteAsset(ns,  "test2", "")
+
+		uo = v1.Request().Node().NodeRouteStatusOptions()
+	)
+
+	uo.Stage = "error"
+	uo.Message = "error message"
+
+	type args struct {
+		ctx    context.Context
+		node   string
+		route string
+	}
+
+	tests := []struct {
+		name         string
+		args         args
+		headers      map[string]string
+		handler      func(http.ResponseWriter, *http.Request)
+		data         string
+		description  string
+		expectedBody string
+		expectedCode int
+	}{
+		{
+			name:         "checking ndoe set route state failed: node not found",
+			args:         args{ctx, n2.Meta.Name, r1.SelfLink()},
+			handler:      node.NodeSetRouteStatusH,
+			data:         uo.ToJson(),
+			expectedBody: "{\"code\":404,\"status\":\"Not Found\",\"message\":\"Node not found\"}",
+			expectedCode: http.StatusNotFound,
+		},
+		{
+			name:         "checking ndoe set route state failed: route not found",
+			args:         args{ctx, n1.Meta.Name, r2.SelfLink()},
+			handler:      node.NodeSetRouteStatusH,
+			data:         uo.ToJson(),
+			expectedBody: "{\"code\":404,\"status\":\"Not Found\",\"message\":\"Route not found\"}",
+			expectedCode: http.StatusNotFound,
+		},
+		{
+			name:         "checking update node successfully",
+			args:         args{ctx, n1.Meta.Name, r1.SelfLink()},
+			handler:      node.NodeSetRouteStatusH,
+			data:         uo.ToJson(),
+			description:  "successfully",
+			expectedBody: "",
+			expectedCode: http.StatusOK,
+		},
+	}
+
+	for _, tc := range tests {
+
+		err = envs.Get().GetStorage().Node().Clear(ctx)
+		assert.NoError(t, err)
+
+		err = envs.Get().GetStorage().Node().Insert(ctx, &n1)
+		assert.NoError(t, err)
+
+		err = envs.Get().GetStorage().Route().Insert(ctx, &r1)
+		assert.NoError(t, err)
+
+		t.Run(tc.name, func(t *testing.T) {
+
+			// Create assert request to pass to our handler. We don't have any query parameters for now, so we'll
+			// pass 'nil' as the third parameter.
+			req, err := http.NewRequest("PUT", fmt.Sprintf("/cluster/node/%s/status/route/%s", tc.args.node, tc.args.route), strings.NewReader(tc.data))
+			assert.NoError(t, err)
+
+			if tc.headers != nil {
+				for key, val := range tc.headers {
+					req.Header.Set(key, val)
+				}
+			}
+
+			r := mux.NewRouter()
+			r.HandleFunc("/cluster/node/{node}/status/route/{route}", tc.handler)
+
+			setRequestVars(r, req)
+
+			// We create assert ResponseRecorder (which satisfies http.ResponseWriter) to record the response.
+			res := httptest.NewRecorder()
+
+			// Our handlers satisfy http.Handler, so we can call their ServeHTTP method
+			// directly and pass in our Request and ResponseRecorder.
+			r.ServeHTTP(res, req)
+
+			// Check the status code is what we expect.
+			assert.Equal(t, tc.expectedCode, res.Code, tc.description)
+
+			body, err := ioutil.ReadAll(res.Body)
+			assert.NoError(t, err)
+			assert.Equal(t, tc.expectedBody, string(body), tc.description)
+
+			if tc.expectedCode == http.StatusOK {
+				p, err := envs.Get().GetStorage().Route().Get(ctx, r1.Meta.Namespace, r1.Meta.Name)
+				assert.NoError(t, err)
+
+				assert.Equal(t, uo.Stage, p.Status.Stage, "pods stage not equal")
+				assert.Equal(t, uo.Message, p.Status.Message, "pods message not equal")
+			}
+
+		})
+	}
 }
+
 
 func setRequestVars(r *mux.Router, req *http.Request) {
 	var match mux.RouteMatch
@@ -434,7 +1121,7 @@ func getNodeAsset(name, desc string, online bool) types.Node {
 		Info: types.NodeInfo{
 			Hostname: name,
 		},
-		State: types.NodeState{
+		Status: types.NodeStatus{
 			Capacity: types.NodeResources{
 				Containers: 2,
 				Pods:       2,
@@ -486,4 +1173,26 @@ func getPodAsset(namespace, service, deployment, name, desc string) types.Pod {
 	p.SelfLink()
 
 	return p
+}
+
+func getVolumeAsset(namespace, name, desc string) types.Volume {
+
+	var n= types.Volume{}
+
+	n.Meta.Name = name
+	n.Meta.Namespace = namespace
+	n.Meta.Description = desc
+
+	return n
+}
+
+func getRouteAsset(namespace, name, desc string) types.Route {
+
+	var n = types.Route{}
+
+	n.Meta.Name = name
+	n.Meta.Namespace = namespace
+	n.Meta.Description = desc
+
+	return n
 }

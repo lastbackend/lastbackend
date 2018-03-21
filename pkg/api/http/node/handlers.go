@@ -161,8 +161,13 @@ func NodeUpdateH(w http.ResponseWriter, r *http.Request) {
 
 	n, err := nm.Get(nid)
 	if err != nil {
-		log.V(logLevel).Errorf("Handler: Node: get node err: %s", err)
+		log.V(logLevel).Errorf("Handler: Node: update node err: %s", err)
 		errors.HTTP.InternalServerError(w)
+		return
+	}
+	if n == nil {
+		log.V(logLevel).Warnf("Handler: Node: update node `%s` not found", nid)
+		errors.New("node").NotFound().Http(w)
 		return
 	}
 
@@ -210,6 +215,11 @@ func NodeSetInfoH(w http.ResponseWriter, r *http.Request) {
 		errors.HTTP.InternalServerError(w)
 		return
 	}
+	if node == nil {
+		log.V(logLevel).Warnf("Handler: Node: update node `%s` not found", nid)
+		errors.New("node").NotFound().Http(w)
+		return
+	}
 
 	if err := nm.SetInfo(node, types.NodeInfo{
 		Hostname:     opts.Hostname,
@@ -231,7 +241,7 @@ func NodeSetInfoH(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func NodeSetStateH(w http.ResponseWriter, r *http.Request) {
+func NodeSetStatusH(w http.ResponseWriter, r *http.Request) {
 
 	log.V(logLevel).Debug("Handler: Node: node set state")
 
@@ -241,7 +251,7 @@ func NodeSetStateH(w http.ResponseWriter, r *http.Request) {
 	)
 
 	// request body struct
-	opts := new(request.NodeStateOptions)
+	opts := new(request.NodeStatusOptions)
 	if err := opts.DecodeAndValidate(r.Body); err != nil {
 		log.V(logLevel).Errorf("Handler: Node: validation incoming data", err)
 		err.Http(w)
@@ -254,9 +264,14 @@ func NodeSetStateH(w http.ResponseWriter, r *http.Request) {
 		errors.HTTP.InternalServerError(w)
 		return
 	}
+	if node == nil {
+		log.V(logLevel).Warnf("Handler: Node: update node `%s` not found", nid)
+		errors.New("node").NotFound().Http(w)
+		return
+	}
 
-	if err := nm.SetState(node, types.NodeState{
-		Capacity:  opts.Capacity,
+	if err := nm.SetStatus(node, types.NodeStatus{
+		Capacity: opts.Capacity,
 		Allocated: opts.Allocated,
 	}); err != nil {
 		log.V(logLevel).Errorf("Handler: Node: get nodes list err: %s", err)
@@ -288,26 +303,38 @@ func NodeSetPodStatusH(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	_, err := nm.Get(nid)
+	n, err := nm.Get(nid)
 	if err != nil {
 		log.V(logLevel).Errorf("Handler: Node: get nodes list err: %s", err)
-		errors.HTTP.NotFound(w)
+		errors.HTTP.InternalServerError(w)
+		return
+	}
+	if n == nil {
+		log.V(logLevel).Warnf("Handler: Node: update node `%s` not found", nid)
+		errors.New("node").NotFound().Http(w)
 		return
 	}
 
-	keys := strings.Split(pid, ":")
-	if len(keys) != 5 {
+	keys:=strings.Split(pid, ":")
+	if len(keys) != 4 {
 		log.V(logLevel).Errorf("Handler: Node: invalid pod selflink err: %s", pid)
 		errors.HTTP.BadRequest(w)
 		return
 	}
 
-	pod, err := pm.Get(keys[1], keys[2], keys[3], keys[4])
+	pod, err := pm.Get(keys[0],keys[1],keys[2],keys[3])
 	if err != nil {
 		log.V(logLevel).Errorf("Handler: Node: pod not found selflink err: %s", pid)
-		errors.HTTP.NotFound(w)
+		errors.HTTP.InternalServerError(w)
 		return
 	}
+	if pod == nil {
+		log.V(logLevel).Warnf("Handler: Node: update node `%s` not found", nid)
+		errors.New("pod").NotFound().Http(w)
+		return
+	}
+
+	log.Info(pod)
 
 	if err := pm.SetStatus(pod, &types.PodStatus{
 		Stage:      opts.Stage,
@@ -347,26 +374,37 @@ func NodeSetVolumeStatusH(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	_, err := nm.Get(nid)
+	n, err := nm.Get(nid)
 	if err != nil {
 		log.V(logLevel).Errorf("Handler: Node: get nodes list err: %s", err)
 		errors.HTTP.InternalServerError(w)
 		return
 	}
+	if n == nil {
+		log.V(logLevel).Warnf("Handler: Node: update node `%s` not found", nid)
+		errors.New("node").NotFound().Http(w)
+		return
+	}
 
-	keys := strings.Split(vid, ":")
-	if len(keys) != 3 {
+	keys:=strings.Split(vid, ":")
+	if len(keys) != 2 {
 		log.V(logLevel).Errorf("Handler: Node: invalid volume selflink err: %s", vid)
 		errors.HTTP.BadRequest(w)
 		return
 	}
 
-	volume, err := vm.Get(keys[1], keys[2])
+	volume, err := vm.Get(keys[0],keys[1])
 	if err != nil {
 		log.V(logLevel).Errorf("Handler: Node: pod not found selflink err: %s", vid)
 		errors.HTTP.NotFound(w)
 		return
 	}
+	if volume == nil {
+		log.V(logLevel).Warnf("Handler: Node: update node `%s` volume not found %s", nid, vid)
+		errors.New("volume").NotFound().Http(w)
+		return
+	}
+
 
 	if err := vm.SetStatus(volume, &types.VolumeStatus{
 		Stage:   opts.Stage,
@@ -403,24 +441,34 @@ func NodeSetRouteStatusH(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	_, err := nm.Get(nid)
+	n, err := nm.Get(nid)
 	if err != nil {
 		log.V(logLevel).Errorf("Handler: Node: get nodes list err: %s", err)
 		errors.HTTP.InternalServerError(w)
 		return
 	}
+	if n == nil {
+		log.V(logLevel).Warnf("Handler: Node: update node `%s` not found", nid)
+		errors.New("node").NotFound().Http(w)
+		return
+	}
 
-	keys := strings.Split(vid, ":")
-	if len(keys) != 3 {
+	keys:=strings.Split(vid, ":")
+	if len(keys) != 2 {
 		log.V(logLevel).Errorf("Handler: Node: invalid route selflink err: %s", vid)
 		errors.HTTP.BadRequest(w)
 		return
 	}
 
-	route, err := rm.Get(keys[1], keys[2])
+	route, err := rm.Get(keys[0],keys[1])
 	if err != nil {
 		log.V(logLevel).Errorf("Handler: Node: pod not found selflink err: %s", vid)
 		errors.HTTP.NotFound(w)
+		return
+	}
+	if route == nil {
+		log.V(logLevel).Warnf("Handler: Node: update node `%s` route not found %s", nid, vid)
+		errors.New("route").NotFound().Http(w)
 		return
 	}
 

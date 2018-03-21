@@ -56,9 +56,9 @@ func GetInfo() types.NodeInfo {
 	return info
 }
 
-func GetState() types.NodeState {
+func GetStatus() types.NodeStatus {
 
-	var state = types.NodeState{}
+	var state = types.NodeStatus{}
 
 	state.Capacity = GetCapacity()
 	state.Allocated = GetAllocation()

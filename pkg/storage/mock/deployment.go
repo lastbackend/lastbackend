@@ -71,13 +71,13 @@ func (s *DeploymentStorage) ListByService(ctx context.Context, namespace, servic
 	return list, nil
 }
 
-// Update deployment state
-func (s *DeploymentStorage) SetState(ctx context.Context, deployment *types.Deployment) error {
+// Update deployment status
+func (s *DeploymentStorage) SetStatus(ctx context.Context, deployment *types.Deployment) error {
 	if err := s.checkDeploymentExists(deployment); err != nil {
 		return err
 	}
 
-	s.data[s.keyGet(deployment)].State = deployment.State
+	s.data[s.keyGet(deployment)].Status = deployment.Status
 	return nil
 }
 
@@ -138,7 +138,7 @@ func (s *DeploymentStorage) WatchSpec(ctx context.Context, deployment chan *type
 }
 
 // Watch deployment state changes
-func (s *DeploymentStorage) WatchState(ctx context.Context, deployment chan *types.Deployment) error {
+func (s *DeploymentStorage) WatchStatus(ctx context.Context, deployment chan *types.Deployment) error {
 	return nil
 }
 

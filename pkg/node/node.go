@@ -68,7 +68,7 @@ func Daemon() {
 	r.Restore()
 
 	state.Node().Info = node.GetInfo()
-	state.Node().State = node.GetState()
+	state.Node().Status = node.GetStatus()
 
 	r.Subscribe()
 	r.Loop()

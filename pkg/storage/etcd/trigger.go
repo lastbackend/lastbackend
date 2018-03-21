@@ -30,7 +30,7 @@ import (
 	"time"
 )
 
-const triggerStorage string = "triggers"
+const triggerStorage = "triggers"
 
 // Service Trigger type for interface in interfaces folder
 type TriggerStorage struct {
@@ -60,7 +60,7 @@ func (s *TriggerStorage) Get(ctx context.Context, namespace, service, name strin
 		return nil, err
 	}
 
-	const filter = `\b.+` + triggerStorage + `\/.+\/(?:meta|state|spec)\b`
+	const filter = `\b.+` + triggerStorage + `\/.+\/(?:meta|status|spec)\b`
 
 	var (
 		trigger = new(types.Trigger)
@@ -97,7 +97,7 @@ func (s *TriggerStorage) ListByNamespace(ctx context.Context, namespace string) 
 		return nil, err
 	}
 
-	const filter = `\b.+` + triggerStorage + `\/.+\/(?:meta|state|spec)\b`
+	const filter = `\b.+` + triggerStorage + `\/.+\/(?:meta|status|spec)\b`
 
 	var (
 		triggers = make(map[string]*types.Trigger)
@@ -136,7 +136,7 @@ func (s *TriggerStorage) ListByService(ctx context.Context, namespace, service s
 		return nil, err
 	}
 
-	const filter = `\b.+` + triggerStorage + `\/.+\/(?:meta|state|spec)\b`
+	const filter = `\b.+` + triggerStorage + `\/.+\/(?:meta|status|spec)\b`
 
 	var (
 		triggers = make(map[string]*types.Trigger)
@@ -158,10 +158,10 @@ func (s *TriggerStorage) ListByService(ctx context.Context, namespace, service s
 	return triggers, nil
 }
 
-// Update trigger state
-func (s *TriggerStorage) SetState(ctx context.Context, trigger *types.Trigger) error {
+// Update trigger status
+func (s *TriggerStorage) SetStatus(ctx context.Context, trigger *types.Trigger) error {
 
-	log.V(logLevel).Debugf("storage:etcd:trigger:> update trigger state: %#v", trigger)
+	log.V(logLevel).Debugf("storage:etcd:trigger:> update trigger status: %#v", trigger)
 
 	if err := s.checkTriggerExists(ctx, trigger); err != nil {
 		return err
@@ -174,8 +174,8 @@ func (s *TriggerStorage) SetState(ctx context.Context, trigger *types.Trigger) e
 	}
 	defer destroy()
 
-	key := keyCreate(triggerStorage, s.keyGet(trigger), "state")
-	if err := client.Upsert(ctx, key, trigger.State, nil, 0); err != nil {
+	key := keyCreate(triggerStorage, s.keyGet(trigger), "status")
+	if err := client.Upsert(ctx, key, trigger.Status, nil, 0); err != nil {
 		log.V(logLevel).Errorf("storage:etcd:trigger:>: update trigger err: %s", err.Error())
 		return err
 	}
@@ -183,7 +183,7 @@ func (s *TriggerStorage) SetState(ctx context.Context, trigger *types.Trigger) e
 	return nil
 }
 
-// Update trigger state
+// Update trigger status
 func (s *TriggerStorage) SetSpec(ctx context.Context, trigger *types.Trigger) error {
 
 	log.V(logLevel).Debugf("storage:etcd:trigger:> update trigger spec: %#v", trigger)
@@ -200,7 +200,7 @@ func (s *TriggerStorage) SetSpec(ctx context.Context, trigger *types.Trigger) er
 	defer destroy()
 
 	key := keyCreate(triggerStorage, s.keyGet(trigger), "spec")
-	if err := client.Upsert(ctx, key, trigger.State, nil, 0); err != nil {
+	if err := client.Upsert(ctx, key, trigger.Spec, nil, 0); err != nil {
 		log.V(logLevel).Errorf("storage:etcd:trigger:>: update trigger err: %s", err.Error())
 		return err
 	}
@@ -232,8 +232,8 @@ func (s *TriggerStorage) Insert(ctx context.Context, trigger *types.Trigger) err
 		return err
 	}
 
-	keyState := keyCreate(triggerStorage, s.keyGet(trigger), "state")
-	if err := tx.Create(keyState, trigger.State, 0); err != nil {
+	keyStatus := keyCreate(triggerStorage, s.keyGet(trigger), "status")
+	if err := tx.Create(keyStatus, trigger.Status, 0); err != nil {
 		log.V(logLevel).Errorf("storage:etcd:trigger:> insert trigger err: %s", err.Error())
 		return err
 	}
@@ -367,12 +367,12 @@ func (s *TriggerStorage) WatchSpec(ctx context.Context, trigger chan *types.Trig
 	return nil
 }
 
-// Watch trigger state changes
-func (s *TriggerStorage) WatchState(ctx context.Context, trigger chan *types.Trigger) error {
+// Watch trigger status changes
+func (s *TriggerStorage) WatchStatus(ctx context.Context, trigger chan *types.Trigger) error {
 
 	log.V(logLevel).Debug("storage:etcd:trigger:> watch trigger by spec")
 
-	const filter = `\b\/` + triggerStorage + `\/(.+):(.+):(.+)/state\b`
+	const filter = `\b\/` + triggerStorage + `\/(.+):(.+):(.+)/status\b`
 	client, destroy, err := getClient(ctx)
 	if err != nil {
 		log.V(logLevel).Errorf("storage:etcd:trigger:> watch trigger by spec err: %s", err.Error())

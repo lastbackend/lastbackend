@@ -53,7 +53,7 @@ func (s *RouteStorage) Get(ctx context.Context, namespace, name string) (*types.
 		return nil, err
 	}
 
-	const filter = `\b.+` + routeStorage + `\/.+\/(?:meta|state|spec)\b`
+	const filter = `\b.+` + routeStorage + `\/.+\/(?:meta|status|spec)\b`
 	var (
 		route = new(types.Route)
 	)
@@ -89,7 +89,7 @@ func (s *RouteStorage) ListByNamespace(ctx context.Context, namespace string) (m
 		return nil, err
 	}
 
-	const filter = `\b.+` + routeStorage + `\/.+\/(?:meta|state|spec)\b`
+	const filter = `\b.+` + routeStorage + `\/.+\/(?:meta|status|spec)\b`
 
 	var (
 		routes = make(map[string]*types.Route)
@@ -136,10 +136,10 @@ func (s *RouteStorage) SetSpec(ctx context.Context, route *types.Route) error {
 	return nil
 }
 
-// Update route state
-func (s *RouteStorage) SetState(ctx context.Context, route *types.Route) error {
+// Update route status
+func (s *RouteStorage) SetStatus(ctx context.Context, route *types.Route) error {
 
-	log.V(logLevel).Debugf("storage:etcd:route:> update route state: %#v", route)
+	log.V(logLevel).Debugf("storage:etcd:route:> update route status: %#v", route)
 
 	if err := s.checkRouteExists(ctx, route); err != nil {
 		return err
@@ -152,8 +152,8 @@ func (s *RouteStorage) SetState(ctx context.Context, route *types.Route) error {
 	}
 	defer destroy()
 
-	key := keyCreate(routeStorage, s.keyGet(route), "state")
-	if err := client.Upsert(ctx, key, route.State, nil, 0); err != nil {
+	key := keyCreate(routeStorage, s.keyGet(route), "status")
+	if err := client.Upsert(ctx, key, route.Status, nil, 0); err != nil {
 		log.V(logLevel).Errorf("storage:etcd:route:>: update route err: %s", err.Error())
 		return err
 	}
@@ -185,8 +185,8 @@ func (s *RouteStorage) Insert(ctx context.Context, route *types.Route) error {
 		return err
 	}
 
-	keyState := keyCreate(routeStorage, s.keyGet(route), "state")
-	if err := tx.Create(keyState, route.State, 0); err != nil {
+	keyStatus := keyCreate(routeStorage, s.keyGet(route), "status")
+	if err := tx.Create(keyStatus, route.Status, 0); err != nil {
 		log.V(logLevel).Errorf("storage:etcd:route:> insert route err: %s", err.Error())
 		return err
 	}
@@ -324,12 +324,12 @@ func (s *RouteStorage) WatchSpec(ctx context.Context, route chan *types.Route) e
 	return nil
 }
 
-// Watch route state changes
-func (s *RouteStorage) WatchState(ctx context.Context, route chan *types.Route) error {
+// Watch route status changes
+func (s *RouteStorage) WatchStatus(ctx context.Context, route chan *types.Route) error {
 
 	log.V(logLevel).Debug("storage:etcd:route:> watch route")
 
-	const filter = `\b\/` + routeStorage + `\/(.+):(.+)/state\b`
+	const filter = `\b\/` + routeStorage + `\/(.+):(.+)/status\b`
 	client, destroy, err := getClient(ctx)
 	if err != nil {
 		log.V(logLevel).Errorf("storage:etcd:route:> watch route err: %s", err.Error())

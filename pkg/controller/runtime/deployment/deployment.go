@@ -99,7 +99,7 @@ func Provision(d *types.Deployment) error {
 				break
 			}
 
-			if p.State.Error {
+			if p.Status.Stage == types.StageError {
 				if err := pm.Destroy(context.Background(), p); err != nil {
 					log.Errorf("controller:service:controller:provision: remove pod err: %s", err.Error())
 					continue
@@ -117,7 +117,7 @@ func Provision(d *types.Deployment) error {
 				break
 			}
 
-			if p.State.Provision {
+			if p.Status.Stage == types.StageProvision {
 				if err := pm.Destroy(context.Background(), p); err != nil {
 					log.Errorf("controller:service:controller:provision: remove pod err: %s", err.Error())
 					continue
@@ -135,7 +135,7 @@ func Provision(d *types.Deployment) error {
 				break
 			}
 
-			if p.State.Ready {
+			if d.Status.Stage == types.StageReady {
 				if err := pm.Destroy(context.Background(), p); err != nil {
 					log.Errorf("controller:service:controller:provision: remove pod err: %s", err.Error())
 					continue
@@ -147,8 +147,8 @@ func Provision(d *types.Deployment) error {
 	}
 
 	// Update deployment state
-	d.State.Provision = true
-	if err := distribution.NewDeploymentModel(context.Background(), stg).SetState(d); err != nil {
+	d.Status.Stage = types.StageProvision
+	if err := distribution.NewDeploymentModel(context.Background(), stg).SetStatus(d); err != nil {
 		log.Errorf("controller:deployment:controller:provision: deployment set state err: %s", err.Error())
 		return err
 	}

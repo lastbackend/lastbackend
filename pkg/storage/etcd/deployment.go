@@ -59,7 +59,7 @@ func (s *DeploymentStorage) Get(ctx context.Context, namespace, service, name st
 		return nil, err
 	}
 
-	const filter = `\b.+` + deploymentStorage + `\/.+\/(?:meta|state|spec)\b`
+	const filter = `\b.+` + deploymentStorage + `\/.+\/(?:meta|status|spec)\b`
 
 	var (
 		deployment = new(types.Deployment)
@@ -96,7 +96,7 @@ func (s *DeploymentStorage) ListByNamespace(ctx context.Context, namespace strin
 		return nil, err
 	}
 
-	const filter = `\b.+` + deploymentStorage + `\/.+\/(?:meta|state|spec)\b`
+	const filter = `\b.+` + deploymentStorage + `\/.+\/(?:meta|status|spec)\b`
 
 	var (
 		deployments = make(map[string]*types.Deployment)
@@ -135,7 +135,7 @@ func (s *DeploymentStorage) ListByService(ctx context.Context, namespace, servic
 		return nil, err
 	}
 
-	const filter = `\b.+` + deploymentStorage + `\/.+\/(?:meta|state|spec)\b`
+	const filter = `\b.+` + deploymentStorage + `\/.+\/(?:meta|status|spec)\b`
 
 	var (
 		deployments = make(map[string]*types.Deployment)
@@ -157,10 +157,10 @@ func (s *DeploymentStorage) ListByService(ctx context.Context, namespace, servic
 	return deployments, nil
 }
 
-// Update deployment state
-func (s *DeploymentStorage) SetState(ctx context.Context, deployment *types.Deployment) error {
+// Update deployment status
+func (s *DeploymentStorage) SetStatus(ctx context.Context, deployment *types.Deployment) error {
 
-	log.V(logLevel).Debugf("storage:etcd:deployment:> update deployment state: %#v", deployment)
+	log.V(logLevel).Debugf("storage:etcd:deployment:> update deployment status: %#v", deployment)
 
 	if err := s.checkDeploymentExists(ctx, deployment); err != nil {
 		return err
@@ -173,8 +173,8 @@ func (s *DeploymentStorage) SetState(ctx context.Context, deployment *types.Depl
 	}
 	defer destroy()
 
-	key := keyCreate(deploymentStorage, s.keyGet(deployment), "state")
-	if err := client.Upsert(ctx, key, deployment.State, nil, 0); err != nil {
+	key := keyCreate(deploymentStorage, s.keyGet(deployment), "status")
+	if err := client.Upsert(ctx, key, deployment.Status, nil, 0); err != nil {
 		log.V(logLevel).Errorf("storage:etcd:deployment:>: update deployment err: %s", err.Error())
 		return err
 	}
@@ -182,7 +182,7 @@ func (s *DeploymentStorage) SetState(ctx context.Context, deployment *types.Depl
 	return nil
 }
 
-// Update deployment state
+// Update deployment spec
 func (s *DeploymentStorage) SetSpec(ctx context.Context, deployment *types.Deployment) error {
 
 	log.V(logLevel).Debugf("storage:etcd:deployment:> update deployment spec: %#v", deployment)
@@ -199,7 +199,7 @@ func (s *DeploymentStorage) SetSpec(ctx context.Context, deployment *types.Deplo
 	defer destroy()
 
 	key := keyCreate(deploymentStorage, s.keyGet(deployment), "spec")
-	if err := client.Upsert(ctx, key, deployment.State, nil, 0); err != nil {
+	if err := client.Upsert(ctx, key, deployment.Spec, nil, 0); err != nil {
 		log.V(logLevel).Errorf("storage:etcd:deployment:>: update deployment err: %s", err.Error())
 		return err
 	}
@@ -231,8 +231,8 @@ func (s *DeploymentStorage) Insert(ctx context.Context, deployment *types.Deploy
 		return err
 	}
 
-	keyState := keyCreate(deploymentStorage, s.keyGet(deployment), "state")
-	if err := tx.Create(keyState, deployment.State, 0); err != nil {
+	keyStatus := keyCreate(deploymentStorage, s.keyGet(deployment), "status")
+	if err := tx.Create(keyStatus, deployment.Spec, 0); err != nil {
 		log.V(logLevel).Errorf("storage:etcd:deployment:> insert deployment err: %s", err.Error())
 		return err
 	}
@@ -366,12 +366,12 @@ func (s *DeploymentStorage) WatchSpec(ctx context.Context, deployment chan *type
 	return nil
 }
 
-// Watch deployment state changes
-func (s *DeploymentStorage) WatchState(ctx context.Context, deployment chan *types.Deployment) error {
+// Watch deployment status changes
+func (s *DeploymentStorage) WatchStatus(ctx context.Context, deployment chan *types.Deployment) error {
 
 	log.V(logLevel).Debug("storage:etcd:deployment:> watch deployment by spec")
 
-	const filter = `\b\/` + deploymentStorage + `\/(.+):(.+):(.+)/state\b`
+	const filter = `\b\/` + deploymentStorage + `\/(.+):(.+):(.+)/status\b`
 	client, destroy, err := getClient(ctx)
 	if err != nil {
 		log.V(logLevel).Errorf("storage:etcd:deployment:> watch deployment by spec err: %s", err.Error())
