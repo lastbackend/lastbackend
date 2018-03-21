@@ -30,7 +30,7 @@ type Service struct {
 	ID          string                 `json:"id"`
 	Meta        ServiceMeta            `json:"meta"`
 	Stats       ServiceStats           `json:"stats"`
-	State       ServiceState           `json:"state"`
+	Status      ServiceStatus          `json:"status"`
 	Spec        ServiceSpec            `json:"spec"`
 	Sources     ServiceSources         `json:"sources"`
 	Quotas      ServiceQuotas          `json:"quotas"`
@@ -78,14 +78,14 @@ type ServiceStats struct {
 	Network int64 `json:"network"`
 }
 
-type ServiceState struct {
-	Provision bool `json:"provision"`
-	Destroy   bool `json:"destroy"`
+type ServiceStatus struct {
+	Stage   string `json:"stage"`
+	Message string `json:"message"`
 }
 
 type ServiceDeployment struct {
-	ID      string `json:"id"`
-	Name    string `json:"name"`
+	ID      string    `json:"id"`
+	Name    string    `json:"name"`
 	Pods    map[string]Pod
 	Started time.Time `json:"started"`
 }

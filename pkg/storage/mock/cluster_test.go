@@ -258,8 +258,8 @@ func getClusterAsset(name string) types.Cluster {
 			Provider: "local",
 			Shared:   false,
 		},
-		State: types.ClusterState{
-			Nodes: types.ClusterStateNodes{
+		Status: types.ClusterStatus{
+			Nodes: types.ClusterStatusNodes{
 				Total:   2,
 				Online:  1,
 				Offline: 1,

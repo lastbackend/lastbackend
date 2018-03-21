@@ -53,7 +53,7 @@ func (s *VolumeStorage) Get(ctx context.Context, namespace, name string) (*types
 		return nil, err
 	}
 
-	const filter = `\b.+` + volumeStorage + `\/.+\/(?:meta|state|spec)\b`
+	const filter = `\b.+` + volumeStorage + `\/.+\/(?:meta|status|spec)\b`
 
 	var (
 		volume = new(types.Volume)
@@ -90,7 +90,7 @@ func (s *VolumeStorage) ListByNamespace(ctx context.Context, namespace string) (
 		return nil, err
 	}
 
-	const filter = `\b.+` + volumeStorage + `\/.+\/(?:meta|state|spec)\b`
+	const filter = `\b.+` + volumeStorage + `\/.+\/(?:meta|status|spec)\b`
 
 	var (
 		volumes = make(map[string]*types.Volume)
@@ -129,7 +129,7 @@ func (s *VolumeStorage) ListByService(ctx context.Context, namespace, service st
 		return nil, err
 	}
 
-	const filter = `\b.+` + volumeStorage + `\/.+\/(?:meta|state|spec)\b`
+	const filter = `\b.+` + volumeStorage + `\/.+\/(?:meta|status|spec)\b`
 
 	var (
 		volumes = make(map[string]*types.Volume)
@@ -151,10 +151,10 @@ func (s *VolumeStorage) ListByService(ctx context.Context, namespace, service st
 	return volumes, nil
 }
 
-// Update volume state
-func (s *VolumeStorage) SetState(ctx context.Context, volume *types.Volume) error {
+// Update volume status
+func (s *VolumeStorage) SetStatus(ctx context.Context, volume *types.Volume) error {
 
-	log.V(logLevel).Debugf("storage:etcd:volume:> update volume state: %#v", volume)
+	log.V(logLevel).Debugf("storage:etcd:volume:> update volume status: %#v", volume)
 
 	if err := s.checkVolumeExists(ctx, volume); err != nil {
 		return err
@@ -167,8 +167,8 @@ func (s *VolumeStorage) SetState(ctx context.Context, volume *types.Volume) erro
 	}
 	defer destroy()
 
-	key := keyCreate(volumeStorage, s.keyGet(volume), "state")
-	if err := client.Upsert(ctx, key, volume.State, nil, 0); err != nil {
+	key := keyCreate(volumeStorage, s.keyGet(volume), "status")
+	if err := client.Upsert(ctx, key, volume.Status, nil, 0); err != nil {
 		log.V(logLevel).Errorf("storage:etcd:volume:>: update volume err: %s", err.Error())
 		return err
 	}
@@ -176,7 +176,7 @@ func (s *VolumeStorage) SetState(ctx context.Context, volume *types.Volume) erro
 	return nil
 }
 
-// Update volume state
+// Update volume status
 func (s *VolumeStorage) SetSpec(ctx context.Context, volume *types.Volume) error {
 
 	log.V(logLevel).Debugf("storage:etcd:volume:> update volume spec: %#v", volume)
@@ -193,7 +193,7 @@ func (s *VolumeStorage) SetSpec(ctx context.Context, volume *types.Volume) error
 	defer destroy()
 
 	key := keyCreate(volumeStorage, s.keyGet(volume), "spec")
-	if err := client.Upsert(ctx, key, volume.State, nil, 0); err != nil {
+	if err := client.Upsert(ctx, key, volume.Spec, nil, 0); err != nil {
 		log.V(logLevel).Errorf("storage:etcd:volume:>: update volume err: %s", err.Error())
 		return err
 	}
@@ -225,8 +225,8 @@ func (s *VolumeStorage) Insert(ctx context.Context, volume *types.Volume) error 
 		return err
 	}
 
-	keyState := keyCreate(volumeStorage, s.keyGet(volume), "state")
-	if err := tx.Create(keyState, volume.State, 0); err != nil {
+	keyStatus := keyCreate(volumeStorage, s.keyGet(volume), "status")
+	if err := tx.Create(keyStatus, volume.Status, 0); err != nil {
 		log.V(logLevel).Errorf("storage:etcd:volume:> insert volume err: %s", err.Error())
 		return err
 	}
@@ -360,12 +360,12 @@ func (s *VolumeStorage) WatchSpec(ctx context.Context, volume chan *types.Volume
 	return nil
 }
 
-// Watch volume state changes
-func (s *VolumeStorage) WatchState(ctx context.Context, volume chan *types.Volume) error {
+// Watch volume status changes
+func (s *VolumeStorage) WatchStatus(ctx context.Context, volume chan *types.Volume) error {
 
 	log.V(logLevel).Debug("storage:etcd:volume:> watch volume by spec")
 
-	const filter = `\b\/` + volumeStorage + `\/(.+):(.+):(.+)/state\b`
+	const filter = `\b\/` + volumeStorage + `\/(.+):(.+):(.+)/status\b`
 	client, destroy, err := getClient(ctx)
 	if err != nil {
 		log.V(logLevel).Errorf("storage:etcd:volume:> watch volume by spec err: %s", err.Error())

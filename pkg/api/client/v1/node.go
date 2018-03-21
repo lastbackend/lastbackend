@@ -86,14 +86,10 @@ func (s *NodeClient) Get(ctx context.Context) (*vv1.Node, error) {
 
 func (s *NodeClient) Update(ctx context.Context, opts *rv1.NodeUpdateOptions) (*vv1.Node, error) {
 
-	body, err := opts.ToJson()
-	if err != nil {
-		return nil, err
-	}
-
-	req := s.client.Put(fmt.Sprintf("/cluster/namespace/%s", s.hostname)).
+	body := opts.ToJson()
+	req := s.client.Put(fmt.Sprintf("/cluster/node/%s", s.hostname)).
 		AddHeader("Content-Type", "application/json").
-		Body(body).
+		Body([]byte(body)).
 		Do()
 
 	buf, err := req.Raw()

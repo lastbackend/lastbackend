@@ -35,7 +35,7 @@ func (sv *ServiceView) New(srv *types.Service, d map[string]*types.Deployment, p
 	s := new(Service)
 	s.ID = srv.Meta.Name
 	s.Meta = s.ToMeta(srv.Meta)
-	s.State = s.ToState(srv.State)
+	s.Status = s.ToStatus(srv.Status)
 	s.Spec = s.ToSpec(srv.Spec)
 	s.Deployments = s.ToDeployments(d, p)
 	return s
@@ -53,10 +53,10 @@ func (sv *Service) ToMeta(obj types.ServiceMeta) ServiceMeta {
 	}
 }
 
-func (sv *Service) ToState(obj types.ServiceState) ServiceState {
-	return ServiceState{
-		Provision: obj.Provision,
-		Destroy:   obj.Destroy,
+func (sv *Service) ToStatus(obj types.ServiceStatus) ServiceStatus {
+	return ServiceStatus{
+		Stage: obj.Stage,
+		Message:   obj.Message,
 	}
 }
 

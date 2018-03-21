@@ -204,7 +204,7 @@ func TestServiceStorage_ListByNamespace(t *testing.T) {
 	}
 }
 
-func TestServiceStorage_SetState(t *testing.T) {
+func TestServiceStorage_SetStatus(t *testing.T) {
 
 	initStorage()
 
@@ -218,8 +218,7 @@ func TestServiceStorage_SetState(t *testing.T) {
 		nl  = make([]*types.Service, 0)
 	)
 
-	n2.State.Provision = true
-	n2.State.Destroy = true
+	n2.Status.Stage = types.StageReady
 
 	nl0 := append(nl, &n1)
 
@@ -269,27 +268,27 @@ func TestServiceStorage_SetState(t *testing.T) {
 	for _, tt := range tests {
 
 		if err := stg.Clear(ctx); err != nil {
-			t.Errorf("ServiceStorage.SetState() storage setup error = %v", err)
+			t.Errorf("ServiceStorage.SetStatus() storage setup error = %v", err)
 			return
 		}
 
 		for _, n := range nl0 {
 			if err := stg.Insert(ctx, n); err != nil {
-				t.Errorf("ServiceStorage.SetState() storage setup error = %v", err)
+				t.Errorf("ServiceStorage.SetStatus() storage setup error = %v", err)
 				return
 			}
 		}
 
 		t.Run(tt.name, func(t *testing.T) {
-			err := tt.fields.stg.SetState(tt.args.ctx, tt.args.service)
+			err := tt.fields.stg.SetStatus(tt.args.ctx, tt.args.service)
 			if err != nil {
 				if !tt.wantErr {
-					t.Errorf("ServiceStorage.SetState() error = %v, want no error", err.Error())
+					t.Errorf("ServiceStorage.SetStatus() error = %v, want no error", err.Error())
 					return
 				}
 
 				if tt.wantErr && tt.err != err.Error() {
-					t.Errorf("ServiceStorage.SetState() error = %v, want %v", err.Error(), tt.err)
+					t.Errorf("ServiceStorage.SetStatus() error = %v, want %v", err.Error(), tt.err)
 					return
 				}
 
@@ -297,13 +296,13 @@ func TestServiceStorage_SetState(t *testing.T) {
 			}
 
 			if tt.wantErr {
-				t.Errorf("ServiceStorage.SetState() error = %v, want %v", err.Error(), tt.err)
+				t.Errorf("ServiceStorage.SetStatus() error = %v, want %v", err.Error(), tt.err)
 				return
 			}
 
 			got, _ := tt.fields.stg.Get(tt.args.ctx, ns1, tt.args.service.Meta.Name)
 			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("ServiceStorage.SetState() = %v, want %v", got, tt.want)
+				t.Errorf("ServiceStorage.SetStatus() = %v, want %v", got, tt.want)
 				return
 			}
 

@@ -28,7 +28,7 @@ type ClusterList []*Cluster
 
 type Cluster struct {
 	Meta   ClusterMeta   `json:"meta"`
-	State  ClusterState  `json:"state"`
+	Status  ClusterStatus  `json:"status"`
 	Quotas ClusterQuotas `json:"quotas"`
 }
 
@@ -42,14 +42,14 @@ type ClusterMeta struct {
 	Main     bool   `json:"main"`
 }
 
-type ClusterState struct {
-	Nodes     ClusterStateNodes `json:"nodes"`
+type ClusterStatus struct {
+	Nodes     ClusterStatusNodes `json:"nodes"`
 	Capacity  ClusterResources  `json:"capacity"`
 	Allocated ClusterResources  `json:"allocated"`
 	Deleted   bool              `json:"deleted"`
 }
 
-type ClusterStateNodes struct {
+type ClusterStatusNodes struct {
 	Total   int `json:"total"`
 	Online  int `json:"online"`
 	Offline int `json:"offline"`

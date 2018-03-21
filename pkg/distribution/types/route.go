@@ -31,7 +31,6 @@ import (
 
 type Route struct {
 	Meta   RouteMeta   `json:"meta" yaml:"meta"`
-	State  RouteState  `json:"state" yaml:"state"`
 	Spec   RouteSpec   `json:"spec" yaml:"spec"`
 	Status RouteStatus `json:"status" yaml:"status"`
 }
@@ -42,11 +41,6 @@ type RouteMeta struct {
 	Meta             `yaml:",inline"`
 	Namespace string `json:"namespace" yaml:"namespace"`
 	Security  bool   `json:"security" yaml:"security"`
-}
-
-type RouteState struct {
-	Destroy   bool `json:"destroy" yaml:"destroy"`
-	Provision bool `json:"provision" yaml:"provision"`
 }
 
 type RouteSpec struct {
@@ -84,7 +78,6 @@ type RouterConfig struct {
 	ID        string            `json:"id" yaml:"id"`
 	Hash      string            `json:"hash" yaml:"hash"`
 	RootPath  string            `json:"-" yaml:"-"`
-	State     RouteState        `json:"state" yaml:"state"`
 	Upstreams []*UpstreamServer `json:"upstreams" yaml:"upstreams"`
 	Server    RouteServer       `json:"server" yaml:"server"`
 }
@@ -123,7 +116,6 @@ func (r *Route) GetRouteConfig() *RouterConfig {
 	var RouterConfig = new(RouterConfig)
 
 	RouterConfig.ID = r.Meta.Name
-	RouterConfig.State = r.State
 
 	RouterConfig.Server.Hostname = r.Spec.Domain
 	RouterConfig.Server.Protocol = "http"

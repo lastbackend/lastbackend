@@ -42,7 +42,7 @@ func Manage(ctx context.Context, pod *types.Pod) error {
 	//==========================================================================
 
 	// Call destroy pod
-	if pod.State.Destroy {
+	if pod.Spec.State.Destroy {
 
 		if task := envs.Get().GetState().Tasks().GetTask(pod); task != nil {
 			log.Debugf("Cancel pod creating: %s", pod.Meta.Name)
@@ -58,7 +58,7 @@ func Manage(ctx context.Context, pod *types.Pod) error {
 
 		pod.MarkAsDestroyed()
 		envs.Get().GetState().Pods().SetPod(pod)
-		events.NewPodStateEvent(ctx, pod)
+		events.NewPodStatusEvent(ctx, pod)
 
 		return nil
 	}
@@ -100,7 +100,7 @@ func Manage(ctx context.Context, pod *types.Pod) error {
 
 		pod.MarkAsDestroyed()
 		envs.Get().GetState().Pods().SetPod(pod)
-		events.NewPodStateEvent(ctx, pod)
+		events.NewPodStatusEvent(ctx, pod)
 		Destroy(ctx, pod)
 
 		ctx, cancel := context.WithCancel(context.Background())
@@ -129,7 +129,7 @@ func Create(ctx context.Context, pod *types.Pod) error {
 					log.Errorf("Stop inspect container %s: %s", err.Error())
 					pod.MarkAsDestroyed()
 					envs.Get().GetState().Pods().SetPod(pod)
-					events.NewPodStateEvent(ctx, pod)
+					events.NewPodStatusEvent(ctx, pod)
 					Clean(context.Background(), pod)
 					return nil
 				}
@@ -164,7 +164,7 @@ func Create(ctx context.Context, pod *types.Pod) error {
 
 	pod.MarkAsPull()
 	envs.Get().GetState().Pods().AddPod(pod)
-	events.NewPodStateEvent(ctx, pod)
+	events.NewPodStatusEvent(ctx, pod)
 
 	log.Debugf("Have %d containers", len(pod.Spec.Template.Containers))
 	for _, c := range pod.Spec.Template.Containers {
@@ -174,7 +174,7 @@ func Create(ctx context.Context, pod *types.Pod) error {
 			log.Errorf("Can-not pull image: %s", err)
 			pod.MarkAsError(err)
 			envs.Get().GetState().Pods().SetPod(pod)
-			events.NewPodStateEvent(ctx, pod)
+			events.NewPodStatusEvent(ctx, pod)
 			Clean(context.Background(), pod)
 			return err
 		}
@@ -187,12 +187,12 @@ func Create(ctx context.Context, pod *types.Pod) error {
 	//==========================================================================
 
 	pod.MarkAsStarting()
-	pod.Status.Steps[types.PodStepPull] = types.PodStep{
+	pod.Status.Steps[types.StepPull] = types.PodStep{
 		Ready:     true,
 		Timestamp: time.Now().UTC(),
 	}
 	envs.Get().GetState().Pods().SetPod(pod)
-	events.NewPodStateEvent(ctx, pod)
+	events.NewPodStatusEvent(ctx, pod)
 
 	for _, s := range pod.Spec.Template.Containers {
 
@@ -220,7 +220,7 @@ func Create(ctx context.Context, pod *types.Pod) error {
 				pod.MarkAsDestroyed()
 				pod.Status.Containers[c.ID] = c
 				envs.Get().GetState().Pods().SetPod(pod)
-				events.NewPodStateEvent(ctx, pod)
+				events.NewPodStatusEvent(ctx, pod)
 				Clean(context.Background(), pod)
 
 				return nil
@@ -238,7 +238,7 @@ func Create(ctx context.Context, pod *types.Pod) error {
 
 			pod.MarkAsError(err)
 			envs.Get().GetState().Pods().SetPod(pod)
-			events.NewPodStateEvent(ctx, pod)
+			events.NewPodStatusEvent(ctx, pod)
 			Clean(context.Background(), pod)
 			return err
 		}
@@ -247,7 +247,7 @@ func Create(ctx context.Context, pod *types.Pod) error {
 			log.Errorf("Inspect container after create: err %s", err.Error())
 			pod.MarkAsError(err)
 			envs.Get().GetState().Pods().SetPod(pod)
-			events.NewPodStateEvent(ctx, pod)
+			events.NewPodStatusEvent(ctx, pod)
 			Clean(context.Background(), pod)
 			return err
 		}
@@ -261,7 +261,7 @@ func Create(ctx context.Context, pod *types.Pod) error {
 		}
 		pod.Status.Containers[c.ID] = c
 		envs.Get().GetState().Pods().SetPod(pod)
-		events.NewPodStateEvent(ctx, pod)
+		events.NewPodStatusEvent(ctx, pod)
 
 		log.Debugf("Container created: %#v", c)
 
@@ -277,7 +277,7 @@ func Create(ctx context.Context, pod *types.Pod) error {
 				pod.Status.Containers[c.ID] = c
 				pod.MarkAsDestroyed()
 				envs.Get().GetState().Pods().SetPod(pod)
-				events.NewPodStateEvent(ctx, pod)
+				events.NewPodStatusEvent(ctx, pod)
 				Clean(context.Background(), pod)
 				return nil
 			}
@@ -293,7 +293,7 @@ func Create(ctx context.Context, pod *types.Pod) error {
 			pod.Status.Containers[c.ID] = c
 			pod.MarkAsError(err)
 			envs.Get().GetState().Pods().SetPod(pod)
-			events.NewPodStateEvent(ctx, pod)
+			events.NewPodStatusEvent(ctx, pod)
 			Clean(context.Background(), pod)
 			return err
 		}
@@ -302,7 +302,7 @@ func Create(ctx context.Context, pod *types.Pod) error {
 			log.Errorf("Inspect container after create: err %s", err.Error())
 			pod.MarkAsError(err)
 			envs.Get().GetState().Pods().SetPod(pod)
-			events.NewPodStateEvent(ctx, pod)
+			events.NewPodStatusEvent(ctx, pod)
 			Clean(context.Background(), pod)
 			return err
 		}
@@ -314,18 +314,18 @@ func Create(ctx context.Context, pod *types.Pod) error {
 		}
 		pod.Status.Containers[c.ID] = c
 		envs.Get().GetState().Pods().SetPod(pod)
-		events.NewPodStateEvent(ctx, pod)
+		events.NewPodStatusEvent(ctx, pod)
 	}
 
 	pod.MarkAsRunning()
-	pod.Status.Steps[types.PodStepReady] = types.PodStep{
+	pod.Status.Steps[types.StepReady] = types.PodStep{
 		Ready:     true,
 		Timestamp: time.Now().UTC(),
 	}
 
 	pod.Status.Network.HostIP = envs.Get().GetCNI().Info(ctx).Addr
 	envs.Get().GetState().Pods().SetPod(pod)
-	events.NewPodStateEvent(ctx, pod)
+	events.NewPodStatusEvent(ctx, pod)
 
 	return nil
 }

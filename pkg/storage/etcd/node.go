@@ -43,7 +43,7 @@ func (s *NodeStorage) List(ctx context.Context) (map[string]*types.Node, error) 
 
 	log.V(logLevel).Debugf("storage:etcd:node:> get list nodes")
 
-	const filter = `\b.+` + nodeStorage + `\/.+\/(?:meta|info|state|online|network)\b`
+	const filter = `\b.+` + nodeStorage + `\/.+\/(?:meta|info|status|online|network)\b`
 
 	nodes := make(map[string]*types.Node, 0)
 
@@ -75,7 +75,7 @@ func (s *NodeStorage) Get(ctx context.Context, name string) (*types.Node, error)
 		return nil, err
 	}
 
-	const filter = `\b.+` + nodeStorage + `\/.+\/(?:meta|info|state|online|network)\b`
+	const filter = `\b.+` + nodeStorage + `\/.+\/(?:meta|info|status|online|network)\b`
 
 	client, destroy, err := getClient(ctx)
 	if err != nil {
@@ -272,8 +272,8 @@ func (s *NodeStorage) Insert(ctx context.Context, node *types.Node) error {
 		return err
 	}
 
-	keyState := keyCreate(nodeStorage, node.Meta.Name, "state")
-	if err := tx.Create(keyState, &node.State, 0); err != nil {
+	keyStatus := keyCreate(nodeStorage, node.Meta.Name, "status")
+	if err := tx.Create(keyStatus, &node.Status, 0); err != nil {
 		log.V(logLevel).Errorf("storage:etcd:node:> insert node err: %s", err.Error())
 		return err
 	}
@@ -331,9 +331,9 @@ func (s *NodeStorage) Update(ctx context.Context, node *types.Node) error {
 	return nil
 }
 
-func (s *NodeStorage) SetState(ctx context.Context, node *types.Node) error {
+func (s *NodeStorage) SetStatus(ctx context.Context, node *types.Node) error {
 
-	log.V(logLevel).Debugf("storage:etcd:node:> update node state: %#v", node)
+	log.V(logLevel).Debugf("storage:etcd:node:> update node status: %#v", node)
 
 	if err := s.checkNodeExists(ctx, node); err != nil {
 		return err
@@ -343,21 +343,21 @@ func (s *NodeStorage) SetState(ctx context.Context, node *types.Node) error {
 
 	client, destroy, err := getClient(ctx)
 	if err != nil {
-		log.V(logLevel).Errorf("storage:etcd:node:> update node state err: %s", err.Error())
+		log.V(logLevel).Errorf("storage:etcd:node:> update node status err: %s", err.Error())
 		return err
 	}
 	defer destroy()
 
 	tx := client.Begin(ctx)
 
-	key := keyCreate(nodeStorage, node.Meta.Name, "state")
-	if err := tx.Update(key, &node.State, 0); err != nil {
-		log.V(logLevel).Errorf("storage:etcd:node:> update node state err: %s", err.Error())
+	key := keyCreate(nodeStorage, node.Meta.Name, "status")
+	if err := tx.Update(key, &node.Status, 0); err != nil {
+		log.V(logLevel).Errorf("storage:etcd:node:> update node status err: %s", err.Error())
 		return err
 	}
 
 	if err := tx.Commit(); err != nil {
-		log.V(logLevel).Errorf("storage:etcd:node:> update node state err: %s", err.Error())
+		log.V(logLevel).Errorf("storage:etcd:node:> update node status err: %s", err.Error())
 		return err
 	}
 
@@ -737,7 +737,7 @@ func (s *NodeStorage) Watch(ctx context.Context, node chan *types.Node) error {
 			return
 		}
 
-		// TODO: check previous node alive state to prevent multi calls
+		// TODO: check previous node alive status to prevent multi calls
 		if action == "PUT" {
 			n.Online = true
 			node <- n

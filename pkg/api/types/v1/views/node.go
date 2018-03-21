@@ -25,9 +25,9 @@ import (
 
 // Node - default node structure
 type Node struct {
-	Meta  NodeMeta  `json:"meta"`
-	Info  NodeInfo  `json:"info"`
-	State NodeState `json:"state"`
+	Meta   NodeMeta   `json:"meta"`
+	Info   NodeInfo   `json:"info"`
+	Status NodeStatus `json:"status"`
 }
 
 // NodeList - node map list
@@ -35,7 +35,7 @@ type NodeList map[string]*Node
 
 // NodeMeta - node metadata structure
 type NodeMeta struct {
-	ID          string    `json:"id"`
+	Name        string    `json:"name"`
 	Description string    `json:"description"`
 	Created     time.Time `json:"created"`
 	Updated     time.Time `json:"updated"`
@@ -47,14 +47,14 @@ type NodeInfo struct {
 	OSName       string `json:"os_name"`
 	OSType       string `json:"os_type"`
 	Architecture string `json:"architecture"`
-	IP           struct {
+	IP struct {
 		External string `json:"external"`
 		Internal string `json:"internal"`
 	} `json:"ip"`
 }
 
-// NodeState - node state struct
-type NodeState struct {
+// NodeStatus - node state struct
+type NodeStatus struct {
 	Online    bool          `json:"online"`
 	Capacity  NodeResources `json:"capacity"`
 	Allocated NodeResources `json:"allocated"`

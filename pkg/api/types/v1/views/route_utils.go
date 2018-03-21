@@ -30,7 +30,7 @@ func (rv *RouteView) New(obj *types.Route) *Route {
 	r := Route{}
 	r.Meta = r.ToMeta(obj.Meta)
 	r.Spec = r.ToSpec(obj.Spec)
-	r.State = r.ToState(obj.State)
+	r.Status = r.ToStatus(obj.Status)
 	return &r
 }
 
@@ -62,10 +62,10 @@ func (r *Route) ToSpec(obj types.RouteSpec) RouteSpec {
 	return spec
 }
 
-func (r *Route) ToState(obj types.RouteState) RouteState {
-	state := RouteState{}
-	state.Destroy = obj.Destroy
-	state.Provision = obj.Provision
+func (r *Route) ToStatus(obj types.RouteStatus) RouteStatus {
+	state := RouteStatus{}
+	state.Stage = obj.Stage
+	state.Message = obj.Message
 	return state
 }
 

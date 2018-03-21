@@ -22,18 +22,18 @@ import (
 	"context"
 )
 
-type NodeMapState map[string]*NodeState
+type NodeMapStatus map[string]*NodeStatus
 
 type NodeList []*Node
 
 type Node struct {
-	Meta    NodeMeta  `json:"meta"`
-	Info    NodeInfo  `json:"info"`
-	State   NodeState `json:"state"`
-	Spec    NodeSpec  `json:"spec"`
-	Roles   NodeRole  `json:"roles"`
-	Network Subnet    `json:"network"`
-	Online  bool      `json:"online"`
+	Meta    NodeMeta   `json:"meta"`
+	Info    NodeInfo   `json:"info"`
+	Status  NodeStatus `json:"status"`
+	Spec    NodeSpec   `json:"spec"`
+	Roles   NodeRole   `json:"roles"`
+	Network Subnet     `json:"network"`
+	Online  bool       `json:"online"`
 }
 
 type NodeMeta struct {
@@ -78,7 +78,7 @@ type NodeInfo struct {
 	InternalIP string `json:"internal_ip"`
 }
 
-type NodeState struct {
+type NodeStatus struct {
 	// Node Capacity
 	Capacity NodeResources `json:"capacity"`
 	// Node Allocated

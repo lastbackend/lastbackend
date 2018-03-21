@@ -57,12 +57,12 @@ func (s *RouteStorage) ListByNamespace(ctx context.Context, namespace string) (m
 }
 
 // Update route state
-func (s *RouteStorage) SetState(ctx context.Context, route *types.Route) error {
+func (s *RouteStorage) SetStatus(ctx context.Context, route *types.Route) error {
 	if err := s.checkRouteExists(route); err != nil {
 		return err
 	}
 
-	s.data[s.keyGet(route)].State = route.State
+	s.data[s.keyGet(route)].Status = route.Status
 	return nil
 }
 
@@ -112,7 +112,7 @@ func (s *RouteStorage) WatchSpec(ctx context.Context, route chan *types.Route) e
 }
 
 // Watch route state changes
-func (s *RouteStorage) WatchState(ctx context.Context, route chan *types.Route) error {
+func (s *RouteStorage) WatchStatus(ctx context.Context, route chan *types.Route) error {
 	return nil
 }
 

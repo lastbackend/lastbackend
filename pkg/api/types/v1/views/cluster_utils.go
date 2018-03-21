@@ -29,7 +29,7 @@ type ClusterView struct{}
 func (cv *ClusterView) New(obj *types.Cluster) *Cluster {
 	c := Cluster{}
 	c.Meta = cv.ToClusterMeta(obj.Meta)
-	c.State = cv.ToClusterState(obj.State)
+	c.Status = cv.ToClusterStatus(obj.Status)
 	return &c
 }
 
@@ -68,23 +68,23 @@ func (cv *ClusterView) ToClusterMeta(meta types.ClusterMeta) ClusterMeta {
 	}
 }
 
-func (cv *ClusterView) ToClusterState(state types.ClusterState) ClusterState {
-	return ClusterState{
-		Nodes: state.Nodes,
+func (cv *ClusterView) ToClusterStatus(status types.ClusterStatus) ClusterStatus {
+	return ClusterStatus{
+		Nodes: status.Nodes,
 		Capacity: ClusterResources{
-			Containers: state.Capacity.Containers,
-			Pods:       state.Capacity.Pods,
-			Memory:     state.Capacity.Memory,
-			Cpu:        state.Capacity.Cpu,
-			Storage:    state.Capacity.Storage,
+			Containers: status.Capacity.Containers,
+			Pods:       status.Capacity.Pods,
+			Memory:     status.Capacity.Memory,
+			Cpu:        status.Capacity.Cpu,
+			Storage:    status.Capacity.Storage,
 		},
 		Allocated: ClusterResources{
-			Containers: state.Allocated.Containers,
-			Pods:       state.Allocated.Pods,
-			Memory:     state.Allocated.Memory,
-			Cpu:        state.Allocated.Cpu,
-			Storage:    state.Allocated.Storage,
+			Containers: status.Allocated.Containers,
+			Pods:       status.Allocated.Pods,
+			Memory:     status.Allocated.Memory,
+			Cpu:        status.Allocated.Cpu,
+			Storage:    status.Allocated.Storage,
 		},
-		Deleted: state.Deleted,
+		Deleted: status.Deleted,
 	}
 }

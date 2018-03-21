@@ -28,11 +28,31 @@ import (
 const (
 	DEFAULT_SERVICE_MEMORY   int64 = 128
 	DEFAULT_SERVICE_REPLICAS int   = 1
+
+	StepInitialized = "initialized"
+	StepScheduled = "scheduled"
+	StepPull = "pull"
+	StepDestroyed = "destroyed"
+	StepReady = "ready"
+
+	StageInitialized = StepInitialized
+	StageScheduled = StepScheduled
+	StagePull = StepPull
+
+	StageStarting = "starting"
+	StageRunning = "running"
+	StageStopped = "stopped"
+	StageDestroyed = "destroyed"
+	StageProvision = "provision"
+	StageReady = "ready"
+	StageCancel = "cancel"
+	StageDestroy = "destroy"
+	StageError = "error"
 )
 
 type Service struct {
 	Meta        ServiceMeta            `json:"meta"`
-	State       ServiceState           `json:"state"`
+	Status      ServiceStatus           `json:"status"`
 	Spec        ServiceSpec            `json:"spec"`
 	Deployments map[string]*Deployment `json:"deployments"`
 }
@@ -51,12 +71,9 @@ type ServiceEndpoint struct {
 	Main bool   `json:"main"`
 }
 
-type ServiceState struct {
-	Ready     bool   `json:"ready"`
-	Provision bool   `json:"provision"`
-	Destroy   bool   `json:"destroy"`
-	Error     bool   `json:"error"`
-	Message   string `json:"message"`
+type ServiceStatus struct {
+	Stage string `json:"stage"`
+	Message string `json:"message"`
 }
 
 type ServiceSpec struct {

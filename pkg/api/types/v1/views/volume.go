@@ -23,7 +23,7 @@ import "time"
 type Volume struct {
 	Meta  VolumeMeta  `json:"meta"`
 	Spec  VolumeSpec  `json:"spec"`
-	State VolumeState `json:"state"`
+	Status VolumeStatus `json:"status"`
 }
 
 type VolumeMeta struct {
@@ -35,7 +35,7 @@ type VolumeMeta struct {
 type VolumeSpec struct {
 }
 
-type VolumeState struct {
+type VolumeStatus struct {
 }
 
 type VolumeList map[string]*Volume

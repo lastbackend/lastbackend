@@ -28,7 +28,6 @@ func (pv *PodViewHelper) New(pod *types.Pod) Pod {
 	p := Pod{}
 	p.ID = pod.Meta.Name
 	p.Meta = p.toMeta(pod.Meta)
-	p.State = p.toState(pod.State)
 	p.Spec = p.toSpec(pod.Spec)
 	p.Status = p.toStatus(pod.Status)
 	return p
@@ -48,19 +47,6 @@ func (pv *Pod) toMeta(pod types.PodMeta) PodMeta {
 	meta.Created = pod.Created
 
 	return meta
-}
-
-func (pv *Pod) toState(pod types.PodState) PodState {
-	return PodState{
-		Scheduled: pod.Scheduled,
-		Provision: pod.Provision,
-		Error:     pod.Error,
-		Created:   pod.Created,
-		Pulling:   pod.Pulling,
-		Running:   pod.Running,
-		Stopped:   pod.Stopped,
-		Destroy:   pod.Destroy,
-	}
 }
 
 func (pv *Pod) toSpec(pod types.PodSpec) PodSpec {

@@ -29,8 +29,6 @@ type Pod struct {
 	ID string `json:"id"`
 	// Pod Meta
 	Meta PodMeta `json:"meta"`
-	// Pod state
-	State PodState `json:"state"`
 	// Pod Spec
 	Spec PodSpec `json:"spec"`
 	// Pod containers
@@ -60,25 +58,6 @@ type PodMeta struct {
 	Created time.Time `json:"created"`
 	// Meta updated time
 	Updated time.Time `json:"updated"`
-}
-
-type PodState struct {
-	// Pod state scheduled
-	Scheduled bool `json:"scheduled"`
-	// Pod state provision
-	Provision bool `json:"provision"`
-	// Pod state error
-	Error bool `json:"error"`
-	// Pod state created
-	Created bool `json:"created"`
-	// Pod state created
-	Pulling bool `json:"pulling"`
-	// Pod state started
-	Running bool `json:"started"`
-	// Pod state stopped
-	Stopped bool `json:"stopped"`
-	// Pod state destroy
-	Destroy bool `json:"destroy"`
 }
 
 type PodSpec struct {

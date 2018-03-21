@@ -36,7 +36,6 @@ type IRoute interface {
 	ListByNamespace(namespace string) (map[string]*types.Route, error)
 	Create(namespace *types.Namespace, opts *request.RouteCreateOptions) (*types.Route, error)
 	Update(route *types.Route, namespace *types.Namespace, opts *request.RouteUpdateOptions) (*types.Route, error)
-	SetState(route *types.Route, state *types.RouteState) error
 	SetStatus(route *types.Route, status *types.RouteStatus) error
 	Remove(route *types.Route) error
 }
@@ -89,7 +88,7 @@ func (n *Route) Create(namespace *types.Namespace, opts *request.RouteCreateOpti
 	route.Meta.Name = generator.GenerateRandomString(10)
 	route.Meta.Namespace = namespace.Meta.Name
 	route.Meta.Security = opts.Security
-	route.State.Provision = true
+	route.Status.Stage = types.StageInitialized
 
 	if len(opts.Domain) != 0 && opts.Custom {
 		route.Spec.Domain = strings.ToLower(opts.Domain)
@@ -126,7 +125,7 @@ func (n *Route) Update(route *types.Route, namespace *types.Namespace, opts *req
 
 	route.Meta.SetDefault()
 	route.Meta.Security = opts.Security
-	route.State.Provision = true
+	route.Status.Stage = types.StageProvision
 
 	route.Spec.Domain = opts.Domain
 	route.Spec.Rules = make([]*types.RouteRule, 0)
@@ -150,24 +149,21 @@ func (n *Route) Update(route *types.Route, namespace *types.Namespace, opts *req
 	return route, nil
 }
 
-func (n *Route) SetState(route *types.Route, state *types.RouteState) error {
+func (n *Route) SetStatus(route *types.Route, status *types.RouteStatus) error {
 
-	log.V(logLevel).Debugf("api:distribution:route:setstate set state route %s -> %#v", route.Meta.Name, state)
+	if route == nil {
+		log.V(logLevel).Warnf("api:distribution:route:setstatus: invalid argument %v", route)
+		return nil
+	}
 
-	route.State.Destroy = state.Destroy
-	route.State.Provision = state.Provision
+	log.V(logLevel).Debugf("api:distribution:route:setstate set state route %s -> %#v", route.Meta.Name, status)
 
-	if err := n.storage.Route().Update(n.context, route); err != nil {
-		log.V(logLevel).Errorf("api:distribution:route:setstate mark route as destroy err: %s", err)
+	route.Status = *status
+	if err := n.storage.Route().SetStatus(n.context, route); err != nil {
+		log.Errorf("Pod set status err: %s", err.Error())
 		return err
 	}
 
-	return nil
-}
-
-func (n *Route) SetStatus(route *types.Route, status *types.RouteStatus) error {
-
-	log.V(logLevel).Debugf("api:distribution:route:setstate set state route %s -> %#v", route.Meta.Name, status)
 
 	return nil
 }

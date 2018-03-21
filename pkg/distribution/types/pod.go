@@ -24,30 +24,11 @@ import (
 	"time"
 )
 
-const PodStepInitialized = "initialized"
-const PodStepScheduled = "scheduled"
-const PodStepPull = "pull"
-const PodStepDestroyed = "destroyed"
-const PodStepReady = "ready"
-
-const PodStageInitialized = PodStepInitialized
-const PodStageScheduled = PodStepScheduled
-const PodStagePull = PodStepPull
-
-const PodStageStarting = "starting"
-const PodStageRunning = "running"
-const PodStageStopped = "stopped"
-const PodStageError = "error"
-const PodStageDestroy = "destroy"
-const PodStageDestroyed = "destroyed"
-
 type Pod struct {
 	// Lock map
 	lock sync.RWMutex
 	// Pod Meta
 	Meta PodMeta `json:"meta" yaml:"meta"`
-	// Pod state
-	State PodState `json:"state" yaml:"state"`
 	// Pod Spec
 	Spec PodSpec `json:"spec" yaml:"spec"`
 	// Containers status info
@@ -75,27 +56,6 @@ type PodMeta struct {
 type PodSpec struct {
 	State    SpecState    `json:"state"`
 	Template SpecTemplate `json:"template" yaml:"template"`
-}
-
-type PodState struct {
-	// Pod state ready
-	Ready bool `json:"ready" yaml:"ready"`
-	// Pod state scheduled
-	Scheduled bool `json:"scheduled" yaml:"scheduled"`
-	// Pod state provision
-	Provision bool `json:"provision" yaml:"provision"`
-	// Pod state error
-	Error bool `json:"error" yaml:"error"`
-	// Pod state created
-	Created bool `json:"created" yaml:"created"`
-	// Pod state created
-	Pulling bool `json:"pulling" yaml:"pulling"`
-	// Pod state started
-	Running bool `json:"started" yaml:"started"`
-	// Pod state stopped
-	Stopped bool `json:"stopped" yaml:"stopped"`
-	// Pod state destroy
-	Destroy bool `json:"destroy" yaml:"destroy"`
 }
 
 type PodStatus struct {
@@ -205,82 +165,41 @@ func (p *Pod) SelfLink() string {
 }
 
 func (p *Pod) MarkAsInitialized() {
-	p.State.Pulling = false
-	p.State.Created = true
-	p.State.Running = false
-	p.State.Stopped = true
-	p.State.Provision = true
-	p.State.Destroy = false
-	p.State.Error = false
-	p.Status.Stage = PodStageInitialized
+	p.Status.Stage = StageInitialized
 	p.Status.Message = EmptyString
 }
 
 func (p *Pod) MarkAsPull() {
-	p.State.Pulling = true
-	p.State.Created = false
-	p.State.Running = false
-	p.State.Stopped = true
-	p.State.Provision = true
-	p.State.Destroy = false
-	p.State.Error = false
-	p.Status.Stage = PodStepPull
+	p.Status.Stage = StepPull
+	p.Status.Message = EmptyString
+}
+
+func (p *Pod) MarkAsDestroy() {
+	p.Status.Stage = StageDestroy
 	p.Status.Message = EmptyString
 }
 
 func (p *Pod) MarkAsDestroyed() {
-	p.State.Pulling = false
-	p.State.Created = false
-	p.State.Running = false
-	p.State.Stopped = true
-	p.State.Provision = false
-	p.State.Destroy = true
-	p.State.Error = false
-	p.Status.Stage = PodStageDestroyed
+	p.Status.Stage = StageDestroyed
 	p.Status.Message = EmptyString
 }
 
 func (p *Pod) MarkAsStarting() {
-	p.State.Pulling = false
-	p.State.Created = false
-	p.State.Running = false
-	p.State.Stopped = false
-	p.State.Provision = true
-	p.State.Error = false
-	p.Status.Stage = PodStageStarting
+	p.Status.Stage = StageStarting
 	p.Status.Message = EmptyString
 }
 
 func (p *Pod) MarkAsRunning() {
-	p.State.Pulling = false
-	p.State.Created = false
-	p.State.Running = true
-	p.State.Stopped = false
-	p.State.Provision = false
-	p.State.Error = false
-	p.Status.Stage = PodStageRunning
+	p.Status.Stage = StageRunning
 	p.Status.Message = EmptyString
 }
 
 func (p *Pod) MarkAsStopped() {
-	p.State.Pulling = false
-	p.State.Created = false
-	p.State.Running = false
-	p.State.Stopped = true
-	p.State.Provision = false
-	p.State.Error = false
-	p.Status.Stage = PodStageStopped
+	p.Status.Stage = StageStopped
 	p.Status.Message = EmptyString
 }
 
 func (p *Pod) MarkAsError(err error) {
-	p.State.Pulling = false
-	p.State.Created = false
-	p.State.Running = false
-	p.State.Stopped = true
-	p.State.Provision = false
-	p.State.Destroy = false
-	p.State.Error = true
-	p.Status.Stage = PodStageError
+	p.Status.Stage = StageError
 	p.Status.Message = err.Error()
 }

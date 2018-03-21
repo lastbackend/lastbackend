@@ -105,17 +105,17 @@ func Manage(ctx context.Context, route *types.Route) error {
 		return err
 	}
 
-	if config.State.Destroy {
-		events.NewRouteStateEvent(ctx, route)
-		return nil
-	}
+	//if route.Spec.Destroy {
+	//	events.NewRouteStatusEvent(ctx, route)
+	//	return nil
+	//}
 
 	if err := Create(ctx, config); err != nil {
 		log.Errorf("Route: Manage: create route %s config err: %s", config.ID, err)
 		return err
 	}
 
-	events.NewRouteStateEvent(ctx, route)
+	events.NewRouteStatusEvent(ctx, route)
 
 	return nil
 }

@@ -60,7 +60,7 @@ func (s *PodStorage) Get(ctx context.Context, namespace, service, deployment, na
 		return nil, err
 	}
 
-	const filter = `\b.+` + podStorage + `\/.+\/(?:meta|state|spec|status)\b`
+	const filter = `\b.+` + podStorage + `\/.+\/(?:meta|status|spec|status)\b`
 	var (
 		pod = new(types.Pod)
 	)
@@ -96,7 +96,7 @@ func (s *PodStorage) ListByNamespace(ctx context.Context, namespace string) (map
 		return nil, err
 	}
 
-	const filter = `\b.+` + podStorage + `\/.+\/(?:meta|state|spec|status)\b`
+	const filter = `\b.+` + podStorage + `\/.+\/(?:meta|status|spec|status)\b`
 
 	var (
 		pods = make(map[string]*types.Pod)
@@ -135,7 +135,7 @@ func (s *PodStorage) ListByService(ctx context.Context, namespace, service strin
 		return nil, err
 	}
 
-	const filter = `\b.+` + podStorage + `\/.+\/(?:meta|state|spec|status)\b`
+	const filter = `\b.+` + podStorage + `\/.+\/(?:meta|status|spec|status)\b`
 
 	var (
 		pods = make(map[string]*types.Pod)
@@ -180,7 +180,7 @@ func (s *PodStorage) ListByDeployment(ctx context.Context, namespace, service, d
 		return nil, err
 	}
 
-	const filter = `\b.+` + podStorage + `\/.+\/(?:meta|state|spec|status)\b`
+	const filter = `\b.+` + podStorage + `\/.+\/(?:meta|status|spec|status)\b`
 
 	var (
 		pods = make(map[string]*types.Pod)
@@ -227,9 +227,9 @@ func (s *PodStorage) SetSpec(ctx context.Context, pod *types.Pod) error {
 	return nil
 }
 
-// Update pod state
-func (s *PodStorage) SetState(ctx context.Context, pod *types.Pod) error {
-	log.V(logLevel).Debugf("storage:etcd:pod:> update pod state: %#v", pod)
+// Update pod status
+func (s *PodStorage) SetStatus(ctx context.Context, pod *types.Pod) error {
+	log.V(logLevel).Debugf("storage:etcd:pod:> update pod status: %#v", pod)
 
 	if err := s.checkPodExists(ctx, pod); err != nil {
 		return err
@@ -242,8 +242,8 @@ func (s *PodStorage) SetState(ctx context.Context, pod *types.Pod) error {
 	}
 	defer destroy()
 
-	key := keyCreate(podStorage, s.keyGet(pod), "state")
-	if err := client.Upsert(ctx, key, pod.State, nil, 0); err != nil {
+	key := keyCreate(podStorage, s.keyGet(pod), "status")
+	if err := client.Upsert(ctx, key, pod.Status, nil, 0); err != nil {
 		log.V(logLevel).Errorf("storage:etcd:pod:>: update pod err: %s", err.Error())
 		return err
 	}
@@ -271,12 +271,6 @@ func (s *PodStorage) Insert(ctx context.Context, pod *types.Pod) error {
 
 	keyMeta := keyCreate(podStorage, s.keyGet(pod), "meta")
 	if err := tx.Create(keyMeta, pod.Meta, 0); err != nil {
-		log.V(logLevel).Errorf("storage:etcd:pod:> insert pod err: %s", err.Error())
-		return err
-	}
-
-	keyState := keyCreate(podStorage, s.keyGet(pod), "state")
-	if err := tx.Create(keyState, pod.State, 0); err != nil {
 		log.V(logLevel).Errorf("storage:etcd:pod:> insert pod err: %s", err.Error())
 		return err
 	}
@@ -444,40 +438,7 @@ func (s *PodStorage) WatchSpec(ctx context.Context, pod chan *types.Pod) error {
 	return nil
 }
 
-// Watch pod state changes
-func (s *PodStorage) WatchState(ctx context.Context, pod chan *types.Pod) error {
-	log.V(logLevel).Debug("storage:etcd:pod:> watch pod")
-
-	const filter = `\b\/` + podStorage + `\/(.+):(.+):(.+):(.+)/state\b`
-	client, destroy, err := getClient(ctx)
-	if err != nil {
-		log.V(logLevel).Errorf("storage:etcd:pod:> watch pod err: %s", err.Error())
-		return err
-	}
-	defer destroy()
-
-	r, _ := regexp.Compile(filter)
-	key := keyCreate(podStorage)
-	cb := func(action, key string, _ []byte) {
-		keys := r.FindStringSubmatch(key)
-		if len(keys) < 3 {
-			return
-		}
-
-		if d, err := s.Get(ctx, keys[1], keys[2], keys[3], keys[4]); err == nil {
-			pod <- d
-		}
-	}
-
-	if err := client.Watch(ctx, key, filter, cb); err != nil {
-		log.V(logLevel).Errorf("storage:etcd:pod:> watch pod err: %s", err.Error())
-		return err
-	}
-
-	return nil
-}
-
-// Watch pod state changes
+// Watch pod status changes
 func (s *PodStorage) WatchStatus(ctx context.Context, pod chan *types.Pod) error {
 	log.V(logLevel).Debug("storage:etcd:pod:> watch pod")
 

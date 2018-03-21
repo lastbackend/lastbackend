@@ -29,8 +29,7 @@ func (dv *DeploymentView) New(obj *types.Deployment, pl map[string]*types.Pod) *
 	d := Deployment{}
 	d.ID = obj.Meta.Name
 	d.Meta = d.ToMeta(obj.Meta)
-	d.Status = obj.Meta.Status
-	d.State = d.ToState(obj.State)
+	d.Status = d.ToStatus(obj.Status)
 	d.Spec = d.ToSpec(obj.Spec)
 	d.Replicas = d.ToReplicas(obj.Replicas)
 	d.Pods = d.ToPods(pl)
@@ -53,12 +52,10 @@ func (di *Deployment) ToMeta(obj types.DeploymentMeta) DeploymentMeta {
 	return meta
 }
 
-func (di *Deployment) ToState(obj types.DeploymentState) DeploymentStateInfo {
-	return DeploymentStateInfo{
-		Provision: obj.Provision,
-		Cancel:    obj.Cancel,
-		Error:     obj.Error,
-		Destroy:   obj.Destroy,
+func (di *Deployment) ToStatus(obj types.DeploymentStatus) DeploymentStatusInfo {
+	return DeploymentStatusInfo{
+		Stage: obj.Stage,
+		Message: obj.Message,
 	}
 }
 

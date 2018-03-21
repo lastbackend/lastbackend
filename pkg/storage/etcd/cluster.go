@@ -56,8 +56,8 @@ func (s *ClusterStorage) Insert(ctx context.Context, cluster *types.Cluster) err
 		return err
 	}
 
-	keyState := keyCreate(clusterStorage, "state")
-	if err := client.Create(ctx, keyState, cluster.State, nil, 0); err != nil {
+	keyStatus := keyCreate(clusterStorage, "status")
+	if err := client.Create(ctx, keyStatus, cluster.Status, nil, 0); err != nil {
 		log.V(logLevel).Errorf("storage:etcd:cluster:> insert err: %s", err.Error())
 		return err
 	}
@@ -68,9 +68,9 @@ func (s *ClusterStorage) Insert(ctx context.Context, cluster *types.Cluster) err
 // Get - return  cluster info from mock storage
 func (s *ClusterStorage) Get(ctx context.Context) (*types.Cluster, error) {
 
-	log.V(logLevel).Debug("storage:etcd:cluster:> get meta|state")
+	log.V(logLevel).Debug("storage:etcd:cluster:> get meta|status")
 
-	const filter = `\b.+` + clusterStorage + `\/(?:meta|state)\b`
+	const filter = `\b.+` + clusterStorage + `\/(?:meta|status)\b`
 
 	client, destroy, err := getClient(ctx)
 	if err != nil {

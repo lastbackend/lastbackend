@@ -25,8 +25,6 @@ type VolumeList []Volume
 type Volume struct {
 	// Volume meta
 	Meta VolumeMeta `json:"meta" yaml:"meta"`
-	// Volume stat
-	State VolumeState `json:"state" yaml:"state"`
 	// Volume spec
 	Spec VolumeSpec `json:"spec" yaml:"spec"`
 	// Volume status
@@ -38,14 +36,13 @@ type VolumeMeta struct {
 	Namespace string `json:"namespace"`
 }
 
-type VolumeState struct {
-	Provision bool `json:"provision"`
-	Ready     bool `json:"ready"`
-}
-
 type VolumeSpec struct {
+	State VolumeSpecState `json:"state"`
 }
 
+type VolumeSpecState struct {
+	Destroy bool `json:"destroy"`
+}
 
 type VolumeCreateOptions struct {
 

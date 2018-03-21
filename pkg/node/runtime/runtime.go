@@ -72,7 +72,7 @@ func (r *Runtime) Subscribe() {
 			select {
 			case p := <-pc:
 				log.Debugf("node:runtime:subscribe:> new pod state event: %#v", p)
-				events.NewPodStateEvent(r.ctx, p)
+				events.NewPodStatusEvent(r.ctx, p)
 			}
 		}
 	}()

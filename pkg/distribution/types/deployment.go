@@ -24,8 +24,8 @@ type Deployment struct {
 	Meta DeploymentMeta `json:"meta"`
 	// Deployment spec
 	Spec DeploymentSpec `json:"spec"`
-	// Deployment state
-	State DeploymentState `json:"state"`
+	// Deployment status
+	Status DeploymentStatus `json:"status"`
 	// Deployment replicas
 	Replicas DeploymentReplicas `json:"replicas"`
 }
@@ -54,12 +54,9 @@ type DeploymentSpec struct {
 	Template SpecTemplate `json:"template"`
 }
 
-type DeploymentState struct {
-	Ready     bool `json:"ready"`
-	Provision bool `json:"provision"`
-	Error     bool `json:"error"`
-	Destroy   bool `json:"destroy"`
-	Cancel    bool `json:"cancel"`
+type DeploymentStatus struct {
+	Stage string `json:"stage"`
+	Message string `json:"message"`
 }
 
 type DeploymentReplicas struct {
@@ -83,22 +80,22 @@ func (d *Deployment) SelfLink() string {
 	return d.Meta.SelfLink
 }
 
-func (d *DeploymentState) SetProvision() {
-	d.Ready = false
-	d.Provision = true
+func (d *DeploymentStatus) SetProvision() {
+	d.Stage = StageProvision
+	d.Message = ""
 }
 
-func (d *DeploymentState) SetReady() {
-	d.Ready = true
-	d.Provision = false
+func (d *DeploymentStatus) SetReady() {
+	d.Stage = StageReady
+	d.Message = ""
 }
 
-func (d *DeploymentState) SetCancel() {
-	d.Ready = false
-	d.Provision = true
+func (d *DeploymentStatus) SetCancel() {
+	d.Stage = StageCancel
+	d.Message = ""
 }
 
-func (d *DeploymentState) SetDestroy() {
-	d.Ready = false
-	d.Provision = true
+func (d *DeploymentStatus) SetDestroy() {
+	d.Stage = StageDestroy
+	d.Message = ""
 }

@@ -54,7 +54,7 @@ func (s *ServiceStorage) Get(ctx context.Context, namespace, name string) (*type
 		return nil, err
 	}
 
-	const filter = `\b.+` + serviceStorage + `\/.+\/(?:meta|state|spec)\b`
+	const filter = `\b.+` + serviceStorage + `\/.+\/(?:meta|status|spec)\b`
 	var (
 		service = new(types.Service)
 	)
@@ -90,7 +90,7 @@ func (s *ServiceStorage) ListByNamespace(ctx context.Context, namespace string) 
 		return nil, err
 	}
 
-	const filter = `\b.+` + serviceStorage + `\/.+\/(?:meta|state|spec)\b`
+	const filter = `\b.+` + serviceStorage + `\/.+\/(?:meta|status|spec)\b`
 
 	var (
 		services = make(map[string]*types.Service)
@@ -112,10 +112,10 @@ func (s *ServiceStorage) ListByNamespace(ctx context.Context, namespace string) 
 	return services, nil
 }
 
-// Update service state
-func (s *ServiceStorage) SetState(ctx context.Context, service *types.Service) error {
+// Update service status
+func (s *ServiceStorage) SetStatus(ctx context.Context, service *types.Service) error {
 
-	log.V(logLevel).Debugf("storage:etcd:service:> update service state: %#v", service)
+	log.V(logLevel).Debugf("storage:etcd:service:> update service status: %#v", service)
 
 	if err := s.checkServiceExists(ctx, service); err != nil {
 		return err
@@ -128,8 +128,8 @@ func (s *ServiceStorage) SetState(ctx context.Context, service *types.Service) e
 	}
 	defer destroy()
 
-	key := keyCreate(serviceStorage, s.keyGet(service), "state")
-	if err := client.Upsert(ctx, key, service.State, nil, 0); err != nil {
+	key := keyCreate(serviceStorage, s.keyGet(service), "status")
+	if err := client.Upsert(ctx, key, service.Status, nil, 0); err != nil {
 		log.V(logLevel).Errorf("storage:etcd:service:>: update service err: %s", err.Error())
 		return err
 	}
@@ -186,8 +186,8 @@ func (s *ServiceStorage) Insert(ctx context.Context, service *types.Service) err
 		return err
 	}
 
-	keyState := keyCreate(serviceStorage, s.keyGet(service), "state")
-	if err := tx.Create(keyState, service.State, 0); err != nil {
+	keyStatus := keyCreate(serviceStorage, s.keyGet(service), "status")
+	if err := tx.Create(keyStatus, service.Status, 0); err != nil {
 		log.V(logLevel).Errorf("storage:etcd:service:> insert service err: %s", err.Error())
 		return err
 	}
@@ -325,12 +325,12 @@ func (s *ServiceStorage) WatchSpec(ctx context.Context, service chan *types.Serv
 	return nil
 }
 
-// Watch service state changes
-func (s *ServiceStorage) WatchState(ctx context.Context, service chan *types.Service) error {
+// Watch service status changes
+func (s *ServiceStorage) WatchStatus(ctx context.Context, service chan *types.Service) error {
 
 	log.V(logLevel).Debug("storage:etcd:service:> watch service")
 
-	const filter = `\b\/` + serviceStorage + `\/(.+):(.+)/state\b`
+	const filter = `\b\/` + serviceStorage + `\/(.+):(.+)/status\b`
 	client, destroy, err := getClient(ctx)
 	if err != nil {
 		log.V(logLevel).Errorf("storage:etcd:service:> watch service err: %s", err.Error())

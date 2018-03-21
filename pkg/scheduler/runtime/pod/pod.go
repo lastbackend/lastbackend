@@ -97,8 +97,8 @@ func Provision(p *types.Pod) error {
 	}
 
 	sort.Slice(nl, func(i, j int) bool {
-		n1 := nl[i].State.Capacity.Memory - nl[i].State.Allocated.Memory
-		n2 := nl[j].State.Capacity.Memory - nl[j].State.Allocated.Memory
+		n1 := nl[i].Status.Capacity.Memory - nl[i].Status.Allocated.Memory
+		n2 := nl[j].Status.Capacity.Memory - nl[j].Status.Allocated.Memory
 		return n2 < n1
 	})
 
@@ -109,9 +109,9 @@ func Provision(p *types.Pod) error {
 			continue
 		}
 
-		ram := n.State.Capacity.Memory - n.State.Allocated.Memory
-		pds := n.State.Capacity.Pods   - n.State.Allocated.Pods
-		cns := n.State.Capacity.Containers   - n.State.Allocated.Containers
+		ram := n.Status.Capacity.Memory - n.Status.Allocated.Memory
+		pds := n.Status.Capacity.Pods   - n.Status.Allocated.Pods
+		cns := n.Status.Capacity.Containers   - n.Status.Allocated.Containers
 
 		if ram <= memory {
 			continue
@@ -133,10 +133,10 @@ func Provision(p *types.Pod) error {
 
 		log.Debug("Node: Allocate: Available node not found")
 
-		p.Status.Stage = types.PodStageError
-		p.Status.Message = errors.NodeNotFound
-
-		if err := distribution.NewPodModel(context.Background(), stg).SetState(p); err != nil {
+		if err := distribution.NewPodModel(context.Background(), stg).SetStatus(p, &types.PodStatus{
+			Stage: types.StageError,
+			Message :errors.NodeNotFound,
+		}); err != nil {
 			log.Errorf("set pod state error: %s", err.Error())
 			return err
 		}

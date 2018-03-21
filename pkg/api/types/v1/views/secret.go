@@ -23,7 +23,7 @@ import "time"
 type Secret struct {
 	Meta  SecretMeta  `json:"meta"`
 	Spec  SecretSpec  `json:"spec"`
-	State SecretState `json:"state"`
+	Status SecretStatus `json:"status"`
 }
 
 type SecretMeta struct {
@@ -36,7 +36,7 @@ type SecretMeta struct {
 type SecretSpec struct {
 }
 
-type SecretState struct {
+type SecretStatus struct {
 }
 
 type SecretList map[string]*Secret

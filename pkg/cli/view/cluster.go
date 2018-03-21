@@ -85,20 +85,20 @@ func FromApiClusterView(cluster *views.Cluster) *Cluster {
 		item.Meta.Labels = make(map[string]string, 0)
 	}
 
-	item.State.Nodes.Total = cluster.State.Nodes.Total
-	item.State.Nodes.Online = cluster.State.Nodes.Online
-	item.State.Nodes.Offline = cluster.State.Nodes.Offline
-	item.State.Capacity.Containers = cluster.State.Capacity.Containers
-	item.State.Capacity.Pods = cluster.State.Capacity.Pods
-	item.State.Capacity.Memory = cluster.State.Capacity.Memory
-	item.State.Capacity.Cpu = cluster.State.Capacity.Cpu
-	item.State.Capacity.Storage = cluster.State.Capacity.Storage
-	item.State.Allocated.Containers = cluster.State.Allocated.Containers
-	item.State.Allocated.Pods = cluster.State.Allocated.Pods
-	item.State.Allocated.Memory = cluster.State.Allocated.Memory
-	item.State.Allocated.Cpu = cluster.State.Allocated.Cpu
-	item.State.Allocated.Storage = cluster.State.Allocated.Storage
-	item.State.Deleted = cluster.State.Deleted
+	item.State.Nodes.Total = cluster.Status.Nodes.Total
+	item.State.Nodes.Online = cluster.Status.Nodes.Online
+	item.State.Nodes.Offline = cluster.Status.Nodes.Offline
+	item.State.Capacity.Containers = cluster.Status.Capacity.Containers
+	item.State.Capacity.Pods = cluster.Status.Capacity.Pods
+	item.State.Capacity.Memory = cluster.Status.Capacity.Memory
+	item.State.Capacity.Cpu = cluster.Status.Capacity.Cpu
+	item.State.Capacity.Storage = cluster.Status.Capacity.Storage
+	item.State.Allocated.Containers = cluster.Status.Allocated.Containers
+	item.State.Allocated.Pods = cluster.Status.Allocated.Pods
+	item.State.Allocated.Memory = cluster.Status.Allocated.Memory
+	item.State.Allocated.Cpu = cluster.Status.Allocated.Cpu
+	item.State.Allocated.Storage = cluster.Status.Allocated.Storage
+	item.State.Deleted = cluster.Status.Deleted
 
 	return item
 }

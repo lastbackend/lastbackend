@@ -54,7 +54,7 @@ func (pc *Controller) Watch(node chan *types.Node) {
 					}
 
 					// If pod state not set to provision then need skip
-					if !p.State.Provision {
+					if !(p.Status.Stage == types.StageProvision) {
 						continue
 					}
 
@@ -116,7 +116,7 @@ func (pc *Controller) Resume() {
 		}
 
 		for _, p := range pods {
-			if p.State.Provision == true {
+			if p.Status.Stage == types.StageProvision {
 				pc.pods <- p
 			}
 		}

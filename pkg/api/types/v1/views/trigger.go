@@ -23,7 +23,7 @@ import "time"
 type Trigger struct {
 	Meta  TriggerMeta  `json:"meta"`
 	Spec  TriggerSpec  `json:"spec"`
-	State TriggerState `json:"state"`
+	Status TriggerStatus `json:"status"`
 }
 
 type TriggerMeta struct {
@@ -35,7 +35,7 @@ type TriggerMeta struct {
 type TriggerSpec struct {
 }
 
-type TriggerState struct {
+type TriggerStatus struct {
 }
 
 type TriggerList map[string]*Trigger
