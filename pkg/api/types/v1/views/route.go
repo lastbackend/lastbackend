@@ -29,6 +29,7 @@ type Route struct {
 type RouteMeta struct {
 	Name      string    `json:"name"`
 	Namespace string    `json:"namespace"`
+	SelfLink  string    `json:"self_link"`
 	Security  bool      `json:"security"`
 	Updated   time.Time `json:"updated"`
 	Created   time.Time `json:"created"`

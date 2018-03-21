@@ -25,7 +25,6 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/lastbackend/lastbackend/pkg/api/envs"
 	"github.com/lastbackend/lastbackend/pkg/api/http/namespace"
-	"github.com/lastbackend/lastbackend/pkg/api/types/v1"
 	"github.com/lastbackend/lastbackend/pkg/api/types/v1/request"
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 	"github.com/lastbackend/lastbackend/pkg/storage"
@@ -36,13 +35,18 @@ import (
 	"net/http/httptest"
 	"strings"
 	"testing"
+	"github.com/lastbackend/lastbackend/pkg/api/types/v1/views"
+	"github.com/lastbackend/lastbackend/pkg/api/types/v1"
+	"errors"
 )
 
 // Testing NamespaceInfoH handler
 func TestNamespaceInfo(t *testing.T) {
 
-	strg, _ := storage.GetMock()
-	envs.Get().SetStorage(strg)
+	var ctx = context.Background()
+
+	stg, _ := storage.GetMock()
+	envs.Get().SetStorage(stg)
 	viper.Set("verbose", 7)
 
 	ns1 := getNamespaceAsset("demo", "")
@@ -52,75 +56,98 @@ func TestNamespaceInfo(t *testing.T) {
 	nl[ns1.Meta.Name] = ns1
 	nl[ns2.Meta.Name] = ns2
 
-	err := envs.Get().GetStorage().Namespace().Clear(context.Background())
-	assert.NoError(t, err)
+	type fields struct {
+		stg storage.Storage
+	}
 
-	err = envs.Get().GetStorage().Namespace().Insert(context.Background(), ns1)
-	assert.NoError(t, err)
-
-	v, err := v1.View().Namespace().New(ns1).ToJson()
-	assert.NoError(t, err)
+	type args struct {
+		ctx       context.Context
+		namespace *types.Namespace
+	}
 
 	tests := []struct {
-		url          string
+		name         string
+		fields       fields
+		args         args
 		headers      map[string]string
 		handler      func(http.ResponseWriter, *http.Request)
 		description  string
-		expectedBody string
+		err          string
+		want         *views.Namespace
+		wantErr      bool
 		expectedCode int
 	}{
 		{
-			url:          fmt.Sprintf("/namespace/%s", ns2.Meta.Name),
+			name:         "checking get namespace if not exists",
+			args:         args{ctx, ns2},
+			fields:       fields{stg},
 			handler:      namespace.NamespaceInfoH,
 			description:  "namespace not found",
-			expectedBody: "{\"code\":404,\"status\":\"Not Found\",\"message\":\"Namespace not found\"}",
+			err:          "{\"code\":404,\"status\":\"Not Found\",\"message\":\"Namespace not found\"}",
+			wantErr:      true,
 			expectedCode: http.StatusNotFound,
 		},
 		{
-			url:          fmt.Sprintf("/namespace/%s", ns1.Meta.Name),
+			name:         "checking success get namespace",
+			args:         args{ctx, ns1},
+			fields:       fields{stg},
 			handler:      namespace.NamespaceInfoH,
 			description:  "successfully",
-			expectedBody: string(v),
+			want:         v1.View().Namespace().New(ns1),
+			wantErr:      false,
 			expectedCode: http.StatusOK,
 		},
 	}
 
 	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			err := envs.Get().GetStorage().Namespace().Clear(context.Background())
+			assert.NoError(t, err)
 
-		// Create assert request to pass to our handler. We don't have any query parameters for now, so we'll
-		// pass 'nil' as the third parameter.
-		req, err := http.NewRequest("GET", tc.url, nil)
-		assert.NoError(t, err)
+			err = envs.Get().GetStorage().Namespace().Insert(context.Background(), ns1)
+			assert.NoError(t, err)
 
-		if tc.headers != nil {
-			for key, val := range tc.headers {
-				req.Header.Set(key, val)
+			// Create assert request to pass to our handler. We don't have any query parameters for now, so we'll
+			// pass 'nil' as the third parameter.
+			req, err := http.NewRequest("GET", fmt.Sprintf("/namespace/%s", tc.args.namespace.Meta.Name), nil)
+			assert.NoError(t, err)
+
+			if tc.headers != nil {
+				for key, val := range tc.headers {
+					req.Header.Set(key, val)
+				}
 			}
-		}
 
-		r := mux.NewRouter()
-		r.HandleFunc("/namespace/{namespace}", tc.handler)
+			r := mux.NewRouter()
+			r.HandleFunc("/namespace/{namespace}", tc.handler)
 
-		setRequestVars(r, req)
+			setRequestVars(r, req)
 
-		// We create assert ResponseRecorder (which satisfies http.ResponseWriter) to record the response.
-		res := httptest.NewRecorder()
+			// We create assert ResponseRecorder (which satisfies http.ResponseWriter) to record the response.
+			res := httptest.NewRecorder()
 
-		// Our handlers satisfy http.Handler, so we can call their ServeHTTP method
-		// directly and pass in our Request and ResponseRecorder.
-		r.ServeHTTP(res, req)
+			// Our handlers satisfy http.Handler, so we can call their ServeHTTP method
+			// directly and pass in our Request and ResponseRecorder.
+			r.ServeHTTP(res, req)
 
-		// Check the status code is what we expect.
-		assert.Equal(t, tc.expectedCode, res.Code, tc.description)
+			// Check the status code is what we expect.
+			assert.Equal(t, tc.expectedCode, res.Code, tc.description)
 
-		body, err := ioutil.ReadAll(res.Body)
-		assert.NoError(t, err)
+			body, err := ioutil.ReadAll(res.Body)
+			assert.NoError(t, err)
 
-		if res.Code == http.StatusOK {
-			assert.Equal(t, tc.expectedBody, string(v), tc.description)
-		} else {
-			assert.Equal(t, tc.expectedBody, string(body), tc.description)
-		}
+			if tc.wantErr && res.Code != 200 {
+				assert.Equal(t, tc.err, string(body), tc.description)
+			} else {
+
+				n := new(views.Namespace)
+				err := json.Unmarshal(body, &n)
+				assert.NoError(t, err)
+
+				assert.Equal(t, tc.want.Meta.Name, n.Meta.Name, tc.description)
+			}
+
+		})
 	}
 
 }
@@ -128,8 +155,10 @@ func TestNamespaceInfo(t *testing.T) {
 // Testing NamespaceInfoH handler
 func TestNamespaceList(t *testing.T) {
 
-	strg, _ := storage.GetMock()
-	envs.Get().SetStorage(strg)
+	var ctx = context.Background()
+
+	stg, _ := storage.GetMock()
+	envs.Get().SetStorage(stg)
 	viper.Set("verbose", 0)
 
 	ns1 := getNamespaceAsset("demo", "")
@@ -139,154 +168,35 @@ func TestNamespaceList(t *testing.T) {
 	nl[ns1.Meta.Name] = ns1
 	nl[ns2.Meta.Name] = ns2
 
-	err := envs.Get().GetStorage().Namespace().Clear(context.Background())
-	assert.NoError(t, err)
-
-	err = envs.Get().GetStorage().Namespace().Insert(context.Background(), ns1)
-	assert.NoError(t, err)
-
-	err = envs.Get().GetStorage().Namespace().Insert(context.Background(), ns2)
-	assert.NoError(t, err)
-
-	v, err := v1.View().Namespace().NewList(nl).ToJson()
-	assert.NoError(t, err)
-
-	tests := []struct {
-		url          string
-		headers      map[string]string
-		handler      func(http.ResponseWriter, *http.Request)
-		description  string
-		expectedBody string
-		expectedCode int
-	}{
-		{
-			url:          "/namespace",
-			handler:      namespace.NamespaceListH,
-			description:  "successfully",
-			expectedBody: string(v),
-			expectedCode: http.StatusOK,
-		},
+	type fields struct {
+		stg storage.Storage
 	}
 
-	for _, tc := range tests {
-
-		// Create assert request to pass to our handler. We don't have any query parameters for now, so we'll
-		// pass 'nil' as the third parameter.
-		req, err := http.NewRequest("GET", tc.url, nil)
-		assert.NoError(t, err)
-
-		if tc.headers != nil {
-			for key, val := range tc.headers {
-				req.Header.Set(key, val)
-			}
-		}
-
-		r := mux.NewRouter()
-		r.HandleFunc("/namespace", tc.handler)
-
-		setRequestVars(r, req)
-
-		// We create assert ResponseRecorder (which satisfies http.ResponseWriter) to record the response.
-		res := httptest.NewRecorder()
-
-		// Our handlers satisfy http.Handler, so we can call their ServeHTTP method
-		// directly and pass in our Request and ResponseRecorder.
-		r.ServeHTTP(res, req)
-
-		// Check the status code is what we expect.
-		assert.Equal(t, tc.expectedCode, res.Code, tc.description)
-
-		body, err := ioutil.ReadAll(res.Body)
-		assert.NoError(t, err)
-
-		if res.Code == http.StatusOK {
-			assert.Equal(t, tc.expectedBody, string(v), tc.description)
-		} else {
-			assert.Equal(t, tc.expectedBody, string(body), tc.description)
-		}
+	type args struct {
+		ctx       context.Context
+		namespace *types.Namespace
 	}
-
-}
-
-type NamespaceCreateOptions struct {
-	request.NamespaceCreateOptions
-}
-
-func createNamespaceCreateOptions(name, description string, quotas *request.NamespaceQuotasOptions) *NamespaceCreateOptions {
-	opts := new(NamespaceCreateOptions)
-	opts.Name = name
-	opts.Description = description
-	opts.Quotas = quotas
-	return opts
-}
-
-func (s *NamespaceCreateOptions) toJson() string {
-	buf, _ := json.Marshal(s)
-	return string(buf)
-}
-
-// Testing NamespaceCreateH handler
-func TestNamespaceCreate(t *testing.T) {
-
-	strg, _ := storage.GetMock()
-	envs.Get().SetStorage(strg)
-	viper.Set("verbose", 0)
-
-	ns1 := getNamespaceAsset("demo", "")
-
-	err := envs.Get().GetStorage().Namespace().Clear(context.Background())
-	assert.NoError(t, err)
-
-	err = envs.Get().GetStorage().Namespace().Insert(context.Background(), ns1)
-	assert.NoError(t, err)
-
-	v, err := v1.View().Namespace().New(ns1).ToJson()
-	assert.NoError(t, err)
 
 	tests := []struct {
 		name         string
-		url          string
+		fields       fields
+		args         args
 		headers      map[string]string
 		handler      func(http.ResponseWriter, *http.Request)
 		description  string
-		data         string
-		expectedBody string
+		err          string
+		want         map[string]*types.Namespace
+		wantErr      bool
 		expectedCode int
 	}{
 		{
-			name:         "check create namespace success if name already exists",
-			description:  "namespace already exists",
-			url:          "/namespace",
-			handler:      namespace.NamespaceCreateH,
-			data:         createNamespaceCreateOptions("demo", "", nil).toJson(),
-			expectedBody: "{\"code\":400,\"status\":\"Not Unique\",\"message\":\"Name is already in use\"}",
-			expectedCode: http.StatusBadRequest,
-		},
-		{
-			name:         "check create namespace error",
+			name:         "checking success get namespace list",
+			args:         args{ctx, nil},
+			fields:       fields{stg},
+			handler:      namespace.NamespaceListH,
 			description:  "successfully",
-			url:          "/namespace",
-			handler:      namespace.NamespaceCreateH,
-			data:         createNamespaceCreateOptions("__test", "", &request.NamespaceQuotasOptions{RAM: 2, Routes: 1}).toJson(),
-			expectedBody: "{\"code\":400,\"status\":\"Bad Parameter\",\"message\":\"Bad name parameter\"}",
-			expectedCode: http.StatusBadRequest,
-		},
-		{
-			name:         "check create namespace error",
-			description:  "successfully",
-			url:          "/namespace",
-			handler:      namespace.NamespaceCreateH,
-			data:         "{name:demo}",
-			expectedBody: "{\"code\":400,\"status\":\"Incorrect json\",\"message\":\"Incorrect json\"}",
-			expectedCode: http.StatusBadRequest,
-		},
-		{
-			name:         "check create namespace success",
-			description:  "successfully",
-			url:          "/namespace",
-			handler:      namespace.NamespaceCreateH,
-			data:         createNamespaceCreateOptions("test", "", &request.NamespaceQuotasOptions{RAM: 2, Routes: 1}).toJson(),
-			expectedBody: string(v),
+			want:         nl,
+			wantErr:      false,
 			expectedCode: http.StatusOK,
 		},
 	}
@@ -294,9 +204,18 @@ func TestNamespaceCreate(t *testing.T) {
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
 
+			err := envs.Get().GetStorage().Namespace().Clear(context.Background())
+			assert.NoError(t, err)
+
+			err = envs.Get().GetStorage().Namespace().Insert(context.Background(), ns1)
+			assert.NoError(t, err)
+
+			err = envs.Get().GetStorage().Namespace().Insert(context.Background(), ns2)
+			assert.NoError(t, err)
+
 			// Create assert request to pass to our handler. We don't have any query parameters for now, so we'll
 			// pass 'nil' as the third parameter.
-			req, err := http.NewRequest("POST", tc.url, strings.NewReader(tc.data))
+			req, err := http.NewRequest("GET", "/namespace", nil)
 			assert.NoError(t, err)
 
 			if tc.headers != nil {
@@ -323,10 +242,167 @@ func TestNamespaceCreate(t *testing.T) {
 			body, err := ioutil.ReadAll(res.Body)
 			assert.NoError(t, err)
 
-			if res.Code == http.StatusOK {
-				assert.Equal(t, tc.expectedBody, string(v), tc.description)
+			if tc.wantErr && res.Code != 200 {
+				assert.Equal(t, tc.err, string(body), tc.description)
 			} else {
-				assert.Equal(t, tc.expectedBody, string(body), tc.description)
+
+				n := new(views.NamespaceList)
+				err := json.Unmarshal(body, &n)
+				assert.NoError(t, err)
+
+				for _, item := range *n {
+					if _, ok := tc.want[item.Meta.SelfLink]; !ok {
+						assert.Error(t, errors.New("not equals"))
+					}
+				}
+			}
+		})
+	}
+
+}
+
+type NamespaceCreateOptions struct {
+	request.NamespaceCreateOptions
+}
+
+func createNamespaceCreateOptions(name, description string, quotas *request.NamespaceQuotasOptions) *NamespaceCreateOptions {
+	opts := new(NamespaceCreateOptions)
+	opts.Name = name
+	opts.Description = description
+	opts.Quotas = quotas
+	return opts
+}
+
+func (s *NamespaceCreateOptions) toJson() string {
+	buf, _ := json.Marshal(s)
+	return string(buf)
+}
+
+// Testing NamespaceCreateH handler
+func TestNamespaceCreate(t *testing.T) {
+
+	var ctx = context.Background()
+
+	stg, _ := storage.GetMock()
+	envs.Get().SetStorage(stg)
+	viper.Set("verbose", 0)
+
+	ns1 := getNamespaceAsset("demo", "")
+
+	type fields struct {
+		stg storage.Storage
+	}
+
+	type args struct {
+		ctx       context.Context
+		namespace *types.Namespace
+	}
+
+	tests := []struct {
+		name         string
+		fields       fields
+		args         args
+		headers      map[string]string
+		handler      func(http.ResponseWriter, *http.Request)
+		description  string
+		data         string
+		err          string
+		want         *views.Namespace
+		wantErr      bool
+		expectedCode int
+	}{
+		{
+			name:         "checking create namespace if name already exists",
+			description:  "namespace already exists",
+			args:         args{ctx, ns1},
+			fields:       fields{stg},
+			handler:      namespace.NamespaceCreateH,
+			data:         createNamespaceCreateOptions("demo", "", nil).toJson(),
+			err:          "{\"code\":400,\"status\":\"Not Unique\",\"message\":\"Name is already in use\"}",
+			wantErr:      true,
+			expectedCode: http.StatusBadRequest,
+		},
+		{
+			name:         "checking create namespace error if name bad parameter",
+			description:  "successfully",
+			args:         args{ctx, ns1},
+			fields:       fields{stg},
+			handler:      namespace.NamespaceCreateH,
+			data:         createNamespaceCreateOptions("__test", "", &request.NamespaceQuotasOptions{RAM: 2, Routes: 1}).toJson(),
+			err:          "{\"code\":400,\"status\":\"Bad Parameter\",\"message\":\"Bad name parameter\"}",
+			wantErr:      true,
+			expectedCode: http.StatusBadRequest,
+		},
+		{
+			name:         "checking create namespace if incorrect json",
+			description:  "successfully",
+			args:         args{ctx, ns1},
+			fields:       fields{stg},
+			handler:      namespace.NamespaceCreateH,
+			data:         "{name:demo}",
+			err:          "{\"code\":400,\"status\":\"Incorrect json\",\"message\":\"Incorrect json\"}",
+			wantErr:      true,
+			expectedCode: http.StatusBadRequest,
+		},
+		{
+			name:         "checking success create namespace",
+			description:  "successfully",
+			args:         args{ctx, ns1},
+			fields:       fields{stg},
+			handler:      namespace.NamespaceCreateH,
+			data:         createNamespaceCreateOptions("test", "", &request.NamespaceQuotasOptions{RAM: 2, Routes: 1}).toJson(),
+			want:         v1.View().Namespace().New(ns1),
+			wantErr:      false,
+			expectedCode: http.StatusOK,
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+
+			err := envs.Get().GetStorage().Namespace().Clear(context.Background())
+			assert.NoError(t, err)
+
+			err = envs.Get().GetStorage().Namespace().Insert(context.Background(), ns1)
+			assert.NoError(t, err)
+
+			// Create assert request to pass to our handler. We don't have any query parameters for now, so we'll
+			// pass 'nil' as the third parameter.
+			req, err := http.NewRequest("POST", "/namespace", strings.NewReader(tc.data))
+			assert.NoError(t, err)
+
+			if tc.headers != nil {
+				for key, val := range tc.headers {
+					req.Header.Set(key, val)
+				}
+			}
+
+			r := mux.NewRouter()
+			r.HandleFunc("/namespace", tc.handler)
+
+			setRequestVars(r, req)
+
+			// We create assert ResponseRecorder (which satisfies http.ResponseWriter) to record the response.
+			res := httptest.NewRecorder()
+
+			// Our handlers satisfy http.Handler, so we can call their ServeHTTP method
+			// directly and pass in our Request and ResponseRecorder.
+			r.ServeHTTP(res, req)
+
+			// Check the status code is what we expect.
+			assert.Equal(t, tc.expectedCode, res.Code, tc.description)
+
+			body, err := ioutil.ReadAll(res.Body)
+			assert.NoError(t, err)
+
+			if tc.wantErr && res.Code != 200 {
+				assert.Equal(t, tc.err, string(body), tc.description)
+			} else {
+
+				got, err := tc.fields.stg.Namespace().Get(tc.args.ctx, tc.args.namespace.Meta.Name)
+				assert.NoError(t, err)
+
+				assert.Equal(t, ns1.Meta.Name, got.Meta.Name, tc.description)
 			}
 
 		})
@@ -353,8 +429,10 @@ func (s *NamespaceUpdateOptions) toJson() string {
 // Testing NamespaceUpdateH handler
 func TestNamespaceUpdate(t *testing.T) {
 
-	strg, _ := storage.GetMock()
-	envs.Get().SetStorage(strg)
+	var ctx = context.Background()
+
+	stg, _ := storage.GetMock()
+	envs.Get().SetStorage(stg)
 	viper.Set("verbose", 0)
 
 	ns1 := getNamespaceAsset("demo", "")
@@ -363,87 +441,114 @@ func TestNamespaceUpdate(t *testing.T) {
 	ns2.Resources.Routes = 2
 	ns3 := getNamespaceAsset("empty", "")
 
-	err := envs.Get().GetStorage().Namespace().Clear(context.Background())
-	assert.NoError(t, err)
+	type fields struct {
+		stg storage.Storage
+	}
 
-	err = envs.Get().GetStorage().Namespace().Insert(context.Background(), ns1)
-	assert.NoError(t, err)
-
-	v, err := v1.View().Namespace().New(ns2).ToJson()
-	assert.NoError(t, err)
+	type args struct {
+		ctx       context.Context
+		namespace *types.Namespace
+	}
 
 	tests := []struct {
-		url          string
+		name         string
+		fields       fields
+		args         args
 		headers      map[string]string
 		handler      func(http.ResponseWriter, *http.Request)
 		description  string
 		data         string
-		expectedBody string
+		err          string
+		want         *views.Namespace
+		wantErr      bool
 		expectedCode int
 	}{
 		{
-			url:          fmt.Sprintf("/namespace/%s", ns3.Meta.Name),
+			name:         "checking update namespace if not exists",
+			args:         args{ctx, ns3},
+			fields:       fields{stg},
 			handler:      namespace.NamespaceUpdateH,
 			description:  "namespace not exists",
 			data:         createNamespaceUpdateOptions(nil, nil).toJson(),
-			expectedBody: "{\"code\":404,\"status\":\"Not Found\",\"message\":\"Namespace not found\"}",
+			err:          "{\"code\":404,\"status\":\"Not Found\",\"message\":\"Namespace not found\"}",
+			wantErr:      true,
 			expectedCode: http.StatusNotFound,
 		},
 		{
-			description:  "successfully",
-			url:          fmt.Sprintf("/namespace/%s", ns1.Meta.Name),
+			name:         "checking update namespace if not exists",
+			description:  "",
+			args:         args{ctx, ns1},
+			fields:       fields{stg},
 			handler:      namespace.NamespaceUpdateH,
 			data:         "{description:demo}",
-			expectedBody: "{\"code\":400,\"status\":\"Incorrect json\",\"message\":\"Incorrect json\"}",
+			err:          "{\"code\":400,\"status\":\"Incorrect json\",\"message\":\"Incorrect json\"}",
+			wantErr:      true,
 			expectedCode: http.StatusBadRequest,
 		},
 		{
-			url:          fmt.Sprintf("/namespace/%s", ns1.Meta.Name),
+			name:         "checking success update namespace",
+			args:         args{ctx, ns1},
+			fields:       fields{stg},
 			handler:      namespace.NamespaceUpdateH,
 			description:  "successfully",
 			data:         createNamespaceUpdateOptions(nil, &request.NamespaceQuotasOptions{RAM: ns2.Resources.RAM, Routes: ns2.Resources.Routes}).toJson(),
-			expectedBody: string(v),
+			want:         v1.View().Namespace().New(ns1),
+			wantErr:      false,
 			expectedCode: http.StatusOK,
 		},
 	}
 
 	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
 
-		// Create assert request to pass to our handler. We don't have any query parameters for now, so we'll
-		// pass 'nil' as the third parameter.
-		req, err := http.NewRequest("PUT", tc.url, strings.NewReader(tc.data))
-		assert.NoError(t, err)
+			err := envs.Get().GetStorage().Namespace().Clear(context.Background())
+			assert.NoError(t, err)
 
-		if tc.headers != nil {
-			for key, val := range tc.headers {
-				req.Header.Set(key, val)
+			err = envs.Get().GetStorage().Namespace().Insert(context.Background(), ns1)
+			assert.NoError(t, err)
+
+			// Create assert request to pass to our handler. We don't have any query parameters for now, so we'll
+			// pass 'nil' as the third parameter.
+			req, err := http.NewRequest("PUT", fmt.Sprintf("/namespace/%s", tc.args.namespace.Meta.Name), strings.NewReader(tc.data))
+			assert.NoError(t, err)
+
+			if tc.headers != nil {
+				for key, val := range tc.headers {
+					req.Header.Set(key, val)
+				}
 			}
-		}
 
-		r := mux.NewRouter()
-		r.HandleFunc("/namespace/{namespace}", tc.handler)
+			r := mux.NewRouter()
+			r.HandleFunc("/namespace/{namespace}", tc.handler)
 
-		setRequestVars(r, req)
+			setRequestVars(r, req)
 
-		// We create assert ResponseRecorder (which satisfies http.ResponseWriter) to record the response.
-		res := httptest.NewRecorder()
+			// We create assert ResponseRecorder (which satisfies http.ResponseWriter) to record the response.
+			res := httptest.NewRecorder()
 
-		// Our handlers satisfy http.Handler, so we can call their ServeHTTP method
-		// directly and pass in our Request and ResponseRecorder.
-		r.ServeHTTP(res, req)
+			// Our handlers satisfy http.Handler, so we can call their ServeHTTP method
+			// directly and pass in our Request and ResponseRecorder.
+			r.ServeHTTP(res, req)
 
-		// Check the status code is what we expect.
-		assert.Equal(t, tc.expectedCode, res.Code, tc.description)
+			// Check the status code is what we expect.
+			assert.Equal(t, tc.expectedCode, res.Code, tc.description)
 
-		body, err := ioutil.ReadAll(res.Body)
-		assert.NoError(t, err)
+			body, err := ioutil.ReadAll(res.Body)
+			assert.NoError(t, err)
 
-		if res.Code == http.StatusOK {
-			assert.Equal(t, tc.expectedBody, string(v), tc.description)
-		} else {
-			assert.Equal(t, tc.expectedBody, string(body), tc.description)
-		}
+			if tc.wantErr && res.Code != 200 {
+				assert.Equal(t, tc.err, string(body), tc.description)
+			} else {
 
+				n := new(views.Namespace)
+				err := json.Unmarshal(body, &n)
+				assert.NoError(t, err)
+
+				assert.Equal(t, tc.want.Meta.Name, n.Meta.Name, tc.description)
+				assert.Equal(t, tc.want.Meta.Description, n.Meta.Description, tc.description)
+			}
+
+		})
 	}
 
 }
@@ -451,74 +556,104 @@ func TestNamespaceUpdate(t *testing.T) {
 // Testing NamespaceRemoveH handler
 func TestNamespaceRemove(t *testing.T) {
 
-	strg, _ := storage.GetMock()
-	envs.Get().SetStorage(strg)
+	var ctx = context.Background()
+
+	stg, _ := storage.GetMock()
+	envs.Get().SetStorage(stg)
 	viper.Set("verbose", 0)
 
 	ns1 := getNamespaceAsset("demo", "")
+	ns2 := getNamespaceAsset("test", "")
 
-	err := envs.Get().GetStorage().Namespace().Clear(context.Background())
-	assert.NoError(t, err)
+	type fields struct {
+		stg storage.Storage
+	}
 
-	err = envs.Get().GetStorage().Namespace().Insert(context.Background(), ns1)
-	assert.NoError(t, err)
+	type args struct {
+		ctx       context.Context
+		namespace *types.Namespace
+	}
 
 	tests := []struct {
-		url          string
+		name         string
+		fields       fields
+		args         args
 		headers      map[string]string
 		handler      func(http.ResponseWriter, *http.Request)
 		description  string
-		expectedBody string
+		err          string
+		want         string
+		wantErr      bool
 		expectedCode int
 	}{
 		{
-			url:          fmt.Sprintf("/namespace/%s", ns1.Meta.Name),
+			name:         "checking success remove namespace",
+			args:         args{ctx, ns1},
+			fields:       fields{stg},
 			handler:      namespace.NamespaceRemoveH,
 			description:  "successfully",
+			want:         "",
+			wantErr:      false,
 			expectedCode: http.StatusOK,
 		},
 		{
-			url:          fmt.Sprintf("/namespace/%s", ns1.Meta.Name),
+			name:         "checking remove namespace if name not exists",
+			args:         args{ctx, ns2},
+			fields:       fields{stg},
 			handler:      namespace.NamespaceRemoveH,
 			description:  "namespace not found",
-			expectedBody: "{\"code\":404,\"status\":\"Not Found\",\"message\":\"Namespace not found\"}",
+			err:          "{\"code\":404,\"status\":\"Not Found\",\"message\":\"Namespace not found\"}",
+			wantErr:      true,
 			expectedCode: http.StatusNotFound,
 		},
 	}
 
 	for _, tc := range tests {
 
-		// Create assert request to pass to our handler. We don't have any query parameters for now, so we'll
-		// pass 'nil' as the third parameter.
-		req, err := http.NewRequest("DELETE", tc.url, nil)
-		assert.NoError(t, err)
+		t.Run(tc.name, func(t *testing.T) {
 
-		if tc.headers != nil {
-			for key, val := range tc.headers {
-				req.Header.Set(key, val)
+			err := envs.Get().GetStorage().Namespace().Clear(context.Background())
+			assert.NoError(t, err)
+
+			err = envs.Get().GetStorage().Namespace().Insert(context.Background(), ns1)
+			assert.NoError(t, err)
+
+			// Create assert request to pass to our handler. We don't have any query parameters for now, so we'll
+			// pass 'nil' as the third parameter.
+			req, err := http.NewRequest("DELETE", fmt.Sprintf("/namespace/%s", tc.args.namespace.Meta.Name), nil)
+			assert.NoError(t, err)
+
+			if tc.headers != nil {
+				for key, val := range tc.headers {
+					req.Header.Set(key, val)
+				}
 			}
-		}
 
-		r := mux.NewRouter()
-		r.HandleFunc("/namespace/{namespace}", tc.handler)
+			r := mux.NewRouter()
+			r.HandleFunc("/namespace/{namespace}", tc.handler)
 
-		setRequestVars(r, req)
+			setRequestVars(r, req)
 
-		// We create assert ResponseRecorder (which satisfies http.ResponseWriter) to record the response.
-		res := httptest.NewRecorder()
+			// We create assert ResponseRecorder (which satisfies http.ResponseWriter) to record the response.
+			res := httptest.NewRecorder()
 
-		// Our handlers satisfy http.Handler, so we can call their ServeHTTP method
-		// directly and pass in our Request and ResponseRecorder.
-		r.ServeHTTP(res, req)
+			// Our handlers satisfy http.Handler, so we can call their ServeHTTP method
+			// directly and pass in our Request and ResponseRecorder.
+			r.ServeHTTP(res, req)
 
-		// Check the status code is what we expect.
-		assert.Equal(t, tc.expectedCode, res.Code, tc.description)
+			// Check the status code is what we expect.
+			assert.Equal(t, tc.expectedCode, res.Code, tc.description)
 
-		body, err := ioutil.ReadAll(res.Body)
-		assert.NoError(t, err)
+			body, err := ioutil.ReadAll(res.Body)
+			assert.NoError(t, err)
 
-		assert.Equal(t, tc.expectedBody, string(body), tc.description)
+			if tc.wantErr && res.Code != 200 {
+				assert.Equal(t, tc.err, string(body), tc.description)
+			} else {
+				assert.Equal(t, tc.want, string(body), tc.description)
+			}
 
+		})
 	}
 
 }

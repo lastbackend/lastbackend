@@ -23,7 +23,6 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/lastbackend/lastbackend/pkg/api/types/v1/request"
 	"github.com/lastbackend/lastbackend/pkg/distribution/errors"
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 	"github.com/lastbackend/lastbackend/pkg/log"
@@ -34,8 +33,8 @@ import (
 type INamespace interface {
 	List() (map[string]*types.Namespace, error)
 	Get(name string) (*types.Namespace, error)
-	Create(opts *request.NamespaceCreateOptions) (*types.Namespace, error)
-	Update(namespace *types.Namespace, opts *request.NamespaceUpdateOptions) error
+	Create(opts *types.NamespaceCreateOptions) (*types.Namespace, error)
+	Update(namespace *types.Namespace, opts *types.NamespaceUpdateOptions) error
 	Remove(namespace *types.Namespace) error
 }
 
@@ -81,7 +80,7 @@ func (n *Namespace) Get(name string) (*types.Namespace, error) {
 	return namespace, nil
 }
 
-func (n *Namespace) Create(opts *request.NamespaceCreateOptions) (*types.Namespace, error) {
+func (n *Namespace) Create(opts *types.NamespaceCreateOptions) (*types.Namespace, error) {
 
 	log.V(logLevel).Debugf("Namespace: Create: create Namespace %#v", opts)
 
@@ -110,7 +109,7 @@ func (n *Namespace) Create(opts *request.NamespaceCreateOptions) (*types.Namespa
 	return ns, nil
 }
 
-func (n *Namespace) Update(namespace *types.Namespace, opts *request.NamespaceUpdateOptions) error {
+func (n *Namespace) Update(namespace *types.Namespace, opts *types.NamespaceUpdateOptions) error {
 
 	log.V(logLevel).Debugf("Namespace: Update: update Namespace %#v", namespace)
 

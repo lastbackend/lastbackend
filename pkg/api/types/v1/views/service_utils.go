@@ -33,7 +33,6 @@ type ServiceView struct{}
 
 func (sv *ServiceView) New(srv *types.Service, d map[string]*types.Deployment, p map[string]*types.Pod) *Service {
 	s := new(Service)
-	s.ID = srv.Meta.Name
 	s.Meta = s.ToMeta(srv.Meta)
 	s.Status = s.ToStatus(srv.Status)
 	s.Spec = s.ToSpec(srv.Spec)
@@ -113,8 +112,7 @@ func (sv *Service) ToDeployments(obj map[string]*types.Deployment, pods map[stri
 
 	deployments := make(map[string]*Deployment, 0)
 	for _, d := range obj {
-
-		if d.Meta.Service == sv.ID {
+		if d.Meta.Service == sv.Meta.Name {
 			dv := new(DeploymentView)
 			dp := dv.New(d, pods)
 			deployments[dp.Meta.Name] = dp

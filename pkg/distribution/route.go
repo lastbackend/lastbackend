@@ -21,7 +21,6 @@ package distribution
 import (
 	"context"
 	"fmt"
-	"github.com/lastbackend/lastbackend/pkg/api/types/v1/request"
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 	"github.com/lastbackend/lastbackend/pkg/log"
 	"github.com/lastbackend/lastbackend/pkg/storage"
@@ -34,8 +33,8 @@ import (
 type IRoute interface {
 	Get(namespace, name string) (*types.Route, error)
 	ListByNamespace(namespace string) (map[string]*types.Route, error)
-	Create(namespace *types.Namespace, opts *request.RouteCreateOptions) (*types.Route, error)
-	Update(route *types.Route, namespace *types.Namespace, opts *request.RouteUpdateOptions) (*types.Route, error)
+	Create(namespace *types.Namespace, opts *types.RouteCreateOptions) (*types.Route, error)
+	Update(route *types.Route, namespace *types.Namespace, opts *types.RouteUpdateOptions) (*types.Route, error)
 	SetStatus(route *types.Route, status *types.RouteStatus) error
 	Remove(route *types.Route) error
 }
@@ -79,7 +78,7 @@ func (n *Route) ListByNamespace(namespace string) (map[string]*types.Route, erro
 	return items, nil
 }
 
-func (n *Route) Create(namespace *types.Namespace, opts *request.RouteCreateOptions) (*types.Route, error) {
+func (n *Route) Create(namespace *types.Namespace, opts *types.RouteCreateOptions) (*types.Route, error) {
 
 	log.V(logLevel).Debugf("api:distribution:route:crete create route %#v", opts)
 
@@ -119,7 +118,7 @@ func (n *Route) Create(namespace *types.Namespace, opts *request.RouteCreateOpti
 	return route, nil
 }
 
-func (n *Route) Update(route *types.Route, namespace *types.Namespace, opts *request.RouteUpdateOptions) (*types.Route, error) {
+func (n *Route) Update(route *types.Route, namespace *types.Namespace, opts *types.RouteUpdateOptions) (*types.Route, error) {
 
 	log.V(logLevel).Debugf("api:distribution:route:update update route %s", route.Meta.Name)
 

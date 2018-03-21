@@ -26,6 +26,7 @@ import (
 
 	"github.com/lastbackend/lastbackend/pkg/distribution/errors"
 	"github.com/lastbackend/lastbackend/pkg/util/validator"
+	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 )
 
 type NamespaceRequest struct{}
@@ -50,24 +51,39 @@ func (n *NamespaceCreateOptions) Validate() *errors.Err {
 	}
 }
 
-func (n *NamespaceCreateOptions) DecodeAndValidate(reader io.Reader) *errors.Err {
+func (n *NamespaceCreateOptions) DecodeAndValidate(reader io.Reader) (*types.NamespaceCreateOptions, *errors.Err) {
 
 	if reader == nil {
 		err := errors.New("data body can not be null")
-		return errors.New("namespace").IncorrectJSON(err)
+		return nil, errors.New("namespace").IncorrectJSON(err)
 	}
 
 	body, err := ioutil.ReadAll(reader)
 	if err != nil {
-		return errors.New("namespace").Unknown(err)
+		return nil, errors.New("namespace").Unknown(err)
 	}
 
 	err = json.Unmarshal(body, n)
 	if err != nil {
-		return errors.New("namespace").IncorrectJSON(err)
+		return nil, errors.New("namespace").IncorrectJSON(err)
 	}
 
-	return n.Validate()
+	if err := n.Validate(); err != nil {
+		return nil, err
+	}
+
+	opts := new(types.NamespaceCreateOptions)
+	opts.Description = n.Description
+	opts.Name = n.Name
+
+	if n.Quotas != nil {
+		opts.Quotas = new(types.NamespaceQuotasOptions)
+		opts.Quotas.Routes = n.Quotas.Routes
+		opts.Quotas.RAM = n.Quotas.RAM
+		opts.Quotas.Disabled = n.Quotas.Disabled
+	}
+
+	return opts, nil
 }
 
 func (n *NamespaceCreateOptions) ToJson() ([]byte, error) {
@@ -88,24 +104,38 @@ func (n *NamespaceUpdateOptions) Validate() *errors.Err {
 	}
 }
 
-func (n *NamespaceUpdateOptions) DecodeAndValidate(reader io.Reader) *errors.Err {
+func (n *NamespaceUpdateOptions) DecodeAndValidate(reader io.Reader) (*types.NamespaceUpdateOptions, *errors.Err) {
 
 	if reader == nil {
 		err := errors.New("data body can not be null")
-		return errors.New("namespace").IncorrectJSON(err)
+		return nil, errors.New("namespace").IncorrectJSON(err)
 	}
 
 	body, err := ioutil.ReadAll(reader)
 	if err != nil {
-		return errors.New("namespace").Unknown(err)
+		return nil, errors.New("namespace").Unknown(err)
 	}
 
 	err = json.Unmarshal(body, n)
 	if err != nil {
-		return errors.New("namespace").IncorrectJSON(err)
+		return nil, errors.New("namespace").IncorrectJSON(err)
 	}
 
-	return n.Validate()
+	if err := n.Validate(); err != nil {
+		return nil, err
+	}
+
+	opts := new(types.NamespaceUpdateOptions)
+	opts.Description = n.Description
+
+	if n.Quotas != nil {
+		opts.Quotas = new(types.NamespaceQuotasOptions)
+		opts.Quotas.Routes = n.Quotas.Routes
+		opts.Quotas.RAM = n.Quotas.RAM
+		opts.Quotas.Disabled = n.Quotas.Disabled
+	}
+
+	return opts, nil
 }
 
 func (n *NamespaceUpdateOptions) ToJson() ([]byte, error) {
@@ -120,23 +150,30 @@ func (n *NamespaceRemoveOptions) Validate() *errors.Err {
 	return nil
 }
 
-func (n *NamespaceRemoveOptions) DecodeAndValidate(reader io.Reader) *errors.Err {
+func (n *NamespaceRemoveOptions) DecodeAndValidate(reader io.Reader) (*types.NamespaceRemoveOptions, *errors.Err) {
 
 	if reader == nil {
-		return nil
+		return nil, nil
 	}
 
 	body, err := ioutil.ReadAll(reader)
 	if err != nil {
-		return errors.New("namespace").Unknown(err)
+		return nil, errors.New("namespace").Unknown(err)
 	}
 
 	err = json.Unmarshal(body, n)
 	if err != nil {
-		return errors.New("namespace").IncorrectJSON(err)
+		return nil, errors.New("namespace").IncorrectJSON(err)
 	}
 
-	return n.Validate()
+	if err := n.Validate(); err != nil {
+		return nil, err
+	}
+
+	opts := new(types.NamespaceRemoveOptions)
+	opts.Force = n.Force
+
+	return opts, nil
 }
 
 func (n *NamespaceRemoveOptions) ToJson() ([]byte, error) {
