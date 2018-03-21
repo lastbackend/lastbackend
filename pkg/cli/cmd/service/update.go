@@ -41,7 +41,6 @@ func UpdateCmd(cmd *cobra.Command, args []string) {
 	)
 	cmd.Flags().StringVarP(opts.Description, "desc", "d", "", "Set description")
 	cmd.Flags().Int64VarP(opts.Spec.Memory, "memory", "m", 0, "Set memory")
-	cmd.Flags().StringVarP(opts.Sources, "sources", "s", "", "Set sources")
 	cmd.Flags().StringVarP(&namespace, "namespace", "ns", "", "namespace")
 
 	if err := opts.Validate(); err != nil {

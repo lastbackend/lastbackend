@@ -19,13 +19,8 @@
 package types
 
 import (
-	"encoding/json"
 	"fmt"
-	"github.com/lastbackend/lastbackend/pkg/distribution/errors"
-	"github.com/lastbackend/lastbackend/pkg/log"
 	"github.com/lastbackend/lastbackend/pkg/util/generator"
-	"io"
-	"io/ioutil"
 	"strings"
 )
 
@@ -39,7 +34,7 @@ type Route struct {
 type RouteList map[string]*Route
 
 type RouteMeta struct {
-	Meta      `yaml:",inline"`
+	Meta             `yaml:",inline"`
 	Namespace string `json:"namespace" yaml:"namespace"`
 	Security  bool   `json:"security" yaml:"security"`
 }
@@ -106,12 +101,6 @@ type RoteLocation struct {
 	ProxyPass string `json:"proxy_pass" yaml:"proxy_pass"`
 }
 
-type RulesOption struct {
-	Service *string `json:"service" yaml:"service"`
-	Path    string  `json:"path" yaml:"path"`
-	Port    *int    `json:"port" yaml:"port"`
-}
-
 func (r *Route) SelfLink() string {
 	if r.Meta.SelfLink == "" {
 		r.Meta.SelfLink = fmt.Sprintf("%s:%s", r.Meta.Namespace, r.Meta.Name)
@@ -154,37 +143,28 @@ func (r *Route) GetRouteConfig() *RouterConfig {
 	return RouterConfig
 }
 
-func (s *RouteOptions) DecodeAndValidate(reader io.Reader) *errors.Err {
+type RouteCreateOptions struct {
+	Subdomain string        `json:"subdomain"`
+	Domain    string        `json:"domain"`
+	Custom    bool          `json:"custom"`
+	Security  bool          `json:"security"`
+	Rules     []RulesOption `json:"rules"`
+}
 
-	log.V(logLevel).Debug("Request: Route: decode and validate data")
+type RouteUpdateOptions struct {
+	Subdomain string        `json:"subdomain"`
+	Domain    string        `json:"domain"`
+	Custom    bool          `json:"custom"`
+	Security  bool          `json:"security"`
+	Rules     []RulesOption `json:"rules"`
+}
 
-	body, err := ioutil.ReadAll(reader)
-	if err != nil {
-		log.V(logLevel).Errorf("Request: Route: decode and validate data for creating err: %s", err)
-		return errors.New("route").Unknown(err)
-	}
+type RouteRemoveOptions struct {
+	Force bool `json:"force"`
+}
 
-	err = json.Unmarshal(body, s)
-	if err != nil {
-		log.V(logLevel).Errorf("Request: Route: convert struct from json err: %s", err)
-		return errors.New("route").IncorrectJSON(err)
-	}
-
-	for _, rule := range s.Rules {
-		if rule.Path == "" {
-			rule.Path = "/"
-		}
-
-		if rule.Service == nil || len(*rule.Service) == 0 {
-			log.V(logLevel).Error("Request: Route: parameter service can not be empty")
-			return errors.New("route").BadParameter("service")
-		}
-
-		if rule.Port == nil {
-			log.V(logLevel).Error("Request: Route: parameter port can not be empty")
-			return errors.New("route").BadParameter("port")
-		}
-	}
-
-	return nil
+type RulesOption struct {
+	Endpoint *string `json:"endpoint"`
+	Path     string  `json:"path"`
+	Port     *int    `json:"port"`
 }

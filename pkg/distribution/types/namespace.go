@@ -82,3 +82,24 @@ func (n *NamespaceList) ToJson() ([]byte, error) {
 	}
 	return buf, nil
 }
+
+type NamespaceCreateOptions struct {
+	Name        string                  `json:"name"`
+	Description string                  `json:"description"`
+	Quotas      *NamespaceQuotasOptions `json:"quotas"`
+}
+
+type NamespaceUpdateOptions struct {
+	Description *string                 `json:"description"`
+	Quotas      *NamespaceQuotasOptions `json:"quotas"`
+}
+
+type NamespaceRemoveOptions struct {
+	Force bool `json:"force"`
+}
+
+type NamespaceQuotasOptions struct {
+	Disabled bool  `json:"disabled"`
+	RAM      int64 `json:"ram"`
+	Routes   int   `json:"routes"`
+}

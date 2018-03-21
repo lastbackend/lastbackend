@@ -111,8 +111,6 @@ func (ServiceRequest) UpdateOptions() *ServiceUpdateOptions {
 
 func (s *ServiceUpdateOptions) Validate() *errors.Err {
 	switch true {
-	case s.Sources == nil:
-		return errors.New("service").BadParameter("source")
 	case s.Description != nil && len(*s.Description) > DEFAULT_DESCRIPTION_LIMIT:
 		return errors.New("service").BadParameter("description")
 	case s.Spec != nil:
@@ -149,7 +147,6 @@ func (s *ServiceUpdateOptions) DecodeAndValidate(reader io.Reader) (*types.Servi
 	opts := new(types.ServiceUpdateOptions)
 	opts.Description = s.Description
 	opts.Description = s.Description
-	opts.Sources = s.Sources
 
 	if s.Spec != nil {
 		opts.Spec = new(types.ServiceOptionsSpec)

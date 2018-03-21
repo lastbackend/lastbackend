@@ -140,10 +140,10 @@ func RouteCreateH(w http.ResponseWriter, r *http.Request) {
 	)
 
 	// request body struct
-	opts := v1.Request().Route().CreateOptions()
-	if err := opts.DecodeAndValidate(r.Body); err != nil {
-		log.V(logLevel).Errorf("Handler: Route: validation incoming data err: %s", err.Err())
-		err.Http(w)
+	opts, e := v1.Request().Route().CreateOptions().DecodeAndValidate(r.Body)
+	if e != nil {
+		log.V(logLevel).Errorf("Handler: Route: validation incoming data err: %s", e.Err())
+		e.Http(w)
 		return
 	}
 
@@ -194,10 +194,10 @@ func RouteUpdateH(w http.ResponseWriter, r *http.Request) {
 	)
 
 	// request body struct
-	opts := v1.Request().Route().UpdateOptions()
-	if err := opts.DecodeAndValidate(r.Body); err != nil {
-		log.V(logLevel).Errorf("Handler: Route: validation incoming data err: %s", err.Err())
-		err.Http(w)
+	opts, e := v1.Request().Route().UpdateOptions().DecodeAndValidate(r.Body)
+	if e != nil {
+		log.V(logLevel).Errorf("Handler: Route: validation incoming data err: %s", e.Err())
+		e.Http(w)
 		return
 	}
 
@@ -259,10 +259,10 @@ func RouteRemoveH(w http.ResponseWriter, r *http.Request) {
 	)
 
 	// request body struct
-	opts := v1.Request().Route().RemoveOptions()
-	if err := opts.DecodeAndValidate(r.Body); err != nil {
-		log.V(logLevel).Errorf("Handler: Route: validation incoming data err: %s", err.Err())
-		err.Http(w)
+	_, e := v1.Request().Route().RemoveOptions().DecodeAndValidate(r.Body)
+	if e != nil {
+		log.V(logLevel).Errorf("Handler: Route: validation incoming data err: %s", e.Err())
+		e.Http(w)
 		return
 	}
 

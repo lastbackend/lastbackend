@@ -42,6 +42,7 @@ func (r *Route) ToMeta(obj types.RouteMeta) RouteMeta {
 	meta := RouteMeta{}
 	meta.Name = obj.Name
 	meta.Namespace = obj.Namespace
+	meta.SelfLink = obj.SelfLink
 	meta.Security = obj.Security
 	meta.Updated = obj.Updated
 	meta.Created = obj.Created
