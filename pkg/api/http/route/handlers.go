@@ -291,7 +291,7 @@ func RouteRemoveH(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = rm.SetState(rs, &types.RouteState{Provision: false, Destroy: true})
+	err = rm.SetStatus(rs, &types.RouteStatus{Stage:types.StageReady})
 	if err != nil {
 		log.V(logLevel).Errorf("Handler: Route: remove route `%s` err: %s", rid, err)
 		errors.HTTP.InternalServerError(w)

@@ -29,14 +29,14 @@ type NodeView struct{}
 func (nv *NodeView) New(obj *types.Node) *Node {
 	n := Node{}
 	n.Meta = nv.ToNodeMeta(obj.Meta)
-	n.State = nv.ToNodeState(obj.State)
+	n.Status = nv.ToNodeStatus(obj.Status)
 	n.Info = nv.ToNodeInfo(obj.Info)
 	return &n
 }
 
 func (nv *NodeView) ToNodeMeta(meta types.NodeMeta) NodeMeta {
 	return NodeMeta{
-		ID:          meta.Name,
+		Name:          meta.Name,
 		Description: meta.Description,
 		Created:     meta.Created,
 		Updated:     meta.Updated,
@@ -55,21 +55,21 @@ func (nv *NodeView) ToNodeInfo(info types.NodeInfo) NodeInfo {
 	return ni
 }
 
-func (nv *NodeView) ToNodeState(state types.NodeState) NodeState {
-	return NodeState{
+func (nv *NodeView) ToNodeStatus(status types.NodeStatus) NodeStatus {
+	return NodeStatus{
 		Capacity: NodeResources{
-			Containers: state.Capacity.Containers,
-			Pods:       state.Capacity.Pods,
-			Memory:     state.Capacity.Memory,
-			Cpu:        state.Capacity.Cpu,
-			Storage:    state.Capacity.Storage,
+			Containers: status.Capacity.Containers,
+			Pods:       status.Capacity.Pods,
+			Memory:     status.Capacity.Memory,
+			Cpu:        status.Capacity.Cpu,
+			Storage:    status.Capacity.Storage,
 		},
 		Allocated: NodeResources{
-			Containers: state.Allocated.Containers,
-			Pods:       state.Allocated.Pods,
-			Memory:     state.Allocated.Memory,
-			Cpu:        state.Allocated.Cpu,
-			Storage:    state.Allocated.Storage,
+			Containers: status.Allocated.Containers,
+			Pods:       status.Allocated.Pods,
+			Memory:     status.Allocated.Memory,
+			Cpu:        status.Allocated.Cpu,
+			Storage:    status.Allocated.Storage,
 		},
 	}
 }
@@ -85,7 +85,7 @@ func (nv *NodeView) NewList(obj map[string]*types.Node) *NodeList {
 	nodes := make(NodeList, 0)
 	for _, v := range obj {
 		nn := nv.New(v)
-		nodes[nn.Meta.ID] = nn
+		nodes[nn.Meta.Name] = nn
 	}
 
 	return &nodes

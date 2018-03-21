@@ -38,10 +38,10 @@ type Node interface {
 	GetSpec(ctx context.Context) (*vv1.NodeSpec, error)
 	Update(ctx context.Context, opts *rv1.NodeUpdateOptions) (*vv1.Node, error)
 	SetInfo(ctx context.Context, opts *rv1.NodeInfoOptions) error
-	SetState(ctx context.Context, opts *rv1.NodeStateOptions) error
-	SetPodState(ctx context.Context, opts *rv1.NodePodStatusOptions) error
-	SetVolumeState(ctx context.Context, opts *rv1.NodeVolumeStatusOptions) error
-	SetRouteState(ctx context.Context, opts *rv1.NodeRouteStatusOptions) error
+	SetStatus(ctx context.Context, opts *rv1.NodeStatusOptions) error
+	SetPodStatus(ctx context.Context, opts *rv1.NodePodStatusOptions) error
+	SetVolumeStatus(ctx context.Context, opts *rv1.NodeVolumeStatusOptions) error
+	SetRouteStatus(ctx context.Context, opts *rv1.NodeRouteStatusOptions) error
 	Remove(ctx context.Context, opts *rv1.NodeRemoveOptions) error
 }
 

@@ -30,8 +30,8 @@ var Routes = []http.Route{
 	{Path: "/cluster/node/{node}", Method: http.MethodDelete, Middleware: []http.Middleware{middleware.Authenticate}, Handler: NodeRemoveH},
 	{Path: "/cluster/node/{node}", Method: http.MethodPut, Middleware: []http.Middleware{middleware.Authenticate}, Handler: NodeUpdateH},
 	{Path: "/cluster/node/{node}/info", Method: http.MethodPut, Middleware: []http.Middleware{middleware.Authenticate}, Handler: NodeSetInfoH},
-	{Path: "/cluster/node/{node}/state", Method: http.MethodPut, Middleware: []http.Middleware{middleware.Authenticate}, Handler: NodeSetStateH},
-	{Path: "/cluster/node/{node}/state/pod/{pod}", Method: http.MethodPut, Middleware: []http.Middleware{middleware.Authenticate}, Handler: NodeSetPodStatusH},
-	{Path: "/cluster/node/{node}/state/volume/{pod}", Method: http.MethodPut, Middleware: []http.Middleware{middleware.Authenticate}, Handler: NodeSetVolumeStatusH},
-	{Path: "/cluster/node/{node}/state/route/{pod}", Method: http.MethodPut, Middleware: []http.Middleware{middleware.Authenticate}, Handler: NodeSetRouteStatusH},
+	{Path: "/cluster/node/{node}/status", Method: http.MethodPut, Middleware: []http.Middleware{middleware.Authenticate}, Handler: NodeSetStatusH},
+	{Path: "/cluster/node/{node}/status/pod/{pod}", Method: http.MethodPut, Middleware: []http.Middleware{middleware.Authenticate}, Handler: NodeSetPodStatusH},
+	{Path: "/cluster/node/{node}/status/volume/{pod}", Method: http.MethodPut, Middleware: []http.Middleware{middleware.Authenticate}, Handler: NodeSetVolumeStatusH},
+	{Path: "/cluster/node/{node}/status/route/{pod}", Method: http.MethodPut, Middleware: []http.Middleware{middleware.Authenticate}, Handler: NodeSetRouteStatusH},
 }

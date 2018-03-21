@@ -317,7 +317,7 @@ func TestTriggerStorage_ListByService(t *testing.T) {
 	}
 }
 
-func TestTriggerStorage_SetState(t *testing.T) {
+func TestTriggerStorage_SetStatus(t *testing.T) {
 
 	initStorage()
 
@@ -332,8 +332,7 @@ func TestTriggerStorage_SetState(t *testing.T) {
 		nl  = make([]*types.Trigger, 0)
 	)
 
-	n2.State.Provision = true
-	n2.State.Ready = true
+	n2.Status.Stage = types.StageReady
 
 	nl0 := append(nl, &n1)
 
@@ -383,27 +382,27 @@ func TestTriggerStorage_SetState(t *testing.T) {
 	for _, tt := range tests {
 
 		if err := stg.Clear(ctx); err != nil {
-			t.Errorf("TriggerStorage.SetState() storage setup error = %v", err)
+			t.Errorf("TriggerStorage.SetStatus() storage setup error = %v", err)
 			return
 		}
 
 		for _, n := range nl0 {
 			if err := stg.Insert(ctx, n); err != nil {
-				t.Errorf("TriggerStorage.SetState() storage setup error = %v", err)
+				t.Errorf("TriggerStorage.SetStatus() storage setup error = %v", err)
 				return
 			}
 		}
 
 		t.Run(tt.name, func(t *testing.T) {
-			err := tt.fields.stg.SetState(tt.args.ctx, tt.args.trigger)
+			err := tt.fields.stg.SetStatus(tt.args.ctx, tt.args.trigger)
 			if err != nil {
 				if !tt.wantErr {
-					t.Errorf("TriggerStorage.SetState() error = %v, want no error", err.Error())
+					t.Errorf("TriggerStorage.SetStatus() error = %v, want no error", err.Error())
 					return
 				}
 
 				if tt.wantErr && tt.err != err.Error() {
-					t.Errorf("TriggerStorage.SetState() error = %v, want %v", err.Error(), tt.err)
+					t.Errorf("TriggerStorage.SetStatus() error = %v, want %v", err.Error(), tt.err)
 					return
 				}
 
@@ -411,13 +410,13 @@ func TestTriggerStorage_SetState(t *testing.T) {
 			}
 
 			if tt.wantErr {
-				t.Errorf("TriggerStorage.SetState() error = %v, want %v", err.Error(), tt.err)
+				t.Errorf("TriggerStorage.SetStatus() error = %v, want %v", err.Error(), tt.err)
 				return
 			}
 
 			got, _ := tt.fields.stg.Get(tt.args.ctx, tt.args.trigger.Meta.Namespace, tt.args.trigger.Meta.Service, tt.args.trigger.Meta.Name)
 			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("TriggerStorage.SetState() = %v, want %v", got, tt.want)
+				t.Errorf("TriggerStorage.SetStatus() = %v, want %v", got, tt.want)
 				return
 			}
 
@@ -440,8 +439,7 @@ func TestTriggerStorage_SetSpec(t *testing.T) {
 		nl  = make([]*types.Trigger, 0)
 	)
 
-	n2.State.Provision = true
-	n2.State.Ready = true
+	n2.Status.Stage = types.StageReady
 
 	nl0 := append(nl, &n1)
 
@@ -491,27 +489,27 @@ func TestTriggerStorage_SetSpec(t *testing.T) {
 	for _, tt := range tests {
 
 		if err := stg.Clear(ctx); err != nil {
-			t.Errorf("TriggerStorage.SetState() storage setup error = %v", err)
+			t.Errorf("TriggerStorage.SetStatus() storage setup error = %v", err)
 			return
 		}
 
 		for _, n := range nl0 {
 			if err := stg.Insert(ctx, n); err != nil {
-				t.Errorf("TriggerStorage.SetState() storage setup error = %v", err)
+				t.Errorf("TriggerStorage.SetStatus() storage setup error = %v", err)
 				return
 			}
 		}
 
 		t.Run(tt.name, func(t *testing.T) {
-			err := tt.fields.stg.SetState(tt.args.ctx, tt.args.trigger)
+			err := tt.fields.stg.SetStatus(tt.args.ctx, tt.args.trigger)
 			if err != nil {
 				if !tt.wantErr {
-					t.Errorf("TriggerStorage.SetState() error = %v, want no error", err.Error())
+					t.Errorf("TriggerStorage.SetStatus() error = %v, want no error", err.Error())
 					return
 				}
 
 				if tt.wantErr && tt.err != err.Error() {
-					t.Errorf("TriggerStorage.SetState() error = %v, want %v", err.Error(), tt.err)
+					t.Errorf("TriggerStorage.SetStatus() error = %v, want %v", err.Error(), tt.err)
 					return
 				}
 
@@ -519,13 +517,13 @@ func TestTriggerStorage_SetSpec(t *testing.T) {
 			}
 
 			if tt.wantErr {
-				t.Errorf("TriggerStorage.SetState() error = %v, want %v", err.Error(), tt.err)
+				t.Errorf("TriggerStorage.SetStatus() error = %v, want %v", err.Error(), tt.err)
 				return
 			}
 
 			got, _ := tt.fields.stg.Get(tt.args.ctx, tt.args.trigger.Meta.Namespace, tt.args.trigger.Meta.Service, tt.args.trigger.Meta.Name)
 			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("TriggerStorage.SetState() = %v, want %v", got, tt.want)
+				t.Errorf("TriggerStorage.SetStatus() = %v, want %v", got, tt.want)
 				return
 			}
 

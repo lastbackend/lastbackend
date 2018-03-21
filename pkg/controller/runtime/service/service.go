@@ -72,13 +72,13 @@ func Provision(svc *types.Service) error {
 	// Create new deployment
 	if _, err := dm.Create(svc); err != nil {
 		log.Errorf("controller:service:controller:provision: create deployment err: %s", err.Error())
-		svc.State.Error = true
-		svc.State.Message = err.Error()
+		svc.Status.Stage = types.StageError
+		svc.Status.Message = err.Error()
 	}
 
 	// Update service state
-	svc.State.Provision = true
-	if err := distribution.NewServiceModel(context.Background(), stg).SetState(svc); err != nil {
+	svc.Status.Stage = types.StageProvision
+	if err := distribution.NewServiceModel(context.Background(), stg).SetStatus(svc); err != nil {
 		log.Errorf("controller:service:controller:provision: service set state err: %s", err.Error())
 		return err
 	}

@@ -37,7 +37,7 @@ type IService interface {
 	Update(service *types.Service, opts *types.ServiceUpdateOptions) (*types.Service, error)
 	Destroy(service *types.Service) (*types.Service, error)
 	Remove(service *types.Service) error
-	SetState(service *types.Service) error
+	SetStatus(service *types.Service) error
 	Watch(dt chan *types.Service) error
 	WatchSpec(dt chan *types.Service) error
 }
@@ -163,7 +163,9 @@ func (s *Service) Destroy(service *types.Service) (*types.Service, error) {
 
 	log.V(logLevel).Debugf("api:distribution:service:destroy: destroy service %#v", service)
 
-	service.State.Destroy = true
+	service.Status.Stage = types.StageDestroy
+	service.Spec.State.Destroy = true
+
 	err := s.storage.Service().SetSpec(s.context, service)
 	if err != nil {
 		log.V(logLevel).Errorf("api:distribution:service:destroy: destroy service err: %s", err)
@@ -188,11 +190,11 @@ func (s *Service) Remove(service *types.Service) error {
 }
 
 // Set state for deployment
-func (s *Service) SetState(service *types.Service) error {
+func (s *Service) SetStatus(service *types.Service) error {
 
 	log.Debugf("api:distribution:service:set: set state for service %s", service.Meta.Name)
 
-	if err := s.storage.Service().SetState(s.context, service); err != nil {
+	if err := s.storage.Service().SetStatus(s.context, service); err != nil {
 		log.Errorf("api:distribution:service:set: set state for service %s err: %s", service.Meta.Name, err.Error())
 		return err
 	}

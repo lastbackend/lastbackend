@@ -34,7 +34,7 @@ type IDeployment interface {
 	ListByNamespace(namespace string) (map[string]*types.Deployment, error)
 	ListByService(namespace, service string) (map[string]*types.Deployment, error)
 	SetSpec(dt *types.Deployment, opts *request.DeploymentUpdateOptions) error
-	SetState(dt *types.Deployment) error
+	SetStatus(dt *types.Deployment) error
 	Cancel(dt *types.Deployment) error
 	Destroy(dt *types.Deployment) error
 	Remove(dt *types.Deployment) error
@@ -87,7 +87,7 @@ func (d *Deployment) Create(service *types.Service) (*types.Deployment, error) {
 	deployment.Spec.Meta.SetDefault()
 	deployment.Spec.Meta.Name = service.Spec.Meta.Name
 
-	deployment.State.SetProvision()
+	deployment.Status.SetProvision()
 
 	if err := d.storage.Deployment().Insert(d.context, deployment); err != nil {
 		log.Errorf("distribution:deployment:create: distribution create in service: %s err: %s", service.Meta.Name, err.Error())
@@ -142,11 +142,11 @@ func (d *Deployment) SetSpec(dt *types.Deployment, opts *request.DeploymentUpdat
 }
 
 // Set state for deployment
-func (d *Deployment) SetState(dt *types.Deployment) error {
+func (d *Deployment) SetStatus(dt *types.Deployment) error {
 
 	log.Debugf("distribution:deployment:set: set state for deployment %s", dt.Meta.Name)
 
-	if err := d.storage.Deployment().SetState(d.context, dt); err != nil {
+	if err := d.storage.Deployment().SetStatus(d.context, dt); err != nil {
 		log.Errorf("distribution:deployment:set: set state for deployment %s err: %s", dt.Meta.Name, err.Error())
 		return err
 	}
@@ -160,9 +160,9 @@ func (d *Deployment) Cancel(dt *types.Deployment) error {
 	log.Debugf("distribution:deployment:cancel: cancel deployment %s", dt.Meta.Name)
 
 	// mark deployment for cancel
-	dt.State.SetCancel()
+	dt.Status.SetCancel()
 
-	if err := d.storage.Deployment().SetState(d.context, dt); err != nil {
+	if err := d.storage.Deployment().SetStatus(d.context, dt); err != nil {
 		log.Debugf("distribution:deployment:cancel: cancel deployment %s err: %s", dt.Meta.Name, err.Error())
 		return err
 	}
@@ -176,9 +176,9 @@ func (d *Deployment) Destroy(dt *types.Deployment) error {
 	log.Debugf("distribution:deployment:destroy: destroy deployment %s", dt.Meta.Name)
 
 	// mark deployment for destroy
-	dt.State.SetDestroy()
+	dt.Status.SetDestroy()
 
-	if err := d.storage.Deployment().SetState(d.context, dt); err != nil {
+	if err := d.storage.Deployment().SetStatus(d.context, dt); err != nil {
 		log.Debugf("distribution:deployment:destroy: destroy deployment %s err: %s", dt.Meta.Name, err.Error())
 		return err
 	}

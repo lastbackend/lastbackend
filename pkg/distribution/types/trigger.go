@@ -23,9 +23,9 @@ import "fmt"
 type TriggerList []Trigger
 
 type Trigger struct {
-	Meta  TriggerMeta  `json:"meta"`
-	Spec  TriggerSpec  `json:"spec"`
-	State TriggerState `json:"state"`
+	Meta TriggerMeta `json:"meta"`
+	Spec TriggerSpec `json:"spec"`
+	Status TriggerStatus `json:"status"`
 }
 
 type TriggerMeta struct {
@@ -34,9 +34,9 @@ type TriggerMeta struct {
 	Service   string `json:"service"`
 }
 
-type TriggerState struct {
-	Provision bool `json:"provision"`
-	Ready     bool `json:"ready"`
+type TriggerStatus struct {
+	Stage string `json:"stage"`
+	Message string `json:"message"`
 }
 
 type TriggerSpec struct {

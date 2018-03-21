@@ -57,12 +57,12 @@ func (s *ServiceStorage) ListByNamespace(ctx context.Context, namespace string) 
 }
 
 // Update service state
-func (s *ServiceStorage) SetState(ctx context.Context, service *types.Service) error {
+func (s *ServiceStorage) SetStatus(ctx context.Context, service *types.Service) error {
 	if err := s.checkServiceExists(service); err != nil {
 		return err
 	}
 
-	s.data[s.keyCreate(service.Meta.Namespace, service.Meta.Name)].State = service.State
+	s.data[s.keyCreate(service.Meta.Namespace, service.Meta.Name)].Status = service.Status
 	return nil
 }
 
@@ -123,7 +123,7 @@ func (s *ServiceStorage) WatchSpec(ctx context.Context, service chan *types.Serv
 }
 
 // Watch service state changes
-func (s *ServiceStorage) WatchState(ctx context.Context, service chan *types.Service) error {
+func (s *ServiceStorage) WatchStatus(ctx context.Context, service chan *types.Service) error {
 	return nil
 }
 

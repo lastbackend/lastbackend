@@ -30,7 +30,7 @@ func (rv *SecretView) New(obj *types.Secret) *Secret {
 	r := Secret{}
 	r.Meta = r.ToMeta(obj.Meta)
 	r.Spec = r.ToSpec(obj.Spec)
-	r.State = r.ToState(obj.State)
+	r.Status = r.ToStatus(obj.Status)
 	return &r
 }
 
@@ -53,8 +53,8 @@ func (r *Secret) ToSpec(obj types.SecretSpec) SecretSpec {
 	return spec
 }
 
-func (r *Secret) ToState(obj types.SecretState) SecretState {
-	state := SecretState{}
+func (r *Secret) ToStatus(obj types.SecretStatus) SecretStatus {
+	state := SecretStatus{}
 	return state
 }
 

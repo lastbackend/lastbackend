@@ -49,25 +49,25 @@ func TestProvision(t *testing.T) {
 		n2  = getNodeAsset("node-2", "", true)        // limit 512 RAM
 	)
 
-	n1.State.Capacity.Memory = 1024
-	n1.State.Capacity.Cpu = 8
-	n1.State.Capacity.Pods = 8
-	n1.State.Capacity.Containers = 8
+	n1.Status.Capacity.Memory = 1024
+	n1.Status.Capacity.Cpu = 8
+	n1.Status.Capacity.Pods = 8
+	n1.Status.Capacity.Containers = 8
 
-	n1.State.Allocated.Memory = 512
-	n1.State.Allocated.Cpu = 0
-	n1.State.Allocated.Pods = 7
-	n1.State.Allocated.Containers = 6
+	n1.Status.Allocated.Memory = 512
+	n1.Status.Allocated.Cpu = 0
+	n1.Status.Allocated.Pods = 7
+	n1.Status.Allocated.Containers = 6
 
-	n2.State.Capacity.Memory = 1024
-	n2.State.Capacity.Cpu = 8
-	n2.State.Capacity.Pods = 8
-	n2.State.Capacity.Containers = 8
+	n2.Status.Capacity.Memory = 1024
+	n2.Status.Capacity.Cpu = 8
+	n2.Status.Capacity.Pods = 8
+	n2.Status.Capacity.Containers = 8
 
-	n2.State.Allocated.Memory = 0
-	n2.State.Allocated.Cpu = 0
-	n2.State.Allocated.Pods = 0
-	n2.State.Allocated.Containers = 0
+	n2.Status.Allocated.Memory = 0
+	n2.Status.Allocated.Cpu = 0
+	n2.Status.Allocated.Pods = 0
+	n2.Status.Allocated.Containers = 0
 
 	var ips = make([]string, 0)
 	ips = append(ips, "8.8.8.8")
@@ -219,13 +219,13 @@ func TestProvision(t *testing.T) {
 						return
 					}
 
-					if !got.State.Error {
-						t.Errorf("Provision() = %v, want error is true", got.State.Error)
+					if !(got.Status.Stage == types.StageError) {
+						t.Errorf("Provision() = %v, want error is true", got.Status.Stage)
 						return
 					}
 
-					if got.Status.Stage != types.PodStageError {
-						t.Errorf("Provision() = %v, want stage %s", got.Status.Stage, types.PodStageError)
+					if got.Status.Stage != types.StageError {
+						t.Errorf("Provision() = %v, want stage %s", got.Status.Stage, types.StageError)
 						return
 					}
 
@@ -304,7 +304,7 @@ func getNodeAsset(name, desc string, online bool) types.Node {
 		Info: types.NodeInfo{
 			Hostname: name,
 		},
-		State: types.NodeState{
+		Status: types.NodeStatus{
 			Capacity: types.NodeResources{
 				Containers: 2,
 				Pods:       2,

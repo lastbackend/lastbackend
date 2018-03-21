@@ -80,13 +80,13 @@ func (s *NodeStorage) Update(ctx context.Context, node *types.Node) error {
 	return nil
 }
 
-func (s *NodeStorage) SetState(ctx context.Context, node *types.Node) error {
+func (s *NodeStorage) SetStatus(ctx context.Context, node *types.Node) error {
 
 	if err := s.checkNodeExists(node); err != nil {
 		return err
 	}
 
-	s.data[node.Meta.Name].State = node.State
+	s.data[node.Meta.Name].Status = node.Status
 	return nil
 }
 

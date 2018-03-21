@@ -26,6 +26,7 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/log"
 	"github.com/lastbackend/lastbackend/pkg/storage"
 	"github.com/lastbackend/lastbackend/pkg/storage/store"
+	"github.com/lastbackend/lastbackend/pkg/distribution/errors"
 )
 
 type INode interface {
@@ -35,8 +36,8 @@ type INode interface {
 	Get(name string) (*types.Node, error)
 	GetSpec(node *types.Node) (*types.NodeSpec, error)
 
-	SetMeta(node *types.Node, meta *types.NodeUpdateMetaOptions) error
-	SetState(node *types.Node, state types.NodeState) error
+	SetMeta(node *types.Node,  meta *types.NodeUpdateMetaOptions) error
+	SetStatus(node *types.Node, state types.NodeStatus)  error
 	SetInfo(node *types.Node, info types.NodeInfo) error
 	SetNetwork(node *types.Node, network types.Subnet) error
 	SetOnline(node *types.Node) error
@@ -120,7 +121,11 @@ func (n *Node) GetSpec(node *types.Node) (*types.NodeSpec, error) {
 
 func (n *Node) SetMeta(node *types.Node, meta *types.NodeUpdateMetaOptions) error {
 
-	log.V(logLevel).Debugf("Node: update Node %#v", node)
+	log.V(logLevel).Debugf("Node: update Node %#v", meta)
+	if meta == nil {
+		log.V(logLevel).Errorf("Node: update Node err: %s", errors.New(errors.ArgumentIsEmpty))
+		return  errors.New(errors.ArgumentIsEmpty)
+	}
 
 	node.Meta.Set(meta)
 
@@ -128,6 +133,7 @@ func (n *Node) SetMeta(node *types.Node, meta *types.NodeUpdateMetaOptions) erro
 		log.V(logLevel).Errorf("Node: update Node meta err: %s", err)
 		return err
 	}
+
 	return nil
 }
 
@@ -152,11 +158,11 @@ func (n *Node) SetOffline(node *types.Node) error {
 
 }
 
-func (n *Node) SetState(node *types.Node, state types.NodeState) error {
+func (n *Node) SetStatus(node *types.Node, status types.NodeStatus)  error {
 
-	node.State = state
+	node.Status = status
 
-	if err := n.storage.Node().SetState(n.context, node); err != nil {
+	if err := n.storage.Node().SetStatus(n.context, node); err != nil {
 		log.Errorf("Set node offline state error: %s", err)
 		return err
 	}

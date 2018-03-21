@@ -64,8 +64,8 @@ func (s *State) Tasks() *TaskState {
 }
 
 type NodeState struct {
-	Info  types.NodeInfo
-	State types.NodeState
+	Info   types.NodeInfo
+	Status types.NodeStatus
 }
 
 type PodState struct {

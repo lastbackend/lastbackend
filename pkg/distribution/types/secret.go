@@ -26,8 +26,8 @@ import (
 
 type Secret struct {
 	Meta  SecretMeta  `json:"meta" yaml:"meta"`
-	State SecretState `json:"meta" yaml:"state"`
-	Spec  SecretSpec  `json:"meta" yaml:"spec"`
+	Status SecretStatus `json:"status" yaml:"status"`
+	Spec  SecretSpec  `json:"status" yaml:"spec"`
 }
 
 type SecretMeta struct {
@@ -38,7 +38,7 @@ type SecretMeta struct {
 type SecretSpec struct {
 }
 
-type SecretState struct {
+type SecretStatus struct {
 }
 
 func (s *Secret) GetHash() string {

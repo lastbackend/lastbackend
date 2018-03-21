@@ -87,7 +87,7 @@ func (s *PodStorage) ListByDeployment(ctx context.Context, namespace, service, d
 	return list, nil
 }
 
-// Update deployment spec
+// Update pod spec
 func (s *PodStorage) SetSpec(ctx context.Context, pod *types.Pod) error {
 	if err := s.checkPodExists(pod); err != nil {
 		return err
@@ -97,13 +97,13 @@ func (s *PodStorage) SetSpec(ctx context.Context, pod *types.Pod) error {
 	return nil
 }
 
-// Update deployment state
-func (s *PodStorage) SetState(ctx context.Context, pod *types.Pod) error {
+// Update pod status
+func (s *PodStorage) SetStatus(ctx context.Context, pod *types.Pod) error {
 	if err := s.checkPodExists(pod); err != nil {
 		return err
 	}
 
-	s.data[s.keyGet(pod)].State = pod.State
+	s.data[s.keyGet(pod)].Status = pod.Status
 	return nil
 }
 
@@ -160,11 +160,6 @@ func (s *PodStorage) Watch(ctx context.Context, pod chan *types.Pod) error {
 
 // Watch pod spec changes
 func (s *PodStorage) WatchSpec(ctx context.Context, pod chan *types.Pod) error {
-	return nil
-}
-
-// Watch pod state changes
-func (s *PodStorage) WatchState(ctx context.Context, pod chan *types.Pod) error {
 	return nil
 }
 

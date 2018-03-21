@@ -58,12 +58,12 @@ func (s *VolumeStorage) ListByNamespace(ctx context.Context, namespace string) (
 }
 
 // Update volume state
-func (s *VolumeStorage) SetState(ctx context.Context, volume *types.Volume) error {
+func (s *VolumeStorage) SetStatus(ctx context.Context, volume *types.Volume) error {
 	if err := s.checkVolumeExists(volume); err != nil {
 		return err
 	}
 
-	s.data[s.keyGet(volume)].State = volume.State
+	s.data[s.keyGet(volume)].Status = volume.Status
 	return nil
 }
 
@@ -124,7 +124,7 @@ func (s *VolumeStorage) WatchSpec(ctx context.Context, volume chan *types.Volume
 }
 
 // Watch volume state changes
-func (s *VolumeStorage) WatchState(ctx context.Context, volume chan *types.Volume) error {
+func (s *VolumeStorage) WatchStatus(ctx context.Context, volume chan *types.Volume) error {
 	return nil
 }
 
