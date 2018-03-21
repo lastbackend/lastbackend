@@ -21,6 +21,7 @@ package request
 import "github.com/lastbackend/lastbackend/pkg/distribution/types"
 
 type NodeUpdateOptions struct {
+	Meta *types.NodeUpdateMetaOptions
 }
 
 type NodeInfoOptions struct {

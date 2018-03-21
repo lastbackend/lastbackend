@@ -22,20 +22,20 @@ import (
 	"context"
 	"github.com/lastbackend/lastbackend/pkg/util/generator"
 
-	"github.com/lastbackend/lastbackend/pkg/api/types/v1/request"
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 	"github.com/lastbackend/lastbackend/pkg/log"
 	"github.com/lastbackend/lastbackend/pkg/storage"
+	"github.com/lastbackend/lastbackend/pkg/storage/store"
 )
 
 type INode interface {
 	List() (map[string]*types.Node, error)
-	Create() (*types.Node, error)
+	Create(opts *types.NodeCreateOptions) (*types.Node, error)
 
 	Get(name string) (*types.Node, error)
 	GetSpec(node *types.Node) (*types.NodeSpec, error)
 
-	Update(node *types.Node, opts *request.NodeUpdateOptions) error
+	SetMeta(node *types.Node,  meta *types.NodeUpdateMetaOptions) error
 	SetState(node *types.Node, state types.NodeState)  error
 	SetInfo(node *types.Node, info types.NodeInfo) error
 	SetNetwork(node *types.Node, network types.Subnet) error
@@ -60,13 +60,22 @@ func (n *Node) List() (map[string]*types.Node, error) {
 	return n.storage.Node().List(n.context)
 }
 
-func (n *Node) Create() (*types.Node, error) {
+func (n *Node) Create(opts *types.NodeCreateOptions) (*types.Node, error) {
 
 	log.Debug("Node: create node in cluster")
 
 	ni := new(types.Node)
-	ni.Meta.Labels = make(map[string]string, 0)
-	ni.Meta.Token = generator.GenerateRandomString(32)
+	ni.Meta.SetDefault()
+
+	ni.Meta.Name = opts.Meta.Name
+	ni.Meta.Token = opts.Meta.Token
+	ni.Meta.Region = opts.Meta.Region
+	ni.Meta.Provider = opts.Meta.Provider
+
+	if ni.Meta.Token == "" {
+		ni.Meta.Token = generator.GenerateRandomString(32)
+	}
+
 	ni.Online = true
 
 	if err := n.storage.Node().Insert(n.context, ni); err != nil {
@@ -79,11 +88,17 @@ func (n *Node) Create() (*types.Node, error) {
 
 func (n *Node) Get(name string) (*types.Node, error) {
 
-	log.V(logLevel).Debugf("Node: get Node by name %s", name)
+	log.V(logLevel).Debugf("api:distribution:node:get by name %s", name)
 
 	node, err := n.storage.Node().Get(n.context, name)
 	if err != nil {
-		log.V(logLevel).Debugf("Node: get Node `%s` err: %s", name, err)
+
+		if err.Error() == store.ErrEntityNotFound {
+			log.V(logLevel).Warnf("api:distribution:service:get: not found", name)
+			return nil, nil
+		}
+
+		log.V(logLevel).Debugf("api:distribution:node:get `%s` err: %s", name, err)
 		return nil, err
 	}
 
@@ -103,9 +118,11 @@ func (n *Node) GetSpec(node *types.Node) (*types.NodeSpec, error) {
 	return spec, nil
 }
 
-func (n *Node) Update(node *types.Node, opts *request.NodeUpdateOptions) error {
+func (n *Node) SetMeta(node *types.Node, meta *types.NodeUpdateMetaOptions) error {
 
 	log.V(logLevel).Debugf("Node: update Node %#v", node)
+
+	node.Meta.Set(meta)
 
 	if err := n.storage.Node().Update(n.context, node); err != nil {
 		log.V(logLevel).Errorf("Node: update Node meta err: %s", err)

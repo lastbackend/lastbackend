@@ -165,6 +165,13 @@ func (n *Route) SetState(route *types.Route, state *types.RouteState) error {
 	return nil
 }
 
+func (n *Route) SetStatus(route *types.Route, status *types.RouteStatus) error {
+
+	log.V(logLevel).Debugf("api:distribution:route:setstate set state route %s -> %#v", route.Meta.Name, status)
+
+	return nil
+}
+
 func (n *Route) Remove(route *types.Route) error {
 
 	log.V(logLevel).Debugf("api:distribution:route:remove remove route %#v", route)

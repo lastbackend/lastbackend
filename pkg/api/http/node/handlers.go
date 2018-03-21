@@ -166,7 +166,7 @@ func NodeUpdateH(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = nm.Update(n, opts)
+	err = nm.SetMeta(n, opts.Meta)
 	if err != nil {
 		log.V(logLevel).Errorf("Handler: Node: update node `%s` err: %s", nid, err)
 		errors.HTTP.InternalServerError(w)
@@ -271,7 +271,7 @@ func NodeSetStateH(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func NodeSetPodStateH(w http.ResponseWriter, r *http.Request) {
+func NodeSetPodStatusH(w http.ResponseWriter, r *http.Request) {
 
 	var (
 		nm = distribution.NewNodeModel(r.Context(), envs.Get().GetStorage())
@@ -328,7 +328,7 @@ func NodeSetPodStateH(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func NodeSetVolumeStateH(w http.ResponseWriter, r *http.Request) {
+func NodeSetVolumeStatusH(w http.ResponseWriter, r *http.Request) {
 
 	log.V(logLevel).Debug("Handler: Node: node set volume state")
 
@@ -384,7 +384,7 @@ func NodeSetVolumeStateH(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func NodeSetRouteStateH(w http.ResponseWriter, r *http.Request) {
+func NodeSetRouteStatusH(w http.ResponseWriter, r *http.Request) {
 
 	log.V(logLevel).Debug("Handler: Node: node set route state")
 
@@ -461,6 +461,12 @@ func NodeRemoveH(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.V(logLevel).Errorf("Handler: Node: remove node err: %s", err)
 		errors.HTTP.InternalServerError(w)
+		return
+	}
+
+	if n == nil {
+		log.V(logLevel).Warnf("Handler: Node: remove node `%s` not found", nid)
+		errors.New("node").NotFound().Http(w)
 		return
 	}
 
