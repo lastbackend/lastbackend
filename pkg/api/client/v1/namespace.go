@@ -78,6 +78,14 @@ func (s *NamespaceClient) List(ctx context.Context) (*vv1.NamespaceList, error) 
 		return nil, err
 	}
 
+	if code := req.StatusCode(); 200 > code || code > 299 {
+		var e *errors.Http
+		if err := json.Unmarshal(buf, &e); err != nil {
+			return nil, err
+		}
+		return nil, errors.New(e.Message)
+	}
+
 	var nl *vv1.NamespaceList
 
 	if err := json.Unmarshal(buf, &nl); err != nil {

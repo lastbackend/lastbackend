@@ -34,14 +34,14 @@ func CreateCmd(cmd *cobra.Command, args []string) {
 		return
 	}
 
-	name := args[0]
-
 	namespace, _ := cmd.Flags().GetString("namespace")
 
 	if namespace == "" {
-		fmt.Errorf("namesapace parameter not set")
+		fmt.Println("namesapace parameter not set")
 		return
 	}
+
+	name := args[0]
 
 	description, _ := cmd.Flags().GetString("desc")
 	memory, _ := cmd.Flags().GetInt64("memory")
@@ -51,6 +51,7 @@ func CreateCmd(cmd *cobra.Command, args []string) {
 	opts := new(request.ServiceCreateOptions)
 	opts.Spec = new(request.ServiceOptionsSpec)
 
+	opts.Name = &name
 	opts.Description = &description
 	opts.Spec.Memory = &memory
 	opts.Image = &image
@@ -62,12 +63,14 @@ func CreateCmd(cmd *cobra.Command, args []string) {
 	}
 
 	cli := envs.Get().GetClient()
-	response, err := cli.V1().Namespace(name).Service().Create(envs.Background(), opts)
+	response, err := cli.V1().Namespace(namespace).Service().Create(envs.Background(), opts)
 	if err != nil {
+		fmt.Println(err)
 		return
 	}
 
 	fmt.Println(fmt.Sprintf("Service `%s` is created", name))
+
 	service := view.FromApiServiceView(response)
 	service.Print()
 }

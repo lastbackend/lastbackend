@@ -36,7 +36,7 @@ func FetchCmd(cmd *cobra.Command, args []string) {
 	namespace, _ := cmd.Flags().GetString("namespace")
 
 	if namespace == "" {
-		fmt.Errorf("namesapace parameter not set")
+		fmt.Println("namesapace parameter not set")
 		return
 	}
 

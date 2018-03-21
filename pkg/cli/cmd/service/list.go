@@ -25,18 +25,19 @@ import (
 	"fmt"
 )
 
-func ListCmd(cmd *cobra.Command, args []string) {
+func ListCmd(cmd *cobra.Command, _ []string) {
 
 	namespace, _ := cmd.Flags().GetString("namespace")
 
 	if namespace == "" {
-		fmt.Errorf("namesapace parameter not set")
+		fmt.Println("namesapace parameter not set")
 		return
 	}
 
 	cli := envs.Get().GetClient()
 	response, err := cli.V1().Namespace(namespace).Service().List(envs.Background())
 	if err != nil {
+		fmt.Println(err)
 		return
 	}
 

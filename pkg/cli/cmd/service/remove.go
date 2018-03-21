@@ -37,7 +37,7 @@ func RemoveCmd(cmd *cobra.Command, args []string) {
 	namespace, _ := cmd.Flags().GetString("namespace")
 
 	if namespace == "" {
-		fmt.Errorf("namesapace parameter not set")
+		fmt.Println("namesapace parameter not set")
 		return
 	}
 
@@ -49,7 +49,7 @@ func RemoveCmd(cmd *cobra.Command, args []string) {
 	}
 
 	cli := envs.Get().GetClient()
-	cli.V1().Namespace(namespace).Service(name).Remove(envs.Background(), opts)
+	cli.V1().Namespace(namespace).Service(namespace).Remove(envs.Background(), opts)
 
 	fmt.Println(fmt.Sprintf("Service `%s` is successfully removed", name))
 }

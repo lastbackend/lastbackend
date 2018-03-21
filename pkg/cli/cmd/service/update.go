@@ -38,7 +38,7 @@ func UpdateCmd(cmd *cobra.Command, args []string) {
 	namespace, _ := cmd.Flags().GetString("namespace")
 
 	if namespace == "" {
-		fmt.Errorf("namesapace parameter not set")
+		fmt.Println("namesapace parameter not set")
 		return
 	}
 
@@ -59,6 +59,7 @@ func UpdateCmd(cmd *cobra.Command, args []string) {
 	cli := envs.Get().GetClient()
 	response, err := cli.V1().Namespace(namespace).Service(name).Update(envs.Background(), opts)
 	if err != nil {
+		fmt.Println(err)
 		return
 	}
 
