@@ -33,6 +33,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"testing"
+	"strings"
 )
 
 // Testing NodeList handler

@@ -231,10 +231,6 @@ func (n *NodeUpdateOptions) DecodeAndValidate(reader io.Reader) *errors.Err {
 	return n.Validate()
 }
 
-func (n *NodeUpdateOptions) ToJson() ([]byte, error) {
-	return json.Marshal(n)
-}
-
 
 func (NodeRequest) RemoveOptions() *NodeRemoveOptions {
 	return new(NodeRemoveOptions)
