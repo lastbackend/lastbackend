@@ -162,7 +162,8 @@ func (s *NamespaceStorage) Remove(ctx context.Context, namespace *types.Namespac
 	}
 	defer destroy()
 
-	keyMeta := keyCreate(namespaceStorage, s.keyGet(namespace))
+	keyMeta := keyDirCreate(namespaceStorage, s.keyGet(namespace))
+
 	if err := client.DeleteDir(ctx, keyMeta); err != nil {
 		log.V(logLevel).Errorf("storage:etcd:deployment:> remove namespace err: %s", err.Error())
 		return err

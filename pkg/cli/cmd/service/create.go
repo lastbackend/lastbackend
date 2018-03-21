@@ -22,7 +22,7 @@ import (
 	"fmt"
 
 	"github.com/lastbackend/lastbackend/pkg/api/types/v1/request"
-	"github.com/lastbackend/lastbackend/pkg/cli/context"
+	"github.com/lastbackend/lastbackend/pkg/cli/envs"
 	"github.com/lastbackend/lastbackend/pkg/cli/view"
 	"github.com/spf13/cobra"
 )
@@ -33,20 +33,36 @@ func CreateCmd(cmd *cobra.Command, args []string) {
 		cmd.Help()
 		return
 	}
-	var name = args[0]
 
-	opts := &request.ServiceCreateOptions{Name: &name}
-	cmd.Flags().StringVarP(opts.Description, "desc", "d", "", "Set description")
-	cmd.Flags().StringVarP(opts.Sources, "sources", "s", "", "Set sources")
-	cmd.Flags().Int64VarP(opts.Spec.Memory, "memory", "m", 0, "Set memory")
+	name := args[0]
+
+	namespace, _ := cmd.Flags().GetString("namespace")
+
+	if namespace == "" {
+		fmt.Errorf("namesapace parameter not set")
+		return
+	}
+
+	description, _ := cmd.Flags().GetString("desc")
+	memory, _ := cmd.Flags().GetInt64("memory")
+	image, _ := cmd.Flags().GetString("image")
+	replicas, _ := cmd.Flags().GetInt("replicas")
+
+	opts := new(request.ServiceCreateOptions)
+	opts.Spec = new(request.ServiceOptionsSpec)
+
+	opts.Description = &description
+	opts.Spec.Memory = &memory
+	opts.Image = &image
+	opts.Replicas = &replicas
 
 	if err := opts.Validate(); err != nil {
 		fmt.Println(err.Attr)
 		return
 	}
 
-	cli := context.Get().GetClient()
-	response, err := cli.V1().Namespace(name).Service().Create(context.Background(), opts)
+	cli := envs.Get().GetClient()
+	response, err := cli.V1().Namespace(name).Service().Create(envs.Background(), opts)
 	if err != nil {
 		return
 	}

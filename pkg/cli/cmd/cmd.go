@@ -24,7 +24,7 @@ import (
 
 	"github.com/lastbackend/lastbackend/pkg/api/client"
 	"github.com/lastbackend/lastbackend/pkg/cli/config"
-	"github.com/lastbackend/lastbackend/pkg/cli/context"
+	"github.com/lastbackend/lastbackend/pkg/cli/envs"
 	"github.com/lastbackend/lastbackend/pkg/cli/storage"
 	"github.com/spf13/cobra"
 )
@@ -38,7 +38,7 @@ var (
 )
 var (
 	cfg = config.Get()
-	ctx = context.Get()
+	ctx = envs.Get()
 )
 
 // RootCmd represents the base command when called without any subcommands

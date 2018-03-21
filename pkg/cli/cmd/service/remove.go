@@ -22,7 +22,7 @@ import (
 	"fmt"
 
 	"github.com/lastbackend/lastbackend/pkg/api/types/v1/request"
-	"github.com/lastbackend/lastbackend/pkg/cli/context"
+	"github.com/lastbackend/lastbackend/pkg/cli/envs"
 	"github.com/spf13/cobra"
 )
 
@@ -34,8 +34,12 @@ func RemoveCmd(cmd *cobra.Command, args []string) {
 	}
 	name := args[0]
 
-	var namespace string
-	cmd.Flags().StringVarP(&namespace, "namespace", "ns", "", "namespace")
+	namespace, _ := cmd.Flags().GetString("namespace")
+
+	if namespace == "" {
+		fmt.Errorf("namesapace parameter not set")
+		return
+	}
 
 	opts := &request.ServiceRemoveOptions{Force: false}
 
@@ -44,8 +48,8 @@ func RemoveCmd(cmd *cobra.Command, args []string) {
 		return
 	}
 
-	cli := context.Get().GetClient()
-	cli.V1().Namespace(namespace).Service(name).Remove(context.Background(), opts)
+	cli := envs.Get().GetClient()
+	cli.V1().Namespace(namespace).Service(name).Remove(envs.Background(), opts)
 
 	fmt.Println(fmt.Sprintf("Service `%s` is successfully removed", name))
 }

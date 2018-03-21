@@ -44,8 +44,8 @@ func (s *ServiceCreateOptions) Validate() *errors.Err {
 		return errors.New("service").BadParameter("replicas")
 	case s.Replicas != nil && *s.Replicas < DEFAULT_REPLICAS_MIN:
 		return errors.New("service").BadParameter("replicas")
-	case s.Sources == nil:
-		return errors.New("service").BadParameter("source")
+	case s.Image == nil:
+		return errors.New("service").BadParameter("image")
 	case s.Description != nil && len(*s.Description) > DEFAULT_DESCRIPTION_LIMIT:
 		return errors.New("service").BadParameter("description")
 	case s.Spec != nil:
@@ -82,7 +82,7 @@ func (s *ServiceCreateOptions) DecodeAndValidate(reader io.Reader) (*types.Servi
 	opts := new(types.ServiceCreateOptions)
 	opts.Name = s.Name
 	opts.Description = s.Description
-	opts.Sources = s.Sources
+	opts.Image = s.Image
 
 	if s.Spec != nil {
 		opts.Spec = new(types.ServiceOptionsSpec)

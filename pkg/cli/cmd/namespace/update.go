@@ -16,30 +16,43 @@
 // from Last.Backend LLC.
 //
 
-package service
+package namespace
 
 import (
+	"fmt"
+
+	"github.com/spf13/cobra"
+	"github.com/lastbackend/lastbackend/pkg/api/types/v1/request"
 	"github.com/lastbackend/lastbackend/pkg/cli/envs"
 	"github.com/lastbackend/lastbackend/pkg/cli/view"
-	"github.com/spf13/cobra"
-	"fmt"
 )
 
-func ListCmd(cmd *cobra.Command, args []string) {
+func UpdateCmd(cmd *cobra.Command, args []string) {
 
-	namespace, _ := cmd.Flags().GetString("namespace")
+	if len(args) != 1 {
+		cmd.Help()
+		return
+	}
 
-	if namespace == "" {
-		fmt.Errorf("namesapace parameter not set")
+	name := args[0]
+	desc := cmd.Flag("desc").Value.String()
+
+	opts := new(request.NamespaceUpdateOptions)
+	opts.Description = &desc
+
+	if err := opts.Validate(); err != nil {
+		fmt.Println(err.Attr)
 		return
 	}
 
 	cli := envs.Get().GetClient()
-	response, err := cli.V1().Namespace(namespace).Service().List(envs.Background())
+	response, err := cli.V1().Namespace(name).Update(envs.Background(), opts)
 	if err != nil {
+		fmt.Println(err)
 		return
 	}
 
-	list := view.FromApiServiceListView(response)
-	list.Print()
+	fmt.Println(fmt.Sprintf("Namespace `%s` is updated", name))
+	ns := view.FromApiNamespaceView(response)
+	ns.Print()
 }
