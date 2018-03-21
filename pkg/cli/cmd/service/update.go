@@ -58,10 +58,6 @@ func Update(name string, desc, sources *string, memory *int64) (*view.Service, e
 		Description: desc,
 	}
 
-	if sources == nil {
-		data.Sources = sources
-	}
-
 	if memory == nil {
 		data.Spec.Memory = memory
 	}

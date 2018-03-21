@@ -37,6 +37,7 @@ import (
 	"testing"
 	"github.com/lastbackend/lastbackend/pkg/distribution/errors"
 	"github.com/lastbackend/lastbackend/pkg/api/types/v1/views"
+	"github.com/lastbackend/lastbackend/pkg/api/types/v1"
 )
 
 // Testing ServiceInfoH handler
@@ -70,7 +71,7 @@ func TestServiceInfo(t *testing.T) {
 		headers      map[string]string
 		handler      func(http.ResponseWriter, *http.Request)
 		description  string
-		want         *types.Service
+		want         *views.Service
 		wantErr      bool
 		err          string
 		expectedCode int
@@ -101,7 +102,7 @@ func TestServiceInfo(t *testing.T) {
 			description:  "successfully",
 			args:         args{ctx, ns1, s1},
 			fields:       fields{stg},
-			want:         s1,
+			want:         v1.View().Service().New(s1, nil, nil),
 			wantErr:      false,
 			expectedCode: http.StatusOK,
 		},
@@ -354,7 +355,7 @@ func TestServiceCreate(t *testing.T) {
 		handler      func(http.ResponseWriter, *http.Request)
 		description  string
 		data         string
-		want         *types.Service
+		want         *views.Service
 		wantErr      bool
 		err          string
 		expectedCode int
@@ -433,7 +434,7 @@ func TestServiceCreate(t *testing.T) {
 			fields:       fields{stg},
 			handler:      service.ServiceCreateH,
 			data:         createServiceCreateOptions(srtPointer(s3.Meta.Name), nil, srtPointer("redis"), intPointer(1), nil).toJson(),
-			want:         s3,
+			want:         v1.View().Service().New(s3, nil, nil),
 			wantErr:      false,
 			expectedCode: http.StatusOK,
 		},
@@ -487,7 +488,8 @@ func TestServiceCreate(t *testing.T) {
 				assert.Equal(t, tc.err, string(body), tc.description)
 			} else {
 
-				got, _ := tc.fields.stg.Service().Get(tc.args.ctx, tc.args.namespace.Meta.Name, tc.args.service.Meta.Name)
+				got, err := tc.fields.stg.Service().Get(tc.args.ctx, tc.args.namespace.Meta.Name, tc.args.service.Meta.Name)
+				assert.NoError(t, err)
 				got.Meta.Updated = tc.want.Meta.Updated
 				got.Meta.Created = tc.want.Meta.Created
 
@@ -549,7 +551,7 @@ func TestServiceUpdate(t *testing.T) {
 		handler      func(http.ResponseWriter, *http.Request)
 		description  string
 		data         string
-		want         *types.Service
+		want         *views.Service
 		wantErr      bool
 		err          string
 		expectedCode int
@@ -606,7 +608,7 @@ func TestServiceUpdate(t *testing.T) {
 			args:         args{ctx, ns1, s1},
 			handler:      service.ServiceUpdateH,
 			data:         createServiceUpdateOptions(&s3.Meta.Description, nil).toJson(),
-			want:         s3,
+			want:         v1.View().Service().New(s3, nil, nil),
 			wantErr:      false,
 			expectedCode: http.StatusOK,
 		},

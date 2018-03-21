@@ -25,7 +25,6 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/lastbackend/lastbackend/pkg/api/envs"
 	"github.com/lastbackend/lastbackend/pkg/api/http/route"
-	"github.com/lastbackend/lastbackend/pkg/api/types/v1"
 	"github.com/lastbackend/lastbackend/pkg/api/types/v1/request"
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 	"github.com/lastbackend/lastbackend/pkg/storage"
@@ -36,13 +35,17 @@ import (
 	"net/http/httptest"
 	"strings"
 	"testing"
+	"github.com/lastbackend/lastbackend/pkg/api/types/v1/views"
+	"errors"
 )
 
 // Testing RouteInfoH handler
 func TestRouteInfo(t *testing.T) {
 
-	strg, _ := storage.GetMock()
-	envs.Get().SetStorage(strg)
+	var ctx = context.Background()
+
+	stg, _ := storage.GetMock()
+	envs.Get().SetStorage(stg)
 	viper.Set("verbose", 0)
 
 	err := envs.Get().GetStorage().Namespace().Clear(context.Background())
@@ -62,40 +65,56 @@ func TestRouteInfo(t *testing.T) {
 	err = envs.Get().GetStorage().Route().Insert(context.Background(), r1)
 	assert.NoError(t, err)
 
-	v, err := v1.View().Route().New(r1).ToJson()
-	assert.NoError(t, err)
+	type fields struct {
+		stg storage.Storage
+	}
+
+	type args struct {
+		ctx       context.Context
+		namespace *types.Namespace
+		route     *types.Route
+	}
 
 	tests := []struct {
 		name         string
-		url          string
+		fields       fields
+		args         args
 		headers      map[string]string
 		handler      func(http.ResponseWriter, *http.Request)
 		description  string
-		expectedBody string
+		err          string
+		want         *types.Route
+		wantErr      bool
 		expectedCode int
 	}{
 		{
 			name:         "checking get route if not exists",
-			url:          fmt.Sprintf("/namespace/%s/route/%s", ns1.Meta.Name, r2.Meta.Name),
+			args:         args{ctx, ns1, r2},
+			fields:       fields{stg},
 			handler:      route.RouteInfoH,
 			description:  "route not found",
-			expectedBody: "{\"code\":404,\"status\":\"Not Found\",\"message\":\"Route not found\"}",
+			err:          "{\"code\":404,\"status\":\"Not Found\",\"message\":\"Route not found\"}",
+			wantErr:      true,
 			expectedCode: http.StatusNotFound,
 		},
 		{
 			name:         "checking get route if namespace not exists",
-			url:          fmt.Sprintf("/namespace/%s/route/%s", ns2.Meta.Name, r1.Meta.Name),
+			args:         args{ctx, ns2, r1},
+			fields:       fields{stg},
 			handler:      route.RouteInfoH,
 			description:  "namespace not found",
-			expectedBody: "{\"code\":404,\"status\":\"Not Found\",\"message\":\"Namespace not found\"}",
+			err:          "{\"code\":404,\"status\":\"Not Found\",\"message\":\"Namespace not found\"}",
+			wantErr:      true,
 			expectedCode: http.StatusNotFound,
 		},
 		{
 			name:         "checking get route successfully",
-			url:          fmt.Sprintf("/namespace/%s/route/%s", ns1.Meta.Name, r1.Meta.Name),
+			args:         args{ctx, ns1, r1},
+			fields:       fields{stg},
 			handler:      route.RouteInfoH,
 			description:  "successfully",
-			expectedBody: string(v),
+			want:         r1,
+			wantErr:      false,
 			expectedCode: http.StatusOK,
 		},
 	}
@@ -106,7 +125,7 @@ func TestRouteInfo(t *testing.T) {
 
 			// Create assert request to pass to our handler. We don't have any query parameters for now, so we'll
 			// pass 'nil' as the third parameter.
-			req, err := http.NewRequest("GET", tc.url, nil)
+			req, err := http.NewRequest("GET", fmt.Sprintf("/namespace/%s/route/%s", tc.args.namespace.Meta.Name, tc.args.route.Meta.Name), nil)
 			assert.NoError(t, err)
 
 			if tc.headers != nil {
@@ -133,7 +152,16 @@ func TestRouteInfo(t *testing.T) {
 			body, err := ioutil.ReadAll(res.Body)
 			assert.NoError(t, err)
 
-			assert.Equal(t, tc.expectedBody, string(body), tc.description)
+			if tc.wantErr && res.Code != 200 {
+				assert.Equal(t, tc.err, string(body), tc.description)
+			} else {
+
+				n := new(views.Route)
+				err := json.Unmarshal(body, &n)
+				assert.NoError(t, err)
+
+				assert.Equal(t, tc.want.Meta.Name, n.Meta.Name, tc.description)
+			}
 		})
 	}
 
@@ -142,61 +170,60 @@ func TestRouteInfo(t *testing.T) {
 // Testing RouteListH handler
 func TestRouteList(t *testing.T) {
 
-	strg, _ := storage.GetMock()
-	envs.Get().SetStorage(strg)
+	var ctx = context.Background()
+
+	stg, _ := storage.GetMock()
+	envs.Get().SetStorage(stg)
 	viper.Set("verbose", 0)
-
-	err := envs.Get().GetStorage().Namespace().Clear(context.Background())
-	assert.NoError(t, err)
-
-	err = envs.Get().GetStorage().Route().Clear(context.Background())
-	assert.NoError(t, err)
 
 	ns1 := getNamespaceAsset("demo", "")
 	ns2 := getNamespaceAsset("test", "")
-
-	err = envs.Get().GetStorage().Namespace().Insert(context.Background(), ns1)
-	assert.NoError(t, err)
-
 	r1 := getRouteAsset(ns1.Meta.Name, "demo")
 	r2 := getRouteAsset(ns1.Meta.Name, "test")
-
-	err = envs.Get().GetStorage().Route().Insert(context.Background(), r1)
-	assert.NoError(t, err)
-
-	err = envs.Get().GetStorage().Route().Insert(context.Background(), r2)
-	assert.NoError(t, err)
 
 	rl := make(types.RouteList, 0)
 	rl[r1.SelfLink()] = r1
 	rl[r2.SelfLink()] = r2
 
-	v, err := v1.View().Route().NewList(rl).ToJson()
-	assert.NoError(t, err)
+	type fields struct {
+		stg storage.Storage
+	}
+
+	type args struct {
+		ctx       context.Context
+		namespace *types.Namespace
+	}
 
 	tests := []struct {
 		name         string
-		url          string
+		fields       fields
+		args         args
 		headers      map[string]string
 		handler      func(http.ResponseWriter, *http.Request)
 		description  string
-		expectedBody string
+		err          string
+		want         types.RouteList
+		wantErr      bool
 		expectedCode int
 	}{
 		{
 			name:         "checking get routes list if namespace not found",
-			url:          fmt.Sprintf("/namespace/%s", ns2.Meta.Name),
+			args:         args{ctx, ns2},
+			fields:       fields{stg},
 			handler:      route.RouteListH,
 			description:  "namespace not found",
-			expectedBody: "{\"code\":404,\"status\":\"Not Found\",\"message\":\"Namespace not found\"}",
+			err:          "{\"code\":404,\"status\":\"Not Found\",\"message\":\"Namespace not found\"}",
+			wantErr:      true,
 			expectedCode: http.StatusNotFound,
 		},
 		{
 			name:         "checking get routes list successfully",
-			url:          fmt.Sprintf("/namespace/%s", ns1.Meta.Name),
+			args:         args{ctx, ns1},
+			fields:       fields{stg},
 			handler:      route.RouteListH,
 			description:  "successfully",
-			expectedBody: string(v),
+			want:         rl,
+			wantErr:      false,
 			expectedCode: http.StatusOK,
 		},
 	}
@@ -205,9 +232,24 @@ func TestRouteList(t *testing.T) {
 
 		t.Run(tc.name, func(t *testing.T) {
 
+			err := envs.Get().GetStorage().Namespace().Clear(context.Background())
+			assert.NoError(t, err)
+
+			err = envs.Get().GetStorage().Route().Clear(context.Background())
+			assert.NoError(t, err)
+
+			err = envs.Get().GetStorage().Namespace().Insert(context.Background(), ns1)
+			assert.NoError(t, err)
+
+			err = envs.Get().GetStorage().Route().Insert(context.Background(), r1)
+			assert.NoError(t, err)
+
+			err = envs.Get().GetStorage().Route().Insert(context.Background(), r2)
+			assert.NoError(t, err)
+
 			// Create assert request to pass to our handler. We don't have any query parameters for now, so we'll
 			// pass 'nil' as the third parameter.
-			req, err := http.NewRequest("GET", tc.url, nil)
+			req, err := http.NewRequest("GET", fmt.Sprintf("/namespace/%s", tc.args.namespace.Meta.Name), nil)
 			assert.NoError(t, err)
 
 			if tc.headers != nil {
@@ -234,7 +276,20 @@ func TestRouteList(t *testing.T) {
 			body, err := ioutil.ReadAll(res.Body)
 			assert.NoError(t, err)
 
-			assert.Equal(t, tc.expectedBody, string(body), tc.description)
+			if tc.wantErr && res.Code != 200 {
+				assert.Equal(t, tc.err, string(body), tc.description)
+			} else {
+
+				r := new(views.RouteList)
+				err := json.Unmarshal(body, &r)
+				assert.NoError(t, err)
+
+				for _, item := range *r {
+					if _, ok := tc.want[item.Meta.SelfLink]; !ok {
+						assert.Error(t, errors.New("not equals"))
+					}
+				}
+			}
 		})
 	}
 
@@ -262,70 +317,75 @@ func (s *RouteCreateOptions) toJson() string {
 // Testing RouteCreateH handler
 func TestRouteCreate(t *testing.T) {
 
-	strg, _ := storage.GetMock()
-	envs.Get().SetStorage(strg)
+	var ctx = context.Background()
+
+	stg, _ := storage.GetMock()
+	envs.Get().SetStorage(stg)
 	viper.Set("verbose", 0)
 
 	srtPointer := func(s string) *string { return &s }
 	intPointer := func(i int) *int { return &i }
 
-	err := envs.Get().GetStorage().Namespace().Clear(context.Background())
-	assert.NoError(t, err)
+	ns1 := getNamespaceAsset("demo", "")
+	ns2 := getNamespaceAsset("test", "")
 
-	err = envs.Get().GetStorage().Route().Clear(context.Background())
-	assert.NoError(t, err)
+	r1 := getRouteAsset(ns1.Meta.Name, "demo")
 
-	ns := getNamespaceAsset("demo", "")
+	type fields struct {
+		stg storage.Storage
+	}
 
-	err = envs.Get().GetStorage().Namespace().Insert(context.Background(), ns)
-	assert.NoError(t, err)
-
-	r1 := getRouteAsset(ns.Meta.Name, "demo")
-	r2 := getRouteAsset(ns.Meta.Name, "test")
-
-	err = envs.Get().GetStorage().Route().Insert(context.Background(), r1)
-	assert.NoError(t, err)
-
-	v, err := v1.View().Route().New(r1).ToJson()
-	assert.NoError(t, err)
+	type args struct {
+		ctx       context.Context
+		namespace *types.Namespace
+	}
 
 	tests := []struct {
 		name         string
-		url          string
+		fields       fields
+		args         args
 		headers      map[string]string
 		handler      func(http.ResponseWriter, *http.Request)
 		description  string
 		data         string
-		expectedBody string
+		err          string
+		want         *types.Route
+		wantErr      bool
 		expectedCode int
 	}{
 		// TODO: need checking for unique
 		{
 			name:         "checking create route if namespace not found",
 			description:  "namespace not found",
-			url:          fmt.Sprintf("/namespace/%s/route", r2.Meta.Name),
+			args:         args{ctx, ns2},
+			fields:       fields{stg},
 			handler:      route.RouteCreateH,
 			data:         createRouteCreateOptions("demo", "", false, false, []request.RulesOption{{Endpoint: srtPointer("route.test-domain.com"), Path: "/", Port: intPointer(80)}}).toJson(),
-			expectedBody: "{\"code\":404,\"status\":\"Not Found\",\"message\":\"Namespace not found\"}",
+			err:          "{\"code\":404,\"status\":\"Not Found\",\"message\":\"Namespace not found\"}",
+			wantErr:      true,
 			expectedCode: http.StatusNotFound,
 		},
 		{
 			name:         "check create route if failed incoming json data",
 			description:  "incoming json data is failed",
-			url:          fmt.Sprintf("/namespace/%s/route", r1.Meta.Name),
+			args:         args{ctx, ns1},
+			fields:       fields{stg},
 			handler:      route.RouteCreateH,
 			data:         "{name:demo}",
-			expectedBody: "{\"code\":400,\"status\":\"Incorrect json\",\"message\":\"Incorrect json\"}",
+			err:          "{\"code\":400,\"status\":\"Incorrect json\",\"message\":\"Incorrect json\"}",
+			wantErr:      true,
 			expectedCode: http.StatusBadRequest,
 		},
 		// TODO: need checking incoming data for validity
 		{
 			name:         "check create route success",
 			description:  "successfully",
-			url:          fmt.Sprintf("/namespace/%s/route", r1.Meta.Name),
+			args:         args{ctx, ns1},
+			fields:       fields{stg},
 			handler:      route.RouteCreateH,
 			data:         createRouteCreateOptions("demo", "", false, false, []request.RulesOption{{Endpoint: srtPointer("route.test-domain.com"), Path: "/", Port: intPointer(80)}}).toJson(),
-			expectedBody: string(v),
+			want:         r1,
+			wantErr:      false,
 			expectedCode: http.StatusOK,
 		},
 	}
@@ -333,9 +393,21 @@ func TestRouteCreate(t *testing.T) {
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
 
+			err := envs.Get().GetStorage().Namespace().Clear(context.Background())
+			assert.NoError(t, err)
+
+			err = envs.Get().GetStorage().Route().Clear(context.Background())
+			assert.NoError(t, err)
+
+			err = envs.Get().GetStorage().Namespace().Insert(context.Background(), ns1)
+			assert.NoError(t, err)
+
+			err = envs.Get().GetStorage().Route().Insert(context.Background(), r1)
+			assert.NoError(t, err)
+
 			// Create assert request to pass to our handler. We don't have any query parameters for now, so we'll
 			// pass 'nil' as the third parameter.
-			req, err := http.NewRequest("POST", tc.url, strings.NewReader(tc.data))
+			req, err := http.NewRequest("POST", fmt.Sprintf("/namespace/%s/route", tc.args.namespace.Meta.Name), strings.NewReader(tc.data))
 			assert.NoError(t, err)
 
 			if tc.headers != nil {
@@ -362,7 +434,15 @@ func TestRouteCreate(t *testing.T) {
 			body, err := ioutil.ReadAll(res.Body)
 			assert.NoError(t, err)
 
-			assert.Equal(t, tc.expectedBody, string(body), tc.description)
+			if tc.wantErr && res.Code != 200 {
+				assert.Equal(t, tc.err, string(body), tc.description)
+			} else {
+
+				got, err := tc.fields.stg.Route().Get(tc.args.ctx, tc.args.namespace.Meta.Name, tc.want.Meta.Name)
+				assert.NoError(t, err)
+
+				assert.Equal(t, ns1.Meta.Name, got.Meta.Name, tc.description)
+			}
 		})
 	}
 
@@ -390,8 +470,10 @@ func (s *RouteUpdateOptions) toJson() string {
 // Testing RouteUpdateH handler
 func TestRouteUpdate(t *testing.T) {
 
-	strg, _ := storage.GetMock()
-	envs.Get().SetStorage(strg)
+	var ctx = context.Background()
+
+	stg, _ := storage.GetMock()
+	envs.Get().SetStorage(stg)
 	viper.Set("verbose", 0)
 
 	srtPointer := func(s string) *string { return &s }
@@ -403,59 +485,78 @@ func TestRouteUpdate(t *testing.T) {
 	err := envs.Get().GetStorage().Namespace().Insert(context.Background(), ns1)
 	assert.NoError(t, err)
 
-	s1 := getRouteAsset(ns1.Meta.Name, "demo")
-	s2 := getRouteAsset(ns1.Meta.Name, "test")
+	r1 := getRouteAsset(ns1.Meta.Name, "demo")
+	r2 := getRouteAsset(ns1.Meta.Name, "test")
+	r3 := getRouteAsset(ns1.Meta.Name, "demo")
 
-	err = envs.Get().GetStorage().Route().Insert(context.Background(), s1)
+	err = envs.Get().GetStorage().Route().Insert(context.Background(), r1)
 	assert.NoError(t, err)
 
-	v, err := v1.View().Route().New(s1).ToJson()
-	assert.NoError(t, err)
+	type fields struct {
+		stg storage.Storage
+	}
+
+	type args struct {
+		ctx       context.Context
+		namespace *types.Namespace
+		route     *types.Route
+	}
 
 	tests := []struct {
 		name         string
-		url          string
+		fields       fields
+		args         args
 		headers      map[string]string
 		handler      func(http.ResponseWriter, *http.Request)
 		description  string
 		data         string
-		expectedBody string
+		err          string
+		want         *types.Route
+		wantErr      bool
 		expectedCode int
 	}{
 		{
 			name:         "checking update route if name not exists",
 			description:  "route not exists",
-			url:          fmt.Sprintf("/namespace/%s/route/%s", ns1.Meta.Name, s2.Meta.Name),
+			args:         args{ctx, ns1, r2},
+			fields:       fields{stg},
 			handler:      route.RouteUpdateH,
 			data:         createRouteUpdateOptions("demo", "", false, false, []request.RulesOption{{Endpoint: srtPointer("route.test-domain.com"), Path: "/", Port: intPointer(80)}}).toJson(),
-			expectedBody: "{\"code\":404,\"status\":\"Not Found\",\"message\":\"Route not found\"}",
+			err:          "{\"code\":404,\"status\":\"Not Found\",\"message\":\"Route not found\"}",
+			wantErr:      true,
 			expectedCode: http.StatusNotFound,
 		},
 		{
 			name:         "checking update route if namespace not found",
 			description:  "namespace not found",
-			url:          fmt.Sprintf("/namespace/%s/route/%s", ns2.Meta.Name, s1.Meta.Name),
+			args:         args{ctx, ns2, r1},
+			fields:       fields{stg},
 			handler:      route.RouteUpdateH,
 			data:         createRouteUpdateOptions("demo", "", false, false, []request.RulesOption{{Endpoint: srtPointer("route.test-domain.com"), Path: "/", Port: intPointer(80)}}).toJson(),
-			expectedBody: "{\"code\":404,\"status\":\"Not Found\",\"message\":\"Namespace not found\"}",
+			err:          "{\"code\":404,\"status\":\"Not Found\",\"message\":\"Namespace not found\"}",
+			wantErr:      true,
 			expectedCode: http.StatusNotFound,
 		},
 		{
 			name:         "check update route if failed incoming json data",
 			description:  "incoming json data is failed",
-			url:          fmt.Sprintf("/namespace/%s/route/%s", ns1.Meta.Name, s1.Meta.Name),
+			args:         args{ctx, ns1, r1},
+			fields:       fields{stg},
 			handler:      route.RouteUpdateH,
 			data:         "{name:demo}",
-			expectedBody: "{\"code\":400,\"status\":\"Incorrect json\",\"message\":\"Incorrect json\"}",
+			err:          "{\"code\":400,\"status\":\"Incorrect json\",\"message\":\"Incorrect json\"}",
+			wantErr:      true,
 			expectedCode: http.StatusBadRequest,
 		},
 		{
 			name:         "check update route success",
 			description:  "successfully",
-			url:          fmt.Sprintf("/namespace/%s/route/%s", ns1.Meta.Name, s1.Meta.Name),
+			args:         args{ctx, ns1, r1},
+			fields:       fields{stg},
 			handler:      route.RouteUpdateH,
 			data:         createRouteUpdateOptions("demo", "", false, false, []request.RulesOption{{Endpoint: srtPointer("route.test-domain.com"), Path: "/", Port: intPointer(80)}}).toJson(),
-			expectedBody: string(v),
+			want:         r3,
+			wantErr:      false,
 			expectedCode: http.StatusOK,
 		},
 	}
@@ -465,7 +566,7 @@ func TestRouteUpdate(t *testing.T) {
 
 			// Create assert request to pass to our handler. We don't have any query parameters for now, so we'll
 			// pass 'nil' as the third parameter.
-			req, err := http.NewRequest("PUT", tc.url, strings.NewReader(tc.data))
+			req, err := http.NewRequest("PUT", fmt.Sprintf("/namespace/%s/route/%s", tc.args.namespace.Meta.Name, tc.args.route.Meta.Name), strings.NewReader(tc.data))
 			assert.NoError(t, err)
 
 			if tc.headers != nil {
@@ -492,7 +593,16 @@ func TestRouteUpdate(t *testing.T) {
 			body, err := ioutil.ReadAll(res.Body)
 			assert.NoError(t, err)
 
-			assert.Equal(t, tc.expectedBody, string(body), tc.description)
+			if tc.wantErr && res.Code != 200 {
+				assert.Equal(t, tc.err, string(body), tc.description)
+			} else {
+
+				n := new(views.Route)
+				err := json.Unmarshal(body, &n)
+				assert.NoError(t, err)
+
+				assert.Equal(t, tc.want.Meta.Name, n.Meta.Name, tc.description)
+			}
 		})
 	}
 
@@ -501,53 +611,67 @@ func TestRouteUpdate(t *testing.T) {
 // Testing RouteRemoveH handler
 func TestRouteRemove(t *testing.T) {
 
-	strg, _ := storage.GetMock()
-	envs.Get().SetStorage(strg)
+	var ctx = context.Background()
+
+	stg, _ := storage.GetMock()
+	envs.Get().SetStorage(stg)
 	viper.Set("verbose", 0)
 
 	ns1 := getNamespaceAsset("demo", "")
 	ns2 := getNamespaceAsset("test", "")
-
-	err := envs.Get().GetStorage().Namespace().Insert(context.Background(), ns1)
-	assert.NoError(t, err)
-
 	r1 := getRouteAsset(ns1.Meta.Name, "demo")
 	r2 := getRouteAsset(ns1.Meta.Name, "test")
 
-	err = envs.Get().GetStorage().Route().Insert(context.Background(), r1)
-	assert.NoError(t, err)
+	type fields struct {
+		stg storage.Storage
+	}
+
+	type args struct {
+		ctx       context.Context
+		namespace *types.Namespace
+		route     *types.Route
+	}
 
 	tests := []struct {
 		name         string
-		url          string
+		fields       fields
+		args         args
 		headers      map[string]string
 		handler      func(http.ResponseWriter, *http.Request)
 		description  string
-		expectedBody string
+		err          string
+		want         string
+		wantErr      bool
 		expectedCode int
 	}{
 		{
 			name:         "checking get route if not exists",
-			url:          fmt.Sprintf("/namespace/%s/route/%s", ns1.Meta.Name, r2.Meta.Name),
+			args:         args{ctx, ns1, r2},
+			fields:       fields{stg},
 			handler:      route.RouteRemoveH,
 			description:  "route not found",
-			expectedBody: "{\"code\":404,\"status\":\"Not Found\",\"message\":\"Route not found\"}",
+			err:          "{\"code\":404,\"status\":\"Not Found\",\"message\":\"Route not found\"}",
+			wantErr:      true,
 			expectedCode: http.StatusNotFound,
 		},
 		{
 			name:         "checking get route if namespace not exists",
-			url:          fmt.Sprintf("/namespace/%s/route/%s", ns2.Meta.Name, r1.Meta.Name),
+			args:         args{ctx, ns2, r1},
+			fields:       fields{stg},
 			handler:      route.RouteRemoveH,
 			description:  "namespace not found",
-			expectedBody: "{\"code\":404,\"status\":\"Not Found\",\"message\":\"Namespace not found\"}",
+			err:          "{\"code\":404,\"status\":\"Not Found\",\"message\":\"Namespace not found\"}",
+			wantErr:      true,
 			expectedCode: http.StatusNotFound,
 		},
 		{
 			name:         "checking get route successfully",
-			url:          fmt.Sprintf("/namespace/%s/route/%s", ns1.Meta.Name, r1.Meta.Name),
+			args:         args{ctx, ns1, r1},
+			fields:       fields{stg},
 			handler:      route.RouteRemoveH,
 			description:  "successfully",
-			expectedBody: "",
+			want:         "",
+			wantErr:      false,
 			expectedCode: http.StatusOK,
 		},
 	}
@@ -556,9 +680,15 @@ func TestRouteRemove(t *testing.T) {
 
 		t.Run(tc.name, func(t *testing.T) {
 
+			err := envs.Get().GetStorage().Namespace().Insert(context.Background(), ns1)
+			assert.NoError(t, err)
+
+			err = envs.Get().GetStorage().Route().Insert(context.Background(), r1)
+			assert.NoError(t, err)
+
 			// Create assert request to pass to our handler. We don't have any query parameters for now, so we'll
 			// pass 'nil' as the third parameter.
-			req, err := http.NewRequest("DELETE", tc.url, nil)
+			req, err := http.NewRequest("DELETE", fmt.Sprintf("/namespace/%s/route/%s", tc.args.namespace.Meta.Name, tc.args.route.Meta.Name), nil)
 			assert.NoError(t, err)
 
 			if tc.headers != nil {
@@ -586,7 +716,11 @@ func TestRouteRemove(t *testing.T) {
 			body, err := ioutil.ReadAll(res.Body)
 			assert.NoError(t, err)
 
-			assert.Equal(t, tc.expectedBody, string(body), tc.description)
+			if tc.wantErr && res.Code != 200 {
+				assert.Equal(t, tc.err, string(body), tc.description)
+			} else {
+				assert.Equal(t, tc.want, string(body), tc.description)
+			}
 		})
 	}
 
