@@ -32,6 +32,14 @@ var versionCmd = &cobra.Command{
 	},
 }
 
+var set = &cobra.Command{
+	Use:   "set",
+	Short: "Manage set vars to your local storage",
+	Run: func(cmd *cobra.Command, args []string) {
+		cmd.Help()
+	},
+}
+
 var cluster = &cobra.Command{
 	Use:   "cluster",
 	Short: "Manage your cluster",

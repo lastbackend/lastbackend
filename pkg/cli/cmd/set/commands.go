@@ -16,34 +16,14 @@
 // from Last.Backend LLC.
 //
 
-package client
+package set
 
 import (
-	"github.com/lastbackend/lastbackend/pkg/api/client/http"
-	"github.com/lastbackend/lastbackend/pkg/api/client/v1"
-	"net/url"
+	"github.com/spf13/cobra"
 )
 
-func New(endpoint, token string) (*Client, error) {
-	c := new(Client)
-
-	baseURL, err := url.Parse(endpoint)
-	if err != nil {
-		return nil, err
-	}
-
-	client, err := http.NewRESTClient(baseURL, token)
-	if err != nil {
-		return nil, err
-	}
-	c.client = client
-	return c, nil
-}
-
-type Client struct {
-	client http.Interface
-}
-
-func (c Client) V1() IClientV1 {
-	return v1.New(c.client)
+var SetToken = &cobra.Command{
+	Use:   "token",
+	Short: "Set token to local storage",
+	Run:   SetTokenCmd,
 }

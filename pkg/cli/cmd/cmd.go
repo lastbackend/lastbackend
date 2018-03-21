@@ -25,6 +25,7 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/api/client"
 	"github.com/lastbackend/lastbackend/pkg/cli/config"
 	"github.com/lastbackend/lastbackend/pkg/cli/context"
+	"github.com/lastbackend/lastbackend/pkg/cli/storage"
 	"github.com/spf13/cobra"
 )
 
@@ -64,7 +65,13 @@ func Execute() {
 
 // init client object
 func InitClient(apiHost string) *client.Client {
-	cli, err := client.New(apiHost)
+
+	token, err := storage.GetToken()
+	if err != nil {
+		panic("There is no token in .lastbackend in homedir")
+	}
+
+	cli, err := client.New(apiHost, token)
 	if err != nil {
 		panic(err)
 	}

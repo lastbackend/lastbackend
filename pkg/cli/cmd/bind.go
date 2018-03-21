@@ -22,6 +22,7 @@ import (
 	cs "github.com/lastbackend/lastbackend/pkg/cli/cmd/cluster"
 	ns "github.com/lastbackend/lastbackend/pkg/cli/cmd/namespace"
 	sr "github.com/lastbackend/lastbackend/pkg/cli/cmd/service"
+	st "github.com/lastbackend/lastbackend/pkg/cli/cmd/set"
 )
 
 func init() {
@@ -36,6 +37,11 @@ func init() {
 	// ----- cluster -----
 	cluster.AddCommand(
 		cs.ClusterFetch,
+	)
+
+	// ----- set -----
+	set.AddCommand(
+		st.SetToken,
 	)
 
 	// ----- namespace -----
