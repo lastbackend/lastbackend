@@ -2,7 +2,7 @@
 // Last.Backend LLC CONFIDENTIAL
 // __________________
 //
-// [2014] - [2017] Last.Backend LLC
+// [2014] - [2018] Last.Backend LLC
 // All Rights Reserved.
 //
 // NOTICE:  All information contained herein is, and remains
@@ -26,6 +26,7 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/api/client/interfaces"
 	rv1 "github.com/lastbackend/lastbackend/pkg/api/types/v1/request"
 	vv1 "github.com/lastbackend/lastbackend/pkg/api/types/v1/views"
+	"github.com/lastbackend/lastbackend/pkg/distribution/errors"
 )
 
 type NamespaceClient struct {
@@ -68,18 +69,16 @@ func (s *NamespaceClient) Volume(name ...string) *VolumeClient {
 
 func (s *NamespaceClient) List(ctx context.Context) (*vv1.NamespaceList, error) {
 
-	var (
-		nl *vv1.NamespaceList
-	)
-
-	result := s.client.Get(fmt.Sprintf("/namespace")).
+	req := s.client.Get(fmt.Sprintf("/namespace")).
 		AddHeader("Content-Type", "application/json").
 		Do()
 
-	buf, err := result.Raw()
+	buf, err := req.Raw()
 	if err != nil {
 		return nil, err
 	}
+
+	var nl *vv1.NamespaceList
 
 	if err := json.Unmarshal(buf, &nl); err != nil {
 		return nil, err
@@ -90,24 +89,34 @@ func (s *NamespaceClient) List(ctx context.Context) (*vv1.NamespaceList, error) 
 
 func (s *NamespaceClient) Create(ctx context.Context, opts *rv1.NamespaceCreateOptions) (*vv1.Namespace, error) {
 
-	var (
-		ns *vv1.Namespace
-	)
-
 	body, err := opts.ToJson()
 	if err != nil {
 		return nil, err
 	}
 
-	result := s.client.Post("/namespace").
+	req := s.client.Post("/namespace").
 		AddHeader("Content-Type", "application/json").
 		Body(body).
 		Do()
 
-	buf, err := result.Raw()
+	if err := req.Error(); err != nil {
+		return nil, err
+	}
+
+	buf, err := req.Raw()
 	if err != nil {
 		return nil, err
 	}
+
+	if code := req.StatusCode(); 200 > code || code > 299 {
+		var e *errors.Http
+		if err := json.Unmarshal(buf, &e); err != nil {
+			return nil, err
+		}
+		return nil, errors.New(e.Message)
+	}
+
+	var ns = new(vv1.Namespace)
 
 	if err := json.Unmarshal(buf, &ns); err != nil {
 		return nil, err
@@ -117,18 +126,25 @@ func (s *NamespaceClient) Create(ctx context.Context, opts *rv1.NamespaceCreateO
 }
 
 func (s *NamespaceClient) Get(ctx context.Context) (*vv1.Namespace, error) {
-	var (
-		ns *vv1.Namespace
-	)
 
-	result := s.client.Get(fmt.Sprintf("/namespace/%s", s.name)).
+	req := s.client.Get(fmt.Sprintf("/namespace/%s", s.name)).
 		AddHeader("Content-Type", "application/json").
 		Do()
 
-	buf, err := result.Raw()
+	buf, err := req.Raw()
 	if err != nil {
 		return nil, err
 	}
+
+	if code := req.StatusCode(); 200 > code || code > 299 {
+		var e *errors.Http
+		if err := json.Unmarshal(buf, &e); err != nil {
+			return nil, err
+		}
+		return nil,  errors.New(e.Message)
+	}
+
+	var ns *vv1.Namespace
 
 	if err := json.Unmarshal(buf, &ns); err != nil {
 		return nil, err
@@ -138,24 +154,31 @@ func (s *NamespaceClient) Get(ctx context.Context) (*vv1.Namespace, error) {
 }
 
 func (s *NamespaceClient) Update(ctx context.Context, opts *rv1.NamespaceUpdateOptions) (*vv1.Namespace, error) {
-	var (
-		ns *vv1.Namespace
-	)
 
 	body, err := opts.ToJson()
 	if err != nil {
 		return nil, err
 	}
 
-	result := s.client.Put(fmt.Sprintf("/namespace/%s", s.name)).
+	req := s.client.Put(fmt.Sprintf("/namespace/%s", s.name)).
 		AddHeader("Content-Type", "application/json").
 		Body(body).
 		Do()
 
-	buf, err := result.Raw()
+	buf, err := req.Raw()
 	if err != nil {
 		return nil, err
 	}
+
+	if code := req.StatusCode(); 200 > code || code > 299 {
+		var e *errors.Http
+		if err := json.Unmarshal(buf, &e); err != nil {
+			return nil, err
+		}
+		return nil,  errors.New(e.Message)
+	}
+
+	var ns *vv1.Namespace
 
 	if err := json.Unmarshal(buf, &ns); err != nil {
 		return nil, err
@@ -166,9 +189,22 @@ func (s *NamespaceClient) Update(ctx context.Context, opts *rv1.NamespaceUpdateO
 
 func (s *NamespaceClient) Remove(ctx context.Context, opts *rv1.NamespaceRemoveOptions) error {
 
-	s.client.Delete(fmt.Sprintf("/namespace/%s", s.name)).
+	req := s.client.Delete(fmt.Sprintf("/namespace/%s", s.name)).
 		AddHeader("Content-Type", "application/json").
 		Do()
+
+	buf, err := req.Raw()
+	if err != nil {
+		return err
+	}
+
+	if code := req.StatusCode(); 200 > code || code > 299 {
+		var e *errors.Http
+		if err := json.Unmarshal(buf, &e); err != nil {
+			return err
+		}
+		return  errors.New(e.Message)
+	}
 
 	return nil
 }

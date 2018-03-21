@@ -72,14 +72,14 @@ type Service interface {
 type Deployment interface {
 	Pod(name ...string) Pod
 	List(ctx context.Context) (*vv1.DeploymentList, error)
-	Get(ctx context.Context, deployment string) (*vv1.Deployment, error)
-	Update(ctx context.Context, deployment string, opts **rv1.DeploymentUpdateOptions) (*vv1.Deployment, error)
+	Get(ctx context.Context) (*vv1.Deployment, error)
+	Update(ctx context.Context, opts **rv1.DeploymentUpdateOptions) (*vv1.Deployment, error)
 }
 
 type Pod interface {
-	List(ctx context.Context, namespace, service string) (*vv1.DeploymentList, error)
-	Get(ctx context.Context, deployment string) (*vv1.Deployment, error)
-	Update(ctx context.Context, deployment string, opts **rv1.DeploymentUpdateOptions) (*vv1.Deployment, error)
+	List(ctx context.Context) (*vv1.PodList, error)
+	Get(ctx context.Context) (*vv1.Pod, error)
+	Update(ctx context.Context, opts **rv1.DeploymentUpdateOptions) (*vv1.Pod, error)
 }
 
 type Events interface {

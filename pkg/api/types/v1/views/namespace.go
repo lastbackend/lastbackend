@@ -23,7 +23,6 @@ import (
 )
 
 type Namespace struct {
-	ID        string             `json:"id"`
 	Meta      NamespaceMeta      `json:"meta"`
 	Env       NamespaceEnvs      `json:"env"`
 	Resources NamespaceResources `json:"resources"`

@@ -23,6 +23,7 @@ import (
 	"net/http"
 	"net/url"
 	"strings"
+	"time"
 )
 
 // Interface captures the set of operations for generically interacting with Kubernetes REST apis.
@@ -48,8 +49,10 @@ func NewRESTClient(baseURL *url.URL) (*RESTClient, error) {
 	}
 
 	return &RESTClient{
-		base:   &base,
-		Client: &http.Client{},
+		base: &base,
+		Client: &http.Client{
+			Timeout: time.Second * 10,
+		},
 	}, nil
 }
 

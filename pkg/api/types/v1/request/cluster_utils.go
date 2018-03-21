@@ -56,3 +56,7 @@ func (s *ClusterUpdateOptions) DecodeAndValidate(reader io.Reader) *errors.Err {
 
 	return nil
 }
+
+func (s *ClusterUpdateOptions) ToJson() ([]byte, error) {
+	return json.Marshal(s)
+}

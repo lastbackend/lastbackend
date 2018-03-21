@@ -32,6 +32,10 @@ func (DeploymentRequest) UpdateOptions() *DeploymentUpdateOptions {
 	return new(DeploymentUpdateOptions)
 }
 
+func (s *DeploymentUpdateOptions) ToJson() ([]byte, error) {
+	return json.Marshal(s)
+}
+
 func (s *DeploymentUpdateOptions) DecodeAndValidate(reader io.Reader) *errors.Err {
 
 	if reader == nil {

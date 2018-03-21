@@ -26,7 +26,7 @@ type Storage struct {
 	*NamespaceStorage
 }
 
-func (s *Storage) Namespace() INspace {
+func (s *Storage) Namespace() INamespace {
 	if s == nil {
 		return nil
 	}

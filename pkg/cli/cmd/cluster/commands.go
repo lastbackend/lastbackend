@@ -17,3 +17,13 @@
 //
 
 package cluster
+
+import "github.com/spf13/cobra"
+
+var ClusterFetch = &cobra.Command{
+	Use:   "info",
+	Short: "Get cluster info",
+	Run: func(cmd *cobra.Command, args []string) {
+		FetchCmd()
+	},
+}

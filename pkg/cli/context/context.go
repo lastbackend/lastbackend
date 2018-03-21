@@ -19,6 +19,7 @@
 package context
 
 import (
+	"context"
 	"github.com/lastbackend/lastbackend/pkg/api/client"
 	"github.com/lastbackend/lastbackend/pkg/cli/config"
 	"github.com/lastbackend/lastbackend/pkg/cli/storage"
@@ -28,6 +29,10 @@ var _ctx ctx
 
 func Get() *ctx {
 	return &_ctx
+}
+
+func Background() context.Context {
+	return context.Background()
 }
 
 func Mock() *ctx {

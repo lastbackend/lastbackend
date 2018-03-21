@@ -16,18 +16,4 @@
 // from Last.Backend LLC.
 //
 
-package storage
-
-import (
-	v "github.com/lastbackend/lastbackend/pkg/cli/view"
-)
-
-type IStorage interface {
-	Namespace() INamespace
-}
-
-type INamespace interface {
-	Save(ns *v.Namespace) error
-	Load() (*v.Namespace, error)
-	Remove() error
-}
+package namespace_test

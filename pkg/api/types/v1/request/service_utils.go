@@ -74,8 +74,16 @@ func (s *ServiceCreateOptions) DecodeAndValidate(reader io.Reader) *errors.Err {
 	return nil
 }
 
+func (s *ServiceCreateOptions) ToJson() ([]byte, error) {
+	return json.Marshal(s)
+}
+
 func (ServiceRequest) UpdateOptions() *ServiceUpdateOptions {
 	return new(ServiceUpdateOptions)
+}
+
+func (s *ServiceUpdateOptions) ToJson() ([]byte, error) {
+	return json.Marshal(s)
 }
 
 func (s *ServiceUpdateOptions) DecodeAndValidate(reader io.Reader) *errors.Err {

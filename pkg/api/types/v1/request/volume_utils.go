@@ -59,6 +59,10 @@ func (s *VolumeCreateOptions) DecodeAndValidate(reader io.Reader) *errors.Err {
 	return nil
 }
 
+func (s *VolumeCreateOptions) ToJson() ([]byte, error) {
+	return json.Marshal(s)
+}
+
 func (VolumeRequest) UpdateOptions() *VolumeUpdateOptions {
 	return new(VolumeUpdateOptions)
 }
@@ -88,6 +92,10 @@ func (s *VolumeUpdateOptions) DecodeAndValidate(reader io.Reader) *errors.Err {
 	//TODO: need checking arguments
 
 	return nil
+}
+
+func (s *VolumeUpdateOptions) ToJson() ([]byte, error) {
+	return json.Marshal(s)
 }
 
 func (VolumeRequest) RemoveOptions() *VolumeRemoveOptions {

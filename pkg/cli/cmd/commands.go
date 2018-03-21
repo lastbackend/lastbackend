@@ -32,6 +32,14 @@ var versionCmd = &cobra.Command{
 	},
 }
 
+var cluster = &cobra.Command{
+	Use:   "cluster",
+	Short: "Manage your cluster",
+	Run: func(cmd *cobra.Command, args []string) {
+		cmd.Help()
+	},
+}
+
 var namespace = &cobra.Command{
 	Use:   "namespace",
 	Short: "Manage your namespace and create",
@@ -43,14 +51,6 @@ var namespace = &cobra.Command{
 var service = &cobra.Command{
 	Use:   "service",
 	Short: "Manage service",
-	Run: func(cmd *cobra.Command, args []string) {
-		cmd.Help()
-	},
-}
-
-var repo = &cobra.Command{
-	Use:   "repo",
-	Short: "Manage repo(registry)",
 	Run: func(cmd *cobra.Command, args []string) {
 		cmd.Help()
 	},
