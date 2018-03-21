@@ -36,6 +36,7 @@ func NewInfoEvent(ctx context.Context) error {
 	)
 
 	opts := v1.Request().Node().NodeInfoOptions()
+
 	return c.SetInfo(ctx, opts)
 }
 
@@ -67,7 +68,7 @@ func NewPodStateEvent(ctx context.Context, pod *types.Pod) error {
 	log.Debugf("Event: Pod state event state: %s", pod.Meta.Name)
 
 
-	opts := v1.Request().Node().NodePodStateOptions()
+	opts := v1.Request().Node().NodePodStatusOptions()
 	return c.SetPodState(ctx, opts)
 }
 
@@ -87,7 +88,7 @@ func NewRouteStateEvent(ctx context.Context, route *types.Route) error {
 	log.Debugf("Event: route state event state: %s", route.Meta.Name)
 
 
-	opts := v1.Request().Node().NodeRouteStateOptions()
+	opts := v1.Request().Node().NodeRouteStatusOptions()
 	return c.SetRouteState(ctx, opts)
 }
 
@@ -107,6 +108,6 @@ func NewVolumeStateEvent(ctx context.Context, volume *types.Volume) error {
 	log.Debugf("Event: volume state event state: %s", volume.Meta.Name)
 
 
-	opts := v1.Request().Node().NodeVolumeStateOptions()
+	opts := v1.Request().Node().NodeVolumeStatusOptions()
 	return c.SetVolumeState(ctx, opts)
 }
