@@ -24,41 +24,28 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/api/types/v1/request"
 	"github.com/lastbackend/lastbackend/pkg/cli/context"
 	"github.com/lastbackend/lastbackend/pkg/cli/view"
+	"github.com/spf13/cobra"
 )
 
-func CreateCmd(name, desc string) {
+func CreateCmd(cmd *cobra.Command, args []string) {
 
-	ns, err := Create(name, desc)
+	if len(args) != 1 {
+		cmd.Help()
+		return
+	}
+	var name = args[0]
+
+	var opts *request.NamespaceCreateOptions
+	cmd.Flags().StringVarP(&opts.Description, "desc", "d", "", "Set description")
+	opts.Name = name
+
+	cli := context.Get().GetClient()
+	response, err := cli.V1().Namespace().Create(context.Background(), opts)
 	if err != nil {
-		fmt.Println(err)
 		return
 	}
 
 	fmt.Println(fmt.Sprintf("Namespace `%s` is created", name))
-
-	ns.Print()
-}
-
-func Create(name, desc string) (*view.Namespace, error) {
-
-	stg := context.Get().GetStorage()
-	cli := context.Get().GetClient()
-
-	data := &request.NamespaceCreateOptions{
-		Name:        name,
-		Description: desc,
-	}
-
-	response, err := cli.V1().Namespace().Create(context.Background(), data)
-	if err != nil {
-		return nil, err
-	}
-
 	ns := view.FromApiNamespaceView(response)
-
-	if err := stg.Namespace().Save(ns); err != nil {
-		return nil, err
-	}
-
-	return ns, nil
+	ns.Print()
 }

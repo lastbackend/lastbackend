@@ -27,7 +27,11 @@ import (
 func New(endpoint string) (*Client, error) {
 	c := new(Client)
 
-	baseURL, _ := url.Parse(endpoint)
+	baseURL, err := url.Parse(endpoint)
+	if err != nil {
+		return nil, err
+	}
+
 	client, err := http.NewRESTClient(baseURL)
 	if err != nil {
 		return nil, err

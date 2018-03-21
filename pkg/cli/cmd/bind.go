@@ -44,8 +44,6 @@ func init() {
 		ns.NamespaceList,
 		ns.NamespaceFetch,
 		ns.NamespaceRemove,
-		ns.NamespaceCurrent,
-		ns.NamespaceSelect,
 	)
 
 	// ----- service -----

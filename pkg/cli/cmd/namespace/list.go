@@ -19,33 +19,19 @@
 package namespace
 
 import (
-	"fmt"
-
 	"github.com/lastbackend/lastbackend/pkg/cli/context"
 	"github.com/lastbackend/lastbackend/pkg/cli/view"
+	"github.com/spf13/cobra"
 )
 
-func ListCmd() {
+func ListCmd(cmd *cobra.Command, args []string) {
 
-	list, err := List()
+	cli := context.Get().GetClient()
+	response, err := cli.V1().Namespace().List(context.Background())
 	if err != nil {
-		fmt.Println(err)
 		return
 	}
 
-	list.Print()
-}
-
-func List() (*view.NamespaceList, error) {
-
-	cli := context.Get().GetClient()
-
-	response, err := cli.V1().Namespace().List(context.Background())
-	if err != nil {
-		return nil, err
-	}
-
 	list := view.FromApiNamespaceListView(response)
-
-	return list, nil
+	list.Print()
 }

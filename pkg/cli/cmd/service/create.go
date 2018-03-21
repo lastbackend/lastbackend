@@ -24,55 +24,29 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/api/types/v1/request"
 	"github.com/lastbackend/lastbackend/pkg/cli/context"
 	"github.com/lastbackend/lastbackend/pkg/cli/view"
-	"github.com/lastbackend/lastbackend/pkg/distribution/errors"
+	"github.com/spf13/cobra"
 )
 
-func CreateCmd(name string, desc, sources *string, memory *int64) {
+func CreateCmd(cmd *cobra.Command, args []string) {
 
-	ss, err := Create(name, desc, sources, memory)
+	if len(args) != 1 {
+		cmd.Help()
+		return
+	}
+	var name = args[0]
+
+	opts := &request.ServiceCreateOptions{Name: &name}
+	cmd.Flags().StringVarP(opts.Description, "desc", "d", "", "Set description")
+	cmd.Flags().StringVarP(opts.Sources, "sources", "s", "", "Set sources")
+	cmd.Flags().Int64VarP(opts.Spec.Memory, "memory", "m", 0, "Set memory")
+
+	cli := context.Get().GetClient()
+	response, err := cli.V1().Namespace(name).Service().Create(context.Background(), opts)
 	if err != nil {
-		fmt.Println(err)
 		return
 	}
 
 	fmt.Println(fmt.Sprintf("Service `%s` is created", name))
-
-	ss.Print()
-}
-
-func Create(name string, desc, sources *string, memory *int64) (*view.Service, error) {
-
-	stg := context.Get().GetStorage()
-	cli := context.Get().GetClient()
-
-	ns, err := stg.Namespace().Load()
-	if err != nil {
-		return nil, err
-	}
-
-	if ns == nil {
-		return nil, errors.New("namespace has not been selected")
-	}
-
-	data := &request.ServiceCreateOptions{
-		Name:        &name,
-		Description: desc,
-	}
-
-	if sources != nil {
-		data.Sources = sources
-	}
-
-	if memory != nil {
-		data.Spec.Memory = memory
-	}
-
-	response, err := cli.V1().Namespace(ns.Meta.Name).Service().Create(context.Background(), data)
-	if err != nil {
-		return nil, err
-	}
-
-	ss := view.FromApiServiceView(response)
-
-	return ss, nil
+	service := view.FromApiServiceView(response)
+	service.Print()
 }

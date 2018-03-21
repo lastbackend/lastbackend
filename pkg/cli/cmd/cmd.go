@@ -25,7 +25,6 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/api/client"
 	"github.com/lastbackend/lastbackend/pkg/cli/config"
 	"github.com/lastbackend/lastbackend/pkg/cli/context"
-	"github.com/lastbackend/lastbackend/pkg/cli/storage"
 	"github.com/spf13/cobra"
 )
 
@@ -50,13 +49,6 @@ var RootCmd = &cobra.Command{
 		if debug {
 			cfg.Debug = debug
 		}
-
-		strg, err := storage.Get()
-		if err != nil {
-			panic(fmt.Sprintf("Error: init local storage %s", err))
-			return
-		}
-		ctx.SetStorage(strg)
 	},
 }
 
