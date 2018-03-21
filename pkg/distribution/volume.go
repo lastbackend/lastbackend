@@ -19,8 +19,8 @@
 package distribution
 
 import (
-	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 	"context"
+	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 	"github.com/lastbackend/lastbackend/pkg/storage"
 )
 
@@ -81,7 +81,6 @@ func (v *Volume) Watch(dt chan *types.Volume) error {
 func (v *Volume) WatchSpec(dt chan *types.Volume) error {
 	return nil
 }
-
 
 func NewVolumeModel(ctx context.Context, stg storage.Storage) IVolume {
 	return &Volume{ctx, stg}

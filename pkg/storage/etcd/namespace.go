@@ -22,12 +22,12 @@ import (
 	"context"
 	"time"
 
+	"fmt"
 	"github.com/lastbackend/lastbackend/pkg/distribution/errors"
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 	"github.com/lastbackend/lastbackend/pkg/log"
 	"github.com/lastbackend/lastbackend/pkg/storage/storage"
 	"github.com/lastbackend/lastbackend/pkg/storage/store"
-	"fmt"
 )
 
 const namespaceStorage = "namespace"
@@ -230,7 +230,6 @@ func (s *NamespaceStorage) checkNamespaceExists(ctx context.Context, namespace *
 		log.V(logLevel).Debugf("storage:etcd:namespace:> check namespace exists err: %s", err.Error())
 		return err
 	}
-
 
 	return nil
 }

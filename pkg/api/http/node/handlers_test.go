@@ -19,20 +19,20 @@
 package node_test
 
 import (
-	"testing"
-	"github.com/spf13/viper"
-	"github.com/stretchr/testify/assert"
-	"net/http"
+	"context"
 	"fmt"
 	"github.com/gorilla/mux"
-	"net/http/httptest"
-	"io/ioutil"
-	"github.com/lastbackend/lastbackend/pkg/storage"
 	"github.com/lastbackend/lastbackend/pkg/api/envs"
+	"github.com/lastbackend/lastbackend/pkg/api/http/node"
 	"github.com/lastbackend/lastbackend/pkg/api/types/v1"
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
-	"github.com/lastbackend/lastbackend/pkg/api/http/node"
-	"context"
+	"github.com/lastbackend/lastbackend/pkg/storage"
+	"github.com/spf13/viper"
+	"github.com/stretchr/testify/assert"
+	"io/ioutil"
+	"net/http"
+	"net/http/httptest"
+	"testing"
 )
 
 // Testing NodeList handler
@@ -163,7 +163,6 @@ func TestNodeGetH(t *testing.T) {
 			expectedBody: string(v),
 			expectedCode: http.StatusOK,
 		},
-
 	}
 
 	for _, tc := range tests {
@@ -226,9 +225,9 @@ func TestNodeGetSpecH(t *testing.T) {
 		p2  = getPodAsset(ns, svc, dp, "test2", "")
 	)
 
-	n1.Spec.Pods    = make(map[string]types.PodSpec)
+	n1.Spec.Pods = make(map[string]types.PodSpec)
 	n1.Spec.Volumes = make(map[string]types.VolumeSpec)
-	n1.Spec.Routes  = make(map[string]types.RouteSpec)
+	n1.Spec.Routes = make(map[string]types.RouteSpec)
 
 	n1.Spec.Pods[p1.SelfLink()] = p1.Spec
 	n1.Spec.Pods[p2.SelfLink()] = p2.Spec
@@ -260,7 +259,6 @@ func TestNodeGetSpecH(t *testing.T) {
 			expectedBody: string(v),
 			expectedCode: http.StatusOK,
 		},
-
 	}
 
 	for _, tc := range tests {
@@ -271,10 +269,10 @@ func TestNodeGetSpecH(t *testing.T) {
 		err = envs.Get().GetStorage().Node().Insert(ctx, &n1)
 		assert.NoError(t, err)
 
-		err = envs.Get().GetStorage().Node().InsertPod(ctx, &n1, &p1);
+		err = envs.Get().GetStorage().Node().InsertPod(ctx, &n1, &p1)
 		assert.NoError(t, err)
 
-		err = envs.Get().GetStorage().Node().InsertPod(ctx, &n1, &p2);
+		err = envs.Get().GetStorage().Node().InsertPod(ctx, &n1, &p2)
 		assert.NoError(t, err)
 
 		t.Run(tc.name, func(t *testing.T) {
@@ -348,7 +346,6 @@ func TestNodeRemoveH(t *testing.T) {
 			expectedBody: "",
 			expectedCode: http.StatusOK,
 		},
-
 	}
 
 	for _, tc := range tests {
@@ -397,7 +394,6 @@ func TestNodeRemoveH(t *testing.T) {
 
 func TestNodeUpdateH(t *testing.T) {
 
-
 }
 
 func TestNodeSetInfoH(t *testing.T) {
@@ -419,7 +415,6 @@ func TestNodeSetVolumeStatusH(t *testing.T) {
 func TestNodeSetRouteStatusH(t *testing.T) {
 
 }
-
 
 func setRequestVars(r *mux.Router, req *http.Request) {
 	var match mux.RouteMatch

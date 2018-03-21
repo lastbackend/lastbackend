@@ -19,11 +19,11 @@
 package envs
 
 import (
+	"github.com/lastbackend/lastbackend/pkg/api/client/interfaces"
 	"github.com/lastbackend/lastbackend/pkg/cache"
 	"github.com/lastbackend/lastbackend/pkg/node/runtime/cni"
 	"github.com/lastbackend/lastbackend/pkg/node/runtime/cri"
 	"github.com/lastbackend/lastbackend/pkg/node/state"
-	"github.com/lastbackend/lastbackend/pkg/api/client/interfaces"
 )
 
 var e Env
@@ -33,10 +33,10 @@ func Get() *Env {
 }
 
 type Env struct {
-	cri   cri.CRI
-	cni   cni.CNI
-	cache *cache.Cache
-	state *state.State
+	cri    cri.CRI
+	cni    cni.CNI
+	cache  *cache.Cache
+	state  *state.State
 	client interfaces.Node
 }
 
@@ -76,6 +76,6 @@ func (c *Env) SetClient(cl interfaces.Node) {
 	c.client = cl
 }
 
-func (c *Env) GetClient() interfaces.Node{
+func (c *Env) GetClient() interfaces.Node {
 	return c.client
 }

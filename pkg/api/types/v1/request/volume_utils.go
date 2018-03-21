@@ -32,7 +32,11 @@ func (VolumeRequest) CreateOptions() *VolumeCreateOptions {
 	return new(VolumeCreateOptions)
 }
 
-func (s *VolumeCreateOptions) DecodeAndValidate(reader io.Reader) *errors.Err {
+func (v *VolumeCreateOptions) Validate() *errors.Err {
+	return nil
+}
+
+func (v *VolumeCreateOptions) DecodeAndValidate(reader io.Reader) *errors.Err {
 
 	if reader == nil {
 		err := errors.New("data body can not be null")
@@ -49,25 +53,27 @@ func (s *VolumeCreateOptions) DecodeAndValidate(reader io.Reader) *errors.Err {
 		return errors.New("volume").Unknown(err)
 	}
 
-	err = json.Unmarshal(body, s)
+	err = json.Unmarshal(body, v)
 	if err != nil {
 		return errors.New("volume").IncorrectJSON(err)
 	}
 
-	//TODO: need checking arguments
-
-	return nil
+	return v.Validate()
 }
 
-func (s *VolumeCreateOptions) ToJson() ([]byte, error) {
-	return json.Marshal(s)
+func (v *VolumeCreateOptions) ToJson() ([]byte, error) {
+	return json.Marshal(v)
 }
 
 func (VolumeRequest) UpdateOptions() *VolumeUpdateOptions {
 	return new(VolumeUpdateOptions)
 }
 
-func (s *VolumeUpdateOptions) DecodeAndValidate(reader io.Reader) *errors.Err {
+func (v *VolumeUpdateOptions) Validate() *errors.Err {
+	return nil
+}
+
+func (v *VolumeUpdateOptions) DecodeAndValidate(reader io.Reader) *errors.Err {
 
 	if reader == nil {
 		err := errors.New("data body can not be null")
@@ -84,25 +90,27 @@ func (s *VolumeUpdateOptions) DecodeAndValidate(reader io.Reader) *errors.Err {
 		return errors.New("volume").Unknown(err)
 	}
 
-	err = json.Unmarshal(body, s)
+	err = json.Unmarshal(body, v)
 	if err != nil {
 		return errors.New("volume").IncorrectJSON(err)
 	}
 
-	//TODO: need checking arguments
-
-	return nil
+	return v.Validate()
 }
 
-func (s *VolumeUpdateOptions) ToJson() ([]byte, error) {
-	return json.Marshal(s)
+func (v *VolumeUpdateOptions) ToJson() ([]byte, error) {
+	return json.Marshal(v)
 }
 
 func (VolumeRequest) RemoveOptions() *VolumeRemoveOptions {
 	return new(VolumeRemoveOptions)
 }
 
-func (s *VolumeRemoveOptions) DecodeAndValidate(reader io.Reader) *errors.Err {
+func (v *VolumeRemoveOptions) Validate() *errors.Err {
+	return nil
+}
+
+func (v *VolumeRemoveOptions) DecodeAndValidate(reader io.Reader) *errors.Err {
 
 	if reader == nil {
 		return nil
@@ -113,10 +121,10 @@ func (s *VolumeRemoveOptions) DecodeAndValidate(reader io.Reader) *errors.Err {
 		return errors.New("volume").Unknown(err)
 	}
 
-	err = json.Unmarshal(body, s)
+	err = json.Unmarshal(body, v)
 	if err != nil {
 		return errors.New("volume").IncorrectJSON(err)
 	}
 
-	return nil
+	return v.Validate()
 }

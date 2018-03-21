@@ -39,7 +39,7 @@ type Route struct {
 type RouteList map[string]*Route
 
 type RouteMeta struct {
-	Meta             `yaml:",inline"`
+	Meta      `yaml:",inline"`
 	Namespace string `json:"namespace" yaml:"namespace"`
 	Security  bool   `json:"security" yaml:"security"`
 }

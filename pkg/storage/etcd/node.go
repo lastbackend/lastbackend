@@ -95,7 +95,6 @@ func (s *NodeStorage) Get(ctx context.Context, name string) (*types.Node, error)
 
 func (s *NodeStorage) GetSpec(ctx context.Context, node *types.Node) (*types.NodeSpec, error) {
 
-
 	log.V(logLevel).Debugf("storage:etcd:node:> get node spec: %v", node)
 
 	var (
@@ -110,9 +109,9 @@ func (s *NodeStorage) GetSpec(ctx context.Context, node *types.Node) (*types.Nod
 		return nil, err
 	}
 
-	const filterPods    = `\b.+` + nodeStorage + `\/.+\/spec\/pods\/(.+)\b`
+	const filterPods = `\b.+` + nodeStorage + `\/.+\/spec\/pods\/(.+)\b`
 	const filterVolumes = `\b.+` + nodeStorage + `\/.+\/spec\/volumes\/(.+)\b`
-	const filterRoutes  = `\b.+` + nodeStorage + `\/.+\/spec\/routes\/(.+)\b`
+	const filterRoutes = `\b.+` + nodeStorage + `\/.+\/spec\/routes\/(.+)\b`
 
 	client, destroy, err := getClient(ctx)
 	if err != nil {
