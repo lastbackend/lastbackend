@@ -18,7 +18,10 @@
 
 package views
 
-import "time"
+import (
+	"time"
+	"github.com/lastbackend/lastbackend/pkg/distribution/types"
+)
 
 // Node - default node structure
 type Node struct {
@@ -67,8 +70,8 @@ type NodeResources struct {
 }
 
 type NodeSpec struct {
-	Routes  map[string]RouteSpec  `json:"routes"`
-	Network map[string]Subnet     `json:"network"`
-	Pods    map[string]PodSpec    `json:"pods"`
-	Volumes map[string]VolumeSpec `json:"volumes"`
+	Routes  map[string]types.RouteSpec  `json:"routes"`
+	Network map[string]types.Subnet     `json:"network"`
+	Pods    map[string]types.PodSpec    `json:"pods"`
+	Volumes map[string]types.VolumeSpec `json:"volumes"`
 }

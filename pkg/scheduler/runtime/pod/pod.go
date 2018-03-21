@@ -136,7 +136,7 @@ func Provision(p *types.Pod) error {
 		p.Status.Stage = types.PodStageError
 		p.Status.Message = errors.NodeNotFound
 
-		if _, err := distribution.NewPodModel(context.Background(), stg).SetState(p); err != nil {
+		if err := distribution.NewPodModel(context.Background(), stg).SetState(p); err != nil {
 			log.Errorf("set pod state error: %s", err.Error())
 			return err
 		}

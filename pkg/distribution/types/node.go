@@ -43,6 +43,29 @@ type NodeMeta struct {
 	Provider string `json:"provider"`
 }
 
+func (m *NodeMeta) Set(meta *NodeUpdateMetaOptions) {
+	if meta.Description != nil {
+		m.Description = *meta.Description
+	}
+
+	if meta.Token != nil {
+		m.Token = *meta.Token
+	}
+
+	if meta.Region != nil {
+		m.Region = *meta.Region
+	}
+
+	if meta.Provider != nil {
+		m.Provider = *meta.Provider
+	}
+
+	if meta.Labels != nil {
+		m.Labels = meta.Labels
+	}
+
+}
+
 type NodeInfo struct {
 	Hostname     string `json:"hostname"`
 	Architecture string `json:"architecture"`
@@ -106,4 +129,22 @@ type NodeRoleRouter struct {
 
 type NodeTask struct {
 	Cancel context.CancelFunc
+}
+
+type NodeCreateMetaOptions struct {
+	MetaCreateOptions
+	Token    string `json:"token"`
+	Region   string `json:"region"`
+	Provider string `json:"provider"`
+}
+
+type NodeUpdateMetaOptions struct {
+	MetaUpdateOptions
+	Token    *string `json:"token"`
+	Region   *string `json:"region"`
+	Provider *string `json:"provider"`
+}
+
+type NodeCreateOptions struct {
+	Meta NodeCreateMetaOptions `json:"meta",yaml:"meta"`
 }

@@ -22,21 +22,21 @@ import (
 	"context"
 	"github.com/lastbackend/lastbackend/pkg/util/generator"
 
-	"github.com/lastbackend/lastbackend/pkg/api/types/v1/request"
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 	"github.com/lastbackend/lastbackend/pkg/log"
 	"github.com/lastbackend/lastbackend/pkg/storage"
+	"github.com/lastbackend/lastbackend/pkg/storage/store"
 )
 
 type INode interface {
 	List() (map[string]*types.Node, error)
-	Create() (*types.Node, error)
+	Create(opts *types.NodeCreateOptions) (*types.Node, error)
 
 	Get(name string) (*types.Node, error)
-	GetSpec(name string) (types.NodeSpec, error)
+	GetSpec(node *types.Node) (*types.NodeSpec, error)
 
-	Update(node *types.Node, opts *request.NodeUpdateOptions) error
-	SetState(node *types.Node, state types.NodeState) (*types.Node, error)
+	SetMeta(node *types.Node,  meta *types.NodeUpdateMetaOptions) error
+	SetState(node *types.Node, state types.NodeState)  error
 	SetInfo(node *types.Node, info types.NodeInfo) error
 	SetNetwork(node *types.Node, network types.Subnet) error
 	SetOnline(node *types.Node) error
@@ -60,13 +60,22 @@ func (n *Node) List() (map[string]*types.Node, error) {
 	return n.storage.Node().List(n.context)
 }
 
-func (n *Node) Create() (*types.Node, error) {
+func (n *Node) Create(opts *types.NodeCreateOptions) (*types.Node, error) {
 
 	log.Debug("Node: create node in cluster")
 
 	ni := new(types.Node)
-	ni.Meta.Labels = make(map[string]string, 0)
-	ni.Meta.Token = generator.GenerateRandomString(32)
+	ni.Meta.SetDefault()
+
+	ni.Meta.Name = opts.Meta.Name
+	ni.Meta.Token = opts.Meta.Token
+	ni.Meta.Region = opts.Meta.Region
+	ni.Meta.Provider = opts.Meta.Provider
+
+	if ni.Meta.Token == "" {
+		ni.Meta.Token = generator.GenerateRandomString(32)
+	}
+
 	ni.Online = true
 
 	if err := n.storage.Node().Insert(n.context, ni); err != nil {
@@ -79,20 +88,41 @@ func (n *Node) Create() (*types.Node, error) {
 
 func (n *Node) Get(name string) (*types.Node, error) {
 
-	log.V(logLevel).Debugf("Node: get Node by name %s", name)
+	log.V(logLevel).Debugf("api:distribution:node:get by name %s", name)
 
 	node, err := n.storage.Node().Get(n.context, name)
 	if err != nil {
-		log.V(logLevel).Debugf("Node: get Node `%s` err: %s", name, err)
+
+		if err.Error() == store.ErrEntityNotFound {
+			log.V(logLevel).Warnf("api:distribution:service:get: not found", name)
+			return nil, nil
+		}
+
+		log.V(logLevel).Debugf("api:distribution:node:get `%s` err: %s", name, err)
 		return nil, err
 	}
 
 	return node, nil
 }
 
-func (n *Node) Update(node *types.Node, opts *request.NodeUpdateOptions) error {
+func (n *Node) GetSpec(node *types.Node) (*types.NodeSpec, error) {
+
+	log.V(logLevel).Debugf("Node: get node spec: %s", node.Meta.Name)
+
+	spec, err := n.storage.Node().GetSpec(n.context, node)
+	if err != nil {
+		log.V(logLevel).Debugf("Node: get Node `%s` err: %s", node.Meta.Name, err)
+		return nil, err
+	}
+
+	return spec, nil
+}
+
+func (n *Node) SetMeta(node *types.Node, meta *types.NodeUpdateMetaOptions) error {
 
 	log.V(logLevel).Debugf("Node: update Node %#v", node)
+
+	node.Meta.Set(meta)
 
 	if err := n.storage.Node().Update(n.context, node); err != nil {
 		log.V(logLevel).Errorf("Node: update Node meta err: %s", err)
@@ -122,16 +152,16 @@ func (n *Node) SetOffline(node *types.Node) error {
 
 }
 
-func (n *Node) SetState(node *types.Node, state types.NodeState) (*types.Node, error) {
+func (n *Node) SetState(node *types.Node, state types.NodeState)  error {
 
 	node.State = state
 
 	if err := n.storage.Node().SetState(n.context, node); err != nil {
 		log.Errorf("Set node offline state error: %s", err)
-		return nil, err
+		return err
 	}
 
-	return node, nil
+	return nil
 }
 
 func (n *Node) SetInfo(node *types.Node, info types.NodeInfo) error {
@@ -190,13 +220,6 @@ func (n *Node) InsertRoute(node *types.Node, route *types.Route) error {
 
 func (n *Node) RemoveRoute(node *types.Node, route *types.Route) error {
 	return nil
-}
-
-func (n *Node) GetSpec(name string) (types.NodeSpec, error) {
-
-	var spec types.NodeSpec
-
-	return spec, nil
 }
 
 func (n *Node) Remove(node *types.Node) error {
