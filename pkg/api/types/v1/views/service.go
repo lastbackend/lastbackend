@@ -27,7 +27,6 @@ type ServiceList []*Service
 // ***************************************************
 
 type Service struct {
-	ID          string                 `json:"id"`
 	Meta        ServiceMeta            `json:"meta"`
 	Stats       ServiceStats           `json:"stats"`
 	State       ServiceState           `json:"state"`

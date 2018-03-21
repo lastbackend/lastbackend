@@ -28,7 +28,6 @@ type ServiceCreateOptions struct {
 
 type ServiceUpdateOptions struct {
 	Description *string             `json:"description"`
-	Sources     *string             `json:"sources"`
 	Spec        *ServiceOptionsSpec `json:"spec"`
 }
 

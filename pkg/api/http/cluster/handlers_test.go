@@ -99,11 +99,7 @@ func TestClusterInfo(t *testing.T) {
 		body, err := ioutil.ReadAll(res.Body)
 		assert.NoError(t, err)
 
-		if res.Code == http.StatusOK {
-			assert.Equal(t, tc.expectedBody, string(v), tc.description)
-		} else {
-			assert.Equal(t, tc.expectedBody, string(body), tc.description)
-		}
+		assert.Equal(t, tc.expectedBody, string(body), tc.description)
 	}
 }
 
@@ -203,12 +199,7 @@ func TestNamespaceUpdate(t *testing.T) {
 		body, err := ioutil.ReadAll(res.Body)
 		assert.NoError(t, err)
 
-		if res.Code == http.StatusOK {
-			assert.Equal(t, tc.expectedBody, string(v), tc.description)
-		} else {
-			assert.Equal(t, tc.expectedBody, string(body), tc.description)
-		}
-
+		assert.Equal(t, tc.expectedBody, string(body), tc.description)
 	}
 
 }

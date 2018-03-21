@@ -133,11 +133,7 @@ func TestRouteInfo(t *testing.T) {
 			body, err := ioutil.ReadAll(res.Body)
 			assert.NoError(t, err)
 
-			if res.Code == http.StatusOK {
-				assert.Equal(t, tc.expectedBody, string(v), tc.description)
-			} else {
-				assert.Equal(t, tc.expectedBody, string(body), tc.description)
-			}
+			assert.Equal(t, tc.expectedBody, string(body), tc.description)
 		})
 	}
 
@@ -238,11 +234,7 @@ func TestRouteList(t *testing.T) {
 			body, err := ioutil.ReadAll(res.Body)
 			assert.NoError(t, err)
 
-			if res.Code == http.StatusOK {
-				assert.Equal(t, tc.expectedBody, string(v), tc.description)
-			} else {
-				assert.Equal(t, tc.expectedBody, string(body), tc.description)
-			}
+			assert.Equal(t, tc.expectedBody, string(body), tc.description)
 		})
 	}
 
@@ -370,12 +362,7 @@ func TestRouteCreate(t *testing.T) {
 			body, err := ioutil.ReadAll(res.Body)
 			assert.NoError(t, err)
 
-			if res.Code == http.StatusOK {
-				assert.Equal(t, tc.expectedBody, string(v), tc.description)
-			} else {
-				assert.Equal(t, tc.expectedBody, string(body), tc.description)
-			}
-
+			assert.Equal(t, tc.expectedBody, string(body), tc.description)
 		})
 	}
 
@@ -440,7 +427,7 @@ func TestRouteUpdate(t *testing.T) {
 			description:  "route not exists",
 			url:          fmt.Sprintf("/namespace/%s/route/%s", ns1.Meta.Name, s2.Meta.Name),
 			handler:      route.RouteUpdateH,
-			data:         createRouteCreateOptions("demo", "", false, false, []request.RulesOption{{Endpoint: srtPointer("route.test-domain.com"), Path: "/", Port: intPointer(80)}}).toJson(),
+			data:         createRouteUpdateOptions("demo", "", false, false, []request.RulesOption{{Endpoint: srtPointer("route.test-domain.com"), Path: "/", Port: intPointer(80)}}).toJson(),
 			expectedBody: "{\"code\":404,\"status\":\"Not Found\",\"message\":\"Route not found\"}",
 			expectedCode: http.StatusNotFound,
 		},
@@ -449,7 +436,7 @@ func TestRouteUpdate(t *testing.T) {
 			description:  "namespace not found",
 			url:          fmt.Sprintf("/namespace/%s/route/%s", ns2.Meta.Name, s1.Meta.Name),
 			handler:      route.RouteUpdateH,
-			data:         createRouteCreateOptions("demo", "", false, false, []request.RulesOption{{Endpoint: srtPointer("route.test-domain.com"), Path: "/", Port: intPointer(80)}}).toJson(),
+			data:         createRouteUpdateOptions("demo", "", false, false, []request.RulesOption{{Endpoint: srtPointer("route.test-domain.com"), Path: "/", Port: intPointer(80)}}).toJson(),
 			expectedBody: "{\"code\":404,\"status\":\"Not Found\",\"message\":\"Namespace not found\"}",
 			expectedCode: http.StatusNotFound,
 		},
@@ -467,7 +454,7 @@ func TestRouteUpdate(t *testing.T) {
 			description:  "successfully",
 			url:          fmt.Sprintf("/namespace/%s/route/%s", ns1.Meta.Name, s1.Meta.Name),
 			handler:      route.RouteUpdateH,
-			data:         createRouteCreateOptions("demo", "", false, false, []request.RulesOption{{Endpoint: srtPointer("route.test-domain.com"), Path: "/", Port: intPointer(80)}}).toJson(),
+			data:         createRouteUpdateOptions("demo", "", false, false, []request.RulesOption{{Endpoint: srtPointer("route.test-domain.com"), Path: "/", Port: intPointer(80)}}).toJson(),
 			expectedBody: string(v),
 			expectedCode: http.StatusOK,
 		},
@@ -505,12 +492,7 @@ func TestRouteUpdate(t *testing.T) {
 			body, err := ioutil.ReadAll(res.Body)
 			assert.NoError(t, err)
 
-			if res.Code == http.StatusOK {
-				assert.Equal(t, tc.expectedBody, string(v), tc.description)
-			} else {
-				assert.Equal(t, tc.expectedBody, string(body), tc.description)
-			}
-
+			assert.Equal(t, tc.expectedBody, string(body), tc.description)
 		})
 	}
 
