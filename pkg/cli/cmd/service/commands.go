@@ -31,33 +31,13 @@ var ServiceList = &cobra.Command{
 	Use:   "list",
 	Short: "Display the services list",
 	Run: func(cmd *cobra.Command, args []string) {
-		//ListServiceCmd()
+		ListCmd()
 	},
 }
 
-var ServiceScale = &cobra.Command{
-	Use:   "scale",
-	Short: "Scale service",
-	Run: func(cmd *cobra.Command, args []string) {
-
-		if len(args) != 2 {
-			cmd.Help()
-			return
-		}
-
-		//replicas, err := strconv.ParseInt(args[1], 10, 64)
-		//if err != nil {
-		//	cmd.Help()
-		//	return
-		//}
-
-		//ScaleCmd(args[0], replicas)
-	},
-}
-
-var ServiceInfo = &cobra.Command{
+var ServiceFetch = &cobra.Command{
 	Use:   "info",
-	Short: "Service info by Name",
+	Short: "Service info by name",
 	Run: func(cmd *cobra.Command, args []string) {
 
 		if len(args) != 1 {
@@ -65,7 +45,7 @@ var ServiceInfo = &cobra.Command{
 			return
 		}
 
-		//InspectCmd(args[0])
+		FetchCmd(args[0])
 	},
 }
 
@@ -74,12 +54,20 @@ var ServiceUpdate = &cobra.Command{
 	Short: "Change configuration of the service",
 	Run: func(cmd *cobra.Command, args []string) {
 
+		var desc *string
+		var memory *int64
+		var sources *string
+
+		cmd.Flags().StringVarP(desc, "desc", "m", "", "Set memory")
+		cmd.Flags().Int64VarP(memory, "memory", "m", 0, "Set memory")
+		cmd.Flags().StringVarP(sources, "sources", "s", "", "Set sources")
+
 		if len(args) != 1 {
 			cmd.Help()
 			return
 		}
 
-		//UpdateCmd(args[0], Memory)
+		UpdateCmd(args[0], desc, sources, memory)
 	},
 }
 
@@ -93,7 +81,7 @@ var ServiceRemove = &cobra.Command{
 			return
 		}
 
-		//RemoveCmd(args[0])
+		RemoveCmd(args[0])
 	},
 }
 
@@ -102,25 +90,19 @@ var ServiceCreate = &cobra.Command{
 	Short: "Create service",
 	Run: func(cmd *cobra.Command, args []string) {
 
-		if len(args) != 1 {
-			cmd.Help()
-			return
-		}
+		var desc *string
+		var memory *int64
+		var sources *string
 
-		//CreateCmd(args[0], Sources, Memory)
-	},
-}
-
-var ServiceLogs = &cobra.Command{
-	Use:   "logs",
-	Short: "Show service logs",
-	Run: func(cmd *cobra.Command, args []string) {
+		cmd.Flags().StringVarP(desc, "desc", "m", "", "Set memory")
+		cmd.Flags().StringVarP(sources, "sources", "s", "", "Set sources")
+		cmd.Flags().Int64VarP(memory, "memory", "m", 0, "Set memory")
 
 		if len(args) != 1 {
 			cmd.Help()
 			return
 		}
 
-		//LogsServiceCmd(args[0])
+		CreateCmd(args[0], desc, sources, memory)
 	},
 }

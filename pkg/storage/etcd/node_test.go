@@ -2,7 +2,7 @@
 // Last.Backend LLC CONFIDENTIAL
 // __________________
 //
-// [2014] - [2017] Last.Backend LLC
+// [2014] - [2018] Last.Backend LLC
 // All Rights Reserved.
 //
 // NOTICE:  All information contained herein is, and remains
@@ -23,10 +23,10 @@ import (
 	"reflect"
 	"testing"
 
+	"encoding/json"
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 	"github.com/lastbackend/lastbackend/pkg/storage/storage"
 	"github.com/lastbackend/lastbackend/pkg/storage/store"
-	"encoding/json"
 )
 
 func TestNodeStorage_List(t *testing.T) {
@@ -212,16 +212,16 @@ func TestNodeStorage_GetSpec(t *testing.T) {
 		dp  = "dp"
 		stg = newNodeStorage()
 		ctx = context.Background()
-		n1   = getNodeAsset("test1", "", true)
-		n2   = getNodeAsset("test1", "", true)
-		n3   = getNodeAsset("test2", "", true)
+		n1  = getNodeAsset("test1", "", true)
+		n2  = getNodeAsset("test1", "", true)
+		n3  = getNodeAsset("test2", "", true)
 		p1  = getPodAsset(ns, svc, dp, "test1", "")
 		p2  = getPodAsset(ns, svc, dp, "test2", "")
 	)
 
-	n2.Spec.Pods    = make(map[string]types.PodSpec)
+	n2.Spec.Pods = make(map[string]types.PodSpec)
 	n2.Spec.Volumes = make(map[string]types.VolumeSpec)
-	n2.Spec.Routes  = make(map[string]types.RouteSpec)
+	n2.Spec.Routes = make(map[string]types.RouteSpec)
 
 	n2.Spec.Pods[p1.SelfLink()] = p1.Spec
 	n2.Spec.Pods[p2.SelfLink()] = p2.Spec
@@ -2097,7 +2097,7 @@ func getNodeAsset(name, desc string, online bool) types.Node {
 			Provider: "local",
 		},
 		Info: types.NodeInfo{
-			Hostname: name,
+			Hostname:   name,
 			InternalIP: "0.0.0.0",
 		},
 		State: types.NodeState{
@@ -2116,8 +2116,7 @@ func getNodeAsset(name, desc string, online bool) types.Node {
 				Storage:    256,
 			},
 		},
-		Spec: types.NodeSpec{
-		},
+		Spec:  types.NodeSpec{},
 		Roles: types.NodeRole{},
 		Network: types.Subnet{
 			Type:   types.NetworkTypeVxLAN,

@@ -24,6 +24,7 @@ import (
 	"io/ioutil"
 
 	"github.com/lastbackend/lastbackend/pkg/distribution/errors"
+	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 	"github.com/lastbackend/lastbackend/pkg/util/validator"
 )
 
@@ -33,45 +34,64 @@ func (ServiceRequest) CreateOptions() *ServiceCreateOptions {
 	return new(ServiceCreateOptions)
 }
 
-func (s *ServiceCreateOptions) DecodeAndValidate(reader io.Reader) *errors.Err {
+func (s *ServiceCreateOptions) DecodeAndValidate(reader io.Reader) (*types.ServiceCreateOptions, *errors.Err) {
 
 	if reader == nil {
 		err := errors.New("data body can not be null")
-		return errors.New("service").IncorrectJSON(err)
+		return nil, errors.New("service").IncorrectJSON(err)
 	}
 
 	body, err := ioutil.ReadAll(reader)
 	if err != nil {
-		return errors.New("service").Unknown(err)
+		return nil, errors.New("service").Unknown(err)
 	}
 
 	err = json.Unmarshal(body, s)
 	if err != nil {
-		return errors.New("service").IncorrectJSON(err)
+		return nil, errors.New("service").IncorrectJSON(err)
 	}
 
 	switch true {
 	case s.Name == nil:
-		return errors.New("service").BadParameter("name")
+		return nil, errors.New("service").BadParameter("name")
 	case !validator.IsServiceName(*s.Name):
-		return errors.New("service").BadParameter("name")
+		return nil, errors.New("service").BadParameter("name")
 	case s.Replicas == nil:
-		return errors.New("service").BadParameter("replicas")
+		return nil, errors.New("service").BadParameter("replicas")
 	case s.Replicas != nil && *s.Replicas < DEFAULT_REPLICAS_MIN:
-		return errors.New("service").BadParameter("replicas")
+		return nil, errors.New("service").BadParameter("replicas")
 	case s.Sources == nil:
-		return errors.New("service").BadParameter("source")
+		return nil, errors.New("service").BadParameter("source")
 	case s.Description != nil && len(*s.Description) > DEFAULT_DESCRIPTION_LIMIT:
-		return errors.New("service").BadParameter("description")
+		return nil, errors.New("service").BadParameter("description")
 	case s.Spec != nil:
 		if s.Spec.Memory != nil && *s.Spec.Memory < DEFAULT_MEMORY_MIN {
-			return errors.New("service").BadParameter("memory")
+			return nil, errors.New("service").BadParameter("memory")
 		}
 
 		// TODO: need checking anymore arguments
 	}
 
-	return nil
+	opts := new(types.ServiceCreateOptions)
+	opts.Name = s.Name
+	opts.Description = s.Description
+	opts.Sources = s.Sources
+
+	if s.Spec != nil {
+		opts.Spec = new(types.ServiceOptionsSpec)
+		opts.Spec.Memory = s.Spec.Memory
+		opts.Spec.EnvVars = s.Spec.EnvVars
+		opts.Spec.Entrypoint = s.Spec.Entrypoint
+		opts.Spec.Command = s.Spec.Command
+		for _, port := range *s.Spec.Ports {
+			*opts.Spec.Ports = append(*opts.Spec.Ports, types.ServiceOptionsSpecPort{
+				Internal: port.Internal,
+				Protocol: port.Protocol,
+			})
+		}
+	}
+
+	return opts, nil
 }
 
 func (s *ServiceCreateOptions) ToJson() ([]byte, error) {
@@ -86,37 +106,56 @@ func (s *ServiceUpdateOptions) ToJson() ([]byte, error) {
 	return json.Marshal(s)
 }
 
-func (s *ServiceUpdateOptions) DecodeAndValidate(reader io.Reader) *errors.Err {
+func (s *ServiceUpdateOptions) DecodeAndValidate(reader io.Reader) (*types.ServiceUpdateOptions, *errors.Err) {
 
 	if reader == nil {
 		err := errors.New("data body can not be null")
-		return errors.New("service").IncorrectJSON(err)
+		return nil, errors.New("service").IncorrectJSON(err)
 	}
 
 	body, err := ioutil.ReadAll(reader)
 	if err != nil {
-		return errors.New("service").Unknown(err)
+		return nil, errors.New("service").Unknown(err)
 	}
 
 	err = json.Unmarshal(body, s)
 	if err != nil {
-		return errors.New("service").IncorrectJSON(err)
+		return nil, errors.New("service").IncorrectJSON(err)
 	}
 
 	switch true {
 	case s.Sources == nil:
-		return errors.New("service").BadParameter("source")
+		return nil, errors.New("service").BadParameter("source")
 	case s.Description != nil && len(*s.Description) > DEFAULT_DESCRIPTION_LIMIT:
-		return errors.New("service").BadParameter("description")
+		return nil, errors.New("service").BadParameter("description")
 	case s.Spec != nil:
 		if s.Spec.Memory != nil && *s.Spec.Memory < DEFAULT_MEMORY_MIN {
-			return errors.New("service").BadParameter("memory")
+			return nil, errors.New("service").BadParameter("memory")
 		}
 
 		// TODO: need checking anymore arguments
 	}
 
-	return nil
+	opts := new(types.ServiceUpdateOptions)
+	opts.Description = s.Description
+	opts.Description = s.Description
+	opts.Sources = s.Sources
+
+	if s.Spec != nil {
+		opts.Spec = new(types.ServiceOptionsSpec)
+		opts.Spec.Memory = s.Spec.Memory
+		opts.Spec.EnvVars = s.Spec.EnvVars
+		opts.Spec.Entrypoint = s.Spec.Entrypoint
+		opts.Spec.Command = s.Spec.Command
+		for _, port := range *s.Spec.Ports {
+			*opts.Spec.Ports = append(*opts.Spec.Ports, types.ServiceOptionsSpecPort{
+				Internal: port.Internal,
+				Protocol: port.Protocol,
+			})
+		}
+	}
+
+	return opts, nil
 }
 
 func (ServiceRequest) RemoveOptions() *ServiceRemoveOptions {

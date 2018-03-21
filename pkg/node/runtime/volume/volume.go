@@ -2,7 +2,7 @@
 // Last.Backend LLC CONFIDENTIAL
 // __________________
 //
-// [2014] - [2017] Last.Backend LLC
+// [2014] - [2018] Last.Backend LLC
 // All Rights Reserved.
 //
 // NOTICE:  All information contained herein is, and remains
@@ -20,6 +20,6 @@ package volume
 
 import "context"
 
-func Restore (ctx context.Context) error {
+func Restore(ctx context.Context) error {
 	return nil
 }

@@ -163,10 +163,10 @@ func ServiceCreateH(w http.ResponseWriter, r *http.Request) {
 	)
 
 	// request body struct
-	opts := v1.Request().Service().CreateOptions()
-	if err := opts.DecodeAndValidate(r.Body); err != nil {
-		log.V(logLevel).Errorf("Handler: Service: validation incoming data err: %s", err.Err())
-		err.Http(w)
+	opts, e := v1.Request().Service().CreateOptions().DecodeAndValidate(r.Body)
+	if e != nil {
+		log.V(logLevel).Errorf("Handler: Service: validation incoming data err: %s", e.Err())
+		e.Http(w)
 		return
 	}
 
@@ -229,10 +229,10 @@ func ServiceUpdateH(w http.ResponseWriter, r *http.Request) {
 	)
 
 	// request body struct
-	opts := v1.Request().Service().UpdateOptions()
-	if err := opts.DecodeAndValidate(r.Body); err != nil {
-		log.V(logLevel).Errorf("Handler: Service: validation incoming data err: %s", err.Err())
-		err.Http(w)
+	opts, e := v1.Request().Service().UpdateOptions().DecodeAndValidate(r.Body)
+	if e != nil {
+		log.V(logLevel).Errorf("Handler: Service: validation incoming data err: %s", e.Err())
+		e.Http(w)
 		return
 	}
 

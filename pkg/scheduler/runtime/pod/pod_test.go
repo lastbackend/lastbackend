@@ -2,7 +2,7 @@
 // Last.Backend LLC CONFIDENTIAL
 // __________________
 //
-// [2014] - [2017] Last.Backend LLC
+// [2014] - [2018] Last.Backend LLC
 // All Rights Reserved.
 //
 // NOTICE:  All information contained herein is, and remains
@@ -19,16 +19,16 @@
 package pod
 
 import (
-	"testing"
-	"github.com/lastbackend/lastbackend/pkg/storage/store"
-	"github.com/lastbackend/lastbackend/pkg/storage/mock"
-	"github.com/lastbackend/lastbackend/pkg/scheduler/envs"
 	"context"
-	"github.com/lastbackend/lastbackend/pkg/distribution/types"
-	"github.com/lastbackend/lastbackend/pkg/storage"
 	"encoding/json"
-	"reflect"
 	"github.com/lastbackend/lastbackend/pkg/distribution/errors"
+	"github.com/lastbackend/lastbackend/pkg/distribution/types"
+	"github.com/lastbackend/lastbackend/pkg/scheduler/envs"
+	"github.com/lastbackend/lastbackend/pkg/storage"
+	"github.com/lastbackend/lastbackend/pkg/storage/mock"
+	"github.com/lastbackend/lastbackend/pkg/storage/store"
+	"reflect"
+	"testing"
 )
 
 func TestProvision(t *testing.T) {
@@ -42,32 +42,32 @@ func TestProvision(t *testing.T) {
 		dp1 = "dp1"
 		dp2 = "dp2"
 		ctx = context.Background()
-		p1  = getPodAsset(ns1, svc, dp1,"test1", "")  // successful
-		p2  = getPodAsset(ns1, svc, dp2,"test2", "")  // can not be provisioned by ram
-		p3  = getPodAsset(ns1, svc, dp2,"test3", "")  // not found
-		n1  = getNodeAsset("node-1", "", true) // limit 512 RAM
-		n2  = getNodeAsset("node-2", "", true) // limit 512 RAM
+		p1  = getPodAsset(ns1, svc, dp1, "test1", "") // successful
+		p2  = getPodAsset(ns1, svc, dp2, "test2", "") // can not be provisioned by ram
+		p3  = getPodAsset(ns1, svc, dp2, "test3", "") // not found
+		n1  = getNodeAsset("node-1", "", true)        // limit 512 RAM
+		n2  = getNodeAsset("node-2", "", true)        // limit 512 RAM
 	)
 
-	n1.State.Capacity.Memory 			= 1024
-	n1.State.Capacity.Cpu    			= 8
-	n1.State.Capacity.Pods   			= 8
-	n1.State.Capacity.Containers  = 8
+	n1.State.Capacity.Memory = 1024
+	n1.State.Capacity.Cpu = 8
+	n1.State.Capacity.Pods = 8
+	n1.State.Capacity.Containers = 8
 
-	n1.State.Allocated.Memory 			= 512
-	n1.State.Allocated.Cpu    			= 0
-	n1.State.Allocated.Pods   			= 7
-	n1.State.Allocated.Containers   = 6
+	n1.State.Allocated.Memory = 512
+	n1.State.Allocated.Cpu = 0
+	n1.State.Allocated.Pods = 7
+	n1.State.Allocated.Containers = 6
 
-	n2.State.Capacity.Memory 			= 1024
-	n2.State.Capacity.Cpu    			= 8
-	n2.State.Capacity.Pods   			= 8
-	n2.State.Capacity.Containers  = 8
+	n2.State.Capacity.Memory = 1024
+	n2.State.Capacity.Cpu = 8
+	n2.State.Capacity.Pods = 8
+	n2.State.Capacity.Containers = 8
 
-	n2.State.Allocated.Memory 			= 0
-	n2.State.Allocated.Cpu    			= 0
-	n2.State.Allocated.Pods   			= 0
-	n2.State.Allocated.Containers   = 0
+	n2.State.Allocated.Memory = 0
+	n2.State.Allocated.Cpu = 0
+	n2.State.Allocated.Pods = 0
+	n2.State.Allocated.Containers = 0
 
 	var ips = make([]string, 0)
 	ips = append(ips, "8.8.8.8")
@@ -122,7 +122,7 @@ func TestProvision(t *testing.T) {
 
 	type args struct {
 		ctx  context.Context
-		pod *types.Pod
+		pod  *types.Pod
 		node *types.Node
 	}
 
@@ -220,17 +220,17 @@ func TestProvision(t *testing.T) {
 					}
 
 					if !got.State.Error {
-						t.Errorf("Provision() = %v, want error is true", got.State.Error )
+						t.Errorf("Provision() = %v, want error is true", got.State.Error)
 						return
 					}
 
 					if got.Status.Stage != types.PodStageError {
-						t.Errorf("Provision() = %v, want stage %s", got.Status.Stage, types.PodStageError )
+						t.Errorf("Provision() = %v, want stage %s", got.Status.Stage, types.PodStageError)
 						return
 					}
 
 					if got.Status.Message != errors.NodeNotFound {
-						t.Errorf("Provision() = %v, want error %s", got.Status.Message, errors.NodeNotFound )
+						t.Errorf("Provision() = %v, want error %s", got.Status.Message, errors.NodeNotFound)
 						return
 					}
 				}

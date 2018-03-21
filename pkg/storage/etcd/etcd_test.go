@@ -2,7 +2,7 @@
 // Last.Backend LLC CONFIDENTIAL
 // __________________
 //
-// [2014] - [2017] Last.Backend LLC
+// [2014] - [2018] Last.Backend LLC
 // All Rights Reserved.
 //
 // NOTICE:  All information contained herein is, and remains
@@ -19,12 +19,12 @@
 package etcd
 
 import (
-	"github.com/spf13/viper"
-	"testing"
-	"reflect"
-	"github.com/lastbackend/lastbackend/pkg/storage/storage"
 	"context"
 	"github.com/lastbackend/lastbackend/pkg/storage/etcd/v3"
+	"github.com/lastbackend/lastbackend/pkg/storage/storage"
+	"github.com/spf13/viper"
+	"reflect"
+	"testing"
 )
 
 func TestStorage_Cluster(t *testing.T) {
@@ -281,8 +281,7 @@ func Test_getClient(t *testing.T) {
 	}
 }
 
-
-func initStorage () {
+func initStorage() {
 	cfg := v3.Config{}
 	cfg.Prefix = "lstbknd"
 	cfg.Endpoints = []string{"127.0.0.1:2379"}

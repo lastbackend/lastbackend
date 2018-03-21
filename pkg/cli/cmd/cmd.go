@@ -82,7 +82,7 @@ func InitClient(apiHost string) *client.Client {
 func init() {
 	cobra.OnInitialize()
 
-	RootCmd.Flags().StringVar(&host, "host", "http://api.lstbknd.net", "Host for rest api")
+	RootCmd.Flags().StringVar(&host, "host", "https://api.lastbackend.com", "Set api host parameter")
 	RootCmd.Flags().BoolVar(&debug, "debug", false, "Enable debug mode")
 	RootCmd.Flags().BoolVar(&tls, "tls", false, "Enable tls")
 
