@@ -21,10 +21,10 @@ package namespace
 import (
 	"fmt"
 
-	"github.com/spf13/cobra"
 	"github.com/lastbackend/lastbackend/pkg/api/types/v1/request"
 	"github.com/lastbackend/lastbackend/pkg/cli/envs"
 	"github.com/lastbackend/lastbackend/pkg/cli/view"
+	"github.com/spf13/cobra"
 )
 
 func CreateCmd(cmd *cobra.Command, args []string) {

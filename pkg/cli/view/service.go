@@ -137,7 +137,7 @@ func (dl *DeploymentList) Replicas() int {
 }
 
 func (s *ServiceSources) String() string {
-	if s.Image!= nil && s.Image.Namespace != "" {
+	if s.Image != nil && s.Image.Namespace != "" {
 		return fmt.Sprintf("%s:%s",
 			s.Image.Namespace, s.Image.Tag)
 	}

@@ -54,7 +54,7 @@ func (di *Deployment) ToMeta(obj types.DeploymentMeta) DeploymentMeta {
 
 func (di *Deployment) ToStatus(obj types.DeploymentStatus) DeploymentStatusInfo {
 	return DeploymentStatusInfo{
-		Stage: obj.Stage,
+		Stage:   obj.Stage,
 		Message: obj.Message,
 	}
 }

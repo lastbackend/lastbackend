@@ -23,11 +23,11 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 	"github.com/lastbackend/lastbackend/pkg/log"
 	"github.com/lastbackend/lastbackend/pkg/storage"
+	"github.com/lastbackend/lastbackend/pkg/storage/store"
 	"github.com/lastbackend/lastbackend/pkg/util/generator"
 	"github.com/spf13/viper"
 	"strings"
 	"time"
-	"github.com/lastbackend/lastbackend/pkg/storage/store"
 )
 
 type IPod interface {
@@ -158,7 +158,6 @@ func (p *Pod) SetStatus(pod *types.Pod, status *types.PodStatus) error {
 		log.Errorf("Pod set status err: %s", err.Error())
 		return err
 	}
-
 
 	return nil
 }

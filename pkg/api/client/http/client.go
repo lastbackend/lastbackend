@@ -24,6 +24,8 @@ import (
 	"net/url"
 	"strings"
 	"time"
+	"github.com/lastbackend/lastbackend/pkg/distribution/errors"
+	"fmt"
 )
 
 // Interface captures the set of operations for generically interacting with Kubernetes REST apis.
@@ -39,28 +41,42 @@ type RESTClient struct {
 	base        *url.URL
 	serializers serializer.Codec
 	Client      *http.Client
+	config      *Config
 	token       string
 }
 
-func NewRESTClient(baseURL *url.URL, token string) (*RESTClient, error) {
+func NewRESTClient(baseURL *url.URL, config *Config) (*RESTClient, error) {
+
+	if config == nil {
+		return nil, errors.New("config not set")
+	}
+
 	base := *baseURL
+
+	if base.Scheme == "" {
+		base.Scheme = "http"
+	}
 
 	if !strings.HasSuffix(base.Path, "/") {
 		base.Path += "/"
 	}
 
 	return &RESTClient{
-		base: &base,
+		base:   &base,
+		config: config,
 		Client: &http.Client{
-			Timeout: time.Second * 10,
+			Timeout: time.Second * config.Timeout,
 		},
-		token: token,
 	}, nil
 }
 
 func (c *RESTClient) Do(verb string, path string) *Request {
 	c.base.Path = path
-	return NewRequest(c.Client, verb, c.base)
+	request := NewRequest(c.Client, verb, c.base)
+	if len(c.config.BearerToken) != 0 {
+		request.AddHeader("Authorization", fmt.Sprintf("Bearer %s", string(c.config.BearerToken)))
+	}
+	return request
 }
 
 func (c *RESTClient) Post(path string) *Request {

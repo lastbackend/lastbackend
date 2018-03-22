@@ -21,8 +21,8 @@ package views
 import "time"
 
 type Volume struct {
-	Meta  VolumeMeta  `json:"meta"`
-	Spec  VolumeSpec  `json:"spec"`
+	Meta   VolumeMeta   `json:"meta"`
+	Spec   VolumeSpec   `json:"spec"`
 	Status VolumeStatus `json:"status"`
 }
 

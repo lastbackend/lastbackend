@@ -64,7 +64,6 @@ type DeploymentSources struct {
 	Hash string `json:"hash"`
 }
 
-
 type DeploymentSpec struct {
 	Strategy types.SpecStrategy `json:"strategy"`
 	Triggers types.SpecTriggers `json:"triggers"`
@@ -74,7 +73,7 @@ type DeploymentSpec struct {
 }
 
 type DeploymentStatusInfo struct {
-	Stage string `json:"stage"`
+	Stage   string `json:"stage"`
 	Message string `json:"message"`
 }
 

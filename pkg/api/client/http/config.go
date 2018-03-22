@@ -16,27 +16,20 @@
 // from Last.Backend LLC.
 //
 
-package views
+package http
 
 import "time"
 
-type Secret struct {
-	Meta   SecretMeta   `json:"meta"`
-	Spec   SecretSpec   `json:"spec"`
-	Status SecretStatus `json:"status"`
+type Config struct {
+	// Host API server
+	Host string
+	// Server requires Bearer authentication.
+	BearerToken string
+	// The maximum length of time to wait before giving up on a server request. A value of zero means no timeout.
+	Timeout time.Duration
 }
 
-type SecretMeta struct {
-	Name      string    `json:"name"`
-	Namespace string    `json:"namespace"`
-	Updated   time.Time `json:"updated"`
-	Created   time.Time `json:"created"`
+func (c *Config) SetDefault() {
+	c.Host = "localhost"
+	c.Timeout = 10
 }
-
-type SecretSpec struct {
-}
-
-type SecretStatus struct {
-}
-
-type SecretList map[string]*Secret

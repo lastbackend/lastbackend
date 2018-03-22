@@ -39,8 +39,6 @@ func commands() {
 		service,
 	)
 
-	RootCmd.Flags().BoolP("dd", "a", true, "a")
-
 	// ----- cluster -----
 	cluster.AddCommand(
 		cs.ClusterFetch,

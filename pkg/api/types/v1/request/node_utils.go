@@ -61,7 +61,6 @@ func (s *NodeConnectOptions) ToJson() string {
 	return string(buf)
 }
 
-
 func (NodeRequest) NodeStatusOptions() *NodeStatusOptions {
 	return new(NodeStatusOptions)
 }
@@ -94,7 +93,6 @@ func (s *NodeStatusOptions) ToJson() string {
 	buf, _ := json.Marshal(s)
 	return string(buf)
 }
-
 
 func (NodeRequest) NodePodStatusOptions() *NodePodStatusOptions {
 	return new(NodePodStatusOptions)
@@ -129,7 +127,6 @@ func (s *NodePodStatusOptions) ToJson() string {
 	return string(buf)
 }
 
-
 func (NodeRequest) NodeVolumeStatusOptions() *NodeVolumeStatusOptions {
 	return new(NodeVolumeStatusOptions)
 }
@@ -162,7 +159,6 @@ func (s *NodeVolumeStatusOptions) ToJson() string {
 	buf, _ := json.Marshal(s)
 	return string(buf)
 }
-
 
 func (NodeRequest) NodeRouteStatusOptions() *NodeRouteStatusOptions {
 	return new(NodeRouteStatusOptions)
@@ -197,7 +193,6 @@ func (n *NodeRouteStatusOptions) ToJson() string {
 	return string(buf)
 }
 
-
 func (NodeRequest) UpdateOptions() *NodeMetaOptions {
 	return new(NodeMetaOptions)
 }
@@ -230,7 +225,6 @@ func (n *NodeMetaOptions) DecodeAndValidate(reader io.Reader) *errors.Err {
 
 	return n.Validate()
 }
-
 
 func (NodeRequest) RemoveOptions() *NodeRemoveOptions {
 	return new(NodeRemoveOptions)
