@@ -28,10 +28,10 @@ func (s *SecretsState) GetSecrets() map[string]types.Secret {
 	return s.secrets
 }
 
-func (s *SecretsState) SetSecrets(secrets []*types.Secret) {
+func (s *SecretsState) SetSecrets(secrets map[string]*types.Secret) {
 	log.V(logLevel).Debugf("Cache: SecretCache: set secrets: %#v", secrets)
-	for _, secret := range secrets {
-		s.secrets[secret.GetHash()] = *secret
+	for h, secret := range secrets {
+		s.secrets[h] = *secret
 	}
 }
 
@@ -46,12 +46,12 @@ func (s *SecretsState) GetSecret(hash string) *types.Secret {
 	return &pod
 }
 
-func (s *SecretsState) AddSecret(secret *types.Secret) {
+func (s *SecretsState) AddSecret(hash string, secret *types.Secret) {
 	log.V(logLevel).Debugf("Cache: SecretCache: add secret: %#v", secret)
-	s.SetSecret(secret)
+	s.SetSecret(hash, secret)
 }
 
-func (s *SecretsState) SetSecret(secret *types.Secret) {
+func (s *SecretsState) SetSecret(hash string, secret *types.Secret) {
 	log.V(logLevel).Debugf("Cache: SecretCache: set secret: %#v", secret)
 	s.lock.Lock()
 	defer s.lock.Unlock()
@@ -63,11 +63,11 @@ func (s *SecretsState) SetSecret(secret *types.Secret) {
 	s.secrets[secret.GetHash()] = *secret
 }
 
-func (s *SecretsState) DelSecret(secret *types.Secret) {
-	log.V(logLevel).Debugf("Cache: SecretCache: del secret: %#v", secret)
+func (s *SecretsState) DelSecret(hash string) {
+	log.V(logLevel).Debugf("Cache: SecretCache: del secret: %s", hash)
 	s.lock.Lock()
 	defer s.lock.Unlock()
-	if _, ok := s.secrets[secret.GetHash()]; ok {
-		delete(s.secrets, secret.GetHash())
+	if _, ok := s.secrets[hash]; ok {
+		delete(s.secrets, hash)
 	}
 }

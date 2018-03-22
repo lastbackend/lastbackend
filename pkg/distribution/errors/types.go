@@ -19,3 +19,4 @@
 package errors
 
 const NodeNotFound = "NodeNotFound"
+const PodNotFound = "PodNotFound"

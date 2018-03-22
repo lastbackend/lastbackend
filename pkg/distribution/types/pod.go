@@ -150,6 +150,47 @@ type PodContainerStateExit struct {
 	Timestamp time.Time `json:"timestamp" yaml:"timestamp"`
 }
 
+func (s *PodStatus) SetInitialized() {
+	s.Stage = StageInitialized
+	s.Message = EmptyString
+}
+
+func (s *PodStatus) SetDestroy () {
+	s.Stage = StageDestroy
+}
+
+func (s *PodStatus) SetDestroyed () {
+	s.Stage = StageDestroyed
+}
+
+func (s *PodStatus) SetPull () {
+	s.Stage = StagePull
+}
+
+func (s *PodStatus) SetProvision () {
+	s.Stage = StageProvision
+}
+
+func (s *PodStatus) SetStarting() {
+	s.Stage = StageStarting
+	s.Message = EmptyString
+}
+
+func (s *PodStatus) SetRunning() {
+	s.Stage = StageRunning
+	s.Message = EmptyString
+}
+
+func (s *PodStatus) SetStopped() {
+	s.Stage = StageStopped
+	s.Message = EmptyString
+}
+
+func (s *PodStatus) SetError (err error) {
+	s.Stage = StageError
+	s.Message = err.Error()
+}
+
 func NewPod() *Pod {
 	pod := new(Pod)
 	pod.Status.Steps = make(PodSteps, 0)
@@ -162,44 +203,4 @@ func (p *Pod) SelfLink() string {
 		p.Meta.SelfLink = fmt.Sprintf("%s:%s:%s:%s", p.Meta.Namespace, p.Meta.Service, p.Meta.Deployment, p.Meta.Name)
 	}
 	return p.Meta.SelfLink
-}
-
-func (p *Pod) MarkAsInitialized() {
-	p.Status.Stage = StageInitialized
-	p.Status.Message = EmptyString
-}
-
-func (p *Pod) MarkAsPull() {
-	p.Status.Stage = StepPull
-	p.Status.Message = EmptyString
-}
-
-func (p *Pod) MarkAsDestroy() {
-	p.Status.Stage = StageDestroy
-	p.Status.Message = EmptyString
-}
-
-func (p *Pod) MarkAsDestroyed() {
-	p.Status.Stage = StageDestroyed
-	p.Status.Message = EmptyString
-}
-
-func (p *Pod) MarkAsStarting() {
-	p.Status.Stage = StageStarting
-	p.Status.Message = EmptyString
-}
-
-func (p *Pod) MarkAsRunning() {
-	p.Status.Stage = StageRunning
-	p.Status.Message = EmptyString
-}
-
-func (p *Pod) MarkAsStopped() {
-	p.Status.Stage = StageStopped
-	p.Status.Message = EmptyString
-}
-
-func (p *Pod) MarkAsError(err error) {
-	p.Status.Stage = StageError
-	p.Status.Message = err.Error()
 }

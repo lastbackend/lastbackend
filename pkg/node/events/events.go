@@ -54,20 +54,26 @@ func NewStatusEvent(ctx context.Context) error {
 
 // NewPodStatusEvent - send pod state event after
 // node is successful accepted and each hour
-func NewPodStatusEvent(ctx context.Context, pod *types.Pod) error {
+func NewPodStatusEvent(ctx context.Context, pod string, status *types.PodStatus) error {
 
 	var (
 		c = envs.Get().GetClient()
 	)
 
-	if pod == nil {
+	if pod == "" {
 		log.Errorf("Event: Pod state event: pod is empty")
 		return errors.New("Event: Pod state event: pod is empty")
 	}
 
-	log.Debugf("Event: Pod state event state: %s", pod.Meta.Name)
+	log.Debugf("Event: Pod state event state: %s", pod)
 
 	opts := v1.Request().Node().NodePodStatusOptions()
+	opts.Stage = status.Stage
+	opts.Message = status.Message
+	opts.Containers = status.Containers
+	opts.Network = status.Network
+	opts.Steps = status.Steps
+
 	return c.SetPodStatus(ctx, opts)
 }
 

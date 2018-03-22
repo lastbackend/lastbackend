@@ -167,15 +167,10 @@ func (r *Runtime) ContainerInspect(ctx context.Context, ID string) (*types.Conta
 		return nil, nil
 	}
 
-	match := strings.Split(meta, "/")
-
-	if len(match) < 3 {
+	if len(strings.Split(meta, ":")) < 3 {
 		return container, nil
 	}
-
-	container.Namespace = match[0]
-	container.Deployment = match[1]
-	container.Pod = match[2]
+	container.Pod = meta
 
 	return container, nil
 }

@@ -23,51 +23,51 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/log"
 )
 
-func (s *VolumesState) GetVolumes() map[string]types.Volume {
+func (s *VolumesState) GetVolumes() map[string]types.VolumeSpec {
 	log.V(logLevel).Debug("Cache: VolumeCache: get pods")
 	return s.volumes
 }
 
-func (s *VolumesState) SetVolumes(volumes []*types.Volume) {
+func (s *VolumesState) SetVolumes(key string, volumes []*types.VolumeSpec) {
 	log.V(logLevel).Debugf("Cache: VolumeCache: set volumes: %#v", volumes)
 	for _, secret := range volumes {
-		s.volumes[secret.Meta.Name] = *secret
+		s.volumes[key] = *secret
 	}
 }
 
-func (s *VolumesState) GetVolume(hash string) *types.Volume {
+func (s *VolumesState) GetVolume(hash string) *types.VolumeSpec {
 	log.V(logLevel).Debugf("Cache: VolumeCache: get secret: %s", hash)
 	s.lock.Lock()
 	defer s.lock.Unlock()
-	pod, ok := s.volumes[hash]
+	v, ok := s.volumes[hash]
 	if !ok {
 		return nil
 	}
-	return &pod
+	return &v
 }
 
-func (s *VolumesState) AddVolume(secret *types.Volume) {
-	log.V(logLevel).Debugf("Cache: VolumeCache: add secret: %#v", secret)
-	s.SetVolume(secret)
+func (s *VolumesState) AddVolume(key string, v *types.VolumeSpec) {
+	log.V(logLevel).Debugf("Cache: VolumeCache: add volume: %#v", key)
+	s.SetVolume(key, v)
 }
 
-func (s *VolumesState) SetVolume(secret *types.Volume) {
-	log.V(logLevel).Debugf("Cache: VolumeCache: set secret: %#v", secret)
+func (s *VolumesState) SetVolume(key string, volume *types.VolumeSpec) {
+	log.V(logLevel).Debugf("Cache: VolumeCache: set volume: %s", key)
 	s.lock.Lock()
 	defer s.lock.Unlock()
 
-	if _, ok := s.volumes[secret.Meta.Name]; ok {
-		delete(s.volumes, secret.Meta.Name)
+	if _, ok := s.volumes[key]; ok {
+		delete(s.volumes, key)
 	}
 
-	s.volumes[secret.Meta.Name] = *secret
+	s.volumes[key] = *volume
 }
 
-func (s *VolumesState) DelVolume(secret *types.Volume) {
-	log.V(logLevel).Debugf("Cache: VolumeCache: del secret: %#v", secret)
+func (s *VolumesState) DelVolume(volume *types.Volume) {
+	log.V(logLevel).Debugf("Cache: VolumeCache: del volume: %#v", volume)
 	s.lock.Lock()
 	defer s.lock.Unlock()
-	if _, ok := s.volumes[secret.Meta.Name]; ok {
-		delete(s.volumes, secret.Meta.Name)
+	if _, ok := s.volumes[volume.Meta.Name]; ok {
+		delete(s.volumes, volume.Meta.Name)
 	}
 }

@@ -35,6 +35,7 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/node/runtime/cni/cni"
 	"github.com/lastbackend/lastbackend/pkg/node/runtime/cri/cri"
 	"github.com/spf13/viper"
+	"github.com/lastbackend/lastbackend/pkg/api/client"
 )
 
 // Daemon - run node daemon
@@ -69,6 +70,13 @@ func Daemon() {
 
 	state.Node().Info = node.GetInfo()
 	state.Node().Status = node.GetStatus()
+
+	rest, err := client.New(viper.GetString("node.api-server"),viper.GetString("token"))
+	if err != nil {
+		log.Panic(err)
+	}
+
+	envs.Get().SetClient(rest.V1().Cluster().Node(state.Node().Info.Hostname))
 
 	r.Subscribe()
 	r.Loop()
