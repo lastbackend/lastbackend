@@ -303,12 +303,12 @@ type ServiceCreateOptions struct {
 	request.ServiceCreateOptions
 }
 
-func createServiceCreateOptions(name, description, sources *string, replicas *int, spec *request.ServiceOptionsSpec) *ServiceCreateOptions {
+func createServiceCreateOptions(name, description, image *string, replicas *int, spec *request.ServiceOptionsSpec) *ServiceCreateOptions {
 	opts := new(ServiceCreateOptions)
 	opts.Name = name
 	opts.Description = description
 	opts.Replicas = replicas
-	opts.Sources = sources
+	opts.Image = image
 	opts.Spec = spec
 	return opts
 }

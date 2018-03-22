@@ -294,14 +294,6 @@ func ServiceRemoveH(w http.ResponseWriter, r *http.Request) {
 		sm  = distribution.NewServiceModel(r.Context(), envs.Get().GetStorage())
 	)
 
-	// request body struct
-	opts := v1.Request().Service().RemoveOptions()
-	if err := opts.DecodeAndValidate(r.Body); err != nil {
-		log.V(logLevel).Errorf("Handler: Service: validation incoming data err: %s", err.Err())
-		err.Http(w)
-		return
-	}
-
 	ns, err := nsm.Get(nid)
 	if err != nil {
 		log.V(logLevel).Errorf("Handler: Service: get namespace", err)

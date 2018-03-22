@@ -16,7 +16,7 @@
 // from Last.Backend LLC.
 //
 
-package context
+package envs
 
 import (
 	"context"

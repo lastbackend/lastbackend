@@ -150,32 +150,6 @@ func (n *NamespaceRemoveOptions) Validate() *errors.Err {
 	return nil
 }
 
-func (n *NamespaceRemoveOptions) DecodeAndValidate(reader io.Reader) (*types.NamespaceRemoveOptions, *errors.Err) {
-
-	if reader == nil {
-		return nil, nil
-	}
-
-	body, err := ioutil.ReadAll(reader)
-	if err != nil {
-		return nil, errors.New("namespace").Unknown(err)
-	}
-
-	err = json.Unmarshal(body, n)
-	if err != nil {
-		return nil, errors.New("namespace").IncorrectJSON(err)
-	}
-
-	if err := n.Validate(); err != nil {
-		return nil, err
-	}
-
-	opts := new(types.NamespaceRemoveOptions)
-	opts.Force = n.Force
-
-	return opts, nil
-}
-
 func (n *NamespaceRemoveOptions) ToJson() ([]byte, error) {
 	return json.Marshal(n)
 }

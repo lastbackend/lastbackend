@@ -21,15 +21,15 @@ package namespace
 import (
 	"fmt"
 
-	"github.com/lastbackend/lastbackend/pkg/cli/context"
+	"github.com/lastbackend/lastbackend/pkg/cli/envs"
 	"github.com/lastbackend/lastbackend/pkg/cli/view"
 	"github.com/spf13/cobra"
 )
 
-func ListCmd(cmd *cobra.Command, args []string) {
+func ListCmd(_ *cobra.Command, _ []string) {
 
-	cli := context.Get().GetClient()
-	response, err := cli.V1().Namespace().List(context.Background())
+	cli := envs.Get().GetClient()
+	response, err := cli.V1().Namespace().List(envs.Background())
 	if err != nil {
 		fmt.Println(err)
 		return

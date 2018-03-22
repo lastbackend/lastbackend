@@ -136,29 +136,3 @@ func (RouteRequest) RemoveOptions() *RouteRemoveOptions {
 func (r *RouteRemoveOptions) Validate() *errors.Err {
 	return nil
 }
-
-func (r *RouteRemoveOptions) DecodeAndValidate(reader io.Reader) (*types.RouteRemoveOptions, *errors.Err) {
-
-	if reader == nil {
-		return nil, nil
-	}
-
-	body, err := ioutil.ReadAll(reader)
-	if err != nil {
-		return nil, errors.New("route").Unknown(err)
-	}
-
-	err = json.Unmarshal(body, r)
-	if err != nil {
-		return nil, errors.New("route").IncorrectJSON(err)
-	}
-
-	if err := r.Validate(); err != nil {
-		return nil, err
-	}
-
-	opts := new(types.RouteRemoveOptions)
-	opts.Force = r.Force
-
-	return opts, nil
-}

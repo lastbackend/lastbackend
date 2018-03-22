@@ -109,22 +109,3 @@ func (VolumeRequest) RemoveOptions() *VolumeRemoveOptions {
 func (v *VolumeRemoveOptions) Validate() *errors.Err {
 	return nil
 }
-
-func (v *VolumeRemoveOptions) DecodeAndValidate(reader io.Reader) *errors.Err {
-
-	if reader == nil {
-		return nil
-	}
-
-	body, err := ioutil.ReadAll(reader)
-	if err != nil {
-		return errors.New("volume").Unknown(err)
-	}
-
-	err = json.Unmarshal(body, v)
-	if err != nil {
-		return errors.New("volume").IncorrectJSON(err)
-	}
-
-	return v.Validate()
-}

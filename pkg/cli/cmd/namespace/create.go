@@ -21,10 +21,10 @@ package namespace
 import (
 	"fmt"
 
-	"github.com/lastbackend/lastbackend/pkg/api/types/v1/request"
-	"github.com/lastbackend/lastbackend/pkg/cli/context"
-	"github.com/lastbackend/lastbackend/pkg/cli/view"
 	"github.com/spf13/cobra"
+	"github.com/lastbackend/lastbackend/pkg/api/types/v1/request"
+	"github.com/lastbackend/lastbackend/pkg/cli/envs"
+	"github.com/lastbackend/lastbackend/pkg/cli/view"
 )
 
 func CreateCmd(cmd *cobra.Command, args []string) {
@@ -33,25 +33,25 @@ func CreateCmd(cmd *cobra.Command, args []string) {
 		cmd.Help()
 		return
 	}
-	var name = args[0]
 
-	var opts *request.NamespaceCreateOptions
-	cmd.Flags().StringVarP(&opts.Description, "desc", "d", "", "Set description")
-	opts.Name = name
+	opts := new(request.NamespaceCreateOptions)
+
+	opts.Description = cmd.Flag("desc").Value.String()
+	opts.Name = args[0]
 
 	if err := opts.Validate(); err != nil {
 		fmt.Println(err.Attr)
 		return
 	}
 
-	cli := context.Get().GetClient()
-	response, err := cli.V1().Namespace().Create(context.Background(), opts)
+	cli := envs.Get().GetClient()
+	response, err := cli.V1().Namespace().Create(envs.Background(), opts)
 	if err != nil {
 		fmt.Println(err)
 		return
 	}
 
-	fmt.Println(fmt.Sprintf("Namespace `%s` is created", name))
+	fmt.Println(fmt.Sprintf("Namespace `%s` is created", opts.Name))
 	ns := view.FromApiNamespaceView(response)
 	ns.Print()
 }

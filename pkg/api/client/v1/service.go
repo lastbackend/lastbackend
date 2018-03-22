@@ -74,7 +74,7 @@ func (s *ServiceClient) Create(ctx context.Context, opts *rv1.ServiceCreateOptio
 		return nil, errors.New(e.Message)
 	}
 
-	var ss = new(vv1.Service)
+	var ss *vv1.Service
 
 	if err := json.Unmarshal(buf, &ss); err != nil {
 		return nil, err
@@ -92,6 +92,14 @@ func (s *ServiceClient) List(ctx context.Context) (*vv1.ServiceList, error) {
 	buf, err := req.Raw()
 	if err != nil {
 		return nil, err
+	}
+
+	if code := req.StatusCode(); 200 > code || code > 299 {
+		var e *errors.Http
+		if err := json.Unmarshal(buf, &e); err != nil {
+			return nil, err
+		}
+		return nil, errors.New(e.Message)
 	}
 
 	var sl *vv1.ServiceList

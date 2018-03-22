@@ -44,8 +44,8 @@ func (s *ServiceCreateOptions) Validate() *errors.Err {
 		return errors.New("service").BadParameter("replicas")
 	case s.Replicas != nil && *s.Replicas < DEFAULT_REPLICAS_MIN:
 		return errors.New("service").BadParameter("replicas")
-	case s.Sources == nil:
-		return errors.New("service").BadParameter("source")
+	case s.Image == nil:
+		return errors.New("service").BadParameter("image")
 	case s.Description != nil && len(*s.Description) > DEFAULT_DESCRIPTION_LIMIT:
 		return errors.New("service").BadParameter("description")
 	case s.Spec != nil:
@@ -82,7 +82,7 @@ func (s *ServiceCreateOptions) DecodeAndValidate(reader io.Reader) (*types.Servi
 	opts := new(types.ServiceCreateOptions)
 	opts.Name = s.Name
 	opts.Description = s.Description
-	opts.Sources = s.Sources
+	opts.Image = s.Image
 
 	if s.Spec != nil {
 		opts.Spec = new(types.ServiceOptionsSpec)
@@ -90,12 +90,16 @@ func (s *ServiceCreateOptions) DecodeAndValidate(reader io.Reader) (*types.Servi
 		opts.Spec.EnvVars = s.Spec.EnvVars
 		opts.Spec.Entrypoint = s.Spec.Entrypoint
 		opts.Spec.Command = s.Spec.Command
-		for _, port := range *s.Spec.Ports {
-			*opts.Spec.Ports = append(*opts.Spec.Ports, types.ServiceOptionsSpecPort{
-				Internal: port.Internal,
-				Protocol: port.Protocol,
-			})
+
+		if s.Spec.Ports != nil {
+			for _, port := range *s.Spec.Ports {
+				*opts.Spec.Ports = append(*opts.Spec.Ports, types.ServiceOptionsSpecPort{
+					Internal: port.Internal,
+					Protocol: port.Protocol,
+				})
+			}
 		}
+
 	}
 
 	return opts, nil
@@ -154,11 +158,14 @@ func (s *ServiceUpdateOptions) DecodeAndValidate(reader io.Reader) (*types.Servi
 		opts.Spec.EnvVars = s.Spec.EnvVars
 		opts.Spec.Entrypoint = s.Spec.Entrypoint
 		opts.Spec.Command = s.Spec.Command
-		for _, port := range *s.Spec.Ports {
-			*opts.Spec.Ports = append(*opts.Spec.Ports, types.ServiceOptionsSpecPort{
-				Internal: port.Internal,
-				Protocol: port.Protocol,
-			})
+
+		if s.Spec.Ports != nil {
+			for _, port := range *s.Spec.Ports {
+				*opts.Spec.Ports = append(*opts.Spec.Ports, types.ServiceOptionsSpecPort{
+					Internal: port.Internal,
+					Protocol: port.Protocol,
+				})
+			}
 		}
 	}
 
@@ -175,23 +182,4 @@ func (ServiceRequest) RemoveOptions() *ServiceRemoveOptions {
 
 func (s *ServiceRemoveOptions) Validate() *errors.Err {
 	return nil
-}
-
-func (s *ServiceRemoveOptions) DecodeAndValidate(reader io.Reader) *errors.Err {
-
-	if reader == nil {
-		return nil
-	}
-
-	body, err := ioutil.ReadAll(reader)
-	if err != nil {
-		return errors.New("service").Unknown(err)
-	}
-
-	err = json.Unmarshal(body, s)
-	if err != nil {
-		return errors.New("service").IncorrectJSON(err)
-	}
-
-	return s.Validate()
 }

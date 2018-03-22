@@ -205,14 +205,6 @@ func NamespaceRemoveH(w http.ResponseWriter, r *http.Request) {
 		sm  = distribution.NewServiceModel(r.Context(), envs.Get().GetStorage())
 	)
 
-	// request body struct
-	_, e := v1.Request().Namespace().RemoveOptions().DecodeAndValidate(r.Body)
-	if e != nil {
-		log.V(logLevel).Errorf("Handler: Namespace: validation incoming data err: %s", e)
-		e.Http(w)
-		return
-	}
-
 	ns, err := nsm.Get(nid)
 	if err != nil {
 		log.V(logLevel).Errorf("Handler: Namespace: get namespace", err)

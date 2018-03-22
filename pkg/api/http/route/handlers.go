@@ -258,14 +258,6 @@ func RouteRemoveH(w http.ResponseWriter, r *http.Request) {
 		nsm = distribution.NewNamespaceModel(r.Context(), envs.Get().GetStorage())
 	)
 
-	// request body struct
-	_, e := v1.Request().Route().RemoveOptions().DecodeAndValidate(r.Body)
-	if e != nil {
-		log.V(logLevel).Errorf("Handler: Route: validation incoming data err: %s", e.Err())
-		e.Http(w)
-		return
-	}
-
 	ns, err := nsm.Get(nid)
 	if err != nil {
 		log.V(logLevel).Errorf("Handler: Route: get namespace", err)

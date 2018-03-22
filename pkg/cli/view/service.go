@@ -117,7 +117,10 @@ func (s *Service) Print() {
 		data["CMD"] = s.Spec.Command
 	}
 	data["MEMORY"] = s.Spec.Memory
-	data["REPLICAS"] = s.Deployments.Replicas()
+
+	if s.Deployments != nil {
+		data["REPLICAS"] = s.Deployments.Replicas()
+	}
 
 	println()
 	table.PrintHorizontal(data)
@@ -134,7 +137,7 @@ func (dl *DeploymentList) Replicas() int {
 }
 
 func (s *ServiceSources) String() string {
-	if s.Image.Namespace != "" {
+	if s.Image!= nil && s.Image.Namespace != "" {
 		return fmt.Sprintf("%s:%s",
 			s.Image.Namespace, s.Image.Tag)
 	}
