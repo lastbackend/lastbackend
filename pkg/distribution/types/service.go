@@ -120,7 +120,7 @@ type ServiceReplicas struct {
 func (s *ServiceSpec) SetDefault() {
 	s.Meta.SetDefault()
 	s.Meta.Name = uuid.NewV4().String()
-	s.Replicas = int(1)
+	s.Replicas = DEFAULT_SERVICE_REPLICAS
 	s.Template.Volumes = make(SpecTemplateVolumes, 0)
 	s.Template.Containers = make(SpecTemplateContainers, 0)
 	s.Triggers = make(SpecTriggers, 0)

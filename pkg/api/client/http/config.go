@@ -16,26 +16,20 @@
 // from Last.Backend LLC.
 //
 
-package cluster
+package http
 
-import (
-	"fmt"
+import "time"
 
-	"github.com/lastbackend/lastbackend/pkg/cli/envs"
-	"github.com/lastbackend/lastbackend/pkg/cli/view"
-	"github.com/spf13/cobra"
-)
+type Config struct {
+	// Host API server
+	Host string
+	// Server requires Bearer authentication.
+	BearerToken string
+	// The maximum length of time to wait before giving up on a server request. A value of zero means no timeout.
+	Timeout time.Duration
+}
 
-func FetchCmd(_ *cobra.Command, _ []string) {
-
-	cli := envs.Get().GetClient()
-
-	response, err := cli.V1().Cluster().Get(envs.Background())
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
-
-	cluster := view.FromApiClusterView(response)
-	cluster.Print()
+func (c *Config) SetDefault() {
+	c.Host = "localhost"
+	c.Timeout = 10
 }

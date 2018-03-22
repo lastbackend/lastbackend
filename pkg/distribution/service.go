@@ -28,6 +28,7 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/storage"
 	"github.com/lastbackend/lastbackend/pkg/storage/store"
 	"github.com/spf13/viper"
+	"github.com/lastbackend/lastbackend/pkg/distribution/errors"
 )
 
 type IService interface {
@@ -89,36 +90,47 @@ func (s *Service) Create(namespace *types.Namespace, opts *types.ServiceCreateOp
 
 	log.V(logLevel).Debugf("api:distribution:service:create: service %#v", opts)
 
-	if opts == nil {
-		opts = new(types.ServiceCreateOptions)
-	}
-
-	// ------------------------------------------------
-	// Create service
-	// ------------------------------------------------
-
 	service := new(types.Service)
+	switch true {
+	case opts == nil:
+		return nil, errors.New("opts can not be nil")
+	case opts.Name == nil || *opts.Name == "":
+		return nil, errors.New("name is required")
+	case opts.Image == nil || *opts.Image == "":
+		return nil, errors.New("image is required")
+	default:
+	}
 
 	// prepare meta data for service
 	service.Meta.SetDefault()
 	service.Meta.Name = *opts.Name
-	service.Meta.Endpoint = strings.ToLower(fmt.Sprintf("%s-%s.%s", *opts.Name, namespace.Meta.Endpoint, viper.GetString("domain.internal")))
 	service.Meta.Namespace = namespace.Meta.Name
+	service.Meta.Endpoint = strings.ToLower(fmt.Sprintf("%s-%s.%s", *opts.Name, namespace.Meta.Endpoint, viper.GetString("domain.internal")))
+
+	if opts.Description != nil {
+		service.Meta.Description = *opts.Description
+	}
+
+	service.Deployments = make(map[string]*types.Deployment, 0)
 	service.SelfLink()
 
-	// prepare spec data for service
-	service.Spec.SetDefault()
 	if opts.Replicas != nil {
-		service.Spec.Replicas = types.DEFAULT_SERVICE_REPLICAS
+		service.Spec.Replicas = *opts.Replicas
 	}
 
 	// prepare default template spec
 	c := types.SpecTemplateContainer{}
 	c.SetDefault()
-
 	c.Role = types.ContainerRolePrimary
+	c.Image.Name = *opts.Image
+
+	// prepare spec data for service
+	service.Spec.SetDefault()
 	service.Spec.Template.Containers = append(service.Spec.Template.Containers, c)
-	service.Spec.Update(opts.Spec)
+
+	if opts.Spec != nil {
+		service.Spec.Update(opts.Spec)
+	}
 
 	if err := s.storage.Service().Insert(s.context, service); err != nil {
 		log.V(logLevel).Errorf("api:distribution:service:insert: service err: %s", err)

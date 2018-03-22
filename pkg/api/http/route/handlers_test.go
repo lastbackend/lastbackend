@@ -37,6 +37,7 @@ import (
 	"net/http/httptest"
 	"strings"
 	"testing"
+	"github.com/lastbackend/lastbackend/pkg/api/types/v1"
 )
 
 // Testing RouteInfoH handler
@@ -69,7 +70,7 @@ func TestRouteInfo(t *testing.T) {
 		headers      map[string]string
 		handler      func(http.ResponseWriter, *http.Request)
 		err          string
-		want         *types.Route
+		want         *views.Route
 		wantErr      bool
 		expectedCode int
 	}{
@@ -96,7 +97,7 @@ func TestRouteInfo(t *testing.T) {
 			args:         args{ctx, ns1, r1},
 			fields:       fields{stg},
 			handler:      route.RouteInfoH,
-			want:         r1,
+			want:         v1.View().Route().New(r1),
 			wantErr:      false,
 			expectedCode: http.StatusOK,
 		},
@@ -347,7 +348,7 @@ func TestRouteCreate(t *testing.T) {
 		handler      func(http.ResponseWriter, *http.Request)
 		data         string
 		err          string
-		want         *types.Route
+		want         *views.Route
 		wantErr      bool
 		expectedCode int
 	}{
@@ -379,7 +380,7 @@ func TestRouteCreate(t *testing.T) {
 			fields:       fields{stg},
 			handler:      route.RouteCreateH,
 			data:         createRouteCreateOptions("demo", "", false, false, []request.RulesOption{{Endpoint: srtPointer("route.test-domain.com"), Path: "/", Port: intPointer(80)}}).toJson(),
-			want:         r1,
+			want:         v1.View().Route().New(r1),
 			wantErr:      false,
 			expectedCode: http.StatusOK,
 		},
@@ -502,7 +503,7 @@ func TestRouteUpdate(t *testing.T) {
 		handler      func(http.ResponseWriter, *http.Request)
 		data         string
 		err          string
-		want         *types.Route
+		want         *views.Route
 		wantErr      bool
 		expectedCode int
 	}{
@@ -542,7 +543,7 @@ func TestRouteUpdate(t *testing.T) {
 			fields:       fields{stg},
 			handler:      route.RouteUpdateH,
 			data:         createRouteUpdateOptions("demo", "", false, false, []request.RulesOption{{Endpoint: srtPointer("route.test-domain.com"), Path: "/", Port: intPointer(80)}}).toJson(),
-			want:         r3,
+			want:         v1.View().Route().New(r3),
 			wantErr:      false,
 			expectedCode: http.StatusOK,
 		},

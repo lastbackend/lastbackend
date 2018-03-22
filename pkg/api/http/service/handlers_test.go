@@ -488,6 +488,11 @@ func TestServiceCreate(t *testing.T) {
 				got, err := tc.fields.stg.Service().Get(tc.args.ctx, tc.args.namespace.Meta.Name, tc.args.service.Meta.Name)
 				assert.NoError(t, err)
 
+				if got == nil {
+					t.Error("can not be not nil")
+					return
+				}
+
 				assert.Equal(t, s3.Meta.Name, got.Meta.Name, "name not equal")
 				assert.Equal(t, s3.Meta.Description, got.Meta.Description, "description not equal")
 			}
