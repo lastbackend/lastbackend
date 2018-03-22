@@ -50,7 +50,7 @@ func PodLogsH(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if _, ok := p.Status.Containers[c]; !ok {
+	if _, ok := p.Containers[c]; !ok {
 		log.Errorf("node:http:pod:get:> container not found")
 		errors.New("pod").NotFound().Http(w)
 		return

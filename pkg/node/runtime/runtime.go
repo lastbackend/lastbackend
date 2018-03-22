@@ -64,14 +64,14 @@ func (r *Runtime) Provision(ctx context.Context, spec *types.NodeSpec) error {
 func (r *Runtime) Subscribe() {
 
 	log.Debug("node:runtime:subscribe:> subscribe init")
-	pc := make(chan *types.Pod)
+	pc := make(chan string)
 
 	go func() {
 
 		for {
 			select {
 			case p := <-pc:
-				log.Debugf("node:runtime:subscribe:> new pod state event: %#v", p)
+				log.Debugf("node:runtime:subscribe:> new pod state event: %s", p)
 				events.NewPodStatusEvent(r.ctx, p)
 			}
 		}

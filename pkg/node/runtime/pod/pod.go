@@ -60,7 +60,8 @@ func Manage(ctx context.Context, key string, spec *types.PodSpec) error {
 		Destroy(ctx, key, p)
 
 		p.SetDestroyed()
-		events.NewPodStatusEvent(ctx, key, p)
+		envs.Get().GetState().Pods().SetPod(key, p)
+		events.NewPodStatusEvent(ctx, key)
 		return nil
 	}
 
@@ -87,7 +88,8 @@ func Manage(ctx context.Context, key string, spec *types.PodSpec) error {
 		status.SetError(err)
 	}
 
-	events.NewPodStatusEvent(ctx, key, p)
+	envs.Get().GetState().Pods().SetPod(key, status)
+	events.NewPodStatusEvent(ctx, key)
 	return nil
 }
 
@@ -107,7 +109,7 @@ func Create(ctx context.Context, key string, spec *types.PodSpec) (*types.PodSta
 	status.SetPull()
 
 	envs.Get().GetState().Pods().AddPod(key, status)
-	events.NewPodStatusEvent(ctx, key, status)
+	events.NewPodStatusEvent(ctx, key)
 
 	log.Debugf("Have %d containers", len(spec.Template.Containers))
 	for _, c := range spec.Template.Containers {
@@ -135,7 +137,7 @@ func Create(ctx context.Context, key string, spec *types.PodSpec) (*types.PodSta
 	}
 
 	envs.Get().GetState().Pods().SetPod(key, status)
-	events.NewPodStatusEvent(ctx, key, status)
+	events.NewPodStatusEvent(ctx, key)
 
 	for _, s := range spec.Template.Containers {
 
@@ -270,7 +272,6 @@ func Restore(ctx context.Context) error {
 		}
 
 		key := c.Pod
-
 		cs := &types.PodContainer{
 			ID: c.ID,
 			Image: types.PodContainerImage{

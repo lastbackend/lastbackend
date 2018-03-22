@@ -32,7 +32,7 @@ import (
 type CRI interface {
 	ContainerRuntime
 	ImageRuntime
-	Subscribe(ctx context.Context, state *state.PodState, p chan *types.Pod)
+	Subscribe(ctx context.Context, state *state.PodState, p chan string)
 }
 
 type ContainerRuntime interface {

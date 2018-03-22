@@ -28,7 +28,7 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/log"
 )
 
-func (r *Runtime) Subscribe(ctx context.Context, state *state.PodState, p chan *types.Pod) {
+func (r *Runtime) Subscribe(ctx context.Context, state *state.PodState, p chan string) {
 
 	log.Debug("Create new event listener subscribe")
 
@@ -59,7 +59,7 @@ func (r *Runtime) Subscribe(ctx context.Context, state *state.PodState, p chan *
 				if e.Action == types.EventStateDestroy {
 					container.State = types.StateDestroyed
 					state.SetContainer(container)
-					p <- state.GetPod(container.Pod)
+					p <- container.Pod
 					break
 				}
 
@@ -74,7 +74,7 @@ func (r *Runtime) Subscribe(ctx context.Context, state *state.PodState, p chan *
 				}
 
 				state.SetContainer(c)
-				p <- state.GetPod(container.Pod)
+				p <- container.Pod
 
 				break
 
