@@ -100,7 +100,7 @@ func init() {
 	CLI.Flags().IntVarP(&debug, "verbose", "v", 0, "verbose level")
 
 	viper.BindPFlag("verbose", CLI.Flags().Lookup("verbose"))
-	viper.BindPFlag("token", CLI.Flags().Lookup("node.token"))
+	viper.BindPFlag("token", CLI.Flags().Lookup("token"))
 	viper.BindPFlag("external_ip", CLI.Flags().Lookup("node.services.router.external_ip"))
 }
 

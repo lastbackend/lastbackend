@@ -193,9 +193,16 @@ func (s *PodStatus) SetError (err error) {
 
 func NewPod() *Pod {
 	pod := new(Pod)
-	pod.Status.Steps = make(PodSteps, 0)
-	pod.Status.Containers = make(map[string]*PodContainer, 0)
+	pod.Status = NewPodStatus()
 	return pod
+}
+
+func NewPodStatus () PodStatus {
+	status := PodStatus{
+		Steps: make(PodSteps, 0),
+		Containers: make(map[string]*PodContainer, 0),
+	}
+	return status
 }
 
 func (p *Pod) SelfLink() string {

@@ -54,7 +54,7 @@ func (pc *Controller) Watch(node chan *types.Node) {
 					}
 
 					// If pod state not set to provision then need skip
-					if !(p.Status.Stage == types.StageProvision) {
+					if !(p.Status.Stage == types.StageInitialized) {
 						continue
 					}
 
@@ -87,7 +87,7 @@ func (pc *Controller) Watch(node chan *types.Node) {
 		}
 	}()
 
-	stg.Pod().Watch(context.Background(), pc.pods)
+	stg.Pod().WatchSpec(context.Background(), pc.pods)
 }
 
 func (pc *Controller) Pause() {

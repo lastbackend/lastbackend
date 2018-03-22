@@ -80,6 +80,7 @@ func Provision(p *types.Pod) error {
 	}
 
 	log.Debugf("Allocate node for pod: %s", p.Meta.Name)
+
 	nodes, err := nm.List()
 	if err != nil {
 		log.Errorf("Node: allocate: get nodes error: %s", err.Error())

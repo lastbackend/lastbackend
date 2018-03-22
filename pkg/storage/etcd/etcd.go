@@ -27,7 +27,12 @@ import (
 	"strings"
 )
 
-const logLevel = 5
+const logLevel = 3
+
+var c struct {
+	store store.Store
+	dfunc store.DestroyFunc
+}
 
 type Storage struct {
 	context.Context
@@ -131,6 +136,15 @@ func New() (*Storage, error) {
 
 	log.Debug("Etcd: define storage")
 
+	var (
+		err error
+	)
+
+	if c.store, c.dfunc, err = v3.GetClient(context.Background()); err != nil {
+		log.Errorf("etcd: store initialize err: %s", err)
+		return nil, err
+	}
+
 	s := new(Storage)
 
 	s.ClusterStorage = newClusterStorage()
@@ -151,7 +165,5 @@ func New() (*Storage, error) {
 }
 
 func getClient(ctx context.Context) (store.Store, store.DestroyFunc, error) {
-
-	log.V(logLevel).Debug("Etcd3: initialization storage")
-	return v3.GetClient(ctx)
+	return c.store, c.dfunc, nil
 }

@@ -349,13 +349,18 @@ func (s *DeploymentStorage) WatchSpec(ctx context.Context, deployment chan *type
 	key := keyCreate(deploymentStorage)
 	cb := func(action, key string, _ []byte) {
 		keys := r.FindStringSubmatch(key)
-		if len(keys) < 3 {
+		if len(keys) < 4 {
 			return
 		}
 
-		if d, err := s.Get(ctx, keys[1], keys[2], keys[3]); err == nil {
-			deployment <- d
+		log.Debug(keys)
+
+		d, err := s.Get(ctx, keys[1], keys[2], keys[3])
+		if err != nil {
+			log.Errorf("storage:etcd:deployment:> watch deployment by spec: get err :%s", err.Error())
+			return
 		}
+		deployment <- d
 	}
 
 	if err := client.Watch(ctx, key, filter, cb); err != nil {

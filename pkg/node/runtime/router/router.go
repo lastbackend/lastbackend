@@ -115,7 +115,7 @@ func Manage(ctx context.Context, route *types.Route) error {
 		return err
 	}
 
-	events.NewRouteStatusEvent(ctx, route)
+	events.NewRouteStatusEvent(ctx, route.Meta.Name)
 
 	return nil
 }

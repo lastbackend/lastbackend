@@ -26,6 +26,7 @@ import (
 	"github.com/docker/docker/api/types/events"
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 	"github.com/lastbackend/lastbackend/pkg/log"
+	"os"
 )
 
 func (r *Runtime) Subscribe(ctx context.Context, state *state.PodState, p chan string) {
@@ -80,7 +81,7 @@ func (r *Runtime) Subscribe(ctx context.Context, state *state.PodState, p chan s
 
 			case err := <-errors:
 				log.Errorf("Event listening error: %s", err)
-				panic(0)
+				os.Exit(0)
 			}
 		}
 	}()

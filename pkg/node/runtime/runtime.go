@@ -29,6 +29,7 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/node/runtime/pod"
 	"github.com/lastbackend/lastbackend/pkg/node/runtime/router"
 	"github.com/lastbackend/lastbackend/pkg/node/runtime/volume"
+	"time"
 )
 
 type Runtime struct {
@@ -50,8 +51,11 @@ func (r *Runtime) Provision(ctx context.Context, spec *types.NodeSpec) error {
 		log.Debugf("route: %v", r)
 	}
 
-	for _, p := range spec.Pods {
+	for p, spec := range spec.Pods {
 		log.Debugf("pod: %v", p)
+		if err := pod.Manage(ctx, p, &spec); err != nil {
+			log.Errorf("Pod [%s] manage err: %s", p, err.Error())
+		}
 	}
 
 	for _, v := range spec.Volumes {
@@ -80,6 +84,26 @@ func (r *Runtime) Subscribe() {
 	envs.Get().GetCri().Subscribe(r.ctx, envs.Get().GetState().Pods(), pc)
 }
 
+func (r *Runtime) Connect(ctx context.Context) error {
+
+	log.Debug("node:runtime:connect:> connect init")
+	if err := events.NewConnectEventt(ctx); err != nil {
+		log.Errorf("node:runtime:connect:> connect err: %s", err.Error())
+		return err
+	}
+
+	go func (ctx context.Context) {
+		ticker := time.NewTicker(time.Second * 10)
+		for _ = range ticker.C {
+			if err := events.NewStatusEvent(ctx); err != nil {
+				log.Errorf("node:runtime:connect:> send status err: %s", err.Error())
+			}
+		}
+	}(ctx)
+
+	return nil
+}
+
 func (r *Runtime) GetSpec(ctx context.Context) error {
 
 	log.Debug("node:runtime:getspec:> getspec request init")
@@ -90,17 +114,16 @@ func (r *Runtime) GetSpec(ctx context.Context) error {
 
 	spec, err := c.GetSpec(ctx)
 	if err != nil {
-		log.Debug("node:runtime:getspec:> request err: %s", err.Error())
+		log.Debugf("node:runtime:getspec:> request err: %s", err.Error())
 		return err
 	}
 
 	if spec == nil {
-		log.Debug("node:runtime:getspec:> new spec is nil")
+		log.Debugf("node:runtime:getspec:> new spec is nil")
 		return nil
 	}
 
-	//r.spec <- spec
-
+	r.spec <- spec.Decode()
 	return nil
 }
 
@@ -115,22 +138,27 @@ func (r *Runtime) Loop() {
 				if err := r.Provision(ctx, spec); err != nil {
 					log.Errorf("node:runtime:loop:> provision new spec err: %s", err.Error())
 				}
-
-			}
-
-			log.Debug("node:runtime:loop:> request new spec")
-			err := r.GetSpec(ctx)
-			if err != nil {
-				log.Debug("node:runtime:loop:> new spec request err: %s", err.Error())
 			}
 		}
 	}(r.ctx)
 
+	go func (ctx context.Context) {
+		ticker := time.NewTicker(time.Second * 10)
+		for _ = range ticker.C {
+			err := r.GetSpec(r.ctx)
+			if err != nil {
+				log.Debugf("node:runtime:loop:> new spec request err: %s", err.Error())
+			}
+		}
+	}(context.Background())
+
 	err := r.GetSpec(r.ctx)
 	if err != nil {
-		log.Debug("node:runtime:loop:> new spec request err: %s", err.Error())
+		log.Debugf("node:runtime:loop:> new spec request err: %s", err.Error())
 	}
 }
+
+
 
 func NewRuntime(ctx context.Context) *Runtime {
 	r := Runtime{

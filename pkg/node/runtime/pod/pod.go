@@ -268,7 +268,8 @@ func Restore(ctx context.Context) error {
 		status := envs.Get().GetState().Pods().GetPod(c.Pod)
 
 		if status == nil {
-			status = new(types.PodStatus)
+			st := types.NewPodStatus()
+			status = &st
 		}
 
 		key := c.Pod

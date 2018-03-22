@@ -20,21 +20,13 @@ package request
 
 import "github.com/lastbackend/lastbackend/pkg/distribution/types"
 
-type NodeUpdateOptions struct {
+type NodeMetaOptions struct {
 	Meta *types.NodeUpdateMetaOptions `json:"meta"`
 }
 
-type NodeInfoOptions struct {
-	// Node hostname
-	Hostname string `json:"hostname"`
-	// Linux architecture
-	Architecture string `json:"architecture"`
-	// OS information
-	OSName string `json:"os_name"`
-	OSType string `json:"os_type"`
-	// RewriteIP - need to set true if you want to use an external ip
-	ExternalIP string `json:"external_ip"`
-	InternalIP string `json:"internal_ip"`
+type NodeConnectOptions struct {
+	Info types.NodeInfo `json:"info"`
+	Status types.NodeStatus `json:"status"`
 }
 
 type NodeStatusOptions struct {

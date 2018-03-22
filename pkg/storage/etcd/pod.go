@@ -421,7 +421,7 @@ func (s *PodStorage) WatchSpec(ctx context.Context, pod chan *types.Pod) error {
 	key := keyCreate(podStorage)
 	cb := func(action, key string, _ []byte) {
 		keys := r.FindStringSubmatch(key)
-		if len(keys) < 3 {
+		if len(keys) < 5 {
 			return
 		}
 

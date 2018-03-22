@@ -25,6 +25,7 @@ import (
 	"github.com/spf13/viper"
 	"reflect"
 	"testing"
+	"github.com/lastbackend/lastbackend/pkg/log"
 )
 
 func TestStorage_Cluster(t *testing.T) {
@@ -282,8 +283,20 @@ func Test_getClient(t *testing.T) {
 }
 
 func initStorage() {
+
+	var (
+		err error
+	)
+
 	cfg := v3.Config{}
 	cfg.Prefix = "lstbknd"
 	cfg.Endpoints = []string{"127.0.0.1:2379"}
 	viper.Set("etcd", cfg)
+
+
+	if c.store, c.dfunc, err = v3.GetClient(context.Background()); err != nil {
+		log.Errorf("etcd: store initialize err: %s", err)
+		return
+	}
+
 }

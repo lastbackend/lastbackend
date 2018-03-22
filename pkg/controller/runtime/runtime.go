@@ -82,6 +82,7 @@ func (r *Runtime) Loop() {
 
 						r.active = true
 						r.sc.Resume()
+						r.dc.Resume()
 
 					} else {
 
@@ -94,6 +95,7 @@ func (r *Runtime) Loop() {
 
 						r.active = false
 						r.sc.Pause()
+						r.dc.Pause()
 					}
 				}
 			}

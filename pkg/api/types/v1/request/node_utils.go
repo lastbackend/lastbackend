@@ -28,15 +28,15 @@ import (
 
 type NodeRequest struct{}
 
-func (NodeRequest) NodeInfoOptions() *NodeInfoOptions {
-	return new(NodeInfoOptions)
+func (NodeRequest) NodeConnectOptions() *NodeConnectOptions {
+	return new(NodeConnectOptions)
 }
 
-func (n *NodeInfoOptions) Validate() *errors.Err {
+func (n *NodeConnectOptions) Validate() *errors.Err {
 	return nil
 }
 
-func (n *NodeInfoOptions) DecodeAndValidate(reader io.Reader) *errors.Err {
+func (n *NodeConnectOptions) DecodeAndValidate(reader io.Reader) *errors.Err {
 
 	if reader == nil {
 		err := errors.New("data body can not be null")
@@ -56,7 +56,7 @@ func (n *NodeInfoOptions) DecodeAndValidate(reader io.Reader) *errors.Err {
 	return n.Validate()
 }
 
-func (s *NodeInfoOptions) ToJson() string {
+func (s *NodeConnectOptions) ToJson() string {
 	buf, _ := json.Marshal(s)
 	return string(buf)
 }
@@ -198,20 +198,20 @@ func (n *NodeRouteStatusOptions) ToJson() string {
 }
 
 
-func (NodeRequest) UpdateOptions() *NodeUpdateOptions {
-	return new(NodeUpdateOptions)
+func (NodeRequest) UpdateOptions() *NodeMetaOptions {
+	return new(NodeMetaOptions)
 }
 
-func (s *NodeUpdateOptions) ToJson() string {
+func (s *NodeMetaOptions) ToJson() string {
 	buf, _ := json.Marshal(s)
 	return string(buf)
 }
 
-func (n *NodeUpdateOptions) Validate() *errors.Err {
+func (n *NodeMetaOptions) Validate() *errors.Err {
 	return nil
 }
 
-func (n *NodeUpdateOptions) DecodeAndValidate(reader io.Reader) *errors.Err {
+func (n *NodeMetaOptions) DecodeAndValidate(reader io.Reader) *errors.Err {
 
 	if reader == nil {
 		err := errors.New("data body can not be null")
