@@ -51,7 +51,6 @@ func NewStatusEvent(ctx context.Context) error {
 	return c.SetStatus(ctx, opts)
 }
 
-
 // NewPodStatusEvent - send pod state event after
 // node is successful accepted and each hour
 func NewPodStatusEvent(ctx context.Context, pod *types.Pod) error {

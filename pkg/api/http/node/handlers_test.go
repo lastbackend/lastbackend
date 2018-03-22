@@ -32,8 +32,8 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
-	"testing"
 	"strings"
+	"testing"
 )
 
 // Testing NodeList handler
@@ -58,18 +58,14 @@ func TestNodeListH(t *testing.T) {
 
 	tests := []struct {
 		name         string
-		url          string
 		headers      map[string]string
 		handler      func(http.ResponseWriter, *http.Request)
-		description  string
 		expectedBody string
 		expectedCode int
 	}{
 		{
 			name:         "checking get node list successfully",
-			url:          fmt.Sprintf("/cluster/node"),
 			handler:      node.NodeListH,
-			description:  "successfully",
 			expectedBody: string(v),
 			expectedCode: http.StatusOK,
 		},
@@ -89,7 +85,7 @@ func TestNodeListH(t *testing.T) {
 
 			// Create assert request to pass to our handler. We don't have any query parameters for now, so we'll
 			// pass 'nil' as the third parameter.
-			req, err := http.NewRequest("GET", tc.url, nil)
+			req, err := http.NewRequest("GET", "/cluster/node", nil)
 			assert.NoError(t, err)
 
 			if tc.headers != nil {
@@ -111,15 +107,15 @@ func TestNodeListH(t *testing.T) {
 			r.ServeHTTP(res, req)
 
 			// Check the status code is what we expect.
-			assert.Equal(t, tc.expectedCode, res.Code, tc.description)
+			assert.Equal(t, tc.expectedCode, res.Code, "status code not equal")
 
 			body, err := ioutil.ReadAll(res.Body)
 			assert.NoError(t, err)
 
 			if res.Code == http.StatusOK {
-				assert.Equal(t, tc.expectedBody, string(v), tc.description)
+				assert.Equal(t, tc.expectedBody, string(v), "status code not error")
 			} else {
-				assert.Equal(t, tc.expectedBody, string(body), tc.description)
+				assert.Equal(t, tc.expectedBody, string(body), "incorrect status code")
 			}
 		})
 	}
@@ -145,7 +141,6 @@ func TestNodeGetH(t *testing.T) {
 		url          string
 		headers      map[string]string
 		handler      func(http.ResponseWriter, *http.Request)
-		description  string
 		expectedBody string
 		expectedCode int
 	}{
@@ -160,11 +155,9 @@ func TestNodeGetH(t *testing.T) {
 			name:         "checking get node successfully",
 			url:          fmt.Sprintf("/cluster/node/%s", n1.Meta.Name),
 			handler:      node.NodeGetH,
-			description:  "successfully",
 			expectedBody: string(v),
 			expectedCode: http.StatusOK,
 		},
-
 	}
 
 	for _, tc := range tests {
@@ -201,11 +194,11 @@ func TestNodeGetH(t *testing.T) {
 			r.ServeHTTP(res, req)
 
 			// Check the status code is what we expect.
-			assert.Equal(t, tc.expectedCode, res.Code, tc.description)
+			assert.Equal(t, tc.expectedCode, res.Code, "status code not equal")
 
 			body, err := ioutil.ReadAll(res.Body)
 			assert.NoError(t, err)
-			assert.Equal(t, tc.expectedBody, string(body), tc.description)
+			assert.Equal(t, tc.expectedBody, string(body), "incorrect status code")
 
 		})
 	}
@@ -242,7 +235,6 @@ func TestNodeGetSpecH(t *testing.T) {
 		url          string
 		headers      map[string]string
 		handler      func(http.ResponseWriter, *http.Request)
-		description  string
 		expectedBody string
 		expectedCode int
 	}{
@@ -257,7 +249,6 @@ func TestNodeGetSpecH(t *testing.T) {
 			name:         "checking get node spec successfully",
 			url:          fmt.Sprintf("/cluster/node/%s/spec", n1.Meta.Name),
 			handler:      node.NodeGetSpecH,
-			description:  "successfully",
 			expectedBody: string(v),
 			expectedCode: http.StatusOK,
 		},
@@ -303,12 +294,12 @@ func TestNodeGetSpecH(t *testing.T) {
 			r.ServeHTTP(res, req)
 
 			// Check the status code is what we expect.
-			assert.Equal(t, tc.expectedCode, res.Code, tc.description)
+			assert.Equal(t, tc.expectedCode, res.Code, "status code not equal")
 
 			body, err := ioutil.ReadAll(res.Body)
 			assert.NoError(t, err)
 
-			assert.Equal(t, tc.expectedBody, string(body), tc.description)
+			assert.Equal(t, tc.expectedBody, string(body), "incorrect status code")
 		})
 	}
 }
@@ -330,7 +321,6 @@ func TestNodeRemoveH(t *testing.T) {
 		url          string
 		headers      map[string]string
 		handler      func(http.ResponseWriter, *http.Request)
-		description  string
 		expectedBody string
 		expectedCode int
 	}{
@@ -384,12 +374,12 @@ func TestNodeRemoveH(t *testing.T) {
 			r.ServeHTTP(res, req)
 
 			// Check the status code is what we expect.
-			assert.Equal(t, tc.expectedCode, res.Code, tc.description)
+			assert.Equal(t, tc.expectedCode, res.Code, "status code not equal")
 
 			body, err := ioutil.ReadAll(res.Body)
 			assert.NoError(t, err)
 
-			assert.Equal(t, tc.expectedBody, string(body), tc.description)
+			assert.Equal(t, tc.expectedBody, string(body), "incorrect status code")
 		})
 	}
 }
@@ -426,7 +416,6 @@ func TestNodeUpdateH(t *testing.T) {
 		headers      map[string]string
 		handler      func(http.ResponseWriter, *http.Request)
 		data         string
-		description  string
 		expectedBody string
 		expectedCode int
 	}{
@@ -443,7 +432,6 @@ func TestNodeUpdateH(t *testing.T) {
 			args:         args{ctx, n1.Meta.Name},
 			handler:      node.NodeUpdateH,
 			data:         uo.ToJson(),
-			description:  "successfully",
 			expectedBody: string(v),
 			expectedCode: http.StatusOK,
 		},
@@ -483,11 +471,11 @@ func TestNodeUpdateH(t *testing.T) {
 			r.ServeHTTP(res, req)
 
 			// Check the status code is what we expect.
-			assert.Equal(t, tc.expectedCode, res.Code, tc.description)
+			assert.Equal(t, tc.expectedCode, res.Code, "status code not equal")
 
 			body, err := ioutil.ReadAll(res.Body)
 			assert.NoError(t, err)
-			assert.Equal(t, tc.expectedBody, string(body), tc.description)
+			assert.Equal(t, tc.expectedBody, string(body), "incorrect status code")
 
 			if tc.expectedCode == http.StatusOK {
 				n, err := envs.Get().GetStorage().Node().Get(ctx, tc.args.node)
@@ -527,7 +515,6 @@ func TestNodeSetInfoH(t *testing.T) {
 		headers      map[string]string
 		handler      func(http.ResponseWriter, *http.Request)
 		data         string
-		description  string
 		expectedBody string
 		expectedCode int
 	}{
@@ -544,7 +531,6 @@ func TestNodeSetInfoH(t *testing.T) {
 			args:         args{ctx, n1.Meta.Name},
 			handler:      node.NodeSetInfoH,
 			data:         uo.ToJson(),
-			description:  "successfully",
 			expectedBody: "",
 			expectedCode: http.StatusOK,
 		},
@@ -584,11 +570,11 @@ func TestNodeSetInfoH(t *testing.T) {
 			r.ServeHTTP(res, req)
 
 			// Check the status code is what we expect.
-			assert.Equal(t, tc.expectedCode, res.Code, tc.description)
+			assert.Equal(t, tc.expectedCode, res.Code, "status code not equal")
 
 			body, err := ioutil.ReadAll(res.Body)
 			assert.NoError(t, err)
-			assert.Equal(t, tc.expectedBody, string(body), tc.description)
+			assert.Equal(t, tc.expectedBody, string(body), "incorrect status code")
 
 			if tc.expectedCode == http.StatusOK {
 				n, err := envs.Get().GetStorage().Node().Get(ctx, tc.args.node)
@@ -630,7 +616,6 @@ func TestNodeSetStatusH(t *testing.T) {
 		headers      map[string]string
 		handler      func(http.ResponseWriter, *http.Request)
 		data         string
-		description  string
 		expectedBody string
 		expectedCode int
 	}{
@@ -647,7 +632,6 @@ func TestNodeSetStatusH(t *testing.T) {
 			args:         args{ctx, n1.Meta.Name},
 			handler:      node.NodeSetStatusH,
 			data:         uo.ToJson(),
-			description:  "successfully",
 			expectedBody: "",
 			expectedCode: http.StatusOK,
 		},
@@ -687,11 +671,11 @@ func TestNodeSetStatusH(t *testing.T) {
 			r.ServeHTTP(res, req)
 
 			// Check the status code is what we expect.
-			assert.Equal(t, tc.expectedCode, res.Code, tc.description)
+			assert.Equal(t, tc.expectedCode, res.Code, "status code not equal")
 
 			body, err := ioutil.ReadAll(res.Body)
 			assert.NoError(t, err)
-			assert.Equal(t, tc.expectedBody, string(body), tc.description)
+			assert.Equal(t, tc.expectedBody, string(body), "incorrect status code")
 
 			if tc.expectedCode == http.StatusOK {
 				n, err := envs.Get().GetStorage().Node().Get(ctx, tc.args.node)
@@ -704,7 +688,6 @@ func TestNodeSetStatusH(t *testing.T) {
 	}
 }
 
-
 func TestNodeSetPodStatusH(t *testing.T) {
 
 	stg, _ := storage.GetMock()
@@ -712,7 +695,6 @@ func TestNodeSetPodStatusH(t *testing.T) {
 	viper.Set("verbose", 0)
 
 	var (
-
 		ns  = "ns"
 		svc = "svc"
 		dp  = "dp"
@@ -723,8 +705,8 @@ func TestNodeSetPodStatusH(t *testing.T) {
 		n1 = getNodeAsset("test1", "", true)
 		n2 = getNodeAsset("test2", "", true)
 
-		p1  = getPodAsset(ns, svc, dp, "test1", "")
-		p2  = getPodAsset(ns, svc, dp, "test2", "")
+		p1 = getPodAsset(ns, svc, dp, "test1", "")
+		p2 = getPodAsset(ns, svc, dp, "test2", "")
 
 		uo = v1.Request().Node().NodePodStatusOptions()
 	)
@@ -735,7 +717,7 @@ func TestNodeSetPodStatusH(t *testing.T) {
 	uo.Containers["test"] = &types.PodContainer{
 		ID: "container-id",
 		Image: types.PodContainerImage{
-			ID: "image-id",
+			ID:   "image-id",
 			Name: "image-name",
 		},
 	}
@@ -752,7 +734,6 @@ func TestNodeSetPodStatusH(t *testing.T) {
 		headers      map[string]string
 		handler      func(http.ResponseWriter, *http.Request)
 		data         string
-		description  string
 		expectedBody string
 		expectedCode int
 	}{
@@ -777,7 +758,6 @@ func TestNodeSetPodStatusH(t *testing.T) {
 			args:         args{ctx, n1.Meta.Name, p1.SelfLink()},
 			handler:      node.NodeSetPodStatusH,
 			data:         uo.ToJson(),
-			description:  "successfully",
 			expectedBody: "",
 			expectedCode: http.StatusOK,
 		},
@@ -820,11 +800,11 @@ func TestNodeSetPodStatusH(t *testing.T) {
 			r.ServeHTTP(res, req)
 
 			// Check the status code is what we expect.
-			assert.Equal(t, tc.expectedCode, res.Code, tc.description)
+			assert.Equal(t, tc.expectedCode, res.Code, "status code not equal")
 
 			body, err := ioutil.ReadAll(res.Body)
 			assert.NoError(t, err)
-			assert.Equal(t, tc.expectedBody, string(body), tc.description)
+			assert.Equal(t, tc.expectedBody, string(body), "incorrect status code")
 
 			if tc.expectedCode == http.StatusOK {
 				p, err := envs.Get().GetStorage().Pod().Get(ctx, p1.Meta.Namespace, p1.Meta.Service, p1.Meta.Deployment, p1.Meta.Name)
@@ -837,7 +817,7 @@ func TestNodeSetPodStatusH(t *testing.T) {
 				uo.Containers["test"] = &types.PodContainer{
 					ID: "container-id",
 					Image: types.PodContainerImage{
-						ID: "image-id",
+						ID:   "image-id",
 						Name: "image-name",
 					},
 				}
@@ -863,8 +843,7 @@ func TestNodeSetVolumeStatusH(t *testing.T) {
 	viper.Set("verbose", 0)
 
 	var (
-
-		ns  = "ns"
+		ns = "ns"
 
 		err error
 		ctx = context.Background()
@@ -873,7 +852,7 @@ func TestNodeSetVolumeStatusH(t *testing.T) {
 		n2 = getNodeAsset("test2", "", true)
 
 		vl1 = getVolumeAsset(ns, "test1", "")
-		vl2 = getVolumeAsset(ns,  "test2", "")
+		vl2 = getVolumeAsset(ns, "test2", "")
 
 		uo = v1.Request().Node().NodeVolumeStatusOptions()
 	)
@@ -893,7 +872,6 @@ func TestNodeSetVolumeStatusH(t *testing.T) {
 		headers      map[string]string
 		handler      func(http.ResponseWriter, *http.Request)
 		data         string
-		description  string
 		expectedBody string
 		expectedCode int
 	}{
@@ -918,7 +896,6 @@ func TestNodeSetVolumeStatusH(t *testing.T) {
 			args:         args{ctx, n1.Meta.Name, vl1.SelfLink()},
 			handler:      node.NodeSetVolumeStatusH,
 			data:         uo.ToJson(),
-			description:  "successfully",
 			expectedBody: "",
 			expectedCode: http.StatusOK,
 		},
@@ -961,11 +938,11 @@ func TestNodeSetVolumeStatusH(t *testing.T) {
 			r.ServeHTTP(res, req)
 
 			// Check the status code is what we expect.
-			assert.Equal(t, tc.expectedCode, res.Code, tc.description)
+			assert.Equal(t, tc.expectedCode, res.Code, "status code not equal")
 
 			body, err := ioutil.ReadAll(res.Body)
 			assert.NoError(t, err)
-			assert.Equal(t, tc.expectedBody, string(body), tc.description)
+			assert.Equal(t, tc.expectedBody, string(body), "incorrect status code")
 
 			if tc.expectedCode == http.StatusOK {
 				p, err := envs.Get().GetStorage().Volume().Get(ctx, vl1.Meta.Namespace, vl1.Meta.Name)
@@ -986,8 +963,7 @@ func TestNodeSetRouteStatusH(t *testing.T) {
 	viper.Set("verbose", 0)
 
 	var (
-
-		ns  = "ns"
+		ns = "ns"
 
 		err error
 		ctx = context.Background()
@@ -996,7 +972,7 @@ func TestNodeSetRouteStatusH(t *testing.T) {
 		n2 = getNodeAsset("test2", "", true)
 
 		r1 = getRouteAsset(ns, "test1", "")
-		r2 = getRouteAsset(ns,  "test2", "")
+		r2 = getRouteAsset(ns, "test2", "")
 
 		uo = v1.Request().Node().NodeRouteStatusOptions()
 	)
@@ -1005,8 +981,8 @@ func TestNodeSetRouteStatusH(t *testing.T) {
 	uo.Message = "error message"
 
 	type args struct {
-		ctx    context.Context
-		node   string
+		ctx   context.Context
+		node  string
 		route string
 	}
 
@@ -1016,7 +992,6 @@ func TestNodeSetRouteStatusH(t *testing.T) {
 		headers      map[string]string
 		handler      func(http.ResponseWriter, *http.Request)
 		data         string
-		description  string
 		expectedBody string
 		expectedCode int
 	}{
@@ -1041,7 +1016,6 @@ func TestNodeSetRouteStatusH(t *testing.T) {
 			args:         args{ctx, n1.Meta.Name, r1.SelfLink()},
 			handler:      node.NodeSetRouteStatusH,
 			data:         uo.ToJson(),
-			description:  "successfully",
 			expectedBody: "",
 			expectedCode: http.StatusOK,
 		},
@@ -1084,11 +1058,11 @@ func TestNodeSetRouteStatusH(t *testing.T) {
 			r.ServeHTTP(res, req)
 
 			// Check the status code is what we expect.
-			assert.Equal(t, tc.expectedCode, res.Code, tc.description)
+			assert.Equal(t, tc.expectedCode, res.Code, "status code not equal")
 
 			body, err := ioutil.ReadAll(res.Body)
 			assert.NoError(t, err)
-			assert.Equal(t, tc.expectedBody, string(body), tc.description)
+			assert.Equal(t, tc.expectedBody, string(body), "incorrect status code")
 
 			if tc.expectedCode == http.StatusOK {
 				p, err := envs.Get().GetStorage().Route().Get(ctx, r1.Meta.Namespace, r1.Meta.Name)
@@ -1101,7 +1075,6 @@ func TestNodeSetRouteStatusH(t *testing.T) {
 		})
 	}
 }
-
 
 func setRequestVars(r *mux.Router, req *http.Request) {
 	var match mux.RouteMatch
@@ -1177,7 +1150,7 @@ func getPodAsset(namespace, service, deployment, name, desc string) types.Pod {
 
 func getVolumeAsset(namespace, name, desc string) types.Volume {
 
-	var n= types.Volume{}
+	var n = types.Volume{}
 
 	n.Meta.Name = name
 	n.Meta.Namespace = namespace

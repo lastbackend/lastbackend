@@ -21,8 +21,8 @@ package views
 import "time"
 
 type Route struct {
-	Meta  RouteMeta  `json:"meta"`
-	Spec  RouteSpec  `json:"spec"`
+	Meta   RouteMeta   `json:"meta"`
+	Spec   RouteSpec   `json:"spec"`
 	Status RouteStatus `json:"status"`
 }
 
@@ -47,7 +47,7 @@ type RouteRule struct {
 }
 
 type RouteStatus struct {
-	Stage string `json:"stage"`
+	Stage   string `json:"stage"`
 	Message string `json:"message"`
 }
 

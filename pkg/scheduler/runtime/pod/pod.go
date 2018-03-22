@@ -101,7 +101,6 @@ func Provision(p *types.Pod) error {
 		return n2 < n1
 	})
 
-
 	for _, n := range nl {
 
 		if !n.Online {
@@ -133,8 +132,8 @@ func Provision(p *types.Pod) error {
 		log.Debug("Node: Allocate: Available node not found")
 
 		if err := distribution.NewPodModel(context.Background(), stg).SetStatus(p, &types.PodStatus{
-			Stage: types.StageError,
-			Message :errors.NodeNotFound,
+			Stage:   types.StageError,
+			Message: errors.NodeNotFound,
 		}); err != nil {
 			log.Errorf("set pod state error: %s", err.Error())
 			return err

@@ -19,10 +19,10 @@
 package service
 
 import (
+	"fmt"
 	"github.com/lastbackend/lastbackend/pkg/cli/envs"
 	"github.com/lastbackend/lastbackend/pkg/cli/view"
 	"github.com/spf13/cobra"
-	"fmt"
 )
 
 func ListCmd(cmd *cobra.Command, _ []string) {

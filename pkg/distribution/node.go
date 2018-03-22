@@ -22,11 +22,11 @@ import (
 	"context"
 	"github.com/lastbackend/lastbackend/pkg/util/generator"
 
+	"github.com/lastbackend/lastbackend/pkg/distribution/errors"
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 	"github.com/lastbackend/lastbackend/pkg/log"
 	"github.com/lastbackend/lastbackend/pkg/storage"
 	"github.com/lastbackend/lastbackend/pkg/storage/store"
-	"github.com/lastbackend/lastbackend/pkg/distribution/errors"
 )
 
 type INode interface {
@@ -36,8 +36,8 @@ type INode interface {
 	Get(name string) (*types.Node, error)
 	GetSpec(node *types.Node) (*types.NodeSpec, error)
 
-	SetMeta(node *types.Node,  meta *types.NodeUpdateMetaOptions) error
-	SetStatus(node *types.Node, state types.NodeStatus)  error
+	SetMeta(node *types.Node, meta *types.NodeUpdateMetaOptions) error
+	SetStatus(node *types.Node, state types.NodeStatus) error
 	SetInfo(node *types.Node, info types.NodeInfo) error
 	SetNetwork(node *types.Node, network types.Subnet) error
 	SetOnline(node *types.Node) error
@@ -124,7 +124,7 @@ func (n *Node) SetMeta(node *types.Node, meta *types.NodeUpdateMetaOptions) erro
 	log.V(logLevel).Debugf("Node: update Node %#v", meta)
 	if meta == nil {
 		log.V(logLevel).Errorf("Node: update Node err: %s", errors.New(errors.ArgumentIsEmpty))
-		return  errors.New(errors.ArgumentIsEmpty)
+		return errors.New(errors.ArgumentIsEmpty)
 	}
 
 	node.Meta.Set(meta)
@@ -158,7 +158,7 @@ func (n *Node) SetOffline(node *types.Node) error {
 
 }
 
-func (n *Node) SetStatus(node *types.Node, status types.NodeStatus)  error {
+func (n *Node) SetStatus(node *types.Node, status types.NodeStatus) error {
 
 	node.Status = status
 

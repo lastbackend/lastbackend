@@ -55,7 +55,7 @@ type DeploymentSpec struct {
 }
 
 type DeploymentStatus struct {
-	Stage string `json:"stage"`
+	Stage   string `json:"stage"`
 	Message string `json:"message"`
 }
 

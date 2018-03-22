@@ -23,8 +23,8 @@ import "fmt"
 type TriggerList []Trigger
 
 type Trigger struct {
-	Meta TriggerMeta `json:"meta"`
-	Spec TriggerSpec `json:"spec"`
+	Meta   TriggerMeta   `json:"meta"`
+	Spec   TriggerSpec   `json:"spec"`
 	Status TriggerStatus `json:"status"`
 }
 
@@ -35,7 +35,7 @@ type TriggerMeta struct {
 }
 
 type TriggerStatus struct {
-	Stage string `json:"stage"`
+	Stage   string `json:"stage"`
 	Message string `json:"message"`
 }
 

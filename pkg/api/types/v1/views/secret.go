@@ -21,8 +21,8 @@ package views
 import "time"
 
 type Secret struct {
-	Meta  SecretMeta  `json:"meta"`
-	Spec  SecretSpec  `json:"spec"`
+	Meta   SecretMeta   `json:"meta"`
+	Spec   SecretSpec   `json:"spec"`
 	Status SecretStatus `json:"status"`
 }
 

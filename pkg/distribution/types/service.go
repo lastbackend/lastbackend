@@ -30,29 +30,29 @@ const (
 	DEFAULT_SERVICE_REPLICAS int   = 1
 
 	StepInitialized = "initialized"
-	StepScheduled = "scheduled"
-	StepPull = "pull"
-	StepDestroyed = "destroyed"
-	StepReady = "ready"
+	StepScheduled   = "scheduled"
+	StepPull        = "pull"
+	StepDestroyed   = "destroyed"
+	StepReady       = "ready"
 
 	StageInitialized = StepInitialized
-	StageScheduled = StepScheduled
-	StagePull = StepPull
+	StageScheduled   = StepScheduled
+	StagePull        = StepPull
 
-	StageStarting = "starting"
-	StageRunning = "running"
-	StageStopped = "stopped"
+	StageStarting  = "starting"
+	StageRunning   = "running"
+	StageStopped   = "stopped"
 	StageDestroyed = "destroyed"
 	StageProvision = "provision"
-	StageReady = "ready"
-	StageCancel = "cancel"
-	StageDestroy = "destroy"
-	StageError = "error"
+	StageReady     = "ready"
+	StageCancel    = "cancel"
+	StageDestroy   = "destroy"
+	StageError     = "error"
 )
 
 type Service struct {
 	Meta        ServiceMeta            `json:"meta"`
-	Status      ServiceStatus           `json:"status"`
+	Status      ServiceStatus          `json:"status"`
 	Spec        ServiceSpec            `json:"spec"`
 	Deployments map[string]*Deployment `json:"deployments"`
 }
@@ -72,7 +72,7 @@ type ServiceEndpoint struct {
 }
 
 type ServiceStatus struct {
-	Stage string `json:"stage"`
+	Stage   string `json:"stage"`
 	Message string `json:"message"`
 }
 
