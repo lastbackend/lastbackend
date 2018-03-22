@@ -21,7 +21,7 @@ package request
 type ServiceCreateOptions struct {
 	Name        *string             `json:"name"`
 	Description *string             `json:"description"`
-	Sources     *string             `json:"sources"`
+	Image       *string             `json:"image"`
 	Replicas    *int                `json:"replicas"`
 	Spec        *ServiceOptionsSpec `json:"spec"`
 }

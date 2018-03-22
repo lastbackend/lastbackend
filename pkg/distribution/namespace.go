@@ -89,7 +89,7 @@ func (n *Namespace) Create(opts *types.NamespaceCreateOptions) (*types.Namespace
 	ns.Meta.Name = opts.Name
 	ns.Meta.Description = opts.Description
 	ns.Meta.Endpoint = strings.ToLower(fmt.Sprintf("%s", opts.Name))
-	ns.Meta.SelfLink = fmt.Sprintf("/namespace/%s", opts.Name)
+	ns.SelfLink()
 
 	if opts.Quotas != nil {
 		ns.Quotas.RAM = opts.Quotas.RAM

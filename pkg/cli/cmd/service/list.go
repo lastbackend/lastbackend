@@ -19,19 +19,25 @@
 package service
 
 import (
-	"github.com/lastbackend/lastbackend/pkg/cli/context"
+	"github.com/lastbackend/lastbackend/pkg/cli/envs"
 	"github.com/lastbackend/lastbackend/pkg/cli/view"
 	"github.com/spf13/cobra"
+	"fmt"
 )
 
-func ListCmd(cmd *cobra.Command, args []string) {
+func ListCmd(cmd *cobra.Command, _ []string) {
 
-	var namespace string
-	cmd.Flags().StringVarP(&namespace, "namespace", "ns", "", "namespace")
+	namespace, _ := cmd.Flags().GetString("namespace")
 
-	cli := context.Get().GetClient()
-	response, err := cli.V1().Namespace(namespace).Service().List(context.Background())
+	if namespace == "" {
+		fmt.Println("namesapace parameter not set")
+		return
+	}
+
+	cli := envs.Get().GetClient()
+	response, err := cli.V1().Namespace(namespace).Service().List(envs.Background())
 	if err != nil {
+		fmt.Println(err)
 		return
 	}
 

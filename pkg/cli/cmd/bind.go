@@ -26,6 +26,11 @@ import (
 )
 
 func init() {
+	commands()
+	flags()
+}
+
+func commands() {
 	// ----- root -----
 	RootCmd.AddCommand(
 		versionCmd,
@@ -33,6 +38,8 @@ func init() {
 		namespace,
 		service,
 	)
+
+	RootCmd.Flags().BoolP("dd", "a", true, "a")
 
 	// ----- cluster -----
 	cluster.AddCommand(
@@ -49,6 +56,7 @@ func init() {
 		ns.NamespaceCreate,
 		ns.NamespaceList,
 		ns.NamespaceFetch,
+		ns.NamespaceUpdate,
 		ns.NamespaceRemove,
 	)
 
@@ -60,4 +68,32 @@ func init() {
 		sr.ServiceUpdate,
 		sr.ServiceRemove,
 	)
+
+}
+
+func flags() {
+	// ----- NAMESPACE -----
+	// namespace :: NamespaceCreate
+	ns.NamespaceCreate.Flags().StringP("desc", "d", "", "set namespace description")
+	// namespace :: NamespaceUpdate
+	ns.NamespaceUpdate.Flags().StringP("desc", "d", "", "set namespace description")
+
+	// ----- SERVICE -----
+	// service :: ServiceCreate
+	sr.ServiceCreate.Flags().String("namespace", "", "set namespace context")
+	sr.ServiceCreate.Flags().StringP("desc", "d", "", "dset service description")
+	sr.ServiceCreate.Flags().StringP("image", "i", "", "set service spec image")
+	sr.ServiceCreate.Flags().Int64P("memory", "m", 128, "set service spec memory")
+	sr.ServiceCreate.Flags().IntP("replicas", "r", 1, "set service replicas")
+	//// service :: ServiceFetch
+	sr.ServiceFetch.Flags().String("namespace", "", "set namespace context")
+	//// service :: ServiceList
+	sr.ServiceList.Flags().String("namespace", "", "set namespace context")
+	//// service :: ServiceUpdate
+	sr.ServiceUpdate.Flags().String("namespace", "", "set namespace context")
+	sr.ServiceUpdate.Flags().StringP("desc", "d", "", "set service description")
+	sr.ServiceUpdate.Flags().Int64P("memory", "m", 128, "set service spec memory")
+	//// service :: ServiceRemove
+	sr.ServiceRemove.Flags().String("namespace", "", "set namespace context")
+
 }

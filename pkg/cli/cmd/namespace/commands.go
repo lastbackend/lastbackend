@@ -40,6 +40,12 @@ var NamespaceList = &cobra.Command{
 	Run:   ListCmd,
 }
 
+var NamespaceUpdate = &cobra.Command{
+	Use:   "update",
+	Short: "Update the namespace by name",
+	Run:   UpdateCmd,
+}
+
 var NamespaceRemove = &cobra.Command{
 	Use:   "remove",
 	Short: "Remove namespace by name",

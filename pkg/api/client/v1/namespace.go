@@ -78,6 +78,14 @@ func (s *NamespaceClient) List(ctx context.Context) (*vv1.NamespaceList, error) 
 		return nil, err
 	}
 
+	if code := req.StatusCode(); 200 > code || code > 299 {
+		var e *errors.Http
+		if err := json.Unmarshal(buf, &e); err != nil {
+			return nil, err
+		}
+		return nil, errors.New(e.Message)
+	}
+
 	var nl *vv1.NamespaceList
 
 	if err := json.Unmarshal(buf, &nl); err != nil {
@@ -165,6 +173,10 @@ func (s *NamespaceClient) Update(ctx context.Context, opts *rv1.NamespaceUpdateO
 		Body(body).
 		Do()
 
+	if err := req.Error(); err != nil {
+		return nil, err
+	}
+
 	buf, err := req.Raw()
 	if err != nil {
 		return nil, err
@@ -178,7 +190,7 @@ func (s *NamespaceClient) Update(ctx context.Context, opts *rv1.NamespaceUpdateO
 		return nil, errors.New(e.Message)
 	}
 
-	var ns *vv1.Namespace
+	var ns = new(vv1.Namespace)
 
 	if err := json.Unmarshal(buf, &ns); err != nil {
 		return nil, err

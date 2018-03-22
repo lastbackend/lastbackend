@@ -16,46 +16,29 @@
 // from Last.Backend LLC.
 //
 
-package service
+package namespace
 
 import (
 	"fmt"
 
+	"github.com/spf13/cobra"
 	"github.com/lastbackend/lastbackend/pkg/api/types/v1/request"
 	"github.com/lastbackend/lastbackend/pkg/cli/envs"
 	"github.com/lastbackend/lastbackend/pkg/cli/view"
-	"github.com/spf13/cobra"
 )
 
-func CreateCmd(cmd *cobra.Command, args []string) {
+func UpdateCmd(cmd *cobra.Command, args []string) {
 
 	if len(args) != 1 {
 		cmd.Help()
 		return
 	}
 
-	namespace, _ := cmd.Flags().GetString("namespace")
-
-	if namespace == "" {
-		fmt.Println("namesapace parameter not set")
-		return
-	}
-
 	name := args[0]
+	desc := cmd.Flag("desc").Value.String()
 
-	description, _ := cmd.Flags().GetString("desc")
-	memory, _ := cmd.Flags().GetInt64("memory")
-	image, _ := cmd.Flags().GetString("image")
-	replicas, _ := cmd.Flags().GetInt("replicas")
-
-	opts := new(request.ServiceCreateOptions)
-	opts.Spec = new(request.ServiceOptionsSpec)
-
-	opts.Name = &name
-	opts.Description = &description
-	opts.Spec.Memory = &memory
-	opts.Image = &image
-	opts.Replicas = &replicas
+	opts := new(request.NamespaceUpdateOptions)
+	opts.Description = &desc
 
 	if err := opts.Validate(); err != nil {
 		fmt.Println(err.Attr)
@@ -63,14 +46,13 @@ func CreateCmd(cmd *cobra.Command, args []string) {
 	}
 
 	cli := envs.Get().GetClient()
-	response, err := cli.V1().Namespace(namespace).Service().Create(envs.Background(), opts)
+	response, err := cli.V1().Namespace(name).Update(envs.Background(), opts)
 	if err != nil {
 		fmt.Println(err)
 		return
 	}
 
-	fmt.Println(fmt.Sprintf("Service `%s` is created", name))
-
-	service := view.FromApiServiceView(response)
-	service.Print()
+	fmt.Println(fmt.Sprintf("Namespace `%s` is updated", name))
+	ns := view.FromApiNamespaceView(response)
+	ns.Print()
 }

@@ -271,7 +271,7 @@ func NodeSetStatusH(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := nm.SetStatus(node, types.NodeStatus{
-		Capacity: opts.Capacity,
+		Capacity:  opts.Capacity,
 		Allocated: opts.Allocated,
 	}); err != nil {
 		log.V(logLevel).Errorf("Handler: Node: get nodes list err: %s", err)
@@ -315,14 +315,14 @@ func NodeSetPodStatusH(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	keys:=strings.Split(pid, ":")
+	keys := strings.Split(pid, ":")
 	if len(keys) != 4 {
 		log.V(logLevel).Errorf("Handler: Node: invalid pod selflink err: %s", pid)
 		errors.HTTP.BadRequest(w)
 		return
 	}
 
-	pod, err := pm.Get(keys[0],keys[1],keys[2],keys[3])
+	pod, err := pm.Get(keys[0], keys[1], keys[2], keys[3])
 	if err != nil {
 		log.V(logLevel).Errorf("Handler: Node: pod not found selflink err: %s", pid)
 		errors.HTTP.InternalServerError(w)
@@ -386,14 +386,14 @@ func NodeSetVolumeStatusH(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	keys:=strings.Split(vid, ":")
+	keys := strings.Split(vid, ":")
 	if len(keys) != 2 {
 		log.V(logLevel).Errorf("Handler: Node: invalid volume selflink err: %s", vid)
 		errors.HTTP.BadRequest(w)
 		return
 	}
 
-	volume, err := vm.Get(keys[0],keys[1])
+	volume, err := vm.Get(keys[0], keys[1])
 	if err != nil {
 		log.V(logLevel).Errorf("Handler: Node: pod not found selflink err: %s", vid)
 		errors.HTTP.NotFound(w)
@@ -404,7 +404,6 @@ func NodeSetVolumeStatusH(w http.ResponseWriter, r *http.Request) {
 		errors.New("volume").NotFound().Http(w)
 		return
 	}
-
 
 	if err := vm.SetStatus(volume, &types.VolumeStatus{
 		Stage:   opts.Stage,
@@ -453,14 +452,14 @@ func NodeSetRouteStatusH(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	keys:=strings.Split(vid, ":")
+	keys := strings.Split(vid, ":")
 	if len(keys) != 2 {
 		log.V(logLevel).Errorf("Handler: Node: invalid route selflink err: %s", vid)
 		errors.HTTP.BadRequest(w)
 		return
 	}
 
-	route, err := rm.Get(keys[0],keys[1])
+	route, err := rm.Get(keys[0], keys[1])
 	if err != nil {
 		log.V(logLevel).Errorf("Handler: Node: pod not found selflink err: %s", vid)
 		errors.HTTP.NotFound(w)
@@ -496,14 +495,6 @@ func NodeRemoveH(w http.ResponseWriter, r *http.Request) {
 		nm  = distribution.NewNodeModel(r.Context(), envs.Get().GetStorage())
 		nid = utils.Vars(r)["node"]
 	)
-
-	// request body struct
-	opts := v1.Request().Node().RemoveOptions()
-	if err := opts.DecodeAndValidate(r.Body); err != nil {
-		log.V(logLevel).Errorf("Handler: Node: validation incoming data err: %s", err)
-		err.Http(w)
-		return
-	}
 
 	n, err := nm.Get(nid)
 	if err != nil {

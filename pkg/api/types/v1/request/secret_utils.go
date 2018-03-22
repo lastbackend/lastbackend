@@ -99,22 +99,3 @@ func (SecretRequest) RemoveOptions() *SecretRemoveOptions {
 func (s *SecretRemoveOptions) Validate() *errors.Err {
 	return nil
 }
-
-func (s *SecretRemoveOptions) DecodeAndValidate(reader io.Reader) *errors.Err {
-
-	if reader == nil {
-		return nil
-	}
-
-	body, err := ioutil.ReadAll(reader)
-	if err != nil {
-		return errors.New("secret").Unknown(err)
-	}
-
-	err = json.Unmarshal(body, s)
-	if err != nil {
-		return errors.New("secret").IncorrectJSON(err)
-	}
-
-	return s.Validate()
-}
