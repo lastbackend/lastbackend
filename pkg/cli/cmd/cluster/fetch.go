@@ -29,6 +29,7 @@ import (
 func FetchCmd(_ *cobra.Command, _ []string) {
 
 	cli := envs.Get().GetClient()
+
 	response, err := cli.V1().Cluster().Get(envs.Background())
 	if err != nil {
 		fmt.Println(err)

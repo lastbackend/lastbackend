@@ -25,9 +25,9 @@ import (
 )
 
 type Secret struct {
-	Meta  SecretMeta  `json:"meta" yaml:"meta"`
+	Meta   SecretMeta   `json:"meta" yaml:"meta"`
 	Status SecretStatus `json:"status" yaml:"status"`
-	Spec  SecretSpec  `json:"status" yaml:"spec"`
+	Spec   SecretSpec   `json:"status" yaml:"spec"`
 }
 
 type SecretMeta struct {

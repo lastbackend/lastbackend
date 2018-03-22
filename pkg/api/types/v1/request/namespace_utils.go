@@ -25,8 +25,8 @@ import (
 	"strings"
 
 	"github.com/lastbackend/lastbackend/pkg/distribution/errors"
-	"github.com/lastbackend/lastbackend/pkg/util/validator"
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
+	"github.com/lastbackend/lastbackend/pkg/util/validator"
 )
 
 type NamespaceRequest struct{}

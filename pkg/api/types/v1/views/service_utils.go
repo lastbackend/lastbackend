@@ -54,8 +54,8 @@ func (sv *Service) ToMeta(obj types.ServiceMeta) ServiceMeta {
 
 func (sv *Service) ToStatus(obj types.ServiceStatus) ServiceStatus {
 	return ServiceStatus{
-		Stage: obj.Stage,
-		Message:   obj.Message,
+		Stage:   obj.Stage,
+		Message: obj.Message,
 	}
 }
 

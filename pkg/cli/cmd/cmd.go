@@ -27,15 +27,9 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/cli/envs"
 	"github.com/lastbackend/lastbackend/pkg/cli/storage"
 	"github.com/spf13/cobra"
+	"github.com/lastbackend/lastbackend/pkg/api/client/http"
 )
 
-var (
-	// VERSION is set during build
-	version string
-	host    string
-	debug   bool
-	tls     bool
-)
 var (
 	cfg = config.Get()
 	ctx = envs.Get()
@@ -47,43 +41,39 @@ var RootCmd = &cobra.Command{
 	Short: "Apps cloud hosting with integrated deployment tools",
 	PersistentPreRun: func(cmd *cobra.Command, args []string) {
 
+		debug, _ := cmd.Flags().GetBool("debug")
+
 		if debug {
+			fmt.Println("debug mode enabled")
 			cfg.Debug = debug
 		}
+
+		token, err := storage.GetToken()
+		if err != nil {
+			panic("There is no token in .lastbackend in homedir")
+		}
+
+		host := cmd.Flag("host").Value.String()
+
+		httpcli, err := client.New(host, &http.Config{BearerToken: token})
+		if err != nil {
+			panic(err)
+		}
+
+		ctx.SetClient(httpcli)
 	},
 }
 
 // Execute adds all child commands to the root command
 func Execute() {
-	version = "0.0.1"
+
+	cobra.OnInitialize()
+
+	RootCmd.PersistentFlags().StringP("host", "H", "https://api.lastbackend.com", "Set api host parameter")
+	RootCmd.PersistentFlags().Bool("debug", false, "Enable debug mode")
 
 	if err := RootCmd.Execute(); err != nil {
 		fmt.Println(err)
 		os.Exit(-1)
 	}
-}
-
-// init client object
-func InitClient(apiHost string) *client.Client {
-
-	token, err := storage.GetToken()
-	if err != nil {
-		panic("There is no token in .lastbackend in homedir")
-	}
-
-	cli, err := client.New(apiHost, token)
-	if err != nil {
-		panic(err)
-	}
-	return cli
-}
-
-func init() {
-	cobra.OnInitialize()
-
-	RootCmd.Flags().StringVar(&host, "host", "https://api.lastbackend.com", "Set api host parameter")
-	RootCmd.Flags().BoolVar(&debug, "debug", false, "Enable debug mode")
-	RootCmd.Flags().BoolVar(&tls, "tls", false, "Enable tls")
-
-	ctx.SetClient(InitClient("https://api.lstbknd.net"))
 }

@@ -21,9 +21,9 @@ package distribution
 import (
 	"context"
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
+	"github.com/lastbackend/lastbackend/pkg/log"
 	"github.com/lastbackend/lastbackend/pkg/storage"
 	"github.com/lastbackend/lastbackend/pkg/storage/store"
-	"github.com/lastbackend/lastbackend/pkg/log"
 	"github.com/lastbackend/lastbackend/pkg/util/generator"
 )
 
@@ -98,7 +98,6 @@ func (v *Volume) Update(volume *types.Volume, opts *types.VolumeUpdateOptions) (
 
 	volume.Meta.SetDefault()
 	volume.Status.Stage = types.StageProvision
-
 
 	if err := v.storage.Volume().Update(v.context, volume); err != nil {
 		log.V(logLevel).Errorf("api:distribution:volume:update update volume err: %s", err)

@@ -21,22 +21,23 @@ package route_test
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"github.com/gorilla/mux"
 	"github.com/lastbackend/lastbackend/pkg/api/envs"
 	"github.com/lastbackend/lastbackend/pkg/api/http/route"
 	"github.com/lastbackend/lastbackend/pkg/api/types/v1/request"
+	"github.com/lastbackend/lastbackend/pkg/api/types/v1/views"
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 	"github.com/lastbackend/lastbackend/pkg/storage"
-	"github.com/spf13/viper"
+	"github.com/lastbackend/lastbackend/pkg/storage/store"
 	"github.com/stretchr/testify/assert"
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
 	"strings"
 	"testing"
-	"github.com/lastbackend/lastbackend/pkg/api/types/v1/views"
-	"errors"
+	"github.com/lastbackend/lastbackend/pkg/api/types/v1"
 )
 
 // Testing RouteInfoH handler
@@ -46,24 +47,11 @@ func TestRouteInfo(t *testing.T) {
 
 	stg, _ := storage.GetMock()
 	envs.Get().SetStorage(stg)
-	viper.Set("verbose", 0)
-
-	err := envs.Get().GetStorage().Namespace().Clear(context.Background())
-	assert.NoError(t, err)
-
-	err = envs.Get().GetStorage().Route().Clear(context.Background())
-	assert.NoError(t, err)
 
 	ns1 := getNamespaceAsset("demo", "")
 	ns2 := getNamespaceAsset("test", "")
 	r1 := getRouteAsset(ns1.Meta.Name, "demo")
 	r2 := getRouteAsset(ns2.Meta.Name, "test")
-
-	err = envs.Get().GetStorage().Namespace().Insert(context.Background(), ns1)
-	assert.NoError(t, err)
-
-	err = envs.Get().GetStorage().Route().Insert(context.Background(), r1)
-	assert.NoError(t, err)
 
 	type fields struct {
 		stg storage.Storage
@@ -81,9 +69,8 @@ func TestRouteInfo(t *testing.T) {
 		args         args
 		headers      map[string]string
 		handler      func(http.ResponseWriter, *http.Request)
-		description  string
 		err          string
-		want         *types.Route
+		want         *views.Route
 		wantErr      bool
 		expectedCode int
 	}{
@@ -92,7 +79,6 @@ func TestRouteInfo(t *testing.T) {
 			args:         args{ctx, ns1, r2},
 			fields:       fields{stg},
 			handler:      route.RouteInfoH,
-			description:  "route not found",
 			err:          "{\"code\":404,\"status\":\"Not Found\",\"message\":\"Route not found\"}",
 			wantErr:      true,
 			expectedCode: http.StatusNotFound,
@@ -102,7 +88,6 @@ func TestRouteInfo(t *testing.T) {
 			args:         args{ctx, ns2, r1},
 			fields:       fields{stg},
 			handler:      route.RouteInfoH,
-			description:  "namespace not found",
 			err:          "{\"code\":404,\"status\":\"Not Found\",\"message\":\"Namespace not found\"}",
 			wantErr:      true,
 			expectedCode: http.StatusNotFound,
@@ -112,16 +97,32 @@ func TestRouteInfo(t *testing.T) {
 			args:         args{ctx, ns1, r1},
 			fields:       fields{stg},
 			handler:      route.RouteInfoH,
-			description:  "successfully",
-			want:         r1,
+			want:         v1.View().Route().New(r1),
 			wantErr:      false,
 			expectedCode: http.StatusOK,
 		},
 	}
 
+	clear := func() {
+		err := envs.Get().GetStorage().Namespace().Clear(context.Background())
+		assert.NoError(t, err)
+
+		err = envs.Get().GetStorage().Route().Clear(context.Background())
+		assert.NoError(t, err)
+	}
+
 	for _, tc := range tests {
 
 		t.Run(tc.name, func(t *testing.T) {
+
+			clear()
+			defer clear()
+
+			err := envs.Get().GetStorage().Namespace().Insert(context.Background(), ns1)
+			assert.NoError(t, err)
+
+			err = envs.Get().GetStorage().Route().Insert(context.Background(), r1)
+			assert.NoError(t, err)
 
 			// Create assert request to pass to our handler. We don't have any query parameters for now, so we'll
 			// pass 'nil' as the third parameter.
@@ -147,20 +148,19 @@ func TestRouteInfo(t *testing.T) {
 			r.ServeHTTP(res, req)
 
 			// Check the status code is what we expect.
-			assert.Equal(t, tc.expectedCode, res.Code, tc.description)
+			assert.Equal(t, tc.expectedCode, res.Code, "status code not equal")
 
 			body, err := ioutil.ReadAll(res.Body)
 			assert.NoError(t, err)
 
 			if tc.wantErr && res.Code != 200 {
-				assert.Equal(t, tc.err, string(body), tc.description)
+				assert.Equal(t, tc.err, string(body), "incorrect status code")
 			} else {
 
 				n := new(views.Route)
 				err := json.Unmarshal(body, &n)
 				assert.NoError(t, err)
 
-				assert.Equal(t, tc.want.Meta.Name, n.Meta.Name, tc.description)
 			}
 		})
 	}
@@ -174,7 +174,6 @@ func TestRouteList(t *testing.T) {
 
 	stg, _ := storage.GetMock()
 	envs.Get().SetStorage(stg)
-	viper.Set("verbose", 0)
 
 	ns1 := getNamespaceAsset("demo", "")
 	ns2 := getNamespaceAsset("test", "")
@@ -200,7 +199,6 @@ func TestRouteList(t *testing.T) {
 		args         args
 		headers      map[string]string
 		handler      func(http.ResponseWriter, *http.Request)
-		description  string
 		err          string
 		want         types.RouteList
 		wantErr      bool
@@ -211,7 +209,6 @@ func TestRouteList(t *testing.T) {
 			args:         args{ctx, ns2},
 			fields:       fields{stg},
 			handler:      route.RouteListH,
-			description:  "namespace not found",
 			err:          "{\"code\":404,\"status\":\"Not Found\",\"message\":\"Namespace not found\"}",
 			wantErr:      true,
 			expectedCode: http.StatusNotFound,
@@ -221,24 +218,28 @@ func TestRouteList(t *testing.T) {
 			args:         args{ctx, ns1},
 			fields:       fields{stg},
 			handler:      route.RouteListH,
-			description:  "successfully",
 			want:         rl,
 			wantErr:      false,
 			expectedCode: http.StatusOK,
 		},
 	}
 
+	clear := func() {
+		err := envs.Get().GetStorage().Namespace().Clear(context.Background())
+		assert.NoError(t, err)
+
+		err = envs.Get().GetStorage().Route().Clear(context.Background())
+		assert.NoError(t, err)
+	}
+
 	for _, tc := range tests {
 
 		t.Run(tc.name, func(t *testing.T) {
 
-			err := envs.Get().GetStorage().Namespace().Clear(context.Background())
-			assert.NoError(t, err)
+			clear()
+			defer clear()
 
-			err = envs.Get().GetStorage().Route().Clear(context.Background())
-			assert.NoError(t, err)
-
-			err = envs.Get().GetStorage().Namespace().Insert(context.Background(), ns1)
+			err := envs.Get().GetStorage().Namespace().Insert(context.Background(), ns1)
 			assert.NoError(t, err)
 
 			err = envs.Get().GetStorage().Route().Insert(context.Background(), r1)
@@ -271,13 +272,13 @@ func TestRouteList(t *testing.T) {
 			r.ServeHTTP(res, req)
 
 			// Check the status code is what we expect.
-			assert.Equal(t, tc.expectedCode, res.Code, tc.description)
+			assert.Equal(t, tc.expectedCode, res.Code, "status code not equal")
 
 			body, err := ioutil.ReadAll(res.Body)
 			assert.NoError(t, err)
 
 			if tc.wantErr && res.Code != 200 {
-				assert.Equal(t, tc.err, string(body), tc.description)
+				assert.Equal(t, tc.err, string(body), "incorrect status code")
 			} else {
 
 				r := new(views.RouteList)
@@ -321,7 +322,6 @@ func TestRouteCreate(t *testing.T) {
 
 	stg, _ := storage.GetMock()
 	envs.Get().SetStorage(stg)
-	viper.Set("verbose", 0)
 
 	srtPointer := func(s string) *string { return &s }
 	intPointer := func(i int) *int { return &i }
@@ -346,17 +346,15 @@ func TestRouteCreate(t *testing.T) {
 		args         args
 		headers      map[string]string
 		handler      func(http.ResponseWriter, *http.Request)
-		description  string
 		data         string
 		err          string
-		want         *types.Route
+		want         *views.Route
 		wantErr      bool
 		expectedCode int
 	}{
 		// TODO: need checking for unique
 		{
 			name:         "checking create route if namespace not found",
-			description:  "namespace not found",
 			args:         args{ctx, ns2},
 			fields:       fields{stg},
 			handler:      route.RouteCreateH,
@@ -367,7 +365,6 @@ func TestRouteCreate(t *testing.T) {
 		},
 		{
 			name:         "check create route if failed incoming json data",
-			description:  "incoming json data is failed",
 			args:         args{ctx, ns1},
 			fields:       fields{stg},
 			handler:      route.RouteCreateH,
@@ -379,27 +376,31 @@ func TestRouteCreate(t *testing.T) {
 		// TODO: need checking incoming data for validity
 		{
 			name:         "check create route success",
-			description:  "successfully",
 			args:         args{ctx, ns1},
 			fields:       fields{stg},
 			handler:      route.RouteCreateH,
 			data:         createRouteCreateOptions("demo", "", false, false, []request.RulesOption{{Endpoint: srtPointer("route.test-domain.com"), Path: "/", Port: intPointer(80)}}).toJson(),
-			want:         r1,
+			want:         v1.View().Route().New(r1),
 			wantErr:      false,
 			expectedCode: http.StatusOK,
 		},
 	}
 
+	clear := func() {
+		err := envs.Get().GetStorage().Namespace().Clear(context.Background())
+		assert.NoError(t, err)
+
+		err = envs.Get().GetStorage().Route().Clear(context.Background())
+		assert.NoError(t, err)
+	}
+
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
 
-			err := envs.Get().GetStorage().Namespace().Clear(context.Background())
-			assert.NoError(t, err)
+			clear()
+			defer clear()
 
-			err = envs.Get().GetStorage().Route().Clear(context.Background())
-			assert.NoError(t, err)
-
-			err = envs.Get().GetStorage().Namespace().Insert(context.Background(), ns1)
+			err := envs.Get().GetStorage().Namespace().Insert(context.Background(), ns1)
 			assert.NoError(t, err)
 
 			err = envs.Get().GetStorage().Route().Insert(context.Background(), r1)
@@ -429,19 +430,19 @@ func TestRouteCreate(t *testing.T) {
 			r.ServeHTTP(res, req)
 
 			// Check the status code is what we expect.
-			assert.Equal(t, tc.expectedCode, res.Code, tc.description)
+			assert.Equal(t, tc.expectedCode, res.Code, "status code not equal")
 
 			body, err := ioutil.ReadAll(res.Body)
 			assert.NoError(t, err)
 
 			if tc.wantErr && res.Code != 200 {
-				assert.Equal(t, tc.err, string(body), tc.description)
+				assert.Equal(t, tc.err, string(body), "incorrect status code")
 			} else {
 
 				got, err := tc.fields.stg.Route().Get(tc.args.ctx, tc.args.namespace.Meta.Name, tc.want.Meta.Name)
 				assert.NoError(t, err)
 
-				assert.Equal(t, ns1.Meta.Name, got.Meta.Name, tc.description)
+				assert.Equal(t, ns1.Meta.Name, got.Meta.Name, "it was not be create")
 			}
 		})
 	}
@@ -474,23 +475,15 @@ func TestRouteUpdate(t *testing.T) {
 
 	stg, _ := storage.GetMock()
 	envs.Get().SetStorage(stg)
-	viper.Set("verbose", 0)
 
 	srtPointer := func(s string) *string { return &s }
 	intPointer := func(i int) *int { return &i }
 
 	ns1 := getNamespaceAsset("demo", "")
 	ns2 := getNamespaceAsset("test", "")
-
-	err := envs.Get().GetStorage().Namespace().Insert(context.Background(), ns1)
-	assert.NoError(t, err)
-
 	r1 := getRouteAsset(ns1.Meta.Name, "demo")
 	r2 := getRouteAsset(ns1.Meta.Name, "test")
 	r3 := getRouteAsset(ns1.Meta.Name, "demo")
-
-	err = envs.Get().GetStorage().Route().Insert(context.Background(), r1)
-	assert.NoError(t, err)
 
 	type fields struct {
 		stg storage.Storage
@@ -508,16 +501,14 @@ func TestRouteUpdate(t *testing.T) {
 		args         args
 		headers      map[string]string
 		handler      func(http.ResponseWriter, *http.Request)
-		description  string
 		data         string
 		err          string
-		want         *types.Route
+		want         *views.Route
 		wantErr      bool
 		expectedCode int
 	}{
 		{
 			name:         "checking update route if name not exists",
-			description:  "route not exists",
 			args:         args{ctx, ns1, r2},
 			fields:       fields{stg},
 			handler:      route.RouteUpdateH,
@@ -528,7 +519,6 @@ func TestRouteUpdate(t *testing.T) {
 		},
 		{
 			name:         "checking update route if namespace not found",
-			description:  "namespace not found",
 			args:         args{ctx, ns2, r1},
 			fields:       fields{stg},
 			handler:      route.RouteUpdateH,
@@ -539,7 +529,6 @@ func TestRouteUpdate(t *testing.T) {
 		},
 		{
 			name:         "check update route if failed incoming json data",
-			description:  "incoming json data is failed",
 			args:         args{ctx, ns1, r1},
 			fields:       fields{stg},
 			handler:      route.RouteUpdateH,
@@ -550,19 +539,35 @@ func TestRouteUpdate(t *testing.T) {
 		},
 		{
 			name:         "check update route success",
-			description:  "successfully",
 			args:         args{ctx, ns1, r1},
 			fields:       fields{stg},
 			handler:      route.RouteUpdateH,
 			data:         createRouteUpdateOptions("demo", "", false, false, []request.RulesOption{{Endpoint: srtPointer("route.test-domain.com"), Path: "/", Port: intPointer(80)}}).toJson(),
-			want:         r3,
+			want:         v1.View().Route().New(r3),
 			wantErr:      false,
 			expectedCode: http.StatusOK,
 		},
 	}
 
+	clear := func() {
+		err := envs.Get().GetStorage().Namespace().Clear(context.Background())
+		assert.NoError(t, err)
+
+		err = envs.Get().GetStorage().Route().Clear(context.Background())
+		assert.NoError(t, err)
+	}
+
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
+
+			clear()
+			defer clear()
+
+			err := envs.Get().GetStorage().Namespace().Insert(context.Background(), ns1)
+			assert.NoError(t, err)
+
+			err = envs.Get().GetStorage().Route().Insert(context.Background(), r1)
+			assert.NoError(t, err)
 
 			// Create assert request to pass to our handler. We don't have any query parameters for now, so we'll
 			// pass 'nil' as the third parameter.
@@ -588,20 +593,20 @@ func TestRouteUpdate(t *testing.T) {
 			r.ServeHTTP(res, req)
 
 			// Check the status code is what we expect.
-			assert.Equal(t, tc.expectedCode, res.Code, tc.description)
+			assert.Equal(t, tc.expectedCode, res.Code, "status code not equal")
 
 			body, err := ioutil.ReadAll(res.Body)
 			assert.NoError(t, err)
 
 			if tc.wantErr && res.Code != 200 {
-				assert.Equal(t, tc.err, string(body), tc.description)
+				assert.Equal(t, tc.err, string(body), "incorrect status code")
 			} else {
 
 				n := new(views.Route)
 				err := json.Unmarshal(body, &n)
 				assert.NoError(t, err)
 
-				assert.Equal(t, tc.want.Meta.Name, n.Meta.Name, tc.description)
+				assert.Equal(t, tc.want.Meta.Name, n.Meta.Name, "it was not be update")
 			}
 		})
 	}
@@ -615,7 +620,6 @@ func TestRouteRemove(t *testing.T) {
 
 	stg, _ := storage.GetMock()
 	envs.Get().SetStorage(stg)
-	viper.Set("verbose", 0)
 
 	ns1 := getNamespaceAsset("demo", "")
 	ns2 := getNamespaceAsset("test", "")
@@ -638,7 +642,6 @@ func TestRouteRemove(t *testing.T) {
 		args         args
 		headers      map[string]string
 		handler      func(http.ResponseWriter, *http.Request)
-		description  string
 		err          string
 		want         string
 		wantErr      bool
@@ -649,7 +652,6 @@ func TestRouteRemove(t *testing.T) {
 			args:         args{ctx, ns1, r2},
 			fields:       fields{stg},
 			handler:      route.RouteRemoveH,
-			description:  "route not found",
 			err:          "{\"code\":404,\"status\":\"Not Found\",\"message\":\"Route not found\"}",
 			wantErr:      true,
 			expectedCode: http.StatusNotFound,
@@ -659,7 +661,6 @@ func TestRouteRemove(t *testing.T) {
 			args:         args{ctx, ns2, r1},
 			fields:       fields{stg},
 			handler:      route.RouteRemoveH,
-			description:  "namespace not found",
 			err:          "{\"code\":404,\"status\":\"Not Found\",\"message\":\"Namespace not found\"}",
 			wantErr:      true,
 			expectedCode: http.StatusNotFound,
@@ -669,16 +670,26 @@ func TestRouteRemove(t *testing.T) {
 			args:         args{ctx, ns1, r1},
 			fields:       fields{stg},
 			handler:      route.RouteRemoveH,
-			description:  "successfully",
 			want:         "",
 			wantErr:      false,
 			expectedCode: http.StatusOK,
 		},
 	}
 
+	clear := func() {
+		err := envs.Get().GetStorage().Namespace().Clear(context.Background())
+		assert.NoError(t, err)
+
+		err = envs.Get().GetStorage().Route().Clear(context.Background())
+		assert.NoError(t, err)
+	}
+
 	for _, tc := range tests {
 
 		t.Run(tc.name, func(t *testing.T) {
+
+			clear()
+			defer clear()
 
 			err := envs.Get().GetStorage().Namespace().Insert(context.Background(), ns1)
 			assert.NoError(t, err)
@@ -711,15 +722,24 @@ func TestRouteRemove(t *testing.T) {
 			r.ServeHTTP(res, req)
 
 			// Check the status code is what we expect.
-			assert.Equal(t, tc.expectedCode, res.Code, tc.description)
+			assert.Equal(t, tc.expectedCode, res.Code, "status code not equal")
 
 			body, err := ioutil.ReadAll(res.Body)
 			assert.NoError(t, err)
 
 			if tc.wantErr && res.Code != 200 {
-				assert.Equal(t, tc.err, string(body), tc.description)
+				assert.Equal(t, tc.err, string(body), "incorrect status code")
 			} else {
-				assert.Equal(t, tc.want, string(body), tc.description)
+				got, err := tc.fields.stg.Route().Get(tc.args.ctx, tc.args.namespace.Meta.Name, tc.args.route.Meta.Name)
+				if err != nil && err.Error() != store.ErrEntityNotFound {
+					assert.NoError(t, err)
+				}
+
+				if got != nil {
+					assert.Equal(t, got.Status.Stage, types.StageDestroy, "can not be set to destroy")
+				}
+
+				assert.Equal(t, tc.want, string(body), "response not empty")
 			}
 		})
 	}

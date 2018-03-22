@@ -21,8 +21,8 @@ package views
 import "time"
 
 type Trigger struct {
-	Meta  TriggerMeta  `json:"meta"`
-	Spec  TriggerSpec  `json:"spec"`
+	Meta   TriggerMeta   `json:"meta"`
+	Spec   TriggerSpec   `json:"spec"`
 	Status TriggerStatus `json:"status"`
 }
 

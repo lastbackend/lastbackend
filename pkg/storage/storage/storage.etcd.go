@@ -125,6 +125,7 @@ type Cluster interface {
 	Insert(ctx context.Context, cluster *types.Cluster) error
 	Get(ctx context.Context) (*types.Cluster, error)
 	Update(ctx context.Context, cluster *types.Cluster) error
+	Clear(ctx context.Context) error
 }
 
 type Node interface {

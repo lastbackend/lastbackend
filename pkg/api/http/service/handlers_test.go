@@ -25,19 +25,19 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/lastbackend/lastbackend/pkg/api/envs"
 	"github.com/lastbackend/lastbackend/pkg/api/http/service"
+	"github.com/lastbackend/lastbackend/pkg/api/types/v1"
 	"github.com/lastbackend/lastbackend/pkg/api/types/v1/request"
+	"github.com/lastbackend/lastbackend/pkg/api/types/v1/views"
+	"github.com/lastbackend/lastbackend/pkg/distribution/errors"
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 	"github.com/lastbackend/lastbackend/pkg/storage"
-	"github.com/spf13/viper"
+	"github.com/lastbackend/lastbackend/pkg/storage/store"
 	"github.com/stretchr/testify/assert"
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
 	"strings"
 	"testing"
-	"github.com/lastbackend/lastbackend/pkg/distribution/errors"
-	"github.com/lastbackend/lastbackend/pkg/api/types/v1/views"
-	"github.com/lastbackend/lastbackend/pkg/api/types/v1"
 )
 
 // Testing ServiceInfoH handler
@@ -47,7 +47,6 @@ func TestServiceInfo(t *testing.T) {
 
 	stg, _ := storage.GetMock()
 	envs.Get().SetStorage(stg)
-	viper.Set("verbose", 0)
 
 	ns1 := getNamespaceAsset("demo", "")
 	ns2 := getNamespaceAsset("test", "")
@@ -70,7 +69,6 @@ func TestServiceInfo(t *testing.T) {
 		args         args
 		headers      map[string]string
 		handler      func(http.ResponseWriter, *http.Request)
-		description  string
 		want         *views.Service
 		wantErr      bool
 		err          string
@@ -79,7 +77,6 @@ func TestServiceInfo(t *testing.T) {
 		{
 			name:         "checking get service if not exists",
 			handler:      service.ServiceInfoH,
-			description:  "service not found",
 			args:         args{ctx, ns1, s2},
 			fields:       fields{stg},
 			err:          "{\"code\":404,\"status\":\"Not Found\",\"message\":\"Service not found\"}",
@@ -89,7 +86,6 @@ func TestServiceInfo(t *testing.T) {
 		{
 			name:         "checking get service if namespace not exists",
 			handler:      service.ServiceInfoH,
-			description:  "namespace not found",
 			args:         args{ctx, ns2, s1},
 			fields:       fields{stg},
 			err:          "{\"code\":404,\"status\":\"Not Found\",\"message\":\"Namespace not found\"}",
@@ -99,7 +95,6 @@ func TestServiceInfo(t *testing.T) {
 		{
 			name:         "checking get service successfully",
 			handler:      service.ServiceInfoH,
-			description:  "successfully",
 			args:         args{ctx, ns1, s1},
 			fields:       fields{stg},
 			want:         v1.View().Service().New(s1, nil, nil),
@@ -108,17 +103,22 @@ func TestServiceInfo(t *testing.T) {
 		},
 	}
 
+	clear := func() {
+		err := envs.Get().GetStorage().Namespace().Clear(context.Background())
+		assert.NoError(t, err)
+
+		err = envs.Get().GetStorage().Service().Clear(context.Background())
+		assert.NoError(t, err)
+	}
+
 	for _, tc := range tests {
 
 		t.Run(tc.name, func(t *testing.T) {
 
-			err := envs.Get().GetStorage().Namespace().Clear(context.Background())
-			assert.NoError(t, err)
+			clear()
+			defer clear()
 
-			err = envs.Get().GetStorage().Service().Clear(context.Background())
-			assert.NoError(t, err)
-
-			err = envs.Get().GetStorage().Namespace().Insert(context.Background(), ns1)
+			err := envs.Get().GetStorage().Namespace().Insert(context.Background(), ns1)
 			assert.NoError(t, err)
 
 			err = envs.Get().GetStorage().Service().Insert(context.Background(), s1)
@@ -148,20 +148,20 @@ func TestServiceInfo(t *testing.T) {
 			r.ServeHTTP(res, req)
 
 			// Check the status code is what we expect.
-			assert.Equal(t, tc.expectedCode, res.Code, tc.description)
+			assert.Equal(t, tc.expectedCode, res.Code, "status code not equal")
 
 			body, err := ioutil.ReadAll(res.Body)
 			assert.NoError(t, err)
 
 			if tc.wantErr && res.Code != 200 {
-				assert.Equal(t, tc.err, string(body), tc.description)
+				assert.Equal(t, tc.err, string(body), "incorrect status code")
 			} else {
 
 				s := new(views.Service)
 				err := json.Unmarshal(body, &s)
 				assert.NoError(t, err)
 
-				assert.Equal(t, tc.want.Meta.Name, s.Meta.Name, tc.description)
+				assert.Equal(t, tc.want.Meta.Name, s.Meta.Name, "name not equal")
 			}
 
 		})
@@ -176,7 +176,6 @@ func TestServiceList(t *testing.T) {
 
 	stg, _ := storage.GetMock()
 	envs.Get().SetStorage(stg)
-	viper.Set("verbose", 0)
 
 	ns1 := getNamespaceAsset("demo", "")
 	ns2 := getNamespaceAsset("test", "")
@@ -203,7 +202,6 @@ func TestServiceList(t *testing.T) {
 		args         args
 		headers      map[string]string
 		handler      func(http.ResponseWriter, *http.Request)
-		description  string
 		err          string
 		want         types.ServiceList
 		wantErr      bool
@@ -214,7 +212,6 @@ func TestServiceList(t *testing.T) {
 			args:         args{ctx, ns2, nil},
 			fields:       fields{stg},
 			handler:      service.ServiceListH,
-			description:  "namespace not found",
 			err:          "{\"code\":404,\"status\":\"Not Found\",\"message\":\"Namespace not found\"}",
 			wantErr:      true,
 			expectedCode: http.StatusNotFound,
@@ -224,24 +221,28 @@ func TestServiceList(t *testing.T) {
 			args:         args{ctx, ns1, nil},
 			fields:       fields{stg},
 			handler:      service.ServiceListH,
-			description:  "successfully",
 			want:         sl,
 			wantErr:      false,
 			expectedCode: http.StatusOK,
 		},
 	}
 
+	clear := func() {
+		err := envs.Get().GetStorage().Namespace().Clear(context.Background())
+		assert.NoError(t, err)
+
+		err = envs.Get().GetStorage().Service().Clear(context.Background())
+		assert.NoError(t, err)
+	}
+
 	for _, tc := range tests {
 
 		t.Run(tc.name, func(t *testing.T) {
 
-			err := envs.Get().GetStorage().Namespace().Clear(context.Background())
-			assert.NoError(t, err)
+			clear()
+			defer clear()
 
-			err = envs.Get().GetStorage().Service().Clear(context.Background())
-			assert.NoError(t, err)
-
-			err = envs.Get().GetStorage().Namespace().Insert(context.Background(), ns1)
+			err := envs.Get().GetStorage().Namespace().Insert(context.Background(), ns1)
 			assert.NoError(t, err)
 
 			err = envs.Get().GetStorage().Service().Insert(context.Background(), s1)
@@ -274,13 +275,13 @@ func TestServiceList(t *testing.T) {
 			r.ServeHTTP(res, req)
 
 			// Check the status code is what we expect.
-			assert.Equal(t, tc.expectedCode, res.Code, tc.description)
+			assert.Equal(t, tc.expectedCode, res.Code, "status code not equal")
 
 			body, err := ioutil.ReadAll(res.Body)
 			assert.NoError(t, err)
 
 			if tc.wantErr && res.Code != 200 {
-				assert.Equal(t, tc.err, string(body), tc.description)
+				assert.Equal(t, tc.err, string(body), "incorrect status code")
 			} else {
 
 				s := new(views.ServiceList)
@@ -325,7 +326,6 @@ func TestServiceCreate(t *testing.T) {
 
 	stg, _ := storage.GetMock()
 	envs.Get().SetStorage(stg)
-	viper.Set("verbose", 0)
 
 	srtPointer := func(s string) *string { return &s }
 	intPointer := func(i int) *int { return &i }
@@ -353,7 +353,6 @@ func TestServiceCreate(t *testing.T) {
 		fields       fields
 		headers      map[string]string
 		handler      func(http.ResponseWriter, *http.Request)
-		description  string
 		data         string
 		want         *views.Service
 		wantErr      bool
@@ -362,7 +361,6 @@ func TestServiceCreate(t *testing.T) {
 	}{
 		{
 			name:         "checking create service if name already exists",
-			description:  "service already exists",
 			args:         args{ctx, ns1, s1},
 			fields:       fields{stg},
 			handler:      service.ServiceCreateH,
@@ -373,7 +371,6 @@ func TestServiceCreate(t *testing.T) {
 		},
 		{
 			name:         "checking create service if namespace not found",
-			description:  "namespace not found",
 			args:         args{ctx, ns2, s2},
 			fields:       fields{stg},
 			handler:      service.ServiceCreateH,
@@ -384,7 +381,6 @@ func TestServiceCreate(t *testing.T) {
 		},
 		{
 			name:         "check create service if failed incoming json data",
-			description:  "incoming json data is failed",
 			args:         args{ctx, ns1, s3},
 			fields:       fields{stg},
 			handler:      service.ServiceCreateH,
@@ -395,7 +391,6 @@ func TestServiceCreate(t *testing.T) {
 		},
 		{
 			name:         "check create service if bad parameter name",
-			description:  "incorrect name parameter",
 			args:         args{ctx, ns1, s3},
 			fields:       fields{stg},
 			handler:      service.ServiceCreateH,
@@ -406,7 +401,6 @@ func TestServiceCreate(t *testing.T) {
 		},
 		{
 			name:         "check create service if bad parameter memory",
-			description:  "incorrect memory parameter",
 			args:         args{ctx, ns1, s3},
 			fields:       fields{stg},
 			handler:      service.ServiceCreateH,
@@ -418,7 +412,6 @@ func TestServiceCreate(t *testing.T) {
 		// TODO: check another spec parameters
 		{
 			name:         "check create service if bad parameter replicas",
-			description:  "incorrect replicas parameter",
 			args:         args{ctx, ns1, s3},
 			fields:       fields{stg},
 			handler:      service.ServiceCreateH,
@@ -429,7 +422,6 @@ func TestServiceCreate(t *testing.T) {
 		},
 		{
 			name:         "check create service success",
-			description:  "successfully",
 			args:         args{ctx, ns1, s3},
 			fields:       fields{stg},
 			handler:      service.ServiceCreateH,
@@ -440,16 +432,21 @@ func TestServiceCreate(t *testing.T) {
 		},
 	}
 
+	clear := func() {
+		err := envs.Get().GetStorage().Namespace().Clear(context.Background())
+		assert.NoError(t, err)
+
+		err = envs.Get().GetStorage().Service().Clear(context.Background())
+		assert.NoError(t, err)
+	}
+
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
 
-			err := envs.Get().GetStorage().Namespace().Clear(context.Background())
-			assert.NoError(t, err)
+			clear()
+			defer clear()
 
-			err = envs.Get().GetStorage().Service().Clear(context.Background())
-			assert.NoError(t, err)
-
-			err = envs.Get().GetStorage().Namespace().Insert(context.Background(), ns1)
+			err := envs.Get().GetStorage().Namespace().Insert(context.Background(), ns1)
 			assert.NoError(t, err)
 
 			err = envs.Get().GetStorage().Service().Insert(context.Background(), s1)
@@ -479,20 +476,25 @@ func TestServiceCreate(t *testing.T) {
 			r.ServeHTTP(res, req)
 
 			// Check the status code is what we expect.
-			assert.Equal(t, tc.expectedCode, res.Code, tc.description)
+			assert.Equal(t, tc.expectedCode, res.Code, "status code not equal")
 
 			body, err := ioutil.ReadAll(res.Body)
 			assert.NoError(t, err)
 
 			if tc.wantErr && res.Code != 200 {
-				assert.Equal(t, tc.err, string(body), tc.description)
+				assert.Equal(t, tc.err, string(body), "incorrect status code")
 			} else {
 
 				got, err := tc.fields.stg.Service().Get(tc.args.ctx, tc.args.namespace.Meta.Name, tc.args.service.Meta.Name)
 				assert.NoError(t, err)
 
-				assert.Equal(t, s3.Meta.Name, got.Meta.Name, tc.description)
-				assert.Equal(t, s3.Meta.Description, got.Meta.Description, tc.description)
+				if got == nil {
+					t.Error("can not be not nil")
+					return
+				}
+
+				assert.Equal(t, s3.Meta.Name, got.Meta.Name, "name not equal")
+				assert.Equal(t, s3.Meta.Description, got.Meta.Description, "description not equal")
 			}
 		})
 	}
@@ -522,7 +524,6 @@ func TestServiceUpdate(t *testing.T) {
 
 	stg, _ := storage.GetMock()
 	envs.Get().SetStorage(stg)
-	viper.Set("verbose", 0)
 
 	int64Pointer := func(i int64) *int64 { return &i }
 
@@ -548,7 +549,6 @@ func TestServiceUpdate(t *testing.T) {
 		args         args
 		headers      map[string]string
 		handler      func(http.ResponseWriter, *http.Request)
-		description  string
 		data         string
 		want         *views.Service
 		wantErr      bool
@@ -557,7 +557,6 @@ func TestServiceUpdate(t *testing.T) {
 	}{
 		{
 			name:         "checking update service if name not exists",
-			description:  "service not exists",
 			fields:       fields{stg},
 			args:         args{ctx, ns1, s2},
 			handler:      service.ServiceUpdateH,
@@ -568,7 +567,6 @@ func TestServiceUpdate(t *testing.T) {
 		},
 		{
 			name:         "checking update service if namespace not found",
-			description:  "namespace not found",
 			fields:       fields{stg},
 			args:         args{ctx, ns2, s1},
 			handler:      service.ServiceUpdateH,
@@ -579,7 +577,6 @@ func TestServiceUpdate(t *testing.T) {
 		},
 		{
 			name:         "check update service if failed incoming json data",
-			description:  "incoming json data is failed",
 			fields:       fields{stg},
 			args:         args{ctx, ns1, s1},
 			handler:      service.ServiceUpdateH,
@@ -590,7 +587,6 @@ func TestServiceUpdate(t *testing.T) {
 		},
 		{
 			name:         "check update service if bad parameter memory",
-			description:  "incorrect memory parameter",
 			fields:       fields{stg},
 			args:         args{ctx, ns1, s1},
 			handler:      service.ServiceUpdateH,
@@ -602,7 +598,6 @@ func TestServiceUpdate(t *testing.T) {
 		// TODO: check another spec parameters
 		{
 			name:         "check update service success",
-			description:  "successfully",
 			fields:       fields{stg},
 			args:         args{ctx, ns1, s1},
 			handler:      service.ServiceUpdateH,
@@ -613,16 +608,21 @@ func TestServiceUpdate(t *testing.T) {
 		},
 	}
 
+	clear := func() {
+		err := envs.Get().GetStorage().Namespace().Clear(context.Background())
+		assert.NoError(t, err)
+
+		err = envs.Get().GetStorage().Service().Clear(context.Background())
+		assert.NoError(t, err)
+	}
+
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
 
-			err := envs.Get().GetStorage().Namespace().Clear(context.Background())
-			assert.NoError(t, err)
+			clear()
+			defer clear()
 
-			err = envs.Get().GetStorage().Service().Clear(context.Background())
-			assert.NoError(t, err)
-
-			err = envs.Get().GetStorage().Namespace().Insert(context.Background(), ns1)
+			err := envs.Get().GetStorage().Namespace().Insert(context.Background(), ns1)
 			assert.NoError(t, err)
 
 			err = envs.Get().GetStorage().Service().Insert(context.Background(), s1)
@@ -652,21 +652,21 @@ func TestServiceUpdate(t *testing.T) {
 			r.ServeHTTP(res, req)
 
 			// Check the status code is what we expect.
-			assert.Equal(t, tc.expectedCode, res.Code, tc.description)
+			assert.Equal(t, tc.expectedCode, res.Code, "status code not equal")
 
 			body, err := ioutil.ReadAll(res.Body)
 			assert.NoError(t, err)
 
 			if tc.wantErr && res.Code != 200 {
-				assert.Equal(t, tc.err, string(body), tc.description)
+				assert.Equal(t, tc.err, string(body), "incorrect status code")
 			} else {
 				s := new(views.Service)
 				err := json.Unmarshal(body, &s)
 				assert.NoError(t, err)
 
-				assert.Equal(t, tc.want.Meta.Name, s.Meta.Name, tc.description)
-				assert.Equal(t, tc.want.Meta.Description, s.Meta.Description, tc.description)
-				assert.Equal(t, tc.want.Spec.Replicas, s.Spec.Replicas, tc.description)
+				assert.Equal(t, tc.want.Meta.Name, s.Meta.Name, "description not equal")
+				assert.Equal(t, tc.want.Meta.Description, s.Meta.Description, "description not equal")
+				assert.Equal(t, tc.want.Spec.Replicas, s.Spec.Replicas, "replicas not equal")
 				// TODO: check all updated parameters
 			}
 		})
@@ -681,7 +681,6 @@ func TestServiceRemove(t *testing.T) {
 
 	stg, _ := storage.GetMock()
 	envs.Get().SetStorage(stg)
-	viper.Set("verbose", 0)
 
 	ns1 := getNamespaceAsset("demo", "")
 	ns2 := getNamespaceAsset("test", "")
@@ -705,7 +704,6 @@ func TestServiceRemove(t *testing.T) {
 		args         args
 		headers      map[string]string
 		handler      func(http.ResponseWriter, *http.Request)
-		description  string
 		err          string
 		want         string
 		wantErr      bool
@@ -716,7 +714,6 @@ func TestServiceRemove(t *testing.T) {
 			fields:       fields{stg},
 			args:         args{ctx, ns1, s2},
 			handler:      service.ServiceRemoveH,
-			description:  "service not found",
 			err:          "{\"code\":404,\"status\":\"Not Found\",\"message\":\"Service not found\"}",
 			wantErr:      true,
 			expectedCode: http.StatusNotFound,
@@ -726,7 +723,6 @@ func TestServiceRemove(t *testing.T) {
 			fields:       fields{stg},
 			args:         args{ctx, ns2, s1},
 			handler:      service.ServiceRemoveH,
-			description:  "namespace not found",
 			err:          "{\"code\":404,\"status\":\"Not Found\",\"message\":\"Namespace not found\"}",
 			wantErr:      true,
 			expectedCode: http.StatusNotFound,
@@ -736,23 +732,27 @@ func TestServiceRemove(t *testing.T) {
 			fields:       fields{stg},
 			args:         args{ctx, ns1, s1},
 			handler:      service.ServiceRemoveH,
-			description:  "successfully",
 			want:         "",
 			wantErr:      false,
 			expectedCode: http.StatusOK,
 		},
 	}
 
+	clear := func() {
+		err := envs.Get().GetStorage().Namespace().Clear(context.Background())
+		assert.NoError(t, err)
+
+		err = envs.Get().GetStorage().Service().Clear(context.Background())
+		assert.NoError(t, err)
+	}
+
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
 
-			err := envs.Get().GetStorage().Namespace().Clear(context.Background())
-			assert.NoError(t, err)
+			clear()
+			defer clear()
 
-			err = envs.Get().GetStorage().Service().Clear(context.Background())
-			assert.NoError(t, err)
-
-			err = envs.Get().GetStorage().Namespace().Insert(context.Background(), ns1)
+			err := envs.Get().GetStorage().Namespace().Insert(context.Background(), ns1)
 			assert.NoError(t, err)
 
 			err = envs.Get().GetStorage().Service().Insert(context.Background(), s1)
@@ -783,15 +783,25 @@ func TestServiceRemove(t *testing.T) {
 			r.ServeHTTP(res, req)
 
 			// Check the status code is what we expect.
-			assert.Equal(t, tc.expectedCode, res.Code, tc.description)
+			assert.Equal(t, tc.expectedCode, res.Code, "status code not equal")
 
 			body, err := ioutil.ReadAll(res.Body)
 			assert.NoError(t, err)
 
 			if tc.wantErr && res.Code != 200 {
-				assert.Equal(t, tc.err, string(body), tc.description)
+				assert.Equal(t, tc.err, string(body), "incorrect status code")
 			} else {
-				assert.Equal(t, tc.want, string(body), tc.description)
+
+				got, err := tc.fields.stg.Service().Get(tc.args.ctx, tc.args.namespace.Meta.Name, tc.args.service.Meta.Name)
+				if err != nil && err.Error() != store.ErrEntityNotFound {
+					assert.NoError(t, err)
+				}
+
+				if got != nil {
+					assert.Equal(t, got.Status.Stage, types.StageDestroy, "status not destroy")
+				}
+
+				assert.Equal(t, tc.want, string(body), "response not equal with want")
 			}
 
 		})

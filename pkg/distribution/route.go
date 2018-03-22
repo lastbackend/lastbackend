@@ -163,7 +163,6 @@ func (n *Route) SetStatus(route *types.Route, status *types.RouteStatus) error {
 		return err
 	}
 
-
 	return nil
 }
 
