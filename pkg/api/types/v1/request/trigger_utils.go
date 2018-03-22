@@ -99,22 +99,3 @@ func (TriggerRequest) RemoveOptions() *TriggerRemoveOptions {
 func (t *TriggerRemoveOptions) Validate() *errors.Err {
 	return nil
 }
-
-func (t *TriggerRemoveOptions) DecodeAndValidate(reader io.Reader) *errors.Err {
-
-	if reader == nil {
-		return nil
-	}
-
-	body, err := ioutil.ReadAll(reader)
-	if err != nil {
-		return errors.New("trigger").Unknown(err)
-	}
-
-	err = json.Unmarshal(body, t)
-	if err != nil {
-		return errors.New("trigger").IncorrectJSON(err)
-	}
-
-	return t.Validate()
-}

@@ -244,22 +244,3 @@ func (s *NodeRemoveOptions) ToJson() string {
 func (n *NodeRemoveOptions) Validate() *errors.Err {
 	return nil
 }
-
-func (n *NodeRemoveOptions) DecodeAndValidate(reader io.Reader) *errors.Err {
-
-	if reader == nil {
-		return nil
-	}
-
-	body, err := ioutil.ReadAll(reader)
-	if err != nil {
-		return errors.New("node").Unknown(err)
-	}
-
-	err = json.Unmarshal(body, n)
-	if err != nil {
-		return errors.New("node").IncorrectJSON(err)
-	}
-
-	return n.Validate()
-}

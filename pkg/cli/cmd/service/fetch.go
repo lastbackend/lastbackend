@@ -33,6 +33,7 @@ func FetchCmd(cmd *cobra.Command, args []string) {
 		return
 	}
 
+	name := args[0]
 	namespace, _ := cmd.Flags().GetString("namespace")
 
 	if namespace == "" {
@@ -41,7 +42,7 @@ func FetchCmd(cmd *cobra.Command, args []string) {
 	}
 
 	cli := envs.Get().GetClient()
-	response, err := cli.V1().Namespace(namespace).Service(args[0]).Get(envs.Background())
+	response, err := cli.V1().Namespace(namespace).Service(name).Get(envs.Background())
 	if err != nil {
 		fmt.Println(err)
 		return

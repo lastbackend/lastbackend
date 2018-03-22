@@ -183,22 +183,3 @@ func (ServiceRequest) RemoveOptions() *ServiceRemoveOptions {
 func (s *ServiceRemoveOptions) Validate() *errors.Err {
 	return nil
 }
-
-func (s *ServiceRemoveOptions) DecodeAndValidate(reader io.Reader) *errors.Err {
-
-	if reader == nil {
-		return nil
-	}
-
-	body, err := ioutil.ReadAll(reader)
-	if err != nil {
-		return errors.New("service").Unknown(err)
-	}
-
-	err = json.Unmarshal(body, s)
-	if err != nil {
-		return errors.New("service").IncorrectJSON(err)
-	}
-
-	return s.Validate()
-}
