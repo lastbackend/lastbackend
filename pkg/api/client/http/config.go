@@ -21,8 +21,6 @@ package http
 import "time"
 
 type Config struct {
-	// Host API server
-	Endpoint string
 	// Server requires Bearer authentication.
 	BearerToken string
 	// The maximum length of time to wait before giving up on a server request. A value of zero means no timeout.
@@ -30,6 +28,5 @@ type Config struct {
 }
 
 func (c *Config) SetDefault() {
-	c.Endpoint = "http://localhost"
 	c.Timeout = 10
 }
