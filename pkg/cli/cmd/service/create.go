@@ -55,7 +55,7 @@ func CreateCmd(cmd *cobra.Command, args []string) {
 	opts.Description = &description
 	opts.Spec.Memory = &memory
 	opts.Image = &image
-	opts.Replicas = &replicas
+	opts.Spec.Replicas = &replicas
 
 	if err := opts.Validate(); err != nil {
 		fmt.Println(err.Attr)

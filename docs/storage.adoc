@@ -63,7 +63,6 @@ route:
 discovery:
 /lastbackend/discovery/<endpoint>: <endpoint spec object>
 
-
 cluster:
 /lastbackend/cluster/meta: <cluster meta object>
 /lastbackend/cluster/stat: <cluster stat object>

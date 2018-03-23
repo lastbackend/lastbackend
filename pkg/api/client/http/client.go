@@ -19,13 +19,13 @@
 package http
 
 import (
+	"fmt"
+	"github.com/lastbackend/lastbackend/pkg/distribution/errors"
 	"github.com/lastbackend/lastbackend/pkg/util/serializer"
 	"net/http"
 	"net/url"
 	"strings"
 	"time"
-	"github.com/lastbackend/lastbackend/pkg/distribution/errors"
-	"fmt"
 )
 
 // Interface captures the set of operations for generically interacting with Kubernetes REST apis.

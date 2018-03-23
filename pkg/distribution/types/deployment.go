@@ -29,6 +29,8 @@ type Deployment struct {
 	// Deployment replicas
 	Replicas DeploymentReplicas `json:"replicas"`
 }
+type DeploymentMap map[string]*Deployment
+type DeploymentList []*Deployment
 
 type DeploymentMeta struct {
 	Meta

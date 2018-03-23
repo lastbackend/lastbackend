@@ -182,7 +182,7 @@ func TestServiceList(t *testing.T) {
 	s1 := getServiceAsset(ns1.Meta.Name, "demo", "")
 	s2 := getServiceAsset(ns1.Meta.Name, "test", "")
 
-	sl := make(types.ServiceList, 0)
+	sl := make(types.ServiceMap, 0)
 	sl[s1.SelfLink()] = s1
 	sl[s2.SelfLink()] = s2
 
@@ -203,7 +203,7 @@ func TestServiceList(t *testing.T) {
 		headers      map[string]string
 		handler      func(http.ResponseWriter, *http.Request)
 		err          string
-		want         types.ServiceList
+		want         types.ServiceMap
 		wantErr      bool
 		expectedCode int
 	}{
@@ -304,11 +304,10 @@ type ServiceCreateOptions struct {
 	request.ServiceCreateOptions
 }
 
-func createServiceCreateOptions(name, description, image *string, replicas *int, spec *request.ServiceOptionsSpec) *ServiceCreateOptions {
+func createServiceCreateOptions(name, description, image *string, spec *request.ServiceOptionsSpec) *ServiceCreateOptions {
 	opts := new(ServiceCreateOptions)
 	opts.Name = name
 	opts.Description = description
-	opts.Replicas = replicas
 	opts.Image = image
 	opts.Spec = spec
 	return opts
@@ -364,7 +363,7 @@ func TestServiceCreate(t *testing.T) {
 			args:         args{ctx, ns1, s1},
 			fields:       fields{stg},
 			handler:      service.ServiceCreateH,
-			data:         createServiceCreateOptions(srtPointer("demo"), nil, srtPointer("redis"), intPointer(1), nil).toJson(),
+			data:         createServiceCreateOptions(srtPointer("demo"), nil, srtPointer("redis"), nil).toJson(),
 			err:          "{\"code\":400,\"status\":\"Not Unique\",\"message\":\"Name is already in use\"}",
 			wantErr:      true,
 			expectedCode: http.StatusBadRequest,
@@ -374,7 +373,7 @@ func TestServiceCreate(t *testing.T) {
 			args:         args{ctx, ns2, s2},
 			fields:       fields{stg},
 			handler:      service.ServiceCreateH,
-			data:         createServiceCreateOptions(srtPointer("test"), nil, srtPointer("redis"), intPointer(1), nil).toJson(),
+			data:         createServiceCreateOptions(srtPointer("test"), nil, srtPointer("redis"), nil).toJson(),
 			err:          "{\"code\":404,\"status\":\"Not Found\",\"message\":\"Namespace not found\"}",
 			wantErr:      true,
 			expectedCode: http.StatusNotFound,
@@ -394,7 +393,7 @@ func TestServiceCreate(t *testing.T) {
 			args:         args{ctx, ns1, s3},
 			fields:       fields{stg},
 			handler:      service.ServiceCreateH,
-			data:         createServiceCreateOptions(srtPointer("___test"), nil, srtPointer("redis"), intPointer(1), nil).toJson(),
+			data:         createServiceCreateOptions(srtPointer("___test"), nil, srtPointer("redis"), nil).toJson(),
 			err:          "{\"code\":400,\"status\":\"Bad Parameter\",\"message\":\"Bad name parameter\"}",
 			wantErr:      true,
 			expectedCode: http.StatusBadRequest,
@@ -404,7 +403,7 @@ func TestServiceCreate(t *testing.T) {
 			args:         args{ctx, ns1, s3},
 			fields:       fields{stg},
 			handler:      service.ServiceCreateH,
-			data:         createServiceCreateOptions(srtPointer("test"), nil, srtPointer("redis"), intPointer(1), &request.ServiceOptionsSpec{Memory: int64Pointer(127)}).toJson(),
+			data:         createServiceCreateOptions(srtPointer("test"), nil, srtPointer("redis"), &request.ServiceOptionsSpec{Replicas: intPointer(1), Memory: int64Pointer(127)}).toJson(),
 			err:          "{\"code\":400,\"status\":\"Bad Parameter\",\"message\":\"Bad memory parameter\"}",
 			wantErr:      true,
 			expectedCode: http.StatusBadRequest,
@@ -415,7 +414,7 @@ func TestServiceCreate(t *testing.T) {
 			args:         args{ctx, ns1, s3},
 			fields:       fields{stg},
 			handler:      service.ServiceCreateH,
-			data:         createServiceCreateOptions(srtPointer("test"), nil, srtPointer("redis"), intPointer(-1), nil).toJson(),
+			data:         createServiceCreateOptions(srtPointer("test"), nil, srtPointer("redis"), &request.ServiceOptionsSpec{Replicas: intPointer(-1)}).toJson(),
 			err:          "{\"code\":400,\"status\":\"Bad Parameter\",\"message\":\"Bad replicas parameter\"}",
 			wantErr:      true,
 			expectedCode: http.StatusBadRequest,
@@ -425,7 +424,7 @@ func TestServiceCreate(t *testing.T) {
 			args:         args{ctx, ns1, s3},
 			fields:       fields{stg},
 			handler:      service.ServiceCreateH,
-			data:         createServiceCreateOptions(srtPointer(s3.Meta.Name), nil, srtPointer("redis"), intPointer(1), nil).toJson(),
+			data:         createServiceCreateOptions(srtPointer(s3.Meta.Name), nil, srtPointer("redis"), nil).toJson(),
 			want:         v1.View().Service().New(s3, nil, nil),
 			wantErr:      false,
 			expectedCode: http.StatusOK,

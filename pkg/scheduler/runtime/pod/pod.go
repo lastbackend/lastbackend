@@ -88,7 +88,7 @@ func Provision(p *types.Pod) error {
 	}
 
 	for _, c := range p.Spec.Template.Containers {
-		memory += c.Resources.Quota.RAM
+		memory += c.Resources.Request.RAM
 	}
 
 	var nl []*types.Node

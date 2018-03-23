@@ -87,7 +87,7 @@ func TestProvision(t *testing.T) {
 			CPU: 0,
 			RAM: 256,
 		},
-		Quota: types.SpecTemplateContainerResource{
+		Request: types.SpecTemplateContainerResource{
 			CPU: 0,
 			RAM: 256,
 		},
@@ -109,7 +109,7 @@ func TestProvision(t *testing.T) {
 			CPU: 0,
 			RAM: 1024,
 		},
-		Quota: types.SpecTemplateContainerResource{
+		Request: types.SpecTemplateContainerResource{
 			CPU: 0,
 			RAM: 1024,
 		},

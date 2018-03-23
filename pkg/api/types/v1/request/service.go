@@ -22,7 +22,6 @@ type ServiceCreateOptions struct {
 	Name        *string             `json:"name"`
 	Description *string             `json:"description"`
 	Image       *string             `json:"image"`
-	Replicas    *int                `json:"replicas"`
 	Spec        *ServiceOptionsSpec `json:"spec"`
 }
 
@@ -36,6 +35,7 @@ type ServiceRemoveOptions struct {
 }
 
 type ServiceOptionsSpec struct {
+	Replicas   *int                      `json:"replicas"`
 	Memory     *int64                    `json:"memory,omitempty"`
 	Entrypoint *string                   `json:"entrypoint,omitempty"`
 	Command    *string                   `json:"command,omitempty"`

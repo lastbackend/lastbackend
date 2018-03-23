@@ -26,6 +26,7 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/lastbackend/lastbackend/pkg/api/envs"
 	"github.com/lastbackend/lastbackend/pkg/api/http/route"
+	"github.com/lastbackend/lastbackend/pkg/api/types/v1"
 	"github.com/lastbackend/lastbackend/pkg/api/types/v1/request"
 	"github.com/lastbackend/lastbackend/pkg/api/types/v1/views"
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
@@ -37,7 +38,6 @@ import (
 	"net/http/httptest"
 	"strings"
 	"testing"
-	"github.com/lastbackend/lastbackend/pkg/api/types/v1"
 )
 
 // Testing RouteInfoH handler
@@ -180,7 +180,7 @@ func TestRouteList(t *testing.T) {
 	r1 := getRouteAsset(ns1.Meta.Name, "demo")
 	r2 := getRouteAsset(ns1.Meta.Name, "test")
 
-	rl := make(types.RouteList, 0)
+	rl := make(types.RouteMap, 0)
 	rl[r1.SelfLink()] = r1
 	rl[r2.SelfLink()] = r2
 
@@ -200,7 +200,7 @@ func TestRouteList(t *testing.T) {
 		headers      map[string]string
 		handler      func(http.ResponseWriter, *http.Request)
 		err          string
-		want         types.RouteList
+		want         types.RouteMap
 		wantErr      bool
 		expectedCode int
 	}{

@@ -16,7 +16,7 @@
 // from Last.Backend LLC.
 //
 
-package http
+package client
 
 import "time"
 
