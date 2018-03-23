@@ -152,8 +152,8 @@ type SpecTemplateContainerEnvSecret struct {
 type SpecTemplateContainerResources struct {
 	// Limit resources
 	Limits SpecTemplateContainerResource `json:"limits"`
-	// Quota resources
-	Quota SpecTemplateContainerResource `json:"quota"`
+	// Request resources
+	Request SpecTemplateContainerResource `json:"quota"`
 }
 
 type SpecTemplateContainerExec struct {
@@ -300,7 +300,7 @@ func (s *SpecTemplate) SetDefault() {
 func (s *SpecTemplateContainer) SetDefault() {
 	s.Labels = make(map[string]string, 0)
 	s.Resources.Limits.RAM = int64(128)
-	s.Resources.Quota.RAM = int64(128)
+	s.Resources.Request.RAM = int64(128)
 	s.EnvVars = make(SpecTemplateContainerEnvs, 0)
 	s.Ports = make(SpecTemplateContainerPorts, 0)
 	s.Volumes = make(SpecTemplateContainerVolumes, 0)

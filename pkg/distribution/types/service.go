@@ -77,14 +77,13 @@ type ServiceStatus struct {
 }
 
 type ServiceSpec struct {
-	Meta     Meta          `json:"meta"`
-	Replicas int           `json:"replicas"`
-	State    SpecState     `json:"state"`
-	Strategy SpecStrategy  `json:"strategy"`
-	Triggers SpecTriggers  `json:"triggers"`
-	Selector SpecSelector  `json:"selector"`
-	Template SpecTemplate  `json:"template"`
-	Quotas   ServiceQuotas `json:"quotas"`
+	Meta     Meta         `json:"meta"`
+	Replicas int          `json:"replicas"`
+	State    SpecState    `json:"state"`
+	Strategy SpecStrategy `json:"strategy"`
+	Triggers SpecTriggers `json:"triggers"`
+	Selector SpecSelector `json:"selector"`
+	Template SpecTemplate `json:"template"`
 }
 
 type ServiceSpecStrategy struct {
@@ -138,6 +137,10 @@ func (s *ServiceSpec) Update(spec *ServiceOptionsSpec) {
 	)
 
 	s.Meta.Name = uuid.NewV4().String()
+
+	if spec.Replicas != nil {
+		s.Replicas = *spec.Replicas
+	}
 
 	c := SpecTemplateContainer{}
 	for i, t := range s.Template.Containers {
@@ -230,13 +233,11 @@ type ServiceCreateOptions struct {
 	Name        *string             `json:"name"`
 	Description *string             `json:"description"`
 	Image       *string             `json:"sources"`
-	Replicas    *int                `json:"replicas"`
 	Spec        *ServiceOptionsSpec `json:"spec"`
 }
 
 type ServiceUpdateOptions struct {
 	Description *string             `json:"description"`
-	Sources     *string             `json:"sources"`
 	Spec        *ServiceOptionsSpec `json:"spec"`
 }
 
@@ -245,6 +246,7 @@ type ServiceRemoveOptions struct {
 }
 
 type ServiceOptionsSpec struct {
+	Replicas   *int                      `json:"replicas"`
 	Memory     *int64                    `json:"memory,omitempty"`
 	Entrypoint *string                   `json:"entrypoint,omitempty"`
 	Command    *string                   `json:"command,omitempty"`

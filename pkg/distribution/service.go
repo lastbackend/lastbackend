@@ -114,10 +114,6 @@ func (s *Service) Create(namespace *types.Namespace, opts *types.ServiceCreateOp
 	service.Deployments = make(map[string]*types.Deployment, 0)
 	service.SelfLink()
 
-	if opts.Replicas != nil {
-		service.Spec.Replicas = *opts.Replicas
-	}
-
 	// prepare default template spec
 	c := types.SpecTemplateContainer{}
 	c.SetDefault()

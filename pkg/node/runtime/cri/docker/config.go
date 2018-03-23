@@ -69,8 +69,8 @@ func GetHostConfig(spec *types.SpecTemplateContainer) *container.HostConfig {
 	}
 
 	resources := container.Resources{
-		Memory:    spec.Resources.Quota.RAM * 1024 * 1024,
-		CPUShares: spec.Resources.Quota.CPU,
+		Memory:    spec.Resources.Request.RAM * 1024 * 1024,
+		CPUShares: spec.Resources.Request.CPU,
 	}
 
 	var (
