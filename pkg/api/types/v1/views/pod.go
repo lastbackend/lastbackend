@@ -72,7 +72,7 @@ type PodSpecState struct {
 
 type PodSpecTemplate struct {
 	// Template Volume
-	Volumes types.SpecTemplateVolumes `json:"volumes"`
+	Volumes types.SpecTemplateVolumeList `json:"volumes"`
 	// Template main container
 	Containers types.SpecTemplateContainers `json:"container"`
 	// Termination period

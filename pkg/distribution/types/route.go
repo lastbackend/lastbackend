@@ -30,7 +30,8 @@ type Route struct {
 	Status RouteStatus `json:"status" yaml:"status"`
 }
 
-type RouteList map[string]*Route
+type RouteMap map[string]*Route
+type RouteList []*Route
 
 type RouteMeta struct {
 	Meta      `yaml:",inline"`

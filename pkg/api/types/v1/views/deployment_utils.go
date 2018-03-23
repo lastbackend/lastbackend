@@ -99,3 +99,17 @@ func (di *Deployment) ToPods(obj map[string]*types.Pod) map[string]Pod {
 func (di *Deployment) ToJson() ([]byte, error) {
 	return json.Marshal(di)
 }
+
+func (dv *DeploymentView) NewList(obj map[string]*types.Deployment, pods map[string]*types.Pod) *DeploymentList {
+	dl := make(DeploymentList, 0)
+	for _, d := range obj {
+		dv := new(DeploymentView)
+		dp := dv.New(d, pods)
+		dl = append(dl, dp)
+	}
+	return &dl
+}
+
+func (di *DeploymentList) ToJson() ([]byte, error) {
+	return json.Marshal(di)
+}

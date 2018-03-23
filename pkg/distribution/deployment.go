@@ -26,6 +26,7 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/storage"
 	"github.com/lastbackend/lastbackend/pkg/util/generator"
 	"strings"
+	"github.com/lastbackend/lastbackend/pkg/storage/store"
 )
 
 type IDeployment interface {
@@ -55,7 +56,13 @@ func (d *Deployment) Get(namespace, service, name string) (*types.Deployment, er
 
 	dt, err := d.storage.Deployment().Get(d.context, namespace, service, name)
 	if err != nil {
-		log.Errorf("distribution:deployment:get: in namespace %s and service %s by name %s error: %s", namespace, service, name, err.Error())
+
+		if err.Error() == store.ErrEntityNotFound {
+			log.V(logLevel).Warnf("api:distribution:deployment:get: in namespace %s by name %s not found", namespace, name)
+			return nil, nil
+		}
+
+		log.V(logLevel).Errorf("api:distribution:deployment:get: in namespace %s by name %s error: %s", namespace, name, err)
 		return nil, err
 	}
 

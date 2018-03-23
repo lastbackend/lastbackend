@@ -24,6 +24,7 @@ import (
 
 type NodeMapStatus map[string]*NodeStatus
 
+type NodeMap map[string]*Node
 type NodeList []*Node
 
 type Node struct {

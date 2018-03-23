@@ -24,7 +24,7 @@ import (
 	"net/url"
 )
 
-func New(endpoint string, config *http.Config) (*Client, error) {
+func NewHTTP(endpoint string, config *Config) (*Client, error) {
 	c := new(Client)
 
 	baseURL, err := url.Parse(endpoint)
@@ -32,12 +32,15 @@ func New(endpoint string, config *http.Config) (*Client, error) {
 		return nil, err
 	}
 
-	if config == nil {
-		config = new(http.Config)
-		config.SetDefault()
+	cfg := new(http.Config)
+	if config != nil {
+		cfg.BearerToken = config.BearerToken
+		cfg.Timeout = config.Timeout
+	} else {
+		cfg.SetDefault()
 	}
 
-	client, err := http.NewRESTClient(baseURL, config)
+	client, err := http.NewRESTClient(baseURL, cfg)
 	if err != nil {
 		return nil, err
 	}

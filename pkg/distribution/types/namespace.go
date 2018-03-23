@@ -23,8 +23,6 @@ import (
 	"fmt"
 )
 
-type NamespaceList []*Namespace
-
 type Namespace struct {
 	Meta      NamespaceMeta      `json:"meta"`
 	Env       NamespaceEnvs      `json:"env"`
@@ -32,6 +30,9 @@ type Namespace struct {
 	Quotas    NamespaceQuotas    `json:"quotas,omitempty"`
 	Labels    map[string]string  `json:"labels"`
 }
+
+type NamespaceMap map[string]*Namespace
+type NamespaceList []*Namespace
 
 type NamespaceEnvs []NamespaceEnv
 

@@ -40,18 +40,19 @@ func (s *ServiceCreateOptions) Validate() *errors.Err {
 		return errors.New("service").BadParameter("name")
 	case !validator.IsServiceName(*s.Name):
 		return errors.New("service").BadParameter("name")
-	case s.Replicas == nil:
-		return errors.New("service").BadParameter("replicas")
-	case s.Replicas != nil && *s.Replicas < DEFAULT_REPLICAS_MIN:
-		return errors.New("service").BadParameter("replicas")
 	case s.Image == nil:
 		return errors.New("service").BadParameter("image")
 	case s.Description != nil && len(*s.Description) > DEFAULT_DESCRIPTION_LIMIT:
 		return errors.New("service").BadParameter("description")
 	case s.Spec != nil:
+		if s.Spec.Replicas != nil && *s.Spec.Replicas < DEFAULT_REPLICAS_MIN {
+			return errors.New("service").BadParameter("replicas")
+		}
+
 		if s.Spec.Memory != nil && *s.Spec.Memory < DEFAULT_MEMORY_MIN {
 			return errors.New("service").BadParameter("memory")
 		}
+
 	default:
 		return nil
 	}
@@ -86,6 +87,7 @@ func (s *ServiceCreateOptions) DecodeAndValidate(reader io.Reader) (*types.Servi
 
 	if s.Spec != nil {
 		opts.Spec = new(types.ServiceOptionsSpec)
+		opts.Spec.Replicas = s.Spec.Replicas
 		opts.Spec.Memory = s.Spec.Memory
 		opts.Spec.EnvVars = s.Spec.EnvVars
 		opts.Spec.Entrypoint = s.Spec.Entrypoint
@@ -149,7 +151,6 @@ func (s *ServiceUpdateOptions) DecodeAndValidate(reader io.Reader) (*types.Servi
 	}
 
 	opts := new(types.ServiceUpdateOptions)
-	opts.Description = s.Description
 	opts.Description = s.Description
 
 	if s.Spec != nil {

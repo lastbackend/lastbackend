@@ -20,7 +20,8 @@ package types
 
 import "fmt"
 
-type TriggerList []Trigger
+type TriggerMap map[string]*Trigger
+type TriggerList []*Trigger
 
 type Trigger struct {
 	Meta   TriggerMeta   `json:"meta"`
