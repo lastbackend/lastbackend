@@ -108,9 +108,8 @@ func (sv *Service) ToQuotas(obj types.ServiceQuotas) ServiceQuotas {
 	}
 }
 
-func (sv *Service) ToDeployments(obj map[string]*types.Deployment, pods map[string]*types.Pod) map[string]*Deployment {
-
-	deployments := make(map[string]*Deployment, 0)
+func (sv *Service) ToDeployments(obj map[string]*types.Deployment, pods map[string]*types.Pod) DeploymentMap {
+	deployments := make(DeploymentMap, 0)
 	for _, d := range obj {
 		if d.Meta.Service == sv.Meta.Name {
 			dv := new(DeploymentView)

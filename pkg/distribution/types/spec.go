@@ -33,14 +33,15 @@ type SpecState struct {
 
 type SpecTemplate struct {
 	// Template Volume
-	Volumes SpecTemplateVolumes `json:"volumes"`
+	Volumes SpecTemplateVolumeList `json:"volumes"`
 	// Template main container
 	Containers SpecTemplateContainers `json:"container"`
 	// Termination period
 	Termination int `json:"termination"`
 }
 
-type SpecTemplateVolumes []SpecTemplateVolume
+type SpecTemplateVolumeMap map[string]*SpecTemplateVolume
+type SpecTemplateVolumeList []*SpecTemplateVolume
 
 type SpecTemplateVolume struct {
 	// Template volume name
@@ -294,7 +295,7 @@ func (s *SpecTemplate) SetDefault() {
 	// Set default configurations
 
 	s.Containers = make(SpecTemplateContainers, 1)
-	s.Volumes = make(SpecTemplateVolumes, 0)
+	s.Volumes = make(SpecTemplateVolumeList, 0)
 }
 
 func (s *SpecTemplateContainer) SetDefault() {

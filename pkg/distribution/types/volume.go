@@ -20,7 +20,8 @@ package types
 
 import "fmt"
 
-type VolumeList []Volume
+type VolumeMap map[string]*Volume
+type VolumeList []*Volume
 
 type Volume struct {
 	// Volume meta

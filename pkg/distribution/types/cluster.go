@@ -25,6 +25,7 @@ const (
 )
 
 type ClusterList []*Cluster
+type ClusterMap map[string]*Cluster
 
 type Cluster struct {
 	Meta   ClusterMeta   `json:"meta"`

@@ -31,7 +31,8 @@ type Notification struct {
 	Active        bool
 }
 
-type Notifications []Notification
+type NotificationMap map[string]*Notification
+type NotificationList []*Notification
 
 type NotifyChannel struct {
 	ID   string

@@ -45,7 +45,6 @@ func (s *ServiceCreateOptions) Validate() *errors.Err {
 	case s.Description != nil && len(*s.Description) > DEFAULT_DESCRIPTION_LIMIT:
 		return errors.New("service").BadParameter("description")
 	case s.Spec != nil:
-
 		if s.Spec.Replicas != nil && *s.Spec.Replicas < DEFAULT_REPLICAS_MIN {
 			return errors.New("service").BadParameter("replicas")
 		}

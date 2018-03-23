@@ -57,7 +57,8 @@ type Service struct {
 	Deployments map[string]*Deployment `json:"deployments"`
 }
 
-type ServiceList map[string]*Service
+type ServiceMap map[string]*Service
+type ServiceList []*Service
 
 type ServiceMeta struct {
 	Meta
@@ -120,7 +121,7 @@ func (s *ServiceSpec) SetDefault() {
 	s.Meta.SetDefault()
 	s.Meta.Name = uuid.NewV4().String()
 	s.Replicas = DEFAULT_SERVICE_REPLICAS
-	s.Template.Volumes = make(SpecTemplateVolumes, 0)
+	s.Template.Volumes = make(SpecTemplateVolumeList, 0)
 	s.Template.Containers = make(SpecTemplateContainers, 0)
 	s.Triggers = make(SpecTriggers, 0)
 }
