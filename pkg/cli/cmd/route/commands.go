@@ -16,22 +16,38 @@
 // from Last.Backend LLC.
 //
 
-package views
+package route
 
-import "time"
+import (
+	"github.com/spf13/cobra"
+)
 
-type Secret struct {
-	Meta SecretMeta `json:"meta"`
-	Data string     `json:"data"`
+var RouteCreate = &cobra.Command{
+	Use:   "create",
+	Short: "Create route",
+	Run:   CreateCmd,
 }
 
-type SecretMeta struct {
-	Name      string    `json:"name"`
-	Namespace string    `json:"namespace"`
-	SelfLink  string    `json:"self_link"`
-	Updated   time.Time `json:"updated"`
-	Created   time.Time `json:"created"`
+var RouteFetch = &cobra.Command{
+	Use:   "info",
+	Short: "Route info by name",
+	Run:   FetchCmd,
 }
 
-type SecretMap map[string]*Secret
-type SecretList []*Secret
+var RouteList = &cobra.Command{
+	Use:   "list",
+	Short: "Display the routes list",
+	Run:   ListCmd,
+}
+
+var RouteUpdate = &cobra.Command{
+	Use:   "update",
+	Short: "Change configuration of the route",
+	Run:   UpdateCmd,
+}
+
+var RouteRemove = &cobra.Command{
+	Use:   "remove",
+	Short: "Remove route by Name",
+	Run:   RemoveCmd,
+}

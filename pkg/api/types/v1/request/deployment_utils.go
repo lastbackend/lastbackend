@@ -38,9 +38,8 @@ func (d *DeploymentUpdateOptions) Validate() *errors.Err {
 		return errors.New("deployment").BadParameter("replicas")
 	case *d.Replicas < 1:
 		return errors.New("deployment").BadParameter("replicas")
-	default:
-		return nil
 	}
+	return nil
 }
 
 func (d *DeploymentUpdateOptions) DecodeAndValidate(reader io.Reader) *errors.Err {

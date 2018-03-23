@@ -26,19 +26,18 @@ import (
 
 type SecretView struct{}
 
-func (rv *SecretView) New(obj *types.Secret) *Secret {
-	r := Secret{}
-	r.Meta = r.ToMeta(obj.Meta)
-	r.Spec = r.ToSpec(obj.Spec)
-	r.Status = r.ToStatus(obj.Status)
-	return &r
+func (sv *SecretView) New(obj *types.Secret) *Secret {
+	s := Secret{}
+	s.Meta = s.ToMeta(obj.Meta)
+	s.Data = obj.Data
+	return &s
 }
 
-func (p *Secret) ToJson() ([]byte, error) {
-	return json.Marshal(p)
+func (s *Secret) ToJson() ([]byte, error) {
+	return json.Marshal(s)
 }
 
-func (r *Secret) ToMeta(obj types.SecretMeta) SecretMeta {
+func (s *Secret) ToMeta(obj types.SecretMeta) SecretMeta {
 	meta := SecretMeta{}
 	meta.Name = obj.Name
 	meta.Namespace = obj.Namespace
@@ -48,31 +47,21 @@ func (r *Secret) ToMeta(obj types.SecretMeta) SecretMeta {
 	return meta
 }
 
-func (r *Secret) ToSpec(obj types.SecretSpec) SecretSpec {
-	spec := SecretSpec{}
-	return spec
-}
-
-func (r *Secret) ToStatus(obj types.SecretStatus) SecretStatus {
-	state := SecretStatus{}
-	return state
-}
-
-func (rv SecretView) NewList(obj map[string]*types.Secret) *SecretList {
+func (sv SecretView) NewList(obj map[string]*types.Secret) *SecretList {
 	if obj == nil {
 		return nil
 	}
 
-	n := make(SecretList, 0)
+	sl := make(SecretList, 0)
 	for _, v := range obj {
-		n[v.Meta.Name] = rv.New(v)
+		sl = append(sl, sv.New(v))
 	}
-	return &n
+	return &sl
 }
 
-func (n *SecretList) ToJson() ([]byte, error) {
-	if n == nil {
-		n = &SecretList{}
+func (sl *SecretList) ToJson() ([]byte, error) {
+	if sl == nil {
+		sl = &SecretList{}
 	}
-	return json.Marshal(n)
+	return json.Marshal(sl)
 }

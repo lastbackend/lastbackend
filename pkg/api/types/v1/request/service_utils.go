@@ -52,9 +52,6 @@ func (s *ServiceCreateOptions) Validate() *errors.Err {
 		if s.Spec.Memory != nil && *s.Spec.Memory < DEFAULT_MEMORY_MIN {
 			return errors.New("service").BadParameter("memory")
 		}
-
-	default:
-		return nil
 	}
 	return nil
 }
@@ -123,8 +120,6 @@ func (s *ServiceUpdateOptions) Validate() *errors.Err {
 		if s.Spec.Memory != nil && *s.Spec.Memory < DEFAULT_MEMORY_MIN {
 			return errors.New("service").BadParameter("memory")
 		}
-	default:
-		return nil
 	}
 	return nil
 }

@@ -27,6 +27,7 @@ type IView interface {
 	Namespace() *NamespaceView
 	Route() *RouteView
 	Service() *ServiceView
+	Secret() *SecretView
 	Deployment() *DeploymentView
 	Pod() *Pod
 	Container() *ContainerView
@@ -49,6 +50,9 @@ func (View) Route() *RouteView {
 }
 func (View) Service() *ServiceView {
 	return new(ServiceView)
+}
+func (View) Secret() *SecretView {
+	return new(SecretView)
 }
 func (View) Deployment() *DeploymentView {
 	return new(DeploymentView)

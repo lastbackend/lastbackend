@@ -62,8 +62,8 @@ type Service interface {
 	Deployment(name ...string) Deployment
 	Trigger(name ...string) Trigger
 
-	Create(ctx context.Context, opts **rv1.ServiceCreateOptions) (*vv1.ServiceList, error)
-	List(ctx context.Context) (*vv1.ServiceList, error)
+	Create(ctx context.Context, opts **rv1.ServiceCreateOptions) (*vv1.RouteList, error)
+	List(ctx context.Context) (*vv1.RouteList, error)
 	Get(ctx context.Context) (*vv1.Service, error)
 	Update(ctx context.Context, opts **rv1.ServiceUpdateOptions) (*vv1.NamespaceList, error)
 	Remove(ctx context.Context, opts *rv1.ServiceRemoveOptions) error
@@ -88,7 +88,6 @@ type Events interface {
 type Secret interface {
 	Create(ctx context.Context, opts *rv1.SecretCreateOptions) (*vv1.Secret, error)
 	List(ctx context.Context) (*vv1.SecretList, error)
-	Get(ctx context.Context) (*vv1.Secret, error)
 	Update(ctx context.Context, opts *rv1.SecretUpdateOptions) (*vv1.Secret, error)
 	Remove(ctx context.Context, opts *rv1.SecretRemoveOptions) error
 }
