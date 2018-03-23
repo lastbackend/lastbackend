@@ -29,7 +29,7 @@ type Cluster interface {
 	Node(hostname string) Node
 
 	Get(ctx context.Context) (*vv1.ClusterList, error)
-	Update(ctx context.Context, opts **rv1.ClusterUpdateOptions) (*vv1.Cluster, error)
+	Update(ctx context.Context, opts *rv1.ClusterUpdateOptions) (*vv1.Cluster, error)
 }
 
 type Node interface {
@@ -62,10 +62,10 @@ type Service interface {
 	Deployment(name ...string) Deployment
 	Trigger(name ...string) Trigger
 
-	Create(ctx context.Context, opts **rv1.ServiceCreateOptions) (*vv1.RouteList, error)
-	List(ctx context.Context) (*vv1.RouteList, error)
+	Create(ctx context.Context, opts *rv1.ServiceCreateOptions) (*vv1.Service, error)
+	List(ctx context.Context) (*vv1.ServiceList, error)
 	Get(ctx context.Context) (*vv1.Service, error)
-	Update(ctx context.Context, opts **rv1.ServiceUpdateOptions) (*vv1.NamespaceList, error)
+	Update(ctx context.Context, opts *rv1.ServiceUpdateOptions) (*vv1.NamespaceList, error)
 	Remove(ctx context.Context, opts *rv1.ServiceRemoveOptions) error
 }
 
@@ -73,13 +73,13 @@ type Deployment interface {
 	Pod(name ...string) Pod
 	List(ctx context.Context) (*vv1.DeploymentList, error)
 	Get(ctx context.Context) (*vv1.Deployment, error)
-	Update(ctx context.Context, opts **rv1.DeploymentUpdateOptions) (*vv1.Deployment, error)
+	Update(ctx context.Context, opts *rv1.DeploymentUpdateOptions) (*vv1.Deployment, error)
 }
 
 type Pod interface {
 	List(ctx context.Context) (*vv1.PodList, error)
 	Get(ctx context.Context) (*vv1.Pod, error)
-	Update(ctx context.Context, opts **rv1.DeploymentUpdateOptions) (*vv1.Pod, error)
+	Update(ctx context.Context, opts *rv1.DeploymentUpdateOptions) (*vv1.Pod, error)
 }
 
 type Events interface {
