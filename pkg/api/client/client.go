@@ -24,7 +24,7 @@ import (
 	"net/url"
 )
 
-func New(endpoint string, config *http.Config) (*Client, error) {
+func NewHTTP(endpoint string, config *Config) (*Client, error) {
 	c := new(Client)
 
 	baseURL, err := url.Parse(endpoint)
@@ -33,11 +33,19 @@ func New(endpoint string, config *http.Config) (*Client, error) {
 	}
 
 	if config == nil {
-		config = new(http.Config)
+		config = new(Config)
 		config.SetDefault()
 	}
 
-	client, err := http.NewRESTClient(baseURL, config)
+	cfg := &http.Config{
+		Endpoint: endpoint,
+		// Server requires Bearer authentication.
+		BearerToken: config.BearerToken,
+		// The maximum length of time to wait before giving up on a server request. A value of zero means no timeout.
+		Timeout: config.Timeout,
+	}
+
+	client, err := http.NewRESTClient(baseURL, cfg)
 	if err != nil {
 		return nil, err
 	}

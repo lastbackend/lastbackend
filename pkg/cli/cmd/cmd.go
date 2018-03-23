@@ -23,7 +23,6 @@ import (
 	"os"
 
 	"github.com/lastbackend/lastbackend/pkg/api/client"
-	"github.com/lastbackend/lastbackend/pkg/api/client/http"
 	"github.com/lastbackend/lastbackend/pkg/cli/config"
 	"github.com/lastbackend/lastbackend/pkg/cli/envs"
 	"github.com/lastbackend/lastbackend/pkg/cli/storage"
@@ -55,7 +54,7 @@ var RootCmd = &cobra.Command{
 
 		host := cmd.Flag("host").Value.String()
 
-		httpcli, err := client.New(host, &http.Config{BearerToken: token})
+		httpcli, err := client.NewHTTP(host, &client.Config{BearerToken: token})
 		if err != nil {
 			panic(err)
 		}
