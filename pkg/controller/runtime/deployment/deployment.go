@@ -155,3 +155,8 @@ func Provision(d *types.Deployment) error {
 
 	return nil
 }
+
+// Handler Deployment status
+func HandleStatus(d *types.Deployment) error {
+	return nil
+}

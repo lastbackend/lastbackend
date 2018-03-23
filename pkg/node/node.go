@@ -83,7 +83,11 @@ func Daemon() {
 	endpoint := fmt.Sprintf("%s://%s", schema, host)
 	types.SecretAccessToken = viper.GetString("token")
 
-	rest, err := client.New(endpoint, types.SecretAccessToken)
+	rest, err := client.NewHTTP(endpoint, &client.Config{
+		BearerToken: types.SecretAccessToken,
+		Timeout: 5,
+	})
+
 	if err != nil {
 		log.Errorf("node:initialize client err: %s", err.Error())
 		os.Exit(0)

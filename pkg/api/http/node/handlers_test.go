@@ -523,7 +523,6 @@ func TestNodeConnectH(t *testing.T) {
 			args:         args{ctx, n2.Meta.Name},
 			handler:      node.NodeConnectH,
 			data:         uo.ToJson(),
-			description:  "successfully",
 			expectedBody: "",
 			expectedCode: http.StatusOK,
 		},

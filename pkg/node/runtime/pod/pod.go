@@ -97,7 +97,7 @@ func Create(ctx context.Context, key string, spec *types.PodSpec) (*types.PodSta
 
 	var (
 		err    error
-		status = new(types.PodStatus)
+		status = types.NewPodStatus()
 	)
 
 	log.Debugf("Create pod: %s", key)
@@ -262,22 +262,60 @@ func Restore(ctx context.Context) error {
 	}
 
 	for _, c := range cl {
-		log.Debugf("Container restore %s", c.ID)
-		envs.Get().GetState().Pods().AddContainer(c)
+
+		log.Debugf("Pod [%s] > container restore %s", c.Pod, c.ID)
 
 		status := envs.Get().GetState().Pods().GetPod(c.Pod)
-
 		if status == nil {
-			st := types.NewPodStatus()
-			status = &st
+			status = types.NewPodStatus()
 		}
 
 		key := c.Pod
+
 		cs := &types.PodContainer{
 			ID: c.ID,
 			Image: types.PodContainerImage{
 				Name: c.Image,
 			},
+		}
+
+		switch c.Status {
+		case types.StateCreated:
+			cs.State = types.PodContainerState{
+				Created: types.PodContainerStateCreated{
+					Created: time.Now().UTC(),
+				},
+			}
+		case types.StateStarted:
+			cs.State = types.PodContainerState{
+				Started: types.PodContainerStateStarted{
+					Started: true,
+					Timestamp: time.Now().UTC(),
+				},
+			}
+			cs.State.Stopped.Stopped = false
+		case types.StateStopped:
+			cs.State.Stopped.Stopped = true
+			cs.State.Stopped.Exit = types.PodContainerStateExit{
+				Code:      c.ExitCode,
+				Timestamp: time.Now().UTC(),
+			}
+			cs.State.Started.Started = false
+		case types.StateError:
+
+			cs.State.Error.Error = true
+			cs.State.Error.Message = c.Status
+			cs.State.Error.Exit = types.PodContainerStateExit{
+				Code:      c.ExitCode,
+				Timestamp: time.Now().UTC(),
+			}
+			cs.State.Started.Started = false
+			cs.State.Stopped.Stopped = false
+			cs.State.Stopped.Exit = types.PodContainerStateExit{
+				Code:      c.ExitCode,
+				Timestamp: time.Now().UTC(),
+			}
+			cs.State.Started.Started = false
 		}
 
 		if c.Status == types.StateStopped {
@@ -291,9 +329,11 @@ func Restore(ctx context.Context) error {
 		}
 
 		cs.Ready = true
-
 		status.Containers[cs.ID] = cs
+
+		log.Debugf("Container restored %s", c.ID)
 		envs.Get().GetState().Pods().SetPod(key, status)
+
 	}
 
 	return nil

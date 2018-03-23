@@ -26,12 +26,13 @@ import (
 )
 
 type Controller struct {
-	services chan *types.Service
-	active   bool
+	spec  	 chan *types.Service
+	status   chan *types.Service
+	active bool
 }
 
 // Watch services spec changes
-func (sc *Controller) Watch() {
+func (sc *Controller) WatchSpec() {
 
 	var (
 		stg = envs.Get().GetStorage()
@@ -41,7 +42,7 @@ func (sc *Controller) Watch() {
 	go func() {
 		for {
 			select {
-			case s := <-sc.services:
+			case s := <-sc.spec:
 				{
 					if !sc.active {
 						log.Debug("controller:service:controller: skip management course it is in slave mode")
@@ -62,7 +63,42 @@ func (sc *Controller) Watch() {
 		}
 	}()
 
-	stg.Service().WatchSpec(context.Background(), sc.services)
+	stg.Service().WatchSpec(context.Background(), sc.spec)
+}
+
+// Watch services spec changes
+func (sc *Controller) WatchStatus() {
+
+	var (
+		stg = envs.Get().GetStorage()
+	)
+
+	log.Debug("controller:service:controller: start watch service spec")
+	go func() {
+		for {
+			select {
+			case s := <-sc.status:
+				{
+					if !sc.active {
+						log.Debug("controller:service:controller: skip management course it is in slave mode")
+						continue
+					}
+
+					if s == nil {
+						log.Debug("controller:service:controller: skip because service is nil")
+						continue
+					}
+
+					log.Debugf("controller:service:controller: Service needs to be provisioned: %s:%s", s.Meta.Namespace, s.Meta.Name)
+					if err := HandleStatus(s); err != nil {
+						log.Errorf("controller:service:controller: service provision: %s err: %s", s.Meta.Name, err.Error())
+					}
+				}
+			}
+		}
+	}()
+
+	stg.Service().WatchStatus(context.Background(), sc.status)
 }
 
 // Pause service controller because not lead
@@ -96,7 +132,7 @@ func (sc *Controller) Resume() {
 			if err != nil {
 				log.Errorf("controller:service:controller:resume get service err: %s", err.Error())
 			}
-			sc.services <- svc
+			sc.spec <- svc
 		}
 	}
 }
@@ -105,6 +141,6 @@ func (sc *Controller) Resume() {
 func NewServiceController(_ context.Context) *Controller {
 	sc := new(Controller)
 	sc.active = false
-	sc.services = make(chan *types.Service)
+	sc.spec = make(chan *types.Service)
 	return sc
 }

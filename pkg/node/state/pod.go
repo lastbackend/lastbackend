@@ -65,8 +65,6 @@ func (s *PodState) AddPod(key string, pod *types.PodStatus) {
 func (s *PodState) SetPod(key string, pod *types.PodStatus) {
 	log.V(logLevel).Debugf("Cache: PodCache: set pod: %#v", pod)
 	s.lock.Lock()
-	defer s.lock.Unlock()
-
 	if _, ok := s.pods[key]; ok {
 		delete(s.pods, key)
 		s.stats.pods--
@@ -74,6 +72,11 @@ func (s *PodState) SetPod(key string, pod *types.PodStatus) {
 
 	s.pods[key] = *pod
 	s.stats.pods++
+
+	s.lock.Unlock()
+	for _, c := range pod.Containers {
+		s.SetContainer(c)
+	}
 }
 
 func (s *PodState) DelPod(key string) {
@@ -86,7 +89,7 @@ func (s *PodState) DelPod(key string) {
 	}
 }
 
-func (s *PodState) GetContainer(id string) *types.Container {
+func (s *PodState) GetContainer(id string) *types.PodContainer {
 	log.V(logLevel).Debugf("Cache: PodCache: get container: %s", id)
 	c, ok := s.containers[id]
 	if !ok {
@@ -95,7 +98,7 @@ func (s *PodState) GetContainer(id string) *types.Container {
 	return &c
 }
 
-func (s *PodState) AddContainer(c *types.Container) {
+func (s *PodState) AddContainer(c *types.PodContainer) {
 	log.V(logLevel).Debugf("Cache: PodCache: add container: %#v", c)
 	s.lock.Lock()
 	defer s.lock.Unlock()
@@ -106,7 +109,7 @@ func (s *PodState) AddContainer(c *types.Container) {
 
 }
 
-func (s *PodState) SetContainer(c *types.Container) {
+func (s *PodState) SetContainer(c *types.PodContainer) {
 	log.V(logLevel).Debugf("Cache: PodCache: set container: %#v", c)
 	s.lock.Lock()
 	defer s.lock.Unlock()
@@ -116,7 +119,7 @@ func (s *PodState) SetContainer(c *types.Container) {
 	s.containers[c.ID] = *c
 }
 
-func (s *PodState) DelContainer(c *types.Container) {
+func (s *PodState) DelContainer(c *types.PodContainer) {
 	log.V(logLevel).Debugf("Cache: PodCache: del container: %s", c.ID)
 	s.lock.Lock()
 	defer s.lock.Unlock()

@@ -26,6 +26,7 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 	"github.com/lastbackend/lastbackend/pkg/log"
 	"github.com/lastbackend/lastbackend/pkg/system"
+	"github.com/lastbackend/lastbackend/pkg/controller/runtime/pod"
 )
 
 // watch service state and specs
@@ -39,8 +40,10 @@ import (
 
 type Runtime struct {
 	process *system.Process
+
 	sc      *service.Controller
 	dc      *deployment.Controller
+	pc      *pod.Controller
 
 	active bool
 }
@@ -52,8 +55,11 @@ func NewRuntime(ctx context.Context) *Runtime {
 
 	r.sc = service.NewServiceController(ctx)
 	r.dc = deployment.NewDeploymentController(ctx)
-	go r.sc.Watch()
-	go r.dc.Watch()
+
+	go r.sc.WatchSpec()
+	go r.dc.WatchSpec()
+	go r.dc.WatchStatus()
+	go r.pc.WatchStatus()
 
 	return r
 }
@@ -64,7 +70,7 @@ func (r *Runtime) Loop() {
 		lead = make(chan bool)
 	)
 
-	log.Debug("Contoller: Runtime: Loop")
+	log.Debug("Controller: Runtime: Loop")
 
 	go func() {
 		for {
@@ -83,6 +89,7 @@ func (r *Runtime) Loop() {
 						r.active = true
 						r.sc.Resume()
 						r.dc.Resume()
+						r.pc.Resume()
 
 					} else {
 
@@ -96,6 +103,7 @@ func (r *Runtime) Loop() {
 						r.active = false
 						r.sc.Pause()
 						r.dc.Pause()
+						r.pc.Pause()
 					}
 				}
 			}

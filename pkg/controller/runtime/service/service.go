@@ -85,3 +85,9 @@ func Provision(svc *types.Service) error {
 
 	return nil
 }
+
+// HandleStatus handles status of service
+func HandleStatus(svc *types.Service) error {
+
+	return nil
+}

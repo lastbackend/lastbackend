@@ -26,12 +26,13 @@ import (
 )
 
 type Controller struct {
-	deployment chan *types.Deployment
+	status chan *types.Deployment
+	spec chan *types.Deployment
 	active     bool
 }
 
 // Watch deployment spec changes
-func (dc *Controller) Watch() {
+func (dc *Controller) WatchSpec() {
 
 	var (
 		stg = envs.Get().GetStorage()
@@ -41,10 +42,10 @@ func (dc *Controller) Watch() {
 	go func() {
 		for {
 			select {
-			case s := <-dc.deployment:
+			case s := <-dc.spec:
 				{
 					if !dc.active {
-						log.Debug("controller:deployment:controller: skip management course it is in slave mode")
+						log.Debug("controller:deployment:controller: skip management couse it is in slave mode")
 						continue
 					}
 
@@ -62,7 +63,42 @@ func (dc *Controller) Watch() {
 		}
 	}()
 
-	stg.Deployment().WatchSpec(context.Background(), dc.deployment)
+	stg.Deployment().WatchSpec(context.Background(), dc.spec)
+}
+
+// Watch deployment spec changes
+func (dc *Controller) WatchStatus() {
+
+	var (
+		stg = envs.Get().GetStorage()
+	)
+
+	log.Debug("controller:deployment:controller: start watch deployment status")
+	go func() {
+		for {
+			select {
+			case s := <-dc.status:
+				{
+					if !dc.active {
+						log.Debug("controller:deployment:controller: skip management couse it is in slave mode")
+						continue
+					}
+
+					if s == nil {
+						log.Debug("controller:deployment:controller: skip because service is nil")
+						continue
+					}
+
+					log.Debugf("controller:deployment:controller: Service needs to be provisioned: %s:%s", s.Meta.Namespace, s.Meta.Name)
+					if err := HandleStatus(s); err != nil {
+						log.Errorf("controller:deployment:controller: service provision: %s err: %s", s.Meta.Name, err.Error())
+					}
+				}
+			}
+		}
+	}()
+
+	stg.Deployment().WatchStatus(context.Background(), dc.status)
 }
 
 // Pause deployment controller because not lead
@@ -96,7 +132,9 @@ func (dc *Controller) Resume() {
 			if err != nil {
 				log.Errorf("controller:deployment:controller:resume get deployment err: %s", err.Error())
 			}
-			dc.deployment <- d
+
+			dc.spec <- d
+			dc.status <- d
 		}
 	}
 }
@@ -105,6 +143,7 @@ func (dc *Controller) Resume() {
 func NewDeploymentController(_ context.Context) *Controller {
 	sc := new(Controller)
 	sc.active = false
-	sc.deployment = make(chan *types.Deployment)
+	sc.status = make(chan *types.Deployment)
+	sc.spec   = make(chan *types.Deployment)
 	return sc
 }

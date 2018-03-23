@@ -27,6 +27,7 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 	"github.com/lastbackend/lastbackend/pkg/log"
 	"os"
+	"time"
 )
 
 func (r *Runtime) Subscribe(ctx context.Context, state *state.PodState, p chan string) {
@@ -45,10 +46,11 @@ func (r *Runtime) Subscribe(ctx context.Context, state *state.PodState, p chan s
 			select {
 			case e := <-es:
 
-				log.Debugf("Event type: %s action: %s", e.Type, e.Action)
 				if e.Type != events.ContainerEventType {
 					continue
 				}
+
+				log.Debugf("Event type: %s action: %s", e.Type, e.Action)
 
 				container := state.GetContainer(e.ID)
 				if container == nil {
@@ -56,15 +58,64 @@ func (r *Runtime) Subscribe(ctx context.Context, state *state.PodState, p chan s
 					continue
 				}
 
-				log.Debugf("Contaniner %s update in pod %s", container.ID, container.Pod)
+				log.Debugf("Container %s update in pod %s", container.ID, container.Pod)
+
 				if e.Action == types.EventStateDestroy {
-					container.State = types.StateDestroyed
-					state.SetContainer(container)
+					state.DelContainer(container)
 					p <- container.Pod
 					break
 				}
 
 				c, err := r.ContainerInspect(ctx, e.ID)
+				container.Pod = c.Pod
+
+				switch c.State {
+				case types.StateCreated:
+					container.State = types.PodContainerState{
+						Created: types.PodContainerStateCreated{
+							Created: time.Now().UTC(),
+						},
+					}
+				case types.StateStarted:
+					if container.State.Started.Started {
+						continue
+					}
+					container.State = types.PodContainerState{
+						Started: types.PodContainerStateStarted{
+							Started: true,
+							Timestamp: time.Now().UTC(),
+						},
+					}
+					container.State.Stopped.Stopped = false
+				case types.StateStopped:
+					if container.State.Stopped.Stopped {
+						continue
+					}
+					container.State.Stopped.Stopped = true
+					container.State.Stopped.Exit = types.PodContainerStateExit{
+						Code:      c.ExitCode,
+						Timestamp: time.Now().UTC(),
+					}
+					container.State.Started.Started = false
+				case types.StateError:
+					if container.State.Error.Error {
+						continue
+					}
+					container.State.Error.Error = true
+					container.State.Error.Message = c.Status
+					container.State.Error.Exit = types.PodContainerStateExit{
+						Code:      c.ExitCode,
+						Timestamp: time.Now().UTC(),
+					}
+					container.State.Started.Started = false
+					container.State.Stopped.Stopped = false
+					container.State.Stopped.Exit = types.PodContainerStateExit{
+						Code:      c.ExitCode,
+						Timestamp: time.Now().UTC(),
+					}
+					container.State.Started.Started = false
+				}
+
 				if err != nil {
 					log.Errorf("Container: can-not inspect")
 					break
@@ -74,7 +125,7 @@ func (r *Runtime) Subscribe(ctx context.Context, state *state.PodState, p chan s
 					break
 				}
 
-				state.SetContainer(c)
+				state.SetContainer(container)
 				p <- container.Pod
 
 				break
