@@ -2,7 +2,7 @@
 // Last.Backend LLC CONFIDENTIAL
 // __________________
 //
-// [2014] - [2017] Last.Backend LLC
+// [2014] - [2018] Last.Backend LLC
 // All Rights Reserved.
 //
 // NOTICE:  All information contained herein is, and remains
@@ -96,7 +96,6 @@ func (v *Volume) Create(namespace *types.Namespace, opts *types.VolumeCreateOpti
 func (v *Volume) Update(volume *types.Volume, opts *types.VolumeUpdateOptions) (*types.Volume, error) {
 	log.V(logLevel).Debugf("api:distribution:volume:update update volume %s", volume.Meta.Name)
 
-	volume.Meta.SetDefault()
 	volume.Status.Stage = types.StageProvision
 
 	if err := v.storage.Volume().Update(v.context, volume); err != nil {

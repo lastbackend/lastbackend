@@ -1,3 +1,4 @@
+
 //
 // Last.Backend LLC CONFIDENTIAL
 // __________________
@@ -36,9 +37,8 @@ func (c *ClusterUpdateOptions) Validate() *errors.Err {
 	switch true {
 	case c.Description != nil && len(*c.Description) > DEFAULT_DESCRIPTION_LIMIT:
 		return errors.New("cluster").BadParameter("description")
-	default:
-		return nil
 	}
+	return nil
 }
 
 func (c *ClusterUpdateOptions) DecodeAndValidate(reader io.Reader) *errors.Err {

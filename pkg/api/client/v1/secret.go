@@ -95,34 +95,6 @@ func (s *SecretClient) List(ctx context.Context) (*vv1.SecretList, error) {
 	return sl, nil
 }
 
-func (s *SecretClient) Get(ctx context.Context) (*vv1.Secret, error) {
-
-	req := s.client.Get(fmt.Sprintf("/namespace/%s/secret/%s", s.namespace, s.name)).
-		AddHeader("Content-Type", "application/json").
-		Do()
-
-	buf, err := req.Raw()
-	if err != nil {
-		return nil, err
-	}
-
-	if code := req.StatusCode(); 200 > code || code > 299 {
-		var e *errors.Http
-		if err := json.Unmarshal(buf, &e); err != nil {
-			return nil, err
-		}
-		return nil, errors.New(e.Message)
-	}
-
-	var ss *vv1.Secret
-
-	if err := json.Unmarshal(buf, &ss); err != nil {
-		return nil, err
-	}
-
-	return ss, nil
-}
-
 func (s *SecretClient) Update(ctx context.Context, opts *rv1.SecretUpdateOptions) (*vv1.Secret, error) {
 
 	body, err := opts.ToJson()

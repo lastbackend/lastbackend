@@ -122,7 +122,6 @@ func (n *Route) Update(route *types.Route, namespace *types.Namespace, opts *typ
 
 	log.V(logLevel).Debugf("api:distribution:route:update update route %s", route.Meta.Name)
 
-	route.Meta.SetDefault()
 	route.Meta.Security = opts.Security
 	route.Status.Stage = types.StageProvision
 

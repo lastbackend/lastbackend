@@ -16,7 +16,7 @@
 // from Last.Backend LLC.
 //
 
-package service
+package route
 
 import (
 	"fmt"
@@ -27,12 +27,13 @@ import (
 	"github.com/spf13/cobra"
 )
 
-func CreateCmd(cmd *cobra.Command, args []string) {
+func UpdateCmd(cmd *cobra.Command, args []string) {
 
 	if len(args) != 1 {
 		cmd.Help()
 		return
 	}
+	name := args[0]
 
 	namespace, _ := cmd.Flags().GetString("namespace")
 
@@ -41,19 +42,9 @@ func CreateCmd(cmd *cobra.Command, args []string) {
 		return
 	}
 
-	description, _ := cmd.Flags().GetString("desc")
-	memory, _ := cmd.Flags().GetInt64("memory")
-	name, _ := cmd.Flags().GetString("name")
-	replicas, _ := cmd.Flags().GetInt("replicas")
+	// TODO: set route options
 
-	opts := new(request.ServiceCreateOptions)
-	opts.Spec = new(request.ServiceOptionsSpec)
-
-	opts.Name = &name
-	opts.Description = &description
-	opts.Image = &args[0]
-	opts.Spec.Memory = &memory
-	opts.Spec.Replicas = &replicas
+	opts := new(request.RouteUpdateOptions)
 
 	if err := opts.Validate(); err != nil {
 		fmt.Println(err.Attr)
@@ -61,14 +52,13 @@ func CreateCmd(cmd *cobra.Command, args []string) {
 	}
 
 	cli := envs.Get().GetClient()
-	response, err := cli.V1().Namespace(namespace).Service().Create(envs.Background(), opts)
+	response, err := cli.V1().Namespace(namespace).Route(name).Update(envs.Background(), opts)
 	if err != nil {
 		fmt.Println(err)
 		return
 	}
 
-	fmt.Println(fmt.Sprintf("Service `%s` is created", name))
-
-	service := view.FromApiServiceView(response)
-	service.Print()
+	fmt.Println(fmt.Sprintf("Route `%s` is updated", name))
+	ss := view.FromApiRouteView(response)
+	ss.Print()
 }

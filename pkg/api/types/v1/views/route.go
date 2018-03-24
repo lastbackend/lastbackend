@@ -26,6 +26,9 @@ type Route struct {
 	Status RouteStatus `json:"status"`
 }
 
+type RouteMap map[string]*Route
+type RouteList []*Route
+
 type RouteMeta struct {
 	Name      string    `json:"name"`
 	Namespace string    `json:"namespace"`
@@ -50,5 +53,3 @@ type RouteStatus struct {
 	Stage   string `json:"stage"`
 	Message string `json:"message"`
 }
-
-type RouteList map[string]*Route

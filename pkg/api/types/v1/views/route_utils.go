@@ -77,7 +77,7 @@ func (rv RouteView) NewList(obj map[string]*types.Route) *RouteList {
 
 	n := make(RouteList, 0)
 	for _, v := range obj {
-		n[v.Meta.Name] = rv.New(v)
+		n = append(n, rv.New(v))
 	}
 	return &n
 }

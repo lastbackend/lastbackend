@@ -101,8 +101,6 @@ func BridgeFDBParse(r string) FDBRule {
 		case "permanent":
 			rule.Permanent = true
 			break
-		default:
-			break
 		}
 	}
 

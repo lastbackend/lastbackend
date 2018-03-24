@@ -42,6 +42,7 @@ type Storage struct {
 	*ServiceStorage
 	*RouteStorage
 	*VolumeStorage
+	*SecretStorage
 	*SystemStorage
 }
 
@@ -108,6 +109,13 @@ func (s *Storage) Volume() storage.Volume {
 	return s.VolumeStorage
 }
 
+func (s *Storage) Secret() storage.Secret {
+	if s == nil {
+		return nil
+	}
+	return s.SecretStorage
+}
+
 func (s *Storage) System() storage.System {
 	if s == nil {
 		return nil
@@ -146,6 +154,7 @@ func New() (*Storage, error) {
 	s.RouteStorage = newRouteStorage()
 	s.SystemStorage = newSystemStorage()
 	s.VolumeStorage = newVolumeStorage()
+	s.SecretStorage = newSecretStorage()
 
 	return s, nil
 }

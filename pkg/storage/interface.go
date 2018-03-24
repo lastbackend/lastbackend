@@ -29,13 +29,14 @@ type Util interface {
 
 type Storage interface {
 	Cluster() storage.Cluster
-	Trigger() storage.Trigger
-	Namespace() storage.Namespace
 	Deployment() storage.Deployment
-	Service() storage.Service
-	Route() storage.Route
-	System() storage.System
-	Pod() storage.Pod
-	Volume() storage.Volume
+	Namespace() storage.Namespace
 	Node() storage.Node
+	Pod() storage.Pod
+	Route() storage.Route
+	Secret() storage.Secret
+	Service() storage.Service
+	System() storage.System
+	Trigger() storage.Trigger
+	Volume() storage.Volume
 }

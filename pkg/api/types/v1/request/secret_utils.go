@@ -24,6 +24,7 @@ import (
 	"io/ioutil"
 
 	"github.com/lastbackend/lastbackend/pkg/distribution/errors"
+	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 )
 
 type SecretRequest struct{}
@@ -33,27 +34,34 @@ func (SecretRequest) CreateOptions() *SecretCreateOptions {
 }
 
 func (s *SecretCreateOptions) Validate() *errors.Err {
+	switch true {
+	case s.Data == nil:
+		return errors.New("secret").BadParameter("data")
+	}
 	return nil
 }
 
-func (s *SecretCreateOptions) DecodeAndValidate(reader io.Reader) *errors.Err {
+func (s *SecretCreateOptions) DecodeAndValidate(reader io.Reader) (*types.SecretCreateOptions, *errors.Err) {
 
 	if reader == nil {
 		err := errors.New("data body can not be null")
-		return errors.New("secret").IncorrectJSON(err)
+		return nil, errors.New("secret").IncorrectJSON(err)
 	}
 
 	body, err := ioutil.ReadAll(reader)
 	if err != nil {
-		return errors.New("secret").Unknown(err)
+		return nil, errors.New("secret").Unknown(err)
 	}
 
 	err = json.Unmarshal(body, s)
 	if err != nil {
-		return errors.New("secret").IncorrectJSON(err)
+		return nil, errors.New("secret").IncorrectJSON(err)
 	}
 
-	return s.Validate()
+	opts := new(types.SecretCreateOptions)
+	opts.Data = s.Data
+
+	return opts, nil
 }
 
 func (s *SecretCreateOptions) ToJson() ([]byte, error) {
@@ -65,27 +73,38 @@ func (SecretRequest) UpdateOptions() *SecretUpdateOptions {
 }
 
 func (s *SecretUpdateOptions) Validate() *errors.Err {
+	switch true {
+	case s.Data == nil:
+		return errors.New("secret").BadParameter("data")
+	}
 	return nil
 }
 
-func (s *SecretUpdateOptions) DecodeAndValidate(reader io.Reader) *errors.Err {
+func (s *SecretUpdateOptions) DecodeAndValidate(reader io.Reader) (*types.SecretUpdateOptions, *errors.Err) {
 
 	if reader == nil {
 		err := errors.New("data body can not be null")
-		return errors.New("secret").IncorrectJSON(err)
+		return nil, errors.New("secret").IncorrectJSON(err)
 	}
 
 	body, err := ioutil.ReadAll(reader)
 	if err != nil {
-		return errors.New("secret").Unknown(err)
+		return nil, errors.New("secret").Unknown(err)
 	}
 
 	err = json.Unmarshal(body, s)
 	if err != nil {
-		return errors.New("secret").IncorrectJSON(err)
+		return nil, errors.New("secret").IncorrectJSON(err)
 	}
 
-	return s.Validate()
+	if s.Data == nil {
+
+	}
+
+	opts := new(types.SecretUpdateOptions)
+	opts.Data = s.Data
+
+	return opts, nil
 }
 
 func (s *SecretUpdateOptions) ToJson() ([]byte, error) {

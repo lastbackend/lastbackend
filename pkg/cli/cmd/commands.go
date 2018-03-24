@@ -63,3 +63,19 @@ var service = &cobra.Command{
 		cmd.Help()
 	},
 }
+
+var route = &cobra.Command{
+	Use:   "route",
+	Short: "Manage route ",
+	Run: func(cmd *cobra.Command, args []string) {
+		cmd.Help()
+	},
+}
+
+var secret = &cobra.Command{
+	Use:   "secret",
+	Short: "Manage secret ",
+	Run: func(cmd *cobra.Command, args []string) {
+		cmd.Help()
+	},
+}

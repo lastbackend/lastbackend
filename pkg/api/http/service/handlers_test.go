@@ -284,7 +284,7 @@ func TestServiceList(t *testing.T) {
 				assert.Equal(t, tc.err, string(body), "incorrect status code")
 			} else {
 
-				s := new(views.ServiceList)
+				s := new(views.RouteList)
 				err := json.Unmarshal(body, &s)
 				assert.NoError(t, err)
 
@@ -817,13 +817,12 @@ func getNamespaceAsset(name, desc string) *types.Namespace {
 }
 
 func getServiceAsset(namespace, name, desc string) *types.Service {
-	var n = types.Service{}
-
-	n.Meta.SetDefault()
-	n.Meta.Namespace = namespace
-	n.Meta.Name = name
-	n.Meta.Description = desc
-	return &n
+	var s = types.Service{}
+	s.Meta.SetDefault()
+	s.Meta.Namespace = namespace
+	s.Meta.Name = name
+	s.Meta.Description = desc
+	return &s
 }
 
 func setRequestVars(r *mux.Router, req *http.Request) {
