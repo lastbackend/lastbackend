@@ -813,7 +813,7 @@ func TestNodeSetPodStatusH(t *testing.T) {
 				p, err := envs.Get().GetStorage().Pod().Get(ctx, p1.Meta.Namespace, p1.Meta.Service, p1.Meta.Deployment, p1.Meta.Name)
 				assert.NoError(t, err)
 
-				assert.Equal(t, uo.Stage, p.Status.Stage, "pods stage not equal")
+				assert.Equal(t, uo.Stage, p.Status.State, "pods stage not equal")
 				assert.Equal(t, uo.Message, p.Status.Message, "pods message not equal")
 
 				uo.Containers = make(map[string]*types.PodContainer)

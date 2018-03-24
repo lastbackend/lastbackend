@@ -28,26 +28,6 @@ import (
 const (
 	DEFAULT_SERVICE_MEMORY   int64 = 128
 	DEFAULT_SERVICE_REPLICAS int   = 1
-
-	StepInitialized = "initialized"
-	StepScheduled   = "scheduled"
-	StepPull        = "pull"
-	StepDestroyed   = "destroyed"
-	StepReady       = "ready"
-
-	StageInitialized = StepInitialized
-	StageScheduled   = StepScheduled
-	StagePull        = StepPull
-
-	StageStarting  = "starting"
-	StageRunning   = "running"
-	StageStopped   = "stopped"
-	StageDestroyed = "destroyed"
-	StageProvision = "provision"
-	StageReady     = "ready"
-	StageCancel    = "cancel"
-	StageDestroy   = "destroy"
-	StageError     = "error"
 )
 
 type Service struct {
@@ -73,7 +53,7 @@ type ServiceEndpoint struct {
 }
 
 type ServiceStatus struct {
-	Stage   string `json:"stage"`
+	State   string `json:"state"`
 	Message string `json:"message"`
 }
 

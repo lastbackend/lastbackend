@@ -36,6 +36,7 @@ type IPod interface {
 	ListByNamespace(namespace string) (map[string]*types.Pod, error)
 	ListByService(namespace, service string) (map[string]*types.Pod, error)
 	ListByDeployment(namespace, service, deployment string) (map[string]*types.Pod, error)
+	SetNode(pod *types.Pod, node *types.Node) error
 	SetStatus(pod *types.Pod, state *types.PodStatus) error
 	Destroy(ctx context.Context, pod *types.Pod) error
 	Remove(ctx context.Context, pod *types.Pod) error
@@ -146,6 +147,19 @@ func (p *Pod) ListByDeployment(namespace, service, deployment string) (map[strin
 	}
 
 	return pods, nil
+}
+
+
+func (p *Pod) SetNode(pod *types.Pod, node *types.Node) error {
+	log.Debugf("Set node for pod: %s", pod.Meta.Name)
+
+	pod.Meta.Node = node.Meta.Name
+	if err := p.storage.Pod().SetMeta(p.context, pod); err != nil {
+		log.Errorf("Pod set node err: %s", err.Error())
+		return err
+	}
+
+	return nil
 }
 
 // SetStatus - set state for pod

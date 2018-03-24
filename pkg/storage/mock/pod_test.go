@@ -450,7 +450,7 @@ func TestPodStorage_SetStatus(t *testing.T) {
 		nl  = make([]*types.Pod, 0)
 	)
 
-	n2.Status.Stage = types.StageReady
+	n2.Status.State = types.StateReady
 
 	nl0 := append(nl, &n1)
 

@@ -218,7 +218,7 @@ func TestVolumeStorage_SetStatus(t *testing.T) {
 		nl  = make([]*types.Volume, 0)
 	)
 
-	n2.Status.Stage = types.StageReady
+	n2.Status.Stage = types.StateReady
 
 	nl0 := append(nl, &n1)
 
@@ -324,7 +324,7 @@ func TestVolumeStorage_SetSpec(t *testing.T) {
 		nl  = make([]*types.Volume, 0)
 	)
 
-	n2.Status.Stage = types.StageReady
+	n2.Status.Stage = types.StateReady
 
 	nl0 := append(nl, &n1)
 

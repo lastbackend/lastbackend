@@ -55,6 +55,7 @@ func NewRuntime(ctx context.Context) *Runtime {
 
 	r.sc = service.NewServiceController(ctx)
 	r.dc = deployment.NewDeploymentController(ctx)
+	r.pc = pod.NewPodController(ctx)
 
 	go r.sc.WatchSpec()
 	go r.dc.WatchSpec()

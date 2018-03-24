@@ -29,14 +29,14 @@ import (
 
 type Controller struct {
 	context context.Context
-	pods    chan *types.Pod
-
+	spec    chan *types.Pod
+	status  chan *types.Pod
 	pending *cache.PodCache
 
 	active bool
 }
 
-func (pc *Controller) Watch(node chan *types.Node) {
+func (pc *Controller) WatchSpec(node chan *types.Node) {
 	var (
 		stg = envs.Get().GetStorage()
 	)
@@ -45,7 +45,7 @@ func (pc *Controller) Watch(node chan *types.Node) {
 	go func() {
 		for {
 			select {
-			case p := <-pc.pods:
+			case p := <-pc.spec:
 				{
 					if !pc.active {
 						log.Debug("PodController: skip management cause it is in slave mode")
@@ -54,7 +54,7 @@ func (pc *Controller) Watch(node chan *types.Node) {
 					}
 
 					// If pod state not set to provision then need skip
-					if !(p.Status.Stage == types.StageInitialized) {
+					if !(p.Status.State == types.StateInitialized) {
 						continue
 					}
 
@@ -80,14 +80,68 @@ func (pc *Controller) Watch(node chan *types.Node) {
 			case _ = <-node:
 				{
 					for _, p := range pc.pending.GetPods() {
-						pc.pods <- p
+						pc.spec <- p
 					}
 				}
 			}
 		}
 	}()
 
-	stg.Pod().WatchSpec(context.Background(), pc.pods)
+	stg.Pod().WatchSpec(context.Background(), pc.spec)
+}
+
+func (pc *Controller) WatchStatus(node chan *types.Node) {
+	var (
+		stg = envs.Get().GetStorage()
+	)
+
+	log.Debug("PodController: start watch")
+	go func() {
+		for {
+			select {
+			case p := <-pc.status:
+				{
+					if !pc.active {
+						log.Debug("PodController: skip management cause it is in slave mode")
+						pc.pending.DelPod(p)
+						continue
+					}
+
+					// If pod state not set to provision then need skip
+					if p.Status.State == types.StateProvision {
+						continue
+					}
+
+					log.Debugf("PodController: handle status for pod: %s", p.Meta.Name)
+					if err := HandleStatus(p); err != nil {
+						if err.Error() != errors.NodeNotFound {
+							pc.pending.AddPod(p)
+						} else {
+							log.Errorf("PodController: pod provision err: %s", err.Error())
+						}
+						continue
+					}
+
+					pc.pending.DelPod(p)
+				}
+			}
+		}
+	}()
+
+	go func() {
+		for {
+			select {
+			case _ = <-node:
+				{
+					for _, p := range pc.pending.GetPods() {
+						pc.status <- p
+					}
+				}
+			}
+		}
+	}()
+
+	stg.Pod().WatchStatus(context.Background(), pc.status)
 }
 
 func (pc *Controller) Pause() {
@@ -116,8 +170,14 @@ func (pc *Controller) Resume() {
 		}
 
 		for _, p := range pods {
-			if p.Status.Stage == types.StageProvision {
-				pc.pods <- p
+			if p.Status.State == types.StateProvision {
+				pc.spec <- p
+			}
+		}
+
+		for _, p := range pods {
+			if p.Status.State != types.StateProvision {
+				pc.status <- p
 			}
 		}
 	}
@@ -127,7 +187,8 @@ func NewPodController(ctx context.Context) *Controller {
 	sc := new(Controller)
 	sc.context = ctx
 	sc.active = false
-	sc.pods = make(chan *types.Pod)
+	sc.spec = make(chan *types.Pod)
+	sc.status = make(chan *types.Pod)
 	sc.pending = cache.NewPodCache()
 	return sc
 }

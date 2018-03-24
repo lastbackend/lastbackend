@@ -60,7 +60,7 @@ func (r *Runtime) Subscribe(ctx context.Context, state *state.PodState, p chan s
 
 				log.Debugf("Container %s update in pod %s", container.ID, container.Pod)
 
-				if e.Action == types.EventStateDestroy {
+				if e.Action == types.StateDestroy {
 					state.DelContainer(container)
 					p <- container.Pod
 					break

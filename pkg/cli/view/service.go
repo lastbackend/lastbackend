@@ -29,6 +29,7 @@ type ServiceList []*Service
 type Service struct {
 	Meta        ServiceMeta    `json:"meta"`
 	Spec        ServiceSpec    `json:"spec"`
+	Status      ServiceStatus  `json:"status"`
 	Sources     ServiceSources `json:"sources"`
 	Deployments DeploymentList `json:"deployments"`
 }
@@ -37,6 +38,11 @@ type ServiceMeta struct {
 	Name        string `json:"name"`
 	Description string `json:"description"`
 	Endpoint    string `json:"endpoint"`
+}
+
+type ServiceStatus struct {
+	State string `json:"state"`
+	Message string `json:"message"`
 }
 
 type ServiceSources struct {
@@ -55,14 +61,14 @@ type ServiceSpec struct {
 
 type DeploymentList []*Deployment
 type Deployment struct {
-	ID    string              `json:"id"`
+	Name  string              `json:"name"`
 	State DeploymentStateInfo `json:"state"`
 	Spec  DeploymentSpec      `json:"spec"`
 	Pods  []*PodView          `json:"pods"`
 }
 
 type PodView struct {
-	ID     string     `json:"id"`
+	Name    string     `json:"name"`
 	Status *PodStatus `json:"status"`
 }
 
@@ -85,7 +91,7 @@ type DeploymentStateInfo struct {
 
 func (sl *ServiceList) Print() {
 
-	t := table.New([]string{"NAME", "SOURCES", "ENDPOINT", "CMD", "MEMORY", "REPLICAS"})
+	t := table.New([]string{"NAME", "SOURCES", "ENDPOINT", "STATUS", "CMD", "MEMORY", "REPLICAS"})
 	t.VisibleHeader = true
 
 	for _, s := range *sl {
@@ -95,6 +101,7 @@ func (sl *ServiceList) Print() {
 		data["NAME"] = s.Meta.Name
 		data["SOURCES"] = s.Sources.String()
 		data["ENDPOINT"] = s.Meta.Endpoint
+		data["STATUS"] = s.Status.State
 		data["CMD"] = s.Spec.Command
 		data["MEMORY"] = s.Spec.Memory
 		data["REPLICAS"] = s.Deployments.Replicas()
@@ -113,6 +120,12 @@ func (s *Service) Print() {
 	data["NAME"] = s.Meta.Name
 	data["SOURCES"] = s.Sources.String()
 	data["ENDPOINT"] = s.Meta.Endpoint
+	data["STATUS"] = s.Status.State
+
+	if s.Status.Message != "" {
+		data["STATUS"] = fmt.Sprintf("%s: %s", s.Status.State, s.Status.Message)
+	}
+
 	if s.Spec.Command != "" {
 		data["CMD"] = s.Spec.Command
 	}
@@ -149,6 +162,8 @@ func FromApiServiceView(service *views.Service) *Service {
 	item.Meta.Name = service.Meta.Name
 	item.Meta.Description = service.Meta.Description
 	item.Meta.Endpoint = service.Meta.Endpoint
+	item.Status.State = service.Status.State
+	item.Status.Message = service.Status.Message
 	return item
 }
 

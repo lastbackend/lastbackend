@@ -60,7 +60,7 @@ type PodSpec struct {
 
 type PodStatus struct {
 	// Pod stage
-	Stage string `json:"stage" yaml:"stage"`
+	State string `json:"stage" yaml:"stage"`
 	// Pod state message
 	Message string `json:"message" yaml:"message"`
 	// Pod steps
@@ -151,43 +151,43 @@ type PodContainerStateExit struct {
 }
 
 func (s *PodStatus) SetInitialized() {
-	s.Stage = StageInitialized
+	s.State = StateInitialized
 	s.Message = EmptyString
 }
 
 func (s *PodStatus) SetDestroy () {
-	s.Stage = StageDestroy
+	s.State = StateDestroy
 }
 
 func (s *PodStatus) SetDestroyed () {
-	s.Stage = StageDestroyed
+	s.State = StateDestroyed
 }
 
 func (s *PodStatus) SetPull () {
-	s.Stage = StagePull
+	s.State = StatePull
 }
 
 func (s *PodStatus) SetProvision () {
-	s.Stage = StageProvision
+	s.State = StateProvision
 }
 
-func (s *PodStatus) SetStarting() {
-	s.Stage = StageStarting
+func (s *PodStatus) SetCreated() {
+	s.State = StateCreated
 	s.Message = EmptyString
 }
 
 func (s *PodStatus) SetRunning() {
-	s.Stage = StageRunning
+	s.State = StateRunning
 	s.Message = EmptyString
 }
 
 func (s *PodStatus) SetStopped() {
-	s.Stage = StageStopped
+	s.State = StateStopped
 	s.Message = EmptyString
 }
 
 func (s *PodStatus) SetError (err error) {
-	s.Stage = StageError
+	s.State = StateError
 	s.Message = err.Error()
 }
 

@@ -72,7 +72,7 @@ func NewPodStatusEvent(ctx context.Context, pod string) error {
 	log.Debugf("Event: Pod state event state: %s", pod)
 
 	opts := v1.Request().Node().NodePodStatusOptions()
-	opts.Stage = p.Stage
+	opts.Stage = p.State
 	opts.Message = p.Message
 	opts.Containers = p.Containers
 	opts.Network = p.Network

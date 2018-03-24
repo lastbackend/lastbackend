@@ -55,7 +55,8 @@ func NewRuntime(ctx context.Context) *Runtime {
 	r.nc = node.NewNodeController(ctx)
 
 	n := make(chan *types.Node)
-	go r.pc.Watch(n)
+	go r.pc.WatchSpec(n)
+	go r.pc.WatchStatus(n)
 	go r.nc.Watch(n)
 
 	return r

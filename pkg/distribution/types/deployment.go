@@ -57,7 +57,7 @@ type DeploymentSpec struct {
 }
 
 type DeploymentStatus struct {
-	Stage   string `json:"stage"`
+	State   string `json:"stage"`
 	Message string `json:"message"`
 }
 
@@ -83,21 +83,21 @@ func (d *Deployment) SelfLink() string {
 }
 
 func (d *DeploymentStatus) SetProvision() {
-	d.Stage = StageProvision
+	d.State = StateProvision
 	d.Message = ""
 }
 
 func (d *DeploymentStatus) SetReady() {
-	d.Stage = StageReady
+	d.State = StateReady
 	d.Message = ""
 }
 
 func (d *DeploymentStatus) SetCancel() {
-	d.Stage = StageCancel
+	d.State = StateCancel
 	d.Message = ""
 }
 
 func (d *DeploymentStatus) SetDestroy() {
-	d.Stage = StageDestroy
+	d.State = StateDestroy
 	d.Message = ""
 }

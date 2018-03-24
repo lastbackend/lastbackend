@@ -67,6 +67,7 @@ type Pod interface {
 	ListByNamespace(ctx context.Context, namespace string) (map[string]*types.Pod, error)
 	ListByService(ctx context.Context, namespace, service string) (map[string]*types.Pod, error)
 	ListByDeployment(ctx context.Context, namespace, service, deployment string) (map[string]*types.Pod, error)
+	SetMeta(ctx context.Context, pod *types.Pod) error
 	SetSpec(ctx context.Context, pod *types.Pod) error
 	SetStatus(ctx context.Context, pod *types.Pod) error
 	Insert(ctx context.Context, pod *types.Pod) error
