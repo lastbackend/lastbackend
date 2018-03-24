@@ -16,4 +16,31 @@
 // from Last.Backend LLC.
 //
 
-package types_test
+package route
+
+import (
+	"fmt"
+	"github.com/lastbackend/lastbackend/pkg/cli/envs"
+	"github.com/lastbackend/lastbackend/pkg/cli/view"
+	"github.com/spf13/cobra"
+)
+
+func ListCmd(cmd *cobra.Command, _ []string) {
+
+	namespace, _ := cmd.Flags().GetString("namespace")
+
+	if namespace == "" {
+		fmt.Println("namesapace parameter not set")
+		return
+	}
+
+	cli := envs.Get().GetClient()
+	response, err := cli.V1().Namespace(namespace).Route().List(envs.Background())
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+
+	list := view.FromApiRouteListView(response)
+	list.Print()
+}

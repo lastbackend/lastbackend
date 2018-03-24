@@ -22,6 +22,8 @@ import (
 	cs "github.com/lastbackend/lastbackend/pkg/cli/cmd/cluster"
 	ns "github.com/lastbackend/lastbackend/pkg/cli/cmd/namespace"
 	sr "github.com/lastbackend/lastbackend/pkg/cli/cmd/service"
+	rt "github.com/lastbackend/lastbackend/pkg/cli/cmd/route"
+	sc "github.com/lastbackend/lastbackend/pkg/cli/cmd/secret"
 	st "github.com/lastbackend/lastbackend/pkg/cli/cmd/set"
 )
 
@@ -67,6 +69,23 @@ func commands() {
 		sr.ServiceRemove,
 	)
 
+	// ----- route -----
+	route.AddCommand(
+		rt.RouteCreate,
+		rt.RouteList,
+		rt.RouteFetch,
+		rt.RouteUpdate,
+		rt.RouteRemove,
+	)
+
+	// ----- secret -----
+	secret.AddCommand(
+		sc.SecretCreate,
+		sc.SecretList,
+		sc.SecretUpdate,
+		sc.SecretRemove,
+	)
+
 }
 
 func flags() {
@@ -80,7 +99,7 @@ func flags() {
 	// service :: ServiceCreate
 	sr.ServiceCreate.Flags().String("namespace", "", "set namespace context")
 	sr.ServiceCreate.Flags().StringP("desc", "d", "", "dset service description")
-	sr.ServiceCreate.Flags().StringP("image", "i", "", "set service spec image")
+	sr.ServiceCreate.Flags().StringP("name", "n", "", "set service name")
 	sr.ServiceCreate.Flags().Int64P("memory", "m", 128, "set service spec memory")
 	sr.ServiceCreate.Flags().IntP("replicas", "r", 1, "set service replicas")
 	//// service :: ServiceFetch
@@ -93,5 +112,27 @@ func flags() {
 	sr.ServiceUpdate.Flags().Int64P("memory", "m", 128, "set service spec memory")
 	//// service :: ServiceRemove
 	sr.ServiceRemove.Flags().String("namespace", "", "set namespace context")
+
+	// ----- ROUTE -----
+	// route :: RouteCreate
+	rt.RouteCreate.Flags().String("namespace", "", "set namespace context")
+	//// route :: RouteFetch
+	rt.RouteFetch.Flags().String("namespace", "", "set namespace context")
+	//// route :: RouteList
+	rt.RouteList.Flags().String("namespace", "", "set namespace context")
+	//// route :: RouteUpdate
+	rt.RouteUpdate.Flags().String("namespace", "", "set namespace context")
+	//// route :: RouteRemove
+	rt.RouteRemove.Flags().String("namespace", "", "set namespace context")
+
+	// ----- SECRET -----
+	// secret :: SecretCreate
+	sc.SecretCreate.Flags().String("namespace", "", "set namespace context")
+	//// secret :: SecretList
+	sc.SecretList.Flags().String("namespace", "", "set namespace context")
+	//// secret :: SecretUpdate
+	sc.SecretUpdate.Flags().String("namespace", "", "set namespace context")
+	//// secret :: SecretRemove
+	sc.SecretRemove.Flags().String("namespace", "", "set namespace context")
 
 }

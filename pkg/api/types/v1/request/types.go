@@ -31,6 +31,7 @@ type IRequest interface {
 	Node() *NodeRequest
 	Route() *RouteRequest
 	Service() *ServiceRequest
+	Secret() *SecretRequest
 	Trigger() *TriggerRequest
 	Volume() *VolumeRequest
 }
@@ -54,6 +55,9 @@ func (Request) Route() *RouteRequest {
 }
 func (Request) Service() *ServiceRequest {
 	return new(ServiceRequest)
+}
+func (Request) Secret() *SecretRequest {
+	return new(SecretRequest)
 }
 func (Request) Trigger() *TriggerRequest {
 	return new(TriggerRequest)

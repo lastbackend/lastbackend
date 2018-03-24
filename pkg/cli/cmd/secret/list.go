@@ -16,22 +16,31 @@
 // from Last.Backend LLC.
 //
 
-package views
+package secret
 
-import "time"
+import (
+	"fmt"
+	"github.com/lastbackend/lastbackend/pkg/cli/envs"
+	"github.com/lastbackend/lastbackend/pkg/cli/view"
+	"github.com/spf13/cobra"
+)
 
-type Secret struct {
-	Meta SecretMeta `json:"meta"`
-	Data string     `json:"data"`
+func ListCmd(cmd *cobra.Command, _ []string) {
+
+	namespace, _ := cmd.Flags().GetString("namespace")
+
+	if namespace == "" {
+		fmt.Println("namesapace parameter not set")
+		return
+	}
+
+	cli := envs.Get().GetClient()
+	response, err := cli.V1().Namespace(namespace).Secret().List(envs.Background())
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+
+	list := view.FromApiSecretListView(response)
+	list.Print()
 }
-
-type SecretMeta struct {
-	Name      string    `json:"name"`
-	Namespace string    `json:"namespace"`
-	SelfLink  string    `json:"self_link"`
-	Updated   time.Time `json:"updated"`
-	Created   time.Time `json:"created"`
-}
-
-type SecretMap map[string]*Secret
-type SecretList []*Secret

@@ -108,6 +108,15 @@ type Route interface {
 	Clear(ctx context.Context) error
 }
 
+type Secret interface {
+	Get(ctx context.Context, namespace, name string) (*types.Secret, error)
+	ListByNamespace(ctx context.Context, namespace string) (map[string]*types.Secret, error)
+	Insert(ctx context.Context, route *types.Secret) error
+	Update(ctx context.Context, route *types.Secret) error
+	Remove(ctx context.Context, route *types.Secret) error
+	Clear(ctx context.Context) error
+}
+
 type Volume interface {
 	Get(ctx context.Context, namespace, name string) (*types.Volume, error)
 	ListByNamespace(ctx context.Context, namespace string) (map[string]*types.Volume, error)

@@ -16,22 +16,16 @@
 // from Last.Backend LLC.
 //
 
-package views
+package secret
 
-import "time"
+import (
+	"github.com/lastbackend/lastbackend/pkg/util/http"
+	"github.com/lastbackend/lastbackend/pkg/util/http/middleware"
+)
 
-type Secret struct {
-	Meta SecretMeta `json:"meta"`
-	Data string     `json:"data"`
+var Routes = []http.Route{
+	// Route handlers
+	{Path: "/namespace/{namespace}/secret", Method: http.MethodPost, Middleware: []http.Middleware{middleware.Authenticate}, Handler: SecretCreateH},
+	{Path: "/namespace/{namespace}/secret", Method: http.MethodGet, Middleware: []http.Middleware{middleware.Authenticate}, Handler: SecretListH},
+	{Path: "/namespace/{namespace}/secret/{secret}", Method: http.MethodDelete, Middleware: []http.Middleware{middleware.Authenticate}, Handler: SecretRemoveH},
 }
-
-type SecretMeta struct {
-	Name      string    `json:"name"`
-	Namespace string    `json:"namespace"`
-	SelfLink  string    `json:"self_link"`
-	Updated   time.Time `json:"updated"`
-	Created   time.Time `json:"created"`
-}
-
-type SecretMap map[string]*Secret
-type SecretList []*Secret

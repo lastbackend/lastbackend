@@ -16,22 +16,32 @@
 // from Last.Backend LLC.
 //
 
-package views
+package secret
 
-import "time"
+import (
+	"github.com/spf13/cobra"
+)
 
-type Secret struct {
-	Meta SecretMeta `json:"meta"`
-	Data string     `json:"data"`
+var SecretCreate = &cobra.Command{
+	Use:   "create",
+	Short: "Create secret",
+	Run:   CreateCmd,
 }
 
-type SecretMeta struct {
-	Name      string    `json:"name"`
-	Namespace string    `json:"namespace"`
-	SelfLink  string    `json:"self_link"`
-	Updated   time.Time `json:"updated"`
-	Created   time.Time `json:"created"`
+var SecretList = &cobra.Command{
+	Use:   "list",
+	Short: "Display the secrets list",
+	Run:   ListCmd,
 }
 
-type SecretMap map[string]*Secret
-type SecretList []*Secret
+var SecretUpdate = &cobra.Command{
+	Use:   "update",
+	Short: "Change configuration of the secret",
+	Run:   UpdateCmd,
+}
+
+var SecretRemove = &cobra.Command{
+	Use:   "remove",
+	Short: "Remove secret by Name",
+	Run:   RemoveCmd,
+}

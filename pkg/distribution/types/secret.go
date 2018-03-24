@@ -25,24 +25,39 @@ import (
 )
 
 type Secret struct {
-	Meta   SecretMeta   `json:"meta" yaml:"meta"`
-	Status SecretStatus `json:"status" yaml:"status"`
-	Spec   SecretSpec   `json:"status" yaml:"spec"`
+	Meta SecretMeta `json:"meta" yaml:"meta"`
+	Data string     `json:"data" yaml:"data"`
 }
+
+type SecretList []*Secret
+type SecretMap map[string]*Secret
 
 type SecretMeta struct {
-	Meta      `yaml:",inline"`
+	Meta             `yaml:",inline"`
 	Namespace string `json:"namespace" yaml:"namespace"`
-}
-
-type SecretSpec struct {
-}
-
-type SecretStatus struct {
 }
 
 func (s *Secret) GetHash() string {
 	h := sha1.New()
 	h.Write([]byte(fmt.Sprintf("%s:%s", s.Meta.Namespace, s.Meta.Name)))
 	return base64.URLEncoding.EncodeToString(h.Sum(nil))
+}
+
+func (s *Secret) SelfLink() string {
+	if s.Meta.SelfLink == "" {
+		s.Meta.SelfLink = fmt.Sprintf("%s:%s", s.Meta.Namespace, s.Meta.Name)
+	}
+	return s.Meta.SelfLink
+}
+
+type SecretCreateOptions struct {
+	Data *string
+}
+
+type SecretUpdateOptions struct {
+	Data *string
+}
+
+type SecretRemoveOptions struct {
+	Force bool `json:"force"`
 }

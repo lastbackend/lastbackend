@@ -16,7 +16,7 @@
 // from Last.Backend LLC.
 //
 
-package service
+package secret
 
 import (
 	"fmt"
@@ -41,19 +41,11 @@ func CreateCmd(cmd *cobra.Command, args []string) {
 		return
 	}
 
-	description, _ := cmd.Flags().GetString("desc")
-	memory, _ := cmd.Flags().GetInt64("memory")
-	name, _ := cmd.Flags().GetString("name")
-	replicas, _ := cmd.Flags().GetInt("replicas")
+	name := args[0]
 
-	opts := new(request.ServiceCreateOptions)
-	opts.Spec = new(request.ServiceOptionsSpec)
+	// TODO: set route options
 
-	opts.Name = &name
-	opts.Description = &description
-	opts.Image = &args[0]
-	opts.Spec.Memory = &memory
-	opts.Spec.Replicas = &replicas
+	opts := new(request.SecretCreateOptions)
 
 	if err := opts.Validate(); err != nil {
 		fmt.Println(err.Attr)
@@ -61,14 +53,14 @@ func CreateCmd(cmd *cobra.Command, args []string) {
 	}
 
 	cli := envs.Get().GetClient()
-	response, err := cli.V1().Namespace(namespace).Service().Create(envs.Background(), opts)
+	response, err := cli.V1().Namespace(namespace).Secret().Create(envs.Background(), opts)
 	if err != nil {
 		fmt.Println(err)
 		return
 	}
 
-	fmt.Println(fmt.Sprintf("Service `%s` is created", name))
+	fmt.Println(fmt.Sprintf("Secret `%s` is created", name))
 
-	service := view.FromApiServiceView(response)
+	service := view.FromApiSecretView(response)
 	service.Print()
 }

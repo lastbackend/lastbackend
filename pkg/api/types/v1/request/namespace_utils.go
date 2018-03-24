@@ -45,10 +45,9 @@ func (n *NamespaceCreateOptions) Validate() *errors.Err {
 		return errors.New("namespace").BadParameter("name")
 	case len(n.Description) > DEFAULT_DESCRIPTION_LIMIT:
 		return errors.New("namespace").BadParameter("description")
-	default:
 		// TODO: check quotas data
-		return nil
 	}
+	return nil
 }
 
 func (n *NamespaceCreateOptions) DecodeAndValidate(reader io.Reader) (*types.NamespaceCreateOptions, *errors.Err) {
@@ -98,10 +97,9 @@ func (n *NamespaceUpdateOptions) Validate() *errors.Err {
 	switch true {
 	case n.Description != nil && len(*n.Description) > DEFAULT_DESCRIPTION_LIMIT:
 		return errors.New("namespace").BadParameter("description")
-	default:
 		// TODO: check quotas data
-		return nil
 	}
+	return nil
 }
 
 func (n *NamespaceUpdateOptions) DecodeAndValidate(reader io.Reader) (*types.NamespaceUpdateOptions, *errors.Err) {

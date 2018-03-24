@@ -55,8 +55,6 @@ func (n *Subnet) Equal(nt *Subnet) bool {
 		return false
 	case n.Addr == nt.Addr:
 		return false
-	default:
-		return true
 	}
-
+	return true
 }

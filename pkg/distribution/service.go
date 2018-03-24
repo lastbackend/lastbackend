@@ -98,7 +98,6 @@ func (s *Service) Create(namespace *types.Namespace, opts *types.ServiceCreateOp
 		return nil, errors.New("name is required")
 	case opts.Image == nil || *opts.Image == "":
 		return nil, errors.New("image is required")
-	default:
 	}
 
 	// prepare meta data for service
