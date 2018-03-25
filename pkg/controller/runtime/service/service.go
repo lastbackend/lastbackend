@@ -35,6 +35,7 @@ func Provision(svc *types.Service) error {
 
 	var (
 		stg = envs.Get().GetStorage()
+		spc bool
 	)
 
 	sm := distribution.NewServiceModel(context.Background(), stg)
@@ -58,14 +59,21 @@ func Provision(svc *types.Service) error {
 
 	// Destroy parent deployments
 	for _, d := range dl {
+
+		if d.Spec.Meta.Name == svc.Spec.Meta.Name {
+			spc = true
+			continue
+		}
+
 		d.Spec.State.Destroy = true
 		if err := dm.Destroy(d); err != nil {
 			log.Errorf("controller:service:controller:provision: destroy deployment err: %s", err.Error())
 		}
+
 	}
 
 	// Check service is marked for destroy
-	if svc.Spec.State.Destroy {
+	if spc || svc.Spec.State.Destroy {
 		return nil
 	}
 
