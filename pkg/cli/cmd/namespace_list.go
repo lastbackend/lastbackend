@@ -33,6 +33,7 @@ func init() {
 var namespaceListCmd = &cobra.Command{
 	Use:   "ls",
 	Short: "Display the namespace list",
+	Args:  cobra.NoArgs,
 	Run: func(_ *cobra.Command, _ []string) {
 
 		cli := envs.Get().GetClient()

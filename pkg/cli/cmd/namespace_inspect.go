@@ -33,7 +33,7 @@ func init() {
 var namespaceFetchCmd = &cobra.Command{
 	Use:   "inspect",
 	Short: "Get namespace info by name",
-	Args: cobra.MinimumNArgs(1),
+	Args:  cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 
 		namespace := args[0]
