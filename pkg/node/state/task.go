@@ -23,16 +23,16 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/log"
 )
 
-func (s *TaskState) AddTask(pod *types.Pod, task *types.NodeTask) {
-	log.V(logLevel).Debugf("Cache: PodCache: add cancel func pod: %#v", pod)
-	s.tasks[pod.Meta.Name] = *task
+func (s *TaskState) AddTask(key string, task *types.NodeTask) {
+	log.V(logLevel).Debugf("Cache: PodCache: add cancel func pod: %#v", key)
+	s.tasks[key] = *task
 }
 
-func (s *TaskState) GetTask(pod *types.Pod) *types.NodeTask {
-	log.V(logLevel).Debugf("Cache: PodCache: get cancel func pod: %#v", pod)
+func (s *TaskState) GetTask(key string) *types.NodeTask {
+	log.V(logLevel).Debugf("Cache: PodCache: get cancel func pod: %#v", key)
 
-	if _, ok := s.tasks[pod.Meta.Name]; ok {
-		t := s.tasks[pod.Meta.Name]
+	if _, ok := s.tasks[key]; ok {
+		t := s.tasks[key]
 		return &t
 	}
 

@@ -449,7 +449,7 @@ func (s *NodeStorage) SetOnline(ctx context.Context, node *types.Node) error {
 	tx := client.Begin(ctx)
 
 	keyMeta := keyCreate(nodeStorage, node.Meta.Name, "online")
-	if err := tx.Update(keyMeta, true, timeout); err != nil {
+	if err := tx.Upsert(keyMeta, true, timeout); err != nil {
 		log.V(logLevel).Errorf("storage:etcd:node:> set node online err: %s", err.Error())
 		return err
 	}

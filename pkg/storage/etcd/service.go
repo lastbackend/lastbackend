@@ -68,7 +68,7 @@ func (s *ServiceStorage) Get(ctx context.Context, namespace, name string) (*type
 
 	keyMeta := keyCreate(serviceStorage, s.keyCreate(namespace, name))
 	if err := client.Map(ctx, keyMeta, filter, service); err != nil {
-		log.V(logLevel).Errorf("storage:etcd:service:> get by name err: %s", name, err.Error())
+		log.V(logLevel).Errorf("storage:etcd:service:> get by name %s err: %s", name, err.Error())
 		return nil, err
 	}
 

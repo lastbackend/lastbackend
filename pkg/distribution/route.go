@@ -87,7 +87,7 @@ func (n *Route) Create(namespace *types.Namespace, opts *types.RouteCreateOption
 	route.Meta.Name = generator.GenerateRandomString(10)
 	route.Meta.Namespace = namespace.Meta.Name
 	route.Meta.Security = opts.Security
-	route.Status.Stage = types.StageInitialized
+	route.Status.Stage = types.StateInitialized
 
 	if len(opts.Domain) != 0 && opts.Custom {
 		route.Spec.Domain = strings.ToLower(opts.Domain)
@@ -123,7 +123,7 @@ func (n *Route) Update(route *types.Route, namespace *types.Namespace, opts *typ
 	log.V(logLevel).Debugf("api:distribution:route:update update route %s", route.Meta.Name)
 
 	route.Meta.Security = opts.Security
-	route.Status.Stage = types.StageProvision
+	route.Status.Stage = types.StateProvision
 
 	route.Spec.Domain = opts.Domain
 	route.Spec.Rules = make([]*types.RouteRule, 0)

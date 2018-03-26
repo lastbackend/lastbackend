@@ -797,7 +797,7 @@ func TestServiceRemove(t *testing.T) {
 				}
 
 				if got != nil {
-					assert.Equal(t, got.Status.Stage, types.StageDestroy, "status not destroy")
+					assert.Equal(t, got.Status.State, types.StateDestroy, "status not destroy")
 				}
 
 				assert.Equal(t, tc.want, string(body), "response not equal with want")

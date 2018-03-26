@@ -99,7 +99,7 @@ func Provision(d *types.Deployment) error {
 				break
 			}
 
-			if p.Status.Stage == types.StageError {
+			if p.Status.State == types.StateError {
 				if err := pm.Destroy(context.Background(), p); err != nil {
 					log.Errorf("controller:service:controller:provision: remove pod err: %s", err.Error())
 					continue
@@ -117,7 +117,7 @@ func Provision(d *types.Deployment) error {
 				break
 			}
 
-			if p.Status.Stage == types.StageProvision {
+			if p.Status.State == types.StateProvision {
 				if err := pm.Destroy(context.Background(), p); err != nil {
 					log.Errorf("controller:service:controller:provision: remove pod err: %s", err.Error())
 					continue
@@ -135,7 +135,7 @@ func Provision(d *types.Deployment) error {
 				break
 			}
 
-			if d.Status.Stage == types.StageReady {
+			if d.Status.State == types.StateReady {
 				if err := pm.Destroy(context.Background(), p); err != nil {
 					log.Errorf("controller:service:controller:provision: remove pod err: %s", err.Error())
 					continue
@@ -147,11 +147,116 @@ func Provision(d *types.Deployment) error {
 	}
 
 	// Update deployment state
-	d.Status.Stage = types.StageProvision
+	d.Status.State = types.StateProvision
 	if err := distribution.NewDeploymentModel(context.Background(), stg).SetStatus(d); err != nil {
 		log.Errorf("controller:deployment:controller:provision: deployment set state err: %s", err.Error())
 		return err
 	}
+
+	return nil
+}
+
+// Handler Deployment status
+func HandleStatus(d *types.Deployment) error {
+
+	var (
+		stg = envs.Get().GetStorage()
+		lst = "controller:deployment:controller:status>"
+		status = make(map[string]int)
+		message string
+	)
+
+	dm := distribution.NewDeploymentModel(context.Background(), stg)
+	sm := distribution.NewServiceModel(context.Background(), stg)
+
+	// Skip state handle
+	if d.Status.State == types.StateDestroy {
+		log.Debugf("%s> skip deployment status [%s] handle: %s", lst, d.Status.State, d.Meta.Name)
+		return nil
+	}
+
+
+
+	svc, err  := sm.Get(d.Meta.Namespace, d.Meta.Service)
+	if err != nil {
+		log.Errorf("%s> get service err: %s", lst, err.Error())
+		return err
+	}
+
+	if svc == nil {
+		log.Errorf("%s> service [%s:%s] not found", d.Meta.Namespace, d.Meta.Service)
+		return nil
+	}
+
+	dl, err := dm.ListByService(svc.Meta.Namespace, svc.Meta.Name)
+	if err != nil {
+		log.Errorf("%s> get pod list err: %s", lst, err.Error())
+		return err
+	}
+
+	for _, di := range dl {
+
+		switch di.Status.State {
+		case types.StateError:
+			status[types.StateError]+=1
+			// TODO: check if many pods contains different errors: create an error map
+			message = di.Status.Message
+			break
+		case types.StateProvision :
+			status[types.StateProvision]+=1
+			break
+		case types.StateRunning :
+			status[types.StateRunning]+=1
+			break
+		case types.StateStopped:
+			status[types.StateStopped]+=1
+			break
+		case types.StateDestroy:
+			status[types.StateDestroy]+=1
+			break
+		case types.StateDestroyed:
+			status[types.StateDestroyed]+=1
+			break
+		}
+	}
+
+	switch true {
+	case status[types.StateError] > 0:
+		svc.Status.State = types.StateError
+		svc.Status.Message = message
+		break
+	case status[types.StateProvision] > 0:
+		svc.Status.State = types.StateProvision
+		svc.Status.Message = ""
+		break
+	case status[types.StateDestroy] > 0:
+		svc.Status.State = types.StateDestroy
+		svc.Status.Message = ""
+		break
+	case status[types.StateStarted] == d.Spec.Replicas:
+		svc.Status.State = types.StateStarted
+		break
+	case status[types.StateStopped] == d.Spec.Replicas:
+		svc.Status.State = types.StateStopped
+		break
+	case status[types.StateDestroyed] == d.Spec.Replicas:
+		svc.Status.State = types.StateDestroyed
+		break
+	}
+
+	// Remove destroyed deployment
+	if d.Status.State == types.StateDestroyed {
+		if err := dm.Remove(d); err != nil {
+			log.Errorf("%s> remove deployment err: %s", lst, err.Error())
+			return err
+		}
+	}
+
+	if err := sm.SetStatus(svc); err != nil {
+		log.Errorf("%s> set deployment status err: %s", lst, err.Error())
+		return err
+	}
+
 
 	return nil
 }

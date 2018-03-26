@@ -71,8 +71,8 @@ type NodeState struct {
 type PodState struct {
 	lock       sync.RWMutex
 	stats      PodStateStats
-	containers map[string]types.Container
-	pods       map[string]types.Pod
+	containers map[string]types.PodContainer
+	pods       map[string]types.PodStatus
 }
 
 type PodStateStats struct {
@@ -87,7 +87,7 @@ type NetworkState struct {
 
 type VolumesState struct {
 	lock    sync.RWMutex
-	volumes map[string]types.Volume
+	volumes map[string]types.VolumeSpec
 }
 
 type SecretsState struct {
@@ -110,14 +110,14 @@ func New() *State {
 	state := State{
 		node: new(NodeState),
 		pods: &PodState{
-			containers: make(map[string]types.Container, 0),
-			pods:       make(map[string]types.Pod, 0),
+			containers: make(map[string]types.PodContainer, 0),
+			pods:       make(map[string]types.PodStatus, 0),
 		},
 		networks: &NetworkState{
 			subnets: make(map[string]types.Subnet, 0),
 		},
 		volumes: &VolumesState{
-			volumes: make(map[string]types.Volume, 0),
+			volumes: make(map[string]types.VolumeSpec, 0),
 		},
 		secrets: &SecretsState{
 			secrets: make(map[string]types.Secret, 0),

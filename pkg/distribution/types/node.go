@@ -148,4 +148,6 @@ type NodeUpdateMetaOptions struct {
 
 type NodeCreateOptions struct {
 	Meta NodeCreateMetaOptions `json:"meta",yaml:"meta"`
+	Info NodeInfo `json:"info",yaml:"info"`
+	Status NodeStatus `json:"status",yaml:"status"`
 }

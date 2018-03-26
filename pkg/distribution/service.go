@@ -170,7 +170,7 @@ func (s *Service) Destroy(service *types.Service) (*types.Service, error) {
 
 	log.V(logLevel).Debugf("api:distribution:service:destroy: destroy service %#v", service)
 
-	service.Status.Stage = types.StageDestroy
+	service.Status.State = types.StateDestroy
 	service.Spec.State.Destroy = true
 
 	err := s.storage.Service().SetSpec(s.context, service)

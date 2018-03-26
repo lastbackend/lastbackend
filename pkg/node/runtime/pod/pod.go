@@ -20,163 +20,107 @@ package pod
 
 import (
 	"context"
-	"fmt"
 	"io"
 	"os"
 	"time"
 
+	"net/http"
+
+	"github.com/lastbackend/lastbackend/pkg/distribution/errors"
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 	"github.com/lastbackend/lastbackend/pkg/log"
 	"github.com/lastbackend/lastbackend/pkg/node/envs"
 	"github.com/lastbackend/lastbackend/pkg/node/events"
-	"net/http"
 )
 
 const BUFFER_SIZE = 1024
 
-func Manage(ctx context.Context, pod *types.Pod) error {
-	log.Debugf("Provision pod: %s", pod.Meta.Name)
+func Manage(ctx context.Context, key string, spec *types.PodSpec) error {
+	log.Debugf("Provision pod: %s", key)
 
 	//==========================================================================
 	// Destroy pod =============================================================
 	//==========================================================================
 
 	// Call destroy pod
-	if pod.Spec.State.Destroy {
+	if spec.State.Destroy {
 
-		if task := envs.Get().GetState().Tasks().GetTask(pod); task != nil {
-			log.Debugf("Cancel pod creating: %s", pod.Meta.Name)
+		if task := envs.Get().GetState().Tasks().GetTask(key); task != nil {
+			log.Debugf("Cancel pod creating: %s", key)
 			task.Cancel()
 		}
 
-		log.Debugf("Pod found and in destroy state > destroy it: %s", pod.Meta.Name)
+		log.Debugf("Pod found and in destroy state > destroy it: %s", key)
 
-		pods := envs.Get().GetState().Pods().GetPods()
-		if p, ok := pods[pod.Meta.Name]; ok {
-			Destroy(ctx, &p)
+		p := envs.Get().GetState().Pods().GetPod(key)
+		if p == nil {
+			return errors.New(errors.PodNotFound)
 		}
 
-		pod.MarkAsDestroyed()
-		envs.Get().GetState().Pods().SetPod(pod)
-		events.NewPodStatusEvent(ctx, pod)
+		Destroy(ctx, key, p)
 
+		p.SetDestroyed()
+		envs.Get().GetState().Pods().SetPod(key, p)
+		events.NewPodStatusEvent(ctx, key)
 		return nil
 	}
 
 	//==========================================================================
-	// Create pod ==============================================================
+	// Check containers pod status =============================================
 	//==========================================================================
 
 	// Get pod list from current state
-	pods := envs.Get().GetState().Pods().GetPods()
-
-	if _, ok := pods[pod.Meta.Name]; !ok {
-		log.Debugf("Pod not found > create it: %s", pod.Meta.Name)
-
-		ctx, cancel := context.WithCancel(context.Background())
-		envs.Get().GetState().Tasks().AddTask(pod, &types.NodeTask{Cancel: cancel})
-
-		if err := Create(ctx, pod); err != nil {
-			log.Errorf("Can not be create pod: %s", pod.Meta.Name)
-			return err
-		}
-
+	p := envs.Get().GetState().Pods().GetPod(key)
+	if p != nil {
+		// TODO: check pod status
+		// if not match - recreate pod or try to fix
 		return nil
 	}
 
-	//==========================================================================
-	// Scale pod ===============================================================
-	//==========================================================================
+	log.Debugf("Pod not found > create it: %s", key)
 
-	if len(pod.Spec.Template.Containers) != len(pods[pod.Meta.Name].Status.Containers) {
+	ctx, cancel := context.WithCancel(context.Background())
+	envs.Get().GetState().Tasks().AddTask(key, &types.NodeTask{Cancel: cancel})
 
-		log.Debugf("Pod containers not match: %d != %d",
-			len(pod.Spec.Template.Containers), len(pods[pod.Meta.Name].Spec.Template.Containers))
-
-		if task := envs.Get().GetState().Tasks().GetTask(pod); task != nil {
-			log.Debugf("Cancel pod creating: %s", pod.Meta.Name)
-			task.Cancel()
-		}
-
-		pod.MarkAsDestroyed()
-		envs.Get().GetState().Pods().SetPod(pod)
-		events.NewPodStatusEvent(ctx, pod)
-		Destroy(ctx, pod)
-
-		ctx, cancel := context.WithCancel(context.Background())
-		envs.Get().GetState().Tasks().AddTask(pod, &types.NodeTask{Cancel: cancel})
-
-		if err := Create(ctx, pod); err != nil {
-			log.Errorf("Can not be create pod: %s", pod.Meta.Name)
-			return err
-		}
-
-		return nil
+	status, err := Create(ctx, key, spec)
+	if err != nil {
+		log.Errorf("Can not create pod: %s err: %s", key, err.Error())
+		status.SetError(err)
 	}
 
+	envs.Get().GetState().Pods().SetPod(key, status)
+	events.NewPodStatusEvent(ctx, key)
 	return nil
 }
 
-func Create(ctx context.Context, pod *types.Pod) error {
+func Create(ctx context.Context, key string, spec *types.PodSpec) (*types.PodStatus, error) {
 
 	var (
-		err     error
-		inspect = func(ctx context.Context, container *types.PodContainer) error {
-			info, err := envs.Get().GetCri().ContainerInspect(ctx, container.ID)
-			if err != nil {
-				switch err {
-				case context.Canceled:
-					log.Errorf("Stop inspect container %s: %s", err.Error())
-					pod.MarkAsDestroyed()
-					envs.Get().GetState().Pods().SetPod(pod)
-					events.NewPodStatusEvent(ctx, pod)
-					Clean(context.Background(), pod)
-					return nil
-				}
-				log.Errorf("Can-not inspect container: %s", err)
-				return err
-			} else {
-				container.Image = types.PodContainerImage{
-					Name: info.Image,
-				}
-				if info.Status == types.StateStopped {
-					container.State.Stopped = types.PodContainerStateStopped{
-						Stopped: true,
-						Exit: types.PodContainerStateExit{
-							Code:      info.ExitCode,
-							Timestamp: time.Now().UTC(),
-						},
-					}
-				}
-			}
-			if pod.Status.Network.PodIP == "" {
-				pod.Status.Network.PodIP = info.Network.IPAddress
-			}
-			return nil
-		}
+		err    error
+		status = types.NewPodStatus()
 	)
 
-	log.Debugf("Create pod: %s", pod.Meta.Name)
+	log.Debugf("Create pod: %s", key)
 
 	//==========================================================================
 	// Pull image ==============================================================
 	//==========================================================================
 
-	pod.MarkAsPull()
-	envs.Get().GetState().Pods().AddPod(pod)
-	events.NewPodStatusEvent(ctx, pod)
+	status.SetPull()
 
-	log.Debugf("Have %d containers", len(pod.Spec.Template.Containers))
-	for _, c := range pod.Spec.Template.Containers {
+	envs.Get().GetState().Pods().AddPod(key, status)
+	events.NewPodStatusEvent(ctx, key)
+
+	log.Debugf("Have %d containers", len(spec.Template.Containers))
+	for _, c := range spec.Template.Containers {
+
 		log.Debug("Pull images for pod if needed")
 		r, err := envs.Get().GetCri().ImagePull(ctx, &c.Image)
 		if err != nil {
 			log.Errorf("Can-not pull image: %s", err)
-			pod.MarkAsError(err)
-			envs.Get().GetState().Pods().SetPod(pod)
-			events.NewPodStatusEvent(ctx, pod)
-			Clean(context.Background(), pod)
-			return err
+			status.SetError(err)
+			Clean(context.Background(), status)
+			return status, err
 		}
 
 		io.Copy(os.Stdout, r)
@@ -186,21 +130,16 @@ func Create(ctx context.Context, pod *types.Pod) error {
 	// Run container ===========================================================
 	//==========================================================================
 
-	pod.MarkAsStarting()
-	pod.Status.Steps[types.StepPull] = types.PodStep{
+	status.SetStarting()
+	status.Steps[types.StepPull] = types.PodStep{
 		Ready:     true,
 		Timestamp: time.Now().UTC(),
 	}
-	envs.Get().GetState().Pods().SetPod(pod)
-	events.NewPodStatusEvent(ctx, pod)
 
-	for _, s := range pod.Spec.Template.Containers {
+	envs.Get().GetState().Pods().SetPod(key, status)
+	events.NewPodStatusEvent(ctx, key)
 
-		if s.Labels == nil {
-			s.Labels = make(map[string]string)
-		}
-
-		s.Labels["LB"] = fmt.Sprintf("%s/%s/%s", pod.Meta.Namespace, pod.Meta.Deployment, pod.Meta.Name)
+	for _, s := range spec.Template.Containers {
 
 		//==========================================================================
 		// Create container ========================================================
@@ -212,18 +151,8 @@ func Create(ctx context.Context, pod *types.Pod) error {
 			switch err {
 			case context.Canceled:
 				log.Errorf("Stop creating container: %s", err.Error())
-
-				if err := inspect(context.Background(), c); err != nil {
-					log.Errorf("Inspect container after create: err %s", err.Error())
-				}
-
-				pod.MarkAsDestroyed()
-				pod.Status.Containers[c.ID] = c
-				envs.Get().GetState().Pods().SetPod(pod)
-				events.NewPodStatusEvent(ctx, pod)
-				Clean(context.Background(), pod)
-
-				return nil
+				Clean(context.Background(), status)
+				return status, nil
 			}
 
 			log.Errorf("Can-not create container: %s", err)
@@ -234,22 +163,13 @@ func Create(ctx context.Context, pod *types.Pod) error {
 					Timestamp: time.Now().UTC(),
 				},
 			}
-			pod.Status.Containers[c.ID] = c
-
-			pod.MarkAsError(err)
-			envs.Get().GetState().Pods().SetPod(pod)
-			events.NewPodStatusEvent(ctx, pod)
-			Clean(context.Background(), pod)
-			return err
+			return status, err
 		}
 
-		if err := inspect(context.Background(), c); err != nil {
+		if err := containerInspect(context.Background(), status, c); err != nil {
 			log.Errorf("Inspect container after create: err %s", err.Error())
-			pod.MarkAsError(err)
-			envs.Get().GetState().Pods().SetPod(pod)
-			events.NewPodStatusEvent(ctx, pod)
-			Clean(context.Background(), pod)
-			return err
+			Clean(context.Background(), status)
+			return status, err
 		}
 
 		//==========================================================================
@@ -259,28 +179,18 @@ func Create(ctx context.Context, pod *types.Pod) error {
 		c.State.Created = types.PodContainerStateCreated{
 			Created: time.Now().UTC(),
 		}
-		pod.Status.Containers[c.ID] = c
-		envs.Get().GetState().Pods().SetPod(pod)
-		events.NewPodStatusEvent(ctx, pod)
-
+		status.Containers[c.ID] = c
+		envs.Get().GetState().Pods().SetPod(key, status)
 		log.Debugf("Container created: %#v", c)
 
 		if err := envs.Get().GetCri().ContainerStart(ctx, c.ID); err != nil {
 			switch err {
 			case context.Canceled:
 				log.Errorf("Stop starting container err: %s", err.Error())
-
-				if err := inspect(context.Background(), c); err != nil {
-					log.Errorf("Inspect container after create: err %s", err.Error())
-				}
-
-				pod.Status.Containers[c.ID] = c
-				pod.MarkAsDestroyed()
-				envs.Get().GetState().Pods().SetPod(pod)
-				events.NewPodStatusEvent(ctx, pod)
-				Clean(context.Background(), pod)
-				return nil
+				Clean(context.Background(), status)
+				return status, nil
 			}
+
 			log.Errorf("Can-not start container: %s", err)
 			c.State.Error = types.PodContainerStateError{
 				Error:   true,
@@ -290,21 +200,13 @@ func Create(ctx context.Context, pod *types.Pod) error {
 				},
 			}
 
-			pod.Status.Containers[c.ID] = c
-			pod.MarkAsError(err)
-			envs.Get().GetState().Pods().SetPod(pod)
-			events.NewPodStatusEvent(ctx, pod)
-			Clean(context.Background(), pod)
-			return err
+			status.Containers[c.ID] = c
+			return status, err
 		}
 
-		if err := inspect(context.Background(), c); err != nil {
+		if err := containerInspect(context.Background(), status, c); err != nil {
 			log.Errorf("Inspect container after create: err %s", err.Error())
-			pod.MarkAsError(err)
-			envs.Get().GetState().Pods().SetPod(pod)
-			events.NewPodStatusEvent(ctx, pod)
-			Clean(context.Background(), pod)
-			return err
+			return status, err
 		}
 
 		c.Ready = true
@@ -312,34 +214,31 @@ func Create(ctx context.Context, pod *types.Pod) error {
 			Started:   true,
 			Timestamp: time.Now().UTC(),
 		}
-		pod.Status.Containers[c.ID] = c
-		envs.Get().GetState().Pods().SetPod(pod)
-		events.NewPodStatusEvent(ctx, pod)
+		status.Containers[c.ID] = c
+		envs.Get().GetState().Pods().SetPod(key, status)
 	}
 
-	pod.MarkAsRunning()
-	pod.Status.Steps[types.StepReady] = types.PodStep{
+	status.SetRunning()
+	status.Steps[types.StepReady] = types.PodStep{
 		Ready:     true,
 		Timestamp: time.Now().UTC(),
 	}
 
-	pod.Status.Network.HostIP = envs.Get().GetCNI().Info(ctx).Addr
-	envs.Get().GetState().Pods().SetPod(pod)
-	events.NewPodStatusEvent(ctx, pod)
-
-	return nil
+	status.Network.HostIP = envs.Get().GetCNI().Info(ctx).Addr
+	envs.Get().GetState().Pods().SetPod(key, status)
+	return status, nil
 }
 
-func Clean(ctx context.Context, pod *types.Pod) {
+func Clean(ctx context.Context, status *types.PodStatus) {
 
-	for _, c := range pod.Status.Containers {
+	for _, c := range status.Containers {
 		log.Debugf("Remove unnecessary container: %s", c.ID)
 		if err := envs.Get().GetCri().ContainerRemove(ctx, c.ID, true, true); err != nil {
 			log.Warnf("Can-not remove unnecessary container %s: %s", c.ID, err)
 		}
 	}
 
-	for _, c := range pod.Spec.Template.Containers {
+	for _, c := range status.Containers {
 		log.Debugf("Try to clean image: %s", c.Image.Name)
 		if err := envs.Get().GetCri().ImageRemove(ctx, c.Image.Name); err != nil {
 			log.Warnf("Can-not remove unnecessary image %s: %s", c.Image.Name, err)
@@ -347,9 +246,9 @@ func Clean(ctx context.Context, pod *types.Pod) {
 	}
 }
 
-func Destroy(ctx context.Context, pod *types.Pod) {
-	log.Debugf("Try to remove pod: %s", pod.Meta.Name)
-	Clean(ctx, pod)
+func Destroy(ctx context.Context, pod string, status *types.PodStatus) {
+	log.Debugf("Try to remove pod: %s", pod)
+	Clean(ctx, status)
 	envs.Get().GetState().Pods().DelPod(pod)
 }
 
@@ -363,24 +262,60 @@ func Restore(ctx context.Context) error {
 	}
 
 	for _, c := range cl {
-		log.Debugf("Container restore %s", c.ID)
-		envs.Get().GetState().Pods().AddContainer(c)
 
-		pod := envs.Get().GetState().Pods().GetPod(c.Pod)
+		log.Debugf("Pod [%s] > container restore %s", c.Pod, c.ID)
 
-		if pod == nil {
-			pod = types.NewPod()
+		status := envs.Get().GetState().Pods().GetPod(c.Pod)
+		if status == nil {
+			status = types.NewPodStatus()
 		}
 
-		pod.Meta.Name = c.Pod
-		pod.Meta.Deployment = c.Deployment
-		pod.Meta.Namespace = c.Namespace
+		key := c.Pod
 
 		cs := &types.PodContainer{
 			ID: c.ID,
 			Image: types.PodContainerImage{
 				Name: c.Image,
 			},
+		}
+
+		switch c.Status {
+		case types.StateCreated:
+			cs.State = types.PodContainerState{
+				Created: types.PodContainerStateCreated{
+					Created: time.Now().UTC(),
+				},
+			}
+		case types.StateStarted:
+			cs.State = types.PodContainerState{
+				Started: types.PodContainerStateStarted{
+					Started: true,
+					Timestamp: time.Now().UTC(),
+				},
+			}
+			cs.State.Stopped.Stopped = false
+		case types.StateStopped:
+			cs.State.Stopped.Stopped = true
+			cs.State.Stopped.Exit = types.PodContainerStateExit{
+				Code:      c.ExitCode,
+				Timestamp: time.Now().UTC(),
+			}
+			cs.State.Started.Started = false
+		case types.StateError:
+
+			cs.State.Error.Error = true
+			cs.State.Error.Message = c.Status
+			cs.State.Error.Exit = types.PodContainerStateExit{
+				Code:      c.ExitCode,
+				Timestamp: time.Now().UTC(),
+			}
+			cs.State.Started.Started = false
+			cs.State.Stopped.Stopped = false
+			cs.State.Stopped.Exit = types.PodContainerStateExit{
+				Code:      c.ExitCode,
+				Timestamp: time.Now().UTC(),
+			}
+			cs.State.Started.Started = false
 		}
 
 		if c.Status == types.StateStopped {
@@ -394,9 +329,11 @@ func Restore(ctx context.Context) error {
 		}
 
 		cs.Ready = true
+		status.Containers[cs.ID] = cs
 
-		pod.Status.Containers[cs.ID] = cs
-		envs.Get().GetState().Pods().SetPod(pod)
+		log.Debugf("Container restored %s", c.ID)
+		envs.Get().GetState().Pods().SetPod(key, status)
+
 	}
 
 	return nil
@@ -465,5 +402,37 @@ func Logs(ctx context.Context, id string, follow bool, s io.Writer) error {
 	}()
 
 	<-done
+	return nil
+}
+
+func containerInspect(ctx context.Context, status *types.PodStatus, container *types.PodContainer) error {
+	info, err := envs.Get().GetCri().ContainerInspect(ctx, container.ID)
+	if err != nil {
+		switch err {
+		case context.Canceled:
+			log.Errorf("Stop inspect container %s: %s", err.Error())
+			return nil
+		}
+		log.Errorf("Can-not inspect container: %s", err)
+		return err
+	} else {
+		container.Image = types.PodContainerImage{
+			Name: info.Image,
+		}
+		if info.Status == types.StateStopped {
+			container.State.Stopped = types.PodContainerStateStopped{
+				Stopped: true,
+				Exit: types.PodContainerStateExit{
+					Code:      info.ExitCode,
+					Timestamp: time.Now().UTC(),
+				},
+			}
+		}
+	}
+
+	if status.Network.PodIP == "" {
+		status.Network.PodIP = info.Network.IPAddress
+	}
+
 	return nil
 }

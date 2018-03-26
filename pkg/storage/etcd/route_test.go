@@ -218,7 +218,7 @@ func TestRouteStorage_SetStatus(t *testing.T) {
 		nl  = make([]*types.Route, 0)
 	)
 
-	n2.Status.Stage = types.StageReady
+	n2.Status.Stage = types.StateReady
 
 	nl0 := append(nl, &n1)
 

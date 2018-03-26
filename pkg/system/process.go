@@ -33,6 +33,7 @@ import (
 
 // HeartBeat Interval
 const heartBeatInterval = 10 // in seconds
+const logLevel = 7
 
 type Process struct {
 	// Process operations context
@@ -53,7 +54,7 @@ func (c *Process) Register(ctx context.Context, kind string, stg storage.Storage
 		item = new(types.Process)
 	)
 
-	log.Debugf("System: Process: Register: %s", kind)
+	log.V(logLevel).Debugf("System: Process: Register: %s", kind)
 	item.Meta.SetDefault()
 	item.Meta.Kind = kind
 
@@ -81,17 +82,17 @@ func (c *Process) Register(ctx context.Context, kind string, stg storage.Storage
 // and master election ttl option
 func (c *Process) HeartBeat() {
 
-	log.Debugf("System: Process: Start HeartBeat for: %s", c.process.Meta.Kind)
+	log.V(logLevel).Debugf("System: Process: Start HeartBeat for: %s", c.process.Meta.Kind)
 	ticker := time.NewTicker(heartBeatInterval * time.Second)
 	for range ticker.C {
 		// Update process state
-		log.Debug("System: Process: Beat")
+		log.V(logLevel).Debug("System: Process: Beat")
 		if err := c.storage.System().ProcessSet(context.Background(), c.process); err != nil {
 
 		}
 		// Check election
 		if c.process.Meta.Lead {
-			log.Debug("System: Process: Beat: Lead TTL update")
+			log.V(logLevel).Debug("System: Process: Beat: Lead TTL update")
 			c.storage.System().ElectUpdate(context.Background(), c.process)
 		}
 
@@ -105,14 +106,14 @@ func (c *Process) WaitElected(lead chan bool) error {
 		ld = make(chan bool)
 	)
 
-	log.Debug("System: Process: Wait for election")
+	log.V(logLevel).Debug("System: Process: Wait for election")
 	l, err := c.storage.System().Elect(context.Background(), c.process)
 	if err != nil {
 		return err
 	}
 
 	if l {
-		log.Debug("System: Process: Set as Lead")
+		log.V(logLevel).Debug("System: Process: Set as Lead")
 		c.process.Meta.Lead = true
 		c.process.Meta.Slave = false
 		lead <- true

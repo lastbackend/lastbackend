@@ -87,6 +87,18 @@ func (s *PodStorage) ListByDeployment(ctx context.Context, namespace, service, d
 	return list, nil
 }
 
+// Update pod meta
+func (s *PodStorage) SetMeta(ctx context.Context, pod *types.Pod) error {
+
+	if err := s.checkPodExists(pod); err != nil {
+		return err
+	}
+
+	s.data[s.keyGet(pod)].Meta = pod.Meta
+
+	return nil
+}
+
 // Update pod spec
 func (s *PodStorage) SetSpec(ctx context.Context, pod *types.Pod) error {
 	if err := s.checkPodExists(pod); err != nil {

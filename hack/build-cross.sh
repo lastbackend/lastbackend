@@ -3,7 +3,11 @@
 mkdir -p build/linux && mkdir -p build/darwin
 
 ## declare an array of components variable
-declare -a arr=("kit" "node")
+declare -a arr=("kit" "node", "cli")
+
+if [[ $1 != "" ]]; then
+  arr=($1)
+fi
 
 ## now loop through the components array
 for i in "${arr[@]}"

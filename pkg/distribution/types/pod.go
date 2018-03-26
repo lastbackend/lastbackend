@@ -60,7 +60,7 @@ type PodSpec struct {
 
 type PodStatus struct {
 	// Pod stage
-	Stage string `json:"stage" yaml:"stage"`
+	State string `json:"stage" yaml:"stage"`
 	// Pod state message
 	Message string `json:"message" yaml:"message"`
 	// Pod steps
@@ -150,11 +150,64 @@ type PodContainerStateExit struct {
 	Timestamp time.Time `json:"timestamp" yaml:"timestamp"`
 }
 
+func (s *PodStatus) SetInitialized() {
+	s.State = StateInitialized
+	s.Message = EmptyString
+}
+
+func (s *PodStatus) SetDestroy () {
+	s.State = StateDestroy
+}
+
+func (s *PodStatus) SetDestroyed () {
+	s.State = StateDestroyed
+}
+
+func (s *PodStatus) SetPull () {
+	s.State = StatePull
+}
+
+func (s *PodStatus) SetProvision () {
+	s.State = StateProvision
+}
+
+func (s *PodStatus) SetCreated() {
+	s.State = StateCreated
+	s.Message = EmptyString
+}
+
+func (s *PodStatus) SetStarting() {
+	s.State = StateStarting
+	s.Message = EmptyString
+}
+
+func (s *PodStatus) SetRunning() {
+	s.State = StateRunning
+	s.Message = EmptyString
+}
+
+func (s *PodStatus) SetStopped() {
+	s.State = StateStopped
+	s.Message = EmptyString
+}
+
+func (s *PodStatus) SetError (err error) {
+	s.State = StateError
+	s.Message = err.Error()
+}
+
 func NewPod() *Pod {
 	pod := new(Pod)
-	pod.Status.Steps = make(PodSteps, 0)
-	pod.Status.Containers = make(map[string]*PodContainer, 0)
+	pod.Status = *NewPodStatus()
 	return pod
+}
+
+func NewPodStatus () *PodStatus {
+	status := PodStatus{
+		Steps: make(PodSteps, 0),
+		Containers: make(map[string]*PodContainer, 0),
+	}
+	return &status
 }
 
 func (p *Pod) SelfLink() string {
@@ -162,44 +215,4 @@ func (p *Pod) SelfLink() string {
 		p.Meta.SelfLink = fmt.Sprintf("%s:%s:%s:%s", p.Meta.Namespace, p.Meta.Service, p.Meta.Deployment, p.Meta.Name)
 	}
 	return p.Meta.SelfLink
-}
-
-func (p *Pod) MarkAsInitialized() {
-	p.Status.Stage = StageInitialized
-	p.Status.Message = EmptyString
-}
-
-func (p *Pod) MarkAsPull() {
-	p.Status.Stage = StepPull
-	p.Status.Message = EmptyString
-}
-
-func (p *Pod) MarkAsDestroy() {
-	p.Status.Stage = StageDestroy
-	p.Status.Message = EmptyString
-}
-
-func (p *Pod) MarkAsDestroyed() {
-	p.Status.Stage = StageDestroyed
-	p.Status.Message = EmptyString
-}
-
-func (p *Pod) MarkAsStarting() {
-	p.Status.Stage = StageStarting
-	p.Status.Message = EmptyString
-}
-
-func (p *Pod) MarkAsRunning() {
-	p.Status.Stage = StageRunning
-	p.Status.Message = EmptyString
-}
-
-func (p *Pod) MarkAsStopped() {
-	p.Status.Stage = StageStopped
-	p.Status.Message = EmptyString
-}
-
-func (p *Pod) MarkAsError(err error) {
-	p.Status.Stage = StageError
-	p.Status.Message = err.Error()
 }

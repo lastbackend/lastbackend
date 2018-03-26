@@ -20,7 +20,6 @@ package distribution
 
 import (
 	"context"
-	"github.com/lastbackend/lastbackend/pkg/distribution/errors"
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 	"github.com/lastbackend/lastbackend/pkg/log"
 	"github.com/lastbackend/lastbackend/pkg/storage"
@@ -37,6 +36,7 @@ type IPod interface {
 	ListByNamespace(namespace string) (map[string]*types.Pod, error)
 	ListByService(namespace, service string) (map[string]*types.Pod, error)
 	ListByDeployment(namespace, service, deployment string) (map[string]*types.Pod, error)
+	SetNode(pod *types.Pod, node *types.Node) error
 	SetStatus(pod *types.Pod, state *types.PodStatus) error
 	Destroy(ctx context.Context, pod *types.Pod) error
 	Remove(ctx context.Context, pod *types.Pod) error
@@ -76,7 +76,7 @@ func (p *Pod) Create(deployment *types.Deployment) (*types.Pod, error) {
 	pod.Meta.Service = deployment.Meta.Service
 	pod.Meta.Namespace = deployment.Meta.Namespace
 
-	pod.MarkAsInitialized()
+	pod.Status.SetInitialized()
 	pod.Status.Steps = make(map[string]types.PodStep)
 	pod.Status.Steps[types.StepInitialized] = types.PodStep{
 		Ready:     true,
@@ -149,6 +149,19 @@ func (p *Pod) ListByDeployment(namespace, service, deployment string) (map[strin
 	return pods, nil
 }
 
+
+func (p *Pod) SetNode(pod *types.Pod, node *types.Node) error {
+	log.Debugf("Set node for pod: %s", pod.Meta.Name)
+
+	pod.Meta.Node = node.Meta.Name
+	if err := p.storage.Pod().SetMeta(p.context, pod); err != nil {
+		log.Errorf("Pod set node err: %s", err.Error())
+		return err
+	}
+
+	return nil
+}
+
 // SetStatus - set state for pod
 func (p *Pod) SetStatus(pod *types.Pod, status *types.PodStatus) error {
 
@@ -158,39 +171,6 @@ func (p *Pod) SetStatus(pod *types.Pod, status *types.PodStatus) error {
 	if err := p.storage.Pod().SetStatus(p.context, pod); err != nil {
 		log.Errorf("Pod set status err: %s", err.Error())
 		return err
-	}
-
-	return nil
-}
-
-// SetStatus - set state for pod
-func (p *Pod) SetState(pod *types.Pod) error {
-
-	log.Debugf("Set state for pod: %s", pod.Meta.Name)
-
-	switch pod.Status.Stage {
-	case types.StagePull:
-		pod.MarkAsPull()
-	case types.StageRunning:
-		pod.MarkAsRunning()
-	case types.StageStopped:
-		pod.MarkAsStopped()
-	case types.StageError:
-		pod.MarkAsError(errors.New(pod.Status.Message))
-	case types.StageDestroyed:
-		pod.MarkAsDestroyed()
-	}
-
-	if pod.Status.Stage == types.StageDestroyed {
-		if err := p.storage.Pod().Remove(p.context, pod); err != nil {
-			log.Errorf("Pod remove err: %s", err.Error())
-			return err
-		}
-	} else {
-		if err := p.storage.Pod().SetStatus(p.context, pod); err != nil {
-			log.Errorf("Pod set state err: %s", err.Error())
-			return err
-		}
 	}
 
 	return nil

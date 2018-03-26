@@ -78,7 +78,7 @@ type ServiceStats struct {
 }
 
 type ServiceStatus struct {
-	Stage   string `json:"stage"`
+	State   string `json:"state"`
 	Message string `json:"message"`
 }
 

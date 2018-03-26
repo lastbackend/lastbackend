@@ -31,6 +31,8 @@ import (
 
 func Provision(p *types.Pod) error {
 
+	log.Debugf("scheduler:pod:controller:provision: start pod provision: %s", p.Meta.SelfLink)
+
 	var (
 		stg = envs.Get().GetStorage()
 
@@ -80,6 +82,7 @@ func Provision(p *types.Pod) error {
 	}
 
 	log.Debugf("Allocate node for pod: %s", p.Meta.Name)
+
 	nodes, err := nm.List()
 	if err != nil {
 		log.Errorf("Node: allocate: get nodes error: %s", err.Error())
@@ -132,7 +135,7 @@ func Provision(p *types.Pod) error {
 		log.Debug("Node: Allocate: Available node not found")
 
 		if err := distribution.NewPodModel(context.Background(), stg).SetStatus(p, &types.PodStatus{
-			Stage:   types.StageError,
+			State:   types.StateError,
 			Message: errors.NodeNotFound,
 		}); err != nil {
 			log.Errorf("set pod state error: %s", err.Error())
@@ -142,9 +145,63 @@ func Provision(p *types.Pod) error {
 		return errors.New(errors.NodeNotFound)
 	}
 
+	p.Meta.Node = node.Meta.Name
+
+	if err := pm.SetNode(p, node); err != nil {
+		log.Errorf("Pod: attach node to spec err: %s", err.Error())
+		return err
+	}
+
 	if err := nm.InsertPod(node, p); err != nil {
 		log.Errorf("Node: Pod spec add: insert spec to node err: %s", err.Error())
 		return err
+	}
+
+	return nil
+}
+
+func HandleStatus(p *types.Pod) error {
+
+	log.Debugf("scheduler:pod:controller:status: handle pod status: %s", p.Meta.SelfLink)
+
+	var (
+		stg = envs.Get().GetStorage()
+	)
+
+	nm := distribution.NewNodeModel(context.Background(), stg)
+
+	if p.Meta.Node == "" {
+		log.Debugf("scheduler:pod:controller:status: pod is not allocated for node: %s", p.Meta.SelfLink)
+		return nil
+	}
+
+	n, err := nm.Get(p.Meta.Node)
+	if err != nil {
+		log.Errorf("Node: find node err: %s", err.Error())
+		return err
+	}
+
+	if n == nil {
+		log.Errorf("Node: not found")
+		return errors.New(errors.NodeNotFound)
+	}
+
+	if p.Status.State == types.StateProvision || p.Status.State == types.StateInitialized {
+		return nil
+	}
+
+	if p.Status.State == types.StateError {
+		if err := stg.Node().RemovePod(context.Background(), n, p); err != nil {
+			log.Errorf("scheduler:pod:controller:status> handle status err: %s", err.Error())
+			return err
+		}
+	}
+
+	if p.Status.State == types.StateDestroyed {
+		if err := stg.Node().RemovePod(context.Background(), n, p); err != nil {
+			log.Errorf("scheduler:pod:controller:status> handle status err: %s", err.Error())
+			return err
+		}
 	}
 
 	return nil

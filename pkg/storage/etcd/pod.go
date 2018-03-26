@@ -202,6 +202,31 @@ func (s *PodStorage) ListByDeployment(ctx context.Context, namespace, service, d
 	return pods, nil
 }
 
+// Update pod meta
+func (s *PodStorage) SetMeta(ctx context.Context, pod *types.Pod) error {
+
+	log.V(logLevel).Debugf("storage:etcd:pod:> update pod meta: %#v", pod)
+
+	if err := s.checkPodExists(ctx, pod); err != nil {
+		return err
+	}
+
+	client, destroy, err := getClient(ctx)
+	if err != nil {
+		log.V(logLevel).Errorf("storage:etcd:pod:>: update pod err: %s", err.Error())
+		return err
+	}
+	defer destroy()
+
+	key := keyCreate(podStorage, s.keyGet(pod), "meta")
+	if err := client.Upsert(ctx, key, pod.Meta, nil, 0); err != nil {
+		log.V(logLevel).Errorf("storage:etcd:pod:>: update pod err: %s", err.Error())
+		return err
+	}
+
+	return nil
+}
+
 // Update pod spec
 func (s *PodStorage) SetSpec(ctx context.Context, pod *types.Pod) error {
 
@@ -421,7 +446,7 @@ func (s *PodStorage) WatchSpec(ctx context.Context, pod chan *types.Pod) error {
 	key := keyCreate(podStorage)
 	cb := func(action, key string, _ []byte) {
 		keys := r.FindStringSubmatch(key)
-		if len(keys) < 3 {
+		if len(keys) < 5 {
 			return
 		}
 

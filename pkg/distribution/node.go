@@ -73,6 +73,9 @@ func (n *Node) Create(opts *types.NodeCreateOptions) (*types.Node, error) {
 	ni.Meta.Region = opts.Meta.Region
 	ni.Meta.Provider = opts.Meta.Provider
 
+	ni.Info = opts.Info
+	ni.Status = opts.Status
+
 	if ni.Meta.Token == "" {
 		ni.Meta.Token = generator.GenerateRandomString(32)
 	}

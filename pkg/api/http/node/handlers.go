@@ -141,7 +141,7 @@ func NodeListH(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func NodeUpdateH(w http.ResponseWriter, r *http.Request) {
+func NodeSetMetaH(w http.ResponseWriter, r *http.Request) {
 
 	nid := utils.Vars(r)["node"]
 
@@ -152,7 +152,7 @@ func NodeUpdateH(w http.ResponseWriter, r *http.Request) {
 	)
 
 	// request body struct
-	opts := new(request.NodeUpdateOptions)
+	opts := new(request.NodeMetaOptions)
 	if err := opts.DecodeAndValidate(r.Body); err != nil {
 		log.V(logLevel).Errorf("Handler: Node: validation incoming data", err)
 		err.Http(w)
@@ -192,17 +192,17 @@ func NodeUpdateH(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func NodeSetInfoH(w http.ResponseWriter, r *http.Request) {
+func NodeConnectH(w http.ResponseWriter, r *http.Request) {
 
-	log.V(logLevel).Debug("Handler: Node: node set info")
+	log.V(logLevel).Debug("Handler: Node: node connect")
 
 	var (
-		nm  = distribution.NewNodeModel(r.Context(), envs.Get().GetStorage())
-		nid = utils.Vars(r)["node"]
+		nm= distribution.NewNodeModel(r.Context(), envs.Get().GetStorage())
+		nid= utils.Vars(r)["node"]
 	)
 
 	// request body struct
-	opts := new(request.NodeInfoOptions)
+	opts := new(request.NodeConnectOptions)
 	if err := opts.DecodeAndValidate(r.Body); err != nil {
 		log.V(logLevel).Errorf("Handler: Node: validation incoming data", err)
 		err.Http(w)
@@ -216,19 +216,48 @@ func NodeSetInfoH(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if node == nil {
-		log.V(logLevel).Warnf("Handler: Node: update node `%s` not found", nid)
-		errors.New("node").NotFound().Http(w)
+
+		nco := types.NodeCreateOptions{}
+
+		nco.Meta.Name = opts.Info.Hostname
+		nco.Info = opts.Info
+		nco.Status = opts.Status
+
+		node, err = nm.Create(&nco)
+		if err != nil {
+			log.V(logLevel).Errorf("Handler: Node: validation incoming data", err)
+			errors.HTTP.InternalServerError(w)
+			return
+		}
+
+		if err := nm.SetOnline(node); err != nil {
+			log.V(logLevel).Errorf("Handler: Node: get nodes list err: %s", err)
+			errors.HTTP.InternalServerError(w)
+			return
+		}
+
+		w.WriteHeader(http.StatusOK)
+		if _, err := w.Write([]byte{}); err != nil {
+			log.Errorf("Handler: Node: write response err: %s", err)
+			return
+		}
+
 		return
 	}
 
-	if err := nm.SetInfo(node, types.NodeInfo{
-		Hostname:     opts.Hostname,
-		Architecture: opts.Architecture,
-		OSName:       opts.OSName,
-		OSType:       opts.OSType,
-		ExternalIP:   opts.ExternalIP,
-		InternalIP:   opts.InternalIP,
-	}); err != nil {
+	if err := nm.SetInfo(node, opts.Info); err != nil {
+		log.V(logLevel).Errorf("Handler: Node: get nodes list err: %s", err)
+		errors.HTTP.InternalServerError(w)
+		return
+	}
+
+	if err := nm.SetStatus(node, opts.Status); err != nil {
+		log.V(logLevel).Errorf("Handler: Node: get nodes list err: %s", err)
+		errors.HTTP.InternalServerError(w)
+		return
+	}
+
+	if err := nm.SetOnline(node); err != nil {
 		log.V(logLevel).Errorf("Handler: Node: get nodes list err: %s", err)
 		errors.HTTP.InternalServerError(w)
 		return
@@ -274,7 +303,13 @@ func NodeSetStatusH(w http.ResponseWriter, r *http.Request) {
 		Capacity:  opts.Capacity,
 		Allocated: opts.Allocated,
 	}); err != nil {
-		log.V(logLevel).Errorf("Handler: Node: get nodes list err: %s", err)
+		log.V(logLevel).Errorf("Handler: Node: set status err: %s", err)
+		errors.HTTP.InternalServerError(w)
+		return
+	}
+
+	if err := nm.SetOnline(node); err != nil {
+		log.V(logLevel).Errorf("Handler: Node: set status err: %s", err)
 		errors.HTTP.InternalServerError(w)
 		return
 	}
@@ -337,7 +372,7 @@ func NodeSetPodStatusH(w http.ResponseWriter, r *http.Request) {
 	log.Info(pod)
 
 	if err := pm.SetStatus(pod, &types.PodStatus{
-		Stage:      opts.Stage,
+		State:      opts.Stage,
 		Message:    opts.Message,
 		Steps:      opts.Steps,
 		Network:    opts.Network,

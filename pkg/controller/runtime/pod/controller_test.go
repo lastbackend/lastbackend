@@ -2,7 +2,7 @@
 // Last.Backend LLC CONFIDENTIAL
 // __________________
 //
-// [2014] - [2018] Last.Backend LLC
+// [2014] - [2017] Last.Backend LLC
 // All Rights Reserved.
 //
 // NOTICE:  All information contained herein is, and remains
@@ -16,29 +16,4 @@
 // from Last.Backend LLC.
 //
 
-package types
-
-const StateProvision = "provision"
-const StateInitialized = "initialized"
-const StateWarning = "warning"
-const StateReady = "ready"
-
-
-const StatePull    = "pull"
-const StateDestroy = "destroy"
-const StateCancel = "cancel"
-
-const StateCreated = "created"
-const StateStarting = "starting"
-const StateStarted = "started"
-const StateStopped = "stopped"
-const StateDestroyed = "destroyed"
-
-const StateExited = "exited"
-const StateRunning = "running"
-const StateError = "error"
-
-
-const StepInitialized = "initialized"
-const StepPull        = "pull"
-const StepReady       = "ready"
+package pod

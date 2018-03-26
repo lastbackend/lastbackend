@@ -28,26 +28,6 @@ import (
 const (
 	DEFAULT_SERVICE_MEMORY   int64 = 128
 	DEFAULT_SERVICE_REPLICAS int   = 1
-
-	StepInitialized = "initialized"
-	StepScheduled   = "scheduled"
-	StepPull        = "pull"
-	StepDestroyed   = "destroyed"
-	StepReady       = "ready"
-
-	StageInitialized = StepInitialized
-	StageScheduled   = StepScheduled
-	StagePull        = StepPull
-
-	StageStarting  = "starting"
-	StageRunning   = "running"
-	StageStopped   = "stopped"
-	StageDestroyed = "destroyed"
-	StageProvision = "provision"
-	StageReady     = "ready"
-	StageCancel    = "cancel"
-	StageDestroy   = "destroy"
-	StageError     = "error"
 )
 
 type Service struct {
@@ -73,7 +53,7 @@ type ServiceEndpoint struct {
 }
 
 type ServiceStatus struct {
-	Stage   string `json:"stage"`
+	State   string `json:"state"`
 	Message string `json:"message"`
 }
 
@@ -135,9 +115,8 @@ func (s *ServiceSpec) Update(spec *ServiceOptionsSpec) {
 	var (
 		f bool
 		i int
+		n bool
 	)
-
-	s.Meta.Name = uuid.NewV4().String()
 
 	if spec.Replicas != nil {
 		s.Replicas = *spec.Replicas
@@ -156,12 +135,15 @@ func (s *ServiceSpec) Update(spec *ServiceOptionsSpec) {
 		c.Role = ContainerRolePrimary
 	}
 
+
 	if spec.Command != nil {
 		c.Exec.Command = strings.Split(*spec.Command, " ")
+		n = true
 	}
 
 	if spec.Entrypoint != nil {
 		c.Exec.Entrypoint = strings.Split(*spec.Entrypoint, " ")
+		n = true
 	}
 
 	if spec.Ports != nil {
@@ -172,6 +154,7 @@ func (s *ServiceSpec) Update(spec *ServiceOptionsSpec) {
 				ContainerPort: val.Internal,
 			})
 		}
+		n = true
 	}
 
 	if spec.EnvVars != nil {
@@ -185,16 +168,23 @@ func (s *ServiceSpec) Update(spec *ServiceOptionsSpec) {
 			}
 			c.EnvVars = append(c.EnvVars, env)
 		}
+		n = true
 	}
 
 	if spec.Memory != nil {
 		c.Resources.Limits.RAM = *spec.Memory
+		n = true
 	}
 
 	if !f {
 		s.Template.Containers = append(s.Template.Containers, c)
 	} else {
 		s.Template.Containers[i] = c
+	}
+
+	// Need to create new spec name for new deployment creating
+	if n {
+		s.Meta.Name = uuid.NewV4().String()
 	}
 }
 

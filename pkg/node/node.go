@@ -35,6 +35,8 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/node/runtime/cni/cni"
 	"github.com/lastbackend/lastbackend/pkg/node/runtime/cri/cri"
 	"github.com/spf13/viper"
+	"github.com/lastbackend/lastbackend/pkg/api/client"
+	"fmt"
 )
 
 // Daemon - run node daemon
@@ -70,11 +72,40 @@ func Daemon() {
 	state.Node().Info = node.GetInfo()
 	state.Node().Status = node.GetStatus()
 
+	host := viper.GetString("api.uri")
+	tls  := viper.GetBool("api.tls")
+
+	schema := "http"
+	if tls {
+		schema = "https"
+	}
+
+	endpoint := fmt.Sprintf("%s://%s", schema, host)
+	types.SecretAccessToken = viper.GetString("token")
+
+	rest, err := client.NewHTTP(endpoint, &client.Config{
+		BearerToken: types.SecretAccessToken,
+		Timeout: 5,
+	})
+
+	if err != nil {
+		log.Errorf("node:initialize client err: %s", err.Error())
+		os.Exit(0)
+	}
+
+	c := rest.V1().Cluster().Node(state.Node().Info.Hostname)
+
+	envs.Get().SetClient(c)
+
+	if err := r.Connect(context.Background()); err != nil {
+		log.Fatalf("node:initialize: connect err %s", err.Error())
+	}
+
 	r.Subscribe()
 	r.Loop()
 
 	go func() {
-		types.SecretAccessToken = viper.GetString("token")
+
 		if err := http.Listen(viper.GetString("node.host"), viper.GetInt("node.port")); err != nil {
 			log.Fatalf("Http server start error: %v", err)
 		}

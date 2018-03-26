@@ -78,6 +78,34 @@ func (obj *Node) ToJson() ([]byte, error) {
 	return json.Marshal(obj)
 }
 
+func (obj *NodeSpec) Decode() *types.NodeSpec {
+
+	spec :=types.NodeSpec {
+		Network: make(map[string]types.Subnet, 0),
+		Pods : make(map[string]types.PodSpec, 0),
+		Volumes : make(map[string]types.VolumeSpec, 0),
+		Routes  : make(map[string]types.RouteSpec, 0),
+	}
+
+	for i, s := range obj.Network {
+		spec.Network[i]=s
+	}
+
+	for i, s := range obj.Pods {
+		spec.Pods[i]=s
+	}
+
+	for i, s := range obj.Volumes {
+		spec.Volumes[i]=s
+	}
+
+	for i, s := range obj.Routes {
+		spec.Routes[i]=s
+	}
+
+	return &spec
+}
+
 func (nv *NodeView) NewList(obj map[string]*types.Node) *NodeList {
 	if obj == nil {
 		return nil

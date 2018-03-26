@@ -57,7 +57,7 @@ func GetClient(_ context.Context) (s.Store, s.DestroyFunc, error) {
 	}
 
 	destroyFunc := func() {
-		client.Close()
+		//client.Close()
 	}
 
 	codec := serializer.NewSerializer(json.Encoder{}, json.Decoder{})
