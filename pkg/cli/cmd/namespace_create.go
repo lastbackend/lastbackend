@@ -35,12 +35,8 @@ func init() {
 var namespaceCreateCmd = &cobra.Command{
 	Use:   "create",
 	Short: "Create new namespace",
+	Args: cobra.MinimumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
-
-		if len(args) != 1 {
-			cmd.Help()
-			return
-		}
 
 		opts := new(request.NamespaceCreateOptions)
 

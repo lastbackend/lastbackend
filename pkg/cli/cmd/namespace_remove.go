@@ -26,12 +26,17 @@ import (
 	"github.com/spf13/cobra"
 )
 
+func init() {
+	namespaceCmd.AddCommand(namespaceRemoveCmd)
+}
+
 var namespaceRemoveCmd = &cobra.Command{
 	Use:   "remove",
 	Short: "Remove namespace by name",
+	Args: cobra.MinimumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 
-		namespace := cmd.Parent().Name()
+		namespace := args[0]
 		opts := &request.NamespaceRemoveOptions{Force: false}
 
 		if err := opts.Validate(); err != nil {

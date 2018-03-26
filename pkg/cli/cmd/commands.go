@@ -99,9 +99,6 @@ var namespaceCmd = &cobra.Command{
 			serviceCmd,
 			secretCmd,
 			routeCmd,
-			namespaceFetchCmd,
-			namespaceUpdateCmd,
-			namespaceRemoveCmd,
 		)
 
 		ns.Execute()

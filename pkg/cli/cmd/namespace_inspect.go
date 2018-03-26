@@ -26,12 +26,17 @@ import (
 	"github.com/spf13/cobra"
 )
 
+func init() {
+	namespaceCmd.AddCommand(namespaceFetchCmd)
+}
+
 var namespaceFetchCmd = &cobra.Command{
 	Use:   "inspect",
 	Short: "Get namespace info by name",
+	Args: cobra.MinimumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 
-		namespace := cmd.Parent().Name()
+		namespace := args[0]
 
 		cli := envs.Get().GetClient()
 		response, err := cli.V1().Namespace(namespace).Get(envs.Background())

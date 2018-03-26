@@ -29,17 +29,17 @@ import (
 
 func init() {
 	namespaceUpdateCmd.Flags().StringP("desc", "d", "", "set namespace description")
+	namespaceCmd.AddCommand(namespaceUpdateCmd)
 }
 
 var namespaceUpdateCmd = &cobra.Command{
 	Use:   "update",
 	Short: "Update the namespace by name",
+	Args: cobra.MinimumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 
-		namespace := cmd.Parent().Name()
+		namespace := args[0]
 		desc := cmd.Flag("desc").Value.String()
-
-		fmt.Println("desc >>>>>>>", desc)
 
 		opts := new(request.NamespaceUpdateOptions)
 		opts.Description = &desc
