@@ -68,6 +68,9 @@ func HandleStatus (p *types.Pod) error {
 		case types.StateCreated :
 			status[types.StateProvision]+=1
 			break
+		case types.StateStarting:
+			status[types.StateProvision]+=1
+			break
 		case types.StateStarted:
 			status[types.StateRunning]+=1
 			break

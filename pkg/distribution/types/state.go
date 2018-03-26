@@ -29,6 +29,7 @@ const StateDestroy = "destroy"
 const StateCancel = "cancel"
 
 const StateCreated = "created"
+const StateStarting = "starting"
 const StateStarted = "started"
 const StateStopped = "stopped"
 const StateDestroyed = "destroyed"

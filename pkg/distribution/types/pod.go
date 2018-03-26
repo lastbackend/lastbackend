@@ -176,6 +176,11 @@ func (s *PodStatus) SetCreated() {
 	s.Message = EmptyString
 }
 
+func (s *PodStatus) SetStarting() {
+	s.State = StateStarting
+	s.Message = EmptyString
+}
+
 func (s *PodStatus) SetRunning() {
 	s.State = StateRunning
 	s.Message = EmptyString
