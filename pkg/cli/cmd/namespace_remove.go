@@ -10,44 +10,38 @@
 // if any.  The intellectual and technical concepts contained
 // herein are proprietary to Last.Backend LLC
 // and its suppliers and may be covered by Russian Federation and Foreign Patents,
-// patents in process, and are protected by trade secret or copyright law.
+// patents in process, and are protected by trade secretCmd or copyright law.
 // Dissemination of this information or reproduction of this material
 // is strictly forbidden unless prior written permission is obtained
 // from Last.Backend LLC.
 //
 
-package namespace
+package cmd
 
 import (
+	"fmt"
+
+	"github.com/lastbackend/lastbackend/pkg/api/types/v1/request"
+	"github.com/lastbackend/lastbackend/pkg/cli/envs"
 	"github.com/spf13/cobra"
 )
 
-var NamespaceCreate = &cobra.Command{
-	Use:   "create",
-	Short: "Create new namespace",
-	Run:   CreateCmd,
-}
-
-var NamespaceFetch = &cobra.Command{
-	Use:   "info",
-	Short: "Get namespace info by name",
-	Run:   FetchCmd,
-}
-
-var NamespaceList = &cobra.Command{
-	Use:   "list",
-	Short: "Display the namespace list",
-	Run:   ListCmd,
-}
-
-var NamespaceUpdate = &cobra.Command{
-	Use:   "update",
-	Short: "Update the namespace by name",
-	Run:   UpdateCmd,
-}
-
-var NamespaceRemove = &cobra.Command{
+var namespaceRemoveCmd = &cobra.Command{
 	Use:   "remove",
 	Short: "Remove namespace by name",
-	Run:   RemoveCmd,
+	Run: func(cmd *cobra.Command, args []string) {
+
+		namespace := cmd.Parent().Name()
+		opts := &request.NamespaceRemoveOptions{Force: false}
+
+		if err := opts.Validate(); err != nil {
+			fmt.Println(err.Attr)
+			return
+		}
+
+		cli := envs.Get().GetClient()
+		cli.V1().Namespace(namespace).Remove(envs.Background(), opts)
+
+		fmt.Println(fmt.Sprintf("Namespace `%s` is successfully removed", namespace))
+	},
 }

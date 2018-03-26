@@ -197,8 +197,8 @@ func NodeConnectH(w http.ResponseWriter, r *http.Request) {
 	log.V(logLevel).Debug("Handler: Node: node connect")
 
 	var (
-		nm= distribution.NewNodeModel(r.Context(), envs.Get().GetStorage())
-		nid= utils.Vars(r)["node"]
+		nm  = distribution.NewNodeModel(r.Context(), envs.Get().GetStorage())
+		nid = utils.Vars(r)["node"]
 	)
 
 	// request body struct

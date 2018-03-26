@@ -25,7 +25,7 @@ type NodeMetaOptions struct {
 }
 
 type NodeConnectOptions struct {
-	Info types.NodeInfo `json:"info"`
+	Info   types.NodeInfo   `json:"info"`
 	Status types.NodeStatus `json:"status"`
 }
 

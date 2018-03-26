@@ -155,19 +155,19 @@ func (s *PodStatus) SetInitialized() {
 	s.Message = EmptyString
 }
 
-func (s *PodStatus) SetDestroy () {
+func (s *PodStatus) SetDestroy() {
 	s.State = StateDestroy
 }
 
-func (s *PodStatus) SetDestroyed () {
+func (s *PodStatus) SetDestroyed() {
 	s.State = StateDestroyed
 }
 
-func (s *PodStatus) SetPull () {
+func (s *PodStatus) SetPull() {
 	s.State = StatePull
 }
 
-func (s *PodStatus) SetProvision () {
+func (s *PodStatus) SetProvision() {
 	s.State = StateProvision
 }
 
@@ -191,7 +191,7 @@ func (s *PodStatus) SetStopped() {
 	s.Message = EmptyString
 }
 
-func (s *PodStatus) SetError (err error) {
+func (s *PodStatus) SetError(err error) {
 	s.State = StateError
 	s.Message = err.Error()
 }
@@ -202,9 +202,9 @@ func NewPod() *Pod {
 	return pod
 }
 
-func NewPodStatus () *PodStatus {
+func NewPodStatus() *PodStatus {
 	status := PodStatus{
-		Steps: make(PodSteps, 0),
+		Steps:      make(PodSteps, 0),
 		Containers: make(map[string]*PodContainer, 0),
 	}
 	return &status

@@ -264,7 +264,6 @@ func (s *NodeClient) SetRouteStatus(ctx context.Context, route string, opts *rv1
 	return nil
 }
 
-
 func (s *NodeClient) Remove(ctx context.Context, opts *rv1.NodeRemoveOptions) error {
 
 	req := s.client.Delete(fmt.Sprintf("/cluster/node/%s", s.hostname)).

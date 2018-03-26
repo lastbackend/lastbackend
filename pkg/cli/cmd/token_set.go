@@ -10,37 +10,40 @@
 // if any.  The intellectual and technical concepts contained
 // herein are proprietary to Last.Backend LLC
 // and its suppliers and may be covered by Russian Federation and Foreign Patents,
-// patents in process, and are protected by trade secret or copyright law.
+// patents in process, and are protected by trade secretCmd or copyright law.
 // Dissemination of this information or reproduction of this material
 // is strictly forbidden unless prior written permission is obtained
 // from Last.Backend LLC.
 //
 
-package route
+package cmd
 
 import (
 	"fmt"
-	"github.com/lastbackend/lastbackend/pkg/cli/envs"
-	"github.com/lastbackend/lastbackend/pkg/cli/view"
+
+	"github.com/lastbackend/lastbackend/pkg/cli/storage"
 	"github.com/spf13/cobra"
 )
 
-func ListCmd(cmd *cobra.Command, _ []string) {
+func init() {
+	tokenCmd.AddCommand(tokenSetCmd)
+}
 
-	namespace, _ := cmd.Flags().GetString("namespace")
+var tokenSetCmd = &cobra.Command{
+	Use:   "token",
+	Short: "Set token to local storage",
+	Run: func(cmd *cobra.Command, args []string) {
 
-	if namespace == "" {
-		fmt.Println("namesapace parameter not set")
-		return
-	}
+		if len(args) != 1 {
+			cmd.Help()
+			return
+		}
 
-	cli := envs.Get().GetClient()
-	response, err := cli.V1().Namespace(namespace).Route().List(envs.Background())
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
+		if err := storage.SetToken(args[0]); err != nil {
+			fmt.Println(err)
+			return
+		}
 
-	list := view.FromApiRouteListView(response)
-	list.Print()
+		fmt.Println("Token successfully setted")
+	},
 }

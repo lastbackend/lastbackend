@@ -10,13 +10,13 @@
 // if any.  The intellectual and technical concepts contained
 // herein are proprietary to Last.Backend LLC
 // and its suppliers and may be covered by Russian Federation and Foreign Patents,
-// patents in process, and are protected by trade secret or copyright law.
+// patents in process, and are protected by trade secretCmd or copyright law.
 // Dissemination of this information or reproduction of this material
 // is strictly forbidden unless prior written permission is obtained
 // from Last.Backend LLC.
 //
 
-package secret
+package cmd
 
 import (
 	"fmt"
@@ -25,22 +25,30 @@ import (
 	"github.com/spf13/cobra"
 )
 
-func ListCmd(cmd *cobra.Command, _ []string) {
+func init() {
+	secretCmd.AddCommand(secretListCmd)
+}
 
-	namespace, _ := cmd.Flags().GetString("namespace")
+var secretListCmd = &cobra.Command{
+	Use:   "ls",
+	Short: "Display the secrets list",
+	Run: func(cmd *cobra.Command, _ []string) {
 
-	if namespace == "" {
-		fmt.Println("namesapace parameter not set")
-		return
-	}
+		namespace, _ := cmd.Flags().GetString("namespace")
 
-	cli := envs.Get().GetClient()
-	response, err := cli.V1().Namespace(namespace).Secret().List(envs.Background())
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
+		if namespace == "" {
+			fmt.Println("namesapace parameter not set")
+			return
+		}
 
-	list := view.FromApiSecretListView(response)
-	list.Print()
+		cli := envs.Get().GetClient()
+		response, err := cli.V1().Namespace(namespace).Secret().List(envs.Background())
+		if err != nil {
+			fmt.Println(err)
+			return
+		}
+
+		list := view.FromApiSecretListView(response)
+		list.Print()
+	},
 }

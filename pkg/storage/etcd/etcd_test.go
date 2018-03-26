@@ -20,12 +20,12 @@ package etcd
 
 import (
 	"context"
+	"github.com/lastbackend/lastbackend/pkg/log"
 	"github.com/lastbackend/lastbackend/pkg/storage/etcd/v3"
 	"github.com/lastbackend/lastbackend/pkg/storage/storage"
 	"github.com/spf13/viper"
 	"reflect"
 	"testing"
-	"github.com/lastbackend/lastbackend/pkg/log"
 )
 
 func TestStorage_Cluster(t *testing.T) {
@@ -292,7 +292,6 @@ func initStorage() {
 	cfg.Prefix = "lstbknd"
 	cfg.Endpoints = []string{"127.0.0.1:2379"}
 	viper.Set("etcd", cfg)
-
 
 	if c.store, c.dfunc, err = v3.GetClient(context.Background()); err != nil {
 		log.Errorf("etcd: store initialize err: %s", err)

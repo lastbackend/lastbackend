@@ -10,38 +10,37 @@
 // if any.  The intellectual and technical concepts contained
 // herein are proprietary to Last.Backend LLC
 // and its suppliers and may be covered by Russian Federation and Foreign Patents,
-// patents in process, and are protected by trade secret or copyright law.
+// patents in process, and are protected by trade secretCmd or copyright law.
 // Dissemination of this information or reproduction of this material
 // is strictly forbidden unless prior written permission is obtained
 // from Last.Backend LLC.
 //
 
-package secret
+package cmd
 
 import (
+	"fmt"
+
+	"github.com/lastbackend/lastbackend/pkg/cli/envs"
+	"github.com/lastbackend/lastbackend/pkg/cli/view"
 	"github.com/spf13/cobra"
 )
 
-var SecretCreate = &cobra.Command{
-	Use:   "create",
-	Short: "Create secret",
-	Run:   CreateCmd,
-}
+var namespaceFetchCmd = &cobra.Command{
+	Use:   "inspect",
+	Short: "Get namespace info by name",
+	Run: func(cmd *cobra.Command, args []string) {
 
-var SecretList = &cobra.Command{
-	Use:   "list",
-	Short: "Display the secrets list",
-	Run:   ListCmd,
-}
+		namespace := cmd.Parent().Name()
 
-var SecretUpdate = &cobra.Command{
-	Use:   "update",
-	Short: "Change configuration of the secret",
-	Run:   UpdateCmd,
-}
+		cli := envs.Get().GetClient()
+		response, err := cli.V1().Namespace(namespace).Get(envs.Background())
+		if err != nil {
+			fmt.Println(err)
+			return
+		}
 
-var SecretRemove = &cobra.Command{
-	Use:   "remove",
-	Short: "Remove secret by Name",
-	Run:   RemoveCmd,
+		ns := view.FromApiNamespaceView(response)
+		ns.Print()
+	},
 }

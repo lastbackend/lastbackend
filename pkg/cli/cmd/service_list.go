@@ -10,46 +10,45 @@
 // if any.  The intellectual and technical concepts contained
 // herein are proprietary to Last.Backend LLC
 // and its suppliers and may be covered by Russian Federation and Foreign Patents,
-// patents in process, and are protected by trade secret or copyright law.
+// patents in process, and are protected by trade secretCmd or copyright law.
 // Dissemination of this information or reproduction of this material
 // is strictly forbidden unless prior written permission is obtained
 // from Last.Backend LLC.
 //
 
-package route
+package cmd
 
 import (
 	"fmt"
-
-	"github.com/lastbackend/lastbackend/pkg/api/types/v1/request"
 	"github.com/lastbackend/lastbackend/pkg/cli/envs"
+	"github.com/lastbackend/lastbackend/pkg/cli/view"
 	"github.com/spf13/cobra"
 )
 
-func RemoveCmd(cmd *cobra.Command, args []string) {
+func init() {
+	serviceCmd.AddCommand(serviceListCmd)
+}
 
-	if len(args) != 1 {
-		cmd.Help()
-		return
-	}
-	name := args[0]
+var serviceListCmd = &cobra.Command{
+	Use:   "ls",
+	Short: "Display the services list",
+	Run: func(cmd *cobra.Command, args []string) {
 
-	namespace, _ := cmd.Flags().GetString("namespace")
+		namespace := cmd.Parent().Parent().Name()
 
-	if namespace == "" {
-		fmt.Println("namesapace parameter not set")
-		return
-	}
+		if namespace == "" {
+			fmt.Println("namesapace parameter not set")
+			return
+		}
 
-	opts := &request.RouteRemoveOptions{Force: false}
+		cli := envs.Get().GetClient()
+		response, err := cli.V1().Namespace(namespace).Service().List(envs.Background())
+		if err != nil {
+			fmt.Println(err)
+			return
+		}
 
-	if err := opts.Validate(); err != nil {
-		fmt.Println(err.Attr)
-		return
-	}
-
-	cli := envs.Get().GetClient()
-	cli.V1().Namespace(namespace).Route(name).Remove(envs.Background(), opts)
-
-	fmt.Println(fmt.Sprintf("Route `%s` remove now", name))
+		list := view.FromApiServiceListView(response)
+		list.Print()
+	},
 }

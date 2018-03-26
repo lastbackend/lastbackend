@@ -289,7 +289,7 @@ func Restore(ctx context.Context) error {
 		case types.StateStarted:
 			cs.State = types.PodContainerState{
 				Started: types.PodContainerStateStarted{
-					Started: true,
+					Started:   true,
 					Timestamp: time.Now().UTC(),
 				},
 			}

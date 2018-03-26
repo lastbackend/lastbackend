@@ -10,44 +10,40 @@
 // if any.  The intellectual and technical concepts contained
 // herein are proprietary to Last.Backend LLC
 // and its suppliers and may be covered by Russian Federation and Foreign Patents,
-// patents in process, and are protected by trade secret or copyright law.
+// patents in process, and are protected by trade secretCmd or copyright law.
 // Dissemination of this information or reproduction of this material
 // is strictly forbidden unless prior written permission is obtained
 // from Last.Backend LLC.
 //
 
-package service
+package cmd
 
 import (
+	"fmt"
+
+	"github.com/lastbackend/lastbackend/pkg/cli/envs"
+	"github.com/lastbackend/lastbackend/pkg/cli/view"
 	"github.com/spf13/cobra"
 )
 
-var ServiceCreate = &cobra.Command{
-	Use:   "create",
-	Short: "Create service",
-	Run:   CreateCmd,
+func init() {
+	clusterCmd.AddCommand(ClusterFetchCmd)
 }
 
-var ServiceFetch = &cobra.Command{
-	Use:   "info",
-	Short: "Service info by name",
-	Run:   FetchCmd,
-}
+var ClusterFetchCmd = &cobra.Command{
+	Use:   "inspect",
+	Short: "Get cluster info",
+	Run: func(_ *cobra.Command, _ []string) {
 
-var ServiceList = &cobra.Command{
-	Use:   "list",
-	Short: "Display the services list",
-	Run:   ListCmd,
-}
+		cli := envs.Get().GetClient()
 
-var ServiceUpdate = &cobra.Command{
-	Use:   "update",
-	Short: "Change configuration of the service",
-	Run:   UpdateCmd,
-}
+		response, err := cli.V1().Cluster().Get(envs.Background())
+		if err != nil {
+			fmt.Println(err)
+			return
+		}
 
-var ServiceRemove = &cobra.Command{
-	Use:   "remove",
-	Short: "Remove service by Name",
-	Run:   RemoveCmd,
+		cluster := view.FromApiClusterView(response)
+		cluster.Print()
+	},
 }

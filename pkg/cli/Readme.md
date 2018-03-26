@@ -1,4 +1,4 @@
-
+CLI commands:
 
 ## Namespace
 ns list

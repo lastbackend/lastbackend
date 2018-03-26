@@ -26,8 +26,8 @@ import (
 )
 
 type Controller struct {
-	spec  	 chan *types.Service
-	status   chan *types.Service
+	spec   chan *types.Service
+	status chan *types.Service
 	active bool
 }
 

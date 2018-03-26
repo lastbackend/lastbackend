@@ -19,19 +19,19 @@
 package pod
 
 import (
-	"github.com/lastbackend/lastbackend/pkg/distribution/types"
+	"context"
 	"github.com/lastbackend/lastbackend/pkg/controller/envs"
 	"github.com/lastbackend/lastbackend/pkg/distribution"
-	"context"
+	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 	"github.com/lastbackend/lastbackend/pkg/log"
 )
 
-func HandleStatus (p *types.Pod) error {
+func HandleStatus(p *types.Pod) error {
 
 	var (
-		stg = envs.Get().GetStorage()
-		lst = "controller:pod:controller:status>"
-		status = make(map[string]int)
+		stg     = envs.Get().GetStorage()
+		lst     = "controller:pod:controller:status>"
+		status  = make(map[string]int)
 		message string
 	)
 
@@ -55,39 +55,39 @@ func HandleStatus (p *types.Pod) error {
 		switch ps.Status.State {
 
 		case types.StateError:
-			status[types.StateError]+=1
+			status[types.StateError] += 1
 			// TODO: check if many pods contains different errors: create an error map
 			message = ps.Status.Message
 			break
-		case types.StateProvision :
-			status[types.StateProvision]+=1
+		case types.StateProvision:
+			status[types.StateProvision] += 1
 			break
-		case types.StatePull :
-			status[types.StateProvision]+=1
+		case types.StatePull:
+			status[types.StateProvision] += 1
 			break
-		case types.StateCreated :
-			status[types.StateProvision]+=1
+		case types.StateCreated:
+			status[types.StateProvision] += 1
 			break
 		case types.StateStarting:
-			status[types.StateProvision]+=1
+			status[types.StateProvision] += 1
 			break
 		case types.StateStarted:
-			status[types.StateRunning]+=1
+			status[types.StateRunning] += 1
 			break
 		case types.StateRunning:
-			status[types.StateRunning]+=1
+			status[types.StateRunning] += 1
 			break
 		case types.StateStopped:
-			status[types.StateStopped]+=1
+			status[types.StateStopped] += 1
 			break
 		case types.StateExited:
-			status[types.StateStopped]+=1
+			status[types.StateStopped] += 1
 			break
 		case types.StateDestroy:
-			status[types.StateDestroy]+=1
+			status[types.StateDestroy] += 1
 			break
 		case types.StateDestroyed:
-			status[types.StateDestroyed]+=1
+			status[types.StateDestroyed] += 1
 			break
 		}
 	}
@@ -122,7 +122,6 @@ func HandleStatus (p *types.Pod) error {
 		log.Errorf("%s> set deployment status err: %s", lst, err.Error())
 		return err
 	}
-
 
 	return nil
 }

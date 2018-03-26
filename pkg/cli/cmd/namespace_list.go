@@ -10,44 +10,39 @@
 // if any.  The intellectual and technical concepts contained
 // herein are proprietary to Last.Backend LLC
 // and its suppliers and may be covered by Russian Federation and Foreign Patents,
-// patents in process, and are protected by trade secret or copyright law.
+// patents in process, and are protected by trade secretCmd or copyright law.
 // Dissemination of this information or reproduction of this material
 // is strictly forbidden unless prior written permission is obtained
 // from Last.Backend LLC.
 //
 
-package route
+package cmd
 
 import (
+	"fmt"
+
+	"github.com/lastbackend/lastbackend/pkg/cli/envs"
+	"github.com/lastbackend/lastbackend/pkg/cli/view"
 	"github.com/spf13/cobra"
 )
 
-var RouteCreate = &cobra.Command{
-	Use:   "create",
-	Short: "Create route",
-	Run:   CreateCmd,
+func init() {
+	namespaceCmd.AddCommand(namespaceListCmd)
 }
 
-var RouteFetch = &cobra.Command{
-	Use:   "info",
-	Short: "Route info by name",
-	Run:   FetchCmd,
-}
+var namespaceListCmd = &cobra.Command{
+	Use:   "ls",
+	Short: "Display the namespace list",
+	Run: func(_ *cobra.Command, _ []string) {
 
-var RouteList = &cobra.Command{
-	Use:   "list",
-	Short: "Display the routes list",
-	Run:   ListCmd,
-}
+		cli := envs.Get().GetClient()
+		response, err := cli.V1().Namespace().List(envs.Background())
+		if err != nil {
+			fmt.Println(err)
+			return
+		}
 
-var RouteUpdate = &cobra.Command{
-	Use:   "update",
-	Short: "Change configuration of the route",
-	Run:   UpdateCmd,
-}
-
-var RouteRemove = &cobra.Command{
-	Use:   "remove",
-	Short: "Remove route by Name",
-	Run:   RemoveCmd,
+		list := view.FromApiNamespaceListView(response)
+		list.Print()
+	},
 }

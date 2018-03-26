@@ -149,7 +149,6 @@ func (p *Pod) ListByDeployment(namespace, service, deployment string) (map[strin
 	return pods, nil
 }
 
-
 func (p *Pod) SetNode(pod *types.Pod, node *types.Node) error {
 	log.Debugf("Set node for pod: %s", pod.Meta.Name)
 
