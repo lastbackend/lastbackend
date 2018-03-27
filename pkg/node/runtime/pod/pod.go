@@ -78,6 +78,7 @@ func Manage(ctx context.Context, key string, spec *types.PodSpec) error {
 	p := envs.Get().GetState().Pods().GetPod(key)
 	if p != nil {
 		if p.State != types.StateWarning {
+			events.NewPodStatusEvent(ctx, key)
 			return nil
 		}
 		Destroy(ctx, key, p)
