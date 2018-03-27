@@ -31,30 +31,27 @@ func init() {
 	secretCmd.AddCommand(secretCreateCmd)
 }
 
+const secretCreateExample = `
+  # Create secret 'token' for 'ns-demo' namespace with 'secret' data 
+  lb secret create ns-demo token secret"
+`
+
 var secretCreateCmd = &cobra.Command{
-	Use:   "create",
-	Short: "Create secretCmd",
+	Use:     "create [NAMESPACE] [NAME] [DATA]",
+	Short:   "Create secret",
+	Example: secretCreateExample,
+	Args:    cobra.ExactArgs(3),
 	Run: func(cmd *cobra.Command, args []string) {
 
-		if len(args) != 1 {
-			cmd.Help()
-			return
-		}
-
-		name := args[0]
-		namespace := cmd.Parent().Parent().Name()
-
-		if namespace == "" {
-			fmt.Println("namesapace parameter not set")
-			return
-		}
-
-		// TODO: set routeCmd options
+		namespace := args[0]
+		name := args[1]
+		data := args[2]
 
 		opts := new(request.SecretCreateOptions)
+		opts.Data = &data
 
 		if err := opts.Validate(); err != nil {
-			fmt.Println(err.Attr)
+			fmt.Println(err.Err())
 			return
 		}
 

@@ -30,17 +30,23 @@ func init() {
 	namespaceCmd.AddCommand(namespaceRemoveCmd)
 }
 
+const namespaceRemoveExample = `
+  # Remove 'ns-demo' namespace
+  lb namespace remove ns-demo"
+`
+
 var namespaceRemoveCmd = &cobra.Command{
-	Use:   "remove",
-	Short: "Remove namespace by name",
-	Args:  cobra.ExactArgs(1),
+	Use:     "remove [NAME]",
+	Short:   "Remove namespace by name",
+	Example: namespaceRemoveExample,
+	Args:    cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 
 		namespace := args[0]
 		opts := &request.NamespaceRemoveOptions{Force: false}
 
 		if err := opts.Validate(); err != nil {
-			fmt.Println(err.Attr)
+			fmt.Println(err.Err())
 			return
 		}
 

@@ -27,12 +27,19 @@ import (
 )
 
 func init() {
-	clusterCmd.AddCommand(ClusterFetchCmd)
+	clusterCmd.AddCommand(ClusterInspectCmd)
 }
 
-var ClusterFetchCmd = &cobra.Command{
-	Use:   "inspect",
-	Short: "Get cluster info",
+const clusterInspectExample = `
+  # Get information about cluster 
+  lb cluster inspect
+`
+
+var ClusterInspectCmd = &cobra.Command{
+	Use:     "inspect",
+	Short:   "Get cluster info",
+	Example: clusterInspectExample,
+	Args:    cobra.NoArgs,
 	Run: func(_ *cobra.Command, _ []string) {
 
 		cli := envs.Get().GetClient()

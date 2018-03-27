@@ -29,22 +29,29 @@ func init() {
 	routeCmd.AddCommand(routeListCmd)
 }
 
+const routeListExample = `
+  # Get all routes for 'ns-demo' namespace
+  lb route inspect ns-demo wef34fg"
+`
+
 var routeListCmd = &cobra.Command{
-	Use:   "ls",
-	Short: "Display the routes list",
-	Run: func(cmd *cobra.Command, _ []string) {
+	Use:     "ls [NAMESPACE]",
+	Short:   "Get routes list",
+	Example: routeListExample,
+	Args:    cobra.ExactArgs(1),
+	Run: func(cmd *cobra.Command, args []string) {
 
-		namespace := cmd.Parent().Parent().Name()
-
-		if namespace == "" {
-			fmt.Println("namesapace parameter not set")
-			return
-		}
+		namespace := args[0]
 
 		cli := envs.Get().GetClient()
 		response, err := cli.V1().Namespace(namespace).Route().List(envs.Background())
 		if err != nil {
 			fmt.Println(err)
+			return
+		}
+
+		if response == nil || len(*response) == 0 {
+			fmt.Println("no routes available")
 			return
 		}
 

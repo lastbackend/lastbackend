@@ -28,14 +28,20 @@ import (
 )
 
 func init() {
-	namespaceUpdateCmd.Flags().StringP("desc", "d", "", "set namespace description")
+	namespaceUpdateCmd.Flags().StringP("desc", "d", "", "set namespace description (maximum 512 chars)")
 	namespaceCmd.AddCommand(namespaceUpdateCmd)
 }
 
+const namespaceUpdateExample = `
+  # Update information for 'ns-demo' namespace
+  lb namespace update ns-demo --desc "Example new description"
+`
+
 var namespaceUpdateCmd = &cobra.Command{
-	Use:   "update",
-	Short: "Update the namespace by name",
-	Args:  cobra.ExactArgs(1),
+	Use:     "update [NAME]",
+	Short:   "Update the namespace by name",
+	Example: namespaceUpdateExample,
+	Args:    cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 
 		namespace := args[0]
@@ -45,7 +51,7 @@ var namespaceUpdateCmd = &cobra.Command{
 		opts.Description = &desc
 
 		if err := opts.Validate(); err != nil {
-			fmt.Println(err.Attr)
+			fmt.Println(err.Err())
 			return
 		}
 

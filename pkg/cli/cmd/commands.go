@@ -31,10 +31,13 @@ import (
 
 func init() {
 	RootCmd.AddCommand(
-		versionCmd,
-		namespaceCmd,
 		clusterCmd,
+		namespaceCmd,
+		routeCmd,
+		serviceCmd,
+		secretCmd,
 		tokenCmd,
+		versionCmd,
 	)
 }
 
@@ -73,11 +76,12 @@ var RootCmd = &cobra.Command{
 }
 
 var namespaceCmd = &cobra.Command{
-	Use:   "ns",
+	Use:   "namespace",
 	Short: "Manage your namespaces",
+	Args:  cobra.NoArgs,
 	Run: func(cmd *cobra.Command, args []string) {
 
-		command := "[name]"
+		command := "[string]"
 		if len(args) != 0 {
 			command = args[0]
 		}

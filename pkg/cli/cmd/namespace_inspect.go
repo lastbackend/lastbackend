@@ -27,13 +27,19 @@ import (
 )
 
 func init() {
-	namespaceCmd.AddCommand(namespaceFetchCmd)
+	namespaceCmd.AddCommand(namespaceInspectCmd)
 }
 
-var namespaceFetchCmd = &cobra.Command{
-	Use:   "inspect",
-	Short: "Get namespace info by name",
-	Args:  cobra.ExactArgs(1),
+const namespaceInspectExample = `
+  # Get information for 'ns-demo' namespace
+  lb namespace inspect ns-demo"
+`
+
+var namespaceInspectCmd = &cobra.Command{
+	Use:     "inspect [NAME]",
+	Short:   "Get namespace info by name",
+	Example: namespaceInspectExample,
+	Args:    cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 
 		namespace := args[0]

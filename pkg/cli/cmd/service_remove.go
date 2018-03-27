@@ -30,28 +30,25 @@ func init() {
 	serviceCmd.AddCommand(serviceRemoveCmd)
 }
 
+const serviceRemoveExample = `
+  # Remove 'redis' service in 'ns-demo' namespace
+  lb service remove ns-demo redis
+`
+
 var serviceRemoveCmd = &cobra.Command{
-	Use:   "remove",
-	Short: "Remove serviceCmd by Name",
+	Use:     "remove [NAMESPACE] [NAME]",
+	Short:   "Remove service by name",
+	Example: serviceRemoveExample,
+	Args:    cobra.ExactArgs(2),
 	Run: func(cmd *cobra.Command, args []string) {
 
-		if len(args) != 1 {
-			cmd.Help()
-			return
-		}
-
-		name := args[0]
-		namespace := cmd.Parent().Parent().Name()
-
-		if namespace == "" {
-			fmt.Println("namesapace parameter not set")
-			return
-		}
+		namespace := args[0]
+		name := args[1]
 
 		opts := &request.ServiceRemoveOptions{Force: false}
 
 		if err := opts.Validate(); err != nil {
-			fmt.Println(err.Attr)
+			fmt.Println(err.Err())
 			return
 		}
 

@@ -25,6 +25,7 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/storage"
 	"github.com/lastbackend/lastbackend/pkg/storage/store"
 	"github.com/lastbackend/lastbackend/pkg/util/generator"
+	"fmt"
 )
 
 type ISecret interface {
@@ -82,6 +83,9 @@ func (n *Secret) Create(namespace *types.Namespace, opts *types.SecretCreateOpti
 	secret.Meta.SetDefault()
 	secret.Meta.Name = generator.GenerateRandomString(10)
 	secret.Meta.Namespace = namespace.Meta.Name
+	if opts.Data != nil {
+		secret.Data = *opts.Data
+	}
 
 	if err := n.storage.Secret().Insert(n.context, secret); err != nil {
 		log.V(logLevel).Errorf("api:distribution:secret:crete insert secret err: %s", err)
@@ -97,11 +101,11 @@ func (n *Secret) Update(secret *types.Secret, namespace *types.Namespace, opts *
 
 	if opts.Data != nil {
 		secret.Data = *opts.Data
-
-		if err := n.storage.Secret().Update(n.context, secret); err != nil {
-			log.V(logLevel).Errorf("api:distribution:secret:update update secret err: %s", err)
-			return nil, err
-		}
+	}
+fmt.Println(">>>>>>>>", secret.Data)
+	if err := n.storage.Secret().Update(n.context, secret); err != nil {
+		log.V(logLevel).Errorf("api:distribution:secret:update update secret err: %s", err)
+		return nil, err
 	}
 
 	return secret, nil

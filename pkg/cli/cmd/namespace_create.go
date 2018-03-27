@@ -28,14 +28,20 @@ import (
 )
 
 func init() {
-	namespaceCreateCmd.Flags().StringP("desc", "d", "", "set namespace description")
+	namespaceCreateCmd.Flags().StringP("desc", "d", "", "set namespace description (maximum 512 chars)")
 	namespaceCmd.AddCommand(namespaceCreateCmd)
 }
 
+const namespaceCreateExample = `
+  # Create 'ns-demo' namespace with description
+  lb namespace create ns-demo --desc "Example description"
+`
+
 var namespaceCreateCmd = &cobra.Command{
-	Use:   "create",
-	Short: "Create new namespace",
-	Args:  cobra.ExactArgs(1),
+	Use:     "create [NAME]",
+	Short:   "Create new namespace",
+	Example: namespaceCreateExample,
+	Args:    cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 
 		opts := new(request.NamespaceCreateOptions)
@@ -44,7 +50,7 @@ var namespaceCreateCmd = &cobra.Command{
 		opts.Name = args[0]
 
 		if err := opts.Validate(); err != nil {
-			fmt.Println(err.Attr)
+			fmt.Println(err.Err())
 			return
 		}
 

@@ -26,6 +26,7 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/distribution"
 	"github.com/lastbackend/lastbackend/pkg/distribution/errors"
 	"github.com/lastbackend/lastbackend/pkg/log"
+	"github.com/lastbackend/lastbackend/pkg/util/converter"
 	"github.com/lastbackend/lastbackend/pkg/util/http/utils"
 )
 
@@ -181,6 +182,15 @@ func ServiceCreateH(w http.ResponseWriter, r *http.Request) {
 		log.V(logLevel).Errorf("api:handler:service:create get namespace", err)
 		errors.New("namespace").NotFound().Http(w)
 		return
+	}
+
+	if opts.Name == nil {
+		data, err := converter.DockerNamespaceParse(*opts.Image)
+		if err != nil {
+			errors.New("service").BadParameter("image").Http(w)
+			return
+		}
+		opts.Name = &data.Repo
 	}
 
 	srv, err := sm.Get(ns.Meta.Name, *opts.Name)

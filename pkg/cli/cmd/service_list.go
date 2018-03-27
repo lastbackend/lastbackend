@@ -29,22 +29,29 @@ func init() {
 	serviceCmd.AddCommand(serviceListCmd)
 }
 
+const serviceListExample = `
+  # Get all services for 'ns-demo' namespace  
+  lb service ls ns-demo
+`
+
 var serviceListCmd = &cobra.Command{
-	Use:   "ls",
-	Short: "Display the services list",
+	Use:     "ls [NAMESPACE]",
+	Short:   "Display the services list",
+	Example: serviceListExample,
+	Args:    cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 
-		namespace := cmd.Parent().Parent().Name()
-
-		if namespace == "" {
-			fmt.Println("namesapace parameter not set")
-			return
-		}
+		namespace := args[0]
 
 		cli := envs.Get().GetClient()
 		response, err := cli.V1().Namespace(namespace).Service().List(envs.Background())
 		if err != nil {
 			fmt.Println(err)
+			return
+		}
+
+		if response == nil || len(*response) == 0 {
+			fmt.Println("no services available")
 			return
 		}
 

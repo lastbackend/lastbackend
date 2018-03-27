@@ -31,30 +31,27 @@ func init() {
 	secretCmd.AddCommand(secretUpdateCmd)
 }
 
+const secretUpdateExample = `
+  # Update 'token' secret record with 'new-secret' data  in 'ns-demo' namespace
+  lb secret update ns-demo token new-secret"
+`
+
 var secretUpdateCmd = &cobra.Command{
-	Use:   "update",
-	Short: "Change configuration of the secretCmd",
+	Use:     "update [NAMESPACE] [NAME] [DATA]",
+	Short:   "Change configuration of the secret",
+	Example: secretUpdateExample,
+	Args:    cobra.ExactArgs(3),
 	Run: func(cmd *cobra.Command, args []string) {
 
-		if len(args) != 1 {
-			cmd.Help()
-			return
-		}
-
-		name := args[0]
-		namespace := cmd.Parent().Parent().Name()
-
-		if namespace == "" {
-			fmt.Println("namesapace parameter not set")
-			return
-		}
-
-		// TODO: set routeCmd options
+		namespace := args[0]
+		name := args[1]
+		data := args[2]
 
 		opts := new(request.SecretUpdateOptions)
+		opts.Data = &data
 
 		if err := opts.Validate(); err != nil {
-			fmt.Println(err.Attr)
+			fmt.Println(err.Err())
 			return
 		}
 

@@ -28,29 +28,27 @@ import (
 )
 
 func init() {
-	serviceCreateCmd.Flags().StringP("desc", "d", "", "dset serviceCmd description")
-	serviceCreateCmd.Flags().StringP("name", "n", "", "set serviceCmd name")
-	serviceCreateCmd.Flags().Int64P("memory", "m", 128, "set serviceCmd spec memory")
-	serviceCreateCmd.Flags().IntP("replicas", "r", 1, "set serviceCmd replicas")
+	serviceCreateCmd.Flags().StringP("desc", "d", "", "set service description")
+	serviceCreateCmd.Flags().StringP("name", "n", "", "set service name")
+	serviceCreateCmd.Flags().Int64P("memory", "m", 128, "set service spec memory")
+	serviceCreateCmd.Flags().IntP("replicas", "r", 1, "set service replicas")
 	serviceCmd.AddCommand(serviceCreateCmd)
 }
 
+const serviceCreateExample = `
+  # Create new redis service with description and 256 MB limit memory
+  lb service create ns-demo redis --desc "Example description" -m 256
+`
+
 var serviceCreateCmd = &cobra.Command{
-	Use:   "create",
-	Short: "Create serviceCmd",
+	Use:     "create [NAMESPACE] [IMAGE]",
+	Short:   "Create service",
+	Example: serviceCreateExample,
+	Args:    cobra.ExactArgs(2),
 	Run: func(cmd *cobra.Command, args []string) {
 
-		if len(args) != 1 {
-			cmd.Help()
-			return
-		}
-
-		namespace := cmd.Parent().Parent().Name()
-
-		if namespace == "" {
-			fmt.Println("namesapace parameter not set")
-			return
-		}
+		namespace := args[0]
+		image := args[1]
 
 		description, _ := cmd.Flags().GetString("desc")
 		memory, _ := cmd.Flags().GetInt64("memory")
@@ -60,14 +58,27 @@ var serviceCreateCmd = &cobra.Command{
 		opts := new(request.ServiceCreateOptions)
 		opts.Spec = new(request.ServiceOptionsSpec)
 
-		opts.Name = &name
+		if len(name) != 0 {
+			opts.Name = &name
+		}
+
+		if len(description) != 0 {
+			opts.Description = &description
+		}
+
+		if memory != 0 {
+			opts.Spec.Memory = &memory
+		}
+
+		if replicas != 0 {
+			opts.Spec.Replicas = &replicas
+		}
+
 		opts.Description = &description
-		opts.Image = &args[0]
-		opts.Spec.Memory = &memory
-		opts.Spec.Replicas = &replicas
+		opts.Image = &image
 
 		if err := opts.Validate(); err != nil {
-			fmt.Println(err.Attr)
+			fmt.Println(err.Err())
 			return
 		}
 

@@ -1,28 +1,31 @@
 CLI commands:
 
 ## Namespace
-ns list
-ns create <name:string> --decs <string[optional]> --memory <int[optional]> --route <int[optional]>
-ns update <name:string> --desc <string[optional]> --memory <int[optional]> --route <int[optional]>
-ns inspect <name:string>
-ns remove <name:string>
+namespace ls
+namespace create [NAME] --decs <string[optional]> --memory <int[optional]> --route <int[optional]>
+namespace update [NAME] --decs <string[optional]> --memory <int[optional]> --route <int[optional]>
+namespace remove [NAME]
+namespace inspect [NAME]
+namespace watch [NAME]
 
 ## Service
-ns <name:string> service list
-ns <name:string> service create <image:string> --name <string[optional]> --desc <string[optional]> --replicas <int[optional]> --memory <int[optional]>
-ns <name:string> service update <name:string> --desc <string[optional]> --replicas <int[optional]> --memory <int[optional]>
-ns <name:string> service inspect <name:string>  
-ns <name:string> service remove <name:string> 
- 
-## Secret
-ns <name:string> secret list 
-ns <name:string> secret create <name:string> <data:string> 
-ns <name:string> secret update <name:string> <data:string> 
-ns <name:string> secret remove <name:string> 
+service ls [NAMESPACE] 
+service create [NAMESPACE] [IMAGE] --name <string[optional]> --desc <string[optional]> --replicas <int[optional]> --memory <int[optional]>
+service update [NAMESPACE] [NAME] --desc <string[optional]> --replicas <int[optional]> --memory <int[optional]>
+service remove [NAMESPACE] [NAME] 
+service inspect [NAMESPACE] [NAME]  
+service watch [NAMESPACE] [NAME] 
+service logs [NAMESPACE] [NAME] --pod=<string> --container=<string> 
 
 ## Route
-ns <name:string> route list 
-ns <name:string> route create <endpoint:string> <port:int> 
-ns <name:string> route update <name:string> <endpoint:string> <port:int> 
-ns <name:string> route inspect <name:string> 
-ns <name:string> route remove <name:string> 
+route ls [NAMESPACE] 
+route create [NAMESPACE] [ENDPOINT] [PORT] 
+route update [NAMESPACE] [NAME] [ENDPOINT] [PORT] 
+route remove [NAMESPACE] [NAME] 
+route inspect [NAMESPACE] [NAME]
+
+## Secret
+secret ls [NAMESPACE] 
+secret create [NAMESPACE] [NAME] [DATA] 
+secret update [NAMESPACE] [NAME] [DATA] 
+secret remove [NAMESPACE] [NAME]  

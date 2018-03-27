@@ -31,29 +31,26 @@ func init() {
 	routeCmd.AddCommand(routeUpdateCmd)
 }
 
+const routeUpdateExample = `
+  # Update 'wef34fg' route for 'ns-demo' namespace
+  lb route update ns-demo wef34fg blog-ns-demo.lstbknd.net 443"
+`
+
 var routeUpdateCmd = &cobra.Command{
-	Use:   "update",
-	Short: "Change configuration of the routeCmd",
+	Use:     "update [NAMESPACE] [NAME] [ENDPOINT] [PORT]",
+	Short:   "Change configuration of the route",
+	Example: routeUpdateExample,
+	Args:    cobra.ExactArgs(4),
 	Run: func(cmd *cobra.Command, args []string) {
 
-		if len(args) != 1 {
-			cmd.Help()
-			return
-		}
-
-		name := args[0]
-		namespace := cmd.Parent().Parent().Name()
-
-		if namespace == "" {
-			fmt.Println("namesapace parameter not set")
-			return
-		}
+		namespace := args[0]
+		name := args[1]
 
 		// TODO: set routeCmd options
 		opts := new(request.RouteUpdateOptions)
 
 		if err := opts.Validate(); err != nil {
-			fmt.Println(err.Attr)
+			fmt.Println(err.Err())
 			return
 		}
 

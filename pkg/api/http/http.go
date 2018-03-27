@@ -27,6 +27,7 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/api/http/namespace"
 	"github.com/lastbackend/lastbackend/pkg/api/http/node"
 	"github.com/lastbackend/lastbackend/pkg/api/http/route"
+	"github.com/lastbackend/lastbackend/pkg/api/http/secret"
 	"github.com/lastbackend/lastbackend/pkg/api/http/service"
 	"github.com/lastbackend/lastbackend/pkg/api/http/trigger"
 	"github.com/lastbackend/lastbackend/pkg/log"
@@ -54,6 +55,7 @@ func init() {
 	AddRoutes(service.Routes)
 	AddRoutes(deployment.Routes)
 	AddRoutes(route.Routes)
+	AddRoutes(secret.Routes)
 
 	// Hooks
 	AddRoutes(trigger.Routes)

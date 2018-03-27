@@ -30,29 +30,25 @@ func init() {
 	routeCmd.AddCommand(routeRemoveCmd)
 }
 
+const routeRemoveExample = `
+  # Remove 'wef34fg' route for 'ns-demo' namespace
+  lb route remove ns-demo wef34fg"
+`
+
 var routeRemoveCmd = &cobra.Command{
-	Use:   "remove",
-	Short: "Remove routeCmd by Name",
+	Use:     "remove [NAMESPACE] [NAME]",
+	Short:   "Remove route by name",
+	Example: routeRemoveExample,
+	Args:    cobra.ExactArgs(2),
 	Run: func(cmd *cobra.Command, args []string) {
 
-		if len(args) != 1 {
-			cmd.Help()
-			return
-		}
-
-		name := args[0]
-
-		namespace := cmd.Parent().Parent().Name()
-
-		if namespace == "" {
-			fmt.Println("namesapace parameter not set")
-			return
-		}
+		namespace := args[0]
+		name := args[1]
 
 		opts := &request.RouteRemoveOptions{Force: false}
 
 		if err := opts.Validate(); err != nil {
-			fmt.Println(err.Attr)
+			fmt.Println(err.Err())
 			return
 		}
 

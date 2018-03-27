@@ -30,28 +30,25 @@ func init() {
 	secretCmd.AddCommand(secretRemoveCmd)
 }
 
+const secretRemoveExample = `
+  # Remove 'token' secret in 'ns-demo' namespace
+  lb secret remove ns-demo token
+`
+
 var secretRemoveCmd = &cobra.Command{
-	Use:   "remove",
-	Short: "Remove secretCmd by Name",
+	Use:     "remove [NAMESPACE] [NAME]",
+	Short:   "Remove secret by name",
+	Example: secretRemoveExample,
+	Args:    cobra.ExactArgs(2),
 	Run: func(cmd *cobra.Command, args []string) {
 
-		if len(args) != 1 {
-			cmd.Help()
-			return
-		}
-
-		name := args[0]
-		namespace := cmd.Parent().Parent().Name()
-
-		if namespace == "" {
-			fmt.Println("namesapace parameter not set")
-			return
-		}
+		namespace := args[0]
+		name := args[1]
 
 		opts := &request.SecretRemoveOptions{Force: false}
 
 		if err := opts.Validate(); err != nil {
-			fmt.Println(err.Attr)
+			fmt.Println(err.Err())
 			return
 		}
 

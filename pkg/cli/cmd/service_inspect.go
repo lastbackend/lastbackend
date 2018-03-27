@@ -27,26 +27,23 @@ import (
 )
 
 func init() {
-	serviceCmd.AddCommand(serviceFetchCmd)
+	serviceCmd.AddCommand(serviceInspectCmd)
 }
 
-var serviceFetchCmd = &cobra.Command{
-	Use:   "inspect",
-	Short: "Service info by name",
+const serviceInspectExample = `
+  # Get information for 'redis' service in 'ns-demo' namespace
+  lb service inspect ns-demo redis
+`
+
+var serviceInspectCmd = &cobra.Command{
+	Use:     "inspect [NAMESPACE] [NAME]",
+	Short:   "Service info by name",
+	Example: serviceInspectExample,
+	Args:    cobra.ExactArgs(2),
 	Run: func(cmd *cobra.Command, args []string) {
 
-		if len(args) != 1 {
-			cmd.Help()
-			return
-		}
-
-		name := args[0]
-		namespace := cmd.Parent().Parent().Name()
-
-		if namespace == "" {
-			fmt.Println("namesapace parameter not set")
-			return
-		}
+		namespace := args[0]
+		name := args[1]
 
 		cli := envs.Get().GetClient()
 		response, err := cli.V1().Namespace(namespace).Service(name).Get(envs.Background())

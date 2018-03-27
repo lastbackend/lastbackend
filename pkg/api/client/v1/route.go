@@ -88,6 +88,11 @@ func (s *RouteClient) List(ctx context.Context) (*vv1.RouteList, error) {
 
 	var rl *vv1.RouteList
 
+	if len(buf) == 0 {
+		list := make(vv1.RouteList, 0)
+		return &list, nil
+	}
+
 	if err := json.Unmarshal(buf, &rl); err != nil {
 		return nil, err
 	}

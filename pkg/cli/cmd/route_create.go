@@ -31,31 +31,27 @@ func init() {
 	routeCmd.AddCommand(routeCreateCmd)
 }
 
+const routeCreateExample = `
+  # Create new route for proxing http traffic from 'blog-ns-demo.lstbknd.net' to service on 80 port
+  lb route create ns-demo blog-ns-demo.lstbknd.net 80"
+`
+
 var routeCreateCmd = &cobra.Command{
-	Use:   "create",
-	Short: "Create routeCmd",
+	Use:     "create [NAMESPACE] [ENDPOINT] [PORT]",
+	Short:   "Create new route",
+	Example: routeCreateExample,
+	Args:    cobra.ExactArgs(3),
 	Run: func(cmd *cobra.Command, args []string) {
 
-		if len(args) != 1 {
-			cmd.Help()
-			return
-		}
+		namespace := args[0]
+		name := args[1]
 
-		namespace := cmd.Parent().Parent().Name()
-
-		if namespace == "" {
-			fmt.Println("namesapace parameter not set")
-			return
-		}
-
-		name := args[0]
-
-		// TODO: set routeCmd options
+		// TODO: set route options
 
 		opts := new(request.RouteCreateOptions)
 
 		if err := opts.Validate(); err != nil {
-			fmt.Println(err.Attr)
+			fmt.Println(err.Err())
 			return
 		}
 

@@ -27,27 +27,23 @@ import (
 )
 
 func init() {
-	routeCmd.AddCommand(routeFetchCmd)
+	routeCmd.AddCommand(routeInspectCmd)
 }
 
-var routeFetchCmd = &cobra.Command{
-	Use:   "inspect",
-	Short: "Route info by name",
+const routeInspectExample = `
+  # Get information 'wef34fg' for route in 'ns-demo' namespace
+  lb route inspect ns-demo wef34fg"
+`
+
+var routeInspectCmd = &cobra.Command{
+	Use:     "inspect [NAMESPACE] [NAME]",
+	Short:   "Route info by name",
+	Example: routeInspectExample,
+	Args:    cobra.ExactArgs(2),
 	Run: func(cmd *cobra.Command, args []string) {
 
-		if len(args) != 1 {
-			cmd.Help()
-			return
-		}
-
-		name := args[0]
-
-		namespace := cmd.Parent().Parent().Name()
-
-		if namespace == "" {
-			fmt.Println("namesapace parameter not set")
-			return
-		}
+		namespace := args[0]
+		name := args[1]
 
 		cli := envs.Get().GetClient()
 		response, err := cli.V1().Namespace(namespace).Route(name).Get(envs.Background())

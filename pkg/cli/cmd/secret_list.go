@@ -29,22 +29,29 @@ func init() {
 	secretCmd.AddCommand(secretListCmd)
 }
 
+const secretListExample = `
+  # Get all secrets records
+  lb secret ls ns-demo"
+`
+
 var secretListCmd = &cobra.Command{
-	Use:   "ls",
-	Short: "Display the secrets list",
-	Run: func(cmd *cobra.Command, _ []string) {
+	Use:     "ls [NAMESPACE]",
+	Short:   "Display the secrets list",
+	Example: secretListExample,
+	Args:    cobra.ExactArgs(1),
+	Run: func(cmd *cobra.Command, args []string) {
 
-		namespace, _ := cmd.Flags().GetString("namespace")
-
-		if namespace == "" {
-			fmt.Println("namesapace parameter not set")
-			return
-		}
+		namespace := args[0]
 
 		cli := envs.Get().GetClient()
 		response, err := cli.V1().Namespace(namespace).Secret().List(envs.Background())
 		if err != nil {
 			fmt.Println(err)
+			return
+		}
+
+		if response == nil || len(*response) == 0 {
+			fmt.Println("no secrets available")
 			return
 		}
 

@@ -88,6 +88,11 @@ func (s *SecretClient) List(ctx context.Context) (*vv1.SecretList, error) {
 
 	var sl *vv1.SecretList
 
+	if len(buf) == 0 {
+		list := make(vv1.SecretList, 0)
+		return &list, nil
+	}
+
 	if err := json.Unmarshal(buf, &sl); err != nil {
 		return nil, err
 	}

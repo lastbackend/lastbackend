@@ -88,6 +88,11 @@ func (s *NamespaceClient) List(ctx context.Context) (*vv1.NamespaceList, error) 
 
 	var nl *vv1.NamespaceList
 
+	if len(buf) == 0 {
+		list := make(vv1.NamespaceList, 0)
+		return &list, nil
+	}
+
 	if err := json.Unmarshal(buf, &nl); err != nil {
 		return nil, err
 	}

@@ -104,6 +104,11 @@ func (s *ServiceClient) List(ctx context.Context) (*vv1.ServiceList, error) {
 
 	var sl *vv1.ServiceList
 
+	if len(buf) == 0 {
+		list := make(vv1.ServiceList, 0)
+		return &list, nil
+	}
+
 	if err := json.Unmarshal(buf, &sl); err != nil {
 		return nil, err
 	}

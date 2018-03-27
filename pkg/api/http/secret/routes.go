@@ -27,5 +27,6 @@ var Routes = []http.Route{
 	// Route handlers
 	{Path: "/namespace/{namespace}/secret", Method: http.MethodPost, Middleware: []http.Middleware{middleware.Authenticate}, Handler: SecretCreateH},
 	{Path: "/namespace/{namespace}/secret", Method: http.MethodGet, Middleware: []http.Middleware{middleware.Authenticate}, Handler: SecretListH},
+	{Path: "/namespace/{namespace}/secret/{secret}", Method: http.MethodPut, Middleware: []http.Middleware{middleware.Authenticate}, Handler: SecretUpdateH},
 	{Path: "/namespace/{namespace}/secret/{secret}", Method: http.MethodDelete, Middleware: []http.Middleware{middleware.Authenticate}, Handler: SecretRemoveH},
 }

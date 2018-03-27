@@ -28,28 +28,25 @@ import (
 )
 
 func init() {
-	serviceUpdateCmd.Flags().StringP("desc", "d", "", "set serviceCmd description")
-	serviceUpdateCmd.Flags().Int64P("memory", "m", 128, "set serviceCmd spec memory")
+	serviceUpdateCmd.Flags().StringP("desc", "d", "", "set service description")
+	serviceUpdateCmd.Flags().Int64P("memory", "m", 128, "set service spec memory")
 	serviceCmd.AddCommand(serviceUpdateCmd)
 }
 
+const serviceUpdateExample = `
+  # Update info for 'redis' service in 'ns-demo' namespace 
+  lb service update ns-demo redis --desc "Example new description" -m 128
+`
+
 var serviceUpdateCmd = &cobra.Command{
-	Use:   "update",
-	Short: "Change configuration of the serviceCmd",
+	Use:     "update [NAMESPACE] [NAME]",
+	Short:   "Change configuration of the service",
+	Example: serviceUpdateExample,
+	Args:    cobra.ExactArgs(2),
 	Run: func(cmd *cobra.Command, args []string) {
 
-		if len(args) != 1 {
-			cmd.Help()
-			return
-		}
-
-		name := args[0]
-		namespace := cmd.Parent().Parent().Name()
-
-		if namespace == "" {
-			fmt.Println("namesapace parameter not set")
-			return
-		}
+		namespace := args[0]
+		name := args[1]
 
 		description, _ := cmd.Flags().GetString("desc")
 		memory, _ := cmd.Flags().GetInt64("memory")
@@ -61,7 +58,7 @@ var serviceUpdateCmd = &cobra.Command{
 		opts.Spec.Memory = &memory
 
 		if err := opts.Validate(); err != nil {
-			fmt.Println(err.Attr)
+			fmt.Println(err.Err())
 			return
 		}
 

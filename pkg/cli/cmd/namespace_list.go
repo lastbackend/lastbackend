@@ -30,16 +30,27 @@ func init() {
 	namespaceCmd.AddCommand(namespaceListCmd)
 }
 
+const namespaceListExample = `
+  # Get all namespaces
+  lb namespace ls"
+`
+
 var namespaceListCmd = &cobra.Command{
-	Use:   "ls",
-	Short: "Display the namespace list",
-	Args:  cobra.NoArgs,
+	Use:     "ls",
+	Short:   "Display the namespace list",
+	Example: namespaceListExample,
+	Args:    cobra.NoArgs,
 	Run: func(_ *cobra.Command, _ []string) {
 
 		cli := envs.Get().GetClient()
 		response, err := cli.V1().Namespace().List(envs.Background())
 		if err != nil {
 			fmt.Println(err)
+			return
+		}
+
+		if response == nil || len(*response) == 0 {
+			fmt.Println("no namespaces available")
 			return
 		}
 

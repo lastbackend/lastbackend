@@ -29,17 +29,21 @@ func init() {
 	tokenCmd.AddCommand(tokenSetCmd)
 }
 
+const tokenSetExample = `
+  # Set auth token for request quest in API 
+  lb token set e3865d9b52c34dd4b6ec.5cff8c8e4cf6
+`
+
 var tokenSetCmd = &cobra.Command{
-	Use:   "token",
-	Short: "Set token to local storage",
+	Use:     "token [DATA]",
+	Short:   "Set token to local storage",
+	Example: tokenSetExample,
+	Args:    cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 
-		if len(args) != 1 {
-			cmd.Help()
-			return
-		}
+		token := args[0]
 
-		if err := storage.SetToken(args[0]); err != nil {
+		if err := storage.SetToken(token); err != nil {
 			fmt.Println(err)
 			return
 		}
