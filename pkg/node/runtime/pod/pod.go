@@ -26,7 +26,6 @@ import (
 
 	"net/http"
 
-	"github.com/lastbackend/lastbackend/pkg/distribution/errors"
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 	"github.com/lastbackend/lastbackend/pkg/log"
 	"github.com/lastbackend/lastbackend/pkg/node/envs"
@@ -50,12 +49,18 @@ func Manage(ctx context.Context, key string, spec *types.PodSpec) error {
 			task.Cancel()
 		}
 
-		log.Debugf("Pod found and in destroy state > destroy it: %s", key)
-
 		p := envs.Get().GetState().Pods().GetPod(key)
 		if p == nil {
-			return errors.New(errors.PodNotFound)
+
+			ps := types.NewPodStatus()
+			ps.SetDestroyed()
+			envs.Get().GetState().Pods().AddPod(key, ps)
+			events.NewPodStatusEvent(ctx, key)
+
+			return nil
 		}
+
+		log.Debugf("Pod found > destroy it: %s", key)
 
 		Destroy(ctx, key, p)
 
@@ -72,9 +77,10 @@ func Manage(ctx context.Context, key string, spec *types.PodSpec) error {
 	// Get pod list from current state
 	p := envs.Get().GetState().Pods().GetPod(key)
 	if p != nil {
-		// TODO: check pod status
-		// if not match - recreate pod or try to fix
-		return nil
+		if p.State != types.StateWarning {
+			return nil
+		}
+		Destroy(ctx, key, p)
 	}
 
 	log.Debugf("Pod not found > create it: %s", key)
@@ -279,7 +285,9 @@ func Restore(ctx context.Context) error {
 			},
 		}
 
-		switch c.Status {
+		log.Debugf("%#v", c.State)
+
+		switch c.State {
 		case types.StateCreated:
 			cs.State = types.PodContainerState{
 				Created: types.PodContainerStateCreated{
@@ -333,7 +341,7 @@ func Restore(ctx context.Context) error {
 
 		log.Debugf("Container restored %s", c.ID)
 		envs.Get().GetState().Pods().SetPod(key, status)
-
+		log.Debugf("Pod restored %#v", status)
 	}
 
 	return nil

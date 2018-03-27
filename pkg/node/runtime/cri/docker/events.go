@@ -41,7 +41,7 @@ func (r *Runtime) Subscribe(ctx context.Context, state *state.PodState, p chan s
 			return
 		}
 
-		es, errors := r.client.Events(ctx, d.EventsOptions{})
+		es, errr := r.client.Events(ctx, d.EventsOptions{})
 		for {
 			select {
 			case e := <-es:
@@ -67,6 +67,15 @@ func (r *Runtime) Subscribe(ctx context.Context, state *state.PodState, p chan s
 				}
 
 				c, err := r.ContainerInspect(ctx, e.ID)
+				if err != nil {
+					log.Errorf("Container inspect err: %s", err.Error())
+					continue
+				}
+				if c == nil {
+					log.Errorf("Container: container not found")
+					break
+				}
+
 				container.Pod = c.Pod
 
 				switch c.State {
@@ -120,17 +129,17 @@ func (r *Runtime) Subscribe(ctx context.Context, state *state.PodState, p chan s
 					log.Errorf("Container: can-not inspect")
 					break
 				}
-				if c == nil {
-					log.Errorf("Container: container not found")
-					break
-				}
 
 				state.SetContainer(container)
+
+
+
+
 				p <- container.Pod
 
 				break
 
-			case err := <-errors:
+			case err := <-errr:
 				log.Errorf("Event listening error: %s", err)
 				os.Exit(0)
 			}

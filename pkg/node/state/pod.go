@@ -21,6 +21,7 @@ package state
 import (
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 	"github.com/lastbackend/lastbackend/pkg/log"
+	"errors"
 )
 
 func (s *PodState) GetPodsCount() int {
@@ -33,7 +34,7 @@ func (s *PodState) GetContainersCount() int {
 	return s.stats.containers
 }
 
-func (s *PodState) GetPods() map[string]types.PodStatus {
+func (s *PodState) GetPods() map[string]*types.PodStatus {
 	log.V(logLevel).Debug("Cache: PodCache: get pods")
 	return s.pods
 }
@@ -41,7 +42,8 @@ func (s *PodState) GetPods() map[string]types.PodStatus {
 func (s *PodState) SetPods(pods map[string]*types.PodStatus) {
 	log.V(logLevel).Debugf("Cache: PodCache: set pods: %#v", pods)
 	for key, pod := range pods {
-		s.pods[key] = *pod
+		state(pod)
+		s.pods[key] = pod
 		s.stats.pods++
 	}
 }
@@ -54,7 +56,7 @@ func (s *PodState) GetPod(key string) *types.PodStatus {
 	if !ok {
 		return nil
 	}
-	return &pod
+	return pod
 }
 
 func (s *PodState) AddPod(key string, pod *types.PodStatus) {
@@ -64,13 +66,16 @@ func (s *PodState) AddPod(key string, pod *types.PodStatus) {
 
 func (s *PodState) SetPod(key string, pod *types.PodStatus) {
 	log.V(logLevel).Debugf("Cache: PodCache: set pod: %#v", pod)
+
 	s.lock.Lock()
 	if _, ok := s.pods[key]; ok {
 		delete(s.pods, key)
 		s.stats.pods--
 	}
 
-	s.pods[key] = *pod
+	state(pod)
+
+	s.pods[key] = pod
 	s.stats.pods++
 
 	s.lock.Unlock()
@@ -95,36 +100,98 @@ func (s *PodState) GetContainer(id string) *types.PodContainer {
 	if !ok {
 		return nil
 	}
-	return &c
+	return c
 }
 
 func (s *PodState) AddContainer(c *types.PodContainer) {
 	log.V(logLevel).Debugf("Cache: PodCache: add container: %#v", c)
 	s.lock.Lock()
-	defer s.lock.Unlock()
 	if _, ok := s.containers[c.ID]; !ok {
 		s.stats.containers++
 	}
-	s.containers[c.ID] = *c
+	s.containers[c.ID] = c
 
+	s.lock.Unlock()
 }
 
 func (s *PodState) SetContainer(c *types.PodContainer) {
 	log.V(logLevel).Debugf("Cache: PodCache: set container: %#v", c)
 	s.lock.Lock()
-	defer s.lock.Unlock()
+
 	if _, ok := s.containers[c.ID]; !ok {
 		s.stats.containers++
 	}
-	s.containers[c.ID] = *c
+	s.containers[c.ID] = c
+
+	s.lock.Unlock()
 }
 
 func (s *PodState) DelContainer(c *types.PodContainer) {
 	log.V(logLevel).Debugf("Cache: PodCache: del container: %s", c.ID)
 	s.lock.Lock()
-	defer s.lock.Unlock()
 	if _, ok := s.containers[c.ID]; ok {
 		delete(s.containers, c.ID)
 		s.stats.containers--
+	}
+	s.lock.Unlock()
+	pod := s.GetPod(c.Pod)
+	if pod == nil {
+		return
+	}
+
+	s.lock.Lock()
+	delete (pod.Containers, c.ID)
+	state(pod)
+	s.lock.Unlock()
+
+	log.Debugf("%#v", s.GetPod(c.Pod))
+}
+
+
+func state(s *types.PodStatus) {
+
+	var sts = make(map[string]int)
+	var ems string
+
+
+	switch s.State {
+	case types.StateDestroyed: return
+	case types.StateError: return
+	case types.StateProvision: return
+	case types.StateCreated: return
+	case types.StatePull: return
+	}
+
+	if len(s.Containers) == 0 {
+		s.State = types.StateWarning
+		return
+	}
+
+	for _, cn := range s.Containers {
+
+		switch true {
+		case cn.State.Error.Error:
+			sts[types.StateError]+=1
+			ems = cn.State.Error.Message
+			break
+		case cn.State.Stopped.Stopped:
+			sts[types.StateStopped]+=1
+			break
+		case cn.State.Started.Started:
+			sts[types.StateStarted]+=1
+			break
+		}
+	}
+
+	switch true {
+	case len(s.Containers) == sts[types.StateError]:
+		s.SetError(errors.New(ems))
+		break
+	case len(s.Containers) == sts[types.StateStarted]:
+		s.SetRunning()
+		break
+	case len(s.Containers) == sts[types.StateStopped]:
+		s.SetStopped()
+		break
 	}
 }

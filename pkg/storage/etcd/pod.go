@@ -416,6 +416,10 @@ func (s *PodStorage) Watch(ctx context.Context, pod chan *types.Pod) error {
 			return
 		}
 
+		if action == ACTIONDELETE {
+			return
+		}
+
 		if d, err := s.Get(ctx, keys[1], keys[2], keys[3], keys[4]); err == nil {
 			pod <- d
 		}
@@ -450,6 +454,10 @@ func (s *PodStorage) WatchSpec(ctx context.Context, pod chan *types.Pod) error {
 			return
 		}
 
+		if action == ACTIONDELETE {
+			return
+		}
+
 		if d, err := s.Get(ctx, keys[1], keys[2], keys[3], keys[4]); err == nil {
 			pod <- d
 		}
@@ -480,6 +488,10 @@ func (s *PodStorage) WatchStatus(ctx context.Context, pod chan *types.Pod) error
 	cb := func(action, key string, _ []byte) {
 		keys := r.FindStringSubmatch(key)
 		if len(keys) < 3 {
+			return
+		}
+
+		if action == ACTIONDELETE {
 			return
 		}
 

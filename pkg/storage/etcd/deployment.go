@@ -319,6 +319,10 @@ func (s *DeploymentStorage) Watch(ctx context.Context, deployment chan *types.De
 			return
 		}
 
+		if action == ACTIONDELETE {
+			return
+		}
+
 		if d, err := s.Get(ctx, keys[1], keys[2], keys[3]); err == nil {
 			deployment <- d
 		}
@@ -353,7 +357,9 @@ func (s *DeploymentStorage) WatchSpec(ctx context.Context, deployment chan *type
 			return
 		}
 
-		log.Debug(keys)
+		if action == ACTIONDELETE {
+			return
+		}
 
 		d, err := s.Get(ctx, keys[1], keys[2], keys[3])
 		if err != nil {
@@ -392,6 +398,10 @@ func (s *DeploymentStorage) WatchStatus(ctx context.Context, deployment chan *ty
 			return
 		}
 
+		if action == ACTIONDELETE {
+			return
+		}
+
 		if d, err := s.Get(ctx, keys[1], keys[2], keys[3]); err == nil {
 			deployment <- d
 		}
@@ -399,6 +409,7 @@ func (s *DeploymentStorage) WatchStatus(ctx context.Context, deployment chan *ty
 
 	if err := client.Watch(ctx, key, filter, cb); err != nil {
 		log.V(logLevel).Errorf("storage:etcd:deployment:> watch deployment by spec err: %s", err.Error())
+
 		return err
 	}
 

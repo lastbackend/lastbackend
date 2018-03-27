@@ -59,10 +59,30 @@ func Provision(d *types.Deployment) error {
 
 	// Check deployment is marked for destroy
 	if d.Spec.State.Destroy {
-		// Mark pod for destroy
+
+		if len(pl) == 0 {
+			log.Debugf("controller:deployment:controller:provision: remove deployment %s", d.SelfLink())
+			if err := dm.Remove(d); err != nil {
+				log.Errorf("controller:deployment:controller:provision: remove pod err: %s", err.Error())
+				return nil
+			}
+		}
+
 		for _, p := range pl {
+
+			if p.Meta.Node == "" {
+				// Mark pod for destroy
+				log.Debugf("controller:deployment:controller:provision: remove pod %s", p.SelfLink())
+				if err := pm.Remove(context.Background(), p); err != nil {
+					log.Errorf("controller:deployment:controller:provision: remove pod err: %s", err.Error())
+					continue
+				}
+			}
+
+			// Mark pod for destroy
+			log.Debugf("controller:deployment:controller:provision: mark pod for destroy %s", p.SelfLink())
 			if err := pm.Destroy(context.Background(), p); err != nil {
-				log.Errorf("controller:deployment:controller:provision: destroy deployment err: %s", err.Error())
+				log.Errorf("controller:deployment:controller:provision: destroy pod err: %s", err.Error())
 			}
 		}
 		return nil
@@ -160,10 +180,9 @@ func Provision(d *types.Deployment) error {
 func HandleStatus(d *types.Deployment) error {
 
 	var (
-		stg = envs.Get().GetStorage()
-		lst = "controller:deployment:controller:status>"
-		status = make(map[string]int)
-		message string
+		stg     = envs.Get().GetStorage()
+		msg     = "controller:deployment:controller:status:"
+		status  = make(map[string]int)
 	)
 
 	dm := distribution.NewDeploymentModel(context.Background(), stg)
@@ -171,89 +190,109 @@ func HandleStatus(d *types.Deployment) error {
 
 	// Skip state handle
 	if d.Status.State == types.StateDestroy {
-		log.Debugf("%s> skip deployment status [%s] handle: %s", lst, d.Status.State, d.Meta.Name)
+		log.Debugf("%s> skip deployment status [%s] handle: %s", msg, d.Status.State, d.Meta.Name)
 		return nil
 	}
 
-
-
 	svc, err  := sm.Get(d.Meta.Namespace, d.Meta.Service)
 	if err != nil {
-		log.Errorf("%s> get service err: %s", lst, err.Error())
+		log.Errorf("%s> get service err: %s", msg, err.Error())
 		return err
 	}
 
 	if svc == nil {
-		log.Errorf("%s> service [%s:%s] not found", d.Meta.Namespace, d.Meta.Service)
+		log.Warnf("%s> service [%s:%s] not found", msg, d.Meta.Namespace, d.Meta.Service)
+		if err := dm.Remove(d); err != nil {
+			log.Errorf("%s> remove deployment err: %s", msg, err.Error())
+			return err
+		}
+
 		return nil
 	}
 
+
 	dl, err := dm.ListByService(svc.Meta.Namespace, svc.Meta.Name)
 	if err != nil {
-		log.Errorf("%s> get pod list err: %s", lst, err.Error())
+		log.Errorf("%s> get deployment list err: %s", msg, err.Error())
 		return err
 	}
 
 	for _, di := range dl {
-
 		switch di.Status.State {
-		case types.StateError:
-			status[types.StateError]+=1
-			// TODO: check if many pods contains different errors: create an error map
-			message = di.Status.Message
-			break
 		case types.StateProvision :
 			status[types.StateProvision]+=1
 			break
 		case types.StateRunning :
 			status[types.StateRunning]+=1
 			break
-		case types.StateStopped:
+		case types.StateStopped :
 			status[types.StateStopped]+=1
 			break
-		case types.StateDestroy:
-			status[types.StateDestroy]+=1
-			break
-		case types.StateDestroyed:
+		case types.StateDestroyed :
 			status[types.StateDestroyed]+=1
 			break
 		}
 	}
 
+	var curr = svc.Spec.Meta.Name == d.Spec.Meta.Name
+
 	switch true {
-	case status[types.StateError] > 0:
-		svc.Status.State = types.StateError
-		svc.Status.Message = message
-		break
 	case status[types.StateProvision] > 0:
 		svc.Status.State = types.StateProvision
-		svc.Status.Message = ""
+		svc.Status.Message = types.EmptyString
 		break
-	case status[types.StateDestroy] > 0:
-		svc.Status.State = types.StateDestroy
-		svc.Status.Message = ""
-		break
-	case status[types.StateStarted] == d.Spec.Replicas:
-		svc.Status.State = types.StateStarted
-		break
-	case status[types.StateStopped] == d.Spec.Replicas:
-		svc.Status.State = types.StateStopped
-		break
-	case status[types.StateDestroyed] == d.Spec.Replicas:
+	case status[types.StateDestroyed] == 1 && d.Status.State == types.StateDestroyed:
 		svc.Status.State = types.StateDestroyed
+		svc.Status.Message = types.EmptyString
 		break
+	case curr && d.Status.State == types.StateError:
+		if (status[types.StateRunning] + status[types.StateStopped]) == 0{
+			svc.Status.State = types.StateError
+			svc.Status.Message = d.Status.Message
+			break
+		}
+		svc.Status.State = types.StateWarning
+		svc.Status.Message = d.Status.Message
+		break
+	case curr && d.Status.State == types.StateRunning:
+		svc.Status.State = types.StateRunning
+		svc.Status.Message = types.EmptyString
+		break
+	case curr && d.Status.State == types.StateStopped:
+		svc.Status.State = types.StateStopped
+		svc.Status.Message = types.EmptyString
+		break
+	case curr && d.Status.State == types.StateWarning:
+		svc.Status.State = types.StateWarning
+		svc.Status.Message = d.Status.Message
+		break
+	}
+
+	if (status[types.StateRunning] + status[types.StateStopped]) > 1 {
+		for _, di := range dl {
+			if svc.Spec.Meta.Name == di.Spec.Meta.Name {
+				continue
+			}
+
+			if di.Status.State == types.StateRunning || di.Status.State == types.StateStopped {
+				if err := dm.Destroy(di); err != nil {
+					log.Errorf("%s> destroy deployment err: %s", msg, err.Error())
+				}
+			}
+
+		}
 	}
 
 	// Remove destroyed deployment
 	if d.Status.State == types.StateDestroyed {
 		if err := dm.Remove(d); err != nil {
-			log.Errorf("%s> remove deployment err: %s", lst, err.Error())
+			log.Errorf("%s> remove deployment err: %s", msg, err.Error())
 			return err
 		}
 	}
 
 	if err := sm.SetStatus(svc); err != nil {
-		log.Errorf("%s> set deployment status err: %s", lst, err.Error())
+		log.Errorf("%s> set deployment status err: %s", msg, err.Error())
 		return err
 	}
 

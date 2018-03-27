@@ -166,6 +166,13 @@ func (d *Deployment) Cancel(dt *types.Deployment) error {
 
 	log.Debugf("distribution:deployment:cancel: cancel deployment %s", dt.Meta.Name)
 
+	// mark deployment for destroy
+	dt.Spec.State.Destroy = true
+	if err := d.storage.Deployment().SetSpec(d.context, dt); err != nil {
+		log.Debugf("distribution:deployment:destroy: destroy deployment %s err: %s", dt.Meta.Name, err.Error())
+		return err
+	}
+
 	// mark deployment for cancel
 	dt.Status.SetCancel()
 
@@ -183,6 +190,12 @@ func (d *Deployment) Destroy(dt *types.Deployment) error {
 	log.Debugf("distribution:deployment:destroy: destroy deployment %s", dt.Meta.Name)
 
 	// mark deployment for destroy
+	dt.Spec.State.Destroy = true
+	if err := d.storage.Deployment().SetSpec(d.context, dt); err != nil {
+		log.Debugf("distribution:deployment:destroy: destroy deployment %s err: %s", dt.Meta.Name, err.Error())
+		return err
+	}
+
 	dt.Status.SetDestroy()
 
 	if err := d.storage.Deployment().SetStatus(d.context, dt); err != nil {

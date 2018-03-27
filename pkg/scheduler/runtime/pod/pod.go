@@ -52,6 +52,7 @@ func Provision(p *types.Pod) error {
 	nm := distribution.NewNodeModel(context.Background(), stg)
 
 	if p.Meta.Node != "" {
+		log.Debugf("Node: [%s]: handle scheduled pos: %s", p.Meta.Node, p.SelfLink())
 		n, err := nm.Get(p.Meta.Node)
 		if err != nil {
 			log.Errorf("Node: find node err: %s", err.Error())
@@ -59,12 +60,13 @@ func Provision(p *types.Pod) error {
 		}
 
 		if n == nil {
-			log.Errorf("Node: not found")
+			log.Errorf("Node: not attached to pod")
 			return errors.New(errors.NodeNotFound)
 		}
 
 		if p.Spec.State.Destroy {
-			if err := nm.RemovePod(n, p); err != nil {
+			log.Debugf("Node: [%s]: update pod spec: %s", n.Meta.Name, p.SelfLink())
+			if err := nm.UpdatePod(n, p); err != nil {
 				log.Errorf("Node: update pod spec err: %s", err.Error())
 				return err
 			}

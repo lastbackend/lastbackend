@@ -24,11 +24,13 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/log"
 	"github.com/lastbackend/lastbackend/pkg/node/envs"
 	"github.com/pkg/errors"
+	"github.com/lastbackend/lastbackend/pkg/distribution/types"
+	"github.com/lastbackend/lastbackend/pkg/api/types/v1/request"
 )
 
 // NewConnectEventt - send node info event after
 // node is successful accepted and each hour
-func NewConnectEventt(ctx context.Context) error {
+func NewConnectEvent(ctx context.Context) error {
 
 	var (
 		c = envs.Get().GetClient()
@@ -69,14 +71,11 @@ func NewPodStatusEvent(ctx context.Context, pod string) error {
 		return errors.New("Event: Pod state event: pod is empty")
 	}
 
-	log.Debugf("Event: Pod state event state: %s", pod)
+	log.Debugf("Event: Pod state event state: %#v", pod)
+	opts := getPodOptions(p)
 
-	opts := v1.Request().Node().NodePodStatusOptions()
-	opts.Stage = p.State
-	opts.Message = p.Message
-	opts.Containers = p.Containers
-	opts.Network = p.Network
-	opts.Steps = p.Steps
+	log.Debugf("Event: Pod state event state opts: %#v", opts)
+	log.Debugf("%v", opts)
 
 	return c.SetPodStatus(ctx, pod, opts)
 }
@@ -117,4 +116,15 @@ func NewVolumeStatusEvent(ctx context.Context, volume string) error {
 
 	opts := v1.Request().Node().NodeVolumeStatusOptions()
 	return c.SetVolumeStatus(ctx, volume, opts)
+}
+
+
+func getPodOptions(p *types.PodStatus) *request.NodePodStatusOptions {
+	opts := v1.Request().Node().NodePodStatusOptions()
+	opts.Stage = p.State
+	opts.Message = p.Message
+	opts.Containers = p.Containers
+	opts.Network = p.Network
+	opts.Steps = p.Steps
+	return opts
 }
