@@ -150,6 +150,7 @@ type Node interface {
 	SetOnline(ctx context.Context, node *types.Node) error
 	SetOffline(ctx context.Context, node *types.Node) error
 	InsertPod(ctx context.Context, node *types.Node, pod *types.Pod) error
+	UpdatePod(ctx context.Context, node *types.Node, pod *types.Pod) error
 	RemovePod(ctx context.Context, node *types.Node, pod *types.Pod) error
 	InsertVolume(ctx context.Context, node *types.Node, volume *types.Volume) error
 	RemoveVolume(ctx context.Context, node *types.Node, volume *types.Volume) error

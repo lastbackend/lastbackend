@@ -26,6 +26,7 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/log"
 	"github.com/lastbackend/lastbackend/pkg/storage/storage"
 	"github.com/lastbackend/lastbackend/pkg/storage/store"
+	"time"
 )
 
 const secretStorage = "secrets"
@@ -157,29 +158,17 @@ func (s *SecretStorage) Update(ctx context.Context, secret *types.Secret) error 
 		return err
 	}
 
+	secret.Meta.Updated = time.Now()
 	client, destroy, err := getClient(ctx)
 	if err != nil {
-		log.V(logLevel).Errorf("storage:etcd:secret:> insert secret err: %s", err.Error())
+		log.V(logLevel).Errorf("storage:etcd:secret:> update secret err: %s", err.Error())
 		return err
 	}
 	defer destroy()
 
-	tx := client.Begin(ctx)
-
 	keyMeta := keyCreate(secretStorage, s.keyGet(secret), "meta")
-	if err := tx.Upsert(keyMeta, secret.Meta, 0); err != nil {
+	if err := client.Upsert(ctx, keyMeta, secret.Meta, nil, 0); err != nil {
 		log.V(logLevel).Errorf("storage:etcd:secret:> update secret err: %s", err.Error())
-		return err
-	}
-
-	keySpec := keyCreate(secretStorage, s.keyGet(secret), "data")
-	if err := tx.Upsert(keySpec, secret.Data, 0); err != nil {
-		log.V(logLevel).Errorf("storage:etcd:secret:> insert secret err: %s", err.Error())
-		return err
-	}
-
-	if err := tx.Commit(); err != nil {
-		log.V(logLevel).Errorf("storage:etcd:secret:> insert secret err: %s", err.Error())
 		return err
 	}
 

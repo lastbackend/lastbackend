@@ -74,19 +74,24 @@ func TestRouteStorage_Get(t *testing.T) {
 		},
 	}
 
-	for _, tt := range tests {
-
+	clear := func() {
 		if err := stg.Clear(ctx); err != nil {
 			t.Errorf("RouteStorage.Get() storage setup error = %v", err)
 			return
 		}
+	}
 
-		if err := stg.Insert(ctx, &d); err != nil {
-			t.Errorf("RouteStorage.Get() storage setup error = %v", err)
-			return
-		}
+	for _, tt := range tests {
 
 		t.Run(tt.name, func(t *testing.T) {
+
+			clear()
+			defer clear()
+
+			if err := stg.Insert(ctx, &d); err != nil {
+				t.Errorf("RouteStorage.Get() storage setup error = %v", err)
+				return
+			}
 
 			got, err := tt.fields.stg.Get(tt.args.ctx, ns1, tt.args.name)
 
@@ -177,21 +182,27 @@ func TestRouteStorage_ListByNamespace(t *testing.T) {
 		},
 	}
 
-	for _, tt := range tests {
-
+	clear := func() {
 		if err := stg.Clear(ctx); err != nil {
 			t.Errorf("RouteStorage.ListByNamespace() storage setup error = %v", err)
 			return
 		}
+	}
 
-		for _, n := range nl0 {
-			if err := stg.Insert(ctx, n); err != nil {
-				t.Errorf("RouteStorage.ListByNamespace() storage setup error = %v", err)
-				return
-			}
-		}
+	for _, tt := range tests {
 
 		t.Run(tt.name, func(t *testing.T) {
+
+			clear()
+			defer clear()
+
+			for _, n := range nl0 {
+				if err := stg.Insert(ctx, n); err != nil {
+					t.Errorf("RouteStorage.ListByNamespace() storage setup error = %v", err)
+					return
+				}
+			}
+
 			got, err := stg.ListByNamespace(tt.args.ctx, tt.args.ns)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("RouteStorage.ListByNamespace() error = %v, wantErr %v", err, tt.wantErr)
@@ -218,7 +229,7 @@ func TestRouteStorage_SetStatus(t *testing.T) {
 		nl  = make([]*types.Route, 0)
 	)
 
-	n2.Status.Stage = types.StateReady
+	n2.Status.State = types.StateReady
 
 	nl0 := append(nl, &n1)
 
@@ -265,21 +276,27 @@ func TestRouteStorage_SetStatus(t *testing.T) {
 		},
 	}
 
-	for _, tt := range tests {
-
+	clear := func() {
 		if err := stg.Clear(ctx); err != nil {
 			t.Errorf("RouteStorage.SetStatus() storage setup error = %v", err)
 			return
 		}
+	}
 
-		for _, n := range nl0 {
-			if err := stg.Insert(ctx, n); err != nil {
-				t.Errorf("RouteStorage.SetStatus() storage setup error = %v", err)
-				return
-			}
-		}
+	for _, tt := range tests {
 
 		t.Run(tt.name, func(t *testing.T) {
+
+			clear()
+			defer clear()
+
+			for _, n := range nl0 {
+				if err := stg.Insert(ctx, n); err != nil {
+					t.Errorf("RouteStorage.SetStatus() storage setup error = %v", err)
+					return
+				}
+			}
+
 			err := tt.fields.stg.SetStatus(tt.args.ctx, tt.args.route)
 			if err != nil {
 				if !tt.wantErr {
@@ -367,14 +384,19 @@ func TestRouteStorage_Insert(t *testing.T) {
 		},
 	}
 
-	for _, tt := range tests {
-
+	clear:=func() {
 		if err := stg.Clear(ctx); err != nil {
 			t.Errorf("RouteStorage.ListByNamespace() storage setup error = %v", err)
 			return
 		}
+	}
 
+	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+
+			clear()
+			defer clear()
+
 			err := tt.fields.stg.Insert(tt.args.ctx, tt.args.route)
 			if err != nil {
 				if !tt.wantErr {
@@ -457,21 +479,27 @@ func TestRouteStorage_Update(t *testing.T) {
 		},
 	}
 
-	for _, tt := range tests {
-
+	clear:=func() {
 		if err := stg.Clear(ctx); err != nil {
 			t.Errorf("RouteStorage.Update() storage setup error = %v", err)
 			return
 		}
+	}
 
-		for _, n := range nl0 {
-			if err := stg.Insert(ctx, n); err != nil {
-				t.Errorf("RouteStorage.Update() storage setup error = %v", err)
-				return
-			}
-		}
+	for _, tt := range tests {
 
 		t.Run(tt.name, func(t *testing.T) {
+
+			clear()
+			defer clear()
+
+			for _, n := range nl0 {
+				if err := stg.Insert(ctx, n); err != nil {
+					t.Errorf("RouteStorage.Update() storage setup error = %v", err)
+					return
+				}
+			}
+
 			err := tt.fields.stg.Update(tt.args.ctx, tt.args.route)
 			if err != nil {
 				if !tt.wantErr {
@@ -558,19 +586,24 @@ func TestRouteStorage_Remove(t *testing.T) {
 		},
 	}
 
-	for _, tt := range tests {
-
+	clear:= func() {
 		if err := stg.Clear(ctx); err != nil {
 			t.Errorf("RouteStorage.Remove() storage setup error = %v", err)
 			return
 		}
+	}
 
-		if err := stg.Insert(ctx, &n1); err != nil {
-			t.Errorf("RouteStorage.Remove() storage setup error = %v", err)
-			return
-		}
-
+	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+
+			clear()
+			defer clear()
+
+			if err := stg.Insert(ctx, &n1); err != nil {
+				t.Errorf("RouteStorage.Remove() storage setup error = %v", err)
+				return
+			}
+
 			err := tt.fields.stg.Remove(tt.args.ctx, tt.args.route)
 			if err != nil {
 				if !tt.wantErr {

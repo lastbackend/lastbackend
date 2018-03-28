@@ -180,7 +180,6 @@ func (s *Service) Destroy(service *types.Service) (*types.Service, error) {
 		return nil, err
 	}
 
-
 	service.Spec.State.Destroy = true
 	if err := s.storage.Service().SetSpec(s.context, service); err != nil {
 		log.V(logLevel).Errorf("%s:destroy:> destroy service err: %s", logServicePrefix, err)

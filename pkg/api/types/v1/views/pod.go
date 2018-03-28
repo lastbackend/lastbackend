@@ -80,8 +80,8 @@ type PodSpecTemplate struct {
 }
 
 type PodStatus struct {
-	// Pod stage
-	Stage string `json:"stage"`
+	// Pod state
+	State string `json:"state"`
 	// Pod state message
 	Message string `json:"message"`
 	// Pod steps

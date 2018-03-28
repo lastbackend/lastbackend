@@ -87,7 +87,7 @@ func (v *Volume) Create(namespace *types.Namespace, opts *types.VolumeCreateOpti
 	volume.Meta.SetDefault()
 	volume.Meta.Name = generator.GenerateRandomString(10)
 	volume.Meta.Namespace = namespace.Meta.Name
-	volume.Status.Stage = types.StateInitialized
+	volume.Status.State = types.StateInitialized
 
 	if err := v.storage.Volume().Insert(v.context, volume); err != nil {
 		log.V(logLevel).Errorf("%s:crete:> insert volume err: %s", logVolumePrefix, err.Error())
@@ -101,7 +101,7 @@ func (v *Volume) Update(volume *types.Volume, opts *types.VolumeUpdateOptions) (
 	log.V(logLevel).Debugf("%s:update:> update volume %s", logVolumePrefix, volume.Meta.Name)
 
 	volume.Meta.SetDefault()
-	volume.Status.Stage = types.StateProvision
+	volume.Status.State = types.StateProvision
 
 	if err := v.storage.Volume().Update(v.context, volume); err != nil {
 		log.V(logLevel).Errorf("%s:update:> update volume err: %s", logVolumePrefix, err.Error())

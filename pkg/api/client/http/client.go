@@ -19,6 +19,7 @@
 package http
 
 import (
+	"crypto/tls"
 	"fmt"
 	"github.com/lastbackend/lastbackend/pkg/distribution/errors"
 	"github.com/lastbackend/lastbackend/pkg/util/serializer"
@@ -26,7 +27,6 @@ import (
 	"net/url"
 	"strings"
 	"time"
-	"crypto/tls"
 )
 
 // Interface captures the set of operations for generically interacting with Kubernetes REST apis.

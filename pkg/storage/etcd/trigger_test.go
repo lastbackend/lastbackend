@@ -75,19 +75,23 @@ func TestTriggerStorage_Get(t *testing.T) {
 		},
 	}
 
-	for _, tt := range tests {
-
+	clear := func() {
 		if err := stg.Clear(ctx); err != nil {
 			t.Errorf("TriggerStorage.Get() storage setup error = %v", err)
 			return
 		}
+	}
 
-		if err := stg.Insert(ctx, &d); err != nil {
-			t.Errorf("TriggerStorage.Get() storage setup error = %v", err)
-			return
-		}
-
+	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+
+			clear()
+			defer clear()
+
+			if err := stg.Insert(ctx, &d); err != nil {
+				t.Errorf("TriggerStorage.Get() storage setup error = %v", err)
+				return
+			}
 
 			got, err := tt.fields.stg.Get(tt.args.ctx, ns1, svc, tt.args.name)
 
@@ -179,21 +183,26 @@ func TestTriggerStorage_ListByNamespace(t *testing.T) {
 		},
 	}
 
-	for _, tt := range tests {
-
+	clear := func() {
 		if err := stg.Clear(ctx); err != nil {
 			t.Errorf("TriggerStorage.ListByNamespace() storage setup error = %v", err)
 			return
 		}
+	}
 
-		for _, n := range nl0 {
-			if err := stg.Insert(ctx, n); err != nil {
-				t.Errorf("TriggerStorage.ListByNamespace() storage setup error = %v", err)
-				return
-			}
-		}
-
+	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+
+			clear()
+			defer clear()
+
+			for _, n := range nl0 {
+				if err := stg.Insert(ctx, n); err != nil {
+					t.Errorf("TriggerStorage.ListByNamespace() storage setup error = %v", err)
+					return
+				}
+			}
+
 			got, err := stg.ListByNamespace(tt.args.ctx, tt.args.ns)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("TriggerStorage.ListByNamespace() error = %v, wantErr %v", err, tt.wantErr)
@@ -290,21 +299,26 @@ func TestTriggerStorage_ListByService(t *testing.T) {
 		},
 	}
 
-	for _, tt := range tests {
-
+	clear := func() {
 		if err := stg.Clear(ctx); err != nil {
 			t.Errorf("TriggerStorage.ListByService() storage setup error = %v", err)
 			return
 		}
+	}
 
-		for _, n := range nl0 {
-			if err := stg.Insert(ctx, n); err != nil {
-				t.Errorf("TriggerStorage.ListByService() storage setup error = %v", err)
-				return
-			}
-		}
-
+	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+
+			clear()
+			defer clear()
+
+			for _, n := range nl0 {
+				if err := stg.Insert(ctx, n); err != nil {
+					t.Errorf("TriggerStorage.ListByService() storage setup error = %v", err)
+					return
+				}
+			}
+
 			got, err := stg.ListByService(tt.args.ctx, tt.args.ns, tt.args.svc)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("TriggerStorage.ListByService() error = %v, wantErr %v", err, tt.wantErr)
@@ -332,7 +346,7 @@ func TestTriggerStorage_SetStatus(t *testing.T) {
 		nl  = make([]*types.Trigger, 0)
 	)
 
-	n2.Status.Stage = types.StateReady
+	n2.Status.State = types.StateReady
 
 	nl0 := append(nl, &n1)
 
@@ -379,21 +393,26 @@ func TestTriggerStorage_SetStatus(t *testing.T) {
 		},
 	}
 
-	for _, tt := range tests {
-
+	clear := func() {
 		if err := stg.Clear(ctx); err != nil {
 			t.Errorf("TriggerStorage.SetStatus() storage setup error = %v", err)
 			return
 		}
+	}
 
-		for _, n := range nl0 {
-			if err := stg.Insert(ctx, n); err != nil {
-				t.Errorf("TriggerStorage.SetStatus() storage setup error = %v", err)
-				return
-			}
-		}
-
+	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+
+			clear()
+			defer clear()
+
+			for _, n := range nl0 {
+				if err := stg.Insert(ctx, n); err != nil {
+					t.Errorf("TriggerStorage.SetStatus() storage setup error = %v", err)
+					return
+				}
+			}
+
 			err := tt.fields.stg.SetStatus(tt.args.ctx, tt.args.trigger)
 			if err != nil {
 				if !tt.wantErr {
@@ -439,7 +458,7 @@ func TestTriggerStorage_SetSpec(t *testing.T) {
 		nl  = make([]*types.Trigger, 0)
 	)
 
-	n2.Status.Stage = types.StateReady
+	n2.Status.State = types.StateReady
 
 	nl0 := append(nl, &n1)
 
@@ -486,21 +505,27 @@ func TestTriggerStorage_SetSpec(t *testing.T) {
 		},
 	}
 
-	for _, tt := range tests {
-
+	clear := func() {
 		if err := stg.Clear(ctx); err != nil {
 			t.Errorf("TriggerStorage.SetStatus() storage setup error = %v", err)
 			return
 		}
+	}
 
-		for _, n := range nl0 {
-			if err := stg.Insert(ctx, n); err != nil {
-				t.Errorf("TriggerStorage.SetStatus() storage setup error = %v", err)
-				return
-			}
-		}
+	for _, tt := range tests {
 
 		t.Run(tt.name, func(t *testing.T) {
+
+			clear()
+			defer clear()
+
+			for _, n := range nl0 {
+				if err := stg.Insert(ctx, n); err != nil {
+					t.Errorf("TriggerStorage.SetStatus() storage setup error = %v", err)
+					return
+				}
+			}
+
 			err := tt.fields.stg.SetStatus(tt.args.ctx, tt.args.trigger)
 			if err != nil {
 				if !tt.wantErr {
@@ -589,14 +614,19 @@ func TestTriggerStorage_Insert(t *testing.T) {
 		},
 	}
 
-	for _, tt := range tests {
-
+	clear := func() {
 		if err := stg.Clear(ctx); err != nil {
 			t.Errorf("TriggerStorage.Insert() storage setup error = %v", err)
 			return
 		}
+	}
 
+	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+
+			clear()
+			defer clear()
+
 			err := tt.fields.stg.Insert(tt.args.ctx, tt.args.trigger)
 			if err != nil {
 				if !tt.wantErr {
@@ -680,21 +710,26 @@ func TestTriggerStorage_Update(t *testing.T) {
 		},
 	}
 
-	for _, tt := range tests {
-
+	clear := func() {
 		if err := stg.Clear(ctx); err != nil {
 			t.Errorf("TriggerStorage.Update() storage setup error = %v", err)
 			return
 		}
+	}
 
-		for _, n := range nl0 {
-			if err := stg.Insert(ctx, n); err != nil {
-				t.Errorf("TriggerStorage.Update() storage setup error = %v", err)
-				return
-			}
-		}
-
+	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+
+			clear()
+			defer clear()
+
+			for _, n := range nl0 {
+				if err := stg.Insert(ctx, n); err != nil {
+					t.Errorf("TriggerStorage.Update() storage setup error = %v", err)
+					return
+				}
+			}
+
 			err := tt.fields.stg.Update(tt.args.ctx, tt.args.trigger)
 			if err != nil {
 				if !tt.wantErr {
@@ -782,19 +817,24 @@ func TestTriggerStorage_Remove(t *testing.T) {
 		},
 	}
 
-	for _, tt := range tests {
-
+	clear := func() {
 		if err := stg.Clear(ctx); err != nil {
 			t.Errorf("TriggerStorage.Remove() storage setup error = %v", err)
 			return
 		}
+	}
 
-		if err := stg.Insert(ctx, &n1); err != nil {
-			t.Errorf("TriggerStorage.Remove() storage setup error = %v", err)
-			return
-		}
-
+	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+
+			clear()
+			defer clear()
+
+			if err := stg.Insert(ctx, &n1); err != nil {
+				t.Errorf("TriggerStorage.Remove() storage setup error = %v", err)
+				return
+			}
+
 			err := tt.fields.stg.Remove(tt.args.ctx, tt.args.trigger)
 			if err != nil {
 				if !tt.wantErr {

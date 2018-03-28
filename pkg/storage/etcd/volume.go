@@ -313,6 +313,10 @@ func (s *VolumeStorage) Watch(ctx context.Context, volume chan *types.Volume) er
 			return
 		}
 
+		if action == ACTIONDELETE {
+			return
+		}
+
 		if d, err := s.Get(ctx, keys[1], keys[2]); err == nil {
 			volume <- d
 		}
@@ -347,6 +351,10 @@ func (s *VolumeStorage) WatchSpec(ctx context.Context, volume chan *types.Volume
 			return
 		}
 
+		if action == ACTIONDELETE {
+			return
+		}
+
 		if d, err := s.Get(ctx, keys[1], keys[2]); err == nil {
 			volume <- d
 		}
@@ -378,6 +386,10 @@ func (s *VolumeStorage) WatchStatus(ctx context.Context, volume chan *types.Volu
 	cb := func(action, key string, _ []byte) {
 		keys := r.FindStringSubmatch(key)
 		if len(keys) < 3 {
+			return
+		}
+
+		if action == ACTIONDELETE {
 			return
 		}
 

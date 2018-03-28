@@ -528,6 +528,42 @@ func (s *NodeStorage) InsertPod(ctx context.Context, node *types.Node, pod *type
 	return nil
 }
 
+func (s *NodeStorage) UpdatePod(ctx context.Context, node *types.Node, pod *types.Pod) error {
+
+	log.V(logLevel).Debugf("storage:etcd:node:> update pod: %#v", pod)
+
+	if err := s.checkNodeExists(ctx, node); err != nil {
+		return err
+	}
+
+	if err := s.checkPodArgument(pod); err != nil {
+		return err
+	}
+
+	node.Meta.Updated = time.Now()
+
+	client, destroy, err := getClient(ctx)
+	if err != nil {
+		log.V(logLevel).Errorf("storage:etcd:node:> create client err: %s", err.Error())
+		return err
+	}
+	defer destroy()
+
+	keyMeta := keyCreate(nodeStorage, node.Meta.Name, "meta")
+	if err := client.Update(ctx, keyMeta, node.Meta, nil, 0); err != nil {
+		log.V(logLevel).Errorf("storage:etcd:node:> insert pod err: %s", err.Error())
+		return err
+	}
+
+	keyPod := keyCreate(nodeStorage, node.Meta.Name, "spec", "pods", pod.SelfLink())
+	if err := client.Upsert(ctx, keyPod, pod.Spec, nil, 0); err != nil {
+		log.V(logLevel).Errorf("storage:etcd:node:> insert pod err: %s", err.Error())
+		return err
+	}
+
+	return nil
+}
+
 func (s *NodeStorage) RemovePod(ctx context.Context, node *types.Node, pod *types.Pod) error {
 
 	if err := s.checkNodeExists(ctx, node); err != nil {

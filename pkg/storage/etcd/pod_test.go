@@ -76,19 +76,24 @@ func TestPodStorage_Get(t *testing.T) {
 		},
 	}
 
-	for _, tt := range tests {
-
+	clear := func() {
 		if err := stg.Clear(ctx); err != nil {
 			t.Errorf("PodStorage.Get() storage setup error = %v", err)
 			return
 		}
+	}
 
-		if err := stg.Insert(ctx, &d); err != nil {
-			t.Errorf("PodStorage.Get() storage setup error = %v", err)
-			return
-		}
+	for _, tt := range tests {
 
 		t.Run(tt.name, func(t *testing.T) {
+
+			clear()
+			defer clear()
+
+			if err := stg.Insert(ctx, &d); err != nil {
+				t.Errorf("PodStorage.Get() storage setup error = %v", err)
+				return
+			}
 
 			got, err := tt.fields.stg.Get(tt.args.ctx, ns1, svc, dp1, tt.args.name)
 
@@ -181,21 +186,27 @@ func TestPodStorage_ListByNamespace(t *testing.T) {
 		},
 	}
 
-	for _, tt := range tests {
-
+	clear := func() {
 		if err := stg.Clear(ctx); err != nil {
 			t.Errorf("PodStorage.List() storage setup error = %v", err)
 			return
 		}
+	}
 
-		for _, n := range nl0 {
-			if err := stg.Insert(ctx, n); err != nil {
-				t.Errorf("PodStorage.List() storage setup error = %v", err)
-				return
-			}
-		}
+	for _, tt := range tests {
 
 		t.Run(tt.name, func(t *testing.T) {
+
+			clear()
+			defer clear()
+
+			for _, n := range nl0 {
+				if err := stg.Insert(ctx, n); err != nil {
+					t.Errorf("PodStorage.List() storage setup error = %v", err)
+					return
+				}
+			}
+
 			got, err := stg.ListByNamespace(tt.args.ctx, tt.args.ns)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("PodStorage.List() error = %v, wantErr %v", err, tt.wantErr)
@@ -293,21 +304,26 @@ func TestPodStorage_ListByService(t *testing.T) {
 		},
 	}
 
-	for _, tt := range tests {
-
+	clear := func() {
 		if err := stg.Clear(ctx); err != nil {
 			t.Errorf("PodStorage.ListByService() storage setup error = %v", err)
 			return
 		}
+	}
 
-		for _, n := range nl0 {
-			if err := stg.Insert(ctx, n); err != nil {
-				t.Errorf("PodStorage.ListByService() storage setup error = %v", err)
-				return
-			}
-		}
-
+	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+
+			clear()
+			defer clear()
+
+			for _, n := range nl0 {
+				if err := stg.Insert(ctx, n); err != nil {
+					t.Errorf("PodStorage.ListByService() storage setup error = %v", err)
+					return
+				}
+			}
+
 			got, err := stg.ListByService(tt.args.ctx, tt.args.ns, tt.args.svc)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("PodStorage.ListByService() error = %v, wantErr %v", err, tt.wantErr)
@@ -423,21 +439,26 @@ func TestPodStorage_ListByDeployment(t *testing.T) {
 		},
 	}
 
-	for _, tt := range tests {
-
+	clear := func() {
 		if err := stg.Clear(ctx); err != nil {
 			t.Errorf("PodStorage.ListByDeployment() storage setup error = %v", err)
 			return
 		}
+	}
 
-		for _, n := range nl0 {
-			if err := stg.Insert(ctx, n); err != nil {
-				t.Errorf("PodStorage.ListByDeployment() storage setup error = %v", err)
-				return
-			}
-		}
-
+	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+
+			clear()
+			defer clear()
+
+			for _, n := range nl0 {
+				if err := stg.Insert(ctx, n); err != nil {
+					t.Errorf("PodStorage.ListByDeployment() storage setup error = %v", err)
+					return
+				}
+			}
+
 			got, err := stg.ListByDeployment(tt.args.ctx, tt.args.ns, tt.args.svc, tt.args.dp)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("PodStorage.ListByDeployment() error = %v, wantErr %v", err, tt.wantErr)
@@ -466,7 +487,7 @@ func TestPodStorage_SetStatus(t *testing.T) {
 		nl  = make([]*types.Pod, 0)
 	)
 
-	n2.Status.State = types.StateReady
+	n2.Status.Stage = types.StateReady
 
 	nl0 := append(nl, &n1)
 
@@ -513,21 +534,27 @@ func TestPodStorage_SetStatus(t *testing.T) {
 		},
 	}
 
-	for _, tt := range tests {
-
+	clear := func() {
 		if err := stg.Clear(ctx); err != nil {
 			t.Errorf("PodStorage.SetStatus() storage setup error = %v", err)
 			return
 		}
+	}
 
-		for _, n := range nl0 {
-			if err := stg.Insert(ctx, n); err != nil {
-				t.Errorf("PodStorage.SetStatus() storage setup error = %v", err)
-				return
-			}
-		}
+	for _, tt := range tests {
 
 		t.Run(tt.name, func(t *testing.T) {
+
+			clear()
+			defer clear()
+
+			for _, n := range nl0 {
+				if err := stg.Insert(ctx, n); err != nil {
+					t.Errorf("PodStorage.SetStatus() storage setup error = %v", err)
+					return
+				}
+			}
+
 			err := tt.fields.stg.SetStatus(tt.args.ctx, tt.args.pod)
 			if err != nil {
 				if !tt.wantErr {
@@ -618,14 +645,19 @@ func TestPodStorage_Insert(t *testing.T) {
 		},
 	}
 
-	for _, tt := range tests {
-
+	clear := func() {
 		if err := stg.Clear(ctx); err != nil {
 			t.Errorf("PodStorage.SetStatus() storage setup error = %v", err)
 			return
 		}
+	}
 
+	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+
+			clear()
+			defer clear()
+
 			err := tt.fields.stg.Insert(tt.args.ctx, tt.args.pod)
 			if err != nil {
 				if !tt.wantErr {
@@ -710,21 +742,27 @@ func TestPodStorage_Update(t *testing.T) {
 		},
 	}
 
-	for _, tt := range tests {
-
+	clear := func() {
 		if err := stg.Clear(ctx); err != nil {
 			t.Errorf("PodStorage.Update() storage setup error = %v", err)
 			return
 		}
+	}
 
-		for _, n := range nl0 {
-			if err := stg.Insert(ctx, n); err != nil {
-				t.Errorf("PodStorage.Update() storage setup error = %v", err)
-				return
-			}
-		}
+	for _, tt := range tests {
 
 		t.Run(tt.name, func(t *testing.T) {
+
+			clear()
+			defer clear()
+
+			for _, n := range nl0 {
+				if err := stg.Insert(ctx, n); err != nil {
+					t.Errorf("PodStorage.Update() storage setup error = %v", err)
+					return
+				}
+			}
+
 			err := tt.fields.stg.Update(tt.args.ctx, tt.args.pod)
 			if err != nil {
 				if !tt.wantErr {
@@ -813,19 +851,25 @@ func TestPodStorage_Remove(t *testing.T) {
 		},
 	}
 
-	for _, tt := range tests {
-
+	clear := func() {
 		if err := stg.Clear(ctx); err != nil {
 			t.Errorf("PodStorage.Remove() storage setup error = %v", err)
 			return
 		}
+	}
 
-		if err := stg.Insert(ctx, &n1); err != nil {
-			t.Errorf("PodStorage.Remove() storage setup error = %v", err)
-			return
-		}
+	for _, tt := range tests {
 
 		t.Run(tt.name, func(t *testing.T) {
+
+			clear()
+			defer clear()
+
+			if err := stg.Insert(ctx, &n1); err != nil {
+				t.Errorf("PodStorage.Remove() storage setup error = %v", err)
+				return
+			}
+
 			err := tt.fields.stg.Remove(tt.args.ctx, tt.args.pod)
 			if err != nil {
 				if !tt.wantErr {

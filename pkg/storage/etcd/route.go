@@ -277,6 +277,10 @@ func (s *RouteStorage) Watch(ctx context.Context, route chan *types.Route) error
 			return
 		}
 
+		if action == ACTIONDELETE {
+			return
+		}
+
 		if d, err := s.Get(ctx, keys[1], keys[2]); err == nil {
 			route <- d
 		}
@@ -311,6 +315,10 @@ func (s *RouteStorage) WatchSpec(ctx context.Context, route chan *types.Route) e
 			return
 		}
 
+		if action == ACTIONDELETE {
+			return
+		}
+
 		if d, err := s.Get(ctx, keys[1], keys[2]); err == nil {
 			route <- d
 		}
@@ -342,6 +350,10 @@ func (s *RouteStorage) WatchStatus(ctx context.Context, route chan *types.Route)
 	cb := func(action, key string, _ []byte) {
 		keys := r.FindStringSubmatch(key)
 		if len(keys) < 3 {
+			return
+		}
+
+		if action == ACTIONDELETE {
 			return
 		}
 

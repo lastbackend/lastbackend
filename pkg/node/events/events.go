@@ -21,11 +21,11 @@ package events
 import (
 	"context"
 	"github.com/lastbackend/lastbackend/pkg/api/types/v1"
+	"github.com/lastbackend/lastbackend/pkg/api/types/v1/request"
+	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 	"github.com/lastbackend/lastbackend/pkg/log"
 	"github.com/lastbackend/lastbackend/pkg/node/envs"
 	"github.com/pkg/errors"
-	"github.com/lastbackend/lastbackend/pkg/distribution/types"
-	"github.com/lastbackend/lastbackend/pkg/api/types/v1/request"
 )
 
 // NewConnectEventt - send node info event after
@@ -118,10 +118,9 @@ func NewVolumeStatusEvent(ctx context.Context, volume string) error {
 	return c.SetVolumeStatus(ctx, volume, opts)
 }
 
-
 func getPodOptions(p *types.PodStatus) *request.NodePodStatusOptions {
 	opts := v1.Request().Node().NodePodStatusOptions()
-	opts.Stage = p.State
+	opts.State = p.Stage
 	opts.Message = p.Message
 	opts.Containers = p.Containers
 	opts.Network = p.Network

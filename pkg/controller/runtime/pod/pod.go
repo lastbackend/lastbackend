@@ -19,10 +19,10 @@
 package pod
 
 import (
-	"github.com/lastbackend/lastbackend/pkg/distribution/types"
+	"context"
 	"github.com/lastbackend/lastbackend/pkg/controller/envs"
 	"github.com/lastbackend/lastbackend/pkg/distribution"
-	"context"
+	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 	"github.com/lastbackend/lastbackend/pkg/log"
 )
 
@@ -60,7 +60,7 @@ func HandleStatus(p *types.Pod) error {
 
 	for _, ps := range pl {
 
-		switch ps.Status.State {
+		switch ps.Status.Stage {
 
 		case types.StateError:
 			status[types.StateError] += 1
@@ -98,7 +98,7 @@ func HandleStatus(p *types.Pod) error {
 			status[types.StateDestroyed] += 1
 			break
 		case types.StateWarning:
-			status[types.StateWarning]+=1
+			status[types.StateWarning] += 1
 			break
 		}
 	}
@@ -126,12 +126,12 @@ func HandleStatus(p *types.Pod) error {
 	case status[types.StateStopped] == d.Spec.Replicas:
 		d.Status.State = types.StateStopped
 		break
-	case status[types.StateDestroyed] == 1 && p.Status.State == types.StateDestroyed:
+	case status[types.StateDestroyed] == 1 && p.Status.Stage == types.StateDestroyed:
 		d.Status.State = types.StateDestroyed
 		break
 	}
 
-	if p.Status.State == types.StateDestroyed {
+	if p.Status.Stage == types.StateDestroyed {
 		if err := pm.Remove(context.Background(), p); err != nil {
 			log.Errorf("%s: remove pod [%s] err: %s", msg, p.SelfLink(), err.Error())
 			return err

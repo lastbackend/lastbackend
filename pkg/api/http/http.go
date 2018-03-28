@@ -34,7 +34,7 @@ import (
 )
 
 const (
-	logLevel = 2
+	logLevel  = 2
 	logPrefix = "api:http"
 )
 

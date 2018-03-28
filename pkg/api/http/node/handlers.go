@@ -33,7 +33,7 @@ import (
 )
 
 const (
-	logLevel = 2
+	logLevel  = 2
 	logPrefix = "api:handler:node"
 )
 
@@ -373,7 +373,7 @@ func NodeSetPodStatusH(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := pm.SetStatus(pod, &types.PodStatus{
-		State:      opts.Stage,
+		Stage:      opts.State,
 		Message:    opts.Message,
 		Steps:      opts.Steps,
 		Network:    opts.Network,
@@ -442,7 +442,7 @@ func NodeSetVolumeStatusH(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := vm.SetStatus(volume, &types.VolumeStatus{
-		Stage:   opts.Stage,
+		State:   opts.State,
 		Message: opts.Message,
 	}); err != nil {
 		log.V(logLevel).Errorf("%s:setvolumestatus:> get nodes list err: %s", logPrefix, err.Error())
@@ -508,7 +508,7 @@ func NodeSetRouteStatusH(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := rm.SetStatus(route, &types.RouteStatus{
-		Stage:   opts.Stage,
+		State:   opts.State,
 		Message: opts.Message,
 	}); err != nil {
 		log.V(logLevel).Errorf("%s:setroutestatus:> get nodes list err: %s", logPrefix, err.Error())

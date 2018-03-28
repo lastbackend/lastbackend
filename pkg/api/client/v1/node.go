@@ -28,8 +28,8 @@ import (
 	rv1 "github.com/lastbackend/lastbackend/pkg/api/types/v1/request"
 	vv1 "github.com/lastbackend/lastbackend/pkg/api/types/v1/views"
 	"github.com/lastbackend/lastbackend/pkg/distribution/errors"
-	"strconv"
 	"io"
+	"strconv"
 )
 
 type NodeClient struct {

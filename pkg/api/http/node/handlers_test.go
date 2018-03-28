@@ -713,7 +713,7 @@ func TestNodeSetPodStatusH(t *testing.T) {
 		uo = v1.Request().Node().NodePodStatusOptions()
 	)
 
-	uo.Stage = "error"
+	uo.State = types.StateError
 	uo.Message = "error message"
 	uo.Containers = make(map[string]*types.PodContainer)
 	uo.Containers["test"] = &types.PodContainer{
@@ -812,7 +812,7 @@ func TestNodeSetPodStatusH(t *testing.T) {
 				p, err := envs.Get().GetStorage().Pod().Get(ctx, p1.Meta.Namespace, p1.Meta.Service, p1.Meta.Deployment, p1.Meta.Name)
 				assert.NoError(t, err)
 
-				assert.Equal(t, uo.Stage, p.Status.State, "pods stage not equal")
+				assert.Equal(t, uo.State, p.Status.Stage, "pods state not equal")
 				assert.Equal(t, uo.Message, p.Status.Message, "pods message not equal")
 
 				uo.Containers = make(map[string]*types.PodContainer)
@@ -859,7 +859,7 @@ func TestNodeSetVolumeStatusH(t *testing.T) {
 		uo = v1.Request().Node().NodeVolumeStatusOptions()
 	)
 
-	uo.Stage = "error"
+	uo.State = types.StateError
 	uo.Message = "error message"
 
 	type args struct {
@@ -950,7 +950,7 @@ func TestNodeSetVolumeStatusH(t *testing.T) {
 				p, err := envs.Get().GetStorage().Volume().Get(ctx, vl1.Meta.Namespace, vl1.Meta.Name)
 				assert.NoError(t, err)
 
-				assert.Equal(t, uo.Stage, p.Status.Stage, "pods stage not equal")
+				assert.Equal(t, uo.State, p.Status.State, "pods state not equal")
 				assert.Equal(t, uo.Message, p.Status.Message, "pods message not equal")
 			}
 
@@ -979,7 +979,7 @@ func TestNodeSetRouteStatusH(t *testing.T) {
 		uo = v1.Request().Node().NodeRouteStatusOptions()
 	)
 
-	uo.Stage = "error"
+	uo.State = types.StateError
 	uo.Message = "error message"
 
 	type args struct {
@@ -1070,7 +1070,7 @@ func TestNodeSetRouteStatusH(t *testing.T) {
 				p, err := envs.Get().GetStorage().Route().Get(ctx, r1.Meta.Namespace, r1.Meta.Name)
 				assert.NoError(t, err)
 
-				assert.Equal(t, uo.Stage, p.Status.Stage, "pods stage not equal")
+				assert.Equal(t, uo.State, p.Status.State, "pods state not equal")
 				assert.Equal(t, uo.Message, p.Status.Message, "pods message not equal")
 			}
 

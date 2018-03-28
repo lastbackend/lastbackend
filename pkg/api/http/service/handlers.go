@@ -21,6 +21,7 @@ package service
 import (
 	"net/http"
 
+	"github.com/lastbackend/lastbackend/pkg/api/client"
 	"github.com/lastbackend/lastbackend/pkg/api/envs"
 	"github.com/lastbackend/lastbackend/pkg/api/types/v1"
 	"github.com/lastbackend/lastbackend/pkg/distribution"
@@ -28,8 +29,6 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/log"
 	"github.com/lastbackend/lastbackend/pkg/util/converter"
 	"github.com/lastbackend/lastbackend/pkg/util/http/utils"
-	"github.com/lastbackend/lastbackend/pkg/api/client"
-	"fmt"
 )
 
 const (
@@ -372,8 +371,6 @@ func ServiceLogsH(w http.ResponseWriter, r *http.Request) {
 		errors.New("service").NotFound().Http(w)
 		return
 	}
-
-	fmt.Println(">>>>", pod.Meta.Node)
 
 	node, err := nm.Get(pod.Meta.Node)
 	if err != nil {

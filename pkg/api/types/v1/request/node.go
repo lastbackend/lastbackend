@@ -37,8 +37,8 @@ type NodeStatusOptions struct {
 }
 
 type NodePodStatusOptions struct {
-	// Pod stage
-	Stage string `json:"stage" yaml:"stage"`
+	// Pod state
+	State string `json:"state" yaml:"state"`
 	// Pod state message
 	Message string `json:"message" yaml:"message"`
 	// Pod steps
@@ -50,15 +50,15 @@ type NodePodStatusOptions struct {
 }
 
 type NodeVolumeStatusOptions struct {
-	// route status stage
-	Stage string `json:"stage" yaml:"stage"`
+	// route status state
+	State string `json:"state" yaml:"state"`
 	// route status message
 	Message string `json:"message" yaml:"message"`
 }
 
 type NodeRouteStatusOptions struct {
-	// route status stage
-	Stage string `json:"stage" yaml:"stage"`
+	// route status state
+	State string `json:"state" yaml:"state"`
 	// route status message
 	Message string `json:"message" yaml:"message"`
 }

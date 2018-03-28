@@ -77,7 +77,7 @@ func Manage(ctx context.Context, key string, spec *types.PodSpec) error {
 	// Get pod list from current state
 	p := envs.Get().GetState().Pods().GetPod(key)
 	if p != nil {
-		if p.State != types.StateWarning {
+		if p.Stage != types.StateWarning {
 			events.NewPodStatusEvent(ctx, key)
 			return nil
 		}

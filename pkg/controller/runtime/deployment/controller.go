@@ -71,7 +71,7 @@ func (dc *Controller) WatchStatus() {
 
 	var (
 		stg = envs.Get().GetStorage()
-		msg     = "controller:deployment:status:"
+		msg = "controller:deployment:status:"
 	)
 
 	log.Debugf("%s> start watch deployment status", msg)

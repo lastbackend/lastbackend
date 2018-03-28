@@ -320,6 +320,10 @@ func (s *TriggerStorage) Watch(ctx context.Context, trigger chan *types.Trigger)
 			return
 		}
 
+		if action == ACTIONDELETE {
+			return
+		}
+
 		if d, err := s.Get(ctx, keys[1], keys[2], keys[3]); err == nil {
 			trigger <- d
 		}
@@ -354,6 +358,10 @@ func (s *TriggerStorage) WatchSpec(ctx context.Context, trigger chan *types.Trig
 			return
 		}
 
+		if action == ACTIONDELETE {
+			return
+		}
+
 		if d, err := s.Get(ctx, keys[1], keys[2], keys[3]); err == nil {
 			trigger <- d
 		}
@@ -385,6 +393,10 @@ func (s *TriggerStorage) WatchStatus(ctx context.Context, trigger chan *types.Tr
 	cb := func(action, key string, _ []byte) {
 		keys := r.FindStringSubmatch(key)
 		if len(keys) < 3 {
+			return
+		}
+
+		if action == ACTIONDELETE {
 			return
 		}
 
