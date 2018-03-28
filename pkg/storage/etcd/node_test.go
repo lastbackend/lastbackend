@@ -68,21 +68,26 @@ func TestNodeStorage_List(t *testing.T) {
 		},
 	}
 
-	for _, tt := range tests {
-
+	clear := func() {
 		if err := stg.Clear(ctx); err != nil {
 			t.Errorf("NodeStorage.List() storage setup error = %v", err)
 			return
 		}
+	}
 
-		for _, n := range nl {
-			if err := stg.Insert(ctx, n); err != nil {
-				t.Errorf("NodeStorage.List() storage setup error = %v", err)
-				return
-			}
-		}
-
+	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+
+			clear()
+			defer clear()
+
+			for _, n := range nl {
+				if err := stg.Insert(ctx, n); err != nil {
+					t.Errorf("NodeStorage.List() storage setup error = %v", err)
+					return
+				}
+			}
+
 			got, err := stg.List(tt.args.ctx)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("NodeStorage.List() error = %v, wantErr %v", err, tt.wantErr)
@@ -153,19 +158,23 @@ func TestNodeStorage_Get(t *testing.T) {
 		},
 	}
 
-	for _, tt := range tests {
-
+	clear := func() {
 		if err := stg.Clear(ctx); err != nil {
 			t.Errorf("NodeStorage.Get() storage setup error = %v", err)
 			return
 		}
+	}
 
-		if err := stg.Insert(ctx, &n); err != nil {
-			t.Errorf("NodeStorage.Get() storage setup error = %v", err)
-			return
-		}
-
+	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+
+			clear()
+			defer clear()
+
+			if err := stg.Insert(ctx, &n); err != nil {
+				t.Errorf("NodeStorage.Get() storage setup error = %v", err)
+				return
+			}
 
 			got, err := tt.fields.stg.Get(tt.args.ctx, tt.args.name)
 
@@ -261,29 +270,33 @@ func TestNodeStorage_GetSpec(t *testing.T) {
 		},
 	}
 
-	for _, tt := range tests {
-
+	clear := func() {
 		if err := stg.Clear(ctx); err != nil {
 			t.Errorf("NodeStorage.Get() storage setup error = %v", err)
 			return
 		}
+	}
 
-		if err := stg.Insert(ctx, &n1); err != nil {
-			t.Errorf("NodeStorage.GetSpec() storage setup error = %v", err)
-			return
-		}
-
-		if err := stg.InsertPod(ctx, &n1, &p1); err != nil {
-			t.Errorf("NodeStorage.GetSpec() storage setup error = %v", err)
-			return
-		}
-
-		if err := stg.InsertPod(ctx, &n1, &p2); err != nil {
-			t.Errorf("NodeStorage.GetSpec() storage setup error = %v", err)
-			return
-		}
-
+	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+
+			clear()
+			defer clear()
+
+			if err := stg.Insert(ctx, &n1); err != nil {
+				t.Errorf("NodeStorage.GetSpec() storage setup error = %v", err)
+				return
+			}
+
+			if err := stg.InsertPod(ctx, &n1, &p1); err != nil {
+				t.Errorf("NodeStorage.GetSpec() storage setup error = %v", err)
+				return
+			}
+
+			if err := stg.InsertPod(ctx, &n1, &p2); err != nil {
+				t.Errorf("NodeStorage.GetSpec() storage setup error = %v", err)
+				return
+			}
 
 			got, err := tt.fields.stg.GetSpec(tt.args.ctx, tt.args.node)
 
@@ -374,14 +387,19 @@ func TestNodeStorage_Insert(t *testing.T) {
 		},
 	}
 
-	for _, tt := range tests {
-
+	clear := func() {
 		if err := stg.Clear(ctx); err != nil {
 			t.Errorf("NodeStorage.Insert() storage setup error = %v", err)
 			return
 		}
+	}
 
+	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+
+			clear()
+			defer clear()
+
 			err := tt.fields.stg.Insert(tt.args.ctx, tt.args.node)
 			if err != nil {
 				if !tt.wantErr {
@@ -460,19 +478,25 @@ func TestNodeStorage_Update(t *testing.T) {
 		},
 	}
 
-	for _, tt := range tests {
-
+	clear := func() {
 		if err := stg.Clear(ctx); err != nil {
 			t.Errorf("NodeStorage.Update() storage setup error = %v", err)
 			return
 		}
+	}
 
-		if err := stg.Insert(ctx, &n1); err != nil {
-			t.Errorf("NodeStorage.Update() storage setup error = %v", err)
-			return
-		}
+	for _, tt := range tests {
 
 		t.Run(tt.name, func(t *testing.T) {
+
+			clear()
+			defer clear()
+
+			if err := stg.Insert(ctx, &n1); err != nil {
+				t.Errorf("NodeStorage.Update() storage setup error = %v", err)
+				return
+			}
+
 			err := tt.fields.stg.Update(tt.args.ctx, tt.args.node)
 			if err != nil {
 				if !tt.wantErr {
@@ -561,19 +585,25 @@ func TestNodeStorage_SetStatus(t *testing.T) {
 		},
 	}
 
-	for _, tt := range tests {
-
+	clear := func() {
 		if err := stg.Clear(ctx); err != nil {
 			t.Errorf("NodeStorage.SetStatus() storage setup error = %v", err)
 			return
 		}
+	}
 
-		if err := stg.Insert(ctx, &n1); err != nil {
-			t.Errorf("NodeStorage.SetStatus() storage setup error = %v", err)
-			return
-		}
+	for _, tt := range tests {
 
 		t.Run(tt.name, func(t *testing.T) {
+
+			clear()
+			defer clear()
+
+			if err := stg.Insert(ctx, &n1); err != nil {
+				t.Errorf("NodeStorage.SetStatus() storage setup error = %v", err)
+				return
+			}
+
 			err := tt.fields.stg.SetStatus(tt.args.ctx, tt.args.node)
 			if err != nil {
 				if !tt.wantErr {
@@ -665,19 +695,24 @@ func TestNodeStorage_SetInfo(t *testing.T) {
 		},
 	}
 
-	for _, tt := range tests {
-
+	clear := func() {
 		if err := stg.Clear(ctx); err != nil {
 			t.Errorf("NodeStorage.SetInfo() storage setup error = %v", err)
 			return
 		}
+	}
 
-		if err := stg.Insert(ctx, &n1); err != nil {
-			t.Errorf("NodeStorage.SetInfo() storage setup error = %v", err)
-			return
-		}
-
+	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+
+			clear()
+			defer clear()
+
+			if err := stg.Insert(ctx, &n1); err != nil {
+				t.Errorf("NodeStorage.SetInfo() storage setup error = %v", err)
+				return
+			}
+
 			err := tt.fields.stg.SetInfo(tt.args.ctx, tt.args.node)
 			if err != nil {
 				if !tt.wantErr {
@@ -770,19 +805,24 @@ func TestNodeStorage_SetNetwork(t *testing.T) {
 		},
 	}
 
-	for _, tt := range tests {
-
+	clear := func() {
 		if err := stg.Clear(ctx); err != nil {
 			t.Errorf("NodeStorage.SetNetwork() storage setup error = %v", err)
 			return
 		}
+	}
 
-		if err := stg.Insert(ctx, &n1); err != nil {
-			t.Errorf("NodeStorage.SetNetwork() storage setup error = %v", err)
-			return
-		}
-
+	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+
+			clear()
+			defer clear()
+
+			if err := stg.Insert(ctx, &n1); err != nil {
+				t.Errorf("NodeStorage.SetNetwork() storage setup error = %v", err)
+				return
+			}
+
 			err := tt.fields.stg.SetNetwork(tt.args.ctx, tt.args.node)
 			if err != nil {
 				if !tt.wantErr {
@@ -873,19 +913,24 @@ func TestNodeStorage_SetOnline(t *testing.T) {
 		},
 	}
 
-	for _, tt := range tests {
-
+	clear := func() {
 		if err := stg.Clear(ctx); err != nil {
 			t.Errorf("NodeStorage.SetOnline() storage setup error = %v", err)
 			return
 		}
+	}
 
-		if err := stg.Insert(ctx, &n1); err != nil {
-			t.Errorf("NodeStorage.SetOnline() storage setup error = %v", err)
-			return
-		}
-
+	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+
+			clear()
+			defer clear()
+
+			if err := stg.Insert(ctx, &n1); err != nil {
+				t.Errorf("NodeStorage.SetOnline() storage setup error = %v", err)
+				return
+			}
+
 			err := tt.fields.stg.SetOnline(tt.args.ctx, tt.args.node)
 			if err != nil {
 				if !tt.wantErr {
@@ -976,19 +1021,24 @@ func TestNodeStorage_SetOffline(t *testing.T) {
 		},
 	}
 
-	for _, tt := range tests {
-
+	clear := func() {
 		if err := stg.Clear(ctx); err != nil {
 			t.Errorf("NodeStorage.SetOffline() storage setup error = %v", err)
 			return
 		}
+	}
 
-		if err := stg.Insert(ctx, &n1); err != nil {
-			t.Errorf("NodeStorage.SetOffline() storage setup error = %v", err)
-			return
-		}
-
+	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+
+			clear()
+			defer clear()
+
+			if err := stg.Insert(ctx, &n1); err != nil {
+				t.Errorf("NodeStorage.SetOffline() storage setup error = %v", err)
+				return
+			}
+
 			err := tt.fields.stg.SetOffline(tt.args.ctx, tt.args.node)
 			if err != nil {
 				if !tt.wantErr {
@@ -1112,19 +1162,25 @@ func TestNodeStorage_InsertPod(t *testing.T) {
 		},
 	}
 
-	for _, tt := range tests {
+	clear := func() {
 
 		if err := stg.Clear(ctx); err != nil {
 			t.Errorf("NodeStorage.InsertPod() storage setup error = %v", err)
 			return
 		}
+	}
 
-		if err := stg.Insert(ctx, &n1); err != nil {
-			t.Errorf("NodeStorage.InsertPod() storage setup error = %v", err)
-			return
-		}
-
+	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+
+			clear()
+			defer clear()
+
+			if err := stg.Insert(ctx, &n1); err != nil {
+				t.Errorf("NodeStorage.InsertPod() storage setup error = %v", err)
+				return
+			}
+
 			err := tt.fields.stg.InsertPod(tt.args.ctx, tt.args.node, tt.args.pod)
 			if err != nil {
 				if !tt.wantErr {
@@ -1267,24 +1323,30 @@ func TestNodeStorage_RemovePod(t *testing.T) {
 		},
 	}
 
-	for _, tt := range tests {
-
+	clear := func() {
 		if err := stg.Clear(ctx); err != nil {
 			t.Errorf("NodeStorage.RemovePod() storage setup error = %v", err)
 			return
 		}
+	}
 
-		if err := stg.Insert(ctx, &n1); err != nil {
-			t.Errorf("NodeStorage.RemovePod() storage setup error = %v", err)
-			return
-		}
-
-		if err := stg.InsertPod(ctx, &n1, &p1); err != nil {
-			t.Errorf("NodeStorage.RemovePod() storage setup error = %v", err)
-			return
-		}
+	for _, tt := range tests {
 
 		t.Run(tt.name, func(t *testing.T) {
+
+			clear()
+			defer clear()
+
+			if err := stg.Insert(ctx, &n1); err != nil {
+				t.Errorf("NodeStorage.RemovePod() storage setup error = %v", err)
+				return
+			}
+
+			if err := stg.InsertPod(ctx, &n1, &p1); err != nil {
+				t.Errorf("NodeStorage.RemovePod() storage setup error = %v", err)
+				return
+			}
+
 			err := tt.fields.stg.RemovePod(tt.args.ctx, tt.args.node, tt.args.pod)
 			if err != nil {
 				if !tt.wantErr {
@@ -1417,19 +1479,24 @@ func TestNodeStorage_InsertVolume(t *testing.T) {
 		},
 	}
 
-	for _, tt := range tests {
-
+	clear := func() {
 		if err := stg.Clear(ctx); err != nil {
 			t.Errorf("NodeStorage.InsertVolume() storage setup error = %v", err)
 			return
 		}
+	}
 
-		if err := stg.Insert(ctx, &n1); err != nil {
-			t.Errorf("NodeStorage.InsertVolume() storage setup error = %v", err)
-			return
-		}
-
+	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+
+			clear()
+			defer clear()
+
+			if err := stg.Insert(ctx, &n1); err != nil {
+				t.Errorf("NodeStorage.InsertVolume() storage setup error = %v", err)
+				return
+			}
+
 			err := tt.fields.stg.InsertVolume(tt.args.ctx, tt.args.node, tt.args.volume)
 			if err != nil {
 				if !tt.wantErr {
@@ -1570,24 +1637,29 @@ func TestNodeStorage_RemoveVolume(t *testing.T) {
 		},
 	}
 
-	for _, tt := range tests {
-
+	clear := func() {
 		if err := stg.Clear(ctx); err != nil {
 			t.Errorf("NodeStorage.RemoveVolume() storage setup error = %v", err)
 			return
 		}
+	}
 
-		if err := stg.Insert(ctx, &n1); err != nil {
-			t.Errorf("NodeStorage.RemoveVolume() storage setup error = %v", err)
-			return
-		}
-
-		if err := stg.InsertVolume(ctx, &n1, &v1); err != nil {
-			t.Errorf("NodeStorage.RemovePod() storage setup error = %v", err)
-			return
-		}
-
+	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+
+			clear()
+			defer clear()
+
+			if err := stg.Insert(ctx, &n1); err != nil {
+				t.Errorf("NodeStorage.RemoveVolume() storage setup error = %v", err)
+				return
+			}
+
+			if err := stg.InsertVolume(ctx, &n1, &v1); err != nil {
+				t.Errorf("NodeStorage.RemovePod() storage setup error = %v", err)
+				return
+			}
+
 			err := tt.fields.stg.RemoveVolume(tt.args.ctx, tt.args.node, tt.args.volume)
 			if err != nil {
 				if !tt.wantErr {
@@ -1720,19 +1792,25 @@ func TestNodeStorage_InsertRoute(t *testing.T) {
 		},
 	}
 
-	for _, tt := range tests {
-
+	clear := func() {
 		if err := stg.Clear(ctx); err != nil {
 			t.Errorf("NodeStorage.InsertRoute() storage setup error = %v", err)
 			return
 		}
+	}
 
-		if err := stg.Insert(ctx, &n1); err != nil {
-			t.Errorf("NodeStorage.InsertRoute() storage setup error = %v", err)
-			return
-		}
+	for _, tt := range tests {
 
 		t.Run(tt.name, func(t *testing.T) {
+
+			clear()
+			defer clear()
+
+			if err := stg.Insert(ctx, &n1); err != nil {
+				t.Errorf("NodeStorage.InsertRoute() storage setup error = %v", err)
+				return
+			}
+
 			err := tt.fields.stg.InsertRoute(tt.args.ctx, tt.args.node, tt.args.route)
 			if err != nil {
 				if !tt.wantErr {
@@ -1873,24 +1951,29 @@ func TestNodeStorage_RemoveRoute(t *testing.T) {
 		},
 	}
 
-	for _, tt := range tests {
-
+	clear := func() {
 		if err := stg.Clear(ctx); err != nil {
 			t.Errorf("NodeStorage.RemoveRoute() storage setup error = %v", err)
 			return
 		}
+	}
 
-		if err := stg.Insert(ctx, &n1); err != nil {
-			t.Errorf("NodeStorage.RemoveRoute() storage setup error = %v", err)
-			return
-		}
-
-		if err := stg.InsertRoute(ctx, &n1, &r1); err != nil {
-			t.Errorf("NodeStorage.RemovePod() storage setup error = %v", err)
-			return
-		}
-
+	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+
+			clear()
+			defer clear()
+
+			if err := stg.Insert(ctx, &n1); err != nil {
+				t.Errorf("NodeStorage.RemoveRoute() storage setup error = %v", err)
+				return
+			}
+
+			if err := stg.InsertRoute(ctx, &n1, &r1); err != nil {
+				t.Errorf("NodeStorage.RemovePod() storage setup error = %v", err)
+				return
+			}
+
 			err := tt.fields.stg.RemoveRoute(tt.args.ctx, tt.args.node, tt.args.route)
 			if err != nil {
 				if !tt.wantErr {
@@ -1991,19 +2074,24 @@ func TestNodeStorage_Remove(t *testing.T) {
 		},
 	}
 
-	for _, tt := range tests {
-
+	clear := func() {
 		if err := stg.Clear(ctx); err != nil {
 			t.Errorf("NodeStorage.Remove() storage setup error = %v", err)
 			return
 		}
+	}
 
-		if err := stg.Insert(ctx, &n1); err != nil {
-			t.Errorf("NodeStorage.Remove() storage setup error = %v", err)
-			return
-		}
-
+	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+
+			clear()
+			defer clear()
+
+			if err := stg.Insert(ctx, &n1); err != nil {
+				t.Errorf("NodeStorage.Remove() storage setup error = %v", err)
+				return
+			}
+
 			err := tt.fields.stg.Remove(tt.args.ctx, tt.args.node)
 			if err != nil {
 				if !tt.wantErr {

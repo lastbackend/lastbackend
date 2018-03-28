@@ -45,8 +45,8 @@ type RouteSpec struct {
 }
 
 type RouteStatus struct {
-	// Pod stage
-	Stage string `json:"stage" yaml:"stage"`
+	// Pod state
+	State string `json:"state" yaml:"state"`
 	// Pod state message
 	Message string `json:"message" yaml:"message"`
 }

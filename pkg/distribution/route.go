@@ -30,6 +30,10 @@ import (
 	"strings"
 )
 
+const (
+	logRoutePrefix = "distribution:route"
+)
+
 type IRoute interface {
 	Get(namespace, name string) (*types.Route, error)
 	ListByNamespace(namespace string) (map[string]*types.Route, error)
@@ -46,17 +50,17 @@ type Route struct {
 
 func (n *Route) Get(namespace, name string) (*types.Route, error) {
 
-	log.V(logLevel).Debug("api:distribution:route: get route by id %s/%s", namespace, name)
+	log.V(logLevel).Debug("%s:get:> get route by id %s/%s", logRoutePrefix, namespace, name)
 
 	item, err := n.storage.Route().Get(n.context, namespace, name)
 	if err != nil {
 
 		if err.Error() == store.ErrEntityNotFound {
-			log.V(logLevel).Warnf("api:distribution:route:get: in namespace %s by name %s not found", namespace, name)
+			log.V(logLevel).Warnf("%s:get:> in namespace %s by name %s not found", logRoutePrefix, namespace, name)
 			return nil, nil
 		}
 
-		log.V(logLevel).Errorf("api:distribution:route:get: in namespace %s by name %s error: %s", namespace, name, err)
+		log.V(logLevel).Errorf("%s:get:> in namespace %s by name %s error: %s", logRoutePrefix, namespace, name, err.Error())
 		return nil, err
 	}
 
@@ -65,29 +69,29 @@ func (n *Route) Get(namespace, name string) (*types.Route, error) {
 
 func (n *Route) ListByNamespace(namespace string) (map[string]*types.Route, error) {
 
-	log.V(logLevel).Debug("api:distribution:route: list route")
+	log.V(logLevel).Debug("%s:listbynamespace:> list route", logRoutePrefix)
 
 	items, err := n.storage.Route().ListByNamespace(n.context, namespace)
 	if err != nil {
-		log.V(logLevel).Error("api:distribution:route: list route err: %s", err)
+		log.V(logLevel).Error("%s:listbynamespace:> list route err: %s", logRoutePrefix, err.Error())
 		return items, err
 	}
 
-	log.V(logLevel).Debugf("api:distribution:route: list route result: %d", len(items))
+	log.V(logLevel).Debugf("%s:listbynamespace:> list route result: %d", logRoutePrefix, len(items))
 
 	return items, nil
 }
 
 func (n *Route) Create(namespace *types.Namespace, opts *types.RouteCreateOptions) (*types.Route, error) {
 
-	log.V(logLevel).Debugf("api:distribution:route:crete create route %#v", opts)
+	log.V(logLevel).Debugf("%s:create:> create route %#v", logRoutePrefix, opts)
 
 	route := new(types.Route)
 	route.Meta.SetDefault()
 	route.Meta.Name = generator.GenerateRandomString(10)
 	route.Meta.Namespace = namespace.Meta.Name
 	route.Meta.Security = opts.Security
-	route.Status.Stage = types.StateInitialized
+	route.Status.State = types.StateInitialized
 
 	if len(opts.Domain) != 0 && opts.Custom {
 		route.Spec.Domain = strings.ToLower(opts.Domain)
@@ -111,7 +115,7 @@ func (n *Route) Create(namespace *types.Namespace, opts *types.RouteCreateOption
 	}
 
 	if err := n.storage.Route().Insert(n.context, route); err != nil {
-		log.V(logLevel).Errorf("api:distribution:route:crete insert route err: %s", err)
+		log.V(logLevel).Errorf("%s:create:> insert route err: %s", logRoutePrefix, err.Error())
 		return nil, err
 	}
 
@@ -120,10 +124,10 @@ func (n *Route) Create(namespace *types.Namespace, opts *types.RouteCreateOption
 
 func (n *Route) Update(route *types.Route, namespace *types.Namespace, opts *types.RouteUpdateOptions) (*types.Route, error) {
 
-	log.V(logLevel).Debugf("api:distribution:route:update update route %s", route.Meta.Name)
+	log.V(logLevel).Debugf("%s:update:> update route %s", logRoutePrefix, route.Meta.Name)
 
 	route.Meta.Security = opts.Security
-	route.Status.Stage = types.StateProvision
+	route.Status.State = types.StateProvision
 
 	route.Spec.Domain = opts.Domain
 	route.Spec.Rules = make([]*types.RouteRule, 0)
@@ -140,7 +144,7 @@ func (n *Route) Update(route *types.Route, namespace *types.Namespace, opts *typ
 	}
 
 	if err := n.storage.Route().Update(n.context, route); err != nil {
-		log.V(logLevel).Errorf("api:distribution:route:update update route err: %s", err)
+		log.V(logLevel).Errorf("%s:update:> update route err: %s", logRoutePrefix, err.Error())
 		return nil, err
 	}
 
@@ -150,15 +154,15 @@ func (n *Route) Update(route *types.Route, namespace *types.Namespace, opts *typ
 func (n *Route) SetStatus(route *types.Route, status *types.RouteStatus) error {
 
 	if route == nil {
-		log.V(logLevel).Warnf("api:distribution:route:setstatus: invalid argument %v", route)
+		log.V(logLevel).Warnf("%s:setstatus:> invalid argument %v", logRoutePrefix, route)
 		return nil
 	}
 
-	log.V(logLevel).Debugf("api:distribution:route:setstate set state route %s -> %#v", route.Meta.Name, status)
+	log.V(logLevel).Debugf("%s:setstate:> set state route %s -> %#v", logRoutePrefix, route.Meta.Name, status)
 
 	route.Status = *status
 	if err := n.storage.Route().SetStatus(n.context, route); err != nil {
-		log.Errorf("Pod set status err: %s", err.Error())
+		log.Errorf("%s:setstatus:> pod set status err: %s", err.Error())
 		return err
 	}
 
@@ -167,10 +171,10 @@ func (n *Route) SetStatus(route *types.Route, status *types.RouteStatus) error {
 
 func (n *Route) Remove(route *types.Route) error {
 
-	log.V(logLevel).Debugf("api:distribution:route:remove remove route %#v", route)
+	log.V(logLevel).Debugf("%s:remove:> remove route %#v", logRoutePrefix, route)
 
 	if err := n.storage.Route().Remove(n.context, route); err != nil {
-		log.V(logLevel).Errorf("api:distribution:route:remove remove route  err: %s", err)
+		log.V(logLevel).Errorf("%s:remove:> remove route  err: %s", logRoutePrefix, err.Error())
 		return err
 	}
 

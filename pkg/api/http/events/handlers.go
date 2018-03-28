@@ -25,14 +25,14 @@ import (
 )
 
 const (
-	logLevel      = 2
-	defaultClient = "lastbackend"
+	logLevel  = 2
+	logPrefix = "api:handler:events"
 )
 
 //EventSubscribeH - realtime events handler
 func EventSubscribeH(w http.ResponseWriter, r *http.Request) {
 
-	log.V(logLevel).Debug("Handler: Event: subscribe on events")
+	log.V(logLevel).Debugf("%s:subscribe:> subscribe on events", logPrefix)
 
 	if r.Method != "GET" {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)

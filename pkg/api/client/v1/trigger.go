@@ -28,6 +28,7 @@ import (
 	rv1 "github.com/lastbackend/lastbackend/pkg/api/types/v1/request"
 	vv1 "github.com/lastbackend/lastbackend/pkg/api/types/v1/views"
 	"github.com/lastbackend/lastbackend/pkg/distribution/errors"
+	"strconv"
 )
 
 type TriggerClient struct {
@@ -45,21 +46,21 @@ func (s *TriggerClient) Create(ctx context.Context, opts *rv1.TriggerCreateOptio
 		return nil, err
 	}
 
-	req := s.client.Post(fmt.Sprintf("/namespace/%s/service/%s/trigger", s.namespace, s.service)).
+	res := s.client.Post(fmt.Sprintf("/namespace/%s/service/%s/trigger", s.namespace, s.service)).
 		AddHeader("Content-Type", "application/json").
 		Body(body).
 		Do()
 
-	if err := req.Error(); err != nil {
+	if err := res.Error(); err != nil {
 		return nil, err
 	}
 
-	buf, err := req.Raw()
+	buf, err := res.Raw()
 	if err != nil {
 		return nil, err
 	}
 
-	if code := req.StatusCode(); 200 > code || code > 299 {
+	if code := res.StatusCode(); 200 > code || code > 299 {
 		var e *errors.Http
 		if err := json.Unmarshal(buf, &e); err != nil {
 			return nil, err
@@ -78,11 +79,11 @@ func (s *TriggerClient) Create(ctx context.Context, opts *rv1.TriggerCreateOptio
 
 func (s *TriggerClient) List(ctx context.Context) (*vv1.TriggerList, error) {
 
-	req := s.client.Get(fmt.Sprintf("/namespace/%s/service/%s/trigger", s.namespace, s.service)).
+	res := s.client.Get(fmt.Sprintf("/namespace/%s/service/%s/trigger", s.namespace, s.service)).
 		AddHeader("Content-Type", "application/json").
 		Do()
 
-	buf, err := req.Raw()
+	buf, err := res.Raw()
 	if err != nil {
 		return nil, err
 	}
@@ -98,16 +99,16 @@ func (s *TriggerClient) List(ctx context.Context) (*vv1.TriggerList, error) {
 
 func (s *TriggerClient) Get(ctx context.Context) (*vv1.Trigger, error) {
 
-	req := s.client.Get(fmt.Sprintf("/namespace/%s/service/%s/trigger/%s", s.namespace, s.service, s.name)).
+	res := s.client.Get(fmt.Sprintf("/namespace/%s/service/%s/trigger/%s", s.namespace, s.service, s.name)).
 		AddHeader("Content-Type", "application/json").
 		Do()
 
-	buf, err := req.Raw()
+	buf, err := res.Raw()
 	if err != nil {
 		return nil, err
 	}
 
-	if code := req.StatusCode(); 200 > code || code > 299 {
+	if code := res.StatusCode(); 200 > code || code > 299 {
 		var e *errors.Http
 		if err := json.Unmarshal(buf, &e); err != nil {
 			return nil, err
@@ -131,17 +132,17 @@ func (s *TriggerClient) Update(ctx context.Context, opts *rv1.TriggerUpdateOptio
 		return nil, err
 	}
 
-	req := s.client.Put(fmt.Sprintf("/namespace/%s/service/%s/trigger/%s", s.namespace, s.service, s.name)).
+	res := s.client.Put(fmt.Sprintf("/namespace/%s/service/%s/trigger/%s", s.namespace, s.service, s.name)).
 		AddHeader("Content-Type", "application/json").
 		Body(body).
 		Do()
 
-	buf, err := req.Raw()
+	buf, err := res.Raw()
 	if err != nil {
 		return nil, err
 	}
 
-	if code := req.StatusCode(); 200 > code || code > 299 {
+	if code := res.StatusCode(); 200 > code || code > 299 {
 		var e *errors.Http
 		if err := json.Unmarshal(buf, &e); err != nil {
 			return nil, err
@@ -160,9 +161,16 @@ func (s *TriggerClient) Update(ctx context.Context, opts *rv1.TriggerUpdateOptio
 
 func (s *TriggerClient) Remove(ctx context.Context, opts *rv1.TriggerRemoveOptions) error {
 
-	req := s.client.Delete(fmt.Sprintf("/namespace/%s/service/%s/trigger/%s", s.namespace, s.service, s.name)).
-		AddHeader("Content-Type", "application/json").
-		Do()
+	res := s.client.Delete(fmt.Sprintf("/namespace/%s/service/%s/trigger/%s", s.namespace, s.service, s.name)).
+		AddHeader("Content-Type", "application/json")
+
+	if opts != nil {
+		if opts.Force {
+			res.Param("force", strconv.FormatBool(opts.Force))
+		}
+	}
+
+	req := res.Do()
 
 	buf, err := req.Raw()
 	if err != nil {

@@ -135,7 +135,6 @@ func (s *ServiceSpec) Update(spec *ServiceOptionsSpec) {
 		c.Role = ContainerRolePrimary
 	}
 
-
 	if spec.Command != nil {
 		c.Exec.Command = strings.Split(*spec.Command, " ")
 		n = true

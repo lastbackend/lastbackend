@@ -65,7 +65,7 @@ func (r *Route) ToSpec(obj types.RouteSpec) RouteSpec {
 
 func (r *Route) ToStatus(obj types.RouteStatus) RouteStatus {
 	state := RouteStatus{}
-	state.Stage = obj.Stage
+	state.State = obj.State
 	state.Message = obj.Message
 	return state
 }

@@ -41,7 +41,7 @@ func Daemon() bool {
 		done = make(chan bool, 1)
 	)
 
-	log.Info("Start State Scheduler")
+	log.Info("Start Stage Scheduler")
 
 	stg, err := storage.Get(viper.GetString("etcd"))
 	if err != nil {

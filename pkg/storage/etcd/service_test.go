@@ -74,19 +74,23 @@ func TestServiceStorage_Get(t *testing.T) {
 		},
 	}
 
-	for _, tt := range tests {
-
+	clear := func() {
 		if err := stg.Clear(ctx); err != nil {
 			t.Errorf("ServiceStorage.Get() storage setup error = %v", err)
 			return
 		}
+	}
 
-		if err := stg.Insert(ctx, &d); err != nil {
-			t.Errorf("ServiceStorage.Get() storage setup error = %v", err)
-			return
-		}
-
+	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+
+			clear()
+			defer clear()
+
+			if err := stg.Insert(ctx, &d); err != nil {
+				t.Errorf("ServiceStorage.Get() storage setup error = %v", err)
+				return
+			}
 
 			got, err := tt.fields.stg.Get(tt.args.ctx, ns1, tt.args.name)
 
@@ -177,21 +181,26 @@ func TestServiceStorage_ListByNamespace(t *testing.T) {
 		},
 	}
 
-	for _, tt := range tests {
-
+	clear := func() {
 		if err := stg.Clear(ctx); err != nil {
 			t.Errorf("ServiceStorage.ListByNamespace() storage setup error = %v", err)
 			return
 		}
+	}
 
-		for _, n := range nl0 {
-			if err := stg.Insert(ctx, n); err != nil {
-				t.Errorf("ServiceStorage.ListByNamespace() storage setup error = %v", err)
-				return
-			}
-		}
-
+	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+
+			clear()
+			defer clear()
+
+			for _, n := range nl0 {
+				if err := stg.Insert(ctx, n); err != nil {
+					t.Errorf("ServiceStorage.ListByNamespace() storage setup error = %v", err)
+					return
+				}
+			}
+
 			got, err := stg.ListByNamespace(tt.args.ctx, tt.args.ns)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("ServiceStorage.ListByNamespace() error = %v, wantErr %v", err, tt.wantErr)
@@ -265,21 +274,26 @@ func TestServiceStorage_SetStatus(t *testing.T) {
 		},
 	}
 
-	for _, tt := range tests {
-
+	clear := func() {
 		if err := stg.Clear(ctx); err != nil {
 			t.Errorf("ServiceStorage.SetStatus() storage setup error = %v", err)
 			return
 		}
+	}
 
-		for _, n := range nl0 {
-			if err := stg.Insert(ctx, n); err != nil {
-				t.Errorf("ServiceStorage.SetStatus() storage setup error = %v", err)
-				return
-			}
-		}
-
+	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+
+			clear()
+			defer clear()
+
+			for _, n := range nl0 {
+				if err := stg.Insert(ctx, n); err != nil {
+					t.Errorf("ServiceStorage.SetStatus() storage setup error = %v", err)
+					return
+				}
+			}
+
 			err := tt.fields.stg.SetStatus(tt.args.ctx, tt.args.service)
 			if err != nil {
 				if !tt.wantErr {
@@ -371,21 +385,26 @@ func TestServiceStorage_SetSpec(t *testing.T) {
 		},
 	}
 
-	for _, tt := range tests {
-
+	clear := func() {
 		if err := stg.Clear(ctx); err != nil {
 			t.Errorf("ServiceStorage.SetSpec() storage setup error = %v", err)
 			return
 		}
+	}
 
-		for _, n := range nl0 {
-			if err := stg.Insert(ctx, n); err != nil {
-				t.Errorf("ServiceStorage.SetSpec() storage setup error = %v", err)
-				return
-			}
-		}
-
+	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+
+			clear()
+			defer clear()
+
+			for _, n := range nl0 {
+				if err := stg.Insert(ctx, n); err != nil {
+					t.Errorf("ServiceStorage.SetSpec() storage setup error = %v", err)
+					return
+				}
+			}
+
 			err := tt.fields.stg.SetSpec(tt.args.ctx, tt.args.service)
 			if err != nil {
 				if !tt.wantErr {
@@ -473,14 +492,20 @@ func TestServiceStorage_Insert(t *testing.T) {
 		},
 	}
 
-	for _, tt := range tests {
-
+	clear := func() {
 		if err := stg.Clear(ctx); err != nil {
 			t.Errorf("ServiceStorage.Insert() storage setup error = %v", err)
 			return
 		}
+	}
+
+	for _, tt := range tests {
 
 		t.Run(tt.name, func(t *testing.T) {
+
+			clear()
+			defer clear()
+
 			err := tt.fields.stg.Insert(tt.args.ctx, tt.args.service)
 			if err != nil {
 				if !tt.wantErr {
@@ -563,21 +588,27 @@ func TestServiceStorage_Update(t *testing.T) {
 		},
 	}
 
-	for _, tt := range tests {
-
+	clear := func() {
 		if err := stg.Clear(ctx); err != nil {
 			t.Errorf("ServiceStorage.Update() storage setup error = %v", err)
 			return
 		}
+	}
 
-		for _, n := range nl0 {
-			if err := stg.Insert(ctx, n); err != nil {
-				t.Errorf("ServiceStorage.Update() storage setup error = %v", err)
-				return
-			}
-		}
+	for _, tt := range tests {
 
 		t.Run(tt.name, func(t *testing.T) {
+
+			clear()
+			defer clear()
+
+			for _, n := range nl0 {
+				if err := stg.Insert(ctx, n); err != nil {
+					t.Errorf("ServiceStorage.Update() storage setup error = %v", err)
+					return
+				}
+			}
+
 			err := tt.fields.stg.Update(tt.args.ctx, tt.args.service)
 			if err != nil {
 				if !tt.wantErr {
@@ -664,19 +695,25 @@ func TestServiceStorage_Remove(t *testing.T) {
 		},
 	}
 
-	for _, tt := range tests {
-
+	clear := func() {
 		if err := stg.Clear(ctx); err != nil {
 			t.Errorf("ServiceStorage.Remove() storage setup error = %v", err)
 			return
 		}
+	}
 
-		if err := stg.Insert(ctx, &n1); err != nil {
-			t.Errorf("ServiceStorage.Remove() storage setup error = %v", err)
-			return
-		}
+	for _, tt := range tests {
 
 		t.Run(tt.name, func(t *testing.T) {
+
+			clear()
+			defer clear()
+
+			if err := stg.Insert(ctx, &n1); err != nil {
+				t.Errorf("ServiceStorage.Remove() storage setup error = %v", err)
+				return
+			}
+
 			err := tt.fields.stg.Remove(tt.args.ctx, tt.args.service)
 			if err != nil {
 				if !tt.wantErr {

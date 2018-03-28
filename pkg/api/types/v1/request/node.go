@@ -25,8 +25,8 @@ type NodeMetaOptions struct {
 }
 
 type NodeConnectOptions struct {
-	Info   types.NodeInfo           `json:"info"`
-	Status types.NodeStatus         `json:"status"`
+	Info   types.NodeInfo   `json:"info"`
+	Status types.NodeStatus `json:"status"`
 }
 
 type NodeStatusOptions struct {
@@ -37,8 +37,8 @@ type NodeStatusOptions struct {
 }
 
 type NodePodStatusOptions struct {
-	// Pod stage
-	Stage string `json:"stage" yaml:"stage"`
+	// Pod state
+	State string `json:"state" yaml:"state"`
 	// Pod state message
 	Message string `json:"message" yaml:"message"`
 	// Pod steps
@@ -50,19 +50,23 @@ type NodePodStatusOptions struct {
 }
 
 type NodeVolumeStatusOptions struct {
-	// route status stage
-	Stage string `json:"stage" yaml:"stage"`
+	// route status state
+	State string `json:"state" yaml:"state"`
 	// route status message
 	Message string `json:"message" yaml:"message"`
 }
 
 type NodeRouteStatusOptions struct {
-	// route status stage
-	Stage string `json:"stage" yaml:"stage"`
+	// route status state
+	State string `json:"state" yaml:"state"`
 	// route status message
 	Message string `json:"message" yaml:"message"`
 }
 
 type NodeRemoveOptions struct {
 	Force bool `json:"force"`
+}
+
+type NodeLogsOptions struct {
+	Follow bool `json:"follow"`
 }

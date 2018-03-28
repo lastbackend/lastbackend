@@ -103,7 +103,7 @@ func (pc *Controller) WatchStatus(node chan *types.Node) {
 					}
 
 					// If pod state not set to provision then need skip
-					if p.Status.State == types.StateProvision {
+					if p.Status.Stage == types.StateProvision {
 						continue
 					}
 
@@ -167,15 +167,15 @@ func (pc *Controller) Resume() {
 
 		for _, p := range pods {
 
-			log.Debugf("%s: restore pod: %s> status:[%s], state:[%s]", msg, p.SelfLink(), p.Status.State, p.Spec.State)
-			if p.Status.State == types.StateProvision || p.Spec.State.Destroy {
+			log.Debugf("%s: restore pod: %s> status:[%s], state:[%s]", msg, p.SelfLink(), p.Status.Stage, p.Spec.State)
+			if p.Status.Stage == types.StateProvision || p.Spec.State.Destroy {
 				log.Debugf("%s: provision pod: %s", msg, p.SelfLink())
 				pc.spec <- p
 			}
 		}
 
 		for _, p := range pods {
-			if p.Status.State != types.StateProvision {
+			if p.Status.Stage != types.StateProvision {
 				pc.status <- p
 			}
 		}

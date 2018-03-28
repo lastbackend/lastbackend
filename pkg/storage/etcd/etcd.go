@@ -29,7 +29,7 @@ import (
 
 const logLevel = 6
 
-const ACTIONDELETE="DELETE"
+const ACTIONDELETE = "DELETE"
 
 var c struct {
 	store store.Store

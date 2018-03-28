@@ -27,6 +27,7 @@ import (
 	rv1 "github.com/lastbackend/lastbackend/pkg/api/types/v1/request"
 	vv1 "github.com/lastbackend/lastbackend/pkg/api/types/v1/views"
 	"github.com/lastbackend/lastbackend/pkg/distribution/errors"
+	"strconv"
 )
 
 type NamespaceClient struct {
@@ -88,6 +89,11 @@ func (s *NamespaceClient) List(ctx context.Context) (*vv1.NamespaceList, error) 
 
 	var nl *vv1.NamespaceList
 
+	if len(buf) == 0 {
+		list := make(vv1.NamespaceList, 0)
+		return &list, nil
+	}
+
 	if err := json.Unmarshal(buf, &nl); err != nil {
 		return nil, err
 	}
@@ -102,21 +108,21 @@ func (s *NamespaceClient) Create(ctx context.Context, opts *rv1.NamespaceCreateO
 		return nil, err
 	}
 
-	req := s.client.Post("/namespace").
+	res := s.client.Post("/namespace").
 		AddHeader("Content-Type", "application/json").
 		Body(body).
 		Do()
 
-	if err := req.Error(); err != nil {
+	if err := res.Error(); err != nil {
 		return nil, err
 	}
 
-	buf, err := req.Raw()
+	buf, err := res.Raw()
 	if err != nil {
 		return nil, err
 	}
 
-	if code := req.StatusCode(); 200 > code || code > 299 {
+	if code := res.StatusCode(); 200 > code || code > 299 {
 		var e *errors.Http
 		if err := json.Unmarshal(buf, &e); err != nil {
 			return nil, err
@@ -135,16 +141,16 @@ func (s *NamespaceClient) Create(ctx context.Context, opts *rv1.NamespaceCreateO
 
 func (s *NamespaceClient) Get(ctx context.Context) (*vv1.Namespace, error) {
 
-	req := s.client.Get(fmt.Sprintf("/namespace/%s", s.name)).
+	res := s.client.Get(fmt.Sprintf("/namespace/%s", s.name)).
 		AddHeader("Content-Type", "application/json").
 		Do()
 
-	buf, err := req.Raw()
+	buf, err := res.Raw()
 	if err != nil {
 		return nil, err
 	}
 
-	if code := req.StatusCode(); 200 > code || code > 299 {
+	if code := res.StatusCode(); 200 > code || code > 299 {
 		var e *errors.Http
 		if err := json.Unmarshal(buf, &e); err != nil {
 			return nil, err
@@ -168,21 +174,21 @@ func (s *NamespaceClient) Update(ctx context.Context, opts *rv1.NamespaceUpdateO
 		return nil, err
 	}
 
-	req := s.client.Put(fmt.Sprintf("/namespace/%s", s.name)).
+	res := s.client.Put(fmt.Sprintf("/namespace/%s", s.name)).
 		AddHeader("Content-Type", "application/json").
 		Body(body).
 		Do()
 
-	if err := req.Error(); err != nil {
+	if err := res.Error(); err != nil {
 		return nil, err
 	}
 
-	buf, err := req.Raw()
+	buf, err := res.Raw()
 	if err != nil {
 		return nil, err
 	}
 
-	if code := req.StatusCode(); 200 > code || code > 299 {
+	if code := res.StatusCode(); 200 > code || code > 299 {
 		var e *errors.Http
 		if err := json.Unmarshal(buf, &e); err != nil {
 			return nil, err
@@ -202,15 +208,22 @@ func (s *NamespaceClient) Update(ctx context.Context, opts *rv1.NamespaceUpdateO
 func (s *NamespaceClient) Remove(ctx context.Context, opts *rv1.NamespaceRemoveOptions) error {
 
 	req := s.client.Delete(fmt.Sprintf("/namespace/%s", s.name)).
-		AddHeader("Content-Type", "application/json").
-		Do()
+		AddHeader("Content-Type", "application/json")
 
-	buf, err := req.Raw()
+	if opts != nil {
+		if opts.Force {
+			req.Param("force", strconv.FormatBool(opts.Force))
+		}
+	}
+
+	res := req.Do()
+
+	buf, err := res.Raw()
 	if err != nil {
 		return err
 	}
 
-	if code := req.StatusCode(); 200 > code || code > 299 {
+	if code := res.StatusCode(); 200 > code || code > 299 {
 		var e *errors.Http
 		if err := json.Unmarshal(buf, &e); err != nil {
 			return err

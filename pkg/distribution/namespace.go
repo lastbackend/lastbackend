@@ -20,7 +20,6 @@ package distribution
 
 import (
 	"context"
-	"fmt"
 	"strings"
 
 	"github.com/lastbackend/lastbackend/pkg/distribution/errors"
@@ -28,6 +27,10 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/log"
 	"github.com/lastbackend/lastbackend/pkg/storage"
 	"github.com/lastbackend/lastbackend/pkg/storage/store"
+)
+
+const (
+	logNamespacePrefix = "distribution:namespace"
 )
 
 type INamespace interface {
@@ -45,22 +48,22 @@ type Namespace struct {
 
 func (n *Namespace) List() (map[string]*types.Namespace, error) {
 
-	log.V(logLevel).Debug("Namespace: List: list namespace")
+	log.V(logLevel).Debug("%s:list:> get namespaces list", logNamespacePrefix)
 
 	items, err := n.storage.Namespace().List(n.context)
 	if err != nil {
-		log.V(logLevel).Error("Namespace: List: list namespace err: %s", err.Error())
+		log.V(logLevel).Error("%s:list:> get namespaces list err: %s", logNamespacePrefix, err.Error())
 		return items, err
 	}
 
-	log.V(logLevel).Debugf("Namespace: List: list namespace result: %d", len(items))
+	log.V(logLevel).Debugf("%s:list:> get namespaces list result: %d", logNamespacePrefix, len(items))
 
 	return items, nil
 }
 
 func (n *Namespace) Get(name string) (*types.Namespace, error) {
 
-	log.V(logLevel).Infof("Namespace: Get: get namespace %s", name)
+	log.V(logLevel).Infof("%s:get:> get namespace %s", logNamespacePrefix, name)
 
 	if name == "" {
 		return nil, errors.New(errors.ArgumentIsEmpty)
@@ -69,11 +72,11 @@ func (n *Namespace) Get(name string) (*types.Namespace, error) {
 	namespace, err := n.storage.Namespace().Get(n.context, name)
 	if err != nil {
 		if err.Error() == store.ErrEntityNotFound {
-			log.V(logLevel).Warnf("Namespace: Get: namespace by name `%s` not found", name)
+			log.V(logLevel).Warnf("%s:get:> namespace by name `%s` not found", logNamespacePrefix, name)
 			return nil, nil
 		}
 
-		log.V(logLevel).Errorf("Namespace: Get: get namespace by name `%s` err: %s", name, err.Error())
+		log.V(logLevel).Errorf("%s:get:> get namespace by name `%s` err: %s", logNamespacePrefix, name, err.Error())
 		return nil, err
 	}
 
@@ -82,13 +85,13 @@ func (n *Namespace) Get(name string) (*types.Namespace, error) {
 
 func (n *Namespace) Create(opts *types.NamespaceCreateOptions) (*types.Namespace, error) {
 
-	log.V(logLevel).Debugf("Namespace: Create: create Namespace %#v", opts)
+	log.V(logLevel).Debugf("%s:create:> create Namespace %#v", logNamespacePrefix, opts)
 
 	var ns = new(types.Namespace)
 	ns.Meta.SetDefault()
 	ns.Meta.Name = opts.Name
 	ns.Meta.Description = opts.Description
-	ns.Meta.Endpoint = strings.ToLower(fmt.Sprintf("%s", opts.Name))
+	ns.Meta.Endpoint = strings.ToLower(opts.Name)
 	ns.SelfLink()
 
 	if opts.Quotas != nil {
@@ -102,7 +105,7 @@ func (n *Namespace) Create(opts *types.NamespaceCreateOptions) (*types.Namespace
 	}
 
 	if err := n.storage.Namespace().Insert(n.context, ns); err != nil {
-		log.V(logLevel).Errorf("Namespace: Create: insert namespace err: %s", err.Error())
+		log.V(logLevel).Errorf("%s:create:> insert namespace err: %s", logNamespacePrefix, err.Error())
 		return nil, err
 	}
 
@@ -111,14 +114,14 @@ func (n *Namespace) Create(opts *types.NamespaceCreateOptions) (*types.Namespace
 
 func (n *Namespace) Update(namespace *types.Namespace, opts *types.NamespaceUpdateOptions) error {
 
-	log.V(logLevel).Debugf("Namespace: Update: update Namespace %#v", namespace)
+	log.V(logLevel).Debugf("%s:update:> update Namespace %#v", logNamespacePrefix, namespace)
 
 	if opts.Description != nil {
 		namespace.Meta.Description = *opts.Description
 	}
 
 	if err := n.storage.Namespace().Update(n.context, namespace); err != nil {
-		log.V(logLevel).Errorf("Namespace: update Namespace err: %s", err.Error())
+		log.V(logLevel).Errorf("%s:update:> namespace update err: %s", logNamespacePrefix, err.Error())
 		return err
 	}
 
@@ -127,10 +130,10 @@ func (n *Namespace) Update(namespace *types.Namespace, opts *types.NamespaceUpda
 
 func (n *Namespace) Remove(namespace *types.Namespace) error {
 
-	log.V(logLevel).Debugf("Namespace: Remove: remove namespace %s", namespace.Meta.Name)
+	log.V(logLevel).Debugf("%s:remove:> remove namespace %s", logNamespacePrefix, namespace.Meta.Name)
 
 	if err := n.storage.Namespace().Remove(n.context, namespace); err != nil {
-		log.V(logLevel).Errorf("Namespace: remove namespace err: %s", err.Error())
+		log.V(logLevel).Errorf("%s:remove:> remove namespace err: %s", logNamespacePrefix, err.Error())
 		return err
 	}
 

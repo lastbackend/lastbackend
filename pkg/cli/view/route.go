@@ -52,7 +52,7 @@ type RouteRule struct {
 }
 
 type RouteStatus struct {
-	Stage   string `json:"stage"`
+	State   string `json:"state"`
 	Message string `json:"message"`
 }
 
@@ -67,7 +67,7 @@ func (rl *RouteList) Print() {
 		data["NAMESPACE"] = r.Meta.Namespace
 		data["DOMAIN"] = r.Spec.Domain
 		data["HTTPS"] = r.Meta.Security
-		data["STATUS"] = r.Status.Stage
+		data["STATUS"] = r.Status.State
 		t.AddRow(data)
 	}
 
@@ -82,7 +82,7 @@ func (r *Route) Print() {
 	data["NAMESPACE"] = r.Meta.Namespace
 	data["DOMAIN"] = r.Spec.Domain
 	data["HTTPS"] = r.Meta.Security
-	data["STATUS"] = r.Status.Stage
+	data["STATUS"] = r.Status.State
 	println()
 	table.PrintHorizontal(data)
 	println()
@@ -111,7 +111,7 @@ func FromApiRouteView(route *views.Route) *Route {
 	item.Meta.Created = route.Meta.Created
 	item.Meta.Updated = route.Meta.Updated
 
-	item.Status.Stage = route.Status.Stage
+	item.Status.State = route.Status.State
 	item.Status.Message = route.Status.Message
 
 	item.Spec.Domain = route.Spec.Domain

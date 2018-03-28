@@ -27,6 +27,10 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/storage/store"
 )
 
+const (
+	logClusterPrefix = "distribution:cluster"
+)
+
 // Cluster - distribution model
 type Cluster struct {
 	context context.Context
@@ -36,16 +40,16 @@ type Cluster struct {
 // Info - get cluster info
 func (c *Cluster) Get() (*types.Cluster, error) {
 
-	log.V(logLevel).Debug("api:distribution:cluster:get get info")
+	log.V(logLevel).Debugf("%s:get:> get info", logClusterPrefix)
 
 	cluster, err := c.storage.Cluster().Get(c.context)
 	if err != nil {
 		if err.Error() == store.ErrEntityNotFound {
-			log.V(logLevel).Warnf("api:distribution:cluster:get cluster not found")
+			log.V(logLevel).Warnf("%s:get:> cluster not found", logClusterPrefix)
 			return nil, nil
 		}
 
-		log.V(logLevel).Errorf("api:distribution:cluster:get get cluster err: %s", err.Error())
+		log.V(logLevel).Errorf("%s:get:> get cluster err: %s", logClusterPrefix, err.Error())
 		return nil, err
 	}
 
@@ -55,14 +59,14 @@ func (c *Cluster) Get() (*types.Cluster, error) {
 // Update - update cluster stats data and meta information
 func (c *Cluster) Update(cluster *types.Cluster, opts *request.ClusterUpdateOptions) error {
 
-	log.V(logLevel).Debugf("api:distribution:cluster:update update cluster %#v", cluster)
+	log.V(logLevel).Debugf("%s:update:> update cluster %#v", logClusterPrefix, cluster)
 
 	if opts.Description != nil {
 		cluster.Meta.Description = *opts.Description
 	}
 
 	if err := c.storage.Cluster().Update(c.context, cluster); err != nil {
-		log.V(logLevel).Errorf("api:distribution:cluster:update update cluster err: %s", err)
+		log.V(logLevel).Errorf("%s:update:> update cluster err: %s", logClusterPrefix, err.Error())
 		return err
 	}
 

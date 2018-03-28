@@ -40,11 +40,11 @@ func Daemon() bool {
 		done = make(chan bool, 1)
 	)
 
-	log.Info("Start State Controller")
+	log.Info("Start Stage Controller")
 
 	stg, err := storage.Get(viper.GetString("etcd"))
 	if err != nil {
-		log.Fatalf("Cannot initialize storage: %v", err)
+		log.Fatalf("Cannot initialize storage: %s", err.Error())
 	}
 	env.SetStorage(stg)
 

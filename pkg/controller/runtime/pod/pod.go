@@ -2,7 +2,7 @@
 // Last.Backend LLC CONFIDENTIAL
 // __________________
 //
-// [2014] - [2017] Last.Backend LLC
+// [2014] - [2018] Last.Backend LLC
 // All Rights Reserved.
 //
 // NOTICE:  All information contained herein is, and remains
@@ -19,14 +19,14 @@
 package pod
 
 import (
-	"github.com/lastbackend/lastbackend/pkg/distribution/types"
+	"context"
 	"github.com/lastbackend/lastbackend/pkg/controller/envs"
 	"github.com/lastbackend/lastbackend/pkg/distribution"
-	"context"
+	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 	"github.com/lastbackend/lastbackend/pkg/log"
 )
 
-func HandleStatus (p *types.Pod) error {
+func HandleStatus(p *types.Pod) error {
 
 	var (
 		stg     = envs.Get().GetStorage()
@@ -60,45 +60,45 @@ func HandleStatus (p *types.Pod) error {
 
 	for _, ps := range pl {
 
-		switch ps.Status.State {
+		switch ps.Status.Stage {
 
 		case types.StateError:
-			status[types.StateError]+=1
+			status[types.StateError] += 1
 			// TODO: check if many pods contains different errors: create an error map
 			message = ps.Status.Message
 			break
-		case types.StateProvision :
-			status[types.StateProvision]+=1
+		case types.StateProvision:
+			status[types.StateProvision] += 1
 			break
-		case types.StatePull :
-			status[types.StateProvision]+=1
+		case types.StatePull:
+			status[types.StateProvision] += 1
 			break
-		case types.StateCreated :
-			status[types.StateProvision]+=1
+		case types.StateCreated:
+			status[types.StateProvision] += 1
 			break
 		case types.StateStarting:
-			status[types.StateProvision]+=1
+			status[types.StateProvision] += 1
 			break
 		case types.StateStarted:
-			status[types.StateRunning]+=1
+			status[types.StateRunning] += 1
 			break
 		case types.StateRunning:
-			status[types.StateRunning]+=1
+			status[types.StateRunning] += 1
 			break
 		case types.StateStopped:
-			status[types.StateStopped]+=1
+			status[types.StateStopped] += 1
 			break
 		case types.StateExited:
-			status[types.StateStopped]+=1
+			status[types.StateStopped] += 1
 			break
 		case types.StateDestroy:
-			status[types.StateDestroy]+=1
+			status[types.StateDestroy] += 1
 			break
 		case types.StateDestroyed:
-			status[types.StateDestroyed]+=1
+			status[types.StateDestroyed] += 1
 			break
 		case types.StateWarning:
-			status[types.StateWarning]+=1
+			status[types.StateWarning] += 1
 			break
 		}
 	}
@@ -126,12 +126,12 @@ func HandleStatus (p *types.Pod) error {
 	case status[types.StateStopped] == d.Spec.Replicas:
 		d.Status.State = types.StateStopped
 		break
-	case status[types.StateDestroyed] == 1 && p.Status.State == types.StateDestroyed:
+	case status[types.StateDestroyed] == 1 && p.Status.Stage == types.StateDestroyed:
 		d.Status.State = types.StateDestroyed
 		break
 	}
 
-	if p.Status.State == types.StateDestroyed {
+	if p.Status.Stage == types.StateDestroyed {
 		if err := pm.Remove(context.Background(), p); err != nil {
 			log.Errorf("%s: remove pod [%s] err: %s", msg, p.SelfLink(), err.Error())
 			return err
@@ -142,7 +142,6 @@ func HandleStatus (p *types.Pod) error {
 		log.Errorf("%s> set deployment status err: %s", msg, err.Error())
 		return err
 	}
-
 
 	return nil
 }

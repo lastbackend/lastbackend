@@ -50,6 +50,6 @@ type RouteRule struct {
 }
 
 type RouteStatus struct {
-	Stage   string `json:"stage"`
+	State   string `json:"state"`
 	Message string `json:"message"`
 }

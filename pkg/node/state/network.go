@@ -28,12 +28,12 @@ func (n *NetworkState) GetSubnets() map[string]types.Subnet {
 }
 
 func (n *NetworkState) AddSubnet(sn *types.Subnet) {
-	log.V(logLevel).Debugf("State: NetworkState: add subnet: %v", sn)
+	log.V(logLevel).Debugf("Stage: NetworkState: add subnet: %v", sn)
 	n.SetSubnet(sn)
 }
 
 func (n *NetworkState) SetSubnet(sn *types.Subnet) {
-	log.V(logLevel).Debugf("State: NetworkState: set subnet: %v", sn)
+	log.V(logLevel).Debugf("Stage: NetworkState: set subnet: %v", sn)
 	n.lock.Lock()
 	defer n.lock.Unlock()
 
@@ -45,7 +45,7 @@ func (n *NetworkState) SetSubnet(sn *types.Subnet) {
 }
 
 func (n *NetworkState) GetSubnet(sn string) *types.Subnet {
-	log.V(logLevel).Debugf("State: NetworkState: get subnet: %s", sn)
+	log.V(logLevel).Debugf("Stage: NetworkState: get subnet: %s", sn)
 	n.lock.Lock()
 	defer n.lock.Unlock()
 	s, ok := n.subnets[sn]
@@ -56,7 +56,7 @@ func (n *NetworkState) GetSubnet(sn string) *types.Subnet {
 }
 
 func (n *NetworkState) DelSubnet(sn *types.Subnet) {
-	log.V(logLevel).Debugf("State: NetworkState: del subnet: %v", sn)
+	log.V(logLevel).Debugf("Stage: NetworkState: del subnet: %v", sn)
 	n.lock.Lock()
 	defer n.lock.Unlock()
 	if _, ok := n.subnets[sn.Subnet]; ok {

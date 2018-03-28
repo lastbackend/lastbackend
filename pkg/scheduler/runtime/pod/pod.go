@@ -137,7 +137,7 @@ func Provision(p *types.Pod) error {
 		log.Debug("Node: Allocate: Available node not found")
 
 		if err := distribution.NewPodModel(context.Background(), stg).SetStatus(p, &types.PodStatus{
-			State:   types.StateError,
+			Stage:   types.StateError,
 			Message: errors.NodeNotFound,
 		}); err != nil {
 			log.Errorf("set pod state error: %s", err.Error())
@@ -188,18 +188,18 @@ func HandleStatus(p *types.Pod) error {
 		return errors.New(errors.NodeNotFound)
 	}
 
-	if p.Status.State == types.StateProvision || p.Status.State == types.StateInitialized {
+	if p.Status.Stage == types.StateProvision || p.Status.Stage == types.StateInitialized {
 		return nil
 	}
 
-	if p.Status.State == types.StateError {
+	if p.Status.Stage == types.StateError {
 		if err := stg.Node().RemovePod(context.Background(), n, p); err != nil {
 			log.Errorf("scheduler:pod:controller:status> handle status err: %s", err.Error())
 			return err
 		}
 	}
 
-	if p.Status.State == types.StateDestroyed {
+	if p.Status.Stage == types.StateDestroyed {
 		if err := stg.Node().RemovePod(context.Background(), n, p); err != nil {
 			log.Errorf("scheduler:pod:controller:status> handle status err: %s", err.Error())
 			return err

@@ -10,13 +10,13 @@
 // if any.  The intellectual and technical concepts contained
 // herein are proprietary to Last.Backend LLC
 // and its suppliers and may be covered by Russian Federation and Foreign Patents,
-// patents in process, and are protected by trade secret or copyright law.
+// patents in process, and are protected by trade secretCmd or copyright law.
 // Dissemination of this information or reproduction of this material
 // is strictly forbidden unless prior written permission is obtained
 // from Last.Backend LLC.
 //
 
-package set
+package cmd
 
 import (
 	"fmt"
@@ -25,17 +25,29 @@ import (
 	"github.com/spf13/cobra"
 )
 
-func SetTokenCmd(cmd *cobra.Command, args []string) {
+func init() {
+	tokenCmd.AddCommand(tokenSetCmd)
+}
 
-	if len(args) != 1 {
-		cmd.Help()
-		return
-	}
+const tokenSetExample = `
+  # Set auth token for request quest in API 
+  lb token set e3865d9b52c34dd4b6ec.5cff8c8e4cf6
+`
 
-	if err := storage.SetToken(args[0]); err != nil {
-		fmt.Println(err)
-		return
-	}
+var tokenSetCmd = &cobra.Command{
+	Use:     "token [DATA]",
+	Short:   "Set token to local storage",
+	Example: tokenSetExample,
+	Args:    cobra.ExactArgs(1),
+	Run: func(cmd *cobra.Command, args []string) {
 
-	fmt.Println("Token successfully setted")
+		token := args[0]
+
+		if err := storage.SetToken(token); err != nil {
+			fmt.Println(err)
+			return
+		}
+
+		fmt.Println("Token successfully setted")
+	},
 }

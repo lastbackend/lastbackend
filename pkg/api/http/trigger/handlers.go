@@ -23,11 +23,14 @@ import (
 	"net/http"
 )
 
-const logLevel = 2
+const (
+	logLevel  = 2
+	logPrefix = "api:handler:trigger"
+)
 
 func HookExecuteH(w http.ResponseWriter, r *http.Request) {
 
-	log.V(logLevel).Debug("Handler: Hook: execute hook")
+	log.V(logLevel).Debugf("%s:execute:> execute hook", logPrefix)
 
 	var (
 		err error
@@ -35,7 +38,7 @@ func HookExecuteH(w http.ResponseWriter, r *http.Request) {
 
 	w.WriteHeader(http.StatusOK)
 	if _, err = w.Write([]byte{}); err != nil {
-		log.Error("Error: write response", err)
+		log.Errorf("%s:execute:> write response err: %s", logPrefix, err.Error())
 		return
 	}
 }
