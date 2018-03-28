@@ -22,4 +22,6 @@ type TriggerCreateOptions struct{}
 
 type TriggerUpdateOptions struct{}
 
-type TriggerRemoveOptions struct{}
+type TriggerRemoveOptions struct{
+	Force bool
+}

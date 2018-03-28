@@ -25,7 +25,7 @@ type NodeMetaOptions struct {
 }
 
 type NodeConnectOptions struct {
-	Info types.NodeInfo `json:"info"`
+	Info   types.NodeInfo   `json:"info"`
 	Status types.NodeStatus `json:"status"`
 }
 
@@ -65,4 +65,8 @@ type NodeRouteStatusOptions struct {
 
 type NodeRemoveOptions struct {
 	Force bool `json:"force"`
+}
+
+type NodeLogsOptions struct {
+	Follow bool `json:"follow"`
 }

@@ -23,8 +23,7 @@ const StateInitialized = "initialized"
 const StateWarning = "warning"
 const StateReady = "ready"
 
-
-const StatePull    = "pull"
+const StatePull = "pull"
 const StateDestroy = "destroy"
 const StateCancel = "cancel"
 
@@ -38,7 +37,6 @@ const StateExited = "exited"
 const StateRunning = "running"
 const StateError = "error"
 
-
 const StepInitialized = "initialized"
-const StepPull        = "pull"
-const StepReady       = "ready"
+const StepPull = "pull"
+const StepReady = "ready"

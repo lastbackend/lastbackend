@@ -583,7 +583,6 @@ func TestNodeConnectH(t *testing.T) {
 					assert.Equal(t, uo.Info.Architecture, n.Info.Architecture, "architecture not equal")
 				}
 
-
 			}
 
 		})

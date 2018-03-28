@@ -36,9 +36,7 @@ func (ServiceRequest) CreateOptions() *ServiceCreateOptions {
 
 func (s *ServiceCreateOptions) Validate() *errors.Err {
 	switch true {
-	case s.Name == nil:
-		return errors.New("service").BadParameter("name")
-	case !validator.IsServiceName(*s.Name):
+	case s.Name != nil && !validator.IsServiceName(*s.Name):
 		return errors.New("service").BadParameter("name")
 	case s.Image == nil:
 		return errors.New("service").BadParameter("image")

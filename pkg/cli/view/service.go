@@ -41,7 +41,7 @@ type ServiceMeta struct {
 }
 
 type ServiceStatus struct {
-	State string `json:"state"`
+	State   string `json:"state"`
 	Message string `json:"message"`
 }
 
@@ -68,7 +68,7 @@ type Deployment struct {
 }
 
 type PodView struct {
-	Name    string     `json:"name"`
+	Name   string     `json:"name"`
 	Status *PodStatus `json:"status"`
 }
 

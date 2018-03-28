@@ -26,6 +26,7 @@ import (
 	"net/url"
 	"strings"
 	"time"
+	"crypto/tls"
 )
 
 // Interface captures the set of operations for generically interacting with Kubernetes REST apis.
@@ -66,6 +67,9 @@ func NewRESTClient(baseURL *url.URL, config *Config) (*RESTClient, error) {
 		config: config,
 		Client: &http.Client{
 			Timeout: time.Second * config.Timeout,
+			Transport: &http.Transport{
+				TLSClientConfig: &tls.Config{InsecureSkipVerify: config.Insecure},
+			},
 		},
 	}, nil
 }

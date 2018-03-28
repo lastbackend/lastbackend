@@ -532,6 +532,12 @@
 			"revisionTime": "2018-03-03T13:51:14Z"
 		},
 		{
+			"checksumSHA1": "XYXw2KJliJzdpECTWSpJfRaFoq8=",
+			"path": "github.com/unloop/gopipe",
+			"revision": "aca87f166889b8e546d391bd834677bc89de1b75",
+			"revisionTime": "2016-12-22T13:25:17Z"
+		},
+		{
 			"checksumSHA1": "m0YuGCADsfNHgq1WbS4dLLc1g60=",
 			"path": "github.com/vishvananda/netlink",
 			"revision": "c27b7f7359fa2461b8e2a4c42021eb549ccc8ff0",

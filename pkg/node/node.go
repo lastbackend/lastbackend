@@ -28,6 +28,8 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/node/runtime/node"
 	"github.com/lastbackend/lastbackend/pkg/node/state"
 
+	"fmt"
+	"github.com/lastbackend/lastbackend/pkg/api/client"
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 	"github.com/lastbackend/lastbackend/pkg/log"
 	"github.com/lastbackend/lastbackend/pkg/node/envs"
@@ -35,8 +37,6 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/node/runtime/cni/cni"
 	"github.com/lastbackend/lastbackend/pkg/node/runtime/cri/cri"
 	"github.com/spf13/viper"
-	"github.com/lastbackend/lastbackend/pkg/api/client"
-	"fmt"
 )
 
 // Daemon - run node daemon
@@ -73,7 +73,7 @@ func Daemon() {
 	state.Node().Status = node.GetStatus()
 
 	host := viper.GetString("api.uri")
-	tls  := viper.GetBool("api.tls")
+	tls := viper.GetBool("api.tls")
 
 	schema := "http"
 	if tls {
@@ -85,7 +85,7 @@ func Daemon() {
 
 	rest, err := client.NewHTTP(endpoint, &client.Config{
 		BearerToken: types.SecretAccessToken,
-		Timeout: 5,
+		Timeout:     5,
 	})
 
 	if err != nil {

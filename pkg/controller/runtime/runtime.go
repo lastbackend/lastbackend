@@ -22,11 +22,11 @@ import (
 	"context"
 	"github.com/lastbackend/lastbackend/pkg/controller/envs"
 	"github.com/lastbackend/lastbackend/pkg/controller/runtime/deployment"
+	"github.com/lastbackend/lastbackend/pkg/controller/runtime/pod"
 	"github.com/lastbackend/lastbackend/pkg/controller/runtime/service"
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 	"github.com/lastbackend/lastbackend/pkg/log"
 	"github.com/lastbackend/lastbackend/pkg/system"
-	"github.com/lastbackend/lastbackend/pkg/controller/runtime/pod"
 )
 
 // watch service state and specs
@@ -41,9 +41,9 @@ import (
 type Runtime struct {
 	process *system.Process
 
-	sc      *service.Controller
-	dc      *deployment.Controller
-	pc      *pod.Controller
+	sc *service.Controller
+	dc *deployment.Controller
+	pc *pod.Controller
 
 	active bool
 }

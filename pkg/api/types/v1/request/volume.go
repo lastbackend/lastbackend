@@ -22,4 +22,6 @@ type VolumeCreateOptions struct{}
 
 type VolumeUpdateOptions struct{}
 
-type VolumeRemoveOptions struct{}
+type VolumeRemoveOptions struct {
+	Force bool
+}
