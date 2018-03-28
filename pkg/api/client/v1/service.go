@@ -211,8 +211,7 @@ func (s *ServiceClient) Remove(ctx context.Context, opts *rv1.ServiceRemoveOptio
 
 func (s *ServiceClient) Logs(ctx context.Context, opts *rv1.ServiceLogsOptions) (io.ReadCloser, error) {
 
-	res := s.client.Get(fmt.Sprintf("/namespace/%s/service/%s/logs", s.namespace, s.name)).
-		AddHeader("Content-Type", "application/json")
+	res := s.client.Get(fmt.Sprintf("/namespace/%s/service/%s/logs", s.namespace, s.name))
 
 	if opts != nil {
 		res.Param("deployment", opts.Deployment)

@@ -144,6 +144,7 @@ func (r *Request) Stream() (io.ReadCloser, error) {
 	}
 
 	u := r.URL().String()
+
 	req, err := http.NewRequest(r.verb, u, nil)
 	if err != nil {
 		return nil, err
@@ -151,25 +152,25 @@ func (r *Request) Stream() (io.ReadCloser, error) {
 	if r.ctx != nil {
 		req = req.WithContext(r.ctx)
 	}
-	req.Header = r.headers
+	//req.Header = r.headers
 	client := r.client
 	if client == nil {
 		client = http.DefaultClient
 	}
 
-	resp, err := client.Do(req)
+	res, err := client.Do(req)
 	if err != nil {
 		return nil, err
 	}
 
 	switch {
-	case (resp.StatusCode >= 200) && (resp.StatusCode < 300):
-		return resp.Body, nil
+	case (res.StatusCode >= 200) && (res.StatusCode < 400):
+		return res.Body, nil
 
 	default:
-		defer resp.Body.Close()
+		defer res.Body.Close()
 
-		result := r.transformResponse(resp, req)
+		result := r.transformResponse(res, req)
 		err := result.Error()
 		if err == nil {
 			err = fmt.Errorf("%d while accessing %v: %s", result.statusCode, u, string(result.body))
@@ -231,5 +232,6 @@ func (r *Request) URL() *url.URL {
 	}
 
 	finalURL.RawQuery = query.Encode()
+
 	return finalURL
 }

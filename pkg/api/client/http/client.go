@@ -27,6 +27,7 @@ import (
 	"net/url"
 	"strings"
 	"time"
+	"github.com/lastbackend/lastbackend/pkg/util/validator"
 )
 
 // Interface captures the set of operations for generically interacting with Kubernetes REST apis.
@@ -46,24 +47,29 @@ type RESTClient struct {
 	token       string
 }
 
-func NewRESTClient(baseURL *url.URL, config *Config) (*RESTClient, error) {
+func NewRESTClient(uri *url.URL, config *Config) (*RESTClient, error) {
 
 	if config == nil {
 		return nil, errors.New("config not set")
 	}
 
-	base := *baseURL
+	u := *uri
 
-	if base.Scheme == "" {
-		base.Scheme = "http"
+	if validator.IsIP(u.Path) {
+		u.Host = u.Path
+		u.Path = "/"
 	}
 
-	if !strings.HasSuffix(base.Path, "/") {
-		base.Path += "/"
+	if u.Scheme == "" {
+		u.Scheme = "http"
+	}
+
+	if !strings.HasSuffix(u.Path, "/") {
+		u.Path += "/"
 	}
 
 	return &RESTClient{
-		base:   &base,
+		base:   &u,
 		config: config,
 		Client: &http.Client{
 			Timeout: time.Second * config.Timeout,

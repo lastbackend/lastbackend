@@ -51,7 +51,7 @@ func Restore(ctx context.Context) error {
 	}
 
 	err := filepath.Walk(dir, func(path string, info os.FileInfo, err error) error {
-		fmt.Println(info)
+
 		if info.IsDir() {
 			return nil
 		}

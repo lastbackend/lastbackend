@@ -29,11 +29,14 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/log"
 	"github.com/lastbackend/lastbackend/pkg/util/converter"
 	"github.com/lastbackend/lastbackend/pkg/util/http/utils"
+	"fmt"
+	"context"
 )
 
 const (
-	logLevel  = 2
-	logPrefix = "api:handler:service"
+	logLevel    = 2
+	logPrefix   = "api:handler:service"
+	BUFFER_SIZE = 512
 )
 
 func ServiceListH(w http.ResponseWriter, r *http.Request) {
@@ -304,15 +307,6 @@ func ServiceLogsH(w http.ResponseWriter, r *http.Request) {
 	pid := r.URL.Query().Get("pod")
 	cid := r.URL.Query().Get("container")
 
-	notify := w.(http.CloseNotifier).CloseNotify()
-	doneChan := make(chan bool, 1)
-
-	go func() {
-		<-notify
-		log.Debugf("%s:logs:> HTTP connection just closed.", logPrefix)
-		doneChan <- true
-	}()
-
 	log.V(logLevel).Debugf("%s:logs:> get logs service `%s` in namespace `%s`", logPrefix, sid, nid)
 
 	var (
@@ -360,7 +354,7 @@ func ServiceLogsH(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	pod, err := pm.Get(ns.Meta.Name, did, pid, cid)
+	pod, err := pm.Get(ns.Meta.Name, svc.Meta.Name, did, pid)
 	if err != nil {
 		log.V(logLevel).Errorf("%s:logs:> get pod by name` err: %s", logPrefix, err.Error())
 		errors.HTTP.InternalServerError(w)
@@ -384,49 +378,73 @@ func ServiceLogsH(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	httpcli, err := client.NewHTTP("http://"+node.Info.InternalIP, &client.Config{BearerToken: node.Meta.Token})
+	// TODO: you need to take the port from the node and http(s) schema
+	httpcli, err := client.NewHTTP(fmt.Sprintf("http://%s:%d", node.Info.InternalIP, 2969), &client.Config{BearerToken: node.Meta.Token})
 	if err != nil {
 		log.V(logLevel).Errorf("%s:logs:> create http client err: %s", logPrefix, err.Error())
 		errors.HTTP.InternalServerError(w)
 		return
 	}
 
-	res, err := httpcli.V1().Cluster().Node().Logs(r.Context(), pid, cid, nil)
+	stream, err := httpcli.V1().Cluster().Node().Logs(r.Context(), pod.Meta.SelfLink, cid, nil)
 	if err != nil {
 		log.V(logLevel).Errorf("%s:logs:> get pod logs err: %s", logPrefix, err.Error())
 		errors.HTTP.InternalServerError(w)
 		return
 	}
 
-	var buffer []byte
+	notify := w.(http.CloseNotifier).CloseNotify()
+	done := make(chan bool, 1)
+	exit := make(chan bool, 1)
+
+	go func() {
+		<-notify
+		log.Debugf("%s:logs:> HTTP connection just closed.", logPrefix)
+		done <- true
+	}()
+
+	var buffer = make([]byte, BUFFER_SIZE)
 
 	go func() {
 		for {
 			select {
-			case <-doneChan:
-				res.Close()
+			case <-done:
+				stream.Close()
+				exit <- true
 				return
 			default:
-				n, err := res.Read(buffer)
+
+				n, err := stream.Read(buffer)
 				if err != nil {
-					log.V(logLevel).Errorf("%s:logs:> read bytes from stream err: %s", logPrefix, err.Error())
-					res.Close()
+
+					if err == context.Canceled {
+						log.Debug("Stream is canceled")
+						return
+					}
+
+					log.Errorf("Error read bytes from stream %s", err)
+					exit <- true
 					return
 				}
 
 				_, err = func(p []byte) (n int, err error) {
+
 					n, err = w.Write(p)
 					if err != nil {
-						log.V(logLevel).Errorf("%s:logs:> write bytes from stream err: %s", logPrefix, err.Error())
+						log.Errorf("Error write bytes to stream %s", err)
 						return n, err
 					}
+
 					if f, ok := w.(http.Flusher); ok {
 						f.Flush()
 					}
+
 					return n, nil
 				}(buffer[0:n])
+
 				if err != nil {
-					log.V(logLevel).Errorf("%s:logs:> written to stream err: %s", logPrefix, err.Error())
+					log.Errorf("Error written to stream %s", err)
+					exit <- true
 					return
 				}
 
@@ -435,7 +453,10 @@ func ServiceLogsH(w http.ResponseWriter, r *http.Request) {
 				}
 			}
 		}
+
 	}()
+
+	<-exit
 
 }
 

@@ -78,35 +78,39 @@ var serviceLogsCmd = &cobra.Command{
 
 		for _, deployment := range response.Deployments {
 			state := deployment.Status.State
-			if !(state == request.StateStarted || state == request.StateStopped) {
+
+			if !(state == request.StateRunning || state == request.StateStopped) {
 				continue
 			}
 
 			for _, pod := range deployment.Pods {
-				for _, container := range pod.Spec.Template.Containers {
+				for _, container := range pod.Status.Containers {
 					fmt.Printf("[%d] %s\n", index, container.Image.Name)
 					m[strconv.Itoa(index)] = serviceInfo{
 						Deployment: deployment.Meta.Name,
 						Pod:        pod.Meta.Name,
-						Container:  container.Image.Name,
+						Container:  container.ID,
 					}
 				}
 				index++
 			}
 		}
 
-		if len(m) > 1 {
-			for {
-				fmt.Print("\nEnter container number for watch log or ^C for Exit: ")
-				fmt.Scan(&choice)
-				choice = strings.ToLower(choice)
+		if len(m) == 0 {
+			fmt.Println("service in status: ", response.Status.State)
+			return
+		}
 
-				if _, ok := m[choice]; ok {
-					break
-				}
+		for {
+			fmt.Print("\nEnter container number for watch log or ^C for Exit: ")
+			fmt.Scan(&choice)
+			choice = strings.ToLower(choice)
 
-				fmt.Println("Number not correct!")
+			if _, ok := m[choice]; ok {
+				break
 			}
+
+			fmt.Println("Number not correct!")
 		}
 
 		opts := new(request.ServiceLogsOptions)

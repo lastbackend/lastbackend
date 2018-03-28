@@ -348,7 +348,7 @@ func Restore(ctx context.Context) error {
 	return nil
 }
 
-func Logs(ctx context.Context, id string, follow bool, s io.Writer) error {
+func Logs(ctx context.Context, id string, follow bool, s io.Writer, doneChan chan bool) error {
 
 	log.Debugf("Get container [%s] logs streaming", id)
 
@@ -372,45 +372,53 @@ func Logs(ctx context.Context, id string, follow bool, s io.Writer) error {
 
 	go func() {
 		for {
-			n, err := req.Read(buffer)
-			if err != nil {
+			select {
+			case <-done:
+				req.Close()
+				return
+			default:
 
-				if err == context.Canceled {
-					log.Debug("Stream is canceled")
+				n, err := req.Read(buffer)
+				if err != nil {
+
+					if err == context.Canceled {
+						log.Debug("Stream is canceled")
+						return
+					}
+
+					log.Errorf("Error read bytes from stream %s", err)
+					doneChan <- true
 					return
 				}
 
-				log.Errorf("Error read bytes from stream %s", err)
-				done <- true
-				return
-			}
+				_, err = func(p []byte) (n int, err error) {
+					n, err = s.Write(p)
+					if err != nil {
+						log.Errorf("Error write bytes to stream %s", err)
+						return n, err
+					}
 
-			_, err = func(p []byte) (n int, err error) {
-				n, err = s.Write(p)
+					if f, ok := s.(http.Flusher); ok {
+						f.Flush()
+					}
+					return n, nil
+				}(buffer[0:n])
+
 				if err != nil {
-					log.Errorf("Error write bytes to stream %s", err)
-					return n, err
+					log.Errorf("Error written to stream %s", err)
+					done <- true
+					return
 				}
 
-				if f, ok := s.(http.Flusher); ok {
-					f.Flush()
+				for i := 0; i < n; i++ {
+					buffer[i] = 0
 				}
-				return n, nil
-			}(buffer[0:n])
-
-			if err != nil {
-				log.Errorf("Error written to stream %s", err)
-				done <- true
-				return
-			}
-
-			for i := 0; i < n; i++ {
-				buffer[i] = 0
 			}
 		}
 	}()
 
-	<-done
+	<-doneChan
+
 	return nil
 }
 

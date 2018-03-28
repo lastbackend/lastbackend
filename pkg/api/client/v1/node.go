@@ -294,10 +294,7 @@ func (s *NodeClient) Remove(ctx context.Context, opts *rv1.NodeRemoveOptions) er
 }
 
 func (s *NodeClient) Logs(ctx context.Context, pod, container string, opts *rv1.NodeLogsOptions) (io.ReadCloser, error) {
-
-	req := s.client.Get(fmt.Sprintf("/pod/%s/%s/logs", pod, container)).
-		AddHeader("Content-Type", "application/json")
-
+	req := s.client.Get(fmt.Sprintf("/pod/%s/%s/logs", pod, container))
 	if opts != nil {
 		if opts.Follow {
 			req.Param("force", strconv.FormatBool(opts.Follow))

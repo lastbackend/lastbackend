@@ -29,7 +29,7 @@ import (
 
 const logLevel = 2
 
-func PodGetH(w http.ResponseWriter, r *http.Request) {
+func PodGetH(w http.ResponseWriter, _ *http.Request) {
 
 	log.V(logLevel).Debug("node:http:pod:get:> get pod info")
 }
@@ -42,7 +42,15 @@ func PodLogsH(w http.ResponseWriter, r *http.Request) {
 	var (
 		c = mux.Vars(r)["container"]
 		p = envs.Get().GetState().Pods().GetPod(mux.Vars(r)["pod"])
+		notify   = w.(http.CloseNotifier).CloseNotify()
+		done = make(chan bool, 1)
 	)
+
+	go func() {
+		<-notify
+		log.Debug("HTTP connection just closed.")
+		done <- true
+	}()
 
 	if p == nil {
 		log.Errorf("node:http:pod:get:> pod not found")
@@ -56,7 +64,7 @@ func PodLogsH(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := pod.Logs(r.Context(), c, true, w); err != nil {
+	if err := pod.Logs(r.Context(), c, true, w, done); err != nil {
 		log.Errorf("node:http:pod:get:> get pod logs err: %s", err.Error())
 	}
 

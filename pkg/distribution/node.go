@@ -103,7 +103,7 @@ func (n *Node) Get(name string) (*types.Node, error) {
 	if err != nil {
 
 		if err.Error() == store.ErrEntityNotFound {
-			log.V(logLevel).Warnf("%s:get:> get: not found", logNodePrefix, name)
+			log.V(logLevel).Warnf("%s:get:> get: node %s not found", logNodePrefix, name)
 			return nil, nil
 		}
 

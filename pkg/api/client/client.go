@@ -27,7 +27,7 @@ import (
 func NewHTTP(endpoint string, config *Config) (*Client, error) {
 	c := new(Client)
 
-	baseURL, err := url.Parse(endpoint)
+	u, err := url.Parse(endpoint)
 	if err != nil {
 		return nil, err
 	}
@@ -40,7 +40,7 @@ func NewHTTP(endpoint string, config *Config) (*Client, error) {
 		cfg.SetDefault()
 	}
 
-	client, err := http.NewRESTClient(baseURL, cfg)
+	client, err := http.NewRESTClient(u, cfg)
 	if err != nil {
 		return nil, err
 	}
