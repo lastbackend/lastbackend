@@ -59,6 +59,8 @@ func NewRuntime(ctx context.Context) *Runtime {
 
 	go r.sc.WatchSpec()
 	go r.dc.WatchSpec()
+
+	go r.sc.WatchStatus()
 	go r.dc.WatchStatus()
 	go r.pc.WatchStatus()
 

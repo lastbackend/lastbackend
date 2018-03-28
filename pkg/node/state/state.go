@@ -23,7 +23,7 @@ import (
 	"sync"
 )
 
-const logLevel = 7
+const logLevel = 3
 
 type State struct {
 	node     *NodeState
@@ -71,8 +71,8 @@ type NodeState struct {
 type PodState struct {
 	lock       sync.RWMutex
 	stats      PodStateStats
-	containers map[string]types.PodContainer
-	pods       map[string]types.PodStatus
+	containers map[string]*types.PodContainer
+	pods       map[string]*types.PodStatus
 }
 
 type PodStateStats struct {
@@ -110,8 +110,8 @@ func New() *State {
 	state := State{
 		node: new(NodeState),
 		pods: &PodState{
-			containers: make(map[string]types.PodContainer, 0),
-			pods:       make(map[string]types.PodStatus, 0),
+			containers: make(map[string]*types.PodContainer, 0),
+			pods:       make(map[string]*types.PodStatus, 0),
 		},
 		networks: &NetworkState{
 			subnets: make(map[string]types.Subnet, 0),

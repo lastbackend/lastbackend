@@ -29,7 +29,8 @@ import (
 type NodeRequest struct{}
 
 func (NodeRequest) NodeConnectOptions() *NodeConnectOptions {
-	return new(NodeConnectOptions)
+	cp := new(NodeConnectOptions)
+	return cp
 }
 
 func (n *NodeConnectOptions) Validate() *errors.Err {

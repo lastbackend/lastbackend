@@ -71,27 +71,28 @@ func (dc *Controller) WatchStatus() {
 
 	var (
 		stg = envs.Get().GetStorage()
+		msg     = "controller:deployment:status:"
 	)
 
-	log.Debug("controller:deployment:controller: start watch deployment status")
+	log.Debugf("%s> start watch deployment status", msg)
 	go func() {
 		for {
 			select {
 			case s := <-dc.status:
 				{
 					if !dc.active {
-						log.Debug("controller:deployment:controller: skip management couse it is in slave mode")
+						log.Debug("%s> skip management couse it is in slave mode", msg)
 						continue
 					}
 
 					if s == nil {
-						log.Debug("controller:deployment:controller: skip because service is nil")
+						log.Debug("%s> skip because service is nil", msg)
 						continue
 					}
 
-					log.Debugf("controller:deployment:controller: Service needs to be provisioned: %s:%s", s.Meta.Namespace, s.Meta.Name)
+					log.Debugf("%s> Service needs to be provisioned: %s", msg, s.SelfLink())
 					if err := HandleStatus(s); err != nil {
-						log.Errorf("controller:deployment:controller: service provision: %s err: %s", s.Meta.Name, err.Error())
+						log.Errorf("%s> service provision: %s err: %s", msg, s.SelfLink(), err.Error())
 					}
 				}
 			}

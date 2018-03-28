@@ -369,8 +369,6 @@ func NodeSetPodStatusH(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	log.Info(pod)
-
 	if err := pm.SetStatus(pod, &types.PodStatus{
 		State:      opts.Stage,
 		Message:    opts.Message,

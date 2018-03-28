@@ -168,13 +168,17 @@ func (s *Service) Update(service *types.Service, opts *types.ServiceUpdateOption
 // Destroy method marks service for destroy
 func (s *Service) Destroy(service *types.Service) (*types.Service, error) {
 
-	log.V(logLevel).Debugf("api:distribution:service:destroy: destroy service %#v", service)
+	log.V(logLevel).Debugf("api:distribution:service:destroy: destroy service %s", service.SelfLink())
 
 	service.Status.State = types.StateDestroy
-	service.Spec.State.Destroy = true
+	if err := s.storage.Service().SetStatus(s.context, service); err != nil {
+		log.V(logLevel).Errorf("api:distribution:service:destroy: destroy service err: %s", err)
+		return nil, err
+	}
 
-	err := s.storage.Service().SetSpec(s.context, service)
-	if err != nil {
+
+	service.Spec.State.Destroy = true
+	if err := s.storage.Service().SetSpec(s.context, service); err != nil {
 		log.V(logLevel).Errorf("api:distribution:service:destroy: destroy service err: %s", err)
 		return nil, err
 	}

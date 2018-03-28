@@ -44,6 +44,7 @@ type INode interface {
 	SetOffline(node *types.Node) error
 
 	InsertPod(node *types.Node, pod *types.Pod) error
+	UpdatePod(node *types.Node, pod *types.Pod) error
 	RemovePod(node *types.Node, pod *types.Pod) error
 	InsertVolume(node *types.Node, volume *types.Volume) error
 	RemoveVolume(node *types.Node, volume *types.Volume) error
@@ -198,6 +199,16 @@ func (n *Node) SetNetwork(node *types.Node, network types.Subnet) error {
 func (n *Node) InsertPod(node *types.Node, pod *types.Pod) error {
 
 	if err := n.storage.Node().InsertPod(n.context, node, pod); err != nil {
+		log.Errorf("Set node network error: %s", err)
+		return err
+	}
+
+	return nil
+}
+
+func (n *Node) UpdatePod(node *types.Node, pod *types.Pod) error {
+
+	if err := n.storage.Node().UpdatePod(n.context, node, pod); err != nil {
 		log.Errorf("Set node network error: %s", err)
 		return err
 	}

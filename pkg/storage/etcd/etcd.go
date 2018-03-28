@@ -27,7 +27,9 @@ import (
 	"strings"
 )
 
-const logLevel = 3
+const logLevel = 6
+
+const ACTIONDELETE="DELETE"
 
 var c struct {
 	store store.Store

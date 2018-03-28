@@ -53,11 +53,6 @@ func (pc *Controller) WatchSpec(node chan *types.Node) {
 						continue
 					}
 
-					// If pod state not set to provision then need skip
-					if !(p.Status.State == types.StateInitialized) {
-						continue
-					}
-
 					log.Debugf("PodController: provision for pod: %s", p.Meta.Name)
 					if err := Provision(p); err != nil {
 						if err.Error() != errors.NodeNotFound {
@@ -152,6 +147,7 @@ func (pc *Controller) Resume() {
 
 	var (
 		stg = envs.Get().GetStorage()
+		msg = "scheduler:controller:pod:resume"
 	)
 
 	pc.active = true
@@ -163,14 +159,17 @@ func (pc *Controller) Resume() {
 	}
 
 	for _, ns := range namespaces {
-		log.Debugf("PodController: Get pods in app: %s", ns.Meta.Name)
+		log.Debugf("PodController: Get pods in namespace: %s", ns.Meta.Name)
 		pods, err := stg.Pod().ListByNamespace(context.Background(), ns.Meta.Name)
 		if err != nil {
 			log.Errorf("PodController: Get pods list err: %s", err.Error())
 		}
 
 		for _, p := range pods {
-			if p.Status.State == types.StateProvision {
+
+			log.Debugf("%s: restore pod: %s> status:[%s], state:[%s]", msg, p.SelfLink(), p.Status.State, p.Spec.State)
+			if p.Status.State == types.StateProvision || p.Spec.State.Destroy {
+				log.Debugf("%s: provision pod: %s", msg, p.SelfLink())
 				pc.spec <- p
 			}
 		}
