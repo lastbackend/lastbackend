@@ -36,6 +36,7 @@ func Provision(svc *types.Service) error {
 	var (
 		stg = envs.Get().GetStorage()
 		spc bool
+		msg = "controller:service:controller:provision:"
 	)
 
 	sm := distribution.NewServiceModel(context.Background(), stg)
@@ -43,33 +44,44 @@ func Provision(svc *types.Service) error {
 		if d == nil {
 			return errors.New(store.ErrEntityNotFound)
 		}
-		log.Errorf("controller:service:controller:provision: get deployment error: %s", err.Error())
+		log.Errorf("%s> get deployment error: %s", msg, err.Error())
 		return err
 	}
 
-	log.Debugf("controller:service:controller:provision: provision service: %s/%s", svc.Meta.Namespace, svc.Meta.Name)
+	log.Debugf("%s> provision service: %s", msg, svc.SelfLink())
 
 	// Get all deployments per service
 	dm := distribution.NewDeploymentModel(context.Background(), stg)
 	dl, err := dm.ListByService(svc.Meta.Namespace, svc.Meta.Name)
 	if err != nil {
-		log.Errorf("controller:service:controller:provision: get deployments list error: %s", err.Error())
+		log.Errorf("%s> get deployments list error: %s", msg, err.Error())
 		return err
 	}
 
-	// Destroy parent deployments
+	if len(dl) == 0 && svc.Status.State == types.StateDestroy {
+		if err := sm.Remove(svc); err != nil {
+			log.Errorf("%s> remove service err: %s", err.Error())
+			return nil
+		}
+	}
+
 	for _, d := range dl {
 
-		if d.Spec.Meta.Name == svc.Spec.Meta.Name {
+		if d.Spec.State.Destroy {
+			continue
+		}
+
+		if !svc.Spec.State.Destroy && d.Spec.Meta.Name == svc.Spec.Meta.Name {
 			spc = true
 			continue
 		}
 
-		d.Spec.State.Destroy = true
-		if err := dm.Destroy(d); err != nil {
-			log.Errorf("controller:service:controller:provision: destroy deployment err: %s", err.Error())
+		if svc.Spec.State.Destroy && !d.Spec.State.Destroy {
+			if err := dm.Destroy(d); err != nil {
+				log.Errorf("%s> remove deployment err: %s", err.Error())
+				continue
+			}
 		}
-
 	}
 
 	// Check service is marked for destroy
@@ -79,7 +91,7 @@ func Provision(svc *types.Service) error {
 
 	// Create new deployment
 	if _, err := dm.Create(svc); err != nil {
-		log.Errorf("controller:service:controller:provision: create deployment err: %s", err.Error())
+		log.Errorf("%s> create deployment err: %s", msg, err.Error())
 		svc.Status.State = types.StateError
 		svc.Status.Message = err.Error()
 	}
@@ -87,7 +99,7 @@ func Provision(svc *types.Service) error {
 	// Update service state
 	svc.Status.State = types.StateProvision
 	if err := distribution.NewServiceModel(context.Background(), stg).SetStatus(svc); err != nil {
-		log.Errorf("controller:service:controller:provision: service set state err: %s", err.Error())
+		log.Errorf("%s> service set state err: %s", msg, err.Error())
 		return err
 	}
 
@@ -96,6 +108,51 @@ func Provision(svc *types.Service) error {
 
 // HandleStatus handles status of service
 func HandleStatus(svc *types.Service) error {
+
+	var (
+		stg     = envs.Get().GetStorage()
+		msg     = "controller:deployment:service:status:"
+		status  = make(map[string]int)
+	)
+
+	if svc == nil {
+		log.Errorf("%s> service is nil", msg)
+		return nil
+	}
+
+	log.Debugf("%s> handle service [%s] status", msg, svc.SelfLink())
+
+	dm := distribution.NewDeploymentModel(context.Background(), stg)
+	sm := distribution.NewServiceModel(context.Background(), stg)
+
+	// Skip state handle
+	if svc.Status.State == types.StateDestroy {
+		log.Debugf("%s> skip service status [%s] handle: %s", msg, svc.SelfLink())
+		return nil
+	}
+
+	dl, err := dm.ListByService(svc.Meta.Namespace, svc.Meta.Name)
+	if err != nil {
+		log.Errorf("%s> get pod list err: %s", msg, err.Error())
+		return err
+	}
+
+	for _, di := range dl {
+		switch di.Status.State {
+		case types.StateDestroyed :
+			status[types.StateDestroyed]+=1
+			break
+		}
+	}
+
+	if svc.Spec.State.Destroy && len(dl) == status[types.StateDestroyed] {
+		log.Debugf("%s:> remove destroyed service: %s", msg, svc.SelfLink())
+		if err := sm.Remove(svc); err != nil {
+			log.Errorf("%s> remove destroyed service [%s] err: %s", msg, err.Error())
+			return err
+		}
+		return nil
+	}
 
 	return nil
 }

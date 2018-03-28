@@ -25,7 +25,7 @@ import (
 
 var Routes = []http.Route{
 	{Path: "/cluster/node", Method: http.MethodGet, Middleware: []http.Middleware{middleware.Authenticate}, Handler: NodeListH},
-	{Path: "/cluster/node/{node}", Method: http.MethodGet, Middleware: []http.Middleware{middleware.Authenticate}, Handler: NodeGetH},
+	{Path: "/cluster/node/{node}", Method: http.MethodGet, Middleware: []http.Middleware{middleware.Authenticate}, Handler: NodeInfoH},
 	{Path: "/cluster/node/{node}/spec", Method: http.MethodGet, Middleware: []http.Middleware{middleware.Authenticate}, Handler: NodeGetSpecH},
 	{Path: "/cluster/node/{node}", Method: http.MethodDelete, Middleware: []http.Middleware{middleware.Authenticate}, Handler: NodeRemoveH},
 	{Path: "/cluster/node/{node}", Method: http.MethodPut, Middleware: []http.Middleware{middleware.Authenticate}, Handler: NodeConnectH},

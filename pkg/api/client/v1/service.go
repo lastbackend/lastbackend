@@ -29,7 +29,6 @@ import (
 	vv1 "github.com/lastbackend/lastbackend/pkg/api/types/v1/views"
 	"github.com/lastbackend/lastbackend/pkg/distribution/errors"
 	"io"
-	"net/url"
 	"strconv"
 )
 
@@ -55,21 +54,21 @@ func (s *ServiceClient) Create(ctx context.Context, opts *rv1.ServiceCreateOptio
 		return nil, err
 	}
 
-	req := s.client.Post(fmt.Sprintf("/namespace/%s/service", s.namespace)).
+	res := s.client.Post(fmt.Sprintf("/namespace/%s/service", s.namespace)).
 		AddHeader("Content-Type", "application/json").
 		Body(body).
 		Do()
 
-	if err := req.Error(); err != nil {
+	if err := res.Error(); err != nil {
 		return nil, err
 	}
 
-	buf, err := req.Raw()
+	buf, err := res.Raw()
 	if err != nil {
 		return nil, err
 	}
 
-	if code := req.StatusCode(); 200 > code || code > 299 {
+	if code := res.StatusCode(); 200 > code || code > 299 {
 		var e *errors.Http
 		if err := json.Unmarshal(buf, &e); err != nil {
 			return nil, err
@@ -88,16 +87,16 @@ func (s *ServiceClient) Create(ctx context.Context, opts *rv1.ServiceCreateOptio
 
 func (s *ServiceClient) List(ctx context.Context) (*vv1.ServiceList, error) {
 
-	req := s.client.Get(fmt.Sprintf("/namespace/%s/service", s.namespace)).
+	res := s.client.Get(fmt.Sprintf("/namespace/%s/service", s.namespace)).
 		AddHeader("Content-Type", "application/json").
 		Do()
 
-	buf, err := req.Raw()
+	buf, err := res.Raw()
 	if err != nil {
 		return nil, err
 	}
 
-	if code := req.StatusCode(); 200 > code || code > 299 {
+	if code := res.StatusCode(); 200 > code || code > 299 {
 		var e *errors.Http
 		if err := json.Unmarshal(buf, &e); err != nil {
 			return nil, err
@@ -121,16 +120,16 @@ func (s *ServiceClient) List(ctx context.Context) (*vv1.ServiceList, error) {
 
 func (s *ServiceClient) Get(ctx context.Context) (*vv1.Service, error) {
 
-	req := s.client.Get(fmt.Sprintf("/namespace/%s/service/%s", s.namespace, s.name)).
+	res := s.client.Get(fmt.Sprintf("/namespace/%s/service/%s", s.namespace, s.name)).
 		AddHeader("Content-Type", "application/json").
 		Do()
 
-	buf, err := req.Raw()
+	buf, err := res.Raw()
 	if err != nil {
 		return nil, err
 	}
 
-	if code := req.StatusCode(); 200 > code || code > 299 {
+	if code := res.StatusCode(); 200 > code || code > 299 {
 		var e *errors.Http
 		if err := json.Unmarshal(buf, &e); err != nil {
 			return nil, err
@@ -154,17 +153,17 @@ func (s *ServiceClient) Update(ctx context.Context, opts *rv1.ServiceUpdateOptio
 		return nil, err
 	}
 
-	req := s.client.Put(fmt.Sprintf("/namespace/%s/service/%s", s.namespace, s.name)).
+	res := s.client.Put(fmt.Sprintf("/namespace/%s/service/%s", s.namespace, s.name)).
 		AddHeader("Content-Type", "application/json").
 		Body(body).
 		Do()
 
-	buf, err := req.Raw()
+	buf, err := res.Raw()
 	if err != nil {
 		return nil, err
 	}
 
-	if code := req.StatusCode(); 200 > code || code > 299 {
+	if code := res.StatusCode(); 200 > code || code > 299 {
 		var e *errors.Http
 		if err := json.Unmarshal(buf, &e); err != nil {
 			return nil, err
@@ -183,23 +182,16 @@ func (s *ServiceClient) Update(ctx context.Context, opts *rv1.ServiceUpdateOptio
 
 func (s *ServiceClient) Remove(ctx context.Context, opts *rv1.ServiceRemoveOptions) error {
 
-	v := url.Values{}
+	res := s.client.Delete(fmt.Sprintf("/namespace/%s/service/%s", s.namespace, s.name)).
+		AddHeader("Content-Type", "application/json")
 
 	if opts != nil {
 		if opts.Force {
-			v.Set("force", strconv.FormatBool(opts.Force))
+			res.Param("force", strconv.FormatBool(opts.Force))
 		}
 	}
 
-	qs := v.Encode()
-
-	if len(qs) != 0 {
-		qs = "?" + qs
-	}
-
-	req := s.client.Delete(fmt.Sprintf("/namespace/%s/service/%s%s", s.namespace, s.name, qs)).
-		AddHeader("Content-Type", "application/json").
-		Do()
+	req := res.Do()
 
 	buf, err := req.Raw()
 	if err != nil {
@@ -219,27 +211,20 @@ func (s *ServiceClient) Remove(ctx context.Context, opts *rv1.ServiceRemoveOptio
 
 func (s *ServiceClient) Logs(ctx context.Context, opts *rv1.ServiceLogsOptions) (io.ReadCloser, error) {
 
-	v := url.Values{}
+	res := s.client.Get(fmt.Sprintf("/namespace/%s/service/%s/logs", s.namespace, s.name)).
+		AddHeader("Content-Type", "application/json")
 
 	if opts != nil {
-		v.Set("deployment", opts.Deployment)
-		v.Set("pod", opts.Pod)
-		v.Set("container", opts.Container)
+		res.Param("deployment", opts.Deployment)
+		res.Param("pod", opts.Pod)
+		res.Param("container", opts.Container)
 
 		if opts.Follow {
-			v.Set("follow", strconv.FormatBool(opts.Follow))
+			res.Param("follow", strconv.FormatBool(opts.Follow))
 		}
 	}
 
-	qs := v.Encode()
-
-	if len(qs) != 0 {
-		qs = "?" + qs
-	}
-
-	return s.client.Get(fmt.Sprintf("/namespace/%s/service/%s/logs%s", s.namespace, s.name, qs)).
-		AddHeader("Content-Type", "application/json").
-		Stream()
+	return res.Stream()
 }
 
 func newServiceClient(client http.Interface, namespace, name string) *ServiceClient {

@@ -35,7 +35,7 @@ const (
 
 func SecretListH(w http.ResponseWriter, r *http.Request) {
 
-	log.V(logLevel).Debugf("%s:list list", logPrefix)
+	log.V(logLevel).Debugf("%s:list:> get secrets list", logPrefix)
 
 	nid := utils.Vars(r)["namespace"]
 
@@ -46,41 +46,41 @@ func SecretListH(w http.ResponseWriter, r *http.Request) {
 
 	ns, err := nsm.Get(nid)
 	if err != nil {
-		log.V(logLevel).Errorf("%s:list get namespace", logPrefix, err.Error())
+		log.V(logLevel).Errorf("%s:list:> get namespace", logPrefix, err.Error())
 		errors.HTTP.InternalServerError(w)
 		return
 	}
 	if ns == nil {
 		err := errors.New("namespace not found")
-		log.V(logLevel).Errorf("%s:list get namespace", logPrefix, err.Error())
+		log.V(logLevel).Errorf("%s:list:> get namespace", logPrefix, err.Error())
 		errors.New("namespace").NotFound().Http(w)
 		return
 	}
 
 	items, err := rm.ListByNamespace(ns.Meta.Name)
 	if err != nil {
-		log.V(logLevel).Errorf("%s:list find secret list err: %s", logPrefix, err.Error())
+		log.V(logLevel).Errorf("%s:list:> find secret list err: %s", logPrefix, err.Error())
 		errors.HTTP.InternalServerError(w)
 		return
 	}
 
 	response, err := v1.View().Secret().NewList(items).ToJson()
 	if err != nil {
-		log.V(logLevel).Errorf("%s:list convert struct to json err: %s", logPrefix, err.Error())
+		log.V(logLevel).Errorf("%s:list:> convert struct to json err: %s", logPrefix, err.Error())
 		errors.HTTP.InternalServerError(w)
 		return
 	}
 
 	w.WriteHeader(http.StatusOK)
 	if _, err := w.Write(response); err != nil {
-		log.V(logLevel).Errorf("%s:list write response err: %s", logPrefix, err.Error())
+		log.V(logLevel).Errorf("%s:list:> write response err: %s", logPrefix, err.Error())
 		return
 	}
 }
 
 func SecretCreateH(w http.ResponseWriter, r *http.Request) {
 
-	log.V(logLevel).Debugf("%s:create create secret", logPrefix)
+	log.V(logLevel).Debugf("%s:create:> create secret", logPrefix)
 
 	nid := utils.Vars(r)["namespace"]
 
@@ -92,41 +92,41 @@ func SecretCreateH(w http.ResponseWriter, r *http.Request) {
 	// request body struct
 	opts, e := v1.Request().Secret().CreateOptions().DecodeAndValidate(r.Body)
 	if e != nil {
-		log.V(logLevel).Errorf("%s:create validation incoming data err: %s", logPrefix, e.Err())
+		log.V(logLevel).Errorf("%s:create:> validation incoming data err: %s", logPrefix, e.Err())
 		e.Http(w)
 		return
 	}
 
 	ns, err := nsm.Get(nid)
 	if err != nil {
-		log.V(logLevel).Errorf("%s:create get namespace", logPrefix, err.Error())
+		log.V(logLevel).Errorf("%s:create:> get namespace", logPrefix, err.Error())
 		errors.HTTP.InternalServerError(w)
 		return
 	}
 	if ns == nil {
 		err := errors.New("namespace not found")
-		log.V(logLevel).Errorf("%s:create get namespace", logPrefix, err.Error())
+		log.V(logLevel).Errorf("%s:create:> get namespace", logPrefix, err.Error())
 		errors.New("namespace").NotFound().Http(w)
 		return
 	}
 
 	rs, err := rm.Create(ns, opts)
 	if err != nil {
-		log.V(logLevel).Errorf("%s:create create secret err: %s", logPrefix, ns.Meta.Name, err.Error())
+		log.V(logLevel).Errorf("%s:create:> create secret err: %s", logPrefix, ns.Meta.Name, err.Error())
 		errors.HTTP.InternalServerError(w)
 		return
 	}
 
 	response, err := v1.View().Secret().New(rs).ToJson()
 	if err != nil {
-		log.V(logLevel).Errorf("%s:create convert struct to json err: %s", logPrefix, err.Error())
+		log.V(logLevel).Errorf("%s:create:> convert struct to json err: %s", logPrefix, err.Error())
 		errors.HTTP.InternalServerError(w)
 		return
 	}
 
 	w.WriteHeader(http.StatusOK)
 	if _, err := w.Write(response); err != nil {
-		log.V(logLevel).Errorf("%s:create write response err: %s", logPrefix, err.Error())
+		log.V(logLevel).Errorf("%s:create:> write response err: %s", logPrefix, err.Error())
 		return
 	}
 }
@@ -136,7 +136,7 @@ func SecretUpdateH(w http.ResponseWriter, r *http.Request) {
 	nid := utils.Vars(r)["namespace"]
 	sid := utils.Vars(r)["secret"]
 
-	log.V(logLevel).Debugf("%s:update update secret `%s`", logPrefix, nid)
+	log.V(logLevel).Debugf("%s:update:> update secret `%s`", logPrefix, nid)
 
 	var (
 		rm  = distribution.NewSecretModel(r.Context(), envs.Get().GetStorage())
@@ -146,52 +146,52 @@ func SecretUpdateH(w http.ResponseWriter, r *http.Request) {
 	// request body struct
 	opts, e := v1.Request().Secret().UpdateOptions().DecodeAndValidate(r.Body)
 	if e != nil {
-		log.V(logLevel).Errorf("%s:update validation incoming data err: %s", logPrefix, e.Err())
+		log.V(logLevel).Errorf("%s:update:> validation incoming data err: %s", logPrefix, e.Err())
 		e.Http(w)
 		return
 	}
 
 	ns, err := nsm.Get(nid)
 	if err != nil {
-		log.V(logLevel).Errorf("%s:update get namespace", logPrefix, err.Error())
+		log.V(logLevel).Errorf("%s:update:> get namespace", logPrefix, err.Error())
 		errors.HTTP.InternalServerError(w)
 		return
 	}
 	if ns == nil {
 		err := errors.New("namespace not found")
-		log.V(logLevel).Errorf("%s:update get namespace", logPrefix, err.Error())
+		log.V(logLevel).Errorf("%s:update:> get namespace", logPrefix, err.Error())
 		errors.New("namespace").NotFound().Http(w)
 		return
 	}
 
 	ss, err := rm.Get(ns.Meta.Name, sid)
 	if err != nil {
-		log.V(logLevel).Errorf("%s:update check secret exists by selflink `%s` err: %s", logPrefix, ns.Meta.SelfLink, err.Error())
+		log.V(logLevel).Errorf("%s:update:> check secret exists by selflink `%s` err: %s", logPrefix, ns.Meta.SelfLink, err.Error())
 		errors.HTTP.InternalServerError(w)
 		return
 	}
 	if ss == nil {
-		log.V(logLevel).Warnf("%s:update secret `%s` not found", logPrefix, sid)
+		log.V(logLevel).Warnf("%s:update:> secret `%s` not found", logPrefix, sid)
 		errors.New("secret").NotFound().Http(w)
 		return
 	}
 
 	ss, err = rm.Update(ss, ns, opts)
 	if err != nil {
-		log.V(logLevel).Errorf("%s:update update secret `%s` err: %s", logPrefix, ns.Meta.Name, err.Error())
+		log.V(logLevel).Errorf("%s:update:> update secret `%s` err: %s", logPrefix, ns.Meta.Name, err.Error())
 		errors.HTTP.InternalServerError(w)
 	}
 
 	response, err := v1.View().Secret().New(ss).ToJson()
 	if err != nil {
-		log.V(logLevel).Errorf("%s:update convert struct to json err: %s", logPrefix, err.Error())
+		log.V(logLevel).Errorf("%s:update:> convert struct to json err: %s", logPrefix, err.Error())
 		errors.HTTP.InternalServerError(w)
 		return
 	}
 
 	w.WriteHeader(http.StatusOK)
 	if _, err := w.Write(response); err != nil {
-		log.V(logLevel).Errorf("%s:update write response err: %s", logPrefix, err.Error())
+		log.V(logLevel).Errorf("%s:update:> write response err: %s", logPrefix, err.Error())
 		return
 	}
 }
@@ -201,7 +201,7 @@ func SecretRemoveH(w http.ResponseWriter, r *http.Request) {
 	nid := utils.Vars(r)["namespace"]
 	sid := utils.Vars(r)["secret"]
 
-	log.V(logLevel).Debugf("%s:remove remove secret %s", logPrefix, sid)
+	log.V(logLevel).Debugf("%s:remove:> remove secret %s", logPrefix, sid)
 
 	var (
 		sm  = distribution.NewSecretModel(r.Context(), envs.Get().GetStorage())
@@ -210,39 +210,39 @@ func SecretRemoveH(w http.ResponseWriter, r *http.Request) {
 
 	ns, err := nsm.Get(nid)
 	if err != nil {
-		log.V(logLevel).Errorf("%s:remove get namespace", logPrefix, err.Error())
+		log.V(logLevel).Errorf("%s:remove:> get namespace", logPrefix, err.Error())
 		errors.HTTP.InternalServerError(w)
 		return
 	}
 	if ns == nil {
 		err := errors.New("namespace not found")
-		log.V(logLevel).Errorf("%s:remove get namespace", logPrefix, err.Error())
+		log.V(logLevel).Errorf("%s:remove:> get namespace", logPrefix, err.Error())
 		errors.New("namespace").NotFound().Http(w)
 		return
 	}
 
 	ss, err := sm.Get(ns.Meta.Name, sid)
 	if err != nil {
-		log.V(logLevel).Errorf("%s:remove get secret by id `%s` err: %s", logPrefix, sid, err.Error())
+		log.V(logLevel).Errorf("%s:remove:> get secret by id `%s` err: %s", logPrefix, sid, err.Error())
 		errors.HTTP.InternalServerError(w)
 		return
 	}
 	if ss == nil {
-		log.V(logLevel).Warnf("%s:remove secret `%s` not found", logPrefix, sid)
+		log.V(logLevel).Warnf("%s:remove:> secret `%s` not found", logPrefix, sid)
 		errors.New("secret").NotFound().Http(w)
 		return
 	}
 
 	err = sm.Remove(ss)
 	if err != nil {
-		log.V(logLevel).Errorf("%s:remove remove secret `%s` err: %s", logPrefix, sid, err.Error())
+		log.V(logLevel).Errorf("%s:remove:> remove secret `%s` err: %s", logPrefix, sid, err.Error())
 		errors.HTTP.InternalServerError(w)
 		return
 	}
 
 	w.WriteHeader(http.StatusOK)
 	if _, err := w.Write([]byte{}); err != nil {
-		log.V(logLevel).Errorf("%s:remove write response err: %s", logPrefix, err.Error())
+		log.V(logLevel).Errorf("%s:remove:> write response err: %s", logPrefix, err.Error())
 		return
 	}
 }

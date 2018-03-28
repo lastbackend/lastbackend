@@ -51,6 +51,14 @@ func (r *Runtime) Provision(ctx context.Context, spec *types.NodeSpec) error {
 		log.Debugf("route: %v", r)
 	}
 
+	pods := envs.Get().GetState().Pods().GetPods()
+
+	for k := range pods {
+		if _, ok := spec.Pods[k]; !ok {
+			pod.Destroy(context.Background(), k, pods[k])
+		}
+	}
+
 	for p, spec := range spec.Pods {
 		log.Debugf("pod: %v", p)
 		if err := pod.Manage(ctx, p, &spec); err != nil {
@@ -87,7 +95,7 @@ func (r *Runtime) Subscribe() {
 func (r *Runtime) Connect(ctx context.Context) error {
 
 	log.Debug("node:runtime:connect:> connect init")
-	if err := events.NewConnectEventt(ctx); err != nil {
+	if err := events.NewConnectEvent(ctx); err != nil {
 		log.Errorf("node:runtime:connect:> connect err: %s", err.Error())
 		return err
 	}

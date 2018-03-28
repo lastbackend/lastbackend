@@ -44,11 +44,11 @@ func (s *DeploymentClient) Pod(deployment string) *PodClient {
 
 func (s *DeploymentClient) List(ctx context.Context) (*vv1.DeploymentList, error) {
 
-	req := s.client.Get(fmt.Sprintf("/namespace/%s/service/%s/deploymet", s.namespace, s.service)).
+	res := s.client.Get(fmt.Sprintf("/namespace/%s/service/%s/deploymet", s.namespace, s.service)).
 		AddHeader("Content-Type", "application/json").
 		Do()
 
-	buf, err := req.Raw()
+	buf, err := res.Raw()
 	if err != nil {
 		return nil, err
 	}
@@ -64,16 +64,16 @@ func (s *DeploymentClient) List(ctx context.Context) (*vv1.DeploymentList, error
 
 func (s *DeploymentClient) Get(ctx context.Context) (*vv1.Deployment, error) {
 
-	req := s.client.Get(fmt.Sprintf("/namespace/%s/service/%s/deploymet/%s", s.namespace, s.service, s.name)).
+	res := s.client.Get(fmt.Sprintf("/namespace/%s/service/%s/deploymet/%s", s.namespace, s.service, s.name)).
 		AddHeader("Content-Type", "application/json").
 		Do()
 
-	buf, err := req.Raw()
+	buf, err := res.Raw()
 	if err != nil {
 		return nil, err
 	}
 
-	if code := req.StatusCode(); 200 > code || code > 299 {
+	if code := res.StatusCode(); 200 > code || code > 299 {
 		var e *errors.Http
 		if err := json.Unmarshal(buf, &e); err != nil {
 			return nil, err
@@ -97,17 +97,17 @@ func (s *DeploymentClient) Update(ctx context.Context, opts *rv1.DeploymentUpdat
 		return nil, err
 	}
 
-	req := s.client.Put(fmt.Sprintf("/namespace/%s/service/%s/deployment/%s", s.namespace, s.service, s.name)).
+	res := s.client.Put(fmt.Sprintf("/namespace/%s/service/%s/deployment/%s", s.namespace, s.service, s.name)).
 		AddHeader("Content-Type", "application/json").
 		Body(body).
 		Do()
 
-	buf, err := req.Raw()
+	buf, err := res.Raw()
 	if err != nil {
 		return nil, err
 	}
 
-	if code := req.StatusCode(); 200 > code || code > 299 {
+	if code := res.StatusCode(); 200 > code || code > 299 {
 		var e *errors.Http
 		if err := json.Unmarshal(buf, &e); err != nil {
 			return nil, err

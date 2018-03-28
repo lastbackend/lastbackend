@@ -178,6 +178,14 @@ func (r *Request) Stream() (io.ReadCloser, error) {
 	}
 }
 
+func (r *Request) Param(name, value string) *Request {
+	if r.params == nil {
+		r.params = make(url.Values)
+	}
+	r.params[name] = append(r.params[name], value)
+	return r
+}
+
 func (r *Request) transformResponse(resp *http.Response, req *http.Request) Result {
 	var body []byte
 

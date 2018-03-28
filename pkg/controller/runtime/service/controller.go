@@ -71,27 +71,28 @@ func (sc *Controller) WatchStatus() {
 
 	var (
 		stg = envs.Get().GetStorage()
+		msg = "controller:service:watch_status:"
 	)
 
-	log.Debug("controller:service:controller: start watch service spec")
+	log.Debugf("%s> start watch service status", msg)
 	go func() {
 		for {
 			select {
 			case s := <-sc.status:
 				{
 					if !sc.active {
-						log.Debug("controller:service:controller: skip management course it is in slave mode")
+						log.Debugf("%s> skip management course it is in slave mode", msg)
 						continue
 					}
 
 					if s == nil {
-						log.Debug("controller:service:controller: skip because service is nil")
+						log.Debugf("%s> skip because service is nil", msg)
 						continue
 					}
 
-					log.Debugf("controller:service:controller: Service needs to be provisioned: %s:%s", s.Meta.Namespace, s.Meta.Name)
+					log.Debugf("%s> Service needs to be provisioned: %s", msg, s.SelfLink())
 					if err := HandleStatus(s); err != nil {
-						log.Errorf("controller:service:controller: service provision: %s err: %s", s.Meta.Name, err.Error())
+						log.Errorf("%s> service provision: %s err: %s", msg, s.SelfLink(), err.Error())
 					}
 				}
 			}
@@ -111,28 +112,34 @@ func (sc *Controller) Resume() {
 
 	var (
 		stg = envs.Get().GetStorage()
+		msg = "controller:service:resume:"
 	)
 
 	sc.active = true
 
-	log.Debug("controller:service:controller:resume start check services states")
+	log.Debugf("%s> start check services states", msg)
 	nss, err := stg.Namespace().List(context.Background())
 	if err != nil {
-		log.Errorf("controller:service:controller:resume get namespaces list err: %s", err.Error())
+		log.Errorf("%s> get namespaces list err: %s", msg, err.Error())
 	}
 
 	for _, ns := range nss {
 		svcs, err := stg.Service().ListByNamespace(context.Background(), ns.Meta.Name)
 		if err != nil {
-			log.Errorf("controller:service:controller:resume get services list err: %s", err.Error())
+			log.Errorf("%s> get services list err: %s", msg, err.Error())
 		}
 
 		for _, svc := range svcs {
 			svc, err := stg.Service().Get(context.Background(), svc.Meta.Namespace, svc.Meta.Name)
 			if err != nil {
-				log.Errorf("controller:service:controller:resume get service err: %s", err.Error())
+				log.Errorf("%s> get service err: %s", msg, err.Error())
 			}
 			sc.spec <- svc
+		}
+
+		for _, svc := range svcs {
+			log.Debugf("%s> check service [%s] status", msg, svc.SelfLink())
+			sc.status <- svc
 		}
 	}
 }
@@ -142,5 +149,6 @@ func NewServiceController(_ context.Context) *Controller {
 	sc := new(Controller)
 	sc.active = false
 	sc.spec = make(chan *types.Service)
+	sc.status = make(chan *types.Service)
 	return sc
 }

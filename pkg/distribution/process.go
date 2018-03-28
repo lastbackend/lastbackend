@@ -24,6 +24,10 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/storage"
 )
 
+const (
+	logProcessPrefix = "distribution:process"
+)
+
 type IProcess interface {
 	ProcessSet(process *types.Process) error
 	Elect(p *types.Process) (bool, error)

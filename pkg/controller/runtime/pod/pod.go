@@ -19,10 +19,10 @@
 package pod
 
 import (
-	"context"
+	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 	"github.com/lastbackend/lastbackend/pkg/controller/envs"
 	"github.com/lastbackend/lastbackend/pkg/distribution"
-	"github.com/lastbackend/lastbackend/pkg/distribution/types"
+	"context"
 	"github.com/lastbackend/lastbackend/pkg/log"
 )
 
@@ -30,7 +30,7 @@ func HandleStatus(p *types.Pod) error {
 
 	var (
 		stg     = envs.Get().GetStorage()
-		lst     = "controller:pod:controller:status>"
+		msg     = "controller:pod:controller:status>"
 		status  = make(map[string]int)
 		message string
 	)
@@ -40,13 +40,21 @@ func HandleStatus(p *types.Pod) error {
 
 	d, err := dm.Get(p.Meta.Namespace, p.Meta.Service, p.Meta.Deployment)
 	if err != nil {
-		log.Errorf("%s get deployment err: %s", lst, err.Error())
+		log.Errorf("%s get deployment err: %s", msg, err.Error())
 		return err
+	}
+	if d == nil {
+		log.Warnf("%s: deployment already removed: [%s:%s:%s]", msg, p.Meta.Namespace, p.Meta.Service, p.Meta.Deployment)
+		if err := pm.Remove(context.Background(), p); err != nil {
+			log.Errorf("%s: remove pod [%s] err: %s", msg, p.SelfLink(), err.Error())
+			return err
+		}
+		return nil
 	}
 
 	pl, err := pm.ListByDeployment(p.Meta.Namespace, p.Meta.Service, p.Meta.Deployment)
 	if err != nil {
-		log.Errorf("%s> get pod list err: %s", lst, err.Error())
+		log.Errorf("%s> get pod list err: %s", msg, err.Error())
 		return err
 	}
 
@@ -89,6 +97,9 @@ func HandleStatus(p *types.Pod) error {
 		case types.StateDestroyed:
 			status[types.StateDestroyed] += 1
 			break
+		case types.StateWarning:
+			status[types.StateWarning]+=1
+			break
 		}
 	}
 
@@ -105,21 +116,30 @@ func HandleStatus(p *types.Pod) error {
 		d.Status.State = types.StateDestroy
 		d.Status.Message = ""
 		break
+	case status[types.StateWarning] > 0 && d.Status.State != types.StateDestroy:
+		d.Status.State = types.StateWarning
+		d.Status.Message = p.Status.Message
+		break
 	case status[types.StateRunning] == d.Spec.Replicas:
 		d.Status.State = types.StateRunning
 		break
 	case status[types.StateStopped] == d.Spec.Replicas:
 		d.Status.State = types.StateStopped
 		break
-	case status[types.StateDestroyed] == d.Spec.Replicas:
+	case status[types.StateDestroyed] == 1 && p.Status.State == types.StateDestroyed:
 		d.Status.State = types.StateDestroyed
 		break
 	}
 
-	// TODO: delete destroyed pods
+	if p.Status.State == types.StateDestroyed {
+		if err := pm.Remove(context.Background(), p); err != nil {
+			log.Errorf("%s: remove pod [%s] err: %s", msg, p.SelfLink(), err.Error())
+			return err
+		}
+	}
 
 	if err := dm.SetStatus(d); err != nil {
-		log.Errorf("%s> set deployment status err: %s", lst, err.Error())
+		log.Errorf("%s> set deployment status err: %s", msg, err.Error())
 		return err
 	}
 

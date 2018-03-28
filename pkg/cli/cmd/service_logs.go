@@ -77,6 +77,11 @@ var serviceLogsCmd = &cobra.Command{
 		}
 
 		for _, deployment := range response.Deployments {
+			state := deployment.Status.State
+			if !(state == request.StateStarted || state == request.StateStopped) {
+				continue
+			}
+
 			for _, pod := range deployment.Pods {
 				for _, container := range pod.Spec.Template.Containers {
 					fmt.Printf("[%d] %s\n", index, container.Image.Name)
@@ -115,7 +120,7 @@ var serviceLogsCmd = &cobra.Command{
 			return
 		}
 
-		fmt.Println("Service logs:\n")
+		fmt.Println("Service logs:")
 
 		stream.New(Writer{}).Pipe(&reader)
 	},

@@ -28,7 +28,6 @@ import (
 	rv1 "github.com/lastbackend/lastbackend/pkg/api/types/v1/request"
 	vv1 "github.com/lastbackend/lastbackend/pkg/api/types/v1/views"
 	"github.com/lastbackend/lastbackend/pkg/distribution/errors"
-	"net/url"
 	"strconv"
 )
 
@@ -46,21 +45,21 @@ func (s *SecretClient) Create(ctx context.Context, opts *rv1.SecretCreateOptions
 		return nil, err
 	}
 
-	req := s.client.Post(fmt.Sprintf("/namespace/%s/secret", s.namespace)).
+	res := s.client.Post(fmt.Sprintf("/namespace/%s/secret", s.namespace)).
 		AddHeader("Content-Type", "application/json").
 		Body(body).
 		Do()
 
-	if err := req.Error(); err != nil {
+	if err := res.Error(); err != nil {
 		return nil, err
 	}
 
-	buf, err := req.Raw()
+	buf, err := res.Raw()
 	if err != nil {
 		return nil, err
 	}
 
-	if code := req.StatusCode(); 200 > code || code > 299 {
+	if code := res.StatusCode(); 200 > code || code > 299 {
 		var e *errors.Http
 		if err := json.Unmarshal(buf, &e); err != nil {
 			return nil, err
@@ -79,11 +78,11 @@ func (s *SecretClient) Create(ctx context.Context, opts *rv1.SecretCreateOptions
 
 func (s *SecretClient) List(ctx context.Context) (*vv1.SecretList, error) {
 
-	req := s.client.Get(fmt.Sprintf("/namespace/%s/secret", s.namespace)).
+	res := s.client.Get(fmt.Sprintf("/namespace/%s/secret", s.namespace)).
 		AddHeader("Content-Type", "application/json").
 		Do()
 
-	buf, err := req.Raw()
+	buf, err := res.Raw()
 	if err != nil {
 		return nil, err
 	}
@@ -109,17 +108,17 @@ func (s *SecretClient) Update(ctx context.Context, opts *rv1.SecretUpdateOptions
 		return nil, err
 	}
 
-	req := s.client.Put(fmt.Sprintf("/namespace/%s/secret/%s", s.namespace, s.name)).
+	res := s.client.Put(fmt.Sprintf("/namespace/%s/secret/%s", s.namespace, s.name)).
 		AddHeader("Content-Type", "application/json").
 		Body(body).
 		Do()
 
-	buf, err := req.Raw()
+	buf, err := res.Raw()
 	if err != nil {
 		return nil, err
 	}
 
-	if code := req.StatusCode(); 200 > code || code > 299 {
+	if code := res.StatusCode(); 200 > code || code > 299 {
 		var e *errors.Http
 		if err := json.Unmarshal(buf, &e); err != nil {
 			return nil, err
@@ -138,23 +137,16 @@ func (s *SecretClient) Update(ctx context.Context, opts *rv1.SecretUpdateOptions
 
 func (s *SecretClient) Remove(ctx context.Context, opts *rv1.SecretRemoveOptions) error {
 
-	v := url.Values{}
+	res := s.client.Delete(fmt.Sprintf("/namespace/%s/secret/%s", s.namespace, s.name)).
+		AddHeader("Content-Type", "application/json")
 
 	if opts != nil {
 		if opts.Force {
-			v.Set("force", strconv.FormatBool(opts.Force))
+			res.Param("force", strconv.FormatBool(opts.Force))
 		}
 	}
 
-	qs := v.Encode()
-
-	if len(qs) != 0 {
-		qs = "?" + qs
-	}
-
-	req := s.client.Delete(fmt.Sprintf("/namespace/%s/secret/%s%s", s.namespace, s.name, qs)).
-		AddHeader("Content-Type", "application/json").
-		Do()
+	req := res.Do()
 
 	buf, err := req.Raw()
 	if err != nil {

@@ -32,7 +32,7 @@ const (
 //EventSubscribeH - realtime events handler
 func EventSubscribeH(w http.ResponseWriter, r *http.Request) {
 
-	log.V(logLevel).Debugf("%s: subscribe on events", logPrefix)
+	log.V(logLevel).Debugf("%s:subscribe:> subscribe on events", logPrefix)
 
 	if r.Method != "GET" {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)

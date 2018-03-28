@@ -33,7 +33,10 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/log"
 )
 
-const logLevel = 2
+const (
+	logLevel = 2
+	logPrefix = "api:http"
+)
 
 // Extends routes variable
 var Routes = make([]http.Route, 0)
@@ -63,13 +66,13 @@ func init() {
 
 func Listen(host string, port int) error {
 
-	log.V(logLevel).Debugf("HTTP: listen HTTP server on %s:%d", host, port)
+	log.V(logLevel).Debugf("%s:> listen HTTP server on %s:%d", logPrefix, host, port)
 
 	r := mux.NewRouter()
 	r.Methods("OPTIONS").HandlerFunc(http.Headers)
 
 	for _, route := range Routes {
-		log.V(logLevel).Debugf("HTTP: init route: %s", route.Path)
+		log.V(logLevel).Debugf("%s:> init route: %s", logPrefix, route.Path)
 		r.Handle(route.Path, http.Handle(route.Handler, route.Middleware...)).Methods(route.Method)
 	}
 

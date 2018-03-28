@@ -147,14 +147,14 @@ func TestNodeGetH(t *testing.T) {
 		{
 			name:         "checking get node failed: not found",
 			url:          fmt.Sprintf("/cluster/node/%s", n2.Meta.Name),
-			handler:      node.NodeGetH,
+			handler:      node.NodeInfoH,
 			expectedBody: "{\"code\":404,\"status\":\"Not Found\",\"message\":\"Node not found\"}",
 			expectedCode: http.StatusNotFound,
 		},
 		{
 			name:         "checking get node successfully",
 			url:          fmt.Sprintf("/cluster/node/%s", n1.Meta.Name),
-			handler:      node.NodeGetH,
+			handler:      node.NodeInfoH,
 			expectedBody: string(v),
 			expectedCode: http.StatusOK,
 		},

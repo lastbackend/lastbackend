@@ -34,43 +34,43 @@ const (
 
 func ClusterInfoH(w http.ResponseWriter, r *http.Request) {
 
-	log.V(logLevel).Debugf("%s:info get cluster", logPrefix)
+	log.V(logLevel).Debugf("%s:info:> get cluster", logPrefix)
 
 	var clm = distribution.NewClusterModel(r.Context(), envs.Get().GetStorage())
 
 	cl, err := clm.Get()
 	if err != nil {
-		log.V(logLevel).Errorf("%s:info get cluster err: %s", logPrefix, err.Error())
+		log.V(logLevel).Errorf("%s:info:> get cluster err: %s", logPrefix, err.Error())
 		errors.HTTP.InternalServerError(w)
 		return
 	}
 	if cl == nil {
-		log.V(logLevel).Errorf("%s:info cluster not found", logPrefix)
+		log.V(logLevel).Errorf("%s:info:> cluster not found", logPrefix)
 		errors.New("cluster").NotFound().Http(w)
 		return
 	}
 
 	response, err := v1.View().Cluster().New(cl).ToJson()
 	if err != nil {
-		log.V(logLevel).Errorf("%s:info convert struct to json err: %s", logPrefix, err.Error())
+		log.V(logLevel).Errorf("%s:info:> convert struct to json err: %s", logPrefix, err.Error())
 		errors.HTTP.InternalServerError(w)
 		return
 	}
 
 	w.WriteHeader(http.StatusOK)
 	if _, err = w.Write(response); err != nil {
-		log.V(logLevel).Errorf("%s:info write response err: %s", logPrefix, err.Error())
+		log.V(logLevel).Errorf("%s:info:> write response err: %s", logPrefix, err.Error())
 		return
 	}
 }
 
 func ClusterUpdateH(w http.ResponseWriter, r *http.Request) {
 
-	log.V(logLevel).Debugf("%s:update update cluster")
+	log.V(logLevel).Debugf("%s:update:> update cluster")
 
 	opts := v1.Request().Cluster().UpdateOptions()
 	if err := opts.DecodeAndValidate(r.Body); err != nil {
-		log.V(logLevel).Errorf("%s:update validation incoming data", logPrefix, err.Err())
+		log.V(logLevel).Errorf("%s:update:> validation incoming data", logPrefix, err.Err())
 		err.Http(w)
 		return
 	}
@@ -79,39 +79,39 @@ func ClusterUpdateH(w http.ResponseWriter, r *http.Request) {
 
 	cl, err := clm.Get()
 	if err != nil {
-		log.V(logLevel).Errorf("%s:update get cluster err: %s", logPrefix, err.Error())
+		log.V(logLevel).Errorf("%s:update:> get cluster err: %s", logPrefix, err.Error())
 		errors.HTTP.InternalServerError(w)
 		return
 	}
 	if cl == nil {
 		err := errors.New("cluster not found")
-		log.V(logLevel).Errorf("%s:update get cluster err: %s", logPrefix, err.Error())
+		log.V(logLevel).Errorf("%s:update:> get cluster err: %s", logPrefix, err.Error())
 		errors.New("cluster").NotFound().Http(w)
 		return
 	}
 
 	err = clm.Update(cl, opts)
 	if err != nil {
-		log.V(logLevel).Errorf("%s:update get cluster err: %s", logPrefix, err.Error())
+		log.V(logLevel).Errorf("%s:update:> get cluster err: %s", logPrefix, err.Error())
 		errors.HTTP.InternalServerError(w)
 		return
 	}
 	if cl == nil {
-		log.V(logLevel).Errorf("%s:update cluster not found", logPrefix)
+		log.V(logLevel).Errorf("%s:update:> cluster not found", logPrefix)
 		errors.New("cluster").NotFound().Http(w)
 		return
 	}
 
 	response, err := v1.View().Cluster().New(cl).ToJson()
 	if err != nil {
-		log.V(logLevel).Errorf("%s:update convert struct to json err: %s", logPrefix, err.Error())
+		log.V(logLevel).Errorf("%s:update:> convert struct to json err: %s", logPrefix, err.Error())
 		errors.HTTP.InternalServerError(w)
 		return
 	}
 
 	w.WriteHeader(http.StatusOK)
 	if _, err = w.Write(response); err != nil {
-		log.V(logLevel).Errorf("%s:update write response err: %s", logPrefix, err.Error())
+		log.V(logLevel).Errorf("%s:update:> write response err: %s", logPrefix, err.Error())
 		return
 	}
 }

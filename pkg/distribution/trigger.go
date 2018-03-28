@@ -25,6 +25,10 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/storage"
 )
 
+const (
+	logTriggerPrefix = "distribution:trigger"
+)
+
 type ITrigger interface {
 	Get(namespace, service, name string) (*types.Trigger, error)
 }
@@ -36,11 +40,11 @@ type Trigger struct {
 
 func (h *Trigger) Get(namespace, service, name string) (*types.Trigger, error) {
 
-	log.V(logLevel).Debugf("Trigger: Get: get Trigger by name %s: %s", namespace, name)
+	log.V(logLevel).Debugf("%s:get:> get trigger by name %s: %s", logTriggerPrefix, namespace, name)
 
 	hook, err := h.storage.Trigger().Get(h.context, namespace, service, name)
 	if err != nil {
-		log.V(logLevel).Errorf("Trigger: Get: create Trigger err: %s", err)
+		log.V(logLevel).Errorf("%s:get:> create trigger err: %s", logTriggerPrefix, err.Error())
 		return nil, err
 	}
 

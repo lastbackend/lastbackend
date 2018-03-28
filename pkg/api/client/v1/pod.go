@@ -39,11 +39,11 @@ type PodClient struct {
 
 func (s *PodClient) List(ctx context.Context) (*vv1.PodList, error) {
 
-	req := s.client.Get(fmt.Sprintf("/namespace/%s/service/%s/deploymet/%s/pod", s.namespace, s.service, s.deployment)).
+	res := s.client.Get(fmt.Sprintf("/namespace/%s/service/%s/deploymet/%s/pod", s.namespace, s.service, s.deployment)).
 		AddHeader("Content-Type", "application/json").
 		Do()
 
-	buf, err := req.Raw()
+	buf, err := res.Raw()
 	if err != nil {
 		return nil, err
 	}
@@ -59,16 +59,16 @@ func (s *PodClient) List(ctx context.Context) (*vv1.PodList, error) {
 
 func (s *PodClient) Get(ctx context.Context, name string) (*vv1.Pod, error) {
 
-	req := s.client.Get(fmt.Sprintf("/namespace/%s/service/%s/deploymet/%s/pod/%s", s.namespace, s.service, s.deployment, name)).
+	res := s.client.Get(fmt.Sprintf("/namespace/%s/service/%s/deploymet/%s/pod/%s", s.namespace, s.service, s.deployment, name)).
 		AddHeader("Content-Type", "application/json").
 		Do()
 
-	buf, err := req.Raw()
+	buf, err := res.Raw()
 	if err != nil {
 		return nil, err
 	}
 
-	if code := req.StatusCode(); 200 > code || code > 299 {
+	if code := res.StatusCode(); 200 > code || code > 299 {
 		var e *errors.Http
 		if err := json.Unmarshal(buf, &e); err != nil {
 			return nil, err
