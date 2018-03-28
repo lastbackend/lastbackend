@@ -65,8 +65,9 @@ var RootCmd = &cobra.Command{
 		}
 
 		host := cmd.Flag("host").Value.String()
+		insecure, _ := cmd.Flags().GetBool("insecure")
 
-		httpcli, err := client.NewHTTP(host, &client.Config{BearerToken: token})
+		httpcli, err := client.NewHTTP(host, &client.Config{BearerToken: token, Insecure: insecure})
 		if err != nil {
 			panic(err)
 		}
@@ -157,6 +158,7 @@ func Execute() {
 
 	RootCmd.PersistentFlags().StringP("host", "H", "https://api.lastbackend.com", "Set api host parameter")
 	RootCmd.PersistentFlags().Bool("debug", false, "Enable debug mode")
+	RootCmd.PersistentFlags().Bool("insecure", false, "Disable security check")
 
 	if err := RootCmd.Execute(); err != nil {
 		fmt.Println(err)

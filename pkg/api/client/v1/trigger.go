@@ -28,6 +28,8 @@ import (
 	rv1 "github.com/lastbackend/lastbackend/pkg/api/types/v1/request"
 	vv1 "github.com/lastbackend/lastbackend/pkg/api/types/v1/views"
 	"github.com/lastbackend/lastbackend/pkg/distribution/errors"
+	"strconv"
+	"net/url"
 )
 
 type TriggerClient struct {
@@ -160,7 +162,21 @@ func (s *TriggerClient) Update(ctx context.Context, opts *rv1.TriggerUpdateOptio
 
 func (s *TriggerClient) Remove(ctx context.Context, opts *rv1.TriggerRemoveOptions) error {
 
-	req := s.client.Delete(fmt.Sprintf("/namespace/%s/service/%s/trigger/%s", s.namespace, s.service, s.name)).
+	v := url.Values{}
+
+	if opts != nil {
+		if opts.Force {
+			v.Set("force", strconv.FormatBool(opts.Force))
+		}
+	}
+
+	qs := v.Encode()
+
+	if len(qs) != 0 {
+		qs = "?" + qs
+	}
+
+	req := s.client.Delete(fmt.Sprintf("/namespace/%s/service/%s/trigger/%s%s", s.namespace, s.service, s.name, qs)).
 		AddHeader("Content-Type", "application/json").
 		Do()
 

@@ -23,6 +23,7 @@ import (
 
 	rv1 "github.com/lastbackend/lastbackend/pkg/api/types/v1/request"
 	vv1 "github.com/lastbackend/lastbackend/pkg/api/types/v1/views"
+	"io"
 )
 
 type Cluster interface {
@@ -43,6 +44,7 @@ type Node interface {
 	SetVolumeStatus(ctx context.Context, volume string, opts *rv1.NodeVolumeStatusOptions) error
 	SetRouteStatus(ctx context.Context, route string, opts *rv1.NodeRouteStatusOptions) error
 	Remove(ctx context.Context, opts *rv1.NodeRemoveOptions) error
+	Logs(ctx context.Context, pod, container string, opts *rv1.NodeLogsOptions) (io.ReadCloser, error)
 }
 
 type Namespace interface {
@@ -67,6 +69,7 @@ type Service interface {
 	Get(ctx context.Context) (*vv1.Service, error)
 	Update(ctx context.Context, opts *rv1.ServiceUpdateOptions) (*vv1.NamespaceList, error)
 	Remove(ctx context.Context, opts *rv1.ServiceRemoveOptions) error
+	Logs(ctx context.Context, opts *rv1.ServiceLogsOptions) (io.ReadCloser, error)
 }
 
 type Deployment interface {

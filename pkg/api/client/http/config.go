@@ -24,7 +24,9 @@ type Config struct {
 	// Server requires Bearer authentication.
 	BearerToken string
 	// The maximum length of time to wait before giving up on a server request. A value of zero means no timeout.
-	Timeout time.Duration
+	Timeout  time.Duration
+	// Disable security check for a client
+	Insecure bool
 }
 
 func (c *Config) SetDefault() {

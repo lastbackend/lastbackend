@@ -138,6 +138,46 @@ func (r Result) Error() error {
 	return r.err
 }
 
+func (r *Request) Stream() (io.ReadCloser, error) {
+	if r.err != nil {
+		return nil, r.err
+	}
+
+	u := r.URL().String()
+	req, err := http.NewRequest(r.verb, u, nil)
+	if err != nil {
+		return nil, err
+	}
+	if r.ctx != nil {
+		req = req.WithContext(r.ctx)
+	}
+	req.Header = r.headers
+	client := r.client
+	if client == nil {
+		client = http.DefaultClient
+	}
+
+	resp, err := client.Do(req)
+	if err != nil {
+		return nil, err
+	}
+
+	switch {
+	case (resp.StatusCode >= 200) && (resp.StatusCode < 300):
+		return resp.Body, nil
+
+	default:
+		defer resp.Body.Close()
+
+		result := r.transformResponse(resp, req)
+		err := result.Error()
+		if err == nil {
+			err = fmt.Errorf("%d while accessing %v: %s", result.statusCode, u, string(result.body))
+		}
+		return nil, err
+	}
+}
+
 func (r *Request) transformResponse(resp *http.Response, req *http.Request) Result {
 	var body []byte
 

@@ -28,6 +28,7 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/log"
 	"github.com/lastbackend/lastbackend/pkg/util/converter"
 	"github.com/lastbackend/lastbackend/pkg/util/http/utils"
+	"github.com/lastbackend/lastbackend/pkg/api/client"
 )
 
 const logLevel = 2
@@ -290,6 +291,148 @@ func ServiceUpdateH(w http.ResponseWriter, r *http.Request) {
 		log.V(logLevel).Errorf("handler:service:update write response err: %s", err.Error())
 		return
 	}
+}
+
+func ServiceLogsH(w http.ResponseWriter, r *http.Request) {
+
+	nid := utils.Vars(r)["namespace"]
+	sid := utils.Vars(r)["service"]
+	did := r.URL.Query().Get("deployment")
+	pid := r.URL.Query().Get("pod")
+	cid := r.URL.Query().Get("container")
+	notify := w.(http.CloseNotifier).CloseNotify()
+	doneChan := make(chan bool, 1)
+
+	go func() {
+		<-notify
+		log.Debug("api:handler:service:logs HTTP connection just closed.")
+		doneChan <- true
+	}()
+
+	log.V(logLevel).Debugf("api:handler:service:logs get logs service `%s` in namespace `%s`", sid, nid)
+
+	var (
+		nsm = distribution.NewNamespaceModel(r.Context(), envs.Get().GetStorage())
+		sm  = distribution.NewServiceModel(r.Context(), envs.Get().GetStorage())
+		pm  = distribution.NewPodModel(r.Context(), envs.Get().GetStorage())
+		dm  = distribution.NewDeploymentModel(r.Context(), envs.Get().GetStorage())
+		nm  = distribution.NewNodeModel(r.Context(), envs.Get().GetStorage())
+	)
+
+	ns, err := nsm.Get(nid)
+	if err != nil {
+		log.V(logLevel).Errorf("api:handler:service:logs get namespace", err)
+		errors.HTTP.InternalServerError(w)
+		return
+	}
+	if ns == nil {
+		err := errors.New("namespace not found")
+		log.V(logLevel).Errorf("api:handler:service:logs get namespace", err)
+		errors.New("namespace").NotFound().Http(w)
+		return
+	}
+
+	svc, err := sm.Get(ns.Meta.Name, sid)
+	if err != nil {
+		log.V(logLevel).Errorf("api:handler:service:logs get service by name` err: %s", sid, err.Error())
+		errors.HTTP.InternalServerError(w)
+		return
+	}
+	if svc == nil {
+		log.V(logLevel).Warnf("api:handler:service:logs service name `%s` in namespace `%s` not found", sid, ns.Meta.Name)
+		errors.New("service").NotFound().Http(w)
+		return
+	}
+
+	deployment, err := dm.Get(ns.Meta.Name, svc.Meta.Name, did)
+	if err != nil {
+		log.V(logLevel).Errorf("api:handler:service:logs get deployment by name` err: %s", did, err.Error())
+		errors.HTTP.InternalServerError(w)
+		return
+	}
+	if deployment == nil {
+		log.V(logLevel).Warnf("api:handler:service:logs deployment `%s` not found", pid)
+		errors.New("service").NotFound().Http(w)
+		return
+	}
+
+	pod, err := pm.Get(ns.Meta.Name, did, pid, cid)
+	if err != nil {
+		log.V(logLevel).Errorf("api:handler:service:logs get pod by name` err: %s", sid, err.Error())
+		errors.HTTP.InternalServerError(w)
+		return
+	}
+	if svc == nil {
+		log.V(logLevel).Warnf("api:handler:service:logs pod `%s` not found", pid)
+		errors.New("service").NotFound().Http(w)
+		return
+	}
+
+	node, err := nm.Get(pod.Meta.Node)
+	if err != nil {
+		log.V(logLevel).Errorf("api:handler:service:logs get node by name err: %s", sid, err.Error())
+		errors.HTTP.InternalServerError(w)
+		return
+	}
+	if node == nil {
+		log.V(logLevel).Warnf("api:handler:service:logs node %s not found", sid, pod.Meta.Node)
+		errors.New("service").NotFound().Http(w)
+		return
+	}
+
+	httpcli, err := client.NewHTTP("http://"+node.Info.InternalIP, &client.Config{BearerToken: ""})
+	if err != nil {
+		log.V(logLevel).Errorf("api:handler:service:logs create http client err: %s", err.Error())
+		errors.HTTP.InternalServerError(w)
+		return
+	}
+
+	res, err := httpcli.V1().Cluster().Node().Logs(r.Context(), pid, cid, nil)
+	if err != nil {
+		log.V(logLevel).Errorf("api:handler:service:logs get pod logs err: %s", err.Error())
+		errors.HTTP.InternalServerError(w)
+		return
+	}
+
+	var buffer []byte
+
+	go func() {
+		for {
+			select {
+			case <-doneChan:
+				res.Close()
+				return
+			default:
+				n, err := res.Read(buffer)
+				if err != nil {
+					log.V(logLevel).Errorf("api:handler:service:logs read bytes from stream err: %s", err)
+					res.Close()
+					return
+				}
+
+				_, err = func(p []byte) (n int, err error) {
+					n, err = w.Write(p)
+					if err != nil {
+						log.V(logLevel).Errorf("api:handler:service:logs write bytes from stream err: %s", err)
+						return n, err
+					}
+					if f, ok := w.(http.Flusher); ok {
+						f.Flush()
+					}
+					return n, nil
+				}(buffer[0:n])
+				if err != nil {
+					log.V(logLevel).Errorf("api:handler:service:logs written to stream err: %s", err)
+					return
+				}
+
+				for i := 0; i < n; i++ {
+					buffer[i] = 0
+				}
+			}
+		}
+	}()
+
 }
 
 func ServiceRemoveH(w http.ResponseWriter, r *http.Request) {

@@ -28,6 +28,9 @@ import (
 	rv1 "github.com/lastbackend/lastbackend/pkg/api/types/v1/request"
 	vv1 "github.com/lastbackend/lastbackend/pkg/api/types/v1/views"
 	"github.com/lastbackend/lastbackend/pkg/distribution/errors"
+	"strconv"
+	"net/url"
+	"io"
 )
 
 type NodeClient struct {
@@ -266,7 +269,21 @@ func (s *NodeClient) SetRouteStatus(ctx context.Context, route string, opts *rv1
 
 func (s *NodeClient) Remove(ctx context.Context, opts *rv1.NodeRemoveOptions) error {
 
-	req := s.client.Delete(fmt.Sprintf("/cluster/node/%s", s.hostname)).
+	v := url.Values{}
+
+	if opts != nil {
+		if opts.Force {
+			v.Set("force", strconv.FormatBool(opts.Force))
+		}
+	}
+
+	qs := v.Encode()
+
+	if len(qs) != 0 {
+		qs = "?" + qs
+	}
+
+	req := s.client.Delete(fmt.Sprintf("/cluster/node/%s%s", s.hostname, qs)).
 		AddHeader("Content-Type", "application/json").
 		Do()
 
@@ -284,6 +301,27 @@ func (s *NodeClient) Remove(ctx context.Context, opts *rv1.NodeRemoveOptions) er
 	}
 
 	return nil
+}
+
+func (s *NodeClient) Logs(ctx context.Context, pod, container string, opts *rv1.NodeLogsOptions) (io.ReadCloser, error) {
+
+	v := url.Values{}
+
+	if opts != nil {
+		if opts.Follow {
+			v.Set("follow", strconv.FormatBool(opts.Follow))
+		}
+
+	}
+	qs := v.Encode()
+
+	if len(qs) != 0 {
+		qs = "?" + qs
+	}
+
+	return s.client.Get(fmt.Sprintf("/pod/%s/%s/logs%s", pod, container, qs)).
+		AddHeader("Content-Type", "application/json").
+		Stream()
 }
 
 func newNodeClient(req http.Interface, hostname string) *NodeClient {

@@ -27,6 +27,8 @@ import (
 	rv1 "github.com/lastbackend/lastbackend/pkg/api/types/v1/request"
 	vv1 "github.com/lastbackend/lastbackend/pkg/api/types/v1/views"
 	"github.com/lastbackend/lastbackend/pkg/distribution/errors"
+	"strconv"
+	"net/url"
 )
 
 type NamespaceClient struct {
@@ -206,7 +208,21 @@ func (s *NamespaceClient) Update(ctx context.Context, opts *rv1.NamespaceUpdateO
 
 func (s *NamespaceClient) Remove(ctx context.Context, opts *rv1.NamespaceRemoveOptions) error {
 
-	req := s.client.Delete(fmt.Sprintf("/namespace/%s", s.name)).
+	v := url.Values{}
+
+	if opts != nil {
+		if opts.Force {
+			v.Set("force", strconv.FormatBool(opts.Force))
+		}
+	}
+
+	qs := v.Encode()
+
+	if len(qs) != 0 {
+		qs = "?" + qs
+	}
+
+	req := s.client.Delete(fmt.Sprintf("/namespace/%s%s", s.name, qs)).
 		AddHeader("Content-Type", "application/json").
 		Do()
 

@@ -66,3 +66,7 @@ type NodeRouteStatusOptions struct {
 type NodeRemoveOptions struct {
 	Force bool `json:"force"`
 }
+
+type NodeLogsOptions struct {
+	Follow bool `json:"follow"`
+}

@@ -47,3 +47,10 @@ type ServiceOptionsSpecPort struct {
 	Internal int    `json:"internal"`
 	Protocol string `json:"protocol"`
 }
+
+type ServiceLogsOptions struct {
+	Deployment string `json:"deployment"`
+	Pod        string `json:"pod"`
+	Container  string `json:"container"`
+	Follow     bool   `json:"follow"`
+}

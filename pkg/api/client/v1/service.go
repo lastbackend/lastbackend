@@ -28,6 +28,9 @@ import (
 	rv1 "github.com/lastbackend/lastbackend/pkg/api/types/v1/request"
 	vv1 "github.com/lastbackend/lastbackend/pkg/api/types/v1/views"
 	"github.com/lastbackend/lastbackend/pkg/distribution/errors"
+	"io"
+	"net/url"
+	"strconv"
 )
 
 type ServiceClient struct {
@@ -180,7 +183,21 @@ func (s *ServiceClient) Update(ctx context.Context, opts *rv1.ServiceUpdateOptio
 
 func (s *ServiceClient) Remove(ctx context.Context, opts *rv1.ServiceRemoveOptions) error {
 
-	req := s.client.Delete(fmt.Sprintf("/namespace/%s/service/%s", s.namespace, s.name)).
+	v := url.Values{}
+
+	if opts != nil {
+		if opts.Force {
+			v.Set("force", strconv.FormatBool(opts.Force))
+		}
+	}
+
+	qs := v.Encode()
+
+	if len(qs) != 0 {
+		qs = "?" + qs
+	}
+
+	req := s.client.Delete(fmt.Sprintf("/namespace/%s/service/%s%s", s.namespace, s.name, qs)).
 		AddHeader("Content-Type", "application/json").
 		Do()
 
@@ -198,6 +215,31 @@ func (s *ServiceClient) Remove(ctx context.Context, opts *rv1.ServiceRemoveOptio
 	}
 
 	return nil
+}
+
+func (s *ServiceClient) Logs(ctx context.Context, opts *rv1.ServiceLogsOptions) (io.ReadCloser, error) {
+
+	v := url.Values{}
+
+	if opts != nil {
+		v.Set("deployment", opts.Deployment)
+		v.Set("pod", opts.Pod)
+		v.Set("container", opts.Container)
+
+		if opts.Follow {
+			v.Set("follow", strconv.FormatBool(opts.Follow))
+		}
+	}
+
+	qs := v.Encode()
+
+	if len(qs) != 0 {
+		qs = "?" + qs
+	}
+
+	return s.client.Get(fmt.Sprintf("/namespace/%s/service/%s/logs%s", s.namespace, s.name, qs)).
+		AddHeader("Content-Type", "application/json").
+		Stream()
 }
 
 func newServiceClient(client http.Interface, namespace, name string) *ServiceClient {

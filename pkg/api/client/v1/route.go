@@ -28,6 +28,8 @@ import (
 	rv1 "github.com/lastbackend/lastbackend/pkg/api/types/v1/request"
 	vv1 "github.com/lastbackend/lastbackend/pkg/api/types/v1/views"
 	"github.com/lastbackend/lastbackend/pkg/distribution/errors"
+	"strconv"
+	"net/url"
 )
 
 type RouteClient struct {
@@ -164,7 +166,21 @@ func (s *RouteClient) Update(ctx context.Context, opts *rv1.RouteUpdateOptions) 
 
 func (s *RouteClient) Remove(ctx context.Context, opts *rv1.RouteRemoveOptions) error {
 
-	req := s.client.Delete(fmt.Sprintf("/namespace/%s/route/%s", s.namespace, s.name)).
+	v := url.Values{}
+
+	if opts != nil {
+		if opts.Force {
+			v.Set("force", strconv.FormatBool(opts.Force))
+		}
+	}
+
+	qs := v.Encode()
+
+	if len(qs) != 0 {
+		qs = "?" + qs
+	}
+
+	req := s.client.Delete(fmt.Sprintf("/namespace/%s/route/%s%s", s.namespace, s.name, qs)).
 		AddHeader("Content-Type", "application/json").
 		Do()
 

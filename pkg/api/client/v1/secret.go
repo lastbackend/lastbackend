@@ -28,6 +28,8 @@ import (
 	rv1 "github.com/lastbackend/lastbackend/pkg/api/types/v1/request"
 	vv1 "github.com/lastbackend/lastbackend/pkg/api/types/v1/views"
 	"github.com/lastbackend/lastbackend/pkg/distribution/errors"
+	"net/url"
+	"strconv"
 )
 
 type SecretClient struct {
@@ -136,7 +138,21 @@ func (s *SecretClient) Update(ctx context.Context, opts *rv1.SecretUpdateOptions
 
 func (s *SecretClient) Remove(ctx context.Context, opts *rv1.SecretRemoveOptions) error {
 
-	req := s.client.Delete(fmt.Sprintf("/namespace/%s/secret/%s", s.namespace, s.name)).
+	v := url.Values{}
+
+	if opts != nil {
+		if opts.Force {
+			v.Set("force", strconv.FormatBool(opts.Force))
+		}
+	}
+
+	qs := v.Encode()
+
+	if len(qs) != 0 {
+		qs = "?" + qs
+	}
+
+	req := s.client.Delete(fmt.Sprintf("/namespace/%s/secret/%s%s", s.namespace, s.name, qs)).
 		AddHeader("Content-Type", "application/json").
 		Do()
 
