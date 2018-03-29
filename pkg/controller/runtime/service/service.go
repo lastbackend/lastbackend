@@ -110,9 +110,9 @@ func Provision(svc *types.Service) error {
 func HandleStatus(svc *types.Service) error {
 
 	var (
-		stg     = envs.Get().GetStorage()
-		msg     = "controller:deployment:service:status:"
-		status  = make(map[string]int)
+		stg    = envs.Get().GetStorage()
+		msg    = "controller:deployment:service:status:"
+		status = make(map[string]int)
 	)
 
 	if svc == nil {
@@ -139,8 +139,8 @@ func HandleStatus(svc *types.Service) error {
 
 	for _, di := range dl {
 		switch di.Status.State {
-		case types.StateDestroyed :
-			status[types.StateDestroyed]+=1
+		case types.StateDestroyed:
+			status[types.StateDestroyed] += 1
 			break
 		}
 	}

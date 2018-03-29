@@ -100,7 +100,7 @@ func (r *Runtime) Connect(ctx context.Context) error {
 		return err
 	}
 
-	go func (ctx context.Context) {
+	go func(ctx context.Context) {
 		ticker := time.NewTicker(time.Second * 10)
 		for _ = range ticker.C {
 			if err := events.NewStatusEvent(ctx); err != nil {
@@ -150,7 +150,7 @@ func (r *Runtime) Loop() {
 		}
 	}(r.ctx)
 
-	go func (ctx context.Context) {
+	go func(ctx context.Context) {
 		ticker := time.NewTicker(time.Second * 10)
 		for _ = range ticker.C {
 			err := r.GetSpec(r.ctx)
@@ -165,8 +165,6 @@ func (r *Runtime) Loop() {
 		log.Debugf("node:runtime:loop:> new spec request err: %s", err.Error())
 	}
 }
-
-
 
 func NewRuntime(ctx context.Context) *Runtime {
 	r := Runtime{

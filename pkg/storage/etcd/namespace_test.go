@@ -73,19 +73,23 @@ func TestNamespaceStorage_Get(t *testing.T) {
 		},
 	}
 
-	for _, tt := range tests {
-
+	clear := func() {
 		if err := stg.Clear(ctx); err != nil {
 			t.Errorf("NamespaceStorage.Get() storage setup error = %v", err)
 			return
 		}
+	}
 
-		if err := stg.Insert(ctx, &n); err != nil {
-			t.Errorf("NamespaceStorage.Get() storage setup error = %v", err)
-			return
-		}
-
+	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+
+			clear()
+			defer clear()
+
+			if err := stg.Insert(ctx, &n); err != nil {
+				t.Errorf("NamespaceStorage.Get() storage setup error = %v", err)
+				return
+			}
 
 			got, err := tt.fields.stg.Get(tt.args.ctx, tt.args.name)
 
@@ -149,21 +153,26 @@ func TestNamespaceStorage_List(t *testing.T) {
 		},
 	}
 
-	for _, tt := range tests {
-
+	clear := func() {
 		if err := stg.Clear(ctx); err != nil {
 			t.Errorf("NamespaceStorage.List() storage setup error = %v", err)
 			return
 		}
+	}
 
-		for _, n := range nl {
-			if err := stg.Insert(ctx, n); err != nil {
-				t.Errorf("NamespaceStorage.List() storage setup error = %v", err)
-				return
-			}
-		}
-
+	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+
+			clear()
+			defer clear()
+
+			for _, n := range nl {
+				if err := stg.Insert(ctx, n); err != nil {
+					t.Errorf("NamespaceStorage.List() storage setup error = %v", err)
+					return
+				}
+			}
+
 			got, err := stg.List(tt.args.ctx)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("NamespaceStorage.List() error = %v, wantErr %v", err, tt.wantErr)
@@ -230,14 +239,19 @@ func TestNamespaceStorage_Insert(t *testing.T) {
 		},
 	}
 
-	for _, tt := range tests {
-
+	clear := func() {
 		if err := stg.Clear(ctx); err != nil {
 			t.Errorf("NamespaceStorage.Insert() storage setup error = %v", err)
 			return
 		}
+	}
 
+	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+
+			clear()
+			defer clear()
+
 			err := tt.fields.stg.Insert(tt.args.ctx, tt.args.namespace)
 			if err != nil {
 				if !tt.wantErr {
@@ -316,19 +330,24 @@ func TestNamespaceStorage_Update(t *testing.T) {
 		},
 	}
 
-	for _, tt := range tests {
-
+	clear := func() {
 		if err := stg.Clear(ctx); err != nil {
 			t.Errorf("NamespaceStorage.Update() storage setup error = %v", err)
 			return
 		}
+	}
 
-		if err := stg.Insert(ctx, &n1); err != nil {
-			t.Errorf("NamespaceStorage.Update() storage setup error = %v", err)
-			return
-		}
-
+	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+
+			clear()
+			defer clear()
+
+			if err := stg.Insert(ctx, &n1); err != nil {
+				t.Errorf("NamespaceStorage.Update() storage setup error = %v", err)
+				return
+			}
+
 			err := tt.fields.stg.Update(tt.args.ctx, tt.args.namespace)
 			if err != nil {
 				if !tt.wantErr {
@@ -418,19 +437,24 @@ func TestNamespaceStorage_Remove(t *testing.T) {
 		},
 	}
 
-	for _, tt := range tests {
-
+	clear := func() {
 		if err := stg.Clear(ctx); err != nil {
 			t.Errorf("NamespaceStorage.Remove() storage setup error = %v", err)
 			return
 		}
+	}
 
-		if err := stg.Insert(ctx, &n1); err != nil {
-			t.Errorf("NamespaceStorage.Remove() storage setup error = %v", err)
-			return
-		}
-
+	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+
+			clear()
+			defer clear()
+
+			if err := stg.Insert(ctx, &n1); err != nil {
+				t.Errorf("NamespaceStorage.Remove() storage setup error = %v", err)
+				return
+			}
+
 			err := tt.fields.stg.Remove(tt.args.ctx, tt.args.namespace)
 			if err != nil {
 				if !tt.wantErr {

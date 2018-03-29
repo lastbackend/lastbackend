@@ -216,6 +216,7 @@ func (cv *ContainerView) FromImageSpec(spec ContainerImageSpec) types.ImageSpec 
 }
 
 func (cv *ContainerView) NewPodContainer(c *types.PodContainer) PodContainer {
+
 	container := PodContainer{
 		ID:      c.ID,
 		Pod:     c.Pod,

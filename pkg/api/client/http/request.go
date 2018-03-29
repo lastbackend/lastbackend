@@ -138,6 +138,55 @@ func (r Result) Error() error {
 	return r.err
 }
 
+func (r *Request) Stream() (io.ReadCloser, error) {
+	if r.err != nil {
+		return nil, r.err
+	}
+
+	u := r.URL().String()
+
+	req, err := http.NewRequest(r.verb, u, nil)
+	if err != nil {
+		return nil, err
+	}
+	if r.ctx != nil {
+		req = req.WithContext(r.ctx)
+	}
+	//req.Header = r.headers
+	client := r.client
+	if client == nil {
+		client = http.DefaultClient
+	}
+
+	res, err := client.Do(req)
+	if err != nil {
+		return nil, err
+	}
+
+	switch {
+	case (res.StatusCode >= 200) && (res.StatusCode < 400):
+		return res.Body, nil
+
+	default:
+		defer res.Body.Close()
+
+		result := r.transformResponse(res, req)
+		err := result.Error()
+		if err == nil {
+			err = fmt.Errorf("%d while accessing %v: %s", result.statusCode, u, string(result.body))
+		}
+		return nil, err
+	}
+}
+
+func (r *Request) Param(name, value string) *Request {
+	if r.params == nil {
+		r.params = make(url.Values)
+	}
+	r.params[name] = append(r.params[name], value)
+	return r
+}
+
 func (r *Request) transformResponse(resp *http.Response, req *http.Request) Result {
 	var body []byte
 
@@ -183,5 +232,6 @@ func (r *Request) URL() *url.URL {
 	}
 
 	finalURL.RawQuery = query.Encode()
+
 	return finalURL
 }

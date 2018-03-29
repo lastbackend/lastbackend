@@ -27,8 +27,8 @@ import (
 
 type Controller struct {
 	status chan *types.Deployment
-	spec chan *types.Deployment
-	active     bool
+	spec   chan *types.Deployment
+	active bool
 }
 
 // Watch deployment spec changes
@@ -71,7 +71,7 @@ func (dc *Controller) WatchStatus() {
 
 	var (
 		stg = envs.Get().GetStorage()
-		msg     = "controller:deployment:status:"
+		msg = "controller:deployment:status:"
 	)
 
 	log.Debugf("%s> start watch deployment status", msg)
@@ -145,6 +145,6 @@ func NewDeploymentController(_ context.Context) *Controller {
 	sc := new(Controller)
 	sc.active = false
 	sc.status = make(chan *types.Deployment)
-	sc.spec   = make(chan *types.Deployment)
+	sc.spec = make(chan *types.Deployment)
 	return sc
 }

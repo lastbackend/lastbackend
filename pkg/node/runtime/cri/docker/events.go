@@ -91,7 +91,7 @@ func (r *Runtime) Subscribe(ctx context.Context, state *state.PodState, p chan s
 					}
 					container.State = types.PodContainerState{
 						Started: types.PodContainerStateStarted{
-							Started: true,
+							Started:   true,
 							Timestamp: time.Now().UTC(),
 						},
 					}
@@ -131,9 +131,6 @@ func (r *Runtime) Subscribe(ctx context.Context, state *state.PodState, p chan s
 				}
 
 				state.SetContainer(container)
-
-
-
 
 				p <- container.Pod
 

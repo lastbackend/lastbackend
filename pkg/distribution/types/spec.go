@@ -56,6 +56,8 @@ type SpecTemplateVolumeMounts struct {
 type SpecTemplateContainers []SpecTemplateContainer
 
 type SpecTemplateContainer struct {
+	// Template container id
+	ID string `json:"id"`
 	// Template container name
 	Name string `json:"name"`
 	// Template container role

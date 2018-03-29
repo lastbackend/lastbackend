@@ -75,19 +75,24 @@ func TestDeploymentStorage_Get(t *testing.T) {
 		},
 	}
 
-	for _, tt := range tests {
-
+	clear := func() {
 		if err := stg.Clear(ctx); err != nil {
 			t.Errorf("DeploymentStorage.Get() storage setup error = %v", err)
 			return
 		}
+	}
 
-		if err := stg.Insert(ctx, &d); err != nil {
-			t.Errorf("DeploymentStorage.Get() storage setup error = %v", err)
-			return
-		}
+	for _, tt := range tests {
 
 		t.Run(tt.name, func(t *testing.T) {
+
+			clear()
+			defer clear()
+
+			if err := stg.Insert(ctx, &d); err != nil {
+				t.Errorf("DeploymentStorage.Get() storage setup error = %v", err)
+				return
+			}
 
 			got, err := tt.fields.stg.Get(tt.args.ctx, ns1, svc, tt.args.name)
 
@@ -179,21 +184,27 @@ func TestDeploymentStorage_ListByNamespace(t *testing.T) {
 		},
 	}
 
-	for _, tt := range tests {
-
+	clear := func() {
 		if err := stg.Clear(ctx); err != nil {
 			t.Errorf("DeploymentStorage.Get() storage setup error = %v", err)
 			return
 		}
+	}
 
-		for _, n := range nl0 {
-			if err := stg.Insert(ctx, n); err != nil {
-				t.Errorf("DeploymentStorage.List() storage setup error = %v", err)
-				return
-			}
-		}
+	for _, tt := range tests {
 
 		t.Run(tt.name, func(t *testing.T) {
+
+			clear()
+			defer clear()
+
+			for _, n := range nl0 {
+				if err := stg.Insert(ctx, n); err != nil {
+					t.Errorf("DeploymentStorage.List() storage setup error = %v", err)
+					return
+				}
+			}
+
 			got, err := stg.ListByNamespace(tt.args.ctx, tt.args.ns)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("DeploymentStorage.List() error = %v, wantErr %v", err, tt.wantErr)
@@ -291,21 +302,27 @@ func TestDeploymentStorage_ListByService(t *testing.T) {
 		},
 	}
 
-	for _, tt := range tests {
-
+	clear := func() {
 		if err := stg.Clear(ctx); err != nil {
 			t.Errorf("DeploymentStorage.ListByService() storage setup error = %v", err)
 			return
 		}
+	}
 
-		for _, n := range nl0 {
-			if err := stg.Insert(ctx, n); err != nil {
-				t.Errorf("DeploymentStorage.ListByService() storage setup error = %v", err)
-				return
-			}
-		}
+	for _, tt := range tests {
 
 		t.Run(tt.name, func(t *testing.T) {
+
+			clear()
+			defer clear()
+
+			for _, n := range nl0 {
+				if err := stg.Insert(ctx, n); err != nil {
+					t.Errorf("DeploymentStorage.ListByService() storage setup error = %v", err)
+					return
+				}
+			}
+
 			got, err := stg.ListByService(tt.args.ctx, tt.args.ns, tt.args.svc)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("DeploymentStorage.ListByService() error = %v, wantErr %v", err, tt.wantErr)
@@ -380,21 +397,27 @@ func TestDeploymentStorage_SetStatus(t *testing.T) {
 		},
 	}
 
-	for _, tt := range tests {
-
+	clear := func() {
 		if err := stg.Clear(ctx); err != nil {
 			t.Errorf("DeploymentStorage.SetStatus() storage setup error = %v", err)
 			return
 		}
+	}
 
-		for _, n := range nl0 {
-			if err := stg.Insert(ctx, n); err != nil {
-				t.Errorf("DeploymentStorage.SetStatus() storage setup error = %v", err)
-				return
-			}
-		}
+	for _, tt := range tests {
 
 		t.Run(tt.name, func(t *testing.T) {
+
+			clear()
+			defer clear()
+
+			for _, n := range nl0 {
+				if err := stg.Insert(ctx, n); err != nil {
+					t.Errorf("DeploymentStorage.SetStatus() storage setup error = %v", err)
+					return
+				}
+			}
+
 			err := tt.fields.stg.SetStatus(tt.args.ctx, tt.args.deployment)
 			if err != nil {
 				if !tt.wantErr {
@@ -484,14 +507,20 @@ func TestDeploymentStorage_Insert(t *testing.T) {
 		},
 	}
 
-	for _, tt := range tests {
-
+	clear := func() {
 		if err := stg.Clear(ctx); err != nil {
 			t.Errorf("DeploymentStorage.Insert() storage setup error = %v", err)
 			return
 		}
+	}
+
+	for _, tt := range tests {
 
 		t.Run(tt.name, func(t *testing.T) {
+
+			clear()
+			defer clear()
+
 			err := tt.fields.stg.Insert(tt.args.ctx, tt.args.deployment)
 			if err != nil {
 				if !tt.wantErr {
@@ -575,21 +604,27 @@ func TestDeploymentStorage_Update(t *testing.T) {
 		},
 	}
 
-	for _, tt := range tests {
-
+	clear := func() {
 		if err := stg.Clear(ctx); err != nil {
 			t.Errorf("DeploymentStorage.Update() storage setup error = %v", err)
 			return
 		}
+	}
 
-		for _, n := range nl0 {
-			if err := stg.Insert(ctx, n); err != nil {
-				t.Errorf("DeploymentStorage.Update() storage setup error = %v", err)
-				return
-			}
-		}
+	for _, tt := range tests {
 
 		t.Run(tt.name, func(t *testing.T) {
+
+			clear()
+			defer clear()
+
+			for _, n := range nl0 {
+				if err := stg.Insert(ctx, n); err != nil {
+					t.Errorf("DeploymentStorage.Update() storage setup error = %v", err)
+					return
+				}
+			}
+
 			err := tt.fields.stg.Update(tt.args.ctx, tt.args.deployment)
 			if err != nil {
 				if !tt.wantErr {
@@ -677,19 +712,25 @@ func TestDeploymentStorage_Remove(t *testing.T) {
 		},
 	}
 
-	for _, tt := range tests {
-
+	clear := func() {
 		if err := stg.Clear(ctx); err != nil {
 			t.Errorf("DeploymentStorage.Remove() storage setup error = %v", err)
 			return
 		}
+	}
 
-		if err := stg.Insert(ctx, &n1); err != nil {
-			t.Errorf("DeploymentStorage.Remove() storage setup error = %v", err)
-			return
-		}
+	for _, tt := range tests {
 
 		t.Run(tt.name, func(t *testing.T) {
+
+			clear()
+			defer clear()
+
+			if err := stg.Insert(ctx, &n1); err != nil {
+				t.Errorf("DeploymentStorage.Remove() storage setup error = %v", err)
+				return
+			}
+
 			err := tt.fields.stg.Remove(tt.args.ctx, tt.args.deployment)
 			if err != nil {
 				if !tt.wantErr {
@@ -749,14 +790,20 @@ func TestDeploymentStorage_Watch(t *testing.T) {
 			false,
 		},
 	}
-	for _, tt := range tests {
 
+	clear := func() {
 		if err := stg.Clear(ctx); err != nil {
 			t.Errorf("DeploymentStorage.Watch() storage setup error = %v", err)
 			return
 		}
+	}
+
+	for _, tt := range tests {
 
 		t.Run(tt.name, func(t *testing.T) {
+
+			clear()
+			defer clear()
 
 		})
 	}
@@ -791,15 +838,18 @@ func TestDeploymentStorage_WatchSpec(t *testing.T) {
 			false,
 		},
 	}
-	for _, tt := range tests {
 
+	clear:= func() {
 		if err := stg.Clear(ctx); err != nil {
 			t.Errorf("DeploymentStorage.WatchSpec() storage setup error = %v", err)
 			return
 		}
+	}
 
+	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-
+			clear()
+			defer clear()
 		})
 	}
 }
@@ -816,6 +866,7 @@ func Test_newDeploymentStorage(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+
 			if got := newDeploymentStorage(); !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("newDeploymentStorage() = %v, want %v", got, tt.want)
 			}

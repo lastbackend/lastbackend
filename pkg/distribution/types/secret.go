@@ -33,7 +33,7 @@ type SecretList []*Secret
 type SecretMap map[string]*Secret
 
 type SecretMeta struct {
-	Meta             `yaml:",inline"`
+	Meta      `yaml:",inline"`
 	Namespace string `json:"namespace" yaml:"namespace"`
 }
 

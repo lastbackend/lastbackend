@@ -25,5 +25,5 @@ import (
 
 var Routes = []http.Route{
 	{Path: "/pod/{pod}", Method: http.MethodGet, Middleware: []http.Middleware{middleware.Authenticate}, Handler: PodGetH},
-	{Path: "/pod/{pod}/logs", Method: http.MethodGet, Middleware: []http.Middleware{middleware.Authenticate}, Handler: PodLogsH},
+	{Path: "/pod/{pod}/{container}/logs", Method: http.MethodGet, Middleware: []http.Middleware{middleware.Authenticate}, Handler: PodLogsH},
 }

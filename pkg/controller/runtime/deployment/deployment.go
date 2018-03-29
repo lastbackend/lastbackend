@@ -119,7 +119,7 @@ func Provision(d *types.Deployment) error {
 				break
 			}
 
-			if p.Status.State == types.StateError {
+			if p.Status.Stage == types.StateError {
 				if err := pm.Destroy(context.Background(), p); err != nil {
 					log.Errorf("controller:service:controller:provision: remove pod err: %s", err.Error())
 					continue
@@ -137,7 +137,7 @@ func Provision(d *types.Deployment) error {
 				break
 			}
 
-			if p.Status.State == types.StateProvision {
+			if p.Status.Stage == types.StateProvision {
 				if err := pm.Destroy(context.Background(), p); err != nil {
 					log.Errorf("controller:service:controller:provision: remove pod err: %s", err.Error())
 					continue
@@ -180,9 +180,9 @@ func Provision(d *types.Deployment) error {
 func HandleStatus(d *types.Deployment) error {
 
 	var (
-		stg     = envs.Get().GetStorage()
-		msg     = "controller:deployment:controller:status:"
-		status  = make(map[string]int)
+		stg    = envs.Get().GetStorage()
+		msg    = "controller:deployment:controller:status:"
+		status = make(map[string]int)
 	)
 
 	dm := distribution.NewDeploymentModel(context.Background(), stg)
@@ -194,7 +194,7 @@ func HandleStatus(d *types.Deployment) error {
 		return nil
 	}
 
-	svc, err  := sm.Get(d.Meta.Namespace, d.Meta.Service)
+	svc, err := sm.Get(d.Meta.Namespace, d.Meta.Service)
 	if err != nil {
 		log.Errorf("%s> get service err: %s", msg, err.Error())
 		return err
@@ -210,7 +210,6 @@ func HandleStatus(d *types.Deployment) error {
 		return nil
 	}
 
-
 	dl, err := dm.ListByService(svc.Meta.Namespace, svc.Meta.Name)
 	if err != nil {
 		log.Errorf("%s> get deployment list err: %s", msg, err.Error())
@@ -219,17 +218,17 @@ func HandleStatus(d *types.Deployment) error {
 
 	for _, di := range dl {
 		switch di.Status.State {
-		case types.StateProvision :
-			status[types.StateProvision]+=1
+		case types.StateProvision:
+			status[types.StateProvision] += 1
 			break
-		case types.StateRunning :
-			status[types.StateRunning]+=1
+		case types.StateRunning:
+			status[types.StateRunning] += 1
 			break
-		case types.StateStopped :
-			status[types.StateStopped]+=1
+		case types.StateStopped:
+			status[types.StateStopped] += 1
 			break
-		case types.StateDestroyed :
-			status[types.StateDestroyed]+=1
+		case types.StateDestroyed:
+			status[types.StateDestroyed] += 1
 			break
 		}
 	}
@@ -246,7 +245,7 @@ func HandleStatus(d *types.Deployment) error {
 		svc.Status.Message = types.EmptyString
 		break
 	case curr && d.Status.State == types.StateError:
-		if (status[types.StateRunning] + status[types.StateStopped]) == 0{
+		if (status[types.StateRunning] + status[types.StateStopped]) == 0 {
 			svc.Status.State = types.StateError
 			svc.Status.Message = d.Status.Message
 			break
@@ -295,7 +294,6 @@ func HandleStatus(d *types.Deployment) error {
 		log.Errorf("%s> set deployment status err: %s", msg, err.Error())
 		return err
 	}
-
 
 	return nil
 }

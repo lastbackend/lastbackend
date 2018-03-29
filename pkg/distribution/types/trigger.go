@@ -36,7 +36,7 @@ type TriggerMeta struct {
 }
 
 type TriggerStatus struct {
-	Stage   string `json:"stage"`
+	State   string `json:"state"`
 	Message string `json:"message"`
 }
 

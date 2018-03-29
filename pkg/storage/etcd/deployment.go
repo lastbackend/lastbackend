@@ -232,7 +232,7 @@ func (s *DeploymentStorage) Insert(ctx context.Context, deployment *types.Deploy
 	}
 
 	keyStatus := keyCreate(deploymentStorage, s.keyGet(deployment), "status")
-	if err := tx.Create(keyStatus, deployment.Spec, 0); err != nil {
+	if err := tx.Create(keyStatus, deployment.Status, 0); err != nil {
 		log.V(logLevel).Errorf("storage:etcd:deployment:> insert deployment err: %s", err.Error())
 		return err
 	}

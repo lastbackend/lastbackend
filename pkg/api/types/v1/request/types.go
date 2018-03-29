@@ -24,6 +24,39 @@ const (
 	DEFAULT_DESCRIPTION_LIMIT = 512
 )
 
+const (
+	StateProvision   = "provision"
+	StateInitialized = "initialized"
+	StateWarning     = "warning"
+	StateReady       = "ready"
+)
+
+const (
+	StatePull    = "pull"
+	StateDestroy = "destroy"
+	StateCancel  = "cancel"
+)
+
+const (
+	StateCreated   = "created"
+	StateStarting  = "starting"
+	StateStarted   = "started"
+	StateStopped   = "stopped"
+	StateDestroyed = "destroyed"
+)
+
+const (
+	StateExited  = "exited"
+	StateRunning = "running"
+	StateError   = "error"
+)
+
+const (
+	StepInitialized = "initialized"
+	StepPull        = "pull"
+	StepReady       = "ready"
+)
+
 type IRequest interface {
 	Cluster() *ClusterRequest
 	Deployment() *DeploymentRequest

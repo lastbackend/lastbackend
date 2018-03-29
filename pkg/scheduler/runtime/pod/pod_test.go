@@ -219,13 +219,13 @@ func TestProvision(t *testing.T) {
 						return
 					}
 
-					if !(got.Status.State == types.StateError) {
-						t.Errorf("Provision() = %v, want error is true", got.Status.State)
+					if !(got.Status.Stage == types.StateError) {
+						t.Errorf("Provision() = %v, want error is true", got.Status.Stage)
 						return
 					}
 
-					if got.Status.State != types.StateError {
-						t.Errorf("Provision() = %v, want stage %s", got.Status.State, types.StateError)
+					if got.Status.Stage != types.StateError {
+						t.Errorf("Provision() = %v, want state %s", got.Status.Stage, types.StateError)
 						return
 					}
 

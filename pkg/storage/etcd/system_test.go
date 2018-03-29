@@ -56,14 +56,21 @@ func TestSystemStorage_ProcessSet(t *testing.T) {
 			false,
 		},
 	}
-	for _, tt := range tests {
 
+	clear := func() {
 		if err := stg.Clear(ctx); err != nil {
 			t.Errorf("SystemStorage.ProcessSet() storage setup error = %v", err)
 			return
 		}
+	}
+
+	for _, tt := range tests {
 
 		t.Run(tt.name, func(t *testing.T) {
+
+			clear()
+			defer clear()
+
 			if err := stg.ProcessSet(tt.args.ctx, tt.args.process); (err != nil) != tt.wantErr {
 				t.Errorf("SystemStorage.ProcessSet() error = %v, wantErr %v", err, tt.wantErr)
 			}
@@ -100,14 +107,21 @@ func TestSystemStorage_Elect(t *testing.T) {
 			false,
 		},
 	}
-	for _, tt := range tests {
 
+	clear := func() {
 		if err := stg.Clear(ctx); err != nil {
 			t.Errorf("SystemStorage.Elect() storage setup error = %v", err)
 			return
 		}
+	}
+
+	for _, tt := range tests {
 
 		t.Run(tt.name, func(t *testing.T) {
+
+			clear()
+			defer clear()
+
 			if b, err := stg.Elect(tt.args.ctx, tt.args.process); !b || (err != nil) != tt.wantErr {
 				t.Errorf("SystemStorage.Elect() error = %v, wantErr %v", err, tt.wantErr)
 			}
@@ -146,19 +160,26 @@ func TestSystemStorage_ElectUpdate(t *testing.T) {
 			false,
 		},
 	}
-	for _, tt := range tests {
 
+	clear := func() {
 		if err := stg.Clear(ctx); err != nil {
 			t.Errorf("SystemStorage.ElectUpdate() storage setup error = %v", err)
 			return
 		}
+	}
 
-		if _, err := stg.Elect(ctx, tt.args.process); err != nil {
-			t.Errorf("SystemStorage.ElectUpdate() set storage err = %v", err)
-			return
-		}
+	for _, tt := range tests {
 
 		t.Run(tt.name, func(t *testing.T) {
+
+			clear()
+			defer clear()
+
+			if _, err := stg.Elect(ctx, tt.args.process); err != nil {
+				t.Errorf("SystemStorage.ElectUpdate() set storage err = %v", err)
+				return
+			}
+
 			if err := stg.ElectUpdate(tt.args.ctx, tt.args.process); (err != nil) != tt.wantErr {
 				t.Errorf("SystemStorage.ElectUpdate() error = %v, wantErr %v", err, tt.wantErr)
 			}
@@ -196,15 +217,18 @@ func TestSystemStorage_ElectWait(t *testing.T) {
 			false,
 		},
 	}
-	for _, tt := range tests {
 
+	clear := func() {
 		if err := stg.Clear(ctx); err != nil {
 			t.Errorf("SystemStorage.ElectUpdate() storage setup error = %v", err)
 			return
 		}
+	}
 
+	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-
+			clear()
+			defer clear()
 		})
 	}
 }

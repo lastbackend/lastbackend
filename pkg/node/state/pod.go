@@ -19,9 +19,9 @@
 package state
 
 import (
+	"errors"
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 	"github.com/lastbackend/lastbackend/pkg/log"
-	"errors"
 )
 
 func (s *PodState) GetPodsCount() int {
@@ -140,30 +140,33 @@ func (s *PodState) DelContainer(c *types.PodContainer) {
 	}
 
 	s.lock.Lock()
-	delete (pod.Containers, c.ID)
+	delete(pod.Containers, c.ID)
 	state(pod)
 	s.lock.Unlock()
 
 	log.Debugf("%#v", s.GetPod(c.Pod))
 }
 
-
 func state(s *types.PodStatus) {
 
 	var sts = make(map[string]int)
 	var ems string
 
-
-	switch s.State {
-	case types.StateDestroyed: return
-	case types.StateError: return
-	case types.StateProvision: return
-	case types.StateCreated: return
-	case types.StatePull: return
+	switch s.Stage {
+	case types.StateDestroyed:
+		return
+	case types.StateError:
+		return
+	case types.StateProvision:
+		return
+	case types.StateCreated:
+		return
+	case types.StatePull:
+		return
 	}
 
 	if len(s.Containers) == 0 {
-		s.State = types.StateWarning
+		s.Stage = types.StateWarning
 		return
 	}
 
@@ -171,14 +174,14 @@ func state(s *types.PodStatus) {
 
 		switch true {
 		case cn.State.Error.Error:
-			sts[types.StateError]+=1
+			sts[types.StateError] += 1
 			ems = cn.State.Error.Message
 			break
 		case cn.State.Stopped.Stopped:
-			sts[types.StateStopped]+=1
+			sts[types.StateStopped] += 1
 			break
 		case cn.State.Started.Started:
-			sts[types.StateStarted]+=1
+			sts[types.StateStarted] += 1
 			break
 		}
 	}

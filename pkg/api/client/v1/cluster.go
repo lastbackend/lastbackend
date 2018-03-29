@@ -44,16 +44,16 @@ func (s *ClusterClient) Node(hostname ...string) *NodeClient {
 
 func (s *ClusterClient) Get(ctx context.Context) (*vv1.Cluster, error) {
 
-	req := s.client.Get("/cluster").
+	res := s.client.Get("/cluster").
 		AddHeader("Content-Type", "application/json").
 		Do()
 
-	buf, err := req.Raw()
+	buf, err := res.Raw()
 	if err != nil {
 		return nil, err
 	}
 
-	if code := req.StatusCode(); 200 > code || code > 299 {
+	if code := res.StatusCode(); 200 > code || code > 299 {
 		var e *errors.Http
 		if err := json.Unmarshal(buf, &e); err != nil {
 			return nil, err
@@ -77,17 +77,17 @@ func (s *ClusterClient) Update(ctx context.Context, opts *rv1.ClusterUpdateOptio
 		return nil, err
 	}
 
-	req := s.client.Put("/cluster").
+	res := s.client.Put("/cluster").
 		AddHeader("Content-Type", "application/json").
 		Body(body).
 		Do()
 
-	buf, err := req.Raw()
+	buf, err := res.Raw()
 	if err != nil {
 		return nil, err
 	}
 
-	if code := req.StatusCode(); 200 > code || code > 299 {
+	if code := res.StatusCode(); 200 > code || code > 299 {
 		var e *errors.Http
 		if err := json.Unmarshal(buf, &e); err != nil {
 			return nil, err

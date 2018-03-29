@@ -27,7 +27,7 @@ import (
 
 type Controller struct {
 	status chan *types.Pod
-	active     bool
+	active bool
 }
 
 // Watch pod spec changes

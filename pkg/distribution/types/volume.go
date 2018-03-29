@@ -52,8 +52,8 @@ type VolumeUpdateOptions struct {
 }
 
 type VolumeStatus struct {
-	// volume status stage
-	Stage string `json:"stage" yaml:"stage"`
+	// volume status state
+	State string `json:"state" yaml:"state"`
 	// volume status message
 	Message string `json:"message" yaml:"message"`
 }
