@@ -30,6 +30,7 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/log"
 	"github.com/lastbackend/lastbackend/pkg/node/envs"
 	"github.com/lastbackend/lastbackend/pkg/node/events"
+	"github.com/lastbackend/lastbackend/pkg/util/cleaner"
 )
 
 const BUFFER_SIZE = 1024
@@ -378,7 +379,7 @@ func Logs(ctx context.Context, id string, follow bool, s io.Writer, doneChan cha
 				return
 			default:
 
-				n, err := req.Read(buffer)
+				n, err := cleaner.NewReader(req).Read(buffer)
 				if err != nil {
 
 					if err == context.Canceled {
