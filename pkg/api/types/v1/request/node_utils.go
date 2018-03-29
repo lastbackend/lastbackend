@@ -63,7 +63,9 @@ func (s *NodeConnectOptions) ToJson() string {
 }
 
 func (NodeRequest) NodeStatusOptions() *NodeStatusOptions {
-	return new(NodeStatusOptions)
+	ns := new(NodeStatusOptions)
+	ns.Pods = make(map[string]*NodePodStatusOptions)
+	return ns
 }
 
 func (n *NodeStatusOptions) Validate() *errors.Err {

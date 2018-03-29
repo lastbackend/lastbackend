@@ -51,10 +51,12 @@ func NewStatusEvent(ctx context.Context) error {
 	)
 
 	opts := v1.Request().Node().NodeStatusOptions()
-	opts.Capacity = envs.Get().GetState().Node().Status.Capacity
-	opts.Allocated = envs.Get().GetState().Node().Status.Allocated
+	opts.Resources.Capacity = envs.Get().GetState().Node().Status.Capacity
+	opts.Resources.Allocated = envs.Get().GetState().Node().Status.Allocated
 
-	return c.SetStatus(ctx, opts)
+	c.SetStatus(ctx, opts)
+
+	return nil
 }
 
 // NewPodStatusEvent - send pod state event after
@@ -118,6 +120,9 @@ func NewVolumeStatusEvent(ctx context.Context, volume string) error {
 	return c.SetVolumeStatus(ctx, volume, opts)
 }
 
+func Loop () {
+
+}
 
 func getPodOptions(p *types.PodStatus) *request.NodePodStatusOptions {
 	opts := v1.Request().Node().NodePodStatusOptions()

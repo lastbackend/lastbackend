@@ -605,8 +605,8 @@ func TestNodeSetStatusH(t *testing.T) {
 		uo = v1.Request().Node().NodeStatusOptions()
 	)
 
-	uo.Capacity.Pods = 20
-	uo.Allocated.Containers = 10
+	uo.Resources.Capacity.Pods = 20
+	uo.Resources.Allocated.Containers = 10
 
 	type args struct {
 		ctx  context.Context
@@ -683,8 +683,8 @@ func TestNodeSetStatusH(t *testing.T) {
 			if tc.expectedCode == http.StatusOK {
 				n, err := envs.Get().GetStorage().Node().Get(ctx, tc.args.node)
 				assert.NoError(t, err)
-				assert.Equal(t, uo.Capacity.Pods, n.Status.Capacity.Pods, "pods not equal")
-				assert.Equal(t, uo.Allocated.Containers, n.Status.Allocated.Containers, "containers not equal")
+				assert.Equal(t, uo.Resources.Capacity.Pods, n.Status.Capacity.Pods, "pods not equal")
+				assert.Equal(t, uo.Resources.Allocated.Containers, n.Status.Allocated.Containers, "containers not equal")
 			}
 
 		})

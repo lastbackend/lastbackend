@@ -300,8 +300,8 @@ func NodeSetStatusH(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := nm.SetStatus(node, types.NodeStatus{
-		Capacity:  opts.Capacity,
-		Allocated: opts.Allocated,
+		Capacity:  opts.Resources.Capacity,
+		Allocated: opts.Resources.Allocated,
 	}); err != nil {
 		log.V(logLevel).Errorf("Handler: Node: set status err: %s", err)
 		errors.HTTP.InternalServerError(w)

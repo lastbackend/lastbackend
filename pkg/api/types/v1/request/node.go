@@ -30,6 +30,15 @@ type NodeConnectOptions struct {
 }
 
 type NodeStatusOptions struct {
+
+	// Pods statuses
+	Pods map[string]*NodePodStatusOptions `json:"pods"`
+
+	// Node resources
+	Resources NodeResourcesOptions `json:"resources"`
+}
+
+type NodeResourcesOptions struct {
 	// Node state capacity
 	Capacity types.NodeResources `json:"capacity"`
 	// Node state allocated
