@@ -16,14 +16,22 @@
 // from Last.Backend LLC.
 //
 
-package events
+package cache
 
-import (
-	"github.com/lastbackend/lastbackend/pkg/api/types/v1/request"
-	"github.com/lastbackend/lastbackend/pkg/node/envs"
-	"context"
-)
+import "context"
 
-func Dispatcher (options *request.NodeStatusOptions) error {
-	return envs.Get().GetClient().SetStatus(context.Background(), options)
+type Cache struct {
+	node *CacheNodeSpec
+}
+
+type Cleaner func (ctx context.Context) error
+
+func (c *Cache) Node () *CacheNodeSpec {
+	return c.node
+}
+
+func NewCache() *Cache {
+	c := new(Cache)
+	c.node = NewCacheNodeSpec()
+	return c
 }

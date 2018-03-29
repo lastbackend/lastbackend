@@ -16,9 +16,34 @@
 // from Last.Backend LLC.
 //
 
-package events
+package types
 
-type Collector struct {
+const STORAGEPUTEVENT = "PUT"
+const STORAGEDELEVENT = "DELETE"
 
+type NodeOfflineEvent struct {
+	Event  string `json:"event"`
+	Node   string `json:"node"`
+	Online bool   `json:"online"`
 }
 
+type PodSpecEvent struct {
+	Event string  `json:"event"`
+	Node  string  `json:"node"`
+	Name  string  `json:"name"`
+	Spec  PodSpec `json:"spec"`
+}
+
+type RouteSpecEvent struct {
+	Event string    `json:"event"`
+	Node  string    `json:"node"`
+	Name  string    `json:"name"`
+	Spec  RouteSpec `json:"spec"`
+}
+
+type VolumeSpecEvent struct {
+	Event string     `json:"event"`
+	Node  string     `json:"node"`
+	Name  string     `json:"name"`
+	Spec  VolumeSpec `json:"spec"`
+}

@@ -320,7 +320,7 @@ func (s *TriggerStorage) Watch(ctx context.Context, trigger chan *types.Trigger)
 			return
 		}
 
-		if action == ACTIONDELETE {
+		if action == types.STORAGEDELEVENT {
 			return
 		}
 
@@ -358,7 +358,7 @@ func (s *TriggerStorage) WatchSpec(ctx context.Context, trigger chan *types.Trig
 			return
 		}
 
-		if action == ACTIONDELETE {
+		if action == types.STORAGEDELEVENT {
 			return
 		}
 
@@ -396,7 +396,7 @@ func (s *TriggerStorage) WatchStatus(ctx context.Context, trigger chan *types.Tr
 			return
 		}
 
-		if action == ACTIONDELETE {
+		if action == types.STORAGEDELEVENT {
 			return
 		}
 

@@ -750,7 +750,7 @@ func (s *NodeStorage) Watch(ctx context.Context, node chan *types.Node) error {
 
 	log.V(logLevel).Debug("storage:etcd:node:> watch node")
 
-	const filter = `\b.+` + nodeStorage + `\/(.+)\/alive\b`
+	const filter = `\b.+` + nodeStorage + `\/(.+)\/online\b`
 
 	client, destroy, err := getClient(ctx)
 	if err != nil {
@@ -784,6 +784,96 @@ func (s *NodeStorage) Watch(ctx context.Context, node chan *types.Node) error {
 			node <- n
 			return
 		}
+
+		return
+	}
+
+	if err := client.Watch(ctx, key, filter, cb); err != nil {
+		log.V(logLevel).Errorf("storage:etcd:node:> watch node err: %s", err.Error())
+		return err
+	}
+
+	return nil
+}
+
+func (s *NodeStorage) WatchOffline(ctx context.Context, event chan *types.NodeOfflineEvent) error {
+
+	log.V(logLevel).Debug("storage:etcd:node:> watch node pod spec")
+
+	const filter = `\b.+` + nodeStorage + `\/(.+)\/online\b`
+
+	client, destroy, err := getClient(ctx)
+	if err != nil {
+		log.V(logLevel).Errorf("storage:etcd:node:> create client err: %s", err.Error())
+		return err
+	}
+	defer destroy()
+
+	r, _ := regexp.Compile(filter)
+	key := keyCreate(nodeStorage)
+	cb := func(action, key string, val []byte) {
+		keys := r.FindStringSubmatch(key)
+		if len(keys) < 2 {
+			return
+		}
+
+		e := new(types.NodeOfflineEvent)
+		e.Event = action
+		e.Node = keys[1]
+
+		if action == types.STORAGEPUTEVENT {
+			e.Online = true
+		}
+
+		if action == types.STORAGEDELEVENT {
+			e.Online = false
+		}
+
+		event <- e
+
+		return
+	}
+
+	if err := client.Watch(ctx, key, filter, cb); err != nil {
+		log.V(logLevel).Errorf("storage:etcd:node:> watch node err: %s", err.Error())
+		return err
+	}
+
+	return nil
+}
+
+func (s *NodeStorage) WatchPodSpec(ctx context.Context, event chan *types.PodSpecEvent) error {
+
+	log.V(logLevel).Debug("storage:etcd:node:> watch node pod spec")
+
+	const filter = `\b.+` + nodeStorage + `\/(.+)\/spec\/pods\/(.+)\b`
+
+	client, destroy, err := getClient(ctx)
+	if err != nil {
+		log.V(logLevel).Errorf("storage:etcd:node:> create client err: %s", err.Error())
+		return err
+	}
+	defer destroy()
+
+	r, _ := regexp.Compile(filter)
+	key := keyCreate(nodeStorage)
+	cb := func(action, key string, val []byte) {
+		keys := r.FindStringSubmatch(key)
+		if len(keys) < 3 {
+			return
+		}
+
+		e := new(types.PodSpecEvent)
+		e.Event = action
+		e.Node = keys[1]
+		e.Name = keys[2]
+
+		key = keyCreate(nodeStorage, e.Node, "spec", "pods", e.Name)
+		if err := client.Get(ctx, key, &e.Spec); err != nil {
+			log.Warnf("storage:etcd:node:> watch node pod spec parse err: %s", err.Error())
+		}
+
+		event <- e
 
 		return
 	}

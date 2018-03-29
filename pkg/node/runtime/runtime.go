@@ -45,17 +45,19 @@ func (r *Runtime) Restore() {
 	pod.Restore(r.ctx)
 }
 
-func (r *Runtime) Provision(ctx context.Context, spec *types.NodeSpec) error {
+func (r *Runtime) Provision(ctx context.Context, spec *types.NodeSpec, clean bool) error {
 	log.Debug("node:runtime:provision:> provision init")
 	for _, r := range spec.Routes {
 		log.Debugf("route: %v", r)
 	}
 
-	pods := envs.Get().GetState().Pods().GetPods()
+	if clean {
+		pods := envs.Get().GetState().Pods().GetPods()
 
-	for k := range pods {
-		if _, ok := spec.Pods[k]; !ok {
-			pod.Destroy(context.Background(), k, pods[k])
+		for k := range pods {
+			if _, ok := spec.Pods[k]; !ok {
+				pod.Destroy(context.Background(), k, pods[k])
+			}
 		}
 	}
 
@@ -138,21 +140,24 @@ func (r *Runtime) GetSpec(ctx context.Context) error {
 func (r *Runtime) Loop() {
 	log.Debug("node:runtime:loop:> start runtime loop")
 
+	var clean = true
+
 	go func(ctx context.Context) {
 		for {
 			select {
 			case spec := <-r.spec:
 				log.Debug("node:runtime:loop:> provision new spec")
-				if err := r.Provision(ctx, spec); err != nil {
+				if err := r.Provision(ctx, spec, clean); err != nil {
 					log.Errorf("node:runtime:loop:> provision new spec err: %s", err.Error())
 				}
+				clean = false
 			}
 		}
 	}(r.ctx)
 
 	go func(ctx context.Context) {
 		ticker := time.NewTicker(time.Second * 10)
-		for _ = range ticker.C {
+		for  range ticker.C {
 			err := r.GetSpec(r.ctx)
 			if err != nil {
 				log.Debugf("node:runtime:loop:> new spec request err: %s", err.Error())

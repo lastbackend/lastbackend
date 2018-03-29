@@ -21,8 +21,6 @@ package events
 import (
 	"context"
 	"github.com/lastbackend/lastbackend/pkg/api/types/v1"
-	"github.com/lastbackend/lastbackend/pkg/api/types/v1/request"
-	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 	"github.com/lastbackend/lastbackend/pkg/log"
 	"github.com/lastbackend/lastbackend/pkg/node/envs"
 	"github.com/pkg/errors"
@@ -41,21 +39,17 @@ func NewConnectEvent(ctx context.Context) error {
 	opts.Status = envs.Get().GetState().Node().Status
 
 	return c.Connect(ctx, opts)
+
 }
 
 // NewStatusEvent - send node state event after
 // node is successful accepted and each hour
 func NewStatusEvent(ctx context.Context) error {
 	var (
-		c = envs.Get().GetClient()
+		e = envs.Get().GetExporter()
 	)
 
-	opts := v1.Request().Node().NodeStatusOptions()
-	opts.Resources.Capacity = envs.Get().GetState().Node().Status.Capacity
-	opts.Resources.Allocated = envs.Get().GetState().Node().Status.Allocated
-
-	c.SetStatus(ctx, opts)
-
+	e.Resources(envs.Get().GetState().Node().Status)
 	return nil
 }
 
@@ -64,8 +58,8 @@ func NewStatusEvent(ctx context.Context) error {
 func NewPodStatusEvent(ctx context.Context, pod string) error {
 
 	var (
-		c = envs.Get().GetClient()
 		p = envs.Get().GetState().Pods().GetPod(pod)
+		e = envs.Get().GetExporter()
 	)
 
 	if pod == "" {
@@ -73,13 +67,13 @@ func NewPodStatusEvent(ctx context.Context, pod string) error {
 		return errors.New("Event: Pod state event: pod is empty")
 	}
 
-	log.Debugf("Event: Pod state event state: %#v", pod)
-	opts := getPodOptions(p)
+	if p == nil {
+		return nil
+	}
 
-	log.Debugf("Event: Pod state event state opts: %#v", opts)
-	log.Debugf("%v", opts)
+	e.PodStatus(pod, p)
 
-	return c.SetPodStatus(ctx, pod, opts)
+	return nil
 }
 
 // NewRouteStatusEvent - send route state event after
@@ -118,14 +112,4 @@ func NewVolumeStatusEvent(ctx context.Context, volume string) error {
 
 	opts := v1.Request().Node().NodeVolumeStatusOptions()
 	return c.SetVolumeStatus(ctx, volume, opts)
-}
-
-func getPodOptions(p *types.PodStatus) *request.NodePodStatusOptions {
-	opts := v1.Request().Node().NodePodStatusOptions()
-	opts.State = p.Stage
-	opts.Message = p.Message
-	opts.Containers = p.Containers
-	opts.Network = p.Network
-	opts.Steps = p.Steps
-	return opts
 }
