@@ -36,6 +36,7 @@ func NewHTTP(endpoint string, config *Config) (*Client, error) {
 	if config != nil {
 		cfg.BearerToken = config.BearerToken
 		cfg.Timeout = config.Timeout
+		cfg.Insecure = config.Insecure
 	} else {
 		cfg.SetDefault()
 	}
