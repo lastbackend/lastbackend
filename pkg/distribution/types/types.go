@@ -19,3 +19,9 @@
 package types
 
 const logLevel = 3
+
+const (
+	DEFAULT_MEMORY_MIN        = 128
+	DEFAULT_REPLICAS_MIN      = 1
+	DEFAULT_DESCRIPTION_LIMIT = 512
+)
