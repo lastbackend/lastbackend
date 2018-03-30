@@ -19,7 +19,7 @@ RUN set -ex \
 	&& export GOROOT_BOOTSTRAP="$(go env GOROOT)" \
 	\
 	&& wget -q "$GOLANG_SRC_URL" -O golang.tar.gz \
-	&& echo "$GOLANG_SRC_SHA256 golang.tar.gz" | sha256sum -c - \
+	&& echo "$GOLANG_SRC_SHA256  golang.tar.gz" | sha256sum -c - \
 	&& tar -C /usr/local -xzf golang.tar.gz \
 	&& rm golang.tar.gz \
 	&& cd /usr/local/go/src \
