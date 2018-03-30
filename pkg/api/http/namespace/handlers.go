@@ -108,7 +108,6 @@ func NamespaceCreateH(w http.ResponseWriter, r *http.Request) {
 	// request body struct
 	opts, e := v1.Request().Namespace().CreateOptions().DecodeAndValidate(r.Body)
 	if e != nil {
-
 		log.V(logLevel).Errorf("%s:create:> validation incoming data err: %s", logPrefix, e.Err())
 		e.Http(w)
 		return

@@ -20,24 +20,31 @@ package view
 
 import (
 	"fmt"
+	"time"
 
 	"github.com/lastbackend/lastbackend/pkg/api/types/v1/views"
 	"github.com/lastbackend/lastbackend/pkg/util/table"
+	"github.com/lastbackend/lastbackend/pkg/util/converter"
+	"github.com/ararog/timeago"
 )
 
 type ServiceList []*Service
 type Service struct {
-	Meta        ServiceMeta    `json:"meta"`
-	Spec        ServiceSpec    `json:"spec"`
-	Status      ServiceStatus  `json:"status"`
-	Sources     ServiceSources `json:"sources"`
-	Deployments DeploymentList `json:"deployments"`
+	Meta        ServiceMeta            `json:"meta"`
+	Spec        ServiceSpec            `json:"spec"`
+	Status      ServiceStatus          `json:"status"`
+	Sources     ServiceSources         `json:"sources"`
+	Deployments DeploymentMap `json:"deployments"`
 }
 
 type ServiceMeta struct {
-	Name        string `json:"name"`
-	Description string `json:"description"`
-	Endpoint    string `json:"endpoint"`
+	Name        string            `json:"name"`
+	Description string            `json:"description"`
+	Endpoint    string            `json:"endpoint"`
+	Namespace   string            `json:"namespace"`
+	Labels      map[string]string `json:"labels"`
+	Created     time.Time         `json:"created"`
+	Updated     time.Time         `json:"updated"`
 }
 
 type ServiceStatus struct {
@@ -60,33 +67,34 @@ type ServiceSpec struct {
 }
 
 type DeploymentList []*Deployment
+type DeploymentMap map[string]*Deployment
 type Deployment struct {
-	Name  string              `json:"name"`
-	State DeploymentStateInfo `json:"state"`
-	Spec  DeploymentSpec      `json:"spec"`
-	Pods  []*PodView          `json:"pods"`
+	Name  string         `json:"name"`
+	State string         `json:"state"`
+	Spec  DeploymentSpec `json:"spec"`
+	Pods  map[string]PodView     `json:"pods"`
 }
 
 type PodView struct {
 	Name   string     `json:"name"`
+	Created time.Time `json:"created"`
 	Status *PodStatus `json:"status"`
 }
 
 type PodStatus struct {
-	Containers *PodContainers `json:"containers"`
+	State      string         `json:"state"`
+	Containers PodContainers `json:"containers"`
 }
 
-type PodContainers []*PodContainer
+type PodContainers []PodContainer
 type PodContainer struct {
-	ID string `json:"id"`
+	ID      string `json:"id"`
+	Ready   bool   `json:"ready"`
+	Restart int    `json:"restared"`
 }
 
 type DeploymentSpec struct {
 	Replicas int `json:"replicas"`
-}
-
-type DeploymentStateInfo struct {
-	Active bool `json:"active"`
 }
 
 func (sl *ServiceList) Print() {
@@ -104,7 +112,7 @@ func (sl *ServiceList) Print() {
 		data["STATUS"] = s.Status.State
 		data["CMD"] = s.Spec.Command
 		data["MEMORY"] = s.Spec.Memory
-		data["REPLICAS"] = s.Deployments.Replicas()
+		//data["REPLICAS"] = s.Deployments.Replicas()
 
 		t.AddRow(data)
 	}
@@ -117,36 +125,79 @@ func (s *Service) Print() {
 
 	var data = map[string]interface{}{}
 
-	data["NAME"] = s.Meta.Name
-	data["SOURCES"] = s.Sources.String()
-	data["ENDPOINT"] = s.Meta.Endpoint
-	data["STATUS"] = s.Status.State
+	data["Name"] = s.Meta.Name
+	data["Namespace"] = s.Meta.Namespace
+	data["Endpoint"] = s.Meta.Endpoint
+	data["Status"] = s.Status.State
+	data["Message"] = s.Status.Message
+	data["Created"] = s.Meta.Created
+	data["Updated"] = s.Meta.Updated
 
-	if s.Status.Message != "" {
-		data["STATUS"] = fmt.Sprintf("%s: %s", s.Status.State, s.Status.Message)
-	}
+	//var labelList string
+	//for key, l := range s.Meta.Labels {
+	//	labelList += key + "=" + l + " "
+	//}
+	//data["LABELS"] = labelList
 
-	if s.Spec.Command != "" {
-		data["CMD"] = s.Spec.Command
-	}
-	data["MEMORY"] = s.Spec.Memory
-
-	if s.Deployments != nil {
-		data["REPLICAS"] = s.Deployments.Replicas()
-	}
+	//if s.Deployments != nil {
+	//	data["REPLICAS"] = s.Deployments.Replicas()
+	//}
 
 	println()
 	table.PrintHorizontal(data)
 	println()
+	if s.Deployments != nil {
+		fmt.Println("Deployments:")
+		println()
+		s.Deployments.Print()
+	}
+	println()
 }
 
-func (dl *DeploymentList) Replicas() int {
+//func (dl *DeploymentList) Replicas() int {
+//	for _, d := range *dl {
+//		if d.State.Active {
+//			return d.Spec.Replicas
+//		}
+//	}
+//	return 0
+//}
+//
+func (dl *DeploymentMap) Print() {
 	for _, d := range *dl {
-		if d.State.Active {
-			return d.Spec.Replicas
-		}
+			var data = map[string]interface{}{}
+
+			data["Name"] = d.Name
+			data["Status"] = d.State
+			//data["REPLICAS"] = string(d.Spec.Replicas) + " updated | " + string(d.Spec.Replicas) + " total | " + string(d.Spec.Replicas) + " availible | 0 unavailible"
+
+			//fmt.Println("Active:")
+			table.PrintHorizontal(data)
+			fmt.Println("\n Deployment pods:")
+
+			podTable := table.New([]string{"Name", "Ready", "Status", "Restarts", "Age"})
+			podTable.VisibleHeader=true
+
+			for _, p := range d.Pods {
+				var ready, restarts int
+				for _, c := range p.Status.Containers {
+					if c.Ready {
+						ready++
+						restarts += c.Restart
+					}
+				}
+				var podRow = map[string]interface{}{}
+				got, _ := timeago.TimeAgoWithTime(time.Now(), p.Created)
+				podRow["Name"] = p.Name
+				podRow["Ready"] = string(converter.IntToString(ready)+"/"+converter.IntToString(len(p.Status.Containers)))
+				podRow["Status"] = p.Status.State
+				podRow["Restarts"] = restarts
+				podRow["Age"] = got
+				podTable.AddRow(podRow)
+			}
+
+			podTable.Print()
 	}
-	return 0
 }
 
 func (s *ServiceSources) String() string {
@@ -159,11 +210,48 @@ func (s *ServiceSources) String() string {
 
 func FromApiServiceView(service *views.Service) *Service {
 	var item = new(Service)
+
 	item.Meta.Name = service.Meta.Name
 	item.Meta.Description = service.Meta.Description
+	item.Meta.Namespace = service.Meta.Namespace
 	item.Meta.Endpoint = service.Meta.Endpoint
+	item.Meta.Labels = service.Meta.Labels
+	item.Meta.Created = service.Meta.Created
+	item.Meta.Updated = service.Meta.Updated
+
 	item.Status.State = service.Status.State
 	item.Status.Message = service.Status.Message
+
+	item.Deployments = make(map[string]*Deployment)
+
+	for i, d := range service.Deployments {
+		var itd Deployment
+
+		itd.State=d.Status.State
+		itd.Name=d.Meta.Name
+		itd.Pods = make(map[string]PodView)
+
+		for j, p := range d.Pods {
+			var pd = PodView{Status: &PodStatus{p.Status.State, PodContainers{}}}
+
+			pd.Name = p.Meta.Name
+			pd.Created = p.Meta.Created
+
+			for k, c := range p.Status.Containers {
+				var cn PodContainer
+
+				cn.Ready = c.Ready
+				cn.Restart = c.Restart
+
+				pd.Status.Containers[k] = cn
+			}
+
+			itd.Pods[j] = pd
+		}
+
+		item.Deployments[i] = &itd
+	}
+
 	return item
 }
 
