@@ -21,24 +21,22 @@ package envs
 import (
 	"github.com/lastbackend/lastbackend/pkg/api/client"
 	"github.com/lastbackend/lastbackend/pkg/storage"
-	"github.com/lastbackend/lastbackend/pkg/util/http"
+	"github.com/lastbackend/lastbackend/pkg/api/cache"
 )
 
 var e Env
 
 type Env struct {
-	storage              storage.Storage
-	httpTemplateRegistry *http.RawReq
-	client               client.Client
+	storage storage.Storage
+	client  client.Client
+	cache   *cache.Cache
 }
 
 func Get() *Env {
 	return &e
 }
 
-func (c *Env) SetStorage(storage storage.Storage) {
-	c.storage = storage
-}
+
 
 func (c *Env) SetClient(client client.Client) {
 	c.client = client
@@ -48,14 +46,18 @@ func (c *Env) GetClient() client.Client {
 	return c.client
 }
 
+func (c *Env) SetStorage(storage storage.Storage) {
+	c.storage = storage
+}
+
 func (c *Env) GetStorage() storage.Storage {
 	return c.storage
 }
 
-func (c *Env) SetHttpTemplateRegistry(http *http.RawReq) {
-	c.httpTemplateRegistry = http
+func (c *Env) SetCache(ch *cache.Cache) {
+	c.cache = ch
 }
 
-func (c *Env) GetHttpTemplateRegistry() *http.RawReq {
-	return c.httpTemplateRegistry
+func (c *Env) GetCache() *cache.Cache {
+	return c.cache
 }

@@ -16,9 +16,22 @@
 // from Last.Backend LLC.
 //
 
-package events
+package cache
 
-type Collector struct {
+import "context"
 
+type Cache struct {
+	node *CacheNodeSpec
 }
 
+type Cleaner func (ctx context.Context) error
+
+func (c *Cache) Node () *CacheNodeSpec {
+	return c.node
+}
+
+func NewCache() *Cache {
+	c := new(Cache)
+	c.node = NewCacheNodeSpec()
+	return c
+}

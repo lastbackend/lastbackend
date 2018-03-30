@@ -29,6 +29,7 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/log"
 	"github.com/lastbackend/lastbackend/pkg/storage"
 	"github.com/spf13/viper"
+	"github.com/lastbackend/lastbackend/pkg/api/cache"
 )
 
 func Daemon() bool {
@@ -46,6 +47,14 @@ func Daemon() bool {
 	}
 
 	envs.Get().SetStorage(stg)
+
+	c := cache.NewCache()
+	go c.Node().CachePods(stg.Node().WatchPodSpec)
+	go c.Node().CacheRoutes(stg.Node().WatchRouteSpec)
+	go c.Node().CacheVolumes(stg.Node().WatchVolumeSpec)
+	go c.Node().Del(stg.Node().WatchOffline)
+	envs.Get().SetCache(c)
+
 
 	go func() {
 		types.SecretAccessToken = viper.GetString("token")

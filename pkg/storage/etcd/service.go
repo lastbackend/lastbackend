@@ -54,7 +54,7 @@ func (s *ServiceStorage) Get(ctx context.Context, namespace, name string) (*type
 		return nil, err
 	}
 
-	const filter = `\b.+` + serviceStorage + `\/.+\/(?:meta|status|spec)\b`
+	const filter = `\b.+` + serviceStorage + `\/.+\/(meta|status|spec)\b`
 	var (
 		service = new(types.Service)
 	)
@@ -66,7 +66,7 @@ func (s *ServiceStorage) Get(ctx context.Context, namespace, name string) (*type
 	}
 	defer destroy()
 
-	keyMeta := keyCreate(serviceStorage, s.keyCreate(namespace, name))
+	keyMeta := keyDirCreate(serviceStorage, s.keyCreate(namespace, name))
 	if err := client.Map(ctx, keyMeta, filter, service); err != nil {
 		log.V(logLevel).Errorf("storage:etcd:service:> get by name %s err: %s", name, err.Error())
 		return nil, err
@@ -90,7 +90,7 @@ func (s *ServiceStorage) ListByNamespace(ctx context.Context, namespace string) 
 		return nil, err
 	}
 
-	const filter = `\b.+` + serviceStorage + `\/.+\/(?:meta|status|spec)\b`
+	const filter = `\b.+` + serviceStorage + `\/(.+)\/(meta|status|spec)\b`
 
 	var (
 		services = make(map[string]*types.Service)
@@ -278,7 +278,7 @@ func (s *ServiceStorage) Watch(ctx context.Context, service chan *types.Service)
 			return
 		}
 
-		if action == ACTIONDELETE {
+		if action == types.STORAGEDELEVENT {
 			return
 		}
 
@@ -316,7 +316,7 @@ func (s *ServiceStorage) WatchSpec(ctx context.Context, service chan *types.Serv
 			return
 		}
 
-		if action == ACTIONDELETE {
+		if action == types.STORAGEDELEVENT {
 			return
 		}
 
@@ -354,7 +354,7 @@ func (s *ServiceStorage) WatchStatus(ctx context.Context, service chan *types.Se
 			return
 		}
 
-		if action == ACTIONDELETE {
+		if action == types.STORAGEDELEVENT {
 			return
 		}
 

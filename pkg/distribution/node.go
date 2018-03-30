@@ -43,7 +43,7 @@ type INode interface {
 	SetMeta(node *types.Node, meta *types.NodeUpdateMetaOptions) error
 	SetStatus(node *types.Node, state types.NodeStatus) error
 	SetInfo(node *types.Node, info types.NodeInfo) error
-	SetNetwork(node *types.Node, network types.Subnet) error
+	SetNetwork(node *types.Node, network types.NetworkSpec) error
 	SetOnline(node *types.Node) error
 	SetOffline(node *types.Node) error
 
@@ -189,7 +189,7 @@ func (n *Node) SetInfo(node *types.Node, info types.NodeInfo) error {
 	return nil
 }
 
-func (n *Node) SetNetwork(node *types.Node, network types.Subnet) error {
+func (n *Node) SetNetwork(node *types.Node, network types.NetworkSpec) error {
 
 	node.Network = network
 	if err := n.storage.Node().SetNetwork(n.context, node); err != nil {

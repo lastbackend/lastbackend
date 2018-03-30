@@ -37,6 +37,8 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/node/runtime/cni/cni"
 	"github.com/lastbackend/lastbackend/pkg/node/runtime/cri/cri"
 	"github.com/spf13/viper"
+	"github.com/lastbackend/lastbackend/pkg/node/events/exporter"
+	"github.com/lastbackend/lastbackend/pkg/node/events"
 )
 
 // Daemon - run node daemon
@@ -96,12 +98,17 @@ func Daemon() {
 	c := rest.V1().Cluster().Node(state.Node().Info.Hostname)
 
 	envs.Get().SetClient(c)
+	e := exporter.NewExporter()
+	e.SetDispatcher(events.Dispatcher)
+	envs.Get().SetExporter(e)
 
 	if err := r.Connect(context.Background()); err != nil {
 		log.Fatalf("node:initialize: connect err %s", err.Error())
 	}
 
 	r.Subscribe()
+
+	e.Loop()
 	r.Loop()
 
 	go func() {

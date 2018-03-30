@@ -53,7 +53,7 @@ func (s *VolumeStorage) Get(ctx context.Context, namespace, name string) (*types
 		return nil, err
 	}
 
-	const filter = `\b.+` + volumeStorage + `\/.+\/(?:meta|status|spec)\b`
+	const filter = `\b.+` + volumeStorage + `\/.+\/(meta|status|spec)\b`
 
 	var (
 		volume = new(types.Volume)
@@ -90,7 +90,7 @@ func (s *VolumeStorage) ListByNamespace(ctx context.Context, namespace string) (
 		return nil, err
 	}
 
-	const filter = `\b.+` + volumeStorage + `\/.+\/(?:meta|status|spec)\b`
+	const filter = `\b.+` + volumeStorage + `\/(.+)\/(meta|status|spec)\b`
 
 	var (
 		volumes = make(map[string]*types.Volume)
@@ -129,7 +129,7 @@ func (s *VolumeStorage) ListByService(ctx context.Context, namespace, service st
 		return nil, err
 	}
 
-	const filter = `\b.+` + volumeStorage + `\/.+\/(?:meta|status|spec)\b`
+	const filter = `\b.+` + volumeStorage + `\/(.+)\/(meta|status|spec)\b`
 
 	var (
 		volumes = make(map[string]*types.Volume)
@@ -313,7 +313,7 @@ func (s *VolumeStorage) Watch(ctx context.Context, volume chan *types.Volume) er
 			return
 		}
 
-		if action == ACTIONDELETE {
+		if action == types.STORAGEDELEVENT {
 			return
 		}
 
@@ -351,7 +351,7 @@ func (s *VolumeStorage) WatchSpec(ctx context.Context, volume chan *types.Volume
 			return
 		}
 
-		if action == ACTIONDELETE {
+		if action == types.STORAGEDELEVENT {
 			return
 		}
 
@@ -389,7 +389,7 @@ func (s *VolumeStorage) WatchStatus(ctx context.Context, volume chan *types.Volu
 			return
 		}
 
-		if action == ACTIONDELETE {
+		if action == types.STORAGEDELEVENT {
 			return
 		}
 

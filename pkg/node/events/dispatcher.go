@@ -19,35 +19,11 @@
 package events
 
 import (
+	"github.com/lastbackend/lastbackend/pkg/api/types/v1/request"
+	"github.com/lastbackend/lastbackend/pkg/node/envs"
 	"context"
-	"sync"
-	"time"
 )
 
-type Manager struct {
-
-}
-
-
-type Buffer struct {
-	lock    sync.RWMutex
-	Pod []string
-}
-
-func (m *Manager) Loop () {
-
-	go func(ctx context.Context) {
-		for {
-			select {
-
-			}
-		}
-	}(context.Background())
-
-	go func (ctx context.Context) {
-		ticker := time.NewTicker(time.Second * 10)
-		for _ = range ticker.C {
-		}
-	}(context.Background())
-
+func Dispatcher (options *request.NodeStatusOptions) error {
+	return envs.Get().GetClient().SetStatus(context.Background(), options)
 }

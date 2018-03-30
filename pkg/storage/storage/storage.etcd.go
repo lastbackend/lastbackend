@@ -158,6 +158,10 @@ type Node interface {
 	RemoveRoute(ctx context.Context, node *types.Node, route *types.Route) error
 	Remove(ctx context.Context, node *types.Node) error
 	Watch(ctx context.Context, node chan *types.Node) error
+	WatchOffline(ctx context.Context, event chan *types.NodeOfflineEvent) error
+	WatchPodSpec(ctx context.Context, event chan *types.PodSpecEvent) error
+	WatchRouteSpec(ctx context.Context, event chan *types.RouteSpecEvent) error
+	WatchVolumeSpec(ctx context.Context, event chan *types.VolumeSpecEvent) error
 	Clear(ctx context.Context) error
 }
 

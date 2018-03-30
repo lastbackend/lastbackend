@@ -43,7 +43,7 @@ func (s *NodeStorage) List(ctx context.Context) (map[string]*types.Node, error) 
 
 	log.V(logLevel).Debugf("storage:etcd:node:> get list nodes")
 
-	const filter = `\b.+` + nodeStorage + `\/.+\/(?:meta|info|status|online|network)\b`
+	const filter = `\b.+` + nodeStorage + `\/(.+)\/(meta|info|status|online|network)\b`
 
 	nodes := make(map[string]*types.Node, 0)
 
@@ -75,7 +75,7 @@ func (s *NodeStorage) Get(ctx context.Context, name string) (*types.Node, error)
 		return nil, err
 	}
 
-	const filter = `\b.+` + nodeStorage + `\/.+\/(?:meta|info|status|online|network)\b`
+	const filter = `\b.+` + nodeStorage + `\/.+\/(meta|info|status|online|network)\b`
 
 	client, destroy, err := getClient(ctx)
 	if err != nil {
@@ -101,6 +101,7 @@ func (s *NodeStorage) GetSpec(ctx context.Context, node *types.Node) (*types.Nod
 		spec = new(types.NodeSpec)
 	)
 
+	spec.Network = make(map[string]types.NetworkSpec)
 	spec.Pods = make(map[string]types.PodSpec)
 	spec.Volumes = make(map[string]types.VolumeSpec)
 	spec.Routes = make(map[string]types.RouteSpec)
@@ -109,6 +110,7 @@ func (s *NodeStorage) GetSpec(ctx context.Context, node *types.Node) (*types.Nod
 		return nil, err
 	}
 
+	const filterNetwork = `\b.+` + nodeStorage + `\/(.+)\/network\b`
 	const filterPods = `\b.+` + nodeStorage + `\/.+\/spec\/pods\/(.+)\b`
 	const filterVolumes = `\b.+` + nodeStorage + `\/.+\/spec\/volumes\/(.+)\b`
 	const filterRoutes = `\b.+` + nodeStorage + `\/.+\/spec\/routes\/(.+)\b`
@@ -118,6 +120,12 @@ func (s *NodeStorage) GetSpec(ctx context.Context, node *types.Node) (*types.Nod
 		return nil, err
 	}
 	defer destroy()
+
+	keyNetwork := keyDirCreate(nodeStorage)
+	if err := client.Map(ctx, keyNetwork, filterNetwork, spec.Network); err != nil && err.Error() != store.ErrEntityNotFound {
+		log.V(logLevel).Errorf("storage:etcd:node:> get node spec: err: %s", err.Error())
+		return nil, err
+	}
 
 	keyPods := keyDirCreate(nodeStorage, node.Meta.Name, "spec", "pods")
 	if err := client.Map(ctx, keyPods, filterPods, spec.Pods); err != nil && err.Error() != store.ErrEntityNotFound {
@@ -136,6 +144,9 @@ func (s *NodeStorage) GetSpec(ctx context.Context, node *types.Node) (*types.Nod
 		log.V(logLevel).Errorf("storage:etcd:node:> get node spec: err: %s", err.Error())
 		return nil, err
 	}
+
+
+	delete(spec.Network, node.Meta.Name)
 
 	return spec, nil
 }
@@ -750,7 +761,7 @@ func (s *NodeStorage) Watch(ctx context.Context, node chan *types.Node) error {
 
 	log.V(logLevel).Debug("storage:etcd:node:> watch node")
 
-	const filter = `\b.+` + nodeStorage + `\/(.+)\/alive\b`
+	const filter = `\b.+` + nodeStorage + `\/(.+)\/online\b`
 
 	client, destroy, err := getClient(ctx)
 	if err != nil {
@@ -784,6 +795,227 @@ func (s *NodeStorage) Watch(ctx context.Context, node chan *types.Node) error {
 			node <- n
 			return
 		}
+
+		return
+	}
+
+	if err := client.Watch(ctx, key, filter, cb); err != nil {
+		log.V(logLevel).Errorf("storage:etcd:node:> watch node err: %s", err.Error())
+		return err
+	}
+
+	return nil
+}
+
+func (s *NodeStorage) WatchOffline(ctx context.Context, event chan *types.NodeOfflineEvent) error {
+
+	log.V(logLevel).Debug("storage:etcd:node:> watch node pod spec")
+
+	const filter = `\b.+` + nodeStorage + `\/(.+)\/online\b`
+
+	client, destroy, err := getClient(ctx)
+	if err != nil {
+		log.V(logLevel).Errorf("storage:etcd:node:> create client err: %s", err.Error())
+		return err
+	}
+	defer destroy()
+
+	r, _ := regexp.Compile(filter)
+	key := keyCreate(nodeStorage)
+	cb := func(action, key string, val []byte) {
+		keys := r.FindStringSubmatch(key)
+		if len(keys) < 2 {
+			return
+		}
+
+		e := new(types.NodeOfflineEvent)
+		e.Event = action
+		e.Node = keys[1]
+
+		if action == types.STORAGEPUTEVENT {
+			e.Online = true
+		}
+
+		if action == types.STORAGEDELEVENT {
+			e.Online = false
+		}
+
+		event <- e
+
+		return
+	}
+
+	if err := client.Watch(ctx, key, filter, cb); err != nil {
+		log.V(logLevel).Errorf("storage:etcd:node:> watch node err: %s", err.Error())
+		return err
+	}
+
+	return nil
+}
+
+func (s *NodeStorage) WatchPodSpec(ctx context.Context, event chan *types.PodSpecEvent) error {
+
+	log.V(logLevel).Debug("storage:etcd:node:> watch node pod spec")
+
+	const filter = `\b.+` + nodeStorage + `\/(.+)\/spec\/pods\/(.+)\b`
+
+	client, destroy, err := getClient(ctx)
+	if err != nil {
+		log.V(logLevel).Errorf("storage:etcd:node:> create client err: %s", err.Error())
+		return err
+	}
+	defer destroy()
+
+	r, _ := regexp.Compile(filter)
+	key := keyCreate(nodeStorage)
+	cb := func(action, key string, val []byte) {
+		keys := r.FindStringSubmatch(key)
+		if len(keys) < 3 {
+			return
+		}
+
+		e := new(types.PodSpecEvent)
+		e.Event = action
+		e.Node = keys[1]
+		e.Name = keys[2]
+
+		key = keyCreate(nodeStorage, e.Node, "spec", "pods", e.Name)
+		if err := client.Get(ctx, key, &e.Spec); err != nil {
+			log.Warnf("storage:etcd:node:> watch node pod spec parse err: %s", err.Error())
+		}
+
+		event <- e
+
+		return
+	}
+
+	if err := client.Watch(ctx, key, filter, cb); err != nil {
+		log.V(logLevel).Errorf("storage:etcd:node:> watch node err: %s", err.Error())
+		return err
+	}
+
+	return nil
+}
+
+func (s *NodeStorage) WatchRouteSpec(ctx context.Context, event chan *types.RouteSpecEvent) error {
+
+	log.V(logLevel).Debug("storage:etcd:node:> watch node route spec")
+
+	const filter = `\b.+` + nodeStorage + `\/(.+)\/spec\/routes\/(.+)\b`
+
+	client, destroy, err := getClient(ctx)
+	if err != nil {
+		log.V(logLevel).Errorf("storage:etcd:node:> create client err: %s", err.Error())
+		return err
+	}
+	defer destroy()
+
+	r, _ := regexp.Compile(filter)
+	key := keyCreate(nodeStorage)
+	cb := func(action, key string, val []byte) {
+		keys := r.FindStringSubmatch(key)
+		if len(keys) < 3 {
+			return
+		}
+
+		e := new(types.RouteSpecEvent)
+		e.Event = action
+		e.Node = keys[1]
+		e.Name = keys[2]
+
+		key = keyCreate(nodeStorage, e.Node, "spec", "routes", e.Name)
+		if err := client.Get(ctx, key, &e.Spec); err != nil {
+			log.Warnf("storage:etcd:node:> watch node route spec parse err: %s", err.Error())
+		}
+
+		event <- e
+
+		return
+	}
+
+	if err := client.Watch(ctx, key, filter, cb); err != nil {
+		log.V(logLevel).Errorf("storage:etcd:node:> watch node err: %s", err.Error())
+		return err
+	}
+
+	return nil
+}
+
+func (s *NodeStorage) WatchVolumeSpec(ctx context.Context, event chan *types.VolumeSpecEvent) error {
+
+	log.V(logLevel).Debug("storage:etcd:node:> watch node volume spec")
+
+	const filter = `\b.+` + nodeStorage + `\/(.+)\/spec\/volumes\/(.+)\b`
+
+	client, destroy, err := getClient(ctx)
+	if err != nil {
+		log.V(logLevel).Errorf("storage:etcd:node:> create client err: %s", err.Error())
+		return err
+	}
+	defer destroy()
+
+	r, _ := regexp.Compile(filter)
+	key := keyCreate(nodeStorage)
+	cb := func(action, key string, val []byte) {
+		keys := r.FindStringSubmatch(key)
+		if len(keys) < 3 {
+			return
+		}
+
+		e := new(types.VolumeSpecEvent)
+		e.Event = action
+		e.Node = keys[1]
+		e.Name = keys[2]
+
+		key = keyCreate(nodeStorage, e.Node, "spec", "volumes", e.Name)
+		if err := client.Get(ctx, key, &e.Spec); err != nil {
+			log.Warnf("storage:etcd:node:> watch node volume spec parse err: %s", err.Error())
+		}
+
+		event <- e
+
+		return
+	}
+
+	if err := client.Watch(ctx, key, filter, cb); err != nil {
+		log.V(logLevel).Errorf("storage:etcd:node:> watch node err: %s", err.Error())
+		return err
+	}
+
+	return nil
+}
+
+func (s *NodeStorage) WatchNetworkSpec(ctx context.Context, event chan *types.NetworkSpecEvent) error {
+
+	log.V(logLevel).Debug("storage:etcd:node:> watch node volume spec")
+
+	const filter = `\b.+` + nodeStorage + `\/(.+)\/network\b`
+
+	client, destroy, err := getClient(ctx)
+	if err != nil {
+		log.V(logLevel).Errorf("storage:etcd:node:> create client err: %s", err.Error())
+		return err
+	}
+	defer destroy()
+
+	r, _ := regexp.Compile(filter)
+	key := keyCreate(nodeStorage)
+	cb := func(action, key string, val []byte) {
+		keys := r.FindStringSubmatch(key)
+		if len(keys) < 2 {
+			return
+		}
+
+		e := new(types.NetworkSpecEvent)
+		e.Event = action
+		e.Node = keys[1]
+
+		key = keyCreate(nodeStorage, e.Node, "network")
+		if err := client.Get(ctx, key, &e.Spec); err != nil {
+			log.Warnf("storage:etcd:node:> watch node volume spec parse err: %s", err.Error())
+		}
+
+		event <- e
 
 		return
 	}
