@@ -86,7 +86,7 @@ func (t *table) Print() {
 }
 
 func (t *table) printHeader() {
-	var s string
+	var s, h, h1 string
 
 	if !t.VisibleHeader {
 		return
@@ -97,6 +97,16 @@ func (t *table) printHeader() {
 	}
 
 	fmt.Println(s)
+
+	for _, name := range t.fields {
+		h1=""
+		for i:=0; i<len(name); i++ {
+			h1+="-"
+		}
+		h += t.fieldToString(name, strings.Title(h1))
+	}
+
+	fmt.Println(h)
 }
 
 func (t *table) printRow(row map[string]string) {

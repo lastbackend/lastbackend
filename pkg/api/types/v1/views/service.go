@@ -37,14 +37,15 @@ type Service struct {
 }
 
 type ServiceMeta struct {
-	Name        string    `json:"name"`
-	Namespace   string    `json:"namespace"`
-	Description string    `json:"description"`
-	SelfLink    string    `json:"self_link"`
-	Endpoint    string    `json:"endpoint"`
-	Replicas    int       `json:"replicas"`
-	Created     time.Time `json:"created"`
-	Updated     time.Time `json:"updated"`
+	Name        string            `json:"name"`
+	Namespace   string            `json:"namespace"`
+	Description string            `json:"description"`
+	SelfLink    string            `json:"self_link"`
+	Endpoint    string            `json:"endpoint"`
+	Replicas    int               `json:"replicas"`
+	Labels      map[string]string `json:"labels"`
+	Created     time.Time         `json:"created"`
+	Updated     time.Time         `json:"updated"`
 }
 
 type ServiceSources struct {
@@ -83,8 +84,8 @@ type ServiceStatus struct {
 }
 
 type ServiceDeployment struct {
-	ID      string `json:"id"`
-	Name    string `json:"name"`
+	ID      string    `json:"id"`
+	Name    string    `json:"name"`
 	Pods    map[string]Pod
 	Started time.Time `json:"started"`
 }
