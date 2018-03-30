@@ -53,7 +53,7 @@ func (s *RouteStorage) Get(ctx context.Context, namespace, name string) (*types.
 		return nil, err
 	}
 
-	const filter = `\b.+` + routeStorage + `\/.+\/(?:meta|status|spec)\b`
+	const filter = `\b.+` + routeStorage + `\/.+\/(meta|status|spec)\b`
 	var (
 		route = new(types.Route)
 	)
@@ -89,7 +89,7 @@ func (s *RouteStorage) ListByNamespace(ctx context.Context, namespace string) (m
 		return nil, err
 	}
 
-	const filter = `\b.+` + routeStorage + `\/.+\/(?:meta|status|spec)\b`
+	const filter = `\b.+` + routeStorage + `\/(.+)\/(meta|status|spec)\b`
 
 	var (
 		routes = make(map[string]*types.Route)

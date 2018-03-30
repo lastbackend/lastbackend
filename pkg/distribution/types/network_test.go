@@ -26,9 +26,9 @@ import (
 
 func TestEqual(t *testing.T) {
 
-	var network = &types.Subnet{
-		Type:   "vxlan",
-		Subnet: "10.0.0.0/24",
+	var network = &types.NetworkSpec{
+		Type:  "vxlan",
+		Range: "10.0.0.0/24",
 		IFace: types.NetworkInterface{
 			Index: 1,
 			Name:  "lb.1",
@@ -38,9 +38,9 @@ func TestEqual(t *testing.T) {
 		Addr: "10.0.0.0",
 	}
 
-	var asset = &types.Subnet{
-		Type:   "vxlan",
-		Subnet: "10.0.0.0/24",
+	var asset = &types.NetworkSpec{
+		Type:  "vxlan",
+		Range: "10.0.0.0/24",
 		IFace: types.NetworkInterface{
 			Index: 1,
 			Name:  "lb.1",
@@ -55,9 +55,9 @@ func TestEqual(t *testing.T) {
 
 func TestNotEqual(t *testing.T) {
 
-	var network = &types.Subnet{
-		Type:   "vxlan",
-		Subnet: "10.0.0.0/24",
+	var network = &types.NetworkSpec{
+		Type:  "vxlan",
+		Range: "10.0.0.0/24",
 		IFace: types.NetworkInterface{
 			Index: 1,
 			Name:  "lb.1",
@@ -67,11 +67,11 @@ func TestNotEqual(t *testing.T) {
 		Addr: "10.0.0.0",
 	}
 
-	var assets = make(map[string]*types.Subnet)
+	var assets = make(map[string]*types.NetworkSpec)
 
-	assets["type"] = &types.Subnet{
-		Type:   "vlan",
-		Subnet: "10.0.0.0/24",
+	assets["type"] = &types.NetworkSpec{
+		Type:  "vlan",
+		Range: "10.0.0.0/24",
 		IFace: types.NetworkInterface{
 			Index: 1,
 			Name:  "lb.1",
@@ -81,9 +81,9 @@ func TestNotEqual(t *testing.T) {
 		Addr: "10.0.0.0",
 	}
 
-	assets["subnet"] = &types.Subnet{
-		Type:   "vxlan",
-		Subnet: "10.0.0.0/22",
+	assets["subnet"] = &types.NetworkSpec{
+		Type:  "vxlan",
+		Range: "10.0.0.0/22",
 		IFace: types.NetworkInterface{
 			Index: 1,
 			Name:  "lb.1",
@@ -93,9 +93,9 @@ func TestNotEqual(t *testing.T) {
 		Addr: "10.0.0.0",
 	}
 
-	assets["subnet & type"] = &types.Subnet{
-		Type:   "vlan",
-		Subnet: "10.0.0.0/22",
+	assets["subnet & type"] = &types.NetworkSpec{
+		Type:  "vlan",
+		Range: "10.0.0.0/22",
 		IFace: types.NetworkInterface{
 			Index: 1,
 			Name:  "lb.1",
@@ -105,9 +105,9 @@ func TestNotEqual(t *testing.T) {
 		Addr: "10.0.0.0",
 	}
 
-	assets["iface index"] = &types.Subnet{
-		Type:   "vxlan",
-		Subnet: "10.0.0.0/24",
+	assets["iface index"] = &types.NetworkSpec{
+		Type:  "vxlan",
+		Range: "10.0.0.0/24",
 		IFace: types.NetworkInterface{
 			Index: 2,
 			Name:  "lb.1",
@@ -117,9 +117,9 @@ func TestNotEqual(t *testing.T) {
 		Addr: "10.0.0.0",
 	}
 
-	assets["iface index & type"] = &types.Subnet{
-		Type:   "vxlan",
-		Subnet: "10.0.0.0/24",
+	assets["iface index & type"] = &types.NetworkSpec{
+		Type:  "vxlan",
+		Range: "10.0.0.0/24",
 		IFace: types.NetworkInterface{
 			Index: 2,
 			Name:  "lb.1",
@@ -129,9 +129,9 @@ func TestNotEqual(t *testing.T) {
 		Addr: "10.0.0.0",
 	}
 
-	assets["iface index & subnet"] = &types.Subnet{
-		Type:   "vxlan",
-		Subnet: "10.0.0.0/24",
+	assets["iface index & subnet"] = &types.NetworkSpec{
+		Type:  "vxlan",
+		Range: "10.0.0.0/24",
 		IFace: types.NetworkInterface{
 			Index: 2,
 			Name:  "lb.1",
@@ -141,9 +141,9 @@ func TestNotEqual(t *testing.T) {
 		Addr: "10.0.0.0",
 	}
 
-	assets["iface name"] = &types.Subnet{
-		Type:   "vxlan",
-		Subnet: "10.0.0.0/24",
+	assets["iface name"] = &types.NetworkSpec{
+		Type:  "vxlan",
+		Range: "10.0.0.0/24",
 		IFace: types.NetworkInterface{
 			Index: 1,
 			Name:  "lb.0",
@@ -153,9 +153,9 @@ func TestNotEqual(t *testing.T) {
 		Addr: "10.0.0.0",
 	}
 
-	assets["iface addr"] = &types.Subnet{
-		Type:   "vxlan",
-		Subnet: "10.0.0.0/24",
+	assets["iface addr"] = &types.NetworkSpec{
+		Type:  "vxlan",
+		Range: "10.0.0.0/24",
 		IFace: types.NetworkInterface{
 			Index: 1,
 			Name:  "lb.1",
@@ -165,9 +165,9 @@ func TestNotEqual(t *testing.T) {
 		Addr: "10.0.0.0",
 	}
 
-	assets["iface haddr"] = &types.Subnet{
-		Type:   "vxlan",
-		Subnet: "10.0.0.0/24",
+	assets["iface haddr"] = &types.NetworkSpec{
+		Type:  "vxlan",
+		Range: "10.0.0.0/24",
 		IFace: types.NetworkInterface{
 			Index: 1,
 			Name:  "lb.1",
@@ -177,9 +177,9 @@ func TestNotEqual(t *testing.T) {
 		Addr: "10.0.0.0",
 	}
 
-	assets["addr"] = &types.Subnet{
-		Type:   "vxlan",
-		Subnet: "10.0.0.0/24",
+	assets["addr"] = &types.NetworkSpec{
+		Type:  "vxlan",
+		Range: "10.0.0.0/24",
 		IFace: types.NetworkInterface{
 			Index: 1,
 			Name:  "lb.1",

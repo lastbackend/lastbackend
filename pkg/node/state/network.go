@@ -23,28 +23,28 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/log"
 )
 
-func (n *NetworkState) GetSubnets() map[string]types.Subnet {
+func (n *NetworkState) GetSubnets() map[string]types.NetworkSpec {
 	return n.subnets
 }
 
-func (n *NetworkState) AddSubnet(sn *types.Subnet) {
+func (n *NetworkState) AddSubnet(sn *types.NetworkSpec) {
 	log.V(logLevel).Debugf("Stage: NetworkState: add subnet: %v", sn)
 	n.SetSubnet(sn)
 }
 
-func (n *NetworkState) SetSubnet(sn *types.Subnet) {
+func (n *NetworkState) SetSubnet(sn *types.NetworkSpec) {
 	log.V(logLevel).Debugf("Stage: NetworkState: set subnet: %v", sn)
 	n.lock.Lock()
 	defer n.lock.Unlock()
 
-	if _, ok := n.subnets[sn.Subnet]; ok {
-		delete(n.subnets, sn.Subnet)
+	if _, ok := n.subnets[sn.Range]; ok {
+		delete(n.subnets, sn.Range)
 	}
 
-	n.subnets[sn.Subnet] = *sn
+	n.subnets[sn.Range] = *sn
 }
 
-func (n *NetworkState) GetSubnet(sn string) *types.Subnet {
+func (n *NetworkState) GetSubnet(sn string) *types.NetworkSpec {
 	log.V(logLevel).Debugf("Stage: NetworkState: get subnet: %s", sn)
 	n.lock.Lock()
 	defer n.lock.Unlock()
@@ -55,11 +55,11 @@ func (n *NetworkState) GetSubnet(sn string) *types.Subnet {
 	return &s
 }
 
-func (n *NetworkState) DelSubnet(sn *types.Subnet) {
+func (n *NetworkState) DelSubnet(sn *types.NetworkSpec) {
 	log.V(logLevel).Debugf("Stage: NetworkState: del subnet: %v", sn)
 	n.lock.Lock()
 	defer n.lock.Unlock()
-	if _, ok := n.subnets[sn.Subnet]; ok {
-		delete(n.subnets, sn.Subnet)
+	if _, ok := n.subnets[sn.Range]; ok {
+		delete(n.subnets, sn.Range)
 	}
 }

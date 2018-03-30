@@ -59,7 +59,7 @@ func (s *DeploymentStorage) Get(ctx context.Context, namespace, service, name st
 		return nil, err
 	}
 
-	const filter = `\b.+` + deploymentStorage + `\/.+\/(?:meta|status|spec)\b`
+	const filter = `\b.+` + deploymentStorage + `\/.+\/(meta|status|spec)\b`
 
 	var (
 		deployment = new(types.Deployment)
@@ -96,7 +96,7 @@ func (s *DeploymentStorage) ListByNamespace(ctx context.Context, namespace strin
 		return nil, err
 	}
 
-	const filter = `\b.+` + deploymentStorage + `\/.+\/(?:meta|status|spec)\b`
+	const filter = `\b.+` + deploymentStorage + `\/(.+)\/(meta|status|spec)\b`
 
 	var (
 		deployments = make(map[string]*types.Deployment)
@@ -135,7 +135,7 @@ func (s *DeploymentStorage) ListByService(ctx context.Context, namespace, servic
 		return nil, err
 	}
 
-	const filter = `\b.+` + deploymentStorage + `\/.+\/(?:meta|status|spec)\b`
+	const filter = `\b.+` + deploymentStorage + `\/(.+)\/(meta|status|spec)\b`
 
 	var (
 		deployments = make(map[string]*types.Deployment)

@@ -60,7 +60,7 @@ func (s *TriggerStorage) Get(ctx context.Context, namespace, service, name strin
 		return nil, err
 	}
 
-	const filter = `\b.+` + triggerStorage + `\/.+\/(?:meta|status|spec)\b`
+	const filter = `\b.+` + triggerStorage + `\/.+\/(meta|status|spec)\b`
 
 	var (
 		trigger = new(types.Trigger)
@@ -97,7 +97,7 @@ func (s *TriggerStorage) ListByNamespace(ctx context.Context, namespace string) 
 		return nil, err
 	}
 
-	const filter = `\b.+` + triggerStorage + `\/.+\/(?:meta|status|spec)\b`
+	const filter = `\b.+` + triggerStorage + `\/(.+)\/(meta|status|spec)\b`
 
 	var (
 		triggers = make(map[string]*types.Trigger)
@@ -136,7 +136,7 @@ func (s *TriggerStorage) ListByService(ctx context.Context, namespace, service s
 		return nil, err
 	}
 
-	const filter = `\b.+` + triggerStorage + `\/.+\/(?:meta|status|spec)\b`
+	const filter = `\b.+` + triggerStorage + `\/(.+)\/(meta|status|spec)\b`
 
 	var (
 		triggers = make(map[string]*types.Trigger)

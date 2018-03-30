@@ -28,13 +28,13 @@ type NodeMap map[string]*Node
 type NodeList []*Node
 
 type Node struct {
-	Meta    NodeMeta   `json:"meta"`
-	Info    NodeInfo   `json:"info"`
-	Status  NodeStatus `json:"status"`
-	Spec    NodeSpec   `json:"spec"`
-	Roles   NodeRole   `json:"roles"`
-	Network Subnet     `json:"network"`
-	Online  bool       `json:"online"`
+	Meta    NodeMeta    `json:"meta"`
+	Info    NodeInfo    `json:"info"`
+	Status  NodeStatus  `json:"status"`
+	Spec    NodeSpec    `json:"spec"`
+	Roles   NodeRole    `json:"roles"`
+	Network NetworkSpec `json:"network"`
+	Online  bool        `json:"online"`
 }
 
 type NodeMeta struct {
@@ -87,10 +87,10 @@ type NodeStatus struct {
 }
 
 type NodeSpec struct {
-	Routes  map[string]RouteSpec  `json:"routes"`
-	Network map[string]Subnet     `json:"network"`
-	Pods    map[string]PodSpec    `json:"pods"`
-	Volumes map[string]VolumeSpec `json:"volumes"`
+	Routes  map[string]RouteSpec   `json:"routes"`
+	Network map[string]NetworkSpec `json:"network"`
+	Pods    map[string]PodSpec     `json:"pods"`
+	Volumes map[string]VolumeSpec  `json:"volumes"`
 }
 
 type NodeNamespace struct {

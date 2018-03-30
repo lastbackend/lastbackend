@@ -54,7 +54,7 @@ func (s *ServiceStorage) Get(ctx context.Context, namespace, name string) (*type
 		return nil, err
 	}
 
-	const filter = `\b.+` + serviceStorage + `\/.+\/(?:meta|status|spec)\b`
+	const filter = `\b.+` + serviceStorage + `\/.+\/(meta|status|spec)\b`
 	var (
 		service = new(types.Service)
 	)
@@ -90,7 +90,7 @@ func (s *ServiceStorage) ListByNamespace(ctx context.Context, namespace string) 
 		return nil, err
 	}
 
-	const filter = `\b.+` + serviceStorage + `\/.+\/(?:meta|status|spec)\b`
+	const filter = `\b.+` + serviceStorage + `\/(.+)\/(meta|status|spec)\b`
 
 	var (
 		services = make(map[string]*types.Service)

@@ -27,6 +27,12 @@ type NodeOfflineEvent struct {
 	Online bool   `json:"online"`
 }
 
+type NetworkSpecEvent struct {
+	Event string      `json:"event"`
+	Node  string      `json:"node"`
+	Spec  NetworkSpec `json:"spec"`
+}
+
 type PodSpecEvent struct {
 	Event string  `json:"event"`
 	Node  string  `json:"node"`

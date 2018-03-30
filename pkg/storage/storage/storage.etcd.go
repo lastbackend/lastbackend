@@ -160,6 +160,8 @@ type Node interface {
 	Watch(ctx context.Context, node chan *types.Node) error
 	WatchOffline(ctx context.Context, event chan *types.NodeOfflineEvent) error
 	WatchPodSpec(ctx context.Context, event chan *types.PodSpecEvent) error
+	WatchRouteSpec(ctx context.Context, event chan *types.RouteSpecEvent) error
+	WatchVolumeSpec(ctx context.Context, event chan *types.VolumeSpecEvent) error
 	Clear(ctx context.Context) error
 }
 

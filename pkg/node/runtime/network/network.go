@@ -39,7 +39,7 @@ func Restore(ctx context.Context) error {
 	return nil
 }
 
-func Create(ctx context.Context, sn *types.Subnet) error {
+func Create(ctx context.Context, sn *types.NetworkSpec) error {
 	if err := envs.Get().GetCNI().Create(ctx, sn); err != nil {
 		log.Errorf("Can not create network subnet: %s", err.Error())
 		return err
@@ -49,7 +49,7 @@ func Create(ctx context.Context, sn *types.Subnet) error {
 	return nil
 }
 
-func Destroy(ctx context.Context, sn *types.Subnet) error {
+func Destroy(ctx context.Context, sn *types.NetworkSpec) error {
 	if err := envs.Get().GetCNI().Destroy(ctx, sn); err != nil {
 		log.Errorf("Can not destroy network subnet: %s", err.Error())
 		return err

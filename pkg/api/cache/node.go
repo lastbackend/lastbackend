@@ -30,6 +30,8 @@ type CacheNodeSpec struct {
 	spec map[string]*types.NodeSpec
 }
 
+type NetworkSpecWatcher func(ctx context.Context, event chan *types.NetworkSpecEvent) error
+
 type PodSpecWatcher func(ctx context.Context, event chan *types.PodSpecEvent) error
 
 type RouteSpecWatcher func(ctx context.Context, event chan *types.RouteSpecEvent) error
@@ -65,6 +67,16 @@ func (c *CacheNodeSpec) DelPodSpec(node, pod string) {
 func (c *CacheNodeSpec) SetRouteSpec(node, route string, s types.RouteSpec) {
 	c.lock.Lock()
 	defer c.lock.Unlock()
+
+	if _, ok := c.spec[node]; !ok {
+		c.spec[node] = new(types.NodeSpec)
+	}
+
+	if c.spec[node].Routes == nil {
+		sp := c.spec[node]
+		sp.Routes = make(map[string]types.RouteSpec, 0)
+	}
+
 	c.spec[node].Routes[route] = s
 }
 
@@ -77,6 +89,16 @@ func (c *CacheNodeSpec) DelRouteSpec(node, route string) {
 func (c *CacheNodeSpec) SetVolumeSpec(node, volume string, s types.VolumeSpec) {
 	c.lock.Lock()
 	defer c.lock.Unlock()
+
+	if _, ok := c.spec[node]; !ok {
+		c.spec[node] = new(types.NodeSpec)
+	}
+
+	if c.spec[node].Volumes == nil {
+		sp := c.spec[node]
+		sp.Volumes = make(map[string]types.VolumeSpec, 0)
+	}
+
 	c.spec[node].Volumes[volume] = s
 }
 
@@ -85,6 +107,30 @@ func (c *CacheNodeSpec) DelVolumeSpec(node, volume string) {
 	defer c.lock.Unlock()
 	delete(c.spec[node].Volumes, volume)
 }
+
+func (c *CacheNodeSpec) SetNetworkSpec(node string, s types.NetworkSpec) {
+	c.lock.Lock()
+	defer c.lock.Unlock()
+
+	for n := range c.spec {
+		if c.spec[node].Network == nil {
+			sp := c.spec[node]
+			sp.Network = make(map[string]types.NetworkSpec, 0)
+		}
+
+		c.spec[n].Network[node] = s
+	}
+}
+
+func (c *CacheNodeSpec) DelNetworkSpec(node string) {
+	c.lock.Lock()
+	defer c.lock.Unlock()
+	for n := range c.spec {
+		delete(c.spec[n].Network, node)
+	}
+
+}
+
 
 func (c *CacheNodeSpec) Get(node string) *types.NodeSpec {
 	c.lock.Lock()
@@ -179,6 +225,31 @@ func (c *CacheNodeSpec) CacheVolumes(vs VolumeSpecWatcher) error {
 
 	return vs(context.Background(), evs)
 }
+
+func (c *CacheNodeSpec) CacheNetwork(ns NetworkSpecWatcher) error {
+	evs := make(chan *types.NetworkSpecEvent)
+	go func() {
+		for {
+			select {
+			case e := <-evs:
+				{
+					if e.Event == types.STORAGEPUTEVENT {
+						c.SetNetworkSpec(e.Node, e.Spec)
+						continue
+					}
+
+					if e.Event == types.STORAGEDELEVENT {
+						c.DelNetworkSpec(e.Node)
+						continue
+					}
+				}
+			}
+		}
+	}()
+
+	return ns(context.Background(), evs)
+}
+
 
 func (c *CacheNodeSpec) Del(dw NodeDelWatcher) error {
 	evs := make(chan *types.NodeOfflineEvent)
