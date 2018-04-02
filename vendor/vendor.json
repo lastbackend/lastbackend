@@ -9,6 +9,12 @@
 			"revisionTime": "2017-08-04T20:09:54Z"
 		},
 		{
+			"checksumSHA1": "flvaJZnYndDRidNqUA9lPI0nDvg=",
+			"path": "github.com/ararog/timeago",
+			"revision": "e9969cf18b8d5f04cc42f050e8b9968e152cd294",
+			"revisionTime": "2016-03-28T17:41:24Z"
+		},
+		{
 			"checksumSHA1": "Qz62A5bUoyHQ65KxP7JURBakesI=",
 			"path": "github.com/asaskevich/govalidator",
 			"revision": "4b3d68f87f176641ffc147420296013aff66ea32",

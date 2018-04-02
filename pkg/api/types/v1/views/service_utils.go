@@ -47,6 +47,7 @@ func (sv *Service) ToMeta(obj types.ServiceMeta) ServiceMeta {
 		SelfLink:    obj.SelfLink,
 		Endpoint:    obj.Endpoint,
 		Namespace:   obj.Namespace,
+		Labels:      obj.Labels,
 		Updated:     obj.Updated,
 		Created:     obj.Created,
 	}
