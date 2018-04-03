@@ -19,8 +19,12 @@ $vm_gui = false
 $vm_memory = 1024
 $vm_cpus = 1
 $vb_cpuexecutioncap = 100
-$shared_folders = {}
+$shared_folders = {
+  "./" => "/lastbackend"
+}
 $forwarded_ports = {
+  2967 => 2967,
+  2968 => 2968,
   2379 => 2379,
     80 => 80
 }
@@ -72,6 +76,10 @@ Vagrant.configure("2") do |config|
     # in CoreOS, so tell Vagrant that so it can be smarter.
     v.check_guest_additions = false
     v.functional_vboxsf     = false
+  end
+
+  config.vm.provision "docker" do |d|
+    d.build_image "-f /lastbackend/images/lastbackend/Dockerfile -t lastbackend /lastbackend"
   end
 
   # plugin conflict
@@ -145,8 +153,6 @@ Vagrant.configure("2") do |config|
         config.vm.provision :file, :source => "#{CLOUD_CONFIG_PATH}", :destination => "/tmp/vagrantfile-user-data"
         config.vm.provision :shell, :inline => "mv /tmp/vagrantfile-user-data /var/lib/coreos-vagrant/", :privileged => true
       end
-
-
 
     end
   end
