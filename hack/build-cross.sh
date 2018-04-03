@@ -1,5 +1,8 @@
 #!/bin/bash
 
+go get -u github.com/kardianos/govendor
+govendor sync
+
 mkdir -p build/linux && mkdir -p build/darwin
 
 ## declare an array of components variable
