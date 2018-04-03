@@ -1,0 +1,125 @@
+# Gopkg.toml example
+#
+# Refer to https://github.com/golang/dep/blob/master/docs/Gopkg.toml.md
+# for detailed Gopkg.toml documentation.
+#
+# required = ["github.com/user/thing/cmd/thing"]
+# ignored = ["github.com/user/project/pkgX", "bitbucket.org/user/project/pkgA/pkgY"]
+#
+# [[constraint]]
+#   name = "github.com/user/project"
+#   version = "1.0.0"
+#
+# [[constraint]]
+#   name = "github.com/user/project2"
+#   branch = "dev"
+#   source = "github.com/myfork/project2"
+#
+# [[override]]
+#   name = "github.com/x/y"
+#   version = "2.4.0"
+#
+# [prune]
+#   non-go = false
+#   go-tests = true
+#   unused-packages = true
+
+[[constraint]]
+  name = "github.com/ararog/timeago"
+  version = "0.0.1"
+
+[[constraint]]
+  name = "github.com/asaskevich/govalidator"
+  version = "9.0.0"
+
+[[constraint]]
+  name = "github.com/coreos/etcd"
+  version = "3.3.3"
+
+[[constraint]]
+  name = "github.com/coreos/go-iptables"
+  version = "0.3.0"
+
+[[override]]
+  name = "github.com/docker/distribution"
+  revision = "83389a148052d74ac602f5f1d62f86ff2f3c4aa5"
+
+[[constraint]]
+  name = "github.com/docker/docker"
+  revision = "6c0d6236117effb139dd3d3edf984877f81e0a94"
+
+[[constraint]]
+  name = "github.com/docker/go-connections"
+  revision = "7395e3f8aa162843a74ed6d48e79627d9792ac55"
+
+[[constraint]]
+  name = "github.com/gorilla/mux"
+  version = "1.6.1"
+
+[[constraint]]
+  name = "github.com/gorilla/websocket"
+  version = "1.2.0"
+
+[[constraint]]
+  name = "github.com/mattn/go-runewidth"
+  version = "0.0.2"
+
+[[constraint]]
+  name = "github.com/miekg/dns"
+  version = "1.0.5"
+
+[[constraint]]
+  name = "github.com/pkg/errors"
+  version = "0.8.0"
+
+[[constraint]]
+  name = "github.com/satori/go.uuid"
+  revision = "36e9d2ebbde5e3f13ab2e25625fd453271d6522e"
+
+[[constraint]]
+  name = "github.com/shirou/gopsutil"
+  version = "2.18.3"
+
+[[constraint]]
+  name = "github.com/sirupsen/logrus"
+  version = "1.0.5"
+
+[[constraint]]
+  name = "github.com/spf13/cobra"
+  version = "0.0.2"
+
+[[constraint]]
+  name = "github.com/spf13/viper"
+  version = "1.0.2"
+
+[[constraint]]
+  name = "github.com/stretchr/testify"
+  version = "1.2.1"
+
+[[constraint]]
+  name = "github.com/unloop/gopipe"
+  version = "0.2.0"
+
+[[constraint]]
+  name = "github.com/vishvananda/netlink"
+  version = "1.0.0"
+
+[[constraint]]
+  branch = "master"
+  name = "golang.org/x/crypto"
+
+[[constraint]]
+  branch = "master"
+  name = "golang.org/x/net"
+
+[[constraint]]
+  branch = "master"
+  name = "golang.org/x/oauth2"
+
+[[constraint]]
+  name = "gopkg.in/yaml.v2"
+  version = "2.2.1"
+
+[prune]
+  go-tests = true
+  unused-packages = true

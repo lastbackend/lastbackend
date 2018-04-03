@@ -22,7 +22,7 @@ import (
 	"strings"
 
 	"fmt"
-	"github.com/satori/uuid"
+	"github.com/lastbackend/lastbackend/pkg/util/generator"
 )
 
 const (
@@ -99,7 +99,7 @@ type ServiceReplicas struct {
 
 func (s *ServiceSpec) SetDefault() {
 	s.Meta.SetDefault()
-	s.Meta.Name = uuid.NewV4().String()
+	s.Meta.Name = generator.GetUUIDV4()
 	s.Replicas = DEFAULT_SERVICE_REPLICAS
 	s.Template.Volumes = make(SpecTemplateVolumeList, 0)
 	s.Template.Containers = make(SpecTemplateContainers, 0)
@@ -183,7 +183,7 @@ func (s *ServiceSpec) Update(spec *ServiceOptionsSpec) {
 
 	// Need to create new spec name for new deployment creating
 	if n {
-		s.Meta.Name = uuid.NewV4().String()
+		s.Meta.Name = generator.GetUUIDV4()
 	}
 }
 

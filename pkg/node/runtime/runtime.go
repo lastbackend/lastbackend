@@ -102,7 +102,7 @@ func (r *Runtime) Connect(ctx context.Context) error {
 
 	go func(ctx context.Context) {
 		ticker := time.NewTicker(time.Second * 10)
-		for _ = range ticker.C {
+		for range ticker.C {
 			if err := events.NewStatusEvent(ctx); err != nil {
 				log.Errorf("node:runtime:connect:> send status err: %s", err.Error())
 			}
