@@ -24,11 +24,8 @@ import (
 )
 
 type Namespace struct {
-	Meta      NamespaceMeta      `json:"meta"`
-	Env       NamespaceEnvs      `json:"env"`
-	Resources NamespaceResources `json:"resources"`
-	Quotas    NamespaceQuotas    `json:"quotas,omitempty"`
-	Labels    map[string]string  `json:"labels"`
+	Meta NamespaceMeta `json:"meta"`
+	Spec NamespaceSpec `json:"spec"`
 }
 
 type NamespaceMap map[string]*Namespace
@@ -42,20 +39,26 @@ type NamespaceEnv struct {
 }
 
 type NamespaceMeta struct {
-	Meta     `yaml:",inline"`
+	Meta            `yaml:",inline"`
 	Endpoint string `json:"endpoint"`
 	Type     string `json:"type"`
 }
 
-type NamespaceResources struct {
-	RAM    int64 `json:"ram"`
-	Routes int   `json:"routes"`
+type NamespaceSpec struct {
+	Quotas    NamespaceQuotas    `json:"quotas"`
+	Resources NamespaceResources `json:"resources"`
+	Env       NamespaceEnvs      `json:"env"`
 }
 
 type NamespaceQuotas struct {
 	RAM      int64 `json:"ram"`
 	Routes   int   `json:"routes"`
 	Disabled bool  `json:"disabled"`
+}
+
+type NamespaceResources struct {
+	RAM    int64 `json:"ram"`
+	Routes int   `json:"routes"`
 }
 
 func (n *Namespace) SelfLink() string {
