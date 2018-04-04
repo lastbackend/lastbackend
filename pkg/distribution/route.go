@@ -25,8 +25,6 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/log"
 	"github.com/lastbackend/lastbackend/pkg/storage"
 	"github.com/lastbackend/lastbackend/pkg/storage/store"
-	"github.com/lastbackend/lastbackend/pkg/util/generator"
-	"github.com/spf13/viper"
 	"strings"
 )
 
@@ -38,7 +36,7 @@ type IRoute interface {
 	Get(namespace, name string) (*types.Route, error)
 	ListByNamespace(namespace string) (map[string]*types.Route, error)
 	Create(namespace *types.Namespace, opts *types.RouteCreateOptions) (*types.Route, error)
-	Update(route *types.Route, namespace *types.Namespace, opts *types.RouteUpdateOptions) (*types.Route, error)
+	Update(route *types.Route, opts *types.RouteUpdateOptions) (*types.Route, error)
 	SetStatus(route *types.Route, status *types.RouteStatus) error
 	Remove(route *types.Route) error
 }
@@ -88,28 +86,19 @@ func (n *Route) Create(namespace *types.Namespace, opts *types.RouteCreateOption
 
 	route := new(types.Route)
 	route.Meta.SetDefault()
-	route.Meta.Name = generator.GenerateRandomString(10)
+	route.Meta.Name = opts.Name
 	route.Meta.Namespace = namespace.Meta.Name
 	route.Meta.Security = opts.Security
+	route.SelfLink()
+
 	route.Status.State = types.StateInitialized
 
-	if len(opts.Domain) != 0 && opts.Custom {
-		route.Spec.Domain = strings.ToLower(opts.Domain)
-	}
-
-	if len(opts.Domain) == 0 && len(opts.Subdomain) != 0 && !opts.Custom {
-		route.Spec.Domain = strings.ToLower(fmt.Sprintf("%s-%s.%s", opts.Subdomain, namespace.Meta.Endpoint, viper.GetString("domain.external")))
-	}
-
-	if len(opts.Domain) == 0 && len(opts.Subdomain) == 0 && !opts.Custom {
-		route.Spec.Domain = strings.ToLower(strings.Join([]string{generator.GenerateRandomString(5), namespace.Meta.Endpoint}, "-"))
-	}
-
+	route.Spec.Domain = fmt.Sprintf("%s.%s", strings.ToLower(opts.Name), strings.ToLower(opts.Domain))
 	route.Spec.Rules = make([]*types.RouteRule, 0)
 	for _, rule := range opts.Rules {
 		route.Spec.Rules = append(route.Spec.Rules, &types.RouteRule{
-			Endpoint: *rule.Endpoint,
-			Port:     *rule.Port,
+			Endpoint: rule.Endpoint,
+			Port:     rule.Port,
 			Path:     rule.Path,
 		})
 	}
@@ -122,25 +111,19 @@ func (n *Route) Create(namespace *types.Namespace, opts *types.RouteCreateOption
 	return route, nil
 }
 
-func (n *Route) Update(route *types.Route, namespace *types.Namespace, opts *types.RouteUpdateOptions) (*types.Route, error) {
+func (n *Route) Update(route *types.Route, opts *types.RouteUpdateOptions) (*types.Route, error) {
 
 	log.V(logLevel).Debugf("%s:update:> update route %s", logRoutePrefix, route.Meta.Name)
 
 	route.Meta.Security = opts.Security
 	route.Status.State = types.StateProvision
-
-	route.Spec.Domain = opts.Domain
 	route.Spec.Rules = make([]*types.RouteRule, 0)
 	for _, rule := range opts.Rules {
 		route.Spec.Rules = append(route.Spec.Rules, &types.RouteRule{
-			Endpoint: *rule.Endpoint,
-			Port:     *rule.Port,
+			Endpoint: rule.Endpoint,
+			Port:     rule.Port,
 			Path:     rule.Path,
 		})
-	}
-
-	if len(opts.Domain) == 0 {
-		route.Spec.Domain = strings.Join([]string{generator.GenerateRandomString(5), namespace.Meta.Endpoint}, "-")
 	}
 
 	if err := n.storage.Route().Update(n.context, route); err != nil {

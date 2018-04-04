@@ -138,8 +138,9 @@ func RouteCreateH(w http.ResponseWriter, r *http.Request) {
 	nid := utils.Vars(r)["namespace"]
 
 	var (
-		rm  = distribution.NewRouteModel(r.Context(), envs.Get().GetStorage())
-		nsm = distribution.NewNamespaceModel(r.Context(), envs.Get().GetStorage())
+		rm = distribution.NewRouteModel(r.Context(), envs.Get().GetStorage())
+		nm = distribution.NewNamespaceModel(r.Context(), envs.Get().GetStorage())
+		sm = distribution.NewServiceModel(r.Context(), envs.Get().GetStorage())
 	)
 
 	// request body struct
@@ -150,7 +151,7 @@ func RouteCreateH(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	ns, err := nsm.Get(nid)
+	ns, err := nm.Get(nid)
 	if err != nil {
 		log.V(logLevel).Errorf("%s:create:> get namespace", logPrefix, err.Error())
 		errors.HTTP.InternalServerError(w)
@@ -163,7 +164,55 @@ func RouteCreateH(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	rs, err := rm.Create(ns, opts)
+
+	svc, err := sm.List(ns.Meta.SelfLink)
+	if err != nil {
+		log.V(logLevel).Errorf("%s:create:> get services", logPrefix, err.Error())
+		errors.HTTP.InternalServerError(w)
+		return
+	}
+
+	rcopts := types.RouteCreateOptions{
+		Name:     opts.Name,
+		Domain:   ns.Meta.Endpoint,
+		Security: opts.Security,
+		Rules:    make([]types.RuleOption, 0),
+	}
+
+	var links = make(map[string]string)
+
+	for _, s := range svc{
+		links[s.Meta.Name] = s.Meta.SelfLink
+	}
+
+	for _, r := range opts.Rules {
+
+		if r.Service == "" || r.Port == 0 {
+			continue
+		}
+
+		if r.Path == "" {
+			r.Path = "/"
+		}
+
+		if _, ok := links[r.Service]; ok {
+			rcopts.Rules = append(rcopts.Rules, types.RuleOption{
+				Endpoint: svc[links[r.Service]].Meta.Endpoint,
+				Path: r.Path,
+				Port: r.Port,
+			})
+		}
+	}
+
+	if len(rcopts.Rules) == 0 {
+		err := errors.New("route rules are incorrect")
+		log.V(logLevel).Errorf("%s:create:> route rules empty", logPrefix, err.Error())
+		errors.New("route").BadParameter("rules", err).Http(w)
+		return
+	}
+
+	rs, err := rm.Create(ns, &rcopts)
+
 	if err != nil {
 		log.V(logLevel).Errorf("%s:create:> create route err: %s", logPrefix, ns.Meta.Name, err.Error())
 		errors.HTTP.InternalServerError(w)
@@ -192,8 +241,9 @@ func RouteUpdateH(w http.ResponseWriter, r *http.Request) {
 	log.V(logLevel).Debugf("%s:update:> update route `%s`", logPrefix, nid)
 
 	var (
-		rm  = distribution.NewRouteModel(r.Context(), envs.Get().GetStorage())
-		nsm = distribution.NewNamespaceModel(r.Context(), envs.Get().GetStorage())
+		rm = distribution.NewRouteModel(r.Context(), envs.Get().GetStorage())
+		nm = distribution.NewNamespaceModel(r.Context(), envs.Get().GetStorage())
+		sm = distribution.NewServiceModel(r.Context(), envs.Get().GetStorage())
 	)
 
 	// request body struct
@@ -204,7 +254,7 @@ func RouteUpdateH(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	ns, err := nsm.Get(nid)
+	ns, err := nm.Get(nid)
 	if err != nil {
 		log.V(logLevel).Errorf("%s:update:> get namespace", logPrefix, err.Error())
 		errors.HTTP.InternalServerError(w)
@@ -229,7 +279,51 @@ func RouteUpdateH(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	rs, err = rm.Update(rs, ns, opts)
+	svc, err := sm.List(ns.Meta.SelfLink)
+	if err != nil {
+		log.V(logLevel).Errorf("%s:create:> get services", logPrefix, err.Error())
+		errors.HTTP.InternalServerError(w)
+		return
+	}
+
+	ruopts := types.RouteUpdateOptions{
+		Security: opts.Security,
+		Rules:    make([]types.RuleOption, 0),
+	}
+
+	var links = make(map[string]string)
+
+	for _, s := range svc{
+		links[s.Meta.Name] = s.Meta.SelfLink
+	}
+
+	for _, r := range opts.Rules {
+
+		if r.Service == "" || r.Port == 0 {
+			continue
+		}
+
+		if r.Path == "" {
+			r.Path = "/"
+		}
+
+		if _, ok := links[r.Service]; ok {
+			ruopts.Rules = append(ruopts.Rules, types.RuleOption{
+				Endpoint: svc[links[r.Service]].Meta.Endpoint,
+				Path: r.Path,
+				Port: r.Port,
+			})
+		}
+	}
+
+	if len(ruopts.Rules) == 0 {
+		err := errors.New("route rules are incorrect")
+		log.V(logLevel).Errorf("%s:create:> route rules empty", logPrefix, err.Error())
+		errors.New("route").BadParameter("rules", err).Http(w)
+		return
+	}
+
+	rs, err = rm.Update(rs, &ruopts)
 	if err != nil {
 		log.V(logLevel).Errorf("%s:update:> update route `%s` err: %s", logPrefix, ns.Meta.Name, err.Error())
 		errors.HTTP.InternalServerError(w)

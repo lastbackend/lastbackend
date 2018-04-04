@@ -24,7 +24,6 @@ import (
 	"io/ioutil"
 
 	"github.com/lastbackend/lastbackend/pkg/distribution/errors"
-	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 )
 
 type RouteRequest struct{}
@@ -37,7 +36,7 @@ func (r *RouteCreateOptions) Validate() *errors.Err {
 	return nil
 }
 
-func (r *RouteCreateOptions) DecodeAndValidate(reader io.Reader) (*types.RouteCreateOptions, *errors.Err) {
+func (r *RouteCreateOptions) DecodeAndValidate(reader io.Reader) ( *RouteCreateOptions, *errors.Err) {
 
 	if reader == nil {
 		err := errors.New("data body can not be null")
@@ -58,21 +57,7 @@ func (r *RouteCreateOptions) DecodeAndValidate(reader io.Reader) (*types.RouteCr
 		return nil, err
 	}
 
-	opts := new(types.RouteCreateOptions)
-	opts.Domain = r.Domain
-	opts.Subdomain = r.Subdomain
-	opts.Security = r.Security
-	opts.Custom = r.Custom
-
-	for _, rule := range r.Rules {
-		opts.Rules = append(opts.Rules, types.RulesOption{
-			Endpoint: rule.Endpoint,
-			Path:     rule.Path,
-			Port:     rule.Port,
-		})
-	}
-
-	return opts, nil
+	return r, nil
 }
 
 func (r *RouteCreateOptions) ToJson() ([]byte, error) {
@@ -87,7 +72,7 @@ func (r *RouteUpdateOptions) Validate() *errors.Err {
 	return nil
 }
 
-func (r *RouteUpdateOptions) DecodeAndValidate(reader io.Reader) (*types.RouteUpdateOptions, *errors.Err) {
+func (r *RouteUpdateOptions) DecodeAndValidate(reader io.Reader) (*RouteUpdateOptions, *errors.Err) {
 
 	if reader == nil {
 		err := errors.New("data body can not be null")
@@ -108,21 +93,7 @@ func (r *RouteUpdateOptions) DecodeAndValidate(reader io.Reader) (*types.RouteUp
 		return nil, err
 	}
 
-	opts := new(types.RouteUpdateOptions)
-	opts.Domain = r.Domain
-	opts.Subdomain = r.Subdomain
-	opts.Security = r.Security
-	opts.Custom = r.Custom
-
-	for _, rule := range r.Rules {
-		opts.Rules = append(opts.Rules, types.RulesOption{
-			Endpoint: rule.Endpoint,
-			Path:     rule.Path,
-			Port:     rule.Port,
-		})
-	}
-
-	return opts, nil
+	return r, nil
 }
 
 func (r *RouteUpdateOptions) ToJson() ([]byte, error) {

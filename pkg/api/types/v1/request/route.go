@@ -19,15 +19,14 @@
 package request
 
 type RouteCreateOptions struct {
-	Domain   string        `json:"domain"`
+	Name     string        `json:"name"`
 	Security bool          `json:"security"`
 	Rules    []RulesOption `json:"rules"`
 }
 
 type RouteUpdateOptions struct {
-	Domain    string        `json:"domain"`
-	Security  bool          `json:"security"`
-	Rules     []RulesOption `json:"rules"`
+	Security bool          `json:"security"`
+	Rules    []RulesOption `json:"rules"`
 }
 
 type RouteRemoveOptions struct {
@@ -35,7 +34,7 @@ type RouteRemoveOptions struct {
 }
 
 type RulesOption struct {
-	Service *string `json:"service"`
-	Path    string  `json:"path"`
-	Port    *int    `json:"port"`
+	Service string `json:"service"`
+	Path    string `json:"path"`
+	Port    int    `json:"port"`
 }

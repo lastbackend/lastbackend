@@ -124,27 +124,23 @@ func (r *Route) GetRouteConfig() *RouterConfig {
 }
 
 type RouteCreateOptions struct {
-	Subdomain string        `json:"subdomain"`
-	Domain    string        `json:"domain"`
-	Custom    bool          `json:"custom"`
-	Security  bool          `json:"security"`
-	Rules     []RulesOption `json:"rules"`
+	Name     string       `json:"name"`
+	Domain   string       `json:"domain"`
+	Security bool         `json:"security"`
+	Rules    []RuleOption `json:"rules"`
 }
 
 type RouteUpdateOptions struct {
-	Subdomain string        `json:"subdomain"`
-	Domain    string        `json:"domain"`
-	Custom    bool          `json:"custom"`
-	Security  bool          `json:"security"`
-	Rules     []RulesOption `json:"rules"`
+	Security bool         `json:"security"`
+	Rules    []RuleOption `json:"rules"`
 }
 
 type RouteRemoveOptions struct {
 	Force bool `json:"force"`
 }
 
-type RulesOption struct {
-	Endpoint *string `json:"endpoint"`
-	Path     string  `json:"path"`
-	Port     *int    `json:"port"`
+type RuleOption struct {
+	Endpoint string `json:"endpoint"`
+	Path     string `json:"path"`
+	Port     int    `json:"port"`
 }
