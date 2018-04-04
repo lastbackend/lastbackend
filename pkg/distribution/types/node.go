@@ -20,6 +20,7 @@ package types
 
 import (
 	"context"
+	"fmt"
 )
 
 type NodeMapStatus map[string]*NodeStatus
@@ -39,6 +40,7 @@ type Node struct {
 
 type NodeMeta struct {
 	Meta
+	Cluster  string `json:"cluster"`
 	Token    string `json:"token"`
 	Region   string `json:"region"`
 	Provider string `json:"provider"`
@@ -151,4 +153,11 @@ type NodeCreateOptions struct {
 	Info    NodeInfo              `json:"info",yaml:"info"`
 	Status  NodeStatus            `json:"status",yaml:"status"`
 	Network NetworkSpec           `json:"network"`
+}
+
+func (n *Node) SelfLink() string {
+	if n.Meta.SelfLink == "" {
+		n.Meta.SelfLink = fmt.Sprintf("%s:%s", n.Meta.Cluster, n.Meta.Name)
+	}
+	return n.Meta.SelfLink
 }
