@@ -153,7 +153,7 @@ func (s *ClusterUpdateOptions) toJson() string {
 }
 
 // Testing NamespaceUpdateH handler
-func TestNamespaceUpdate(t *testing.T) {
+func TestClusterUpdate(t *testing.T) {
 
 	strg, _ := storage.GetMock()
 	envs.Get().SetStorage(strg)

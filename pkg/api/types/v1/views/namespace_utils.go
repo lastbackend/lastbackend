@@ -30,9 +30,7 @@ type NamespaceView struct{}
 func (nv *NamespaceView) New(obj *types.Namespace) *Namespace {
 	n := Namespace{}
 	n.Meta = n.ToMeta(obj.Meta)
-	n.Env = n.ToEnv(obj.Env)
-	n.Resources = n.ToResources(obj.Resources)
-	n.Quotas = n.ToQuotas(obj.Quotas)
+	n.Spec = n.ToSpec(obj.Spec)
 	return &n
 }
 
@@ -45,11 +43,20 @@ func (r *Namespace) ToMeta(obj types.NamespaceMeta) NamespaceMeta {
 	meta.Created = obj.Created
 	meta.Updated = obj.Updated
 	meta.Labels = make(map[string]string, 0)
-	if len(obj.Labels) != 0 {
+
+	if obj.Labels != nil {
 		meta.Labels = obj.Meta.Labels
 	}
 
 	return meta
+}
+
+func (r *Namespace) ToSpec(spec types.NamespaceSpec) NamespaceSpec {
+	return NamespaceSpec{
+		Resources: r.ToResources(spec.Resources),
+		Quotas:    r.ToQuotas(spec.Quotas),
+		Env:       r.ToEnv(spec.Env),
+	}
 }
 
 func (r *Namespace) ToEnv(obj types.NamespaceEnvs) NamespaceEnvs {
