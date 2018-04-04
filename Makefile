@@ -9,8 +9,8 @@ default: deps test build
 
 deps:
 	@echo "Configuring Last.Backend Dependencies"
-	go get -u github.com/kardianos/govendor
-	govendor sync
+	go get -u github.com/golang/dep/cmd/dep
+	dep ensure
 
 test:
 	@echo "Testing Last.Backend"
@@ -39,10 +39,6 @@ install:
 image:
 	@echo "== Pre-building configuration"
 	@sh ./hack/build-images.sh
-
-vendor-add:
-	@echo "== Add mission vendors"
-	@govendor add +external
 
 run-kit:
 	@echo "== Run kit daemon all in one"

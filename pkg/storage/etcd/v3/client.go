@@ -78,9 +78,9 @@ func getTLSConfig(certFile, keyFile, caFile string) (*tls.Config, error) {
 	}
 
 	tlsInfo := transport.TLSInfo{
-		CertFile: certFile,
-		KeyFile:  keyFile,
-		CAFile:   caFile,
+		CertFile:      certFile,
+		KeyFile:       keyFile,
+		TrustedCAFile: caFile,
 	}
 
 	return tlsInfo.ClientConfig()
