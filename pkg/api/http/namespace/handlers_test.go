@@ -444,6 +444,8 @@ func TestNamespaceUpdate(t *testing.T) {
 	ns3 := getNamespaceAsset("demo", "")
 	ns3.Spec.Resources.RAM = 512
 	ns3.Spec.Resources.Routes = 2
+	ns3.Spec.Quotas.RAM = 512
+	ns3.Spec.Quotas.Routes = 2
 
 	type fields struct {
 		stg storage.Storage
