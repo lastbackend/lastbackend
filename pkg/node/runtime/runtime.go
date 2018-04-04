@@ -46,12 +46,15 @@ func (r *Runtime) Restore() {
 }
 
 func (r *Runtime) Provision(ctx context.Context, spec *types.NodeSpec, clean bool) error {
-	log.Debug("node:runtime:provision:> provision init")
-	for _, r := range spec.Routes {
-		log.Debugf("route: %v", r)
-	}
+
+	var (
+		msg = "node:runtime:provision:"
+	)
+
+	log.Debugf("%s> provision init", msg)
 
 	if clean {
+		log.Debugf("%s> clean up pods", msg)
 		pods := envs.Get().GetState().Pods().GetPods()
 
 		for k := range pods {
@@ -61,6 +64,32 @@ func (r *Runtime) Provision(ctx context.Context, spec *types.NodeSpec, clean boo
 		}
 	}
 
+	if clean {
+		log.Debugf("%s> clean up networks", msg)
+		nets := envs.Get().GetState().Networks().GetSubnets()
+
+		for n, sp := range nets {
+			if _, ok := spec.Network[n]; !ok {
+				network.Destroy(ctx, &sp)
+			}
+		}
+	}
+
+	log.Debugf("%s> provision networks", msg)
+	for _, n := range spec.Network {
+		log.Debugf("network: %v", n)
+		if err := network.Create(ctx, &n); err != nil {
+			log.Errorf("Network [%s] create err: %s", n.Range, err.Error())
+		}
+	}
+
+	log.Debugf("%s> provision routes", msg)
+	for _, r := range spec.Routes {
+		log.Debugf("route: %v", r)
+	}
+
+
+	log.Debugf("%s> provision pods", msg)
 	for p, spec := range spec.Pods {
 		log.Debugf("pod: %v", p)
 		if err := pod.Manage(ctx, p, &spec); err != nil {
@@ -68,6 +97,7 @@ func (r *Runtime) Provision(ctx context.Context, spec *types.NodeSpec, clean boo
 		}
 	}
 
+	log.Debugf("%s> provision volumes", msg)
 	for _, v := range spec.Volumes {
 		log.Debugf("volume: %v", v)
 	}
@@ -124,12 +154,12 @@ func (r *Runtime) GetSpec(ctx context.Context) error {
 
 	spec, err := c.GetSpec(ctx)
 	if err != nil {
-		log.Debugf("node:runtime:getspec:> request err: %s", err.Error())
+		log.Errorf("node:runtime:getspec:> request err: %s", err.Error())
 		return err
 	}
 
 	if spec == nil {
-		log.Debugf("node:runtime:getspec:> new spec is nil")
+		log.Warnf("node:runtime:getspec:> new spec is nil")
 		return nil
 	}
 

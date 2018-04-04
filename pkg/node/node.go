@@ -75,6 +75,7 @@ func Daemon() {
 	state.Node().Status = node.GetStatus()
 
 	host := viper.GetString("api.uri")
+	port := viper.GetInt("api.port")
 	tls := viper.GetBool("api.tls")
 
 	schema := "http"
@@ -82,7 +83,7 @@ func Daemon() {
 		schema = "https"
 	}
 
-	endpoint := fmt.Sprintf("%s://%s", schema, host)
+	endpoint := fmt.Sprintf("%s://%s:%d", schema, host, port)
 	types.SecretAccessToken = viper.GetString("token")
 
 	rest, err := client.NewHTTP(endpoint, &client.Config{

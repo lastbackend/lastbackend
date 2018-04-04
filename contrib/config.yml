@@ -23,7 +23,7 @@ api:
   host: 0.0.0.0
   port: 2967
   uri: "api.lstbknd.net"
-  tls: true
+  tls: false
 
 dns:
   host: 0.0.0.0

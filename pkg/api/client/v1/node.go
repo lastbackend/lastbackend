@@ -79,7 +79,7 @@ func (s *NodeClient) Get(ctx context.Context) (*vv1.Node, error) {
 
 	var ns *vv1.Node
 
-	if err := json.Unmarshal(buf, &ns); err != nil {
+	if err := json.Unmarshal(buf, ns); err != nil {
 		return nil, err
 	}
 

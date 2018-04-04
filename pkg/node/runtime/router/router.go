@@ -80,7 +80,7 @@ func Create(ctx context.Context, config *types.RouterConfig) error {
 
 	dir += "routes"
 
-	filename := fmt.Sprintf("%s:%s.conf", config.ID, config.Hash)
+	filename := fmt.Sprintf("%s:%s.conf", config.Name, config.Hash)
 
 	config.RootPath = viper.GetString("node.volume")
 
@@ -89,7 +89,7 @@ func Create(ctx context.Context, config *types.RouterConfig) error {
 		return err
 	}
 
-	envs.Get().GetState().Router().Set(config.ID, config.Hash)
+	envs.Get().GetState().Router().Set(config.Name, config.Hash)
 
 	return nil
 }
@@ -100,8 +100,8 @@ func Manage(ctx context.Context, route *types.Route) error {
 
 	config := route.GetRouteConfig()
 
-	if err := Destroy(ctx, config.ID); err != nil {
-		log.Errorf("Route: Manage: remove route %s config err: %s", config.ID, err)
+	if err := Destroy(ctx, config.Name); err != nil {
+		log.Errorf("Route: Manage: remove route %s config err: %s", config.Name, err)
 		return err
 	}
 
@@ -111,7 +111,7 @@ func Manage(ctx context.Context, route *types.Route) error {
 	//}
 
 	if err := Create(ctx, config); err != nil {
-		log.Errorf("Route: Manage: create route %s config err: %s", config.ID, err)
+		log.Errorf("Route: Manage: create route %s config err: %s", config.Name, err)
 		return err
 	}
 

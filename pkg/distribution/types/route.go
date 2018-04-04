@@ -34,7 +34,7 @@ type RouteMap map[string]*Route
 type RouteList []*Route
 
 type RouteMeta struct {
-	Meta      `yaml:",inline"`
+	Meta             `yaml:",inline"`
 	Namespace string `json:"namespace" yaml:"namespace"`
 	Security  bool   `json:"security" yaml:"security"`
 }
@@ -57,25 +57,12 @@ type RouteRule struct {
 	Port     int    `json:"port" yaml:"port"`
 }
 
-type RouteOptions struct {
-	Subdomain string        `json:"subdomain" yaml:"subdomain"`
-	Domain    string        `json:"domain" yaml:"domain"`
-	Custom    bool          `json:"custom" yaml:"custom"`
-	Security  bool          `json:"security" yaml:"security"`
-	Rules     []RulesOption `json:"rules" yaml:"rules"`
-}
-
-type RouteStateEvent struct {
-	ID     string `json:"id" yaml:"id"`
-	Status string `json:"status" yaml:"status"`
-}
-
 type RouterConfig struct {
-	ID        string            `json:"id" yaml:"id"`
-	Hash      string            `json:"hash" yaml:"hash"`
-	RootPath  string            `json:"-" yaml:"-"`
-	Upstreams []*UpstreamServer `json:"upstreams" yaml:"upstreams"`
-	Server    RouteServer       `json:"server" yaml:"server"`
+	Name      string      `json:"id" yaml:"id"`
+	Hash      string      `json:"hash" yaml:"hash"`
+	RootPath  string      `json:"-" yaml:"-"`
+	Upstreams []*Upstream `json:"upstreams" yaml:"upstreams"`
+	Server    RouteServer `json:"server" yaml:"server"`
 }
 
 type RouteServer struct {
@@ -85,7 +72,7 @@ type RouteServer struct {
 	Locations []*RoteLocation `json:"locations" yaml:"locations"`
 }
 
-type UpstreamServer struct {
+type Upstream struct {
 	Name    string `json:"name" yaml:"name"`
 	Address string `json:"address" yaml:"address"`
 }
@@ -105,7 +92,7 @@ func (r *Route) SelfLink() string {
 func (r *Route) GetRouteConfig() *RouterConfig {
 	var RouterConfig = new(RouterConfig)
 
-	RouterConfig.ID = r.Meta.Name
+	RouterConfig.Name = r.Meta.Name
 
 	RouterConfig.Server.Hostname = r.Spec.Domain
 	RouterConfig.Server.Protocol = "http"
@@ -116,20 +103,20 @@ func (r *Route) GetRouteConfig() *RouterConfig {
 		RouterConfig.Server.Port = 443
 	}
 
-	RouterConfig.Upstreams = make([]*UpstreamServer, 0)
+	RouterConfig.Upstreams = make([]*Upstream, 0)
 	RouterConfig.Server.Locations = make([]*RoteLocation, 0)
 	for _, rule := range r.Spec.Rules {
 
-		id := generator.GetUUIDV4()
+		name := generator.GetUUIDV4()
 
-		RouterConfig.Upstreams = append(RouterConfig.Upstreams, &UpstreamServer{
-			Name:    id,
+		RouterConfig.Upstreams = append(RouterConfig.Upstreams, &Upstream{
+			Name:    name,
 			Address: strings.ToLower(fmt.Sprintf("%s:%d", rule.Endpoint, rule.Port)),
 		})
 
 		RouterConfig.Server.Locations = append(RouterConfig.Server.Locations, &RoteLocation{
 			Path:      rule.Path,
-			ProxyPass: strings.ToLower(fmt.Sprintf("http://%s", id)),
+			ProxyPass: strings.ToLower(fmt.Sprintf("http://%s", name)),
 		})
 	}
 

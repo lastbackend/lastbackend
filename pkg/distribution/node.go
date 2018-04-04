@@ -80,6 +80,7 @@ func (n *Node) Create(opts *types.NodeCreateOptions) (*types.Node, error) {
 
 	ni.Info = opts.Info
 	ni.Status = opts.Status
+	ni.Network = opts.Network
 
 	if ni.Meta.Token == "" {
 		ni.Meta.Token = generator.GenerateRandomString(32)

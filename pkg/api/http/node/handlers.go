@@ -231,6 +231,8 @@ func NodeConnectH(w http.ResponseWriter, r *http.Request) {
 		nco.Meta.Name = opts.Info.Hostname
 		nco.Info = opts.Info
 		nco.Status = opts.Status
+		nco.Network = opts.Network
+
 
 		node, err = nm.Create(&nco)
 		if err != nil {
@@ -261,6 +263,12 @@ func NodeConnectH(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := nm.SetStatus(node, opts.Status); err != nil {
+		log.V(logLevel).Errorf("%s:connect:> get nodes list err: %s", logPrefix, err.Error())
+		errors.HTTP.InternalServerError(w)
+		return
+	}
+
+	if err := nm.SetNetwork(node, opts.Network); err != nil {
 		log.V(logLevel).Errorf("%s:connect:> get nodes list err: %s", logPrefix, err.Error())
 		errors.HTTP.InternalServerError(w)
 		return

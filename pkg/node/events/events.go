@@ -37,6 +37,7 @@ func NewConnectEvent(ctx context.Context) error {
 	opts := v1.Request().Node().NodeConnectOptions()
 	opts.Info = envs.Get().GetState().Node().Info
 	opts.Status = envs.Get().GetState().Node().Status
+	opts.Network = *envs.Get().GetCNI().Info(ctx)
 
 	return c.Connect(ctx, opts)
 

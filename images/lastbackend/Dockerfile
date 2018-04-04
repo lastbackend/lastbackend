@@ -2,6 +2,9 @@ FROM golang:1.10.1-alpine3.7
 
 RUN apk add --no-cache ca-certificates
 
+RUN apk add --no-cache iptables \
+    iproute2
+
 RUN set -ex \
 	&& apk add --no-cache --virtual .build-deps \
     bash \
@@ -26,4 +29,3 @@ RUN rm -rf /go/pkg \
     && rm -rf /var/cache/apk/*
 
 EXPOSE 2967
-ENTRYPOINT ["/usr/local/bin/lastbackend"]
