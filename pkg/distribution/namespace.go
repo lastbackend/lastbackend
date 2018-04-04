@@ -122,6 +122,12 @@ func (n *Namespace) Update(namespace *types.Namespace, opts *types.NamespaceUpda
 		namespace.Meta.Description = *opts.Description
 	}
 
+	if opts.Quotas != nil {
+		namespace.Spec.Quotas.RAM = opts.Quotas.RAM
+		namespace.Spec.Quotas.Routes = opts.Quotas.Routes
+		namespace.Spec.Quotas.Disabled = opts.Quotas.Disabled
+	}
+
 	if err := n.storage.Namespace().Update(n.context, namespace); err != nil {
 		log.V(logLevel).Errorf("%s:update:> namespace update err: %s", logNamespacePrefix, err.Error())
 		return err
