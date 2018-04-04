@@ -442,8 +442,8 @@ func TestNamespaceUpdate(t *testing.T) {
 	ns1 := getNamespaceAsset("demo", "")
 	ns2 := getNamespaceAsset("empty", "new description")
 	ns3 := getNamespaceAsset("demo", "")
-	ns3.Resources.RAM = 512
-	ns3.Resources.Routes = 2
+	ns3.Spec.Resources.RAM = 512
+	ns3.Spec.Resources.Routes = 2
 
 	type fields struct {
 		stg storage.Storage
@@ -490,7 +490,7 @@ func TestNamespaceUpdate(t *testing.T) {
 			args:         args{ctx, ns1},
 			fields:       fields{stg},
 			handler:      namespace.NamespaceUpdateH,
-			data:         createNamespaceUpdateOptions(strPointer(ns3.Meta.Description), &request.NamespaceQuotasOptions{RAM: ns3.Resources.RAM, Routes: ns3.Resources.Routes}).toJson(),
+			data:         createNamespaceUpdateOptions(strPointer(ns3.Meta.Description), &request.NamespaceQuotasOptions{RAM: ns3.Spec.Resources.RAM, Routes: ns3.Spec.Resources.Routes}).toJson(),
 			want:         v1.View().Namespace().New(ns3),
 			wantErr:      false,
 			expectedCode: http.StatusOK,
@@ -550,8 +550,8 @@ func TestNamespaceUpdate(t *testing.T) {
 
 				assert.Equal(t, tc.want.Meta.Name, n.Meta.Name, "name not equal")
 				assert.Equal(t, tc.want.Meta.Description, n.Meta.Description, "description not equal")
-				assert.Equal(t, tc.want.Quotas.RAM, n.Quotas.RAM, "ram not equal")
-				assert.Equal(t, tc.want.Quotas.Routes, n.Quotas.Routes, "routes not equal")
+				assert.Equal(t, tc.want.Spec.Quotas.RAM, n.Spec.Quotas.RAM, "ram not equal")
+				assert.Equal(t, tc.want.Spec.Quotas.Routes, n.Spec.Quotas.Routes, "routes not equal")
 			}
 
 		})
