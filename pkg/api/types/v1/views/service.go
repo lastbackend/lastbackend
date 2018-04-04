@@ -32,7 +32,6 @@ type Service struct {
 	Status      ServiceStatus          `json:"status"`
 	Spec        ServiceSpec            `json:"spec"`
 	Sources     ServiceSources         `json:"sources"`
-	Quotas      ServiceQuotas          `json:"quotas"`
 	Deployments map[string]*Deployment `json:"deployments"`
 }
 
@@ -62,11 +61,6 @@ type ServiceSourcesImage struct {
 	Tag string `json:"tag"`
 	// Hash
 	Hash string `json:"hash"`
-}
-
-type ServiceQuotas struct {
-	// Service quotas ram
-	RAM *int64 `json:"ram, omitempty"`
 }
 
 type ServiceSourcesRepo struct {

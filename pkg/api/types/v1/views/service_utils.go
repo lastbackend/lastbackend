@@ -103,12 +103,6 @@ func (sv *Service) ToSpec(obj types.ServiceSpec) ServiceSpec {
 	return spec
 }
 
-func (sv *Service) ToQuotas(obj types.ServiceQuotas) ServiceQuotas {
-	return ServiceQuotas{
-		RAM: obj.RAM,
-	}
-}
-
 func (sv *Service) ToDeployments(obj map[string]*types.Deployment, pods map[string]*types.Pod) DeploymentMap {
 	deployments := make(DeploymentMap, 0)
 	for _, d := range obj {
