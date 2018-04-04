@@ -197,6 +197,7 @@ func RouteCreateH(w http.ResponseWriter, r *http.Request) {
 
 		if _, ok := links[r.Service]; ok {
 			rcopts.Rules = append(rcopts.Rules, types.RuleOption{
+				Service: r.Service,
 				Endpoint: svc[links[r.Service]].Meta.Endpoint,
 				Path: r.Path,
 				Port: r.Port,
@@ -309,6 +310,7 @@ func RouteUpdateH(w http.ResponseWriter, r *http.Request) {
 
 		if _, ok := links[r.Service]; ok {
 			ruopts.Rules = append(ruopts.Rules, types.RuleOption{
+				Service: r.Service,
 				Endpoint: svc[links[r.Service]].Meta.Endpoint,
 				Path: r.Path,
 				Port: r.Port,

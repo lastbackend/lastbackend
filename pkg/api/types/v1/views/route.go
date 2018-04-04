@@ -44,6 +44,7 @@ type RouteSpec struct {
 }
 
 type RouteRule struct {
+	Service  string `json:"service"`
 	Path     string `json:"path"`
 	Endpoint string `json:"endpoint"`
 	Port     int    `json:"port"`

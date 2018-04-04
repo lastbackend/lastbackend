@@ -97,6 +97,7 @@ func (n *Route) Create(namespace *types.Namespace, opts *types.RouteCreateOption
 	route.Spec.Rules = make([]*types.RouteRule, 0)
 	for _, rule := range opts.Rules {
 		route.Spec.Rules = append(route.Spec.Rules, &types.RouteRule{
+			Service: rule.Service,
 			Endpoint: rule.Endpoint,
 			Port:     rule.Port,
 			Path:     rule.Path,

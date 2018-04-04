@@ -55,6 +55,7 @@ func (r *Route) ToSpec(obj types.RouteSpec) RouteSpec {
 	spec.Domain = obj.Domain
 	for _, rule := range obj.Rules {
 		spec.Rules = append(spec.Rules, &RouteRule{
+			Service:  rule.Service,
 			Path:     rule.Path,
 			Port:     rule.Port,
 			Endpoint: rule.Endpoint,

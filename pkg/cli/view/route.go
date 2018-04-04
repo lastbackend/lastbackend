@@ -46,6 +46,7 @@ type RouteSpec struct {
 }
 
 type RouteRule struct {
+	Service  string `json:"service"`
 	Path     string `json:"path"`
 	Endpoint string `json:"endpoint"`
 	Port     int    `json:"port"`
@@ -58,13 +59,13 @@ type RouteStatus struct {
 
 func (rl *RouteList) Print() {
 
-	t := table.New([]string{"NAME", "ENDPOINT", "DOMAIN", "HTTPS", "STATUS"})
+	t := table.New([]string{"NAMESPACE", "NAME", "DOMAIN", "HTTPS", "STATUS"})
 	t.VisibleHeader = true
 
 	for _, r := range *rl {
 		var data = map[string]interface{}{}
-		data["NAME"] = r.Meta.Name
 		data["NAMESPACE"] = r.Meta.Namespace
+		data["NAME"] = r.Meta.Name
 		data["DOMAIN"] = r.Spec.Domain
 		data["HTTPS"] = r.Meta.Security
 		data["STATUS"] = r.Status.State
@@ -87,13 +88,14 @@ func (r *Route) Print() {
 	table.PrintHorizontal(data)
 	println()
 
-	t := table.New([]string{"NAME", "ENDPOINT", "DOMAIN", "HTTPS", "STATUS"})
+	t := table.New([]string{"PATH", "SERVICE", "ENDPOINT", "PORT"})
 	t.VisibleHeader = true
 
 	for _, r := range r.Spec.Rules {
 		var data = map[string]interface{}{}
-		data["ENDPOINT"] = r.Endpoint
 		data["PATH"] = r.Path
+		data["SERVICE"] = r.Service
+		data["ENDPOINT"] = r.Endpoint
 		data["PORT"] = r.Port
 		t.AddRow(data)
 	}
@@ -118,6 +120,7 @@ func FromApiRouteView(route *views.Route) *Route {
 
 	for _, rule := range route.Spec.Rules {
 		item.Spec.Rules = append(item.Spec.Rules, &RouteRule{
+			Service:  rule.Service,
 			Path:     rule.Path,
 			Endpoint: rule.Endpoint,
 			Port:     rule.Port,

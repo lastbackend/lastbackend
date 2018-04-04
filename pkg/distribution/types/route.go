@@ -52,6 +52,7 @@ type RouteStatus struct {
 }
 
 type RouteRule struct {
+	Service  string `json:"service" yaml:"service"`
 	Path     string `json:"path" yaml:"path"`
 	Endpoint string `json:"endpoint" yaml:"endpoint"`
 	Port     int    `json:"port" yaml:"port"`
@@ -140,6 +141,7 @@ type RouteRemoveOptions struct {
 }
 
 type RuleOption struct {
+	Service  string `json:"service"`
 	Endpoint string `json:"endpoint"`
 	Path     string `json:"path"`
 	Port     int    `json:"port"`
