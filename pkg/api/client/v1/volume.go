@@ -21,7 +21,6 @@ package v1
 import (
 	"context"
 
-	"encoding/json"
 	"fmt"
 	"github.com/lastbackend/lastbackend/pkg/api/client/http"
 	"github.com/lastbackend/lastbackend/pkg/api/client/interfaces"
@@ -38,149 +37,101 @@ type VolumeClient struct {
 	name      string
 }
 
-func (s *VolumeClient) Create(ctx context.Context, opts *rv1.VolumeCreateOptions) (*vv1.Volume, error) {
+func (vc *VolumeClient) Create(ctx context.Context, opts *rv1.VolumeCreateOptions) (*vv1.Volume, error) {
 
 	body, err := opts.ToJson()
 	if err != nil {
 		return nil, err
 	}
 
-	res := s.client.Post(fmt.Sprintf("/namespace/%s/volume", s.namespace)).
+	var s *vv1.Volume
+	var e *errors.Http
+
+	err = vc.client.Post(fmt.Sprintf("/namespace/%s/volume", vc.namespace)).
 		AddHeader("Content-Type", "application/json").
 		Body(body).
-		Do()
+		JSON(&s, &e)
 
-	if err := res.Error(); err != nil {
-		return nil, err
-	}
-
-	buf, err := res.Raw()
 	if err != nil {
-		return nil, err
-	}
-
-	if code := res.StatusCode(); 200 > code || code > 299 {
-		var e *errors.Http
-		if err := json.Unmarshal(buf, &e); err != nil {
-			return nil, err
-		}
 		return nil, errors.New(e.Message)
 	}
 
-	var vs = new(vv1.Volume)
-
-	if err := json.Unmarshal(buf, &vs); err != nil {
-		return nil, err
-	}
-
-	return vs, nil
+	return s, nil
 }
 
-func (s *VolumeClient) List(ctx context.Context) (*vv1.VolumeList, error) {
+func (vc *VolumeClient) List(ctx context.Context) (*vv1.VolumeList, error) {
 
-	res := s.client.Get(fmt.Sprintf("/namespace/%s/volume", s.namespace)).
+	var s *vv1.VolumeList
+	var e *errors.Http
+
+	err := vc.client.Get(fmt.Sprintf("/namespace/%s/volume", vc.namespace)).
 		AddHeader("Content-Type", "application/json").
-		Do()
+		JSON(&s, &e)
 
-	buf, err := res.Raw()
 	if err != nil {
-		return nil, err
-	}
-
-	var vl *vv1.VolumeList
-
-	if err := json.Unmarshal(buf, &vl); err != nil {
-		return nil, err
-	}
-
-	return vl, nil
-}
-
-func (s *VolumeClient) Get(ctx context.Context) (*vv1.Volume, error) {
-
-	res := s.client.Get(fmt.Sprintf("/namespace/%s/volume/%s", s.namespace, s.name)).
-		AddHeader("Content-Type", "application/json").
-		Do()
-
-	buf, err := res.Raw()
-	if err != nil {
-		return nil, err
-	}
-
-	if code := res.StatusCode(); 200 > code || code > 299 {
-		var e *errors.Http
-		if err := json.Unmarshal(buf, &e); err != nil {
-			return nil, err
-		}
 		return nil, errors.New(e.Message)
 	}
 
-	var vs *vv1.Volume
-
-	if err := json.Unmarshal(buf, &vs); err != nil {
-		return nil, err
+	if s == nil {
+		list := make(vv1.VolumeList, 0)
+		s = &list
 	}
 
-	return vs, nil
+	return s, nil
 }
 
-func (s *VolumeClient) Update(ctx context.Context, opts *rv1.VolumeUpdateOptions) (*vv1.Volume, error) {
+func (vc *VolumeClient) Get(ctx context.Context) (*vv1.Volume, error) {
+
+	var s *vv1.Volume
+	var e *errors.Http
+
+	err := vc.client.Get(fmt.Sprintf("/namespace/%s/volume/%s", vc.namespace, vc.name)).
+		AddHeader("Content-Type", "application/json").
+		JSON(&s, &e)
+
+	if err != nil {
+		return nil, errors.New(e.Message)
+	}
+
+	return s, nil
+}
+
+func (vc *VolumeClient) Update(ctx context.Context, opts *rv1.VolumeUpdateOptions) (*vv1.Volume, error) {
 
 	body, err := opts.ToJson()
 	if err != nil {
 		return nil, err
 	}
 
-	res := s.client.Put(fmt.Sprintf("/namespace/%s/volume/%s", s.namespace, s.name)).
+	var s *vv1.Volume
+	var e *errors.Http
+
+	err = vc.client.Put(fmt.Sprintf("/namespace/%s/volume/%s", vc.namespace, vc.name)).
 		AddHeader("Content-Type", "application/json").
 		Body(body).
-		Do()
+		JSON(&s, &e)
 
-	buf, err := res.Raw()
 	if err != nil {
-		return nil, err
-	}
-
-	if code := res.StatusCode(); 200 > code || code > 299 {
-		var e *errors.Http
-		if err := json.Unmarshal(buf, &e); err != nil {
-			return nil, err
-		}
 		return nil, errors.New(e.Message)
 	}
 
-	var vs *vv1.Volume
-
-	if err := json.Unmarshal(buf, &vs); err != nil {
-		return nil, err
-	}
-
-	return vs, nil
+	return s, nil
 }
 
-func (s *VolumeClient) Remove(ctx context.Context, opts *rv1.VolumeRemoveOptions) error {
+func (vc *VolumeClient) Remove(ctx context.Context, opts *rv1.VolumeRemoveOptions) error {
 
-	res := s.client.Delete(fmt.Sprintf("/namespace/%s/volume/%s", s.namespace, s.name)).
+	req := vc.client.Delete(fmt.Sprintf("/namespace/%s/volume/%s", vc.namespace, vc.name)).
 		AddHeader("Content-Type", "application/json")
 
 	if opts != nil {
 		if opts.Force {
-			res.Param("force", strconv.FormatBool(opts.Force))
+			req.Param("force", strconv.FormatBool(opts.Force))
 		}
 	}
 
-	req := res.Do()
+	var e *errors.Http
 
-	buf, err := req.Raw()
-	if err != nil {
-		return err
-	}
-
-	if code := req.StatusCode(); 200 > code || code > 299 {
-		var e *errors.Http
-		if err := json.Unmarshal(buf, &e); err != nil {
-			return err
-		}
+	if err := req.JSON(nil, &e); err != nil {
 		return errors.New(e.Message)
 	}
 
@@ -188,9 +139,5 @@ func (s *VolumeClient) Remove(ctx context.Context, opts *rv1.VolumeRemoveOptions
 }
 
 func newVolumeClient(client http.Interface, namespace, name string) *VolumeClient {
-	s := new(VolumeClient)
-	s.client = client
-	s.namespace = namespace
-	s.name = name
-	return s
+	return &VolumeClient{client: client, namespace: namespace, name: name}
 }

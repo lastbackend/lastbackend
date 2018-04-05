@@ -698,7 +698,7 @@ func TestVolumeStorage_Remove(t *testing.T) {
 		},
 	}
 
-	clear:=func() {
+	clear := func() {
 		if err := stg.Clear(ctx); err != nil {
 			t.Errorf("VolumeStorage.Remove() storage setup error = %v", err)
 			return

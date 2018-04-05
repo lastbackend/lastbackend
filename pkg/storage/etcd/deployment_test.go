@@ -839,7 +839,7 @@ func TestDeploymentStorage_WatchSpec(t *testing.T) {
 		},
 	}
 
-	clear:= func() {
+	clear := func() {
 		if err := stg.Clear(ctx); err != nil {
 			t.Errorf("DeploymentStorage.WatchSpec() storage setup error = %v", err)
 			return

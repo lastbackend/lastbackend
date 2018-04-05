@@ -21,7 +21,6 @@ package v1
 import (
 	"context"
 
-	"encoding/json"
 	"fmt"
 	"github.com/lastbackend/lastbackend/pkg/api/client/http"
 	"github.com/lastbackend/lastbackend/pkg/api/client/interfaces"
@@ -38,90 +37,67 @@ type DeploymentClient struct {
 	name      string
 }
 
-func (s *DeploymentClient) Pod(deployment string) *PodClient {
-	return newPodClient(s.client, s.namespace, s.service, deployment)
+func (dc *DeploymentClient) Pod(deployment string) *PodClient {
+	return newPodClient(dc.client, dc.namespace, dc.service, deployment)
 }
 
-func (s *DeploymentClient) List(ctx context.Context) (*vv1.DeploymentList, error) {
+func (dc *DeploymentClient) List(ctx context.Context) (*vv1.DeploymentList, error) {
 
-	res := s.client.Get(fmt.Sprintf("/namespace/%s/service/%s/deploymet", s.namespace, s.service)).
+	var s *vv1.DeploymentList
+	var e *errors.Http
+
+	err := dc.client.Get(fmt.Sprintf("/namespace/%s/service/%s/deploymet", dc.namespace, dc.service)).
 		AddHeader("Content-Type", "application/json").
-		Do()
+		JSON(&s, &e)
 
-	buf, err := res.Raw()
 	if err != nil {
-		return nil, err
-	}
-
-	var dl *vv1.DeploymentList
-
-	if err := json.Unmarshal(buf, &dl); err != nil {
-		return nil, err
-	}
-
-	return dl, nil
-}
-
-func (s *DeploymentClient) Get(ctx context.Context) (*vv1.Deployment, error) {
-
-	res := s.client.Get(fmt.Sprintf("/namespace/%s/service/%s/deploymet/%s", s.namespace, s.service, s.name)).
-		AddHeader("Content-Type", "application/json").
-		Do()
-
-	buf, err := res.Raw()
-	if err != nil {
-		return nil, err
-	}
-
-	if code := res.StatusCode(); 200 > code || code > 299 {
-		var e *errors.Http
-		if err := json.Unmarshal(buf, &e); err != nil {
-			return nil, err
-		}
 		return nil, errors.New(e.Message)
 	}
 
-	var ds *vv1.Deployment
-
-	if err := json.Unmarshal(buf, &ds); err != nil {
-		return nil, err
+	if s == nil {
+		list := make(vv1.DeploymentList, 0)
+		s = &list
 	}
 
-	return ds, nil
+	return s, nil
 }
 
-func (s *DeploymentClient) Update(ctx context.Context, opts *rv1.DeploymentUpdateOptions) (*vv1.Deployment, error) {
+func (dc *DeploymentClient) Get(ctx context.Context) (*vv1.Deployment, error) {
+
+	var s *vv1.Deployment
+	var e *errors.Http
+
+	err := dc.client.Get(fmt.Sprintf("/namespace/%s/service/%s/deploymet/%s", dc.namespace, dc.service, dc.name)).
+		AddHeader("Content-Type", "application/json").
+		JSON(&s, &e)
+
+	if err != nil {
+		return nil, errors.New(e.Message)
+	}
+
+	return s, nil
+}
+
+func (dc *DeploymentClient) Update(ctx context.Context, opts *rv1.DeploymentUpdateOptions) (*vv1.Deployment, error) {
 
 	body, err := opts.ToJson()
 	if err != nil {
 		return nil, err
 	}
 
-	res := s.client.Put(fmt.Sprintf("/namespace/%s/service/%s/deployment/%s", s.namespace, s.service, s.name)).
+	var s *vv1.Deployment
+	var e *errors.Http
+
+	err = dc.client.Put(fmt.Sprintf("/namespace/%s/service/%s/deployment/%s", dc.namespace, dc.service, dc.name)).
 		AddHeader("Content-Type", "application/json").
 		Body(body).
-		Do()
+		JSON(&s, &e)
 
-	buf, err := res.Raw()
 	if err != nil {
-		return nil, err
-	}
-
-	if code := res.StatusCode(); 200 > code || code > 299 {
-		var e *errors.Http
-		if err := json.Unmarshal(buf, &e); err != nil {
-			return nil, err
-		}
 		return nil, errors.New(e.Message)
 	}
 
-	var ds *vv1.Deployment
-
-	if err := json.Unmarshal(buf, &ds); err != nil {
-		return nil, err
-	}
-
-	return ds, nil
+	return s, nil
 }
 
 func newDeploymentClient(client http.Interface, namespace, service, name string) *DeploymentClient {

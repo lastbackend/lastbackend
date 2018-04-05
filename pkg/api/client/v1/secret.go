@@ -21,7 +21,6 @@ package v1
 import (
 	"context"
 
-	"encoding/json"
 	"fmt"
 	"github.com/lastbackend/lastbackend/pkg/api/client/http"
 	"github.com/lastbackend/lastbackend/pkg/api/client/interfaces"
@@ -38,126 +37,85 @@ type SecretClient struct {
 	name      string
 }
 
-func (s *SecretClient) Create(ctx context.Context, opts *rv1.SecretCreateOptions) (*vv1.Secret, error) {
+func (sc *SecretClient) Create(ctx context.Context, opts *rv1.SecretCreateOptions) (*vv1.Secret, error) {
 
 	body, err := opts.ToJson()
 	if err != nil {
 		return nil, err
 	}
 
-	res := s.client.Post(fmt.Sprintf("/namespace/%s/secret", s.namespace)).
+	var s *vv1.Secret
+	var e *errors.Http
+
+	err = sc.client.Post(fmt.Sprintf("/namespace/%s/secret", sc.namespace)).
 		AddHeader("Content-Type", "application/json").
 		Body(body).
-		Do()
+		JSON(&s, &e)
 
-	if err := res.Error(); err != nil {
-		return nil, err
-	}
-
-	buf, err := res.Raw()
 	if err != nil {
-		return nil, err
-	}
-
-	if code := res.StatusCode(); 200 > code || code > 299 {
-		var e *errors.Http
-		if err := json.Unmarshal(buf, &e); err != nil {
-			return nil, err
-		}
 		return nil, errors.New(e.Message)
 	}
 
-	var ss = new(vv1.Secret)
-
-	if err := json.Unmarshal(buf, &ss); err != nil {
-		return nil, err
-	}
-
-	return ss, nil
+	return s, nil
 }
 
-func (s *SecretClient) List(ctx context.Context) (*vv1.SecretList, error) {
+func (sc *SecretClient) List(ctx context.Context) (*vv1.SecretList, error) {
 
-	res := s.client.Get(fmt.Sprintf("/namespace/%s/secret", s.namespace)).
+	var s *vv1.SecretList
+	var e *errors.Http
+
+	err := sc.client.Get(fmt.Sprintf("/namespace/%s/secret", sc.namespace)).
 		AddHeader("Content-Type", "application/json").
-		Do()
+		JSON(&s, &e)
 
-	buf, err := res.Raw()
 	if err != nil {
-		return nil, err
+		return nil, errors.New(e.Message)
 	}
 
-	var sl *vv1.SecretList
-
-	if len(buf) == 0 {
+	if s == nil {
 		list := make(vv1.SecretList, 0)
-		return &list, nil
+		s = &list
 	}
 
-	if err := json.Unmarshal(buf, &sl); err != nil {
-		return nil, err
-	}
-
-	return sl, nil
+	return s, nil
 }
 
-func (s *SecretClient) Update(ctx context.Context, opts *rv1.SecretUpdateOptions) (*vv1.Secret, error) {
+func (sc *SecretClient) Update(ctx context.Context, opts *rv1.SecretUpdateOptions) (*vv1.Secret, error) {
 
 	body, err := opts.ToJson()
 	if err != nil {
 		return nil, err
 	}
 
-	res := s.client.Put(fmt.Sprintf("/namespace/%s/secret/%s", s.namespace, s.name)).
+	var s *vv1.Secret
+	var e *errors.Http
+
+	err = sc.client.Put(fmt.Sprintf("/namespace/%s/secret/%s", sc.namespace, sc.name)).
 		AddHeader("Content-Type", "application/json").
 		Body(body).
-		Do()
+		JSON(&s, &e)
 
-	buf, err := res.Raw()
 	if err != nil {
-		return nil, err
-	}
-
-	if code := res.StatusCode(); 200 > code || code > 299 {
-		var e *errors.Http
-		if err := json.Unmarshal(buf, &e); err != nil {
-			return nil, err
-		}
 		return nil, errors.New(e.Message)
 	}
 
-	var ss *vv1.Secret
-
-	if err := json.Unmarshal(buf, &ss); err != nil {
-		return nil, err
-	}
-
-	return ss, nil
+	return s, nil
 }
 
-func (s *SecretClient) Remove(ctx context.Context, opts *rv1.SecretRemoveOptions) error {
+func (sc *SecretClient) Remove(ctx context.Context, opts *rv1.SecretRemoveOptions) error {
 
-	res := s.client.Delete(fmt.Sprintf("/namespace/%s/secret/%s", s.namespace, s.name)).
+	req := sc.client.Delete(fmt.Sprintf("/namespace/%s/secret/%s", sc.namespace, sc.name)).
 		AddHeader("Content-Type", "application/json")
 
 	if opts != nil {
 		if opts.Force {
-			res.Param("force", strconv.FormatBool(opts.Force))
+			req.Param("force", strconv.FormatBool(opts.Force))
 		}
 	}
 
-	req := res.Do()
+	var e *errors.Http
 
-	buf, err := req.Raw()
-	if err != nil {
-		return err
-	}
-
-	if code := req.StatusCode(); 200 > code || code > 299 {
-		var e *errors.Http
-		if err := json.Unmarshal(buf, &e); err != nil {
-			return err
-		}
+	if err := req.JSON(nil, &e); err != nil {
 		return errors.New(e.Message)
 	}
 
@@ -165,9 +123,5 @@ func (s *SecretClient) Remove(ctx context.Context, opts *rv1.SecretRemoveOptions
 }
 
 func newSecretClient(client http.Interface, namespace, name string) *SecretClient {
-	s := new(SecretClient)
-	s.client = client
-	s.namespace = namespace
-	s.name = name
-	return s
+	return &SecretClient{client: client, namespace: namespace, name: name}
 }

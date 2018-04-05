@@ -23,8 +23,8 @@ import (
 )
 
 type Namespace struct {
-	Meta      NamespaceMeta      `json:"meta"`
-	Spec      NamespaceSpec      `json:"spec"`
+	Meta NamespaceMeta `json:"meta"`
+	Spec NamespaceSpec `json:"spec"`
 }
 
 type NamespaceMeta struct {
