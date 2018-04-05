@@ -27,7 +27,6 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/node/envs"
 	"github.com/lastbackend/lastbackend/pkg/node/events"
 	"github.com/lastbackend/lastbackend/pkg/node/runtime/pod"
-	"github.com/lastbackend/lastbackend/pkg/node/runtime/router"
 	"github.com/lastbackend/lastbackend/pkg/node/runtime/volume"
 	"time"
 )
@@ -40,7 +39,6 @@ type Runtime struct {
 func (r *Runtime) Restore() {
 	log.Debug("node:runtime:restore:> restore init")
 	network.Restore(r.ctx)
-	router.Restore(r.ctx)
 	volume.Restore(r.ctx)
 	pod.Restore(r.ctx)
 }
@@ -82,12 +80,6 @@ func (r *Runtime) Provision(ctx context.Context, spec *types.NodeSpec, clean boo
 			log.Errorf("Network [%s] create err: %s", n.Range, err.Error())
 		}
 	}
-
-	log.Debugf("%s> provision routes", msg)
-	for _, r := range spec.Routes {
-		log.Debugf("route: %v", r)
-	}
-
 
 	log.Debugf("%s> provision pods", msg)
 	for p, spec := range spec.Pods {

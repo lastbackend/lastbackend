@@ -16,28 +16,11 @@
 // from Last.Backend LLC.
 //
 
-package cache
+package state
 
-import "context"
+import "github.com/lastbackend/lastbackend/pkg/distribution/types"
 
-type Cache struct {
-	node *CacheNodeSpec
-	ingress *CacheIngressSpec
+type State struct {
+	Resources types.NodeResources
 }
 
-type Cleaner func (ctx context.Context) error
-
-func (c *Cache) Node () *CacheNodeSpec {
-	return c.node
-}
-
-func (c *Cache) Ingress () *CacheIngressSpec {
-	return c.ingress
-}
-
-func NewCache() *Cache {
-	c := new(Cache)
-	c.node = NewCacheNodeSpec()
-	c.ingress = NewCacheIngressSpec()
-	return c
-}

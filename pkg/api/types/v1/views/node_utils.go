@@ -84,7 +84,6 @@ func (obj *NodeSpec) Decode() *types.NodeSpec {
 		Network: make(map[string]types.NetworkSpec, 0),
 		Pods:    make(map[string]types.PodSpec, 0),
 		Volumes: make(map[string]types.VolumeSpec, 0),
-		Routes:  make(map[string]types.RouteSpec, 0),
 	}
 
 	for i, s := range obj.Network {
@@ -97,10 +96,6 @@ func (obj *NodeSpec) Decode() *types.NodeSpec {
 
 	for i, s := range obj.Volumes {
 		spec.Volumes[i] = s
-	}
-
-	for i, s := range obj.Routes {
-		spec.Routes[i] = s
 	}
 
 	return &spec
@@ -130,7 +125,6 @@ func (nv *NodeView) NewSpec(obj *types.NodeSpec) *NodeSpec {
 	spec.Network = obj.Network
 	spec.Pods = obj.Pods
 	spec.Volumes = obj.Volumes
-	spec.Routes = obj.Routes
 
 	return &spec
 }

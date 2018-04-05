@@ -63,7 +63,6 @@ func (s *NodeStorage) Insert(ctx context.Context, node *types.Node) error {
 
 	node.Spec.Pods = make(map[string]types.PodSpec)
 	node.Spec.Volumes = make(map[string]types.VolumeSpec)
-	node.Spec.Routes = make(map[string]types.RouteSpec)
 
 	s.data[node.Meta.Name] = node
 
@@ -194,40 +193,6 @@ func (s *NodeStorage) RemoveVolume(ctx context.Context, node *types.Node, volume
 	}
 
 	delete(s.data[node.Meta.Name].Spec.Volumes, volume.SelfLink())
-
-	return nil
-}
-
-func (s *NodeStorage) InsertRoute(ctx context.Context, node *types.Node, route *types.Route) error {
-
-	if err := s.checkNodeExists(node); err != nil {
-		return err
-	}
-
-	if err := s.checkRouteArgument(route); err != nil {
-		return err
-	}
-
-	s.data[node.Meta.Name].Spec.Routes[route.SelfLink()] = route.Spec
-
-	return nil
-}
-
-func (s *NodeStorage) RemoveRoute(ctx context.Context, node *types.Node, route *types.Route) error {
-
-	if err := s.checkNodeExists(node); err != nil {
-		return err
-	}
-
-	if err := s.checkRouteArgument(route); err != nil {
-		return err
-	}
-
-	if _, ok := s.data[node.Meta.Name].Spec.Routes[route.SelfLink()]; !ok {
-		return errors.New(store.ErrEntityNotFound)
-	}
-
-	delete(s.data[node.Meta.Name].Spec.Routes, route.SelfLink())
 
 	return nil
 }

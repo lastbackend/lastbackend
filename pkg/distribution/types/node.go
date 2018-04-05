@@ -89,7 +89,6 @@ type NodeStatus struct {
 }
 
 type NodeSpec struct {
-	Routes  map[string]RouteSpec   `json:"routes"`
 	Network map[string]NetworkSpec `json:"network"`
 	Pods    map[string]PodSpec     `json:"pods"`
 	Volumes map[string]VolumeSpec  `json:"volumes"`

@@ -34,6 +34,7 @@ const (
 
 type IRoute interface {
 	Get(namespace, name string) (*types.Route, error)
+	ListSpec() (map[string]*types.RouteSpec, error)
 	ListByNamespace(namespace string) (map[string]*types.Route, error)
 	Create(namespace *types.Namespace, opts *types.RouteCreateOptions) (*types.Route, error)
 	Update(route *types.Route, opts *types.RouteUpdateOptions) (*types.Route, error)
@@ -59,6 +60,19 @@ func (n *Route) Get(namespace, name string) (*types.Route, error) {
 		}
 
 		log.V(logLevel).Errorf("%s:get:> in namespace %s by name %s error: %s", logRoutePrefix, namespace, name, err.Error())
+		return nil, err
+	}
+
+	return item, nil
+}
+
+func (n *Route) ListSpec() (map[string]*types.RouteSpec, error) {
+
+	log.V(logLevel).Debug("%s:listspec:> list specs", logRoutePrefix)
+
+	item, err := n.storage.Route().ListSpec(n.context)
+	if err != nil {
+		log.V(logLevel).Errorf("%s:listspec:> error: %s", logRoutePrefix, err.Error())
 		return nil, err
 	}
 

@@ -21,7 +21,7 @@ package types
 const STORAGEPUTEVENT = "PUT"
 const STORAGEDELEVENT = "DELETE"
 
-type NodeOfflineEvent struct {
+type NodeStatusEvent struct {
 	Event  string `json:"event"`
 	Node   string `json:"node"`
 	Online bool   `json:"online"`
@@ -42,7 +42,6 @@ type PodSpecEvent struct {
 
 type RouteSpecEvent struct {
 	Event string    `json:"event"`
-	Node  string    `json:"node"`
 	Name  string    `json:"name"`
 	Spec  RouteSpec `json:"spec"`
 }
@@ -52,4 +51,10 @@ type VolumeSpecEvent struct {
 	Node  string     `json:"node"`
 	Name  string     `json:"name"`
 	Spec  VolumeSpec `json:"spec"`
+}
+
+type IngressStatusEvent struct {
+	Event  string        `json:"event"`
+	Name   string        `json:"name"`
+	Status IngressStatus `json:"status"`
 }

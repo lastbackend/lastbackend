@@ -16,28 +16,4 @@
 // from Last.Backend LLC.
 //
 
-package cache
-
-import "context"
-
-type Cache struct {
-	node *CacheNodeSpec
-	ingress *CacheIngressSpec
-}
-
-type Cleaner func (ctx context.Context) error
-
-func (c *Cache) Node () *CacheNodeSpec {
-	return c.node
-}
-
-func (c *Cache) Ingress () *CacheIngressSpec {
-	return c.ingress
-}
-
-func NewCache() *Cache {
-	c := new(Cache)
-	c.node = NewCacheNodeSpec()
-	c.ingress = NewCacheIngressSpec()
-	return c
-}
+package ingress

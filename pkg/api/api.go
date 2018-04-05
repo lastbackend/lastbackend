@@ -50,9 +50,11 @@ func Daemon() bool {
 
 	c := cache.NewCache()
 	go c.Node().CachePods(stg.Node().WatchPodSpec)
-	go c.Node().CacheRoutes(stg.Node().WatchRouteSpec)
 	go c.Node().CacheVolumes(stg.Node().WatchVolumeSpec)
-	go c.Node().Del(stg.Node().WatchOffline)
+	go c.Node().Del(stg.Node().WatchStatus)
+
+	go c.Ingress().CacheRoutes(stg.Route().WatchSpecEvents)
+	go c.Ingress().Del(stg.Ingress().WatchStatus)
 	envs.Get().SetCache(c)
 
 

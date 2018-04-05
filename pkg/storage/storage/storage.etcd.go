@@ -97,6 +97,7 @@ type Trigger interface {
 type Route interface {
 	Get(ctx context.Context, namespace, name string) (*types.Route, error)
 	ListByNamespace(ctx context.Context, namespace string) (map[string]*types.Route, error)
+	ListSpec(ctx context.Context) (map[string]*types.RouteSpec, error)
 	SetStatus(ctx context.Context, route *types.Route) error
 	SetSpec(ctx context.Context, route *types.Route) error
 	Insert(ctx context.Context, route *types.Route) error
@@ -104,6 +105,7 @@ type Route interface {
 	Remove(ctx context.Context, route *types.Route) error
 	Watch(ctx context.Context, route chan *types.Route) error
 	WatchSpec(ctx context.Context, route chan *types.Route) error
+	WatchSpecEvents(ctx context.Context, event chan *types.RouteSpecEvent) error
 	WatchStatus(ctx context.Context, route chan *types.Route) error
 	Clear(ctx context.Context) error
 }
@@ -154,14 +156,24 @@ type Node interface {
 	RemovePod(ctx context.Context, node *types.Node, pod *types.Pod) error
 	InsertVolume(ctx context.Context, node *types.Node, volume *types.Volume) error
 	RemoveVolume(ctx context.Context, node *types.Node, volume *types.Volume) error
-	InsertRoute(ctx context.Context, node *types.Node, route *types.Route) error
-	RemoveRoute(ctx context.Context, node *types.Node, route *types.Route) error
 	Remove(ctx context.Context, node *types.Node) error
 	Watch(ctx context.Context, node chan *types.Node) error
-	WatchOffline(ctx context.Context, event chan *types.NodeOfflineEvent) error
+	WatchStatus(ctx context.Context, event chan *types.NodeStatusEvent) error
 	WatchPodSpec(ctx context.Context, event chan *types.PodSpecEvent) error
-	WatchRouteSpec(ctx context.Context, event chan *types.RouteSpecEvent) error
 	WatchVolumeSpec(ctx context.Context, event chan *types.VolumeSpecEvent) error
+	Clear(ctx context.Context) error
+}
+
+type Ingress interface {
+	List(ctx context.Context) (map[string]*types.Ingress, error)
+	Get(ctx context.Context, name string) (*types.Ingress, error)
+	GetSpec(ctx context.Context, ingress *types.Ingress) (*types.IngressSpec, error)
+	Insert(ctx context.Context, ingress *types.Ingress) error
+	Update(ctx context.Context, ingress *types.Ingress) error
+	SetStatus(ctx context.Context, ingress *types.Ingress) error
+	Remove(ctx context.Context, ingress *types.Ingress) error
+	Watch(ctx context.Context, ingress chan *types.Ingress) error
+	WatchStatus(ctx context.Context, event chan *types.IngressStatusEvent) error
 	Clear(ctx context.Context) error
 }
 

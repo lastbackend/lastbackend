@@ -23,6 +23,7 @@ const logLevel = 5
 type IView interface {
 	Cluster() *ClusterView
 	Node() *NodeView
+	Ingress() *IngressView
 
 	Namespace() *NamespaceView
 	Route() *RouteView
@@ -40,6 +41,9 @@ func (View) Cluster() *ClusterView {
 }
 func (View) Node() *NodeView {
 	return new(NodeView)
+}
+func (View) Ingress() *IngressView {
+	return new(IngressView)
 }
 
 func (View) Namespace() *NamespaceView {

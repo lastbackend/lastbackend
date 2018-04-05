@@ -16,28 +16,36 @@
 // from Last.Backend LLC.
 //
 
-package storage
+package views
 
 import (
-	"context"
-	"github.com/lastbackend/lastbackend/pkg/storage/storage"
+	"time"
+	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 )
 
-type Util interface {
-	Key(ctx context.Context, pattern ...string) string
+// Ingress - default node structure
+type Ingress struct {
+	Meta   IngressMeta   `json:"meta"`
+	Status IngressStatus `json:"status"`
 }
 
-type Storage interface {
-	Cluster() storage.Cluster
-	Deployment() storage.Deployment
-	Namespace() storage.Namespace
-	Node() storage.Node
-	Ingress() storage.Ingress
-	Pod() storage.Pod
-	Route() storage.Route
-	Secret() storage.Secret
-	Service() storage.Service
-	System() storage.System
-	Trigger() storage.Trigger
-	Volume() storage.Volume
+// IngressList - node map list
+type IngressList map[string]*Ingress
+
+// IngressMeta - node metadata structure
+type IngressMeta struct {
+	Name        string    `json:"name"`
+	Description string    `json:"description"`
+	Created     time.Time `json:"created"`
+	Updated     time.Time `json:"updated"`
+}
+
+// IngressStatus - node state struct
+type IngressStatus struct {
+	Ready bool `json:"ready"`
+}
+
+
+type IngressSpec struct {
+	Routes  map[string]types.RouteSpec   `json:"routes"`
 }

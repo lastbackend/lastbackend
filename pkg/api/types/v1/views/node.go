@@ -70,7 +70,6 @@ type NodeResources struct {
 }
 
 type NodeSpec struct {
-	Routes  map[string]types.RouteSpec   `json:"routes"`
 	Network map[string]types.NetworkSpec `json:"network"`
 	Pods    map[string]types.PodSpec     `json:"pods"`
 	Volumes map[string]types.VolumeSpec  `json:"volumes"`

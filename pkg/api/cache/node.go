@@ -34,11 +34,10 @@ type NetworkSpecWatcher func(ctx context.Context, event chan *types.NetworkSpecE
 
 type PodSpecWatcher func(ctx context.Context, event chan *types.PodSpecEvent) error
 
-type RouteSpecWatcher func(ctx context.Context, event chan *types.RouteSpecEvent) error
-
 type VolumeSpecWatcher func(ctx context.Context, event chan *types.VolumeSpecEvent) error
 
-type NodeDelWatcher func(ctx context.Context, event chan *types.NodeOfflineEvent) error
+type NodeStatusWatcher func(ctx context.Context, event chan *types.NodeStatusEvent) error
+
 
 func (c *CacheNodeSpec) SetPodSpec(node, pod string, s types.PodSpec) {
 	log.Info("api:cache:setpodspec:> %s, %s, %#v", node, pod, s)
@@ -62,28 +61,6 @@ func (c *CacheNodeSpec) DelPodSpec(node, pod string) {
 	c.lock.Lock()
 	defer c.lock.Unlock()
 	delete(c.spec[node].Pods, pod)
-}
-
-func (c *CacheNodeSpec) SetRouteSpec(node, route string, s types.RouteSpec) {
-	c.lock.Lock()
-	defer c.lock.Unlock()
-
-	if _, ok := c.spec[node]; !ok {
-		c.spec[node] = new(types.NodeSpec)
-	}
-
-	if c.spec[node].Routes == nil {
-		sp := c.spec[node]
-		sp.Routes = make(map[string]types.RouteSpec, 0)
-	}
-
-	c.spec[node].Routes[route] = s
-}
-
-func (c *CacheNodeSpec) DelRouteSpec(node, route string) {
-	c.lock.Lock()
-	defer c.lock.Unlock()
-	delete(c.spec[node].Routes, route)
 }
 
 func (c *CacheNodeSpec) SetVolumeSpec(node, volume string, s types.VolumeSpec) {
@@ -178,30 +155,6 @@ func (c *CacheNodeSpec) CachePods(ps PodSpecWatcher) error {
 	return ps(context.Background(), evs)
 }
 
-func (c *CacheNodeSpec) CacheRoutes(rs RouteSpecWatcher) error {
-	evs := make(chan *types.RouteSpecEvent)
-	go func() {
-		for {
-			select {
-			case e := <-evs:
-				{
-					if e.Event == types.STORAGEPUTEVENT {
-						c.SetRouteSpec(e.Node, e.Name, e.Spec)
-						continue
-					}
-
-					if e.Event == types.STORAGEDELEVENT {
-						c.DelRouteSpec(e.Node, e.Name)
-						continue
-					}
-				}
-			}
-		}
-	}()
-
-	return rs(context.Background(), evs)
-}
-
 func (c *CacheNodeSpec) CacheVolumes(vs VolumeSpecWatcher) error {
 	evs := make(chan *types.VolumeSpecEvent)
 	go func() {
@@ -251,8 +204,8 @@ func (c *CacheNodeSpec) CacheNetwork(ns NetworkSpecWatcher) error {
 }
 
 
-func (c *CacheNodeSpec) Del(dw NodeDelWatcher) error {
-	evs := make(chan *types.NodeOfflineEvent)
+func (c *CacheNodeSpec) Del(dw NodeStatusWatcher) error {
+	evs := make(chan *types.NodeStatusEvent)
 	go func() {
 		for {
 			select {
