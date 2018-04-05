@@ -53,6 +53,9 @@ func (sc *SecretClient) Create(ctx context.Context, opts *rv1.SecretCreateOption
 		JSON(&s, &e)
 
 	if err != nil {
+		return nil, err
+	}
+	if e != nil {
 		return nil, errors.New(e.Message)
 	}
 
@@ -69,6 +72,9 @@ func (sc *SecretClient) List(ctx context.Context) (*vv1.SecretList, error) {
 		JSON(&s, &e)
 
 	if err != nil {
+		return nil, err
+	}
+	if e != nil {
 		return nil, errors.New(e.Message)
 	}
 
@@ -96,6 +102,9 @@ func (sc *SecretClient) Update(ctx context.Context, opts *rv1.SecretUpdateOption
 		JSON(&s, &e)
 
 	if err != nil {
+		return nil, err
+	}
+	if e != nil {
 		return nil, errors.New(e.Message)
 	}
 
@@ -116,6 +125,9 @@ func (sc *SecretClient) Remove(ctx context.Context, opts *rv1.SecretRemoveOption
 	var e *errors.Http
 
 	if err := req.JSON(nil, &e); err != nil {
+		return err
+	}
+	if e != nil {
 		return errors.New(e.Message)
 	}
 

@@ -53,6 +53,9 @@ func (vc *VolumeClient) Create(ctx context.Context, opts *rv1.VolumeCreateOption
 		JSON(&s, &e)
 
 	if err != nil {
+		return nil, err
+	}
+	if e != nil {
 		return nil, errors.New(e.Message)
 	}
 
@@ -69,6 +72,9 @@ func (vc *VolumeClient) List(ctx context.Context) (*vv1.VolumeList, error) {
 		JSON(&s, &e)
 
 	if err != nil {
+		return nil, err
+	}
+	if e != nil {
 		return nil, errors.New(e.Message)
 	}
 
@@ -90,6 +96,9 @@ func (vc *VolumeClient) Get(ctx context.Context) (*vv1.Volume, error) {
 		JSON(&s, &e)
 
 	if err != nil {
+		return nil, err
+	}
+	if e != nil {
 		return nil, errors.New(e.Message)
 	}
 
@@ -112,6 +121,9 @@ func (vc *VolumeClient) Update(ctx context.Context, opts *rv1.VolumeUpdateOption
 		JSON(&s, &e)
 
 	if err != nil {
+		return nil, err
+	}
+	if e != nil {
 		return nil, errors.New(e.Message)
 	}
 
@@ -132,6 +144,9 @@ func (vc *VolumeClient) Remove(ctx context.Context, opts *rv1.VolumeRemoveOption
 	var e *errors.Http
 
 	if err := req.JSON(nil, &e); err != nil {
+		return err
+	}
+	if e != nil {
 		return errors.New(e.Message)
 	}
 

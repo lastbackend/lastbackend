@@ -47,6 +47,9 @@ func (nc *NodeClient) List(ctx context.Context) (*vv1.NodeList, error) {
 		JSON(&s, &e)
 
 	if err != nil {
+		return nil, err
+	}
+	if e != nil {
 		return nil, errors.New(e.Message)
 	}
 
@@ -63,6 +66,9 @@ func (nc *NodeClient) Get(ctx context.Context) (*vv1.Node, error) {
 		JSON(&s, &e)
 
 	if err != nil {
+		return nil, err
+	}
+	if e != nil {
 		return nil, errors.New(e.Message)
 	}
 
@@ -79,6 +85,9 @@ func (nc *NodeClient) GetSpec(ctx context.Context) (*vv1.NodeSpec, error) {
 		JSON(&s, &e)
 
 	if err != nil {
+		return nil, err
+	}
+	if e != nil {
 		return nil, errors.New(e.Message)
 	}
 
@@ -98,6 +107,9 @@ func (nc *NodeClient) SetMeta(ctx context.Context, opts *rv1.NodeMetaOptions) (*
 		JSON(&s, &e)
 
 	if err != nil {
+		return nil, err
+	}
+	if e != nil {
 		return nil, errors.New(e.Message)
 	}
 
@@ -116,6 +128,9 @@ func (nc *NodeClient) Connect(ctx context.Context, opts *rv1.NodeConnectOptions)
 		JSON(nil, &e)
 
 	if err != nil {
+		return err
+	}
+	if e != nil {
 		return errors.New(e.Message)
 	}
 
@@ -134,6 +149,9 @@ func (nc *NodeClient) SetStatus(ctx context.Context, opts *rv1.NodeStatusOptions
 		JSON(nil, &e)
 
 	if err != nil {
+		return err
+	}
+	if e != nil {
 		return errors.New(e.Message)
 	}
 
@@ -152,6 +170,9 @@ func (nc *NodeClient) SetPodStatus(ctx context.Context, pod string, opts *rv1.No
 		JSON(nil, &e)
 
 	if err != nil {
+		return err
+	}
+	if e != nil {
 		return errors.New(e.Message)
 	}
 
@@ -170,6 +191,9 @@ func (nc *NodeClient) SetVolumeStatus(ctx context.Context, volume string, opts *
 		JSON(nil, &e)
 
 	if err != nil {
+		return err
+	}
+	if e != nil {
 		return errors.New(e.Message)
 	}
 
@@ -188,6 +212,9 @@ func (nc *NodeClient) SetRouteStatus(ctx context.Context, route string, opts *rv
 		JSON(nil, &e)
 
 	if err != nil {
+		return err
+	}
+	if e != nil {
 		return errors.New(e.Message)
 	}
 
@@ -208,6 +235,9 @@ func (nc *NodeClient) Remove(ctx context.Context, opts *rv1.NodeRemoveOptions) e
 	var e *errors.Http
 
 	if err := req.JSON(nil, &e); err != nil {
+		return err
+	}
+	if e != nil {
 		return errors.New(e.Message)
 	}
 
@@ -221,7 +251,6 @@ func (nc *NodeClient) Logs(ctx context.Context, pod, container string, opts *rv1
 			req.Param("force", strconv.FormatBool(opts.Follow))
 		}
 	}
-
 	return req.Stream()
 }
 

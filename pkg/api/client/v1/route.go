@@ -53,6 +53,9 @@ func (rc *RouteClient) Create(ctx context.Context, opts *rv1.RouteCreateOptions)
 		JSON(&s, &e)
 
 	if err != nil {
+		return nil, err
+	}
+	if e != nil {
 		return nil, errors.New(e.Message)
 	}
 
@@ -69,6 +72,9 @@ func (rc *RouteClient) List(ctx context.Context) (*vv1.RouteList, error) {
 		JSON(&s, &e)
 
 	if err != nil {
+		return nil, err
+	}
+	if e != nil {
 		return nil, errors.New(e.Message)
 	}
 
@@ -90,6 +96,9 @@ func (rc *RouteClient) Get(ctx context.Context) (*vv1.Route, error) {
 		JSON(&s, &e)
 
 	if err != nil {
+		return nil, err
+	}
+	if e != nil {
 		return nil, errors.New(e.Message)
 	}
 
@@ -112,6 +121,9 @@ func (rc *RouteClient) Update(ctx context.Context, opts *rv1.RouteUpdateOptions)
 		JSON(&s, &e)
 
 	if err != nil {
+		return nil, err
+	}
+	if e != nil {
 		return nil, errors.New(e.Message)
 	}
 
@@ -132,6 +144,9 @@ func (rc *RouteClient) Remove(ctx context.Context, opts *rv1.RouteRemoveOptions)
 	}
 
 	if err := req.JSON(nil, &e); err != nil {
+		return err
+	}
+	if e != nil {
 		return errors.New(e.Message)
 	}
 
