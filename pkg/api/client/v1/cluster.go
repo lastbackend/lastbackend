@@ -51,6 +51,9 @@ func (cc *ClusterClient) Get(ctx context.Context) (*vv1.Cluster, error) {
 		JSON(&s, &e)
 
 	if err != nil {
+		return nil, err
+	}
+	if e != nil {
 		return nil, errors.New(e.Message)
 	}
 
@@ -73,6 +76,9 @@ func (cc *ClusterClient) Update(ctx context.Context, opts *rv1.ClusterUpdateOpti
 		JSON(&s, &e)
 
 	if err != nil {
+		return nil, err
+	}
+	if e != nil {
 		return nil, errors.New(e.Message)
 	}
 

@@ -77,6 +77,9 @@ func (nc *NamespaceClient) List(ctx context.Context) (*vv1.NamespaceList, error)
 		JSON(&s, &e)
 
 	if err != nil {
+		return nil, err
+	}
+	if e != nil {
 		return nil, errors.New(e.Message)
 	}
 
@@ -104,6 +107,9 @@ func (nc *NamespaceClient) Create(ctx context.Context, opts *rv1.NamespaceCreate
 		JSON(&s, &e)
 
 	if err != nil {
+		return nil, err
+	}
+	if e != nil {
 		return nil, errors.New(e.Message)
 	}
 
@@ -120,6 +126,9 @@ func (nc *NamespaceClient) Get(ctx context.Context) (*vv1.Namespace, error) {
 		JSON(&s, &e)
 
 	if err != nil {
+		return nil, err
+	}
+	if e != nil {
 		return nil, errors.New(e.Message)
 	}
 
@@ -142,6 +151,9 @@ func (nc *NamespaceClient) Update(ctx context.Context, opts *rv1.NamespaceUpdate
 		JSON(&s, &e)
 
 	if err != nil {
+		return nil, err
+	}
+	if e != nil {
 		return nil, errors.New(e.Message)
 	}
 
@@ -162,6 +174,9 @@ func (nc *NamespaceClient) Remove(ctx context.Context, opts *rv1.NamespaceRemove
 	var e *errors.Http
 
 	if err := req.JSON(nil, &e); err != nil {
+		return err
+	}
+	if e != nil {
 		return errors.New(e.Message)
 	}
 

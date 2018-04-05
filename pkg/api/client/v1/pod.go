@@ -46,6 +46,9 @@ func (pc *PodClient) List(ctx context.Context) (*vv1.PodList, error) {
 		JSON(&s, &e)
 
 	if err != nil {
+		return nil, err
+	}
+	if e != nil {
 		return nil, errors.New(e.Message)
 	}
 
@@ -67,6 +70,9 @@ func (pc *PodClient) Get(ctx context.Context, name string) (*vv1.Pod, error) {
 		JSON(&s, &e)
 
 	if err != nil {
+		return nil, err
+	}
+	if e != nil {
 		return nil, errors.New(e.Message)
 	}
 

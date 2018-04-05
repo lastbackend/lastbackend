@@ -54,6 +54,9 @@ func (tc *TriggerClient) Create(ctx context.Context, opts *rv1.TriggerCreateOpti
 		JSON(&s, &e)
 
 	if err != nil {
+		return nil, err
+	}
+	if e != nil {
 		return nil, errors.New(e.Message)
 	}
 
@@ -70,6 +73,9 @@ func (tc *TriggerClient) List(ctx context.Context) (*vv1.TriggerList, error) {
 		JSON(&s, &e)
 
 	if err != nil {
+		return nil, err
+	}
+	if e != nil {
 		return nil, errors.New(e.Message)
 	}
 
@@ -91,6 +97,9 @@ func (tc *TriggerClient) Get(ctx context.Context) (*vv1.Trigger, error) {
 		JSON(&s, &e)
 
 	if err != nil {
+		return nil, err
+	}
+	if e != nil {
 		return nil, errors.New(e.Message)
 	}
 
@@ -112,6 +121,9 @@ func (tc *TriggerClient) Update(ctx context.Context, opts *rv1.TriggerUpdateOpti
 		Body(body).
 		JSON(&s, &e)
 
+	if err != nil {
+		return nil, err
+	}
 	if e != nil {
 		return nil, errors.New(e.Message)
 	}
@@ -133,6 +145,9 @@ func (tc *TriggerClient) Remove(ctx context.Context, opts *rv1.TriggerRemoveOpti
 	var e *errors.Http
 
 	if err := req.JSON(nil, &e); err != nil {
+		return err
+	}
+	if e != nil {
 		return errors.New(e.Message)
 	}
 

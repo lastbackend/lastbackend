@@ -79,7 +79,6 @@ func (s *Service) List(namespace string) (map[string]*types.Service, error) {
 
 	items, err := s.storage.Service().ListByNamespace(s.context, namespace)
 	if err != nil {
-		log.Debug(1)
 		log.V(logLevel).Error("%s:list:> by namespace %s err: %s", logServicePrefix, namespace, err)
 		return nil, err
 	}
@@ -206,7 +205,7 @@ func (s *Service) Remove(service *types.Service) error {
 // Set state for deployment
 func (s *Service) SetStatus(service *types.Service) error {
 
-	log.Debugf("%s:setstatus:> set state for service %s", service.Meta.Name)
+	log.Debugf("%s:setstatus:> set state for service %s", logServicePrefix, service.Meta.Name)
 
 	if err := s.storage.Service().SetStatus(s.context, service); err != nil {
 		log.Errorf("%s:setstatus:> set state for service %s err: %s", logServicePrefix, service.Meta.Name, err.Error())
@@ -219,7 +218,7 @@ func (s *Service) SetStatus(service *types.Service) error {
 // Watch service changes
 func (s *Service) Watch(dt chan *types.Service) error {
 
-	log.Debug("%s:watch:> watch deployments")
+	log.Debugf("%s:watch:> watch deployments", logServicePrefix)
 	if err := s.storage.Service().Watch(s.context, dt); err != nil {
 		log.Debugf("%s:watch:> watch deployment err: %s", logServicePrefix, err.Error())
 		return err
@@ -231,7 +230,7 @@ func (s *Service) Watch(dt chan *types.Service) error {
 // Watch service by spec changes
 func (s *Service) WatchSpec(dt chan *types.Service) error {
 
-	log.Debug("%s:watchspec:> watch deployments by spec changes")
+	log.Debugf("%s:watchspec:> watch deployments by spec changes", logServicePrefix)
 	if err := s.storage.Service().WatchSpec(s.context, dt); err != nil {
 		log.Debugf("%s:watchspec:> watch deployment by spec changes err: %s", logServicePrefix, err.Error())
 		return err

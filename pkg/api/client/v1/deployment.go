@@ -51,6 +51,9 @@ func (dc *DeploymentClient) List(ctx context.Context) (*vv1.DeploymentList, erro
 		JSON(&s, &e)
 
 	if err != nil {
+		return nil, err
+	}
+	if e != nil {
 		return nil, errors.New(e.Message)
 	}
 
@@ -72,6 +75,9 @@ func (dc *DeploymentClient) Get(ctx context.Context) (*vv1.Deployment, error) {
 		JSON(&s, &e)
 
 	if err != nil {
+		return nil, err
+	}
+	if e != nil {
 		return nil, errors.New(e.Message)
 	}
 
@@ -94,6 +100,9 @@ func (dc *DeploymentClient) Update(ctx context.Context, opts *rv1.DeploymentUpda
 		JSON(&s, &e)
 
 	if err != nil {
+		return nil, err
+	}
+	if e != nil {
 		return nil, errors.New(e.Message)
 	}
 
