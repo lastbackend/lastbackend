@@ -21,7 +21,6 @@ package v1
 import (
 	"context"
 
-	"encoding/json"
 	"fmt"
 	"github.com/lastbackend/lastbackend/pkg/api/client/http"
 	"github.com/lastbackend/lastbackend/pkg/api/client/interfaces"
@@ -38,154 +37,116 @@ type RouteClient struct {
 	name      string
 }
 
-func (s *RouteClient) Create(ctx context.Context, opts *rv1.RouteCreateOptions) (*vv1.Route, error) {
+func (rc *RouteClient) Create(ctx context.Context, opts *rv1.RouteCreateOptions) (*vv1.Route, error) {
 
 	body, err := opts.ToJson()
 	if err != nil {
 		return nil, err
 	}
 
-	res := s.client.Post(fmt.Sprintf("/namespace/%s/route", s.namespace)).
+	var s *vv1.Route
+	var e *errors.Http
+
+	err = rc.client.Post(fmt.Sprintf("/namespace/%s/route", rc.namespace)).
 		AddHeader("Content-Type", "application/json").
 		Body(body).
-		Do()
+		JSON(&s, &e)
 
-	if err := res.Error(); err != nil {
-		return nil, err
-	}
-
-	buf, err := res.Raw()
 	if err != nil {
 		return nil, err
 	}
-
-	if code := res.StatusCode(); 200 > code || code > 299 {
-		var e *errors.Http
-		if err := json.Unmarshal(buf, &e); err != nil {
-			return nil, err
-		}
+	if e != nil {
 		return nil, errors.New(e.Message)
 	}
 
-	var rs = new(vv1.Route)
-
-	if err := json.Unmarshal(buf, &rs); err != nil {
-		return nil, err
-	}
-
-	return rs, nil
+	return s, nil
 }
 
-func (s *RouteClient) List(ctx context.Context) (*vv1.RouteList, error) {
+func (rc *RouteClient) List(ctx context.Context) (*vv1.RouteList, error) {
 
-	res := s.client.Get(fmt.Sprintf("/namespace/%s/route", s.namespace)).
+	var s *vv1.RouteList
+	var e *errors.Http
+
+	err := rc.client.Get(fmt.Sprintf("/namespace/%s/route", rc.namespace)).
 		AddHeader("Content-Type", "application/json").
-		Do()
+		JSON(&s, &e)
 
-	buf, err := res.Raw()
 	if err != nil {
 		return nil, err
 	}
+	if e != nil {
+		return nil, errors.New(e.Message)
+	}
 
-	var rl *vv1.RouteList
-
-	if len(buf) == 0 {
+	if s == nil {
 		list := make(vv1.RouteList, 0)
-		return &list, nil
+		s = &list
 	}
 
-	if err := json.Unmarshal(buf, &rl); err != nil {
-		return nil, err
-	}
-
-	return rl, nil
+	return s, nil
 }
 
-func (s *RouteClient) Get(ctx context.Context) (*vv1.Route, error) {
+func (rc *RouteClient) Get(ctx context.Context) (*vv1.Route, error) {
 
-	res := s.client.Get(fmt.Sprintf("/namespace/%s/route/%s", s.namespace, s.name)).
+	var s *vv1.Route
+	var e *errors.Http
+
+	err := rc.client.Get(fmt.Sprintf("/namespace/%s/route/%s", rc.namespace, rc.name)).
 		AddHeader("Content-Type", "application/json").
-		Do()
+		JSON(&s, &e)
 
-	buf, err := res.Raw()
 	if err != nil {
 		return nil, err
 	}
-
-	if code := res.StatusCode(); 200 > code || code > 299 {
-		var e *errors.Http
-		if err := json.Unmarshal(buf, &e); err != nil {
-			return nil, err
-		}
+	if e != nil {
 		return nil, errors.New(e.Message)
 	}
 
-	var rs *vv1.Route
-
-	if err := json.Unmarshal(buf, &rs); err != nil {
-		return nil, err
-	}
-
-	return rs, nil
+	return s, nil
 }
 
-func (s *RouteClient) Update(ctx context.Context, opts *rv1.RouteUpdateOptions) (*vv1.Route, error) {
+func (rc *RouteClient) Update(ctx context.Context, opts *rv1.RouteUpdateOptions) (*vv1.Route, error) {
 
 	body, err := opts.ToJson()
 	if err != nil {
 		return nil, err
 	}
 
-	res := s.client.Put(fmt.Sprintf("/namespace/%s/route/%s", s.namespace, s.name)).
+	var s *vv1.Route
+	var e *errors.Http
+
+	err = rc.client.Put(fmt.Sprintf("/namespace/%s/route/%s", rc.namespace, rc.name)).
 		AddHeader("Content-Type", "application/json").
 		Body(body).
-		Do()
+		JSON(&s, &e)
 
-	buf, err := res.Raw()
 	if err != nil {
 		return nil, err
 	}
-
-	if code := res.StatusCode(); 200 > code || code > 299 {
-		var e *errors.Http
-		if err := json.Unmarshal(buf, &e); err != nil {
-			return nil, err
-		}
+	if e != nil {
 		return nil, errors.New(e.Message)
 	}
 
-	var rs *vv1.Route
-
-	if err := json.Unmarshal(buf, &rs); err != nil {
-		return nil, err
-	}
-
-	return rs, nil
+	return s, nil
 }
 
-func (s *RouteClient) Remove(ctx context.Context, opts *rv1.RouteRemoveOptions) error {
+func (rc *RouteClient) Remove(ctx context.Context, opts *rv1.RouteRemoveOptions) error {
 
-	res := s.client.Delete(fmt.Sprintf("/namespace/%s/route/%s", s.namespace, s.name)).
+	var e *errors.Http
+
+	req := rc.client.Delete(fmt.Sprintf("/namespace/%s/route/%s", rc.namespace, rc.name)).
 		AddHeader("Content-Type", "application/json")
 
 	if opts != nil {
 		if opts.Force {
-			res.Param("force", strconv.FormatBool(opts.Force))
+			req.Param("force", strconv.FormatBool(opts.Force))
 		}
 	}
 
-	req := res.Do()
-
-	buf, err := req.Raw()
-	if err != nil {
+	if err := req.JSON(nil, &e); err != nil {
 		return err
 	}
-
-	if code := req.StatusCode(); 200 > code || code > 299 {
-		var e *errors.Http
-		if err := json.Unmarshal(buf, &e); err != nil {
-			return err
-		}
+	if e != nil {
 		return errors.New(e.Message)
 	}
 
@@ -193,9 +154,5 @@ func (s *RouteClient) Remove(ctx context.Context, opts *rv1.RouteRemoveOptions) 
 }
 
 func newRouteClient(client http.Interface, namespace, name string) *RouteClient {
-	s := new(RouteClient)
-	s.client = client
-	s.namespace = namespace
-	s.name = name
-	return s
+	return &RouteClient{client: client, namespace: namespace, name: name}
 }

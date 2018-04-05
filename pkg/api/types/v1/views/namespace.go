@@ -23,10 +23,8 @@ import (
 )
 
 type Namespace struct {
-	Meta      NamespaceMeta      `json:"meta"`
-	Env       NamespaceEnvs      `json:"env"`
-	Resources NamespaceResources `json:"resources"`
-	Quotas    NamespaceQuotas    `json:"quotas"`
+	Meta NamespaceMeta `json:"meta"`
+	Spec NamespaceSpec `json:"spec"`
 }
 
 type NamespaceMeta struct {
@@ -38,6 +36,12 @@ type NamespaceMeta struct {
 	Labels      map[string]string `json:"labels"`
 	Created     time.Time         `json:"created"`
 	Updated     time.Time         `json:"updated"`
+}
+
+type NamespaceSpec struct {
+	Env       NamespaceEnvs      `json:"env"`
+	Resources NamespaceResources `json:"resources"`
+	Quotas    NamespaceQuotas    `json:"quotas"`
 }
 
 type NamespaceEnvs []string

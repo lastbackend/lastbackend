@@ -21,7 +21,6 @@ package v1
 import (
 	"context"
 
-	"encoding/json"
 	"fmt"
 	"github.com/lastbackend/lastbackend/pkg/api/client/http"
 	"github.com/lastbackend/lastbackend/pkg/api/client/interfaces"
@@ -38,235 +37,193 @@ type NodeClient struct {
 	hostname string
 }
 
-func (s *NodeClient) List(ctx context.Context) (*vv1.NodeList, error) {
+func (nc *NodeClient) List(ctx context.Context) (*vv1.NodeList, error) {
 
-	res := s.client.Get(fmt.Sprintf("/cluster/node")).
+	var s *vv1.NodeList
+	var e *errors.Http
+
+	err := nc.client.Get(fmt.Sprintf("/cluster/node")).
 		AddHeader("Content-Type", "application/json").
-		Do()
+		JSON(&s, &e)
 
-	buf, err := res.Raw()
 	if err != nil {
 		return nil, err
 	}
-
-	var nl *vv1.NodeList
-
-	if err := json.Unmarshal(buf, &nl); err != nil {
-		return nil, err
-	}
-
-	return nl, nil
-}
-
-func (s *NodeClient) Get(ctx context.Context) (*vv1.Node, error) {
-
-	res := s.client.Get(fmt.Sprintf("/cluster/node/%s", s.hostname)).
-		AddHeader("Content-Type", "application/json").
-		Do()
-
-	buf, err := res.Raw()
-	if err != nil {
-		return nil, err
-	}
-
-	if code := res.StatusCode(); 200 > code || code > 299 {
-		var e *errors.Http
-		if err := json.Unmarshal(buf, &e); err != nil {
-			return nil, err
-		}
+	if e != nil {
 		return nil, errors.New(e.Message)
 	}
 
-	var ns *vv1.Node
-
-	if err := json.Unmarshal(buf, ns); err != nil {
-		return nil, err
-	}
-
-	return ns, nil
+	return s, nil
 }
 
-func (s *NodeClient) GetSpec(ctx context.Context) (*vv1.NodeSpec, error) {
+func (nc *NodeClient) Get(ctx context.Context) (*vv1.Node, error) {
 
-	res := s.client.Get(fmt.Sprintf("/cluster/node/%s/spec", s.hostname)).
+	var s *vv1.Node
+	var e *errors.Http
+
+	err := nc.client.Get(fmt.Sprintf("/cluster/node/%s", nc.hostname)).
 		AddHeader("Content-Type", "application/json").
-		Do()
+		JSON(&s, &e)
 
-	buf, err := res.Raw()
 	if err != nil {
 		return nil, err
 	}
-
-	if code := res.StatusCode(); 200 > code || code > 299 {
-		var e *errors.Http
-		if err := json.Unmarshal(buf, &e); err != nil {
-			return nil, err
-		}
+	if e != nil {
 		return nil, errors.New(e.Message)
 	}
 
-	var ns *vv1.NodeSpec
-
-	if err := json.Unmarshal(buf, &ns); err != nil {
-		return nil, err
-	}
-
-	return ns, nil
+	return s, nil
 }
 
-func (s *NodeClient) SetMeta(ctx context.Context, opts *rv1.NodeMetaOptions) (*vv1.Node, error) {
+func (nc *NodeClient) GetSpec(ctx context.Context) (*vv1.NodeSpec, error) {
 
-	body := opts.ToJson()
-	res := s.client.Put(fmt.Sprintf("/cluster/node/%s/Meta", s.hostname)).
+	var s *vv1.NodeSpec
+	var e *errors.Http
+
+	err := nc.client.Get(fmt.Sprintf("/cluster/node/%s/spec", nc.hostname)).
 		AddHeader("Content-Type", "application/json").
-		Body([]byte(body)).
-		Do()
+		JSON(&s, &e)
 
-	buf, err := res.Raw()
 	if err != nil {
 		return nil, err
 	}
-
-	if code := res.StatusCode(); 200 > code || code > 299 {
-		var e *errors.Http
-		if err := json.Unmarshal(buf, &e); err != nil {
-			return nil, err
-		}
+	if e != nil {
 		return nil, errors.New(e.Message)
 	}
 
-	var ns *vv1.Node
+	return s, nil
+}
 
-	if err := json.Unmarshal(buf, &ns); err != nil {
+func (nc *NodeClient) SetMeta(ctx context.Context, opts *rv1.NodeMetaOptions) (*vv1.Node, error) {
+
+	body := opts.ToJson()
+
+	var s *vv1.Node
+	var e *errors.Http
+
+	err := nc.client.Put(fmt.Sprintf("/cluster/node/%s/Meta", nc.hostname)).
+		AddHeader("Content-Type", "application/json").
+		Body([]byte(body)).
+		JSON(&s, &e)
+
+	if err != nil {
 		return nil, err
 	}
+	if e != nil {
+		return nil, errors.New(e.Message)
+	}
 
-	return ns, nil
+	return s, nil
 }
 
-func (s *NodeClient) Connect(ctx context.Context, opts *rv1.NodeConnectOptions) error {
+func (nc *NodeClient) Connect(ctx context.Context, opts *rv1.NodeConnectOptions) error {
 
 	body := opts.ToJson()
-	res := s.client.Put(fmt.Sprintf("/cluster/node/%s", s.hostname)).
+
+	var e *errors.Http
+
+	err := nc.client.Put(fmt.Sprintf("/cluster/node/%s", nc.hostname)).
 		AddHeader("Content-Type", "application/json").
 		Body([]byte(body)).
-		Do()
+		JSON(nil, &e)
 
-	buf, err := res.Raw()
 	if err != nil {
 		return err
 	}
-
-	if code := res.StatusCode(); 200 > code || code > 299 {
-		var e *errors.Http
-		if err := json.Unmarshal(buf, &e); err != nil {
-			return err
-		}
+	if e != nil {
 		return errors.New(e.Message)
 	}
 
 	return nil
 }
 
-func (s *NodeClient) SetStatus(ctx context.Context, opts *rv1.NodeStatusOptions) error {
+func (nc *NodeClient) SetStatus(ctx context.Context, opts *rv1.NodeStatusOptions) error {
 
 	body := opts.ToJson()
-	res := s.client.Put(fmt.Sprintf("/cluster/node/%s/status", s.hostname)).
+
+	var e *errors.Http
+
+	err := nc.client.Put(fmt.Sprintf("/cluster/node/%s/status", nc.hostname)).
 		AddHeader("Content-Type", "application/json").
 		Body([]byte(body)).
-		Do()
+		JSON(nil, &e)
 
-	buf, err := res.Raw()
 	if err != nil {
 		return err
 	}
-
-	if code := res.StatusCode(); 200 > code || code > 299 {
-		var e *errors.Http
-		if err := json.Unmarshal(buf, &e); err != nil {
-			return err
-		}
+	if e != nil {
 		return errors.New(e.Message)
 	}
 
 	return nil
 }
 
-func (s *NodeClient) SetPodStatus(ctx context.Context, pod string, opts *rv1.NodePodStatusOptions) error {
+func (nc *NodeClient) SetPodStatus(ctx context.Context, pod string, opts *rv1.NodePodStatusOptions) error {
 
 	body := opts.ToJson()
-	res := s.client.Put(fmt.Sprintf("/cluster/node/%s/status/pod/%s", s.hostname, pod)).
+
+	var e *errors.Http
+
+	err := nc.client.Put(fmt.Sprintf("/cluster/node/%s/status/pod/%s", nc.hostname, pod)).
 		AddHeader("Content-Type", "application/json").
 		Body([]byte(body)).
-		Do()
+		JSON(nil, &e)
 
-	buf, err := res.Raw()
 	if err != nil {
 		return err
 	}
-
-	if code := res.StatusCode(); 200 > code || code > 299 {
-		var e *errors.Http
-		if err := json.Unmarshal(buf, &e); err != nil {
-			return err
-		}
+	if e != nil {
 		return errors.New(e.Message)
 	}
 
 	return nil
 }
 
-func (s *NodeClient) SetVolumeStatus(ctx context.Context, volume string, opts *rv1.NodeVolumeStatusOptions) error {
+func (nc *NodeClient) SetVolumeStatus(ctx context.Context, volume string, opts *rv1.NodeVolumeStatusOptions) error {
 
 	body := opts.ToJson()
-	res := s.client.Put(fmt.Sprintf("/cluster/node/%s/status/volume/%s", s.hostname, volume)).
+
+	var e *errors.Http
+
+	err := nc.client.Put(fmt.Sprintf("/cluster/node/%s/status/volume/%s", nc.hostname, volume)).
 		AddHeader("Content-Type", "application/json").
 		Body([]byte(body)).
-		Do()
+		JSON(nil, &e)
 
-	buf, err := res.Raw()
 	if err != nil {
 		return err
 	}
-
-	if code := res.StatusCode(); 200 > code || code > 299 {
-		var e *errors.Http
-		if err := json.Unmarshal(buf, &e); err != nil {
-			return err
-		}
+	if e != nil {
 		return errors.New(e.Message)
 	}
 
 	return nil
 }
 
-func (s *NodeClient) SetRouteStatus(ctx context.Context, route string, opts *rv1.NodeRouteStatusOptions) error {
+func (nc *NodeClient) SetRouteStatus(ctx context.Context, route string, opts *rv1.NodeRouteStatusOptions) error {
 
 	body := opts.ToJson()
-	res := s.client.Put(fmt.Sprintf("/cluster/node/%s/status/route/%s", s.hostname, route)).
+
+	var e *errors.Http
+
+	err := nc.client.Put(fmt.Sprintf("/cluster/node/%s/status/route/%s", nc.hostname, route)).
 		AddHeader("Content-Type", "application/json").
 		Body([]byte(body)).
-		Do()
+		JSON(nil, &e)
 
-	buf, err := res.Raw()
 	if err != nil {
 		return err
 	}
-
-	if code := res.StatusCode(); 200 > code || code > 299 {
-		var e *errors.Http
-		if err := json.Unmarshal(buf, &e); err != nil {
-			return err
-		}
+	if e != nil {
 		return errors.New(e.Message)
 	}
 
 	return nil
 }
 
-func (s *NodeClient) Remove(ctx context.Context, opts *rv1.NodeRemoveOptions) error {
+func (nc *NodeClient) Remove(ctx context.Context, opts *rv1.NodeRemoveOptions) error {
 
-	req := s.client.Delete(fmt.Sprintf("/cluster/node/%s", s.hostname)).
+	req := nc.client.Delete(fmt.Sprintf("/cluster/node/%s", nc.hostname)).
 		AddHeader("Content-Type", "application/json")
 
 	if opts != nil {
@@ -275,32 +232,25 @@ func (s *NodeClient) Remove(ctx context.Context, opts *rv1.NodeRemoveOptions) er
 		}
 	}
 
-	res := req.Do()
+	var e *errors.Http
 
-	buf, err := res.Raw()
-	if err != nil {
+	if err := req.JSON(nil, &e); err != nil {
 		return err
 	}
-
-	if code := res.StatusCode(); 200 > code || code > 299 {
-		var e *errors.Http
-		if err := json.Unmarshal(buf, &e); err != nil {
-			return err
-		}
+	if e != nil {
 		return errors.New(e.Message)
 	}
 
 	return nil
 }
 
-func (s *NodeClient) Logs(ctx context.Context, pod, container string, opts *rv1.NodeLogsOptions) (io.ReadCloser, error) {
-	req := s.client.Get(fmt.Sprintf("/pod/%s/%s/logs", pod, container))
+func (nc *NodeClient) Logs(ctx context.Context, pod, container string, opts *rv1.NodeLogsOptions) (io.ReadCloser, error) {
+	req := nc.client.Get(fmt.Sprintf("/pod/%s/%s/logs", pod, container))
 	if opts != nil {
 		if opts.Follow {
 			req.Param("force", strconv.FormatBool(opts.Follow))
 		}
 	}
-
 	return req.Stream()
 }
 

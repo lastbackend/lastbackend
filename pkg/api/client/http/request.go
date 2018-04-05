@@ -21,6 +21,7 @@ package http
 import (
 	"bytes"
 	"context"
+	"encoding/json"
 	"fmt"
 	"golang.org/x/net/http2"
 	"io"
@@ -118,6 +119,39 @@ func (r *Request) Do() Result {
 	return result
 }
 
+func (r *Request) JSON(success interface{}, failure interface{}) error {
+
+	if r.err != nil {
+		return r.err
+	}
+
+	client := r.client
+	if client == nil {
+		client = &http.Client{
+			Timeout: time.Second * 10,
+		}
+	}
+
+	u := r.URL().String()
+	req, err := http.NewRequest(r.verb, u, r.body)
+	if err != nil {
+		return r.err
+	}
+
+	if r.ctx != nil {
+		req = req.WithContext(r.ctx)
+	}
+
+	req.Header = r.headers
+
+	resp, err := client.Do(req)
+	if err != nil {
+		return r.err
+	}
+
+	return decodeJSON(resp, success, failure)
+}
+
 type Result struct {
 	body        []byte
 	contentType string
@@ -128,6 +162,23 @@ type Result struct {
 // Raw returns the raw result.
 func (r Result) Raw() ([]byte, error) {
 	return r.body, r.err
+}
+
+// Raw returns the raw result.
+func decodeJSON(r *http.Response, success interface{}, failure interface{}) error {
+
+	if code := r.StatusCode; 200 > code || code > 299 {
+		if failure == nil {
+			return nil
+		}
+		return decodeResponseJSON(r, failure)
+	}
+
+	if success == nil {
+		return nil
+	}
+
+	return decodeResponseJSON(r, success)
 }
 
 func (r Result) StatusCode() int {
@@ -207,12 +258,19 @@ func (r *Request) transformResponse(resp *http.Response, req *http.Request) Resu
 		}
 	}
 
-	contentType := resp.Header.Get("Content-Type")
 	return Result{
 		body:        body,
-		contentType: contentType,
+		contentType: resp.Header.Get("Content-Type"),
 		statusCode:  resp.StatusCode,
 	}
+}
+
+func decodeResponseJSON(r *http.Response, v interface{}) error {
+	err := json.NewDecoder(r.Body).Decode(v)
+	if err != nil && io.EOF == err {
+		return nil
+	}
+	return err
 }
 
 func (r *Request) URL() *url.URL {

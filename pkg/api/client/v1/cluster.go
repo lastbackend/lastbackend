@@ -21,7 +21,6 @@ package v1
 import (
 	"context"
 
-	"encoding/json"
 	"github.com/lastbackend/lastbackend/pkg/api/client/http"
 	"github.com/lastbackend/lastbackend/pkg/api/client/interfaces"
 	rv1 "github.com/lastbackend/lastbackend/pkg/api/types/v1/request"
@@ -34,82 +33,64 @@ type ClusterClient struct {
 	client http.Interface
 }
 
-func (s *ClusterClient) Node(hostname ...string) *NodeClient {
+func (cc *ClusterClient) Node(hostname ...string) *NodeClient {
 	hst := ""
 	if len(hostname) > 0 {
 		hst = hostname[0]
 	}
-	return newNodeClient(s.client, hst)
+	return newNodeClient(cc.client, hst)
 }
 
-func (s *ClusterClient) Ingress(name ...string) *IngressClient {
+func (cc *ClusterClient) Ingress(name ...string) *IngressClient {
 	hst := ""
 	if len(name) > 0 {
 		hst = name[0]
 	}
-	return newIngressClient(s.client, hst)
+	return newIngressClient(cc.client, hst)
 }
 
-func (s *ClusterClient) Get(ctx context.Context) (*vv1.Cluster, error) {
+func (cc *ClusterClient) Get(ctx context.Context) (*vv1.Cluster, error) {
 
-	res := s.client.Get("/cluster").
+	var s *vv1.Cluster
+	var e *errors.Http
+
+	err := cc.client.Get("/cluster").
 		AddHeader("Content-Type", "application/json").
-		Do()
+		JSON(&s, &e)
 
-	buf, err := res.Raw()
 	if err != nil {
 		return nil, err
 	}
-
-	if code := res.StatusCode(); 200 > code || code > 299 {
-		var e *errors.Http
-		if err := json.Unmarshal(buf, &e); err != nil {
-			return nil, err
-		}
+	if e != nil {
 		return nil, errors.New(e.Message)
 	}
 
-	var cl *vv1.Cluster
-
-	if err := json.Unmarshal(buf, &cl); err != nil {
-		return nil, err
-	}
-
-	return cl, nil
+	return s, nil
 }
 
-func (s *ClusterClient) Update(ctx context.Context, opts *rv1.ClusterUpdateOptions) (*vv1.Cluster, error) {
+func (cc *ClusterClient) Update(ctx context.Context, opts *rv1.ClusterUpdateOptions) (*vv1.Cluster, error) {
 
 	body, err := opts.ToJson()
 	if err != nil {
 		return nil, err
 	}
 
-	res := s.client.Put("/cluster").
+	var s *vv1.Cluster
+	var e *errors.Http
+
+	err = cc.client.Put("/cluster").
 		AddHeader("Content-Type", "application/json").
 		Body(body).
-		Do()
+		JSON(&s, &e)
 
-	buf, err := res.Raw()
 	if err != nil {
 		return nil, err
 	}
-
-	if code := res.StatusCode(); 200 > code || code > 299 {
-		var e *errors.Http
-		if err := json.Unmarshal(buf, &e); err != nil {
-			return nil, err
-		}
+	if e != nil {
 		return nil, errors.New(e.Message)
 	}
 
-	var cl *vv1.Cluster
-
-	if err := json.Unmarshal(buf, &cl); err != nil {
-		return nil, err
-	}
-
-	return cl, nil
+	return s, nil
 }
 
 func newClusterClient(req http.Interface) *ClusterClient {

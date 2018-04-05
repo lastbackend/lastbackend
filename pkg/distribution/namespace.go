@@ -30,7 +30,9 @@ import (
 )
 
 const (
-	logNamespacePrefix = "distribution:namespace"
+	logNamespacePrefix     = "distribution:namespace"
+	defaultNamespaceRam    = 4096
+	defaultNamespaceRoutes = 1
 )
 
 type INamespace interface {
@@ -95,13 +97,13 @@ func (n *Namespace) Create(opts *types.NamespaceCreateOptions) (*types.Namespace
 	ns.SelfLink()
 
 	if opts.Quotas != nil {
-		ns.Quotas.RAM = opts.Quotas.RAM
-		ns.Quotas.Routes = opts.Quotas.Routes
-		ns.Quotas.Disabled = opts.Quotas.Disabled
+		ns.Spec.Quotas.RAM = opts.Quotas.RAM
+		ns.Spec.Quotas.Routes = opts.Quotas.Routes
+		ns.Spec.Quotas.Disabled = opts.Quotas.Disabled
 	} else {
-		ns.Quotas.Disabled = true
-		ns.Quotas.RAM = 4096
-		ns.Quotas.Routes = 1
+		ns.Spec.Quotas.Disabled = true
+		ns.Spec.Quotas.RAM = defaultNamespaceRam
+		ns.Spec.Quotas.Routes = defaultNamespaceRoutes
 	}
 
 	if err := n.storage.Namespace().Insert(n.context, ns); err != nil {
@@ -118,6 +120,12 @@ func (n *Namespace) Update(namespace *types.Namespace, opts *types.NamespaceUpda
 
 	if opts.Description != nil {
 		namespace.Meta.Description = *opts.Description
+	}
+
+	if opts.Quotas != nil {
+		namespace.Spec.Quotas.RAM = opts.Quotas.RAM
+		namespace.Spec.Quotas.Routes = opts.Quotas.Routes
+		namespace.Spec.Quotas.Disabled = opts.Quotas.Disabled
 	}
 
 	if err := n.storage.Namespace().Update(n.context, namespace); err != nil {

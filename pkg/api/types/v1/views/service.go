@@ -31,8 +31,6 @@ type Service struct {
 	Stats       ServiceStats           `json:"stats"`
 	Status      ServiceStatus          `json:"status"`
 	Spec        ServiceSpec            `json:"spec"`
-	Sources     ServiceSources         `json:"sources"`
-	Quotas      ServiceQuotas          `json:"quotas"`
 	Deployments map[string]*Deployment `json:"deployments"`
 }
 
@@ -48,25 +46,13 @@ type ServiceMeta struct {
 	Updated     time.Time         `json:"updated"`
 }
 
-type ServiceSources struct {
-	// Image sources
-	Image *ServiceSourcesImage `json:"image,omitempty"`
-	// Deployment source lastbackend repo
-	Repo *ServiceSourcesRepo `json:"repo,omitempty"`
-}
-
-type ServiceSourcesImage struct {
+type ServiceImage struct {
 	// Image namespace name
 	Namespace string `json:"namespace"`
 	// Image tag
 	Tag string `json:"tag"`
 	// Hash
 	Hash string `json:"hash"`
-}
-
-type ServiceQuotas struct {
-	// Service quotas ram
-	RAM *int64 `json:"ram, omitempty"`
 }
 
 type ServiceSourcesRepo struct {

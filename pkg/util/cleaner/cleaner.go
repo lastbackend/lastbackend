@@ -92,7 +92,7 @@ func (r *reader) clear() error {
 		return fmt.Errorf("unexpected stream byte: %#x", r.prefix[0])
 	}
 
-	size := binary.BigEndian.Uint32(r.prefix[stdWriterSizeIndex: stdWriterSizeIndex+4])
+	size := binary.BigEndian.Uint32(r.prefix[stdWriterSizeIndex : stdWriterSizeIndex+4])
 	if size > defaultDataLength {
 		return fmt.Errorf("exceeded the data limit (%d/%d) bytes", size, defaultDataLength)
 	}

@@ -60,22 +60,6 @@ func (sv *Service) ToStatus(obj types.ServiceStatus) ServiceStatus {
 	}
 }
 
-func (sv *Service) ToSource(obj types.ServiceSources) ServiceSources {
-	s := ServiceSources{}
-	s.Repo = new(ServiceSourcesRepo)
-	s.Image = new(ServiceSourcesImage)
-
-	if obj.Repo.ID == "" || obj.Repo.Build == "" {
-		s.Image = new(ServiceSourcesImage)
-		s.Image.Namespace = obj.Image.Namespace
-		s.Image.Tag = obj.Image.Tag
-		s.Image.Hash = obj.Image.Hash
-		return s
-	}
-
-	return s
-}
-
 func (sv *Service) ToSpec(obj types.ServiceSpec) ServiceSpec {
 
 	var spec = ServiceSpec{
@@ -101,12 +85,6 @@ func (sv *Service) ToSpec(obj types.ServiceSpec) ServiceSpec {
 	}
 
 	return spec
-}
-
-func (sv *Service) ToQuotas(obj types.ServiceQuotas) ServiceQuotas {
-	return ServiceQuotas{
-		RAM: obj.RAM,
-	}
 }
 
 func (sv *Service) ToDeployments(obj map[string]*types.Deployment, pods map[string]*types.Pod) DeploymentMap {

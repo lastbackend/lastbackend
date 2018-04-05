@@ -42,7 +42,7 @@ func (s *NamespaceStorage) Get(ctx context.Context, name string) (*types.Namespa
 
 	log.V(logLevel).Debugf("storage:etcd:namespace:> get by name: %s", name)
 
-	const filter = `\b.+` + namespaceStorage + `\/.+\/(meta|state)\b`
+	const filter = `\b.+` + namespaceStorage + `\/.+\/(meta|state|spec)\b`
 
 	if len(name) == 0 {
 		err := errors.New("name can not be empty")
@@ -111,8 +111,21 @@ func (s *NamespaceStorage) Insert(ctx context.Context, namespace *types.Namespac
 	}
 	defer destroy()
 
+	tx := client.Begin(ctx)
+
 	key := keyCreate(namespaceStorage, namespace.Meta.Name, "meta")
-	if err := client.Create(ctx, key, namespace.Meta, nil, 0); err != nil {
+	if err := tx.Create(key, namespace.Meta, 0); err != nil {
+		log.V(logLevel).Errorf("storage:etcd:namespace:> insert namespace meta err: %s", err.Error())
+		return err
+	}
+
+	keySpec := keyCreate(namespaceStorage, namespace.Meta.Name, "spec")
+	if err := tx.Create(keySpec, namespace.Spec, 0); err != nil {
+		log.V(logLevel).Errorf("storage:etcd:namespace:> insert namespace spec err: %s", err.Error())
+		return err
+	}
+
+	if err := tx.Commit(); err != nil {
 		log.V(logLevel).Errorf("storage:etcd:namespace:> insert namespace err: %s", err.Error())
 		return err
 	}
@@ -137,8 +150,21 @@ func (s *NamespaceStorage) Update(ctx context.Context, namespace *types.Namespac
 	}
 	defer destroy()
 
+	tx := client.Begin(ctx)
+
 	key := keyCreate(namespaceStorage, namespace.Meta.Name, "meta")
 	if err := client.Update(ctx, key, namespace.Meta, nil, 0); err != nil {
+		log.V(logLevel).Errorf("storage:etcd:namespace:> update namespace err: %s", err.Error())
+		return err
+	}
+
+	keySpec := keyCreate(namespaceStorage, namespace.Meta.Name, "spec")
+	if err := tx.Update(keySpec, namespace.Spec, 0); err != nil {
+		log.V(logLevel).Errorf("storage:etcd:namespace:> update namespace spec err: %s", err.Error())
+		return err
+	}
+
+	if err := tx.Commit(); err != nil {
 		log.V(logLevel).Errorf("storage:etcd:namespace:> update namespace err: %s", err.Error())
 		return err
 	}

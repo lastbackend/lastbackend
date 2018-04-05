@@ -21,7 +21,6 @@ package v1
 import (
 	"context"
 
-	"encoding/json"
 	"fmt"
 	"github.com/lastbackend/lastbackend/pkg/api/client/http"
 	"github.com/lastbackend/lastbackend/pkg/api/client/interfaces"
@@ -37,52 +36,47 @@ type PodClient struct {
 	deployment string
 }
 
-func (s *PodClient) List(ctx context.Context) (*vv1.PodList, error) {
+func (pc *PodClient) List(ctx context.Context) (*vv1.PodList, error) {
 
-	res := s.client.Get(fmt.Sprintf("/namespace/%s/service/%s/deploymet/%s/pod", s.namespace, s.service, s.deployment)).
+	var s *vv1.PodList
+	var e *errors.Http
+
+	err := pc.client.Get(fmt.Sprintf("/namespace/%s/service/%s/deploymet/%s/pod", pc.namespace, pc.service, pc.deployment)).
 		AddHeader("Content-Type", "application/json").
-		Do()
+		JSON(&s, &e)
 
-	buf, err := res.Raw()
 	if err != nil {
 		return nil, err
 	}
-
-	var pl *vv1.PodList
-
-	if err := json.Unmarshal(buf, &pl); err != nil {
-		return nil, err
-	}
-
-	return pl, nil
-}
-
-func (s *PodClient) Get(ctx context.Context, name string) (*vv1.Pod, error) {
-
-	res := s.client.Get(fmt.Sprintf("/namespace/%s/service/%s/deploymet/%s/pod/%s", s.namespace, s.service, s.deployment, name)).
-		AddHeader("Content-Type", "application/json").
-		Do()
-
-	buf, err := res.Raw()
-	if err != nil {
-		return nil, err
-	}
-
-	if code := res.StatusCode(); 200 > code || code > 299 {
-		var e *errors.Http
-		if err := json.Unmarshal(buf, &e); err != nil {
-			return nil, err
-		}
+	if e != nil {
 		return nil, errors.New(e.Message)
 	}
 
-	var ps *vv1.Pod
-
-	if err := json.Unmarshal(buf, &ps); err != nil {
-		return nil, err
+	if s == nil {
+		list := make(vv1.PodList, 0)
+		s = &list
 	}
 
-	return ps, nil
+	return s, nil
+}
+
+func (pc *PodClient) Get(ctx context.Context, name string) (*vv1.Pod, error) {
+
+	var s *vv1.Pod
+	var e *errors.Http
+
+	err := pc.client.Get(fmt.Sprintf("/namespace/%s/service/%s/deploymet/%s/pod/%s", pc.namespace, pc.service, pc.deployment, name)).
+		AddHeader("Content-Type", "application/json").
+		JSON(&s, &e)
+
+	if err != nil {
+		return nil, err
+	}
+	if e != nil {
+		return nil, errors.New(e.Message)
+	}
+
+	return s, nil
 }
 
 func newPodClient(client http.Interface, namespace, service, deployment string) *PodClient {

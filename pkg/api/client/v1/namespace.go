@@ -20,7 +20,6 @@ package v1
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"github.com/lastbackend/lastbackend/pkg/api/client/http"
 	"github.com/lastbackend/lastbackend/pkg/api/client/interfaces"
@@ -36,178 +35,134 @@ type NamespaceClient struct {
 	name   string
 }
 
-func (s *NamespaceClient) Service(name ...string) *ServiceClient {
+func (nc *NamespaceClient) Service(name ...string) *ServiceClient {
 	n := ""
 	if len(name) > 0 {
 		n = name[0]
 	}
-	return newServiceClient(s.client, s.name, n)
+	return newServiceClient(nc.client, nc.name, n)
 }
 
-func (s *NamespaceClient) Secret(name ...string) *SecretClient {
+func (nc *NamespaceClient) Secret(name ...string) *SecretClient {
 	n := ""
 	if len(name) > 0 {
 		n = name[0]
 	}
-	return newSecretClient(s.client, s.name, n)
+	return newSecretClient(nc.client, nc.name, n)
 }
 
-func (s *NamespaceClient) Route(name ...string) *RouteClient {
+func (nc *NamespaceClient) Route(name ...string) *RouteClient {
 	n := ""
 	if len(name) > 0 {
 		n = name[0]
 	}
-	return newRouteClient(s.client, s.name, n)
+	return newRouteClient(nc.client, nc.name, n)
 }
 
-func (s *NamespaceClient) Volume(name ...string) *VolumeClient {
+func (nc *NamespaceClient) Volume(name ...string) *VolumeClient {
 	n := ""
 	if len(name) > 0 {
 		n = name[0]
 	}
-	return newVolumeClient(s.client, s.name, n)
+	return newVolumeClient(nc.client, nc.name, n)
 }
 
-func (s *NamespaceClient) List(ctx context.Context) (*vv1.NamespaceList, error) {
+func (nc *NamespaceClient) List(ctx context.Context) (*vv1.NamespaceList, error) {
 
-	req := s.client.Get(fmt.Sprintf("/namespace")).
+	var s = new(vv1.NamespaceList)
+	var e = new(errors.Http)
+
+	err := nc.client.Get(fmt.Sprintf("/namespace")).
 		AddHeader("Content-Type", "application/json").
-		Do()
+		JSON(&s, &e)
 
-	buf, err := req.Raw()
 	if err != nil {
 		return nil, err
 	}
-
-	if code := req.StatusCode(); 200 > code || code > 299 {
-		var e *errors.Http
-		if err := json.Unmarshal(buf, &e); err != nil {
-			return nil, err
-		}
+	if e != nil {
 		return nil, errors.New(e.Message)
 	}
 
-	var nl *vv1.NamespaceList
-
-	if len(buf) == 0 {
+	if s == nil {
 		list := make(vv1.NamespaceList, 0)
-		return &list, nil
+		s = &list
 	}
 
-	if err := json.Unmarshal(buf, &nl); err != nil {
-		return nil, err
-	}
-
-	return nl, nil
+	return s, nil
 }
 
-func (s *NamespaceClient) Create(ctx context.Context, opts *rv1.NamespaceCreateOptions) (*vv1.Namespace, error) {
+func (nc *NamespaceClient) Create(ctx context.Context, opts *rv1.NamespaceCreateOptions) (*vv1.Namespace, error) {
 
 	body, err := opts.ToJson()
 	if err != nil {
 		return nil, err
 	}
 
-	res := s.client.Post("/namespace").
+	var s *vv1.Namespace
+	var e *errors.Http
+
+	err = nc.client.Post("/namespace").
 		AddHeader("Content-Type", "application/json").
 		Body(body).
-		Do()
+		JSON(&s, &e)
 
-	if err := res.Error(); err != nil {
-		return nil, err
-	}
-
-	buf, err := res.Raw()
 	if err != nil {
 		return nil, err
 	}
-
-	if code := res.StatusCode(); 200 > code || code > 299 {
-		var e *errors.Http
-		if err := json.Unmarshal(buf, &e); err != nil {
-			return nil, err
-		}
+	if e != nil {
 		return nil, errors.New(e.Message)
 	}
 
-	var ns = new(vv1.Namespace)
-
-	if err := json.Unmarshal(buf, &ns); err != nil {
-		return nil, err
-	}
-
-	return ns, nil
+	return s, nil
 }
 
-func (s *NamespaceClient) Get(ctx context.Context) (*vv1.Namespace, error) {
+func (nc *NamespaceClient) Get(ctx context.Context) (*vv1.Namespace, error) {
 
-	res := s.client.Get(fmt.Sprintf("/namespace/%s", s.name)).
+	var s *vv1.Namespace
+	var e *errors.Http
+
+	err := nc.client.Get(fmt.Sprintf("/namespace/%s", nc.name)).
 		AddHeader("Content-Type", "application/json").
-		Do()
+		JSON(&s, &e)
 
-	buf, err := res.Raw()
 	if err != nil {
 		return nil, err
 	}
-
-	if code := res.StatusCode(); 200 > code || code > 299 {
-		var e *errors.Http
-		if err := json.Unmarshal(buf, &e); err != nil {
-			return nil, err
-		}
+	if e != nil {
 		return nil, errors.New(e.Message)
 	}
 
-	var ns *vv1.Namespace
-
-	if err := json.Unmarshal(buf, &ns); err != nil {
-		return nil, err
-	}
-
-	return ns, nil
+	return s, nil
 }
 
-func (s *NamespaceClient) Update(ctx context.Context, opts *rv1.NamespaceUpdateOptions) (*vv1.Namespace, error) {
+func (nc *NamespaceClient) Update(ctx context.Context, opts *rv1.NamespaceUpdateOptions) (*vv1.Namespace, error) {
 
 	body, err := opts.ToJson()
 	if err != nil {
 		return nil, err
 	}
 
-	res := s.client.Put(fmt.Sprintf("/namespace/%s", s.name)).
+	var s *vv1.Namespace
+	var e *errors.Http
+
+	err = nc.client.Put(fmt.Sprintf("/namespace/%s", nc.name)).
 		AddHeader("Content-Type", "application/json").
 		Body(body).
-		Do()
+		JSON(&s, &e)
 
-	if err := res.Error(); err != nil {
-		return nil, err
-	}
-
-	buf, err := res.Raw()
 	if err != nil {
 		return nil, err
 	}
-
-	if code := res.StatusCode(); 200 > code || code > 299 {
-		var e *errors.Http
-		if err := json.Unmarshal(buf, &e); err != nil {
-			return nil, err
-		}
+	if e != nil {
 		return nil, errors.New(e.Message)
 	}
 
-	var ns = new(vv1.Namespace)
-
-	if err := json.Unmarshal(buf, &ns); err != nil {
-		return nil, err
-	}
-
-	return ns, nil
+	return s, nil
 }
 
-func (s *NamespaceClient) Remove(ctx context.Context, opts *rv1.NamespaceRemoveOptions) error {
+func (nc *NamespaceClient) Remove(ctx context.Context, opts *rv1.NamespaceRemoveOptions) error {
 
-	req := s.client.Delete(fmt.Sprintf("/namespace/%s", s.name)).
+	req := nc.client.Delete(fmt.Sprintf("/namespace/%s", nc.name)).
 		AddHeader("Content-Type", "application/json")
 
 	if opts != nil {
@@ -216,18 +171,12 @@ func (s *NamespaceClient) Remove(ctx context.Context, opts *rv1.NamespaceRemoveO
 		}
 	}
 
-	res := req.Do()
+	var e *errors.Http
 
-	buf, err := res.Raw()
-	if err != nil {
+	if err := req.JSON(nil, &e); err != nil {
 		return err
 	}
-
-	if code := res.StatusCode(); 200 > code || code > 299 {
-		var e *errors.Http
-		if err := json.Unmarshal(buf, &e); err != nil {
-			return err
-		}
+	if e != nil {
 		return errors.New(e.Message)
 	}
 

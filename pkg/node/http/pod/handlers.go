@@ -40,10 +40,10 @@ func PodLogsH(w http.ResponseWriter, r *http.Request) {
 	log.V(logLevel).Debug("node:http:pod:get:> get pod logs")
 
 	var (
-		c = mux.Vars(r)["container"]
-		p = envs.Get().GetState().Pods().GetPod(mux.Vars(r)["pod"])
-		notify   = w.(http.CloseNotifier).CloseNotify()
-		done = make(chan bool, 1)
+		c      = mux.Vars(r)["container"]
+		p      = envs.Get().GetState().Pods().GetPod(mux.Vars(r)["pod"])
+		notify = w.(http.CloseNotifier).CloseNotify()
+		done   = make(chan bool, 1)
 	)
 
 	go func() {
