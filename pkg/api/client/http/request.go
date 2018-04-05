@@ -21,6 +21,7 @@ package http
 import (
 	"bytes"
 	"context"
+	"encoding/json"
 	"fmt"
 	"golang.org/x/net/http2"
 	"io"
@@ -29,7 +30,6 @@ import (
 	"net/url"
 	"path"
 	"time"
-	"encoding/json"
 )
 
 type Request struct {

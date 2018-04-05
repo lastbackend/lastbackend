@@ -48,7 +48,7 @@ func (cc *ClusterClient) Get(ctx context.Context) (*vv1.Cluster, error) {
 
 	err := cc.client.Get("/cluster").
 		AddHeader("Content-Type", "application/json").
-		JSON(s, e)
+		JSON(&s, &e)
 
 	if err != nil {
 		return nil, errors.New(e.Message)
@@ -70,7 +70,7 @@ func (cc *ClusterClient) Update(ctx context.Context, opts *rv1.ClusterUpdateOpti
 	err = cc.client.Put("/cluster").
 		AddHeader("Content-Type", "application/json").
 		Body(body).
-		JSON(s, e)
+		JSON(&s, &e)
 
 	if err != nil {
 		return nil, errors.New(e.Message)

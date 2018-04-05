@@ -59,7 +59,7 @@ func (sc *ServiceClient) Create(ctx context.Context, opts *rv1.ServiceCreateOpti
 	err = sc.client.Post(fmt.Sprintf("/namespace/%s/service", sc.namespace)).
 		AddHeader("Content-Type", "application/json").
 		Body(body).
-		JSON(s, e)
+		JSON(&s, &e)
 
 	if err != nil {
 		return nil, errors.New(e.Message)
@@ -75,7 +75,7 @@ func (sc *ServiceClient) List(ctx context.Context) (*vv1.ServiceList, error) {
 
 	err := sc.client.Get(fmt.Sprintf("/namespace/%s/service", sc.namespace)).
 		AddHeader("Content-Type", "application/json").
-		JSON(s, e)
+		JSON(&s, &e)
 
 	if err != nil {
 		return nil, errors.New(e.Message)
@@ -96,7 +96,7 @@ func (sc *ServiceClient) Get(ctx context.Context) (*vv1.Service, error) {
 
 	err := sc.client.Get(fmt.Sprintf("/namespace/%s/service/%s", sc.namespace, sc.name)).
 		AddHeader("Content-Type", "application/json").
-		JSON(s, e)
+		JSON(&s, &e)
 
 	if err != nil {
 		return nil, errors.New(e.Message)
@@ -118,7 +118,7 @@ func (sc *ServiceClient) Update(ctx context.Context, opts *rv1.ServiceUpdateOpti
 	err = sc.client.Put(fmt.Sprintf("/namespace/%s/service/%s", sc.namespace, sc.name)).
 		AddHeader("Content-Type", "application/json").
 		Body(body).
-		JSON(s, e)
+		JSON(&s, &e)
 
 	if err != nil {
 		return nil, errors.New(e.Message)
@@ -140,7 +140,7 @@ func (sc *ServiceClient) Remove(ctx context.Context, opts *rv1.ServiceRemoveOpti
 
 	var e *errors.Http
 
-	if err := req.JSON(nil, e); err != nil {
+	if err := req.JSON(nil, &e); err != nil {
 		return errors.New(e.Message)
 	}
 

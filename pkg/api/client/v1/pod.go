@@ -43,7 +43,7 @@ func (pc *PodClient) List(ctx context.Context) (*vv1.PodList, error) {
 
 	err := pc.client.Get(fmt.Sprintf("/namespace/%s/service/%s/deploymet/%s/pod", pc.namespace, pc.service, pc.deployment)).
 		AddHeader("Content-Type", "application/json").
-		JSON(s, e)
+		JSON(&s, &e)
 
 	if err != nil {
 		return nil, errors.New(e.Message)
@@ -64,7 +64,7 @@ func (pc *PodClient) Get(ctx context.Context, name string) (*vv1.Pod, error) {
 
 	err := pc.client.Get(fmt.Sprintf("/namespace/%s/service/%s/deploymet/%s/pod/%s", pc.namespace, pc.service, pc.deployment, name)).
 		AddHeader("Content-Type", "application/json").
-		JSON(s, e)
+		JSON(&s, &e)
 
 	if err != nil {
 		return nil, errors.New(e.Message)

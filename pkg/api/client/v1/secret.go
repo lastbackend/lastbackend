@@ -50,7 +50,7 @@ func (sc *SecretClient) Create(ctx context.Context, opts *rv1.SecretCreateOption
 	err = sc.client.Post(fmt.Sprintf("/namespace/%s/secret", sc.namespace)).
 		AddHeader("Content-Type", "application/json").
 		Body(body).
-		JSON(s, e)
+		JSON(&s, &e)
 
 	if err != nil {
 		return nil, errors.New(e.Message)
@@ -66,7 +66,7 @@ func (sc *SecretClient) List(ctx context.Context) (*vv1.SecretList, error) {
 
 	err := sc.client.Get(fmt.Sprintf("/namespace/%s/secret", sc.namespace)).
 		AddHeader("Content-Type", "application/json").
-		JSON(s, e)
+		JSON(&s, &e)
 
 	if err != nil {
 		return nil, errors.New(e.Message)
@@ -93,7 +93,7 @@ func (sc *SecretClient) Update(ctx context.Context, opts *rv1.SecretUpdateOption
 	err = sc.client.Put(fmt.Sprintf("/namespace/%s/secret/%s", sc.namespace, sc.name)).
 		AddHeader("Content-Type", "application/json").
 		Body(body).
-		JSON(s, e)
+		JSON(&s, &e)
 
 	if err != nil {
 		return nil, errors.New(e.Message)
@@ -115,7 +115,7 @@ func (sc *SecretClient) Remove(ctx context.Context, opts *rv1.SecretRemoveOption
 
 	var e *errors.Http
 
-	if err := req.JSON(nil, e); err != nil {
+	if err := req.JSON(nil, &e); err != nil {
 		return errors.New(e.Message)
 	}
 

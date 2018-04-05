@@ -50,7 +50,7 @@ func (vc *VolumeClient) Create(ctx context.Context, opts *rv1.VolumeCreateOption
 	err = vc.client.Post(fmt.Sprintf("/namespace/%s/volume", vc.namespace)).
 		AddHeader("Content-Type", "application/json").
 		Body(body).
-		JSON(s, e)
+		JSON(&s, &e)
 
 	if err != nil {
 		return nil, errors.New(e.Message)
@@ -66,7 +66,7 @@ func (vc *VolumeClient) List(ctx context.Context) (*vv1.VolumeList, error) {
 
 	err := vc.client.Get(fmt.Sprintf("/namespace/%s/volume", vc.namespace)).
 		AddHeader("Content-Type", "application/json").
-		JSON(s, e)
+		JSON(&s, &e)
 
 	if err != nil {
 		return nil, errors.New(e.Message)
@@ -87,7 +87,7 @@ func (vc *VolumeClient) Get(ctx context.Context) (*vv1.Volume, error) {
 
 	err := vc.client.Get(fmt.Sprintf("/namespace/%s/volume/%s", vc.namespace, vc.name)).
 		AddHeader("Content-Type", "application/json").
-		JSON(s, e)
+		JSON(&s, &e)
 
 	if err != nil {
 		return nil, errors.New(e.Message)
@@ -109,7 +109,7 @@ func (vc *VolumeClient) Update(ctx context.Context, opts *rv1.VolumeUpdateOption
 	err = vc.client.Put(fmt.Sprintf("/namespace/%s/volume/%s", vc.namespace, vc.name)).
 		AddHeader("Content-Type", "application/json").
 		Body(body).
-		JSON(s, e)
+		JSON(&s, &e)
 
 	if err != nil {
 		return nil, errors.New(e.Message)
@@ -131,7 +131,7 @@ func (vc *VolumeClient) Remove(ctx context.Context, opts *rv1.VolumeRemoveOption
 
 	var e *errors.Http
 
-	if err := req.JSON(nil, e); err != nil {
+	if err := req.JSON(nil, &e); err != nil {
 		return errors.New(e.Message)
 	}
 

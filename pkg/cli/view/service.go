@@ -22,19 +22,19 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/lastbackend/lastbackend/pkg/api/types/v1/views"
-	"github.com/lastbackend/lastbackend/pkg/util/table"
-	"github.com/lastbackend/lastbackend/pkg/util/converter"
 	"github.com/ararog/timeago"
+	"github.com/lastbackend/lastbackend/pkg/api/types/v1/views"
+	"github.com/lastbackend/lastbackend/pkg/util/converter"
+	"github.com/lastbackend/lastbackend/pkg/util/table"
 )
 
 type ServiceList []*Service
 type Service struct {
-	Meta        ServiceMeta            `json:"meta"`
-	Spec        ServiceSpec            `json:"spec"`
-	Status      ServiceStatus          `json:"status"`
-	Sources     ServiceSources         `json:"sources"`
-	Deployments DeploymentMap `json:"deployments"`
+	Meta        ServiceMeta    `json:"meta"`
+	Spec        ServiceSpec    `json:"spec"`
+	Status      ServiceStatus  `json:"status"`
+	Sources     ServiceSources `json:"sources"`
+	Deployments DeploymentMap  `json:"deployments"`
 }
 
 type ServiceMeta struct {
@@ -69,20 +69,20 @@ type ServiceSpec struct {
 type DeploymentList []*Deployment
 type DeploymentMap map[string]*Deployment
 type Deployment struct {
-	Name  string         `json:"name"`
-	State string         `json:"state"`
-	Spec  DeploymentSpec `json:"spec"`
-	Pods  map[string]PodView     `json:"pods"`
+	Name  string             `json:"name"`
+	State string             `json:"state"`
+	Spec  DeploymentSpec     `json:"spec"`
+	Pods  map[string]PodView `json:"pods"`
 }
 
 type PodView struct {
-	Name   string     `json:"name"`
-	Created time.Time `json:"created"`
-	Status *PodStatus `json:"status"`
+	Name    string     `json:"name"`
+	Created time.Time  `json:"created"`
+	Status  *PodStatus `json:"status"`
 }
 
 type PodStatus struct {
-	State      string         `json:"state"`
+	State      string        `json:"state"`
 	Containers PodContainers `json:"containers"`
 }
 
@@ -165,38 +165,38 @@ func (s *Service) Print() {
 //
 func (dl *DeploymentMap) Print() {
 	for _, d := range *dl {
-			var data = map[string]interface{}{}
+		var data = map[string]interface{}{}
 
-			data["Name"] = d.Name
-			data["Status"] = d.State
-			//data["REPLICAS"] = string(d.Spec.Replicas) + " updated | " + string(d.Spec.Replicas) + " total | " + string(d.Spec.Replicas) + " availible | 0 unavailible"
+		data["Name"] = d.Name
+		data["Status"] = d.State
+		//data["REPLICAS"] = string(d.Spec.Replicas) + " updated | " + string(d.Spec.Replicas) + " total | " + string(d.Spec.Replicas) + " availible | 0 unavailible"
 
-			//fmt.Println("Active:")
-			table.PrintHorizontal(data)
-			fmt.Println("\n Deployment pods:")
+		//fmt.Println("Active:")
+		table.PrintHorizontal(data)
+		fmt.Println("\n Deployment pods:")
 
-			podTable := table.New([]string{"Name", "Ready", "Status", "Restarts", "Age"})
-			podTable.VisibleHeader=true
+		podTable := table.New([]string{"Name", "Ready", "Status", "Restarts", "Age"})
+		podTable.VisibleHeader = true
 
-			for _, p := range d.Pods {
-				var ready, restarts int
-				for _, c := range p.Status.Containers {
-					if c.Ready {
-						ready++
-						restarts += c.Restart
-					}
+		for _, p := range d.Pods {
+			var ready, restarts int
+			for _, c := range p.Status.Containers {
+				if c.Ready {
+					ready++
+					restarts += c.Restart
 				}
-				var podRow = map[string]interface{}{}
-				got, _ := timeago.TimeAgoWithTime(time.Now(), p.Created)
-				podRow["Name"] = p.Name
-				podRow["Ready"] = string(converter.IntToString(ready)+"/"+converter.IntToString(len(p.Status.Containers)))
-				podRow["Status"] = p.Status.State
-				podRow["Restarts"] = restarts
-				podRow["Age"] = got
-				podTable.AddRow(podRow)
 			}
+			var podRow = map[string]interface{}{}
+			got, _ := timeago.TimeAgoWithTime(time.Now(), p.Created)
+			podRow["Name"] = p.Name
+			podRow["Ready"] = string(converter.IntToString(ready) + "/" + converter.IntToString(len(p.Status.Containers)))
+			podRow["Status"] = p.Status.State
+			podRow["Restarts"] = restarts
+			podRow["Age"] = got
+			podTable.AddRow(podRow)
+		}
 
-			podTable.Print()
+		podTable.Print()
 	}
 }
 
@@ -227,8 +227,8 @@ func FromApiServiceView(service *views.Service) *Service {
 	for i, d := range service.Deployments {
 		var itd Deployment
 
-		itd.State=d.Status.State
-		itd.Name=d.Meta.Name
+		itd.State = d.Status.State
+		itd.Name = d.Meta.Name
 		itd.Pods = make(map[string]PodView)
 
 		for j, p := range d.Pods {

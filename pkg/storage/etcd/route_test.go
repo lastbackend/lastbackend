@@ -384,7 +384,7 @@ func TestRouteStorage_Insert(t *testing.T) {
 		},
 	}
 
-	clear:=func() {
+	clear := func() {
 		if err := stg.Clear(ctx); err != nil {
 			t.Errorf("RouteStorage.ListByNamespace() storage setup error = %v", err)
 			return
@@ -479,7 +479,7 @@ func TestRouteStorage_Update(t *testing.T) {
 		},
 	}
 
-	clear:=func() {
+	clear := func() {
 		if err := stg.Clear(ctx); err != nil {
 			t.Errorf("RouteStorage.Update() storage setup error = %v", err)
 			return
@@ -586,7 +586,7 @@ func TestRouteStorage_Remove(t *testing.T) {
 		},
 	}
 
-	clear:= func() {
+	clear := func() {
 		if err := stg.Clear(ctx); err != nil {
 			t.Errorf("RouteStorage.Remove() storage setup error = %v", err)
 			return

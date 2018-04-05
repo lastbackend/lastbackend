@@ -74,7 +74,7 @@ func (nc *NamespaceClient) List(ctx context.Context) (*vv1.NamespaceList, error)
 
 	err := nc.client.Get(fmt.Sprintf("/namespace")).
 		AddHeader("Content-Type", "application/json").
-		JSON(s, e)
+		JSON(&s, &e)
 
 	if err != nil {
 		return nil, errors.New(e.Message)
@@ -101,7 +101,7 @@ func (nc *NamespaceClient) Create(ctx context.Context, opts *rv1.NamespaceCreate
 	err = nc.client.Post("/namespace").
 		AddHeader("Content-Type", "application/json").
 		Body(body).
-		JSON(s, e)
+		JSON(&s, &e)
 
 	if err != nil {
 		return nil, errors.New(e.Message)
@@ -117,7 +117,7 @@ func (nc *NamespaceClient) Get(ctx context.Context) (*vv1.Namespace, error) {
 
 	err := nc.client.Get(fmt.Sprintf("/namespace/%s", nc.name)).
 		AddHeader("Content-Type", "application/json").
-		JSON(s, e)
+		JSON(&s, &e)
 
 	if err != nil {
 		return nil, errors.New(e.Message)
@@ -139,7 +139,7 @@ func (nc *NamespaceClient) Update(ctx context.Context, opts *rv1.NamespaceUpdate
 	err = nc.client.Put(fmt.Sprintf("/namespace/%s", nc.name)).
 		AddHeader("Content-Type", "application/json").
 		Body(body).
-		JSON(s, e)
+		JSON(&s, &e)
 
 	if err != nil {
 		return nil, errors.New(e.Message)

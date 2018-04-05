@@ -44,7 +44,7 @@ func (nc *NodeClient) List(ctx context.Context) (*vv1.NodeList, error) {
 
 	err := nc.client.Get(fmt.Sprintf("/cluster/node")).
 		AddHeader("Content-Type", "application/json").
-		JSON(s, e)
+		JSON(&s, &e)
 
 	if err != nil {
 		return nil, errors.New(e.Message)
@@ -60,7 +60,7 @@ func (nc *NodeClient) Get(ctx context.Context) (*vv1.Node, error) {
 
 	err := nc.client.Get(fmt.Sprintf("/cluster/node/%s", nc.hostname)).
 		AddHeader("Content-Type", "application/json").
-		JSON(s, e)
+		JSON(&s, &e)
 
 	if err != nil {
 		return nil, errors.New(e.Message)
@@ -76,7 +76,7 @@ func (nc *NodeClient) GetSpec(ctx context.Context) (*vv1.NodeSpec, error) {
 
 	err := nc.client.Get(fmt.Sprintf("/cluster/node/%s/spec", nc.hostname)).
 		AddHeader("Content-Type", "application/json").
-		JSON(s, e)
+		JSON(&s, &e)
 
 	if err != nil {
 		return nil, errors.New(e.Message)
@@ -95,7 +95,7 @@ func (nc *NodeClient) SetMeta(ctx context.Context, opts *rv1.NodeMetaOptions) (*
 	err := nc.client.Put(fmt.Sprintf("/cluster/node/%s/Meta", nc.hostname)).
 		AddHeader("Content-Type", "application/json").
 		Body([]byte(body)).
-		JSON(s, e)
+		JSON(&s, &e)
 
 	if err != nil {
 		return nil, errors.New(e.Message)
@@ -113,7 +113,7 @@ func (nc *NodeClient) Connect(ctx context.Context, opts *rv1.NodeConnectOptions)
 	err := nc.client.Put(fmt.Sprintf("/cluster/node/%s", nc.hostname)).
 		AddHeader("Content-Type", "application/json").
 		Body([]byte(body)).
-		JSON(nil, e)
+		JSON(nil, &e)
 
 	if err != nil {
 		return errors.New(e.Message)
@@ -131,7 +131,7 @@ func (nc *NodeClient) SetStatus(ctx context.Context, opts *rv1.NodeStatusOptions
 	err := nc.client.Put(fmt.Sprintf("/cluster/node/%s/status", nc.hostname)).
 		AddHeader("Content-Type", "application/json").
 		Body([]byte(body)).
-		JSON(nil, e)
+		JSON(nil, &e)
 
 	if err != nil {
 		return errors.New(e.Message)
@@ -149,7 +149,7 @@ func (nc *NodeClient) SetPodStatus(ctx context.Context, pod string, opts *rv1.No
 	err := nc.client.Put(fmt.Sprintf("/cluster/node/%s/status/pod/%s", nc.hostname, pod)).
 		AddHeader("Content-Type", "application/json").
 		Body([]byte(body)).
-		JSON(nil, e)
+		JSON(nil, &e)
 
 	if err != nil {
 		return errors.New(e.Message)
@@ -167,7 +167,7 @@ func (nc *NodeClient) SetVolumeStatus(ctx context.Context, volume string, opts *
 	err := nc.client.Put(fmt.Sprintf("/cluster/node/%s/status/volume/%s", nc.hostname, volume)).
 		AddHeader("Content-Type", "application/json").
 		Body([]byte(body)).
-		JSON(nil, e)
+		JSON(nil, &e)
 
 	if err != nil {
 		return errors.New(e.Message)
@@ -185,7 +185,7 @@ func (nc *NodeClient) SetRouteStatus(ctx context.Context, route string, opts *rv
 	err := nc.client.Put(fmt.Sprintf("/cluster/node/%s/status/route/%s", nc.hostname, route)).
 		AddHeader("Content-Type", "application/json").
 		Body([]byte(body)).
-		JSON(nil, e)
+		JSON(nil, &e)
 
 	if err != nil {
 		return errors.New(e.Message)
@@ -207,7 +207,7 @@ func (nc *NodeClient) Remove(ctx context.Context, opts *rv1.NodeRemoveOptions) e
 
 	var e *errors.Http
 
-	if err := req.JSON(nil, e); err != nil {
+	if err := req.JSON(nil, &e); err != nil {
 		return errors.New(e.Message)
 	}
 
