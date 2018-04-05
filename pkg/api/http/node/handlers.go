@@ -208,6 +208,7 @@ func NodeConnectH(w http.ResponseWriter, r *http.Request) {
 	var (
 		nm  = distribution.NewNodeModel(r.Context(), envs.Get().GetStorage())
 		nid = utils.Vars(r)["node"]
+		cache = envs.Get().GetCache().Node()
 	)
 
 	// request body struct
@@ -279,6 +280,8 @@ func NodeConnectH(w http.ResponseWriter, r *http.Request) {
 		errors.HTTP.InternalServerError(w)
 		return
 	}
+
+	cache.Clear(nid)
 
 	w.WriteHeader(http.StatusOK)
 	if _, err := w.Write([]byte{}); err != nil {

@@ -22,6 +22,7 @@ import (
 	"sync"
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 	"context"
+	"github.com/lastbackend/lastbackend/pkg/log"
 )
 
 type CacheIngressSpec struct {
@@ -29,15 +30,15 @@ type CacheIngressSpec struct {
 	spec map[string]*types.IngressSpec
 }
 
-type IngressStatusWatcher func (ctx context.Context, event chan *types.IngressStatusEvent) error
+type IngressStatusWatcher func(ctx context.Context, event chan *types.IngressStatusEvent) error
 
 type RouteSpecWatcher func(ctx context.Context, event chan *types.RouteSpecEvent) error
-
 
 func (c *CacheIngressSpec) SetRouteSpec(route string, s types.RouteSpec) {
 	c.lock.Lock()
 	defer c.lock.Unlock()
 
+	log.Debugf("add route spec: %s", route)
 	for i := range c.spec {
 		if _, ok := c.spec[i]; !ok {
 			c.spec[i] = new(types.IngressSpec)
@@ -55,6 +56,7 @@ func (c *CacheIngressSpec) SetRouteSpec(route string, s types.RouteSpec) {
 func (c *CacheIngressSpec) DelRouteSpec(route string) {
 	c.lock.Lock()
 	defer c.lock.Unlock()
+	log.Debugf("del route spec: %s", route)
 	for i := range c.spec {
 		delete(c.spec[i].Routes, route)
 	}
@@ -84,7 +86,6 @@ func (c *CacheIngressSpec) CacheRoutes(rs RouteSpecWatcher) error {
 	return rs(context.Background(), evs)
 }
 
-
 func (c *CacheIngressSpec) Get(ingress string) *types.IngressSpec {
 	c.lock.Lock()
 	defer c.lock.Unlock()
@@ -99,15 +100,16 @@ func (c *CacheIngressSpec) Flush(ingress string) {
 	c.lock.Lock()
 	defer c.lock.Unlock()
 	c.spec[ingress] = new(types.IngressSpec)
+	c.spec[ingress].Routes = make(map[string]types.RouteSpec, 0)
 }
 
 func (c *CacheIngressSpec) Clear(ingress string) {
 	c.lock.Lock()
 	defer c.lock.Unlock()
-	c.spec = make(map[string]*types.IngressSpec, 0)
+	delete(c.spec, ingress)
 }
 
-func (c *CacheIngressSpec) Del(isw IngressStatusWatcher) error {
+func (c *CacheIngressSpec) Status(isw IngressStatusWatcher) error {
 	evs := make(chan *types.IngressStatusEvent)
 	go func() {
 		for {

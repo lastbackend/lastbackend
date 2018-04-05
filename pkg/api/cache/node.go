@@ -128,7 +128,7 @@ func (c *CacheNodeSpec) Flush(node string) {
 func (c *CacheNodeSpec) Clear(node string) {
 	c.lock.Lock()
 	defer c.lock.Unlock()
-	c.spec = make(map[string]*types.NodeSpec, 0)
+	delete(c.spec, node)
 }
 
 func (c *CacheNodeSpec) CachePods(ps PodSpecWatcher) error {

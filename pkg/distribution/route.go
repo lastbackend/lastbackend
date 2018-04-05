@@ -68,7 +68,7 @@ func (n *Route) Get(namespace, name string) (*types.Route, error) {
 
 func (n *Route) ListSpec() (map[string]*types.RouteSpec, error) {
 
-	log.V(logLevel).Debug("%s:listspec:> list specs", logRoutePrefix)
+	log.V(logLevel).Debugf("%s:listspec:> list specs", logRoutePrefix)
 
 	item, err := n.storage.Route().ListSpec(n.context)
 	if err != nil {

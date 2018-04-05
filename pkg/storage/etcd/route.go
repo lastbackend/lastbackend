@@ -104,7 +104,6 @@ func (s *RouteStorage) ListSpec(ctx context.Context) (map[string]*types.RouteSpe
 	return spec, nil
 }
 
-
 // Get routes by namespace name
 func (s *RouteStorage) ListByNamespace(ctx context.Context, namespace string) (map[string]*types.Route, error) {
 
@@ -402,7 +401,7 @@ func (s *RouteStorage) WatchSpecEvents(ctx context.Context, event chan *types.Ro
 
 	log.V(logLevel).Debug("storage:etcd:route:> watch route route spec")
 
-	const filter = `\b.+` + routeStorage + `\/(.+)\/spec\/routes\/(.+)\b`
+	const filter = `\b.+` + routeStorage + `\/(.+)\/spec\b`
 
 	client, destroy, err := getClient(ctx)
 	if err != nil {
@@ -415,7 +414,8 @@ func (s *RouteStorage) WatchSpecEvents(ctx context.Context, event chan *types.Ro
 	key := keyCreate(routeStorage)
 	cb := func(action, key string, val []byte) {
 		keys := r.FindStringSubmatch(key)
-		if len(keys) < 3 {
+
+		if len(keys) < 1 {
 			return
 		}
 
@@ -440,7 +440,6 @@ func (s *RouteStorage) WatchSpecEvents(ctx context.Context, event chan *types.Ro
 
 	return nil
 }
-
 
 // Clear route storage
 func (s *RouteStorage) Clear(ctx context.Context) error {

@@ -77,24 +77,7 @@ func NewPodStatusEvent(ctx context.Context, pod string) error {
 	return nil
 }
 
-// NewRouteStatusEvent - send route state event after
-// node is successful accepted and each hour
-func NewRouteStatusEvent(ctx context.Context, route string) error {
 
-	var (
-		c = envs.Get().GetClient()
-	)
-
-	if route == "" {
-		log.Errorf("Event: route state event: route is empty")
-		return errors.New("Event: route state event: route is empty")
-	}
-
-	log.Debugf("Event: route state event state: %s", route)
-
-	opts := v1.Request().Node().NodeRouteStatusOptions()
-	return c.SetRouteStatus(ctx, route, opts)
-}
 
 // NewRouteStatusEvent - send pod state event after
 // node is successful accepted and each hour

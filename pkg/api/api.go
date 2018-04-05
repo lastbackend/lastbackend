@@ -54,7 +54,8 @@ func Daemon() bool {
 	go c.Node().Del(stg.Node().WatchStatus)
 
 	go c.Ingress().CacheRoutes(stg.Route().WatchSpecEvents)
-	go c.Ingress().Del(stg.Ingress().WatchStatus)
+	go c.Ingress().Status(stg.Ingress().WatchStatus)
+
 	envs.Get().SetCache(c)
 
 

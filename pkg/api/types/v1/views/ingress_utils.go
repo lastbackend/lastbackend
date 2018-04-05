@@ -82,6 +82,20 @@ func (obj *IngressSpec) ToJson() ([]byte, error) {
 	return json.Marshal(obj)
 }
 
+func (obj *IngressSpec) Decode() *types.IngressSpec {
+
+	spec := types.IngressSpec{
+		Routes: make(map[string]types.RouteSpec, 0),
+	}
+
+	for i, s := range obj.Routes {
+		spec.Routes[i] = s
+	}
+
+	return &spec
+}
+
+
 func (obj *IngressList) ToJson() ([]byte, error) {
 	return json.Marshal(obj)
 }

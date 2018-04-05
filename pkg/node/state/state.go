@@ -55,9 +55,6 @@ func (s *State) Secrets() *SecretsState {
 	return s.secrets
 }
 
-func (s *State) Router() *RouterState {
-	return s.router
-}
 
 func (s *State) Tasks() *TaskState {
 	return s.task

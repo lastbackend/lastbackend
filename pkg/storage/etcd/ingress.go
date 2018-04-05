@@ -216,7 +216,7 @@ func (s *IngressStorage) SetStatus(ctx context.Context, ingress *types.Ingress) 
 	tx := client.Begin(ctx)
 
 	key := keyCreate(ingressStorage, ingress.Meta.Name, "status")
-	if err := tx.Update(key, &ingress.Status, 0); err != nil {
+	if err := tx.Upsert(key, &ingress.Status,  timeout); err != nil {
 		log.V(logLevel).Errorf("storage:etcd:ingress:> update ingress status err: %s", err.Error())
 		return err
 	}

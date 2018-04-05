@@ -31,6 +31,7 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/api/http/service"
 	"github.com/lastbackend/lastbackend/pkg/api/http/trigger"
 	"github.com/lastbackend/lastbackend/pkg/log"
+	"github.com/lastbackend/lastbackend/pkg/api/http/ingress"
 )
 
 const (
@@ -52,6 +53,7 @@ func init() {
 	// Cluster
 	AddRoutes(cluster.Routes)
 	AddRoutes(node.Routes)
+	AddRoutes(ingress.Routes)
 
 	// Namespace
 	AddRoutes(namespace.Routes)

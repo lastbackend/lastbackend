@@ -106,12 +106,13 @@ func IngressGetSpecH(w http.ResponseWriter, r *http.Request) {
 			errors.HTTP.InternalServerError(w)
 			return
 		}
-
+		spec = new(types.IngressSpec)
 		spec.Routes = make(map[string]types.RouteSpec)
 		for r, rsp := range sp {
 			spec.Routes[r]=*rsp
 		}
 	}
+
 	cache.Flush(ing.Meta.Name)
 
 	response, err := v1.View().Ingress().NewSpec(spec).ToJson()
@@ -215,6 +216,7 @@ func IngressConnectH(w http.ResponseWriter, r *http.Request) {
 	var (
 		im  = distribution.NewIngressModel(r.Context(), envs.Get().GetStorage())
 		iid = utils.Vars(r)["ingress"]
+		cache = envs.Get().GetCache().Ingress()
 	)
 
 	// request body struct
@@ -251,6 +253,7 @@ func IngressConnectH(w http.ResponseWriter, r *http.Request) {
 		errors.HTTP.InternalServerError(w)
 		return
 	}
+	cache.Clear(iid)
 
 	w.WriteHeader(http.StatusOK)
 	if _, err := w.Write([]byte{}); err != nil {
