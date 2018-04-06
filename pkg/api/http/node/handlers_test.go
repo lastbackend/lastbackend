@@ -34,6 +34,7 @@ import (
 	"net/http/httptest"
 	"strings"
 	"testing"
+	"github.com/lastbackend/lastbackend/pkg/api/cache"
 )
 
 // Testing NodeList handler
@@ -206,7 +207,11 @@ func TestNodeGetH(t *testing.T) {
 
 func TestNodeGetSpecH(t *testing.T) {
 	stg, _ := storage.GetMock()
+	cg := cache.NewCache()
+
 	envs.Get().SetStorage(stg)
+	envs.Get().SetCache(cg)
+
 	viper.Set("verbose", 0)
 
 	var (
@@ -222,7 +227,6 @@ func TestNodeGetSpecH(t *testing.T) {
 
 	n1.Spec.Pods = make(map[string]types.PodSpec)
 	n1.Spec.Volumes = make(map[string]types.VolumeSpec)
-	n1.Spec.Routes = make(map[string]types.RouteSpec)
 
 	n1.Spec.Pods[p1.SelfLink()] = p1.Spec
 	n1.Spec.Pods[p2.SelfLink()] = p2.Spec
@@ -1115,7 +1119,6 @@ func getNodeAsset(name, desc string, online bool) types.Node {
 		Spec: types.NodeSpec{
 			Pods:    make(map[string]types.PodSpec),
 			Volumes: make(map[string]types.VolumeSpec),
-			Routes:  make(map[string]types.RouteSpec),
 		},
 		Roles: types.NodeRole{},
 		Network: types.NetworkSpec{

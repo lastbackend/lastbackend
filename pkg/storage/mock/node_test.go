@@ -189,7 +189,6 @@ func TestNodeStorage_GetSpec(t *testing.T) {
 
 	n2.Spec.Pods = make(map[string]types.PodSpec)
 	n2.Spec.Volumes = make(map[string]types.VolumeSpec)
-	n2.Spec.Routes = make(map[string]types.RouteSpec)
 
 	n2.Spec.Pods[p1.SelfLink()] = p1.Spec
 	n2.Spec.Pods[p2.SelfLink()] = p2.Spec
@@ -975,7 +974,6 @@ func TestNodeStorage_InsertPod(t *testing.T) {
 
 	n2.Spec.Pods = make(map[string]types.PodSpec)
 	n2.Spec.Volumes = make(map[string]types.VolumeSpec)
-	n2.Spec.Routes = make(map[string]types.RouteSpec)
 
 	n3.Spec.Pods = make(map[string]types.PodSpec)
 
@@ -1105,7 +1103,6 @@ func TestNodeStorage_RemovePod(t *testing.T) {
 
 	n2.Spec.Pods = make(map[string]types.PodSpec)
 	n2.Spec.Volumes = make(map[string]types.VolumeSpec)
-	n2.Spec.Routes = make(map[string]types.RouteSpec)
 
 	n3.Spec.Pods = make(map[string]types.PodSpec)
 
@@ -1244,7 +1241,6 @@ func TestNodeStorage_InsertVolume(t *testing.T) {
 
 	n2.Spec.Pods = make(map[string]types.PodSpec)
 	n2.Spec.Volumes = make(map[string]types.VolumeSpec)
-	n2.Spec.Routes = make(map[string]types.RouteSpec)
 
 	n3.Spec.Pods = make(map[string]types.PodSpec)
 
@@ -1388,7 +1384,6 @@ func TestNodeStorage_RemoveVolume(t *testing.T) {
 
 	n2.Spec.Pods = make(map[string]types.PodSpec)
 	n2.Spec.Volumes = make(map[string]types.VolumeSpec)
-	n2.Spec.Routes = make(map[string]types.RouteSpec)
 
 	n3.Spec.Pods = make(map[string]types.PodSpec)
 
@@ -1520,305 +1515,6 @@ func TestNodeStorage_RemoveVolume(t *testing.T) {
 
 			if !reflect.DeepEqual(g, e) {
 				t.Errorf("NodeStorage.RemoveVolume() = %v, want %v", string(g), string(e))
-			}
-
-		})
-	}
-}
-
-func TestNodeStorage_InsertRoute(t *testing.T) {
-
-	var (
-		ns  = "ns"
-		stg = newNodeStorage()
-		ctx = context.Background()
-		n1  = getNodeAsset("test1", "", true)
-		n2  = getNodeAsset("test1", "", true)
-		n3  = getNodeAsset("test2", "", false)
-		r1  = getRouteAsset(ns, "test1", "")
-		r2  = getRouteAsset(ns, "test1", "")
-	)
-
-	n1.Spec.Pods = make(map[string]types.PodSpec)
-
-	n2.Spec.Pods = make(map[string]types.PodSpec)
-	n2.Spec.Volumes = make(map[string]types.VolumeSpec)
-	n2.Spec.Routes = make(map[string]types.RouteSpec)
-
-	n3.Spec.Pods = make(map[string]types.PodSpec)
-
-	n2.Spec.Routes[r1.SelfLink()] = r1.Spec
-	r2.Meta.Name = ""
-
-	type fields struct {
-		stg storage.Node
-	}
-
-	type args struct {
-		ctx   context.Context
-		node  *types.Node
-		route *types.Route
-	}
-
-	tests := []struct {
-		name    string
-		fields  fields
-		args    args
-		want    *types.Node
-		wantErr bool
-		err     string
-	}{
-		{
-			"test successful route insert",
-			fields{stg},
-			args{ctx, &n1, &r1},
-			&n2,
-			false,
-			"",
-		},
-		{
-			"test failed update: nil node structure",
-			fields{stg},
-			args{ctx, nil, &r1},
-			&n2,
-			true,
-			store.ErrStructArgIsNil,
-		},
-		{
-			"test failed update: nil route structure",
-			fields{stg},
-			args{ctx, &n1, nil},
-			&n2,
-			true,
-			store.ErrStructArgIsNil,
-		},
-		{
-			"test failed update: invalid route structure",
-			fields{stg},
-			args{ctx, &n1, &r2},
-			&n2,
-			true,
-			store.ErrStructArgIsInvalid,
-		},
-		{
-			"test failed update: entity not found",
-			fields{stg},
-			args{ctx, &n3, nil},
-			&n1,
-			true,
-			store.ErrEntityNotFound,
-		},
-	}
-
-	for _, tt := range tests {
-
-		if err := stg.Clear(ctx); err != nil {
-			t.Errorf("NodeStorage.InsertRoute() storage setup error = %v", err)
-			return
-		}
-
-		if err := stg.Insert(ctx, &n1); err != nil {
-			t.Errorf("NodeStorage.InsertRoute() storage setup error = %v", err)
-			return
-		}
-
-		t.Run(tt.name, func(t *testing.T) {
-			err := tt.fields.stg.InsertRoute(tt.args.ctx, tt.args.node, tt.args.route)
-			if err != nil {
-				if !tt.wantErr {
-					t.Errorf("NodeStorage.InsertRoute() error = %v, want no error", err.Error())
-					return
-				}
-
-				if tt.wantErr && tt.err != err.Error() {
-					t.Errorf("NodeStorage.InsertRoute() error = %v, want %v", err.Error(), tt.err)
-					return
-				}
-
-				return
-			}
-
-			if tt.wantErr {
-				t.Errorf("NodeStorage.InsertRoute() error = %v, want %v", err.Error(), tt.err)
-				return
-			}
-
-			got, err := tt.fields.stg.GetSpec(tt.args.ctx, tt.args.node)
-			if err != nil {
-				t.Errorf("NodeStorage.InsertRoute() error = %v, want no error", err.Error())
-				return
-			}
-
-			g, err := json.Marshal(got)
-			if err != nil {
-				t.Errorf("NodeStorage.InsertRoute() error = %v, wantErr %v", err, tt.wantErr)
-				return
-			}
-
-			e, err := json.Marshal(tt.want.Spec)
-			if err != nil {
-				t.Errorf("NodeStorage.InsertRoute() error = %v, wantErr %v", err, tt.wantErr)
-				return
-			}
-
-			if !reflect.DeepEqual(g, e) {
-				t.Errorf("NodeStorage.InsertRoute() = %v, want %v", string(g), string(e))
-			}
-
-		})
-	}
-}
-
-func TestNodeStorage_RemoveRoute(t *testing.T) {
-
-	var (
-		ns  = "ns"
-		stg = newNodeStorage()
-		ctx = context.Background()
-		n1  = getNodeAsset("test1", "", true)
-		n2  = getNodeAsset("test1", "", true)
-		n3  = getNodeAsset("test2", "", false)
-		r1  = getRouteAsset(ns, "test1", "")
-		r2  = getRouteAsset(ns, "test2", "")
-		r3  = getRouteAsset(ns, "test2", "")
-	)
-
-	n1.Spec.Pods = make(map[string]types.PodSpec)
-
-	n2.Spec.Pods = make(map[string]types.PodSpec)
-	n2.Spec.Volumes = make(map[string]types.VolumeSpec)
-	n2.Spec.Routes = make(map[string]types.RouteSpec)
-
-	n3.Spec.Pods = make(map[string]types.PodSpec)
-
-	r2.Meta.Name = ""
-
-	type fields struct {
-		stg storage.Node
-	}
-
-	type args struct {
-		ctx   context.Context
-		node  *types.Node
-		route *types.Route
-	}
-
-	tests := []struct {
-		name    string
-		fields  fields
-		args    args
-		want    *types.Node
-		wantErr bool
-		err     string
-	}{
-		{
-			"test successful route remove",
-			fields{stg},
-			args{ctx, &n1, &r1},
-			&n2,
-			false,
-			"",
-		},
-		{
-			"test failed update: nil node structure",
-			fields{stg},
-			args{ctx, nil, &r1},
-			&n2,
-			true,
-			store.ErrStructArgIsNil,
-		},
-		{
-			"test failed update: nil route structure",
-			fields{stg},
-			args{ctx, &n1, nil},
-			&n2,
-			true,
-			store.ErrStructArgIsNil,
-		},
-		{
-			"test failed update: node not found",
-			fields{stg},
-			args{ctx, &n3, nil},
-			&n1,
-			true,
-			store.ErrEntityNotFound,
-		},
-		{
-			"test failed update: route arg is invalid",
-			fields{stg},
-			args{ctx, &n1, &r2},
-			&n1,
-			true,
-			store.ErrStructArgIsInvalid,
-		},
-		{
-			"test failed update: route not found",
-			fields{stg},
-			args{ctx, &n1, &r3},
-			&n1,
-			true,
-			store.ErrEntityNotFound,
-		},
-	}
-
-	for _, tt := range tests {
-
-		if err := stg.Clear(ctx); err != nil {
-			t.Errorf("NodeStorage.RemoveRoute() storage setup error = %v", err)
-			return
-		}
-
-		if err := stg.Insert(ctx, &n1); err != nil {
-			t.Errorf("NodeStorage.RemoveRoute() storage setup error = %v", err)
-			return
-		}
-
-		if err := stg.InsertRoute(ctx, &n1, &r1); err != nil {
-			t.Errorf("NodeStorage.RemovePod() storage setup error = %v", err)
-			return
-		}
-
-		t.Run(tt.name, func(t *testing.T) {
-			err := tt.fields.stg.RemoveRoute(tt.args.ctx, tt.args.node, tt.args.route)
-			if err != nil {
-				if !tt.wantErr {
-					t.Errorf("NodeStorage.RemoveRoute() error = %v, want no error", err.Error())
-					return
-				}
-
-				if tt.wantErr && tt.err != err.Error() {
-					t.Errorf("NodeStorage.RemoveRoute() error = %v, want %v", err.Error(), tt.err)
-					return
-				}
-
-				return
-			}
-
-			if tt.wantErr {
-				t.Errorf("NodeStorage.RemoveRoute() error = %v, want %v", err.Error(), tt.err)
-				return
-			}
-
-			got, err := tt.fields.stg.GetSpec(tt.args.ctx, tt.args.node)
-			if err != nil {
-				t.Errorf("NodeStorage.RemoveRoute() error = %v, want no error", err.Error())
-				return
-			}
-
-			g, err := json.Marshal(got)
-			if err != nil {
-				t.Errorf("NodeStorage.RemoveRoute() error = %v, wantErr %v", err, tt.wantErr)
-				return
-			}
-
-			e, err := json.Marshal(tt.want.Spec)
-			if err != nil {
-				t.Errorf("NodeStorage.RemoveRoute() error = %v, wantErr %v", err, tt.wantErr)
-				return
-			}
-
-			if !reflect.DeepEqual(g, e) {
-				t.Errorf("NodeStorage.RemoveRoute() = %v, want %v", string(g), string(e))
 			}
 
 		})
@@ -2004,7 +1700,6 @@ func getNodeAsset(name, desc string, online bool) types.Node {
 		Spec: types.NodeSpec{
 			Pods:    make(map[string]types.PodSpec),
 			Volumes: make(map[string]types.VolumeSpec),
-			Routes:  make(map[string]types.RouteSpec),
 		},
 		Roles: types.NodeRole{},
 		Network: types.NetworkSpec{
