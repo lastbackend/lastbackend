@@ -53,7 +53,7 @@ func (s *RouteStorage) Get(ctx context.Context, namespace, name string) (*types.
 		return nil, err
 	}
 
-	const filter = `\b.+` + routeStorage + `\/.+\/(?:meta|status|spec)\b`
+	const filter = `\b.+` + routeStorage + `\/.+\/(meta|status|spec)\b`
 	var (
 		route = new(types.Route)
 	)
@@ -78,6 +78,32 @@ func (s *RouteStorage) Get(ctx context.Context, namespace, name string) (*types.
 	return route, nil
 }
 
+// Get routes spec
+func (s *RouteStorage) ListSpec(ctx context.Context) (map[string]*types.RouteSpec, error) {
+	log.V(logLevel).Debugf("storage:etcd:route:> get spec list")
+
+	const filter = `\b.+` + routeStorage + `\/(.+)\/spec\b`
+
+	var (
+		spec = make(map[string]*types.RouteSpec)
+	)
+
+	client, destroy, err := getClient(ctx)
+	if err != nil {
+		log.V(logLevel).Errorf("storage:etcd:route:>  get spec list err: %s", err.Error())
+		return nil, err
+	}
+	defer destroy()
+
+	key := keyCreate(routeStorage)
+	if err := client.Map(ctx, key, filter, spec); err != nil {
+		log.V(logLevel).Errorf("storage:etcd:route:>  get spec list err: %s", err.Error())
+		return nil, err
+	}
+
+	return spec, nil
+}
+
 // Get routes by namespace name
 func (s *RouteStorage) ListByNamespace(ctx context.Context, namespace string) (map[string]*types.Route, error) {
 
@@ -89,7 +115,7 @@ func (s *RouteStorage) ListByNamespace(ctx context.Context, namespace string) (m
 		return nil, err
 	}
 
-	const filter = `\b.+` + routeStorage + `\/.+\/(?:meta|status|spec)\b`
+	const filter = `\b.+` + routeStorage + `\/(.+)\/(meta|status|spec)\b`
 
 	var (
 		routes = make(map[string]*types.Route)
@@ -277,7 +303,7 @@ func (s *RouteStorage) Watch(ctx context.Context, route chan *types.Route) error
 			return
 		}
 
-		if action == ACTIONDELETE {
+		if action == types.STORAGEDELEVENT {
 			return
 		}
 
@@ -315,7 +341,7 @@ func (s *RouteStorage) WatchSpec(ctx context.Context, route chan *types.Route) e
 			return
 		}
 
-		if action == ACTIONDELETE {
+		if action == types.STORAGEDELEVENT {
 			return
 		}
 
@@ -353,13 +379,58 @@ func (s *RouteStorage) WatchStatus(ctx context.Context, route chan *types.Route)
 			return
 		}
 
-		if action == ACTIONDELETE {
+		if action == types.STORAGEDELEVENT {
 			return
 		}
 
 		if d, err := s.Get(ctx, keys[1], keys[2]); err == nil {
 			route <- d
 		}
+	}
+
+	if err := client.Watch(ctx, key, filter, cb); err != nil {
+		log.V(logLevel).Errorf("storage:etcd:route:> watch route err: %s", err.Error())
+		return err
+	}
+
+	return nil
+}
+
+// Watch route spec change events
+func (s *RouteStorage) WatchSpecEvents(ctx context.Context, event chan *types.RouteSpecEvent) error {
+
+	log.V(logLevel).Debug("storage:etcd:route:> watch route route spec")
+
+	const filter = `\b.+` + routeStorage + `\/(.+)\/spec\b`
+
+	client, destroy, err := getClient(ctx)
+	if err != nil {
+		log.V(logLevel).Errorf("storage:etcd:route:> create client err: %s", err.Error())
+		return err
+	}
+	defer destroy()
+
+	r, _ := regexp.Compile(filter)
+	key := keyCreate(routeStorage)
+	cb := func(action, key string, val []byte) {
+		keys := r.FindStringSubmatch(key)
+
+		if len(keys) < 1 {
+			return
+		}
+
+		e := new(types.RouteSpecEvent)
+		e.Event = action
+		e.Name = keys[1]
+
+		key = keyCreate(routeStorage, e.Name, "spec")
+		if err := client.Get(ctx, key, &e.Spec); err != nil {
+			log.Warnf("storage:etcd:route:> watch route route spec parse err: %s", err.Error())
+		}
+
+		event <- e
+
+		return
 	}
 
 	if err := client.Watch(ctx, key, filter, cb); err != nil {

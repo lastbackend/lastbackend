@@ -55,9 +55,6 @@ func (s *State) Secrets() *SecretsState {
 	return s.secrets
 }
 
-func (s *State) Router() *RouterState {
-	return s.router
-}
 
 func (s *State) Tasks() *TaskState {
 	return s.task
@@ -82,7 +79,7 @@ type PodStateStats struct {
 
 type NetworkState struct {
 	lock    sync.RWMutex
-	subnets map[string]types.Subnet
+	subnets map[string]types.NetworkSpec
 }
 
 type VolumesState struct {
@@ -114,7 +111,7 @@ func New() *State {
 			pods:       make(map[string]*types.PodStatus, 0),
 		},
 		networks: &NetworkState{
-			subnets: make(map[string]types.Subnet, 0),
+			subnets: make(map[string]types.NetworkSpec, 0),
 		},
 		volumes: &VolumesState{
 			volumes: make(map[string]types.VolumeSpec, 0),

@@ -37,6 +37,7 @@ type Storage struct {
 	*DeploymentStorage
 	*TriggerStorage
 	*NodeStorage
+	*IngressStorage
 	*NamespaceStorage
 	*PodStorage
 	*ServiceStorage
@@ -60,6 +61,10 @@ func (s *Storage) Trigger() storage.Trigger {
 
 func (s *Storage) Node() storage.Node {
 	return s.NodeStorage
+}
+
+func (s *Storage) Ingress() storage.Ingress {
+	return s.IngressStorage
 }
 
 func (s *Storage) Namespace() storage.Namespace {
@@ -102,6 +107,7 @@ func New() (*Storage, error) {
 
 	s.ClusterStorage = newClusterStorage()
 	s.NodeStorage = newNodeStorage()
+	s.IngressStorage = newIngressStorage()
 
 	s.NamespaceStorage = newNamespaceStorage()
 	s.ServiceStorage = newServiceStorage()

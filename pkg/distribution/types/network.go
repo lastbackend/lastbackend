@@ -20,11 +20,11 @@ package types
 
 const NetworkTypeVxLAN = "vxlan"
 
-type Subnet struct {
+type NetworkSpec struct {
 	// Node network type
 	Type string `json:"type"`
 	// Node Network subnet info
-	Subnet string `json:"subnet"`
+	Range string `json:"range"`
 	// Node Network interface
 	IFace NetworkInterface `json:"iface"`
 	// Node Public IP
@@ -38,12 +38,12 @@ type NetworkInterface struct {
 	HAddr string `json:"HAddr"`
 }
 
-func (n *Subnet) Equal(nt *Subnet) bool {
+func (n *NetworkSpec) Equal(nt *NetworkSpec) bool {
 
 	switch false {
 	case n.Type == nt.Type:
 		return false
-	case n.Subnet == nt.Subnet:
+	case n.Range == nt.Range:
 		return false
 	case n.IFace.Index == nt.IFace.Index:
 		return false

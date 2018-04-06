@@ -47,6 +47,18 @@ type Node interface {
 	Logs(ctx context.Context, pod, container string, opts *rv1.NodeLogsOptions) (io.ReadCloser, error)
 }
 
+type Ingress interface {
+	List(ctx context.Context) (*vv1.IngressList, error)
+	Connect(ctx context.Context, opts *rv1.IngressConnectOptions) error
+	Get(ctx context.Context) (*vv1.Ingress, error)
+	GetSpec(ctx context.Context) (*vv1.IngressSpec, error)
+	SetMeta(ctx context.Context, opts *rv1.IngressMetaOptions) (*vv1.Ingress, error)
+	SetStatus(ctx context.Context, opts *rv1.IngressStatusOptions) error
+	SetRouteStatus(ctx context.Context, route string, opts *rv1.IngressRouteStatusOptions) error
+	Remove(ctx context.Context, opts *rv1.IngressRemoveOptions) error
+	Logs(ctx context.Context, pod, container string, opts *rv1.IngressLogsOptions) (io.ReadCloser, error)
+}
+
 type Namespace interface {
 	Service(name ...string) Service
 	Secret(name ...string) Secret

@@ -62,6 +62,7 @@ type IRequest interface {
 	Deployment() *DeploymentRequest
 	Namespace() *NamespaceRequest
 	Node() *NodeRequest
+	Ingress() *IngressRequest
 	Route() *RouteRequest
 	Service() *ServiceRequest
 	Secret() *SecretRequest
@@ -82,6 +83,9 @@ func (Request) Namespace() *NamespaceRequest {
 }
 func (Request) Node() *NodeRequest {
 	return new(NodeRequest)
+}
+func (Request) Ingress() *IngressRequest {
+	return new(IngressRequest)
 }
 func (Request) Route() *RouteRequest {
 	return new(RouteRequest)

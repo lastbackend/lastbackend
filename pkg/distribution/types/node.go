@@ -20,6 +20,7 @@ package types
 
 import (
 	"context"
+	"fmt"
 )
 
 type NodeMapStatus map[string]*NodeStatus
@@ -28,17 +29,18 @@ type NodeMap map[string]*Node
 type NodeList []*Node
 
 type Node struct {
-	Meta    NodeMeta   `json:"meta"`
-	Info    NodeInfo   `json:"info"`
-	Status  NodeStatus `json:"status"`
-	Spec    NodeSpec   `json:"spec"`
-	Roles   NodeRole   `json:"roles"`
-	Network Subnet     `json:"network"`
-	Online  bool       `json:"online"`
+	Meta    NodeMeta    `json:"meta"`
+	Info    NodeInfo    `json:"info"`
+	Status  NodeStatus  `json:"status"`
+	Spec    NodeSpec    `json:"spec"`
+	Roles   NodeRole    `json:"roles"`
+	Network NetworkSpec `json:"network"`
+	Online  bool        `json:"online"`
 }
 
 type NodeMeta struct {
 	Meta
+	Cluster  string `json:"cluster"`
 	Token    string `json:"token"`
 	Region   string `json:"region"`
 	Provider string `json:"provider"`
@@ -87,10 +89,9 @@ type NodeStatus struct {
 }
 
 type NodeSpec struct {
-	Routes  map[string]RouteSpec  `json:"routes"`
-	Network map[string]Subnet     `json:"network"`
-	Pods    map[string]PodSpec    `json:"pods"`
-	Volumes map[string]VolumeSpec `json:"volumes"`
+	Network map[string]NetworkSpec `json:"network"`
+	Pods    map[string]PodSpec     `json:"pods"`
+	Volumes map[string]VolumeSpec  `json:"volumes"`
 }
 
 type NodeNamespace struct {
@@ -147,7 +148,15 @@ type NodeUpdateMetaOptions struct {
 }
 
 type NodeCreateOptions struct {
-	Meta   NodeCreateMetaOptions `json:"meta",yaml:"meta"`
-	Info   NodeInfo              `json:"info",yaml:"info"`
-	Status NodeStatus            `json:"status",yaml:"status"`
+	Meta    NodeCreateMetaOptions `json:"meta",yaml:"meta"`
+	Info    NodeInfo              `json:"info",yaml:"info"`
+	Status  NodeStatus            `json:"status",yaml:"status"`
+	Network NetworkSpec           `json:"network"`
+}
+
+func (n *Node) SelfLink() string {
+	if n.Meta.SelfLink == "" {
+		n.Meta.SelfLink = fmt.Sprintf("%s:%s", n.Meta.Cluster, n.Meta.Name)
+	}
+	return n.Meta.SelfLink
 }

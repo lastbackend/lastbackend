@@ -1,29 +1,15 @@
-FROM alpine:3.7
+FROM golang:1.10.1-alpine3.7
 
 RUN apk add --no-cache ca-certificates
 
-ENV GOLANG_VERSION 1.10.1
-ENV GOLANG_SRC_URL https://golang.org/dl/go$GOLANG_VERSION.src.tar.gz
-ENV GOLANG_SRC_SHA256 589449ff6c3ccbff1d391d4e7ab5bb5d5643a5a41a04c99315e55c16bbf73ddc
+RUN apk add --no-cache iptables \
+    iproute2
 
 RUN set -ex \
 	&& apk add --no-cache --virtual .build-deps \
-		bash \
-		gcc \
-		musl-dev \
-		openssl \
-		go \
-    git \
-    alpine-sdk \
-	\
-	&& export GOROOT_BOOTSTRAP="$(go env GOROOT)" \
-	\
-	&& wget -q "$GOLANG_SRC_URL" -O golang.tar.gz \
-	&& echo "$GOLANG_SRC_SHA256  golang.tar.gz" | sha256sum -c - \
-	&& tar -C /usr/local -xzf golang.tar.gz \
-	&& rm golang.tar.gz \
-	&& cd /usr/local/go/src \
-	&& ./make.bash \
+    bash \
+    git  \
+		make \
 	\
 	&& rm -rf /*.patch
 
@@ -43,4 +29,3 @@ RUN rm -rf /go/pkg \
     && rm -rf /var/cache/apk/*
 
 EXPOSE 2967
-ENTRYPOINT ["/usr/local/bin/lastbackend"]

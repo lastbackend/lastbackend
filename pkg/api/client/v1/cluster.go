@@ -41,6 +41,14 @@ func (cc *ClusterClient) Node(hostname ...string) *NodeClient {
 	return newNodeClient(cc.client, hst)
 }
 
+func (cc *ClusterClient) Ingress(name ...string) *IngressClient {
+	hst := ""
+	if len(name) > 0 {
+		hst = name[0]
+	}
+	return newIngressClient(cc.client, hst)
+}
+
 func (cc *ClusterClient) Get(ctx context.Context) (*vv1.Cluster, error) {
 
 	var s *vv1.Cluster

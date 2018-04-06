@@ -27,7 +27,6 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/node/envs"
 	"github.com/lastbackend/lastbackend/pkg/node/events"
 	"github.com/lastbackend/lastbackend/pkg/node/runtime/pod"
-	"github.com/lastbackend/lastbackend/pkg/node/runtime/router"
 	"github.com/lastbackend/lastbackend/pkg/node/runtime/volume"
 	"time"
 )
@@ -40,25 +39,49 @@ type Runtime struct {
 func (r *Runtime) Restore() {
 	log.Debug("node:runtime:restore:> restore init")
 	network.Restore(r.ctx)
-	router.Restore(r.ctx)
 	volume.Restore(r.ctx)
 	pod.Restore(r.ctx)
 }
 
-func (r *Runtime) Provision(ctx context.Context, spec *types.NodeSpec) error {
-	log.Debug("node:runtime:provision:> provision init")
-	for _, r := range spec.Routes {
-		log.Debugf("route: %v", r)
-	}
+func (r *Runtime) Provision(ctx context.Context, spec *types.NodeSpec, clean bool) error {
 
-	pods := envs.Get().GetState().Pods().GetPods()
+	var (
+		msg = "node:runtime:provision:"
+	)
 
-	for k := range pods {
-		if _, ok := spec.Pods[k]; !ok {
-			pod.Destroy(context.Background(), k, pods[k])
+	log.Debugf("%s> provision init", msg)
+
+	if clean {
+		log.Debugf("%s> clean up pods", msg)
+		pods := envs.Get().GetState().Pods().GetPods()
+
+		for k := range pods {
+			if _, ok := spec.Pods[k]; !ok {
+				pod.Destroy(context.Background(), k, pods[k])
+			}
 		}
 	}
 
+	if clean {
+		log.Debugf("%s> clean up networks", msg)
+		nets := envs.Get().GetState().Networks().GetSubnets()
+
+		for n, sp := range nets {
+			if _, ok := spec.Network[n]; !ok {
+				network.Destroy(ctx, &sp)
+			}
+		}
+	}
+
+	log.Debugf("%s> provision networks", msg)
+	for _, n := range spec.Network {
+		log.Debugf("network: %v", n)
+		if err := network.Create(ctx, &n); err != nil {
+			log.Errorf("Network [%s] create err: %s", n.Range, err.Error())
+		}
+	}
+
+	log.Debugf("%s> provision pods", msg)
 	for p, spec := range spec.Pods {
 		log.Debugf("pod: %v", p)
 		if err := pod.Manage(ctx, p, &spec); err != nil {
@@ -66,6 +89,7 @@ func (r *Runtime) Provision(ctx context.Context, spec *types.NodeSpec) error {
 		}
 	}
 
+	log.Debugf("%s> provision volumes", msg)
 	for _, v := range spec.Volumes {
 		log.Debugf("volume: %v", v)
 	}
@@ -122,12 +146,12 @@ func (r *Runtime) GetSpec(ctx context.Context) error {
 
 	spec, err := c.GetSpec(ctx)
 	if err != nil {
-		log.Debugf("node:runtime:getspec:> request err: %s", err.Error())
+		log.Errorf("node:runtime:getspec:> request err: %s", err.Error())
 		return err
 	}
 
 	if spec == nil {
-		log.Debugf("node:runtime:getspec:> new spec is nil")
+		log.Warnf("node:runtime:getspec:> new spec is nil")
 		return nil
 	}
 
@@ -138,21 +162,24 @@ func (r *Runtime) GetSpec(ctx context.Context) error {
 func (r *Runtime) Loop() {
 	log.Debug("node:runtime:loop:> start runtime loop")
 
+	var clean = true
+
 	go func(ctx context.Context) {
 		for {
 			select {
 			case spec := <-r.spec:
 				log.Debug("node:runtime:loop:> provision new spec")
-				if err := r.Provision(ctx, spec); err != nil {
+				if err := r.Provision(ctx, spec, clean); err != nil {
 					log.Errorf("node:runtime:loop:> provision new spec err: %s", err.Error())
 				}
+				clean = false
 			}
 		}
 	}(r.ctx)
 
 	go func(ctx context.Context) {
 		ticker := time.NewTicker(time.Second * 10)
-		for _ = range ticker.C {
+		for  range ticker.C {
 			err := r.GetSpec(r.ctx)
 			if err != nil {
 				log.Debugf("node:runtime:loop:> new spec request err: %s", err.Error())

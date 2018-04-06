@@ -181,15 +181,8 @@ func (s *store) Map(ctx context.Context, key, keyRegexFilter string, mapOutPtr i
 	items := make(map[string]buffer, len(getResp.Kvs))
 	for _, kv := range getResp.Kvs {
 		if (keyRegexFilter == "") || r.MatchString(string(kv.Key)) {
-
-			var (
-				key   []string
-				index string
-			)
-
-			key = strings.Split(string(kv.Key), "/")
-			index = key[len(key)-1]
-			items[index] = buffer(kv.Value)
+			keys := r.FindStringSubmatch(string(kv.Key))
+			items[keys[1]] = buffer(kv.Value)
 		}
 	}
 
@@ -220,13 +213,14 @@ func (s *store) MapList(ctx context.Context, key string, keyRegexFilter string, 
 	r, _ := regexp.Compile(keyRegexFilter)
 	items := make(map[string]map[string]buffer)
 	for _, kv := range getResp.Kvs {
-		keys := strings.Split(string(kv.Key), "/")
-		field := keys[len(keys)-1]
-		node := keys[len(keys)-2]
 
 		if (keyRegexFilter != "") && !r.MatchString(string(kv.Key)) {
 			continue
 		}
+
+		keys := r.FindStringSubmatch(string(kv.Key))
+		field := keys[len(keys)-1]
+		node := keys[len(keys)-2]
 
 		if len(items[node]) == 0 {
 			items[node] = make(map[string]buffer)

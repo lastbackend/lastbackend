@@ -27,9 +27,19 @@ type NodeMetaOptions struct {
 type NodeConnectOptions struct {
 	Info   types.NodeInfo   `json:"info"`
 	Status types.NodeStatus `json:"status"`
+	Network types.NetworkSpec `json:"network"`
 }
 
 type NodeStatusOptions struct {
+
+	// Pods statuses
+	Pods map[string]*NodePodStatusOptions `json:"pods"`
+
+	// Node resources
+	Resources NodeResourcesOptions `json:"resources"`
+}
+
+type NodeResourcesOptions struct {
 	// Node state capacity
 	Capacity types.NodeResources `json:"capacity"`
 	// Node state allocated

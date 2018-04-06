@@ -117,7 +117,7 @@ func GetNetworkConfig(spec *types.SpecTemplateContainer) *network.NetworkingConf
 	}
 
 	//endpoint := &network.EndpointSettings{
-	//	NetworkID: spec.Network.Subnet,
+	//	NetworkID: spec.Network.NetworkSpec,
 	//}
 	//cfg.EndpointsConfig["lo"] = endpoint
 

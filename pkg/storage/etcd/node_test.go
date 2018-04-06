@@ -107,7 +107,7 @@ func TestNodeStorage_List(t *testing.T) {
 			}
 
 			if !reflect.DeepEqual(g, e) {
-				t.Errorf("NodeStorage.List() = %v, want %v", string(g), string(e))
+				t.Errorf("NodeStorage.List() \n%v\nwant\n%v", string(g), string(e))
 			}
 		})
 	}
@@ -180,7 +180,7 @@ func TestNodeStorage_Get(t *testing.T) {
 
 			if err != nil {
 				if tt.wantErr && tt.err != err.Error() {
-					t.Errorf("NodeStorage.Get() = %v, want %v", err, tt.err)
+					t.Errorf("NodeStorage.Get() \n%v\nwant\n%v", err, tt.err)
 					return
 				}
 				return
@@ -204,7 +204,7 @@ func TestNodeStorage_Get(t *testing.T) {
 			}
 
 			if !reflect.DeepEqual(g, e) {
-				t.Errorf("NodeStorage.Get() = %v, want %v", string(g), string(e))
+				t.Errorf("NodeStorage.Get() \n%v\nwant\n%v", string(g), string(e))
 			}
 
 		})
@@ -224,16 +224,23 @@ func TestNodeStorage_GetSpec(t *testing.T) {
 		n1  = getNodeAsset("test1", "", true)
 		n2  = getNodeAsset("test1", "", true)
 		n3  = getNodeAsset("test2", "", true)
+		n4  = getNodeAsset("test3", "", true)
 		p1  = getPodAsset(ns, svc, dp, "test1", "")
 		p2  = getPodAsset(ns, svc, dp, "test2", "")
 	)
 
+	n1.Network.Range = "10.0.1.0"
+	n2.Network.Range = "10.0.1.0"
+	n3.Network.Range = "10.0.2.0"
+
+	n2.Spec.Network = make(map[string]types.NetworkSpec)
 	n2.Spec.Pods = make(map[string]types.PodSpec)
 	n2.Spec.Volumes = make(map[string]types.VolumeSpec)
-	n2.Spec.Routes = make(map[string]types.RouteSpec)
 
 	n2.Spec.Pods[p1.SelfLink()] = p1.Spec
 	n2.Spec.Pods[p2.SelfLink()] = p2.Spec
+
+	n2.Spec.Network[n3.Meta.Name] = n3.Network
 
 	type fields struct {
 		stg storage.Node
@@ -255,8 +262,8 @@ func TestNodeStorage_GetSpec(t *testing.T) {
 		{
 			"get node spec info failed",
 			fields{stg},
-			args{ctx, &n3},
-			&n3.Spec,
+			args{ctx, &n4},
+			&n4.Spec,
 			true,
 			store.ErrEntityNotFound,
 		},
@@ -287,6 +294,10 @@ func TestNodeStorage_GetSpec(t *testing.T) {
 				t.Errorf("NodeStorage.GetSpec() storage setup error = %v", err)
 				return
 			}
+			if err := stg.Insert(ctx, &n3); err != nil {
+				t.Errorf("NodeStorage.GetSpec() storage setup error = %v", err)
+				return
+			}
 
 			if err := stg.InsertPod(ctx, &n1, &p1); err != nil {
 				t.Errorf("NodeStorage.GetSpec() storage setup error = %v", err)
@@ -302,7 +313,7 @@ func TestNodeStorage_GetSpec(t *testing.T) {
 
 			if err != nil {
 				if tt.wantErr && tt.err != err.Error() {
-					t.Errorf("NodeStorage.GetSpec() = %v, want %v", err, tt.err)
+					t.Errorf("NodeStorage.GetSpec() \n%v\nwant\n%v", err, tt.err)
 					return
 				}
 				return
@@ -326,7 +337,7 @@ func TestNodeStorage_GetSpec(t *testing.T) {
 			}
 
 			if !reflect.DeepEqual(g, e) {
-				t.Errorf("NodeStorage.GetSpec() = %v, want %v", string(g), string(e))
+				t.Errorf("NodeStorage.GetSpec() = \n%v\nwant\n%v", string(g), string(e))
 			}
 
 		})
@@ -408,7 +419,7 @@ func TestNodeStorage_Insert(t *testing.T) {
 				}
 
 				if tt.wantErr && tt.err != err.Error() {
-					t.Errorf("NodeStorage.Insert() error = %v, want %v", err.Error(), tt.err)
+					t.Errorf("NodeStorage.Insert() error \n%v\nwant\n%v", err.Error(), tt.err)
 					return
 				}
 
@@ -416,7 +427,7 @@ func TestNodeStorage_Insert(t *testing.T) {
 			}
 
 			if tt.wantErr {
-				t.Errorf("NodeStorage.Insert() error = %v, want %v", err, tt.err)
+				t.Errorf("NodeStorage.Insert() error \n%v\nwant\n%v", err, tt.err)
 				return
 			}
 		})
@@ -505,7 +516,7 @@ func TestNodeStorage_Update(t *testing.T) {
 				}
 
 				if tt.wantErr && tt.err != err.Error() {
-					t.Errorf("NodeStorage.Update() error = %v, want %v", err.Error(), tt.err)
+					t.Errorf("NodeStorage.Update() error \n%v\nwant\n%v", err.Error(), tt.err)
 					return
 				}
 
@@ -513,14 +524,14 @@ func TestNodeStorage_Update(t *testing.T) {
 			}
 
 			if tt.wantErr {
-				t.Errorf("NodeStorage.Update() error = %v, want %v", err, tt.err)
+				t.Errorf("NodeStorage.Update() error \n%v\nwant\n%v", err, tt.err)
 				return
 			}
 
 			got, _ := tt.fields.stg.Get(tt.args.ctx, tt.args.node.Meta.Name)
 			tt.want.Meta.Updated = got.Meta.Updated
 			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("NodeStorage.Update() = %v, want %v", got, tt.want)
+				t.Errorf("NodeStorage.Update() \n%v\nwant\n%v", got, tt.want)
 				return
 			}
 
@@ -612,7 +623,7 @@ func TestNodeStorage_SetStatus(t *testing.T) {
 				}
 
 				if tt.wantErr && tt.err != err.Error() {
-					t.Errorf("NodeStorage.SetStatus() error = %v, want %v", err.Error(), tt.err)
+					t.Errorf("NodeStorage.SetStatus() error \n%v\nwant\n%v", err.Error(), tt.err)
 					return
 				}
 
@@ -620,7 +631,7 @@ func TestNodeStorage_SetStatus(t *testing.T) {
 			}
 
 			if tt.wantErr {
-				t.Errorf("NodeStorage.SetStatus() error = %v, want %v", err.Error(), tt.err)
+				t.Errorf("NodeStorage.SetStatus() error \n%v\nwant\n%v", err.Error(), tt.err)
 				return
 			}
 
@@ -630,7 +641,7 @@ func TestNodeStorage_SetStatus(t *testing.T) {
 			tt.want.Meta.Updated = got.Meta.Updated
 
 			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("NodeStorage.SetStatus() = %v, want %v", got, tt.want)
+				t.Errorf("NodeStorage.SetStatus() \n%v\nwant\n%v", got, tt.want)
 				return
 			}
 
@@ -721,7 +732,7 @@ func TestNodeStorage_SetInfo(t *testing.T) {
 				}
 
 				if tt.wantErr && tt.err != err.Error() {
-					t.Errorf("NodeStorage.SetInfo() error = %v, want %v", err.Error(), tt.err)
+					t.Errorf("NodeStorage.SetInfo() error \n%v\nwant\n%v", err.Error(), tt.err)
 					return
 				}
 
@@ -730,7 +741,7 @@ func TestNodeStorage_SetInfo(t *testing.T) {
 			}
 
 			if tt.wantErr {
-				t.Errorf("NodeStorage.SetInfo() error = %v, want %v", err.Error(), tt.err)
+				t.Errorf("NodeStorage.SetInfo() error \n%v\nwant\n%v", err.Error(), tt.err)
 				return
 			}
 
@@ -740,7 +751,7 @@ func TestNodeStorage_SetInfo(t *testing.T) {
 			tt.want.Meta.Updated = got.Meta.Updated
 
 			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("NodeStorage.SetInfo() = %v, want %v", got, tt.want)
+				t.Errorf("NodeStorage.SetInfo() \n%v\nwant\n%v", got, tt.want)
 				return
 			}
 
@@ -831,7 +842,7 @@ func TestNodeStorage_SetNetwork(t *testing.T) {
 				}
 
 				if tt.wantErr && tt.err != err.Error() {
-					t.Errorf("NodeStorage.SetNetwork() error = %v, want %v", err.Error(), tt.err)
+					t.Errorf("NodeStorage.SetNetwork() error \n%v\nwant\n%v", err.Error(), tt.err)
 					return
 				}
 
@@ -840,7 +851,7 @@ func TestNodeStorage_SetNetwork(t *testing.T) {
 			}
 
 			if tt.wantErr {
-				t.Errorf("NodeStorage.SetNetwork() error = %v, want %v", err.Error(), tt.err)
+				t.Errorf("NodeStorage.SetNetwork() error \n%v\nwant\n%v", err.Error(), tt.err)
 				return
 			}
 
@@ -850,7 +861,7 @@ func TestNodeStorage_SetNetwork(t *testing.T) {
 			tt.want.Meta.Updated = got.Meta.Updated
 
 			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("NodeStorage.SetNetwork() = %v, want %v", got, tt.want)
+				t.Errorf("NodeStorage.SetNetwork() \n%v\nwant\n%v", got, tt.want)
 				return
 			}
 
@@ -939,7 +950,7 @@ func TestNodeStorage_SetOnline(t *testing.T) {
 				}
 
 				if tt.wantErr && tt.err != err.Error() {
-					t.Errorf("NodeStorage.SetOnline() error = %v, want %v", err.Error(), tt.err)
+					t.Errorf("NodeStorage.SetOnline() error \n%v\nwant\n%v", err.Error(), tt.err)
 					return
 				}
 
@@ -948,7 +959,7 @@ func TestNodeStorage_SetOnline(t *testing.T) {
 			}
 
 			if tt.wantErr {
-				t.Errorf("NodeStorage.SetOnline() error = %v, want %v", err.Error(), tt.err)
+				t.Errorf("NodeStorage.SetOnline() error \n%v\nwant\n%v", err.Error(), tt.err)
 				return
 			}
 
@@ -958,7 +969,7 @@ func TestNodeStorage_SetOnline(t *testing.T) {
 			tt.want.Meta.Updated = got.Meta.Updated
 
 			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("NodeStorage.SetOnline() = %v, want %v", got, tt.want)
+				t.Errorf("NodeStorage.SetOnline() \n%v\nwant\n%v", got, tt.want)
 				return
 			}
 
@@ -1047,7 +1058,7 @@ func TestNodeStorage_SetOffline(t *testing.T) {
 				}
 
 				if tt.wantErr && tt.err != err.Error() {
-					t.Errorf("NodeStorage.SetOffline() error = %v, want %v", err.Error(), tt.err)
+					t.Errorf("NodeStorage.SetOffline() error \n%v\nwant\n%v", err.Error(), tt.err)
 					return
 				}
 
@@ -1056,7 +1067,7 @@ func TestNodeStorage_SetOffline(t *testing.T) {
 			}
 
 			if tt.wantErr {
-				t.Errorf("NodeStorage.SetOffline() error = %v, want %v", err.Error(), tt.err)
+				t.Errorf("NodeStorage.SetOffline() error \n%v\nwant\n%v", err.Error(), tt.err)
 				return
 			}
 
@@ -1066,7 +1077,7 @@ func TestNodeStorage_SetOffline(t *testing.T) {
 			tt.want.Meta.Updated = got.Meta.Updated
 
 			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("NodeStorage.SetOffline() = %v, want %v", got, tt.want)
+				t.Errorf("NodeStorage.SetOffline() \n%v\nwant\n%v", got, tt.want)
 				return
 			}
 
@@ -1093,9 +1104,9 @@ func TestNodeStorage_InsertPod(t *testing.T) {
 
 	n1.Spec.Pods = make(map[string]types.PodSpec)
 
+	n2.Spec.Network = make(map[string]types.NetworkSpec)
 	n2.Spec.Pods = make(map[string]types.PodSpec)
 	n2.Spec.Volumes = make(map[string]types.VolumeSpec)
-	n2.Spec.Routes = make(map[string]types.RouteSpec)
 
 	n3.Spec.Pods = make(map[string]types.PodSpec)
 
@@ -1189,7 +1200,7 @@ func TestNodeStorage_InsertPod(t *testing.T) {
 				}
 
 				if tt.wantErr && tt.err != err.Error() {
-					t.Errorf("NodeStorage.InsertPod() error = %v, want %v", err.Error(), tt.err)
+					t.Errorf("NodeStorage.InsertPod() error \n%v\nwant\n%v", err.Error(), tt.err)
 					return
 				}
 
@@ -1197,7 +1208,7 @@ func TestNodeStorage_InsertPod(t *testing.T) {
 			}
 
 			if tt.wantErr {
-				t.Errorf("NodeStorage.InsertPod() error = %v, want %v", err, tt.err)
+				t.Errorf("NodeStorage.InsertPod() error \n%v\nwant\n%v", err, tt.err)
 				return
 			}
 
@@ -1220,7 +1231,7 @@ func TestNodeStorage_InsertPod(t *testing.T) {
 			}
 
 			if !reflect.DeepEqual(g, e) {
-				t.Errorf("NodeStorage.InsertPod() = %v, want %v", string(g), string(e))
+				t.Errorf("NodeStorage.InsertPod() \n%v\nwant\n%v", string(g), string(e))
 			}
 
 		})
@@ -1247,9 +1258,9 @@ func TestNodeStorage_RemovePod(t *testing.T) {
 
 	n1.Spec.Pods = make(map[string]types.PodSpec)
 
+	n2.Spec.Network = make(map[string]types.NetworkSpec)
 	n2.Spec.Pods = make(map[string]types.PodSpec)
 	n2.Spec.Volumes = make(map[string]types.VolumeSpec)
-	n2.Spec.Routes = make(map[string]types.RouteSpec)
 
 	n3.Spec.Pods = make(map[string]types.PodSpec)
 
@@ -1355,7 +1366,7 @@ func TestNodeStorage_RemovePod(t *testing.T) {
 				}
 
 				if tt.wantErr && tt.err != err.Error() {
-					t.Errorf("NodeStorage.RemovePod() error = %v, want %v", err.Error(), tt.err)
+					t.Errorf("NodeStorage.RemovePod() error \n%v\nwant\n%v", err.Error(), tt.err)
 					return
 				}
 
@@ -1363,7 +1374,7 @@ func TestNodeStorage_RemovePod(t *testing.T) {
 			}
 
 			if tt.wantErr {
-				t.Errorf("NodeStorage.RemovePod() error = %v, want %v", err.Error(), tt.err)
+				t.Errorf("NodeStorage.RemovePod() error \n%v\nwant\n%v", err.Error(), tt.err)
 				return
 			}
 
@@ -1386,7 +1397,7 @@ func TestNodeStorage_RemovePod(t *testing.T) {
 			}
 
 			if !reflect.DeepEqual(g, e) {
-				t.Errorf("NodeStorage.RemovePod() = %v, want %v", string(g), string(e))
+				t.Errorf("NodeStorage.RemovePod() \n%v\nwant\n%v", string(g), string(e))
 			}
 
 		})
@@ -1410,9 +1421,9 @@ func TestNodeStorage_InsertVolume(t *testing.T) {
 
 	n1.Spec.Pods = make(map[string]types.PodSpec)
 
+	n2.Spec.Network = make(map[string]types.NetworkSpec)
 	n2.Spec.Pods = make(map[string]types.PodSpec)
 	n2.Spec.Volumes = make(map[string]types.VolumeSpec)
-	n2.Spec.Routes = make(map[string]types.RouteSpec)
 
 	n3.Spec.Pods = make(map[string]types.PodSpec)
 
@@ -1505,7 +1516,7 @@ func TestNodeStorage_InsertVolume(t *testing.T) {
 				}
 
 				if tt.wantErr && tt.err != err.Error() {
-					t.Errorf("NodeStorage.InsertVolume() error = %v, want %v", err.Error(), tt.err)
+					t.Errorf("NodeStorage.InsertVolume() error \n%v\nwant\n%v", err.Error(), tt.err)
 					return
 				}
 
@@ -1513,7 +1524,7 @@ func TestNodeStorage_InsertVolume(t *testing.T) {
 			}
 
 			if tt.wantErr {
-				t.Errorf("NodeStorage.InsertVolume() error = %v, want %v", err.Error(), tt.err)
+				t.Errorf("NodeStorage.InsertVolume() error \n%v\nwant\n%v", err.Error(), tt.err)
 				return
 			}
 
@@ -1536,7 +1547,7 @@ func TestNodeStorage_InsertVolume(t *testing.T) {
 			}
 
 			if !reflect.DeepEqual(g, e) {
-				t.Errorf("NodeStorage.InsertVolume() = %v, want %v", string(g), string(e))
+				t.Errorf("NodeStorage.InsertVolume() \n%v\nwant\n%v", string(g), string(e))
 			}
 
 		})
@@ -1561,9 +1572,9 @@ func TestNodeStorage_RemoveVolume(t *testing.T) {
 
 	n1.Spec.Pods = make(map[string]types.PodSpec)
 
+	n2.Spec.Network = make(map[string]types.NetworkSpec)
 	n2.Spec.Pods = make(map[string]types.PodSpec)
 	n2.Spec.Volumes = make(map[string]types.VolumeSpec)
-	n2.Spec.Routes = make(map[string]types.RouteSpec)
 
 	n3.Spec.Pods = make(map[string]types.PodSpec)
 
@@ -1668,7 +1679,7 @@ func TestNodeStorage_RemoveVolume(t *testing.T) {
 				}
 
 				if tt.wantErr && tt.err != err.Error() {
-					t.Errorf("NodeStorage.RemoveVolume() error = %v, want %v", err.Error(), tt.err)
+					t.Errorf("NodeStorage.RemoveVolume() error \n%v\nwant\n%v", err.Error(), tt.err)
 					return
 				}
 
@@ -1676,7 +1687,7 @@ func TestNodeStorage_RemoveVolume(t *testing.T) {
 			}
 
 			if tt.wantErr {
-				t.Errorf("NodeStorage.RemoveVolume() error = %v, want %v", err.Error(), tt.err)
+				t.Errorf("NodeStorage.RemoveVolume() error \n%v\nwant\n%v", err.Error(), tt.err)
 				return
 			}
 
@@ -1699,321 +1710,7 @@ func TestNodeStorage_RemoveVolume(t *testing.T) {
 			}
 
 			if !reflect.DeepEqual(g, e) {
-				t.Errorf("NodeStorage.RemoveVolume() = %v, want %v", string(g), string(e))
-			}
-
-		})
-	}
-}
-
-func TestNodeStorage_InsertRoute(t *testing.T) {
-
-	initStorage()
-
-	var (
-		ns  = "ns"
-		stg = newNodeStorage()
-		ctx = context.Background()
-		n1  = getNodeAsset("test1", "", true)
-		n2  = getNodeAsset("test1", "", true)
-		n3  = getNodeAsset("test2", "", false)
-		r1  = getRouteAsset(ns, "test1", "")
-		r2  = getRouteAsset(ns, "test1", "")
-	)
-
-	n1.Spec.Pods = make(map[string]types.PodSpec)
-
-	n2.Spec.Pods = make(map[string]types.PodSpec)
-	n2.Spec.Volumes = make(map[string]types.VolumeSpec)
-	n2.Spec.Routes = make(map[string]types.RouteSpec)
-
-	n3.Spec.Pods = make(map[string]types.PodSpec)
-
-	n2.Spec.Routes[r1.SelfLink()] = r1.Spec
-	r2.Meta.Name = ""
-
-	type fields struct {
-		stg storage.Node
-	}
-
-	type args struct {
-		ctx   context.Context
-		node  *types.Node
-		route *types.Route
-	}
-
-	tests := []struct {
-		name    string
-		fields  fields
-		args    args
-		want    *types.Node
-		wantErr bool
-		err     string
-	}{
-		{
-			"test successful route insert",
-			fields{stg},
-			args{ctx, &n1, &r1},
-			&n2,
-			false,
-			"",
-		},
-		{
-			"test failed update: nil node structure",
-			fields{stg},
-			args{ctx, nil, &r1},
-			&n2,
-			true,
-			store.ErrStructArgIsNil,
-		},
-		{
-			"test failed update: nil route structure",
-			fields{stg},
-			args{ctx, &n1, nil},
-			&n2,
-			true,
-			store.ErrStructArgIsNil,
-		},
-		{
-			"test failed update: invalid route structure",
-			fields{stg},
-			args{ctx, &n1, &r2},
-			&n2,
-			true,
-			store.ErrStructArgIsInvalid,
-		},
-		{
-			"test failed update: entity not found",
-			fields{stg},
-			args{ctx, &n3, nil},
-			&n1,
-			true,
-			store.ErrEntityNotFound,
-		},
-	}
-
-	clear := func() {
-		if err := stg.Clear(ctx); err != nil {
-			t.Errorf("NodeStorage.InsertRoute() storage setup error = %v", err)
-			return
-		}
-	}
-
-	for _, tt := range tests {
-
-		t.Run(tt.name, func(t *testing.T) {
-
-			clear()
-			defer clear()
-
-			if err := stg.Insert(ctx, &n1); err != nil {
-				t.Errorf("NodeStorage.InsertRoute() storage setup error = %v", err)
-				return
-			}
-
-			err := tt.fields.stg.InsertRoute(tt.args.ctx, tt.args.node, tt.args.route)
-			if err != nil {
-				if !tt.wantErr {
-					t.Errorf("NodeStorage.InsertRoute() error = %v, want no error", err.Error())
-					return
-				}
-
-				if tt.wantErr && tt.err != err.Error() {
-					t.Errorf("NodeStorage.InsertRoute() error = %v, want %v", err.Error(), tt.err)
-					return
-				}
-
-				return
-			}
-
-			if tt.wantErr {
-				t.Errorf("NodeStorage.InsertRoute() error = %v, want %v", err.Error(), tt.err)
-				return
-			}
-
-			got, err := tt.fields.stg.GetSpec(tt.args.ctx, tt.args.node)
-			if err != nil {
-				t.Errorf("NodeStorage.InsertRoute() error = %v, want no error", err.Error())
-				return
-			}
-
-			g, err := json.Marshal(got)
-			if err != nil {
-				t.Errorf("NodeStorage.InsertRoute() error = %v, wantErr %v", err, tt.wantErr)
-				return
-			}
-
-			e, err := json.Marshal(tt.want.Spec)
-			if err != nil {
-				t.Errorf("NodeStorage.InsertRoute() error = %v, wantErr %v", err, tt.wantErr)
-				return
-			}
-
-			if !reflect.DeepEqual(g, e) {
-				t.Errorf("NodeStorage.InsertRoute() = %v, want %v", string(g), string(e))
-			}
-
-		})
-	}
-}
-
-func TestNodeStorage_RemoveRoute(t *testing.T) {
-
-	initStorage()
-
-	var (
-		ns  = "ns"
-		stg = newNodeStorage()
-		ctx = context.Background()
-		n1  = getNodeAsset("test1", "", true)
-		n2  = getNodeAsset("test1", "", true)
-		n3  = getNodeAsset("test2", "", false)
-		r1  = getRouteAsset(ns, "test1", "")
-		r2  = getRouteAsset(ns, "test2", "")
-		r3  = getRouteAsset(ns, "test2", "")
-	)
-
-	n1.Spec.Pods = make(map[string]types.PodSpec)
-
-	n2.Spec.Pods = make(map[string]types.PodSpec)
-	n2.Spec.Volumes = make(map[string]types.VolumeSpec)
-	n2.Spec.Routes = make(map[string]types.RouteSpec)
-
-	n3.Spec.Pods = make(map[string]types.PodSpec)
-
-	r2.Meta.Name = ""
-
-	type fields struct {
-		stg storage.Node
-	}
-
-	type args struct {
-		ctx   context.Context
-		node  *types.Node
-		route *types.Route
-	}
-
-	tests := []struct {
-		name    string
-		fields  fields
-		args    args
-		want    *types.Node
-		wantErr bool
-		err     string
-	}{
-		{
-			"test successful route remove",
-			fields{stg},
-			args{ctx, &n1, &r1},
-			&n2,
-			false,
-			"",
-		},
-		{
-			"test failed update: nil node structure",
-			fields{stg},
-			args{ctx, nil, &r1},
-			&n2,
-			true,
-			store.ErrStructArgIsNil,
-		},
-		{
-			"test failed update: nil route structure",
-			fields{stg},
-			args{ctx, &n1, nil},
-			&n2,
-			true,
-			store.ErrStructArgIsNil,
-		},
-		{
-			"test failed update: node not found",
-			fields{stg},
-			args{ctx, &n3, nil},
-			&n1,
-			true,
-			store.ErrEntityNotFound,
-		},
-		{
-			"test failed update: route arg is invalid",
-			fields{stg},
-			args{ctx, &n1, &r2},
-			&n1,
-			true,
-			store.ErrStructArgIsInvalid,
-		},
-		{
-			"test failed update: route not found",
-			fields{stg},
-			args{ctx, &n1, &r3},
-			&n1,
-			true,
-			store.ErrEntityNotFound,
-		},
-	}
-
-	clear := func() {
-		if err := stg.Clear(ctx); err != nil {
-			t.Errorf("NodeStorage.RemoveRoute() storage setup error = %v", err)
-			return
-		}
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-
-			clear()
-			defer clear()
-
-			if err := stg.Insert(ctx, &n1); err != nil {
-				t.Errorf("NodeStorage.RemoveRoute() storage setup error = %v", err)
-				return
-			}
-
-			if err := stg.InsertRoute(ctx, &n1, &r1); err != nil {
-				t.Errorf("NodeStorage.RemovePod() storage setup error = %v", err)
-				return
-			}
-
-			err := tt.fields.stg.RemoveRoute(tt.args.ctx, tt.args.node, tt.args.route)
-			if err != nil {
-				if !tt.wantErr {
-					t.Errorf("NodeStorage.RemoveRoute() error = %v, want no error", err.Error())
-					return
-				}
-
-				if tt.wantErr && tt.err != err.Error() {
-					t.Errorf("NodeStorage.RemoveRoute() error = %v, want %v", err.Error(), tt.err)
-					return
-				}
-
-				return
-			}
-
-			if tt.wantErr {
-				t.Errorf("NodeStorage.RemoveRoute() error = %v, want %v", err.Error(), tt.err)
-				return
-			}
-
-			got, err := tt.fields.stg.GetSpec(tt.args.ctx, tt.args.node)
-			if err != nil {
-				t.Errorf("NodeStorage.RemoveRoute() error = %v, want no error", err.Error())
-				return
-			}
-
-			g, err := json.Marshal(got)
-			if err != nil {
-				t.Errorf("NodeStorage.RemoveRoute() error = %v, wantErr %v", err, tt.wantErr)
-				return
-			}
-
-			e, err := json.Marshal(tt.want.Spec)
-			if err != nil {
-				t.Errorf("NodeStorage.RemoveRoute() error = %v, wantErr %v", err, tt.wantErr)
-				return
-			}
-
-			if !reflect.DeepEqual(g, e) {
-				t.Errorf("NodeStorage.RemoveRoute() = %v, want %v", string(g), string(e))
+				t.Errorf("NodeStorage.RemoveVolume() \n%v\nwant\n%v", string(g), string(e))
 			}
 
 		})
@@ -2100,7 +1797,7 @@ func TestNodeStorage_Remove(t *testing.T) {
 				}
 
 				if tt.wantErr && tt.err != err.Error() {
-					t.Errorf("NodeStorage.Remove() error = %v, want %v", err.Error(), tt.err)
+					t.Errorf("NodeStorage.Remove() error \n%v\nwant\n%v", err.Error(), tt.err)
 					return
 				}
 
@@ -2108,13 +1805,13 @@ func TestNodeStorage_Remove(t *testing.T) {
 			}
 
 			if tt.wantErr {
-				t.Errorf("NodeStorage.Remove() error = %v, want %v", err, tt.err)
+				t.Errorf("NodeStorage.Remove() error \n%v\nwant\n%v", err, tt.err)
 				return
 			}
 
 			_, err = tt.fields.stg.Get(tt.args.ctx, tt.args.node.Meta.Name)
 			if err == nil || tt.err != err.Error() {
-				t.Errorf("NodeStorage.Remove() = %v, want %v", err, tt.want)
+				t.Errorf("NodeStorage.Remove() \n%v\nwant\n%v", err, tt.want)
 				return
 			}
 
@@ -2171,7 +1868,7 @@ func Test_newNodeStorage(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			if got := newNodeStorage(); !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("newNodeStorage() = %v, want %v", got, tt.want)
+				t.Errorf("newNodeStorage() \n%v\nwant\n%v", got, tt.want)
 			}
 		})
 	}
@@ -2206,9 +1903,9 @@ func getNodeAsset(name, desc string, online bool) types.Node {
 		},
 		Spec:  types.NodeSpec{},
 		Roles: types.NodeRole{},
-		Network: types.Subnet{
-			Type:   types.NetworkTypeVxLAN,
-			Subnet: "10.0.0.1",
+		Network: types.NetworkSpec{
+			Type:  types.NetworkTypeVxLAN,
+			Range: "10.0.0.1",
 			IFace: types.NetworkInterface{
 				Index: 1,
 				Name:  "lb",

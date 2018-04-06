@@ -49,25 +49,25 @@ func New() (*Network, error) {
 	}, nil
 }
 
-func (n *Network) Info(ctx context.Context) *types.Subnet {
-	return &types.Subnet{
+func (n *Network) Info(ctx context.Context) *types.NetworkSpec {
+	return &types.NetworkSpec{
 		Type: "local",
 		Addr: n.ExtIface.IfaceAddr.String(),
 	}
 }
 
-func (n *Network) Create(ctx context.Context, network *types.Subnet) error {
+func (n *Network) Create(ctx context.Context, network *types.NetworkSpec) error {
 	return nil
 }
 
-func (n *Network) Destroy(ctx context.Context, network *types.Subnet) error {
+func (n *Network) Destroy(ctx context.Context, network *types.NetworkSpec) error {
 	return nil
 }
 
-func (n *Network) Replace(ctx context.Context, current *types.Subnet, proposal *types.Subnet) error {
+func (n *Network) Replace(ctx context.Context, current *types.NetworkSpec, proposal *types.NetworkSpec) error {
 	return nil
 }
 
-func (n *Network) Subnets(ctx context.Context) (map[string]*types.Subnet, error) {
+func (n *Network) Subnets(ctx context.Context) (map[string]*types.NetworkSpec, error) {
 	return nil, nil
 }

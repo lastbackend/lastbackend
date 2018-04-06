@@ -37,6 +37,8 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/node/runtime/cni/cni"
 	"github.com/lastbackend/lastbackend/pkg/node/runtime/cri/cri"
 	"github.com/spf13/viper"
+	"github.com/lastbackend/lastbackend/pkg/node/events/exporter"
+	"github.com/lastbackend/lastbackend/pkg/node/events"
 )
 
 // Daemon - run node daemon
@@ -73,6 +75,7 @@ func Daemon() {
 	state.Node().Status = node.GetStatus()
 
 	host := viper.GetString("api.uri")
+	port := viper.GetInt("api.port")
 	tls := viper.GetBool("api.tls")
 
 	schema := "http"
@@ -80,7 +83,7 @@ func Daemon() {
 		schema = "https"
 	}
 
-	endpoint := fmt.Sprintf("%s://%s", schema, host)
+	endpoint := fmt.Sprintf("%s://%s:%d", schema, host, port)
 	types.SecretAccessToken = viper.GetString("token")
 
 	rest, err := client.NewHTTP(endpoint, &client.Config{
@@ -96,12 +99,17 @@ func Daemon() {
 	c := rest.V1().Cluster().Node(state.Node().Info.Hostname)
 
 	envs.Get().SetClient(c)
+	e := exporter.NewExporter()
+	e.SetDispatcher(events.Dispatcher)
+	envs.Get().SetExporter(e)
 
 	if err := r.Connect(context.Background()); err != nil {
 		log.Fatalf("node:initialize: connect err %s", err.Error())
 	}
 
 	r.Subscribe()
+
+	e.Loop()
 	r.Loop()
 
 	go func() {

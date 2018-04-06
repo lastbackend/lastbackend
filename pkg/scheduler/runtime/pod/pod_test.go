@@ -323,12 +323,11 @@ func getNodeAsset(name, desc string, online bool) types.Node {
 		Spec: types.NodeSpec{
 			Pods:    make(map[string]types.PodSpec),
 			Volumes: make(map[string]types.VolumeSpec),
-			Routes:  make(map[string]types.RouteSpec),
 		},
 		Roles: types.NodeRole{},
-		Network: types.Subnet{
-			Type:   types.NetworkTypeVxLAN,
-			Subnet: "10.0.0.1",
+		Network: types.NetworkSpec{
+			Type:  types.NetworkTypeVxLAN,
+			Range: "10.0.0.1",
 			IFace: types.NetworkInterface{
 				Index: 1,
 				Name:  "lb",

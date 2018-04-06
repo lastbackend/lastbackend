@@ -139,10 +139,10 @@ func (n *Network) AddInterface() error {
 	return nil
 }
 
-func (n *Network) Info(ctx context.Context) *types.Subnet {
-	return &types.Subnet{
-		Type:   NetworkType,
-		Subnet: n.Subnet.String(),
+func (n *Network) Info(ctx context.Context) *types.NetworkSpec {
+	return &types.NetworkSpec{
+		Type:  NetworkType,
+		Range: n.Subnet.String(),
 		IFace: types.NetworkInterface{
 			Index: n.Device.GetIndex(),
 			Name:  n.Device.GetName(),
@@ -153,15 +153,15 @@ func (n *Network) Info(ctx context.Context) *types.Subnet {
 	}
 }
 
-func (n *Network) Destroy(ctx context.Context, network *types.Subnet) error {
+func (n *Network) Destroy(ctx context.Context, network *types.NetworkSpec) error {
 
 	return nil
 }
 
-func (n *Network) Create(ctx context.Context, network *types.Subnet) error {
-	log.Debugf("Connect to node to network: %v > %v", network.Subnet, network.IFace.Addr)
+func (n *Network) Create(ctx context.Context, network *types.NetworkSpec) error {
+	log.Debugf("Connect to node to network: %v > %v", network.Range, network.IFace.Addr)
 
-	if n.Subnet.String() == network.Subnet {
+	if n.Subnet.String() == network.Range {
 		log.Debug("Skip local network provision")
 		return nil
 	}
@@ -188,11 +188,11 @@ func (n *Network) Create(ctx context.Context, network *types.Subnet) error {
 	}
 
 	// Add route
-	log.Debugf("Add new route record for %v :> %v", network.Subnet, network.IFace.Addr)
+	log.Debugf("Add new route record for %v :> %v", network.Range, network.IFace.Addr)
 
-	_, ipn, err := net.ParseCIDR(network.Subnet)
+	_, ipn, err := net.ParseCIDR(network.Range)
 	if err != nil {
-		log.Errorf("Can-not parse subnet %v: %s", network.Subnet, err.Error())
+		log.Errorf("Can-not parse subnet %v: %s", network.Range, err.Error())
 		return err
 	}
 
@@ -224,7 +224,7 @@ func (n *Network) Create(ctx context.Context, network *types.Subnet) error {
 	return nil
 }
 
-func (n *Network) Replace(ctx context.Context, current *types.Subnet, proposal *types.Subnet) error {
+func (n *Network) Replace(ctx context.Context, current *types.NetworkSpec, proposal *types.NetworkSpec) error {
 
 	if current != nil {
 		if err := n.Destroy(ctx, current); err != nil {
@@ -241,12 +241,12 @@ func (n *Network) Replace(ctx context.Context, current *types.Subnet, proposal *
 	return nil
 }
 
-func (n *Network) Subnets(ctx context.Context) (map[string]*types.Subnet, error) {
+func (n *Network) Subnets(ctx context.Context) (map[string]*types.NetworkSpec, error) {
 
 	log.Debug("Get current subnets list")
 
 	var (
-		subnets = make(map[string]*types.Subnet)
+		subnets = make(map[string]*types.NetworkSpec)
 		neighs  = make(map[string]string)
 	)
 
@@ -274,9 +274,9 @@ func (n *Network) Subnets(ctx context.Context) (map[string]*types.Subnet, error)
 
 	for _, r := range routes {
 
-		sn := types.Subnet{
-			Type:   n.Device.link.Type(),
-			Subnet: r.Dst.String(),
+		sn := types.NetworkSpec{
+			Type:  n.Device.link.Type(),
+			Range: r.Dst.String(),
 			IFace: types.NetworkInterface{
 				Index: n.Device.link.Index,
 				Name:  n.Device.link.Name,
@@ -295,7 +295,7 @@ func (n *Network) Subnets(ctx context.Context) (map[string]*types.Subnet, error)
 	}
 
 	for r, sn := range subnets {
-		log.Debugf("Subnet [%s]: %v", r, sn)
+		log.Debugf("NetworkSpec [%s]: %v", r, sn)
 	}
 
 	return subnets, nil

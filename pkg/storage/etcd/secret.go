@@ -52,7 +52,7 @@ func (s *SecretStorage) Get(ctx context.Context, namespace, name string) (*types
 		return nil, err
 	}
 
-	const filter = `\b.+` + secretStorage + `\/.+\/(?:meta|status|spec)\b`
+	const filter = `\b.+` + secretStorage + `\/.+\/(meta|status|spec)\b`
 	var (
 		secret = new(types.Secret)
 	)
@@ -88,7 +88,7 @@ func (s *SecretStorage) ListByNamespace(ctx context.Context, namespace string) (
 		return nil, err
 	}
 
-	const filter = `\b.+` + secretStorage + `\/.+\/(?:meta|status|spec)\b`
+	const filter = `\b.+` + secretStorage + `\/(.+)\/(meta|status|spec)\b`
 
 	var (
 		secrets = make(map[string]*types.Secret)
@@ -101,7 +101,7 @@ func (s *SecretStorage) ListByNamespace(ctx context.Context, namespace string) (
 	}
 	defer destroy()
 
-	key := keyCreate(secretStorage, fmt.Sprintf("%s:", namespace))
+	key := keyDirCreate(secretStorage, fmt.Sprintf("%s:", namespace))
 	if err := client.MapList(ctx, key, filter, secrets); err != nil {
 		log.V(logLevel).Errorf("storage:etcd:secret:> err: %s", namespace, err.Error())
 		return nil, err

@@ -70,7 +70,7 @@ func (s *ClusterStorage) Get(ctx context.Context) (*types.Cluster, error) {
 
 	log.V(logLevel).Debug("storage:etcd:cluster:> get meta|status")
 
-	const filter = `\b.+` + clusterStorage + `\/(?:meta|status)\b`
+	const filter = `\b.+` + clusterStorage + `\/(meta|status)\b`
 
 	client, destroy, err := getClient(ctx)
 	if err != nil {

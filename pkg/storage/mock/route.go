@@ -41,6 +41,15 @@ func (s *RouteStorage) Get(ctx context.Context, namespace, name string) (*types.
 	return nil, errors.New(store.ErrEntityNotFound)
 }
 
+// Get routes spec
+func (s *RouteStorage) ListSpec(ctx context.Context) (map[string]*types.RouteSpec, error) {
+	rs := make(map[string]*types.RouteSpec, 0)
+	for _, d := range s.data {
+		rs[s.keyGet(d)] = &d.Spec
+	}
+	return rs, nil
+}
+
 // Get routes by namespace name
 func (s *RouteStorage) ListByNamespace(ctx context.Context, namespace string) (map[string]*types.Route, error) {
 	list := make(map[string]*types.Route, 0)

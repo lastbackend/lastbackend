@@ -32,6 +32,7 @@ type Storage interface {
 	Deployment() storage.Deployment
 	Namespace() storage.Namespace
 	Node() storage.Node
+	Ingress() storage.Ingress
 	Pod() storage.Pod
 	Route() storage.Route
 	Secret() storage.Secret

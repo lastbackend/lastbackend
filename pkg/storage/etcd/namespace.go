@@ -42,7 +42,7 @@ func (s *NamespaceStorage) Get(ctx context.Context, name string) (*types.Namespa
 
 	log.V(logLevel).Debugf("storage:etcd:namespace:> get by name: %s", name)
 
-	const filter = `\b.+` + namespaceStorage + `\/.+\/(?:meta|state|spec)\b`
+	const filter = `\b.+` + namespaceStorage + `\/.+\/(meta|state|spec)\b`
 
 	if len(name) == 0 {
 		err := errors.New("name can not be empty")
@@ -73,7 +73,7 @@ func (s *NamespaceStorage) List(ctx context.Context) (map[string]*types.Namespac
 
 	log.V(logLevel).Debugf("storage:etcd:namespace:> get list")
 
-	const filter = `\b.+` + namespaceStorage + `\/(.+)\/(?:meta|state|spec)\b`
+	const filter = `\b.+` + namespaceStorage + `\/(.+)\/(meta|state|spec)\b`
 
 	var (
 		namespaces = make(map[string]*types.Namespace)

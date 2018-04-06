@@ -19,19 +19,14 @@
 package request
 
 type RouteCreateOptions struct {
-	Subdomain string        `json:"subdomain"`
-	Domain    string        `json:"domain"`
-	Custom    bool          `json:"custom"`
-	Security  bool          `json:"security"`
-	Rules     []RulesOption `json:"rules"`
+	Name     string        `json:"name"`
+	Security bool          `json:"security"`
+	Rules    []RulesOption `json:"rules"`
 }
 
 type RouteUpdateOptions struct {
-	Subdomain string        `json:"subdomain"`
-	Domain    string        `json:"domain"`
-	Custom    bool          `json:"custom"`
-	Security  bool          `json:"security"`
-	Rules     []RulesOption `json:"rules"`
+	Security bool          `json:"security"`
+	Rules    []RulesOption `json:"rules"`
 }
 
 type RouteRemoveOptions struct {
@@ -39,7 +34,7 @@ type RouteRemoveOptions struct {
 }
 
 type RulesOption struct {
-	Endpoint *string `json:"endpoint"`
-	Path     string  `json:"path"`
-	Port     *int    `json:"port"`
+	Service string `json:"service"`
+	Path    string `json:"path"`
+	Port    int    `json:"port"`
 }

@@ -60,7 +60,7 @@ func (s *PodStorage) Get(ctx context.Context, namespace, service, deployment, na
 		return nil, err
 	}
 
-	const filter = `\b.+` + podStorage + `\/.+\/(?:meta|status|spec|status)\b`
+	const filter = `\b.+` + podStorage + `\/.+\/(meta|status|spec|status)\b`
 	var (
 		pod = new(types.Pod)
 	)
@@ -96,7 +96,7 @@ func (s *PodStorage) ListByNamespace(ctx context.Context, namespace string) (map
 		return nil, err
 	}
 
-	const filter = `\b.+` + podStorage + `\/.+\/(?:meta|status|spec|status)\b`
+	const filter = `\b.+` + podStorage + `\/(.+)\/(meta|status|spec|status)\b`
 
 	var (
 		pods = make(map[string]*types.Pod)
@@ -135,7 +135,7 @@ func (s *PodStorage) ListByService(ctx context.Context, namespace, service strin
 		return nil, err
 	}
 
-	const filter = `\b.+` + podStorage + `\/.+\/(?:meta|status|spec|status)\b`
+	const filter = `\b.+` + podStorage + `\/(.+)\/(meta|status|spec|status)\b`
 
 	var (
 		pods = make(map[string]*types.Pod)
@@ -180,7 +180,7 @@ func (s *PodStorage) ListByDeployment(ctx context.Context, namespace, service, d
 		return nil, err
 	}
 
-	const filter = `\b.+` + podStorage + `\/.+\/(?:meta|status|spec|status)\b`
+	const filter = `\b.+` + podStorage + `\/(.+)\/(meta|status|spec|status)\b`
 
 	var (
 		pods = make(map[string]*types.Pod)
@@ -416,7 +416,7 @@ func (s *PodStorage) Watch(ctx context.Context, pod chan *types.Pod) error {
 			return
 		}
 
-		if action == ACTIONDELETE {
+		if action == types.STORAGEDELEVENT {
 			return
 		}
 
@@ -454,7 +454,7 @@ func (s *PodStorage) WatchSpec(ctx context.Context, pod chan *types.Pod) error {
 			return
 		}
 
-		if action == ACTIONDELETE {
+		if action == types.STORAGEDELEVENT {
 			return
 		}
 
@@ -491,7 +491,7 @@ func (s *PodStorage) WatchStatus(ctx context.Context, pod chan *types.Pod) error
 			return
 		}
 
-		if action == ACTIONDELETE {
+		if action == types.STORAGEDELEVENT {
 			return
 		}
 

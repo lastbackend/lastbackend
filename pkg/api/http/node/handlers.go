@@ -80,6 +80,7 @@ func NodeGetSpecH(w http.ResponseWriter, r *http.Request) {
 		nm  = distribution.NewNodeModel(r.Context(), envs.Get().GetStorage())
 		cid = utils.Vars(r)["cluster"]
 		nid = utils.Vars(r)["node"]
+		cache = envs.Get().GetCache().Node()
 	)
 
 	n, err := nm.Get(nid)
@@ -94,12 +95,17 @@ func NodeGetSpecH(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	spec, err := nm.GetSpec(n)
-	if err != nil {
-		log.V(logLevel).Warnf("%s:getspec:> node `%s` not found", logPrefix, cid)
-		errors.HTTP.InternalServerError(w)
-		return
+	spec := new(types.NodeSpec)
+	spec = cache.Get(n.Meta.Name)
+	if spec == nil {
+		spec, err = nm.GetSpec(n)
+		if err != nil {
+			log.V(logLevel).Warnf("%s:getspec:> node `%s` not found", logPrefix, cid)
+			errors.HTTP.InternalServerError(w)
+			return
+		}
 	}
+	cache.Flush(n.Meta.Name)
 
 	response, err := v1.View().Node().NewSpec(spec).ToJson()
 	if err != nil {
@@ -202,6 +208,7 @@ func NodeConnectH(w http.ResponseWriter, r *http.Request) {
 	var (
 		nm  = distribution.NewNodeModel(r.Context(), envs.Get().GetStorage())
 		nid = utils.Vars(r)["node"]
+		cache = envs.Get().GetCache().Node()
 	)
 
 	// request body struct
@@ -225,6 +232,8 @@ func NodeConnectH(w http.ResponseWriter, r *http.Request) {
 		nco.Meta.Name = opts.Info.Hostname
 		nco.Info = opts.Info
 		nco.Status = opts.Status
+		nco.Network = opts.Network
+
 
 		node, err = nm.Create(&nco)
 		if err != nil {
@@ -260,11 +269,19 @@ func NodeConnectH(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if err := nm.SetNetwork(node, opts.Network); err != nil {
+		log.V(logLevel).Errorf("%s:connect:> get nodes list err: %s", logPrefix, err.Error())
+		errors.HTTP.InternalServerError(w)
+		return
+	}
+
 	if err := nm.SetOnline(node); err != nil {
 		log.V(logLevel).Errorf("%s:connect:> get nodes list err: %s", logPrefix, err.Error())
 		errors.HTTP.InternalServerError(w)
 		return
 	}
+
+	cache.Clear(nid)
 
 	w.WriteHeader(http.StatusOK)
 	if _, err := w.Write([]byte{}); err != nil {
@@ -279,6 +296,7 @@ func NodeSetStatusH(w http.ResponseWriter, r *http.Request) {
 
 	var (
 		nm  = distribution.NewNodeModel(r.Context(), envs.Get().GetStorage())
+		pm  = distribution.NewPodModel(r.Context(), envs.Get().GetStorage())
 		nid = utils.Vars(r)["node"]
 	)
 
@@ -303,8 +321,8 @@ func NodeSetStatusH(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := nm.SetStatus(node, types.NodeStatus{
-		Capacity:  opts.Capacity,
-		Allocated: opts.Allocated,
+		Capacity:  opts.Resources.Capacity,
+		Allocated: opts.Resources.Allocated,
 	}); err != nil {
 		log.V(logLevel).Errorf("%s:setstatus:> set status err: %s", logPrefix, err.Error())
 		errors.HTTP.InternalServerError(w)
@@ -315,6 +333,39 @@ func NodeSetStatusH(w http.ResponseWriter, r *http.Request) {
 		log.V(logLevel).Errorf("%s:setstatus:> set status err: %s", logPrefix, err.Error())
 		errors.HTTP.InternalServerError(w)
 		return
+	}
+
+	for p, s := range opts.Pods{
+		keys := strings.Split(p, ":")
+		if len(keys) != 4 {
+			log.V(logLevel).Errorf("%s:setpodstatus:> invalid pod selflink err: %s", logPrefix, p)
+			errors.HTTP.BadRequest(w)
+			return
+		}
+
+		pod, err := pm.Get(keys[0], keys[1], keys[2], keys[3])
+		if err != nil {
+			log.V(logLevel).Errorf("%s:setpodstatus:> pod not found selflink err: %s", logPrefix, p)
+			errors.HTTP.InternalServerError(w)
+			return
+		}
+		if pod == nil {
+			log.V(logLevel).Warnf("%s:setpodstatus:> update node `%s` not found", logPrefix, nid)
+			errors.New("pod").NotFound().Http(w)
+			return
+		}
+
+		if err := pm.SetStatus(pod, &types.PodStatus{
+			Stage:      s.State,
+			Message:    s.Message,
+			Steps:      s.Steps,
+			Network:    s.Network,
+			Containers: s.Containers,
+		}); err != nil {
+			log.V(logLevel).Errorf("%s:setpodstatus:> get nodes list err: %s", logPrefix, err.Error())
+			errors.HTTP.InternalServerError(w)
+			return
+		}
 	}
 
 	w.WriteHeader(http.StatusOK)

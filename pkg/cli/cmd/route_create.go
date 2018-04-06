@@ -25,6 +25,8 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/cli/envs"
 	"github.com/lastbackend/lastbackend/pkg/cli/view"
 	"github.com/spf13/cobra"
+	"strings"
+	"strconv"
 )
 
 func init() {
@@ -32,23 +34,39 @@ func init() {
 }
 
 const routeCreateExample = `
-  # Create new route for proxing http traffic from 'blog-ns-demo.lstbknd.net' to service on 80 port
-  lb route create ns-demo blog-ns-demo.lstbknd.net 80"
+  # Create new route for proxying http traffic from 'blog-ns-demo.lstbknd.io' to service 'blog-web' on 80 port
+  lb route create ns-demo blog blog-web:80"
 `
 
 var routeCreateCmd = &cobra.Command{
-	Use:     "create [NAMESPACE] [ENDPOINT] [PORT]",
+	Use:     "create [NAMESPACE] [NAME] [SERVICE:PORT]",
 	Short:   "Create new route",
 	Example: routeCreateExample,
 	Args:    cobra.ExactArgs(3),
 	Run: func(cmd *cobra.Command, args []string) {
 
 		namespace := args[0]
-		name := args[1]
-
-		// TODO: set route options
 
 		opts := new(request.RouteCreateOptions)
+		opts.Name = args[1]
+
+		proxy := strings.Split(args[2], ":")
+		port, err := strconv.Atoi(proxy[1])
+		if err != nil {
+			fmt.Printf("Invalid port number: %s", proxy[1])
+			return
+		}
+
+		if port >= 65535 {
+			fmt.Printf("Port number is out of range: %s [65535]", proxy[1])
+			return
+		}
+
+		opts.Rules = append(opts.Rules, request.RulesOption{
+			Service: proxy[0],
+			Port: port,
+		})
+
 
 		if err := opts.Validate(); err != nil {
 			fmt.Println(err.Err())
@@ -62,7 +80,7 @@ var routeCreateCmd = &cobra.Command{
 			return
 		}
 
-		fmt.Println(fmt.Sprintf("Route `%s` is created", name))
+		fmt.Println(fmt.Sprintf("Route `%s` is created in namespace `%s`", opts.Name, namespace))
 
 		service := view.FromApiRouteView(response)
 		service.Print()

@@ -29,8 +29,6 @@ import (
 
 const logLevel = 6
 
-const ACTIONDELETE = "DELETE"
-
 var c struct {
 	store store.Store
 	dfunc store.DestroyFunc
@@ -44,6 +42,7 @@ type Storage struct {
 	*DeploymentStorage
 	*TriggerStorage
 	*NodeStorage
+	*IngressStorage
 	*NamespaceStorage
 	*PodStorage
 	*ServiceStorage
@@ -79,6 +78,13 @@ func (s *Storage) Node() storage.Node {
 		return nil
 	}
 	return s.NodeStorage
+}
+
+func (s *Storage) Ingress() storage.Ingress {
+	if s == nil {
+		return nil
+	}
+	return s.IngressStorage
 }
 
 func (s *Storage) Namespace() storage.Namespace {
@@ -159,6 +165,7 @@ func New() (*Storage, error) {
 
 	s.ClusterStorage = newClusterStorage()
 	s.NodeStorage = newNodeStorage()
+	s.IngressStorage = newIngressStorage()
 
 	s.NamespaceStorage = newNamespaceStorage()
 	s.ServiceStorage = newServiceStorage()
@@ -175,6 +182,6 @@ func New() (*Storage, error) {
 	return s, nil
 }
 
-func getClient(ctx context.Context) (store.Store, store.DestroyFunc, error) {
+func getClient(_ context.Context) (store.Store, store.DestroyFunc, error) {
 	return c.store, c.dfunc, nil
 }

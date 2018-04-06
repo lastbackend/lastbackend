@@ -21,8 +21,6 @@ package events
 import (
 	"context"
 	"github.com/lastbackend/lastbackend/pkg/api/types/v1"
-	"github.com/lastbackend/lastbackend/pkg/api/types/v1/request"
-	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 	"github.com/lastbackend/lastbackend/pkg/log"
 	"github.com/lastbackend/lastbackend/pkg/node/envs"
 	"github.com/pkg/errors"
@@ -39,22 +37,21 @@ func NewConnectEvent(ctx context.Context) error {
 	opts := v1.Request().Node().NodeConnectOptions()
 	opts.Info = envs.Get().GetState().Node().Info
 	opts.Status = envs.Get().GetState().Node().Status
+	opts.Network = *envs.Get().GetCNI().Info(ctx)
 
 	return c.Connect(ctx, opts)
+
 }
 
 // NewStatusEvent - send node state event after
 // node is successful accepted and each hour
 func NewStatusEvent(ctx context.Context) error {
 	var (
-		c = envs.Get().GetClient()
+		e = envs.Get().GetExporter()
 	)
 
-	opts := v1.Request().Node().NodeStatusOptions()
-	opts.Capacity = envs.Get().GetState().Node().Status.Capacity
-	opts.Allocated = envs.Get().GetState().Node().Status.Allocated
-
-	return c.SetStatus(ctx, opts)
+	e.Resources(envs.Get().GetState().Node().Status)
+	return nil
 }
 
 // NewPodStatusEvent - send pod state event after
@@ -62,8 +59,8 @@ func NewStatusEvent(ctx context.Context) error {
 func NewPodStatusEvent(ctx context.Context, pod string) error {
 
 	var (
-		c = envs.Get().GetClient()
 		p = envs.Get().GetState().Pods().GetPod(pod)
+		e = envs.Get().GetExporter()
 	)
 
 	if pod == "" {
@@ -71,33 +68,16 @@ func NewPodStatusEvent(ctx context.Context, pod string) error {
 		return errors.New("Event: Pod state event: pod is empty")
 	}
 
-	log.Debugf("Event: Pod state event state: %#v", pod)
-	opts := getPodOptions(p)
-
-	log.Debugf("Event: Pod state event state opts: %#v", opts)
-	log.Debugf("%v", opts)
-
-	return c.SetPodStatus(ctx, pod, opts)
-}
-
-// NewRouteStatusEvent - send route state event after
-// node is successful accepted and each hour
-func NewRouteStatusEvent(ctx context.Context, route string) error {
-
-	var (
-		c = envs.Get().GetClient()
-	)
-
-	if route == "" {
-		log.Errorf("Event: route state event: route is empty")
-		return errors.New("Event: route state event: route is empty")
+	if p == nil {
+		return nil
 	}
 
-	log.Debugf("Event: route state event state: %s", route)
+	e.PodStatus(pod, p)
 
-	opts := v1.Request().Node().NodeRouteStatusOptions()
-	return c.SetRouteStatus(ctx, route, opts)
+	return nil
 }
+
+
 
 // NewRouteStatusEvent - send pod state event after
 // node is successful accepted and each hour
@@ -116,14 +96,4 @@ func NewVolumeStatusEvent(ctx context.Context, volume string) error {
 
 	opts := v1.Request().Node().NodeVolumeStatusOptions()
 	return c.SetVolumeStatus(ctx, volume, opts)
-}
-
-func getPodOptions(p *types.PodStatus) *request.NodePodStatusOptions {
-	opts := v1.Request().Node().NodePodStatusOptions()
-	opts.State = p.Stage
-	opts.Message = p.Message
-	opts.Containers = p.Containers
-	opts.Network = p.Network
-	opts.Steps = p.Steps
-	return opts
 }
