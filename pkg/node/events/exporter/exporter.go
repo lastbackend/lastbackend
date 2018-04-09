@@ -75,7 +75,7 @@ func (e *Exporter) Loop() {
 			}
 
 			if err := e.dispatcher(opts); err != nil {
-				log.Errorf("node:exporter:dispatch err: %", err.Error())
+				log.Errorf("node:exporter:dispatch err: %s", err.Error())
 			}
 		}
 
