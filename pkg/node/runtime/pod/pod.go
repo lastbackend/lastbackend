@@ -263,6 +263,7 @@ func Destroy(ctx context.Context, pod string, status *types.PodStatus) {
 func Restore(ctx context.Context) error {
 
 	log.Debug("Runtime restore state")
+
 	cl, err := envs.Get().GetCri().ContainerList(ctx, true)
 	if err != nil {
 		log.Errorf("Pods restore error: %s", err)

@@ -46,7 +46,7 @@
 
 [[constraint]]
   name = "github.com/docker/docker"
-  revision = "6c0d6236117effb139dd3d3edf984877f81e0a94"
+  revision = "cbde00b44273a584bed2ee3513db68924b4a6dba"
 
 [[constraint]]
   name = "github.com/docker/go-connections"
