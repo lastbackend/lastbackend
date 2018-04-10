@@ -72,7 +72,7 @@ func GetRepository(name string) (*RepositoryList, error) {
 			owner = items[0]
 			name = items[1]
 		} else if len(items) == 1 {
-			owner = "library"
+			owner = ""
 			name = items[0]
 		}
 

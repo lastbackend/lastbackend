@@ -123,7 +123,7 @@ Service info object
 Service config object
 ```json
 {
-  "image": "library/lastbackend/proxy:latest",
+  "image": "lastbackend/proxy:latest",
   "name": "",
   "replicas": 2,
   "memory": 32,

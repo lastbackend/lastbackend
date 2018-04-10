@@ -24,8 +24,11 @@ import (
 	"fmt"
 	"github.com/lastbackend/lastbackend/pkg/api/client/http"
 	"github.com/lastbackend/lastbackend/pkg/api/client/interfaces"
+	rv1 "github.com/lastbackend/lastbackend/pkg/api/types/v1/request"
 	vv1 "github.com/lastbackend/lastbackend/pkg/api/types/v1/views"
 	"github.com/lastbackend/lastbackend/pkg/distribution/errors"
+	"io"
+	"strconv"
 )
 
 type PodClient struct {
@@ -34,6 +37,7 @@ type PodClient struct {
 	namespace  string
 	service    string
 	deployment string
+	name       string
 }
 
 func (pc *PodClient) List(ctx context.Context) (*vv1.PodList, error) {
@@ -60,12 +64,12 @@ func (pc *PodClient) List(ctx context.Context) (*vv1.PodList, error) {
 	return s, nil
 }
 
-func (pc *PodClient) Get(ctx context.Context, name string) (*vv1.Pod, error) {
+func (pc *PodClient) Get(ctx context.Context) (*vv1.Pod, error) {
 
 	var s *vv1.Pod
 	var e *errors.Http
 
-	err := pc.client.Get(fmt.Sprintf("/namespace/%s/service/%s/deploymet/%s/pod/%s", pc.namespace, pc.service, pc.deployment, name)).
+	err := pc.client.Get(fmt.Sprintf("/namespace/%s/service/%s/deploymet/%s/pod/%s", pc.namespace, pc.service, pc.deployment, pc.name)).
 		AddHeader("Content-Type", "application/json").
 		JSON(&s, &e)
 
@@ -79,6 +83,23 @@ func (pc *PodClient) Get(ctx context.Context, name string) (*vv1.Pod, error) {
 	return s, nil
 }
 
-func newPodClient(client http.Interface, namespace, service, deployment string) *PodClient {
-	return &PodClient{client: client, namespace: namespace, service: service, deployment: deployment}
+func (pc *PodClient) Logs(ctx context.Context, opts *rv1.PodLogsOptions) (io.ReadCloser, error) {
+
+	res := pc.client.Get(fmt.Sprintf("/namespace/%s/service/%s/logs", pc.namespace, pc.service))
+
+	if opts != nil {
+		res.Param("deployment", pc.deployment)
+		res.Param("pod", pc.name)
+		res.Param("container", opts.Container)
+
+		if opts.Follow {
+			res.Param("follow", strconv.FormatBool(opts.Follow))
+		}
+	}
+
+	return res.Stream()
+}
+
+func newPodClient(client http.Interface, namespace, service, deployment, name string) *PodClient {
+	return &PodClient{client: client, namespace: namespace, service: service, deployment: deployment, name: name}
 }

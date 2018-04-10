@@ -94,7 +94,7 @@ type Deployment interface {
 type Pod interface {
 	List(ctx context.Context) (*vv1.PodList, error)
 	Get(ctx context.Context) (*vv1.Pod, error)
-	Update(ctx context.Context, opts *rv1.DeploymentUpdateOptions) (*vv1.Pod, error)
+	Logs(ctx context.Context, opts *rv1.PodLogsOptions) (io.ReadCloser, error)
 }
 
 type Events interface {
