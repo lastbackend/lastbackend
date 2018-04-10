@@ -152,6 +152,8 @@ func ServiceInfoH(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	fmt.Println(">>>>>>", string(response))
+
 	w.WriteHeader(http.StatusOK)
 	if _, err = w.Write(response); err != nil {
 		log.V(logLevel).Errorf("%s:get write response err: %s", logPrefix, err.Error())
