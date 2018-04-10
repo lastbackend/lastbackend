@@ -378,7 +378,6 @@ func ServiceLogsH(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// TODO: you need to take the port from the node and http(s) schema
 	httpcli, err := client.NewHTTP(fmt.Sprintf("http://%s:%d", node.Info.InternalIP, 2969), &client.Config{BearerToken: node.Meta.Token})
 	if err != nil {
 		log.V(logLevel).Errorf("%s:logs:> create http client err: %s", logPrefix, err.Error())

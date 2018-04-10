@@ -37,8 +37,8 @@ type DeploymentClient struct {
 	name      string
 }
 
-func (dc *DeploymentClient) Pod(deployment string) *PodClient {
-	return newPodClient(dc.client, dc.namespace, dc.service, deployment)
+func (dc *DeploymentClient) Pod(name string) *PodClient {
+	return newPodClient(dc.client, dc.namespace, dc.service, dc.name, name)
 }
 
 func (dc *DeploymentClient) List(ctx context.Context) (*vv1.DeploymentList, error) {

@@ -145,20 +145,20 @@ func IsGitUrl(url string) bool {
 
 func validateDockerRepoName(repoName string) error {
 	var (
-		app  string
-		name string
+		owner string
+		name  string
 	)
 	nameParts := strings.SplitN(repoName, "/", 2)
 	if len(nameParts) < 2 {
-		app = "library"
+		owner = ""
 		name = nameParts[0]
 	} else {
-		app = nameParts[0]
+		owner = nameParts[0]
 		name = nameParts[1]
 	}
 	validApp := regexp.MustCompile(`^([a-z0-9_]{4,30})$`)
-	if !validApp.MatchString(app) {
-		return fmt.Errorf("invalid app name (%s), only [a-z0-9_] are allowed, size between 4 and 30", app)
+	if !validApp.MatchString(owner) {
+		return fmt.Errorf("invalid owner name (%s), only [a-z0-9_] are allowed, size between 4 and 30", owner)
 	}
 	validRepo := regexp.MustCompile(`^([a-zA-Z0-9-_.]+)$`)
 	if !validRepo.MatchString(name) {
