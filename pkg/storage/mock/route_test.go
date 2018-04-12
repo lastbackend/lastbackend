@@ -359,7 +359,7 @@ func TestRouteStorage_Insert(t *testing.T) {
 	for _, tt := range tests {
 
 		if err := stg.Clear(ctx); err != nil {
-			t.Errorf("RouteStorage.ListByNamespace() storage setup error = %v", err)
+			t.Errorf("RouteStorage.Insert() storage setup error = %v", err)
 			return
 		}
 
@@ -494,8 +494,8 @@ func TestRouteStorage_ListSpec(t *testing.T) {
 		ctx = context.Background()
 		n1  = getRouteAsset("ns1", "test1", "")
 		n2  = getRouteAsset("ns1", "test2", "")
-		nl  = make(map[string]*types.Route, 0)
-		ls  = make(map[string]*types.RouteSpec, 0)
+		nl  = make(map[string]*types.Route, 2)
+		ls  = make(map[string]*types.RouteSpec, 2)
 	)
 
 	nl[stg.keyGet(&n1)] = &n1

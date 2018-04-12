@@ -394,6 +394,212 @@ func TestTriggerStorage_Insert(t *testing.T) {
 	}
 }
 
+func TestTriggerStorage_SetStatus(t *testing.T) {
+	var (
+		ns1 = "ns1"
+		svc = "svc"
+		stg = newTriggerStorage()
+		ctx = context.Background()
+		n1  = getTriggerAsset(ns1, svc, "test1", "")
+		n2  = getTriggerAsset(ns1, svc, "test1", "")
+		n3  = getTriggerAsset(ns1, svc, "test2", "")
+		nl  = make([]*types.Trigger, 0)
+	)
+
+	n2.Status.State = types.StateReady
+
+	nl0 := append(nl, &n1)
+
+	type fields struct {
+		stg storage.Trigger
+	}
+
+	type args struct {
+		ctx     context.Context
+		trigger *types.Trigger
+	}
+
+	tests := []struct {
+		name    string
+		fields  fields
+		args    args
+		want    *types.Trigger
+		wantErr bool
+		err     string
+	}{
+		{
+			"test successful update",
+			fields{stg},
+			args{ctx, &n2},
+			&n2,
+			false,
+			"",
+		},
+		{
+			"test failed update: nil structure",
+			fields{stg},
+			args{ctx, nil},
+			&n1,
+			true,
+			store.ErrStructArgIsNil,
+		},
+		{
+			"test failed update: entity not found",
+			fields{stg},
+			args{ctx, &n3},
+			&n1,
+			true,
+			store.ErrEntityNotFound,
+		},
+	}
+
+	for _, tt := range tests {
+
+		if err := stg.Clear(ctx); err != nil {
+			t.Errorf("TriggerStorage.SetStatus() storage setup error = %v", err)
+			return
+		}
+
+		for _, n := range nl0 {
+			if err := stg.Insert(ctx, n); err != nil {
+				t.Errorf("TriggerStorage.SetStatus() storage setup error = %v", err)
+				return
+			}
+		}
+
+		t.Run(tt.name, func(t *testing.T) {
+			err := tt.fields.stg.SetStatus(tt.args.ctx, tt.args.trigger)
+			if err != nil {
+				if !tt.wantErr {
+					t.Errorf("TriggerStorage.SetStatus() error = %v, want no error", err.Error())
+					return
+				}
+
+				if tt.wantErr && tt.err != err.Error() {
+					t.Errorf("TriggerStorage.SetStatus() error = %v, want %v", err.Error(), tt.err)
+					return
+				}
+				return
+			}
+
+			if tt.wantErr {
+				t.Errorf("TriggerStorage.SetStatus() error = %v, want %v", err.Error(), tt.err)
+				return
+			}
+
+			got, _ := tt.fields.stg.Get(tt.args.ctx, ns1, svc, tt.args.trigger.Meta.Name)
+			if !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("TriggerStorage.SetStatus() = %v, want %v", got, tt.want)
+				return
+			}
+
+		})
+	}
+}
+
+func TestTriggerStorage_SetSpec(t *testing.T) {
+	var (
+		ns1 = "ns1"
+		svc = "svc"
+		stg = newTriggerStorage()
+		ctx = context.Background()
+		n1  = getTriggerAsset(ns1, svc, "test1", "")
+		n2  = getTriggerAsset(ns1, svc, "test1", "")
+		n3  = getTriggerAsset(ns1, svc, "test2", "")
+		nl  = make([]*types.Trigger, 0)
+	)
+
+	//TODO when TriggerSpec will have data
+	//n2.Spec = types.TriggerSpec{}
+	nl0 := append(nl, &n1)
+
+	type fields struct {
+		stg storage.Trigger
+	}
+
+	type args struct {
+		ctx     context.Context
+		trigger *types.Trigger
+	}
+
+	tests := []struct {
+		name    string
+		fields  fields
+		args    args
+		want    *types.Trigger
+		wantErr bool
+		err     string
+	}{
+		{
+			"test successful update",
+			fields{stg},
+			args{ctx, &n2},
+			&n2,
+			false,
+			"",
+		},
+		{
+			"test failed update: nil structure",
+			fields{stg},
+			args{ctx, nil},
+			&n1,
+			true,
+			store.ErrStructArgIsNil,
+		},
+		{
+			"test failed update: entity not found",
+			fields{stg},
+			args{ctx, &n3},
+			&n1,
+			true,
+			store.ErrEntityNotFound,
+		},
+	}
+
+	for _, tt := range tests {
+
+		if err := stg.Clear(ctx); err != nil {
+			t.Errorf("TriggerStorage.SetSpec() storage setup error = %v", err)
+			return
+		}
+
+		for _, n := range nl0 {
+			if err := stg.Insert(ctx, n); err != nil {
+				t.Errorf("TriggerStorage.SetSpec() storage setup error = %v", err)
+				return
+			}
+		}
+
+		t.Run(tt.name, func(t *testing.T) {
+			err := tt.fields.stg.SetSpec(tt.args.ctx, tt.args.trigger)
+			if err != nil {
+				if !tt.wantErr {
+					t.Errorf("TriggerStorage.SetSpec() error = %v, want no error", err.Error())
+					return
+				}
+
+				if tt.wantErr && tt.err != err.Error() {
+					t.Errorf("TriggerStorage.SetSpec() error = %v, want %v", err.Error(), tt.err)
+					return
+				}
+				return
+			}
+
+			if tt.wantErr {
+				t.Errorf("TriggerStorage.SetSpec() error = %v, want %v", err.Error(), tt.err)
+				return
+			}
+
+			got, _ := tt.fields.stg.Get(tt.args.ctx, ns1, svc, tt.args.trigger.Meta.Name)
+			if !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("TriggerStorage.SetSpec() = %v, want %v", got, tt.want)
+				return
+			}
+
+		})
+	}
+}
+
 func TestTriggerStorage_Update(t *testing.T) {
 	var (
 		ns1 = "ns1"
@@ -657,6 +863,41 @@ func TestTriggerStorage_WatchSpec(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			if err := tt.fields.stg.WatchSpec(tt.args.ctx, tt.args.trigger); (err != nil) != tt.wantErr {
 				t.Errorf("TriggerStorage.Watch() error = %v, wantErr %v", err, tt.wantErr)
+			}
+		})
+	}
+}
+
+func TestTriggerStorage_WatchStatus(t *testing.T) {
+	var (
+		stg = newTriggerStorage()
+		ctx = context.Background()
+	)
+
+	type fields struct {
+		stg storage.Trigger
+	}
+	type args struct {
+		ctx     context.Context
+		trigger chan *types.Trigger
+	}
+	tests := []struct {
+		name    string
+		fields  fields
+		args    args
+		wantErr bool
+	}{
+		{
+			"check watch status",
+			fields{stg},
+			args{ctx, make(chan *types.Trigger)},
+			false,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if err := tt.fields.stg.WatchStatus(tt.args.ctx, tt.args.trigger); (err != nil) != tt.wantErr {
+				t.Errorf("TriggerStorage.WatchStatus() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
 	}

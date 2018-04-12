@@ -22,10 +22,11 @@ import (
 	"testing"
 
 	"context"
+	"reflect"
+
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 	"github.com/lastbackend/lastbackend/pkg/storage/storage"
 	"github.com/lastbackend/lastbackend/pkg/storage/store"
-	"reflect"
 )
 
 func TestVolumeStorage_Get(t *testing.T) {
@@ -194,6 +195,109 @@ func TestVolumeStorage_ListByNamespace(t *testing.T) {
 			if !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("VolumeStorage.ListByNamespace() = %v, want %v", got, tt.want)
 			}
+		})
+	}
+}
+
+func TestVolumeStorage_SetSpec(t *testing.T) {
+	var (
+		ns1 = "ns1"
+		stg = newVolumeStorage()
+		ctx = context.Background()
+		n1  = getVolumeAsset(ns1, "test1", "")
+		n2  = getVolumeAsset(ns1, "test1", "")
+		n3  = getVolumeAsset(ns1, "test2", "")
+		nl  = make([]*types.Volume, 0)
+	)
+
+	n2.Spec.State.Destroy = true
+
+	nl0 := append(nl, &n1)
+
+	type fields struct {
+		stg storage.Volume
+	}
+
+	type args struct {
+		ctx    context.Context
+		volume *types.Volume
+	}
+
+	tests := []struct {
+		name    string
+		fields  fields
+		args    args
+		want    *types.Volume
+		wantErr bool
+		err     string
+	}{
+		{
+			"test successful update",
+			fields{stg},
+			args{ctx, &n2},
+			&n2,
+			false,
+			"",
+		},
+		{
+			"test failed update: nil structure",
+			fields{stg},
+			args{ctx, nil},
+			&n1,
+			true,
+			store.ErrStructArgIsNil,
+		},
+		{
+			"test failed update: entity not found",
+			fields{stg},
+			args{ctx, &n3},
+			&n1,
+			true,
+			store.ErrEntityNotFound,
+		},
+	}
+
+	for _, tt := range tests {
+
+		if err := stg.Clear(ctx); err != nil {
+			t.Errorf("VolumeStorage.SetSpec() storage setup error = %v", err)
+			return
+		}
+
+		for _, n := range nl0 {
+			if err := stg.Insert(ctx, n); err != nil {
+				t.Errorf("VolumeStorage.SetSpec() storage setup error = %v", err)
+				return
+			}
+		}
+
+		t.Run(tt.name, func(t *testing.T) {
+			err := tt.fields.stg.SetSpec(tt.args.ctx, tt.args.volume)
+			if err != nil {
+				if !tt.wantErr {
+					t.Errorf("VolumeStorage.SetSpec() error = %v, want no error", err.Error())
+					return
+				}
+
+				if tt.wantErr && tt.err != err.Error() {
+					t.Errorf("VolumeStorage.SetSpec() error = %v, want %v", err.Error(), tt.err)
+					return
+				}
+
+				return
+			}
+
+			if tt.wantErr {
+				t.Errorf("VolumeStorage.SetSpec() error = %v, want %v", err.Error(), tt.err)
+				return
+			}
+
+			got, _ := tt.fields.stg.Get(tt.args.ctx, ns1, tt.args.volume.Meta.Name)
+			if !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("VolumeStorage.SetSpec() = %v, want %v", got, tt.want)
+				return
+			}
+
 		})
 	}
 }
@@ -647,6 +751,41 @@ func TestVolumeStorage_WatchSpec(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			if err := tt.fields.stg.WatchSpec(tt.args.ctx, tt.args.volume); (err != nil) != tt.wantErr {
 				t.Errorf("VolumeStorage.Watch() error = %v, wantErr %v", err, tt.wantErr)
+			}
+		})
+	}
+}
+
+func TestVolumeStorage_WatchStatus(t *testing.T) {
+	var (
+		stg = newVolumeStorage()
+		ctx = context.Background()
+	)
+
+	type fields struct {
+		stg storage.Volume
+	}
+	type args struct {
+		ctx    context.Context
+		volume chan *types.Volume
+	}
+	tests := []struct {
+		name    string
+		fields  fields
+		args    args
+		wantErr bool
+	}{
+		{
+			"check watch status",
+			fields{stg},
+			args{ctx, make(chan *types.Volume)},
+			false,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if err := tt.fields.stg.WatchStatus(tt.args.ctx, tt.args.volume); (err != nil) != tt.wantErr {
+				t.Errorf("VolumeStorage.WatchStatus() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
 	}
