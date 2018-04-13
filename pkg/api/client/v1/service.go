@@ -29,6 +29,7 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/distribution/errors"
 	"io"
 	"strconv"
+	"github.com/lastbackend/lastbackend/pkg/api/client/watcher"
 )
 
 type ServiceClient struct {
@@ -177,6 +178,10 @@ func (sc *ServiceClient) Logs(ctx context.Context, opts *rv1.ServiceLogsOptions)
 	}
 
 	return res.Stream()
+}
+
+func (sc *ServiceClient) Watch(ctx context.Context) (watcher.IWatcher, error) {
+	return sc.client.Get(fmt.Sprintf("/namespace/%s/service/%s/watch", sc.namespace, sc.name)).Watch()
 }
 
 func newServiceClient(client http.Interface, namespace, name string) *ServiceClient {

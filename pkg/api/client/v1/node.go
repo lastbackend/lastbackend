@@ -27,7 +27,6 @@ import (
 	rv1 "github.com/lastbackend/lastbackend/pkg/api/types/v1/request"
 	vv1 "github.com/lastbackend/lastbackend/pkg/api/types/v1/views"
 	"github.com/lastbackend/lastbackend/pkg/distribution/errors"
-	"io"
 	"strconv"
 )
 
@@ -242,16 +241,6 @@ func (nc *NodeClient) Remove(ctx context.Context, opts *rv1.NodeRemoveOptions) e
 	}
 
 	return nil
-}
-
-func (nc *NodeClient) Logs(ctx context.Context, pod, container string, opts *rv1.NodeLogsOptions) (io.ReadCloser, error) {
-	req := nc.client.Get(fmt.Sprintf("/pod/%s/%s/logs", pod, container))
-	if opts != nil {
-		if opts.Follow {
-			req.Param("force", strconv.FormatBool(opts.Follow))
-		}
-	}
-	return req.Stream()
 }
 
 func newNodeClient(req http.Interface, hostname string) *NodeClient {

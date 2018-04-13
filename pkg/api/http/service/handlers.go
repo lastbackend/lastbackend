@@ -23,7 +23,6 @@ import (
 
 	"context"
 	"fmt"
-	"github.com/lastbackend/lastbackend/pkg/api/client"
 	"github.com/lastbackend/lastbackend/pkg/api/envs"
 	"github.com/lastbackend/lastbackend/pkg/api/types/v1"
 	"github.com/lastbackend/lastbackend/pkg/distribution"
@@ -299,6 +298,56 @@ func ServiceUpdateH(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+func ServiceRemoveH(w http.ResponseWriter, r *http.Request) {
+
+	nid := utils.Vars(r)["namespace"]
+	sid := utils.Vars(r)["service"]
+
+	log.V(logLevel).Debugf("%s:remove:> remove service `%s` from app `%s`", logPrefix, sid, nid)
+
+	var (
+		nsm = distribution.NewNamespaceModel(r.Context(), envs.Get().GetStorage())
+		sm  = distribution.NewServiceModel(r.Context(), envs.Get().GetStorage())
+	)
+
+	ns, err := nsm.Get(nid)
+	if err != nil {
+		log.V(logLevel).Errorf("%s:remove:> get namespace", logPrefix, err.Error())
+		errors.HTTP.InternalServerError(w)
+		return
+	}
+	if ns == nil {
+		err := errors.New("namespace not found")
+		log.V(logLevel).Errorf("%s:remove:> get namespace", logPrefix, err.Error())
+		errors.New("namespace").NotFound().Http(w)
+		return
+	}
+
+	svc, err := sm.Get(ns.Meta.Name, sid)
+	if err != nil {
+		log.V(logLevel).Errorf("%s:remove:> get service by name `%s` in namespace `%s` err: %s", logPrefix, sid, ns.Meta.Name, err.Error())
+		errors.HTTP.InternalServerError(w)
+		return
+	}
+	if svc == nil {
+		log.V(logLevel).Warnf("%s:remove:> service name `%s` in namespace `%s` not found", logPrefix, sid, ns.Meta.Name)
+		errors.New("service").NotFound().Http(w)
+		return
+	}
+
+	if _, err := sm.Destroy(svc); err != nil {
+		log.V(logLevel).Errorf("%s:remove:> remove service err: %s", logPrefix, err.Error())
+		errors.HTTP.InternalServerError(w)
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+	if _, err := w.Write([]byte{}); err != nil {
+		log.V(logLevel).Errorf("%s:remove:> write response err: %s", logPrefix, err.Error())
+		return
+	}
+}
+
 func ServiceLogsH(w http.ResponseWriter, r *http.Request) {
 
 	nid := utils.Vars(r)["namespace"]
@@ -378,14 +427,15 @@ func ServiceLogsH(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	httpcli, err := client.NewHTTP(fmt.Sprintf("http://%s:%d", node.Info.InternalIP, 2969), &client.Config{BearerToken: node.Meta.Token})
+	req, err := http.NewRequest(http.MethodGet, fmt.Sprintf("http://%s:%d/pod/%s/%s/logs", node.Info.InternalIP, 2969, pod, cid), nil)
 	if err != nil {
 		log.V(logLevel).Errorf("%s:logs:> create http client err: %s", logPrefix, err.Error())
 		errors.HTTP.InternalServerError(w)
 		return
 	}
 
-	stream, err := httpcli.V1().Cluster().Node().Logs(r.Context(), pod.Meta.SelfLink, cid, nil)
+	c := new(http.Client)
+	res, err := c.Do(req)
 	if err != nil {
 		log.V(logLevel).Errorf("%s:logs:> get pod logs err: %s", logPrefix, err.Error())
 		errors.HTTP.InternalServerError(w)
@@ -408,12 +458,12 @@ func ServiceLogsH(w http.ResponseWriter, r *http.Request) {
 		for {
 			select {
 			case <-done:
-				stream.Close()
+				res.Body.Close()
 				exit <- true
 				return
 			default:
 
-				n, err := stream.Read(buffer)
+				n, err := res.Body.Read(buffer)
 				if err != nil {
 
 					if err == context.Canceled {
@@ -457,54 +507,4 @@ func ServiceLogsH(w http.ResponseWriter, r *http.Request) {
 
 	<-exit
 
-}
-
-func ServiceRemoveH(w http.ResponseWriter, r *http.Request) {
-
-	nid := utils.Vars(r)["namespace"]
-	sid := utils.Vars(r)["service"]
-
-	log.V(logLevel).Debugf("%s:remove:> remove service `%s` from app `%s`", logPrefix, sid, nid)
-
-	var (
-		nsm = distribution.NewNamespaceModel(r.Context(), envs.Get().GetStorage())
-		sm  = distribution.NewServiceModel(r.Context(), envs.Get().GetStorage())
-	)
-
-	ns, err := nsm.Get(nid)
-	if err != nil {
-		log.V(logLevel).Errorf("%s:remove:> get namespace", logPrefix, err.Error())
-		errors.HTTP.InternalServerError(w)
-		return
-	}
-	if ns == nil {
-		err := errors.New("namespace not found")
-		log.V(logLevel).Errorf("%s:remove:> get namespace", logPrefix, err.Error())
-		errors.New("namespace").NotFound().Http(w)
-		return
-	}
-
-	svc, err := sm.Get(ns.Meta.Name, sid)
-	if err != nil {
-		log.V(logLevel).Errorf("%s:remove:> get service by name `%s` in namespace `%s` err: %s", logPrefix, sid, ns.Meta.Name, err.Error())
-		errors.HTTP.InternalServerError(w)
-		return
-	}
-	if svc == nil {
-		log.V(logLevel).Warnf("%s:remove:> service name `%s` in namespace `%s` not found", logPrefix, sid, ns.Meta.Name)
-		errors.New("service").NotFound().Http(w)
-		return
-	}
-
-	if _, err := sm.Destroy(svc); err != nil {
-		log.V(logLevel).Errorf("%s:remove:> remove service err: %s", logPrefix, err.Error())
-		errors.HTTP.InternalServerError(w)
-		return
-	}
-
-	w.WriteHeader(http.StatusOK)
-	if _, err := w.Write([]byte{}); err != nil {
-		log.V(logLevel).Errorf("%s:remove:> write response err: %s", logPrefix, err.Error())
-		return
-	}
 }

@@ -44,7 +44,6 @@ type Node interface {
 	SetVolumeStatus(ctx context.Context, volume string, opts *rv1.NodeVolumeStatusOptions) error
 	SetRouteStatus(ctx context.Context, route string, opts *rv1.NodeRouteStatusOptions) error
 	Remove(ctx context.Context, opts *rv1.NodeRemoveOptions) error
-	Logs(ctx context.Context, pod, container string, opts *rv1.NodeLogsOptions) (io.ReadCloser, error)
 }
 
 type Ingress interface {
