@@ -20,13 +20,14 @@ package distribution
 
 import (
 	"context"
-	"strings"
-
 	"github.com/lastbackend/lastbackend/pkg/distribution/errors"
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 	"github.com/lastbackend/lastbackend/pkg/log"
 	"github.com/lastbackend/lastbackend/pkg/storage"
 	"github.com/lastbackend/lastbackend/pkg/storage/store"
+	"fmt"
+	"strings"
+	"github.com/spf13/viper"
 )
 
 const (
@@ -93,7 +94,7 @@ func (n *Namespace) Create(opts *types.NamespaceCreateOptions) (*types.Namespace
 	ns.Meta.SetDefault()
 	ns.Meta.Name = opts.Name
 	ns.Meta.Description = opts.Description
-	ns.Meta.Endpoint = strings.ToLower(opts.Name)
+	ns.Meta.Endpoint = strings.ToLower(fmt.Sprintf("%s.%s", opts.Name, viper.GetString("domain.external")))
 	ns.SelfLink()
 
 	if opts.Quotas != nil {

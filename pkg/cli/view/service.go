@@ -222,14 +222,14 @@ func FromApiServiceView(service *views.Service) *Service {
 	item.Status.State = service.Status.State
 	item.Status.Message = service.Status.Message
 
-	item.Deployments = make(map[string]*Deployment)
+	item.Deployments = make(map[string]*Deployment, 0)
 
 	for i, d := range service.Deployments {
 		var itd Deployment
 
 		itd.State = d.Status.State
 		itd.Name = d.Meta.Name
-		itd.Pods = make(map[string]PodView)
+		itd.Pods = make(map[string]PodView, 0)
 
 		for j, p := range d.Pods {
 			var pd = PodView{Status: &PodStatus{p.Status.State, PodContainers{}}}
@@ -237,13 +237,17 @@ func FromApiServiceView(service *views.Service) *Service {
 			pd.Name = p.Meta.Name
 			pd.Created = p.Meta.Created
 
-			for k, c := range p.Status.Containers {
+			if pd.Status.Containers == nil {
+				pd.Status.Containers = make(PodContainers, 0)
+			}
+
+			for _, c := range p.Status.Containers {
 				var cn PodContainer
 
 				cn.Ready = c.Ready
 				cn.Restart = c.Restart
 
-				pd.Status.Containers[k] = cn
+				pd.Status.Containers = append(pd.Status.Containers, cn)
 			}
 
 			itd.Pods[j] = pd

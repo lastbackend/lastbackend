@@ -72,13 +72,13 @@ func NamespaceInfoH(w http.ResponseWriter, r *http.Request) {
 
 	ns, err := nsm.Get(nid)
 	if err != nil {
-		log.V(logLevel).Errorf("%s:info:> get namespace", logPrefix, err.Error())
+		log.V(logLevel).Errorf("%s:info:> get namespace err: %s", logPrefix, err.Error())
 		errors.HTTP.InternalServerError(w)
 		return
 	}
 	if ns == nil {
 		err := errors.New("namespace not found")
-		log.V(logLevel).Errorf("%s:info:> get namespace", logPrefix, err.Error())
+		log.V(logLevel).Errorf("%s:info:> get namespace err: %s", logPrefix, err.Error())
 		errors.New("namespace").NotFound().Http(w)
 		return
 	}
@@ -127,7 +127,7 @@ func NamespaceCreateH(w http.ResponseWriter, r *http.Request) {
 
 	ns, err := nsm.Create(opts)
 	if err != nil {
-		log.V(logLevel).Errorf("%s:create:> create namespace", logPrefix, err.Error())
+		log.V(logLevel).Errorf("%s:create:> create namespace err: %s", logPrefix, err.Error())
 		errors.HTTP.InternalServerError(w)
 		return
 	}
@@ -209,13 +209,13 @@ func NamespaceRemoveH(w http.ResponseWriter, r *http.Request) {
 
 	ns, err := nsm.Get(nid)
 	if err != nil {
-		log.V(logLevel).Errorf("%s:remove:> get namespace", logPrefix, err.Error())
+		log.V(logLevel).Errorf("%s:remove:> get namespace err: %s", logPrefix, err.Error())
 		errors.HTTP.InternalServerError(w)
 		return
 	}
 	if ns == nil {
 		err := errors.New("namespace not found")
-		log.V(logLevel).Errorf("%s:remove:> get namespace", logPrefix, err.Error())
+		log.V(logLevel).Errorf("%s:remove:> get namespace err: %s", logPrefix, err.Error())
 		errors.New("namespace").NotFound().Http(w)
 		return
 	}
