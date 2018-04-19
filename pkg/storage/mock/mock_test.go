@@ -103,6 +103,25 @@ func TestStorage_Node(t *testing.T) {
 	}
 }
 
+func TestStorage_Ingress(t *testing.T) {
+	tests := []struct {
+		name string
+		want storage.Ingress
+	}{
+		{"Ingress storage",
+			newIngressStorage(),
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got, err := New(); (err != nil) || !reflect.DeepEqual(got.Ingress(), tt.want) {
+				t.Errorf("Storage.Ingress() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
 func TestStorage_Namespace(t *testing.T) {
 	tests := []struct {
 		name string
@@ -193,6 +212,25 @@ func TestStorage_Volume(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			if got, err := New(); (err != nil) || !reflect.DeepEqual(got.Volume(), tt.want) {
 				t.Errorf("Storage.Volume() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestStorage_Secret(t *testing.T) {
+	tests := []struct {
+		name string
+		want storage.Secret
+	}{
+		{"Secret storage",
+			newSecretStorage(),
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got, err := New(); (err != nil) || !reflect.DeepEqual(got.Secret(), tt.want) {
+				t.Errorf("Storage.Secret() = %v, want %v", got, tt.want)
 			}
 		})
 	}

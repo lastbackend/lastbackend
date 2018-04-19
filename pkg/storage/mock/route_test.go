@@ -22,10 +22,11 @@ import (
 	"testing"
 
 	"context"
+	"reflect"
+
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 	"github.com/lastbackend/lastbackend/pkg/storage/storage"
 	"github.com/lastbackend/lastbackend/pkg/storage/store"
-	"reflect"
 )
 
 func TestRouteStorage_Get(t *testing.T) {
@@ -358,7 +359,7 @@ func TestRouteStorage_Insert(t *testing.T) {
 	for _, tt := range tests {
 
 		if err := stg.Clear(ctx); err != nil {
-			t.Errorf("RouteStorage.ListByNamespace() storage setup error = %v", err)
+			t.Errorf("RouteStorage.Insert() storage setup error = %v", err)
 			return
 		}
 
@@ -483,6 +484,72 @@ func TestRouteStorage_Update(t *testing.T) {
 				return
 			}
 
+		})
+	}
+}
+
+func TestRouteStorage_ListSpec(t *testing.T) {
+	var (
+		stg = newRouteStorage()
+		ctx = context.Background()
+		n1  = getRouteAsset("ns1", "test1", "")
+		n2  = getRouteAsset("ns1", "test2", "")
+		nl  = make(map[string]*types.Route, 2)
+		ls  = make(map[string]*types.RouteSpec, 2)
+	)
+
+	nl[stg.keyGet(&n1)] = &n1
+	nl[stg.keyGet(&n2)] = &n2
+	ls[stg.keyGet(&n1)] = &n1.Spec
+	ls[stg.keyGet(&n2)] = &n2.Spec
+
+	type fields struct {
+		stg storage.Route
+	}
+
+	type args struct {
+		ctx context.Context
+	}
+
+	tests := []struct {
+		name    string
+		fields  fields
+		args    args
+		want    map[string]*types.RouteSpec
+		wantErr bool
+	}{
+		{
+			"get route spec list success",
+			fields{stg},
+			args{ctx},
+			ls,
+			false,
+		},
+	}
+
+	for _, tt := range tests {
+
+		if err := stg.Clear(ctx); err != nil {
+			t.Errorf("RouteStorage.ListSpec() storage setup error = %v", err)
+			return
+		}
+
+		for _, n := range nl {
+			if err := stg.Insert(ctx, n); err != nil {
+				t.Errorf("RouteStorage.ListSpec() storage setup error = %v", err)
+				return
+			}
+		}
+
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := stg.ListSpec(tt.args.ctx)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("RouteStorage.ListSpec() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("RouteStorage.ListSpec() = %v, want %v", got, tt.want)
+			}
 		})
 	}
 }
@@ -647,6 +714,41 @@ func TestRouteStorage_WatchSpec(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			if err := tt.fields.stg.WatchSpec(tt.args.ctx, tt.args.route); (err != nil) != tt.wantErr {
 				t.Errorf("RouteStorage.Watch() error = %v, wantErr %v", err, tt.wantErr)
+			}
+		})
+	}
+}
+
+func TestRouteStorage_WatchStatus(t *testing.T) {
+	var (
+		stg = newRouteStorage()
+		ctx = context.Background()
+	)
+
+	type fields struct {
+		stg storage.Route
+	}
+	type args struct {
+		ctx   context.Context
+		route chan *types.Route
+	}
+	tests := []struct {
+		name    string
+		fields  fields
+		args    args
+		wantErr bool
+	}{
+		{
+			"check watch status",
+			fields{stg},
+			args{ctx, make(chan *types.Route)},
+			false,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if err := tt.fields.stg.WatchStatus(tt.args.ctx, tt.args.route); (err != nil) != tt.wantErr {
+				t.Errorf("RouteStorage.WatchStatus() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
 	}

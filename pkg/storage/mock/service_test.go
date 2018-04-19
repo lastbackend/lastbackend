@@ -22,10 +22,11 @@ import (
 	"testing"
 
 	"context"
+	"reflect"
+
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 	"github.com/lastbackend/lastbackend/pkg/storage/storage"
 	"github.com/lastbackend/lastbackend/pkg/storage/store"
-	"reflect"
 )
 
 func TestServiceStorage_Get(t *testing.T) {
@@ -750,6 +751,41 @@ func TestServiceStorage_WatchSpec(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			if err := tt.fields.stg.WatchSpec(tt.args.ctx, tt.args.service); (err != nil) != tt.wantErr {
 				t.Errorf("ServiceStorage.Watch() error = %v, wantErr %v", err, tt.wantErr)
+			}
+		})
+	}
+}
+
+func TestServiceStorage_WatchStatus(t *testing.T) {
+	var (
+		stg = newServiceStorage()
+		ctx = context.Background()
+	)
+
+	type fields struct {
+		stg storage.Service
+	}
+	type args struct {
+		ctx     context.Context
+		service chan *types.Service
+	}
+	tests := []struct {
+		name    string
+		fields  fields
+		args    args
+		wantErr bool
+	}{
+		{
+			"check watch status",
+			fields{stg},
+			args{ctx, make(chan *types.Service)},
+			false,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if err := tt.fields.stg.WatchStatus(tt.args.ctx, tt.args.service); (err != nil) != tt.wantErr {
+				t.Errorf("ServiceStorage.WatchStatus() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
 	}
