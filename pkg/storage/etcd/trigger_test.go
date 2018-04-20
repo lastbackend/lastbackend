@@ -22,6 +22,7 @@ import (
 	"context"
 	"reflect"
 	"testing"
+	"time"
 
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 	"github.com/lastbackend/lastbackend/pkg/storage/storage"
@@ -47,6 +48,8 @@ func TestTriggerStorage_Get(t *testing.T) {
 	type args struct {
 		ctx  context.Context
 		name string
+		ns   string
+		svc  string
 	}
 
 	tests := []struct {
@@ -60,7 +63,7 @@ func TestTriggerStorage_Get(t *testing.T) {
 		{
 			"get trigger info failed",
 			fields{stg},
-			args{ctx, "test2"},
+			args{ctx, "test2", ns1, svc},
 			&d,
 			true,
 			store.ErrEntityNotFound,
@@ -68,10 +71,34 @@ func TestTriggerStorage_Get(t *testing.T) {
 		{
 			"get trigger info successful",
 			fields{stg},
-			args{ctx, "test"},
+			args{ctx, "test", ns1, svc},
 			&d,
 			false,
 			"",
+		},
+		{
+			"get trigger info failed empty namespace",
+			fields{stg},
+			args{ctx, "test", "", svc},
+			&d,
+			true,
+			"namespace can not be empty",
+		},
+		{
+			"get trigger info failed empty service",
+			fields{stg},
+			args{ctx, "test", ns1, ""},
+			&d,
+			true,
+			"service can not be empty",
+		},
+		{
+			"get trigger info failed empty name",
+			fields{stg},
+			args{ctx, "", ns1, svc},
+			&d,
+			true,
+			"name can not be empty",
 		},
 	}
 
@@ -93,22 +120,26 @@ func TestTriggerStorage_Get(t *testing.T) {
 				return
 			}
 
-			got, err := tt.fields.stg.Get(tt.args.ctx, ns1, svc, tt.args.name)
+			got, err := tt.fields.stg.Get(tt.args.ctx, tt.args.ns, tt.args.svc, tt.args.name)
 
 			if err != nil {
 				if tt.wantErr && tt.err != err.Error() {
 					t.Errorf("TriggerStorage.Get() = %v, want %v", err, tt.err)
 					return
 				}
+				if !tt.wantErr {
+					t.Errorf("TriggerStorage.Get() error = %v, want no error", err)
+					return
+				}
 				return
 			}
 
 			if tt.wantErr {
-				t.Errorf("TriggerStorage.Get() error = %v, wantErr %v", err, tt.err)
+				t.Errorf("TriggerStorage.Get() wantErr %v, got none", tt.err)
 				return
 			}
 
-			if !reflect.DeepEqual(got, tt.want) {
+			if !compareTriggers(got, tt.want) {
 				t.Errorf("TriggerStorage.Get() = %v, want %v", got, tt.want)
 			}
 
@@ -159,6 +190,7 @@ func TestTriggerStorage_ListByNamespace(t *testing.T) {
 		args    args
 		want    map[string]*types.Trigger
 		wantErr bool
+		err     string
 	}{
 		{
 			"get namespace list 1 success",
@@ -166,6 +198,7 @@ func TestTriggerStorage_ListByNamespace(t *testing.T) {
 			args{ctx, ns1},
 			nl1,
 			false,
+			"",
 		},
 		{
 			"get namespace list 2 success",
@@ -173,6 +206,7 @@ func TestTriggerStorage_ListByNamespace(t *testing.T) {
 			args{ctx, ns2},
 			nl2,
 			false,
+			"",
 		},
 		{
 			"get namespace empty list success",
@@ -180,6 +214,15 @@ func TestTriggerStorage_ListByNamespace(t *testing.T) {
 			args{ctx, "empty"},
 			nl,
 			false,
+			"",
+		},
+		{
+			"get namespace info failed empty namespace",
+			fields{stg},
+			args{ctx, ""},
+			nl,
+			true,
+			"namespace can not be empty",
 		},
 	}
 
@@ -204,11 +247,22 @@ func TestTriggerStorage_ListByNamespace(t *testing.T) {
 			}
 
 			got, err := stg.ListByNamespace(tt.args.ctx, tt.args.ns)
-			if (err != nil) != tt.wantErr {
-				t.Errorf("TriggerStorage.ListByNamespace() error = %v, wantErr %v", err, tt.wantErr)
+			if err != nil {
+				if tt.wantErr && tt.err != err.Error() {
+					t.Errorf("TriggerStorage.ListByNamespace() error = %v, wantErr %v", err, tt.wantErr)
+					return
+				}
+				if !tt.wantErr {
+					t.Errorf("TriggerStorage.ListByNamespace() error = %v, want no error", err, tt.wantErr)
+				}
 				return
 			}
-			if !reflect.DeepEqual(got, tt.want) {
+			if tt.wantErr {
+				t.Errorf("TriggerStorage.ListByNamespace() want error = %v, got none", tt.err)
+				return
+			}
+
+			if !compareTriggerMaps(got, tt.want) {
 				t.Errorf("TriggerStorage.ListByNamespace() = %v, want %v", got, tt.want)
 			}
 		})
@@ -268,6 +322,7 @@ func TestTriggerStorage_ListByService(t *testing.T) {
 		args    args
 		want    map[string]*types.Trigger
 		wantErr bool
+		err     string
 	}{
 		{
 			"get namespace 1 service 1 list success",
@@ -275,6 +330,7 @@ func TestTriggerStorage_ListByService(t *testing.T) {
 			args{ctx, ns1, sv1},
 			nl1,
 			false,
+			"",
 		},
 		{
 			"get namespace 1 service 2 list success",
@@ -282,6 +338,7 @@ func TestTriggerStorage_ListByService(t *testing.T) {
 			args{ctx, ns1, sv2},
 			nl2,
 			false,
+			"",
 		},
 		{
 			"get namespace 2 service 1 list success",
@@ -289,6 +346,7 @@ func TestTriggerStorage_ListByService(t *testing.T) {
 			args{ctx, ns2, sv1},
 			nl3,
 			false,
+			"",
 		},
 		{
 			"get namespace empty list success",
@@ -296,6 +354,23 @@ func TestTriggerStorage_ListByService(t *testing.T) {
 			args{ctx, "t", "t"},
 			nl,
 			false,
+			"",
+		},
+		{
+			"get namespace info failed empty namespace",
+			fields{stg},
+			args{ctx, "", sv1},
+			nl,
+			true,
+			"namespace can not be empty",
+		},
+		{
+			"get namespace info failed empty service",
+			fields{stg},
+			args{ctx, ns1, ""},
+			nl,
+			true,
+			"service can not be empty",
 		},
 	}
 
@@ -320,13 +395,140 @@ func TestTriggerStorage_ListByService(t *testing.T) {
 			}
 
 			got, err := stg.ListByService(tt.args.ctx, tt.args.ns, tt.args.svc)
-			if (err != nil) != tt.wantErr {
-				t.Errorf("TriggerStorage.ListByService() error = %v, wantErr %v", err, tt.wantErr)
+			if err != nil {
+				if tt.wantErr && tt.err != err.Error() {
+					t.Errorf("TriggerStorage.ListByService() error = %v, wantErr %v", err, tt.wantErr)
+				}
+				if !tt.wantErr {
+					t.Errorf("TriggerStorage.ListByService() error = %v, want no error", err)
+				}
 				return
 			}
-			if !reflect.DeepEqual(got, tt.want) {
+			if tt.wantErr {
+				t.Errorf("TriggerStorage.ListByService() want error = %v, got none", tt.err)
+				return
+			}
+
+			if !compareTriggerMaps(got, tt.want) {
 				t.Errorf("TriggerStorage.ListByService() = %v, want %v", got, tt.want)
 			}
+		})
+	}
+}
+
+func TestTriggerStorage_SetSpec(t *testing.T) {
+
+	initStorage()
+
+	var (
+		ns1 = "ns1"
+		svc = "svc"
+		stg = newTriggerStorage()
+		ctx = context.Background()
+		n1  = getTriggerAsset(ns1, svc, "test1", "")
+		n2  = getTriggerAsset(ns1, svc, "test1", "")
+		n3  = getTriggerAsset(ns1, svc, "test2", "")
+		nl  = make([]*types.Trigger, 0)
+	)
+
+	//TODO change spec for Trigger
+	n2.Spec = types.TriggerSpec{}
+
+	nl0 := append(nl, &n1)
+
+	type fields struct {
+		stg storage.Trigger
+	}
+
+	type args struct {
+		ctx     context.Context
+		trigger *types.Trigger
+	}
+
+	tests := []struct {
+		name    string
+		fields  fields
+		args    args
+		want    *types.Trigger
+		wantErr bool
+		err     string
+	}{
+		{
+			"test successful update",
+			fields{stg},
+			args{ctx, &n2},
+			&n2,
+			false,
+			"",
+		},
+		{
+			"test failed update: nil structure",
+			fields{stg},
+			args{ctx, nil},
+			&n1,
+			true,
+			store.ErrStructArgIsNil,
+		},
+		{
+			"test failed update: entity not found",
+			fields{stg},
+			args{ctx, &n3},
+			&n1,
+			true,
+			store.ErrEntityNotFound,
+		},
+	}
+
+	clear := func() {
+		if err := stg.Clear(ctx); err != nil {
+			t.Errorf("TriggerStorage.SetSpec() storage setup error = %v", err)
+			return
+		}
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+
+			clear()
+			defer clear()
+
+			for _, n := range nl0 {
+				if err := stg.Insert(ctx, n); err != nil {
+					t.Errorf("TriggerStorage.SetSpec() storage setup error = %v", err)
+					return
+				}
+			}
+
+			err := tt.fields.stg.SetSpec(tt.args.ctx, tt.args.trigger)
+			if err != nil {
+				if !tt.wantErr {
+					t.Errorf("TriggerStorage.SetSpec() error = %v, want no error", err.Error())
+					return
+				}
+
+				if tt.wantErr && tt.err != err.Error() {
+					t.Errorf("TriggerStorage.SetSpec() error = %v, want %v", err.Error(), tt.err)
+					return
+				}
+
+				return
+			}
+
+			if tt.wantErr {
+				t.Errorf("TriggerStorage.SetSpec() want error = %v, got none", tt.err)
+				return
+			}
+
+			got, err := tt.fields.stg.Get(tt.args.ctx, tt.args.trigger.Meta.Namespace, tt.args.trigger.Meta.Service, tt.args.trigger.Meta.Name)
+			if err != nil {
+				t.Errorf("TriggerStorage.SetSpec() got Get error %v", err)
+				return
+			}
+			if !compareTriggers(got, tt.want) {
+				t.Errorf("TriggerStorage.SetSpec() = %v, want %v", got, tt.want)
+				return
+			}
+
 		})
 	}
 }
@@ -429,125 +631,16 @@ func TestTriggerStorage_SetStatus(t *testing.T) {
 			}
 
 			if tt.wantErr {
-				t.Errorf("TriggerStorage.SetStatus() error = %v, want %v", err.Error(), tt.err)
+				t.Errorf("TriggerStorage.SetStatus() want error = %v, got none %v", tt.err)
 				return
 			}
 
-			got, _ := tt.fields.stg.Get(tt.args.ctx, tt.args.trigger.Meta.Namespace, tt.args.trigger.Meta.Service, tt.args.trigger.Meta.Name)
-			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("TriggerStorage.SetStatus() = %v, want %v", got, tt.want)
-				return
-			}
-
-		})
-	}
-}
-
-func TestTriggerStorage_SetSpec(t *testing.T) {
-
-	initStorage()
-
-	var (
-		ns1 = "ns1"
-		svc = "svc"
-		stg = newTriggerStorage()
-		ctx = context.Background()
-		n1  = getTriggerAsset(ns1, svc, "test1", "")
-		n2  = getTriggerAsset(ns1, svc, "test1", "")
-		n3  = getTriggerAsset(ns1, svc, "test2", "")
-		nl  = make([]*types.Trigger, 0)
-	)
-
-	n2.Status.State = types.StateReady
-
-	nl0 := append(nl, &n1)
-
-	type fields struct {
-		stg storage.Trigger
-	}
-
-	type args struct {
-		ctx     context.Context
-		trigger *types.Trigger
-	}
-
-	tests := []struct {
-		name    string
-		fields  fields
-		args    args
-		want    *types.Trigger
-		wantErr bool
-		err     string
-	}{
-		{
-			"test successful update",
-			fields{stg},
-			args{ctx, &n2},
-			&n2,
-			false,
-			"",
-		},
-		{
-			"test failed update: nil structure",
-			fields{stg},
-			args{ctx, nil},
-			&n1,
-			true,
-			store.ErrStructArgIsNil,
-		},
-		{
-			"test failed update: entity not found",
-			fields{stg},
-			args{ctx, &n3},
-			&n1,
-			true,
-			store.ErrEntityNotFound,
-		},
-	}
-
-	clear := func() {
-		if err := stg.Clear(ctx); err != nil {
-			t.Errorf("TriggerStorage.SetStatus() storage setup error = %v", err)
-			return
-		}
-	}
-
-	for _, tt := range tests {
-
-		t.Run(tt.name, func(t *testing.T) {
-
-			clear()
-			defer clear()
-
-			for _, n := range nl0 {
-				if err := stg.Insert(ctx, n); err != nil {
-					t.Errorf("TriggerStorage.SetStatus() storage setup error = %v", err)
-					return
-				}
-			}
-
-			err := tt.fields.stg.SetStatus(tt.args.ctx, tt.args.trigger)
+			got, err := tt.fields.stg.Get(tt.args.ctx, tt.args.trigger.Meta.Namespace, tt.args.trigger.Meta.Service, tt.args.trigger.Meta.Name)
 			if err != nil {
-				if !tt.wantErr {
-					t.Errorf("TriggerStorage.SetStatus() error = %v, want no error", err.Error())
-					return
-				}
-
-				if tt.wantErr && tt.err != err.Error() {
-					t.Errorf("TriggerStorage.SetStatus() error = %v, want %v", err.Error(), tt.err)
-					return
-				}
-
+				t.Errorf("TriggerStorage.SetStatus() got Get error %v", err)
 				return
 			}
-
-			if tt.wantErr {
-				t.Errorf("TriggerStorage.SetStatus() error = %v, want %v", err.Error(), tt.err)
-				return
-			}
-
-			got, _ := tt.fields.stg.Get(tt.args.ctx, tt.args.trigger.Meta.Namespace, tt.args.trigger.Meta.Service, tt.args.trigger.Meta.Name)
-			if !reflect.DeepEqual(got, tt.want) {
+			if !compareTriggers(got, tt.want) {
 				t.Errorf("TriggerStorage.SetStatus() = %v, want %v", got, tt.want)
 				return
 			}
@@ -635,10 +728,8 @@ func TestTriggerStorage_Insert(t *testing.T) {
 				}
 
 				if tt.wantErr && tt.err != err.Error() {
-					t.Errorf("TriggerStorage.Insert() error = %v, want %v", err.Error(), tt.err)
-					return
+					t.Errorf("TriggerStorage.Insert() want error = %v, got none", tt.err)
 				}
-
 				return
 			}
 
@@ -739,20 +830,21 @@ func TestTriggerStorage_Update(t *testing.T) {
 
 				if tt.wantErr && tt.err != err.Error() {
 					t.Errorf("TriggerStorage.Update() error = %v, want %v", err.Error(), tt.err)
-					return
 				}
-
 				return
 			}
 
 			if tt.wantErr {
-				t.Errorf("TriggerStorage.Update() error = %v, want %v", err, tt.err)
+				t.Errorf("TriggerStorage.Update() want error = %v, got none", tt.err)
 				return
 			}
 
-			got, _ := tt.fields.stg.Get(tt.args.ctx, ns1, svc, tt.args.trigger.Meta.Name)
-			tt.want.Meta.Updated = got.Meta.Updated
-			if !reflect.DeepEqual(got, tt.want) {
+			got, err := tt.fields.stg.Get(tt.args.ctx, ns1, svc, tt.args.trigger.Meta.Name)
+			if err != nil {
+				t.Errorf("TriggerStorage.Update() got Get error %v", err)
+				return
+			}
+			if !compareTriggers(got, tt.want) {
 				t.Errorf("TriggerStorage.Update() = %v, want %v", got, tt.want)
 				return
 			}
@@ -844,14 +936,12 @@ func TestTriggerStorage_Remove(t *testing.T) {
 
 				if tt.wantErr && tt.err != err.Error() {
 					t.Errorf("TriggerStorage.Remove() error = %v, want %v", err.Error(), tt.err)
-					return
 				}
-
 				return
 			}
 
 			if tt.wantErr {
-				t.Errorf("TriggerStorage.Remove() error = %v, want %v", err, tt.err)
+				t.Errorf("TriggerStorage.Remove() want error = %v, got none", tt.err)
 				return
 			}
 
@@ -870,17 +960,19 @@ func TestTriggerStorage_Watch(t *testing.T) {
 	initStorage()
 
 	var (
-		stg = newTriggerStorage()
-		ctx = context.Background()
+		err      error
+		stg      = newTriggerStorage()
+		ctx      = context.Background()
+		n        = getTriggerAsset("ns1", "svc", "test1", "")
+		triggerC = make(chan *types.Trigger)
+		stopC    = make(chan int)
 	)
 
 	type fields struct {
-		stg storage.Trigger
 	}
 	type args struct {
-		ctx     context.Context
-		trigger chan *types.Trigger
 	}
+
 	tests := []struct {
 		name    string
 		fields  fields
@@ -888,15 +980,67 @@ func TestTriggerStorage_Watch(t *testing.T) {
 		wantErr bool
 	}{
 		{
-			"check watch",
-			fields{stg},
-			args{ctx, make(chan *types.Trigger)},
+			"check trigger watch",
+			fields{},
+			args{},
 			false,
 		},
+	}
+
+	clear := func() {
+		if err := stg.Clear(ctx); err != nil {
+			t.Errorf("TriggerStorage.Watch() storage setup error = %v", err)
+			return
+		}
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 
+			clear()
+			defer clear()
+
+			err = stg.Insert(ctx, &n)
+			startW := make(chan int, 1)
+			if err != nil {
+				startW <- 2
+			} else {
+				//start watch after successfull insert
+				startW <- 1
+			}
+			select {
+			case res := <-startW:
+				if res != 1 {
+					t.Errorf("TriggerStorage.Watch() insert error = %v", err)
+					return
+				}
+				//run watch go function
+				go func() {
+					err = stg.Watch(ctx, triggerC)
+					if err != nil {
+						t.Errorf("TriggerStorage.Watch() storage setup error = %v", err)
+						return
+					}
+				}()
+			}
+			//run go function to cause watch event
+			go func() {
+				time.Sleep(1 * time.Second)
+				err = stg.Update(ctx, &n)
+				time.Sleep(1 * time.Second)
+				stopC <- 1
+				return
+			}()
+
+			//wait for result
+			select {
+			case <-stopC:
+				t.Errorf("TriggerStorage.Watch() update error =%v", err)
+				return
+
+			case <-triggerC:
+				t.Log("TriggerStorage.Watch() is working")
+				return
+			}
 		})
 	}
 }
@@ -906,17 +1050,19 @@ func TestTriggerStorage_WatchSpec(t *testing.T) {
 	initStorage()
 
 	var (
-		stg = newTriggerStorage()
-		ctx = context.Background()
+		err      error
+		stg      = newTriggerStorage()
+		ctx      = context.Background()
+		n        = getTriggerAsset("ns1", "svc", "test1", "")
+		triggerC = make(chan *types.Trigger)
+		stopC    = make(chan int)
 	)
 
 	type fields struct {
-		stg storage.Trigger
 	}
 	type args struct {
-		ctx     context.Context
-		trigger chan *types.Trigger
 	}
+
 	tests := []struct {
 		name    string
 		fields  fields
@@ -924,15 +1070,157 @@ func TestTriggerStorage_WatchSpec(t *testing.T) {
 		wantErr bool
 	}{
 		{
-			"check watch",
-			fields{stg},
-			args{ctx, make(chan *types.Trigger)},
+			"check trigger watch spec",
+			fields{},
+			args{},
 			false,
 		},
+	}
+
+	clear := func() {
+		if err := stg.Clear(ctx); err != nil {
+			t.Errorf("TriggerStorage.WatchSpec() storage setup error = %v", err)
+			return
+		}
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 
+			clear()
+			defer clear()
+
+			err = stg.Insert(ctx, &n)
+			startW := make(chan int, 1)
+			if err != nil {
+				startW <- 2
+			} else {
+				//start watch after successfull insert
+				startW <- 1
+			}
+			select {
+			case res := <-startW:
+				if res != 1 {
+					t.Errorf("TriggerStorage.WatchSpec() insert error = %v", err)
+					return
+				}
+				//run watch go function
+				go func() {
+					err = stg.WatchSpec(ctx, triggerC)
+					if err != nil {
+						t.Errorf("TriggerStorage.WatchSpec() storage setup error = %v", err)
+						return
+					}
+				}()
+			}
+			//run go function to cause watch event
+			go func() {
+				time.Sleep(1 * time.Second)
+				err = stg.SetSpec(ctx, &n)
+				time.Sleep(1 * time.Second)
+				stopC <- 1
+				return
+			}()
+
+			//wait for result
+			select {
+			case <-stopC:
+				t.Errorf("TriggerStorage.WatchSpec() update error =%v", err)
+				return
+
+			case <-triggerC:
+				t.Log("TriggerStorage.WatchSpec() is working")
+				return
+			}
+		})
+	}
+}
+
+func TestTriggerStorage_WatchStatus(t *testing.T) {
+
+	initStorage()
+
+	var (
+		err      error
+		stg      = newTriggerStorage()
+		ctx      = context.Background()
+		n        = getTriggerAsset("ns1", "svc", "test1", "")
+		triggerC = make(chan *types.Trigger)
+		stopC    = make(chan int)
+	)
+
+	type fields struct {
+	}
+	type args struct {
+	}
+
+	tests := []struct {
+		name    string
+		fields  fields
+		args    args
+		wantErr bool
+	}{
+		{
+			"check trigger watch status",
+			fields{},
+			args{},
+			false,
+		},
+	}
+
+	clear := func() {
+		if err := stg.Clear(ctx); err != nil {
+			t.Errorf("TriggerStorage.WatchStatus() storage setup error = %v", err)
+			return
+		}
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+
+			clear()
+			defer clear()
+
+			err = stg.Insert(ctx, &n)
+			startW := make(chan int, 1)
+			if err != nil {
+				startW <- 2
+			} else {
+				//start watch after successfull insert
+				startW <- 1
+			}
+			select {
+			case res := <-startW:
+				if res != 1 {
+					t.Errorf("TriggerStorage.WatchStatus() insert error = %v", err)
+					return
+				}
+				//run watch go function
+				go func() {
+					err = stg.WatchStatus(ctx, triggerC)
+					if err != nil {
+						t.Errorf("TriggerStorage.WatchStatus() storage setup error = %v", err)
+						return
+					}
+				}()
+			}
+			//run go function to cause watch event
+			go func() {
+				time.Sleep(1 * time.Second)
+				err = stg.SetStatus(ctx, &n)
+				time.Sleep(1 * time.Second)
+				stopC <- 1
+				return
+			}()
+
+			//wait for result
+			select {
+			case <-stopC:
+				t.Errorf("TriggerStorage.WatchStatus() update error =%v", err)
+				return
+
+			case <-triggerC:
+				t.Log("TriggerStorage.WatchStatus() is working")
+				return
+			}
 		})
 	}
 }
@@ -965,5 +1253,30 @@ func getTriggerAsset(namespace, service, name, desc string) types.Trigger {
 	n.Meta.Service = service
 	n.Meta.Description = desc
 
+	n.Meta.Created = time.Now()
+
 	return n
+}
+
+//compare two secret structures
+func compareTriggers(got, want *types.Trigger) bool {
+	result := false
+	if compareMeta(got.Meta.Meta, want.Meta.Meta) &&
+		(got.Meta.Service == want.Meta.Service) &&
+		(got.Meta.Namespace == want.Meta.Namespace) &&
+		reflect.DeepEqual(got.Spec, want.Spec) &&
+		reflect.DeepEqual(got.Status, want.Status) {
+		result = true
+	}
+
+	return result
+}
+
+func compareTriggerMaps(got, want map[string]*types.Trigger) bool {
+	for k, v := range got {
+		if !compareTriggers(v, want[k]) {
+			return false
+		}
+	}
+	return true
 }

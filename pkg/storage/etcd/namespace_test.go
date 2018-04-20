@@ -22,6 +22,7 @@ import (
 	"context"
 	"reflect"
 	"testing"
+	"time"
 
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 	"github.com/lastbackend/lastbackend/pkg/storage/storage"
@@ -71,6 +72,14 @@ func TestNamespaceStorage_Get(t *testing.T) {
 			false,
 			"",
 		},
+		{
+			"get namespace info failed empty name",
+			fields{stg},
+			args{ctx, ""},
+			&n,
+			true,
+			"name can not be empty",
+		},
 	}
 
 	clear := func() {
@@ -92,21 +101,23 @@ func TestNamespaceStorage_Get(t *testing.T) {
 			}
 
 			got, err := tt.fields.stg.Get(tt.args.ctx, tt.args.name)
-
 			if err != nil {
 				if tt.wantErr && tt.err != err.Error() {
 					t.Errorf("NamespaceStorage.Get() = %v, want %v", err, tt.err)
 					return
 				}
+				if !tt.wantErr {
+					t.Errorf("NamespaceStorage.Get() error = %v, want no error", err)
+				}
 				return
 			}
 
 			if tt.wantErr {
-				t.Errorf("NamespaceStorage.Get() error = %v, wantErr %v", err, tt.err)
+				t.Errorf("NamespaceStorage.Get() want error = %v, got none", tt.err)
 				return
 			}
 
-			if !reflect.DeepEqual(got, tt.want) {
+			if !compareNamespaces(got, tt.want) {
 				t.Errorf("NamespaceStorage.Get() = %v, want %v", got, tt.want)
 			}
 
@@ -178,7 +189,7 @@ func TestNamespaceStorage_List(t *testing.T) {
 				t.Errorf("NamespaceStorage.List() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
-			if !reflect.DeepEqual(got, tt.want) {
+			if !compareNamespaceMaps(got, tt.want) {
 				t.Errorf("NamespaceStorage.List() = %v, want %v", got, tt.want)
 			}
 		})
@@ -261,14 +272,12 @@ func TestNamespaceStorage_Insert(t *testing.T) {
 
 				if tt.wantErr && tt.err != err.Error() {
 					t.Errorf("NamespaceStorage.Insert() error = %v, want %v", err.Error(), tt.err)
-					return
 				}
-
 				return
 			}
 
 			if tt.wantErr {
-				t.Errorf("NamespaceStorage.Insert() error = %v, want %v", err.Error(), tt.err)
+				t.Errorf("NamespaceStorage.Insert() want error = %v, got none", tt.err)
 				return
 			}
 		})
@@ -357,24 +366,21 @@ func TestNamespaceStorage_Update(t *testing.T) {
 
 				if tt.wantErr && tt.err != err.Error() {
 					t.Errorf("NamespaceStorage.Update() error = %v, want %v", err.Error(), tt.err)
-					return
 				}
-
 				return
 			}
 
 			if tt.wantErr {
-				t.Errorf("NamespaceStorage.Update() error = %v, want %v", err.Error(), tt.err)
+				t.Errorf("NamespaceStorage.Update() want error = %v, got none", tt.err)
 				return
 			}
 
 			got, err := tt.fields.stg.Get(tt.args.ctx, tt.args.namespace.Meta.Name)
 			if err != nil {
-				t.Errorf("NamespaceStorage.Update() = %v, want %v", err, tt.want)
+				t.Errorf("NamespaceStorage.Update() got Get error= %v", err)
 				return
 			}
-			tt.want.Meta.Updated = got.Meta.Updated
-			if !reflect.DeepEqual(got, tt.want) {
+			if !compareNamespaces(got, tt.want) {
 				t.Errorf("NamespaceStorage.Update() = %v, want %v", got, tt.want)
 				return
 			}
@@ -464,14 +470,12 @@ func TestNamespaceStorage_Remove(t *testing.T) {
 
 				if tt.wantErr && tt.err != err.Error() {
 					t.Errorf("NamespaceStorage.Remove() error = %v, want %v", err.Error(), tt.err)
-					return
 				}
-
 				return
 			}
 
 			if tt.wantErr {
-				t.Errorf("NamespaceStorage.Remove() error = %v, want %v", err.Error(), tt.err)
+				t.Errorf("NamespaceStorage.Remove() want error = %v, got none", tt.err)
 				return
 			}
 
@@ -511,5 +515,29 @@ func getNamespaceAsset(name, desc string) types.Namespace {
 	n.Meta.Description = desc
 	n.SelfLink()
 
+	n.Meta.Created = time.Now()
+
 	return n
+}
+
+//compare two namespace structures
+func compareNamespaces(got, want *types.Namespace) bool {
+	result := false
+	if compareMeta(got.Meta.Meta, want.Meta.Meta) &&
+		(got.Meta.Endpoint == want.Meta.Endpoint) &&
+		(got.Meta.Type == want.Meta.Type) &&
+		reflect.DeepEqual(got.Spec, want.Spec) {
+		result = true
+	}
+
+	return result
+}
+
+func compareNamespaceMaps(got, want map[string]*types.Namespace) bool {
+	for k, v := range got {
+		if !compareNamespaces(v, want[k]) {
+			return false
+		}
+	}
+	return true
 }

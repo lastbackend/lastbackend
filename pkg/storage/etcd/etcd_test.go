@@ -20,29 +20,50 @@ package etcd
 
 import (
 	"context"
+	"reflect"
+	"testing"
+
+	"github.com/coreos/etcd/clientv3"
+	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 	"github.com/lastbackend/lastbackend/pkg/log"
 	"github.com/lastbackend/lastbackend/pkg/storage/etcd/v3"
 	"github.com/lastbackend/lastbackend/pkg/storage/storage"
 	"github.com/spf13/viper"
-	"reflect"
-	"testing"
 )
 
 func TestStorage_Cluster(t *testing.T) {
 
 	tests := []struct {
-		name string
-		want storage.Cluster
+		name    string
+		want    storage.Cluster
+		wantErr bool
 	}{
-		{"cluster storage",
+		{"Cluster storage",
 			newClusterStorage(),
+			false,
+		},
+		{"Cluster storage nil",
+			nil,
+			true,
 		},
 	}
 
 	for _, tt := range tests {
+		//in order to prevent "no available endpoints" error
+		initV3DummyConf()
 		t.Run(tt.name, func(t *testing.T) {
-			if got, err := New(); (err != nil) || !reflect.DeepEqual(got.Cluster(), tt.want) {
+			got, err := New()
+			if err != nil || (!tt.wantErr && !reflect.DeepEqual(got.Cluster(), tt.want)) {
 				t.Errorf("Storage.Cluster() = %v, want %v", got.Cluster(), tt.want)
+				return
+			}
+
+			if tt.wantErr {
+				got = nil
+				if !reflect.DeepEqual(got.Cluster(), tt.want) {
+					t.Errorf("Storage.Cluster() = %v, want %v", got.Cluster(), tt.want)
+					return
+				}
 			}
 		})
 	}
@@ -50,37 +71,72 @@ func TestStorage_Cluster(t *testing.T) {
 
 func TestStorage_Deployment(t *testing.T) {
 	tests := []struct {
-		name string
-		want storage.Deployment
+		name    string
+		want    storage.Deployment
+		wantErr bool
 	}{
 		{"Deployment storage",
 			newDeploymentStorage(),
+			false,
+		},
+		{"Deployment storage nil",
+			nil,
+			true,
 		},
 	}
 
 	for _, tt := range tests {
+		//in order to prevent "no available endpoints" error
+		initV3DummyConf()
 		t.Run(tt.name, func(t *testing.T) {
-			if got, err := New(); (err != nil) || !reflect.DeepEqual(got.Deployment(), tt.want) {
+			got, err := New()
+			if err != nil || (!tt.wantErr && !reflect.DeepEqual(got.Deployment(), tt.want)) {
 				t.Errorf("Storage.Deployment() = %v, want %v", got.Deployment(), tt.want)
+				return
 			}
+
+			if tt.wantErr {
+				got = nil
+				if !reflect.DeepEqual(got.Deployment(), tt.want) {
+					t.Errorf("Storage.Deployment() = %v, want %v", got.Deployment(), tt.want)
+				}
+			}
+
 		})
 	}
 }
 
 func TestStorage_Trigger(t *testing.T) {
 	tests := []struct {
-		name string
-		want storage.Trigger
+		name    string
+		want    storage.Trigger
+		wantErr bool
 	}{
-		{"cluster storage",
+		{"Trigger storage",
 			newTriggerStorage(),
+			false,
+		},
+		{"Trigger storage nil",
+			nil,
+			true,
 		},
 	}
 
 	for _, tt := range tests {
+		//in order to prevent "no available endpoints" error
+		initV3DummyConf()
 		t.Run(tt.name, func(t *testing.T) {
-			if got, err := New(); (err != nil) || !reflect.DeepEqual(got.Trigger(), tt.want) {
+			got, err := New()
+			if err != nil || (!tt.wantErr && !reflect.DeepEqual(got.Trigger(), tt.want)) {
 				t.Errorf("Storage.Trigger() = %v, want %v", got.Trigger(), tt.want)
+				return
+			}
+
+			if tt.wantErr {
+				got = nil
+				if !reflect.DeepEqual(got.Trigger(), tt.want) {
+					t.Errorf("Storage.Trigger() = %v, want %v", got.Trigger(), tt.want)
+				}
 			}
 		})
 	}
@@ -88,18 +144,107 @@ func TestStorage_Trigger(t *testing.T) {
 
 func TestStorage_Node(t *testing.T) {
 	tests := []struct {
-		name string
-		want storage.Node
+		name    string
+		want    storage.Node
+		wantErr bool
 	}{
 		{"Node storage",
 			newNodeStorage(),
+			false,
+		},
+		{"Node storage nil",
+			nil,
+			true,
 		},
 	}
 
 	for _, tt := range tests {
+		//in order to prevent "no available endpoints" error
+		initV3DummyConf()
 		t.Run(tt.name, func(t *testing.T) {
-			if got, err := New(); (err != nil) || !reflect.DeepEqual(got.Node(), tt.want) {
+			got, err := New()
+			if err != nil || (!tt.wantErr && !reflect.DeepEqual(got.Node(), tt.want)) {
 				t.Errorf("Storage.Node() = %v, want %v", got.Node(), tt.want)
+				return
+			}
+
+			if tt.wantErr {
+				got = nil
+				if !reflect.DeepEqual(got.Node(), tt.want) {
+					t.Errorf("Storage.Node() = %v, want %v", got.Node(), tt.want)
+				}
+			}
+		})
+	}
+}
+
+func TestStorage_Ingress(t *testing.T) {
+	tests := []struct {
+		name    string
+		want    storage.Ingress
+		wantErr bool
+	}{
+		{"Ingress storage",
+			newIngressStorage(),
+			false,
+		},
+		{"Ingress storage nil",
+			nil,
+			true,
+		},
+	}
+
+	for _, tt := range tests {
+		//in order to prevent "no available endpoints" error
+		initV3DummyConf()
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := New()
+			if err != nil || (!tt.wantErr && !reflect.DeepEqual(got.Ingress(), tt.want)) {
+				t.Errorf("Storage.Ingress() = %v, want %v", got.Ingress(), tt.want)
+				return
+			}
+
+			if tt.wantErr {
+				got = nil
+				if !reflect.DeepEqual(got.Ingress(), tt.want) {
+					t.Errorf("Storage.Ingress() = %v, want %v", got.Ingress(), tt.want)
+				}
+			}
+		})
+	}
+}
+
+func TestStorage_Secret(t *testing.T) {
+	tests := []struct {
+		name    string
+		want    storage.Secret
+		wantErr bool
+	}{
+		{"Secret storage",
+			newSecretStorage(),
+			false,
+		},
+		{"Secret storage nil",
+			nil,
+			true,
+		},
+	}
+
+	for _, tt := range tests {
+		//in order to prevent "no available endpoints" error
+		initV3DummyConf()
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := New()
+			if err != nil || (!tt.wantErr && !reflect.DeepEqual(got.Secret(), tt.want)) {
+				t.Errorf("Storage.Secret() = %v, want %v", got.Secret(), tt.want)
+				return
+			}
+
+			if tt.wantErr {
+				got = nil
+				if !reflect.DeepEqual(got.Secret(), tt.want) {
+					t.Errorf("Storage.Secret() = %v, want %v", got.Secret(), tt.want)
+				}
 			}
 		})
 	}
@@ -107,18 +252,35 @@ func TestStorage_Node(t *testing.T) {
 
 func TestStorage_Namespace(t *testing.T) {
 	tests := []struct {
-		name string
-		want storage.Namespace
+		name    string
+		want    storage.Namespace
+		wantErr bool
 	}{
 		{"Namespace storage",
 			newNamespaceStorage(),
+			false,
+		},
+		{"Namespace storage nil",
+			nil,
+			true,
 		},
 	}
 
 	for _, tt := range tests {
+		//in order to prevent "no available endpoints" error
+		initV3DummyConf()
 		t.Run(tt.name, func(t *testing.T) {
-			if got, err := New(); (err != nil) || !reflect.DeepEqual(got.Namespace(), tt.want) {
+			got, err := New()
+			if err != nil || (!tt.wantErr && !reflect.DeepEqual(got.Namespace(), tt.want)) {
 				t.Errorf("Storage.Namespace() = %v, want %v", got.Namespace(), tt.want)
+				return
+			}
+
+			if tt.wantErr {
+				got = nil
+				if !reflect.DeepEqual(got.Namespace(), tt.want) {
+					t.Errorf("Storage.Namespace() = %v, want %v", got.Namespace(), tt.want)
+				}
 			}
 		})
 	}
@@ -126,18 +288,35 @@ func TestStorage_Namespace(t *testing.T) {
 
 func TestStorage_Route(t *testing.T) {
 	tests := []struct {
-		name string
-		want storage.Route
+		name    string
+		want    storage.Route
+		wantErr bool
 	}{
 		{"Route storage",
 			newRouteStorage(),
+			false,
+		},
+		{"Route storage nil",
+			nil,
+			true,
 		},
 	}
 
 	for _, tt := range tests {
+		//in order to prevent "no available endpoints" error
+		initV3DummyConf()
 		t.Run(tt.name, func(t *testing.T) {
-			if got, err := New(); (err != nil) || !reflect.DeepEqual(got.Route(), tt.want) {
+			got, err := New()
+			if err != nil || (!tt.wantErr && !reflect.DeepEqual(got.Route(), tt.want)) {
 				t.Errorf("Storage.Route() = %v, want %v", got.Route(), tt.want)
+				return
+			}
+
+			if tt.wantErr {
+				got = nil
+				if !reflect.DeepEqual(got.Route(), tt.want) {
+					t.Errorf("Storage.Route() = %v, want %v", got.Route(), tt.want)
+				}
 			}
 		})
 	}
@@ -145,18 +324,35 @@ func TestStorage_Route(t *testing.T) {
 
 func TestStorage_Pod(t *testing.T) {
 	tests := []struct {
-		name string
-		want storage.Pod
+		name    string
+		want    storage.Pod
+		wantErr bool
 	}{
 		{"Pod storage",
 			newPodStorage(),
+			false,
+		},
+		{"Pod storage nil",
+			nil,
+			true,
 		},
 	}
 
 	for _, tt := range tests {
+		//in order to prevent "no available endpoints" error
+		initV3DummyConf()
 		t.Run(tt.name, func(t *testing.T) {
-			if got, err := New(); (err != nil) || !reflect.DeepEqual(got.Pod(), tt.want) {
+			got, err := New()
+			if err != nil || (!tt.wantErr && !reflect.DeepEqual(got.Pod(), tt.want)) {
 				t.Errorf("Storage.Pod() = %v, want %v", got.Pod(), tt.want)
+				return
+			}
+
+			if tt.wantErr {
+				got = nil
+				if !reflect.DeepEqual(got.Pod(), tt.want) {
+					t.Errorf("Storage.Pod() = %v, want %v", got.Pod(), tt.want)
+				}
 			}
 		})
 	}
@@ -164,18 +360,35 @@ func TestStorage_Pod(t *testing.T) {
 
 func TestStorage_Service(t *testing.T) {
 	tests := []struct {
-		name string
-		want storage.Service
+		name    string
+		want    storage.Service
+		wantErr bool
 	}{
 		{"Service storage",
 			newServiceStorage(),
+			false,
+		},
+		{"Service storage nil",
+			nil,
+			true,
 		},
 	}
 
 	for _, tt := range tests {
+		//in order to prevent "no available endpoints" error
+		initV3DummyConf()
 		t.Run(tt.name, func(t *testing.T) {
-			if got, err := New(); (err != nil) || !reflect.DeepEqual(got.Service(), tt.want) {
+			got, err := New()
+			if err != nil || (!tt.wantErr && !reflect.DeepEqual(got.Service(), tt.want)) {
 				t.Errorf("Storage.Service() = %v, want %v", got.Service(), tt.want)
+				return
+			}
+
+			if tt.wantErr {
+				got = nil
+				if !reflect.DeepEqual(got.Service(), tt.want) {
+					t.Errorf("Storage.Service() = %v, want %v", got.Service(), tt.want)
+				}
 			}
 		})
 	}
@@ -184,18 +397,35 @@ func TestStorage_Service(t *testing.T) {
 func TestStorage_Volume(t *testing.T) {
 
 	tests := []struct {
-		name string
-		want storage.Volume
+		name    string
+		want    storage.Volume
+		wantErr bool
 	}{
 		{"Volume storage",
 			newVolumeStorage(),
+			false,
+		},
+		{"Volume storage nil",
+			nil,
+			true,
 		},
 	}
 
 	for _, tt := range tests {
+		//in order to prevent "no available endpoints" error
+		initV3DummyConf()
 		t.Run(tt.name, func(t *testing.T) {
-			if got, err := New(); (err != nil) || !reflect.DeepEqual(got.Volume(), tt.want) {
+			got, err := New()
+			if err != nil || (!tt.wantErr && !reflect.DeepEqual(got.Volume(), tt.want)) {
 				t.Errorf("Storage.Volume() = %v, want %v", got.Volume(), tt.want)
+				return
+			}
+
+			if tt.wantErr {
+				got = nil
+				if !reflect.DeepEqual(got.Volume(), tt.want) {
+					t.Errorf("Storage.Volume() = %v, want %v", got.Volume(), tt.want)
+				}
 			}
 		})
 	}
@@ -203,18 +433,35 @@ func TestStorage_Volume(t *testing.T) {
 
 func TestStorage_System(t *testing.T) {
 	tests := []struct {
-		name string
-		want storage.System
+		name    string
+		want    storage.System
+		wantErr bool
 	}{
 		{"System storage",
 			newSystemStorage(),
+			false,
+		},
+		{"System storage nil",
+			nil,
+			true,
 		},
 	}
 
 	for _, tt := range tests {
+		//in order to prevent "no available endpoints" error
+		initV3DummyConf()
 		t.Run(tt.name, func(t *testing.T) {
-			if got, err := New(); (err != nil) || !reflect.DeepEqual(got.System(), tt.want) {
+			got, err := New()
+			if err != nil || (!tt.wantErr && !reflect.DeepEqual(got.System(), tt.want)) {
 				t.Errorf("Storage.System() = %v, want %v", got.System(), tt.want)
+				return
+			}
+
+			if tt.wantErr {
+				got = nil
+				if !reflect.DeepEqual(got.System(), tt.want) {
+					t.Errorf("Storage.System() = %v, want %v", got.System(), tt.want)
+				}
 			}
 		})
 	}
@@ -259,7 +506,8 @@ func Test_getClient(t *testing.T) {
 		args    args
 		wantErr bool
 	}{
-		{"test get client dummy",
+		{
+			"test get client dummy",
 			args{context.Background()},
 			false,
 		},
@@ -282,20 +530,89 @@ func Test_getClient(t *testing.T) {
 	}
 }
 
+//Test connect to etcd
+func Test_clientV3Connect(t *testing.T) {
+
+	type args struct {
+		ctx context.Context
+	}
+	tests := []struct {
+		name    string
+		args    args
+		wantErr bool
+		err     error
+	}{
+		{ //should be first!
+			"test client v3 connect fail",
+			args{context.Background()},
+			true,
+			clientv3.ErrNoAvailableEndpoints,
+		},
+		{
+			"test client v3 connect successfull",
+			args{context.Background()},
+			false,
+			nil,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if !tt.wantErr {
+				initV3DummyConf()
+			} else {
+				clearV3Dummyconf()
+			}
+
+			_, _, err := v3.GetClient(context.Background())
+
+			if err != nil {
+				if !tt.wantErr {
+					t.Errorf("clientV3Connect() got error %v, but shouldn't", err)
+					return
+				}
+				if tt.wantErr && (err != tt.err) {
+					t.Errorf("clientV3Connect() = %v, want = %v", err, tt.err)
+				}
+			}
+		})
+	}
+
+}
+
 func initStorage() {
 
 	var (
 		err error
 	)
-
-	cfg := v3.Config{}
-	cfg.Prefix = "lstbknd"
-	cfg.Endpoints = []string{"127.0.0.1:2379"}
-	viper.Set("etcd", cfg)
+	//move dummy conf init to func
+	initV3DummyConf()
 
 	if c.store, c.dfunc, err = v3.GetClient(context.Background()); err != nil {
 		log.Errorf("etcd: store initialize err: %s", err)
 		return
 	}
 
+}
+
+func initV3DummyConf() {
+	cfg := v3.Config{}
+	cfg.Prefix = "lstbknd"
+	cfg.Endpoints = []string{"127.0.0.1:2379"}
+	viper.Set("etcd", cfg)
+}
+func clearV3Dummyconf() {
+	cfg := v3.Config{}
+	viper.Set("etcd", cfg)
+}
+
+func compareMeta(got, want types.Meta) bool {
+	result := false
+	if (got.Name == want.Name) &&
+		(got.Description == want.Description) &&
+		(got.SelfLink == want.SelfLink) &&
+		reflect.DeepEqual(got.Labels, want.Labels) {
+		result = true
+	}
+
+	return result
 }

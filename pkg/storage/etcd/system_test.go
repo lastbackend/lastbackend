@@ -49,11 +49,19 @@ func TestSystemStorage_ProcessSet(t *testing.T) {
 		fields  fields
 		args    args
 		wantErr bool
+		err     string
 	}{
 		{"dummy test",
 			fields{stg},
 			args{ctx, &p},
 			false,
+			"",
+		},
+		{"test process nil",
+			fields{stg},
+			args{ctx, nil},
+			true,
+			"process can not be empty",
 		},
 	}
 
@@ -71,8 +79,15 @@ func TestSystemStorage_ProcessSet(t *testing.T) {
 			clear()
 			defer clear()
 
-			if err := stg.ProcessSet(tt.args.ctx, tt.args.process); (err != nil) != tt.wantErr {
-				t.Errorf("SystemStorage.ProcessSet() error = %v, wantErr %v", err, tt.wantErr)
+			err := stg.ProcessSet(tt.args.ctx, tt.args.process)
+			if err != nil {
+				if tt.wantErr && tt.err != err.Error() {
+					t.Errorf("SystemStorage.ProcessSet() error = %v, wantErr %v", err, tt.wantErr)
+					return
+				}
+				if !tt.wantErr {
+					t.Errorf("SystemStorage.ProcessSet() error = %v, wantErr %v", err, tt.wantErr)
+				}
 			}
 		})
 	}
@@ -100,11 +115,19 @@ func TestSystemStorage_Elect(t *testing.T) {
 		fields  fields
 		args    args
 		wantErr bool
+		err     string
 	}{
 		{"dummy test",
 			fields{stg},
 			args{ctx, &p},
 			false,
+			"",
+		},
+		{"test process nil",
+			fields{stg},
+			args{ctx, nil},
+			true,
+			"process can not be empty",
 		},
 	}
 
@@ -121,8 +144,19 @@ func TestSystemStorage_Elect(t *testing.T) {
 
 			clear()
 			defer clear()
-
-			if b, err := stg.Elect(tt.args.ctx, tt.args.process); !b || (err != nil) != tt.wantErr {
+			b, err := stg.Elect(tt.args.ctx, tt.args.process)
+			if err != nil {
+				if tt.wantErr && tt.err != err.Error() {
+					t.Errorf("SystemStorage.Elect() error = %v, wantErr %v", err, tt.wantErr)
+					return
+				}
+				if !tt.wantErr {
+					t.Errorf("SystemStorage.Elect() error = %v, wantErr %v", err, tt.wantErr)
+					return
+				}
+				return
+			}
+			if !b {
 				t.Errorf("SystemStorage.Elect() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
@@ -153,11 +187,19 @@ func TestSystemStorage_ElectUpdate(t *testing.T) {
 		fields  fields
 		args    args
 		wantErr bool
+		err     string
 	}{
 		{"dummy test",
 			fields{stg},
 			args{ctx, &p},
 			false,
+			"",
+		},
+		{"test process nil",
+			fields{stg},
+			args{ctx, nil},
+			true,
+			"process can not be empty",
 		},
 	}
 
@@ -175,13 +217,21 @@ func TestSystemStorage_ElectUpdate(t *testing.T) {
 			clear()
 			defer clear()
 
-			if _, err := stg.Elect(ctx, tt.args.process); err != nil {
+			_, err := stg.Elect(ctx, tt.args.process)
+			if err != nil && !tt.wantErr {
 				t.Errorf("SystemStorage.ElectUpdate() set storage err = %v", err)
 				return
 			}
 
-			if err := stg.ElectUpdate(tt.args.ctx, tt.args.process); (err != nil) != tt.wantErr {
-				t.Errorf("SystemStorage.ElectUpdate() error = %v, wantErr %v", err, tt.wantErr)
+			err = stg.ElectUpdate(tt.args.ctx, tt.args.process)
+			if err != nil {
+				if tt.wantErr && tt.err != err.Error() {
+					t.Errorf("SystemStorage.ElectUpdate() error = %v, wantErr %v", err, tt.wantErr)
+					return
+				}
+				if !tt.wantErr {
+					t.Errorf("SystemStorage.ElectUpdate() got error = %v, wantErr %v", err, tt.wantErr)
+				}
 			}
 		})
 	}

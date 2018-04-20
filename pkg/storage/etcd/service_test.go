@@ -19,13 +19,14 @@
 package etcd
 
 import (
-	"testing"
-
 	"context"
+	"reflect"
+	"testing"
+	"time"
+
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 	"github.com/lastbackend/lastbackend/pkg/storage/storage"
 	"github.com/lastbackend/lastbackend/pkg/storage/store"
-	"reflect"
 )
 
 func TestServiceStorage_Get(t *testing.T) {
@@ -46,6 +47,7 @@ func TestServiceStorage_Get(t *testing.T) {
 	type args struct {
 		ctx  context.Context
 		name string
+		ns   string
 	}
 
 	tests := []struct {
@@ -59,7 +61,7 @@ func TestServiceStorage_Get(t *testing.T) {
 		{
 			"get service info failed",
 			fields{stg},
-			args{ctx, "test2"},
+			args{ctx, "test2", ns1},
 			&d,
 			true,
 			store.ErrEntityNotFound,
@@ -67,10 +69,26 @@ func TestServiceStorage_Get(t *testing.T) {
 		{
 			"get service info successful",
 			fields{stg},
-			args{ctx, "test"},
+			args{ctx, "test", ns1},
 			&d,
 			false,
 			"",
+		},
+		{
+			"get service info failed empty namespace",
+			fields{stg},
+			args{ctx, "test", ""},
+			&d,
+			true,
+			"namespace can not be empty",
+		},
+		{
+			"get service info failed empty name",
+			fields{stg},
+			args{ctx, "", ns1},
+			&d,
+			true,
+			"name can not be empty",
 		},
 	}
 
@@ -92,22 +110,24 @@ func TestServiceStorage_Get(t *testing.T) {
 				return
 			}
 
-			got, err := tt.fields.stg.Get(tt.args.ctx, ns1, tt.args.name)
-
+			got, err := tt.fields.stg.Get(tt.args.ctx, tt.args.ns, tt.args.name)
 			if err != nil {
 				if tt.wantErr && tt.err != err.Error() {
 					t.Errorf("ServiceStorage.Get() = %v, want %v", err, tt.err)
 					return
 				}
+				if !tt.wantErr {
+					t.Errorf("ServiceStorage.Get() error = %v, want no error", err)
+				}
 				return
 			}
 
 			if tt.wantErr {
-				t.Errorf("ServiceStorage.Get() error = %v, wantErr %v", err, tt.err)
+				t.Errorf("ServiceStorage.Get() want error = %v, got none", tt.err)
 				return
 			}
 
-			if !reflect.DeepEqual(got, tt.want) {
+			if !compareServices(got, tt.want) {
 				t.Errorf("ServiceStorage.Get() = %v, want %v", got, tt.want)
 			}
 
@@ -157,6 +177,7 @@ func TestServiceStorage_ListByNamespace(t *testing.T) {
 		args    args
 		want    map[string]*types.Service
 		wantErr bool
+		err     string
 	}{
 		{
 			"get namespace list 1 success",
@@ -164,6 +185,7 @@ func TestServiceStorage_ListByNamespace(t *testing.T) {
 			args{ctx, ns1},
 			nl1,
 			false,
+			"",
 		},
 		{
 			"get namespace list 2 success",
@@ -171,6 +193,7 @@ func TestServiceStorage_ListByNamespace(t *testing.T) {
 			args{ctx, ns2},
 			nl2,
 			false,
+			"",
 		},
 		{
 			"get namespace empty list success",
@@ -178,6 +201,15 @@ func TestServiceStorage_ListByNamespace(t *testing.T) {
 			args{ctx, "empty"},
 			nl,
 			false,
+			"",
+		},
+		{
+			"get namespace info failed empty namespace",
+			fields{stg},
+			args{ctx, ""},
+			nl,
+			true,
+			"namespace can not be empty",
 		},
 	}
 
@@ -202,11 +234,23 @@ func TestServiceStorage_ListByNamespace(t *testing.T) {
 			}
 
 			got, err := stg.ListByNamespace(tt.args.ctx, tt.args.ns)
-			if (err != nil) != tt.wantErr {
-				t.Errorf("ServiceStorage.ListByNamespace() error = %v, wantErr %v", err, tt.wantErr)
+			if err != nil {
+				if tt.wantErr && tt.err != err.Error() {
+					t.Errorf("ServiceStorage.ListByNamespace() error = %v, wantErr %v", err, tt.wantErr)
+					return
+				}
+				if !tt.wantErr {
+					t.Errorf("ServiceStorage.ListByNamespace() error = %v, want no error", err)
+				}
 				return
 			}
-			if !reflect.DeepEqual(got, tt.want) {
+
+			if tt.wantErr {
+				t.Errorf("ServiceStorage.ListByNamespace() want error = %v, got none", tt.err)
+				return
+			}
+
+			if !compareServiceMaps(got, tt.want) {
 				t.Errorf("ServiceStorage.ListByNamespace() = %v, want %v", got, tt.want)
 			}
 		})
@@ -303,19 +347,21 @@ func TestServiceStorage_SetStatus(t *testing.T) {
 
 				if tt.wantErr && tt.err != err.Error() {
 					t.Errorf("ServiceStorage.SetStatus() error = %v, want %v", err.Error(), tt.err)
-					return
 				}
-
 				return
 			}
 
 			if tt.wantErr {
-				t.Errorf("ServiceStorage.SetStatus() error = %v, want %v", err.Error(), tt.err)
+				t.Errorf("ServiceStorage.SetStatus() want error = %v, got none", tt.err)
 				return
 			}
 
-			got, _ := tt.fields.stg.Get(tt.args.ctx, ns1, tt.args.service.Meta.Name)
-			if !reflect.DeepEqual(got, tt.want) {
+			got, err := tt.fields.stg.Get(tt.args.ctx, ns1, tt.args.service.Meta.Name)
+			if err != nil {
+				t.Errorf("ServiceStorage.SetStatus() got Get error = %s", err.Error())
+				return
+			}
+			if !compareServices(got, tt.want) {
 				t.Errorf("ServiceStorage.SetStatus() = %v, want %v", got, tt.want)
 				return
 			}
@@ -421,12 +467,16 @@ func TestServiceStorage_SetSpec(t *testing.T) {
 			}
 
 			if tt.wantErr {
-				t.Errorf("ServiceStorage.SetSpec() error = %v, want %v", err.Error(), tt.err)
+				t.Errorf("ServiceStorage.SetSpec() want error = %v, got none", tt.err)
 				return
 			}
 
-			got, _ := tt.fields.stg.Get(tt.args.ctx, ns1, tt.args.service.Meta.Name)
-			if !reflect.DeepEqual(got, tt.want) {
+			got, err := tt.fields.stg.Get(tt.args.ctx, ns1, tt.args.service.Meta.Name)
+			if err != nil {
+				t.Errorf("ServiceStorage.SetSpec() got Get error = %s", err.Error())
+				return
+			}
+			if !compareServices(got, tt.want) {
 				t.Errorf("ServiceStorage.SetSpec() = %v, want %v", got, tt.want)
 				return
 			}
@@ -515,14 +565,12 @@ func TestServiceStorage_Insert(t *testing.T) {
 
 				if tt.wantErr && tt.err != err.Error() {
 					t.Errorf("ServiceStorage.Insert() error = %v, want %v", err.Error(), tt.err)
-					return
 				}
-
 				return
 			}
 
 			if tt.wantErr {
-				t.Errorf("ServiceStorage.Insert() error = %v, want %v", err, tt.err)
+				t.Errorf("ServiceStorage.Insert() want error = %v, got none", tt.err)
 				return
 			}
 		})
@@ -618,20 +666,21 @@ func TestServiceStorage_Update(t *testing.T) {
 
 				if tt.wantErr && tt.err != err.Error() {
 					t.Errorf("ServiceStorage.Update() error = %v, want %v", err.Error(), tt.err)
-					return
 				}
-
 				return
 			}
 
 			if tt.wantErr {
-				t.Errorf("ServiceStorage.Update() error = %v, want %v", err, tt.err)
+				t.Errorf("ServiceStorage.Update() want error = %v, got none", tt.err)
 				return
 			}
 
-			got, _ := tt.fields.stg.Get(tt.args.ctx, ns1, tt.args.service.Meta.Name)
-			tt.want.Meta.Updated = got.Meta.Updated
-			if !reflect.DeepEqual(got, tt.want) {
+			got, err := tt.fields.stg.Get(tt.args.ctx, ns1, tt.args.service.Meta.Name)
+			if err != nil {
+				t.Errorf("ServiceStorage.Update() got Get error = %s", err.Error())
+				return
+			}
+			if !compareServices(got, tt.want) {
 				t.Errorf("ServiceStorage.Update() = %v, want %v", got, tt.want)
 				return
 			}
@@ -723,14 +772,12 @@ func TestServiceStorage_Remove(t *testing.T) {
 
 				if tt.wantErr && tt.err != err.Error() {
 					t.Errorf("ServiceStorage.Remove() error = %v, want %v", err.Error(), tt.err)
-					return
 				}
-
 				return
 			}
 
 			if tt.wantErr {
-				t.Errorf("ServiceStorage.Remove() error = %v, want %v", err, tt.err)
+				t.Errorf("ServiceStorage.Remove() want error = %v, got none", tt.err)
 				return
 			}
 
@@ -749,17 +796,19 @@ func TestServiceStorage_Watch(t *testing.T) {
 	initStorage()
 
 	var (
-		stg = newServiceStorage()
-		ctx = context.Background()
+		stg      = newServiceStorage()
+		ctx      = context.Background()
+		err      error
+		n        = getServiceAsset("ns1", "test1", "")
+		serviceC = make(chan *types.Service)
+		stopC    = make(chan int)
 	)
 
 	type fields struct {
-		stg storage.Service
 	}
 	type args struct {
-		ctx     context.Context
-		service chan *types.Service
 	}
+
 	tests := []struct {
 		name    string
 		fields  fields
@@ -767,15 +816,67 @@ func TestServiceStorage_Watch(t *testing.T) {
 		wantErr bool
 	}{
 		{
-			"check watch",
-			fields{stg},
-			args{ctx, make(chan *types.Service)},
+			"check service watch",
+			fields{},
+			args{},
 			false,
 		},
+	}
+
+	clear := func() {
+		if err := stg.Clear(ctx); err != nil {
+			t.Errorf("ServiceStorage.Watch() storage setup error = %v", err)
+			return
+		}
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 
+			clear()
+			defer clear()
+
+			err = stg.Insert(ctx, &n)
+			startW := make(chan int, 1)
+			if err != nil {
+				startW <- 2
+			} else {
+				//start watch after successfull insert
+				startW <- 1
+			}
+			select {
+			case res := <-startW:
+				if res != 1 {
+					t.Errorf("ServiceStorage.Watch() insert error = %v", err)
+					return
+				}
+				//run watch go function
+				go func() {
+					err = stg.Watch(ctx, serviceC)
+					if err != nil {
+						t.Errorf("ServiceStorage.Watch() storage setup error = %v", err)
+						return
+					}
+				}()
+			}
+			//run go function to cause watch event
+			go func() {
+				time.Sleep(1 * time.Second)
+				err = stg.Update(ctx, &n)
+				time.Sleep(1 * time.Second)
+				stopC <- 1
+				return
+			}()
+
+			//wait for result
+			select {
+			case <-stopC:
+				t.Errorf("ServiceStorage.Watch() update error =%v", err)
+				return
+
+			case <-serviceC:
+				t.Log("ServiceStorage.Watch() is working")
+				return
+			}
 		})
 	}
 }
@@ -785,17 +886,19 @@ func TestServiceStorage_WatchSpec(t *testing.T) {
 	initStorage()
 
 	var (
-		stg = newServiceStorage()
-		ctx = context.Background()
+		stg      = newServiceStorage()
+		ctx      = context.Background()
+		err      error
+		n        = getServiceAsset("ns1", "test1", "")
+		serviceC = make(chan *types.Service)
+		stopC    = make(chan int)
 	)
 
 	type fields struct {
-		stg storage.Service
 	}
 	type args struct {
-		ctx     context.Context
-		service chan *types.Service
 	}
+
 	tests := []struct {
 		name    string
 		fields  fields
@@ -803,15 +906,157 @@ func TestServiceStorage_WatchSpec(t *testing.T) {
 		wantErr bool
 	}{
 		{
-			"check watch",
-			fields{stg},
-			args{ctx, make(chan *types.Service)},
+			"check service watch spec",
+			fields{},
+			args{},
 			false,
 		},
+	}
+
+	clear := func() {
+		if err := stg.Clear(ctx); err != nil {
+			t.Errorf("ServiceStorage.WatchSpec() storage setup error = %v", err)
+			return
+		}
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 
+			clear()
+			defer clear()
+
+			err = stg.Insert(ctx, &n)
+			startW := make(chan int, 1)
+			if err != nil {
+				startW <- 2
+			} else {
+				//start watch after successfull insert
+				startW <- 1
+			}
+			select {
+			case res := <-startW:
+				if res != 1 {
+					t.Errorf("ServiceStorage.WatchSpec() insert error = %v", err)
+					return
+				}
+				//run watch go function
+				go func() {
+					err = stg.WatchSpec(ctx, serviceC)
+					if err != nil {
+						t.Errorf("ServiceStorage.WatchSpec() storage setup error = %v", err)
+						return
+					}
+				}()
+			}
+			//run go function to cause watch event
+			go func() {
+				time.Sleep(1 * time.Second)
+				err = stg.SetSpec(ctx, &n)
+				time.Sleep(1 * time.Second)
+				stopC <- 1
+				return
+			}()
+
+			//wait for result
+			select {
+			case <-stopC:
+				t.Errorf("ServiceStorage.WatchSpec() update error =%v", err)
+				return
+
+			case <-serviceC:
+				t.Log("ServiceStorage.WatchSpec() is working")
+				return
+			}
+		})
+	}
+}
+
+func TestServiceStorage_WatchStatus(t *testing.T) {
+
+	initStorage()
+
+	var (
+		stg      = newServiceStorage()
+		ctx      = context.Background()
+		err      error
+		n        = getServiceAsset("ns1", "test1", "")
+		serviceC = make(chan *types.Service)
+		stopC    = make(chan int)
+	)
+
+	type fields struct {
+	}
+	type args struct {
+	}
+
+	tests := []struct {
+		name    string
+		fields  fields
+		args    args
+		wantErr bool
+	}{
+		{
+			"check service watch status",
+			fields{},
+			args{},
+			false,
+		},
+	}
+
+	clear := func() {
+		if err := stg.Clear(ctx); err != nil {
+			t.Errorf("ServiceStorage.WatchStatus() storage setup error = %v", err)
+			return
+		}
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+
+			clear()
+			defer clear()
+
+			err = stg.Insert(ctx, &n)
+			startW := make(chan int, 1)
+			if err != nil {
+				startW <- 2
+			} else {
+				//start watch after successfull insert
+				startW <- 1
+			}
+			select {
+			case res := <-startW:
+				if res != 1 {
+					t.Errorf("ServiceStorage.WatchStatus() insert error = %v", err)
+					return
+				}
+				//run watch go function
+				go func() {
+					err = stg.WatchStatus(ctx, serviceC)
+					if err != nil {
+						t.Errorf("ServiceStorage.WatchStatus() storage setup error = %v", err)
+						return
+					}
+				}()
+			}
+			//run go function to cause watch event
+			go func() {
+				time.Sleep(1 * time.Second)
+				err = stg.SetStatus(ctx, &n)
+				time.Sleep(1 * time.Second)
+				stopC <- 1
+				return
+			}()
+
+			//wait for result
+			select {
+			case <-stopC:
+				t.Errorf("ServiceStorage.WatchStatus() update error =%v", err)
+				return
+
+			case <-serviceC:
+				t.Log("ServiceStorage.WatchStatus() is working")
+				return
+			}
 		})
 	}
 }
@@ -843,5 +1088,32 @@ func getServiceAsset(namespace, name, desc string) types.Service {
 	n.Meta.Namespace = namespace
 	n.Meta.Description = desc
 
+	n.Meta.Created = time.Now()
+
 	return n
+}
+
+//compare two service structures
+func compareServices(got, want *types.Service) bool {
+	result := false
+	if compareMeta(got.Meta.Meta, want.Meta.Meta) &&
+		(got.Meta.Namespace == want.Meta.Namespace) &&
+		(got.Meta.Endpoint == want.Meta.Endpoint) &&
+		(got.Meta.SelfLink == want.Meta.SelfLink) &&
+		reflect.DeepEqual(got.Spec, want.Spec) &&
+		reflect.DeepEqual(got.Deployments, want.Deployments) &&
+		reflect.DeepEqual(got.Status, want.Status) {
+		result = true
+	}
+
+	return result
+}
+
+func compareServiceMaps(got, want map[string]*types.Service) bool {
+	for k, v := range got {
+		if !compareServices(v, want[k]) {
+			return false
+		}
+	}
+	return true
 }
