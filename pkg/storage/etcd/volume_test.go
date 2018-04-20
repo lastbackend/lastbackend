@@ -1225,7 +1225,7 @@ func getVolumeAsset(namespace, name, desc string) types.Volume {
 	return n
 }
 
-//compare two secret structures
+//compare two volume structures
 func compareVolumes(got, want *types.Volume) bool {
 	result := false
 	if compareMeta(got.Meta.Meta, want.Meta.Meta) &&

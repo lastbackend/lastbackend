@@ -324,12 +324,14 @@ func Test_newClusterStorage(t *testing.T) {
 //compare two cluster structures
 func compareClusters(got, want *types.Cluster) bool {
 	result := false
-	if (got.Meta.Name == want.Meta.Name) &&
-		(got.Meta.Description == want.Meta.Description) &&
-		(got.Meta.SelfLink == want.Meta.SelfLink) &&
+	if compareMeta(got.Meta.Meta, want.Meta.Meta) &&
+		(got.Meta.Region == want.Meta.Region) &&
+		(got.Meta.Token == want.Meta.Token) &&
+		(got.Meta.Provider == want.Meta.Provider) &&
+		(got.Meta.Shared == want.Meta.Shared) &&
+		(got.Meta.Main == want.Meta.Main) &&
 		reflect.DeepEqual(got.Status, want.Status) &&
-		reflect.DeepEqual(got.Quotas, want.Quotas) &&
-		reflect.DeepEqual(got.Meta.Labels, want.Meta.Labels) {
+		reflect.DeepEqual(got.Quotas, want.Quotas) {
 		result = true
 	}
 
