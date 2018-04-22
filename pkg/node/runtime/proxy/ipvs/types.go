@@ -16,29 +16,46 @@
 // from Last.Backend LLC.
 //
 
-package storage
+package ipvs
 
-import (
-	"context"
-	"github.com/lastbackend/lastbackend/pkg/storage/storage"
+const (
+
+	SvcFlagPersist   = 0x1
+	SvcFlagHashed    = 0x2
+	SvcFlagOnePacket = 0x4
+
+	DstFlagFwdMask   = 0x7
+	DstFlagFwdMasq   = 0x0
+	DstFlagFwdLocal  = 0x1
+	DstFlagFwdTunnel = 0x2
+	DstFlagFwdRoute  = 0x3
+	DstFlagFwdBypass = 0x4
+	DstFlagSync      = 0x20
+	DstFlagHashed    = 0x40
+	DstFlagNoOutput  = 0x80
+	DstFlagInactive  = 0x100
+	DstFlagOutSeq    = 0x200
+	DstFlagInSeq     = 0x400
+	DstFlagSeqMask   = 0x600
+	DstFlagNoCPort   = 0x800
+	DstFlagTemplate  = 0x1000
+	DstFlagOnePacket = 0x2000
+
 )
 
-type Util interface {
-	Key(ctx context.Context, pattern ...string) string
+type Service struct {
+
 }
 
-type Storage interface {
-	Cluster() storage.Cluster
-	Deployment() storage.Deployment
-	Namespace() storage.Namespace
-	Node() storage.Node
-	Ingress() storage.Ingress
-	Pod() storage.Pod
-	Route() storage.Route
-	Secret() storage.Secret
-	Service() storage.Service
-	System() storage.System
-	Endpoint() storage.Endpoint
-	Trigger() storage.Trigger
-	Volume() storage.Volume
+type Destination struct {
+
 }
+
+type DestinationFlags uint32
+
+type DestinationStats struct {
+	ActiveConns   uint32
+	InactiveConns uint32
+	PersistConns  uint32
+}
+

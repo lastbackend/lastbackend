@@ -113,7 +113,6 @@ func (s *Service) Create(namespace *types.Namespace, opts *types.ServiceCreateOp
 		service.Meta.Description = *opts.Description
 	}
 
-	service.Deployments = make(map[string]*types.Deployment, 0)
 	service.SelfLink()
 
 	// prepare default template spec

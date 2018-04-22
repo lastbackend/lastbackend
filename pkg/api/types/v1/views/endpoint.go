@@ -16,29 +16,27 @@
 // from Last.Backend LLC.
 //
 
-package storage
+package views
 
-import (
-	"context"
-	"github.com/lastbackend/lastbackend/pkg/storage/storage"
-)
+import "time"
 
-type Util interface {
-	Key(ctx context.Context, pattern ...string) string
+type Endpoint struct {
+	Meta   EndpointMeta   `json:"meta"`
+	Spec   EndpointSpec   `json:"spec"`
+	Status EndpointStatus `json:"status"`
 }
 
-type Storage interface {
-	Cluster() storage.Cluster
-	Deployment() storage.Deployment
-	Namespace() storage.Namespace
-	Node() storage.Node
-	Ingress() storage.Ingress
-	Pod() storage.Pod
-	Route() storage.Route
-	Secret() storage.Secret
-	Service() storage.Service
-	System() storage.System
-	Endpoint() storage.Endpoint
-	Trigger() storage.Trigger
-	Volume() storage.Volume
+type EndpointMeta struct {
+	Name     string    `json:"name"`
+	SelfLink string    `json:"self_link"`
+	Updated  time.Time `json:"updated"`
+	Created  time.Time `json:"created"`
 }
+
+type EndpointSpec struct {
+}
+
+type EndpointStatus struct {
+}
+
+type EndpointList map[string]*Endpoint

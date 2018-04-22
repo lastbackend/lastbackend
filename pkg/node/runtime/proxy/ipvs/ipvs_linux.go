@@ -16,29 +16,4 @@
 // from Last.Backend LLC.
 //
 
-package storage
-
-import (
-	"context"
-	"github.com/lastbackend/lastbackend/pkg/storage/storage"
-)
-
-type Util interface {
-	Key(ctx context.Context, pattern ...string) string
-}
-
-type Storage interface {
-	Cluster() storage.Cluster
-	Deployment() storage.Deployment
-	Namespace() storage.Namespace
-	Node() storage.Node
-	Ingress() storage.Ingress
-	Pod() storage.Pod
-	Route() storage.Route
-	Secret() storage.Secret
-	Service() storage.Service
-	System() storage.System
-	Endpoint() storage.Endpoint
-	Trigger() storage.Trigger
-	Volume() storage.Volume
-}
+package ipvs

@@ -16,29 +16,12 @@
 // from Last.Backend LLC.
 //
 
-package storage
+package request
 
-import (
-	"context"
-	"github.com/lastbackend/lastbackend/pkg/storage/storage"
-)
+type EndpointCreateOptions struct{}
 
-type Util interface {
-	Key(ctx context.Context, pattern ...string) string
-}
+type EndpointUpdateOptions struct{}
 
-type Storage interface {
-	Cluster() storage.Cluster
-	Deployment() storage.Deployment
-	Namespace() storage.Namespace
-	Node() storage.Node
-	Ingress() storage.Ingress
-	Pod() storage.Pod
-	Route() storage.Route
-	Secret() storage.Secret
-	Service() storage.Service
-	System() storage.System
-	Endpoint() storage.Endpoint
-	Trigger() storage.Trigger
-	Volume() storage.Volume
+type EndpointRemoveOptions struct {
+	Force bool
 }

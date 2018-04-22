@@ -40,6 +40,7 @@ type Storage struct {
 
 	*ClusterStorage
 	*DeploymentStorage
+	*EndpointStorage
 	*TriggerStorage
 	*NodeStorage
 	*IngressStorage
@@ -64,6 +65,13 @@ func (s *Storage) Deployment() storage.Deployment {
 		return nil
 	}
 	return s.DeploymentStorage
+}
+
+func (s *Storage) Endpoint() storage.Endpoint {
+	if s == nil {
+		return nil
+	}
+	return s.EndpointStorage
 }
 
 func (s *Storage) Trigger() storage.Trigger {
@@ -172,6 +180,7 @@ func New() (*Storage, error) {
 	s.DeploymentStorage = newDeploymentStorage()
 	s.PodStorage = newPodStorage()
 
+	s.EndpointStorage = newEndpointStorage()
 	s.TriggerStorage = newTriggerStorage()
 
 	s.RouteStorage = newRouteStorage()

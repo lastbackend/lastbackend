@@ -16,29 +16,44 @@
 // from Last.Backend LLC.
 //
 
-package storage
+// +build linux
 
-import (
-	"context"
-	"github.com/lastbackend/lastbackend/pkg/storage/storage"
-)
+package ipvs
 
-type Util interface {
-	Key(ctx context.Context, pattern ...string) string
+/*
+#include <linux/types.h>
+#include <linux/ip_vs.h>
+*/
+import "C"
+
+type IPVS struct {
+
 }
 
-type Storage interface {
-	Cluster() storage.Cluster
-	Deployment() storage.Deployment
-	Namespace() storage.Namespace
-	Node() storage.Node
-	Ingress() storage.Ingress
-	Pod() storage.Pod
-	Route() storage.Route
-	Secret() storage.Secret
-	Service() storage.Service
-	System() storage.System
-	Endpoint() storage.Endpoint
-	Trigger() storage.Trigger
-	Volume() storage.Volume
+func (i *IPVS) GetServices() {
+
+}
+
+func (i *IPVS) AddService () {
+
+}
+
+func (i *IPVS) SetService () {
+
+}
+
+func (i *IPVS) DelService () {
+
+}
+
+func (i *IPVS) AddDestination () {
+
+}
+
+func (i *IPVS) SetDestination () {
+
+}
+
+func (i *IPVS) DelDestination () {
+
 }

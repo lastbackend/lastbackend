@@ -34,7 +34,6 @@ type Service struct {
 	Meta        ServiceMeta            `json:"meta"`
 	Status      ServiceStatus          `json:"status"`
 	Spec        ServiceSpec            `json:"spec"`
-	Deployments map[string]*Deployment `json:"deployments"`
 }
 
 type ServiceMap map[string]*Service
