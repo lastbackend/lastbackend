@@ -22,11 +22,13 @@ import (
 	"time"
 )
 
+// swagger:model views_namespace
 type Namespace struct {
 	Meta NamespaceMeta `json:"meta"`
 	Spec NamespaceSpec `json:"spec"`
 }
 
+// swagger:model views_namespace_meta
 type NamespaceMeta struct {
 	Name        string            `json:"name"`
 	Description string            `json:"description"`
@@ -38,26 +40,33 @@ type NamespaceMeta struct {
 	Updated     time.Time         `json:"updated"`
 }
 
+// swagger:model views_namespace_spec
 type NamespaceSpec struct {
 	Env       NamespaceEnvs      `json:"env"`
 	Resources NamespaceResources `json:"resources"`
 	Quotas    NamespaceQuotas    `json:"quotas"`
 }
 
+// swagger:model views_namespace_envs
 type NamespaceEnvs []string
 
+// swagger:model views_namespace_resource
 type NamespaceResources struct {
 	RAM    int64 `json:"ram"`
 	Routes int   `json:"routes"`
 }
 
+// swagger:model views_namespace_quotas
 type NamespaceQuotas struct {
 	Disabled bool  `json:"disabled"`
 	RAM      int64 `json:"ram"`
 	Routes   int   `json:"routes"`
 }
 
+// swagger:ignore
+// swagger:model views_namespace_resource
 type NamespaceResource struct {
 }
 
+// swagger:model views_namespace_list
 type NamespaceList []*Namespace

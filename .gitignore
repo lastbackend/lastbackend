@@ -28,6 +28,7 @@ _testmain.go
 *.iml
 *.srl
 
+.DS_Store
 vendor/*/
 docs/output/
 /build/

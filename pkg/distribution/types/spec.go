@@ -26,11 +26,15 @@ import (
 const ContainerRolePrimary = "primary"
 const ContainerRoleSlave = "slave"
 
+// SpecState is a state of the spec
+// swagger:model types_spec_state
 type SpecState struct {
 	Destroy     bool `json:"destroy"`
 	Maintenance bool `json:"maintenance"`
 }
 
+// SpecTemplate is a template of the spec
+// swagger:model types_spec_template
 type SpecTemplate struct {
 	// Template Volume
 	Volumes SpecTemplateVolumeList `json:"volumes"`
@@ -40,21 +44,32 @@ type SpecTemplate struct {
 	Termination int `json:"termination"`
 }
 
+// swagger:ignore
+// SpecTemplateVolumeMap is a map of spec template volumes
+// swagger:model types_spec_template_volume_map
 type SpecTemplateVolumeMap map[string]*SpecTemplateVolume
+// SpecTemplateVolumeList is a list of spec template volumes
+// swagger:model types_spec_template_volume_list
 type SpecTemplateVolumeList []*SpecTemplateVolume
 
+// swagger:model types_spec_template_volume
 type SpecTemplateVolume struct {
 	// Template volume name
 	Name string `json:"name"`
 }
 
+// swagger:ignore
+// swagger:model types_spec_template_volume_mounts
 type SpecTemplateVolumeMounts struct {
 	// Template volume mounts name
 	Name string `json:"name"`
 }
 
+// SpecTemplateContainers is a list of spec template containers
+// swagger:model types_spec_template_container_list
 type SpecTemplateContainers []SpecTemplateContainer
 
+// swagger:model types_spec_template_container
 type SpecTemplateContainer struct {
 	// Template container id
 	ID string `json:"id"`
@@ -96,12 +111,16 @@ type SpecTemplateContainer struct {
 	RestartPolicy SpecTemplateRestartPolicy `json:"restart"`
 }
 
+// swagger:model types_spec_template_container_image
 type SpecTemplateContainerImage struct {
 	Name   string `json:"name"`
 	Auth   string `json:"auth"`
 	Policy string `json:"policy"`
 }
 
+// swagger:ignore
+// SpecBuildImage is an image of the spec build
+// swagger:model types_spec_build_image
 type SpecBuildImage struct {
 	Tags           []string
 	NoCache        bool
@@ -113,7 +132,9 @@ type SpecBuildImage struct {
 	ExtraHosts     []string // List of extra hosts
 }
 
+// swagger:ignore
 // AuthConfig contains authorization information for connecting to a Registry
+// swagger:model types_authConfig
 type AuthConfig struct {
 	Username string `json:"username,omitempty"`
 	Password string `json:"password,omitempty"`
@@ -130,8 +151,12 @@ type AuthConfig struct {
 	RegistryToken string `json:"registrytoken,omitempty"`
 }
 
+// SpecTemplateContainerPorts is a list of spec template container ports
+// swagger:model types_spec_template_container_port_list
 type SpecTemplateContainerPorts []SpecTemplateContainerPort
 
+// SpecTemplateContainerPort is a port of the spec template container
+// swagger:model types_spec_template_container_port
 type SpecTemplateContainerPort struct {
 	// Container port
 	ContainerPort int `json:"container_port"`
@@ -139,19 +164,24 @@ type SpecTemplateContainerPort struct {
 	Protocol string `json:"protocol"`
 }
 
+// SpecTemplateContainerPorts is a list of spec template container env vars
+// swagger:model types_spec_template_container_env_list
 type SpecTemplateContainerEnvs []SpecTemplateContainerEnv
 
+// swagger:model types_spec_template_container_env
 type SpecTemplateContainerEnv struct {
 	Name  string                         `json:"name"`
 	Value string                         `json:"value"`
 	From  SpecTemplateContainerEnvSecret `json:"from"`
 }
 
+// swagger:model types_spec_template_container_env_secret
 type SpecTemplateContainerEnvSecret struct {
 	Name string `json:"name"`
 	Key  string `json:"key"`
 }
 
+// swagger:model types_spec_template_container_resources
 type SpecTemplateContainerResources struct {
 	// Limit resources
 	Limits SpecTemplateContainerResource `json:"limits"`
@@ -159,6 +189,7 @@ type SpecTemplateContainerResources struct {
 	Request SpecTemplateContainerResource `json:"quota"`
 }
 
+// swagger:model types_spec_template_container_exec
 type SpecTemplateContainerExec struct {
 	Command []string `json:"command"`
 	// Container enrtypoint
@@ -169,6 +200,7 @@ type SpecTemplateContainerExec struct {
 	Args []string `json:"args"`
 }
 
+// swagger:model types_spec_template_container_resource
 type SpecTemplateContainerResource struct {
 	// CPU resource option
 	CPU int64 `json:"cpu"`
@@ -176,8 +208,11 @@ type SpecTemplateContainerResource struct {
 	RAM int64 `json:"ram"`
 }
 
+// SpecTemplateContainerVolumes is a list of spec template container volumes
+// swagger:model types_spec_template_container_volume_list
 type SpecTemplateContainerVolumes []SpecTemplateContainerVolume
 
+// swagger:model types_spec_template_container_volume
 type SpecTemplateContainerVolume struct {
 	// Volume name
 	Name string `json:"name"`
@@ -187,11 +222,13 @@ type SpecTemplateContainerVolume struct {
 	Path string `json:"path"`
 }
 
+// swagger:model types_spec_template_container_probes
 type SpecTemplateContainerProbes struct {
 	LiveProbe SpecTemplateContainerProbe `json:"live_probe"`
 	ReadProbe SpecTemplateContainerProbe `json:"read_probe"`
 }
 
+// swagger:model types_spec_template_container_probe
 type SpecTemplateContainerProbe struct {
 	// Exec command to check container liveness
 	Exec struct {
@@ -210,6 +247,7 @@ type SpecTemplateContainerProbe struct {
 	ThresholdFailure    int `json:"threshold_failure"`
 }
 
+// swagger:model types_spec_template_container_security
 type SpecTemplateContainerSecurity struct {
 	// Start container in priveleged mode
 	Privileged bool `json:"privileged"`
@@ -219,10 +257,12 @@ type SpecTemplateContainerSecurity struct {
 	User int `json:"user"`
 }
 
+// swagger:model types_spec_template_container_security_linux
 type SpecTemplateContainerSecurityLinuxOptions struct {
 	Level string `json:"level"`
 }
 
+// swagger:model types_spec_template_container_network
 type SpecTemplateContainerNetwork struct {
 	// Container hostname
 	Hostname string `json:"hostname"`
@@ -234,6 +274,7 @@ type SpecTemplateContainerNetwork struct {
 	Mode string `json:"mode"`
 }
 
+// swagger:model types_spec_template_container_dns
 type SpecTemplateContainerDNS struct {
 	// List of DNS servers
 	Server []string `json:"server"`
@@ -243,6 +284,7 @@ type SpecTemplateContainerDNS struct {
 	Options []string `json:"options"`
 }
 
+// swagger:model types_spec_template_container_link
 type SpecTemplateContainerLink struct {
 	// Link name
 	Link string `json:"link"`
@@ -250,6 +292,7 @@ type SpecTemplateContainerLink struct {
 	Alias string `json:"alias"`
 }
 
+// swagger:model types_spec_template_policy
 type SpecTemplateRestartPolicy struct {
 	// Restart policy name
 	Policy string `json:"policy"`
@@ -257,6 +300,7 @@ type SpecTemplateRestartPolicy struct {
 	Attempt int `json:"attempt"`
 }
 
+// swagger:model types_spec_strategy
 type SpecStrategy struct {
 	Type           string                     `json:"type"` // Rolling
 	RollingOptions SpecStrategyRollingOptions `json:"rollingOptions"`
@@ -264,9 +308,11 @@ type SpecStrategy struct {
 	Deadline       int                        `json:"deadline"`
 }
 
+// swagger:model types_spec_strategy_resources
 type SpecStrategyResources struct {
 }
 
+// swagger:model types_spec_strategy_rolling
 type SpecStrategyRollingOptions struct {
 	PeriodUpdate   int `json:"period_update"`
 	Interval       int `json:"interval"`
@@ -275,11 +321,15 @@ type SpecStrategyRollingOptions struct {
 	MaxSurge       int `json:"max_surge"`
 }
 
+// SpecTriggers is a list of spec triggers
+// swagger:model types_spec_trigger_list
 type SpecTriggers []SpecTrigger
 
+// swagger:model types_spec_trigger
 type SpecTrigger struct {
 }
 
+// swagger:model types_spec_selector
 type SpecSelector struct {
 }
 

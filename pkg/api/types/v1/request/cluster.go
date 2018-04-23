@@ -18,9 +18,13 @@
 
 package request
 
+// ClusterUpdateOptions represents options availible to update in cluster
+//
+// swagger:model request_cluster_update
 type ClusterUpdateOptions struct {
 	Description *string               `json:"description"`
 	Quotas      *ClusterQuotasOptions `json:"quotas"`
 }
 
+// swagger:model request_cluster_update_quotas
 type ClusterQuotasOptions struct{}

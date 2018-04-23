@@ -20,20 +20,24 @@ package request
 
 import "github.com/lastbackend/lastbackend/pkg/distribution/types"
 
+// swagger:model request_ingress_meta
 type IngressMetaOptions struct {
 	Meta *types.IngressUpdateMetaOptions `json:"meta"`
 }
 
+// swagger:model request_ingress_connect
 type IngressConnectOptions struct {
 	Status types.IngressStatus `json:"status"`
 }
 
+// swagger:model request_ingress_status
 type IngressStatusOptions struct {
 	Ready bool `ready`
 	// Pods statuses
 	Routes map[string]*IngressRouteStatusOptions `json:"routes"`
 }
 
+// swagger:model request_ingress_route_status
 type IngressRouteStatusOptions struct {
 	// route status state
 	State string `json:"state" yaml:"state"`
@@ -41,10 +45,12 @@ type IngressRouteStatusOptions struct {
 	Message string `json:"message" yaml:"message"`
 }
 
+// swagger:ignore
 type IngressRemoveOptions struct {
 	Force bool `json:"force"`
 }
 
+// swagger:ignore
 type IngressLogsOptions struct {
 	Follow bool `json:"follow"`
 }

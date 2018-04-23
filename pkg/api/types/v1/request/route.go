@@ -18,21 +18,26 @@
 
 package request
 
+// swagger:model request_route_create
 type RouteCreateOptions struct {
 	Name     string        `json:"name"`
 	Security bool          `json:"security"`
 	Rules    []RulesOption `json:"rules"`
 }
 
+// swagger:model request_route_update
 type RouteUpdateOptions struct {
 	Security bool          `json:"security"`
 	Rules    []RulesOption `json:"rules"`
 }
 
+// swagger:ignore
+// swagger:model request_route_remove
 type RouteRemoveOptions struct {
 	Force bool `json:"force"`
 }
 
+// swagger:model request_route_rules
 type RulesOption struct {
 	Service string `json:"service"`
 	Path    string `json:"path"`

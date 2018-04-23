@@ -28,21 +28,39 @@ import (
 	"io/ioutil"
 )
 
+// Deployment is a deployment model for api
+//
+// swagger:model views_deployment
 type Deployment struct {
+	// deployment id
 	ID       string                 `json:"id"`
 	Meta     DeploymentMeta         `json:"meta"`
 	Status   DeploymentStatusInfo   `json:"status"`
 	Spec     DeploymentSpec         `json:"spec"`
 	Sources  DeploymentSources      `json:"sources"`
 	Replicas DeploymentReplicasInfo `json:"replicas"`
+	// deployment pods
 	Pods     map[string]Pod         `json:"pods"`
 }
 
+// swagger:ignore
+// DeploymentMap is a map of deployments
+//
+// swagger:model views_deployment_map
 type DeploymentMap map[string]*Deployment
+
+// DeploymentList is a list of deployments
+//
+// swagger:model views_deployment_list
 type DeploymentList []*Deployment
 
+// DeploymentMeta is a meta of deployment model for api
+//
+// swagger:model views_deployment_meta
 type DeploymentMeta struct {
+	// Deployment name
 	Name        string `json:"name"`
+	// Deployment description
 	Description string `json:"description"`
 
 	Version   int    `json:"version"`
@@ -52,10 +70,15 @@ type DeploymentMeta struct {
 	SelfLink  string `json:"self_link"`
 	Status    string `json:"status"`
 
+	// Deployment creation time
 	Created time.Time `json:"created"`
+	// Deployment creation time
 	Updated time.Time `json:"updated"`
 }
 
+// DeploymentSources is a source of deployment model for api
+//
+// swagger:model views_deployment_sources
 type DeploymentSources struct {
 	// Image namespace name
 	Namespace string `json:"namespace"`
@@ -65,6 +88,9 @@ type DeploymentSources struct {
 	Hash string `json:"hash"`
 }
 
+// DeploymentSpec is a spec of deployment model for api
+//
+// swagger:model views_deployment_spec
 type DeploymentSpec struct {
 	Strategy types.SpecStrategy `json:"strategy"`
 	Triggers types.SpecTriggers `json:"triggers"`
@@ -73,11 +99,17 @@ type DeploymentSpec struct {
 	Template types.SpecTemplate `json:"template"`
 }
 
+// DeploymentStatusInfo is an info about deployment status
+//
+// swagger:model views_deployment_status
 type DeploymentStatusInfo struct {
 	State   string `json:"state"`
 	Message string `json:"message"`
 }
 
+// DeploymentReplicasInfo is an info about deployment replicas
+//
+// swagger:model views_deployment_replicas
 type DeploymentReplicasInfo struct {
 	Total     int `json:"total"`
 	Provision int `json:"provision"`
@@ -88,7 +120,12 @@ type DeploymentReplicasInfo struct {
 	Errored   int `json:"errored"`
 }
 
+// swagger:ignore
+// RequestDeploymentScaleOptions is a ...
+//
+// swagger:model views_deployment_scale
 type RequestDeploymentScaleOptions struct {
+	// Number of replicas
 	Replicas *int `json:"replicas"`
 }
 
