@@ -631,7 +631,7 @@ func TestTriggerStorage_SetStatus(t *testing.T) {
 			}
 
 			if tt.wantErr {
-				t.Errorf("TriggerStorage.SetStatus() want error = %v, got none %v", tt.err)
+				t.Errorf("TriggerStorage.SetStatus() want error = %v, got none", tt.err)
 				return
 			}
 
