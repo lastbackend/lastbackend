@@ -253,7 +253,7 @@ func TestTriggerStorage_ListByNamespace(t *testing.T) {
 					return
 				}
 				if !tt.wantErr {
-					t.Errorf("TriggerStorage.ListByNamespace() error = %v, want no error", err, tt.wantErr)
+					t.Errorf("TriggerStorage.ListByNamespace() error = %v, want no error", err)
 				}
 				return
 			}
