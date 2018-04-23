@@ -22,6 +22,7 @@ import (
 	"context"
 	"reflect"
 	"testing"
+	"time"
 
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 	"github.com/lastbackend/lastbackend/pkg/storage/storage"
@@ -51,7 +52,7 @@ func TestSystemStorage_ProcessSet(t *testing.T) {
 		wantErr bool
 		err     string
 	}{
-		{"dummy test",
+		{"test process set",
 			fields{stg},
 			args{ctx, &p},
 			false,
@@ -89,6 +90,7 @@ func TestSystemStorage_ProcessSet(t *testing.T) {
 					t.Errorf("SystemStorage.ProcessSet() error = %v, wantErr %v", err, tt.wantErr)
 				}
 			}
+
 		})
 	}
 }
@@ -117,7 +119,7 @@ func TestSystemStorage_Elect(t *testing.T) {
 		wantErr bool
 		err     string
 	}{
-		{"dummy test",
+		{"test process elect",
 			fields{stg},
 			args{ctx, &p},
 			false,
@@ -152,7 +154,6 @@ func TestSystemStorage_Elect(t *testing.T) {
 				}
 				if !tt.wantErr {
 					t.Errorf("SystemStorage.Elect() error = %v, wantErr %v", err, tt.wantErr)
-					return
 				}
 				return
 			}
@@ -173,8 +174,6 @@ func TestSystemStorage_ElectUpdate(t *testing.T) {
 		p   = types.Process{}
 	)
 
-	p.ID = "test"
-
 	type fields struct {
 		stg storage.System
 	}
@@ -189,7 +188,7 @@ func TestSystemStorage_ElectUpdate(t *testing.T) {
 		wantErr bool
 		err     string
 	}{
-		{"dummy test",
+		{"test process elect update",
 			fields{stg},
 			args{ctx, &p},
 			false,
@@ -242,9 +241,10 @@ func TestSystemStorage_ElectWait(t *testing.T) {
 	initStorage()
 
 	var (
-		stg = newSystemStorage()
-		ctx = context.Background()
-		p   = types.Process{}
+		stg   = newSystemStorage()
+		ctx   = context.Background()
+		p     = types.Process{}
+		stopC = make(chan int)
 	)
 
 	type fields struct {
@@ -253,7 +253,7 @@ func TestSystemStorage_ElectWait(t *testing.T) {
 	type args struct {
 		ctx     context.Context
 		process *types.Process
-		cn      chan bool
+		ch      chan bool
 	}
 	tests := []struct {
 		name    string
@@ -261,7 +261,7 @@ func TestSystemStorage_ElectWait(t *testing.T) {
 		args    args
 		wantErr bool
 	}{
-		{"dummy test",
+		{"test process elect wait",
 			fields{stg},
 			args{ctx, &p, make(chan bool)},
 			false,
@@ -270,7 +270,7 @@ func TestSystemStorage_ElectWait(t *testing.T) {
 
 	clear := func() {
 		if err := stg.Clear(ctx); err != nil {
-			t.Errorf("SystemStorage.ElectUpdate() storage setup error = %v", err)
+			t.Errorf("SystemStorage.ElectWait() storage setup error = %v", err)
 			return
 		}
 	}
@@ -279,6 +279,41 @@ func TestSystemStorage_ElectWait(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			clear()
 			defer clear()
+
+			//insert
+			_, err := stg.Elect(ctx, tt.args.process)
+			if err != nil && !tt.wantErr {
+				t.Errorf("SystemStorage.ElectWait() set storage err = %v", err)
+				return
+			}
+			//run watch gofunction
+			go func() {
+				err = stg.ElectWait(ctx, &p, tt.args.ch)
+				if err != nil {
+					t.Errorf("SystemStorage.ElectWait() storage setup error = %v", err)
+					return
+				}
+			}()
+
+			//run go function to cause watch event
+			go func() {
+				time.Sleep(1 * time.Second)
+				err = stg.ElectUpdate(ctx, &p)
+				time.Sleep(1 * time.Second)
+				stopC <- 1
+				return
+			}()
+
+			//wait for result
+			select {
+			case <-stopC:
+				t.Errorf("SystemStorage.ElectWait() update error =%v", err)
+				return
+
+			case res := <-tt.args.ch:
+				t.Log("SystemStorage.ElectWait() is working, res=", res)
+				return
+			}
 		})
 	}
 }
