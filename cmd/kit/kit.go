@@ -24,8 +24,8 @@
 //
 // https://lastbackend.com/legal/terms/
 //
-//     Schemes: http, https
-//     Host: api.lstbknd.net
+//     Schemes: https
+//     Host: api.lastbackend.com
 //     BasePath: /
 //     Version: 0.9.4
 //     License: MIT http://opensource.org/licenses/MIT
