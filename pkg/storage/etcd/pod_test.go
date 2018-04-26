@@ -1613,7 +1613,7 @@ func TestPodStorage_WatchStatus(t *testing.T) {
 
 			//run watch go function
 			go func() {
-				err = stg.WatchStatus(ctx, podC)
+				err = stg.WatchStatus(ctxT, podC)
 				if err != nil {
 					t.Errorf("PodStorage.WatchStatus() storage setup error = %v", err)
 					return
