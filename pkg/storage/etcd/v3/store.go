@@ -20,6 +20,11 @@ package v3
 
 import (
 	"errors"
+	"path"
+	"reflect"
+	"regexp"
+	"strings"
+
 	"github.com/coreos/etcd/clientv3"
 	"github.com/lastbackend/lastbackend/pkg/log"
 	st "github.com/lastbackend/lastbackend/pkg/storage/store"
@@ -27,10 +32,6 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/util/serializer"
 	"github.com/lastbackend/lastbackend/pkg/util/validator"
 	"golang.org/x/net/context"
-	"path"
-	"reflect"
-	"regexp"
-	"strings"
 )
 
 type store struct {
@@ -45,6 +46,10 @@ const logLevel = 5
 
 // Need for decode array bytes
 type buffer []byte
+
+func (s *store) WatchClose() {
+	s.client.Watcher.Close()
+}
 
 func (s *store) Count(ctx context.Context, key, keyRegexFilter string) (int, error) {
 	key = path.Join(s.pathPrefix, key)
