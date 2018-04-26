@@ -719,10 +719,8 @@ func TestIngressStorage_GetSpec(t *testing.T) {
 	}
 }
 */
-/* TODO data race problem
-func TestIngressStorage_Watch(t *testing.T) {
 
-	initStorage()
+func TestIngressStorage_Watch(t *testing.T) {
 
 	var (
 		err      error
@@ -730,8 +728,12 @@ func TestIngressStorage_Watch(t *testing.T) {
 		ctx      = context.Background()
 		n        = getIngressAsset("test", "desc")
 		ingressC = make(chan *types.Ingress)
-		stopC    = make(chan int)
 	)
+
+	etcdCtl, _, err := initStorageWatch()
+	if err != nil {
+		t.Errorf("IngressStorage.Watch() storage setup error = %v", err)
+	}
 
 	type fields struct {
 	}
@@ -764,55 +766,59 @@ func TestIngressStorage_Watch(t *testing.T) {
 			clear()
 			defer clear()
 
-			err = stg.Insert(ctx, &n)
-			startW := make(chan int, 1)
-			if err != nil {
-				startW <- 2
-			} else {
-				//start watch after successfull insert
-				startW <- 1
+			if err := stg.Insert(ctx, &n); err != nil {
+				t.Errorf("DeploymentStorage.Watch() storage setup error = %v", err)
+				return
 			}
-			select {
-			case res := <-startW:
-				if res != 1 {
-					t.Errorf("IngressStorage.Watch() insert error = %v", err)
+
+			//create timeout context
+			ctxT, cancel := context.WithTimeout(ctx, 4*time.Second)
+			defer cancel()
+			defer etcdCtl.WatchClose()
+
+			//run watch go function
+			go func() {
+				err = stg.Watch(ctxT, ingressC)
+				if err != nil {
+					t.Errorf("IngressStorage.Watch() storage setup error = %v", err)
 					return
 				}
-				//run watch go function
-				go func() {
-					err = stg.Watch(ctx, ingressC)
-					if err != nil {
-						t.Errorf("IngressStorage.Watch() storage setup error = %v", err)
-						return
-					}
-				}()
-			}
-			//run go function to cause watch event
-			go func() {
-				time.Sleep(1 * time.Second)
-				err = stg.Update(ctx, &n)
-				time.Sleep(1 * time.Second)
-				stopC <- 1
-				return
 			}()
 
 			//wait for result
-			select {
-			case <-stopC:
-				t.Errorf("IngressStorage.Watch() update error =%v", err)
-				return
+			time.Sleep(1 * time.Second)
 
-			case <-ingressC:
-				t.Log("IngressStorage.Watch() is working")
-				return
+			//make etcd key put through etcdctrl
+			path := getEtcdctrl()
+			if path == "" {
+				t.Skipf("skip watch test: not found etcdctl path=%s", path)
 			}
+			key := "/lstbknd/ingress/test/meta"
+			value := `{"name":"test","description":"desc","self_link":"","labels":null,"created":"2018-04-26T14:50:05.523091+03:00","updated":"2018-04-26T14:50:05.523097+03:00","cluster":""}`
+			err = runEtcdPut(path, key, value)
+			if err != nil {
+				t.Skipf("skip watch test: exec etcdctl err=%s", err.Error())
+			}
+
+			for {
+				select {
+				case <-ingressC:
+					t.Log("IngressStorage.Watch() is working")
+					return
+				case <-ctxT.Done():
+					t.Log("ctxT done=", ctxT.Err(), "time=", time.Now())
+					t.Error("IngressStorage.Watch() NO watch event happen")
+					return
+				case <-time.After(500 * time.Millisecond):
+					//wait for 500 ms
+				}
+			}
+			t.Log("successfull!")
 		})
 	}
 }
 
 func TestIngressStorage_WatchStatus(t *testing.T) {
-
-	initStorage()
 
 	var (
 		err                 error
@@ -820,8 +826,12 @@ func TestIngressStorage_WatchStatus(t *testing.T) {
 		ctx                 = context.Background()
 		n                   = getIngressAsset("test", "desc")
 		ingressStatusEventC = make(chan *types.IngressStatusEvent)
-		stopC               = make(chan int)
 	)
+
+	etcdCtl, _, err := initStorageWatch()
+	if err != nil {
+		t.Errorf("IngressStorage.WatchStatus() storage setup error = %v", err)
+	}
 
 	type fields struct {
 	}
@@ -854,53 +864,58 @@ func TestIngressStorage_WatchStatus(t *testing.T) {
 			clear()
 			defer clear()
 
-			err = stg.Insert(ctx, &n)
-			startW := make(chan int, 1)
-			if err != nil {
-				startW <- 2
-			} else {
-				//start watch after successfull insert
-				startW <- 1
+			if err := stg.Insert(ctx, &n); err != nil {
+				t.Errorf("DeploymentStorage.WatchStatus() storage setup error = %v", err)
+				return
 			}
-			select {
-			case res := <-startW:
-				if res != 1 {
-					t.Errorf("IngressStorage.WatchStatus() insert error = %v", err)
+
+			//create timeout context
+			ctxT, cancel := context.WithTimeout(ctx, 4*time.Second)
+			defer cancel()
+			defer etcdCtl.WatchClose()
+
+			//run watch go function
+			go func() {
+				err = stg.WatchStatus(ctxT, ingressStatusEventC)
+				if err != nil {
+					t.Errorf("IngressStorage.WatchStatus() storage setup error = %v", err)
 					return
 				}
-				//run watch go function
-				go func() {
-					err = stg.WatchStatus(ctx, ingressStatusEventC)
-					if err != nil {
-						t.Errorf("IngressStorage.WatchStatus() storage setup error = %v", err)
-						return
-					}
-				}()
-			}
-			//run go function to cause watch event
-			go func() {
-				time.Sleep(1 * time.Second)
-				err = stg.SetStatus(ctx, &n)
-				time.Sleep(1 * time.Second)
-				stopC <- 1
-				return
 			}()
 
 			//wait for result
-			select {
-			case <-stopC:
-				t.Errorf("IngressStorage.WatchStatus() update error =%v", err)
-				return
+			time.Sleep(1 * time.Second)
 
-			case resEvent := <-ingressStatusEventC:
-				t.Log("IngressStorage.WatchStatus() is working")
-				t.Logf("resEvent=%v", resEvent)
-				return
+			//make etcd key put through etcdctrl
+			path := getEtcdctrl()
+			if path == "" {
+				t.Skipf("skip watch test: not found etcdctl path=%s", path)
 			}
+			key := "/lstbknd/ingress/test/status"
+			value := `{"ready":false}`
+			err = runEtcdPut(path, key, value)
+			if err != nil {
+				t.Skipf("skip watch test: exec etcdctl err=%s", err.Error())
+			}
+
+			for {
+				select {
+				case <-ingressStatusEventC:
+					t.Log("IngressStorage.WatchStatus() is working")
+					return
+				case <-ctxT.Done():
+					t.Log("ctxT done=", ctxT.Err(), "time=", time.Now())
+					t.Error("IngressStorage.WatchStatus() NO watch event happen")
+					return
+				case <-time.After(500 * time.Millisecond):
+					//wait for 500 ms
+				}
+			}
+			t.Log("successfull!")
 		})
 	}
 }
-*/
+
 func getIngressAsset(name, desc string) types.Ingress {
 
 	var n = types.Ingress{}

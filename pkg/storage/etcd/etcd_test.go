@@ -20,6 +20,9 @@ package etcd
 
 import (
 	"context"
+	"errors"
+	"os"
+	"os/exec"
 	"reflect"
 	"testing"
 
@@ -28,6 +31,7 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/log"
 	"github.com/lastbackend/lastbackend/pkg/storage/etcd/v3"
 	"github.com/lastbackend/lastbackend/pkg/storage/storage"
+	s "github.com/lastbackend/lastbackend/pkg/storage/store"
 	"github.com/spf13/viper"
 )
 
@@ -615,4 +619,50 @@ func compareMeta(got, want types.Meta) bool {
 	}
 
 	return result
+}
+
+//find etcdctrl adsolute path
+func getEtcdctrl() string {
+	path, lookErr := exec.LookPath("etcdctl")
+	if lookErr != nil {
+		return ""
+	}
+	return path
+}
+
+func runEtcdPut(path, key, value string) error {
+
+	//ETCDCTL_API=3 etcdctl --endpoints=127.0.0.1:2379 put key value
+
+	var conf = v3.Config{}
+	if err := viper.UnmarshalKey("etcd", &conf); err != nil {
+		return err
+	}
+	endpoint := conf.Endpoints
+	//fmt.Println("endpoint=", endpoint[0]) //"127.0.0.1:2379"
+	//have to use V3 API
+	os.Setenv("ETCDCTL_API", "3")
+	out, err := exec.Command(path, "--endpoints", endpoint[0], "put", key, value).Output()
+	if err != nil {
+		return errors.New("etcdctl not found")
+	}
+	if string(out) != "OK\n" {
+		return errors.New("etcdctl put failed")
+	}
+	return nil
+}
+
+//special init storage for watch tests in order to get client
+func initStorageWatch() (s.Store, s.DestroyFunc, error) {
+	var (
+		err error
+	)
+	initV3DummyConf()
+
+	c.store, c.dfunc, err = v3.GetClient(context.Background())
+	if err != nil {
+		log.Errorf("etcd: store initialize err: %s", err)
+		return nil, nil, err
+	}
+	return c.store, c.dfunc, nil
 }

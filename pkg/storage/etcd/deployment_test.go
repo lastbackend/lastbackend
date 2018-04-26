@@ -967,19 +967,17 @@ func TestDeploymentStorage_Remove(t *testing.T) {
 		})
 	}
 }
-
-/* TODO data race problem
 func TestDeploymentStorage_Watch(t *testing.T) {
 
-	initStorage()
-
+	etcdCtl, _, err := initStorageWatch()
+	if err != nil {
+		t.Errorf("DeploymentStorage.Watch() storage setup error = %v", err)
+	}
 	var (
 		stg         = newDeploymentStorage()
 		ctx         = context.Background()
-		err         error
 		n           = getDeploymentAsset("ns1", "svc", "test1", "desc")
 		deploymentC = make(chan *types.Deployment)
-		stopC       = make(chan int)
 	)
 
 	type fields struct {
@@ -1013,64 +1011,69 @@ func TestDeploymentStorage_Watch(t *testing.T) {
 			clear()
 			defer clear()
 
-			err = stg.Insert(ctx, &n)
-			startW := make(chan int, 1)
-			if err != nil {
-				startW <- 2
-			} else {
-				//start watch after successfull insert
-				startW <- 1
+			if err := stg.Insert(ctx, &n); err != nil {
+				t.Errorf("DeploymentStorage.Watch() storage setup error = %v", err)
+				return
 			}
-			select {
-			case res := <-startW:
-				if res != 1 {
-					t.Errorf("DeploymentStorage.Watch() insert error = %v", err)
+
+			//create timeout context
+			ctxT, cancel := context.WithTimeout(ctx, 4*time.Second)
+			defer cancel()
+			defer etcdCtl.WatchClose()
+
+			//run watch go function
+			go func() {
+				err = stg.Watch(ctxT, deploymentC)
+				if err != nil {
+					t.Errorf("DeploymentStorage.Watch() storage setup error = %v", err)
 					return
 				}
-				//run watch go function
-				go func() {
-					err = stg.Watch(ctx, deploymentC)
-					if err != nil {
-						t.Errorf("DeploymentStorage.Watch() storage setup error = %v", err)
-						return
-					}
-				}()
-			}
-			//run go function to cause watch event
-			go func() {
-				time.Sleep(1 * time.Second)
-				err = stg.Update(ctx, &n)
-				time.Sleep(1 * time.Second)
-				stopC <- 1
-				return
 			}()
 
 			//wait for result
-			select {
-			case <-stopC:
-				t.Errorf("DeploymentStorage.Watch() update error =%v", err)
-				return
+			time.Sleep(1 * time.Second)
 
-			case chanRes := <-deploymentC:
-				t.Log("DeploymentStorage.Watch() is working")
-				t.Logf("eventRes = %v\n", chanRes)
-				return
+			//make etcd key put through etcdctrl
+			path := getEtcdctrl()
+			if path == "" {
+				t.Skipf("skip watch test: not found etcdctl path=%s", path)
 			}
+			key := "/lstbknd/deployments/ns1:svc:test1/meta"
+			value := `{"name":"test1","description":"desc","self_link":"ns1:svc:test1","labels":null,"created":"2018-04-26T11:26:22.999932+03:00","updated":"0001-01-01T00:00:00Z","version":0,"namespace":"ns1","service":"svc","endpoint":"","status":""}`
+			err = runEtcdPut(path, key, value)
+			if err != nil {
+				t.Skipf("skip watch test: exec etcdctl err=%s", err.Error())
+			}
+
+			for {
+				select {
+				case <-deploymentC:
+					t.Log("DeploymentStorage.Watch() is working")
+					return
+				case <-ctxT.Done():
+					t.Log("ctxT done=", ctxT.Err(), "time=", time.Now())
+					t.Error("DeploymentStorage.Watch() NO watch event happen")
+					return
+				case <-time.After(500 * time.Millisecond):
+					//wait for 500 ms
+				}
+			}
+			t.Log("successfull!")
 		})
 	}
 }
 
 func TestDeploymentStorage_WatchSpec(t *testing.T) {
-
-	initStorage()
+	etcdCtl, _, err := initStorageWatch()
+	if err != nil {
+		t.Errorf("DeploymentStorage.WatchStatus() storage setup error = %v", err)
+	}
 
 	var (
 		stg         = newDeploymentStorage()
 		ctx         = context.Background()
-		err         error
 		n           = getDeploymentAsset("ns1", "svc", "test1", "desc")
 		deploymentC = make(chan *types.Deployment)
-		stopC       = make(chan int)
 	)
 
 	type fields struct {
@@ -1104,66 +1107,70 @@ func TestDeploymentStorage_WatchSpec(t *testing.T) {
 			clear()
 			defer clear()
 
-			err = stg.Insert(ctx, &n)
-			startW := make(chan int, 1)
-			if err != nil {
-				startW <- 2
-			} else {
-				//start watch after successfull insert
-				startW <- 1
+			if err := stg.Insert(ctx, &n); err != nil {
+				t.Errorf("DeploymentStorage.WatchSpec() storage setup error = %v", err)
+				return
 			}
-			select {
-			case res := <-startW:
-				if res != 1 {
-					t.Errorf("DeploymentStorage.WatchSpec() insert error = %v", err)
+
+			//create timeout context
+			ctxT, cancel := context.WithTimeout(ctx, 4*time.Second)
+			defer cancel()
+			defer etcdCtl.WatchClose()
+
+			//run watch go function
+			go func() {
+				err = stg.WatchSpec(ctxT, deploymentC)
+				if err != nil {
+					t.Errorf("DeploymentStorage.WatchSpec() storage setup error = %v", err)
 					return
 				}
-				//run watch go function
-				go func() {
-					err = stg.WatchSpec(ctx, deploymentC)
-					if err != nil {
-						t.Errorf("DeploymentStorage.WatchSpec() storage setup error = %v", err)
-						return
-					}
-				}()
-			}
-			//run go function to cause watch event
-			go func() {
-				time.Sleep(1 * time.Second)
-				err = stg.SetSpec(ctx, &n)
-				time.Sleep(1 * time.Second)
-				stopC <- 1
-				return
 			}()
-
 			//wait for result
-			select {
-			case <-stopC:
-				t.Errorf("DeploymentStorage.WatchSpec() update error =%v", err)
-				return
+			time.Sleep(1 * time.Second)
 
-			case chanRes := <-deploymentC:
-				t.Log("DeploymentStorage.WatchSpec() is working")
-				t.Logf("eventRes = %v\n", chanRes)
-				return
+			//make etcd key put through etcdctrl
+			path := getEtcdctrl()
+			if path == "" {
+				t.Skipf("skip watch test: not found etcdctl path=%s", path)
 			}
+			key := "/lstbknd/deployments/ns1:svc:test1/spec"
+			value := `{"meta":{"name":"","description":"","self_link":"","labels":null,"created":"0001-01-01T00:00:00Z","updated":"0001-01-01T00:00:00Z"},"replicas":0,"state":{"destroy":false,"maintenance":false},"strategy":{"type":"","rollingOptions":{"period_update":0,"interval":0,"timeout":0,"max_unavailable":0,"max_surge":0},"resources":{},"deadline":0},"triggers":null,"selector":{},"template":{"volumes":null,"container":null,"termination":0}}`
+			err = runEtcdPut(path, key, value)
+			if err != nil {
+				t.Skipf("skip watch test: exec etcdctl err=%s", err.Error())
+			}
+
+			for {
+				select {
+				case <-deploymentC:
+					t.Log("DeploymentStorage.WatchSpec() is working")
+					return
+				case <-ctxT.Done():
+					t.Log("ctxT done=", ctxT.Err(), "time=", time.Now())
+					t.Error("DeploymentStorage.WatchSpec() NO watch event happen")
+					return
+				case <-time.After(500 * time.Millisecond):
+					//wait for 500 ms
+				}
+			}
+			t.Log("successfull!")
 		})
 	}
 }
 
 func TestDeploymentStorage_WatchStatus(t *testing.T) {
 
-	initStorage()
+	etcdCtl, _, err := initStorageWatch()
+	if err != nil {
+		t.Errorf("DeploymentStorage.WatchStatus() storage setup error = %v", err)
+	}
 
 	var (
 		stg         = newDeploymentStorage()
 		ctx         = context.Background()
-		err         error
 		n           = getDeploymentAsset("ns1", "svc", "test1", "desc")
 		deploymentC = make(chan *types.Deployment)
-		stopC       = make(chan int)
 	)
-
 	type fields struct {
 	}
 	type args struct {
@@ -1195,53 +1202,56 @@ func TestDeploymentStorage_WatchStatus(t *testing.T) {
 			clear()
 			defer clear()
 
-			err = stg.Insert(ctx, &n)
-			startW := make(chan int, 1)
-			if err != nil {
-				startW <- 2
-			} else {
-				//start watch after successfull insert
-				startW <- 1
-			}
-			select {
-			case res := <-startW:
-				if res != 1 {
-					t.Errorf("DeploymentStorage.WatchStatus() insert error = %v", err)
-					return
-				}
-				//run watch go function
-				go func() {
-					err = stg.WatchStatus(ctx, deploymentC)
-					if err != nil {
-						t.Errorf("DeploymentStorage.WatchStatus() storage setup error = %v", err)
-						return
-					}
-				}()
-			}
-			//run go function to cause watch event
-			go func() {
-				time.Sleep(1 * time.Second)
-				err = stg.SetStatus(ctx, &n)
-				time.Sleep(1 * time.Second)
-				stopC <- 1
+			if err := stg.Insert(ctx, &n); err != nil {
+				t.Errorf("DeploymentStorage.WatchSetStatus() storage setup error = %v", err)
 				return
+			}
+
+			//create timeout context
+			ctxT, cancel := context.WithTimeout(ctx, 4*time.Second)
+			defer cancel()
+			defer etcdCtl.WatchClose()
+
+			//run watcher goroutine
+			go func() {
+				_ = stg.WatchStatus(ctxT, deploymentC)
 			}()
 
 			//wait for result
-			select {
-			case <-stopC:
-				t.Errorf("DeploymentStorage.WatchStatus() update error =%v", err)
-				return
+			time.Sleep(1 * time.Second)
 
-			case chanRes := <-deploymentC:
-				t.Log("DeploymentStorage.WatchStatus() is working")
-				t.Logf("eventRes = %v\n", chanRes)
-				return
+			//make etcd key put through etcdctrl
+			path := getEtcdctrl()
+			if path == "" {
+				t.Skipf("skip watch test: not found etcdctl path=%s", path)
 			}
+			key := "/lstbknd/deployments/ns1:svc:test1/status"
+			value := `{"state":"","message":""}`
+			//t.Log("path =", path)
+			err = runEtcdPut(path, key, value)
+			//			t.Logf("err = %v", err)
+			if err != nil {
+				t.Skipf("skip watch test: exec etcdctl err=%s, path=%s", err.Error(), path)
+			}
+			//
+			for {
+				select {
+				case <-deploymentC:
+					t.Log("DeploymentStorage.WatchStatus() is working")
+					return
+				case <-ctxT.Done():
+					t.Log("ctxT done=", ctxT.Err(), "time=", time.Now())
+					t.Error("DeploymentStorage.WatchSetStatus() NO watch event happen")
+					return
+				case <-time.After(500 * time.Millisecond):
+					//wait for 500 ms
+				}
+			}
+			t.Log("successfull!")
 		})
 	}
 }
-*/
+
 func Test_newDeploymentStorage(t *testing.T) {
 	tests := []struct {
 		name string

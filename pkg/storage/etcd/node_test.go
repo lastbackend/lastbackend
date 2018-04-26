@@ -1814,10 +1814,7 @@ func TestNodeStorage_Remove(t *testing.T) {
 	}
 }
 
-/* TODO data race problem
 func TestNodeStorage_Watch(t *testing.T) {
-
-	initStorage()
 
 	var (
 		stg   = newNodeStorage()
@@ -1825,8 +1822,12 @@ func TestNodeStorage_Watch(t *testing.T) {
 		err   error
 		n     = getNodeAsset("test1", "desc1", true)
 		nodeC = make(chan *types.Node)
-		stopC = make(chan int)
 	)
+
+	etcdCtl, _, err := initStorageWatch()
+	if err != nil {
+		t.Errorf("NodeStorage.Watch() storage setup error = %v", err)
+	}
 
 	type fields struct {
 	}
@@ -1859,55 +1860,58 @@ func TestNodeStorage_Watch(t *testing.T) {
 			clear()
 			defer clear()
 
-			err = stg.Insert(ctx, &n)
-			startW := make(chan int, 1)
-			if err != nil {
-				startW <- 2
-			} else {
-				//start watch after successfull insert
-				startW <- 1
+			if err := stg.Insert(ctx, &n); err != nil {
+				t.Errorf("NodeStorage.Watch() storage setup error = %v", err)
+				return
 			}
-			select {
-			case res := <-startW:
-				if res != 1 {
-					t.Errorf("NodeStorage.Watch() insert error = %v", err)
+
+			//create timeout context
+			ctxT, cancel := context.WithTimeout(ctx, 4*time.Second)
+			defer cancel()
+			defer etcdCtl.WatchClose()
+
+			//run watch go function
+			go func() {
+				err = stg.Watch(ctxT, nodeC)
+				if err != nil {
+					t.Errorf("NodeStorage.Watch() storage setup error = %v", err)
 					return
 				}
-				//run watch go function
-				go func() {
-					err = stg.Watch(ctx, nodeC)
-					if err != nil {
-						t.Errorf("NodeStorage.Watch() storage setup error = %v", err)
-						return
-					}
-				}()
-			}
-			//run go function to cause watch event
-			go func() {
-				time.Sleep(1 * time.Second)
-				err = stg.SetOnline(ctx, &n)
-				time.Sleep(1 * time.Second)
-				stopC <- 1
-				return
 			}()
-
 			//wait for result
-			select {
-			case <-stopC:
-				t.Errorf("NodeStorage.Watch() update error =%v", err)
-				return
+			time.Sleep(1 * time.Second)
 
-			case <-nodeC:
-				t.Log("NodeStorage.Watch() is working")
-				return
+			//make etcd key put through etcdctrl
+			path := getEtcdctrl()
+			if path == "" {
+				t.Skipf("skip watch test: not found etcdctl path=%s", path)
 			}
+			key := "/lstbknd/node/test1/online"
+			value := "true"
+			err = runEtcdPut(path, key, value)
+			if err != nil {
+				t.Skipf("skip watch test: exec etcdctl err=%s", err.Error())
+			}
+
+			for {
+				select {
+				case <-nodeC:
+					t.Log("NodeStorage.Watch() is working")
+					return
+				case <-ctxT.Done():
+					t.Log("ctxT done=", ctxT.Err(), "time=", time.Now())
+					t.Error("NodeStorage.Watch() NO watch event happen")
+					return
+				case <-time.After(500 * time.Millisecond):
+					//wait for 500 ms
+				}
+			}
+			t.Log("successfull!")
 		})
 	}
 }
 
 func TestNodeStorage_WatchStatus(t *testing.T) {
-
-	initStorage()
 
 	var (
 		stg              = newNodeStorage()
@@ -1915,8 +1919,12 @@ func TestNodeStorage_WatchStatus(t *testing.T) {
 		err              error
 		n                = getNodeAsset("test1", "desc1", true)
 		nodeStatusEventC = make(chan *types.NodeStatusEvent)
-		stopC            = make(chan int)
 	)
+
+	etcdCtl, _, err := initStorageWatch()
+	if err != nil {
+		t.Errorf("NodeStorage.WatchStatus() storage setup error = %v", err)
+	}
 
 	type fields struct {
 	}
@@ -1949,56 +1957,57 @@ func TestNodeStorage_WatchStatus(t *testing.T) {
 			clear()
 			defer clear()
 
-			err = stg.Insert(ctx, &n)
-			startW := make(chan int, 1)
-			if err != nil {
-				startW <- 2
-			} else {
-				//start watch after successfull insert
-				startW <- 1
+			if err := stg.Insert(ctx, &n); err != nil {
+				t.Errorf("NodeStorage.WatchStatus() storage setup error = %v", err)
+				return
 			}
-			select {
-			case res := <-startW:
-				if res != 1 {
-					t.Errorf("NodeStorage.WatchStatus() insert error = %v", err)
+
+			//create timeout context
+			ctxT, cancel := context.WithTimeout(ctx, 4*time.Second)
+			defer cancel()
+			defer etcdCtl.WatchClose()
+			//run watch go function
+			go func() {
+				err = stg.WatchStatus(ctxT, nodeStatusEventC)
+				if err != nil {
+					t.Errorf("NodeStorage.WatchStatus() storage setup error = %v", err)
 					return
 				}
-				//run watch go function
-				go func() {
-					err = stg.WatchStatus(ctx, nodeStatusEventC)
-					if err != nil {
-						t.Errorf("NodeStorage.WatchStatus() storage setup error = %v", err)
-						return
-					}
-				}()
-			}
-			//run go function to cause watch event
-			go func() {
-				time.Sleep(1 * time.Second)
-				err = stg.SetOnline(ctx, &n)
-				time.Sleep(1 * time.Second)
-				stopC <- 1
-				return
 			}()
-
 			//wait for result
-			select {
-			case <-stopC:
-				t.Errorf("NodeStorage.WatchStatus() update error =%v", err)
-				return
+			time.Sleep(1 * time.Second)
 
-			case eventRes := <-nodeStatusEventC:
-				t.Log("NodeStorage.WatchStatus() is working")
-				t.Logf("eventRes = %v\n", eventRes)
-				return
+			//make etcd key put through etcdctrl
+			path := getEtcdctrl()
+			if path == "" {
+				t.Skipf("skip watch test: not found etcdctl path=%s", path)
 			}
+			key := "/lstbknd/node/test1/online"
+			value := "true"
+			err = runEtcdPut(path, key, value)
+			if err != nil {
+				t.Skipf("skip watch test: exec etcdctl err=%s", err.Error())
+			}
+
+			for {
+				select {
+				case <-nodeStatusEventC:
+					t.Log("NodeStorage.WatchStatus() is working")
+					return
+				case <-ctxT.Done():
+					t.Log("ctxT done=", ctxT.Err(), "time=", time.Now())
+					t.Error("NodeStorage.WatchStatus() NO watch event happen")
+					return
+				case <-time.After(500 * time.Millisecond):
+					//wait for 500 ms
+				}
+			}
+			t.Log("successfull!")
 		})
 	}
 }
 
 func TestNodeStorage_WatchNetworkSpec(t *testing.T) {
-
-	initStorage()
 
 	var (
 		stg                   = newNodeStorage()
@@ -2006,8 +2015,12 @@ func TestNodeStorage_WatchNetworkSpec(t *testing.T) {
 		err                   error
 		n                     = getNodeAsset("test1", "desc1", true)
 		nodeNetworkSpecEventC = make(chan *types.NetworkSpecEvent)
-		stopC                 = make(chan int)
 	)
+
+	etcdCtl, _, err := initStorageWatch()
+	if err != nil {
+		t.Errorf("NodeStorage.WatchNetworkSpec() storage setup error = %v", err)
+	}
 
 	type fields struct {
 	}
@@ -2040,56 +2053,57 @@ func TestNodeStorage_WatchNetworkSpec(t *testing.T) {
 			clear()
 			defer clear()
 
-			err = stg.Insert(ctx, &n)
-			startW := make(chan int, 1)
-			if err != nil {
-				startW <- 2
-			} else {
-				//start watch after successfull insert
-				startW <- 1
+			if err := stg.Insert(ctx, &n); err != nil {
+				t.Errorf("NodeStorage.WatchNetworkSpec() storage setup error = %v", err)
+				return
 			}
-			select {
-			case res := <-startW:
-				if res != 1 {
-					t.Errorf("NodeStorage.WatchNetworkSpec() insert error = %v", err)
+
+			//create timeout context
+			ctxT, cancel := context.WithTimeout(ctx, 4*time.Second)
+			defer cancel()
+			defer etcdCtl.WatchClose()
+			//run watch go function
+			go func() {
+				err = stg.WatchNetworkSpec(ctxT, nodeNetworkSpecEventC)
+				if err != nil {
+					t.Errorf("NodeStorage.WatchNetworkSpec() storage setup error = %v", err)
 					return
 				}
-				//run watch go function
-				go func() {
-					err = stg.WatchNetworkSpec(ctx, nodeNetworkSpecEventC)
-					if err != nil {
-						t.Errorf("NodeStorage.WatchNetworkSpec() storage setup error = %v", err)
-						return
-					}
-				}()
-			}
-			//run go function to cause watch event
-			go func() {
-				time.Sleep(1 * time.Second)
-				err = stg.SetNetwork(ctx, &n)
-				time.Sleep(1 * time.Second)
-				stopC <- 1
-				return
 			}()
-
 			//wait for result
-			select {
-			case <-stopC:
-				t.Errorf("NodeStorage.WatchNetworkSpec() update error =%v", err)
-				return
+			time.Sleep(1 * time.Second)
 
-			case eventRes := <-nodeNetworkSpecEventC:
-				t.Log("NodeStorage.WatchNetworkSpec() is working")
-				t.Logf("eventRes = %v\n", eventRes)
-				return
+			//make etcd key put through etcdctrl
+			path := getEtcdctrl()
+			if path == "" {
+				t.Skipf("skip watch test: not found etcdctl path=%s", path)
 			}
+			key := "/lstbknd/node/test1/network"
+			value := `{"type":"vxlan","range":"10.0.0.1","iface":{"index":1,"name":"lb","addr":"10.0.0.1","HAddr":"dc:a9:04:83:0d:eb"},"addr":""}`
+			err = runEtcdPut(path, key, value)
+			if err != nil {
+				t.Skipf("skip watch test: exec etcdctl err=%s", err.Error())
+			}
+
+			for {
+				select {
+				case <-nodeNetworkSpecEventC:
+					t.Log("NodeStorage.WatchNetworkSpec() is working")
+					return
+				case <-ctxT.Done():
+					t.Log("ctxT done=", ctxT.Err(), "time=", time.Now())
+					t.Error("NodeStorage.WatchNetworkSpec() NO watch event happen")
+					return
+				case <-time.After(500 * time.Millisecond):
+					//wait for 500 ms
+				}
+			}
+			t.Log("successfull!")
 		})
 	}
 }
 
 func TestNodeStorage_WatchPodSpec(t *testing.T) {
-
-	initStorage()
 
 	var (
 		stg               = newNodeStorage()
@@ -2098,8 +2112,11 @@ func TestNodeStorage_WatchPodSpec(t *testing.T) {
 		n                 = getNodeAsset("test1", "desc1", true)
 		p                 = getPodAsset("ns1", "svc", "dp1", "test1", "desc")
 		nodePodSpecEventC = make(chan *types.PodSpecEvent)
-		stopC             = make(chan int)
 	)
+	etcdCtl, _, err := initStorageWatch()
+	if err != nil {
+		t.Errorf("NodeStorage.WatchPodSpec() storage setup error = %v", err)
+	}
 
 	type fields struct {
 	}
@@ -2135,55 +2152,52 @@ func TestNodeStorage_WatchPodSpec(t *testing.T) {
 			err = stg.Insert(ctx, &n)
 			err = stg.InsertPod(ctx, &n, &p)
 
-			startW := make(chan int, 1)
-			if err != nil {
-				startW <- 2
-			} else {
-				//start watch after successfull insert
-				startW <- 1
-			}
-			select {
-			case res := <-startW:
-				if res != 1 {
-					t.Errorf("NodeStorage.WatchPodSpec() insert error = %v", err)
+			//create timeout context
+			ctxT, cancel := context.WithTimeout(ctx, 4*time.Second)
+			defer cancel()
+			defer etcdCtl.WatchClose()
+			//run watch go function
+			go func() {
+				err = stg.WatchPodSpec(ctxT, nodePodSpecEventC)
+				if err != nil {
+					t.Errorf("NodeStorage.WatchPodSpec() storage setup error = %v", err)
 					return
 				}
-				//run watch go function
-				go func() {
-					err = stg.WatchPodSpec(ctx, nodePodSpecEventC)
-					if err != nil {
-						t.Errorf("NodeStorage.WatchPodSpec() storage setup error = %v", err)
-						return
-					}
-				}()
-			}
-			//run go function to cause watch event
-			go func() {
-				time.Sleep(1 * time.Second)
-				err = stg.UpdatePod(ctx, &n, &p)
-				time.Sleep(1 * time.Second)
-				stopC <- 1
-				return
 			}()
-
 			//wait for result
-			select {
-			case <-stopC:
-				t.Errorf("NodeStorage.WatchPodSpec() update error =%v", err)
-				return
+			time.Sleep(1 * time.Second)
 
-			case eventRes := <-nodePodSpecEventC:
-				t.Log("NodeStorage.WatchPodSpec() is working")
-				t.Logf("eventRes = %v\n", eventRes)
-				return
+			//make etcd key put through etcdctrl
+			path := getEtcdctrl()
+			if path == "" {
+				t.Skipf("skip watch test: not found etcdctl path=%s", path)
 			}
+			key := "/lstbknd/node/test1/spec/pods/ns1:svc:dp1:test1"
+			value := `{"state":{"destroy":false,"maintenance":false},"template":{"volumes":null,"container":null,"termination":0}}`
+			err = runEtcdPut(path, key, value)
+			if err != nil {
+				t.Skipf("skip watch test: exec etcdctl err=%s", err.Error())
+			}
+
+			for {
+				select {
+				case <-nodePodSpecEventC:
+					t.Log("NodeStorage.WatchPodSpec() is working")
+					return
+				case <-ctxT.Done():
+					t.Log("ctxT done=", ctxT.Err(), "time=", time.Now())
+					t.Error("NodeStorage.WatchPodSpec() NO watch event happen")
+					return
+				case <-time.After(500 * time.Millisecond):
+					//wait for 500 ms
+				}
+			}
+			t.Log("successfull!")
 		})
 	}
 }
 
 func TestNodeStorage_WatchVolumeSpec(t *testing.T) {
-
-	initStorage()
 
 	var (
 		stg                  = newNodeStorage()
@@ -2192,8 +2206,11 @@ func TestNodeStorage_WatchVolumeSpec(t *testing.T) {
 		n                    = getNodeAsset("test1", "desc1", true)
 		v                    = getVolumeAsset("ns1", "test1", "desc")
 		nodeVolumeSpecEventC = make(chan *types.VolumeSpecEvent)
-		stopC                = make(chan int)
 	)
+	etcdCtl, _, err := initStorageWatch()
+	if err != nil {
+		t.Errorf("NodeStorage.WatchVolumeSpec() storage setup error = %v", err)
+	}
 
 	type fields struct {
 	}
@@ -2229,52 +2246,51 @@ func TestNodeStorage_WatchVolumeSpec(t *testing.T) {
 			err = stg.Insert(ctx, &n)
 			err = stg.InsertVolume(ctx, &n, &v)
 
-			startW := make(chan int, 1)
-			if err != nil {
-				startW <- 2
-			} else {
-				//start watch after successfull insert
-				startW <- 1
-			}
-			select {
-			case res := <-startW:
-				if res != 1 {
-					t.Errorf("NodeStorage.WatchVolumeSpec() insert error = %v", err)
+			//create timeout context
+			ctxT, cancel := context.WithTimeout(ctx, 4*time.Second)
+			defer cancel()
+			defer etcdCtl.WatchClose() //run watch go function
+
+			go func() {
+				err = stg.WatchVolumeSpec(ctxT, nodeVolumeSpecEventC)
+				if err != nil {
+					t.Errorf("NodeStorage.WatchVolumeSpec() storage setup error = %v", err)
 					return
 				}
-				//run watch go function
-				go func() {
-					err = stg.WatchVolumeSpec(ctx, nodeVolumeSpecEventC)
-					if err != nil {
-						t.Errorf("NodeStorage.WatchVolumeSpec() storage setup error = %v", err)
-						return
-					}
-				}()
-			}
-			//run go function to cause watch event
-			go func() {
-				time.Sleep(1 * time.Second)
-				err = stg.RemoveVolume(ctx, &n, &v)
-				time.Sleep(1 * time.Second)
-				stopC <- 1
-				return
 			}()
-
 			//wait for result
-			select {
-			case <-stopC:
-				t.Errorf("NodeStorage.WatchVolumeSpec() update error =%v", err)
-				return
+			time.Sleep(1 * time.Second)
 
-			case eventRes := <-nodeVolumeSpecEventC:
-				t.Log("NodeStorage.WatchVolumeSpec() is working")
-				t.Logf("eventRes = %v\n", eventRes)
-				return
+			//make etcd key put through etcdctrl
+			path := getEtcdctrl()
+			if path == "" {
+				t.Skipf("skip watch test: not found etcdctl path=%s", path)
 			}
+			key := "/lstbknd/node/test1/spec/volumes/ns1:test1"
+			value := `{"state":{"destroy":false}}`
+			err = runEtcdPut(path, key, value)
+			if err != nil {
+				t.Skipf("skip watch test: exec etcdctl err=%s", err.Error())
+			}
+
+			for {
+				select {
+				case <-nodeVolumeSpecEventC:
+					t.Log("NodeStorage.WatchVolumeSpec() is working")
+					return
+				case <-ctxT.Done():
+					t.Log("ctxT done=", ctxT.Err(), "time=", time.Now())
+					t.Error("NodeStorage.WatchVolumeSpec() NO watch event happen")
+					return
+				case <-time.After(500 * time.Millisecond):
+					//wait for 500 ms
+				}
+			}
+			t.Log("successfull!")
 		})
 	}
 }
-*/
+
 func Test_newNodeStorage(t *testing.T) {
 	tests := []struct {
 		name string

@@ -1365,19 +1365,18 @@ func TestPodStorage_Destroy(t *testing.T) {
 	}
 }
 
-/* TODO data race problem
 func TestPodStorage_Watch(t *testing.T) {
-
-	initStorage()
-
 	var (
-		stg   = newPodStorage()
-		ctx   = context.Background()
-		n     = getPodAsset("ns1", "svc", "dp1", "test", "")
-		err   error
-		podC  = make(chan *types.Pod)
-		stopC = make(chan int)
+		stg  = newPodStorage()
+		ctx  = context.Background()
+		n    = getPodAsset("ns1", "svc", "dp1", "test", "")
+		err  error
+		podC = make(chan *types.Pod)
 	)
+	etcdCtl, _, err := initStorageWatch()
+	if err != nil {
+		t.Errorf("PodStorage.Watch() storage setup error = %v", err)
+	}
 
 	type fields struct {
 	}
@@ -1409,65 +1408,70 @@ func TestPodStorage_Watch(t *testing.T) {
 
 			clear()
 			defer clear()
-
-			err = stg.Insert(ctx, &n)
-			startW := make(chan int, 1)
-			if err != nil {
-				startW <- 2
-			} else {
-				//start watch after successfull insert
-				startW <- 1
+			if err := stg.Insert(ctx, &n); err != nil {
+				t.Errorf("PodStorage.Watch() storage setup error = %v", err)
+				return
 			}
-			select {
-			case res := <-startW:
-				if res != 1 {
-					t.Errorf("PodStorage.Watch() insert error = %v", err)
+
+			//create timeout context
+			ctxT, cancel := context.WithTimeout(ctx, 4*time.Second)
+			defer cancel()
+			defer etcdCtl.WatchClose()
+
+			//run watch go function
+			go func() {
+				err = stg.Watch(ctxT, podC)
+				if err != nil {
+					t.Errorf("PodStorage.Watch() storage setup error = %v", err)
 					return
 				}
-				//run watch go function
-				go func() {
-					err = stg.Watch(ctx, podC)
-					if err != nil {
-						t.Errorf("PodStorage.Watch() storage setup error = %v", err)
-						return
-					}
-				}()
-			}
-			//run go function to cause watch event
-			go func() {
-				time.Sleep(1 * time.Second)
-				err = stg.Update(ctx, &n)
-				time.Sleep(1 * time.Second)
-				stopC <- 1
-				return
 			}()
-
 			//wait for result
-			select {
-			case <-stopC:
-				t.Errorf("PodStorage.Watch() update error =%v", err)
-				return
+			time.Sleep(1 * time.Second)
 
-			case <-podC:
-				t.Log("PodStorage.Watch() is working")
-				return
+			//make etcd key put through etcdctrl
+			path := getEtcdctrl()
+			if path == "" {
+				t.Skipf("skip watch test: not found etcdctl path=%s", path)
 			}
+			key := "/lstbknd/deployments/ns1:svc:test1/meta"
+			value := ``
+			err = runEtcdPut(path, key, value)
+			if err != nil {
+				t.Skipf("skip watch test: exec etcdctl err=%s", err.Error())
+			}
+
+			for {
+				select {
+				case <-podC:
+					t.Log("PodStorage.Watch() is working")
+					return
+				case <-ctxT.Done():
+					t.Log("ctxT done=", ctxT.Err(), "time=", time.Now())
+					t.Error("PodStorage.Watch() NO watch event happen")
+					return
+				case <-time.After(500 * time.Millisecond):
+					//wait for 500 ms
+				}
+			}
+			t.Log("successfull!")
 		})
 	}
 }
 
 func TestPodStorage_WatchSpec(t *testing.T) {
 
-	initStorage()
-
 	var (
-		stg   = newPodStorage()
-		ctx   = context.Background()
-		n     = getPodAsset("ns1", "svc", "dp1", "test", "")
-		err   error
-		podC  = make(chan *types.Pod)
-		stopC = make(chan int)
+		stg  = newPodStorage()
+		ctx  = context.Background()
+		n    = getPodAsset("ns1", "svc", "dp1", "test", "")
+		err  error
+		podC = make(chan *types.Pod)
 	)
+	etcdCtl, _, err := initStorageWatch()
+	if err != nil {
+		t.Errorf("PodStorage.WatchSpec() storage setup error = %v", err)
+	}
 
 	type fields struct {
 	}
@@ -1500,64 +1504,71 @@ func TestPodStorage_WatchSpec(t *testing.T) {
 			clear()
 			defer clear()
 
-			err = stg.Insert(ctx, &n)
-			startW := make(chan int, 1)
-			if err != nil {
-				startW <- 2
-			} else {
-				//start watch after successfull insert
-				startW <- 1
+			if err := stg.Insert(ctx, &n); err != nil {
+				t.Errorf("PodStorage.WatchSpec() storage setup error = %v", err)
+				return
 			}
-			select {
-			case res := <-startW:
-				if res != 1 {
-					t.Errorf("PodStorage.WatchSpec() insert error = %v", err)
+
+			//create timeout context
+			ctxT, cancel := context.WithTimeout(ctx, 4*time.Second)
+			defer cancel()
+			defer etcdCtl.WatchClose()
+
+			//run watch go function
+			go func() {
+				err = stg.WatchSpec(ctxT, podC)
+				if err != nil {
+					t.Errorf("PodStorage.WatchSpec() storage setup error = %v", err)
 					return
 				}
-				//run watch go function
-				go func() {
-					err = stg.WatchSpec(ctx, podC)
-					if err != nil {
-						t.Errorf("PodStorage.WatchSpec() storage setup error = %v", err)
-						return
-					}
-				}()
-			}
-			//run go function to cause watch event
-			go func() {
-				time.Sleep(1 * time.Second)
-				err = stg.SetSpec(ctx, &n)
-				time.Sleep(1 * time.Second)
-				stopC <- 1
-				return
 			}()
-
 			//wait for result
-			select {
-			case <-stopC:
-				t.Errorf("PodStorage.WatchSpec() update error =%v", err)
-				return
+			time.Sleep(1 * time.Second)
 
-			case <-podC:
-				t.Log("PodStorage.WatchSpec() is working")
-				return
+			//make etcd key put through etcdctrl
+			path := getEtcdctrl()
+			if path == "" {
+				t.Skipf("skip watch test: not found etcdctl path=%s", path)
 			}
+			key := "/lstbknd/deployments/ns1:svc:test1/meta"
+			value := ``
+			err = runEtcdPut(path, key, value)
+			if err != nil {
+				t.Skipf("skip watch test: exec etcdctl err=%s", err.Error())
+			}
+
+			for {
+				select {
+				case <-podC:
+					t.Log("PodStorage.WatchSpec() is working")
+					return
+				case <-ctxT.Done():
+					t.Log("ctxT done=", ctxT.Err(), "time=", time.Now())
+					t.Error("PodStorage.WatchSpec() NO watch event happen")
+					return
+				case <-time.After(500 * time.Millisecond):
+					//wait for 500 ms
+				}
+			}
+			t.Log("successfull!")
 		})
 	}
 }
 
 func TestPodStorage_WatchStatus(t *testing.T) {
 
-	initStorage()
-
 	var (
-		stg   = newPodStorage()
-		ctx   = context.Background()
-		n     = getPodAsset("ns1", "svc", "dp1", "test", "")
-		err   error
-		podC  = make(chan *types.Pod)
-		stopC = make(chan int)
+		stg  = newPodStorage()
+		ctx  = context.Background()
+		n    = getPodAsset("ns1", "svc", "dp1", "test", "")
+		err  error
+		podC = make(chan *types.Pod)
 	)
+
+	etcdCtl, _, err := initStorageWatch()
+	if err != nil {
+		t.Errorf("PodStorage.WatchStatus() storage setup error = %v", err)
+	}
 
 	type fields struct {
 	}
@@ -1590,52 +1601,57 @@ func TestPodStorage_WatchStatus(t *testing.T) {
 			clear()
 			defer clear()
 
-			err = stg.Insert(ctx, &n)
-			startW := make(chan int, 1)
-			if err != nil {
-				startW <- 2
-			} else {
-				//start watch after successfull insert
-				startW <- 1
+			if err := stg.Insert(ctx, &n); err != nil {
+				t.Errorf("PodStorage.WatchStatus() storage setup error = %v", err)
+				return
 			}
-			select {
-			case res := <-startW:
-				if res != 1 {
-					t.Errorf("PodStorage.WatchStatus() insert error = %v", err)
+
+			//create timeout context
+			ctxT, cancel := context.WithTimeout(ctx, 4*time.Second)
+			defer cancel()
+			defer etcdCtl.WatchClose()
+
+			//run watch go function
+			go func() {
+				err = stg.WatchStatus(ctx, podC)
+				if err != nil {
+					t.Errorf("PodStorage.WatchStatus() storage setup error = %v", err)
 					return
 				}
-				//run watch go function
-				go func() {
-					err = stg.WatchStatus(ctx, podC)
-					if err != nil {
-						t.Errorf("PodStorage.WatchStatus() storage setup error = %v", err)
-						return
-					}
-				}()
-			}
-			//run go function to cause watch event
-			go func() {
-				time.Sleep(1 * time.Second)
-				err = stg.SetStatus(ctx, &n)
-				time.Sleep(1 * time.Second)
-				stopC <- 1
-				return
 			}()
-
 			//wait for result
-			select {
-			case <-stopC:
-				t.Errorf("PodStorage.WatchStatus() update error =%v", err)
-				return
+			time.Sleep(1 * time.Second)
 
-			case <-podC:
-				t.Log("PodStorage.WatchStatus() is working")
-				return
+			//make etcd key put through etcdctrl
+			path := getEtcdctrl()
+			if path == "" {
+				t.Skipf("skip watch test: not found etcdctl path=%s", path)
 			}
+			key := "/lstbknd/deployments/ns1:svc:test1/meta"
+			value := ``
+			err = runEtcdPut(path, key, value)
+			if err != nil {
+				t.Skipf("skip watch test: exec etcdctl err=%s", err.Error())
+			}
+
+			for {
+				select {
+				case <-podC:
+					t.Log("PodStorage.WatchStatus() is working")
+					return
+				case <-ctxT.Done():
+					t.Log("ctxT done=", ctxT.Err(), "time=", time.Now())
+					t.Error("PodStorage.WatchStatus() NO watch event happen")
+					return
+				case <-time.After(500 * time.Millisecond):
+					//wait for 500 ms
+				}
+			}
+			t.Log("successfull!")
 		})
 	}
 }
-*/
+
 func Test_newPodStorage(t *testing.T) {
 	tests := []struct {
 		name string
