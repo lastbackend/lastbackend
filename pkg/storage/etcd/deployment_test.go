@@ -969,10 +969,12 @@ func TestDeploymentStorage_Remove(t *testing.T) {
 }
 func TestDeploymentStorage_Watch(t *testing.T) {
 
-	etcdCtl, _, err := initStorageWatch()
+	etcdCtl, destroy, err := initStorageWatch()
 	if err != nil {
 		t.Errorf("DeploymentStorage.Watch() storage setup error = %v", err)
 	}
+	defer destroy()
+
 	var (
 		stg         = newDeploymentStorage()
 		ctx         = context.Background()
@@ -1064,10 +1066,11 @@ func TestDeploymentStorage_Watch(t *testing.T) {
 }
 
 func TestDeploymentStorage_WatchSpec(t *testing.T) {
-	etcdCtl, _, err := initStorageWatch()
+	etcdCtl, destroy, err := initStorageWatch()
 	if err != nil {
 		t.Errorf("DeploymentStorage.WatchStatus() storage setup error = %v", err)
 	}
+	defer destroy()
 
 	var (
 		stg         = newDeploymentStorage()
@@ -1160,10 +1163,11 @@ func TestDeploymentStorage_WatchSpec(t *testing.T) {
 
 func TestDeploymentStorage_WatchStatus(t *testing.T) {
 
-	etcdCtl, _, err := initStorageWatch()
+	etcdCtl, destroy, err := initStorageWatch()
 	if err != nil {
 		t.Errorf("DeploymentStorage.WatchStatus() storage setup error = %v", err)
 	}
+	defer destroy()
 
 	var (
 		stg         = newDeploymentStorage()

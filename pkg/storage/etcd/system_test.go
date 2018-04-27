@@ -22,7 +22,7 @@ import (
 	"context"
 	"reflect"
 	"testing"
-	//"time"
+	"time"
 
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 	"github.com/lastbackend/lastbackend/pkg/storage/storage"
@@ -236,17 +236,18 @@ func TestSystemStorage_ElectUpdate(t *testing.T) {
 	}
 }
 
-/* TODO data race problem
 func TestSystemStorage_ElectWait(t *testing.T) {
 
-	initStorage()
-
 	var (
-		stg   = newSystemStorage()
-		ctx   = context.Background()
-		p     = types.Process{}
-		stopC = make(chan int)
+		stg = newSystemStorage()
+		ctx = context.Background()
+		p   = types.Process{}
 	)
+	etcdCtl, destroy, err := initStorageWatch()
+	if err != nil {
+		t.Errorf("SystemStorage.ElectWait() storage setup error = %v", err)
+	}
+	defer destroy()
 
 	type fields struct {
 		stg storage.System
@@ -287,38 +288,51 @@ func TestSystemStorage_ElectWait(t *testing.T) {
 				t.Errorf("SystemStorage.ElectWait() set storage err = %v", err)
 				return
 			}
+			//create timeout context
+			ctxT, cancel := context.WithTimeout(ctx, 4*time.Second)
+			defer cancel()
+			defer etcdCtl.WatchClose()
+
 			//run watch gofunction
 			go func() {
-				err = stg.ElectWait(ctx, &p, tt.args.ch)
+				err = stg.ElectWait(ctxT, &p, tt.args.ch)
 				if err != nil {
 					t.Errorf("SystemStorage.ElectWait() storage setup error = %v", err)
 					return
 				}
 			}()
-
-			//run go function to cause watch event
-			go func() {
-				time.Sleep(1 * time.Second)
-				err = stg.ElectUpdate(ctx, &p)
-				time.Sleep(1 * time.Second)
-				stopC <- 1
-				return
-			}()
-
 			//wait for result
-			select {
-			case <-stopC:
-				t.Errorf("SystemStorage.ElectWait() update error =%v", err)
-				return
+			time.Sleep(1 * time.Second)
 
-			case res := <-tt.args.ch:
-				t.Log("SystemStorage.ElectWait() is working, res=", res)
-				return
+			//make etcd key put through etcdctrl
+			path := getEtcdctrl()
+			if path == "" {
+				t.Skipf("skip watch test: not found etcdctl path=%s", path)
 			}
+			key := "/lstbknd/system/lead"
+			value := ""
+			err = runEtcdPut(path, key, value)
+			if err != nil {
+				t.Skipf("skip watch test: exec etcdctl err=%s, path=%s", err.Error(), path)
+			}
+
+			for {
+				select {
+				case <-tt.args.ch:
+					t.Log("SystemStorage.ElectWait() is working")
+					return
+				case <-ctxT.Done():
+					t.Log("ctxT done=", ctxT.Err(), "time=", time.Now())
+					t.Error("SystemStorage.ElectWait() NO watch event happen")
+					return
+				case <-time.After(500 * time.Millisecond):
+					//wait for 500 ms
+				}
+			}
+			t.Log("successfull!")
 		})
 	}
 }
-*/
 
 func Test_newSystemStorage(t *testing.T) {
 	tests := []struct {

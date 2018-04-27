@@ -890,10 +890,7 @@ func TestRouteStorage_Remove(t *testing.T) {
 	}
 }
 
-/* TODO data race problem
 func TestRouteStorage_Watch(t *testing.T) {
-
-	initStorage()
 
 	var (
 		stg    = newRouteStorage()
@@ -901,8 +898,13 @@ func TestRouteStorage_Watch(t *testing.T) {
 		err    error
 		n      = getRouteAsset("ns1", "test1", "")
 		routeC = make(chan *types.Route)
-		stopC  = make(chan int)
 	)
+
+	etcdCtl, destroy, err := initStorageWatch()
+	if err != nil {
+		t.Errorf("RouteStorage.Watch() storage setup error = %v", err)
+	}
+	defer destroy()
 
 	type fields struct {
 	}
@@ -935,55 +937,58 @@ func TestRouteStorage_Watch(t *testing.T) {
 			clear()
 			defer clear()
 
-			err = stg.Insert(ctx, &n)
-			startW := make(chan int, 1)
-			if err != nil {
-				startW <- 2
-			} else {
-				//start watch after successfull insert
-				startW <- 1
+			if err := stg.Insert(ctx, &n); err != nil {
+				t.Errorf("RouteStorage.Watch() storage setup error = %v", err)
+				return
 			}
-			select {
-			case res := <-startW:
-				if res != 1 {
-					t.Errorf("RouteStorage.Watch() insert error = %v", err)
+
+			//create timeout context
+			ctxT, cancel := context.WithTimeout(ctx, 4*time.Second)
+			defer cancel()
+			defer etcdCtl.WatchClose()
+
+			//run watch go function
+			go func() {
+				err = stg.Watch(ctxT, routeC)
+				if err != nil {
+					t.Errorf("RouteStorage.Watch() storage setup error = %v", err)
 					return
 				}
-				//run watch go function
-				go func() {
-					err = stg.Watch(ctx, routeC)
-					if err != nil {
-						t.Errorf("RouteStorage.Watch() storage setup error = %v", err)
-						return
-					}
-				}()
-			}
-			//run go function to cause watch event
-			go func() {
-				time.Sleep(1 * time.Second)
-				err = stg.Update(ctx, &n)
-				time.Sleep(1 * time.Second)
-				stopC <- 1
-				return
 			}()
-
 			//wait for result
-			select {
-			case <-stopC:
-				t.Errorf("RouteStorage.Watch() update error =%v", err)
-				return
+			time.Sleep(1 * time.Second)
 
-			case <-routeC:
-				t.Log("RouteStorage.Watch() is working")
-				return
+			//make etcd key put through etcdctrl
+			path := getEtcdctrl()
+			if path == "" {
+				t.Skipf("skip watch test: not found etcdctl path=%s", path)
 			}
+			key := "/lstbknd/routes/ns1:test1/meta"
+			value := `{"name":"test1","description":"","self_link":"ns1:test1","labels":null,"created":"2018-04-26T22:38:28.142004+03:00","updated":"0001-01-01T00:00:00Z","namespace":"ns1","security":false}`
+			err = runEtcdPut(path, key, value)
+			if err != nil {
+				t.Skipf("skip watch test: exec etcdctl err=%s", err.Error())
+			}
+
+			for {
+				select {
+				case <-routeC:
+					t.Log("RouteStorage.Watch() is working")
+					return
+				case <-ctxT.Done():
+					t.Log("ctxT done=", ctxT.Err(), "time=", time.Now())
+					t.Error("RouteStorage.Watch() NO watch event happen")
+					return
+				case <-time.After(500 * time.Millisecond):
+					//wait for 500 ms
+				}
+			}
+			t.Log("successfull!")
 		})
 	}
 }
 
 func TestRouteStorage_WatchSpec(t *testing.T) {
-
-	initStorage()
 
 	var (
 		stg    = newRouteStorage()
@@ -991,8 +996,13 @@ func TestRouteStorage_WatchSpec(t *testing.T) {
 		err    error
 		n      = getRouteAsset("ns1", "test1", "")
 		routeC = make(chan *types.Route)
-		stopC  = make(chan int)
 	)
+
+	etcdCtl, destroy, err := initStorageWatch()
+	if err != nil {
+		t.Errorf("RouteStorage.WatchSpec() storage setup error = %v", err)
+	}
+	defer destroy()
 
 	type fields struct {
 	}
@@ -1025,55 +1035,58 @@ func TestRouteStorage_WatchSpec(t *testing.T) {
 			clear()
 			defer clear()
 
-			err = stg.Insert(ctx, &n)
-			startW := make(chan int, 1)
-			if err != nil {
-				startW <- 2
-			} else {
-				//start watch after successfull insert
-				startW <- 1
+			if err := stg.Insert(ctx, &n); err != nil {
+				t.Errorf("RouteStorage.WatchSpec() storage setup error = %v", err)
+				return
 			}
-			select {
-			case res := <-startW:
-				if res != 1 {
-					t.Errorf("RouteStorage.WatchSpec() insert error = %v", err)
+
+			//create timeout context
+			ctxT, cancel := context.WithTimeout(ctx, 4*time.Second)
+			defer cancel()
+			defer etcdCtl.WatchClose()
+
+			//run watch go function
+			go func() {
+				err = stg.WatchSpec(ctxT, routeC)
+				if err != nil {
+					t.Errorf("RouteStorage.WatchSpec() storage setup error = %v", err)
 					return
 				}
-				//run watch go function
-				go func() {
-					err = stg.WatchSpec(ctx, routeC)
-					if err != nil {
-						t.Errorf("RouteStorage.WatchSpec() storage setup error = %v", err)
-						return
-					}
-				}()
-			}
-			//run go function to cause watch event
-			go func() {
-				time.Sleep(1 * time.Second)
-				err = stg.SetSpec(ctx, &n)
-				time.Sleep(1 * time.Second)
-				stopC <- 1
-				return
 			}()
-
 			//wait for result
-			select {
-			case <-stopC:
-				t.Errorf("RouteStorage.WatchSpec() update error =%v", err)
-				return
+			time.Sleep(1 * time.Second)
 
-			case <-routeC:
-				t.Log("RouteStorage.WatchSpec() is working")
-				return
+			//make etcd key put through etcdctrl
+			path := getEtcdctrl()
+			if path == "" {
+				t.Skipf("skip watch test: not found etcdctl path=%s", path)
 			}
+			key := "/lstbknd/routes/ns1:test1/spec"
+			value := `{"domain":"","rules":null}`
+			err = runEtcdPut(path, key, value)
+			if err != nil {
+				t.Skipf("skip watch test: exec etcdctl err=%s", err.Error())
+			}
+
+			for {
+				select {
+				case <-routeC:
+					t.Log("RouteStorage.WatchSpec() is working")
+					return
+				case <-ctxT.Done():
+					t.Log("ctxT done=", ctxT.Err(), "time=", time.Now())
+					t.Error("RouteStorage.WatchSpec() NO watch event happen")
+					return
+				case <-time.After(500 * time.Millisecond):
+					//wait for 500 ms
+				}
+			}
+			t.Log("successfull!")
 		})
 	}
 }
 
 func TestRouteStorage_WatchStatus(t *testing.T) {
-
-	initStorage()
 
 	var (
 		stg    = newRouteStorage()
@@ -1081,8 +1094,13 @@ func TestRouteStorage_WatchStatus(t *testing.T) {
 		err    error
 		n      = getRouteAsset("ns1", "test1", "")
 		routeC = make(chan *types.Route)
-		stopC  = make(chan int)
 	)
+
+	etcdCtl, destroy, err := initStorageWatch()
+	if err != nil {
+		t.Errorf("RouteStorage.WatchStatus() storage setup error = %v", err)
+	}
+	defer destroy()
 
 	type fields struct {
 	}
@@ -1115,55 +1133,58 @@ func TestRouteStorage_WatchStatus(t *testing.T) {
 			clear()
 			defer clear()
 
-			err = stg.Insert(ctx, &n)
-			startW := make(chan int, 1)
-			if err != nil {
-				startW <- 2
-			} else {
-				//start watch after successfull insert
-				startW <- 1
+			if err := stg.Insert(ctx, &n); err != nil {
+				t.Errorf("RouteStorage.WatchStatus() storage setup error = %v", err)
+				return
 			}
-			select {
-			case res := <-startW:
-				if res != 1 {
-					t.Errorf("RouteStorage.WatchStatus() insert error = %v", err)
+
+			//create timeout context
+			ctxT, cancel := context.WithTimeout(ctx, 4*time.Second)
+			defer cancel()
+			defer etcdCtl.WatchClose()
+
+			//run watch go function
+			go func() {
+				err = stg.WatchStatus(ctxT, routeC)
+				if err != nil {
+					t.Errorf("RouteStorage.WatchStatus() storage setup error = %v", err)
 					return
 				}
-				//run watch go function
-				go func() {
-					err = stg.WatchStatus(ctx, routeC)
-					if err != nil {
-						t.Errorf("RouteStorage.WatchStatus() storage setup error = %v", err)
-						return
-					}
-				}()
-			}
-			//run go function to cause watch event
-			go func() {
-				time.Sleep(1 * time.Second)
-				err = stg.SetStatus(ctx, &n)
-				time.Sleep(1 * time.Second)
-				stopC <- 1
-				return
 			}()
-
 			//wait for result
-			select {
-			case <-stopC:
-				t.Errorf("RouteStorage.WatchStatus() update error =%v", err)
-				return
+			time.Sleep(1 * time.Second)
 
-			case <-routeC:
-				t.Log("RouteStorage.WatchStatus() is working")
-				return
+			//make etcd key put through etcdctrl
+			path := getEtcdctrl()
+			if path == "" {
+				t.Skipf("skip watch test: not found etcdctl path=%s", path)
 			}
+			key := "/lstbknd/routes/ns1:test1/status"
+			value := `{"state":"","message":""}`
+			err = runEtcdPut(path, key, value)
+			if err != nil {
+				t.Skipf("skip watch test: exec etcdctl err=%s", err.Error())
+			}
+
+			for {
+				select {
+				case <-routeC:
+					t.Log("RouteStorage.WatchStatus() is working")
+					return
+				case <-ctxT.Done():
+					t.Log("ctxT done=", ctxT.Err(), "time=", time.Now())
+					t.Error("RouteStorage.WatchStatus() NO watch event happen")
+					return
+				case <-time.After(500 * time.Millisecond):
+					//wait for 500 ms
+				}
+			}
+			t.Log("successfull!")
 		})
 	}
 }
 
 func TestRouteStorage_WatchSpecEvents(t *testing.T) {
-
-	initStorage()
 
 	var (
 		stg             = newRouteStorage()
@@ -1171,8 +1192,13 @@ func TestRouteStorage_WatchSpecEvents(t *testing.T) {
 		err             error
 		n               = getRouteAsset("ns1", "test1", "")
 		routeSpecEventC = make(chan *types.RouteSpecEvent)
-		stopC           = make(chan int)
 	)
+
+	etcdCtl, destroy, err := initStorageWatch()
+	if err != nil {
+		t.Errorf("RouteStorage.WatchSpecEvents() storage setup error = %v", err)
+	}
+	defer destroy()
 
 	type fields struct {
 	}
@@ -1205,53 +1231,57 @@ func TestRouteStorage_WatchSpecEvents(t *testing.T) {
 			clear()
 			defer clear()
 
-			err = stg.Insert(ctx, &n)
-			startW := make(chan int, 1)
-			if err != nil {
-				startW <- 2
-			} else {
-				//start watch after successfull insert
-				startW <- 1
+			if err := stg.Insert(ctx, &n); err != nil {
+				t.Errorf("RouteStorage.WatchSpecEvents() storage setup error = %v", err)
+				return
 			}
-			select {
-			case res := <-startW:
-				if res != 1 {
-					t.Errorf("RouteStorage.WatchSpecEvents() insert error = %v", err)
+
+			//create timeout context
+			ctxT, cancel := context.WithTimeout(ctx, 4*time.Second)
+			defer cancel()
+			defer etcdCtl.WatchClose()
+
+			//run watch go function
+			go func() {
+				err = stg.WatchSpecEvents(ctxT, routeSpecEventC)
+				if err != nil {
+					t.Errorf("RouteStorage.WatchSpecEvents() storage setup error = %v", err)
 					return
 				}
-				//run watch go function
-				go func() {
-					err = stg.WatchSpecEvents(ctx, routeSpecEventC)
-					if err != nil {
-						t.Errorf("RouteStorage.WatchSpecEvents() storage setup error = %v", err)
-						return
-					}
-				}()
-			}
-			//run go function to cause watch event
-			go func() {
-				time.Sleep(1 * time.Second)
-				err = stg.SetSpec(ctx, &n)
-				time.Sleep(1 * time.Second)
-				stopC <- 1
-				return
 			}()
-
 			//wait for result
-			select {
-			case <-stopC:
-				t.Errorf("RouteStorage.WatchSpecEvents() update error =%v", err)
-				return
+			time.Sleep(1 * time.Second)
 
-			case retSpecEvent := <-routeSpecEventC:
-				t.Log("RouteStorage.WatchSpecEvents() is working")
-				t.Logf("retSpecEvent=%v\n", retSpecEvent)
-				return
+			//make etcd key put through etcdctrl
+			path := getEtcdctrl()
+			if path == "" {
+				t.Skipf("skip watch test: not found etcdctl path=%s", path)
 			}
+			key := "/lstbknd/routes/ns1:test1/spec"
+			value := `{"domain":"","rules":null}`
+			err = runEtcdPut(path, key, value)
+			if err != nil {
+				t.Skipf("skip watch test: exec etcdctl err=%s", err.Error())
+			}
+
+			for {
+				select {
+				case <-routeSpecEventC:
+					t.Log("RouteStorage.WatchSpecEvents() is working")
+					return
+				case <-ctxT.Done():
+					t.Log("ctxT done=", ctxT.Err(), "time=", time.Now())
+					t.Error("RouteStorage.WatchSpecEvents() NO watch event happen")
+					return
+				case <-time.After(500 * time.Millisecond):
+					//wait for 500 ms
+				}
+			}
+			t.Log("successfull!")
 		})
 	}
 }
-*/
+
 func Test_newRouteStorage(t *testing.T) {
 	tests := []struct {
 		name string

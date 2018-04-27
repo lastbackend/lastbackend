@@ -791,10 +791,7 @@ func TestServiceStorage_Remove(t *testing.T) {
 	}
 }
 
-/* TODO data race problem
 func TestServiceStorage_Watch(t *testing.T) {
-
-	initStorage()
 
 	var (
 		stg      = newServiceStorage()
@@ -802,8 +799,13 @@ func TestServiceStorage_Watch(t *testing.T) {
 		err      error
 		n        = getServiceAsset("ns1", "test1", "")
 		serviceC = make(chan *types.Service)
-		stopC    = make(chan int)
 	)
+
+	etcdCtl, destroy, err := initStorageWatch()
+	if err != nil {
+		t.Errorf("ServiceStorage.Watch() storage setup error = %v", err)
+	}
+	defer destroy()
 
 	type fields struct {
 	}
@@ -836,55 +838,57 @@ func TestServiceStorage_Watch(t *testing.T) {
 			clear()
 			defer clear()
 
-			err = stg.Insert(ctx, &n)
-			startW := make(chan int, 1)
-			if err != nil {
-				startW <- 2
-			} else {
-				//start watch after successfull insert
-				startW <- 1
+			if err := stg.Insert(ctx, &n); err != nil {
+				t.Errorf("ServiceStorage.Watch() storage setup error = %v", err)
+				return
 			}
-			select {
-			case res := <-startW:
-				if res != 1 {
-					t.Errorf("ServiceStorage.Watch() insert error = %v", err)
+
+			//create timeout context
+			ctxT, cancel := context.WithTimeout(ctx, 4*time.Second)
+			defer cancel()
+			defer etcdCtl.WatchClose()
+			//run watch go function
+			go func() {
+				err = stg.Watch(ctxT, serviceC)
+				if err != nil {
+					t.Errorf("ServiceStorage.Watch() storage setup error = %v", err)
 					return
 				}
-				//run watch go function
-				go func() {
-					err = stg.Watch(ctx, serviceC)
-					if err != nil {
-						t.Errorf("ServiceStorage.Watch() storage setup error = %v", err)
-						return
-					}
-				}()
-			}
-			//run go function to cause watch event
-			go func() {
-				time.Sleep(1 * time.Second)
-				err = stg.Update(ctx, &n)
-				time.Sleep(1 * time.Second)
-				stopC <- 1
-				return
 			}()
-
 			//wait for result
-			select {
-			case <-stopC:
-				t.Errorf("ServiceStorage.Watch() update error =%v", err)
-				return
+			time.Sleep(1 * time.Second)
 
-			case <-serviceC:
-				t.Log("ServiceStorage.Watch() is working")
-				return
+			//make etcd key put through etcdctrl
+			path := getEtcdctrl()
+			if path == "" {
+				t.Skipf("skip watch test: not found etcdctl path=%s", path)
 			}
+			key := "/lstbknd/services/ns1:test1/meta"
+			value := `{"name":"test1","description":"","self_link":"","labels":null,"created":"2018-04-27T09:30:19.278018+03:00","updated":"0001-01-01T00:00:00Z","namespace":"ns1","selflink":"ns1:test1","endpoint":""}`
+			err = runEtcdPut(path, key, value)
+			if err != nil {
+				t.Skipf("skip watch test: exec etcdctl err=%s", err.Error())
+			}
+
+			for {
+				select {
+				case <-serviceC:
+					t.Log("ServiceStorage.Watch() is working")
+					return
+				case <-ctxT.Done():
+					t.Log("ctxT done=", ctxT.Err(), "time=", time.Now())
+					t.Error("ServiceStorage.Watch() NO watch event happen")
+					return
+				case <-time.After(500 * time.Millisecond):
+					//wait for 500 ms
+				}
+			}
+			t.Log("successfull!")
 		})
 	}
 }
 
 func TestServiceStorage_WatchSpec(t *testing.T) {
-
-	initStorage()
 
 	var (
 		stg      = newServiceStorage()
@@ -892,8 +896,13 @@ func TestServiceStorage_WatchSpec(t *testing.T) {
 		err      error
 		n        = getServiceAsset("ns1", "test1", "")
 		serviceC = make(chan *types.Service)
-		stopC    = make(chan int)
 	)
+
+	etcdCtl, destroy, err := initStorageWatch()
+	if err != nil {
+		t.Errorf("ServiceStorage.WatchSpec() storage setup error = %v", err)
+	}
+	defer destroy()
 
 	type fields struct {
 	}
@@ -926,55 +935,57 @@ func TestServiceStorage_WatchSpec(t *testing.T) {
 			clear()
 			defer clear()
 
-			err = stg.Insert(ctx, &n)
-			startW := make(chan int, 1)
-			if err != nil {
-				startW <- 2
-			} else {
-				//start watch after successfull insert
-				startW <- 1
+			if err := stg.Insert(ctx, &n); err != nil {
+				t.Errorf("ServiceStorage.WatchSpec() storage setup error = %v", err)
+				return
 			}
-			select {
-			case res := <-startW:
-				if res != 1 {
-					t.Errorf("ServiceStorage.WatchSpec() insert error = %v", err)
+
+			//create timeout context
+			ctxT, cancel := context.WithTimeout(ctx, 4*time.Second)
+			defer cancel()
+			defer etcdCtl.WatchClose()
+			//run watch go function
+			go func() {
+				err = stg.WatchSpec(ctxT, serviceC)
+				if err != nil {
+					t.Errorf("ServiceStorage.WatchSpec() storage setup error = %v", err)
 					return
 				}
-				//run watch go function
-				go func() {
-					err = stg.WatchSpec(ctx, serviceC)
-					if err != nil {
-						t.Errorf("ServiceStorage.WatchSpec() storage setup error = %v", err)
-						return
-					}
-				}()
-			}
-			//run go function to cause watch event
-			go func() {
-				time.Sleep(1 * time.Second)
-				err = stg.SetSpec(ctx, &n)
-				time.Sleep(1 * time.Second)
-				stopC <- 1
-				return
 			}()
-
 			//wait for result
-			select {
-			case <-stopC:
-				t.Errorf("ServiceStorage.WatchSpec() update error =%v", err)
-				return
+			time.Sleep(1 * time.Second)
 
-			case <-serviceC:
-				t.Log("ServiceStorage.WatchSpec() is working")
-				return
+			//make etcd key put through etcdctrl
+			path := getEtcdctrl()
+			if path == "" {
+				t.Skipf("skip watch test: not found etcdctl path=%s", path)
 			}
+			key := "/lstbknd/services/ns1:test1/spec"
+			value := `{"meta":{"name":"","description":"","self_link":"","labels":null,"created":"0001-01-01T00:00:00Z","updated":"0001-01-01T00:00:00Z"},"replicas":0,"state":{"destroy":false,"maintenance":false},"strategy":{"type":"","rollingOptions":{"period_update":0,"interval":0,"timeout":0,"max_unavailable":0,"max_surge":0},"resources":{},"deadline":0},"triggers":null,"selector":{},"template":{"volumes":null,"container":null,"termination":0}}`
+			err = runEtcdPut(path, key, value)
+			if err != nil {
+				t.Skipf("skip watch test: exec etcdctl err=%s", err.Error())
+			}
+
+			for {
+				select {
+				case <-serviceC:
+					t.Log("ServiceStorage.WatchSpec() is working")
+					return
+				case <-ctxT.Done():
+					t.Log("ctxT done=", ctxT.Err(), "time=", time.Now())
+					t.Error("ServiceStorage.WatchSpec() NO watch event happen")
+					return
+				case <-time.After(500 * time.Millisecond):
+					//wait for 500 ms
+				}
+			}
+			t.Log("successfull!")
 		})
 	}
 }
 
 func TestServiceStorage_WatchStatus(t *testing.T) {
-
-	initStorage()
 
 	var (
 		stg      = newServiceStorage()
@@ -982,8 +993,13 @@ func TestServiceStorage_WatchStatus(t *testing.T) {
 		err      error
 		n        = getServiceAsset("ns1", "test1", "")
 		serviceC = make(chan *types.Service)
-		stopC    = make(chan int)
 	)
+
+	etcdCtl, destroy, err := initStorageWatch()
+	if err != nil {
+		t.Errorf("ServiceStorage.WatchStatus() storage setup error = %v", err)
+	}
+	defer destroy()
 
 	type fields struct {
 	}
@@ -1016,52 +1032,56 @@ func TestServiceStorage_WatchStatus(t *testing.T) {
 			clear()
 			defer clear()
 
-			err = stg.Insert(ctx, &n)
-			startW := make(chan int, 1)
-			if err != nil {
-				startW <- 2
-			} else {
-				//start watch after successfull insert
-				startW <- 1
+			if err := stg.Insert(ctx, &n); err != nil {
+				t.Errorf("ServiceStorage.WatchStatus() storage setup error = %v", err)
+				return
 			}
-			select {
-			case res := <-startW:
-				if res != 1 {
-					t.Errorf("ServiceStorage.WatchStatus() insert error = %v", err)
+
+			//create timeout context
+			ctxT, cancel := context.WithTimeout(ctx, 4*time.Second)
+			defer cancel()
+			defer etcdCtl.WatchClose()
+			//run watch go function
+			go func() {
+				err = stg.WatchStatus(ctxT, serviceC)
+				if err != nil {
+					t.Errorf("ServiceStorage.WatchStatus() storage setup error = %v", err)
 					return
 				}
-				//run watch go function
-				go func() {
-					err = stg.WatchStatus(ctx, serviceC)
-					if err != nil {
-						t.Errorf("ServiceStorage.WatchStatus() storage setup error = %v", err)
-						return
-					}
-				}()
-			}
-			//run go function to cause watch event
-			go func() {
-				time.Sleep(1 * time.Second)
-				err = stg.SetStatus(ctx, &n)
-				time.Sleep(1 * time.Second)
-				stopC <- 1
-				return
 			}()
-
 			//wait for result
-			select {
-			case <-stopC:
-				t.Errorf("ServiceStorage.WatchStatus() update error =%v", err)
-				return
+			time.Sleep(1 * time.Second)
 
-			case <-serviceC:
-				t.Log("ServiceStorage.WatchStatus() is working")
-				return
+			//make etcd key put through etcdctrl
+			path := getEtcdctrl()
+			if path == "" {
+				t.Skipf("skip watch test: not found etcdctl path=%s", path)
 			}
+			key := "/lstbknd/services/ns1:test1/status"
+			value := `{"state":"","message":""}`
+			err = runEtcdPut(path, key, value)
+			if err != nil {
+				t.Skipf("skip watch test: exec etcdctl err=%s", err.Error())
+			}
+
+			for {
+				select {
+				case <-serviceC:
+					t.Log("ServiceStorage.WatchStatus() is working")
+					return
+				case <-ctxT.Done():
+					t.Log("ctxT done=", ctxT.Err(), "time=", time.Now())
+					t.Error("ServiceStorage.WatchStatus() NO watch event happen")
+					return
+				case <-time.After(500 * time.Millisecond):
+					//wait for 500 ms
+				}
+			}
+			t.Log("successfull!")
 		})
 	}
 }
-*/
+
 func Test_newServiceStorage(t *testing.T) {
 	tests := []struct {
 		name string

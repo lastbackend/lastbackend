@@ -1335,9 +1335,7 @@ func TestPodStorage_Destroy(t *testing.T) {
 				return
 			}
 
-			t.Log("before destroy=", tt.args.pod)
 			err := stg.Destroy(tt.args.ctx, tt.args.pod)
-			t.Log("after destroy=", tt.args.pod)
 			if err != nil {
 				if !tt.wantErr {
 					t.Errorf("PodStorage.Destroy() error = %v, want no error", err.Error())
@@ -1373,10 +1371,11 @@ func TestPodStorage_Watch(t *testing.T) {
 		err  error
 		podC = make(chan *types.Pod)
 	)
-	etcdCtl, _, err := initStorageWatch()
+	etcdCtl, destroy, err := initStorageWatch()
 	if err != nil {
 		t.Errorf("PodStorage.Watch() storage setup error = %v", err)
 	}
+	defer destroy()
 
 	type fields struct {
 	}
@@ -1434,8 +1433,8 @@ func TestPodStorage_Watch(t *testing.T) {
 			if path == "" {
 				t.Skipf("skip watch test: not found etcdctl path=%s", path)
 			}
-			key := "/lstbknd/deployments/ns1:svc:test1/meta"
-			value := ``
+			key := "/lstbknd/pods/ns1:svc:dp1:test/meta"
+			value := `{"name":"test","description":"","labels":null,"created":"2018-04-27T10:55:18.114748+03:00","updated":"0001-01-01T00:00:00Z","self_link":"ns1:svc:dp1:test","deployment":"dp1","service":"svc","namespace":"ns1","node":"","status":"","endpoint":""}`
 			err = runEtcdPut(path, key, value)
 			if err != nil {
 				t.Skipf("skip watch test: exec etcdctl err=%s", err.Error())
@@ -1468,10 +1467,11 @@ func TestPodStorage_WatchSpec(t *testing.T) {
 		err  error
 		podC = make(chan *types.Pod)
 	)
-	etcdCtl, _, err := initStorageWatch()
+	etcdCtl, destroy, err := initStorageWatch()
 	if err != nil {
 		t.Errorf("PodStorage.WatchSpec() storage setup error = %v", err)
 	}
+	defer destroy()
 
 	type fields struct {
 	}
@@ -1530,8 +1530,8 @@ func TestPodStorage_WatchSpec(t *testing.T) {
 			if path == "" {
 				t.Skipf("skip watch test: not found etcdctl path=%s", path)
 			}
-			key := "/lstbknd/deployments/ns1:svc:test1/meta"
-			value := ``
+			key := "/lstbknd/pods/ns1:svc:dp1:test/spec"
+			value := `{"state":{"destroy":false,"maintenance":false},"template":{"volumes":null,"container":null,"termination":0}}`
 			err = runEtcdPut(path, key, value)
 			if err != nil {
 				t.Skipf("skip watch test: exec etcdctl err=%s", err.Error())
@@ -1565,10 +1565,11 @@ func TestPodStorage_WatchStatus(t *testing.T) {
 		podC = make(chan *types.Pod)
 	)
 
-	etcdCtl, _, err := initStorageWatch()
+	etcdCtl, destroy, err := initStorageWatch()
 	if err != nil {
 		t.Errorf("PodStorage.WatchStatus() storage setup error = %v", err)
 	}
+	defer destroy()
 
 	type fields struct {
 	}
@@ -1627,8 +1628,8 @@ func TestPodStorage_WatchStatus(t *testing.T) {
 			if path == "" {
 				t.Skipf("skip watch test: not found etcdctl path=%s", path)
 			}
-			key := "/lstbknd/deployments/ns1:svc:test1/meta"
-			value := ``
+			key := "/lstbknd/pods/ns1:svc:dp1:test/status"
+			value := `{"stage":"","message":"msg","steps":null,"network":{"host_ip":"","pod_ip":""},"containers":null}`
 			err = runEtcdPut(path, key, value)
 			if err != nil {
 				t.Skipf("skip watch test: exec etcdctl err=%s", err.Error())

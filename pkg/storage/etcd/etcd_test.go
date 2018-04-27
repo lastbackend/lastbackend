@@ -604,6 +604,7 @@ func initV3DummyConf() {
 	cfg.Endpoints = []string{"127.0.0.1:2379"}
 	viper.Set("etcd", cfg)
 }
+
 func clearV3Dummyconf() {
 	cfg := v3.Config{}
 	viper.Set("etcd", cfg)
@@ -638,9 +639,9 @@ func runEtcdPut(path, key, value string) error {
 	if err := viper.UnmarshalKey("etcd", &conf); err != nil {
 		return err
 	}
-	endpoint := conf.Endpoints
-	//fmt.Println("endpoint=", endpoint[0]) //"127.0.0.1:2379"
-	//have to use V3 API
+	endpoint := conf.Endpoints //"127.0.0.1:2379"
+
+	//have to use V3 API. "put" should be lowcase !
 	os.Setenv("ETCDCTL_API", "3")
 	out, err := exec.Command(path, "--endpoints", endpoint[0], "put", key, value).Output()
 	if err != nil {

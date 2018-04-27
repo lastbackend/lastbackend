@@ -955,10 +955,7 @@ func TestTriggerStorage_Remove(t *testing.T) {
 	}
 }
 
-/* TODO data race problem
 func TestTriggerStorage_Watch(t *testing.T) {
-
-	initStorage()
 
 	var (
 		err      error
@@ -966,8 +963,13 @@ func TestTriggerStorage_Watch(t *testing.T) {
 		ctx      = context.Background()
 		n        = getTriggerAsset("ns1", "svc", "test1", "")
 		triggerC = make(chan *types.Trigger)
-		stopC    = make(chan int)
 	)
+
+	etcdCtl, destroy, err := initStorageWatch()
+	if err != nil {
+		t.Errorf("TriggerStorage.Watch() storage setup error = %v", err)
+	}
+	defer destroy()
 
 	type fields struct {
 	}
@@ -1000,55 +1002,58 @@ func TestTriggerStorage_Watch(t *testing.T) {
 			clear()
 			defer clear()
 
-			err = stg.Insert(ctx, &n)
-			startW := make(chan int, 1)
-			if err != nil {
-				startW <- 2
-			} else {
-				//start watch after successfull insert
-				startW <- 1
+			if err := stg.Insert(ctx, &n); err != nil {
+				t.Errorf("TriggerStorage.Watch() storage setup error = %v", err)
+				return
 			}
-			select {
-			case res := <-startW:
-				if res != 1 {
-					t.Errorf("TriggerStorage.Watch() insert error = %v", err)
+
+			//create timeout context
+			ctxT, cancel := context.WithTimeout(ctx, 4*time.Second)
+			defer cancel()
+			defer etcdCtl.WatchClose()
+
+			//run watch go function
+			go func() {
+				err = stg.Watch(ctxT, triggerC)
+				if err != nil {
+					t.Errorf("TriggerStorage.Watch() storage setup error = %v", err)
 					return
 				}
-				//run watch go function
-				go func() {
-					err = stg.Watch(ctx, triggerC)
-					if err != nil {
-						t.Errorf("TriggerStorage.Watch() storage setup error = %v", err)
-						return
-					}
-				}()
-			}
-			//run go function to cause watch event
-			go func() {
-				time.Sleep(1 * time.Second)
-				err = stg.Update(ctx, &n)
-				time.Sleep(1 * time.Second)
-				stopC <- 1
-				return
 			}()
-
 			//wait for result
-			select {
-			case <-stopC:
-				t.Errorf("TriggerStorage.Watch() update error =%v", err)
-				return
+			time.Sleep(1 * time.Second)
 
-			case <-triggerC:
-				t.Log("TriggerStorage.Watch() is working")
-				return
+			//make etcd key put through etcdctrl
+			path := getEtcdctrl()
+			if path == "" {
+				t.Skipf("skip watch test: not found etcdctl path=%s", path)
 			}
+			key := "/lstbknd/triggers/ns1:svc:test1/meta"
+			value := `{"name":"test1","description":"","self_link":"ns1:svc:test1","labels":null,"created":"2018-04-27T09:50:05.135285+03:00","updated":"0001-01-01T00:00:00Z","namespace":"ns1","service":"svc"}`
+			err = runEtcdPut(path, key, value)
+			if err != nil {
+				t.Skipf("skip watch test: exec etcdctl err=%s", err.Error())
+			}
+
+			for {
+				select {
+				case <-triggerC:
+					t.Log("TriggerStorage.Watch() is working")
+					return
+				case <-ctxT.Done():
+					t.Log("ctxT done=", ctxT.Err(), "time=", time.Now())
+					t.Error("TriggerStorage.Watch() NO watch event happen")
+					return
+				case <-time.After(500 * time.Millisecond):
+					//wait for 500 ms
+				}
+			}
+			t.Log("successfull!")
 		})
 	}
 }
 
 func TestTriggerStorage_WatchSpec(t *testing.T) {
-
-	initStorage()
 
 	var (
 		err      error
@@ -1056,8 +1061,13 @@ func TestTriggerStorage_WatchSpec(t *testing.T) {
 		ctx      = context.Background()
 		n        = getTriggerAsset("ns1", "svc", "test1", "")
 		triggerC = make(chan *types.Trigger)
-		stopC    = make(chan int)
 	)
+
+	etcdCtl, destroy, err := initStorageWatch()
+	if err != nil {
+		t.Errorf("TriggerStorage.WatchSpec() storage setup error = %v", err)
+	}
+	defer destroy()
 
 	type fields struct {
 	}
@@ -1090,55 +1100,58 @@ func TestTriggerStorage_WatchSpec(t *testing.T) {
 			clear()
 			defer clear()
 
-			err = stg.Insert(ctx, &n)
-			startW := make(chan int, 1)
-			if err != nil {
-				startW <- 2
-			} else {
-				//start watch after successfull insert
-				startW <- 1
+			if err := stg.Insert(ctx, &n); err != nil {
+				t.Errorf("TriggerStorage.WatchSpec() storage setup error = %v", err)
+				return
 			}
-			select {
-			case res := <-startW:
-				if res != 1 {
-					t.Errorf("TriggerStorage.WatchSpec() insert error = %v", err)
+
+			//create timeout context
+			ctxT, cancel := context.WithTimeout(ctx, 4*time.Second)
+			defer cancel()
+			defer etcdCtl.WatchClose()
+
+			//run watch go function
+			go func() {
+				err = stg.WatchSpec(ctxT, triggerC)
+				if err != nil {
+					t.Errorf("TriggerStorage.WatchSpec() storage setup error = %v", err)
 					return
 				}
-				//run watch go function
-				go func() {
-					err = stg.WatchSpec(ctx, triggerC)
-					if err != nil {
-						t.Errorf("TriggerStorage.WatchSpec() storage setup error = %v", err)
-						return
-					}
-				}()
-			}
-			//run go function to cause watch event
-			go func() {
-				time.Sleep(1 * time.Second)
-				err = stg.SetSpec(ctx, &n)
-				time.Sleep(1 * time.Second)
-				stopC <- 1
-				return
 			}()
-
 			//wait for result
-			select {
-			case <-stopC:
-				t.Errorf("TriggerStorage.WatchSpec() update error =%v", err)
-				return
+			time.Sleep(1 * time.Second)
 
-			case <-triggerC:
-				t.Log("TriggerStorage.WatchSpec() is working")
-				return
+			//make etcd key put through etcdctrl
+			path := getEtcdctrl()
+			if path == "" {
+				t.Skipf("skip watch test: not found etcdctl path=%s", path)
 			}
+			key := "/lstbknd/triggers/ns1:svc:test1/spec"
+			value := `{}`
+			err = runEtcdPut(path, key, value)
+			if err != nil {
+				t.Skipf("skip watch test: exec etcdctl err=%s", err.Error())
+			}
+
+			for {
+				select {
+				case <-triggerC:
+					t.Log("TriggerStorage.WatchSpec() is working")
+					return
+				case <-ctxT.Done():
+					t.Log("ctxT done=", ctxT.Err(), "time=", time.Now())
+					t.Error("TriggerStorage.WatchSpec() NO watch event happen")
+					return
+				case <-time.After(500 * time.Millisecond):
+					//wait for 500 ms
+				}
+			}
+			t.Log("successfull!")
 		})
 	}
 }
 
 func TestTriggerStorage_WatchStatus(t *testing.T) {
-
-	initStorage()
 
 	var (
 		err      error
@@ -1146,8 +1159,13 @@ func TestTriggerStorage_WatchStatus(t *testing.T) {
 		ctx      = context.Background()
 		n        = getTriggerAsset("ns1", "svc", "test1", "")
 		triggerC = make(chan *types.Trigger)
-		stopC    = make(chan int)
 	)
+
+	etcdCtl, destroy, err := initStorageWatch()
+	if err != nil {
+		t.Errorf("TriggerStorage.WatchStatus() storage setup error = %v", err)
+	}
+	defer destroy()
 
 	type fields struct {
 	}
@@ -1180,52 +1198,57 @@ func TestTriggerStorage_WatchStatus(t *testing.T) {
 			clear()
 			defer clear()
 
-			err = stg.Insert(ctx, &n)
-			startW := make(chan int, 1)
-			if err != nil {
-				startW <- 2
-			} else {
-				//start watch after successfull insert
-				startW <- 1
+			if err := stg.Insert(ctx, &n); err != nil {
+				t.Errorf("TriggerStorage.WatchStatus() storage setup error = %v", err)
+				return
 			}
-			select {
-			case res := <-startW:
-				if res != 1 {
-					t.Errorf("TriggerStorage.WatchStatus() insert error = %v", err)
+
+			//create timeout context
+			ctxT, cancel := context.WithTimeout(ctx, 4*time.Second)
+			defer cancel()
+			defer etcdCtl.WatchClose()
+
+			//run watch go function
+			go func() {
+				err = stg.WatchStatus(ctxT, triggerC)
+				if err != nil {
+					t.Errorf("TriggerStorage.WatchStatus() storage setup error = %v", err)
 					return
 				}
-				//run watch go function
-				go func() {
-					err = stg.WatchStatus(ctx, triggerC)
-					if err != nil {
-						t.Errorf("TriggerStorage.WatchStatus() storage setup error = %v", err)
-						return
-					}
-				}()
-			}
-			//run go function to cause watch event
-			go func() {
-				time.Sleep(1 * time.Second)
-				err = stg.SetStatus(ctx, &n)
-				time.Sleep(1 * time.Second)
-				stopC <- 1
-				return
 			}()
-
 			//wait for result
-			select {
-			case <-stopC:
-				t.Errorf("TriggerStorage.WatchStatus() update error =%v", err)
-				return
+			time.Sleep(1 * time.Second)
 
-			case <-triggerC:
-				t.Log("TriggerStorage.WatchStatus() is working")
-				return
+			//make etcd key put through etcdctrl
+			path := getEtcdctrl()
+			if path == "" {
+				t.Skipf("skip watch test: not found etcdctl path=%s", path)
 			}
+			key := "/lstbknd/triggers/ns1:svc:test1/status"
+			value := `{"state":"","message":""}`
+			err = runEtcdPut(path, key, value)
+			if err != nil {
+				t.Skipf("skip watch test: exec etcdctl err=%s", err.Error())
+			}
+
+			for {
+				select {
+				case <-triggerC:
+					t.Log("TriggerStorage.WatchStatus() is working")
+					return
+				case <-ctxT.Done():
+					t.Log("ctxT done=", ctxT.Err(), "time=", time.Now())
+					t.Error("TriggerStorage.WatchStatus() NO watch event happen")
+					return
+				case <-time.After(500 * time.Millisecond):
+					//wait for 500 ms
+				}
+			}
+			t.Log("successfull!")
 		})
 	}
 }
-*/
+
 func Test_newTriggerStorage(t *testing.T) {
 	tests := []struct {
 		name string

@@ -321,7 +321,7 @@ func TestNodeStorage_GetSpec(t *testing.T) {
 			}
 
 			got, err := tt.fields.stg.GetSpec(tt.args.ctx, tt.args.node)
-			t.Logf("got get spec=%v\n from node = %v", got, tt.args.node)
+			//t.Logf("got get spec=%v\n from node = %v", got, tt.args.node)
 			if err != nil {
 				if tt.wantErr && tt.err != err.Error() {
 					t.Errorf("NodeStorage.GetSpec() \n%v\nwant\n%v", err, tt.err)
@@ -1824,10 +1824,11 @@ func TestNodeStorage_Watch(t *testing.T) {
 		nodeC = make(chan *types.Node)
 	)
 
-	etcdCtl, _, err := initStorageWatch()
+	etcdCtl, destroy, err := initStorageWatch()
 	if err != nil {
 		t.Errorf("NodeStorage.Watch() storage setup error = %v", err)
 	}
+	defer destroy()
 
 	type fields struct {
 	}
@@ -1921,10 +1922,11 @@ func TestNodeStorage_WatchStatus(t *testing.T) {
 		nodeStatusEventC = make(chan *types.NodeStatusEvent)
 	)
 
-	etcdCtl, _, err := initStorageWatch()
+	etcdCtl, destroy, err := initStorageWatch()
 	if err != nil {
 		t.Errorf("NodeStorage.WatchStatus() storage setup error = %v", err)
 	}
+	defer destroy()
 
 	type fields struct {
 	}
@@ -2017,10 +2019,11 @@ func TestNodeStorage_WatchNetworkSpec(t *testing.T) {
 		nodeNetworkSpecEventC = make(chan *types.NetworkSpecEvent)
 	)
 
-	etcdCtl, _, err := initStorageWatch()
+	etcdCtl, destroy, err := initStorageWatch()
 	if err != nil {
 		t.Errorf("NodeStorage.WatchNetworkSpec() storage setup error = %v", err)
 	}
+	defer destroy()
 
 	type fields struct {
 	}
@@ -2113,10 +2116,11 @@ func TestNodeStorage_WatchPodSpec(t *testing.T) {
 		p                 = getPodAsset("ns1", "svc", "dp1", "test1", "desc")
 		nodePodSpecEventC = make(chan *types.PodSpecEvent)
 	)
-	etcdCtl, _, err := initStorageWatch()
+	etcdCtl, destroy, err := initStorageWatch()
 	if err != nil {
 		t.Errorf("NodeStorage.WatchPodSpec() storage setup error = %v", err)
 	}
+	defer destroy()
 
 	type fields struct {
 	}
@@ -2207,10 +2211,12 @@ func TestNodeStorage_WatchVolumeSpec(t *testing.T) {
 		v                    = getVolumeAsset("ns1", "test1", "desc")
 		nodeVolumeSpecEventC = make(chan *types.VolumeSpecEvent)
 	)
-	etcdCtl, _, err := initStorageWatch()
+
+	etcdCtl, destroy, err := initStorageWatch()
 	if err != nil {
 		t.Errorf("NodeStorage.WatchVolumeSpec() storage setup error = %v", err)
 	}
+	defer destroy()
 
 	type fields struct {
 	}

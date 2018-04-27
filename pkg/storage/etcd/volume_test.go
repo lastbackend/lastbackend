@@ -942,10 +942,7 @@ func TestVolumeStorage_Remove(t *testing.T) {
 	}
 }
 
-/* TODO data race problem
 func TestVolumeStorage_Watch(t *testing.T) {
-
-	initStorage()
 
 	var (
 		err     error
@@ -953,8 +950,13 @@ func TestVolumeStorage_Watch(t *testing.T) {
 		ctx     = context.Background()
 		n       = getVolumeAsset("ns1", "test1", "")
 		volumeC = make(chan *types.Volume)
-		stopC   = make(chan int)
 	)
+
+	etcdCtl, destroy, err := initStorageWatch()
+	if err != nil {
+		t.Errorf("VolumeStorage.Watch() storage setup error = %v", err)
+	}
+	defer destroy()
 
 	type fields struct {
 	}
@@ -987,55 +989,58 @@ func TestVolumeStorage_Watch(t *testing.T) {
 			clear()
 			defer clear()
 
-			err = stg.Insert(ctx, &n)
-			startW := make(chan int, 1)
-			if err != nil {
-				startW <- 2
-			} else {
-				//start watch after successfull insert
-				startW <- 1
+			if err := stg.Insert(ctx, &n); err != nil {
+				t.Errorf("VolumeStorage.Watch() storage setup error = %v", err)
+				return
 			}
-			select {
-			case res := <-startW:
-				if res != 1 {
-					t.Errorf("VolumeStorage.Watch() insert error = %v", err)
+
+			//create timeout context
+			ctxT, cancel := context.WithTimeout(ctx, 4*time.Second)
+			defer cancel()
+			defer etcdCtl.WatchClose()
+
+			//run watch go function
+			go func() {
+				err = stg.Watch(ctxT, volumeC)
+				if err != nil {
+					t.Errorf("VolumeStorage.Watch() storage setup error = %v", err)
 					return
 				}
-				//run watch go function
-				go func() {
-					err = stg.Watch(ctx, volumeC)
-					if err != nil {
-						t.Errorf("VolumeStorage.Watch() storage setup error = %v", err)
-						return
-					}
-				}()
-			}
-			//run go function to cause watch event
-			go func() {
-				time.Sleep(1 * time.Second)
-				err = stg.Update(ctx, &n)
-				time.Sleep(1 * time.Second)
-				stopC <- 1
-				return
 			}()
-
 			//wait for result
-			select {
-			case <-stopC:
-				t.Errorf("VolumeStorage.Watch() update error =%v", err)
-				return
+			time.Sleep(1 * time.Second)
 
-			case <-volumeC:
-				t.Log("VolumeStorage.Watch() is working")
-				return
+			//make etcd key put through etcdctrl
+			path := getEtcdctrl()
+			if path == "" {
+				t.Skipf("skip watch test: not found etcdctl path=%s", path)
 			}
+			key := "/lstbknd/volumes/ns1:test1/meta"
+			value := `{"name":"test1","description":"","self_link":"ns1:test1","labels":null,"created":"2018-04-27T10:02:25.58067+03:00","updated":"0001-01-01T00:00:00Z","namespace":"ns1"}`
+			err = runEtcdPut(path, key, value)
+			if err != nil {
+				t.Skipf("skip watch test: exec etcdctl err=%s", err.Error())
+			}
+
+			for {
+				select {
+				case <-volumeC:
+					t.Log("VolumeStorage.Watch() is working")
+					return
+				case <-ctxT.Done():
+					t.Log("ctxT done=", ctxT.Err(), "time=", time.Now())
+					t.Error("VolumeStorage.Watch() NO watch event happen")
+					return
+				case <-time.After(500 * time.Millisecond):
+					//wait for 500 ms
+				}
+			}
+			t.Log("successfull!")
 		})
 	}
 }
 
 func TestVolumeStorage_WatchSpec(t *testing.T) {
-
-	initStorage()
 
 	var (
 		err     error
@@ -1043,8 +1048,12 @@ func TestVolumeStorage_WatchSpec(t *testing.T) {
 		ctx     = context.Background()
 		n       = getVolumeAsset("ns1", "test1", "")
 		volumeC = make(chan *types.Volume)
-		stopC   = make(chan int)
 	)
+	etcdCtl, destroy, err := initStorageWatch()
+	if err != nil {
+		t.Errorf("VolumeStorage.WatchSpec() storage setup error = %v", err)
+	}
+	defer destroy()
 
 	type fields struct {
 	}
@@ -1077,55 +1086,57 @@ func TestVolumeStorage_WatchSpec(t *testing.T) {
 			clear()
 			defer clear()
 
-			err = stg.Insert(ctx, &n)
-			startW := make(chan int, 1)
-			if err != nil {
-				startW <- 2
-			} else {
-				//start watch after successfull insert
-				startW <- 1
+			if err := stg.Insert(ctx, &n); err != nil {
+				t.Errorf("VolumeStorage.WatchSpec() storage setup error = %v", err)
+				return
 			}
-			select {
-			case res := <-startW:
-				if res != 1 {
-					t.Errorf("VolumeStorage.WatchSpec() insert error = %v", err)
+
+			//create timeout context
+			ctxT, cancel := context.WithTimeout(ctx, 4*time.Second)
+			defer cancel()
+			defer etcdCtl.WatchClose()
+			//run watch go function
+			go func() {
+				err = stg.WatchSpec(ctxT, volumeC)
+				if err != nil {
+					t.Errorf("VolumeStorage.WatchSpec() storage setup error = %v", err)
 					return
 				}
-				//run watch go function
-				go func() {
-					err = stg.WatchSpec(ctx, volumeC)
-					if err != nil {
-						t.Errorf("VolumeStorage.WatchSpec() storage setup error = %v", err)
-						return
-					}
-				}()
-			}
-			//run go function to cause watch event
-			go func() {
-				time.Sleep(1 * time.Second)
-				err = stg.SetSpec(ctx, &n)
-				time.Sleep(1 * time.Second)
-				stopC <- 1
-				return
 			}()
-
 			//wait for result
-			select {
-			case <-stopC:
-				t.Errorf("VolumeStorage.WatchSpec() set spec error =%v", err)
-				return
+			time.Sleep(1 * time.Second)
 
-			case <-volumeC:
-				t.Log("VolumeStorage.WatchSpec() is working")
-				return
+			//make etcd key put through etcdctrl
+			path := getEtcdctrl()
+			if path == "" {
+				t.Skipf("skip watch test: not found etcdctl path=%s", path)
 			}
+			key := "/lstbknd/volumes/ns1:test1/spec"
+			value := `{"state":{"destroy":false}}`
+			err = runEtcdPut(path, key, value)
+			if err != nil {
+				t.Skipf("skip watch test: exec etcdctl err=%s", err.Error())
+			}
+
+			for {
+				select {
+				case <-volumeC:
+					t.Log("VolumeStorage.WatchSpec() is working")
+					return
+				case <-ctxT.Done():
+					t.Log("ctxT done=", ctxT.Err(), "time=", time.Now())
+					t.Error("VolumeStorage.WatchSpec() NO watch event happen")
+					return
+				case <-time.After(500 * time.Millisecond):
+					//wait for 500 ms
+				}
+			}
+			t.Log("successfull!")
 		})
 	}
 }
 
 func TestVolumeStorage_WatchStatus(t *testing.T) {
-
-	initStorage()
 
 	var (
 		err     error
@@ -1133,8 +1144,13 @@ func TestVolumeStorage_WatchStatus(t *testing.T) {
 		ctx     = context.Background()
 		n       = getVolumeAsset("ns1", "test1", "")
 		volumeC = make(chan *types.Volume)
-		stopC   = make(chan int)
 	)
+
+	etcdCtl, destroy, err := initStorageWatch()
+	if err != nil {
+		t.Errorf("VolumeStorage.WatchStatus() storage setup error = %v", err)
+	}
+	defer destroy()
 
 	type fields struct {
 	}
@@ -1167,52 +1183,56 @@ func TestVolumeStorage_WatchStatus(t *testing.T) {
 			clear()
 			defer clear()
 
-			err = stg.Insert(ctx, &n)
-			startW := make(chan int, 1)
-			if err != nil {
-				startW <- 2
-			} else {
-				//start watch after successfull insert
-				startW <- 1
+			if err := stg.Insert(ctx, &n); err != nil {
+				t.Errorf("VolumeStorage.WatchStatus() storage setup error = %v", err)
+				return
 			}
-			select {
-			case res := <-startW:
-				if res != 1 {
-					t.Errorf("VolumeStorage.WatchStatus() insert error = %v", err)
+
+			//create timeout context
+			ctxT, cancel := context.WithTimeout(ctx, 4*time.Second)
+			defer cancel()
+			defer etcdCtl.WatchClose()
+			//run watch go function
+			go func() {
+				err = stg.WatchStatus(ctxT, volumeC)
+				if err != nil {
+					t.Errorf("VolumeStorage.WatchStatus() storage setup error = %v", err)
 					return
 				}
-				//run watch go function
-				go func() {
-					err = stg.WatchStatus(ctx, volumeC)
-					if err != nil {
-						t.Errorf("VolumeStorage.WatchStatus() storage setup error = %v", err)
-						return
-					}
-				}()
-			}
-			//run go function to cause watch event
-			go func() {
-				time.Sleep(1 * time.Second)
-				err = stg.SetStatus(ctx, &n)
-				time.Sleep(1 * time.Second)
-				stopC <- 1
-				return
 			}()
-
 			//wait for result
-			select {
-			case <-stopC:
-				t.Errorf("VolumeStorage.WatchStatus() set status error =%v", err)
-				return
+			time.Sleep(1 * time.Second)
 
-			case <-volumeC:
-				t.Log("VolumeStorage.WatchStatus() is working")
-				return
+			//make etcd key put through etcdctrl
+			path := getEtcdctrl()
+			if path == "" {
+				t.Skipf("skip watch test: not found etcdctl path=%s", path)
 			}
+			key := "/lstbknd/volumes/ns1:test1/status"
+			value := `{"state":"","message":""}`
+			err = runEtcdPut(path, key, value)
+			if err != nil {
+				t.Skipf("skip watch test: exec etcdctl err=%s", err.Error())
+			}
+
+			for {
+				select {
+				case <-volumeC:
+					t.Log("VolumeStorage.WatchStatus() is working")
+					return
+				case <-ctxT.Done():
+					t.Log("ctxT done=", ctxT.Err(), "time=", time.Now())
+					t.Error("VolumeStorage.WatchStatus() NO watch event happen")
+					return
+				case <-time.After(500 * time.Millisecond):
+					//wait for 500 ms
+				}
+			}
+			t.Log("successfull!")
 		})
 	}
 }
-*/
+
 func getVolumeAsset(namespace, name, desc string) types.Volume {
 
 	var n = types.Volume{}

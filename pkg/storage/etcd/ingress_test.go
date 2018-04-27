@@ -730,10 +730,11 @@ func TestIngressStorage_Watch(t *testing.T) {
 		ingressC = make(chan *types.Ingress)
 	)
 
-	etcdCtl, _, err := initStorageWatch()
+	etcdCtl, destroy, err := initStorageWatch()
 	if err != nil {
 		t.Errorf("IngressStorage.Watch() storage setup error = %v", err)
 	}
+	defer destroy()
 
 	type fields struct {
 	}
@@ -828,10 +829,11 @@ func TestIngressStorage_WatchStatus(t *testing.T) {
 		ingressStatusEventC = make(chan *types.IngressStatusEvent)
 	)
 
-	etcdCtl, _, err := initStorageWatch()
+	etcdCtl, destroy, err := initStorageWatch()
 	if err != nil {
 		t.Errorf("IngressStorage.WatchStatus() storage setup error = %v", err)
 	}
+	defer destroy()
 
 	type fields struct {
 	}
