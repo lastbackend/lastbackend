@@ -640,17 +640,107 @@ func runEtcdPut(path, key, value string) error {
 		return err
 	}
 	endpoint := conf.Endpoints //"127.0.0.1:2379"
-
 	//have to use V3 API. "put" should be lowcase !
 	os.Setenv("ETCDCTL_API", "3")
-	out, err := exec.Command(path, "--endpoints", endpoint[0], "put", key, value).Output()
+	_, err := exec.Command(path, "--endpoints", endpoint[0], "put", key, value).Output()
 	if err != nil {
-		return errors.New("etcdctl not found")
+		switch err.Error() {
+		case "exit status 1":
+			return errors.New("etcdctl wrong params")
+		case "fork/exec : no such file or directory":
+			return errors.New("etcdctl not found")
+		default:
+			return errors.New("etcdctl unknown")
+		}
 	}
-	if string(out) != "OK\n" {
+
+	/*if string(out) != "OK\n" {
 		return errors.New("etcdctl put failed")
 	}
+	*/
 	return nil
+}
+
+func runEtcdDel(path, key string) error {
+	var conf = v3.Config{}
+	if err := viper.UnmarshalKey("etcd", &conf); err != nil {
+		return err
+	}
+	endpoint := conf.Endpoints //"127.0.0.1:2379"
+
+	_, err := exec.Command(path, "--endpoints", endpoint[0], "del", key).Output()
+	return err
+}
+
+//Test etcdctl put
+func Test_RunEtcdPut(t *testing.T) {
+	initV3DummyConf()
+	key := "/lstbknd/deployments/ns1:svc:test1/status"
+	value := `{"state":"","message":""}`
+
+	path := getEtcdctrl()
+	if path == "" {
+		t.Skip("Test_RunEtcdPut skip: no etcdctl for test")
+	}
+
+	type args struct {
+		path  string
+		key   string
+		value string
+	}
+	tests := []struct {
+		name    string
+		args    args
+		wantErr bool
+		err     string
+	}{
+		{
+			"test run etcdctl path empty",
+			args{"", key, value},
+			true,
+			"etcdctl not found",
+		},
+		{
+			"test run etcdctl key empty",
+			args{path, "", value},
+			true,
+			"etcdctl wrong params",
+		},
+		{
+			"test etcdctl put successfull",
+			args{path, key, value},
+			false,
+			"",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			err := runEtcdPut(tt.args.path, tt.args.key, tt.args.value)
+			if err != nil {
+				if tt.wantErr && err.Error() != tt.err {
+					t.Errorf("Test_RunEtcdPut want err=%v, got %v", tt.err, err)
+					return
+				}
+				if !tt.wantErr {
+					t.Errorf("Test_RunEtcdPut got err=%v", err)
+				}
+				return
+			}
+
+			if tt.wantErr {
+				_ = runEtcdDel(tt.args.path, tt.args.key)
+				t.Errorf("Test_RunEtcdPut want err=%v got none", tt.err)
+				return
+			}
+
+			//delete key
+			_ = runEtcdDel(tt.args.path, tt.args.key)
+			t.Log("successfull")
+
+		})
+	}
+
 }
 
 //special init storage for watch tests in order to get client
