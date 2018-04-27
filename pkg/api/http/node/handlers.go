@@ -39,6 +39,29 @@ const (
 
 func NodeInfoH(w http.ResponseWriter, r *http.Request) {
 
+	// swagger:operation GET /cluster/node/{node} node nodeInfo
+	//
+	// Shows an info about node
+	//
+	// ---
+	// produces:
+	// - application/json
+	// parameters:
+	//   - name: node
+	//     in: path
+	//     description: node id
+	//     required: true
+	//     type: string
+	// responses:
+	//   '200':
+	//     description: Node response
+	//     schema:
+	//       "$ref": "#/definitions/views_node"
+	//   '404':
+	//     description: Node not found
+	//   '500':
+	//     description: Internal server error
+
 	log.V(logLevel).Debugf("%s:info:> get node", logPrefix)
 
 	var (
@@ -73,6 +96,29 @@ func NodeInfoH(w http.ResponseWriter, r *http.Request) {
 }
 
 func NodeGetSpecH(w http.ResponseWriter, r *http.Request) {
+
+	// swagger:operation GET /cluster/node/{node}/spec node nodeGetSpec
+	//
+	// Shows an info about node spec
+	//
+	// ---
+	// produces:
+	// - application/json
+	// parameters:
+	//   - name: node
+	//     in: path
+	//     description: node id
+	//     required: true
+	//     type: string
+	// responses:
+	//   '200':
+	//     description: Node spec response
+	//     schema:
+	//       "$ref": "#/definitions/views_node_spec"
+	//   '404':
+	//     description: Node not found
+	//   '500':
+	//     description: Internal server error
 
 	log.V(logLevel).Debugf("%s:getspec:> list node", logPrefix)
 
@@ -123,6 +169,21 @@ func NodeGetSpecH(w http.ResponseWriter, r *http.Request) {
 
 func NodeListH(w http.ResponseWriter, r *http.Request) {
 
+	// swagger:operation GET /cluster/node node nodeList
+	//
+	// Shows a list of nodes
+	//
+	// ---
+	// produces:
+	// - application/json
+	// responses:
+	//   '200':
+	//     description: Node list response
+	//     schema:
+	//       "$ref": "#/definitions/views_node_list"
+	//   '500':
+	//     description: Internal server error
+
 	log.V(logLevel).Debugf("%s:list:> get nodes list", logPrefix)
 
 	var (
@@ -151,6 +212,34 @@ func NodeListH(w http.ResponseWriter, r *http.Request) {
 }
 
 func NodeSetMetaH(w http.ResponseWriter, r *http.Request) {
+
+	// swagger:operation PUT /cluster/node/{node}/meta node nodeSetMeta
+	//
+	// Set node meta
+	//
+	// ---
+	// produces:
+	// - application/json
+	// parameters:
+	//   - name: node
+	//     in: path
+	//     description: node id
+	//     required: true
+	//     type: string
+	//   - name: body
+	//     in: body
+	//     required: true
+	//     schema:
+	//       "$ref": "#/definitions/request_node_meta"
+	// responses:
+	//   '200':
+	//     description: Successfully set node meta
+	//     schema:
+	//       "$ref": "#/definitions/views_node"
+	//   '404':
+	//     description: Node not found
+	//   '500':
+	//     description: Internal server error
 
 	nid := utils.Vars(r)["node"]
 
@@ -202,6 +291,30 @@ func NodeSetMetaH(w http.ResponseWriter, r *http.Request) {
 }
 
 func NodeConnectH(w http.ResponseWriter, r *http.Request) {
+
+	// swagger:operation PUT /cluster/node/{node} node nodeConnect
+	//
+	// Connect node
+	//
+	// ---
+	// produces:
+	// - application/json
+	// parameters:
+	//   - name: node
+	//     in: path
+	//     description: node id
+	//     required: true
+	//     type: string
+	//   - name: body
+	//     in: body
+	//     required: true
+	//     schema:
+	//       "$ref": "#/definitions/request_node_connect"
+	// responses:
+	//   '200':
+	//     description: Node connected
+	//   '500':
+	//     description: Internal server error
 
 	log.V(logLevel).Debugf("%s:connect:> node connect", logPrefix)
 
@@ -292,6 +405,34 @@ func NodeConnectH(w http.ResponseWriter, r *http.Request) {
 
 func NodeSetStatusH(w http.ResponseWriter, r *http.Request) {
 
+	// swagger:operation PUT /cluster/node/{node}/status node nodeSetStatus
+	//
+	// Set node status
+	//
+	// ---
+	// produces:
+	// - application/json
+	// parameters:
+	//   - name: node
+	//     in: path
+	//     description: node id
+	//     required: true
+	//     type: string
+	//   - name: body
+	//     in: body
+	//     required: true
+	//     schema:
+	//       "$ref": "#/definitions/request_node_status"
+	// responses:
+	//   '200':
+	//     description: Successfully set node status
+	//   '400':
+	//     description: Bad request
+	//   '404':
+	//     description: Node not found / Pod not found
+	//   '500':
+	//     description: Internal server error
+
 	log.V(logLevel).Debugf("%s:setstatus:> node set state", logPrefix)
 
 	var (
@@ -377,6 +518,39 @@ func NodeSetStatusH(w http.ResponseWriter, r *http.Request) {
 
 func NodeSetPodStatusH(w http.ResponseWriter, r *http.Request) {
 
+	// swagger:operation PUT /cluster/node/{node}/status/pod/{pod} node nodeSetPodStatus
+	//
+	// Set node pod status
+	//
+	// ---
+	// produces:
+	// - application/json
+	// parameters:
+	//   - name: node
+	//     in: path
+	//     description: node id
+	//     required: true
+	//     type: string
+	//   - name: pod
+	//     in: path
+	//     description: pod id
+	//     required: true
+	//     type: string
+	//   - name: body
+	//     in: body
+	//     required: true
+	//     schema:
+	//       "$ref": "#/definitions/request_node_pod_status"
+	// responses:
+	//   '200':
+	//     description: Successfully set node pod status
+	//   '400':
+	//     description: Bad request
+	//   '404':
+	//     description: Node not found / Pod not found
+	//   '500':
+	//     description: Internal server error
+
 	var (
 		nm  = distribution.NewNodeModel(r.Context(), envs.Get().GetStorage())
 		pm  = distribution.NewPodModel(r.Context(), envs.Get().GetStorage())
@@ -444,6 +618,39 @@ func NodeSetPodStatusH(w http.ResponseWriter, r *http.Request) {
 
 func NodeSetVolumeStatusH(w http.ResponseWriter, r *http.Request) {
 
+	// swagger:operation PUT /cluster/node/{node}/status/volume/{pod} node nodeSetVolumeStatus
+	//
+	// Set node volume status
+	//
+	// ---
+	// produces:
+	// - application/json
+	// parameters:
+	//   - name: node
+	//     in: path
+	//     description: node id
+	//     required: true
+	//     type: string
+	//   - name: pod
+	//     in: path
+	//     description: pod id
+	//     required: true
+	//     type: string
+	//   - name: body
+	//     in: body
+	//     required: true
+	//     schema:
+	//       "$ref": "#/definitions/request_node_volume_status"
+	// responses:
+	//   '200':
+	//     description: Successfully set node volume status
+	//   '400':
+	//     description: Bad request
+	//   '404':
+	//     description: Node not found / Pod not found / Volume not found
+	//   '500':
+	//     description: Internal server error
+
 	log.V(logLevel).Debugf("%s:setvolumestatus:> node set volume state", logPrefix)
 
 	var (
@@ -510,6 +717,39 @@ func NodeSetVolumeStatusH(w http.ResponseWriter, r *http.Request) {
 
 func NodeSetRouteStatusH(w http.ResponseWriter, r *http.Request) {
 
+	// swagger:operation PUT /cluster/node/{node}/status/route/{pod} node nodeSetRouteStatus
+	//
+	// Set node route status
+	//
+	// ---
+	// produces:
+	// - application/json
+	// parameters:
+	//   - name: node
+	//     in: path
+	//     description: node id
+	//     required: true
+	//     type: string
+	//   - name: pod
+	//     in: path
+	//     description: pod id
+	//     required: true
+	//     type: string
+	//   - name: body
+	//     in: body
+	//     required: true
+	//     schema:
+	//       "$ref": "#/definitions/request_node_route_status"
+	// responses:
+	//   '200':
+	//     description: Successfully set node route status
+	//   '400':
+	//     description: Bad request
+	//   '404':
+	//     description: Node not found / Pod not found / Route not found
+	//   '500':
+	//     description: Internal server error
+
 	log.V(logLevel).Debugf("%s:setroutestatus:> node set route state", logPrefix)
 
 	var (
@@ -575,6 +815,27 @@ func NodeSetRouteStatusH(w http.ResponseWriter, r *http.Request) {
 }
 
 func NodeRemoveH(w http.ResponseWriter, r *http.Request) {
+
+	// swagger:operation DELETE /cluster/node/{node} node nodeRemove
+	//
+	// Remove node
+	//
+	// ---
+	// produces:
+	// - application/json
+	// parameters:
+	//   - name: node
+	//     in: path
+	//     description: node id
+	//     required: true
+	//     type: string
+	// responses:
+	//   '200':
+	//     description: Node removed
+	//   '404':
+	//     description: Node not found
+	//   '500':
+	//     description: Internal server error
 
 	log.V(logLevel).Debugf("%s:remove:>_ create node", logPrefix)
 

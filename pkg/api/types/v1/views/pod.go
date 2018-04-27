@@ -24,6 +24,7 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 )
 
+// swagger:model views_pod
 type Pod struct {
 	// Pod meta id
 	ID string `json:"id"`
@@ -35,12 +36,17 @@ type Pod struct {
 	Status PodStatus `json:"status"`
 }
 
+// swagger:ignore
+// PodList is a map of pods
+// swagger:model views_pod_list
 type PodList map[string]*Pod
 
+// PodMeta is a meta of pod
+// swagger:model views_pod_meta
 type PodMeta struct {
 	// Meta name
 	Name string `json:"name"`
-	// Meta name
+	// Meta description
 	Description string `json:"description"`
 	// Pod SelfLink
 	SelfLink string `json:"self_link"`
@@ -60,16 +66,22 @@ type PodMeta struct {
 	Updated time.Time `json:"updated"`
 }
 
+// PodSpec is a spec of pod
+// swagger:model views_pod_spec
 type PodSpec struct {
 	State    PodSpecState    `json:"state"`
 	Template PodSpecTemplate `json:"template"`
 }
 
+// PodSpecState is a state of pod spec
+// swagger:model views_pod_spec_state
 type PodSpecState struct {
 	Destroy     bool `json:"destroy"`
 	Maintenance bool `json:"maintenance"`
 }
 
+// PodSpecTemplate is a template of pod spec
+// swagger:model views_pod_spec_template
 type PodSpecTemplate struct {
 	// Template Volume
 	Volumes types.SpecTemplateVolumeList `json:"volumes"`
@@ -79,6 +91,8 @@ type PodSpecTemplate struct {
 	Termination int `json:"termination"`
 }
 
+// PodStatus is a status of pod
+// swagger:model views_pod_status
 type PodStatus struct {
 	// Pod state
 	State string `json:"state"`
@@ -92,8 +106,12 @@ type PodStatus struct {
 	Containers PodContainers `json:"containers"`
 }
 
+// PodContainers is a list of pod containers
+// swagger:model views_pod_container_list
 type PodContainers []PodContainer
 
+// PodContainer is a container of the pod
+// swagger:model views_pod_container
 type PodContainer struct {
 	// Pod container ID
 	ID string `json:"id"`
@@ -111,6 +129,8 @@ type PodContainer struct {
 	Image PodContainerImage `json:"image"`
 }
 
+// PodContainerState is a state of pod container
+// swagger:model views_pod_container_state
 type PodContainerState struct {
 	// Container create state
 	Created PodContainerStateCreated `json:"created"`
@@ -125,31 +145,51 @@ type PodContainerState struct {
 	Error PodContainerStateError `json:"error"`
 }
 
+// swagger:ignore
+// PodContainerStateCreated represents creation time of the pod container
+// swagger:model views_pod_container_state_created
 type PodContainerStateCreated struct {
 	Created time.Time `json:"created"`
 }
 
+// swagger:ignore
+// PodContainerStateStarted represents time when pod container was started
+// swagger:model views_pod_container_state_started
 type PodContainerStateStarted struct {
+	// was the container started
 	Started   bool      `json:"started"`
 	Timestamp time.Time `json:"timestamp"`
 }
 
+// swagger:ignore
+// PodContainerStateStopped shows if pod container was stopped
+// swagger:model views_pod_container_state_stopped
 type PodContainerStateStopped struct {
+	// was the container stopped
 	Stopped bool                  `json:"stopped"`
 	Exit    PodContainerStateExit `json:"exit"`
 }
 
+// swagger:ignore
+// PodContainerStateError shows if pod container got error
+// swagger:model views_pod_container_state_error
 type PodContainerStateError struct {
+	// was error happened
 	Error   bool                  `json:"error"`
 	Message string                `json:"message"`
 	Exit    PodContainerStateExit `json:"exit"`
 }
 
+// swagger:ignore
+// PodContainerStateExit represents an exit status of pod container after stop or error
+// swagger:model views_pod_container_state_exit
 type PodContainerStateExit struct {
 	Code      int       `json:"code"`
 	Timestamp time.Time `json:"timestamp"`
 }
 
+// PodContainerImage is an image of pod container
+// swagger:model views_pod_container_state
 type PodContainerImage struct {
 	// Pod container image ID
 	ID string `json:"id"`
@@ -157,8 +197,11 @@ type PodContainerImage struct {
 	Name string `json:"name"`
 }
 
+// PodSteps is a map of pod steps
+// swagger:model views_pod_step_map
 type PodSteps map[string]PodStep
 
+// swagger:model views_pod_step
 type PodStep struct {
 	// Pod step ready
 	Ready bool `json:"ready"`
@@ -166,6 +209,7 @@ type PodStep struct {
 	Timestamp time.Time `json:"timestamp"`
 }
 
+// swagger:model views_pod_network
 type PodNetwork struct {
 	// Pod host IP
 	HostIP string `json:"host_ip"`

@@ -20,15 +20,19 @@ package views
 
 import "time"
 
+// swagger:model views_route
 type Route struct {
 	Meta   RouteMeta   `json:"meta"`
 	Spec   RouteSpec   `json:"spec"`
 	Status RouteStatus `json:"status"`
 }
 
+// swagger:ignore
 type RouteMap map[string]*Route
+// swagger:model views_route_list
 type RouteList []*Route
 
+// swagger:model views_route_meta
 type RouteMeta struct {
 	Name      string    `json:"name"`
 	Namespace string    `json:"namespace"`
@@ -38,11 +42,13 @@ type RouteMeta struct {
 	Created   time.Time `json:"created"`
 }
 
+// swagger:model views_route_spec
 type RouteSpec struct {
 	Domain string       `json:"domain"`
 	Rules  []*RouteRule `json:"rules"`
 }
 
+// swagger:model views_route_rule
 type RouteRule struct {
 	Service  string `json:"service"`
 	Path     string `json:"path"`
@@ -50,6 +56,7 @@ type RouteRule struct {
 	Port     int    `json:"port"`
 }
 
+// swagger:model views_route_status
 type RouteStatus struct {
 	State   string `json:"state"`
 	Message string `json:"message"`

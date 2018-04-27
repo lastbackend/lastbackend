@@ -41,6 +41,29 @@ const (
 
 func ServiceListH(w http.ResponseWriter, r *http.Request) {
 
+	// swagger:operation GET /namespace/{namespace}/service service serviceList
+	//
+	// Shows a list of services
+	//
+	// ---
+	// produces:
+	// - application/json
+	// parameters:
+	//   - name: namespace
+	//     in: path
+	//     description: namespace id
+	//     required: true
+	//     type: string
+	// responses:
+	//   '200':
+	//     description: Service list response
+	//     schema:
+	//       "$ref": "#/definitions/views_service_list"
+	//   '404':
+	//     description: Namespace not found
+	//   '500':
+	//     description: Internal server error
+
 	nid := utils.Vars(r)["namespace"]
 
 	log.V(logLevel).Debugf("%s:list:> list services in %s", logPrefix, nid)
@@ -93,6 +116,34 @@ func ServiceListH(w http.ResponseWriter, r *http.Request) {
 }
 
 func ServiceInfoH(w http.ResponseWriter, r *http.Request) {
+
+	// swagger:operation GET /namespace/{namespace}/service/{service} service serviceInfo
+	//
+	// Shows an info about service
+	//
+	// ---
+	// produces:
+	// - application/json
+	// parameters:
+	//   - name: namespace
+	//     in: path
+	//     description: namespace id
+	//     required: true
+	//     type: string
+	//   - name: service
+	//     in: path
+	//     description: service id
+	//     required: true
+	//     type: string
+	// responses:
+	//   '200':
+	//     description: Service list response
+	//     schema:
+	//       "$ref": "#/definitions/views_service"
+	//   '404':
+	//     description: Namespace not found / Service not found
+	//   '500':
+	//     description: Internal server error
 
 	sid := utils.Vars(r)["service"]
 	nid := utils.Vars(r)["namespace"]
@@ -160,6 +211,36 @@ func ServiceInfoH(w http.ResponseWriter, r *http.Request) {
 }
 
 func ServiceCreateH(w http.ResponseWriter, r *http.Request) {
+
+	// swagger:operation POST /namespace/{namespace}/service service serviceCreate
+	//
+	// Create new service
+	//
+	// ---
+	// produces:
+	// - application/json
+	// parameters:
+	//   - name: namespace
+	//     in: path
+	//     description: namespace id
+	//     required: true
+	//     type: string
+	//   - name: body
+	//     in: body
+	//     required: true
+	//     schema:
+	//       "$ref": "#/definitions/request_service_create"
+	// responses:
+	//   '200':
+	//     description: Service was successfully created
+	//     schema:
+	//       "$ref": "#/definitions/views_service"
+	//   '400':
+	//     description: Name is already in use
+	//   '404':
+	//     description: Namespace not found
+	//   '500':
+	//     description: Internal server error
 
 	nid := utils.Vars(r)["namespace"]
 
@@ -235,6 +316,39 @@ func ServiceCreateH(w http.ResponseWriter, r *http.Request) {
 
 func ServiceUpdateH(w http.ResponseWriter, r *http.Request) {
 
+	// swagger:operation PUT /namespace/{namespace}/service/{service} service serviceUpdate
+	//
+	// Update service
+	//
+	// ---
+	// produces:
+	// - application/json
+	// parameters:
+	//   - name: namespace
+	//     in: path
+	//     description: namespace id
+	//     required: true
+	//     type: string
+	//   - name: service
+	//     in: path
+	//     description: service id
+	//     required: true
+	//     type: string
+	//   - name: body
+	//     in: body
+	//     required: true
+	//     schema:
+	//       "$ref": "#/definitions/request_service_update"
+	// responses:
+	//   '200':
+	//     description: Service was successfully updated
+	//     schema:
+	//       "$ref": "#/definitions/views_service"
+	//   '404':
+	//     description: Namespace not found / Service not found
+	//   '500':
+	//     description: Internal server error
+
 	nid := utils.Vars(r)["namespace"]
 	sid := utils.Vars(r)["service"]
 
@@ -300,6 +414,47 @@ func ServiceUpdateH(w http.ResponseWriter, r *http.Request) {
 }
 
 func ServiceLogsH(w http.ResponseWriter, r *http.Request) {
+
+	// swagger:operation GET /namespace/{namespace}/service/{service}/logs service serviceLogs
+	//
+	// Shows logs of the service
+	//
+	// ---
+	// produces:
+	// - application/json
+	// parameters:
+	//   - name: namespace
+	//     in: path
+	//     description: namespace id
+	//     required: true
+	//     type: string
+	//   - name: service
+	//     in: path
+	//     description: service id
+	//     required: true
+	//     type: string
+	//   - name: deployment
+	//     in: query
+	//     description: deployment id
+	//     required: true
+	//     type: string
+	//   - name: pod
+	//     in: query
+	//     description: pod id
+	//     required: true
+	//     type: string
+	//   - name: container
+	//     in: query
+	//     description: container id
+	//     required: true
+	//     type: string
+	// responses:
+	//   '200':
+	//     description: Service logs received
+	//   '404':
+	//     description: Namespace not found / Service not found
+	//   '500':
+	//     description: Internal server error
 
 	nid := utils.Vars(r)["namespace"]
 	sid := utils.Vars(r)["service"]
@@ -460,6 +615,32 @@ func ServiceLogsH(w http.ResponseWriter, r *http.Request) {
 }
 
 func ServiceRemoveH(w http.ResponseWriter, r *http.Request) {
+
+	// swagger:operation DELETE /namespace/{namespace}/service/{service} service serviceRemove
+	//
+	// Remove service
+	//
+	// ---
+	// produces:
+	// - application/json
+	// parameters:
+	//   - name: namespace
+	//     in: path
+	//     description: namespace id
+	//     required: true
+	//     type: string
+	//   - name: service
+	//     in: path
+	//     description: service id
+	//     required: true
+	//     type: string
+	// responses:
+	//   '200':
+	//     description: Service was successfully removed
+	//   '404':
+	//     description: Namespace not found / Service not found
+	//   '500':
+	//     description: Internal server error
 
 	nid := utils.Vars(r)["namespace"]
 	sid := utils.Vars(r)["service"]

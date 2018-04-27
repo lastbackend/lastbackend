@@ -35,6 +35,21 @@ const (
 
 func NamespaceListH(w http.ResponseWriter, r *http.Request) {
 
+	// swagger:operation GET /namespace namespace namespaceList
+	//
+	// Shows a list of namespaces
+	//
+	// ---
+	// produces:
+	// - application/json
+	// responses:
+	//   '200':
+	//     description: Namespace list response
+	//     schema:
+	//       "$ref": "#/definitions/views_namespace_list"
+	//   '500':
+	//     description: Internal server error
+
 	log.V(logLevel).Debugf("%s:list:> get namespace list", logPrefix)
 
 	var (
@@ -63,6 +78,29 @@ func NamespaceListH(w http.ResponseWriter, r *http.Request) {
 }
 
 func NamespaceInfoH(w http.ResponseWriter, r *http.Request) {
+
+	// swagger:operation GET /namespace/{namespace} namespace namespaceInfo
+	//
+	// Shows an info about namespace
+	//
+	// ---
+	// produces:
+	// - application/json
+	// parameters:
+	//   - name: namespace
+	//     in: path
+	//     description: namespace id
+	//     required: true
+	//     type: string
+	// responses:
+	//   '200':
+	//     description: Namespace response
+	//     schema:
+	//       "$ref": "#/definitions/views_namespace"
+	//   '404':
+	//     description: Namespace not found
+	//   '500':
+	//     description: Internal server error
 
 	nid := utils.Vars(r)["namespace"]
 
@@ -98,6 +136,29 @@ func NamespaceInfoH(w http.ResponseWriter, r *http.Request) {
 }
 
 func NamespaceCreateH(w http.ResponseWriter, r *http.Request) {
+
+	// swagger:operation POST /namespace namespace namespaceCreate
+	//
+	// Create new namespace
+	//
+	// ---
+	// produces:
+	// - application/json
+	// parameters:
+	//   - name: body
+	//     in: body
+	//     required: true
+	//     schema:
+	//       "$ref": "#/definitions/request_namespace_create"
+	// responses:
+	//   '200':
+	//     description: Namespace was successfully created
+	//     schema:
+	//       "$ref": "#/definitions/views_namespace"
+	//   '400':
+	//     description: Name is already in use
+	//   '500':
+	//     description: Internal server error
 
 	log.V(logLevel).Debugf("%s:create:> create namespace", logPrefix)
 
@@ -148,6 +209,34 @@ func NamespaceCreateH(w http.ResponseWriter, r *http.Request) {
 
 func NamespaceUpdateH(w http.ResponseWriter, r *http.Request) {
 
+	// swagger:operation PUT /namespace/{namespace} namespace namespaceUpdate
+	//
+	// Update namespace parameters
+	//
+	// ---
+	// produces:
+	// - application/json
+	// parameters:
+	//   - name: namespace
+	//     in: path
+	//     description: namespace id
+	//     required: true
+	//     type: string
+	//   - name: body
+	//     in: body
+	//     required: true
+	//     schema:
+	//       "$ref": "#/definitions/request_namespace_update"
+	// responses:
+	//   '200':
+	//     description: Namespace was successfully updated
+	//     schema:
+	//       "$ref": "#/definitions/views_namespace"
+	//   '404':
+	//     description: Namespace not found
+	//   '500':
+	//     description: Internal server error
+
 	nid := utils.Vars(r)["namespace"]
 
 	log.V(logLevel).Debugf("%s:update:> update namespace `%s`", logPrefix, nid)
@@ -197,6 +286,34 @@ func NamespaceUpdateH(w http.ResponseWriter, r *http.Request) {
 }
 
 func NamespaceRemoveH(w http.ResponseWriter, r *http.Request) {
+
+	// swagger:operation DELETE /namespace/{namespace} namespace namespaceRemove
+	//
+	// Remove namespace
+	//
+	// ---
+	// produces:
+	// - application/json
+	// parameters:
+	//   - name: namespace
+	//     in: path
+	//     description: namespace id
+	//     required: true
+	//     type: string
+	//   - name: body
+	//     in: body
+	//     required: true
+	//     schema:
+	//       "$ref": "#/definitions/request_namespace_remove"
+	// responses:
+	//   '200':
+	//     description: Namespace was successfully removed
+	//   '403':
+	//     description: Forbidden
+	//   '404':
+	//     description: Namespace not found
+	//   '500':
+	//     description: Internal server error
 
 	nid := utils.Vars(r)["namespace"]
 

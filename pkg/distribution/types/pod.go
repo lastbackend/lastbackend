@@ -24,6 +24,8 @@ import (
 	"time"
 )
 
+// swagger:ignore
+// swagger:model types_pod
 type Pod struct {
 	// Lock map
 	lock sync.RWMutex
@@ -35,6 +37,9 @@ type Pod struct {
 	Status PodStatus `json:"status" yaml:"status"`
 }
 
+// swagger:ignore
+// PodMeta is a meta of pod
+// swagger:model types_pod_meta
 type PodMeta struct {
 	Meta `yaml:",inline"`
 	// Pod SelfLink
@@ -53,11 +58,16 @@ type PodMeta struct {
 	Endpoint string `json:"endpoint" yaml:"endpoint"`
 }
 
+// PodSpec is a spec of pod
+// swagger:model types_pod_spec
 type PodSpec struct {
 	State    SpecState    `json:"state"`
 	Template SpecTemplate `json:"template" yaml:"template"`
 }
 
+// swagger:ignore
+// PodSpecStatus is a status of pod
+// swagger:model types_pod_status
 type PodStatus struct {
 	// Pod state
 	Stage string `json:"stage" yaml:"stage"`
@@ -71,8 +81,11 @@ type PodStatus struct {
 	Containers map[string]*PodContainer `json:"containers" yaml:"containers"`
 }
 
+// PodSteps is a map of pod steps
+// swagger:model types_pod_step_map
 type PodSteps map[string]PodStep
 
+// swagger:model types_pod_step
 type PodStep struct {
 	// Pod step ready
 	Ready bool `json:"ready" yaml:"ready"`
@@ -80,6 +93,7 @@ type PodStep struct {
 	Timestamp time.Time `json:"timestamp" yaml:"timestamp"`
 }
 
+// swagger:model types_pod_network
 type PodNetwork struct {
 	// Pod host IP
 	HostIP string `json:"host_ip" yaml:"host_ip"`
@@ -87,6 +101,8 @@ type PodNetwork struct {
 	PodIP string `json:"pod_ip" yaml:"pod_ip"`
 }
 
+// PodContainer is a container of the pod
+// swagger:model types_pod_container
 type PodContainer struct {
 	// Pod container ID
 	ID string `json:"id" yaml:"id"`
@@ -104,6 +120,7 @@ type PodContainer struct {
 	Image PodContainerImage `json:"image" yaml:"image"`
 }
 
+// swagger:model types_pod_container_image
 type PodContainerImage struct {
 	// Pod container image ID
 	ID string `json:"id" yaml:"id"`
@@ -111,6 +128,7 @@ type PodContainerImage struct {
 	Name string `json:"name" yaml:"name"`
 }
 
+// swagger:model types_pod_container_state
 type PodContainerState struct {
 	// Container create state
 	Created PodContainerStateCreated `json:"created" yaml:"created"`
@@ -125,26 +143,31 @@ type PodContainerState struct {
 	Error PodContainerStateError `json:"error" yaml:"error"`
 }
 
+// swagger:model types_pod_container_state_created
 type PodContainerStateCreated struct {
 	Created time.Time `json:"created" yaml:"created"`
 }
 
+// swagger:model types_pod_container_state_started
 type PodContainerStateStarted struct {
 	Started   bool      `json:"started" yaml:"started"`
 	Timestamp time.Time `json:"timestamp" yaml:"timestamp"`
 }
 
+// swagger:model types_pod_container_state_stopped
 type PodContainerStateStopped struct {
 	Stopped bool                  `json:"stopped" yaml:"stopped"`
 	Exit    PodContainerStateExit `json:"exit" yaml:"exit"`
 }
 
+// swagger:model types_pod_container_state_error
 type PodContainerStateError struct {
 	Error   bool                  `json:"error" yaml:"error"`
 	Message string                `json:"message" yaml:"message"`
 	Exit    PodContainerStateExit `json:"exit" yaml:"exit"`
 }
 
+// swagger:model types_pod_container_state_exit
 type PodContainerStateExit struct {
 	Code      int       `json:"code" yaml:"code"`
 	Timestamp time.Time `json:"timestamp" yaml:"timestamp"`

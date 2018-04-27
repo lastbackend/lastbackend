@@ -20,33 +20,40 @@ package types
 
 import "fmt"
 
+// swagger:ignore
 type Ingress struct {
 	Meta   IngressMeta   `json:"meta"`
 	Status IngressStatus `json:"status"`
 	Spec   IngressSpec   `json:"spec"`
 }
 
+// swagger:ignore
 type IngressMeta struct {
 	Meta
 	Cluster string `json:"cluster"`
 }
 
+// swagger:model types_ingress_status
 type IngressStatus struct {
 	Ready bool `json:"ready"`
 }
 
+// swagger:ignore
 type IngressSpec struct {
 	Routes map[string]RouteSpec `json:"routes"`
 }
 
+// swagger:ignore
 type IngressCreateMetaOptions struct {
 	MetaCreateOptions
 }
 
+// swagger:model types_ingress_meta_update
 type IngressUpdateMetaOptions struct {
 	MetaUpdateOptions
 }
 
+// swagger:ignore
 type IngressCreateOptions struct {
 	Meta    IngressCreateMetaOptions `json:"meta",yaml:"meta"`
 	Status  IngressStatus            `json:"status",yaml:"status"`

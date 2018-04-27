@@ -35,6 +35,29 @@ const (
 
 func SecretListH(w http.ResponseWriter, r *http.Request) {
 
+	// swagger:operation GET /namespace/{namespace}/secret secret secretList
+	//
+	// Shows a list of secrets
+	//
+	// ---
+	// produces:
+	// - application/json
+	// parameters:
+	//   - name: namespace
+	//     in: path
+	//     description: namespace id
+	//     required: true
+	//     type: string
+	// responses:
+	//   '200':
+	//     description: Secret list response
+	//     schema:
+	//       "$ref": "#/definitions/views_secret_list"
+	//   '404':
+	//     description: Namespace not found
+	//   '500':
+	//     description: Internal server error
+
 	log.V(logLevel).Debugf("%s:list:> get secrets list", logPrefix)
 
 	nid := utils.Vars(r)["namespace"]
@@ -79,6 +102,34 @@ func SecretListH(w http.ResponseWriter, r *http.Request) {
 }
 
 func SecretCreateH(w http.ResponseWriter, r *http.Request) {
+
+	// swagger:operation POST /namespace/{namespace}/secret secret secretCreate
+	//
+	// Create secret
+	//
+	// ---
+	// produces:
+	// - application/json
+	// parameters:
+	//   - name: namespace
+	//     in: path
+	//     description: namespace id
+	//     required: true
+	//     type: string
+	//   - name: body
+	//     in: body
+	//     required: true
+	//     schema:
+	//       "$ref": "#/definitions/request_secret_create"
+	// responses:
+	//   '200':
+	//     description: Secret was successfully created
+	//     schema:
+	//       "$ref": "#/definitions/views_secret"
+	//   '404':
+	//     description: Namespace not found
+	//   '500':
+	//     description: Internal server error
 
 	log.V(logLevel).Debugf("%s:create:> create secret", logPrefix)
 
@@ -132,6 +183,39 @@ func SecretCreateH(w http.ResponseWriter, r *http.Request) {
 }
 
 func SecretUpdateH(w http.ResponseWriter, r *http.Request) {
+
+	// swagger:operation PUT /namespace/{namespace}/secret/{secret} secret secretUpdate
+	//
+	// Create secret
+	//
+	// ---
+	// produces:
+	// - application/json
+	// parameters:
+	//   - name: namespace
+	//     in: path
+	//     description: namespace id
+	//     required: true
+	//     type: string
+	//   - name: secret
+	//     in: path
+	//     description: secret id
+	//     required: true
+	//     type: string
+	//   - name: body
+	//     in: body
+	//     required: true
+	//     schema:
+	//       "$ref": "#/definitions/request_secret_update"
+	// responses:
+	//   '200':
+	//     description: Secret was successfully updated
+	//     schema:
+	//       "$ref": "#/definitions/views_secret"
+	//   '404':
+	//     description: Namespace not found / Secret not found
+	//   '500':
+	//     description: Internal server error
 
 	nid := utils.Vars(r)["namespace"]
 	sid := utils.Vars(r)["secret"]
@@ -197,6 +281,32 @@ func SecretUpdateH(w http.ResponseWriter, r *http.Request) {
 }
 
 func SecretRemoveH(w http.ResponseWriter, r *http.Request) {
+
+	// swagger:operation DELETE /namespace/{namespace}/secret/{secret} secret secretRemove
+	//
+	// Remove secret
+	//
+	// ---
+	// produces:
+	// - application/json
+	// parameters:
+	//   - name: namespace
+	//     in: path
+	//     description: namespace id
+	//     required: true
+	//     type: string
+	//   - name: secret
+	//     in: path
+	//     description: secret id
+	//     required: true
+	//     type: string
+	// responses:
+	//   '200':
+	//     description: Secret was successfully removed
+	//   '404':
+	//     description: Namespace not found / Secret not found
+	//   '500':
+	//     description: Internal server error
 
 	nid := utils.Vars(r)["namespace"]
 	sid := utils.Vars(r)["secret"]
