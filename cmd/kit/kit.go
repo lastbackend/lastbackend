@@ -29,7 +29,7 @@
 //     BasePath: /
 //     Version: 0.9.4
 //     License: MIT http://opensource.org/licenses/MIT
-//     Contact: Alexander Kaloshin<team@lastbackend.com> http://lastbackend.com
+//     Contact: Last.Backend Teams <team@lastbackend.com> https://lastbackend.com
 //
 //     Consumes:
 //     - application/json
