@@ -20,10 +20,11 @@ package etcd
 
 import (
 	"context"
+	"encoding/json"
 	"reflect"
 	"testing"
+	"time"
 
-	"encoding/json"
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 	"github.com/lastbackend/lastbackend/pkg/storage/storage"
 	"github.com/lastbackend/lastbackend/pkg/storage/store"
@@ -156,6 +157,14 @@ func TestNodeStorage_Get(t *testing.T) {
 			false,
 			"",
 		},
+		{
+			"get node info failed empty name",
+			fields{stg},
+			args{ctx, ""},
+			&n,
+			true,
+			"node can not be empty",
+		},
 	}
 
 	clear := func() {
@@ -177,17 +186,19 @@ func TestNodeStorage_Get(t *testing.T) {
 			}
 
 			got, err := tt.fields.stg.Get(tt.args.ctx, tt.args.name)
-
 			if err != nil {
 				if tt.wantErr && tt.err != err.Error() {
-					t.Errorf("NodeStorage.Get() \n%v\nwant\n%v", err, tt.err)
+					t.Errorf("NodeStorage.Get() = %v, want %v", err, tt.err)
 					return
+				}
+				if !tt.wantErr {
+					t.Errorf("NodeStorage.Get() error = %v, want no error", err)
 				}
 				return
 			}
 
 			if tt.wantErr {
-				t.Errorf("NodeStorage.Get() error = %v, wantErr %v", err, tt.err)
+				t.Errorf("NodeStorage.Get() error = %v, want none", tt.err)
 				return
 			}
 
@@ -310,17 +321,20 @@ func TestNodeStorage_GetSpec(t *testing.T) {
 			}
 
 			got, err := tt.fields.stg.GetSpec(tt.args.ctx, tt.args.node)
-
+			//t.Logf("got get spec=%v\n from node = %v", got, tt.args.node)
 			if err != nil {
 				if tt.wantErr && tt.err != err.Error() {
 					t.Errorf("NodeStorage.GetSpec() \n%v\nwant\n%v", err, tt.err)
 					return
 				}
+				if !tt.wantErr {
+					t.Errorf("NodeStorage.GetSpec() error = %v, want no error", err)
+				}
 				return
 			}
 
 			if tt.wantErr {
-				t.Errorf("NodeStorage.GetSpec() error = %v, wantErr %v", err, tt.err)
+				t.Errorf("NodeStorage.GetSpec() error = %v, want none", tt.err)
 				return
 			}
 
@@ -427,7 +441,7 @@ func TestNodeStorage_Insert(t *testing.T) {
 			}
 
 			if tt.wantErr {
-				t.Errorf("NodeStorage.Insert() error \n%v\nwant\n%v", err, tt.err)
+				t.Errorf("NodeStorage.Insert() error = %v, want none", tt.err)
 				return
 			}
 		})
@@ -517,20 +531,21 @@ func TestNodeStorage_Update(t *testing.T) {
 
 				if tt.wantErr && tt.err != err.Error() {
 					t.Errorf("NodeStorage.Update() error \n%v\nwant\n%v", err.Error(), tt.err)
-					return
 				}
-
 				return
 			}
 
 			if tt.wantErr {
-				t.Errorf("NodeStorage.Update() error \n%v\nwant\n%v", err, tt.err)
+				t.Errorf("NodeStorage.Update() error = %v, want none", tt.err)
 				return
 			}
 
-			got, _ := tt.fields.stg.Get(tt.args.ctx, tt.args.node.Meta.Name)
-			tt.want.Meta.Updated = got.Meta.Updated
-			if !reflect.DeepEqual(got, tt.want) {
+			got, err := tt.fields.stg.Get(tt.args.ctx, tt.args.node.Meta.Name)
+			if err != nil {
+				t.Errorf("NodeStorage.Update() got Get error = %s", err.Error())
+				return
+			}
+			if !compareNodes(got, tt.want) {
 				t.Errorf("NodeStorage.Update() \n%v\nwant\n%v", got, tt.want)
 				return
 			}
@@ -631,16 +646,16 @@ func TestNodeStorage_SetStatus(t *testing.T) {
 			}
 
 			if tt.wantErr {
-				t.Errorf("NodeStorage.SetStatus() error \n%v\nwant\n%v", err.Error(), tt.err)
+				t.Errorf("NodeStorage.SetStatus() error = %v, want none", tt.err)
 				return
 			}
 
-			got, _ := tt.fields.stg.Get(tt.args.ctx, tt.args.node.Meta.Name)
-
-			tt.want.Meta.Created = got.Meta.Created
-			tt.want.Meta.Updated = got.Meta.Updated
-
-			if !reflect.DeepEqual(got, tt.want) {
+			got, err := tt.fields.stg.Get(tt.args.ctx, tt.args.node.Meta.Name)
+			if err != nil {
+				t.Errorf("NodeStorage.SetStatus() got Get error = %s", err.Error())
+				return
+			}
+			if !compareNodes(got, tt.want) {
 				t.Errorf("NodeStorage.SetStatus() \n%v\nwant\n%v", got, tt.want)
 				return
 			}
@@ -733,24 +748,22 @@ func TestNodeStorage_SetInfo(t *testing.T) {
 
 				if tt.wantErr && tt.err != err.Error() {
 					t.Errorf("NodeStorage.SetInfo() error \n%v\nwant\n%v", err.Error(), tt.err)
-					return
 				}
-
 				return
 
 			}
 
 			if tt.wantErr {
-				t.Errorf("NodeStorage.SetInfo() error \n%v\nwant\n%v", err.Error(), tt.err)
+				t.Errorf("NodeStorage.SetInfo() error = %v,  want none", tt.err)
 				return
 			}
 
-			got, _ := tt.fields.stg.Get(tt.args.ctx, tt.args.node.Meta.Name)
-
-			tt.want.Meta.Created = got.Meta.Created
-			tt.want.Meta.Updated = got.Meta.Updated
-
-			if !reflect.DeepEqual(got, tt.want) {
+			got, err := tt.fields.stg.Get(tt.args.ctx, tt.args.node.Meta.Name)
+			if err != nil {
+				t.Errorf("NodeStorage.SetInfo() got Get error = %s", err.Error())
+				return
+			}
+			if !compareNodes(got, tt.want) {
 				t.Errorf("NodeStorage.SetInfo() \n%v\nwant\n%v", got, tt.want)
 				return
 			}
@@ -843,24 +856,22 @@ func TestNodeStorage_SetNetwork(t *testing.T) {
 
 				if tt.wantErr && tt.err != err.Error() {
 					t.Errorf("NodeStorage.SetNetwork() error \n%v\nwant\n%v", err.Error(), tt.err)
-					return
 				}
-
 				return
 
 			}
 
 			if tt.wantErr {
-				t.Errorf("NodeStorage.SetNetwork() error \n%v\nwant\n%v", err.Error(), tt.err)
+				t.Errorf("NodeStorage.SetNetwork() error = %v, want none", tt.err)
 				return
 			}
 
-			got, _ := tt.fields.stg.Get(tt.args.ctx, tt.args.node.Meta.Name)
-
-			tt.want.Meta.Created = got.Meta.Created
-			tt.want.Meta.Updated = got.Meta.Updated
-
-			if !reflect.DeepEqual(got, tt.want) {
+			got, err := tt.fields.stg.Get(tt.args.ctx, tt.args.node.Meta.Name)
+			if err != nil {
+				t.Errorf("NodeStorage.SetNetwork() got Get error = %s", err.Error())
+				return
+			}
+			if !compareNodes(got, tt.want) {
 				t.Errorf("NodeStorage.SetNetwork() \n%v\nwant\n%v", got, tt.want)
 				return
 			}
@@ -951,24 +962,21 @@ func TestNodeStorage_SetOnline(t *testing.T) {
 
 				if tt.wantErr && tt.err != err.Error() {
 					t.Errorf("NodeStorage.SetOnline() error \n%v\nwant\n%v", err.Error(), tt.err)
-					return
 				}
-
 				return
-
 			}
 
 			if tt.wantErr {
-				t.Errorf("NodeStorage.SetOnline() error \n%v\nwant\n%v", err.Error(), tt.err)
+				t.Errorf("NodeStorage.SetOnline() error = %v, want none", tt.err)
 				return
 			}
 
-			got, _ := tt.fields.stg.Get(tt.args.ctx, tt.args.node.Meta.Name)
-
-			tt.want.Meta.Created = got.Meta.Created
-			tt.want.Meta.Updated = got.Meta.Updated
-
-			if !reflect.DeepEqual(got, tt.want) {
+			got, err := tt.fields.stg.Get(tt.args.ctx, tt.args.node.Meta.Name)
+			if err != nil {
+				t.Errorf("NodeStorage.SetOnline() got Get error = %s", err.Error())
+				return
+			}
+			if !compareNodes(got, tt.want) {
 				t.Errorf("NodeStorage.SetOnline() \n%v\nwant\n%v", got, tt.want)
 				return
 			}
@@ -1059,24 +1067,21 @@ func TestNodeStorage_SetOffline(t *testing.T) {
 
 				if tt.wantErr && tt.err != err.Error() {
 					t.Errorf("NodeStorage.SetOffline() error \n%v\nwant\n%v", err.Error(), tt.err)
-					return
 				}
-
 				return
-
 			}
 
 			if tt.wantErr {
-				t.Errorf("NodeStorage.SetOffline() error \n%v\nwant\n%v", err.Error(), tt.err)
+				t.Errorf("NodeStorage.SetOffline() error = %v, want none", tt.err)
 				return
 			}
 
-			got, _ := tt.fields.stg.Get(tt.args.ctx, tt.args.node.Meta.Name)
-
-			tt.want.Meta.Created = got.Meta.Created
-			tt.want.Meta.Updated = got.Meta.Updated
-
-			if !reflect.DeepEqual(got, tt.want) {
+			got, err := tt.fields.stg.Get(tt.args.ctx, tt.args.node.Meta.Name)
+			if err != nil {
+				t.Errorf("NodeStorage.SetOffline() got Get error = %s", err.Error())
+				return
+			}
+			if !compareNodes(got, tt.want) {
 				t.Errorf("NodeStorage.SetOffline() \n%v\nwant\n%v", got, tt.want)
 				return
 			}
@@ -1201,14 +1206,12 @@ func TestNodeStorage_InsertPod(t *testing.T) {
 
 				if tt.wantErr && tt.err != err.Error() {
 					t.Errorf("NodeStorage.InsertPod() error \n%v\nwant\n%v", err.Error(), tt.err)
-					return
 				}
-
 				return
 			}
 
 			if tt.wantErr {
-				t.Errorf("NodeStorage.InsertPod() error \n%v\nwant\n%v", err, tt.err)
+				t.Errorf("NodeStorage.InsertPod() error = %v, want none", tt.err)
 				return
 			}
 
@@ -1367,14 +1370,12 @@ func TestNodeStorage_RemovePod(t *testing.T) {
 
 				if tt.wantErr && tt.err != err.Error() {
 					t.Errorf("NodeStorage.RemovePod() error \n%v\nwant\n%v", err.Error(), tt.err)
-					return
 				}
-
 				return
 			}
 
 			if tt.wantErr {
-				t.Errorf("NodeStorage.RemovePod() error \n%v\nwant\n%v", err.Error(), tt.err)
+				t.Errorf("NodeStorage.RemovePod() error = %v, want none", tt.err)
 				return
 			}
 
@@ -1517,14 +1518,12 @@ func TestNodeStorage_InsertVolume(t *testing.T) {
 
 				if tt.wantErr && tt.err != err.Error() {
 					t.Errorf("NodeStorage.InsertVolume() error \n%v\nwant\n%v", err.Error(), tt.err)
-					return
 				}
-
 				return
 			}
 
 			if tt.wantErr {
-				t.Errorf("NodeStorage.InsertVolume() error \n%v\nwant\n%v", err.Error(), tt.err)
+				t.Errorf("NodeStorage.InsertVolume() error = %v, want none", tt.err)
 				return
 			}
 
@@ -1680,14 +1679,12 @@ func TestNodeStorage_RemoveVolume(t *testing.T) {
 
 				if tt.wantErr && tt.err != err.Error() {
 					t.Errorf("NodeStorage.RemoveVolume() error \n%v\nwant\n%v", err.Error(), tt.err)
-					return
 				}
-
 				return
 			}
 
 			if tt.wantErr {
-				t.Errorf("NodeStorage.RemoveVolume() error \n%v\nwant\n%v", err.Error(), tt.err)
+				t.Errorf("NodeStorage.RemoveVolume() error = %v, want none", tt.err)
 				return
 			}
 
@@ -1798,14 +1795,12 @@ func TestNodeStorage_Remove(t *testing.T) {
 
 				if tt.wantErr && tt.err != err.Error() {
 					t.Errorf("NodeStorage.Remove() error \n%v\nwant\n%v", err.Error(), tt.err)
-					return
 				}
-
 				return
 			}
 
 			if tt.wantErr {
-				t.Errorf("NodeStorage.Remove() error \n%v\nwant\n%v", err, tt.err)
+				t.Errorf("NodeStorage.Remove() error = %v, want none", tt.err)
 				return
 			}
 
@@ -1821,20 +1816,25 @@ func TestNodeStorage_Remove(t *testing.T) {
 
 func TestNodeStorage_Watch(t *testing.T) {
 
-	initStorage()
-
 	var (
-		stg = newNodeStorage()
-		ctx = context.Background()
+		stg   = newNodeStorage()
+		ctx   = context.Background()
+		err   error
+		n     = getNodeAsset("test1", "desc1", true)
+		nodeC = make(chan *types.Node)
 	)
 
+	etcdCtl, destroy, err := initStorageWatch()
+	if err != nil {
+		t.Errorf("NodeStorage.Watch() storage setup error = %v", err)
+	}
+	defer destroy()
+
 	type fields struct {
-		stg storage.Node
 	}
 	type args struct {
-		ctx  context.Context
-		node chan *types.Node
 	}
+
 	tests := []struct {
 		name    string
 		fields  fields
@@ -1842,15 +1842,457 @@ func TestNodeStorage_Watch(t *testing.T) {
 		wantErr bool
 	}{
 		{
-			"check watch",
-			fields{stg},
-			args{ctx, make(chan *types.Node)},
+			"check node watch",
+			fields{},
+			args{},
 			false,
 		},
+	}
+
+	clear := func() {
+		if err := stg.Clear(ctx); err != nil {
+			t.Errorf("NodeStorage.Watch() storage setup error = %v", err)
+			return
+		}
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 
+			clear()
+			defer clear()
+
+			if err := stg.Insert(ctx, &n); err != nil {
+				t.Errorf("NodeStorage.Watch() storage setup error = %v", err)
+				return
+			}
+
+			//create timeout context
+			ctxT, cancel := context.WithTimeout(ctx, 4*time.Second)
+			defer cancel()
+			defer etcdCtl.WatchClose()
+
+			//run watch go function
+			go func() {
+				err = stg.Watch(ctxT, nodeC)
+				if err != nil {
+					t.Errorf("NodeStorage.Watch() storage setup error = %v", err)
+					return
+				}
+			}()
+			//wait for result
+			time.Sleep(1 * time.Second)
+
+			//make etcd key put through etcdctrl
+			path := getEtcdctrl()
+			if path == "" {
+				t.Skipf("skip watch test: not found etcdctl path=%s", path)
+			}
+			key := "/lstbknd/node/test1/online"
+			value := "true"
+			err = runEtcdPut(path, key, value)
+			if err != nil {
+				t.Skipf("skip watch test: exec etcdctl err=%s", err.Error())
+			}
+
+			for {
+				select {
+				case <-nodeC:
+					t.Log("NodeStorage.Watch() is working")
+					return
+				case <-ctxT.Done():
+					t.Log("ctxT done=", ctxT.Err(), "time=", time.Now())
+					t.Error("NodeStorage.Watch() NO watch event happen")
+					return
+				case <-time.After(500 * time.Millisecond):
+					//wait for 500 ms
+				}
+			}
+			t.Log("successfull!")
+		})
+	}
+}
+
+func TestNodeStorage_WatchStatus(t *testing.T) {
+
+	var (
+		stg              = newNodeStorage()
+		ctx              = context.Background()
+		err              error
+		n                = getNodeAsset("test1", "desc1", true)
+		nodeStatusEventC = make(chan *types.NodeStatusEvent)
+	)
+
+	etcdCtl, destroy, err := initStorageWatch()
+	if err != nil {
+		t.Errorf("NodeStorage.WatchStatus() storage setup error = %v", err)
+	}
+	defer destroy()
+
+	type fields struct {
+	}
+	type args struct {
+	}
+
+	tests := []struct {
+		name    string
+		fields  fields
+		args    args
+		wantErr bool
+	}{
+		{
+			"check node watch status",
+			fields{},
+			args{},
+			false,
+		},
+	}
+
+	clear := func() {
+		if err := stg.Clear(ctx); err != nil {
+			t.Errorf("NodeStorage.WatchStatus() storage setup error = %v", err)
+			return
+		}
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+
+			clear()
+			defer clear()
+
+			if err := stg.Insert(ctx, &n); err != nil {
+				t.Errorf("NodeStorage.WatchStatus() storage setup error = %v", err)
+				return
+			}
+
+			//create timeout context
+			ctxT, cancel := context.WithTimeout(ctx, 4*time.Second)
+			defer cancel()
+			defer etcdCtl.WatchClose()
+			//run watch go function
+			go func() {
+				err = stg.WatchStatus(ctxT, nodeStatusEventC)
+				if err != nil {
+					t.Errorf("NodeStorage.WatchStatus() storage setup error = %v", err)
+					return
+				}
+			}()
+			//wait for result
+			time.Sleep(1 * time.Second)
+
+			//make etcd key put through etcdctrl
+			path := getEtcdctrl()
+			if path == "" {
+				t.Skipf("skip watch test: not found etcdctl path=%s", path)
+			}
+			key := "/lstbknd/node/test1/online"
+			value := "true"
+			err = runEtcdPut(path, key, value)
+			if err != nil {
+				t.Skipf("skip watch test: exec etcdctl err=%s", err.Error())
+			}
+
+			for {
+				select {
+				case <-nodeStatusEventC:
+					t.Log("NodeStorage.WatchStatus() is working")
+					return
+				case <-ctxT.Done():
+					t.Log("ctxT done=", ctxT.Err(), "time=", time.Now())
+					t.Error("NodeStorage.WatchStatus() NO watch event happen")
+					return
+				case <-time.After(500 * time.Millisecond):
+					//wait for 500 ms
+				}
+			}
+			t.Log("successfull!")
+		})
+	}
+}
+
+func TestNodeStorage_WatchNetworkSpec(t *testing.T) {
+
+	var (
+		stg                   = newNodeStorage()
+		ctx                   = context.Background()
+		err                   error
+		n                     = getNodeAsset("test1", "desc1", true)
+		nodeNetworkSpecEventC = make(chan *types.NetworkSpecEvent)
+	)
+
+	etcdCtl, destroy, err := initStorageWatch()
+	if err != nil {
+		t.Errorf("NodeStorage.WatchNetworkSpec() storage setup error = %v", err)
+	}
+	defer destroy()
+
+	type fields struct {
+	}
+	type args struct {
+	}
+
+	tests := []struct {
+		name    string
+		fields  fields
+		args    args
+		wantErr bool
+	}{
+		{
+			"check node watch network spec event",
+			fields{},
+			args{},
+			false,
+		},
+	}
+
+	clear := func() {
+		if err := stg.Clear(ctx); err != nil {
+			t.Errorf("NodeStorage.WatchNetworkSpec() storage setup error = %v", err)
+			return
+		}
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+
+			clear()
+			defer clear()
+
+			if err := stg.Insert(ctx, &n); err != nil {
+				t.Errorf("NodeStorage.WatchNetworkSpec() storage setup error = %v", err)
+				return
+			}
+
+			//create timeout context
+			ctxT, cancel := context.WithTimeout(ctx, 4*time.Second)
+			defer cancel()
+			defer etcdCtl.WatchClose()
+			//run watch go function
+			go func() {
+				err = stg.WatchNetworkSpec(ctxT, nodeNetworkSpecEventC)
+				if err != nil {
+					t.Errorf("NodeStorage.WatchNetworkSpec() storage setup error = %v", err)
+					return
+				}
+			}()
+			//wait for result
+			time.Sleep(1 * time.Second)
+
+			//make etcd key put through etcdctrl
+			path := getEtcdctrl()
+			if path == "" {
+				t.Skipf("skip watch test: not found etcdctl path=%s", path)
+			}
+			key := "/lstbknd/node/test1/network"
+			value := `{"type":"vxlan","range":"10.0.0.1","iface":{"index":1,"name":"lb","addr":"10.0.0.1","HAddr":"dc:a9:04:83:0d:eb"},"addr":""}`
+			err = runEtcdPut(path, key, value)
+			if err != nil {
+				t.Skipf("skip watch test: exec etcdctl err=%s", err.Error())
+			}
+
+			for {
+				select {
+				case <-nodeNetworkSpecEventC:
+					t.Log("NodeStorage.WatchNetworkSpec() is working")
+					return
+				case <-ctxT.Done():
+					t.Log("ctxT done=", ctxT.Err(), "time=", time.Now())
+					t.Error("NodeStorage.WatchNetworkSpec() NO watch event happen")
+					return
+				case <-time.After(500 * time.Millisecond):
+					//wait for 500 ms
+				}
+			}
+			t.Log("successfull!")
+		})
+	}
+}
+
+func TestNodeStorage_WatchPodSpec(t *testing.T) {
+
+	var (
+		stg               = newNodeStorage()
+		ctx               = context.Background()
+		err               error
+		n                 = getNodeAsset("test1", "desc1", true)
+		p                 = getPodAsset("ns1", "svc", "dp1", "test1", "desc")
+		nodePodSpecEventC = make(chan *types.PodSpecEvent)
+	)
+	etcdCtl, destroy, err := initStorageWatch()
+	if err != nil {
+		t.Errorf("NodeStorage.WatchPodSpec() storage setup error = %v", err)
+	}
+	defer destroy()
+
+	type fields struct {
+	}
+	type args struct {
+	}
+
+	tests := []struct {
+		name    string
+		fields  fields
+		args    args
+		wantErr bool
+	}{
+		{
+			"check node watch pod spec event",
+			fields{},
+			args{},
+			false,
+		},
+	}
+
+	clear := func() {
+		if err := stg.Clear(ctx); err != nil {
+			t.Errorf("NodeStorage.WatchPodSpec() storage setup error = %v", err)
+			return
+		}
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+
+			clear()
+			defer clear()
+
+			err = stg.Insert(ctx, &n)
+			err = stg.InsertPod(ctx, &n, &p)
+
+			//create timeout context
+			ctxT, cancel := context.WithTimeout(ctx, 4*time.Second)
+			defer cancel()
+			defer etcdCtl.WatchClose()
+			//run watch go function
+			go func() {
+				err = stg.WatchPodSpec(ctxT, nodePodSpecEventC)
+				if err != nil {
+					t.Errorf("NodeStorage.WatchPodSpec() storage setup error = %v", err)
+					return
+				}
+			}()
+			//wait for result
+			time.Sleep(1 * time.Second)
+
+			//make etcd key put through etcdctrl
+			path := getEtcdctrl()
+			if path == "" {
+				t.Skipf("skip watch test: not found etcdctl path=%s", path)
+			}
+			key := "/lstbknd/node/test1/spec/pods/ns1:svc:dp1:test1"
+			value := `{"state":{"destroy":false,"maintenance":false},"template":{"volumes":null,"container":null,"termination":0}}`
+			err = runEtcdPut(path, key, value)
+			if err != nil {
+				t.Skipf("skip watch test: exec etcdctl err=%s", err.Error())
+			}
+
+			for {
+				select {
+				case <-nodePodSpecEventC:
+					t.Log("NodeStorage.WatchPodSpec() is working")
+					return
+				case <-ctxT.Done():
+					t.Log("ctxT done=", ctxT.Err(), "time=", time.Now())
+					t.Error("NodeStorage.WatchPodSpec() NO watch event happen")
+					return
+				case <-time.After(500 * time.Millisecond):
+					//wait for 500 ms
+				}
+			}
+			t.Log("successfull!")
+		})
+	}
+}
+
+func TestNodeStorage_WatchVolumeSpec(t *testing.T) {
+
+	var (
+		stg                  = newNodeStorage()
+		ctx                  = context.Background()
+		err                  error
+		n                    = getNodeAsset("test1", "desc1", true)
+		v                    = getVolumeAsset("ns1", "test1", "desc")
+		nodeVolumeSpecEventC = make(chan *types.VolumeSpecEvent)
+	)
+
+	etcdCtl, destroy, err := initStorageWatch()
+	if err != nil {
+		t.Errorf("NodeStorage.WatchVolumeSpec() storage setup error = %v", err)
+	}
+	defer destroy()
+
+	type fields struct {
+	}
+	type args struct {
+	}
+
+	tests := []struct {
+		name    string
+		fields  fields
+		args    args
+		wantErr bool
+	}{
+		{
+			"check node watch volume spec event",
+			fields{},
+			args{},
+			false,
+		},
+	}
+
+	clear := func() {
+		if err := stg.Clear(ctx); err != nil {
+			t.Errorf("NodeStorage.WatchVolumeSpec() storage setup error = %v", err)
+			return
+		}
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+
+			clear()
+			defer clear()
+
+			err = stg.Insert(ctx, &n)
+			err = stg.InsertVolume(ctx, &n, &v)
+
+			//create timeout context
+			ctxT, cancel := context.WithTimeout(ctx, 4*time.Second)
+			defer cancel()
+			defer etcdCtl.WatchClose() //run watch go function
+
+			go func() {
+				err = stg.WatchVolumeSpec(ctxT, nodeVolumeSpecEventC)
+				if err != nil {
+					t.Errorf("NodeStorage.WatchVolumeSpec() storage setup error = %v", err)
+					return
+				}
+			}()
+			//wait for result
+			time.Sleep(1 * time.Second)
+
+			//make etcd key put through etcdctrl
+			path := getEtcdctrl()
+			if path == "" {
+				t.Skipf("skip watch test: not found etcdctl path=%s", path)
+			}
+			key := "/lstbknd/node/test1/spec/volumes/ns1:test1"
+			value := `{"state":{"destroy":false}}`
+			err = runEtcdPut(path, key, value)
+			if err != nil {
+				t.Skipf("skip watch test: exec etcdctl err=%s", err.Error())
+			}
+
+			for {
+				select {
+				case <-nodeVolumeSpecEventC:
+					t.Log("NodeStorage.WatchVolumeSpec() is working")
+					return
+				case <-ctxT.Done():
+					t.Log("ctxT done=", ctxT.Err(), "time=", time.Now())
+					t.Error("NodeStorage.WatchVolumeSpec() NO watch event happen")
+					return
+				case <-time.After(500 * time.Millisecond):
+					//wait for 500 ms
+				}
+			}
+			t.Log("successfull!")
 		})
 	}
 }
@@ -1918,6 +2360,36 @@ func getNodeAsset(name, desc string, online bool) types.Node {
 
 	n.Meta.Name = name
 	n.Meta.Description = desc
+	n.Meta.Created = time.Now()
 
 	return n
+}
+
+//compare two node structures
+func compareNodes(got, want *types.Node) bool {
+	result := false
+	if compareMeta(got.Meta.Meta, want.Meta.Meta) &&
+		(got.Online == want.Online) &&
+		(got.Meta.Cluster == want.Meta.Cluster) &&
+		(got.Meta.Token == want.Meta.Token) &&
+		(got.Meta.Region == want.Meta.Region) &&
+		(got.Meta.Provider == want.Meta.Provider) &&
+		reflect.DeepEqual(got.Status, want.Status) &&
+		reflect.DeepEqual(got.Info, want.Info) &&
+		reflect.DeepEqual(got.Roles, want.Roles) &&
+		reflect.DeepEqual(got.Network, want.Network) &&
+		reflect.DeepEqual(got.Spec, want.Spec) {
+		result = true
+	}
+
+	return result
+}
+
+func compareNodeMaps(got, want map[string]*types.Node) bool {
+	for k, v := range got {
+		if !compareNodes(v, want[k]) {
+			return false
+		}
+	}
+	return true
 }

@@ -47,6 +47,7 @@ type Store interface {
 	DeleteDir(ctx context.Context, key string) error
 	Watch(ctx context.Context, key, filter string, f func(action, key string, val []byte)) error
 	Begin(ctx context.Context) TX
+	WatchClose()
 }
 
 type TX interface {
