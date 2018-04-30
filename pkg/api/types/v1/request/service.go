@@ -18,6 +18,7 @@
 
 package request
 
+// swagger:model request_service_create
 type ServiceCreateOptions struct {
 	Name        *string             `json:"name"`
 	Description *string             `json:"description"`
@@ -25,15 +26,19 @@ type ServiceCreateOptions struct {
 	Spec        *ServiceOptionsSpec `json:"spec"`
 }
 
+// swagger:model request_service_update
 type ServiceUpdateOptions struct {
 	Description *string             `json:"description"`
 	Spec        *ServiceOptionsSpec `json:"spec"`
 }
 
+// swagger:ignore
+// swagger:model request_service_remove
 type ServiceRemoveOptions struct {
 	Force bool `json:"force"`
 }
 
+// swagger:model request_service_spec
 type ServiceOptionsSpec struct {
 	Replicas   *int                      `json:"replicas"`
 	Memory     *int64                    `json:"memory,omitempty"`
@@ -43,11 +48,14 @@ type ServiceOptionsSpec struct {
 	Ports      *[]ServiceOptionsSpecPort `json:"ports,omitempty"`
 }
 
+// swagger:model request_service_spec_port
 type ServiceOptionsSpecPort struct {
 	Internal int    `json:"internal"`
 	Protocol string `json:"protocol"`
 }
 
+// swagger:ignore
+// swagger:model request_service_logs
 type ServiceLogsOptions struct {
 	Deployment string `json:"deployment"`
 	Pod        string `json:"pod"`

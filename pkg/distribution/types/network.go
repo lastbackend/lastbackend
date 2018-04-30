@@ -20,6 +20,7 @@ package types
 
 const NetworkTypeVxLAN = "vxlan"
 
+// swagger:model types_network_spec
 type NetworkSpec struct {
 	// Node network type
 	Type string `json:"type"`
@@ -31,6 +32,7 @@ type NetworkSpec struct {
 	Addr string `json:"addr"`
 }
 
+// swagger:model types_network_interface
 type NetworkInterface struct {
 	Index int    `json:"index"`
 	Name  string `json:"name"`

@@ -30,6 +30,24 @@ const (
 
 func HookExecuteH(w http.ResponseWriter, r *http.Request) {
 
+	// swagger:operation POST /hook/{id} trigger hookExecute
+	//
+	// Execute hook
+	//
+	// ---
+	// produces:
+	// - application/json
+	// parameters:
+	//   - name: id
+	//     in: path
+	//     description: string
+	//     required: true
+	//     type: string
+	// responses:
+	//   '200':
+	//     description: Hook was successfully executed
+
+
 	log.V(logLevel).Debugf("%s:execute:> execute hook", logPrefix)
 
 	var (

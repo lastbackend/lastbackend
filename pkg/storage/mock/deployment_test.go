@@ -22,10 +22,11 @@ import (
 	"testing"
 
 	"context"
+	"reflect"
+
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 	"github.com/lastbackend/lastbackend/pkg/storage/storage"
 	"github.com/lastbackend/lastbackend/pkg/storage/store"
-	"reflect"
 )
 
 func TestDeploymentStorage_Get(t *testing.T) {
@@ -304,6 +305,110 @@ func TestDeploymentStorage_ListByService(t *testing.T) {
 			if !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("DeploymentStorage.ListByService() = %v, want %v", got, tt.want)
 			}
+		})
+	}
+}
+
+func TestDeploymentStorage_SetSpec(t *testing.T) {
+	var (
+		ns1 = "ns1"
+		svc = "svc"
+		stg = newDeploymentStorage()
+		ctx = context.Background()
+		n1  = getDeploymentAsset(ns1, svc, "test1", "")
+		n2  = getDeploymentAsset(ns1, svc, "test1", "")
+		n3  = getDeploymentAsset(ns1, svc, "test2", "")
+		nl  = make([]*types.Deployment, 0)
+	)
+
+	n2.Spec.State.Maintenance = true
+
+	nl0 := append(nl, &n1)
+
+	type fields struct {
+		stg storage.Deployment
+	}
+
+	type args struct {
+		ctx        context.Context
+		deployment *types.Deployment
+	}
+
+	tests := []struct {
+		name    string
+		fields  fields
+		args    args
+		want    *types.Deployment
+		wantErr bool
+		err     string
+	}{
+		{
+			"test successful update",
+			fields{stg},
+			args{ctx, &n2},
+			&n2,
+			false,
+			"",
+		},
+		{
+			"test failed update: nil structure",
+			fields{stg},
+			args{ctx, nil},
+			&n1,
+			true,
+			store.ErrStructArgIsNil,
+		},
+		{
+			"test failed update: entity not found",
+			fields{stg},
+			args{ctx, &n3},
+			&n1,
+			true,
+			store.ErrEntityNotFound,
+		},
+	}
+
+	for _, tt := range tests {
+
+		if err := stg.Clear(ctx); err != nil {
+			t.Errorf("DeploymentStorage.SetSpec() storage setup error = %v", err)
+			return
+		}
+
+		for _, n := range nl0 {
+			if err := stg.Insert(ctx, n); err != nil {
+				t.Errorf("DeploymentStorage.SetSpec() storage setup error = %v", err)
+				return
+			}
+		}
+
+		t.Run(tt.name, func(t *testing.T) {
+			err := tt.fields.stg.SetSpec(tt.args.ctx, tt.args.deployment)
+			if err != nil {
+				if !tt.wantErr {
+					t.Errorf("DeploymentStorage.SetSpec() error = %v, want no error", err.Error())
+					return
+				}
+
+				if tt.wantErr && tt.err != err.Error() {
+					t.Errorf("DeploymentStorage.SetSpec() error = %v, want %v", err.Error(), tt.err)
+					return
+				}
+
+				return
+			}
+
+			if tt.wantErr {
+				t.Errorf("DeploymentStorage.SetSpec() error = %v, want %v", err.Error(), tt.err)
+				return
+			}
+
+			got, _ := tt.fields.stg.Get(tt.args.ctx, ns1, svc, tt.args.deployment.Meta.Name)
+			if !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("DeploymentStorage.SetSpec() = %v, want %v", got, tt.want)
+				return
+			}
+
 		})
 	}
 }
@@ -732,6 +837,47 @@ func TestDeploymentStorage_Watch(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			if err := tt.fields.stg.Watch(tt.args.ctx, tt.args.deployment); (err != nil) != tt.wantErr {
 				t.Errorf("DeploymentStorage.Watch() error = %v, wantErr %v", err, tt.wantErr)
+			}
+		})
+	}
+}
+
+func TestDeploymentStorage_WatchStatus(t *testing.T) {
+	var (
+		stg = newDeploymentStorage()
+		ctx = context.Background()
+	)
+
+	type fields struct {
+		stg storage.Deployment
+	}
+	type args struct {
+		ctx        context.Context
+		deployment chan *types.Deployment
+	}
+	tests := []struct {
+		name    string
+		fields  fields
+		args    args
+		wantErr bool
+	}{
+		{
+			"check watch status ",
+			fields{stg},
+			args{ctx, make(chan *types.Deployment)},
+			false,
+		},
+	}
+	for _, tt := range tests {
+
+		if err := stg.Clear(ctx); err != nil {
+			t.Errorf("DeploymentStorage.WatchStatus() storage setup error = %v", err)
+			return
+		}
+
+		t.Run(tt.name, func(t *testing.T) {
+			if err := tt.fields.stg.WatchStatus(tt.args.ctx, tt.args.deployment); (err != nil) != tt.wantErr {
+				t.Errorf("DeploymentStorage.WatchStatus() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
 	}

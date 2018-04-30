@@ -20,9 +20,15 @@ package types
 
 import "fmt"
 
+// swagger:ignore
+// swagger:model types_volume_map
 type VolumeMap map[string]*Volume
+// swagger:ignore
+// swagger:model types_volume_list
 type VolumeList []*Volume
 
+// swagger:ignore
+// swagger:model types_volume
 type Volume struct {
 	// Volume meta
 	Meta VolumeMeta `json:"meta" yaml:"meta"`
@@ -32,25 +38,35 @@ type Volume struct {
 	Status VolumeStatus `json:"status" yaml:"status"`
 }
 
+// swagger:ignore
+// swagger:model types_volume_meta
 type VolumeMeta struct {
 	Meta
 	Namespace string `json:"namespace"`
 }
 
+// swagger:model types_volume_spec
 type VolumeSpec struct {
 	State VolumeSpecState `json:"state"`
 }
 
+// swagger:model types_volume_spec_state
 type VolumeSpecState struct {
 	Destroy bool `json:"destroy"`
 }
 
+// swagger:ignore
+// swagger:model types_volume_create
 type VolumeCreateOptions struct {
 }
 
+// swagger:ignore
+// swagger:model types_volume_update
 type VolumeUpdateOptions struct {
 }
 
+// swagger:ignore
+// swagger:model types_volume_status
 type VolumeStatus struct {
 	// volume status state
 	State string `json:"state" yaml:"state"`

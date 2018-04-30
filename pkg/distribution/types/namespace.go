@@ -23,39 +23,49 @@ import (
 	"fmt"
 )
 
+// swagger:ignore
 type Namespace struct {
 	Meta NamespaceMeta `json:"meta"`
 	Spec NamespaceSpec `json:"spec"`
 }
 
+// swagger:ignore
 type NamespaceMap map[string]*Namespace
+// swagger:ignore
 type NamespaceList []*Namespace
 
+// swagger:ignore
 type NamespaceEnvs []NamespaceEnv
 
+// swagger:ignore
 type NamespaceEnv struct {
 	Name  string `json:"name"`
 	Value string `json:"value"`
 }
 
+// swagger:ignore
+// swagger:model types_namespace_meta
 type NamespaceMeta struct {
 	Meta     `yaml:",inline"`
 	Endpoint string `json:"endpoint"`
 	Type     string `json:"type"`
 }
 
+// swagger:ignore
 type NamespaceSpec struct {
 	Quotas    NamespaceQuotas    `json:"quotas"`
 	Resources NamespaceResources `json:"resources"`
 	Env       NamespaceEnvs      `json:"env"`
 }
 
+// swagger:ignore
 type NamespaceQuotas struct {
 	RAM      int64 `json:"ram"`
 	Routes   int   `json:"routes"`
 	Disabled bool  `json:"disabled"`
 }
 
+// swagger:ignore
 type NamespaceResources struct {
 	RAM    int64 `json:"ram"`
 	Routes int   `json:"routes"`
@@ -87,21 +97,25 @@ func (n *NamespaceList) ToJson() ([]byte, error) {
 	return buf, nil
 }
 
+// swagger:ignore
 type NamespaceCreateOptions struct {
 	Name        string                  `json:"name"`
 	Description string                  `json:"description"`
 	Quotas      *NamespaceQuotasOptions `json:"quotas"`
 }
 
+// swagger:ignore
 type NamespaceUpdateOptions struct {
 	Description *string                 `json:"description"`
 	Quotas      *NamespaceQuotasOptions `json:"quotas"`
 }
 
+// swagger:ignore
 type NamespaceRemoveOptions struct {
 	Force bool `json:"force"`
 }
 
+// swagger:ignore
 type NamespaceQuotasOptions struct {
 	Disabled bool  `json:"disabled"`
 	RAM      int64 `json:"ram"`

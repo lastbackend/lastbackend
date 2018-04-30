@@ -24,14 +24,19 @@ import (
 	"fmt"
 )
 
+// swagger:ignore
+// swagger:model types_secret
 type Secret struct {
 	Meta SecretMeta `json:"meta" yaml:"meta"`
 	Data string     `json:"data" yaml:"data"`
 }
-
+// swagger:ignore
 type SecretList []*Secret
+// swagger:ignore
 type SecretMap map[string]*Secret
 
+// swagger:ignore
+// swagger:model types_secret_meta
 type SecretMeta struct {
 	Meta      `yaml:",inline"`
 	Namespace string `json:"namespace" yaml:"namespace"`
@@ -50,14 +55,17 @@ func (s *Secret) SelfLink() string {
 	return s.Meta.SelfLink
 }
 
+// swagger:ignore
 type SecretCreateOptions struct {
 	Data *string
 }
 
+// swagger:ignore
 type SecretUpdateOptions struct {
 	Data *string
 }
 
+// swagger:ignore
 type SecretRemoveOptions struct {
 	Force bool `json:"force"`
 }

@@ -24,6 +24,7 @@ import (
 )
 
 // Node - default node structure
+// swagger:model views_node
 type Node struct {
 	Meta   NodeMeta   `json:"meta"`
 	Info   NodeInfo   `json:"info"`
@@ -31,9 +32,11 @@ type Node struct {
 }
 
 // NodeList - node map list
+// swagger:model views_node_list
 type NodeList map[string]*Node
 
 // NodeMeta - node metadata structure
+// swagger:model views_node_meta
 type NodeMeta struct {
 	Name        string    `json:"name"`
 	Description string    `json:"description"`
@@ -42,6 +45,7 @@ type NodeMeta struct {
 }
 
 // NodeInfo - node info struct
+// swagger:model views_node_info
 type NodeInfo struct {
 	Hostname     string `json:"hostname"`
 	OSName       string `json:"os_name"`
@@ -54,6 +58,7 @@ type NodeInfo struct {
 }
 
 // NodeStatus - node state struct
+// swagger:model views_node_status
 type NodeStatus struct {
 	Online    bool          `json:"online"`
 	Capacity  NodeResources `json:"capacity"`
@@ -61,6 +66,7 @@ type NodeStatus struct {
 }
 
 // NodeResources - node resources structure
+// swagger:model views_node_resources
 type NodeResources struct {
 	Containers int   `json:"containers"`
 	Pods       int   `json:"pods"`
@@ -69,6 +75,7 @@ type NodeResources struct {
 	Storage    int   `json:"storage"`
 }
 
+// swagger:model views_node_spec
 type NodeSpec struct {
 	Network map[string]types.NetworkSpec `json:"network"`
 	Pods    map[string]types.PodSpec     `json:"pods"`

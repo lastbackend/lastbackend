@@ -23,11 +23,19 @@ import (
 	"fmt"
 )
 
+// swagger:ignore
+// swagger:model types_node_status_map
 type NodeMapStatus map[string]*NodeStatus
 
+// swagger:ignore
+// swagger:model types_node_map
 type NodeMap map[string]*Node
+// swagger:ignore
+// swagger:model types_node_list
 type NodeList []*Node
 
+// swagger:ignore
+// swagger:model types_node
 type Node struct {
 	Meta    NodeMeta    `json:"meta"`
 	Info    NodeInfo    `json:"info"`
@@ -38,6 +46,8 @@ type Node struct {
 	Online  bool        `json:"online"`
 }
 
+// swagger:ignore
+// swagger:model types_node_meta
 type NodeMeta struct {
 	Meta
 	Cluster  string `json:"cluster"`
@@ -69,6 +79,7 @@ func (m *NodeMeta) Set(meta *NodeUpdateMetaOptions) {
 
 }
 
+// swagger:model types_node_info
 type NodeInfo struct {
 	Hostname     string `json:"hostname"`
 	Architecture string `json:"architecture"`
@@ -81,6 +92,7 @@ type NodeInfo struct {
 	InternalIP string `json:"internal_ip"`
 }
 
+// swagger:model types_node_status
 type NodeStatus struct {
 	// Node Capacity
 	Capacity NodeResources `json:"capacity"`
@@ -88,17 +100,23 @@ type NodeStatus struct {
 	Allocated NodeResources `json:"allocated"`
 }
 
+// swagger:ignore
+// swagger:model types_node_spec
 type NodeSpec struct {
 	Network map[string]NetworkSpec `json:"network"`
 	Pods    map[string]PodSpec     `json:"pods"`
 	Volumes map[string]VolumeSpec  `json:"volumes"`
 }
 
+// swagger:ignore
+// swagger:model types_node_namespace
 type NodeNamespace struct {
 	Meta NamespaceMeta     `json:"meta",yaml:"meta"`
 	Spec NodeNamespaceSpec `json:"spec",yaml:"spec"`
 }
 
+// swagger:ignore
+// swagger:model types_node_namespace_spec
 type NodeNamespaceSpec struct {
 	Routes  []*Route  `json:"routes",yaml:"routes"`
 	Pods    []*Pod    `json:"pods",yaml:"pods"`
@@ -106,6 +124,7 @@ type NodeNamespaceSpec struct {
 	Secrets []*Secret `json:"secrets",yaml:"secrets"`
 }
 
+// swagger:model types_node_resources
 type NodeResources struct {
 	// Node total containers
 	Containers int `json:"containers"`
@@ -119,20 +138,28 @@ type NodeResources struct {
 	Storage int `json:"storage"`
 }
 
+// swagger:ignore
+// swagger:model types_node_role
 type NodeRole struct {
 	Router  NodeRoleRouter `json:"router"`
 	Builder bool           `json:"builder"`
 }
 
+// swagger:ignore
+// swagger:model types_node_role_router
 type NodeRoleRouter struct {
 	ExternalIP string `json:"external_ip"`
 	Enabled    bool   `json:"enabled"`
 }
 
+// swagger:ignore
+// swagger:model types_node_task
 type NodeTask struct {
 	Cancel context.CancelFunc
 }
 
+// swagger:ignore
+// swagger:model types_node_meta_create
 type NodeCreateMetaOptions struct {
 	MetaCreateOptions
 	Token    string `json:"token"`
@@ -140,6 +167,7 @@ type NodeCreateMetaOptions struct {
 	Provider string `json:"provider"`
 }
 
+// swagger:model types_node_meta_update
 type NodeUpdateMetaOptions struct {
 	MetaUpdateOptions
 	Token    *string `json:"token"`
@@ -147,6 +175,8 @@ type NodeUpdateMetaOptions struct {
 	Provider *string `json:"provider"`
 }
 
+// swagger:ignore
+// swagger:model types_node_create
 type NodeCreateOptions struct {
 	Meta    NodeCreateMetaOptions `json:"meta",yaml:"meta"`
 	Info    NodeInfo              `json:"info",yaml:"info"`

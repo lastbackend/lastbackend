@@ -20,16 +20,19 @@ package request
 
 import "github.com/lastbackend/lastbackend/pkg/distribution/types"
 
+// swagger:model request_node_meta
 type NodeMetaOptions struct {
 	Meta *types.NodeUpdateMetaOptions `json:"meta"`
 }
 
+// swagger:model request_node_connect
 type NodeConnectOptions struct {
 	Info   types.NodeInfo   `json:"info"`
 	Status types.NodeStatus `json:"status"`
 	Network types.NetworkSpec `json:"network"`
 }
 
+// swagger:model request_node_status
 type NodeStatusOptions struct {
 
 	// Pods statuses
@@ -39,6 +42,7 @@ type NodeStatusOptions struct {
 	Resources NodeResourcesOptions `json:"resources"`
 }
 
+// swagger:model request_node_resources
 type NodeResourcesOptions struct {
 	// Node state capacity
 	Capacity types.NodeResources `json:"capacity"`
@@ -46,6 +50,7 @@ type NodeResourcesOptions struct {
 	Allocated types.NodeResources `json:"allocated"`
 }
 
+// swagger:model request_node_pod_status
 type NodePodStatusOptions struct {
 	// Pod state
 	State string `json:"state" yaml:"state"`
@@ -59,6 +64,7 @@ type NodePodStatusOptions struct {
 	Containers map[string]*types.PodContainer `json:"containers" yaml:"containers"`
 }
 
+// swagger:model request_node_volume_status
 type NodeVolumeStatusOptions struct {
 	// route status state
 	State string `json:"state" yaml:"state"`
@@ -66,6 +72,7 @@ type NodeVolumeStatusOptions struct {
 	Message string `json:"message" yaml:"message"`
 }
 
+// swagger:model request_node_route_status
 type NodeRouteStatusOptions struct {
 	// route status state
 	State string `json:"state" yaml:"state"`
@@ -73,10 +80,14 @@ type NodeRouteStatusOptions struct {
 	Message string `json:"message" yaml:"message"`
 }
 
+// swagger:ignore
+// swagger:model request_node_remove
 type NodeRemoveOptions struct {
 	Force bool `json:"force"`
 }
 
+// swagger:ignore
+// swagger:model request_node_logs
 type NodeLogsOptions struct {
 	Follow bool `json:"follow"`
 }

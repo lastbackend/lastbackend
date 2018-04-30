@@ -437,6 +437,214 @@ func TestPodStorage_ListByDeployment(t *testing.T) {
 	}
 }
 
+func TestPodStorage_SetMeta(t *testing.T) {
+	var (
+		ns1 = "ns1"
+		svc = "svc"
+		dp1 = "dp1"
+		stg = newPodStorage()
+		ctx = context.Background()
+		n1  = getPodAsset(ns1, svc, dp1, "test1", "")
+		n2  = getPodAsset(ns1, svc, dp1, "test1", "")
+		n3  = getPodAsset(ns1, svc, dp1, "test2", "")
+		nl  = make([]*types.Pod, 0)
+	)
+
+	n2.Meta.Status = types.StateReady
+
+	nl0 := append(nl, &n1)
+
+	type fields struct {
+		stg storage.Pod
+	}
+
+	type args struct {
+		ctx context.Context
+		pod *types.Pod
+	}
+
+	tests := []struct {
+		name    string
+		fields  fields
+		args    args
+		want    *types.Pod
+		wantErr bool
+		err     string
+	}{
+		{
+			"test successful update",
+			fields{stg},
+			args{ctx, &n2},
+			&n2,
+			false,
+			"",
+		},
+		{
+			"test failed update: nil structure",
+			fields{stg},
+			args{ctx, nil},
+			&n1,
+			true,
+			store.ErrStructArgIsNil,
+		},
+		{
+			"test failed update: entity not found",
+			fields{stg},
+			args{ctx, &n3},
+			&n1,
+			true,
+			store.ErrEntityNotFound,
+		},
+	}
+
+	for _, tt := range tests {
+
+		if err := stg.Clear(ctx); err != nil {
+			t.Errorf("PodStorage.SetMeta() storage setup error = %v", err)
+			return
+		}
+
+		for _, n := range nl0 {
+			if err := stg.Insert(ctx, n); err != nil {
+				t.Errorf("PodStorage.SetMeta() storage setup error = %v", err)
+				return
+			}
+		}
+
+		t.Run(tt.name, func(t *testing.T) {
+			err := tt.fields.stg.SetMeta(tt.args.ctx, tt.args.pod)
+			if err != nil {
+				if !tt.wantErr {
+					t.Errorf("PodStorage.SetMeta() error = %v, want no error", err.Error())
+					return
+				}
+
+				if tt.wantErr && tt.err != err.Error() {
+					t.Errorf("PodStorage.SetMeta() error = %v, want %v", err.Error(), tt.err)
+					return
+				}
+				return
+			}
+
+			if tt.wantErr {
+				t.Errorf("PodStorage.SetMeta() error = %v, want %v", err.Error(), tt.err)
+				return
+			}
+
+			got, _ := tt.fields.stg.Get(tt.args.ctx, ns1, svc, dp1, tt.args.pod.Meta.Name)
+			if !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("PodStorage.SetMeta() = %v, want %v", got, tt.want)
+				return
+			}
+
+		})
+	}
+}
+
+func TestPodStorage_SetSpec(t *testing.T) {
+	var (
+		ns1 = "ns1"
+		svc = "svc"
+		dp1 = "dp1"
+		stg = newPodStorage()
+		ctx = context.Background()
+		n1  = getPodAsset(ns1, svc, dp1, "test1", "")
+		n2  = getPodAsset(ns1, svc, dp1, "test1", "")
+		n3  = getPodAsset(ns1, svc, dp1, "test2", "")
+		nl  = make([]*types.Pod, 0)
+	)
+
+	n2.Spec.State.Maintenance = true
+
+	nl0 := append(nl, &n1)
+
+	type fields struct {
+		stg storage.Pod
+	}
+
+	type args struct {
+		ctx context.Context
+		pod *types.Pod
+	}
+
+	tests := []struct {
+		name    string
+		fields  fields
+		args    args
+		want    *types.Pod
+		wantErr bool
+		err     string
+	}{
+		{
+			"test successful update",
+			fields{stg},
+			args{ctx, &n2},
+			&n2,
+			false,
+			"",
+		},
+		{
+			"test failed update: nil structure",
+			fields{stg},
+			args{ctx, nil},
+			&n1,
+			true,
+			store.ErrStructArgIsNil,
+		},
+		{
+			"test failed update: entity not found",
+			fields{stg},
+			args{ctx, &n3},
+			&n1,
+			true,
+			store.ErrEntityNotFound,
+		},
+	}
+
+	for _, tt := range tests {
+
+		if err := stg.Clear(ctx); err != nil {
+			t.Errorf("PodStorage.SetSpec() storage setup error = %v", err)
+			return
+		}
+
+		for _, n := range nl0 {
+			if err := stg.Insert(ctx, n); err != nil {
+				t.Errorf("PodStorage.SetSpec() storage setup error = %v", err)
+				return
+			}
+		}
+
+		t.Run(tt.name, func(t *testing.T) {
+			err := tt.fields.stg.SetSpec(tt.args.ctx, tt.args.pod)
+			if err != nil {
+				if !tt.wantErr {
+					t.Errorf("PodStorage.SetSpec() error = %v, want no error", err.Error())
+					return
+				}
+
+				if tt.wantErr && tt.err != err.Error() {
+					t.Errorf("PodStorage.SetSpec() error = %v, want %v", err.Error(), tt.err)
+					return
+				}
+				return
+			}
+
+			if tt.wantErr {
+				t.Errorf("PodStorage.SetSpec() error = %v, want %v", err.Error(), tt.err)
+				return
+			}
+
+			got, _ := tt.fields.stg.Get(tt.args.ctx, ns1, svc, dp1, tt.args.pod.Meta.Name)
+			if !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("PodStorage.SetSpec() = %v, want %v", got, tt.want)
+				return
+			}
+
+		})
+	}
+}
+
 func TestPodStorage_SetStatus(t *testing.T) {
 	var (
 		ns1 = "ns1"
@@ -732,6 +940,104 @@ func TestPodStorage_Update(t *testing.T) {
 	}
 }
 
+func TestPodStorage_Destroy(t *testing.T) {
+	var (
+		ns1 = "ns1"
+		svc = "svc"
+		dp1 = "dp1"
+		stg = newPodStorage()
+		ctx = context.Background()
+		n1  = getPodAsset(ns1, svc, dp1, "test1", "")
+		n2  = getPodAsset(ns1, svc, dp1, "test2", "")
+	)
+
+	type fields struct {
+		//stg storage.Pod
+	}
+
+	type args struct {
+		ctx context.Context
+		pod *types.Pod
+	}
+
+	tests := []struct {
+		name    string
+		fields  fields
+		args    args
+		want    *types.Pod
+		wantErr bool
+		err     string
+	}{
+		{
+			"test successful pod destroy",
+			fields{},
+			args{ctx, &n1},
+			nil, //err should be nil
+			false,
+			store.ErrEntityNotFound,
+		},
+		{
+			"test failed destroy: nil pod structure",
+			fields{},
+			args{ctx, nil},
+			&n2,
+			true,
+			store.ErrStructArgIsNil,
+		},
+		{
+			"test failed destroy: pod not found",
+			fields{},
+			args{ctx, &n2},
+			&n1,
+			true,
+			store.ErrEntityNotFound,
+		},
+	}
+
+	for _, tt := range tests {
+
+		if err := stg.Clear(ctx); err != nil {
+			t.Errorf("PodStorage.Destroy() storage setup error = %v", err)
+			return
+		}
+
+		if err := stg.Insert(ctx, &n1); err != nil {
+			t.Errorf("PodStorage.Destroy() storage setup error = %v", err)
+			return
+		}
+
+		t.Run(tt.name, func(t *testing.T) {
+			err := stg.Destroy(tt.args.ctx, tt.args.pod)
+
+			if err != nil {
+				if !tt.wantErr {
+					t.Errorf("PodStorage.Destroy() error = %v, want no error", err.Error())
+					return
+				}
+
+				if tt.wantErr && tt.err != err.Error() {
+					t.Errorf("PodStorage.Destroy() error = %v, want %v", err.Error(), tt.err)
+					return
+				}
+
+				return
+			}
+
+			if tt.wantErr {
+				t.Errorf("PodStorage.Destroy() error = %v, want %v", err, tt.err)
+				return
+			}
+			//check that tt.args.pod is really destroyed
+			err = stg.checkPodExists(tt.args.pod)
+			if err == nil || tt.want != nil {
+				t.Errorf("PodStorage.Destroy() = %v, want %v", err, tt.want)
+				return
+			}
+
+		})
+	}
+}
+
 func TestPodStorage_Remove(t *testing.T) {
 	var (
 		ns1 = "ns1"
@@ -859,6 +1165,41 @@ func TestPodStorage_Watch(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			if err := tt.fields.stg.Watch(tt.args.ctx, tt.args.pod); (err != nil) != tt.wantErr {
 				t.Errorf("PodStorage.Watch() error = %v, wantErr %v", err, tt.wantErr)
+			}
+		})
+	}
+}
+
+func TestPodStorage_WatchStatus(t *testing.T) {
+	var (
+		stg = newPodStorage()
+		ctx = context.Background()
+	)
+
+	type fields struct {
+		stg storage.Pod
+	}
+	type args struct {
+		ctx context.Context
+		pod chan *types.Pod
+	}
+	tests := []struct {
+		name    string
+		fields  fields
+		args    args
+		wantErr bool
+	}{
+		{
+			"check watch status",
+			fields{stg},
+			args{ctx, make(chan *types.Pod)},
+			false,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if err := tt.fields.stg.WatchStatus(tt.args.ctx, tt.args.pod); (err != nil) != tt.wantErr {
+				t.Errorf("PodStorage.WatchStatus() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
 	}
