@@ -37,6 +37,7 @@ type Storage struct {
 	*DeploymentStorage
 	*TriggerStorage
 	*NodeStorage
+	*EndpointStorage
 	*IngressStorage
 	*NamespaceStorage
 	*PodStorage
@@ -95,6 +96,10 @@ func (s *Storage) System() storage.System {
 	return s.SystemStorage
 }
 
+func (s *Storage) Endpoint() storage.Endpoint {
+	return s.EndpointStorage
+}
+
 func keyCreate(args ...string) string {
 	return strings.Join([]string(args), "/")
 }
@@ -120,6 +125,7 @@ func New() (*Storage, error) {
 	s.SystemStorage = newSystemStorage()
 	s.VolumeStorage = newVolumeStorage()
 	s.SecretStorage = newSecretStorage()
+	s.EndpointStorage = newEndpointStorage()
 
 	return s, nil
 }

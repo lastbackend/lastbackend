@@ -19,7 +19,6 @@
 package ipvs
 
 const (
-
 	SvcFlagPersist   = 0x1
 	SvcFlagHashed    = 0x2
 	SvcFlagOnePacket = 0x4
@@ -40,15 +39,30 @@ const (
 	DstFlagNoCPort   = 0x800
 	DstFlagTemplate  = 0x1000
 	DstFlagOnePacket = 0x2000
+)
 
+const (
+	proxyTCPProto = "tcp"
+	proxyUDPProto = "udp"
 )
 
 type Service struct {
-
+	Host        string    `json:"host"`
+	Port        int       `json:"port"`
+	Type        string    `json:"type"`
+	Scheduler   string    `json:"scheduler"`
+	Persistence int       `json:"persistence"`
+	Netmask     string    `json:"netmask"`
+	Backends    []Backend `json:"backends"`
 }
 
-type Destination struct {
-
+type Backend struct {
+	Host           string `json:"host"`
+	Port           int    `json:"port"`
+	Forwarder      string `json:"forwarder"`
+	Weight         int    `json:"weight"`
+	UpperThreshold int    `json:"upper_threshold"`
+	LowerThreshold int    `json:"lower_threshold"`
 }
 
 type DestinationFlags uint32
@@ -58,4 +72,3 @@ type DestinationStats struct {
 	InactiveConns uint32
 	PersistConns  uint32
 }
-

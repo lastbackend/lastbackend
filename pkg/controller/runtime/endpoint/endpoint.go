@@ -15,19 +15,5 @@
 // is strictly forbidden unless prior written permission is obtained
 // from Last.Backend LLC.
 //
-// +build !linux
 
-package cni
-
-import (
-	"github.com/lastbackend/lastbackend/pkg/node/runtime/cni"
-	"github.com/lastbackend/lastbackend/pkg/node/runtime/cni/local"
-	"github.com/spf13/viper"
-)
-
-func New() (cni.CNI, error) {
-	switch viper.GetString("node.cni.type") {
-	default:
-		return local.New()
-	}
-}
+package endpoint

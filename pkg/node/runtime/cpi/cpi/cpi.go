@@ -17,17 +17,13 @@
 //
 // +build !linux
 
-package cni
+package cpi
 
 import (
-	"github.com/lastbackend/lastbackend/pkg/node/runtime/cni"
-	"github.com/lastbackend/lastbackend/pkg/node/runtime/cni/local"
-	"github.com/spf13/viper"
+	"github.com/lastbackend/lastbackend/pkg/node/runtime/cpi/local"
+	"github.com/lastbackend/lastbackend/pkg/node/runtime/cpi"
 )
 
-func New() (cni.CNI, error) {
-	switch viper.GetString("node.cni.type") {
-	default:
-		return local.New()
-	}
+func New() (cpi.CPI, error) {
+	return local.New()
 }

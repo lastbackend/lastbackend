@@ -16,4 +16,17 @@
 // from Last.Backend LLC.
 //
 
-package proxy
+package local
+
+import (
+	"github.com/lastbackend/lastbackend/pkg/node/runtime/cpi"
+)
+
+type Proxy struct {
+	cpi.CPI
+}
+
+func New() (*Proxy, error) {
+	return &Proxy{
+	}, nil
+}

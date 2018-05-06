@@ -16,44 +16,30 @@
 // from Last.Backend LLC.
 //
 
-// +build linux
+package endpoint
 
-package ipvs
+import (
+	"context"
+	"github.com/lastbackend/lastbackend/pkg/distribution/types"
+)
 
-/*
-#include <linux/types.h>
-#include <linux/ip_vs.h>
-*/
-import "C"
+func Restore(ctx context.Context) error {
+	return nil
+}
 
-type IPVS struct {
+func Create(ctx context.Context, key string, spec *types.EndpointSpec) (types.EndpointStatus, error) {
+	return types.EndpointStatus{}, nil
+}
+
+func Clean(ctx context.Context, status *types.EndpointStatus) {
 
 }
 
-func (i *IPVS) GetServices() {
+func Destroy(ctx context.Context, endpoint string, status *types.EndpointStatus) {
 
 }
 
-func (i *IPVS) AddService () {
+func Manage(ctx context.Context) error {
 
-}
-
-func (i *IPVS) SetService () {
-
-}
-
-func (i *IPVS) DelService () {
-
-}
-
-func (i *IPVS) AddDestination () {
-
-}
-
-func (i *IPVS) SetDestination () {
-
-}
-
-func (i *IPVS) DelDestination () {
-
+	return nil
 }

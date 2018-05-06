@@ -45,24 +45,30 @@ type EndpointMeta struct {
 
 // EndpointStatus - endpoint status
 type EndpointStatus struct {
-	State   string `json:"state"`
-	Message string `json:"message"`
+	State     string                               `json:"state"`
+	Message   string                               `json:"message"`
+	Upstreams map[int]map[string]*EndpointUpstream `json:"upstreams"`
 }
 
 // EndpointSpec spec data
 type EndpointSpec struct {
-	IP            string                         `json:"ip"`
-	Ports         []int                          `json:"ports"`
-	Backends      map[string]EndpointSpecBackend `json:"backends"`
-	RouteStrategy string                         `json:"route_strategy"`
-	Policy        string                         `json:"policy"`
-	BindStrategy  string                         `json:"bind_strategy"`
+	State     string               `json:"state"`
+	IP        string               `json:"ip"`
+	PortMap   map[string]int       `json:"port_map"`
+	Upstreams []*EndpointUpstream  `json:"upstreams"`
+	Strategy  EndpointSpecStrategy `json:"strategy"`
+	Policy    string               `json:"policy"`
 }
 
-// EndpointSpecBackend describe endpoint backend data
-type EndpointSpecBackend struct {
-	IP      string      `json:"ip"`
-	PortMap map[int]int `json:"port_map"`
+type EndpointSpecStrategy struct {
+	Route string `json:"route"`
+	Bind  string `json:"bind"`
+}
+
+// EndpointUpstream describe endpoint backend data
+type EndpointUpstream struct {
+	Host string `json:"host"`
+	Port int    `json:"port"`
 }
 
 // SelfLink generates and returning link to object in platform
@@ -73,11 +79,17 @@ func (e *Endpoint) SelfLink() string {
 	return e.Meta.SelfLink
 }
 
-
 type EndpointCreateOptions struct {
-
+	Name          string  `json:"name"`
+	Ports         []int   `json:"ports"`
+	RouteStrategy *string `json:"route_strategy"`
+	Policy        *string `json:"policy"`
+	BindStrategy  *string `json:"bind_strategy"`
 }
 
 type EndpointUpdateOptions struct {
-
+	Ports         *[]int  `json:"ports"`
+	RouteStrategy *string `json:"route_strategy"`
+	Policy        *string `json:"policy"`
+	BindStrategy  *string `json:"bind_strategy"`
 }

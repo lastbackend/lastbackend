@@ -15,18 +15,21 @@
 // is strictly forbidden unless prior written permission is obtained
 // from Last.Backend LLC.
 //
-// +build !linux
+// +build linux
 
-package cni
+package cpi
 
 import (
-	"github.com/lastbackend/lastbackend/pkg/node/runtime/cni"
-	"github.com/lastbackend/lastbackend/pkg/node/runtime/cni/local"
+	"github.com/lastbackend/lastbackend/pkg/node/runtime/cpi"
 	"github.com/spf13/viper"
+	"github.com/lastbackend/lastbackend/pkg/node/runtime/cpi/ipvs"
+	"github.com/lastbackend/lastbackend/pkg/node/runtime/cpi/local"
 )
 
-func New() (cni.CNI, error) {
-	switch viper.GetString("node.cni.type") {
+func New() (cpi.CPI, error) {
+	switch viper.GetString("node.cpi.type") {
+	case "ipvs":
+		return ipvs.New()
 	default:
 		return local.New()
 	}

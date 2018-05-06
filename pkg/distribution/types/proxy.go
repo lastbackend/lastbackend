@@ -16,4 +16,5 @@
 // from Last.Backend LLC.
 //
 
-package ipvs
+package types
+
