@@ -48,7 +48,7 @@ func (rc *RouteClient) Create(ctx context.Context, opts *rv1.RouteCreateOptions)
 	var e *errors.Http
 
 	err = rc.client.Post(fmt.Sprintf("/namespace/%s/route", rc.namespace)).
-		AddHeader("Content-Type", "application/json").
+		AddHeader("Content-Entity", "application/json").
 		Body(body).
 		JSON(&s, &e)
 
@@ -68,7 +68,7 @@ func (rc *RouteClient) List(ctx context.Context) (*vv1.RouteList, error) {
 	var e *errors.Http
 
 	err := rc.client.Get(fmt.Sprintf("/namespace/%s/route", rc.namespace)).
-		AddHeader("Content-Type", "application/json").
+		AddHeader("Content-Entity", "application/json").
 		JSON(&s, &e)
 
 	if err != nil {
@@ -92,7 +92,7 @@ func (rc *RouteClient) Get(ctx context.Context) (*vv1.Route, error) {
 	var e *errors.Http
 
 	err := rc.client.Get(fmt.Sprintf("/namespace/%s/route/%s", rc.namespace, rc.name)).
-		AddHeader("Content-Type", "application/json").
+		AddHeader("Content-Entity", "application/json").
 		JSON(&s, &e)
 
 	if err != nil {
@@ -116,7 +116,7 @@ func (rc *RouteClient) Update(ctx context.Context, opts *rv1.RouteUpdateOptions)
 	var e *errors.Http
 
 	err = rc.client.Put(fmt.Sprintf("/namespace/%s/route/%s", rc.namespace, rc.name)).
-		AddHeader("Content-Type", "application/json").
+		AddHeader("Content-Entity", "application/json").
 		Body(body).
 		JSON(&s, &e)
 
@@ -135,7 +135,7 @@ func (rc *RouteClient) Remove(ctx context.Context, opts *rv1.RouteRemoveOptions)
 	var e *errors.Http
 
 	req := rc.client.Delete(fmt.Sprintf("/namespace/%s/route/%s", rc.namespace, rc.name)).
-		AddHeader("Content-Type", "application/json")
+		AddHeader("Content-Entity", "application/json")
 
 	if opts != nil {
 		if opts.Force {

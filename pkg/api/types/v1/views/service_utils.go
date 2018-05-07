@@ -31,7 +31,15 @@ type ServiceView struct{}
 // SERVICE INFO MODEL
 // ***************************************************
 
-func (sv *ServiceView) New(srv *types.Service, d map[string]*types.Deployment, p map[string]*types.Pod) *Service {
+func (sv *ServiceView) New(srv *types.Service) *Service {
+	s := new(Service)
+	s.Meta = s.ToMeta(srv.Meta)
+	s.Status = s.ToStatus(srv.Status)
+	s.Spec = s.ToSpec(srv.Spec)
+	return s
+}
+
+func (sv *ServiceView) NewWithDeployment(srv *types.Service, d map[string]*types.Deployment, p map[string]*types.Pod) *Service {
 	s := new(Service)
 	s.Meta = s.ToMeta(srv.Meta)
 	s.Status = s.ToStatus(srv.Status)
@@ -95,7 +103,6 @@ func (sv *Service) ToDeployments(obj map[string]*types.Deployment, pods map[stri
 			dp := dv.New(d, pods)
 			deployments[dp.Meta.Name] = dp
 		}
-
 	}
 	return deployments
 }
@@ -112,7 +119,7 @@ func (sv *ServiceView) NewList(obj map[string]*types.Service, d map[string]*type
 	s := make(ServiceList, 0)
 	slv := ServiceView{}
 	for _, v := range obj {
-		s = append(s, slv.New(v, d, nil))
+		s = append(s, slv.NewWithDeployment(v, d, nil))
 	}
 	return &s
 }

@@ -28,6 +28,8 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/storage/store"
 	"regexp"
 	"time"
+	"github.com/lastbackend/lastbackend/pkg/storage/etcd/cache"
+	"encoding/json"
 )
 
 const serviceStorage = "services"
@@ -35,6 +37,7 @@ const serviceStorage = "services"
 // Service Service type for interface in interfaces folder
 type ServiceStorage struct {
 	storage.Service
+	cache *cache.Cache
 }
 
 // Get service by name
@@ -258,11 +261,11 @@ func (s *ServiceStorage) Remove(ctx context.Context, service *types.Service) err
 }
 
 // Watch service changes
-func (s *ServiceStorage) Watch(ctx context.Context, service chan *types.Service) error {
+func (s *ServiceStorage) Watch(ctx context.Context, event chan *types.Event) error {
 
 	log.V(logLevel).Debug("storage:etcd:service:> watch service")
 
-	const filter = `\b\/` + serviceStorage + `\/(.+):(.+)/.+\b`
+	const filter = `\b\/` + serviceStorage + `\/(.+):(.+)\/(.+)\b`
 	client, destroy, err := getClient(ctx)
 	if err != nil {
 		log.V(logLevel).Errorf("storage:etcd:service:> watch service err: %s", err.Error())
@@ -272,19 +275,59 @@ func (s *ServiceStorage) Watch(ctx context.Context, service chan *types.Service)
 
 	r, _ := regexp.Compile(filter)
 	key := keyCreate(serviceStorage)
-	cb := func(action, key string, _ []byte) {
+	cb := func(action, key string, data []byte) {
+
 		keys := r.FindStringSubmatch(key)
-		if len(keys) < 3 {
+		if len(keys) < 4 {
 			return
 		}
 
-		if action == types.STORAGEDELEVENT {
+		e := new(types.Event)
+		e.Action = action
+
+		index := fmt.Sprintf("%s:%s", keys[1], keys[2])
+		item := s.cache.Get(index)
+
+		if item == nil {
+			if data, err := s.Get(ctx, keys[1], keys[2]); err == nil {
+				s.cache.Set(index, data)
+				e.Data = data
+				event <- e
+			}
 			return
 		}
 
-		if d, err := s.Get(ctx, keys[1], keys[2]); err == nil {
-			service <- d
+		srv := item.(*types.Service)
+
+		switch keys[3] {
+		case "meta":
+			var meta types.ServiceMeta
+			if err := json.Unmarshal(data, &meta); err != nil {
+				log.V(logLevel).Errorf("storage:etcd:service:> parse service meta err: %s", err.Error())
+				return
+			}
+			srv.Meta = meta
+		case "spec":
+			var spec types.ServiceSpec
+			if err := json.Unmarshal(data, &spec); err != nil {
+				log.V(logLevel).Errorf("storage:etcd:service:> parse service spec err: %s", err.Error())
+				return
+			}
+			srv.Spec = spec
+		case "status":
+			var status types.ServiceStatus
+			if err := json.Unmarshal(data, &status); err != nil {
+				log.V(logLevel).Errorf("storage:etcd:service:> parse service status err: %s", err.Error())
+				return
+			}
+			srv.Status = status
 		}
+
+		s.cache.Set(index, srv)
+
+		e.Data = srv
+
+		event <- e
 	}
 
 	if err := client.Watch(ctx, key, filter, cb); err != nil {
@@ -401,12 +444,6 @@ func (s *ServiceStorage) keyGet(svc *types.Service) string {
 	return svc.SelfLink()
 }
 
-// newServiceStorage returns new storage
-func newServiceStorage() *ServiceStorage {
-	s := new(ServiceStorage)
-	return s
-}
-
 // checkServiceArgument - check if argument is valid for manipulations
 func (s *ServiceStorage) checkServiceArgument(service *types.Service) error {
 
@@ -438,4 +475,11 @@ func (s *ServiceStorage) checkServiceExists(ctx context.Context, service *types.
 	return nil
 
 	return nil
+}
+
+// newServiceStorage returns new storage
+func newServiceStorage() *ServiceStorage {
+	s := new(ServiceStorage)
+	s.cache = cache.NewCache(24 * time.Hour)
+	return s
 }

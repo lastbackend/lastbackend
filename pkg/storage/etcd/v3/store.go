@@ -41,7 +41,9 @@ type store struct {
 	pathPrefix string
 }
 
-const logLevel = 5
+const (
+	logLevel = 5
+)
 
 // Need for decode array bytes
 type buffer []byte
@@ -363,7 +365,18 @@ func (s *store) Watch(ctx context.Context, key, keyRegexFilter string, f func(st
 	for wresp := range rch {
 		for _, ev := range wresp.Events {
 			if r.MatchString(string(ev.Kv.Key)) {
-				go f(ev.Type.String(), string(ev.Kv.Key), ev.Kv.Value)
+
+				action := EventTypeCreate
+
+				if ev.Type.String() == "PUT" && wresp.Header.Revision != ev.Kv.CreateRevision {
+					action = EventTypeUpdate
+				}
+
+				if ev.Type.String() == "DEL" {
+					action = EventTypeDelete
+				}
+
+				go f(action, string(ev.Kv.Key), ev.Kv.Value)
 			}
 		}
 	}

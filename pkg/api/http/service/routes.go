@@ -30,5 +30,4 @@ var Routes = []http.Route{
 	{Path: "/namespace/{namespace}/service/{service}", Method: http.MethodPut, Middleware: []http.Middleware{middleware.Authenticate}, Handler: ServiceUpdateH},
 	{Path: "/namespace/{namespace}/service/{service}", Method: http.MethodDelete, Middleware: []http.Middleware{middleware.Authenticate}, Handler: ServiceRemoveH},
 	{Path: "/namespace/{namespace}/service/{service}/logs", Method: http.MethodGet, Middleware: []http.Middleware{middleware.Authenticate}, Handler: ServiceLogsH},
-	{Path: "/namespace/{namespace}/service/{service}/watch", Method: http.MethodGet, Middleware: []http.Middleware{middleware.Authenticate}, Handler: ServiceWatchH},
 }

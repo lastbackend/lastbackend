@@ -16,21 +16,29 @@
 // from Last.Backend LLC.
 //
 
-package v3
+package cache
 
-const (
-	EventTypeCreate = "create"
-	EventTypeUpdate = "update"
-	EventTypeDelete = "delete"
+import (
+	"sync"
+	"time"
 )
 
-type Config struct {
-	Endpoints []string `yaml:"endpoint"`
-	TLS struct {
-		Key  string `yaml:"key"`
-		Cert string `yaml:"cert"`
-		CA   string `yaml:"ca"`
-	} `yaml:"tls"`
-	Quorum bool   `yaml:"quorum"`
-	Prefix string `yaml:"prefix"`
+type Item struct {
+	sync.RWMutex
+	data    interface{}
+	expires *time.Time
+}
+
+func (item *Item) setExpireTime(duration time.Duration) {
+	item.Lock()
+	defer item.Unlock()
+
+	expires := time.Now().Add(duration)
+	item.expires = &expires
+}
+
+func (item *Item) expired() bool {
+	item.RLock()
+	defer item.RUnlock()
+	return item.expires == nil || item.expires.Before(time.Now())
 }

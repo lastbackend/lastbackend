@@ -21,22 +21,99 @@ package events
 import (
 	"net/http"
 
+	"github.com/lastbackend/lastbackend/pkg/api/envs"
 	"github.com/lastbackend/lastbackend/pkg/log"
+	"github.com/lastbackend/lastbackend/pkg/distribution"
+	"github.com/lastbackend/lastbackend/pkg/distribution/types"
+	"github.com/lastbackend/lastbackend/pkg/api/types/v1"
+	"fmt"
+	"github.com/gorilla/websocket"
+	"encoding/json"
 )
 
 const (
 	logLevel  = 2
-	logPrefix = "api:handler:events"
+	logPrefix = "api:handler:event"
 )
 
-//EventSubscribeH - realtime events handler
+var upgrader = websocket.Upgrader{
+	ReadBufferSize:  1024,
+	WriteBufferSize: 1024,
+	CheckOrigin: func(r *http.Request) bool {
+		return true
+	},
+}
+
+type Event struct {
+	Entity string      `json:"entity"`
+	Action string      `json:"action"`
+	Data   interface{} `json:"data"`
+}
+
+//EventSubscribeH - realtime subscribe handler
 func EventSubscribeH(w http.ResponseWriter, r *http.Request) {
 
-	log.V(logLevel).Debugf("%s:subscribe:> subscribe on events", logPrefix)
+	log.V(logLevel).Debugf("%s:subscribe:> subscribe on subscribe", logPrefix)
 
 	if r.Method != "GET" {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 		return
 	}
 
+	log.V(logLevel).Debugf("%s:subscribe:> watch all events", logPrefix)
+
+	var (
+		sm   = distribution.NewServiceModel(r.Context(), envs.Get().GetStorage())
+		done = make(chan bool, 1)
+	)
+
+	conn, err := upgrader.Upgrade(w, r, nil)
+	if err != nil {
+		log.Debugf("%s:subscribe:> set websocket upgrade err: %s", logPrefix, err.Error())
+		return
+	}
+
+	var event = make(chan *types.Event)
+
+	notify := w.(http.CloseNotifier).CloseNotify()
+
+	go func() {
+		<-notify
+		log.Debugf("%s:subscribe:> HTTP connection just closed.", logPrefix)
+		done <- true
+	}()
+
+	go func() {
+		for {
+			select {
+			case <-done:
+				close(event)
+				return
+			case e := <-event:
+
+				buf, _ := json.Marshal(e)
+				fmt.Println(string(buf))
+
+				if e.Data == nil {
+					continue
+				}
+
+				fmt.Println(e.Data)
+
+				event := Event{
+					Entity: "service",
+					Action: e.Action,
+					Data:   v1.View().Service().New(e.Data.(*types.Service)),
+				}
+
+				if err = conn.WriteJSON(event); err != nil {
+					fmt.Println(err)
+				}
+			}
+		}
+	}()
+
+	go sm.Watch(event)
+
+	<-done
 }

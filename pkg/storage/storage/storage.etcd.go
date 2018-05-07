@@ -41,7 +41,7 @@ type Service interface {
 	Insert(ctx context.Context, service *types.Service) error
 	Update(ctx context.Context, service *types.Service) error
 	Remove(ctx context.Context, service *types.Service) error
-	Watch(ctx context.Context, service chan *types.Service) error
+	Watch(ctx context.Context, event chan *types.Event) error
 	WatchSpec(ctx context.Context, service chan *types.Service) error
 	WatchStatus(ctx context.Context, service chan *types.Service) error
 	Clear(ctx context.Context) error

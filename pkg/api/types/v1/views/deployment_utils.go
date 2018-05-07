@@ -32,7 +32,11 @@ func (dv *DeploymentView) New(obj *types.Deployment, pl map[string]*types.Pod) *
 	d.Status = d.ToStatus(obj.Status)
 	d.Spec = d.ToSpec(obj.Spec)
 	d.Replicas = d.ToReplicas(obj.Replicas)
-	d.Pods = d.ToPods(pl)
+
+	if pl != nil {
+		d.Pods = d.ToPods(pl)
+	}
+
 	return &d
 }
 

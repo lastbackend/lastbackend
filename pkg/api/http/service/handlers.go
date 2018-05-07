@@ -144,7 +144,7 @@ func ServiceInfoH(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	response, err := v1.View().Service().New(srv, dl, pods).ToJson()
+	response, err := v1.View().Service().NewWithDeployment(srv, dl, pods).ToJson()
 	if err != nil {
 		log.V(logLevel).Errorf("%s:info:> convert struct to json err: %s", logPrefix, err.Error())
 		errors.HTTP.InternalServerError(w)
@@ -218,7 +218,7 @@ func ServiceCreateH(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	response, err := v1.View().Service().New(srv, nil, nil).ToJson()
+	response, err := v1.View().Service().NewWithDeployment(srv, nil, nil).ToJson()
 	if err != nil {
 		log.V(logLevel).Errorf("%s:create:> convert struct to json err: %s", logPrefix, err.Error())
 		errors.HTTP.InternalServerError(w)
@@ -284,7 +284,7 @@ func ServiceUpdateH(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	response, err := v1.View().Service().New(srv, nil, nil).ToJson()
+	response, err := v1.View().Service().NewWithDeployment(srv, nil, nil).ToJson()
 	if err != nil {
 		log.V(logLevel).Errorf("%s:update:> convert struct to json err: %s", logPrefix, err.Error())
 		errors.HTTP.InternalServerError(w)
@@ -434,8 +434,7 @@ func ServiceLogsH(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	c := new(http.Client)
-	res, err := c.Do(req)
+	res, err := http.DefaultClient.Do(req)
 	if err != nil {
 		log.V(logLevel).Errorf("%s:logs:> get pod logs err: %s", logPrefix, err.Error())
 		errors.HTTP.InternalServerError(w)
@@ -444,7 +443,6 @@ func ServiceLogsH(w http.ResponseWriter, r *http.Request) {
 
 	notify := w.(http.CloseNotifier).CloseNotify()
 	done := make(chan bool, 1)
-	exit := make(chan bool, 1)
 
 	go func() {
 		<-notify
@@ -454,57 +452,50 @@ func ServiceLogsH(w http.ResponseWriter, r *http.Request) {
 
 	var buffer = make([]byte, BUFFER_SIZE)
 
-	go func() {
-		for {
-			select {
-			case <-done:
-				res.Body.Close()
-				exit <- true
+	for {
+		select {
+		case <-done:
+			res.Body.Close()
+			return
+		default:
+
+			n, err := res.Body.Read(buffer)
+			if err != nil {
+
+				if err == context.Canceled {
+					log.Debug("Stream is canceled")
+					return
+				}
+
+				log.Errorf("Error read bytes from stream %s", err)
 				return
-			default:
+			}
 
-				n, err := res.Body.Read(buffer)
+			_, err = func(p []byte) (n int, err error) {
+
+				n, err = w.Write(p)
 				if err != nil {
-
-					if err == context.Canceled {
-						log.Debug("Stream is canceled")
-						return
-					}
-
-					log.Errorf("Error read bytes from stream %s", err)
-					exit <- true
-					return
+					log.Errorf("Error write bytes to stream %s", err)
+					return n, err
 				}
 
-				_, err = func(p []byte) (n int, err error) {
-
-					n, err = w.Write(p)
-					if err != nil {
-						log.Errorf("Error write bytes to stream %s", err)
-						return n, err
-					}
-
-					if f, ok := w.(http.Flusher); ok {
-						f.Flush()
-					}
-
-					return n, nil
-				}(buffer[0:n])
-
-				if err != nil {
-					log.Errorf("Error written to stream %s", err)
-					exit <- true
-					return
+				if f, ok := w.(http.Flusher); ok {
+					f.Flush()
 				}
 
-				for i := 0; i < n; i++ {
-					buffer[i] = 0
-				}
+				return n, nil
+			}(buffer[0:n])
+
+			if err != nil {
+				log.Errorf("Error written to stream %s", err)
+				return
+			}
+
+			for i := 0; i < n; i++ {
+				buffer[i] = 0
 			}
 		}
-
-	}()
-
-	<-exit
+	}
 
 }
+
