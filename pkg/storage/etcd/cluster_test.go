@@ -22,6 +22,7 @@ import (
 	"context"
 	"reflect"
 	"testing"
+	"time"
 
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 	"github.com/lastbackend/lastbackend/pkg/storage/storage"
@@ -36,7 +37,8 @@ func TestClusterStorage_Insert(t *testing.T) {
 	var (
 		stg = newClusterStorage()
 		ctx = context.Background()
-		c   = types.Cluster{}
+		//c   = types.Cluster{}
+		c = getClusterAsset("test")
 	)
 
 	type fields struct {
@@ -77,14 +79,38 @@ func TestClusterStorage_Insert(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 
-			if err := stg.Clear(ctx); err != nil {
-				t.Errorf("ClusterStorage.Get() storage setup error = %v", err)
+			err := stg.Clear(ctx)
+			if err != nil {
+				t.Errorf("ClusterStorage.Insert() storage setup error = %v", err)
 				return
 			}
 
-			if err := tt.fields.stg.Insert(tt.args.ctx, tt.args.cluster); (err != nil) != tt.wantErr || (tt.wantErr && (err.Error() != tt.err)) {
-				t.Errorf("ClusterStorage.Insert() error = %v, want errorr %v", err, tt.err)
+			err = tt.fields.stg.Insert(tt.args.ctx, tt.args.cluster)
+			if err != nil {
+				if tt.wantErr && (err.Error() != tt.err) {
+					t.Errorf("ClusterStorage.Insert() error = %v, want errorr %v", err, tt.err)
+					return
+				}
+				if !tt.wantErr {
+					t.Errorf("ClusterStorage.Insert() error = %v, want no errorr", err)
+				}
+				return
 			}
+
+			if tt.wantErr {
+				t.Errorf("ClusterStorage.Insert() want error = %v, got none", tt.err)
+				return
+			}
+			//check that really inserted
+			got, err := tt.fields.stg.Get(tt.args.ctx)
+			if err != nil {
+				t.Errorf("ClusterStorage.SetSpec() got Get error = %s", err.Error())
+				return
+			}
+			if !compareClusters(got, tt.want) {
+				t.Errorf("ClusterStorage.Insert() = %v, want %v", got, tt.want)
+			}
+
 		})
 	}
 }
@@ -114,6 +140,7 @@ func TestClusterStorage_Get(t *testing.T) {
 		args    args
 		want    *types.Cluster
 		wantErr bool
+		err     string
 	}{
 		{
 			"get cluster info successful",
@@ -121,6 +148,15 @@ func TestClusterStorage_Get(t *testing.T) {
 			args{ctx},
 			&c,
 			false,
+			"",
+		},
+		{
+			"test failed no entity",
+			fields{stg},
+			args{ctx},
+			nil,
+			true,
+			store.ErrEntityNotFound,
 		},
 	}
 
@@ -132,23 +168,36 @@ func TestClusterStorage_Get(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-
 		t.Run(tt.name, func(t *testing.T) {
 
 			clear()
 			defer clear()
 
-			if err := stg.Insert(ctx, &c); err != nil {
-				t.Errorf("ClusterStorage.Get() storage setup error = %v", err)
-				return
+			if !tt.wantErr {
+				if err := stg.Insert(ctx, &c); err != nil {
+					t.Errorf("ClusterStorage.Get() storage setup error = %v", err)
+					return
+				}
 			}
 
 			got, err := tt.fields.stg.Get(tt.args.ctx)
-			if (err != nil) != tt.wantErr {
-				t.Errorf("ClusterStorage.Get() error = %v, wantErr %v", err, tt.wantErr)
+			if err != nil {
+				if tt.wantErr && tt.err != err.Error() {
+					t.Errorf("ClusterStorage.Get() error = %v, wantErr %v", err, tt.err)
+					return
+				}
+				if !tt.wantErr {
+					t.Errorf("ClusterStorage.Get() error = %v, want no error", err)
+				}
 				return
 			}
-			if !reflect.DeepEqual(got, tt.want) {
+
+			if tt.wantErr {
+				t.Errorf("ClusterStorage.Get() want error = %v, got none", tt.err)
+				return
+			}
+
+			if !compareClusters(got, tt.want) {
 				t.Errorf("ClusterStorage.Get() = %v, want %v", got, tt.want)
 			}
 		})
@@ -234,13 +283,16 @@ func TestClusterStorage_Update(t *testing.T) {
 				return
 			}
 			if tt.wantErr {
-				t.Errorf("ClusterStorage.Update() error = %v, wantErr %v", err, tt.err)
+				t.Errorf("ClusterStorage.Update() want error = %v, got none", tt.err)
 				return
 			}
 
-			got, _ := tt.fields.stg.Get(tt.args.ctx)
-			tt.want.Meta.Updated = got.Meta.Updated
-			if !reflect.DeepEqual(got, tt.want) {
+			got, err := tt.fields.stg.Get(tt.args.ctx)
+			if err != nil {
+				t.Errorf("ClusterStorage.Update() got Get error = %s", err.Error())
+				return
+			}
+			if !compareClusters(got, tt.want) {
 				t.Errorf("ClusterStorage.Update() = %v, want %v", got, tt.want)
 			}
 
@@ -267,6 +319,23 @@ func Test_newClusterStorage(t *testing.T) {
 			}
 		})
 	}
+}
+
+//compare two cluster structures
+func compareClusters(got, want *types.Cluster) bool {
+	result := false
+	if compareMeta(got.Meta.Meta, want.Meta.Meta) &&
+		(got.Meta.Region == want.Meta.Region) &&
+		(got.Meta.Token == want.Meta.Token) &&
+		(got.Meta.Provider == want.Meta.Provider) &&
+		(got.Meta.Shared == want.Meta.Shared) &&
+		(got.Meta.Main == want.Meta.Main) &&
+		reflect.DeepEqual(got.Status, want.Status) &&
+		reflect.DeepEqual(got.Quotas, want.Quotas) {
+		result = true
+	}
+
+	return result
 }
 
 func getClusterAsset(name string) types.Cluster {
@@ -302,6 +371,7 @@ func getClusterAsset(name string) types.Cluster {
 	}
 
 	c.Meta.Name = name
+	c.Meta.Created = time.Now()
 
 	return c
 }

@@ -22,6 +22,7 @@ import (
 	"context"
 	"reflect"
 	"testing"
+	"time"
 
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 	"github.com/lastbackend/lastbackend/pkg/storage/storage"
@@ -49,11 +50,19 @@ func TestSystemStorage_ProcessSet(t *testing.T) {
 		fields  fields
 		args    args
 		wantErr bool
+		err     string
 	}{
-		{"dummy test",
+		{"test process set",
 			fields{stg},
 			args{ctx, &p},
 			false,
+			"",
+		},
+		{"test process nil",
+			fields{stg},
+			args{ctx, nil},
+			true,
+			"process can not be empty",
 		},
 	}
 
@@ -71,9 +80,17 @@ func TestSystemStorage_ProcessSet(t *testing.T) {
 			clear()
 			defer clear()
 
-			if err := stg.ProcessSet(tt.args.ctx, tt.args.process); (err != nil) != tt.wantErr {
-				t.Errorf("SystemStorage.ProcessSet() error = %v, wantErr %v", err, tt.wantErr)
+			err := stg.ProcessSet(tt.args.ctx, tt.args.process)
+			if err != nil {
+				if tt.wantErr && tt.err != err.Error() {
+					t.Errorf("SystemStorage.ProcessSet() error = %v, wantErr %v", err, tt.wantErr)
+					return
+				}
+				if !tt.wantErr {
+					t.Errorf("SystemStorage.ProcessSet() error = %v, wantErr %v", err, tt.wantErr)
+				}
 			}
+
 		})
 	}
 }
@@ -100,11 +117,19 @@ func TestSystemStorage_Elect(t *testing.T) {
 		fields  fields
 		args    args
 		wantErr bool
+		err     string
 	}{
-		{"dummy test",
+		{"test process elect",
 			fields{stg},
 			args{ctx, &p},
 			false,
+			"",
+		},
+		{"test process nil",
+			fields{stg},
+			args{ctx, nil},
+			true,
+			"process can not be empty",
 		},
 	}
 
@@ -121,8 +146,18 @@ func TestSystemStorage_Elect(t *testing.T) {
 
 			clear()
 			defer clear()
-
-			if b, err := stg.Elect(tt.args.ctx, tt.args.process); !b || (err != nil) != tt.wantErr {
+			b, err := stg.Elect(tt.args.ctx, tt.args.process)
+			if err != nil {
+				if tt.wantErr && tt.err != err.Error() {
+					t.Errorf("SystemStorage.Elect() error = %v, wantErr %v", err, tt.wantErr)
+					return
+				}
+				if !tt.wantErr {
+					t.Errorf("SystemStorage.Elect() error = %v, wantErr %v", err, tt.wantErr)
+				}
+				return
+			}
+			if !b {
 				t.Errorf("SystemStorage.Elect() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
@@ -139,8 +174,6 @@ func TestSystemStorage_ElectUpdate(t *testing.T) {
 		p   = types.Process{}
 	)
 
-	p.ID = "test"
-
 	type fields struct {
 		stg storage.System
 	}
@@ -153,11 +186,19 @@ func TestSystemStorage_ElectUpdate(t *testing.T) {
 		fields  fields
 		args    args
 		wantErr bool
+		err     string
 	}{
-		{"dummy test",
+		{"test process elect update",
 			fields{stg},
 			args{ctx, &p},
 			false,
+			"",
+		},
+		{"test process nil",
+			fields{stg},
+			args{ctx, nil},
+			true,
+			"process can not be empty",
 		},
 	}
 
@@ -175,13 +216,21 @@ func TestSystemStorage_ElectUpdate(t *testing.T) {
 			clear()
 			defer clear()
 
-			if _, err := stg.Elect(ctx, tt.args.process); err != nil {
+			_, err := stg.Elect(ctx, tt.args.process)
+			if err != nil && !tt.wantErr {
 				t.Errorf("SystemStorage.ElectUpdate() set storage err = %v", err)
 				return
 			}
 
-			if err := stg.ElectUpdate(tt.args.ctx, tt.args.process); (err != nil) != tt.wantErr {
-				t.Errorf("SystemStorage.ElectUpdate() error = %v, wantErr %v", err, tt.wantErr)
+			err = stg.ElectUpdate(tt.args.ctx, tt.args.process)
+			if err != nil {
+				if tt.wantErr && tt.err != err.Error() {
+					t.Errorf("SystemStorage.ElectUpdate() error = %v, wantErr %v", err, tt.wantErr)
+					return
+				}
+				if !tt.wantErr {
+					t.Errorf("SystemStorage.ElectUpdate() got error = %v, wantErr %v", err, tt.wantErr)
+				}
 			}
 		})
 	}
@@ -189,13 +238,16 @@ func TestSystemStorage_ElectUpdate(t *testing.T) {
 
 func TestSystemStorage_ElectWait(t *testing.T) {
 
-	initStorage()
-
 	var (
 		stg = newSystemStorage()
 		ctx = context.Background()
 		p   = types.Process{}
 	)
+	etcdCtl, destroy, err := initStorageWatch()
+	if err != nil {
+		t.Errorf("SystemStorage.ElectWait() storage setup error = %v", err)
+	}
+	defer destroy()
 
 	type fields struct {
 		stg storage.System
@@ -203,7 +255,7 @@ func TestSystemStorage_ElectWait(t *testing.T) {
 	type args struct {
 		ctx     context.Context
 		process *types.Process
-		cn      chan bool
+		ch      chan bool
 	}
 	tests := []struct {
 		name    string
@@ -211,7 +263,7 @@ func TestSystemStorage_ElectWait(t *testing.T) {
 		args    args
 		wantErr bool
 	}{
-		{"dummy test",
+		{"test process elect wait",
 			fields{stg},
 			args{ctx, &p, make(chan bool)},
 			false,
@@ -220,7 +272,7 @@ func TestSystemStorage_ElectWait(t *testing.T) {
 
 	clear := func() {
 		if err := stg.Clear(ctx); err != nil {
-			t.Errorf("SystemStorage.ElectUpdate() storage setup error = %v", err)
+			t.Errorf("SystemStorage.ElectWait() storage setup error = %v", err)
 			return
 		}
 	}
@@ -229,6 +281,55 @@ func TestSystemStorage_ElectWait(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			clear()
 			defer clear()
+
+			//insert
+			_, err := stg.Elect(ctx, tt.args.process)
+			if err != nil && !tt.wantErr {
+				t.Errorf("SystemStorage.ElectWait() set storage err = %v", err)
+				return
+			}
+			//create timeout context
+			ctxT, cancel := context.WithTimeout(ctx, 4*time.Second)
+			defer cancel()
+			defer etcdCtl.WatchClose()
+
+			//run watch gofunction
+			go func() {
+				err = stg.ElectWait(ctxT, &p, tt.args.ch)
+				if err != nil {
+					t.Errorf("SystemStorage.ElectWait() storage setup error = %v", err)
+					return
+				}
+			}()
+			//wait for result
+			time.Sleep(1 * time.Second)
+
+			//make etcd key put through etcdctrl
+			path := getEtcdctrl()
+			if path == "" {
+				t.Skipf("skip watch test: not found etcdctl path=%s", path)
+			}
+			key := "/lstbknd/system/lead"
+			value := ""
+			err = runEtcdPut(path, key, value)
+			if err != nil {
+				t.Skipf("skip watch test: exec etcdctl err=%s, path=%s", err.Error(), path)
+			}
+
+			for {
+				select {
+				case <-tt.args.ch:
+					t.Log("SystemStorage.ElectWait() is working")
+					return
+				case <-ctxT.Done():
+					t.Log("ctxT done=", ctxT.Err(), "time=", time.Now())
+					t.Error("SystemStorage.ElectWait() NO watch event happen")
+					return
+				case <-time.After(500 * time.Millisecond):
+					//wait for 500 ms
+				}
+			}
+			t.Log("successfull!")
 		})
 	}
 }
