@@ -24,26 +24,34 @@ import (
 	"strings"
 )
 
+// swagger:ignore
+// swagger:model types_route
 type Route struct {
 	Meta   RouteMeta   `json:"meta" yaml:"meta"`
 	Spec   RouteSpec   `json:"spec" yaml:"spec"`
 	Status RouteStatus `json:"status" yaml:"status"`
 }
-
+// swagger:ignore
 type RouteMap map[string]*Route
+// swagger:ignore
 type RouteList []*Route
 
+// swagger:ignore
+// swagger:model types_route_meta
 type RouteMeta struct {
 	Meta             `yaml:",inline"`
 	Namespace string `json:"namespace" yaml:"namespace"`
 	Security  bool   `json:"security" yaml:"security"`
 }
 
+// swagger:model types_route_spec
 type RouteSpec struct {
 	Domain string       `json:"domain" yaml:"domain"`
 	Rules  []*RouteRule `json:"rules" yaml:"rules"`
 }
 
+// swagger:ignore
+// swagger:model types_route_status
 type RouteStatus struct {
 	// Pod state
 	State string `json:"state" yaml:"state"`
@@ -51,6 +59,7 @@ type RouteStatus struct {
 	Message string `json:"message" yaml:"message"`
 }
 
+// swagger:model types_route_rule
 type RouteRule struct {
 	Service  string `json:"service" yaml:"service"`
 	Path     string `json:"path" yaml:"path"`
@@ -58,6 +67,7 @@ type RouteRule struct {
 	Port     int    `json:"port" yaml:"port"`
 }
 
+// swagger:ignore
 type RouterConfig struct {
 	Name      string      `json:"id" yaml:"id"`
 	Hash      string      `json:"hash" yaml:"hash"`
@@ -66,6 +76,7 @@ type RouterConfig struct {
 	Server    RouteServer `json:"server" yaml:"server"`
 }
 
+// swagger:ignore
 type RouteServer struct {
 	Hostname  string          `json:"hostname" yaml:"hostname"`
 	Port      int             `json:"port" yaml:"port"`
@@ -73,11 +84,13 @@ type RouteServer struct {
 	Locations []*RoteLocation `json:"locations" yaml:"locations"`
 }
 
+// swagger:ignore
 type Upstream struct {
 	Name    string `json:"name" yaml:"name"`
 	Address string `json:"address" yaml:"address"`
 }
 
+// swagger:ignore
 type RoteLocation struct {
 	Path      string `json:"path" yaml:"path"`
 	ProxyPass string `json:"proxy_pass" yaml:"proxy_pass"`
@@ -124,6 +137,7 @@ func (r *Route) GetRouteConfig() *RouterConfig {
 	return RouterConfig
 }
 
+// swagger:ignore
 type RouteCreateOptions struct {
 	Name     string       `json:"name"`
 	Domain   string       `json:"domain"`
@@ -131,15 +145,18 @@ type RouteCreateOptions struct {
 	Rules    []RuleOption `json:"rules"`
 }
 
+// swagger:ignore
 type RouteUpdateOptions struct {
 	Security bool         `json:"security"`
 	Rules    []RuleOption `json:"rules"`
 }
 
+// swagger:ignore
 type RouteRemoveOptions struct {
 	Force bool `json:"force"`
 }
 
+// swagger:ignore
 type RuleOption struct {
 	Service  string `json:"service"`
 	Endpoint string `json:"endpoint"`

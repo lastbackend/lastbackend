@@ -18,21 +18,25 @@
 
 package request
 
+// swagger:model request_namespace_create
 type NamespaceCreateOptions struct {
 	Name        string                  `json:"name"`
 	Description string                  `json:"description"`
 	Quotas      *NamespaceQuotasOptions `json:"quotas"`
 }
 
+// swagger:model request_namespace_update
 type NamespaceUpdateOptions struct {
 	Description *string                 `json:"description"`
 	Quotas      *NamespaceQuotasOptions `json:"quotas"`
 }
 
+// swagger:model request_namespace_remove
 type NamespaceRemoveOptions struct {
 	Force bool `json:"force"`
 }
 
+// swagger:model request_namespace_quotas
 type NamespaceQuotasOptions struct {
 	Disabled bool  `json:"disabled"`
 	RAM      int64 `json:"ram"`

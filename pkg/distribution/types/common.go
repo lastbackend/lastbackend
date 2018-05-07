@@ -25,6 +25,8 @@ import (
 const EmptyString = ""
 const EmptyStringSlice = "[]"
 
+// swagger:ignore
+// swagger:model types_meta
 type Meta struct {
 	// Meta name
 	Name string `json:"name",yaml:"name"`
@@ -40,12 +42,16 @@ type Meta struct {
 	Updated time.Time `json:"updated",yaml:"updated"`
 }
 
+// swagger:ignore
+// swagger:model types_meta_create
 type MetaCreateOptions struct {
 	Name        string            `json:"name",yaml:"name"`
 	Description string            `json:"description",yaml:"description"`
 	Labels      map[string]string `json:"labels",yaml:"labels"`
 }
 
+// swagger:ignore
+// swagger:model types_meta_update
 type MetaUpdateOptions struct {
 	Description *string           `json:"description",yaml:"description"`
 	Labels      map[string]string `json:"labels",yaml:"labels"`

@@ -16,6 +16,47 @@
 // from Last.Backend LLC.
 //
 
+// Last.Backend Open-source API
+//
+// Open-source system for automating deployment, scaling, and management of containerized applications.
+//
+// Terms Of Service:
+//
+// https://lastbackend.com/legal/terms/
+//
+//     Schemes: https
+//     Host: api.lastbackend.com
+//     BasePath: /
+//     Version: 0.9.4
+//     License: MIT http://opensource.org/licenses/MIT
+//     Contact: Last.Backend Teams <team@lastbackend.com> https://lastbackend.com
+//
+//     Consumes:
+//     - application/json
+//
+//     Produces:
+//     - application/json
+//
+//     Security:
+//     - BearerToken:
+//
+//     SecurityDefinitions:
+//       BearerToken:
+//         description: Bearer Token authentication
+//         type: apiKey
+//         name: authorization
+//         in: header
+//
+//     Extensions:
+//     x-meta-value: value
+//     x-meta-array:
+//       - value1
+//       - value2
+//     x-meta-array-obj:
+//       - name: obj
+//         value: field
+//
+// swagger:meta
 package main
 
 import (

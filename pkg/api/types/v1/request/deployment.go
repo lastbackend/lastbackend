@@ -18,6 +18,11 @@
 
 package request
 
+// DeploymentUpdateOptions represents options availible to update in deployment
+//
+// swagger:model request_deployment_update
 type DeploymentUpdateOptions struct {
+	// Number of replicas
+	// required: true
 	Replicas *int `json:"replicas"`
 }

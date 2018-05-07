@@ -37,6 +37,29 @@ const (
 
 func RouteListH(w http.ResponseWriter, r *http.Request) {
 
+	// swagger:operation GET /namespace/{namespace}/route route routeList
+	//
+	// Shows a list of routes
+	//
+	// ---
+	// produces:
+	// - application/json
+	// parameters:
+	//   - name: namespace
+	//     in: path
+	//     description: namespace id
+	//     required: true
+	//     type: string
+	// responses:
+	//   '200':
+	//     description: Route list response
+	//     schema:
+	//       "$ref": "#/definitions/views_route_list"
+	//   '404':
+	//     description: Namespace not found
+	//   '500':
+	//     description: Internal server error
+
 	log.V(logLevel).Debugf("%s:list:> get routes list", logPrefix)
 
 	nid := utils.Vars(r)["namespace"]
@@ -81,6 +104,34 @@ func RouteListH(w http.ResponseWriter, r *http.Request) {
 }
 
 func RouteInfoH(w http.ResponseWriter, r *http.Request) {
+
+	// swagger:operation GET /namespace/{namespace}/route/{route} route routeInfo
+	//
+	// Shows an info about route
+	//
+	// ---
+	// produces:
+	// - application/json
+	// parameters:
+	//   - name: namespace
+	//     in: path
+	//     description: namespace id
+	//     required: true
+	//     type: string
+	//   - name: route
+	//     in: path
+	//     description: route id
+	//     required: true
+	//     type: string
+	// responses:
+	//   '200':
+	//     description: Route response
+	//     schema:
+	//       "$ref": "#/definitions/views_route"
+	//   '404':
+	//     description: Namespace not found / Route not found
+	//   '500':
+	//     description: Internal server error
 
 	nid := utils.Vars(r)["namespace"]
 	rid := utils.Vars(r)["route"]
@@ -132,6 +183,36 @@ func RouteInfoH(w http.ResponseWriter, r *http.Request) {
 }
 
 func RouteCreateH(w http.ResponseWriter, r *http.Request) {
+
+	// swagger:operation POST /namespace/{namespace}/route route routeCreate
+	//
+	// Creates a route
+	//
+	// ---
+	// produces:
+	// - application/json
+	// parameters:
+	//   - name: namespace
+	//     in: path
+	//     description: namespace id
+	//     required: true
+	//     type: string
+	//   - name: body
+	//     in: body
+	//     required: true
+	//     schema:
+	//       "$ref": "#/definitions/request_route_create"
+	// responses:
+	//   '200':
+	//     description: Route was successfully created
+	//     schema:
+	//       "$ref": "#/definitions/views_route"
+	//   '400':
+	//     description: Bad rules parameter
+	//   '404':
+	//     description: Namespace not found
+	//   '500':
+	//     description: Internal server error
 
 	log.V(logLevel).Debugf("%s:create:> create route", logPrefix)
 
@@ -235,6 +316,42 @@ func RouteCreateH(w http.ResponseWriter, r *http.Request) {
 }
 
 func RouteUpdateH(w http.ResponseWriter, r *http.Request) {
+
+	// swagger:operation PUT /namespace/{namespace}/route/{route} route routeUpdate
+	//
+	// Update route
+	//
+	// ---
+	// deprecated: true
+	// produces:
+	// - application/json
+	// parameters:
+	//   - name: namespace
+	//     in: path
+	//     description: namespace id
+	//     required: true
+	//     type: string
+	//   - name: route
+	//     in: path
+	//     description: route id
+	//     required: true
+	//     type: string
+	//   - name: body
+	//     in: body
+	//     required: true
+	//     schema:
+	//       "$ref": "#/definitions/request_route_update"
+	// responses:
+	//   '200':
+	//     description: Route was successfully updated
+	//     schema:
+	//       "$ref": "#/definitions/views_route"
+	//   '400':
+	//     description: Bad rules parameter
+	//   '404':
+	//     description: Namespace not found / Route not found
+	//   '500':
+	//     description: Internal server error
 
 	nid := utils.Vars(r)["namespace"]
 	rid := utils.Vars(r)["route"]
@@ -346,6 +463,32 @@ func RouteUpdateH(w http.ResponseWriter, r *http.Request) {
 }
 
 func RouteRemoveH(w http.ResponseWriter, r *http.Request) {
+
+	// swagger:operation DELETE /namespace/{namespace}/route/{route} route routeRemove
+	//
+	// Removes route
+	//
+	// ---
+	// produces:
+	// - application/json
+	// parameters:
+	//   - name: namespace
+	//     in: path
+	//     description: namespace id
+	//     required: true
+	//     type: string
+	//   - name: route
+	//     in: path
+	//     description: route id
+	//     required: true
+	//     type: string
+	// responses:
+	//   '200':
+	//     description: Route was successfully removed
+	//   '404':
+	//     description: Namespace not found / Route not found
+	//   '500':
+	//     description: Internal server error
 
 	nid := utils.Vars(r)["namespace"]
 	rid := utils.Vars(r)["route"]

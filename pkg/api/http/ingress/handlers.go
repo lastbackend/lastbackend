@@ -40,6 +40,29 @@ const (
 
 func IngressInfoH(w http.ResponseWriter, r *http.Request) {
 
+	// swagger:operation GET /cluster/ingress/{ingress} ingress ingressInfo
+	//
+	// Shows an ingress info
+	//
+	// ---
+	// produces:
+	// - application/json
+	// parameters:
+	//   - name: ingress
+	//     in: path
+	//     description: ingress id
+	//     required: true
+	//     type: string
+	// responses:
+	//   '200':
+	//     description: Ingress response
+	//     schema:
+	//       "$ref": "#/definitions/views_ingress_list"
+	//   '404':
+	//     description: Ingress not found
+	//   '500':
+	//     description: Internal server error
+
 	log.V(logLevel).Debugf("%s:info:> get ingress", logPrefix)
 
 	var (
@@ -74,6 +97,29 @@ func IngressInfoH(w http.ResponseWriter, r *http.Request) {
 }
 
 func IngressGetSpecH(w http.ResponseWriter, r *http.Request) {
+
+	// swagger:operation GET /cluster/ingress/{ingress}/spec ingress ingressGetSpec
+	//
+	// Shows an ingress spec
+	//
+	// ---
+	// produces:
+	// - application/json
+	// parameters:
+	//   - name: ingress
+	//     in: path
+	//     description: ingress id
+	//     required: true
+	//     type: string
+	// responses:
+	//   '200':
+	//     description: Ingress spec response
+	//     schema:
+	//       "$ref": "#/definitions/views_ingress_spec"
+	//   '404':
+	//     description: Ingress not found
+	//   '500':
+	//     description: Internal server error
 
 	log.V(logLevel).Debugf("%s:getspec:> list ingress", logPrefix)
 
@@ -131,6 +177,21 @@ func IngressGetSpecH(w http.ResponseWriter, r *http.Request) {
 
 func IngressListH(w http.ResponseWriter, r *http.Request) {
 
+	// swagger:operation GET /cluster/ingress ingress ingressList
+	//
+	// Shows an ingress list
+	//
+	// ---
+	// produces:
+	// - application/json
+	// responses:
+	//   '200':
+	//     description: Ingress list response
+	//     schema:
+	//       "$ref": "#/definitions/views_ingress_list"
+	//   '500':
+	//     description: Internal server error
+
 	log.V(logLevel).Debugf("%s:list:> get ingresss list", logPrefix)
 
 	var (
@@ -159,6 +220,34 @@ func IngressListH(w http.ResponseWriter, r *http.Request) {
 }
 
 func IngressSetMetaH(w http.ResponseWriter, r *http.Request) {
+
+	// swagger:operation PUT /cluster/ingress/{ingress}/meta ingress ingressSetMeta
+	//
+	// Set ingress meta
+	//
+	// ---
+	// produces:
+	// - application/json
+	// parameters:
+	//   - name: ingress
+	//     in: path
+	//     description: ingress id
+	//     required: true
+	//     type: string
+	//   - name: body
+	//     in: body
+	//     required: true
+	//     schema:
+	//       "$ref": "#/definitions/request_ingress_meta"
+	// responses:
+	//   '200':
+	//     description: Successfully set ingress meta
+	//     schema:
+	//       "$ref": "#/definitions/views_ingress_list"
+	//   '404':
+	//     description: Ingress not found
+	//   '500':
+	//     description: Internal server error
 
 	nid := utils.Vars(r)["ingress"]
 
@@ -210,6 +299,30 @@ func IngressSetMetaH(w http.ResponseWriter, r *http.Request) {
 }
 
 func IngressConnectH(w http.ResponseWriter, r *http.Request) {
+
+	// swagger:operation PUT /cluster/ingress/{ingress} ingress ingressConnect
+	//
+	// Connect ingress
+	//
+	// ---
+	// produces:
+	// - application/json
+	// parameters:
+	//   - name: ingress
+	//     in: path
+	//     description: ingress id
+	//     required: true
+	//     type: string
+	//   - name: body
+	//     in: body
+	//     required: true
+	//     schema:
+	//       "$ref": "#/definitions/request_ingress_connect"
+	// responses:
+	//   '200':
+	//     description: Successfully connect ingress
+	//   '500':
+	//     description: Internal server error
 
 	log.V(logLevel).Debugf("%s:connect:> ingress connect", logPrefix)
 
@@ -263,6 +376,34 @@ func IngressConnectH(w http.ResponseWriter, r *http.Request) {
 }
 
 func IngressSetStatusH(w http.ResponseWriter, r *http.Request) {
+
+	// swagger:operation PUT /cluster/ingress/{ingress}/status ingress ingressSetStatus
+	//
+	// Set ingress status
+	//
+	// ---
+	// produces:
+	// - application/json
+	// parameters:
+	//   - name: ingress
+	//     in: path
+	//     description: ingress id
+	//     required: true
+	//     type: string
+	//   - name: body
+	//     in: body
+	//     required: true
+	//     schema:
+	//       "$ref": "#/definitions/request_ingress_status"
+	// responses:
+	//   '200':
+	//     description: Successfully set ingress status
+	//   '400':
+	//     description: Bad request
+	//   '404':
+	//     description: Ingress not found / Route not found
+	//   '500':
+	//     description: Internal server error
 
 	log.V(logLevel).Debugf("%s:setstatus:> ingress set state", logPrefix)
 
@@ -339,6 +480,39 @@ func IngressSetStatusH(w http.ResponseWriter, r *http.Request) {
 
 func IngressSetRouteStatusH(w http.ResponseWriter, r *http.Request) {
 
+	// swagger:operation PUT /cluster/ingress/{ingress}/status/route/{pod} ingress ingressSetRouteStatus
+	//
+	// Set ingress route status
+	//
+	// ---
+	// produces:
+	// - application/json
+	// parameters:
+	//   - name: ingress
+	//     in: path
+	//     description: ingress id
+	//     required: true
+	//     type: string
+	//   - name: pod
+	//     in: path
+	//     description: pod id
+	//     required: true
+	//     type: string
+	//   - name: body
+	//     in: body
+	//     required: true
+	//     schema:
+	//       "$ref": "#/definitions/request_ingress_route_status"
+	// responses:
+	//   '200':
+	//     description: Successfully set ingress route status
+	//   '400':
+	//     description: Bad request
+	//   '404':
+	//     description: Ingress not found / Route not found
+	//   '500':
+	//     description: Internal server error
+
 	log.V(logLevel).Debugf("%s:setroutestatus:> ingress set route state", logPrefix)
 
 	var (
@@ -404,6 +578,27 @@ func IngressSetRouteStatusH(w http.ResponseWriter, r *http.Request) {
 }
 
 func IngressRemoveH(w http.ResponseWriter, r *http.Request) {
+
+	// swagger:operation DELETE /cluster/ingress/{ingress} ingress ingressRemove
+	//
+	// Remove ingress
+	//
+	// ---
+	// produces:
+	// - application/json
+	// parameters:
+	//   - name: ingress
+	//     in: path
+	//     description: ingress id
+	//     required: true
+	//     type: string
+	// responses:
+	//   '200':
+	//     description: Ingress removed
+	//   '404':
+	//     description: Ingress not found
+	//   '500':
+	//     description: Internal server error
 
 	log.V(logLevel).Debugf("%s:remove:>_ create ingress", logPrefix)
 

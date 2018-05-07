@@ -24,15 +24,18 @@ import (
 )
 
 // Ingress - default node structure
+// swagger:model views_ingress
 type Ingress struct {
 	Meta   IngressMeta   `json:"meta"`
 	Status IngressStatus `json:"status"`
 }
 
 // IngressList - node map list
+// swagger:model views_ingress_list
 type IngressList map[string]*Ingress
 
 // IngressMeta - node metadata structure
+// swagger:model views_ingress_meta
 type IngressMeta struct {
 	Name        string    `json:"name"`
 	Description string    `json:"description"`
@@ -41,11 +44,12 @@ type IngressMeta struct {
 }
 
 // IngressStatus - node state struct
+// swagger:model views_ingress_status
 type IngressStatus struct {
 	Ready bool `json:"ready"`
 }
 
-
+// swagger:model views_ingress_spec
 type IngressSpec struct {
 	Routes  map[string]types.RouteSpec   `json:"routes"`
 }

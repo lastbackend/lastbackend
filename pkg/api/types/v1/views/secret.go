@@ -20,11 +20,13 @@ package views
 
 import "time"
 
+// swagger:model views_secret
 type Secret struct {
 	Meta SecretMeta `json:"meta"`
 	Data string     `json:"data"`
 }
 
+// swagger:model views_secret_meta
 type SecretMeta struct {
 	Name      string    `json:"name"`
 	Namespace string    `json:"namespace"`
@@ -32,6 +34,7 @@ type SecretMeta struct {
 	Updated   time.Time `json:"updated"`
 	Created   time.Time `json:"created"`
 }
-
+// swagger:ignore
 type SecretMap map[string]*Secret
+// swagger:model views_secret_list
 type SecretList []*Secret

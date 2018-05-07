@@ -34,6 +34,23 @@ const (
 
 func ClusterInfoH(w http.ResponseWriter, r *http.Request) {
 
+	// swagger:operation GET /cluster cluster clusterInfo
+	//
+	// Shows an info about current cluster
+	//
+	// ---
+	// produces:
+	// - application/json
+	// responses:
+	//   '200':
+	//     description: Cluster response
+	//     schema:
+	//       "$ref": "#/definitions/views_cluster"
+	//   '404':
+	//     description: Cluster not found
+	//   '500':
+	//     description: Internal server error
+
 	log.V(logLevel).Debugf("%s:info:> get cluster", logPrefix)
 
 	var clm = distribution.NewClusterModel(r.Context(), envs.Get().GetStorage())
@@ -65,6 +82,31 @@ func ClusterInfoH(w http.ResponseWriter, r *http.Request) {
 }
 
 func ClusterUpdateH(w http.ResponseWriter, r *http.Request) {
+
+	// swagger:operation PUT /cluster cluster clusterUpdate
+	//
+	// Updates cluster parameters
+	//
+	// ---
+	// consumes:
+	// - application/json
+	// produces:
+	// - application/json
+	// parameters:
+	//   - name: body
+	//     in: body
+	//     required: true
+	//     schema:
+	//       "$ref": "#/definitions/request_cluster_update"
+	// responses:
+	//   '200':
+	//     description: Cluster was successfully updated
+	//     schema:
+	//       "$ref": "#/definitions/views_cluster"
+	//   '404':
+	//     description: Cluster not found
+	//   '500':
+	//     description: Internal server error
 
 	log.V(logLevel).Debugf("%s:update:> update cluster")
 

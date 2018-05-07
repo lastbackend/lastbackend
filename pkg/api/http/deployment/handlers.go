@@ -37,6 +37,34 @@ const (
 
 func DeploymentListH(w http.ResponseWriter, r *http.Request) {
 
+	// swagger:operation GET /namespace/{namespace}/service/{service}/deployment deployment deploymentList
+	//
+	// Shows a list of deployments
+	//
+	// ---
+	// produces:
+	// - application/json
+	// parameters:
+	//   - name: namespace
+	//     in: path
+	//     description: name of the namespace
+	//     required: true
+	//     type: string
+	//   - name: service
+	//     in: path
+	//     description: name of the service
+	//     required: true
+	//     type: string
+	// responses:
+	//   '200':
+	//     description: Deployment list response
+	//     schema:
+	//       "$ref": "#/definitions/views_deployment_list"
+	//   '404':
+	//     description: Namespace not found / Service not found
+	//   '500':
+	//     description: Internal server error
+
 	sid := utils.Vars(r)["service"]
 	nid := utils.Vars(r)["namespace"]
 
@@ -103,6 +131,39 @@ func DeploymentListH(w http.ResponseWriter, r *http.Request) {
 }
 
 func DeploymentInfoH(w http.ResponseWriter, r *http.Request) {
+
+	// swagger:operation GET /namespace/{namespace}/service/{service}/deployment/{deployment} deployment deploymentInfo
+	//
+	// Shows a deployment info
+	//
+	// ---
+	// produces:
+	// - application/json
+	// parameters:
+	//   - name: namespace
+	//     in: path
+	//     description: name of the namespace
+	//     required: true
+	//     type: string
+	//   - name: service
+	//     in: path
+	//     description: name of the service
+	//     required: true
+	//     type: string
+	//   - name: deployment
+	//     in: path
+	//     description: name of the deployment
+	//     required: true
+	//     type: string
+	// responses:
+	//   '200':
+	//     description: Deployment response
+	//     schema:
+	//       "$ref": "#/definitions/views_deployment"
+	//   '404':
+	//     description: Namespace not found / Service not found
+	//   '500':
+	//     description: Internal server error
 
 	sid := utils.Vars(r)["service"]
 	nid := utils.Vars(r)["namespace"]
@@ -176,6 +237,44 @@ func DeploymentInfoH(w http.ResponseWriter, r *http.Request) {
 }
 
 func DeploymentUpdateH(w http.ResponseWriter, r *http.Request) {
+
+	// swagger:operation PUT /namespace/{namespace}/service/{service}/deployment/{deployment} deployment deploymentUpdate
+	//
+	// Updates deployment parameters
+	//
+	// ---
+	// produces:
+	// - application/json
+	// parameters:
+	//   - name: namespace
+	//     in: path
+	//     description: name of the namespace
+	//     required: true
+	//     type: string
+	//   - name: service
+	//     in: path
+	//     description: name of the service
+	//     required: true
+	//     type: string
+	//   - name: deployment
+	//     in: path
+	//     description: name of the deployment
+	//     required: true
+	//     type: string
+	//   - name: body
+	//     in: body
+	//     required: true
+	//     schema:
+	//       "$ref": "#/definitions/request_deployment_update"
+	// responses:
+	//   '200':
+	//     description: Deployment was successfully updated
+	//     schema:
+	//       "$ref": "#/definitions/views_deployment"
+	//   '404':
+	//     description: Namespace not found / Service not found
+	//   '500':
+	//     description: Internal server error
 
 	nid := utils.Vars(r)["namespace"]
 	sid := utils.Vars(r)["service"]

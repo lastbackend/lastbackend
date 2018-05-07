@@ -18,14 +18,17 @@
 
 package request
 
+// swagger:model request_secret_create
 type SecretCreateOptions struct {
 	Data *string
 }
 
+// swagger:model request_secret_update
 type SecretUpdateOptions struct {
 	Data *string
 }
 
+// swagger:ignore
 type SecretRemoveOptions struct {
 	Force bool `json:"force"`
 }

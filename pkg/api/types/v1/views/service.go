@@ -20,12 +20,14 @@ package views
 
 import "time"
 
+// swagger:model views_service_list
 type ServiceList []*Service
 
 // ***************************************************
 // SERVICE INFO MODEL
 // ***************************************************
 
+// swagger:model views_service
 type Service struct {
 	Meta        ServiceMeta            `json:"meta"`
 	Stats       ServiceStats           `json:"stats"`
@@ -34,6 +36,7 @@ type Service struct {
 	Deployments map[string]*Deployment `json:"deployments,omitempty"`
 }
 
+// swagger:model views_service_meta
 type ServiceMeta struct {
 	Name        string            `json:"name"`
 	Namespace   string            `json:"namespace"`
@@ -46,6 +49,7 @@ type ServiceMeta struct {
 	Updated     time.Time         `json:"updated"`
 }
 
+// swagger:ignore
 type ServiceImage struct {
 	// Image namespace name
 	Namespace string `json:"namespace"`
@@ -55,20 +59,24 @@ type ServiceImage struct {
 	Hash string `json:"hash"`
 }
 
+// swagger:ignore
 type ServiceSourcesRepo struct {
 }
 
+// swagger:model views_service_stats
 type ServiceStats struct {
 	Memory  int64 `json:"memory"`
 	Cpu     int64 `json:"cpu"`
 	Network int64 `json:"network"`
 }
 
+// swagger:model views_service_status
 type ServiceStatus struct {
 	State   string `json:"state"`
 	Message string `json:"message"`
 }
 
+// swagger:ignore
 type ServiceDeployment struct {
 	ID      string    `json:"id"`
 	Name    string    `json:"name"`
@@ -76,6 +84,7 @@ type ServiceDeployment struct {
 	Started time.Time `json:"started"`
 }
 
+// swagger:model views_service_spec
 type ServiceSpec struct {
 	Replicas   int                `json:"replicas"`
 	Meta       ServiceSpecMeta    `json:"meta"`
@@ -87,6 +96,7 @@ type ServiceSpec struct {
 	Ports      []*ServiceSpecPort `json:"ports"`
 }
 
+// swagger:model views_service_spec_meta
 type ServiceSpecMeta struct {
 	ID        string `json:"id,omitempty"`
 	ServiceID string `json:"service_id,omitempty"`
@@ -95,6 +105,7 @@ type ServiceSpecMeta struct {
 	Revision  int    `json:"revision,omitempty"`
 }
 
+// swagger:model views_service_spec_port
 type ServiceSpecPort struct {
 	Protocol  string `json:"protocol"`
 	Container int    `json:"internal"`
@@ -102,6 +113,7 @@ type ServiceSpecPort struct {
 	Published bool   `json:"published"`
 }
 
+// swagger:ignore
 type ServiceEndpoint struct {
 	Name      string `json:"name"`
 	Technical bool   `json:"technical"`

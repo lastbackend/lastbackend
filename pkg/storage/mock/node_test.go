@@ -24,6 +24,7 @@ import (
 	"testing"
 
 	"encoding/json"
+
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 	"github.com/lastbackend/lastbackend/pkg/storage/storage"
 	"github.com/lastbackend/lastbackend/pkg/storage/store"
@@ -1556,7 +1557,7 @@ func TestNodeStorage_Remove(t *testing.T) {
 			store.ErrEntityNotFound,
 		},
 		{
-			"test failed update: nil node structure",
+			"test failed remove: nil node structure",
 			fields{stg},
 			args{ctx, nil},
 			&n2,
@@ -1564,7 +1565,7 @@ func TestNodeStorage_Remove(t *testing.T) {
 			store.ErrStructArgIsNil,
 		},
 		{
-			"test failed update: node not found",
+			"test failed remove: node not found",
 			fields{stg},
 			args{ctx, &n2},
 			&n1,
