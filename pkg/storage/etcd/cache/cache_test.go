@@ -20,8 +20,8 @@ package cache
 
 import (
 	"testing"
-	"time"
 	"github.com/stretchr/testify/assert"
+	"time"
 )
 
 func TestGet(t *testing.T) {

@@ -55,7 +55,7 @@ var serviceWatchCmd = &cobra.Command{
 		defer watcher.Stop()
 
 		for w := range watcher.ResultChan() {
-			fmt.Println(">>>>>>>>>", w.Data)
+
 			if w.Data == nil {
 				continue
 			}

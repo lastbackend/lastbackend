@@ -55,6 +55,8 @@ func (cache *Cache) Get(key string) (data interface{}) {
 }
 
 func (cache *Cache) Clear() {
+	cache.mutex.Lock()
+	defer cache.mutex.Unlock()
 	cache.items = make(map[string]*Item, 0)
 }
 
