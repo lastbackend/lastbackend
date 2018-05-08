@@ -46,9 +46,8 @@ var namespaceCreateCmd = &cobra.Command{
 
 		opts := new(request.NamespaceCreateOptions)
 
-		desc := cmd.Flag("desc").Value.String()
-		opts.Description = &desc
-		opts.Name = &args[0]
+		opts.Description = cmd.Flag("desc").Value.String()
+		opts.Name = args[0]
 
 		if err := opts.Validate(); err != nil {
 			fmt.Println(err.Err())
@@ -62,7 +61,7 @@ var namespaceCreateCmd = &cobra.Command{
 			return
 		}
 
-		fmt.Println(fmt.Sprintf("Namespace `%s` is created", *opts.Name))
+		fmt.Println(fmt.Sprintf("Namespace `%s` is created", opts.Name))
 		ns := view.FromApiNamespaceView(response)
 		ns.Print()
 	},
