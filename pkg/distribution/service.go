@@ -43,8 +43,8 @@ type IService interface {
 	Destroy(service *types.Service) (*types.Service, error)
 	Remove(service *types.Service) error
 	SetStatus(service *types.Service) error
-	Watch(dt chan *types.Service) error
-	WatchSpec(dt chan *types.Service) error
+	Watch(ch chan *types.Event) error
+	WatchSpec(ch chan *types.Service) error
 }
 
 type Service struct {
@@ -216,10 +216,10 @@ func (s *Service) SetStatus(service *types.Service) error {
 }
 
 // Watch service changes
-func (s *Service) Watch(dt chan *types.Service) error {
+func (s *Service) Watch(ch chan *types.Event) error {
 
 	log.Debugf("%s:watch:> watch deployments", logServicePrefix)
-	if err := s.storage.Service().Watch(s.context, dt); err != nil {
+	if err := s.storage.Service().Watch(s.context, ch); err != nil {
 		log.Debugf("%s:watch:> watch deployment err: %s", logServicePrefix, err.Error())
 		return err
 	}
@@ -228,10 +228,10 @@ func (s *Service) Watch(dt chan *types.Service) error {
 }
 
 // Watch service by spec changes
-func (s *Service) WatchSpec(dt chan *types.Service) error {
+func (s *Service) WatchSpec(ch chan *types.Service) error {
 
 	log.Debugf("%s:watchspec:> watch deployments by spec changes", logServicePrefix)
-	if err := s.storage.Service().WatchSpec(s.context, dt); err != nil {
+	if err := s.storage.Service().WatchSpec(s.context, ch); err != nil {
 		log.Debugf("%s:watchspec:> watch deployment by spec changes err: %s", logServicePrefix, err.Error())
 		return err
 	}

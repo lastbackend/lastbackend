@@ -794,11 +794,11 @@ func TestServiceStorage_Remove(t *testing.T) {
 func TestServiceStorage_Watch(t *testing.T) {
 
 	var (
-		stg      = newServiceStorage()
-		ctx      = context.Background()
-		err      error
-		n        = getServiceAsset("ns1", "test1", "")
-		serviceC = make(chan *types.Service)
+		stg    = newServiceStorage()
+		ctx    = context.Background()
+		err    error
+		s      = getServiceAsset("ns1", "test1", "")
+		eventC = make(chan *types.Event)
 	)
 
 	etcdCtl, destroy, err := initStorageWatch()
@@ -838,7 +838,7 @@ func TestServiceStorage_Watch(t *testing.T) {
 			clear()
 			defer clear()
 
-			if err := stg.Insert(ctx, &n); err != nil {
+			if err := stg.Insert(ctx, &s); err != nil {
 				t.Errorf("ServiceStorage.Watch() storage setup error = %v", err)
 				return
 			}
@@ -849,7 +849,7 @@ func TestServiceStorage_Watch(t *testing.T) {
 			defer etcdCtl.WatchClose()
 			//run watch go function
 			go func() {
-				err = stg.Watch(ctxT, serviceC)
+				err = stg.Watch(ctxT, eventC)
 				if err != nil {
 					t.Errorf("ServiceStorage.Watch() storage setup error = %v", err)
 					return
@@ -872,7 +872,7 @@ func TestServiceStorage_Watch(t *testing.T) {
 
 			for {
 				select {
-				case <-serviceC:
+				case <-eventC:
 					t.Log("ServiceStorage.Watch() is working")
 					return
 				case <-ctxT.Done():

@@ -47,7 +47,7 @@ func (dc *DeploymentClient) List(ctx context.Context) (*vv1.DeploymentList, erro
 	var e *errors.Http
 
 	err := dc.client.Get(fmt.Sprintf("/namespace/%s/service/%s/deploymet", dc.namespace, dc.service)).
-		AddHeader("Content-Type", "application/json").
+		AddHeader("Content-Entity", "application/json").
 		JSON(&s, &e)
 
 	if err != nil {
@@ -71,7 +71,7 @@ func (dc *DeploymentClient) Get(ctx context.Context) (*vv1.Deployment, error) {
 	var e *errors.Http
 
 	err := dc.client.Get(fmt.Sprintf("/namespace/%s/service/%s/deploymet/%s", dc.namespace, dc.service, dc.name)).
-		AddHeader("Content-Type", "application/json").
+		AddHeader("Content-Entity", "application/json").
 		JSON(&s, &e)
 
 	if err != nil {
@@ -95,7 +95,7 @@ func (dc *DeploymentClient) Update(ctx context.Context, opts *rv1.DeploymentUpda
 	var e *errors.Http
 
 	err = dc.client.Put(fmt.Sprintf("/namespace/%s/service/%s/deployment/%s", dc.namespace, dc.service, dc.name)).
-		AddHeader("Content-Type", "application/json").
+		AddHeader("Content-Entity", "application/json").
 		Body(body).
 		JSON(&s, &e)
 

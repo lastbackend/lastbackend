@@ -38,11 +38,11 @@ const serviceLogsExample = `
   lb service logs ns-demo redis
 `
 
-type Writer struct {
+type LogsWriter struct {
 	io.Writer
 }
 
-func (Writer) Write(p []byte) (int, error) {
+func (LogsWriter) Write(p []byte) (int, error) {
 	return fmt.Print(string(p))
 }
 
@@ -126,6 +126,6 @@ var serviceLogsCmd = &cobra.Command{
 
 		fmt.Println("Service logs:")
 
-		stream.New(Writer{}).Pipe(&reader)
+		stream.New(LogsWriter{}).Pipe(&reader)
 	},
 }

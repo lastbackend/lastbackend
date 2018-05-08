@@ -69,7 +69,7 @@ func (Http) NotImplemented(w http.ResponseWriter) {
 }
 
 func (h Http) send(w http.ResponseWriter) {
-	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
+	w.Header().Set("Content-Entity", "application/json; charset=UTF-8")
 	w.WriteHeader(h.Code)
 	response, _ := json.Marshal(h)
 	w.Write(response)

@@ -32,6 +32,7 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/api/http/trigger"
 	"github.com/lastbackend/lastbackend/pkg/log"
 	"github.com/lastbackend/lastbackend/pkg/api/http/ingress"
+	"github.com/lastbackend/lastbackend/pkg/api/http/events"
 )
 
 const (
@@ -64,6 +65,9 @@ func init() {
 
 	// Hooks
 	AddRoutes(trigger.Routes)
+
+	// Events
+	AddRoutes(events.Routes)
 }
 
 func Listen(host string, port int) error {

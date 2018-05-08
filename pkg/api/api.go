@@ -58,7 +58,6 @@ func Daemon() bool {
 
 	envs.Get().SetCache(c)
 
-
 	go func() {
 		types.SecretAccessToken = viper.GetString("token")
 		if err := http.Listen(viper.GetString("api.host"), viper.GetInt("api.port")); err != nil {

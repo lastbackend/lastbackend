@@ -48,7 +48,7 @@ func (sc *SecretClient) Create(ctx context.Context, opts *rv1.SecretCreateOption
 	var e *errors.Http
 
 	err = sc.client.Post(fmt.Sprintf("/namespace/%s/secret", sc.namespace)).
-		AddHeader("Content-Type", "application/json").
+		AddHeader("Content-Entity", "application/json").
 		Body(body).
 		JSON(&s, &e)
 
@@ -68,7 +68,7 @@ func (sc *SecretClient) List(ctx context.Context) (*vv1.SecretList, error) {
 	var e *errors.Http
 
 	err := sc.client.Get(fmt.Sprintf("/namespace/%s/secret", sc.namespace)).
-		AddHeader("Content-Type", "application/json").
+		AddHeader("Content-Entity", "application/json").
 		JSON(&s, &e)
 
 	if err != nil {
@@ -97,7 +97,7 @@ func (sc *SecretClient) Update(ctx context.Context, opts *rv1.SecretUpdateOption
 	var e *errors.Http
 
 	err = sc.client.Put(fmt.Sprintf("/namespace/%s/secret/%s", sc.namespace, sc.name)).
-		AddHeader("Content-Type", "application/json").
+		AddHeader("Content-Entity", "application/json").
 		Body(body).
 		JSON(&s, &e)
 
@@ -114,7 +114,7 @@ func (sc *SecretClient) Update(ctx context.Context, opts *rv1.SecretUpdateOption
 func (sc *SecretClient) Remove(ctx context.Context, opts *rv1.SecretRemoveOptions) error {
 
 	req := sc.client.Delete(fmt.Sprintf("/namespace/%s/secret/%s", sc.namespace, sc.name)).
-		AddHeader("Content-Type", "application/json")
+		AddHeader("Content-Entity", "application/json")
 
 	if opts != nil {
 		if opts.Force {

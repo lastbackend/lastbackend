@@ -271,8 +271,8 @@ type NamespaceCreateOptions struct {
 
 func createNamespaceCreateOptions(name, description string, quotas *request.NamespaceQuotasOptions) *NamespaceCreateOptions {
 	opts := new(NamespaceCreateOptions)
-	opts.Name = name
-	opts.Description = description
+	opts.Name = &name
+	opts.Description = &description
 	opts.Quotas = quotas
 	return opts
 }

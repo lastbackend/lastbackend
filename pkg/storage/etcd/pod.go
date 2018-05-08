@@ -416,7 +416,7 @@ func (s *PodStorage) Watch(ctx context.Context, pod chan *types.Pod) error {
 			return
 		}
 
-		if action == types.STORAGEDELEVENT {
+		if action == "delete" {
 			return
 		}
 
@@ -454,7 +454,7 @@ func (s *PodStorage) WatchSpec(ctx context.Context, pod chan *types.Pod) error {
 			return
 		}
 
-		if action == types.STORAGEDELEVENT {
+		if action == "delete" {
 			return
 		}
 
@@ -491,7 +491,7 @@ func (s *PodStorage) WatchStatus(ctx context.Context, pod chan *types.Pod) error
 			return
 		}
 
-		if action == types.STORAGEDELEVENT {
+		if action == "delete" {
 			return
 		}
 

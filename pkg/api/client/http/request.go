@@ -30,6 +30,7 @@ import (
 	"net/url"
 	"path"
 	"time"
+	"github.com/lastbackend/lastbackend/pkg/api/client/watcher"
 )
 
 type Request struct {
@@ -203,7 +204,9 @@ func (r *Request) Stream() (io.ReadCloser, error) {
 	if r.ctx != nil {
 		req = req.WithContext(r.ctx)
 	}
-	//req.Header = r.headers
+
+	req.Header = r.headers
+
 	client := r.client
 	if client == nil {
 		client = http.DefaultClient
@@ -228,6 +231,31 @@ func (r *Request) Stream() (io.ReadCloser, error) {
 		}
 		return nil, err
 	}
+}
+
+func (r *Request) Watch() (watcher.IWatcher, error) {
+
+	u := r.URL().String()
+	req, err := http.NewRequest(r.verb, u, r.body)
+	if err != nil {
+		return nil, err
+	}
+	if r.ctx != nil {
+		req = req.WithContext(r.ctx)
+	}
+
+	req.Header = r.headers
+	client := r.client
+	if client == nil {
+		client = http.DefaultClient
+	}
+
+	res, err := client.Do(req)
+	if err != nil {
+		return nil, err
+	}
+
+	return watcher.NewStreamWatcher(res.Body), nil
 }
 
 func (r *Request) Param(name, value string) *Request {
@@ -260,7 +288,7 @@ func (r *Request) transformResponse(resp *http.Response, req *http.Request) Resu
 
 	return Result{
 		body:        body,
-		contentType: resp.Header.Get("Content-Type"),
+		contentType: resp.Header.Get("Content-Entity"),
 		statusCode:  resp.StatusCode,
 	}
 }

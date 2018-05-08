@@ -32,7 +32,7 @@ import (
 )
 
 const (
-	contentType     = "Content-Type"
+	contentType     = "Content-Entity"
 	jsonContentType = "application/json"
 	formContentType = "application/x-www-form-urlencoded"
 )

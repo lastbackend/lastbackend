@@ -696,8 +696,8 @@ func TestServiceStorage_Watch(t *testing.T) {
 		stg storage.Service
 	}
 	type args struct {
-		ctx     context.Context
-		service chan *types.Service
+		ctx   context.Context
+		event chan *types.Event
 	}
 	tests := []struct {
 		name    string
@@ -708,13 +708,13 @@ func TestServiceStorage_Watch(t *testing.T) {
 		{
 			"check watch",
 			fields{stg},
-			args{ctx, make(chan *types.Service)},
+			args{ctx, make(chan *types.Event)},
 			false,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if err := tt.fields.stg.Watch(tt.args.ctx, tt.args.service); (err != nil) != tt.wantErr {
+			if err := tt.fields.stg.Watch(tt.args.ctx, tt.args.event); (err != nil) != tt.wantErr {
 				t.Errorf("ServiceStorage.Watch() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})

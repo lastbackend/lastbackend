@@ -16,21 +16,15 @@
 // from Last.Backend LLC.
 //
 
-package v3
+package types
 
 const (
-	EventTypeCreate = "create"
-	EventTypeUpdate = "update"
-	EventTypeDelete = "delete"
+	EventActionCreate = "create"
+	EventActionUpdate = "update"
+	EventActionDelete = "delete"
 )
 
-type Config struct {
-	Endpoints []string `yaml:"endpoint"`
-	TLS struct {
-		Key  string `yaml:"key"`
-		Cert string `yaml:"cert"`
-		CA   string `yaml:"ca"`
-	} `yaml:"tls"`
-	Quorum bool   `yaml:"quorum"`
-	Prefix string `yaml:"prefix"`
+type Event struct {
+	Action string
+	Data   interface{}
 }

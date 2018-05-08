@@ -113,7 +113,7 @@ func (s *ServiceStorage) Remove(ctx context.Context, service *types.Service) err
 }
 
 // Watch service changes
-func (s *ServiceStorage) Watch(ctx context.Context, service chan *types.Service) error {
+func (s *ServiceStorage) Watch(ctx context.Context, event chan *types.Event) error {
 	return nil
 }
 

@@ -967,6 +967,7 @@ func TestDeploymentStorage_Remove(t *testing.T) {
 		})
 	}
 }
+
 func TestDeploymentStorage_Watch(t *testing.T) {
 
 	etcdCtl, destroy, err := initStorageWatch()
