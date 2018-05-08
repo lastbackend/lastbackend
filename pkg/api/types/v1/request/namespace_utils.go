@@ -37,13 +37,13 @@ func (NamespaceRequest) CreateOptions() *NamespaceCreateOptions {
 
 func (n *NamespaceCreateOptions) Validate() *errors.Err {
 	switch true {
-	case n.Name == nil:
+	case len(n.Name) == 0:
 		return errors.New("namespace").BadParameter("name")
-	case len(*n.Name) < 4 || len(*n.Name) > 64:
+	case len(n.Name) < 4 || len(n.Name) > 64:
 		return errors.New("namespace").BadParameter("name")
-	case !validator.IsNamespaceName(strings.ToLower(*n.Name)):
+	case !validator.IsNamespaceName(strings.ToLower(n.Name)):
 		return errors.New("namespace").BadParameter("name")
-	case n.Description != nil && len(*n.Description) > DEFAULT_DESCRIPTION_LIMIT:
+	case len(n.Description) > DEFAULT_DESCRIPTION_LIMIT:
 		return errors.New("namespace").BadParameter("description")
 		// TODO: check quotas data
 	}
@@ -72,8 +72,8 @@ func (n *NamespaceCreateOptions) DecodeAndValidate(reader io.Reader) (*types.Nam
 	}
 
 	opts := new(types.NamespaceCreateOptions)
-	opts.Description = *n.Description
-	opts.Name = *n.Name
+	opts.Description = n.Description
+	opts.Name = n.Name
 
 	if n.Quotas != nil {
 		opts.Quotas = new(types.NamespaceQuotasOptions)
