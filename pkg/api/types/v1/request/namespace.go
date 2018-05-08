@@ -20,8 +20,8 @@ package request
 
 // swagger:model request_namespace_create
 type NamespaceCreateOptions struct {
-	Name        *string                 `json:"name"`
-	Description *string                 `json:"description"`
+	Name        string                  `json:"name"`
+	Description string                  `json:"description"`
 	Quotas      *NamespaceQuotasOptions `json:"quotas"`
 }
 
