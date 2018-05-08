@@ -797,7 +797,7 @@ func TestServiceStorage_Watch(t *testing.T) {
 		stg    = newServiceStorage()
 		ctx    = context.Background()
 		err    error
-		n      = getServiceAsset("ns1", "test1", "")
+		s      = getServiceAsset("ns1", "test1", "")
 		eventC = make(chan *types.Event)
 	)
 
@@ -838,7 +838,7 @@ func TestServiceStorage_Watch(t *testing.T) {
 			clear()
 			defer clear()
 
-			if err := stg.Insert(ctx, &n); err != nil {
+			if err := stg.Insert(ctx, &s); err != nil {
 				t.Errorf("ServiceStorage.Watch() storage setup error = %v", err)
 				return
 			}

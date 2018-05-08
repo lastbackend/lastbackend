@@ -69,12 +69,12 @@ func (c *CacheIngressSpec) CacheRoutes(rs RouteSpecWatcher) error {
 			select {
 			case e := <-evs:
 				{
-					if e.Event == types.STORAGEPUTEVENT {
+					if e.Event == "create" || e.Event == "update" {
 						c.SetRouteSpec(e.Name, e.Spec)
 						continue
 					}
 
-					if e.Event == types.STORAGEDELEVENT {
+					if e.Event == "delete" {
 						c.DelRouteSpec(e.Name)
 						continue
 					}

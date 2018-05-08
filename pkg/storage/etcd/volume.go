@@ -315,7 +315,7 @@ func (s *VolumeStorage) Watch(ctx context.Context, volume chan *types.Volume) er
 			return
 		}
 
-		if action == types.STORAGEDELEVENT {
+		if action == "delete" {
 			return
 		}
 
@@ -352,7 +352,7 @@ func (s *VolumeStorage) WatchSpec(ctx context.Context, volume chan *types.Volume
 			return
 		}
 
-		if action == types.STORAGEDELEVENT {
+		if action == "delete" {
 			return
 		}
 
@@ -390,7 +390,7 @@ func (s *VolumeStorage) WatchStatus(ctx context.Context, volume chan *types.Volu
 			return
 		}
 
-		if action == types.STORAGEDELEVENT {
+		if action == "delete" {
 			return
 		}
 

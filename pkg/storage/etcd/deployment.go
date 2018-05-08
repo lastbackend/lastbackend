@@ -319,7 +319,7 @@ func (s *DeploymentStorage) Watch(ctx context.Context, deployment chan *types.De
 			return
 		}
 
-		if action == types.STORAGEDELEVENT {
+		if action == "delete" {
 			return
 		}
 
@@ -357,7 +357,7 @@ func (s *DeploymentStorage) WatchSpec(ctx context.Context, deployment chan *type
 			return
 		}
 
-		if action == types.STORAGEDELEVENT {
+		if action == "delete" {
 			return
 		}
 
@@ -398,7 +398,7 @@ func (s *DeploymentStorage) WatchStatus(ctx context.Context, deployment chan *ty
 			return
 		}
 
-		if action == types.STORAGEDELEVENT {
+		if action == "delete" {
 			return
 		}
 

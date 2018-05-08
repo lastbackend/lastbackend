@@ -18,9 +18,6 @@
 
 package types
 
-const STORAGEPUTEVENT = "PUT"
-const STORAGEDELEVENT = "DELETE"
-
 type NodeStatusEvent struct {
 	Event  string `json:"event"`
 	Node   string `json:"node"`

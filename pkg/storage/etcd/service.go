@@ -359,7 +359,7 @@ func (s *ServiceStorage) WatchSpec(ctx context.Context, service chan *types.Serv
 			return
 		}
 
-		if action == types.STORAGEDELEVENT {
+		if action == "delete" {
 			return
 		}
 
@@ -397,7 +397,7 @@ func (s *ServiceStorage) WatchStatus(ctx context.Context, service chan *types.Se
 			return
 		}
 
-		if action == types.STORAGEDELEVENT {
+		if action == "delete" {
 			return
 		}
 

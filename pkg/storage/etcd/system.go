@@ -162,7 +162,7 @@ func (s *SystemStorage) ElectWait(ctx context.Context, process *types.Process, l
 
 	key := keyCreate(systemStorage, process.Meta.Kind, "lead")
 	cb := func(action, key string, val []byte) {
-		if action == "PUT" {
+		if action == "create" || action == "update" {
 			var id string
 			if err := json.Unmarshal(val, &id); err != nil {
 				//TODO: return error and start loop over
@@ -175,7 +175,7 @@ func (s *SystemStorage) ElectWait(ctx context.Context, process *types.Process, l
 			}
 		}
 
-		if action == "DELETE" {
+		if action == "delete" {
 			_, err := s.Elect(ctx, process)
 			if err != nil {
 				log.V(logLevel).Errorf("Storage: System: elect process err: %s", err.Error())
