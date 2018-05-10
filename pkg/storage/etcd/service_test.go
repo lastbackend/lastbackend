@@ -864,7 +864,7 @@ func TestServiceStorage_Watch(t *testing.T) {
 				t.Skipf("skip watch test: not found etcdctl path=%s", path)
 			}
 			key := "/lstbknd/services/ns1:test1/meta"
-			value := `{"name":"test1","description":"","self_link":"","labels":null,"created":"2018-04-27T09:30:19.278018+03:00","updated":"0001-01-01T00:00:00Z","namespace":"ns1","selflink":"ns1:test1","endpoint":""}`
+			value := `{"name":"test1","description":"","self_link":"","labels":null,"created":"2018-04-27T09:30:19.278018+03:00","updated":"0001-01-01T00:00:00Z","namespace":"ns1","self_link":"ns1:test1","endpoint":""}`
 			err = runEtcdPut(path, key, value)
 			if err != nil {
 				t.Skipf("skip watch test: exec etcdctl err=%s", err.Error())
