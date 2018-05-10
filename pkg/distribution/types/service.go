@@ -43,7 +43,7 @@ type ServiceList []*Service
 type ServiceMeta struct {
 	Meta
 	Namespace string `json:"namespace"`
-	SelfLink  string `json:"selflink"`
+	SelfLink  string `json:"self_link"`
 	Endpoint  string `json:"endpoint"`
 }
 
