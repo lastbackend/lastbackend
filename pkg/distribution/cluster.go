@@ -56,6 +56,25 @@ func (c *Cluster) Get() (*types.Cluster, error) {
 	return cluster, nil
 }
 
+// Create - create cluster info
+func (c *Cluster) Create(opts *types.ClusterCreateOptions) (*types.Cluster, error) {
+
+	log.V(logLevel).Debugf("%s:create:> create cluster %#v", logClusterPrefix, opts)
+
+	var cl = new(types.Cluster)
+	cl.Meta.SetDefault()
+	cl.Meta.Name = "local"
+	cl.Meta.Description = opts.Description
+	cl.SelfLink()
+
+	if err := c.storage.Cluster().Insert(c.context, cl); err != nil {
+		log.V(logLevel).Errorf("%s:create:> insert cluster err: %s", logClusterPrefix, err.Error())
+		return nil, err
+	}
+
+	return cl, nil
+}
+
 // Update - update cluster stats data and meta information
 func (c *Cluster) Update(cluster *types.Cluster, opts *request.ClusterUpdateOptions) error {
 

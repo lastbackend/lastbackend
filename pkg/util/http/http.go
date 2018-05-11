@@ -24,13 +24,31 @@ import (
 	//	"time"
 )
 
+type NotFoundHandler struct {
+	http.Handler
+}
+
+func (NotFoundHandler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
+	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
+	w.WriteHeader(http.StatusNotFound)
+	w.Write([]byte(`{"code": "404", "status": "Not Found", "message": "Not Found"}`))
+}
+
+type MethodNotAllowedHandler struct {
+	http.Handler
+}
+
+func (MethodNotAllowedHandler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
+	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
+	w.WriteHeader(http.StatusMethodNotAllowed)
+	w.Write([]byte(`{"code": "405", "status": "Method Not Allowed", "message": "Method Not Allowed"}`))
+}
+
 func Handle(h http.HandlerFunc, middleware ...Middleware) http.HandlerFunc {
 	headers := func(h http.HandlerFunc) http.HandlerFunc {
 		return func(w http.ResponseWriter, r *http.Request) {
-			//start := time.Now()
 			Headers(w, r)
 			h.ServeHTTP(w, r)
-			//fmt.Println(fmt.Sprintf("%s\t%s\t%s", r.Method, r.RequestURI, time.Since(start)))
 		}
 	}
 

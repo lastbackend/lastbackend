@@ -18,6 +18,8 @@
 
 package types
 
+import "fmt"
+
 const (
 	CentralUSRegions = "CU"
 	WestEuropeRegion = "WE"
@@ -65,4 +67,17 @@ type ClusterResources struct {
 }
 
 type ClusterQuotas struct {
+}
+
+func (c *Cluster) SelfLink() string {
+	if c.Meta.SelfLink == "" {
+		c.Meta.SelfLink = fmt.Sprintf("%s", c.Meta.Name)
+	}
+	return c.Meta.SelfLink
+}
+
+// swagger:ignore
+type ClusterCreateOptions struct {
+	Description string                  `json:"description"`
+	Quotas      *NamespaceQuotasOptions `json:"quotas"`
 }
