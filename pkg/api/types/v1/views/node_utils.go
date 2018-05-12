@@ -36,10 +36,10 @@ func (nv *NodeView) New(obj *types.Node) *Node {
 
 func (nv *NodeView) ToNodeMeta(meta types.NodeMeta) NodeMeta {
 	return NodeMeta{
-		Name:        meta.Name,
-		Description: meta.Description,
-		Created:     meta.Created,
-		Updated:     meta.Updated,
+		Name:     meta.Name,
+		SelfLink: meta.SelfLink,
+		Created:  meta.Created,
+		Updated:  meta.Updated,
 	}
 }
 
