@@ -23,6 +23,7 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 	"github.com/lastbackend/lastbackend/pkg/log"
 	"github.com/lastbackend/lastbackend/pkg/storage"
+	"github.com/lastbackend/lastbackend/pkg/controller/envs"
 )
 
 const (
@@ -30,10 +31,9 @@ const (
 )
 
 type IEndpoint interface {
-	Get(namespace, service, name string) (*types.Endpoint, error)
+	Get(namespace, service string) (*types.Endpoint, error)
 	ListByNamespace(namespace string) (map[string]*types.Endpoint, error)
-	ListByService(namespace, service string) (map[string]*types.Endpoint, error)
-	Create(namespace *types.Namespace, service *types.Service, opts *types.EndpointCreateOptions) (*types.Endpoint, error)
+	Create(namespace string, service string, opts *types.EndpointCreateOptions) (*types.Endpoint, error)
 	Update(endpoint *types.Endpoint, opts *types.EndpointUpdateOptions) (*types.Endpoint, error)
 	Remove(endpoint *types.Endpoint) error
 }
@@ -43,11 +43,11 @@ type Endpoint struct {
 	storage storage.Storage
 }
 
-func (e *Endpoint) Get(namespace, service, name string) (*types.Endpoint, error) {
+func (e *Endpoint) Get(namespace, service string) (*types.Endpoint, error) {
 
-	log.V(logLevel).Debugf("%s:get:> get endpoint by name %s: %s", logEndpointPrefix, namespace, name)
+	log.V(logLevel).Debugf("%s:get:> get endpoint by name %s: %s", logEndpointPrefix, namespace, service)
 
-	hook, err := e.storage.Endpoint().Get(e.context, namespace, service, name)
+	hook, err := e.storage.Endpoint().Get(e.context, namespace, service)
 	if err != nil {
 		log.V(logLevel).Errorf("%s:get:> create endpoint err: %s", logEndpointPrefix, err.Error())
 		return nil, err
@@ -68,41 +68,28 @@ func (e *Endpoint) ListByNamespace(namespace string) (map[string]*types.Endpoint
 	return el, nil
 }
 
-func (e *Endpoint) ListByService(namespace, service string) (map[string]*types.Endpoint, error) {
-	log.Debugf("%s:listbyservice:> in service: %s", logEndpointPrefix, service)
-
-	el, err := e.storage.Endpoint().ListByService(e.context, namespace, service)
-	if err != nil {
-		log.Errorf("%s:listbyservice:> in namespace %s and service: %s err: %s", logEndpointPrefix, namespace, service, err.Error())
-		return nil, err
-	}
-
-	return el, nil
-}
-
-func (e *Endpoint) Create(namespace *types.Namespace, service *types.Service, opts *types.EndpointCreateOptions) (*types.Endpoint, error){
+func (e *Endpoint) Create(namespace, service string, opts *types.EndpointCreateOptions) (*types.Endpoint, error){
 	endpoint := new(types.Endpoint)
 
-	endpoint.Meta.Name = opts.Name
-	endpoint.Meta.Namespace = namespace.Meta.Name
-	endpoint.Meta.Service = service.Meta.Name
+	endpoint.Meta.Name = service
+	endpoint.Meta.Namespace = namespace
 	endpoint.Meta.SetDefault()
 	endpoint.SelfLink()
 
 	endpoint.Status.State = types.StateCreated
 	endpoint.Status.Message = ""
 
-	if opts.Policy != nil {
-		endpoint.Spec.Policy = *opts.Policy
+	endpoint.Spec.PortMap	= opts.Ports
+	endpoint.Spec.Policy = opts.Policy
+	endpoint.Spec.Strategy.Route = opts.RouteStrategy
+	endpoint.Spec.Strategy.Bind = opts.BindStrategy
+
+	ip, err := envs.Get().GetIPAM().Lease()
+	if err != nil {
+		log.Errorf("%s:create:> distribution create endpoint: %s err: %s", logEndpointPrefix, endpoint.SelfLink(), err.Error())
 	}
 
-	if opts.RouteStrategy != nil {
-		endpoint.Spec.RouteStrategy = *opts.RouteStrategy
-	}
-
-	if opts.BindStrategy != nil {
-		endpoint.Spec.BindStrategy = *opts.BindStrategy
-	}
+	endpoint.Spec.IP = ip.String()
 
 	if err := e.storage.Endpoint().Insert(e.context, endpoint); err != nil {
 		log.Errorf("%s:create:> distribution create endpoint: %s err: %s", logEndpointPrefix, endpoint.SelfLink(), err.Error())
@@ -116,20 +103,12 @@ func (e *Endpoint) Update(endpoint *types.Endpoint, opts *types.EndpointUpdateOp
 	log.Debugf("%s:update:> endpoint: %s", logEndpointPrefix, endpoint.SelfLink())
 
 	if opts.Ports != nil {
-		endpoint.Spec.Ports	= *opts.Ports
+		endpoint.Spec.PortMap	= opts.Ports
 	}
 
-	if opts.Policy != nil {
-		endpoint.Spec.Policy = *opts.Policy
-	}
-
-	if opts.RouteStrategy != nil {
-		endpoint.Spec.RouteStrategy = *opts.RouteStrategy
-	}
-
-	if opts.BindStrategy != nil {
-		endpoint.Spec.BindStrategy = *opts.BindStrategy
-	}
+	endpoint.Spec.Policy = opts.Policy
+	endpoint.Spec.Strategy.Route = opts.RouteStrategy
+	endpoint.Spec.Strategy.Bind = opts.BindStrategy
 
 	if err := e.storage.Endpoint().Update(e.context, endpoint); err != nil {
 		log.Errorf("%s:create:> distribution update endpoint: %s err: %s", logEndpointPrefix, endpoint.SelfLink(), err.Error())

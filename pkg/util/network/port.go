@@ -16,30 +16,44 @@
 // from Last.Backend LLC.
 //
 
-package storage
+package network
 
 import (
-	"context"
-	"github.com/lastbackend/lastbackend/pkg/storage/storage"
+	"strings"
+	"strconv"
+	"github.com/lastbackend/lastbackend/pkg/distribution/errors"
 )
 
-type Util interface {
-	Key(ctx context.Context, pattern ...string) string
-}
+func ParsePortMap(s string) (int, string, error) {
 
-type Storage interface {
-	Cluster() storage.Cluster
-	Deployment() storage.Deployment
-	Namespace() storage.Namespace
-	Node() storage.Node
-	Ingress() storage.Ingress
-	Pod() storage.Pod
-	Route() storage.Route
-	Secret() storage.Secret
-	Service() storage.Service
-	System() storage.System
-	Endpoint() storage.Endpoint
-	Trigger() storage.Trigger
-	Volume() storage.Volume
-	IPAM() storage.IPAM
+	var (
+		port int
+		proto string
+		err error
+	)
+
+	pm := strings.Split(s, "/")
+	switch len(pm) {
+	case 0:
+		break
+	case 1:
+		port, err = strconv.Atoi(pm[0])
+		if err != nil {
+			break
+		}
+		proto = "tcp"
+		break
+	case 2:
+		port, err = strconv.Atoi(pm[0])
+		if err != nil {
+			return port, proto, err
+		}
+		proto = strings.ToLower(pm[1])
+		break
+	default:
+		err = errors.New("Invalid port map declaration")
+		return port, proto, err
+	}
+
+	return port, proto, nil
 }

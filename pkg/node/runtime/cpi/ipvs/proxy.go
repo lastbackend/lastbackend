@@ -23,9 +23,8 @@ import (
 	"context"
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 	"github.com/lastbackend/dynamic/pkg/log"
-	"strings"
-	"strconv"
 	"github.com/lastbackend/dynamic/pkg/distribution/errors"
+	"github.com/lastbackend/lastbackend/pkg/util/network"
 )
 
 const logIPVSPrefix = "cpi:ivps:proxy:>"
@@ -90,52 +89,27 @@ func (i *Proxy) Create(ctx context.Context, spec *types.EndpointSpec) (*types.En
 		}
 	}()
 
-	for ext, it := range spec.PortMap {
+	for mp, ext := range spec.PortMap {
 
-		var (
-			port  int
-			proto string
-			err   error
-		)
-
-		// Setup port and proxy type for IPVS service
-		pm := strings.Split(ext, "/")
-		switch len(pm) {
-		case 0:
-			continue
-			break
-		case 1:
-			port, err = strconv.Atoi(pm[0])
-			if err != nil {
-				continue
-			}
-			proto = "*"
-			break
-		case 2:
-			port, err = strconv.Atoi(pm[0])
-			if err != nil {
-				continue
-			}
-			proto = strings.ToLower(pm[1])
-			break
-		default:
+		port, proto, err := network.ParsePortMap(mp)
+		if err != nil {
 			err = errors.New("Invalid port map declaration")
 			status.State = types.StateError
 			status.Message = err.Error()
 			return status, err
 		}
 
-		status.Upstreams[port] = make(map[string]*types.EndpointUpstream)
-
 		svc := Service{
 			Host: spec.IP,
-			Port: port,
+			Port: ext,
 		}
+
+		status.Upstreams[port] = make(map[string]*types.EndpointUpstream)
 
 		for _, ups := range spec.Upstreams {
 			svc.Backends = append(svc.Backends, Backend{
 				Host: ups.Host,
-				Port: it,
+				Port: port,
 			})
 
 			status.Upstreams[port][ups.Host] = ups
@@ -208,35 +182,10 @@ func (i *Proxy) Destroy(ctx context.Context, spec *types.EndpointSpec) (*types.E
 		}
 	}()
 
-	for ext := range spec.PortMap {
+	for pm, ext := range spec.PortMap {
 
-		var (
-			port  int
-			proto string
-			err   error
-		)
-
-		// Setup port and proxy type for IPVS service
-		pm := strings.Split(ext, "/")
-		switch len(pm) {
-		case 0:
-			continue
-			break
-		case 1:
-			port, err = strconv.Atoi(pm[0])
-			if err != nil {
-				continue
-			}
-			proto = "*"
-			break
-		case 2:
-			port, err = strconv.Atoi(pm[0])
-			if err != nil {
-				continue
-			}
-			proto = strings.ToLower(pm[1])
-			break
-		default:
+		_, proto, err := network.ParsePortMap(pm)
+		if err != nil {
 			err = errors.New("Invalid port map declaration")
 			status.State = types.StateError
 			status.Message = err.Error()
@@ -245,7 +194,7 @@ func (i *Proxy) Destroy(ctx context.Context, spec *types.EndpointSpec) (*types.E
 
 		svc := Service{
 			Host: spec.IP,
-			Port: port,
+			Port: ext,
 		}
 
 		switch proto {
@@ -296,8 +245,7 @@ func (i *Proxy) Destroy(ctx context.Context, spec *types.EndpointSpec) (*types.E
 }
 
 func (p *Proxy) Replace(ctx context.Context, spec *types.EndpointSpec) (*types.EndpointStatus, error) {
-
-
+	return new(types.EndpointStatus), nil
 }
 
 func New() (*Proxy, error) {

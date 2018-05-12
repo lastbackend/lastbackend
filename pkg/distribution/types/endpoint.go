@@ -39,8 +39,6 @@ type EndpointMeta struct {
 	Meta
 	// Namespace name
 	Namespace string `json:"namespace"`
-	// Service name
-	Service string `json:"service"`
 }
 
 // EndpointStatus - endpoint status
@@ -74,22 +72,23 @@ type EndpointUpstream struct {
 // SelfLink generates and returning link to object in platform
 func (e *Endpoint) SelfLink() string {
 	if e.Meta.SelfLink == "" {
-		e.Meta.SelfLink = fmt.Sprintf("%s:%s:%s", e.Meta.Namespace, e.Meta.Service, e.Meta.Name)
+		e.Meta.SelfLink = fmt.Sprintf("%s:%s", e.Meta.Namespace, e.Meta.Name)
 	}
 	return e.Meta.SelfLink
 }
 
 type EndpointCreateOptions struct {
-	Name          string  `json:"name"`
-	Ports         []int   `json:"ports"`
-	RouteStrategy *string `json:"route_strategy"`
-	Policy        *string `json:"policy"`
-	BindStrategy  *string `json:"bind_strategy"`
+	IP            string         `json:"ip"`
+	Ports         map[string]int `json:"ports"`
+	RouteStrategy string         `json:"route_strategy"`
+	Policy        string         `json:"policy"`
+	BindStrategy  string         `json:"bind_strategy"`
 }
 
 type EndpointUpdateOptions struct {
-	Ports         *[]int  `json:"ports"`
-	RouteStrategy *string `json:"route_strategy"`
-	Policy        *string `json:"policy"`
-	BindStrategy  *string `json:"bind_strategy"`
+	IP            string         `json:"ip"`
+	Ports         map[string]int `json:"ports"`
+	RouteStrategy string         `json:"route_strategy"`
+	Policy        string         `json:"policy"`
+	BindStrategy  string         `json:"bind_strategy"`
 }

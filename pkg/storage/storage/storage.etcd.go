@@ -80,17 +80,16 @@ type Pod interface {
 }
 
 type Endpoint interface {
-	Get(ctx context.Context, namespace, service, name string) (*types.Endpoint, error)
+	Get(ctx context.Context, namespace, service string) (*types.Endpoint, error)
 	ListByNamespace(ctx context.Context, namespace string) (map[string]*types.Endpoint, error)
-	ListByService(ctx context.Context, namespace, service string) (map[string]*types.Endpoint, error)
-	SetStatus(ctx context.Context, trigger *types.Endpoint) error
-	SetSpec(ctx context.Context, trigger *types.Endpoint) error
-	Insert(ctx context.Context, trigger *types.Endpoint) error
-	Update(ctx context.Context, trigger *types.Endpoint) error
-	Remove(ctx context.Context, trigger *types.Endpoint) error
-	Watch(ctx context.Context, trigger chan *types.Endpoint) error
-	WatchSpec(ctx context.Context, trigger chan *types.Endpoint) error
-	WatchStatus(ctx context.Context, trigger chan *types.Endpoint) error
+	SetStatus(ctx context.Context, endpoint *types.Endpoint) error
+	SetSpec(ctx context.Context, endpoint *types.Endpoint) error
+	Insert(ctx context.Context, endpoint *types.Endpoint) error
+	Update(ctx context.Context, endpoint *types.Endpoint) error
+	Remove(ctx context.Context, endpoint *types.Endpoint) error
+	Watch(ctx context.Context, endpoint chan *types.Endpoint) error
+	WatchSpec(ctx context.Context, endpoint chan *types.Endpoint) error
+	WatchStatus(ctx context.Context, endpoint chan *types.Endpoint) error
 	Clear(ctx context.Context) error
 }
 
@@ -198,4 +197,9 @@ type System interface {
 	ElectUpdate(ctx context.Context, process *types.Process) error
 	ElectWait(ctx context.Context, process *types.Process, lead chan bool) error
 	Clear(ctx context.Context) error
+}
+
+type IPAM interface {
+	Get(ctx context.Context) ([]string, error)
+	Set(ctx context.Context, ips []string) error
 }

@@ -35,9 +35,9 @@ type EndpointStorage struct {
 }
 
 // Get endpoints by id
-func (s *EndpointStorage) Get(ctx context.Context, namespace, service, name string) (*types.Endpoint, error) {
+func (s *EndpointStorage) Get(ctx context.Context, namespace, service string) (*types.Endpoint, error) {
 
-	if n, ok := s.data[s.keyCreate(namespace, service, name)]; ok {
+	if n, ok := s.data[s.keyCreate(namespace, service)]; ok {
 		return n, nil
 	}
 
@@ -160,8 +160,8 @@ func (s *EndpointStorage) Clear(ctx context.Context) error {
 }
 
 // keyCreate util function
-func (s *EndpointStorage) keyCreate(namespace, service, name string) string {
-	return fmt.Sprintf("%s:%s:%s", namespace, service, name)
+func (s *EndpointStorage) keyCreate(namespace, service string) string {
+	return fmt.Sprintf("%s:%s", namespace, service)
 }
 
 // keyGet util function

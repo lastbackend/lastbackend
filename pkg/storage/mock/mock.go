@@ -46,6 +46,7 @@ type Storage struct {
 	*VolumeStorage
 	*SecretStorage
 	*SystemStorage
+	*IPAMStorage
 }
 
 func (s *Storage) Cluster() storage.Cluster {
@@ -100,6 +101,10 @@ func (s *Storage) Endpoint() storage.Endpoint {
 	return s.EndpointStorage
 }
 
+func (s *Storage) IPAM() storage.IPAM {
+	return s.IPAMStorage
+}
+
 func keyCreate(args ...string) string {
 	return strings.Join([]string(args), "/")
 }
@@ -126,6 +131,7 @@ func New() (*Storage, error) {
 	s.VolumeStorage = newVolumeStorage()
 	s.SecretStorage = newSecretStorage()
 	s.EndpointStorage = newEndpointStorage()
+	s.IPAMStorage = newIPAMStorage()
 
 	return s, nil
 }

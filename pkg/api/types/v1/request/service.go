@@ -40,18 +40,12 @@ type ServiceRemoveOptions struct {
 
 // swagger:model request_service_spec
 type ServiceOptionsSpec struct {
-	Replicas   *int                      `json:"replicas"`
-	Memory     *int64                    `json:"memory,omitempty"`
-	Entrypoint *string                   `json:"entrypoint,omitempty"`
-	Command    *string                   `json:"command,omitempty"`
-	EnvVars    *[]string                 `json:"env,omitempty"`
-	Ports      *[]ServiceOptionsSpecPort `json:"ports,omitempty"`
-}
-
-// swagger:model request_service_spec_port
-type ServiceOptionsSpecPort struct {
-	Internal int    `json:"internal"`
-	Protocol string `json:"protocol"`
+	Replicas   *int           `json:"replicas"`
+	Memory     *int64         `json:"memory,omitempty"`
+	Entrypoint *string        `json:"entrypoint,omitempty"`
+	Command    *string        `json:"command,omitempty"`
+	EnvVars    *[]string      `json:"env,omitempty"`
+	Ports      map[string]int `json:"ports,omitempty"`
 }
 
 // swagger:ignore

@@ -41,7 +41,7 @@ type NodeStorage struct {
 
 func (s *NodeStorage) List(ctx context.Context) (map[string]*types.Node, error) {
 
-	log.V(logLevel).Debugf("storage:etcd:node:> get list nodes")
+	log.V(logLevel).Debug("storage:etcd:node:> get list nodes")
 
 	const filter = `\b.+` + nodeStorage + `\/(.+)\/(meta|info|status|online|network)\b`
 

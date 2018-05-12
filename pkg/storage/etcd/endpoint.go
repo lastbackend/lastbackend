@@ -38,9 +38,9 @@ type EndpointStorage struct {
 }
 
 // Get endpoints by id
-func (s *EndpointStorage) Get(ctx context.Context, namespace, service, name string) (*types.Endpoint, error) {
+func (s *EndpointStorage) Get(ctx context.Context, namespace, service string) (*types.Endpoint, error) {
 
-	log.V(logLevel).Debugf("storage:etcd:endpoint:> get by name: %s", name)
+	log.V(logLevel).Debugf("storage:etcd:endpoint:> get by service: %s", service)
 
 	if len(namespace) == 0 {
 		err := errors.New("namespace can not be empty")
@@ -50,12 +50,6 @@ func (s *EndpointStorage) Get(ctx context.Context, namespace, service, name stri
 
 	if len(service) == 0 {
 		err := errors.New("service can not be empty")
-		log.V(logLevel).Errorf("storage:etcd:endpoint:> get by name err: %s", err.Error())
-		return nil, err
-	}
-
-	if len(name) == 0 {
-		err := errors.New("name can not be empty")
 		log.V(logLevel).Errorf("storage:etcd:endpoint:> get by name err: %s", err.Error())
 		return nil, err
 	}
@@ -73,9 +67,9 @@ func (s *EndpointStorage) Get(ctx context.Context, namespace, service, name stri
 	}
 	defer destroy()
 
-	keyEndpoint := keyCreate(endpointStorage, s.keyCreate(namespace, service, name))
+	keyEndpoint := keyCreate(endpointStorage, s.keyCreate(namespace, service))
 	if err := client.Map(ctx, keyEndpoint, filter, endpoint); err != nil {
-		log.V(logLevel).Errorf("storage:etcd:endpoint:> err: %s", name, err.Error())
+		log.V(logLevel).Errorf("storage:etcd:endpoint:> err: %s", service, err.Error())
 		return nil, err
 	}
 
@@ -111,45 +105,6 @@ func (s *EndpointStorage) ListByNamespace(ctx context.Context, namespace string)
 	defer destroy()
 
 	keyEndpoint := keyCreate(endpointStorage, fmt.Sprintf("%s:", namespace))
-	if err := client.MapList(ctx, keyEndpoint, filter, endpoints); err != nil {
-		log.V(logLevel).Errorf("storage:etcd:endpoint:> err: %s", namespace, err.Error())
-		return nil, err
-	}
-
-	return endpoints, nil
-}
-
-// Get endpoint by service name
-func (s *EndpointStorage) ListByService(ctx context.Context, namespace, service string) (map[string]*types.Endpoint, error) {
-
-	log.V(logLevel).Debugf("storage:etcd:endpoint:> get list by namespace and service: %s:%s", namespace, service)
-
-	if len(namespace) == 0 {
-		err := errors.New("namespace can not be empty")
-		log.V(logLevel).Errorf("storage:etcd:endpoint:> get list by namespace and service err: %s", err.Error())
-		return nil, err
-	}
-
-	if len(service) == 0 {
-		err := errors.New("service can not be empty")
-		log.V(logLevel).Errorf("storage:etcd:endpoint:> get list by namespace and service err: %s", err.Error())
-		return nil, err
-	}
-
-	const filter = `\b.+` + endpointStorage + `\/(.+)\/(meta|status|spec)\b`
-
-	var (
-		endpoints = make(map[string]*types.Endpoint)
-	)
-
-	client, destroy, err := getClient(ctx)
-	if err != nil {
-		log.V(logLevel).Errorf("storage:etcd:endpoint:>  get list by namespace and service err: %s", err.Error())
-		return nil, err
-	}
-	defer destroy()
-
-	keyEndpoint := keyCreate(endpointStorage, fmt.Sprintf("%s:%s:", namespace, service))
 	if err := client.MapList(ctx, keyEndpoint, filter, endpoints); err != nil {
 		log.V(logLevel).Errorf("storage:etcd:endpoint:> err: %s", namespace, err.Error())
 		return nil, err
@@ -304,7 +259,7 @@ func (s *EndpointStorage) Watch(ctx context.Context, endpoint chan *types.Endpoi
 
 	log.V(logLevel).Debug("storage:etcd:endpoint:> watch endpoint")
 
-	const filter = `\b\/` + endpointStorage + `\/(.+):(.+):(.+)/.+\b`
+	const filter = `\b\/` + endpointStorage + `\/(.+):(.+)/.+\b`
 	client, destroy, err := getClient(ctx)
 	if err != nil {
 		log.V(logLevel).Errorf("storage:etcd:endpoint:> watch endpoint err: %s", err.Error())
@@ -324,7 +279,7 @@ func (s *EndpointStorage) Watch(ctx context.Context, endpoint chan *types.Endpoi
 			return
 		}
 
-		if d, err := s.Get(ctx, keys[1], keys[2], keys[3]); err == nil {
+		if d, err := s.Get(ctx, keys[1], keys[2]); err == nil {
 			endpoint <- d
 		}
 	}
@@ -342,7 +297,7 @@ func (s *EndpointStorage) WatchSpec(ctx context.Context, endpoint chan *types.En
 
 	log.V(logLevel).Debug("storage:etcd:endpoint:> watch endpoint by spec")
 
-	const filter = `\b\/` + endpointStorage + `\/(.+):(.+):(.+)/spec\b`
+	const filter = `\b\/` + endpointStorage + `\/(.+):(.+)/spec\b`
 	client, destroy, err := getClient(ctx)
 	if err != nil {
 		log.V(logLevel).Errorf("storage:etcd:endpoint:> watch endpoint by spec err: %s", err.Error())
@@ -362,7 +317,7 @@ func (s *EndpointStorage) WatchSpec(ctx context.Context, endpoint chan *types.En
 			return
 		}
 
-		if d, err := s.Get(ctx, keys[1], keys[2], keys[3]); err == nil {
+		if d, err := s.Get(ctx, keys[1], keys[2]); err == nil {
 			endpoint <- d
 		}
 	}
@@ -380,7 +335,7 @@ func (s *EndpointStorage) WatchStatus(ctx context.Context, endpoint chan *types.
 
 	log.V(logLevel).Debug("storage:etcd:endpoint:> watch endpoint by spec")
 
-	const filter = `\b\/` + endpointStorage + `\/(.+):(.+):(.+)/status\b`
+	const filter = `\b\/` + endpointStorage + `\/(.+):(.+)/status\b`
 	client, destroy, err := getClient(ctx)
 	if err != nil {
 		log.V(logLevel).Errorf("storage:etcd:endpoint:> watch endpoint by spec err: %s", err.Error())
@@ -400,7 +355,7 @@ func (s *EndpointStorage) WatchStatus(ctx context.Context, endpoint chan *types.
 			return
 		}
 
-		if d, err := s.Get(ctx, keys[1], keys[2], keys[3]); err == nil {
+		if d, err := s.Get(ctx, keys[1], keys[2]); err == nil {
 			endpoint <- d
 		}
 	}
@@ -434,8 +389,8 @@ func (s *EndpointStorage) Clear(ctx context.Context) error {
 }
 
 // keyCreate util function
-func (s *EndpointStorage) keyCreate(namespace, service, name string) string {
-	return fmt.Sprintf("%s:%s:%s", namespace, service, name)
+func (s *EndpointStorage) keyCreate(namespace, service string) string {
+	return fmt.Sprintf("%s:%s", namespace, service)
 }
 
 // keyGet util function
@@ -471,7 +426,7 @@ func (s *EndpointStorage) checkEndpointExists(ctx context.Context, endpoint *typ
 
 	log.V(logLevel).Debugf("storage:etcd:endpoint:> check endpoint exists")
 
-	if _, err := s.Get(ctx, endpoint.Meta.Namespace, endpoint.Meta.Service, endpoint.Meta.Name); err != nil {
+	if _, err := s.Get(ctx, endpoint.Meta.Namespace, endpoint.Meta.Name); err != nil {
 		log.V(logLevel).Debugf("storage:etcd:endpoint:> check endpoint exists err: %s", err.Error())
 		return err
 	}

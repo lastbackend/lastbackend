@@ -23,6 +23,7 @@ import (
 
 	"fmt"
 	"github.com/lastbackend/lastbackend/pkg/util/generator"
+	"github.com/lastbackend/lastbackend/pkg/util/network"
 )
 
 const (
@@ -31,9 +32,9 @@ const (
 )
 
 type Service struct {
-	Meta        ServiceMeta            `json:"meta"`
-	Status      ServiceStatus          `json:"status"`
-	Spec        ServiceSpec            `json:"spec"`
+	Meta   ServiceMeta   `json:"meta"`
+	Status ServiceStatus `json:"status"`
+	Spec   ServiceSpec   `json:"spec"`
 }
 
 type ServiceMap map[string]*Service
@@ -54,6 +55,7 @@ type ServiceEndpoint struct {
 type ServiceStatus struct {
 	State   string `json:"state"`
 	Message string `json:"message"`
+	Network ServiceStatusNetwork `json:"network"`
 }
 
 type ServiceSpec struct {
@@ -64,6 +66,10 @@ type ServiceSpec struct {
 	Triggers SpecTriggers `json:"triggers"`
 	Selector SpecSelector `json:"selector"`
 	Template SpecTemplate `json:"template"`
+}
+
+type ServiceStatusNetwork struct {
+	IP string `json:"ip"`
 }
 
 type ServiceSpecStrategy struct {
@@ -146,10 +152,16 @@ func (s *ServiceSpec) Update(spec *ServiceOptionsSpec) {
 
 	if spec.Ports != nil {
 		c.Ports = SpecTemplateContainerPorts{}
-		for _, val := range *spec.Ports {
+
+		for internal := range spec.Ports {
+			port, proto, err := network.ParsePortMap(internal)
+			if err != nil {
+				continue
+			}
+
 			c.Ports = append(c.Ports, SpecTemplateContainerPort{
-				Protocol:      val.Protocol,
-				ContainerPort: val.Internal,
+				Protocol:      proto,
+				ContainerPort: port,
 			})
 		}
 		n = true
@@ -235,15 +247,10 @@ type ServiceRemoveOptions struct {
 }
 
 type ServiceOptionsSpec struct {
-	Replicas   *int                      `json:"replicas"`
-	Memory     *int64                    `json:"memory,omitempty"`
-	Entrypoint *string                   `json:"entrypoint,omitempty"`
-	Command    *string                   `json:"command,omitempty"`
-	EnvVars    *[]string                 `json:"env,omitempty"`
-	Ports      *[]ServiceOptionsSpecPort `json:"ports,omitempty"`
-}
-
-type ServiceOptionsSpecPort struct {
-	Internal int    `json:"internal"`
-	Protocol string `json:"protocol"`
+	Replicas   *int           `json:"replicas"`
+	Memory     *int64         `json:"memory,omitempty"`
+	Entrypoint *string        `json:"entrypoint,omitempty"`
+	Command    *string        `json:"command,omitempty"`
+	EnvVars    *[]string      `json:"env,omitempty"`
+	Ports      map[string]int `json:"ports,omitempty"`
 }

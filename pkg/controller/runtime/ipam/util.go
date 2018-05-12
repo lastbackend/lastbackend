@@ -16,30 +16,17 @@
 // from Last.Backend LLC.
 //
 
-package storage
+package ipam
 
 import (
-	"context"
-	"github.com/lastbackend/lastbackend/pkg/storage/storage"
+	"net"
 )
 
-type Util interface {
-	Key(ctx context.Context, pattern ...string) string
-}
-
-type Storage interface {
-	Cluster() storage.Cluster
-	Deployment() storage.Deployment
-	Namespace() storage.Namespace
-	Node() storage.Node
-	Ingress() storage.Ingress
-	Pod() storage.Pod
-	Route() storage.Route
-	Secret() storage.Secret
-	Service() storage.Service
-	System() storage.System
-	Endpoint() storage.Endpoint
-	Trigger() storage.Trigger
-	Volume() storage.Volume
-	IPAM() storage.IPAM
+func inc(ip net.IP) {
+	for j := len(ip) - 1; j >= 0; j-- {
+		ip[j]++
+		if ip[j] > 0 {
+			break
+		}
+	}
 }

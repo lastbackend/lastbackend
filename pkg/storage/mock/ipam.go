@@ -16,30 +16,30 @@
 // from Last.Backend LLC.
 //
 
-package storage
+package mock
 
 import (
-	"context"
 	"github.com/lastbackend/lastbackend/pkg/storage/storage"
+	"context"
 )
 
-type Util interface {
-	Key(ctx context.Context, pattern ...string) string
+type IPAMStorage struct {
+	storage.IPAM
+	data []string
 }
 
-type Storage interface {
-	Cluster() storage.Cluster
-	Deployment() storage.Deployment
-	Namespace() storage.Namespace
-	Node() storage.Node
-	Ingress() storage.Ingress
-	Pod() storage.Pod
-	Route() storage.Route
-	Secret() storage.Secret
-	Service() storage.Service
-	System() storage.System
-	Endpoint() storage.Endpoint
-	Trigger() storage.Trigger
-	Volume() storage.Volume
-	IPAM() storage.IPAM
+func (s *IPAMStorage) Get(ctx context.Context) ([]string, error) {
+	return s.data, nil
 }
+
+func (s *IPAMStorage) Set(ctx context.Context, ips []string) error {
+	s.data = ips
+	return nil
+}
+
+func newIPAMStorage() *IPAMStorage {
+	s := new(IPAMStorage)
+	s.data = make([]string, 0)
+	return s
+}
+
