@@ -711,13 +711,13 @@ func (s *NodeStorage) Watch(ctx context.Context, node chan *types.Node) error {
 		}
 
 		// TODO: check previous node alive status to prevent multi calls
-		if action == "PUT" {
+		if action == "create" || action == "update" {
 			n.Online = true
 			node <- n
 			return
 		}
 
-		if action == "DELETE" {
+		if action == "delete" {
 			n.Online = false
 			node <- n
 			return
@@ -759,11 +759,11 @@ func (s *NodeStorage) WatchStatus(ctx context.Context, event chan *types.NodeSta
 		e.Event = action
 		e.Node = keys[1]
 
-		if action == types.STORAGEPUTEVENT {
+		if action == "create" || action == "update" {
 			e.Online = true
 		}
 
-		if action == types.STORAGEDELEVENT {
+		if action == "delete" {
 			e.Online = false
 		}
 

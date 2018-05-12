@@ -22,12 +22,13 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"regexp"
+	"time"
+
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 	"github.com/lastbackend/lastbackend/pkg/log"
 	"github.com/lastbackend/lastbackend/pkg/storage/storage"
 	"github.com/lastbackend/lastbackend/pkg/storage/store"
-	"regexp"
-	"time"
 )
 
 const volumeStorage = "volumes"
@@ -40,7 +41,7 @@ type VolumeStorage struct {
 func (s *VolumeStorage) Get(ctx context.Context, namespace, name string) (*types.Volume, error) {
 
 	log.V(logLevel).Debugf("storage:etcd:volume:> get by name: %s", name)
-
+	//fmt.Printf("GET: ns=%s,name=%s\n", namespace, name)
 	if len(namespace) == 0 {
 		err := errors.New("namespace can not be empty")
 		log.V(logLevel).Errorf("storage:etcd:volume:> get by name err: %s", err.Error())
@@ -297,7 +298,7 @@ func (s *VolumeStorage) Watch(ctx context.Context, volume chan *types.Volume) er
 
 	log.V(logLevel).Debug("storage:etcd:volume:> watch volume")
 
-	const filter = `\b\/` + volumeStorage + `\/(.+):(.+):(.+)/.+\b`
+	const filter = `\b\/` + volumeStorage + `\/(.+):(.+)\/(.+)\b`
 	client, destroy, err := getClient(ctx)
 	if err != nil {
 		log.V(logLevel).Errorf("storage:etcd:volume:> watch volume err: %s", err.Error())
@@ -305,15 +306,16 @@ func (s *VolumeStorage) Watch(ctx context.Context, volume chan *types.Volume) er
 	}
 	defer destroy()
 
-	r, _ := regexp.Compile(filter)
+	r, err := regexp.Compile(filter)
 	key := keyCreate(volumeStorage)
 	cb := func(action, key string, _ []byte) {
+		//fmt.Println("key=", key)
 		keys := r.FindStringSubmatch(key)
 		if len(keys) < 3 {
 			return
 		}
 
-		if action == types.STORAGEDELEVENT {
+		if action == "delete" {
 			return
 		}
 
@@ -321,7 +323,6 @@ func (s *VolumeStorage) Watch(ctx context.Context, volume chan *types.Volume) er
 			volume <- d
 		}
 	}
-
 	if err := client.Watch(ctx, key, filter, cb); err != nil {
 		log.V(logLevel).Errorf("storage:etcd:volume:> watch volume err: %s", err.Error())
 		return err
@@ -335,7 +336,7 @@ func (s *VolumeStorage) WatchSpec(ctx context.Context, volume chan *types.Volume
 
 	log.V(logLevel).Debug("storage:etcd:volume:> watch volume by spec")
 
-	const filter = `\b\/` + volumeStorage + `\/(.+):(.+):(.+)/spec\b`
+	const filter = `\b\/` + volumeStorage + `\/(.+):(.+)\/spec\b`
 	client, destroy, err := getClient(ctx)
 	if err != nil {
 		log.V(logLevel).Errorf("storage:etcd:volume:> watch volume by spec err: %s", err.Error())
@@ -351,7 +352,7 @@ func (s *VolumeStorage) WatchSpec(ctx context.Context, volume chan *types.Volume
 			return
 		}
 
-		if action == types.STORAGEDELEVENT {
+		if action == "delete" {
 			return
 		}
 
@@ -373,7 +374,7 @@ func (s *VolumeStorage) WatchStatus(ctx context.Context, volume chan *types.Volu
 
 	log.V(logLevel).Debug("storage:etcd:volume:> watch volume by spec")
 
-	const filter = `\b\/` + volumeStorage + `\/(.+):(.+):(.+)/status\b`
+	const filter = `\b\/` + volumeStorage + `\/(.+):(.+)\/status\b`
 	client, destroy, err := getClient(ctx)
 	if err != nil {
 		log.V(logLevel).Errorf("storage:etcd:volume:> watch volume by spec err: %s", err.Error())
@@ -389,7 +390,7 @@ func (s *VolumeStorage) WatchStatus(ctx context.Context, volume chan *types.Volu
 			return
 		}
 
-		if action == types.STORAGEDELEVENT {
+		if action == "delete" {
 			return
 		}
 

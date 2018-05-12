@@ -31,6 +31,7 @@ type Namespace struct {
 
 // swagger:ignore
 type NamespaceMap map[string]*Namespace
+
 // swagger:ignore
 type NamespaceList []*Namespace
 
@@ -46,7 +47,7 @@ type NamespaceEnv struct {
 // swagger:ignore
 // swagger:model types_namespace_meta
 type NamespaceMeta struct {
-	Meta     `yaml:",inline"`
+	Meta            `yaml:",inline"`
 	Endpoint string `json:"endpoint"`
 	Type     string `json:"type"`
 }
@@ -99,8 +100,8 @@ func (n *NamespaceList) ToJson() ([]byte, error) {
 
 // swagger:ignore
 type NamespaceCreateOptions struct {
-	Name        string                  `json:"name"`
-	Description string                  `json:"description"`
+	Name        string                 `json:"name"`
+	Description string                 `json:"description"`
 	Quotas      *NamespaceQuotasOptions `json:"quotas"`
 }
 

@@ -138,12 +138,12 @@ func (c *CacheNodeSpec) CachePods(ps PodSpecWatcher) error {
 			select {
 			case e := <-evs:
 				{
-					if e.Event == types.STORAGEPUTEVENT {
+					if e.Event == "create" || e.Event == "update" {
 						c.SetPodSpec(e.Node, e.Name, e.Spec)
 						continue
 					}
 
-					if e.Event == types.STORAGEDELEVENT {
+					if e.Event == "delete" {
 						c.DelPodSpec(e.Node, e.Name)
 						continue
 					}
@@ -162,12 +162,12 @@ func (c *CacheNodeSpec) CacheVolumes(vs VolumeSpecWatcher) error {
 			select {
 			case e := <-evs:
 				{
-					if e.Event == types.STORAGEPUTEVENT {
+					if e.Event == "create" || e.Event == "update" {
 						c.SetVolumeSpec(e.Node, e.Name, e.Spec)
 						continue
 					}
 
-					if e.Event == types.STORAGEDELEVENT {
+					if e.Event == "delete" {
 						c.DelVolumeSpec(e.Node, e.Name)
 						continue
 					}
@@ -186,12 +186,12 @@ func (c *CacheNodeSpec) CacheNetwork(ns NetworkSpecWatcher) error {
 			select {
 			case e := <-evs:
 				{
-					if e.Event == types.STORAGEPUTEVENT {
+					if e.Event == "create" || e.Event == "update" {
 						c.SetNetworkSpec(e.Node, e.Spec)
 						continue
 					}
 
-					if e.Event == types.STORAGEDELEVENT {
+					if e.Event == "delete" {
 						c.DelNetworkSpec(e.Node)
 						continue
 					}

@@ -30,6 +30,7 @@ import (
 	"net/url"
 	"path"
 	"time"
+	"github.com/lastbackend/lastbackend/pkg/api/client/watcher"
 )
 
 type Request struct {
@@ -121,10 +122,6 @@ func (r *Request) Do() Result {
 
 func (r *Request) JSON(success interface{}, failure interface{}) error {
 
-	if r.err != nil {
-		return r.err
-	}
-
 	client := r.client
 	if client == nil {
 		client = &http.Client{
@@ -135,7 +132,7 @@ func (r *Request) JSON(success interface{}, failure interface{}) error {
 	u := r.URL().String()
 	req, err := http.NewRequest(r.verb, u, r.body)
 	if err != nil {
-		return r.err
+		return err
 	}
 
 	if r.ctx != nil {
@@ -146,7 +143,7 @@ func (r *Request) JSON(success interface{}, failure interface{}) error {
 
 	resp, err := client.Do(req)
 	if err != nil {
-		return r.err
+		return err
 	}
 
 	return decodeJSON(resp, success, failure)
@@ -203,7 +200,9 @@ func (r *Request) Stream() (io.ReadCloser, error) {
 	if r.ctx != nil {
 		req = req.WithContext(r.ctx)
 	}
-	//req.Header = r.headers
+
+	req.Header = r.headers
+
 	client := r.client
 	if client == nil {
 		client = http.DefaultClient
@@ -228,6 +227,31 @@ func (r *Request) Stream() (io.ReadCloser, error) {
 		}
 		return nil, err
 	}
+}
+
+func (r *Request) Watch() (watcher.IWatcher, error) {
+
+	u := r.URL().String()
+	req, err := http.NewRequest(r.verb, u, r.body)
+	if err != nil {
+		return nil, err
+	}
+	if r.ctx != nil {
+		req = req.WithContext(r.ctx)
+	}
+
+	req.Header = r.headers
+	client := r.client
+	if client == nil {
+		client = http.DefaultClient
+	}
+
+	res, err := client.Do(req)
+	if err != nil {
+		return nil, err
+	}
+
+	return watcher.NewStreamWatcher(res.Body), nil
 }
 
 func (r *Request) Param(name, value string) *Request {
@@ -260,13 +284,14 @@ func (r *Request) transformResponse(resp *http.Response, req *http.Request) Resu
 
 	return Result{
 		body:        body,
-		contentType: resp.Header.Get("Content-Type"),
+		contentType: resp.Header.Get("Content-Entity"),
 		statusCode:  resp.StatusCode,
 	}
 }
 
 func decodeResponseJSON(r *http.Response, v interface{}) error {
 	err := json.NewDecoder(r.Body).Decode(v)
+	fmt.Println(err)
 	if err != nil && io.EOF == err {
 		return nil
 	}

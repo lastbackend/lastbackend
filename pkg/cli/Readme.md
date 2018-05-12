@@ -15,7 +15,8 @@ service update [NAMESPACE] [NAME] --desc <string[optional]> --replicas <int[opti
 service remove [NAMESPACE] [NAME] 
 service inspect [NAMESPACE] [NAME]  
 service watch [NAMESPACE] [NAME] 
-service logs [NAMESPACE] [NAME] 
+service logs [NAMESPACE] [NAME]
+service watch [NAMESPACE] [NAME]
 
 ## Route
 route ls [NAMESPACE] 

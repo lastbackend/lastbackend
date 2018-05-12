@@ -303,7 +303,7 @@ func (s *RouteStorage) Watch(ctx context.Context, route chan *types.Route) error
 			return
 		}
 
-		if action == types.STORAGEDELEVENT {
+		if action == "delete" {
 			return
 		}
 
@@ -341,7 +341,7 @@ func (s *RouteStorage) WatchSpec(ctx context.Context, route chan *types.Route) e
 			return
 		}
 
-		if action == types.STORAGEDELEVENT {
+		if action == "delete" {
 			return
 		}
 
@@ -379,7 +379,7 @@ func (s *RouteStorage) WatchStatus(ctx context.Context, route chan *types.Route)
 			return
 		}
 
-		if action == types.STORAGEDELEVENT {
+		if action == "delete" {
 			return
 		}
 

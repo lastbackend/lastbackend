@@ -29,6 +29,7 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/distribution/errors"
 	"io"
 	"strconv"
+	"github.com/lastbackend/lastbackend/pkg/api/client/watcher"
 )
 
 type ServiceClient struct {
@@ -57,7 +58,7 @@ func (sc *ServiceClient) Create(ctx context.Context, opts *rv1.ServiceCreateOpti
 	var e *errors.Http
 
 	err = sc.client.Post(fmt.Sprintf("/namespace/%s/service", sc.namespace)).
-		AddHeader("Content-Type", "application/json").
+		AddHeader("Content-Entity", "application/json").
 		Body(body).
 		JSON(&s, &e)
 
@@ -77,7 +78,7 @@ func (sc *ServiceClient) List(ctx context.Context) (*vv1.ServiceList, error) {
 	var e *errors.Http
 
 	err := sc.client.Get(fmt.Sprintf("/namespace/%s/service", sc.namespace)).
-		AddHeader("Content-Type", "application/json").
+		AddHeader("Content-Entity", "application/json").
 		JSON(&s, &e)
 
 	if err != nil {
@@ -101,7 +102,7 @@ func (sc *ServiceClient) Get(ctx context.Context) (*vv1.Service, error) {
 	var e *errors.Http
 
 	err := sc.client.Get(fmt.Sprintf("/namespace/%s/service/%s", sc.namespace, sc.name)).
-		AddHeader("Content-Type", "application/json").
+		AddHeader("Content-Entity", "application/json").
 		JSON(&s, &e)
 
 	if err != nil {
@@ -125,7 +126,7 @@ func (sc *ServiceClient) Update(ctx context.Context, opts *rv1.ServiceUpdateOpti
 	var e *errors.Http
 
 	err = sc.client.Put(fmt.Sprintf("/namespace/%s/service/%s", sc.namespace, sc.name)).
-		AddHeader("Content-Type", "application/json").
+		AddHeader("Content-Entity", "application/json").
 		Body(body).
 		JSON(&s, &e)
 
@@ -142,7 +143,7 @@ func (sc *ServiceClient) Update(ctx context.Context, opts *rv1.ServiceUpdateOpti
 func (sc *ServiceClient) Remove(ctx context.Context, opts *rv1.ServiceRemoveOptions) error {
 
 	req := sc.client.Delete(fmt.Sprintf("/namespace/%s/service/%s", sc.namespace, sc.name)).
-		AddHeader("Content-Type", "application/json")
+		AddHeader("Content-Entity", "application/json")
 
 	if opts != nil {
 		if opts.Force {
@@ -177,6 +178,10 @@ func (sc *ServiceClient) Logs(ctx context.Context, opts *rv1.ServiceLogsOptions)
 	}
 
 	return res.Stream()
+}
+
+func (sc *ServiceClient) Watch(ctx context.Context) (watcher.IWatcher, error) {
+	return sc.client.Get(fmt.Sprintf("/namespace/%s/service/%s/watch", sc.namespace, sc.name)).Watch()
 }
 
 func newServiceClient(client http.Interface, namespace, name string) *ServiceClient {

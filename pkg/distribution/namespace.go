@@ -92,7 +92,7 @@ func (n *Namespace) Create(opts *types.NamespaceCreateOptions) (*types.Namespace
 
 	var ns = new(types.Namespace)
 	ns.Meta.SetDefault()
-	ns.Meta.Name = opts.Name
+	ns.Meta.Name = strings.ToLower(opts.Name)
 	ns.Meta.Description = opts.Description
 	ns.Meta.Endpoint = strings.ToLower(fmt.Sprintf("%s.%s", opts.Name, viper.GetString("domain.external")))
 	ns.SelfLink()

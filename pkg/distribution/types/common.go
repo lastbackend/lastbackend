@@ -29,7 +29,7 @@ const EmptyStringSlice = "[]"
 // swagger:model types_meta
 type Meta struct {
 	// Meta name
-	Name string `json:"name",yaml:"name"`
+	Name string `json:"name,omitempty",yaml:"name,omitempty"`
 	// Meta description
 	Description string `json:"description",yaml:"description"`
 	// Meta self link

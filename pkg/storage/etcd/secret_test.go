@@ -19,13 +19,14 @@
 package etcd
 
 import (
-	"testing"
-
 	"context"
+	"reflect"
+	"testing"
+	"time"
+
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 	"github.com/lastbackend/lastbackend/pkg/storage/storage"
 	"github.com/lastbackend/lastbackend/pkg/storage/store"
-	"reflect"
 )
 
 func TestSecretStorage_Get(t *testing.T) {
@@ -46,6 +47,7 @@ func TestSecretStorage_Get(t *testing.T) {
 	type args struct {
 		ctx  context.Context
 		name string
+		ns   string
 	}
 
 	tests := []struct {
@@ -59,7 +61,7 @@ func TestSecretStorage_Get(t *testing.T) {
 		{
 			"get secret info failed",
 			fields{stg},
-			args{ctx, "test2"},
+			args{ctx, "test2", ns1},
 			&d,
 			true,
 			store.ErrEntityNotFound,
@@ -67,10 +69,26 @@ func TestSecretStorage_Get(t *testing.T) {
 		{
 			"get secret info successful",
 			fields{stg},
-			args{ctx, "test"},
+			args{ctx, "test", ns1},
 			&d,
 			false,
 			"",
+		},
+		{
+			"get secret info failed empty namespace",
+			fields{stg},
+			args{ctx, "test", ""},
+			&d,
+			true,
+			"namespace can not be empty",
+		},
+		{
+			"get secret info failed empty name",
+			fields{stg},
+			args{ctx, "", ns1},
+			&d,
+			true,
+			"name can not be empty",
 		},
 	}
 
@@ -93,22 +111,25 @@ func TestSecretStorage_Get(t *testing.T) {
 				return
 			}
 
-			got, err := tt.fields.stg.Get(tt.args.ctx, ns1, tt.args.name)
+			got, err := tt.fields.stg.Get(tt.args.ctx, tt.args.ns, tt.args.name)
 
 			if err != nil {
 				if tt.wantErr && tt.err != err.Error() {
 					t.Errorf("SecretStorage.Get() = %v, want %v", err, tt.err)
 					return
 				}
+				if !tt.wantErr {
+					t.Errorf("SecretStorage.Get() error = %v, want no error", err)
+				}
 				return
 			}
 
 			if tt.wantErr {
-				t.Errorf("SecretStorage.Get() error = %v, wantErr %v", err, tt.err)
+				t.Errorf("SecretStorage.Get() want error = %v, got none", tt.err)
 				return
 			}
 
-			if !reflect.DeepEqual(got, tt.want) {
+			if !compareSecrets(got, tt.want) {
 				t.Errorf("SecretStorage.Get() = %v, want %v", got, tt.want)
 			}
 
@@ -158,6 +179,7 @@ func TestSecretStorage_ListByNamespace(t *testing.T) {
 		args    args
 		want    map[string]*types.Secret
 		wantErr bool
+		err     string
 	}{
 		{
 			"get namespace list 1 success",
@@ -165,6 +187,7 @@ func TestSecretStorage_ListByNamespace(t *testing.T) {
 			args{ctx, ns1},
 			nl1,
 			false,
+			"",
 		},
 		{
 			"get namespace list 2 success",
@@ -172,6 +195,7 @@ func TestSecretStorage_ListByNamespace(t *testing.T) {
 			args{ctx, ns2},
 			nl2,
 			false,
+			"",
 		},
 		{
 			"get namespace empty list success",
@@ -179,6 +203,15 @@ func TestSecretStorage_ListByNamespace(t *testing.T) {
 			args{ctx, "empty"},
 			nl,
 			false,
+			"",
+		},
+		{
+			"get namespace info failed empty namespace",
+			fields{stg},
+			args{ctx, ""},
+			nl,
+			true,
+			"namespace can not be empty",
 		},
 	}
 
@@ -203,11 +236,22 @@ func TestSecretStorage_ListByNamespace(t *testing.T) {
 			}
 
 			got, err := stg.ListByNamespace(tt.args.ctx, tt.args.ns)
-			if (err != nil) != tt.wantErr {
-				t.Errorf("SecretStorage.ListByNamespace() error = %v, wantErr %v", err, tt.wantErr)
+			if err != nil {
+				if tt.wantErr && tt.err != err.Error() {
+					t.Errorf("SecretStorage.ListByNamespace() error = %v, wantErr %v", err, tt.wantErr)
+					return
+				}
+				if !tt.wantErr {
+					t.Errorf("SecretStorage.ListByNamespace() error = %v, want no error", err)
+				}
 				return
 			}
-			if !reflect.DeepEqual(got, tt.want) {
+
+			if tt.wantErr {
+				t.Errorf("SecretStorage.ListByNamespace() want error = %v, got none", tt.err)
+				return
+			}
+			if !compareSecretMaps(got, tt.want) {
 				t.Errorf("SecretStorage.ListByNamespace() = %v, want %v", got, tt.want)
 			}
 		})
@@ -293,14 +337,12 @@ func TestSecretStorage_Insert(t *testing.T) {
 
 				if tt.wantErr && tt.err != err.Error() {
 					t.Errorf("SecretStorage.Insert() error = %v, want %v", err.Error(), tt.err)
-					return
 				}
-
 				return
 			}
 
 			if tt.wantErr {
-				t.Errorf("SecretStorage.Insert() error = %v, want %v", err, tt.err)
+				t.Errorf("SecretStorage.Insert() want error = %v, got none", tt.err)
 				return
 			}
 		})
@@ -396,20 +438,21 @@ func TestSecretStorage_Update(t *testing.T) {
 
 				if tt.wantErr && tt.err != err.Error() {
 					t.Errorf("SecretStorage.Update() error = %v, want %v", err.Error(), tt.err)
-					return
 				}
-
 				return
 			}
 
 			if tt.wantErr {
-				t.Errorf("SecretStorage.Update() error = %v, want %v", err, tt.err)
+				t.Errorf("SecretStorage.Update() want error = %v, got none", tt.err)
 				return
 			}
 
-			got, _ := tt.fields.stg.Get(tt.args.ctx, ns1, tt.args.secret.Meta.Name)
-			tt.want.Meta.Updated = got.Meta.Updated
-			if !reflect.DeepEqual(got, tt.want) {
+			got, err := tt.fields.stg.Get(tt.args.ctx, ns1, tt.args.secret.Meta.Name)
+			if err != nil {
+				t.Errorf("SecretStorage.Update() got Get error = %s", err.Error())
+				return
+			}
+			if !compareSecrets(got, tt.want) {
 				t.Errorf("SecretStorage.Update() = %v, want %v", got, tt.want)
 				return
 			}
@@ -500,14 +543,12 @@ func TestSecretStorage_Remove(t *testing.T) {
 
 				if tt.wantErr && tt.err != err.Error() {
 					t.Errorf("SecretStorage.Remove() error = %v, want %v", err.Error(), tt.err)
-					return
 				}
-
 				return
 			}
 
 			if tt.wantErr {
-				t.Errorf("SecretStorage.Remove() error = %v, want %v", err, tt.err)
+				t.Errorf("SecretStorage.Remove() want error = %v, got none", tt.err)
 				return
 			}
 
@@ -547,5 +588,28 @@ func getSecretAsset(namespace, name string) types.Secret {
 	n.Meta.Name = name
 	n.Meta.Namespace = namespace
 
+	n.Meta.Created = time.Now()
+
 	return n
+}
+
+//compare two secret structures
+func compareSecrets(got, want *types.Secret) bool {
+	result := false
+	if compareMeta(got.Meta.Meta, want.Meta.Meta) &&
+		(got.Data == want.Data) &&
+		(got.Meta.Namespace == want.Meta.Namespace) {
+		result = true
+	}
+
+	return result
+}
+
+func compareSecretMaps(got, want map[string]*types.Secret) bool {
+	for k, v := range got {
+		if !compareSecrets(v, want[k]) {
+			return false
+		}
+	}
+	return true
 }

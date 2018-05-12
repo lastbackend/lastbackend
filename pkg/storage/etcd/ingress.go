@@ -106,7 +106,7 @@ func (s *IngressStorage) GetSpec(ctx context.Context, ingress *types.Ingress) (*
 		return nil, err
 	}
 
-	const filterSpec= `\b.+` + ingressStorage + `\/(.+)\/spec\b`
+	const filterSpec = `\b.+` + ingressStorage + `\/(.+)\/spec\b`
 
 	client, destroy, err := getClient(ctx)
 	if err != nil {
@@ -216,7 +216,7 @@ func (s *IngressStorage) SetStatus(ctx context.Context, ingress *types.Ingress) 
 	tx := client.Begin(ctx)
 
 	key := keyCreate(ingressStorage, ingress.Meta.Name, "status")
-	if err := tx.Upsert(key, &ingress.Status,  timeout); err != nil {
+	if err := tx.Upsert(key, &ingress.Status, timeout); err != nil {
 		log.V(logLevel).Errorf("storage:etcd:ingress:> update ingress status err: %s", err.Error())
 		return err
 	}
@@ -279,16 +279,7 @@ func (s *IngressStorage) Watch(ctx context.Context, ingress chan *types.Ingress)
 			return
 		}
 
-		if action == "PUT" {
-			ingress <- n
-			return
-		}
-
-		if action == "DELETE" {
-			ingress <- n
-			return
-		}
-
+		ingress <- n
 		return
 	}
 
@@ -344,7 +335,6 @@ func (s *IngressStorage) WatchStatus(ctx context.Context, event chan *types.Ingr
 
 	return nil
 }
-
 
 // Clear ingress storage
 func (s *IngressStorage) Clear(ctx context.Context) error {

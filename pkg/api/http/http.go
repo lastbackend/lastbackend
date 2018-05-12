@@ -32,6 +32,7 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/api/http/trigger"
 	"github.com/lastbackend/lastbackend/pkg/log"
 	"github.com/lastbackend/lastbackend/pkg/api/http/ingress"
+	"github.com/lastbackend/lastbackend/pkg/api/http/events"
 )
 
 const (
@@ -64,6 +65,9 @@ func init() {
 
 	// Hooks
 	AddRoutes(trigger.Routes)
+
+	// Events
+	AddRoutes(events.Routes)
 }
 
 func Listen(host string, port int) error {
@@ -72,6 +76,12 @@ func Listen(host string, port int) error {
 
 	r := mux.NewRouter()
 	r.Methods("OPTIONS").HandlerFunc(http.Headers)
+
+	var notFound http.MethodNotAllowedHandler
+	r.NotFoundHandler = notFound
+
+	var notAllowed http.MethodNotAllowedHandler
+	r.MethodNotAllowedHandler = notAllowed
 
 	for _, route := range Routes {
 		log.V(logLevel).Debugf("%s:> init route: %s", logPrefix, route.Path)
