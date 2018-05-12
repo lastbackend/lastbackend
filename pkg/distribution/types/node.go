@@ -30,6 +30,7 @@ type NodeMapStatus map[string]*NodeStatus
 // swagger:ignore
 // swagger:model types_node_map
 type NodeMap map[string]*Node
+
 // swagger:ignore
 // swagger:model types_node_list
 type NodeList []*Node
@@ -186,7 +187,7 @@ type NodeCreateOptions struct {
 
 func (n *Node) SelfLink() string {
 	if n.Meta.SelfLink == "" {
-		n.Meta.SelfLink = fmt.Sprintf("%s:%s", n.Meta.Cluster, n.Meta.Name)
+		n.Meta.SelfLink = fmt.Sprintf("%s", n.Meta.Name)
 	}
 	return n.Meta.SelfLink
 }
