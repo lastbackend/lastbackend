@@ -60,11 +60,7 @@ func (cv *ClusterView) ToClusterMeta(meta types.ClusterMeta) ClusterMeta {
 	return ClusterMeta{
 		Name:        meta.Name,
 		Description: meta.Description,
-		Region:      meta.Region,
-		Provider:    meta.Provider,
 		Labels:      meta.Labels,
-		Created:     meta.Created,
-		Updated:     meta.Updated,
 	}
 }
 

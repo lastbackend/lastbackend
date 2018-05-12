@@ -26,6 +26,11 @@ const (
 	EastAsiaRegion   = "EA"
 )
 
+const (
+	DefaultClusterName        = "LB"
+	DefaultClusterDescription = "Last.Backend cluster"
+)
+
 type ClusterList []*Cluster
 type ClusterMap map[string]*Cluster
 

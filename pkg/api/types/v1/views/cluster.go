@@ -18,10 +18,6 @@
 
 package views
 
-import (
-	"time"
-)
-
 // Cluster represents cluster model for api
 //
 // swagger:model views_cluster
@@ -43,20 +39,8 @@ type ClusterMeta struct {
 	// example: this is cluster
 	Description string            `json:"description"`
 
-	// cluster region
-	Region      string            `json:"region"`
-
-	// cluster provider
-	Provider    string            `json:"provider"`
-
 	// labels of the cluster
 	Labels      map[string]string `json:"labels"`
-
-	// cluster creation time
-	Created     time.Time         `json:"created"`
-
-	// cluster update time
-	Updated     time.Time         `json:"updated"`
 }
 
 // ClusterStatus represents status info of cluster model for api
