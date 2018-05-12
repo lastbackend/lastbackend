@@ -19,8 +19,6 @@
 package view
 
 import (
-	"time"
-
 	"github.com/lastbackend/lastbackend/pkg/api/types/v1/views"
 	"github.com/lastbackend/lastbackend/pkg/util/table"
 )
@@ -34,11 +32,7 @@ type Cluster struct {
 type ClusterMeta struct {
 	Name        string            `json:"name"`
 	Description string            `json:"description"`
-	Region      string            `json:"region"`
-	Provider    string            `json:"provider"`
 	Labels      map[string]string `json:"labels"`
-	Created     time.Time         `json:"created"`
-	Updated     time.Time         `json:"updated"`
 }
 
 type ClusterState struct {
@@ -66,8 +60,6 @@ func (c *Cluster) Print() {
 	table.PrintHorizontal(map[string]interface{}{
 		"NAME":        c.Meta.Name,
 		"DESCRIPTION": c.Meta.Description,
-		"REGION":      c.Meta.Region,
-		"PROVIDER":    c.Meta.Provider,
 	})
 	println()
 }
@@ -76,10 +68,6 @@ func FromApiClusterView(cluster *views.Cluster) *Cluster {
 	var item = new(Cluster)
 	item.Meta.Name = cluster.Meta.Name
 	item.Meta.Description = cluster.Meta.Description
-	item.Meta.Region = cluster.Meta.Region
-	item.Meta.Provider = cluster.Meta.Provider
-	item.Meta.Created = cluster.Meta.Created
-	item.Meta.Updated = cluster.Meta.Updated
 
 	item.Meta.Labels = cluster.Meta.Labels
 	if item.Meta.Labels == nil {
