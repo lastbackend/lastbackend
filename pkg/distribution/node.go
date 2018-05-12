@@ -88,6 +88,8 @@ func (n *Node) Create(opts *types.NodeCreateOptions) (*types.Node, error) {
 
 	ni.Online = true
 
+	ni.SelfLink()
+
 	if err := n.storage.Node().Insert(n.context, ni); err != nil {
 		log.Debugf("%s:create:> insert node err: %s", logNodePrefix, err.Error())
 		return nil, err
