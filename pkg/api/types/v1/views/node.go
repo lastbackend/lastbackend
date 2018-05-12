@@ -39,7 +39,7 @@ type NodeList map[string]*Node
 // swagger:model views_node_meta
 type NodeMeta struct {
 	Name        string    `json:"name"`
-	Description string    `json:"description"`
+	SelfLink    string    `json:"self_link"`
 	Created     time.Time `json:"created"`
 	Updated     time.Time `json:"updated"`
 }
@@ -51,7 +51,7 @@ type NodeInfo struct {
 	OSName       string `json:"os_name"`
 	OSType       string `json:"os_type"`
 	Architecture string `json:"architecture"`
-	IP           struct {
+	IP struct {
 		External string `json:"external"`
 		Internal string `json:"internal"`
 	} `json:"ip"`
