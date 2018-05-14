@@ -21,7 +21,6 @@ package v1
 import (
 	"context"
 
-	"encoding/json"
 	"fmt"
 	"github.com/lastbackend/lastbackend/pkg/api/client/http"
 	"github.com/lastbackend/lastbackend/pkg/api/client/interfaces"
@@ -38,187 +37,168 @@ type IngressClient struct {
 	hostname string
 }
 
-func (s *IngressClient) List(ctx context.Context) (*vv1.IngressList, error) {
+func (ic *IngressClient) List(ctx context.Context) (*vv1.IngressList, error) {
 
-	res := s.client.Get(fmt.Sprintf("/cluster/ingress")).
+	var i *vv1.IngressList
+	var e *errors.Http
+
+	err := ic.client.Get(fmt.Sprintf("/cluster/ingress")).
 		AddHeader("Content-Entity", "application/json").
-		Do()
+		JSON(&i, &e)
 
-	buf, err := res.Raw()
 	if err != nil {
 		return nil, err
 	}
-
-	var nl *vv1.IngressList
-
-	if err := json.Unmarshal(buf, &nl); err != nil {
-		return nil, err
-	}
-
-	return nl, nil
-}
-
-func (s *IngressClient) Get(ctx context.Context) (*vv1.Ingress, error) {
-
-	res := s.client.Get(fmt.Sprintf("/cluster/ingress/%s", s.hostname)).
-		AddHeader("Content-Entity", "application/json").
-		Do()
-
-	buf, err := res.Raw()
-	if err != nil {
-		return nil, err
-	}
-
-	if code := res.StatusCode(); 200 > code || code > 299 {
-		var e *errors.Http
-		if err := json.Unmarshal(buf, &e); err != nil {
-			return nil, err
-		}
+	if e != nil {
 		return nil, errors.New(e.Message)
 	}
 
-	var ns *vv1.Ingress
-
-	if err := json.Unmarshal(buf, ns); err != nil {
-		return nil, err
+	if ic == nil {
+		list := make(vv1.IngressList, 0)
+		i = &list
 	}
 
-	return ns, nil
+	return i, nil
 }
 
-func (s *IngressClient) GetSpec(ctx context.Context) (*vv1.IngressSpec, error) {
+func (ic *IngressClient) Get(ctx context.Context) (*vv1.Ingress, error) {
 
-	res := s.client.Get(fmt.Sprintf("/cluster/ingress/%s/spec", s.hostname)).
+	var s *vv1.Ingress
+	var e *errors.Http
+
+	err := ic.client.Get(fmt.Sprintf("/cluster/ingress/%ic", ic.hostname)).
 		AddHeader("Content-Entity", "application/json").
-		Do()
+		JSON(&s, &e)
 
-	buf, err := res.Raw()
+	if err != nil {
+		return nil, err
+	}
+	if e != nil {
+		return nil, errors.New(e.Message)
+	}
+
+	return s, nil
+}
+
+func (ic *IngressClient) GetSpec(ctx context.Context) (*vv1.IngressSpec, error) {
+
+	var s *vv1.IngressSpec
+	var e *errors.Http
+
+	err := ic.client.Get(fmt.Sprintf("/cluster/ingress/%ic/spec", ic.hostname)).
+		AddHeader("Content-Entity", "application/json").
+		JSON(&s, &e)
+
+	if err != nil {
+		return nil, err
+	}
+	if e != nil {
+		return nil, errors.New(e.Message)
+	}
+
+	return s, nil
+}
+
+func (ic *IngressClient) SetMeta(ctx context.Context, opts *rv1.IngressMetaOptions) (*vv1.Ingress, error) {
+
+	body, err := opts.ToJson()
 	if err != nil {
 		return nil, err
 	}
 
-	if code := res.StatusCode(); 200 > code || code > 299 {
-		var e *errors.Http
-		if err := json.Unmarshal(buf, &e); err != nil {
-			return nil, err
-		}
-		return nil, errors.New(e.Message)
-	}
+	var s *vv1.Ingress
+	var e *errors.Http
 
-	var ns *vv1.IngressSpec
-
-	if err := json.Unmarshal(buf, &ns); err != nil {
-		return nil, err
-	}
-
-	return ns, nil
-}
-
-func (s *IngressClient) SetMeta(ctx context.Context, opts *rv1.IngressMetaOptions) (*vv1.Ingress, error) {
-
-	body := opts.ToJson()
-	res := s.client.Put(fmt.Sprintf("/cluster/ingress/%s/Meta", s.hostname)).
+	err = ic.client.Get(fmt.Sprintf("/cluster/ingress/%ic/Meta", ic.hostname)).
 		AddHeader("Content-Entity", "application/json").
-		Body([]byte(body)).
-		Do()
+		Body(body).
+		JSON(&s, &e)
 
-	buf, err := res.Raw()
 	if err != nil {
 		return nil, err
 	}
-
-	if code := res.StatusCode(); 200 > code || code > 299 {
-		var e *errors.Http
-		if err := json.Unmarshal(buf, &e); err != nil {
-			return nil, err
-		}
+	if e != nil {
 		return nil, errors.New(e.Message)
 	}
 
-	var ns *vv1.Ingress
-
-	if err := json.Unmarshal(buf, &ns); err != nil {
-		return nil, err
-	}
-
-	return ns, nil
+	return s, nil
 }
 
-func (s *IngressClient) Connect(ctx context.Context, opts *rv1.IngressConnectOptions) error {
+func (ic *IngressClient) Connect(ctx context.Context, opts *rv1.IngressConnectOptions) error {
 
-	body := opts.ToJson()
-	res := s.client.Put(fmt.Sprintf("/cluster/ingress/%s", s.hostname)).
-		AddHeader("Content-Entity", "application/json").
-		Body([]byte(body)).
-		Do()
-
-	buf, err := res.Raw()
+	body, err := opts.ToJson()
 	if err != nil {
 		return err
 	}
 
-	if code := res.StatusCode(); 200 > code || code > 299 {
-		var e *errors.Http
-		if err := json.Unmarshal(buf, &e); err != nil {
-			return err
-		}
+	var e *errors.Http
+
+	err = ic.client.Put(fmt.Sprintf("/cluster/ingress/%ic", ic.hostname)).
+		AddHeader("Content-Entity", "application/json").
+		Body(body).
+		JSON(nil, &e)
+
+	if err != nil {
+		return err
+	}
+	if e != nil {
 		return errors.New(e.Message)
 	}
 
 	return nil
 }
 
-func (s *IngressClient) SetStatus(ctx context.Context, opts *rv1.IngressStatusOptions) error {
+func (ic *IngressClient) SetStatus(ctx context.Context, opts *rv1.IngressStatusOptions) error {
 
-	body := opts.ToJson()
-	res := s.client.Put(fmt.Sprintf("/cluster/ingress/%s/status", s.hostname)).
-		AddHeader("Content-Entity", "application/json").
-		Body([]byte(body)).
-		Do()
-
-	buf, err := res.Raw()
+	body, err := opts.ToJson()
 	if err != nil {
 		return err
 	}
 
-	if code := res.StatusCode(); 200 > code || code > 299 {
-		var e *errors.Http
-		if err := json.Unmarshal(buf, &e); err != nil {
-			return err
-		}
+	var e *errors.Http
+
+	err = ic.client.Put(fmt.Sprintf("/cluster/ingress/%ic/status", ic.hostname)).
+		AddHeader("Content-Entity", "application/json").
+		Body(body).
+		JSON(nil, &e)
+
+	if err != nil {
+		return err
+	}
+	if e != nil {
 		return errors.New(e.Message)
 	}
 
 	return nil
 }
 
-func (s *IngressClient) SetRouteStatus(ctx context.Context, route string, opts *rv1.IngressRouteStatusOptions) error {
+func (ic *IngressClient) SetRouteStatus(ctx context.Context, route string, opts *rv1.IngressRouteStatusOptions) error {
 
-	body := opts.ToJson()
-	res := s.client.Put(fmt.Sprintf("/cluster/ingress/%s/status/route/%s", s.hostname, route)).
-		AddHeader("Content-Entity", "application/json").
-		Body([]byte(body)).
-		Do()
-
-	buf, err := res.Raw()
+	body, err := opts.ToJson()
 	if err != nil {
 		return err
 	}
 
-	if code := res.StatusCode(); 200 > code || code > 299 {
-		var e *errors.Http
-		if err := json.Unmarshal(buf, &e); err != nil {
-			return err
-		}
+	var e *errors.Http
+
+	err = ic.client.Put(fmt.Sprintf("/cluster/ingress/%ic/status/route/%ic", ic.hostname, route)).
+		AddHeader("Content-Entity", "application/json").
+		Body([]byte(body)).
+		JSON(nil, &e)
+
+	if err != nil {
+		return err
+	}
+	if e != nil {
 		return errors.New(e.Message)
 	}
 
 	return nil
 }
 
-func (s *IngressClient) Remove(ctx context.Context, opts *rv1.IngressRemoveOptions) error {
+func (ic *IngressClient) Remove(ctx context.Context, opts *rv1.IngressRemoveOptions) error {
 
-	req := s.client.Delete(fmt.Sprintf("/cluster/ingress/%s", s.hostname)).
+	req := ic.client.Delete(fmt.Sprintf("/cluster/ingress/%ic", ic.hostname)).
 		AddHeader("Content-Entity", "application/json")
 
 	if opts != nil {
@@ -227,26 +207,28 @@ func (s *IngressClient) Remove(ctx context.Context, opts *rv1.IngressRemoveOptio
 		}
 	}
 
-	res := req.Do()
-
-	buf, err := res.Raw()
-	if err != nil {
-		return err
+	if opts != nil {
+		if opts.Force {
+			req.Param("force", strconv.FormatBool(opts.Force))
+		}
 	}
 
-	if code := res.StatusCode(); 200 > code || code > 299 {
-		var e *errors.Http
-		if err := json.Unmarshal(buf, &e); err != nil {
-			return err
-		}
+	var e *errors.Http
+
+	if err := req.JSON(nil, &e); err != nil {
+		return err
+	}
+	if e != nil {
 		return errors.New(e.Message)
 	}
 
 	return nil
 }
 
-func (s *IngressClient) Logs(ctx context.Context, pod, container string, opts *rv1.IngressLogsOptions) (io.ReadCloser, error) {
-	req := s.client.Get(fmt.Sprintf("/pod/%s/%s/logs", pod, container))
+func (ic *IngressClient) Logs(ctx context.Context, pod, container string, opts *rv1.IngressLogsOptions) (io.ReadCloser, error) {
+
+	req := ic.client.Get(fmt.Sprintf("/pod/%ic/%ic/logs", pod, container))
+
 	if opts != nil {
 		if opts.Follow {
 			req.Param("force", strconv.FormatBool(opts.Follow))
