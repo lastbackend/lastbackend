@@ -291,7 +291,6 @@ func (r *Request) transformResponse(resp *http.Response, req *http.Request) Resu
 
 func decodeResponseJSON(r *http.Response, v interface{}) error {
 	err := json.NewDecoder(r.Body).Decode(v)
-	fmt.Println(err)
 	if err != nil && io.EOF == err {
 		return nil
 	}

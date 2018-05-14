@@ -69,8 +69,8 @@ func (nc *NamespaceClient) Volume(name ...string) *VolumeClient {
 
 func (nc *NamespaceClient) List(ctx context.Context) (*vv1.NamespaceList, error) {
 
-	var s = new(vv1.NamespaceList)
-	var e = new(errors.Http)
+	var s *vv1.NamespaceList
+	var e *errors.Http
 
 	err := nc.client.Get(fmt.Sprintf("/namespace")).
 		AddHeader("Content-Entity", "application/json").
