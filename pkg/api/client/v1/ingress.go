@@ -66,7 +66,7 @@ func (ic *IngressClient) Get(ctx context.Context) (*vv1.Ingress, error) {
 	var s *vv1.Ingress
 	var e *errors.Http
 
-	err := ic.client.Get(fmt.Sprintf("/cluster/ingress/%ic", ic.hostname)).
+	err := ic.client.Get(fmt.Sprintf("/cluster/ingress/%s", ic.hostname)).
 		AddHeader("Content-Entity", "application/json").
 		JSON(&s, &e)
 
@@ -85,7 +85,7 @@ func (ic *IngressClient) GetSpec(ctx context.Context) (*vv1.IngressSpec, error) 
 	var s *vv1.IngressSpec
 	var e *errors.Http
 
-	err := ic.client.Get(fmt.Sprintf("/cluster/ingress/%ic/spec", ic.hostname)).
+	err := ic.client.Get(fmt.Sprintf("/cluster/ingress/%s/spec", ic.hostname)).
 		AddHeader("Content-Entity", "application/json").
 		JSON(&s, &e)
 
@@ -109,7 +109,7 @@ func (ic *IngressClient) SetMeta(ctx context.Context, opts *rv1.IngressMetaOptio
 	var s *vv1.Ingress
 	var e *errors.Http
 
-	err = ic.client.Get(fmt.Sprintf("/cluster/ingress/%ic/Meta", ic.hostname)).
+	err = ic.client.Get(fmt.Sprintf("/cluster/ingress/%s/Meta", ic.hostname)).
 		AddHeader("Content-Entity", "application/json").
 		Body(body).
 		JSON(&s, &e)
@@ -133,7 +133,7 @@ func (ic *IngressClient) Connect(ctx context.Context, opts *rv1.IngressConnectOp
 
 	var e *errors.Http
 
-	err = ic.client.Put(fmt.Sprintf("/cluster/ingress/%ic", ic.hostname)).
+	err = ic.client.Put(fmt.Sprintf("/cluster/ingress/%s", ic.hostname)).
 		AddHeader("Content-Entity", "application/json").
 		Body(body).
 		JSON(nil, &e)
@@ -157,7 +157,7 @@ func (ic *IngressClient) SetStatus(ctx context.Context, opts *rv1.IngressStatusO
 
 	var e *errors.Http
 
-	err = ic.client.Put(fmt.Sprintf("/cluster/ingress/%ic/status", ic.hostname)).
+	err = ic.client.Put(fmt.Sprintf("/cluster/ingress/%s/status", ic.hostname)).
 		AddHeader("Content-Entity", "application/json").
 		Body(body).
 		JSON(nil, &e)
@@ -181,7 +181,7 @@ func (ic *IngressClient) SetRouteStatus(ctx context.Context, route string, opts 
 
 	var e *errors.Http
 
-	err = ic.client.Put(fmt.Sprintf("/cluster/ingress/%ic/status/route/%ic", ic.hostname, route)).
+	err = ic.client.Put(fmt.Sprintf("/cluster/ingress/%s/status/route/%s", ic.hostname, route)).
 		AddHeader("Content-Entity", "application/json").
 		Body([]byte(body)).
 		JSON(nil, &e)
@@ -198,7 +198,7 @@ func (ic *IngressClient) SetRouteStatus(ctx context.Context, route string, opts 
 
 func (ic *IngressClient) Remove(ctx context.Context, opts *rv1.IngressRemoveOptions) error {
 
-	req := ic.client.Delete(fmt.Sprintf("/cluster/ingress/%ic", ic.hostname)).
+	req := ic.client.Delete(fmt.Sprintf("/cluster/ingress/%s", ic.hostname)).
 		AddHeader("Content-Entity", "application/json")
 
 	if opts != nil {
@@ -227,7 +227,7 @@ func (ic *IngressClient) Remove(ctx context.Context, opts *rv1.IngressRemoveOpti
 
 func (ic *IngressClient) Logs(ctx context.Context, pod, container string, opts *rv1.IngressLogsOptions) (io.ReadCloser, error) {
 
-	req := ic.client.Get(fmt.Sprintf("/pod/%ic/%ic/logs", pod, container))
+	req := ic.client.Get(fmt.Sprintf("/pod/%s/%s/logs", pod, container))
 
 	if opts != nil {
 		if opts.Follow {
