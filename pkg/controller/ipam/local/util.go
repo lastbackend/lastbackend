@@ -16,37 +16,17 @@
 // from Last.Backend LLC.
 //
 
-package envs
+package local
 
 import (
-	"github.com/lastbackend/lastbackend/pkg/storage"
-	"github.com/lastbackend/lastbackend/pkg/controller/ipam/ipam"
+	"net"
 )
 
-var e Env
-
-type Env struct {
-	storage storage.Storage
-	ipam ipam.IPAM
-}
-
-func Get() *Env {
-	return &e
-}
-
-func (c *Env) SetStorage(storage storage.Storage) {
-	c.storage = storage
-}
-
-func (c *Env) GetStorage() storage.Storage {
-	return c.storage
-}
-
-
-func (c *Env) SetIPAM(ipam ipam.IPAM) {
-	c.ipam = ipam
-}
-
-func (c *Env) GetIPAM() ipam.IPAM {
-	return c.ipam
+func inc(ip net.IP) {
+	for j := len(ip) - 1; j >= 0; j-- {
+		ip[j]++
+		if ip[j] > 0 {
+			break
+		}
+	}
 }

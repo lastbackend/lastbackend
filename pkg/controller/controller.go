@@ -29,7 +29,7 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/storage"
 	"github.com/spf13/viper"
 	"os"
-	"github.com/lastbackend/lastbackend/pkg/controller/runtime/ipam"
+	"github.com/lastbackend/lastbackend/pkg/controller/ipam"
 )
 
 // Daemon - controller entrypoint

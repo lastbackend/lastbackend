@@ -16,7 +16,7 @@
 // from Last.Backend LLC.
 //
 
-package ipam
+package local
 
 import (
 	"net"
@@ -95,6 +95,16 @@ func (i *IPAM) Release(ip *net.IP) error {
 	return i.save()
 }
 
+// Available ips count
+func (i *IPAM) Available() int {
+	return i.available
+}
+
+// Reserved ips count
+func (i *IPAM) Reserved() int {
+	return i.reserved
+}
+
 func (i *IPAM) save() error {
 
 	var (
@@ -108,16 +118,6 @@ func (i *IPAM) save() error {
 	return i.storage.Set(context.Background(), ips)
 }
 
-// Available ips count
-func (i *IPAM) Available() int {
-	return i.available
-}
-
-// Reserved ips count
-func (i *IPAM) Reserved() int {
-	return i.reserved
-}
-
 // New IPAM object initializing and returning
 func New(cidr string) (*IPAM, error) {
 
@@ -125,6 +125,9 @@ func New(cidr string) (*IPAM, error) {
 		skip = true
 		ipam = new(IPAM)
 	)
+
+	ipam.leased = make(map[string]bool, 0)
+	ipam.released = make(map[string]bool, 0)
 
 	if cidr == "" {
 		cidr = defaultCIDR

@@ -759,11 +759,11 @@ func (s *NodeStorage) WatchStatus(ctx context.Context, event chan *types.NodeSta
 		e.Event = action
 		e.Node = keys[1]
 
-		if action == "create" || action == "update" {
+		if action == store.STORAGECREATEEVENT || action == store.STORAGEUPDATEEVENT {
 			e.Online = true
 		}
 
-		if action == "delete" {
+		if action == store.STORAGEDELETEEVENT {
 			e.Online = false
 		}
 

@@ -22,11 +22,9 @@ import (
 	"net"
 )
 
-func inc(ip net.IP) {
-	for j := len(ip) - 1; j >= 0; j-- {
-		ip[j]++
-		if ip[j] > 0 {
-			break
-		}
-	}
+type IPAM interface {
+	Lease() (*net.IP, error)
+	Release(ip *net.IP) error
+	Available() int
+	Reserved() int
 }

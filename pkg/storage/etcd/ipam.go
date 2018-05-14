@@ -22,6 +22,7 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/storage/storage"
 	"context"
 	"github.com/lastbackend/lastbackend/pkg/log"
+	"github.com/lastbackend/lastbackend/pkg/storage/store"
 )
 
 const (
@@ -45,13 +46,15 @@ func (s *IPAMStorage) Get(ctx context.Context) ([]string, error) {
 
 	var ips = make([]string, 0)
 	if err := client.Get(ctx, ipamStorage, &ips); err != nil {
+		if err.Error() == store.ErrEntityNotFound {
+			return make([]string, 0), nil
+		}
 		log.V(logLevel).Errorf("%s get nodes list err: %s", logIPAMPrefix, err.Error())
 		return nil, err
 	}
 
 	return ips, nil
 }
-
 
 func (s *IPAMStorage) Set(ctx context.Context, ips []string) error {
 

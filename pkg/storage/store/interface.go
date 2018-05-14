@@ -30,6 +30,9 @@ const (
 	ErrEntityNotFound     = "entity not found"
 	ErrStructArgIsNil     = "input structure is nil"
 	ErrStructArgIsInvalid = "input structure is invalid"
+	STORAGEDELETEEVENT    = "delete"
+	STORAGECREATEEVENT		= "create"
+	STORAGEUPDATEEVENT		= "update"
 )
 
 type DestroyFunc func()

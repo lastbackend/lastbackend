@@ -275,7 +275,7 @@ func (s *EndpointStorage) Watch(ctx context.Context, endpoint chan *types.Endpoi
 			return
 		}
 
-		if action == types.STORAGEDELEVENT {
+		if action == store.STORAGEDELETEEVENT {
 			return
 		}
 
@@ -313,7 +313,7 @@ func (s *EndpointStorage) WatchSpec(ctx context.Context, endpoint chan *types.En
 			return
 		}
 
-		if action == types.STORAGEDELEVENT {
+		if action == store.STORAGEDELETEEVENT {
 			return
 		}
 
@@ -351,7 +351,7 @@ func (s *EndpointStorage) WatchStatus(ctx context.Context, endpoint chan *types.
 			return
 		}
 
-		if action == types.STORAGEDELEVENT {
+		if action == store.STORAGEDELETEEVENT {
 			return
 		}
 
