@@ -22,8 +22,8 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/node/runtime/cpi"
 	"context"
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
-	"github.com/lastbackend/dynamic/pkg/log"
-	"github.com/lastbackend/dynamic/pkg/distribution/errors"
+	"github.com/lastbackend/lastbackend/pkg/log"
+	"github.com/lastbackend/lastbackend/pkg/distribution/errors"
 	"github.com/lastbackend/lastbackend/pkg/util/network"
 )
 
