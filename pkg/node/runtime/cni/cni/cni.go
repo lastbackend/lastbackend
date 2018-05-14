@@ -15,7 +15,7 @@
 // is strictly forbidden unless prior written permission is obtained
 // from Last.Backend LLC.
 //
-// +build darwin
+// +build !linux
 
 package cni
 

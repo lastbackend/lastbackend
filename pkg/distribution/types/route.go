@@ -24,6 +24,7 @@ import (
 	"strings"
 )
 
+// Route
 // swagger:ignore
 // swagger:model types_route
 type Route struct {
@@ -39,7 +40,7 @@ type RouteList []*Route
 // swagger:ignore
 // swagger:model types_route_meta
 type RouteMeta struct {
-	Meta             `yaml:",inline"`
+	Meta      `yaml:",inline"`
 	Namespace string `json:"namespace" yaml:"namespace"`
 	Security  bool   `json:"security" yaml:"security"`
 }
@@ -52,10 +53,9 @@ type RouteSpec struct {
 
 // swagger:ignore
 // swagger:model types_route_status
+// RouteStatus - status of current route state
 type RouteStatus struct {
-	// Pod state
-	State string `json:"state" yaml:"state"`
-	// Pod state message
+	State   string `json:"state" yaml:"state"`
 	Message string `json:"message" yaml:"message"`
 }
 

@@ -29,6 +29,7 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/storage"
 	"github.com/spf13/viper"
 	"os"
+	"github.com/lastbackend/lastbackend/pkg/controller/ipam"
 )
 
 // Daemon - controller entrypoint
@@ -47,6 +48,12 @@ func Daemon() bool {
 		log.Fatalf("Cannot initialize storage: %s", err.Error())
 	}
 	env.SetStorage(stg)
+
+	ipm, err := ipam.New(viper.GetString("service.cidr"))
+	if err != nil {
+		log.Fatalf("Cannot initialize ipam service: %s", err.Error())
+	}
+	env.SetIPAM(ipm)
 
 	// Initialize Runtime
 	r := runtime.NewRuntime(context.Background())

@@ -246,8 +246,8 @@ func ServiceCreateH(w http.ResponseWriter, r *http.Request) {
 	log.V(logLevel).Debugf("%s:create:> create service in namespace `%s`", logPrefix, nid)
 
 	var (
-		nsm = distribution.NewNamespaceModel(r.Context(), envs.Get().GetStorage())
-		sm  = distribution.NewServiceModel(r.Context(), envs.Get().GetStorage())
+		nm = distribution.NewNamespaceModel(r.Context(), envs.Get().GetStorage())
+		sm = distribution.NewServiceModel(r.Context(), envs.Get().GetStorage())
 	)
 
 	// request body struct
@@ -258,7 +258,7 @@ func ServiceCreateH(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	ns, err := nsm.Get(nid)
+	ns, err := nm.Get(nid)
 	if err != nil {
 		log.V(logLevel).Errorf("%s:create:> get namespace", logPrefix, err.Error())
 		errors.HTTP.InternalServerError(w)
@@ -354,8 +354,8 @@ func ServiceUpdateH(w http.ResponseWriter, r *http.Request) {
 	log.V(logLevel).Debugf("%s:update:> update service `%s` in namespace `%s`", logPrefix, sid, nid)
 
 	var (
-		nsm = distribution.NewNamespaceModel(r.Context(), envs.Get().GetStorage())
-		sm  = distribution.NewServiceModel(r.Context(), envs.Get().GetStorage())
+		nm = distribution.NewNamespaceModel(r.Context(), envs.Get().GetStorage())
+		sm = distribution.NewServiceModel(r.Context(), envs.Get().GetStorage())
 	)
 
 	// request body struct
@@ -366,7 +366,7 @@ func ServiceUpdateH(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	ns, err := nsm.Get(nid)
+	ns, err := nm.Get(nid)
 	if err != nil {
 		log.V(logLevel).Errorf("%s:update:> get namespace", logPrefix, err.Error())
 		errors.HTTP.InternalServerError(w)

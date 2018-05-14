@@ -113,7 +113,6 @@ func (s *Service) Create(namespace *types.Namespace, opts *types.ServiceCreateOp
 		service.Meta.Description = *opts.Description
 	}
 
-	service.Deployments = make(map[string]*types.Deployment, 0)
 	service.SelfLink()
 
 	// prepare default template spec
@@ -129,6 +128,7 @@ func (s *Service) Create(namespace *types.Namespace, opts *types.ServiceCreateOp
 	if opts.Spec != nil {
 		service.Spec.Update(opts.Spec)
 	}
+
 
 	if err := s.storage.Service().Insert(s.context, service); err != nil {
 		log.V(logLevel).Errorf("%s:create:> insert service err: %s", logServicePrefix, err)

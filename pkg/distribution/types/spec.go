@@ -36,7 +36,9 @@ type SpecState struct {
 // SpecTemplate is a template of the spec
 // swagger:model types_spec_template
 type SpecTemplate struct {
-	// Template Volume
+	// Network spec for service
+	Network SpecTemplateNetwork `json:"network"`
+	// Template spec for volume
 	Volumes SpecTemplateVolumeList `json:"volumes"`
 	// Template main container
 	Containers SpecTemplateContainers `json:"container"`
@@ -45,9 +47,20 @@ type SpecTemplate struct {
 }
 
 // swagger:ignore
+// SpecTemplateNetwork is a map of spec template for network
+// swagger:model types_spec_template_network
+type SpecTemplateNetwork struct {
+	IP       string               `json:"ip"`
+	Ports    map[string]int       `json:"ports"`
+	Strategy EndpointSpecStrategy `json:"strategy"`
+	Policy   string               `json:"policy"`
+}
+
+// swagger:ignore
 // SpecTemplateVolumeMap is a map of spec template volumes
 // swagger:model types_spec_template_volume_map
 type SpecTemplateVolumeMap map[string]*SpecTemplateVolume
+
 // SpecTemplateVolumeList is a list of spec template volumes
 // swagger:model types_spec_template_volume_list
 type SpecTemplateVolumeList []*SpecTemplateVolume

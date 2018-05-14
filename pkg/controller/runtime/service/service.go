@@ -50,6 +50,77 @@ func Provision(svc *types.Service) error {
 
 	log.Debugf("%s> provision service: %s", msg, svc.SelfLink())
 
+	em := distribution.NewEndpointModel(context.Background(), stg)
+	ept, err := em.Get(svc.Meta.Namespace, svc.Meta.Name)
+	if err != nil {
+		log.Errorf("%s> get endpoint error: %s", msg, err.Error())
+		return err
+	}
+
+	// Check service ports
+	switch true {
+	case svc.Spec.Template.Network.Ports == nil && ept != nil:
+		if err := em.Remove(ept); err != nil {
+			log.Errorf("%s> get endpoint error: %s", msg, err.Error())
+			return err
+		}
+		svc.Status.Network.IP = ""
+		break
+	case 	svc.Spec.Template.Network.Ports != nil && ept == nil:
+
+		opts := types.EndpointCreateOptions{
+			IP: svc.Spec.Template.Network.IP,
+			Ports: svc.Spec.Template.Network.Ports,
+			Policy: svc.Spec.Template.Network.Policy,
+			BindStrategy: svc.Spec.Template.Network.Strategy.Bind,
+			RouteStrategy: svc.Spec.Template.Network.Strategy.Route,
+		}
+
+		ept, err := em.Create(svc.Meta.Namespace, svc.Meta.Name, &opts)
+		if err != nil {
+			log.Errorf("%s> get endpoint error: %s", msg, err.Error())
+			return err
+		}
+
+		svc.Status.Network.IP = ept.Spec.IP
+		break
+
+	case 	svc.Spec.Template.Network.Ports != nil && ept != nil:
+
+		var equal = true
+
+		if
+			(svc.Spec.Template.Network.IP != "" && svc.Spec.Template.Network.IP != ept.Spec.IP ) ||
+			(svc.Spec.Template.Network.Policy != ept.Spec.Policy) ||
+			(svc.Spec.Template.Network.Strategy.Bind != ept.Spec.Strategy.Bind) ||
+			(svc.Spec.Template.Network.Strategy.Route != ept.Spec.Strategy.Route) {
+			equal = false
+		}
+
+		if equal {
+			break
+		}
+
+		opts := types.EndpointUpdateOptions{
+			Ports: svc.Spec.Template.Network.Ports,
+			Policy: svc.Spec.Template.Network.Policy,
+			BindStrategy: svc.Spec.Template.Network.Strategy.Bind,
+			RouteStrategy: svc.Spec.Template.Network.Strategy.Route,
+		}
+
+		if svc.Spec.Template.Network.IP != "" && svc.Spec.Template.Network.IP != ept.Spec.IP  {
+			opts.IP = svc.Spec.Template.Network.IP
+		}
+
+		if ept, err = em.Update(ept, &opts); err != nil {
+			log.Errorf("%s> get endpoint error: %s", msg, err.Error())
+			return err
+		}
+
+		svc.Status.Network.IP = ept.Spec.IP
+		break
+	}
+
 	// Get all deployments per service
 	dm := distribution.NewDeploymentModel(context.Background(), stg)
 	dl, err := dm.ListByService(svc.Meta.Namespace, svc.Meta.Name)

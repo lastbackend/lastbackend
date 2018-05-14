@@ -38,6 +38,8 @@ type Storage interface {
 	Secret() storage.Secret
 	Service() storage.Service
 	System() storage.System
+	Endpoint() storage.Endpoint
 	Trigger() storage.Trigger
 	Volume() storage.Volume
+	IPAM() storage.IPAM
 }

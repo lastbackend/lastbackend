@@ -40,6 +40,7 @@ type Storage struct {
 
 	*ClusterStorage
 	*DeploymentStorage
+	*EndpointStorage
 	*TriggerStorage
 	*NodeStorage
 	*IngressStorage
@@ -50,6 +51,7 @@ type Storage struct {
 	*VolumeStorage
 	*SecretStorage
 	*SystemStorage
+	*IPAMStorage
 }
 
 func (s *Storage) Cluster() storage.Cluster {
@@ -64,6 +66,13 @@ func (s *Storage) Deployment() storage.Deployment {
 		return nil
 	}
 	return s.DeploymentStorage
+}
+
+func (s *Storage) Endpoint() storage.Endpoint {
+	if s == nil {
+		return nil
+	}
+	return s.EndpointStorage
 }
 
 func (s *Storage) Trigger() storage.Trigger {
@@ -136,6 +145,13 @@ func (s *Storage) System() storage.System {
 	return s.SystemStorage
 }
 
+func (s *Storage) IPAM() storage.IPAM {
+	if s == nil {
+		return nil
+	}
+	return s.IPAMStorage
+}
+
 func keyCreate(args ...string) string {
 	return strings.Join([]string(args), "/")
 }
@@ -172,12 +188,14 @@ func New() (*Storage, error) {
 	s.DeploymentStorage = newDeploymentStorage()
 	s.PodStorage = newPodStorage()
 
+	s.EndpointStorage = newEndpointStorage()
 	s.TriggerStorage = newTriggerStorage()
 
 	s.RouteStorage = newRouteStorage()
 	s.SystemStorage = newSystemStorage()
 	s.VolumeStorage = newVolumeStorage()
 	s.SecretStorage = newSecretStorage()
+	s.IPAMStorage   = newIPAMStorage()
 
 	return s, nil
 }

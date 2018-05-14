@@ -89,12 +89,7 @@ func (s *ServiceCreateOptions) DecodeAndValidate(reader io.Reader) (*types.Servi
 		opts.Spec.Command = s.Spec.Command
 
 		if s.Spec.Ports != nil {
-			for _, port := range *s.Spec.Ports {
-				*opts.Spec.Ports = append(*opts.Spec.Ports, types.ServiceOptionsSpecPort{
-					Internal: port.Internal,
-					Protocol: port.Protocol,
-				})
-			}
+				opts.Spec.Ports = s.Spec.Ports
 		}
 
 	}
@@ -154,12 +149,7 @@ func (s *ServiceUpdateOptions) DecodeAndValidate(reader io.Reader) (*types.Servi
 		opts.Spec.Command = s.Spec.Command
 
 		if s.Spec.Ports != nil {
-			for _, port := range *s.Spec.Ports {
-				*opts.Spec.Ports = append(*opts.Spec.Ports, types.ServiceOptionsSpecPort{
-					Internal: port.Internal,
-					Protocol: port.Protocol,
-				})
-			}
+			opts.Spec.Ports = s.Spec.Ports
 		}
 	}
 

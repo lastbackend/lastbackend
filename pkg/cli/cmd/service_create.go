@@ -25,6 +25,7 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/cli/envs"
 	"github.com/lastbackend/lastbackend/pkg/cli/view"
 	"github.com/spf13/cobra"
+	"strings"
 )
 
 func init() {
@@ -53,6 +54,7 @@ var serviceCreateCmd = &cobra.Command{
 		description, _ := cmd.Flags().GetString("desc")
 		memory, _ := cmd.Flags().GetInt64("memory")
 		name, _ := cmd.Flags().GetString("name")
+		ports, _ := cmd.Flags().GetString("ports")
 		replicas, _ := cmd.Flags().GetInt("replicas")
 
 		opts := new(request.ServiceCreateOptions)
@@ -72,6 +74,18 @@ var serviceCreateCmd = &cobra.Command{
 
 		if replicas != 0 {
 			opts.Spec.Replicas = &replicas
+		}
+
+		if ports != "" {
+
+			pm := strings.Split(ports, ":")
+			if len(pm) != 2 {
+				fmt.Println("port mapping is in invalid format")
+				return
+			}
+
+			// TODO: add ports map to structure
+
 		}
 
 		opts.Description = &description
