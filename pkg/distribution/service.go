@@ -124,13 +124,11 @@ func (s *Service) Create(namespace *types.Namespace, opts *types.ServiceCreateOp
 	// prepare spec data for service
 	service.Spec.SetDefault()
 	service.Spec.Template.Containers = append(service.Spec.Template.Containers, c)
-  service.Spec.Template.Network = types.SpecTemplateNetwork{
-  	Ports: opts.Spec.Ports,
-	}
 
 	if opts.Spec != nil {
 		service.Spec.Update(opts.Spec)
 	}
+
 
 	if err := s.storage.Service().Insert(s.context, service); err != nil {
 		log.V(logLevel).Errorf("%s:create:> insert service err: %s", logServicePrefix, err)

@@ -16,6 +16,9 @@
 // from Last.Backend LLC.
 //
 
+
+// +build linux
+
 package ipvs
 
 import (

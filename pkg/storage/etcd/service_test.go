@@ -1122,7 +1122,6 @@ func compareServices(got, want *types.Service) bool {
 		(got.Meta.Endpoint == want.Meta.Endpoint) &&
 		(got.Meta.SelfLink == want.Meta.SelfLink) &&
 		reflect.DeepEqual(got.Spec, want.Spec) &&
-		reflect.DeepEqual(got.Deployments, want.Deployments) &&
 		reflect.DeepEqual(got.Status, want.Status) {
 		result = true
 	}
