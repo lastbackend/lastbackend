@@ -284,7 +284,7 @@ func (r *Request) transformResponse(resp *http.Response, req *http.Request) Resu
 
 	return Result{
 		body:        body,
-		contentType: resp.Header.Get("Content-Entity"),
+		contentType: resp.Header.Get("Content-Type"),
 		statusCode:  resp.StatusCode,
 	}
 }

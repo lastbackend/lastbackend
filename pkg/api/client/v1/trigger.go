@@ -49,7 +49,7 @@ func (tc *TriggerClient) Create(ctx context.Context, opts *rv1.TriggerCreateOpti
 	var e *errors.Http
 
 	err = tc.client.Post(fmt.Sprintf("/namespace/%s/service/%s/trigger", tc.namespace, tc.service)).
-		AddHeader("Content-Entity", "application/json").
+		AddHeader("Content-Type", "application/json").
 		Body(body).
 		JSON(&s, &e)
 
@@ -69,7 +69,7 @@ func (tc *TriggerClient) List(ctx context.Context) (*vv1.TriggerList, error) {
 	var e *errors.Http
 
 	err := tc.client.Get(fmt.Sprintf("/namespace/%s/service/%s/trigger", tc.namespace, tc.service)).
-		AddHeader("Content-Entity", "application/json").
+		AddHeader("Content-Type", "application/json").
 		JSON(&s, &e)
 
 	if err != nil {
@@ -93,7 +93,7 @@ func (tc *TriggerClient) Get(ctx context.Context) (*vv1.Trigger, error) {
 	var e *errors.Http
 
 	err := tc.client.Get(fmt.Sprintf("/namespace/%s/service/%s/trigger/%s", tc.namespace, tc.service, tc.name)).
-		AddHeader("Content-Entity", "application/json").
+		AddHeader("Content-Type", "application/json").
 		JSON(&s, &e)
 
 	if err != nil {
@@ -117,7 +117,7 @@ func (tc *TriggerClient) Update(ctx context.Context, opts *rv1.TriggerUpdateOpti
 	var e *errors.Http
 
 	err = tc.client.Put(fmt.Sprintf("/namespace/%s/service/%s/trigger/%s", tc.namespace, tc.service, tc.name)).
-		AddHeader("Content-Entity", "application/json").
+		AddHeader("Content-Type", "application/json").
 		Body(body).
 		JSON(&s, &e)
 
@@ -134,7 +134,7 @@ func (tc *TriggerClient) Update(ctx context.Context, opts *rv1.TriggerUpdateOpti
 func (tc *TriggerClient) Remove(ctx context.Context, opts *rv1.TriggerRemoveOptions) error {
 
 	req := tc.client.Delete(fmt.Sprintf("/namespace/%s/service/%s/trigger/%s", tc.namespace, tc.service, tc.name)).
-		AddHeader("Content-Entity", "application/json")
+		AddHeader("Content-Type", "application/json")
 
 	if opts != nil {
 		if opts.Force {
