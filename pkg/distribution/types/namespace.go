@@ -100,8 +100,8 @@ func (n *NamespaceList) ToJson() ([]byte, error) {
 
 // swagger:ignore
 type NamespaceCreateOptions struct {
-	Name        string                 `json:"name"`
-	Description string                 `json:"description"`
+	Name        string                  `json:"name"`
+	Description string                  `json:"description"`
 	Quotas      *NamespaceQuotasOptions `json:"quotas"`
 }
 

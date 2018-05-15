@@ -63,6 +63,7 @@ type Node struct {
 }
 
 func (n *Node) List() (map[string]*types.Node, error) {
+	log.Debugf("%s:list:> get nodes list", logNodePrefix)
 	return n.storage.Node().List(n.context)
 }
 
