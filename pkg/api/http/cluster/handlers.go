@@ -19,9 +19,7 @@
 package cluster
 
 import (
-	"github.com/lastbackend/lastbackend/pkg/api/envs"
 	"github.com/lastbackend/lastbackend/pkg/api/types/v1"
-	"github.com/lastbackend/lastbackend/pkg/distribution"
 	"github.com/lastbackend/lastbackend/pkg/distribution/errors"
 	"github.com/lastbackend/lastbackend/pkg/log"
 	"net/http"
@@ -54,20 +52,10 @@ func ClusterInfoH(w http.ResponseWriter, r *http.Request) {
 
 	log.V(logLevel).Debugf("%s:info:> get cluster", logPrefix)
 
-	var clm = distribution.NewClusterModel(r.Context(), envs.Get().GetStorage())
-
-	cl, err := clm.Get()
-	if err != nil {
-		log.V(logLevel).Errorf("%s:info:> get cluster err: %s", logPrefix, err.Error())
-		errors.HTTP.InternalServerError(w)
-		return
-	}
-	if cl == nil {
-		cl = new(types.Cluster)
-		cl.Meta.Name = types.DefaultClusterName
-		cl.Meta.Description = types.DefaultClusterDescription
-		cl.SelfLink()
-	}
+	cl := new(types.Cluster)
+	cl.Meta.Name = types.DefaultClusterName
+	cl.Meta.Description = types.DefaultClusterDescription
+	cl.SelfLink()
 
 	response, err := v1.View().Cluster().New(cl).ToJson()
 	if err != nil {
@@ -79,83 +67,6 @@ func ClusterInfoH(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 	if _, err = w.Write(response); err != nil {
 		log.V(logLevel).Errorf("%s:info:> write response err: %s", logPrefix, err.Error())
-		return
-	}
-}
-
-func ClusterUpdateH(w http.ResponseWriter, r *http.Request) {
-
-	// swagger:operation PUT /cluster cluster clusterUpdate
-	//
-	// Updates cluster parameters
-	//
-	// ---
-	// consumes:
-	// - application/json
-	// produces:
-	// - application/json
-	// parameters:
-	//   - name: body
-	//     in: body
-	//     required: true
-	//     schema:
-	//       "$ref": "#/definitions/request_cluster_update"
-	// responses:
-	//   '200':
-	//     description: Cluster was successfully updated
-	//     schema:
-	//       "$ref": "#/definitions/views_cluster"
-	//   '404':
-	//     description: Cluster not found
-	//   '500':
-	//     description: Internal server error
-
-	log.V(logLevel).Debugf("%s:update:> update cluster")
-
-	opts := v1.Request().Cluster().UpdateOptions()
-	if err := opts.DecodeAndValidate(r.Body); err != nil {
-		log.V(logLevel).Errorf("%s:update:> validation incoming data", logPrefix, err.Err())
-		err.Http(w)
-		return
-	}
-
-	var clm = distribution.NewClusterModel(r.Context(), envs.Get().GetStorage())
-
-	cl, err := clm.Get()
-	if err != nil {
-		log.V(logLevel).Errorf("%s:update:> get cluster err: %s", logPrefix, err.Error())
-		errors.HTTP.InternalServerError(w)
-		return
-	}
-	if cl == nil {
-		err := errors.New("cluster not found")
-		log.V(logLevel).Errorf("%s:update:> get cluster err: %s", logPrefix, err.Error())
-		errors.New("cluster").NotFound().Http(w)
-		return
-	}
-
-	err = clm.Update(cl, opts)
-	if err != nil {
-		log.V(logLevel).Errorf("%s:update:> get cluster err: %s", logPrefix, err.Error())
-		errors.HTTP.InternalServerError(w)
-		return
-	}
-	if cl == nil {
-		log.V(logLevel).Errorf("%s:update:> cluster not found", logPrefix)
-		errors.New("cluster").NotFound().Http(w)
-		return
-	}
-
-	response, err := v1.View().Cluster().New(cl).ToJson()
-	if err != nil {
-		log.V(logLevel).Errorf("%s:update:> convert struct to json err: %s", logPrefix, err.Error())
-		errors.HTTP.InternalServerError(w)
-		return
-	}
-
-	w.WriteHeader(http.StatusOK)
-	if _, err = w.Write(response); err != nil {
-		log.V(logLevel).Errorf("%s:update:> write response err: %s", logPrefix, err.Error())
 		return
 	}
 }
