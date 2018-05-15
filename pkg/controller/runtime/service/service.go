@@ -26,6 +26,7 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 	"github.com/lastbackend/lastbackend/pkg/log"
 	"github.com/lastbackend/lastbackend/pkg/storage/store"
+	"reflect"
 )
 
 // Provision service
@@ -59,15 +60,14 @@ func Provision(svc *types.Service) error {
 
 	// Check service ports
 	switch true {
-	case svc.Spec.Template.Network.Ports == nil && ept != nil:
+	case len(svc.Spec.Template.Network.Ports) == 0 && ept != nil:
 		if err := em.Remove(ept); err != nil {
 			log.Errorf("%s> get endpoint error: %s", msg, err.Error())
 			return err
 		}
 		svc.Status.Network.IP = ""
 		break
-	case 	svc.Spec.Template.Network.Ports != nil && ept == nil:
-
+	case 	len(svc.Spec.Template.Network.Ports) != 0 && ept == nil:
 		opts := types.EndpointCreateOptions{
 			IP: svc.Spec.Template.Network.IP,
 			Ports: svc.Spec.Template.Network.Ports,
@@ -85,8 +85,7 @@ func Provision(svc *types.Service) error {
 		svc.Status.Network.IP = ept.Spec.IP
 		break
 
-	case 	svc.Spec.Template.Network.Ports != nil && ept != nil:
-
+	case 	len(svc.Spec.Template.Network.Ports) != 0 && ept != nil:
 		var equal = true
 
 		if
@@ -94,6 +93,11 @@ func Provision(svc *types.Service) error {
 			(svc.Spec.Template.Network.Policy != ept.Spec.Policy) ||
 			(svc.Spec.Template.Network.Strategy.Bind != ept.Spec.Strategy.Bind) ||
 			(svc.Spec.Template.Network.Strategy.Route != ept.Spec.Strategy.Route) {
+			equal = false
+		}
+
+		// check ports equal
+		if !reflect.DeepEqual(svc.Spec.Template.Network.Ports, ept.Spec.PortMap) {
 			equal = false
 		}
 
