@@ -51,7 +51,7 @@ type Namespace struct {
 
 func (n *Namespace) List() (map[string]*types.Namespace, error) {
 
-	log.V(logLevel).Debug("%s:list:> get namespaces list", logNamespacePrefix)
+	log.V(logLevel).Debugf("%s:list:> get namespaces list", logNamespacePrefix)
 
 	items, err := n.storage.Namespace().List(n.context)
 	if err != nil {

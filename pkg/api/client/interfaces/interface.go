@@ -30,7 +30,6 @@ type Cluster interface {
 	Node(hostname string) Node
 
 	Get(ctx context.Context) (*vv1.ClusterList, error)
-	Update(ctx context.Context, opts *rv1.ClusterUpdateOptions) (*vv1.Cluster, error)
 }
 
 type Node interface {

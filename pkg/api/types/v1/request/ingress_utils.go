@@ -57,9 +57,8 @@ func (i *IngressConnectOptions) DecodeAndValidate(reader io.Reader) *errors.Err 
 	return i.Validate()
 }
 
-func (i *IngressConnectOptions) ToJson() string {
-	buf, _ := json.Marshal(i)
-	return string(buf)
+func (i *IngressConnectOptions) ToJson() ([]byte, error) {
+	return json.Marshal(i)
 }
 
 func (IngressRequest) IngressStatusOptions() *IngressStatusOptions {
@@ -92,11 +91,9 @@ func (i *IngressStatusOptions) DecodeAndValidate(reader io.Reader) *errors.Err {
 	return i.Validate()
 }
 
-func (i *IngressStatusOptions) ToJson() string {
-	buf, _ := json.Marshal(i)
-	return string(buf)
+func (i *IngressStatusOptions) ToJson() ([]byte, error) {
+	return json.Marshal(i)
 }
-
 
 func (IngressRequest) IngressRouteStatusOptions() *IngressRouteStatusOptions {
 	return new(IngressRouteStatusOptions)
@@ -126,18 +123,16 @@ func (i *IngressRouteStatusOptions) DecodeAndValidate(reader io.Reader) *errors.
 	return i.Validate()
 }
 
-func (i *IngressRouteStatusOptions) ToJson() string {
-	buf, _ := json.Marshal(i)
-	return string(buf)
+func (i *IngressRouteStatusOptions) ToJson() ([]byte, error) {
+	return json.Marshal(i)
 }
 
 func (IngressRequest) UpdateOptions() *IngressMetaOptions {
 	return new(IngressMetaOptions)
 }
 
-func (i *IngressMetaOptions) ToJson() string {
-	buf, _ := json.Marshal(i)
-	return string(buf)
+func (i *IngressMetaOptions) ToJson() ([]byte, error) {
+	return json.Marshal(i)
 }
 
 func (i *IngressMetaOptions) Validate() *errors.Err {

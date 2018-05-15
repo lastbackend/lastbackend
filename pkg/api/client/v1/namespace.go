@@ -69,11 +69,11 @@ func (nc *NamespaceClient) Volume(name ...string) *VolumeClient {
 
 func (nc *NamespaceClient) List(ctx context.Context) (*vv1.NamespaceList, error) {
 
-	var s = new(vv1.NamespaceList)
-	var e = new(errors.Http)
+	var s *vv1.NamespaceList
+	var e *errors.Http
 
 	err := nc.client.Get(fmt.Sprintf("/namespace")).
-		AddHeader("Content-Entity", "application/json").
+		AddHeader("Content-Type", "application/json").
 		JSON(&s, &e)
 
 	if err != nil {
@@ -102,7 +102,7 @@ func (nc *NamespaceClient) Create(ctx context.Context, opts *rv1.NamespaceCreate
 	var e *errors.Http
 
 	err = nc.client.Post("/namespace").
-		AddHeader("Content-Entity", "application/json").
+		AddHeader("Content-Type", "application/json").
 		Body(body).
 		JSON(&s, &e)
 
@@ -122,7 +122,7 @@ func (nc *NamespaceClient) Get(ctx context.Context) (*vv1.Namespace, error) {
 	var e *errors.Http
 
 	err := nc.client.Get(fmt.Sprintf("/namespace/%s", nc.name)).
-		AddHeader("Content-Entity", "application/json").
+		AddHeader("Content-Type", "application/json").
 		JSON(&s, &e)
 
 	if err != nil {
@@ -146,7 +146,7 @@ func (nc *NamespaceClient) Update(ctx context.Context, opts *rv1.NamespaceUpdate
 	var e *errors.Http
 
 	err = nc.client.Put(fmt.Sprintf("/namespace/%s", nc.name)).
-		AddHeader("Content-Entity", "application/json").
+		AddHeader("Content-Type", "application/json").
 		Body(body).
 		JSON(&s, &e)
 
@@ -163,7 +163,7 @@ func (nc *NamespaceClient) Update(ctx context.Context, opts *rv1.NamespaceUpdate
 func (nc *NamespaceClient) Remove(ctx context.Context, opts *rv1.NamespaceRemoveOptions) error {
 
 	req := nc.client.Delete(fmt.Sprintf("/namespace/%s", nc.name)).
-		AddHeader("Content-Entity", "application/json")
+		AddHeader("Content-Type", "application/json")
 
 	if opts != nil {
 		if opts.Force {

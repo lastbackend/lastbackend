@@ -31,6 +31,7 @@ func (nv *NodeView) New(obj *types.Node) *Node {
 	n.Meta = nv.ToNodeMeta(obj.Meta)
 	n.Status = nv.ToNodeStatus(obj.Status)
 	n.Info = nv.ToNodeInfo(obj.Info)
+	n.Status.Online = obj.Online
 	return &n
 }
 
