@@ -23,7 +23,6 @@ import (
 
 	"github.com/lastbackend/lastbackend/pkg/api/client/http"
 	"github.com/lastbackend/lastbackend/pkg/api/client/interfaces"
-	rv1 "github.com/lastbackend/lastbackend/pkg/api/types/v1/request"
 	vv1 "github.com/lastbackend/lastbackend/pkg/api/types/v1/views"
 	"github.com/lastbackend/lastbackend/pkg/distribution/errors"
 )
@@ -56,31 +55,6 @@ func (cc *ClusterClient) Get(ctx context.Context) (*vv1.Cluster, error) {
 
 	err := cc.client.Get("/cluster").
 		AddHeader("Content-Type", "application/json").
-		JSON(&s, &e)
-
-	if err != nil {
-		return nil, err
-	}
-	if e != nil {
-		return nil, errors.New(e.Message)
-	}
-
-	return s, nil
-}
-
-func (cc *ClusterClient) Update(ctx context.Context, opts *rv1.ClusterUpdateOptions) (*vv1.Cluster, error) {
-
-	body, err := opts.ToJson()
-	if err != nil {
-		return nil, err
-	}
-
-	var s *vv1.Cluster
-	var e *errors.Http
-
-	err = cc.client.Put("/cluster").
-		AddHeader("Content-Type", "application/json").
-		Body(body).
 		JSON(&s, &e)
 
 	if err != nil {

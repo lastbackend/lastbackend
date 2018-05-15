@@ -19,7 +19,9 @@
 package cluster
 
 import (
+	"github.com/lastbackend/lastbackend/pkg/api/envs"
 	"github.com/lastbackend/lastbackend/pkg/api/types/v1"
+	"github.com/lastbackend/lastbackend/pkg/distribution"
 	"github.com/lastbackend/lastbackend/pkg/distribution/errors"
 	"github.com/lastbackend/lastbackend/pkg/log"
 	"net/http"
@@ -52,10 +54,20 @@ func ClusterInfoH(w http.ResponseWriter, r *http.Request) {
 
 	log.V(logLevel).Debugf("%s:info:> get cluster", logPrefix)
 
-	cl := new(types.Cluster)
-	cl.Meta.Name = types.DefaultClusterName
-	cl.Meta.Description = types.DefaultClusterDescription
-	cl.SelfLink()
+	var clm = distribution.NewClusterModel(r.Context(), envs.Get().GetStorage())
+
+	cl, err := clm.Get()
+	if err != nil {
+		log.V(logLevel).Errorf("%s:info:> get cluster err: %s", logPrefix, err.Error())
+		errors.HTTP.InternalServerError(w)
+		return
+	}
+	if cl == nil {
+		cl = new(types.Cluster)
+		cl.Meta.Name = types.DefaultClusterName
+		cl.Meta.Description = types.DefaultClusterDescription
+		cl.SelfLink()
+	}
 
 	response, err := v1.View().Cluster().New(cl).ToJson()
 	if err != nil {
