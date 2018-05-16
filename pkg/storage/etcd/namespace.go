@@ -28,6 +28,9 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/log"
 	"github.com/lastbackend/lastbackend/pkg/storage/storage"
 	"github.com/lastbackend/lastbackend/pkg/storage/store"
+	"regexp"
+	"encoding/json"
+	"github.com/lastbackend/lastbackend/pkg/storage/etcd/cache"
 )
 
 const namespaceStorage = "namespace"
@@ -35,6 +38,7 @@ const namespaceStorage = "namespace"
 // Namespace Service type for interface in interfaces folder
 type NamespaceStorage struct {
 	storage.Namespace
+	cache *cache.Cache
 }
 
 // Get namespace by name
@@ -42,7 +46,7 @@ func (s *NamespaceStorage) Get(ctx context.Context, name string) (*types.Namespa
 
 	log.V(logLevel).Debugf("storage:etcd:namespace:> get by name: %s", name)
 
-	const filter = `\b.+` + namespaceStorage + `\/.+\/(meta|state|spec)\b`
+	const filter = `\b.+` + namespaceStorage + `\/.+\/(meta|spec)\b`
 
 	if len(name) == 0 {
 		err := errors.New("name can not be empty")
@@ -73,7 +77,7 @@ func (s *NamespaceStorage) List(ctx context.Context) (map[string]*types.Namespac
 
 	log.V(logLevel).Debugf("storage:etcd:namespace:> get list")
 
-	const filter = `\b.+` + namespaceStorage + `\/(.+)\/(meta|state|spec)\b`
+	const filter = `\b.+` + namespaceStorage + `\/(.+)\/(meta|spec)\b`
 
 	var (
 		namespaces = make(map[string]*types.Namespace)
@@ -198,6 +202,77 @@ func (s *NamespaceStorage) Remove(ctx context.Context, namespace *types.Namespac
 	return nil
 }
 
+// Watch namespace changes
+func (s *NamespaceStorage) Watch(ctx context.Context, event chan *types.Event) error {
+
+	log.V(logLevel).Debug("storage:etcd:namesapce:> watch namesapce")
+
+	const filter = `\b.+` + namespaceStorage + `\/(.+)\b`
+	client, destroy, err := getClient(ctx)
+	if err != nil {
+		log.V(logLevel).Errorf("storage:etcd:namesapce:> watch namesapce err: %s", err.Error())
+		return err
+	}
+	defer destroy()
+
+	r, _ := regexp.Compile(filter)
+	key := keyCreate(serviceStorage)
+	cb := func(action, key string, data []byte) {
+
+		keys := r.FindStringSubmatch(key)
+		if len(keys) < 4 {
+			return
+		}
+
+		e := new(types.Event)
+		e.Action = action
+
+		index := keys[1]
+		item := s.cache.Get(keys[1])
+
+		if item == nil {
+			if data, err := s.Get(ctx, keys[1]); err == nil {
+				s.cache.Set(index, data)
+				e.Data = data
+				event <- e
+			}
+			return
+		}
+
+		ns := item.(*types.Namespace)
+
+		switch keys[3] {
+		case "meta":
+			var meta types.NamespaceMeta
+			if err := json.Unmarshal(data, &meta); err != nil {
+				log.V(logLevel).Errorf("storage:etcd:namesapce:> parse namesapce meta err: %s", err.Error())
+				return
+			}
+			ns.Meta = meta
+		case "spec":
+			var spec types.NamespaceSpec
+			if err := json.Unmarshal(data, &spec); err != nil {
+				log.V(logLevel).Errorf("storage:etcd:namesapce:> parse namesapce spec err: %s", err.Error())
+				return
+			}
+			ns.Spec = spec
+		}
+
+		s.cache.Set(index, ns)
+
+		e.Data = ns
+
+		event <- e
+	}
+
+	if err := client.Watch(ctx, key, filter, cb); err != nil {
+		log.V(logLevel).Errorf("storage:etcd:namesapce:> watch namesapce err: %s", err.Error())
+		return err
+	}
+
+	return nil
+}
+
 // Clear namespace storage
 func (s *NamespaceStorage) Clear(ctx context.Context) error {
 
@@ -230,6 +305,7 @@ func (s *NamespaceStorage) keyGet(namespace *types.Namespace) string {
 
 func newNamespaceStorage() *NamespaceStorage {
 	s := new(NamespaceStorage)
+	s.cache = cache.NewCache(24 * time.Hour)
 	return s
 }
 
