@@ -26,9 +26,7 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/distribution"
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 	"github.com/lastbackend/lastbackend/pkg/api/types/v1"
-	"fmt"
 	"github.com/gorilla/websocket"
-	"encoding/json"
 )
 
 const (
@@ -64,6 +62,7 @@ func EventSubscribeH(w http.ResponseWriter, r *http.Request) {
 
 	var (
 		sm   = distribution.NewServiceModel(r.Context(), envs.Get().GetStorage())
+		nm   = distribution.NewNamespaceModel(r.Context(), envs.Get().GetStorage())
 		done = make(chan bool, 1)
 	)
 
@@ -73,7 +72,8 @@ func EventSubscribeH(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var event = make(chan *types.Event)
+	var serviceEvents = make(chan *types.Event)
+	var namespaceEvents = make(chan *types.Event)
 
 	notify := w.(http.CloseNotifier).CloseNotify()
 
@@ -87,18 +87,14 @@ func EventSubscribeH(w http.ResponseWriter, r *http.Request) {
 		for {
 			select {
 			case <-done:
-				close(event)
+				close(serviceEvents)
+				close(namespaceEvents)
 				return
-			case e := <-event:
-
-				buf, _ := json.Marshal(e)
-				fmt.Println(string(buf))
+			case e := <-serviceEvents:
 
 				if e.Data == nil {
 					continue
 				}
-
-				fmt.Println(e.Data)
 
 				event := Event{
 					Entity: "service",
@@ -107,13 +103,29 @@ func EventSubscribeH(w http.ResponseWriter, r *http.Request) {
 				}
 
 				if err = conn.WriteJSON(event); err != nil {
-					fmt.Println(err)
+					log.Errorf("%s:subscribe:> write service event to socket error.", logPrefix)
+				}
+			case e := <-namespaceEvents:
+
+				if e.Data == nil {
+					continue
+				}
+
+				event := Event{
+					Entity: "namespace",
+					Action: e.Action,
+					Data:   v1.View().Namespace().New(e.Data.(*types.Namespace)),
+				}
+
+				if err = conn.WriteJSON(event); err != nil {
+					log.Errorf("%s:subscribe:> write namespace event to socket error.", logPrefix)
 				}
 			}
 		}
 	}()
 
-	go sm.Watch(event)
+	go sm.Watch(serviceEvents)
+	go nm.Watch(namespaceEvents)
 
 	<-done
 }
