@@ -734,7 +734,7 @@ func (s *NodeStorage) Watch(ctx context.Context, node chan *types.Node) error {
 	return nil
 }
 
-func (s *NodeStorage) WatchStatus(ctx context.Context, event chan *types.NodeStatusEvent) error {
+func (s *NodeStorage) EventStatus(ctx context.Context, event chan *types.NodeStatusEvent) error {
 
 	log.V(logLevel).Debug("storage:etcd:node:> watch node pod spec")
 
@@ -780,7 +780,7 @@ func (s *NodeStorage) WatchStatus(ctx context.Context, event chan *types.NodeSta
 	return nil
 }
 
-func (s *NodeStorage) WatchPodSpec(ctx context.Context, event chan *types.PodSpecEvent) error {
+func (s *NodeStorage) EventPodSpec(ctx context.Context, event chan *types.PodSpecEvent) error {
 
 	log.V(logLevel).Debug("storage:etcd:node:> watch node pod spec")
 
@@ -824,7 +824,7 @@ func (s *NodeStorage) WatchPodSpec(ctx context.Context, event chan *types.PodSpe
 	return nil
 }
 
-func (s *NodeStorage) WatchVolumeSpec(ctx context.Context, event chan *types.VolumeSpecEvent) error {
+func (s *NodeStorage) EventVolumeSpec(ctx context.Context, event chan *types.VolumeSpecEvent) error {
 
 	log.V(logLevel).Debug("storage:etcd:node:> watch node volume spec")
 
@@ -868,7 +868,7 @@ func (s *NodeStorage) WatchVolumeSpec(ctx context.Context, event chan *types.Vol
 	return nil
 }
 
-func (s *NodeStorage) WatchNetworkSpec(ctx context.Context, event chan *types.NetworkSpecEvent) error {
+func (s *NodeStorage) EventNetworkSpec(ctx context.Context, event chan *types.NetworkSpecEvent) error {
 
 	log.V(logLevel).Debug("storage:etcd:node:> watch node volume spec")
 

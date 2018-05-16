@@ -1069,7 +1069,7 @@ func TestDeploymentStorage_Watch(t *testing.T) {
 func TestDeploymentStorage_WatchSpec(t *testing.T) {
 	etcdCtl, destroy, err := initStorageWatch()
 	if err != nil {
-		t.Errorf("DeploymentStorage.WatchStatus() storage setup error = %v", err)
+		t.Errorf("DeploymentStorage.WatchSpec() storage setup error = %v", err)
 	}
 	defer destroy()
 
@@ -1166,7 +1166,7 @@ func TestDeploymentStorage_WatchStatus(t *testing.T) {
 
 	etcdCtl, destroy, err := initStorageWatch()
 	if err != nil {
-		t.Errorf("DeploymentStorage.WatchStatus() storage setup error = %v", err)
+		t.Errorf("DeploymentStorage.WatchSpec() storage setup error = %v", err)
 	}
 	defer destroy()
 
@@ -1197,7 +1197,7 @@ func TestDeploymentStorage_WatchStatus(t *testing.T) {
 
 	clear := func() {
 		if err := stg.Clear(ctx); err != nil {
-			t.Errorf("DeploymentStorage.WatchStatus() storage setup error = %v", err)
+			t.Errorf("DeploymentStorage.WatchSpec() storage setup error = %v", err)
 			return
 		}
 	}
@@ -1208,7 +1208,7 @@ func TestDeploymentStorage_WatchStatus(t *testing.T) {
 			defer clear()
 
 			if err := stg.Insert(ctx, &n); err != nil {
-				t.Errorf("DeploymentStorage.WatchSetStatus() storage setup error = %v", err)
+				t.Errorf("DeploymentStorage.WatchSpec() storage setup error = %v", err)
 				return
 			}
 
@@ -1242,7 +1242,7 @@ func TestDeploymentStorage_WatchStatus(t *testing.T) {
 			for {
 				select {
 				case <-deploymentC:
-					t.Log("DeploymentStorage.WatchStatus() is working")
+					t.Log("DeploymentStorage.WatchSpec() is working")
 					return
 				case <-ctxT.Done():
 					t.Log("ctxT done=", ctxT.Err(), "time=", time.Now())

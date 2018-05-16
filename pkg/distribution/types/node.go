@@ -104,9 +104,10 @@ type NodeStatus struct {
 // swagger:ignore
 // swagger:model types_node_spec
 type NodeSpec struct {
-	Network map[string]NetworkSpec `json:"network"`
-	Pods    map[string]PodSpec     `json:"pods"`
-	Volumes map[string]VolumeSpec  `json:"volumes"`
+	Network   map[string]NetworkSpec  `json:"network"`
+	Pods      map[string]PodSpec      `json:"pods"`
+	Volumes   map[string]VolumeSpec   `json:"volumes"`
+	Endpoints map[string]EndpointSpec `json:"endpoints"`
 }
 
 // swagger:ignore

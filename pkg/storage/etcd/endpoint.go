@@ -368,6 +368,49 @@ func (s *EndpointStorage) WatchStatus(ctx context.Context, endpoint chan *types.
 	return nil
 }
 
+
+func (s *EndpointStorage) EventSpec(ctx context.Context, event chan *types.EndpointSpecEvent) error {
+
+	log.V(logLevel).Debug("storage:etcd:endpoint:> watch spec")
+
+	const filter = `\b.+` + endpointStorage + `\/(.+)\/spec\b`
+
+	client, destroy, err := getClient(ctx)
+	if err != nil {
+		log.V(logLevel).Errorf("storage:etcd:node:> create client err: %s", err.Error())
+		return err
+	}
+	defer destroy()
+
+	r, _ := regexp.Compile(filter)
+	key := keyCreate(endpointStorage)
+	cb := func(action, key string, val []byte) {
+		keys := r.FindStringSubmatch(key)
+		if len(keys) < 2 {
+			return
+		}
+
+		e := new(types.EndpointSpecEvent)
+		e.Event = action
+		e.Name = keys[1]
+
+		if err := client.Decode(ctx, val, &e.Spec); err != nil {
+			log.Warnf("storage:etcd:endpoint:> decode err: %s", err.Error())
+		}
+
+		event <- e
+
+		return
+	}
+
+	if err := client.Watch(ctx, key, filter, cb); err != nil {
+		log.V(logLevel).Errorf("storage:etcd:node:> watch node err: %s", err.Error())
+		return err
+	}
+
+	return nil
+}
+
 // Clear endpoint storage
 func (s *EndpointStorage) Clear(ctx context.Context) error {
 

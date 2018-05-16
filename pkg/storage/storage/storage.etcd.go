@@ -90,6 +90,7 @@ type Endpoint interface {
 	Watch(ctx context.Context, endpoint chan *types.Endpoint) error
 	WatchSpec(ctx context.Context, endpoint chan *types.Endpoint) error
 	WatchStatus(ctx context.Context, endpoint chan *types.Endpoint) error
+	EventSpec(ctx context.Context, event chan *types.EndpointSpecEvent) error
 	Clear(ctx context.Context) error
 }
 
@@ -172,9 +173,9 @@ type Node interface {
 	RemoveVolume(ctx context.Context, node *types.Node, volume *types.Volume) error
 	Remove(ctx context.Context, node *types.Node) error
 	Watch(ctx context.Context, node chan *types.Node) error
-	WatchStatus(ctx context.Context, event chan *types.NodeStatusEvent) error
-	WatchPodSpec(ctx context.Context, event chan *types.PodSpecEvent) error
-	WatchVolumeSpec(ctx context.Context, event chan *types.VolumeSpecEvent) error
+	EventStatus(ctx context.Context, event chan *types.NodeStatusEvent) error
+	EventPodSpec(ctx context.Context, event chan *types.PodSpecEvent) error
+	EventVolumeSpec(ctx context.Context, event chan *types.VolumeSpecEvent) error
 	Clear(ctx context.Context) error
 }
 

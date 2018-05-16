@@ -1924,7 +1924,7 @@ func TestNodeStorage_WatchStatus(t *testing.T) {
 
 	etcdCtl, destroy, err := initStorageWatch()
 	if err != nil {
-		t.Errorf("NodeStorage.WatchStatus() storage setup error = %v", err)
+		t.Errorf("NodeStorage.EventsStatus() storage setup error = %v", err)
 	}
 	defer destroy()
 
@@ -1949,7 +1949,7 @@ func TestNodeStorage_WatchStatus(t *testing.T) {
 
 	clear := func() {
 		if err := stg.Clear(ctx); err != nil {
-			t.Errorf("NodeStorage.WatchStatus() storage setup error = %v", err)
+			t.Errorf("NodeStorage.EventsStatus() storage setup error = %v", err)
 			return
 		}
 	}
@@ -1960,7 +1960,7 @@ func TestNodeStorage_WatchStatus(t *testing.T) {
 			defer clear()
 
 			if err := stg.Insert(ctx, &n); err != nil {
-				t.Errorf("NodeStorage.WatchStatus() storage setup error = %v", err)
+				t.Errorf("NodeStorage.EventsStatus() storage setup error = %v", err)
 				return
 			}
 
@@ -1970,9 +1970,9 @@ func TestNodeStorage_WatchStatus(t *testing.T) {
 			defer etcdCtl.WatchClose()
 			//run watch go function
 			go func() {
-				err = stg.WatchStatus(ctxT, nodeStatusEventC)
+				err = stg.EventStatus(ctxT, nodeStatusEventC)
 				if err != nil {
-					t.Errorf("NodeStorage.WatchStatus() storage setup error = %v", err)
+					t.Errorf("NodeStorage.EventsStatus() storage setup error = %v", err)
 					return
 				}
 			}()
@@ -1994,11 +1994,11 @@ func TestNodeStorage_WatchStatus(t *testing.T) {
 			for {
 				select {
 				case <-nodeStatusEventC:
-					t.Log("NodeStorage.WatchStatus() is working")
+					t.Log("NodeStorage.EventsStatus() is working")
 					return
 				case <-ctxT.Done():
 					t.Log("ctxT done=", ctxT.Err(), "time=", time.Now())
-					t.Error("NodeStorage.WatchStatus() NO watch event happen")
+					t.Error("NodeStorage.EventsStatus() NO watch event happen")
 					return
 				case <-time.After(500 * time.Millisecond):
 					//wait for 500 ms
@@ -2009,7 +2009,7 @@ func TestNodeStorage_WatchStatus(t *testing.T) {
 	}
 }
 
-func TestNodeStorage_WatchNetworkSpec(t *testing.T) {
+func TestNodeStorage_EventNetworkSpec(t *testing.T) {
 
 	var (
 		stg                   = newNodeStorage()
@@ -2021,7 +2021,7 @@ func TestNodeStorage_WatchNetworkSpec(t *testing.T) {
 
 	etcdCtl, destroy, err := initStorageWatch()
 	if err != nil {
-		t.Errorf("NodeStorage.WatchNetworkSpec() storage setup error = %v", err)
+		t.Errorf("NodeStorage.EventNetworkSpec() storage setup error = %v", err)
 	}
 	defer destroy()
 
@@ -2046,7 +2046,7 @@ func TestNodeStorage_WatchNetworkSpec(t *testing.T) {
 
 	clear := func() {
 		if err := stg.Clear(ctx); err != nil {
-			t.Errorf("NodeStorage.WatchNetworkSpec() storage setup error = %v", err)
+			t.Errorf("NodeStorage.EventNetworkSpec() storage setup error = %v", err)
 			return
 		}
 	}
@@ -2057,7 +2057,7 @@ func TestNodeStorage_WatchNetworkSpec(t *testing.T) {
 			defer clear()
 
 			if err := stg.Insert(ctx, &n); err != nil {
-				t.Errorf("NodeStorage.WatchNetworkSpec() storage setup error = %v", err)
+				t.Errorf("NodeStorage.EventNetworkSpec() storage setup error = %v", err)
 				return
 			}
 
@@ -2067,9 +2067,9 @@ func TestNodeStorage_WatchNetworkSpec(t *testing.T) {
 			defer etcdCtl.WatchClose()
 			//run watch go function
 			go func() {
-				err = stg.WatchNetworkSpec(ctxT, nodeNetworkSpecEventC)
+				err = stg.EventNetworkSpec(ctxT, nodeNetworkSpecEventC)
 				if err != nil {
-					t.Errorf("NodeStorage.WatchNetworkSpec() storage setup error = %v", err)
+					t.Errorf("NodeStorage.EventNetworkSpec() storage setup error = %v", err)
 					return
 				}
 			}()
@@ -2091,11 +2091,11 @@ func TestNodeStorage_WatchNetworkSpec(t *testing.T) {
 			for {
 				select {
 				case <-nodeNetworkSpecEventC:
-					t.Log("NodeStorage.WatchNetworkSpec() is working")
+					t.Log("NodeStorage.EventNetworkSpec() is working")
 					return
 				case <-ctxT.Done():
 					t.Log("ctxT done=", ctxT.Err(), "time=", time.Now())
-					t.Error("NodeStorage.WatchNetworkSpec() NO watch event happen")
+					t.Error("NodeStorage.EventNetworkSpec() NO watch event happen")
 					return
 				case <-time.After(500 * time.Millisecond):
 					//wait for 500 ms
@@ -2106,7 +2106,7 @@ func TestNodeStorage_WatchNetworkSpec(t *testing.T) {
 	}
 }
 
-func TestNodeStorage_WatchPodSpec(t *testing.T) {
+func TestNodeStorage_EventPodSpec(t *testing.T) {
 
 	var (
 		stg               = newNodeStorage()
@@ -2118,7 +2118,7 @@ func TestNodeStorage_WatchPodSpec(t *testing.T) {
 	)
 	etcdCtl, destroy, err := initStorageWatch()
 	if err != nil {
-		t.Errorf("NodeStorage.WatchPodSpec() storage setup error = %v", err)
+		t.Errorf("NodeStorage.EventPodSpec() storage setup error = %v", err)
 	}
 	defer destroy()
 
@@ -2143,7 +2143,7 @@ func TestNodeStorage_WatchPodSpec(t *testing.T) {
 
 	clear := func() {
 		if err := stg.Clear(ctx); err != nil {
-			t.Errorf("NodeStorage.WatchPodSpec() storage setup error = %v", err)
+			t.Errorf("NodeStorage.EventPodSpec() storage setup error = %v", err)
 			return
 		}
 	}
@@ -2162,9 +2162,9 @@ func TestNodeStorage_WatchPodSpec(t *testing.T) {
 			defer etcdCtl.WatchClose()
 			//run watch go function
 			go func() {
-				err = stg.WatchPodSpec(ctxT, nodePodSpecEventC)
+				err = stg.EventPodSpec(ctxT, nodePodSpecEventC)
 				if err != nil {
-					t.Errorf("NodeStorage.WatchPodSpec() storage setup error = %v", err)
+					t.Errorf("NodeStorage.EventPodSpec() storage setup error = %v", err)
 					return
 				}
 			}()
@@ -2186,11 +2186,11 @@ func TestNodeStorage_WatchPodSpec(t *testing.T) {
 			for {
 				select {
 				case <-nodePodSpecEventC:
-					t.Log("NodeStorage.WatchPodSpec() is working")
+					t.Log("NodeStorage.EventPodSpec() is working")
 					return
 				case <-ctxT.Done():
 					t.Log("ctxT done=", ctxT.Err(), "time=", time.Now())
-					t.Error("NodeStorage.WatchPodSpec() NO watch event happen")
+					t.Error("NodeStorage.EventPodSpec() NO watch event happen")
 					return
 				case <-time.After(500 * time.Millisecond):
 					//wait for 500 ms
@@ -2201,7 +2201,7 @@ func TestNodeStorage_WatchPodSpec(t *testing.T) {
 	}
 }
 
-func TestNodeStorage_WatchVolumeSpec(t *testing.T) {
+func TestNodeStorage_EventVolumeSpec(t *testing.T) {
 
 	var (
 		stg                  = newNodeStorage()
@@ -2214,7 +2214,7 @@ func TestNodeStorage_WatchVolumeSpec(t *testing.T) {
 
 	etcdCtl, destroy, err := initStorageWatch()
 	if err != nil {
-		t.Errorf("NodeStorage.WatchVolumeSpec() storage setup error = %v", err)
+		t.Errorf("NodeStorage.EventVolumeSpec() storage setup error = %v", err)
 	}
 	defer destroy()
 
@@ -2239,7 +2239,7 @@ func TestNodeStorage_WatchVolumeSpec(t *testing.T) {
 
 	clear := func() {
 		if err := stg.Clear(ctx); err != nil {
-			t.Errorf("NodeStorage.WatchVolumeSpec() storage setup error = %v", err)
+			t.Errorf("NodeStorage.EventVolumeSpec() storage setup error = %v", err)
 			return
 		}
 	}
@@ -2258,9 +2258,9 @@ func TestNodeStorage_WatchVolumeSpec(t *testing.T) {
 			defer etcdCtl.WatchClose() //run watch go function
 
 			go func() {
-				err = stg.WatchVolumeSpec(ctxT, nodeVolumeSpecEventC)
+				err = stg.EventVolumeSpec(ctxT, nodeVolumeSpecEventC)
 				if err != nil {
-					t.Errorf("NodeStorage.WatchVolumeSpec() storage setup error = %v", err)
+					t.Errorf("NodeStorage.EventVolumeSpec() storage setup error = %v", err)
 					return
 				}
 			}()
@@ -2282,11 +2282,11 @@ func TestNodeStorage_WatchVolumeSpec(t *testing.T) {
 			for {
 				select {
 				case <-nodeVolumeSpecEventC:
-					t.Log("NodeStorage.WatchVolumeSpec() is working")
+					t.Log("NodeStorage.EventVolumeSpec() is working")
 					return
 				case <-ctxT.Done():
 					t.Log("ctxT done=", ctxT.Err(), "time=", time.Now())
-					t.Error("NodeStorage.WatchVolumeSpec() NO watch event happen")
+					t.Error("NodeStorage.EventVolumeSpec() NO watch event happen")
 					return
 				case <-time.After(500 * time.Millisecond):
 					//wait for 500 ms

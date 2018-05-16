@@ -38,6 +38,8 @@ type VolumeSpecWatcher func(ctx context.Context, event chan *types.VolumeSpecEve
 
 type NodeStatusWatcher func(ctx context.Context, event chan *types.NodeStatusEvent) error
 
+type EndpointSpecWatcher func(ctx context.Context, event chan *types.EndpointSpecEvent) error
+
 
 func (c *CacheNodeSpec) SetPodSpec(node, pod string, s types.PodSpec) {
 	log.Info("api:cache:setpodspec:> %s, %s, %#v", node, pod, s)
@@ -108,6 +110,23 @@ func (c *CacheNodeSpec) DelNetworkSpec(node string) {
 
 }
 
+func (c *CacheNodeSpec) SetEndpointSpec(endpoint string, s types.EndpointSpec) {
+	c.lock.Lock()
+	defer c.lock.Unlock()
+
+	for _, n := range c.spec {
+		n.Endpoints[endpoint] = s
+	}
+}
+
+func (c *CacheNodeSpec) DelEndpointSpec(endpoint string) {
+	c.lock.Lock()
+	defer c.lock.Unlock()
+
+	for _, n := range c.spec {
+		delete(n.Endpoints, endpoint)
+	}
+}
 
 func (c *CacheNodeSpec) Get(node string) *types.NodeSpec {
 	c.lock.Lock()
@@ -203,6 +222,29 @@ func (c *CacheNodeSpec) CacheNetwork(ns NetworkSpecWatcher) error {
 	return ns(context.Background(), evs)
 }
 
+func (c *CacheNodeSpec) CacheEndpoints(es EndpointSpecWatcher) error {
+	evs := make(chan *types.EndpointSpecEvent)
+	go func() {
+		for {
+			select {
+			case e := <-evs:
+				{
+					if e.Event == "create" || e.Event == "update" {
+						c.SetEndpointSpec(e.Name,e.Spec)
+						continue
+					}
+
+					if e.Event == "delete" {
+						c.DelEndpointSpec(e.Name)
+						continue
+					}
+				}
+			}
+		}
+	}()
+
+	return es(context.Background(), evs)
+}
 
 func (c *CacheNodeSpec) Del(dw NodeStatusWatcher) error {
 	evs := make(chan *types.NodeStatusEvent)
