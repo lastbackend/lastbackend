@@ -284,6 +284,13 @@ func (s *ServiceStorage) Watch(ctx context.Context, event chan *types.Event) err
 
 		e := new(types.Event)
 		e.Action = action
+		e.Name = keys[1]
+
+		if action == store.STORAGEDELETEEVENT {
+			e.Data = nil
+			event <- e
+			return
+		}
 
 		index := fmt.Sprintf("%s:%s", keys[1], keys[2])
 		item := s.cache.Get(index)
