@@ -18,12 +18,6 @@
 
 package v3
 
-const (
-	EventTypeCreate = "create"
-	EventTypeUpdate = "update"
-	EventTypeDelete = "delete"
-)
-
 type Config struct {
 	Endpoints []string `yaml:"endpoint"`
 	TLS struct {

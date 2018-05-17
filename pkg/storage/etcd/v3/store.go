@@ -27,14 +27,14 @@ import (
 
 	"github.com/coreos/etcd/clientv3"
 	"github.com/lastbackend/lastbackend/pkg/log"
-	st "github.com/lastbackend/lastbackend/pkg/storage/store"
+	"github.com/lastbackend/lastbackend/pkg/storage/store"
 	"github.com/lastbackend/lastbackend/pkg/util/converter"
 	"github.com/lastbackend/lastbackend/pkg/util/serializer"
 	"github.com/lastbackend/lastbackend/pkg/util/validator"
 	"golang.org/x/net/context"
 )
 
-type store struct {
+type dbstore struct {
 	debug      bool
 	client     *clientv3.Client
 	opts       []clientv3.OpOption
@@ -49,11 +49,11 @@ const (
 // Need for decode array bytes
 type buffer []byte
 
-func (s *store) WatchClose() {
+func (s *dbstore) WatchClose() {
 	s.client.Watcher.Close()
 }
 
-func (s *store) Count(ctx context.Context, key, keyRegexFilter string) (int, error) {
+func (s *dbstore) Count(ctx context.Context, key, keyRegexFilter string) (int, error) {
 	key = path.Join(s.pathPrefix, key)
 
 	log.V(logLevel).Debugf("Etcd3: Count: key: %s with filter: %s", key, keyRegexFilter)
@@ -78,7 +78,7 @@ func (s *store) Count(ctx context.Context, key, keyRegexFilter string) (int, err
 	return count, nil
 }
 
-func (s *store) Create(ctx context.Context, key string, obj, outPtr interface{}, ttl uint64) error {
+func (s *dbstore) Create(ctx context.Context, key string, obj, outPtr interface{}, ttl uint64) error {
 	key = path.Join(s.pathPrefix, key)
 
 	log.V(logLevel).Debugf("Etcd3: Create: key: %s, ttl: %d, val: %#v", key, ttl, obj)
@@ -101,7 +101,7 @@ func (s *store) Create(ctx context.Context, key string, obj, outPtr interface{},
 		return err
 	}
 	if !txnResp.Succeeded {
-		return errors.New(st.ErrEntityExists)
+		return errors.New(store.ErrEntityExists)
 	}
 	if validator.IsNil(outPtr) {
 		log.V(logLevel).Warn("Etcd3: Create: output struct is nil")
@@ -115,7 +115,7 @@ func (s *store) Create(ctx context.Context, key string, obj, outPtr interface{},
 	return nil
 }
 
-func (s *store) Get(ctx context.Context, key string, outPtr interface{}) error {
+func (s *dbstore) Get(ctx context.Context, key string, outPtr interface{}) error {
 	key = path.Join(s.pathPrefix, key)
 
 	log.V(logLevel).Debugf("Etcd3: Get: key: %s", key)
@@ -126,7 +126,7 @@ func (s *store) Get(ctx context.Context, key string, outPtr interface{}) error {
 		return err
 	}
 	if len(res.Kvs) == 0 {
-		return errors.New(st.ErrEntityNotFound)
+		return errors.New(store.ErrEntityNotFound)
 	}
 	if err := decode(s.codec, res.Kvs[0].Value, outPtr); err != nil {
 		log.V(logLevel).Errorf("Etcd3: Get: decode data err: %s", err.Error())
@@ -135,7 +135,7 @@ func (s *store) Get(ctx context.Context, key string, outPtr interface{}) error {
 	return nil
 }
 
-func (s *store) List(ctx context.Context, key, keyRegexFilter string, listOutPtr interface{}) error {
+func (s *dbstore) List(ctx context.Context, key, keyRegexFilter string, listOutPtr interface{}) error {
 	key = path.Join(s.pathPrefix, key)
 
 	log.V(logLevel).Debugf("Etcd3: List: key: %s with filter: %s", key, keyRegexFilter)
@@ -174,7 +174,7 @@ func (s *store) List(ctx context.Context, key, keyRegexFilter string, listOutPtr
 	return nil
 }
 
-func (s *store) Map(ctx context.Context, key, keyRegexFilter string, mapOutPtr interface{}) error {
+func (s *dbstore) Map(ctx context.Context, key, keyRegexFilter string, mapOutPtr interface{}) error {
 	key = path.Join(s.pathPrefix, key)
 
 	log.V(logLevel).Debugf("Etcd3: Map: key: %s with filter: %s", key, keyRegexFilter)
@@ -194,7 +194,7 @@ func (s *store) Map(ctx context.Context, key, keyRegexFilter string, mapOutPtr i
 	}
 
 	if len(items) == 0 {
-		return errors.New(st.ErrEntityNotFound)
+		return errors.New(store.ErrEntityNotFound)
 	}
 
 	if err := decodeMap(s.codec, items, mapOutPtr); err != nil {
@@ -205,7 +205,7 @@ func (s *store) Map(ctx context.Context, key, keyRegexFilter string, mapOutPtr i
 	return nil
 }
 
-func (s *store) MapList(ctx context.Context, key string, keyRegexFilter string, mapOutPtr interface{}) error {
+func (s *dbstore) MapList(ctx context.Context, key string, keyRegexFilter string, mapOutPtr interface{}) error {
 
 	key = path.Join(s.pathPrefix, key)
 
@@ -243,7 +243,7 @@ func (s *store) MapList(ctx context.Context, key string, keyRegexFilter string, 
 	return nil
 }
 
-func (s *store) Update(ctx context.Context, key string, obj, outPtr interface{}, ttl uint64) error {
+func (s *dbstore) Update(ctx context.Context, key string, obj, outPtr interface{}, ttl uint64) error {
 	key = path.Join(s.pathPrefix, key)
 
 	log.V(logLevel).Debugf("Etcd3: Update: key: %s, ttl: %d, val: %#v", key, ttl, obj)
@@ -267,7 +267,7 @@ func (s *store) Update(ctx context.Context, key string, obj, outPtr interface{},
 		return err
 	}
 	if !txnResp.Succeeded {
-		return errors.New(st.ErrEntityNotFound)
+		return errors.New(store.ErrEntityNotFound)
 	}
 	if validator.IsNil(outPtr) {
 		log.V(logLevel).Warn("Etcd3: Update: output struct is nil")
@@ -282,7 +282,7 @@ func (s *store) Update(ctx context.Context, key string, obj, outPtr interface{},
 	return nil
 }
 
-func (s *store) Upsert(ctx context.Context, key string, obj, outPtr interface{}, ttl uint64) error {
+func (s *dbstore) Upsert(ctx context.Context, key string, obj, outPtr interface{}, ttl uint64) error {
 	key = path.Join(s.pathPrefix, key)
 
 	log.V(logLevel).Debugf("Etcd3: Upsert: key: %s, ttl: %d, val: %#v", key, ttl, obj)
@@ -304,7 +304,7 @@ func (s *store) Upsert(ctx context.Context, key string, obj, outPtr interface{},
 		return err
 	}
 	if !txnResp.Succeeded {
-		return errors.New(st.ErrEntityExists)
+		return errors.New(store.ErrEntityExists)
 	}
 	if validator.IsNil(outPtr) {
 		log.V(logLevel).Warn("Etcd3: Upsert: output struct is nil")
@@ -319,7 +319,7 @@ func (s *store) Upsert(ctx context.Context, key string, obj, outPtr interface{},
 	return nil
 }
 
-func (s *store) Delete(ctx context.Context, key string) error {
+func (s *dbstore) Delete(ctx context.Context, key string) error {
 	key = path.Join(s.pathPrefix, key)
 
 	log.V(logLevel).Debugf("Etcd3: Delete: key: %s", key)
@@ -334,7 +334,7 @@ func (s *store) Delete(ctx context.Context, key string) error {
 	return nil
 }
 
-func (s *store) DeleteDir(ctx context.Context, key string) error {
+func (s *dbstore) DeleteDir(ctx context.Context, key string) error {
 	key = path.Join(s.pathPrefix, key)
 
 	log.V(logLevel).Debugf("Etcd3: DeleteDir: key: %s", key)
@@ -349,36 +349,38 @@ func (s *store) DeleteDir(ctx context.Context, key string) error {
 	return nil
 }
 
-func (s *store) Begin(ctx context.Context) st.TX {
+func (s *dbstore) Begin(ctx context.Context) store.TX {
 
 	log.V(logLevel).Debugf("Etcd3: Begin")
 
 	t := new(tx)
-	t.store = s
+	t.dbstore = s
 	t.context = ctx
 	t.txn = s.client.KV.Txn(ctx)
 	return t
 }
 
-func (s *store) Watch(ctx context.Context, key, keyRegexFilter string, f func(string, string, []byte)) error {
+func (s *dbstore) Watch(ctx context.Context, key, keyRegexFilter string, f func(string, string, []byte)) error {
 	key = path.Join(s.pathPrefix, key)
 
 	log.V(logLevel).Debugf("Etcd3: WatchService: key: %s, filter: %s", key, keyRegexFilter)
 
 	r, _ := regexp.Compile(keyRegexFilter)
 	rch := s.client.Watch(context.Background(), key, clientv3.WithPrefix())
+
 	for wresp := range rch {
 		for _, ev := range wresp.Events {
+
 			if r.MatchString(string(ev.Kv.Key)) {
 
-				action := EventTypeCreate
+				action := store.STORAGECREATEEVENT
 
 				if ev.Type.String() == "PUT" && wresp.Header.Revision != ev.Kv.CreateRevision {
-					action = EventTypeUpdate
+					action = store.STORAGEUPDATEEVENT
 				}
 
-				if ev.Type.String() == "DEL" {
-					action = EventTypeDelete
+				if ev.Type.String() == "DELETE" {
+					action = store.STORAGEDELETEEVENT
 				}
 
 				go f(action, string(ev.Kv.Key), ev.Kv.Value)
@@ -471,7 +473,7 @@ func joinJSON(item map[string]buffer) []byte {
 	return buffer
 }
 
-func (s *store) ttlOpts(ctx context.Context, ttl int64) ([]clientv3.OpOption, error) {
+func (s *dbstore) ttlOpts(ctx context.Context, ttl int64) ([]clientv3.OpOption, error) {
 	if ttl == 0 {
 		return nil, nil
 	}
@@ -482,8 +484,8 @@ func (s *store) ttlOpts(ctx context.Context, ttl int64) ([]clientv3.OpOption, er
 	return []clientv3.OpOption{clientv3.WithLease(clientv3.LeaseID(lcr.ID))}, nil
 }
 
-func GetStore(client *clientv3.Client, opts []clientv3.OpOption, codec serializer.Codec, pathPrefix string, debug bool) *store {
-	return &store{
+func GetStore(client *clientv3.Client, opts []clientv3.OpOption, codec serializer.Codec, pathPrefix string, debug bool) *dbstore {
+	return &dbstore{
 		client:     client,
 		opts:       opts,
 		codec:      codec,

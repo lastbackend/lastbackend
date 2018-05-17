@@ -27,6 +27,7 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 	"github.com/lastbackend/lastbackend/pkg/api/types/v1"
 	"github.com/gorilla/websocket"
+	"time"
 )
 
 const (
@@ -45,6 +46,7 @@ var upgrader = websocket.Upgrader{
 type Event struct {
 	Entity string      `json:"entity"`
 	Action string      `json:"action"`
+	Name   string      `json:"name"`
 	Data   interface{} `json:"data"`
 }
 
@@ -72,6 +74,9 @@ func EventSubscribeH(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	ticker := time.NewTicker(time.Second)
+	defer ticker.Stop()
+
 	var serviceEvents = make(chan *types.Event)
 	var namespaceEvents = make(chan *types.Event)
 
@@ -92,14 +97,18 @@ func EventSubscribeH(w http.ResponseWriter, r *http.Request) {
 				return
 			case e := <-serviceEvents:
 
+				var data interface{}
 				if e.Data == nil {
-					continue
+					data = nil
+				} else {
+					data = v1.View().Service().New(e.Data.(*types.Service))
 				}
 
 				event := Event{
 					Entity: "service",
 					Action: e.Action,
-					Data:   v1.View().Service().New(e.Data.(*types.Service)),
+					Name:   e.Name,
+					Data:   data,
 				}
 
 				if err = conn.WriteJSON(event); err != nil {
@@ -107,14 +116,18 @@ func EventSubscribeH(w http.ResponseWriter, r *http.Request) {
 				}
 			case e := <-namespaceEvents:
 
+				var data interface{}
 				if e.Data == nil {
-					continue
+					data = nil
+				} else {
+					data = v1.View().Namespace().New(e.Data.(*types.Namespace))
 				}
 
 				event := Event{
 					Entity: "namespace",
 					Action: e.Action,
-					Data:   v1.View().Namespace().New(e.Data.(*types.Namespace)),
+					Name:   e.Name,
+					Data:   data,
 				}
 
 				if err = conn.WriteJSON(event); err != nil {
@@ -123,9 +136,17 @@ func EventSubscribeH(w http.ResponseWriter, r *http.Request) {
 			}
 		}
 	}()
-
 	go sm.Watch(serviceEvents)
 	go nm.Watch(namespaceEvents)
+	go func() {
+		for range ticker.C {
+			if err := conn.WriteMessage(websocket.TextMessage, []byte{}); err != nil {
+				log.Errorf("%s:subscribe:> writing to the client websocket err: %s", logPrefix, err.Error())
+				done <- true
+				break
+			}
+		}
+	}()
 
 	<-done
 }

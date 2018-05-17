@@ -205,27 +205,33 @@ func (s *NamespaceStorage) Remove(ctx context.Context, namespace *types.Namespac
 // Watch namespace changes
 func (s *NamespaceStorage) Watch(ctx context.Context, event chan *types.Event) error {
 
-	log.V(logLevel).Debug("storage:etcd:namesapce:> watch namesapce")
+	log.V(logLevel).Debug("storage:etcd:namespace:> watch namespace")
 
-	const filter = `\b.+` + namespaceStorage + `\/(.+)\b`
+	const filter = `\b.+` + namespaceStorage + `\/(.+)\/(.+)\b`
 	client, destroy, err := getClient(ctx)
 	if err != nil {
-		log.V(logLevel).Errorf("storage:etcd:namesapce:> watch namesapce err: %s", err.Error())
+		log.V(logLevel).Errorf("storage:etcd:namespace:> watch namespace err: %s", err.Error())
 		return err
 	}
 	defer destroy()
 
 	r, _ := regexp.Compile(filter)
-	key := keyCreate(serviceStorage)
+	key := keyCreate(namespaceStorage)
 	cb := func(action, key string, data []byte) {
-
 		keys := r.FindStringSubmatch(key)
-		if len(keys) < 4 {
+		if len(keys) < 2 {
 			return
 		}
 
 		e := new(types.Event)
 		e.Action = action
+		e.Name = keys[1]
+
+		if action == store.STORAGEDELETEEVENT {
+			e.Data = nil
+			event <- e
+			return
+		}
 
 		index := keys[1]
 		item := s.cache.Get(keys[1])
@@ -241,18 +247,18 @@ func (s *NamespaceStorage) Watch(ctx context.Context, event chan *types.Event) e
 
 		ns := item.(*types.Namespace)
 
-		switch keys[3] {
+		switch keys[2] {
 		case "meta":
 			var meta types.NamespaceMeta
 			if err := json.Unmarshal(data, &meta); err != nil {
-				log.V(logLevel).Errorf("storage:etcd:namesapce:> parse namesapce meta err: %s", err.Error())
+				log.V(logLevel).Errorf("storage:etcd:namespace:> parse namespace meta err: %s", err.Error())
 				return
 			}
 			ns.Meta = meta
 		case "spec":
 			var spec types.NamespaceSpec
 			if err := json.Unmarshal(data, &spec); err != nil {
-				log.V(logLevel).Errorf("storage:etcd:namesapce:> parse namesapce spec err: %s", err.Error())
+				log.V(logLevel).Errorf("storage:etcd:namespace:> parse namespace spec err: %s", err.Error())
 				return
 			}
 			ns.Spec = spec
@@ -266,7 +272,7 @@ func (s *NamespaceStorage) Watch(ctx context.Context, event chan *types.Event) e
 	}
 
 	if err := client.Watch(ctx, key, filter, cb); err != nil {
-		log.V(logLevel).Errorf("storage:etcd:namesapce:> watch namesapce err: %s", err.Error())
+		log.V(logLevel).Errorf("storage:etcd:namespace:> watch namespace err: %s", err.Error())
 		return err
 	}
 
