@@ -21,7 +21,13 @@ package state
 import (
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 	"github.com/lastbackend/lastbackend/pkg/log"
+	"sync"
 )
+
+type SecretsState struct {
+	lock    sync.RWMutex
+	secrets map[string]types.Secret
+}
 
 func (s *SecretsState) GetSecrets() map[string]types.Secret {
 	log.V(logLevel).Debug("Cache: SecretCache: get pods")

@@ -51,7 +51,7 @@ type SpecTemplate struct {
 // swagger:model types_spec_template_network
 type SpecTemplateNetwork struct {
 	IP       string               `json:"ip"`
-	Ports    map[string]int       `json:"ports"`
+	Ports    map[int]string       `json:"ports"`
 	Strategy EndpointSpecStrategy `json:"strategy"`
 	Policy   string               `json:"policy"`
 }

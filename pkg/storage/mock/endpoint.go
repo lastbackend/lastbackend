@@ -44,6 +44,17 @@ func (s *EndpointStorage) Get(ctx context.Context, namespace, service string) (*
 	return nil, errors.New(store.ErrEntityNotFound)
 }
 
+// Get endpoints
+func (s *EndpointStorage) List(ctx context.Context) (map[string]*types.Endpoint, error) {
+
+	list := make(map[string]*types.Endpoint, 0)
+	for _, d := range s.data {
+		list[s.keyGet(&d)] = &d
+	}
+
+	return list, nil
+}
+
 // Get endpoint by namespace name
 func (s *EndpointStorage) ListByNamespace(ctx context.Context, namespace string) (map[string]*types.Endpoint, error) {
 

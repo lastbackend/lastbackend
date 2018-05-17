@@ -21,25 +21,30 @@ package endpoint
 import (
 	"context"
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
+	"github.com/lastbackend/lastbackend/pkg/log"
 )
 
+const logEndpointPrefix = "runtime:endpoint:>"
+
 func Restore(ctx context.Context) error {
+	log.Debugf("%s restore", logEndpointPrefix)
 	return nil
 }
 
 func Create(ctx context.Context, key string, spec *types.EndpointSpec) (types.EndpointStatus, error) {
+	log.Debugf("%s create", logEndpointPrefix)
 	return types.EndpointStatus{}, nil
 }
 
 func Clean(ctx context.Context, status *types.EndpointStatus) {
-
+	log.Debugf("%s clean", logEndpointPrefix)
 }
 
 func Destroy(ctx context.Context, endpoint string, status *types.EndpointStatus) {
-
+	log.Debugf("%s destroy", logEndpointPrefix)
 }
 
 func Manage(ctx context.Context) error {
-
+	log.Debugf("%s manage", logEndpointPrefix)
 	return nil
 }

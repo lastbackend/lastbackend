@@ -29,6 +29,7 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/node/runtime/pod"
 	"github.com/lastbackend/lastbackend/pkg/node/runtime/volume"
 	"time"
+	"github.com/lastbackend/lastbackend/pkg/node/runtime/endpoint"
 )
 
 type Runtime struct {
@@ -43,35 +44,13 @@ func (r *Runtime) Restore() {
 	pod.Restore(r.ctx)
 }
 
-func (r *Runtime) Provision(ctx context.Context, spec *types.NodeSpec, clean bool) error {
+func (r *Runtime) Provision(ctx context.Context, spec *types.NodeSpec) error {
 
 	var (
 		msg = "node:runtime:provision:"
 	)
 
 	log.Debugf("%s> provision init", msg)
-
-	if clean {
-		log.Debugf("%s> clean up pods", msg)
-		pods := envs.Get().GetState().Pods().GetPods()
-
-		for k := range pods {
-			if _, ok := spec.Pods[k]; !ok {
-				pod.Destroy(context.Background(), k, pods[k])
-			}
-		}
-	}
-
-	if clean {
-		log.Debugf("%s> clean up networks", msg)
-		nets := envs.Get().GetState().Networks().GetSubnets()
-
-		for n, sp := range nets {
-			if _, ok := spec.Network[n]; !ok {
-				network.Destroy(ctx, &sp)
-			}
-		}
-	}
 
 	log.Debugf("%s> provision networks", msg)
 	for _, n := range spec.Network {
@@ -87,6 +66,11 @@ func (r *Runtime) Provision(ctx context.Context, spec *types.NodeSpec, clean boo
 		if err := pod.Manage(ctx, p, &spec); err != nil {
 			log.Errorf("Pod [%s] manage err: %s", p, err.Error())
 		}
+	}
+
+	log.Debugf("%s> provision endpoints", msg)
+	for _, e := range spec.Endpoints {
+		log.Debugf("endpoint: %v", e)
 	}
 
 	log.Debugf("%s> provision volumes", msg)
@@ -159,6 +143,41 @@ func (r *Runtime) GetSpec(ctx context.Context) error {
 	return nil
 }
 
+func (r *Runtime) Clean(ctx context.Context, spec *types.NodeSpec) error {
+	var (
+		msg = "node:runtime:clean:"
+	)
+
+	log.Debugf("%s> clean up endpoints", msg)
+	es := envs.Get().GetState().Endpoints().GetEndpoints()
+
+	for k := range es {
+		if _, ok := spec.Endpoints[k]; !ok {
+			endpoint.Destroy(context.Background(), k, es[k])
+		}
+	}
+
+	log.Debugf("%s> clean up pods", msg)
+	pods := envs.Get().GetState().Pods().GetPods()
+
+	for k := range pods {
+		if _, ok := spec.Pods[k]; !ok {
+			pod.Destroy(context.Background(), k, pods[k])
+		}
+	}
+
+	log.Debugf("%s> clean up networks", msg)
+	nets := envs.Get().GetState().Networks().GetSubnets()
+
+	for n, sp := range nets {
+		if _, ok := spec.Network[n]; !ok {
+			network.Destroy(ctx, &sp)
+		}
+	}
+
+	return nil
+}
+
 func (r *Runtime) Loop() {
 	log.Debug("node:runtime:loop:> start runtime loop")
 
@@ -169,10 +188,18 @@ func (r *Runtime) Loop() {
 			select {
 			case spec := <-r.spec:
 				log.Debug("node:runtime:loop:> provision new spec")
-				if err := r.Provision(ctx, spec, clean); err != nil {
+
+				if clean {
+					if err := r.Clean(ctx, spec); err != nil {
+						log.Errorf("node:runtime:loop:> clean err: %s", err.Error())
+						continue
+					}
+					clean = false
+				}
+
+				if err := r.Provision(ctx, spec); err != nil {
 					log.Errorf("node:runtime:loop:> provision new spec err: %s", err.Error())
 				}
-				clean = false
 			}
 		}
 	}(r.ctx)

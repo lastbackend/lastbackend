@@ -81,6 +81,7 @@ type Pod interface {
 
 type Endpoint interface {
 	Get(ctx context.Context, namespace, service string) (*types.Endpoint, error)
+	List(ctx context.Context) (map[string]*types.Endpoint, error)
 	ListByNamespace(ctx context.Context, namespace string) (map[string]*types.Endpoint, error)
 	SetStatus(ctx context.Context, endpoint *types.Endpoint) error
 	SetSpec(ctx context.Context, endpoint *types.Endpoint) error

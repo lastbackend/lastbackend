@@ -21,7 +21,14 @@ package state
 import (
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 	"github.com/lastbackend/lastbackend/pkg/log"
+	"sync"
 )
+
+
+type NetworkState struct {
+	lock    sync.RWMutex
+	subnets map[string]types.NetworkSpec
+}
 
 func (n *NetworkState) GetSubnets() map[string]types.NetworkSpec {
 	return n.subnets

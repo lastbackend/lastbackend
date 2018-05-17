@@ -150,11 +150,14 @@ func (s *ServiceSpec) Update(spec *ServiceOptionsSpec) {
 		n = true
 	}
 
+	// TODO: update for multi-container pod
 	if spec.Ports != nil {
+		s.Template.Network.Ports = spec.Ports
+
 		c.Ports = SpecTemplateContainerPorts{}
 
-		for internal := range spec.Ports {
-			port, proto, err := network.ParsePortMap(internal)
+		for _, pm := range spec.Ports {
+			port, proto, err := network.ParsePortMap(pm)
 			if err != nil {
 				continue
 			}
@@ -164,7 +167,7 @@ func (s *ServiceSpec) Update(spec *ServiceOptionsSpec) {
 				ContainerPort: port,
 			})
 		}
-		n = true
+
 	}
 
 	if spec.EnvVars != nil {
@@ -252,5 +255,5 @@ type ServiceOptionsSpec struct {
 	Entrypoint *string        `json:"entrypoint,omitempty"`
 	Command    *string        `json:"command,omitempty"`
 	EnvVars    *[]string      `json:"env,omitempty"`
-	Ports      map[string]int `json:"ports,omitempty"`
+	Ports      map[int]string `json:"ports,omitempty"`
 }

@@ -26,7 +26,6 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 	"github.com/lastbackend/lastbackend/pkg/log"
 	"github.com/lastbackend/lastbackend/pkg/storage/store"
-	"reflect"
 )
 
 // Provision service
@@ -97,8 +96,21 @@ func Provision(svc *types.Service) error {
 		}
 
 		// check ports equal
-		if !reflect.DeepEqual(svc.Spec.Template.Network.Ports, ept.Spec.PortMap) {
-			equal = false
+		for ext, pm := range svc.Spec.Template.Network.Ports {
+			if cpm, ok := ept.Spec.PortMap[ext]; !ok || pm != cpm {
+				equal = false
+				break
+			}
+		}
+
+		// check if some ports are deleted from spec but presents in endpoint spec
+		if !equal {
+			for ext, pm := range ept.Spec.PortMap {
+				if cpm, ok := svc.Spec.Template.Network.Ports[ext]; !ok || pm != cpm {
+					equal = false
+					break
+				}
+			}
 		}
 
 		if equal {

@@ -160,6 +160,7 @@ func NodeGetSpecH(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	log.Infof("%s", string(response))
 	w.WriteHeader(http.StatusOK)
 	if _, err := w.Write(response); err != nil {
 		log.Errorf("%s:getspec:> write response err: %s", logPrefix, err.Error())

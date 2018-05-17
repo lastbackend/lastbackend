@@ -115,6 +115,9 @@ func (c *CacheNodeSpec) SetEndpointSpec(endpoint string, s types.EndpointSpec) {
 	defer c.lock.Unlock()
 
 	for _, n := range c.spec {
+		if n.Endpoints == nil {
+			n.Endpoints = make(map[string]types.EndpointSpec, 0)
+		}
 		n.Endpoints[endpoint] = s
 	}
 }

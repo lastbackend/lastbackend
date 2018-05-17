@@ -84,7 +84,8 @@ func (e *Endpoint) Create(namespace, service string, opts *types.EndpointCreateO
 
 	endpoint.Status.State = types.StateCreated
 	endpoint.Status.Message = ""
-	endpoint.Spec.PortMap = make(map[string]int, 0)
+	endpoint.Spec.PortMap = make(map[int]string, 0)
+	endpoint.Spec.Upstreams = make([]*types.EndpointUpstream, 0)
 
 	for k,v := range opts.Ports {
 		endpoint.Spec.PortMap[k] = v
@@ -113,7 +114,7 @@ func (e *Endpoint) Update(endpoint *types.Endpoint, opts *types.EndpointUpdateOp
 	log.Debugf("%s:update:> endpoint: %s", logEndpointPrefix, endpoint.SelfLink())
 
 	if len(opts.Ports) != 0 {
-		endpoint.Spec.PortMap = make(map[string]int, 0)
+		endpoint.Spec.PortMap = make(map[int]string, 0)
 		for k,v := range opts.Ports {
 			endpoint.Spec.PortMap[k] = v
 		}

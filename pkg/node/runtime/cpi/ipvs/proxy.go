@@ -92,9 +92,9 @@ func (i *Proxy) Create(ctx context.Context, spec *types.EndpointSpec) (*types.En
 		}
 	}()
 
-	for mp, ext := range spec.PortMap {
+	for ext, pm := range spec.PortMap {
 
-		port, proto, err := network.ParsePortMap(mp)
+		port, proto, err := network.ParsePortMap(pm)
 		if err != nil {
 			err = errors.New("Invalid port map declaration")
 			status.State = types.StateError
@@ -185,7 +185,7 @@ func (i *Proxy) Destroy(ctx context.Context, spec *types.EndpointSpec) (*types.E
 		}
 	}()
 
-	for pm, ext := range spec.PortMap {
+	for ext, pm := range spec.PortMap {
 
 		_, proto, err := network.ParsePortMap(pm)
 		if err != nil {

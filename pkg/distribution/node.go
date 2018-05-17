@@ -128,6 +128,19 @@ func (n *Node) GetSpec(node *types.Node) (*types.NodeSpec, error) {
 		return nil, err
 	}
 
+	es, err := n.storage.Endpoint().List(n.context)
+	if err != nil {
+		log.V(logLevel).Debugf("%s:getspec:> get endpoints `%s` err: %s", logNodePrefix, node.Meta.Name, err.Error())
+		return nil, err
+	}
+
+	spec.Endpoints = make(map[string]types.EndpointSpec, 0)
+	for n, sp := range es {
+		spec.Endpoints[n]=sp.Spec
+	}
+
+	log.Debugf("%#v", spec.Endpoints)
+
 	return spec, nil
 }
 
