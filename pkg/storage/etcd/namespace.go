@@ -218,7 +218,6 @@ func (s *NamespaceStorage) Watch(ctx context.Context, event chan *types.Event) e
 	r, _ := regexp.Compile(filter)
 	key := keyCreate(namespaceStorage)
 	cb := func(action, key string, data []byte) {
-		fmt.Println(">>>>>>>>>>>", key, string(data))
 		keys := r.FindStringSubmatch(key)
 		if len(keys) < 2 {
 			return
