@@ -27,8 +27,7 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 	"github.com/lastbackend/lastbackend/pkg/api/types/v1"
 	"github.com/gorilla/websocket"
-	"fmt"
-	"encoding/json"
+	"time"
 )
 
 const (
@@ -74,6 +73,17 @@ func EventSubscribeH(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	ticker := time.NewTicker(time.Second)
+	defer ticker.Stop()
+
+	for range ticker.C {
+		if err := conn.WriteMessage(websocket.TextMessage, []byte{}); err != nil {
+			log.Errorf("%s:subscribe:> writing to the client websocket err: %s", logPrefix, err.Error())
+			done <- true
+			break
+		}
+	}
+
 	var serviceEvents = make(chan *types.Event)
 	var namespaceEvents = make(chan *types.Event)
 
@@ -112,9 +122,6 @@ func EventSubscribeH(w http.ResponseWriter, r *http.Request) {
 				if e.Data == nil {
 					continue
 				}
-
-				buf, _ := json.Marshal(e.Data)
-				fmt.Println("2 >>>>>>>>>>>>>>>>>>", string(buf))
 
 				event := Event{
 					Entity: "namespace",
