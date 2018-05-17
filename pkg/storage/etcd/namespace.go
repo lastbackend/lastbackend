@@ -207,7 +207,7 @@ func (s *NamespaceStorage) Watch(ctx context.Context, event chan *types.Event) e
 
 	log.V(logLevel).Debug("storage:etcd:namesapce:> watch namesapce")
 
-	const filter = `\b.+` + namespaceStorage + `\/(.+)\b`
+	const filter = `\b.+` + namespaceStorage + `\/(.+)\/(.+)\b`
 	client, destroy, err := getClient(ctx)
 	if err != nil {
 		log.V(logLevel).Errorf("storage:etcd:namesapce:> watch namesapce err: %s", err.Error())
@@ -216,11 +216,11 @@ func (s *NamespaceStorage) Watch(ctx context.Context, event chan *types.Event) e
 	defer destroy()
 
 	r, _ := regexp.Compile(filter)
-	key := keyCreate(serviceStorage)
+	key := keyCreate(namespaceStorage)
 	cb := func(action, key string, data []byte) {
 
 		keys := r.FindStringSubmatch(key)
-		if len(keys) < 4 {
+		if len(keys) < 2 {
 			return
 		}
 
@@ -241,7 +241,7 @@ func (s *NamespaceStorage) Watch(ctx context.Context, event chan *types.Event) e
 
 		ns := item.(*types.Namespace)
 
-		switch keys[3] {
+		switch keys[2] {
 		case "meta":
 			var meta types.NamespaceMeta
 			if err := json.Unmarshal(data, &meta); err != nil {

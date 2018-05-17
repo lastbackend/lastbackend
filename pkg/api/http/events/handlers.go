@@ -27,6 +27,8 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 	"github.com/lastbackend/lastbackend/pkg/api/types/v1"
 	"github.com/gorilla/websocket"
+	"fmt"
+	"encoding/json"
 )
 
 const (
@@ -110,6 +112,9 @@ func EventSubscribeH(w http.ResponseWriter, r *http.Request) {
 				if e.Data == nil {
 					continue
 				}
+
+				buf, _ := json.Marshal(e.Data)
+				fmt.Println("2 >>>>>>>>>>>>>>>>>>", string(buf))
 
 				event := Event{
 					Entity: "namespace",

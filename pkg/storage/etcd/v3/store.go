@@ -367,8 +367,10 @@ func (s *store) Watch(ctx context.Context, key, keyRegexFilter string, f func(st
 
 	r, _ := regexp.Compile(keyRegexFilter)
 	rch := s.client.Watch(context.Background(), key, clientv3.WithPrefix())
+
 	for wresp := range rch {
 		for _, ev := range wresp.Events {
+
 			if r.MatchString(string(ev.Kv.Key)) {
 
 				action := EventTypeCreate
