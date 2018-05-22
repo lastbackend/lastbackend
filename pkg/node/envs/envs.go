@@ -25,6 +25,7 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/node/runtime/cri"
 	"github.com/lastbackend/lastbackend/pkg/node/state"
 	"github.com/lastbackend/lastbackend/pkg/node/events/exporter"
+	"github.com/lastbackend/lastbackend/pkg/node/runtime/cpi"
 )
 
 var e Env
@@ -36,17 +37,18 @@ func Get() *Env {
 type Env struct {
 	cri      cri.CRI
 	cni      cni.CNI
+	cpi      cpi.CPI
 	cache    *cache.Cache
 	state    *state.State
 	client   interfaces.Node
 	exporter *exporter.Exporter
 }
 
-func (c *Env) SetCri(cri cri.CRI) {
+func (c *Env) SetCRI(cri cri.CRI) {
 	c.cri = cri
 }
 
-func (c *Env) GetCri() cri.CRI {
+func (c *Env) GetCRI() cri.CRI {
 	return c.cri
 }
 
@@ -57,6 +59,15 @@ func (c *Env) SetCNI(n cni.CNI) {
 func (c *Env) GetCNI() cni.CNI {
 	return c.cni
 }
+
+func (c *Env) SetCPI(cpi cpi.CPI) {
+	c.cpi = cpi
+}
+
+func (c *Env) GetCPI() cpi.CPI {
+	return c.cpi
+}
+
 
 func (c *Env) SetCache(s *cache.Cache) {
 	c.cache = s

@@ -52,6 +52,15 @@ func (r *Runtime) Provision(ctx context.Context, spec *types.NodeSpec) error {
 
 	log.Debugf("%s> provision init", msg)
 
+	log.Debugf("%s> clean up endpoints", msg)
+	es := envs.Get().GetState().Endpoints().GetEndpoints()
+
+	for k := range es {
+		if _, ok := spec.Endpoints[k]; !ok {
+			endpoint.Destroy(context.Background(), k, es[k])
+		}
+	}
+
 	log.Debugf("%s> provision networks", msg)
 	for _, n := range spec.Network {
 		log.Debugf("network: %v", n)
@@ -69,8 +78,11 @@ func (r *Runtime) Provision(ctx context.Context, spec *types.NodeSpec) error {
 	}
 
 	log.Debugf("%s> provision endpoints", msg)
-	for _, e := range spec.Endpoints {
+	for e, spec := range spec.Endpoints {
 		log.Debugf("endpoint: %v", e)
+		if err := endpoint.Manage(ctx, e, &spec); err != nil {
+			log.Errorf("Endpoint [%s] manage err: %s", e, err.Error())
+		}
 	}
 
 	log.Debugf("%s> provision volumes", msg)
@@ -97,7 +109,7 @@ func (r *Runtime) Subscribe() {
 		}
 	}()
 
-	envs.Get().GetCri().Subscribe(r.ctx, envs.Get().GetState().Pods(), pc)
+	envs.Get().GetCRI().Subscribe(r.ctx, envs.Get().GetState().Pods(), pc)
 }
 
 func (r *Runtime) Connect(ctx context.Context) error {
@@ -147,15 +159,6 @@ func (r *Runtime) Clean(ctx context.Context, spec *types.NodeSpec) error {
 	var (
 		msg = "node:runtime:clean:"
 	)
-
-	log.Debugf("%s> clean up endpoints", msg)
-	es := envs.Get().GetState().Endpoints().GetEndpoints()
-
-	for k := range es {
-		if _, ok := spec.Endpoints[k]; !ok {
-			endpoint.Destroy(context.Background(), k, es[k])
-		}
-	}
 
 	log.Debugf("%s> clean up pods", msg)
 	pods := envs.Get().GetState().Pods().GetPods()

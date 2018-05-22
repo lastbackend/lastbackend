@@ -123,7 +123,7 @@ func Create(ctx context.Context, key string, spec *types.PodSpec) (*types.PodSta
 	for _, c := range spec.Template.Containers {
 
 		log.Debug("Pull images for pod if needed")
-		r, err := envs.Get().GetCri().ImagePull(ctx, &c.Image)
+		r, err := envs.Get().GetCRI().ImagePull(ctx, &c.Image)
 		if err != nil {
 			log.Errorf("Can-not pull image: %s", err)
 			status.SetError(err)
@@ -154,7 +154,7 @@ func Create(ctx context.Context, key string, spec *types.PodSpec) (*types.PodSta
 		//==========================================================================
 
 		var c = new(types.PodContainer)
-		c.ID, err = envs.Get().GetCri().ContainerCreate(ctx, &s)
+		c.ID, err = envs.Get().GetCRI().ContainerCreate(ctx, &s)
 		if err != nil {
 			switch err {
 			case context.Canceled:
@@ -191,7 +191,7 @@ func Create(ctx context.Context, key string, spec *types.PodSpec) (*types.PodSta
 		envs.Get().GetState().Pods().SetPod(key, status)
 		log.Debugf("Container created: %#v", c)
 
-		if err := envs.Get().GetCri().ContainerStart(ctx, c.ID); err != nil {
+		if err := envs.Get().GetCRI().ContainerStart(ctx, c.ID); err != nil {
 			switch err {
 			case context.Canceled:
 				log.Errorf("Stop starting container err: %s", err.Error())
@@ -241,14 +241,14 @@ func Clean(ctx context.Context, status *types.PodStatus) {
 
 	for _, c := range status.Containers {
 		log.Debugf("Remove unnecessary container: %s", c.ID)
-		if err := envs.Get().GetCri().ContainerRemove(ctx, c.ID, true, true); err != nil {
+		if err := envs.Get().GetCRI().ContainerRemove(ctx, c.ID, true, true); err != nil {
 			log.Warnf("Can-not remove unnecessary container %s: %s", c.ID, err)
 		}
 	}
 
 	for _, c := range status.Containers {
 		log.Debugf("Try to clean image: %s", c.Image.Name)
-		if err := envs.Get().GetCri().ImageRemove(ctx, c.Image.Name); err != nil {
+		if err := envs.Get().GetCRI().ImageRemove(ctx, c.Image.Name); err != nil {
 			log.Warnf("Can-not remove unnecessary image %s: %s", c.Image.Name, err)
 		}
 	}
@@ -264,7 +264,7 @@ func Restore(ctx context.Context) error {
 
 	log.Debug("Runtime restore state")
 
-	cl, err := envs.Get().GetCri().ContainerList(ctx, true)
+	cl, err := envs.Get().GetCRI().ContainerList(ctx, true)
 	if err != nil {
 		log.Errorf("Pods restore error: %s", err)
 		return err
@@ -355,7 +355,7 @@ func Logs(ctx context.Context, id string, follow bool, s io.Writer, doneChan cha
 	log.Debugf("Get container [%s] logs streaming", id)
 
 	var (
-		cri    = envs.Get().GetCri()
+		cri    = envs.Get().GetCRI()
 		buffer = make([]byte, BUFFER_SIZE)
 		done   = make(chan bool, 1)
 	)
@@ -425,7 +425,7 @@ func Logs(ctx context.Context, id string, follow bool, s io.Writer, doneChan cha
 }
 
 func containerInspect(ctx context.Context, status *types.PodStatus, container *types.PodContainer) error {
-	info, err := envs.Get().GetCri().ContainerInspect(ctx, container.ID)
+	info, err := envs.Get().GetCRI().ContainerInspect(ctx, container.ID)
 	if err != nil {
 		switch err {
 		case context.Canceled:

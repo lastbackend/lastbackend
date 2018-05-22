@@ -43,17 +43,19 @@ type EndpointMeta struct {
 
 // EndpointStatus - endpoint status
 type EndpointStatus struct {
-	State     string                               `json:"state"`
-	Message   string                               `json:"message"`
-	Upstreams map[int]map[string]*EndpointUpstream `json:"upstreams"`
+	State     string               `json:"state"`
+	Message   string               `json:"message"`
+	IP        string               `json:"ip"`
+	PortMap   map[int]string       `json:"port_map"`
+	Upstreams []string             `json:"upstreams"`
+	Strategy  EndpointSpecStrategy `json:"strategy"`
 }
 
 // EndpointSpec spec data
 type EndpointSpec struct {
-	State     string               `json:"state"`
 	IP        string               `json:"ip"`
 	PortMap   map[int]string       `json:"port_map"`
-	Upstreams []*EndpointUpstream  `json:"upstreams"`
+	Upstreams []string             `json:"upstreams"`
 	Strategy  EndpointSpecStrategy `json:"strategy"`
 	Policy    string               `json:"policy"`
 }

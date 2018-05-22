@@ -54,6 +54,19 @@ func (es *EndpointState) SetEndpoints(endpoints map[string]*types.EndpointStatus
 	}
 }
 
+func (es *EndpointState) GetEndpoint(key string) *types.EndpointStatus {
+	log.V(logLevel).Debugf("%s: get endpoint: %s", logEndpointPrefix, key)
+	es.lock.Lock()
+	defer es.lock.Unlock()
+
+	ep, ok := es.endpoints[key]
+	if !ok {
+		return nil
+	}
+
+	return ep
+}
+
 func (es *EndpointState) AddEndpoint(key string, endpoint *types.EndpointStatus) {
 	es.lock.Lock()
 	defer es.lock.Unlock()

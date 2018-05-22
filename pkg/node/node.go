@@ -39,6 +39,7 @@ import (
 	"github.com/spf13/viper"
 	"github.com/lastbackend/lastbackend/pkg/node/events/exporter"
 	"github.com/lastbackend/lastbackend/pkg/node/events"
+	"github.com/lastbackend/lastbackend/pkg/node/runtime/cpi/cpi"
 )
 
 // Daemon - run node daemon
@@ -62,11 +63,17 @@ func Daemon() {
 		log.Errorf("Cannot initialize cni: %v", err)
 	}
 
+	cpi, err := cpi.New()
+	if err != nil {
+		log.Errorf("Cannot initialize cni: %v", err)
+	}
+
 	state := state.New()
 
 	envs.Get().SetState(state)
-	envs.Get().SetCri(cri)
+	envs.Get().SetCRI(cri)
 	envs.Get().SetCNI(cni)
+	envs.Get().SetCPI(cpi)
 
 	r := runtime.NewRuntime(context.Background())
 	r.Restore()
