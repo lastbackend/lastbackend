@@ -193,8 +193,8 @@ func TestProvisionEndpointCreate (t *testing.T) {
 
 	s1.Spec.Replicas = 2
 	s1.Spec.Template.Containers = make(types.SpecTemplateContainers, 0)
-	s1.Spec.Template.Network.Ports = make(map[string]int, 0)
-	s1.Spec.Template.Network.Ports["6379/tcp"]=6379
+	s1.Spec.Template.Network.Ports = make(map[int]string, 0)
+	s1.Spec.Template.Network.Ports[6379]="6379/tcp"
 
 	spec := types.SpecTemplateContainer{
 		Name: "test-template",
@@ -203,7 +203,7 @@ func TestProvisionEndpointCreate (t *testing.T) {
 	spec.SetDefault()
 
 	s1.Spec.Template.Containers = append(s1.Spec.Template.Containers, spec)
-	e1.Spec.PortMap = make(map[string]int)
+	e1.Spec.PortMap = make(map[int]string)
 
 	for k,v := range s1.Spec.Template.Network.Ports {
 		e1.Spec.PortMap[k] = v
@@ -264,8 +264,8 @@ func TestProvisionEndpointUpdate (t *testing.T) {
 
 	s1.Spec.Replicas = 2
 	s1.Spec.Template.Containers = make(types.SpecTemplateContainers, 0)
-	s1.Spec.Template.Network.Ports = make(map[string]int, 0)
-	s1.Spec.Template.Network.Ports["6379/tcp"]=6379
+	s1.Spec.Template.Network.Ports = make(map[int]string, 0)
+	s1.Spec.Template.Network.Ports[6379]="6379/tcp"
 
 	spec := types.SpecTemplateContainer{
 		Name: "test-template",
@@ -274,7 +274,7 @@ func TestProvisionEndpointUpdate (t *testing.T) {
 	spec.SetDefault()
 
 	s1.Spec.Template.Containers = append(s1.Spec.Template.Containers, spec)
-	e1.Spec.PortMap = make(map[string]int)
+	e1.Spec.PortMap = make(map[int]string)
 
 	for k,v := range s1.Spec.Template.Network.Ports {
 		e1.Spec.PortMap[k] = v
@@ -315,7 +315,7 @@ func TestProvisionEndpointUpdate (t *testing.T) {
 			return
 		}
 
-		s1.Spec.Template.Network.Ports["6379/tcp"]=6380
+		s1.Spec.Template.Network.Ports[6380]="6379/tcp"
 		for k,v := range s1.Spec.Template.Network.Ports {
 			e1.Spec.PortMap[k] = v
 		}
@@ -362,8 +362,8 @@ func TestProvisionEndpointRemove (t *testing.T) {
 
 	s1.Spec.Replicas = 2
 	s1.Spec.Template.Containers = make(types.SpecTemplateContainers, 0)
-	s1.Spec.Template.Network.Ports = make(map[string]int, 0)
-	s1.Spec.Template.Network.Ports["6379/tcp"]=6379
+	s1.Spec.Template.Network.Ports = make(map[int]string, 0)
+	s1.Spec.Template.Network.Ports[6379]="6379/tcp"
 
 	spec := types.SpecTemplateContainer{
 		Name: "test-template",
@@ -372,7 +372,7 @@ func TestProvisionEndpointRemove (t *testing.T) {
 	spec.SetDefault()
 
 	s1.Spec.Template.Containers = append(s1.Spec.Template.Containers, spec)
-	e1.Spec.PortMap = make(map[string]int)
+	e1.Spec.PortMap = make(map[int]string)
 
 	for k,v := range s1.Spec.Template.Network.Ports {
 		e1.Spec.PortMap[k] = v
@@ -413,7 +413,7 @@ func TestProvisionEndpointRemove (t *testing.T) {
 			return
 		}
 
-		delete(s1.Spec.Template.Network.Ports, "6379/tcp")
+		delete(s1.Spec.Template.Network.Ports, 6379)
 
 		if err := stg.Service().Update(ctx, &s1); err != nil {
 			t.Errorf("Provision() storage setup error = %v", err)
