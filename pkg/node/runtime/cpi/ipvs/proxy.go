@@ -41,24 +41,7 @@ type Proxy struct {
 }
 
 func (p *Proxy) Info(ctx context.Context) (map[string]*types.EndpointStatus, error) {
-	el := make(map[string]*types.EndpointStatus)
-
-	svcs, err := p.ipvs.GetServices(ctx)
-	if err != nil {
-		log.Errorf("%s info error: %s", logIPVSPrefix, err.Error())
-		return nil, err
-	}
-
-	for _, svc := range svcs {
-
-		// check if endpoint exists
-		if _, ok := el[svc.Host]; !ok {
-			el[svc.Host] = new(types.EndpointStatus)
-			el[svc.Host].Upstreams = make([]string, 0)
-		}
-	}
-
-	return el, nil
+	return p.getState(ctx)
 }
 
 // Create new proxy rules
@@ -93,7 +76,7 @@ func (p *Proxy) Create(ctx context.Context, spec *types.EndpointSpec) (*types.En
 		return status, err
 	}
 
-	state, err := getStateByIP(ctx, spec.IP)
+	state, err := p.getStateByIP(ctx, spec.IP)
 	if err != nil {
 		log.Errorf("%s get state by ip err: %s", logIPVSPrefix, err.Error())
 		return status, err
@@ -184,7 +167,7 @@ func (p *Proxy) Update(ctx context.Context, state *types.EndpointStatus, spec *t
 		}
 	}
 
-	st, err := getStateByIP(ctx, spec.IP)
+	st, err := p.getStateByIP(ctx, spec.IP)
 	if err != nil {
 		log.Errorf("%s get state by ip err: %s", logIPVSPrefix, err.Error())
 		return status, err
@@ -198,6 +181,143 @@ func (p *Proxy) Update(ctx context.Context, state *types.EndpointStatus, spec *t
 	status.Message = ""
 
 	return status, nil
+}
+
+func (p *Proxy) getStateByIP(ctx context.Context, ip string) (*types.EndpointStatus, error) {
+
+	var status = new(types.EndpointStatus)
+	status.Upstreams = make([]string, 0)
+	status.PortMap = make(map[int]string, 0)
+
+	svcs, err := p.ipvs.GetServices(ctx)
+	if err != nil {
+		log.Errorf("%s get state by ip error: %s", logIPVSPrefix, err.Error())
+		return nil, err
+	}
+
+	for _, svc := range svcs {
+		// check if endpoint exists
+
+		if svc.Host != ip {
+			continue
+		}
+
+		var p int
+
+		for _, bknd := range svc.Backends {
+			var (
+				f = false
+			)
+
+			if p == 0 {
+				p = bknd.Port
+			}
+
+			if p != 0 || p != bknd.Port {
+				status.State = types.StateWarning
+				status.Message = "Ports mismatch"
+				break
+			}
+
+			for _, hst := range status.Upstreams {
+				if bknd.Host == hst {
+					f = true
+					break
+				}
+			}
+
+			if !f {
+				status.Upstreams = append(status.Upstreams, bknd.Host)
+			}
+		}
+
+		if _, ok := status.PortMap[svc.Port]; ok {
+			if svc.Type == proxyTCPProto && (status.PortMap[svc.Port] == fmt.Sprintf("%d/%s", p, proxyUDPProto)) {
+				status.PortMap[svc.Port] = fmt.Sprintf("%d/*", p)
+			}
+
+			if svc.Type == proxyUDPProto && (status.PortMap[svc.Port] == fmt.Sprintf("%d/%s", p, proxyTCPProto)) {
+				status.PortMap[svc.Port] = fmt.Sprintf("%d/*", p)
+			}
+		} else {
+			status.PortMap[svc.Port] = fmt.Sprintf("%d/%s", p, svc.Type)
+		}
+
+	}
+
+
+	return status, nil
+}
+
+func (p *Proxy) getState(ctx context.Context) (map[string]*types.EndpointStatus, error) {
+	el := make(map[string]*types.EndpointStatus)
+
+	svcs, err := p.ipvs.GetServices(ctx)
+	if err != nil {
+		log.Errorf("%s info error: %s", logIPVSPrefix, err.Error())
+		return el, err
+	}
+
+	for _, svc := range svcs {
+		// check if endpoint exists
+
+		if _, ok := el[svc.Host]; !ok {
+			el[svc.Host] = new(types.EndpointStatus)
+			el[svc.Host].Upstreams = make([]string, 0)
+			el[svc.Host].PortMap = make(map[int]string, 0)
+		}
+
+		var prt int
+
+		for _, bknd := range svc.Backends {
+
+			var (
+				f = false
+			)
+
+			if prt == 0 {
+				prt = bknd.Port
+			}
+
+			if prt != 0 || prt != bknd.Port {
+				el[svc.Host].State = types.StateWarning
+				el[svc.Host].Message = "Ports mismatch"
+				break
+			}
+
+			for _, hst := range el[svc.Host].Upstreams {
+				if bknd.Host == hst {
+					f = true
+					break
+				}
+			}
+
+			if !f {
+				el[svc.Host].Upstreams = append(el[svc.Host].Upstreams, bknd.Host)
+			}
+		}
+
+		if _, ok := el[svc.Host].PortMap[svc.Port]; ok {
+			if svc.Type == proxyTCPProto && (el[svc.Host].PortMap[svc.Port] == fmt.Sprintf("%d/%s", prt, proxyUDPProto)) {
+				el[svc.Host].PortMap[svc.Port] = fmt.Sprintf("%d/*", prt)
+			}
+
+			if svc.Type == proxyUDPProto && (el[svc.Host].PortMap[svc.Port] == fmt.Sprintf("%d/%s", prt, proxyTCPProto)) {
+				el[svc.Host].PortMap[svc.Port] = fmt.Sprintf("%d/*", prt)
+			}
+		} else {
+			el[svc.Host].PortMap[svc.Port] = fmt.Sprintf("%d/%s", prt, svc.Type)
+		}
+
+	}
+
+	return el, nil
+}
+
+func New() (*Proxy, error) {
+	prx := new(Proxy)
+	// TODO: Check ipvs proxy mode is available on host
+	return prx, nil
 }
 
 func specToServices(spec *types.EndpointSpec) (map[string]Service, error) {
@@ -292,15 +412,4 @@ func stateToServices(status *types.EndpointStatus) (map[string]Service, error) {
 	}
 
 	return svcs, nil
-}
-
-func getStateByIP(ctx context.Context, ip string) (*types.EndpointStatus, error) {
-	var status = new(types.EndpointStatus)
-	return status, nil
-}
-
-func New() (*Proxy, error) {
-	prx := new(Proxy)
-	// TODO: Check ipvs proxy mode is available on host
-	return prx, nil
 }
