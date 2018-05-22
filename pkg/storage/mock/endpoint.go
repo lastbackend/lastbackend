@@ -31,17 +31,28 @@ import (
 // Service Endpoint type for interface in interfaces folder
 type EndpointStorage struct {
 	storage.Endpoint
-	data map[string]*types.Endpoint
+	data map[string]types.Endpoint
 }
 
 // Get endpoints by id
 func (s *EndpointStorage) Get(ctx context.Context, namespace, service string) (*types.Endpoint, error) {
 
 	if n, ok := s.data[s.keyCreate(namespace, service)]; ok {
-		return n, nil
+		return &n, nil
 	}
 
 	return nil, errors.New(store.ErrEntityNotFound)
+}
+
+// Get endpoints
+func (s *EndpointStorage) List(ctx context.Context) (map[string]*types.Endpoint, error) {
+
+	list := make(map[string]*types.Endpoint, 0)
+	for _, d := range s.data {
+		list[s.keyGet(&d)] = &d
+	}
+
+	return list, nil
 }
 
 // Get endpoint by namespace name
@@ -52,8 +63,8 @@ func (s *EndpointStorage) ListByNamespace(ctx context.Context, namespace string)
 	prefix := fmt.Sprintf("%s:", namespace)
 	for _, d := range s.data {
 
-		if strings.HasPrefix(s.keyGet(d), prefix) {
-			list[s.keyGet(d)] = d
+		if strings.HasPrefix(s.keyGet(&d), prefix) {
+			list[s.keyGet(&d)] = &d
 		}
 	}
 
@@ -68,8 +79,8 @@ func (s *EndpointStorage) ListByService(ctx context.Context, namespace, service 
 	prefix := fmt.Sprintf("%s:%s:", namespace, service)
 
 	for _, d := range s.data {
-		if strings.HasPrefix(s.keyGet(d), prefix) {
-			list[s.keyGet(d)] = d
+		if strings.HasPrefix(s.keyGet(&d), prefix) {
+			list[s.keyGet(&d)] = &d
 		}
 	}
 
@@ -83,7 +94,10 @@ func (s *EndpointStorage) SetStatus(ctx context.Context, endpoint *types.Endpoin
 		return err
 	}
 
-	s.data[s.keyGet(endpoint)].Status = endpoint.Status
+	e := 	s.data[s.keyGet(endpoint)]
+	e.Status = endpoint.Status
+
+	s.data[s.keyGet(endpoint)] = e
 	return nil
 }
 
@@ -94,7 +108,10 @@ func (s *EndpointStorage) SetSpec(ctx context.Context, endpoint *types.Endpoint)
 		return err
 	}
 
-	s.data[s.keyGet(endpoint)].Spec = endpoint.Spec
+	e := 	s.data[s.keyGet(endpoint)]
+	e.Spec = endpoint.Spec
+
+	s.data[s.keyGet(endpoint)] = e
 	return nil
 }
 
@@ -105,7 +122,7 @@ func (s *EndpointStorage) Insert(ctx context.Context, endpoint *types.Endpoint) 
 		return err
 	}
 
-	s.data[s.keyGet(endpoint)] = endpoint
+	s.data[s.keyGet(endpoint)] = *endpoint
 
 	return nil
 }
@@ -117,7 +134,7 @@ func (s *EndpointStorage) Update(ctx context.Context, endpoint *types.Endpoint) 
 		return err
 	}
 
-	s.data[s.keyGet(endpoint)] = endpoint
+	s.data[s.keyGet(endpoint)] = *endpoint
 
 	return nil
 }
@@ -155,7 +172,7 @@ func (s *EndpointStorage) WatchStatus(ctx context.Context, endpoint chan *types.
 // Clear endpoint storage
 func (s *EndpointStorage) Clear(ctx context.Context) error {
 
-	s.data = make(map[string]*types.Endpoint)
+	s.data = make(map[string]types.Endpoint)
 	return nil
 }
 

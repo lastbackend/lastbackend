@@ -227,6 +227,7 @@ func TestNodeGetSpecH(t *testing.T) {
 
 	n1.Spec.Pods = make(map[string]types.PodSpec)
 	n1.Spec.Volumes = make(map[string]types.VolumeSpec)
+	n1.Spec.Endpoints = make(map[string]types.EndpointSpec)
 
 	n1.Spec.Pods[p1.SelfLink()] = p1.Spec
 	n1.Spec.Pods[p2.SelfLink()] = p2.Spec

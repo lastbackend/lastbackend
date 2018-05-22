@@ -26,6 +26,7 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/cli/view"
 	"github.com/spf13/cobra"
 	"strings"
+	"strconv"
 )
 
 func init() {
@@ -84,8 +85,13 @@ var serviceCreateCmd = &cobra.Command{
 				return
 			}
 
-			// TODO: add ports map to structure
+			ext, err := strconv.Atoi(pm[0])
+			if err != nil {
+				fmt.Println("port mapping is in invalid format")
+				return
+			}
 
+			opts.Spec.Ports[ext] = pm[1]
 		}
 
 		opts.Description = &description

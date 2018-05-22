@@ -55,7 +55,7 @@ type Service struct {
 	Scheduler   string    `json:"scheduler"`
 	Persistence int       `json:"persistence"`
 	Netmask     string    `json:"netmask"`
-	Backends    []Backend `json:"backends"`
+	Backends    map[string]Backend `json:"backends"`
 }
 
 type Backend struct {

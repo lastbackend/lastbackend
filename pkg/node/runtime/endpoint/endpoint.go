@@ -21,25 +21,62 @@ package endpoint
 import (
 	"context"
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
+	"github.com/lastbackend/lastbackend/pkg/log"
+	"github.com/lastbackend/lastbackend/pkg/node/envs"
 )
 
+const logEndpointPrefix = "runtime:endpoint:>"
+
+func Manage(ctx context.Context, key string, spec *types.EndpointSpec) error {
+	log.Debugf("%s manage: %s", logEndpointPrefix, key)
+
+	ep := envs.Get().GetState().Endpoints().GetEndpoint(key)
+	if ep != nil {
+		if check(spec, ep) {
+			Update(ctx, key, ep, spec)
+		}
+	}
+
+	status, err := Create(ctx, key, spec)
+	if err != nil {
+		log.Errorf("%s create error: %s", logEndpointPrefix, err.Error())
+		return err
+	}
+
+	envs.Get().GetState().Endpoints().SetEndpoint(key, status)
+	return nil
+}
+
 func Restore(ctx context.Context) error {
+	log.Debugf("%s restore", logEndpointPrefix)
+	cpi := envs.Get().GetCPI()
+	endpoints, err := cpi.Info(ctx)
+	if err != nil {
+		log.Errorf("%s restore error: %s", err.Error())
+		return err
+	}
+	envs.Get().GetState().Endpoints().SetEndpoints(endpoints)
 	return nil
 }
 
-func Create(ctx context.Context, key string, spec *types.EndpointSpec) (types.EndpointStatus, error) {
-	return types.EndpointStatus{}, nil
+func Create(ctx context.Context, key string, spec *types.EndpointSpec) (*types.EndpointStatus, error) {
+	log.Debugf("%s create %s", logEndpointPrefix)
+	cpi := envs.Get().GetCPI()
+	return cpi.Create(ctx, spec)
 }
 
-func Clean(ctx context.Context, status *types.EndpointStatus) {
-
+func Update (ctx context.Context, endpoint string, status *types.EndpointStatus, spec *types.EndpointSpec) (*types.EndpointStatus, error) {
+	log.Debugf("%s update %s", logEndpointPrefix, endpoint)
+	cpi := envs.Get().GetCPI()
+	return cpi.Update(ctx, status, spec)
 }
 
-func Destroy(ctx context.Context, endpoint string, status *types.EndpointStatus) {
-
+func Destroy(ctx context.Context, endpoint string, status *types.EndpointStatus) error {
+	log.Debugf("%s destroy", logEndpointPrefix, endpoint)
+	cpi := envs.Get().GetCPI()
+	return cpi.Destroy(ctx, status)
 }
 
-func Manage(ctx context.Context) error {
-
-	return nil
+func check (spec *types.EndpointSpec, status *types.EndpointStatus) bool {
+	return false
 }

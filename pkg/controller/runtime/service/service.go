@@ -59,15 +59,14 @@ func Provision(svc *types.Service) error {
 
 	// Check service ports
 	switch true {
-	case svc.Spec.Template.Network.Ports == nil && ept != nil:
+	case len(svc.Spec.Template.Network.Ports) == 0 && ept != nil:
 		if err := em.Remove(ept); err != nil {
 			log.Errorf("%s> get endpoint error: %s", msg, err.Error())
 			return err
 		}
 		svc.Status.Network.IP = ""
 		break
-	case 	svc.Spec.Template.Network.Ports != nil && ept == nil:
-
+	case 	len(svc.Spec.Template.Network.Ports) != 0 && ept == nil:
 		opts := types.EndpointCreateOptions{
 			IP: svc.Spec.Template.Network.IP,
 			Ports: svc.Spec.Template.Network.Ports,
@@ -85,8 +84,7 @@ func Provision(svc *types.Service) error {
 		svc.Status.Network.IP = ept.Spec.IP
 		break
 
-	case 	svc.Spec.Template.Network.Ports != nil && ept != nil:
-
+	case 	len(svc.Spec.Template.Network.Ports) != 0 && ept != nil:
 		var equal = true
 
 		if
@@ -95,6 +93,24 @@ func Provision(svc *types.Service) error {
 			(svc.Spec.Template.Network.Strategy.Bind != ept.Spec.Strategy.Bind) ||
 			(svc.Spec.Template.Network.Strategy.Route != ept.Spec.Strategy.Route) {
 			equal = false
+		}
+
+		// check ports equal
+		for ext, pm := range svc.Spec.Template.Network.Ports {
+			if cpm, ok := ept.Spec.PortMap[ext]; !ok || pm != cpm {
+				equal = false
+				break
+			}
+		}
+
+		// check if some ports are deleted from spec but presents in endpoint spec
+		if !equal {
+			for ext, pm := range ept.Spec.PortMap {
+				if cpm, ok := svc.Spec.Template.Network.Ports[ext]; !ok || pm != cpm {
+					equal = false
+					break
+				}
+			}
 		}
 
 		if equal {

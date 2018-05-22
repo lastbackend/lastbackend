@@ -21,7 +21,13 @@ package state
 import (
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 	"github.com/lastbackend/lastbackend/pkg/log"
+	"sync"
 )
+
+type VolumesState struct {
+	lock    sync.RWMutex
+	volumes map[string]types.VolumeSpec
+}
 
 func (s *VolumesState) GetVolumes() map[string]types.VolumeSpec {
 	log.V(logLevel).Debug("Cache: VolumeCache: get pods")

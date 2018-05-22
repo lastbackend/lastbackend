@@ -38,10 +38,10 @@ type NodeList map[string]*Node
 // NodeMeta - node metadata structure
 // swagger:model views_node_meta
 type NodeMeta struct {
-	Name        string    `json:"name"`
-	SelfLink    string    `json:"self_link"`
-	Created     time.Time `json:"created"`
-	Updated     time.Time `json:"updated"`
+	Name     string    `json:"name"`
+	SelfLink string    `json:"self_link"`
+	Created  time.Time `json:"created"`
+	Updated  time.Time `json:"updated"`
 }
 
 // NodeInfo - node info struct
@@ -77,7 +77,8 @@ type NodeResources struct {
 
 // swagger:model views_node_spec
 type NodeSpec struct {
-	Network map[string]types.NetworkSpec `json:"network"`
-	Pods    map[string]types.PodSpec     `json:"pods"`
-	Volumes map[string]types.VolumeSpec  `json:"volumes"`
+	Network   map[string]types.NetworkSpec  `json:"network"`
+	Pods      map[string]types.PodSpec      `json:"pods"`
+	Volumes   map[string]types.VolumeSpec   `json:"volumes"`
+	Endpoints map[string]types.EndpointSpec `json:"endpoints"`
 }

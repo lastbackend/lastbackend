@@ -45,7 +45,7 @@ type ServiceOptionsSpec struct {
 	Entrypoint *string        `json:"entrypoint,omitempty"`
 	Command    *string        `json:"command,omitempty"`
 	EnvVars    *[]string      `json:"env,omitempty"`
-	Ports      map[string]int `json:"ports,omitempty"`
+	Ports      map[int]string `json:"ports,omitempty"`
 }
 
 // swagger:ignore

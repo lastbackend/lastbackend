@@ -391,6 +391,10 @@ func (s *dbstore) Watch(ctx context.Context, key, keyRegexFilter string, f func(
 	return nil
 }
 
+func (s *dbstore) Decode(ctx context.Context, value []byte, out interface{}) error {
+	return decode(s.codec, value, out)
+}
+
 func decode(s serializer.Codec, value []byte, out interface{}) error {
 	if _, err := converter.EnforcePtr(out); err != nil {
 		panic("Error: unable to convert output struct to pointer")

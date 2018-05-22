@@ -24,6 +24,7 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/log"
 	"github.com/lastbackend/lastbackend/pkg/storage"
 	"github.com/lastbackend/lastbackend/pkg/controller/envs"
+	"github.com/lastbackend/lastbackend/pkg/storage/store"
 )
 
 const (
@@ -49,6 +50,11 @@ func (e *Endpoint) Get(namespace, service string) (*types.Endpoint, error) {
 
 	hook, err := e.storage.Endpoint().Get(e.context, namespace, service)
 	if err != nil {
+
+		if err.Error() == store.ErrEntityNotFound {
+			return nil, nil
+		}
+
 		log.V(logLevel).Errorf("%s:get:> create endpoint err: %s", logEndpointPrefix, err.Error())
 		return nil, err
 	}
@@ -78,8 +84,13 @@ func (e *Endpoint) Create(namespace, service string, opts *types.EndpointCreateO
 
 	endpoint.Status.State = types.StateCreated
 	endpoint.Status.Message = ""
+	endpoint.Spec.PortMap = make(map[int]string, 0)
+	endpoint.Spec.Upstreams = make([]string, 0)
 
-	endpoint.Spec.PortMap	= opts.Ports
+	for k,v := range opts.Ports {
+		endpoint.Spec.PortMap[k] = v
+	}
+
 	endpoint.Spec.Policy = opts.Policy
 	endpoint.Spec.Strategy.Route = opts.RouteStrategy
 	endpoint.Spec.Strategy.Bind = opts.BindStrategy
@@ -102,8 +113,11 @@ func (e *Endpoint) Create(namespace, service string, opts *types.EndpointCreateO
 func (e *Endpoint) Update(endpoint *types.Endpoint, opts *types.EndpointUpdateOptions) (*types.Endpoint, error) {
 	log.Debugf("%s:update:> endpoint: %s", logEndpointPrefix, endpoint.SelfLink())
 
-	if opts.Ports != nil {
-		endpoint.Spec.PortMap	= opts.Ports
+	if len(opts.Ports) != 0 {
+		endpoint.Spec.PortMap = make(map[int]string, 0)
+		for k,v := range opts.Ports {
+			endpoint.Spec.PortMap[k] = v
+		}
 	}
 
 	endpoint.Spec.Policy = opts.Policy

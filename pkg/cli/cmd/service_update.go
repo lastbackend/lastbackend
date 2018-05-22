@@ -25,11 +25,15 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/cli/envs"
 	"github.com/lastbackend/lastbackend/pkg/cli/view"
 	"github.com/spf13/cobra"
+	"strings"
+	"strconv"
 )
 
 func init() {
 	serviceUpdateCmd.Flags().StringP("desc", "d", "", "set service description")
 	serviceUpdateCmd.Flags().Int64P("memory", "m", 128, "set service spec memory")
+	serviceUpdateCmd.Flags().IntP("replicas", "r", 1, "set service replicas")
+	serviceUpdateCmd.Flags().StringP("port", "p", "", "set service ports")
 	serviceCmd.AddCommand(serviceUpdateCmd)
 }
 
@@ -50,12 +54,35 @@ var serviceUpdateCmd = &cobra.Command{
 
 		description, _ := cmd.Flags().GetString("desc")
 		memory, _ := cmd.Flags().GetInt64("memory")
+		ports, _ := cmd.Flags().GetString("port")
+		replicas, _ := cmd.Flags().GetInt("replicas")
 
 		opts := new(request.ServiceUpdateOptions)
 		opts.Spec = new(request.ServiceOptionsSpec)
 
 		opts.Description = &description
 		opts.Spec.Memory = &memory
+
+		if replicas != 0 {
+			opts.Spec.Replicas = &replicas
+		}
+
+		if ports != "" {
+			opts.Spec.Ports = make(map[int]string, 0)
+			pm := strings.Split(ports, ":")
+			if len(pm) != 2 {
+				fmt.Println("port mapping is in invalid format")
+				return
+			}
+
+			ext, err := strconv.Atoi(pm[0])
+			if err != nil {
+				fmt.Println("port mapping is in invalid format")
+				return
+			}
+
+			opts.Spec.Ports[ext] = pm[1]
+		}
 
 		if err := opts.Validate(); err != nil {
 			fmt.Println(err.Err())

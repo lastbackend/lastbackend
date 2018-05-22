@@ -819,7 +819,7 @@ func TestIngressStorage_Watch(t *testing.T) {
 	}
 }
 
-func TestIngressStorage_WatchStatus(t *testing.T) {
+func TestIngressStorage_EventsStatus(t *testing.T) {
 
 	var (
 		err                 error
@@ -831,7 +831,7 @@ func TestIngressStorage_WatchStatus(t *testing.T) {
 
 	etcdCtl, destroy, err := initStorageWatch()
 	if err != nil {
-		t.Errorf("IngressStorage.WatchStatus() storage setup error = %v", err)
+		t.Errorf("IngressStorage.EventsStatus() storage setup error = %v", err)
 	}
 	defer destroy()
 
@@ -856,7 +856,7 @@ func TestIngressStorage_WatchStatus(t *testing.T) {
 
 	clear := func() {
 		if err := stg.Clear(ctx); err != nil {
-			t.Errorf("IngressStorage.WatchStatus() storage setup error = %v", err)
+			t.Errorf("IngressStorage.EventsStatus() storage setup error = %v", err)
 			return
 		}
 	}
@@ -867,7 +867,7 @@ func TestIngressStorage_WatchStatus(t *testing.T) {
 			defer clear()
 
 			if err := stg.Insert(ctx, &n); err != nil {
-				t.Errorf("DeploymentStorage.WatchStatus() storage setup error = %v", err)
+				t.Errorf("DeploymentStorage.EventsStatus() storage setup error = %v", err)
 				return
 			}
 
@@ -880,7 +880,7 @@ func TestIngressStorage_WatchStatus(t *testing.T) {
 			go func() {
 				err = stg.WatchStatus(ctxT, ingressStatusEventC)
 				if err != nil {
-					t.Errorf("IngressStorage.WatchStatus() storage setup error = %v", err)
+					t.Errorf("IngressStorage.EventsStatus() storage setup error = %v", err)
 					return
 				}
 			}()
@@ -903,11 +903,11 @@ func TestIngressStorage_WatchStatus(t *testing.T) {
 			for {
 				select {
 				case <-ingressStatusEventC:
-					t.Log("IngressStorage.WatchStatus() is working")
+					t.Log("IngressStorage.EventsStatus() is working")
 					return
 				case <-ctxT.Done():
 					t.Log("ctxT done=", ctxT.Err(), "time=", time.Now())
-					t.Error("IngressStorage.WatchStatus() NO watch event happen")
+					t.Error("IngressStorage.EventsStatus() NO watch event happen")
 					return
 				case <-time.After(500 * time.Millisecond):
 					//wait for 500 ms

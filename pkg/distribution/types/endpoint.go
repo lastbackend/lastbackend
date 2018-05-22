@@ -43,17 +43,19 @@ type EndpointMeta struct {
 
 // EndpointStatus - endpoint status
 type EndpointStatus struct {
-	State     string                               `json:"state"`
-	Message   string                               `json:"message"`
-	Upstreams map[int]map[string]*EndpointUpstream `json:"upstreams"`
+	State     string               `json:"state"`
+	Message   string               `json:"message"`
+	IP        string               `json:"ip"`
+	PortMap   map[int]string       `json:"port_map"`
+	Upstreams []string             `json:"upstreams"`
+	Strategy  EndpointSpecStrategy `json:"strategy"`
 }
 
 // EndpointSpec spec data
 type EndpointSpec struct {
-	State     string               `json:"state"`
 	IP        string               `json:"ip"`
-	PortMap   map[string]int       `json:"port_map"`
-	Upstreams []*EndpointUpstream  `json:"upstreams"`
+	PortMap   map[int]string       `json:"port_map"`
+	Upstreams []string             `json:"upstreams"`
 	Strategy  EndpointSpecStrategy `json:"strategy"`
 	Policy    string               `json:"policy"`
 }
@@ -79,7 +81,7 @@ func (e *Endpoint) SelfLink() string {
 
 type EndpointCreateOptions struct {
 	IP            string         `json:"ip"`
-	Ports         map[string]int `json:"ports"`
+	Ports         map[int]string `json:"ports"`
 	RouteStrategy string         `json:"route_strategy"`
 	Policy        string         `json:"policy"`
 	BindStrategy  string         `json:"bind_strategy"`
@@ -87,7 +89,7 @@ type EndpointCreateOptions struct {
 
 type EndpointUpdateOptions struct {
 	IP            string         `json:"ip"`
-	Ports         map[string]int `json:"ports"`
+	Ports         map[int]string `json:"ports"`
 	RouteStrategy string         `json:"route_strategy"`
 	Policy        string         `json:"policy"`
 	BindStrategy  string         `json:"bind_strategy"`

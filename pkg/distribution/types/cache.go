@@ -43,6 +43,12 @@ type RouteSpecEvent struct {
 	Spec  RouteSpec `json:"spec"`
 }
 
+type EndpointSpecEvent struct {
+	Event string       `json:"event"`
+	Name  string       `json:"name"`
+	Spec  EndpointSpec `json:"spec"`
+}
+
 type VolumeSpecEvent struct {
 	Event string     `json:"event"`
 	Node  string     `json:"node"`

@@ -20,19 +20,18 @@ package state
 
 import (
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
-	"sync"
 )
 
 const logLevel = 3
 
 type State struct {
-	node     *NodeState
-	pods     *PodState
-	networks *NetworkState
-	volumes  *VolumesState
-	secrets  *SecretsState
-	task     *TaskState
-	router   *RouterState
+	node      *NodeState
+	pods      *PodState
+	networks  *NetworkState
+	volumes   *VolumesState
+	secrets   *SecretsState
+	endpoints *EndpointState
+	task      *TaskState
 }
 
 func (s *State) Node() *NodeState {
@@ -55,6 +54,9 @@ func (s *State) Secrets() *SecretsState {
 	return s.secrets
 }
 
+func (s *State) Endpoints() *EndpointState {
+	return s.endpoints
+}
 
 func (s *State) Tasks() *TaskState {
 	return s.task
@@ -63,43 +65,6 @@ func (s *State) Tasks() *TaskState {
 type NodeState struct {
 	Info   types.NodeInfo
 	Status types.NodeStatus
-}
-
-type PodState struct {
-	lock       sync.RWMutex
-	stats      PodStateStats
-	containers map[string]*types.PodContainer
-	pods       map[string]*types.PodStatus
-}
-
-type PodStateStats struct {
-	pods       int
-	containers int
-}
-
-type NetworkState struct {
-	lock    sync.RWMutex
-	subnets map[string]types.NetworkSpec
-}
-
-type VolumesState struct {
-	lock    sync.RWMutex
-	volumes map[string]types.VolumeSpec
-}
-
-type SecretsState struct {
-	lock    sync.RWMutex
-	secrets map[string]types.Secret
-}
-
-type TaskState struct {
-	lock  sync.RWMutex
-	tasks map[string]types.NodeTask
-}
-
-type RouterState struct {
-	lock    sync.RWMutex
-	configs map[string]string
 }
 
 func New() *State {
@@ -119,8 +84,8 @@ func New() *State {
 		secrets: &SecretsState{
 			secrets: make(map[string]types.Secret, 0),
 		},
-		router: &RouterState{
-			configs: make(map[string]string, 0),
+		endpoints: &EndpointState{
+			endpoints: make(map[string]*types.EndpointStatus, 0),
 		},
 		task: &TaskState{
 			tasks: make(map[string]types.NodeTask, 0),

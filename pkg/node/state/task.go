@@ -21,7 +21,13 @@ package state
 import (
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 	"github.com/lastbackend/lastbackend/pkg/log"
+	"sync"
 )
+
+type TaskState struct {
+	lock  sync.RWMutex
+	tasks map[string]types.NodeTask
+}
 
 func (s *TaskState) AddTask(key string, task *types.NodeTask) {
 	log.V(logLevel).Debugf("Cache: PodCache: add cancel func pod: %#v", key)
