@@ -30,6 +30,7 @@ type Namespace interface {
 	Insert(ctx context.Context, namespace *types.Namespace) error
 	Update(ctx context.Context, namespace *types.Namespace) error
 	Remove(ctx context.Context, namespace *types.Namespace) error
+	Watch(ctx context.Context, event chan *types.Event) error
 	Clear(ctx context.Context) error
 }
 

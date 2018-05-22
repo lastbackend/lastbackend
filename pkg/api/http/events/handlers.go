@@ -26,9 +26,8 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/distribution"
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 	"github.com/lastbackend/lastbackend/pkg/api/types/v1"
-	"fmt"
 	"github.com/gorilla/websocket"
-	"encoding/json"
+	"time"
 )
 
 const (
@@ -47,6 +46,7 @@ var upgrader = websocket.Upgrader{
 type Event struct {
 	Entity string      `json:"entity"`
 	Action string      `json:"action"`
+	Name   string      `json:"name"`
 	Data   interface{} `json:"data"`
 }
 
@@ -64,6 +64,7 @@ func EventSubscribeH(w http.ResponseWriter, r *http.Request) {
 
 	var (
 		sm   = distribution.NewServiceModel(r.Context(), envs.Get().GetStorage())
+		nm   = distribution.NewNamespaceModel(r.Context(), envs.Get().GetStorage())
 		done = make(chan bool, 1)
 	)
 
@@ -73,7 +74,11 @@ func EventSubscribeH(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var event = make(chan *types.Event)
+	ticker := time.NewTicker(time.Second)
+	defer ticker.Stop()
+
+	var serviceEvents = make(chan *types.Event)
+	var namespaceEvents = make(chan *types.Event)
 
 	notify := w.(http.CloseNotifier).CloseNotify()
 
@@ -87,33 +92,61 @@ func EventSubscribeH(w http.ResponseWriter, r *http.Request) {
 		for {
 			select {
 			case <-done:
-				close(event)
+				close(serviceEvents)
+				close(namespaceEvents)
 				return
-			case e := <-event:
+			case e := <-serviceEvents:
 
-				buf, _ := json.Marshal(e)
-				fmt.Println(string(buf))
-
+				var data interface{}
 				if e.Data == nil {
-					continue
+					data = nil
+				} else {
+					data = v1.View().Service().New(e.Data.(*types.Service))
 				}
-
-				fmt.Println(e.Data)
 
 				event := Event{
 					Entity: "service",
 					Action: e.Action,
-					Data:   v1.View().Service().New(e.Data.(*types.Service)),
+					Name:   e.Name,
+					Data:   data,
 				}
 
 				if err = conn.WriteJSON(event); err != nil {
-					fmt.Println(err)
+					log.Errorf("%s:subscribe:> write service event to socket error.", logPrefix)
+				}
+			case e := <-namespaceEvents:
+
+				var data interface{}
+				if e.Data == nil {
+					data = nil
+				} else {
+					data = v1.View().Namespace().New(e.Data.(*types.Namespace))
+				}
+
+				event := Event{
+					Entity: "namespace",
+					Action: e.Action,
+					Name:   e.Name,
+					Data:   data,
+				}
+
+				if err = conn.WriteJSON(event); err != nil {
+					log.Errorf("%s:subscribe:> write namespace event to socket error.", logPrefix)
 				}
 			}
 		}
 	}()
-
-	go sm.Watch(event)
+	go sm.Watch(serviceEvents)
+	go nm.Watch(namespaceEvents)
+	go func() {
+		for range ticker.C {
+			if err := conn.WriteMessage(websocket.TextMessage, []byte{}); err != nil {
+				log.Errorf("%s:subscribe:> writing to the client websocket err: %s", logPrefix, err.Error())
+				done <- true
+				break
+			}
+		}
+	}()
 
 	<-done
 }

@@ -163,7 +163,7 @@ func (nc *NamespaceClient) Update(ctx context.Context, opts *rv1.NamespaceUpdate
 func (nc *NamespaceClient) Remove(ctx context.Context, opts *rv1.NamespaceRemoveOptions) error {
 
 	req := nc.client.Delete(fmt.Sprintf("/namespace/%s", nc.name)).
-		AddHeader("Content-Type", "application/json")
+		AddHeader("Content-Entity", "application/json")
 
 	if opts != nil {
 		if opts.Force {

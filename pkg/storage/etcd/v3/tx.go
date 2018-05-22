@@ -27,7 +27,7 @@ import (
 )
 
 type tx struct {
-	*store
+	*dbstore
 	txn     clientv3.Txn
 	context context.Context
 	cmp     []clientv3.Cmp

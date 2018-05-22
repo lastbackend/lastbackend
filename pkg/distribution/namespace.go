@@ -42,6 +42,7 @@ type INamespace interface {
 	Create(opts *types.NamespaceCreateOptions) (*types.Namespace, error)
 	Update(namespace *types.Namespace, opts *types.NamespaceUpdateOptions) error
 	Remove(namespace *types.Namespace) error
+	Watch(ch chan *types.Event) error
 }
 
 type Namespace struct {
@@ -143,6 +144,19 @@ func (n *Namespace) Remove(namespace *types.Namespace) error {
 
 	if err := n.storage.Namespace().Remove(n.context, namespace); err != nil {
 		log.V(logLevel).Errorf("%s:remove:> remove namespace err: %s", logNamespacePrefix, err.Error())
+		return err
+	}
+
+	return nil
+}
+
+// Watch namespace changes
+func (n *Namespace) Watch(ch chan *types.Event) error {
+
+	log.Debugf("%s:watch:> watch namespace", logNamespacePrefix)
+
+	if err := n.storage.Namespace().Watch(n.context, ch); err != nil {
+		log.Debugf("%s:watch:> watch namespace err: %s", logNamespacePrefix, err.Error())
 		return err
 	}
 

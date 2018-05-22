@@ -61,7 +61,7 @@ func GetClient(_ context.Context) (s.Store, s.DestroyFunc, error) {
 	}
 
 	codec := serializer.NewSerializer(json.Encoder{}, json.Decoder{})
-	var st = &store{
+	var st = &dbstore{
 		client:     client,
 		codec:      codec,
 		pathPrefix: path.Join("/", conf.Prefix),

@@ -26,5 +26,6 @@ const (
 
 type Event struct {
 	Action string
+	Name   string
 	Data   interface{}
 }
