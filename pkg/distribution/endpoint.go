@@ -74,7 +74,7 @@ func (e *Endpoint) ListByNamespace(namespace string) (map[string]*types.Endpoint
 	return el, nil
 }
 
-func (e *Endpoint) Create(namespace, service string, opts *types.EndpointCreateOptions) (*types.Endpoint, error){
+func (e *Endpoint) Create(namespace, service string, opts *types.EndpointCreateOptions) (*types.Endpoint, error) {
 	endpoint := new(types.Endpoint)
 
 	endpoint.Meta.Name = service
@@ -85,9 +85,9 @@ func (e *Endpoint) Create(namespace, service string, opts *types.EndpointCreateO
 	endpoint.Status.State = types.StateCreated
 	endpoint.Status.Message = ""
 	endpoint.Spec.PortMap = make(map[int]string, 0)
-	endpoint.Spec.Upstreams = make([]*types.EndpointUpstream, 0)
+	endpoint.Spec.Upstreams = make([]string, 0)
 
-	for k,v := range opts.Ports {
+	for k, v := range opts.Ports {
 		endpoint.Spec.PortMap[k] = v
 	}
 
@@ -115,7 +115,7 @@ func (e *Endpoint) Update(endpoint *types.Endpoint, opts *types.EndpointUpdateOp
 
 	if len(opts.Ports) != 0 {
 		endpoint.Spec.PortMap = make(map[int]string, 0)
-		for k,v := range opts.Ports {
+		for k, v := range opts.Ports {
 			endpoint.Spec.PortMap[k] = v
 		}
 	}

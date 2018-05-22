@@ -391,7 +391,7 @@ func (s *dbstore) Watch(ctx context.Context, key, keyRegexFilter string, f func(
 	return nil
 }
 
-func (s *store) Decode(ctx context.Context, value []byte, out interface{}) error {
+func (s *dbstore) Decode(ctx context.Context, value []byte, out interface{}) error {
 	return decode(s.codec, value, out)
 }
 
