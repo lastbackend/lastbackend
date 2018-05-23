@@ -25,11 +25,10 @@ import (
 
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 	"github.com/lastbackend/lastbackend/pkg/storage/storage"
-	"github.com/lastbackend/lastbackend/pkg/storage/store"
 )
 
-// Test cluster storage insert method
-func TestClusterStorage_Insert(t *testing.T) {
+// Test cluster storage set status method
+func TestClusterStorage_SetStatus(t *testing.T) {
 
 	var (
 		stg = newClusterStorage()
@@ -62,14 +61,6 @@ func TestClusterStorage_Insert(t *testing.T) {
 			false,
 			"",
 		},
-		{
-			"test failed insert",
-			fields{stg},
-			args{ctx, nil},
-			&c,
-			true,
-			store.ErrStructArgIsNil,
-		},
 	}
 
 	for _, tt := range tests {
@@ -80,7 +71,7 @@ func TestClusterStorage_Insert(t *testing.T) {
 				return
 			}
 
-			if err := tt.fields.stg.Insert(tt.args.ctx, tt.args.cluster); (err != nil) != tt.wantErr || (tt.wantErr && (err.Error() != tt.err)) {
+			if err := tt.fields.stg.SetStatus(tt.args.ctx, &tt.args.cluster.Status); (err != nil) != tt.wantErr || (tt.wantErr && (err.Error() != tt.err)) {
 				t.Errorf("ClusterStorage.Insert() error = %v, want errorr %v", err, tt.err)
 			}
 		})
@@ -93,7 +84,7 @@ func TestClusterStorage_Get(t *testing.T) {
 	var (
 		stg = newClusterStorage()
 		ctx = context.Background()
-		c   = getClusterAsset("test")
+		c   = getClusterAsset()
 	)
 
 	type fields struct {
@@ -127,7 +118,7 @@ func TestClusterStorage_Get(t *testing.T) {
 			return
 		}
 
-		if err := stg.Insert(ctx, &c); err != nil {
+		if err := stg.SetStatus(ctx, &c.Status); err != nil {
 			t.Errorf("ClusterStorage.Get() storage setup error = %v", err)
 			return
 		}
@@ -142,89 +133,6 @@ func TestClusterStorage_Get(t *testing.T) {
 			if !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("ClusterStorage.Get() = %v, want %v", got, tt.want)
 			}
-		})
-	}
-}
-
-// Test cluster storage update method
-func TestClusterStorage_Update(t *testing.T) {
-	var (
-		stg = newClusterStorage()
-		ctx = context.Background()
-		c1  = getClusterAsset("test1")
-		c2  = getClusterAsset("test2")
-	)
-
-	type fields struct {
-		stg storage.Cluster
-	}
-
-	type args struct {
-		ctx     context.Context
-		cluster *types.Cluster
-	}
-
-	tests := []struct {
-		name    string
-		fields  fields
-		args    args
-		want    *types.Cluster
-		wantErr bool
-		err     string
-	}{
-		{
-			"update cluster info failed",
-			fields{stg},
-			args{ctx, nil},
-			&c2,
-			true,
-			store.ErrStructArgIsNil,
-		},
-		{
-			"update cluster info successful",
-			fields{stg},
-			args{ctx, &c2},
-			&c2,
-			false,
-			"",
-		},
-	}
-	for _, tt := range tests {
-
-		if err := stg.Clear(ctx); err != nil {
-			t.Errorf("ClusterStorage.Update() storage setup error = %v", err)
-			return
-		}
-
-		if err := stg.Insert(ctx, &c1); err != nil {
-			t.Errorf("ClusterStorage.Update() storage setup error = %v", err)
-			return
-		}
-
-		t.Run(tt.name, func(t *testing.T) {
-
-			err := tt.fields.stg.Update(tt.args.ctx, tt.args.cluster)
-			if err != nil {
-				if !tt.wantErr {
-					t.Errorf("ClusterStorage.Update() error = %v, want no error", err.Error())
-					return
-				}
-				if tt.wantErr && tt.err != err.Error() {
-					t.Errorf("ClusterStorage.Update() error = %v, want %v", err, tt.err)
-					return
-				}
-				return
-			}
-			if tt.wantErr {
-				t.Errorf("ClusterStorage.Update() error = %v, wantErr %v", err, tt.err)
-				return
-			}
-
-			got, _ := tt.fields.stg.Get(tt.args.ctx)
-			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("ClusterStorage.Update() = %v, want %v", got, tt.want)
-			}
-
 		})
 	}
 }
@@ -250,14 +158,8 @@ func Test_newClusterStorage(t *testing.T) {
 	}
 }
 
-func getClusterAsset(name string) types.Cluster {
+func getClusterAsset() types.Cluster {
 	var c = types.Cluster{
-		Meta: types.ClusterMeta{
-			Region:   "local",
-			Token:    "token",
-			Provider: "local",
-			Shared:   false,
-		},
 		Status: types.ClusterStatus{
 			Nodes: types.ClusterStatusNodes{
 				Total:   2,
@@ -281,8 +183,5 @@ func getClusterAsset(name string) types.Cluster {
 			Deleted: false,
 		},
 	}
-
-	c.Meta.Name = name
-
 	return c
 }

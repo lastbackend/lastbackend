@@ -66,13 +66,6 @@ func (c *Cluster) Print() {
 
 func FromApiClusterView(cluster *views.Cluster) *Cluster {
 	var item = new(Cluster)
-	item.Meta.Name = cluster.Meta.Name
-	item.Meta.Description = cluster.Meta.Description
-
-	item.Meta.Labels = cluster.Meta.Labels
-	if item.Meta.Labels == nil {
-		item.Meta.Labels = make(map[string]string, 0)
-	}
 
 	item.State.Nodes.Total = cluster.Status.Nodes.Total
 	item.State.Nodes.Online = cluster.Status.Nodes.Online
@@ -87,7 +80,6 @@ func FromApiClusterView(cluster *views.Cluster) *Cluster {
 	item.State.Allocated.Memory = cluster.Status.Allocated.Memory
 	item.State.Allocated.Cpu = cluster.Status.Allocated.Cpu
 	item.State.Allocated.Storage = cluster.Status.Allocated.Storage
-	item.State.Deleted = cluster.Status.Deleted
 
 	return item
 }

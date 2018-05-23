@@ -27,8 +27,8 @@ import (
 const logEndpointPrefix = "state:endpoints:>"
 
 type EndpointState struct {
-	lock    sync.RWMutex
-	hash string
+	lock      sync.RWMutex
+	hash      string
 	endpoints map[string]*types.EndpointStatus
 }
 
@@ -84,4 +84,3 @@ func (es *EndpointState) DelEndpoint(key string) {
 	defer es.lock.Unlock()
 	delete(es.endpoints, key)
 }
-

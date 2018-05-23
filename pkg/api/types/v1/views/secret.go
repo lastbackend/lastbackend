@@ -34,7 +34,9 @@ type SecretMeta struct {
 	Updated   time.Time `json:"updated"`
 	Created   time.Time `json:"created"`
 }
+
 // swagger:ignore
 type SecretMap map[string]*Secret
+
 // swagger:model views_secret_list
 type SecretList []*Secret

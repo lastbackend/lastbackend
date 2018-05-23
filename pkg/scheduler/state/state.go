@@ -23,4 +23,3 @@ import "github.com/lastbackend/lastbackend/pkg/distribution/types"
 type State struct {
 	Resources types.NodeResources
 }
-

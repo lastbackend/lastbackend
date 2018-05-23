@@ -22,6 +22,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/gorilla/mux"
+	"github.com/lastbackend/lastbackend/pkg/api/cache"
 	"github.com/lastbackend/lastbackend/pkg/api/envs"
 	"github.com/lastbackend/lastbackend/pkg/api/http/node"
 	"github.com/lastbackend/lastbackend/pkg/api/types/v1"
@@ -34,7 +35,6 @@ import (
 	"net/http/httptest"
 	"strings"
 	"testing"
-	"github.com/lastbackend/lastbackend/pkg/api/cache"
 )
 
 // Testing NodeList handler

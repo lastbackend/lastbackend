@@ -151,9 +151,8 @@ type Volume interface {
 }
 
 type Cluster interface {
-	Insert(ctx context.Context, cluster *types.Cluster) error
+	SetStatus(ctx context.Context, cluster *types.ClusterStatus) error
 	Get(ctx context.Context) (*types.Cluster, error)
-	Update(ctx context.Context, cluster *types.Cluster) error
 	Clear(ctx context.Context) error
 }
 

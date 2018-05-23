@@ -36,7 +36,6 @@ type Env struct {
 	exporter *exporter.Exporter
 }
 
-
 func (c *Env) SetState(s *state.State) {
 	c.state = s
 }

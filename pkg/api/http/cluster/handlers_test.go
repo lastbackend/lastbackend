@@ -42,7 +42,7 @@ func TestClusterInfo(t *testing.T) {
 	stg, _ := storage.GetMock()
 	envs.Get().SetStorage(stg)
 
-	c := getClusterAsset("demo", "")
+	c := getClusterAsset(4096)
 
 	type fields struct {
 		stg storage.Storage
@@ -87,7 +87,7 @@ func TestClusterInfo(t *testing.T) {
 			clear()
 			defer clear()
 
-			err := envs.Get().GetStorage().Cluster().Insert(context.Background(), c)
+			err := envs.Get().GetStorage().Cluster().SetStatus(context.Background(), &c.Status)
 			assert.NoError(t, err)
 
 			// Create assert request to pass to our handler. We don't have any query parameters for now, so we'll
@@ -127,16 +127,15 @@ func TestClusterInfo(t *testing.T) {
 				err := json.Unmarshal(body, &s)
 				assert.NoError(t, err)
 
-				assert.Equal(t, tc.want.Meta.Name, s.Meta.Name, "name not equal")
+				assert.Equal(t, tc.want.Status.Capacity.Memory, s.Status.Capacity.Memory, "memory not equal")
 			}
 		})
 	}
 }
 
-func getClusterAsset(name, desc string) *types.Cluster {
+func getClusterAsset(memory int64) *types.Cluster {
 	var c = types.Cluster{}
-	c.Meta.Name = name
-	c.Meta.Description = desc
+	c.Status.Capacity.Memory = memory
 	return &c
 }
 

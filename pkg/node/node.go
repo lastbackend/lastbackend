@@ -33,13 +33,13 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 	"github.com/lastbackend/lastbackend/pkg/log"
 	"github.com/lastbackend/lastbackend/pkg/node/envs"
+	"github.com/lastbackend/lastbackend/pkg/node/events"
+	"github.com/lastbackend/lastbackend/pkg/node/events/exporter"
 	"github.com/lastbackend/lastbackend/pkg/node/http"
 	"github.com/lastbackend/lastbackend/pkg/node/runtime/cni/cni"
+	"github.com/lastbackend/lastbackend/pkg/node/runtime/cpi/cpi"
 	"github.com/lastbackend/lastbackend/pkg/node/runtime/cri/cri"
 	"github.com/spf13/viper"
-	"github.com/lastbackend/lastbackend/pkg/node/events/exporter"
-	"github.com/lastbackend/lastbackend/pkg/node/events"
-	"github.com/lastbackend/lastbackend/pkg/node/runtime/cpi/cpi"
 )
 
 // Daemon - run node daemon

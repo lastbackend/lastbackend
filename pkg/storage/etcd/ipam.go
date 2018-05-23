@@ -19,14 +19,14 @@
 package etcd
 
 import (
-	"github.com/lastbackend/lastbackend/pkg/storage/storage"
 	"context"
 	"github.com/lastbackend/lastbackend/pkg/log"
+	"github.com/lastbackend/lastbackend/pkg/storage/storage"
 	"github.com/lastbackend/lastbackend/pkg/storage/store"
 )
 
 const (
-	ipamStorage = "utils/ipam"
+	ipamStorage   = "utils/ipam"
 	logIPAMPrefix = "storage:etcd:ipam:>"
 )
 

@@ -19,17 +19,17 @@
 package network
 
 import (
-	"strings"
-	"strconv"
 	"github.com/lastbackend/lastbackend/pkg/distribution/errors"
+	"strconv"
+	"strings"
 )
 
 func ParsePortMap(s string) (int, string, error) {
 
 	var (
-		port int
+		port  int
 		proto string
-		err error
+		err   error
 	)
 
 	pm := strings.Split(s, "/")

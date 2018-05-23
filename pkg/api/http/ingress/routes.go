@@ -33,4 +33,3 @@ var Routes = []http.Route{
 	{Path: "/cluster/ingress/{ingress}/status", Method: http.MethodPut, Middleware: []http.Middleware{middleware.Authenticate}, Handler: IngressSetStatusH},
 	{Path: "/cluster/ingress/{ingress}/status/route/{pod}", Method: http.MethodPut, Middleware: []http.Middleware{middleware.Authenticate}, Handler: IngressSetRouteStatusH},
 }
-

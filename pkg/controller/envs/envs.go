@@ -19,15 +19,15 @@
 package envs
 
 import (
-	"github.com/lastbackend/lastbackend/pkg/storage"
 	"github.com/lastbackend/lastbackend/pkg/controller/ipam/ipam"
+	"github.com/lastbackend/lastbackend/pkg/storage"
 )
 
 var e Env
 
 type Env struct {
 	storage storage.Storage
-	ipam ipam.IPAM
+	ipam    ipam.IPAM
 }
 
 func Get() *Env {
@@ -41,7 +41,6 @@ func (c *Env) SetStorage(storage storage.Storage) {
 func (c *Env) GetStorage() storage.Storage {
 	return c.storage
 }
-
 
 func (c *Env) SetIPAM(ipam ipam.IPAM) {
 	c.ipam = ipam

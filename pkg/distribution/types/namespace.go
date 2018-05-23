@@ -47,7 +47,7 @@ type NamespaceEnv struct {
 // swagger:ignore
 // swagger:model types_namespace_meta
 type NamespaceMeta struct {
-	Meta            `yaml:",inline"`
+	Meta     `yaml:",inline"`
 	Endpoint string `json:"endpoint"`
 	Type     string `json:"type"`
 }

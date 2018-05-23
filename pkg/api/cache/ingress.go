@@ -19,10 +19,10 @@
 package cache
 
 import (
-	"sync"
-	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 	"context"
+	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 	"github.com/lastbackend/lastbackend/pkg/log"
+	"sync"
 )
 
 type CacheIngressSpec struct {

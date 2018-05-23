@@ -21,11 +21,11 @@ package envs
 import (
 	"github.com/lastbackend/lastbackend/pkg/api/client/interfaces"
 	"github.com/lastbackend/lastbackend/pkg/cache"
+	"github.com/lastbackend/lastbackend/pkg/node/events/exporter"
 	"github.com/lastbackend/lastbackend/pkg/node/runtime/cni"
+	"github.com/lastbackend/lastbackend/pkg/node/runtime/cpi"
 	"github.com/lastbackend/lastbackend/pkg/node/runtime/cri"
 	"github.com/lastbackend/lastbackend/pkg/node/state"
-	"github.com/lastbackend/lastbackend/pkg/node/events/exporter"
-	"github.com/lastbackend/lastbackend/pkg/node/runtime/cpi"
 )
 
 var e Env
@@ -67,7 +67,6 @@ func (c *Env) SetCPI(cpi cpi.CPI) {
 func (c *Env) GetCPI() cpi.CPI {
 	return c.cpi
 }
-
 
 func (c *Env) SetCache(s *cache.Cache) {
 	c.cache = s

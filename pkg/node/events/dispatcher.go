@@ -19,11 +19,11 @@
 package events
 
 import (
+	"context"
 	"github.com/lastbackend/lastbackend/pkg/api/types/v1/request"
 	"github.com/lastbackend/lastbackend/pkg/node/envs"
-	"context"
 )
 
-func Dispatcher (options *request.NodeStatusOptions) error {
+func Dispatcher(options *request.NodeStatusOptions) error {
 	return envs.Get().GetClient().SetStatus(context.Background(), options)
 }

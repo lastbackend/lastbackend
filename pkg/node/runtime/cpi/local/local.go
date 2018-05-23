@@ -19,9 +19,9 @@
 package local
 
 import (
-	"github.com/lastbackend/lastbackend/pkg/node/runtime/cpi"
 	"context"
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
+	"github.com/lastbackend/lastbackend/pkg/node/runtime/cpi"
 )
 
 type Proxy struct {
@@ -46,6 +46,5 @@ func (p *Proxy) Update(ctx context.Context, endpoint *types.EndpointStatus, spec
 }
 
 func New() (*Proxy, error) {
-	return &Proxy{
-	}, nil
+	return &Proxy{}, nil
 }

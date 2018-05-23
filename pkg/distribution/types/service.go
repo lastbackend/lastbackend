@@ -53,8 +53,8 @@ type ServiceEndpoint struct {
 }
 
 type ServiceStatus struct {
-	State   string `json:"state"`
-	Message string `json:"message"`
+	State   string               `json:"state"`
+	Message string               `json:"message"`
 	Network ServiceStatusNetwork `json:"network"`
 }
 

@@ -414,7 +414,6 @@ func (s *EndpointStorage) WatchStatus(ctx context.Context, endpoint chan *types.
 	return nil
 }
 
-
 func (s *EndpointStorage) EventSpec(ctx context.Context, event chan *types.EndpointSpecEvent) error {
 
 	log.V(logLevel).Debug("storage:etcd:endpoint:> watch spec")

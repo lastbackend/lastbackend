@@ -20,8 +20,8 @@
 package cpi
 
 import (
-	"github.com/lastbackend/lastbackend/pkg/node/runtime/cpi/local"
 	"github.com/lastbackend/lastbackend/pkg/node/runtime/cpi"
+	"github.com/lastbackend/lastbackend/pkg/node/runtime/cpi/local"
 )
 
 func New() (cpi.CPI, error) {

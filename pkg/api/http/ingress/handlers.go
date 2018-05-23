@@ -18,18 +18,17 @@
 
 package ingress
 
-
 import (
 	"net/http"
 
 	"github.com/lastbackend/lastbackend/pkg/api/envs"
 	"github.com/lastbackend/lastbackend/pkg/api/types/v1"
+	"github.com/lastbackend/lastbackend/pkg/api/types/v1/request"
 	"github.com/lastbackend/lastbackend/pkg/distribution"
 	"github.com/lastbackend/lastbackend/pkg/distribution/errors"
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 	"github.com/lastbackend/lastbackend/pkg/log"
 	"github.com/lastbackend/lastbackend/pkg/util/http/utils"
-	"github.com/lastbackend/lastbackend/pkg/api/types/v1/request"
 	"strings"
 )
 
@@ -124,10 +123,10 @@ func IngressGetSpecH(w http.ResponseWriter, r *http.Request) {
 	log.V(logLevel).Debugf("%s:getspec:> list ingress", logPrefix)
 
 	var (
-		im  = distribution.NewIngressModel(r.Context(), envs.Get().GetStorage())
-		rm  = distribution.NewRouteModel(r.Context(), envs.Get().GetStorage())
-		cid = utils.Vars(r)["cluster"]
-		nid = utils.Vars(r)["ingress"]
+		im    = distribution.NewIngressModel(r.Context(), envs.Get().GetStorage())
+		rm    = distribution.NewRouteModel(r.Context(), envs.Get().GetStorage())
+		cid   = utils.Vars(r)["cluster"]
+		nid   = utils.Vars(r)["ingress"]
 		cache = envs.Get().GetCache().Ingress()
 	)
 
@@ -155,7 +154,7 @@ func IngressGetSpecH(w http.ResponseWriter, r *http.Request) {
 		spec = new(types.IngressSpec)
 		spec.Routes = make(map[string]types.RouteSpec)
 		for r, rsp := range sp {
-			spec.Routes[r]=*rsp
+			spec.Routes[r] = *rsp
 		}
 	}
 
@@ -327,8 +326,8 @@ func IngressConnectH(w http.ResponseWriter, r *http.Request) {
 	log.V(logLevel).Debugf("%s:connect:> ingress connect", logPrefix)
 
 	var (
-		im  = distribution.NewIngressModel(r.Context(), envs.Get().GetStorage())
-		iid = utils.Vars(r)["ingress"]
+		im    = distribution.NewIngressModel(r.Context(), envs.Get().GetStorage())
+		iid   = utils.Vars(r)["ingress"]
 		cache = envs.Get().GetCache().Ingress()
 	)
 
@@ -441,7 +440,7 @@ func IngressSetStatusH(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	for p, s := range opts.Routes{
+	for p, s := range opts.Routes {
 		keys := strings.Split(p, ":")
 		if len(keys) != 2 {
 			log.V(logLevel).Errorf("%s:setroutestatus:> invalid route selflink err: %s", logPrefix, p)
@@ -462,8 +461,8 @@ func IngressSetStatusH(w http.ResponseWriter, r *http.Request) {
 		}
 
 		if err := rm.SetStatus(route, &types.RouteStatus{
-			State:      s.State,
-			Message:    s.Message,
+			State:   s.State,
+			Message: s.Message,
 		}); err != nil {
 			log.V(logLevel).Errorf("%s:setroutestatus:> get ingresss list err: %s", logPrefix, err.Error())
 			errors.HTTP.InternalServerError(w)

@@ -51,7 +51,7 @@ type NodeInfo struct {
 	OSName       string `json:"os_name"`
 	OSType       string `json:"os_type"`
 	Architecture string `json:"architecture"`
-	IP struct {
+	IP           struct {
 		External string `json:"external"`
 		Internal string `json:"internal"`
 	} `json:"ip"`

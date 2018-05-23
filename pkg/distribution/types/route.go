@@ -32,8 +32,10 @@ type Route struct {
 	Spec   RouteSpec   `json:"spec" yaml:"spec"`
 	Status RouteStatus `json:"status" yaml:"status"`
 }
+
 // swagger:ignore
 type RouteMap map[string]*Route
+
 // swagger:ignore
 type RouteList []*Route
 
