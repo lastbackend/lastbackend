@@ -19,10 +19,10 @@
 package cache
 
 import (
-	"github.com/lastbackend/lastbackend/pkg/distribution/types"
-	"sync"
 	"context"
+	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 	"github.com/lastbackend/lastbackend/pkg/log"
+	"sync"
 )
 
 type CacheNodeSpec struct {
@@ -39,7 +39,6 @@ type VolumeSpecWatcher func(ctx context.Context, event chan *types.VolumeSpecEve
 type NodeStatusWatcher func(ctx context.Context, event chan *types.NodeStatusEvent) error
 
 type EndpointSpecWatcher func(ctx context.Context, event chan *types.EndpointSpecEvent) error
-
 
 func (c *CacheNodeSpec) SetPodSpec(node, pod string, s types.PodSpec) {
 	log.Info("api:cache:setpodspec:> %s, %s, %#v", node, pod, s)
@@ -233,7 +232,7 @@ func (c *CacheNodeSpec) CacheEndpoints(es EndpointSpecWatcher) error {
 			case e := <-evs:
 				{
 					if e.Event == "create" || e.Event == "update" {
-						c.SetEndpointSpec(e.Name,e.Spec)
+						c.SetEndpointSpec(e.Name, e.Spec)
 						continue
 					}
 

@@ -65,7 +65,7 @@ func Create(ctx context.Context, key string, spec *types.EndpointSpec) (*types.E
 	return cpi.Create(ctx, spec)
 }
 
-func Update (ctx context.Context, endpoint string, status *types.EndpointStatus, spec *types.EndpointSpec) (*types.EndpointStatus, error) {
+func Update(ctx context.Context, endpoint string, status *types.EndpointStatus, spec *types.EndpointSpec) (*types.EndpointStatus, error) {
 	log.Debugf("%s update %s", logEndpointPrefix, endpoint)
 	cpi := envs.Get().GetCPI()
 	return cpi.Update(ctx, status, spec)
@@ -77,6 +77,6 @@ func Destroy(ctx context.Context, endpoint string, status *types.EndpointStatus)
 	return cpi.Destroy(ctx, status)
 }
 
-func check (spec *types.EndpointSpec, status *types.EndpointStatus) bool {
+func check(spec *types.EndpointSpec, status *types.EndpointStatus) bool {
 	return false
 }

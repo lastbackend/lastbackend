@@ -19,8 +19,8 @@
 package views
 
 import (
-	"time"
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
+	"time"
 )
 
 // Ingress - default node structure
@@ -51,5 +51,5 @@ type IngressStatus struct {
 
 // swagger:model views_ingress_spec
 type IngressSpec struct {
-	Routes  map[string]types.RouteSpec   `json:"routes"`
+	Routes map[string]types.RouteSpec `json:"routes"`
 }

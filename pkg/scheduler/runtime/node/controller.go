@@ -20,14 +20,18 @@ package node
 
 import (
 	"context"
+	"github.com/lastbackend/lastbackend/pkg/cache"
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 	"github.com/lastbackend/lastbackend/pkg/log"
 	"github.com/lastbackend/lastbackend/pkg/scheduler/envs"
+	"reflect"
 )
 
 type Controller struct {
-	nodes  chan *types.Node
+	node   chan *types.Node
 	active bool
+
+	cache *cache.NodeCache
 }
 
 func (nc *Controller) Watch(node chan *types.Node) {
@@ -40,7 +44,7 @@ func (nc *Controller) Watch(node chan *types.Node) {
 	go func() {
 		for {
 			select {
-			case n := <-nc.nodes:
+			case n := <-nc.node:
 				{
 					if !nc.active {
 						log.Debug("NodeController: skip management cause it is in slave mode")
@@ -48,6 +52,21 @@ func (nc *Controller) Watch(node chan *types.Node) {
 					}
 
 					log.Debugf("Node check state: %s", n.Meta.Name)
+
+					item := nc.cache.Get(n.Info.Hostname)
+					if item == nil || !reflect.DeepEqual(item, n) {
+						nc.cache.Set(n.Info.Hostname, n)
+
+						nodes := nc.cache.List()
+
+						err := stg.Cluster().SetStatus(context.Background(), getClusterStatus(nodes))
+						if err != nil {
+							log.Debug("NodeController: set cluster status err: %s", err.Error())
+							continue
+						}
+
+					}
+
 					if n.Online {
 						log.Debugf("Node set alive, try to provision on it pods: %s", n.Meta.Name)
 						node <- n
@@ -61,7 +80,7 @@ func (nc *Controller) Watch(node chan *types.Node) {
 		}
 	}()
 
-	stg.Node().Watch(context.Background(), nc.nodes)
+	stg.Node().Watch(context.Background(), nc.node)
 }
 
 func (nc *Controller) Pause() {
@@ -73,9 +92,26 @@ func (nc *Controller) Resume() {
 	log.Debug("NodeController: start check pods state")
 }
 
-func NewNodeController(_ context.Context) *Controller {
+func NewNodeController(ctx context.Context) *Controller {
+
 	sc := new(Controller)
 	sc.active = false
-	sc.nodes = make(chan *types.Node)
+	sc.node = make(chan *types.Node)
+	sc.cache = cache.NewNodeCache()
+
+	nodes, err := envs.Get().GetStorage().Node().List(ctx)
+	if err != nil {
+		log.Fatalf("NodeController: get nodes list err: %s", err.Error())
+	}
+
+	for _, node := range nodes {
+		sc.cache.Set(node.Info.Hostname, node)
+	}
+
+	err = envs.Get().GetStorage().Cluster().SetStatus(context.Background(), getClusterStatus(nodes))
+	if err != nil {
+		log.Fatalf("NodeController: set cluster status err: %s", err.Error())
+	}
+
 	return sc
 }

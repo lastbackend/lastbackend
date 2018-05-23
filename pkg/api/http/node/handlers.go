@@ -123,9 +123,9 @@ func NodeGetSpecH(w http.ResponseWriter, r *http.Request) {
 	log.V(logLevel).Debugf("%s:getspec:> list node", logPrefix)
 
 	var (
-		nm  = distribution.NewNodeModel(r.Context(), envs.Get().GetStorage())
-		cid = utils.Vars(r)["cluster"]
-		nid = utils.Vars(r)["node"]
+		nm    = distribution.NewNodeModel(r.Context(), envs.Get().GetStorage())
+		cid   = utils.Vars(r)["cluster"]
+		nid   = utils.Vars(r)["node"]
 		cache = envs.Get().GetCache().Node()
 	)
 
@@ -320,8 +320,8 @@ func NodeConnectH(w http.ResponseWriter, r *http.Request) {
 	log.V(logLevel).Debugf("%s:connect:> node connect", logPrefix)
 
 	var (
-		nm  = distribution.NewNodeModel(r.Context(), envs.Get().GetStorage())
-		nid = utils.Vars(r)["node"]
+		nm    = distribution.NewNodeModel(r.Context(), envs.Get().GetStorage())
+		nid   = utils.Vars(r)["node"]
 		cache = envs.Get().GetCache().Node()
 	)
 
@@ -347,7 +347,6 @@ func NodeConnectH(w http.ResponseWriter, r *http.Request) {
 		nco.Info = opts.Info
 		nco.Status = opts.Status
 		nco.Network = opts.Network
-
 
 		node, err = nm.Create(&nco)
 		if err != nil {
@@ -477,7 +476,7 @@ func NodeSetStatusH(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	for p, s := range opts.Pods{
+	for p, s := range opts.Pods {
 		keys := strings.Split(p, ":")
 		if len(keys) != 4 {
 			log.V(logLevel).Errorf("%s:setpodstatus:> invalid pod selflink err: %s", logPrefix, p)

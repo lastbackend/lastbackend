@@ -30,10 +30,10 @@ import (
 )
 
 var (
-	config     string //
-	token      string //
-	daemon     bool   //
-	debug      int    //
+	config string //
+	token  string //
+	daemon bool   //
+	debug  int    //
 
 	// HoarderCmd ...
 	CLI = &cobra.Command{

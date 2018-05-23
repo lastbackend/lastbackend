@@ -25,7 +25,6 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/log"
 	"github.com/lastbackend/lastbackend/pkg/storage/storage"
 	"github.com/lastbackend/lastbackend/pkg/storage/store"
-	"time"
 )
 
 type ClusterStorage struct {
@@ -34,43 +33,37 @@ type ClusterStorage struct {
 
 const clusterStorage = "cluster"
 
-// Insert - insert new cluster object into mock storage
-func (s *ClusterStorage) Insert(ctx context.Context, cluster *types.Cluster) error {
+// SetStatus - set cluster status object into storage
+func (s *ClusterStorage) SetStatus(ctx context.Context, status *types.ClusterStatus) error {
 
-	log.V(logLevel).Debugf("storage:etcd:cluster:> insert: %v", cluster)
+	log.V(logLevel).Debugf("storage:etcd:cluster:> set status: %v", status)
 
-	if cluster == nil {
+	if status == nil {
 		return errors.New(store.ErrStructArgIsNil)
 	}
 
 	client, destroy, err := getClient(ctx)
 	if err != nil {
-		log.V(logLevel).Errorf("storage:etcd:cluster:> insert err: %s", err.Error())
+		log.V(logLevel).Errorf("storage:etcd:cluster:> set status err: %s", err.Error())
 		return err
 	}
 	defer destroy()
 
-	keyMeta := keyCreate(clusterStorage, "meta")
-	if err := client.Create(ctx, keyMeta, cluster.Meta, nil, 0); err != nil {
-		log.V(logLevel).Errorf("storage:etcd:cluster:> insert err: %s", err.Error())
-		return err
-	}
-
 	keyStatus := keyCreate(clusterStorage, "status")
-	if err := client.Create(ctx, keyStatus, cluster.Status, nil, 0); err != nil {
-		log.V(logLevel).Errorf("storage:etcd:cluster:> insert err: %s", err.Error())
+	if err := client.Upsert(ctx, keyStatus, status, nil, 0); err != nil {
+		log.V(logLevel).Errorf("storage:etcd:cluster:> set status err: %s", err.Error())
 		return err
 	}
 
 	return nil
 }
 
-// Get - return  cluster info from mock storage
+// Get - return  cluster info from storage
 func (s *ClusterStorage) Get(ctx context.Context) (*types.Cluster, error) {
 
-	log.V(logLevel).Debug("storage:etcd:cluster:> get meta|status")
+	log.V(logLevel).Debug("storage:etcd:cluster:> get status")
 
-	const filter = `\b.+` + clusterStorage + `\/(meta|status)\b`
+	const filter = `\b.+` + clusterStorage + `\/(status)\b`
 
 	client, destroy, err := getClient(ctx)
 	if err != nil {
@@ -86,33 +79,6 @@ func (s *ClusterStorage) Get(ctx context.Context) (*types.Cluster, error) {
 	}
 
 	return cluster, nil
-}
-
-// Update cluster info into mock storage
-func (s *ClusterStorage) Update(ctx context.Context, cluster *types.Cluster) error {
-
-	if cluster == nil {
-		return errors.New(store.ErrStructArgIsNil)
-	}
-
-	log.V(logLevel).Debugf("storage:etcd:cluster:> update: %v", cluster)
-
-	cluster.Meta.Updated = time.Now()
-
-	client, destroy, err := getClient(ctx)
-	if err != nil {
-		log.V(logLevel).Errorf("storage:etcd:cluster:> update err: %s", err.Error())
-		return err
-	}
-	defer destroy()
-
-	keyMeta := keyCreate(clusterStorage, "meta")
-	if err := client.Update(ctx, keyMeta, cluster.Meta, nil, 0); err != nil {
-		log.V(logLevel).Errorf("storage:etcd:cluster:> update err: %s", err.Error())
-		return err
-	}
-
-	return nil
 }
 
 // Clear database stare
@@ -135,7 +101,7 @@ func (s *ClusterStorage) Clear(ctx context.Context) error {
 	return nil
 }
 
-// newClusterStorage - return new mock cluster interface
+// newClusterStorage - return new cluster interface
 func newClusterStorage() *ClusterStorage {
 	s := new(ClusterStorage)
 	return s

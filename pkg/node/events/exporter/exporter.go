@@ -20,20 +20,20 @@ package exporter
 
 import (
 	"context"
+	"github.com/lastbackend/lastbackend/pkg/api/types/v1"
+	"github.com/lastbackend/lastbackend/pkg/api/types/v1/request"
+	"github.com/lastbackend/lastbackend/pkg/distribution/types"
+	"github.com/lastbackend/lastbackend/pkg/log"
 	"sync"
 	"time"
-	"github.com/lastbackend/lastbackend/pkg/api/types/v1/request"
-	"github.com/lastbackend/lastbackend/pkg/log"
-	"github.com/lastbackend/lastbackend/pkg/distribution/types"
-	"github.com/lastbackend/lastbackend/pkg/api/types/v1"
 )
 
 type Exporter struct {
-	lock   sync.RWMutex
+	lock       sync.RWMutex
 	dispatcher Dispatcher
 
 	resources types.NodeStatus
-	pods   map[string]*types.PodStatus
+	pods      map[string]*types.PodStatus
 }
 
 type Dispatcher func(options *request.NodeStatusOptions) error
@@ -56,7 +56,7 @@ func (e *Exporter) Loop() {
 			opts.Resources.Allocated = e.resources.Allocated
 
 			e.lock.Lock()
-			var  i = 0
+			var i = 0
 			for p, status := range e.pods {
 				i++
 				if i > 10 {
@@ -88,7 +88,7 @@ func (e *Exporter) Resources(res types.NodeStatus) {
 	defer e.lock.Unlock()
 
 	e.resources.Allocated = res.Allocated
-	e.resources.Capacity  = res.Capacity
+	e.resources.Capacity = res.Capacity
 }
 
 func (e *Exporter) PodStatus(pod string, status *types.PodStatus) {
@@ -108,7 +108,6 @@ func NewExporter() *Exporter {
 
 	return d
 }
-
 
 func getPodOptions(p *types.PodStatus) *request.NodePodStatusOptions {
 	opts := v1.Request().Node().NodePodStatusOptions()

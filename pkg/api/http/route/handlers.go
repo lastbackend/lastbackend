@@ -245,7 +245,6 @@ func RouteCreateH(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-
 	svc, err := sm.List(ns.Meta.SelfLink)
 	if err != nil {
 		log.V(logLevel).Errorf("%s:create:> get services", logPrefix, err.Error())
@@ -262,7 +261,7 @@ func RouteCreateH(w http.ResponseWriter, r *http.Request) {
 
 	var links = make(map[string]string)
 
-	for _, s := range svc{
+	for _, s := range svc {
 		links[s.Meta.Name] = s.Meta.SelfLink
 	}
 
@@ -278,10 +277,10 @@ func RouteCreateH(w http.ResponseWriter, r *http.Request) {
 
 		if _, ok := links[r.Service]; ok {
 			rcopts.Rules = append(rcopts.Rules, types.RuleOption{
-				Service: r.Service,
+				Service:  r.Service,
 				Endpoint: svc[links[r.Service]].Meta.Endpoint,
-				Path: r.Path,
-				Port: r.Port,
+				Path:     r.Path,
+				Port:     r.Port,
 			})
 		}
 	}
@@ -411,7 +410,7 @@ func RouteUpdateH(w http.ResponseWriter, r *http.Request) {
 
 	var links = make(map[string]string)
 
-	for _, s := range svc{
+	for _, s := range svc {
 		links[s.Meta.Name] = s.Meta.SelfLink
 	}
 
@@ -427,10 +426,10 @@ func RouteUpdateH(w http.ResponseWriter, r *http.Request) {
 
 		if _, ok := links[r.Service]; ok {
 			ruopts.Rules = append(ruopts.Rules, types.RuleOption{
-				Service: r.Service,
+				Service:  r.Service,
 				Endpoint: svc[links[r.Service]].Meta.Endpoint,
-				Path: r.Path,
-				Port: r.Port,
+				Path:     r.Path,
+				Port:     r.Port,
 			})
 		}
 	}

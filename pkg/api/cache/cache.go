@@ -21,17 +21,17 @@ package cache
 import "context"
 
 type Cache struct {
-	node *CacheNodeSpec
+	node    *CacheNodeSpec
 	ingress *CacheIngressSpec
 }
 
-type Cleaner func (ctx context.Context) error
+type Cleaner func(ctx context.Context) error
 
-func (c *Cache) Node () *CacheNodeSpec {
+func (c *Cache) Node() *CacheNodeSpec {
 	return c.node
 }
 
-func (c *Cache) Ingress () *CacheIngressSpec {
+func (c *Cache) Ingress() *CacheIngressSpec {
 	return c.ingress
 }
 

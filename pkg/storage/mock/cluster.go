@@ -33,30 +33,20 @@ type ClusterStorage struct {
 	data types.Cluster
 }
 
-// Insert - insert new cluster object into mock storage
-func (s *ClusterStorage) Insert(ctx context.Context, cluster *types.Cluster) error {
+// SetStatus - set cluster status object into mock storage
+func (s *ClusterStorage) SetStatus(ctx context.Context, status *types.ClusterStatus) error {
 
-	if cluster == nil {
+	if status == nil {
 		return errors.New(store.ErrStructArgIsNil)
 	}
 
-	s.data = *cluster
+	s.data.Status = *status
 	return nil
 }
 
 // Get - return  cluster info from mock storage
 func (s *ClusterStorage) Get(ctx context.Context) (*types.Cluster, error) {
 	return &s.data, nil
-}
-
-// Update cluster info into mock storage
-func (s *ClusterStorage) Update(ctx context.Context, cluster *types.Cluster) error {
-	if cluster == nil {
-		return errors.New(store.ErrStructArgIsNil)
-	}
-
-	s.data = *cluster
-	return nil
 }
 
 // Clear database stare

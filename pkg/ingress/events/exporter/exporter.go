@@ -19,20 +19,20 @@
 package exporter
 
 import (
-	"time"
+	"context"
+	"github.com/lastbackend/lastbackend/pkg/api/types/v1"
 	"github.com/lastbackend/lastbackend/pkg/api/types/v1/request"
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
-	"github.com/lastbackend/lastbackend/pkg/api/types/v1"
-	"sync"
-	"context"
 	"github.com/lastbackend/lastbackend/pkg/log"
+	"sync"
+	"time"
 )
 
 type Exporter struct {
-	lock   sync.RWMutex
+	lock       sync.RWMutex
 	dispatcher Dispatcher
 
-	routes   map[string]*types.RouteStatus
+	routes map[string]*types.RouteStatus
 }
 
 type Dispatcher func(options *request.IngressStatusOptions) error
@@ -54,7 +54,7 @@ func (e *Exporter) Loop() {
 			opts.Routes = make(map[string]*request.IngressRouteStatusOptions)
 
 			e.lock.Lock()
-			var  i = 0
+			var i = 0
 			for r, status := range e.routes {
 				i++
 				if i > 10 {
@@ -98,7 +98,6 @@ func NewExporter() *Exporter {
 
 	return d
 }
-
 
 func getRouteOptions(r *types.RouteStatus) *request.IngressRouteStatusOptions {
 	opts := v1.Request().Ingress().IngressRouteStatusOptions()

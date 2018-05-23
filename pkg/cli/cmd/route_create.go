@@ -25,8 +25,8 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/cli/envs"
 	"github.com/lastbackend/lastbackend/pkg/cli/view"
 	"github.com/spf13/cobra"
-	"strings"
 	"strconv"
+	"strings"
 )
 
 func init() {
@@ -64,9 +64,8 @@ var routeCreateCmd = &cobra.Command{
 
 		opts.Rules = append(opts.Rules, request.RulesOption{
 			Service: proxy[0],
-			Port: port,
+			Port:    port,
 		})
-
 
 		if err := opts.Validate(); err != nil {
 			fmt.Println(err.Err())

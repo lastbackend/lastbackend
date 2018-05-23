@@ -19,12 +19,11 @@
 package events
 
 import (
+	"context"
 	"github.com/lastbackend/lastbackend/pkg/api/types/v1/request"
 	"github.com/lastbackend/lastbackend/pkg/ingress/envs"
-	"context"
 )
 
-func Dispatcher (options *request.IngressStatusOptions) error {
+func Dispatcher(options *request.IngressStatusOptions) error {
 	return envs.Get().GetClient().SetStatus(context.Background(), options)
 }
-

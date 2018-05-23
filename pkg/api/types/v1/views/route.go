@@ -29,6 +29,7 @@ type Route struct {
 
 // swagger:ignore
 type RouteMap map[string]*Route
+
 // swagger:model views_route_list
 type RouteList []*Route
 

@@ -40,7 +40,7 @@ type Deployment struct {
 	Sources  DeploymentSources      `json:"sources"`
 	Replicas DeploymentReplicasInfo `json:"replicas"`
 	// deployment pods
-	Pods     map[string]Pod         `json:"pods"`
+	Pods map[string]Pod `json:"pods"`
 }
 
 // swagger:ignore
@@ -59,7 +59,7 @@ type DeploymentList []*Deployment
 // swagger:model views_deployment_meta
 type DeploymentMeta struct {
 	// Deployment name
-	Name        string `json:"name"`
+	Name string `json:"name"`
 	// Deployment description
 	Description string `json:"description"`
 

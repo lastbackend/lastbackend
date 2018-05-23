@@ -23,6 +23,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/lastbackend/lastbackend/pkg/api/client/watcher"
 	"golang.org/x/net/http2"
 	"io"
 	"io/ioutil"
@@ -30,7 +31,6 @@ import (
 	"net/url"
 	"path"
 	"time"
-	"github.com/lastbackend/lastbackend/pkg/api/client/watcher"
 )
 
 type Request struct {

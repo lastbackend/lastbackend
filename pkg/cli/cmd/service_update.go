@@ -25,8 +25,8 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/cli/envs"
 	"github.com/lastbackend/lastbackend/pkg/cli/view"
 	"github.com/spf13/cobra"
-	"strings"
 	"strconv"
+	"strings"
 )
 
 func init() {

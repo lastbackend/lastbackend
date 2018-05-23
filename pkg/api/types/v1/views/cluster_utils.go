@@ -28,7 +28,6 @@ type ClusterView struct{}
 
 func (cv *ClusterView) New(obj *types.Cluster) *Cluster {
 	c := Cluster{}
-	c.Meta = cv.ToClusterMeta(obj.Meta)
 	c.Status = cv.ToClusterStatus(obj.Status)
 	return &c
 }
@@ -56,14 +55,6 @@ func (cl *ClusterList) ToJson() ([]byte, error) {
 	return json.Marshal(cl)
 }
 
-func (cv *ClusterView) ToClusterMeta(meta types.ClusterMeta) ClusterMeta {
-	return ClusterMeta{
-		Name:        meta.Name,
-		Description: meta.Description,
-		Labels:      meta.Labels,
-	}
-}
-
 func (cv *ClusterView) ToClusterStatus(status types.ClusterStatus) ClusterStatus {
 	return ClusterStatus{
 		Nodes: status.Nodes,
@@ -81,6 +72,5 @@ func (cv *ClusterView) ToClusterStatus(status types.ClusterStatus) ClusterStatus
 			Cpu:        status.Allocated.Cpu,
 			Storage:    status.Allocated.Storage,
 		},
-		Deleted: status.Deleted,
 	}
 }

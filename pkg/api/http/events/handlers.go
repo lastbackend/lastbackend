@@ -21,12 +21,12 @@ package events
 import (
 	"net/http"
 
+	"github.com/gorilla/websocket"
 	"github.com/lastbackend/lastbackend/pkg/api/envs"
-	"github.com/lastbackend/lastbackend/pkg/log"
+	"github.com/lastbackend/lastbackend/pkg/api/types/v1"
 	"github.com/lastbackend/lastbackend/pkg/distribution"
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
-	"github.com/lastbackend/lastbackend/pkg/api/types/v1"
-	"github.com/gorilla/websocket"
+	"github.com/lastbackend/lastbackend/pkg/log"
 	"time"
 )
 

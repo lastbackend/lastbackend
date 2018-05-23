@@ -17,3 +17,32 @@
 //
 
 package node
+
+import "github.com/lastbackend/lastbackend/pkg/distribution/types"
+
+func getClusterStatus(nodes map[string]*types.Node) *types.ClusterStatus {
+	status := new(types.ClusterStatus)
+	status.Nodes.Total = len(nodes)
+
+	for _, node := range nodes {
+		status.Allocated.Containers += node.Status.Allocated.Containers
+		status.Allocated.Pods += node.Status.Allocated.Pods
+		status.Allocated.Memory += node.Status.Allocated.Memory
+		status.Allocated.Cpu += node.Status.Allocated.Cpu
+		status.Allocated.Storage += node.Status.Allocated.Storage
+
+		status.Capacity.Containers += node.Status.Capacity.Containers
+		status.Capacity.Pods += node.Status.Capacity.Pods
+		status.Capacity.Memory += node.Status.Capacity.Memory
+		status.Capacity.Cpu += node.Status.Capacity.Cpu
+		status.Capacity.Storage += node.Status.Capacity.Storage
+
+		if node.Online {
+			status.Nodes.Online++
+		} else {
+			status.Nodes.Offline++
+		}
+	}
+
+	return status
+}

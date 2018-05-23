@@ -36,7 +36,7 @@ func (r *RouteCreateOptions) Validate() *errors.Err {
 	return nil
 }
 
-func (r *RouteCreateOptions) DecodeAndValidate(reader io.Reader) ( *RouteCreateOptions, *errors.Err) {
+func (r *RouteCreateOptions) DecodeAndValidate(reader io.Reader) (*RouteCreateOptions, *errors.Err) {
 
 	if reader == nil {
 		err := errors.New("data body can not be null")

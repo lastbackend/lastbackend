@@ -20,14 +20,14 @@ package distribution
 
 import (
 	"context"
+	"fmt"
 	"github.com/lastbackend/lastbackend/pkg/distribution/errors"
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 	"github.com/lastbackend/lastbackend/pkg/log"
 	"github.com/lastbackend/lastbackend/pkg/storage"
 	"github.com/lastbackend/lastbackend/pkg/storage/store"
-	"fmt"
-	"strings"
 	"github.com/spf13/viper"
+	"strings"
 )
 
 const (

@@ -19,8 +19,8 @@
 package mock
 
 import (
-	"github.com/lastbackend/lastbackend/pkg/storage/storage"
 	"context"
+	"github.com/lastbackend/lastbackend/pkg/storage/storage"
 )
 
 type IPAMStorage struct {
@@ -42,4 +42,3 @@ func newIPAMStorage() *IPAMStorage {
 	s.data = make([]string, 0)
 	return s
 }
-

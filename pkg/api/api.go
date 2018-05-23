@@ -23,13 +23,13 @@ import (
 	"os/signal"
 	"syscall"
 
+	"github.com/lastbackend/lastbackend/pkg/api/cache"
 	"github.com/lastbackend/lastbackend/pkg/api/envs"
 	"github.com/lastbackend/lastbackend/pkg/api/http"
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 	"github.com/lastbackend/lastbackend/pkg/log"
 	"github.com/lastbackend/lastbackend/pkg/storage"
 	"github.com/spf13/viper"
-	"github.com/lastbackend/lastbackend/pkg/api/cache"
 )
 
 func Daemon() bool {

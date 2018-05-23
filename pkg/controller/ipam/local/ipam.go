@@ -19,18 +19,18 @@
 package local
 
 import (
-	"net"
-	"github.com/lastbackend/lastbackend/pkg/controller/envs"
 	"context"
-	"github.com/lastbackend/lastbackend/pkg/log"
+	"github.com/lastbackend/lastbackend/pkg/controller/envs"
 	"github.com/lastbackend/lastbackend/pkg/distribution/errors"
+	"github.com/lastbackend/lastbackend/pkg/log"
 	"github.com/lastbackend/lastbackend/pkg/storage/storage"
+	"net"
 )
 
 const (
-	logIPAMPrefix = "controller:ipam:>"
+	logIPAMPrefix         = "controller:ipam:>"
 	IPAMLeaseNotAvailable = "IPAMLeaseNotAvailable"
-	defaultCIDR = "172.17.0.0/16"
+	defaultCIDR           = "172.17.0.0/16"
 )
 
 // IPAM - IP address management
@@ -39,7 +39,7 @@ type IPAM struct {
 	released  map[string]bool
 	available int
 	reserved  int
-	storage  storage.IPAM
+	storage   storage.IPAM
 }
 
 // Lease IP from range
@@ -66,7 +66,7 @@ func (i *IPAM) Lease() (*net.IP, error) {
 	// Find new lease for next reservation
 
 	// Decrease available count
-	i.leased[lease]=true
+	i.leased[lease] = true
 	i.reserved++
 
 	ip := net.ParseIP(lease)
@@ -89,7 +89,7 @@ func (i *IPAM) Release(ip *net.IP) error {
 	delete(i.leased, lease)
 	i.reserved--
 	// Add IP as released and increase available count
-	i.released[lease]=true
+	i.released[lease] = true
 	i.available++
 
 	return i.save()
@@ -108,7 +108,7 @@ func (i *IPAM) Reserved() int {
 func (i *IPAM) save() error {
 
 	var (
-		ips  = make([]string, 0)
+		ips = make([]string, 0)
 	)
 
 	for ip := range i.leased {
@@ -148,7 +148,7 @@ func New(cidr string) (*IPAM, error) {
 			continue
 		}
 
-		ipam.released[ip.String()]=true
+		ipam.released[ip.String()] = true
 		ipam.available++
 	}
 
@@ -164,7 +164,7 @@ func New(cidr string) (*IPAM, error) {
 		if _, ok := ipam.released[item]; ok {
 			delete(ipam.released, item)
 			ipam.available--
-			ipam.leased[item]=true
+			ipam.leased[item] = true
 			ipam.reserved++
 		}
 	}

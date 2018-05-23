@@ -77,8 +77,6 @@ func NewPodStatusEvent(ctx context.Context, pod string) error {
 	return nil
 }
 
-
-
 // NewRouteStatusEvent - send pod state event after
 // node is successful accepted and each hour
 func NewVolumeStatusEvent(ctx context.Context, volume string) error {

@@ -95,7 +95,6 @@ func (obj *IngressSpec) Decode() *types.IngressSpec {
 	return &spec
 }
 
-
 func (obj *IngressList) ToJson() ([]byte, error) {
 	return json.Marshal(obj)
 }

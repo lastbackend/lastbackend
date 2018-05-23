@@ -47,7 +47,6 @@ func HookExecuteH(w http.ResponseWriter, r *http.Request) {
 	//   '200':
 	//     description: Hook was successfully executed
 
-
 	log.V(logLevel).Debugf("%s:execute:> execute hook", logPrefix)
 
 	var (
