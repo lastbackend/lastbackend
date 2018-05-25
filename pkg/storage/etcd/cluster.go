@@ -25,10 +25,15 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/log"
 	"github.com/lastbackend/lastbackend/pkg/storage/storage"
 	"github.com/lastbackend/lastbackend/pkg/storage/store"
+	"github.com/lastbackend/lastbackend/pkg/storage/etcd/cache"
+	"time"
+	"regexp"
+	"encoding/json"
 )
 
 type ClusterStorage struct {
 	storage.Cluster
+	cache *cache.Cache
 }
 
 const clusterStorage = "cluster"
@@ -81,6 +86,76 @@ func (s *ClusterStorage) Get(ctx context.Context) (*types.Cluster, error) {
 	return cluster, nil
 }
 
+// Watch cluster changes
+func (s *ClusterStorage) Watch(ctx context.Context, event chan *types.Event) error {
+
+	log.V(logLevel).Debug("storage:etcd:service:> watch service")
+
+	const filter = `\b\/` + clusterStorage + `\/(.+)\b`
+	client, destroy, err := getClient(ctx)
+	if err != nil {
+		log.V(logLevel).Errorf("storage:etcd:cluster:> watch cluster err: %s", err.Error())
+		return err
+	}
+	defer destroy()
+
+	r, _ := regexp.Compile(filter)
+	key := keyCreate(clusterStorage)
+	cb := func(action, key string, data []byte) {
+
+		keys := r.FindStringSubmatch(key)
+		if len(keys) < 4 {
+			return
+		}
+
+		e := new(types.Event)
+		e.Action = action
+		e.Name = keys[1]
+
+		if action == store.STORAGEDELETEEVENT {
+			e.Data = nil
+			event <- e
+			return
+		}
+
+		item := s.cache.Get("cluster")
+
+		if item == nil {
+			if data, err := s.Get(ctx); err == nil {
+				s.cache.Set("cluster", data)
+				e.Data = data
+				event <- e
+			}
+			return
+		}
+
+		cl := item.(*types.Cluster)
+
+		switch keys[3] {
+		case "status":
+			var status types.ClusterStatus
+			if err := json.Unmarshal(data, &status); err != nil {
+				log.V(logLevel).Errorf("storage:etcd:cluster:> parse cluster status err: %s", err.Error())
+				return
+			}
+			cl.Status = status
+		}
+
+		s.cache.Set("cluster", cl)
+
+		e.Data = cl
+
+		event <- e
+	}
+
+	if err := client.Watch(ctx, key, filter, cb); err != nil {
+		log.V(logLevel).Errorf("storage:etcd:cluster:> watch cluster err: %s", err.Error())
+		return err
+	}
+
+	return nil
+}
+
 // Clear database stare
 func (s *ClusterStorage) Clear(ctx context.Context) error {
 
@@ -104,5 +179,6 @@ func (s *ClusterStorage) Clear(ctx context.Context) error {
 // newClusterStorage - return new cluster interface
 func newClusterStorage() *ClusterStorage {
 	s := new(ClusterStorage)
+	s.cache = cache.NewCache(24 * time.Hour)
 	return s
 }

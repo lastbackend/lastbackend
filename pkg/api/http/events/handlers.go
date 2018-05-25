@@ -65,6 +65,7 @@ func EventSubscribeH(w http.ResponseWriter, r *http.Request) {
 	var (
 		sm   = distribution.NewServiceModel(r.Context(), envs.Get().GetStorage())
 		nm   = distribution.NewNamespaceModel(r.Context(), envs.Get().GetStorage())
+		cm   = distribution.NewClusterModel(r.Context(), envs.Get().GetStorage())
 		done = make(chan bool, 1)
 	)
 
@@ -79,6 +80,7 @@ func EventSubscribeH(w http.ResponseWriter, r *http.Request) {
 
 	var serviceEvents = make(chan *types.Event)
 	var namespaceEvents = make(chan *types.Event)
+	var clusterEvents = make(chan *types.Event)
 
 	notify := w.(http.CloseNotifier).CloseNotify()
 
@@ -94,6 +96,7 @@ func EventSubscribeH(w http.ResponseWriter, r *http.Request) {
 			case <-done:
 				close(serviceEvents)
 				close(namespaceEvents)
+				close(clusterEvents)
 				return
 			case e := <-serviceEvents:
 
@@ -136,8 +139,10 @@ func EventSubscribeH(w http.ResponseWriter, r *http.Request) {
 			}
 		}
 	}()
+
 	go sm.Watch(serviceEvents)
 	go nm.Watch(namespaceEvents)
+	go cm.Watch(clusterEvents)
 	go func() {
 		for range ticker.C {
 			if err := conn.WriteMessage(websocket.TextMessage, []byte{}); err != nil {
