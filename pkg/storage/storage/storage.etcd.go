@@ -153,6 +153,7 @@ type Volume interface {
 type Cluster interface {
 	SetStatus(ctx context.Context, cluster *types.ClusterStatus) error
 	Get(ctx context.Context) (*types.Cluster, error)
+	Watch(ctx context.Context, event chan *types.Event) error
 	Clear(ctx context.Context) error
 }
 

@@ -49,6 +49,11 @@ func (s *ClusterStorage) Get(ctx context.Context) (*types.Cluster, error) {
 	return &s.data, nil
 }
 
+// Watch cluster changes
+func (s *ClusterStorage) Watch(ctx context.Context, event chan *types.Event) error {
+	return nil
+}
+
 // Clear database stare
 func (s *ClusterStorage) Clear(ctx context.Context) error {
 	s.data = types.Cluster{}
