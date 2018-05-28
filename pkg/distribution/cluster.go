@@ -60,7 +60,7 @@ func (c *Cluster) Watch(ch chan *types.Event) error {
 
 	log.Debugf("%s:watch:> watch cluster", logClusterPrefix)
 
-	if err := c.storage.Namespace().Watch(c.context, ch); err != nil {
+	if err := c.storage.Cluster().Watch(c.context, ch); err != nil {
 		log.Debugf("%s:watch:> watch cluster err: %s", logClusterPrefix, err.Error())
 		return err
 	}

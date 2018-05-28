@@ -89,9 +89,9 @@ func (s *ClusterStorage) Get(ctx context.Context) (*types.Cluster, error) {
 // Watch cluster changes
 func (s *ClusterStorage) Watch(ctx context.Context, event chan *types.Event) error {
 
-	log.V(logLevel).Debug("storage:etcd:service:> watch service")
+	log.V(logLevel).Debug("storage:etcd:service:> watch cluster")
 
-	const filter = `\b\/` + clusterStorage + `\/(.+)\b`
+	const filter = `\b.+` + clusterStorage + `\/(.+)\b`
 	client, destroy, err := getClient(ctx)
 	if err != nil {
 		log.V(logLevel).Errorf("storage:etcd:cluster:> watch cluster err: %s", err.Error())
@@ -104,13 +104,13 @@ func (s *ClusterStorage) Watch(ctx context.Context, event chan *types.Event) err
 	cb := func(action, key string, data []byte) {
 
 		keys := r.FindStringSubmatch(key)
-		if len(keys) < 4 {
+		if len(keys) < 1 {
 			return
 		}
 
 		e := new(types.Event)
 		e.Action = action
-		e.Name = keys[1]
+		e.Name = "lb"
 
 		if action == store.STORAGEDELETEEVENT {
 			e.Data = nil
@@ -131,7 +131,7 @@ func (s *ClusterStorage) Watch(ctx context.Context, event chan *types.Event) err
 
 		cl := item.(*types.Cluster)
 
-		switch keys[3] {
+		switch keys[1] {
 		case "status":
 			var status types.ClusterStatus
 			if err := json.Unmarshal(data, &status); err != nil {

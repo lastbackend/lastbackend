@@ -41,7 +41,7 @@ type VolumeStorage struct {
 func (s *VolumeStorage) Get(ctx context.Context, namespace, name string) (*types.Volume, error) {
 
 	log.V(logLevel).Debugf("storage:etcd:volume:> get by name: %s", name)
-	//fmt.Printf("GET: ns=%s,name=%s\n", namespace, name)
+
 	if len(namespace) == 0 {
 		err := errors.New("namespace can not be empty")
 		log.V(logLevel).Errorf("storage:etcd:volume:> get by name err: %s", err.Error())
@@ -309,7 +309,7 @@ func (s *VolumeStorage) Watch(ctx context.Context, volume chan *types.Volume) er
 	r, err := regexp.Compile(filter)
 	key := keyCreate(volumeStorage)
 	cb := func(action, key string, _ []byte) {
-		//fmt.Println("key=", key)
+
 		keys := r.FindStringSubmatch(key)
 		if len(keys) < 3 {
 			return
