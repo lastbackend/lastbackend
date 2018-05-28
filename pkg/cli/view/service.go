@@ -171,7 +171,6 @@ func (dl *DeploymentMap) Print() {
 		data["Status"] = d.State
 		//data["REPLICAS"] = string(d.Spec.Replicas) + " updated | " + string(d.Spec.Replicas) + " total | " + string(d.Spec.Replicas) + " availible | 0 unavailible"
 
-		//fmt.Println("Active:")
 		table.PrintHorizontal(data)
 		fmt.Println("\n Deployment pods:")
 

@@ -98,6 +98,25 @@ func EventSubscribeH(w http.ResponseWriter, r *http.Request) {
 				close(namespaceEvents)
 				close(clusterEvents)
 				return
+			case e := <-clusterEvents:
+
+				var data interface{}
+				if e.Data == nil {
+					data = nil
+				} else {
+					data = v1.View().Cluster().New(e.Data.(*types.Cluster))
+				}
+
+				event := Event{
+					Entity: "cluster",
+					Action: e.Action,
+					Name:   e.Name,
+					Data:   data,
+				}
+
+				if err = conn.WriteJSON(event); err != nil {
+					log.Errorf("%s:subscribe:> write cluster event to socket error.", logPrefix)
+				}
 			case e := <-serviceEvents:
 
 				var data interface{}
@@ -140,9 +159,10 @@ func EventSubscribeH(w http.ResponseWriter, r *http.Request) {
 		}
 	}()
 
+	go cm.Watch(clusterEvents)
 	go sm.Watch(serviceEvents)
 	go nm.Watch(namespaceEvents)
-	go cm.Watch(clusterEvents)
+
 	go func() {
 		for range ticker.C {
 			if err := conn.WriteMessage(websocket.TextMessage, []byte{}); err != nil {
