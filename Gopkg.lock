@@ -99,6 +99,12 @@
   version = "v0.3.3"
 
 [[projects]]
+  branch = "master"
+  name = "github.com/docker/libnetwork"
+  packages = ["ipvs"]
+  revision = "9e422a6585cb1dc5fb508d3c37302a112ec2abb9"
+
+[[projects]]
   name = "github.com/fsnotify/fsnotify"
   packages = ["."]
   revision = "c2828203cd70a50dcccfb2761f8b1f8ceef9a8e9"
@@ -310,8 +316,7 @@
     ".",
     "nl"
   ]
-  revision = "a2ad57a690f3caf3015351d2d6e1c0b95c349752"
-  version = "v1.0.0"
+  revision = "b2de5d10e38ecce8607e6b438b6d174f389a004e"
 
 [[projects]]
   branch = "master"
@@ -452,6 +457,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "923ba3b86bd9cdf969bd8335e5f6f10f5a42013b32afad1b98fc2e127135a2ec"
+  inputs-digest = "59f465b6dc1787fc19ac94b89ff014f5a6f535d9822ae1d2b7cb4b2da23594d1"
   solver-name = "gps-cdcl"
   solver-version = 1

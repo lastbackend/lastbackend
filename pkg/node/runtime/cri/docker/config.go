@@ -37,9 +37,10 @@ func GetConfig(spec *types.SpecTemplateContainer) *container.Config {
 	volumes = make(map[string]struct{}, 0)
 
 	for _, p := range spec.Ports {
-		port := nat.Port(strconv.Itoa(p.ContainerPort))
+		port := nat.Port(strconv.Itoa(int(p.ContainerPort)))
 		ports[port] = struct{}{}
 	}
+
 
 	var envs []string
 	for _, e := range spec.EnvVars {

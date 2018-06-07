@@ -3,13 +3,16 @@ FROM golang:1.10.1-alpine3.7
 RUN apk add --no-cache ca-certificates
 
 RUN apk add --no-cache iptables \
+    linux-headers \
+    gcc \
+    musl-dev \
     iproute2
 
 RUN set -ex \
 	&& apk add --no-cache --virtual .build-deps \
     bash \
     git  \
-		make \
+    make \
 	\
 	&& rm -rf /*.patch
 

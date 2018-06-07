@@ -98,7 +98,7 @@
 
 [[constraint]]
   name = "github.com/vishvananda/netlink"
-  version = "1.0.0"
+  revision = "b2de5d10e38ecce8607e6b438b6d174f389a004e"
 
 [[constraint]]
   branch = "master"
@@ -119,3 +119,7 @@
 [prune]
   go-tests = true
   unused-packages = true
+
+[[constraint]]
+  branch = "master"
+  name = "github.com/docker/libnetwork"

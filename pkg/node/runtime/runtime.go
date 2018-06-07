@@ -26,10 +26,10 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/log"
 	"github.com/lastbackend/lastbackend/pkg/node/envs"
 	"github.com/lastbackend/lastbackend/pkg/node/events"
+	"github.com/lastbackend/lastbackend/pkg/node/runtime/endpoint"
 	"github.com/lastbackend/lastbackend/pkg/node/runtime/pod"
 	"github.com/lastbackend/lastbackend/pkg/node/runtime/volume"
 	"time"
-	"github.com/lastbackend/lastbackend/pkg/node/runtime/endpoint"
 )
 
 type Runtime struct {
@@ -42,6 +42,7 @@ func (r *Runtime) Restore() {
 	network.Restore(r.ctx)
 	volume.Restore(r.ctx)
 	pod.Restore(r.ctx)
+	endpoint.Restore(r.ctx)
 }
 
 func (r *Runtime) Provision(ctx context.Context, spec *types.NodeSpec) error {
@@ -57,7 +58,7 @@ func (r *Runtime) Provision(ctx context.Context, spec *types.NodeSpec) error {
 
 	for k := range es {
 		if _, ok := spec.Endpoints[k]; !ok {
-			endpoint.Destroy(context.Background(), k, es[k])
+			//		endpoint.Destroy(context.Background(), k, es[k])
 		}
 	}
 
@@ -209,7 +210,7 @@ func (r *Runtime) Loop() {
 
 	go func(ctx context.Context) {
 		ticker := time.NewTicker(time.Second * 10)
-		for  range ticker.C {
+		for range ticker.C {
 			err := r.GetSpec(r.ctx)
 			if err != nil {
 				log.Debugf("node:runtime:loop:> new spec request err: %s", err.Error())

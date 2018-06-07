@@ -135,8 +135,8 @@ func (n *Node) GetSpec(node *types.Node) (*types.NodeSpec, error) {
 	}
 
 	spec.Endpoints = make(map[string]types.EndpointSpec, 0)
-	for n, sp := range es {
-		spec.Endpoints[n]=sp.Spec
+	for _, sp := range es {
+		spec.Endpoints[sp.Spec.IP]=sp.Spec
 	}
 
 	log.Debugf("%#v", spec.Endpoints)
