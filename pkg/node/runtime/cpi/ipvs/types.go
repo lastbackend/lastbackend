@@ -47,30 +47,3 @@ const (
 	proxyTCPProto = "tcp"
 	proxyUDPProto = "udp"
 )
-
-type Service struct {
-	Host        string    `json:"host"`
-	Port        int       `json:"port"`
-	Type        string    `json:"type"`
-	Scheduler   string    `json:"scheduler"`
-	Persistence int       `json:"persistence"`
-	Netmask     string    `json:"netmask"`
-	Backends    map[string]Backend `json:"backends"`
-}
-
-type Backend struct {
-	Host           string `json:"host"`
-	Port           int    `json:"port"`
-	Forwarder      string `json:"forwarder"`
-	Weight         int    `json:"weight"`
-	UpperThreshold int    `json:"upper_threshold"`
-	LowerThreshold int    `json:"lower_threshold"`
-}
-
-type DestinationFlags uint32
-
-type DestinationStats struct {
-	ActiveConns   uint32
-	InactiveConns uint32
-	PersistConns  uint32
-}

@@ -36,10 +36,6 @@ install:
 	@echo "== Install binaries"
 	@bash ./hack/install-cross.sh
 
-image-ingress:
-	@echo "== Build ingress image"
-	@sh ./hack/build-images.sh ingress
-
 image:
 	@echo "== Pre-building configuration"
 	@sh ./hack/build-images.sh

@@ -42,6 +42,7 @@ func (r *Runtime) Restore() {
 	network.Restore(r.ctx)
 	volume.Restore(r.ctx)
 	pod.Restore(r.ctx)
+	endpoint.Restore(r.ctx)
 }
 
 func (r *Runtime) Provision(ctx context.Context, spec *types.NodeSpec) error {
@@ -57,7 +58,7 @@ func (r *Runtime) Provision(ctx context.Context, spec *types.NodeSpec) error {
 
 	for k := range es {
 		if _, ok := spec.Endpoints[k]; !ok {
-			endpoint.Destroy(context.Background(), k, es[k])
+			//		endpoint.Destroy(context.Background(), k, es[k])
 		}
 	}
 

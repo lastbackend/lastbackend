@@ -232,12 +232,12 @@ func (c *CacheNodeSpec) CacheEndpoints(es EndpointSpecWatcher) error {
 			case e := <-evs:
 				{
 					if e.Event == "create" || e.Event == "update" {
-						c.SetEndpointSpec(e.Name, e.Spec)
+						c.SetEndpointSpec(e.Spec.IP ,e.Spec)
 						continue
 					}
 
 					if e.Event == "delete" {
-						c.DelEndpointSpec(e.Name)
+						c.DelEndpointSpec(e.Spec.IP)
 						continue
 					}
 				}

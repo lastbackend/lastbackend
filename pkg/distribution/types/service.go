@@ -152,11 +152,11 @@ func (s *ServiceSpec) Update(spec *ServiceOptionsSpec) {
 
 	// TODO: update for multi-container pod
 	if spec.Ports != nil {
-		s.Template.Network.Ports = spec.Ports
 
+		s.Template.Network.Ports = make(map[uint16]string, 0)
 		c.Ports = SpecTemplateContainerPorts{}
 
-		for _, pm := range spec.Ports {
+		for pt, pm := range spec.Ports {
 			port, proto, err := network.ParsePortMap(pm)
 			if err != nil {
 				continue
@@ -166,6 +166,8 @@ func (s *ServiceSpec) Update(spec *ServiceOptionsSpec) {
 				Protocol:      proto,
 				ContainerPort: port,
 			})
+
+			s.Template.Network.Ports[pt] = fmt.Sprintf("%d/%s", port, proto)
 		}
 
 	}
@@ -250,10 +252,10 @@ type ServiceRemoveOptions struct {
 }
 
 type ServiceOptionsSpec struct {
-	Replicas   *int           `json:"replicas"`
-	Memory     *int64         `json:"memory,omitempty"`
-	Entrypoint *string        `json:"entrypoint,omitempty"`
-	Command    *string        `json:"command,omitempty"`
-	EnvVars    *[]string      `json:"env,omitempty"`
-	Ports      map[int]string `json:"ports,omitempty"`
+	Replicas   *int              `json:"replicas"`
+	Memory     *int64            `json:"memory,omitempty"`
+	Entrypoint *string           `json:"entrypoint,omitempty"`
+	Command    *string           `json:"command,omitempty"`
+	EnvVars    *[]string         `json:"env,omitempty"`
+	Ports      map[uint16]string `json:"ports,omitempty"`
 }

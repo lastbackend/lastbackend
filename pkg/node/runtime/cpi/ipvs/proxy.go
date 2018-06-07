@@ -16,19 +16,22 @@
 // from Last.Backend LLC.
 //
 
-
 // +build linux
 
 package ipvs
 
 import (
-	"github.com/lastbackend/lastbackend/pkg/node/runtime/cpi"
 	"context"
+	"fmt"
+	libipvs "github.com/docker/libnetwork/ipvs"
+	"github.com/lastbackend/lastbackend/pkg/distribution/errors"
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 	"github.com/lastbackend/lastbackend/pkg/log"
-	"github.com/lastbackend/lastbackend/pkg/distribution/errors"
+	"github.com/lastbackend/lastbackend/pkg/node/runtime/cpi"
 	"github.com/lastbackend/lastbackend/pkg/util/network"
-	"fmt"
+	"net"
+	"syscall"
+	"github.com/vishvananda/netlink/nl"
 )
 
 const logIPVSPrefix = "cpi:ipvs:proxy:>"
@@ -37,67 +40,74 @@ const logIPVSPrefix = "cpi:ipvs:proxy:>"
 type Proxy struct {
 	cpi cpi.CPI
 	// IVPS cmd path
-	ipvs *IPVS
+	ipvs *libipvs.Handle
 }
 
 func (p *Proxy) Info(ctx context.Context) (map[string]*types.EndpointStatus, error) {
-	el := make(map[string]*types.EndpointStatus)
-
-	svcs, err := p.ipvs.GetServices(ctx)
-	if err != nil {
-		log.Errorf("%s info error: %s", logIPVSPrefix, err.Error())
-		return nil, err
-	}
-
-	for _, svc := range svcs {
-
-		// check if endpoint exists
-		if _, ok := el[svc.Host]; !ok {
-			el[svc.Host] = new(types.EndpointStatus)
-			el[svc.Host].Upstreams = make([]string, 0)
-		}
-	}
-
-	return el, nil
+	return p.getState(ctx)
 }
 
 // Create new proxy rules
 func (p *Proxy) Create(ctx context.Context, spec *types.EndpointSpec) (*types.EndpointStatus, error) {
 
+	log.Debugf("%s create ipvs virtual server with ip %s", logIPVSPrefix, spec.IP)
+
 	var (
-		err  error
+		err    error
 		status = new(types.EndpointStatus)
-		csvcs = make([]*Service, 0)
+		csvcs  = make([]*libipvs.Service, 0)
 	)
 
 	status.IP = spec.IP
-	svcs, err := specToServices(spec)
+	svcs, dests, err := specToServices(spec)
 	if err != nil {
+		log.Errorf("%s can not get services from spec: %s", logIPVSPrefix, err.Error())
 		return nil, err
+	}
+
+	if len(dests) == 0 {
+		log.Debugf("%s skip creating service, destinations not exists", logIPVSPrefix)
+		return nil, nil
 	}
 
 	defer func() {
 		if err != nil {
 			for _, svc := range csvcs {
-				p.ipvs.DelService(ctx, svc)
+				p.ipvs.DelService(svc)
 			}
 		}
 	}()
 
 	for _, svc := range svcs {
-		if err := p.ipvs.AddService(ctx, &svc); err != nil {
+		log.Debugf("%s create new service: %s", logIPVSPrefix, svc.Address.String())
+		if err := p.ipvs.NewService(svc); err != nil {
+			log.Errorf("%s create service err: %s", logIPVSPrefix, err.Error())
 			status.State = types.StateError
 			status.Message = err.Error()
 		}
-		csvcs = append(csvcs, &svc)
+
+		for _, dest := range dests {
+			log.Debugf("%s create new destination %s for service: %s", logIPVSPrefix,
+				dest.Address.String(), svc.Address.String())
+
+			if err := p.ipvs.NewDestination(svc, dest); err != nil {
+				log.Errorf("%s create destination for service err: %s", logIPVSPrefix, err.Error())
+				status.State = types.StateError
+				status.Message = err.Error()
+			}
+		}
+
+		csvcs = append(csvcs, svc)
 		return status, err
 	}
 
-	state, err := getStateByIP(ctx, spec.IP)
+	state, err := p.getStateByIP(ctx, spec.IP)
 	if err != nil {
 		log.Errorf("%s get state by ip err: %s", logIPVSPrefix, err.Error())
 		return status, err
 	}
+
+
 
 	status.PortMap = state.PortMap
 	status.Upstreams = state.Upstreams
@@ -109,19 +119,20 @@ func (p *Proxy) Create(ctx context.Context, spec *types.EndpointSpec) (*types.En
 	return status, nil
 }
 
+// Destroy proxy rules
 func (p *Proxy) Destroy(ctx context.Context, state *types.EndpointStatus) error {
 
 	var (
-		err  error
+		err error
 	)
 
-	svcs, err := stateToServices(state)
+	svcs, _, err := stateToServices(state)
 	if err != nil {
 		return err
 	}
 
 	for _, svc := range svcs {
-		if err = p.ipvs.DelService(ctx, &svc); err != nil {
+		if err = p.ipvs.DelService(svc); err != nil {
 			log.Errorf("%s can not delete service: %s", logIPVSPrefix, err.Error())
 		}
 	}
@@ -129,19 +140,20 @@ func (p *Proxy) Destroy(ctx context.Context, state *types.EndpointStatus) error 
 	return err
 }
 
+// Update proxy rules
 func (p *Proxy) Update(ctx context.Context, state *types.EndpointStatus, spec *types.EndpointSpec) (*types.EndpointStatus, error) {
 
 	var (
 		status = new(types.EndpointStatus)
 	)
 
-	psvc, err := specToServices(spec)
+	psvc, pdest, err := specToServices(spec)
 	if err != nil {
 		log.Errorf("%s can not convert spec to services: %s", logIPVSPrefix, err.Error())
 		return state, err
 	}
 
-	csvc, err := stateToServices(state)
+	csvc, cdest, err := stateToServices(state)
 	if err != nil {
 		log.Errorf("%s can not convert state to services: %s", logIPVSPrefix, err.Error())
 		return state, err
@@ -151,25 +163,24 @@ func (p *Proxy) Update(ctx context.Context, state *types.EndpointStatus, spec *t
 
 		// remove service which not exists in new spec
 		if _, ok := psvc[id]; !ok {
-			if err := p.ipvs.DelService(ctx, &svc); err != nil {
+			if err := p.ipvs.DelService(svc); err != nil {
 				log.Errorf("%s can not remove service: %s", logIPVSPrefix, err.Error())
 			}
 		}
 
 		// check service upstreams for removing
-		for host, bknd := range svc.Backends {
-			pu := psvc[id].Backends
-			if _, ok := pu[host]; !ok {
-				if err := p.ipvs.DelBackend(ctx, &svc, &bknd); err != nil {
+		for id, dest := range cdest {
+			if _, ok := pdest[id]; !ok {
+				if err := p.ipvs.DelDestination(svc, dest); err != nil {
 					log.Errorf("%s can not remove backend: %s", logIPVSPrefix, err.Error())
 				}
 			}
 		}
 
 		// check service upstreams for creating
-		for host, bknd := range psvc[id].Backends {
-			if _, ok := svc.Backends[host]; !ok {
-				if err := p.ipvs.AddBackend(ctx, &svc, &bknd); err != nil {
+		for id, dest := range pdest {
+			if _, ok := cdest[id]; !ok {
+				if err := p.ipvs.NewDestination(svc, dest); err != nil {
 					log.Errorf("%s can not add backend: %s", logIPVSPrefix, err.Error())
 				}
 			}
@@ -178,13 +189,13 @@ func (p *Proxy) Update(ctx context.Context, state *types.EndpointStatus, spec *t
 
 	for id, svc := range psvc {
 		if _, ok := csvc[id]; !ok {
-			if err := p.ipvs.AddService(ctx, &svc); err != nil {
+			if err := p.ipvs.NewService(svc); err != nil {
 				log.Errorf("%s can not create service: %s", logIPVSPrefix, err.Error())
 			}
 		}
 	}
 
-	st, err := getStateByIP(ctx, spec.IP)
+	st, err := p.getStateByIP(ctx, spec.IP)
 	if err != nil {
 		log.Errorf("%s get state by ip err: %s", logIPVSPrefix, err.Error())
 		return status, err
@@ -200,107 +211,229 @@ func (p *Proxy) Update(ctx context.Context, state *types.EndpointStatus, spec *t
 	return status, nil
 }
 
-func specToServices(spec *types.EndpointSpec) (map[string]Service, error) {
+// getStateByIp returns current proxy state filtered by endpoint ip
+func (p *Proxy) getStateByIP(ctx context.Context, ip string) (*types.EndpointStatus, error) {
 
-	var svcs = make(map[string]Service, 0)
+	state, err := p.getState(ctx)
+	if err != nil {
+		log.Errorf("%s get state err: %s", logIPVSPrefix, err.Error())
+		return nil, err
+	}
+
+	return state[ip], nil
+}
+
+// getStateByIp returns current proxy state
+func (p *Proxy) getState(ctx context.Context) (map[string]*types.EndpointStatus, error) {
+	el := make(map[string]*types.EndpointStatus)
+
+	svcs, err := p.ipvs.GetServices()
+	if err != nil {
+		log.Errorf("%s info error: %s", logIPVSPrefix, err.Error())
+		return el, err
+	}
+
+	log.Debugf("%s services list: %#v", logIPVSPrefix, svcs)
+
+	for _, svc := range svcs {
+		// check if endpoint exists
+		var host = svc.Address.String()
+
+		log.Debugf("%s add service %s to current state", logIPVSPrefix, svc.Address.String())
+
+		endpoint := el[host]
+		if endpoint == nil {
+			endpoint = new(types.EndpointStatus)
+			endpoint.IP = host
+			endpoint.PortMap = make(map[uint16]string)
+			endpoint.Upstreams = make([]string, 0)
+		}
+
+
+
+		var prt uint16
+
+		dests, err := p.ipvs.GetDestinations(svc)
+		if err != nil {
+			log.Errorf("%s get destinations err: %s", logIPVSPrefix, err.Error())
+			continue
+		}
+
+		log.Debugf("%s found %d destinations for service: %s", logIPVSPrefix, len(dests), svc.Address.String())
+
+		for _, dest := range dests {
+
+			var (
+				f = false
+			)
+
+			if prt == 0 {
+				prt = dest.Port
+			}
+
+			if prt != 0 && prt != dest.Port {
+				log.Debugf("%s dest port mismatch %d != %d", logIPVSPrefix, prt, dest.Port)
+				endpoint.State = types.StateWarning
+				endpoint.Message = "Ports mismatch"
+				break
+			}
+
+			for _, hst := range endpoint.Upstreams {
+				if dest.Address.String() == hst {
+					f = true
+					break
+				}
+			}
+
+			if !f {
+				endpoint.Upstreams = append(endpoint.Upstreams, dest.Address.String())
+			}
+		}
+
+		if prt != 0 {
+			if _, ok := endpoint.PortMap[svc.Port]; ok {
+				if svc.Protocol == syscall.IPPROTO_TCP && (endpoint.PortMap[svc.Port] == fmt.Sprintf("%d/%s", prt, proxyUDPProto)) {
+					endpoint.PortMap[svc.Port] = fmt.Sprintf("%d/*", prt)
+				}
+
+				if svc.Protocol == syscall.IPPROTO_UDP && (endpoint.PortMap[svc.Port] == fmt.Sprintf("%d/%s", prt, proxyTCPProto)) {
+					endpoint.PortMap[svc.Port] = fmt.Sprintf("%d/*", prt)
+				}
+			} else {
+
+				if svc.Protocol == syscall.IPPROTO_TCP {
+					endpoint.PortMap[svc.Port] = fmt.Sprintf("%d/%s", prt, proxyTCPProto)
+				}
+
+				if svc.Protocol == syscall.IPPROTO_UDP {
+					endpoint.PortMap[svc.Port] = fmt.Sprintf("%d/%s", prt, proxyUDPProto)
+				}
+			}
+		}
+
+		log.Debugf("%s add endpoint state: %#v", logIPVSPrefix, endpoint)
+		el[host] = endpoint
+	}
+
+	log.Debugf("%s current ipvs state: %#v", logIPVSPrefix, el)
+
+	return el, nil
+}
+
+func New() (*Proxy, error) {
+	prx := new(Proxy)
+	handler, err := libipvs.New("")
+	if err != nil {
+		log.Errorf("%s can not initialize ipvs: %s", logIPVSPrefix, err.Error())
+		return nil, err
+	}
+
+	prx.ipvs = handler
+
+	// TODO: Check ipvs proxy mode is available on host
+	return prx, nil
+}
+
+func specToServices(spec *types.EndpointSpec) (map[string]*libipvs.Service, map[string]*libipvs.Destination, error) {
+
+	var svcs = make(map[string]*libipvs.Service, 0)
+	dests := make(map[string]*libipvs.Destination, 0)
 
 	for ext, pm := range spec.PortMap {
 
 		port, proto, err := network.ParsePortMap(pm)
 		if err != nil {
 			err = errors.New("Invalid port map declaration")
-			return svcs, err
+			return svcs, dests, err
 		}
 
-		svc := Service{
-			Host: spec.IP,
-			Port: ext,
+		svc := libipvs.Service{
+			Address: net.ParseIP(spec.IP),
+			Port:    ext,
+			AddressFamily: nl.FAMILY_V4,
+			SchedName: "rr",
 		}
 
 		for _, host := range spec.Upstreams {
-			svc.Backends[host] = Backend{
-				Host: host,
-				Port: port,
-			}
-		}
+			dest := new(libipvs.Destination)
 
+			dest.Address = net.ParseIP(host)
+			dest.Port = port
+			dest.Weight = 1
+			dests[fmt.Sprintf("%s_%d", dest.Address.String(), dest.Port)] = dest
+		}
+		
 		switch proto {
 		case "tcp":
-			svc.Type = proxyTCPProto
-			svcs[fmt.Sprintf("%s_%d_%d_%s", svc.Host, svc.Port, port, proxyTCPProto)] = svc
+			svc.Protocol = syscall.IPPROTO_TCP
+			svcs[fmt.Sprintf("%s_%d_%d_%s", spec.IP, svc.Port, port, proxyTCPProto)] = &svc
 			break
 		case "udp":
-			svc.Type = proxyUDPProto
-			svcs[fmt.Sprintf("%s_%d_%d_%s", svc.Host, svc.Port, port, proxyUDPProto)] = svc
+			svc.Protocol = syscall.IPPROTO_UDP
+			svcs[fmt.Sprintf("%s_%d_%d_%s", spec.IP, svc.Port, port, proxyUDPProto)] = &svc
 			break
 		case "*":
 			svcc := svc
-			svc.Type = proxyTCPProto
-			svcc.Type = proxyUDPProto
+			svc.Protocol = syscall.IPPROTO_TCP
+			svcc.Protocol = syscall.IPPROTO_UDP
 
-			svcs[fmt.Sprintf("%s_%d_%d_%s", svc.Host, svc.Port, port, proxyTCPProto)] = svc
-			svcs[fmt.Sprintf("%s_%d_%d_%s", svcc.Host, svcc.Port, port, proxyUDPProto)] = svcc
+			svcs[fmt.Sprintf("%s_%d_%d_%s", spec.IP, svc.Port, port, proxyTCPProto)] = &svc
+			svcs[fmt.Sprintf("%s_%d_%d_%s", spec.IP, svcc.Port, port, proxyUDPProto)] = &svcc
 			break
 		}
 	}
 
-	return svcs, nil
+	return svcs, dests, nil
 }
 
-func stateToServices(status *types.EndpointStatus) (map[string]Service, error) {
+func stateToServices(status *types.EndpointStatus) (map[string]*libipvs.Service, map[string]*libipvs.Destination, error) {
 
-	var svcs = make(map[string]Service, 0)
+	var svcs = make(map[string]*libipvs.Service, 0)
+	dests := make(map[string]*libipvs.Destination, 0)
 
 	for ext, pm := range status.PortMap {
 
 		port, proto, err := network.ParsePortMap(pm)
 		if err != nil {
 			err = errors.New("Invalid port map declaration")
-			return svcs, err
+			return svcs, dests, err
 		}
 
-		svc := Service{
-			Host: status.IP,
-			Port: ext,
+		svc := libipvs.Service{
+			AddressFamily: nl.FAMILY_V4,
+			Address: net.ParseIP(status.IP),
+			Port:    ext,
+			SchedName: "rr",
 		}
 
 		for _, host := range status.Upstreams {
-			svc.Backends[host] = Backend{
-				Host: host,
-				Port: port,
-			}
+			dest := new(libipvs.Destination)
+
+			dest.Address = net.ParseIP(host)
+			dest.Port = port
+			dest.Weight = 1
+			dests[fmt.Sprintf("%s_%d", dest.Address.String(), dest.Port)] = dest
 		}
 
 		switch proto {
 		case "tcp":
-			svc.Type = proxyTCPProto
-			svcs[fmt.Sprintf("%s_%d_%d_%s", svc.Host, svc.Port, port, proxyTCPProto)] = svc
+			svc.Protocol = syscall.IPPROTO_TCP
+			svcs[fmt.Sprintf("%s_%d_%d_%s", status.IP, svc.Port, port, proxyTCPProto)] = &svc
 			break
 		case "udp":
-			svc.Type = proxyUDPProto
-			svcs[fmt.Sprintf("%s_%d_%d_%s", svc.Host, svc.Port, port, proxyUDPProto)] = svc
+			svc.Protocol = syscall.IPPROTO_UDP
+			svcs[fmt.Sprintf("%s_%d_%d_%s", status.IP, svc.Port, port, proxyUDPProto)] = &svc
 			break
 		case "*":
 			svcc := svc
-			svc.Type = proxyTCPProto
-			svcc.Type = proxyUDPProto
+			svc.Protocol = syscall.IPPROTO_TCP
+			svcc.Protocol = syscall.IPPROTO_UDP
 
-			svcs[fmt.Sprintf("%s_%d_%d_%s", svc.Host, svc.Port, port, proxyTCPProto)] = svc
-			svcs[fmt.Sprintf("%s_%d_%d_%s", svcc.Host, svcc.Port, port, proxyUDPProto)] = svcc
+			svcs[fmt.Sprintf("%s_%d_%d_%s", status.IP, svc.Port, port, proxyTCPProto)] = &svc
+			svcs[fmt.Sprintf("%s_%d_%d_%s", status.IP, svcc.Port, port, proxyUDPProto)] = &svcc
 			break
 		}
 	}
 
-	return svcs, nil
-}
-
-func getStateByIP(ctx context.Context, ip string) (*types.EndpointStatus, error) {
-	var status = new(types.EndpointStatus)
-	return status, nil
-}
-
-func New() (*Proxy, error) {
-	prx := new(Proxy)
-	// TODO: Check ipvs proxy mode is available on host
-	return prx, nil
+	return svcs, dests, nil
 }

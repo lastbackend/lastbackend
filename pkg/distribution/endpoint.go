@@ -36,6 +36,7 @@ type IEndpoint interface {
 	ListByNamespace(namespace string) (map[string]*types.Endpoint, error)
 	Create(namespace string, service string, opts *types.EndpointCreateOptions) (*types.Endpoint, error)
 	Update(endpoint *types.Endpoint, opts *types.EndpointUpdateOptions) (*types.Endpoint, error)
+	SetSpec(endpoint *types.Endpoint, spec *types.EndpointSpec) (*types.Endpoint, error)
 	Remove(endpoint *types.Endpoint) error
 }
 
@@ -84,7 +85,7 @@ func (e *Endpoint) Create(namespace, service string, opts *types.EndpointCreateO
 
 	endpoint.Status.State = types.StateCreated
 	endpoint.Status.Message = ""
-	endpoint.Spec.PortMap = make(map[int]string, 0)
+	endpoint.Spec.PortMap = make(map[uint16]string, 0)
 	endpoint.Spec.Upstreams = make([]string, 0)
 
 	for k, v := range opts.Ports {
@@ -114,7 +115,7 @@ func (e *Endpoint) Update(endpoint *types.Endpoint, opts *types.EndpointUpdateOp
 	log.Debugf("%s:update:> endpoint: %s", logEndpointPrefix, endpoint.SelfLink())
 
 	if len(opts.Ports) != 0 {
-		endpoint.Spec.PortMap = make(map[int]string, 0)
+		endpoint.Spec.PortMap = make(map[uint16]string, 0)
 		for k, v := range opts.Ports {
 			endpoint.Spec.PortMap[k] = v
 		}
@@ -129,6 +130,15 @@ func (e *Endpoint) Update(endpoint *types.Endpoint, opts *types.EndpointUpdateOp
 		return nil, err
 	}
 
+	return endpoint, nil
+}
+
+func (e *Endpoint) SetSpec(endpoint *types.Endpoint, spec *types.EndpointSpec) (*types.Endpoint, error) {
+	endpoint.Spec = *spec
+	if err := e.storage.Endpoint().SetSpec(e.context, endpoint); err != nil {
+		log.Errorf("%s:create:> distribution update endpoint spec: %s err: %s", logEndpointPrefix, endpoint.SelfLink(), err.Error())
+		return nil, err
+	}
 	return endpoint, nil
 }
 

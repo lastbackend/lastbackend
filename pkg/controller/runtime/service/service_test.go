@@ -193,7 +193,7 @@ func TestProvisionEndpointCreate(t *testing.T) {
 
 	s1.Spec.Replicas = 2
 	s1.Spec.Template.Containers = make(types.SpecTemplateContainers, 0)
-	s1.Spec.Template.Network.Ports = make(map[int]string, 0)
+	s1.Spec.Template.Network.Ports = make(map[uint16]string, 0)
 	s1.Spec.Template.Network.Ports[6379] = "6379/tcp"
 
 	spec := types.SpecTemplateContainer{
@@ -203,7 +203,7 @@ func TestProvisionEndpointCreate(t *testing.T) {
 	spec.SetDefault()
 
 	s1.Spec.Template.Containers = append(s1.Spec.Template.Containers, spec)
-	e1.Spec.PortMap = make(map[int]string)
+	e1.Spec.PortMap = make(map[uint16]string)
 
 	for k, v := range s1.Spec.Template.Network.Ports {
 		e1.Spec.PortMap[k] = v
@@ -264,7 +264,7 @@ func TestProvisionEndpointUpdate(t *testing.T) {
 
 	s1.Spec.Replicas = 2
 	s1.Spec.Template.Containers = make(types.SpecTemplateContainers, 0)
-	s1.Spec.Template.Network.Ports = make(map[int]string, 0)
+	s1.Spec.Template.Network.Ports = make(map[uint16]string, 0)
 	s1.Spec.Template.Network.Ports[6379] = "6379/tcp"
 
 	spec := types.SpecTemplateContainer{
@@ -274,7 +274,7 @@ func TestProvisionEndpointUpdate(t *testing.T) {
 	spec.SetDefault()
 
 	s1.Spec.Template.Containers = append(s1.Spec.Template.Containers, spec)
-	e1.Spec.PortMap = make(map[int]string)
+	e1.Spec.PortMap = make(map[uint16]string)
 
 	for k, v := range s1.Spec.Template.Network.Ports {
 		e1.Spec.PortMap[k] = v
@@ -362,7 +362,7 @@ func TestProvisionEndpointRemove(t *testing.T) {
 
 	s1.Spec.Replicas = 2
 	s1.Spec.Template.Containers = make(types.SpecTemplateContainers, 0)
-	s1.Spec.Template.Network.Ports = make(map[int]string, 0)
+	s1.Spec.Template.Network.Ports = make(map[uint16]string, 0)
 	s1.Spec.Template.Network.Ports[6379] = "6379/tcp"
 
 	spec := types.SpecTemplateContainer{
@@ -372,7 +372,7 @@ func TestProvisionEndpointRemove(t *testing.T) {
 	spec.SetDefault()
 
 	s1.Spec.Template.Containers = append(s1.Spec.Template.Containers, spec)
-	e1.Spec.PortMap = make(map[int]string)
+	e1.Spec.PortMap = make(map[uint16]string)
 
 	for k, v := range s1.Spec.Template.Network.Ports {
 		e1.Spec.PortMap[k] = v

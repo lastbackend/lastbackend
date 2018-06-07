@@ -24,10 +24,10 @@ import (
 	"strings"
 )
 
-func ParsePortMap(s string) (int, string, error) {
+func ParsePortMap(s string) (uint16, string, error) {
 
 	var (
-		port  int
+		port uint16
 		proto string
 		err   error
 	)
@@ -37,17 +37,19 @@ func ParsePortMap(s string) (int, string, error) {
 	case 0:
 		break
 	case 1:
-		port, err = strconv.Atoi(pm[0])
+		p, err := strconv.ParseUint(pm[0], 10, 16)
 		if err != nil {
 			break
 		}
+		port = uint16(p)
 		proto = "tcp"
 		break
 	case 2:
-		port, err = strconv.Atoi(pm[0])
+		p, err := strconv.ParseUint(pm[0], 10, 16)
 		if err != nil {
-			return port, proto, err
+			break
 		}
+		port = uint16(p)
 		proto = strings.ToLower(pm[1])
 		break
 	default:

@@ -18,6 +18,8 @@ node:
     type: "docker"
   cni:
     type: "vxlan"
+  cpi:
+    type: "ipvs"
   volume: "/var/lib/lastbackend/"
 
 # Runtime

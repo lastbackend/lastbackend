@@ -85,13 +85,13 @@ var serviceCreateCmd = &cobra.Command{
 				return
 			}
 
-			ext, err := strconv.Atoi(pm[0])
+			ext, err := strconv.ParseUint(pm[0], 10, 16)
 			if err != nil {
 				fmt.Println("port mapping is in invalid format")
 				return
 			}
 
-			opts.Spec.Ports[ext] = pm[1]
+			opts.Spec.Ports[uint16(ext)] = pm[1]
 		}
 
 		opts.Description = &description

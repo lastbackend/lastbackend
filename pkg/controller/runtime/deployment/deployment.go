@@ -282,6 +282,39 @@ func HandleStatus(d *types.Deployment) error {
 		}
 	}
 
+	// Update endpoint upstreams if deployment is in ready stage
+	if d.Status.State == types.StateRunning {
+		em := distribution.NewEndpointModel(context.Background(), stg)
+		pm := distribution.NewPodModel(context.Background(), stg)
+		ept, err := em.Get(svc.Meta.Namespace, svc.Meta.Name)
+		if err != nil {
+			log.Errorf("%s> get endpoint error: %s", msg, err.Error())
+			return err
+		}
+
+
+		pl, err := pm.ListByDeployment(d.Meta.Namespace, d.Meta.Service, d.Meta.Name)
+		if err != nil {
+			log.Errorf("%s> get pod list error: %s", msg, err.Error())
+			return err
+		}
+
+		ept.Spec.Upstreams = make([]string, 0)
+		for _, p := range pl {
+			if p.Status.Network.PodIP != "" {
+				ept.Spec.Upstreams = append(ept.Spec.Upstreams, p.Status.Network.PodIP)
+			}
+		}
+
+		if len(ept.Spec.Upstreams) > 0 {
+			if _, err := em.SetSpec(ept, &ept.Spec); err != nil {
+				log.Errorf("%s> update endpoint upstreams error: %s", msg, err.Error())
+				return err
+			}
+		}
+
+	}
+
 	// Remove destroyed deployment
 	if d.Status.State == types.StateDestroyed {
 		if err := dm.Remove(d); err != nil {

@@ -17,8 +17,9 @@ for i in "${arr[@]}"
 do
  echo "Build '$i' version '$VERSION' for os '$OSTYPE'"
   if [[ "$OSTYPE" == "linux-gnu" || "$OSTYPE" == "linux-musl" ]]; then
-   GOOS=linux  go build -ldflags "-X main.Version=$VERSION" -o "build/linux/$i" "cmd/$i/$i.go"
+    CGO_ENABLED=1 \
+    GOOS=linux  go build -ldflags "-X main.Version=$VERSION" -o "build/linux/$i" "cmd/$i/$i.go"
   elif [[ "$OSTYPE" == "darwin"* ]]; then
-   GOOS=darwin go build -ldflags "-X main.Version=$VERSION" -o "build/darwin/$i" "cmd/$i/$i.go"
+    GOOS=darwin go build -ldflags "-X main.Version=$VERSION" -o "build/darwin/$i" "cmd/$i/$i.go"
   fi
 done
