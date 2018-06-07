@@ -20,16 +20,16 @@ package etcd
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 	"github.com/lastbackend/lastbackend/pkg/log"
+	"github.com/lastbackend/lastbackend/pkg/storage/etcd/cache"
 	"github.com/lastbackend/lastbackend/pkg/storage/storage"
 	"github.com/lastbackend/lastbackend/pkg/storage/store"
 	"regexp"
 	"time"
-	"github.com/lastbackend/lastbackend/pkg/storage/etcd/cache"
-	"encoding/json"
 )
 
 const serviceStorage = "services"

@@ -129,7 +129,6 @@ func (s *Service) Create(namespace *types.Namespace, opts *types.ServiceCreateOp
 		service.Spec.Update(opts.Spec)
 	}
 
-
 	if err := s.storage.Service().Insert(s.context, service); err != nil {
 		log.V(logLevel).Errorf("%s:create:> insert service err: %s", logServicePrefix, err)
 		return nil, err

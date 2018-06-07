@@ -19,9 +19,9 @@
 package envs
 
 import (
+	"github.com/lastbackend/lastbackend/pkg/api/cache"
 	"github.com/lastbackend/lastbackend/pkg/api/client"
 	"github.com/lastbackend/lastbackend/pkg/storage"
-	"github.com/lastbackend/lastbackend/pkg/api/cache"
 )
 
 var e Env
@@ -35,8 +35,6 @@ type Env struct {
 func Get() *Env {
 	return &e
 }
-
-
 
 func (c *Env) SetClient(client client.Client) {
 	c.client = client

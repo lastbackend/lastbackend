@@ -66,12 +66,12 @@ func Provision(svc *types.Service) error {
 		}
 		svc.Status.Network.IP = ""
 		break
-	case 	len(svc.Spec.Template.Network.Ports) != 0 && ept == nil:
+	case len(svc.Spec.Template.Network.Ports) != 0 && ept == nil:
 		opts := types.EndpointCreateOptions{
-			IP: svc.Spec.Template.Network.IP,
-			Ports: svc.Spec.Template.Network.Ports,
-			Policy: svc.Spec.Template.Network.Policy,
-			BindStrategy: svc.Spec.Template.Network.Strategy.Bind,
+			IP:            svc.Spec.Template.Network.IP,
+			Ports:         svc.Spec.Template.Network.Ports,
+			Policy:        svc.Spec.Template.Network.Policy,
+			BindStrategy:  svc.Spec.Template.Network.Strategy.Bind,
 			RouteStrategy: svc.Spec.Template.Network.Strategy.Route,
 		}
 
@@ -84,11 +84,10 @@ func Provision(svc *types.Service) error {
 		svc.Status.Network.IP = ept.Spec.IP
 		break
 
-	case 	len(svc.Spec.Template.Network.Ports) != 0 && ept != nil:
+	case len(svc.Spec.Template.Network.Ports) != 0 && ept != nil:
 		var equal = true
 
-		if
-			(svc.Spec.Template.Network.IP != "" && svc.Spec.Template.Network.IP != ept.Spec.IP ) ||
+		if (svc.Spec.Template.Network.IP != "" && svc.Spec.Template.Network.IP != ept.Spec.IP) ||
 			(svc.Spec.Template.Network.Policy != ept.Spec.Policy) ||
 			(svc.Spec.Template.Network.Strategy.Bind != ept.Spec.Strategy.Bind) ||
 			(svc.Spec.Template.Network.Strategy.Route != ept.Spec.Strategy.Route) {
@@ -118,13 +117,13 @@ func Provision(svc *types.Service) error {
 		}
 
 		opts := types.EndpointUpdateOptions{
-			Ports: svc.Spec.Template.Network.Ports,
-			Policy: svc.Spec.Template.Network.Policy,
-			BindStrategy: svc.Spec.Template.Network.Strategy.Bind,
+			Ports:         svc.Spec.Template.Network.Ports,
+			Policy:        svc.Spec.Template.Network.Policy,
+			BindStrategy:  svc.Spec.Template.Network.Strategy.Bind,
 			RouteStrategy: svc.Spec.Template.Network.Strategy.Route,
 		}
 
-		if svc.Spec.Template.Network.IP != "" && svc.Spec.Template.Network.IP != ept.Spec.IP  {
+		if svc.Spec.Template.Network.IP != "" && svc.Spec.Template.Network.IP != ept.Spec.IP {
 			opts.IP = svc.Spec.Template.Network.IP
 		}
 

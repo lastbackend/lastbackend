@@ -20,7 +20,7 @@ package v3
 
 type Config struct {
 	Endpoints []string `yaml:"endpoint"`
-	TLS struct {
+	TLS       struct {
 		Key  string `yaml:"key"`
 		Cert string `yaml:"cert"`
 		CA   string `yaml:"ca"`

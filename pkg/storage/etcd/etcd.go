@@ -195,7 +195,7 @@ func New() (*Storage, error) {
 	s.SystemStorage = newSystemStorage()
 	s.VolumeStorage = newVolumeStorage()
 	s.SecretStorage = newSecretStorage()
-	s.IPAMStorage   = newIPAMStorage()
+	s.IPAMStorage = newIPAMStorage()
 
 	return s, nil
 }

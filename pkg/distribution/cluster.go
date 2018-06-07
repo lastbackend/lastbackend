@@ -55,6 +55,19 @@ func (c *Cluster) Get() (*types.Cluster, error) {
 	return cluster, nil
 }
 
+// Watch cluster changes
+func (c *Cluster) Watch(ch chan *types.Event) error {
+
+	log.Debugf("%s:watch:> watch cluster", logClusterPrefix)
+
+	if err := c.storage.Cluster().Watch(c.context, ch); err != nil {
+		log.Debugf("%s:watch:> watch cluster err: %s", logClusterPrefix, err.Error())
+		return err
+	}
+
+	return nil
+}
+
 // NewClusterModel - return new cluster model
 func NewClusterModel(ctx context.Context, stg storage.Storage) *Cluster {
 	return &Cluster{ctx, stg}

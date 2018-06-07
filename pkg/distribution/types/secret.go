@@ -30,8 +30,10 @@ type Secret struct {
 	Meta SecretMeta `json:"meta" yaml:"meta"`
 	Data string     `json:"data" yaml:"data"`
 }
+
 // swagger:ignore
 type SecretList []*Secret
+
 // swagger:ignore
 type SecretMap map[string]*Secret
 

@@ -21,12 +21,12 @@ package events
 import (
 	"net/http"
 
+	"github.com/gorilla/websocket"
 	"github.com/lastbackend/lastbackend/pkg/api/envs"
-	"github.com/lastbackend/lastbackend/pkg/log"
+	"github.com/lastbackend/lastbackend/pkg/api/types/v1"
 	"github.com/lastbackend/lastbackend/pkg/distribution"
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
-	"github.com/lastbackend/lastbackend/pkg/api/types/v1"
-	"github.com/gorilla/websocket"
+	"github.com/lastbackend/lastbackend/pkg/log"
 	"time"
 )
 
@@ -65,6 +65,7 @@ func EventSubscribeH(w http.ResponseWriter, r *http.Request) {
 	var (
 		sm   = distribution.NewServiceModel(r.Context(), envs.Get().GetStorage())
 		nm   = distribution.NewNamespaceModel(r.Context(), envs.Get().GetStorage())
+		cm   = distribution.NewClusterModel(r.Context(), envs.Get().GetStorage())
 		done = make(chan bool, 1)
 	)
 
@@ -79,6 +80,7 @@ func EventSubscribeH(w http.ResponseWriter, r *http.Request) {
 
 	var serviceEvents = make(chan *types.Event)
 	var namespaceEvents = make(chan *types.Event)
+	var clusterEvents = make(chan *types.Event)
 
 	notify := w.(http.CloseNotifier).CloseNotify()
 
@@ -94,7 +96,27 @@ func EventSubscribeH(w http.ResponseWriter, r *http.Request) {
 			case <-done:
 				close(serviceEvents)
 				close(namespaceEvents)
+				close(clusterEvents)
 				return
+			case e := <-clusterEvents:
+
+				var data interface{}
+				if e.Data == nil {
+					data = nil
+				} else {
+					data = v1.View().Cluster().New(e.Data.(*types.Cluster))
+				}
+
+				event := Event{
+					Entity: "cluster",
+					Action: e.Action,
+					Name:   e.Name,
+					Data:   data,
+				}
+
+				if err = conn.WriteJSON(event); err != nil {
+					log.Errorf("%s:subscribe:> write cluster event to socket error.", logPrefix)
+				}
 			case e := <-serviceEvents:
 
 				var data interface{}
@@ -136,8 +158,11 @@ func EventSubscribeH(w http.ResponseWriter, r *http.Request) {
 			}
 		}
 	}()
+
+	go cm.Watch(clusterEvents)
 	go sm.Watch(serviceEvents)
 	go nm.Watch(namespaceEvents)
+
 	go func() {
 		for range ticker.C {
 			if err := conn.WriteMessage(websocket.TextMessage, []byte{}); err != nil {

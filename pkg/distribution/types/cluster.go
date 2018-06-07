@@ -18,36 +18,17 @@
 
 package types
 
-import "fmt"
-
 const (
 	CentralUSRegions = "CU"
 	WestEuropeRegion = "WE"
 	EastAsiaRegion   = "EA"
 )
 
-const (
-	DefaultClusterName        = "LB"
-	DefaultClusterDescription = "Last.Backend cluster"
-)
-
 type ClusterList []*Cluster
 type ClusterMap map[string]*Cluster
 
 type Cluster struct {
-	Meta   ClusterMeta   `json:"meta"`
 	Status ClusterStatus `json:"status"`
-	Quotas ClusterQuotas `json:"quotas"`
-}
-
-type ClusterMeta struct {
-	Meta
-
-	Region   string `json:"region"`
-	Token    string `json:"token"`
-	Provider string `json:"provider"`
-	Shared   bool   `json:"shared"`
-	Main     bool   `json:"main"`
 }
 
 type ClusterStatus struct {
@@ -69,16 +50,6 @@ type ClusterResources struct {
 	Memory     int64 `json:"memory"`
 	Cpu        int   `json:"cpu"`
 	Storage    int   `json:"storage"`
-}
-
-type ClusterQuotas struct {
-}
-
-func (c *Cluster) SelfLink() string {
-	if c.Meta.SelfLink == "" {
-		c.Meta.SelfLink = fmt.Sprintf("%s", c.Meta.Name)
-	}
-	return c.Meta.SelfLink
 }
 
 // swagger:ignore

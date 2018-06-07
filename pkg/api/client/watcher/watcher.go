@@ -19,10 +19,10 @@
 package watcher
 
 import (
+	"encoding/json"
+	"github.com/lastbackend/lastbackend/pkg/log"
 	"io"
 	"sync"
-	"github.com/lastbackend/lastbackend/pkg/log"
-	"encoding/json"
 )
 
 type IWatcher interface {

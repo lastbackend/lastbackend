@@ -19,8 +19,8 @@
 package cpi
 
 import (
-	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 	"context"
+	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 )
 
 type CPI interface {

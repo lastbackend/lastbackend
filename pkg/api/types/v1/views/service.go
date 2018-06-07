@@ -78,8 +78,8 @@ type ServiceStatus struct {
 
 // swagger:ignore
 type ServiceDeployment struct {
-	ID      string    `json:"id"`
-	Name    string    `json:"name"`
+	ID      string `json:"id"`
+	Name    string `json:"name"`
 	Pods    map[string]Pod
 	Started time.Time `json:"started"`
 }

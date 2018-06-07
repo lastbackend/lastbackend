@@ -61,7 +61,6 @@ func (n *Ingress) Create(opts *types.IngressCreateOptions) (*types.Ingress, erro
 	ig.Meta.Name = opts.Meta.Name
 	ig.Status = opts.Status
 
-
 	if err := n.storage.Ingress().Insert(n.context, ig); err != nil {
 		log.Debugf("%s:create:> insert ingress err: %s", logIngressPrefix, err.Error())
 		return nil, err
@@ -131,7 +130,6 @@ func (n *Ingress) SetStatus(ingress *types.Ingress, status types.IngressStatus) 
 
 	return nil
 }
-
 
 func (n *Ingress) Remove(ingress *types.Ingress) error {
 

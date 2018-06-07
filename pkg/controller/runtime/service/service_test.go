@@ -22,14 +22,14 @@ import (
 	"context"
 	"encoding/json"
 	"github.com/lastbackend/lastbackend/pkg/controller/envs"
+	"github.com/lastbackend/lastbackend/pkg/controller/ipam"
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 	"github.com/lastbackend/lastbackend/pkg/storage"
 	"github.com/lastbackend/lastbackend/pkg/storage/mock"
 	"github.com/lastbackend/lastbackend/pkg/storage/store"
+	"github.com/stretchr/testify/assert"
 	"reflect"
 	"testing"
-	"github.com/lastbackend/lastbackend/pkg/controller/ipam"
-	"github.com/stretchr/testify/assert"
 )
 
 func TestProvision(t *testing.T) {
@@ -176,7 +176,7 @@ func TestProvision(t *testing.T) {
 	}
 }
 
-func TestProvisionEndpointCreate (t *testing.T) {
+func TestProvisionEndpointCreate(t *testing.T) {
 
 	stg, _ := mock.New()
 	envs.Get().SetStorage(stg)
@@ -194,7 +194,7 @@ func TestProvisionEndpointCreate (t *testing.T) {
 	s1.Spec.Replicas = 2
 	s1.Spec.Template.Containers = make(types.SpecTemplateContainers, 0)
 	s1.Spec.Template.Network.Ports = make(map[int]string, 0)
-	s1.Spec.Template.Network.Ports[6379]="6379/tcp"
+	s1.Spec.Template.Network.Ports[6379] = "6379/tcp"
 
 	spec := types.SpecTemplateContainer{
 		Name: "test-template",
@@ -205,7 +205,7 @@ func TestProvisionEndpointCreate (t *testing.T) {
 	s1.Spec.Template.Containers = append(s1.Spec.Template.Containers, spec)
 	e1.Spec.PortMap = make(map[int]string)
 
-	for k,v := range s1.Spec.Template.Network.Ports {
+	for k, v := range s1.Spec.Template.Network.Ports {
 		e1.Spec.PortMap[k] = v
 	}
 
@@ -247,7 +247,7 @@ func TestProvisionEndpointCreate (t *testing.T) {
 	})
 }
 
-func TestProvisionEndpointUpdate (t *testing.T) {
+func TestProvisionEndpointUpdate(t *testing.T) {
 
 	stg, _ := mock.New()
 	envs.Get().SetStorage(stg)
@@ -265,7 +265,7 @@ func TestProvisionEndpointUpdate (t *testing.T) {
 	s1.Spec.Replicas = 2
 	s1.Spec.Template.Containers = make(types.SpecTemplateContainers, 0)
 	s1.Spec.Template.Network.Ports = make(map[int]string, 0)
-	s1.Spec.Template.Network.Ports[6379]="6379/tcp"
+	s1.Spec.Template.Network.Ports[6379] = "6379/tcp"
 
 	spec := types.SpecTemplateContainer{
 		Name: "test-template",
@@ -276,7 +276,7 @@ func TestProvisionEndpointUpdate (t *testing.T) {
 	s1.Spec.Template.Containers = append(s1.Spec.Template.Containers, spec)
 	e1.Spec.PortMap = make(map[int]string)
 
-	for k,v := range s1.Spec.Template.Network.Ports {
+	for k, v := range s1.Spec.Template.Network.Ports {
 		e1.Spec.PortMap[k] = v
 	}
 
@@ -315,8 +315,8 @@ func TestProvisionEndpointUpdate (t *testing.T) {
 			return
 		}
 
-		s1.Spec.Template.Network.Ports[6380]="6379/tcp"
-		for k,v := range s1.Spec.Template.Network.Ports {
+		s1.Spec.Template.Network.Ports[6380] = "6379/tcp"
+		for k, v := range s1.Spec.Template.Network.Ports {
 			e1.Spec.PortMap[k] = v
 		}
 
@@ -345,7 +345,7 @@ func TestProvisionEndpointUpdate (t *testing.T) {
 	})
 }
 
-func TestProvisionEndpointRemove (t *testing.T) {
+func TestProvisionEndpointRemove(t *testing.T) {
 
 	stg, _ := mock.New()
 	envs.Get().SetStorage(stg)
@@ -363,7 +363,7 @@ func TestProvisionEndpointRemove (t *testing.T) {
 	s1.Spec.Replicas = 2
 	s1.Spec.Template.Containers = make(types.SpecTemplateContainers, 0)
 	s1.Spec.Template.Network.Ports = make(map[int]string, 0)
-	s1.Spec.Template.Network.Ports[6379]="6379/tcp"
+	s1.Spec.Template.Network.Ports[6379] = "6379/tcp"
 
 	spec := types.SpecTemplateContainer{
 		Name: "test-template",
@@ -374,7 +374,7 @@ func TestProvisionEndpointRemove (t *testing.T) {
 	s1.Spec.Template.Containers = append(s1.Spec.Template.Containers, spec)
 	e1.Spec.PortMap = make(map[int]string)
 
-	for k,v := range s1.Spec.Template.Network.Ports {
+	for k, v := range s1.Spec.Template.Network.Ports {
 		e1.Spec.PortMap[k] = v
 	}
 

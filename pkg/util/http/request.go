@@ -192,7 +192,6 @@ func decodeResponseJSON(resp *http.Response, successV, failureV interface{}) err
 				buf.ReadFrom(resp.Body)
 			case "application/json":
 				return decodeResponseBodyJSON(resp, failureV)
-			//fmt.Printf("%+v", failureV)
 			default:
 				return errors.New(fmt.Sprintf("Unknown content-type (%+v)", strings.Split(resp.Header.Get("Content-type"), ";")))
 			}

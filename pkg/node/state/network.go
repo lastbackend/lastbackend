@@ -24,7 +24,6 @@ import (
 	"sync"
 )
 
-
 type NetworkState struct {
 	lock    sync.RWMutex
 	subnets map[string]types.NetworkSpec

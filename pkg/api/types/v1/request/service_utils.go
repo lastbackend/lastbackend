@@ -89,7 +89,7 @@ func (s *ServiceCreateOptions) DecodeAndValidate(reader io.Reader) (*types.Servi
 		opts.Spec.Command = s.Spec.Command
 
 		if s.Spec.Ports != nil {
-				opts.Spec.Ports = s.Spec.Ports
+			opts.Spec.Ports = s.Spec.Ports
 		}
 
 	}

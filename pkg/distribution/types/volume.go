@@ -23,6 +23,7 @@ import "fmt"
 // swagger:ignore
 // swagger:model types_volume_map
 type VolumeMap map[string]*Volume
+
 // swagger:ignore
 // swagger:model types_volume_list
 type VolumeList []*Volume

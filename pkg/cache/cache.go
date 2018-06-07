@@ -24,6 +24,7 @@ const logLevel = 7
 type Cache struct {
 	pods      *PodCache
 	endpoints *EndpointCache
+	nodes     *NodeCache
 }
 
 func New() *Cache {
@@ -32,6 +33,7 @@ func New() *Cache {
 	return &Cache{
 		pods:      NewPodCache(),
 		endpoints: NewEndpointCache(),
+		nodes:     NewNodeCache(),
 	}
 }
 
@@ -43,4 +45,9 @@ func (s *Cache) Pods() *PodCache {
 // Return endpoints storage
 func (s *Cache) Endpoints() *EndpointCache {
 	return s.endpoints
+}
+
+// Return nodes storage
+func (s *Cache) Nodes() *NodeCache {
+	return s.nodes
 }

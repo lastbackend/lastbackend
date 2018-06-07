@@ -82,9 +82,9 @@ func (obj *Node) ToJson() ([]byte, error) {
 func (obj *NodeSpec) Decode() *types.NodeSpec {
 
 	spec := types.NodeSpec{
-		Network: make(map[string]types.NetworkSpec, 0),
-		Pods:    make(map[string]types.PodSpec, 0),
-		Volumes: make(map[string]types.VolumeSpec, 0),
+		Network:   make(map[string]types.NetworkSpec, 0),
+		Pods:      make(map[string]types.PodSpec, 0),
+		Volumes:   make(map[string]types.VolumeSpec, 0),
 		Endpoints: make(map[string]types.EndpointSpec, 0),
 	}
 

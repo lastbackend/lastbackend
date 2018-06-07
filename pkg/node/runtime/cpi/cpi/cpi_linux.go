@@ -21,9 +21,9 @@ package cpi
 
 import (
 	"github.com/lastbackend/lastbackend/pkg/node/runtime/cpi"
-	"github.com/spf13/viper"
 	"github.com/lastbackend/lastbackend/pkg/node/runtime/cpi/ipvs"
 	"github.com/lastbackend/lastbackend/pkg/node/runtime/cpi/local"
+	"github.com/spf13/viper"
 )
 
 func New() (cpi.CPI, error) {

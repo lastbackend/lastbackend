@@ -21,18 +21,18 @@ package runtime
 import (
 	"context"
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
-	"time"
+	"github.com/lastbackend/lastbackend/pkg/ingress/envs"
 	"github.com/lastbackend/lastbackend/pkg/ingress/events"
 	"github.com/lastbackend/lastbackend/pkg/log"
-	"github.com/lastbackend/lastbackend/pkg/ingress/envs"
+	"time"
 )
 
 type Runtime struct {
-	ctx context.Context
+	ctx  context.Context
 	spec chan *types.IngressSpec
 }
 
-func (r *Runtime) Provision (ctx context.Context, spec *types.IngressSpec, clean bool) error {
+func (r *Runtime) Provision(ctx context.Context, spec *types.IngressSpec, clean bool) error {
 
 	var (
 		msg = "node:runtime:provision:"
@@ -106,7 +106,7 @@ func (r *Runtime) Loop() {
 
 	go func(ctx context.Context) {
 		ticker := time.NewTicker(time.Second * 10)
-		for  range ticker.C {
+		for range ticker.C {
 			err := r.GetSpec(r.ctx)
 			if err != nil {
 				log.Debugf("ingress:runtime:loop:> new spec request err: %s", err.Error())

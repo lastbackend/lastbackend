@@ -128,8 +128,8 @@ var (
 					"api":        api.Daemon,
 					"controller": controller.Daemon,
 					"scheduler":  scheduler.Daemon,
-					"ctl": controller.Daemon,
-					"sdl":  scheduler.Daemon,
+					"ctl":        controller.Daemon,
+					"sdl":        scheduler.Daemon,
 					"discovery":  discovery.Daemon,
 				}
 			)

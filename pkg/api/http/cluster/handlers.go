@@ -23,9 +23,9 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/api/types/v1"
 	"github.com/lastbackend/lastbackend/pkg/distribution"
 	"github.com/lastbackend/lastbackend/pkg/distribution/errors"
+	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 	"github.com/lastbackend/lastbackend/pkg/log"
 	"net/http"
-	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 )
 
 const (
@@ -64,9 +64,6 @@ func ClusterInfoH(w http.ResponseWriter, r *http.Request) {
 	}
 	if cl == nil {
 		cl = new(types.Cluster)
-		cl.Meta.Name = types.DefaultClusterName
-		cl.Meta.Description = types.DefaultClusterDescription
-		cl.SelfLink()
 	}
 
 	response, err := v1.View().Cluster().New(cl).ToJson()

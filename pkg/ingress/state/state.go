@@ -21,7 +21,7 @@ package state
 const logLevel = 3
 
 type State struct {
-	routes *RoutesState
+	routes  *RoutesState
 	ingress *IngressState
 }
 
@@ -36,8 +36,7 @@ func (s *State) Router() *RoutesState {
 func New() *State {
 
 	state := State{
-		ingress: &IngressState{
-		},
+		ingress: &IngressState{},
 		routes: &RoutesState{
 			configs: make(map[string]string, 0),
 		},

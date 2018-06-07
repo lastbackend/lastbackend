@@ -19,8 +19,8 @@
 package views
 
 import (
-	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 	"encoding/json"
+	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 )
 
 type EndpointView struct{}
@@ -34,21 +34,15 @@ func (ev *EndpointView) New(obj *types.Endpoint) *Endpoint {
 }
 
 func (ev *EndpointView) ToEndpointMeta(meta types.EndpointMeta) EndpointMeta {
-	return EndpointMeta{
-
-	}
+	return EndpointMeta{}
 }
 
 func (ev *EndpointView) ToEndpointStatus(meta types.EndpointStatus) EndpointStatus {
-	return EndpointStatus{
-
-	}
+	return EndpointStatus{}
 }
 
 func (ev *EndpointView) ToEndpointSpec(meta types.EndpointSpec) EndpointSpec {
-	return EndpointSpec{
-
-	}
+	return EndpointSpec{}
 }
 
 func (ev *EndpointView) NewList(obj map[string]*types.Endpoint) *EndpointList {

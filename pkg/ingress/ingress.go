@@ -30,11 +30,11 @@ import (
 	"fmt"
 	"github.com/lastbackend/lastbackend/pkg/api/client"
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
-	"github.com/lastbackend/lastbackend/pkg/log"
 	"github.com/lastbackend/lastbackend/pkg/ingress/envs"
-	"github.com/spf13/viper"
-	"github.com/lastbackend/lastbackend/pkg/ingress/events/exporter"
 	"github.com/lastbackend/lastbackend/pkg/ingress/events"
+	"github.com/lastbackend/lastbackend/pkg/ingress/events/exporter"
+	"github.com/lastbackend/lastbackend/pkg/log"
+	"github.com/spf13/viper"
 )
 
 // Daemon - run node daemon

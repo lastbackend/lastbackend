@@ -94,7 +94,7 @@ func (s *EndpointStorage) SetStatus(ctx context.Context, endpoint *types.Endpoin
 		return err
 	}
 
-	e := 	s.data[s.keyGet(endpoint)]
+	e := s.data[s.keyGet(endpoint)]
 	e.Status = endpoint.Status
 
 	s.data[s.keyGet(endpoint)] = e
@@ -108,7 +108,7 @@ func (s *EndpointStorage) SetSpec(ctx context.Context, endpoint *types.Endpoint)
 		return err
 	}
 
-	e := 	s.data[s.keyGet(endpoint)]
+	e := s.data[s.keyGet(endpoint)]
 	e.Spec = endpoint.Spec
 
 	s.data[s.keyGet(endpoint)] = e

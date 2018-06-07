@@ -22,15 +22,15 @@ import (
 	"context"
 	"time"
 
+	"encoding/json"
 	"fmt"
 	"github.com/lastbackend/lastbackend/pkg/distribution/errors"
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 	"github.com/lastbackend/lastbackend/pkg/log"
+	"github.com/lastbackend/lastbackend/pkg/storage/etcd/cache"
 	"github.com/lastbackend/lastbackend/pkg/storage/storage"
 	"github.com/lastbackend/lastbackend/pkg/storage/store"
 	"regexp"
-	"encoding/json"
-	"github.com/lastbackend/lastbackend/pkg/storage/etcd/cache"
 )
 
 const namespaceStorage = "namespace"
