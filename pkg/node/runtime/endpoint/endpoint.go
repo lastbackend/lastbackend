@@ -99,8 +99,10 @@ func equal (spec *types.EndpointSpec, status *types.EndpointStatus) bool {if sta
 
 	if spec.Strategy.Bind != spec.Strategy.Bind {
 		log.Debugf("%s bind strategy not match %s != %s", logEndpointPrefix, spec.Strategy.Bind, status.Strategy.Bind)
-	return false
-}for port, pm := range spec.PortMap {
+		return false
+	}
+
+	for port, pm := range spec.PortMap {
 
 		if _, ok := status.PortMap[port]; !ok {
 			log.Debugf("%s portmap not found %#v", logEndpointPrefix, pm)
