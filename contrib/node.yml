@@ -2,13 +2,13 @@
 
 # Runtime
 verbose: 3
-token: cluster-token
+token:
 ssl: true
 
 api:
   host: 0.0.0.0
   port: 2967
-  uri: "127.0.0.1"
+  uri: "api.lstbknd.net"
   tls: false
 
 node:
