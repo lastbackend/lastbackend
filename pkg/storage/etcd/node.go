@@ -30,7 +30,7 @@ import (
 )
 
 const (
-	nodeStorage = "node"
+	nodeStorage = "nodes"
 	timeout     = 15
 )
 

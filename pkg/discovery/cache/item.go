@@ -16,4 +16,29 @@
 // from Last.Backend LLC.
 //
 
-package ipam
+package cache
+
+import (
+	"sync"
+	"time"
+)
+
+type Item struct {
+	sync.RWMutex
+	data    []string
+	expires *time.Time
+}
+
+func (item *Item) setExpireTime(duration time.Duration) {
+	item.Lock()
+	defer item.Unlock()
+
+	expires := time.Now().Add(duration)
+	item.expires = &expires
+}
+
+func (item *Item) expired() bool {
+	item.RLock()
+	defer item.RUnlock()
+	return item.expires == nil || item.expires.Before(time.Now())
+}

@@ -2,7 +2,7 @@
 
 # Runtime
 verbose: 3
-token:
+token: cluster-token
 ssl: true
 
 # Etcd database
@@ -22,7 +22,13 @@ api:
   uri: "api.lstbknd.net"
   tls: false
 
-dns:
+# Discovery settings
+discovery:
   host: 0.0.0.0
-  port: 53
-  default_ip: "127.0.0.1"
+  port: 5380
+  default_ips:
+    - "127.0.0.1"
+
+  cache:
+    duration: 1440  # minutes
+    enabled: true

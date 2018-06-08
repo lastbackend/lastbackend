@@ -89,7 +89,7 @@ type Endpoint interface {
 	Insert(ctx context.Context, endpoint *types.Endpoint) error
 	Update(ctx context.Context, endpoint *types.Endpoint) error
 	Remove(ctx context.Context, endpoint *types.Endpoint) error
-	Watch(ctx context.Context, endpoint chan *types.Endpoint) error
+	Watch(ctx context.Context, event chan *types.Event) error
 	WatchSpec(ctx context.Context, endpoint chan *types.Endpoint) error
 	WatchStatus(ctx context.Context, endpoint chan *types.Endpoint) error
 	EventSpec(ctx context.Context, event chan *types.EndpointSpecEvent) error

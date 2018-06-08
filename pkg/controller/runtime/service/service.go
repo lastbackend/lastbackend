@@ -26,6 +26,8 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 	"github.com/lastbackend/lastbackend/pkg/log"
 	"github.com/lastbackend/lastbackend/pkg/storage/store"
+	"fmt"
+	"github.com/spf13/viper"
 )
 
 // Provision service
@@ -73,6 +75,7 @@ func Provision(svc *types.Service) error {
 			Policy:        svc.Spec.Template.Network.Policy,
 			BindStrategy:  svc.Spec.Template.Network.Strategy.Bind,
 			RouteStrategy: svc.Spec.Template.Network.Strategy.Route,
+			Domain:        fmt.Sprintf("%s-%s.%s", svc.Meta.Name, svc.Meta.Namespace, viper.GetString("domain.internal")),
 		}
 
 		ept, err := em.Create(svc.Meta.Namespace, svc.Meta.Name, &opts)

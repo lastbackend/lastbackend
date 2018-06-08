@@ -33,7 +33,7 @@ import (
 	"regexp"
 )
 
-const namespaceStorage = "namespace"
+const namespaceStorage = "namespaces"
 
 // Namespace Service type for interface in interfaces folder
 type NamespaceStorage struct {

@@ -16,36 +16,18 @@
 // from Last.Backend LLC.
 //
 
-package envs
+package resources
 
 import (
-	"github.com/lastbackend/lastbackend/pkg/discovery/cache"
-	"github.com/lastbackend/lastbackend/pkg/storage"
+	"github.com/miekg/dns"
 )
 
-var _env Env
+const (
+	logLevel  = 3
+	logPrefix = "dns:resources"
+)
 
-type Env struct {
-	storage storage.Storage
-	cache   *cache.Cache
-}
-
-func Get() *Env {
-	return &_env
-}
-
-func (c *Env) SetStorage(storage storage.Storage) {
-	c.storage = storage
-}
-
-func (c *Env) GetStorage() storage.Storage {
-	return c.storage
-}
-
-func (c *Env) SetCache(cache *cache.Cache) {
-	c.cache = cache
-}
-
-func (c *Env) GetCache() *cache.Cache {
-	return c.cache
+var Map = map[string]func(w dns.ResponseWriter, r *dns.Msg){
+	"lb.local.": lbLocal,
+	".":         other,
 }
