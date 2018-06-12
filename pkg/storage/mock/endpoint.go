@@ -152,7 +152,7 @@ func (s *EndpointStorage) Remove(ctx context.Context, endpoint *types.Endpoint) 
 }
 
 // Watch endpoint changes
-func (s *EndpointStorage) Watch(ctx context.Context, endpoint chan *types.Endpoint) error {
+func (s *EndpointStorage) Watch(ctx context.Context, event chan *types.Event) error {
 
 	return nil
 }

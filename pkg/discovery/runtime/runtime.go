@@ -16,36 +16,31 @@
 // from Last.Backend LLC.
 //
 
-package envs
+package runtime
 
 import (
-	"github.com/lastbackend/lastbackend/pkg/discovery/cache"
-	"github.com/lastbackend/lastbackend/pkg/storage"
+	"context"
+	"github.com/lastbackend/lastbackend/pkg/log"
+	"github.com/lastbackend/lastbackend/pkg/discovery/runtime/endpoint"
 )
 
-var _env Env
+const (
+	logPrefix = "discovery:runtime"
+)
 
-type Env struct {
-	storage storage.Storage
-	cache   *cache.Cache
+type Runtime struct {
+	ctx context.Context
 }
 
-func Get() *Env {
-	return &_env
+func (r *Runtime) Restore() {
+	log.Debugf("%s:restore:> restore init", logPrefix)
 }
 
-func (c *Env) SetStorage(storage storage.Storage) {
-	c.storage = storage
+func (r *Runtime) Loop() {
+	log.Debugf("%s:restore:> watch endpoint start", logPrefix)
+	endpoint.Watch(r.ctx)
 }
 
-func (c *Env) GetStorage() storage.Storage {
-	return c.storage
-}
-
-func (c *Env) SetCache(cache *cache.Cache) {
-	c.cache = cache
-}
-
-func (c *Env) GetCache() *cache.Cache {
-	return c.cache
+func NewRuntime(ctx context.Context) *Runtime {
+	return &Runtime{ctx: ctx}
 }

@@ -19,18 +19,16 @@
 package resources
 
 import (
-	"github.com/lastbackend/lastbackend/pkg/discovery/endpoint"
-	"github.com/lastbackend/lastbackend/pkg/log"
-	"github.com/lastbackend/lastbackend/pkg/util"
-	"github.com/miekg/dns"
-	"github.com/spf13/viper"
-	"net"
 	"time"
+
+	"github.com/lastbackend/lastbackend/pkg/log"
+	"github.com/miekg/dns"
+	"net"
 )
 
-func LbLocal(w dns.ResponseWriter, r *dns.Msg) {
+func other(w dns.ResponseWriter, r *dns.Msg) {
 
-	log.V(logLevel).Debug("Resource: dns request lb.local.")
+	log.V(logLevel).Debugf("%s:other:> dns request `.`", logPrefix)
 
 	var (
 		v4 bool
@@ -43,42 +41,31 @@ func LbLocal(w dns.ResponseWriter, r *dns.Msg) {
 
 	switch r.Opcode {
 	case dns.OpcodeQuery:
-		log.V(logLevel).Debug("Resource: dns.OpcodeQuery")
+		log.V(logLevel).Debugf("%s:other:> dns.OpcodeQuery", logPrefix)
 
 		for _, q := range m.Question {
 
 			switch r.Question[0].Qtype {
 			case dns.TypeTXT:
-				log.V(logLevel).Debug("Resource: get txt type query")
+				log.V(logLevel).Debugf("%s:other:> get txt type query", logPrefix)
 				t := new(dns.TXT)
 				t.Hdr = dns.RR_Header{Name: q.Name, Rrtype: dns.TypeTXT, Class: dns.ClassINET, Ttl: 0}
 				m.Answer = append(m.Answer, t)
 				m.Extra = append(m.Extra, rr)
 			default:
-				log.V(logLevel).Debug("Resource: get unknown query type")
+				log.V(logLevel).Debugf("%s:other:> get unknown query type", logPrefix)
 				fallthrough
 			case dns.TypeAAAA, dns.TypeA:
-				log.V(logLevel).Debug("Resource: get A or AAAA type query")
+				log.V(logLevel).Debugf("%s:other:> get A or AAAA type query", logPrefix)
 
 				if q.Name[len(q.Name)-1:] != "." {
 					q.Name += "."
 				}
 
-				log.V(logLevel).Debugf("Resource: find ip addresses for domain: %s", q.Name)
-
 				// GenerateConfig A and AAAA records
-				ips, err := endpoint.GetForService(util.Trim(q.Name, `.`))
-				if err != nil {
-					log.V(logLevel).Errorf("Resource: get endpoint `%s` err: %s", q.Name, err)
-					w.WriteMsg(m)
-					return
-				}
+				ips := make([]net.IP, 0)
 
-				if len(ips) == 0 {
-					ips = append(ips, net.ParseIP(viper.GetString("dns.default_ip")))
-				}
-
-				log.V(logLevel).Debugf("Resource: ips list: %#v for %s", ips, q.Name)
+				log.V(logLevel).Debugf("%s:other:> ips list: %#v for %s", logPrefix, ips, q.Name)
 
 				for _, ip := range ips {
 					v4 = ip.To4() != nil
@@ -98,18 +85,18 @@ func LbLocal(w dns.ResponseWriter, r *dns.Msg) {
 			}
 		}
 	case dns.OpcodeUpdate:
-		log.Debugf("Resource: dns.OpcodeUpdate")
+		log.Debugf("%s:other:> dns.OpcodeUpdate", logPrefix)
 	}
 
 	if r.IsTsig() != nil {
 		if w.TsigStatus() == nil {
 			m.SetTsig(r.Extra[len(r.Extra)-1].(*dns.TSIG).Hdr.Name, dns.HmacMD5, 300, time.Now().Unix())
 		} else {
-			log.V(logLevel).Errorf("Resource: tsig status err: %s", w.TsigStatus())
+			log.V(logLevel).Errorf("%s:other:> tsig status err: %s", logPrefix, w.TsigStatus())
 		}
 	}
 
-	log.Debugf("Resource: send message info  %#v", m)
+	log.Debugf("%s:other:> send message info  %#v", logPrefix, m)
 
 	w.WriteMsg(m)
 }

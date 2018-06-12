@@ -16,36 +16,37 @@
 // from Last.Backend LLC.
 //
 
-package envs
+package cache
 
 import (
-	"github.com/lastbackend/lastbackend/pkg/discovery/cache"
-	"github.com/lastbackend/lastbackend/pkg/storage"
+	"github.com/lastbackend/lastbackend/pkg/log"
+	"github.com/spf13/viper"
+	"time"
 )
 
-var _env Env
+const (
+	logLevel          = 7
+	defaultExpireTime = 24 // 24 hours
+)
 
-type Env struct {
-	storage storage.Storage
-	cache   *cache.Cache
+type Cache struct {
+	endpoints *EndpointCache
 }
 
-func Get() *Env {
-	return &_env
+func New() *Cache {
+	log.V(logLevel).Debug("Cache: initialization cache storage")
+
+	var duration = viper.GetDuration("discovery.cache.duration")
+	if duration == 0 {
+		duration = defaultExpireTime
+	}
+
+	return &Cache{
+		endpoints: NewEndpointCache(duration * time.Minute),
+	}
 }
 
-func (c *Env) SetStorage(storage storage.Storage) {
-	c.storage = storage
-}
-
-func (c *Env) GetStorage() storage.Storage {
-	return c.storage
-}
-
-func (c *Env) SetCache(cache *cache.Cache) {
-	c.cache = cache
-}
-
-func (c *Env) GetCache() *cache.Cache {
-	return c.cache
+// Return endpoint storage
+func (s *Cache) Endpoint() *EndpointCache {
+	return s.endpoints
 }

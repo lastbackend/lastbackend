@@ -38,6 +38,7 @@ type IEndpoint interface {
 	Update(endpoint *types.Endpoint, opts *types.EndpointUpdateOptions) (*types.Endpoint, error)
 	SetSpec(endpoint *types.Endpoint, spec *types.EndpointSpec) (*types.Endpoint, error)
 	Remove(endpoint *types.Endpoint) error
+	Watch(event chan *types.Event) error
 }
 
 type Endpoint struct {
@@ -102,6 +103,7 @@ func (e *Endpoint) Create(namespace, service string, opts *types.EndpointCreateO
 	}
 
 	endpoint.Spec.IP = ip.String()
+	endpoint.Spec.Domain = opts.Domain
 
 	if err := e.storage.Endpoint().Insert(e.context, endpoint); err != nil {
 		log.Errorf("%s:create:> distribution create endpoint: %s err: %s", logEndpointPrefix, endpoint.SelfLink(), err.Error())
@@ -146,6 +148,18 @@ func (e *Endpoint) Remove(endpoint *types.Endpoint) error {
 	log.Debugf("%s:remove:> remove endpoint %s", logEndpointPrefix, endpoint.Meta.Name)
 	if err := e.storage.Endpoint().Remove(e.context, endpoint); err != nil {
 		log.Debugf("%s:remove:> remove endpoint %s err: %s", logEndpointPrefix, endpoint.Meta.Name, err.Error())
+		return err
+	}
+
+	return nil
+}
+
+// Watch cname changes
+func (p *Endpoint) Watch(event chan *types.Event) error {
+
+	log.Debugf("%s:watch:> watch endpoint", logEndpointPrefix)
+	if err := p.storage.Endpoint().Watch(p.context, event); err != nil {
+		log.Debugf("%s:watch:> watch endpoint err: %s", logEndpointPrefix, err.Error())
 		return err
 	}
 

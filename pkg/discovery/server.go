@@ -16,10 +16,10 @@
 // from Last.Backend LLC.
 //
 
-package dns
+package discovery
 
 import (
-	"github.com/lastbackend/lastbackend/pkg/discovery/dns/resources"
+	"github.com/lastbackend/lastbackend/pkg/discovery/resources"
 	"github.com/lastbackend/lastbackend/pkg/log"
 	"github.com/lastbackend/lastbackend/pkg/util/dns"
 )
@@ -30,8 +30,9 @@ func Listen(port int) (*dns.DNS, error) {
 
 	log.Debug(`Init discovery resources`)
 
-	d.AddHandler(`lb.local.`, resources.LbLocal)
-	d.AddHandler(`lstbknd.io.`, resources.LstbkndIo)
+	for pattern, resource := range resources.Map {
+		d.AddHandler(pattern, resource)
+	}
 
 	go func() {
 		log.Debugf(`Start discovery %s service on %d port`, dns.TCP, port)

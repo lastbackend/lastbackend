@@ -24,17 +24,21 @@ import (
 	"fmt"
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 	"github.com/lastbackend/lastbackend/pkg/log"
+	"github.com/lastbackend/lastbackend/pkg/storage/etcd/cache"
 	"github.com/lastbackend/lastbackend/pkg/storage/storage"
 	"github.com/lastbackend/lastbackend/pkg/storage/store"
 	"regexp"
 	"time"
+	"encoding/json"
+	"strings"
 )
 
-const endpointStorage = "endpoint"
+const endpointStorage = "endpoints"
 
 // Service Endpoint type for interface in interfaces folder
 type EndpointStorage struct {
 	storage.Endpoint
+	cache *cache.Cache
 }
 
 // Get endpoints by id
@@ -301,11 +305,11 @@ func (s *EndpointStorage) Remove(ctx context.Context, endpoint *types.Endpoint) 
 }
 
 // Watch endpoint changes
-func (s *EndpointStorage) Watch(ctx context.Context, endpoint chan *types.Endpoint) error {
+func (s *EndpointStorage) Watch(ctx context.Context, event chan *types.Event) error {
 
 	log.V(logLevel).Debug("storage:etcd:endpoint:> watch endpoint")
 
-	const filter = `\b\/` + endpointStorage + `\/(.+):(.+)/.+\b`
+	const filter = `\b.+` + endpointStorage + `\/(.+)\/(.+)\b`
 	client, destroy, err := getClient(ctx)
 	if err != nil {
 		log.V(logLevel).Errorf("storage:etcd:endpoint:> watch endpoint err: %s", err.Error())
@@ -315,19 +319,68 @@ func (s *EndpointStorage) Watch(ctx context.Context, endpoint chan *types.Endpoi
 
 	r, _ := regexp.Compile(filter)
 	key := keyCreate(endpointStorage)
-	cb := func(action, key string, _ []byte) {
+	cb := func(action, key string, data []byte) {
 		keys := r.FindStringSubmatch(key)
-		if len(keys) < 3 {
+		if len(keys) < 2 {
 			return
 		}
+
+		e := new(types.Event)
+		e.Action = action
+		e.Name = keys[1]
 
 		if action == store.STORAGEDELETEEVENT {
+			e.Data = nil
+			event <- e
 			return
 		}
 
-		if d, err := s.Get(ctx, keys[1], keys[2]); err == nil {
-			endpoint <- d
+		index := keys[1]
+		item := s.cache.Get(keys[1])
+
+		if item == nil {
+
+			match := strings.Split(keys[1], ":")
+
+			if data, err := s.Get(ctx, match[0], match[1]); err == nil {
+				s.cache.Set(index, data)
+				e.Data = data
+				event <- e
+			}
+			return
 		}
+
+		es := item.(*types.Endpoint)
+
+		switch keys[2] {
+		case "meta":
+			var meta types.EndpointMeta
+			if err := json.Unmarshal(data, &meta); err != nil {
+				log.V(logLevel).Errorf("storage:etcd:endpoint:> parse endpoint meta err: %s", err.Error())
+				return
+			}
+			es.Meta = meta
+		case "spec":
+			var spec types.EndpointSpec
+			if err := json.Unmarshal(data, &spec); err != nil {
+				log.V(logLevel).Errorf("storage:etcd:endpoint:> parse endpoint spec err: %s", err.Error())
+				return
+			}
+			es.Spec = spec
+		case "status":
+			var status types.EndpointStatus
+			if err := json.Unmarshal(data, &status); err != nil {
+				log.V(logLevel).Errorf("storage:etcd:endpoint:> parse endpoint status err: %s", err.Error())
+				return
+			}
+			es.Status = status
+		}
+
+		s.cache.Set(index, es)
+
+		e.Data = es
+
+		event <- e
 	}
 
 	if err := client.Watch(ctx, key, filter, cb); err != nil {
@@ -488,6 +541,7 @@ func (s *EndpointStorage) keyGet(t *types.Endpoint) string {
 
 func newEndpointStorage() *EndpointStorage {
 	s := new(EndpointStorage)
+	s.cache = cache.NewCache(24 * time.Hour)
 	return s
 }
 

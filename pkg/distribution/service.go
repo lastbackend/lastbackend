@@ -107,7 +107,7 @@ func (s *Service) Create(namespace *types.Namespace, opts *types.ServiceCreateOp
 	service.Meta.SetDefault()
 	service.Meta.Name = *opts.Name
 	service.Meta.Namespace = namespace.Meta.Name
-	service.Meta.Endpoint = strings.ToLower(fmt.Sprintf("%s-%s.%s", *opts.Name, namespace.Meta.Endpoint, viper.GetString("domain.internal")))
+	service.Meta.Endpoint = strings.ToLower(fmt.Sprintf("%s-%s.%s", *opts.Name, namespace.Meta.Name, viper.GetString("domain.internal")))
 
 	if opts.Description != nil {
 		service.Meta.Description = *opts.Description
