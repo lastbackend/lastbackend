@@ -19,16 +19,16 @@
 package discovery
 
 import (
+	"context"
 	"github.com/lastbackend/lastbackend/pkg/discovery/cache"
 	"github.com/lastbackend/lastbackend/pkg/discovery/envs"
+	"github.com/lastbackend/lastbackend/pkg/discovery/runtime"
 	"github.com/lastbackend/lastbackend/pkg/log"
 	"github.com/lastbackend/lastbackend/pkg/storage"
 	"github.com/spf13/viper"
 	"os"
 	"os/signal"
 	"syscall"
-	"github.com/lastbackend/lastbackend/pkg/discovery/runtime"
-	"context"
 )
 
 func Daemon() bool {

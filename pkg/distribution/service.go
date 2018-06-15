@@ -27,7 +27,7 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 	"github.com/lastbackend/lastbackend/pkg/log"
 	"github.com/lastbackend/lastbackend/pkg/storage"
-	"github.com/lastbackend/lastbackend/pkg/storage/store"
+	"github.com/lastbackend/lastbackend/pkg/storage/etcd/v3/store"
 	"github.com/spf13/viper"
 )
 
@@ -43,8 +43,8 @@ type IService interface {
 	Destroy(service *types.Service) (*types.Service, error)
 	Remove(service *types.Service) error
 	SetStatus(service *types.Service) error
-	Watch(ch chan *types.Event) error
-	WatchSpec(ch chan *types.Service) error
+	Watch(ch chan types.ServiceEvent) error
+	WatchSpec(ch chan types.Service) error
 }
 
 type Service struct {
@@ -215,25 +215,68 @@ func (s *Service) SetStatus(service *types.Service) error {
 }
 
 // Watch service changes
-func (s *Service) Watch(ch chan *types.Event) error {
+func (s *Service) Watch(ch chan types.ServiceEvent) error {
 
-	log.Debugf("%s:watch:> watch deployments", logServicePrefix)
-	if err := s.storage.Service().Watch(s.context, ch); err != nil {
-		log.Debugf("%s:watch:> watch deployment err: %s", logServicePrefix, err.Error())
-		return err
-	}
+	log.Debugf("%s:watchspec:> watch service by spec changes", logServicePrefix)
+
+	done := make(chan bool)
+	event := make(chan *types.Event)
+
+	go func() {
+		for {
+			select {
+			case <-s.context.Done():
+				done <- true
+				return
+			case e := <-event:
+				if e.Data == nil {
+					continue
+				}
+
+				res := types.ServiceEvent{}
+				res.Name = e.Name
+				res.Action = e.Action
+				res.Data = e.Data.(*types.Service)
+
+				ch <- res
+			}
+		}
+	}()
+
+	go s.storage.Service().Watch(s.context, event)
+
+	<-done
 
 	return nil
 }
 
 // Watch service by spec changes
-func (s *Service) WatchSpec(ch chan *types.Service) error {
+func (s *Service) WatchSpec(ch chan types.Service) error {
 
-	log.Debugf("%s:watchspec:> watch deployments by spec changes", logServicePrefix)
-	if err := s.storage.Service().WatchSpec(s.context, ch); err != nil {
-		log.Debugf("%s:watchspec:> watch deployment by spec changes err: %s", logServicePrefix, err.Error())
-		return err
-	}
+	log.Debugf("%s:watchspec:> watch service by spec changes", logServicePrefix)
+
+	done := make(chan bool)
+	event := make(chan *types.Event)
+
+	go func() {
+		for {
+			select {
+			case <-s.context.Done():
+				done <- true
+				return
+			case e := <-event:
+				if e.Data == nil {
+					continue
+				}
+
+				ch <- e.Data.(types.Service)
+			}
+		}
+	}()
+
+	go s.storage.Service().WatchSpec(s.context, event)
+
+	<-done
 
 	return nil
 }

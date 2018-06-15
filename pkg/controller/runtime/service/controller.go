@@ -25,6 +25,8 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/log"
 )
 
+const logPrefix = "controller:service"
+
 type Controller struct {
 	spec   chan *types.Service
 	status chan *types.Service
@@ -35,7 +37,8 @@ type Controller struct {
 func (sc *Controller) WatchSpec() {
 
 	var (
-		stg = envs.Get().GetStorage()
+		stg   = envs.Get().GetStorage()
+		event = make(chan *types.Event)
 	)
 
 	log.Debug("controller:service:controller: start watch service spec")
@@ -63,43 +66,69 @@ func (sc *Controller) WatchSpec() {
 		}
 	}()
 
-	stg.Service().WatchSpec(context.Background(), sc.spec)
+	go func() {
+		for {
+			select {
+			case e := <-event:
+				if e.Data == nil {
+					continue
+				}
+
+				sc.spec <- e.Data.(*types.Service)
+			}
+		}
+	}()
+
+	stg.Service().WatchSpec(context.Background(), event)
 }
 
 // Watch services spec changes
 func (sc *Controller) WatchStatus() {
 
 	var (
-		stg = envs.Get().GetStorage()
-		msg = "controller:service:watch_status:"
+		stg   = envs.Get().GetStorage()
+		event = make(chan *types.Event)
 	)
 
-	log.Debugf("%s> start watch service status", msg)
+	log.Debugf("%s:watch_status> start watch service status", logPrefix)
 	go func() {
 		for {
 			select {
 			case s := <-sc.status:
 				{
 					if !sc.active {
-						log.Debugf("%s> skip management course it is in slave mode", msg)
+						log.Debugf("%s:watch_status> skip management course it is in slave mode", logPrefix)
 						continue
 					}
 
 					if s == nil {
-						log.Debugf("%s> skip because service is nil", msg)
+						log.Debugf("%s:watch_status> skip because service is nil", logPrefix)
 						continue
 					}
 
-					log.Debugf("%s> Service needs to be provisioned: %s", msg, s.SelfLink())
+					log.Debugf("%s:watch_status> Service needs to be provisioned: %s", logPrefix, s.SelfLink())
 					if err := HandleStatus(s); err != nil {
-						log.Errorf("%s> service provision: %s err: %s", msg, s.SelfLink(), err.Error())
+						log.Errorf("%s:watch_status> service provision: %s err: %s", logPrefix, s.SelfLink(), err.Error())
 					}
 				}
 			}
 		}
 	}()
 
-	stg.Service().WatchStatus(context.Background(), sc.status)
+	go func() {
+		for {
+			select {
+			case e := <-event:
+				if e.Data == nil {
+					continue
+				}
+
+				sc.status <- e.Data.(*types.Service)
+			}
+		}
+	}()
+
+	stg.Service().WatchStatus(context.Background(), event)
 }
 
 // Pause service controller because not lead
@@ -112,33 +141,32 @@ func (sc *Controller) Resume() {
 
 	var (
 		stg = envs.Get().GetStorage()
-		msg = "controller:service:resume:"
 	)
 
 	sc.active = true
 
-	log.Debugf("%s> start check services states", msg)
+	log.Debugf("%s:resume> start check services states", logPrefix)
 	nss, err := stg.Namespace().List(context.Background())
 	if err != nil {
-		log.Errorf("%s> get namespaces list err: %s", msg, err.Error())
+		log.Errorf("%s:resume> get namespaces list err: %s", logPrefix, err.Error())
 	}
 
 	for _, ns := range nss {
 		svcs, err := stg.Service().ListByNamespace(context.Background(), ns.Meta.Name)
 		if err != nil {
-			log.Errorf("%s> get services list err: %s", msg, err.Error())
+			log.Errorf("%s:resume> get services list err: %s", logPrefix, err.Error())
 		}
 
 		for _, svc := range svcs {
 			svc, err := stg.Service().Get(context.Background(), svc.Meta.Namespace, svc.Meta.Name)
 			if err != nil {
-				log.Errorf("%s> get service err: %s", msg, err.Error())
+				log.Errorf("%s:resume> get service err: %s", logPrefix, err.Error())
 			}
 			sc.spec <- svc
 		}
 
 		for _, svc := range svcs {
-			log.Debugf("%s> check service [%s] status", msg, svc.SelfLink())
+			log.Debugf("%s:resume> check service [%s] status", logPrefix, svc.SelfLink())
 			sc.status <- svc
 		}
 	}

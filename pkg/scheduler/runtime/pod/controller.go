@@ -38,7 +38,8 @@ type Controller struct {
 
 func (pc *Controller) WatchSpec(node chan *types.Node) {
 	var (
-		stg = envs.Get().GetStorage()
+		stg   = envs.Get().GetStorage()
+		event = make(chan *types.Event)
 	)
 
 	log.Debug("PodController: start watch")
@@ -82,12 +83,26 @@ func (pc *Controller) WatchSpec(node chan *types.Node) {
 		}
 	}()
 
-	stg.Pod().WatchSpec(context.Background(), pc.spec)
+	go func() {
+		for {
+			select {
+			case e := <-event:
+				if e.Data == nil {
+					continue
+				}
+
+				pc.spec <- e.Data.(*types.Pod)
+			}
+		}
+	}()
+
+	stg.Pod().WatchSpec(context.Background(), event)
 }
 
 func (pc *Controller) WatchStatus(node chan *types.Node) {
 	var (
-		stg = envs.Get().GetStorage()
+		stg   = envs.Get().GetStorage()
+		event = make(chan *types.Event)
 	)
 
 	log.Debug("PodController: start watch")
@@ -136,7 +151,20 @@ func (pc *Controller) WatchStatus(node chan *types.Node) {
 		}
 	}()
 
-	stg.Pod().WatchStatus(context.Background(), pc.status)
+	go func() {
+		for {
+			select {
+			case e := <-event:
+				if e.Data == nil {
+					continue
+				}
+
+				pc.status <- e.Data.(*types.Pod)
+			}
+		}
+	}()
+
+	stg.Pod().WatchStatus(context.Background(), event)
 }
 
 func (pc *Controller) Pause() {

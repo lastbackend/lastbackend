@@ -20,8 +20,8 @@ package runtime
 
 import (
 	"context"
-	"github.com/lastbackend/lastbackend/pkg/log"
 	"github.com/lastbackend/lastbackend/pkg/discovery/runtime/endpoint"
+	"github.com/lastbackend/lastbackend/pkg/log"
 )
 
 const (

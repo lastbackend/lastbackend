@@ -23,6 +23,12 @@ package request
 // swagger:model request_deployment_update
 type DeploymentUpdateOptions struct {
 	// Number of replicas
-	// required: true
+	// required: false
 	Replicas *int `json:"replicas"`
+	// Deployment status for update
+	// required: false
+	Status *struct {
+		State   string `json:"state"`
+		Message string `json:"message"`
+	} `json:"status"`
 }

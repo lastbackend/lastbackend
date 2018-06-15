@@ -80,6 +80,7 @@ func (r *Runtime) Loop() {
 			select {
 			case l := <-lead:
 				{
+
 					if l {
 
 						if r.active {
@@ -108,6 +109,7 @@ func (r *Runtime) Loop() {
 						r.dc.Pause()
 						r.pc.Pause()
 					}
+
 				}
 			}
 		}

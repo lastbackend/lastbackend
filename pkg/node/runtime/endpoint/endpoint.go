@@ -87,7 +87,8 @@ func Destroy(ctx context.Context, endpoint string, status *types.EndpointStatus)
 	return cpi.Destroy(ctx, status)
 }
 
-func equal (spec *types.EndpointSpec, status *types.EndpointStatus) bool {if status.IP != spec.IP {
+func equal(spec *types.EndpointSpec, status *types.EndpointStatus) bool {
+	if status.IP != spec.IP {
 		log.Debugf("%s ips not match %s != %s", logEndpointPrefix, spec.IP, status.IP)
 		return false
 	}
@@ -109,7 +110,6 @@ func equal (spec *types.EndpointSpec, status *types.EndpointStatus) bool {if sta
 			return false
 		}
 
-
 		if status.PortMap[port] != pm {
 			log.Debugf("%s portmap not match %#v != %#v", logEndpointPrefix, pm, status.PortMap[port])
 			return false
@@ -127,7 +127,6 @@ func equal (spec *types.EndpointSpec, status *types.EndpointStatus) bool {if sta
 		log.Debugf("%s upstreams count changed %d != %d", logEndpointPrefix, len(spec.Upstreams), len(status.Upstreams))
 		return false
 	}
-
 
 	for _, up := range spec.Upstreams {
 		var f = false

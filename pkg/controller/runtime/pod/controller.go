@@ -34,7 +34,8 @@ type Controller struct {
 func (pc *Controller) WatchStatus() {
 
 	var (
-		stg = envs.Get().GetStorage()
+		stg   = envs.Get().GetStorage()
+		event = make(chan *types.Event)
 	)
 
 	log.Debug("controller:pod:controller: start watch pod spec")
@@ -62,7 +63,20 @@ func (pc *Controller) WatchStatus() {
 		}
 	}()
 
-	stg.Pod().WatchStatus(context.Background(), pc.status)
+	go func() {
+		for {
+			select {
+			case e := <-event:
+				if e.Data == nil {
+					continue
+				}
+
+				pc.status <- e.Data.(*types.Pod)
+			}
+		}
+	}()
+
+	stg.Pod().WatchStatus(context.Background(), event)
 }
 
 // Pause pod controller because not lead

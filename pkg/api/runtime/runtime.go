@@ -16,29 +16,29 @@
 // from Last.Backend LLC.
 //
 
-package mock
+package runtime
 
-import (
-	"context"
-	"github.com/lastbackend/lastbackend/pkg/storage/storage"
-)
+import "github.com/lastbackend/lastbackend/pkg/api/envs"
 
-type IPAMStorage struct {
-	storage.IPAM
-	data []string
+type Runtime struct {
 }
 
-func (s *IPAMStorage) Get(ctx context.Context) ([]string, error) {
-	return s.data, nil
+func New() *Runtime {
+	return new(Runtime)
 }
 
-func (s *IPAMStorage) Set(ctx context.Context, ips []string) error {
-	s.data = ips
-	return nil
-}
+func (r *Runtime) Run() {
 
-func newIPAMStorage() *IPAMStorage {
-	s := new(IPAMStorage)
-	s.data = make([]string, 0)
-	return s
+	var (
+		stg = envs.Get().GetStorage()
+		c   = envs.Get().GetCache()
+	)
+
+	go c.Node().CachePods(stg.Node().EventPodSpec)
+	go c.Node().CacheVolumes(stg.Node().EventVolumeSpec)
+	go c.Node().CacheEndpoints(stg.Endpoint().EventSpec)
+	go c.Node().Del(stg.Node().EventStatus)
+
+	go c.Ingress().CacheRoutes(stg.Route().WatchSpecEvents)
+	go c.Ingress().Status(stg.Ingress().WatchStatus)
 }

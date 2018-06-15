@@ -103,10 +103,11 @@ func (c *Process) HeartBeat() {
 // master/replicas type of process used
 func (c *Process) WaitElected(lead chan bool) error {
 	var (
-		ld = make(chan bool)
+		event = make(chan *types.Event)
 	)
 
 	log.V(logLevel).Debug("System: Process: Wait for election")
+
 	l, err := c.storage.System().Elect(context.Background(), c.process)
 	if err != nil {
 		return err
@@ -122,7 +123,13 @@ func (c *Process) WaitElected(lead chan bool) error {
 	go func() {
 		for {
 			select {
-			case l := <-ld:
+			case e := <-event:
+
+				if e.Data == nil {
+					continue
+				}
+
+				l := c.process.Meta.ID == e.Data.(string)
 				c.process.Meta.Lead = l
 				c.process.Meta.Slave = !l
 				lead <- l
@@ -130,7 +137,7 @@ func (c *Process) WaitElected(lead chan bool) error {
 		}
 	}()
 
-	return c.storage.System().ElectWait(context.Background(), c.process, ld)
+	return c.storage.System().ElectWait(context.Background(), c.process, event)
 }
 
 // Encode unique ID from pid and process hostname

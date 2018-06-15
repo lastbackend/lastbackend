@@ -25,6 +25,8 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/log"
 )
 
+const logPrefix = "controller:deployment"
+
 type Controller struct {
 	status chan *types.Deployment
 	spec   chan *types.Deployment
@@ -35,7 +37,8 @@ type Controller struct {
 func (dc *Controller) WatchSpec() {
 
 	var (
-		stg = envs.Get().GetStorage()
+		stg   = envs.Get().GetStorage()
+		event = make(chan *types.Event)
 	)
 
 	log.Debug("controller:deployment:controller: start watch deployment spec")
@@ -63,43 +66,69 @@ func (dc *Controller) WatchSpec() {
 		}
 	}()
 
-	stg.Deployment().WatchSpec(context.Background(), dc.spec)
+	go func() {
+		for {
+			select {
+			case e := <-event:
+				if e.Data == nil {
+					continue
+				}
+
+				dc.spec <- e.Data.(*types.Deployment)
+			}
+		}
+	}()
+
+	stg.Deployment().Watch(context.Background(), event)
 }
 
 // Watch deployment spec changes
 func (dc *Controller) WatchStatus() {
 
 	var (
-		stg = envs.Get().GetStorage()
-		msg = "controller:deployment:status:"
+		stg   = envs.Get().GetStorage()
+		event = make(chan *types.Event)
 	)
 
-	log.Debugf("%s> start watch deployment status", msg)
+	log.Debugf("%s:status> start watch deployment status", logPrefix)
 	go func() {
 		for {
 			select {
 			case s := <-dc.status:
 				{
 					if !dc.active {
-						log.Debug("%s> skip management couse it is in slave mode", msg)
+						log.Debug("%s:status> skip management couse it is in slave mode", logPrefix)
 						continue
 					}
 
 					if s == nil {
-						log.Debug("%s> skip because service is nil", msg)
+						log.Debug("%s:status> skip because service is nil", logPrefix)
 						continue
 					}
 
-					log.Debugf("%s> Service needs to be provisioned: %s", msg, s.SelfLink())
+					log.Debugf("%s:status> Service needs to be provisioned: %s", logPrefix, s.SelfLink())
 					if err := HandleStatus(s); err != nil {
-						log.Errorf("%s> service provision: %s err: %s", msg, s.SelfLink(), err.Error())
+						log.Errorf("%s:status> service provision: %s err: %s", logPrefix, s.SelfLink(), err.Error())
 					}
 				}
 			}
 		}
 	}()
 
-	stg.Deployment().WatchStatus(context.Background(), dc.status)
+	go func() {
+		for {
+			select {
+			case e := <-event:
+				if e.Data == nil {
+					continue
+				}
+
+				dc.status <- e.Data.(*types.Deployment)
+			}
+		}
+	}()
+
+	stg.Deployment().Watch(context.Background(), event)
 }
 
 // Pause deployment controller because not lead

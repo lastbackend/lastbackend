@@ -24,15 +24,16 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/distribution"
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 	"github.com/lastbackend/lastbackend/pkg/log"
+	"github.com/lastbackend/lastbackend/pkg/api/types/v1/request"
 )
 
 func HandleStatus(p *types.Pod) error {
 
 	var (
-		stg     = envs.Get().GetStorage()
-		msg     = "controller:pod:controller:status>"
-		status  = make(map[string]int)
-		message string
+		stg       = envs.Get().GetStorage()
+		logPrefix = "controller:pod:controller:status>"
+		status    = make(map[string]int)
+		message   string
 	)
 
 	pm := distribution.NewPodModel(context.Background(), stg)
@@ -40,13 +41,13 @@ func HandleStatus(p *types.Pod) error {
 
 	d, err := dm.Get(p.Meta.Namespace, p.Meta.Service, p.Meta.Deployment)
 	if err != nil {
-		log.Errorf("%s get deployment err: %s", msg, err.Error())
+		log.Errorf("%s get deployment err: %v", logPrefix, err)
 		return err
 	}
 	if d == nil {
-		log.Warnf("%s: deployment already removed: [%s:%s:%s]", msg, p.Meta.Namespace, p.Meta.Service, p.Meta.Deployment)
+		log.Warnf("%s: deployment already removed: [%s:%s:%s]", logPrefix, p.Meta.Namespace, p.Meta.Service, p.Meta.Deployment)
 		if err := pm.Remove(context.Background(), p); err != nil {
-			log.Errorf("%s: remove pod [%s] err: %s", msg, p.SelfLink(), err.Error())
+			log.Errorf("%s: remove pod [%s] err: %v", logPrefix, p.SelfLink())
 			return err
 		}
 		return nil
@@ -54,7 +55,7 @@ func HandleStatus(p *types.Pod) error {
 
 	pl, err := pm.ListByDeployment(p.Meta.Namespace, p.Meta.Service, p.Meta.Deployment)
 	if err != nil {
-		log.Errorf("%s> get pod list err: %s", msg, err.Error())
+		log.Errorf("%s> get pod list err: %v", logPrefix, err)
 		return err
 	}
 
@@ -103,43 +104,45 @@ func HandleStatus(p *types.Pod) error {
 		}
 	}
 
+	opts := new(request.DeploymentUpdateOptions)
+
 	switch true {
 	case status[types.StateError] > 0:
-		d.Status.State = types.StateError
-		d.Status.Message = message
+		opts.Status.State = types.StateError
+		opts.Status.Message = message
 		break
 	case status[types.StateProvision] > 0:
-		d.Status.State = types.StateProvision
-		d.Status.Message = ""
+		opts.Status.State = types.StateProvision
+		opts.Status.Message = ""
 		break
 	case status[types.StateDestroy] > 0:
-		d.Status.State = types.StateDestroy
-		d.Status.Message = ""
+		opts.Status.State = types.StateDestroy
+		opts.Status.Message = ""
 		break
 	case status[types.StateWarning] > 0 && d.Status.State != types.StateDestroy:
-		d.Status.State = types.StateWarning
-		d.Status.Message = p.Status.Message
+		opts.Status.State = types.StateWarning
+		opts.Status.Message = p.Status.Message
 		break
 	case status[types.StateRunning] == d.Spec.Replicas:
-		d.Status.State = types.StateRunning
+		opts.Status.State = types.StateRunning
 		break
 	case status[types.StateStopped] == d.Spec.Replicas:
-		d.Status.State = types.StateStopped
+		opts.Status.State = types.StateStopped
 		break
 	case status[types.StateDestroyed] == 1 && p.Status.Stage == types.StateDestroyed:
-		d.Status.State = types.StateDestroyed
+		opts.Status.State = types.StateDestroyed
 		break
 	}
 
 	if p.Status.Stage == types.StateDestroyed {
 		if err := pm.Remove(context.Background(), p); err != nil {
-			log.Errorf("%s: remove pod [%s] err: %s", msg, p.SelfLink(), err.Error())
+			log.Errorf("%s: remove pod [%s] err: %v", logPrefix, p.SelfLink(), err)
 			return err
 		}
 	}
 
-	if err := dm.SetStatus(d); err != nil {
-		log.Errorf("%s> set deployment status err: %s", msg, err.Error())
+	if err := dm.Update(d, opts); err != nil {
+		log.Errorf("%s> update deployment err: %v", logPrefix, err)
 		return err
 	}
 

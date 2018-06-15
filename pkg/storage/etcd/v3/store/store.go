@@ -20,6 +20,7 @@ package store
 
 import (
 	"golang.org/x/net/context"
+	"github.com/lastbackend/lastbackend/pkg/storage/etcd/types"
 )
 
 const LogLevel = 7
@@ -33,6 +34,7 @@ const (
 	STORAGEDELETEEVENT    = "delete"
 	STORAGECREATEEVENT    = "create"
 	STORAGEUPDATEEVENT    = "update"
+	STORAGEERROREVENT     = "error"
 )
 
 type DestroyFunc func()
@@ -41,17 +43,16 @@ type Store interface {
 	Count(ctx context.Context, key, keyRegexFilter string) (int, error)
 	Create(ctx context.Context, key string, obj, out interface{}, ttl uint64) error
 	Get(ctx context.Context, key string, objPtr interface{}) error
-	List(ctx context.Context, key, keyRegexpFilter string, listObjPtr interface{}) error
-	Map(ctx context.Context, key, keyRegexpFilter string, mapObj interface{}) error
+	List(ctx context.Context, key string, listObjPtr interface{}) error
+	Map(ctx context.Context, key, mapObj interface{}) error
 	MapList(ctx context.Context, key, filter string, mapObj interface{}) error
 	Update(ctx context.Context, key string, obj, outPtr interface{}, ttl uint64) error
 	Upsert(ctx context.Context, key string, obj, out interface{}, ttl uint64) error
 	Delete(ctx context.Context, key string) error
 	DeleteDir(ctx context.Context, key string) error
-	Watch(ctx context.Context, key, filter string, f func(action, key string, val []byte)) error
+	Watch(ctx context.Context, key string) (types.Watcher, error)
 	Begin(ctx context.Context) TX
 	Decode(ctx context.Context, value []byte, out interface{}) error
-	WatchClose()
 }
 
 type TX interface {

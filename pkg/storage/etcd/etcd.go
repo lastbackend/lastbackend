@@ -19,187 +19,161 @@
 package etcd
 
 import (
-	"context"
 	"github.com/lastbackend/lastbackend/pkg/log"
 	"github.com/lastbackend/lastbackend/pkg/storage/etcd/v3"
-	"github.com/lastbackend/lastbackend/pkg/storage/storage"
-	"github.com/lastbackend/lastbackend/pkg/storage/store"
+	"github.com/lastbackend/lastbackend/pkg/storage/etcd/v3/store"
+	"github.com/spf13/viper"
+	"context"
+	"github.com/lastbackend/lastbackend/pkg/storage/etcd/types"
+	"regexp"
 	"strings"
+	"fmt"
 )
 
-const logLevel = 6
+const (
+	logLevel  = 6
+	logPrefix = "storage:etcd"
+)
 
-var c struct {
+type StorageV3 struct {
+	config *v3.Config
+	client *clientV3
+}
+
+type clientV3 struct {
 	store store.Store
 	dfunc store.DestroyFunc
 }
 
-type Storage struct {
-	context.Context
-	context.CancelFunc
-
-	*ClusterStorage
-	*DeploymentStorage
-	*EndpointStorage
-	*TriggerStorage
-	*NodeStorage
-	*IngressStorage
-	*NamespaceStorage
-	*PodStorage
-	*ServiceStorage
-	*RouteStorage
-	*VolumeStorage
-	*SecretStorage
-	*SystemStorage
-	*IPAMStorage
-}
-
-func (s *Storage) Cluster() storage.Cluster {
-	if s == nil {
-		return nil
-	}
-	return s.ClusterStorage
-}
-
-func (s *Storage) Deployment() storage.Deployment {
-	if s == nil {
-		return nil
-	}
-	return s.DeploymentStorage
-}
-
-func (s *Storage) Endpoint() storage.Endpoint {
-	if s == nil {
-		return nil
-	}
-	return s.EndpointStorage
-}
-
-func (s *Storage) Trigger() storage.Trigger {
-	if s == nil {
-		return nil
-	}
-	return s.TriggerStorage
-}
-
-func (s *Storage) Node() storage.Node {
-	if s == nil {
-		return nil
-	}
-	return s.NodeStorage
-}
-
-func (s *Storage) Ingress() storage.Ingress {
-	if s == nil {
-		return nil
-	}
-	return s.IngressStorage
-}
-
-func (s *Storage) Namespace() storage.Namespace {
-	if s == nil {
-		return nil
-	}
-	return s.NamespaceStorage
-}
-
-func (s *Storage) Route() storage.Route {
-	if s == nil {
-		return nil
-	}
-	return s.RouteStorage
-}
-
-func (s *Storage) Pod() storage.Pod {
-	if s == nil {
-		return nil
-	}
-	return s.PodStorage
-}
-
-func (s *Storage) Service() storage.Service {
-	if s == nil {
-		return nil
-	}
-	return s.ServiceStorage
-}
-
-func (s *Storage) Volume() storage.Volume {
-	if s == nil {
-		return nil
-	}
-	return s.VolumeStorage
-}
-
-func (s *Storage) Secret() storage.Secret {
-	if s == nil {
-		return nil
-	}
-	return s.SecretStorage
-}
-
-func (s *Storage) System() storage.System {
-	if s == nil {
-		return nil
-	}
-	return s.SystemStorage
-}
-
-func (s *Storage) IPAM() storage.IPAM {
-	if s == nil {
-		return nil
-	}
-	return s.IPAMStorage
-}
-
-func keyCreate(args ...string) string {
-	return strings.Join([]string(args), "/")
-}
-
-func keyDirCreate(args ...string) string {
-	key := strings.Join([]string(args), "/")
-	if !strings.HasSuffix(key, "/") {
-		key += "/"
-	}
-	return key
-}
-
-func New() (*Storage, error) {
+func NewV3() (*StorageV3, error) {
 
 	log.Debug("Etcd: define storage")
 
 	var (
-		err error
+		err    error
+		s      = new(StorageV3)
+		config *v3.Config
 	)
 
-	if c.store, c.dfunc, err = v3.GetClient(context.Background()); err != nil {
-		log.Errorf("etcd: store initialize err: %s", err)
+	if err := viper.UnmarshalKey("etcd", &config); err != nil {
+		log.Errorf("%s: error parsing etcd config: %v", logPrefix, err)
 		return nil, err
 	}
 
-	s := new(Storage)
+	s.client = new(clientV3)
 
-	s.ClusterStorage = newClusterStorage()
-	s.NodeStorage = newNodeStorage()
-	s.IngressStorage = newIngressStorage()
-
-	s.NamespaceStorage = newNamespaceStorage()
-	s.ServiceStorage = newServiceStorage()
-	s.DeploymentStorage = newDeploymentStorage()
-	s.PodStorage = newPodStorage()
-
-	s.EndpointStorage = newEndpointStorage()
-	s.TriggerStorage = newTriggerStorage()
-
-	s.RouteStorage = newRouteStorage()
-	s.SystemStorage = newSystemStorage()
-	s.VolumeStorage = newVolumeStorage()
-	s.SecretStorage = newSecretStorage()
-	s.IPAMStorage = newIPAMStorage()
+	if s.client.store, s.client.dfunc, err = v3.GetClient(config); err != nil {
+		log.Errorf("%s: store initialize err: %v", err)
+		return nil, err
+	}
 
 	return s, nil
 }
 
-func getClient(_ context.Context) (store.Store, store.DestroyFunc, error) {
-	return c.store, c.dfunc, nil
+func (s StorageV3) Get(ctx context.Context, kind types.Kind, name string, obj interface{}) error {
+	return s.client.store.Get(ctx, keyCreate(kind.String(), name), obj)
+}
+
+func (s StorageV3) List(ctx context.Context, kind types.Kind, query string, obj interface{}) error {
+	return s.client.store.List(ctx, keyCreate(kind.String(), query), obj)
+}
+
+func (s StorageV3) Map(ctx context.Context, kind types.Kind, query string, obj interface{}) error {
+	return s.client.store.Map(ctx, keyCreate(kind.String(), query), obj)
+}
+
+func (s StorageV3) Update(ctx context.Context, kind types.Kind, name string, obj interface{}, opts *types.Opts) error {
+
+	if opts == nil {
+		opts = new(types.Opts)
+	}
+
+	return s.client.store.Update(ctx, keyCreate(kind.String(), name), obj, nil, opts.Ttl)
+}
+
+func (s StorageV3) Create(ctx context.Context, kind types.Kind, name string, obj interface{}, opts *types.Opts) error {
+
+	if opts == nil {
+		opts = new(types.Opts)
+	}
+
+	return s.client.store.Create(ctx, keyCreate(kind.String(), name), obj, nil, opts.Ttl)
+}
+
+func (s StorageV3) Remove(ctx context.Context, kind types.Kind, name string) error {
+	return s.client.store.Delete(ctx, keyCreate(kind.String(), name))
+}
+
+func (s *StorageV3) Watch(ctx context.Context, kind types.Kind, event chan *types.WatcherEvent) error {
+
+	log.V(logLevel).Debug("%s:> watch %s", logPrefix, kind.String())
+
+	const filter = `\b.+\/(.+)\b`
+
+	client, destroy, err := s.getClient()
+	if err != nil {
+		log.V(logLevel).Errorf("%s:> watch err: %v", logPrefix, err)
+		return err
+	}
+	defer destroy()
+
+	watcher, err := client.Watch(ctx, keyCreate(kind.String()))
+	if err != nil {
+		log.V(logLevel).Errorf("%s:> watch err: %v", logPrefix, err)
+		return err
+	}
+
+	for {
+		select {
+		case <-ctx.Done():
+			log.Debugf("%s:> the user interrupted watch", logPrefix)
+			watcher.Stop()
+			return nil
+		case res := <-watcher.ResultChan():
+
+			if res == nil {
+				continue
+			}
+
+			if res.Type == store.STORAGEERROREVENT {
+				err := res.Object.(error)
+				log.Errorf("%s:> watch err: %v", logPrefix, err)
+				return err
+			}
+
+			r, _ := regexp.Compile(filter)
+			keys := r.FindStringSubmatch(res.Key)
+			if len(keys) == 0 {
+				continue
+			}
+
+			e := new(types.WatcherEvent)
+			e.Action = res.Type
+
+			match := strings.Split(res.Key, ":")
+
+			if len(match) > 0 {
+				e.Name = match[len(match)-1]
+			} else {
+				fmt.Println(match[0])
+				e.Name = keys[0]
+			}
+
+			if res.Type == store.STORAGEDELETEEVENT {
+				e.Data = nil
+				event <- e
+				continue
+			}
+
+			e.Data = res.Object
+
+			event <- e
+		}
+	}
+
+	return nil
+}
+
+func (s StorageV3) getClient() (store.Store, store.DestroyFunc, error) {
+	return s.client.store, s.client.dfunc, nil
 }

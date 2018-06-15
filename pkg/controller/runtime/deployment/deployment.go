@@ -25,7 +25,8 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/distribution/errors"
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 	"github.com/lastbackend/lastbackend/pkg/log"
-	"github.com/lastbackend/lastbackend/pkg/storage/store"
+	"github.com/lastbackend/lastbackend/pkg/storage/etcd/v3/store"
+	"github.com/lastbackend/lastbackend/pkg/api/types/v1/request"
 )
 
 // Provision deployment
@@ -168,9 +169,11 @@ func Provision(d *types.Deployment) error {
 		}
 	}
 
+	opts := new(request.DeploymentUpdateOptions)
+	opts.Status.State = types.StateProvision
+
 	// Update deployment state
-	d.Status.State = types.StateProvision
-	if err := distribution.NewDeploymentModel(context.Background(), stg).SetStatus(d); err != nil {
+	if err := distribution.NewDeploymentModel(context.Background(), stg).Update(d, opts); err != nil {
 		log.Errorf("%s:> deployment set state err: %s", logPrefix, err.Error())
 		return err
 	}

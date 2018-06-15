@@ -30,9 +30,9 @@ type CacheIngressSpec struct {
 	spec map[string]*types.IngressSpec
 }
 
-type IngressStatusWatcher func(ctx context.Context, event chan *types.IngressStatusEvent) error
+type IngressStatusWatcher func(ctx context.Context, event chan *types.Event) error
 
-type RouteSpecWatcher func(ctx context.Context, event chan *types.RouteSpecEvent) error
+type RouteSpecWatcher func(ctx context.Context, event chan *types.Event) error
 
 func (c *CacheIngressSpec) SetRouteSpec(route string, s types.RouteSpec) {
 	c.lock.Lock()
@@ -63,21 +63,30 @@ func (c *CacheIngressSpec) DelRouteSpec(route string) {
 }
 
 func (c *CacheIngressSpec) CacheRoutes(rs RouteSpecWatcher) error {
-	evs := make(chan *types.RouteSpecEvent)
+	evs := make(chan *types.Event)
+
 	go func() {
 		for {
 			select {
 			case e := <-evs:
 				{
-					if e.Event == "create" || e.Event == "update" {
-						c.SetRouteSpec(e.Name, e.Spec)
+
+					if e.Data == nil {
 						continue
 					}
 
-					if e.Event == "delete" {
-						c.DelRouteSpec(e.Name)
-						continue
+					spec := e.Data.(types.RouteSpec)
+					route := e.Name
+
+					switch e.Action {
+					case types.EventActionCreate:
+						fallthrough
+					case types.EventActionUpdate:
+						c.SetRouteSpec(route, spec)
+					case types.EventActionDelete:
+						c.DelRouteSpec(route)
 					}
+
 				}
 			}
 		}
@@ -110,13 +119,22 @@ func (c *CacheIngressSpec) Clear(ingress string) {
 }
 
 func (c *CacheIngressSpec) Status(isw IngressStatusWatcher) error {
-	evs := make(chan *types.IngressStatusEvent)
+	evs := make(chan *types.Event)
+
 	go func() {
 		for {
 			select {
 			case e := <-evs:
-				if !e.Status.Ready {
-					delete(c.spec, e.Name)
+
+				if e.Data == nil {
+					continue
+				}
+
+				status := e.Data.(types.IngressStatus)
+				ingress := e.Name
+
+				if !status.Ready {
+					delete(c.spec, ingress)
 				}
 			}
 		}

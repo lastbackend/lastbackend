@@ -16,20 +16,26 @@
 // from Last.Backend LLC.
 //
 
-package v3
+package storage
 
-const (
-	logLevel = 5
-	logPrefix = "storage:etcd:v3"
+import (
+	"strings"
 )
 
-type Config struct {
-	Endpoints []string `yaml:"endpoint"`
-	TLS       struct {
-		Key  string `yaml:"key"`
-		Cert string `yaml:"cert"`
-		CA   string `yaml:"ca"`
-	} `yaml:"tls"`
-	Quorum bool   `yaml:"quorum"`
-	Prefix string `yaml:"prefix"`
+type Pod struct{}
+
+func (Pod) Query(namespace, service, deployment, pod string) string {
+	return strings.Join([]string{namespace, service, deployment, pod}, ":")
+}
+
+type Deployment struct{}
+
+func (Deployment) Query(namespace, service, deployment string) string {
+	return strings.Join([]string{namespace, service, deployment}, ":")
+}
+
+type Service struct{}
+
+func (Service) Query(namespace string) string {
+	return strings.Join([]string{namespace}, ":")
 }

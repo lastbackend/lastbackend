@@ -27,7 +27,7 @@ import (
 func ParsePortMap(s string) (uint16, string, error) {
 
 	var (
-		port uint16
+		port  uint16
 		proto string
 		err   error
 	)

@@ -48,8 +48,8 @@ func (p *Process) Elect(process *types.Process) (bool, error) {
 	return p.Storage.System().Elect(p.context, process)
 }
 
-func (p *Process) ElectWait(process *types.Process, l chan bool) error {
-	return p.Storage.System().ElectWait(p.context, process, l)
+func (p *Process) ElectWait(process *types.Process, event chan *types.Event) error {
+	return p.Storage.System().ElectWait(p.context, process, event)
 }
 
 func (p *Process) ElectUpdate(process *types.Process) error {

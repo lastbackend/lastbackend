@@ -23,6 +23,7 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 	"github.com/lastbackend/lastbackend/pkg/log"
 	"sync"
+	"strings"
 )
 
 type CacheNodeSpec struct {
@@ -30,15 +31,15 @@ type CacheNodeSpec struct {
 	spec map[string]*types.NodeSpec
 }
 
-type NetworkSpecWatcher func(ctx context.Context, event chan *types.NetworkSpecEvent) error
+type NetworkSpecWatcher func(ctx context.Context, event chan *types.Event) error
 
-type PodSpecWatcher func(ctx context.Context, event chan *types.PodSpecEvent) error
+type PodSpecWatcher func(ctx context.Context, event chan *types.Event) error
 
-type VolumeSpecWatcher func(ctx context.Context, event chan *types.VolumeSpecEvent) error
+type VolumeSpecWatcher func(ctx context.Context, event chan *types.Event) error
 
-type NodeStatusWatcher func(ctx context.Context, event chan *types.NodeStatusEvent) error
+type NodeStatusWatcher func(ctx context.Context, event chan *types.Event) error
 
-type EndpointSpecWatcher func(ctx context.Context, event chan *types.EndpointSpecEvent) error
+type EndpointSpecWatcher func(ctx context.Context, event chan *types.Event) error
 
 func (c *CacheNodeSpec) SetPodSpec(node, pod string, s types.PodSpec) {
 	log.Info("api:cache:setpodspec:> %s, %s, %#v", node, pod, s)
@@ -153,21 +154,32 @@ func (c *CacheNodeSpec) Clear(node string) {
 }
 
 func (c *CacheNodeSpec) CachePods(ps PodSpecWatcher) error {
-	evs := make(chan *types.PodSpecEvent)
+	evs := make(chan *types.Event)
+
 	go func() {
 		for {
 			select {
 			case e := <-evs:
 				{
-					if e.Event == "create" || e.Event == "update" {
-						c.SetPodSpec(e.Node, e.Name, e.Spec)
+
+					if e.Data == nil {
 						continue
 					}
 
-					if e.Event == "delete" {
-						c.DelPodSpec(e.Node, e.Name)
-						continue
+					spec := e.Data.(types.PodSpec)
+					parse := strings.Split(e.Name, ":")
+					node := parse[0]
+					pod := parse[1]
+
+					switch e.Action {
+					case types.EventActionCreate:
+						fallthrough
+					case types.EventActionUpdate:
+						c.SetPodSpec(node, pod, spec)
+					case types.EventActionDelete:
+						c.DelPodSpec(node, pod)
 					}
+
 				}
 			}
 		}
@@ -177,21 +189,32 @@ func (c *CacheNodeSpec) CachePods(ps PodSpecWatcher) error {
 }
 
 func (c *CacheNodeSpec) CacheVolumes(vs VolumeSpecWatcher) error {
-	evs := make(chan *types.VolumeSpecEvent)
+	evs := make(chan *types.Event)
+
 	go func() {
 		for {
 			select {
 			case e := <-evs:
 				{
-					if e.Event == "create" || e.Event == "update" {
-						c.SetVolumeSpec(e.Node, e.Name, e.Spec)
+
+					if e.Data == nil {
 						continue
 					}
 
-					if e.Event == "delete" {
-						c.DelVolumeSpec(e.Node, e.Name)
-						continue
+					spec := e.Data.(types.VolumeSpec)
+					parse := strings.Split(e.Name, ":")
+					node := parse[0]
+					volume := parse[1]
+
+					switch e.Action {
+					case types.EventActionCreate:
+						fallthrough
+					case types.EventActionUpdate:
+						c.SetVolumeSpec(node, volume, spec)
+					case types.EventActionDelete:
+						c.DelVolumeSpec(node, volume)
 					}
+
 				}
 			}
 		}
@@ -201,21 +224,29 @@ func (c *CacheNodeSpec) CacheVolumes(vs VolumeSpecWatcher) error {
 }
 
 func (c *CacheNodeSpec) CacheNetwork(ns NetworkSpecWatcher) error {
-	evs := make(chan *types.NetworkSpecEvent)
+	evs := make(chan *types.Event)
 	go func() {
 		for {
 			select {
 			case e := <-evs:
 				{
-					if e.Event == "create" || e.Event == "update" {
-						c.SetNetworkSpec(e.Node, e.Spec)
+
+					if e.Data == nil {
 						continue
 					}
 
-					if e.Event == "delete" {
-						c.DelNetworkSpec(e.Node)
-						continue
+					spec := e.Data.(types.NetworkSpec)
+					node := e.Name
+
+					switch e.Action {
+					case types.EventActionCreate:
+						fallthrough
+					case types.EventActionUpdate:
+						c.SetNetworkSpec(node, spec)
+					case types.EventActionDelete:
+						c.DelNetworkSpec(node)
 					}
+
 				}
 			}
 		}
@@ -225,21 +256,31 @@ func (c *CacheNodeSpec) CacheNetwork(ns NetworkSpecWatcher) error {
 }
 
 func (c *CacheNodeSpec) CacheEndpoints(es EndpointSpecWatcher) error {
-	evs := make(chan *types.EndpointSpecEvent)
+
+	//evs := make(chan *types.EndpointSpecEvent)
+	evs := make(chan *types.Event)
+
 	go func() {
 		for {
 			select {
 			case e := <-evs:
 				{
-					if e.Event == "create" || e.Event == "update" {
-						c.SetEndpointSpec(e.Spec.IP ,e.Spec)
+
+					if e.Data == nil {
 						continue
 					}
 
-					if e.Event == "delete" {
-						c.DelEndpointSpec(e.Spec.IP)
-						continue
+					spec := e.Data.(types.EndpointSpec)
+
+					switch e.Action {
+					case types.EventActionCreate:
+						fallthrough
+					case types.EventActionUpdate:
+						c.SetEndpointSpec(spec.IP, spec)
+					case types.EventActionDelete:
+						c.DelEndpointSpec(spec.IP)
 					}
+
 				}
 			}
 		}
@@ -249,13 +290,21 @@ func (c *CacheNodeSpec) CacheEndpoints(es EndpointSpecWatcher) error {
 }
 
 func (c *CacheNodeSpec) Del(dw NodeStatusWatcher) error {
-	evs := make(chan *types.NodeStatusEvent)
+	evs := make(chan *types.Event)
 	go func() {
 		for {
 			select {
 			case e := <-evs:
-				if !e.Online {
-					delete(c.spec, e.Node)
+
+				if e.Data == nil {
+					continue
+				}
+
+				online := e.Data.(bool)
+				node := e.Name
+
+				if !online {
+					delete(c.spec, node)
 				}
 			}
 		}

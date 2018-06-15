@@ -16,20 +16,37 @@
 // from Last.Backend LLC.
 //
 
-package v3
+package types
 
-const (
-	logLevel = 5
-	logPrefix = "storage:etcd:v3"
-)
+type Watcher interface {
+	Stop()
+	ResultChan() <-chan *Event
+}
 
-type Config struct {
-	Endpoints []string `yaml:"endpoint"`
-	TLS       struct {
-		Key  string `yaml:"key"`
-		Cert string `yaml:"cert"`
-		CA   string `yaml:"ca"`
-	} `yaml:"tls"`
-	Quorum bool   `yaml:"quorum"`
-	Prefix string `yaml:"prefix"`
+type WatcherEvent struct {
+	Action string
+	Name   string
+	Data   interface{}
+}
+
+type Event struct {
+	Type   string
+	Key    string
+	Object interface{}
+}
+
+type Kind string
+
+func (k Kind) String() string {
+	return string(k)
+}
+
+type Query string
+
+func (qf Query) String() string {
+	return string(qf)
+}
+
+type Opts struct {
+	Ttl uint64
 }
