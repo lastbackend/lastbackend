@@ -22,11 +22,9 @@ import (
 	"crypto/tls"
 	"github.com/coreos/etcd/clientv3"
 	"github.com/coreos/etcd/pkg/transport"
-	"github.com/lastbackend/lastbackend/pkg/log"
 	s "github.com/lastbackend/lastbackend/pkg/storage/etcd/v3/store"
 	"github.com/lastbackend/lastbackend/pkg/util/serializer"
 	"github.com/lastbackend/lastbackend/pkg/util/serializer/json"
-	"github.com/spf13/viper"
 	"path"
 	"time"
 )

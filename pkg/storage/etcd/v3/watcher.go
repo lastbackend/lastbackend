@@ -26,7 +26,6 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/log"
 	"github.com/lastbackend/lastbackend/pkg/storage/etcd/v3/store"
 	"regexp"
-	"github.com/lastbackend/lastbackend/pkg/storage/etcd/types"
 )
 
 const (

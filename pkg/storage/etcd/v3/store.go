@@ -32,7 +32,6 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/util/serializer"
 	"github.com/lastbackend/lastbackend/pkg/util/validator"
 	"golang.org/x/net/context"
-	"github.com/lastbackend/lastbackend/pkg/storage/etcd/types"
 )
 
 type dbstore struct {
