@@ -47,8 +47,6 @@ func ClusterInfoH(w http.ResponseWriter, r *http.Request) {
 	//     description: Cluster response
 	//     schema:
 	//       "$ref": "#/definitions/views_cluster"
-	//   '404':
-	//     description: Cluster not found
 	//   '500':
 	//     description: Internal server error
 
