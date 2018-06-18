@@ -76,9 +76,9 @@ type NodeResources struct {
 }
 
 // swagger:model views_node_spec
-type NodeSpec struct {
-	Network   map[string]types.NetworkSpec  `json:"network"`
-	Pods      map[string]types.PodSpec      `json:"pods"`
-	Volumes   map[string]types.VolumeSpec   `json:"volumes"`
-	Endpoints map[string]types.EndpointSpec `json:"endpoints"`
+type NodeManifest struct {
+	Network   map[string]types.NetworkManifest  `json:"network"`
+	Pods      map[string]types.PodManifest      `json:"pods"`
+	Volumes   map[string]types.VolumeManifest   `json:"volumes"`
+	Endpoints map[string]types.EndpointManifest `json:"endpoints"`
 }

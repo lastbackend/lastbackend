@@ -25,20 +25,20 @@ import (
 	"sync"
 )
 
-type CacheIngressSpec struct {
+type CacheIngressManifest struct {
 	lock sync.RWMutex
 	spec map[string]*types.IngressSpec
 }
 
-type IngressStatusWatcher func(ctx context.Context, event chan *types.IngressStatusEvent) error
+type IngressStatusWatcher func(ctx context.Context, event chan *types.IngressEvent) error
 
-type RouteSpecWatcher func(ctx context.Context, event chan *types.RouteSpecEvent) error
+type RouteSpecWatcher func(ctx context.Context, event chan *types.IngressRouteEvent) error
 
-func (c *CacheIngressSpec) SetRouteSpec(route string, s types.RouteSpec) {
+func (c *CacheIngressManifest) SetRouteSpec(route string, s types.RouteSpec) {
 	c.lock.Lock()
 	defer c.lock.Unlock()
 
-	log.Debugf("add route spec: %s", route)
+	log.Debugf("add route manifests: %s", route)
 	for i := range c.spec {
 		if _, ok := c.spec[i]; !ok {
 			c.spec[i] = new(types.IngressSpec)
@@ -53,24 +53,24 @@ func (c *CacheIngressSpec) SetRouteSpec(route string, s types.RouteSpec) {
 	}
 }
 
-func (c *CacheIngressSpec) DelRouteSpec(route string) {
+func (c *CacheIngressManifest) DelRouteSpec(route string) {
 	c.lock.Lock()
 	defer c.lock.Unlock()
-	log.Debugf("del route spec: %s", route)
+	log.Debugf("del route manifests: %s", route)
 	for i := range c.spec {
 		delete(c.spec[i].Routes, route)
 	}
 }
 
-func (c *CacheIngressSpec) CacheRoutes(rs RouteSpecWatcher) error {
-	evs := make(chan *types.RouteSpecEvent)
+func (c *CacheIngressManifest) CacheRoutes(rs RouteSpecWatcher) error {
+	evs := make(chan *types.IngressRouteEvent)
 	go func() {
 		for {
 			select {
 			case e := <-evs:
 				{
 					if e.Event == "create" || e.Event == "update" {
-						c.SetRouteSpec(e.Name, e.Spec)
+						c.SetRouteSpec(e.Name, e.Route)
 						continue
 					}
 
@@ -86,7 +86,7 @@ func (c *CacheIngressSpec) CacheRoutes(rs RouteSpecWatcher) error {
 	return rs(context.Background(), evs)
 }
 
-func (c *CacheIngressSpec) Get(ingress string) *types.IngressSpec {
+func (c *CacheIngressManifest) Get(ingress string) *types.IngressSpec {
 	c.lock.Lock()
 	defer c.lock.Unlock()
 	if s, ok := c.spec[ingress]; !ok {
@@ -96,26 +96,26 @@ func (c *CacheIngressSpec) Get(ingress string) *types.IngressSpec {
 	}
 }
 
-func (c *CacheIngressSpec) Flush(ingress string) {
+func (c *CacheIngressManifest) Flush(ingress string) {
 	c.lock.Lock()
 	defer c.lock.Unlock()
 	c.spec[ingress] = new(types.IngressSpec)
 	c.spec[ingress].Routes = make(map[string]types.RouteSpec, 0)
 }
 
-func (c *CacheIngressSpec) Clear(ingress string) {
+func (c *CacheIngressManifest) Clear(ingress string) {
 	c.lock.Lock()
 	defer c.lock.Unlock()
 	delete(c.spec, ingress)
 }
 
-func (c *CacheIngressSpec) Status(isw IngressStatusWatcher) error {
-	evs := make(chan *types.IngressStatusEvent)
+func (c *CacheIngressManifest) Status(isw IngressStatusWatcher) error {
+	evs := make(chan *types.IngressEvent)
 	go func() {
 		for {
 			select {
 			case e := <-evs:
-				if !e.Status.Ready {
+				if !e.Ready {
 					delete(c.spec, e.Name)
 				}
 			}
@@ -125,8 +125,8 @@ func (c *CacheIngressSpec) Status(isw IngressStatusWatcher) error {
 	return isw(context.Background(), evs)
 }
 
-func NewCacheIngressSpec() *CacheIngressSpec {
-	c := new(CacheIngressSpec)
+func NewCacheIngressSpec() *CacheIngressManifest {
+	c := new(CacheIngressManifest)
 	c.spec = make(map[string]*types.IngressSpec, 0)
 	return c
 }

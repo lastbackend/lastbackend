@@ -24,8 +24,8 @@ import (
 )
 
 type CPI interface {
-	Info(ctx context.Context) (map[string]*types.EndpointStatus, error)
-	Create(ctx context.Context, endpoint *types.EndpointSpec) (*types.EndpointStatus, error)
-	Destroy(ctx context.Context, state *types.EndpointStatus) error
-	Update(ctx context.Context, state *types.EndpointStatus, spec *types.EndpointSpec) (*types.EndpointStatus, error)
+	Info(ctx context.Context) (map[string]*types.EndpointState, error)
+	Create(ctx context.Context, manifest *types.EndpointManifest) (*types.EndpointState, error)
+	Destroy(ctx context.Context, state *types.EndpointState) error
+	Update(ctx context.Context, state *types.EndpointState, manifest *types.EndpointManifest) (*types.EndpointState, error)
 }

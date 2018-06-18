@@ -76,7 +76,7 @@ func New() *State {
 			pods:       make(map[string]*types.PodStatus, 0),
 		},
 		networks: &NetworkState{
-			subnets: make(map[string]types.NetworkSpec, 0),
+			subnets: make(map[string]types.NetworkState, 0),
 		},
 		volumes: &VolumesState{
 			volumes: make(map[string]types.VolumeSpec, 0),
@@ -85,7 +85,7 @@ func New() *State {
 			secrets: make(map[string]types.Secret, 0),
 		},
 		endpoints: &EndpointState{
-			endpoints: make(map[string]*types.EndpointStatus, 0),
+			endpoints: make(map[string]*types.EndpointState, 0),
 		},
 		task: &TaskState{
 			tasks: make(map[string]types.NodeTask, 0),

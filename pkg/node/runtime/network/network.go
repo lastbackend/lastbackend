@@ -32,29 +32,52 @@ func Restore(ctx context.Context) error {
 		log.Errorf("Can-not get subnets from CNI", err.Error())
 	}
 
-	for _, s := range sn {
-		envs.Get().GetState().Networks().SetSubnet(s)
+	for cidr, s := range sn {
+		envs.Get().GetState().Networks().SetSubnet(cidr, s)
 	}
 
 	return nil
 }
 
-func Create(ctx context.Context, sn *types.NetworkSpec) error {
-	if err := envs.Get().GetCNI().Create(ctx, sn); err != nil {
+func Manage(ctx context.Context, cidr string, sn *types.NetworkManifest) error {
+
+	subnets := envs.Get().GetState().Networks().GetSubnets()
+	if state, ok := subnets[cidr]; ok {
+
+		if sn.State == types.StateDestroy {
+			envs.Get().GetCNI().Destroy(ctx, &state)
+			envs.Get().GetState().Networks().DelSubnet(cidr)
+			return nil
+		}
+
+		// TODO: check if network manifest changes
+		// if changes then update routes and interfaces
+		return nil
+	}
+
+	if sn.State == types.StateDestroy {
+		return nil
+	}
+
+	state, err := envs.Get().GetCNI().Create(ctx, sn)
+	if err != nil {
 		log.Errorf("Can not create network subnet: %s", err.Error())
 		return err
 	}
 
-	envs.Get().GetState().Networks().AddSubnet(sn)
+	envs.Get().GetState().Networks().AddSubnet(cidr, state)
 	return nil
 }
 
-func Destroy(ctx context.Context, sn *types.NetworkSpec) error {
+func Destroy(ctx context.Context, cidr string) error {
+
+	sn := envs.Get().GetState().Networks().GetSubnet(cidr)
+
 	if err := envs.Get().GetCNI().Destroy(ctx, sn); err != nil {
 		log.Errorf("Can not destroy network subnet: %s", err.Error())
 		return err
 	}
 
-	envs.Get().GetState().Networks().DelSubnet(sn)
+	envs.Get().GetState().Networks().DelSubnet(cidr)
 	return nil
 }

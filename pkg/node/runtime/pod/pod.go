@@ -35,7 +35,7 @@ import (
 
 const BUFFER_SIZE = 1024
 
-func Manage(ctx context.Context, key string, spec *types.PodSpec) error {
+func Manage(ctx context.Context, key string, manifest *types.PodManifest) error {
 	log.Debugf("Provision pod: %s", key)
 
 	//==========================================================================
@@ -43,7 +43,7 @@ func Manage(ctx context.Context, key string, spec *types.PodSpec) error {
 	//==========================================================================
 
 	// Call destroy pod
-	if spec.State.Destroy {
+	if manifest.State.Destroy {
 
 		if task := envs.Get().GetState().Tasks().GetTask(key); task != nil {
 			log.Debugf("Cancel pod creating: %s", key)
@@ -90,7 +90,7 @@ func Manage(ctx context.Context, key string, spec *types.PodSpec) error {
 	ctx, cancel := context.WithCancel(context.Background())
 	envs.Get().GetState().Tasks().AddTask(key, &types.NodeTask{Cancel: cancel})
 
-	status, err := Create(ctx, key, spec)
+	status, err := Create(ctx, key, manifest)
 	if err != nil {
 		log.Errorf("Can not create pod: %s err: %s", key, err.Error())
 		status.SetError(err)
@@ -101,7 +101,7 @@ func Manage(ctx context.Context, key string, spec *types.PodSpec) error {
 	return nil
 }
 
-func Create(ctx context.Context, key string, spec *types.PodSpec) (*types.PodStatus, error) {
+func Create(ctx context.Context, key string, manifest *types.PodManifest) (*types.PodStatus, error) {
 
 	var (
 		err    error
@@ -119,8 +119,8 @@ func Create(ctx context.Context, key string, spec *types.PodSpec) (*types.PodSta
 	envs.Get().GetState().Pods().AddPod(key, status)
 	events.NewPodStatusEvent(ctx, key)
 
-	log.Debugf("Have %d containers", len(spec.Template.Containers))
-	for _, c := range spec.Template.Containers {
+	log.Debugf("Have %d containers", len(manifest.Template.Containers))
+	for _, c := range manifest.Template.Containers {
 
 		log.Debug("Pull images for pod if needed")
 		r, err := envs.Get().GetCRI().ImagePull(ctx, &c.Image)
@@ -147,7 +147,7 @@ func Create(ctx context.Context, key string, spec *types.PodSpec) (*types.PodSta
 	envs.Get().GetState().Pods().SetPod(key, status)
 	events.NewPodStatusEvent(ctx, key)
 
-	for _, s := range spec.Template.Containers {
+	for _, s := range manifest.Template.Containers {
 
 		//==========================================================================
 		// Create container ========================================================

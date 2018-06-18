@@ -52,7 +52,9 @@ func Daemon() bool {
 	go c.Node().CachePods(stg.Node().EventPodSpec)
 	go c.Node().CacheVolumes(stg.Node().EventVolumeSpec)
 	go c.Node().CacheEndpoints(stg.Endpoint().EventSpec)
-	go c.Node().Del(stg.Node().EventStatus)
+
+
+	go c.Node().Status(stg.Node().EventStatus)
 
 	go c.Ingress().CacheRoutes(stg.Route().WatchSpecEvents)
 	go c.Ingress().Status(stg.Ingress().WatchStatus)

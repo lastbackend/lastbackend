@@ -1704,8 +1704,8 @@ func getNodeAsset(name, desc string, online bool) types.Node {
 		},
 		Roles: types.NodeRole{},
 		Network: types.NetworkSpec{
-			Type:  types.NetworkTypeVxLAN,
-			Range: "10.0.0.1",
+			Type: types.NetworkTypeVxLAN,
+			CIDR: "10.0.0.1",
 			IFace: types.NetworkInterface{
 				Index: 1,
 				Name:  "lb",

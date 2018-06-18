@@ -27,8 +27,8 @@ import (
 func TestEqual(t *testing.T) {
 
 	var network = &types.NetworkSpec{
-		Type:  "vxlan",
-		Range: "10.0.0.0/24",
+		Type: "vxlan",
+		CIDR: "10.0.0.0/24",
 		IFace: types.NetworkInterface{
 			Index: 1,
 			Name:  "lb.1",
@@ -39,8 +39,8 @@ func TestEqual(t *testing.T) {
 	}
 
 	var asset = &types.NetworkSpec{
-		Type:  "vxlan",
-		Range: "10.0.0.0/24",
+		Type: "vxlan",
+		CIDR: "10.0.0.0/24",
 		IFace: types.NetworkInterface{
 			Index: 1,
 			Name:  "lb.1",
@@ -56,8 +56,8 @@ func TestEqual(t *testing.T) {
 func TestNotEqual(t *testing.T) {
 
 	var network = &types.NetworkSpec{
-		Type:  "vxlan",
-		Range: "10.0.0.0/24",
+		Type: "vxlan",
+		CIDR: "10.0.0.0/24",
 		IFace: types.NetworkInterface{
 			Index: 1,
 			Name:  "lb.1",
@@ -70,8 +70,8 @@ func TestNotEqual(t *testing.T) {
 	var assets = make(map[string]*types.NetworkSpec)
 
 	assets["type"] = &types.NetworkSpec{
-		Type:  "vlan",
-		Range: "10.0.0.0/24",
+		Type: "vlan",
+		CIDR: "10.0.0.0/24",
 		IFace: types.NetworkInterface{
 			Index: 1,
 			Name:  "lb.1",
@@ -82,8 +82,8 @@ func TestNotEqual(t *testing.T) {
 	}
 
 	assets["subnet"] = &types.NetworkSpec{
-		Type:  "vxlan",
-		Range: "10.0.0.0/22",
+		Type: "vxlan",
+		CIDR: "10.0.0.0/22",
 		IFace: types.NetworkInterface{
 			Index: 1,
 			Name:  "lb.1",
@@ -94,8 +94,8 @@ func TestNotEqual(t *testing.T) {
 	}
 
 	assets["subnet & type"] = &types.NetworkSpec{
-		Type:  "vlan",
-		Range: "10.0.0.0/22",
+		Type: "vlan",
+		CIDR: "10.0.0.0/22",
 		IFace: types.NetworkInterface{
 			Index: 1,
 			Name:  "lb.1",
@@ -106,8 +106,8 @@ func TestNotEqual(t *testing.T) {
 	}
 
 	assets["iface index"] = &types.NetworkSpec{
-		Type:  "vxlan",
-		Range: "10.0.0.0/24",
+		Type: "vxlan",
+		CIDR: "10.0.0.0/24",
 		IFace: types.NetworkInterface{
 			Index: 2,
 			Name:  "lb.1",
@@ -118,8 +118,8 @@ func TestNotEqual(t *testing.T) {
 	}
 
 	assets["iface index & type"] = &types.NetworkSpec{
-		Type:  "vxlan",
-		Range: "10.0.0.0/24",
+		Type: "vxlan",
+		CIDR: "10.0.0.0/24",
 		IFace: types.NetworkInterface{
 			Index: 2,
 			Name:  "lb.1",
@@ -130,8 +130,8 @@ func TestNotEqual(t *testing.T) {
 	}
 
 	assets["iface index & subnet"] = &types.NetworkSpec{
-		Type:  "vxlan",
-		Range: "10.0.0.0/24",
+		Type: "vxlan",
+		CIDR: "10.0.0.0/24",
 		IFace: types.NetworkInterface{
 			Index: 2,
 			Name:  "lb.1",
@@ -142,8 +142,8 @@ func TestNotEqual(t *testing.T) {
 	}
 
 	assets["iface name"] = &types.NetworkSpec{
-		Type:  "vxlan",
-		Range: "10.0.0.0/24",
+		Type: "vxlan",
+		CIDR: "10.0.0.0/24",
 		IFace: types.NetworkInterface{
 			Index: 1,
 			Name:  "lb.0",
@@ -154,8 +154,8 @@ func TestNotEqual(t *testing.T) {
 	}
 
 	assets["iface addr"] = &types.NetworkSpec{
-		Type:  "vxlan",
-		Range: "10.0.0.0/24",
+		Type: "vxlan",
+		CIDR: "10.0.0.0/24",
 		IFace: types.NetworkInterface{
 			Index: 1,
 			Name:  "lb.1",
@@ -166,8 +166,8 @@ func TestNotEqual(t *testing.T) {
 	}
 
 	assets["iface haddr"] = &types.NetworkSpec{
-		Type:  "vxlan",
-		Range: "10.0.0.0/24",
+		Type: "vxlan",
+		CIDR: "10.0.0.0/24",
 		IFace: types.NetworkInterface{
 			Index: 1,
 			Name:  "lb.1",
@@ -178,8 +178,8 @@ func TestNotEqual(t *testing.T) {
 	}
 
 	assets["addr"] = &types.NetworkSpec{
-		Type:  "vxlan",
-		Range: "10.0.0.0/24",
+		Type: "vxlan",
+		CIDR: "10.0.0.0/24",
 		IFace: types.NetworkInterface{
 			Index: 1,
 			Name:  "lb.1",

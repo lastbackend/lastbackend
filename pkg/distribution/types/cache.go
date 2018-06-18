@@ -19,45 +19,44 @@
 package types
 
 type NodeStatusEvent struct {
-	Event  string `json:"event"`
-	Node   string `json:"node"`
-	Online bool   `json:"online"`
+	Event string `json:"event"`
+	Node  string `json:"node"`
+	Ready bool   `json:"ready"`
 }
 
-type NetworkSpecEvent struct {
-	Event string      `json:"event"`
-	Node  string      `json:"node"`
-	Spec  NetworkSpec `json:"spec"`
+type PodManifestEvent struct {
+	Event    string      `json:"event"`
+	Node     string      `json:"node"`
+	Name     string      `json:"name"`
+	Manifest PodManifest `json:"manifest"`
 }
 
-type PodSpecEvent struct {
-	Event string  `json:"event"`
-	Node  string  `json:"node"`
-	Name  string  `json:"name"`
-	Spec  PodSpec `json:"spec"`
+type VolumeManifestEvent struct {
+	Event    string         `json:"event"`
+	Node     string         `json:"node"`
+	Name     string         `json:"name"`
+	Manifest VolumeManifest `json:"manifest"`
 }
 
-type RouteSpecEvent struct {
+type NetworkManifestEvent struct {
+	Event    string          `json:"event"`
+	Manifest NetworkManifest `json:"manifest"`
+}
+
+type EndpointManifestEvent struct {
+	Event    string           `json:"event"`
+	Manifest EndpointManifest `json:"manifest"`
+}
+
+type IngressEvent struct {
+	Event   string  `json:"event"`
+	Name    string  `json:"name"`
+	Ingress Ingress `json:"ingress"`
+	Ready   bool    `json:"ready"`
+}
+
+type IngressRouteEvent struct {
 	Event string    `json:"event"`
 	Name  string    `json:"name"`
-	Spec  RouteSpec `json:"spec"`
-}
-
-type EndpointSpecEvent struct {
-	Event string       `json:"event"`
-	Name  string       `json:"name"`
-	Spec  EndpointSpec `json:"spec"`
-}
-
-type VolumeSpecEvent struct {
-	Event string     `json:"event"`
-	Node  string     `json:"node"`
-	Name  string     `json:"name"`
-	Spec  VolumeSpec `json:"spec"`
-}
-
-type IngressStatusEvent struct {
-	Event  string        `json:"event"`
-	Name   string        `json:"name"`
-	Status IngressStatus `json:"status"`
+	Route RouteSpec `json:"spec"`
 }

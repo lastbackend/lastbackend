@@ -20,16 +20,27 @@ package types
 
 const NetworkTypeVxLAN = "vxlan"
 
+type Network struct {
+	Meta Meta
+	Spec NetworkSpec `json:"spec"`
+}
+
 // swagger:model types_network_spec
 type NetworkSpec struct {
+	// Network state
+	State string `json:"state"`
 	// Node network type
 	Type string `json:"type"`
 	// Node Network subnet info
-	Range string `json:"range"`
+	CIDR string `json:"cidr"`
 	// Node Network interface
 	IFace NetworkInterface `json:"iface"`
 	// Node Public IP
 	Addr string `json:"addr"`
+}
+
+type NetworkState struct {
+	NetworkSpec
 }
 
 // swagger:model types_network_interface
@@ -45,7 +56,7 @@ func (n *NetworkSpec) Equal(nt *NetworkSpec) bool {
 	switch false {
 	case n.Type == nt.Type:
 		return false
-	case n.Range == nt.Range:
+	case n.CIDR == nt.CIDR:
 		return false
 	case n.IFace.Index == nt.IFace.Index:
 		return false

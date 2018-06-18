@@ -141,10 +141,10 @@ func NodeGetSpecH(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	spec := new(types.NodeSpec)
+	spec := new(types.NodeManifest)
 	spec = cache.Get(n.Meta.Name)
 	if spec == nil {
-		spec, err = nm.GetSpec(n)
+		spec, err = nm.GetManifest(n)
 		if err != nil {
 			log.V(logLevel).Warnf("%s:getspec:> node `%s` not found", logPrefix, cid)
 			errors.HTTP.InternalServerError(w)
@@ -153,7 +153,7 @@ func NodeGetSpecH(w http.ResponseWriter, r *http.Request) {
 	}
 	cache.Flush(n.Meta.Name)
 
-	response, err := v1.View().Node().NewSpec(spec).ToJson()
+	response, err := v1.View().Node().NewManifest(spec).ToJson()
 	if err != nil {
 		log.V(logLevel).Errorf("%s:getspec:> convert struct to json err: %s", logPrefix, err.Error())
 		errors.HTTP.InternalServerError(w)
@@ -346,7 +346,7 @@ func NodeConnectH(w http.ResponseWriter, r *http.Request) {
 		nco.Meta.Name = opts.Info.Hostname
 		nco.Info = opts.Info
 		nco.Status = opts.Status
-		nco.Network = opts.Network
+		nco.Network = opts.Network.NetworkSpec
 
 		node, err = nm.Create(&nco)
 		if err != nil {
@@ -382,7 +382,7 @@ func NodeConnectH(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := nm.SetNetwork(node, opts.Network); err != nil {
+	if err := nm.SetNetwork(node, opts.Network.NetworkSpec); err != nil {
 		log.V(logLevel).Errorf("%s:connect:> get nodes list err: %s", logPrefix, err.Error())
 		errors.HTTP.InternalServerError(w)
 		return

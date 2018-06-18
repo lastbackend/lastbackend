@@ -16,7 +16,23 @@
 // from Last.Backend LLC.
 //
 
-package views
+package types
 
-type Subnet struct {
+type NodeManifest struct {
+	Endpoints map[string]EndpointManifest `json:"endpoint"`
+	Network  map[string]NetworkManifest  `json:"network"`
+	Pods     map[string]PodManifest      `json:"pods"`
+	Volumes  map[string]VolumeManifest   `json:"volumes"`
+}
+
+type PodManifest PodSpec
+
+type VolumeManifest VolumeSpec
+
+type NetworkManifest struct {
+	NetworkSpec
+}
+
+type EndpointManifest struct {
+	EndpointSpec
 }

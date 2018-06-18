@@ -240,9 +240,9 @@ func TestNodeStorage_GetSpec(t *testing.T) {
 		p2  = getPodAsset(ns, svc, dp, "test2", "")
 	)
 
-	n1.Network.Range = "10.0.1.0"
-	n2.Network.Range = "10.0.1.0"
-	n3.Network.Range = "10.0.2.0"
+	n1.Network.CIDR = "10.0.1.0"
+	n2.Network.CIDR = "10.0.1.0"
+	n3.Network.CIDR = "10.0.2.0"
 
 	n2.Spec.Network = make(map[string]types.NetworkSpec)
 	n2.Spec.Pods = make(map[string]types.PodSpec)
@@ -2346,8 +2346,8 @@ func getNodeAsset(name, desc string, online bool) types.Node {
 		Spec:  types.NodeSpec{},
 		Roles: types.NodeRole{},
 		Network: types.NetworkSpec{
-			Type:  types.NetworkTypeVxLAN,
-			Range: "10.0.0.1",
+			Type: types.NetworkTypeVxLAN,
+			CIDR: "10.0.0.1",
 			IFace: types.NetworkInterface{
 				Index: 1,
 				Name:  "lb",

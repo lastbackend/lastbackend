@@ -110,22 +110,6 @@ type NodeSpec struct {
 	Endpoints map[string]EndpointSpec `json:"endpoints"`
 }
 
-// swagger:ignore
-// swagger:model types_node_namespace
-type NodeNamespace struct {
-	Meta NamespaceMeta     `json:"meta",yaml:"meta"`
-	Spec NodeNamespaceSpec `json:"spec",yaml:"spec"`
-}
-
-// swagger:ignore
-// swagger:model types_node_namespace_spec
-type NodeNamespaceSpec struct {
-	Routes  []*Route  `json:"routes",yaml:"routes"`
-	Pods    []*Pod    `json:"pods",yaml:"pods"`
-	Volumes []*Volume `json:"volumes",yaml:"volumes"`
-	Secrets []*Secret `json:"secrets",yaml:"secrets"`
-}
-
 // swagger:model types_node_resources
 type NodeResources struct {
 	// Node total containers

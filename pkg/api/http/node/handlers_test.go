@@ -205,7 +205,7 @@ func TestNodeGetH(t *testing.T) {
 	}
 }
 
-func TestNodeGetSpecH(t *testing.T) {
+func TestNodeGetManifestH(t *testing.T) {
 	stg, _ := storage.GetMock()
 	cg := cache.NewCache()
 
@@ -232,7 +232,8 @@ func TestNodeGetSpecH(t *testing.T) {
 	n1.Spec.Pods[p1.SelfLink()] = p1.Spec
 	n1.Spec.Pods[p2.SelfLink()] = p2.Spec
 
-	v, err := v1.View().Node().NewSpec(&n1.Spec).ToJson()
+	//TODO: check node manifest
+	v, err := v1.View().Node().NewManifest(&types.NodeManifest{}).ToJson()
 	assert.NoError(t, err)
 
 	tests := []struct {
@@ -1123,8 +1124,8 @@ func getNodeAsset(name, desc string, online bool) types.Node {
 		},
 		Roles: types.NodeRole{},
 		Network: types.NetworkSpec{
-			Type:  types.NetworkTypeVxLAN,
-			Range: "10.0.0.1",
+			Type: types.NetworkTypeVxLAN,
+			CIDR: "10.0.0.1",
 			IFace: types.NetworkInterface{
 				Index: 1,
 				Name:  "lb",

@@ -39,6 +39,7 @@ type INode interface {
 
 	Get(name string) (*types.Node, error)
 	GetSpec(node *types.Node) (*types.NodeSpec, error)
+	GetManifest(node *types.Node) (*types.NodeManifest, error)
 
 	SetMeta(node *types.Node, meta *types.NodeUpdateMetaOptions) error
 	SetStatus(node *types.Node, state types.NodeStatus) error
@@ -142,6 +143,10 @@ func (n *Node) GetSpec(node *types.Node) (*types.NodeSpec, error) {
 	log.Debugf("%#v", spec.Endpoints)
 
 	return spec, nil
+}
+
+func (n *Node) GetManifest(node *types.Node) (*types.NodeManifest, error) {
+	return nil, nil
 }
 
 func (n *Node) SetMeta(node *types.Node, meta *types.NodeUpdateMetaOptions) error {

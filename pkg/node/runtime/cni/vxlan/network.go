@@ -41,7 +41,7 @@ type Network struct {
 	ExtIface *NetworkInterface
 	Device   *Device
 	Network  *net.IPNet
-	Subnet   *net.IPNet
+	CIDR     *net.IPNet
 	IP       net.IP
 }
 
@@ -107,7 +107,7 @@ func (n *Network) SetSubnetFromDevice(name string) error {
 	copy(smk, addrs[0].Mask)
 
 	sip[3] = byte(0)
-	n.Subnet = &net.IPNet{
+	n.CIDR = &net.IPNet{
 		IP:   sip,
 		Mask: smk,
 	}
@@ -135,65 +135,69 @@ func (n *Network) AddInterface() error {
 		return err
 	}
 
-	n.Device.SetIP(*n.Subnet)
+	n.Device.SetIP(*n.CIDR)
 	return nil
 }
 
-func (n *Network) Info(ctx context.Context) *types.NetworkSpec {
-	return &types.NetworkSpec{
-		Type:  NetworkType,
-		Range: n.Subnet.String(),
-		IFace: types.NetworkInterface{
-			Index: n.Device.GetIndex(),
-			Name:  n.Device.GetName(),
-			HAddr: n.Device.GetHardware(),
-			Addr:  n.Device.GetAddr(),
-		},
-		Addr: n.ExtIface.IfaceAddr.String(),
+func (n *Network) Info(ctx context.Context) *types.NetworkState {
+	state := types.NetworkState{}
+
+	state.Type = NetworkType
+	state.CIDR = n.CIDR.String()
+	state.IFace= types.NetworkInterface{
+		Index: n.Device.GetIndex(),
+		Name:  n.Device.GetName(),
+		HAddr: n.Device.GetHardware(),
+		Addr:  n.Device.GetAddr(),
 	}
+	state.Addr = n.ExtIface.IfaceAddr.String()
+	return &state
 }
 
-func (n *Network) Destroy(ctx context.Context, network *types.NetworkSpec) error {
+func (n *Network) Destroy(ctx context.Context, network *types.NetworkState) error {
 
 	return nil
 }
 
-func (n *Network) Create(ctx context.Context, network *types.NetworkSpec) error {
-	log.Debugf("Connect to node to network: %v > %v", network.Range, network.IFace.Addr)
+func (n *Network) Create(ctx context.Context, network *types.NetworkManifest) (*types.NetworkState, error) {
 
-	if n.Subnet.String() == network.Range {
+	log.Debugf("Connect to node to network: %v > %v", network.CIDR, network.IFace.Addr)
+
+	if n.CIDR.String() == network.CIDR {
 		log.Debug("Skip local network provision")
-		return nil
+		return n.Info(ctx), nil
 	}
 
 	// Parse MAC address from string
 	lladdr, err := net.ParseMAC(network.IFace.HAddr)
 	if err != nil {
 		log.Errorf("Can-not parse MAC addres %v: %s", network.IFace.HAddr, err.Error())
-		return err
+		return nil, err
 	}
 
 	// Add ARP record
 	log.Debugf("Add new ARP record to %v :> %v", lladdr, network.Addr)
 	if err := n.Device.AddARP(lladdr, net.ParseIP(network.IFace.Addr)); err != nil {
 		log.Errorf("Can not add ARP record: %s", err.Error())
-		return err
+		return nil, err
 	}
 
 	// Add FDB record
 	log.Debugf("Add new FDB record to %v :> %v", network.IFace.HAddr, network.Addr)
 	if err := n.Device.AddFDB(lladdr, net.ParseIP(network.Addr)); err != nil {
 		log.Errorf("Can not add FDB record: %s", err.Error())
-		return n.Device.DelARP(lladdr, net.ParseIP(network.IFace.Addr))
+		if err := n.Device.DelARP(lladdr, net.ParseIP(network.IFace.Addr)); err != nil {
+			return nil, err
+		}
 	}
 
 	// Add route
-	log.Debugf("Add new route record for %v :> %v", network.Range, network.IFace.Addr)
+	log.Debugf("Add new route record for %v :> %v", network.CIDR, network.IFace.Addr)
 
-	_, ipn, err := net.ParseCIDR(network.Range)
+	_, ipn, err := net.ParseCIDR(network.CIDR)
 	if err != nil {
-		log.Errorf("Can-not parse subnet %v: %s", network.Range, err.Error())
-		return err
+		log.Errorf("Can-not parse subnet %v: %s", network.CIDR, err.Error())
+		return nil, err
 	}
 
 	vxlanRoute := netlink.Route{
@@ -210,43 +214,59 @@ func (n *Network) Create(ctx context.Context, network *types.NetworkSpec) error 
 
 		if err := n.Device.DelARP(lladdr, net.ParseIP(network.IFace.Addr)); err != nil {
 			log.Errorf("Can not del ARP record: %s", err.Error())
-			return err
+			return nil, err
 		}
 
 		if err := n.Device.DelFDB(lladdr, net.ParseIP(network.IFace.Addr)); err != nil {
 			log.Errorf("Can not del FBD record: %s", err.Error())
-			return err
+			return nil, err
 		}
 
-		return err
+		return nil, err
 	}
 
-	return nil
+	state := types.NetworkState{}
+
+	state.Type = NetworkType
+	state.CIDR = n.CIDR.String()
+	state.IFace= types.NetworkInterface{
+		Index: n.Device.GetIndex(),
+		Name:  n.Device.GetName(),
+		HAddr: n.Device.GetHardware(),
+		Addr:  n.Device.GetAddr(),
+	}
+	state.Addr = n.ExtIface.IfaceAddr.String()
+
+	return &state, nil
 }
 
-func (n *Network) Replace(ctx context.Context, current *types.NetworkSpec, proposal *types.NetworkSpec) error {
+func (n *Network) Replace(ctx context.Context, state *types.NetworkState, manifest *types.NetworkManifest) (*types.NetworkState, error) {
 
-	if current != nil {
-		if err := n.Destroy(ctx, current); err != nil {
-			return err
+	if state != nil {
+		if err := n.Destroy(ctx, state); err != nil {
+			return nil, err
 		}
 	}
 
-	if proposal != nil {
-		if err := n.Create(ctx, proposal); err != nil {
-			return err
-		}
+	if manifest == nil {
+		return nil, nil
 	}
 
-	return nil
+	state, err := n.Create(ctx, manifest)
+	if err != nil {
+		return nil, err
+	}
+
+
+	return state, nil
 }
 
-func (n *Network) Subnets(ctx context.Context) (map[string]*types.NetworkSpec, error) {
+func (n *Network) Subnets(ctx context.Context) (map[string]*types.NetworkState, error) {
 
 	log.Debug("Get current subnets list")
 
 	var (
-		subnets = make(map[string]*types.NetworkSpec)
+		subnets = make(map[string]*types.NetworkState)
 		neighs  = make(map[string]string)
 	)
 
@@ -274,16 +294,16 @@ func (n *Network) Subnets(ctx context.Context) (map[string]*types.NetworkSpec, e
 
 	for _, r := range routes {
 
-		sn := types.NetworkSpec{
-			Type:  n.Device.link.Type(),
-			Range: r.Dst.String(),
-			IFace: types.NetworkInterface{
-				Index: n.Device.link.Index,
-				Name:  n.Device.link.Name,
-				Addr:  r.Gw.String(),
-				HAddr: neighs[r.Gw.String()],
-			},
+		sn := types.NetworkState{}
+		sn.Type = n.Device.link.Type()
+		sn.CIDR = r.Dst.String()
+		sn.IFace = types.NetworkInterface{
+			Index: n.Device.link.Index,
+			Name:  n.Device.link.Name,
+			Addr:  r.Gw.String(),
+			HAddr: neighs[r.Gw.String()],
 		}
+
 
 		for _, rule := range rules {
 			if rule.Mac == sn.IFace.HAddr && rule.DST != "" {

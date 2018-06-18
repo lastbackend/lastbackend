@@ -27,33 +27,43 @@ import (
 
 const logEndpointPrefix = "runtime:endpoint:>"
 
-func Manage(ctx context.Context, key string, spec *types.EndpointSpec) error {
+func Manage(ctx context.Context, key string, manifest *types.EndpointManifest) error {
 	log.Debugf("%s manage: %s", logEndpointPrefix, key)
 
-	ep := envs.Get().GetState().Endpoints().GetEndpoint(key)
+	state := envs.Get().GetState().Endpoints().GetEndpoint(key)
 
-	if ep != nil {
+	if state != nil {
+		if manifest.State == types.StateDestroy {
+			Destroy(ctx, key, state)
+			envs.Get().GetState().Endpoints().DelEndpoint(key)
+			return nil
+		}
+
 		log.Debugf("%s check endpoint: %s", logEndpointPrefix, key)
-		if !equal(spec, ep) {
-			status, err := Update(ctx, key, ep, spec)
+		if !equal(manifest, state) {
+			state, err := Update(ctx, key, state, manifest)
 			if err != nil {
 				log.Errorf("%s update error: %s", logEndpointPrefix, err.Error())
 				return err
 			}
-			envs.Get().GetState().Endpoints().SetEndpoint(key, status)
+			envs.Get().GetState().Endpoints().SetEndpoint(key, state)
 			return nil
 		}
 
 		return nil
 	}
 
-	status, err := Create(ctx, key, spec)
+	if manifest.State == types.StateDestroy {
+		return nil
+	}
+
+	state, err := Create(ctx, key, manifest)
 	if err != nil {
 		log.Errorf("%s create error: %s", logEndpointPrefix, err.Error())
 		return err
 	}
 
-	envs.Get().GetState().Endpoints().SetEndpoint(key, status)
+	envs.Get().GetState().Endpoints().SetEndpoint(key, state)
 	return nil
 }
 
@@ -69,69 +79,71 @@ func Restore(ctx context.Context) error {
 	return nil
 }
 
-func Create(ctx context.Context, key string, spec *types.EndpointSpec) (*types.EndpointStatus, error) {
+func Create(ctx context.Context, key string, manifest *types.EndpointManifest) (*types.EndpointState, error) {
 	log.Debugf("%s create %s", logEndpointPrefix, key)
 	cpi := envs.Get().GetCPI()
-	return cpi.Create(ctx, spec)
+	return cpi.Create(ctx, manifest)
 }
 
-func Update(ctx context.Context, endpoint string, status *types.EndpointStatus, spec *types.EndpointSpec) (*types.EndpointStatus, error) {
+func Update(ctx context.Context, endpoint string, state *types.EndpointState, manifest *types.EndpointManifest) (*types.EndpointState, error) {
 	log.Debugf("%s update %s", logEndpointPrefix, endpoint)
 	cpi := envs.Get().GetCPI()
-	return cpi.Update(ctx, status, spec)
+	return cpi.Update(ctx, state, manifest)
 }
 
-func Destroy(ctx context.Context, endpoint string, status *types.EndpointStatus) error {
+func Destroy(ctx context.Context, endpoint string, state *types.EndpointState) error {
 	log.Debugf("%s destroy", logEndpointPrefix, endpoint)
 	cpi := envs.Get().GetCPI()
-	return cpi.Destroy(ctx, status)
+	return cpi.Destroy(ctx, state)
 }
 
-func equal (spec *types.EndpointSpec, status *types.EndpointStatus) bool {if status.IP != spec.IP {
-		log.Debugf("%s ips not match %s != %s", logEndpointPrefix, spec.IP, status.IP)
+func equal (manifest *types.EndpointManifest, state *types.EndpointState) bool {
+
+	if state.IP != manifest.IP {
+		log.Debugf("%s ips not match %s != %s", logEndpointPrefix, manifest.IP, state.IP)
 		return false
 	}
 
-	if spec.Strategy.Route != spec.Strategy.Route {
-		log.Debugf("%s route strategy not match %s != %s", logEndpointPrefix, spec.Strategy.Route, status.Strategy.Route)
+	if manifest.Strategy.Route != manifest.Strategy.Route {
+		log.Debugf("%s route strategy not match %s != %s", logEndpointPrefix, manifest.Strategy.Route, state.Strategy.Route)
 		return false
 	}
 
-	if spec.Strategy.Bind != spec.Strategy.Bind {
-		log.Debugf("%s bind strategy not match %s != %s", logEndpointPrefix, spec.Strategy.Bind, status.Strategy.Bind)
+	if manifest.Strategy.Bind != manifest.Strategy.Bind {
+		log.Debugf("%s bind strategy not match %s != %s", logEndpointPrefix, manifest.Strategy.Bind, state.Strategy.Bind)
 		return false
 	}
 
-	for port, pm := range spec.PortMap {
+	for port, pm := range manifest.PortMap {
 
-		if _, ok := status.PortMap[port]; !ok {
+		if _, ok := state.PortMap[port]; !ok {
 			log.Debugf("%s portmap not found %#v", logEndpointPrefix, pm)
 			return false
 		}
 
 
-		if status.PortMap[port] != pm {
-			log.Debugf("%s portmap not match %#v != %#v", logEndpointPrefix, pm, status.PortMap[port])
+		if state.PortMap[port] != pm {
+			log.Debugf("%s portmap not match %#v != %#v", logEndpointPrefix, pm, state.PortMap[port])
 			return false
 		}
 	}
 
-	for port, pm := range status.PortMap {
-		if _, ok := spec.PortMap[port]; !ok {
+	for port, pm := range state.PortMap {
+		if _, ok := manifest.PortMap[port]; !ok {
 			log.Debugf("%s portmap should be deleted %#v", logEndpointPrefix, pm)
 			return false
 		}
 	}
 
-	if len(spec.Upstreams) != len(status.Upstreams) {
-		log.Debugf("%s upstreams count changed %d != %d", logEndpointPrefix, len(spec.Upstreams), len(status.Upstreams))
+	if len(manifest.Upstreams) != len(state.Upstreams) {
+		log.Debugf("%s upstreams count changed %d != %d", logEndpointPrefix, len(manifest.Upstreams), len(state.Upstreams))
 		return false
 	}
 
 
-	for _, up := range spec.Upstreams {
+	for _, up := range manifest.Upstreams {
 		var f = false
-		for _, stup := range status.Upstreams {
+		for _, stup := range state.Upstreams {
 			if up == stup {
 				f = true
 			}
@@ -142,9 +154,9 @@ func equal (spec *types.EndpointSpec, status *types.EndpointStatus) bool {if sta
 		}
 	}
 
-	for _, up := range status.Upstreams {
+	for _, up := range state.Upstreams {
 		var f = false
-		for _, stup := range spec.Upstreams {
+		for _, stup := range manifest.Upstreams {
 			if up == stup {
 				f = true
 			}
