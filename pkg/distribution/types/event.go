@@ -49,8 +49,12 @@ type ServiceEvent struct {
 	Data *Service
 }
 
-
 type IngresEvent struct {
 	event
 	Data *Ingress
+}
+
+type EndpointEvent struct {
+	event
+	Data *Endpoint
 }

@@ -51,7 +51,7 @@ type Runtime struct {
 func NewRuntime(ctx context.Context) *Runtime {
 	r := new(Runtime)
 	r.process = new(system.Process)
-	r.process.Register(ctx, types.KindController, envs.Get().GetStorage())
+	r.process.Register(types.KindController, envs.Get().GetStorage())
 
 	r.sc = service.NewServiceController(ctx)
 	r.dc = deployment.NewDeploymentController(ctx)

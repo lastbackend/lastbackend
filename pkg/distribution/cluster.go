@@ -26,6 +26,7 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/storage/etcd/v3/store"
 
 	stgtypes "github.com/lastbackend/lastbackend/pkg/storage/etcd/types"
+	"encoding/json"
 )
 
 const (
@@ -81,7 +82,15 @@ func (c *Cluster) Watch(ch chan types.ClusterEvent) {
 				res := types.ClusterEvent{}
 				res.Name = e.Name
 				res.Action = e.Action
-				res.Data = e.Data.(*types.Cluster)
+
+				cluster := new(types.Cluster)
+
+				if err := json.Unmarshal(e.Data.([]byte), *cluster); err != nil {
+					log.Errorf("%s:> parse data err: %v", logClusterPrefix, err)
+					continue
+				}
+
+				res.Data = cluster
 
 				ch <- res
 			}

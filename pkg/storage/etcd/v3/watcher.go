@@ -26,6 +26,7 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/log"
 	"github.com/lastbackend/lastbackend/pkg/storage/etcd/v3/store"
 	"regexp"
+	"github.com/lastbackend/lastbackend/pkg/storage/etcd/types"
 )
 
 const (
@@ -46,7 +47,7 @@ type watchChan struct {
 	ctx       context.Context
 	cancel    context.CancelFunc
 	event     chan *event
-	result    chan *store.Event
+	result    chan *types.Event
 	error     chan error
 }
 
@@ -65,7 +66,7 @@ func newWatcher(client *clientv3.Client) *watcher {
 	}
 }
 
-func (w *watcher) Watch(ctx context.Context, key, keyRegexFilter string) (store.Watcher, error) {
+func (w *watcher) Watch(ctx context.Context, key, keyRegexFilter string) (types.Watcher, error) {
 
 	wc := w.newWatchChan(ctx, key, keyRegexFilter)
 
@@ -78,7 +79,7 @@ func (wc *watchChan) Stop() {
 	wc.cancel()
 }
 
-func (wc *watchChan) ResultChan() <-chan *store.Event {
+func (wc *watchChan) ResultChan() <-chan *types.Event {
 	return wc.result
 }
 
@@ -88,7 +89,7 @@ func (w *watcher) newWatchChan(ctx context.Context, key, keyRegexFilter string) 
 		key:     key,
 		filter:  keyRegexFilter,
 		event:   make(chan *event, incomingBufSize),
-		result:  make(chan *store.Event, outgoingBufSize),
+		result:  make(chan *types.Event, outgoingBufSize),
 		error:   make(chan error, 1),
 	}
 	wc.ctx, wc.cancel = context.WithCancel(ctx)
@@ -240,7 +241,7 @@ func (wc *watchChan) sendEvent(e *event) {
 	}
 }
 
-func transformEvent(e *event) *store.Event {
+func transformEvent(e *event) *types.Event {
 
 	action := store.STORAGEUPDATEEVENT
 
@@ -252,7 +253,7 @@ func transformEvent(e *event) *store.Event {
 		action = store.STORAGEDELETEEVENT
 	}
 
-	event := &store.Event{
+	event := &types.Event{
 		Type:   action,
 		Key:    string(e.key),
 		Object: e.value,
@@ -261,8 +262,8 @@ func transformEvent(e *event) *store.Event {
 	return event
 }
 
-func transformError(err error) *store.Event {
-	return &store.Event{
+func transformError(err error) *types.Event {
+	return &types.Event{
 		Type:   store.STORAGEERROREVENT,
 		Object: err,
 	}

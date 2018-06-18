@@ -20,11 +20,16 @@ package distribution
 
 import (
 	"context"
+
 	"github.com/lastbackend/lastbackend/pkg/controller/envs"
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 	"github.com/lastbackend/lastbackend/pkg/log"
 	"github.com/lastbackend/lastbackend/pkg/storage"
 	"github.com/lastbackend/lastbackend/pkg/storage/etcd/v3/store"
+
+	stgtypes "github.com/lastbackend/lastbackend/pkg/storage/etcd/types"
+	"encoding/json"
+	"github.com/lastbackend/lastbackend/pkg/storage/etcd"
 )
 
 const (
@@ -32,13 +37,13 @@ const (
 )
 
 type IEndpoint interface {
-	Get(namespace, service string) (*types.Endpoint, error)
+	Get(id string) (*types.Endpoint, error)
 	ListByNamespace(namespace string) (map[string]*types.Endpoint, error)
 	Create(namespace string, service string, opts *types.EndpointCreateOptions) (*types.Endpoint, error)
 	Update(endpoint *types.Endpoint, opts *types.EndpointUpdateOptions) (*types.Endpoint, error)
 	SetSpec(endpoint *types.Endpoint, spec *types.EndpointSpec) (*types.Endpoint, error)
 	Remove(endpoint *types.Endpoint) error
-	Watch(event chan *types.Event) error
+	Watch(ch chan types.EndpointEvent) error
 }
 
 type Endpoint struct {
@@ -46,34 +51,39 @@ type Endpoint struct {
 	storage storage.Storage
 }
 
-func (e *Endpoint) Get(namespace, service string) (*types.Endpoint, error) {
+func (e *Endpoint) Get(id string) (*types.Endpoint, error) {
 
-	log.V(logLevel).Debugf("%s:get:> get endpoint by name %s: %s", logEndpointPrefix, namespace, service)
+	log.V(logLevel).Debugf("%s:get:> get endpoint by id %s", logEndpointPrefix, id)
 
-	hook, err := e.storage.Endpoint().Get(e.context, namespace, service)
+	item := new(types.Endpoint)
+
+	err := e.storage.Get(e.context, storage.EndpointKind, id, &item)
 	if err != nil {
 
 		if err.Error() == store.ErrEntityNotFound {
 			return nil, nil
 		}
 
-		log.V(logLevel).Errorf("%s:get:> create endpoint err: %s", logEndpointPrefix, err.Error())
+		log.V(logLevel).Errorf("%s:get:> get endpoint err: %v", logEndpointPrefix, err)
 		return nil, err
 	}
 
-	return hook, nil
+	return item, nil
 }
 
 func (e *Endpoint) ListByNamespace(namespace string) (map[string]*types.Endpoint, error) {
 	log.Debugf("%s:listbynamespace:> in namespace: %s", namespace)
 
-	el, err := e.storage.Endpoint().ListByNamespace(e.context, namespace)
+	list := make(map[string]*types.Endpoint, 0)
+	query := etcd.BuildEndpointQuery(namespace)
+
+	err := e.storage.Map(e.context, storage.EndpointKind, query, &list)
 	if err != nil {
-		log.Errorf("%s:listbynamespace:> in namespace: %s err: %s", logEndpointPrefix, namespace, err.Error())
+		log.Errorf("%s:listbynamespace:> in namespace: %s err: %v", logEndpointPrefix, namespace, err)
 		return nil, err
 	}
 
-	return el, nil
+	return list, nil
 }
 
 func (e *Endpoint) Create(namespace, service string, opts *types.EndpointCreateOptions) (*types.Endpoint, error) {
@@ -99,14 +109,14 @@ func (e *Endpoint) Create(namespace, service string, opts *types.EndpointCreateO
 
 	ip, err := envs.Get().GetIPAM().Lease()
 	if err != nil {
-		log.Errorf("%s:create:> distribution create endpoint: %s err: %s", logEndpointPrefix, endpoint.SelfLink(), err.Error())
+		log.Errorf("%s:create:> distribution create endpoint: %s err: %v", logEndpointPrefix, endpoint.SelfLink(), err)
 	}
 
 	endpoint.Spec.IP = ip.String()
 	endpoint.Spec.Domain = opts.Domain
 
-	if err := e.storage.Endpoint().Insert(e.context, endpoint); err != nil {
-		log.Errorf("%s:create:> distribution create endpoint: %s err: %s", logEndpointPrefix, endpoint.SelfLink(), err.Error())
+	if err := e.storage.Create(e.context, storage.EndpointKind, endpoint.Meta.SelfLink, endpoint, nil); err != nil {
+		log.Errorf("%s:create:> distribution create endpoint: %s err: %v", logEndpointPrefix, endpoint.SelfLink(), err)
 		return nil, err
 	}
 
@@ -127,8 +137,8 @@ func (e *Endpoint) Update(endpoint *types.Endpoint, opts *types.EndpointUpdateOp
 	endpoint.Spec.Strategy.Route = opts.RouteStrategy
 	endpoint.Spec.Strategy.Bind = opts.BindStrategy
 
-	if err := e.storage.Endpoint().Update(e.context, endpoint); err != nil {
-		log.Errorf("%s:create:> distribution update endpoint: %s err: %s", logEndpointPrefix, endpoint.SelfLink(), err.Error())
+	if err := e.storage.Update(e.context, storage.EndpointKind, endpoint.Meta.SelfLink, endpoint, nil); err != nil {
+		log.Errorf("%s:create:> distribution update endpoint: %s err: %v", logEndpointPrefix, endpoint.SelfLink(), err)
 		return nil, err
 	}
 
@@ -137,8 +147,8 @@ func (e *Endpoint) Update(endpoint *types.Endpoint, opts *types.EndpointUpdateOp
 
 func (e *Endpoint) SetSpec(endpoint *types.Endpoint, spec *types.EndpointSpec) (*types.Endpoint, error) {
 	endpoint.Spec = *spec
-	if err := e.storage.Endpoint().SetSpec(e.context, endpoint); err != nil {
-		log.Errorf("%s:create:> distribution update endpoint spec: %s err: %s", logEndpointPrefix, endpoint.SelfLink(), err.Error())
+	if err := e.storage.Update(e.context, storage.EndpointKind, endpoint.Meta.SelfLink, endpoint, nil); err != nil {
+		log.Errorf("%s:create:> distribution update endpoint spec: %s err: %v", logEndpointPrefix, endpoint.SelfLink(), err)
 		return nil, err
 	}
 	return endpoint, nil
@@ -146,20 +156,52 @@ func (e *Endpoint) SetSpec(endpoint *types.Endpoint, spec *types.EndpointSpec) (
 
 func (e *Endpoint) Remove(endpoint *types.Endpoint) error {
 	log.Debugf("%s:remove:> remove endpoint %s", logEndpointPrefix, endpoint.Meta.Name)
-	if err := e.storage.Endpoint().Remove(e.context, endpoint); err != nil {
-		log.Debugf("%s:remove:> remove endpoint %s err: %s", logEndpointPrefix, endpoint.Meta.Name, err.Error())
+	if err := e.storage.Remove(e.context, storage.EndpointKind, endpoint.Meta.SelfLink); err != nil {
+		log.Debugf("%s:remove:> remove endpoint %s err: %v", logEndpointPrefix, endpoint.Meta.Name, err)
 		return err
 	}
 
 	return nil
 }
 
-// Watch cname changes
-func (p *Endpoint) Watch(event chan *types.Event) error {
+// Watch endpoint changes
+func (e *Endpoint) Watch(ch chan types.EndpointEvent) error {
 
 	log.Debugf("%s:watch:> watch endpoint", logEndpointPrefix)
-	if err := p.storage.Endpoint().Watch(p.context, event); err != nil {
-		log.Debugf("%s:watch:> watch endpoint err: %s", logEndpointPrefix, err.Error())
+
+	done := make(chan bool)
+	event := make(chan *stgtypes.WatcherEvent)
+
+	go func() {
+		for {
+			select {
+			case <-e.context.Done():
+				done <- true
+				return
+			case e := <-event:
+				if e.Data == nil {
+					continue
+				}
+
+				res := types.EndpointEvent{}
+				res.Action = e.Action
+				res.Name = e.Name
+
+				endpoint := new(types.Endpoint)
+
+				if err := json.Unmarshal(e.Data.([]byte), *endpoint); err != nil {
+					log.Errorf("%s:> parse data err: %v", logEndpointPrefix, err)
+					continue
+				}
+
+				res.Data = endpoint
+
+				ch <- res
+			}
+		}
+	}()
+
+	if err := e.storage.Watch(e.context, storage.EndpointKind, event); err != nil {
 		return err
 	}
 

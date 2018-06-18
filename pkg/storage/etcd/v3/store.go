@@ -32,6 +32,7 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/util/serializer"
 	"github.com/lastbackend/lastbackend/pkg/util/validator"
 	"golang.org/x/net/context"
+	"github.com/lastbackend/lastbackend/pkg/storage/etcd/types"
 )
 
 type dbstore struct {
@@ -299,7 +300,7 @@ func (s *dbstore) Upsert(ctx context.Context, key string, obj, outPtr interface{
 		return err
 	}
 	if !txnResp.Succeeded {
-		return errors.New(store.ErrEntityExists)
+		return errors.New(store.ErrOperationFailure)
 	}
 	if validator.IsNil(outPtr) {
 		log.V(logLevel).Warn("%s:Upsert: output struct is nil")
@@ -355,7 +356,7 @@ func (s *dbstore) Begin(ctx context.Context) store.TX {
 	return t
 }
 
-func (s *dbstore) Watch(ctx context.Context, key, keyRegexFilter string) (store.Watcher, error) {
+func (s *dbstore) Watch(ctx context.Context, key, keyRegexFilter string) (types.Watcher, error) {
 	log.V(logLevel).Debugf("%s:watch:> key: %s, filter: %s", logPrefix, key, keyRegexFilter)
 	key = path.Join(s.pathPrefix, key)
 	return s.watcher.Watch(ctx, key, keyRegexFilter)

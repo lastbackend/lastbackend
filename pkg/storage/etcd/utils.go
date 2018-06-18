@@ -22,6 +22,34 @@ import "strings"
 
 const keySeparator = "/"
 
+func BuildServiceKey(namespace, name string) string {
+	return keyCreate(namespace, name)
+}
+
+func BuildPodKey(namespace, service, deployment, name string) string {
+	return keyCreate(namespace, service, deployment, name)
+}
+
+func BuildProcessKey(kind, hostname string) string {
+	return keyCreate(kind, "process", hostname)
+}
+
+func BuildProcessLeadKey(kind string) string {
+	return keyCreate(kind, "lead")
+}
+
+func BuildRouteKey(namespace string) string {
+	return keyCreate(namespace)
+}
+
+func BuildSecretKey(namespace string) string {
+	return keyCreate(namespace)
+}
+
+func BuildVolumeKey(namespace, name string) string {
+	return keyCreate(namespace, name)
+}
+
 func keyCreate(val ...string) string {
 	return strings.Join(val, keySeparator)
 }

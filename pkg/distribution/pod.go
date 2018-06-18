@@ -28,6 +28,7 @@ import (
 	"github.com/spf13/viper"
 	"strings"
 	"time"
+	"github.com/lastbackend/lastbackend/pkg/storage/etcd"
 )
 
 const (
@@ -52,10 +53,13 @@ type Pod struct {
 }
 
 // Get pod info from storage
-func (p *Pod) Get(namespace, service, deployment, name string) (*types.Pod, error) {
-	log.V(logLevel).Debugf("%s:get:> get by name %s", logPodPrefix, name)
+func (p *Pod) Get(namespace, service, deployment, pod string) (*types.Pod, error) {
+	log.V(logLevel).Debugf("%s:get:> get by name %s", logPodPrefix, pod)
 
-	pod, err := p.storage.Pod().Get(p.context, namespace, service, deployment, name)
+	item := new(types.Pod)
+	name := etcd.BuildPodKey(namespace, service, deployment, pod)
+
+	err := p.storage.Get(p.context, storage.PodKind, name, &item)
 	if err != nil {
 
 		if err.Error() == store.ErrEntityNotFound {
@@ -63,11 +67,11 @@ func (p *Pod) Get(namespace, service, deployment, name string) (*types.Pod, erro
 			return nil, nil
 		}
 
-		log.V(logLevel).Debugf("%s:get:> get Pod `%s` err: %s", logPodPrefix, name, err.Error())
+		log.V(logLevel).Debugf("%s:get:> get Pod `%s` err: %v", logPodPrefix, name, err)
 		return nil, err
 	}
 
-	return pod, nil
+	return item, nil
 }
 
 // Create new pod
@@ -105,8 +109,8 @@ func (p *Pod) Create(deployment *types.Deployment) (*types.Pod, error) {
 		pod.Spec.Template.Volumes = append(pod.Spec.Template.Volumes, s)
 	}
 
-	if err := p.storage.Pod().Insert(p.context, pod); err != nil {
-		log.Errorf("%s:create:> insert pod err %s", logPodPrefix, err.Error())
+	if err := p.storage.Create(p.context, storage.PodKind, pod.Meta.SelfLink, pod, nil); err != nil {
+		log.Errorf("%s:create:> insert pod err %v", logPodPrefix, err)
 		return nil, err
 	}
 
@@ -117,48 +121,58 @@ func (p *Pod) Create(deployment *types.Deployment) (*types.Pod, error) {
 func (p *Pod) ListByNamespace(namespace string) (map[string]*types.Pod, error) {
 	log.V(logLevel).Debugf("%s:listbynamespace:> get pod list by namespace %s", logPodPrefix, namespace)
 
-	pods, err := p.storage.Pod().ListByNamespace(p.context, namespace)
+	q := etcd.BuildPodQuery(namespace, types.EmptyString, types.EmptyString)
+	items := make(map[string]*types.Pod, 0)
+
+	err := p.storage.Map(p.context, storage.PodKind, q, items)
 	if err != nil {
-		log.V(logLevel).Debugf("%s:listbynamespace:> get pod list by deployment id `%s` err: %s", logPodPrefix, namespace, err.Error())
+		log.V(logLevel).Debugf("%s:listbynamespace:> get pod list by deployment id `%s` err: %v", logPodPrefix, namespace, err)
 		return nil, err
 	}
 
-	return pods, nil
+	return items, nil
 }
 
 // ListByService returns pod list in selected service
 func (p *Pod) ListByService(namespace, service string) (map[string]*types.Pod, error) {
 	log.V(logLevel).Debugf("%s:listbyservice:> get pod list by service id %s/%s", logPodPrefix, namespace, service)
 
-	pods, err := p.storage.Pod().ListByService(p.context, namespace, service)
+	q := etcd.BuildPodQuery(namespace, service, types.EmptyString)
+	items := make(map[string]*types.Pod, 0)
+
+	err := p.storage.Map(p.context, storage.PodKind, q, items)
 	if err != nil {
-		log.V(logLevel).Debugf("%s:listbyservice:> get pod list by service id `%s` err: %s", logPodPrefix, namespace, service, err.Error())
+		log.V(logLevel).Debugf("%s:listbyservice:> get pod list by service id `%s` err: %v", logPodPrefix, namespace, service, err)
 		return nil, err
 	}
 
-	return pods, nil
+	return items, nil
 }
 
 // ListByDeployment returns pod list in selected deployment
 func (p *Pod) ListByDeployment(namespace, service, deployment string) (map[string]*types.Pod, error) {
 	log.V(logLevel).Debugf("%s:listbydeployment:> get pod list by id %s/%s/%s", logPodPrefix, namespace, service, deployment)
 
-	pods, err := p.storage.Pod().ListByDeployment(p.context, namespace, service, deployment)
+	q := etcd.BuildPodQuery(namespace, service, deployment)
+	items := make(map[string]*types.Pod, 0)
+
+	err := p.storage.Map(p.context, storage.PodKind, q, items)
 	if err != nil {
-		log.V(logLevel).Debugf("%s:listbydeployment:> get pod list by deployment id `%s/%s/%s` err: %s",
-			logPodPrefix, namespace, service, deployment, err.Error())
+		log.V(logLevel).Debugf("%s:listbydeployment:> get pod list by deployment id `%s/%s/%s` err: %v",
+			logPodPrefix, namespace, service, deployment, err)
 		return nil, err
 	}
 
-	return pods, nil
+	return items, nil
 }
 
 func (p *Pod) SetNode(pod *types.Pod, node *types.Node) error {
 	log.Debugf("%s:setnode:> set node for pod: %s", logPodPrefix, pod.Meta.Name)
 
 	pod.Meta.Node = node.Meta.Name
-	if err := p.storage.Pod().SetMeta(p.context, pod); err != nil {
-		log.Errorf("%s:setnode:> pod set node err: %s", logPodPrefix, err.Error())
+
+	if err := p.storage.Update(p.context, storage.PodKind, pod.Meta.SelfLink, pod, nil); err != nil {
+		log.Errorf("%s:setnode:> pod set node err: %v", logPodPrefix, err)
 		return err
 	}
 
@@ -171,8 +185,9 @@ func (p *Pod) SetStatus(pod *types.Pod, status *types.PodStatus) error {
 	log.Debugf("%s:setstatus:> set state for pod: %s", logPodPrefix, pod.Meta.Name)
 
 	pod.Status = *status
-	if err := p.storage.Pod().SetStatus(p.context, pod); err != nil {
-		log.Errorf("%s:setstatus:> pod set status err: %s", logPodPrefix, err.Error())
+
+	if err := p.storage.Update(p.context, storage.PodKind, pod.Meta.SelfLink, pod, nil); err != nil {
+		log.Errorf("%s:setstatus:> pod set status err: %v", logPodPrefix, err)
 		return err
 	}
 
@@ -183,8 +198,9 @@ func (p *Pod) SetStatus(pod *types.Pod, status *types.PodStatus) error {
 func (p *Pod) Destroy(ctx context.Context, pod *types.Pod) error {
 
 	pod.Spec.State.Destroy = true
-	if err := p.storage.Pod().SetSpec(p.context, pod); err != nil {
-		log.Errorf("%s:destroy:> mark pod for destroy error: %s", logPodPrefix, err.Error())
+
+	if err := p.storage.Update(p.context, storage.PodKind, pod.Meta.SelfLink, pod, nil); err != nil {
+		log.Errorf("%s:destroy:> mark pod for destroy error: %v", logPodPrefix, err)
 		return err
 	}
 	return nil
@@ -192,8 +208,8 @@ func (p *Pod) Destroy(ctx context.Context, pod *types.Pod) error {
 
 // Remove pod from storage
 func (p *Pod) Remove(ctx context.Context, pod *types.Pod) error {
-	if err := p.storage.Pod().Remove(p.context, pod); err != nil {
-		log.Errorf("%s:remove:> mark pod for destroy error: %s", logPodPrefix, err.Error())
+	if err := p.storage.Remove(p.context, storage.PodKind, pod.Meta.SelfLink); err != nil {
+		log.Errorf("%s:remove:> mark pod for destroy error: %v", logPodPrefix, err)
 		return err
 	}
 	return nil

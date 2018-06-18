@@ -75,11 +75,20 @@ func (s StorageV3) Get(ctx context.Context, kind types.Kind, name string, obj in
 }
 
 func (s StorageV3) List(ctx context.Context, kind types.Kind, query string, obj interface{}) error {
-	return s.client.store.List(ctx, keyCreate(kind.String(), query), obj)
+	return s.client.store.List(ctx, keyCreate(kind.String(), query), "", obj)
 }
 
 func (s StorageV3) Map(ctx context.Context, kind types.Kind, query string, obj interface{}) error {
-	return s.client.store.Map(ctx, keyCreate(kind.String(), query), obj)
+	return s.client.store.Map(ctx, keyCreate(kind.String(), query), "", obj)
+}
+
+func (s StorageV3) Create(ctx context.Context, kind types.Kind, name string, obj interface{}, opts *types.Opts) error {
+
+	if opts == nil {
+		opts = new(types.Opts)
+	}
+
+	return s.client.store.Create(ctx, keyCreate(kind.String(), name), obj, nil, opts.Ttl)
 }
 
 func (s StorageV3) Update(ctx context.Context, kind types.Kind, name string, obj interface{}, opts *types.Opts) error {
@@ -91,13 +100,13 @@ func (s StorageV3) Update(ctx context.Context, kind types.Kind, name string, obj
 	return s.client.store.Update(ctx, keyCreate(kind.String(), name), obj, nil, opts.Ttl)
 }
 
-func (s StorageV3) Create(ctx context.Context, kind types.Kind, name string, obj interface{}, opts *types.Opts) error {
+func (s StorageV3) Upsert(ctx context.Context, kind types.Kind, name string, obj interface{}, opts *types.Opts) error {
 
 	if opts == nil {
 		opts = new(types.Opts)
 	}
 
-	return s.client.store.Create(ctx, keyCreate(kind.String(), name), obj, nil, opts.Ttl)
+	return s.client.store.Upsert(ctx, keyCreate(kind.String(), name), obj, nil, opts.Ttl)
 }
 
 func (s StorageV3) Remove(ctx context.Context, kind types.Kind, name string) error {
@@ -117,7 +126,7 @@ func (s *StorageV3) Watch(ctx context.Context, kind types.Kind, event chan *type
 	}
 	defer destroy()
 
-	watcher, err := client.Watch(ctx, keyCreate(kind.String()))
+	watcher, err := client.Watch(ctx, keyCreate(kind.String()), "")
 	if err != nil {
 		log.V(logLevel).Errorf("%s:> watch err: %v", logPrefix, err)
 		return err

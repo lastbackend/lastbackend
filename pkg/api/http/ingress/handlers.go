@@ -145,7 +145,7 @@ func IngressGetSpecH(w http.ResponseWriter, r *http.Request) {
 	spec := new(types.IngressSpec)
 	spec = cache.Get(ing.Meta.Name)
 	if spec == nil {
-		sp, err := rm.ListSpec()
+		routes, err := rm.List()
 		if err != nil {
 			log.V(logLevel).Warnf("%s:getspec:> ingress `%s` not found", logPrefix, cid)
 			errors.HTTP.InternalServerError(w)
@@ -153,8 +153,8 @@ func IngressGetSpecH(w http.ResponseWriter, r *http.Request) {
 		}
 		spec = new(types.IngressSpec)
 		spec.Routes = make(map[string]types.RouteSpec)
-		for r, rsp := range sp {
-			spec.Routes[r] = *rsp
+		for r, rt := range routes {
+			spec.Routes[r] = rt.Spec
 		}
 	}
 

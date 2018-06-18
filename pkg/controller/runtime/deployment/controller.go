@@ -23,6 +23,10 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/controller/envs"
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 	"github.com/lastbackend/lastbackend/pkg/log"
+	"github.com/lastbackend/lastbackend/pkg/storage"
+	"github.com/lastbackend/lastbackend/pkg/storage/etcd"
+
+	stgtypes "github.com/lastbackend/lastbackend/pkg/storage/etcd/types"
 )
 
 const logPrefix = "controller:deployment"
@@ -38,7 +42,7 @@ func (dc *Controller) WatchSpec() {
 
 	var (
 		stg   = envs.Get().GetStorage()
-		event = make(chan *types.Event)
+		event = make(chan *stgtypes.WatcherEvent)
 	)
 
 	log.Debug("controller:deployment:controller: start watch deployment spec")
@@ -79,7 +83,7 @@ func (dc *Controller) WatchSpec() {
 		}
 	}()
 
-	stg.Deployment().Watch(context.Background(), event)
+	stg.Watch(context.Background(), storage.DeploymentKind, event)
 }
 
 // Watch deployment spec changes
@@ -87,7 +91,7 @@ func (dc *Controller) WatchStatus() {
 
 	var (
 		stg   = envs.Get().GetStorage()
-		event = make(chan *types.Event)
+		event = make(chan *stgtypes.WatcherEvent)
 	)
 
 	log.Debugf("%s:status> start watch deployment status", logPrefix)
@@ -128,7 +132,7 @@ func (dc *Controller) WatchStatus() {
 		}
 	}()
 
-	stg.Deployment().Watch(context.Background(), event)
+	stg.Watch(context.Background(), storage.DeploymentKind, event)
 }
 
 // Pause deployment controller because not lead
@@ -145,20 +149,28 @@ func (dc *Controller) Resume() {
 
 	dc.active = true
 
+	nss := make(map[string]*types.Namespace)
+
 	log.Debug("controller:deployment:controller:resume start check deployment states")
-	nss, err := stg.Namespace().List(context.Background())
+	err := stg.Map(context.Background(), storage.NamespaceKind, "", &nss)
 	if err != nil {
 		log.Errorf("controller:deployment:controller:resume get namespaces list err: %s", err.Error())
 	}
 
 	for _, ns := range nss {
-		dl, err := stg.Deployment().ListByNamespace(context.Background(), ns.Meta.Name)
+
+		dl := make(map[string]*types.Deployment)
+
+		err := stg.Map(context.Background(), storage.DeploymentKind, etcd.BuildDeploymentQuery(ns.Meta.Name, ""), ns.Meta.Name)
 		if err != nil {
 			log.Errorf("controller:deployment:controller:resume get deployment list err: %s", err.Error())
 		}
 
 		for _, d := range dl {
-			d, err := stg.Deployment().Get(context.Background(), d.Meta.Namespace, d.Meta.Service, d.Meta.Name)
+
+			dp := new(types.Deployment)
+
+			err := stg.Get(context.Background(), storage.DeploymentKind, dp.Meta.SelfLink, &dp)
 			if err != nil {
 				log.Errorf("controller:deployment:controller:resume get deployment err: %s", err.Error())
 			}

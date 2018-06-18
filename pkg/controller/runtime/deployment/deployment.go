@@ -27,6 +27,7 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/log"
 	"github.com/lastbackend/lastbackend/pkg/storage/etcd/v3/store"
 	"github.com/lastbackend/lastbackend/pkg/api/types/v1/request"
+	"github.com/lastbackend/lastbackend/pkg/storage"
 )
 
 // Provision deployment

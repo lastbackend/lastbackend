@@ -29,6 +29,8 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/api/types/v1/request"
 
 	stgtypes "github.com/lastbackend/lastbackend/pkg/storage/etcd/types"
+	"github.com/lastbackend/lastbackend/pkg/storage/etcd"
+	"encoding/json"
 )
 
 const (
@@ -58,10 +60,10 @@ func (d *Deployment) Get(namespace, service, name string) (*types.Deployment, er
 
 	log.Debugf("%s:get:> namespace %s and service %s by name %s", logDeploymentPrefix, namespace, service, name)
 
-	query := storage.Deployment{}.Query(namespace, service, name)
+	q := etcd.BuildDeploymentQuery(namespace, service)
 	dp := new(types.Deployment)
 
-	err := d.storage.Get(d.context, storage.DeploymentKind, query, &dp)
+	err := d.storage.Get(d.context, storage.DeploymentKind, q, &dp)
 	if err != nil {
 
 		if err.Error() == store.ErrEntityNotFound {
@@ -116,10 +118,10 @@ func (d *Deployment) ListByNamespace(namespace string) (map[string]*types.Deploy
 
 	log.Debugf("%s:listbynamespace:> in namespace: %s", namespace)
 
-	query := storage.Deployment{}.Query(namespace, "", "")
+	q := etcd.BuildDeploymentQuery(namespace, types.EmptyString)
 	dl := make(map[string]*types.Deployment, 0)
 
-	err := d.storage.List(d.context, storage.DeploymentKind, query, &dl)
+	err := d.storage.Map(d.context, storage.DeploymentKind, q, &dl)
 	if err != nil {
 		log.Errorf("%s:listbynamespace:> in namespace: %s err: %v", logDeploymentPrefix, namespace, err)
 		return nil, err
@@ -133,10 +135,10 @@ func (d *Deployment) ListByService(namespace, service string) (map[string]*types
 
 	log.Debugf("%s:listbyservice:> in namespace: %s and service %s", logDeploymentPrefix, namespace, service)
 
-	query := storage.Deployment{}.Query(namespace, service, "")
+	q := etcd.BuildDeploymentQuery(namespace, service)
 	dl := make(map[string]*types.Deployment, 0)
 
-	err := d.storage.List(d.context, storage.DeploymentKind, query, &dl)
+	err := d.storage.Map(d.context, storage.DeploymentKind, q, &dl)
 	if err != nil {
 		log.Errorf("%s:listbyservice:> in namespace: %s and service %s err: %v", logDeploymentPrefix, namespace, service, err)
 		return nil, err
@@ -239,7 +241,14 @@ func (d *Deployment) Watch(dt chan *types.Deployment) {
 					continue
 				}
 
-				dt <- e.Data.(*types.Deployment)
+				deployment := new(types.Deployment)
+
+				if err := json.Unmarshal(e.Data.([]byte), *deployment); err != nil {
+					log.Errorf("%s:> parse data err: %v", logDeploymentPrefix, err)
+					continue
+				}
+
+				dt <-  deployment
 			}
 		}
 	}()

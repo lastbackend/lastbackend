@@ -21,15 +21,17 @@ package distribution
 import (
 	"context"
 	"fmt"
+	"strings"
+
 	"github.com/lastbackend/lastbackend/pkg/distribution/errors"
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 	"github.com/lastbackend/lastbackend/pkg/log"
 	"github.com/lastbackend/lastbackend/pkg/storage/etcd/v3/store"
 	"github.com/spf13/viper"
-	"strings"
 	"github.com/lastbackend/lastbackend/pkg/storage"
 
 	stgtypes "github.com/lastbackend/lastbackend/pkg/storage/etcd/types"
+	"encoding/json"
 )
 
 const (
@@ -179,7 +181,14 @@ func (n *Namespace) Watch(ch chan types.NamespaceEvent) error {
 				res := types.NamespaceEvent{}
 				res.Action = e.Action
 				res.Name = e.Name
-				res.Data = e.Data.(*types.Namespace)
+
+				obj := new(types.Namespace)
+
+				if err := json.Unmarshal(e.Data.([]byte), &obj); err != nil {
+					continue
+				}
+
+				res.Data = obj
 
 				ch <- res
 			}

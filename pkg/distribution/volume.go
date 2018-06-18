@@ -25,6 +25,7 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/storage"
 	"github.com/lastbackend/lastbackend/pkg/storage/etcd/v3/store"
 	"github.com/lastbackend/lastbackend/pkg/util/generator"
+	"github.com/lastbackend/lastbackend/pkg/storage/etcd"
 )
 
 const (
@@ -51,7 +52,9 @@ type Volume struct {
 func (v *Volume) Get(namespace, name string) (*types.Volume, error) {
 	log.V(logLevel).Debugf("%s:get:> get volume by id %s/%s", logVolumePrefix, namespace, name)
 
-	item, err := v.storage.Volume().Get(v.context, namespace, name)
+	item := new(types.Volume)
+
+	err := v.storage.Get(v.context, storage.VolumeKind, etcd.BuildServiceKey(namespace, name), &item)
 	if err != nil {
 
 		if err.Error() == store.ErrEntityNotFound {
@@ -59,7 +62,7 @@ func (v *Volume) Get(namespace, name string) (*types.Volume, error) {
 			return nil, nil
 		}
 
-		log.V(logLevel).Errorf("%s:get:> in namespace %s by name %s error: %s", logVolumePrefix, namespace, name, err.Error())
+		log.V(logLevel).Errorf("%s:get:> in namespace %s by name %s error: %v", logVolumePrefix, namespace, name, err)
 		return nil, err
 	}
 
@@ -69,9 +72,11 @@ func (v *Volume) Get(namespace, name string) (*types.Volume, error) {
 func (v *Volume) ListByNamespace(namespace string) (map[string]*types.Volume, error) {
 	log.V(logLevel).Debugf("%s:list:> get volumes list", logVolumePrefix)
 
-	items, err := v.storage.Volume().ListByNamespace(v.context, namespace)
+	items := make(map[string]*types.Volume, 0)
+
+	err := v.storage.Map(v.context, storage.VolumeKind, etcd.BuildVolumeQuery(namespace), &items)
 	if err != nil {
-		log.V(logLevel).Error("%s:list:> get volumes list err: %s", logVolumePrefix, err.Error())
+		log.V(logLevel).Error("%s:list:> get volumes list err: %v", logVolumePrefix, err)
 		return items, err
 	}
 
@@ -89,8 +94,8 @@ func (v *Volume) Create(namespace *types.Namespace, opts *types.VolumeCreateOpti
 	volume.Meta.Namespace = namespace.Meta.Name
 	volume.Status.State = types.StateInitialized
 
-	if err := v.storage.Volume().Insert(v.context, volume); err != nil {
-		log.V(logLevel).Errorf("%s:crete:> insert volume err: %s", logVolumePrefix, err.Error())
+	if err := v.storage.Create(v.context, storage.VolumeKind, volume.Meta.SelfLink, volume, nil); err != nil {
+		log.V(logLevel).Errorf("%s:crete:> insert volume err: %v", logVolumePrefix, err)
 		return nil, err
 	}
 
@@ -103,8 +108,8 @@ func (v *Volume) Update(volume *types.Volume, opts *types.VolumeUpdateOptions) (
 	volume.Meta.SetDefault()
 	volume.Status.State = types.StateProvision
 
-	if err := v.storage.Volume().Update(v.context, volume); err != nil {
-		log.V(logLevel).Errorf("%s:update:> update volume err: %s", logVolumePrefix, err.Error())
+	if err := v.storage.Update(v.context, storage.VolumeKind, volume.Meta.SelfLink, volume, nil); err != nil {
+		log.V(logLevel).Errorf("%s:update:> update volume err: %v", logVolumePrefix, err)
 		return nil, err
 	}
 
@@ -121,19 +126,9 @@ func (v *Volume) Destroy(volume *types.Volume) error {
 	log.V(logLevel).Debugf("%s:destroy:> volume %s", logVolumePrefix, volume.Meta.Name)
 
 	volume.Spec.State.Destroy = true
-	if err := v.storage.Volume().SetSpec(v.context, volume); err != nil {
-		log.Errorf("%s:destroy:> volume err: %s", logVolumePrefix, err.Error())
-		return err
-	}
 
-	return nil
-}
-
-func (v *Volume) Remove(volume *types.Volume) error {
-	log.V(logLevel).Debugf("%s:remove:> remove volume %#v", logVolumePrefix, volume)
-
-	if err := v.storage.Volume().Remove(v.context, volume); err != nil {
-		log.V(logLevel).Errorf("%s:remove:> remove volume  err: %s", logVolumePrefix, err.Error())
+	if err := v.storage.Update(v.context, storage.VolumeKind, volume.Meta.SelfLink, volume, nil); err != nil {
+		log.Errorf("%s:destroy:> volume err: %v", logVolumePrefix, err)
 		return err
 	}
 
@@ -149,8 +144,20 @@ func (v *Volume) SetStatus(volume *types.Volume, status *types.VolumeStatus) err
 	log.V(logLevel).Debugf("%s:setstatus:> set state volume %s -> %#v", logVolumePrefix, volume.Meta.Name, status)
 
 	volume.Status = *status
-	if err := v.storage.Volume().SetStatus(v.context, volume); err != nil {
-		log.Errorf("%s:setstatus:> pod set status err: %s", err.Error())
+
+	if err := v.storage.Update(v.context, storage.VolumeKind, volume.Meta.SelfLink, volume, nil); err != nil {
+		log.Errorf("%s:setstatus:> pod set status err: %v", err)
+		return err
+	}
+
+	return nil
+}
+
+func (v *Volume) Remove(volume *types.Volume) error {
+	log.V(logLevel).Debugf("%s:remove:> remove volume %#v", logVolumePrefix, volume)
+
+	if err := v.storage.Remove(v.context, storage.VolumeKind, volume.Meta.SelfLink); err != nil {
+		log.V(logLevel).Errorf("%s:remove:> remove volume  err: %v", logVolumePrefix, err)
 		return err
 	}
 

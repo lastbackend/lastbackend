@@ -41,9 +41,9 @@ func (k Kind) String() string {
 	return string(k)
 }
 
-type Query string
+type QueryFilter string
 
-func (qf Query) String() string {
+func (qf QueryFilter) String() string {
 	return string(qf)
 }
 

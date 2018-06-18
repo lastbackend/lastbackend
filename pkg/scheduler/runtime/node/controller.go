@@ -20,11 +20,20 @@ package node
 
 import (
 	"context"
+	"reflect"
+
 	"github.com/lastbackend/lastbackend/pkg/cache"
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 	"github.com/lastbackend/lastbackend/pkg/log"
 	"github.com/lastbackend/lastbackend/pkg/scheduler/envs"
-	"reflect"
+	"github.com/lastbackend/lastbackend/pkg/storage"
+
+	stgtypes "github.com/lastbackend/lastbackend/pkg/storage/etcd/types"
+	"encoding/json"
+)
+
+const (
+	logPrefix = "nodecontroller"
 )
 
 type Controller struct {
@@ -38,21 +47,22 @@ func (nc *Controller) Watch(node chan *types.Node) {
 
 	var (
 		stg   = envs.Get().GetStorage()
-		event = make(chan *types.Event)
+		event = make(chan *stgtypes.WatcherEvent)
 	)
 
-	log.Debug("PodController: start watch")
+	log.Debugf("%s:> start watch", logPrefix)
+
 	go func() {
 		for {
 			select {
 			case n := <-nc.node:
 				{
 					if !nc.active {
-						log.Debug("NodeController: skip management cause it is in slave mode")
+						log.Debugf("%s:> skip management cause it is in slave mode", logPrefix)
 						continue
 					}
 
-					log.Debugf("Node check state: %s", n.Meta.Name)
+					log.Debugf("%s:> node check state: %s", logPrefix, n.Meta.Name)
 
 					item := nc.cache.Get(n.Info.Hostname)
 					if item == nil || !reflect.DeepEqual(item, n) {
@@ -60,21 +70,29 @@ func (nc *Controller) Watch(node chan *types.Node) {
 
 						nodes := nc.cache.List()
 
-						err := stg.Cluster().SetStatus(context.Background(), getClusterStatus(nodes))
-						if err != nil {
-							log.Debug("NodeController: set cluster status err: %s", err.Error())
+						cl := new(types.Cluster)
+
+						if err := envs.Get().GetStorage().Get(context.Background(), storage.ClusterKind, types.EmptyString, &cl); err != nil {
+							log.Errorf("%s:> get cluster info err: %v", logPrefix, err)
+							continue
+						}
+
+						cl.Status = *getClusterStatus(nodes)
+
+						if err := envs.Get().GetStorage().Upsert(context.Background(), storage.ClusterKind, types.EmptyString, cl, nil); err != nil {
+							log.Errorf("%s:> set cluster status err: %v", logPrefix, err)
 							continue
 						}
 
 					}
 
 					if n.Online {
-						log.Debugf("Node set alive, try to provision on it pods: %s", n.Meta.Name)
+						log.Debugf("%s:> node set alive, try to provision on it pods: %s", logPrefix, n.Meta.Name)
 						node <- n
 						continue
 					}
 
-					log.Debugf("Node set offline, try to move all pods to another")
+					log.Debugf("%s:> node set offline, try to move all pods to another", logPrefix)
 
 				}
 			}
@@ -89,12 +107,19 @@ func (nc *Controller) Watch(node chan *types.Node) {
 					continue
 				}
 
-				nc.node <- e.Data.(*types.Node)
+				node := new(types.Node)
+
+				if err := json.Unmarshal(e.Data.([]byte), *node); err != nil {
+					log.Errorf("%s:> parse data err: %v", logPrefix, err)
+					continue
+				}
+
+				nc.node <- node
 			}
 		}
 	}()
 
-	stg.Node().Watch(context.Background(), event)
+	stg.Watch(context.Background(), storage.NodeKind, event)
 }
 
 func (nc *Controller) Pause() {
@@ -103,7 +128,7 @@ func (nc *Controller) Pause() {
 
 func (nc *Controller) Resume() {
 	nc.active = true
-	log.Debug("NodeController: start check pods state")
+	log.Debugf("%s:> start check pods state", logPrefix)
 }
 
 func NewNodeController(ctx context.Context) *Controller {
@@ -113,18 +138,29 @@ func NewNodeController(ctx context.Context) *Controller {
 	sc.node = make(chan *types.Node)
 	sc.cache = cache.NewNodeCache()
 
-	nodes, err := envs.Get().GetStorage().Node().List(ctx)
+	nodes := make(map[string]*types.Node, 0)
+
+	err := envs.Get().GetStorage().Map(ctx, storage.NodeKind, "", nodes)
 	if err != nil {
-		log.Fatalf("NodeController: get nodes list err: %s", err.Error())
+		log.Fatalf("%s:> get nodes list err: %v", logPrefix, err)
 	}
 
 	for _, node := range nodes {
 		sc.cache.Set(node.Info.Hostname, node)
 	}
 
-	err = envs.Get().GetStorage().Cluster().SetStatus(context.Background(), getClusterStatus(nodes))
+	cl := new(types.Cluster)
+
+	err = envs.Get().GetStorage().Get(context.Background(), storage.ClusterKind, types.EmptyString, &cl)
 	if err != nil {
-		log.Fatalf("NodeController: set cluster status err: %s", err.Error())
+		log.Fatalf("%s:> get cluster info err: %v", logPrefix, err)
+	}
+
+	cl.Status = *getClusterStatus(nodes)
+
+	err = envs.Get().GetStorage().Upsert(context.Background(), storage.ClusterKind, types.EmptyString, cl, nil)
+	if err != nil {
+		log.Fatalf("%s:> set cluster status err: %v", logPrefix, err)
 	}
 
 	return sc

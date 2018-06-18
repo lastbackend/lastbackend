@@ -67,9 +67,9 @@ func (n *Node) List() (map[string]*types.Node, error) {
 
 	nodes := make(map[string]*types.Node, 0)
 
-	err := n.storage.List(n.context, storage.NodeKind, "", &nodes)
+	err := n.storage.Map(n.context, storage.NodeKind, "", &nodes)
 	if err != nil {
-		log.Debugf("%s:list:> get nodes list err: %s", logNodePrefix, err.Error())
+		log.Debugf("%s:list:> get nodes list err: %v", logNodePrefix, err)
 		return nil, err
 	}
 	return nodes, nil
@@ -100,7 +100,7 @@ func (n *Node) Create(opts *types.NodeCreateOptions) (*types.Node, error) {
 	ni.SelfLink()
 
 	if err := n.storage.Create(n.context, storage.NodeKind, ni.Meta.SelfLink, ni, nil); err != nil {
-		log.Debugf("%s:create:> insert node err: %s", logNodePrefix, err.Error())
+		log.Debugf("%s:create:> insert node err: %v", logNodePrefix, err)
 		return nil, err
 	}
 
@@ -121,7 +121,7 @@ func (n *Node) Get(hostname string) (*types.Node, error) {
 			return nil, nil
 		}
 
-		log.V(logLevel).Debugf("%s:get:> get node `%s` err: %s", logNodePrefix, hostname, err.Error())
+		log.V(logLevel).Debugf("%s:get:> get node `%s` err: %v", logNodePrefix, hostname, err)
 		return nil, err
 	}
 
@@ -136,15 +136,15 @@ func (n *Node) GetSpec(node *types.Node) (*types.NodeSpec, error) {
 
 	err := n.storage.Get(n.context, storage.NodeKind, node.Meta.Name, &ni)
 	if err != nil {
-		log.V(logLevel).Debugf("%s:getspec:> get Node `%s` err: %s", logNodePrefix, node.Meta.Name, err.Error())
+		log.V(logLevel).Debugf("%s:getspec:> get Node `%s` err: %v", logNodePrefix, node.Meta.Name, err)
 		return nil, err
 	}
 
 	es := make(map[string]types.EndpointSpec, 0)
 
-	err = n.storage.List(n.context, storage.EndpointKind, "", &es)
+	err = n.storage.Map(n.context, storage.EndpointKind, "", &es)
 	if err != nil {
-		log.V(logLevel).Debugf("%s:getspec:> get endpoints `%s` err: %s", logNodePrefix, node.Meta.Name, err.Error())
+		log.V(logLevel).Debugf("%s:getspec:> get endpoints `%s` err: %v", logNodePrefix, node.Meta.Name, err)
 		return nil, err
 	}
 
@@ -162,14 +162,14 @@ func (n *Node) SetMeta(node *types.Node, meta *types.NodeUpdateMetaOptions) erro
 
 	log.V(logLevel).Debugf("%s:setmeta:> update Node %#v", logNodePrefix, meta)
 	if meta == nil {
-		log.V(logLevel).Errorf("%s:setmeta:> update Node err: %s", logNodePrefix, errors.New(errors.ArgumentIsEmpty))
+		log.V(logLevel).Errorf("%s:setmeta:> update Node err: %v", logNodePrefix, errors.New(errors.ArgumentIsEmpty))
 		return errors.New(errors.ArgumentIsEmpty)
 	}
 
 	node.Meta.Set(meta)
 
-	if err := n.storage.Update(n.context, node); err != nil {
-		log.V(logLevel).Errorf("%s:setmeta:> update Node meta err: %s", logNodePrefix, err.Error())
+	if err := n.storage.Update(n.context, storage.NodeKind, node.Meta.SelfLink, node, nil); err != nil {
+		log.V(logLevel).Errorf("%s:setmeta:> update Node meta err: %v", logNodePrefix, err)
 		return err
 	}
 
@@ -178,8 +178,10 @@ func (n *Node) SetMeta(node *types.Node, meta *types.NodeUpdateMetaOptions) erro
 
 func (n *Node) SetOnline(node *types.Node) error {
 
-	if err := n.storage.SetOnline(n.context, node); err != nil {
-		log.Errorf("%s:setonline:> set node online state error: %s", logNodePrefix, err.Error())
+	node.Online = true
+
+	if err := n.storage.Update(n.context, storage.NodeKind, node.Meta.SelfLink, node, nil); err != nil {
+		log.Errorf("%s:setonline:> set node online state error: %v", logNodePrefix, err)
 		return err
 	}
 
@@ -188,8 +190,10 @@ func (n *Node) SetOnline(node *types.Node) error {
 
 func (n *Node) SetOffline(node *types.Node) error {
 
-	if err := n.storage.SetOffline(n.context, node); err != nil {
-		log.Errorf("%s:setoffline:> set node offline state error: %s", logNodePrefix, err.Error())
+	node.Online = false
+
+	if err := n.storage.Update(n.context, storage.NodeKind, node.Meta.SelfLink, node, nil); err != nil {
+		log.Errorf("%s:setoffline:> set node offline state error: %v", logNodePrefix, err)
 		return err
 	}
 
@@ -201,8 +205,8 @@ func (n *Node) SetStatus(node *types.Node, status types.NodeStatus) error {
 
 	node.Status = status
 
-	if err := n.storage.SetStatus(n.context, node); err != nil {
-		log.Errorf("%s:setstatus:> set node offline state error: %s", logNodePrefix, err.Error())
+	if err := n.storage.Update(n.context, storage.NodeKind, node.Meta.SelfLink, node, nil); err != nil {
+		log.Errorf("%s:setstatus:> set node offline state error: %v", logNodePrefix, err)
 		return err
 	}
 
@@ -212,8 +216,9 @@ func (n *Node) SetStatus(node *types.Node, status types.NodeStatus) error {
 func (n *Node) SetInfo(node *types.Node, info types.NodeInfo) error {
 
 	node.Info = info
-	if err := n.storage.SetInfo(n.context, node); err != nil {
-		log.Errorf("%s:setinfo:> set node info error: %s", logNodePrefix, err.Error())
+
+	if err := n.storage.Update(n.context, storage.NodeKind, node.Meta.SelfLink, node, nil); err != nil {
+		log.Errorf("%s:setinfo:> set node info error: %v", logNodePrefix, err)
 		return err
 	}
 
@@ -223,8 +228,9 @@ func (n *Node) SetInfo(node *types.Node, info types.NodeInfo) error {
 func (n *Node) SetNetwork(node *types.Node, network types.NetworkSpec) error {
 
 	node.Network = network
-	if err := n.storage.SetNetwork(n.context, node); err != nil {
-		log.Errorf("%s:setnetwork:> set node network error: %s", logNodePrefix, err.Error())
+
+	if err := n.storage.Update(n.context, storage.NodeKind, node.Meta.SelfLink,  node, nil); err != nil {
+		log.Errorf("%s:setnetwork:> set node network error: %v", logNodePrefix, err)
 		return err
 	}
 
@@ -233,8 +239,8 @@ func (n *Node) SetNetwork(node *types.Node, network types.NetworkSpec) error {
 
 func (n *Node) InsertPod(node *types.Node, pod *types.Pod) error {
 
-	if err := n.storage.InsertPod(n.context, node, pod); err != nil {
-		log.Errorf("%s:insertpod:> set node network error: %s", logNodePrefix, err.Error())
+	if err := n.storage.Create(n.context, storage.PodKind, pod.Meta.SelfLink, pod, nil); err != nil {
+		log.Errorf("%s:insertpod:> create pod for node error: %v", logNodePrefix, err)
 		return err
 	}
 
@@ -243,8 +249,8 @@ func (n *Node) InsertPod(node *types.Node, pod *types.Pod) error {
 
 func (n *Node) UpdatePod(node *types.Node, pod *types.Pod) error {
 
-	if err := n.storage.UpdatePod(n.context, node, pod); err != nil {
-		log.Errorf("%s:updatepod:> set node network error: %s", logNodePrefix, err.Error())
+	if err := n.storage.Update(n.context, storage.PodKind, pod.Meta.SelfLink, pod, nil); err != nil {
+		log.Errorf("%s:updatepod:> update pod for node error: %v", logNodePrefix, err)
 		return err
 	}
 
@@ -253,8 +259,9 @@ func (n *Node) UpdatePod(node *types.Node, pod *types.Pod) error {
 
 func (n *Node) RemovePod(node *types.Node, pod *types.Pod) error {
 
-	if err := n.storage.RemovePod(n.context, node, pod); err != nil {
-		log.Errorf("%s:removepod:> set node network error: %s", logNodePrefix, err.Error())
+	//if err := n.storage.RemovePod(n.context, node, pod); err != nil {
+	if err := n.storage.Remove(n.context, storage.PodKind, pod.Meta.SelfLink); err != nil {
+		log.Errorf("%s:removepod:> remove pod error: %v", logNodePrefix, err)
 		return err
 	}
 
@@ -281,8 +288,8 @@ func (n *Node) Remove(node *types.Node) error {
 
 	log.V(logLevel).Debugf("%s:remove:> remove node %s", logNodePrefix, node.Meta.Name)
 
-	if err := n.storage.Remove(n.context, node); err != nil {
-		log.V(logLevel).Debugf("%s:remove:> remove node err: %s", logNodePrefix, err.Error())
+	if err := n.storage.Remove(n.context, storage.NodeKind, node.Meta.SelfLink); err != nil {
+		log.V(logLevel).Debugf("%s:remove:> remove node err: %v", logNodePrefix, err)
 		return err
 	}
 
