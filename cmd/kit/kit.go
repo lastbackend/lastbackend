@@ -69,7 +69,6 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/controller"
 	"github.com/lastbackend/lastbackend/pkg/discovery"
 	"github.com/lastbackend/lastbackend/pkg/log"
-	"github.com/lastbackend/lastbackend/pkg/scheduler"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -127,9 +126,7 @@ var (
 				daemons = map[string]func() bool{
 					"api":        api.Daemon,
 					"controller": controller.Daemon,
-					"scheduler":  scheduler.Daemon,
 					"ctl":        controller.Daemon,
-					"sdl":        scheduler.Daemon,
 					"discovery":  discovery.Daemon,
 				}
 			)

@@ -29,15 +29,6 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/system"
 )
 
-// watch service state and specs
-// generate pods by specs
-
-// watch service builds
-// generate build spec after build creation
-
-// watch service build state
-// update pods after build passed state
-
 type Runtime struct {
 	process *system.Process
 
