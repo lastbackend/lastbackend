@@ -53,7 +53,7 @@ func (c *Cluster) Get() (*types.Cluster, error) {
 			return nil, nil
 		}
 
-		log.V(logLevel).Errorf("%s:get:> get cluster err: %s", logClusterPrefix, err.Error())
+		log.V(logLevel).Errorf("%s:get:> get cluster err: %v", logClusterPrefix, err)
 		return nil, err
 	}
 

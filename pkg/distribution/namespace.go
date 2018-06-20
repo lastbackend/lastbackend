@@ -63,7 +63,7 @@ func (n *Namespace) List() (map[string]*types.Namespace, error) {
 	err := n.storage.Map(n.context, storage.NamespaceKind, "", &items)
 
 	if err != nil {
-		log.V(logLevel).Error("%s:list:> get namespaces list err: %s", logNamespacePrefix, err.Error())
+		log.V(logLevel).Error("%s:list:> get namespaces list err: %v", logNamespacePrefix, err)
 		return nil, err
 	}
 
@@ -89,7 +89,7 @@ func (n *Namespace) Get(name string) (*types.Namespace, error) {
 			return nil, nil
 		}
 
-		log.V(logLevel).Errorf("%s:get:> get namespace by name `%s` err: %s", logNamespacePrefix, name, err.Error())
+		log.V(logLevel).Errorf("%s:get:> get namespace by name `%s` err: %v", logNamespacePrefix, name, err)
 		return nil, err
 	}
 
@@ -118,7 +118,7 @@ func (n *Namespace) Create(opts *types.NamespaceCreateOptions) (*types.Namespace
 	}
 
 	if err := n.storage.Create(n.context, storage.NamespaceKind, ns.Meta.SelfLink, ns, nil); err != nil {
-		log.V(logLevel).Errorf("%s:create:> insert namespace err: %s", logNamespacePrefix, err.Error())
+		log.V(logLevel).Errorf("%s:create:> insert namespace err: %v", logNamespacePrefix, err)
 		return nil, err
 	}
 
@@ -140,7 +140,7 @@ func (n *Namespace) Update(namespace *types.Namespace, opts *types.NamespaceUpda
 	}
 
 	if err := n.storage.Update(n.context, storage.NamespaceKind, namespace.Meta.SelfLink, namespace, nil); err != nil {
-		log.V(logLevel).Errorf("%s:update:> namespace update err: %s", logNamespacePrefix, err.Error())
+		log.V(logLevel).Errorf("%s:update:> namespace update err: %v", logNamespacePrefix, err)
 		return err
 	}
 
@@ -152,7 +152,7 @@ func (n *Namespace) Remove(namespace *types.Namespace) error {
 	log.V(logLevel).Debugf("%s:remove:> remove namespace %s", logNamespacePrefix, namespace.Meta.Name)
 
 	if err := n.storage.Remove(n.context, storage.NamespaceKind, namespace.Meta.SelfLink); err != nil {
-		log.V(logLevel).Errorf("%s:remove:> remove namespace err: %s", logNamespacePrefix, err.Error())
+		log.V(logLevel).Errorf("%s:remove:> remove namespace err: %v", logNamespacePrefix, err)
 		return err
 	}
 

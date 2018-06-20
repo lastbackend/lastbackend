@@ -47,7 +47,7 @@ func (h *Trigger) Get(namespace, service, name string) (*types.Trigger, error) {
 
 	err := h.storage.Get(h.context, storage.TriggerKind, etcd.BuildTriggerQuery(namespace, service, name), &trigger)
 	if err != nil {
-		log.V(logLevel).Errorf("%s:get:> create trigger err: %s", logTriggerPrefix, err.Error())
+		log.V(logLevel).Errorf("%s:get:> create trigger err: %v", logTriggerPrefix, err)
 		return nil, err
 	}
 
