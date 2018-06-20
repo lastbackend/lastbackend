@@ -37,7 +37,7 @@ const (
 )
 
 type IEndpoint interface {
-	Get(id string) (*types.Endpoint, error)
+	Get(namespace, service string) (*types.Endpoint, error)
 	ListByNamespace(namespace string) (map[string]*types.Endpoint, error)
 	Create(namespace string, service string, opts *types.EndpointCreateOptions) (*types.Endpoint, error)
 	Update(endpoint *types.Endpoint, opts *types.EndpointUpdateOptions) (*types.Endpoint, error)
@@ -51,13 +51,13 @@ type Endpoint struct {
 	storage storage.Storage
 }
 
-func (e *Endpoint) Get(id string) (*types.Endpoint, error) {
+func (e *Endpoint) Get(namespace, service string) (*types.Endpoint, error) {
 
-	log.V(logLevel).Debugf("%s:get:> get endpoint by id %s", logEndpointPrefix, id)
+	log.V(logLevel).Debugf("%s:get:> get endpoint by namespace %s and service %s", logEndpointPrefix, namespace, service)
 
 	item := new(types.Endpoint)
 
-	err := e.storage.Get(e.context, storage.EndpointKind, id, &item)
+	err := e.storage.Get(e.context, storage.EndpointKind, etcd.BuildEndpointKey(namespace, service), &item)
 	if err != nil {
 
 		if err.Error() == store.ErrEntityNotFound {

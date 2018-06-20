@@ -22,6 +22,7 @@ import (
 	"context"
 	"fmt"
 	"strings"
+	"encoding/json"
 
 	"github.com/lastbackend/lastbackend/pkg/distribution/errors"
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
@@ -31,7 +32,6 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/storage"
 
 	stgtypes "github.com/lastbackend/lastbackend/pkg/storage/etcd/types"
-	"encoding/json"
 )
 
 const (
@@ -185,6 +185,7 @@ func (n *Namespace) Watch(ch chan types.NamespaceEvent) error {
 				obj := new(types.Namespace)
 
 				if err := json.Unmarshal(e.Data.([]byte), &obj); err != nil {
+					log.Errorf("%s:watch:> parse json", logNamespacePrefix)
 					continue
 				}
 

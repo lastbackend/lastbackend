@@ -54,7 +54,7 @@ type Process struct {
 // Process register function
 // The main purpose is to register process in the system
 // If we need to distribution and need master/replicas, use WaitElected function
-func (c *Process) Register(ctx context.Context, kind string, stg storage.Storage) (*types.Process, error) {
+func (c *Process) Register(kind string, stg storage.Storage) (*types.Process, error) {
 
 	var (
 		err  error

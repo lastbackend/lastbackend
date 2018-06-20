@@ -20,9 +20,15 @@ package pod
 
 import (
 	"context"
+
 	"github.com/lastbackend/lastbackend/pkg/controller/envs"
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 	"github.com/lastbackend/lastbackend/pkg/log"
+	"github.com/lastbackend/lastbackend/pkg/storage"
+
+	stgtypes "github.com/lastbackend/lastbackend/pkg/storage/etcd/types"
+	"encoding/json"
+	"github.com/lastbackend/lastbackend/pkg/storage/etcd"
 )
 
 type Controller struct {
@@ -35,7 +41,7 @@ func (pc *Controller) WatchStatus() {
 
 	var (
 		stg   = envs.Get().GetStorage()
-		event = make(chan *types.Event)
+		event = make(chan *stgtypes.WatcherEvent)
 	)
 
 	log.Debug("controller:pod:controller: start watch pod spec")
@@ -71,12 +77,19 @@ func (pc *Controller) WatchStatus() {
 					continue
 				}
 
-				pc.status <- e.Data.(*types.Pod)
+				pod := new(types.Pod)
+
+				if err := json.Unmarshal(e.Data.([]byte), &pod); err != nil {
+					log.Errorf("controller:pod:controller: parse json err: %v", err)
+					continue
+				}
+
+				pc.status <- pod
 			}
 		}
 	}()
 
-	stg.Pod().WatchStatus(context.Background(), event)
+	stg.Watch(context.Background(), storage.PodKind, event)
 }
 
 // Pause pod controller because not lead
@@ -94,13 +107,19 @@ func (pc *Controller) Resume() {
 	pc.active = true
 
 	log.Debug("controller:pod:controller:resume start check pod states")
-	nss, err := stg.Namespace().List(context.Background())
+
+	nss := make(map[string]*types.Namespace, 0)
+
+	err := stg.Map(context.Background(), storage.NamespaceKind, "", &nss)
 	if err != nil {
 		log.Errorf("controller:pod:controller:resume get namespaces list err: %s", err.Error())
 	}
 
 	for _, ns := range nss {
-		pl, err := stg.Pod().ListByNamespace(context.Background(), ns.Meta.Name)
+
+		pl := make(map[string]*types.Pod, 0)
+
+		err := stg.Map(context.Background(), storage.PodKind, etcd.BuildPodQuery(ns.Meta.Name, "", ""), &pl)
 		if err != nil {
 			log.Errorf("controller:pod:controller:resume get pod list err: %s", err.Error())
 		}

@@ -27,6 +27,7 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/scheduler/envs"
 	"github.com/lastbackend/lastbackend/pkg/storage/etcd/v3/store"
 	"sort"
+	"github.com/lastbackend/lastbackend/pkg/storage"
 )
 
 func Provision(p *types.Pod) error {
@@ -193,14 +194,14 @@ func HandleStatus(p *types.Pod) error {
 	}
 
 	if p.Status.Stage == types.StateError {
-		if err := stg.Node().RemovePod(context.Background(), n, p); err != nil {
+		if err := stg.Remove(context.Background(), storage.PodKind, p.Meta.SelfLink); err != nil {
 			log.Errorf("scheduler:pod:controller:status> handle status err: %s", err.Error())
 			return err
 		}
 	}
 
 	if p.Status.Stage == types.StateDestroyed {
-		if err := stg.Node().RemovePod(context.Background(), n, p); err != nil {
+		if err := stg.Remove(context.Background(), storage.PodKind, p.Meta.SelfLink); err != nil {
 			log.Errorf("scheduler:pod:controller:status> handle status err: %s", err.Error())
 			return err
 		}

@@ -46,6 +46,11 @@ func BuildSecretKey(namespace string) string {
 	return keyCreate(namespace)
 }
 
+func BuildEndpointKey(namespace, name string) string {
+	return keyCreate(namespace, name)
+}
+
+
 func BuildVolumeKey(namespace, name string) string {
 	return keyCreate(namespace, name)
 }

@@ -20,9 +20,15 @@ package service
 
 import (
 	"context"
+
 	"github.com/lastbackend/lastbackend/pkg/controller/envs"
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 	"github.com/lastbackend/lastbackend/pkg/log"
+	"github.com/lastbackend/lastbackend/pkg/storage"
+
+	stgtypes "github.com/lastbackend/lastbackend/pkg/storage/etcd/types"
+	"encoding/json"
+	"github.com/lastbackend/lastbackend/pkg/storage/etcd"
 )
 
 const logPrefix = "controller:service"
@@ -38,7 +44,7 @@ func (sc *Controller) WatchSpec() {
 
 	var (
 		stg   = envs.Get().GetStorage()
-		event = make(chan *types.Event)
+		event = make(chan *stgtypes.WatcherEvent)
 	)
 
 	log.Debug("controller:service:controller: start watch service spec")
@@ -60,6 +66,7 @@ func (sc *Controller) WatchSpec() {
 					log.Debugf("controller:service:controller: Service needs to be provisioned: %s:%s", s.Meta.Namespace, s.Meta.Name)
 					if err := Provision(s); err != nil {
 						log.Errorf("controller:service:controller: service provision: %s err: %s", s.Meta.Name, err.Error())
+						continue
 					}
 				}
 			}
@@ -74,12 +81,19 @@ func (sc *Controller) WatchSpec() {
 					continue
 				}
 
-				sc.spec <- e.Data.(*types.Service)
+				service := new(types.Service)
+
+				if err := json.Unmarshal(e.Data.([]byte), &service); err != nil {
+					log.Errorf("controller:service:controller: parse json err: %s", err.Error())
+					continue
+				}
+
+				sc.spec <- service
 			}
 		}
 	}()
 
-	stg.Service().WatchSpec(context.Background(), event)
+	stg.Watch(context.Background(), storage.ServiceKind, event)
 }
 
 // Watch services spec changes
@@ -87,7 +101,7 @@ func (sc *Controller) WatchStatus() {
 
 	var (
 		stg   = envs.Get().GetStorage()
-		event = make(chan *types.Event)
+		event = make(chan *stgtypes.WatcherEvent)
 	)
 
 	log.Debugf("%s:watch_status> start watch service status", logPrefix)
@@ -123,12 +137,19 @@ func (sc *Controller) WatchStatus() {
 					continue
 				}
 
-				sc.status <- e.Data.(*types.Service)
+				service := new(types.Service)
+
+				if err := json.Unmarshal(e.Data.([]byte), &service); err != nil {
+					log.Errorf("controller:service:controller: parse json err: %s", err.Error())
+					continue
+				}
+
+				sc.status <- service
 			}
 		}
 	}()
 
-	stg.Service().WatchStatus(context.Background(), event)
+	stg.Watch(context.Background(), storage.ServiceKind, event)
 }
 
 // Pause service controller because not lead
@@ -146,22 +167,24 @@ func (sc *Controller) Resume() {
 	sc.active = true
 
 	log.Debugf("%s:resume> start check services states", logPrefix)
-	nss, err := stg.Namespace().List(context.Background())
+
+	nss := make(map[string]*types.Namespace)
+
+	err := stg.Map(context.Background(), storage.NamespaceKind, "", &nss)
 	if err != nil {
 		log.Errorf("%s:resume> get namespaces list err: %s", logPrefix, err.Error())
 	}
 
 	for _, ns := range nss {
-		svcs, err := stg.Service().ListByNamespace(context.Background(), ns.Meta.Name)
+
+		svcs := make(map[string]*types.Service)
+
+		err := stg.Map(context.Background(), storage.ServiceKind, etcd.BuildServiceQuery(ns.Meta.Name), &svcs)
 		if err != nil {
 			log.Errorf("%s:resume> get services list err: %s", logPrefix, err.Error())
 		}
 
 		for _, svc := range svcs {
-			svc, err := stg.Service().Get(context.Background(), svc.Meta.Namespace, svc.Meta.Name)
-			if err != nil {
-				log.Errorf("%s:resume> get service err: %s", logPrefix, err.Error())
-			}
 			sc.spec <- svc
 		}
 

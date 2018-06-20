@@ -27,6 +27,7 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/storage/etcd"
 
 	stgtypes "github.com/lastbackend/lastbackend/pkg/storage/etcd/types"
+	"encoding/json"
 )
 
 const logPrefix = "controller:deployment"
@@ -78,7 +79,14 @@ func (dc *Controller) WatchSpec() {
 					continue
 				}
 
-				dc.spec <- e.Data.(*types.Deployment)
+				deployment := new(types.Deployment)
+
+				if err := json.Unmarshal(e.Data.([]byte), &deployment); err != nil {
+					log.Errorf("controller:deployment:controller: parse json err: %s", err.Error())
+					continue
+				}
+
+				dc.spec <- deployment
 			}
 		}
 	}()
@@ -127,7 +135,14 @@ func (dc *Controller) WatchStatus() {
 					continue
 				}
 
-				dc.status <- e.Data.(*types.Deployment)
+				deployment := new(types.Deployment)
+
+				if err := json.Unmarshal(e.Data.([]byte), &deployment); err != nil {
+					log.Errorf("%s:status parse json err: %s", logPrefix, err.Error())
+					continue
+				}
+
+				dc.status <- deployment
 			}
 		}
 	}()
