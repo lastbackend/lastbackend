@@ -133,6 +133,10 @@ func (e *Endpoint) Update(endpoint *types.Endpoint, opts *types.EndpointUpdateOp
 		}
 	}
 
+	if opts.IP != nil {
+		endpoint.Spec.IP = *opts.IP
+	}
+
 	endpoint.Spec.Policy = opts.Policy
 	endpoint.Spec.Strategy.Route = opts.RouteStrategy
 	endpoint.Spec.Strategy.Bind = opts.BindStrategy

@@ -158,10 +158,12 @@ func (d *Deployment) Update(dt *types.Deployment, opts *request.DeploymentUpdate
 	case opts.Replicas != nil && dt.Spec.Replicas != *opts.Replicas:
 		dt.Spec.Replicas = *opts.Replicas
 		isChanged = true
+		break
 	case opts.Status != nil:
 		dt.Status.State = opts.Status.State
 		dt.Status.Message = opts.Status.Message
 		isChanged = true
+		break
 	}
 
 	if isChanged {
@@ -248,7 +250,7 @@ func (d *Deployment) Watch(dt chan *types.Deployment) {
 					continue
 				}
 
-				dt <-  deployment
+				dt <- deployment
 			}
 		}
 	}()

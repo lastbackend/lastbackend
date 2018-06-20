@@ -29,6 +29,7 @@ import (
 	stgtypes "github.com/lastbackend/lastbackend/pkg/storage/etcd/types"
 	"encoding/json"
 	"github.com/lastbackend/lastbackend/pkg/storage/etcd"
+	"github.com/lastbackend/lastbackend/pkg/controller/runtime/cache"
 )
 
 type Controller struct {
@@ -128,6 +129,10 @@ func (pc *Controller) Resume() {
 			pc.status <- p
 		}
 	}
+}
+
+func (pc *Controller) Observe(ctx context.Context, cache *cache.Cache) {
+	// TODO: watch etcd: pod collection
 }
 
 // NewDeploymentController return new controller instance

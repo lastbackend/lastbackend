@@ -118,4 +118,5 @@ func (r *Runtime) Loop() {
 	if err := r.process.WaitElected(lead); err != nil {
 		log.Errorf("Runtime: Elect Wait error: %s", err.Error())
 	}
+
 }

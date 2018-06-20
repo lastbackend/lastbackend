@@ -342,3 +342,7 @@ func HandleStatus(d *types.Deployment) error {
 
 	return nil
 }
+
+func Update() error {
+	return nil
+}

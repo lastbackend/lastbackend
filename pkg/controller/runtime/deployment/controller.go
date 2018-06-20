@@ -28,6 +28,8 @@ import (
 
 	stgtypes "github.com/lastbackend/lastbackend/pkg/storage/etcd/types"
 	"encoding/json"
+	"fmt"
+	"github.com/lastbackend/lastbackend/pkg/controller/runtime/cache"
 )
 
 const logPrefix = "controller:deployment"
@@ -192,6 +194,20 @@ func (dc *Controller) Resume() {
 
 			dc.spec <- d
 			dc.status <- d
+		}
+	}
+}
+
+func (dc *Controller) Observe(ctx context.Context, cache *cache.Cache) {
+
+	// TODO: watch etcd: deployment collection
+
+	event := cache.Pods.Subscribe()
+
+	for {
+		select {
+		case e := <-event:
+			fmt.Println("change pod", e)
 		}
 	}
 }

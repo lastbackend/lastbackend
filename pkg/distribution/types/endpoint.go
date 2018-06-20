@@ -90,7 +90,7 @@ type EndpointCreateOptions struct {
 }
 
 type EndpointUpdateOptions struct {
-	IP            string            `json:"ip"`
+	IP            *string           `json:"ip"`
 	Ports         map[uint16]string `json:"ports"`
 	RouteStrategy string            `json:"route_strategy"`
 	Policy        string            `json:"policy"`
