@@ -99,7 +99,8 @@ func Destroy(ctx context.Context, endpoint string, state *types.EndpointState) e
 }
 
 func equal(manifest *types.EndpointManifest, state *types.EndpointState) bool {
-	if status.IP != spec.IP {
+
+	if state.IP != manifest.IP {
 		log.Debugf("%s ips not match %s != %s", logEndpointPrefix, manifest.IP, state.IP)
 		return false
 	}

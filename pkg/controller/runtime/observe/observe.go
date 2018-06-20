@@ -28,7 +28,7 @@ import (
 )
 
 type Controller interface {
-	Observe(ctx context.Context, *cache.Cache)
+	Observe(ctx context.Context, cache *cache.Cache)
 	Pause()
 	Resume()
 }

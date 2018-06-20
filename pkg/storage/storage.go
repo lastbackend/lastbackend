@@ -25,19 +25,19 @@ import (
 )
 
 const (
-	NamespaceKind  types.Kind = "namespaces"
-	ServiceKind    types.Kind = "services"
-	DeploymentKind types.Kind = "deployments"
+	NamespaceKind  types.Kind = "namespace"
+	ServiceKind    types.Kind = "service"
+	DeploymentKind types.Kind = "deployment"
 	ClusterKind    types.Kind = "cluster"
-	PodKind        types.Kind = "pods"
-	IngressKind    types.Kind = "ingresses"
-	SystemKind     types.Kind = "systems"
-	NodeKind       types.Kind = "nodes"
-	RouteKind      types.Kind = "routes"
-	VolumeKind     types.Kind = "volumes"
-	TriggerKind    types.Kind = "triggers"
-	SecretKind     types.Kind = "secrets"
-	EndpointKind   types.Kind = "endpoints"
+	PodKind        types.Kind = "pod"
+	IngressKind    types.Kind = "ingress"
+	SystemKind     types.Kind = "system"
+	NodeKind       types.Kind = "node"
+	RouteKind      types.Kind = "route"
+	VolumeKind     types.Kind = "volume"
+	TriggerKind    types.Kind = "trigger"
+	SecretKind     types.Kind = "secret"
+	EndpointKind   types.Kind = "endpoint"
 	UtilsKind      types.Kind = "utils"
 )
 

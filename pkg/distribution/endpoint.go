@@ -27,9 +27,10 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/storage"
 	"github.com/lastbackend/lastbackend/pkg/storage/etcd/v3/store"
 
-	stgtypes "github.com/lastbackend/lastbackend/pkg/storage/etcd/types"
 	"encoding/json"
+
 	"github.com/lastbackend/lastbackend/pkg/storage/etcd"
+	stgtypes "github.com/lastbackend/lastbackend/pkg/storage/etcd/types"
 )
 
 const (
@@ -95,7 +96,6 @@ func (e *Endpoint) Create(namespace, service string, opts *types.EndpointCreateO
 	endpoint.SelfLink()
 
 	endpoint.Status.State = types.StateCreated
-	endpoint.Status.Message = ""
 	endpoint.Spec.PortMap = make(map[uint16]string, 0)
 	endpoint.Spec.Upstreams = make([]string, 0)
 
