@@ -20,6 +20,7 @@ package endpoint
 
 import (
 	"context"
+
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 	"github.com/lastbackend/lastbackend/pkg/log"
 	"github.com/lastbackend/lastbackend/pkg/node/envs"
@@ -97,9 +98,8 @@ func Destroy(ctx context.Context, endpoint string, state *types.EndpointState) e
 	return cpi.Destroy(ctx, state)
 }
 
-func equal (manifest *types.EndpointManifest, state *types.EndpointState) bool {
-
-	if state.IP != manifest.IP {
+func equal(manifest *types.EndpointManifest, state *types.EndpointState) bool {
+	if status.IP != spec.IP {
 		log.Debugf("%s ips not match %s != %s", logEndpointPrefix, manifest.IP, state.IP)
 		return false
 	}
@@ -121,7 +121,6 @@ func equal (manifest *types.EndpointManifest, state *types.EndpointState) bool {
 			return false
 		}
 
-
 		if state.PortMap[port] != pm {
 			log.Debugf("%s portmap not match %#v != %#v", logEndpointPrefix, pm, state.PortMap[port])
 			return false
@@ -140,8 +139,7 @@ func equal (manifest *types.EndpointManifest, state *types.EndpointState) bool {
 		return false
 	}
 
-
-	for _, up := range manifest.Upstreams {
+	for _, up := range state.Upstreams {
 		var f = false
 		for _, stup := range state.Upstreams {
 			if up == stup {

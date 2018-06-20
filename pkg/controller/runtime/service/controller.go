@@ -20,86 +20,140 @@ package service
 
 import (
 	"context"
+
 	"github.com/lastbackend/lastbackend/pkg/controller/envs"
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 	"github.com/lastbackend/lastbackend/pkg/log"
+	"github.com/lastbackend/lastbackend/pkg/storage"
+
+	stgtypes "github.com/lastbackend/lastbackend/pkg/storage/etcd/types"
+	"encoding/json"
+	"github.com/lastbackend/lastbackend/pkg/storage/etcd"
+	"github.com/lastbackend/lastbackend/pkg/controller/runtime/cache"
+	"fmt"
 )
+
+const logPrefix = "controller:service:controller"
 
 type Controller struct {
 	spec   chan *types.Service
 	status chan *types.Service
-	active bool
+
+	storage storage.Storage
+	active  bool
 }
 
 // Watch services spec changes
 func (sc *Controller) WatchSpec() {
 
 	var (
-		stg = envs.Get().GetStorage()
+		stg   = envs.Get().GetStorage()
+		event = make(chan *stgtypes.WatcherEvent)
 	)
 
-	log.Debug("controller:service:controller: start watch service spec")
+	log.Debug("%s:watch_spec:> start watch service spec", logPrefix)
 	go func() {
 		for {
 			select {
 			case s := <-sc.spec:
 				{
 					if !sc.active {
-						log.Debug("controller:service:controller: skip management course it is in slave mode")
+						log.Debug("%s:watch_spec:> skip management course it is in slave mode", logPrefix)
 						continue
 					}
 
 					if s == nil {
-						log.Debug("controller:service:controller: skip because service is nil")
+						log.Debug("%s:watch_spec:> skip because service is nil", logPrefix)
 						continue
 					}
 
-					log.Debugf("controller:service:controller: Service needs to be provisioned: %s:%s", s.Meta.Namespace, s.Meta.Name)
+					log.Debugf("%s:watch_spec:> service needs to be provisioned: %s:%s", logPrefix, s.Meta.Namespace, s.Meta.Name)
 					if err := Provision(s); err != nil {
-						log.Errorf("controller:service:controller: service provision: %s err: %s", s.Meta.Name, err.Error())
+						log.Errorf("%s:watch_spec:> service provision: %s err: %v", logPrefix, s.Meta.Name, err)
+						continue
 					}
 				}
 			}
 		}
 	}()
 
-	stg.Service().WatchSpec(context.Background(), sc.spec)
+	go func() {
+		for {
+			select {
+			case e := <-event:
+				if e.Data == nil {
+					continue
+				}
+
+				service := new(types.Service)
+
+				if err := json.Unmarshal(e.Data.([]byte), &service); err != nil {
+					log.Errorf("%s:watch_spec:> parse json err: %v", logPrefix, err)
+					continue
+				}
+
+				sc.spec <- service
+			}
+		}
+	}()
+
+	stg.Watch(context.Background(), storage.ServiceKind, event)
 }
 
 // Watch services spec changes
 func (sc *Controller) WatchStatus() {
 
 	var (
-		stg = envs.Get().GetStorage()
-		msg = "controller:service:watch_status:"
+		stg   = envs.Get().GetStorage()
+		event = make(chan *stgtypes.WatcherEvent)
 	)
 
-	log.Debugf("%s> start watch service status", msg)
+	log.Debugf("%s:watch_status> start watch service status", logPrefix)
 	go func() {
 		for {
 			select {
 			case s := <-sc.status:
 				{
 					if !sc.active {
-						log.Debugf("%s> skip management course it is in slave mode", msg)
+						log.Debugf("%s:watch_status> skip management course it is in slave mode", logPrefix)
 						continue
 					}
 
 					if s == nil {
-						log.Debugf("%s> skip because service is nil", msg)
+						log.Debugf("%s:watch_status> skip because service is nil", logPrefix)
 						continue
 					}
 
-					log.Debugf("%s> Service needs to be provisioned: %s", msg, s.SelfLink())
+					log.Debugf("%s:watch_status> Service needs to be provisioned: %s", logPrefix, s.SelfLink())
 					if err := HandleStatus(s); err != nil {
-						log.Errorf("%s> service provision: %s err: %s", msg, s.SelfLink(), err.Error())
+						log.Errorf("%s:watch_status> service provision: %s err: %v", logPrefix, s.SelfLink(), err)
 					}
 				}
 			}
 		}
 	}()
 
-	stg.Service().WatchStatus(context.Background(), sc.status)
+	go func() {
+		for {
+			select {
+			case e := <-event:
+				if e.Data == nil {
+					continue
+				}
+
+				service := new(types.Service)
+
+				if err := json.Unmarshal(e.Data.([]byte), &service); err != nil {
+					log.Errorf("%s:watch_status:> parse json err: %v", logPrefix, err)
+					continue
+				}
+
+				sc.status <- service
+			}
+		}
+	}()
+
+	stg.Watch(context.Background(), storage.ServiceKind, event)
 }
 
 // Pause service controller because not lead
@@ -112,34 +166,86 @@ func (sc *Controller) Resume() {
 
 	var (
 		stg = envs.Get().GetStorage()
-		msg = "controller:service:resume:"
 	)
 
 	sc.active = true
 
-	log.Debugf("%s> start check services states", msg)
-	nss, err := stg.Namespace().List(context.Background())
+	log.Debugf("%s:resume> start check services states", logPrefix)
+
+	nss := make(map[string]*types.Namespace)
+
+	err := stg.Map(context.Background(), storage.NamespaceKind, "", &nss)
 	if err != nil {
-		log.Errorf("%s> get namespaces list err: %s", msg, err.Error())
+		log.Errorf("%s:resume> get namespaces list err: %v", logPrefix, err)
 	}
 
 	for _, ns := range nss {
-		svcs, err := stg.Service().ListByNamespace(context.Background(), ns.Meta.Name)
+
+		svcs := make(map[string]*types.Service)
+
+		err := stg.Map(context.Background(), storage.ServiceKind, etcd.BuildServiceQuery(ns.Meta.Name), &svcs)
 		if err != nil {
-			log.Errorf("%s> get services list err: %s", msg, err.Error())
+			log.Errorf("%s:resume> get services list err: %v", logPrefix, err)
 		}
 
 		for _, svc := range svcs {
-			svc, err := stg.Service().Get(context.Background(), svc.Meta.Namespace, svc.Meta.Name)
-			if err != nil {
-				log.Errorf("%s> get service err: %s", msg, err.Error())
-			}
 			sc.spec <- svc
 		}
 
 		for _, svc := range svcs {
-			log.Debugf("%s> check service [%s] status", msg, svc.SelfLink())
+			log.Debugf("%s:resume> check service [%s] status", logPrefix, svc.SelfLink())
 			sc.status <- svc
+		}
+	}
+}
+
+func (sc *Controller) Observe(ctx context.Context, cache *cache.Cache) {
+
+	done := make(chan bool)
+	event := make(chan *stgtypes.WatcherEvent)
+
+	go func() {
+		for {
+			select {
+			case <-ctx.Done():
+				done <- true
+				return
+			case e := <-event:
+				if e.Data == nil {
+					continue
+				}
+
+				res := types.ServiceEvent{}
+				res.Action = e.Action
+				res.Name = e.Name
+
+				service := new(types.Service)
+
+				if err := json.Unmarshal(e.Data.([]byte), *service); err != nil {
+					log.Errorf("%s:> parse data err: %v", logPrefix, err)
+					continue
+				}
+
+				res.Data = service
+
+				// TODO: service status handlers
+			}
+		}
+	}()
+
+	if err := sc.storage.Watch(ctx, storage.ServiceKind, event); err != nil {
+		return
+	}
+
+	emit := cache.Deployments.Subscribe()
+
+	for {
+		select {
+		case <-ctx.Done():
+			done <- true
+			return
+		case e := <-emit:
+			fmt.Println("change deployment", e)
 		}
 	}
 }
@@ -148,7 +254,7 @@ func (sc *Controller) Resume() {
 func NewServiceController(_ context.Context) *Controller {
 	sc := new(Controller)
 	sc.active = false
-	sc.spec = make(chan *types.Service)
-	sc.status = make(chan *types.Service)
+	sc.spec = make(chan *types.Service, 0)
+	sc.status = make(chan *types.Service, 0)
 	return sc
 }

@@ -25,7 +25,8 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/distribution/errors"
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 	"github.com/lastbackend/lastbackend/pkg/log"
-	"github.com/lastbackend/lastbackend/pkg/storage/store"
+	"github.com/lastbackend/lastbackend/pkg/storage/etcd/v3/store"
+	"github.com/lastbackend/lastbackend/pkg/api/types/v1/request"
 )
 
 // Provision deployment
@@ -33,19 +34,21 @@ import (
 // Remove deployment if no active pods present and deployment is marked for destroy
 func Provision(d *types.Deployment) error {
 
+	const logPrefix = "controller:service:controller:provision"
+
 	var (
 		stg      = envs.Get().GetStorage()
 		replicas int
 	)
 
-	log.Debugf("controller:deployment:controller:provision: provision deployment: %s", d.SelfLink())
+	log.Debugf("%s:> provision deployment: %s", logPrefix, d.SelfLink())
 
 	dm := distribution.NewDeploymentModel(context.Background(), stg)
 	if d, err := dm.Get(d.Meta.Namespace, d.Meta.Service, d.Meta.Name); d == nil || err != nil {
 		if d == nil {
 			return errors.New(store.ErrEntityNotFound)
 		}
-		log.Errorf("controller:deployment:controller:provision: get deployment error: %s", err.Error())
+		log.Errorf("%s:> get deployment error: %s", logPrefix, err.Error())
 		return err
 	}
 
@@ -53,7 +56,7 @@ func Provision(d *types.Deployment) error {
 	pm := distribution.NewPodModel(context.Background(), stg)
 	pl, err := pm.ListByDeployment(d.Meta.Namespace, d.Meta.Service, d.Meta.Name)
 	if err != nil {
-		log.Errorf("controller:deployment:controller:provision: get pod list error: %s", err.Error())
+		log.Errorf("%s:> get pod list error: %s", logPrefix, err.Error())
 		return err
 	}
 
@@ -61,9 +64,9 @@ func Provision(d *types.Deployment) error {
 	if d.Spec.State.Destroy {
 
 		if len(pl) == 0 {
-			log.Debugf("controller:deployment:controller:provision: remove deployment %s", d.SelfLink())
+			log.Debugf("%s:> remove deployment %s", logPrefix, d.SelfLink())
 			if err := dm.Remove(d); err != nil {
-				log.Errorf("controller:deployment:controller:provision: remove pod err: %s", err.Error())
+				log.Errorf("%s:> remove pod err: %s", logPrefix, err.Error())
 				return nil
 			}
 		}
@@ -72,17 +75,17 @@ func Provision(d *types.Deployment) error {
 
 			if p.Meta.Node == "" {
 				// Mark pod for destroy
-				log.Debugf("controller:deployment:controller:provision: remove pod %s", p.SelfLink())
+				log.Debugf("%s:> remove pod %s", logPrefix, p.SelfLink())
 				if err := pm.Remove(context.Background(), p); err != nil {
-					log.Errorf("controller:deployment:controller:provision: remove pod err: %s", err.Error())
+					log.Errorf("%s:> remove pod err: %s", logPrefix, err.Error())
 					continue
 				}
 			}
 
 			// Mark pod for destroy
-			log.Debugf("controller:deployment:controller:provision: mark pod for destroy %s", p.SelfLink())
+			log.Debugf("%s:> mark pod for destroy %s", logPrefix, p.SelfLink())
 			if err := pm.Destroy(context.Background(), p); err != nil {
-				log.Errorf("controller:deployment:controller:provision: destroy pod err: %s", err.Error())
+				log.Errorf("%s:> destroy pod err: %s", logPrefix, err.Error())
 			}
 		}
 		return nil
@@ -97,10 +100,10 @@ func Provision(d *types.Deployment) error {
 
 	// Create new replicas
 	if replicas < d.Spec.Replicas {
-		log.Debug("controller:deployment:controller:provision: create new pods")
+		log.Debugf("%s:> create new pods", logPrefix)
 		for i := 0; i < (d.Spec.Replicas - replicas); i++ {
 			if _, err := pm.Create(d); err != nil {
-				log.Errorf("controller:deployment:controller:provision: create new pod err: %s", err.Error())
+				log.Errorf("%s:> create new pod err: %s", logPrefix, err.Error())
 			}
 		}
 	}
@@ -109,7 +112,7 @@ func Provision(d *types.Deployment) error {
 	if replicas > d.Spec.Replicas {
 
 		count := replicas - d.Spec.Replicas
-		log.Debug("controller:deployment:controller:provision: remove unneeded pods")
+		log.Debugf("%s:> remove unneeded pods", logPrefix)
 
 		// Remove pods in error state
 		for _, p := range pl {
@@ -121,7 +124,7 @@ func Provision(d *types.Deployment) error {
 
 			if p.Status.Stage == types.StateError {
 				if err := pm.Destroy(context.Background(), p); err != nil {
-					log.Errorf("controller:service:controller:provision: remove pod err: %s", err.Error())
+					log.Errorf("%s:> remove pod err: %s", logPrefix, err.Error())
 					continue
 				}
 				count--
@@ -139,7 +142,7 @@ func Provision(d *types.Deployment) error {
 
 			if p.Status.Stage == types.StateProvision {
 				if err := pm.Destroy(context.Background(), p); err != nil {
-					log.Errorf("controller:service:controller:provision: remove pod err: %s", err.Error())
+					log.Errorf("%s:> remove pod err: %s", logPrefix, err.Error())
 					continue
 				}
 				count--
@@ -157,7 +160,7 @@ func Provision(d *types.Deployment) error {
 
 			if d.Status.State == types.StateReady {
 				if err := pm.Destroy(context.Background(), p); err != nil {
-					log.Errorf("controller:service:controller:provision: remove pod err: %s", err.Error())
+					log.Errorf("%s:> remove pod err: %s", logPrefix, err.Error())
 					continue
 				}
 				count--
@@ -166,10 +169,12 @@ func Provision(d *types.Deployment) error {
 		}
 	}
 
+	opts := new(request.DeploymentUpdateOptions)
+	opts.Status.State = types.StateProvision
+
 	// Update deployment state
-	d.Status.State = types.StateProvision
-	if err := distribution.NewDeploymentModel(context.Background(), stg).SetStatus(d); err != nil {
-		log.Errorf("controller:deployment:controller:provision: deployment set state err: %s", err.Error())
+	if err := distribution.NewDeploymentModel(context.Background(), stg).Update(d, opts); err != nil {
+		log.Errorf("%s:> deployment set state err: %s", logPrefix, err.Error())
 		return err
 	}
 
@@ -179,9 +184,10 @@ func Provision(d *types.Deployment) error {
 // Handler Deployment status
 func HandleStatus(d *types.Deployment) error {
 
+	const logPrefix = "controller:deployment:controller:status"
+
 	var (
 		stg    = envs.Get().GetStorage()
-		msg    = "controller:deployment:controller:status:"
 		status = make(map[string]int)
 	)
 
@@ -190,20 +196,20 @@ func HandleStatus(d *types.Deployment) error {
 
 	// Skip state handle
 	if d.Status.State == types.StateDestroy {
-		log.Debugf("%s> skip deployment status [%s] handle: %s", msg, d.Status.State, d.Meta.Name)
+		log.Debugf("%s:> skip deployment status [%s] handle: %s", logPrefix, d.Status.State, d.Meta.Name)
 		return nil
 	}
 
 	svc, err := sm.Get(d.Meta.Namespace, d.Meta.Service)
 	if err != nil {
-		log.Errorf("%s> get service err: %s", msg, err.Error())
+		log.Errorf("%s:> get service err: %s", logPrefix, err.Error())
 		return err
 	}
 
 	if svc == nil {
-		log.Warnf("%s> service [%s:%s] not found", msg, d.Meta.Namespace, d.Meta.Service)
+		log.Warnf("%s:> service [%s:%s] not found", logPrefix, d.Meta.Namespace, d.Meta.Service)
 		if err := dm.Remove(d); err != nil {
-			log.Errorf("%s> remove deployment err: %s", msg, err.Error())
+			log.Errorf("%s:> remove deployment err: %s", logPrefix, err.Error())
 			return err
 		}
 
@@ -212,7 +218,7 @@ func HandleStatus(d *types.Deployment) error {
 
 	dl, err := dm.ListByService(svc.Meta.Namespace, svc.Meta.Name)
 	if err != nil {
-		log.Errorf("%s> get deployment list err: %s", msg, err.Error())
+		log.Errorf("%s:> get deployment list err: %s", logPrefix, err.Error())
 		return err
 	}
 
@@ -275,7 +281,7 @@ func HandleStatus(d *types.Deployment) error {
 
 			if di.Status.State == types.StateRunning || di.Status.State == types.StateStopped {
 				if err := dm.Destroy(di); err != nil {
-					log.Errorf("%s> destroy deployment err: %s", msg, err.Error())
+					log.Errorf("%s:> destroy deployment err: %s", logPrefix, err.Error())
 				}
 			}
 
@@ -284,22 +290,28 @@ func HandleStatus(d *types.Deployment) error {
 
 	// Update endpoint upstreams if deployment is in ready stage
 	if d.Status.State == types.StateRunning {
+
 		em := distribution.NewEndpointModel(context.Background(), stg)
 		pm := distribution.NewPodModel(context.Background(), stg)
+
 		ept, err := em.Get(svc.Meta.Namespace, svc.Meta.Name)
 		if err != nil {
-			log.Errorf("%s> get endpoint error: %s", msg, err.Error())
+			log.Errorf("%s:> get endpoint error: %s", logPrefix, err.Error())
 			return err
 		}
-
+		if ept == nil {
+			log.Debugf("%s:> endpoint not found, skip upstream configure", logPrefix)
+			return nil
+		}
 
 		pl, err := pm.ListByDeployment(d.Meta.Namespace, d.Meta.Service, d.Meta.Name)
 		if err != nil {
-			log.Errorf("%s> get pod list error: %s", msg, err.Error())
+			log.Errorf("%s:> get pod list error: %s", logPrefix, err.Error())
 			return err
 		}
 
 		ept.Spec.Upstreams = make([]string, 0)
+
 		for _, p := range pl {
 			if p.Status.Network.PodIP != "" {
 				ept.Spec.Upstreams = append(ept.Spec.Upstreams, p.Status.Network.PodIP)
@@ -308,7 +320,7 @@ func HandleStatus(d *types.Deployment) error {
 
 		if len(ept.Spec.Upstreams) > 0 {
 			if _, err := em.SetSpec(ept, &ept.Spec); err != nil {
-				log.Errorf("%s> update endpoint upstreams error: %s", msg, err.Error())
+				log.Errorf("%s:> update endpoint upstreams error: %s", logPrefix, err.Error())
 				return err
 			}
 		}
@@ -318,15 +330,19 @@ func HandleStatus(d *types.Deployment) error {
 	// Remove destroyed deployment
 	if d.Status.State == types.StateDestroyed {
 		if err := dm.Remove(d); err != nil {
-			log.Errorf("%s> remove deployment err: %s", msg, err.Error())
+			log.Errorf("%s:> remove deployment err: %s", logPrefix, err.Error())
 			return err
 		}
 	}
 
 	if err := sm.SetStatus(svc); err != nil {
-		log.Errorf("%s> set deployment status err: %s", msg, err.Error())
+		log.Errorf("%s:> set deployment status err: %s", logPrefix, err.Error())
 		return err
 	}
 
+	return nil
+}
+
+func Update() error {
 	return nil
 }

@@ -322,8 +322,8 @@ func DeploymentUpdateH(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := dm.SetSpec(dp, opts); err != nil {
-		log.V(logLevel).Errorf("%s:update:> update service err: %s", logPrefix, err.Error())
+	if err := dm.Update(dp, opts); err != nil {
+		log.V(logLevel).Errorf("%s:update:> update deployment err: %s", logPrefix, err.Error())
 		errors.HTTP.InternalServerError(w)
 		return
 	}

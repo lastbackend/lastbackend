@@ -23,7 +23,16 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/controller/envs"
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 	"github.com/lastbackend/lastbackend/pkg/log"
+	"github.com/lastbackend/lastbackend/pkg/storage"
+	"github.com/lastbackend/lastbackend/pkg/storage/etcd"
+
+	stgtypes "github.com/lastbackend/lastbackend/pkg/storage/etcd/types"
+	"encoding/json"
+	"fmt"
+	"github.com/lastbackend/lastbackend/pkg/controller/runtime/cache"
 )
+
+const logPrefix = "controller:deployment"
 
 type Controller struct {
 	status chan *types.Deployment
@@ -35,7 +44,8 @@ type Controller struct {
 func (dc *Controller) WatchSpec() {
 
 	var (
-		stg = envs.Get().GetStorage()
+		stg   = envs.Get().GetStorage()
+		event = make(chan *stgtypes.WatcherEvent)
 	)
 
 	log.Debug("controller:deployment:controller: start watch deployment spec")
@@ -63,43 +73,83 @@ func (dc *Controller) WatchSpec() {
 		}
 	}()
 
-	stg.Deployment().WatchSpec(context.Background(), dc.spec)
+	go func() {
+		for {
+			select {
+			case e := <-event:
+				if e.Data == nil {
+					continue
+				}
+
+				deployment := new(types.Deployment)
+
+				if err := json.Unmarshal(e.Data.([]byte), &deployment); err != nil {
+					log.Errorf("controller:deployment:controller: parse json err: %s", err.Error())
+					continue
+				}
+
+				dc.spec <- deployment
+			}
+		}
+	}()
+
+	stg.Watch(context.Background(), storage.DeploymentKind, event)
 }
 
 // Watch deployment spec changes
 func (dc *Controller) WatchStatus() {
 
 	var (
-		stg = envs.Get().GetStorage()
-		msg = "controller:deployment:status:"
+		stg   = envs.Get().GetStorage()
+		event = make(chan *stgtypes.WatcherEvent)
 	)
 
-	log.Debugf("%s> start watch deployment status", msg)
+	log.Debugf("%s:status> start watch deployment status", logPrefix)
 	go func() {
 		for {
 			select {
 			case s := <-dc.status:
 				{
 					if !dc.active {
-						log.Debug("%s> skip management couse it is in slave mode", msg)
+						log.Debug("%s:status> skip management couse it is in slave mode", logPrefix)
 						continue
 					}
 
 					if s == nil {
-						log.Debug("%s> skip because service is nil", msg)
+						log.Debug("%s:status> skip because service is nil", logPrefix)
 						continue
 					}
 
-					log.Debugf("%s> Service needs to be provisioned: %s", msg, s.SelfLink())
+					log.Debugf("%s:status> Service needs to be provisioned: %s", logPrefix, s.SelfLink())
 					if err := HandleStatus(s); err != nil {
-						log.Errorf("%s> service provision: %s err: %s", msg, s.SelfLink(), err.Error())
+						log.Errorf("%s:status> service provision: %s err: %s", logPrefix, s.SelfLink(), err.Error())
 					}
 				}
 			}
 		}
 	}()
 
-	stg.Deployment().WatchStatus(context.Background(), dc.status)
+	go func() {
+		for {
+			select {
+			case e := <-event:
+				if e.Data == nil {
+					continue
+				}
+
+				deployment := new(types.Deployment)
+
+				if err := json.Unmarshal(e.Data.([]byte), &deployment); err != nil {
+					log.Errorf("%s:status parse json err: %s", logPrefix, err.Error())
+					continue
+				}
+
+				dc.status <- deployment
+			}
+		}
+	}()
+
+	stg.Watch(context.Background(), storage.DeploymentKind, event)
 }
 
 // Pause deployment controller because not lead
@@ -116,26 +166,48 @@ func (dc *Controller) Resume() {
 
 	dc.active = true
 
+	nss := make(map[string]*types.Namespace)
+
 	log.Debug("controller:deployment:controller:resume start check deployment states")
-	nss, err := stg.Namespace().List(context.Background())
+	err := stg.Map(context.Background(), storage.NamespaceKind, "", &nss)
 	if err != nil {
 		log.Errorf("controller:deployment:controller:resume get namespaces list err: %s", err.Error())
 	}
 
 	for _, ns := range nss {
-		dl, err := stg.Deployment().ListByNamespace(context.Background(), ns.Meta.Name)
+
+		dl := make(map[string]*types.Deployment)
+
+		err := stg.Map(context.Background(), storage.DeploymentKind, etcd.BuildDeploymentQuery(ns.Meta.Name, ""), ns.Meta.Name)
 		if err != nil {
 			log.Errorf("controller:deployment:controller:resume get deployment list err: %s", err.Error())
 		}
 
 		for _, d := range dl {
-			d, err := stg.Deployment().Get(context.Background(), d.Meta.Namespace, d.Meta.Service, d.Meta.Name)
+
+			dp := new(types.Deployment)
+
+			err := stg.Get(context.Background(), storage.DeploymentKind, dp.Meta.SelfLink, &dp)
 			if err != nil {
 				log.Errorf("controller:deployment:controller:resume get deployment err: %s", err.Error())
 			}
 
 			dc.spec <- d
 			dc.status <- d
+		}
+	}
+}
+
+func (dc *Controller) Observe(ctx context.Context, cache *cache.Cache) {
+
+	// TODO: watch etcd: deployment collection
+
+	event := cache.Pods.Subscribe()
+
+	for {
+		select {
+		case e := <-event:
+			fmt.Println("change pod", e)
 		}
 	}
 }

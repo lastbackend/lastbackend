@@ -41,7 +41,6 @@ func GetConfig(spec *types.SpecTemplateContainer) *container.Config {
 		ports[port] = struct{}{}
 	}
 
-
 	var envs []string
 	for _, e := range spec.EnvVars {
 		env := fmt.Sprintf("%s=%s", e.Name, e.Value)

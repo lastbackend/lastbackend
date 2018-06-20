@@ -24,8 +24,37 @@ const (
 	EventActionDelete = "delete"
 )
 
-type Event struct {
+type event struct {
 	Action string
 	Name   string
-	Data   interface{}
+}
+
+type Event struct {
+	event
+	Data interface{}
+}
+
+type NamespaceEvent struct {
+	event
+	Data *Namespace
+}
+
+type ClusterEvent struct {
+	event
+	Data *Cluster
+}
+
+type ServiceEvent struct {
+	event
+	Data *Service
+}
+
+type IngresEvent struct {
+	event
+	Data *Ingress
+}
+
+type EndpointEvent struct {
+	event
+	Data *Endpoint
 }

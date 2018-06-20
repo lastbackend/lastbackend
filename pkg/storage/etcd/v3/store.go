@@ -27,11 +27,12 @@ import (
 
 	"github.com/coreos/etcd/clientv3"
 	"github.com/lastbackend/lastbackend/pkg/log"
-	"github.com/lastbackend/lastbackend/pkg/storage/store"
+	"github.com/lastbackend/lastbackend/pkg/storage/etcd/v3/store"
 	"github.com/lastbackend/lastbackend/pkg/util/converter"
 	"github.com/lastbackend/lastbackend/pkg/util/serializer"
 	"github.com/lastbackend/lastbackend/pkg/util/validator"
 	"golang.org/x/net/context"
+	"github.com/lastbackend/lastbackend/pkg/storage/etcd/types"
 )
 
 type dbstore struct {
@@ -40,27 +41,20 @@ type dbstore struct {
 	opts       []clientv3.OpOption
 	codec      serializer.Codec
 	pathPrefix string
+	watcher    *watcher
 }
-
-const (
-	logLevel = 5
-)
 
 // Need for decode array bytes
 type buffer []byte
 
-func (s *dbstore) WatchClose() {
-	s.client.Watcher.Close()
-}
-
 func (s *dbstore) Count(ctx context.Context, key, keyRegexFilter string) (int, error) {
 	key = path.Join(s.pathPrefix, key)
 
-	log.V(logLevel).Debugf("Etcd3: Count: key: %s with filter: %s", key, keyRegexFilter)
+	log.V(logLevel).Debugf("%s:count:> key: %s with filter: %s", logPrefix, key, keyRegexFilter)
 
 	getResp, err := s.client.KV.Get(ctx, key, clientv3.WithPrefix())
 	if err != nil {
-		log.V(logLevel).Errorf("Etcd3: Count: request err: %s", err.Error())
+		log.V(logLevel).Errorf("%s:count:> request err: %v", logPrefix, err)
 		return 0, err
 	}
 	r, _ := regexp.Compile(keyRegexFilter)
@@ -81,34 +75,34 @@ func (s *dbstore) Count(ctx context.Context, key, keyRegexFilter string) (int, e
 func (s *dbstore) Create(ctx context.Context, key string, obj, outPtr interface{}, ttl uint64) error {
 	key = path.Join(s.pathPrefix, key)
 
-	log.V(logLevel).Debugf("Etcd3: Create: key: %s, ttl: %d, val: %#v", key, ttl, obj)
+	log.V(logLevel).Debugf("%s:create:> key: %s, ttl: %d, val: %#v", logPrefix, key, ttl, obj)
 
 	data, err := serializer.Encode(s.codec, obj)
 	if err != nil {
-		log.V(logLevel).Errorf("Etcd3: Create: encode data err: %s", err.Error())
+		log.V(logLevel).Errorf("%s:create:> encode data err: %v", logPrefix, err)
 		return err
 	}
 	opts, err := s.ttlOpts(ctx, int64(ttl))
 	if err != nil {
-		log.V(logLevel).Errorf("Etcd3: Create: create ttl option err: %s", err.Error())
+		log.V(logLevel).Errorf("%s:create:> create ttl option err: %v", logPrefix, err)
 		return err
 	}
 	txnResp, err := s.client.KV.Txn(ctx).
 		If(clientv3.Compare(clientv3.ModRevision(key), "=", 0)).
 		Then(clientv3.OpPut(key, string(data), opts...)).Commit()
 	if err != nil {
-		log.V(logLevel).Errorf("Etcd3: Create: request err: %s", err.Error())
+		log.V(logLevel).Errorf("%s:create:> request err: %v", logPrefix, err)
 		return err
 	}
 	if !txnResp.Succeeded {
 		return errors.New(store.ErrEntityExists)
 	}
 	if validator.IsNil(outPtr) {
-		log.V(logLevel).Warn("Etcd3: Create: output struct is nil")
+		log.V(logLevel).Warn("%s:Create: output struct is nil")
 		return nil
 	} else {
 		if err := decode(s.codec, data, outPtr); err != nil {
-			log.V(logLevel).Errorf("Etcd3: Create: decode data err: %s", err.Error())
+			log.V(logLevel).Errorf("%s:create:> decode data err: %v", logPrefix, err)
 			return err
 		}
 	}
@@ -118,18 +112,18 @@ func (s *dbstore) Create(ctx context.Context, key string, obj, outPtr interface{
 func (s *dbstore) Get(ctx context.Context, key string, outPtr interface{}) error {
 	key = path.Join(s.pathPrefix, key)
 
-	log.V(logLevel).Debugf("Etcd3: Get: key: %s", key)
+	log.V(logLevel).Debugf("%s:get:> key: %s", key)
 
 	res, err := s.client.KV.Get(ctx, key, s.opts...)
 	if err != nil {
-		log.V(logLevel).Errorf("Etcd3: Get: request err: %s", err.Error())
+		log.V(logLevel).Errorf("%s:get:> request err: %v", logPrefix, err)
 		return err
 	}
 	if len(res.Kvs) == 0 {
 		return errors.New(store.ErrEntityNotFound)
 	}
 	if err := decode(s.codec, res.Kvs[0].Value, outPtr); err != nil {
-		log.V(logLevel).Errorf("Etcd3: Get: decode data err: %s", err.Error())
+		log.V(logLevel).Errorf("%s:get:> decode data err: %v", logPrefix, err)
 		return err
 	}
 	return nil
@@ -138,7 +132,7 @@ func (s *dbstore) Get(ctx context.Context, key string, outPtr interface{}) error
 func (s *dbstore) List(ctx context.Context, key, keyRegexFilter string, listOutPtr interface{}) error {
 	key = path.Join(s.pathPrefix, key)
 
-	log.V(logLevel).Debugf("Etcd3: List: key: %s with filter: %s", key, keyRegexFilter)
+	log.V(logLevel).Debugf("%s:list:> key: %s with filter: %s", logPrefix, key, keyRegexFilter)
 
 	if !strings.HasSuffix(key, "/") {
 		key += "/"
@@ -146,7 +140,7 @@ func (s *dbstore) List(ctx context.Context, key, keyRegexFilter string, listOutP
 
 	getResp, err := s.client.KV.Get(ctx, key, clientv3.WithPrefix())
 	if err != nil {
-		log.V(logLevel).Errorf("Etcd3: List: request err: %s", err.Error())
+		log.V(logLevel).Errorf("%s:list:> request err: %v", logPrefix, err)
 		return err
 	}
 
@@ -168,7 +162,7 @@ func (s *dbstore) List(ctx context.Context, key, keyRegexFilter string, listOutP
 	}
 
 	if err := decodeList(s.codec, items, listOutPtr); err != nil {
-		log.V(logLevel).Errorf("Etcd3: List: decode data err: %s", err.Error())
+		log.V(logLevel).Errorf("%s:list:> decode data err: %v", logPrefix, err)
 		return err
 	}
 	return nil
@@ -177,15 +171,17 @@ func (s *dbstore) List(ctx context.Context, key, keyRegexFilter string, listOutP
 func (s *dbstore) Map(ctx context.Context, key, keyRegexFilter string, mapOutPtr interface{}) error {
 	key = path.Join(s.pathPrefix, key)
 
-	log.V(logLevel).Debugf("Etcd3: Map: key: %s with filter: %s", key, keyRegexFilter)
+	log.V(logLevel).Debugf("%s:map:> key: %s with filter: %s", logPrefix, key, keyRegexFilter)
 
 	getResp, err := s.client.KV.Get(ctx, key, clientv3.WithPrefix())
 	if err != nil {
-		log.V(logLevel).Errorf("Etcd3: Map: request err: %s", err.Error())
+		log.V(logLevel).Errorf("%s:map:> request err: %v", logPrefix, err)
 		return err
 	}
+
 	r, _ := regexp.Compile(keyRegexFilter)
 	items := make(map[string]buffer, len(getResp.Kvs))
+
 	for _, kv := range getResp.Kvs {
 		if (keyRegexFilter == "") || r.MatchString(string(kv.Key)) {
 			keys := r.FindStringSubmatch(string(kv.Key))
@@ -198,7 +194,7 @@ func (s *dbstore) Map(ctx context.Context, key, keyRegexFilter string, mapOutPtr
 	}
 
 	if err := decodeMap(s.codec, items, mapOutPtr); err != nil {
-		log.V(logLevel).Errorf("Etcd3: Map: decode data err: %s", err.Error())
+		log.V(logLevel).Errorf("%s:map:> decode data err: %v", logPrefix, err)
 		return err
 	}
 
@@ -209,11 +205,11 @@ func (s *dbstore) MapList(ctx context.Context, key string, keyRegexFilter string
 
 	key = path.Join(s.pathPrefix, key)
 
-	log.V(logLevel).Debugf("Etcd3: MapList: key: %s with filter: %s", key, keyRegexFilter)
+	log.V(logLevel).Debugf("%s:maplist:> key: %s with filter: %s", logPrefix, key, keyRegexFilter)
 
 	getResp, err := s.client.KV.Get(ctx, key, clientv3.WithPrefix())
 	if err != nil {
-		log.V(logLevel).Errorf("Etcd3: MapList: request err: %s", err.Error())
+		log.V(logLevel).Errorf("%s:maplist:> request err: %v", logPrefix, err)
 		return err
 	}
 
@@ -237,7 +233,7 @@ func (s *dbstore) MapList(ctx context.Context, key string, keyRegexFilter string
 	}
 
 	if err := decodeMapList(s.codec, items, mapOutPtr); err != nil {
-		log.V(logLevel).Errorf("Etcd3: MapList: decode data err: %s", err.Error())
+		log.V(logLevel).Errorf("%s:maplist:> decode data err: %v", logPrefix, err)
 		return err
 	}
 	return nil
@@ -246,16 +242,16 @@ func (s *dbstore) MapList(ctx context.Context, key string, keyRegexFilter string
 func (s *dbstore) Update(ctx context.Context, key string, obj, outPtr interface{}, ttl uint64) error {
 	key = path.Join(s.pathPrefix, key)
 
-	log.V(logLevel).Debugf("Etcd3: Update: key: %s, ttl: %d, val: %#v", key, ttl, obj)
+	log.V(logLevel).Debugf("%s:update:> key: %s, ttl: %d, val: %#v", logPrefix, key, ttl, obj)
 
 	data, err := serializer.Encode(s.codec, obj)
 	if err != nil {
-		log.V(logLevel).Errorf("Etcd3: Update: encode data err: %s", err.Error())
+		log.V(logLevel).Errorf("%s:update:> encode data err: %v", logPrefix, err)
 		return err
 	}
 	opts, err := s.ttlOpts(ctx, int64(ttl))
 	if err != nil {
-		log.V(logLevel).Errorf("Etcd3: Update: create ttl option err: %s", err.Error())
+		log.V(logLevel).Errorf("%s:update:> create ttl option err: %v", logPrefix, err)
 		return err
 	}
 	txnResp, err := s.client.KV.Txn(ctx).
@@ -263,19 +259,19 @@ func (s *dbstore) Update(ctx context.Context, key string, obj, outPtr interface{
 		Then(clientv3.OpPut(key, string(data), opts...)).
 		Commit()
 	if err != nil {
-		log.V(logLevel).Errorf("Etcd3: Update: request err: %s", err.Error())
+		log.V(logLevel).Errorf("%s:update:> request err: %v", logPrefix, err)
 		return err
 	}
 	if !txnResp.Succeeded {
 		return errors.New(store.ErrEntityNotFound)
 	}
 	if validator.IsNil(outPtr) {
-		log.V(logLevel).Warn("Etcd3: Update: output struct is nil")
+		log.V(logLevel).Warnf("%s:Update: output struct is nil", logPrefix)
 		return nil
 	}
 	if outPtr != nil {
 		if err := decode(s.codec, data, outPtr); err != nil {
-			log.V(logLevel).Errorf("Etcd3: Update: decode data err: %s", err.Error())
+			log.V(logLevel).Errorf("%s:update:> decode data err: %v", logPrefix, err)
 			return err
 		}
 	}
@@ -285,34 +281,34 @@ func (s *dbstore) Update(ctx context.Context, key string, obj, outPtr interface{
 func (s *dbstore) Upsert(ctx context.Context, key string, obj, outPtr interface{}, ttl uint64) error {
 	key = path.Join(s.pathPrefix, key)
 
-	log.V(logLevel).Debugf("Etcd3: Upsert: key: %s, ttl: %d, val: %#v", key, ttl, obj)
+	log.V(logLevel).Debugf("%s:upsert:> key: %s, ttl: %d, val: %#v", logPrefix, key, ttl, obj)
 
 	data, err := serializer.Encode(s.codec, obj)
 	if err != nil {
-		log.V(logLevel).Errorf("Etcd3: Upsert: encode data err: %s", err.Error())
+		log.V(logLevel).Errorf("%s:upsert:> encode data err: %v", logPrefix, err)
 		return err
 	}
 	opts, err := s.ttlOpts(ctx, int64(ttl))
 	if err != nil {
-		log.V(logLevel).Errorf("Etcd3: Upsert: create ttl option err: %s", err.Error())
+		log.V(logLevel).Errorf("%s:upsert:> create ttl option err: %v", logPrefix, err)
 		return err
 	}
 	txnResp, err := s.client.KV.Txn(ctx).
 		Then(clientv3.OpPut(key, string(data), opts...)).Commit()
 	if err != nil {
-		log.V(logLevel).Errorf("Etcd3: Upsert: request err: %s", err.Error())
+		log.V(logLevel).Errorf("%s:upsert:> request err: %v", logPrefix, err)
 		return err
 	}
 	if !txnResp.Succeeded {
-		return errors.New(store.ErrEntityExists)
+		return errors.New(store.ErrOperationFailure)
 	}
 	if validator.IsNil(outPtr) {
-		log.V(logLevel).Warn("Etcd3: Upsert: output struct is nil")
+		log.V(logLevel).Warn("%s:Upsert: output struct is nil")
 		return nil
 	}
 	if outPtr != nil {
 		if err := decode(s.codec, data, outPtr); err != nil {
-			log.V(logLevel).Errorf("Etcd3: Upsert: decode data err: %s", err.Error())
+			log.V(logLevel).Errorf("%s:upsert:> decode data err: %v", logPrefix, err)
 			return err
 		}
 	}
@@ -322,13 +318,13 @@ func (s *dbstore) Upsert(ctx context.Context, key string, obj, outPtr interface{
 func (s *dbstore) Delete(ctx context.Context, key string) error {
 	key = path.Join(s.pathPrefix, key)
 
-	log.V(logLevel).Debugf("Etcd3: Delete: key: %s", key)
+	log.V(logLevel).Debugf("%s:delete:> key: %s", logPrefix, key)
 
 	_, err := s.client.KV.Txn(ctx).
 		Then(clientv3.OpGet(key), clientv3.OpDelete(key)).
 		Commit()
 	if err != nil {
-		log.V(logLevel).Errorf("Etcd3: Delete: request err: %s", err.Error())
+		log.V(logLevel).Errorf("%s:delete:> request err: %v", logPrefix, err)
 		return err
 	}
 	return nil
@@ -337,13 +333,13 @@ func (s *dbstore) Delete(ctx context.Context, key string) error {
 func (s *dbstore) DeleteDir(ctx context.Context, key string) error {
 	key = path.Join(s.pathPrefix, key)
 
-	log.V(logLevel).Debugf("Etcd3: DeleteDir: key: %s", key)
+	log.V(logLevel).Debugf("%s:deletedir:> key: %s", logPrefix, key)
 
 	_, err := s.client.KV.Txn(ctx).
 		Then(clientv3.OpDelete(key, clientv3.WithPrefix())).
 		Commit()
 	if err != nil {
-		log.V(logLevel).Errorf("Etcd3: DeleteDir: request err: %s", err.Error())
+		log.V(logLevel).Errorf("%s:deletedir:> request err: %v", logPrefix, err)
 		return err
 	}
 	return nil
@@ -351,7 +347,7 @@ func (s *dbstore) DeleteDir(ctx context.Context, key string) error {
 
 func (s *dbstore) Begin(ctx context.Context) store.TX {
 
-	log.V(logLevel).Debugf("Etcd3: Begin")
+	log.V(logLevel).Debugf("%s:begin:> start transaction", logPrefix)
 
 	t := new(tx)
 	t.dbstore = s
@@ -360,36 +356,10 @@ func (s *dbstore) Begin(ctx context.Context) store.TX {
 	return t
 }
 
-func (s *dbstore) Watch(ctx context.Context, key, keyRegexFilter string, f func(string, string, []byte)) error {
+func (s *dbstore) Watch(ctx context.Context, key, keyRegexFilter string) (types.Watcher, error) {
+	log.V(logLevel).Debugf("%s:watch:> key: %s, filter: %s", logPrefix, key, keyRegexFilter)
 	key = path.Join(s.pathPrefix, key)
-
-	log.V(logLevel).Debugf("Etcd3: WatchService: key: %s, filter: %s", key, keyRegexFilter)
-
-	r, _ := regexp.Compile(keyRegexFilter)
-	rch := s.client.Watch(context.Background(), key, clientv3.WithPrefix())
-
-	for wresp := range rch {
-
-		for _, ev := range wresp.Events {
-
-			if r.MatchString(string(ev.Kv.Key)) {
-
-				action := store.STORAGECREATEEVENT
-
-				if ev.Type.String() == "PUT" && wresp.Header.Revision != ev.Kv.CreateRevision {
-					action = store.STORAGEUPDATEEVENT
-				}
-
-				if ev.Type.String() == "DELETE" {
-					action = store.STORAGEDELETEEVENT
-				}
-
-				go f(action, string(ev.Kv.Key), ev.Kv.Value)
-			}
-		}
-	}
-
-	return nil
+	return s.watcher.Watch(ctx, key, keyRegexFilter)
 }
 
 func (s *dbstore) Decode(ctx context.Context, value []byte, out interface{}) error {
@@ -398,7 +368,7 @@ func (s *dbstore) Decode(ctx context.Context, value []byte, out interface{}) err
 
 func decode(s serializer.Codec, value []byte, out interface{}) error {
 	if _, err := converter.EnforcePtr(out); err != nil {
-		panic("Error: unable to convert output struct to pointer")
+		return errors.New("unable to convert output struct to pointer")
 	}
 	return serializer.Decode(s, value, out)
 }
@@ -406,7 +376,7 @@ func decode(s serializer.Codec, value []byte, out interface{}) error {
 func decodeList(codec serializer.Codec, items map[string]map[string]buffer, listOut interface{}) error {
 	v, err := converter.EnforcePtr(listOut)
 	if err != nil || (v.Kind() != reflect.Slice) {
-		panic("Error: need ptr slice")
+		return errors.New("need ptr slice")
 	}
 
 	for _, item := range items {
@@ -445,7 +415,7 @@ func decodeMap(codec serializer.Codec, items map[string]buffer, mapOut interface
 func decodeMapList(codec serializer.Codec, items map[string]map[string]buffer, mapOut interface{}) error {
 	v := reflect.ValueOf(mapOut)
 	if v.Kind() != reflect.Map {
-		panic("Error: need map")
+		return errors.New("need map")
 	}
 
 	for key, item := range items {
@@ -487,14 +457,4 @@ func (s *dbstore) ttlOpts(ctx context.Context, ttl int64) ([]clientv3.OpOption, 
 		return nil, err
 	}
 	return []clientv3.OpOption{clientv3.WithLease(clientv3.LeaseID(lcr.ID))}, nil
-}
-
-func GetStore(client *clientv3.Client, opts []clientv3.OpOption, codec serializer.Codec, pathPrefix string, debug bool) *dbstore {
-	return &dbstore{
-		client:     client,
-		opts:       opts,
-		codec:      codec,
-		pathPrefix: pathPrefix,
-		debug:      debug,
-	}
 }

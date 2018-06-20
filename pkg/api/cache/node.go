@@ -20,9 +20,11 @@ package cache
 
 import (
 	"context"
+	"strings"
+	"sync"
+
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 	"github.com/lastbackend/lastbackend/pkg/log"
-	"sync"
 )
 
 const logCacheNode = "api:cache:node"
@@ -32,13 +34,13 @@ type CacheNodeManifest struct {
 	manifests map[string]*types.NodeManifest
 }
 
-type NetworkManifestWatcher func(ctx context.Context, event chan *types.NetworkManifestEvent) error
+type NetworkManifestWatcher func(ctx context.Context, event chan *types.Event) error
 
-type PodManifestWatcher func(ctx context.Context, event chan *types.PodManifestEvent) error
+type PodManifestWatcher func(ctx context.Context, event chan *types.Event) error
 
-type VolumeManifestWatcher func(ctx context.Context, event chan *types.VolumeManifestEvent) error
+type VolumeManifestWatcher func(ctx context.Context, event chan *types.Event) error
 
-type EndpointManifestWatcher func(ctx context.Context, event chan *types.EndpointManifestEvent) error
+type EndpointManifestWatcher func(ctx context.Context, event chan *types.Event) error
 
 func (c *CacheNodeManifest) checkNode(node string) {
 	if _, ok := c.manifests[node]; !ok {
@@ -141,38 +143,33 @@ func (c *CacheNodeManifest) Clear(node string) {
 	delete(c.manifests, node)
 }
 
-func (c *CacheNodeManifest) Status(isw IngressStatusWatcher) error {
-	evs := make(chan *types.NodeStatusEvent)
-	go func() {
-		for {
-			select {
-			case e := <-evs:
-				if !e.Ready {
-					delete(c.manifests, e.Node)
-				}
-			}
-		}
-	}()
-
-	return isw(context.Background(), evs)
-}
-
 func (c *CacheNodeManifest) CachePods(ps PodManifestWatcher) error {
-	evs := make(chan *types.PodManifestEvent)
+	evs := make(chan *types.Event)
+
 	go func() {
 		for {
 			select {
 			case e := <-evs:
 				{
-					if e.Event == "create" || e.Event == "update" {
-						c.SetPodManifest(e.Node, e.Name, e.Manifest)
+
+					if e.Data == nil {
 						continue
 					}
 
-					if e.Event == "delete" {
-						c.DelPodManifest(e.Node, e.Name)
-						continue
+					spec := e.Data.(types.PodManifest)
+					parse := strings.Split(e.Name, ":")
+					node := parse[0]
+					pod := parse[1]
+
+					switch e.Action {
+					case types.EventActionCreate:
+						fallthrough
+					case types.EventActionUpdate:
+						c.SetPodManifest(node, pod, spec)
+					case types.EventActionDelete:
+						c.DelPodManifest(node, pod)
 					}
+
 				}
 			}
 		}
@@ -182,21 +179,32 @@ func (c *CacheNodeManifest) CachePods(ps PodManifestWatcher) error {
 }
 
 func (c *CacheNodeManifest) CacheVolumes(vs VolumeManifestWatcher) error {
-	evs := make(chan *types.VolumeManifestEvent)
+	evs := make(chan *types.Event)
+
 	go func() {
 		for {
 			select {
 			case e := <-evs:
 				{
-					if e.Event == "create" || e.Event == "update" {
-						c.SetVolumeManifest(e.Node, e.Name, e.Manifest)
+
+					if e.Data == nil {
 						continue
 					}
 
-					if e.Event == "delete" {
-						c.DelVolumeManifest(e.Node, e.Name)
-						continue
+					spec := e.Data.(types.VolumeManifest)
+					parse := strings.Split(e.Name, ":")
+					node := parse[0]
+					volume := parse[1]
+
+					switch e.Action {
+					case types.EventActionCreate:
+						fallthrough
+					case types.EventActionUpdate:
+						c.SetVolumeManifest(node, volume, spec)
+					case types.EventActionDelete:
+						c.DelVolumeManifest(node, volume)
 					}
+
 				}
 			}
 		}
@@ -206,22 +214,30 @@ func (c *CacheNodeManifest) CacheVolumes(vs VolumeManifestWatcher) error {
 }
 
 func (c *CacheNodeManifest) CacheNetwork(ns NetworkManifestWatcher) error {
-	evs := make(chan *types.NetworkManifestEvent)
+	evs := make(chan *types.Event)
 	go func() {
 		for {
 			select {
 			case e := <-evs:
 				{
-					if e.Event == "create" || e.Event == "update" {
-						c.SetNetworkManifest(e.Manifest.CIDR, e.Manifest)
+
+					if e.Data == nil {
 						continue
 					}
 
-					if e.Event == "delete" {
-						e.Manifest.State = types.StateDestroy
-						c.SetNetworkManifest(e.Manifest.CIDR, e.Manifest)
-						continue
+					spec := e.Data.(types.NetworkManifest)
+					node := e.Name
+
+					switch e.Action {
+					case types.EventActionCreate:
+						fallthrough
+					case types.EventActionUpdate:
+						c.SetNetworkManifest(node, spec)
+					case types.EventActionDelete:
+						spec.State = types.StateDestroy
+						c.SetNetworkManifest(node, spec)
 					}
+
 				}
 			}
 		}
@@ -231,22 +247,31 @@ func (c *CacheNodeManifest) CacheNetwork(ns NetworkManifestWatcher) error {
 }
 
 func (c *CacheNodeManifest) CacheEndpoints(es EndpointManifestWatcher) error {
-	evs := make(chan *types.EndpointManifestEvent)
+
+	evs := make(chan *types.Event)
+
 	go func() {
 		for {
 			select {
 			case e := <-evs:
 				{
-					if e.Event == "create" || e.Event == "update" {
-						c.SetEndpointManifest(e.Manifest.IP, e.Manifest)
+
+					if e.Data == nil {
 						continue
 					}
 
-					if e.Event == "delete" {
-						e.Manifest.State = types.StateDestroy
-						c.SetEndpointManifest(e.Manifest.IP, e.Manifest)
-						continue
+					spec := e.Data.(types.EndpointManifest)
+
+					switch e.Action {
+					case types.EventActionCreate:
+						fallthrough
+					case types.EventActionUpdate:
+						c.SetEndpointManifest(spec.IP, spec)
+					case types.EventActionDelete:
+						spec.State = types.StateDestroy
+						c.SetEndpointManifest(spec.IP, spec)
 					}
+
 				}
 			}
 		}

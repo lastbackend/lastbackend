@@ -27,8 +27,11 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 	"github.com/lastbackend/lastbackend/pkg/log"
 	"github.com/lastbackend/lastbackend/pkg/storage"
-	"github.com/lastbackend/lastbackend/pkg/storage/store"
+	"github.com/lastbackend/lastbackend/pkg/storage/etcd/v3/store"
 	"github.com/spf13/viper"
+	"github.com/lastbackend/lastbackend/pkg/storage/etcd"
+	stgtypes "github.com/lastbackend/lastbackend/pkg/storage/etcd/types"
+	"encoding/json"
 )
 
 const (
@@ -43,8 +46,7 @@ type IService interface {
 	Destroy(service *types.Service) (*types.Service, error)
 	Remove(service *types.Service) error
 	SetStatus(service *types.Service) error
-	Watch(ch chan *types.Event) error
-	WatchSpec(ch chan *types.Service) error
+	Watch(ch chan types.ServiceEvent) error
 }
 
 type Service struct {
@@ -57,7 +59,9 @@ func (s *Service) Get(namespace, service string) (*types.Service, error) {
 
 	log.V(logLevel).Debugf("%s:get:> get in namespace %s by name %s", logServicePrefix, namespace, service)
 
-	svc, err := s.storage.Service().Get(s.context, namespace, service)
+	svc := new(types.Service)
+
+	err := s.storage.Get(s.context, storage.ServiceKind, etcd.BuildServiceKey(namespace, service), &svc)
 	if err != nil {
 
 		if err.Error() == store.ErrEntityNotFound {
@@ -65,7 +69,7 @@ func (s *Service) Get(namespace, service string) (*types.Service, error) {
 			return nil, nil
 		}
 
-		log.V(logLevel).Errorf("%s:get:> get in namespace %s by name %s error: %s", logServicePrefix, namespace, service, err)
+		log.V(logLevel).Errorf("%s:get:> get in namespace %s by name %s error: %v", logServicePrefix, namespace, service, err)
 		return nil, err
 	}
 
@@ -77,9 +81,12 @@ func (s *Service) List(namespace string) (map[string]*types.Service, error) {
 
 	log.V(logLevel).Debugf("%s:list:> by namespace %s", logServicePrefix, namespace)
 
-	items, err := s.storage.Service().ListByNamespace(s.context, namespace)
+	items := make(map[string]*types.Service, 0)
+	q := etcd.BuildServiceQuery(namespace)
+
+	err := s.storage.Map(s.context, storage.ServiceKind, q, &items)
 	if err != nil {
-		log.V(logLevel).Error("%s:list:> by namespace %s err: %s", logServicePrefix, namespace, err)
+		log.V(logLevel).Error("%s:list:> by namespace %s err: %v", logServicePrefix, namespace, err)
 		return nil, err
 	}
 
@@ -107,7 +114,7 @@ func (s *Service) Create(namespace *types.Namespace, opts *types.ServiceCreateOp
 	service.Meta.SetDefault()
 	service.Meta.Name = *opts.Name
 	service.Meta.Namespace = namespace.Meta.Name
-	service.Meta.Endpoint = strings.ToLower(fmt.Sprintf("%s-%s.%s", *opts.Name, namespace.Meta.Endpoint, viper.GetString("domain.internal")))
+	service.Meta.Endpoint = strings.ToLower(fmt.Sprintf("%s-%s.%s", *opts.Name, namespace.Meta.Name, viper.GetString("domain.internal")))
 
 	if opts.Description != nil {
 		service.Meta.Description = *opts.Description
@@ -129,8 +136,10 @@ func (s *Service) Create(namespace *types.Namespace, opts *types.ServiceCreateOp
 		service.Spec.Update(opts.Spec)
 	}
 
-	if err := s.storage.Service().Insert(s.context, service); err != nil {
-		log.V(logLevel).Errorf("%s:create:> insert service err: %s", logServicePrefix, err)
+	service.SelfLink()
+
+	if err := s.storage.Create(s.context, storage.ServiceKind, service.Meta.SelfLink, service, nil); err != nil {
+		log.V(logLevel).Errorf("%s:create:> insert service err: %v", logServicePrefix, err)
 		return nil, err
 	}
 
@@ -148,8 +157,9 @@ func (s *Service) Update(service *types.Service, opts *types.ServiceUpdateOption
 
 	if opts.Description != nil {
 		service.Meta.Description = *opts.Description
-		if err := s.storage.Service().Update(s.context, service); err != nil {
-			log.V(logLevel).Errorf("%s:update:> update service meta err: %s", logServicePrefix, err)
+
+		if err := s.storage.Update(s.context, storage.ServiceKind, service.Meta.SelfLink, service, nil); err != nil {
+			log.V(logLevel).Errorf("%s:update:> update service meta err: %v", logServicePrefix, err)
 			return nil, err
 		}
 	}
@@ -158,8 +168,8 @@ func (s *Service) Update(service *types.Service, opts *types.ServiceUpdateOption
 
 		service.Spec.Update(opts.Spec)
 
-		if err := s.storage.Service().SetSpec(s.context, service); err != nil {
-			log.V(logLevel).Errorf("%s:update:> update service spec err: %s", logServicePrefix, err)
+		if err := s.storage.Update(s.context, storage.ServiceKind, service.Meta.SelfLink, service, nil); err != nil {
+			log.V(logLevel).Errorf("%s:update:> update service spec err: %v", logServicePrefix, err)
 			return nil, err
 		}
 	}
@@ -173,17 +183,12 @@ func (s *Service) Destroy(service *types.Service) (*types.Service, error) {
 	log.V(logLevel).Debugf("%s:destroy:> destroy service %s", logServicePrefix, service.SelfLink())
 
 	service.Status.State = types.StateDestroy
-	if err := s.storage.Service().SetStatus(s.context, service); err != nil {
-		log.V(logLevel).Errorf("%s:destroy:> destroy service err: %s", logServicePrefix, err)
-		return nil, err
-	}
-
 	service.Spec.State.Destroy = true
-	if err := s.storage.Service().SetSpec(s.context, service); err != nil {
-		log.V(logLevel).Errorf("%s:destroy:> destroy service err: %s", logServicePrefix, err)
+
+	if err := s.storage.Update(s.context, storage.ServiceKind, service.Meta.SelfLink, service, nil); err != nil {
+		log.V(logLevel).Errorf("%s:destroy:> destroy service err: %v", logServicePrefix, err)
 		return nil, err
 	}
-
 	return service, nil
 }
 
@@ -192,9 +197,9 @@ func (s *Service) Remove(service *types.Service) error {
 
 	log.V(logLevel).Debugf("%s:remove:> remove service %#v", logServicePrefix, service)
 
-	err := s.storage.Service().Remove(s.context, service)
+	err := s.storage.Remove(s.context, storage.ServiceKind, service.Meta.SelfLink)
 	if err != nil {
-		log.V(logLevel).Errorf("%s:remove:> remove service err: %s", logServicePrefix, err)
+		log.V(logLevel).Errorf("%s:remove:> remove service err: %v", logServicePrefix, err)
 		return err
 	}
 
@@ -206,8 +211,8 @@ func (s *Service) SetStatus(service *types.Service) error {
 
 	log.Debugf("%s:setstatus:> set state for service %s", logServicePrefix, service.Meta.Name)
 
-	if err := s.storage.Service().SetStatus(s.context, service); err != nil {
-		log.Errorf("%s:setstatus:> set state for service %s err: %s", logServicePrefix, service.Meta.Name, err.Error())
+	if err := s.storage.Update(s.context, storage.ServiceKind, service.Meta.SelfLink, service, nil); err != nil {
+		log.Errorf("%s:setstatus:> set state for service %s err: %v", logServicePrefix, service.Meta.Name, err)
 		return err
 	}
 
@@ -215,23 +220,43 @@ func (s *Service) SetStatus(service *types.Service) error {
 }
 
 // Watch service changes
-func (s *Service) Watch(ch chan *types.Event) error {
+func (s *Service) Watch(ch chan types.ServiceEvent) error {
 
-	log.Debugf("%s:watch:> watch deployments", logServicePrefix)
-	if err := s.storage.Service().Watch(s.context, ch); err != nil {
-		log.Debugf("%s:watch:> watch deployment err: %s", logServicePrefix, err.Error())
-		return err
-	}
+	log.Debugf("%s:watch:> watch service by spec changes", logServicePrefix)
 
-	return nil
-}
+	done := make(chan bool)
+	event := make(chan *stgtypes.WatcherEvent)
 
-// Watch service by spec changes
-func (s *Service) WatchSpec(ch chan *types.Service) error {
+	go func() {
+		for {
+			select {
+			case <-s.context.Done():
+				done <- true
+				return
+			case e := <-event:
+				if e.Data == nil {
+					continue
+				}
 
-	log.Debugf("%s:watchspec:> watch deployments by spec changes", logServicePrefix)
-	if err := s.storage.Service().WatchSpec(s.context, ch); err != nil {
-		log.Debugf("%s:watchspec:> watch deployment by spec changes err: %s", logServicePrefix, err.Error())
+				res := types.ServiceEvent{}
+				res.Action = e.Action
+				res.Name = e.Name
+
+				service := new(types.Service)
+
+				if err := json.Unmarshal(e.Data.([]byte), *service); err != nil {
+					log.Errorf("%s:> parse data err: %v", logServicePrefix, err)
+					continue
+				}
+
+				res.Data = service
+
+				ch <- res
+			}
+		}
+	}()
+
+	if err := s.storage.Watch(s.context, storage.ServiceKind, event); err != nil {
 		return err
 	}
 

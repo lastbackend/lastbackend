@@ -20,9 +20,10 @@ package cache
 
 import (
 	"context"
+	"sync"
+
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 	"github.com/lastbackend/lastbackend/pkg/log"
-	"sync"
 )
 
 type CacheIngressManifest struct {
@@ -30,9 +31,9 @@ type CacheIngressManifest struct {
 	spec map[string]*types.IngressSpec
 }
 
-type IngressStatusWatcher func(ctx context.Context, event chan *types.IngressEvent) error
+type IngressStatusWatcher func(ctx context.Context, event chan *types.Event) error
 
-type RouteSpecWatcher func(ctx context.Context, event chan *types.IngressRouteEvent) error
+type RouteSpecWatcher func(ctx context.Context, event chan *types.Event) error
 
 func (c *CacheIngressManifest) SetRouteSpec(route string, s types.RouteSpec) {
 	c.lock.Lock()
@@ -63,21 +64,31 @@ func (c *CacheIngressManifest) DelRouteSpec(route string) {
 }
 
 func (c *CacheIngressManifest) CacheRoutes(rs RouteSpecWatcher) error {
-	evs := make(chan *types.IngressRouteEvent)
+
+	evs := make(chan *types.Event)
+
 	go func() {
 		for {
 			select {
 			case e := <-evs:
 				{
-					if e.Event == "create" || e.Event == "update" {
-						c.SetRouteSpec(e.Name, e.Route)
+
+					if e.Data == nil {
 						continue
 					}
 
-					if e.Event == "delete" {
-						c.DelRouteSpec(e.Name)
-						continue
+					spec := e.Data.(types.RouteSpec)
+					route := e.Name
+
+					switch e.Action {
+					case types.EventActionCreate:
+						fallthrough
+					case types.EventActionUpdate:
+						c.SetRouteSpec(route, spec)
+					case types.EventActionDelete:
+						c.DelRouteSpec(route)
 					}
+
 				}
 			}
 		}
@@ -110,13 +121,23 @@ func (c *CacheIngressManifest) Clear(ingress string) {
 }
 
 func (c *CacheIngressManifest) Status(isw IngressStatusWatcher) error {
-	evs := make(chan *types.IngressEvent)
+
+	evs := make(chan *types.Event)
+
 	go func() {
 		for {
 			select {
 			case e := <-evs:
-				if !e.Ready {
-					delete(c.spec, e.Name)
+
+				if e.Data == nil {
+					continue
+				}
+
+				status := e.Data.(types.IngressStatus)
+				ingress := e.Name
+
+				if !status.Ready {
+					delete(c.spec, ingress)
 				}
 			}
 		}

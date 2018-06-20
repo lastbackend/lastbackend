@@ -51,7 +51,7 @@ type Runtime struct {
 func NewRuntime(ctx context.Context) *Runtime {
 	r := new(Runtime)
 	r.process = new(system.Process)
-	r.process.Register(ctx, types.KindController, envs.Get().GetStorage())
+	r.process.Register(types.KindController, envs.Get().GetStorage())
 
 	r.sc = service.NewServiceController(ctx)
 	r.dc = deployment.NewDeploymentController(ctx)
@@ -80,6 +80,7 @@ func (r *Runtime) Loop() {
 			select {
 			case l := <-lead:
 				{
+
 					if l {
 
 						if r.active {
@@ -108,6 +109,7 @@ func (r *Runtime) Loop() {
 						r.dc.Pause()
 						r.pc.Pause()
 					}
+
 				}
 			}
 		}
@@ -116,4 +118,5 @@ func (r *Runtime) Loop() {
 	if err := r.process.WaitElected(lead); err != nil {
 		log.Errorf("Runtime: Elect Wait error: %s", err.Error())
 	}
+
 }

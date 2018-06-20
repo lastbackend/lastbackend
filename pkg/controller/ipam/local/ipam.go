@@ -23,8 +23,8 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/controller/envs"
 	"github.com/lastbackend/lastbackend/pkg/distribution/errors"
 	"github.com/lastbackend/lastbackend/pkg/log"
-	"github.com/lastbackend/lastbackend/pkg/storage/storage"
 	"net"
+	"github.com/lastbackend/lastbackend/pkg/storage"
 )
 
 const (
@@ -39,7 +39,7 @@ type IPAM struct {
 	released  map[string]bool
 	available int
 	reserved  int
-	storage   storage.IPAM
+	storage   storage.Storage
 }
 
 // Lease IP from range
@@ -115,7 +115,7 @@ func (i *IPAM) save() error {
 		ips = append(ips, ip)
 	}
 
-	return i.storage.Set(context.Background(), ips)
+	return i.storage.Upsert(context.Background(), storage.UtilsKind, "imap", ips, nil)
 }
 
 // New IPAM object initializing and returning
@@ -132,8 +132,6 @@ func New(cidr string) (*IPAM, error) {
 	if cidr == "" {
 		cidr = defaultCIDR
 	}
-
-	ipam.storage = envs.Get().GetStorage().IPAM()
 
 	// Get IP range by network CIDR
 	ip, ipnet, err := net.ParseCIDR(cidr)
@@ -152,8 +150,10 @@ func New(cidr string) (*IPAM, error) {
 		ipam.available++
 	}
 
+	ips := make([]string, 0)
+
 	// Get IP list from database storage
-	ips, err := ipam.storage.Get(context.Background())
+	err = envs.Get().GetStorage().Get(context.Background(), storage.UtilsKind, "ipam", &ips)
 	if err != nil {
 		log.Errorf("%s get context error: %s", logIPAMPrefix, err.Error())
 		return nil, err

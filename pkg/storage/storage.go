@@ -19,17 +19,42 @@
 package storage
 
 import (
+	"github.com/lastbackend/lastbackend/pkg/storage/etcd/types"
+	"context"
 	"github.com/lastbackend/lastbackend/pkg/storage/etcd"
-	"github.com/lastbackend/lastbackend/pkg/storage/mock"
 )
+
+const (
+	NamespaceKind  types.Kind = "namespaces"
+	ServiceKind    types.Kind = "services"
+	DeploymentKind types.Kind = "deployments"
+	ClusterKind    types.Kind = "cluster"
+	PodKind        types.Kind = "pods"
+	IngressKind    types.Kind = "ingresses"
+	SystemKind     types.Kind = "systems"
+	NodeKind       types.Kind = "nodes"
+	RouteKind      types.Kind = "routes"
+	VolumeKind     types.Kind = "volumes"
+	TriggerKind    types.Kind = "triggers"
+	SecretKind     types.Kind = "secrets"
+	EndpointKind   types.Kind = "endpoints"
+	UtilsKind      types.Kind = "utils"
+)
+
+type Storage interface {
+	Get(ctx context.Context, kind types.Kind, name string, obj interface{}) error
+	List(ctx context.Context, kind types.Kind, q string, obj interface{}) error
+	Map(ctx context.Context, kind types.Kind, q string, obj interface{}) error
+	Create(ctx context.Context, kind types.Kind, name string, obj interface{}, opts *types.Opts) error
+	Update(ctx context.Context, kind types.Kind, name string, obj interface{}, opts *types.Opts) error
+	Upsert(ctx context.Context, kind types.Kind, name string, obj interface{}, opts *types.Opts) error
+	Remove(ctx context.Context, kind types.Kind, name string) error
+	Watch(ctx context.Context, kind types.Kind, event chan *types.WatcherEvent) error
+}
 
 func Get(driver string) (Storage, error) {
 	switch driver {
 	default:
-		return etcd.New()
+		return etcd.NewV3()
 	}
-}
-
-func GetMock() (Storage, error) {
-	return mock.New()
 }

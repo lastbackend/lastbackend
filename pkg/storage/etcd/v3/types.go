@@ -18,6 +18,11 @@
 
 package v3
 
+const (
+	logLevel = 5
+	logPrefix = "storage:etcd:v3"
+)
+
 type Config struct {
 	Endpoints []string `yaml:"endpoint"`
 	TLS       struct {

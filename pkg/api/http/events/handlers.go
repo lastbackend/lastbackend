@@ -78,9 +78,9 @@ func EventSubscribeH(w http.ResponseWriter, r *http.Request) {
 	ticker := time.NewTicker(time.Second)
 	defer ticker.Stop()
 
-	var serviceEvents = make(chan *types.Event)
-	var namespaceEvents = make(chan *types.Event)
-	var clusterEvents = make(chan *types.Event)
+	var serviceEvents = make(chan types.ServiceEvent)
+	var namespaceEvents = make(chan types.NamespaceEvent)
+	var clusterEvents = make(chan types.ClusterEvent)
 
 	notify := w.(http.CloseNotifier).CloseNotify()
 
@@ -104,7 +104,7 @@ func EventSubscribeH(w http.ResponseWriter, r *http.Request) {
 				if e.Data == nil {
 					data = nil
 				} else {
-					data = v1.View().Cluster().New(e.Data.(*types.Cluster))
+					data = v1.View().Cluster().New(e.Data)
 				}
 
 				event := Event{
@@ -123,7 +123,7 @@ func EventSubscribeH(w http.ResponseWriter, r *http.Request) {
 				if e.Data == nil {
 					data = nil
 				} else {
-					data = v1.View().Service().New(e.Data.(*types.Service))
+					data = v1.View().Service().New(e.Data)
 				}
 
 				event := Event{
@@ -142,7 +142,7 @@ func EventSubscribeH(w http.ResponseWriter, r *http.Request) {
 				if e.Data == nil {
 					data = nil
 				} else {
-					data = v1.View().Namespace().New(e.Data.(*types.Namespace))
+					data = v1.View().Namespace().New(e.Data)
 				}
 
 				event := Event{

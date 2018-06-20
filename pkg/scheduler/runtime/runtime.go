@@ -49,7 +49,7 @@ type Runtime struct {
 func NewRuntime(ctx context.Context) *Runtime {
 	r := new(Runtime)
 	r.process = new(system.Process)
-	r.process.Register(ctx, types.KindScheduler, envs.Get().GetStorage())
+	r.process.Register(types.KindScheduler, envs.Get().GetStorage())
 
 	r.pc = pod.NewPodController(ctx)
 	r.nc = node.NewNodeController(ctx)

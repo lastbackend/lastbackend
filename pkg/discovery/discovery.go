@@ -19,9 +19,10 @@
 package discovery
 
 import (
-	"github.com/lastbackend/lastbackend/pkg/cache"
-	"github.com/lastbackend/lastbackend/pkg/discovery/dns"
+	"context"
+	"github.com/lastbackend/lastbackend/pkg/discovery/cache"
 	"github.com/lastbackend/lastbackend/pkg/discovery/envs"
+	"github.com/lastbackend/lastbackend/pkg/discovery/runtime"
 	"github.com/lastbackend/lastbackend/pkg/log"
 	"github.com/lastbackend/lastbackend/pkg/storage"
 	"github.com/spf13/viper"
@@ -39,15 +40,18 @@ func Daemon() bool {
 
 	log.Info("Start service discovery")
 
-	envs.Get().SetCache(cache.New())
-
-	stg, err := storage.Get(viper.GetString("psql"))
+	stg, err := storage.Get(viper.GetString("storage"))
 	if err != nil {
-		log.Fatalf("Cannot initialize storage: %v", err)
+		log.Fatalf("Can not initialize storage: %v", err)
 	}
 	envs.Get().SetStorage(stg)
+	envs.Get().SetCache(cache.New())
 
-	sd, err := dns.Listen(viper.GetInt("dns.port"))
+	r := runtime.NewRuntime(context.Background())
+	r.Restore()
+	r.Loop()
+
+	sd, err := Listen(viper.GetInt("discovery.port"))
 	if err != nil {
 		log.Fatalf("Start discovery server error: %v", err)
 	}
