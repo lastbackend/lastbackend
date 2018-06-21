@@ -26,44 +26,62 @@ import (
 
 const (
 	logLevel  = 6
-	logPrefix = "storage:etcd:v3:mock"
+	logPrefix = "storage:mock"
 )
 
 type MockDB struct {
+	store map[types.Kind]map[string]interface{}
+}
+
+func (db *MockDB) Get(ctx context.Context, kind types.Kind, name string, obj interface{}) error {
+	db.check(kind)
+
+	return nil
+}
+
+func (db *MockDB) List(ctx context.Context, kind types.Kind, q string, obj interface{}) error {
+	db.check(kind)
+	return nil
+}
+
+func (db *MockDB) Map(ctx context.Context, kind types.Kind, q string, obj interface{}) error {
+	db.check(kind)
+	return nil
+}
+
+func (db *MockDB) Create(ctx context.Context, kind types.Kind, name string, obj interface{}, opts *types.Opts) error {
+	db.check(kind)
+	return nil
+}
+
+func (db *MockDB) Update(ctx context.Context, kind types.Kind, name string, obj interface{}, opts *types.Opts) error {
+	db.check(kind)
+	return nil
+}
+
+func (db *MockDB) Upsert(ctx context.Context, kind types.Kind, name string, obj interface{}, opts *types.Opts) error {
+	db.check(kind)
+	return nil
+}
+
+func (db *MockDB) Remove(ctx context.Context, kind types.Kind, name string) error {
+	db.check(kind)
+	return nil
+}
+
+func (db *MockDB) Watch(ctx context.Context, kind types.Kind, event chan *types.WatcherEvent) error {
+	db.check(kind)
+	return nil
+}
+
+func (db *MockDB) check(kind types.Kind) {
+	if _, ok := db.store[kind]; !ok {
+		db.store[kind] = make(map[string]interface{})
+	}
 }
 
 func New() (*MockDB, error) {
+	db := new(MockDB)
+	db.store = make(map[types.Kind]map[string]interface{})
 	return new(MockDB), nil
-}
-
-func (MockDB) Get(ctx context.Context, kind types.Kind, name string, obj interface{}) error {
-	return nil
-}
-
-func (MockDB) List(ctx context.Context, kind types.Kind, q string, obj interface{}) error {
-	return nil
-}
-
-func (MockDB) Map(ctx context.Context, kind types.Kind, q string, obj interface{}) error {
-	return nil
-}
-
-func (MockDB) Create(ctx context.Context, kind types.Kind, name string, obj interface{}, opts *types.Opts) error {
-	return nil
-}
-
-func (MockDB) Update(ctx context.Context, kind types.Kind, name string, obj interface{}, opts *types.Opts) error {
-	return nil
-}
-
-func (MockDB) Upsert(ctx context.Context, kind types.Kind, name string, obj interface{}, opts *types.Opts) error {
-	return nil
-}
-
-func (MockDB) Remove(ctx context.Context, kind types.Kind, name string) error {
-	return nil
-}
-
-func (MockDB) Watch(ctx context.Context, kind types.Kind, event chan *types.WatcherEvent) error {
-	return nil
 }
