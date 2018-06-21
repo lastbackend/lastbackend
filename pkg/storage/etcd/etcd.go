@@ -27,7 +27,6 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/storage/etcd/types"
 	"regexp"
 	"strings"
-	"fmt"
 )
 
 const (
@@ -47,7 +46,7 @@ type clientV3 struct {
 
 func NewV3() (*StorageV3, error) {
 
-	log.Debug("Etcd: define storage")
+	log.Debug("Etcd: define v3 storage")
 
 	var (
 		err    error
@@ -164,7 +163,6 @@ func (s *StorageV3) Watch(ctx context.Context, kind types.Kind, event chan *type
 			if len(match) > 0 {
 				e.Name = match[len(match)-1]
 			} else {
-				fmt.Println(match[0])
 				e.Name = keys[0]
 			}
 

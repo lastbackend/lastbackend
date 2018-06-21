@@ -36,6 +36,8 @@ import (
 )
 
 type dbstore struct {
+	store.Store
+
 	debug      bool
 	client     *clientv3.Client
 	opts       []clientv3.OpOption
@@ -183,9 +185,11 @@ func (s *dbstore) Map(ctx context.Context, key, keyRegexFilter string, mapOutPtr
 	items := make(map[string]buffer, len(getResp.Kvs))
 
 	for _, kv := range getResp.Kvs {
-		if (keyRegexFilter == "") || r.MatchString(string(kv.Key)) {
+		if keyRegexFilter != "" && r.MatchString(string(kv.Key)) {
 			keys := r.FindStringSubmatch(string(kv.Key))
 			items[keys[1]] = buffer(kv.Value)
+		} else {
+			items[string(kv.Key)] = buffer(kv.Value)
 		}
 	}
 

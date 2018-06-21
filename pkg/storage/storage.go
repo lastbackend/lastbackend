@@ -58,3 +58,7 @@ func Get(driver string) (Storage, error) {
 		return etcd.NewV3()
 	}
 }
+
+func GetMock() (Storage, error) {
+	return etcd.NewV3Mock()
+}

@@ -172,7 +172,7 @@ func (sc *Controller) Resume() {
 
 	log.Debugf("%s:resume> start check services states", logPrefix)
 
-	nss := make(map[string]*types.Namespace)
+	nss := make(map[string]*types.Namespace, 0)
 
 	err := stg.Map(context.Background(), storage.NamespaceKind, "", &nss)
 	if err != nil {
