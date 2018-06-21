@@ -27,6 +27,7 @@ const (
 	EndpointSpecBindStrategyDefault = "default"
 )
 
+// swagger:ignore
 // Endpoint - service endpoint
 type Endpoint struct {
 	Meta   EndpointMeta   `json:"meta"`
@@ -34,6 +35,7 @@ type Endpoint struct {
 	Spec   EndpointSpec   `json:"spec"`
 }
 
+// swagger:ignore
 // EndpointMeta - endpoint meta data
 type EndpointMeta struct {
 	Meta
@@ -41,6 +43,7 @@ type EndpointMeta struct {
 	Namespace string `json:"namespace"`
 }
 
+// swagger:ignore
 // EndpointStatus - endpoint status
 type EndpointStatus struct {
 	State string          `json:"state"`
@@ -48,6 +51,7 @@ type EndpointStatus struct {
 }
 
 // EndpointSpec spec data
+// swagger:model types_endpoint_spec
 type EndpointSpec struct {
 	// Endpoint state
 	State string `json:"state"`
@@ -64,17 +68,21 @@ type EndpointState struct {
 	EndpointSpec
 }
 
+// EndpointSpecStrategy describes route and bind
+// swagger:model types_endpoint_spec_strategy
 type EndpointSpecStrategy struct {
 	Route string `json:"route"`
 	Bind  string `json:"bind"`
 }
 
+// swagger:ignore
 // EndpointUpstream describe endpoint backend data
 type EndpointUpstream struct {
 	Host string `json:"host"`
 	Port int    `json:"port"`
 }
 
+// swagger:ignore
 // SelfLink generates and returning link to object in platform
 func (e *Endpoint) SelfLink() string {
 	if e.Meta.SelfLink == "" {
@@ -83,6 +91,7 @@ func (e *Endpoint) SelfLink() string {
 	return e.Meta.SelfLink
 }
 
+// swagger:ignore
 type EndpointCreateOptions struct {
 	IP            string            `json:"ip"`
 	Domain        string            `json:"domain"`
@@ -92,6 +101,7 @@ type EndpointCreateOptions struct {
 	BindStrategy  string            `json:"bind_strategy"`
 }
 
+// swagger:ignore
 type EndpointUpdateOptions struct {
 	IP            *string           `json:"ip"`
 	Ports         map[uint16]string `json:"ports"`

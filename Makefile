@@ -47,3 +47,8 @@ run-kit:
 run-node:
 	@echo "== Run node"
 	@go run ./cmd/node/node.go --config=./contrib/config.yml
+
+swagger-spec:
+	@echo "== Generating Swagger spec for Last.Backend API"
+	go get -u github.com/go-swagger/go-swagger/cmd/swagger
+	swagger generate spec -b ./cmd/kit -m -o ./swagger.json

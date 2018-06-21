@@ -46,7 +46,6 @@ type SpecTemplate struct {
 	Termination int `json:"termination"`
 }
 
-// swagger:ignore
 // SpecTemplateNetwork is a map of spec template for network
 // swagger:model types_spec_template_network
 type SpecTemplateNetwork struct {
