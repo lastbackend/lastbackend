@@ -55,11 +55,9 @@ type Storage interface {
 
 func Get(driver string) (Storage, error) {
 	switch driver {
+	case "mock":
+		return mock.New()
 	default:
 		return etcd.NewV3()
 	}
-}
-
-func GetMock() (Storage, error) {
-	return mock.New()
 }
