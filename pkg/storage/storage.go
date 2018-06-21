@@ -19,7 +19,7 @@
 package storage
 
 import (
-	"github.com/lastbackend/lastbackend/pkg/storage/etcd/types"
+	"github.com/lastbackend/lastbackend/pkg/storage/types"
 	"context"
 	"github.com/lastbackend/lastbackend/pkg/storage/etcd"
 	"github.com/lastbackend/lastbackend/pkg/storage/mock"

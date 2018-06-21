@@ -24,7 +24,7 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/storage/etcd/v3/store"
 	"github.com/spf13/viper"
 	"context"
-	"github.com/lastbackend/lastbackend/pkg/storage/etcd/types"
+	"github.com/lastbackend/lastbackend/pkg/storage/types"
 	"regexp"
 	"strings"
 )
