@@ -22,6 +22,7 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/storage/etcd/types"
 	"context"
 	"github.com/lastbackend/lastbackend/pkg/storage/etcd"
+	"github.com/lastbackend/lastbackend/pkg/storage/mock"
 )
 
 const (
@@ -60,5 +61,5 @@ func Get(driver string) (Storage, error) {
 }
 
 func GetMock() (Storage, error) {
-	return etcd.NewV3Mock()
+	return mock.New()
 }
