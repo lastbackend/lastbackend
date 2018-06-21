@@ -26,7 +26,7 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/storage"
 	"github.com/lastbackend/lastbackend/pkg/storage/etcd"
 
-	stgtypes "github.com/lastbackend/lastbackend/pkg/storage/etcd/types"
+	stgtypes "github.com/lastbackend/lastbackend/pkg/storage/types"
 	"encoding/json"
 	"fmt"
 	"github.com/lastbackend/lastbackend/pkg/controller/runtime/cache"

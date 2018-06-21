@@ -31,7 +31,7 @@ import (
 	"github.com/spf13/viper"
 	"github.com/lastbackend/lastbackend/pkg/storage"
 
-	stgtypes "github.com/lastbackend/lastbackend/pkg/storage/etcd/types"
+	stgtypes "github.com/lastbackend/lastbackend/pkg/storage/types"
 )
 
 const (

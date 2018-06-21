@@ -28,7 +28,7 @@ import (
 	"strings"
 	"github.com/lastbackend/lastbackend/pkg/api/types/v1/request"
 
-	stgtypes "github.com/lastbackend/lastbackend/pkg/storage/etcd/types"
+	stgtypes "github.com/lastbackend/lastbackend/pkg/storage/types"
 	"github.com/lastbackend/lastbackend/pkg/storage/etcd"
 	"encoding/json"
 )

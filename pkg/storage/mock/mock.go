@@ -21,7 +21,7 @@ package mock
 import (
 	"context"
 
-	"github.com/lastbackend/lastbackend/pkg/storage/etcd/types"
+	"github.com/lastbackend/lastbackend/pkg/storage/types"
 )
 
 const (

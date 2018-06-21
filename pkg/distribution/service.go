@@ -30,7 +30,7 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/storage/etcd/v3/store"
 	"github.com/spf13/viper"
 	"github.com/lastbackend/lastbackend/pkg/storage/etcd"
-	stgtypes "github.com/lastbackend/lastbackend/pkg/storage/etcd/types"
+	stgtypes "github.com/lastbackend/lastbackend/pkg/storage/types"
 	"encoding/json"
 )
 

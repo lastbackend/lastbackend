@@ -34,19 +34,3 @@ type Event struct {
 	Key    string
 	Object interface{}
 }
-
-type Kind string
-
-func (k Kind) String() string {
-	return string(k)
-}
-
-type QueryFilter string
-
-func (qf QueryFilter) String() string {
-	return string(qf)
-}
-
-type Opts struct {
-	Ttl uint64
-}

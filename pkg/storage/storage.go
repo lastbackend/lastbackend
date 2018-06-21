@@ -19,7 +19,7 @@
 package storage
 
 import (
-	"github.com/lastbackend/lastbackend/pkg/storage/etcd/types"
+	"github.com/lastbackend/lastbackend/pkg/storage/types"
 	"context"
 	"github.com/lastbackend/lastbackend/pkg/storage/etcd"
 	"github.com/lastbackend/lastbackend/pkg/storage/mock"
@@ -55,11 +55,9 @@ type Storage interface {
 
 func Get(driver string) (Storage, error) {
 	switch driver {
+	case "mock":
+		return mock.New()
 	default:
 		return etcd.NewV3()
 	}
-}
-
-func GetMock() (Storage, error) {
-	return mock.New()
 }

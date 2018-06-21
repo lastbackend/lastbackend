@@ -16,29 +16,37 @@
 // from Last.Backend LLC.
 //
 
-package cache
+package types
 
-import (
-	"sync"
-	"time"
-)
-
-type Item struct {
-	sync.RWMutex
-	data    interface{}
-	expires *time.Time
+type Watcher interface {
+	Stop()
+	ResultChan() <-chan *Event
 }
 
-func (item *Item) setExpireTime(duration time.Duration) {
-	item.Lock()
-	defer item.Unlock()
-
-	expires := time.Now().Add(duration)
-	item.expires = &expires
+type WatcherEvent struct {
+	Action string
+	Name   string
+	Data   interface{}
 }
 
-func (item *Item) expired() bool {
-	item.RLock()
-	defer item.RUnlock()
-	return item.expires == nil || item.expires.Before(time.Now())
+type Event struct {
+	Type   string
+	Key    string
+	Object interface{}
+}
+
+type Kind string
+
+func (k Kind) String() string {
+	return string(k)
+}
+
+type QueryFilter string
+
+func (qf QueryFilter) String() string {
+	return string(qf)
+}
+
+type Opts struct {
+	Ttl uint64
 }

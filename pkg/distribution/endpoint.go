@@ -30,7 +30,7 @@ import (
 	"encoding/json"
 
 	"github.com/lastbackend/lastbackend/pkg/storage/etcd"
-	stgtypes "github.com/lastbackend/lastbackend/pkg/storage/etcd/types"
+	stgtypes "github.com/lastbackend/lastbackend/pkg/storage/types"
 )
 
 const (
