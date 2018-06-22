@@ -25,17 +25,17 @@ const (
 )
 
 type Cache struct {
-	count       uint8
 	IsReady     bool
 	Pods        *PodCache
 	Deployments *DeploymentCache
 	Services    *ServiceCache
 
-	ready <-chan bool
+	ready chan bool
 }
 
 func New() *Cache {
 	c := new(Cache)
+	c.ready = make(chan bool)
 	c.Pods = NewPodCache()
 	c.Deployments = NewDeploymentCache()
 	c.Services = NewServiceCache()

@@ -26,6 +26,7 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/log"
 	"github.com/lastbackend/lastbackend/pkg/storage"
 	"github.com/lastbackend/lastbackend/pkg/storage/etcd"
+	"fmt"
 )
 
 const logPrefix = "controller:deployment"
@@ -204,7 +205,9 @@ func (ctrl *Controller) Observe(ctx context.Context) {
 			case <-ctx.Done():
 				return
 			case d := <-ctrl.deploymenChan:
-				// todo: update cache
+
+				ctrl.cache.Deployments.Set(d.Meta.SelfLink, d)
+
 				// todo: run handlers
 			}
 		}
@@ -218,6 +221,7 @@ func (ctrl *Controller) Observe(ctx context.Context) {
 			case <-ctx.Done():
 				return
 			case e := <-event:
+				fmt.Println("deployment event", e)
 				// todo: run handlers
 			}
 		}
@@ -226,7 +230,7 @@ func (ctrl *Controller) Observe(ctx context.Context) {
 	ctrl.cache.Deployments.Subscribe(event)
 }
 
-func (ctrl *Controller) UpdateDeployment(dp *types.Deployment) {
+func (ctrl *Controller) UpdateDeployment(ctx context.Context, dp *types.Deployment) {
 	ctrl.deploymenChan <- dp
 }
 

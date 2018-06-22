@@ -20,16 +20,13 @@ package pod
 
 import (
 	"context"
-	"encoding/json"
-
 	"github.com/lastbackend/lastbackend/pkg/controller/envs"
 	"github.com/lastbackend/lastbackend/pkg/controller/runtime/cache"
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 	"github.com/lastbackend/lastbackend/pkg/log"
 	"github.com/lastbackend/lastbackend/pkg/storage"
 	"github.com/lastbackend/lastbackend/pkg/storage/etcd"
-
-	stgtypes "github.com/lastbackend/lastbackend/pkg/storage/types"
+	"fmt"
 )
 
 type Controller struct {
@@ -40,61 +37,61 @@ type Controller struct {
 	active  bool
 }
 
-// Watch pod spec changes
-func (ctrl *Controller) WatchStatus() {
-
-	var (
-		stg   = envs.Get().GetStorage()
-		event = make(chan *stgtypes.WatcherEvent)
-	)
-
-	log.Debug("controller:pod:controller: start watch pod spec")
-	go func() {
-		for {
-			select {
-			case s := <-ctrl.status:
-				{
-					if !ctrl.active {
-						log.Debug("controller:pod:controller: skip management course it is in slave mode")
-						continue
-					}
-
-					if s == nil {
-						log.Debug("controller:pod:controller: skip because service is nil")
-						continue
-					}
-
-					log.Debugf("controller:pod:controller: Service needs to be provisioned: %s:%s", s.Meta.Namespace, s.Meta.Name)
-					if err := HandleStatus(s); err != nil {
-						log.Errorf("controller:pod:controller: service provision: %s err: %s", s.Meta.Name, err.Error())
-					}
-				}
-			}
-		}
-	}()
-
-	go func() {
-		for {
-			select {
-			case e := <-event:
-				if e.Data == nil {
-					continue
-				}
-
-				pod := new(types.Pod)
-
-				if err := json.Unmarshal(e.Data.([]byte), &pod); err != nil {
-					log.Errorf("controller:pod:controller: parse json err: %v", err)
-					continue
-				}
-
-				ctrl.status <- pod
-			}
-		}
-	}()
-
-	stg.Watch(context.Background(), storage.PodKind, event)
-}
+//// Watch pod spec changes
+//func (ctrl *Controller) WatchStatus() {
+//
+//	var (
+//		stg   = envs.Get().GetStorage()
+//		event = make(chan *stgtypes.WatcherEvent)
+//	)
+//
+//	log.Debug("controller:pod:controller: start watch pod spec")
+//	go func() {
+//		for {
+//			select {
+//			case s := <-ctrl.status:
+//				{
+//					if !ctrl.active {
+//						log.Debug("controller:pod:controller: skip management course it is in slave mode")
+//						continue
+//					}
+//
+//					if s == nil {
+//						log.Debug("controller:pod:controller: skip because service is nil")
+//						continue
+//					}
+//
+//					log.Debugf("controller:pod:controller: Service needs to be provisioned: %s:%s", s.Meta.Namespace, s.Meta.Name)
+//					if err := HandleStatus(s); err != nil {
+//						log.Errorf("controller:pod:controller: service provision: %s err: %s", s.Meta.Name, err.Error())
+//					}
+//				}
+//			}
+//		}
+//	}()
+//
+//	go func() {
+//		for {
+//			select {
+//			case e := <-event:
+//				if e.Data == nil {
+//					continue
+//				}
+//
+//				pod := new(types.Pod)
+//
+//				if err := json.Unmarshal(e.Data.([]byte), &pod); err != nil {
+//					log.Errorf("controller:pod:controller: parse json err: %v", err)
+//					continue
+//				}
+//
+//				ctrl.status <- pod
+//			}
+//		}
+//	}()
+//
+//	stg.Watch(context.Background(), storage.PodKind, event)
+//}
 
 // Pause pod controller because not lead
 func (ctrl *Controller) Pause() {
@@ -141,7 +138,9 @@ func (ctrl *Controller) Observe(ctx context.Context) {
 			case <-ctx.Done():
 				return
 			case p := <-ctrl.podChan:
-				// todo: update cache
+
+				ctrl.cache.Pods.Set(p.Meta.SelfLink, p)
+
 				// todo: run handlers
 			}
 		}
@@ -155,12 +154,17 @@ func (ctrl *Controller) Observe(ctx context.Context) {
 			case <-ctx.Done():
 				return
 			case e := <-event:
+				fmt.Println("pod event", e)
 				// todo: run handlers
 			}
 		}
 	}()
 
 	ctrl.cache.Pods.Subscribe(event)
+}
+
+func (ctrl *Controller) UpdatePod(ctx context.Context, pod *types.Pod) {
+	ctrl.podChan <- pod
 }
 
 // NewDeploymentController return new controller instance
