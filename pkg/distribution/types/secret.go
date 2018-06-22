@@ -52,9 +52,13 @@ func (s *Secret) GetHash() string {
 
 func (s *Secret) SelfLink() string {
 	if s.Meta.SelfLink == "" {
-		s.Meta.SelfLink = fmt.Sprintf("%s:%s", s.Meta.Namespace, s.Meta.Name)
+		s.Meta.SelfLink = s.CreateSelfLink(s.Meta.Namespace, s.Meta.Name)
 	}
 	return s.Meta.SelfLink
+}
+
+func (s *Secret) CreateSelfLink(namespace, name string) string {
+	return fmt.Sprintf("%s:%s", namespace, name)
 }
 
 // swagger:ignore

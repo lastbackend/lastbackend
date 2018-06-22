@@ -27,11 +27,9 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/distribution/errors"
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 	"github.com/lastbackend/lastbackend/pkg/log"
-	"github.com/lastbackend/lastbackend/pkg/storage/etcd/v3/store"
 	"github.com/spf13/viper"
 	"github.com/lastbackend/lastbackend/pkg/storage"
 
-	stgtypes "github.com/lastbackend/lastbackend/pkg/storage/types"
 )
 
 const (
@@ -84,7 +82,7 @@ func (n *Namespace) Get(name string) (*types.Namespace, error) {
 
 	err := n.storage.Get(n.context, storage.NamespaceKind, name, &namespace)
 	if err != nil {
-		if err.Error() == store.ErrEntityNotFound {
+		if errors.Storage().IsErrEntityNotFound(err) {
 			log.V(logLevel).Warnf("%s:get:> namespace by name `%s` not found", logNamespacePrefix, name)
 			return nil, nil
 		}
@@ -165,7 +163,7 @@ func (n *Namespace) Watch(ch chan types.NamespaceEvent) error {
 	log.Debugf("%s:watch:> watch namespace", logNamespacePrefix)
 
 	done := make(chan bool)
-	event := make(chan *stgtypes.WatcherEvent)
+	watcher := storage.NewWatcher()
 
 	go func() {
 		for {
@@ -173,7 +171,7 @@ func (n *Namespace) Watch(ch chan types.NamespaceEvent) error {
 			case <-n.context.Done():
 				done <- true
 				return
-			case e := <-event:
+			case e := <-watcher:
 				if e.Data == nil {
 					continue
 				}
@@ -196,7 +194,7 @@ func (n *Namespace) Watch(ch chan types.NamespaceEvent) error {
 		}
 	}()
 
-	if err := n.storage.Watch(n.context, storage.NamespaceKind, event); err != nil {
+	if err := n.storage.Watch(n.context, storage.NamespaceKind, watcher); err != nil {
 		return err
 	}
 

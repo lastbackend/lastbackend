@@ -24,9 +24,9 @@ import (
 
 	"github.com/coreos/etcd/clientv3"
 	"github.com/lastbackend/lastbackend/pkg/log"
-	"github.com/lastbackend/lastbackend/pkg/storage/etcd/v3/store"
+	"github.com/lastbackend/lastbackend/pkg/storage/etcd/store"
 	"regexp"
-	"github.com/lastbackend/lastbackend/pkg/storage/etcd/types"
+	"github.com/lastbackend/lastbackend/pkg/storage/types"
 )
 
 const (

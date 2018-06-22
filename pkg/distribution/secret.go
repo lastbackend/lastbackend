@@ -20,12 +20,13 @@ package distribution
 
 import (
 	"context"
+
+	"github.com/lastbackend/lastbackend/pkg/distribution/errors"
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 	"github.com/lastbackend/lastbackend/pkg/log"
 	"github.com/lastbackend/lastbackend/pkg/storage"
-	"github.com/lastbackend/lastbackend/pkg/storage/etcd/v3/store"
+
 	"github.com/lastbackend/lastbackend/pkg/util/generator"
-	"github.com/lastbackend/lastbackend/pkg/storage/etcd"
 )
 
 const (
@@ -50,11 +51,11 @@ func (n *Secret) Get(namespace, name string) (*types.Secret, error) {
 	log.V(logLevel).Debugf("%s:get:> get secret by id %s/%s", logSecretPrefix, namespace, name)
 
 	item := new(types.Secret)
-
-	err := n.storage.Get(n.context, storage.SecretKind, etcd.BuildSecretQuery(namespace, name), &item)
+	selflink := item.CreateSelfLink(namespace, name)
+	err := n.storage.Get(n.context, storage.SecretKind, selflink, &item)
 	if err != nil {
 
-		if err.Error() == store.ErrEntityNotFound {
+		if errors.Storage().IsErrEntityNotFound(err) {
 			log.V(logLevel).Warnf("%s:get:> in namespace %s by name %s not found", logSecretPrefix, namespace, name)
 			return nil, nil
 		}
@@ -71,8 +72,8 @@ func (n *Secret) ListByNamespace(namespace string) (map[string]*types.Secret, er
 	log.V(logLevel).Debugf("%s:listbynamespace:> get secrets list by namespace", logSecretPrefix)
 
 	items := make(map[string]*types.Secret, 0)
-
-	 err := n.storage.Map(n.context, storage.SecretKind, etcd.BuildSecretKey(namespace), &items)
+	filter := n.storage.Filter().Secret().ByNamespace(namespace)
+	err := n.storage.Map(n.context, storage.SecretKind, filter, &items)
 	if err != nil {
 		log.V(logLevel).Error("%s:listbynamespace:> get secrets list by namespace err: %s", logSecretPrefix, err)
 		return items, err

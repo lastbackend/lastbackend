@@ -23,14 +23,11 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 	"github.com/lastbackend/lastbackend/pkg/log"
 	"github.com/lastbackend/lastbackend/pkg/storage"
-	"github.com/lastbackend/lastbackend/pkg/storage/etcd/v3/store"
 	"github.com/lastbackend/lastbackend/pkg/util/generator"
 	"strings"
-	"github.com/lastbackend/lastbackend/pkg/api/types/v1/request"
 
-	stgtypes "github.com/lastbackend/lastbackend/pkg/storage/types"
-	"github.com/lastbackend/lastbackend/pkg/storage/etcd"
 	"encoding/json"
+	"github.com/lastbackend/lastbackend/pkg/distribution/errors"
 )
 
 const (
@@ -42,7 +39,7 @@ type IDeployment interface {
 	Get(namespace, service, name string) (*types.Deployment, error)
 	ListByNamespace(namespace string) (map[string]*types.Deployment, error)
 	ListByService(namespace, service string) (map[string]*types.Deployment, error)
-	Update(dt *types.Deployment, opts *request.DeploymentUpdateOptions) error
+	Update(dt *types.Deployment, opts *types.DeploymentUpdateOptions) error
 	Cancel(dt *types.Deployment) error
 	Destroy(dt *types.Deployment) error
 	Remove(dt *types.Deployment) error
@@ -60,14 +57,13 @@ func (d *Deployment) Get(namespace, service, name string) (*types.Deployment, er
 
 	log.Debugf("%s:get:> namespace %s and service %s by name %s", logDeploymentPrefix, namespace, service, name)
 
-	q := etcd.BuildDeploymentQuery(namespace, service)
 	dp := new(types.Deployment)
+	selflink := dp.CreateSelfLink(namespace, service, name)
 
-	err := d.storage.Get(d.context, storage.DeploymentKind, q, &dp)
+	err := d.storage.Get(d.context, storage.DeploymentKind, selflink, &dp)
 	if err != nil {
-
-		if err.Error() == store.ErrEntityNotFound {
-			log.V(logLevel).Warnf("%s:get:> in namespace %s by name %s not found", logDeploymentPrefix, namespace, name)
+		if errors.Storage().IsErrEntityNotFound(err) {
+			log.V(logLevel).Warnf("%s:get:> in namespace %s by name %s not found", logDeploymentPrefix, name)
 			return nil, nil
 		}
 
@@ -118,7 +114,7 @@ func (d *Deployment) ListByNamespace(namespace string) (map[string]*types.Deploy
 
 	log.Debugf("%s:listbynamespace:> in namespace: %s", namespace)
 
-	q := etcd.BuildDeploymentQuery(namespace, types.EmptyString)
+	q := d.storage.Filter().Deployment().ByNamespace(namespace)
 	dl := make(map[string]*types.Deployment, 0)
 
 	err := d.storage.Map(d.context, storage.DeploymentKind, q, &dl)
@@ -135,7 +131,7 @@ func (d *Deployment) ListByService(namespace, service string) (map[string]*types
 
 	log.Debugf("%s:listbyservice:> in namespace: %s and service %s", logDeploymentPrefix, namespace, service)
 
-	q := etcd.BuildDeploymentQuery(namespace, service)
+	q := d.storage.Filter().Deployment().ByService(namespace, service)
 	dl := make(map[string]*types.Deployment, 0)
 
 	err := d.storage.Map(d.context, storage.DeploymentKind, q, &dl)
@@ -148,7 +144,7 @@ func (d *Deployment) ListByService(namespace, service string) (map[string]*types
 }
 
 // Update deployment
-func (d *Deployment) Update(dt *types.Deployment, opts *request.DeploymentUpdateOptions) error {
+func (d *Deployment) Update(dt *types.Deployment, opts *types.DeploymentUpdateOptions) error {
 
 	log.Debugf("%s:update:> update deployment %s", logDeploymentPrefix, dt.Meta.Name)
 
@@ -228,7 +224,7 @@ func (d *Deployment) Remove(dt *types.Deployment) error {
 func (d *Deployment) Watch(dt chan *types.Deployment) {
 
 	done := make(chan bool)
-	event := make(chan *stgtypes.WatcherEvent)
+	watcher := storage.NewWatcher()
 
 	log.Debugf("%s:watch:> watch deployments", logDeploymentPrefix)
 
@@ -238,7 +234,7 @@ func (d *Deployment) Watch(dt chan *types.Deployment) {
 			case <-d.context.Done():
 				done <- true
 				return
-			case e := <-event:
+			case e := <-watcher:
 				if e.Data == nil {
 					continue
 				}
@@ -255,7 +251,7 @@ func (d *Deployment) Watch(dt chan *types.Deployment) {
 		}
 	}()
 
-	go d.storage.Watch(d.context, storage.DeploymentKind, event)
+	go d.storage.Watch(d.context, storage.DeploymentKind, watcher)
 
 	<-done
 }

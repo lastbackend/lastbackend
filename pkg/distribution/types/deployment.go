@@ -77,10 +77,15 @@ type DeploymentOptions struct {
 
 func (d *Deployment) SelfLink() string {
 	if d.Meta.SelfLink == "" {
-		d.Meta.SelfLink = fmt.Sprintf("%s:%s:%s", d.Meta.Namespace, d.Meta.Service, d.Meta.Name)
+		d.CreateSelfLink(d.Meta.Namespace, d.Meta.Service, d.Meta.Name)
 	}
 	return d.Meta.SelfLink
 }
+
+func (d *Deployment) CreateSelfLink(namespace, service, name string) string {
+	return fmt.Sprintf("%s:%s:%s", namespace, service, name)
+}
+
 
 func (d *DeploymentStatus) SetProvision() {
 	d.State = StateProvision
@@ -100,4 +105,14 @@ func (d *DeploymentStatus) SetCancel() {
 func (d *DeploymentStatus) SetDestroy() {
 	d.State = StateDestroy
 	d.Message = ""
+}
+
+type DeploymentUpdateOptions struct {
+	// Number of replicas
+	Replicas *int
+	// Deployment status for update
+	Status *struct {
+		State   string
+		Message string
+	}
 }

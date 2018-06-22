@@ -25,12 +25,10 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 	"github.com/lastbackend/lastbackend/pkg/log"
 	"github.com/lastbackend/lastbackend/pkg/storage"
-	"github.com/lastbackend/lastbackend/pkg/storage/etcd/v3/store"
 
 	"encoding/json"
 
-	"github.com/lastbackend/lastbackend/pkg/storage/etcd"
-	stgtypes "github.com/lastbackend/lastbackend/pkg/storage/types"
+	"github.com/lastbackend/lastbackend/pkg/distribution/errors"
 )
 
 const (
@@ -57,11 +55,12 @@ func (e *Endpoint) Get(namespace, service string) (*types.Endpoint, error) {
 	log.V(logLevel).Debugf("%s:get:> get endpoint by namespace %s and service %s", logEndpointPrefix, namespace, service)
 
 	item := new(types.Endpoint)
+	selflink := item.CreateSelfLink(namespace, service)
 
-	err := e.storage.Get(e.context, storage.EndpointKind, etcd.BuildEndpointKey(namespace, service), &item)
+	err := e.storage.Get(e.context, storage.EndpointKind, selflink, &item)
 	if err != nil {
 
-		if err.Error() == store.ErrEntityNotFound {
+		if errors.Storage().IsErrEntityNotFound(err) {
 			return nil, nil
 		}
 
@@ -76,9 +75,8 @@ func (e *Endpoint) ListByNamespace(namespace string) (map[string]*types.Endpoint
 	log.Debugf("%s:listbynamespace:> in namespace: %s", namespace)
 
 	list := make(map[string]*types.Endpoint, 0)
-	query := etcd.BuildEndpointQuery(namespace)
 
-	err := e.storage.Map(e.context, storage.EndpointKind, query, &list)
+	err := e.storage.Map(e.context, storage.EndpointKind, e.storage.Filter().Endpoint().ByNamespace(namespace), &list)
 	if err != nil {
 		log.Errorf("%s:listbynamespace:> in namespace: %s err: %v", logEndpointPrefix, namespace, err)
 		return nil, err
@@ -174,7 +172,7 @@ func (e *Endpoint) Watch(ch chan types.EndpointEvent) error {
 	log.Debugf("%s:watch:> watch endpoint", logEndpointPrefix)
 
 	done := make(chan bool)
-	event := make(chan *stgtypes.WatcherEvent)
+	watcher := storage.NewWatcher()
 
 	go func() {
 		for {
@@ -182,7 +180,7 @@ func (e *Endpoint) Watch(ch chan types.EndpointEvent) error {
 			case <-e.context.Done():
 				done <- true
 				return
-			case e := <-event:
+			case e := <-watcher:
 				if e.Data == nil {
 					continue
 				}
@@ -205,7 +203,7 @@ func (e *Endpoint) Watch(ch chan types.EndpointEvent) error {
 		}
 	}()
 
-	if err := e.storage.Watch(e.context, storage.EndpointKind, event); err != nil {
+	if err := e.storage.Watch(e.context, storage.EndpointKind, watcher); err != nil {
 		return err
 	}
 

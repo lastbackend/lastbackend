@@ -18,19 +18,12 @@
 
 package types
 
-type Watcher interface {
-	Stop()
-	ResultChan() <-chan *Event
-}
-
-type WatcherEvent struct {
-	Action string
-	Name   string
-	Data   interface{}
-}
-
-type Event struct {
-	Type   string
-	Key    string
-	Object interface{}
-}
+const (
+	ErrEntityExists       = "entity exists"
+	ErrOperationFailure   = "operation failure"
+	ErrEntityNotFound     = "entity not found"
+	ErrStructArgIsNil     = "input structure is nil"
+	ErrStructOutIsNil     = "input structure is nil"
+	ErrStructArgIsInvalid = "output structure is invalid"
+	ErrStructOutIsInvalid = "output structure is invalid"
+)

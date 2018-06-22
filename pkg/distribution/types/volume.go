@@ -77,7 +77,11 @@ type VolumeStatus struct {
 
 func (v *Volume) SelfLink() string {
 	if v.Meta.SelfLink == "" {
-		v.Meta.SelfLink = fmt.Sprintf("%s:%s", v.Meta.Namespace, v.Meta.Name)
+		v.Meta.SelfLink = v.CreateSelfLink(v.Meta.Namespace, v.Meta.Name)
 	}
 	return v.Meta.SelfLink
+}
+
+func (v *Volume) CreateSelfLink(namespace, name string) string {
+	return fmt.Sprintf("%s:%s", namespace, name)
 }

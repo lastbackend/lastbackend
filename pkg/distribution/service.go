@@ -23,15 +23,13 @@ import (
 	"fmt"
 	"strings"
 
+	"encoding/json"
+
 	"github.com/lastbackend/lastbackend/pkg/distribution/errors"
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 	"github.com/lastbackend/lastbackend/pkg/log"
 	"github.com/lastbackend/lastbackend/pkg/storage"
-	"github.com/lastbackend/lastbackend/pkg/storage/etcd/v3/store"
 	"github.com/spf13/viper"
-	"github.com/lastbackend/lastbackend/pkg/storage/etcd"
-	stgtypes "github.com/lastbackend/lastbackend/pkg/storage/types"
-	"encoding/json"
 )
 
 const (
@@ -55,21 +53,22 @@ type Service struct {
 }
 
 // Get service by namespace and service name
-func (s *Service) Get(namespace, service string) (*types.Service, error) {
+func (s *Service) Get(namespace, name string) (*types.Service, error) {
 
-	log.V(logLevel).Debugf("%s:get:> get in namespace %s by name %s", logServicePrefix, namespace, service)
+	log.V(logLevel).Debugf("%s:get:> get in namespace %s by name %s", logServicePrefix, namespace, name)
 
 	svc := new(types.Service)
+	sl := svc.CreateSelfLink(namespace, name)
 
-	err := s.storage.Get(s.context, storage.ServiceKind, etcd.BuildServiceKey(namespace, service), &svc)
+	err := s.storage.Get(s.context, storage.ServiceKind, sl, &svc)
 	if err != nil {
 
-		if err.Error() == store.ErrEntityNotFound {
-			log.V(logLevel).Warnf("%s:get:> get in namespace %s by name %s not found", logServicePrefix, namespace, service)
+		if errors.Storage().IsErrEntityNotFound(err) {
+			log.V(logLevel).Warnf("%s:get:> get in namespace %s by name %s not found", logServicePrefix, namespace, name)
 			return nil, nil
 		}
 
-		log.V(logLevel).Errorf("%s:get:> get in namespace %s by name %s error: %v", logServicePrefix, namespace, service, err)
+		log.V(logLevel).Errorf("%s:get:> get in namespace %s by name %s error: %v", logServicePrefix, namespace, name, err)
 		return nil, err
 	}
 
@@ -82,7 +81,7 @@ func (s *Service) List(namespace string) (map[string]*types.Service, error) {
 	log.V(logLevel).Debugf("%s:list:> by namespace %s", logServicePrefix, namespace)
 
 	items := make(map[string]*types.Service, 0)
-	q := etcd.BuildServiceQuery(namespace)
+	q := s.storage.Filter().Service().ByNamespace(namespace)
 
 	err := s.storage.Map(s.context, storage.ServiceKind, q, &items)
 	if err != nil {

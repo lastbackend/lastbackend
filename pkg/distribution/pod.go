@@ -20,15 +20,15 @@ package distribution
 
 import (
 	"context"
+	"strings"
+	"time"
+
+	"github.com/lastbackend/lastbackend/pkg/distribution/errors"
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 	"github.com/lastbackend/lastbackend/pkg/log"
 	"github.com/lastbackend/lastbackend/pkg/storage"
-	"github.com/lastbackend/lastbackend/pkg/storage/etcd/v3/store"
 	"github.com/lastbackend/lastbackend/pkg/util/generator"
 	"github.com/spf13/viper"
-	"strings"
-	"time"
-	"github.com/lastbackend/lastbackend/pkg/storage/etcd"
 )
 
 const (
@@ -53,25 +53,25 @@ type Pod struct {
 }
 
 // Get pod info from storage
-func (p *Pod) Get(namespace, service, deployment, pod string) (*types.Pod, error) {
-	log.V(logLevel).Debugf("%s:get:> get by name %s", logPodPrefix, pod)
+func (p *Pod) Get(namespace, service, deployment, name string) (*types.Pod, error) {
+	log.V(logLevel).Debugf("%s:get:> get by name %s", logPodPrefix, name)
 
-	item := new(types.Pod)
-	name := etcd.BuildPodKey(namespace, service, deployment, pod)
+	pod := new(types.Pod)
+	selflink := pod.CreateSelfLink(namespace, service, deployment, name)
 
-	err := p.storage.Get(p.context, storage.PodKind, name, &item)
+	err := p.storage.Get(p.context, storage.PodKind, selflink, &pod)
 	if err != nil {
 
-		if err.Error() == store.ErrEntityNotFound {
-			log.V(logLevel).Warnf("%s:get:> `%s` not found", logPodPrefix, name)
+		if errors.Storage().IsErrEntityNotFound(err) {
+			log.V(logLevel).Warnf("%s:get:> `%s` not found", logPodPrefix, selflink)
 			return nil, nil
 		}
 
-		log.V(logLevel).Debugf("%s:get:> get Pod `%s` err: %v", logPodPrefix, name, err)
+		log.V(logLevel).Debugf("%s:get:> get Pod `%s` err: %v", logPodPrefix, selflink, err)
 		return nil, err
 	}
 
-	return item, nil
+	return pod, nil
 }
 
 // Create new pod
@@ -121,10 +121,10 @@ func (p *Pod) Create(deployment *types.Deployment) (*types.Pod, error) {
 func (p *Pod) ListByNamespace(namespace string) (map[string]*types.Pod, error) {
 	log.V(logLevel).Debugf("%s:listbynamespace:> get pod list by namespace %s", logPodPrefix, namespace)
 
-	q := etcd.BuildPodQuery(namespace, types.EmptyString, types.EmptyString)
 	items := make(map[string]*types.Pod, 0)
+	filter := p.storage.Filter().Pod().ByNamespace(namespace)
 
-	err := p.storage.Map(p.context, storage.PodKind, q, items)
+	err := p.storage.Map(p.context, storage.PodKind, filter, items)
 	if err != nil {
 		log.V(logLevel).Debugf("%s:listbynamespace:> get pod list by deployment id `%s` err: %v", logPodPrefix, namespace, err)
 		return nil, err
@@ -137,10 +137,10 @@ func (p *Pod) ListByNamespace(namespace string) (map[string]*types.Pod, error) {
 func (p *Pod) ListByService(namespace, service string) (map[string]*types.Pod, error) {
 	log.V(logLevel).Debugf("%s:listbyservice:> get pod list by service id %s/%s", logPodPrefix, namespace, service)
 
-	q := etcd.BuildPodQuery(namespace, service, types.EmptyString)
 	items := make(map[string]*types.Pod, 0)
+	filter := p.storage.Filter().Pod().ByService(namespace, service)
 
-	err := p.storage.Map(p.context, storage.PodKind, q, items)
+	err := p.storage.Map(p.context, storage.PodKind, filter, items)
 	if err != nil {
 		log.V(logLevel).Debugf("%s:listbyservice:> get pod list by service id `%s` err: %v", logPodPrefix, namespace, service, err)
 		return nil, err
@@ -153,10 +153,10 @@ func (p *Pod) ListByService(namespace, service string) (map[string]*types.Pod, e
 func (p *Pod) ListByDeployment(namespace, service, deployment string) (map[string]*types.Pod, error) {
 	log.V(logLevel).Debugf("%s:listbydeployment:> get pod list by id %s/%s/%s", logPodPrefix, namespace, service, deployment)
 
-	q := etcd.BuildPodQuery(namespace, service, deployment)
 	items := make(map[string]*types.Pod, 0)
+	filter := p.storage.Filter().Pod().ByDeployment(namespace, service, deployment)
 
-	err := p.storage.Map(p.context, storage.PodKind, q, items)
+	err := p.storage.Map(p.context, storage.PodKind, filter, items)
 	if err != nil {
 		log.V(logLevel).Debugf("%s:listbydeployment:> get pod list by deployment id `%s/%s/%s` err: %v",
 			logPodPrefix, namespace, service, deployment, err)

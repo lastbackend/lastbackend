@@ -20,8 +20,9 @@ package types
 
 import (
 	"fmt"
-	"github.com/lastbackend/lastbackend/pkg/util/generator"
 	"strings"
+
+	"github.com/lastbackend/lastbackend/pkg/util/generator"
 )
 
 // Route
@@ -100,9 +101,13 @@ type RoteLocation struct {
 
 func (r *Route) SelfLink() string {
 	if r.Meta.SelfLink == "" {
-		r.Meta.SelfLink = fmt.Sprintf("%s:%s", r.Meta.Namespace, r.Meta.Name)
+		r.Meta.SelfLink = r.CreateSelfLink(r.Meta.Namespace, r.Meta.Name)
 	}
 	return r.Meta.SelfLink
+}
+
+func (r *Route) CreateSelfLink(namespace, name string) string {
+	return fmt.Sprintf("%s:%s", namespace, name)
 }
 
 func (r *Route) GetRouteConfig() *RouterConfig {

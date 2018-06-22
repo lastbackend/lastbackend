@@ -235,7 +235,11 @@ func NewPodStatus() *PodStatus {
 
 func (p *Pod) SelfLink() string {
 	if p.Meta.SelfLink == "" {
-		p.Meta.SelfLink = fmt.Sprintf("%s:%s:%s:%s", p.Meta.Namespace, p.Meta.Service, p.Meta.Deployment, p.Meta.Name)
+		p.Meta.SelfLink = p.CreateSelfLink(p.Meta.Namespace, p.Meta.Service, p.Meta.Deployment, p.Meta.Name)
 	}
 	return p.Meta.SelfLink
+}
+
+func (p *Pod) CreateSelfLink(namespace, service, deployment, name string) string {
+	return fmt.Sprintf("%s:%s:%s:%s", namespace, service, deployment, name)
 }

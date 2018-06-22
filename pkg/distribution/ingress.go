@@ -25,7 +25,6 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 	"github.com/lastbackend/lastbackend/pkg/log"
 	"github.com/lastbackend/lastbackend/pkg/storage"
-	"github.com/lastbackend/lastbackend/pkg/storage/etcd/v3/store"
 )
 
 const (
@@ -85,7 +84,7 @@ func (n *Ingress) Get(name string) (*types.Ingress, error) {
 	err := n.storage.Get(n.context, storage.IngressKind, name, &ingress)
 	if err != nil {
 
-		if err.Error() == store.ErrEntityNotFound {
+		if errors.Storage().IsErrEntityNotFound(err) {
 			log.V(logLevel).Warnf("%s:get:> get: ingress %s not found", logIngressPrefix, name)
 			return nil, nil
 		}

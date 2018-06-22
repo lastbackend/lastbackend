@@ -86,10 +86,15 @@ type EndpointUpstream struct {
 // SelfLink generates and returning link to object in platform
 func (e *Endpoint) SelfLink() string {
 	if e.Meta.SelfLink == "" {
-		e.Meta.SelfLink = fmt.Sprintf("%s:%s", e.Meta.Namespace, e.Meta.Name)
+		e.Meta.SelfLink = e.CreateSelfLink(e.Meta.Namespace, e.Meta.Name)
 	}
 	return e.Meta.SelfLink
 }
+
+func (e *Endpoint) CreateSelfLink(namespace, name string) string {
+	return fmt.Sprintf("%s:%s", namespace, name)
+}
+
 
 // swagger:ignore
 type EndpointCreateOptions struct {

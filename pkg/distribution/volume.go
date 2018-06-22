@@ -20,12 +20,12 @@ package distribution
 
 import (
 	"context"
+
+	"github.com/lastbackend/lastbackend/pkg/distribution/errors"
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 	"github.com/lastbackend/lastbackend/pkg/log"
 	"github.com/lastbackend/lastbackend/pkg/storage"
-	"github.com/lastbackend/lastbackend/pkg/storage/etcd/v3/store"
 	"github.com/lastbackend/lastbackend/pkg/util/generator"
-	"github.com/lastbackend/lastbackend/pkg/storage/etcd"
 )
 
 const (
@@ -53,11 +53,10 @@ func (v *Volume) Get(namespace, name string) (*types.Volume, error) {
 	log.V(logLevel).Debugf("%s:get:> get volume by id %s/%s", logVolumePrefix, namespace, name)
 
 	item := new(types.Volume)
-
-	err := v.storage.Get(v.context, storage.VolumeKind, etcd.BuildServiceKey(namespace, name), &item)
+	sl := item.CreateSelfLink(namespace, name)
+	err := v.storage.Get(v.context, storage.VolumeKind, sl, &item)
 	if err != nil {
-
-		if err.Error() == store.ErrEntityNotFound {
+		if errors.Storage().IsErrEntityNotFound(err) {
 			log.V(logLevel).Warnf("%s:get:> in namespace %s by name %s not found", logVolumePrefix, namespace, name)
 			return nil, nil
 		}
@@ -73,8 +72,8 @@ func (v *Volume) ListByNamespace(namespace string) (map[string]*types.Volume, er
 	log.V(logLevel).Debugf("%s:list:> get volumes list", logVolumePrefix)
 
 	items := make(map[string]*types.Volume, 0)
-
-	err := v.storage.Map(v.context, storage.VolumeKind, etcd.BuildVolumeQuery(namespace), &items)
+	filter := v.storage.Filter().Volume().ByNamespace(namespace)
+	err := v.storage.Map(v.context, storage.VolumeKind, filter, &items)
 	if err != nil {
 		log.V(logLevel).Error("%s:list:> get volumes list err: %v", logVolumePrefix, err)
 		return items, err

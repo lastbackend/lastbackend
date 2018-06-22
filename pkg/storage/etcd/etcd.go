@@ -21,7 +21,7 @@ package etcd
 import (
 	"github.com/lastbackend/lastbackend/pkg/log"
 	"github.com/lastbackend/lastbackend/pkg/storage/etcd/v3"
-	"github.com/lastbackend/lastbackend/pkg/storage/etcd/v3/store"
+	"github.com/lastbackend/lastbackend/pkg/storage/etcd/store"
 	"github.com/spf13/viper"
 	"context"
 	"github.com/lastbackend/lastbackend/pkg/storage/types"
@@ -34,23 +34,22 @@ const (
 	logPrefix = "storage:etcd"
 )
 
-type StorageV3 struct {
-	config *v3.Config
-	client *clientV3
+type Storage struct {
+	client *client
 }
 
-type clientV3 struct {
+type client struct {
 	store store.Store
 	dfunc store.DestroyFunc
 }
 
-func NewV3() (*StorageV3, error) {
+func New() (*Storage, error) {
 
-	log.Debug("Etcd: define v3 storage")
+	log.Debug("Etcd: define storage")
 
 	var (
 		err    error
-		s      = new(StorageV3)
+		s      = new(Storage)
 		config *v3.Config
 	)
 
@@ -59,7 +58,7 @@ func NewV3() (*StorageV3, error) {
 		return nil, err
 	}
 
-	s.client = new(clientV3)
+	s.client = new(client)
 
 	if s.client.store, s.client.dfunc, err = v3.GetClient(config); err != nil {
 		log.Errorf("%s: store initialize err: %v", err)
@@ -69,19 +68,19 @@ func NewV3() (*StorageV3, error) {
 	return s, nil
 }
 
-func (s StorageV3) Get(ctx context.Context, kind types.Kind, name string, obj interface{}) error {
+func (s Storage) Get(ctx context.Context, kind types.Kind, name string, obj interface{}) error {
 	return s.client.store.Get(ctx, keyCreate(kind.String(), name), obj)
 }
 
-func (s StorageV3) List(ctx context.Context, kind types.Kind, query string, obj interface{}) error {
+func (s Storage) List(ctx context.Context, kind types.Kind, query string, obj interface{}) error {
 	return s.client.store.List(ctx, keyCreate(kind.String(), query), "", obj)
 }
 
-func (s StorageV3) Map(ctx context.Context, kind types.Kind, query string, obj interface{}) error {
+func (s Storage) Map(ctx context.Context, kind types.Kind, query string, obj interface{}) error {
 	return s.client.store.Map(ctx, keyCreate(kind.String(), query), "", obj)
 }
 
-func (s StorageV3) Create(ctx context.Context, kind types.Kind, name string, obj interface{}, opts *types.Opts) error {
+func (s Storage) Create(ctx context.Context, kind types.Kind, name string, obj interface{}, opts *types.Opts) error {
 
 	if opts == nil {
 		opts = new(types.Opts)
@@ -90,7 +89,7 @@ func (s StorageV3) Create(ctx context.Context, kind types.Kind, name string, obj
 	return s.client.store.Create(ctx, keyCreate(kind.String(), name), obj, nil, opts.Ttl)
 }
 
-func (s StorageV3) Update(ctx context.Context, kind types.Kind, name string, obj interface{}, opts *types.Opts) error {
+func (s Storage) Update(ctx context.Context, kind types.Kind, name string, obj interface{}, opts *types.Opts) error {
 
 	if opts == nil {
 		opts = new(types.Opts)
@@ -99,7 +98,7 @@ func (s StorageV3) Update(ctx context.Context, kind types.Kind, name string, obj
 	return s.client.store.Update(ctx, keyCreate(kind.String(), name), obj, nil, opts.Ttl)
 }
 
-func (s StorageV3) Upsert(ctx context.Context, kind types.Kind, name string, obj interface{}, opts *types.Opts) error {
+func (s Storage) Upsert(ctx context.Context, kind types.Kind, name string, obj interface{}, opts *types.Opts) error {
 
 	if opts == nil {
 		opts = new(types.Opts)
@@ -108,11 +107,11 @@ func (s StorageV3) Upsert(ctx context.Context, kind types.Kind, name string, obj
 	return s.client.store.Upsert(ctx, keyCreate(kind.String(), name), obj, nil, opts.Ttl)
 }
 
-func (s StorageV3) Remove(ctx context.Context, kind types.Kind, name string) error {
+func (s Storage) Remove(ctx context.Context, kind types.Kind, name string) error {
 	return s.client.store.Delete(ctx, keyCreate(kind.String(), name))
 }
 
-func (s *StorageV3) Watch(ctx context.Context, kind types.Kind, event chan *types.WatcherEvent) error {
+func (s *Storage) Watch(ctx context.Context, kind types.Kind, event chan *types.WatcherEvent) error {
 
 	log.V(logLevel).Debug("%s:> watch %s", logPrefix, kind.String())
 
@@ -181,6 +180,6 @@ func (s *StorageV3) Watch(ctx context.Context, kind types.Kind, event chan *type
 	return nil
 }
 
-func (s StorageV3) getClient() (store.Store, store.DestroyFunc, error) {
+func (s Storage) getClient() (store.Store, store.DestroyFunc, error) {
 	return s.client.store, s.client.dfunc, nil
 }

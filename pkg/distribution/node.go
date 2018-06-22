@@ -26,7 +26,6 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 	"github.com/lastbackend/lastbackend/pkg/log"
 	"github.com/lastbackend/lastbackend/pkg/storage"
-	"github.com/lastbackend/lastbackend/pkg/storage/etcd/v3/store"
 )
 
 const (
@@ -53,8 +52,6 @@ type INode interface {
 	RemovePod(node *types.Node, pod *types.Pod) error
 	InsertVolume(node *types.Node, volume *types.Volume) error
 	RemoveVolume(node *types.Node, volume *types.Volume) error
-	InsertRoute(node *types.Node, route *types.Route) error
-	RemoveRoute(node *types.Node, route *types.Route) error
 	Remove(node *types.Node) error
 }
 
@@ -117,7 +114,7 @@ func (n *Node) Get(hostname string) (*types.Node, error) {
 	err := n.storage.Get(n.context, storage.NodeKind, hostname, &node)
 	if err != nil {
 
-		if err.Error() == store.ErrEntityNotFound {
+		if errors.Storage().IsErrEntityNotFound(err) {
 			log.V(logLevel).Warnf("%s:get:> get: node %s not found", logNodePrefix, hostname)
 			return nil, nil
 		}
@@ -278,14 +275,6 @@ func (n *Node) InsertVolume(node *types.Node, volume *types.Volume) error {
 }
 
 func (n *Node) RemoveVolume(node *types.Node, volume *types.Volume) error {
-	return nil
-}
-
-func (n *Node) InsertRoute(node *types.Node, route *types.Route) error {
-	return nil
-}
-
-func (n *Node) RemoveRoute(node *types.Node, route *types.Route) error {
 	return nil
 }
 

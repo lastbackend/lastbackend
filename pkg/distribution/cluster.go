@@ -23,10 +23,9 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 	"github.com/lastbackend/lastbackend/pkg/log"
 	"github.com/lastbackend/lastbackend/pkg/storage"
-	"github.com/lastbackend/lastbackend/pkg/storage/etcd/v3/store"
 
-	stgtypes "github.com/lastbackend/lastbackend/pkg/storage/types"
 	"encoding/json"
+	"github.com/lastbackend/lastbackend/pkg/distribution/errors"
 )
 
 const (
@@ -48,7 +47,7 @@ func (c *Cluster) Get() (*types.Cluster, error) {
 
 	err := c.storage.Get(c.context, storage.ClusterKind, "", &cluster)
 	if err != nil {
-		if err.Error() == store.ErrEntityNotFound {
+		if errors.Storage().IsErrEntityNotFound(err) {
 			log.V(logLevel).Warnf("%s:get:> cluster not found", logClusterPrefix)
 			return nil, nil
 		}
@@ -66,7 +65,7 @@ func (c *Cluster) Watch(ch chan types.ClusterEvent) {
 	log.Debugf("%s:watch:> watch cluster", logClusterPrefix)
 
 	done := make(chan bool)
-	event := make(chan *stgtypes.WatcherEvent)
+	watcher := storage.NewWatcher()
 
 	go func() {
 		for {
@@ -74,7 +73,7 @@ func (c *Cluster) Watch(ch chan types.ClusterEvent) {
 			case <-c.context.Done():
 				done <- true
 				return
-			case e := <-event:
+			case e := <-watcher:
 				if e.Data == nil {
 					continue
 				}
@@ -97,7 +96,7 @@ func (c *Cluster) Watch(ch chan types.ClusterEvent) {
 		}
 	}()
 
-	go c.storage.Watch(c.context, storage.ClusterKind, event)
+	go c.storage.Watch(c.context, storage.ClusterKind, watcher)
 
 	<-done
 }

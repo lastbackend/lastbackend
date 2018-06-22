@@ -22,7 +22,7 @@ import (
 	"crypto/tls"
 	"github.com/coreos/etcd/clientv3"
 	"github.com/coreos/etcd/pkg/transport"
-	s "github.com/lastbackend/lastbackend/pkg/storage/etcd/v3/store"
+	s "github.com/lastbackend/lastbackend/pkg/storage/etcd/store"
 	"github.com/lastbackend/lastbackend/pkg/util/serializer"
 	"github.com/lastbackend/lastbackend/pkg/util/serializer/json"
 	"path"

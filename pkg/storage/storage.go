@@ -51,6 +51,7 @@ type Storage interface {
 	Upsert(ctx context.Context, kind types.Kind, name string, obj interface{}, opts *types.Opts) error
 	Remove(ctx context.Context, kind types.Kind, name string) error
 	Watch(ctx context.Context, kind types.Kind, event chan *types.WatcherEvent) error
+	Filter() types.Filter
 }
 
 func Get(driver string) (Storage, error) {
@@ -58,6 +59,10 @@ func Get(driver string) (Storage, error) {
 	case "mock":
 		return mock.New()
 	default:
-		return etcd.NewV3()
+		return etcd.New()
 	}
+}
+
+func NewWatcher() chan *types.WatcherEvent {
+	return make(chan *types.WatcherEvent)
 }

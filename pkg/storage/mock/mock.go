@@ -36,6 +36,8 @@ type MockDB struct {
 func (db *MockDB) Get(ctx context.Context, kind types.Kind, name string, obj interface{}) error {
 	db.check(kind)
 
+
+
 	return nil
 }
 

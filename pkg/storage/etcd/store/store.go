@@ -20,17 +20,12 @@ package store
 
 import (
 	"golang.org/x/net/context"
-	"github.com/lastbackend/lastbackend/pkg/storage/etcd/types"
+	"github.com/lastbackend/lastbackend/pkg/storage/types"
 )
 
 const LogLevel = 7
 
 const (
-	ErrEntityExists       = "entity exists"
-	ErrOperationFailure   = "operation failure"
-	ErrEntityNotFound     = "entity not found"
-	ErrStructArgIsNil     = "input structure is nil"
-	ErrStructArgIsInvalid = "input structure is invalid"
 	STORAGEDELETEEVENT    = "delete"
 	STORAGECREATEEVENT    = "create"
 	STORAGEUPDATEEVENT    = "update"

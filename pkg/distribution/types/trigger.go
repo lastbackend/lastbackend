@@ -45,7 +45,11 @@ type TriggerSpec struct {
 
 func (t *Trigger) SelfLink() string {
 	if t.Meta.SelfLink == "" {
-		t.Meta.SelfLink = fmt.Sprintf("%s:%s:%s", t.Meta.Namespace, t.Meta.Service, t.Meta.Name)
+		t.Meta.SelfLink = t.CreateSelfLink(t.Meta.Namespace, t.Meta.Service, t.Meta.Name)
 	}
 	return t.Meta.SelfLink
+}
+
+func (t *Trigger) CreateSelfLink(namespace, service, name string) string {
+	return fmt.Sprintf("%s:%s:%s", namespace, service, name)
 }

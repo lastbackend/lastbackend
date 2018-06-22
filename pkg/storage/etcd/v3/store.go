@@ -27,12 +27,12 @@ import (
 
 	"github.com/coreos/etcd/clientv3"
 	"github.com/lastbackend/lastbackend/pkg/log"
-	"github.com/lastbackend/lastbackend/pkg/storage/etcd/v3/store"
+	"github.com/lastbackend/lastbackend/pkg/storage/etcd/store"
 	"github.com/lastbackend/lastbackend/pkg/util/converter"
 	"github.com/lastbackend/lastbackend/pkg/util/serializer"
 	"github.com/lastbackend/lastbackend/pkg/util/validator"
 	"golang.org/x/net/context"
-	"github.com/lastbackend/lastbackend/pkg/storage/etcd/types"
+	"github.com/lastbackend/lastbackend/pkg/storage/types"
 )
 
 type dbstore struct {
@@ -97,7 +97,7 @@ func (s *dbstore) Create(ctx context.Context, key string, obj, outPtr interface{
 		return err
 	}
 	if !txnResp.Succeeded {
-		return errors.New(store.ErrEntityExists)
+		return errors.New(types.ErrEntityExists)
 	}
 	if validator.IsNil(outPtr) {
 		log.V(logLevel).Warn("%s:Create: output struct is nil")
@@ -122,7 +122,7 @@ func (s *dbstore) Get(ctx context.Context, key string, outPtr interface{}) error
 		return err
 	}
 	if len(res.Kvs) == 0 {
-		return errors.New(store.ErrEntityNotFound)
+		return errors.New(types.ErrEntityNotFound)
 	}
 	if err := decode(s.codec, res.Kvs[0].Value, outPtr); err != nil {
 		log.V(logLevel).Errorf("%s:get:> decode data err: %v", logPrefix, err)
@@ -194,7 +194,7 @@ func (s *dbstore) Map(ctx context.Context, key, keyRegexFilter string, mapOutPtr
 	}
 
 	if len(items) == 0 {
-		return errors.New(store.ErrEntityNotFound)
+		return errors.New(types.ErrEntityNotFound)
 	}
 
 	if err := decodeMap(s.codec, items, mapOutPtr); err != nil {
@@ -267,7 +267,7 @@ func (s *dbstore) Update(ctx context.Context, key string, obj, outPtr interface{
 		return err
 	}
 	if !txnResp.Succeeded {
-		return errors.New(store.ErrEntityNotFound)
+		return errors.New(types.ErrEntityNotFound)
 	}
 	if validator.IsNil(outPtr) {
 		log.V(logLevel).Warnf("%s:Update: output struct is nil", logPrefix)
@@ -304,7 +304,7 @@ func (s *dbstore) Upsert(ctx context.Context, key string, obj, outPtr interface{
 		return err
 	}
 	if !txnResp.Succeeded {
-		return errors.New(store.ErrOperationFailure)
+		return errors.New(types.ErrOperationFailure)
 	}
 	if validator.IsNil(outPtr) {
 		log.V(logLevel).Warn("%s:Upsert: output struct is nil")
@@ -380,7 +380,7 @@ func decode(s serializer.Codec, value []byte, out interface{}) error {
 func decodeList(codec serializer.Codec, items map[string]map[string]buffer, listOut interface{}) error {
 	v, err := converter.EnforcePtr(listOut)
 	if err != nil || (v.Kind() != reflect.Slice) {
-		return errors.New("need ptr slice")
+		return errors.New(types.ErrStructOutIsInvalid)
 	}
 
 	for _, item := range items {
@@ -419,7 +419,7 @@ func decodeMap(codec serializer.Codec, items map[string]buffer, mapOut interface
 func decodeMapList(codec serializer.Codec, items map[string]map[string]buffer, mapOut interface{}) error {
 	v := reflect.ValueOf(mapOut)
 	if v.Kind() != reflect.Map {
-		return errors.New("need map")
+		return errors.New(types.ErrStructOutIsInvalid)
 	}
 
 	for key, item := range items {
