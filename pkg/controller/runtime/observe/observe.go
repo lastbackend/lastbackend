@@ -19,32 +19,26 @@
 package observe
 
 import (
+	"github.com/lastbackend/lastbackend/pkg/controller/envs"
+	"github.com/lastbackend/lastbackend/pkg/controller/runtime/cache"
+	"github.com/lastbackend/lastbackend/pkg/controller/runtime/deployment"
+	"github.com/lastbackend/lastbackend/pkg/controller/runtime/pod"
+	"github.com/lastbackend/lastbackend/pkg/controller/runtime/service"
+	"github.com/lastbackend/lastbackend/pkg/distribution/types"
+	"github.com/lastbackend/lastbackend/pkg/log"
+	"github.com/lastbackend/lastbackend/pkg/storage"
 	"golang.org/x/net/context"
 	"sync"
-	"github.com/lastbackend/lastbackend/pkg/controller/runtime/cache"
-	"github.com/lastbackend/lastbackend/pkg/controller/envs"
-	"github.com/lastbackend/lastbackend/pkg/distribution/types"
-	"github.com/lastbackend/lastbackend/pkg/storage"
-	"github.com/lastbackend/lastbackend/pkg/controller/runtime/service"
-	"github.com/lastbackend/lastbackend/pkg/controller/runtime/pod"
-	"github.com/lastbackend/lastbackend/pkg/controller/runtime/deployment"
-	"github.com/lastbackend/lastbackend/pkg/log"
 )
 
 const (
 	logPrefix = "controller:runtime:observe"
 )
 
-type Controller interface {
-	Observe(ctx context.Context) error
-	Pause()
-	Resume()
-}
-
 type Controllers struct {
-	pc Controller
-	dc Controller
-	sc Controller
+	pc *pod.Controller
+	dc *deployment.Controller
+	sc *service.Controller
 }
 
 type Observer struct {

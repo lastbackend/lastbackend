@@ -19,11 +19,12 @@
 package service
 
 import (
+	"context"
 	"github.com/lastbackend/lastbackend/pkg/controller/runtime/cache"
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
-	"github.com/lastbackend/lastbackend/pkg/storage"
 	"github.com/lastbackend/lastbackend/pkg/log"
-	"context"
+	"github.com/lastbackend/lastbackend/pkg/storage"
+	"fmt"
 )
 
 const logPrefix = "controller:service:controller"
@@ -178,7 +179,9 @@ func (ctrl *Controller) Observe(ctx context.Context) {
 			case <-ctx.Done():
 				return
 			case s := <-ctrl.serviceChan:
-				// todo: update cache
+
+				ctrl.cache.Services.Set(s.Meta.SelfLink, s)
+
 				// todo: run handlers
 			}
 		}
@@ -192,6 +195,7 @@ func (ctrl *Controller) Observe(ctx context.Context) {
 			case <-ctx.Done():
 				return
 			case e := <-event:
+				fmt.Println("service event", e)
 				// todo: run handlers
 			}
 		}
