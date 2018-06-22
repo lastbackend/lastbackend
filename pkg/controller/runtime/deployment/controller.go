@@ -21,150 +21,149 @@ package deployment
 import (
 	"context"
 	"github.com/lastbackend/lastbackend/pkg/controller/envs"
+	"github.com/lastbackend/lastbackend/pkg/controller/runtime/cache"
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 	"github.com/lastbackend/lastbackend/pkg/log"
 	"github.com/lastbackend/lastbackend/pkg/storage"
 	"github.com/lastbackend/lastbackend/pkg/storage/etcd"
-
-	stgtypes "github.com/lastbackend/lastbackend/pkg/storage/types"
-	"encoding/json"
-	"fmt"
-	"github.com/lastbackend/lastbackend/pkg/controller/runtime/cache"
 )
 
 const logPrefix = "controller:deployment"
 
 type Controller struct {
-	status chan *types.Deployment
-	spec   chan *types.Deployment
-	active bool
+	deploymenChan chan *types.Deployment
+
+	cache   *cache.Cache
+	service *types.Service
+	storage storage.Storage
+	active  bool
 }
 
-// Watch deployment spec changes
-func (dc *Controller) WatchSpec() {
-
-	var (
-		stg   = envs.Get().GetStorage()
-		event = make(chan *stgtypes.WatcherEvent)
-	)
-
-	log.Debug("controller:deployment:controller: start watch deployment spec")
-	go func() {
-		for {
-			select {
-			case s := <-dc.spec:
-				{
-					if !dc.active {
-						log.Debug("controller:deployment:controller: skip management couse it is in slave mode")
-						continue
-					}
-
-					if s == nil {
-						log.Debug("controller:deployment:controller: skip because service is nil")
-						continue
-					}
-
-					log.Debugf("controller:deployment:controller: Service needs to be provisioned: %s:%s", s.Meta.Namespace, s.Meta.Name)
-					if err := Provision(s); err != nil {
-						log.Errorf("controller:deployment:controller: service provision: %s err: %s", s.Meta.Name, err.Error())
-					}
-				}
-			}
-		}
-	}()
-
-	go func() {
-		for {
-			select {
-			case e := <-event:
-				if e.Data == nil {
-					continue
-				}
-
-				deployment := new(types.Deployment)
-
-				if err := json.Unmarshal(e.Data.([]byte), &deployment); err != nil {
-					log.Errorf("controller:deployment:controller: parse json err: %s", err.Error())
-					continue
-				}
-
-				dc.spec <- deployment
-			}
-		}
-	}()
-
-	stg.Watch(context.Background(), storage.DeploymentKind, event)
-}
-
-// Watch deployment spec changes
-func (dc *Controller) WatchStatus() {
-
-	var (
-		stg   = envs.Get().GetStorage()
-		event = make(chan *stgtypes.WatcherEvent)
-	)
-
-	log.Debugf("%s:status> start watch deployment status", logPrefix)
-	go func() {
-		for {
-			select {
-			case s := <-dc.status:
-				{
-					if !dc.active {
-						log.Debug("%s:status> skip management couse it is in slave mode", logPrefix)
-						continue
-					}
-
-					if s == nil {
-						log.Debug("%s:status> skip because service is nil", logPrefix)
-						continue
-					}
-
-					log.Debugf("%s:status> Service needs to be provisioned: %s", logPrefix, s.SelfLink())
-					if err := HandleStatus(s); err != nil {
-						log.Errorf("%s:status> service provision: %s err: %s", logPrefix, s.SelfLink(), err.Error())
-					}
-				}
-			}
-		}
-	}()
-
-	go func() {
-		for {
-			select {
-			case e := <-event:
-				if e.Data == nil {
-					continue
-				}
-
-				deployment := new(types.Deployment)
-
-				if err := json.Unmarshal(e.Data.([]byte), &deployment); err != nil {
-					log.Errorf("%s:status parse json err: %s", logPrefix, err.Error())
-					continue
-				}
-
-				dc.status <- deployment
-			}
-		}
-	}()
-
-	stg.Watch(context.Background(), storage.DeploymentKind, event)
-}
+//// Watch deployment spec changes
+//func (ctrl *Controller) WatchSpec() {
+//
+//	var (
+//		stg   = envs.Get().GetStorage()
+//		event = make(chan *stgtypes.WatcherEvent)
+//	)
+//
+//	log.Debug("controller:deployment:controller: start watch deployment spec")
+//	go func() {
+//		for {
+//			select {
+//			case s := <-ctrl.spec:
+//				{
+//					if !ctrl.active {
+//						log.Debug("controller:deployment:controller: skip management couse it is in slave mode")
+//						continue
+//					}
+//
+//					if s == nil {
+//						log.Debug("controller:deployment:controller: skip because service is nil")
+//						continue
+//					}
+//
+//					log.Debugf("controller:deployment:controller: Service needs to be provisioned: %s:%s", s.Meta.Namespace, s.Meta.Name)
+//					if err := Provision(s); err != nil {
+//						log.Errorf("controller:deployment:controller: service provision: %s err: %s", s.Meta.Name, err.Error())
+//					}
+//				}
+//			}
+//		}
+//	}()
+//
+//	go func() {
+//		for {
+//			select {
+//			case e := <-event:
+//				if e.Data == nil {
+//					continue
+//				}
+//
+//				deployment := new(types.Deployment)
+//
+//				if err := json.Unmarshal(e.Data.([]byte), &deployment); err != nil {
+//					log.Errorf("controller:deployment:controller: parse json err: %s", err.Error())
+//					continue
+//				}
+//
+//				ctrl.spec <- deployment
+//			}
+//		}
+//	}()
+//
+//	stg.Watch(context.Background(), storage.DeploymentKind, event)
+//}
+//
+//// Watch deployment spec changes
+//func (ctrl *Controller) WatchStatus() {
+//
+//	var (
+//		stg   = envs.Get().GetStorage()
+//		event = make(chan *stgtypes.WatcherEvent)
+//	)
+//
+//	log.Debugf("%s:status> start watch deployment status", logPrefix)
+//	go func() {
+//		for {
+//			select {
+//			case s := <-ctrl.status:
+//				{
+//					if !ctrl.active {
+//						log.Debug("%s:status> skip management couse it is in slave mode", logPrefix)
+//						continue
+//					}
+//
+//					if s == nil {
+//						log.Debug("%s:status> skip because service is nil", logPrefix)
+//						continue
+//					}
+//
+//					log.Debugf("%s:status> Service needs to be provisioned: %s", logPrefix, s.SelfLink())
+//					if err := HandleStatus(s); err != nil {
+//						log.Errorf("%s:status> service provision: %s err: %s", logPrefix, s.SelfLink(), err.Error())
+//					}
+//				}
+//			}
+//		}
+//	}()
+//
+//	go func() {
+//		for {
+//			select {
+//			case e := <-event:
+//				if e.Data == nil {
+//					continue
+//				}
+//
+//				deployment := new(types.Deployment)
+//
+//				if err := json.Unmarshal(e.Data.([]byte), &deployment); err != nil {
+//					log.Errorf("%s:status parse json err: %s", logPrefix, err.Error())
+//					continue
+//				}
+//
+//				ctrl.status <- deployment
+//			}
+//		}
+//	}()
+//
+//	stg.Watch(context.Background(), storage.DeploymentKind, event)
+//}
 
 // Pause deployment controller because not lead
-func (dc *Controller) Pause() {
-	dc.active = false
+func (ctrl *Controller) Pause() {
+	ctrl.active = false
 }
 
 // Resume deployment controller management
-func (dc *Controller) Resume() {
+func (ctrl *Controller) Resume() {
 
 	var (
 		stg = envs.Get().GetStorage()
 	)
 
-	dc.active = true
+	ctrl.active = true
 
 	nss := make(map[string]*types.Namespace)
 
@@ -192,31 +191,52 @@ func (dc *Controller) Resume() {
 				log.Errorf("controller:deployment:controller:resume get deployment err: %s", err.Error())
 			}
 
-			dc.spec <- d
-			dc.status <- d
+			ctrl.deploymenChan <- d
 		}
 	}
 }
 
-func (dc *Controller) Observe(ctx context.Context, cache *cache.Cache) {
+func (ctrl *Controller) Observe(ctx context.Context) {
 
-	// TODO: watch etcd: deployment collection
-
-	event := cache.Pods.Subscribe()
-
-	for {
-		select {
-		case e := <-event:
-			fmt.Println("change pod", e)
+	go func() {
+		for {
+			select {
+			case <-ctx.Done():
+				return
+			case d := <-ctrl.deploymenChan:
+				// todo: update cache
+				// todo: run handlers
+			}
 		}
-	}
+	}()
+
+	event := make(chan cache.DeploymentEvent)
+
+	go func() {
+		for {
+			select {
+			case <-ctx.Done():
+				return
+			case e := <-event:
+				// todo: run handlers
+			}
+		}
+	}()
+
+	ctrl.cache.Deployments.Subscribe(event)
+}
+
+func (ctrl *Controller) UpdateDeployment(dp *types.Deployment) {
+	ctrl.deploymenChan <- dp
 }
 
 // NewDeploymentController return new controller instance
-func NewDeploymentController(_ context.Context) *Controller {
-	sc := new(Controller)
-	sc.active = false
-	sc.status = make(chan *types.Deployment)
-	sc.spec = make(chan *types.Deployment)
-	return sc
+func NewDeploymentController(stg storage.Storage, c *cache.Cache, s *types.Service) *Controller {
+	ctrl := new(Controller)
+	ctrl.active = false
+	ctrl.storage = stg
+	ctrl.cache = c
+	ctrl.service = s
+	ctrl.deploymenChan = make(chan *types.Deployment)
+	return ctrl
 }

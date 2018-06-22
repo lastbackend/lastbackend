@@ -250,8 +250,6 @@ func HandleStatus(svc *types.Service) error {
 	return nil
 }
 
-
-
 func Update() error {
 	return nil
 }

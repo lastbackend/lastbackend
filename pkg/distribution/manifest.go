@@ -31,15 +31,15 @@ type IManifest interface {
 	GetNodeManifest(node string) (*types.NodeManifest, error)
 	DelNodeManifest(node string) error
 
-	AddPodManifest (node, pod string, manifest *types.PodManifest) error
-	GetPodManifest (node, pod string) (*types.PodManifest, error)
-	SetPodManifest (node, pod string, manifest *types.PodManifest) error
-	DelPodManifest (node, pod string) error
+	AddPodManifest(node, pod string, manifest *types.PodManifest) error
+	GetPodManifest(node, pod string) (*types.PodManifest, error)
+	SetPodManifest(node, pod string, manifest *types.PodManifest) error
+	DelPodManifest(node, pod string) error
 
-	AddVolumeManifest (node, volume string, manifest *types.VolumeManifest) error
-	GetVolumeManifest (node, volume string) (*types.VolumeManifest, error)
-	SetVolumeManifest (node, volume string, manifest *types.VolumeManifest) error
-	DetVolumeManifest (node, volume string) error
+	AddVolumeManifest(node, volume string, manifest *types.VolumeManifest) error
+	GetVolumeManifest(node, volume string) (*types.VolumeManifest, error)
+	SetVolumeManifest(node, volume string, manifest *types.VolumeManifest) error
+	DetVolumeManifest(node, volume string) error
 }
 
 func GetNodeManifest(node string) (*types.NodeManifest, error) {
@@ -52,50 +52,42 @@ func DelNodeManifest(node string) error {
 	return nil
 }
 
-
-func AddPodManifest (node, pod string, manifest *types.PodManifest) error {
+func AddPodManifest(node, pod string, manifest *types.PodManifest) error {
 	log.Debugf("%s:AddPodManifest:> ", logManifestPrefix)
 	return nil
 }
 
-
-func GetPodManifest (node, pod string) (*types.PodManifest, error) {
+func GetPodManifest(node, pod string) (*types.PodManifest, error) {
 	log.Debugf("%s:GetPodManifest:> ", logManifestPrefix)
 	return new(types.PodManifest), nil
 }
 
-
-func SetPodManifest (node, pod string, manifest *types.PodManifest) error {
+func SetPodManifest(node, pod string, manifest *types.PodManifest) error {
 	log.Debugf("%s:SetPodManifest:> ", logManifestPrefix)
 	return nil
 }
 
-
-func DelPodManifest (node, pod string) error {
+func DelPodManifest(node, pod string) error {
 	log.Debugf("%s:DelPodManifest:> ", logManifestPrefix)
 	return nil
 }
 
-
-func AddVolumeManifest (node, volume string, manifest *types.VolumeManifest) error {
+func AddVolumeManifest(node, volume string, manifest *types.VolumeManifest) error {
 	log.Debugf("%s:AddVolumeManifest:> ", logManifestPrefix)
 	return nil
 }
 
-
-func GetVolumeManifest (node, volume string) (*types.VolumeManifest, error) {
+func GetVolumeManifest(node, volume string) (*types.VolumeManifest, error) {
 	log.Debugf("%s:GetVolumeManifest:> ", logManifestPrefix)
 	return new(types.VolumeManifest), nil
 }
 
-
-func SetVolumeManifest (node, volume string, manifest *types.VolumeManifest) error {
+func SetVolumeManifest(node, volume string, manifest *types.VolumeManifest) error {
 	log.Debugf("%s:SetVolumeManifest:> ", logManifestPrefix)
 	return nil
 }
 
-
-func DelVolumeManifest (node, volume string) error {
+func DelVolumeManifest(node, volume string) error {
 	log.Debugf("%s:DelVolumeManifest:> ", logManifestPrefix)
 	return nil
 }

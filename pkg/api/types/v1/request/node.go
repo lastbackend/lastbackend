@@ -27,8 +27,8 @@ type NodeMetaOptions struct {
 
 // swagger:model request_node_connect
 type NodeConnectOptions struct {
-	Info    types.NodeInfo    `json:"info"`
-	Status  types.NodeStatus  `json:"status"`
+	Info    types.NodeInfo     `json:"info"`
+	Status  types.NodeStatus   `json:"status"`
 	Network types.NetworkState `json:"network"`
 }
 

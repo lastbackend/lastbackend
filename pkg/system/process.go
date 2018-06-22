@@ -31,10 +31,10 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/storage"
 	"github.com/lastbackend/lastbackend/pkg/util/system"
 
-	stgtypes "github.com/lastbackend/lastbackend/pkg/storage/types"
+	"encoding/json"
 	"github.com/lastbackend/lastbackend/pkg/storage/etcd"
 	"github.com/lastbackend/lastbackend/pkg/storage/etcd/v3/store"
-	"encoding/json"
+	stgtypes "github.com/lastbackend/lastbackend/pkg/storage/types"
 )
 
 // HeartBeat Interval
@@ -80,7 +80,7 @@ func (c *Process) Register(ctx context.Context, kind string, stg storage.Storage
 	}
 
 	go c.HeartBeat(ctx)
-	
+
 	return item, nil
 }
 

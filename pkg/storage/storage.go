@@ -19,10 +19,10 @@
 package storage
 
 import (
-	"github.com/lastbackend/lastbackend/pkg/storage/types"
 	"context"
 	"github.com/lastbackend/lastbackend/pkg/storage/etcd"
 	"github.com/lastbackend/lastbackend/pkg/storage/mock"
+	"github.com/lastbackend/lastbackend/pkg/storage/types"
 )
 
 const (
@@ -52,6 +52,10 @@ type Storage interface {
 	Remove(ctx context.Context, kind types.Kind, name string) error
 	Watch(ctx context.Context, kind types.Kind, event chan *types.WatcherEvent) error
 	Filter() types.Filter
+}
+
+func NewWatcher() chan *types.WatcherEvent {
+	return make(chan *types.WatcherEvent)
 }
 
 func Get(driver string) (Storage, error) {
