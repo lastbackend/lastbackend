@@ -23,22 +23,25 @@ import (
 	"encoding/json"
 
 	"github.com/lastbackend/lastbackend/pkg/controller/envs"
+	"github.com/lastbackend/lastbackend/pkg/controller/runtime/cache"
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 	"github.com/lastbackend/lastbackend/pkg/log"
 	"github.com/lastbackend/lastbackend/pkg/storage"
 	"github.com/lastbackend/lastbackend/pkg/storage/etcd"
-	"github.com/lastbackend/lastbackend/pkg/controller/runtime/cache"
 
 	stgtypes "github.com/lastbackend/lastbackend/pkg/storage/types"
 )
 
 type Controller struct {
-	status chan *types.Pod
-	active bool
+	podChan chan *types.Pod
+	storage storage.Storage
+	cache   *cache.Cache
+	service *types.Service
+	active  bool
 }
 
 // Watch pod spec changes
-func (pc *Controller) WatchStatus() {
+func (ctrl *Controller) WatchStatus() {
 
 	var (
 		stg   = envs.Get().GetStorage()
@@ -49,9 +52,9 @@ func (pc *Controller) WatchStatus() {
 	go func() {
 		for {
 			select {
-			case s := <-pc.status:
+			case s := <-ctrl.status:
 				{
-					if !pc.active {
+					if !ctrl.active {
 						log.Debug("controller:pod:controller: skip management course it is in slave mode")
 						continue
 					}
@@ -85,7 +88,7 @@ func (pc *Controller) WatchStatus() {
 					continue
 				}
 
-				pc.status <- pod
+				ctrl.status <- pod
 			}
 		}
 	}()
@@ -94,18 +97,18 @@ func (pc *Controller) WatchStatus() {
 }
 
 // Pause pod controller because not lead
-func (pc *Controller) Pause() {
-	pc.active = false
+func (ctrl *Controller) Pause() {
+	ctrl.active = false
 }
 
 // Resume pod controller management
-func (pc *Controller) Resume() {
+func (ctrl *Controller) Resume() {
 
 	var (
 		stg = envs.Get().GetStorage()
 	)
 
-	pc.active = true
+	ctrl.active = true
 
 	log.Debug("controller:pod:controller:resume start check pod states")
 
@@ -126,19 +129,47 @@ func (pc *Controller) Resume() {
 		}
 
 		for _, p := range pl {
-			pc.status <- p
+			ctrl.podChan <- p
 		}
 	}
 }
 
-func (pc *Controller) Observe(ctx context.Context, cache *cache.Cache) {
-	// TODO: watch etcd: pod collection
+func (ctrl *Controller) Observe(ctx context.Context) {
+	go func() {
+		for {
+			select {
+			case <-ctx.Done():
+				return
+			case p := <-ctrl.podChan:
+				// todo: update cache
+				// todo: run handlers
+			}
+		}
+	}()
+
+	event := make(chan cache.PodEvent)
+
+	go func() {
+		for {
+			select {
+			case <-ctx.Done():
+				return
+			case e := <-event:
+				// todo: run handlers
+			}
+		}
+	}()
+
+	ctrl.cache.Pods.Subscribe(event)
 }
 
 // NewDeploymentController return new controller instance
-func NewPodController(_ context.Context) *Controller {
-	sc := new(Controller)
-	sc.active = false
-	sc.status = make(chan *types.Pod)
-	return sc
+func NewPodController(stg storage.Storage, c *cache.Cache, s *types.Service) *Controller {
+	ctrl := new(Controller)
+	ctrl.active = false
+	ctrl.storage = stg
+	ctrl.cache = c
+	ctrl.service = s
+	ctrl.podChan = make(chan *types.Pod)
+	return ctrl
 }

@@ -20,16 +20,16 @@ package distribution
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"strings"
-	"encoding/json"
 
 	"github.com/lastbackend/lastbackend/pkg/distribution/errors"
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 	"github.com/lastbackend/lastbackend/pkg/log"
+	"github.com/lastbackend/lastbackend/pkg/storage"
 	"github.com/lastbackend/lastbackend/pkg/storage/etcd/v3/store"
 	"github.com/spf13/viper"
-	"github.com/lastbackend/lastbackend/pkg/storage"
 
 	stgtypes "github.com/lastbackend/lastbackend/pkg/storage/types"
 )

@@ -19,12 +19,12 @@
 package etcd
 
 import (
+	"context"
 	"github.com/lastbackend/lastbackend/pkg/log"
 	"github.com/lastbackend/lastbackend/pkg/storage/etcd/v3"
 	"github.com/lastbackend/lastbackend/pkg/storage/etcd/v3/store"
-	"github.com/spf13/viper"
-	"context"
 	"github.com/lastbackend/lastbackend/pkg/storage/types"
+	"github.com/spf13/viper"
 	"regexp"
 	"strings"
 )

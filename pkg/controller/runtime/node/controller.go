@@ -23,13 +23,13 @@ import (
 	"reflect"
 
 	"github.com/lastbackend/lastbackend/pkg/cache"
+	"github.com/lastbackend/lastbackend/pkg/controller/envs"
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 	"github.com/lastbackend/lastbackend/pkg/log"
-	"github.com/lastbackend/lastbackend/pkg/controller/envs"
 	"github.com/lastbackend/lastbackend/pkg/storage"
 
-	stgtypes "github.com/lastbackend/lastbackend/pkg/storage/etcd/types"
 	"encoding/json"
+	stgtypes "github.com/lastbackend/lastbackend/pkg/storage/etcd/types"
 )
 
 const (

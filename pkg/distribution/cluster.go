@@ -25,8 +25,8 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/storage"
 	"github.com/lastbackend/lastbackend/pkg/storage/etcd/v3/store"
 
-	stgtypes "github.com/lastbackend/lastbackend/pkg/storage/types"
 	"encoding/json"
+	stgtypes "github.com/lastbackend/lastbackend/pkg/storage/types"
 )
 
 const (

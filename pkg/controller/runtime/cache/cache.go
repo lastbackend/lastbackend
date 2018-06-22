@@ -18,46 +18,51 @@
 
 package cache
 
-import "github.com/lastbackend/lastbackend/pkg/distribution/types"
+const (
+	EventCreate = "create"
+	EventUpdate = "update"
+	EventRemove = "remove"
+)
 
 type Cache struct {
+	count       uint8
+	IsReady     bool
 	Pods        *PodCache
 	Deployments *DeploymentCache
 	Services    *ServiceCache
+
+	ready <-chan bool
 }
 
-func (c Cache) init() {
-	c.Pods = new(PodCache)
-	c.Deployments = new(DeploymentCache)
-	c.Services = new(ServiceCache)
+func New() *Cache {
+	c := new(Cache)
+	c.Pods = NewPodCache()
+	c.Deployments = NewDeploymentCache()
+	c.Services = NewServiceCache()
+
+	go func() {
+		for {
+			select {
+			case <-c.Pods.Ready():
+				c.checkReady()
+			case <-c.Deployments.Ready():
+				c.checkReady()
+			case <-c.Services.Ready():
+				c.checkReady()
+			}
+		}
+	}()
+
+	return c
 }
 
-type PodCache struct {
-	pods map[string]types.Pod
-
-	ch chan types.Pod
+func (c Cache) Ready() <-chan bool {
+	return c.ready
 }
 
-func (pc PodCache) Subscribe() chan types.Pod {
-	return pc.ch
-}
-
-type DeploymentCache struct {
-	deployments map[string]types.Deployment
-
-	ch chan types.Deployment
-}
-
-func (dc DeploymentCache) Subscribe() chan types.Deployment {
-	return dc.ch
-}
-
-type ServiceCache struct {
-	services map[string]types.Service
-
-	ch chan types.Service
-}
-
-func (sc ServiceCache) Subscribe() chan types.Service {
-	return sc.ch
+func (c *Cache) checkReady() {
+	if c.Services.IsReady && c.Deployments.IsReady && c.Pods.IsReady {
+		c.IsReady = true
+		c.ready <- true
+	}
 }

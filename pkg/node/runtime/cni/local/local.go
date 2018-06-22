@@ -51,8 +51,8 @@ func New() (*Network, error) {
 
 func (n *Network) Info(ctx context.Context) *types.NetworkState {
 	state := types.NetworkState{}
-		state.Type = "local"
-		state.Addr = n.ExtIface.IfaceAddr.String()
+	state.Type = "local"
+	state.Addr = n.ExtIface.IfaceAddr.String()
 	return &state
 }
 

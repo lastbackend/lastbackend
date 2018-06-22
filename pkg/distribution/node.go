@@ -234,7 +234,7 @@ func (n *Node) SetNetwork(node *types.Node, network types.NetworkSpec) error {
 
 	node.Network = network
 
-	if err := n.storage.Update(n.context, storage.NodeKind, node.Meta.SelfLink,  node, nil); err != nil {
+	if err := n.storage.Update(n.context, storage.NodeKind, node.Meta.SelfLink, node, nil); err != nil {
 		log.Errorf("%s:setnetwork:> set node network error: %v", logNodePrefix, err)
 		return err
 	}

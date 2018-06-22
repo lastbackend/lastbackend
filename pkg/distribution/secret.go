@@ -23,9 +23,9 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 	"github.com/lastbackend/lastbackend/pkg/log"
 	"github.com/lastbackend/lastbackend/pkg/storage"
+	"github.com/lastbackend/lastbackend/pkg/storage/etcd"
 	"github.com/lastbackend/lastbackend/pkg/storage/etcd/v3/store"
 	"github.com/lastbackend/lastbackend/pkg/util/generator"
-	"github.com/lastbackend/lastbackend/pkg/storage/etcd"
 )
 
 const (
@@ -72,7 +72,7 @@ func (n *Secret) ListByNamespace(namespace string) (map[string]*types.Secret, er
 
 	items := make(map[string]*types.Secret, 0)
 
-	 err := n.storage.Map(n.context, storage.SecretKind, etcd.BuildSecretKey(namespace), &items)
+	err := n.storage.Map(n.context, storage.SecretKind, etcd.BuildSecretKey(namespace), &items)
 	if err != nil {
 		log.V(logLevel).Error("%s:listbynamespace:> get secrets list by namespace err: %s", logSecretPrefix, err)
 		return items, err

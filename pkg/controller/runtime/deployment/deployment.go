@@ -20,13 +20,13 @@ package deployment
 
 import (
 	"context"
+	"github.com/lastbackend/lastbackend/pkg/api/types/v1/request"
 	"github.com/lastbackend/lastbackend/pkg/controller/envs"
 	"github.com/lastbackend/lastbackend/pkg/distribution"
 	"github.com/lastbackend/lastbackend/pkg/distribution/errors"
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 	"github.com/lastbackend/lastbackend/pkg/log"
 	"github.com/lastbackend/lastbackend/pkg/storage/etcd/v3/store"
-	"github.com/lastbackend/lastbackend/pkg/api/types/v1/request"
 )
 
 // Provision deployment

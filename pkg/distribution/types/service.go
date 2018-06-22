@@ -235,6 +235,10 @@ func (s *Service) SelfLink() string {
 	return s.Meta.SelfLink
 }
 
+func (Service) CreateSelfLink(namespace, service string) string {
+	return fmt.Sprintf("%s:%s", namespace, service)
+}
+
 type ServiceCreateOptions struct {
 	Name        *string             `json:"name"`
 	Description *string             `json:"description"`

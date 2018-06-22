@@ -21,21 +21,21 @@ package runtime
 import (
 	"context"
 	"github.com/lastbackend/lastbackend/pkg/controller/envs"
-	"github.com/lastbackend/lastbackend/pkg/controller/runtime/deployment"
-	"github.com/lastbackend/lastbackend/pkg/controller/runtime/pod"
-	"github.com/lastbackend/lastbackend/pkg/controller/runtime/service"
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 	"github.com/lastbackend/lastbackend/pkg/log"
 	"github.com/lastbackend/lastbackend/pkg/system"
+	"github.com/lastbackend/lastbackend/pkg/controller/runtime/observe"
 )
 
 type Runtime struct {
 	ctx     context.Context
 	process *system.Process
 
-	sc *service.Controller
-	dc *deployment.Controller
-	pc *pod.Controller
+	//sc *service.Controller
+	//dc *deployment.Controller
+	//pc *pod.Controller
+
+	observer *observe.Observer
 
 	active bool
 }
@@ -47,16 +47,18 @@ func NewRuntime(ctx context.Context) *Runtime {
 	r.process = new(system.Process)
 	r.process.Register(ctx, types.KindController, envs.Get().GetStorage())
 
-	r.sc = service.NewServiceController(ctx)
-	r.dc = deployment.NewDeploymentController(ctx)
-	r.pc = pod.NewPodController(ctx)
+	r.observer = observe.New(ctx, envs.Get().GetStorage())
 
-	go r.sc.WatchSpec()
-	go r.dc.WatchSpec()
+	//r.sc = service.NewServiceController(ctx)
+	//r.dc = deployment.NewDeploymentController(ctx)
+	//r.pc = pod.NewPodController(ctx)
 
-	go r.sc.WatchStatus()
-	go r.dc.WatchStatus()
-	go r.pc.WatchStatus()
+	//go r.sc.WatchSpec()
+	//go r.dc.WatchSpec()
+
+	//go r.sc.WatchStatus()
+	//go r.dc.WatchStatus()
+	//go r.pc.WatchStatus()
 
 	return r
 }
@@ -87,9 +89,9 @@ func (r *Runtime) Loop() {
 						log.Debug("Runtime: Mark as lead")
 
 						r.active = true
-						r.sc.Resume()
-						r.dc.Resume()
-						r.pc.Resume()
+						//r.sc.Resume()
+						//r.dc.Resume()
+						//r.pc.Resume()
 
 					} else {
 
@@ -101,9 +103,9 @@ func (r *Runtime) Loop() {
 						log.Debug("Runtime: Mark as slave")
 
 						r.active = false
-						r.sc.Pause()
-						r.dc.Pause()
-						r.pc.Pause()
+						//r.sc.Pause()
+						//r.dc.Pause()
+						//r.pc.Pause()
 					}
 
 				}

@@ -19,8 +19,8 @@
 package store
 
 import (
-	"golang.org/x/net/context"
 	"github.com/lastbackend/lastbackend/pkg/storage/etcd/types"
+	"golang.org/x/net/context"
 )
 
 const LogLevel = 7
