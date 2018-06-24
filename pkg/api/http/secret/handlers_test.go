@@ -303,7 +303,9 @@ func TestSecretCreate(t *testing.T) {
 			body, err := ioutil.ReadAll(res.Body)
 			assert.NoError(t, err)
 
-			if tc.wantErr && res.Code != 200 {
+			if tc.wantErr {
+				assert.Nil(t, err, errors.New("err, shouild be not nil"))
+				assert.Equal(t, 200, res.Code, errors.New("err, shouild be not nil"))
 				assert.Equal(t, tc.err, string(body), "incorrect status code")
 			} else {
 

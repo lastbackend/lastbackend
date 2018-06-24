@@ -120,7 +120,9 @@ func TestClusterInfo(t *testing.T) {
 			body, err := ioutil.ReadAll(res.Body)
 			assert.NoError(t, err)
 
-			if tc.wantErr && res.Code != 200 {
+			if tc.wantErr {
+				assert.Error(t, err, "err, should be not nil")
+				assert.NotEqual(t, 200, res.Code, "err, should be not nil")
 				assert.Equal(t, tc.err, string(body), "incorrect status code")
 			} else {
 

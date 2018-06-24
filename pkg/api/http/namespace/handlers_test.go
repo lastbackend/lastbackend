@@ -81,6 +81,7 @@ func TestNamespaceInfo(t *testing.T) {
 			fields:       fields{stg},
 			handler:      namespace.NamespaceInfoH,
 			err:          "{\"code\":404,\"status\":\"Not Found\",\"message\":\"Namespace not found\"}",
+			want:         v1.View().Namespace().New(ns1),
 			wantErr:      true,
 			expectedCode: http.StatusNotFound,
 		},
@@ -138,7 +139,9 @@ func TestNamespaceInfo(t *testing.T) {
 			body, err := ioutil.ReadAll(res.Body)
 			assert.NoError(t, err)
 
-			if tc.wantErr && res.Code != 200 {
+			if tc.wantErr {
+				assert.Error(t, err, "err, should be not nil")
+				assert.NotEqual(t, 200, res.Code, "err, should be not nil")
 				assert.Equal(t, tc.err, string(body), "incorrect status code")
 			} else {
 
@@ -246,7 +249,9 @@ func TestNamespaceList(t *testing.T) {
 			body, err := ioutil.ReadAll(res.Body)
 			assert.NoError(t, err)
 
-			if tc.wantErr && res.Code != 200 {
+			if tc.wantErr {
+				assert.Error(t, err, "err, should be not nil")
+				assert.NotEqual(t, 200, res.Code, "err, should be not nil")
 				assert.Equal(t, tc.err, string(body), "incorrect status code")
 			} else {
 
@@ -398,7 +403,9 @@ func TestNamespaceCreate(t *testing.T) {
 			body, err := ioutil.ReadAll(res.Body)
 			assert.NoError(t, err)
 
-			if tc.wantErr && res.Code != 200 {
+			if tc.wantErr {
+				assert.Error(t, err, "err, should be not nil")
+				assert.NotEqual(t, 200, res.Code, "err, should be not nil")
 				assert.Equal(t, tc.err, string(body), "incorrect status code")
 			} else {
 
@@ -475,6 +482,7 @@ func TestNamespaceUpdate(t *testing.T) {
 			handler:      namespace.NamespaceUpdateH,
 			data:         createNamespaceUpdateOptions(nil, nil).toJson(),
 			err:          "{\"code\":404,\"status\":\"Not Found\",\"message\":\"Namespace not found\"}",
+			want:         v1.View().Namespace().New(ns1),
 			wantErr:      true,
 			expectedCode: http.StatusNotFound,
 		},
@@ -484,6 +492,7 @@ func TestNamespaceUpdate(t *testing.T) {
 			fields:       fields{stg},
 			handler:      namespace.NamespaceUpdateH,
 			err:          "{\"code\":400,\"status\":\"Incorrect json\",\"message\":\"Incorrect json\"}",
+			want:         v1.View().Namespace().New(ns1),
 			wantErr:      true,
 			expectedCode: http.StatusBadRequest,
 		},
@@ -542,7 +551,9 @@ func TestNamespaceUpdate(t *testing.T) {
 			body, err := ioutil.ReadAll(res.Body)
 			assert.NoError(t, err)
 
-			if tc.wantErr && res.Code != 200 {
+			if tc.wantErr {
+				assert.Error(t, err, "err, should be not nil")
+				assert.NotEqual(t, 200, res.Code, "err, should be not nil")
 				assert.Equal(t, tc.err, string(body), "incorrect status code")
 			} else {
 
@@ -656,7 +667,9 @@ func TestNamespaceRemove(t *testing.T) {
 			body, err := ioutil.ReadAll(res.Body)
 			assert.NoError(t, err)
 
-			if tc.wantErr && res.Code != 200 {
+			if tc.wantErr {
+				assert.Error(t, err, "err, should be not nil")
+				assert.NotEqual(t, 200, res.Code, "err, should be not nil")
 				assert.Equal(t, tc.err, string(body), "")
 			} else {
 
