@@ -58,9 +58,8 @@ func (s *Service) Get(namespace, name string) (*types.Service, error) {
 	log.V(logLevel).Debugf("%s:get:> get in namespace %s by name %s", logServicePrefix, namespace, name)
 
 	svc := new(types.Service)
-	sl := svc.CreateSelfLink(namespace, name)
 
-	err := s.storage.Get(s.context, storage.ServiceKind, sl, &svc)
+	err := s.storage.Get(s.context, storage.ServiceKind, s.storage.Key().Service(namespace, name), &svc)
 	if err != nil {
 
 		if errors.Storage().IsErrEntityNotFound(err) {
@@ -137,7 +136,8 @@ func (s *Service) Create(namespace *types.Namespace, opts *types.ServiceCreateOp
 
 	service.SelfLink()
 
-	if err := s.storage.Create(s.context, storage.ServiceKind, service.Meta.SelfLink, service, nil); err != nil {
+	if err := s.storage.Create(s.context, storage.ServiceKind,
+		s.storage.Key().Service(service.Meta.Namespace, service.Meta.Name), service, nil); err != nil {
 		log.V(logLevel).Errorf("%s:create:> insert service err: %v", logServicePrefix, err)
 		return nil, err
 	}
@@ -157,7 +157,8 @@ func (s *Service) Update(service *types.Service, opts *types.ServiceUpdateOption
 	if opts.Description != nil {
 		service.Meta.Description = *opts.Description
 
-		if err := s.storage.Update(s.context, storage.ServiceKind, service.Meta.SelfLink, service, nil); err != nil {
+		if err := s.storage.Update(s.context, storage.ServiceKind,
+			s.storage.Key().Service(service.Meta.Namespace, service.Meta.Name), service, nil); err != nil {
 			log.V(logLevel).Errorf("%s:update:> update service meta err: %v", logServicePrefix, err)
 			return nil, err
 		}
@@ -167,7 +168,8 @@ func (s *Service) Update(service *types.Service, opts *types.ServiceUpdateOption
 
 		service.Spec.Update(opts.Spec)
 
-		if err := s.storage.Update(s.context, storage.ServiceKind, service.Meta.SelfLink, service, nil); err != nil {
+		if err := s.storage.Update(s.context, storage.ServiceKind,
+			s.storage.Key().Service(service.Meta.Namespace, service.Meta.Name), service, nil); err != nil {
 			log.V(logLevel).Errorf("%s:update:> update service spec err: %v", logServicePrefix, err)
 			return nil, err
 		}
@@ -184,7 +186,8 @@ func (s *Service) Destroy(service *types.Service) (*types.Service, error) {
 	service.Status.State = types.StateDestroy
 	service.Spec.State.Destroy = true
 
-	if err := s.storage.Update(s.context, storage.ServiceKind, service.Meta.SelfLink, service, nil); err != nil {
+	if err := s.storage.Update(s.context, storage.ServiceKind,
+		s.storage.Key().Service(service.Meta.Namespace, service.Meta.Name), service, nil); err != nil {
 		log.V(logLevel).Errorf("%s:destroy:> destroy service err: %v", logServicePrefix, err)
 		return nil, err
 	}
@@ -196,7 +199,8 @@ func (s *Service) Remove(service *types.Service) error {
 
 	log.V(logLevel).Debugf("%s:remove:> remove service %#v", logServicePrefix, service)
 
-	err := s.storage.Remove(s.context, storage.ServiceKind, service.Meta.SelfLink)
+	err := s.storage.Remove(s.context, storage.ServiceKind,
+		s.storage.Key().Service(service.Meta.Namespace, service.Meta.Name))
 	if err != nil {
 		log.V(logLevel).Errorf("%s:remove:> remove service err: %v", logServicePrefix, err)
 		return err
@@ -210,7 +214,8 @@ func (s *Service) SetStatus(service *types.Service) error {
 
 	log.Debugf("%s:setstatus:> set state for service %s", logServicePrefix, service.Meta.Name)
 
-	if err := s.storage.Update(s.context, storage.ServiceKind, service.Meta.SelfLink, service, nil); err != nil {
+	if err := s.storage.Update(s.context, storage.ServiceKind,
+		s.storage.Key().Service(service.Meta.Namespace, service.Meta.Name), service, nil); err != nil {
 		log.Errorf("%s:setstatus:> set state for service %s err: %v", logServicePrefix, service.Meta.Name, err)
 		return err
 	}
@@ -224,7 +229,7 @@ func (s *Service) Watch(ch chan types.ServiceEvent) error {
 	log.Debugf("%s:watch:> watch service by spec changes", logServicePrefix)
 
 	done := make(chan bool)
-	event := make(chan *stgtypes.WatcherEvent)
+	watcher := storage.NewWatcher()
 
 	go func() {
 		for {
@@ -232,7 +237,7 @@ func (s *Service) Watch(ch chan types.ServiceEvent) error {
 			case <-s.context.Done():
 				done <- true
 				return
-			case e := <-event:
+			case e := <-watcher:
 				if e.Data == nil {
 					continue
 				}
@@ -255,7 +260,7 @@ func (s *Service) Watch(ch chan types.ServiceEvent) error {
 		}
 	}()
 
-	if err := s.storage.Watch(s.context, storage.ServiceKind, event); err != nil {
+	if err := s.storage.Watch(s.context, storage.ServiceKind, watcher); err != nil {
 		return err
 	}
 

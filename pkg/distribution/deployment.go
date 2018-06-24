@@ -20,13 +20,15 @@ package distribution
 
 import (
 	"context"
+	"strings"
+
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 	"github.com/lastbackend/lastbackend/pkg/log"
 	"github.com/lastbackend/lastbackend/pkg/storage"
 	"github.com/lastbackend/lastbackend/pkg/util/generator"
-	"strings"
 
 	"encoding/json"
+
 	"github.com/lastbackend/lastbackend/pkg/distribution/errors"
 )
 
@@ -58,9 +60,8 @@ func (d *Deployment) Get(namespace, service, name string) (*types.Deployment, er
 	log.Debugf("%s:get:> namespace %s and service %s by name %s", logDeploymentPrefix, namespace, service, name)
 
 	dp := new(types.Deployment)
-	selflink := dp.CreateSelfLink(namespace, service, name)
 
-	err := d.storage.Get(d.context, storage.DeploymentKind, selflink, &dp)
+	err := d.storage.Get(d.context, storage.DeploymentKind, d.storage.Key().Deployment(namespace, service, name), &dp)
 	if err != nil {
 		if errors.Storage().IsErrEntityNotFound(err) {
 			log.V(logLevel).Warnf("%s:get:> in namespace %s by name %s not found", logDeploymentPrefix, name)
@@ -101,7 +102,8 @@ func (d *Deployment) Create(service *types.Service) (*types.Deployment, error) {
 
 	deployment.Status.SetProvision()
 
-	if err := d.storage.Create(d.context, storage.DeploymentKind, deployment.Meta.SelfLink, deployment, nil); err != nil {
+	if err := d.storage.Create(d.context, storage.DeploymentKind,
+		d.storage.Key().Deployment(deployment.Meta.Namespace, deployment.Meta.Service, deployment.Meta.Name), deployment, nil); err != nil {
 		log.Errorf("%s:create:> distribution create in service: %s err: %v", logDeploymentPrefix, service.Meta.Name, err)
 		return nil, err
 	}
@@ -163,7 +165,8 @@ func (d *Deployment) Update(dt *types.Deployment, opts *types.DeploymentUpdateOp
 	}
 
 	if isChanged {
-		if err := d.storage.Update(d.context, storage.DeploymentKind, dt.Meta.SelfLink, dt, nil); err != nil {
+		if err := d.storage.Update(d.context, storage.DeploymentKind,
+			d.storage.Key().Deployment(dt.Meta.Namespace, dt.Meta.Service, dt.Meta.Name), dt, nil); err != nil {
 			log.Errorf("%s:update:> update for deployment %s err: %v", logDeploymentPrefix, dt.Meta.Name, err)
 			return err
 		}
@@ -182,7 +185,8 @@ func (d *Deployment) Cancel(dt *types.Deployment) error {
 	// mark deployment for cancel
 	dt.Status.SetCancel()
 
-	if err := d.storage.Update(d.context, storage.DeploymentKind, dt.Meta.SelfLink, dt, nil); err != nil {
+	if err := d.storage.Update(d.context, storage.DeploymentKind,
+		d.storage.Key().Deployment(dt.Meta.Namespace, dt.Meta.Service, dt.Meta.Name), dt, nil); err != nil {
 		log.Debugf("%s:destroy: destroy deployment %s err: %v", logDeploymentPrefix, dt.Meta.Name, err)
 		return err
 	}
@@ -200,7 +204,8 @@ func (d *Deployment) Destroy(dt *types.Deployment) error {
 	// mark deployment for destroy
 	dt.Status.SetDestroy()
 
-	if err := d.storage.Update(d.context, storage.DeploymentKind, dt.Meta.SelfLink, dt, nil); err != nil {
+	if err := d.storage.Update(d.context, storage.DeploymentKind,
+		d.storage.Key().Deployment(dt.Meta.Namespace, dt.Meta.Service, dt.Meta.Name), dt, nil); err != nil {
 		log.Debugf("%s:destroy:> destroy deployment %s err: %v", logDeploymentPrefix, dt.Meta.Name, err)
 		return err
 	}
@@ -212,7 +217,8 @@ func (d *Deployment) Destroy(dt *types.Deployment) error {
 func (d *Deployment) Remove(dt *types.Deployment) error {
 
 	log.Debugf("%s:remove:> remove deployment %s", logDeploymentPrefix, dt.Meta.Name)
-	if err := d.storage.Remove(d.context, storage.DeploymentKind, dt.Meta.SelfLink); err != nil {
+	if err := d.storage.Remove(d.context, storage.DeploymentKind,
+		d.storage.Key().Deployment(dt.Meta.Namespace, dt.Meta.Service, dt.Meta.Name)); err != nil {
 		log.Debugf("%s:remove:> remove deployment %s err: %v", logDeploymentPrefix, dt.Meta.Name, err)
 		return err
 	}

@@ -32,9 +32,9 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/util/system"
 
 	"encoding/json"
+
+	"github.com/lastbackend/dynamic/pkg/storage/store"
 	"github.com/lastbackend/lastbackend/pkg/storage/etcd"
-	"github.com/lastbackend/lastbackend/pkg/storage/etcd/v3/store"
-	stgtypes "github.com/lastbackend/lastbackend/pkg/storage/types"
 )
 
 // HeartBeat Interval
@@ -74,7 +74,9 @@ func (c *Process) Register(ctx context.Context, kind string, stg storage.Storage
 	c.process = item
 	c.storage = stg
 
-	if err := c.storage.Upsert(ctx, storage.SystemKind, etcd.BuildProcessKey(c.process.Meta.Kind, c.process.Meta.Hostname), c.process, &stgtypes.Opts{Ttl: systemLeadTTL}); err != nil {
+	opts := storage.GetOpts()
+	opts.Ttl = systemLeadTTL
+	if err := c.storage.Upsert(ctx, storage.SystemKind, c.storage.Key().Process(c.process.Meta.Hostname, false), c.process, opts); err != nil {
 		log.Errorf("System: Process: Register: %s", err.Error())
 		return item, err
 	}
@@ -90,11 +92,15 @@ func (c *Process) HeartBeat(ctx context.Context) {
 
 	log.V(logLevel).Debugf("System: Process: Start HeartBeat for: %s", c.process.Meta.Kind)
 	ticker := time.NewTicker(heartBeatInterval * time.Second)
+
+	opts := storage.GetOpts()
+	opts.Ttl = systemLeadTTL
+
 	for range ticker.C {
 		// Update process state
 		log.V(logLevel).Debug("System: Process: Beat")
 
-		if err := c.storage.Upsert(ctx, storage.SystemKind, etcd.BuildProcessKey(c.process.Meta.Kind, c.process.Meta.Hostname), c.process, &stgtypes.Opts{Ttl: systemLeadTTL}); err != nil {
+		if err := c.storage.Upsert(ctx, storage.SystemKind, c.storage.Key().Process(c.process.Meta.Hostname, false), c.process, opts); err != nil {
 			log.Errorf("System: Process: Register: %s", err.Error())
 			return
 		}
@@ -103,7 +109,7 @@ func (c *Process) HeartBeat(ctx context.Context) {
 		if c.process.Meta.Lead {
 			log.V(logLevel).Debug("System: Process: Beat: Lead TTL update")
 
-			if err := c.storage.Update(ctx, storage.SystemKind, etcd.BuildProcessLeadKey(c.process.Meta.Kind), c.process, &stgtypes.Opts{Ttl: systemLeadTTL}); err != nil {
+			if err := c.storage.Update(ctx, storage.SystemKind, c.storage.Key().Process(c.process.Meta.Hostname, true), c.process, opts); err != nil {
 				log.Errorf("System: Process: update process: %s", err.Error())
 				return
 			}
@@ -120,12 +126,14 @@ func (c *Process) WaitElected(ctx context.Context, lead chan bool) error {
 	log.V(logLevel).Debug("System: Process: Wait for election")
 
 	l := false
+	opts := storage.GetOpts()
+	opts.Ttl = systemLeadTTL
 
 	if err := c.storage.Get(ctx, storage.SystemKind, etcd.BuildProcessLeadKey(c.process.Meta.Kind), &l); err != nil {
 		log.Errorf("System: Process: get lead process: %s", err.Error())
 
 		if err.Error() == store.ErrEntityNotFound {
-			err = c.storage.Create(ctx, storage.SystemKind, etcd.BuildProcessLeadKey(c.process.Meta.Kind), c.process, &stgtypes.Opts{Ttl: systemLeadTTL})
+			err = c.storage.Create(ctx, storage.SystemKind, c.storage.Key().Process(c.process.Meta.Hostname, true), c.process, opts)
 			if err != nil && err.Error() != store.ErrEntityExists {
 				log.V(logLevel).Errorf("System: Process: create process ttl err: %s", err.Error())
 				return err
@@ -137,39 +145,15 @@ func (c *Process) WaitElected(ctx context.Context, lead chan bool) error {
 
 	}
 
-	//l, err := c.storage.Elect(c.ctx, c.process)
-	//if err != nil {
-	//	return err
-	//}
-
 	if l {
 		log.V(logLevel).Debug("System: Process: Set as Lead")
 		c.process.Meta.Lead = true
 		c.process.Meta.Slave = false
 		lead <- true
 	}
-	//
-	//go func() {
-	//	for {
-	//		select {
-	//		case e := <-event:
-	//
-	//			if e.Data == nil {
-	//				continue
-	//			}
-	//
-	//			l := c.process.Meta.ID == e.Data.(string)
-	//			c.process.Meta.Lead = l
-	//			c.process.Meta.Slave = !l
-	//			lead <- l
-	//		}
-	//	}
-	//}()
-
-	//return c.storage.ElectWait(c.ctx, c.process, event)
 
 	done := make(chan bool)
-	event := make(chan *stgtypes.WatcherEvent)
+	watcher := storage.NewWatcher()
 
 	go func() {
 		for {
@@ -177,7 +161,7 @@ func (c *Process) WaitElected(ctx context.Context, lead chan bool) error {
 			case <-ctx.Done():
 				done <- true
 				return
-			case e := <-event:
+			case e := <-watcher:
 				if e.Data == nil {
 					continue
 				}
@@ -202,7 +186,8 @@ func (c *Process) WaitElected(ctx context.Context, lead chan bool) error {
 						log.Errorf("System: Process: get lead process: %s", err.Error())
 
 						if err.Error() == store.ErrEntityNotFound {
-							err = c.storage.Create(ctx, storage.SystemKind, etcd.BuildProcessLeadKey(c.process.Meta.Kind), c.process, &stgtypes.Opts{Ttl: systemLeadTTL})
+
+							err = c.storage.Create(ctx, storage.SystemKind, c.storage.Key().Process(c.process.Meta.Hostname, true), c.process, opts)
 							if err != nil && err.Error() != store.ErrEntityExists {
 								log.V(logLevel).Errorf("System: Process: create process ttl err: %s", err.Error())
 								continue
@@ -220,7 +205,7 @@ func (c *Process) WaitElected(ctx context.Context, lead chan bool) error {
 		}
 	}()
 
-	if err := c.storage.Watch(ctx, storage.SystemKind, event); err != nil {
+	if err := c.storage.Watch(ctx, storage.SystemKind, watcher); err != nil {
 		return err
 	}
 

@@ -16,4 +16,20 @@
 // from Last.Backend LLC.
 //
 
-package endpoint
+package types
+
+type Key interface {
+	Namespace(name string) string
+	Service(namespace, name string) string
+	Deployment(namespace, service, name string) string
+	Pod(namespace, service, deployment, name string) string
+	Endpoint(namespace, service string) string
+	Secret(namespace, name string) string
+	Volume(namespace, name string) string
+	Trigger(namespace, service, name string) string
+	Ingress(name string) string
+	Process(name string, lead bool) string
+	Manifest(node string, kind Kind, name string) string
+	Node(name string) string
+	Route(namespace, name string) string
+}

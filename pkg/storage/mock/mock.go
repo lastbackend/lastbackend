@@ -29,61 +29,67 @@ const (
 	logPrefix = "storage:mock"
 )
 
-type MockDB struct {
+type Storage struct {
 	store map[types.Kind]map[string]interface{}
 }
 
-func (db *MockDB) Get(ctx context.Context, kind types.Kind, name string, obj interface{}) error {
-	db.check(kind)
-
-
+func (s *Storage) Get(ctx context.Context, kind types.Kind, name string, obj interface{}) error {
+	s.check(kind)
 
 	return nil
 }
 
-func (db *MockDB) List(ctx context.Context, kind types.Kind, q string, obj interface{}) error {
-	db.check(kind)
+func (s *Storage) List(ctx context.Context, kind types.Kind, q string, obj interface{}) error {
+	s.check(kind)
 	return nil
 }
 
-func (db *MockDB) Map(ctx context.Context, kind types.Kind, q string, obj interface{}) error {
-	db.check(kind)
+func (s *Storage) Map(ctx context.Context, kind types.Kind, q string, obj interface{}) error {
+	s.check(kind)
 	return nil
 }
 
-func (db *MockDB) Create(ctx context.Context, kind types.Kind, name string, obj interface{}, opts *types.Opts) error {
-	db.check(kind)
+func (s *Storage) Create(ctx context.Context, kind types.Kind, name string, obj interface{}, opts *types.Opts) error {
+	s.check(kind)
 	return nil
 }
 
-func (db *MockDB) Update(ctx context.Context, kind types.Kind, name string, obj interface{}, opts *types.Opts) error {
-	db.check(kind)
+func (s *Storage) Update(ctx context.Context, kind types.Kind, name string, obj interface{}, opts *types.Opts) error {
+	s.check(kind)
 	return nil
 }
 
-func (db *MockDB) Upsert(ctx context.Context, kind types.Kind, name string, obj interface{}, opts *types.Opts) error {
-	db.check(kind)
+func (s *Storage) Upsert(ctx context.Context, kind types.Kind, name string, obj interface{}, opts *types.Opts) error {
+	s.check(kind)
 	return nil
 }
 
-func (db *MockDB) Remove(ctx context.Context, kind types.Kind, name string) error {
-	db.check(kind)
+func (s *Storage) Remove(ctx context.Context, kind types.Kind, name string) error {
+	s.check(kind)
 	return nil
 }
 
-func (db *MockDB) Watch(ctx context.Context, kind types.Kind, event chan *types.WatcherEvent) error {
-	db.check(kind)
+func (s *Storage) Watch(ctx context.Context, kind types.Kind, event chan *types.WatcherEvent) error {
+	s.check(kind)
 	return nil
 }
 
-func (db *MockDB) check(kind types.Kind) {
-	if _, ok := db.store[kind]; !ok {
-		db.store[kind] = make(map[string]interface{})
+func (s Storage) Filter() types.Filter {
+	return new(Filter)
+}
+
+func (s Storage) Key() types.Key {
+	return new(Key)
+}
+
+func (s *Storage) check(kind types.Kind) {
+	if _, ok := s.store[kind]; !ok {
+		s.store[kind] = make(map[string]interface{})
 	}
 }
 
-func New() (*MockDB, error) {
-	db := new(MockDB)
+func New() (*Storage, error) {
+	db := new(Storage)
 	db.store = make(map[types.Kind]map[string]interface{})
-	return new(MockDB), nil
+	return db, nil
 }

@@ -54,8 +54,8 @@ func (n *Route) Get(namespace, name string) (*types.Route, error) {
 	log.V(logLevel).Debug("%s:get:> get route by id %s/%s", logRoutePrefix, namespace, name)
 
 	route := new(types.Route)
-	selflink := route.CreateSelfLink(namespace, name)
-	err := n.storage.Get(n.context, storage.RouteKind, selflink, &route)
+
+	err := n.storage.Get(n.context, storage.RouteKind, n.storage.Key().Route(namespace, name), &route)
 	if err != nil {
 		if errors.Storage().IsErrEntityNotFound(err) {
 			log.V(logLevel).Warnf("%s:get:> in namespace %s by name %s not found", logRoutePrefix, namespace, name)
@@ -126,7 +126,8 @@ func (n *Route) Create(namespace *types.Namespace, opts *types.RouteCreateOption
 		})
 	}
 
-	if err := n.storage.Create(n.context, storage.RouteKind, route.Meta.SelfLink, route, nil); err != nil {
+	if err := n.storage.Create(n.context, storage.RouteKind,
+		n.storage.Key().Route(route.Meta.Namespace, route.Meta.Name), route, nil); err != nil {
 		log.V(logLevel).Errorf("%s:create:> insert route err: %v", logRoutePrefix, err)
 		return nil, err
 	}
@@ -149,7 +150,8 @@ func (n *Route) Update(route *types.Route, opts *types.RouteUpdateOptions) (*typ
 		})
 	}
 
-	if err := n.storage.Update(n.context, storage.RouteKind, route.Meta.SelfLink, route, nil); err != nil {
+	if err := n.storage.Update(n.context, storage.RouteKind,
+		n.storage.Key().Route(route.Meta.Namespace, route.Meta.Name), route, nil); err != nil {
 		log.V(logLevel).Errorf("%s:update:> update route err: %v", logRoutePrefix, err)
 		return nil, err
 	}
@@ -167,7 +169,8 @@ func (n *Route) SetStatus(route *types.Route, status *types.RouteStatus) error {
 	log.V(logLevel).Debugf("%s:setstate:> set state route %s -> %#v", logRoutePrefix, route.Meta.Name, status)
 
 	route.Status = *status
-	if err := n.storage.Update(n.context, storage.RouteKind, route.Meta.SelfLink, route, nil); err != nil {
+	if err := n.storage.Update(n.context, storage.RouteKind,
+		n.storage.Key().Route(route.Meta.Namespace, route.Meta.Name), route, nil); err != nil {
 		log.Errorf("%s:setstatus:> pod set status err: %v", err)
 		return err
 	}
@@ -179,7 +182,8 @@ func (n *Route) Remove(route *types.Route) error {
 
 	log.V(logLevel).Debugf("%s:remove:> remove route %#v", logRoutePrefix, route)
 
-	if err := n.storage.Remove(n.context, storage.RouteKind, route.Meta.SelfLink); err != nil {
+	if err := n.storage.Remove(n.context, storage.RouteKind,
+		n.storage.Key().Route(route.Meta.Namespace, route.Meta.Name)); err != nil {
 		log.V(logLevel).Errorf("%s:remove:> remove route  err: %v", logRoutePrefix, err)
 		return err
 	}

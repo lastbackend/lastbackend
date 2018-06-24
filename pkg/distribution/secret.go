@@ -51,8 +51,8 @@ func (n *Secret) Get(namespace, name string) (*types.Secret, error) {
 	log.V(logLevel).Debugf("%s:get:> get secret by id %s/%s", logSecretPrefix, namespace, name)
 
 	item := new(types.Secret)
-	selflink := item.CreateSelfLink(namespace, name)
-	err := n.storage.Get(n.context, storage.SecretKind, selflink, &item)
+
+	err := n.storage.Get(n.context, storage.SecretKind, n.storage.Key().Secret(namespace, name), &item)
 	if err != nil {
 
 		if errors.Storage().IsErrEntityNotFound(err) {
@@ -97,7 +97,8 @@ func (n *Secret) Create(namespace *types.Namespace, opts *types.SecretCreateOpti
 	}
 	secret.SelfLink()
 
-	if err := n.storage.Create(n.context, storage.SecretKind, secret.Meta.SelfLink, secret, nil); err != nil {
+	if err := n.storage.Create(n.context, storage.SecretKind,
+		n.storage.Key().Secret(secret.Meta.Namespace, secret.Meta.Name), secret, nil); err != nil {
 		log.V(logLevel).Errorf("%s:crete:> insert secret err: %s", logSecretPrefix, err)
 		return nil, err
 	}
@@ -113,7 +114,8 @@ func (n *Secret) Update(secret *types.Secret, namespace *types.Namespace, opts *
 		secret.Data = *opts.Data
 	}
 
-	if err := n.storage.Update(n.context, storage.SecretKind, secret.Meta.SelfLink, secret, nil); err != nil {
+	if err := n.storage.Update(n.context, storage.SecretKind,
+		n.storage.Key().Secret(secret.Meta.Namespace, secret.Meta.Name), secret, nil); err != nil {
 		log.V(logLevel).Errorf("%s:update:> update secret err: %s", logSecretPrefix, err)
 		return nil, err
 	}
@@ -125,7 +127,8 @@ func (n *Secret) Remove(secret *types.Secret) error {
 
 	log.V(logLevel).Debugf("%s:remove:> remove secret %#v", logSecretPrefix, secret)
 
-	if err := n.storage.Remove(n.context, storage.SecretKind, secret.Meta.SelfLink); err != nil {
+	if err := n.storage.Remove(n.context, storage.SecretKind,
+		n.storage.Key().Secret(secret.Meta.Namespace, secret.Meta.Name)); err != nil {
 		log.V(logLevel).Errorf("%s:remove:> remove secret  err: %s", logSecretPrefix, err)
 		return err
 	}

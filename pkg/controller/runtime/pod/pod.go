@@ -20,14 +20,13 @@ package pod
 
 import (
 	"context"
-	"github.com/lastbackend/lastbackend/pkg/api/types/v1/request"
+	"sort"
+
 	"github.com/lastbackend/lastbackend/pkg/controller/envs"
 	"github.com/lastbackend/lastbackend/pkg/distribution"
 	"github.com/lastbackend/lastbackend/pkg/distribution/errors"
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 	"github.com/lastbackend/lastbackend/pkg/log"
-	"github.com/lastbackend/lastbackend/pkg/storage/etcd/v3/store"
-	"sort"
 )
 
 func Provision(p *types.Pod) error {
@@ -44,7 +43,7 @@ func Provision(p *types.Pod) error {
 	pm := distribution.NewPodModel(context.Background(), stg)
 	if d, err := pm.Get(p.Meta.Namespace, p.Meta.Service, p.Meta.Deployment, p.Meta.Name); d == nil || err != nil {
 		if d == nil {
-			return errors.New(store.ErrEntityNotFound)
+			return errors.Storage().NewErrEntityNotFound()
 		}
 		log.Errorf("scheduler:pod:controller:provision: get pod error: %s", err.Error())
 		return err
@@ -240,7 +239,7 @@ func HandleStatus(p *types.Pod) error {
 		}
 	}
 
-	opts := new(request.DeploymentUpdateOptions)
+	opts := new(types.DeploymentUpdateOptions)
 
 	switch true {
 	case status[types.StateError] > 0:

@@ -20,16 +20,15 @@ package distribution
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"strings"
-	"encoding/json"
 
 	"github.com/lastbackend/lastbackend/pkg/distribution/errors"
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 	"github.com/lastbackend/lastbackend/pkg/log"
-	"github.com/spf13/viper"
 	"github.com/lastbackend/lastbackend/pkg/storage"
-
+	"github.com/spf13/viper"
 )
 
 const (
@@ -80,7 +79,7 @@ func (n *Namespace) Get(name string) (*types.Namespace, error) {
 
 	namespace := new(types.Namespace)
 
-	err := n.storage.Get(n.context, storage.NamespaceKind, name, &namespace)
+	err := n.storage.Get(n.context, storage.NamespaceKind, n.storage.Key().Namespace(name), &namespace)
 	if err != nil {
 		if errors.Storage().IsErrEntityNotFound(err) {
 			log.V(logLevel).Warnf("%s:get:> namespace by name `%s` not found", logNamespacePrefix, name)
@@ -115,7 +114,7 @@ func (n *Namespace) Create(opts *types.NamespaceCreateOptions) (*types.Namespace
 		ns.Spec.Quotas.Routes = defaultNamespaceRoutes
 	}
 
-	if err := n.storage.Create(n.context, storage.NamespaceKind, ns.Meta.SelfLink, ns, nil); err != nil {
+	if err := n.storage.Create(n.context, storage.NamespaceKind, n.storage.Key().Namespace(ns.Meta.Name), ns, nil); err != nil {
 		log.V(logLevel).Errorf("%s:create:> insert namespace err: %v", logNamespacePrefix, err)
 		return nil, err
 	}
@@ -137,7 +136,8 @@ func (n *Namespace) Update(namespace *types.Namespace, opts *types.NamespaceUpda
 		namespace.Spec.Quotas.Disabled = opts.Quotas.Disabled
 	}
 
-	if err := n.storage.Update(n.context, storage.NamespaceKind, namespace.Meta.SelfLink, namespace, nil); err != nil {
+	if err := n.storage.Update(n.context, storage.NamespaceKind,
+		n.storage.Key().Namespace(namespace.Meta.Name), namespace, nil); err != nil {
 		log.V(logLevel).Errorf("%s:update:> namespace update err: %v", logNamespacePrefix, err)
 		return err
 	}
@@ -149,7 +149,7 @@ func (n *Namespace) Remove(namespace *types.Namespace) error {
 
 	log.V(logLevel).Debugf("%s:remove:> remove namespace %s", logNamespacePrefix, namespace.Meta.Name)
 
-	if err := n.storage.Remove(n.context, storage.NamespaceKind, namespace.Meta.SelfLink); err != nil {
+	if err := n.storage.Remove(n.context, storage.NamespaceKind, n.storage.Key().Namespace(namespace.Meta.Name)); err != nil {
 		log.V(logLevel).Errorf("%s:remove:> remove namespace err: %v", logNamespacePrefix, err)
 		return err
 	}

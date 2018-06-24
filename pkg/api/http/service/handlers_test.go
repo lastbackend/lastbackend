@@ -22,6 +22,12 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
+	"net/http"
+	"net/http/httptest"
+	"strings"
+	"testing"
+
 	"github.com/gorilla/mux"
 	"github.com/lastbackend/lastbackend/pkg/api/envs"
 	"github.com/lastbackend/lastbackend/pkg/api/http/service"
@@ -31,13 +37,7 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/distribution/errors"
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 	"github.com/lastbackend/lastbackend/pkg/storage"
-	"github.com/lastbackend/lastbackend/pkg/storage/etcd/v3/store"
 	"github.com/stretchr/testify/assert"
-	"io/ioutil"
-	"net/http"
-	"net/http/httptest"
-	"strings"
-	"testing"
 )
 
 // Testing ServiceInfoH handler
@@ -45,7 +45,7 @@ func TestServiceInfo(t *testing.T) {
 
 	var ctx = context.Background()
 
-	stg, _ := storage.GetMock()
+	stg, _ := storage.Get("mock")
 	envs.Get().SetStorage(stg)
 
 	ns1 := getNamespaceAsset("demo", "")
@@ -104,10 +104,10 @@ func TestServiceInfo(t *testing.T) {
 	}
 
 	clear := func() {
-		err := envs.Get().GetStorage().Namespace().Clear(context.Background())
+		err := envs.Get().GetStorage().Remove(context.Background(), storage.NamespaceKind, types.EmptyString)
 		assert.NoError(t, err)
 
-		err = envs.Get().GetStorage().Service().Clear(context.Background())
+		err = envs.Get().GetStorage().Remove(context.Background(), storage.ServiceKind, types.EmptyString)
 		assert.NoError(t, err)
 	}
 
@@ -118,10 +118,10 @@ func TestServiceInfo(t *testing.T) {
 			clear()
 			defer clear()
 
-			err := envs.Get().GetStorage().Namespace().Insert(context.Background(), ns1)
+			err := tc.fields.stg.Create(context.Background(), storage.NamespaceKind, tc.fields.stg.Key().Namespace(ns1.Meta.Name), ns1, nil)
 			assert.NoError(t, err)
 
-			err = envs.Get().GetStorage().Service().Insert(context.Background(), s1)
+			err = tc.fields.stg.Create(context.Background(), storage.ServiceKind, tc.fields.stg.Key().Service(s1.Meta.Namespace, s1.Meta.Name), s1, nil)
 			assert.NoError(t, err)
 
 			// Create assert request to pass to our handler. We don't have any query parameters for now, so we'll
@@ -174,7 +174,7 @@ func TestServiceList(t *testing.T) {
 
 	var ctx = context.Background()
 
-	stg, _ := storage.GetMock()
+	stg, _ := storage.Get("mock")
 	envs.Get().SetStorage(stg)
 
 	ns1 := getNamespaceAsset("demo", "")
@@ -228,10 +228,10 @@ func TestServiceList(t *testing.T) {
 	}
 
 	clear := func() {
-		err := envs.Get().GetStorage().Namespace().Clear(context.Background())
+		err := envs.Get().GetStorage().Remove(context.Background(), storage.NamespaceKind, types.EmptyString)
 		assert.NoError(t, err)
 
-		err = envs.Get().GetStorage().Service().Clear(context.Background())
+		err = envs.Get().GetStorage().Remove(context.Background(), storage.ServiceKind, types.EmptyString)
 		assert.NoError(t, err)
 	}
 
@@ -242,13 +242,13 @@ func TestServiceList(t *testing.T) {
 			clear()
 			defer clear()
 
-			err := envs.Get().GetStorage().Namespace().Insert(context.Background(), ns1)
+			err := tc.fields.stg.Create(context.Background(), storage.NamespaceKind, tc.fields.stg.Key().Namespace(ns1.Meta.Name), ns1, nil)
 			assert.NoError(t, err)
 
-			err = envs.Get().GetStorage().Service().Insert(context.Background(), s1)
+			err = tc.fields.stg.Create(context.Background(), storage.ServiceKind, tc.fields.stg.Key().Service(s1.Meta.Namespace, s1.Meta.Name), s1, nil)
 			assert.NoError(t, err)
 
-			err = envs.Get().GetStorage().Service().Insert(context.Background(), s2)
+			err = tc.fields.stg.Create(context.Background(), storage.ServiceKind, tc.fields.stg.Key().Service(s2.Meta.Namespace, s2.Meta.Name), s2, nil)
 			assert.NoError(t, err)
 
 			// Create assert request to pass to our handler. We don't have any query parameters for now, so we'll
@@ -323,7 +323,7 @@ func TestServiceCreate(t *testing.T) {
 
 	var ctx = context.Background()
 
-	stg, _ := storage.GetMock()
+	stg, _ := storage.Get("mock")
 	envs.Get().SetStorage(stg)
 
 	srtPointer := func(s string) *string { return &s }
@@ -432,10 +432,10 @@ func TestServiceCreate(t *testing.T) {
 	}
 
 	clear := func() {
-		err := envs.Get().GetStorage().Namespace().Clear(context.Background())
+		err := envs.Get().GetStorage().Remove(context.Background(), storage.NamespaceKind, types.EmptyString)
 		assert.NoError(t, err)
 
-		err = envs.Get().GetStorage().Service().Clear(context.Background())
+		err = envs.Get().GetStorage().Remove(context.Background(), storage.ServiceKind, types.EmptyString)
 		assert.NoError(t, err)
 	}
 
@@ -445,10 +445,10 @@ func TestServiceCreate(t *testing.T) {
 			clear()
 			defer clear()
 
-			err := envs.Get().GetStorage().Namespace().Insert(context.Background(), ns1)
+			err := tc.fields.stg.Create(context.Background(), storage.NamespaceKind, tc.fields.stg.Key().Namespace(ns1.Meta.Name), ns1, nil)
 			assert.NoError(t, err)
 
-			err = envs.Get().GetStorage().Service().Insert(context.Background(), s1)
+			err = tc.fields.stg.Create(context.Background(), storage.ServiceKind, tc.fields.stg.Key().Service(s1.Meta.Namespace, s1.Meta.Name), s1, nil)
 			assert.NoError(t, err)
 
 			// Create assert request to pass to our handler. We don't have any query parameters for now, so we'll
@@ -484,7 +484,8 @@ func TestServiceCreate(t *testing.T) {
 				assert.Equal(t, tc.err, string(body), "incorrect status code")
 			} else {
 
-				got, err := tc.fields.stg.Service().Get(tc.args.ctx, tc.args.namespace.Meta.Name, tc.args.service.Meta.Name)
+				got := new(types.Service)
+				err := tc.fields.stg.Get(tc.args.ctx, storage.ServiceKind, stg.Key().Service(tc.args.namespace.Meta.Name, tc.args.service.Meta.Name), got)
 				assert.NoError(t, err)
 
 				if got == nil {
@@ -521,7 +522,7 @@ func TestServiceUpdate(t *testing.T) {
 
 	var ctx = context.Background()
 
-	stg, _ := storage.GetMock()
+	stg, _ := storage.Get("mock")
 	envs.Get().SetStorage(stg)
 
 	int64Pointer := func(i int64) *int64 { return &i }
@@ -608,10 +609,10 @@ func TestServiceUpdate(t *testing.T) {
 	}
 
 	clear := func() {
-		err := envs.Get().GetStorage().Namespace().Clear(context.Background())
+		err := envs.Get().GetStorage().Remove(context.Background(), storage.NamespaceKind, types.EmptyString)
 		assert.NoError(t, err)
 
-		err = envs.Get().GetStorage().Service().Clear(context.Background())
+		err = envs.Get().GetStorage().Remove(context.Background(), storage.ServiceKind, types.EmptyString)
 		assert.NoError(t, err)
 	}
 
@@ -621,10 +622,10 @@ func TestServiceUpdate(t *testing.T) {
 			clear()
 			defer clear()
 
-			err := envs.Get().GetStorage().Namespace().Insert(context.Background(), ns1)
+			err := tc.fields.stg.Create(context.Background(), storage.NamespaceKind, tc.fields.stg.Key().Namespace(ns1.Meta.Name), ns1, nil)
 			assert.NoError(t, err)
 
-			err = envs.Get().GetStorage().Service().Insert(context.Background(), s1)
+			err = tc.fields.stg.Create(context.Background(), storage.ServiceKind, tc.fields.stg.Key().Service(s1.Meta.Namespace, s1.Meta.Name), s1, nil)
 			assert.NoError(t, err)
 
 			// Create assert request to pass to our handler. We don't have any query parameters for now, so we'll
@@ -678,7 +679,7 @@ func TestServiceRemove(t *testing.T) {
 
 	var ctx = context.Background()
 
-	stg, _ := storage.GetMock()
+	stg, _ := storage.Get("mock")
 	envs.Get().SetStorage(stg)
 
 	ns1 := getNamespaceAsset("demo", "")
@@ -738,10 +739,10 @@ func TestServiceRemove(t *testing.T) {
 	}
 
 	clear := func() {
-		err := envs.Get().GetStorage().Namespace().Clear(context.Background())
+		err := envs.Get().GetStorage().Remove(context.Background(), storage.NamespaceKind, types.EmptyString)
 		assert.NoError(t, err)
 
-		err = envs.Get().GetStorage().Service().Clear(context.Background())
+		err = envs.Get().GetStorage().Remove(context.Background(), storage.ServiceKind, types.EmptyString)
 		assert.NoError(t, err)
 	}
 
@@ -751,10 +752,10 @@ func TestServiceRemove(t *testing.T) {
 			clear()
 			defer clear()
 
-			err := envs.Get().GetStorage().Namespace().Insert(context.Background(), ns1)
+			err := tc.fields.stg.Create(context.Background(), storage.NamespaceKind, tc.fields.stg.Key().Namespace(ns1.Meta.Name), ns1, nil)
 			assert.NoError(t, err)
 
-			err = envs.Get().GetStorage().Service().Insert(context.Background(), s1)
+			err = tc.fields.stg.Create(context.Background(), storage.ServiceKind, tc.fields.stg.Key().Service(s1.Meta.Namespace, s1.Meta.Name), s1, nil)
 			assert.NoError(t, err)
 
 			// Create assert request to pass to our handler. We don't have any query parameters for now, so we'll
@@ -791,8 +792,9 @@ func TestServiceRemove(t *testing.T) {
 				assert.Equal(t, tc.err, string(body), "incorrect status code")
 			} else {
 
-				got, err := tc.fields.stg.Service().Get(tc.args.ctx, tc.args.namespace.Meta.Name, tc.args.service.Meta.Name)
-				if err != nil && err.Error() != store.ErrEntityNotFound {
+				got := new(types.Service)
+				err := tc.fields.stg.Get(tc.args.ctx, storage.ServiceKind, stg.Key().Service(tc.args.namespace.Meta.Name, tc.args.service.Meta.Name), got)
+				if err != nil && !errors.Storage().IsErrEntityNotFound(err) {
 					assert.NoError(t, err)
 				}
 

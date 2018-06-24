@@ -322,7 +322,16 @@ func DeploymentUpdateH(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := dm.Update(dp, opts); err != nil {
+	uopts := new(types.DeploymentUpdateOptions)
+	if opts.Replicas != nil {
+		uopts.Replicas = uopts.Replicas
+	}
+
+	if opts.Status != nil {
+		uopts.Status = uopts.Status
+	}
+
+	if err := dm.Update(dp, uopts); err != nil {
 		log.V(logLevel).Errorf("%s:update:> update deployment err: %s", logPrefix, err.Error())
 		errors.HTTP.InternalServerError(w)
 		return

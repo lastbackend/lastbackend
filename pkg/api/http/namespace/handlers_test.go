@@ -21,23 +21,23 @@ package namespace_test
 import (
 	"context"
 	"encoding/json"
-	"errors"
 	"fmt"
+	"io/ioutil"
+	"net/http"
+	"net/http/httptest"
+	"strings"
+	"testing"
+
 	"github.com/gorilla/mux"
 	"github.com/lastbackend/lastbackend/pkg/api/envs"
 	"github.com/lastbackend/lastbackend/pkg/api/http/namespace"
 	"github.com/lastbackend/lastbackend/pkg/api/types/v1"
 	"github.com/lastbackend/lastbackend/pkg/api/types/v1/request"
 	"github.com/lastbackend/lastbackend/pkg/api/types/v1/views"
+	"github.com/lastbackend/lastbackend/pkg/distribution/errors"
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 	"github.com/lastbackend/lastbackend/pkg/storage"
-	"github.com/lastbackend/lastbackend/pkg/storage/etcd/v3/store"
 	"github.com/stretchr/testify/assert"
-	"io/ioutil"
-	"net/http"
-	"net/http/httptest"
-	"strings"
-	"testing"
 )
 
 // Testing NamespaceInfoH handler
@@ -45,7 +45,7 @@ func TestNamespaceInfo(t *testing.T) {
 
 	var ctx = context.Background()
 
-	stg, _ := storage.GetMock()
+	stg, _ := storage.Get("mock")
 	envs.Get().SetStorage(stg)
 
 	ns1 := getNamespaceAsset("demo", "")
@@ -96,7 +96,7 @@ func TestNamespaceInfo(t *testing.T) {
 	}
 
 	clear := func() {
-		err := envs.Get().GetStorage().Namespace().Clear(context.Background())
+		err := envs.Get().GetStorage().Remove(context.Background(), storage.NamespaceKind, types.EmptyString)
 		assert.NoError(t, err)
 	}
 
@@ -106,7 +106,7 @@ func TestNamespaceInfo(t *testing.T) {
 			clear()
 			defer clear()
 
-			err := envs.Get().GetStorage().Namespace().Insert(context.Background(), ns1)
+			err := tc.fields.stg.Create(context.Background(), storage.NamespaceKind, tc.fields.stg.Key().Namespace(ns1.Meta.Name), ns1, nil)
 			assert.NoError(t, err)
 
 			// Create assert request to pass to our handler. We don't have any query parameters for now, so we'll
@@ -159,7 +159,7 @@ func TestNamespaceList(t *testing.T) {
 
 	var ctx = context.Background()
 
-	stg, _ := storage.GetMock()
+	stg, _ := storage.Get("mock")
 	envs.Get().SetStorage(stg)
 
 	ns1 := getNamespaceAsset("demo", "")
@@ -201,7 +201,7 @@ func TestNamespaceList(t *testing.T) {
 	}
 
 	clear := func() {
-		err := envs.Get().GetStorage().Namespace().Clear(context.Background())
+		err := envs.Get().GetStorage().Remove(context.Background(), storage.NamespaceKind, types.EmptyString)
 		assert.NoError(t, err)
 	}
 
@@ -211,10 +211,10 @@ func TestNamespaceList(t *testing.T) {
 			clear()
 			defer clear()
 
-			err := envs.Get().GetStorage().Namespace().Insert(context.Background(), ns1)
+			err := tc.fields.stg.Create(context.Background(), storage.NamespaceKind, tc.fields.stg.Key().Namespace(ns1.Meta.Name), ns1, nil)
 			assert.NoError(t, err)
 
-			err = envs.Get().GetStorage().Namespace().Insert(context.Background(), ns2)
+			err = tc.fields.stg.Create(context.Background(), storage.NamespaceKind, tc.fields.stg.Key().Namespace(ns2.Meta.Name), ns2, nil)
 			assert.NoError(t, err)
 
 			// Create assert request to pass to our handler. We don't have any query parameters for now, so we'll
@@ -287,7 +287,7 @@ func TestNamespaceCreate(t *testing.T) {
 
 	var ctx = context.Background()
 
-	stg, _ := storage.GetMock()
+	stg, _ := storage.Get("mock")
 	envs.Get().SetStorage(stg)
 
 	ns1 := getNamespaceAsset("demo", "")
@@ -356,7 +356,7 @@ func TestNamespaceCreate(t *testing.T) {
 	}
 
 	clear := func() {
-		err := envs.Get().GetStorage().Namespace().Clear(context.Background())
+		err := envs.Get().GetStorage().Remove(context.Background(), storage.NamespaceKind, types.EmptyString)
 		assert.NoError(t, err)
 	}
 
@@ -366,7 +366,7 @@ func TestNamespaceCreate(t *testing.T) {
 			clear()
 			defer clear()
 
-			err := envs.Get().GetStorage().Namespace().Insert(context.Background(), ns1)
+			err := tc.fields.stg.Create(context.Background(), storage.NamespaceKind, tc.fields.stg.Key().Namespace(ns1.Meta.Name), ns1, nil)
 			assert.NoError(t, err)
 
 			// Create assert request to pass to our handler. We don't have any query parameters for now, so we'll
@@ -402,9 +402,9 @@ func TestNamespaceCreate(t *testing.T) {
 				assert.Equal(t, tc.err, string(body), "incorrect status code")
 			} else {
 
-				got, err := tc.fields.stg.Namespace().Get(tc.args.ctx, tc.args.namespace.Meta.Name)
+				got := new(types.Namespace)
+				err = tc.fields.stg.Get(context.Background(), storage.NamespaceKind, tc.fields.stg.Key().Namespace(tc.args.namespace.Meta.Name), got)
 				assert.NoError(t, err)
-
 				assert.Equal(t, ns1.Meta.Name, got.Meta.Name, "name not equal")
 			}
 
@@ -434,7 +434,7 @@ func TestNamespaceUpdate(t *testing.T) {
 
 	var ctx = context.Background()
 
-	stg, _ := storage.GetMock()
+	stg, _ := storage.Get("mock")
 	envs.Get().SetStorage(stg)
 
 	strPointer := func(s string) *string { return &s }
@@ -500,7 +500,7 @@ func TestNamespaceUpdate(t *testing.T) {
 	}
 
 	clear := func() {
-		err := envs.Get().GetStorage().Namespace().Clear(context.Background())
+		err := envs.Get().GetStorage().Remove(context.Background(), storage.NamespaceKind, types.EmptyString)
 		assert.NoError(t, err)
 	}
 
@@ -510,7 +510,7 @@ func TestNamespaceUpdate(t *testing.T) {
 			clear()
 			defer clear()
 
-			err := envs.Get().GetStorage().Namespace().Insert(context.Background(), ns1)
+			err := tc.fields.stg.Create(context.Background(), storage.NamespaceKind, tc.fields.stg.Key().Namespace(ns1.Meta.Name), ns1, nil)
 			assert.NoError(t, err)
 
 			// Create assert request to pass to our handler. We don't have any query parameters for now, so we'll
@@ -566,7 +566,7 @@ func TestNamespaceRemove(t *testing.T) {
 
 	var ctx = context.Background()
 
-	stg, _ := storage.GetMock()
+	stg, _ := storage.Get("mock")
 	envs.Get().SetStorage(stg)
 
 	ns1 := getNamespaceAsset("demo", "")
@@ -613,7 +613,7 @@ func TestNamespaceRemove(t *testing.T) {
 	}
 
 	clear := func() {
-		err := envs.Get().GetStorage().Namespace().Clear(context.Background())
+		err := envs.Get().GetStorage().Remove(context.Background(), storage.NamespaceKind, types.EmptyString)
 		assert.NoError(t, err)
 	}
 
@@ -624,7 +624,7 @@ func TestNamespaceRemove(t *testing.T) {
 			clear()
 			defer clear()
 
-			err := envs.Get().GetStorage().Namespace().Insert(context.Background(), ns1)
+			err := tc.fields.stg.Create(context.Background(), storage.NamespaceKind, tc.fields.stg.Key().Namespace(ns1.Meta.Name), ns1, nil)
 			assert.NoError(t, err)
 
 			// Create assert request to pass to our handler. We don't have any query parameters for now, so we'll
@@ -660,8 +660,9 @@ func TestNamespaceRemove(t *testing.T) {
 				assert.Equal(t, tc.err, string(body), "")
 			} else {
 
-				got, err := tc.fields.stg.Namespace().Get(tc.args.ctx, tc.args.namespace.Meta.Name)
-				if err != nil && err.Error() != store.ErrEntityNotFound {
+				got := new(types.Namespace)
+				err = tc.fields.stg.Get(context.Background(), storage.NamespaceKind, tc.fields.stg.Key().Namespace(tc.args.namespace.Meta.Name), got)
+				if err != nil && !errors.Storage().IsErrEntityNotFound(err) {
 					assert.NoError(t, err)
 				}
 

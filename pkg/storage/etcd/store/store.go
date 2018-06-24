@@ -19,17 +19,17 @@
 package store
 
 import (
-	"golang.org/x/net/context"
 	"github.com/lastbackend/lastbackend/pkg/storage/types"
+	"golang.org/x/net/context"
 )
 
 const LogLevel = 7
 
 const (
-	STORAGEDELETEEVENT    = "delete"
-	STORAGECREATEEVENT    = "create"
-	STORAGEUPDATEEVENT    = "update"
-	STORAGEERROREVENT     = "error"
+	STORAGEDELETEEVENT = "delete"
+	STORAGECREATEEVENT = "create"
+	STORAGEUPDATEEVENT = "update"
+	STORAGEERROREVENT  = "error"
 )
 
 type DestroyFunc func()

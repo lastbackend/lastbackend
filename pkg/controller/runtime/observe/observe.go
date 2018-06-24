@@ -19,6 +19,8 @@
 package observe
 
 import (
+	"sync"
+
 	"github.com/lastbackend/lastbackend/pkg/controller/envs"
 	"github.com/lastbackend/lastbackend/pkg/controller/runtime/cache"
 	"github.com/lastbackend/lastbackend/pkg/controller/runtime/deployment"
@@ -28,7 +30,6 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/log"
 	"github.com/lastbackend/lastbackend/pkg/storage"
 	"golang.org/x/net/context"
-	"sync"
 )
 
 const (
@@ -116,6 +117,7 @@ func (o Observer) watchServices(ctx context.Context) {
 func (o Observer) watchDeployments(ctx context.Context) {
 	// Watch deployments change
 
+	var stg = envs.Get().GetStorage()
 	watcher := storage.NewWatcher()
 
 	go func() {
@@ -131,12 +133,12 @@ func (o Observer) watchDeployments(ctx context.Context) {
 
 				dp := w.Data.(*types.Deployment)
 
-				s := types.Service{}.CreateSelfLink(dp.Meta.Namespace, dp.Meta.Service)
+				s := stg.Key().Service(dp.Meta.Namespace, dp.Meta.Service)
 
 				if observer, ok := o.observers[s]; !ok {
 
 					srv := new(types.Service)
-					if err := envs.Get().GetStorage().Get(ctx, storage.ServiceKind, s, &srv); err != nil {
+					if err := stg.Get(ctx, storage.ServiceKind, s, &srv); err != nil {
 						log.Errorf("%s:> get service err: %v", err)
 						continue
 					}
@@ -156,6 +158,7 @@ func (o Observer) watchDeployments(ctx context.Context) {
 func (o Observer) watchPods(ctx context.Context) {
 	// Watch pods change
 
+	var stg = envs.Get().GetStorage()
 	watcher := storage.NewWatcher()
 
 	go func() {
@@ -171,10 +174,9 @@ func (o Observer) watchPods(ctx context.Context) {
 
 				pd := w.Data.(*types.Pod)
 
-				s := types.Service{}.CreateSelfLink(pd.Meta.Namespace, pd.Meta.Service)
+				s := stg.Key().Service(pd.Meta.Namespace, pd.Meta.Service)
 
 				if observer, ok := o.observers[s]; !ok {
-
 					srv := new(types.Service)
 					if err := envs.Get().GetStorage().Get(ctx, storage.ServiceKind, s, &srv); err != nil {
 						log.Errorf("%s:> get service err: %v", err)

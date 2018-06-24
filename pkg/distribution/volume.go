@@ -53,8 +53,8 @@ func (v *Volume) Get(namespace, name string) (*types.Volume, error) {
 	log.V(logLevel).Debugf("%s:get:> get volume by id %s/%s", logVolumePrefix, namespace, name)
 
 	item := new(types.Volume)
-	sl := item.CreateSelfLink(namespace, name)
-	err := v.storage.Get(v.context, storage.VolumeKind, sl, &item)
+
+	err := v.storage.Get(v.context, storage.VolumeKind, v.storage.Key().Volume(namespace, name), &item)
 	if err != nil {
 		if errors.Storage().IsErrEntityNotFound(err) {
 			log.V(logLevel).Warnf("%s:get:> in namespace %s by name %s not found", logVolumePrefix, namespace, name)
@@ -93,7 +93,8 @@ func (v *Volume) Create(namespace *types.Namespace, opts *types.VolumeCreateOpti
 	volume.Meta.Namespace = namespace.Meta.Name
 	volume.Status.State = types.StateInitialized
 
-	if err := v.storage.Create(v.context, storage.VolumeKind, volume.Meta.SelfLink, volume, nil); err != nil {
+	if err := v.storage.Create(v.context, storage.VolumeKind,
+		v.storage.Key().Volume(volume.Meta.Namespace, volume.Meta.Name), volume, nil); err != nil {
 		log.V(logLevel).Errorf("%s:crete:> insert volume err: %v", logVolumePrefix, err)
 		return nil, err
 	}
@@ -107,7 +108,8 @@ func (v *Volume) Update(volume *types.Volume, opts *types.VolumeUpdateOptions) (
 	volume.Meta.SetDefault()
 	volume.Status.State = types.StateProvision
 
-	if err := v.storage.Update(v.context, storage.VolumeKind, volume.Meta.SelfLink, volume, nil); err != nil {
+	if err := v.storage.Update(v.context, storage.VolumeKind,
+		v.storage.Key().Volume(volume.Meta.Namespace, volume.Meta.Name), volume, nil); err != nil {
 		log.V(logLevel).Errorf("%s:update:> update volume err: %v", logVolumePrefix, err)
 		return nil, err
 	}
@@ -126,7 +128,8 @@ func (v *Volume) Destroy(volume *types.Volume) error {
 
 	volume.Spec.State.Destroy = true
 
-	if err := v.storage.Update(v.context, storage.VolumeKind, volume.Meta.SelfLink, volume, nil); err != nil {
+	if err := v.storage.Update(v.context, storage.VolumeKind,
+		v.storage.Key().Volume(volume.Meta.Namespace, volume.Meta.Name), volume, nil); err != nil {
 		log.Errorf("%s:destroy:> volume err: %v", logVolumePrefix, err)
 		return err
 	}
@@ -144,7 +147,8 @@ func (v *Volume) SetStatus(volume *types.Volume, status *types.VolumeStatus) err
 
 	volume.Status = *status
 
-	if err := v.storage.Update(v.context, storage.VolumeKind, volume.Meta.SelfLink, volume, nil); err != nil {
+	if err := v.storage.Update(v.context, storage.VolumeKind,
+		v.storage.Key().Volume(volume.Meta.Namespace, volume.Meta.Name), volume, nil); err != nil {
 		log.Errorf("%s:setstatus:> pod set status err: %v", err)
 		return err
 	}
@@ -155,7 +159,8 @@ func (v *Volume) SetStatus(volume *types.Volume, status *types.VolumeStatus) err
 func (v *Volume) Remove(volume *types.Volume) error {
 	log.V(logLevel).Debugf("%s:remove:> remove volume %#v", logVolumePrefix, volume)
 
-	if err := v.storage.Remove(v.context, storage.VolumeKind, volume.Meta.SelfLink); err != nil {
+	if err := v.storage.Remove(v.context, storage.VolumeKind,
+		v.storage.Key().Volume(volume.Meta.Namespace, volume.Meta.Name)); err != nil {
 		log.V(logLevel).Errorf("%s:remove:> remove volume  err: %v", logVolumePrefix, err)
 		return err
 	}

@@ -39,13 +39,13 @@ type Trigger struct {
 	storage storage.Storage
 }
 
-func (h *Trigger) Get(namespace, service, name string) (*types.Trigger, error) {
+func (t *Trigger) Get(namespace, service, name string) (*types.Trigger, error) {
 
 	log.V(logLevel).Debugf("%s:get:> get trigger by name %s: %s", logTriggerPrefix, namespace, name)
 
 	trigger := new(types.Trigger)
-	sl := trigger.CreateSelfLink(namespace, service, name)
-	err := h.storage.Get(h.context, storage.TriggerKind, sl, &trigger)
+
+	err := t.storage.Get(t.context, storage.TriggerKind, t.storage.Key().Trigger(namespace, service, name), &trigger)
 	if err != nil {
 		log.V(logLevel).Errorf("%s:get:> create trigger err: %v", logTriggerPrefix, err)
 		return nil, err

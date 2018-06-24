@@ -21,12 +21,12 @@ package service
 import (
 	"context"
 	"fmt"
+
 	"github.com/lastbackend/lastbackend/pkg/controller/envs"
 	"github.com/lastbackend/lastbackend/pkg/distribution"
 	"github.com/lastbackend/lastbackend/pkg/distribution/errors"
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 	"github.com/lastbackend/lastbackend/pkg/log"
-	"github.com/lastbackend/lastbackend/pkg/storage/etcd/v3/store"
 	"github.com/spf13/viper"
 )
 
@@ -43,7 +43,7 @@ func Provision(svc *types.Service) error {
 
 	if d, err := sm.Get(svc.Meta.Namespace, svc.Meta.Name); d == nil || err != nil {
 		if d == nil {
-			return errors.New(store.ErrEntityNotFound)
+			return errors.Storage().NewErrEntityNotFound()
 		}
 		log.Errorf("%s:provision:> get deployment error: %v", logPrefix, err)
 		return err

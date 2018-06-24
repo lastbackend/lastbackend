@@ -18,35 +18,68 @@
 
 package errors
 
-import "github.com/lastbackend/lastbackend/pkg/storage/types"
+import (
+	"errors"
 
-type storage struct {}
+	"github.com/lastbackend/lastbackend/pkg/storage/types"
+)
 
-func (storage) IsErrEntityExists (err error) bool {
+type storage struct{}
+
+func (storage) IsErrEntityExists(err error) bool {
 	return err.Error() == types.ErrEntityExists
 }
 
-func (storage) IsErrOperationFailure (err error) bool {
+func (storage) NewErrEntityExists() error {
+	return errors.New(types.ErrEntityExists)
+}
+
+func (storage) IsErrOperationFailure(err error) bool {
 	return err.Error() == types.ErrOperationFailure
 }
 
-func (storage) IsErrEntityNotFound (err error) bool {
+func (storage) NewErrOperationFailure() error {
+	return errors.New(types.ErrOperationFailure)
+}
+
+func (storage) IsErrEntityNotFound(err error) bool {
 	return err.Error() == types.ErrEntityNotFound
 }
 
-func (storage) IsErrStructArgIsNil (err error) bool {
+func (storage) NewErrEntityNotFound() error {
+	return errors.New(types.ErrEntityNotFound)
+}
+
+func (storage) IsErrStructArgIsNil(err error) bool {
 	return err.Error() == types.ErrStructArgIsNil
 }
 
-func (storage) IsErrStructOutIsNil (err error) bool {
+func (storage) NewErrStructArgIsNil() error {
+	return errors.New(types.ErrStructArgIsNil)
+}
+
+func (storage) IsErrStructOutIsNil(err error) bool {
 	return err.Error() == types.ErrStructOutIsNil
 }
 
-func (storage) IsErrStructArgIsInvalid (err error) bool {
+func (storage) NewErrStructOutIsNil() error {
+	return errors.New(types.ErrStructOutIsNil)
+}
+
+func (storage) IsErrStructArgIsInvalid(err error) bool {
 	return err.Error() == types.ErrStructArgIsInvalid
 }
-func (storage) IsErrStructOutIsInvalid (err error) bool {
+
+func (storage) NewErrStructArgIsInvalid() error {
+	return errors.New(types.ErrStructArgIsInvalid)
+}
+
+func (storage) IsErrStructOutIsInvalid(err error) bool {
 	return err.Error() == types.ErrStructOutIsInvalid
+}
+
+func (storage) NewErrStructOutIsInvalid() error {
+	return errors.New(types.ErrStructOutIsInvalid)
 }
 
 func Storage() storage {

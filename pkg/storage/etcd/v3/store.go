@@ -28,11 +28,11 @@ import (
 	"github.com/coreos/etcd/clientv3"
 	"github.com/lastbackend/lastbackend/pkg/log"
 	"github.com/lastbackend/lastbackend/pkg/storage/etcd/store"
+	"github.com/lastbackend/lastbackend/pkg/storage/types"
 	"github.com/lastbackend/lastbackend/pkg/util/converter"
 	"github.com/lastbackend/lastbackend/pkg/util/serializer"
 	"github.com/lastbackend/lastbackend/pkg/util/validator"
 	"golang.org/x/net/context"
-	"github.com/lastbackend/lastbackend/pkg/storage/types"
 )
 
 type dbstore struct {

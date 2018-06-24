@@ -20,13 +20,12 @@ package deployment
 
 import (
 	"context"
-	"github.com/lastbackend/lastbackend/pkg/api/types/v1/request"
+
 	"github.com/lastbackend/lastbackend/pkg/controller/envs"
 	"github.com/lastbackend/lastbackend/pkg/distribution"
 	"github.com/lastbackend/lastbackend/pkg/distribution/errors"
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 	"github.com/lastbackend/lastbackend/pkg/log"
-	"github.com/lastbackend/lastbackend/pkg/storage/etcd/v3/store"
 )
 
 // Provision deployment
@@ -46,7 +45,7 @@ func Provision(d *types.Deployment) error {
 	dm := distribution.NewDeploymentModel(context.Background(), stg)
 	if d, err := dm.Get(d.Meta.Namespace, d.Meta.Service, d.Meta.Name); d == nil || err != nil {
 		if d == nil {
-			return errors.New(store.ErrEntityNotFound)
+			return errors.Storage().NewErrEntityNotFound()
 		}
 		log.Errorf("%s:> get deployment error: %s", logPrefix, err.Error())
 		return err
@@ -169,7 +168,7 @@ func Provision(d *types.Deployment) error {
 		}
 	}
 
-	opts := new(request.DeploymentUpdateOptions)
+	opts := new(types.DeploymentUpdateOptions)
 	opts.Status.State = types.StateProvision
 
 	// Update deployment state

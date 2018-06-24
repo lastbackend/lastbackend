@@ -20,6 +20,7 @@ package storage
 
 import (
 	"context"
+
 	"github.com/lastbackend/lastbackend/pkg/storage/etcd"
 	"github.com/lastbackend/lastbackend/pkg/storage/mock"
 	"github.com/lastbackend/lastbackend/pkg/storage/types"
@@ -40,6 +41,7 @@ const (
 	SecretKind     types.Kind = "secret"
 	EndpointKind   types.Kind = "endpoint"
 	UtilsKind      types.Kind = "utils"
+	ManifestKind   types.Kind = "manifest"
 )
 
 type Storage interface {
@@ -52,10 +54,7 @@ type Storage interface {
 	Remove(ctx context.Context, kind types.Kind, name string) error
 	Watch(ctx context.Context, kind types.Kind, event chan *types.WatcherEvent) error
 	Filter() types.Filter
-}
-
-func NewWatcher() chan *types.WatcherEvent {
-	return make(chan *types.WatcherEvent)
+	Key() types.Key
 }
 
 func Get(driver string) (Storage, error) {
@@ -65,6 +64,10 @@ func Get(driver string) (Storage, error) {
 	default:
 		return etcd.New()
 	}
+}
+
+func GetOpts() *types.Opts {
+	return new(types.Opts)
 }
 
 func NewWatcher() chan *types.WatcherEvent {

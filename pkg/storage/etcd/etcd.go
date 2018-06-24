@@ -19,14 +19,15 @@
 package etcd
 
 import (
-	"github.com/lastbackend/lastbackend/pkg/log"
-	"github.com/lastbackend/lastbackend/pkg/storage/etcd/v3"
-	"github.com/lastbackend/lastbackend/pkg/storage/etcd/store"
-	"github.com/spf13/viper"
 	"context"
-	"github.com/lastbackend/lastbackend/pkg/storage/types"
 	"regexp"
 	"strings"
+
+	"github.com/lastbackend/lastbackend/pkg/log"
+	"github.com/lastbackend/lastbackend/pkg/storage/etcd/store"
+	"github.com/lastbackend/lastbackend/pkg/storage/etcd/v3"
+	"github.com/lastbackend/lastbackend/pkg/storage/types"
+	"github.com/spf13/viper"
 )
 
 const (
@@ -111,7 +112,7 @@ func (s Storage) Remove(ctx context.Context, kind types.Kind, name string) error
 	return s.client.store.Delete(ctx, keyCreate(kind.String(), name))
 }
 
-func (s *Storage) Watch(ctx context.Context, kind types.Kind, event chan *types.WatcherEvent) error {
+func (s Storage) Watch(ctx context.Context, kind types.Kind, event chan *types.WatcherEvent) error {
 
 	log.V(logLevel).Debug("%s:> watch %s", logPrefix, kind.String())
 
@@ -178,6 +179,14 @@ func (s *Storage) Watch(ctx context.Context, kind types.Kind, event chan *types.
 	}
 
 	return nil
+}
+
+func (s Storage) Filter() types.Filter {
+	return new(Filter)
+}
+
+func (s Storage) Key() types.Key {
+	return new(Key)
 }
 
 func (s Storage) getClient() (store.Store, store.DestroyFunc, error) {
