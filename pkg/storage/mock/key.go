@@ -70,7 +70,7 @@ func (Key) Process(name string, lead bool) string {
 }
 
 func (Key) Manifest(node string, kind types.Kind, name string) string {
-	return fmt.Sprintf("%s/", name)
+	return fmt.Sprintf("%s/%s/%s", node, kind, name)
 }
 
 func (Key) Node(name string) string {

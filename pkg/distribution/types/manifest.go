@@ -19,10 +19,10 @@
 package types
 
 type NodeManifest struct {
-	Endpoints map[string]EndpointManifest `json:"endpoint"`
-	Network   map[string]NetworkManifest  `json:"network"`
-	Pods      map[string]PodManifest      `json:"pods"`
-	Volumes   map[string]VolumeManifest   `json:"volumes"`
+	Endpoints map[string]*EndpointManifest `json:"endpoint"`
+	Network   map[string]*NetworkManifest  `json:"network"`
+	Pods      map[string]*PodManifest      `json:"pods"`
+	Volumes   map[string]*VolumeManifest   `json:"volumes"`
 }
 
 type PodManifest PodSpec

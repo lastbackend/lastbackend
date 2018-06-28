@@ -139,9 +139,12 @@ func TestNamespaceInfo(t *testing.T) {
 			body, err := ioutil.ReadAll(res.Body)
 			assert.NoError(t, err)
 
+			// Check the status code is what we expect.
+			if !assert.Equal(t, tc.expectedCode, res.Code, "status code not equal") {
+				return
+			}
+
 			if tc.wantErr {
-				assert.Error(t, err, "err, should be not nil")
-				assert.NotEqual(t, 200, res.Code, "err, should be not nil")
 				assert.Equal(t, tc.err, string(body), "incorrect status code")
 			} else {
 
@@ -244,14 +247,14 @@ func TestNamespaceList(t *testing.T) {
 			r.ServeHTTP(res, req)
 
 			// Check the status code is what we expect.
-			assert.Equal(t, tc.expectedCode, res.Code, "status code not equal")
+			if !assert.Equal(t, tc.expectedCode, res.Code, "status code not equal") {
+				return
+			}
 
 			body, err := ioutil.ReadAll(res.Body)
 			assert.NoError(t, err)
 
 			if tc.wantErr {
-				assert.Error(t, err, "err, should be not nil")
-				assert.NotEqual(t, 200, res.Code, "err, should be not nil")
 				assert.Equal(t, tc.err, string(body), "incorrect status code")
 			} else {
 
@@ -403,9 +406,12 @@ func TestNamespaceCreate(t *testing.T) {
 			body, err := ioutil.ReadAll(res.Body)
 			assert.NoError(t, err)
 
+			// Check the status code is what we expect.
+			if !assert.Equal(t, tc.expectedCode, res.Code, "status code not equal") {
+				return
+			}
+
 			if tc.wantErr {
-				assert.Error(t, err, "err, should be not nil")
-				assert.NotEqual(t, 200, res.Code, "err, should be not nil")
 				assert.Equal(t, tc.err, string(body), "incorrect status code")
 			} else {
 
@@ -551,9 +557,12 @@ func TestNamespaceUpdate(t *testing.T) {
 			body, err := ioutil.ReadAll(res.Body)
 			assert.NoError(t, err)
 
+			// Check the status code is what we expect.
+			if !assert.Equal(t, tc.expectedCode, res.Code, "status code not equal") {
+				return
+			}
+
 			if tc.wantErr {
-				assert.Error(t, err, "err, should be not nil")
-				assert.NotEqual(t, 200, res.Code, "err, should be not nil")
 				assert.Equal(t, tc.err, string(body), "incorrect status code")
 			} else {
 
@@ -667,9 +676,12 @@ func TestNamespaceRemove(t *testing.T) {
 			body, err := ioutil.ReadAll(res.Body)
 			assert.NoError(t, err)
 
+			// Check the status code is what we expect.
+			if !assert.Equal(t, tc.expectedCode, res.Code, "status code not equal") {
+				return
+			}
+
 			if tc.wantErr {
-				assert.Error(t, err, "err, should be not nil")
-				assert.NotEqual(t, 200, res.Code, "err, should be not nil")
 				assert.Equal(t, tc.err, string(body), "")
 			} else {
 
@@ -679,7 +691,10 @@ func TestNamespaceRemove(t *testing.T) {
 					assert.NoError(t, err)
 				}
 
-				assert.Nil(t, got, "namespace not be removed")
+				if errors.Storage().IsErrEntityNotFound(err) {
+					return
+				}
+
 				assert.Equal(t, tc.want, string(body), "response not empty")
 			}
 

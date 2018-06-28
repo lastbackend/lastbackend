@@ -38,7 +38,7 @@ const (
 
 type IService interface {
 	Get(namespace, service string) (*types.Service, error)
-	List(namespace string) (map[string]*types.Service, error)
+	List(namespace string) ([]*types.Service, error)
 	Create(namespace *types.Namespace, opts *types.ServiceCreateOptions) (*types.Service, error)
 	Update(service *types.Service, opts *types.ServiceUpdateOptions) (*types.Service, error)
 	Destroy(service *types.Service) (*types.Service, error)
@@ -75,14 +75,14 @@ func (s *Service) Get(namespace, name string) (*types.Service, error) {
 }
 
 // List method return map of services in selected namespace
-func (s *Service) List(namespace string) (map[string]*types.Service, error) {
+func (s *Service) List(namespace string) ([]*types.Service, error) {
 
 	log.V(logLevel).Debugf("%s:list:> by namespace %s", logServicePrefix, namespace)
 
-	items := make(map[string]*types.Service, 0)
+	items := make([]*types.Service, 0)
 	q := s.storage.Filter().Service().ByNamespace(namespace)
 
-	err := s.storage.Map(s.context, storage.ServiceKind, q, &items)
+	err := s.storage.List(s.context, storage.ServiceKind, q, &items)
 	if err != nil {
 		log.V(logLevel).Error("%s:list:> by namespace %s err: %v", logServicePrefix, namespace, err)
 		return nil, err

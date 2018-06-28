@@ -48,11 +48,11 @@ func TestNodeListH(t *testing.T) {
 	var (
 		n1 = getNodeAsset("test1", "", true)
 		n2 = getNodeAsset("test2", "", false)
-		nl = make(map[string]*types.Node, 0)
+		nl = make([]*types.Node, 0)
 	)
 
-	nl[n1.Meta.Name] = &n1
-	nl[n2.Meta.Name] = &n2
+	nl = append(nl, &n1)
+	nl = append(nl, &n2)
 
 	v, err := v1.View().Node().NewList(nl).ToJson()
 	assert.NoError(t, err)
@@ -214,24 +214,21 @@ func TestNodeGetManifestH(t *testing.T) {
 	viper.Set("verbose", 0)
 
 	var (
-		ns  = "ns"
-		svc = "svc"
-		dp  = "dp"
-		n1  = getNodeAsset("test1", "", true)
-		n2  = getNodeAsset("test2", "", true)
-		p1  = getPodAsset(ns, svc, dp, "test1", "")
-		p2  = getPodAsset(ns, svc, dp, "test2", "")
+		n1 = getNodeAsset("test1", "", true)
+		n2 = getNodeAsset("test2", "", true)
+		p1 = "test1"
+		p2 = "test2"
+
+		nm = new(types.NodeManifest)
 	)
 
-	n1.Spec.Pods = make(map[string]types.PodSpec)
-	n1.Spec.Volumes = make(map[string]types.VolumeSpec)
-	n1.Spec.Endpoints = make(map[string]types.EndpointSpec)
-
-	n1.Spec.Pods[p1.SelfLink()] = p1.Spec
-	n1.Spec.Pods[p2.SelfLink()] = p2.Spec
+	nm.Pods = make(map[string]*types.PodManifest)
+	nm.Pods[p1] = getPodManifest()
+	nm.Pods[p2] = getPodManifest()
+	nm.Volumes = make(map[string]*types.VolumeManifest, 0)
 
 	//TODO: check node manifest
-	v, err := v1.View().Node().NewManifest(&types.NodeManifest{}).ToJson()
+	v, err := v1.View().Node().NewManifest(nm).ToJson()
 	assert.NoError(t, err)
 
 	tests := []struct {
@@ -266,10 +263,10 @@ func TestNodeGetManifestH(t *testing.T) {
 		err = stg.Create(context.Background(), storage.NodeKind, stg.Key().Node(n1.Meta.Name), &n1, nil)
 		assert.NoError(t, err)
 
-		err = stg.Create(context.Background(), storage.ManifestKind, stg.Key().Manifest(n1.Meta.Name, storage.PodKind, p1.Meta.SelfLink), &p1, nil)
+		err = stg.Create(context.Background(), storage.ManifestKind, stg.Key().Manifest(n1.Meta.Name, storage.PodKind, p1), getPodManifest(), nil)
 		assert.NoError(t, err)
 
-		err = stg.Create(context.Background(), storage.ManifestKind, stg.Key().Manifest(n1.Meta.Name, storage.PodKind, p1.Meta.SelfLink), &p2, nil)
+		err = stg.Create(context.Background(), storage.ManifestKind, stg.Key().Manifest(n1.Meta.Name, storage.PodKind, p2), getPodManifest(), nil)
 		assert.NoError(t, err)
 
 		t.Run(tc.name, func(t *testing.T) {
@@ -956,12 +953,12 @@ func TestNodeSetVolumeStatusH(t *testing.T) {
 			assert.Equal(t, tc.expectedBody, string(body), "incorrect status code")
 
 			if tc.expectedCode == http.StatusOK {
-				p := new(types.Volume)
-				err := envs.Get().GetStorage().Get(ctx, storage.PodKind, stg.Key().Volume(vl1.Meta.Namespace, vl1.Meta.Name), p)
+				v := new(types.Volume)
+				err := envs.Get().GetStorage().Get(ctx, storage.VolumeKind, stg.Key().Volume(vl1.Meta.Namespace, vl1.Meta.Name), v)
 				assert.NoError(t, err)
 
-				assert.Equal(t, uo.State, p.Status.State, "pods state not equal")
-				assert.Equal(t, uo.Message, p.Status.Message, "pods message not equal")
+				assert.Equal(t, uo.State, v.Status.State, "volume state not equal")
+				assert.Equal(t, uo.Message, v.Status.Message, "volume message not equal")
 			}
 
 		})
@@ -1039,6 +1036,11 @@ func getPodAsset(namespace, service, deployment, name, desc string) types.Pod {
 	return p
 }
 
+func getPodManifest() *types.PodManifest {
+	p := types.PodManifest{}
+	return &p
+}
+
 func getVolumeAsset(namespace, name, desc string) types.Volume {
 
 	var n = types.Volume{}
@@ -1050,13 +1052,7 @@ func getVolumeAsset(namespace, name, desc string) types.Volume {
 	return n
 }
 
-func getRouteAsset(namespace, name, desc string) types.Route {
-
-	var n = types.Route{}
-
-	n.Meta.Name = name
-	n.Meta.Namespace = namespace
-	n.Meta.Description = desc
-
-	return n
+func getVolumeManifest() *types.VolumeManifest {
+	v := types.VolumeManifest{}
+	return &v
 }

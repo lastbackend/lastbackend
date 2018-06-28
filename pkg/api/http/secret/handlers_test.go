@@ -78,7 +78,7 @@ func TestSecretList(t *testing.T) {
 		expectedCode int
 	}{
 		{
-			name:         "checking get routes list if namespace not found",
+			name:         "checking get secrets list if namespace not found",
 			args:         args{ctx, ns2},
 			fields:       fields{stg},
 			handler:      secret.SecretListH,
@@ -87,7 +87,7 @@ func TestSecretList(t *testing.T) {
 			expectedCode: http.StatusNotFound,
 		},
 		{
-			name:         "checking get routes list successfully",
+			name:         "checking get secrets list successfully",
 			args:         args{ctx, ns1},
 			fields:       fields{stg},
 			handler:      secret.SecretListH,
@@ -298,14 +298,14 @@ func TestSecretCreate(t *testing.T) {
 			r.ServeHTTP(res, req)
 
 			// Check the status code is what we expect.
-			assert.Equal(t, tc.expectedCode, res.Code, "status code not equal")
+			if !assert.Equal(t, tc.expectedCode, res.Code, "status code not equal") {
+				return
+			}
 
 			body, err := ioutil.ReadAll(res.Body)
 			assert.NoError(t, err)
 
 			if tc.wantErr {
-				assert.Nil(t, err, errors.New("err, shouild be not nil"))
-				assert.Equal(t, 200, res.Code, errors.New("err, shouild be not nil"))
 				assert.Equal(t, tc.err, string(body), "incorrect status code")
 			} else {
 
@@ -427,12 +427,14 @@ func TestSecretUpdate(t *testing.T) {
 			r.ServeHTTP(res, req)
 
 			// Check the status code is what we expect.
-			assert.Equal(t, tc.expectedCode, res.Code, "status code not equal")
+			if !assert.Equal(t, tc.expectedCode, res.Code, "status code not equal") {
+				return
+			}
 
 			body, err := ioutil.ReadAll(res.Body)
 			assert.NoError(t, err)
 
-			if tc.wantErr && res.Code != 200 {
+			if tc.wantErr {
 				assert.Equal(t, tc.err, string(body), "incorrect status code")
 			} else {
 
@@ -556,12 +558,14 @@ func TestSecretRemove(t *testing.T) {
 			r.ServeHTTP(res, req)
 
 			// Check the status code is what we expect.
-			assert.Equal(t, tc.expectedCode, res.Code, "status code not equal")
+			if !assert.Equal(t, tc.expectedCode, res.Code, "status code not equal") {
+				return
+			}
 
 			body, err := ioutil.ReadAll(res.Body)
 			assert.NoError(t, err)
 
-			if tc.wantErr && res.Code != 200 {
+			if tc.wantErr {
 				assert.Equal(t, tc.err, string(body), "incorrect status code")
 			} else {
 
@@ -569,11 +573,6 @@ func TestSecretRemove(t *testing.T) {
 				err := tc.fields.stg.Get(tc.args.ctx, storage.SecretKind, tc.fields.stg.Key().Secret(tc.args.namespace.Meta.Name, tc.args.secret.Meta.Name), got)
 				if err != nil && !errors.Storage().IsErrEntityNotFound(err) {
 					assert.NoError(t, err)
-				}
-
-				if got != nil {
-					t.Error("can not be set to destroy")
-					return
 				}
 
 				assert.Equal(t, tc.want, string(body), "response not empty")

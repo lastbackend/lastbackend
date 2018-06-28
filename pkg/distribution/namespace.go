@@ -38,7 +38,7 @@ const (
 )
 
 type INamespace interface {
-	List() (map[string]*types.Namespace, error)
+	List() ([]*types.Namespace, error)
 	Get(name string) (*types.Namespace, error)
 	Create(opts *types.NamespaceCreateOptions) (*types.Namespace, error)
 	Update(namespace *types.Namespace, opts *types.NamespaceUpdateOptions) error
@@ -51,15 +51,16 @@ type Namespace struct {
 	storage storage.Storage
 }
 
-func (n *Namespace) List() (map[string]*types.Namespace, error) {
+func (n *Namespace) List() ([]*types.Namespace, error) {
 
 	log.V(logLevel).Debugf("%s:list:> get namespaces list", logNamespacePrefix)
 
-	var items = make(map[string]*types.Namespace, 0)
+	var items = make([]*types.Namespace, 0)
 
-	err := n.storage.Map(n.context, storage.NamespaceKind, "", &items)
+	err := n.storage.List(n.context, storage.NamespaceKind, "", &items)
 
 	if err != nil {
+		log.Info(err.Error())
 		log.V(logLevel).Error("%s:list:> get namespaces list err: %v", logNamespacePrefix, err)
 		return nil, err
 	}

@@ -71,7 +71,7 @@ func (r *Route) ToStatus(obj types.RouteStatus) RouteStatus {
 	return state
 }
 
-func (rv RouteView) NewList(obj map[string]*types.Route) *RouteList {
+func (rv RouteView) NewList(obj []*types.Route) *RouteList {
 	if obj == nil {
 		return nil
 	}

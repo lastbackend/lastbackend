@@ -39,8 +39,8 @@ const (
 type IDeployment interface {
 	Create(service *types.Service) (*types.Deployment, error)
 	Get(namespace, service, name string) (*types.Deployment, error)
-	ListByNamespace(namespace string) (map[string]*types.Deployment, error)
-	ListByService(namespace, service string) (map[string]*types.Deployment, error)
+	ListByNamespace(namespace string) ([]*types.Deployment, error)
+	ListByService(namespace, service string) ([]*types.Deployment, error)
 	Update(dt *types.Deployment, opts *types.DeploymentUpdateOptions) error
 	Cancel(dt *types.Deployment) error
 	Destroy(dt *types.Deployment) error
@@ -112,14 +112,14 @@ func (d *Deployment) Create(service *types.Service) (*types.Deployment, error) {
 }
 
 // ListByService - list of deployments by service
-func (d *Deployment) ListByNamespace(namespace string) (map[string]*types.Deployment, error) {
+func (d *Deployment) ListByNamespace(namespace string) ([]*types.Deployment, error) {
 
 	log.Debugf("%s:listbynamespace:> in namespace: %s", namespace)
 
 	q := d.storage.Filter().Deployment().ByNamespace(namespace)
-	dl := make(map[string]*types.Deployment, 0)
+	dl := make([]*types.Deployment, 0)
 
-	err := d.storage.Map(d.context, storage.DeploymentKind, q, &dl)
+	err := d.storage.List(d.context, storage.DeploymentKind, q, &dl)
 	if err != nil {
 		log.Errorf("%s:listbynamespace:> in namespace: %s err: %v", logDeploymentPrefix, namespace, err)
 		return nil, err
@@ -129,14 +129,14 @@ func (d *Deployment) ListByNamespace(namespace string) (map[string]*types.Deploy
 }
 
 // ListByService - list of deployments by service
-func (d *Deployment) ListByService(namespace, service string) (map[string]*types.Deployment, error) {
+func (d *Deployment) ListByService(namespace, service string) ([]*types.Deployment, error) {
 
 	log.Debugf("%s:listbyservice:> in namespace: %s and service %s", logDeploymentPrefix, namespace, service)
 
 	q := d.storage.Filter().Deployment().ByService(namespace, service)
-	dl := make(map[string]*types.Deployment, 0)
+	dl := make([]*types.Deployment, 0)
 
-	err := d.storage.Map(d.context, storage.DeploymentKind, q, &dl)
+	err := d.storage.List(d.context, storage.DeploymentKind, q, &dl)
 	if err != nil {
 		log.Errorf("%s:listbyservice:> in namespace: %s and service %s err: %v", logDeploymentPrefix, namespace, service, err)
 		return nil, err

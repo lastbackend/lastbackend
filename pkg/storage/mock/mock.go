@@ -20,8 +20,17 @@ package mock
 
 import (
 	"context"
+	"errors"
 
+	"strings"
+
+	"reflect"
+
+	"encoding/json"
+
+	"github.com/lastbackend/lastbackend/pkg/log"
 	"github.com/lastbackend/lastbackend/pkg/storage/types"
+	"github.com/lastbackend/lastbackend/pkg/util/converter"
 )
 
 const (
@@ -30,42 +39,149 @@ const (
 )
 
 type Storage struct {
-	store map[types.Kind]map[string]interface{}
+	store map[types.Kind]map[string][]byte
 }
 
 func (s *Storage) Get(ctx context.Context, kind types.Kind, name string, obj interface{}) error {
 	s.check(kind)
+
+	if _, ok := s.store[kind][name]; !ok {
+		return errors.New(types.ErrEntityNotFound)
+	}
+
+	if err := json.Unmarshal(s.store[kind][name], obj); err != nil {
+		return err
+	}
 
 	return nil
 }
 
 func (s *Storage) List(ctx context.Context, kind types.Kind, q string, obj interface{}) error {
 	s.check(kind)
+
+	v, err := converter.EnforcePtr(obj)
+	if err != nil {
+		return errors.New(types.ErrStructOutIsNotPointer)
+	}
+
+	if v.Kind() != reflect.Slice {
+		return errors.New(types.ErrStructOutIsInvalid)
+	}
+
+	buffer := []byte("[")
+	current := 0
+	for k, item := range s.store[kind] {
+		if strings.HasPrefix(k, q) {
+
+			if current > 0 {
+				buffer = append(buffer, []byte(",")...)
+			}
+
+			buffer = append(buffer, item...)
+			current++
+
+		}
+	}
+
+	buffer = append(buffer, []byte("]")...)
+
+	if err := json.Unmarshal(buffer, obj); err != nil {
+		return err
+	}
+
 	return nil
 }
 
 func (s *Storage) Map(ctx context.Context, kind types.Kind, q string, obj interface{}) error {
 	s.check(kind)
+
+	v, err := converter.EnforcePtr(obj)
+	if err != nil {
+		return errors.New(types.ErrStructOutIsNotPointer)
+	}
+
+	if v.Kind() != reflect.Map {
+		return errors.New(types.ErrStructOutIsInvalid)
+	}
+
+	buffer := []byte("{")
+	current := 0
+	for k, item := range s.store[kind] {
+		if strings.HasPrefix(k, q) {
+
+			ks := strings.Split(k, "/")
+
+			if current > 0 {
+				buffer = append(buffer, []byte(",")...)
+			}
+
+			buffer = append(buffer, []byte("\"")...)
+			buffer = append(buffer, []byte(ks[len(ks)-1])...)
+			buffer = append(buffer, []byte("\":")...)
+			buffer = append(buffer, item...)
+			current++
+
+		}
+	}
+
+	buffer = append(buffer, []byte("}")...)
+
+	log.Info(string(buffer))
+
+	if err := json.Unmarshal(buffer, obj); err != nil {
+		return err
+	}
+
 	return nil
 }
 
 func (s *Storage) Create(ctx context.Context, kind types.Kind, name string, obj interface{}, opts *types.Opts) error {
 	s.check(kind)
+
+	b, err := json.Marshal(obj)
+	if err != nil {
+		return err
+	}
+
+	log.Info(name, string(b))
+
+	s.store[kind][name] = b
 	return nil
 }
 
 func (s *Storage) Update(ctx context.Context, kind types.Kind, name string, obj interface{}, opts *types.Opts) error {
 	s.check(kind)
+
+	b, err := json.Marshal(obj)
+	if err != nil {
+		return err
+	}
+
+	s.store[kind][name] = b
+
 	return nil
 }
 
 func (s *Storage) Upsert(ctx context.Context, kind types.Kind, name string, obj interface{}, opts *types.Opts) error {
 	s.check(kind)
+
+	b, err := json.Marshal(obj)
+	if err != nil {
+		return err
+	}
+
+	s.store[kind][name] = b
+
 	return nil
 }
 
 func (s *Storage) Remove(ctx context.Context, kind types.Kind, name string) error {
 	s.check(kind)
+	if name == "" {
+		s.store[kind] = make(map[string][]byte)
+		return nil
+	}
+	delete(s.store[kind], name)
 	return nil
 }
 
@@ -84,12 +200,12 @@ func (s Storage) Key() types.Key {
 
 func (s *Storage) check(kind types.Kind) {
 	if _, ok := s.store[kind]; !ok {
-		s.store[kind] = make(map[string]interface{})
+		s.store[kind] = make(map[string][]byte)
 	}
 }
 
 func New() (*Storage, error) {
 	db := new(Storage)
-	db.store = make(map[types.Kind]map[string]interface{})
+	db.store = make(map[types.Kind]map[string][]byte)
 	return db, nil
 }

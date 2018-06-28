@@ -35,7 +35,7 @@ const (
 
 type ISecret interface {
 	Get(namespace, name string) (*types.Secret, error)
-	ListByNamespace(namespace string) (map[string]*types.Secret, error)
+	ListByNamespace(namespace string) ([]*types.Secret, error)
 	Create(namespace *types.Namespace, opts *types.SecretCreateOptions) (*types.Secret, error)
 	Update(secret *types.Secret, namespace *types.Namespace, opts *types.SecretUpdateOptions) (*types.Secret, error)
 	Remove(secret *types.Secret) error
@@ -67,13 +67,13 @@ func (n *Secret) Get(namespace, name string) (*types.Secret, error) {
 	return item, nil
 }
 
-func (n *Secret) ListByNamespace(namespace string) (map[string]*types.Secret, error) {
+func (n *Secret) ListByNamespace(namespace string) ([]*types.Secret, error) {
 
 	log.V(logLevel).Debugf("%s:listbynamespace:> get secrets list by namespace", logSecretPrefix)
 
-	items := make(map[string]*types.Secret, 0)
+	items := make([]*types.Secret, 0)
 	filter := n.storage.Filter().Secret().ByNamespace(namespace)
-	err := n.storage.Map(n.context, storage.SecretKind, filter, &items)
+	err := n.storage.List(n.context, storage.SecretKind, filter, &items)
 	if err != nil {
 		log.V(logLevel).Error("%s:listbynamespace:> get secrets list by namespace err: %s", logSecretPrefix, err)
 		return items, err

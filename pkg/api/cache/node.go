@@ -48,8 +48,8 @@ func (c *CacheNodeManifest) checkNode(node string) {
 	}
 }
 
-func (c *CacheNodeManifest) SetPodManifest(node, pod string, s types.PodManifest) {
-	log.Infof("%s:SetPodManifest:> %s, %s, %#v", logCacheNode, node, pod, s)
+func (c *CacheNodeManifest) SetPodManifest(node, pod string, s *types.PodManifest) {
+	log.Infof("%s:PodManifestSet:> %s, %s, %#v", logCacheNode, node, pod, s)
 	c.lock.Lock()
 	defer c.lock.Unlock()
 
@@ -57,14 +57,14 @@ func (c *CacheNodeManifest) SetPodManifest(node, pod string, s types.PodManifest
 
 	if c.manifests[node].Pods == nil {
 		sp := c.manifests[node]
-		sp.Pods = make(map[string]types.PodManifest, 0)
+		sp.Pods = make(map[string]*types.PodManifest, 0)
 	}
 
 	c.manifests[node].Pods[pod] = s
 }
 
 func (c *CacheNodeManifest) DelPodManifest(node, pod string) {
-	log.Infof("%s:DelPodManifest:> %s, %s", node, pod)
+	log.Infof("%s:PodManifestDel:> %s, %s", node, pod)
 	c.lock.Lock()
 	defer c.lock.Unlock()
 
@@ -75,7 +75,7 @@ func (c *CacheNodeManifest) DelPodManifest(node, pod string) {
 	delete(c.manifests[node].Pods, pod)
 }
 
-func (c *CacheNodeManifest) SetVolumeManifest(node, volume string, s types.VolumeManifest) {
+func (c *CacheNodeManifest) SetVolumeManifest(node, volume string, s *types.VolumeManifest) {
 	c.lock.Lock()
 	defer c.lock.Unlock()
 
@@ -83,7 +83,7 @@ func (c *CacheNodeManifest) SetVolumeManifest(node, volume string, s types.Volum
 
 	if c.manifests[node].Volumes == nil {
 		sp := c.manifests[node]
-		sp.Volumes = make(map[string]types.VolumeManifest, 0)
+		sp.Volumes = make(map[string]*types.VolumeManifest, 0)
 	}
 
 	c.manifests[node].Volumes[volume] = s
@@ -100,7 +100,7 @@ func (c *CacheNodeManifest) DelVolumeManifest(node, volume string) {
 	delete(c.manifests[node].Volumes, volume)
 }
 
-func (c *CacheNodeManifest) SetNetworkManifest(cidr string, s types.NetworkManifest) {
+func (c *CacheNodeManifest) SetNetworkManifest(cidr string, s *types.NetworkManifest) {
 	c.lock.Lock()
 	defer c.lock.Unlock()
 
@@ -109,13 +109,13 @@ func (c *CacheNodeManifest) SetNetworkManifest(cidr string, s types.NetworkManif
 	}
 }
 
-func (c *CacheNodeManifest) SetEndpointManifest(addr string, s types.EndpointManifest) {
+func (c *CacheNodeManifest) SetEndpointManifest(addr string, s *types.EndpointManifest) {
 	c.lock.Lock()
 	defer c.lock.Unlock()
 
 	for _, n := range c.manifests {
 		if n.Endpoints == nil {
-			n.Endpoints = make(map[string]types.EndpointManifest, 0)
+			n.Endpoints = make(map[string]*types.EndpointManifest, 0)
 		}
 		n.Endpoints[addr] = s
 	}
@@ -165,7 +165,7 @@ func (c *CacheNodeManifest) CachePods(ps PodManifestWatcher) error {
 					case types.EventActionCreate:
 						fallthrough
 					case types.EventActionUpdate:
-						c.SetPodManifest(node, pod, spec)
+						c.SetPodManifest(node, pod, &spec)
 					case types.EventActionDelete:
 						c.DelPodManifest(node, pod)
 					}
@@ -200,7 +200,7 @@ func (c *CacheNodeManifest) CacheVolumes(vs VolumeManifestWatcher) error {
 					case types.EventActionCreate:
 						fallthrough
 					case types.EventActionUpdate:
-						c.SetVolumeManifest(node, volume, spec)
+						c.SetVolumeManifest(node, volume, &spec)
 					case types.EventActionDelete:
 						c.DelVolumeManifest(node, volume)
 					}
@@ -232,10 +232,10 @@ func (c *CacheNodeManifest) CacheNetwork(ns NetworkManifestWatcher) error {
 					case types.EventActionCreate:
 						fallthrough
 					case types.EventActionUpdate:
-						c.SetNetworkManifest(node, spec)
+						c.SetNetworkManifest(node, &spec)
 					case types.EventActionDelete:
 						spec.State = types.StateDestroy
-						c.SetNetworkManifest(node, spec)
+						c.SetNetworkManifest(node, &spec)
 					}
 
 				}
@@ -266,10 +266,10 @@ func (c *CacheNodeManifest) CacheEndpoints(es EndpointManifestWatcher) error {
 					case types.EventActionCreate:
 						fallthrough
 					case types.EventActionUpdate:
-						c.SetEndpointManifest(spec.IP, spec)
+						c.SetEndpointManifest(spec.IP, &spec)
 					case types.EventActionDelete:
 						spec.State = types.StateDestroy
-						c.SetEndpointManifest(spec.IP, spec)
+						c.SetEndpointManifest(spec.IP, &spec)
 					}
 
 				}

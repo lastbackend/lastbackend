@@ -19,11 +19,12 @@
 package types
 
 const (
-	ErrEntityExists       = "entity exists"
-	ErrOperationFailure   = "operation failure"
-	ErrEntityNotFound     = "entity not found"
-	ErrStructArgIsNil     = "input structure is nil"
-	ErrStructOutIsNil     = "input structure is nil"
-	ErrStructArgIsInvalid = "output structure is invalid"
-	ErrStructOutIsInvalid = "output structure is invalid"
+	ErrEntityExists          = "entity exists"
+	ErrOperationFailure      = "operation failure"
+	ErrEntityNotFound        = "entity not found"
+	ErrStructArgIsNil        = "input structure is nil"
+	ErrStructOutIsNil        = "input structure is nil"
+	ErrStructArgIsInvalid    = "output structure is invalid"
+	ErrStructOutIsInvalid    = "output structure is invalid"
+	ErrStructOutIsNotPointer = "output structure is not pointer"
 )

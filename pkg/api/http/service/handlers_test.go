@@ -148,14 +148,14 @@ func TestServiceInfo(t *testing.T) {
 			r.ServeHTTP(res, req)
 
 			// Check the status code is what we expect.
-			assert.Equal(t, tc.expectedCode, res.Code, "status code not equal")
+			if !assert.Equal(t, tc.expectedCode, res.Code, "status code not equal") {
+				return
+			}
 
 			body, err := ioutil.ReadAll(res.Body)
 			assert.NoError(t, err)
 
 			if tc.wantErr {
-				assert.Nil(t, err, errors.New("err, should be not nil"))
-				assert.Equal(t, 200, res.Code, errors.New("err, should be not nil"))
 				assert.Equal(t, tc.err, string(body), "incorrect status code")
 			} else {
 
@@ -277,14 +277,14 @@ func TestServiceList(t *testing.T) {
 			r.ServeHTTP(res, req)
 
 			// Check the status code is what we expect.
-			assert.Equal(t, tc.expectedCode, res.Code, "status code not equal")
+			if !assert.Equal(t, tc.expectedCode, res.Code, "status code not equal") {
+				return
+			}
 
 			body, err := ioutil.ReadAll(res.Body)
 			assert.NoError(t, err)
 
 			if tc.wantErr {
-				assert.Error(t, err, "err, should be not nil")
-				assert.NotEqual(t, 200, res.Code, "err, should be not nil")
 				assert.Equal(t, tc.err, string(body), "incorrect status code")
 			} else {
 
@@ -479,14 +479,14 @@ func TestServiceCreate(t *testing.T) {
 			r.ServeHTTP(res, req)
 
 			// Check the status code is what we expect.
-			assert.Equal(t, tc.expectedCode, res.Code, "status code not equal")
+			if !assert.Equal(t, tc.expectedCode, res.Code, "status code not equal") {
+				return
+			}
 
 			body, err := ioutil.ReadAll(res.Body)
 			assert.NoError(t, err)
 
 			if tc.wantErr {
-				assert.Error(t, err, "err, should be not nil")
-				assert.NotEqual(t, 200, res.Code, "err, should be not nil")
 				assert.Equal(t, tc.err, string(body), "incorrect status code")
 			} else {
 
@@ -658,7 +658,9 @@ func TestServiceUpdate(t *testing.T) {
 			r.ServeHTTP(res, req)
 
 			// Check the status code is what we expect.
-			assert.Equal(t, tc.expectedCode, res.Code, "status code not equal")
+			if !assert.Equal(t, tc.expectedCode, res.Code, "status code not equal") {
+				return
+			}
 
 			body, err := ioutil.ReadAll(res.Body)
 			assert.NoError(t, err)
@@ -789,7 +791,9 @@ func TestServiceRemove(t *testing.T) {
 			r.ServeHTTP(res, req)
 
 			// Check the status code is what we expect.
-			assert.Equal(t, tc.expectedCode, res.Code, "status code not equal")
+			if !assert.Equal(t, tc.expectedCode, res.Code, "status code not equal") {
+				return
+			}
 
 			body, err := ioutil.ReadAll(res.Body)
 			assert.NoError(t, err)

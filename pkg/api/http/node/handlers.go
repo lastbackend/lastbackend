@@ -21,6 +21,8 @@ package node
 import (
 	"net/http"
 
+	"strings"
+
 	"github.com/lastbackend/lastbackend/pkg/api/envs"
 	"github.com/lastbackend/lastbackend/pkg/api/types/v1"
 	"github.com/lastbackend/lastbackend/pkg/api/types/v1/request"
@@ -29,7 +31,6 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 	"github.com/lastbackend/lastbackend/pkg/log"
 	"github.com/lastbackend/lastbackend/pkg/util/http/utils"
-	"strings"
 )
 
 const (
@@ -123,7 +124,9 @@ func NodeGetSpecH(w http.ResponseWriter, r *http.Request) {
 	log.V(logLevel).Debugf("%s:getspec:> list node", logPrefix)
 
 	var (
-		nm    = distribution.NewNodeModel(r.Context(), envs.Get().GetStorage())
+		nm = distribution.NewNodeModel(r.Context(), envs.Get().GetStorage())
+		mm = distribution.NewManifestModel(r.Context(), envs.Get().GetStorage())
+
 		cid   = utils.Vars(r)["cluster"]
 		nid   = utils.Vars(r)["node"]
 		cache = envs.Get().GetCache().Node()
@@ -141,15 +144,25 @@ func NodeGetSpecH(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	spec := new(types.NodeManifest)
-	spec = cache.Get(n.Meta.Name)
+	spec := cache.Get(n.Meta.Name)
 	if spec == nil {
-		spec, err = nm.GetManifest(n)
+
+		spec = new(types.NodeManifest)
+
+		spec.Pods, err = mm.PodManifestMap(n.Meta.Name)
 		if err != nil {
-			log.V(logLevel).Warnf("%s:getspec:> node `%s` not found", logPrefix, cid)
+			log.V(logLevel).Errorf("%s:getmanifest:> get pod manifests for node err: %s", logPrefix, err.Error())
 			errors.HTTP.InternalServerError(w)
 			return
 		}
+
+		spec.Volumes, err = mm.VolumeManifestMap(n.Meta.Name)
+		if err != nil {
+			log.V(logLevel).Errorf("%s:getmanifest:> get pod manifests for node err: %s", logPrefix, err.Error())
+			errors.HTTP.InternalServerError(w)
+			return
+		}
+
 	}
 	cache.Flush(n.Meta.Name)
 

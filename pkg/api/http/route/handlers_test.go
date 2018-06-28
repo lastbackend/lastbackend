@@ -272,7 +272,9 @@ func TestRouteList(t *testing.T) {
 			r.ServeHTTP(res, req)
 
 			// Check the status code is what we expect.
-			assert.Equal(t, tc.expectedCode, res.Code, "status code not equal")
+			if !assert.Equal(t, tc.expectedCode, res.Code, "status code not equal") {
+				return
+			}
 
 			body, err := ioutil.ReadAll(res.Body)
 			assert.NoError(t, err)
@@ -588,10 +590,10 @@ func TestRouteUpdate(t *testing.T) {
 	}
 
 	clear := func() {
-		err := envs.Get().GetStorage().Remove(context.Background(), storage.NamespaceKind, types.EmptyString)
+		err := stg.Remove(context.Background(), storage.NamespaceKind, types.EmptyString)
 		assert.NoError(t, err)
 
-		err = envs.Get().GetStorage().Remove(context.Background(), storage.ServiceKind, types.EmptyString)
+		err = stg.Remove(context.Background(), storage.ServiceKind, types.EmptyString)
 		assert.NoError(t, err)
 
 		err = stg.Remove(context.Background(), storage.RouteKind, types.EmptyString)
@@ -649,8 +651,6 @@ func TestRouteUpdate(t *testing.T) {
 			}
 
 			if tc.wantErr {
-				assert.Error(t, err, "err, should be not nil")
-				assert.NotEqual(t, 200, res.Code, "err, should be not nil")
 				assert.Equal(t, tc.err, string(body), "incorrect code message")
 			} else {
 				got := new(types.Route)
@@ -776,14 +776,14 @@ func TestRouteRemove(t *testing.T) {
 			r.ServeHTTP(res, req)
 
 			// Check the status code is what we expect.
-			assert.Equal(t, tc.expectedCode, res.Code, "status code not equal")
+			if !assert.Equal(t, tc.expectedCode, res.Code, "status code not equal") {
+				return
+			}
 
 			body, err := ioutil.ReadAll(res.Body)
 			assert.NoError(t, err)
 
 			if tc.wantErr {
-				assert.Error(t, err, "err, should be not nil")
-				assert.NotEqual(t, 200, res.Code, "err, should be not nil")
 				assert.Equal(t, tc.err, string(body), "incorrect status code")
 			} else {
 				got := new(types.Route)

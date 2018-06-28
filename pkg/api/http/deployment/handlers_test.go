@@ -52,6 +52,8 @@ func TestDeploymentInfo(t *testing.T) {
 	s2 := getServiceAsset(ns1.Meta.Name, "test", "")
 	d1 := getDeploymentAsset(ns1.Meta.Name, s1.Meta.Name, "demo")
 	d2 := getDeploymentAsset(ns1.Meta.Name, s2.Meta.Name, "test")
+	p1 := getPodAsset(ns1.Meta.Name, s1.Meta.Name, d1.Meta.Name, "demo", "")
+	p2 := getPodAsset(ns1.Meta.Name, s1.Meta.Name, d1.Meta.Name, "test", "")
 
 	type fields struct {
 		stg storage.Storage
@@ -122,6 +124,9 @@ func TestDeploymentInfo(t *testing.T) {
 
 		err = envs.Get().GetStorage().Remove(context.Background(), storage.DeploymentKind, types.EmptyString)
 		assert.NoError(t, err)
+
+		err = envs.Get().GetStorage().Remove(context.Background(), storage.PodKind, types.EmptyString)
+		assert.NoError(t, err)
 	}
 
 	for _, tc := range tests {
@@ -139,6 +144,12 @@ func TestDeploymentInfo(t *testing.T) {
 			assert.NoError(t, err)
 
 			err = tc.fields.stg.Create(context.Background(), storage.DeploymentKind, tc.fields.stg.Key().Deployment(d1.Meta.Namespace, d1.Meta.Service, d1.Meta.Name), d1, nil)
+			assert.NoError(t, err)
+
+			err = tc.fields.stg.Create(context.Background(), storage.PodKind, tc.fields.stg.Key().Pod(p1.Meta.Namespace, p1.Meta.Service, p1.Meta.Name, p1.Meta.Name), p1, nil)
+			assert.NoError(t, err)
+
+			err = tc.fields.stg.Create(context.Background(), storage.PodKind, tc.fields.stg.Key().Pod(p2.Meta.Namespace, p2.Meta.Service, p2.Meta.Name, p2.Meta.Name), p2, nil)
 			assert.NoError(t, err)
 
 			// Create assert request to pass to our handler. We don't have any query parameters for now, so we'll
@@ -165,14 +176,14 @@ func TestDeploymentInfo(t *testing.T) {
 			r.ServeHTTP(res, req)
 
 			// Check the status code is what we expect.
-			assert.Equal(t, tc.expectedCode, res.Code, "status code not equal")
+			if !assert.Equal(t, tc.expectedCode, res.Code, "status code not equal") {
+				return
+			}
 
 			body, e := ioutil.ReadAll(res.Body)
 			assert.NoError(t, e)
 
 			if tc.wantErr {
-				assert.Error(t, err, "err, should be not nil")
-				assert.NotEqual(t, 200, res.Code, "err, should be not nil")
 				assert.Equal(t, tc.err, string(body), "incorrect status code")
 			} else {
 
@@ -189,7 +200,7 @@ func TestDeploymentInfo(t *testing.T) {
 }
 
 // Testing ServiceListH handler
-func TestServiceList(t *testing.T) {
+func TestDeploymentListHList(t *testing.T) {
 
 	var ctx = context.Background()
 
@@ -281,9 +292,6 @@ func TestServiceList(t *testing.T) {
 			err = tc.fields.stg.Create(context.Background(), storage.ServiceKind, tc.fields.stg.Key().Service(s1.Meta.Namespace, s1.Meta.Name), s1, nil)
 			assert.NoError(t, err)
 
-			err = tc.fields.stg.Create(context.Background(), storage.ServiceKind, tc.fields.stg.Key().Service(s2.Meta.Namespace, s2.Meta.Name), s2, nil)
-			assert.NoError(t, err)
-
 			err = tc.fields.stg.Create(context.Background(), storage.DeploymentKind, tc.fields.stg.Key().Deployment(d1.Meta.Namespace, d1.Meta.Service, d1.Meta.Name), d1, nil)
 			assert.NoError(t, err)
 
@@ -320,8 +328,7 @@ func TestServiceList(t *testing.T) {
 			assert.NoError(t, err)
 
 			if tc.wantErr {
-				assert.Error(t, err, "err, should be not nil")
-				assert.NotEqual(t, 200, res.Code, "err, should be not nil")
+				assert.Equal(t, tc.expectedCode, res.Code, "status code not match")
 				assert.Equal(t, tc.err, string(body), "incorrect status code")
 			} else {
 
@@ -366,6 +373,19 @@ func getDeploymentAsset(namespace, service, name string) *types.Deployment {
 	d.Meta.Service = service
 	d.Meta.Name = name
 	return &d
+}
+
+func getPodAsset(namespace, service, deployment, name, desc string) types.Pod {
+	p := types.Pod{}
+
+	p.Meta.Name = name
+	p.Meta.Description = desc
+	p.Meta.Namespace = namespace
+	p.Meta.Service = service
+	p.Meta.Deployment = deployment
+	p.SelfLink()
+
+	return p
 }
 
 func setRequestVars(r *mux.Router, req *http.Request) {

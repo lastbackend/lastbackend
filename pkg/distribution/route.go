@@ -36,8 +36,8 @@ const (
 
 type IRoute interface {
 	Get(namespace, name string) (*types.Route, error)
-	List() (map[string]*types.Route, error)
-	ListByNamespace(namespace string) (map[string]*types.Route, error)
+	List() ([]*types.Route, error)
+	ListByNamespace(namespace string) ([]*types.Route, error)
 	Create(namespace *types.Namespace, opts *types.RouteCreateOptions) (*types.Route, error)
 	Update(route *types.Route, opts *types.RouteUpdateOptions) (*types.Route, error)
 	SetStatus(route *types.Route, status *types.RouteStatus) error
@@ -69,14 +69,14 @@ func (n *Route) Get(namespace, name string) (*types.Route, error) {
 	return route, nil
 }
 
-func (n *Route) List() (map[string]*types.Route, error) {
+func (n *Route) List() ([]*types.Route, error) {
 
 	log.V(logLevel).Debugf("%s:listspec:> list specs", logRoutePrefix)
 
-	items := make(map[string]*types.Route, 0)
+	items := make([]*types.Route, 0)
 
 	//TODO: change map to list
-	err := n.storage.Map(n.context, storage.RouteKind, types.EmptyString, &items)
+	err := n.storage.List(n.context, storage.RouteKind, types.EmptyString, &items)
 	if err != nil {
 		log.V(logLevel).Error("%s:listbynamespace:> list route err: %v", logRoutePrefix, err)
 		return items, err
@@ -85,13 +85,13 @@ func (n *Route) List() (map[string]*types.Route, error) {
 	return items, nil
 }
 
-func (n *Route) ListByNamespace(namespace string) (map[string]*types.Route, error) {
+func (n *Route) ListByNamespace(namespace string) ([]*types.Route, error) {
 
 	log.V(logLevel).Debug("%s:listbynamespace:> list route", logRoutePrefix)
 
-	items := make(map[string]*types.Route, 0)
+	items := make([]*types.Route, 0)
 
-	err := n.storage.Map(n.context, storage.RouteKind, n.storage.Filter().Route().ByNamespace(namespace), &items)
+	err := n.storage.List(n.context, storage.RouteKind, n.storage.Filter().Route().ByNamespace(namespace), &items)
 	if err != nil {
 		log.V(logLevel).Error("%s:listbynamespace:> list route err: %v", logRoutePrefix, err)
 		return items, err

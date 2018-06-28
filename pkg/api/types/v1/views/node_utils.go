@@ -82,10 +82,10 @@ func (obj *Node) ToJson() ([]byte, error) {
 func (obj *NodeManifest) Decode() *types.NodeManifest {
 
 	manifest := types.NodeManifest{
-		Network:   make(map[string]types.NetworkManifest, 0),
-		Pods:      make(map[string]types.PodManifest, 0),
-		Volumes:   make(map[string]types.VolumeManifest, 0),
-		Endpoints: make(map[string]types.EndpointManifest, 0),
+		Network:   make(map[string]*types.NetworkManifest, 0),
+		Pods:      make(map[string]*types.PodManifest, 0),
+		Volumes:   make(map[string]*types.VolumeManifest, 0),
+		Endpoints: make(map[string]*types.EndpointManifest, 0),
 	}
 
 	for i, s := range obj.Network {
@@ -107,7 +107,7 @@ func (obj *NodeManifest) Decode() *types.NodeManifest {
 	return &manifest
 }
 
-func (nv *NodeView) NewList(obj map[string]*types.Node) *NodeList {
+func (nv *NodeView) NewList(obj []*types.Node) *NodeList {
 	if obj == nil {
 		return nil
 	}

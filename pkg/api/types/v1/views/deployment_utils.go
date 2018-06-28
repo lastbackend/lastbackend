@@ -20,12 +20,13 @@ package views
 
 import (
 	"encoding/json"
+
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 )
 
 type DeploymentView struct{}
 
-func (dv *DeploymentView) New(obj *types.Deployment, pl map[string]*types.Pod) *Deployment {
+func (dv *DeploymentView) New(obj *types.Deployment, pl []*types.Pod) *Deployment {
 	d := Deployment{}
 	d.ID = obj.Meta.Name
 	d.Meta = d.ToMeta(obj.Meta)
@@ -89,7 +90,7 @@ func (di *Deployment) ToReplicas(obj types.DeploymentReplicas) DeploymentReplica
 	}
 }
 
-func (di *Deployment) ToPods(obj map[string]*types.Pod) map[string]Pod {
+func (di *Deployment) ToPods(obj []*types.Pod) map[string]Pod {
 	pods := make(map[string]Pod, 0)
 	for _, p := range obj {
 		if p.Meta.Deployment == di.ID {
@@ -104,7 +105,7 @@ func (di *Deployment) ToJson() ([]byte, error) {
 	return json.Marshal(di)
 }
 
-func (dv *DeploymentView) NewList(obj map[string]*types.Deployment, pods map[string]*types.Pod) *DeploymentList {
+func (dv *DeploymentView) NewList(obj []*types.Deployment, pods []*types.Pod) *DeploymentList {
 	dl := make(DeploymentList, 0)
 	for _, d := range obj {
 		dv := new(DeploymentView)

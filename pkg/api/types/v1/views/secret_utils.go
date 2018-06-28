@@ -47,7 +47,7 @@ func (s *Secret) ToMeta(obj types.SecretMeta) SecretMeta {
 	return meta
 }
 
-func (sv SecretView) NewList(obj map[string]*types.Secret) *SecretList {
+func (sv SecretView) NewList(obj []*types.Secret) *SecretList {
 	if obj == nil {
 		return nil
 	}

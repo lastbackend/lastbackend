@@ -19,8 +19,12 @@
 package distribution
 
 import (
+	"context"
+
+	"github.com/lastbackend/lastbackend/pkg/distribution/errors"
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 	"github.com/lastbackend/lastbackend/pkg/log"
+	"github.com/lastbackend/lastbackend/pkg/storage"
 )
 
 const (
@@ -28,66 +32,187 @@ const (
 )
 
 type IManifest interface {
-	GetNodeManifest(node string) (*types.NodeManifest, error)
-	DelNodeManifest(node string) error
+	PodManifestMap(node string) (map[string]*types.PodManifest, error)
+	PodManifestGet(node, pod string) (*types.PodManifest, error)
+	PodManifestAdd(node, pod string, manifest *types.PodManifest) error
+	PodManifestSet(node, pod string, manifest *types.PodManifest) error
+	PodManifestDel(node, pod string) error
 
-	AddPodManifest(node, pod string, manifest *types.PodManifest) error
-	GetPodManifest(node, pod string) (*types.PodManifest, error)
-	SetPodManifest(node, pod string, manifest *types.PodManifest) error
-	DelPodManifest(node, pod string) error
-
-	AddVolumeManifest(node, volume string, manifest *types.VolumeManifest) error
-	GetVolumeManifest(node, volume string) (*types.VolumeManifest, error)
-	SetVolumeManifest(node, volume string, manifest *types.VolumeManifest) error
-	DetVolumeManifest(node, volume string) error
+	VolumeManifestMap(node string) (map[string]*types.VolumeManifest, error)
+	VolumeManifestGet(node, volume string) (*types.VolumeManifest, error)
+	VolumeManifestAdd(node, volume string, manifest *types.VolumeManifest) error
+	VolumeManifestSet(node, volume string, manifest *types.VolumeManifest) error
+	VolumeManifestDel(node, volume string) error
 }
 
-func GetNodeManifest(node string) (*types.NodeManifest, error) {
-	log.Debugf("%s:GetNodeManifest:> ", logManifestPrefix)
-	return new(types.NodeManifest), nil
+type Manifest struct {
+	context context.Context
+	storage storage.Storage
 }
 
-func DelNodeManifest(node string) error {
-	log.Debugf("%s:DelNodeManifest:> ", logManifestPrefix)
+func (m *Manifest) PodManifestMap(node string) (map[string]*types.PodManifest, error) {
+	log.Debugf("%s:PodManifestMap:> ", logManifestPrefix)
+
+	var (
+		mf = make(map[string]*types.PodManifest, 0)
+		qs = m.storage.Filter().Manifest().ByKindManifest(node, storage.PodKind)
+	)
+
+	if err := m.storage.Map(m.context, storage.ManifestKind, qs, &mf); err != nil {
+		log.Errorf("%s:PodManifestMap:> err :%s", logManifestPrefix, err.Error())
+		return nil, err
+	}
+
+	return mf, nil
+}
+
+func (m *Manifest) PodManifestGet(node, pod string) (*types.PodManifest, error) {
+	log.Debugf("%s:PodManifestGet:> ", logManifestPrefix)
+
+	var (
+		mf = new(types.PodManifest)
+		k  = m.storage.Key().Manifest(node, storage.PodKind, pod)
+	)
+
+	if err := m.storage.Get(m.context, storage.ManifestKind, k, &mf); err != nil {
+		log.Errorf("%s:PodManifestMap:> err :%s", logManifestPrefix, err.Error())
+
+		if errors.Storage().IsErrEntityNotFound(err) {
+			return nil, nil
+		}
+
+		return nil, err
+	}
+
+	return mf, nil
+}
+
+func (m *Manifest) PodManifestAdd(node, pod string, manifest *types.PodManifest) error {
+	log.Debugf("%s:PodManifestAdd:> ", logManifestPrefix)
+
+	var (
+		k = m.storage.Key().Manifest(node, storage.PodKind, pod)
+	)
+
+	if err := m.storage.Create(m.context, storage.ManifestKind, k, manifest, nil); err != nil {
+		log.Errorf("%s:PodManifestAdd:> err :%s", logManifestPrefix, err.Error())
+		return err
+	}
+
 	return nil
 }
 
-func AddPodManifest(node, pod string, manifest *types.PodManifest) error {
-	log.Debugf("%s:AddPodManifest:> ", logManifestPrefix)
+func (m *Manifest) PodManifestSet(node, pod string, manifest *types.PodManifest) error {
+	log.Debugf("%s:PodManifestSet:> ", logManifestPrefix)
+
+	var (
+		k = m.storage.Key().Manifest(node, storage.PodKind, pod)
+	)
+
+	if err := m.storage.Update(m.context, storage.ManifestKind, k, manifest, nil); err != nil {
+		log.Errorf("%s:PodManifestSet:> err :%s", logManifestPrefix, err.Error())
+		return err
+	}
+
 	return nil
 }
 
-func GetPodManifest(node, pod string) (*types.PodManifest, error) {
-	log.Debugf("%s:GetPodManifest:> ", logManifestPrefix)
-	return new(types.PodManifest), nil
-}
+func (m *Manifest) PodManifestDel(node, pod string) error {
+	log.Debugf("%s:PodManifestDel:> ", logManifestPrefix)
 
-func SetPodManifest(node, pod string, manifest *types.PodManifest) error {
-	log.Debugf("%s:SetPodManifest:> ", logManifestPrefix)
+	var (
+		k = m.storage.Key().Manifest(node, storage.PodKind, pod)
+	)
+
+	if err := m.storage.Remove(m.context, storage.ManifestKind, k); err != nil {
+		log.Errorf("%s:PodManifestDel:> err :%s", logManifestPrefix, err.Error())
+		return err
+	}
+
 	return nil
 }
 
-func DelPodManifest(node, pod string) error {
-	log.Debugf("%s:DelPodManifest:> ", logManifestPrefix)
+func (m *Manifest) VolumeManifestMap(node string) (map[string]*types.VolumeManifest, error) {
+	log.Debugf("%s:VolumeManifestMap:> ", logManifestPrefix)
+
+	var (
+		mf = make(map[string]*types.VolumeManifest)
+		qs = m.storage.Filter().Manifest().ByKindManifest(node, storage.VolumeKind)
+	)
+
+	if err := m.storage.Map(m.context, storage.ManifestKind, qs, &mf); err != nil {
+		log.Errorf("%s:VolumeManifestMap:> err :%s", logManifestPrefix, err.Error())
+		return nil, err
+	}
+	return mf, nil
+}
+
+func (m *Manifest) VolumeManifestGet(node, volume string) (*types.VolumeManifest, error) {
+	log.Debugf("%s:VolumeManifestGet:> ", logManifestPrefix)
+
+	var (
+		mf = new(types.VolumeManifest)
+		k  = m.storage.Key().Manifest(node, storage.VolumeKind, volume)
+	)
+
+	if err := m.storage.Get(m.context, storage.ManifestKind, k, &mf); err != nil {
+		log.Errorf("%s:VolumeManifestGet:> err :%s", logManifestPrefix, err.Error())
+
+		if errors.Storage().IsErrEntityNotFound(err) {
+			return nil, nil
+		}
+
+		return nil, err
+	}
+
+	return mf, nil
+}
+
+func (m *Manifest) VolumeManifestAdd(node, volume string, manifest *types.VolumeManifest) error {
+	log.Debugf("%s:VolumeManifestAdd:> ", logManifestPrefix)
+
+	var (
+		k = m.storage.Key().Manifest(node, storage.VolumeKind, volume)
+	)
+
+	if err := m.storage.Create(m.context, storage.ManifestKind, k, manifest, nil); err != nil {
+		log.Errorf("%s:VolumeManifestAdd:> err :%s", logManifestPrefix, err.Error())
+		return err
+	}
+
 	return nil
 }
 
-func AddVolumeManifest(node, volume string, manifest *types.VolumeManifest) error {
-	log.Debugf("%s:AddVolumeManifest:> ", logManifestPrefix)
+func (m *Manifest) VolumeManifestSet(node, volume string, manifest *types.VolumeManifest) error {
+	log.Debugf("%s:VolumeManifestSet:> ", logManifestPrefix)
+
+	var (
+		k = m.storage.Key().Manifest(node, storage.VolumeKind, volume)
+	)
+
+	if err := m.storage.Update(m.context, storage.ManifestKind, k, manifest, nil); err != nil {
+		log.Errorf("%s:VolumeManifestSet:> err :%s", logManifestPrefix, err.Error())
+		return err
+	}
+
 	return nil
 }
 
-func GetVolumeManifest(node, volume string) (*types.VolumeManifest, error) {
-	log.Debugf("%s:GetVolumeManifest:> ", logManifestPrefix)
-	return new(types.VolumeManifest), nil
-}
-
-func SetVolumeManifest(node, volume string, manifest *types.VolumeManifest) error {
-	log.Debugf("%s:SetVolumeManifest:> ", logManifestPrefix)
-	return nil
-}
-
-func DelVolumeManifest(node, volume string) error {
+func (m *Manifest) VolumeManifestDel(node, volume string) error {
 	log.Debugf("%s:DelVolumeManifest:> ", logManifestPrefix)
+
+	var (
+		k = m.storage.Key().Manifest(node, storage.VolumeKind, volume)
+	)
+
+	if err := m.storage.Remove(m.context, storage.ManifestKind, k); err != nil {
+		log.Errorf("%s:PodManifestDel:> err :%s", logManifestPrefix, err.Error())
+		return err
+	}
+
 	return nil
+}
+
+func NewManifestModel(ctx context.Context, stg storage.Storage) IManifest {
+	return &Manifest{ctx, stg}
 }

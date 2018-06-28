@@ -21,6 +21,8 @@ package ingress
 import (
 	"net/http"
 
+	"strings"
+
 	"github.com/lastbackend/lastbackend/pkg/api/envs"
 	"github.com/lastbackend/lastbackend/pkg/api/types/v1"
 	"github.com/lastbackend/lastbackend/pkg/api/types/v1/request"
@@ -29,7 +31,6 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 	"github.com/lastbackend/lastbackend/pkg/log"
 	"github.com/lastbackend/lastbackend/pkg/util/http/utils"
-	"strings"
 )
 
 const (
@@ -153,8 +154,8 @@ func IngressGetSpecH(w http.ResponseWriter, r *http.Request) {
 		}
 		spec = new(types.IngressSpec)
 		spec.Routes = make(map[string]types.RouteSpec)
-		for r, rt := range routes {
-			spec.Routes[r] = rt.Spec
+		for _, rt := range routes {
+			spec.Routes[rt.Meta.Name] = rt.Spec
 		}
 	}
 

@@ -215,7 +215,7 @@ func DeploymentInfoH(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	pods, err := pdm.ListByService(srv.Meta.Namespace, srv.Meta.Name)
+	pods, err := pdm.ListByDeployment(srv.Meta.Namespace, srv.Meta.Name, d.Meta.Name)
 	if err != nil {
 		log.V(logLevel).Errorf("%s:info:> get pod list by service id `%s` err: %s", logPrefix, srv.Meta.Name, err.Error())
 		errors.HTTP.InternalServerError(w)

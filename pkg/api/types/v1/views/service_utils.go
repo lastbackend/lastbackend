@@ -39,7 +39,7 @@ func (sv *ServiceView) New(srv *types.Service) *Service {
 	return s
 }
 
-func (sv *ServiceView) NewWithDeployment(srv *types.Service, d map[string]*types.Deployment, p map[string]*types.Pod) *Service {
+func (sv *ServiceView) NewWithDeployment(srv *types.Service, d []*types.Deployment, p []*types.Pod) *Service {
 	s := new(Service)
 	s.Meta = s.ToMeta(srv.Meta)
 	s.Status = s.ToStatus(srv.Status)
@@ -95,7 +95,7 @@ func (sv *Service) ToSpec(obj types.ServiceSpec) ServiceSpec {
 	return spec
 }
 
-func (sv *Service) ToDeployments(obj map[string]*types.Deployment, pods map[string]*types.Pod) DeploymentMap {
+func (sv *Service) ToDeployments(obj []*types.Deployment, pods []*types.Pod) DeploymentMap {
 	deployments := make(DeploymentMap, 0)
 	for _, d := range obj {
 		if d.Meta.Service == sv.Meta.Name {
@@ -111,7 +111,7 @@ func (sv *Service) ToJson() ([]byte, error) {
 	return json.Marshal(sv)
 }
 
-func (sv *ServiceView) NewList(obj map[string]*types.Service, d map[string]*types.Deployment) *ServiceList {
+func (sv *ServiceView) NewList(obj []*types.Service, d []*types.Deployment) *ServiceList {
 	if obj == nil {
 		return nil
 	}

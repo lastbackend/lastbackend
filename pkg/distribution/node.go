@@ -34,12 +34,10 @@ const (
 )
 
 type INode interface {
-	List() (map[string]*types.Node, error)
+	List() ([]*types.Node, error)
 	Create(opts *types.NodeCreateOptions) (*types.Node, error)
 
 	Get(name string) (*types.Node, error)
-	GetSpec(node *types.Node) (*types.NodeSpec, error)
-	GetManifest(node *types.Node) (*types.NodeManifest, error)
 
 	SetMeta(node *types.Node, meta *types.NodeUpdateMetaOptions) error
 	SetStatus(node *types.Node, state types.NodeStatus) error
@@ -61,12 +59,12 @@ type Node struct {
 	storage storage.Storage
 }
 
-func (n *Node) List() (map[string]*types.Node, error) {
+func (n *Node) List() ([]*types.Node, error) {
 	log.Debugf("%s:list:> get nodes list", logNodePrefix)
 
-	nodes := make(map[string]*types.Node, 0)
+	nodes := make([]*types.Node, 0)
 
-	err := n.storage.Map(n.context, storage.NodeKind, "", &nodes)
+	err := n.storage.List(n.context, storage.NodeKind, "", &nodes)
 	if err != nil {
 		log.Debugf("%s:list:> get nodes list err: %v", logNodePrefix, err)
 		return nil, err
@@ -125,40 +123,6 @@ func (n *Node) Get(hostname string) (*types.Node, error) {
 	}
 
 	return node, nil
-}
-
-func (n *Node) GetSpec(node *types.Node) (*types.NodeSpec, error) {
-
-	log.V(logLevel).Debugf("%s:getspec:> get node spec: %s", logNodePrefix, node.Meta.Name)
-
-	ni := new(types.Node)
-
-	err := n.storage.Get(n.context, storage.NodeKind, n.storage.Key().Node(node.Meta.Name), &ni)
-	if err != nil {
-		log.V(logLevel).Debugf("%s:getspec:> get Node `%s` err: %v", logNodePrefix, node.Meta.Name, err)
-		return nil, err
-	}
-
-	es := make(map[string]types.EndpointSpec, 0)
-
-	err = n.storage.Map(n.context, storage.EndpointKind, "", &es)
-	if err != nil {
-		log.V(logLevel).Debugf("%s:getspec:> get endpoints `%s` err: %v", logNodePrefix, node.Meta.Name, err)
-		return nil, err
-	}
-
-	ni.Spec.Endpoints = es
-	for _, sp := range es {
-		ni.Spec.Endpoints[sp.IP] = sp
-	}
-
-	log.Debugf("%#v", ni.Spec.Endpoints)
-
-	return &ni.Spec, nil
-}
-
-func (n *Node) GetManifest(node *types.Node) (*types.NodeManifest, error) {
-	return nil, nil
 }
 
 func (n *Node) SetMeta(node *types.Node, meta *types.NodeUpdateMetaOptions) error {
