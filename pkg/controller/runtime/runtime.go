@@ -20,8 +20,9 @@ package runtime
 
 import (
 	"context"
+
 	"github.com/lastbackend/lastbackend/pkg/controller/envs"
-	"github.com/lastbackend/lastbackend/pkg/controller/runtime/observe"
+	"github.com/lastbackend/lastbackend/pkg/controller/runtime/observer"
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 	"github.com/lastbackend/lastbackend/pkg/log"
 	"github.com/lastbackend/lastbackend/pkg/system"
@@ -35,7 +36,7 @@ type Runtime struct {
 	//dc *deployment.Controller
 	//pc *pod.Controller
 
-	observer *observe.Observer
+	observer *observer.Observer
 
 	active bool
 }
@@ -47,7 +48,7 @@ func NewRuntime(ctx context.Context) *Runtime {
 	r.process = new(system.Process)
 	r.process.Register(ctx, types.KindController, envs.Get().GetStorage())
 
-	r.observer = observe.New(ctx, envs.Get().GetStorage())
+	r.observer = observer.New(ctx, envs.Get().GetStorage())
 
 	//r.sc = service.NewServiceController(ctx)
 	//r.dc = deployment.NewDeploymentController(ctx)

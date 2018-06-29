@@ -16,7 +16,7 @@
 // from Last.Backend LLC.
 //
 
-package observe
+package observer
 
 import (
 	"sync"
@@ -33,7 +33,7 @@ import (
 )
 
 const (
-	logPrefix = "controller:runtime:observe"
+	logPrefix = "controller:runtime:observer"
 )
 
 type Controllers struct {
@@ -49,6 +49,7 @@ type Observer struct {
 }
 
 func New(ctx context.Context, stg storage.Storage) *Observer {
+
 	o := new(Observer)
 	o.stg = stg
 	o.observers = make(map[string]*ServiceObserver, 0)
@@ -213,10 +214,10 @@ func NewServiceObserver(ctx context.Context, s *types.Service) *ServiceObserver 
 	return o
 }
 
-func (o ServiceObserver) Run() {
-	go o.ctrl.pc.Observe(o.ctx)
-	go o.ctrl.dc.Observe(o.ctx)
-	go o.ctrl.sc.Observe(o.ctx)
+func (so ServiceObserver) Run() {
+	go so.ctrl.pc.Observe(so.ctx)
+	go so.ctrl.dc.Observe(so.ctx)
+	go so.ctrl.sc.Observe(so.ctx)
 }
 
 func (so ServiceObserver) Stop() {

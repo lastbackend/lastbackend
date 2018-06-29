@@ -240,14 +240,14 @@ func TestNodeGetManifestH(t *testing.T) {
 		expectedCode int
 	}{
 		{
-			name:         "checking get node spec failed: not found",
+			name:         "node spec failed not found",
 			url:          fmt.Sprintf("/cluster/node/%s/spec", n2.Meta.Name),
 			handler:      node.NodeGetSpecH,
 			expectedBody: "{\"code\":404,\"status\":\"Not Found\",\"message\":\"Node not found\"}",
 			expectedCode: http.StatusNotFound,
 		},
 		{
-			name:         "checking get node spec successfully",
+			name:         "node spec successfully",
 			url:          fmt.Sprintf("/cluster/node/%s/spec", n1.Meta.Name),
 			handler:      node.NodeGetSpecH,
 			expectedBody: string(v),
@@ -257,19 +257,22 @@ func TestNodeGetManifestH(t *testing.T) {
 
 	for _, tc := range tests {
 
-		err = envs.Get().GetStorage().Del(context.Background(), storage.NodeKind, types.EmptyString)
-		assert.NoError(t, err)
-
-		err = stg.Put(context.Background(), storage.NodeKind, stg.Key().Node(n1.Meta.Name), &n1, nil)
-		assert.NoError(t, err)
-
-		err = stg.Put(context.Background(), storage.ManifestKind, stg.Key().Manifest(n1.Meta.Name, storage.PodKind, p1), getPodManifest(), nil)
-		assert.NoError(t, err)
-
-		err = stg.Put(context.Background(), storage.ManifestKind, stg.Key().Manifest(n1.Meta.Name, storage.PodKind, p2), getPodManifest(), nil)
-		assert.NoError(t, err)
-
 		t.Run(tc.name, func(t *testing.T) {
+
+			err = envs.Get().GetStorage().Del(context.Background(), storage.NodeKind, types.EmptyString)
+			assert.NoError(t, err)
+
+			err = envs.Get().GetStorage().Del(context.Background(), storage.ManifestKind, types.EmptyString)
+			assert.NoError(t, err)
+
+			err = stg.Put(context.Background(), storage.NodeKind, stg.Key().Node(n1.Meta.Name), &n1, nil)
+			assert.NoError(t, err)
+
+			err = stg.Put(context.Background(), storage.ManifestKind, stg.Key().Manifest(n1.Meta.Name, storage.PodKind, p1), getPodManifest(), nil)
+			assert.NoError(t, err)
+
+			err = stg.Put(context.Background(), storage.ManifestKind, stg.Key().Manifest(n1.Meta.Name, storage.PodKind, p2), getPodManifest(), nil)
+			assert.NoError(t, err)
 
 			// Create assert request to pass to our handler. We don't have any query parameters for now, so we'll
 			// pass 'nil' as the third parameter.
@@ -295,10 +298,14 @@ func TestNodeGetManifestH(t *testing.T) {
 			r.ServeHTTP(res, req)
 
 			// Check the status code is what we expect.
-			assert.Equal(t, tc.expectedCode, res.Code, "status code not equal")
+			if !assert.Equal(t, tc.expectedCode, res.Code, "status code not equal") {
+				return
+			}
 
 			body, err := ioutil.ReadAll(res.Body)
-			assert.NoError(t, err)
+			if !assert.NoError(t, err) {
+				return
+			}
 
 			assert.Equal(t, tc.expectedBody, string(body), "incorrect status code")
 		})
@@ -743,7 +750,7 @@ func TestNodeSetPodStatusH(t *testing.T) {
 		expectedCode int
 	}{
 		{
-			name:         "checking node set pod state failed: node not found",
+			name:         "checking node set pod state failed node not found",
 			args:         args{ctx, n2.Meta.Name, p1.SelfLink()},
 			handler:      node.NodeSetPodStatusH,
 			data:         uo.ToJson(),
@@ -751,7 +758,7 @@ func TestNodeSetPodStatusH(t *testing.T) {
 			expectedCode: http.StatusNotFound,
 		},
 		{
-			name:         "checking node set pod state failed: pod not found",
+			name:         "checking node set pod state failed pod not found",
 			args:         args{ctx, n1.Meta.Name, p2.SelfLink()},
 			handler:      node.NodeSetPodStatusH,
 			data:         uo.ToJson(),
@@ -770,17 +777,20 @@ func TestNodeSetPodStatusH(t *testing.T) {
 
 	for _, tc := range tests {
 
-		err = envs.Get().GetStorage().Del(context.Background(), storage.NodeKind, types.EmptyString)
-		assert.NoError(t, err)
-
-		err = stg.Put(context.Background(), storage.NodeKind, stg.Key().Node(n1.Meta.Name), &n1, nil)
-		assert.NoError(t, err)
-
-		err = stg.Put(context.Background(), storage.PodKind,
-			stg.Key().Pod(p1.Meta.Namespace, p1.Meta.Service, p1.Meta.Deployment, p1.Meta.Name), &p1, nil)
-		assert.NoError(t, err)
-
 		t.Run(tc.name, func(t *testing.T) {
+
+			err = envs.Get().GetStorage().Del(context.Background(), storage.NodeKind, types.EmptyString)
+			assert.NoError(t, err)
+
+			err = envs.Get().GetStorage().Del(context.Background(), storage.PodKind, types.EmptyString)
+			assert.NoError(t, err)
+
+			err = stg.Put(context.Background(), storage.NodeKind, stg.Key().Node(n1.Meta.Name), &n1, nil)
+			assert.NoError(t, err)
+
+			err = stg.Put(context.Background(), storage.PodKind,
+				stg.Key().Pod(p1.Meta.Namespace, p1.Meta.Service, p1.Meta.Deployment, p1.Meta.Name), &p1, nil)
+			assert.NoError(t, err)
 
 			// Create assert request to pass to our handler. We don't have any query parameters for now, so we'll
 			// pass 'nil' as the third parameter.
@@ -884,7 +894,7 @@ func TestNodeSetVolumeStatusH(t *testing.T) {
 		expectedCode int
 	}{
 		{
-			name:         "checking ndoe set volume state failed: node not found",
+			name:         "checking node set volume state failed node not found",
 			args:         args{ctx, n2.Meta.Name, vl1.SelfLink()},
 			handler:      node.NodeSetVolumeStatusH,
 			data:         uo.ToJson(),
@@ -892,7 +902,7 @@ func TestNodeSetVolumeStatusH(t *testing.T) {
 			expectedCode: http.StatusNotFound,
 		},
 		{
-			name:         "checking ndoe set volume state failed: volume not found",
+			name:         "checking node set volume state failed volume not found",
 			args:         args{ctx, n1.Meta.Name, vl2.SelfLink()},
 			handler:      node.NodeSetVolumeStatusH,
 			data:         uo.ToJson(),
@@ -911,16 +921,19 @@ func TestNodeSetVolumeStatusH(t *testing.T) {
 
 	for _, tc := range tests {
 
-		err = envs.Get().GetStorage().Del(context.Background(), storage.NodeKind, types.EmptyString)
-		assert.NoError(t, err)
-
-		err = stg.Put(context.Background(), storage.NodeKind, stg.Key().Node(n1.Meta.Name), &n1, nil)
-		assert.NoError(t, err)
-
-		err = stg.Put(context.Background(), storage.VolumeKind, stg.Key().Volume(vl1.Meta.Namespace, vl1.Meta.Name), &vl1, nil)
-		assert.NoError(t, err)
-
 		t.Run(tc.name, func(t *testing.T) {
+
+			err = envs.Get().GetStorage().Del(context.Background(), storage.NodeKind, types.EmptyString)
+			assert.NoError(t, err)
+
+			err = envs.Get().GetStorage().Del(context.Background(), storage.VolumeKind, types.EmptyString)
+			assert.NoError(t, err)
+
+			err = stg.Put(context.Background(), storage.NodeKind, stg.Key().Node(n1.Meta.Name), &n1, nil)
+			assert.NoError(t, err)
+
+			err = stg.Put(context.Background(), storage.VolumeKind, stg.Key().Volume(vl1.Meta.Namespace, vl1.Meta.Name), &vl1, nil)
+			assert.NoError(t, err)
 
 			// Create assert request to pass to our handler. We don't have any query parameters for now, so we'll
 			// pass 'nil' as the third parameter.

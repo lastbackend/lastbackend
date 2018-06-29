@@ -16,7 +16,7 @@
 // from Last.Backend LLC.
 //
 
-package test_test
+package storage
 
 import (
 	"context"
@@ -25,12 +25,11 @@ import (
 	"encoding/json"
 
 	"github.com/lastbackend/lastbackend/pkg/log"
-	"github.com/lastbackend/lastbackend/pkg/storage"
 	"github.com/lastbackend/lastbackend/pkg/storage/types"
 	"github.com/stretchr/testify/assert"
 )
 
-func StorageGetAssets(t *testing.T, stg storage.Storage) {
+func StorageGetAssets(t *testing.T, stg Storage) {
 
 	var ctx = context.Background()
 
@@ -39,7 +38,7 @@ func StorageGetAssets(t *testing.T, stg storage.Storage) {
 	}
 
 	type fields struct {
-		stg storage.Storage
+		stg Storage
 	}
 
 	type args struct {
@@ -85,13 +84,13 @@ func StorageGetAssets(t *testing.T, stg storage.Storage) {
 
 	for _, tt := range tests {
 
-		err := tt.fields.stg.Del(tt.args.ctx, storage.TestKind, "")
+		err := tt.fields.stg.Del(tt.args.ctx, TestKind, "")
 		if !assert.NoError(t, err) {
 			return
 		}
 
 		if tt.args.obj != nil {
-			err = tt.fields.stg.Put(tt.args.ctx, storage.TestKind, tt.args.obj.Name, tt.args.obj, nil)
+			err = tt.fields.stg.Put(tt.args.ctx, TestKind, tt.args.obj.Name, tt.args.obj, nil)
 			if !assert.NoError(t, err) {
 				return
 			}
@@ -99,7 +98,7 @@ func StorageGetAssets(t *testing.T, stg storage.Storage) {
 
 		t.Run(tt.name, func(t *testing.T) {
 
-			err := tt.fields.stg.Get(tt.args.ctx, storage.TestKind, tt.args.key, tt.args.out)
+			err := tt.fields.stg.Get(tt.args.ctx, TestKind, tt.args.key, tt.args.out)
 
 			if tt.wantErr {
 				if !assert.Error(t, err, "expected err") {
@@ -123,7 +122,7 @@ func StorageGetAssets(t *testing.T, stg storage.Storage) {
 
 }
 
-func StorageListAssets(t *testing.T, stg storage.Storage) {
+func StorageListAssets(t *testing.T, stg Storage) {
 
 	var ctx = context.Background()
 
@@ -132,7 +131,7 @@ func StorageListAssets(t *testing.T, stg storage.Storage) {
 	}
 
 	type fields struct {
-		stg storage.Storage
+		stg Storage
 	}
 
 	type args struct {
@@ -183,13 +182,13 @@ func StorageListAssets(t *testing.T, stg storage.Storage) {
 
 	for _, tt := range tests {
 
-		err := tt.fields.stg.Del(tt.args.ctx, storage.TestKind, "")
+		err := tt.fields.stg.Del(tt.args.ctx, TestKind, "")
 		if !assert.NoError(t, err) {
 			return
 		}
 
 		for _, o := range tt.args.obj {
-			err = tt.fields.stg.Put(tt.args.ctx, storage.TestKind, o.Name, o, nil)
+			err = tt.fields.stg.Put(tt.args.ctx, TestKind, o.Name, o, nil)
 			if !assert.NoError(t, err) {
 				return
 			}
@@ -197,7 +196,7 @@ func StorageListAssets(t *testing.T, stg storage.Storage) {
 
 		t.Run(tt.name, func(t *testing.T) {
 
-			err := tt.fields.stg.List(tt.args.ctx, storage.TestKind, tt.args.q, tt.args.out)
+			err := tt.fields.stg.List(tt.args.ctx, TestKind, tt.args.q, tt.args.out)
 
 			if tt.wantErr {
 				if !assert.Error(t, err, "expected err") {
@@ -237,7 +236,7 @@ func StorageListAssets(t *testing.T, stg storage.Storage) {
 
 }
 
-func StorageMapAssets(t *testing.T, stg storage.Storage) {
+func StorageMapAssets(t *testing.T, stg Storage) {
 
 	var ctx = context.Background()
 
@@ -246,7 +245,7 @@ func StorageMapAssets(t *testing.T, stg storage.Storage) {
 	}
 
 	type fields struct {
-		stg storage.Storage
+		stg Storage
 	}
 
 	type args struct {
@@ -297,13 +296,13 @@ func StorageMapAssets(t *testing.T, stg storage.Storage) {
 
 	for _, tt := range tests {
 
-		err := tt.fields.stg.Del(tt.args.ctx, storage.TestKind, "")
+		err := tt.fields.stg.Del(tt.args.ctx, TestKind, "")
 		if !assert.NoError(t, err) {
 			return
 		}
 
 		for _, o := range tt.args.obj {
-			err = tt.fields.stg.Put(tt.args.ctx, storage.TestKind, o.Name, o, nil)
+			err = tt.fields.stg.Put(tt.args.ctx, TestKind, o.Name, o, nil)
 			if !assert.NoError(t, err) {
 				return
 			}
@@ -311,7 +310,7 @@ func StorageMapAssets(t *testing.T, stg storage.Storage) {
 
 		t.Run(tt.name, func(t *testing.T) {
 
-			err := tt.fields.stg.Map(tt.args.ctx, storage.TestKind, tt.args.q, tt.args.out)
+			err := tt.fields.stg.Map(tt.args.ctx, TestKind, tt.args.q, tt.args.out)
 
 			if tt.wantErr {
 				if !assert.Error(t, err, "expected err") {
@@ -345,7 +344,7 @@ func StorageMapAssets(t *testing.T, stg storage.Storage) {
 
 }
 
-func StoragePutAssets(t *testing.T, stg storage.Storage) {
+func StoragePutAssets(t *testing.T, stg Storage) {
 
 	var ctx = context.Background()
 
@@ -354,7 +353,7 @@ func StoragePutAssets(t *testing.T, stg storage.Storage) {
 	}
 
 	type fields struct {
-		stg storage.Storage
+		stg Storage
 	}
 
 	type args struct {
@@ -394,19 +393,19 @@ func StoragePutAssets(t *testing.T, stg storage.Storage) {
 
 		t.Run(tt.name, func(t *testing.T) {
 
-			err := tt.fields.stg.Del(tt.args.ctx, storage.TestKind, "")
+			err := tt.fields.stg.Del(tt.args.ctx, TestKind, "")
 			if !assert.NoError(t, err) {
 				return
 			}
 
 			if tt.wantErr && tt.err == types.ErrEntityExists {
-				err = tt.fields.stg.Put(tt.args.ctx, storage.TestKind, tt.args.obj.Name, tt.args.obj, nil)
+				err = tt.fields.stg.Put(tt.args.ctx, TestKind, tt.args.obj.Name, tt.args.obj, nil)
 				if !assert.NoError(t, err) {
 					return
 				}
 			}
 
-			err = tt.fields.stg.Put(tt.args.ctx, storage.TestKind, tt.args.obj.Name, tt.args.obj, nil)
+			err = tt.fields.stg.Put(tt.args.ctx, TestKind, tt.args.obj.Name, tt.args.obj, nil)
 			if tt.wantErr {
 				if !assert.Error(t, err, "expected err") {
 					return
@@ -419,7 +418,7 @@ func StoragePutAssets(t *testing.T, stg storage.Storage) {
 				return
 			}
 
-			err = tt.fields.stg.Get(tt.args.ctx, storage.TestKind, tt.args.key, tt.args.out)
+			err = tt.fields.stg.Get(tt.args.ctx, TestKind, tt.args.key, tt.args.out)
 
 			if !assert.NoError(t, err) {
 				return
@@ -435,7 +434,7 @@ func StoragePutAssets(t *testing.T, stg storage.Storage) {
 
 }
 
-func StorageSetAssets(t *testing.T, stg storage.Storage) {
+func StorageSetAssets(t *testing.T, stg Storage) {
 
 	var ctx = context.Background()
 
@@ -445,7 +444,7 @@ func StorageSetAssets(t *testing.T, stg storage.Storage) {
 	}
 
 	type fields struct {
-		stg storage.Storage
+		stg Storage
 	}
 
 	type args struct {
@@ -493,26 +492,26 @@ func StorageSetAssets(t *testing.T, stg storage.Storage) {
 
 		t.Run(tt.name, func(t *testing.T) {
 
-			err := tt.fields.stg.Del(tt.args.ctx, storage.TestKind, "")
+			err := tt.fields.stg.Del(tt.args.ctx, TestKind, "")
 			if !assert.NoError(t, err) {
 				return
 			}
 
 			log.Info(tt.err)
 			if tt.err != types.ErrEntityNotFound {
-				err = tt.fields.stg.Put(tt.args.ctx, storage.TestKind, tt.args.obj.Name, &obj{"demo", "demo"}, nil)
+				err = tt.fields.stg.Put(tt.args.ctx, TestKind, tt.args.obj.Name, &obj{"demo", "demo"}, nil)
 				if !assert.NoError(t, err) {
 					return
 				}
 			}
 
-			var opts = storage.GetOpts()
+			var opts = GetOpts()
 
 			if !tt.wantErr && tt.err == types.ErrEntityNotFound {
 				opts.Force = true
 			}
 
-			err = tt.fields.stg.Set(tt.args.ctx, storage.TestKind, tt.args.obj.Name, tt.args.obj, opts)
+			err = tt.fields.stg.Set(tt.args.ctx, TestKind, tt.args.obj.Name, tt.args.obj, opts)
 
 			if tt.wantErr {
 				if !assert.Error(t, err, "expected err") {
@@ -526,7 +525,7 @@ func StorageSetAssets(t *testing.T, stg storage.Storage) {
 				return
 			}
 
-			err = tt.fields.stg.Get(tt.args.ctx, storage.TestKind, tt.args.key, tt.args.out)
+			err = tt.fields.stg.Get(tt.args.ctx, TestKind, tt.args.key, tt.args.out)
 
 			if !assert.NoError(t, err) {
 				return
@@ -542,7 +541,7 @@ func StorageSetAssets(t *testing.T, stg storage.Storage) {
 
 }
 
-func StorageDelAssets(t *testing.T, stg storage.Storage) {
+func StorageDelAssets(t *testing.T, stg Storage) {
 
 	var ctx = context.Background()
 
@@ -551,7 +550,7 @@ func StorageDelAssets(t *testing.T, stg storage.Storage) {
 	}
 
 	type fields struct {
-		stg storage.Storage
+		stg Storage
 	}
 
 	type args struct {
@@ -591,32 +590,32 @@ func StorageDelAssets(t *testing.T, stg storage.Storage) {
 
 		t.Run(tt.name, func(t *testing.T) {
 
-			err := tt.fields.stg.Del(tt.args.ctx, storage.TestKind, "")
+			err := tt.fields.stg.Del(tt.args.ctx, TestKind, "")
 			if !assert.NoError(t, err) {
 				return
 			}
 
 			if !tt.wantErr && tt.err != types.ErrEntityNotFound {
-				err = tt.fields.stg.Put(tt.args.ctx, storage.TestKind, tt.args.obj.Name, tt.args.obj, nil)
+				err = tt.fields.stg.Put(tt.args.ctx, TestKind, tt.args.obj.Name, tt.args.obj, nil)
 				if !assert.NoError(t, err) {
 					return
 				}
 			}
 
-			var opts = storage.GetOpts()
+			var opts = GetOpts()
 
 			if !tt.wantErr && tt.err == types.ErrEntityNotFound {
 				opts.Force = true
 			}
 
-			err = tt.fields.stg.Del(tt.args.ctx, storage.TestKind, tt.args.obj.Name)
+			err = tt.fields.stg.Del(tt.args.ctx, TestKind, tt.args.obj.Name)
 			if !assert.NoError(t, err) {
 				return
 			}
 
 			if !tt.wantErr {
 
-				err := tt.fields.stg.Get(tt.args.ctx, storage.TestKind, tt.args.key, tt.args.out)
+				err := tt.fields.stg.Get(tt.args.ctx, TestKind, tt.args.key, tt.args.out)
 				if !assert.Error(t, err, "expected err") {
 					return
 				}

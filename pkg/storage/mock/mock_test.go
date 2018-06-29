@@ -21,43 +21,43 @@ package mock_test
 import (
 	"testing"
 
+	"github.com/lastbackend/lastbackend/pkg/storage"
 	"github.com/lastbackend/lastbackend/pkg/storage/mock"
-	"github.com/lastbackend/lastbackend/pkg/storage/test"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestStorage_Get(t *testing.T) {
 	stg, err := mock.New()
 	assert.NoError(t, err, "storage initialize err")
-	test_test.StorageGetAssets(t, stg)
+	storage.StorageGetAssets(t, stg)
 }
 
 func TestStorage_List(t *testing.T) {
 	stg, err := mock.New()
 	assert.NoError(t, err, "storage initialize err")
-	test_test.StorageListAssets(t, stg)
+	storage.StorageListAssets(t, stg)
 }
 
 func TestStorage_Map(t *testing.T) {
 	stg, err := mock.New()
 	assert.NoError(t, err, "storage initialize err")
-	test_test.StorageMapAssets(t, stg)
+	storage.StorageMapAssets(t, stg)
 }
 
 func TestStorage_Put(t *testing.T) {
 	stg, err := mock.New()
 	assert.NoError(t, err, "storage initialize err")
-	test_test.StoragePutAssets(t, stg)
+	storage.StoragePutAssets(t, stg)
 }
 
 func TestStorage_Set(t *testing.T) {
 	stg, err := mock.New()
 	assert.NoError(t, err, "storage initialize err")
-	test_test.StorageSetAssets(t, stg)
+	storage.StorageSetAssets(t, stg)
 }
 
 func TestStorage_Del(t *testing.T) {
 	stg, err := mock.New()
 	assert.NoError(t, err, "storage initialize err")
-	test_test.StorageDelAssets(t, stg)
+	storage.StorageDelAssets(t, stg)
 }
