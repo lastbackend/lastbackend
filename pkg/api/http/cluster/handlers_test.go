@@ -77,7 +77,7 @@ func TestClusterInfo(t *testing.T) {
 	}
 
 	clear := func() {
-		err := envs.Get().GetStorage().Remove(context.Background(), storage.ClusterKind, types.EmptyString)
+		err := envs.Get().GetStorage().Del(context.Background(), storage.ClusterKind, types.EmptyString)
 		assert.NoError(t, err)
 	}
 
@@ -88,7 +88,7 @@ func TestClusterInfo(t *testing.T) {
 			clear()
 			defer clear()
 
-			err := stg.Create(context.Background(), storage.ClusterKind, types.EmptyString, c, nil)
+			err := stg.Put(context.Background(), storage.ClusterKind, types.EmptyString, c, nil)
 			assert.NoError(t, err)
 
 			// Create assert request to pass to our handler. We don't have any query parameters for now, so we'll

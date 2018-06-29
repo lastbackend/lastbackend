@@ -20,11 +20,12 @@ package local
 
 import (
 	"context"
+	"net"
+
 	"github.com/lastbackend/lastbackend/pkg/controller/envs"
 	"github.com/lastbackend/lastbackend/pkg/distribution/errors"
 	"github.com/lastbackend/lastbackend/pkg/log"
 	"github.com/lastbackend/lastbackend/pkg/storage"
-	"net"
 )
 
 const (
@@ -115,7 +116,9 @@ func (i *IPAM) save() error {
 		ips = append(ips, ip)
 	}
 
-	return i.storage.Upsert(context.Background(), storage.UtilsKind, "imap", ips, nil)
+	opts := storage.GetOpts()
+	opts.Force = true
+	return i.storage.Set(context.Background(), storage.UtilsKind, "imap", ips, opts)
 }
 
 // New IPAM object initializing and returning

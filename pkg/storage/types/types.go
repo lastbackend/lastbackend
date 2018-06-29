@@ -48,5 +48,6 @@ func (qf QueryFilter) String() string {
 }
 
 type Opts struct {
-	Ttl uint64
+	Ttl   uint64
+	Force bool
 }

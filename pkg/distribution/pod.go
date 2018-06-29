@@ -109,7 +109,7 @@ func (p *Pod) Create(deployment *types.Deployment) (*types.Pod, error) {
 		pod.Spec.Template.Volumes = append(pod.Spec.Template.Volumes, s)
 	}
 
-	if err := p.storage.Create(p.context, storage.PodKind,
+	if err := p.storage.Put(p.context, storage.PodKind,
 		p.storage.Key().Pod(pod.Meta.Namespace, pod.Meta.Service, pod.Meta.Deployment, pod.Meta.Name), pod, nil); err != nil {
 		log.Errorf("%s:create:> insert pod err %v", logPodPrefix, err)
 		return nil, err
@@ -172,7 +172,7 @@ func (p *Pod) SetNode(pod *types.Pod, node *types.Node) error {
 
 	pod.Meta.Node = node.Meta.Name
 
-	if err := p.storage.Update(p.context, storage.PodKind,
+	if err := p.storage.Set(p.context, storage.PodKind,
 		p.storage.Key().Pod(pod.Meta.Namespace, pod.Meta.Service, pod.Meta.Deployment, pod.Meta.Name), pod, nil); err != nil {
 		log.Errorf("%s:setnode:> pod set node err: %v", logPodPrefix, err)
 		return err
@@ -188,7 +188,7 @@ func (p *Pod) SetStatus(pod *types.Pod, status *types.PodStatus) error {
 
 	pod.Status = *status
 
-	if err := p.storage.Update(p.context, storage.PodKind,
+	if err := p.storage.Set(p.context, storage.PodKind,
 		p.storage.Key().Pod(pod.Meta.Namespace, pod.Meta.Service, pod.Meta.Deployment, pod.Meta.Name), pod, nil); err != nil {
 		log.Errorf("%s:setstatus:> pod set status err: %v", logPodPrefix, err)
 		return err
@@ -202,7 +202,7 @@ func (p *Pod) Destroy(ctx context.Context, pod *types.Pod) error {
 
 	pod.Spec.State.Destroy = true
 
-	if err := p.storage.Update(p.context, storage.PodKind,
+	if err := p.storage.Set(p.context, storage.PodKind,
 		p.storage.Key().Pod(pod.Meta.Namespace, pod.Meta.Service, pod.Meta.Deployment, pod.Meta.Name), pod, nil); err != nil {
 		log.Errorf("%s:destroy:> mark pod for destroy error: %v", logPodPrefix, err)
 		return err
@@ -212,7 +212,7 @@ func (p *Pod) Destroy(ctx context.Context, pod *types.Pod) error {
 
 // Remove pod from storage
 func (p *Pod) Remove(ctx context.Context, pod *types.Pod) error {
-	if err := p.storage.Remove(p.context, storage.PodKind,
+	if err := p.storage.Del(p.context, storage.PodKind,
 		p.storage.Key().Pod(pod.Meta.Namespace, pod.Meta.Service, pod.Meta.Deployment, pod.Meta.Name)); err != nil {
 		log.Errorf("%s:remove:> mark pod for destroy error: %v", logPodPrefix, err)
 		return err

@@ -112,7 +112,7 @@ func (e *Endpoint) Create(namespace, service string, opts *types.EndpointCreateO
 	endpoint.Spec.IP = ip.String()
 	endpoint.Spec.Domain = opts.Domain
 
-	if err := e.storage.Create(e.context, storage.EndpointKind,
+	if err := e.storage.Put(e.context, storage.EndpointKind,
 		e.storage.Key().Endpoint(namespace, service), endpoint, nil); err != nil {
 		log.Errorf("%s:create:> distribution create endpoint: %s err: %v", logEndpointPrefix, endpoint.SelfLink(), err)
 		return nil, err
@@ -139,7 +139,7 @@ func (e *Endpoint) Update(endpoint *types.Endpoint, opts *types.EndpointUpdateOp
 	endpoint.Spec.Strategy.Route = opts.RouteStrategy
 	endpoint.Spec.Strategy.Bind = opts.BindStrategy
 
-	if err := e.storage.Update(e.context, storage.EndpointKind,
+	if err := e.storage.Set(e.context, storage.EndpointKind,
 		e.storage.Key().Endpoint(endpoint.Meta.Namespace, endpoint.Meta.Name), endpoint, nil); err != nil {
 		log.Errorf("%s:create:> distribution update endpoint: %s err: %v", logEndpointPrefix, endpoint.SelfLink(), err)
 		return nil, err
@@ -150,7 +150,7 @@ func (e *Endpoint) Update(endpoint *types.Endpoint, opts *types.EndpointUpdateOp
 
 func (e *Endpoint) SetSpec(endpoint *types.Endpoint, spec *types.EndpointSpec) (*types.Endpoint, error) {
 	endpoint.Spec = *spec
-	if err := e.storage.Update(e.context, storage.EndpointKind,
+	if err := e.storage.Set(e.context, storage.EndpointKind,
 		e.storage.Key().Endpoint(endpoint.Meta.Namespace, endpoint.Meta.Name), endpoint, nil); err != nil {
 		log.Errorf("%s:create:> distribution update endpoint spec: %s err: %v", logEndpointPrefix, endpoint.SelfLink(), err)
 		return nil, err
@@ -160,7 +160,7 @@ func (e *Endpoint) SetSpec(endpoint *types.Endpoint, spec *types.EndpointSpec) (
 
 func (e *Endpoint) Remove(endpoint *types.Endpoint) error {
 	log.Debugf("%s:remove:> remove endpoint %s", logEndpointPrefix, endpoint.Meta.Name)
-	if err := e.storage.Remove(e.context, storage.EndpointKind,
+	if err := e.storage.Del(e.context, storage.EndpointKind,
 		e.storage.Key().Endpoint(endpoint.Meta.Namespace, endpoint.Meta.Name)); err != nil {
 		log.Debugf("%s:remove:> remove endpoint %s err: %v", logEndpointPrefix, endpoint.Meta.Name, err)
 		return err

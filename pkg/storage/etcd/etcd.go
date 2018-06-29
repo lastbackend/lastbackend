@@ -20,6 +20,8 @@ package etcd
 
 import (
 	"context"
+	"errors"
+	"reflect"
 	"regexp"
 	"strings"
 
@@ -70,18 +72,33 @@ func New() (*Storage, error) {
 }
 
 func (s Storage) Get(ctx context.Context, kind types.Kind, name string, obj interface{}) error {
+	if reflect.ValueOf(obj).IsNil() {
+		return errors.New(types.ErrStructOutIsNil)
+	}
 	return s.client.store.Get(ctx, keyCreate(kind.String(), name), obj)
 }
 
 func (s Storage) List(ctx context.Context, kind types.Kind, query string, obj interface{}) error {
+
+	if reflect.ValueOf(obj).IsNil() {
+		return errors.New(types.ErrStructOutIsNil)
+	}
+
 	return s.client.store.List(ctx, keyCreate(kind.String(), query), "", obj)
 }
 
 func (s Storage) Map(ctx context.Context, kind types.Kind, query string, obj interface{}) error {
-	return s.client.store.Map(ctx, keyCreate(kind.String(), query), "", obj)
+
+	if reflect.ValueOf(obj).IsNil() {
+		return errors.New(types.ErrStructOutIsNil)
+	}
+
+	q := ".*/(.*)$"
+
+	return s.client.store.Map(ctx, keyCreate(kind.String(), query), q, obj)
 }
 
-func (s Storage) Create(ctx context.Context, kind types.Kind, name string, obj interface{}, opts *types.Opts) error {
+func (s Storage) Put(ctx context.Context, kind types.Kind, name string, obj interface{}, opts *types.Opts) error {
 
 	if opts == nil {
 		opts = new(types.Opts)
@@ -90,25 +107,23 @@ func (s Storage) Create(ctx context.Context, kind types.Kind, name string, obj i
 	return s.client.store.Create(ctx, keyCreate(kind.String(), name), obj, nil, opts.Ttl)
 }
 
-func (s Storage) Update(ctx context.Context, kind types.Kind, name string, obj interface{}, opts *types.Opts) error {
+func (s Storage) Set(ctx context.Context, kind types.Kind, name string, obj interface{}, opts *types.Opts) error {
 
 	if opts == nil {
 		opts = new(types.Opts)
+	}
+
+	if opts.Force {
+		return s.client.store.Upsert(ctx, keyCreate(kind.String(), name), obj, nil, opts.Ttl)
 	}
 
 	return s.client.store.Update(ctx, keyCreate(kind.String(), name), obj, nil, opts.Ttl)
 }
 
-func (s Storage) Upsert(ctx context.Context, kind types.Kind, name string, obj interface{}, opts *types.Opts) error {
-
-	if opts == nil {
-		opts = new(types.Opts)
+func (s Storage) Del(ctx context.Context, kind types.Kind, name string) error {
+	if name == "" {
+		return s.client.store.DeleteDir(ctx, keyCreate(kind.String()))
 	}
-
-	return s.client.store.Upsert(ctx, keyCreate(kind.String(), name), obj, nil, opts.Ttl)
-}
-
-func (s Storage) Remove(ctx context.Context, kind types.Kind, name string) error {
 	return s.client.store.Delete(ctx, keyCreate(kind.String(), name))
 }
 

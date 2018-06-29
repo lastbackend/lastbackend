@@ -23,8 +23,8 @@ const (
 	ErrOperationFailure      = "operation failure"
 	ErrEntityNotFound        = "entity not found"
 	ErrStructArgIsNil        = "input structure is nil"
-	ErrStructOutIsNil        = "input structure is nil"
-	ErrStructArgIsInvalid    = "output structure is invalid"
+	ErrStructOutIsNil        = "output structure is nil"
+	ErrStructArgIsInvalid    = "input structure is invalid"
 	ErrStructOutIsInvalid    = "output structure is invalid"
 	ErrStructOutIsNotPointer = "output structure is not pointer"
 )

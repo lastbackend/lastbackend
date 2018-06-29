@@ -98,10 +98,10 @@ func TestSecretList(t *testing.T) {
 	}
 
 	clear := func() {
-		err := envs.Get().GetStorage().Remove(context.Background(), storage.NamespaceKind, types.EmptyString)
+		err := envs.Get().GetStorage().Del(context.Background(), storage.NamespaceKind, types.EmptyString)
 		assert.NoError(t, err)
 
-		err = envs.Get().GetStorage().Remove(context.Background(), storage.SecretKind, types.EmptyString)
+		err = envs.Get().GetStorage().Del(context.Background(), storage.SecretKind, types.EmptyString)
 		assert.NoError(t, err)
 	}
 
@@ -112,13 +112,13 @@ func TestSecretList(t *testing.T) {
 			clear()
 			defer clear()
 
-			err := tc.fields.stg.Create(context.Background(), storage.NamespaceKind, tc.fields.stg.Key().Namespace(ns1.Meta.Name), ns1, nil)
+			err := tc.fields.stg.Put(context.Background(), storage.NamespaceKind, tc.fields.stg.Key().Namespace(ns1.Meta.Name), ns1, nil)
 			assert.NoError(t, err)
 
-			err = stg.Create(context.Background(), storage.SecretKind, stg.Key().Secret(r1.Meta.Namespace, r1.Meta.Name), &r1, nil)
+			err = stg.Put(context.Background(), storage.SecretKind, stg.Key().Secret(r1.Meta.Namespace, r1.Meta.Name), &r1, nil)
 			assert.NoError(t, err)
 
-			err = stg.Create(context.Background(), storage.SecretKind, stg.Key().Secret(r2.Meta.Namespace, r2.Meta.Name), &r2, nil)
+			err = stg.Put(context.Background(), storage.SecretKind, stg.Key().Secret(r2.Meta.Namespace, r2.Meta.Name), &r2, nil)
 			assert.NoError(t, err)
 
 			// Create assert request to pass to our handler. We don't have any query parameters for now, so we'll
@@ -255,10 +255,10 @@ func TestSecretCreate(t *testing.T) {
 	}
 
 	clear := func() {
-		err := envs.Get().GetStorage().Remove(context.Background(), storage.NamespaceKind, types.EmptyString)
+		err := envs.Get().GetStorage().Del(context.Background(), storage.NamespaceKind, types.EmptyString)
 		assert.NoError(t, err)
 
-		err = envs.Get().GetStorage().Remove(context.Background(), storage.SecretKind, types.EmptyString)
+		err = envs.Get().GetStorage().Del(context.Background(), storage.SecretKind, types.EmptyString)
 		assert.NoError(t, err)
 	}
 
@@ -268,10 +268,10 @@ func TestSecretCreate(t *testing.T) {
 			clear()
 			defer clear()
 
-			err := tc.fields.stg.Create(context.Background(), storage.NamespaceKind, tc.fields.stg.Key().Namespace(ns1.Meta.Name), ns1, nil)
+			err := tc.fields.stg.Put(context.Background(), storage.NamespaceKind, tc.fields.stg.Key().Namespace(ns1.Meta.Name), ns1, nil)
 			assert.NoError(t, err)
 
-			err = stg.Create(context.Background(), storage.SecretKind, stg.Key().Secret(r1.Meta.Namespace, r1.Meta.Name), &r1, nil)
+			err = stg.Put(context.Background(), storage.SecretKind, stg.Key().Secret(r1.Meta.Namespace, r1.Meta.Name), &r1, nil)
 			assert.NoError(t, err)
 
 			// Create assert request to pass to our handler. We don't have any query parameters for now, so we'll
@@ -384,10 +384,10 @@ func TestSecretUpdate(t *testing.T) {
 	}
 
 	clear := func() {
-		err := envs.Get().GetStorage().Remove(context.Background(), storage.NamespaceKind, types.EmptyString)
+		err := envs.Get().GetStorage().Del(context.Background(), storage.NamespaceKind, types.EmptyString)
 		assert.NoError(t, err)
 
-		err = envs.Get().GetStorage().Remove(context.Background(), storage.SecretKind, types.EmptyString)
+		err = envs.Get().GetStorage().Del(context.Background(), storage.SecretKind, types.EmptyString)
 		assert.NoError(t, err)
 	}
 
@@ -397,10 +397,10 @@ func TestSecretUpdate(t *testing.T) {
 			clear()
 			defer clear()
 
-			err := tc.fields.stg.Create(context.Background(), storage.NamespaceKind, tc.fields.stg.Key().Namespace(ns1.Meta.Name), ns1, nil)
+			err := tc.fields.stg.Put(context.Background(), storage.NamespaceKind, tc.fields.stg.Key().Namespace(ns1.Meta.Name), ns1, nil)
 			assert.NoError(t, err)
 
-			err = stg.Create(context.Background(), storage.SecretKind, stg.Key().Secret(s1.Meta.Namespace, s1.Meta.Name), &s1, nil)
+			err = stg.Put(context.Background(), storage.SecretKind, stg.Key().Secret(s1.Meta.Namespace, s1.Meta.Name), &s1, nil)
 			assert.NoError(t, err)
 
 			// Create assert request to pass to our handler. We don't have any query parameters for now, so we'll
@@ -513,10 +513,10 @@ func TestSecretRemove(t *testing.T) {
 	}
 
 	clear := func() {
-		err := envs.Get().GetStorage().Remove(context.Background(), storage.NamespaceKind, types.EmptyString)
+		err := envs.Get().GetStorage().Del(context.Background(), storage.NamespaceKind, types.EmptyString)
 		assert.NoError(t, err)
 
-		err = envs.Get().GetStorage().Remove(context.Background(), storage.SecretKind, types.EmptyString)
+		err = envs.Get().GetStorage().Del(context.Background(), storage.SecretKind, types.EmptyString)
 		assert.NoError(t, err)
 	}
 
@@ -527,10 +527,10 @@ func TestSecretRemove(t *testing.T) {
 			clear()
 			defer clear()
 
-			err := tc.fields.stg.Create(context.Background(), storage.NamespaceKind, tc.fields.stg.Key().Namespace(ns1.Meta.Name), ns1, nil)
+			err := tc.fields.stg.Put(context.Background(), storage.NamespaceKind, tc.fields.stg.Key().Namespace(ns1.Meta.Name), ns1, nil)
 			assert.NoError(t, err)
 
-			err = stg.Create(context.Background(), storage.SecretKind, stg.Key().Secret(s1.Meta.Namespace, s1.Meta.Name), &s1, nil)
+			err = stg.Put(context.Background(), storage.SecretKind, stg.Key().Secret(s1.Meta.Namespace, s1.Meta.Name), &s1, nil)
 			assert.NoError(t, err)
 
 			// Create assert request to pass to our handler. We don't have any query parameters for now, so we'll

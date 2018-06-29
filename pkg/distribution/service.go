@@ -136,7 +136,7 @@ func (s *Service) Create(namespace *types.Namespace, opts *types.ServiceCreateOp
 
 	service.SelfLink()
 
-	if err := s.storage.Create(s.context, storage.ServiceKind,
+	if err := s.storage.Put(s.context, storage.ServiceKind,
 		s.storage.Key().Service(service.Meta.Namespace, service.Meta.Name), service, nil); err != nil {
 		log.V(logLevel).Errorf("%s:create:> insert service err: %v", logServicePrefix, err)
 		return nil, err
@@ -157,7 +157,7 @@ func (s *Service) Update(service *types.Service, opts *types.ServiceUpdateOption
 	if opts.Description != nil {
 		service.Meta.Description = *opts.Description
 
-		if err := s.storage.Update(s.context, storage.ServiceKind,
+		if err := s.storage.Set(s.context, storage.ServiceKind,
 			s.storage.Key().Service(service.Meta.Namespace, service.Meta.Name), service, nil); err != nil {
 			log.V(logLevel).Errorf("%s:update:> update service meta err: %v", logServicePrefix, err)
 			return nil, err
@@ -168,7 +168,7 @@ func (s *Service) Update(service *types.Service, opts *types.ServiceUpdateOption
 
 		service.Spec.Update(opts.Spec)
 
-		if err := s.storage.Update(s.context, storage.ServiceKind,
+		if err := s.storage.Set(s.context, storage.ServiceKind,
 			s.storage.Key().Service(service.Meta.Namespace, service.Meta.Name), service, nil); err != nil {
 			log.V(logLevel).Errorf("%s:update:> update service spec err: %v", logServicePrefix, err)
 			return nil, err
@@ -186,7 +186,7 @@ func (s *Service) Destroy(service *types.Service) (*types.Service, error) {
 	service.Status.State = types.StateDestroy
 	service.Spec.State.Destroy = true
 
-	if err := s.storage.Update(s.context, storage.ServiceKind,
+	if err := s.storage.Set(s.context, storage.ServiceKind,
 		s.storage.Key().Service(service.Meta.Namespace, service.Meta.Name), service, nil); err != nil {
 		log.V(logLevel).Errorf("%s:destroy:> destroy service err: %v", logServicePrefix, err)
 		return nil, err
@@ -199,7 +199,7 @@ func (s *Service) Remove(service *types.Service) error {
 
 	log.V(logLevel).Debugf("%s:remove:> remove service %#v", logServicePrefix, service)
 
-	err := s.storage.Remove(s.context, storage.ServiceKind,
+	err := s.storage.Del(s.context, storage.ServiceKind,
 		s.storage.Key().Service(service.Meta.Namespace, service.Meta.Name))
 	if err != nil {
 		log.V(logLevel).Errorf("%s:remove:> remove service err: %v", logServicePrefix, err)
@@ -214,7 +214,7 @@ func (s *Service) SetStatus(service *types.Service) error {
 
 	log.Debugf("%s:setstatus:> set state for service %s", logServicePrefix, service.Meta.Name)
 
-	if err := s.storage.Update(s.context, storage.ServiceKind,
+	if err := s.storage.Set(s.context, storage.ServiceKind,
 		s.storage.Key().Service(service.Meta.Namespace, service.Meta.Name), service, nil); err != nil {
 		log.Errorf("%s:setstatus:> set state for service %s err: %v", logServicePrefix, service.Meta.Name, err)
 		return err

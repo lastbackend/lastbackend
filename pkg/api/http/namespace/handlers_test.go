@@ -97,7 +97,7 @@ func TestNamespaceInfo(t *testing.T) {
 	}
 
 	clear := func() {
-		err := envs.Get().GetStorage().Remove(context.Background(), storage.NamespaceKind, types.EmptyString)
+		err := envs.Get().GetStorage().Del(context.Background(), storage.NamespaceKind, types.EmptyString)
 		assert.NoError(t, err)
 	}
 
@@ -107,7 +107,7 @@ func TestNamespaceInfo(t *testing.T) {
 			clear()
 			defer clear()
 
-			err := tc.fields.stg.Create(context.Background(), storage.NamespaceKind, tc.fields.stg.Key().Namespace(ns1.Meta.Name), ns1, nil)
+			err := tc.fields.stg.Put(context.Background(), storage.NamespaceKind, tc.fields.stg.Key().Namespace(ns1.Meta.Name), ns1, nil)
 			assert.NoError(t, err)
 
 			// Create assert request to pass to our handler. We don't have any query parameters for now, so we'll
@@ -207,7 +207,7 @@ func TestNamespaceList(t *testing.T) {
 	}
 
 	clear := func() {
-		err := envs.Get().GetStorage().Remove(context.Background(), storage.NamespaceKind, types.EmptyString)
+		err := envs.Get().GetStorage().Del(context.Background(), storage.NamespaceKind, types.EmptyString)
 		assert.NoError(t, err)
 	}
 
@@ -217,10 +217,10 @@ func TestNamespaceList(t *testing.T) {
 			clear()
 			defer clear()
 
-			err := tc.fields.stg.Create(context.Background(), storage.NamespaceKind, tc.fields.stg.Key().Namespace(ns1.Meta.Name), ns1, nil)
+			err := tc.fields.stg.Put(context.Background(), storage.NamespaceKind, tc.fields.stg.Key().Namespace(ns1.Meta.Name), ns1, nil)
 			assert.NoError(t, err)
 
-			err = tc.fields.stg.Create(context.Background(), storage.NamespaceKind, tc.fields.stg.Key().Namespace(ns2.Meta.Name), ns2, nil)
+			err = tc.fields.stg.Put(context.Background(), storage.NamespaceKind, tc.fields.stg.Key().Namespace(ns2.Meta.Name), ns2, nil)
 			assert.NoError(t, err)
 
 			// Create assert request to pass to our handler. We don't have any query parameters for now, so we'll
@@ -364,7 +364,7 @@ func TestNamespaceCreate(t *testing.T) {
 	}
 
 	clear := func() {
-		err := envs.Get().GetStorage().Remove(context.Background(), storage.NamespaceKind, types.EmptyString)
+		err := envs.Get().GetStorage().Del(context.Background(), storage.NamespaceKind, types.EmptyString)
 		assert.NoError(t, err)
 	}
 
@@ -374,7 +374,7 @@ func TestNamespaceCreate(t *testing.T) {
 			clear()
 			defer clear()
 
-			err := tc.fields.stg.Create(context.Background(), storage.NamespaceKind, tc.fields.stg.Key().Namespace(ns1.Meta.Name), ns1, nil)
+			err := tc.fields.stg.Put(context.Background(), storage.NamespaceKind, tc.fields.stg.Key().Namespace(ns1.Meta.Name), ns1, nil)
 			assert.NoError(t, err)
 
 			// Create assert request to pass to our handler. We don't have any query parameters for now, so we'll
@@ -515,7 +515,7 @@ func TestNamespaceUpdate(t *testing.T) {
 	}
 
 	clear := func() {
-		err := envs.Get().GetStorage().Remove(context.Background(), storage.NamespaceKind, types.EmptyString)
+		err := envs.Get().GetStorage().Del(context.Background(), storage.NamespaceKind, types.EmptyString)
 		assert.NoError(t, err)
 	}
 
@@ -525,7 +525,7 @@ func TestNamespaceUpdate(t *testing.T) {
 			clear()
 			defer clear()
 
-			err := tc.fields.stg.Create(context.Background(), storage.NamespaceKind, tc.fields.stg.Key().Namespace(ns1.Meta.Name), ns1, nil)
+			err := tc.fields.stg.Put(context.Background(), storage.NamespaceKind, tc.fields.stg.Key().Namespace(ns1.Meta.Name), ns1, nil)
 			assert.NoError(t, err)
 
 			// Create assert request to pass to our handler. We don't have any query parameters for now, so we'll
@@ -633,7 +633,7 @@ func TestNamespaceRemove(t *testing.T) {
 	}
 
 	clear := func() {
-		err := envs.Get().GetStorage().Remove(context.Background(), storage.NamespaceKind, types.EmptyString)
+		err := envs.Get().GetStorage().Del(context.Background(), storage.NamespaceKind, types.EmptyString)
 		assert.NoError(t, err)
 	}
 
@@ -644,7 +644,7 @@ func TestNamespaceRemove(t *testing.T) {
 			clear()
 			defer clear()
 
-			err := tc.fields.stg.Create(context.Background(), storage.NamespaceKind, tc.fields.stg.Key().Namespace(ns1.Meta.Name), ns1, nil)
+			err := tc.fields.stg.Put(context.Background(), storage.NamespaceKind, tc.fields.stg.Key().Namespace(ns1.Meta.Name), ns1, nil)
 			assert.NoError(t, err)
 
 			// Create assert request to pass to our handler. We don't have any query parameters for now, so we'll

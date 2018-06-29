@@ -29,7 +29,6 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/storage"
 
 	"encoding/json"
-	stgtypes "github.com/lastbackend/lastbackend/pkg/storage/etcd/types"
 )
 
 const (
@@ -46,8 +45,8 @@ type Controller struct {
 func (nc *Controller) Watch(node chan *types.Node) {
 
 	var (
-		stg   = envs.Get().GetStorage()
-		event = make(chan *stgtypes.WatcherEvent)
+		stg     = envs.Get().GetStorage()
+		watcher = storage.NewWatcher()
 	)
 
 	log.Debugf("%s:> start watch", logPrefix)
@@ -78,8 +77,9 @@ func (nc *Controller) Watch(node chan *types.Node) {
 						}
 
 						cl.Status = *getClusterStatus(nodes)
-
-						if err := envs.Get().GetStorage().Upsert(context.Background(), storage.ClusterKind, types.EmptyString, cl, nil); err != nil {
+						opts := storage.GetOpts()
+						opts.Force = true
+						if err := envs.Get().GetStorage().Set(context.Background(), storage.ClusterKind, types.EmptyString, cl, opts); err != nil {
 							log.Errorf("%s:> set cluster status err: %v", logPrefix, err)
 							continue
 						}
@@ -102,7 +102,7 @@ func (nc *Controller) Watch(node chan *types.Node) {
 	go func() {
 		for {
 			select {
-			case e := <-event:
+			case e := <-watcher:
 				if e.Data == nil {
 					continue
 				}
@@ -119,7 +119,7 @@ func (nc *Controller) Watch(node chan *types.Node) {
 		}
 	}()
 
-	stg.Watch(context.Background(), storage.NodeKind, event)
+	stg.Watch(context.Background(), storage.NodeKind, watcher)
 }
 
 func (nc *Controller) Pause() {
@@ -158,7 +158,9 @@ func NewNodeController(ctx context.Context) *Controller {
 
 	cl.Status = *getClusterStatus(nodes)
 
-	err = envs.Get().GetStorage().Upsert(context.Background(), storage.ClusterKind, types.EmptyString, cl, nil)
+	opts := storage.GetOpts()
+	opts.Force = true
+	err = envs.Get().GetStorage().Set(context.Background(), storage.ClusterKind, types.EmptyString, cl, opts)
 	if err != nil {
 		log.Fatalf("%s:> set cluster status err: %v", logPrefix, err)
 	}

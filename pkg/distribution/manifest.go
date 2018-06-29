@@ -94,7 +94,7 @@ func (m *Manifest) PodManifestAdd(node, pod string, manifest *types.PodManifest)
 		k = m.storage.Key().Manifest(node, storage.PodKind, pod)
 	)
 
-	if err := m.storage.Create(m.context, storage.ManifestKind, k, manifest, nil); err != nil {
+	if err := m.storage.Put(m.context, storage.ManifestKind, k, manifest, nil); err != nil {
 		log.Errorf("%s:PodManifestAdd:> err :%s", logManifestPrefix, err.Error())
 		return err
 	}
@@ -109,7 +109,7 @@ func (m *Manifest) PodManifestSet(node, pod string, manifest *types.PodManifest)
 		k = m.storage.Key().Manifest(node, storage.PodKind, pod)
 	)
 
-	if err := m.storage.Update(m.context, storage.ManifestKind, k, manifest, nil); err != nil {
+	if err := m.storage.Set(m.context, storage.ManifestKind, k, manifest, nil); err != nil {
 		log.Errorf("%s:PodManifestSet:> err :%s", logManifestPrefix, err.Error())
 		return err
 	}
@@ -124,7 +124,7 @@ func (m *Manifest) PodManifestDel(node, pod string) error {
 		k = m.storage.Key().Manifest(node, storage.PodKind, pod)
 	)
 
-	if err := m.storage.Remove(m.context, storage.ManifestKind, k); err != nil {
+	if err := m.storage.Del(m.context, storage.ManifestKind, k); err != nil {
 		log.Errorf("%s:PodManifestDel:> err :%s", logManifestPrefix, err.Error())
 		return err
 	}
@@ -175,7 +175,7 @@ func (m *Manifest) VolumeManifestAdd(node, volume string, manifest *types.Volume
 		k = m.storage.Key().Manifest(node, storage.VolumeKind, volume)
 	)
 
-	if err := m.storage.Create(m.context, storage.ManifestKind, k, manifest, nil); err != nil {
+	if err := m.storage.Put(m.context, storage.ManifestKind, k, manifest, nil); err != nil {
 		log.Errorf("%s:VolumeManifestAdd:> err :%s", logManifestPrefix, err.Error())
 		return err
 	}
@@ -190,7 +190,7 @@ func (m *Manifest) VolumeManifestSet(node, volume string, manifest *types.Volume
 		k = m.storage.Key().Manifest(node, storage.VolumeKind, volume)
 	)
 
-	if err := m.storage.Update(m.context, storage.ManifestKind, k, manifest, nil); err != nil {
+	if err := m.storage.Set(m.context, storage.ManifestKind, k, manifest, nil); err != nil {
 		log.Errorf("%s:VolumeManifestSet:> err :%s", logManifestPrefix, err.Error())
 		return err
 	}
@@ -205,7 +205,7 @@ func (m *Manifest) VolumeManifestDel(node, volume string) error {
 		k = m.storage.Key().Manifest(node, storage.VolumeKind, volume)
 	)
 
-	if err := m.storage.Remove(m.context, storage.ManifestKind, k); err != nil {
+	if err := m.storage.Del(m.context, storage.ManifestKind, k); err != nil {
 		log.Errorf("%s:PodManifestDel:> err :%s", logManifestPrefix, err.Error())
 		return err
 	}

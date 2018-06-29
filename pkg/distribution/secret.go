@@ -97,7 +97,7 @@ func (n *Secret) Create(namespace *types.Namespace, opts *types.SecretCreateOpti
 	}
 	secret.SelfLink()
 
-	if err := n.storage.Create(n.context, storage.SecretKind,
+	if err := n.storage.Put(n.context, storage.SecretKind,
 		n.storage.Key().Secret(secret.Meta.Namespace, secret.Meta.Name), secret, nil); err != nil {
 		log.V(logLevel).Errorf("%s:crete:> insert secret err: %s", logSecretPrefix, err)
 		return nil, err
@@ -114,7 +114,7 @@ func (n *Secret) Update(secret *types.Secret, namespace *types.Namespace, opts *
 		secret.Data = *opts.Data
 	}
 
-	if err := n.storage.Update(n.context, storage.SecretKind,
+	if err := n.storage.Set(n.context, storage.SecretKind,
 		n.storage.Key().Secret(secret.Meta.Namespace, secret.Meta.Name), secret, nil); err != nil {
 		log.V(logLevel).Errorf("%s:update:> update secret err: %s", logSecretPrefix, err)
 		return nil, err
@@ -127,7 +127,7 @@ func (n *Secret) Remove(secret *types.Secret) error {
 
 	log.V(logLevel).Debugf("%s:remove:> remove secret %#v", logSecretPrefix, secret)
 
-	if err := n.storage.Remove(n.context, storage.SecretKind,
+	if err := n.storage.Del(n.context, storage.SecretKind,
 		n.storage.Key().Secret(secret.Meta.Namespace, secret.Meta.Name)); err != nil {
 		log.V(logLevel).Errorf("%s:remove:> remove secret  err: %s", logSecretPrefix, err)
 		return err

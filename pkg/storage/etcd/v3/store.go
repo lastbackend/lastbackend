@@ -136,10 +136,6 @@ func (s *dbstore) List(ctx context.Context, key, keyRegexFilter string, listOutP
 
 	log.V(logLevel).Debugf("%s:list:> key: %s with filter: %s", logPrefix, key, keyRegexFilter)
 
-	if !strings.HasSuffix(key, "/") {
-		key += "/"
-	}
-
 	getResp, err := s.client.KV.Get(ctx, key, clientv3.WithPrefix())
 	if err != nil {
 		log.V(logLevel).Errorf("%s:list:> request err: %v", logPrefix, err)
@@ -147,20 +143,18 @@ func (s *dbstore) List(ctx context.Context, key, keyRegexFilter string, listOutP
 	}
 
 	r, _ := regexp.Compile(keyRegexFilter)
-	items := make(map[string]map[string]buffer)
+	items := make(map[string]buffer)
+
 	for _, kv := range getResp.Kvs {
 
 		keys := strings.Split(string(kv.Key), "/")
-		node := keys[len(keys)-2]
-		field := keys[len(keys)-1]
+		node := keys[len(keys)-1]
 
 		if (keyRegexFilter != "") && !r.MatchString(string(kv.Key)) {
 			continue
 		}
-		if len(items[node]) == 0 {
-			items[node] = make(map[string]buffer)
-		}
-		items[node][field] = kv.Value
+
+		items[node] = kv.Value
 	}
 
 	if err := decodeList(s.codec, items, listOutPtr); err != nil {
@@ -377,7 +371,7 @@ func decode(s serializer.Codec, value []byte, out interface{}) error {
 	return serializer.Decode(s, value, out)
 }
 
-func decodeList(codec serializer.Codec, items map[string]map[string]buffer, listOut interface{}) error {
+func decodeList(codec serializer.Codec, items map[string]buffer, listOut interface{}) error {
 	v, err := converter.EnforcePtr(listOut)
 	if err != nil || (v.Kind() != reflect.Slice) {
 		return errors.New(types.ErrStructOutIsInvalid)
@@ -385,7 +379,7 @@ func decodeList(codec serializer.Codec, items map[string]map[string]buffer, list
 
 	for _, item := range items {
 		var obj = reflect.New(v.Type().Elem()).Interface().(interface{})
-		err := serializer.Decode(codec, joinJSON(item), obj)
+		err := serializer.Decode(codec, item, obj)
 		if err != nil {
 			return err
 		}

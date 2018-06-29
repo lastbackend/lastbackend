@@ -42,16 +42,16 @@ const (
 	EndpointKind   types.Kind = "endpoint"
 	UtilsKind      types.Kind = "utils"
 	ManifestKind   types.Kind = "manifest"
+	TestKind       types.Kind = "test"
 )
 
 type Storage interface {
 	Get(ctx context.Context, kind types.Kind, name string, obj interface{}) error
 	List(ctx context.Context, kind types.Kind, q string, obj interface{}) error
 	Map(ctx context.Context, kind types.Kind, q string, obj interface{}) error
-	Create(ctx context.Context, kind types.Kind, name string, obj interface{}, opts *types.Opts) error
-	Update(ctx context.Context, kind types.Kind, name string, obj interface{}, opts *types.Opts) error
-	Upsert(ctx context.Context, kind types.Kind, name string, obj interface{}, opts *types.Opts) error
-	Remove(ctx context.Context, kind types.Kind, name string) error
+	Put(ctx context.Context, kind types.Kind, name string, obj interface{}, opts *types.Opts) error
+	Set(ctx context.Context, kind types.Kind, name string, obj interface{}, opts *types.Opts) error
+	Del(ctx context.Context, kind types.Kind, name string) error
 	Watch(ctx context.Context, kind types.Kind, event chan *types.WatcherEvent) error
 	Filter() types.Filter
 	Key() types.Key

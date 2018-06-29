@@ -115,7 +115,7 @@ func (n *Namespace) Create(opts *types.NamespaceCreateOptions) (*types.Namespace
 		ns.Spec.Quotas.Routes = defaultNamespaceRoutes
 	}
 
-	if err := n.storage.Create(n.context, storage.NamespaceKind, n.storage.Key().Namespace(ns.Meta.Name), ns, nil); err != nil {
+	if err := n.storage.Put(n.context, storage.NamespaceKind, n.storage.Key().Namespace(ns.Meta.Name), ns, nil); err != nil {
 		log.V(logLevel).Errorf("%s:create:> insert namespace err: %v", logNamespacePrefix, err)
 		return nil, err
 	}
@@ -137,7 +137,7 @@ func (n *Namespace) Update(namespace *types.Namespace, opts *types.NamespaceUpda
 		namespace.Spec.Quotas.Disabled = opts.Quotas.Disabled
 	}
 
-	if err := n.storage.Update(n.context, storage.NamespaceKind,
+	if err := n.storage.Set(n.context, storage.NamespaceKind,
 		n.storage.Key().Namespace(namespace.Meta.Name), namespace, nil); err != nil {
 		log.V(logLevel).Errorf("%s:update:> namespace update err: %v", logNamespacePrefix, err)
 		return err
@@ -150,7 +150,7 @@ func (n *Namespace) Remove(namespace *types.Namespace) error {
 
 	log.V(logLevel).Debugf("%s:remove:> remove namespace %s", logNamespacePrefix, namespace.Meta.Name)
 
-	if err := n.storage.Remove(n.context, storage.NamespaceKind, n.storage.Key().Namespace(namespace.Meta.Name)); err != nil {
+	if err := n.storage.Del(n.context, storage.NamespaceKind, n.storage.Key().Namespace(namespace.Meta.Name)); err != nil {
 		log.V(logLevel).Errorf("%s:remove:> remove namespace err: %v", logNamespacePrefix, err)
 		return err
 	}

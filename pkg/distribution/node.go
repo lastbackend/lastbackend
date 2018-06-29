@@ -96,7 +96,7 @@ func (n *Node) Create(opts *types.NodeCreateOptions) (*types.Node, error) {
 
 	ni.SelfLink()
 
-	if err := n.storage.Create(n.context, storage.NodeKind, n.storage.Key().Node(ni.Meta.Name), ni, nil); err != nil {
+	if err := n.storage.Put(n.context, storage.NodeKind, n.storage.Key().Node(ni.Meta.Name), ni, nil); err != nil {
 		log.Debugf("%s:create:> insert node err: %v", logNodePrefix, err)
 		return nil, err
 	}
@@ -135,7 +135,7 @@ func (n *Node) SetMeta(node *types.Node, meta *types.NodeUpdateMetaOptions) erro
 
 	node.Meta.Set(meta)
 
-	if err := n.storage.Update(n.context, storage.NodeKind, n.storage.Key().Node(node.Meta.Name), node, nil); err != nil {
+	if err := n.storage.Set(n.context, storage.NodeKind, n.storage.Key().Node(node.Meta.Name), node, nil); err != nil {
 		log.V(logLevel).Errorf("%s:setmeta:> update Node meta err: %v", logNodePrefix, err)
 		return err
 	}
@@ -147,7 +147,7 @@ func (n *Node) SetOnline(node *types.Node) error {
 
 	node.Online = true
 
-	if err := n.storage.Update(n.context, storage.NodeKind, n.storage.Key().Node(node.Meta.Name), node, nil); err != nil {
+	if err := n.storage.Set(n.context, storage.NodeKind, n.storage.Key().Node(node.Meta.Name), node, nil); err != nil {
 		log.Errorf("%s:setonline:> set node online state error: %v", logNodePrefix, err)
 		return err
 	}
@@ -159,7 +159,7 @@ func (n *Node) SetOffline(node *types.Node) error {
 
 	node.Online = false
 
-	if err := n.storage.Update(n.context, storage.NodeKind, n.storage.Key().Node(node.Meta.Name), node, nil); err != nil {
+	if err := n.storage.Set(n.context, storage.NodeKind, n.storage.Key().Node(node.Meta.Name), node, nil); err != nil {
 		log.Errorf("%s:setoffline:> set node offline state error: %v", logNodePrefix, err)
 		return err
 	}
@@ -172,7 +172,7 @@ func (n *Node) SetStatus(node *types.Node, status types.NodeStatus) error {
 
 	node.Status = status
 
-	if err := n.storage.Update(n.context, storage.NodeKind, n.storage.Key().Node(node.Meta.Name), node, nil); err != nil {
+	if err := n.storage.Set(n.context, storage.NodeKind, n.storage.Key().Node(node.Meta.Name), node, nil); err != nil {
 		log.Errorf("%s:setstatus:> set node offline state error: %v", logNodePrefix, err)
 		return err
 	}
@@ -184,7 +184,7 @@ func (n *Node) SetInfo(node *types.Node, info types.NodeInfo) error {
 
 	node.Info = info
 
-	if err := n.storage.Update(n.context, storage.NodeKind, n.storage.Key().Node(node.Meta.Name), node, nil); err != nil {
+	if err := n.storage.Set(n.context, storage.NodeKind, n.storage.Key().Node(node.Meta.Name), node, nil); err != nil {
 		log.Errorf("%s:setinfo:> set node info error: %v", logNodePrefix, err)
 		return err
 	}
@@ -196,7 +196,7 @@ func (n *Node) SetNetwork(node *types.Node, network types.NetworkSpec) error {
 
 	node.Network = network
 
-	if err := n.storage.Update(n.context, storage.NodeKind, n.storage.Key().Node(node.Meta.Name), node, nil); err != nil {
+	if err := n.storage.Set(n.context, storage.NodeKind, n.storage.Key().Node(node.Meta.Name), node, nil); err != nil {
 		log.Errorf("%s:setnetwork:> set node network error: %v", logNodePrefix, err)
 		return err
 	}
@@ -206,7 +206,7 @@ func (n *Node) SetNetwork(node *types.Node, network types.NetworkSpec) error {
 
 func (n *Node) InsertPod(node *types.Node, pod *types.Pod) error {
 
-	if err := n.storage.Create(n.context, storage.PodKind, pod.Meta.SelfLink, pod, nil); err != nil {
+	if err := n.storage.Put(n.context, storage.PodKind, pod.Meta.SelfLink, pod, nil); err != nil {
 		log.Errorf("%s:insertpod:> create pod for node error: %v", logNodePrefix, err)
 		return err
 	}
@@ -216,7 +216,7 @@ func (n *Node) InsertPod(node *types.Node, pod *types.Pod) error {
 
 func (n *Node) UpdatePod(node *types.Node, pod *types.Pod) error {
 
-	if err := n.storage.Update(n.context, storage.PodKind, pod.Meta.SelfLink, pod, nil); err != nil {
+	if err := n.storage.Set(n.context, storage.PodKind, pod.Meta.SelfLink, pod, nil); err != nil {
 		log.Errorf("%s:updatepod:> update pod for node error: %v", logNodePrefix, err)
 		return err
 	}
@@ -227,7 +227,7 @@ func (n *Node) UpdatePod(node *types.Node, pod *types.Pod) error {
 func (n *Node) RemovePod(node *types.Node, pod *types.Pod) error {
 
 	//if err := n.storage.RemovePod(n.context, node, pod); err != nil {
-	if err := n.storage.Remove(n.context, storage.PodKind, pod.Meta.SelfLink); err != nil {
+	if err := n.storage.Del(n.context, storage.PodKind, pod.Meta.SelfLink); err != nil {
 		log.Errorf("%s:removepod:> remove pod error: %v", logNodePrefix, err)
 		return err
 	}
@@ -247,7 +247,7 @@ func (n *Node) Remove(node *types.Node) error {
 
 	log.V(logLevel).Debugf("%s:remove:> remove node %s", logNodePrefix, node.Meta.Name)
 
-	if err := n.storage.Remove(n.context, storage.NodeKind, n.storage.Key().Node(node.Meta.Name)); err != nil {
+	if err := n.storage.Del(n.context, storage.NodeKind, n.storage.Key().Node(node.Meta.Name)); err != nil {
 		log.V(logLevel).Debugf("%s:remove:> remove node err: %v", logNodePrefix, err)
 		return err
 	}

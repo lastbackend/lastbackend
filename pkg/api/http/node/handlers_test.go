@@ -74,11 +74,11 @@ func TestNodeListH(t *testing.T) {
 
 	for _, tc := range tests {
 
-		err = envs.Get().GetStorage().Remove(context.Background(), storage.NodeKind, types.EmptyString)
+		err = envs.Get().GetStorage().Del(context.Background(), storage.NodeKind, types.EmptyString)
 		assert.NoError(t, err)
 
 		for _, n := range nl {
-			err = stg.Create(context.Background(), storage.NodeKind, stg.Key().Node(n.Meta.Name), &n, nil)
+			err = stg.Put(context.Background(), storage.NodeKind, stg.Key().Node(n.Meta.Name), &n, nil)
 			assert.NoError(t, err)
 		}
 
@@ -162,10 +162,10 @@ func TestNodeGetH(t *testing.T) {
 
 	for _, tc := range tests {
 
-		err = envs.Get().GetStorage().Remove(context.Background(), storage.NodeKind, types.EmptyString)
+		err = envs.Get().GetStorage().Del(context.Background(), storage.NodeKind, types.EmptyString)
 		assert.NoError(t, err)
 
-		err = stg.Create(context.Background(), storage.NodeKind, stg.Key().Node(n1.Meta.Name), &n1, nil)
+		err = stg.Put(context.Background(), storage.NodeKind, stg.Key().Node(n1.Meta.Name), &n1, nil)
 		assert.NoError(t, err)
 
 		t.Run(tc.name, func(t *testing.T) {
@@ -257,16 +257,16 @@ func TestNodeGetManifestH(t *testing.T) {
 
 	for _, tc := range tests {
 
-		err = envs.Get().GetStorage().Remove(context.Background(), storage.NodeKind, types.EmptyString)
+		err = envs.Get().GetStorage().Del(context.Background(), storage.NodeKind, types.EmptyString)
 		assert.NoError(t, err)
 
-		err = stg.Create(context.Background(), storage.NodeKind, stg.Key().Node(n1.Meta.Name), &n1, nil)
+		err = stg.Put(context.Background(), storage.NodeKind, stg.Key().Node(n1.Meta.Name), &n1, nil)
 		assert.NoError(t, err)
 
-		err = stg.Create(context.Background(), storage.ManifestKind, stg.Key().Manifest(n1.Meta.Name, storage.PodKind, p1), getPodManifest(), nil)
+		err = stg.Put(context.Background(), storage.ManifestKind, stg.Key().Manifest(n1.Meta.Name, storage.PodKind, p1), getPodManifest(), nil)
 		assert.NoError(t, err)
 
-		err = stg.Create(context.Background(), storage.ManifestKind, stg.Key().Manifest(n1.Meta.Name, storage.PodKind, p2), getPodManifest(), nil)
+		err = stg.Put(context.Background(), storage.ManifestKind, stg.Key().Manifest(n1.Meta.Name, storage.PodKind, p2), getPodManifest(), nil)
 		assert.NoError(t, err)
 
 		t.Run(tc.name, func(t *testing.T) {
@@ -342,10 +342,10 @@ func TestNodeRemoveH(t *testing.T) {
 
 	for _, tc := range tests {
 
-		err = envs.Get().GetStorage().Remove(context.Background(), storage.NodeKind, types.EmptyString)
+		err = envs.Get().GetStorage().Del(context.Background(), storage.NodeKind, types.EmptyString)
 		assert.NoError(t, err)
 
-		err = stg.Create(context.Background(), storage.NodeKind, stg.Key().Node(n1.Meta.Name), &n1, nil)
+		err = stg.Put(context.Background(), storage.NodeKind, stg.Key().Node(n1.Meta.Name), &n1, nil)
 		assert.NoError(t, err)
 
 		t.Run(tc.name, func(t *testing.T) {
@@ -439,10 +439,10 @@ func TestNodeSetMetaH(t *testing.T) {
 
 	for _, tc := range tests {
 
-		err = envs.Get().GetStorage().Remove(context.Background(), storage.NodeKind, types.EmptyString)
+		err = envs.Get().GetStorage().Del(context.Background(), storage.NodeKind, types.EmptyString)
 		assert.NoError(t, err)
 
-		err = stg.Create(context.Background(), storage.NodeKind, stg.Key().Node(n1.Meta.Name), &n1, nil)
+		err = stg.Put(context.Background(), storage.NodeKind, stg.Key().Node(n1.Meta.Name), &n1, nil)
 		assert.NoError(t, err)
 
 		t.Run(tc.name, func(t *testing.T) {
@@ -539,10 +539,10 @@ func TestNodeConnectH(t *testing.T) {
 
 	for _, tc := range tests {
 
-		err = envs.Get().GetStorage().Remove(context.Background(), storage.NodeKind, types.EmptyString)
+		err = envs.Get().GetStorage().Del(context.Background(), storage.NodeKind, types.EmptyString)
 		assert.NoError(t, err)
 
-		err = stg.Create(context.Background(), storage.NodeKind, stg.Key().Node(n1.Meta.Name), &n1, nil)
+		err = stg.Put(context.Background(), storage.NodeKind, stg.Key().Node(n1.Meta.Name), &n1, nil)
 		assert.NoError(t, err)
 
 		t.Run(tc.name, func(t *testing.T) {
@@ -643,10 +643,10 @@ func TestNodeSetStatusH(t *testing.T) {
 
 	for _, tc := range tests {
 
-		err = envs.Get().GetStorage().Remove(context.Background(), storage.NodeKind, types.EmptyString)
+		err = envs.Get().GetStorage().Del(context.Background(), storage.NodeKind, types.EmptyString)
 		assert.NoError(t, err)
 
-		err = stg.Create(context.Background(), storage.NodeKind, stg.Key().Node(n1.Meta.Name), &n1, nil)
+		err = stg.Put(context.Background(), storage.NodeKind, stg.Key().Node(n1.Meta.Name), &n1, nil)
 		assert.NoError(t, err)
 
 		t.Run(tc.name, func(t *testing.T) {
@@ -770,13 +770,13 @@ func TestNodeSetPodStatusH(t *testing.T) {
 
 	for _, tc := range tests {
 
-		err = envs.Get().GetStorage().Remove(context.Background(), storage.NodeKind, types.EmptyString)
+		err = envs.Get().GetStorage().Del(context.Background(), storage.NodeKind, types.EmptyString)
 		assert.NoError(t, err)
 
-		err = stg.Create(context.Background(), storage.NodeKind, stg.Key().Node(n1.Meta.Name), &n1, nil)
+		err = stg.Put(context.Background(), storage.NodeKind, stg.Key().Node(n1.Meta.Name), &n1, nil)
 		assert.NoError(t, err)
 
-		err = stg.Create(context.Background(), storage.PodKind,
+		err = stg.Put(context.Background(), storage.PodKind,
 			stg.Key().Pod(p1.Meta.Namespace, p1.Meta.Service, p1.Meta.Deployment, p1.Meta.Name), &p1, nil)
 		assert.NoError(t, err)
 
@@ -911,13 +911,13 @@ func TestNodeSetVolumeStatusH(t *testing.T) {
 
 	for _, tc := range tests {
 
-		err = envs.Get().GetStorage().Remove(context.Background(), storage.NodeKind, types.EmptyString)
+		err = envs.Get().GetStorage().Del(context.Background(), storage.NodeKind, types.EmptyString)
 		assert.NoError(t, err)
 
-		err = stg.Create(context.Background(), storage.NodeKind, stg.Key().Node(n1.Meta.Name), &n1, nil)
+		err = stg.Put(context.Background(), storage.NodeKind, stg.Key().Node(n1.Meta.Name), &n1, nil)
 		assert.NoError(t, err)
 
-		err = stg.Create(context.Background(), storage.VolumeKind, stg.Key().Volume(vl1.Meta.Namespace, vl1.Meta.Name), &vl1, nil)
+		err = stg.Put(context.Background(), storage.VolumeKind, stg.Key().Volume(vl1.Meta.Namespace, vl1.Meta.Name), &vl1, nil)
 		assert.NoError(t, err)
 
 		t.Run(tc.name, func(t *testing.T) {

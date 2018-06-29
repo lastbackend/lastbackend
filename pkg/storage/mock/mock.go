@@ -28,14 +28,8 @@ import (
 
 	"encoding/json"
 
-	"github.com/lastbackend/lastbackend/pkg/log"
 	"github.com/lastbackend/lastbackend/pkg/storage/types"
 	"github.com/lastbackend/lastbackend/pkg/util/converter"
-)
-
-const (
-	logLevel  = 6
-	logPrefix = "storage:mock"
 )
 
 type Storage struct {
@@ -49,6 +43,10 @@ func (s *Storage) Get(ctx context.Context, kind types.Kind, name string, obj int
 		return errors.New(types.ErrEntityNotFound)
 	}
 
+	if reflect.ValueOf(obj).IsNil() {
+		return errors.New(types.ErrStructOutIsNil)
+	}
+
 	if err := json.Unmarshal(s.store[kind][name], obj); err != nil {
 		return err
 	}
@@ -58,6 +56,10 @@ func (s *Storage) Get(ctx context.Context, kind types.Kind, name string, obj int
 
 func (s *Storage) List(ctx context.Context, kind types.Kind, q string, obj interface{}) error {
 	s.check(kind)
+
+	if reflect.ValueOf(obj).IsNil() {
+		return errors.New(types.ErrStructOutIsNil)
+	}
 
 	v, err := converter.EnforcePtr(obj)
 	if err != nil {
@@ -95,6 +97,10 @@ func (s *Storage) List(ctx context.Context, kind types.Kind, q string, obj inter
 func (s *Storage) Map(ctx context.Context, kind types.Kind, q string, obj interface{}) error {
 	s.check(kind)
 
+	if reflect.ValueOf(obj).IsNil() {
+		return errors.New(types.ErrStructOutIsNil)
+	}
+
 	v, err := converter.EnforcePtr(obj)
 	if err != nil {
 		return errors.New(types.ErrStructOutIsNotPointer)
@@ -126,8 +132,6 @@ func (s *Storage) Map(ctx context.Context, kind types.Kind, q string, obj interf
 
 	buffer = append(buffer, []byte("}")...)
 
-	log.Info(string(buffer))
-
 	if err := json.Unmarshal(buffer, obj); err != nil {
 		return err
 	}
@@ -135,35 +139,19 @@ func (s *Storage) Map(ctx context.Context, kind types.Kind, q string, obj interf
 	return nil
 }
 
-func (s *Storage) Create(ctx context.Context, kind types.Kind, name string, obj interface{}, opts *types.Opts) error {
+func (s *Storage) Put(ctx context.Context, kind types.Kind, name string, obj interface{}, opts *types.Opts) error {
 	s.check(kind)
 
-	b, err := json.Marshal(obj)
-	if err != nil {
-		return err
+	if _, ok := s.store[kind][name]; ok {
+
+		if opts == nil {
+			return errors.New(types.ErrEntityExists)
+		}
+
+		if !opts.Force {
+			return errors.New(types.ErrEntityExists)
+		}
 	}
-
-	log.Info(name, string(b))
-
-	s.store[kind][name] = b
-	return nil
-}
-
-func (s *Storage) Update(ctx context.Context, kind types.Kind, name string, obj interface{}, opts *types.Opts) error {
-	s.check(kind)
-
-	b, err := json.Marshal(obj)
-	if err != nil {
-		return err
-	}
-
-	s.store[kind][name] = b
-
-	return nil
-}
-
-func (s *Storage) Upsert(ctx context.Context, kind types.Kind, name string, obj interface{}, opts *types.Opts) error {
-	s.check(kind)
 
 	b, err := json.Marshal(obj)
 	if err != nil {
@@ -171,11 +159,29 @@ func (s *Storage) Upsert(ctx context.Context, kind types.Kind, name string, obj 
 	}
 
 	s.store[kind][name] = b
+	return nil
+}
+
+func (s *Storage) Set(ctx context.Context, kind types.Kind, name string, obj interface{}, opts *types.Opts) error {
+	s.check(kind)
+
+	if _, ok := s.store[kind][name]; !ok {
+		if opts != nil && !opts.Force {
+			return errors.New(types.ErrEntityNotFound)
+		}
+	}
+
+	b, err := json.Marshal(obj)
+	if err != nil {
+		return err
+	}
+
+	s.store[kind][name] = b
 
 	return nil
 }
 
-func (s *Storage) Remove(ctx context.Context, kind types.Kind, name string) error {
+func (s *Storage) Del(ctx context.Context, kind types.Kind, name string) error {
 	s.check(kind)
 	if name == "" {
 		s.store[kind] = make(map[string][]byte)

@@ -76,7 +76,8 @@ func (c *Process) Register(ctx context.Context, kind string, stg storage.Storage
 
 	opts := storage.GetOpts()
 	opts.Ttl = systemLeadTTL
-	if err := c.storage.Upsert(ctx, storage.SystemKind, c.storage.Key().Process(c.process.Meta.Hostname, false), c.process, opts); err != nil {
+	opts.Force = true
+	if err := c.storage.Set(ctx, storage.SystemKind, c.storage.Key().Process(c.process.Meta.Hostname, false), c.process, opts); err != nil {
 		log.Errorf("System: Process: Register: %s", err.Error())
 		return item, err
 	}
@@ -95,12 +96,13 @@ func (c *Process) HeartBeat(ctx context.Context) {
 
 	opts := storage.GetOpts()
 	opts.Ttl = systemLeadTTL
+	opts.Force = true
 
 	for range ticker.C {
 		// Update process state
 		log.V(logLevel).Debug("System: Process: Beat")
 
-		if err := c.storage.Upsert(ctx, storage.SystemKind, c.storage.Key().Process(c.process.Meta.Hostname, false), c.process, opts); err != nil {
+		if err := c.storage.Set(ctx, storage.SystemKind, c.storage.Key().Process(c.process.Meta.Hostname, false), c.process, opts); err != nil {
 			log.Errorf("System: Process: Register: %s", err.Error())
 			return
 		}
@@ -109,7 +111,7 @@ func (c *Process) HeartBeat(ctx context.Context) {
 		if c.process.Meta.Lead {
 			log.V(logLevel).Debug("System: Process: Beat: Lead TTL update")
 
-			if err := c.storage.Update(ctx, storage.SystemKind, c.storage.Key().Process(c.process.Meta.Hostname, true), c.process, opts); err != nil {
+			if err := c.storage.Set(ctx, storage.SystemKind, c.storage.Key().Process(c.process.Meta.Hostname, true), c.process, opts); err != nil {
 				log.Errorf("System: Process: update process: %s", err.Error())
 				return
 			}
@@ -133,7 +135,7 @@ func (c *Process) WaitElected(ctx context.Context, lead chan bool) error {
 		log.Errorf("System: Process: get lead process: %s", err.Error())
 
 		if err.Error() == store.ErrEntityNotFound {
-			err = c.storage.Create(ctx, storage.SystemKind, c.storage.Key().Process(c.process.Meta.Hostname, true), c.process, opts)
+			err = c.storage.Put(ctx, storage.SystemKind, c.storage.Key().Process(c.process.Meta.Hostname, true), c.process, opts)
 			if err != nil && err.Error() != store.ErrEntityExists {
 				log.V(logLevel).Errorf("System: Process: create process ttl err: %s", err.Error())
 				return err
@@ -187,7 +189,7 @@ func (c *Process) WaitElected(ctx context.Context, lead chan bool) error {
 
 						if err.Error() == store.ErrEntityNotFound {
 
-							err = c.storage.Create(ctx, storage.SystemKind, c.storage.Key().Process(c.process.Meta.Hostname, true), c.process, opts)
+							err = c.storage.Put(ctx, storage.SystemKind, c.storage.Key().Process(c.process.Meta.Hostname, true), c.process, opts)
 							if err != nil && err.Error() != store.ErrEntityExists {
 								log.V(logLevel).Errorf("System: Process: create process ttl err: %s", err.Error())
 								continue

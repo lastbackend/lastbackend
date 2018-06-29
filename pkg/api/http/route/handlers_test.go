@@ -104,10 +104,10 @@ func TestRouteInfo(t *testing.T) {
 	}
 
 	clear := func() {
-		err := stg.Remove(context.Background(), storage.NamespaceKind, types.EmptyString)
+		err := stg.Del(context.Background(), storage.NamespaceKind, types.EmptyString)
 		assert.NoError(t, err)
 
-		err = stg.Remove(context.Background(), storage.RouteKind, types.EmptyString)
+		err = stg.Del(context.Background(), storage.RouteKind, types.EmptyString)
 		assert.NoError(t, err)
 	}
 
@@ -118,10 +118,10 @@ func TestRouteInfo(t *testing.T) {
 			clear()
 			defer clear()
 
-			err := tc.fields.stg.Create(context.Background(), storage.NamespaceKind, tc.fields.stg.Key().Namespace(ns1.Meta.Name), ns1, nil)
+			err := tc.fields.stg.Put(context.Background(), storage.NamespaceKind, tc.fields.stg.Key().Namespace(ns1.Meta.Name), ns1, nil)
 			assert.NoError(t, err)
 
-			err = stg.Create(context.Background(), storage.RouteKind, stg.Key().Route(r1.Meta.Namespace, r1.Meta.Name), r1, nil)
+			err = stg.Put(context.Background(), storage.RouteKind, stg.Key().Route(r1.Meta.Namespace, r1.Meta.Name), r1, nil)
 			assert.NoError(t, err)
 
 			// Create assert request to pass to our handler. We don't have any query parameters for now, so we'll
@@ -225,10 +225,10 @@ func TestRouteList(t *testing.T) {
 	}
 
 	clear := func() {
-		err := envs.Get().GetStorage().Remove(context.Background(), storage.NamespaceKind, types.EmptyString)
+		err := envs.Get().GetStorage().Del(context.Background(), storage.NamespaceKind, types.EmptyString)
 		assert.NoError(t, err)
 
-		err = stg.Remove(context.Background(), storage.RouteKind, types.EmptyString)
+		err = stg.Del(context.Background(), storage.RouteKind, types.EmptyString)
 		assert.NoError(t, err)
 	}
 
@@ -239,13 +239,13 @@ func TestRouteList(t *testing.T) {
 			clear()
 			defer clear()
 
-			err := tc.fields.stg.Create(context.Background(), storage.NamespaceKind, tc.fields.stg.Key().Namespace(ns1.Meta.Name), ns1, nil)
+			err := tc.fields.stg.Put(context.Background(), storage.NamespaceKind, tc.fields.stg.Key().Namespace(ns1.Meta.Name), ns1, nil)
 			assert.NoError(t, err)
 
-			err = stg.Create(context.Background(), storage.RouteKind, stg.Key().Route(r1.Meta.Namespace, r1.Meta.Name), r1, nil)
+			err = stg.Put(context.Background(), storage.RouteKind, stg.Key().Route(r1.Meta.Namespace, r1.Meta.Name), r1, nil)
 			assert.NoError(t, err)
 
-			err = stg.Create(context.Background(), storage.RouteKind, stg.Key().Route(r2.Meta.Namespace, r2.Meta.Name), r2, nil)
+			err = stg.Put(context.Background(), storage.RouteKind, stg.Key().Route(r2.Meta.Namespace, r2.Meta.Name), r2, nil)
 			assert.NoError(t, err)
 
 			// Create assert request to pass to our handler. We don't have any query parameters for now, so we'll
@@ -402,13 +402,13 @@ func TestRouteCreate(t *testing.T) {
 	}
 
 	clear := func() {
-		err := envs.Get().GetStorage().Remove(context.Background(), storage.NamespaceKind, types.EmptyString)
+		err := envs.Get().GetStorage().Del(context.Background(), storage.NamespaceKind, types.EmptyString)
 		assert.NoError(t, err)
 
-		err = stg.Remove(context.Background(), storage.RouteKind, types.EmptyString)
+		err = stg.Del(context.Background(), storage.RouteKind, types.EmptyString)
 		assert.NoError(t, err)
 
-		err = envs.Get().GetStorage().Remove(context.Background(), storage.ServiceKind, types.EmptyString)
+		err = envs.Get().GetStorage().Del(context.Background(), storage.ServiceKind, types.EmptyString)
 		assert.NoError(t, err)
 	}
 
@@ -418,10 +418,10 @@ func TestRouteCreate(t *testing.T) {
 			clear()
 			defer clear()
 
-			err := tc.fields.stg.Create(context.Background(), storage.NamespaceKind, tc.fields.stg.Key().Namespace(ns1.Meta.Name), ns1, nil)
+			err := tc.fields.stg.Put(context.Background(), storage.NamespaceKind, tc.fields.stg.Key().Namespace(ns1.Meta.Name), ns1, nil)
 			assert.NoError(t, err)
 
-			err = tc.fields.stg.Create(context.Background(), storage.ServiceKind, stg.Key().Service(sv1.Meta.Namespace, sv1.Meta.Name), sv1, nil)
+			err = tc.fields.stg.Put(context.Background(), storage.ServiceKind, stg.Key().Service(sv1.Meta.Namespace, sv1.Meta.Name), sv1, nil)
 			assert.NoError(t, err)
 
 			// Create assert request to pass to our handler. We don't have any query parameters for now, so we'll
@@ -590,13 +590,13 @@ func TestRouteUpdate(t *testing.T) {
 	}
 
 	clear := func() {
-		err := stg.Remove(context.Background(), storage.NamespaceKind, types.EmptyString)
+		err := stg.Del(context.Background(), storage.NamespaceKind, types.EmptyString)
 		assert.NoError(t, err)
 
-		err = stg.Remove(context.Background(), storage.ServiceKind, types.EmptyString)
+		err = stg.Del(context.Background(), storage.ServiceKind, types.EmptyString)
 		assert.NoError(t, err)
 
-		err = stg.Remove(context.Background(), storage.RouteKind, types.EmptyString)
+		err = stg.Del(context.Background(), storage.RouteKind, types.EmptyString)
 		assert.NoError(t, err)
 	}
 
@@ -606,16 +606,16 @@ func TestRouteUpdate(t *testing.T) {
 			clear()
 			defer clear()
 
-			err := tc.fields.stg.Create(context.Background(), storage.NamespaceKind, tc.fields.stg.Key().Namespace(ns1.Meta.Name), ns1, nil)
+			err := tc.fields.stg.Put(context.Background(), storage.NamespaceKind, tc.fields.stg.Key().Namespace(ns1.Meta.Name), ns1, nil)
 			assert.NoError(t, err)
 
-			err = tc.fields.stg.Create(context.Background(), storage.ServiceKind, stg.Key().Service(sv1.Meta.Namespace, sv1.Meta.Name), sv1, nil)
+			err = tc.fields.stg.Put(context.Background(), storage.ServiceKind, stg.Key().Service(sv1.Meta.Namespace, sv1.Meta.Name), sv1, nil)
 			assert.NoError(t, err)
 
-			err = tc.fields.stg.Create(context.Background(), storage.ServiceKind, stg.Key().Service(sv2.Meta.Namespace, sv2.Meta.Name), sv2, nil)
+			err = tc.fields.stg.Put(context.Background(), storage.ServiceKind, stg.Key().Service(sv2.Meta.Namespace, sv2.Meta.Name), sv2, nil)
 			assert.NoError(t, err)
 
-			err = stg.Create(context.Background(), storage.RouteKind, stg.Key().Route(r1.Meta.Namespace, r1.Meta.Name), r1, nil)
+			err = stg.Put(context.Background(), storage.RouteKind, stg.Key().Route(r1.Meta.Namespace, r1.Meta.Name), r1, nil)
 			assert.NoError(t, err)
 
 			// Create assert request to pass to our handler. We don't have any query parameters for now, so we'll
@@ -731,10 +731,10 @@ func TestRouteRemove(t *testing.T) {
 	}
 
 	clear := func() {
-		err := envs.Get().GetStorage().Remove(context.Background(), storage.NamespaceKind, types.EmptyString)
+		err := envs.Get().GetStorage().Del(context.Background(), storage.NamespaceKind, types.EmptyString)
 		assert.NoError(t, err)
 
-		err = stg.Remove(context.Background(), storage.RouteKind, types.EmptyString)
+		err = stg.Del(context.Background(), storage.RouteKind, types.EmptyString)
 		assert.NoError(t, err)
 	}
 
@@ -745,10 +745,10 @@ func TestRouteRemove(t *testing.T) {
 			clear()
 			defer clear()
 
-			err := tc.fields.stg.Create(context.Background(), storage.NamespaceKind, tc.fields.stg.Key().Namespace(ns1.Meta.Name), ns1, nil)
+			err := tc.fields.stg.Put(context.Background(), storage.NamespaceKind, tc.fields.stg.Key().Namespace(ns1.Meta.Name), ns1, nil)
 			assert.NoError(t, err)
 
-			err = stg.Create(context.Background(), storage.RouteKind, stg.Key().Route(r1.Meta.Namespace, r1.Meta.Name), r1, nil)
+			err = stg.Put(context.Background(), storage.RouteKind, stg.Key().Route(r1.Meta.Namespace, r1.Meta.Name), r1, nil)
 			assert.NoError(t, err)
 
 			// Create assert request to pass to our handler. We don't have any query parameters for now, so we'll

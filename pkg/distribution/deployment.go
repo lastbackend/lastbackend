@@ -102,7 +102,7 @@ func (d *Deployment) Create(service *types.Service) (*types.Deployment, error) {
 
 	deployment.Status.SetProvision()
 
-	if err := d.storage.Create(d.context, storage.DeploymentKind,
+	if err := d.storage.Put(d.context, storage.DeploymentKind,
 		d.storage.Key().Deployment(deployment.Meta.Namespace, deployment.Meta.Service, deployment.Meta.Name), deployment, nil); err != nil {
 		log.Errorf("%s:create:> distribution create in service: %s err: %v", logDeploymentPrefix, service.Meta.Name, err)
 		return nil, err
@@ -165,7 +165,7 @@ func (d *Deployment) Update(dt *types.Deployment, opts *types.DeploymentUpdateOp
 	}
 
 	if isChanged {
-		if err := d.storage.Update(d.context, storage.DeploymentKind,
+		if err := d.storage.Set(d.context, storage.DeploymentKind,
 			d.storage.Key().Deployment(dt.Meta.Namespace, dt.Meta.Service, dt.Meta.Name), dt, nil); err != nil {
 			log.Errorf("%s:update:> update for deployment %s err: %v", logDeploymentPrefix, dt.Meta.Name, err)
 			return err
@@ -185,7 +185,7 @@ func (d *Deployment) Cancel(dt *types.Deployment) error {
 	// mark deployment for cancel
 	dt.Status.SetCancel()
 
-	if err := d.storage.Update(d.context, storage.DeploymentKind,
+	if err := d.storage.Set(d.context, storage.DeploymentKind,
 		d.storage.Key().Deployment(dt.Meta.Namespace, dt.Meta.Service, dt.Meta.Name), dt, nil); err != nil {
 		log.Debugf("%s:destroy: destroy deployment %s err: %v", logDeploymentPrefix, dt.Meta.Name, err)
 		return err
@@ -204,7 +204,7 @@ func (d *Deployment) Destroy(dt *types.Deployment) error {
 	// mark deployment for destroy
 	dt.Status.SetDestroy()
 
-	if err := d.storage.Update(d.context, storage.DeploymentKind,
+	if err := d.storage.Set(d.context, storage.DeploymentKind,
 		d.storage.Key().Deployment(dt.Meta.Namespace, dt.Meta.Service, dt.Meta.Name), dt, nil); err != nil {
 		log.Debugf("%s:destroy:> destroy deployment %s err: %v", logDeploymentPrefix, dt.Meta.Name, err)
 		return err
@@ -217,7 +217,7 @@ func (d *Deployment) Destroy(dt *types.Deployment) error {
 func (d *Deployment) Remove(dt *types.Deployment) error {
 
 	log.Debugf("%s:remove:> remove deployment %s", logDeploymentPrefix, dt.Meta.Name)
-	if err := d.storage.Remove(d.context, storage.DeploymentKind,
+	if err := d.storage.Del(d.context, storage.DeploymentKind,
 		d.storage.Key().Deployment(dt.Meta.Namespace, dt.Meta.Service, dt.Meta.Name)); err != nil {
 		log.Debugf("%s:remove:> remove deployment %s err: %v", logDeploymentPrefix, dt.Meta.Name, err)
 		return err

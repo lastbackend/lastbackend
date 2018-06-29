@@ -126,7 +126,7 @@ func (n *Route) Create(namespace *types.Namespace, opts *types.RouteCreateOption
 		})
 	}
 
-	if err := n.storage.Create(n.context, storage.RouteKind,
+	if err := n.storage.Put(n.context, storage.RouteKind,
 		n.storage.Key().Route(route.Meta.Namespace, route.Meta.Name), route, nil); err != nil {
 		log.V(logLevel).Errorf("%s:create:> insert route err: %v", logRoutePrefix, err)
 		return nil, err
@@ -150,7 +150,7 @@ func (n *Route) Update(route *types.Route, opts *types.RouteUpdateOptions) (*typ
 		})
 	}
 
-	if err := n.storage.Update(n.context, storage.RouteKind,
+	if err := n.storage.Set(n.context, storage.RouteKind,
 		n.storage.Key().Route(route.Meta.Namespace, route.Meta.Name), route, nil); err != nil {
 		log.V(logLevel).Errorf("%s:update:> update route err: %v", logRoutePrefix, err)
 		return nil, err
@@ -169,7 +169,7 @@ func (n *Route) SetStatus(route *types.Route, status *types.RouteStatus) error {
 	log.V(logLevel).Debugf("%s:setstate:> set state route %s -> %#v", logRoutePrefix, route.Meta.Name, status)
 
 	route.Status = *status
-	if err := n.storage.Update(n.context, storage.RouteKind,
+	if err := n.storage.Set(n.context, storage.RouteKind,
 		n.storage.Key().Route(route.Meta.Namespace, route.Meta.Name), route, nil); err != nil {
 		log.Errorf("%s:setstatus:> pod set status err: %v", err)
 		return err
@@ -182,7 +182,7 @@ func (n *Route) Remove(route *types.Route) error {
 
 	log.V(logLevel).Debugf("%s:remove:> remove route %#v", logRoutePrefix, route)
 
-	if err := n.storage.Remove(n.context, storage.RouteKind,
+	if err := n.storage.Del(n.context, storage.RouteKind,
 		n.storage.Key().Route(route.Meta.Namespace, route.Meta.Name)); err != nil {
 		log.V(logLevel).Errorf("%s:remove:> remove route  err: %v", logRoutePrefix, err)
 		return err
