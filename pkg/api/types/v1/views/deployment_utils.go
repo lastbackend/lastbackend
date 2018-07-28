@@ -67,8 +67,6 @@ func (di *Deployment) ToStatus(obj types.DeploymentStatus) DeploymentStatusInfo 
 func (di *Deployment) ToSpec(obj types.DeploymentSpec) DeploymentSpec {
 
 	var spec = DeploymentSpec{
-		Strategy: obj.Strategy,
-		Triggers: obj.Triggers,
 		Selector: obj.Selector,
 		Replicas: obj.Replicas,
 		Template: obj.Template,

@@ -22,23 +22,16 @@ import (
 	"context"
 
 	"github.com/lastbackend/lastbackend/pkg/controller/envs"
-	"github.com/lastbackend/lastbackend/pkg/controller/runtime/observer"
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 	"github.com/lastbackend/lastbackend/pkg/log"
 	"github.com/lastbackend/lastbackend/pkg/system"
 )
 
 type Runtime struct {
-	ctx     context.Context
-	process *system.Process
-
-	//sc *service.Controller
-	//dc *deployment.Controller
-	//pc *pod.Controller
-
-	observer *observer.Observer
-
-	active bool
+	ctx      context.Context
+	process  *system.Process
+	observer *Observer
+	active   bool
 }
 
 func NewRuntime(ctx context.Context) *Runtime {
@@ -48,18 +41,7 @@ func NewRuntime(ctx context.Context) *Runtime {
 	r.process = new(system.Process)
 	r.process.Register(ctx, types.KindController, envs.Get().GetStorage())
 
-	r.observer = observer.New(ctx, envs.Get().GetStorage())
-
-	//r.sc = service.NewServiceController(ctx)
-	//r.dc = deployment.NewDeploymentController(ctx)
-	//r.pc = pod.NewPodController(ctx)
-
-	//go r.sc.WatchSpec()
-	//go r.dc.WatchSpec()
-
-	//go r.sc.WatchStatus()
-	//go r.dc.WatchStatus()
-	//go r.pc.WatchStatus()
+	r.observer = NewObserver(ctx)
 
 	return r
 }
@@ -90,9 +72,6 @@ func (r *Runtime) Loop() {
 						log.Debug("Runtime: Mark as lead")
 
 						r.active = true
-						//r.sc.Resume()
-						//r.dc.Resume()
-						//r.pc.Resume()
 
 					} else {
 
@@ -104,9 +83,6 @@ func (r *Runtime) Loop() {
 						log.Debug("Runtime: Mark as slave")
 
 						r.active = false
-						//r.sc.Pause()
-						//r.dc.Pause()
-						//r.pc.Pause()
 					}
 
 				}

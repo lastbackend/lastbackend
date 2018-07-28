@@ -23,6 +23,8 @@ import (
 
 	"github.com/lastbackend/lastbackend/pkg/util/generator"
 
+	"encoding/json"
+
 	"github.com/lastbackend/lastbackend/pkg/distribution/errors"
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 	"github.com/lastbackend/lastbackend/pkg/log"
@@ -52,6 +54,7 @@ type INode interface {
 	InsertVolume(node *types.Node, volume *types.Volume) error
 	RemoveVolume(node *types.Node, volume *types.Volume) error
 	Remove(node *types.Node) error
+	Watch(ch chan types.NodeEvent) error
 }
 
 type Node struct {
@@ -249,6 +252,50 @@ func (n *Node) Remove(node *types.Node) error {
 
 	if err := n.storage.Del(n.context, storage.NodeKind, n.storage.Key().Node(node.Meta.Name)); err != nil {
 		log.V(logLevel).Debugf("%s:remove:> remove node err: %v", logNodePrefix, err)
+		return err
+	}
+
+	return nil
+}
+
+// Watch namespace changes
+func (n *Node) Watch(ch chan types.NodeEvent) error {
+
+	log.Debugf("%s:watch:> watch node", logNodePrefix)
+
+	done := make(chan bool)
+	watcher := storage.NewWatcher()
+
+	go func() {
+		for {
+			select {
+			case <-n.context.Done():
+				done <- true
+				return
+			case e := <-watcher:
+				if e.Data == nil {
+					continue
+				}
+
+				res := types.NodeEvent{}
+				res.Action = e.Action
+				res.Name = e.Name
+
+				obj := new(types.Node)
+
+				if err := json.Unmarshal(e.Data.([]byte), &obj); err != nil {
+					log.Errorf("%s:watch:> parse json", logNodePrefix)
+					continue
+				}
+
+				res.Data = obj
+
+				ch <- res
+			}
+		}
+	}()
+
+	if err := n.storage.Watch(n.context, storage.NodeKind, watcher); err != nil {
 		return err
 	}
 

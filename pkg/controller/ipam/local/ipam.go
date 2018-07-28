@@ -118,7 +118,7 @@ func (i *IPAM) save() error {
 
 	opts := storage.GetOpts()
 	opts.Force = true
-	return i.storage.Set(context.Background(), storage.UtilsKind, "imap", ips, opts)
+	return i.storage.Set(context.Background(), storage.UtilsKind, "ipam", &ips, opts)
 }
 
 // New IPAM object initializing and returning
@@ -129,6 +129,7 @@ func New(cidr string) (*IPAM, error) {
 		ipam = new(IPAM)
 	)
 
+	ipam.storage = envs.Get().GetStorage()
 	ipam.leased = make(map[string]bool, 0)
 	ipam.released = make(map[string]bool, 0)
 
@@ -158,8 +159,10 @@ func New(cidr string) (*IPAM, error) {
 	// Get IP list from database storage
 	err = envs.Get().GetStorage().Get(context.Background(), storage.UtilsKind, "ipam", &ips)
 	if err != nil {
-		log.Errorf("%s get context error: %s", logIPAMPrefix, err.Error())
-		return nil, err
+		if !errors.Storage().IsErrEntityNotFound(err) {
+			log.Errorf("%s get context error: %s", logIPAMPrefix, err.Error())
+			return nil, err
+		}
 	}
 
 	// Mark IPs as leased

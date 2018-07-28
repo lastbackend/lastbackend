@@ -65,7 +65,7 @@ func (pv *Pod) toSpec(pod types.PodSpec) PodSpec {
 
 func (pv *Pod) toStatus(pod types.PodStatus) PodStatus {
 	var status = PodStatus{
-		State:   pod.Stage,
+		State:   pod.State,
 		Message: pod.Message,
 	}
 

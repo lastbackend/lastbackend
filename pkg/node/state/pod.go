@@ -20,9 +20,10 @@ package state
 
 import (
 	"errors"
+	"sync"
+
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 	"github.com/lastbackend/lastbackend/pkg/log"
-	"sync"
 )
 
 const logPodPrefix = "state:pods:>"
@@ -165,7 +166,7 @@ func state(s *types.PodStatus) {
 	var sts = make(map[string]int)
 	var ems string
 
-	switch s.Stage {
+	switch s.State {
 	case types.StateDestroyed:
 		return
 	case types.StateError:
@@ -179,7 +180,7 @@ func state(s *types.PodStatus) {
 	}
 
 	if len(s.Containers) == 0 {
-		s.Stage = types.StateWarning
+		s.State = types.StateWarning
 		return
 	}
 

@@ -47,11 +47,8 @@ type DeploymentMeta struct {
 }
 
 type DeploymentSpec struct {
-	Meta     Meta         `json:"meta"`
 	Replicas int          `json:"replicas"`
 	State    SpecState    `json:"state"`
-	Strategy SpecStrategy `json:"strategy"`
-	Triggers SpecTriggers `json:"triggers"`
 	Selector SpecSelector `json:"selector"`
 	Template SpecTemplate `json:"template"`
 }
@@ -77,7 +74,7 @@ type DeploymentOptions struct {
 
 func (d *Deployment) SelfLink() string {
 	if d.Meta.SelfLink == "" {
-		d.CreateSelfLink(d.Meta.Namespace, d.Meta.Service, d.Meta.Name)
+		d.Meta.SelfLink = d.CreateSelfLink(d.Meta.Namespace, d.Meta.Service, d.Meta.Name)
 	}
 	return d.Meta.SelfLink
 }
@@ -85,7 +82,6 @@ func (d *Deployment) SelfLink() string {
 func (d *Deployment) CreateSelfLink(namespace, service, name string) string {
 	return fmt.Sprintf("%s:%s:%s", namespace, service, name)
 }
-
 
 func (d *DeploymentStatus) SetProvision() {
 	d.State = StateProvision

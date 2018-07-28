@@ -158,7 +158,7 @@ func (s Storage) Watch(ctx context.Context, kind types.Kind, event chan *types.W
 				continue
 			}
 
-			if res.Type == store.STORAGEERROREVENT {
+			if res.Type == types.STORAGEERROREVENT {
 				err := res.Object.(error)
 				log.Errorf("%s:> watch err: %v", logPrefix, err)
 				return err
@@ -181,7 +181,7 @@ func (s Storage) Watch(ctx context.Context, kind types.Kind, event chan *types.W
 				e.Name = keys[0]
 			}
 
-			if res.Type == store.STORAGEDELETEEVENT {
+			if res.Type == types.STORAGEDELETEEVENT {
 				e.Data = nil
 				event <- e
 				continue

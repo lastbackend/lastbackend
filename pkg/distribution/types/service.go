@@ -23,7 +23,8 @@ import (
 
 	"fmt"
 
-	"github.com/lastbackend/lastbackend/pkg/util/generator"
+	"time"
+
 	"github.com/lastbackend/lastbackend/pkg/util/network"
 )
 
@@ -60,9 +61,9 @@ type ServiceStatus struct {
 }
 
 type ServiceSpec struct {
-	Meta     Meta         `json:"meta"`
 	Replicas int          `json:"replicas"`
 	State    SpecState    `json:"state"`
+	Network  SpecNetwork  `json:"network"`
 	Strategy SpecStrategy `json:"strategy"`
 	Triggers SpecTriggers `json:"triggers"`
 	Selector SpecSelector `json:"selector"`
@@ -104,8 +105,6 @@ type ServiceReplicas struct {
 }
 
 func (s *ServiceSpec) SetDefault() {
-	s.Meta.SetDefault()
-	s.Meta.Name = generator.GetUUIDV4()
 	s.Replicas = DEFAULT_SERVICE_REPLICAS
 	s.Template.Volumes = make(SpecTemplateVolumeList, 0)
 	s.Template.Containers = make(SpecTemplateContainers, 0)
@@ -121,7 +120,6 @@ func (s *ServiceSpec) Update(spec *ServiceOptionsSpec) {
 	var (
 		f bool
 		i int
-		n bool
 	)
 
 	if spec.Replicas != nil {
@@ -143,18 +141,18 @@ func (s *ServiceSpec) Update(spec *ServiceOptionsSpec) {
 
 	if spec.Command != nil {
 		c.Exec.Command = strings.Split(*spec.Command, " ")
-		n = true
+		s.Template.Updated = time.Now()
 	}
 
 	if spec.Entrypoint != nil {
 		c.Exec.Entrypoint = strings.Split(*spec.Entrypoint, " ")
-		n = true
+		s.Template.Updated = time.Now()
 	}
 
 	// TODO: update for multi-container pod
 	if spec.Ports != nil {
 
-		s.Template.Network.Ports = make(map[uint16]string, 0)
+		s.Network.Ports = make(map[uint16]string, 0)
 		c.Ports = SpecTemplateContainerPorts{}
 
 		for pt, pm := range spec.Ports {
@@ -168,7 +166,8 @@ func (s *ServiceSpec) Update(spec *ServiceOptionsSpec) {
 				ContainerPort: port,
 			})
 
-			s.Template.Network.Ports[pt] = fmt.Sprintf("%d/%s", port, proto)
+			s.Network.Ports[pt] = fmt.Sprintf("%d/%s", port, proto)
+			s.Network.Updated = time.Now()
 		}
 
 	}
@@ -184,12 +183,12 @@ func (s *ServiceSpec) Update(spec *ServiceOptionsSpec) {
 			}
 			c.EnvVars = append(c.EnvVars, env)
 		}
-		n = true
+		s.Template.Updated = time.Now()
 	}
 
 	if spec.Memory != nil {
 		c.Resources.Limits.RAM = *spec.Memory
-		n = true
+		s.Template.Updated = time.Now()
 	}
 
 	if !f {
@@ -198,10 +197,6 @@ func (s *ServiceSpec) Update(spec *ServiceOptionsSpec) {
 		s.Template.Containers[i] = c
 	}
 
-	// Need to create new spec name for new deployment creating
-	if n {
-		s.Meta.Name = generator.GetUUIDV4()
-	}
 }
 
 type ServiceSources struct {

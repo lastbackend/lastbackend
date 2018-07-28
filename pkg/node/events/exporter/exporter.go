@@ -20,12 +20,13 @@ package exporter
 
 import (
 	"context"
+	"sync"
+	"time"
+
 	"github.com/lastbackend/lastbackend/pkg/api/types/v1"
 	"github.com/lastbackend/lastbackend/pkg/api/types/v1/request"
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 	"github.com/lastbackend/lastbackend/pkg/log"
-	"sync"
-	"time"
 )
 
 type Exporter struct {
@@ -111,7 +112,7 @@ func NewExporter() *Exporter {
 
 func getPodOptions(p *types.PodStatus) *request.NodePodStatusOptions {
 	opts := v1.Request().Node().NodePodStatusOptions()
-	opts.State = p.Stage
+	opts.State = p.State
 	opts.Message = p.Message
 	opts.Containers = p.Containers
 	opts.Network = p.Network

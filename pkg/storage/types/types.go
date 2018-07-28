@@ -18,6 +18,13 @@
 
 package types
 
+const (
+	STORAGEDELETEEVENT = "delete"
+	STORAGECREATEEVENT = "create"
+	STORAGEUPDATEEVENT = "update"
+	STORAGEERROREVENT  = "error"
+)
+
 type Watcher interface {
 	Stop()
 	ResultChan() <-chan *Event

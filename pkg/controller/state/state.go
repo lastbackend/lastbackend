@@ -18,8 +18,59 @@
 
 package state
 
-import "github.com/lastbackend/lastbackend/pkg/distribution/types"
+import (
+	"context"
+
+	"github.com/lastbackend/lastbackend/pkg/controller/envs"
+	"github.com/lastbackend/lastbackend/pkg/controller/state/cluster"
+	"github.com/lastbackend/lastbackend/pkg/controller/state/service"
+	"github.com/lastbackend/lastbackend/pkg/distribution"
+	"github.com/lastbackend/lastbackend/pkg/log"
+)
 
 type State struct {
-	Resources types.NodeResources
+	Cluster *cluster.ClusterState
+	Service map[string]*service.ServiceState
+}
+
+func (s *State) Restore() {
+
+	log.Info("\n\n\n start cluster restore")
+	s.Cluster.Restore()
+	log.Info("\n\n\n finish cluster restore \n\n\n")
+
+	nm := distribution.NewNamespaceModel(context.Background(), envs.Get().GetStorage())
+	sm := distribution.NewServiceModel(context.Background(), envs.Get().GetStorage())
+	ns, err := nm.List()
+	if err != nil {
+		log.Errorf("%s", err.Error())
+		return
+	}
+
+	for _, n := range ns {
+		log.Debugf("\n\nrestore service in namespace: %s", n.SelfLink())
+		ss, err := sm.List(n.SelfLink())
+		if err != nil {
+			log.Errorf("%s", err.Error())
+			return
+		}
+
+		for _, svc := range ss {
+
+			log.Debugf("restore service state: %s \n", svc.SelfLink())
+			if _, ok := s.Service[svc.SelfLink()]; !ok {
+				s.Service[svc.SelfLink()] = service.NewServiceState(svc)
+			}
+
+			s.Service[svc.SelfLink()].Restore()
+		}
+
+	}
+}
+
+func NewState() *State {
+	var state = new(State)
+	state.Cluster = cluster.NewClusterState()
+	state.Service = make(map[string]*service.ServiceState)
+	return state
 }

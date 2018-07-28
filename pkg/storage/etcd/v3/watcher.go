@@ -26,7 +26,6 @@ import (
 
 	"github.com/coreos/etcd/clientv3"
 	"github.com/lastbackend/lastbackend/pkg/log"
-	"github.com/lastbackend/lastbackend/pkg/storage/etcd/store"
 	"github.com/lastbackend/lastbackend/pkg/storage/types"
 )
 
@@ -244,14 +243,14 @@ func (wc *watchChan) sendEvent(e *event) {
 
 func transformEvent(e *event) *types.Event {
 
-	action := store.STORAGEUPDATEEVENT
+	action := types.STORAGEUPDATEEVENT
 
 	if e.isCreated {
-		action = store.STORAGECREATEEVENT
+		action = types.STORAGECREATEEVENT
 	}
 
 	if e.isDeleted {
-		action = store.STORAGEDELETEEVENT
+		action = types.STORAGEDELETEEVENT
 	}
 
 	event := &types.Event{
@@ -265,7 +264,7 @@ func transformEvent(e *event) *types.Event {
 
 func transformError(err error) *types.Event {
 	return &types.Event{
-		Type:   store.STORAGEERROREVENT,
+		Type:   types.STORAGEERROREVENT,
 		Object: err,
 	}
 }

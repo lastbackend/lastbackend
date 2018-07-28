@@ -23,6 +23,8 @@ import (
 	"strings"
 	"time"
 
+	"encoding/json"
+
 	"github.com/lastbackend/lastbackend/pkg/distribution/errors"
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 	"github.com/lastbackend/lastbackend/pkg/log"
@@ -42,9 +44,10 @@ type IPod interface {
 	ListByService(namespace, service string) ([]*types.Pod, error)
 	ListByDeployment(namespace, service, deployment string) ([]*types.Pod, error)
 	SetNode(pod *types.Pod, node *types.Node) error
-	SetStatus(pod *types.Pod, state *types.PodStatus) error
-	Destroy(ctx context.Context, pod *types.Pod) error
-	Remove(ctx context.Context, pod *types.Pod) error
+	Update(pod *types.Pod) error
+	Destroy(pod *types.Pod) error
+	Remove(pod *types.Pod) error
+	Watch(ch chan types.PodEvent) error
 }
 
 type Pod struct {
@@ -84,7 +87,7 @@ func (p *Pod) Create(deployment *types.Deployment) (*types.Pod, error) {
 	pod.Meta.Service = deployment.Meta.Service
 	pod.Meta.Namespace = deployment.Meta.Namespace
 
-	pod.Status.SetInitialized()
+	pod.Status.SetCreated()
 	pod.Status.Steps = make(map[string]types.PodStep)
 	pod.Status.Steps[types.StepInitialized] = types.PodStep{
 		Ready:     true,
@@ -125,7 +128,7 @@ func (p *Pod) ListByNamespace(namespace string) ([]*types.Pod, error) {
 	items := make([]*types.Pod, 0)
 	filter := p.storage.Filter().Pod().ByNamespace(namespace)
 
-	err := p.storage.Map(p.context, storage.PodKind, filter, &items)
+	err := p.storage.List(p.context, storage.PodKind, filter, &items)
 	if err != nil {
 		log.V(logLevel).Debugf("%s:listbynamespace:> get pod list by deployment id `%s` err: %v", logPodPrefix, namespace, err)
 		return nil, err
@@ -182,15 +185,13 @@ func (p *Pod) SetNode(pod *types.Pod, node *types.Node) error {
 }
 
 // SetStatus - set state for pod
-func (p *Pod) SetStatus(pod *types.Pod, status *types.PodStatus) error {
+func (p *Pod) Update(pod *types.Pod) error {
 
-	log.Debugf("%s:setstatus:> set state for pod: %s", logPodPrefix, pod.Meta.Name)
-
-	pod.Status = *status
+	log.Debugf("%s:update:> update pod: %s", logPodPrefix, pod.Meta.Name)
 
 	if err := p.storage.Set(p.context, storage.PodKind,
 		p.storage.Key().Pod(pod.Meta.Namespace, pod.Meta.Service, pod.Meta.Deployment, pod.Meta.Name), pod, nil); err != nil {
-		log.Errorf("%s:setstatus:> pod set status err: %v", logPodPrefix, err)
+		log.Errorf("%s:update:> pod update err: %v", logPodPrefix, err)
 		return err
 	}
 
@@ -198,7 +199,7 @@ func (p *Pod) SetStatus(pod *types.Pod, status *types.PodStatus) error {
 }
 
 // Destroy pod
-func (p *Pod) Destroy(ctx context.Context, pod *types.Pod) error {
+func (p *Pod) Destroy(pod *types.Pod) error {
 
 	pod.Spec.State.Destroy = true
 
@@ -211,12 +212,54 @@ func (p *Pod) Destroy(ctx context.Context, pod *types.Pod) error {
 }
 
 // Remove pod from storage
-func (p *Pod) Remove(ctx context.Context, pod *types.Pod) error {
+func (p *Pod) Remove(pod *types.Pod) error {
 	if err := p.storage.Del(p.context, storage.PodKind,
 		p.storage.Key().Pod(pod.Meta.Namespace, pod.Meta.Service, pod.Meta.Deployment, pod.Meta.Name)); err != nil {
 		log.Errorf("%s:remove:> mark pod for destroy error: %v", logPodPrefix, err)
 		return err
 	}
+	return nil
+}
+
+func (p *Pod) Watch(ch chan types.PodEvent) error {
+	log.Debugf("%s:watch:> watch service", logPodPrefix)
+
+	done := make(chan bool)
+	watcher := storage.NewWatcher()
+
+	go func() {
+		for {
+			select {
+			case <-p.context.Done():
+				done <- true
+				return
+			case e := <-watcher:
+				if e.Data == nil {
+					continue
+				}
+
+				res := types.PodEvent{}
+				res.Action = e.Action
+				res.Name = e.Name
+
+				obj := new(types.Pod)
+
+				if err := json.Unmarshal(e.Data.([]byte), &obj); err != nil {
+					log.Errorf("%s:watch:> parse json", logPodPrefix)
+					continue
+				}
+
+				res.Data = obj
+
+				ch <- res
+			}
+		}
+	}()
+
+	if err := p.storage.Watch(p.context, storage.PodKind, watcher); err != nil {
+		return err
+	}
+
 	return nil
 }
 

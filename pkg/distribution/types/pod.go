@@ -70,7 +70,7 @@ type PodSpec struct {
 // swagger:model types_pod_status
 type PodStatus struct {
 	// Pod state
-	Stage string `json:"stage" yaml:"stage"`
+	State string `json:"state" yaml:"state"`
 	// Pod state message
 	Message string `json:"message" yaml:"message"`
 	// Pod steps
@@ -174,48 +174,48 @@ type PodContainerStateExit struct {
 }
 
 func (s *PodStatus) SetInitialized() {
-	s.Stage = StateInitialized
+	s.State = StateInitialized
 	s.Message = EmptyString
 }
 
 func (s *PodStatus) SetDestroy() {
-	s.Stage = StateDestroy
+	s.State = StateDestroy
 }
 
 func (s *PodStatus) SetDestroyed() {
-	s.Stage = StateDestroyed
+	s.State = StateDestroyed
 }
 
 func (s *PodStatus) SetPull() {
-	s.Stage = StatePull
+	s.State = StatePull
 }
 
 func (s *PodStatus) SetProvision() {
-	s.Stage = StateProvision
+	s.State = StateProvision
 }
 
 func (s *PodStatus) SetCreated() {
-	s.Stage = StateCreated
+	s.State = StateCreated
 	s.Message = EmptyString
 }
 
 func (s *PodStatus) SetStarting() {
-	s.Stage = StateStarting
+	s.State = StateStarting
 	s.Message = EmptyString
 }
 
 func (s *PodStatus) SetRunning() {
-	s.Stage = StateRunning
+	s.State = StateRunning
 	s.Message = EmptyString
 }
 
 func (s *PodStatus) SetStopped() {
-	s.Stage = StateStopped
+	s.State = StateStopped
 	s.Message = EmptyString
 }
 
 func (s *PodStatus) SetError(err error) {
-	s.Stage = StateError
+	s.State = StateError
 	s.Message = err.Error()
 }
 
@@ -238,6 +238,14 @@ func (p *Pod) SelfLink() string {
 		p.Meta.SelfLink = p.CreateSelfLink(p.Meta.Namespace, p.Meta.Service, p.Meta.Deployment, p.Meta.Name)
 	}
 	return p.Meta.SelfLink
+}
+
+func (p *Pod) ServiceLink() string {
+	return new(Service).CreateSelfLink(p.Meta.Namespace, p.Meta.Service)
+}
+
+func (p *Pod) DeploymentLink() string {
+	return new(Deployment).CreateSelfLink(p.Meta.Namespace, p.Meta.Service, p.Meta.Deployment)
 }
 
 func (p *Pod) CreateSelfLink(namespace, service, deployment, name string) string {

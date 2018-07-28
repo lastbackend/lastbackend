@@ -21,7 +21,6 @@ package distribution
 import (
 	"context"
 
-	"github.com/lastbackend/lastbackend/pkg/controller/envs"
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 	"github.com/lastbackend/lastbackend/pkg/log"
 	"github.com/lastbackend/lastbackend/pkg/storage"
@@ -104,16 +103,11 @@ func (e *Endpoint) Create(namespace, service string, opts *types.EndpointCreateO
 	endpoint.Spec.Strategy.Route = opts.RouteStrategy
 	endpoint.Spec.Strategy.Bind = opts.BindStrategy
 
-	ip, err := envs.Get().GetIPAM().Lease()
-	if err != nil {
-		log.Errorf("%s:create:> distribution create endpoint: %s err: %v", logEndpointPrefix, endpoint.SelfLink(), err)
-	}
-
-	endpoint.Spec.IP = ip.String()
+	endpoint.Spec.IP = opts.IP
 	endpoint.Spec.Domain = opts.Domain
 
-	if err := e.storage.Put(e.context, storage.EndpointKind,
-		e.storage.Key().Endpoint(namespace, service), endpoint, nil); err != nil {
+	key := e.storage.Key().Endpoint(namespace, service)
+	if err := e.storage.Put(e.context, storage.EndpointKind, key, endpoint, nil); err != nil {
 		log.Errorf("%s:create:> distribution create endpoint: %s err: %v", logEndpointPrefix, endpoint.SelfLink(), err)
 		return nil, err
 	}

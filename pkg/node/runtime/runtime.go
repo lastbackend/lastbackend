@@ -20,7 +20,10 @@ package runtime
 
 import (
 	"context"
+
 	"github.com/lastbackend/lastbackend/pkg/node/runtime/network"
+
+	"time"
 
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 	"github.com/lastbackend/lastbackend/pkg/log"
@@ -29,7 +32,6 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/node/runtime/endpoint"
 	"github.com/lastbackend/lastbackend/pkg/node/runtime/pod"
 	"github.com/lastbackend/lastbackend/pkg/node/runtime/volume"
-	"time"
 )
 
 const (
@@ -56,7 +58,7 @@ func (r *Runtime) Provision(ctx context.Context, spec *types.NodeManifest) error
 	log.Debugf("%s> provision networks", logNodeRuntimePrefix)
 	for cidr, n := range spec.Network {
 		log.Debugf("network: %v", n)
-		if err := network.Manage(ctx, cidr, &n); err != nil {
+		if err := network.Manage(ctx, cidr, n); err != nil {
 			log.Errorf("Network [%s] create err: %s", n.CIDR, err.Error())
 		}
 	}
@@ -64,7 +66,7 @@ func (r *Runtime) Provision(ctx context.Context, spec *types.NodeManifest) error
 	log.Debugf("%s> provision pods", logNodeRuntimePrefix)
 	for p, spec := range spec.Pods {
 		log.Debugf("pod: %v", p)
-		if err := pod.Manage(ctx, p, &spec); err != nil {
+		if err := pod.Manage(ctx, p, spec); err != nil {
 			log.Errorf("Pod [%s] manage err: %s", p, err.Error())
 		}
 	}
@@ -72,7 +74,7 @@ func (r *Runtime) Provision(ctx context.Context, spec *types.NodeManifest) error
 	log.Debugf("%s> provision endpoints", logNodeRuntimePrefix)
 	for e, spec := range spec.Endpoints {
 		log.Debugf("endpoint: %v", e)
-		if err := endpoint.Manage(ctx, e, &spec); err != nil {
+		if err := endpoint.Manage(ctx, e, spec); err != nil {
 			log.Errorf("Endpoint [%s] manage err: %s", e, err.Error())
 		}
 	}

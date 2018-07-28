@@ -16,4 +16,33 @@
 // from Last.Backend LLC.
 //
 
-package endpoint
+package cluster
+
+import (
+	"context"
+
+	"github.com/lastbackend/lastbackend/pkg/controller/envs"
+	"github.com/lastbackend/lastbackend/pkg/distribution"
+	"github.com/lastbackend/lastbackend/pkg/distribution/types"
+)
+
+func NodeLease(req types.NodeLease, nodes map[string]*types.Node) (*types.Node, error) {
+
+	for _, n := range nodes {
+		if n.Status.Capacity.Memory < *req.Request.Memory {
+
+			n.Status.Allocated.Pods++
+			n.Status.Allocated.Memory += *req.Request.Memory
+			nm := distribution.NewNodeModel(context.Background(), envs.Get().GetStorage())
+			nm.SetStatus(n, n.Status)
+
+			return n, nil
+		}
+	}
+
+	return nil, nil
+}
+
+func NodeRelease() {
+
+}

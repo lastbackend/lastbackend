@@ -25,13 +25,6 @@ import (
 
 const LogLevel = 7
 
-const (
-	STORAGEDELETEEVENT = "delete"
-	STORAGECREATEEVENT = "create"
-	STORAGEUPDATEEVENT = "update"
-	STORAGEERROREVENT  = "error"
-)
-
 type DestroyFunc func()
 
 type Store interface {

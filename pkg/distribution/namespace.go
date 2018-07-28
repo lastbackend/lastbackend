@@ -67,7 +67,7 @@ func (n *Namespace) List() ([]*types.Namespace, error) {
 
 	log.V(logLevel).Debugf("%s:list:> get namespaces list result: %d", logNamespacePrefix, len(items))
 
-	return nil, nil
+	return items, nil
 }
 
 func (n *Namespace) Get(name string) (*types.Namespace, error) {

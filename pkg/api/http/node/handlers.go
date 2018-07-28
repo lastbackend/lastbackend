@@ -509,13 +509,13 @@ func NodeSetStatusH(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		if err := pm.SetStatus(pod, &types.PodStatus{
-			Stage:      s.State,
-			Message:    s.Message,
-			Steps:      s.Steps,
-			Network:    s.Network,
-			Containers: s.Containers,
-		}); err != nil {
+		pod.Status.State = s.State
+		pod.Status.Message = s.Message
+		pod.Status.Containers = s.Containers
+		pod.Status.Network = s.Network
+		pod.Status.Steps = s.Steps
+
+		if err := pm.Update(pod); err != nil {
 			log.V(logLevel).Errorf("%s:setpodstatus:> get nodes list err: %s", logPrefix, err.Error())
 			errors.HTTP.InternalServerError(w)
 			return
@@ -610,13 +610,13 @@ func NodeSetPodStatusH(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := pm.SetStatus(pod, &types.PodStatus{
-		Stage:      opts.State,
-		Message:    opts.Message,
-		Steps:      opts.Steps,
-		Network:    opts.Network,
-		Containers: opts.Containers,
-	}); err != nil {
+	pod.Status.State = opts.State
+	pod.Status.Message = opts.Message
+	pod.Status.Containers = opts.Containers
+	pod.Status.Network = opts.Network
+	pod.Status.Steps = opts.Steps
+
+	if err := pm.Update(pod); err != nil {
 		log.V(logLevel).Errorf("%s:setpodstatus:> get nodes list err: %s", logPrefix, err.Error())
 		errors.HTTP.InternalServerError(w)
 		return

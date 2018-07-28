@@ -41,7 +41,7 @@ type IDeployment interface {
 	Get(namespace, service, name string) (*types.Deployment, error)
 	ListByNamespace(namespace string) ([]*types.Deployment, error)
 	ListByService(namespace, service string) ([]*types.Deployment, error)
-	Update(dt *types.Deployment, opts *types.DeploymentUpdateOptions) error
+	Update(dt *types.Deployment) error
 	Cancel(dt *types.Deployment) error
 	Destroy(dt *types.Deployment) error
 	Remove(dt *types.Deployment) error
@@ -91,14 +91,9 @@ func (d *Deployment) Create(service *types.Service) (*types.Deployment, error) {
 
 	deployment.Spec = types.DeploymentSpec{
 		Replicas: service.Spec.Replicas,
-		Strategy: service.Spec.Strategy,
 		Template: service.Spec.Template,
-		Triggers: service.Spec.Triggers,
 		Selector: service.Spec.Selector,
 	}
-
-	deployment.Spec.Meta.SetDefault()
-	deployment.Spec.Meta.Name = service.Spec.Meta.Name
 
 	deployment.Status.SetProvision()
 
@@ -146,30 +141,14 @@ func (d *Deployment) ListByService(namespace, service string) ([]*types.Deployme
 }
 
 // Update deployment
-func (d *Deployment) Update(dt *types.Deployment, opts *types.DeploymentUpdateOptions) error {
+func (d *Deployment) Update(dt *types.Deployment) error {
 
 	log.Debugf("%s:update:> update deployment %s", logDeploymentPrefix, dt.Meta.Name)
 
-	var isChanged = false
-
-	switch true {
-	case opts.Replicas != nil && dt.Spec.Replicas != *opts.Replicas:
-		dt.Spec.Replicas = *opts.Replicas
-		isChanged = true
-		break
-	case opts.Status != nil:
-		dt.Status.State = opts.Status.State
-		dt.Status.Message = opts.Status.Message
-		isChanged = true
-		break
-	}
-
-	if isChanged {
-		if err := d.storage.Set(d.context, storage.DeploymentKind,
-			d.storage.Key().Deployment(dt.Meta.Namespace, dt.Meta.Service, dt.Meta.Name), dt, nil); err != nil {
-			log.Errorf("%s:update:> update for deployment %s err: %v", logDeploymentPrefix, dt.Meta.Name, err)
-			return err
-		}
+	if err := d.storage.Set(d.context, storage.DeploymentKind,
+		d.storage.Key().Deployment(dt.Meta.Namespace, dt.Meta.Service, dt.Meta.Name), dt, nil); err != nil {
+		log.Errorf("%s:update:> update for deployment %s err: %v", logDeploymentPrefix, dt.Meta.Name, err)
+		return err
 	}
 
 	return nil

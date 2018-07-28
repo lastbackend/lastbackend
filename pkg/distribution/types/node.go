@@ -176,3 +176,21 @@ func (n *Node) SelfLink() string {
 	}
 	return n.Meta.SelfLink
 }
+
+type NodeLease struct {
+	Request  NodeLeaseOptions
+	Response struct {
+		Err  error
+		Node *Node
+	}
+}
+
+type NodeLeaseOptions struct {
+	Node    *string
+	Memory  *int64
+	Storage *int64
+}
+
+func (nl *NodeLease) Get() (*Node, error) {
+	return nl.Response.Node, nl.Response.Err
+}

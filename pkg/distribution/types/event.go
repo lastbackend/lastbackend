@@ -18,6 +18,8 @@
 
 package types
 
+import "github.com/lastbackend/lastbackend/pkg/storage/types"
+
 const (
 	EventActionCreate = "create"
 	EventActionUpdate = "update"
@@ -57,4 +59,31 @@ type IngresEvent struct {
 type EndpointEvent struct {
 	event
 	Data *Endpoint
+}
+
+type DeploymentEvent struct {
+	event
+	Data *Deployment
+}
+
+type PodEvent struct {
+	event
+	Data *Pod
+}
+
+type NodeEvent struct {
+	event
+	Data *Node
+}
+
+func (e *event) IsActionCreate() bool {
+	return e.Action == types.STORAGECREATEEVENT
+}
+
+func (e *event) IsActionUpdate() bool {
+	return e.Action == types.STORAGEUPDATEEVENT
+}
+
+func (e *event) IsActionRemove() bool {
+	return e.Action == types.STORAGEDELETEEVENT
 }

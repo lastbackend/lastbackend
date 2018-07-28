@@ -43,7 +43,7 @@ type IService interface {
 	Update(service *types.Service, opts *types.ServiceUpdateOptions) (*types.Service, error)
 	Destroy(service *types.Service) (*types.Service, error)
 	Remove(service *types.Service) error
-	SetStatus(service *types.Service) error
+	Set(service *types.Service) error
 	Watch(ch chan types.ServiceEvent) error
 }
 
@@ -120,6 +120,7 @@ func (s *Service) Create(namespace *types.Namespace, opts *types.ServiceCreateOp
 
 	service.SelfLink()
 
+	service.Status.State = types.StateCreated
 	// prepare default template spec
 	c := types.SpecTemplateContainer{}
 	c.SetDefault()
@@ -210,12 +211,12 @@ func (s *Service) Remove(service *types.Service) error {
 }
 
 // Set state for deployment
-func (s *Service) SetStatus(service *types.Service) error {
+func (s *Service) Set(service *types.Service) error {
 
 	log.Debugf("%s:setstatus:> set state for service %s", logServicePrefix, service.Meta.Name)
 
-	if err := s.storage.Set(s.context, storage.ServiceKind,
-		s.storage.Key().Service(service.Meta.Namespace, service.Meta.Name), service, nil); err != nil {
+	key := s.storage.Key().Service(service.Meta.Namespace, service.Meta.Name)
+	if err := s.storage.Set(s.context, storage.ServiceKind, key, service, nil); err != nil {
 		log.Errorf("%s:setstatus:> set state for service %s err: %v", logServicePrefix, service.Meta.Name, err)
 		return err
 	}
@@ -248,7 +249,7 @@ func (s *Service) Watch(ch chan types.ServiceEvent) error {
 
 				service := new(types.Service)
 
-				if err := json.Unmarshal(e.Data.([]byte), *service); err != nil {
+				if err := json.Unmarshal(e.Data.([]byte), service); err != nil {
 					log.Errorf("%s:> parse data err: %v", logServicePrefix, err)
 					continue
 				}

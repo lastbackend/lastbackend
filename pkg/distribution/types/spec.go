@@ -21,6 +21,7 @@ package types
 import (
 	"fmt"
 	"io"
+	"time"
 )
 
 const ContainerRolePrimary = "primary"
@@ -36,23 +37,25 @@ type SpecState struct {
 // SpecTemplate is a template of the spec
 // swagger:model types_spec_template
 type SpecTemplate struct {
-	// Network spec for service
-	Network SpecTemplateNetwork `json:"network"`
 	// Template spec for volume
 	Volumes SpecTemplateVolumeList `json:"volumes"`
 	// Template main container
 	Containers SpecTemplateContainers `json:"container"`
 	// Termination period
 	Termination int `json:"termination"`
+	// Spec updated time
+	Updated time.Time `json:"updated"`
 }
 
-// SpecTemplateNetwork is a map of spec template for network
+// SpecNetwork is a map of spec template for network
 // swagger:model types_spec_template_network
-type SpecTemplateNetwork struct {
+type SpecNetwork struct {
 	IP       string               `json:"ip"`
 	Ports    map[uint16]string    `json:"ports"`
 	Strategy EndpointSpecStrategy `json:"strategy"`
 	Policy   string               `json:"policy"`
+	// Spec updated time
+	Updated time.Time `json:"updated"`
 }
 
 // swagger:ignore
@@ -318,6 +321,8 @@ type SpecStrategy struct {
 	RollingOptions SpecStrategyRollingOptions `json:"rollingOptions"`
 	Resources      SpecStrategyResources      `json:"resources"`
 	Deadline       int                        `json:"deadline"`
+	// Spec updated time
+	Updated time.Time `json:"updated"`
 }
 
 // swagger:model types_spec_strategy_resources
@@ -343,6 +348,8 @@ type SpecTrigger struct {
 
 // swagger:model types_spec_selector
 type SpecSelector struct {
+	// Spec updated time
+	Updated time.Time `json:"updated"`
 }
 
 func (s *SpecTemplateContainerEnvs) ToLinuxFormat() []string {

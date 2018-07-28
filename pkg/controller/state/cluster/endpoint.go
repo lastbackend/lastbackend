@@ -16,4 +16,18 @@
 // from Last.Backend LLC.
 //
 
-package pod
+package cluster
+
+type EndpointController struct{}
+
+func (EndpointController) EndpointCreate() {
+
+}
+
+func (EndpointController) EndpointUpdate() {
+
+}
+
+func (EndpointController) EndpointRemove() {
+
+}
