@@ -17,3 +17,7 @@
 //
 
 package types
+
+import "github.com/lastbackend/lastbackend/pkg/storage/types"
+
+type Runtime types.Runtime

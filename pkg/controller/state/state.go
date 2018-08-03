@@ -26,7 +26,7 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/controller/state/service"
 	"github.com/lastbackend/lastbackend/pkg/distribution"
 	"github.com/lastbackend/lastbackend/pkg/log"
-)
+	)
 
 type State struct {
 	Cluster *cluster.ClusterState
@@ -35,10 +35,14 @@ type State struct {
 
 func (s *State) Restore() {
 
-	log.Info("\n\n\n start cluster restore")
+	println()
+	println()
+	log.Info("start cluster restore")
 	s.Cluster.Restore()
-	log.Info("\n\n\n finish cluster restore \n\n\n")
+	log.Info("finish cluster restore\n\n")
 
+
+	log.Info("start services restore")
 	nm := distribution.NewNamespaceModel(context.Background(), envs.Get().GetStorage())
 	sm := distribution.NewServiceModel(context.Background(), envs.Get().GetStorage())
 	ns, err := nm.List()
@@ -66,6 +70,7 @@ func (s *State) Restore() {
 		}
 
 	}
+	log.Info("finish services restore\n\n")
 }
 
 func NewState() *State {

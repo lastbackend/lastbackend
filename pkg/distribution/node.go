@@ -35,28 +35,6 @@ const (
 	logNodePrefix = "distribution:node"
 )
 
-type INode interface {
-	List() ([]*types.Node, error)
-	Create(opts *types.NodeCreateOptions) (*types.Node, error)
-
-	Get(name string) (*types.Node, error)
-
-	SetMeta(node *types.Node, meta *types.NodeUpdateMetaOptions) error
-	SetStatus(node *types.Node, state types.NodeStatus) error
-	SetInfo(node *types.Node, info types.NodeInfo) error
-	SetNetwork(node *types.Node, network types.NetworkSpec) error
-	SetOnline(node *types.Node) error
-	SetOffline(node *types.Node) error
-
-	InsertPod(node *types.Node, pod *types.Pod) error
-	UpdatePod(node *types.Node, pod *types.Pod) error
-	RemovePod(node *types.Node, pod *types.Pod) error
-	InsertVolume(node *types.Node, volume *types.Volume) error
-	RemoveVolume(node *types.Node, volume *types.Volume) error
-	Remove(node *types.Node) error
-	Watch(ch chan types.NodeEvent) error
-}
-
 type Node struct {
 	context context.Context
 	storage storage.Storage
@@ -207,45 +185,6 @@ func (n *Node) SetNetwork(node *types.Node, network types.NetworkSpec) error {
 	return nil
 }
 
-func (n *Node) InsertPod(node *types.Node, pod *types.Pod) error {
-
-	if err := n.storage.Put(n.context, storage.PodKind, pod.Meta.SelfLink, pod, nil); err != nil {
-		log.Errorf("%s:insertpod:> create pod for node error: %v", logNodePrefix, err)
-		return err
-	}
-
-	return nil
-}
-
-func (n *Node) UpdatePod(node *types.Node, pod *types.Pod) error {
-
-	if err := n.storage.Set(n.context, storage.PodKind, pod.Meta.SelfLink, pod, nil); err != nil {
-		log.Errorf("%s:updatepod:> update pod for node error: %v", logNodePrefix, err)
-		return err
-	}
-
-	return nil
-}
-
-func (n *Node) RemovePod(node *types.Node, pod *types.Pod) error {
-
-	//if err := n.storage.RemovePod(n.context, node, pod); err != nil {
-	if err := n.storage.Del(n.context, storage.PodKind, pod.Meta.SelfLink); err != nil {
-		log.Errorf("%s:removepod:> remove pod error: %v", logNodePrefix, err)
-		return err
-	}
-
-	return nil
-}
-
-func (n *Node) InsertVolume(node *types.Node, volume *types.Volume) error {
-	return nil
-}
-
-func (n *Node) RemoveVolume(node *types.Node, volume *types.Volume) error {
-	return nil
-}
-
 func (n *Node) Remove(node *types.Node) error {
 
 	log.V(logLevel).Debugf("%s:remove:> remove node %s", logNodePrefix, node.Meta.Name)
@@ -258,7 +197,7 @@ func (n *Node) Remove(node *types.Node) error {
 	return nil
 }
 
-// Watch namespace changes
+// Watch node changes
 func (n *Node) Watch(ch chan types.NodeEvent) error {
 
 	log.Debugf("%s:watch:> watch node", logNodePrefix)
@@ -295,13 +234,14 @@ func (n *Node) Watch(ch chan types.NodeEvent) error {
 		}
 	}()
 
-	if err := n.storage.Watch(n.context, storage.NodeKind, watcher); err != nil {
+	opts := storage.GetOpts()
+	if err := n.storage.Watch(n.context, storage.NodeKind, watcher, opts); err != nil {
 		return err
 	}
 
 	return nil
 }
 
-func NewNodeModel(ctx context.Context, stg storage.Storage) INode {
+func NewNodeModel(ctx context.Context, stg storage.Storage) *Node {
 	return &Node{ctx, stg}
 }

@@ -33,14 +33,6 @@ const (
 	logSecretPrefix = "distribution:secret"
 )
 
-type ISecret interface {
-	Get(namespace, name string) (*types.Secret, error)
-	ListByNamespace(namespace string) ([]*types.Secret, error)
-	Create(namespace *types.Namespace, opts *types.SecretCreateOptions) (*types.Secret, error)
-	Update(secret *types.Secret, namespace *types.Namespace, opts *types.SecretUpdateOptions) (*types.Secret, error)
-	Remove(secret *types.Secret) error
-}
-
 type Secret struct {
 	context context.Context
 	storage storage.Storage
@@ -136,6 +128,6 @@ func (n *Secret) Remove(secret *types.Secret) error {
 	return nil
 }
 
-func NewSecretModel(ctx context.Context, stg storage.Storage) ISecret {
+func NewSecretModel(ctx context.Context, stg storage.Storage) *Secret {
 	return &Secret{ctx, stg}
 }

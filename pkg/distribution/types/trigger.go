@@ -20,10 +20,19 @@ package types
 
 import "fmt"
 
-type TriggerMap map[string]*Trigger
-type TriggerList []*Trigger
+type TriggerMap struct {
+	Runtime
+	Items map[string]*Trigger
+}
+
+type TriggerList struct {
+	Runtime
+	Items []*Trigger
+}
+
 
 type Trigger struct {
+	Runtime
 	Meta   TriggerMeta   `json:"meta"`
 	Spec   TriggerSpec   `json:"spec"`
 	Status TriggerStatus `json:"status"`

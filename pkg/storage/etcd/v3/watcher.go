@@ -66,9 +66,9 @@ func newWatcher(client *clientv3.Client) *watcher {
 	}
 }
 
-func (w *watcher) Watch(ctx context.Context, key, keyRegexFilter string) (types.Watcher, error) {
+func (w *watcher) Watch(ctx context.Context, key, keyRegexFilter string, rev *int64) (types.Watcher, error) {
 
-	wc := w.newWatchChan(ctx, key, keyRegexFilter)
+	wc := w.newWatchChan(ctx, key, keyRegexFilter, rev)
 
 	go wc.run()
 
@@ -83,10 +83,11 @@ func (wc *watchChan) ResultChan() <-chan *types.Event {
 	return wc.result
 }
 
-func (w *watcher) newWatchChan(ctx context.Context, key, keyRegexFilter string) *watchChan {
+func (w *watcher) newWatchChan(ctx context.Context, key, keyRegexFilter string, rev *int64) *watchChan {
 	wc := &watchChan{
 		watcher: w,
 		key:     key,
+		rev:     *rev,
 		filter:  keyRegexFilter,
 		event:   make(chan *event, incomingBufSize),
 		result:  make(chan *types.Event, outgoingBufSize),
@@ -139,7 +140,7 @@ func (wc *watchChan) watching(watchClosedCh chan struct{}) {
 	}
 
 	opts := []clientv3.OpOption{
-		clientv3.WithRev(wc.rev + 1),
+		//clientv3.WithRev(wc.rev + 1),
 		clientv3.WithPrevKV(),
 		clientv3.WithPrefix(),
 	}
@@ -210,8 +211,9 @@ func (wc *watchChan) handleEvent(wg *sync.WaitGroup) {
 			if res == nil {
 				continue
 			}
+
 			if len(wc.result) == outgoingBufSize {
-				log.Warnf("%s:handleevent:> buffered events: %d. Processing takes a long time", logPrefix, outgoingBufSize)
+				log.Warnf("%s:handleevent:> buffered events: %d. Processing event %s takes a long time", logPrefix, outgoingBufSize, res.Key)
 			}
 			select {
 			case wc.result <- res:
@@ -233,7 +235,7 @@ func (wc *watchChan) sendError(err error) {
 
 func (wc *watchChan) sendEvent(e *event) {
 	if len(wc.event) == incomingBufSize {
-		log.Warnf("%s:sendevent:> buffered events: %d. Processing takes a long time", logPrefix, incomingBufSize)
+		log.Warnf("%s:sendevent:> buffered events: %d. Processing event %s takes a long time", logPrefix, incomingBufSize, e.key)
 	}
 	select {
 	case wc.event <- e:

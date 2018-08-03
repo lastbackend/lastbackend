@@ -98,7 +98,8 @@ func (c *Cluster) Watch(ch chan types.ClusterEvent) {
 		}
 	}()
 
-	go c.storage.Watch(c.context, storage.ClusterKind, watcher)
+	opts := storage.GetOpts()
+	go c.storage.Watch(c.context, storage.ClusterKind, watcher, opts)
 
 	<-done
 }

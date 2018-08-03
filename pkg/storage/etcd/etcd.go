@@ -71,23 +71,34 @@ func New() (*Storage, error) {
 	return s, nil
 }
 
-func (s Storage) Get(ctx context.Context, kind types.Kind, name string, obj interface{}) error {
-	if reflect.ValueOf(obj).IsNil() {
-		return errors.New(types.ErrStructOutIsNil)
-	}
-	return s.client.store.Get(ctx, keyCreate(kind.String(), name), obj)
-}
-
-func (s Storage) List(ctx context.Context, kind types.Kind, query string, obj interface{}) error {
-
+func (s Storage) Get(ctx context.Context, kind types.Kind, name string, obj interface{}, opts *types.Opts) error {
 	if reflect.ValueOf(obj).IsNil() {
 		return errors.New(types.ErrStructOutIsNil)
 	}
 
-	return s.client.store.List(ctx, keyCreate(kind.String(), query), "", obj)
+	var rev *int64
+	if opts != nil {
+		rev = opts.Rev
+	}
+
+	return s.client.store.Get(ctx, keyCreate(kind.String(), name), obj, rev)
 }
 
-func (s Storage) Map(ctx context.Context, kind types.Kind, query string, obj interface{}) error {
+func (s Storage) List(ctx context.Context, kind types.Kind, query string, obj interface{}, opts *types.Opts) error {
+
+	if reflect.ValueOf(obj).IsNil() {
+		return errors.New(types.ErrStructOutIsNil)
+	}
+
+	var rev *int64
+	if opts != nil {
+		rev = opts.Rev
+	}
+
+	return s.client.store.List(ctx, keyCreate(kind.String(), query), "", obj, rev)
+}
+
+func (s Storage) Map(ctx context.Context, kind types.Kind, query string, obj interface{}, opts *types.Opts) error {
 
 	if reflect.ValueOf(obj).IsNil() {
 		return errors.New(types.ErrStructOutIsNil)
@@ -95,7 +106,12 @@ func (s Storage) Map(ctx context.Context, kind types.Kind, query string, obj int
 
 	q := ".*/(.*)$"
 
-	return s.client.store.Map(ctx, keyCreate(kind.String(), query), q, obj)
+	var rev *int64
+	if opts != nil {
+		rev = opts.Rev
+	}
+
+	return s.client.store.Map(ctx, keyCreate(kind.String(), query), q, obj, rev)
 }
 
 func (s Storage) Put(ctx context.Context, kind types.Kind, name string, obj interface{}, opts *types.Opts) error {
@@ -104,30 +120,38 @@ func (s Storage) Put(ctx context.Context, kind types.Kind, name string, obj inte
 		opts = new(types.Opts)
 	}
 
-	return s.client.store.Create(ctx, keyCreate(kind.String(), name), obj, nil, opts.Ttl)
+	return s.client.store.Put(ctx, keyCreate(kind.String(), name), obj, nil, opts.Ttl)
 }
 
 func (s Storage) Set(ctx context.Context, kind types.Kind, name string, obj interface{}, opts *types.Opts) error {
 
-	if opts == nil {
-		opts = new(types.Opts)
+	var (
+		rev *int64
+		force bool
+		ttl uint64
+	)
+
+	if opts != nil {
+		rev = opts.Rev
+		force = opts.Force
+		ttl = opts.Ttl
 	}
 
-	if opts.Force {
-		return s.client.store.Upsert(ctx, keyCreate(kind.String(), name), obj, nil, opts.Ttl)
-	}
-
-	return s.client.store.Update(ctx, keyCreate(kind.String(), name), obj, nil, opts.Ttl)
+	return s.client.store.Set(ctx, keyCreate(kind.String(), name), obj, nil, ttl, force, rev)
 }
 
 func (s Storage) Del(ctx context.Context, kind types.Kind, name string) error {
+
+	key := keyCreate(kind.String(), name)
+
 	if name == "" {
-		return s.client.store.DeleteDir(ctx, keyCreate(kind.String()))
+		key = keyCreate(kind.String())
 	}
-	return s.client.store.Delete(ctx, keyCreate(kind.String(), name))
+
+	return s.client.store.Del(ctx, key)
 }
 
-func (s Storage) Watch(ctx context.Context, kind types.Kind, event chan *types.WatcherEvent) error {
+func (s Storage) Watch(ctx context.Context, kind types.Kind, event chan *types.WatcherEvent, opts *types.Opts) error {
 
 	log.V(logLevel).Debug("%s:> watch %s", logPrefix, kind.String())
 
@@ -140,7 +164,12 @@ func (s Storage) Watch(ctx context.Context, kind types.Kind, event chan *types.W
 	}
 	defer destroy()
 
-	watcher, err := client.Watch(ctx, keyCreate(kind.String()), "")
+	var rev *int64
+	if opts != nil {
+		rev = opts.Rev
+	}
+
+	watcher, err := client.Watch(ctx, keyCreate(kind.String()), "", rev)
 	if err != nil {
 		log.V(logLevel).Errorf("%s:> watch err: %v", logPrefix, err)
 		return err

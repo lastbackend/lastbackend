@@ -29,16 +29,23 @@ import (
 // swagger:ignore
 // swagger:model types_route
 type Route struct {
+	Runtime
 	Meta   RouteMeta   `json:"meta" yaml:"meta"`
 	Spec   RouteSpec   `json:"spec" yaml:"spec"`
 	Status RouteStatus `json:"status" yaml:"status"`
 }
 
 // swagger:ignore
-type RouteMap map[string]*Route
+type RouteMap struct {
+	Runtime
+	Items map[string]*Route
+}
 
 // swagger:ignore
-type RouteList []*Route
+type RouteList struct {
+	Runtime
+	Items []*Route
+}
 
 // swagger:ignore
 // swagger:model types_route_meta

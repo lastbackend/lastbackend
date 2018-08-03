@@ -31,20 +31,6 @@ const (
 	logManifestPrefix = "distribution:manifest"
 )
 
-type IManifest interface {
-	PodManifestMap(node string) (map[string]*types.PodManifest, error)
-	PodManifestGet(node, pod string) (*types.PodManifest, error)
-	PodManifestAdd(node, pod string, manifest *types.PodManifest) error
-	PodManifestSet(node, pod string, manifest *types.PodManifest) error
-	PodManifestDel(node, pod string) error
-
-	VolumeManifestMap(node string) (map[string]*types.VolumeManifest, error)
-	VolumeManifestGet(node, volume string) (*types.VolumeManifest, error)
-	VolumeManifestAdd(node, volume string, manifest *types.VolumeManifest) error
-	VolumeManifestSet(node, volume string, manifest *types.VolumeManifest) error
-	VolumeManifestDel(node, volume string) error
-}
-
 type Manifest struct {
 	context context.Context
 	storage storage.Storage
@@ -213,6 +199,6 @@ func (m *Manifest) VolumeManifestDel(node, volume string) error {
 	return nil
 }
 
-func NewManifestModel(ctx context.Context, stg storage.Storage) IManifest {
+func NewManifestModel(ctx context.Context, stg storage.Storage) *Manifest {
 	return &Manifest{ctx, stg}
 }

@@ -57,4 +57,13 @@ func (qf QueryFilter) String() string {
 type Opts struct {
 	Ttl   uint64
 	Force bool
+	Rev   *int64
+}
+
+type Runtime struct {
+	System RuntimeSystem `json:"-"`
+}
+
+type RuntimeSystem struct {
+	Revision int64 `json:"-"`
 }

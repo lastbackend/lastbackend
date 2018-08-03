@@ -34,13 +34,22 @@ const (
 )
 
 type Service struct {
+	Runtime
 	Meta   ServiceMeta   `json:"meta"`
 	Status ServiceStatus `json:"status"`
 	Spec   ServiceSpec   `json:"spec"`
 }
 
-type ServiceMap map[string]*Service
-type ServiceList []*Service
+type ServiceMap struct {
+	Runtime
+	Items map[string]*Service
+}
+
+type ServiceList struct {
+	Runtime
+	Items []*Service
+}
+
 
 type ServiceMeta struct {
 	Meta

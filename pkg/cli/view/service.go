@@ -83,6 +83,7 @@ type PodView struct {
 
 type PodStatus struct {
 	State      string        `json:"state"`
+	Message    string        `json:"message"`
 	Containers PodContainers `json:"containers"`
 }
 
@@ -172,9 +173,9 @@ func (dl *DeploymentMap) Print() {
 		//data["REPLICAS"] = string(d.Spec.Replicas) + " updated | " + string(d.Spec.Replicas) + " total | " + string(d.Spec.Replicas) + " availible | 0 unavailible"
 
 		table.PrintHorizontal(data)
-		fmt.Println("\n Deployment pods:")
+		fmt.Println("\n Pods:")
 
-		podTable := table.New([]string{"Name", "Ready", "Status", "Restarts", "Age"})
+		podTable := table.New([]string{"Name", "Ready", "Status", "Message", "Restarts", "Age"})
 		podTable.VisibleHeader = true
 
 		for _, p := range d.Pods {
@@ -190,12 +191,14 @@ func (dl *DeploymentMap) Print() {
 			podRow["Name"] = p.Name
 			podRow["Ready"] = string(converter.IntToString(ready) + "/" + converter.IntToString(len(p.Status.Containers)))
 			podRow["Status"] = p.Status.State
+			podRow["Message"] = p.Status.Message
 			podRow["Restarts"] = restarts
 			podRow["Age"] = got
 			podTable.AddRow(podRow)
 		}
 
 		podTable.Print()
+		println()
 	}
 }
 
@@ -231,7 +234,7 @@ func FromApiServiceView(service *views.Service) *Service {
 		itd.Pods = make(map[string]PodView, 0)
 
 		for j, p := range d.Pods {
-			var pd = PodView{Status: &PodStatus{p.Status.State, PodContainers{}}}
+			var pd = PodView{Status: &PodStatus{p.Status.State, p.Status.Message, PodContainers{}}}
 
 			pd.Name = p.Meta.Name
 			pd.Created = p.Meta.Created

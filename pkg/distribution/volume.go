@@ -32,18 +32,6 @@ const (
 	logVolumePrefix = "distribution:volume"
 )
 
-type IVolume interface {
-	Get(namespace, volume string) (*types.Volume, error)
-	ListByNamespace(namespace string) (map[string]*types.Volume, error)
-	Create(namespace *types.Namespace, opts *types.VolumeCreateOptions) (*types.Volume, error)
-	Update(volume *types.Volume, opts *types.VolumeUpdateOptions) (*types.Volume, error)
-	Destroy(volume *types.Volume) error
-	Remove(volume *types.Volume) error
-	SetStatus(volume *types.Volume, status *types.VolumeStatus) error
-	Watch(dt chan *types.Volume) error
-	WatchSpec(dt chan *types.Volume) error
-}
-
 type Volume struct {
 	context context.Context
 	storage storage.Storage
@@ -176,6 +164,6 @@ func (v *Volume) WatchSpec(dt chan *types.Volume) error {
 	return nil
 }
 
-func NewVolumeModel(ctx context.Context, stg storage.Storage) IVolume {
+func NewVolumeModel(ctx context.Context, stg storage.Storage) *Volume {
 	return &Volume{ctx, stg}
 }

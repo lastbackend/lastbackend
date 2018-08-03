@@ -18,10 +18,17 @@
 
 package types
 
-type ClusterList []*Cluster
-type ClusterMap map[string]*Cluster
+type ClusterList struct {
+	Runtime
+	Items []*Cluster
+}
+type ClusterMap struct {
+	Runtime
+	Items map[string]*Cluster
+}
 
 type Cluster struct {
+	Runtime
 	Meta   Meta          `json:"meta"`
 	Status ClusterStatus `json:"status"`
 	Spec   ClusterSpec   `json:"spec"`

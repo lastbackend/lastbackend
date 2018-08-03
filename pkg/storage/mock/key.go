@@ -62,11 +62,11 @@ func (Key) Ingress(name string) string {
 	return fmt.Sprintf("%s", name)
 }
 
-func (Key) Process(name string, lead bool) string {
+func (Key) Process(kind, name string, lead bool) string {
 	if lead {
-		return fmt.Sprintf("%s:lead", name)
+		return fmt.Sprintf("%s:%s:lead", kind, name)
 	}
-	return fmt.Sprintf("%s", name)
+	return fmt.Sprintf("%s:%s", kind, name)
 }
 
 func (Key) Manifest(node string, kind types.Kind, name string) string {

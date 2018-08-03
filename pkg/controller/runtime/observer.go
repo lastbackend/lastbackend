@@ -24,8 +24,7 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/controller/state/service"
 	"github.com/lastbackend/lastbackend/pkg/distribution"
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
-	"github.com/lastbackend/lastbackend/pkg/log"
-	"github.com/lastbackend/lastbackend/pkg/storage"
+		"github.com/lastbackend/lastbackend/pkg/storage"
 	"golang.org/x/net/context"
 )
 
@@ -45,9 +44,10 @@ func NewObserver(ctx context.Context) *Observer {
 
 	o.state = state.NewState()
 
-	go o.watchServices(ctx)
 	go o.watchNodes(ctx)
+
 	go o.watchPods(ctx)
+	go o.watchServices(ctx)
 
 	o.state.Restore()
 
@@ -122,19 +122,14 @@ func (o *Observer) watchPods(ctx context.Context) {
 					continue
 				}
 
-				log.Info("send pod to cluster state")
 				o.state.Cluster.SetPod(w.Data)
-				log.Info("pod updated in cluster state")
 
 				_, ok := o.state.Service[w.Data.ServiceLink()]
 				if !ok {
-					log.Info("service state not found: skip")
 					break
 				}
 
-				log.Info("send pod to service state")
 				o.state.Service[w.Data.ServiceLink()].SetPod(w.Data)
-				log.Info("pod updated in service state")
 			}
 		}
 	}()

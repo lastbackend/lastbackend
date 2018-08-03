@@ -55,6 +55,8 @@ type ServiceState struct {
 
 func (ss *ServiceState) Restore() error {
 
+	log.Debugf("%s:restore state for service: %s", logPrefix, ss.service.SelfLink())
+
 	var (
 		err error
 		stg = envs.Get().GetStorage()
@@ -80,8 +82,6 @@ func (ss *ServiceState) Restore() error {
 		ss.pod.list[p.DeploymentLink()][p.SelfLink()] = p
 	}
 
-	log.Debugf("p: %#v", ss.pod.list)
-
 	// Get all deployments
 	dm := distribution.NewDeploymentModel(context.Background(), stg)
 	dl, err := dm.ListByService(ss.service.Meta.Namespace, ss.service.Meta.Name)
@@ -95,8 +95,6 @@ func (ss *ServiceState) Restore() error {
 		ss.deployment.list[d.SelfLink()] = d
 	}
 
-	log.Debugf("d: %#v", ss.deployment.list)
-
 	// Set service current spec and provision spec
 	switch ss.service.Status.State {
 	// if service is in ready state - mark deployment with same spec as current
@@ -106,6 +104,7 @@ func (ss *ServiceState) Restore() error {
 				ss.deployment.active = d
 			}
 		}
+		break
 	// if service is in provision state - mark deployment in ready state as current
 	case types.StateProvision:
 		for _, d := range ss.deployment.list {
@@ -122,6 +121,7 @@ func (ss *ServiceState) Restore() error {
 				ss.deployment.provision = d
 			}
 		}
+		break
 	}
 
 	// Get endpoint
@@ -157,7 +157,7 @@ func (ss *ServiceState) Observe() {
 		select {
 
 		case p := <-ss.observers.pod:
-			log.Debugf("pod:> %v", p)
+			log.Debugf("%s:observe:pod:> %v", logPrefix, p)
 
 			// Call pod state manager methods
 			switch p.Status.State {
@@ -187,22 +187,24 @@ func (ss *ServiceState) Observe() {
 			break
 
 		case d := <-ss.observers.deployment:
-			log.Debugf("deployment:> %v", d)
+			log.Debugf("%s:observe:deployment:> %v", logPrefix, d)
 
 			switch d.Status.State {
 			case types.StateCreated:
 			case types.StateProvision:
 
-				log.Debugf("0:> %#v", ss.pod.list)
 
-				_, ok := ss.pod.list[d.SelfLink()]
+				link := d.SelfLink()
+				log.Debugf("0:> %s:> %#v", link, ss.pod.list)
+
+				_, ok := ss.pod.list[link]
 				if !ok {
-					log.Debugf("1:> %#v", ss.pod.list[d.SelfLink()])
-					ss.pod.list[d.SelfLink()] = make(map[string]*types.Pod)
+					log.Debugf("1:> %#v", ss.pod.list[link])
+					ss.pod.list[link] = make(map[string]*types.Pod)
 				}
 
-				log.Debugf("2:> %#v", ss.pod.list[d.SelfLink()])
-				if err := DeploymentProvision(d, ss.pod.list[d.SelfLink()]); err != nil {
+				log.Debugf("2:> %#v", ss.pod.list[link])
+				if err := DeploymentProvision(d, ss.pod.list[link]); err != nil {
 					log.Errorf("%s", err.Error())
 					break
 				}
@@ -256,7 +258,7 @@ func (ss *ServiceState) Observe() {
 			break
 
 		case s := <-ss.observers.service:
-			log.Debugf("service:> %v", s)
+			log.Debugf("%s:observe:service:> %v", logPrefix, s)
 
 			switch s.Status.State {
 			case types.StateCreated:
@@ -295,7 +297,7 @@ func (ss *ServiceState) Observe() {
 			case types.StateProvision:
 
 				// service template spec updated time check
-				if ss.service.Spec.Template.Updated.Before(s.Spec.Template.Updated) {
+				if (ss.deployment.active == nil && ss.deployment.provision == nil) || ss.service.Spec.Template.Updated.Before(s.Spec.Template.Updated) {
 
 					d, err := ServiceProvision(s)
 					if err != nil {

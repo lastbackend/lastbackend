@@ -24,20 +24,23 @@ import (
 )
 
 // swagger:ignore
-// swagger:model types_node_status_map
-type NodeMapStatus map[string]*NodeStatus
-
-// swagger:ignore
 // swagger:model types_node_map
-type NodeMap map[string]*Node
+type NodeMap struct {
+	Runtime
+	Items map[string]*Node
+}
 
 // swagger:ignore
 // swagger:model types_node_list
-type NodeList []*Node
+type NodeList struct {
+	Runtime
+	Items []*Node
+}
 
 // swagger:ignore
 // swagger:model types_node
 type Node struct {
+	Runtime
 	Meta    NodeMeta    `json:"meta"`
 	Info    NodeInfo    `json:"info"`
 	Status  NodeStatus  `json:"status"`

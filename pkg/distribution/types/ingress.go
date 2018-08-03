@@ -20,8 +20,14 @@ package types
 
 import "fmt"
 
+type IngressList struct {
+	Runtime
+	Items []*Ingress
+}
+
 // swagger:ignore
 type Ingress struct {
+	Runtime
 	Meta   IngressMeta   `json:"meta"`
 	Status IngressStatus `json:"status"`
 	Spec   IngressSpec   `json:"spec"`

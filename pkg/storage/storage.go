@@ -46,13 +46,13 @@ const (
 )
 
 type Storage interface {
-	Get(ctx context.Context, kind types.Kind, name string, obj interface{}) error
-	List(ctx context.Context, kind types.Kind, q string, obj interface{}) error
-	Map(ctx context.Context, kind types.Kind, q string, obj interface{}) error
+	Get(ctx context.Context, kind types.Kind, name string, obj interface{}, opts *types.Opts) error
+	List(ctx context.Context, kind types.Kind, q string, obj interface{}, opts *types.Opts) error
+	Map(ctx context.Context, kind types.Kind, q string, obj interface{}, opts *types.Opts) error
 	Put(ctx context.Context, kind types.Kind, name string, obj interface{}, opts *types.Opts) error
 	Set(ctx context.Context, kind types.Kind, name string, obj interface{}, opts *types.Opts) error
 	Del(ctx context.Context, kind types.Kind, name string) error
-	Watch(ctx context.Context, kind types.Kind, event chan *types.WatcherEvent) error
+	Watch(ctx context.Context, kind types.Kind, event chan *types.WatcherEvent, opts *types.Opts) error
 	Filter() types.Filter
 	Key() types.Key
 }

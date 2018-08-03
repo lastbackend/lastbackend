@@ -33,7 +33,9 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/util/serializer"
 	"github.com/lastbackend/lastbackend/pkg/util/validator"
 	"golang.org/x/net/context"
-)
+	"github.com/coreos/etcd/etcdserver/etcdserverpb"
+	"github.com/coreos/etcd/mvcc/mvccpb"
+		)
 
 type dbstore struct {
 	store.Store
@@ -46,8 +48,6 @@ type dbstore struct {
 	watcher    *watcher
 }
 
-// Need for decode array bytes
-type buffer []byte
 
 func (s *dbstore) Count(ctx context.Context, key, keyRegexFilter string) (int, error) {
 	key = path.Join(s.pathPrefix, key)
@@ -74,7 +74,8 @@ func (s *dbstore) Count(ctx context.Context, key, keyRegexFilter string) (int, e
 	return count, nil
 }
 
-func (s *dbstore) Create(ctx context.Context, key string, obj, outPtr interface{}, ttl uint64) error {
+func (s *dbstore) Put(ctx context.Context, key string, obj, outPtr interface{}, ttl uint64) error {
+
 	key = path.Join(s.pathPrefix, key)
 
 	log.V(logLevel).Debugf("%s:create:> key: %s, ttl: %d, val: %#v", logPrefix, key, ttl, obj)
@@ -108,10 +109,18 @@ func (s *dbstore) Create(ctx context.Context, key string, obj, outPtr interface{
 			return err
 		}
 	}
+
+	if _, err := setEntityRuntimeInfo(outPtr, getRuntimeFromResponse(txnResp.Header)); err != nil {
+		log.V(logLevel).Errorf("%s:get:> can not set runtime info err: %v", logPrefix, err)
+		return err
+	}
+
 	return nil
 }
 
-func (s *dbstore) Get(ctx context.Context, key string, outPtr interface{}) error {
+func (s *dbstore) Get(ctx context.Context, key string, outPtr interface{}, rev *int64) error {
+
+
 	key = path.Join(s.pathPrefix, key)
 
 	log.V(logLevel).Debugf("%s:get:> key: %s", key)
@@ -124,14 +133,22 @@ func (s *dbstore) Get(ctx context.Context, key string, outPtr interface{}) error
 	if len(res.Kvs) == 0 {
 		return errors.New(types.ErrEntityNotFound)
 	}
+
 	if err := decode(s.codec, res.Kvs[0].Value, outPtr); err != nil {
 		log.V(logLevel).Errorf("%s:get:> decode data err: %v", logPrefix, err)
 		return err
 	}
+
+	if _, err := setEntityRuntimeInfo(outPtr, getRuntimeFromResponse(res.Header)); err != nil {
+		log.V(logLevel).Errorf("%s:get:> can not set runtime info err: %v", logPrefix, err)
+		return err
+	}
+
 	return nil
 }
 
-func (s *dbstore) List(ctx context.Context, key, keyRegexFilter string, listOutPtr interface{}) error {
+func (s *dbstore) List(ctx context.Context, key, keyRegexFilter string, listOutPtr interface{}, rev *int64) error {
+
 	key = path.Join(s.pathPrefix, key)
 
 	log.V(logLevel).Debugf("%s:list:> key: %s with filter: %s", logPrefix, key, keyRegexFilter)
@@ -143,7 +160,7 @@ func (s *dbstore) List(ctx context.Context, key, keyRegexFilter string, listOutP
 	}
 
 	r, _ := regexp.Compile(keyRegexFilter)
-	items := make(map[string]buffer)
+	items := make(map[string]*mvccpb.KeyValue)
 
 	for _, kv := range getResp.Kvs {
 
@@ -154,17 +171,25 @@ func (s *dbstore) List(ctx context.Context, key, keyRegexFilter string, listOutP
 			continue
 		}
 
-		items[node] = kv.Value
+		items[node] = kv
 	}
 
 	if err := decodeList(s.codec, items, listOutPtr); err != nil {
 		log.V(logLevel).Errorf("%s:list:> decode data err: %v", logPrefix, err)
 		return err
 	}
+
+
+	if _, err := setEntityRuntimeInfo(listOutPtr, getRuntimeFromResponse(getResp.Header)); err != nil {
+		log.V(logLevel).Errorf("%s:get:> can not set runtime info err: %v", logPrefix, err)
+		return err
+	}
+
 	return nil
 }
 
-func (s *dbstore) Map(ctx context.Context, key, keyRegexFilter string, mapOutPtr interface{}) error {
+func (s *dbstore) Map(ctx context.Context, key, keyRegexFilter string, mapOutPtr interface{}, rev *int64) error {
+
 	key = path.Join(s.pathPrefix, key)
 
 	log.V(logLevel).Debugf("%s:map:> key: %s with filter: %s", logPrefix, key, keyRegexFilter)
@@ -176,14 +201,14 @@ func (s *dbstore) Map(ctx context.Context, key, keyRegexFilter string, mapOutPtr
 	}
 
 	r, _ := regexp.Compile(keyRegexFilter)
-	items := make(map[string]buffer, len(getResp.Kvs))
+	items := make(map[string]*mvccpb.KeyValue, len(getResp.Kvs))
 
 	for _, kv := range getResp.Kvs {
 		if keyRegexFilter != "" && r.MatchString(string(kv.Key)) {
 			keys := r.FindStringSubmatch(string(kv.Key))
-			items[keys[1]] = buffer(kv.Value)
+			items[keys[1]] = kv
 		} else {
-			items[string(kv.Key)] = buffer(kv.Value)
+			items[string(kv.Key)] = kv
 		}
 	}
 
@@ -196,48 +221,16 @@ func (s *dbstore) Map(ctx context.Context, key, keyRegexFilter string, mapOutPtr
 		return err
 	}
 
-	return nil
-}
-
-func (s *dbstore) MapList(ctx context.Context, key string, keyRegexFilter string, mapOutPtr interface{}) error {
-
-	key = path.Join(s.pathPrefix, key)
-
-	log.V(logLevel).Debugf("%s:maplist:> key: %s with filter: %s", logPrefix, key, keyRegexFilter)
-
-	getResp, err := s.client.KV.Get(ctx, key, clientv3.WithPrefix())
-	if err != nil {
-		log.V(logLevel).Errorf("%s:maplist:> request err: %v", logPrefix, err)
+	if _, err := setEntityRuntimeInfo(mapOutPtr, getRuntimeFromResponse(getResp.Header)); err != nil {
+		log.V(logLevel).Errorf("%s:get:> can not set runtime info err: %v", logPrefix, err)
 		return err
 	}
 
-	r, _ := regexp.Compile(keyRegexFilter)
-	items := make(map[string]map[string]buffer)
-	for _, kv := range getResp.Kvs {
-
-		if (keyRegexFilter != "") && !r.MatchString(string(kv.Key)) {
-			continue
-		}
-
-		keys := r.FindStringSubmatch(string(kv.Key))
-		field := keys[len(keys)-1]
-		node := keys[len(keys)-2]
-
-		if len(items[node]) == 0 {
-			items[node] = make(map[string]buffer)
-		}
-
-		items[node][field] = kv.Value
-	}
-
-	if err := decodeMapList(s.codec, items, mapOutPtr); err != nil {
-		log.V(logLevel).Errorf("%s:maplist:> decode data err: %v", logPrefix, err)
-		return err
-	}
 	return nil
 }
 
-func (s *dbstore) Update(ctx context.Context, key string, obj, outPtr interface{}, ttl uint64) error {
+func (s *dbstore) Set(ctx context.Context, key string, obj, outPtr interface{}, ttl uint64, force bool, rev *int64) error {
+
 	key = path.Join(s.pathPrefix, key)
 
 	log.V(logLevel).Debugf("%s:update:> key: %s, ttl: %d, val: %#v", logPrefix, key, ttl, obj)
@@ -252,10 +245,22 @@ func (s *dbstore) Update(ctx context.Context, key string, obj, outPtr interface{
 		log.V(logLevel).Errorf("%s:update:> create ttl option err: %v", logPrefix, err)
 		return err
 	}
-	txnResp, err := s.client.KV.Txn(ctx).
-		If(clientv3.Compare(clientv3.ModRevision(key), "!=", 0)).
+
+	txn := s.client.KV.Txn(ctx)
+
+	if !force {
+		rv := int64(0)
+		if rev != nil {
+			rv = *rev
+		}
+
+		txn = txn.If(clientv3.Compare(clientv3.ModRevision(key), "!=", rv))
+	}
+
+	txnResp, err := txn.
 		Then(clientv3.OpPut(key, string(data), opts...)).
 		Commit()
+
 	if err != nil {
 		log.V(logLevel).Errorf("%s:update:> request err: %v", logPrefix, err)
 		return err
@@ -273,71 +278,26 @@ func (s *dbstore) Update(ctx context.Context, key string, obj, outPtr interface{
 			return err
 		}
 	}
+
+	if _, err := setEntityRuntimeInfo(outPtr, getRuntimeFromResponse(txnResp.Header)); err != nil {
+		log.V(logLevel).Errorf("%s:get:> can not set runtime info err: %v", logPrefix, err)
+		return err
+	}
+
 	return nil
 }
 
-func (s *dbstore) Upsert(ctx context.Context, key string, obj, outPtr interface{}, ttl uint64) error {
-	key = path.Join(s.pathPrefix, key)
+func (s *dbstore) Del(ctx context.Context, key string) error {
 
-	log.V(logLevel).Debugf("%s:upsert:> key: %s, ttl: %d, val: %#v", logPrefix, key, ttl, obj)
-
-	data, err := serializer.Encode(s.codec, obj)
-	if err != nil {
-		log.V(logLevel).Errorf("%s:upsert:> encode data err: %v", logPrefix, err)
-		return err
-	}
-	opts, err := s.ttlOpts(ctx, int64(ttl))
-	if err != nil {
-		log.V(logLevel).Errorf("%s:upsert:> create ttl option err: %v", logPrefix, err)
-		return err
-	}
-	txnResp, err := s.client.KV.Txn(ctx).
-		Then(clientv3.OpPut(key, string(data), opts...)).Commit()
-	if err != nil {
-		log.V(logLevel).Errorf("%s:upsert:> request err: %v", logPrefix, err)
-		return err
-	}
-	if !txnResp.Succeeded {
-		return errors.New(types.ErrOperationFailure)
-	}
-	if validator.IsNil(outPtr) {
-		log.V(logLevel).Warn("%s:Upsert: output struct is nil")
-		return nil
-	}
-	if outPtr != nil {
-		if err := decode(s.codec, data, outPtr); err != nil {
-			log.V(logLevel).Errorf("%s:upsert:> decode data err: %v", logPrefix, err)
-			return err
-		}
-	}
-	return nil
-}
-
-func (s *dbstore) Delete(ctx context.Context, key string) error {
 	key = path.Join(s.pathPrefix, key)
 
 	log.V(logLevel).Debugf("%s:delete:> key: %s", logPrefix, key)
 
 	_, err := s.client.KV.Txn(ctx).
-		Then(clientv3.OpGet(key), clientv3.OpDelete(key)).
+		Then(clientv3.OpGet(key), clientv3.OpDelete(key, clientv3.WithPrefix())).
 		Commit()
 	if err != nil {
 		log.V(logLevel).Errorf("%s:delete:> request err: %v", logPrefix, err)
-		return err
-	}
-	return nil
-}
-
-func (s *dbstore) DeleteDir(ctx context.Context, key string) error {
-	key = path.Join(s.pathPrefix, key)
-
-	log.V(logLevel).Debugf("%s:deletedir:> key: %s", logPrefix, key)
-
-	_, err := s.client.KV.Txn(ctx).
-		Then(clientv3.OpDelete(key, clientv3.WithPrefix())).
-		Commit()
-	if err != nil {
-		log.V(logLevel).Errorf("%s:deletedir:> request err: %v", logPrefix, err)
 		return err
 	}
 	return nil
@@ -354,14 +314,67 @@ func (s *dbstore) Begin(ctx context.Context) store.TX {
 	return t
 }
 
-func (s *dbstore) Watch(ctx context.Context, key, keyRegexFilter string) (types.Watcher, error) {
+func (s *dbstore) Watch(ctx context.Context, key, keyRegexFilter string, rev *int64) (types.Watcher, error) {
 	log.V(logLevel).Debugf("%s:watch:> key: %s, filter: %s", logPrefix, key, keyRegexFilter)
 	key = path.Join(s.pathPrefix, key)
-	return s.watcher.Watch(ctx, key, keyRegexFilter)
+	return s.watcher.Watch(ctx, key, keyRegexFilter, rev)
 }
 
 func (s *dbstore) Decode(ctx context.Context, value []byte, out interface{}) error {
 	return decode(s.codec, value, out)
+}
+
+
+func setEntityRuntimeInfo(out interface{}, runtime types.Runtime) (reflect.Value, error) {
+
+	var (
+		v reflect.Value
+		err error
+	)
+
+
+	if reflect.TypeOf(out).Kind() == reflect.Ptr {
+		v, err = converter.EnforcePtr(out)
+		if err != nil {
+			return reflect.ValueOf(v), errors.New("unable to convert output struct to pointer")
+		}
+	} else {
+		v = reflect.ValueOf(out)
+	}
+
+	setValueRuntimeInfo(v, runtime)
+	return reflect.ValueOf(v), nil
+}
+
+func setValueRuntimeInfo(v reflect.Value, runtime types.Runtime) (reflect.Value, error) {
+
+
+	f := v.FieldByName("Runtime")
+
+	if !f.IsValid() {
+		return reflect.ValueOf(v), nil
+	}
+
+	if !f.CanSet() {
+		return reflect.ValueOf(v), nil
+	}
+
+	f.Set(reflect.ValueOf(runtime))
+
+	return reflect.ValueOf(v), nil
+}
+
+
+func getRuntimeFromResponse(res *etcdserverpb.ResponseHeader) types.Runtime {
+	runtime := types.Runtime{}
+	runtime.System.Revision = res.Revision
+	return runtime
+}
+
+func getRuntimeFromValue(res *mvccpb.KeyValue) types.Runtime {
+	runtime := types.Runtime{}
+	runtime.System.Revision = res.ModRevision
+	return runtime
 }
 
 func decode(s serializer.Codec, value []byte, out interface{}) error {
@@ -371,79 +384,73 @@ func decode(s serializer.Codec, value []byte, out interface{}) error {
 	return serializer.Decode(s, value, out)
 }
 
-func decodeList(codec serializer.Codec, items map[string]buffer, listOut interface{}) error {
+func decodeList(codec serializer.Codec, items map[string]*mvccpb.KeyValue, listOut interface{}) error {
 	v, err := converter.EnforcePtr(listOut)
-	if err != nil || (v.Kind() != reflect.Slice) {
+	if err != nil {
 		return errors.New(types.ErrStructOutIsInvalid)
 	}
 
-	for _, item := range items {
-		var obj = reflect.New(v.Type().Elem()).Interface().(interface{})
-		err := serializer.Decode(codec, item, obj)
-		if err != nil {
-			return err
-		}
-		v.Set(reflect.Append(v, reflect.ValueOf(obj).Elem()))
+	f := v.FieldByName("Items")
+	if f.Kind() != reflect.Slice {
+		return errors.New(types.ErrStructOutIsInvalid)
 	}
-	return nil
-}
 
-func decodeMap(codec serializer.Codec, items map[string]buffer, mapOut interface{}) error {
-
-	v := reflect.ValueOf(mapOut)
-	if v.Kind() == reflect.Map {
-		for key, item := range items {
-			var obj = reflect.New(v.Type().Elem()).Interface().(interface{})
-			err := serializer.Decode(codec, item, obj)
-			if err != nil {
-				return err
-			}
-			v.SetMapIndex(reflect.ValueOf(key), reflect.ValueOf(obj).Elem())
-		}
+	if !f.IsValid() {
 		return nil
 	}
 
-	err := serializer.Decode(codec, joinJSON(items), mapOut)
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
-func decodeMapList(codec serializer.Codec, items map[string]map[string]buffer, mapOut interface{}) error {
-	v := reflect.ValueOf(mapOut)
-	if v.Kind() != reflect.Map {
-		return errors.New(types.ErrStructOutIsInvalid)
+	if !f.CanSet() {
+		return nil
 	}
 
-	for key, item := range items {
-		var obj = reflect.New(v.Type().Elem()).Interface().(interface{})
-		err := serializer.Decode(codec, joinJSON(item), obj)
+	for _, item := range items {
+
+		var obj = reflect.New(f.Type().Elem()).Interface().(interface{})
+		err := serializer.Decode(codec, item.Value, obj)
 		if err != nil {
 			return err
 		}
-		v.SetMapIndex(reflect.ValueOf(key), reflect.ValueOf(obj).Elem())
-		delete(items, key)
+
+		setValueRuntimeInfo(reflect.Indirect(reflect.ValueOf(obj).Elem()), getRuntimeFromValue(item))
+		f.Set(reflect.Append(f, reflect.ValueOf(obj).Elem()))
 	}
+
 	return nil
 }
 
-func joinJSON(item map[string]buffer) []byte {
-	current := 0
-	total := len(item)
-	buffer := []byte("{")
-	for field, data := range item {
-		current++
-		buffer = append(buffer, []byte("\"")...)
-		buffer = append(buffer, []byte(field)...)
-		buffer = append(buffer, []byte("\":")...)
-		buffer = append(buffer, data...)
-		if current != total {
-			buffer = append(buffer, []byte(",")...)
-		}
+func decodeMap(codec serializer.Codec, items map[string]*mvccpb.KeyValue, mapOut interface{}) error {
+
+	v, err := converter.EnforcePtr(mapOut)
+	if err != nil {
+		return errors.New(types.ErrStructOutIsInvalid)
 	}
-	buffer = append(buffer, []byte("}")...)
-	return buffer
+
+	f := v.FieldByName("Items")
+	if f.Kind() != reflect.Map {
+		return errors.New(types.ErrStructOutIsInvalid)
+	}
+
+	if !f.IsValid() {
+		return nil
+	}
+
+	if !f.CanSet() {
+		return nil
+	}
+
+	for key, item := range items {
+		var obj = reflect.New(f.Type().Elem()).Interface().(interface{})
+		err := serializer.Decode(codec, item.Value, obj)
+		if err != nil {
+			return err
+		}
+
+		setValueRuntimeInfo(reflect.Indirect(reflect.ValueOf(obj).Elem()), getRuntimeFromValue(item))
+		f.SetMapIndex(reflect.ValueOf(key), reflect.ValueOf(obj).Elem())
+	}
+
+	return nil
+
 }
 
 func (s *dbstore) ttlOpts(ctx context.Context, ttl int64) ([]clientv3.OpOption, error) {

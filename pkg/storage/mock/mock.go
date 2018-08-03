@@ -20,9 +20,7 @@ package mock
 
 import (
 	"context"
-	"errors"
-
-	"strings"
+		"strings"
 
 	"reflect"
 
@@ -30,13 +28,14 @@ import (
 
 	"github.com/lastbackend/lastbackend/pkg/storage/types"
 	"github.com/lastbackend/lastbackend/pkg/util/converter"
+	"github.com/lastbackend/lastbackend/pkg/distribution/errors"
 )
 
 type Storage struct {
 	store map[types.Kind]map[string][]byte
 }
 
-func (s *Storage) Get(ctx context.Context, kind types.Kind, name string, obj interface{}) error {
+func (s *Storage) Get(ctx context.Context, kind types.Kind, name string, obj interface{}, opts *types.Opts) error {
 	s.check(kind)
 
 	if _, ok := s.store[kind][name]; !ok {
@@ -54,7 +53,7 @@ func (s *Storage) Get(ctx context.Context, kind types.Kind, name string, obj int
 	return nil
 }
 
-func (s *Storage) List(ctx context.Context, kind types.Kind, q string, obj interface{}) error {
+func (s *Storage) List(ctx context.Context, kind types.Kind, q string, obj interface{}, opts *types.Opts) error {
 	s.check(kind)
 
 	if reflect.ValueOf(obj).IsNil() {
@@ -64,10 +63,6 @@ func (s *Storage) List(ctx context.Context, kind types.Kind, q string, obj inter
 	v, err := converter.EnforcePtr(obj)
 	if err != nil {
 		return errors.New(types.ErrStructOutIsNotPointer)
-	}
-
-	if v.Kind() != reflect.Slice {
-		return errors.New(types.ErrStructOutIsInvalid)
 	}
 
 	buffer := []byte("[")
@@ -87,14 +82,29 @@ func (s *Storage) List(ctx context.Context, kind types.Kind, q string, obj inter
 
 	buffer = append(buffer, []byte("]")...)
 
-	if err := json.Unmarshal(buffer, obj); err != nil {
+	f := v.FieldByName("Items")
+	if f.Kind() != reflect.Slice {
+		return errors.New(types.ErrStructOutIsInvalid)
+	}
+
+	if !f.IsValid() {
+		return nil
+	}
+
+	if !f.CanSet() {
+		return nil
+	}
+
+	items := reflect.New(f.Type()).Interface().(interface{})
+	if err := json.Unmarshal(buffer, items); err != nil {
 		return err
 	}
 
+	f.Set(reflect.ValueOf(items).Elem())
 	return nil
 }
 
-func (s *Storage) Map(ctx context.Context, kind types.Kind, q string, obj interface{}) error {
+func (s *Storage) Map(ctx context.Context, kind types.Kind, q string, obj interface{}, opts *types.Opts) error {
 	s.check(kind)
 
 	if reflect.ValueOf(obj).IsNil() {
@@ -104,10 +114,6 @@ func (s *Storage) Map(ctx context.Context, kind types.Kind, q string, obj interf
 	v, err := converter.EnforcePtr(obj)
 	if err != nil {
 		return errors.New(types.ErrStructOutIsNotPointer)
-	}
-
-	if v.Kind() != reflect.Map {
-		return errors.New(types.ErrStructOutIsInvalid)
 	}
 
 	buffer := []byte("{")
@@ -132,9 +138,26 @@ func (s *Storage) Map(ctx context.Context, kind types.Kind, q string, obj interf
 
 	buffer = append(buffer, []byte("}")...)
 
-	if err := json.Unmarshal(buffer, obj); err != nil {
+
+	f := v.FieldByName("Items")
+	if f.Kind() != reflect.Map {
+		return errors.New(types.ErrStructOutIsInvalid)
+	}
+
+	if !f.IsValid() {
+		return nil
+	}
+
+	if !f.CanSet() {
+		return nil
+	}
+
+	items := reflect.New(f.Type()).Interface().(interface{})
+	if err := json.Unmarshal(buffer, items); err != nil {
 		return err
 	}
+
+	f.Set(reflect.ValueOf(items).Elem())
 
 	return nil
 }
@@ -181,7 +204,7 @@ func (s *Storage) Set(ctx context.Context, kind types.Kind, name string, obj int
 	return nil
 }
 
-func (s *Storage) Del(ctx context.Context, kind types.Kind, name string) error {
+func (s *Storage) Del(ctx context.Context, kind types.Kind, name string)  error {
 	s.check(kind)
 	if name == "" {
 		s.store[kind] = make(map[string][]byte)
@@ -191,7 +214,7 @@ func (s *Storage) Del(ctx context.Context, kind types.Kind, name string) error {
 	return nil
 }
 
-func (s *Storage) Watch(ctx context.Context, kind types.Kind, event chan *types.WatcherEvent) error {
+func (s *Storage) Watch(ctx context.Context, kind types.Kind, event chan *types.WatcherEvent, opts *types.Opts)  error {
 	s.check(kind)
 	return nil
 }

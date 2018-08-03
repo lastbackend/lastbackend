@@ -39,7 +39,7 @@ type TxResponse struct {
 }
 
 //TODO: add compare parameters as argument
-func (t *tx) Create(key string, obj interface{}, ttl uint64) error {
+func (t *tx) Put(key string, obj interface{}, ttl uint64) error {
 	key = path.Join(t.pathPrefix, key)
 
 	log.V(logLevel).Debugf("%s:create:> key: %s, ttl: %d, val: %#v", logPrefix, key, ttl, obj)
@@ -59,7 +59,7 @@ func (t *tx) Create(key string, obj interface{}, ttl uint64) error {
 	return nil
 }
 
-func (t *tx) Update(key string, obj interface{}, ttl uint64) error {
+func (t *tx) Set(key string, obj interface{}, ttl uint64, force bool) error {
 	key = path.Join(t.pathPrefix, key)
 
 	log.V(logLevel).Debugf("%s:update:> key: %s, ttl: %d, val: %#v", logPrefix, key, ttl, obj)
@@ -79,27 +79,8 @@ func (t *tx) Update(key string, obj interface{}, ttl uint64) error {
 	return nil
 }
 
-func (t *tx) Upsert(key string, obj interface{}, ttl uint64) error {
-	key = path.Join(t.pathPrefix, key)
-
-	log.V(logLevel).Debugf("%s:upsert:> key: %s, val: %#v", logPrefix, key, obj)
-
-	data, err := serializer.Encode(t.codec, obj)
-	if err != nil {
-		log.V(logLevel).Errorf("%s:upsert:> encode data err: %v", logPrefix, err)
-		return err
-	}
-	opts, err := t.ttlOpts(int64(ttl))
-	if err != nil {
-		log.V(logLevel).Errorf("%s:upsert:> create ttl option err: %v", logPrefix, err)
-		return err
-	}
-	t.ops = append(t.ops, clientv3.OpPut(key, string(data), opts...))
-	return nil
-}
-
 //TODO: add compare parameters as argument
-func (t *tx) Delete(key string) {
+func (t *tx) Del(key string) {
 	key = path.Join(t.pathPrefix, key)
 
 	log.V(logLevel).Debugf("%s:delete:> key: %s", logPrefix, key)
@@ -107,14 +88,6 @@ func (t *tx) Delete(key string) {
 	t.ops = append(t.ops, clientv3.OpDelete(key))
 }
 
-//TODO: add compare parameters as argument
-func (t *tx) DeleteDir(key string) {
-	key = path.Join(t.pathPrefix, key)
-
-	log.V(logLevel).Debugf("%s:deletedir:> key: %s", logPrefix, key)
-
-	t.ops = append(t.ops, clientv3.OpDelete(key, clientv3.WithPrefix()))
-}
 
 func (t *tx) Commit() error {
 

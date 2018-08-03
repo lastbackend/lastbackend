@@ -24,6 +24,7 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/controller/envs"
 	"github.com/lastbackend/lastbackend/pkg/distribution"
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
+	"github.com/lastbackend/dynamic/pkg/log"
 )
 
 func ServiceRemove(svc *types.Service) error {
@@ -32,7 +33,21 @@ func ServiceRemove(svc *types.Service) error {
 }
 
 func ServiceProvision(svc *types.Service) (*types.Deployment, error) {
-	return DeploymentCreate(svc)
+
+	d, err := DeploymentCreate(svc)
+	if err != nil {
+		log.Error(err)
+		return nil, err
+	}
+
+	svc.Status.State = types.StateProvision
+	sm := distribution.NewServiceModel(context.Background(), envs.Get().GetStorage())
+	if err := sm.Set(svc); err != nil {
+		log.Error(err)
+		return nil, err
+	}
+
+	return d, nil
 }
 
 func ServiceDestroy(svc *types.Service, dl map[string]*types.Deployment) error {

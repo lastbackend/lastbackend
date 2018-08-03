@@ -34,16 +34,6 @@ const (
 	logRoutePrefix = "distribution:route"
 )
 
-type IRoute interface {
-	Get(namespace, name string) (*types.Route, error)
-	List() ([]*types.Route, error)
-	ListByNamespace(namespace string) ([]*types.Route, error)
-	Create(namespace *types.Namespace, opts *types.RouteCreateOptions) (*types.Route, error)
-	Update(route *types.Route, opts *types.RouteUpdateOptions) (*types.Route, error)
-	SetStatus(route *types.Route, status *types.RouteStatus) error
-	Remove(route *types.Route) error
-}
-
 type Route struct {
 	context context.Context
 	storage storage.Storage
@@ -191,6 +181,6 @@ func (n *Route) Remove(route *types.Route) error {
 	return nil
 }
 
-func NewRouteModel(ctx context.Context, stg storage.Storage) IRoute {
+func NewRouteModel(ctx context.Context, stg storage.Storage) *Route {
 	return &Route{ctx, stg}
 }

@@ -24,16 +24,22 @@ import (
 )
 
 // swagger:ignore
+type NamespaceMap struct {
+	Runtime
+	Items map[string]*Namespace
+}
+
+// swagger:ignore
+type NamespaceList struct {
+	Runtime
+	Items []*Namespace
+}
+
+// swagger:ignore
 type Namespace struct {
 	Meta NamespaceMeta `json:"meta"`
 	Spec NamespaceSpec `json:"spec"`
 }
-
-// swagger:ignore
-type NamespaceMap map[string]*Namespace
-
-// swagger:ignore
-type NamespaceList []*Namespace
 
 // swagger:ignore
 type NamespaceEnvs []NamespaceEnv

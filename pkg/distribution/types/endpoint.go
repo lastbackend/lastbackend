@@ -30,9 +30,15 @@ const (
 // swagger:ignore
 // Endpoint - service endpoint
 type Endpoint struct {
+	Runtime
 	Meta   EndpointMeta   `json:"meta"`
 	Status EndpointStatus `json:"status"`
 	Spec   EndpointSpec   `json:"spec"`
+}
+
+type EndpointList struct {
+	Runtime
+	Items []*Endpoint
 }
 
 // swagger:ignore

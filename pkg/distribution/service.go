@@ -36,17 +36,6 @@ const (
 	logServicePrefix = "distribution:service"
 )
 
-type IService interface {
-	Get(namespace, service string) (*types.Service, error)
-	List(namespace string) ([]*types.Service, error)
-	Create(namespace *types.Namespace, opts *types.ServiceCreateOptions) (*types.Service, error)
-	Update(service *types.Service, opts *types.ServiceUpdateOptions) (*types.Service, error)
-	Destroy(service *types.Service) (*types.Service, error)
-	Remove(service *types.Service) error
-	Set(service *types.Service) error
-	Watch(ch chan types.ServiceEvent) error
-}
-
 type Service struct {
 	context context.Context
 	storage storage.Storage
@@ -261,7 +250,8 @@ func (s *Service) Watch(ch chan types.ServiceEvent) error {
 		}
 	}()
 
-	if err := s.storage.Watch(s.context, storage.ServiceKind, watcher); err != nil {
+	opts := storage.GetOpts()
+	if err := s.storage.Watch(s.context, storage.ServiceKind, watcher, opts); err != nil {
 		return err
 	}
 
@@ -269,6 +259,6 @@ func (s *Service) Watch(ch chan types.ServiceEvent) error {
 }
 
 // NewServiceModel returns new service management model
-func NewServiceModel(ctx context.Context, stg storage.Storage) IService {
+func NewServiceModel(ctx context.Context, stg storage.Storage) *Service {
 	return &Service{ctx, stg}
 }

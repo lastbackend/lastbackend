@@ -20,17 +20,26 @@ package types
 
 import "fmt"
 
+type DeploymentMap struct {
+	Runtime
+	Items map[string]*Deployment
+}
+
+type DeploymentList struct {
+	Runtime
+	Items []*Deployment
+}
+
 type Deployment struct {
+	Runtime
+	// Deployment Meta
 	Meta DeploymentMeta `json:"meta"`
-	// Deployment spec
-	Spec DeploymentSpec `json:"spec"`
 	// Deployment status
 	Status DeploymentStatus `json:"status"`
-	// Deployment replicas
-	Replicas DeploymentReplicas `json:"replicas"`
+	// Deployment spec
+	Spec DeploymentSpec `json:"spec"`
+
 }
-type DeploymentMap map[string]*Deployment
-type DeploymentList []*Deployment
 
 type DeploymentMeta struct {
 	Meta

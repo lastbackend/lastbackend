@@ -30,10 +30,6 @@ const (
 	logTriggerPrefix = "distribution:trigger"
 )
 
-type ITrigger interface {
-	Get(namespace, service, name string) (*types.Trigger, error)
-}
-
 type Trigger struct {
 	context context.Context
 	storage storage.Storage
@@ -54,6 +50,6 @@ func (t *Trigger) Get(namespace, service, name string) (*types.Trigger, error) {
 	return trigger, nil
 }
 
-func NewTriggerModel(ctx context.Context, stg storage.Storage) ITrigger {
+func NewTriggerModel(ctx context.Context, stg storage.Storage) *Trigger {
 	return &Trigger{ctx, stg}
 }

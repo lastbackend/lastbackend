@@ -37,19 +37,6 @@ const (
 	logPodPrefix = "distribution:pod"
 )
 
-type IPod interface {
-	Get(namespace, service, deployment, name string) (*types.Pod, error)
-	Create(deployment *types.Deployment) (*types.Pod, error)
-	ListByNamespace(namespace string) ([]*types.Pod, error)
-	ListByService(namespace, service string) ([]*types.Pod, error)
-	ListByDeployment(namespace, service, deployment string) ([]*types.Pod, error)
-	SetNode(pod *types.Pod, node *types.Node) error
-	Update(pod *types.Pod) error
-	Destroy(pod *types.Pod) error
-	Remove(pod *types.Pod) error
-	Watch(ch chan types.PodEvent) error
-}
-
 type Pod struct {
 	context context.Context
 	storage storage.Storage
@@ -61,8 +48,8 @@ func (p *Pod) Get(namespace, service, deployment, name string) (*types.Pod, erro
 
 	pod := new(types.Pod)
 
-	err := p.storage.Get(p.context, storage.PodKind,
-		p.storage.Key().Pod(namespace, service, deployment, name), &pod)
+	m, err := p.storage.Get(p.context, storage.PodKind,
+		p.storage.Key().Pod(namespace, service, deployment, name), &pod, nil)
 	if err != nil {
 
 		if errors.Storage().IsErrEntityNotFound(err) {
@@ -170,6 +157,7 @@ func (p *Pod) ListByDeployment(namespace, service, deployment string) ([]*types.
 	return items, nil
 }
 
+// SetNode - set node info to pod
 func (p *Pod) SetNode(pod *types.Pod, node *types.Node) error {
 	log.Debugf("%s:setnode:> set node for pod: %s", logPodPrefix, pod.Meta.Name)
 
@@ -189,8 +177,9 @@ func (p *Pod) Update(pod *types.Pod) error {
 
 	log.Debugf("%s:update:> update pod: %s", logPodPrefix, pod.Meta.Name)
 
-	if err := p.storage.Set(p.context, storage.PodKind,
-		p.storage.Key().Pod(pod.Meta.Namespace, pod.Meta.Service, pod.Meta.Deployment, pod.Meta.Name), pod, nil); err != nil {
+	if _, err := p.storage.Set(p.context, storage.PodKind,
+		p.storage.Key().Pod(pod.Meta.Namespace, pod.Meta.Service, pod.Meta.Deployment, pod.Meta.Name),
+		pod, nil); err != nil {
 		log.Errorf("%s:update:> pod update err: %v", logPodPrefix, err)
 		return err
 	}
@@ -256,13 +245,14 @@ func (p *Pod) Watch(ch chan types.PodEvent) error {
 		}
 	}()
 
-	if err := p.storage.Watch(p.context, storage.PodKind, watcher); err != nil {
+	opts := storage.GetOpts()
+	if err := p.storage.Watch(p.context, storage.PodKind, watcher, opts); err != nil {
 		return err
 	}
 
 	return nil
 }
 
-func NewPodModel(ctx context.Context, stg storage.Storage) IPod {
+func NewPodModel(ctx context.Context, stg storage.Storage) *Pod {
 	return &Pod{ctx, stg}
 }

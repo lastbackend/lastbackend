@@ -34,16 +34,6 @@ const (
 	logEndpointPrefix = "distribution:endpoint"
 )
 
-type IEndpoint interface {
-	Get(namespace, service string) (*types.Endpoint, error)
-	ListByNamespace(namespace string) (map[string]*types.Endpoint, error)
-	Create(namespace string, service string, opts *types.EndpointCreateOptions) (*types.Endpoint, error)
-	Update(endpoint *types.Endpoint, opts *types.EndpointUpdateOptions) (*types.Endpoint, error)
-	SetSpec(endpoint *types.Endpoint, spec *types.EndpointSpec) (*types.Endpoint, error)
-	Remove(endpoint *types.Endpoint) error
-	Watch(ch chan types.EndpointEvent) error
-}
-
 type Endpoint struct {
 	context context.Context
 	storage storage.Storage
@@ -200,13 +190,14 @@ func (e *Endpoint) Watch(ch chan types.EndpointEvent) error {
 		}
 	}()
 
-	if err := e.storage.Watch(e.context, storage.EndpointKind, watcher); err != nil {
+	opts := storage.GetOpts()
+	if err := e.storage.Watch(e.context, storage.EndpointKind, watcher, opts); err != nil {
 		return err
 	}
 
 	return nil
 }
 
-func NewEndpointModel(ctx context.Context, stg storage.Storage) IEndpoint {
+func NewEndpointModel(ctx context.Context, stg storage.Storage) *Endpoint {
 	return &Endpoint{ctx, stg}
 }

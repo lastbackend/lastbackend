@@ -21,22 +21,29 @@ package types
 import "fmt"
 
 // swagger:ignore
-// swagger:model types_volume_map
-type VolumeMap map[string]*Volume
-
-// swagger:ignore
-// swagger:model types_volume_list
-type VolumeList []*Volume
-
-// swagger:ignore
 // swagger:model types_volume
 type Volume struct {
+	Runtime
 	// Volume meta
 	Meta VolumeMeta `json:"meta" yaml:"meta"`
 	// Volume spec
 	Spec VolumeSpec `json:"spec" yaml:"spec"`
 	// Volume status
 	Status VolumeStatus `json:"status" yaml:"status"`
+}
+
+// swagger:ignore
+// swagger:model types_volume_map
+type VolumeMap struct {
+	Runtime
+	Items map[string]*Volume
+}
+
+// swagger:ignore
+// swagger:model types_volume_list
+type VolumeList struct {
+	Runtime
+	Items []*Volume
 }
 
 // swagger:ignore

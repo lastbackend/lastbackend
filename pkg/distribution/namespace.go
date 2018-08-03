@@ -37,18 +37,19 @@ const (
 	defaultNamespaceRoutes = 1
 )
 
-type INamespace interface {
-	List() ([]*types.Namespace, error)
-	Get(name string) (*types.Namespace, error)
-	Create(opts *types.NamespaceCreateOptions) (*types.Namespace, error)
-	Update(namespace *types.Namespace, opts *types.NamespaceUpdateOptions) error
-	Remove(namespace *types.Namespace) error
-	Watch(ch chan types.NamespaceEvent) error
-}
-
 type Namespace struct {
 	context context.Context
 	storage storage.Storage
+}
+
+
+type NM struct {
+	Meta struct{}
+	Entity Namespace
+}
+
+func (n *NM) Set(Namespace) error {
+	return nil
 }
 
 func (n *Namespace) List() ([]*types.Namespace, error) {
@@ -57,7 +58,9 @@ func (n *Namespace) List() ([]*types.Namespace, error) {
 
 	var items = make([]*types.Namespace, 0)
 
-	err := n.storage.List(n.context, storage.NamespaceKind, "", &items)
+	m, err := n.storage.List(n.context, storage.NamespaceKind, "", &items, nil)
+
+	log.Debug(m.Revision)
 
 	if err != nil {
 		log.Info(err.Error())
@@ -80,7 +83,7 @@ func (n *Namespace) Get(name string) (*types.Namespace, error) {
 
 	namespace := new(types.Namespace)
 
-	err := n.storage.Get(n.context, storage.NamespaceKind, n.storage.Key().Namespace(name), &namespace)
+	_, err := n.storage.Get(n.context, storage.NamespaceKind, n.storage.Key().Namespace(name), &namespace, nil)
 	if err != nil {
 		if errors.Storage().IsErrEntityNotFound(err) {
 			log.V(logLevel).Warnf("%s:get:> namespace by name `%s` not found", logNamespacePrefix, name)
@@ -90,6 +93,8 @@ func (n *Namespace) Get(name string) (*types.Namespace, error) {
 		log.V(logLevel).Errorf("%s:get:> get namespace by name `%s` err: %v", logNamespacePrefix, name, err)
 		return nil, err
 	}
+
+
 
 	return namespace, nil
 }
@@ -195,13 +200,14 @@ func (n *Namespace) Watch(ch chan types.NamespaceEvent) error {
 		}
 	}()
 
-	if err := n.storage.Watch(n.context, storage.NamespaceKind, watcher); err != nil {
+	opts := storage.GetOpts()
+	if err := n.storage.Watch(n.context, storage.NamespaceKind, watcher, opts); err != nil {
 		return err
 	}
 
 	return nil
 }
 
-func NewNamespaceModel(ctx context.Context, stg storage.Storage) INamespace {
+func NewNamespaceModel(ctx context.Context, stg storage.Storage) *Namespace {
 	return &Namespace{ctx, stg}
 }

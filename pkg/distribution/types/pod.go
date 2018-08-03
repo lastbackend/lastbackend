@@ -20,15 +20,13 @@ package types
 
 import (
 	"fmt"
-	"sync"
-	"time"
+		"time"
 )
 
 // swagger:ignore
 // swagger:model types_pod
 type Pod struct {
-	// Lock map
-	lock sync.RWMutex
+	Runtime
 	// Pod Meta
 	Meta PodMeta `json:"meta" yaml:"meta"`
 	// Pod Spec

@@ -31,15 +31,6 @@ const (
 	logIngressPrefix = "distribution:ingress"
 )
 
-type IIngress interface {
-	List() (map[string]*types.Ingress, error)
-	Create(opts *types.IngressCreateOptions) (*types.Ingress, error)
-	Get(name string) (*types.Ingress, error)
-	SetMeta(ingress *types.Ingress, meta *types.IngressUpdateMetaOptions) error
-	SetStatus(ingress *types.Ingress, state types.IngressStatus) error
-	Remove(ingress *types.Ingress) error
-}
-
 type Ingress struct {
 	context context.Context
 	storage storage.Storage
@@ -141,6 +132,6 @@ func (n *Ingress) Remove(ingress *types.Ingress) error {
 	return nil
 }
 
-func NewIngressModel(ctx context.Context, stg storage.Storage) IIngress {
+func NewIngressModel(ctx context.Context, stg storage.Storage) *Ingress {
 	return &Ingress{ctx, stg}
 }

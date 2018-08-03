@@ -47,25 +47,23 @@ type ClusterState struct {
 func (cs *ClusterState) Observe() {
 	// Watch node changes
 	for {
-		log.Info("cluster: waiting for pod or node")
 		select {
 		case n := <-cs.node.observer:
-			log.Infof("node: %s", n.Meta.Name)
+			log.V(7).Debugf("node: %s", n.Meta.Name)
+			break
 		case p := <-cs.pod.observer:
-
-			log.Infof("pod: %s", p.Meta.Name)
 
 			switch p.Status.State {
 			case types.StateCreated:
-				log.Infof("cluster: Pod provision: %s start", p.SelfLink())
+				log.Debugf("cluster: Pod provision: %s start", p.SelfLink())
 				if err := PodProvision(p, cs); err != nil {
 					log.Errorf("%s", err.Error())
 				}
-				log.Infof("cluster: Pod provision: %s done", p.SelfLink())
+				log.Debugf("cluster: Pod provision: %s done", p.SelfLink())
 
 				break
 			case types.StateProvision:
-				log.Infof("Pod provision: %s", p.SelfLink())
+				log.Debugf("Pod provision: %s", p.SelfLink())
 				if err := PodProvision(p, cs); err != nil {
 					log.Errorf("%s", err.Error())
 				}
@@ -88,7 +86,7 @@ func (cs *ClusterState) Observe() {
 // Restore cluster state from storage
 func (cs *ClusterState) Restore() error {
 
-	log.Info("restore cluster state")
+	log.Debug("restore cluster state")
 	var err error
 
 	// Get cluster info
@@ -128,15 +126,12 @@ func (cs *ClusterState) Restore() error {
 	}
 
 	for _, n := range ns {
-		log.Infof("restore namespace: %s", n.Meta.Name)
-
 		pl, err := pm.ListByNamespace(n.Meta.Name)
 		if err != nil {
 			log.Errorf("%s", err.Error())
 			return err
 		}
 		for _, p := range pl {
-			log.Debugf("cluster: restore pod: %s", p.SelfLink())
 			cs.pod.observer <- p
 		}
 	}
@@ -180,9 +175,7 @@ func (cs *ClusterState) DelNode(n *types.Node) {
 }
 
 func (cs *ClusterState) SetPod(p *types.Pod) {
-	log.Infof("start send pod update: %s", p.SelfLink())
 	cs.pod.observer <- p
-	log.Infof("finish send pod update: %s", p.SelfLink())
 }
 
 // NewClusterState returns new cluster state instance

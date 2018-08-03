@@ -36,18 +36,6 @@ const (
 	logDeploymentPrefix = "distribution:deployment"
 )
 
-type IDeployment interface {
-	Create(service *types.Service) (*types.Deployment, error)
-	Get(namespace, service, name string) (*types.Deployment, error)
-	ListByNamespace(namespace string) ([]*types.Deployment, error)
-	ListByService(namespace, service string) ([]*types.Deployment, error)
-	Update(dt *types.Deployment) error
-	Cancel(dt *types.Deployment) error
-	Destroy(dt *types.Deployment) error
-	Remove(dt *types.Deployment) error
-	Watch(dt chan *types.Deployment)
-}
-
 // Deployment - distribution model
 type Deployment struct {
 	context context.Context
@@ -236,11 +224,12 @@ func (d *Deployment) Watch(dt chan *types.Deployment) {
 		}
 	}()
 
-	go d.storage.Watch(d.context, storage.DeploymentKind, watcher)
+	opts := storage.GetOpts()
+	go d.storage.Watch(d.context, storage.DeploymentKind, watcher, opts)
 
 	<-done
 }
 
-func NewDeploymentModel(ctx context.Context, stg storage.Storage) IDeployment {
+func NewDeploymentModel(ctx context.Context, stg storage.Storage) *Deployment {
 	return &Deployment{ctx, stg}
 }
