@@ -45,7 +45,7 @@ func (e *Endpoint) Get(namespace, service string) (*types.Endpoint, error) {
 
 	item := new(types.Endpoint)
 
-	err := e.storage.Get(e.context, storage.EndpointKind, e.storage.Key().Endpoint(namespace, service), &item)
+	err := e.storage.Get(e.context, storage.EndpointKind, e.storage.Key().Endpoint(namespace, service), &item, nil)
 	if err != nil {
 
 		if errors.Storage().IsErrEntityNotFound(err) {
@@ -59,12 +59,12 @@ func (e *Endpoint) Get(namespace, service string) (*types.Endpoint, error) {
 	return item, nil
 }
 
-func (e *Endpoint) ListByNamespace(namespace string) (map[string]*types.Endpoint, error) {
+func (e *Endpoint) ListByNamespace(namespace string) (*types.EndpointList, error) {
 	log.Debugf("%s:listbynamespace:> in namespace: %s", namespace)
 
-	list := make(map[string]*types.Endpoint, 0)
+	list := types.NewEndpointList()
 
-	err := e.storage.Map(e.context, storage.EndpointKind, e.storage.Filter().Endpoint().ByNamespace(namespace), &list)
+	err := e.storage.List(e.context, storage.EndpointKind, e.storage.Filter().Endpoint().ByNamespace(namespace), list, nil)
 	if err != nil {
 		log.Errorf("%s:listbynamespace:> in namespace: %s err: %v", logEndpointPrefix, namespace, err)
 		return nil, err

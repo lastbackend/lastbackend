@@ -180,9 +180,9 @@ func TestRouteList(t *testing.T) {
 	r1 := getRouteAsset(ns1.Meta.Name, "demo")
 	r2 := getRouteAsset(ns1.Meta.Name, "test")
 
-	rl := make(types.RouteMap, 0)
-	rl[r1.SelfLink()] = r1
-	rl[r2.SelfLink()] = r2
+	rl := types.NewRouteMap()
+	rl.Items[r1.SelfLink()] = r1
+	rl.Items[r2.SelfLink()] = r2
 
 	type fields struct {
 		stg storage.Storage
@@ -200,7 +200,7 @@ func TestRouteList(t *testing.T) {
 		headers      map[string]string
 		handler      func(http.ResponseWriter, *http.Request)
 		err          string
-		want         types.RouteMap
+		want         *types.RouteMap
 		wantErr      bool
 		expectedCode int
 	}{
@@ -288,7 +288,7 @@ func TestRouteList(t *testing.T) {
 				assert.NoError(t, err)
 
 				for _, item := range *r {
-					if _, ok := tc.want[item.Meta.SelfLink]; !ok {
+					if _, ok := tc.want.Items[item.Meta.SelfLink]; !ok {
 						assert.Error(t, errors.New("not equals"))
 					}
 				}
@@ -461,7 +461,7 @@ func TestRouteCreate(t *testing.T) {
 			} else {
 
 				got := new(types.Route)
-				err := tc.fields.stg.Get(tc.args.ctx, storage.RouteKind, stg.Key().Route(tc.args.namespace.Meta.Name, tc.want.Meta.Name), got)
+				err := tc.fields.stg.Get(tc.args.ctx, storage.RouteKind, stg.Key().Route(tc.args.namespace.Meta.Name, tc.want.Meta.Name), got, nil)
 				assert.NoError(t, err)
 				if assert.NotEmpty(t, got, "route is empty") {
 					assert.Equal(t, tc.want.Meta.Name, got.Meta.Name, "names mismatch")
@@ -654,7 +654,7 @@ func TestRouteUpdate(t *testing.T) {
 				assert.Equal(t, tc.err, string(body), "incorrect code message")
 			} else {
 				got := new(types.Route)
-				err := tc.fields.stg.Get(tc.args.ctx, storage.RouteKind, stg.Key().Route(tc.args.namespace.Meta.Name, tc.want.Meta.Name), got)
+				err := tc.fields.stg.Get(tc.args.ctx, storage.RouteKind, stg.Key().Route(tc.args.namespace.Meta.Name, tc.want.Meta.Name), got, nil)
 				assert.NoError(t, err)
 				if assert.NotEmpty(t, got, "route is empty") {
 					assert.Equal(t, tc.want.Meta.Name, got.Meta.Name, "names mismatch")
@@ -787,7 +787,7 @@ func TestRouteRemove(t *testing.T) {
 				assert.Equal(t, tc.err, string(body), "incorrect status code")
 			} else {
 				got := new(types.Route)
-				err := tc.fields.stg.Get(tc.args.ctx, storage.RouteKind, stg.Key().Route(tc.args.namespace.Meta.Name, tc.args.route.Meta.Name), got)
+				err := tc.fields.stg.Get(tc.args.ctx, storage.RouteKind, stg.Key().Route(tc.args.namespace.Meta.Name, tc.args.route.Meta.Name), got, nil)
 				if err != nil && !errors.Storage().IsErrEntityNotFound(err) {
 					assert.NoError(t, err)
 				}

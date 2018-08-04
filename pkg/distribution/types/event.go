@@ -18,12 +18,11 @@
 
 package types
 
-import "github.com/lastbackend/lastbackend/pkg/storage/types"
-
 const (
 	EventActionCreate = "create"
 	EventActionUpdate = "update"
 	EventActionDelete = "delete"
+	EventActionError = "error"
 )
 
 type event struct {
@@ -77,13 +76,17 @@ type NodeEvent struct {
 }
 
 func (e *event) IsActionCreate() bool {
-	return e.Action == types.STORAGECREATEEVENT
+	return e.Action == EventActionCreate
 }
 
 func (e *event) IsActionUpdate() bool {
-	return e.Action == types.STORAGEUPDATEEVENT
+	return e.Action == EventActionUpdate
 }
 
 func (e *event) IsActionRemove() bool {
-	return e.Action == types.STORAGEDELETEEVENT
+	return e.Action == EventActionDelete
+}
+
+func (e *event) IsActionError() bool {
+	return e.Action == EventActionError
 }

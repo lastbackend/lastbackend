@@ -184,9 +184,9 @@ func TestServiceList(t *testing.T) {
 	s1 := getServiceAsset(ns1.Meta.Name, "demo", "")
 	s2 := getServiceAsset(ns1.Meta.Name, "test", "")
 
-	sl := make(types.ServiceMap, 0)
-	sl[s1.SelfLink()] = s1
-	sl[s2.SelfLink()] = s2
+	sl := types.NewServiceMap()
+	sl.Items[s1.SelfLink()] = s1
+	sl.Items[s2.SelfLink()] = s2
 
 	type fields struct {
 		stg storage.Storage
@@ -205,7 +205,7 @@ func TestServiceList(t *testing.T) {
 		headers      map[string]string
 		handler      func(http.ResponseWriter, *http.Request)
 		err          string
-		want         types.ServiceMap
+		want         *types.ServiceMap
 		wantErr      bool
 		expectedCode int
 	}{
@@ -293,7 +293,7 @@ func TestServiceList(t *testing.T) {
 				assert.NoError(t, err)
 
 				for _, item := range *s {
-					if _, ok := tc.want[item.Meta.SelfLink]; !ok {
+					if _, ok := tc.want.Items[item.Meta.SelfLink]; !ok {
 						assert.Error(t, errors.New("not equals"))
 					}
 				}
@@ -491,7 +491,7 @@ func TestServiceCreate(t *testing.T) {
 			} else {
 
 				got := new(types.Service)
-				err := tc.fields.stg.Get(tc.args.ctx, storage.ServiceKind, stg.Key().Service(tc.args.namespace.Meta.Name, tc.args.service.Meta.Name), got)
+				err := tc.fields.stg.Get(tc.args.ctx, storage.ServiceKind, stg.Key().Service(tc.args.namespace.Meta.Name, tc.args.service.Meta.Name), got, nil)
 				assert.NoError(t, err)
 
 				if got == nil {
@@ -803,7 +803,7 @@ func TestServiceRemove(t *testing.T) {
 			} else {
 
 				got := new(types.Service)
-				err := tc.fields.stg.Get(tc.args.ctx, storage.ServiceKind, stg.Key().Service(tc.args.namespace.Meta.Name, tc.args.service.Meta.Name), got)
+				err := tc.fields.stg.Get(tc.args.ctx, storage.ServiceKind, stg.Key().Service(tc.args.namespace.Meta.Name, tc.args.service.Meta.Name), got, nil)
 				if err != nil && !errors.Storage().IsErrEntityNotFound(err) {
 					assert.NoError(t, err)
 				}

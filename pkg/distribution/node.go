@@ -40,12 +40,12 @@ type Node struct {
 	storage storage.Storage
 }
 
-func (n *Node) List() ([]*types.Node, error) {
+func (n *Node) List() (*types.NodeList, error) {
 	log.Debugf("%s:list:> get nodes list", logNodePrefix)
 
-	nodes := make([]*types.Node, 0)
+	nodes := types.NewNodeList()
 
-	err := n.storage.List(n.context, storage.NodeKind, "", &nodes)
+	err := n.storage.List(n.context, storage.NodeKind, "", nodes, nil)
 	if err != nil {
 		log.Debugf("%s:list:> get nodes list err: %v", logNodePrefix, err)
 		return nil, err
@@ -91,7 +91,7 @@ func (n *Node) Get(hostname string) (*types.Node, error) {
 
 	node := new(types.Node)
 
-	err := n.storage.Get(n.context, storage.NodeKind, n.storage.Key().Node(hostname), &node)
+	err := n.storage.Get(n.context, storage.NodeKind, n.storage.Key().Node(hostname), &node, nil)
 	if err != nil {
 
 		if errors.Storage().IsErrEntityNotFound(err) {

@@ -103,7 +103,7 @@ func (cs *ClusterState) Restore() error {
 		return err
 	}
 
-	for _, n := range nl {
+	for _, n := range nl.Items {
 		// Add node to local cache
 		cs.node.list[n.Meta.SelfLink] = n
 		// Run node observers
@@ -125,13 +125,13 @@ func (cs *ClusterState) Restore() error {
 		return err
 	}
 
-	for _, n := range ns {
+	for _, n := range ns.Items {
 		pl, err := pm.ListByNamespace(n.Meta.Name)
 		if err != nil {
 			log.Errorf("%s", err.Error())
 			return err
 		}
-		for _, p := range pl {
+		for _, p := range pl.Items {
 			cs.pod.observer <- p
 		}
 	}

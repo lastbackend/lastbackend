@@ -214,9 +214,9 @@ func TestDeploymentListHList(t *testing.T) {
 	d1 := getDeploymentAsset(ns1.Meta.Name, s1.Meta.Name, "demo")
 	d2 := getDeploymentAsset(ns1.Meta.Name, s2.Meta.Name, "test")
 
-	dl := make(types.DeploymentMap, 0)
-	dl[d1.SelfLink()] = d1
-	dl[d2.SelfLink()] = d2
+	dl := types.NewDeploymentMap()
+	dl.Items[d1.SelfLink()] = d1
+	dl.Items[d2.SelfLink()] = d2
 
 	type fields struct {
 		stg storage.Storage
@@ -235,7 +235,7 @@ func TestDeploymentListHList(t *testing.T) {
 		headers      map[string]string
 		handler      func(http.ResponseWriter, *http.Request)
 		err          string
-		want         types.DeploymentMap
+		want         *types.DeploymentMap
 		wantErr      bool
 		expectedCode int
 	}{
@@ -337,7 +337,7 @@ func TestDeploymentListHList(t *testing.T) {
 				assert.NoError(t, err)
 
 				for _, item := range *d {
-					if _, ok := tc.want[item.Meta.SelfLink]; !ok {
+					if _, ok := tc.want.Items[item.Meta.SelfLink]; !ok {
 						assert.Error(t, errors.New("not equals"))
 					}
 				}

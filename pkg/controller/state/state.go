@@ -51,7 +51,7 @@ func (s *State) Restore() {
 		return
 	}
 
-	for _, n := range ns {
+	for _, n := range ns.Items {
 		log.Debugf("\n\nrestore service in namespace: %s", n.SelfLink())
 		ss, err := sm.List(n.SelfLink())
 		if err != nil {
@@ -59,7 +59,7 @@ func (s *State) Restore() {
 			return
 		}
 
-		for _, svc := range ss {
+		for _, svc := range ss.Items {
 
 			log.Debugf("restore service state: %s \n", svc.SelfLink())
 			if _, ok := s.Service[svc.SelfLink()]; !ok {

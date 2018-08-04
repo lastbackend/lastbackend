@@ -44,7 +44,7 @@ func (n *Secret) Get(namespace, name string) (*types.Secret, error) {
 
 	item := new(types.Secret)
 
-	err := n.storage.Get(n.context, storage.SecretKind, n.storage.Key().Secret(namespace, name), &item)
+	err := n.storage.Get(n.context, storage.SecretKind, n.storage.Key().Secret(namespace, name), &item, nil)
 	if err != nil {
 
 		if errors.Storage().IsErrEntityNotFound(err) {
@@ -59,21 +59,21 @@ func (n *Secret) Get(namespace, name string) (*types.Secret, error) {
 	return item, nil
 }
 
-func (n *Secret) ListByNamespace(namespace string) ([]*types.Secret, error) {
+func (n *Secret) ListByNamespace(namespace string) (*types.SecretList, error) {
 
 	log.V(logLevel).Debugf("%s:listbynamespace:> get secrets list by namespace", logSecretPrefix)
 
-	items := make([]*types.Secret, 0)
+	list := types.NewSecretList()
 	filter := n.storage.Filter().Secret().ByNamespace(namespace)
-	err := n.storage.List(n.context, storage.SecretKind, filter, &items)
+	err := n.storage.List(n.context, storage.SecretKind, filter, list, nil)
 	if err != nil {
 		log.V(logLevel).Error("%s:listbynamespace:> get secrets list by namespace err: %s", logSecretPrefix, err)
-		return items, err
+		return list, err
 	}
 
-	log.V(logLevel).Debugf("%s:listbynamespace:> get secrets list by namespace result: %d", logSecretPrefix, len(items))
+	log.V(logLevel).Debugf("%s:listbynamespace:> get secrets list by namespace result: %d", logSecretPrefix, len(list.Items))
 
-	return items, nil
+	return list, nil
 }
 
 func (n *Secret) Create(namespace *types.Namespace, opts *types.SecretCreateOptions) (*types.Secret, error) {

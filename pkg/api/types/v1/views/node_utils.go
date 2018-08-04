@@ -107,12 +107,12 @@ func (obj *NodeManifest) Decode() *types.NodeManifest {
 	return &manifest
 }
 
-func (nv *NodeView) NewList(obj []*types.Node) *NodeList {
+func (nv *NodeView) NewList(obj *types.NodeList) *NodeList {
 	if obj == nil {
 		return nil
 	}
 	nodes := make(NodeList, 0)
-	for _, v := range obj {
+	for _, v := range obj.Items {
 		nn := nv.New(v)
 		nodes[nn.Meta.Name] = nn
 	}

@@ -82,3 +82,15 @@ type SecretUpdateOptions struct {
 type SecretRemoveOptions struct {
 	Force bool `json:"force"`
 }
+
+func NewSecretList () *SecretList {
+	dm := new(SecretList)
+	dm.Items = make([]*Secret, 0)
+	return dm
+}
+
+func NewSecretMap () *SecretMap {
+	dm := new(SecretMap)
+	dm.Items = make(map[string]*Secret)
+	return dm
+}

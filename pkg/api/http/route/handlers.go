@@ -262,7 +262,7 @@ func RouteCreateH(w http.ResponseWriter, r *http.Request) {
 
 	var links = make(map[string]string)
 
-	for _, s := range svc {
+	for _, s := range svc.Items {
 		links[s.Meta.Name] = s.Meta.Endpoint
 	}
 
@@ -411,7 +411,7 @@ func RouteUpdateH(w http.ResponseWriter, r *http.Request) {
 
 	var links = make(map[string]string)
 
-	for _, s := range svc {
+	for _, s := range svc.Items {
 		links[s.Meta.Name] = s.Meta.Endpoint
 	}
 

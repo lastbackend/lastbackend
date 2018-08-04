@@ -21,7 +21,7 @@ package types
 import (
 	"context"
 	"fmt"
-)
+	)
 
 // swagger:ignore
 // swagger:model types_node_map
@@ -196,4 +196,16 @@ type NodeLeaseOptions struct {
 
 func (nl *NodeLease) Get() (*Node, error) {
 	return nl.Response.Node, nl.Response.Err
+}
+
+func NewNodeList () *NodeList {
+	dm := new(NodeList)
+	dm.Items = make([]*Node, 0)
+	return dm
+}
+
+func NewNodeMap () *NodeMap {
+	dm := new(NodeMap)
+	dm.Items = make(map[string]*Node)
+	return dm
 }

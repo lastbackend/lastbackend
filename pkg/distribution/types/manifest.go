@@ -27,7 +27,27 @@ type NodeManifest struct {
 
 type PodManifest PodSpec
 
+type PodManifestList struct {
+	Runtime
+	Items  []*PodManifest
+}
+
+type PodManifestMap struct {
+	Runtime
+	Items  map[string]*PodManifest
+}
+
 type VolumeManifest VolumeSpec
+
+type VolumeManifestList struct {
+	Runtime
+	Items  []*VolumeManifest
+}
+
+type VolumeManifestMap struct {
+	Runtime
+	Items  map[string]*VolumeManifest
+}
 
 type NetworkManifest struct {
 	NetworkSpec
@@ -35,4 +55,29 @@ type NetworkManifest struct {
 
 type EndpointManifest struct {
 	EndpointSpec
+}
+
+
+func NewPodManifestList () *PodManifestList {
+	dm := new(PodManifestList)
+	dm.Items = make([]*PodManifest, 0)
+	return dm
+}
+
+func NewPodManifestMap () *PodManifestMap {
+	dm := new(PodManifestMap)
+	dm.Items = make(map[string]*PodManifest)
+	return dm
+}
+
+func NewVolumeManifestList () *VolumeManifestList {
+	dm := new(VolumeManifestList)
+	dm.Items = make([]*VolumeManifest, 0)
+	return dm
+}
+
+func NewVolumeManifestMap () *VolumeManifestMap {
+	dm := new(VolumeManifestMap)
+	dm.Items = make(map[string]*VolumeManifest)
+	return dm
 }

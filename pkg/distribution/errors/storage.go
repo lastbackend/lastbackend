@@ -21,65 +21,78 @@ package errors
 import (
 	"errors"
 
-	"github.com/lastbackend/lastbackend/pkg/storage/types"
+	)
+
+const (
+	ErrEntityExists          = "entity exists"
+	ErrOperationFailure      = "operation failure"
+	ErrEntityNotFound        = "entity not found"
+	ErrStructArgIsNil        = "input structure is nil"
+	ErrStructOutIsNil        = "output structure is nil"
+	ErrStructArgIsInvalid    = "input structure is invalid"
+	ErrStructOutIsInvalid    = "output structure is invalid"
+	ErrStructOutIsNotPointer = "output structure is not pointer"
 )
 
 type storage struct{}
 
 func (storage) IsErrEntityExists(err error) bool {
-	return err.Error() == types.ErrEntityExists
+	return err.Error() == ErrEntityExists
 }
 
 func (storage) NewErrEntityExists() error {
-	return errors.New(types.ErrEntityExists)
+	return errors.New(ErrEntityExists)
 }
 
 func (storage) IsErrOperationFailure(err error) bool {
-	return err.Error() == types.ErrOperationFailure
+	return err.Error() == ErrOperationFailure
 }
 
 func (storage) NewErrOperationFailure() error {
-	return errors.New(types.ErrOperationFailure)
+	return errors.New(ErrOperationFailure)
 }
 
 func (storage) IsErrEntityNotFound(err error) bool {
-	return err.Error() == types.ErrEntityNotFound
+	return err.Error() == ErrEntityNotFound
 }
 
 func (storage) NewErrEntityNotFound() error {
-	return errors.New(types.ErrEntityNotFound)
+	return errors.New(ErrEntityNotFound)
 }
 
 func (storage) IsErrStructArgIsNil(err error) bool {
-	return err.Error() == types.ErrStructArgIsNil
+	return err.Error() == ErrStructArgIsNil
 }
 
 func (storage) NewErrStructArgIsNil() error {
-	return errors.New(types.ErrStructArgIsNil)
+	return errors.New(ErrStructArgIsNil)
 }
 
 func (storage) IsErrStructOutIsNil(err error) bool {
-	return err.Error() == types.ErrStructOutIsNil
+	return err.Error() == ErrStructOutIsNil
 }
 
 func (storage) NewErrStructOutIsNil() error {
-	return errors.New(types.ErrStructOutIsNil)
+	return errors.New(ErrStructOutIsNil)
 }
 
 func (storage) IsErrStructArgIsInvalid(err error) bool {
-	return err.Error() == types.ErrStructArgIsInvalid
+	return err.Error() == ErrStructArgIsInvalid
 }
 
 func (storage) NewErrStructArgIsInvalid() error {
-	return errors.New(types.ErrStructArgIsInvalid)
+	return errors.New(ErrStructArgIsInvalid)
 }
 
 func (storage) IsErrStructOutIsInvalid(err error) bool {
-	return err.Error() == types.ErrStructOutIsInvalid
+	return err.Error() == ErrStructOutIsInvalid
 }
 
 func (storage) NewErrStructOutIsInvalid() error {
-	return errors.New(types.ErrStructOutIsInvalid)
+	return errors.New(ErrStructOutIsInvalid)
+}
+func (storage) NewErrStructOutIsNotPointer() error {
+	return errors.New(ErrStructOutIsNotPointer)
 }
 
 func Storage() storage {

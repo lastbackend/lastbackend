@@ -18,13 +18,15 @@
 
 package types
 
+import "github.com/lastbackend/lastbackend/pkg/distribution/errors"
+
 const (
-	ErrEntityExists          = "entity exists"
-	ErrOperationFailure      = "operation failure"
-	ErrEntityNotFound        = "entity not found"
-	ErrStructArgIsNil        = "input structure is nil"
-	ErrStructOutIsNil        = "output structure is nil"
-	ErrStructArgIsInvalid    = "input structure is invalid"
-	ErrStructOutIsInvalid    = "output structure is invalid"
-	ErrStructOutIsNotPointer = "output structure is not pointer"
+	ErrEntityExists          = errors.ErrEntityExists
+	ErrOperationFailure      = errors.ErrOperationFailure
+	ErrEntityNotFound        = errors.ErrEntityNotFound
+	ErrStructArgIsNil        = errors.ErrStructArgIsNil
+	ErrStructOutIsNil        = errors.ErrStructOutIsNil
+	ErrStructArgIsInvalid    = errors.ErrStructArgIsInvalid
+	ErrStructOutIsInvalid    = errors.ErrStructOutIsInvalid
+	ErrStructOutIsNotPointer = errors.ErrStructOutIsNotPointer
 )

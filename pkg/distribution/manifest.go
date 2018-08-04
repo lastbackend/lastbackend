@@ -36,15 +36,15 @@ type Manifest struct {
 	storage storage.Storage
 }
 
-func (m *Manifest) PodManifestMap(node string) (map[string]*types.PodManifest, error) {
+func (m *Manifest) PodManifestMap(node string) (*types.PodManifestMap, error) {
 	log.Debugf("%s:PodManifestMap:> ", logManifestPrefix)
 
 	var (
-		mf = make(map[string]*types.PodManifest, 0)
+		mf = types.NewPodManifestMap()
 		qs = m.storage.Filter().Manifest().ByKindManifest(node, storage.PodKind)
 	)
 
-	if err := m.storage.Map(m.context, storage.ManifestKind, qs, &mf); err != nil {
+	if err := m.storage.Map(m.context, storage.ManifestKind, qs, mf, nil); err != nil {
 		log.Errorf("%s:PodManifestMap:> err :%s", logManifestPrefix, err.Error())
 		return nil, err
 	}
@@ -60,7 +60,7 @@ func (m *Manifest) PodManifestGet(node, pod string) (*types.PodManifest, error) 
 		k  = m.storage.Key().Manifest(node, storage.PodKind, pod)
 	)
 
-	if err := m.storage.Get(m.context, storage.ManifestKind, k, &mf); err != nil {
+	if err := m.storage.Get(m.context, storage.ManifestKind, k, &mf, nil); err != nil {
 		log.Errorf("%s:PodManifestMap:> err :%s", logManifestPrefix, err.Error())
 
 		if errors.Storage().IsErrEntityNotFound(err) {
@@ -118,15 +118,15 @@ func (m *Manifest) PodManifestDel(node, pod string) error {
 	return nil
 }
 
-func (m *Manifest) VolumeManifestMap(node string) (map[string]*types.VolumeManifest, error) {
+func (m *Manifest) VolumeManifestMap(node string) (*types.VolumeManifestMap, error) {
 	log.Debugf("%s:VolumeManifestMap:> ", logManifestPrefix)
 
 	var (
-		mf = make(map[string]*types.VolumeManifest)
+		mf = types.NewVolumeManifestMap()
 		qs = m.storage.Filter().Manifest().ByKindManifest(node, storage.VolumeKind)
 	)
 
-	if err := m.storage.Map(m.context, storage.ManifestKind, qs, &mf); err != nil {
+	if err := m.storage.Map(m.context, storage.ManifestKind, qs, mf, nil); err != nil {
 		log.Errorf("%s:VolumeManifestMap:> err :%s", logManifestPrefix, err.Error())
 		return nil, err
 	}
@@ -141,7 +141,7 @@ func (m *Manifest) VolumeManifestGet(node, volume string) (*types.VolumeManifest
 		k  = m.storage.Key().Manifest(node, storage.VolumeKind, volume)
 	)
 
-	if err := m.storage.Get(m.context, storage.ManifestKind, k, &mf); err != nil {
+	if err := m.storage.Get(m.context, storage.ManifestKind, k, &mf, nil); err != nil {
 		log.Errorf("%s:VolumeManifestGet:> err :%s", logManifestPrefix, err.Error())
 
 		if errors.Storage().IsErrEntityNotFound(err) {

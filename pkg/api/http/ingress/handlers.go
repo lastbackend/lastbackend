@@ -154,7 +154,7 @@ func IngressGetSpecH(w http.ResponseWriter, r *http.Request) {
 		}
 		spec = new(types.IngressSpec)
 		spec.Routes = make(map[string]types.RouteSpec)
-		for _, rt := range routes {
+		for _, rt := range routes.Items {
 			spec.Routes[rt.Meta.Name] = rt.Spec
 		}
 	}

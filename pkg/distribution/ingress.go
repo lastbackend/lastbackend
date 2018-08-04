@@ -36,10 +36,10 @@ type Ingress struct {
 	storage storage.Storage
 }
 
-func (n *Ingress) List() (map[string]*types.Ingress, error) {
-	list := make(map[string]*types.Ingress, 0)
+func (n *Ingress) List() (*types.IngressList, error) {
+	list := types.NewIngressList()
 
-	if err := n.storage.Map(n.context, storage.IngressKind, "", &list); err != nil {
+	if err := n.storage.Map(n.context, storage.IngressKind, "", list, nil); err != nil {
 		log.Debugf("%s:list:> get ingress list err: %v", logIngressPrefix, err)
 		return nil, err
 	}
@@ -73,7 +73,7 @@ func (n *Ingress) Get(name string) (*types.Ingress, error) {
 
 	ingress := new(types.Ingress)
 
-	err := n.storage.Get(n.context, storage.IngressKind, n.storage.Key().Ingress(name), &ingress)
+	err := n.storage.Get(n.context, storage.IngressKind, n.storage.Key().Ingress(name), ingress, nil)
 	if err != nil {
 
 		if errors.Storage().IsErrEntityNotFound(err) {

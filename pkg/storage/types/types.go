@@ -18,11 +18,13 @@
 
 package types
 
+import "github.com/lastbackend/lastbackend/pkg/distribution/types"
+
 const (
-	STORAGEDELETEEVENT = "delete"
-	STORAGECREATEEVENT = "create"
-	STORAGEUPDATEEVENT = "update"
-	STORAGEERROREVENT  = "error"
+	STORAGEDELETEEVENT = types.EventActionDelete
+	STORAGECREATEEVENT = types.EventActionCreate
+	STORAGEUPDATEEVENT = types.EventActionUpdate
+	STORAGEERROREVENT  = types.EventActionError
 )
 
 type Watcher interface {
@@ -61,9 +63,5 @@ type Opts struct {
 }
 
 type Runtime struct {
-	System RuntimeSystem `json:"-"`
-}
-
-type RuntimeSystem struct {
-	Revision int64 `json:"-"`
+	types.Runtime
 }

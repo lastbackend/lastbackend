@@ -35,7 +35,7 @@ import (
 	"golang.org/x/net/context"
 	"github.com/coreos/etcd/etcdserver/etcdserverpb"
 	"github.com/coreos/etcd/mvcc/mvccpb"
-		)
+	)
 
 type dbstore struct {
 	store.Store
@@ -110,7 +110,7 @@ func (s *dbstore) Put(ctx context.Context, key string, obj, outPtr interface{}, 
 		}
 	}
 
-	if _, err := setEntityRuntimeInfo(outPtr, getRuntimeFromResponse(txnResp.Header)); err != nil {
+	if err := setEntityRuntimeInfo(outPtr, getRuntimeFromResponse(txnResp.Header)); err != nil {
 		log.V(logLevel).Errorf("%s:get:> can not set runtime info err: %v", logPrefix, err)
 		return err
 	}
@@ -139,7 +139,7 @@ func (s *dbstore) Get(ctx context.Context, key string, outPtr interface{}, rev *
 		return err
 	}
 
-	if _, err := setEntityRuntimeInfo(outPtr, getRuntimeFromResponse(res.Header)); err != nil {
+	if err := setEntityRuntimeInfo(outPtr, getRuntimeFromResponse(res.Header)); err != nil {
 		log.V(logLevel).Errorf("%s:get:> can not set runtime info err: %v", logPrefix, err)
 		return err
 	}
@@ -180,7 +180,7 @@ func (s *dbstore) List(ctx context.Context, key, keyRegexFilter string, listOutP
 	}
 
 
-	if _, err := setEntityRuntimeInfo(listOutPtr, getRuntimeFromResponse(getResp.Header)); err != nil {
+	if err := setEntityRuntimeInfo(listOutPtr, getRuntimeFromResponse(getResp.Header)); err != nil {
 		log.V(logLevel).Errorf("%s:get:> can not set runtime info err: %v", logPrefix, err)
 		return err
 	}
@@ -221,7 +221,7 @@ func (s *dbstore) Map(ctx context.Context, key, keyRegexFilter string, mapOutPtr
 		return err
 	}
 
-	if _, err := setEntityRuntimeInfo(mapOutPtr, getRuntimeFromResponse(getResp.Header)); err != nil {
+	if err := setEntityRuntimeInfo(mapOutPtr, getRuntimeFromResponse(getResp.Header)); err != nil {
 		log.V(logLevel).Errorf("%s:get:> can not set runtime info err: %v", logPrefix, err)
 		return err
 	}
@@ -279,7 +279,7 @@ func (s *dbstore) Set(ctx context.Context, key string, obj, outPtr interface{}, 
 		}
 	}
 
-	if _, err := setEntityRuntimeInfo(outPtr, getRuntimeFromResponse(txnResp.Header)); err != nil {
+	if err := setEntityRuntimeInfo(outPtr, getRuntimeFromResponse(txnResp.Header)); err != nil {
 		log.V(logLevel).Errorf("%s:get:> can not set runtime info err: %v", logPrefix, err)
 		return err
 	}
@@ -325,43 +325,45 @@ func (s *dbstore) Decode(ctx context.Context, value []byte, out interface{}) err
 }
 
 
-func setEntityRuntimeInfo(out interface{}, runtime types.Runtime) (reflect.Value, error) {
+func setEntityRuntimeInfo(out interface{}, runtime types.Runtime)  error {
 
 	var (
 		v reflect.Value
 		err error
 	)
 
-
 	if reflect.TypeOf(out).Kind() == reflect.Ptr {
 		v, err = converter.EnforcePtr(out)
 		if err != nil {
-			return reflect.ValueOf(v), errors.New("unable to convert output struct to pointer")
+			return errors.New("unable to convert output struct to pointer")
 		}
 	} else {
 		v = reflect.ValueOf(out)
 	}
 
 	setValueRuntimeInfo(v, runtime)
-	return reflect.ValueOf(v), nil
+	return  nil
 }
 
-func setValueRuntimeInfo(v reflect.Value, runtime types.Runtime) (reflect.Value, error) {
+func setValueRuntimeInfo(v reflect.Value, runtime types.Runtime)  error {
 
+	if v.Kind() != reflect.Struct {
+		return nil
+	}
 
 	f := v.FieldByName("Runtime")
 
 	if !f.IsValid() {
-		return reflect.ValueOf(v), nil
+		return nil
 	}
 
 	if !f.CanSet() {
-		return reflect.ValueOf(v), nil
+		return nil
 	}
 
-	f.Set(reflect.ValueOf(runtime))
+	f.Set(reflect.ValueOf(runtime.Runtime))
 
-	return reflect.ValueOf(v), nil
+	return nil
 }
 
 

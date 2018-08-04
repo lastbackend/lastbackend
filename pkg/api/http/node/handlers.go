@@ -149,19 +149,23 @@ func NodeGetSpecH(w http.ResponseWriter, r *http.Request) {
 
 		spec = new(types.NodeManifest)
 
-		spec.Pods, err = mm.PodManifestMap(n.Meta.Name)
+		pods, err := mm.PodManifestMap(n.Meta.Name)
 		if err != nil {
 			log.V(logLevel).Errorf("%s:getmanifest:> get pod manifests for node err: %s", logPrefix, err.Error())
 			errors.HTTP.InternalServerError(w)
 			return
 		}
+		spec.Pods = pods.Items
 
-		spec.Volumes, err = mm.VolumeManifestMap(n.Meta.Name)
+
+		volumes, err := mm.VolumeManifestMap(n.Meta.Name)
 		if err != nil {
 			log.V(logLevel).Errorf("%s:getmanifest:> get pod manifests for node err: %s", logPrefix, err.Error())
 			errors.HTTP.InternalServerError(w)
 			return
 		}
+		spec.Volumes = volumes.Items
+
 
 	}
 	cache.Flush(n.Meta.Name)

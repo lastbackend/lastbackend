@@ -62,3 +62,15 @@ func (t *Trigger) SelfLink() string {
 func (t *Trigger) CreateSelfLink(namespace, service, name string) string {
 	return fmt.Sprintf("%s:%s:%s", namespace, service, name)
 }
+
+func NewTriggerList () *TriggerList {
+	dm := new(TriggerList)
+	dm.Items = make([]*Trigger, 0)
+	return dm
+}
+
+func NewTriggerMap () *TriggerMap {
+	dm := new(TriggerMap)
+	dm.Items = make(map[string]*Trigger)
+	return dm
+}

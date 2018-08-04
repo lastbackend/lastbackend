@@ -339,7 +339,7 @@ func NamespaceRemoveH(w http.ResponseWriter, r *http.Request) {
 	}
 
 	exists, err := sm.List(ns.Meta.Name)
-	if len(exists) > 0 {
+	if len(exists.Items) > 0 {
 		errors.New("namespace").Forbidden().Http(w)
 		return
 	}

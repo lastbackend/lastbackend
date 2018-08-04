@@ -35,6 +35,16 @@ type Pod struct {
 	Status PodStatus `json:"status" yaml:"status"`
 }
 
+type PodList struct {
+	Runtime
+	Items []*Pod
+}
+
+type PodMap struct {
+	Runtime
+	Items map[string]*Pod
+}
+
 // swagger:ignore
 // PodMeta is a meta of pod
 // swagger:model types_pod_meta
@@ -221,6 +231,18 @@ func NewPod() *Pod {
 	pod := new(Pod)
 	pod.Status = *NewPodStatus()
 	return pod
+}
+
+func NewPodList () *PodList {
+	dm := new(PodList)
+	dm.Items = make([]*Pod, 0)
+	return dm
+}
+
+func NewPodMap () *PodMap {
+	dm := new(PodMap)
+	dm.Items = make(map[string]*Pod)
+	return dm
 }
 
 func NewPodStatus() *PodStatus {

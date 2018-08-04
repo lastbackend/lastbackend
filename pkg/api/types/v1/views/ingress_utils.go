@@ -52,12 +52,12 @@ func (obj *Ingress) ToJson() ([]byte, error) {
 	return json.Marshal(obj)
 }
 
-func (nv *IngressView) NewList(obj map[string]*types.Ingress) *IngressList {
+func (nv *IngressView) NewList(obj *types.IngressList) *IngressList {
 	if obj == nil {
 		return nil
 	}
 	ingresses := make(IngressList, 0)
-	for _, v := range obj {
+	for _, v := range obj.Items {
 		nn := nv.New(v)
 		ingresses[nn.Meta.Name] = nn
 	}

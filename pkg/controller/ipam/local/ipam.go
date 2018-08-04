@@ -157,7 +157,7 @@ func New(cidr string) (*IPAM, error) {
 	ips := make([]string, 0)
 
 	// Get IP list from database storage
-	err = envs.Get().GetStorage().Get(context.Background(), storage.UtilsKind, "ipam", &ips)
+	err = envs.Get().GetStorage().Get(context.Background(), storage.UtilsKind, "ipam", &ips, nil)
 	if err != nil {
 		if !errors.Storage().IsErrEntityNotFound(err) {
 			log.Errorf("%s get context error: %s", logIPAMPrefix, err.Error())

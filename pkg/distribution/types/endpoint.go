@@ -41,6 +41,12 @@ type EndpointList struct {
 	Items []*Endpoint
 }
 
+type EndpointMap struct {
+	Runtime
+	Items map[string]*Endpoint
+}
+
+
 // swagger:ignore
 // EndpointMeta - endpoint meta data
 type EndpointMeta struct {
@@ -119,4 +125,16 @@ type EndpointUpdateOptions struct {
 	RouteStrategy string            `json:"route_strategy"`
 	Policy        string            `json:"policy"`
 	BindStrategy  string            `json:"bind_strategy"`
+}
+
+func NewEndpointList () *EndpointList {
+	dm := new(EndpointList)
+	dm.Items = make([]*Endpoint, 0)
+	return dm
+}
+
+func NewEndpointMap () *EndpointMap {
+	dm := new(EndpointMap)
+	dm.Items = make(map[string]*Endpoint)
+	return dm
 }

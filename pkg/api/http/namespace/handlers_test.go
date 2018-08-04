@@ -416,7 +416,7 @@ func TestNamespaceCreate(t *testing.T) {
 			} else {
 
 				got := new(types.Namespace)
-				err = tc.fields.stg.Get(context.Background(), storage.NamespaceKind, tc.fields.stg.Key().Namespace(tc.args.namespace.Meta.Name), got)
+				err = tc.fields.stg.Get(context.Background(), storage.NamespaceKind, tc.fields.stg.Key().Namespace(tc.args.namespace.Meta.Name), got, nil)
 				assert.NoError(t, err)
 				assert.Equal(t, ns1.Meta.Name, got.Meta.Name, "name not equal")
 			}
@@ -686,7 +686,7 @@ func TestNamespaceRemove(t *testing.T) {
 			} else {
 
 				got := new(types.Namespace)
-				err = tc.fields.stg.Get(context.Background(), storage.NamespaceKind, tc.fields.stg.Key().Namespace(tc.args.namespace.Meta.Name), got)
+				err = tc.fields.stg.Get(context.Background(), storage.NamespaceKind, tc.fields.stg.Key().Namespace(tc.args.namespace.Meta.Name), got, nil)
 				if err != nil && !errors.Storage().IsErrEntityNotFound(err) {
 					assert.NoError(t, err)
 				}

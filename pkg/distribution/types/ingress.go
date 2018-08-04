@@ -20,17 +20,22 @@ package types
 
 import "fmt"
 
-type IngressList struct {
-	Runtime
-	Items []*Ingress
-}
-
 // swagger:ignore
 type Ingress struct {
 	Runtime
 	Meta   IngressMeta   `json:"meta"`
 	Status IngressStatus `json:"status"`
 	Spec   IngressSpec   `json:"spec"`
+}
+
+type IngressList struct {
+	Runtime
+	Items []*Ingress
+}
+
+type IngressMap struct {
+	Runtime
+	Items map[string]*Ingress
 }
 
 // swagger:ignore
@@ -82,4 +87,16 @@ func (n *Ingress) SelfLink() string {
 		n.Meta.SelfLink = fmt.Sprintf("%s:%s", n.Meta.Cluster, n.Meta.Name)
 	}
 	return n.Meta.SelfLink
+}
+
+func NewIngressList () *IngressList {
+	dm := new(IngressList)
+	dm.Items = make([]*Ingress, 0)
+	return dm
+}
+
+func NewIngressMap () *IngressMap {
+	dm := new(IngressMap)
+	dm.Items = make(map[string]*Ingress)
+	return dm
 }

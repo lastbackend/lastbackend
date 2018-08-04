@@ -47,13 +47,13 @@ func (s *Secret) ToMeta(obj types.SecretMeta) SecretMeta {
 	return meta
 }
 
-func (sv SecretView) NewList(obj []*types.Secret) *SecretList {
+func (sv SecretView) NewList(obj *types.SecretList) *SecretList {
 	if obj == nil {
 		return nil
 	}
 
 	sl := make(SecretList, 0)
-	for _, v := range obj {
+	for _, v := range obj.Items {
 		sl = append(sl, sv.New(v))
 	}
 	return &sl

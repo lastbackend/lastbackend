@@ -45,7 +45,7 @@ func (n *Route) Get(namespace, name string) (*types.Route, error) {
 
 	route := new(types.Route)
 
-	err := n.storage.Get(n.context, storage.RouteKind, n.storage.Key().Route(namespace, name), &route)
+	err := n.storage.Get(n.context, storage.RouteKind, n.storage.Key().Route(namespace, name), &route, nil)
 	if err != nil {
 		if errors.Storage().IsErrEntityNotFound(err) {
 			log.V(logLevel).Warnf("%s:get:> in namespace %s by name %s not found", logRoutePrefix, namespace, name)
@@ -59,37 +59,37 @@ func (n *Route) Get(namespace, name string) (*types.Route, error) {
 	return route, nil
 }
 
-func (n *Route) List() ([]*types.Route, error) {
+func (n *Route) List() (*types.RouteList, error) {
 
 	log.V(logLevel).Debugf("%s:listspec:> list specs", logRoutePrefix)
 
-	items := make([]*types.Route, 0)
+	list := types.NewRouteList()
 
 	//TODO: change map to list
-	err := n.storage.List(n.context, storage.RouteKind, types.EmptyString, &items)
+	err := n.storage.List(n.context, storage.RouteKind, types.EmptyString, list, nil)
 	if err != nil {
 		log.V(logLevel).Error("%s:listbynamespace:> list route err: %v", logRoutePrefix, err)
-		return items, err
+		return list, err
 	}
 
-	return items, nil
+	return list, nil
 }
 
-func (n *Route) ListByNamespace(namespace string) ([]*types.Route, error) {
+func (n *Route) ListByNamespace(namespace string) (*types.RouteList, error) {
 
 	log.V(logLevel).Debug("%s:listbynamespace:> list route", logRoutePrefix)
 
-	items := make([]*types.Route, 0)
+	list := types.NewRouteList()
 
-	err := n.storage.List(n.context, storage.RouteKind, n.storage.Filter().Route().ByNamespace(namespace), &items)
+	err := n.storage.List(n.context, storage.RouteKind, n.storage.Filter().Route().ByNamespace(namespace), list, nil)
 	if err != nil {
 		log.V(logLevel).Error("%s:listbynamespace:> list route err: %v", logRoutePrefix, err)
-		return items, err
+		return list, err
 	}
 
-	log.V(logLevel).Debugf("%s:listbynamespace:> list route result: %d", logRoutePrefix, len(items))
+	log.V(logLevel).Debugf("%s:listbynamespace:> list route result: %d", logRoutePrefix, len(list.Items))
 
-	return items, nil
+	return list, nil
 }
 
 func (n *Route) Create(namespace *types.Namespace, opts *types.RouteCreateOptions) (*types.Route, error) {

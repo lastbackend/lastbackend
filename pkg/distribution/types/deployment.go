@@ -121,3 +121,15 @@ type DeploymentUpdateOptions struct {
 		Message string
 	}
 }
+
+func NewDeploymentList () *DeploymentList {
+	dm := new(DeploymentList)
+	dm.Items = make([]*Deployment, 0)
+	return dm
+}
+
+func NewDeploymentMap () *DeploymentMap {
+	dm := new(DeploymentMap)
+	dm.Items = make(map[string]*Deployment)
+	return dm
+}

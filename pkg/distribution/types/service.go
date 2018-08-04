@@ -268,3 +268,16 @@ type ServiceOptionsSpec struct {
 	EnvVars    *[]string         `json:"env,omitempty"`
 	Ports      map[uint16]string `json:"ports,omitempty"`
 }
+
+
+func NewServiceList () *ServiceList {
+	dm := new(ServiceList)
+	dm.Items = make([]*Service, 0)
+	return dm
+}
+
+func NewServiceMap () *ServiceMap {
+	dm := new(ServiceMap)
+	dm.Items = make(map[string]*Service)
+	return dm
+}

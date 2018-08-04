@@ -48,7 +48,7 @@ func (s *Service) Get(namespace, name string) (*types.Service, error) {
 
 	svc := new(types.Service)
 
-	err := s.storage.Get(s.context, storage.ServiceKind, s.storage.Key().Service(namespace, name), &svc)
+	err := s.storage.Get(s.context, storage.ServiceKind, s.storage.Key().Service(namespace, name), svc, nil)
 	if err != nil {
 
 		if errors.Storage().IsErrEntityNotFound(err) {
@@ -64,22 +64,22 @@ func (s *Service) Get(namespace, name string) (*types.Service, error) {
 }
 
 // List method return map of services in selected namespace
-func (s *Service) List(namespace string) ([]*types.Service, error) {
+func (s *Service) List(namespace string) (*types.ServiceList, error) {
 
 	log.V(logLevel).Debugf("%s:list:> by namespace %s", logServicePrefix, namespace)
 
-	items := make([]*types.Service, 0)
+	list := types.NewServiceList()
 	q := s.storage.Filter().Service().ByNamespace(namespace)
 
-	err := s.storage.List(s.context, storage.ServiceKind, q, &items)
+	err := s.storage.List(s.context, storage.ServiceKind, q, list, nil)
 	if err != nil {
 		log.V(logLevel).Error("%s:list:> by namespace %s err: %v", logServicePrefix, namespace, err)
 		return nil, err
 	}
 
-	log.V(logLevel).Debugf("%s:list:> by namespace %s result: %d", logServicePrefix, namespace, len(items))
+	log.V(logLevel).Debugf("%s:list:> by namespace %s result: %d", logServicePrefix, namespace, len(list.Items))
 
-	return items, nil
+	return list, nil
 }
 
 // Create new service model in namespace

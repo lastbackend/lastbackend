@@ -70,7 +70,7 @@ func (ss *ServiceState) Restore() error {
 		return err
 	}
 
-	for _, p := range pl {
+	for _, p := range pl.Items {
 		log.Infof("%s: restore: restore pod: %s", logPrefix, p.SelfLink())
 
 		// Check if deployment map for pod exists
@@ -90,7 +90,7 @@ func (ss *ServiceState) Restore() error {
 		return err
 	}
 
-	for _, d := range dl {
+	for _, d := range dl.Items {
 		log.Infof("%s: restore deployment: %s", logPrefix, d.SelfLink())
 		ss.deployment.list[d.SelfLink()] = d
 	}

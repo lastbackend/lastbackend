@@ -131,7 +131,7 @@ func (c *Process) WaitElected(ctx context.Context, lead chan bool) error {
 	opts := storage.GetOpts()
 	opts.Ttl = systemLeadTTL
 
-	if err := c.storage.Get(ctx, storage.SystemKind, etcd.BuildProcessLeadKey(c.process.Meta.Kind), &l); err != nil {
+	if err := c.storage.Get(ctx, storage.SystemKind, etcd.BuildProcessLeadKey(c.process.Meta.Kind), &l, nil); err != nil {
 
 		if errors.Storage().IsErrEntityNotFound(err) {
 			err = c.storage.Put(ctx, storage.SystemKind, c.storage.Key().Process(c.process.Meta.Kind, c.process.Meta.Hostname, true), c.process, opts)
@@ -184,7 +184,7 @@ func (c *Process) WaitElected(ctx context.Context, lead chan bool) error {
 					}
 				case types.EventActionDelete:
 
-					if err := c.storage.Get(ctx, storage.SystemKind, etcd.BuildProcessLeadKey(c.process.Meta.Kind), &l); err != nil {
+					if err := c.storage.Get(ctx, storage.SystemKind, etcd.BuildProcessLeadKey(c.process.Meta.Kind), &l, nil); err != nil {
 						log.Errorf("System: Process: get lead process: %s", err.Error())
 
 						if errors.Storage().IsErrEntityNotFound(err) {
@@ -207,7 +207,7 @@ func (c *Process) WaitElected(ctx context.Context, lead chan bool) error {
 		}
 	}()
 
-	if err := c.storage.Watch(ctx, storage.SystemKind, watcher); err != nil {
+	if err := c.storage.Watch(ctx, storage.SystemKind, watcher, nil); err != nil {
 		return err
 	}
 

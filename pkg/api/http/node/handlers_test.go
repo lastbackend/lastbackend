@@ -48,11 +48,11 @@ func TestNodeListH(t *testing.T) {
 	var (
 		n1 = getNodeAsset("test1", "", true)
 		n2 = getNodeAsset("test2", "", false)
-		nl = make([]*types.Node, 0)
+		nl = types.NewNodeList()
 	)
 
-	nl = append(nl, &n1)
-	nl = append(nl, &n2)
+	nl.Items = append(nl.Items, &n1)
+	nl.Items = append(nl.Items, &n2)
 
 	v, err := v1.View().Node().NewList(nl).ToJson()
 	assert.NoError(t, err)
@@ -77,7 +77,7 @@ func TestNodeListH(t *testing.T) {
 		err = envs.Get().GetStorage().Del(context.Background(), storage.NodeKind, types.EmptyString)
 		assert.NoError(t, err)
 
-		for _, n := range nl {
+		for _, n := range nl.Items {
 			err = stg.Put(context.Background(), storage.NodeKind, stg.Key().Node(n.Meta.Name), &n, nil)
 			assert.NoError(t, err)
 		}
@@ -486,7 +486,7 @@ func TestNodeSetMetaH(t *testing.T) {
 
 			if tc.expectedCode == http.StatusOK {
 				got := new(types.Node)
-				err = envs.Get().GetStorage().Get(context.Background(), storage.NodeKind, envs.Get().GetStorage().Key().Node(tc.args.node), got)
+				err = envs.Get().GetStorage().Get(context.Background(), storage.NodeKind, envs.Get().GetStorage().Key().Node(tc.args.node), got, nil)
 				assert.NoError(t, err)
 				assert.Equal(t, *uo.Meta.Provider, got.Meta.Provider, "provider not equal")
 			}
@@ -586,7 +586,7 @@ func TestNodeConnectH(t *testing.T) {
 
 			if tc.expectedCode == http.StatusOK {
 				got := new(types.Node)
-				err = envs.Get().GetStorage().Get(context.Background(), storage.NodeKind, envs.Get().GetStorage().Key().Node(tc.args.node), got)
+				err = envs.Get().GetStorage().Get(context.Background(), storage.NodeKind, envs.Get().GetStorage().Key().Node(tc.args.node), got, nil)
 				if assert.NoError(t, err) {
 					assert.Equal(t, uo.Info.Hostname, got.Info.Hostname, "hostname not equal")
 					assert.Equal(t, uo.Info.Architecture, got.Info.Architecture, "architecture not equal")
@@ -690,7 +690,7 @@ func TestNodeSetStatusH(t *testing.T) {
 
 			if tc.expectedCode == http.StatusOK {
 				got := new(types.Node)
-				err = envs.Get().GetStorage().Get(context.Background(), storage.NodeKind, envs.Get().GetStorage().Key().Node(tc.args.node), got)
+				err = envs.Get().GetStorage().Get(context.Background(), storage.NodeKind, envs.Get().GetStorage().Key().Node(tc.args.node), got, nil)
 				assert.NoError(t, err)
 				assert.Equal(t, uo.Resources.Capacity.Pods, got.Status.Capacity.Pods, "pods not equal")
 				assert.Equal(t, uo.Resources.Allocated.Containers, got.Status.Allocated.Containers, "containers not equal")
@@ -825,7 +825,7 @@ func TestNodeSetPodStatusH(t *testing.T) {
 			if tc.expectedCode == http.StatusOK {
 
 				p := new(types.Pod)
-				err := envs.Get().GetStorage().Get(ctx, storage.PodKind, stg.Key().Pod(p1.Meta.Namespace, p1.Meta.Service, p1.Meta.Deployment, p1.Meta.Name), p)
+				err := envs.Get().GetStorage().Get(ctx, storage.PodKind, stg.Key().Pod(p1.Meta.Namespace, p1.Meta.Service, p1.Meta.Deployment, p1.Meta.Name), p, nil)
 				assert.NoError(t, err)
 
 				assert.Equal(t, uo.State, p.Status.State, "pods state not equal")
@@ -967,7 +967,7 @@ func TestNodeSetVolumeStatusH(t *testing.T) {
 
 			if tc.expectedCode == http.StatusOK {
 				v := new(types.Volume)
-				err := envs.Get().GetStorage().Get(ctx, storage.VolumeKind, stg.Key().Volume(vl1.Meta.Namespace, vl1.Meta.Name), v)
+				err := envs.Get().GetStorage().Get(ctx, storage.VolumeKind, stg.Key().Volume(vl1.Meta.Namespace, vl1.Meta.Name), v, nil)
 				assert.NoError(t, err)
 
 				assert.Equal(t, uo.State, v.Status.State, "volume state not equal")

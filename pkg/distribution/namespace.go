@@ -52,15 +52,13 @@ func (n *NM) Set(Namespace) error {
 	return nil
 }
 
-func (n *Namespace) List() ([]*types.Namespace, error) {
+func (n *Namespace) List() (*types.NamespaceList, error) {
 
 	log.V(logLevel).Debugf("%s:list:> get namespaces list", logNamespacePrefix)
 
-	var items = make([]*types.Namespace, 0)
+	var list = types.NewNamespaceList()
 
-	m, err := n.storage.List(n.context, storage.NamespaceKind, "", &items, nil)
-
-	log.Debug(m.Revision)
+	err := n.storage.List(n.context, storage.NamespaceKind, "", list, nil)
 
 	if err != nil {
 		log.Info(err.Error())
@@ -68,9 +66,9 @@ func (n *Namespace) List() ([]*types.Namespace, error) {
 		return nil, err
 	}
 
-	log.V(logLevel).Debugf("%s:list:> get namespaces list result: %d", logNamespacePrefix, len(items))
+	log.V(logLevel).Debugf("%s:list:> get namespaces list result: %d", logNamespacePrefix, len(list.Items))
 
-	return items, nil
+	return list, nil
 }
 
 func (n *Namespace) Get(name string) (*types.Namespace, error) {
@@ -83,7 +81,7 @@ func (n *Namespace) Get(name string) (*types.Namespace, error) {
 
 	namespace := new(types.Namespace)
 
-	_, err := n.storage.Get(n.context, storage.NamespaceKind, n.storage.Key().Namespace(name), &namespace, nil)
+	err := n.storage.Get(n.context, storage.NamespaceKind, n.storage.Key().Namespace(name), &namespace, nil)
 	if err != nil {
 		if errors.Storage().IsErrEntityNotFound(err) {
 			log.V(logLevel).Warnf("%s:get:> namespace by name `%s` not found", logNamespacePrefix, name)

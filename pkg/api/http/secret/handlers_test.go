@@ -53,9 +53,9 @@ func TestSecretList(t *testing.T) {
 	r1 := getSecretAsset(ns1.Meta.Name, "demo", "demo")
 	r2 := getSecretAsset(ns1.Meta.Name, "test", "test")
 
-	rl := make(types.SecretMap, 0)
-	rl[r1.SelfLink()] = r1
-	rl[r2.SelfLink()] = r2
+	rl := types.NewSecretMap()
+	rl.Items[r1.SelfLink()] = r1
+	rl.Items[r2.SelfLink()] = r2
 
 	type fields struct {
 		stg storage.Storage
@@ -73,7 +73,7 @@ func TestSecretList(t *testing.T) {
 		headers      map[string]string
 		handler      func(http.ResponseWriter, *http.Request)
 		err          string
-		want         types.SecretMap
+		want         *types.SecretMap
 		wantErr      bool
 		expectedCode int
 	}{
@@ -159,7 +159,7 @@ func TestSecretList(t *testing.T) {
 				assert.NoError(t, err)
 
 				for _, item := range *r {
-					if _, ok := tc.want[item.Meta.SelfLink]; !ok {
+					if _, ok := tc.want.Items[item.Meta.SelfLink]; !ok {
 						assert.Error(t, errors.New("not equals"))
 					}
 				}
@@ -310,7 +310,7 @@ func TestSecretCreate(t *testing.T) {
 			} else {
 
 				got := new(types.Secret)
-				err := tc.fields.stg.Get(tc.args.ctx, storage.SecretKind, tc.fields.stg.Key().Secret(tc.args.namespace.Meta.Name, tc.want.Meta.Name), got)
+				err := tc.fields.stg.Get(tc.args.ctx, storage.SecretKind, tc.fields.stg.Key().Secret(tc.args.namespace.Meta.Name, tc.want.Meta.Name), got, nil)
 				assert.NoError(t, err)
 
 				assert.Equal(t, ns1.Meta.Name, got.Meta.Name, "it was not be create")
@@ -570,7 +570,7 @@ func TestSecretRemove(t *testing.T) {
 			} else {
 
 				got := new(types.Secret)
-				err := tc.fields.stg.Get(tc.args.ctx, storage.SecretKind, tc.fields.stg.Key().Secret(tc.args.namespace.Meta.Name, tc.args.secret.Meta.Name), got)
+				err := tc.fields.stg.Get(tc.args.ctx, storage.SecretKind, tc.fields.stg.Key().Secret(tc.args.namespace.Meta.Name, tc.args.secret.Meta.Name), got, nil)
 				if err != nil && !errors.Storage().IsErrEntityNotFound(err) {
 					assert.NoError(t, err)
 				}

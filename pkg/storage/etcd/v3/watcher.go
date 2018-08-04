@@ -42,7 +42,7 @@ type watchChan struct {
 	watcher   *watcher
 	key       string
 	filter    string
-	rev       int64
+	rev       *int64
 	recursive bool
 	ctx       context.Context
 	cancel    context.CancelFunc
@@ -84,10 +84,11 @@ func (wc *watchChan) ResultChan() <-chan *types.Event {
 }
 
 func (w *watcher) newWatchChan(ctx context.Context, key, keyRegexFilter string, rev *int64) *watchChan {
-	wc := &watchChan{
+
+		wc := &watchChan{
 		watcher: w,
 		key:     key,
-		rev:     *rev,
+		rev:     rev,
 		filter:  keyRegexFilter,
 		event:   make(chan *event, incomingBufSize),
 		result:  make(chan *types.Event, outgoingBufSize),
@@ -131,19 +132,23 @@ func (wc *watchChan) run() {
 
 func (wc *watchChan) watching(watchClosedCh chan struct{}) {
 
-	if wc.rev == 0 {
+	opts := []clientv3.OpOption{
+		clientv3.WithPrevKV(),
+		clientv3.WithPrefix(),
+	}
+
+	if wc.rev != nil {
 		if err := wc.getState(); err != nil {
 			log.Errorf("%s:watching:> failed to getState with latest state: %v", logPrefix, err)
 			wc.sendError(err)
 			return
 		}
+		opts = append(opts, clientv3.WithRev(*wc.rev + 1))
 	}
 
-	opts := []clientv3.OpOption{
-		//clientv3.WithRev(wc.rev + 1),
-		clientv3.WithPrevKV(),
-		clientv3.WithPrefix(),
-	}
+
+
+
 
 	r, _ := regexp.Compile(wc.filter)
 
@@ -180,12 +185,16 @@ func (wc *watchChan) getState() error {
 
 	opts := []clientv3.OpOption{clientv3.WithPrefix()}
 
+	if wc.rev != nil {
+		opts = append(opts, clientv3.WithRev(*wc.rev))
+	}
+
 	getResp, err := wc.watcher.client.Get(wc.ctx, wc.key, opts...)
 	if err != nil {
 		return err
 	}
 
-	wc.rev = getResp.Header.Revision
+	wc.rev = &getResp.Header.Revision
 
 	for _, kv := range getResp.Kvs {
 		wc.sendEvent(&event{

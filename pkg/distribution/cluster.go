@@ -47,7 +47,7 @@ func (c *Cluster) Get() (*types.Cluster, error) {
 
 	cluster := new(types.Cluster)
 
-	err := c.storage.Get(c.context, storage.ClusterKind, "", cluster)
+	err := c.storage.Get(c.context, storage.ClusterKind, "", cluster, nil)
 	if err != nil {
 		if errors.Storage().IsErrEntityNotFound(err) {
 			log.V(logLevel).Warnf("%s:get:> cluster not found", logClusterPrefix)

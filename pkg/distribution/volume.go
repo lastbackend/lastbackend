@@ -42,7 +42,7 @@ func (v *Volume) Get(namespace, name string) (*types.Volume, error) {
 
 	item := new(types.Volume)
 
-	err := v.storage.Get(v.context, storage.VolumeKind, v.storage.Key().Volume(namespace, name), &item)
+	err := v.storage.Get(v.context, storage.VolumeKind, v.storage.Key().Volume(namespace, name), &item, nil)
 	if err != nil {
 		if errors.Storage().IsErrEntityNotFound(err) {
 			log.V(logLevel).Warnf("%s:get:> in namespace %s by name %s not found", logVolumePrefix, namespace, name)
@@ -56,20 +56,20 @@ func (v *Volume) Get(namespace, name string) (*types.Volume, error) {
 	return item, nil
 }
 
-func (v *Volume) ListByNamespace(namespace string) (map[string]*types.Volume, error) {
+func (v *Volume) ListByNamespace(namespace string) (*types.VolumeList, error) {
 	log.V(logLevel).Debugf("%s:list:> get volumes list", logVolumePrefix)
 
-	items := make(map[string]*types.Volume, 0)
+	list := types.NewVolumeList()
 	filter := v.storage.Filter().Volume().ByNamespace(namespace)
-	err := v.storage.Map(v.context, storage.VolumeKind, filter, &items)
+	err := v.storage.Map(v.context, storage.VolumeKind, filter, list, nil)
 	if err != nil {
 		log.V(logLevel).Error("%s:list:> get volumes list err: %v", logVolumePrefix, err)
-		return items, err
+		return list, err
 	}
 
-	log.V(logLevel).Debugf("%s:list:> get volumes list result: %d", logVolumePrefix, len(items))
+	log.V(logLevel).Debugf("%s:list:> get volumes list result: %d", logVolumePrefix, len(list.Items))
 
-	return items, nil
+	return list, nil
 }
 
 func (v *Volume) Create(namespace *types.Namespace, opts *types.VolumeCreateOptions) (*types.Volume, error) {

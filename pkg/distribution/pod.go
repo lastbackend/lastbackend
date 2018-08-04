@@ -48,8 +48,8 @@ func (p *Pod) Get(namespace, service, deployment, name string) (*types.Pod, erro
 
 	pod := new(types.Pod)
 
-	m, err := p.storage.Get(p.context, storage.PodKind,
-		p.storage.Key().Pod(namespace, service, deployment, name), &pod, nil)
+	err := p.storage.Get(p.context, storage.PodKind,
+		p.storage.Key().Pod(namespace, service, deployment, name), pod, nil)
 	if err != nil {
 
 		if errors.Storage().IsErrEntityNotFound(err) {
@@ -109,52 +109,52 @@ func (p *Pod) Create(deployment *types.Deployment) (*types.Pod, error) {
 }
 
 // ListByNamespace returns pod list in selected namespace
-func (p *Pod) ListByNamespace(namespace string) ([]*types.Pod, error) {
+func (p *Pod) ListByNamespace(namespace string) (*types.PodList, error) {
 	log.V(logLevel).Debugf("%s:listbynamespace:> get pod list by namespace %s", logPodPrefix, namespace)
 
-	items := make([]*types.Pod, 0)
+	list := types.NewPodList()
 	filter := p.storage.Filter().Pod().ByNamespace(namespace)
 
-	err := p.storage.List(p.context, storage.PodKind, filter, &items)
+	err := p.storage.List(p.context, storage.PodKind, filter, list, nil)
 	if err != nil {
 		log.V(logLevel).Debugf("%s:listbynamespace:> get pod list by deployment id `%s` err: %v", logPodPrefix, namespace, err)
 		return nil, err
 	}
 
-	return items, nil
+	return list, nil
 }
 
 // ListByService returns pod list in selected service
-func (p *Pod) ListByService(namespace, service string) ([]*types.Pod, error) {
+func (p *Pod) ListByService(namespace, service string) (*types.PodList, error) {
 	log.V(logLevel).Debugf("%s:listbyservice:> get pod list by service id %s/%s", logPodPrefix, namespace, service)
 
-	items := make([]*types.Pod, 0)
+	list := types.NewPodList()
 	filter := p.storage.Filter().Pod().ByService(namespace, service)
 
-	err := p.storage.List(p.context, storage.PodKind, filter, &items)
+	err := p.storage.List(p.context, storage.PodKind, filter, list, nil)
 	if err != nil {
 		log.V(logLevel).Debugf("%s:listbyservice:> get pod list by service id `%s` err: %v", logPodPrefix, namespace, service, err)
 		return nil, err
 	}
 
-	return items, nil
+	return list, nil
 }
 
 // ListByDeployment returns pod list in selected deployment
-func (p *Pod) ListByDeployment(namespace, service, deployment string) ([]*types.Pod, error) {
+func (p *Pod) ListByDeployment(namespace, service, deployment string) (*types.PodList, error) {
 	log.V(logLevel).Debugf("%s:listbydeployment:> get pod list by id %s/%s/%s", logPodPrefix, namespace, service, deployment)
 
-	items := make([]*types.Pod, 0)
+	list := types.NewPodList()
 	filter := p.storage.Filter().Pod().ByDeployment(namespace, service, deployment)
 
-	err := p.storage.List(p.context, storage.PodKind, filter, &items)
+	err := p.storage.List(p.context, storage.PodKind, filter, list, nil)
 	if err != nil {
 		log.V(logLevel).Debugf("%s:listbydeployment:> get pod list by deployment id `%s/%s/%s` err: %v",
 			logPodPrefix, namespace, service, deployment, err)
 		return nil, err
 	}
 
-	return items, nil
+	return list, nil
 }
 
 // SetNode - set node info to pod
@@ -177,7 +177,7 @@ func (p *Pod) Update(pod *types.Pod) error {
 
 	log.Debugf("%s:update:> update pod: %s", logPodPrefix, pod.Meta.Name)
 
-	if _, err := p.storage.Set(p.context, storage.PodKind,
+	if err := p.storage.Set(p.context, storage.PodKind,
 		p.storage.Key().Pod(pod.Meta.Namespace, pod.Meta.Service, pod.Meta.Deployment, pod.Meta.Name),
 		pod, nil); err != nil {
 		log.Errorf("%s:update:> pod update err: %v", logPodPrefix, err)

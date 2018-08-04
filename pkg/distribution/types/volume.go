@@ -92,3 +92,15 @@ func (v *Volume) SelfLink() string {
 func (v *Volume) CreateSelfLink(namespace, name string) string {
 	return fmt.Sprintf("%s:%s", namespace, name)
 }
+
+func NewVolumeList () *VolumeList {
+	dm := new(VolumeList)
+	dm.Items = make([]*Volume, 0)
+	return dm
+}
+
+func NewVolumeMap () *VolumeMap {
+	dm := new(VolumeMap)
+	dm.Items = make(map[string]*Volume)
+	return dm
+}

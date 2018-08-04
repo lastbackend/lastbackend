@@ -18,6 +18,10 @@
 
 package types
 
-import "github.com/lastbackend/lastbackend/pkg/storage/types"
+type Runtime struct {
+	System RuntimeSystem `json:"-"`
+}
 
-type Runtime types.Runtime
+type RuntimeSystem struct {
+	Revision int64 `json:"-"`
+}

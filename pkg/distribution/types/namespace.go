@@ -128,3 +128,15 @@ type NamespaceQuotasOptions struct {
 	RAM      int64 `json:"ram"`
 	Routes   int   `json:"routes"`
 }
+
+func NewNamespaceList () *NamespaceList {
+	dm := new(NamespaceList)
+	dm.Items = make([]*Namespace, 0)
+	return dm
+}
+
+func NewNamespaceMap () *NamespaceMap {
+	dm := new(NamespaceMap)
+	dm.Items = make(map[string]*Namespace)
+	return dm
+}
