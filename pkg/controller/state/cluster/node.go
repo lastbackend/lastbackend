@@ -19,30 +19,74 @@
 package cluster
 
 import (
-	"context"
-
-	"github.com/lastbackend/lastbackend/pkg/controller/envs"
+				"github.com/lastbackend/lastbackend/pkg/distribution/types"
 	"github.com/lastbackend/lastbackend/pkg/distribution"
-	"github.com/lastbackend/lastbackend/pkg/distribution/types"
-)
+	"context"
+	"github.com/lastbackend/lastbackend/pkg/controller/envs"
+	)
 
-func NodeLease(req types.NodeLease, nodes map[string]*types.Node) (*types.Node, error) {
+type NodeLease struct {
+	done    chan bool
+	Request  NodeLeaseOptions
+	Response struct {
+		Err  error
+		Node *types.Node
+	}
+}
 
-	for _, n := range nodes {
-		if n.Status.Capacity.Memory < *req.Request.Memory {
+type NodeLeaseOptions struct {
+	Node    *string
+	Memory  *int64
+	Storage *int64
+}
+
+func (nl *NodeLease) Wait() {
+	<- nl.done
+}
+
+func handleNodeLease (cs *ClusterState, nl *NodeLease) error {
+
+
+
+	defer func() {
+		nl.done <- true
+	}()
+
+	for _, n := range cs.node.list {
+
+		if (n.Status.Capacity.Memory-n.Status.Allocated.Memory) > *nl.Request.Memory {
 
 			n.Status.Allocated.Pods++
-			n.Status.Allocated.Memory += *req.Request.Memory
+			n.Status.Allocated.Memory += *nl.Request.Memory
+
 			nm := distribution.NewNodeModel(context.Background(), envs.Get().GetStorage())
 			nm.SetStatus(n, n.Status)
 
-			return n, nil
+			nl.Response.Node = n
+			return nil
 		}
+
 	}
 
-	return nil, nil
+	return nil
 }
 
-func NodeRelease() {
+func handleNodeRelease (cs *ClusterState, nl *NodeLease) error {
 
+	defer func() {
+		nl.done <- true
+	}()
+
+	if _, ok := cs.node.list[*nl.Request.Node]; !ok {
+		return nil
+	}
+
+	node := cs.node.list[*nl.Request.Node]
+	node.Status.Allocated.Pods--
+	node.Status.Allocated.Memory-=*nl.Request.Memory
+
+	nm := distribution.NewNodeModel(context.Background(), envs.Get().GetStorage())
+	nm.SetStatus(node, node.Status)
+
+	return nil
 }

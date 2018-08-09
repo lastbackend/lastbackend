@@ -26,7 +26,7 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/distribution"
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 	"github.com/lastbackend/lastbackend/pkg/log"
-)
+	)
 
 // ClusterState is cluster current state struct
 type ClusterState struct {
@@ -34,12 +34,9 @@ type ClusterState struct {
 	cluster *types.Cluster
 	node    struct {
 		observer chan *types.Node
-		lease    chan *types.NodeLease
-		release  chan *types.NodeLease
+		lease    chan *NodeLease
+		release  chan *NodeLease
 		list     map[string]*types.Node
-	}
-	pod struct {
-		observer chan *types.Pod
 	}
 }
 
@@ -48,37 +45,16 @@ func (cs *ClusterState) Observe() {
 	// Watch node changes
 	for {
 		select {
+		case l := <-cs.node.lease:
+			handleNodeLease(cs, l)
+			break
+		case l := <-cs.node.release:
+			handleNodeRelease(cs, l)
+			break
 		case n := <-cs.node.observer:
 			log.V(7).Debugf("node: %s", n.Meta.Name)
+			cs.node.list[n.SelfLink()] = n
 			break
-		case p := <-cs.pod.observer:
-
-			switch p.Status.State {
-			case types.StateCreated:
-				log.Debugf("cluster: Pod provision: %s start", p.SelfLink())
-				if err := PodProvision(p, cs); err != nil {
-					log.Errorf("%s", err.Error())
-				}
-				log.Debugf("cluster: Pod provision: %s done", p.SelfLink())
-
-				break
-			case types.StateProvision:
-				log.Debugf("Pod provision: %s", p.SelfLink())
-				if err := PodProvision(p, cs); err != nil {
-					log.Errorf("%s", err.Error())
-				}
-				break
-			case types.StateDestroy:
-				if err := PodDestroy(p); err != nil {
-					log.Errorf("%s", err.Error())
-				}
-				break
-			case types.StateDestroyed:
-				if err := PodRemove(p, cs); err != nil {
-					log.Errorf("%s", err.Error())
-				}
-				break
-			}
 		}
 	}
 }
@@ -109,51 +85,30 @@ func (cs *ClusterState) Restore() error {
 		// Run node observers
 	}
 
-	// Sync cluster state
-
-	// Sync cluster network
-
-	// Sync cluster endpoints
-
-	// Sync cluster manifests
-
-	nn := distribution.NewNamespaceModel(context.Background(), envs.Get().GetStorage())
-	pm := distribution.NewPodModel(context.Background(), envs.Get().GetStorage())
-	ns, err := nn.List()
-	if err != nil {
-		log.Errorf("%s", err.Error())
-		return err
-	}
-
-	for _, n := range ns.Items {
-		pl, err := pm.ListByNamespace(n.Meta.Name)
-		if err != nil {
-			log.Errorf("%s", err.Error())
-			return err
-		}
-		for _, p := range pl.Items {
-			cs.pod.observer <- p
-		}
-	}
-
 	return nil
 }
 
-// Lease new node for requests by parameters
-func (cs *ClusterState) Lease(opts types.NodeLeaseOptions) (*types.Node, error) {
-	// Work as node lease requests queue
-	req := new(types.NodeLease)
-	req.Request = opts
+// lease new node for requests by parameters
+func (cs *ClusterState) lease(opts NodeLeaseOptions) (*types.Node, error) {
 
-	return req.Get()
+	// Work as node lease requests queue
+	req := new(NodeLease)
+	req.Request = opts
+	req.done = make(chan bool)
+	cs.node.lease <- req
+	req.Wait()
+	return req.Response.Node, req.Response.Err
 }
 
-// Release node
-func (cs *ClusterState) Release(opts types.NodeLeaseOptions) (*types.Node, error) {
+// release node
+func (cs *ClusterState) release(opts NodeLeaseOptions) (*types.Node, error) {
 	// Work as node release
-	req := new(types.NodeLease)
+	req := new(NodeLease)
 	req.Request = opts
-	return req.Get()
+	req.done = make(chan bool)
+	cs.node.release <- req
+	req.Wait()
+	return req.Response.Node, req.Response.Err
 }
 
 // IPAM management
@@ -174,21 +129,62 @@ func (cs *ClusterState) DelNode(n *types.Node) {
 	delete(cs.node.list, n.Meta.SelfLink)
 }
 
-func (cs *ClusterState) SetPod(p *types.Pod) {
-	cs.pod.observer <- p
+
+func (cs *ClusterState) PodLease(p *types.Pod) (*types.Node, error) {
+
+	var RAM int64
+
+	for _, s := range p.Spec.Template.Containers {
+		RAM += s.Resources.Request.RAM
+	}
+
+	opts := NodeLeaseOptions{
+		Memory: &RAM,
+	}
+
+	node, err := cs.lease(opts)
+	if err != nil {
+		log.Errorf("%s:> pod lease err: %s", err)
+		return nil, err
+	}
+
+	return node, err
+}
+
+func (cs *ClusterState) PodRelease(p *types.Pod) (*types.Node, error) {
+	var RAM int64
+
+	for _, s := range p.Spec.Template.Containers {
+		RAM += s.Resources.Request.RAM
+	}
+
+	opts := NodeLeaseOptions{
+		Node: &p.Meta.Node,
+		Memory: &RAM,
+	}
+
+	node, err := cs.release(opts)
+	if err != nil {
+		log.Errorf("%s:> pod lease err: %s", err)
+		return nil, err
+	}
+
+	return node, err
 }
 
 // NewClusterState returns new cluster state instance
 func NewClusterState() *ClusterState {
+
 	var cs = new(ClusterState)
 	cs.ec = new(EndpointController)
+
 	cs.node.observer = make(chan *types.Node)
 	cs.node.list = make(map[string]*types.Node)
-	cs.node.lease = make(chan *types.NodeLease)
-	cs.node.release = make(chan *types.NodeLease)
-	cs.node.observer = make(chan *types.Node)
-	cs.pod.observer = make(chan *types.Pod)
 
+	cs.node.lease = make(chan *NodeLease)
+	cs.node.release = make(chan *NodeLease)
+
+	cs.node.observer = make(chan *types.Node)
 	go cs.Observe()
 
 	return cs

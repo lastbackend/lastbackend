@@ -27,6 +27,7 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/distribution/errors"
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 	"github.com/lastbackend/lastbackend/pkg/log"
+	"github.com/lastbackend/lastbackend/pkg/controller/state/cluster"
 )
 
 const logPrefix = "state:service"
@@ -34,6 +35,7 @@ const logPrefix = "state:service"
 type ServiceState struct {
 	lock sync.Mutex
 
+	cluster  *cluster.ClusterState
 	service  *types.Service
 	endpoint *types.Endpoint
 
@@ -107,9 +109,11 @@ func (ss *ServiceState) Restore() error {
 		break
 	// if service is in provision state - mark deployment in ready state as current
 	case types.StateProvision:
+
 		for _, d := range ss.deployment.list {
 			if d.Status.State == types.StateReady {
 				ss.deployment.active = d
+				continue
 			}
 
 			if ss.deployment.provision == nil {
@@ -121,6 +125,14 @@ func (ss *ServiceState) Restore() error {
 				ss.deployment.provision = d
 			}
 		}
+
+		if ss.deployment.active != nil && ss.deployment.provision != nil {
+			if ss.deployment.provision.Spec.Template.Updated.Equal(ss.deployment.active.Spec.Template.Updated) {
+				ss.deployment.provision = nil
+			}
+
+		}
+
 		break
 	}
 
@@ -158,214 +170,26 @@ func (ss *ServiceState) Observe() {
 
 		case p := <-ss.observers.pod:
 			log.Debugf("%s:observe:pod:> %v", logPrefix, p)
-
-			// Call pod state manager methods
-			switch p.Status.State {
-			case types.StateProvision:
-			case types.StateCreated:
-			case types.StateReady:
-			case types.StateError:
-				break
-			case types.StateDestroyed:
-				if err := PodRemove(p); err != nil {
-					log.Errorf("%s", err.Error())
-					break
-				}
-				delete(ss.pod.list[p.DeploymentLink()], p.SelfLink())
-				break
-			case types.StateDestroy:
-				if err := PodDestroy(p); err != nil {
-					log.Errorf("%s", err.Error())
-					break
-				}
-				break
+			if err := PodObserve(ss, p); err != nil {
+				log.Errorf("%s:observe:pod err:> %s", logPrefix, err.Error())
 			}
-
-			// Sync deployment state after pod changes
-			DeploymentSync()
-
 			break
 
 		case d := <-ss.observers.deployment:
 			log.Debugf("%s:observe:deployment:> %v", logPrefix, d)
-
-			switch d.Status.State {
-			case types.StateCreated:
-			case types.StateProvision:
-
-
-				link := d.SelfLink()
-				log.Debugf("0:> %s:> %#v", link, ss.pod.list)
-
-				_, ok := ss.pod.list[link]
-				if !ok {
-					log.Debugf("1:> %#v", ss.pod.list[link])
-					ss.pod.list[link] = make(map[string]*types.Pod)
-				}
-
-				log.Debugf("2:> %#v", ss.pod.list[link])
-				if err := DeploymentProvision(d, ss.pod.list[link]); err != nil {
-					log.Errorf("%s", err.Error())
-					break
-				}
-				break
-			case types.StateReady:
-				if ss.deployment.active != nil {
-					if err := DeploymentCancel(ss.deployment.active, ss.pod.list[ss.deployment.active.SelfLink()]); err != nil {
-						log.Errorf("%s", err.Error())
-						break
-					}
-				}
-
-				ss.deployment.active = d
-				ss.deployment.provision = nil
-
-				break
-			case types.StateError:
-				break
-			case types.StateDestroy:
-				if err := DeploymentDestroy(d, ss.pod.list[d.SelfLink()]); err != nil {
-					log.Errorf("%s", err.Error())
-				}
-				break
-			case types.StateDestroyed:
-				if err := DeploymentRemove(d); err != nil {
-					log.Errorf("%s", err.Error())
-				}
-				break
+			if err := deploymentObserve(ss, d); err != nil {
+				log.Errorf("%s:observe:deployment err:> %s", logPrefix, err.Error())
 			}
-
-			ss.deployment.list[d.SelfLink()] = d
-
-			if ss.deployment.active != nil {
-				if err := ServiceSync(ss.service, ss.deployment.active); err != nil {
-					log.Errorf("%s", err.Error())
-				}
-				break
-			}
-
-			if ss.deployment.provision != nil {
-				if err := ServiceSync(ss.service, ss.deployment.provision); err != nil {
-					log.Errorf("%s", err.Error())
-				}
-				break
-			}
-
-			if err := ServiceSync(ss.service, nil); err != nil {
-				log.Errorf("%s", err.Error())
-			}
-
 			break
 
 		case s := <-ss.observers.service:
 			log.Debugf("%s:observe:service:> %v", logPrefix, s)
-
-			switch s.Status.State {
-			case types.StateCreated:
-
-				if len(s.Spec.Network.Ports) > 0 && ss.endpoint == nil {
-
-					e, err := EndpointCreate(s.Meta.Namespace, s.Meta.Name, s.Meta.Endpoint, &s.Spec.Network)
-					if err != nil {
-						log.Errorf("%s", err.Error())
-						break
-					}
-
-					ss.endpoint = e
-				}
-
-				d, err := ServiceProvision(s)
-				if err != nil {
-					log.Errorf("%s", err.Error())
-					continue
-				}
-
-				ss.deployment.list[d.SelfLink()] = d
-				ss.deployment.provision = d
-
-				if ss.endpoint != nil {
-					e, err := EndpointUpdate(ss.endpoint, &s.Spec.Network)
-					if err != nil {
-						log.Errorf("%s", err.Error())
-						break
-					}
-					ss.endpoint = e
-				}
-
-				break
-
-			case types.StateProvision:
-
-				// service template spec updated time check
-				if (ss.deployment.active == nil && ss.deployment.provision == nil) || ss.service.Spec.Template.Updated.Before(s.Spec.Template.Updated) {
-
-					d, err := ServiceProvision(s)
-					if err != nil {
-						log.Errorf("%s", err.Error())
-						continue
-					}
-
-					ss.deployment.list[d.SelfLink()] = d
-					ss.deployment.provision = d
-				}
-
-				// check expose spec and update endpoint if spec changed
-				if ss.service.Spec.Network.Updated.Before(s.Spec.Network.Updated) {
-
-					if len(s.Spec.Network.Ports) == 0 {
-						if err := EndpointRemove(ss.endpoint); err != nil {
-							log.Errorf("%s", err.Error())
-						}
-						ss.endpoint = nil
-					} else {
-						e, err := EndpointUpdate(ss.endpoint, &s.Spec.Network)
-						if err != nil {
-							log.Errorf("%s", err.Error())
-						}
-						ss.endpoint = e
-					}
-				}
-
-				// check replicas changes
-				if ss.service.Spec.Replicas != s.Spec.Replicas {
-
-					var (
-						err error
-					)
-
-					err = DeploymentScale(ss.deployment.active, s.Spec.Replicas)
-					if err != nil {
-						log.Errorf("%s", err.Error())
-					}
-				}
-
-				break
-
-			// Check service ready/error state triggers
-			case types.StateReady:
-			case types.StateError:
-				// Generate events if needed
-				break
-
-			// Run service destroy process
-			case types.StateDestroy:
-				ss.service = s
-				if err := ServiceDestroy(ss.service, ss.deployment.list); err != nil {
-					log.Errorf("%s")
-				}
-				break
-
-			// Remove service from storage if it is already destroyed
-			case types.StateDestroyed:
-				if err := ServiceRemove(ss.service); err != nil {
-					log.Errorf("%s")
-				}
-				break
+			if err := serviceObserve(ss, s); err != nil {
+				log.Errorf("%s:observe:service err:> %s", logPrefix, err.Error())
 			}
-
-			ss.service = s
 			break
 		}
+
 	}
 }
 
@@ -393,11 +217,12 @@ func (ss *ServiceState) DelPod(p *types.Pod) {
 
 }
 
-func NewServiceState(s *types.Service) *ServiceState {
+func NewServiceState(cs *cluster.ClusterState, s *types.Service) *ServiceState {
 
 	var ss = new(ServiceState)
 
 	ss.service = s
+	ss.cluster = cs
 
 	ss.observers.service = make(chan *types.Service)
 	ss.observers.deployment = make(chan *types.Deployment)

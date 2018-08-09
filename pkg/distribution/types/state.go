@@ -21,6 +21,7 @@ package types
 const StateProvision = "provision"
 const StateInitialized = "initialized"
 const StateWarning = "warning"
+const StateDegradation = "degradation"
 const StateReady = "ready"
 
 const StatePull = "pull"

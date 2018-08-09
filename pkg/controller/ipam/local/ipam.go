@@ -79,7 +79,7 @@ func (i *IPAM) Lease() (*net.IP, error) {
 	return &ip, nil
 }
 
-// Release IP
+// release IP
 func (i *IPAM) Release(ip *net.IP) error {
 
 	var (

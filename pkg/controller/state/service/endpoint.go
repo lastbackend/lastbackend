@@ -27,7 +27,37 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/log"
 )
 
-func EndpointCreate(namespace, service, domain string, spec *types.SpecNetwork) (*types.Endpoint, error) {
+// EndpointValidate - validate endpoint spec
+// return true if spec is valid
+func EndpointValidate(e *types.Endpoint, spec types.SpecNetwork) bool {
+
+	if e == nil {
+		return false
+	}
+
+	if len(e.Spec.PortMap) != len(spec.Ports) {
+		return false
+	}
+
+	for p, s := range spec.Ports {
+		if _, ok := e.Spec.PortMap[p]; !ok {
+			return false
+		}
+
+		if s != e.Spec.PortMap[p] {
+			return false
+		}
+
+	}
+
+	if e.Spec.Policy != spec.Policy {
+		return false
+	}
+
+	return true
+}
+
+func EndpointCreate(namespace, service, domain string, spec types.SpecNetwork) (*types.Endpoint, error) {
 	em := distribution.NewEndpointModel(context.Background(), envs.Get().GetStorage())
 
 	if spec.IP == types.EmptyString {
@@ -56,7 +86,7 @@ func EndpointCreate(namespace, service, domain string, spec *types.SpecNetwork) 
 	return e, nil
 }
 
-func EndpointUpdate(e *types.Endpoint, spec *types.SpecNetwork) (*types.Endpoint, error) {
+func EndpointUpdate(e *types.Endpoint, spec types.SpecNetwork) (*types.Endpoint, error) {
 
 	em := distribution.NewEndpointModel(context.Background(), envs.Get().GetStorage())
 
