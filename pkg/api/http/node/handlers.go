@@ -123,9 +123,11 @@ func NodeGetSpecH(w http.ResponseWriter, r *http.Request) {
 
 	log.V(logLevel).Debugf("%s:getspec:> list node", logPrefix)
 
+	
 	var (
 		nm = distribution.NewNodeModel(r.Context(), envs.Get().GetStorage())
-		mm = distribution.NewManifestModel(r.Context(), envs.Get().GetStorage())
+		pm = distribution.NewPodModel(r.Context(), envs.Get().GetStorage())
+		vm = distribution.NewVolumeModel(r.Context(), envs.Get().GetStorage())
 
 		cid   = utils.Vars(r)["cluster"]
 		nid   = utils.Vars(r)["node"]
@@ -149,7 +151,7 @@ func NodeGetSpecH(w http.ResponseWriter, r *http.Request) {
 
 		spec = new(types.NodeManifest)
 
-		pods, err := mm.PodManifestMap(n.Meta.Name)
+		pods, err := pm.ManifestMap(n.Meta.Name)
 		if err != nil {
 			log.V(logLevel).Errorf("%s:getmanifest:> get pod manifests for node err: %s", logPrefix, err.Error())
 			errors.HTTP.InternalServerError(w)
@@ -158,7 +160,7 @@ func NodeGetSpecH(w http.ResponseWriter, r *http.Request) {
 		spec.Pods = pods.Items
 
 
-		volumes, err := mm.VolumeManifestMap(n.Meta.Name)
+		volumes, err := vm.ManifestMap(n.Meta.Name)
 		if err != nil {
 			log.V(logLevel).Errorf("%s:getmanifest:> get pod manifests for node err: %s", logPrefix, err.Error())
 			errors.HTTP.InternalServerError(w)
@@ -287,7 +289,7 @@ func NodeSetMetaH(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = nm.SetMeta(n, opts.Meta)
+	err = nm.Set(n, opts.Meta)
 	if err != nil {
 		log.V(logLevel).Errorf("%s:setmeta:> update node `%s` err: %s", logPrefix, nid, err.Error())
 		errors.HTTP.InternalServerError(w)
@@ -363,9 +365,9 @@ func NodeConnectH(w http.ResponseWriter, r *http.Request) {
 		nco.Meta.Name = opts.Info.Hostname
 		nco.Info = opts.Info
 		nco.Status = opts.Status
-		nco.Network = opts.Network.NetworkSpec
+		nco.Network = opts.Network.SubnetSpec
 
-		node, err = nm.Create(&nco)
+		node, err = nm.Put(&nco)
 		if err != nil {
 			log.V(logLevel).Errorf("%s:connect:> validation incoming data", logPrefix, err.Error())
 			errors.HTTP.InternalServerError(w)
@@ -399,7 +401,7 @@ func NodeConnectH(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := nm.SetNetwork(node, opts.Network.NetworkSpec); err != nil {
+	if err := nm.SetNetwork(node, opts.Network.SubnetSpec); err != nil {
 		log.V(logLevel).Errorf("%s:connect:> get nodes list err: %s", logPrefix, err.Error())
 		errors.HTTP.InternalServerError(w)
 		return
@@ -728,105 +730,6 @@ func NodeSetVolumeStatusH(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 	if _, err := w.Write([]byte{}); err != nil {
 		log.Errorf("%s:setvolumestatus:> write response err: %s", logPrefix, err.Error())
-		return
-	}
-}
-
-func NodeSetRouteStatusH(w http.ResponseWriter, r *http.Request) {
-
-	// swagger:operation PUT /cluster/node/{node}/status/route/{pod} node nodeSetRouteStatus
-	//
-	// Set node route status
-	//
-	// ---
-	// produces:
-	// - application/json
-	// parameters:
-	//   - name: node
-	//     in: path
-	//     description: node id
-	//     required: true
-	//     type: string
-	//   - name: pod
-	//     in: path
-	//     description: pod id
-	//     required: true
-	//     type: string
-	//   - name: body
-	//     in: body
-	//     required: true
-	//     schema:
-	//       "$ref": "#/definitions/request_node_route_status"
-	// responses:
-	//   '200':
-	//     description: Successfully set node route status
-	//   '400':
-	//     description: Bad request
-	//   '404':
-	//     description: Node not found / Pod not found / Route not found
-	//   '500':
-	//     description: Internal server error
-
-	log.V(logLevel).Debugf("%s:setroutestatus:> node set route state", logPrefix)
-
-	var (
-		nm  = distribution.NewNodeModel(r.Context(), envs.Get().GetStorage())
-		rm  = distribution.NewRouteModel(r.Context(), envs.Get().GetStorage())
-		nid = utils.Vars(r)["node"]
-		vid = utils.Vars(r)["route"]
-	)
-
-	// request body struct
-	opts := new(request.NodeRouteStatusOptions)
-	if err := opts.DecodeAndValidate(r.Body); err != nil {
-		log.V(logLevel).Errorf("%s:setroutestatus:> validation incoming data", logPrefix, err.Err())
-		err.Http(w)
-		return
-	}
-
-	n, err := nm.Get(nid)
-	if err != nil {
-		log.V(logLevel).Errorf("%s:setroutestatus:> get nodes list err: %s", logPrefix, err.Error())
-		errors.HTTP.InternalServerError(w)
-		return
-	}
-	if n == nil {
-		log.V(logLevel).Warnf("%s:setroutestatus:> update node `%s` not found", logPrefix, nid)
-		errors.New("node").NotFound().Http(w)
-		return
-	}
-
-	keys := strings.Split(vid, ":")
-	if len(keys) != 2 {
-		log.V(logLevel).Errorf("%s:setroutestatus:> invalid route selflink err: %s", logPrefix, vid)
-		errors.HTTP.BadRequest(w)
-		return
-	}
-
-	route, err := rm.Get(keys[0], keys[1])
-	if err != nil {
-		log.V(logLevel).Errorf("%s:setroutestatus:> pod not found selflink err: %s", logPrefix, vid)
-		errors.HTTP.NotFound(w)
-		return
-	}
-	if route == nil {
-		log.V(logLevel).Warnf("%s:setroutestatus:> update node `%s` route not found %s", logPrefix, nid, vid)
-		errors.New("route").NotFound().Http(w)
-		return
-	}
-
-	if err := rm.SetStatus(route, &types.RouteStatus{
-		State:   opts.State,
-		Message: opts.Message,
-	}); err != nil {
-		log.V(logLevel).Errorf("%s:setroutestatus:> get nodes list err: %s", logPrefix, err.Error())
-		errors.HTTP.InternalServerError(w)
-		return
-	}
-
-	w.WriteHeader(http.StatusOK)
-	if _, err := w.Write([]byte{}); err != nil {
-		log.Errorf("%s:setroutestatus:> write response err: %s", logPrefix, err.Error())
 		return
 	}
 }

@@ -161,7 +161,7 @@ func EventSubscribeH(w http.ResponseWriter, r *http.Request) {
 	}()
 
 	go cm.Watch(clusterEvents)
-	go sm.Watch(serviceEvents)
+	go sm.Watch(serviceEvents, nil)
 	go nm.Watch(namespaceEvents)
 
 	go func() {

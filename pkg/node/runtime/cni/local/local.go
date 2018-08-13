@@ -56,7 +56,7 @@ func (n *Network) Info(ctx context.Context) *types.NetworkState {
 	return &state
 }
 
-func (n *Network) Create(ctx context.Context, network *types.NetworkManifest) (*types.NetworkState, error) {
+func (n *Network) Create(ctx context.Context, network *types.SubnetManifest) (*types.NetworkState, error) {
 	return n.Info(ctx), nil
 }
 
@@ -64,7 +64,7 @@ func (n *Network) Destroy(ctx context.Context, network *types.NetworkState) erro
 	return nil
 }
 
-func (n *Network) Replace(ctx context.Context, state *types.NetworkState, manifest *types.NetworkManifest) (*types.NetworkState, error) {
+func (n *Network) Replace(ctx context.Context, state *types.NetworkState, manifest *types.SubnetManifest) (*types.NetworkState, error) {
 	return n.Info(ctx), nil
 }
 

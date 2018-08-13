@@ -39,7 +39,7 @@ func Restore(ctx context.Context) error {
 	return nil
 }
 
-func Manage(ctx context.Context, cidr string, sn *types.NetworkManifest) error {
+func Manage(ctx context.Context, cidr string, sn *types.SubnetManifest) error {
 
 	subnets := envs.Get().GetState().Networks().GetSubnets()
 	if state, ok := subnets[cidr]; ok {

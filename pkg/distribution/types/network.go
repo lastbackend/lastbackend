@@ -21,26 +21,46 @@ package types
 const NetworkTypeVxLAN = "vxlan"
 
 type Network struct {
-	Meta Meta
-	Spec NetworkSpec `json:"spec"`
+	Runtime
+	Meta   Meta          `json:"meta"`
+	Status NetworkStatus `json:"status"`
+	Spec   NetworkSpec   `json:"spec"`
+}
+
+type NetworkStatus struct {
+	State string `json:"state"`
+}
+
+type NetworkSpec struct {
+}
+
+type Subnet struct {
+	Runtime
+	Meta   Meta         `json:"meta"`
+	Status SubnetStatus `json:"status"`
+	Spec   SubnetSpec   `json:"spec"`
+}
+
+type SubnetStatus struct {
+	State string `json:"state"`
 }
 
 // swagger:model types_network_spec
-type NetworkSpec struct {
-	// Network state
+type SubnetSpec struct {
+	// Subnet state
 	State string `json:"state"`
 	// Node network type
 	Type string `json:"type"`
-	// Node Network subnet info
+	// Node Subnet subnet info
 	CIDR string `json:"cidr"`
-	// Node Network interface
+	// Node Subnet interface
 	IFace NetworkInterface `json:"iface"`
 	// Node Public IP
 	Addr string `json:"addr"`
 }
 
 type NetworkState struct {
-	NetworkSpec
+	SubnetSpec
 }
 
 // swagger:model types_network_interface
@@ -51,7 +71,7 @@ type NetworkInterface struct {
 	HAddr string `json:"HAddr"`
 }
 
-func (n *NetworkSpec) Equal(nt *NetworkSpec) bool {
+func (n *SubnetSpec) Equal(nt *SubnetSpec) bool {
 
 	switch false {
 	case n.Type == nt.Type:

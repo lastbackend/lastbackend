@@ -16,28 +16,35 @@
 // from Last.Backend LLC.
 //
 
-package cache
+package types
 
-import "context"
-
-type Cache struct {
-	node    *CacheNodeManifest
-	ingress *CacheIngressManifest
+type Collection interface {
+	Namespace() string
+	Service() string
+	Deployment() string
+	Cluster() string
+	Pod() string
+	Ingress() string
+	System() string
+	Node() string
+	Route() string
+	Volume() string
+	Trigger() string
+	Secret() string
+	Endpoint() string
+	Network() string
+	Subnet() string
+	Manifest() ManifestCollection
+	Test () string
 }
 
-type Cleaner func(ctx context.Context) error
-
-func (c *Cache) Node() *CacheNodeManifest {
-	return c.node
+type ManifestCollection interface {
+	Node() string
+	Cluster() string
+	Pod(node string) string
+	Volume(node string) string
+	Ingress() string
+	Subnet() string
+	Endpoint() string
 }
 
-func (c *Cache) Ingress() *CacheIngressManifest {
-	return c.ingress
-}
-
-func NewCache() *Cache {
-	c := new(Cache)
-	c.node = NewCacheNodeManifest()
-	c.ingress = NewCacheIngressSpec()
-	return c
-}

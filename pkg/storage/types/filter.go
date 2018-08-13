@@ -28,7 +28,6 @@ type Filter interface {
 	Secret() SecretFilter
 	Trigger() TriggerFilter
 	Volume() VolumeFilter
-	Manifest() ManifestFilter
 }
 
 type NamespaceFilter interface {
@@ -68,9 +67,4 @@ type VolumeFilter interface {
 type TriggerFilter interface {
 	ByNamespace(namespace string) string
 	ByService(namespace, service string) string
-}
-
-type ManifestFilter interface {
-	ByNodeManifest(node string) string
-	ByKindManifest(node string, kind Kind) string
 }

@@ -62,9 +62,6 @@ func (Filter) Volume() types.VolumeFilter {
 	return new(VolumeFilter)
 }
 
-func (Filter) Manifest() types.ManifestFilter {
-	return new(ManifestFilter)
-}
 
 type NamespaceFilter struct{}
 
@@ -142,14 +139,4 @@ func (TriggerFilter) ByNamespace(namespace string) string {
 
 func (TriggerFilter) ByService(namespace, service string) string {
 	return byService(namespace, service)
-}
-
-type ManifestFilter struct{}
-
-func (ManifestFilter) ByNodeManifest(node string) string {
-	return fmt.Sprintf("%s/", node)
-}
-
-func (ManifestFilter) ByKindManifest(node string, kind types.Kind) string {
-	return fmt.Sprintf("%s/%s", node, kind)
 }

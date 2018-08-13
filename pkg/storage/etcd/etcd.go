@@ -71,7 +71,11 @@ func New() (*Storage, error) {
 	return s, nil
 }
 
-func (s Storage) Get(ctx context.Context, kind types.Kind, name string, obj interface{}, opts *types.Opts) error {
+func (s Storage) Info(ctx context.Context, collection string, name string) (*types.Runtime, error) {
+	return s.client.store.Info(ctx, keyCreate(collection, name))
+}
+
+func (s Storage) Get(ctx context.Context, collection string, name string, obj interface{}, opts *types.Opts) error {
 	if reflect.ValueOf(obj).IsNil() {
 		return errors.New(types.ErrStructOutIsNil)
 	}
@@ -81,10 +85,10 @@ func (s Storage) Get(ctx context.Context, kind types.Kind, name string, obj inte
 		rev = opts.Rev
 	}
 
-	return s.client.store.Get(ctx, keyCreate(kind.String(), name), obj, rev)
+	return s.client.store.Get(ctx, keyCreate(collection, name), obj, rev)
 }
 
-func (s Storage) List(ctx context.Context, kind types.Kind, query string, obj interface{}, opts *types.Opts) error {
+func (s Storage) List(ctx context.Context, collection string, query string, obj interface{}, opts *types.Opts) error {
 
 	if reflect.ValueOf(obj).IsNil() {
 		return errors.New(types.ErrStructOutIsNil)
@@ -95,10 +99,10 @@ func (s Storage) List(ctx context.Context, kind types.Kind, query string, obj in
 		rev = opts.Rev
 	}
 
-	return s.client.store.List(ctx, keyCreate(kind.String(), query), "", obj, rev)
+	return s.client.store.List(ctx, keyCreate(collection, query), "", obj, rev)
 }
 
-func (s Storage) Map(ctx context.Context, kind types.Kind, query string, obj interface{}, opts *types.Opts) error {
+func (s Storage) Map(ctx context.Context, collection string, query string, obj interface{}, opts *types.Opts) error {
 
 	if reflect.ValueOf(obj).IsNil() {
 		return errors.New(types.ErrStructOutIsNil)
@@ -111,19 +115,19 @@ func (s Storage) Map(ctx context.Context, kind types.Kind, query string, obj int
 		rev = opts.Rev
 	}
 
-	return s.client.store.Map(ctx, keyCreate(kind.String(), query), q, obj, rev)
+	return s.client.store.Map(ctx, keyCreate(collection, query), q, obj, rev)
 }
 
-func (s Storage) Put(ctx context.Context, kind types.Kind, name string, obj interface{}, opts *types.Opts) error {
+func (s Storage) Put(ctx context.Context, collection string, name string, obj interface{}, opts *types.Opts) error {
 
 	if opts == nil {
 		opts = new(types.Opts)
 	}
 
-	return s.client.store.Put(ctx, keyCreate(kind.String(), name), obj, nil, opts.Ttl)
+	return s.client.store.Put(ctx, keyCreate(collection, name), obj, nil, opts.Ttl)
 }
 
-func (s Storage) Set(ctx context.Context, kind types.Kind, name string, obj interface{}, opts *types.Opts) error {
+func (s Storage) Set(ctx context.Context, collection string, name string, obj interface{}, opts *types.Opts) error {
 
 	var (
 		rev *int64
@@ -137,23 +141,23 @@ func (s Storage) Set(ctx context.Context, kind types.Kind, name string, obj inte
 		ttl = opts.Ttl
 	}
 
-	return s.client.store.Set(ctx, keyCreate(kind.String(), name), obj, nil, ttl, force, rev)
+	return s.client.store.Set(ctx, keyCreate(collection, name), obj, nil, ttl, force, rev)
 }
 
-func (s Storage) Del(ctx context.Context, kind types.Kind, name string) error {
+func (s Storage) Del(ctx context.Context, collection string, name string) error {
 
-	key := keyCreate(kind.String(), name)
+	key := keyCreate(collection, name)
 
 	if name == "" {
-		key = keyCreate(kind.String())
+		key = keyCreate(collection)
 	}
 
 	return s.client.store.Del(ctx, key)
 }
 
-func (s Storage) Watch(ctx context.Context, kind types.Kind, event chan *types.WatcherEvent, opts *types.Opts) error {
+func (s Storage) Watch(ctx context.Context, collection string, event chan *types.WatcherEvent, opts *types.Opts) error {
 
-	log.V(logLevel).Debug("%s:> watch %s", logPrefix, kind.String())
+	log.V(logLevel).Debug("%s:> watch %s", logPrefix, collection)
 
 	const filter = `\b.+\/(.+)\b`
 
@@ -169,7 +173,7 @@ func (s Storage) Watch(ctx context.Context, kind types.Kind, event chan *types.W
 		rev = opts.Rev
 	}
 
-	watcher, err := client.Watch(ctx, keyCreate(kind.String()), "", rev)
+	watcher, err := client.Watch(ctx, keyCreate(collection), "", rev)
 	if err != nil {
 		log.V(logLevel).Errorf("%s:> watch err: %v", logPrefix, err)
 		return err
@@ -201,6 +205,9 @@ func (s Storage) Watch(ctx context.Context, kind types.Kind, event chan *types.W
 
 			e := new(types.WatcherEvent)
 			e.Action = res.Type
+			e.SelfLink = keys[1]
+			e.System.Key = res.Key
+			e.System.Revision = res.Rev
 
 			match := strings.Split(res.Key, ":")
 
@@ -211,7 +218,7 @@ func (s Storage) Watch(ctx context.Context, kind types.Kind, event chan *types.W
 			}
 
 			if res.Type == types.STORAGEDELETEEVENT {
-				e.Data = nil
+				e.Data = res.Object
 				event <- e
 				continue
 			}
@@ -231,6 +238,10 @@ func (s Storage) Filter() types.Filter {
 
 func (s Storage) Key() types.Key {
 	return new(Key)
+}
+
+func (s Storage) Collection() types.Collection {
+	return new(Collection)
 }
 
 func (s Storage) getClient() (store.Store, store.DestroyFunc, error) {

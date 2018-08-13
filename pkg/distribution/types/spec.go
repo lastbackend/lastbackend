@@ -112,7 +112,7 @@ type SpecTemplateContainer struct {
 	Probes SpecTemplateContainerProbes `json:"probes"`
 	// Template container security
 	Security SpecTemplateContainerSecurity `json:"security"`
-	// Network container settings
+	// Subnet container settings
 	Network SpecTemplateContainerNetwork `json:"network"`
 	// Container DNS configuration
 	DNS SpecTemplateContainerDNS `json:"dns"`
@@ -283,9 +283,9 @@ type SpecTemplateContainerNetwork struct {
 	Hostname string `json:"hostname"`
 	// Container host domain
 	Domain string `json:"domain"`
-	// Network ID to use
+	// Subnet ID to use
 	Network string `json:"network"`
-	// Network Mode to use
+	// Subnet Mode to use
 	Mode string `json:"mode"`
 }
 

@@ -118,7 +118,7 @@ func (i *IPAM) save() error {
 
 	opts := storage.GetOpts()
 	opts.Force = true
-	return i.storage.Set(context.Background(), storage.UtilsKind, "ipam", &ips, opts)
+	return i.storage.Set(context.Background(), i.storage.Collection().System(), "ipam", &ips, opts)
 }
 
 // New IPAM object initializing and returning
@@ -127,6 +127,7 @@ func New(cidr string) (*IPAM, error) {
 	var (
 		skip = true
 		ipam = new(IPAM)
+		stg =  envs.Get().GetStorage()
 	)
 
 	ipam.storage = envs.Get().GetStorage()
@@ -157,7 +158,7 @@ func New(cidr string) (*IPAM, error) {
 	ips := make([]string, 0)
 
 	// Get IP list from database storage
-	err = envs.Get().GetStorage().Get(context.Background(), storage.UtilsKind, "ipam", &ips, nil)
+	err = stg.Get(context.Background(), stg.Collection().System(), "ipam", &ips, nil)
 	if err != nil {
 		if !errors.Storage().IsErrEntityNotFound(err) {
 			log.Errorf("%s get context error: %s", logIPAMPrefix, err.Error())

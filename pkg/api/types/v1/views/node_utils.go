@@ -82,7 +82,7 @@ func (obj *Node) ToJson() ([]byte, error) {
 func (obj *NodeManifest) Decode() *types.NodeManifest {
 
 	manifest := types.NodeManifest{
-		Network:   make(map[string]*types.NetworkManifest, 0),
+		Network:   make(map[string]*types.SubnetManifest, 0),
 		Pods:      make(map[string]*types.PodManifest, 0),
 		Volumes:   make(map[string]*types.VolumeManifest, 0),
 		Endpoints: make(map[string]*types.EndpointManifest, 0),

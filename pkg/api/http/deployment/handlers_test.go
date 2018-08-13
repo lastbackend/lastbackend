@@ -116,16 +116,16 @@ func TestDeploymentInfo(t *testing.T) {
 	}
 
 	clear := func() {
-		err := envs.Get().GetStorage().Del(context.Background(), storage.NamespaceKind, types.EmptyString)
+		err := envs.Get().GetStorage().Del(context.Background(), stg.Collection().Namespace(), types.EmptyString)
 		assert.NoError(t, err)
 
-		err = envs.Get().GetStorage().Del(context.Background(), storage.ServiceKind, types.EmptyString)
+		err = envs.Get().GetStorage().Del(context.Background(), stg.Collection().Service(), types.EmptyString)
 		assert.NoError(t, err)
 
-		err = envs.Get().GetStorage().Del(context.Background(), storage.DeploymentKind, types.EmptyString)
+		err = envs.Get().GetStorage().Del(context.Background(), stg.Collection().Deployment(), types.EmptyString)
 		assert.NoError(t, err)
 
-		err = envs.Get().GetStorage().Del(context.Background(), storage.PodKind, types.EmptyString)
+		err = envs.Get().GetStorage().Del(context.Background(), stg.Collection().Pod(), types.EmptyString)
 		assert.NoError(t, err)
 	}
 
@@ -136,20 +136,20 @@ func TestDeploymentInfo(t *testing.T) {
 			clear()
 			defer clear()
 
-			err := tc.fields.stg.Put(context.Background(), storage.NamespaceKind,
+			err := tc.fields.stg.Put(context.Background(), stg.Collection().Namespace(),
 				tc.fields.stg.Key().Namespace(ns1.Meta.Name), ns1, nil)
 			assert.NoError(t, err)
 
-			err = tc.fields.stg.Put(context.Background(), storage.ServiceKind, tc.fields.stg.Key().Service(s1.Meta.Namespace, s1.Meta.Name), s1, nil)
+			err = tc.fields.stg.Put(context.Background(), stg.Collection().Service(), tc.fields.stg.Key().Service(s1.Meta.Namespace, s1.Meta.Name), s1, nil)
 			assert.NoError(t, err)
 
-			err = tc.fields.stg.Put(context.Background(), storage.DeploymentKind, tc.fields.stg.Key().Deployment(d1.Meta.Namespace, d1.Meta.Service, d1.Meta.Name), d1, nil)
+			err = tc.fields.stg.Put(context.Background(), stg.Collection().Deployment(), tc.fields.stg.Key().Deployment(d1.Meta.Namespace, d1.Meta.Service, d1.Meta.Name), d1, nil)
 			assert.NoError(t, err)
 
-			err = tc.fields.stg.Put(context.Background(), storage.PodKind, tc.fields.stg.Key().Pod(p1.Meta.Namespace, p1.Meta.Service, p1.Meta.Name, p1.Meta.Name), p1, nil)
+			err = tc.fields.stg.Put(context.Background(), stg.Collection().Pod(), tc.fields.stg.Key().Pod(p1.Meta.Namespace, p1.Meta.Service, p1.Meta.Name, p1.Meta.Name), p1, nil)
 			assert.NoError(t, err)
 
-			err = tc.fields.stg.Put(context.Background(), storage.PodKind, tc.fields.stg.Key().Pod(p2.Meta.Namespace, p2.Meta.Service, p2.Meta.Name, p2.Meta.Name), p2, nil)
+			err = tc.fields.stg.Put(context.Background(), stg.Collection().Pod(), tc.fields.stg.Key().Pod(p2.Meta.Namespace, p2.Meta.Service, p2.Meta.Name, p2.Meta.Name), p2, nil)
 			assert.NoError(t, err)
 
 			// Create assert request to pass to our handler. We don't have any query parameters for now, so we'll
@@ -269,13 +269,13 @@ func TestDeploymentListHList(t *testing.T) {
 	}
 
 	clear := func() {
-		err := envs.Get().GetStorage().Del(context.Background(), storage.NamespaceKind, types.EmptyString)
+		err := envs.Get().GetStorage().Del(context.Background(), stg.Collection().Namespace(), types.EmptyString)
 		assert.NoError(t, err)
 
-		err = envs.Get().GetStorage().Del(context.Background(), storage.ServiceKind, types.EmptyString)
+		err = envs.Get().GetStorage().Del(context.Background(), stg.Collection().Service(), types.EmptyString)
 		assert.NoError(t, err)
 
-		err = envs.Get().GetStorage().Del(context.Background(), storage.DeploymentKind, types.EmptyString)
+		err = envs.Get().GetStorage().Del(context.Background(), stg.Collection().Deployment(), types.EmptyString)
 		assert.NoError(t, err)
 	}
 
@@ -286,16 +286,16 @@ func TestDeploymentListHList(t *testing.T) {
 			clear()
 			defer clear()
 
-			err := tc.fields.stg.Put(context.Background(), storage.NamespaceKind, tc.fields.stg.Key().Namespace(ns1.Meta.Name), ns1, nil)
+			err := tc.fields.stg.Put(context.Background(), stg.Collection().Namespace(), tc.fields.stg.Key().Namespace(ns1.Meta.Name), ns1, nil)
 			assert.NoError(t, err)
 
-			err = tc.fields.stg.Put(context.Background(), storage.ServiceKind, tc.fields.stg.Key().Service(s1.Meta.Namespace, s1.Meta.Name), s1, nil)
+			err = tc.fields.stg.Put(context.Background(), stg.Collection().Service(), tc.fields.stg.Key().Service(s1.Meta.Namespace, s1.Meta.Name), s1, nil)
 			assert.NoError(t, err)
 
-			err = tc.fields.stg.Put(context.Background(), storage.DeploymentKind, tc.fields.stg.Key().Deployment(d1.Meta.Namespace, d1.Meta.Service, d1.Meta.Name), d1, nil)
+			err = tc.fields.stg.Put(context.Background(), stg.Collection().Deployment(), tc.fields.stg.Key().Deployment(d1.Meta.Namespace, d1.Meta.Service, d1.Meta.Name), d1, nil)
 			assert.NoError(t, err)
 
-			err = tc.fields.stg.Put(context.Background(), storage.DeploymentKind, tc.fields.stg.Key().Deployment(d2.Meta.Namespace, d2.Meta.Service, d1.Meta.Name), d2, nil)
+			err = tc.fields.stg.Put(context.Background(), stg.Collection().Deployment(), tc.fields.stg.Key().Deployment(d2.Meta.Namespace, d2.Meta.Service, d1.Meta.Name), d2, nil)
 			assert.NoError(t, err)
 
 			// Create assert request to pass to our handler. We don't have any query parameters for now, so we'll

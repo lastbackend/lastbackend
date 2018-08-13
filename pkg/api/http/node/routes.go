@@ -33,5 +33,4 @@ var Routes = []http.Route{
 	{Path: "/cluster/node/{node}/status", Method: http.MethodPut, Middleware: []http.Middleware{middleware.Authenticate}, Handler: NodeSetStatusH},
 	{Path: "/cluster/node/{node}/status/pod/{pod}", Method: http.MethodPut, Middleware: []http.Middleware{middleware.Authenticate}, Handler: NodeSetPodStatusH},
 	{Path: "/cluster/node/{node}/status/volume/{pod}", Method: http.MethodPut, Middleware: []http.Middleware{middleware.Authenticate}, Handler: NodeSetVolumeStatusH},
-	{Path: "/cluster/node/{node}/status/route/{pod}", Method: http.MethodPut, Middleware: []http.Middleware{middleware.Authenticate}, Handler: NodeSetRouteStatusH},
 }

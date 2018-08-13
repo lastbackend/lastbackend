@@ -26,6 +26,7 @@ import (
 type DestroyFunc func()
 
 type Store interface {
+	Info(ctx context.Context, key string) (*types.Runtime, error)
 	Count(ctx context.Context, key, keyRegexFilter string) (int, error)
 	Put(ctx context.Context, key string, obj, out interface{}, ttl uint64) error
 	Get(ctx context.Context, key string, objPtr interface{}, rev *int64) error

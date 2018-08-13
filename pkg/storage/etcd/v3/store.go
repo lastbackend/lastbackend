@@ -48,6 +48,23 @@ type dbstore struct {
 	watcher    *watcher
 }
 
+func (s *dbstore) Info(ctx context.Context, key string) (*types.Runtime, error) {
+
+	key = path.Join(s.pathPrefix, key)
+	r := new(types.Runtime)
+
+
+	log.V(logLevel).Debugf("%s:count:> key: %s with filter: %s", logPrefix, key)
+
+	getResp, err := s.client.KV.Get(ctx, key, clientv3.WithPrefix())
+	if err != nil {
+		log.V(logLevel).Errorf("%s:count:> request err: %v", logPrefix, err)
+		return r, err
+	}
+
+	r.System.Revision = getResp.Header.Revision
+	return r, nil
+}
 
 func (s *dbstore) Count(ctx context.Context, key, keyRegexFilter string) (int, error) {
 	key = path.Join(s.pathPrefix, key)
@@ -204,6 +221,9 @@ func (s *dbstore) Map(ctx context.Context, key, keyRegexFilter string, mapOutPtr
 	items := make(map[string]*mvccpb.KeyValue, len(getResp.Kvs))
 
 	for _, kv := range getResp.Kvs {
+
+		log.Info(string(kv.Key))
+
 		if keyRegexFilter != "" && r.MatchString(string(kv.Key)) {
 			keys := r.FindStringSubmatch(string(kv.Key))
 			items[keys[1]] = kv
@@ -213,7 +233,7 @@ func (s *dbstore) Map(ctx context.Context, key, keyRegexFilter string, mapOutPtr
 	}
 
 	if len(items) == 0 {
-		return errors.New(types.ErrEntityNotFound)
+		return nil
 	}
 
 	if err := decodeMap(s.codec, items, mapOutPtr); err != nil {

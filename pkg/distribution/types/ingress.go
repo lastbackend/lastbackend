@@ -68,7 +68,7 @@ type IngressUpdateMetaOptions struct {
 type IngressCreateOptions struct {
 	Meta    IngressCreateMetaOptions `json:"meta",yaml:"meta"`
 	Status  IngressStatus            `json:"status",yaml:"status"`
-	Network NetworkSpec              `json:"network"`
+	Network SubnetSpec               `json:"network"`
 }
 
 func (m *IngressMeta) Set(meta *IngressUpdateMetaOptions) {

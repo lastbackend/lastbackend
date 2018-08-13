@@ -197,6 +197,39 @@ func (ss *ServiceState) SetService(s *types.Service) {
 	ss.observers.service <- s
 }
 
+func (ss *ServiceState) SetDeployment(d *types.Deployment) {
+	ss.observers.deployment <- d
+}
+
+func (ss *ServiceState) DelDeployment(d *types.Deployment) {
+
+
+
+	if _, ok := ss.pod.list[d.SelfLink()]; !ok {
+		return
+	}
+	delete(ss.pod.list, d.SelfLink())
+
+	if _, ok := ss.deployment.list[d.SelfLink()]; !ok {
+		return
+	}
+
+	delete(ss.deployment.list, d.SelfLink())
+
+	if ss.deployment.active != nil {
+		if ss.deployment.active.SelfLink() == d.SelfLink() {
+			ss.deployment.active = nil
+		}
+	}
+
+	if ss.deployment.provision != nil {
+		if ss.deployment.provision.SelfLink() == d.SelfLink() {
+			ss.deployment.provision = nil
+		}
+	}
+
+}
+
 func (ss *ServiceState) SetPod(p *types.Pod) {
 	ss.observers.pod <- p
 }

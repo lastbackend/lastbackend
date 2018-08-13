@@ -39,7 +39,7 @@ type Ingress struct {
 func (n *Ingress) List() (*types.IngressList, error) {
 	list := types.NewIngressList()
 
-	if err := n.storage.Map(n.context, storage.IngressKind, "", list, nil); err != nil {
+	if err := n.storage.Map(n.context, n.storage.Collection().Ingress(), "", list, nil); err != nil {
 		log.Debugf("%s:list:> get ingress list err: %v", logIngressPrefix, err)
 		return nil, err
 	}
@@ -58,7 +58,7 @@ func (n *Ingress) Create(opts *types.IngressCreateOptions) (*types.Ingress, erro
 	ig.Status = opts.Status
 	ig.SelfLink()
 
-	if err := n.storage.Put(n.context, storage.IngressKind,
+	if err := n.storage.Put(n.context, n.storage.Collection().Ingress(),
 		n.storage.Key().Ingress(ig.Meta.Name), ig, nil); err != nil {
 		log.Debugf("%s:create:> insert ingress err: %v", logIngressPrefix, err)
 		return nil, err
@@ -73,7 +73,7 @@ func (n *Ingress) Get(name string) (*types.Ingress, error) {
 
 	ingress := new(types.Ingress)
 
-	err := n.storage.Get(n.context, storage.IngressKind, n.storage.Key().Ingress(name), ingress, nil)
+	err := n.storage.Get(n.context, n.storage.Collection().Ingress(), n.storage.Key().Ingress(name), ingress, nil)
 	if err != nil {
 
 		if errors.Storage().IsErrEntityNotFound(err) {
@@ -98,7 +98,7 @@ func (n *Ingress) SetMeta(ingress *types.Ingress, meta *types.IngressUpdateMetaO
 
 	ingress.Meta.Set(meta)
 
-	if err := n.storage.Set(n.context, storage.IngressKind,
+	if err := n.storage.Set(n.context, n.storage.Collection().Ingress(),
 		n.storage.Key().Ingress(ingress.Meta.Name), &ingress, nil); err != nil {
 		log.V(logLevel).Errorf("%s:setmeta:> update Ingress meta err: %v", logIngressPrefix, err)
 		return err
@@ -111,7 +111,7 @@ func (n *Ingress) SetStatus(ingress *types.Ingress, status types.IngressStatus) 
 
 	ingress.Status = status
 
-	if err := n.storage.Set(n.context, storage.IngressKind,
+	if err := n.storage.Set(n.context, n.storage.Collection().Ingress(),
 		n.storage.Key().Ingress(ingress.Meta.Name), &ingress, nil); err != nil {
 		log.Errorf("%s:setstatus:> set ingress offline state error: %v", logIngressPrefix, err)
 		return err
@@ -124,7 +124,7 @@ func (n *Ingress) Remove(ingress *types.Ingress) error {
 
 	log.V(logLevel).Debugf("%s:remove:> remove ingress %s", logIngressPrefix, ingress.Meta.Name)
 
-	if err := n.storage.Del(n.context, storage.IngressKind, n.storage.Key().Ingress(ingress.Meta.Name)); err != nil {
+	if err := n.storage.Del(n.context, n.storage.Collection().Ingress(), n.storage.Key().Ingress(ingress.Meta.Name)); err != nil {
 		log.V(logLevel).Debugf("%s:remove:> remove ingress err: %v", logIngressPrefix, err)
 		return err
 	}

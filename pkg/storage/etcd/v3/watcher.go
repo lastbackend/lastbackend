@@ -146,10 +146,6 @@ func (wc *watchChan) watching(watchClosedCh chan struct{}) {
 		opts = append(opts, clientv3.WithRev(*wc.rev + 1))
 	}
 
-
-
-
-
 	r, _ := regexp.Compile(wc.filter)
 
 	wch := wc.watcher.client.Watch(wc.ctx, wc.key, opts...)
@@ -186,7 +182,7 @@ func (wc *watchChan) getState() error {
 	opts := []clientv3.OpOption{clientv3.WithPrefix()}
 
 	if wc.rev != nil {
-		opts = append(opts, clientv3.WithRev(*wc.rev))
+		opts = append(opts, clientv3.WithMinModRev(*wc.rev))
 	}
 
 	getResp, err := wc.watcher.client.Get(wc.ctx, wc.key, opts...)
@@ -243,6 +239,7 @@ func (wc *watchChan) sendError(err error) {
 }
 
 func (wc *watchChan) sendEvent(e *event) {
+
 	if len(wc.event) == incomingBufSize {
 		log.Warnf("%s:sendevent:> buffered events: %d. Processing event %s takes a long time", logPrefix, incomingBufSize, e.key)
 	}
@@ -255,6 +252,7 @@ func (wc *watchChan) sendEvent(e *event) {
 func transformEvent(e *event) *types.Event {
 
 	action := types.STORAGEUPDATEEVENT
+	data := []byte{}
 
 	if e.isCreated {
 		action = types.STORAGECREATEEVENT
@@ -264,11 +262,19 @@ func transformEvent(e *event) *types.Event {
 		action = types.STORAGEDELETEEVENT
 	}
 
+	if !e.isDeleted {
+		data = e.value
+	} else {
+		data = e.prevValue
+	}
+
 	event := &types.Event{
 		Type:   action,
 		Key:    string(e.key),
-		Object: e.value,
+		Rev:    e.rev,
+		Object: data,
 	}
+
 
 	return event
 }

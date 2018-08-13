@@ -21,8 +21,7 @@ package etcd
 import (
 	"fmt"
 
-	"github.com/lastbackend/lastbackend/pkg/storage/types"
-)
+	)
 
 type Key struct{}
 
@@ -69,8 +68,8 @@ func (Key) Process(kind, name string, lead bool) string {
 	return fmt.Sprintf("%s:%s", kind, name)
 }
 
-func (Key) Manifest(node string, kind types.Kind, name string) string {
-	return fmt.Sprintf("%s/", name)
+func (Key) Manifest(name string) string {
+	return fmt.Sprintf("%s", name)
 }
 
 func (Key) Node(name string) string {
@@ -79,4 +78,8 @@ func (Key) Node(name string) string {
 
 func (Key) Route(namespace, name string) string {
 	return fmt.Sprintf("%s:%s", namespace, name)
+}
+
+func (Key) Subnet(name string) string {
+	return fmt.Sprintf("%s", name)
 }

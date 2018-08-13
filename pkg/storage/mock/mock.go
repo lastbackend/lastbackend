@@ -32,13 +32,17 @@ import (
 )
 
 type Storage struct {
-	store map[types.Kind]map[string][]byte
+	store map[string]map[string][]byte
 }
 
-func (s *Storage) Get(ctx context.Context, kind types.Kind, name string, obj interface{}, opts *types.Opts) error {
-	s.check(kind)
+func (s *Storage) Info(ctx context.Context, collection string, name string) (*types.Runtime, error) {
+	return new(types.Runtime), nil
+}
 
-	if _, ok := s.store[kind][name]; !ok {
+func (s *Storage) Get(ctx context.Context, collection string, name string, obj interface{}, opts *types.Opts) error {
+	s.check(collection)
+
+	if _, ok := s.store[collection][name]; !ok {
 		return errors.New(types.ErrEntityNotFound)
 	}
 
@@ -46,15 +50,15 @@ func (s *Storage) Get(ctx context.Context, kind types.Kind, name string, obj int
 		return errors.New(types.ErrStructOutIsNil)
 	}
 
-	if err := json.Unmarshal(s.store[kind][name], obj); err != nil {
+	if err := json.Unmarshal(s.store[collection][name], obj); err != nil {
 		return err
 	}
 
 	return nil
 }
 
-func (s *Storage) List(ctx context.Context, kind types.Kind, q string, obj interface{}, opts *types.Opts) error {
-	s.check(kind)
+func (s *Storage) List(ctx context.Context, collection string, q string, obj interface{}, opts *types.Opts) error {
+	s.check(collection)
 
 	if reflect.ValueOf(obj).IsNil() {
 		return errors.New(types.ErrStructOutIsNil)
@@ -67,7 +71,7 @@ func (s *Storage) List(ctx context.Context, kind types.Kind, q string, obj inter
 
 	buffer := []byte("[")
 	current := 0
-	for k, item := range s.store[kind] {
+	for k, item := range s.store[collection] {
 		if strings.HasPrefix(k, q) {
 
 			if current > 0 {
@@ -104,8 +108,8 @@ func (s *Storage) List(ctx context.Context, kind types.Kind, q string, obj inter
 	return nil
 }
 
-func (s *Storage) Map(ctx context.Context, kind types.Kind, q string, obj interface{}, opts *types.Opts) error {
-	s.check(kind)
+func (s *Storage) Map(ctx context.Context, collection string, q string, obj interface{}, opts *types.Opts) error {
+	s.check(collection)
 
 	if reflect.ValueOf(obj).IsNil() {
 		return errors.New(types.ErrStructOutIsNil)
@@ -118,7 +122,7 @@ func (s *Storage) Map(ctx context.Context, kind types.Kind, q string, obj interf
 
 	buffer := []byte("{")
 	current := 0
-	for k, item := range s.store[kind] {
+	for k, item := range s.store[collection] {
 		if strings.HasPrefix(k, q) {
 
 			ks := strings.Split(k, "/")
@@ -162,10 +166,10 @@ func (s *Storage) Map(ctx context.Context, kind types.Kind, q string, obj interf
 	return nil
 }
 
-func (s *Storage) Put(ctx context.Context, kind types.Kind, name string, obj interface{}, opts *types.Opts) error {
-	s.check(kind)
+func (s *Storage) Put(ctx context.Context, collection string, name string, obj interface{}, opts *types.Opts) error {
+	s.check(collection)
 
-	if _, ok := s.store[kind][name]; ok {
+	if _, ok := s.store[collection][name]; ok {
 
 		if opts == nil {
 			return errors.New(types.ErrEntityExists)
@@ -181,14 +185,14 @@ func (s *Storage) Put(ctx context.Context, kind types.Kind, name string, obj int
 		return err
 	}
 
-	s.store[kind][name] = b
+	s.store[collection][name] = b
 	return nil
 }
 
-func (s *Storage) Set(ctx context.Context, kind types.Kind, name string, obj interface{}, opts *types.Opts) error {
-	s.check(kind)
+func (s *Storage) Set(ctx context.Context, collection string, name string, obj interface{}, opts *types.Opts) error {
+	s.check(collection)
 
-	if _, ok := s.store[kind][name]; !ok {
+	if _, ok := s.store[collection][name]; !ok {
 		if opts != nil && !opts.Force {
 			return errors.New(types.ErrEntityNotFound)
 		}
@@ -199,23 +203,23 @@ func (s *Storage) Set(ctx context.Context, kind types.Kind, name string, obj int
 		return err
 	}
 
-	s.store[kind][name] = b
+	s.store[collection][name] = b
 
 	return nil
 }
 
-func (s *Storage) Del(ctx context.Context, kind types.Kind, name string)  error {
-	s.check(kind)
+func (s *Storage) Del(ctx context.Context, collection string, name string)  error {
+	s.check(collection)
 	if name == "" {
-		s.store[kind] = make(map[string][]byte)
+		s.store[collection] = make(map[string][]byte)
 		return nil
 	}
-	delete(s.store[kind], name)
+	delete(s.store[collection], name)
 	return nil
 }
 
-func (s *Storage) Watch(ctx context.Context, kind types.Kind, event chan *types.WatcherEvent, opts *types.Opts)  error {
-	s.check(kind)
+func (s *Storage) Watch(ctx context.Context, collection string, event chan *types.WatcherEvent, opts *types.Opts)  error {
+	s.check(collection)
 	return nil
 }
 
@@ -227,7 +231,13 @@ func (s Storage) Key() types.Key {
 	return new(Key)
 }
 
-func (s *Storage) check(kind types.Kind) {
+func (s Storage) Collection() types.Collection {
+	return new(Collection)
+}
+
+
+
+func (s *Storage) check(kind string) {
 	if _, ok := s.store[kind]; !ok {
 		s.store[kind] = make(map[string][]byte)
 	}
@@ -235,6 +245,6 @@ func (s *Storage) check(kind types.Kind) {
 
 func New() (*Storage, error) {
 	db := new(Storage)
-	db.store = make(map[types.Kind]map[string][]byte)
+	db.store = make(map[string]map[string][]byte)
 	return db, nil
 }

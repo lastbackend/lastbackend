@@ -33,14 +33,17 @@ type Watcher interface {
 }
 
 type WatcherEvent struct {
-	Action string
-	Name   string
-	Data   interface{}
+	Runtime
+	Action   string
+	Name     string
+	SelfLink string
+	Data     interface{}
 }
 
 type Event struct {
 	Type   string
 	Key    string
+	Rev    int64
 	Object interface{}
 }
 

@@ -92,6 +92,10 @@ func (d *Deployment) CreateSelfLink(namespace, service, name string) string {
 	return fmt.Sprintf("%s:%s:%s", namespace, service, name)
 }
 
+func (d *Deployment) ServiceLink() string {
+	return fmt.Sprintf("%s:%s", d.Meta.Namespace, d.Meta.Service)
+}
+
 func (d *DeploymentStatus) SetProvision() {
 	d.State = StateProvision
 	d.Message = ""

@@ -74,11 +74,11 @@ func TestNodeListH(t *testing.T) {
 
 	for _, tc := range tests {
 
-		err = envs.Get().GetStorage().Del(context.Background(), storage.NodeKind, types.EmptyString)
+		err = envs.Get().GetStorage().Del(context.Background(), stg.Collection().Node(), types.EmptyString)
 		assert.NoError(t, err)
 
 		for _, n := range nl.Items {
-			err = stg.Put(context.Background(), storage.NodeKind, stg.Key().Node(n.Meta.Name), &n, nil)
+			err = stg.Put(context.Background(), stg.Collection().Node(), stg.Key().Node(n.Meta.Name), &n, nil)
 			assert.NoError(t, err)
 		}
 
@@ -162,10 +162,10 @@ func TestNodeGetH(t *testing.T) {
 
 	for _, tc := range tests {
 
-		err = envs.Get().GetStorage().Del(context.Background(), storage.NodeKind, types.EmptyString)
+		err = envs.Get().GetStorage().Del(context.Background(), stg.Collection().Node(), types.EmptyString)
 		assert.NoError(t, err)
 
-		err = stg.Put(context.Background(), storage.NodeKind, stg.Key().Node(n1.Meta.Name), &n1, nil)
+		err = stg.Put(context.Background(), stg.Collection().Node(), stg.Key().Node(n1.Meta.Name), &n1, nil)
 		assert.NoError(t, err)
 
 		t.Run(tc.name, func(t *testing.T) {
@@ -259,19 +259,19 @@ func TestNodeGetManifestH(t *testing.T) {
 
 		t.Run(tc.name, func(t *testing.T) {
 
-			err = envs.Get().GetStorage().Del(context.Background(), storage.NodeKind, types.EmptyString)
+			err = envs.Get().GetStorage().Del(context.Background(), stg.Collection().Node(), types.EmptyString)
 			assert.NoError(t, err)
 
-			err = envs.Get().GetStorage().Del(context.Background(), storage.ManifestKind, types.EmptyString)
+			err = envs.Get().GetStorage().Del(context.Background(), stg.Collection().Manifest().Pod(n1.Meta.Name), types.EmptyString)
 			assert.NoError(t, err)
 
-			err = stg.Put(context.Background(), storage.NodeKind, stg.Key().Node(n1.Meta.Name), &n1, nil)
+			err = stg.Put(context.Background(), stg.Collection().Node(), stg.Key().Node(n1.Meta.Name), &n1, nil)
 			assert.NoError(t, err)
 
-			err = stg.Put(context.Background(), storage.ManifestKind, stg.Key().Manifest(n1.Meta.Name, storage.PodKind, p1), getPodManifest(), nil)
+			err = stg.Put(context.Background(), stg.Collection().Manifest().Pod(n1.Meta.Name), p1, getPodManifest(), nil)
 			assert.NoError(t, err)
 
-			err = stg.Put(context.Background(), storage.ManifestKind, stg.Key().Manifest(n1.Meta.Name, storage.PodKind, p2), getPodManifest(), nil)
+			err = stg.Put(context.Background(), stg.Collection().Manifest().Pod(n1.Meta.Name), p2, getPodManifest(), nil)
 			assert.NoError(t, err)
 
 			// Create assert request to pass to our handler. We don't have any query parameters for now, so we'll
@@ -349,10 +349,10 @@ func TestNodeRemoveH(t *testing.T) {
 
 	for _, tc := range tests {
 
-		err = envs.Get().GetStorage().Del(context.Background(), storage.NodeKind, types.EmptyString)
+		err = envs.Get().GetStorage().Del(context.Background(), stg.Collection().Node(), types.EmptyString)
 		assert.NoError(t, err)
 
-		err = stg.Put(context.Background(), storage.NodeKind, stg.Key().Node(n1.Meta.Name), &n1, nil)
+		err = stg.Put(context.Background(), stg.Collection().Node(), stg.Key().Node(n1.Meta.Name), &n1, nil)
 		assert.NoError(t, err)
 
 		t.Run(tc.name, func(t *testing.T) {
@@ -446,10 +446,10 @@ func TestNodeSetMetaH(t *testing.T) {
 
 	for _, tc := range tests {
 
-		err = envs.Get().GetStorage().Del(context.Background(), storage.NodeKind, types.EmptyString)
+		err = envs.Get().GetStorage().Del(context.Background(), stg.Collection().Node(), types.EmptyString)
 		assert.NoError(t, err)
 
-		err = stg.Put(context.Background(), storage.NodeKind, stg.Key().Node(n1.Meta.Name), &n1, nil)
+		err = stg.Put(context.Background(), stg.Collection().Node(), stg.Key().Node(n1.Meta.Name), &n1, nil)
 		assert.NoError(t, err)
 
 		t.Run(tc.name, func(t *testing.T) {
@@ -486,7 +486,7 @@ func TestNodeSetMetaH(t *testing.T) {
 
 			if tc.expectedCode == http.StatusOK {
 				got := new(types.Node)
-				err = envs.Get().GetStorage().Get(context.Background(), storage.NodeKind, envs.Get().GetStorage().Key().Node(tc.args.node), got, nil)
+				err = envs.Get().GetStorage().Get(context.Background(), stg.Collection().Node(), envs.Get().GetStorage().Key().Node(tc.args.node), got, nil)
 				assert.NoError(t, err)
 				assert.Equal(t, *uo.Meta.Provider, got.Meta.Provider, "provider not equal")
 			}
@@ -546,10 +546,10 @@ func TestNodeConnectH(t *testing.T) {
 
 	for _, tc := range tests {
 
-		err = envs.Get().GetStorage().Del(context.Background(), storage.NodeKind, types.EmptyString)
+		err = envs.Get().GetStorage().Del(context.Background(), stg.Collection().Node(), types.EmptyString)
 		assert.NoError(t, err)
 
-		err = stg.Put(context.Background(), storage.NodeKind, stg.Key().Node(n1.Meta.Name), &n1, nil)
+		err = stg.Put(context.Background(), stg.Collection().Node(), stg.Key().Node(n1.Meta.Name), &n1, nil)
 		assert.NoError(t, err)
 
 		t.Run(tc.name, func(t *testing.T) {
@@ -586,7 +586,7 @@ func TestNodeConnectH(t *testing.T) {
 
 			if tc.expectedCode == http.StatusOK {
 				got := new(types.Node)
-				err = envs.Get().GetStorage().Get(context.Background(), storage.NodeKind, envs.Get().GetStorage().Key().Node(tc.args.node), got, nil)
+				err = envs.Get().GetStorage().Get(context.Background(), stg.Collection().Node(), envs.Get().GetStorage().Key().Node(tc.args.node), got, nil)
 				if assert.NoError(t, err) {
 					assert.Equal(t, uo.Info.Hostname, got.Info.Hostname, "hostname not equal")
 					assert.Equal(t, uo.Info.Architecture, got.Info.Architecture, "architecture not equal")
@@ -650,10 +650,10 @@ func TestNodeSetStatusH(t *testing.T) {
 
 	for _, tc := range tests {
 
-		err = envs.Get().GetStorage().Del(context.Background(), storage.NodeKind, types.EmptyString)
+		err = envs.Get().GetStorage().Del(context.Background(), stg.Collection().Node(), types.EmptyString)
 		assert.NoError(t, err)
 
-		err = stg.Put(context.Background(), storage.NodeKind, stg.Key().Node(n1.Meta.Name), &n1, nil)
+		err = stg.Put(context.Background(), stg.Collection().Node(), stg.Key().Node(n1.Meta.Name), &n1, nil)
 		assert.NoError(t, err)
 
 		t.Run(tc.name, func(t *testing.T) {
@@ -690,7 +690,7 @@ func TestNodeSetStatusH(t *testing.T) {
 
 			if tc.expectedCode == http.StatusOK {
 				got := new(types.Node)
-				err = envs.Get().GetStorage().Get(context.Background(), storage.NodeKind, envs.Get().GetStorage().Key().Node(tc.args.node), got, nil)
+				err = envs.Get().GetStorage().Get(context.Background(), stg.Collection().Node(), envs.Get().GetStorage().Key().Node(tc.args.node), got, nil)
 				assert.NoError(t, err)
 				assert.Equal(t, uo.Resources.Capacity.Pods, got.Status.Capacity.Pods, "pods not equal")
 				assert.Equal(t, uo.Resources.Allocated.Containers, got.Status.Allocated.Containers, "containers not equal")
@@ -779,16 +779,16 @@ func TestNodeSetPodStatusH(t *testing.T) {
 
 		t.Run(tc.name, func(t *testing.T) {
 
-			err = envs.Get().GetStorage().Del(context.Background(), storage.NodeKind, types.EmptyString)
+			err = envs.Get().GetStorage().Del(context.Background(), stg.Collection().Node(), types.EmptyString)
 			assert.NoError(t, err)
 
-			err = envs.Get().GetStorage().Del(context.Background(), storage.PodKind, types.EmptyString)
+			err = envs.Get().GetStorage().Del(context.Background(), stg.Collection().Pod(), types.EmptyString)
 			assert.NoError(t, err)
 
-			err = stg.Put(context.Background(), storage.NodeKind, stg.Key().Node(n1.Meta.Name), &n1, nil)
+			err = stg.Put(context.Background(), stg.Collection().Node(), stg.Key().Node(n1.Meta.Name), &n1, nil)
 			assert.NoError(t, err)
 
-			err = stg.Put(context.Background(), storage.PodKind,
+			err = stg.Put(context.Background(), stg.Collection().Pod(),
 				stg.Key().Pod(p1.Meta.Namespace, p1.Meta.Service, p1.Meta.Deployment, p1.Meta.Name), &p1, nil)
 			assert.NoError(t, err)
 
@@ -825,7 +825,7 @@ func TestNodeSetPodStatusH(t *testing.T) {
 			if tc.expectedCode == http.StatusOK {
 
 				p := new(types.Pod)
-				err := envs.Get().GetStorage().Get(ctx, storage.PodKind, stg.Key().Pod(p1.Meta.Namespace, p1.Meta.Service, p1.Meta.Deployment, p1.Meta.Name), p, nil)
+				err := envs.Get().GetStorage().Get(ctx, stg.Collection().Pod(), stg.Key().Pod(p1.Meta.Namespace, p1.Meta.Service, p1.Meta.Deployment, p1.Meta.Name), p, nil)
 				assert.NoError(t, err)
 
 				assert.Equal(t, uo.State, p.Status.State, "pods state not equal")
@@ -923,16 +923,16 @@ func TestNodeSetVolumeStatusH(t *testing.T) {
 
 		t.Run(tc.name, func(t *testing.T) {
 
-			err = envs.Get().GetStorage().Del(context.Background(), storage.NodeKind, types.EmptyString)
+			err = envs.Get().GetStorage().Del(context.Background(), stg.Collection().Node(), types.EmptyString)
 			assert.NoError(t, err)
 
-			err = envs.Get().GetStorage().Del(context.Background(), storage.VolumeKind, types.EmptyString)
+			err = envs.Get().GetStorage().Del(context.Background(), stg.Collection().Volume(), types.EmptyString)
 			assert.NoError(t, err)
 
-			err = stg.Put(context.Background(), storage.NodeKind, stg.Key().Node(n1.Meta.Name), &n1, nil)
+			err = stg.Put(context.Background(), stg.Collection().Node(), stg.Key().Node(n1.Meta.Name), &n1, nil)
 			assert.NoError(t, err)
 
-			err = stg.Put(context.Background(), storage.VolumeKind, stg.Key().Volume(vl1.Meta.Namespace, vl1.Meta.Name), &vl1, nil)
+			err = stg.Put(context.Background(), stg.Collection().Volume(), stg.Key().Volume(vl1.Meta.Namespace, vl1.Meta.Name), &vl1, nil)
 			assert.NoError(t, err)
 
 			// Create assert request to pass to our handler. We don't have any query parameters for now, so we'll
@@ -967,7 +967,7 @@ func TestNodeSetVolumeStatusH(t *testing.T) {
 
 			if tc.expectedCode == http.StatusOK {
 				v := new(types.Volume)
-				err := envs.Get().GetStorage().Get(ctx, storage.VolumeKind, stg.Key().Volume(vl1.Meta.Namespace, vl1.Meta.Name), v, nil)
+				err := envs.Get().GetStorage().Get(ctx, stg.Collection().Volume(), stg.Key().Volume(vl1.Meta.Namespace, vl1.Meta.Name), v, nil)
 				assert.NoError(t, err)
 
 				assert.Equal(t, uo.State, v.Status.State, "volume state not equal")
@@ -1017,7 +1017,7 @@ func getNodeAsset(name, desc string, online bool) types.Node {
 			Volumes: make(map[string]types.VolumeSpec),
 		},
 		Roles: types.NodeRole{},
-		Network: types.NetworkSpec{
+		Network: types.SubnetSpec{
 			Type: types.NetworkTypeVxLAN,
 			CIDR: "10.0.0.1",
 			IFace: types.NetworkInterface{

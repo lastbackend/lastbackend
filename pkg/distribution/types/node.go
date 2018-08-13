@@ -41,13 +41,13 @@ type NodeList struct {
 // swagger:model types_node
 type Node struct {
 	Runtime
-	Meta    NodeMeta    `json:"meta"`
-	Info    NodeInfo    `json:"info"`
-	Status  NodeStatus  `json:"status"`
-	Spec    NodeSpec    `json:"spec"`
-	Roles   NodeRole    `json:"roles"`
-	Network NetworkSpec `json:"network"`
-	Online  bool        `json:"online"`
+	Meta    NodeMeta   `json:"meta"`
+	Info    NodeInfo   `json:"info"`
+	Status  NodeStatus `json:"status"`
+	Spec    NodeSpec   `json:"spec"`
+	Roles   NodeRole   `json:"roles"`
+	Network SubnetSpec `json:"network"`
+	Online  bool       `json:"online"`
 }
 
 // swagger:ignore
@@ -107,7 +107,7 @@ type NodeStatus struct {
 // swagger:ignore
 // swagger:model types_node_spec
 type NodeSpec struct {
-	Network   map[string]NetworkSpec  `json:"network"`
+	Network   map[string]SubnetSpec   `json:"network"`
 	Pods      map[string]PodSpec      `json:"pods"`
 	Volumes   map[string]VolumeSpec   `json:"volumes"`
 	Endpoints map[string]EndpointSpec `json:"endpoints"`
@@ -170,7 +170,7 @@ type NodeCreateOptions struct {
 	Meta    NodeCreateMetaOptions `json:"meta",yaml:"meta"`
 	Info    NodeInfo              `json:"info",yaml:"info"`
 	Status  NodeStatus            `json:"status",yaml:"status"`
-	Network NetworkSpec           `json:"network"`
+	Network SubnetSpec            `json:"network"`
 }
 
 func (n *Node) SelfLink() string {

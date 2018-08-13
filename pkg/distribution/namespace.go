@@ -58,7 +58,7 @@ func (n *Namespace) List() (*types.NamespaceList, error) {
 
 	var list = types.NewNamespaceList()
 
-	err := n.storage.List(n.context, storage.NamespaceKind, "", list, nil)
+	err := n.storage.List(n.context, n.storage.Collection().Namespace(), "", list, nil)
 
 	if err != nil {
 		log.Info(err.Error())
@@ -81,7 +81,7 @@ func (n *Namespace) Get(name string) (*types.Namespace, error) {
 
 	namespace := new(types.Namespace)
 
-	err := n.storage.Get(n.context, storage.NamespaceKind, n.storage.Key().Namespace(name), &namespace, nil)
+	err := n.storage.Get(n.context, n.storage.Collection().Namespace(), n.storage.Key().Namespace(name), &namespace, nil)
 	if err != nil {
 		if errors.Storage().IsErrEntityNotFound(err) {
 			log.V(logLevel).Warnf("%s:get:> namespace by name `%s` not found", logNamespacePrefix, name)
@@ -118,7 +118,7 @@ func (n *Namespace) Create(opts *types.NamespaceCreateOptions) (*types.Namespace
 		ns.Spec.Quotas.Routes = defaultNamespaceRoutes
 	}
 
-	if err := n.storage.Put(n.context, storage.NamespaceKind, n.storage.Key().Namespace(ns.Meta.Name), ns, nil); err != nil {
+	if err := n.storage.Put(n.context, n.storage.Collection().Namespace(), n.storage.Key().Namespace(ns.Meta.Name), ns, nil); err != nil {
 		log.V(logLevel).Errorf("%s:create:> insert namespace err: %v", logNamespacePrefix, err)
 		return nil, err
 	}
@@ -140,7 +140,7 @@ func (n *Namespace) Update(namespace *types.Namespace, opts *types.NamespaceUpda
 		namespace.Spec.Quotas.Disabled = opts.Quotas.Disabled
 	}
 
-	if err := n.storage.Set(n.context, storage.NamespaceKind,
+	if err := n.storage.Set(n.context, n.storage.Collection().Namespace(),
 		n.storage.Key().Namespace(namespace.Meta.Name), namespace, nil); err != nil {
 		log.V(logLevel).Errorf("%s:update:> namespace update err: %v", logNamespacePrefix, err)
 		return err
@@ -153,7 +153,7 @@ func (n *Namespace) Remove(namespace *types.Namespace) error {
 
 	log.V(logLevel).Debugf("%s:remove:> remove namespace %s", logNamespacePrefix, namespace.Meta.Name)
 
-	if err := n.storage.Del(n.context, storage.NamespaceKind, n.storage.Key().Namespace(namespace.Meta.Name)); err != nil {
+	if err := n.storage.Del(n.context, n.storage.Collection().Namespace(), n.storage.Key().Namespace(namespace.Meta.Name)); err != nil {
 		log.V(logLevel).Errorf("%s:remove:> remove namespace err: %v", logNamespacePrefix, err)
 		return err
 	}
@@ -199,7 +199,7 @@ func (n *Namespace) Watch(ch chan types.NamespaceEvent) error {
 	}()
 
 	opts := storage.GetOpts()
-	if err := n.storage.Watch(n.context, storage.NamespaceKind, watcher, opts); err != nil {
+	if err := n.storage.Watch(n.context, n.storage.Collection().Namespace(), watcher, opts); err != nil {
 		return err
 	}
 

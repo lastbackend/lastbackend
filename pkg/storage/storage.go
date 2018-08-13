@@ -42,19 +42,23 @@ const (
 	EndpointKind   types.Kind = "endpoint"
 	UtilsKind      types.Kind = "utils"
 	ManifestKind   types.Kind = "manifest"
+	NetworkKind    types.Kind = "network"
+	SubnetKind     types.Kind = "subnet"
 	TestKind       types.Kind = "test"
 )
 
 type Storage interface {
-	Get(ctx context.Context, kind types.Kind, name string, obj interface{}, opts *types.Opts) error
-	List(ctx context.Context, kind types.Kind, q string, obj interface{}, opts *types.Opts) error
-	Map(ctx context.Context, kind types.Kind, q string, obj interface{}, opts *types.Opts) error
-	Put(ctx context.Context, kind types.Kind, name string, obj interface{}, opts *types.Opts) error
-	Set(ctx context.Context, kind types.Kind, name string, obj interface{}, opts *types.Opts) error
-	Del(ctx context.Context, kind types.Kind, name string) error
-	Watch(ctx context.Context, kind types.Kind, event chan *types.WatcherEvent, opts *types.Opts) error
-	Filter() types.Filter
+	Info(ctx context.Context, collection, name string) (*types.Runtime, error)
+	Get(ctx context.Context, collection, name string, obj interface{}, opts *types.Opts) error
+	List(ctx context.Context, collection, q string, obj interface{}, opts *types.Opts) error
+	Map(ctx context.Context, collection, q string, obj interface{}, opts *types.Opts) error
+	Put(ctx context.Context, collection, name string, obj interface{}, opts *types.Opts) error
+	Set(ctx context.Context, collection, name string, obj interface{}, opts *types.Opts) error
+	Del(ctx context.Context, collection, name string) error
+	Watch(ctx context.Context, collection string, event chan *types.WatcherEvent, opts *types.Opts) error
 	Key() types.Key
+	Collection() types.Collection
+	Filter() types.Filter
 }
 
 func Get(driver string) (Storage, error) {

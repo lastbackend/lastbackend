@@ -28,6 +28,7 @@ import (
 	"encoding/json"
 
 	"github.com/lastbackend/lastbackend/pkg/distribution/errors"
+	"regexp"
 )
 
 const (
@@ -45,7 +46,7 @@ func (e *Endpoint) Get(namespace, service string) (*types.Endpoint, error) {
 
 	item := new(types.Endpoint)
 
-	err := e.storage.Get(e.context, storage.EndpointKind, e.storage.Key().Endpoint(namespace, service), &item, nil)
+	err := e.storage.Get(e.context, e.storage.Collection().Endpoint(), e.storage.Key().Endpoint(namespace, service), &item, nil)
 	if err != nil {
 
 		if errors.Storage().IsErrEntityNotFound(err) {
@@ -64,7 +65,7 @@ func (e *Endpoint) ListByNamespace(namespace string) (*types.EndpointList, error
 
 	list := types.NewEndpointList()
 
-	err := e.storage.List(e.context, storage.EndpointKind, e.storage.Filter().Endpoint().ByNamespace(namespace), list, nil)
+	err := e.storage.List(e.context, e.storage.Collection().Endpoint(), e.storage.Filter().Endpoint().ByNamespace(namespace), list, nil)
 	if err != nil {
 		log.Errorf("%s:listbynamespace:> in namespace: %s err: %v", logEndpointPrefix, namespace, err)
 		return nil, err
@@ -97,7 +98,7 @@ func (e *Endpoint) Create(namespace, service string, opts *types.EndpointCreateO
 	endpoint.Spec.Domain = opts.Domain
 
 	key := e.storage.Key().Endpoint(namespace, service)
-	if err := e.storage.Put(e.context, storage.EndpointKind, key, endpoint, nil); err != nil {
+	if err := e.storage.Put(e.context, e.storage.Collection().Endpoint(), key, endpoint, nil); err != nil {
 		log.Errorf("%s:create:> distribution create endpoint: %s err: %v", logEndpointPrefix, endpoint.SelfLink(), err)
 		return nil, err
 	}
@@ -123,7 +124,7 @@ func (e *Endpoint) Update(endpoint *types.Endpoint, opts *types.EndpointUpdateOp
 	endpoint.Spec.Strategy.Route = opts.RouteStrategy
 	endpoint.Spec.Strategy.Bind = opts.BindStrategy
 
-	if err := e.storage.Set(e.context, storage.EndpointKind,
+	if err := e.storage.Set(e.context, e.storage.Collection().Endpoint(),
 		e.storage.Key().Endpoint(endpoint.Meta.Namespace, endpoint.Meta.Name), endpoint, nil); err != nil {
 		log.Errorf("%s:create:> distribution update endpoint: %s err: %v", logEndpointPrefix, endpoint.SelfLink(), err)
 		return nil, err
@@ -134,7 +135,7 @@ func (e *Endpoint) Update(endpoint *types.Endpoint, opts *types.EndpointUpdateOp
 
 func (e *Endpoint) SetSpec(endpoint *types.Endpoint, spec *types.EndpointSpec) (*types.Endpoint, error) {
 	endpoint.Spec = *spec
-	if err := e.storage.Set(e.context, storage.EndpointKind,
+	if err := e.storage.Set(e.context, e.storage.Collection().Endpoint(),
 		e.storage.Key().Endpoint(endpoint.Meta.Namespace, endpoint.Meta.Name), endpoint, nil); err != nil {
 		log.Errorf("%s:create:> distribution update endpoint spec: %s err: %v", logEndpointPrefix, endpoint.SelfLink(), err)
 		return nil, err
@@ -144,7 +145,7 @@ func (e *Endpoint) SetSpec(endpoint *types.Endpoint, spec *types.EndpointSpec) (
 
 func (e *Endpoint) Remove(endpoint *types.Endpoint) error {
 	log.Debugf("%s:remove:> remove endpoint %s", logEndpointPrefix, endpoint.Meta.Name)
-	if err := e.storage.Del(e.context, storage.EndpointKind,
+	if err := e.storage.Del(e.context, e.storage.Collection().Endpoint(),
 		e.storage.Key().Endpoint(endpoint.Meta.Namespace, endpoint.Meta.Name)); err != nil {
 		log.Debugf("%s:remove:> remove endpoint %s err: %v", logEndpointPrefix, endpoint.Meta.Name, err)
 		return err
@@ -191,7 +192,133 @@ func (e *Endpoint) Watch(ch chan types.EndpointEvent) error {
 	}()
 
 	opts := storage.GetOpts()
-	if err := e.storage.Watch(e.context, storage.EndpointKind, watcher, opts); err != nil {
+	if err := e.storage.Watch(e.context, e.storage.Collection().Endpoint(), watcher, opts); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+
+// Get network subnet manifests map
+func (e *Endpoint) ManifestMap() (*types.EndpointManifestMap, error) {
+	log.Debugf("%s:EndpointManifestMap:> ", logEndpointPrefix)
+
+	var (
+		mf = types.NewEndpointManifestMap()
+	)
+
+	if err := e.storage.Map(e.context, e.storage.Collection().Endpoint(), types.EmptyString, mf, nil); err != nil {
+		log.Errorf("%s:EndpointManifestMap:> err :%s", logEndpointPrefix, err.Error())
+		return nil, err
+	}
+
+	return mf, nil
+}
+
+// Get particular network manifest
+func (e *Endpoint) ManifestGet(endpoint string) (*types.EndpointManifest, error) {
+	log.Debugf("%s:EndpointManifestGet:> ", logEndpointPrefix)
+
+	var (
+		mf = new(types.EndpointManifest)
+	)
+
+	if err := e.storage.Get(e.context, e.storage.Collection().Manifest().Endpoint(), endpoint, &mf, nil); err != nil {
+		log.Errorf("%s:EndpointManifestGet:> err :%s", logEndpointPrefix, err.Error())
+
+		if errors.Storage().IsErrEntityNotFound(err) {
+			return nil, nil
+		}
+
+		return nil, err
+	}
+
+	return mf, nil
+}
+
+// Add particular network manifest
+func (e *Endpoint) ManifestAdd(name string, manifest *types.EndpointManifest) error {
+	log.Debugf("%s:EndpointManifestAdd:> ", logEndpointPrefix)
+
+	if err := e.storage.Put(e.context, e.storage.Collection().Manifest().Endpoint(), name, manifest, nil); err != nil {
+		log.Errorf("%s:EndpointManifestAdd:> err :%s", logEndpointPrefix, err.Error())
+		return err
+	}
+
+	return nil
+}
+
+// Set particular network manifest
+func (e *Endpoint) ManifestSet(name string, manifest *types.EndpointManifest) error {
+	log.Debugf("%s:EndpointManifestAdd:> ", logEndpointPrefix)
+
+	if err := e.storage.Set(e.context, e.storage.Collection().Manifest().Endpoint(), name, manifest, nil); err != nil {
+		log.Errorf("%s:EndpointManifestAdd:> err :%s", logEndpointPrefix, err.Error())
+		return err
+	}
+
+	return nil
+}
+
+// Del particular network manifest
+func (e *Endpoint) ManifestDel(name string) error {
+	log.Debugf("%s:EndpointManifestDel:> ", logEndpointPrefix)
+
+	if err := e.storage.Del(e.context, e.storage.Collection().Manifest().Endpoint(), name); err != nil {
+		log.Errorf("%s:EndpointManifestDel:> err :%s", logEndpointPrefix, err.Error())
+		return err
+	}
+
+	return nil
+}
+
+// watch subnet manifests
+func (e *Endpoint) ManifestWatch(ch chan types.EndpointManifestEvent, rev *int64) error {
+	log.Debugf("%s:EndpointManifestWatch:> watch manifest ", logEndpointPrefix)
+
+	done := make(chan bool)
+	watcher := storage.NewWatcher()
+	r, _ := regexp.Compile(`\b.+\/(.+)\b`)
+
+	go func() {
+		for {
+			select {
+			case <-e.context.Done():
+				done <- true
+				return
+			case e := <-watcher:
+				if e.Data == nil {
+					continue
+				}
+
+				keys := r.FindStringSubmatch(e.System.Key)
+				if len(keys) == 0 {
+					continue
+				}
+
+				res := types.EndpointManifestEvent{}
+				res.Action = e.Action
+				res.Name = e.Name
+				res.SelfLink = e.SelfLink
+
+				manifest := new(types.EndpointManifest)
+
+				if err := json.Unmarshal(e.Data.([]byte), manifest); err != nil {
+					log.Errorf("%s:> parse data err: %v", logEndpointPrefix, err)
+					continue
+				}
+
+				res.Data = manifest
+
+				ch <- res
+			}
+		}
+	}()
+
+	opts := storage.GetOpts()
+	opts.Rev = rev
+	if err := e.storage.Watch(e.context, e.storage.Collection().Manifest().Endpoint(), watcher, opts); err != nil {
 		return err
 	}
 

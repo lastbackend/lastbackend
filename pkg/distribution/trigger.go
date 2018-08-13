@@ -41,7 +41,7 @@ func (t *Trigger) Get(namespace, service, name string) (*types.Trigger, error) {
 
 	trigger := new(types.Trigger)
 
-	err := t.storage.Get(t.context, storage.TriggerKind, t.storage.Key().Trigger(namespace, service, name), &trigger, nil)
+	err := t.storage.Get(t.context, t.storage.Collection().Trigger(), t.storage.Key().Trigger(namespace, service, name), &trigger, nil)
 	if err != nil {
 		log.V(logLevel).Errorf("%s:get:> create trigger err: %v", logTriggerPrefix, err)
 		return nil, err

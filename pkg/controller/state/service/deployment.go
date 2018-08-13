@@ -147,8 +147,10 @@ func handleDeploymentStateError(ss *ServiceState, d *types.Deployment) error {
 
 func handleDeploymentStateDegradation(ss *ServiceState, d *types.Deployment) error {
 
-	if ss.deployment.active.SelfLink() == d.SelfLink() {
-		serviceStatusState(ss)
+	if ss.deployment.active != nil {
+		if ss.deployment.active.SelfLink() == d.SelfLink() {
+			serviceStatusState(ss)
+		}
 	}
 
 	return nil
@@ -189,18 +191,7 @@ func handleDeploymentStateDestroyed(ss *ServiceState, d *types.Deployment) error
 		return err
 	}
 
-	if ss.deployment.provision != nil {
-		if ss.deployment.provision.SelfLink() == d.SelfLink() {
-			ss.deployment.provision = nil
-		}
-	}
-
-	if ss.deployment.active != nil {
-		if ss.deployment.active.SelfLink() == d.SelfLink() {
-			ss.deployment.active = nil
-		}
-	}
-
+	ss.DelDeployment(d)
 	return nil
 }
 
@@ -215,7 +206,7 @@ func deploymentPodProvision(ss *ServiceState, d *types.Deployment) (err error) {
 	t := d.Meta.Updated
 
 	defer func() {
-		if err != nil {
+		if err == nil {
 			err = deploymentUpdate(d, t)
 		}
 	}()
@@ -328,7 +319,7 @@ func deploymentDestroy(ss *ServiceState, d *types.Deployment) (err error) {
 	t := d.Meta.Updated
 
 	defer func() {
-		if err != nil {
+		if err == nil {
 			err = deploymentUpdate(d, t)
 		}
 	}()
@@ -373,7 +364,11 @@ func deploymentDestroy(ss *ServiceState, d *types.Deployment) (err error) {
 
 func deploymentRemove(d *types.Deployment) error {
 	dm := distribution.NewDeploymentModel(context.Background(), envs.Get().GetStorage())
-	return dm.Remove(d)
+	if err := dm.Remove(d); err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func deploymentScale(d *types.Deployment, replicas int) error {
@@ -388,7 +383,7 @@ func deploymentStatusState(d *types.Deployment, pl map[string]*types.Pod) (err e
 	t := d.Meta.Updated
 
 	defer func() {
-		if err != nil {
+		if err == nil {
 			err = deploymentUpdate(d, t)
 		}
 	}()

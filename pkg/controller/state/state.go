@@ -26,25 +26,45 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/controller/state/service"
 	"github.com/lastbackend/lastbackend/pkg/distribution"
 	"github.com/lastbackend/lastbackend/pkg/log"
-	)
+	"github.com/lastbackend/lastbackend/pkg/distribution/types"
+)
 
 type State struct {
 	Cluster *cluster.ClusterState
 	Service map[string]*service.ServiceState
 }
 
-func (s *State) Restore() {
+func (s *State) Loop() {
 
-	println()
-	println()
 	log.Info("start cluster restore")
-	s.Cluster.Restore()
+	s.Cluster.Loop()
 	log.Info("finish cluster restore\n\n")
 
 
 	log.Info("start services restore")
 	nm := distribution.NewNamespaceModel(context.Background(), envs.Get().GetStorage())
 	sm := distribution.NewServiceModel(context.Background(), envs.Get().GetStorage())
+	dm := distribution.NewDeploymentModel(context.Background(), envs.Get().GetStorage())
+	pm := distribution.NewPodModel(context.Background(), envs.Get().GetStorage())
+
+	dr, err := dm.Runtime()
+	if err != nil {
+		log.Errorf("%s", err.Error())
+		return
+	}
+
+	sr, err := sm.Runtime()
+	if err != nil {
+		log.Errorf("%s", err.Error())
+		return
+	}
+
+	pr, err := pm.Runtime()
+	if err != nil {
+		log.Errorf("%s", err.Error())
+		return
+	}
+
 	ns, err := nm.List()
 	if err != nil {
 		log.Errorf("%s", err.Error())
@@ -63,15 +83,144 @@ func (s *State) Restore() {
 
 			log.Debugf("restore service state: %s \n", svc.SelfLink())
 			if _, ok := s.Service[svc.SelfLink()]; !ok {
-				s.Service[svc.SelfLink()] = service.NewServiceState(svc)
+				s.Service[svc.SelfLink()] = service.NewServiceState(s.Cluster, svc)
 			}
 
 			s.Service[svc.SelfLink()].Restore()
 		}
 
 	}
+
+	go s.watchPods(context.Background(), &pr.System.Revision)
+	go s.watchDeployments(context.Background(), &dr.System.Revision)
+	go s.watchServices(context.Background(), &sr.System.Revision)
+
 	log.Info("finish services restore\n\n")
 }
+
+
+func (s *State) watchServices(ctx context.Context, rev *int64) {
+
+	var (
+		svc = make(chan types.ServiceEvent)
+	)
+
+	sm := distribution.NewServiceModel(ctx, envs.Get().GetStorage())
+
+	go func() {
+		for {
+			select {
+			case <-ctx.Done():
+				return
+			case w := <-svc:
+
+				if w.Data == nil {
+					continue
+				}
+
+				if w.IsActionRemove() {
+					_, ok := s.Service[w.Data.SelfLink()]
+					if ok {
+						delete(s.Service, w.Data.SelfLink())
+					}
+					continue
+				}
+
+				_, ok := s.Service[w.Data.SelfLink()]
+				if !ok {
+					s.Service[w.Data.SelfLink()] = service.NewServiceState(s.Cluster, w.Data)
+				}
+
+				s.Service[w.Data.SelfLink()].SetService(w.Data)
+			}
+		}
+	}()
+
+	sm.Watch(svc, rev)
+}
+
+func (s *State) watchDeployments(ctx context.Context, rev *int64) {
+
+	// Watch pods change
+	var (
+		d = make(chan types.DeploymentEvent)
+	)
+
+	dm := distribution.NewDeploymentModel(ctx, envs.Get().GetStorage())
+
+	go func() {
+		for {
+			select {
+			case <-ctx.Done():
+				return
+			case w := <-d:
+
+				if w.Data == nil {
+					continue
+				}
+
+				if w.IsActionRemove() {
+					_, ok := s.Service[w.Data.ServiceLink()]
+					if ok {
+						s.Service[w.Data.ServiceLink()].DelDeployment(w.Data)
+					}
+					continue
+				}
+
+				_, ok := s.Service[w.Data.ServiceLink()]
+				if !ok {
+					break
+				}
+
+				s.Service[w.Data.ServiceLink()].SetDeployment(w.Data)
+			}
+		}
+	}()
+
+	dm.Watch(d, rev)
+}
+
+func (s *State) watchPods(ctx context.Context, rev *int64) {
+
+	// Watch pods change
+	var (
+		p = make(chan types.PodEvent)
+	)
+
+	pm := distribution.NewPodModel(ctx, envs.Get().GetStorage())
+
+	go func() {
+		for {
+			select {
+			case <-ctx.Done():
+				return
+			case w := <-p:
+
+				if w.Data == nil {
+					continue
+				}
+
+				if w.IsActionRemove() {
+					_, ok := s.Service[w.Data.ServiceLink()]
+					if ok {
+						s.Service[w.Data.ServiceLink()].DelPod(w.Data)
+					}
+					continue
+				}
+
+				_, ok := s.Service[w.Data.ServiceLink()]
+				if !ok {
+					break
+				}
+
+				s.Service[w.Data.ServiceLink()].SetPod(w.Data)
+			}
+		}
+	}()
+
+	pm.Watch(p, rev)
+}
+
 
 func NewState() *State {
 	var state = new(State)

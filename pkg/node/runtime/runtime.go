@@ -59,7 +59,7 @@ func (r *Runtime) Provision(ctx context.Context, spec *types.NodeManifest) error
 	for cidr, n := range spec.Network {
 		log.Debugf("network: %v", n)
 		if err := network.Manage(ctx, cidr, n); err != nil {
-			log.Errorf("Network [%s] create err: %s", n.CIDR, err.Error())
+			log.Errorf("Subnet [%s] create err: %s", n.CIDR, err.Error())
 		}
 	}
 

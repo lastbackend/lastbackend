@@ -59,8 +59,8 @@ func (cs *ClusterState) Observe() {
 	}
 }
 
-// Restore cluster state from storage
-func (cs *ClusterState) Restore() error {
+// Loop cluster state from storage
+func (cs *ClusterState) Loop() error {
 
 	log.Debug("restore cluster state")
 	var err error
@@ -81,11 +81,44 @@ func (cs *ClusterState) Restore() error {
 
 	for _, n := range nl.Items {
 		// Add node to local cache
-		cs.node.list[n.Meta.SelfLink] = n
+		cs.SetNode(n)
 		// Run node observers
 	}
 
+	go cs.subscribe(context.Background(), &nl.System.Revision)
 	return nil
+}
+
+func (cs *ClusterState) subscribe(ctx context.Context, rev *int64) {
+
+	var (
+		p = make(chan types.NodeEvent)
+	)
+
+	nm := distribution.NewNodeModel(ctx, envs.Get().GetStorage())
+
+	go func() {
+		for {
+			select {
+			case <-ctx.Done():
+				return
+			case w := <-p:
+
+				if w.Data == nil {
+					continue
+				}
+
+				if w.IsActionRemove() {
+					cs.DelNode(w.Data)
+					continue
+				}
+
+				cs.SetNode(w.Data)
+			}
+		}
+	}()
+
+	nm.Watch(p, rev)
 }
 
 // lease new node for requests by parameters

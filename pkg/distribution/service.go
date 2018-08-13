@@ -41,6 +41,18 @@ type Service struct {
 	storage storage.Storage
 }
 
+func (s *Service) Runtime() (*types.Runtime, error) {
+
+	log.V(logLevel).Debugf("%s:get:> get services runtime info", logServicePrefix)
+	runtime, err := s.storage.Info(s.context, s.storage.Collection().Service(), "")
+	if err != nil {
+		log.V(logLevel).Errorf("%s:get:> get runtime info error: %s", logServicePrefix, err)
+		return &runtime.Runtime, err
+	}
+	return &runtime.Runtime, nil
+
+}
+
 // Get service by namespace and service name
 func (s *Service) Get(namespace, name string) (*types.Service, error) {
 
@@ -48,7 +60,7 @@ func (s *Service) Get(namespace, name string) (*types.Service, error) {
 
 	svc := new(types.Service)
 
-	err := s.storage.Get(s.context, storage.ServiceKind, s.storage.Key().Service(namespace, name), svc, nil)
+	err := s.storage.Get(s.context, s.storage.Collection().Service(), s.storage.Key().Service(namespace, name), svc, nil)
 	if err != nil {
 
 		if errors.Storage().IsErrEntityNotFound(err) {
@@ -71,7 +83,7 @@ func (s *Service) List(namespace string) (*types.ServiceList, error) {
 	list := types.NewServiceList()
 	q := s.storage.Filter().Service().ByNamespace(namespace)
 
-	err := s.storage.List(s.context, storage.ServiceKind, q, list, nil)
+	err := s.storage.List(s.context, s.storage.Collection().Service(), q, list, nil)
 	if err != nil {
 		log.V(logLevel).Error("%s:list:> by namespace %s err: %v", logServicePrefix, namespace, err)
 		return nil, err
@@ -126,7 +138,7 @@ func (s *Service) Create(namespace *types.Namespace, opts *types.ServiceCreateOp
 
 	service.SelfLink()
 
-	if err := s.storage.Put(s.context, storage.ServiceKind,
+	if err := s.storage.Put(s.context, s.storage.Collection().Service(),
 		s.storage.Key().Service(service.Meta.Namespace, service.Meta.Name), service, nil); err != nil {
 		log.V(logLevel).Errorf("%s:create:> insert service err: %v", logServicePrefix, err)
 		return nil, err
@@ -147,18 +159,21 @@ func (s *Service) Update(service *types.Service, opts *types.ServiceUpdateOption
 	if opts.Description != nil {
 		service.Meta.Description = *opts.Description
 
-		if err := s.storage.Set(s.context, storage.ServiceKind,
+		if err := s.storage.Set(s.context, s.storage.Collection().Service(),
 			s.storage.Key().Service(service.Meta.Namespace, service.Meta.Name), service, nil); err != nil {
 			log.V(logLevel).Errorf("%s:update:> update service meta err: %v", logServicePrefix, err)
 			return nil, err
 		}
 	}
 
+
+
 	if opts.Spec != nil {
 
+		service.Status.State = types.StateProvision
 		service.Spec.Update(opts.Spec)
 
-		if err := s.storage.Set(s.context, storage.ServiceKind,
+		if err := s.storage.Set(s.context, s.storage.Collection().Service(),
 			s.storage.Key().Service(service.Meta.Namespace, service.Meta.Name), service, nil); err != nil {
 			log.V(logLevel).Errorf("%s:update:> update service spec err: %v", logServicePrefix, err)
 			return nil, err
@@ -176,7 +191,7 @@ func (s *Service) Destroy(service *types.Service) (*types.Service, error) {
 	service.Status.State = types.StateDestroy
 	service.Spec.State.Destroy = true
 
-	if err := s.storage.Set(s.context, storage.ServiceKind,
+	if err := s.storage.Set(s.context, s.storage.Collection().Service(),
 		s.storage.Key().Service(service.Meta.Namespace, service.Meta.Name), service, nil); err != nil {
 		log.V(logLevel).Errorf("%s:destroy:> destroy service err: %v", logServicePrefix, err)
 		return nil, err
@@ -189,7 +204,7 @@ func (s *Service) Remove(service *types.Service) error {
 
 	log.V(logLevel).Debugf("%s:remove:> remove service %#v", logServicePrefix, service)
 
-	err := s.storage.Del(s.context, storage.ServiceKind,
+	err := s.storage.Del(s.context, s.storage.Collection().Service(),
 		s.storage.Key().Service(service.Meta.Namespace, service.Meta.Name))
 	if err != nil {
 		log.V(logLevel).Errorf("%s:remove:> remove service err: %v", logServicePrefix, err)
@@ -205,7 +220,7 @@ func (s *Service) Set(service *types.Service) error {
 	log.Debugf("%s:setstatus:> set state for service %s", logServicePrefix, service.Meta.Name)
 
 	key := s.storage.Key().Service(service.Meta.Namespace, service.Meta.Name)
-	if err := s.storage.Set(s.context, storage.ServiceKind, key, service, nil); err != nil {
+	if err := s.storage.Set(s.context, s.storage.Collection().Service(), key, service, nil); err != nil {
 		log.Errorf("%s:setstatus:> set state for service %s err: %v", logServicePrefix, service.Meta.Name, err)
 		return err
 	}
@@ -214,7 +229,7 @@ func (s *Service) Set(service *types.Service) error {
 }
 
 // Watch service changes
-func (s *Service) Watch(ch chan types.ServiceEvent) error {
+func (s *Service) Watch(ch chan types.ServiceEvent, rev *int64) error {
 
 	log.Debugf("%s:watch:> watch service by spec changes", logServicePrefix)
 
@@ -251,7 +266,8 @@ func (s *Service) Watch(ch chan types.ServiceEvent) error {
 	}()
 
 	opts := storage.GetOpts()
-	if err := s.storage.Watch(s.context, storage.ServiceKind, watcher, opts); err != nil {
+	opts.Rev = rev
+	if err := s.storage.Watch(s.context, s.storage.Collection().Service(), watcher, opts); err != nil {
 		return err
 	}
 

@@ -48,7 +48,7 @@ type ContainerSpec struct {
 	Meta ContainerSpecMeta `json:"meta"`
 	// Repo spec
 	Image ContainerImageSpec `json:"image"`
-	// Network spec
+	// Subnet spec
 	Network ContainerNetworkSpec `json:"network"`
 	// Ports configuration
 	Ports []ContainerPortSpec `json:"ports"`
@@ -94,9 +94,9 @@ type ContainerNetworkSpec struct {
 	Hostname string `json:"hostname"`
 	// Container host domain
 	Domain string `json:"domain"`
-	// Network ID to use
+	// Subnet ID to use
 	Network string `json:"network"`
-	// Network Mode to use
+	// Subnet Mode to use
 	Mode string `json:"mode"`
 }
 

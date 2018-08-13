@@ -22,12 +22,13 @@ const (
 	EventActionCreate = "create"
 	EventActionUpdate = "update"
 	EventActionDelete = "delete"
-	EventActionError = "error"
+	EventActionError  = "error"
 )
 
 type event struct {
-	Action string
-	Name   string
+	Action   string
+	Name     string
+	SelfLink string
 }
 
 type Event struct {
@@ -50,6 +51,22 @@ type ServiceEvent struct {
 	Data *Service
 }
 
+type VolumeEvent struct {
+	event
+	Data *Volume
+}
+
+type NetworkEvent struct {
+	event
+	Data *Network
+}
+
+type SubnetEvent struct {
+	event
+	Data *Subnet
+}
+
+
 type IngresEvent struct {
 	event
 	Data *Ingress
@@ -68,6 +85,28 @@ type DeploymentEvent struct {
 type PodEvent struct {
 	event
 	Data *Pod
+}
+
+type PodManifestEvent struct {
+	event
+	Node string
+	Data *PodManifest
+}
+
+type VolumeManifestEvent struct {
+	event
+	Node string
+	Data *VolumeManifest
+}
+
+type EndpointManifestEvent struct {
+	event
+	Data *EndpointManifest
+}
+
+type SubnetManifestEvent struct {
+	event
+	Data *SubnetManifest
 }
 
 type NodeEvent struct {

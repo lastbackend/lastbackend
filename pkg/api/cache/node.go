@@ -20,8 +20,7 @@ package cache
 
 import (
 	"context"
-	"strings"
-	"sync"
+		"sync"
 
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 	"github.com/lastbackend/lastbackend/pkg/log"
@@ -100,7 +99,7 @@ func (c *CacheNodeManifest) DelVolumeManifest(node, volume string) {
 	delete(c.manifests[node].Volumes, volume)
 }
 
-func (c *CacheNodeManifest) SetNetworkManifest(cidr string, s *types.NetworkManifest) {
+func (c *CacheNodeManifest) SetSubnetManifest(cidr string, s *types.SubnetManifest) {
 	c.lock.Lock()
 	defer c.lock.Unlock()
 
@@ -141,143 +140,6 @@ func (c *CacheNodeManifest) Clear(node string) {
 	c.lock.Lock()
 	defer c.lock.Unlock()
 	delete(c.manifests, node)
-}
-
-func (c *CacheNodeManifest) CachePods(ps PodManifestWatcher) error {
-	evs := make(chan *types.Event)
-
-	go func() {
-		for {
-			select {
-			case e := <-evs:
-				{
-
-					if e.Data == nil {
-						continue
-					}
-
-					spec := e.Data.(types.PodManifest)
-					parse := strings.Split(e.Name, ":")
-					node := parse[0]
-					pod := parse[1]
-
-					switch e.Action {
-					case types.EventActionCreate:
-						fallthrough
-					case types.EventActionUpdate:
-						c.SetPodManifest(node, pod, &spec)
-					case types.EventActionDelete:
-						c.DelPodManifest(node, pod)
-					}
-
-				}
-			}
-		}
-	}()
-
-	return ps(context.Background(), evs)
-}
-
-func (c *CacheNodeManifest) CacheVolumes(vs VolumeManifestWatcher) error {
-	evs := make(chan *types.Event)
-
-	go func() {
-		for {
-			select {
-			case e := <-evs:
-				{
-
-					if e.Data == nil {
-						continue
-					}
-
-					spec := e.Data.(types.VolumeManifest)
-					parse := strings.Split(e.Name, ":")
-					node := parse[0]
-					volume := parse[1]
-
-					switch e.Action {
-					case types.EventActionCreate:
-						fallthrough
-					case types.EventActionUpdate:
-						c.SetVolumeManifest(node, volume, &spec)
-					case types.EventActionDelete:
-						c.DelVolumeManifest(node, volume)
-					}
-
-				}
-			}
-		}
-	}()
-
-	return vs(context.Background(), evs)
-}
-
-func (c *CacheNodeManifest) CacheNetwork(ns NetworkManifestWatcher) error {
-	evs := make(chan *types.Event)
-	go func() {
-		for {
-			select {
-			case e := <-evs:
-				{
-
-					if e.Data == nil {
-						continue
-					}
-
-					spec := e.Data.(types.NetworkManifest)
-					node := e.Name
-
-					switch e.Action {
-					case types.EventActionCreate:
-						fallthrough
-					case types.EventActionUpdate:
-						c.SetNetworkManifest(node, &spec)
-					case types.EventActionDelete:
-						spec.State = types.StateDestroy
-						c.SetNetworkManifest(node, &spec)
-					}
-
-				}
-			}
-		}
-	}()
-
-	return ns(context.Background(), evs)
-}
-
-func (c *CacheNodeManifest) CacheEndpoints(es EndpointManifestWatcher) error {
-
-	evs := make(chan *types.Event)
-
-	go func() {
-		for {
-			select {
-			case e := <-evs:
-				{
-
-					if e.Data == nil {
-						continue
-					}
-
-					spec := e.Data.(types.EndpointManifest)
-
-					switch e.Action {
-					case types.EventActionCreate:
-						fallthrough
-					case types.EventActionUpdate:
-						c.SetEndpointManifest(spec.IP, &spec)
-					case types.EventActionDelete:
-						spec.State = types.StateDestroy
-						c.SetEndpointManifest(spec.IP, &spec)
-					}
-
-				}
-			}
-		}
-	}()
-
-	return es(context.Background(), evs)
 }
 
 func NewCacheNodeManifest() *CacheNodeManifest {

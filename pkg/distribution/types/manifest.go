@@ -20,7 +20,7 @@ package types
 
 type NodeManifest struct {
 	Endpoints map[string]*EndpointManifest `json:"endpoint"`
-	Network   map[string]*NetworkManifest  `json:"network"`
+	Network   map[string]*SubnetManifest  `json:"network"`
 	Pods      map[string]*PodManifest      `json:"pods"`
 	Volumes   map[string]*VolumeManifest   `json:"volumes"`
 }
@@ -49,12 +49,33 @@ type VolumeManifestMap struct {
 	Items  map[string]*VolumeManifest
 }
 
-type NetworkManifest struct {
-	NetworkSpec
+type SubnetManifest struct {
+	SubnetSpec
+}
+
+
+type SubnetManifestList struct {
+	Runtime
+	Items []*SubnetManifest
+}
+
+type SubnetManifestMap struct {
+	Runtime
+	Items map[string]*SubnetManifest
 }
 
 type EndpointManifest struct {
 	EndpointSpec
+}
+
+type EndpointManifestList struct {
+	Runtime
+	Items []*EndpointManifest
+}
+
+type EndpointManifestMap struct {
+	Runtime
+	Items map[string]*EndpointManifest
 }
 
 
@@ -79,5 +100,29 @@ func NewVolumeManifestList () *VolumeManifestList {
 func NewVolumeManifestMap () *VolumeManifestMap {
 	dm := new(VolumeManifestMap)
 	dm.Items = make(map[string]*VolumeManifest)
+	return dm
+}
+
+func NewEndpointManifestList () *EndpointManifestList {
+	dm := new(EndpointManifestList)
+	dm.Items = make([]*EndpointManifest, 0)
+	return dm
+}
+
+func NewEndpointManifestMap () *EndpointManifestMap {
+	dm := new(EndpointManifestMap)
+	dm.Items = make(map[string]*EndpointManifest)
+	return dm
+}
+
+func NewSubnetManifestList () *SubnetManifestList {
+	dm := new(SubnetManifestList)
+	dm.Items = make([]*SubnetManifest, 0)
+	return dm
+}
+
+func NewSubnetManifestMap () *SubnetManifestMap {
+	dm := new(SubnetManifestMap)
+	dm.Items = make(map[string]*SubnetManifest)
 	return dm
 }

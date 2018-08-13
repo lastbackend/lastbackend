@@ -47,7 +47,7 @@ func (c *Cluster) Get() (*types.Cluster, error) {
 
 	cluster := new(types.Cluster)
 
-	err := c.storage.Get(c.context, storage.ClusterKind, "", cluster, nil)
+	err := c.storage.Get(c.context, c.storage.Collection().Cluster(), "", cluster, nil)
 	if err != nil {
 		if errors.Storage().IsErrEntityNotFound(err) {
 			log.V(logLevel).Warnf("%s:get:> cluster not found", logClusterPrefix)
@@ -99,7 +99,7 @@ func (c *Cluster) Watch(ch chan types.ClusterEvent) {
 	}()
 
 	opts := storage.GetOpts()
-	go c.storage.Watch(c.context, storage.ClusterKind, watcher, opts)
+	go c.storage.Watch(c.context, c.storage.Collection().Cluster(), watcher, opts)
 
 	<-done
 }

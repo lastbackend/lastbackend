@@ -39,7 +39,11 @@ func NewRuntime(ctx context.Context) *Runtime {
 
 	r.ctx = ctx
 	r.process = new(system.Process)
-	r.process.Register(ctx, types.KindController, envs.Get().GetStorage())
+	_, err := r.process.Register(ctx, types.KindController, envs.Get().GetStorage())
+	if err != nil {
+		log.Error(err)
+		return nil
+	}
 
 	r.observer = NewObserver(ctx)
 

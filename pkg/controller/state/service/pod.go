@@ -92,11 +92,11 @@ func PodObserve (ss *ServiceState, p *types.Pod) error {
 }
 
 func handlePodStateCreated(ss *ServiceState, p *types.Pod) error {
-
+	log.Debugf("%s handle pod create state start: %s", logPodPrefix, p.SelfLink())
 	if err := podProvision(ss, p); err != nil {
 		return err
 	}
-
+	log.Debugf("%s handle pod create state finish: %s : %s", logPodPrefix, p.SelfLink(), p.Status.State)
 	return nil
 }
 
@@ -152,9 +152,11 @@ func podProvision(ss *ServiceState, p *types.Pod) (err error) {
 	t := p.Meta.Updated
 
 	defer func() {
-		if err != nil {
+
+		if err == nil {
 			err = podUpdate(p, t)
 		}
+
 	}()
 
 
@@ -164,12 +166,14 @@ func podProvision(ss *ServiceState, p *types.Pod) (err error) {
 
 		node, err = ss.cluster.PodLease(p)
 		if err != nil {
+			log.Errorf("%s:> pod node lease err: %s", err.Error())
 			return err
 		}
 
 		if node == nil {
 			p.Status.State = types.StateError
 			p.Status.Message = errors.NodeNotFound
+			p.Meta.Updated = time.Now()
 			return nil
 		}
 
@@ -178,6 +182,7 @@ func podProvision(ss *ServiceState, p *types.Pod) (err error) {
 	}
 
 	if err = podManifestPut(p); err != nil {
+		log.Errorf("%s:> pod manifest create err: %s", err.Error())
 		return err
 	}
 
@@ -194,7 +199,7 @@ func podDestroy(ss *ServiceState, p *types.Pod) (err error) {
 
 	t := p.Meta.Updated
 	defer func() {
-		if err != nil {
+		if err == nil {
 			err = podUpdate(p, t)
 		}
 	}()
@@ -247,7 +252,7 @@ func podRemove(ss *ServiceState, p *types.Pod) ( err error) {
 
 	t := p.Meta.Updated
 	defer func() {
-		if err != nil {
+		if err == nil {
 			err = podUpdate(p, t)
 		}
 	}()
@@ -274,6 +279,9 @@ func podRemove(ss *ServiceState, p *types.Pod) ( err error) {
 }
 
 func podUpdate(p *types.Pod, timestamp time.Time) error {
+
+	log.Infof("pod update %#v", p)
+
 	if timestamp.Before(p.Meta.Updated) {
 		pm := distribution.NewPodModel(context.Background(), envs.Get().GetStorage())
 		if err := pm.Update(p); err != nil {
@@ -288,8 +296,8 @@ func podUpdate(p *types.Pod, timestamp time.Time) error {
 
 func podManifestPut(p *types.Pod) error {
 
-	mm := distribution.NewManifestModel(context.Background(), envs.Get().GetStorage())
-	m, err := mm.PodManifestGet(p.Meta.Node, p.Meta.SelfLink)
+	mm := distribution.NewPodModel(context.Background(), envs.Get().GetStorage())
+	m, err := mm.ManifestGet(p.Meta.Node, p.Meta.SelfLink)
 	if err != nil {
 		if !errors.Storage().IsErrEntityNotFound(err) {
 			log.Errorf("%s", err.Error())
@@ -300,7 +308,7 @@ func podManifestPut(p *types.Pod) error {
 	if m == nil {
 		pm := types.PodManifest(p.Spec)
 
-		if err := mm.PodManifestAdd(p.Meta.Node, p.Meta.SelfLink, &pm); err != nil {
+		if err := mm.ManifestAdd(p.Meta.Node, p.Meta.SelfLink, &pm); err != nil {
 			log.Errorf("%s", err.Error())
 			return err
 		}
@@ -316,8 +324,8 @@ func podManifestSet(p *types.Pod) error {
 		err error
 	)
 
-	mm := distribution.NewManifestModel(context.Background(), envs.Get().GetStorage())
-	m, err = mm.PodManifestGet(p.Meta.Node, p.Meta.SelfLink)
+	mm := distribution.NewPodModel(context.Background(), envs.Get().GetStorage())
+	m, err = mm.ManifestGet(p.Meta.Node, p.Meta.SelfLink)
 	if err != nil {
 		return err
 	}
@@ -330,7 +338,7 @@ func podManifestSet(p *types.Pod) error {
 		*m = types.PodManifest(p.Spec)
 	}
 
-	if err := mm.PodManifestSet(p.Meta.Node, p.Meta.SelfLink, m); err != nil {
+	if err := mm.ManifestSet(p.Meta.Node, p.Meta.SelfLink, m); err != nil {
 		return err
 	}
 
@@ -344,15 +352,15 @@ func podManifestDel(p *types.Pod) error {
 	}
 
 	// Remove manifest
-	mm := distribution.NewManifestModel(context.Background(), envs.Get().GetStorage())
-	err := mm.PodManifestDel(p.Meta.Node, p.SelfLink())
+	mm := distribution.NewPodModel(context.Background(), envs.Get().GetStorage())
+	err := mm.ManifestDel(p.Meta.Node, p.SelfLink())
 	if err != nil {
 		if !errors.Storage().IsErrEntityNotFound(err) {
 			return err
 		}
 	}
 
-	if err := mm.PodManifestDel(p.Meta.Node, p.SelfLink()); err != nil {
+	if err := mm.ManifestDel(p.Meta.Node, p.SelfLink()); err != nil {
 		if !errors.Storage().IsErrEntityNotFound(err) {
 			return err
 		}

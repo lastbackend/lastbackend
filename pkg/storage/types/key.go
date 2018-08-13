@@ -29,7 +29,8 @@ type Key interface {
 	Trigger(namespace, service, name string) string
 	Ingress(name string) string
 	Process(kind, name string, lead bool) string
-	Manifest(node string, kind Kind, name string) string
+	Manifest(name string) string
 	Node(name string) string
 	Route(namespace, name string) string
+	Subnet(name string) string
 }

@@ -159,7 +159,7 @@ func (n *Network) Destroy(ctx context.Context, network *types.NetworkState) erro
 	return nil
 }
 
-func (n *Network) Create(ctx context.Context, network *types.NetworkManifest) (*types.NetworkState, error) {
+func (n *Network) Create(ctx context.Context, network *types.SubnetManifest) (*types.NetworkState, error) {
 
 	log.Debugf("Connect to node to network: %v > %v", network.CIDR, network.IFace.Addr)
 
@@ -240,7 +240,7 @@ func (n *Network) Create(ctx context.Context, network *types.NetworkManifest) (*
 	return &state, nil
 }
 
-func (n *Network) Replace(ctx context.Context, state *types.NetworkState, manifest *types.NetworkManifest) (*types.NetworkState, error) {
+func (n *Network) Replace(ctx context.Context, state *types.NetworkState, manifest *types.SubnetManifest) (*types.NetworkState, error) {
 
 	if state != nil {
 		if err := n.Destroy(ctx, state); err != nil {
@@ -315,7 +315,7 @@ func (n *Network) Subnets(ctx context.Context) (map[string]*types.NetworkState, 
 	}
 
 	for r, sn := range subnets {
-		log.Debugf("NetworkSpec [%s]: %v", r, sn)
+		log.Debugf("SubnetSpec [%s]: %v", r, sn)
 	}
 
 	return subnets, nil
