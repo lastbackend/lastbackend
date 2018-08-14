@@ -457,6 +457,7 @@ func NodeSetStatusH(w http.ResponseWriter, r *http.Request) {
 	var (
 		nm  = distribution.NewNodeModel(r.Context(), envs.Get().GetStorage())
 		pm  = distribution.NewPodModel(r.Context(), envs.Get().GetStorage())
+
 		nid = utils.Vars(r)["node"]
 	)
 
@@ -510,16 +511,25 @@ func NodeSetStatusH(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		if pod == nil {
-			log.V(logLevel).Warnf("%s:setpodstatus:> update node `%s` not found", logPrefix, nid)
-			errors.New("pod").NotFound().Http(w)
-			return
+			log.V(logLevel).Warnf("%s:setpodstatus:>pod not found `%s` not found", logPrefix, p)
+			if err := pm.ManifestDel(nid, p); err != nil {
+				if !errors.Storage().IsErrEntityNotFound(err) {
+					log.V(logLevel).Warnf("%s:setpodstatus:>pod manifest del err `%s` ", logPrefix, err.Error())
+					continue
+				}
+			}
+			continue
 		}
 
 		pod.Status.State = s.State
+		pod.Status.Status = s.Status
+		pod.Status.Running = s.Running
 		pod.Status.Message = s.Message
 		pod.Status.Containers = s.Containers
 		pod.Status.Network = s.Network
 		pod.Status.Steps = s.Steps
+
+		log.Info("set pod status >>>>>", p, pod.Status)
 
 		if err := pm.Update(pod); err != nil {
 			log.V(logLevel).Errorf("%s:setpodstatus:> get nodes list err: %s", logPrefix, err.Error())

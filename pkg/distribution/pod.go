@@ -275,8 +275,12 @@ func (p *Pod) ManifestMap(node string) (*types.PodManifestMap, error) {
 	)
 
 	if err := p.storage.Map(p.context, p.storage.Collection().Manifest().Pod(node), types.EmptyString, mf, nil); err != nil {
-		log.Errorf("%s:PodManifestMap:> err :%s", logPodPrefix, err.Error())
-		return nil, err
+		if !errors.Storage().IsErrEntityNotFound(err) {
+			log.Errorf("%s:PodManifestMap:> err: %s", logPodPrefix, err.Error())
+			return nil, err
+		}
+
+		return nil, nil
 	}
 
 	return mf, nil
@@ -290,7 +294,6 @@ func (p *Pod) ManifestGet(node, pod string) (*types.PodManifest, error) {
 	)
 
 	if err := p.storage.Get(p.context, p.storage.Collection().Manifest().Pod(node), pod, &mf, nil); err != nil {
-		log.Errorf("%s:PodManifestMap:> err :%s", logPodPrefix, err.Error())
 
 		if errors.Storage().IsErrEntityNotFound(err) {
 			return nil, nil
@@ -326,7 +329,7 @@ func (p *Pod) ManifestSet(node, pod string, manifest *types.PodManifest) error {
 }
 
 func (p *Pod) ManifestDel(node, pod string) error {
-	log.Debugf("%s:PodManifestDel:> ", logPodPrefix)
+	log.Debugf("%s:PodManifestDel:> %s on node %s", logPodPrefix, pod, node)
 
 	if err := p.storage.Del(p.context, p.storage.Collection().Manifest().Pod(node), pod); err != nil {
 		log.Errorf("%s:PodManifestDel:> err :%s", logPodPrefix, err.Error())
@@ -379,7 +382,12 @@ func (p *Pod) ManifestWatch(node string, ch chan types.PodManifestEvent, rev *in
 				res.Action = e.Action
 				res.Name = e.Name
 				res.SelfLink = e.SelfLink
-				res.Node = keys[1]
+				if node != types.EmptyString {
+					res.Node = node
+				} else {
+					res.Node = keys[1]
+				}
+
 
 				manifest := new(types.PodManifest)
 

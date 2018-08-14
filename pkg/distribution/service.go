@@ -158,26 +158,17 @@ func (s *Service) Update(service *types.Service, opts *types.ServiceUpdateOption
 
 	if opts.Description != nil {
 		service.Meta.Description = *opts.Description
-
-		if err := s.storage.Set(s.context, s.storage.Collection().Service(),
-			s.storage.Key().Service(service.Meta.Namespace, service.Meta.Name), service, nil); err != nil {
-			log.V(logLevel).Errorf("%s:update:> update service meta err: %v", logServicePrefix, err)
-			return nil, err
-		}
 	}
 
-
-
 	if opts.Spec != nil {
-
 		service.Status.State = types.StateProvision
 		service.Spec.Update(opts.Spec)
+	}
 
-		if err := s.storage.Set(s.context, s.storage.Collection().Service(),
-			s.storage.Key().Service(service.Meta.Namespace, service.Meta.Name), service, nil); err != nil {
-			log.V(logLevel).Errorf("%s:update:> update service spec err: %v", logServicePrefix, err)
-			return nil, err
-		}
+	if err := s.storage.Set(s.context, s.storage.Collection().Service(),
+		s.storage.Key().Service(service.Meta.Namespace, service.Meta.Name), service, nil); err != nil {
+		log.V(logLevel).Errorf("%s:update:> update service spec err: %v", logServicePrefix, err)
+		return nil, err
 	}
 
 	return service, nil

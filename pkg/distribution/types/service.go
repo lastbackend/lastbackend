@@ -26,6 +26,7 @@ import (
 	"time"
 
 	"github.com/lastbackend/lastbackend/pkg/util/network"
+	"github.com/lastbackend/dynamic/pkg/log"
 )
 
 const (
@@ -132,6 +133,7 @@ func (s *ServiceSpec) Update(spec *ServiceOptionsSpec) {
 	)
 
 	if spec.Replicas != nil {
+		log.Infof("set replicas: %d", *spec.Replicas)
 		s.Replicas = *spec.Replicas
 	}
 
@@ -195,7 +197,7 @@ func (s *ServiceSpec) Update(spec *ServiceOptionsSpec) {
 		s.Template.Updated = time.Now()
 	}
 
-	if spec.Memory != nil {
+	if spec.Memory != nil && *spec.Memory != c.Resources.Limits.RAM {
 		c.Resources.Limits.RAM = *spec.Memory
 		s.Template.Updated = time.Now()
 	}

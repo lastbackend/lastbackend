@@ -96,7 +96,7 @@ func (r *Runtime) Subscribe(ctx context.Context, state *state.PodState, p chan s
 						},
 					}
 					container.State.Stopped.Stopped = false
-				case types.StateStopped:
+				case types.StatusStopped:
 					if container.State.Stopped.Stopped {
 						continue
 					}

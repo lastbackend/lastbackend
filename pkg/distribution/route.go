@@ -103,7 +103,7 @@ func (n *Route) Create(namespace *types.Namespace, opts *types.RouteCreateOption
 	route.Meta.Security = opts.Security
 	route.SelfLink()
 
-	route.Status.State = types.StateInitialized
+	route.Status.State = types.StatusInitialized
 
 	route.Spec.Domain = fmt.Sprintf("%s.%s", strings.ToLower(opts.Name), strings.ToLower(opts.Domain))
 	route.Spec.Rules = make([]*types.RouteRule, 0)

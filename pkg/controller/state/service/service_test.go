@@ -45,12 +45,12 @@ func testServiceObserver(t *testing.T, name, werr string, wst *ServiceState, sta
 	ipm, _ := ipam.New("")
 	envs.Get().SetIPAM(ipm)
 
-	err = stg.Del(ctx, storage.DeploymentKind, "")
+	err = stg.Del(ctx, stg.Collection().Deployment(), "")
 	if !assert.NoError(t, err) {
 		return
 	}
 
-	err = stg.Del(ctx, storage.EndpointKind, "")
+	err = stg.Del(ctx, stg.Collection().Pod(), "")
 	if !assert.NoError(t, err) {
 		return
 	}
@@ -195,7 +195,7 @@ func testServiceObserver(t *testing.T, name, werr string, wst *ServiceState, sta
 	})
 }
 
-func testStatusState(t *testing.T, fn func(*ServiceState), name string, wst, state *ServiceState) {
+func testStatusState(t *testing.T, fn func(*ServiceState) error, name string, wst, state *ServiceState) {
 
 	t.Run(name, func(t *testing.T) {
 

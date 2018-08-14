@@ -32,6 +32,8 @@ const logDeploymentPrefix = "state:observer:deployment"
 
 func deploymentObserve(ss *ServiceState, d *types.Deployment) error {
 
+	log.Debugf("%s:> observe start: %s > %s", logDeploymentPrefix, d.SelfLink(), d.Status.State)
+
 	if _, ok := ss.pod.list[d.SelfLink()]; !ok {
 		ss.pod.list[d.SelfLink()] = make(map[string]*types.Pod)
 	}
@@ -87,13 +89,14 @@ func deploymentObserve(ss *ServiceState, d *types.Deployment) error {
 		ss.deployment.list[d.SelfLink()] = d
 	}
 
+	log.Debugf("%s:> observe finish: %s > %s", logDeploymentPrefix, d.SelfLink(), d.Status.State)
 	serviceStatusState(ss)
-
 	return nil
 }
 
 func handleDeploymentStateCreated(ss *ServiceState, d *types.Deployment) error {
 
+	log.Debugf("%s:> handleDeploymentStateCreated: %s > %s", logDeploymentPrefix, d.SelfLink(), d.Status.State)
 
 	if err := deploymentPodProvision(ss, d); err != nil {
 		log.Errorf("%s", err.Error())
@@ -105,6 +108,8 @@ func handleDeploymentStateCreated(ss *ServiceState, d *types.Deployment) error {
 
 func handleDeploymentStateProvision(ss *ServiceState, d *types.Deployment) error {
 
+	log.Debugf("%s:> handleDeploymentStateProvision: %s > %s", logDeploymentPrefix, d.SelfLink(), d.Status.State)
+
 	if err := deploymentPodProvision(ss, d); err != nil {
 		log.Errorf("%s", err.Error())
 		return err
@@ -115,48 +120,92 @@ func handleDeploymentStateProvision(ss *ServiceState, d *types.Deployment) error
 
 func handleDeploymentStateReady(ss *ServiceState, d *types.Deployment) error {
 
+	log.Debugf("%s:> handleDeploymentStateReady: %s > %s", logDeploymentPrefix, d.SelfLink(), d.Status.State)
+
 	if ss.deployment.active != nil {
-		log.Info("call active deployment down")
-		if err := deploymentDestroy(ss, ss.deployment.active); err != nil {
-			log.Errorf("%s", err.Error())
-			return err
+		if ss.deployment.active.SelfLink() != d.SelfLink() {
+			if err := deploymentDestroy(ss, ss.deployment.active); err != nil {
+				log.Errorf("%s", err.Error())
+				return err
+			}
 		}
 	}
 
 	ss.deployment.active = d
 
-	if ss.deployment.provision.SelfLink() == d.SelfLink() {
-		ss.deployment.provision = nil
+	if ss.deployment.provision != nil {
+		if ss.deployment.provision.SelfLink() == d.SelfLink() {
+			ss.deployment.provision = nil
+		}
 	}
 
-	serviceStatusState(ss)
+	if ss.deployment.active.SelfLink() != d.SelfLink() {
+		return deploymentDestroy(ss, d)
+	}
 
 	return nil
 }
 
 func handleDeploymentStateError(ss *ServiceState, d *types.Deployment) error {
 
+	log.Debugf("%s:> handleDeploymentStateError: %s > %s", logDeploymentPrefix, d.SelfLink(), d.Status.State)
+
 	if ss.deployment.active == nil {
 		ss.deployment.provision = nil
 		ss.deployment.active = d
 	}
 
-	serviceStatusState(ss)
+	if ss.deployment.provision != nil {
+		if ss.deployment.provision.SelfLink() == d.SelfLink() {
+			ss.deployment.provision = nil
+		}
+	}
+
+	if ss.deployment.active.SelfLink() != d.SelfLink() {
+		return deploymentDestroy(ss, d)
+	}
+
 	return nil
 }
 
 func handleDeploymentStateDegradation(ss *ServiceState, d *types.Deployment) error {
 
-	if ss.deployment.active != nil {
-		if ss.deployment.active.SelfLink() == d.SelfLink() {
-			serviceStatusState(ss)
+	log.Debugf("%s:> handleDeploymentStateDegradation: %s > %s", logDeploymentPrefix, d.SelfLink(), d.Status.State)
+
+	if err := deploymentPodProvision(ss, d); err != nil {
+		log.Errorf("%s", err.Error())
+		return err
+	}
+
+	if ss.deployment.active == nil {
+		ss.deployment.provision = nil
+		ss.deployment.active = d
+		return nil
+	}
+
+	if ss.deployment.provision != nil {
+		if ss.deployment.provision.SelfLink() == d.SelfLink() {
+			ss.deployment.provision = nil
 		}
+	}
+
+
+	if ss.deployment.active.SelfLink() != d.SelfLink() {
+		return deploymentDestroy(ss, d)
 	}
 
 	return nil
 }
 
 func handleDeploymentStateDestroy(ss *ServiceState, d *types.Deployment) error {
+
+	log.Debugf("%s:> handleDeploymentStateDestroy: %s > %s", logDeploymentPrefix, d.SelfLink(), d.Status.State)
+
+	if ss.deployment.provision != nil {
+		if ss.deployment.provision.SelfLink() == d.SelfLink() {
+			ss.deployment.provision = nil
+		}
+	}
 
 	if err := deploymentDestroy(ss, d); err != nil {
 		log.Errorf("%s", err.Error())
@@ -171,6 +220,14 @@ func handleDeploymentStateDestroy(ss *ServiceState, d *types.Deployment) error {
 }
 
 func handleDeploymentStateDestroyed(ss *ServiceState, d *types.Deployment) error {
+
+	log.Debugf("%s:> handleDeploymentStateDestroyed: %s > %s", logDeploymentPrefix, d.SelfLink(), d.Status.State)
+
+	if ss.deployment.provision != nil {
+		if ss.deployment.provision.SelfLink() == d.SelfLink() {
+			ss.deployment.provision = nil
+		}
+	}
 
 	link := d.SelfLink()
 
@@ -196,7 +253,7 @@ func handleDeploymentStateDestroyed(ss *ServiceState, d *types.Deployment) error
 }
 
 func deploymentSpecValidate(d *types.Deployment, spec types.SpecTemplate) bool {
-	return !d.Spec.Template.Updated.Before(spec.Updated)
+	return d.Spec.Template.Updated.Equal(spec.Updated)
 }
 
 // deploymentPodProvision - handles deployment provision logic
@@ -224,6 +281,7 @@ func deploymentPodProvision(ss *ServiceState, d *types.Deployment) (err error) {
 			types.StateProvision,
 			types.StateReady,
 		}
+		pm = distribution.NewPodModel(context.Background(), envs.Get().GetStorage())
 	)
 
 	pods, ok := ss.pod.list[d.SelfLink()]
@@ -240,7 +298,25 @@ func deploymentPodProvision(ss *ServiceState, d *types.Deployment) (err error) {
 
 		for _, p := range pods {
 
+
 			if p.Status.State != types.StateDestroy && p.Status.State != types.StateDestroyed {
+
+				if p.Meta.Node != types.EmptyString {
+
+					m, e := pm.ManifestGet(p.Meta.Node, p.SelfLink())
+					if err != nil {
+						err = e
+						return e
+					}
+
+					if m == nil {
+						if err = podManifestPut(p); err != nil {
+							return err
+						}
+					}
+
+				}
+
 				total++
 			}
 
@@ -252,6 +328,7 @@ func deploymentPodProvision(ss *ServiceState, d *types.Deployment) (err error) {
 		}
 
 		if d.Spec.Replicas == total {
+
 			return nil
 		}
 
@@ -380,8 +457,9 @@ func deploymentScale(d *types.Deployment, replicas int) error {
 
 func deploymentStatusState(d *types.Deployment, pl map[string]*types.Pod) (err error) {
 
-	t := d.Meta.Updated
+	log.Debugf("%s:> deploymentStatusState: start: %s > %s", logDeploymentPrefix, d.SelfLink(), d.Status.State)
 
+	t := d.Meta.Updated
 	defer func() {
 		if err == nil {
 			err = deploymentUpdate(d, t)
@@ -391,6 +469,7 @@ func deploymentStatusState(d *types.Deployment, pl map[string]*types.Pod) (err e
 	var (
 		state = make(map[string]int)
 		message string
+		running int
 	)
 
 	for _, p := range pl {
@@ -398,21 +477,30 @@ func deploymentStatusState(d *types.Deployment, pl map[string]*types.Pod) (err e
 		if p.Status.State == types.StateError {
 			message = p.Status.Message
 		}
+
+		if p.Status.Running {
+			running++
+		}
 	}
+
 
 	switch d.Status.State {
 	case types.StateCreated:
 		break
 	case types.StateProvision:
 
-		if _, ok := state[types.StateReady]; ok && state[types.StateReady] == len(pl) {
+		log.Info("provision", running, len(pl))
+
+		if _, ok := state[types.StateReady]; ok && running == len(pl) {
+			log.Info("ready")
 			d.Status.State = types.StateReady
 			d.Status.Message = types.EmptyString
 			d.Meta.Updated = time.Now()
 			break
 		}
 
-		if _, ok := state[types.StateError]; ok && state[types.StateError] == len(pl) {
+		if _, ok := state[types.StateError]; ok && running == 0 {
+			log.Info("err")
 			d.Status.State = types.StateError
 			d.Status.Message = message
 			d.Meta.Updated = time.Now()
@@ -420,18 +508,13 @@ func deploymentStatusState(d *types.Deployment, pl map[string]*types.Pod) (err e
 		}
 
 		if _, ok := state[types.StateProvision]; ok {
+			log.Info("prov")
 			d.Status.State = types.StateProvision
 			d.Status.Message = types.EmptyString
 			d.Meta.Updated = time.Now()
 			break
 		}
 
-		if _, ok := state[types.StateCreated]; ok {
-			d.Status.State = types.StateProvision
-			d.Status.Message = types.EmptyString
-			d.Meta.Updated = time.Now()
-			break
-		}
 
 		d.Status.State = types.StateDegradation
 		d.Status.Message = types.EmptyString
@@ -439,7 +522,7 @@ func deploymentStatusState(d *types.Deployment, pl map[string]*types.Pod) (err e
 		break
 	case types.StateReady:
 
-		if _, ok := state[types.StateReady]; ok && state[types.StateReady] == len(pl) {
+		if _, ok := state[types.StateReady]; ok && running == len(pl) {
 			break
 		}
 
@@ -450,7 +533,7 @@ func deploymentStatusState(d *types.Deployment, pl map[string]*types.Pod) (err e
 			break
 		}
 
-		if _, ok := state[types.StateError]; ok && state[types.StateError] == len(pl) {
+		if _, ok := state[types.StateError]; ok && running == 0 {
 			d.Status.State = types.StateError
 			d.Status.Message = message
 			d.Meta.Updated = time.Now()
@@ -464,14 +547,14 @@ func deploymentStatusState(d *types.Deployment, pl map[string]*types.Pod) (err e
 		break
 	case types.StateError:
 
-		if _, ok := state[types.StateReady]; ok && state[types.StateReady] == len(pl) {
+		if _, ok := state[types.StateReady]; ok && running == len(pl) {
 			d.Status.State = types.StateReady
 			d.Status.Message = types.EmptyString
 			d.Meta.Updated = time.Now()
 			break
 		}
 
-		if _, ok := state[types.StateError]; ok && state[types.StateError] == len(pl) {
+		if _, ok := state[types.StateError]; ok && running == 0 {
 			break
 		}
 
@@ -489,7 +572,7 @@ func deploymentStatusState(d *types.Deployment, pl map[string]*types.Pod) (err e
 		break
 	case types.StateDegradation:
 
-		if _, ok := state[types.StateReady]; ok && state[types.StateReady] == len(pl) {
+		if _, ok := state[types.StateReady]; ok && running == len(pl) {
 			d.Status.State = types.StateReady
 			d.Status.Message = types.EmptyString
 			d.Meta.Updated = time.Now()
@@ -503,7 +586,7 @@ func deploymentStatusState(d *types.Deployment, pl map[string]*types.Pod) (err e
 			break
 		}
 
-		if _, ok := state[types.StateError]; ok && state[types.StateError] == len(pl) {
+		if _, ok := state[types.StateError]; ok && running == 0 {
 			d.Status.State = types.StateError
 			d.Status.Message = message
 			d.Meta.Updated = time.Now()
@@ -521,6 +604,8 @@ func deploymentStatusState(d *types.Deployment, pl map[string]*types.Pod) (err e
 	case types.StateDestroyed:
 		break
 	}
+
+	log.Debugf("%s:> deploymentStatusState: finish: %s > %s", logDeploymentPrefix, d.SelfLink(), d.Status.State)
 
 	return nil
 }

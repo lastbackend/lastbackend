@@ -34,6 +34,7 @@ const logPodPrefix = "state:observer:pod"
 // PodObserve function manages pod handlers based on pod state
 func PodObserve (ss *ServiceState, p *types.Pod) error {
 
+	log.Debugf("%s:> observe start: %s > state %s", logPodPrefix, p.SelfLink(), p.Status.State)
 	// Call pod state manager methods
 	switch p.Status.State {
 	case types.StateCreated:
@@ -78,21 +79,27 @@ func PodObserve (ss *ServiceState, p *types.Pod) error {
 
 	}
 
-	d, ok := ss.deployment.list[p.DeploymentLink()]
-	if ! ok {
-		return nil
-	}
+	log.Debugf("%s:> observe state finish: %s", logPodPrefix, p.SelfLink())
 
 	pl, ok := ss.pod.list[p.DeploymentLink()]
-	if ! ok {
+	if ok && p.Status.State != types.StateDestroyed {
+		pl[p.SelfLink()] = p
+	}
+
+	d, ok := ss.deployment.list[p.DeploymentLink()]
+	if !ok {
+		log.Debugf("%s:> deployment node found: %s", logPodPrefix, p.DeploymentLink())
 		return nil
 	}
 
+	log.Debugf("%s:> observe finish: %s > %s", logPodPrefix, p.SelfLink(), p.Status.State)
 	return deploymentStatusState(d, pl)
 }
 
 func handlePodStateCreated(ss *ServiceState, p *types.Pod) error {
-	log.Debugf("%s handle pod create state start: %s", logPodPrefix, p.SelfLink())
+
+	log.Debugf("%s:> handlePodStateCreated: %s > %s", logPodPrefix, p.SelfLink(), p.Status.State)
+
 	if err := podProvision(ss, p); err != nil {
 		return err
 	}
@@ -101,6 +108,9 @@ func handlePodStateCreated(ss *ServiceState, p *types.Pod) error {
 }
 
 func handlePodStateProvision(ss *ServiceState, p *types.Pod) error {
+
+	log.Debugf("%s:> handlePodStateProvision: %s > %s", logPodPrefix, p.SelfLink(), p.Status.State)
+
 	if err := podProvision(ss, p); err != nil {
 		return err
 	}
@@ -108,18 +118,29 @@ func handlePodStateProvision(ss *ServiceState, p *types.Pod) error {
 }
 
 func handlePodStateReady(ss *ServiceState, p *types.Pod) error {
+
+	log.Debugf("%s:> handlePodStateReady: %s > %s", logPodPrefix, p.SelfLink(), p.Status.State)
+
 	return nil
 }
 
 func handlePodStateError(ss *ServiceState, p *types.Pod) error {
+
+	log.Debugf("%s:> handlePodStateError: %s > %s", logPodPrefix, p.SelfLink(), p.Status.State)
+
 	return nil
 }
 
 func handlePodStateDegradation(ss *ServiceState, p *types.Pod) error {
+
+	log.Debugf("%s:> handlePodStateDegradation: %s > %s", logPodPrefix, p.SelfLink(), p.Status.State)
+
 	return nil
 }
 
 func handlePodStateDestroy(ss *ServiceState, p *types.Pod) error {
+
+	log.Debugf("%s:> handlePodStateDestroy: %s > %s", logPodPrefix, p.SelfLink(), p.Status.State)
 
 	if err := podDestroy(ss, p); err != nil {
 		log.Errorf("%s", err.Error())
@@ -132,10 +153,13 @@ func handlePodStateDestroy(ss *ServiceState, p *types.Pod) error {
 
 func handlePodStateDestroyed(ss *ServiceState, p *types.Pod) error {
 
+	log.Debugf("%s:> handlePodStateDestroyed: %s > %s", logPodPrefix, p.SelfLink(), p.Status.State)
+
 	if err := podRemove(ss, p); err != nil {
 		log.Errorf("%s", err.Error())
 		return err
 	}
+
 
 	return nil
 }
@@ -248,26 +272,19 @@ func podDestroy(ss *ServiceState, p *types.Pod) (err error) {
 }
 
 // podRemove function removes pod from storage if node is released
-func podRemove(ss *ServiceState, p *types.Pod) ( err error) {
-
-	t := p.Meta.Updated
-	defer func() {
-		if err == nil {
-			err = podUpdate(p, t)
-		}
-	}()
+func podRemove(ss *ServiceState, p *types.Pod) (err error) {
 
 	pm := distribution.NewPodModel(context.Background(), envs.Get().GetStorage())
 	if _, err = ss.cluster.PodRelease(p); err != nil {
 		return err
 	}
 
-	p.Meta.Node = types.EmptyString
-	p.Meta.Updated = time.Now()
-
 	if err = podManifestDel(p); err != nil {
 		return err
 	}
+
+	p.Meta.Node = types.EmptyString
+	p.Meta.Updated = time.Now()
 
 	if err = pm.Remove(p); err != nil {
 		log.Errorf("%s", err.Error())
@@ -279,8 +296,6 @@ func podRemove(ss *ServiceState, p *types.Pod) ( err error) {
 }
 
 func podUpdate(p *types.Pod, timestamp time.Time) error {
-
-	log.Infof("pod update %#v", p)
 
 	if timestamp.Before(p.Meta.Updated) {
 		pm := distribution.NewPodModel(context.Background(), envs.Get().GetStorage())

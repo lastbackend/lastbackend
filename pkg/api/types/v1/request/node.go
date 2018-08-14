@@ -54,6 +54,10 @@ type NodeResourcesOptions struct {
 type NodePodStatusOptions struct {
 	// Pod state
 	State string `json:"state" yaml:"state"`
+	// Pod state
+	Status string `json:"status" yaml:"status"`
+	// Pod state
+	Running bool `json:"running" yaml:"running"`
 	// Pod state message
 	Message string `json:"message" yaml:"message"`
 	// Pod steps

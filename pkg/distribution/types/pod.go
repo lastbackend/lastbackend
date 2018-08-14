@@ -79,6 +79,10 @@ type PodSpec struct {
 type PodStatus struct {
 	// Pod state
 	State string `json:"state" yaml:"state"`
+	// Pod status
+	Status string `json:"status" yaml:"status"`
+	// Pod state
+	Running bool `json:"running" yaml:"state"`
 	// Pod state message
 	Message string `json:"message" yaml:"message"`
 	// Pod steps
@@ -182,7 +186,9 @@ type PodContainerStateExit struct {
 }
 
 func (s *PodStatus) SetInitialized() {
-	s.State = StateInitialized
+	s.State = StateProvision
+	s.Status = StatusInitialized
+	s.Running = false
 	s.Message = EmptyString
 }
 
@@ -192,33 +198,45 @@ func (s *PodStatus) SetDestroy() {
 
 func (s *PodStatus) SetDestroyed() {
 	s.State = StateDestroyed
+	s.Running = false
 }
 
 func (s *PodStatus) SetPull() {
-	s.State = StatePull
+	s.State = StateProvision
+	s.Status = StatusPull
+	s.Running = false
 }
 
 func (s *PodStatus) SetProvision() {
 	s.State = StateProvision
+	s.Running = false
 }
 
 func (s *PodStatus) SetCreated() {
-	s.State = StateCreated
+	s.State = StateProvision
+	s.Status = StateCreated
+	s.Running = false
 	s.Message = EmptyString
 }
 
 func (s *PodStatus) SetStarting() {
-	s.State = StateStarting
+	s.State = StateProvision
+	s.Status = StatusStarting
+	s.Running = false
 	s.Message = EmptyString
 }
 
 func (s *PodStatus) SetRunning() {
-	s.State = StateRunning
+	s.State = StateReady
+	s.Status = StatusRunning
+	s.Running = true
 	s.Message = EmptyString
 }
 
 func (s *PodStatus) SetStopped() {
-	s.State = StateStopped
+	s.State = StateReady
+	s.Status = StatusStopped
+	s.Running = false
 	s.Message = EmptyString
 }
 

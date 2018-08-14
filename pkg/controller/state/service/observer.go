@@ -155,12 +155,11 @@ func (ss *ServiceState) Restore() error {
 
 	// Provision deployment only in provision state
 	for _, d := range ss.deployment.list {
-		if d.Status.State == types.StateProvision {
-			ss.observers.deployment <- d
-		}
+		ss.observers.deployment <- d
 	}
 
 	ss.observers.service <- ss.service
+
 	return nil
 }
 
@@ -240,14 +239,6 @@ func (ss *ServiceState) DelPod(p *types.Pod) {
 	}
 
 	delete(ss.pod.list[p.DeploymentLink()], p.SelfLink())
-
-	if _, ok := ss.deployment.list[p.DeploymentLink()]; !ok {
-		return
-	}
-
-	d := ss.deployment.list[p.DeploymentLink()]
-	ss.observers.deployment <- d
-
 }
 
 func NewServiceState(cs *cluster.ClusterState, s *types.Service) *ServiceState {

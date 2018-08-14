@@ -31,8 +31,8 @@ import (
 
 func init() {
 	serviceUpdateCmd.Flags().StringP("desc", "d", "", "set service description")
-	serviceUpdateCmd.Flags().Int64P("memory", "m", 128, "set service spec memory")
-	serviceUpdateCmd.Flags().IntP("replicas", "r", 1, "set service replicas")
+	serviceUpdateCmd.Flags().Int64P("memory", "m", 0, "set service spec memory")
+	serviceUpdateCmd.Flags().IntP("replicas", "r", 0, "set service replicas")
 	serviceUpdateCmd.Flags().StringP("port", "p", "", "set service ports")
 	serviceCmd.AddCommand(serviceUpdateCmd)
 }
@@ -60,8 +60,13 @@ var serviceUpdateCmd = &cobra.Command{
 		opts := new(request.ServiceUpdateOptions)
 		opts.Spec = new(request.ServiceOptionsSpec)
 
-		opts.Description = &description
-		opts.Spec.Memory = &memory
+		if description != "" {
+			opts.Description = &description
+		}
+
+		if memory != 0 {
+			opts.Spec.Memory = &memory
+		}
 
 		if replicas != 0 {
 			opts.Spec.Replicas = &replicas

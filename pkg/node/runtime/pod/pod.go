@@ -288,8 +288,6 @@ func Restore(ctx context.Context) error {
 			},
 		}
 
-		log.Debugf("%#v", c.State)
-
 		switch c.State {
 		case types.StateCreated:
 			cs.State = types.PodContainerState{
@@ -305,7 +303,7 @@ func Restore(ctx context.Context) error {
 				},
 			}
 			cs.State.Stopped.Stopped = false
-		case types.StateStopped:
+		case types.StatusStopped:
 			cs.State.Stopped.Stopped = true
 			cs.State.Stopped.Exit = types.PodContainerStateExit{
 				Code:      c.ExitCode,
@@ -329,7 +327,7 @@ func Restore(ctx context.Context) error {
 			cs.State.Started.Started = false
 		}
 
-		if c.Status == types.StateStopped {
+		if c.Status == types.StatusStopped {
 			cs.State.Stopped = types.PodContainerStateStopped{
 				Stopped: true,
 				Exit: types.PodContainerStateExit{
@@ -438,7 +436,7 @@ func containerInspect(ctx context.Context, status *types.PodStatus, container *t
 		container.Image = types.PodContainerImage{
 			Name: info.Image,
 		}
-		if info.Status == types.StateStopped {
+		if info.Status == types.StatusStopped {
 			container.State.Stopped = types.PodContainerStateStopped{
 				Stopped: true,
 				Exit: types.PodContainerStateExit{

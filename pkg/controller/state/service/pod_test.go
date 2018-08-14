@@ -41,12 +41,12 @@ func testPodObserver(t *testing.T, name, werr string, wst *ServiceState, state *
 	ipm, _ := ipam.New("")
 	envs.Get().SetIPAM(ipm)
 
-	err = stg.Del(ctx, storage.DeploymentKind, "")
+	err = stg.Del(ctx, stg.Collection().Deployment(), "")
 	if !assert.NoError(t, err) {
 		return
 	}
 
-	err = stg.Del(ctx, storage.EndpointKind, "")
+	err = stg.Del(ctx, stg.Collection().Endpoint(), "")
 	if !assert.NoError(t, err) {
 		return
 	}

@@ -111,8 +111,11 @@ func NewExporter() *Exporter {
 }
 
 func getPodOptions(p *types.PodStatus) *request.NodePodStatusOptions {
+
 	opts := v1.Request().Node().NodePodStatusOptions()
 	opts.State = p.State
+	opts.Status = p.Status
+	opts.Running = p.Running
 	opts.Message = p.Message
 	opts.Containers = p.Containers
 	opts.Network = p.Network

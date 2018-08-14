@@ -82,7 +82,7 @@ func (v *Volume) Create(namespace *types.Namespace, opts *types.VolumeCreateOpti
 	volume.Meta.SetDefault()
 	volume.Meta.Name = generator.GenerateRandomString(10)
 	volume.Meta.Namespace = namespace.Meta.Name
-	volume.Status.State = types.StateInitialized
+	volume.Status.State = types.StatusInitialized
 
 	if err := v.storage.Put(v.context, v.storage.Collection().Volume(),
 		v.storage.Key().Volume(volume.Meta.Namespace, volume.Meta.Name), volume, nil); err != nil {

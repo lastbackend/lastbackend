@@ -19,23 +19,23 @@
 package types
 
 const StateProvision = "provision"
-const StateInitialized = "initialized"
+const StatusInitialized = "initialized"
 const StateWarning = "warning"
 const StateDegradation = "degradation"
 const StateReady = "ready"
 
-const StatePull = "pull"
+const StatusPull = "pull"
 const StateDestroy = "destroy"
 const StateCancel = "cancel"
 
 const StateCreated = "created"
-const StateStarting = "starting"
+const StatusStarting = "starting"
 const StateStarted = "started"
-const StateStopped = "stopped"
+const StatusStopped = "stopped"
 const StateDestroyed = "destroyed"
 
 const StateExited = "exited"
-const StateRunning = "running"
+const StatusRunning = "running"
 const StateError = "error"
 
 const StepInitialized = "initialized"

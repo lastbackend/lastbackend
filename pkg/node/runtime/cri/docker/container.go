@@ -148,12 +148,12 @@ func (r *Runtime) ContainerInspect(ctx context.Context, ID string) (*types.Conta
 		container.State = types.StateCreated
 	case types.StateStarted:
 		container.State = types.StateStarted
-	case types.StateRunning:
+	case types.StatusRunning:
 		container.State = types.StateStarted
-	case types.StateStopped:
-		container.State = types.StateStopped
+	case types.StatusStopped:
+		container.State = types.StatusStopped
 	case types.StateExited:
-		container.State = types.StateStopped
+		container.State = types.StatusStopped
 	case types.StateError:
 		container.State = types.StateError
 	}

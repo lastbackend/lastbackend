@@ -147,6 +147,7 @@ func (s *ServiceUpdateOptions) DecodeAndValidate(reader io.Reader) (*types.Servi
 		opts.Spec.EnvVars = s.Spec.EnvVars
 		opts.Spec.Entrypoint = s.Spec.Entrypoint
 		opts.Spec.Command = s.Spec.Command
+		opts.Spec.Replicas = s.Spec.Replicas
 
 		if len(s.Spec.Ports) != 0 {
 			opts.Spec.Ports = s.Spec.Ports
