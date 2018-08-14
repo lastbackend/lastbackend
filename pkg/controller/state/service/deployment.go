@@ -89,8 +89,22 @@ func deploymentObserve(ss *ServiceState, d *types.Deployment) error {
 		ss.deployment.list[d.SelfLink()] = d
 	}
 
+	log.Debugf("%s:> observe state: %s > %s", logDeploymentPrefix, d.SelfLink(), d.Status.State)
+
+	if ss.deployment.active != nil {
+		if ss.deployment.active.Status.State == types.StateReady {
+			if err := endpointManifestProvision(ss); err != nil {
+				return err
+			}
+		}
+	}
+
+	if err := serviceStatusState(ss); err != nil {
+		return err
+	}
+
 	log.Debugf("%s:> observe finish: %s > %s", logDeploymentPrefix, d.SelfLink(), d.Status.State)
-	serviceStatusState(ss)
+
 	return nil
 }
 
@@ -489,10 +503,7 @@ func deploymentStatusState(d *types.Deployment, pl map[string]*types.Pod) (err e
 		break
 	case types.StateProvision:
 
-		log.Info("provision", running, len(pl))
-
 		if _, ok := state[types.StateReady]; ok && running == len(pl) {
-			log.Info("ready")
 			d.Status.State = types.StateReady
 			d.Status.Message = types.EmptyString
 			d.Meta.Updated = time.Now()
@@ -500,7 +511,6 @@ func deploymentStatusState(d *types.Deployment, pl map[string]*types.Pod) (err e
 		}
 
 		if _, ok := state[types.StateError]; ok && running == 0 {
-			log.Info("err")
 			d.Status.State = types.StateError
 			d.Status.Message = message
 			d.Meta.Updated = time.Now()
@@ -508,7 +518,6 @@ func deploymentStatusState(d *types.Deployment, pl map[string]*types.Pod) (err e
 		}
 
 		if _, ok := state[types.StateProvision]; ok {
-			log.Info("prov")
 			d.Status.State = types.StateProvision
 			d.Status.Message = types.EmptyString
 			d.Meta.Updated = time.Now()

@@ -20,7 +20,7 @@ package types
 
 type NodeManifest struct {
 	Endpoints map[string]*EndpointManifest `json:"endpoint"`
-	Network   map[string]*SubnetManifest  `json:"network"`
+	Network   map[string]*SubnetManifest   `json:"network"`
 	Pods      map[string]*PodManifest      `json:"pods"`
 	Volumes   map[string]*VolumeManifest   `json:"volumes"`
 }
@@ -29,30 +29,29 @@ type PodManifest PodSpec
 
 type PodManifestList struct {
 	Runtime
-	Items  []*PodManifest
+	Items []*PodManifest
 }
 
 type PodManifestMap struct {
 	Runtime
-	Items  map[string]*PodManifest
+	Items map[string]*PodManifest
 }
 
 type VolumeManifest VolumeSpec
 
 type VolumeManifestList struct {
 	Runtime
-	Items  []*VolumeManifest
+	Items []*VolumeManifest
 }
 
 type VolumeManifestMap struct {
 	Runtime
-	Items  map[string]*VolumeManifest
+	Items map[string]*VolumeManifest
 }
 
 type SubnetManifest struct {
 	SubnetSpec
 }
-
 
 type SubnetManifestList struct {
 	Runtime
@@ -66,6 +65,7 @@ type SubnetManifestMap struct {
 
 type EndpointManifest struct {
 	EndpointSpec
+	Upstreams []string `json:"upstreams"`
 }
 
 type EndpointManifestList struct {
@@ -78,50 +78,49 @@ type EndpointManifestMap struct {
 	Items map[string]*EndpointManifest
 }
 
-
-func NewPodManifestList () *PodManifestList {
+func NewPodManifestList() *PodManifestList {
 	dm := new(PodManifestList)
 	dm.Items = make([]*PodManifest, 0)
 	return dm
 }
 
-func NewPodManifestMap () *PodManifestMap {
+func NewPodManifestMap() *PodManifestMap {
 	dm := new(PodManifestMap)
 	dm.Items = make(map[string]*PodManifest)
 	return dm
 }
 
-func NewVolumeManifestList () *VolumeManifestList {
+func NewVolumeManifestList() *VolumeManifestList {
 	dm := new(VolumeManifestList)
 	dm.Items = make([]*VolumeManifest, 0)
 	return dm
 }
 
-func NewVolumeManifestMap () *VolumeManifestMap {
+func NewVolumeManifestMap() *VolumeManifestMap {
 	dm := new(VolumeManifestMap)
 	dm.Items = make(map[string]*VolumeManifest)
 	return dm
 }
 
-func NewEndpointManifestList () *EndpointManifestList {
+func NewEndpointManifestList() *EndpointManifestList {
 	dm := new(EndpointManifestList)
 	dm.Items = make([]*EndpointManifest, 0)
 	return dm
 }
 
-func NewEndpointManifestMap () *EndpointManifestMap {
+func NewEndpointManifestMap() *EndpointManifestMap {
 	dm := new(EndpointManifestMap)
 	dm.Items = make(map[string]*EndpointManifest)
 	return dm
 }
 
-func NewSubnetManifestList () *SubnetManifestList {
+func NewSubnetManifestList() *SubnetManifestList {
 	dm := new(SubnetManifestList)
 	dm.Items = make([]*SubnetManifest, 0)
 	return dm
 }
 
-func NewSubnetManifestMap () *SubnetManifestMap {
+func NewSubnetManifestMap() *SubnetManifestMap {
 	dm := new(SubnetManifestMap)
 	dm.Items = make(map[string]*SubnetManifest)
 	return dm

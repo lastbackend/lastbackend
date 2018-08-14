@@ -71,5 +71,5 @@ func Watch(ctx context.Context) {
 		}
 	}()
 
-	go em.Watch(event)
+	go em.Watch(event, nil)
 }

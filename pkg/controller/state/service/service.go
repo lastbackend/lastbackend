@@ -180,12 +180,11 @@ func handleServiceStateDestroy(ss *ServiceState, svc *types.Service) (err error)
 
 	log.Debugf("%s:> handleServiceStateDestroy: %s > %s", logServicePrefix, svc.SelfLink(), svc.Status.State)
 
-	if ss.endpoint != nil  {
-		if err = EndpointRemove(ss.endpoint); err != nil {
+	if ss.endpoint.endpoint != nil  {
+		if err = endpointDel(ss); err != nil {
 			log.Errorf("%s:> endpoint remove err:", logServicePrefix, err.Error())
 			return err
 		}
-		ss.endpoint = nil
 	}
 
 	dm := distribution.NewDeploymentModel(context.Background(), envs.Get().GetStorage())
@@ -226,16 +225,15 @@ func handleServiceStateDestroyed(ss *ServiceState, svc *types.Service) (err erro
 
 	log.Debugf("%s:> handleServiceStateDestroyed: %s > %s", logServicePrefix, svc.SelfLink(), svc.Status.State)
 
-	if ss.endpoint != nil {
-		if err = EndpointRemove(ss.endpoint); err != nil {
+
+	if err = endpointDel(ss); err != nil {
 			log.Errorf("%s:> endpoint remove err:", logServicePrefix, err.Error())
 			return err
 		}
-		ss.endpoint = nil
 
-		svc.Status.State = types.StateDestroy
-		svc.Meta.Updated = time.Now()
-	}
+	svc.Status.State = types.StateDestroy
+	svc.Meta.Updated = time.Now()
+
 
 	if len(ss.deployment.list) > 0 {
 		dm := distribution.NewDeploymentModel(context.Background(), envs.Get().GetStorage())
@@ -280,40 +278,14 @@ func serviceEndpointProvision(ss *ServiceState, svc *types.Service) error {
 		return errors.New("svc is nil")
 	}
 
-	ef := len(svc.Spec.Network.Ports) > 0
-	switch true {
-	// remove endpoint if not needed but exists
-	case !ef && ss.endpoint != nil:
-		if err := EndpointRemove(ss.endpoint); err != nil {
-			log.Errorf("%s:> endpoint remove err:", logServicePrefix, err.Error())
-			return err
-		}
-		ss.endpoint = nil
-		break
+	if err := endpointProvision(ss, svc); err != nil {
+		log.Errorf("%s:> endpoint provision err: %s", logServicePrefix, err.Error())
+		return err
+	}
 
-		// create endpoint if needed and not exists
-	case ef && ss.endpoint == nil:
-		e, err := EndpointCreate(svc.Meta.Namespace, svc.Meta.Name, svc.Meta.Endpoint, svc.Spec.Network)
-		if err != nil {
-			log.Errorf("%s:> endpoint create err:", logServicePrefix, err.Error())
-			return err
-		}
-		ss.endpoint = e
-		break
-
-		// update endpoint if spec different
-	case ef && ss.endpoint != nil:
-		if EndpointValidate(ss.endpoint, svc.Spec.Network) {
-			break
-		}
-
-		e, err := EndpointUpdate(ss.endpoint, svc.Spec.Network)
-		if err != nil {
-			log.Errorf("%s:> endpoint update err:", logServicePrefix, err.Error())
-			return err
-		}
-		ss.endpoint = e
-
+	if err := endpointManifestProvision(ss); err != nil {
+		log.Errorf("%s:> endpoint provision err: %s", logServicePrefix, err.Error())
+		return err
 	}
 
 	return nil

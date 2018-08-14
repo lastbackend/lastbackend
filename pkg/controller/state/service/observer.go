@@ -24,7 +24,6 @@ import (
 
 	"github.com/lastbackend/lastbackend/pkg/controller/envs"
 	"github.com/lastbackend/lastbackend/pkg/distribution"
-	"github.com/lastbackend/lastbackend/pkg/distribution/errors"
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 	"github.com/lastbackend/lastbackend/pkg/log"
 	"github.com/lastbackend/lastbackend/pkg/controller/state/cluster"
@@ -37,7 +36,10 @@ type ServiceState struct {
 
 	cluster  *cluster.ClusterState
 	service  *types.Service
-	endpoint *types.Endpoint
+	endpoint struct {
+		endpoint *types.Endpoint
+		manifest *types.EndpointManifest
+	}
 
 	deployment struct {
 		active    *types.Deployment
@@ -137,13 +139,9 @@ func (ss *ServiceState) Restore() error {
 	}
 
 	// Get endpoint
-	em := distribution.NewEndpointModel(context.Background(), stg)
-	ss.endpoint, err = em.Get(ss.service.Meta.Namespace, ss.service.Meta.Name)
-	if err != nil {
-		if !errors.Storage().IsErrEntityNotFound(err) {
-			log.Errorf("%s:restore:> get endpoint error: %v", logPrefix, err)
-			return err
-		}
+	if err := endpointRestore(ss); err != nil {
+		log.Errorf("%s: restore endpoint: %s", logPrefix, err.Error())
+		return err
 	}
 
 	// Range over pods to sync pod status

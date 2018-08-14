@@ -71,7 +71,6 @@ type EndpointSpec struct {
 	IP        string               `json:"ip"`
 	Domain    string               `json:"domain"`
 	PortMap   map[uint16]string    `json:"port_map"`
-	Upstreams []string             `json:"upstreams"`
 	Strategy  EndpointSpecStrategy `json:"strategy"`
 	Policy    string               `json:"policy"`
 }

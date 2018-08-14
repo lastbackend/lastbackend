@@ -84,7 +84,6 @@ func (e *Endpoint) Create(namespace, service string, opts *types.EndpointCreateO
 
 	endpoint.Status.State = types.StateCreated
 	endpoint.Spec.PortMap = make(map[uint16]string, 0)
-	endpoint.Spec.Upstreams = make([]string, 0)
 
 	for k, v := range opts.Ports {
 		endpoint.Spec.PortMap[k] = v
@@ -155,7 +154,7 @@ func (e *Endpoint) Remove(endpoint *types.Endpoint) error {
 }
 
 // Watch endpoint changes
-func (e *Endpoint) Watch(ch chan types.EndpointEvent) error {
+func (e *Endpoint) Watch(ch chan types.EndpointEvent, rev *int64) error {
 
 	log.Debugf("%s:watch:> watch endpoint", logEndpointPrefix)
 
@@ -217,14 +216,14 @@ func (e *Endpoint) ManifestMap() (*types.EndpointManifestMap, error) {
 }
 
 // Get particular network manifest
-func (e *Endpoint) ManifestGet(endpoint string) (*types.EndpointManifest, error) {
+func (e *Endpoint) ManifestGet(name string) (*types.EndpointManifest, error) {
 	log.Debugf("%s:EndpointManifestGet:> ", logEndpointPrefix)
 
 	var (
 		mf = new(types.EndpointManifest)
 	)
 
-	if err := e.storage.Get(e.context, e.storage.Collection().Manifest().Endpoint(), endpoint, &mf, nil); err != nil {
+	if err := e.storage.Get(e.context, e.storage.Collection().Manifest().Endpoint(), e.storage.Key().Manifest(name), &mf, nil); err != nil {
 		log.Errorf("%s:EndpointManifestGet:> err :%s", logEndpointPrefix, err.Error())
 
 		if errors.Storage().IsErrEntityNotFound(err) {
@@ -239,9 +238,13 @@ func (e *Endpoint) ManifestGet(endpoint string) (*types.EndpointManifest, error)
 
 // Add particular network manifest
 func (e *Endpoint) ManifestAdd(name string, manifest *types.EndpointManifest) error {
+
 	log.Debugf("%s:EndpointManifestAdd:> ", logEndpointPrefix)
 
-	if err := e.storage.Put(e.context, e.storage.Collection().Manifest().Endpoint(), name, manifest, nil); err != nil {
+	if err := e.storage.Put(e.context,
+		e.storage.Collection().Manifest().Endpoint(),
+		e.storage.Key().Manifest(name),
+		&manifest, nil); err != nil {
 		log.Errorf("%s:EndpointManifestAdd:> err :%s", logEndpointPrefix, err.Error())
 		return err
 	}
@@ -251,10 +254,10 @@ func (e *Endpoint) ManifestAdd(name string, manifest *types.EndpointManifest) er
 
 // Set particular network manifest
 func (e *Endpoint) ManifestSet(name string, manifest *types.EndpointManifest) error {
-	log.Debugf("%s:EndpointManifestAdd:> ", logEndpointPrefix)
+	log.Debugf("%s:EndpointManifestSet:> ", logEndpointPrefix)
 
-	if err := e.storage.Set(e.context, e.storage.Collection().Manifest().Endpoint(), name, manifest, nil); err != nil {
-		log.Errorf("%s:EndpointManifestAdd:> err :%s", logEndpointPrefix, err.Error())
+	if err := e.storage.Set(e.context, e.storage.Collection().Manifest().Endpoint(), e.storage.Key().Manifest(name), manifest, nil); err != nil {
+		log.Errorf("%s:EndpointManifestSet:> err :%s", logEndpointPrefix, err.Error())
 		return err
 	}
 
@@ -265,7 +268,7 @@ func (e *Endpoint) ManifestSet(name string, manifest *types.EndpointManifest) er
 func (e *Endpoint) ManifestDel(name string) error {
 	log.Debugf("%s:EndpointManifestDel:> ", logEndpointPrefix)
 
-	if err := e.storage.Del(e.context, e.storage.Collection().Manifest().Endpoint(), name); err != nil {
+	if err := e.storage.Del(e.context, e.storage.Collection().Manifest().Endpoint(), e.storage.Key().Manifest(name)); err != nil {
 		log.Errorf("%s:EndpointManifestDel:> err :%s", logEndpointPrefix, err.Error())
 		return err
 	}
@@ -323,6 +326,10 @@ func (e *Endpoint) ManifestWatch(ch chan types.EndpointManifestEvent, rev *int64
 	}
 
 	return nil
+}
+
+func (e *Endpoint) ManifestGetName(namespace, service string) string {
+	return new(types.Endpoint).CreateSelfLink(namespace, service)
 }
 
 func NewEndpointModel(ctx context.Context, stg storage.Storage) *Endpoint {
