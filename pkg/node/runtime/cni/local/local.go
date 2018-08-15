@@ -26,12 +26,16 @@ import (
 	"net"
 )
 
+const NetworkType = "local"
+const DefaultContainerDevice = "docker0"
+const localIP = "127.0.0.1"
+
 type Network struct {
 	cni.CNI
 
 	ExtIface *NetworkInterface
 	Network  *net.IPNet
-	Subnet   *net.IPNet
+	CIDR     *net.IPNet
 	IP       net.IP
 }
 
@@ -42,17 +46,50 @@ type NetworkInterface struct {
 
 func New() (*Network, error) {
 	ip, _ := system.GetNodeIP()
-	return &Network{
+
+	iface := getInterface()
+
+	nt := &Network{
 		ExtIface: &NetworkInterface{
 			IfaceAddr: net.ParseIP(ip),
+			Iface:     iface,
 		},
-	}, nil
+	}
+
+	if iface != nil {
+
+		nt.CIDR = &net.IPNet{
+			IP:   net.ParseIP(localIP),
+			Mask: net.ParseIP(localIP).DefaultMask(),
+		}
+
+		nt.Network = &net.IPNet{
+			IP:   net.ParseIP(localIP),
+			Mask: net.CIDRMask(8, 32),
+		}
+	}
+
+	return nt, nil
 }
 
 func (n *Network) Info(ctx context.Context) *types.NetworkState {
+
 	state := types.NetworkState{}
-	state.Type = "local"
+	state.Type = NetworkType
 	state.Addr = n.ExtIface.IfaceAddr.String()
+	if n.CIDR != nil {
+		state.CIDR = n.CIDR.String()
+	}
+
+	if n.ExtIface.Iface != nil {
+		state.IFace = types.NetworkInterface{
+			Index: n.ExtIface.Iface.Index,
+			Name:  n.ExtIface.Iface.Name,
+			HAddr: n.ExtIface.Iface.HardwareAddr.String(),
+			Addr:  net.ParseIP(localIP).String(),
+		}
+	}
+
 	return &state
 }
 

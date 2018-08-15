@@ -90,24 +90,24 @@ func testDeploymentObserver (t *testing.T, name, werr string, wst *ServiceState,
 		}
 
 		// check endpoint
-		if wst.endpoint != nil {
-			if !assert.NotNil(t, state.endpoint, "endpoint should be not nil") {
+		if wst.endpoint.endpoint != nil {
+			if !assert.NotNil(t, state.endpoint.endpoint, "endpoint should be not nil") {
 				return
 			}
-			if !assert.Equal(t, wst.endpoint.Meta.Name, state.endpoint.Meta.Name,
+			if !assert.Equal(t, wst.endpoint.endpoint.Meta.Name, state.endpoint.endpoint.Meta.Name,
 				"endpoint is different") {
 				return
 			}
 
-			if !assert.Equal(t, wst.endpoint.Spec.PortMap, state.endpoint.Spec.PortMap,
+			if !assert.Equal(t, wst.endpoint.endpoint.Spec.PortMap, state.endpoint.endpoint.Spec.PortMap,
 				"endpoint portmap is different") {
 				return
 			}
 
 		}
 
-		if wst.endpoint == nil {
-			if !assert.Nil(t, state.endpoint, "endpoint should be nil") {
+		if wst.endpoint.endpoint == nil {
+			if !assert.Nil(t, state.endpoint.endpoint, "endpoint should be nil") {
 				return
 			}
 		}

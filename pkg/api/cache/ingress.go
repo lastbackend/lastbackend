@@ -39,7 +39,7 @@ func (c *CacheIngressManifest) SetRouteSpec(route string, s types.RouteSpec) {
 	c.lock.Lock()
 	defer c.lock.Unlock()
 
-	log.Debugf("add route manifests: %s", route)
+	log.V(logLevel).Debugf("add route manifests: %s", route)
 	for i := range c.spec {
 		if _, ok := c.spec[i]; !ok {
 			c.spec[i] = new(types.IngressSpec)
@@ -57,7 +57,7 @@ func (c *CacheIngressManifest) SetRouteSpec(route string, s types.RouteSpec) {
 func (c *CacheIngressManifest) DelRouteSpec(route string) {
 	c.lock.Lock()
 	defer c.lock.Unlock()
-	log.Debugf("del route manifests: %s", route)
+	log.V(logLevel).Debugf("del route manifests: %s", route)
 	for i := range c.spec {
 		delete(c.spec[i].Routes, route)
 	}

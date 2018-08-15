@@ -161,10 +161,10 @@ func (n *Network) Destroy(ctx context.Context, network *types.NetworkState) erro
 
 func (n *Network) Create(ctx context.Context, network *types.SubnetManifest) (*types.NetworkState, error) {
 
-	log.Debugf("Connect to node to network: %v > %v", network.CIDR, network.IFace.Addr)
+	log.V(logLevel).Debugf("Connect to node to network: %v > %v", network.CIDR, network.IFace.Addr)
 
 	if n.CIDR.String() == network.CIDR {
-		log.Debug("Skip local network provision")
+		log.V(logLevel).Debug("Skip local network provision")
 		return n.Info(ctx), nil
 	}
 
@@ -176,14 +176,14 @@ func (n *Network) Create(ctx context.Context, network *types.SubnetManifest) (*t
 	}
 
 	// Add ARP record
-	log.Debugf("Add new ARP record to %v :> %v", lladdr, network.Addr)
+	log.V(logLevel).Debugf("Add new ARP record to %v :> %v", lladdr, network.Addr)
 	if err := n.Device.AddARP(lladdr, net.ParseIP(network.IFace.Addr)); err != nil {
 		log.Errorf("Can not add ARP record: %s", err.Error())
 		return nil, err
 	}
 
 	// Add FDB record
-	log.Debugf("Add new FDB record to %v :> %v", network.IFace.HAddr, network.Addr)
+	log.V(logLevel).Debugf("Add new FDB record to %v :> %v", network.IFace.HAddr, network.Addr)
 	if err := n.Device.AddFDB(lladdr, net.ParseIP(network.Addr)); err != nil {
 		log.Errorf("Can not add FDB record: %s", err.Error())
 		if err := n.Device.DelARP(lladdr, net.ParseIP(network.IFace.Addr)); err != nil {
@@ -192,7 +192,7 @@ func (n *Network) Create(ctx context.Context, network *types.SubnetManifest) (*t
 	}
 
 	// Add route
-	log.Debugf("Add new route record for %v :> %v", network.CIDR, network.IFace.Addr)
+	log.V(logLevel).Debugf("Add new route record for %v :> %v", network.CIDR, network.IFace.Addr)
 
 	_, ipn, err := net.ParseCIDR(network.CIDR)
 	if err != nil {
@@ -210,7 +210,7 @@ func (n *Network) Create(ctx context.Context, network *types.SubnetManifest) (*t
 
 	if err := netlink.RouteReplace(&vxlanRoute); err != nil {
 		log.Errorf("Add xvlan route err: %s", err.Error())
-		log.Debug("Clean up added before records")
+		log.V(logLevel).Debug("Clean up added before records")
 
 		if err := n.Device.DelARP(lladdr, net.ParseIP(network.IFace.Addr)); err != nil {
 			log.Errorf("Can not del ARP record: %s", err.Error())
@@ -263,7 +263,7 @@ func (n *Network) Replace(ctx context.Context, state *types.NetworkState, manife
 
 func (n *Network) Subnets(ctx context.Context) (map[string]*types.NetworkState, error) {
 
-	log.Debug("Get current subnets list")
+	log.V(logLevel).Debug("Get current subnets list")
 
 	var (
 		subnets = make(map[string]*types.NetworkState)
@@ -315,7 +315,7 @@ func (n *Network) Subnets(ctx context.Context) (map[string]*types.NetworkState, 
 	}
 
 	for r, sn := range subnets {
-		log.Debugf("SubnetSpec [%s]: %v", r, sn)
+		log.V(logLevel).Debugf("SubnetSpec [%s]: %v", r, sn)
 	}
 
 	return subnets, nil

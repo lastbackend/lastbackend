@@ -72,7 +72,7 @@ func EventSubscribeH(w http.ResponseWriter, r *http.Request) {
 
 	conn, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
-		log.Debugf("%s:subscribe:> set websocket upgrade err: %s", logPrefix, err.Error())
+		log.V(logLevel).Debugf("%s:subscribe:> set websocket upgrade err: %s", logPrefix, err.Error())
 		return
 	}
 
@@ -87,7 +87,7 @@ func EventSubscribeH(w http.ResponseWriter, r *http.Request) {
 
 	go func() {
 		<-notify
-		log.Debugf("%s:subscribe:> HTTP connection just closed.", logPrefix)
+		log.V(logLevel).Debugf("%s:subscribe:> HTTP connection just closed.", logPrefix)
 		done <- true
 	}()
 

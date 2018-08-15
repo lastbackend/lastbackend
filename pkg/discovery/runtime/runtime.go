@@ -26,6 +26,7 @@ import (
 
 const (
 	logPrefix = "discovery:runtime"
+	logLevel = 3
 )
 
 type Runtime struct {
@@ -33,11 +34,11 @@ type Runtime struct {
 }
 
 func (r *Runtime) Restore() {
-	log.Debugf("%s:restore:> restore init", logPrefix)
+	log.V(logLevel).Debugf("%s:restore:> restore init", logPrefix)
 }
 
 func (r *Runtime) Loop() {
-	log.Debugf("%s:restore:> watch endpoint start", logPrefix)
+	log.V(logLevel).Debugf("%s:restore:> watch endpoint start", logPrefix)
 	endpoint.Watch(r.ctx)
 }
 

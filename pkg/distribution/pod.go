@@ -172,7 +172,7 @@ func (p *Pod) ListByDeployment(namespace, service, deployment string) (*types.Po
 
 // SetNode - set node info to pod
 func (p *Pod) SetNode(pod *types.Pod, node *types.Node) error {
-	log.Debugf("%s:setnode:> set node for pod: %s", logPodPrefix, pod.Meta.Name)
+	log.V(logLevel).Debugf("%s:setnode:> set node for pod: %s", logPodPrefix, pod.Meta.Name)
 
 	pod.Meta.Node = node.Meta.Name
 
@@ -188,7 +188,7 @@ func (p *Pod) SetNode(pod *types.Pod, node *types.Node) error {
 // SetStatus - set state for pod
 func (p *Pod) Update(pod *types.Pod) error {
 
-	log.Debugf("%s:update:> update pod: %s", logPodPrefix, pod.Meta.Name)
+	log.V(logLevel).Debugf("%s:update:> update pod: %s", logPodPrefix, pod.Meta.Name)
 
 	if err := p.storage.Set(p.context, p.storage.Collection().Pod(),
 		p.storage.Key().Pod(pod.Meta.Namespace, pod.Meta.Service, pod.Meta.Deployment, pod.Meta.Name),
@@ -224,7 +224,7 @@ func (p *Pod) Remove(pod *types.Pod) error {
 }
 
 func (p *Pod) Watch(ch chan types.PodEvent, rev *int64) error {
-	log.Debugf("%s:watch:> watch pod, from revision %d", logPodPrefix, *rev)
+	log.V(logLevel).Debugf("%s:watch:> watch pod, from revision %d", logPodPrefix, *rev)
 
 	done := make(chan bool)
 	watcher := storage.NewWatcher()
@@ -268,7 +268,7 @@ func (p *Pod) Watch(ch chan types.PodEvent, rev *int64) error {
 }
 
 func (p *Pod) ManifestMap(node string) (*types.PodManifestMap, error) {
-	log.Debugf("%s:PodManifestMap:> ", logPodPrefix)
+	log.V(logLevel).Debugf("%s:PodManifestMap:> ", logPodPrefix)
 
 	var (
 		mf = types.NewPodManifestMap()
@@ -287,7 +287,7 @@ func (p *Pod) ManifestMap(node string) (*types.PodManifestMap, error) {
 }
 
 func (p *Pod) ManifestGet(node, pod string) (*types.PodManifest, error) {
-	log.Debugf("%s:PodManifestGet:> ", logPodPrefix)
+	log.V(logLevel).Debugf("%s:PodManifestGet:> ", logPodPrefix)
 
 	var (
 		mf = new(types.PodManifest)
@@ -306,7 +306,7 @@ func (p *Pod) ManifestGet(node, pod string) (*types.PodManifest, error) {
 }
 
 func (p *Pod) ManifestAdd(node, pod string, manifest *types.PodManifest) error {
-	log.Debugf("%s:PodManifestAdd:> ", logPodPrefix)
+	log.V(logLevel).Debugf("%s:PodManifestAdd:> ", logPodPrefix)
 
 
 	if err := p.storage.Put(p.context, p.storage.Collection().Manifest().Pod(node), pod, manifest, nil); err != nil {
@@ -318,7 +318,7 @@ func (p *Pod) ManifestAdd(node, pod string, manifest *types.PodManifest) error {
 }
 
 func (p *Pod) ManifestSet(node, pod string, manifest *types.PodManifest) error {
-	log.Debugf("%s:PodManifestSet:> ", logPodPrefix)
+	log.V(logLevel).Debugf("%s:PodManifestSet:> ", logPodPrefix)
 
 	if err := p.storage.Set(p.context, p.storage.Collection().Manifest().Pod(node), pod, manifest, nil); err != nil {
 		log.Errorf("%s:PodManifestSet:> err :%s", logPodPrefix, err.Error())
@@ -329,7 +329,7 @@ func (p *Pod) ManifestSet(node, pod string, manifest *types.PodManifest) error {
 }
 
 func (p *Pod) ManifestDel(node, pod string) error {
-	log.Debugf("%s:PodManifestDel:> %s on node %s", logPodPrefix, pod, node)
+	log.V(logLevel).Debugf("%s:PodManifestDel:> %s on node %s", logPodPrefix, pod, node)
 
 	if err := p.storage.Del(p.context, p.storage.Collection().Manifest().Pod(node), pod); err != nil {
 		log.Errorf("%s:PodManifestDel:> err :%s", logPodPrefix, err.Error())
@@ -341,7 +341,7 @@ func (p *Pod) ManifestDel(node, pod string) error {
 
 func (p *Pod) ManifestWatch(node string, ch chan types.PodManifestEvent, rev *int64) error {
 
-	log.Debugf("%s:watch:> watch pod manifest ", logPodPrefix)
+	log.V(logLevel).Debugf("%s:watch:> watch pod manifest ", logPodPrefix)
 
 	done := make(chan bool)
 	watcher := storage.NewWatcher()

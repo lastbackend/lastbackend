@@ -28,8 +28,10 @@ import (
 	"io"
 )
 
+const logLevel = 3
+
 func (r *Runtime) ImagePull(ctx context.Context, spec *types.SpecTemplateContainerImage) (io.ReadCloser, error) {
-	log.Debugf("Docker: Image pull: %s", spec.Name)
+	log.V(logLevel).Debugf("Docker: Image pull: %s", spec.Name)
 
 	options := docker.ImagePullOptions{
 		RegistryAuth: spec.Auth,
@@ -42,7 +44,7 @@ func (r *Runtime) ImagePull(ctx context.Context, spec *types.SpecTemplateContain
 }
 
 func (r *Runtime) ImagePush(ctx context.Context, spec *types.SpecTemplateContainerImage) (io.ReadCloser, error) {
-	log.Debugf("Docker: Image push: %s", spec.Name)
+	log.V(logLevel).Debugf("Docker: Image push: %s", spec.Name)
 	options := docker.ImagePushOptions{
 		RegistryAuth: spec.Auth,
 	}
@@ -70,7 +72,7 @@ func (r *Runtime) ImageBuild(ctx context.Context, stream io.Reader, spec *types.
 }
 
 func (r *Runtime) ImageRemove(ctx context.Context, ID string) error {
-	log.Debugf("Docker: Image remove: %s", ID)
+	log.V(logLevel).Debugf("Docker: Image remove: %s", ID)
 	var options docker.ImageRemoveOptions
 
 	options = docker.ImageRemoveOptions{

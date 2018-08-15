@@ -18,6 +18,11 @@
 
 package types
 
+import (
+	"github.com/lastbackend/genesis/pkg/distribution/types"
+	"strings"
+)
+
 const NetworkTypeVxLAN = "vxlan"
 
 type Network struct {
@@ -34,9 +39,21 @@ type NetworkStatus struct {
 type NetworkSpec struct {
 }
 
+type NetworkState struct {
+	SubnetSpec
+}
+
+// swagger:model types_network_interface
+type NetworkInterface struct {
+	Index int    `json:"index"`
+	Name  string `json:"name"`
+	Addr  string `json:"addr"`
+	HAddr string `json:"HAddr"`
+}
+
 type Subnet struct {
 	Runtime
-	Meta   Meta         `json:"meta"`
+	Meta   SubnetMeta         `json:"meta"`
 	Status SubnetStatus `json:"status"`
 	Spec   SubnetSpec   `json:"spec"`
 }
@@ -45,7 +62,12 @@ type SubnetStatus struct {
 	State string `json:"state"`
 }
 
-// swagger:model types_network_spec
+type SubnetMeta struct {
+	Meta
+	Node string `json:"node"`
+}
+
+// swagger:model subnet_spec
 type SubnetSpec struct {
 	// Subnet state
 	State string `json:"state"`
@@ -59,19 +81,11 @@ type SubnetSpec struct {
 	Addr string `json:"addr"`
 }
 
-type NetworkState struct {
-	SubnetSpec
+func SubnetGetNameFromCIDR(CIDR string) string {
+	return strings.Replace(CIDR, "/", ":", -1)
 }
 
-// swagger:model types_network_interface
-type NetworkInterface struct {
-	Index int    `json:"index"`
-	Name  string `json:"name"`
-	Addr  string `json:"addr"`
-	HAddr string `json:"HAddr"`
-}
-
-func (n *SubnetSpec) Equal(nt *SubnetSpec) bool {
+func SubnetSpecEqual (n *SubnetSpec, nt *SubnetSpec)bool {
 
 	switch false {
 	case n.Type == nt.Type:
@@ -91,3 +105,11 @@ func (n *SubnetSpec) Equal(nt *SubnetSpec) bool {
 	}
 	return true
 }
+
+func (s Subnet) SelfLink() string {
+	if s.Meta.SelfLink == types.EmptyString {
+		s.Meta.SelfLink = s.Meta.Name
+	}
+	return s.Meta.SelfLink
+}
+

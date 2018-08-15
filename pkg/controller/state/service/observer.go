@@ -29,7 +29,10 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/controller/state/cluster"
 )
 
-const logPrefix = "state:service"
+const (
+	logLevel = 3
+	logPrefix = "state:service"
+)
 
 type ServiceState struct {
 	lock sync.Mutex
@@ -59,7 +62,7 @@ type ServiceState struct {
 
 func (ss *ServiceState) Restore() error {
 
-	log.Debugf("%s:restore state for service: %s", logPrefix, ss.service.SelfLink())
+	log.V(logLevel).Debugf("%s:restore state for service: %s", logPrefix, ss.service.SelfLink())
 
 	var (
 		err error
@@ -166,21 +169,21 @@ func (ss *ServiceState) Observe() {
 		select {
 
 		case p := <-ss.observers.pod:
-			log.Debugf("%s:observe:pod:> %v", logPrefix, p)
+			log.V(logLevel).Debugf("%s:observe:pod:> %v", logPrefix, p)
 			if err := PodObserve(ss, p); err != nil {
 				log.Errorf("%s:observe:pod err:> %s", logPrefix, err.Error())
 			}
 			break
 
 		case d := <-ss.observers.deployment:
-			log.Debugf("%s:observe:deployment:> %v", logPrefix, d)
+			log.V(logLevel).Debugf("%s:observe:deployment:> %v", logPrefix, d)
 			if err := deploymentObserve(ss, d); err != nil {
 				log.Errorf("%s:observe:deployment err:> %s", logPrefix, err.Error())
 			}
 			break
 
 		case s := <-ss.observers.service:
-			log.Debugf("%s:observe:service:> %v", logPrefix, s)
+			log.V(logLevel).Debugf("%s:observe:service:> %v", logPrefix, s)
 			if err := serviceObserve(ss, s); err != nil {
 				log.Errorf("%s:observe:service err:> %s", logPrefix, err.Error())
 			}

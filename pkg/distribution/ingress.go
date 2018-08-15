@@ -40,7 +40,7 @@ func (n *Ingress) List() (*types.IngressList, error) {
 	list := types.NewIngressList()
 
 	if err := n.storage.Map(n.context, n.storage.Collection().Ingress(), "", list, nil); err != nil {
-		log.Debugf("%s:list:> get ingress list err: %v", logIngressPrefix, err)
+		log.V(logLevel).Debugf("%s:list:> get ingress list err: %v", logIngressPrefix, err)
 		return nil, err
 	}
 
@@ -49,7 +49,7 @@ func (n *Ingress) List() (*types.IngressList, error) {
 
 func (n *Ingress) Create(opts *types.IngressCreateOptions) (*types.Ingress, error) {
 
-	log.Debugf("%s:create:> create ingress in cluster", logIngressPrefix)
+	log.V(logLevel).Debugf("%s:create:> create ingress in cluster", logIngressPrefix)
 
 	ig := new(types.Ingress)
 	ig.Meta.SetDefault()
@@ -60,7 +60,7 @@ func (n *Ingress) Create(opts *types.IngressCreateOptions) (*types.Ingress, erro
 
 	if err := n.storage.Put(n.context, n.storage.Collection().Ingress(),
 		n.storage.Key().Ingress(ig.Meta.Name), ig, nil); err != nil {
-		log.Debugf("%s:create:> insert ingress err: %v", logIngressPrefix, err)
+		log.V(logLevel).Debugf("%s:create:> insert ingress err: %v", logIngressPrefix, err)
 		return nil, err
 	}
 

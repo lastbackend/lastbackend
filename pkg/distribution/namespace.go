@@ -164,7 +164,7 @@ func (n *Namespace) Remove(namespace *types.Namespace) error {
 // Watch namespace changes
 func (n *Namespace) Watch(ch chan types.NamespaceEvent) error {
 
-	log.Debugf("%s:watch:> watch namespace", logNamespacePrefix)
+	log.V(logLevel).Debugf("%s:watch:> watch namespace", logNamespacePrefix)
 
 	done := make(chan bool)
 	watcher := storage.NewWatcher()

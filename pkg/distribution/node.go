@@ -41,13 +41,13 @@ type Node struct {
 }
 
 func (n *Node) List() (*types.NodeList, error) {
-	log.Debugf("%s:list:> get nodes list", logNodePrefix)
+	log.V(logLevel).Debugf("%s:list:> get nodes list", logNodePrefix)
 
 	nodes := types.NewNodeList()
 
 	err := n.storage.List(n.context, n.storage.Collection().Node(), "", nodes, nil)
 	if err != nil {
-		log.Debugf("%s:list:> get nodes list err: %v", logNodePrefix, err)
+		log.V(logLevel).Debugf("%s:list:> get nodes list err: %v", logNodePrefix, err)
 		return nil, err
 	}
 	return nodes, nil
@@ -55,30 +55,26 @@ func (n *Node) List() (*types.NodeList, error) {
 
 func (n *Node) Put(opts *types.NodeCreateOptions) (*types.Node, error) {
 
-	log.Debugf("%s:create:> create node in cluster", logNodePrefix)
+	log.V(logLevel).Debugf("%s:create:> create node in cluster", logNodePrefix)
 
 	ni := new(types.Node)
 	ni.Meta.SetDefault()
 
 	ni.Meta.Name = opts.Meta.Name
 	ni.Meta.Token = opts.Meta.Token
-	ni.Meta.Region = opts.Meta.Region
-	ni.Meta.Provider = opts.Meta.Provider
 
-	ni.Info = opts.Info
+	ni.Meta.NodeInfo = opts.Info
 	ni.Status = opts.Status
-	ni.Network = opts.Network
+	ni.Status.Online = true
 
 	if ni.Meta.Token == "" {
 		ni.Meta.Token = generator.GenerateRandomString(32)
 	}
 
-	ni.Online = true
-
 	ni.SelfLink()
 
 	if err := n.storage.Put(n.context, n.storage.Collection().Node(), n.storage.Key().Node(ni.Meta.Name), ni, nil); err != nil {
-		log.Debugf("%s:create:> insert node err: %v", logNodePrefix, err)
+		log.V(logLevel).Debugf("%s:create:> insert node err: %v", logNodePrefix, err)
 		return nil, err
 	}
 
@@ -106,82 +102,11 @@ func (n *Node) Get(hostname string) (*types.Node, error) {
 	return node, nil
 }
 
-func (n *Node) Set(node *types.Node, meta *types.NodeUpdateMetaOptions) error {
+func (n *Node) Set(node *types.Node) error {
 
-	log.V(logLevel).Debugf("%s:setmeta:> update Node %#v", logNodePrefix, meta)
-	if meta == nil {
-		log.V(logLevel).Errorf("%s:setmeta:> update Node err: %v", logNodePrefix, errors.New(errors.ArgumentIsEmpty))
-		return errors.New(errors.ArgumentIsEmpty)
-	}
-
-	node.Meta.Set(meta)
-
+	log.V(logLevel).Debugf("%s:setmeta:> update Node %#v", logNodePrefix, node)
 	if err := n.storage.Set(n.context, n.storage.Collection().Node(), n.storage.Key().Node(node.Meta.Name), node, nil); err != nil {
 		log.V(logLevel).Errorf("%s:setmeta:> update Node meta err: %v", logNodePrefix, err)
-		return err
-	}
-
-	return nil
-}
-
-
-func (n *Node) SetOnline(node *types.Node) error {
-
-	node.Online = true
-
-	if err := n.storage.Set(n.context, n.storage.Collection().Node(), n.storage.Key().Node(node.Meta.Name), node, nil); err != nil {
-		log.Errorf("%s:setonline:> set node online state error: %v", logNodePrefix, err)
-		return err
-	}
-
-	return nil
-}
-
-func (n *Node) SetOffline(node *types.Node) error {
-
-	node.Online = false
-
-	if err := n.storage.Set(n.context, n.storage.Collection().Node(), n.storage.Key().Node(node.Meta.Name), node, nil); err != nil {
-		log.Errorf("%s:setoffline:> set node offline state error: %v", logNodePrefix, err)
-		return err
-	}
-
-	return nil
-
-}
-
-
-
-func (n *Node) SetStatus(node *types.Node, status types.NodeStatus) error {
-
-	node.Status = status
-
-	if err := n.storage.Set(n.context, n.storage.Collection().Node(), n.storage.Key().Node(node.Meta.Name), node, nil); err != nil {
-		log.Errorf("%s:setstatus:> set node offline state error: %v", logNodePrefix, err)
-		return err
-	}
-
-	return nil
-}
-
-func (n *Node) SetInfo(node *types.Node, info types.NodeInfo) error {
-
-	node.Info = info
-
-	if err := n.storage.Set(n.context, n.storage.Collection().Node(), n.storage.Key().Node(node.Meta.Name), node, nil); err != nil {
-		log.Errorf("%s:setinfo:> set node info error: %v", logNodePrefix, err)
-		return err
-	}
-
-	return nil
-}
-
-func (n *Node) SetNetwork(node *types.Node, network types.SubnetSpec) error {
-
-	node.Network = network
-
-	if err := n.storage.Set(n.context, n.storage.Collection().Node(), n.storage.Key().Node(node.Meta.Name), node, nil); err != nil {
-		log.Errorf("%s:setnetwork:> set node network error: %v", logNodePrefix, err)
 		return err
 	}
 
@@ -203,7 +128,7 @@ func (n *Node) Remove(node *types.Node) error {
 // Watch node changes
 func (n *Node) Watch(ch chan types.NodeEvent, rev *int64) error {
 
-	log.Debugf("%s:watch:> watch node", logNodePrefix)
+	log.V(logLevel).Debugf("%s:watch:> watch node", logNodePrefix)
 
 	done := make(chan bool)
 	watcher := storage.NewWatcher()

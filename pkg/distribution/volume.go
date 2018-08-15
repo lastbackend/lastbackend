@@ -162,7 +162,7 @@ func (v *Volume) Remove(volume *types.Volume) error {
 // Watch service changes
 func (v *Volume) Watch(ch chan types.VolumeEvent, rev *int64) error {
 
-	log.Debugf("%s:watch:> watch volume by spec changes", logVolumePrefix)
+	log.V(logLevel).Debugf("%s:watch:> watch volume by spec changes", logVolumePrefix)
 
 	done := make(chan bool)
 	watcher := storage.NewWatcher()
@@ -206,7 +206,7 @@ func (v *Volume) Watch(ch chan types.VolumeEvent, rev *int64) error {
 }
 
 func (v *Volume) ManifestMap(node string) (*types.VolumeManifestMap, error) {
-	log.Debugf("%s:VolumeManifestMap:> ", logVolumePrefix)
+	log.V(logLevel).Debugf("%s:VolumeManifestMap:> ", logVolumePrefix)
 
 	var (
 		mf = types.NewVolumeManifestMap()
@@ -220,7 +220,7 @@ func (v *Volume) ManifestMap(node string) (*types.VolumeManifestMap, error) {
 }
 
 func (v *Volume) ManifestGet(node, volume string) (*types.VolumeManifest, error) {
-	log.Debugf("%s:VolumeManifestGet:> ", logVolumePrefix)
+	log.V(logLevel).Debugf("%s:VolumeManifestGet:> ", logVolumePrefix)
 
 	var (
 		mf = new(types.VolumeManifest)
@@ -240,7 +240,7 @@ func (v *Volume) ManifestGet(node, volume string) (*types.VolumeManifest, error)
 }
 
 func (v *Volume) ManifestAdd(node, volume string, manifest *types.VolumeManifest) error {
-	log.Debugf("%s:VolumeManifestAdd:> ", logVolumePrefix)
+	log.V(logLevel).Debugf("%s:VolumeManifestAdd:> ", logVolumePrefix)
 
 
 	if err := v.storage.Put(v.context, v.storage.Collection().Manifest().Volume(node), volume, manifest, nil); err != nil {
@@ -252,7 +252,7 @@ func (v *Volume) ManifestAdd(node, volume string, manifest *types.VolumeManifest
 }
 
 func (v *Volume) ManifestSet(node, volume string, manifest *types.VolumeManifest) error {
-	log.Debugf("%s:VolumeManifestSet:> ", logVolumePrefix)
+	log.V(logLevel).Debugf("%s:VolumeManifestSet:> ", logVolumePrefix)
 
 	if err := v.storage.Set(v.context, v.storage.Collection().Manifest().Volume(node), volume, manifest, nil); err != nil {
 		log.Errorf("%s:VolumeManifestSet:> err :%s", logVolumePrefix, err.Error())
@@ -263,7 +263,7 @@ func (v *Volume) ManifestSet(node, volume string, manifest *types.VolumeManifest
 }
 
 func (v *Volume) ManifestDel(node, volume string) error {
-	log.Debugf("%s:DelVolumeManifest:> ", logVolumePrefix)
+	log.V(logLevel).Debugf("%s:DelVolumeManifest:> ", logVolumePrefix)
 
 	if err := v.storage.Del(v.context, v.storage.Collection().Manifest().Volume(node), volume); err != nil {
 		log.Errorf("%s:PodManifestDel:> err :%s", logVolumePrefix, err.Error())
@@ -275,7 +275,7 @@ func (v *Volume) ManifestDel(node, volume string) error {
 
 func (v *Volume) ManifestWatch(node string, ch chan types.VolumeManifestEvent, rev *int64) error {
 
-	log.Debugf("%s:watch:> watch volume manifest ", logVolumePrefix)
+	log.V(logLevel).Debugf("%s:watch:> watch volume manifest ", logVolumePrefix)
 
 	done := make(chan bool)
 	watcher := storage.NewWatcher()

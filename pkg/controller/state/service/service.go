@@ -36,14 +36,14 @@ const (
 // serviceObserve manage handlers based on service state
 func serviceObserve(ss *ServiceState, s *types.Service) error {
 
-	log.Debugf("%s:> observe start: %s > %s", logServicePrefix, s.SelfLink(), s.Status.State)
+	log.V(logLevel).Debugf("%s:> observe start: %s > %s", logServicePrefix, s.SelfLink(), s.Status.State)
 
 	switch s.Status.State {
 
 	// Check service created state triggers
 	case types.StateCreated:
 		if err := handleServiceStateCreated(ss, s); err != nil {
-			log.Debugf("%s:observe:serviceStateCreated err:> %s", logPrefix, err.Error())
+			log.V(logLevel).Debugf("%s:observe:serviceStateCreated err:> %s", logPrefix, err.Error())
 			return err
 		}
 		break
@@ -51,7 +51,7 @@ func serviceObserve(ss *ServiceState, s *types.Service) error {
 	// Check service provision state triggers
 	case types.StateProvision:
 		if err := handleServiceStateProvision(ss, s); err != nil {
-			log.Debugf("%s:observe:serviceStateProvision err:> %s", logPrefix, err.Error())
+			log.V(logLevel).Debugf("%s:observe:serviceStateProvision err:> %s", logPrefix, err.Error())
 			return err
 		}
 		break
@@ -59,7 +59,7 @@ func serviceObserve(ss *ServiceState, s *types.Service) error {
 	// Check service ready state triggers
 	case types.StateReady:
 		if err := handleServiceStateReady(ss, s); err != nil {
-			log.Debugf("%s:observe:serviceStateReady err:> %s", logPrefix, err.Error())
+			log.V(logLevel).Debugf("%s:observe:serviceStateReady err:> %s", logPrefix, err.Error())
 			return err
 		}
 		break
@@ -67,7 +67,7 @@ func serviceObserve(ss *ServiceState, s *types.Service) error {
 	// Check service error state triggers
 	case types.StateError:
 		if err := handleServiceStateError(ss, s); err != nil {
-			log.Debugf("%s:observe:serviceStateError err:> %s", logPrefix, err.Error())
+			log.V(logLevel).Debugf("%s:observe:serviceStateError err:> %s", logPrefix, err.Error())
 			return err
 		}
 		break
@@ -75,7 +75,7 @@ func serviceObserve(ss *ServiceState, s *types.Service) error {
 		// Check service error state triggers
 	case types.StateDegradation:
 		if err := handleServiceStateDegradation(ss, s); err != nil {
-			log.Debugf("%s:observe:serviceStateDegradation err:> %s", logPrefix, err.Error())
+			log.V(logLevel).Debugf("%s:observe:serviceStateDegradation err:> %s", logPrefix, err.Error())
 			return err
 		}
 		break
@@ -83,7 +83,7 @@ func serviceObserve(ss *ServiceState, s *types.Service) error {
 	// Run service destroy process
 	case types.StateDestroy:
 		if err := handleServiceStateDestroy(ss, s); err != nil {
-			log.Debugf("%s:observe:serviceStateDestroy err:> %s", logPrefix, err.Error())
+			log.V(logLevel).Debugf("%s:observe:serviceStateDestroy err:> %s", logPrefix, err.Error())
 			return err
 		}
 		break
@@ -91,7 +91,7 @@ func serviceObserve(ss *ServiceState, s *types.Service) error {
 	// Remove service from storage if it is already destroyed
 	case types.StateDestroyed:
 		if err := handleServiceStateDestroyed(ss, s); err != nil {
-			log.Debugf("%s:observe:serviceStateDestroyed err:> %s", logPrefix, err.Error())
+			log.V(logLevel).Debugf("%s:observe:serviceStateDestroyed err:> %s", logPrefix, err.Error())
 			return err
 		}
 		break
@@ -106,7 +106,7 @@ func serviceObserve(ss *ServiceState, s *types.Service) error {
 		return err
 	}
 
-	log.Debugf("%s:> observe finish: %s > %s", logServicePrefix, s.SelfLink(), s.Status.State)
+	log.V(logLevel).Debugf("%s:> observe finish: %s > %s", logServicePrefix, s.SelfLink(), s.Status.State)
 
 	return nil
 }
@@ -114,7 +114,7 @@ func serviceObserve(ss *ServiceState, s *types.Service) error {
 // handleServiceStateCreated handles service created state
 func handleServiceStateCreated(ss *ServiceState, svc *types.Service) error {
 
-	log.Debugf("%s:> handleServiceStateCreated: %s > %s", logServicePrefix, svc.SelfLink(), svc.Status.State)
+	log.V(logLevel).Debugf("%s:> handleServiceStateCreated: %s > %s", logServicePrefix, svc.SelfLink(), svc.Status.State)
 
 	// Endpoint provision call
 	if err := serviceEndpointProvision(ss, svc); err != nil {
@@ -134,7 +134,7 @@ func handleServiceStateCreated(ss *ServiceState, svc *types.Service) error {
 // handleServiceStateProvision handles service provision state
 func handleServiceStateProvision(ss *ServiceState, svc *types.Service) error {
 
-	log.Debugf("%s:> handleServiceStateProvision: %s > %s", logServicePrefix, svc.SelfLink(), svc.Status.State)
+	log.V(logLevel).Debugf("%s:> handleServiceStateProvision: %s > %s", logServicePrefix, svc.SelfLink(), svc.Status.State)
 
 	// Endpoint provision call
 	if err := serviceEndpointProvision(ss, svc); err != nil {
@@ -154,7 +154,7 @@ func handleServiceStateProvision(ss *ServiceState, svc *types.Service) error {
 // handleServiceStateReady handles service ready state
 func handleServiceStateReady(ss *ServiceState, svc *types.Service) error {
 
-	log.Debugf("%s:> handleServiceStateReady: %s > %s", logServicePrefix, svc.SelfLink(), svc.Status.State)
+	log.V(logLevel).Debugf("%s:> handleServiceStateReady: %s > %s", logServicePrefix, svc.SelfLink(), svc.Status.State)
 
 	return nil
 }
@@ -162,7 +162,7 @@ func handleServiceStateReady(ss *ServiceState, svc *types.Service) error {
 // handleServiceStateError handles service error state
 func handleServiceStateError(ss *ServiceState, svc *types.Service) error {
 
-	log.Debugf("%s:> handleServiceStateError: %s > %s", logServicePrefix, svc.SelfLink(), svc.Status.State)
+	log.V(logLevel).Debugf("%s:> handleServiceStateError: %s > %s", logServicePrefix, svc.SelfLink(), svc.Status.State)
 
 	return nil
 }
@@ -170,7 +170,7 @@ func handleServiceStateError(ss *ServiceState, svc *types.Service) error {
 // handleServiceStateDegradation handles service degradation state
 func handleServiceStateDegradation(ss *ServiceState, svc *types.Service) error {
 
-	log.Debugf("%s:> handleServiceStateDegradation: %s > %s", logServicePrefix, svc.SelfLink(), svc.Status.State)
+	log.V(logLevel).Debugf("%s:> handleServiceStateDegradation: %s > %s", logServicePrefix, svc.SelfLink(), svc.Status.State)
 
 	return nil
 }
@@ -178,7 +178,7 @@ func handleServiceStateDegradation(ss *ServiceState, svc *types.Service) error {
 // handleServiceStateDestroy handles service destroy state
 func handleServiceStateDestroy(ss *ServiceState, svc *types.Service) (err error) {
 
-	log.Debugf("%s:> handleServiceStateDestroy: %s > %s", logServicePrefix, svc.SelfLink(), svc.Status.State)
+	log.V(logLevel).Debugf("%s:> handleServiceStateDestroy: %s > %s", logServicePrefix, svc.SelfLink(), svc.Status.State)
 
 	if ss.endpoint.endpoint != nil  {
 		if err = endpointDel(ss); err != nil {
@@ -223,7 +223,7 @@ func handleServiceStateDestroy(ss *ServiceState, svc *types.Service) (err error)
 // handleServiceStateDestroyed handles service destroyed state
 func handleServiceStateDestroyed(ss *ServiceState, svc *types.Service) (err error) {
 
-	log.Debugf("%s:> handleServiceStateDestroyed: %s > %s", logServicePrefix, svc.SelfLink(), svc.Status.State)
+	log.V(logLevel).Debugf("%s:> handleServiceStateDestroyed: %s > %s", logServicePrefix, svc.SelfLink(), svc.Status.State)
 
 
 	if err = endpointDel(ss); err != nil {

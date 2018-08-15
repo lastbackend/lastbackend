@@ -41,11 +41,11 @@ func New() (*Runtime, error) {
 		r   = new(Runtime)
 	)
 
-	log.Debug("Use docker CRI")
+	log.V(logLevel).Debug("Use docker CRI")
 
 	if viper.GetString("runtime.docker.certs") != "" {
 
-		log.Debugf("Create Docker secure client: %s", viper.GetString("runtime.docker.certs"))
+		log.V(logLevel).Debugf("Create Docker secure client: %s", viper.GetString("runtime.docker.certs"))
 
 		options := tlsconfig.Options{
 			CAFile:             filepath.Join(viper.GetString("runtime.docker.certs"), "ca.pem"),
@@ -92,11 +92,11 @@ func NewWithHost(host string) (*Runtime, error) {
 		r   = new(Runtime)
 	)
 
-	log.Debugf("Use docker CRI with host %s", host)
+	log.V(logLevel).Debugf("Use docker CRI with host %s", host)
 
 	if viper.GetString("runtime.docker.certs") != "" {
 
-		log.Debugf("Create Docker secure client: %s", viper.GetString("runtime.docker.certs"))
+		log.V(logLevel).Debugf("Create Docker secure client: %s", viper.GetString("runtime.docker.certs"))
 
 		options := tlsconfig.Options{
 			CAFile:             filepath.Join(viper.GetString("runtime.docker.certs"), "ca.pem"),

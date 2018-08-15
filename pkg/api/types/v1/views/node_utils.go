@@ -30,8 +30,6 @@ func (nv *NodeView) New(obj *types.Node) *Node {
 	n := Node{}
 	n.Meta = nv.ToNodeMeta(obj.Meta)
 	n.Status = nv.ToNodeStatus(obj.Status)
-	n.Info = nv.ToNodeInfo(obj.Info)
-	n.Status.Online = obj.Online
 	return &n
 }
 
@@ -122,7 +120,12 @@ func (nv *NodeView) NewList(obj *types.NodeList) *NodeList {
 
 func (nv *NodeView) NewManifest(obj *types.NodeManifest) *NodeManifest {
 
-	manifest := NodeManifest{}
+	manifest := NodeManifest{
+		Network: make(map[string]*types.SubnetManifest, 0),
+		Pods: make(map[string]*types.PodManifest, 0),
+		Volumes: make(map[string]*types.VolumeManifest, 0),
+		Endpoints: make(map[string]*types.EndpointManifest, 0),
+	}
 
 	if obj == nil {
 		return nil

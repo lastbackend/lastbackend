@@ -95,24 +95,24 @@ func testServiceObserver(t *testing.T, name, werr string, wst *ServiceState, sta
 		}
 
 		// check endpoint
-		if wst.endpoint != nil {
-			if !assert.NotNil(t, state.endpoint, "endpoint should be not nil") {
+		if wst.endpoint.endpoint != nil {
+			if !assert.NotNil(t, state.endpoint.endpoint, "endpoint should be not nil") {
 				return
 			}
-			if !assert.Equal(t, wst.endpoint.Meta.Name, state.endpoint.Meta.Name,
+			if !assert.Equal(t, wst.endpoint.endpoint.Meta.Name, state.endpoint.endpoint.Meta.Name,
 				"endpoint is different") {
 				return
 			}
 
-			if !assert.Equal(t, wst.endpoint.Spec.PortMap, state.endpoint.Spec.PortMap,
+			if !assert.Equal(t, wst.endpoint.endpoint.Spec.PortMap, state.endpoint.endpoint.Spec.PortMap,
 				"endpoint portmap is different") {
 				return
 			}
 
 		}
 
-		if wst.endpoint == nil {
-			if !assert.Nil(t, state.endpoint, "endpoint should be nil") {
+		if wst.endpoint.endpoint == nil {
+			if !assert.Nil(t, state.endpoint.endpoint, "endpoint should be nil") {
 				return
 			}
 		}
@@ -225,24 +225,24 @@ func testStatusState(t *testing.T, fn func(*ServiceState) error, name string, ws
 		}
 
 		// check endpoint
-		if wst.endpoint != nil {
+		if wst.endpoint.endpoint != nil {
 			if !assert.NotNil(t, state.endpoint, "endpoint should be not nil") {
 				return
 			}
-			if !assert.Equal(t, wst.endpoint.Meta.Name, state.endpoint.Meta.Name,
+			if !assert.Equal(t, wst.endpoint.endpoint.Meta.Name, state.endpoint.endpoint.Meta.Name,
 				"endpoint is different") {
 				return
 			}
 
-			if !assert.Equal(t, wst.endpoint.Spec.PortMap, state.endpoint.Spec.PortMap,
+			if !assert.Equal(t, wst.endpoint.endpoint.Spec.PortMap, state.endpoint.endpoint.Spec.PortMap,
 				"endpoint portmap is different") {
 				return
 			}
 
 		}
 
-		if wst.endpoint == nil {
-			if !assert.Nil(t, state.endpoint, "endpoint should be nil") {
+		if wst.endpoint.endpoint == nil {
+			if !assert.Nil(t, state.endpoint.endpoint, "endpoint should be nil") {
 				return
 			}
 		}
@@ -372,7 +372,7 @@ func TestHandleServiceStateCreated(t *testing.T) {
 
 		s.want.state.deployment.provision = dp
 		s.want.state.deployment.list[dp.SelfLink()] = dp
-		s.want.state.endpoint = getEndpointAsset(s.args.svc)
+		s.want.state.endpoint.endpoint = getEndpointAsset(s.args.svc)
 
 		return s
 	}())
@@ -385,8 +385,8 @@ func TestHandleServiceStateCreated(t *testing.T) {
 		s.args.svc.Spec.Network.Ports[80] = "80/tcp"
 
 		s.args.state = getServiceStateAsset(s.args.svc)
-		s.args.state.endpoint = getEndpointAsset(s.args.svc)
-		s.args.state.endpoint.Spec.PortMap[9000] = "9000/udp"
+		s.args.state.endpoint.endpoint = getEndpointAsset(s.args.svc)
+		s.args.state.endpoint.endpoint.Spec.PortMap[9000] = "9000/udp"
 
 		s.want.err = types.EmptyString
 		s.want.state = getServiceStateAsset(s.args.svc)
@@ -396,7 +396,7 @@ func TestHandleServiceStateCreated(t *testing.T) {
 		s.want.state.deployment.list[dp.SelfLink()] = dp
 
 		s.args.svc.Spec.Network.Ports[8080] = "8080/tcp"
-		s.want.state.endpoint = getEndpointAsset(s.args.svc)
+		s.want.state.endpoint.endpoint = getEndpointAsset(s.args.svc)
 
 		return s
 	}())
@@ -409,7 +409,7 @@ func TestHandleServiceStateCreated(t *testing.T) {
 		s.args.svc.Spec.Network.Ports[80] = "80/tcp"
 
 		s.args.state = getServiceStateAsset(s.args.svc)
-		s.args.state.endpoint = getEndpointAsset(s.args.svc)
+		s.args.state.endpoint.endpoint = getEndpointAsset(s.args.svc)
 
 		s.args.svc.Spec.Network.Ports = make(map[uint16]string)
 
@@ -511,7 +511,7 @@ func TestHandleServiceStateProvision(t *testing.T) {
 
 		s.want.state.deployment.provision = dp
 		s.want.state.deployment.list[dp.SelfLink()] = dp
-		s.want.state.endpoint = getEndpointAsset(s.args.svc)
+		s.want.state.endpoint.endpoint = getEndpointAsset(s.args.svc)
 
 		return s
 	}())
@@ -524,8 +524,8 @@ func TestHandleServiceStateProvision(t *testing.T) {
 		s.args.svc.Spec.Network.Ports[80] = "80/tcp"
 
 		s.args.state = getServiceStateAsset(s.args.svc)
-		s.args.state.endpoint = getEndpointAsset(s.args.svc)
-		s.args.state.endpoint.Spec.PortMap[9000] = "9000/udp"
+		s.args.state.endpoint.endpoint = getEndpointAsset(s.args.svc)
+		s.args.state.endpoint.endpoint.Spec.PortMap[9000] = "9000/udp"
 
 		s.want.err = types.EmptyString
 		s.want.state = getServiceStateAsset(s.args.svc)
@@ -536,7 +536,7 @@ func TestHandleServiceStateProvision(t *testing.T) {
 
 		s.args.svc.Spec.Network.Ports[80] = "8000/tcp"
 		s.args.svc.Spec.Network.Ports[8080] = "8080/tcp"
-		s.want.state.endpoint = getEndpointAsset(s.args.svc)
+		s.want.state.endpoint.endpoint = getEndpointAsset(s.args.svc)
 
 		return s
 	}())
@@ -550,7 +550,7 @@ func TestHandleServiceStateProvision(t *testing.T) {
 		s.args.svc.Spec.Network.Ports[80] = "80/tcp"
 
 		s.args.state = getServiceStateAsset(s.args.svc)
-		s.args.state.endpoint = getEndpointAsset(s.args.svc)
+		s.args.state.endpoint.endpoint = getEndpointAsset(s.args.svc)
 
 		s.args.svc.Spec.Network.Ports = make(map[uint16]string)
 
@@ -819,13 +819,13 @@ func TestHandleServiceStateDestroy(t *testing.T) {
 		s.args.svc.Spec.Network.Ports[80] = "80/tcp"
 
 		s.args.state = getServiceStateAsset(s.args.svc)
-		s.args.state.endpoint = getEndpointAsset(s.args.svc)
+		s.args.state.endpoint.endpoint = getEndpointAsset(s.args.svc)
 
 		s.want.err = types.EmptyString
 
 		s.want.state = getServiceStateAsset(s.args.svc)
 		s.want.state.service = nil
-		s.want.state.endpoint = nil
+		s.want.state.endpoint.endpoint = nil
 		return s
 	}())
 
@@ -878,7 +878,7 @@ func TestHandleServiceStateDestroy(t *testing.T) {
 		s.args.state.deployment.list[dp1.SelfLink()] = dp1
 		s.args.state.deployment.list[dp2.SelfLink()] = dp2
 
-		s.args.state.endpoint = getEndpointAsset(s.args.svc)
+		s.args.state.endpoint.endpoint = getEndpointAsset(s.args.svc)
 
 		cdp1 := *dp1
 		cdp2 := *dp2
@@ -895,7 +895,7 @@ func TestHandleServiceStateDestroy(t *testing.T) {
 		cdp1.Status.State = types.StateDestroy
 		cdp2.Status.State = types.StateDestroy
 
-		s.want.state.endpoint = nil
+		s.want.state.endpoint.endpoint = nil
 
 		return s
 	}())
@@ -942,13 +942,13 @@ func TestHandleServiceStateDestroyed(t *testing.T) {
 		s.args.svc.Spec.Network.Ports[80] = "80/tcp"
 
 		s.args.state = getServiceStateAsset(s.args.svc)
-		s.args.state.endpoint = getEndpointAsset(s.args.svc)
+		s.args.state.endpoint.endpoint = getEndpointAsset(s.args.svc)
 
 		s.want.err = types.EmptyString
 
 		s.want.state = getServiceStateAsset(s.args.svc)
 		s.want.state.service = nil
-		s.want.state.endpoint = nil
+		s.want.state.endpoint.endpoint = nil
 
 		return s
 	}())
@@ -1004,7 +1004,7 @@ func TestHandleServiceStateDestroyed(t *testing.T) {
 		s.args.state.deployment.list[dp1.SelfLink()] = dp1
 		s.args.state.deployment.list[dp2.SelfLink()] = dp2
 
-		s.args.state.endpoint = getEndpointAsset(s.args.svc)
+		s.args.state.endpoint.endpoint = getEndpointAsset(s.args.svc)
 
 		cdp1 := *dp1
 		cdp2 := *dp2
@@ -1021,7 +1021,7 @@ func TestHandleServiceStateDestroyed(t *testing.T) {
 		cdp1.Status.State = types.StateDestroy
 		cdp2.Status.State = types.StateDestroy
 
-		s.want.state.endpoint = nil
+		s.want.state.endpoint.endpoint = nil
 		s.want.state.service.Status.State = types.StateDestroy
 
 		return s

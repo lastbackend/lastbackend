@@ -30,6 +30,7 @@ const (
 	writeWait  = 10 * time.Second
 	pongWait   = 10 * time.Second
 	pingPeriod = (pongWait * 9) / 10
+  logLevel = 3
 )
 
 type Socket struct {
@@ -194,7 +195,7 @@ func (s *Socket) listen() {
 				case websocket.CloseNormalClosure,
 					websocket.CloseGoingAway,
 					websocket.CloseNoStatusReceived:
-					log.Debug("Web socket closed by client:", err)
+					log.V(logLevel).Debug("Web socket closed by client:", err)
 					s.end <- nil
 					return
 				}
@@ -227,7 +228,7 @@ func (s *Socket) Disconnect() {
 func (s *Socket) End() error {
 	select {
 	case e := <-s.end:
-		log.Debug("Socket ended")
+		log.V(logLevel).Debug("Socket ended")
 		return e
 	}
 }

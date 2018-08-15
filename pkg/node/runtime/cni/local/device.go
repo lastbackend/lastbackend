@@ -16,30 +16,32 @@
 // from Last.Backend LLC.
 //
 
-package cache
+package local
 
-import "context"
+import (
+	"net"
+	"strings"
+)
 
-const logLevel = 3
+func getInterface () *net.Interface {
 
-type Cache struct {
-	node    *CacheNodeManifest
-	ingress *CacheIngressManifest
-}
+	ifas, err := net.Interfaces()
+	if err != nil {
+		return nil
+	}
 
-type Cleaner func(ctx context.Context) error
+	for _, ifa := range ifas {
+		ips, err := ifa.Addrs()
+		if err != nil {
+			return nil
+		}
 
-func (c *Cache) Node() *CacheNodeManifest {
-	return c.node
-}
+		for _, ip := range ips {
+			if ip.String() == "127.0.0.1" || strings.HasPrefix(ifa.Name, "lo") {
+				return &ifa
+			}
+		}
+	}
 
-func (c *Cache) Ingress() *CacheIngressManifest {
-	return c.ingress
-}
-
-func NewCache() *Cache {
-	c := new(Cache)
-	c.node = NewCacheNodeManifest()
-	c.ingress = NewCacheIngressSpec()
-	return c
+	return nil
 }

@@ -85,7 +85,7 @@ func other(w dns.ResponseWriter, r *dns.Msg) {
 			}
 		}
 	case dns.OpcodeUpdate:
-		log.Debugf("%s:other:> dns.OpcodeUpdate", logPrefix)
+		log.V(logLevel).Debugf("%s:other:> dns.OpcodeUpdate", logPrefix)
 	}
 
 	if r.IsTsig() != nil {
@@ -96,7 +96,7 @@ func other(w dns.ResponseWriter, r *dns.Msg) {
 		}
 	}
 
-	log.Debugf("%s:other:> send message info  %#v", logPrefix, m)
+	log.V(logLevel).Debugf("%s:other:> send message info  %#v", logPrefix, m)
 
 	w.WriteMsg(m)
 }

@@ -26,6 +26,8 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/log"
 )
 
+const logLevel = 3
+
 // NewConnectEventt - send ingress info event after
 // ingress is successful accepted and each hour
 func NewConnectEvent(ctx context.Context) error {
@@ -53,7 +55,7 @@ func NewRouteStatusEvent(ctx context.Context, route string) error {
 		return errors.New("Event: route state event: route is empty")
 	}
 
-	log.Debugf("Event: route state event state: %s", route)
+	log.V(logLevel).Debugf("Event: route state event state: %s", route)
 
 	opts := v1.Request().Ingress().IngressRouteStatusOptions()
 	return c.SetRouteStatus(ctx, route, opts)

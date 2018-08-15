@@ -48,7 +48,7 @@ type client struct {
 
 func New() (*Storage, error) {
 
-	log.Debug("Etcd: define storage")
+	log.V(logLevel).Debug("Etcd: define storage")
 
 	var (
 		err    error
@@ -182,7 +182,7 @@ func (s Storage) Watch(ctx context.Context, collection string, event chan *types
 	for {
 		select {
 		case <-ctx.Done():
-			log.Debugf("%s:> the user interrupted watch", logPrefix)
+			log.V(logLevel).Debugf("%s:> the user interrupted watch", logPrefix)
 			watcher.Stop()
 			return nil
 		case res := <-watcher.ResultChan():

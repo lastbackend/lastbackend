@@ -208,7 +208,7 @@ func (s *Service) Remove(service *types.Service) error {
 // Set state for deployment
 func (s *Service) Set(service *types.Service) error {
 
-	log.Debugf("%s:setstatus:> set state for service %s", logServicePrefix, service.Meta.Name)
+	log.V(logLevel).Debugf("%s:setstatus:> set state for service %s", logServicePrefix, service.Meta.Name)
 
 	key := s.storage.Key().Service(service.Meta.Namespace, service.Meta.Name)
 	if err := s.storage.Set(s.context, s.storage.Collection().Service(), key, service, nil); err != nil {
@@ -222,7 +222,7 @@ func (s *Service) Set(service *types.Service) error {
 // Watch service changes
 func (s *Service) Watch(ch chan types.ServiceEvent, rev *int64) error {
 
-	log.Debugf("%s:watch:> watch service by spec changes", logServicePrefix)
+	log.V(logLevel).Debugf("%s:watch:> watch service by spec changes", logServicePrefix)
 
 	done := make(chan bool)
 	watcher := storage.NewWatcher()

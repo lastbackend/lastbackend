@@ -210,7 +210,7 @@ func (r *Runtime) nodeWatch(ctx context.Context, rev *int64) {
 					continue
 				}
 
-				if !w.Data.Online {
+				if !w.Data.Status.Online {
 					c.Node().Clear(w.Name)
 				}
 

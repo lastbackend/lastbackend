@@ -64,7 +64,7 @@ func (c *Cluster) Get() (*types.Cluster, error) {
 // Watch cluster changes
 func (c *Cluster) Watch(ch chan types.ClusterEvent) {
 
-	log.Debugf("%s:watch:> watch cluster", logClusterPrefix)
+	log.V(logLevel).Debugf("%s:watch:> watch cluster", logClusterPrefix)
 
 	done := make(chan bool)
 	watcher := storage.NewWatcher()

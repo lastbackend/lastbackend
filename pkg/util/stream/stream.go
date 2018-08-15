@@ -30,6 +30,8 @@ import (
 	"time"
 )
 
+const logLevel = 4
+
 type Stream struct {
 	io.Writer
 
@@ -138,9 +140,9 @@ func (s *Stream) Flush() {
 }
 
 func (s *Stream) Close() {
-	log.Debug("close stream connection")
+	log.V(logLevel).Debug("close stream connection")
 	if !s.close {
-		log.Debug("connection needs to be closed")
+		log.V(logLevel).Debug("connection needs to be closed")
 		s.Flush()
 		s.stream.Disconnect()
 	}
@@ -158,7 +160,7 @@ func (s *Stream) AddSocketBackend(endpoint string) *Stream {
 	go func() {
 		s.stream.End()
 		s.close = true
-		log.Debug("stream closed")
+		log.V(logLevel).Debug("stream closed")
 		s.done <- true
 	}()
 

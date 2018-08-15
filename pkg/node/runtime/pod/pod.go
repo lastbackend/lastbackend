@@ -33,10 +33,13 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/util/cleaner"
 )
 
-const BUFFER_SIZE = 1024
+const (
+	BUFFER_SIZE = 1024
+	logLevel = 3
+)
 
 func Manage(ctx context.Context, key string, manifest *types.PodManifest) error {
-	log.Debugf("Provision pod: %s", key)
+	log.V(logLevel).Debugf("Provision pod: %s", key)
 
 	//==========================================================================
 	// Destroy pod =============================================================
@@ -46,7 +49,7 @@ func Manage(ctx context.Context, key string, manifest *types.PodManifest) error 
 	if manifest.State.Destroy {
 
 		if task := envs.Get().GetState().Tasks().GetTask(key); task != nil {
-			log.Debugf("Cancel pod creating: %s", key)
+			log.V(logLevel).Debugf("Cancel pod creating: %s", key)
 			task.Cancel()
 		}
 
@@ -61,7 +64,7 @@ func Manage(ctx context.Context, key string, manifest *types.PodManifest) error 
 			return nil
 		}
 
-		log.Debugf("Pod found > destroy it: %s", key)
+		log.V(logLevel).Debugf("Pod found > destroy it: %s", key)
 
 		Destroy(ctx, key, p)
 
@@ -85,7 +88,7 @@ func Manage(ctx context.Context, key string, manifest *types.PodManifest) error 
 		Destroy(ctx, key, p)
 	}
 
-	log.Debugf("Pod not found > create it: %s", key)
+	log.V(logLevel).Debugf("Pod not found > create it: %s", key)
 
 	ctx, cancel := context.WithCancel(context.Background())
 	envs.Get().GetState().Tasks().AddTask(key, &types.NodeTask{Cancel: cancel})
@@ -108,7 +111,7 @@ func Create(ctx context.Context, key string, manifest *types.PodManifest) (*type
 		status = types.NewPodStatus()
 	)
 
-	log.Debugf("Create pod: %s", key)
+	log.V(logLevel).Debugf("Create pod: %s", key)
 
 	//==========================================================================
 	// Pull image ==============================================================
@@ -119,10 +122,10 @@ func Create(ctx context.Context, key string, manifest *types.PodManifest) (*type
 	envs.Get().GetState().Pods().AddPod(key, status)
 	events.NewPodStatusEvent(ctx, key)
 
-	log.Debugf("Have %d containers", len(manifest.Template.Containers))
+	log.V(logLevel).Debugf("Have %d containers", len(manifest.Template.Containers))
 	for _, c := range manifest.Template.Containers {
 
-		log.Debug("Pull images for pod if needed")
+		log.V(logLevel).Debug("Pull images for pod if needed")
 		r, err := envs.Get().GetCRI().ImagePull(ctx, &c.Image)
 		if err != nil {
 			log.Errorf("Can-not pull image: %s", err)
@@ -189,7 +192,7 @@ func Create(ctx context.Context, key string, manifest *types.PodManifest) (*type
 		}
 		status.Containers[c.ID] = c
 		envs.Get().GetState().Pods().SetPod(key, status)
-		log.Debugf("Container created: %#v", c)
+		log.V(logLevel).Debugf("Container created: %#v", c)
 
 		if err := envs.Get().GetCRI().ContainerStart(ctx, c.ID); err != nil {
 			switch err {
@@ -240,14 +243,14 @@ func Create(ctx context.Context, key string, manifest *types.PodManifest) (*type
 func Clean(ctx context.Context, status *types.PodStatus) {
 
 	for _, c := range status.Containers {
-		log.Debugf("Remove unnecessary container: %s", c.ID)
+		log.V(logLevel).Debugf("Remove unnecessary container: %s", c.ID)
 		if err := envs.Get().GetCRI().ContainerRemove(ctx, c.ID, true, true); err != nil {
 			log.Warnf("Can-not remove unnecessary container %s: %s", c.ID, err)
 		}
 	}
 
 	for _, c := range status.Containers {
-		log.Debugf("Try to clean image: %s", c.Image.Name)
+		log.V(logLevel).Debugf("Try to clean image: %s", c.Image.Name)
 		if err := envs.Get().GetCRI().ImageRemove(ctx, c.Image.Name); err != nil {
 			log.Warnf("Can-not remove unnecessary image %s: %s", c.Image.Name, err)
 		}
@@ -255,14 +258,14 @@ func Clean(ctx context.Context, status *types.PodStatus) {
 }
 
 func Destroy(ctx context.Context, pod string, status *types.PodStatus) {
-	log.Debugf("Try to remove pod: %s", pod)
+	log.V(logLevel).Debugf("Try to remove pod: %s", pod)
 	Clean(ctx, status)
 	envs.Get().GetState().Pods().DelPod(pod)
 }
 
 func Restore(ctx context.Context) error {
 
-	log.Debug("Runtime restore state")
+	log.V(logLevel).Debug("Runtime restore state")
 
 	cl, err := envs.Get().GetCRI().ContainerList(ctx, true)
 	if err != nil {
@@ -272,7 +275,7 @@ func Restore(ctx context.Context) error {
 
 	for _, c := range cl {
 
-		log.Debugf("Pod [%s] > container restore %s", c.Pod, c.ID)
+		log.V(logLevel).Debugf("Pod [%s] > container restore %s", c.Pod, c.ID)
 
 		status := envs.Get().GetState().Pods().GetPod(c.Pod)
 		if status == nil {
@@ -340,9 +343,9 @@ func Restore(ctx context.Context) error {
 		cs.Ready = true
 		status.Containers[cs.ID] = cs
 
-		log.Debugf("Container restored %s", c.ID)
+		log.V(logLevel).Debugf("Container restored %s", c.ID)
 		envs.Get().GetState().Pods().SetPod(key, status)
-		log.Debugf("Pod restored %#v", status)
+		log.V(logLevel).Debugf("Pod restored %#v", status)
 	}
 
 	return nil
@@ -350,7 +353,7 @@ func Restore(ctx context.Context) error {
 
 func Logs(ctx context.Context, id string, follow bool, s io.Writer, doneChan chan bool) error {
 
-	log.Debugf("Get container [%s] logs streaming", id)
+	log.V(logLevel).Debugf("Get container [%s] logs streaming", id)
 
 	var (
 		cri    = envs.Get().GetCRI()
@@ -364,7 +367,7 @@ func Logs(ctx context.Context, id string, follow bool, s io.Writer, doneChan cha
 		return err
 	}
 	defer func() {
-		log.Debugf("Stop container [%s] logs streaming", id)
+		log.V(logLevel).Debugf("Stop container [%s] logs streaming", id)
 		ctx.Done()
 		close(done)
 		req.Close()
@@ -382,7 +385,7 @@ func Logs(ctx context.Context, id string, follow bool, s io.Writer, doneChan cha
 				if err != nil {
 
 					if err == context.Canceled {
-						log.Debug("Stream is canceled")
+						log.V(logLevel).Debug("Stream is canceled")
 						return
 					}
 

@@ -104,6 +104,11 @@ func (c *CacheNodeManifest) SetSubnetManifest(cidr string, s *types.SubnetManife
 	defer c.lock.Unlock()
 
 	for n := range c.manifests {
+
+		if _, ok := c.manifests[n].Network[cidr]; !ok {
+			c.manifests[n].Network = make(map[string]*types.SubnetManifest)
+		}
+
 		c.manifests[n].Network[cidr] = s
 	}
 }

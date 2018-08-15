@@ -60,7 +60,7 @@ func handleNodeLease (cs *ClusterState, nl *NodeLease) error {
 			n.Status.Allocated.Memory += *nl.Request.Memory
 
 			nm := distribution.NewNodeModel(context.Background(), envs.Get().GetStorage())
-			nm.SetStatus(n, n.Status)
+			nm.Set(n)
 
 			nl.Response.Node = n
 			return nil
@@ -81,12 +81,12 @@ func handleNodeRelease (cs *ClusterState, nl *NodeLease) error {
 		return nil
 	}
 
-	node := cs.node.list[*nl.Request.Node]
-	node.Status.Allocated.Pods--
-	node.Status.Allocated.Memory-=*nl.Request.Memory
+	n := cs.node.list[*nl.Request.Node]
+	n.Status.Allocated.Pods--
+	n.Status.Allocated.Memory-=*nl.Request.Memory
 
 	nm := distribution.NewNodeModel(context.Background(), envs.Get().GetStorage())
-	nm.SetStatus(node, node.Status)
+	nm.Set(n)
 
 	return nil
 }

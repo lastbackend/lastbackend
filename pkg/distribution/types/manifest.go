@@ -50,8 +50,10 @@ type VolumeManifestMap struct {
 }
 
 type SubnetManifest struct {
+	Runtime
 	SubnetSpec
 }
+
 
 type SubnetManifestList struct {
 	Runtime
@@ -64,7 +66,8 @@ type SubnetManifestMap struct {
 }
 
 type EndpointManifest struct {
-	EndpointSpec
+	Runtime
+	EndpointSpec `json:",inline"`
 	Upstreams []string `json:"upstreams"`
 }
 

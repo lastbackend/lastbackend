@@ -73,6 +73,7 @@ type EndpointSpec struct {
 	PortMap   map[uint16]string    `json:"port_map"`
 	Strategy  EndpointSpecStrategy `json:"strategy"`
 	Policy    string               `json:"policy"`
+	Upstreams  []string `json:"-"`
 }
 
 type EndpointState struct {

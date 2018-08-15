@@ -35,7 +35,10 @@ import (
 	"github.com/vishvananda/netlink/nl"
 )
 
-const logIPVSPrefix = "cpi:ipvs:proxy:>"
+const (
+	logIPVSPrefix = "cpi:ipvs:proxy:>"
+	logLevel = 3
+)
 
 // Proxy balancer
 type Proxy struct {
@@ -51,7 +54,7 @@ func (p *Proxy) Info(ctx context.Context) (map[string]*types.EndpointState, erro
 // Create new proxy rules
 func (p *Proxy) Create(ctx context.Context, manifest *types.EndpointManifest) (*types.EndpointState, error) {
 
-	log.Debugf("%s create ipvs virtual server with ip %s", logIPVSPrefix, manifest.IP)
+	log.V(logLevel).Debugf("%s create ipvs virtual server with ip %s", logIPVSPrefix, manifest.IP)
 
 	var (
 		err    error
@@ -67,7 +70,7 @@ func (p *Proxy) Create(ctx context.Context, manifest *types.EndpointManifest) (*
 	}
 
 	if len(dests) == 0 {
-		log.Debugf("%s skip creating service, destinations not exists", logIPVSPrefix)
+		log.V(logLevel).Debugf("%s skip creating service, destinations not exists", logIPVSPrefix)
 		return nil, nil
 	}
 
@@ -80,13 +83,13 @@ func (p *Proxy) Create(ctx context.Context, manifest *types.EndpointManifest) (*
 	}()
 
 	for _, svc := range svcs {
-		log.Debugf("%s create new service: %s", logIPVSPrefix, svc.Address.String())
+		log.V(logLevel).Debugf("%s create new service: %s", logIPVSPrefix, svc.Address.String())
 		if err := p.ipvs.NewService(svc); err != nil {
 			log.Errorf("%s create service err: %s", logIPVSPrefix, err.Error())
 		}
 
 		for _, dest := range dests {
-			log.Debugf("%s create new destination %s for service: %s", logIPVSPrefix,
+			log.V(logLevel).Debugf("%s create new destination %s for service: %s", logIPVSPrefix,
 				dest.Address.String(), svc.Address.String())
 
 			if err := p.ipvs.NewDestination(svc, dest); err != nil {
@@ -222,13 +225,13 @@ func (p *Proxy) getState(ctx context.Context) (map[string]*types.EndpointState, 
 		return el, err
 	}
 
-	log.Debugf("%s services list: %#v", logIPVSPrefix, svcs)
+	log.V(logLevel).Debugf("%s services list: %#v", logIPVSPrefix, svcs)
 
 	for _, svc := range svcs {
 		// check if endpoint exists
 		var host = svc.Address.String()
 
-		log.Debugf("%s add service %s to current state", logIPVSPrefix, svc.Address.String())
+		log.V(logLevel).Debugf("%s add service %s to current state", logIPVSPrefix, svc.Address.String())
 
 		endpoint := el[host]
 		if endpoint == nil {
@@ -246,7 +249,7 @@ func (p *Proxy) getState(ctx context.Context) (map[string]*types.EndpointState, 
 			continue
 		}
 
-		log.Debugf("%s found %d destinations for service: %s", logIPVSPrefix, len(dests), svc.Address.String())
+		log.V(logLevel).Debugf("%s found %d destinations for service: %s", logIPVSPrefix, len(dests), svc.Address.String())
 
 		for _, dest := range dests {
 
@@ -259,7 +262,7 @@ func (p *Proxy) getState(ctx context.Context) (map[string]*types.EndpointState, 
 			}
 
 			if prt != 0 && prt != dest.Port {
-				log.Debugf("%s dest port mismatch %d != %d", logIPVSPrefix, prt, dest.Port)
+				log.V(logLevel).Debugf("%s dest port mismatch %d != %d", logIPVSPrefix, prt, dest.Port)
 				break
 			}
 
@@ -296,11 +299,11 @@ func (p *Proxy) getState(ctx context.Context) (map[string]*types.EndpointState, 
 			}
 		}
 
-		log.Debugf("%s add endpoint state: %#v", logIPVSPrefix, endpoint)
+		log.V(logLevel).Debugf("%s add endpoint state: %#v", logIPVSPrefix, endpoint)
 		el[host] = endpoint
 	}
 
-	log.Debugf("%s current ipvs state: %#v", logIPVSPrefix, el)
+	log.V(logLevel).Debugf("%s current ipvs state: %#v", logIPVSPrefix, el)
 
 	return el, nil
 }

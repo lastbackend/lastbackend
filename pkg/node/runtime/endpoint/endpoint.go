@@ -26,10 +26,13 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/node/envs"
 )
 
-const logEndpointPrefix = "runtime:endpoint:>"
+const (
+	logEndpointPrefix = "runtime:endpoint:>"
+	logLevel = 3
+)
 
 func Manage(ctx context.Context, key string, manifest *types.EndpointManifest) error {
-	log.Debugf("%s manage: %s", logEndpointPrefix, key)
+	log.V(logLevel).Debugf("%s manage: %s", logEndpointPrefix, key)
 
 	state := envs.Get().GetState().Endpoints().GetEndpoint(key)
 
@@ -40,7 +43,7 @@ func Manage(ctx context.Context, key string, manifest *types.EndpointManifest) e
 			return nil
 		}
 
-		log.Debugf("%s check endpoint: %s", logEndpointPrefix, key)
+		log.V(logLevel).Debugf("%s check endpoint: %s", logEndpointPrefix, key)
 		if !equal(manifest, state) {
 			state, err := Update(ctx, key, state, manifest)
 			if err != nil {
@@ -69,7 +72,7 @@ func Manage(ctx context.Context, key string, manifest *types.EndpointManifest) e
 }
 
 func Restore(ctx context.Context) error {
-	log.Debugf("%s restore", logEndpointPrefix)
+	log.V(logLevel).Debugf("%s restore", logEndpointPrefix)
 	cpi := envs.Get().GetCPI()
 	endpoints, err := cpi.Info(ctx)
 	if err != nil {
@@ -81,19 +84,19 @@ func Restore(ctx context.Context) error {
 }
 
 func Create(ctx context.Context, key string, manifest *types.EndpointManifest) (*types.EndpointState, error) {
-	log.Debugf("%s create %s", logEndpointPrefix, key)
+	log.V(logLevel).Debugf("%s create %s", logEndpointPrefix, key)
 	cpi := envs.Get().GetCPI()
 	return cpi.Create(ctx, manifest)
 }
 
 func Update(ctx context.Context, endpoint string, state *types.EndpointState, manifest *types.EndpointManifest) (*types.EndpointState, error) {
-	log.Debugf("%s update %s", logEndpointPrefix, endpoint)
+	log.V(logLevel).Debugf("%s update %s", logEndpointPrefix, endpoint)
 	cpi := envs.Get().GetCPI()
 	return cpi.Update(ctx, state, manifest)
 }
 
 func Destroy(ctx context.Context, endpoint string, state *types.EndpointState) error {
-	log.Debugf("%s destroy", logEndpointPrefix, endpoint)
+	log.V(logLevel).Debugf("%s destroy", logEndpointPrefix, endpoint)
 	cpi := envs.Get().GetCPI()
 	return cpi.Destroy(ctx, state)
 }
@@ -101,42 +104,42 @@ func Destroy(ctx context.Context, endpoint string, state *types.EndpointState) e
 func equal(manifest *types.EndpointManifest, state *types.EndpointState) bool {
 
 	if state.IP != manifest.IP {
-		log.Debugf("%s ips not match %s != %s", logEndpointPrefix, manifest.IP, state.IP)
+		log.V(logLevel).Debugf("%s ips not match %s != %s", logEndpointPrefix, manifest.IP, state.IP)
 		return false
 	}
 
 	if manifest.Strategy.Route != manifest.Strategy.Route {
-		log.Debugf("%s route strategy not match %s != %s", logEndpointPrefix, manifest.Strategy.Route, state.Strategy.Route)
+		log.V(logLevel).Debugf("%s route strategy not match %s != %s", logEndpointPrefix, manifest.Strategy.Route, state.Strategy.Route)
 		return false
 	}
 
 	if manifest.Strategy.Bind != manifest.Strategy.Bind {
-		log.Debugf("%s bind strategy not match %s != %s", logEndpointPrefix, manifest.Strategy.Bind, state.Strategy.Bind)
+		log.V(logLevel).Debugf("%s bind strategy not match %s != %s", logEndpointPrefix, manifest.Strategy.Bind, state.Strategy.Bind)
 		return false
 	}
 
 	for port, pm := range manifest.PortMap {
 
 		if _, ok := state.PortMap[port]; !ok {
-			log.Debugf("%s portmap not found %#v", logEndpointPrefix, pm)
+			log.V(logLevel).Debugf("%s portmap not found %#v", logEndpointPrefix, pm)
 			return false
 		}
 
 		if state.PortMap[port] != pm {
-			log.Debugf("%s portmap not match %#v != %#v", logEndpointPrefix, pm, state.PortMap[port])
+			log.V(logLevel).Debugf("%s portmap not match %#v != %#v", logEndpointPrefix, pm, state.PortMap[port])
 			return false
 		}
 	}
 
 	for port, pm := range state.PortMap {
 		if _, ok := manifest.PortMap[port]; !ok {
-			log.Debugf("%s portmap should be deleted %#v", logEndpointPrefix, pm)
+			log.V(logLevel).Debugf("%s portmap should be deleted %#v", logEndpointPrefix, pm)
 			return false
 		}
 	}
 
 	if len(manifest.Upstreams) != len(state.Upstreams) {
-		log.Debugf("%s upstreams count changed %d != %d", logEndpointPrefix, len(manifest.Upstreams), len(state.Upstreams))
+		log.V(logLevel).Debugf("%s upstreams count changed %d != %d", logEndpointPrefix, len(manifest.Upstreams), len(state.Upstreams))
 		return false
 	}
 
@@ -148,7 +151,7 @@ func equal(manifest *types.EndpointManifest, state *types.EndpointState) bool {
 			}
 		}
 		if !f {
-			log.Debugf("%s upstream not found: %s", logEndpointPrefix, up)
+			log.V(logLevel).Debugf("%s upstream not found: %s", logEndpointPrefix, up)
 			return false
 		}
 	}
@@ -161,7 +164,7 @@ func equal(manifest *types.EndpointManifest, state *types.EndpointState) bool {
 			}
 		}
 		if !f {
-			log.Debugf("%s upstream should be deleted: %s", logEndpointPrefix, up)
+			log.V(logLevel).Debugf("%s upstream should be deleted: %s", logEndpointPrefix, up)
 			return false
 		}
 	}

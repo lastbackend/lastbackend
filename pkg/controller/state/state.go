@@ -29,6 +29,8 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 )
 
+const logLevel = 3
+
 type State struct {
 	Cluster *cluster.ClusterState
 	Service map[string]*service.ServiceState
@@ -72,7 +74,7 @@ func (s *State) Loop() {
 	}
 
 	for _, n := range ns.Items {
-		log.Debugf("\n\nrestore service in namespace: %s", n.SelfLink())
+		log.V(logLevel).Debugf("\n\nrestore service in namespace: %s", n.SelfLink())
 		ss, err := sm.List(n.SelfLink())
 		if err != nil {
 			log.Errorf("%s", err.Error())
@@ -81,7 +83,7 @@ func (s *State) Loop() {
 
 		for _, svc := range ss.Items {
 
-			log.Debugf("restore service state: %s \n", svc.SelfLink())
+			log.V(logLevel).Debugf("restore service state: %s \n", svc.SelfLink())
 			if _, ok := s.Service[svc.SelfLink()]; !ok {
 				s.Service[svc.SelfLink()] = service.NewServiceState(s.Cluster, svc)
 			}

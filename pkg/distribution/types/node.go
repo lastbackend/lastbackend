@@ -21,7 +21,7 @@ package types
 import (
 	"context"
 	"fmt"
-	)
+)
 
 // swagger:ignore
 // swagger:model types_node_map
@@ -41,23 +41,19 @@ type NodeList struct {
 // swagger:model types_node
 type Node struct {
 	Runtime
-	Meta    NodeMeta   `json:"meta"`
-	Info    NodeInfo   `json:"info"`
-	Status  NodeStatus `json:"status"`
-	Spec    NodeSpec   `json:"spec"`
-	Roles   NodeRole   `json:"roles"`
-	Network SubnetSpec `json:"network"`
-	Online  bool       `json:"online"`
+	Meta   NodeMeta   `json:"meta"`
+	Status NodeStatus `json:"status"`
+	Spec   NodeSpec   `json:"spec"`
 }
 
 // swagger:ignore
 // swagger:model types_node_meta
 type NodeMeta struct {
 	Meta
+	NodeInfo
+	Subnet   string `json:"subnet"`
 	Cluster  string `json:"cluster"`
 	Token    string `json:"token"`
-	Region   string `json:"region"`
-	Provider string `json:"provider"`
 }
 
 func (m *NodeMeta) Set(meta *NodeUpdateMetaOptions) {
@@ -69,16 +65,27 @@ func (m *NodeMeta) Set(meta *NodeUpdateMetaOptions) {
 		m.Token = *meta.Token
 	}
 
-	if meta.Region != nil {
-		m.Region = *meta.Region
-	}
-
-	if meta.Provider != nil {
-		m.Provider = *meta.Provider
-	}
-
 	if meta.Labels != nil {
 		m.Labels = meta.Labels
+	}
+
+	if meta.Hostname != nil {
+		m.Hostname = *meta.Hostname
+	}
+	if meta.Architecture != nil {
+		m.Architecture = *meta.Architecture
+	}
+	if meta.OSName != nil {
+		m.OSName = *meta.OSName
+	}
+	if meta.OSType != nil {
+		m.OSType = *meta.OSType
+	}
+	if meta.ExternalIP != nil {
+		m.ExternalIP = *meta.ExternalIP
+	}
+	if meta.InternalIP != nil {
+		m.InternalIP = *meta.InternalIP
 	}
 
 }
@@ -98,10 +105,28 @@ type NodeInfo struct {
 
 // swagger:model types_node_status
 type NodeStatus struct {
+	// state
+	State NodeStatusState `json:"state"`
+	// node status online
+	Online bool `json:"online"`
 	// Node Capacity
 	Capacity NodeResources `json:"capacity"`
 	// Node Allocated
 	Allocated NodeResources `json:"allocated"`
+}
+
+type NodeStatusState struct {
+	CRI NodeStatusInterfaceState `json:"cri"`
+	CNI NodeStatusInterfaceState `json:"cni"`
+	CPI NodeStatusInterfaceState `json:"cpi"`
+	CSI NodeStatusInterfaceState `json:"csi"`
+}
+
+type NodeStatusInterfaceState struct {
+	Type    string `json:"type"`
+	Version string `json:"version"`
+	State   string `json:"state"`
+	Message string `json:"message"`
 }
 
 // swagger:ignore
@@ -151,6 +176,7 @@ type NodeTask struct {
 // swagger:model types_node_meta_create
 type NodeCreateMetaOptions struct {
 	MetaCreateOptions
+	Subnet   string `json:"subnet"`
 	Token    string `json:"token"`
 	Region   string `json:"region"`
 	Provider string `json:"provider"`
@@ -159,18 +185,36 @@ type NodeCreateMetaOptions struct {
 // swagger:model types_node_meta_update
 type NodeUpdateMetaOptions struct {
 	MetaUpdateOptions
+	NodeUpdateInfoOptions
 	Token    *string `json:"token"`
 	Region   *string `json:"region"`
 	Provider *string `json:"provider"`
 }
 
+type NodeUpdateInfoOptions struct {
+	Hostname     *string `json:"hostname"`
+	Architecture *string `json:"architecture"`
+	OSName       *string `json:"os_name"`
+	OSType       *string `json:"os_type"`
+	ExternalIP   *string `json:"external_ip"`
+	InternalIP   *string `json:"internal_ip"`
+}
+
+func (o *NodeUpdateInfoOptions) Set(i NodeInfo) {
+	o.Hostname = &i.Hostname
+	o.Architecture = &i.Architecture
+	o.OSName = &i.OSName
+	o.OSType = &i.OSType
+	o.ExternalIP = &i.ExternalIP
+	o.InternalIP = &i.InternalIP
+}
+
 // swagger:ignore
 // swagger:model types_node_create
 type NodeCreateOptions struct {
-	Meta    NodeCreateMetaOptions `json:"meta",yaml:"meta"`
-	Info    NodeInfo              `json:"info",yaml:"info"`
-	Status  NodeStatus            `json:"status",yaml:"status"`
-	Network SubnetSpec            `json:"network"`
+	Meta   NodeCreateMetaOptions `json:"meta",yaml:"meta"`
+	Info   NodeInfo              `json:"info",yaml:"info"`
+	Status NodeStatus            `json:"status",yaml:"status"`
 }
 
 func (n *Node) SelfLink() string {
@@ -180,13 +224,13 @@ func (n *Node) SelfLink() string {
 	return n.Meta.SelfLink
 }
 
-func NewNodeList () *NodeList {
+func NewNodeList() *NodeList {
 	dm := new(NodeList)
 	dm.Items = make([]*Node, 0)
 	return dm
 }
 
-func NewNodeMap () *NodeMap {
+func NewNodeMap() *NodeMap {
 	dm := new(NodeMap)
 	dm.Items = make(map[string]*Node)
 	return dm

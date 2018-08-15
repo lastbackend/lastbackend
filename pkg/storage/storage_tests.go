@@ -25,8 +25,9 @@ import (
 	"encoding/json"
 
 	"github.com/lastbackend/lastbackend/pkg/log"
-	"github.com/lastbackend/lastbackend/pkg/storage/types"
+	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 	"github.com/stretchr/testify/assert"
+	"github.com/lastbackend/lastbackend/pkg/distribution/errors"
 )
 
 func StorageGetAssets(t *testing.T, stg Storage) {
@@ -63,7 +64,7 @@ func StorageGetAssets(t *testing.T, stg Storage) {
 			args{ctx: ctx, key: "n", obj: &obj{Name:"demo"}, out: new(obj)},
 			nil,
 			true,
-			types.ErrEntityNotFound,
+			errors.ErrEntityNotFound,
 		},
 		{
 			"out struct is nil",
@@ -71,7 +72,7 @@ func StorageGetAssets(t *testing.T, stg Storage) {
 			args{ctx: ctx, key: "demo", obj: &obj{Name:"demo"}, out: nil},
 			nil,
 			true,
-			types.ErrStructOutIsNil,
+			errors.ErrStructOutIsNil,
 		},
 		{
 			"test successful get",
@@ -167,7 +168,7 @@ func StorageListAssets(t *testing.T, stg Storage) {
 			args{ctx: ctx, obj: objl{Items:[]*obj{{Name:"demo"}, {Name:"test"}}}, out: nil},
 			nil,
 			true,
-			types.ErrStructOutIsNil,
+			errors.ErrStructOutIsNil,
 		},
 		{
 			"test successful list with filter",
@@ -288,7 +289,7 @@ func StorageMapAssets(t *testing.T, stg Storage) {
 			args{ctx: ctx, obj: []*obj{{Name:"demo"}, {Name:"test"}}, out: nil},
 			nil,
 			true,
-			types.ErrStructOutIsNil,
+			errors.ErrStructOutIsNil,
 		},
 		{
 			"test successful list with filter",
@@ -391,7 +392,7 @@ func StoragePutAssets(t *testing.T, stg Storage) {
 			args{ctx: ctx, key: "demo", obj: &obj{"demo"}, out: new(obj)},
 			&obj{"demo"},
 			true,
-			types.ErrEntityExists,
+			errors.ErrEntityExists,
 		},
 		{
 			"test successful put",
@@ -412,7 +413,7 @@ func StoragePutAssets(t *testing.T, stg Storage) {
 				return
 			}
 
-			if tt.wantErr && tt.err == types.ErrEntityExists {
+			if tt.wantErr && tt.err == errors.ErrEntityExists {
 				err = tt.fields.stg.Put(tt.args.ctx, tt.fields.stg.Collection().Test(), tt.args.obj.Name, tt.args.obj, nil)
 				if !assert.NoError(t, err) {
 					return
@@ -482,7 +483,7 @@ func StorageSetAssets(t *testing.T, stg Storage) {
 			args{ctx: ctx, key: "demo", obj: &obj{"demo", "test"}, out: new(obj)},
 			&obj{"demo", "test"},
 			true,
-			types.ErrEntityNotFound,
+			errors.ErrEntityNotFound,
 		},
 		{
 			"test successful set when entity not exists",
@@ -490,7 +491,7 @@ func StorageSetAssets(t *testing.T, stg Storage) {
 			args{ctx: ctx, key: "demo", obj: &obj{"demo", "test"}, out: new(obj)},
 			&obj{"demo", "test"},
 			false,
-			types.ErrEntityNotFound,
+			errors.ErrEntityNotFound,
 		},
 		{
 			"test successful set",
@@ -512,7 +513,7 @@ func StorageSetAssets(t *testing.T, stg Storage) {
 			}
 
 			log.Info(tt.err)
-			if tt.err != types.ErrEntityNotFound {
+			if tt.err != errors.ErrEntityNotFound {
 				err = tt.fields.stg.Put(tt.args.ctx, tt.fields.stg.Collection().Test(), tt.args.obj.Name, &obj{"demo", "demo"}, nil)
 				if !assert.NoError(t, err) {
 					return
@@ -521,7 +522,7 @@ func StorageSetAssets(t *testing.T, stg Storage) {
 
 			var opts = GetOpts()
 
-			if !tt.wantErr && tt.err == types.ErrEntityNotFound {
+			if !tt.wantErr && tt.err == errors.ErrEntityNotFound {
 				opts.Force = true
 			}
 
@@ -588,7 +589,7 @@ func StorageDelAssets(t *testing.T, stg Storage) {
 			args{ctx: ctx, key: "demo", obj: &obj{"demo"}, out: new(obj)},
 			&obj{"demo"},
 			true,
-			types.ErrEntityNotFound,
+			errors.ErrEntityNotFound,
 		},
 		{
 			"test successful del",
@@ -596,7 +597,7 @@ func StorageDelAssets(t *testing.T, stg Storage) {
 			args{ctx: ctx, key: "demo", obj: &obj{"demo"}, out: new(obj)},
 			&obj{"demo"},
 			false,
-			types.ErrEntityNotFound,
+			errors.ErrEntityNotFound,
 		},
 	}
 
@@ -609,7 +610,7 @@ func StorageDelAssets(t *testing.T, stg Storage) {
 				return
 			}
 
-			if !tt.wantErr && tt.err != types.ErrEntityNotFound {
+			if !tt.wantErr && tt.err != errors.ErrEntityNotFound {
 				err = tt.fields.stg.Put(tt.args.ctx, tt.fields.stg.Collection().Test(), tt.args.obj.Name, tt.args.obj, nil)
 				if !assert.NoError(t, err) {
 					return
@@ -618,7 +619,7 @@ func StorageDelAssets(t *testing.T, stg Storage) {
 
 			var opts = GetOpts()
 
-			if !tt.wantErr && tt.err == types.ErrEntityNotFound {
+			if !tt.wantErr && tt.err == errors.ErrEntityNotFound {
 				opts.Force = true
 			}
 

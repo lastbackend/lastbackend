@@ -222,8 +222,6 @@ func (s *dbstore) Map(ctx context.Context, key, keyRegexFilter string, mapOutPtr
 
 	for _, kv := range getResp.Kvs {
 
-		log.Info(string(kv.Key))
-
 		if keyRegexFilter != "" && r.MatchString(string(kv.Key)) {
 			keys := r.FindStringSubmatch(string(kv.Key))
 			items[keys[1]] = kv

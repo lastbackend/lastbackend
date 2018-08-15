@@ -34,10 +34,10 @@ type NodeConnectOptions struct {
 
 // swagger:model request_node_status
 type NodeStatusOptions struct {
-
+	// Node interface options
+	State types.NodeStatusState `json:"state"`
 	// Pods statuses
 	Pods map[string]*NodePodStatusOptions `json:"pods"`
-
 	// Node resources
 	Resources NodeResourcesOptions `json:"resources"`
 }

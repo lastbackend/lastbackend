@@ -27,6 +27,8 @@ import (
 	"time"
 )
 
+const logLevel = 3
+
 type Runtime struct {
 	ctx  context.Context
 	spec chan *types.IngressSpec
@@ -38,15 +40,15 @@ func (r *Runtime) Provision(ctx context.Context, spec *types.IngressSpec, clean 
 		msg = "node:runtime:provision:"
 	)
 
-	log.Debugf("%s> provision init", msg)
+	log.V(logLevel).Debugf("%s> provision init", msg)
 
 	if clean {
-		log.Debugf("%s> clean up current routes", msg)
+		log.V(logLevel).Debugf("%s> clean up current routes", msg)
 	}
 
-	log.Debugf("%s> provision routes", msg)
+	log.V(logLevel).Debugf("%s> provision routes", msg)
 	for _, r := range spec.Routes {
-		log.Debugf("route: %v", r)
+		log.V(logLevel).Debugf("route: %v", r)
 	}
 
 	return nil
@@ -54,7 +56,7 @@ func (r *Runtime) Provision(ctx context.Context, spec *types.IngressSpec, clean 
 
 func (r *Runtime) Connect(ctx context.Context) error {
 
-	log.Debug("ingress:runtime:connect:> connect init")
+	log.V(logLevel).Debug("ingress:runtime:connect:> connect init")
 	if err := events.NewConnectEvent(ctx); err != nil {
 		log.Errorf("ingress:runtime:connect:> connect err: %s", err.Error())
 		return err
@@ -65,7 +67,7 @@ func (r *Runtime) Connect(ctx context.Context) error {
 
 func (r *Runtime) GetSpec(ctx context.Context) error {
 
-	log.Debug("ingress:runtime:getspec:> getspec request init")
+	log.V(logLevel).Debug("ingress:runtime:getspec:> getspec request init")
 
 	var (
 		c = envs.Get().GetClient()
@@ -87,7 +89,7 @@ func (r *Runtime) GetSpec(ctx context.Context) error {
 }
 
 func (r *Runtime) Loop() {
-	log.Debug("ingress:runtime:loop:> start runtime loop")
+	log.V(logLevel).Debug("ingress:runtime:loop:> start runtime loop")
 
 	var clean = true
 
@@ -95,7 +97,7 @@ func (r *Runtime) Loop() {
 		for {
 			select {
 			case spec := <-r.spec:
-				log.Debug("ingress:runtime:loop:> provision new spec")
+				log.V(logLevel).Debug("ingress:runtime:loop:> provision new spec")
 				if err := r.Provision(ctx, spec, clean); err != nil {
 					log.Errorf("ingress:runtime:loop:> provision new spec err: %s", err.Error())
 				}
@@ -109,14 +111,14 @@ func (r *Runtime) Loop() {
 		for range ticker.C {
 			err := r.GetSpec(r.ctx)
 			if err != nil {
-				log.Debugf("ingress:runtime:loop:> new spec request err: %s", err.Error())
+				log.V(logLevel).Debugf("ingress:runtime:loop:> new spec request err: %s", err.Error())
 			}
 		}
 	}(context.Background())
 
 	err := r.GetSpec(r.ctx)
 	if err != nil {
-		log.Debugf("ingress:runtime:loop:> new spec request err: %s", err.Error())
+		log.V(logLevel).Debugf("ingress:runtime:loop:> new spec request err: %s", err.Error())
 	}
 }
 

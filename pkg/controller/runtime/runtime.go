@@ -27,6 +27,8 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/system"
 )
 
+const logLevel = 3
+
 type Runtime struct {
 	ctx      context.Context
 	process  *system.Process
@@ -56,7 +58,7 @@ func (r *Runtime) Loop() {
 		lead = make(chan bool)
 	)
 
-	log.Debug("Controller: Runtime: Loop")
+	log.V(logLevel).Debug("Controller: Runtime: Loop")
 
 	go func() {
 		for {
@@ -69,22 +71,22 @@ func (r *Runtime) Loop() {
 					if l {
 
 						if r.active {
-							log.Debug("Runtime: is already marked as lead -> skip")
+							log.V(logLevel).Debug("Runtime: is already marked as lead -> skip")
 							continue
 						}
 
-						log.Debug("Runtime: Mark as lead")
+						log.V(logLevel).Debug("Runtime: Mark as lead")
 
 						r.active = true
 
 					} else {
 
 						if !r.active {
-							log.Debug("Runtime: is already marked as slave -> skip")
+							log.V(logLevel).Debug("Runtime: is already marked as slave -> skip")
 							continue
 						}
 
-						log.Debug("Runtime: Mark as slave")
+						log.V(logLevel).Debug("Runtime: Mark as slave")
 
 						r.active = false
 					}

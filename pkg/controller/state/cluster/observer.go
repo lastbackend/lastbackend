@@ -28,6 +28,8 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/log"
 	)
 
+const logLevel = 3
+
 // ClusterState is cluster current state struct
 type ClusterState struct {
 	ec      *EndpointController
@@ -62,7 +64,7 @@ func (cs *ClusterState) Observe() {
 // Loop cluster state from storage
 func (cs *ClusterState) Loop() error {
 
-	log.Debug("restore cluster state")
+	log.V(logLevel).Debug("restore cluster state")
 	var err error
 
 	// Get cluster info

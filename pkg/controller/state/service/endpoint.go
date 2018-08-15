@@ -155,7 +155,7 @@ func endpointAdd(ss *ServiceState, svc *types.Service) error {
 	}
 
 	if ss.endpoint.endpoint == nil {
-		log.Debugf("%s> create endpoint error: %s", logPrefix, errors.New("endpoint is nil"))
+		log.V(logLevel).Debugf("%s> create endpoint error: %s", logPrefix, errors.New("endpoint is nil"))
 		return nil
 	}
 	return nil
@@ -302,7 +302,7 @@ func endpointManifestAdd(ss *ServiceState) error {
 	)
 
 	if ss.endpoint.endpoint == nil {
-		log.Debugf("%s> create endpoint manifest error: %s", logPrefix, errors.New("endpoint is nil"))
+		log.V(logLevel).Debugf("%s> create endpoint manifest error: %s", logPrefix, errors.New("endpoint is nil"))
 		return nil
 	}
 
@@ -312,10 +312,9 @@ func endpointManifestAdd(ss *ServiceState) error {
 		}
 	}
 
-	ss.endpoint.manifest = &types.EndpointManifest{
-		ss.endpoint.endpoint.Spec,
-		endpointManifestGetUpstreams(pl),
-	}
+	ss.endpoint.manifest = &types.EndpointManifest{}
+	ss.endpoint.manifest.EndpointSpec = ss.endpoint.endpoint.Spec
+	ss.endpoint.manifest.Upstreams = endpointManifestGetUpstreams(pl)
 
 	if err = em.ManifestAdd(ss.endpoint.endpoint.SelfLink(), ss.endpoint.manifest); err != nil {
 		log.Errorf("%s> add endpoint manifest error: %s", logPrefix, err.Error())
@@ -334,7 +333,7 @@ func endpointManifestSet(ss *ServiceState) error {
 	)
 
 	if ss.endpoint.endpoint == nil {
-		log.Debugf("%s> update endpoint manifest error: %s", logPrefix, errors.New("endpoint is nil"))
+		log.V(logLevel).Debugf("%s> update endpoint manifest error: %s", logPrefix, errors.New("endpoint is nil"))
 		return nil
 	}
 

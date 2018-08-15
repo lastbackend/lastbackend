@@ -609,7 +609,7 @@ func ServiceLogsH(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	req, err := http.NewRequest(http.MethodGet, fmt.Sprintf("http://%s:%d/pod/%s/%s/logs", node.Info.InternalIP, 2969, pod.Meta.Name, cid), nil)
+	req, err := http.NewRequest(http.MethodGet, fmt.Sprintf("http://%s:%d/pod/%s/%s/logs", node.Meta.InternalIP, 2969, pod.Meta.Name, cid), nil)
 	if err != nil {
 		log.V(logLevel).Errorf("%s:logs:> create http client err: %s", logPrefix, err.Error())
 		errors.HTTP.InternalServerError(w)
@@ -628,7 +628,7 @@ func ServiceLogsH(w http.ResponseWriter, r *http.Request) {
 
 	go func() {
 		<-notify
-		log.Debugf("%s:logs:> HTTP connection just closed.", logPrefix)
+		log.V(logLevel).Debugf("%s:logs:> HTTP connection just closed.", logPrefix)
 		done <- true
 	}()
 
@@ -645,7 +645,7 @@ func ServiceLogsH(w http.ResponseWriter, r *http.Request) {
 			if err != nil {
 
 				if err == context.Canceled {
-					log.Debug("Stream is canceled")
+					log.V(logLevel).Debug("Stream is canceled")
 					return
 				}
 

@@ -138,7 +138,7 @@ func lbLocal(w dns.ResponseWriter, r *dns.Msg) {
 			}
 		}
 	case dns.OpcodeUpdate:
-		log.Debugf("%s:lb.local:> dns.OpcodeUpdate", logPrefix)
+		log.V(logLevel).Debugf("%s:lb.local:> dns.OpcodeUpdate", logPrefix)
 	}
 
 	if r.IsTsig() != nil {
@@ -149,7 +149,7 @@ func lbLocal(w dns.ResponseWriter, r *dns.Msg) {
 		}
 	}
 
-	log.Debugf("%s:lb.local:> send message info  %#v", logPrefix, m)
+	log.V(logLevel).Debugf("%s:lb.local:> send message info  %#v", logPrefix, m)
 
 	w.WriteMsg(m)
 }
