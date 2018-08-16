@@ -44,9 +44,18 @@ run-kit:
 	@echo "== Run kit daemon all in one"
 	@go run ./cmd/kit/kit.go $(app) --config=./contrib/config.yml
 
+run-api:
+	@echo "== Run lastbackend rest api daemon all in one"
+	@go run ./cmd/kit/kit.go api --config=./contrib/config.yml
+
+run-ctl:
+	@echo "== Run lastbackend rest api daemon all in one"
+	@go run ./cmd/kit/kit.go ctl --config=./contrib/config.yml
+
+
 run-node:
 	@echo "== Run node"
-	@go run ./cmd/node/node.go --config=./contrib/config.yml
+	@go run ./cmd/node/node.go --config=./contrib/node.yml
 
 swagger-spec:
 	@echo "== Generating Swagger spec for Last.Backend API"

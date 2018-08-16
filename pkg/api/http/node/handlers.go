@@ -123,14 +123,13 @@ func NodeGetSpecH(w http.ResponseWriter, r *http.Request) {
 
 	log.V(logLevel).Debugf("%s:getspec:> list node", logPrefix)
 
-	
 	var (
 		stg = envs.Get().GetStorage()
-		nm = distribution.NewNodeModel(r.Context(), stg)
-		pm = distribution.NewPodModel(r.Context(), stg)
-		vm = distribution.NewVolumeModel(r.Context(), stg)
-		em = distribution.NewEndpointModel(r.Context(), stg)
-		ns = distribution.NewNetworkModel(r.Context(), stg)
+		nm  = distribution.NewNodeModel(r.Context(), stg)
+		pm  = distribution.NewPodModel(r.Context(), stg)
+		vm  = distribution.NewVolumeModel(r.Context(), stg)
+		em  = distribution.NewEndpointModel(r.Context(), stg)
+		ns  = distribution.NewNetworkModel(r.Context(), stg)
 
 		cid   = utils.Vars(r)["cluster"]
 		nid   = utils.Vars(r)["node"]
@@ -161,7 +160,6 @@ func NodeGetSpecH(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		spec.Pods = pods.Items
-
 
 		volumes, err := vm.ManifestMap(n.Meta.Name)
 		if err != nil {
@@ -376,14 +374,14 @@ func NodeConnectH(w http.ResponseWriter, r *http.Request) {
 
 	node, err := nm.Get(nid)
 	if err != nil {
-		log.V(logLevel).Errorf("%s:connect:> get nodes list err: %s", logPrefix, err.Error())
+		log.V(logLevel).Errorf("%s:connect:> get node err: %s", logPrefix, err.Error())
 		errors.HTTP.InternalServerError(w)
 		return
 	}
 
 	snet, err := sn.SubnetGet(opts.Network.CIDR)
 	if err != nil {
-		log.V(logLevel).Errorf("%s:connect:> get nodes list err: %s", logPrefix, err.Error())
+		log.V(logLevel).Errorf("%s:connect:> get subnet err: %s", logPrefix, err.Error())
 		errors.HTTP.InternalServerError(w)
 		return
 	}
@@ -395,7 +393,7 @@ func NodeConnectH(w http.ResponseWriter, r *http.Request) {
 
 		nco.Info = opts.Info
 		nco.Status = opts.Status
-		nco.Meta.Subnet =  types.SubnetGetNameFromCIDR(opts.Network.CIDR)
+		nco.Meta.Subnet = types.SubnetGetNameFromCIDR(opts.Network.CIDR)
 		if snet != nil {
 			nco.Status.State.CNI.State = types.StateWarning
 			nco.Status.State.CNI.Message = errors.ErrEntityExists
@@ -430,7 +428,7 @@ func NodeConnectH(w http.ResponseWriter, r *http.Request) {
 	node.Status = opts.Status
 
 	if err := nm.Set(node); err != nil {
-		log.V(logLevel).Errorf("%s:connect:> get nodes list err: %s", logPrefix, err.Error())
+		log.V(logLevel).Errorf("%s:connect:> get node set err: %s", logPrefix, err.Error())
 		errors.HTTP.InternalServerError(w)
 		return
 	}
@@ -440,9 +438,9 @@ func NodeConnectH(w http.ResponseWriter, r *http.Request) {
 			errors.HTTP.InternalServerError(w)
 		}
 	} else {
-		if ! sn.SubnetEqual(snet, opts.Network.SubnetSpec) {
+		if !sn.SubnetEqual(snet, opts.Network.SubnetSpec) {
 			if err := sn.SubnetSet(snet); err != nil {
-				log.V(logLevel).Errorf("%s:connect:> get nodes list err: %s", logPrefix, err.Error())
+				log.V(logLevel).Errorf("%s:connect:> get subnet set err: %s", logPrefix, err.Error())
 				errors.HTTP.InternalServerError(w)
 				return
 			}
@@ -491,8 +489,8 @@ func NodeSetStatusH(w http.ResponseWriter, r *http.Request) {
 	log.V(logLevel).Debugf("%s:setstatus:> node set state", logPrefix)
 
 	var (
-		nm  = distribution.NewNodeModel(r.Context(), envs.Get().GetStorage())
-		pm  = distribution.NewPodModel(r.Context(), envs.Get().GetStorage())
+		nm = distribution.NewNodeModel(r.Context(), envs.Get().GetStorage())
+		pm = distribution.NewPodModel(r.Context(), envs.Get().GetStorage())
 
 		nid = utils.Vars(r)["node"]
 	)

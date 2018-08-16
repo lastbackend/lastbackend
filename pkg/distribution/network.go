@@ -19,12 +19,12 @@
 package distribution
 
 import (
-	"github.com/lastbackend/lastbackend/pkg/storage"
+	"context"
+	"encoding/json"
 	"github.com/lastbackend/lastbackend/pkg/distribution/errors"
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
-	"encoding/json"
-	"context"
 	"github.com/lastbackend/lastbackend/pkg/log"
+	"github.com/lastbackend/lastbackend/pkg/storage"
 )
 
 const (
@@ -35,7 +35,6 @@ type Network struct {
 	context context.Context
 	storage storage.Storage
 }
-
 
 func (s *Network) Runtime() (*types.Runtime, error) {
 
@@ -157,7 +156,6 @@ func (s *Network) Watch(ch chan types.NetworkEvent, rev *int64) error {
 	return nil
 }
 
-
 // Get subnet list
 func (s *Network) SubnetList() ([]*types.Subnet, error) {
 
@@ -183,7 +181,7 @@ func (s *Network) SubnetList() ([]*types.Subnet, error) {
 // Get subnet by name
 func (s *Network) SubnetGet(cidr string) (*types.Subnet, error) {
 
-	log.V(logLevel).Debugf("%s:SubnetGet:> get by name %s", logNetworkPrefix,  cidr)
+	log.V(logLevel).Debugf("%s:SubnetGet:> get by name %s", logNetworkPrefix, cidr)
 
 	name := types.SubnetGetNameFromCIDR(cidr)
 	snet := new(types.Subnet)
@@ -191,11 +189,11 @@ func (s *Network) SubnetGet(cidr string) (*types.Subnet, error) {
 	if err != nil {
 
 		if errors.Storage().IsErrEntityNotFound(err) {
-			log.V(logLevel).Warnf("%s:SubnetGet:> get by name %s not found", logNetworkPrefix,  name)
+			log.V(logLevel).Warnf("%s:SubnetGet:> get by name %s not found", logNetworkPrefix, name)
 			return nil, nil
 		}
 
-		log.V(logLevel).Errorf("%s:SubnetGet:> get by name %s error: %v", logNetworkPrefix,  name, err)
+		log.V(logLevel).Errorf("%s:SubnetGet:> get by name %s error: %v", logNetworkPrefix, name, err)
 		return nil, err
 	}
 
@@ -232,20 +230,20 @@ func (s *Network) SubnetSet(snet *types.Subnet) error {
 
 	log.V(logLevel).Debugf("%s:SubnetSet:> set subnet", logNetworkPrefix)
 
-	if err := s.storage.Put(s.context, s.storage.Collection().Subnet(),
+	if err := s.storage.Set(s.context, s.storage.Collection().Subnet(),
 		s.storage.Key().Subnet(snet.SelfLink()), snet, nil); err != nil {
 		log.V(logLevel).Errorf("%s:SubnetSet:> err: %v", logNetworkPrefix, err)
 		return err
 	}
 
-	m ,err := s.SubnetManifestGet(snet.SelfLink())
+	m, err := s.SubnetManifestGet(snet.SelfLink())
 	if err != nil {
 		log.V(logLevel).Errorf("%s:SubnetSet:> get manifest err: %v", logNetworkPrefix, err)
 		return err
 	}
 
 	if !types.SubnetSpecEqual(&m.SubnetSpec, &snet.Spec) {
-		if err := s.SubnetManifestSet(m ,snet); err != nil {
+		if err := s.SubnetManifestSet(m, snet); err != nil {
 			log.V(logLevel).Errorf("%s:SubnetPut:> insert subnet manifest err: %v", logNetworkPrefix, err)
 			return err
 		}
@@ -356,7 +354,6 @@ func (s *Network) SubnetWatch(ch chan types.SubnetEvent, rev *int64) error {
 	return nil
 }
 
-
 // Get network subnet manifests map
 func (s *Network) SubnetManifestMap() (*types.SubnetManifestMap, error) {
 	log.V(logLevel).Debugf("%s:SubnetManifestMap:> ", logNetworkPrefix)
@@ -440,7 +437,6 @@ func (s *Network) SubnetManifestWatch(ch chan types.SubnetManifestEvent, rev *in
 	done := make(chan bool)
 	watcher := storage.NewWatcher()
 
-
 	go func() {
 		for {
 			select {
@@ -479,7 +475,6 @@ func (s *Network) SubnetManifestWatch(ch chan types.SubnetManifestEvent, rev *in
 
 	return nil
 }
-
 
 // NewNetworkModel returns new network management model
 func NewNetworkModel(ctx context.Context, stg storage.Storage) *Network {
