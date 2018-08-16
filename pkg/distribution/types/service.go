@@ -26,7 +26,7 @@ import (
 	"time"
 
 	"github.com/lastbackend/lastbackend/pkg/util/network"
-	"github.com/lastbackend/dynamic/pkg/log"
+	"github.com/lastbackend/lastbackend/pkg/log"
 )
 
 const (

@@ -22,7 +22,7 @@ import (
 	"context"
 	"errors"
 
-	"github.com/lastbackend/dynamic/pkg/log"
+	"github.com/lastbackend/lastbackend/pkg/log"
 	"github.com/lastbackend/lastbackend/pkg/controller/envs"
 	"github.com/lastbackend/lastbackend/pkg/distribution"
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
