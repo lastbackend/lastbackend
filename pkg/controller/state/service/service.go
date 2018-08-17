@@ -312,17 +312,14 @@ func serviceDeploymentProvision(ss *ServiceState, svc *types.Service) error {
 		break
 	}
 
-
 	// if deployment found for provision: check and update replicas
-	if d != nil && d.Spec.Replicas != svc.Spec.Replicas {
-		log.Info("scale deployment")
-		if err := deploymentScale(d, svc.Spec.Replicas); err != nil {
-			log.Errorf("%s:> deployment scale err:", logServicePrefix, err.Error())
-			return err
+	if d != nil {
+		if d.Spec.Replicas != svc.Spec.Replicas {
+			if err := deploymentScale(d, svc.Spec.Replicas); err != nil {
+				log.Errorf("%s:> deployment scale err:", logServicePrefix, err.Error())
+				return err
+			}
 		}
-		return nil
-	} else {
-		log.Info("deployment create call")
 	}
 
 	// create deployment if needed
@@ -335,12 +332,17 @@ func serviceDeploymentProvision(ss *ServiceState, svc *types.Service) error {
 		}
 
 		for _, od := range ss.deployment.list {
+
 			if ss.deployment.active != nil {
-				if ss.deployment.active.SelfLink() != od.SelfLink() {
-					if err := deploymentDestroy(ss, ss.deployment.provision); err != nil {
-						log.Errorf("%s:> deployment cancel err:", logServicePrefix, err.Error())
-						return err
-					}
+				if ss.deployment.active.SelfLink() == od.SelfLink() {
+					continue
+				}
+			}
+
+			if od.Status.State != types.StateDestroy && od.Status.State != types.StateDestroyed {
+				if err := deploymentDestroy(ss, od); err != nil {
+					log.Errorf("%s:> deployment cancel err:", logServicePrefix, err.Error())
+					return err
 				}
 			}
 		}
@@ -380,14 +382,18 @@ func serviceStatusState(ss *ServiceState) (err error) {
 				ss.deployment.active.Spec.Replicas == ss.service.Spec.Replicas {
 				ss.service.Status.State = ss.deployment.active.Status.State
 				ss.service.Status.Message = ss.deployment.active.Status.Message
+					if ss.deployment.active.Status.State == types.StateCreated {
+						ss.service.Status.State = types.StateProvision
+						ss.service.Status.Message = types.EmptyString
+					}
 			}
 		}
 
-		if ss.deployment.provision != nil {
+		if ss.deployment.provision != nil && ss.deployment.active == nil {
 			if deploymentSpecValidate(ss.deployment.provision, ss.service.Spec.Template) &&
-				ss.deployment.provision.Spec.Replicas == ss.service.Spec.Replicas {
-				ss.service.Status.State = ss.deployment.provision.Status.State
-				ss.service.Status.Message = ss.deployment.provision.Status.Message
+					ss.deployment.provision.Spec.Replicas == ss.service.Spec.Replicas {
+					ss.service.Status.State = ss.deployment.provision.Status.State
+					ss.service.Status.Message = ss.deployment.provision.Status.Message
 			}
 		}
 

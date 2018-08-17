@@ -398,11 +398,12 @@ func TestHandlePodStateReady (t *testing.T) {
 
 	tests = append(tests, func() suit {
 
-		s := suit{name: "successful state handle, change deployment state"}
+		s := suit{name: "successful state handle with change deployment state"}
 
 		svc := getServiceAsset(types.StateProvision, types.EmptyString)
 		dp := getDeploymentAsset(svc, types.StateProvision, types.EmptyString)
 		pod := getPodAsset(dp, types.StateReady, types.EmptyString)
+		pod.Meta.Node = "node"
 
 		s.args.pod = pod
 
@@ -421,7 +422,7 @@ func TestHandlePodStateReady (t *testing.T) {
 
 	tests = append(tests, func() suit {
 
-		s := suit{name: "successful state handle, change deployment state to ready"}
+		s := suit{name: "successful state handle with change deployment state to ready"}
 
 		svc := getServiceAsset(types.StateProvision, types.EmptyString)
 		dp := getDeploymentAsset(svc, types.StateProvision, types.EmptyString)

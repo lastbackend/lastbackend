@@ -196,10 +196,20 @@ func testDeploymentObserver (t *testing.T, name, werr string, wst *ServiceState,
 			return
 		}
 
-		if _, ok := state.pod.list[d.SelfLink()]; !ok {
-			t.Errorf("pod deployment group not exitst: %s", d.SelfLink())
-			return
+		if d.Status.State != types.StateDestroyed {
+			if _, ok := state.pod.list[d.SelfLink()]; !ok {
+				t.Errorf("pod deployment group not exitst: %s", d.SelfLink())
+				return
+			}
 		}
+
+		if d.Status.State == types.StateDestroyed {
+			if _, ok := state.pod.list[d.SelfLink()]; ok {
+				t.Errorf("pod deployment group should not exitst: %s", d.SelfLink())
+				return
+			}
+		}
+
 
 		if !assert.Equal(t,
 			len(wst.pod.list[d.SelfLink()]),
@@ -222,17 +232,6 @@ func testDeploymentObserver (t *testing.T, name, werr string, wst *ServiceState,
 			if !assert.Equal(t,
 				d.Spec.Replicas,
 				count,
-				"pods count not match with replicas") {
-				return
-			}
-
-			return
-		}
-
-		if d.Status.State == types.StateDestroy {
-			if !assert.Equal(t,
-				d.Spec.Replicas,
-				len(state.pod.list[d.SelfLink()]),
 				"pods count not match with replicas") {
 				return
 			}
@@ -688,25 +687,33 @@ func TestHandleDeploymentStateError (t *testing.T) {
 		s := suit{name: "successful state handle without service state update"}
 
 		svc := getServiceAsset(types.StateReady, types.EmptyString)
+
 		dp1 := getDeploymentAsset(svc, types.StateReady, types.EmptyString)
 		dp2 := getDeploymentAsset(svc, types.StateError, types.EmptyString)
+
+
 		p1 := getPodAsset(dp1, types.StateReady, types.EmptyString)
-		p2 := getPodAsset(dp1, types.StateError, types.EmptyString)
+		p2 := getPodAsset(dp2, types.StateError, types.EmptyString)
+
+		p1.Meta.Node = "node"
+		p2.Meta.Node = "node"
 
 		s.args.state = getServiceStateAsset(svc)
 		s.args.state.deployment.active = dp1
 		s.args.state.deployment.provision = dp2
 		s.args.state.deployment.list[dp1.SelfLink()] = dp1
 		s.args.state.deployment.list[dp2.SelfLink()] = dp2
-		s.args.state.pod.list[dp1.SelfLink()] = make(map[string]*types.Pod)
-		s.args.state.pod.list[dp2.SelfLink()] = make(map[string]*types.Pod)
-		s.args.state.pod.list[dp1.SelfLink()][p1.SelfLink()] = p1
-		s.args.state.pod.list[dp2.SelfLink()][p2.SelfLink()] = p2
+		s.args.state.pod.list[p1.DeploymentLink()] = make(map[string]*types.Pod)
+		s.args.state.pod.list[p2.DeploymentLink()] = make(map[string]*types.Pod)
+		s.args.state.pod.list[p1.DeploymentLink()][p1.SelfLink()] = p1
+		s.args.state.pod.list[p2.DeploymentLink()][p2.SelfLink()] = p2
 		s.args.d = dp2
 
 		s.want.err = types.EmptyString
 		s.want.state = getServiceStateCopy(s.args.state)
+		s.want.state.deployment.provision = nil
 		s.want.state.service.Status.State = types.StateReady
+		s.want.state.deployment.list[dp2.SelfLink()].Status.State = types.StateDestroy
 
 		return s
 	}())
@@ -765,6 +772,9 @@ func TestHandleDeploymentStateDegradation (t *testing.T) {
 		p1 := getPodAsset(dp1, types.StateReady, types.EmptyString)
 		p2 := getPodAsset(dp1, types.StateDegradation, types.EmptyString)
 
+		p1.Meta.Node = "node"
+		p2.Meta.Node = "node"
+
 		s.args.state = getServiceStateAsset(svc)
 		s.args.state.deployment.active = dp1
 		s.args.state.deployment.provision = dp2
@@ -779,6 +789,8 @@ func TestHandleDeploymentStateDegradation (t *testing.T) {
 		s.want.err = types.EmptyString
 		s.want.state = getServiceStateCopy(s.args.state)
 		s.want.state.service.Status.State = types.StateReady
+		s.want.state.deployment.provision = nil
+		s.want.state.deployment.list[dp2.SelfLink()].Status.State = types.StateDestroy
 
 		return s
 	}())
@@ -806,7 +818,7 @@ func TestHandleDeploymentStateDestroy (t *testing.T) {
 
 	tests = append(tests, func() suit {
 
-		s := suit{name: "successful state handle deployment with pods with nodes"}
+		s := suit{name: "successful state handle active deployment with pods with nodes"}
 
 		svc := getServiceAsset(types.StateDestroy, types.EmptyString)
 		svc.Spec.Replicas=2
@@ -857,7 +869,10 @@ func TestHandleDeploymentStateDestroy (t *testing.T) {
 
 		s.want.err = types.EmptyString
 		s.want.state = getServiceStateCopy(s.args.state)
-		s.want.state.deployment.provision.Status.State = types.StateDestroy
+		s.want.state.service.Status.State = types.StateDestroyed
+		s.want.state.deployment.provision = nil
+		s.want.state.deployment.list = make(map[string]*types.Deployment, 0)
+		s.want.state.pod.list = make(map[string]map[string]*types.Pod, 0)
 
 
 		return s
@@ -865,7 +880,7 @@ func TestHandleDeploymentStateDestroy (t *testing.T) {
 
 	tests = append(tests, func() suit {
 
-		s := suit{name: "successful state handle active deployment without pods"}
+		s := suit{name: "successful state handle active deployment with one pod without node"}
 
 		svc := getServiceAsset(types.StateDestroy, types.EmptyString)
 		svc.Spec.Replicas=2
@@ -873,6 +888,7 @@ func TestHandleDeploymentStateDestroy (t *testing.T) {
 		dp := getDeploymentAsset(svc, types.StateDestroy, types.EmptyString)
 		p1 := getPodAsset(dp, types.StateCreated, types.EmptyString)
 		p2 := getPodAsset(dp, types.StateError, types.EmptyString)
+		p1.Meta.Node = "node"
 
 		s.args.state = getServiceStateAsset(svc)
 		s.args.state.deployment.active = dp
@@ -886,6 +902,7 @@ func TestHandleDeploymentStateDestroy (t *testing.T) {
 		s.want.err = types.EmptyString
 		s.want.state = getServiceStateCopy(s.args.state)
 		s.want.state.deployment.active.Status.State = types.StateDestroy
+		delete(s.want.state.pod.list[p2.DeploymentLink()], p2.SelfLink())
 
 		return s
 	}())
@@ -911,6 +928,7 @@ func TestHandleDeploymentStateDestroy (t *testing.T) {
 		s.want.state.deployment.list = make(map[string]*types.Deployment)
 		s.want.state.deployment.provision = nil
 		s.want.state.service.Status.State = types.StateDestroyed
+		delete(s.want.state.pod.list, dp.SelfLink())
 
 		return s
 	}())
@@ -947,6 +965,9 @@ func TestHandleDeploymentStateDestroyed(t *testing.T) {
 		p1 := getPodAsset(dp, types.StateCreated, types.EmptyString)
 		p2 := getPodAsset(dp, types.StateError, types.EmptyString)
 
+		p1.Meta.Node = "node"
+		p2.Meta.Node = "node"
+
 		s.args.state = getServiceStateAsset(svc)
 		s.args.state.deployment.provision = dp
 		s.args.state.deployment.list[dp.SelfLink()] = dp
@@ -958,7 +979,9 @@ func TestHandleDeploymentStateDestroyed(t *testing.T) {
 
 		s.want.err = types.EmptyString
 		s.want.state = getServiceStateCopy(s.args.state)
-		s.want.state.deployment.provision.Status.State = types.StateDestroy
+		s.want.state.service.Status.State = types.StateDestroy
+		s.want.state.deployment.provision = nil
+		s.want.state.deployment.list[dp.SelfLink()].Status.State = types.StateDestroy
 
 		s.want.state.pod.list[dp.SelfLink()] = make(map[string]*types.Pod)
 		s.want.state.pod.list[p1.DeploymentLink()][p1.SelfLink()] = p1
@@ -972,8 +995,6 @@ func TestHandleDeploymentStateDestroyed(t *testing.T) {
 		s := suit{name: "successful state handle with service state change"}
 
 		svc := getServiceAsset(types.StateDestroy, types.EmptyString)
-		svc.Spec.Replicas=2
-
 		dp := getDeploymentAsset(svc, types.StateDestroyed, types.EmptyString)
 
 		s.args.state = getServiceStateAsset(svc)
@@ -988,7 +1009,8 @@ func TestHandleDeploymentStateDestroyed(t *testing.T) {
 		s.want.state.deployment.active = nil
 		s.want.state.deployment.list = make(map[string]*types.Deployment)
 		s.want.state.service.Status.State = types.StateDestroyed
-
+		delete(s.want.state.deployment.list, dp.SelfLink())
+		delete(s.want.state.pod.list, dp.SelfLink())
 		return s
 	}())
 
@@ -1007,8 +1029,15 @@ func TestHandleDeploymentStateDestroyed(t *testing.T) {
 		s.args.state.deployment.provision = dp2
 		s.args.state.deployment.list[dp1.SelfLink()] = dp1
 		s.args.state.deployment.list[dp2.SelfLink()] = dp2
+		p1 := getPodAsset(dp1, types.StateCreated, types.EmptyString)
+		p2:= getPodAsset(dp1, types.StateCreated, types.EmptyString)
+		p1.Meta.Node = "node"
+		p2.Meta.Node = "node"
+
 		s.args.state.pod.list[dp1.SelfLink()] = make(map[string]*types.Pod)
-		s.args.state.pod.list[dp2.SelfLink()] = make(map[string]*types.Pod)
+		s.args.state.pod.list[p1.DeploymentLink()][p1.SelfLink()] = p1
+		s.args.state.pod.list[p2.DeploymentLink()][p2.SelfLink()] = p2
+
 
 		s.args.d = dp2
 

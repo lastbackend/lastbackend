@@ -276,16 +276,15 @@ func deploymentPodProvision(ss *ServiceState, d *types.Deployment) (err error) {
 
 	t := d.Meta.Updated
 
+	var (
+		provision = false
+	)
+
 	defer func() {
 		if err == nil {
 			err = deploymentUpdate(d, t)
 		}
 	}()
-
-	if d.Status.State != types.StateProvision {
-		d.Status.State = types.StateProvision
-		d.Meta.Updated = time.Now()
-	}
 
 	var (
 		st       = []string{
@@ -342,8 +341,7 @@ func deploymentPodProvision(ss *ServiceState, d *types.Deployment) (err error) {
 		}
 
 		if d.Spec.Replicas == total {
-
-			return nil
+			break
 		}
 
 		if d.Spec.Replicas > total {
@@ -354,6 +352,7 @@ func deploymentPodProvision(ss *ServiceState, d *types.Deployment) (err error) {
 				return err
 			}
 			pods[p.SelfLink()] = p
+			provision = true
 			continue
 		}
 
@@ -370,12 +369,19 @@ func deploymentPodProvision(ss *ServiceState, d *types.Deployment) (err error) {
 						return err
 					}
 
-
+					provision = true
 					break
 				}
 			}
 		}
 
+	}
+
+	if provision {
+		if d.Status.State != types.StateProvision {
+			d.Status.State = types.StateProvision
+			d.Meta.Updated = time.Now()
+		}
 	}
 
 	return nil
@@ -429,15 +435,14 @@ func deploymentDestroy(ss *ServiceState, d *types.Deployment) (err error) {
 
 	for _, p := range pl {
 
-		if p.Status.State == types.StateDestroyed {
-			if err := podRemove(ss, p); err != nil {
-				return err
-			}
-			continue
-		}
-
 		if p.Status.State != types.StateDestroy {
 			if err := podDestroy(ss, p); err != nil {
+				return err
+			}
+		}
+
+		if p.Status.State == types.StateDestroyed {
+			if err := podRemove(ss, p); err != nil {
 				return err
 			}
 		}

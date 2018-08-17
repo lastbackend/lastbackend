@@ -197,6 +197,9 @@ func testServiceObserver(t *testing.T, name, werr string, wst *ServiceState, sta
 
 func testStatusState(t *testing.T, fn func(*ServiceState) error, name string, wst, state *ServiceState) {
 
+	stg, _ := storage.Get("mock")
+	envs.Get().SetStorage(stg)
+
 	t.Run(name, func(t *testing.T) {
 
 		fn(state)
@@ -430,23 +433,24 @@ func TestHandleServiceStateCreated(t *testing.T) {
 		s.args.svc.Spec.Template.Updated.Add(-5 * time.Second)
 
 		dp1 := getDeploymentAsset(s.args.svc, types.StateCreated, types.EmptyString)
-		cdp := *dp1
 
 		s.args.state = getServiceStateAsset(s.args.svc)
+		s.args.svc.Spec.Template.Updated = time.Now()
+
 		s.args.state.deployment.provision = dp1
 		s.args.state.deployment.list[dp1.SelfLink()] = dp1
 
+
+
 		s.want.err = types.EmptyString
-		s.args.svc.Spec.Template.Updated = time.Now()
-		s.want.state = getServiceStateAsset(s.args.svc)
+		s.want.state = getServiceStateCopy(s.args.state)
 
-		dp2 := getDeploymentAsset(s.want.state.service, types.StateCreated, types.EmptyString)
+		dp2 := getDeploymentAsset(s.want.state.service, types.StateProvision, types.EmptyString)
 
-		s.want.state.deployment.list[cdp.SelfLink()] = &cdp
-		s.want.state.deployment.list[dp2.SelfLink()] = dp2
-
+		s.want.state.service.Status.State = types.StateProvision
 		s.want.state.deployment.provision = dp2
-		s.want.state.deployment.list[cdp.SelfLink()].Status.State = types.StateDestroyed
+		s.want.state.deployment.list[dp2.SelfLink()] = dp2
+		s.want.state.deployment.list[dp1.SelfLink()].Status.State = types.StateDestroyed
 
 		return s
 	}())
@@ -639,6 +643,7 @@ func TestHandleServiceStateProvision(t *testing.T) {
 
 		s.want.err = types.EmptyString
 		s.want.state = getServiceStateCopy(s.args.state)
+		s.want.state.deployment.list[dp1.SelfLink()].Status.State = types.StateDestroyed
 		s.want.state.deployment.list[dp2.SelfLink()].Status.State = types.StateDestroyed
 		s.want.state.deployment.list[dp3.SelfLink()] = dp3
 		s.want.state.deployment.provision = dp3
@@ -651,22 +656,21 @@ func TestHandleServiceStateProvision(t *testing.T) {
 
 		s.args.svc = getServiceAsset(types.StateProvision, types.EmptyString)
 		s.args.svc.Spec.Template.Updated.Add(-5 * time.Second)
-		dp1 := getDeploymentAsset(s.args.svc, types.StateError, types.EmptyString)
-		cdp1 := *dp1
+		dp1 := getDeploymentAsset(s.args.svc, types.StateReady, types.EmptyString)
 
 		s.args.state = getServiceStateAsset(s.args.svc)
 		s.args.state.deployment.active = dp1
 		s.args.state.deployment.list[dp1.SelfLink()] = dp1
 
-		s.want.err = types.EmptyString
+
 		s.args.svc.Spec.Template.Updated = time.Now()
+		dp2 := getDeploymentAsset(s.args.svc, types.StateProvision, types.EmptyString)
 
-		dp2 := getDeploymentAsset(s.args.svc, types.StateCreated, types.EmptyString)
 
-		s.want.state = getServiceStateAsset(s.args.svc)
-		s.want.state.deployment.list[cdp1.SelfLink()] = &cdp1
+		s.want.err = types.EmptyString
+		s.want.state = getServiceStateCopy(s.args.state)
+		s.want.state.deployment.list[dp1.SelfLink()].Status.State = types.StateDestroyed
 		s.want.state.deployment.list[dp2.SelfLink()] = dp2
-		s.want.state.deployment.active = &cdp1
 		s.want.state.deployment.provision = dp2
 
 		return s
@@ -1257,6 +1261,10 @@ func getPodAsset(d *types.Deployment, state, message string) *types.Pod {
 
 	p.Status.State = state
 	p.Status.Message = message
+
+	if state == types.StateReady {
+		p.Status.Running = true
+	}
 
 	p.Spec.State = d.Spec.State
 	p.Spec.Template = d.Spec.Template
