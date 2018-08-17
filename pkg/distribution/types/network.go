@@ -19,7 +19,6 @@
 package types
 
 import (
-	"github.com/lastbackend/genesis/pkg/distribution/types"
 	"strings"
 )
 
@@ -107,7 +106,7 @@ func SubnetSpecEqual (n *SubnetSpec, nt *SubnetSpec)bool {
 }
 
 func (s Subnet) SelfLink() string {
-	if s.Meta.SelfLink == types.EmptyString {
+	if s.Meta.SelfLink == EmptyString {
 		s.Meta.SelfLink = s.Meta.Name
 	}
 	return s.Meta.SelfLink
