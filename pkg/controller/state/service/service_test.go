@@ -545,7 +545,6 @@ func TestHandleServiceStateProvision(t *testing.T) {
 		return s
 	}())
 
-
 	tests = append(tests, func() suit {
 		s := suit{name: "successful state handle with endpoint remove"}
 
@@ -643,7 +642,7 @@ func TestHandleServiceStateProvision(t *testing.T) {
 
 		s.want.err = types.EmptyString
 		s.want.state = getServiceStateCopy(s.args.state)
-		s.want.state.deployment.list[dp1.SelfLink()].Status.State = types.StateDestroyed
+		s.want.state.deployment.list[dp1.SelfLink()].Status.State = types.StateReady
 		s.want.state.deployment.list[dp2.SelfLink()].Status.State = types.StateDestroyed
 		s.want.state.deployment.list[dp3.SelfLink()] = dp3
 		s.want.state.deployment.provision = dp3
@@ -656,7 +655,7 @@ func TestHandleServiceStateProvision(t *testing.T) {
 
 		s.args.svc = getServiceAsset(types.StateProvision, types.EmptyString)
 		s.args.svc.Spec.Template.Updated.Add(-5 * time.Second)
-		dp1 := getDeploymentAsset(s.args.svc, types.StateReady, types.EmptyString)
+		dp1 := getDeploymentAsset(s.args.svc, types.StateError, types.EmptyString)
 
 		s.args.state = getServiceStateAsset(s.args.svc)
 		s.args.state.deployment.active = dp1
