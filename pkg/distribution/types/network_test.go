@@ -50,7 +50,7 @@ func TestEqual(t *testing.T) {
 		Addr: "10.0.0.0",
 	}
 
-	assert.Equal(t, true, network.Equal(asset), "equal")
+	assert.Equal(t, true, types.SubnetSpecEqual(network, asset), "equal")
 }
 
 func TestNotEqual(t *testing.T) {
@@ -190,6 +190,6 @@ func TestNotEqual(t *testing.T) {
 	}
 
 	for attr, asset := range assets {
-		assert.Equal(t, false, network.Equal(asset), attr)
+		assert.Equal(t, false, types.SubnetSpecEqual(network, asset), attr)
 	}
 }
