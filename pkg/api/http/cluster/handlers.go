@@ -26,7 +26,7 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/distribution"
 	"github.com/lastbackend/lastbackend/pkg/distribution/errors"
 	"github.com/lastbackend/lastbackend/pkg/log"
-)
+	)
 
 const (
 	logLevel  = 2

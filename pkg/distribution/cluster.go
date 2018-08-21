@@ -27,7 +27,7 @@ import (
 
 	"encoding/json"
 
-	"github.com/lastbackend/lastbackend/pkg/distribution/errors"
+	"github.com/spf13/viper"
 )
 
 const (
@@ -46,17 +46,19 @@ func (c *Cluster) Get() (*types.Cluster, error) {
 	log.V(logLevel).Debugf("%s:get:> get info", logClusterPrefix)
 
 	cluster := new(types.Cluster)
+	cluster.Meta.Name = viper.GetString("name")
+	cluster.Meta.Description = viper.GetString("description")
 
-	err := c.storage.Get(c.context, c.storage.Collection().Cluster(), "", cluster, nil)
-	if err != nil {
-		if errors.Storage().IsErrEntityNotFound(err) {
-			log.V(logLevel).Warnf("%s:get:> cluster not found", logClusterPrefix)
-			return nil, nil
-		}
-
-		log.V(logLevel).Errorf("%s:get:> get cluster err: %v", logClusterPrefix, err)
-		return nil, err
-	}
+	//err := c.storage.Get(c.context, c.storage.Collection().Cluster(), "", cluster, nil)
+	//if err != nil {
+	//	if errors.Storage().IsErrEntityNotFound(err) {
+	//		log.V(logLevel).Warnf("%s:get:> cluster not found", logClusterPrefix)
+	//		return nil, nil
+	//	}
+	//
+	//	log.V(logLevel).Errorf("%s:get:> get cluster err: %v", logClusterPrefix, err)
+	//	return nil, err
+	//}
 
 	return cluster, nil
 }
