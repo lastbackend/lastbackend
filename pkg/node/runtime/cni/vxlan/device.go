@@ -29,6 +29,8 @@ import (
 	"github.com/vishvananda/netlink"
 )
 
+const logLevel = 3
+
 type Device struct {
 	link *netlink.Vxlan
 	addr net.IP
@@ -77,15 +79,15 @@ func NewDevice(opts DeviceCreateOpts) (*Device, error) {
 
 func (d *Device) Create() error {
 
-	log.Debug("Create new vxlan interface")
+	log.V(logLevel).Debug("Create new vxlan interface")
 
 	err := netlink.LinkAdd(d.link)
 	if err == syscall.EEXIST {
-		log.Debugf("Device already exists: %s", d.link.Name)
+		log.V(logLevel).Debugf("Device already exists: %s", d.link.Name)
 
 		l, err := netlink.LinkByName(d.link.Name)
 		if err != nil {
-			log.Debugf("Link by name: %s", err.Error())
+			log.V(logLevel).Debugf("Link by name: %s", err.Error())
 		}
 
 		d.link = l.(*netlink.Vxlan)
@@ -112,7 +114,7 @@ func (d *Device) Create() error {
 
 func (d *Device) SetIP(nt net.IPNet) error {
 
-	log.Debug("Set IP for device")
+	log.V(logLevel).Debug("Set IP for device")
 
 	ip := make(net.IP, len(nt.IP))
 	copy(ip, nt.IP)
@@ -156,7 +158,7 @@ func (d *Device) SetIP(nt net.IPNet) error {
 }
 
 func (d *Device) SetUp() error {
-	log.Debug("Set vxlan interface up")
+	log.V(logLevel).Debug("Set vxlan interface up")
 	if err := netlink.LinkSetUp(d.link); err != nil {
 		return fmt.Errorf("failed to set interface %s to UP state: %s", d.link.Attrs().Name, err)
 	}
@@ -165,7 +167,7 @@ func (d *Device) SetUp() error {
 }
 
 func (d *Device) AddFDB(MAC net.HardwareAddr, IP net.IP) error {
-	log.Debugf("Add FDB: %v, %v", MAC, IP)
+	log.V(logLevel).Debugf("Add FDB: %v, %v", MAC, IP)
 
 	rules, err := utils.BridgeFDBList()
 	if err != nil {
@@ -194,7 +196,7 @@ func (d *Device) AddFDB(MAC net.HardwareAddr, IP net.IP) error {
 }
 
 func (d *Device) DelFDB(MAC net.HardwareAddr, IP net.IP) error {
-	log.Debugf("Del FDB: %v, %v", MAC, IP)
+	log.V(logLevel).Debugf("Del FDB: %v, %v", MAC, IP)
 	return netlink.NeighDel(&netlink.Neigh{
 		LinkIndex:    d.link.Index,
 		Family:       syscall.AF_BRIDGE,
@@ -205,7 +207,7 @@ func (d *Device) DelFDB(MAC net.HardwareAddr, IP net.IP) error {
 }
 
 func (d *Device) AddARP(MAC net.HardwareAddr, IP net.IP) error {
-	log.Debugf("Add ARP: %v, %v", MAC, IP)
+	log.V(logLevel).Debugf("Add ARP: %v, %v", MAC, IP)
 	return netlink.NeighSet(&netlink.Neigh{
 		LinkIndex:    d.link.Index,
 		State:        netlink.NUD_PERMANENT,
@@ -216,7 +218,7 @@ func (d *Device) AddARP(MAC net.HardwareAddr, IP net.IP) error {
 }
 
 func (d *Device) DelARP(MAC net.HardwareAddr, IP net.IP) error {
-	log.Debugf("Del ARP: %v, %v", MAC, IP)
+	log.V(logLevel).Debugf("Del ARP: %v, %v", MAC, IP)
 	return netlink.NeighDel(&netlink.Neigh{
 		LinkIndex:    d.link.Index,
 		State:        netlink.NUD_PERMANENT,

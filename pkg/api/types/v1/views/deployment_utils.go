@@ -20,18 +20,18 @@ package views
 
 import (
 	"encoding/json"
+
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 )
 
 type DeploymentView struct{}
 
-func (dv *DeploymentView) New(obj *types.Deployment, pl map[string]*types.Pod) *Deployment {
+func (dv *DeploymentView) New(obj *types.Deployment, pl *types.PodList) *Deployment {
 	d := Deployment{}
 	d.ID = obj.Meta.Name
 	d.Meta = d.ToMeta(obj.Meta)
 	d.Status = d.ToStatus(obj.Status)
 	d.Spec = d.ToSpec(obj.Spec)
-	d.Replicas = d.ToReplicas(obj.Replicas)
 
 	if pl != nil {
 		d.Pods = d.ToPods(pl)
@@ -66,8 +66,6 @@ func (di *Deployment) ToStatus(obj types.DeploymentStatus) DeploymentStatusInfo 
 func (di *Deployment) ToSpec(obj types.DeploymentSpec) DeploymentSpec {
 
 	var spec = DeploymentSpec{
-		Strategy: obj.Strategy,
-		Triggers: obj.Triggers,
 		Selector: obj.Selector,
 		Replicas: obj.Replicas,
 		Template: obj.Template,
@@ -76,22 +74,9 @@ func (di *Deployment) ToSpec(obj types.DeploymentSpec) DeploymentSpec {
 	return spec
 }
 
-func (di *Deployment) ToReplicas(obj types.DeploymentReplicas) DeploymentReplicasInfo {
-
-	return DeploymentReplicasInfo{
-		Total:     obj.Total,
-		Provision: obj.Provision,
-		Created:   obj.Created,
-		Started:   obj.Started,
-		Stopped:   obj.Stopped,
-		Errored:   obj.Errored,
-		Pulling:   obj.Pulling,
-	}
-}
-
-func (di *Deployment) ToPods(obj map[string]*types.Pod) map[string]Pod {
+func (di *Deployment) ToPods(obj *types.PodList) map[string]Pod {
 	pods := make(map[string]Pod, 0)
-	for _, p := range obj {
+	for _, p := range obj.Items {
 		if p.Meta.Deployment == di.ID {
 			pv := new(PodViewHelper)
 			pods[p.Meta.Name] = pv.New(p)
@@ -104,9 +89,9 @@ func (di *Deployment) ToJson() ([]byte, error) {
 	return json.Marshal(di)
 }
 
-func (dv *DeploymentView) NewList(obj map[string]*types.Deployment, pods map[string]*types.Pod) *DeploymentList {
+func (dv *DeploymentView) NewList(obj *types.DeploymentList, pods *types.PodList) *DeploymentList {
 	dl := make(DeploymentList, 0)
-	for _, d := range obj {
+	for _, d := range obj.Items {
 		dv := new(DeploymentView)
 		dp := dv.New(d, pods)
 		dl = append(dl, dp)

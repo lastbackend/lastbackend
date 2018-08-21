@@ -215,7 +215,7 @@ func DeploymentInfoH(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	pods, err := pdm.ListByService(srv.Meta.Namespace, srv.Meta.Name)
+	pods, err := pdm.ListByDeployment(srv.Meta.Namespace, srv.Meta.Name, d.Meta.Name)
 	if err != nil {
 		log.V(logLevel).Errorf("%s:info:> get pod list by service id `%s` err: %s", logPrefix, srv.Meta.Name, err.Error())
 		errors.HTTP.InternalServerError(w)
@@ -322,8 +322,8 @@ func DeploymentUpdateH(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := dm.SetSpec(dp, opts); err != nil {
-		log.V(logLevel).Errorf("%s:update:> update service err: %s", logPrefix, err.Error())
+	if err := dm.Update(dp); err != nil {
+		log.V(logLevel).Errorf("%s:update:> update deployment err: %s", logPrefix, err.Error())
 		errors.HTTP.InternalServerError(w)
 		return
 	}

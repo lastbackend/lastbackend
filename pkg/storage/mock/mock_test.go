@@ -16,301 +16,48 @@
 // from Last.Backend LLC.
 //
 
-package mock
+package mock_test
 
 import (
-	"context"
-	"reflect"
 	"testing"
 
-	"github.com/lastbackend/lastbackend/pkg/storage/storage"
+	"github.com/lastbackend/lastbackend/pkg/storage"
+	"github.com/lastbackend/lastbackend/pkg/storage/mock"
+	"github.com/stretchr/testify/assert"
 )
 
-func TestStorage_Cluster(t *testing.T) {
-
-	tests := []struct {
-		name string
-		want storage.Cluster
-	}{
-		{"cluster storage",
-			newClusterStorage(),
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			if got, err := New(); (err != nil) || !reflect.DeepEqual(got.Cluster(), tt.want) {
-				t.Errorf("Storage.Cluster() = %v, want %v", got, tt.want)
-			}
-		})
-	}
+func TestStorage_Get(t *testing.T) {
+	stg, err := mock.New()
+	assert.NoError(t, err, "storage initialize err")
+	storage.StorageGetAssets(t, stg)
 }
 
-func TestStorage_Deployment(t *testing.T) {
-	tests := []struct {
-		name string
-		want storage.Deployment
-	}{
-		{"Deployment storage",
-			newDeploymentStorage(),
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			if got, err := New(); (err != nil) || !reflect.DeepEqual(got.Deployment(), tt.want) {
-				t.Errorf("Storage.Deployment() = %v, want %v", got, tt.want)
-			}
-		})
-	}
+func TestStorage_List(t *testing.T) {
+	stg, err := mock.New()
+	assert.NoError(t, err, "storage initialize err")
+	storage.StorageListAssets(t, stg)
 }
 
-func TestStorage_Trigger(t *testing.T) {
-	tests := []struct {
-		name string
-		want storage.Trigger
-	}{
-		{"cluster storage",
-			newTriggerStorage(),
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			if got, err := New(); (err != nil) || !reflect.DeepEqual(got.Trigger(), tt.want) {
-				t.Errorf("Storage.Trigger() = %v, want %v", got, tt.want)
-			}
-		})
-	}
+func TestStorage_Map(t *testing.T) {
+	stg, err := mock.New()
+	assert.NoError(t, err, "storage initialize err")
+	storage.StorageMapAssets(t, stg)
 }
 
-func TestStorage_Node(t *testing.T) {
-	tests := []struct {
-		name string
-		want storage.Node
-	}{
-		{"Node storage",
-			newNodeStorage(),
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			if got, err := New(); (err != nil) || !reflect.DeepEqual(got.Node(), tt.want) {
-				t.Errorf("Storage.Node() = %v, want %v", got, tt.want)
-			}
-		})
-	}
+func TestStorage_Put(t *testing.T) {
+	stg, err := mock.New()
+	assert.NoError(t, err, "storage initialize err")
+	storage.StoragePutAssets(t, stg)
 }
 
-func TestStorage_Ingress(t *testing.T) {
-	tests := []struct {
-		name string
-		want storage.Ingress
-	}{
-		{"Ingress storage",
-			newIngressStorage(),
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			if got, err := New(); (err != nil) || !reflect.DeepEqual(got.Ingress(), tt.want) {
-				t.Errorf("Storage.Ingress() = %v, want %v", got, tt.want)
-			}
-		})
-	}
+func TestStorage_Set(t *testing.T) {
+	stg, err := mock.New()
+	assert.NoError(t, err, "storage initialize err")
+	storage.StorageSetAssets(t, stg)
 }
 
-func TestStorage_Namespace(t *testing.T) {
-	tests := []struct {
-		name string
-		want storage.Namespace
-	}{
-		{"Namespace storage",
-			newNamespaceStorage(),
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			if got, err := New(); (err != nil) || !reflect.DeepEqual(got.Namespace(), tt.want) {
-				t.Errorf("Storage.Namespace() = %v, want %v", got, tt.want)
-			}
-		})
-	}
-}
-
-func TestStorage_Route(t *testing.T) {
-	tests := []struct {
-		name string
-		want storage.Route
-	}{
-		{"Route storage",
-			newRouteStorage(),
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			if got, err := New(); (err != nil) || !reflect.DeepEqual(got.Route(), tt.want) {
-				t.Errorf("Storage.Route() = %v, want %v", got, tt.want)
-			}
-		})
-	}
-}
-
-func TestStorage_Pod(t *testing.T) {
-	tests := []struct {
-		name string
-		want storage.Pod
-	}{
-		{"Pod storage",
-			newPodStorage(),
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			if got, err := New(); (err != nil) || !reflect.DeepEqual(got.Pod(), tt.want) {
-				t.Errorf("Storage.Pod() = %v, want %v", got, tt.want)
-			}
-		})
-	}
-}
-
-func TestStorage_Service(t *testing.T) {
-	tests := []struct {
-		name string
-		want storage.Service
-	}{
-		{"Service storage",
-			newServiceStorage(),
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			if got, err := New(); (err != nil) || !reflect.DeepEqual(got.Service(), tt.want) {
-				t.Errorf("Storage.Service() = %v, want %v", got, tt.want)
-			}
-		})
-	}
-}
-
-func TestStorage_Volume(t *testing.T) {
-	tests := []struct {
-		name string
-		want storage.Volume
-	}{
-		{"Volume storage",
-			newVolumeStorage(),
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			if got, err := New(); (err != nil) || !reflect.DeepEqual(got.Volume(), tt.want) {
-				t.Errorf("Storage.Volume() = %v, want %v", got, tt.want)
-			}
-		})
-	}
-}
-
-func TestStorage_Secret(t *testing.T) {
-	tests := []struct {
-		name string
-		want storage.Secret
-	}{
-		{"Secret storage",
-			newSecretStorage(),
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			if got, err := New(); (err != nil) || !reflect.DeepEqual(got.Secret(), tt.want) {
-				t.Errorf("Storage.Secret() = %v, want %v", got, tt.want)
-			}
-		})
-	}
-}
-
-func TestStorage_System(t *testing.T) {
-	tests := []struct {
-		name string
-		want storage.System
-	}{
-		{"System storage",
-			newSystemStorage(),
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			if got, err := New(); (err != nil) || !reflect.DeepEqual(got.System(), tt.want) {
-				t.Errorf("Storage.System() = %v, want %v", got, tt.want)
-			}
-		})
-	}
-}
-
-func Test_keyCreate(t *testing.T) {
-	type args struct {
-		args []string
-	}
-	tests := []struct {
-		name string
-		args args
-		want string
-	}{
-		{"key test",
-			args{[]string{"test", "test"}},
-			"test/test",
-		},
-		{"key demo",
-			args{[]string{"test", "demo"}},
-			"test/demo",
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			if got := keyCreate(tt.args.args...); got != tt.want {
-				t.Errorf("keyCreate() = %v, want %v", got, tt.want)
-			}
-		})
-	}
-}
-
-func Test_getClient(t *testing.T) {
-
-	type args struct {
-		ctx context.Context
-	}
-	tests := []struct {
-		name    string
-		args    args
-		wantErr bool
-	}{
-		{"test get client dummy",
-			args{context.Background()},
-			false,
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			got, got1, err := getClient(tt.args.ctx)
-			if (err != nil) != tt.wantErr {
-				t.Errorf("getClient() error = %v, wantErr %v", err, tt.wantErr)
-				return
-			}
-			if got != nil {
-				t.Errorf("getClient() got = %v, want nil", got)
-			}
-
-			if got1 != nil {
-				t.Errorf("getClient() got1 = %v, want nil", got1)
-			}
-		})
-	}
+func TestStorage_Del(t *testing.T) {
+	stg, err := mock.New()
+	assert.NoError(t, err, "storage initialize err")
+	storage.StorageDelAssets(t, stg)
 }

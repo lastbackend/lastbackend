@@ -17,3 +17,12 @@
 //
 
 package types
+
+type Runtime struct {
+	System RuntimeSystem `json:"-"`
+}
+
+type RuntimeSystem struct {
+	Revision int64 `json:"-"`
+	Key string `json:"-"`
+}

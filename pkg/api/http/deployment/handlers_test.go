@@ -23,6 +23,11 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io/ioutil"
+	"net/http"
+	"net/http/httptest"
+	"testing"
+
 	"github.com/gorilla/mux"
 	"github.com/lastbackend/lastbackend/pkg/api/envs"
 	"github.com/lastbackend/lastbackend/pkg/api/http/deployment"
@@ -31,10 +36,6 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 	"github.com/lastbackend/lastbackend/pkg/storage"
 	"github.com/stretchr/testify/assert"
-	"io/ioutil"
-	"net/http"
-	"net/http/httptest"
-	"testing"
 )
 
 // Testing DeploymentInfoH handler
@@ -42,7 +43,7 @@ func TestDeploymentInfo(t *testing.T) {
 
 	var ctx = context.Background()
 
-	stg, _ := storage.GetMock()
+	stg, _ := storage.Get("mock")
 	envs.Get().SetStorage(stg)
 
 	ns1 := getNamespaceAsset("demo", "")
@@ -51,6 +52,8 @@ func TestDeploymentInfo(t *testing.T) {
 	s2 := getServiceAsset(ns1.Meta.Name, "test", "")
 	d1 := getDeploymentAsset(ns1.Meta.Name, s1.Meta.Name, "demo")
 	d2 := getDeploymentAsset(ns1.Meta.Name, s2.Meta.Name, "test")
+	p1 := getPodAsset(ns1.Meta.Name, s1.Meta.Name, d1.Meta.Name, "demo", "")
+	p2 := getPodAsset(ns1.Meta.Name, s1.Meta.Name, d1.Meta.Name, "test", "")
 
 	type fields struct {
 		stg storage.Storage
@@ -113,13 +116,16 @@ func TestDeploymentInfo(t *testing.T) {
 	}
 
 	clear := func() {
-		err := envs.Get().GetStorage().Namespace().Clear(context.Background())
+		err := envs.Get().GetStorage().Del(context.Background(), stg.Collection().Namespace(), types.EmptyString)
 		assert.NoError(t, err)
 
-		err = envs.Get().GetStorage().Service().Clear(context.Background())
+		err = envs.Get().GetStorage().Del(context.Background(), stg.Collection().Service(), types.EmptyString)
 		assert.NoError(t, err)
 
-		err = envs.Get().GetStorage().Deployment().Clear(context.Background())
+		err = envs.Get().GetStorage().Del(context.Background(), stg.Collection().Deployment(), types.EmptyString)
+		assert.NoError(t, err)
+
+		err = envs.Get().GetStorage().Del(context.Background(), stg.Collection().Pod(), types.EmptyString)
 		assert.NoError(t, err)
 	}
 
@@ -130,13 +136,20 @@ func TestDeploymentInfo(t *testing.T) {
 			clear()
 			defer clear()
 
-			err := envs.Get().GetStorage().Namespace().Insert(context.Background(), ns1)
+			err := tc.fields.stg.Put(context.Background(), stg.Collection().Namespace(),
+				tc.fields.stg.Key().Namespace(ns1.Meta.Name), ns1, nil)
 			assert.NoError(t, err)
 
-			err = envs.Get().GetStorage().Service().Insert(context.Background(), s1)
+			err = tc.fields.stg.Put(context.Background(), stg.Collection().Service(), tc.fields.stg.Key().Service(s1.Meta.Namespace, s1.Meta.Name), s1, nil)
 			assert.NoError(t, err)
 
-			err = envs.Get().GetStorage().Deployment().Insert(context.Background(), d1)
+			err = tc.fields.stg.Put(context.Background(), stg.Collection().Deployment(), tc.fields.stg.Key().Deployment(d1.Meta.Namespace, d1.Meta.Service, d1.Meta.Name), d1, nil)
+			assert.NoError(t, err)
+
+			err = tc.fields.stg.Put(context.Background(), stg.Collection().Pod(), tc.fields.stg.Key().Pod(p1.Meta.Namespace, p1.Meta.Service, p1.Meta.Name, p1.Meta.Name), p1, nil)
+			assert.NoError(t, err)
+
+			err = tc.fields.stg.Put(context.Background(), stg.Collection().Pod(), tc.fields.stg.Key().Pod(p2.Meta.Namespace, p2.Meta.Service, p2.Meta.Name, p2.Meta.Name), p2, nil)
 			assert.NoError(t, err)
 
 			// Create assert request to pass to our handler. We don't have any query parameters for now, so we'll
@@ -163,12 +176,14 @@ func TestDeploymentInfo(t *testing.T) {
 			r.ServeHTTP(res, req)
 
 			// Check the status code is what we expect.
-			assert.Equal(t, tc.expectedCode, res.Code, "status code not equal")
+			if !assert.Equal(t, tc.expectedCode, res.Code, "status code not equal") {
+				return
+			}
 
-			body, err := ioutil.ReadAll(res.Body)
-			assert.NoError(t, err)
+			body, e := ioutil.ReadAll(res.Body)
+			assert.NoError(t, e)
 
-			if tc.wantErr && res.Code != 200 {
+			if tc.wantErr {
 				assert.Equal(t, tc.err, string(body), "incorrect status code")
 			} else {
 
@@ -185,11 +200,11 @@ func TestDeploymentInfo(t *testing.T) {
 }
 
 // Testing ServiceListH handler
-func TestServiceList(t *testing.T) {
+func TestDeploymentListHList(t *testing.T) {
 
 	var ctx = context.Background()
 
-	stg, _ := storage.GetMock()
+	stg, _ := storage.Get("mock")
 	envs.Get().SetStorage(stg)
 
 	ns1 := getNamespaceAsset("demo", "")
@@ -199,9 +214,9 @@ func TestServiceList(t *testing.T) {
 	d1 := getDeploymentAsset(ns1.Meta.Name, s1.Meta.Name, "demo")
 	d2 := getDeploymentAsset(ns1.Meta.Name, s2.Meta.Name, "test")
 
-	dl := make(types.DeploymentMap, 0)
-	dl[d1.SelfLink()] = d1
-	dl[d2.SelfLink()] = d2
+	dl := types.NewDeploymentMap()
+	dl.Items[d1.SelfLink()] = d1
+	dl.Items[d2.SelfLink()] = d2
 
 	type fields struct {
 		stg storage.Storage
@@ -220,7 +235,7 @@ func TestServiceList(t *testing.T) {
 		headers      map[string]string
 		handler      func(http.ResponseWriter, *http.Request)
 		err          string
-		want         types.DeploymentMap
+		want         *types.DeploymentMap
 		wantErr      bool
 		expectedCode int
 	}{
@@ -254,13 +269,13 @@ func TestServiceList(t *testing.T) {
 	}
 
 	clear := func() {
-		err := envs.Get().GetStorage().Namespace().Clear(context.Background())
+		err := envs.Get().GetStorage().Del(context.Background(), stg.Collection().Namespace(), types.EmptyString)
 		assert.NoError(t, err)
 
-		err = envs.Get().GetStorage().Service().Clear(context.Background())
+		err = envs.Get().GetStorage().Del(context.Background(), stg.Collection().Service(), types.EmptyString)
 		assert.NoError(t, err)
 
-		err = envs.Get().GetStorage().Deployment().Clear(context.Background())
+		err = envs.Get().GetStorage().Del(context.Background(), stg.Collection().Deployment(), types.EmptyString)
 		assert.NoError(t, err)
 	}
 
@@ -271,19 +286,16 @@ func TestServiceList(t *testing.T) {
 			clear()
 			defer clear()
 
-			err := envs.Get().GetStorage().Namespace().Insert(context.Background(), ns1)
+			err := tc.fields.stg.Put(context.Background(), stg.Collection().Namespace(), tc.fields.stg.Key().Namespace(ns1.Meta.Name), ns1, nil)
 			assert.NoError(t, err)
 
-			err = envs.Get().GetStorage().Service().Insert(context.Background(), s1)
+			err = tc.fields.stg.Put(context.Background(), stg.Collection().Service(), tc.fields.stg.Key().Service(s1.Meta.Namespace, s1.Meta.Name), s1, nil)
 			assert.NoError(t, err)
 
-			err = envs.Get().GetStorage().Service().Insert(context.Background(), s2)
+			err = tc.fields.stg.Put(context.Background(), stg.Collection().Deployment(), tc.fields.stg.Key().Deployment(d1.Meta.Namespace, d1.Meta.Service, d1.Meta.Name), d1, nil)
 			assert.NoError(t, err)
 
-			err = envs.Get().GetStorage().Deployment().Insert(context.Background(), d1)
-			assert.NoError(t, err)
-
-			err = envs.Get().GetStorage().Deployment().Insert(context.Background(), d2)
+			err = tc.fields.stg.Put(context.Background(), stg.Collection().Deployment(), tc.fields.stg.Key().Deployment(d2.Meta.Namespace, d2.Meta.Service, d1.Meta.Name), d2, nil)
 			assert.NoError(t, err)
 
 			// Create assert request to pass to our handler. We don't have any query parameters for now, so we'll
@@ -315,7 +327,8 @@ func TestServiceList(t *testing.T) {
 			body, err := ioutil.ReadAll(res.Body)
 			assert.NoError(t, err)
 
-			if tc.wantErr && res.Code != 200 {
+			if tc.wantErr {
+				assert.Equal(t, tc.expectedCode, res.Code, "status code not match")
 				assert.Equal(t, tc.err, string(body), "incorrect status code")
 			} else {
 
@@ -324,7 +337,7 @@ func TestServiceList(t *testing.T) {
 				assert.NoError(t, err)
 
 				for _, item := range *d {
-					if _, ok := tc.want[item.Meta.SelfLink]; !ok {
+					if _, ok := tc.want.Items[item.Meta.SelfLink]; !ok {
 						assert.Error(t, errors.New("not equals"))
 					}
 				}
@@ -360,6 +373,19 @@ func getDeploymentAsset(namespace, service, name string) *types.Deployment {
 	d.Meta.Service = service
 	d.Meta.Name = name
 	return &d
+}
+
+func getPodAsset(namespace, service, deployment, name, desc string) types.Pod {
+	p := types.Pod{}
+
+	p.Meta.Name = name
+	p.Meta.Description = desc
+	p.Meta.Namespace = namespace
+	p.Meta.Service = service
+	p.Meta.Deployment = deployment
+	p.SelfLink()
+
+	return p
 }
 
 func setRequestVars(r *mux.Router, req *http.Request) {

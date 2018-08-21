@@ -24,9 +24,9 @@ import (
 )
 
 type CNI interface {
-	Info(ctx context.Context) *types.NetworkSpec
-	Create(ctx context.Context, network *types.NetworkSpec) error
-	Destroy(ctx context.Context, network *types.NetworkSpec) error
-	Replace(ctx context.Context, current *types.NetworkSpec, proposal *types.NetworkSpec) error
-	Subnets(ctx context.Context) (map[string]*types.NetworkSpec, error)
+	Info(ctx context.Context) *types.NetworkState
+	Create(ctx context.Context, network *types.SubnetManifest) (*types.NetworkState, error)
+	Destroy(ctx context.Context, network *types.NetworkState) error
+	Replace(ctx context.Context, state *types.NetworkState, manifest *types.SubnetManifest) (*types.NetworkState, error)
+	Subnets(ctx context.Context) (map[string]*types.NetworkState, error)
 }

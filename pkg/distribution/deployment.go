@@ -20,32 +20,21 @@ package distribution
 
 import (
 	"context"
-	"github.com/lastbackend/lastbackend/pkg/api/types/v1/request"
+	"strings"
+
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 	"github.com/lastbackend/lastbackend/pkg/log"
 	"github.com/lastbackend/lastbackend/pkg/storage"
-	"github.com/lastbackend/lastbackend/pkg/storage/store"
 	"github.com/lastbackend/lastbackend/pkg/util/generator"
-	"strings"
+
+	"encoding/json"
+
+	"github.com/lastbackend/lastbackend/pkg/distribution/errors"
 )
 
 const (
 	logDeploymentPrefix = "distribution:deployment"
 )
-
-type IDeployment interface {
-	Create(service *types.Service) (*types.Deployment, error)
-	Get(namespace, service, name string) (*types.Deployment, error)
-	ListByNamespace(namespace string) (map[string]*types.Deployment, error)
-	ListByService(namespace, service string) (map[string]*types.Deployment, error)
-	SetSpec(dt *types.Deployment, opts *request.DeploymentUpdateOptions) error
-	SetStatus(dt *types.Deployment) error
-	Cancel(dt *types.Deployment) error
-	Destroy(dt *types.Deployment) error
-	Remove(dt *types.Deployment) error
-	Watch(dt chan *types.Deployment) error
-	WatchSpec(dt chan *types.Deployment) error
-}
 
 // Deployment - distribution model
 type Deployment struct {
@@ -53,16 +42,28 @@ type Deployment struct {
 	storage storage.Storage
 }
 
+func (d *Deployment) Runtime() (*types.Runtime, error) {
+
+	log.V(logLevel).Debugf("%s:get:> get deployment runtime info", logDeploymentPrefix)
+	runtime, err := d.storage.Info(d.context, d.storage.Collection().Deployment(), "")
+	if err != nil {
+		log.V(logLevel).Errorf("%s:get:> get runtime info error: %s", logDeploymentPrefix, err)
+		return &runtime.Runtime, err
+	}
+	return &runtime.Runtime, nil
+}
+
 // Get deployment info by namespace service and deployment name
 func (d *Deployment) Get(namespace, service, name string) (*types.Deployment, error) {
 
-	log.Debugf("%s:get:> namespace %s and service %s by name %s", logDeploymentPrefix, namespace, service, name)
+	log.V(logLevel).Debugf("%s:get:> namespace %s and service %s by name %s", logDeploymentPrefix, namespace, service, name)
 
-	dt, err := d.storage.Deployment().Get(d.context, namespace, service, name)
+	dp := new(types.Deployment)
+
+	err := d.storage.Get(d.context, d.storage.Collection().Deployment(), d.storage.Key().Deployment(namespace, service, name), &dp, nil)
 	if err != nil {
-
-		if err.Error() == store.ErrEntityNotFound {
-			log.V(logLevel).Warnf("%s:get:> in namespace %s by name %s not found", logDeploymentPrefix, namespace, name)
+		if errors.Storage().IsErrEntityNotFound(err) {
+			log.V(logLevel).Warnf("%s:get:> in namespace %s by name %s not found", logDeploymentPrefix, name)
 			return nil, nil
 		}
 
@@ -70,13 +71,13 @@ func (d *Deployment) Get(namespace, service, name string) (*types.Deployment, er
 		return nil, err
 	}
 
-	return dt, nil
+	return dp, nil
 }
 
 // Create new deployment
 func (d *Deployment) Create(service *types.Service) (*types.Deployment, error) {
 
-	log.Debugf("%s:create:> distribution create in service: %s", logDeploymentPrefix, service.Meta.Name)
+	log.V(logLevel).Debugf("%s:create:> distribution create in service: %s", logDeploymentPrefix, service.Meta.Name)
 
 	deployment := new(types.Deployment)
 
@@ -89,19 +90,15 @@ func (d *Deployment) Create(service *types.Service) (*types.Deployment, error) {
 
 	deployment.Spec = types.DeploymentSpec{
 		Replicas: service.Spec.Replicas,
-		Strategy: service.Spec.Strategy,
 		Template: service.Spec.Template,
-		Triggers: service.Spec.Triggers,
 		Selector: service.Spec.Selector,
 	}
 
-	deployment.Spec.Meta.SetDefault()
-	deployment.Spec.Meta.Name = service.Spec.Meta.Name
-
 	deployment.Status.SetProvision()
 
-	if err := d.storage.Deployment().Insert(d.context, deployment); err != nil {
-		log.Errorf("%s:create:> distribution create in service: %s err: %s", logDeploymentPrefix, service.Meta.Name, err.Error())
+	if err := d.storage.Put(d.context, d.storage.Collection().Deployment(),
+		d.storage.Key().Deployment(deployment.Meta.Namespace, deployment.Meta.Service, deployment.Meta.Name), deployment, nil); err != nil {
+		log.Errorf("%s:create:> distribution create in service: %s err: %v", logDeploymentPrefix, service.Meta.Name, err)
 		return nil, err
 	}
 
@@ -109,13 +106,16 @@ func (d *Deployment) Create(service *types.Service) (*types.Deployment, error) {
 }
 
 // ListByService - list of deployments by service
-func (d *Deployment) ListByNamespace(namespace string) (map[string]*types.Deployment, error) {
+func (d *Deployment) ListByNamespace(namespace string) (*types.DeploymentList, error) {
 
-	log.Debugf("%s:listbynamespace:> in namespace: %s", namespace)
+	log.V(logLevel).Debugf("%s:listbynamespace:> in namespace: %s", namespace)
 
-	dl, err := d.storage.Deployment().ListByNamespace(d.context, namespace)
+	q := d.storage.Filter().Deployment().ByNamespace(namespace)
+	dl := types.NewDeploymentList()
+
+	err := d.storage.List(d.context, d.storage.Collection().Deployment(), q, dl, nil)
 	if err != nil {
-		log.Errorf("%s:listbynamespace:> in namespace: %s err: %s", logDeploymentPrefix, namespace, err.Error())
+		log.Errorf("%s:listbynamespace:> in namespace: %s err: %v", logDeploymentPrefix, namespace, err)
 		return nil, err
 	}
 
@@ -123,42 +123,30 @@ func (d *Deployment) ListByNamespace(namespace string) (map[string]*types.Deploy
 }
 
 // ListByService - list of deployments by service
-func (d *Deployment) ListByService(namespace, service string) (map[string]*types.Deployment, error) {
+func (d *Deployment) ListByService(namespace, service string) (*types.DeploymentList, error) {
 
-	log.Debugf("%s:listbyservice:> in namespace: %s and service %s", logDeploymentPrefix, namespace, service)
+	log.V(logLevel).Debugf("%s:listbyservice:> in namespace: %s and service %s", logDeploymentPrefix, namespace, service)
 
-	dl, err := d.storage.Deployment().ListByService(d.context, namespace, service)
+	q := d.storage.Filter().Deployment().ByService(namespace, service)
+	dl := types.NewDeploymentList()
+
+	err := d.storage.List(d.context, d.storage.Collection().Deployment(), q, dl, nil)
 	if err != nil {
-		log.Errorf("%s:listbyservice:> in namespace: %s and service %s err: %s", logDeploymentPrefix, namespace, service, err.Error())
+		log.Errorf("%s:listbyservice:> in namespace: %s and service %s err: %v", logDeploymentPrefix, namespace, service, err)
 		return nil, err
 	}
 
 	return dl, nil
 }
 
-// Scale deployment
-func (d *Deployment) SetSpec(dt *types.Deployment, opts *request.DeploymentUpdateOptions) error {
+// Update deployment
+func (d *Deployment) Update(dt *types.Deployment) error {
 
-	log.Debugf("%s:setspec:> set spec for deployment %s", logDeploymentPrefix, dt.Meta.Name)
+	log.V(logLevel).Debugf("%s:update:> update deployment %s", logDeploymentPrefix, dt.Meta.Name)
 
-	if dt.Spec.Replicas != *opts.Replicas {
-		dt.Spec.Replicas = *opts.Replicas
-		if err := d.storage.Deployment().SetSpec(d.context, dt); err != nil {
-			log.Errorf("%s:setspec:> set spec for deployment %s err: %s", logDeploymentPrefix, dt.Meta.Name, err.Error())
-			return err
-		}
-	}
-
-	return nil
-}
-
-// Set state for deployment
-func (d *Deployment) SetStatus(dt *types.Deployment) error {
-
-	log.Debugf("%s:setstatus:> set state for deployment %s", logDeploymentPrefix, dt.Meta.Name)
-
-	if err := d.storage.Deployment().SetStatus(d.context, dt); err != nil {
-		log.Errorf("%s:setstatus:> set state for deployment %s err: %s", logDeploymentPrefix, dt.Meta.Name, err.Error())
+	if err := d.storage.Set(d.context, d.storage.Collection().Deployment(),
+		d.storage.Key().Deployment(dt.Meta.Namespace, dt.Meta.Service, dt.Meta.Name), dt, nil); err != nil {
+		log.Errorf("%s:update:> update for deployment %s err: %v", logDeploymentPrefix, dt.Meta.Name, err)
 		return err
 	}
 
@@ -168,20 +156,16 @@ func (d *Deployment) SetStatus(dt *types.Deployment) error {
 // Cancel deployment
 func (d *Deployment) Cancel(dt *types.Deployment) error {
 
-	log.Debugf("%s:cancel:> cancel deployment %s", logDeploymentPrefix, dt.Meta.Name)
+	log.V(logLevel).Debugf("%s:cancel:> cancel deployment %s", logDeploymentPrefix, dt.Meta.Name)
 
 	// mark deployment for destroy
 	dt.Spec.State.Destroy = true
-	if err := d.storage.Deployment().SetSpec(d.context, dt); err != nil {
-		log.Debugf("%s:destroy: destroy deployment %s err: %s", logDeploymentPrefix, dt.Meta.Name, err.Error())
-		return err
-	}
-
 	// mark deployment for cancel
 	dt.Status.SetCancel()
 
-	if err := d.storage.Deployment().SetStatus(d.context, dt); err != nil {
-		log.Debugf("%s:cancel:> cancel deployment %s err: %s", logDeploymentPrefix, dt.Meta.Name, err.Error())
+	if err := d.storage.Set(d.context, d.storage.Collection().Deployment(),
+		d.storage.Key().Deployment(dt.Meta.Namespace, dt.Meta.Service, dt.Meta.Name), dt, nil); err != nil {
+		log.V(logLevel).Debugf("%s:destroy: destroy deployment %s err: %v", logDeploymentPrefix, dt.Meta.Name, err)
 		return err
 	}
 
@@ -191,19 +175,16 @@ func (d *Deployment) Cancel(dt *types.Deployment) error {
 // Destroy deployment
 func (d *Deployment) Destroy(dt *types.Deployment) error {
 
-	log.Debugf("%s:destroy:> destroy deployment %s", logDeploymentPrefix, dt.Meta.Name)
+	log.V(logLevel).Debugf("%s:destroy:> destroy deployment %s", logDeploymentPrefix, dt.Meta.Name)
 
 	// mark deployment for destroy
 	dt.Spec.State.Destroy = true
-	if err := d.storage.Deployment().SetSpec(d.context, dt); err != nil {
-		log.Debugf("%s:destroy:> destroy deployment %s err: %s", logDeploymentPrefix, dt.Meta.Name, err.Error())
-		return err
-	}
-
+	// mark deployment for destroy
 	dt.Status.SetDestroy()
 
-	if err := d.storage.Deployment().SetStatus(d.context, dt); err != nil {
-		log.Debugf("%s:destroy:> destroy deployment %s err: %s", logDeploymentPrefix, dt.Meta.Name, err.Error())
+	if err := d.storage.Set(d.context, d.storage.Collection().Deployment(),
+		d.storage.Key().Deployment(dt.Meta.Namespace, dt.Meta.Service, dt.Meta.Name), dt, nil); err != nil {
+		log.V(logLevel).Debugf("%s:destroy:> destroy deployment %s err: %v", logDeploymentPrefix, dt.Meta.Name, err)
 		return err
 	}
 
@@ -213,9 +194,10 @@ func (d *Deployment) Destroy(dt *types.Deployment) error {
 // Destroy deployment
 func (d *Deployment) Remove(dt *types.Deployment) error {
 
-	log.Debugf("%s:remove:> remove deployment %s", logDeploymentPrefix, dt.Meta.Name)
-	if err := d.storage.Deployment().Remove(d.context, dt); err != nil {
-		log.Debugf("%s:remove:> remove deployment %s err: %s", logDeploymentPrefix, dt.Meta.Name, err.Error())
+	log.V(logLevel).Debugf("%s:remove:> remove deployment %s", logDeploymentPrefix, dt.Meta.Name)
+	if err := d.storage.Del(d.context, d.storage.Collection().Deployment(),
+		d.storage.Key().Deployment(dt.Meta.Namespace, dt.Meta.Service, dt.Meta.Name)); err != nil {
+		log.V(logLevel).Debugf("%s:remove:> remove deployment %s err: %v", logDeploymentPrefix, dt.Meta.Name, err)
 		return err
 	}
 
@@ -223,29 +205,51 @@ func (d *Deployment) Remove(dt *types.Deployment) error {
 }
 
 // Watch deployment changes
-func (d *Deployment) Watch(dt chan *types.Deployment) error {
+func (d *Deployment) Watch(dt chan types.DeploymentEvent, rev *int64) error {
 
-	log.Debugf("%s:watch:> watch deployments", logDeploymentPrefix)
-	if err := d.storage.Deployment().Watch(d.context, dt); err != nil {
-		log.Debugf("%s:watch:> watch deployment err: %s", logDeploymentPrefix, err.Error())
+	done := make(chan bool)
+	watcher := storage.NewWatcher()
+
+	log.V(logLevel).Debugf("%s:watch:> watch deployments", logDeploymentPrefix)
+
+	go func() {
+		for {
+			select {
+			case <-d.context.Done():
+				done <- true
+				return
+			case e := <-watcher:
+				if e.Data == nil {
+					continue
+				}
+
+				res := types.DeploymentEvent{}
+				res.Action = e.Action
+				res.Name = e.Name
+
+				deployment := new(types.Deployment)
+
+				if err := json.Unmarshal(e.Data.([]byte), deployment); err != nil {
+					log.Errorf("%s:> parse data err: %v", logDeploymentPrefix, err)
+					continue
+				}
+
+				res.Data = deployment
+
+				dt <- res
+			}
+		}
+	}()
+
+	opts := storage.GetOpts()
+	opts.Rev = rev
+	if err := d.storage.Watch(d.context, d.storage.Collection().Deployment(), watcher, opts); err != nil {
 		return err
 	}
 
 	return nil
 }
 
-// Watch deployment by spec changing
-func (d *Deployment) WatchSpec(dt chan *types.Deployment) error {
-
-	log.Debugf("%s:watchspec:> watch deployments by spec changes", logDeploymentPrefix)
-	if err := d.storage.Deployment().WatchSpec(d.context, dt); err != nil {
-		log.Debugf("%s:watchspec:> watch deployment by spec changes err: %s", logDeploymentPrefix, err.Error())
-		return err
-	}
-
-	return nil
-}
-
-func NewDeploymentModel(ctx context.Context, stg storage.Storage) IDeployment {
+func NewDeploymentModel(ctx context.Context, stg storage.Storage) *Deployment {
 	return &Deployment{ctx, stg}
 }

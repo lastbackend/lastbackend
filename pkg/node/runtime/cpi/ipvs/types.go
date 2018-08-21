@@ -21,29 +21,6 @@
 package ipvs
 
 const (
-	SvcFlagPersist   = 0x1
-	SvcFlagHashed    = 0x2
-	SvcFlagOnePacket = 0x4
-
-	DstFlagFwdMask   = 0x7
-	DstFlagFwdMasq   = 0x0
-	DstFlagFwdLocal  = 0x1
-	DstFlagFwdTunnel = 0x2
-	DstFlagFwdRoute  = 0x3
-	DstFlagFwdBypass = 0x4
-	DstFlagSync      = 0x20
-	DstFlagHashed    = 0x40
-	DstFlagNoOutput  = 0x80
-	DstFlagInactive  = 0x100
-	DstFlagOutSeq    = 0x200
-	DstFlagInSeq     = 0x400
-	DstFlagSeqMask   = 0x600
-	DstFlagNoCPort   = 0x800
-	DstFlagTemplate  = 0x1000
-	DstFlagOnePacket = 0x2000
-)
-
-const (
 	proxyTCPProto = "tcp"
 	proxyUDPProto = "udp"
 )

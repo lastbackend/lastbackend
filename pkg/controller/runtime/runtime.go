@@ -20,49 +20,34 @@ package runtime
 
 import (
 	"context"
+
 	"github.com/lastbackend/lastbackend/pkg/controller/envs"
-	"github.com/lastbackend/lastbackend/pkg/controller/runtime/deployment"
-	"github.com/lastbackend/lastbackend/pkg/controller/runtime/pod"
-	"github.com/lastbackend/lastbackend/pkg/controller/runtime/service"
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 	"github.com/lastbackend/lastbackend/pkg/log"
 	"github.com/lastbackend/lastbackend/pkg/system"
 )
 
-// watch service state and specs
-// generate pods by specs
-
-// watch service builds
-// generate build spec after build creation
-
-// watch service build state
-// update pods after build passed state
+const logLevel = 3
 
 type Runtime struct {
-	process *system.Process
-
-	sc *service.Controller
-	dc *deployment.Controller
-	pc *pod.Controller
-
-	active bool
+	ctx      context.Context
+	process  *system.Process
+	observer *Observer
+	active   bool
 }
 
 func NewRuntime(ctx context.Context) *Runtime {
 	r := new(Runtime)
+
+	r.ctx = ctx
 	r.process = new(system.Process)
-	r.process.Register(ctx, types.KindController, envs.Get().GetStorage())
+	_, err := r.process.Register(ctx, types.KindController, envs.Get().GetStorage())
+	if err != nil {
+		log.Error(err)
+		return nil
+	}
 
-	r.sc = service.NewServiceController(ctx)
-	r.dc = deployment.NewDeploymentController(ctx)
-	r.pc = pod.NewPodController(ctx)
-
-	go r.sc.WatchSpec()
-	go r.dc.WatchSpec()
-
-	go r.sc.WatchStatus()
-	go r.dc.WatchStatus()
-	go r.pc.WatchStatus()
+	r.observer = NewObserver(ctx)
 
 	return r
 }
@@ -73,47 +58,46 @@ func (r *Runtime) Loop() {
 		lead = make(chan bool)
 	)
 
-	log.Debug("Controller: Runtime: Loop")
+	log.V(logLevel).Debug("Controller: Runtime: Loop")
 
 	go func() {
 		for {
 			select {
+			case <-r.ctx.Done():
+				return
 			case l := <-lead:
 				{
+
 					if l {
 
 						if r.active {
-							log.Debug("Runtime: is already marked as lead -> skip")
+							log.V(logLevel).Debug("Runtime: is already marked as lead -> skip")
 							continue
 						}
 
-						log.Debug("Runtime: Mark as lead")
+						log.V(logLevel).Debug("Runtime: Mark as lead")
 
 						r.active = true
-						r.sc.Resume()
-						r.dc.Resume()
-						r.pc.Resume()
 
 					} else {
 
 						if !r.active {
-							log.Debug("Runtime: is already marked as slave -> skip")
+							log.V(logLevel).Debug("Runtime: is already marked as slave -> skip")
 							continue
 						}
 
-						log.Debug("Runtime: Mark as slave")
+						log.V(logLevel).Debug("Runtime: Mark as slave")
 
 						r.active = false
-						r.sc.Pause()
-						r.dc.Pause()
-						r.pc.Pause()
 					}
+
 				}
 			}
 		}
 	}()
 
-	if err := r.process.WaitElected(lead); err != nil {
+	if err := r.process.WaitElected(r.ctx, lead); err != nil {
 		log.Errorf("Runtime: Elect Wait error: %s", err.Error())
 	}
+
 }

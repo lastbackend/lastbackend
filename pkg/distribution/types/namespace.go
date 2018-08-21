@@ -24,16 +24,22 @@ import (
 )
 
 // swagger:ignore
+type NamespaceMap struct {
+	Runtime
+	Items map[string]*Namespace
+}
+
+// swagger:ignore
+type NamespaceList struct {
+	Runtime
+	Items []*Namespace
+}
+
+// swagger:ignore
 type Namespace struct {
 	Meta NamespaceMeta `json:"meta"`
 	Spec NamespaceSpec `json:"spec"`
 }
-
-// swagger:ignore
-type NamespaceMap map[string]*Namespace
-
-// swagger:ignore
-type NamespaceList []*Namespace
 
 // swagger:ignore
 type NamespaceEnvs []NamespaceEnv
@@ -121,4 +127,16 @@ type NamespaceQuotasOptions struct {
 	Disabled bool  `json:"disabled"`
 	RAM      int64 `json:"ram"`
 	Routes   int   `json:"routes"`
+}
+
+func NewNamespaceList () *NamespaceList {
+	dm := new(NamespaceList)
+	dm.Items = make([]*Namespace, 0)
+	return dm
+}
+
+func NewNamespaceMap () *NamespaceMap {
+	dm := new(NamespaceMap)
+	dm.Items = make(map[string]*Namespace)
+	return dm
 }

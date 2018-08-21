@@ -22,6 +22,12 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
+	"net/http"
+	"net/http/httptest"
+	"strings"
+	"testing"
+
 	"github.com/gorilla/mux"
 	"github.com/lastbackend/lastbackend/pkg/api/envs"
 	"github.com/lastbackend/lastbackend/pkg/api/http/service"
@@ -31,13 +37,7 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/distribution/errors"
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 	"github.com/lastbackend/lastbackend/pkg/storage"
-	"github.com/lastbackend/lastbackend/pkg/storage/store"
 	"github.com/stretchr/testify/assert"
-	"io/ioutil"
-	"net/http"
-	"net/http/httptest"
-	"strings"
-	"testing"
 )
 
 // Testing ServiceInfoH handler
@@ -45,7 +45,7 @@ func TestServiceInfo(t *testing.T) {
 
 	var ctx = context.Background()
 
-	stg, _ := storage.GetMock()
+	stg, _ := storage.Get("mock")
 	envs.Get().SetStorage(stg)
 
 	ns1 := getNamespaceAsset("demo", "")
@@ -104,10 +104,10 @@ func TestServiceInfo(t *testing.T) {
 	}
 
 	clear := func() {
-		err := envs.Get().GetStorage().Namespace().Clear(context.Background())
+		err := envs.Get().GetStorage().Del(context.Background(), stg.Collection().Namespace(), types.EmptyString)
 		assert.NoError(t, err)
 
-		err = envs.Get().GetStorage().Service().Clear(context.Background())
+		err = envs.Get().GetStorage().Del(context.Background(), stg.Collection().Service(), types.EmptyString)
 		assert.NoError(t, err)
 	}
 
@@ -118,10 +118,10 @@ func TestServiceInfo(t *testing.T) {
 			clear()
 			defer clear()
 
-			err := envs.Get().GetStorage().Namespace().Insert(context.Background(), ns1)
+			err := tc.fields.stg.Put(context.Background(), stg.Collection().Namespace(), tc.fields.stg.Key().Namespace(ns1.Meta.Name), ns1, nil)
 			assert.NoError(t, err)
 
-			err = envs.Get().GetStorage().Service().Insert(context.Background(), s1)
+			err = tc.fields.stg.Put(context.Background(), stg.Collection().Service(), tc.fields.stg.Key().Service(s1.Meta.Namespace, s1.Meta.Name), s1, nil)
 			assert.NoError(t, err)
 
 			// Create assert request to pass to our handler. We don't have any query parameters for now, so we'll
@@ -148,12 +148,14 @@ func TestServiceInfo(t *testing.T) {
 			r.ServeHTTP(res, req)
 
 			// Check the status code is what we expect.
-			assert.Equal(t, tc.expectedCode, res.Code, "status code not equal")
+			if !assert.Equal(t, tc.expectedCode, res.Code, "status code not equal") {
+				return
+			}
 
 			body, err := ioutil.ReadAll(res.Body)
 			assert.NoError(t, err)
 
-			if tc.wantErr && res.Code != 200 {
+			if tc.wantErr {
 				assert.Equal(t, tc.err, string(body), "incorrect status code")
 			} else {
 
@@ -174,7 +176,7 @@ func TestServiceList(t *testing.T) {
 
 	var ctx = context.Background()
 
-	stg, _ := storage.GetMock()
+	stg, _ := storage.Get("mock")
 	envs.Get().SetStorage(stg)
 
 	ns1 := getNamespaceAsset("demo", "")
@@ -182,9 +184,9 @@ func TestServiceList(t *testing.T) {
 	s1 := getServiceAsset(ns1.Meta.Name, "demo", "")
 	s2 := getServiceAsset(ns1.Meta.Name, "test", "")
 
-	sl := make(types.ServiceMap, 0)
-	sl[s1.SelfLink()] = s1
-	sl[s2.SelfLink()] = s2
+	sl := types.NewServiceMap()
+	sl.Items[s1.SelfLink()] = s1
+	sl.Items[s2.SelfLink()] = s2
 
 	type fields struct {
 		stg storage.Storage
@@ -203,7 +205,7 @@ func TestServiceList(t *testing.T) {
 		headers      map[string]string
 		handler      func(http.ResponseWriter, *http.Request)
 		err          string
-		want         types.ServiceMap
+		want         *types.ServiceMap
 		wantErr      bool
 		expectedCode int
 	}{
@@ -228,10 +230,10 @@ func TestServiceList(t *testing.T) {
 	}
 
 	clear := func() {
-		err := envs.Get().GetStorage().Namespace().Clear(context.Background())
+		err := envs.Get().GetStorage().Del(context.Background(), stg.Collection().Namespace(), types.EmptyString)
 		assert.NoError(t, err)
 
-		err = envs.Get().GetStorage().Service().Clear(context.Background())
+		err = envs.Get().GetStorage().Del(context.Background(), stg.Collection().Service(), types.EmptyString)
 		assert.NoError(t, err)
 	}
 
@@ -242,13 +244,13 @@ func TestServiceList(t *testing.T) {
 			clear()
 			defer clear()
 
-			err := envs.Get().GetStorage().Namespace().Insert(context.Background(), ns1)
+			err := tc.fields.stg.Put(context.Background(), stg.Collection().Namespace(), tc.fields.stg.Key().Namespace(ns1.Meta.Name), ns1, nil)
 			assert.NoError(t, err)
 
-			err = envs.Get().GetStorage().Service().Insert(context.Background(), s1)
+			err = tc.fields.stg.Put(context.Background(), stg.Collection().Service(), tc.fields.stg.Key().Service(s1.Meta.Namespace, s1.Meta.Name), s1, nil)
 			assert.NoError(t, err)
 
-			err = envs.Get().GetStorage().Service().Insert(context.Background(), s2)
+			err = tc.fields.stg.Put(context.Background(), stg.Collection().Service(), tc.fields.stg.Key().Service(s2.Meta.Namespace, s2.Meta.Name), s2, nil)
 			assert.NoError(t, err)
 
 			// Create assert request to pass to our handler. We don't have any query parameters for now, so we'll
@@ -275,12 +277,14 @@ func TestServiceList(t *testing.T) {
 			r.ServeHTTP(res, req)
 
 			// Check the status code is what we expect.
-			assert.Equal(t, tc.expectedCode, res.Code, "status code not equal")
+			if !assert.Equal(t, tc.expectedCode, res.Code, "status code not equal") {
+				return
+			}
 
 			body, err := ioutil.ReadAll(res.Body)
 			assert.NoError(t, err)
 
-			if tc.wantErr && res.Code != 200 {
+			if tc.wantErr {
 				assert.Equal(t, tc.err, string(body), "incorrect status code")
 			} else {
 
@@ -289,7 +293,7 @@ func TestServiceList(t *testing.T) {
 				assert.NoError(t, err)
 
 				for _, item := range *s {
-					if _, ok := tc.want[item.Meta.SelfLink]; !ok {
+					if _, ok := tc.want.Items[item.Meta.SelfLink]; !ok {
 						assert.Error(t, errors.New("not equals"))
 					}
 				}
@@ -323,7 +327,7 @@ func TestServiceCreate(t *testing.T) {
 
 	var ctx = context.Background()
 
-	stg, _ := storage.GetMock()
+	stg, _ := storage.Get("mock")
 	envs.Get().SetStorage(stg)
 
 	srtPointer := func(s string) *string { return &s }
@@ -432,10 +436,10 @@ func TestServiceCreate(t *testing.T) {
 	}
 
 	clear := func() {
-		err := envs.Get().GetStorage().Namespace().Clear(context.Background())
+		err := envs.Get().GetStorage().Del(context.Background(), stg.Collection().Namespace(), types.EmptyString)
 		assert.NoError(t, err)
 
-		err = envs.Get().GetStorage().Service().Clear(context.Background())
+		err = envs.Get().GetStorage().Del(context.Background(), stg.Collection().Service(), types.EmptyString)
 		assert.NoError(t, err)
 	}
 
@@ -445,10 +449,10 @@ func TestServiceCreate(t *testing.T) {
 			clear()
 			defer clear()
 
-			err := envs.Get().GetStorage().Namespace().Insert(context.Background(), ns1)
+			err := tc.fields.stg.Put(context.Background(), stg.Collection().Namespace(), tc.fields.stg.Key().Namespace(ns1.Meta.Name), ns1, nil)
 			assert.NoError(t, err)
 
-			err = envs.Get().GetStorage().Service().Insert(context.Background(), s1)
+			err = tc.fields.stg.Put(context.Background(), stg.Collection().Service(), tc.fields.stg.Key().Service(s1.Meta.Namespace, s1.Meta.Name), s1, nil)
 			assert.NoError(t, err)
 
 			// Create assert request to pass to our handler. We don't have any query parameters for now, so we'll
@@ -475,16 +479,19 @@ func TestServiceCreate(t *testing.T) {
 			r.ServeHTTP(res, req)
 
 			// Check the status code is what we expect.
-			assert.Equal(t, tc.expectedCode, res.Code, "status code not equal")
+			if !assert.Equal(t, tc.expectedCode, res.Code, "status code not equal") {
+				return
+			}
 
 			body, err := ioutil.ReadAll(res.Body)
 			assert.NoError(t, err)
 
-			if tc.wantErr && res.Code != 200 {
+			if tc.wantErr {
 				assert.Equal(t, tc.err, string(body), "incorrect status code")
 			} else {
 
-				got, err := tc.fields.stg.Service().Get(tc.args.ctx, tc.args.namespace.Meta.Name, tc.args.service.Meta.Name)
+				got := new(types.Service)
+				err := tc.fields.stg.Get(tc.args.ctx, stg.Collection().Service(), stg.Key().Service(tc.args.namespace.Meta.Name, tc.args.service.Meta.Name), got, nil)
 				assert.NoError(t, err)
 
 				if got == nil {
@@ -521,7 +528,7 @@ func TestServiceUpdate(t *testing.T) {
 
 	var ctx = context.Background()
 
-	stg, _ := storage.GetMock()
+	stg, _ := storage.Get("mock")
 	envs.Get().SetStorage(stg)
 
 	int64Pointer := func(i int64) *int64 { return &i }
@@ -608,10 +615,10 @@ func TestServiceUpdate(t *testing.T) {
 	}
 
 	clear := func() {
-		err := envs.Get().GetStorage().Namespace().Clear(context.Background())
+		err := envs.Get().GetStorage().Del(context.Background(), stg.Collection().Namespace(), types.EmptyString)
 		assert.NoError(t, err)
 
-		err = envs.Get().GetStorage().Service().Clear(context.Background())
+		err = envs.Get().GetStorage().Del(context.Background(), stg.Collection().Service(), types.EmptyString)
 		assert.NoError(t, err)
 	}
 
@@ -621,10 +628,10 @@ func TestServiceUpdate(t *testing.T) {
 			clear()
 			defer clear()
 
-			err := envs.Get().GetStorage().Namespace().Insert(context.Background(), ns1)
+			err := tc.fields.stg.Put(context.Background(), stg.Collection().Namespace(), tc.fields.stg.Key().Namespace(ns1.Meta.Name), ns1, nil)
 			assert.NoError(t, err)
 
-			err = envs.Get().GetStorage().Service().Insert(context.Background(), s1)
+			err = tc.fields.stg.Put(context.Background(), stg.Collection().Service(), tc.fields.stg.Key().Service(s1.Meta.Namespace, s1.Meta.Name), s1, nil)
 			assert.NoError(t, err)
 
 			// Create assert request to pass to our handler. We don't have any query parameters for now, so we'll
@@ -651,7 +658,9 @@ func TestServiceUpdate(t *testing.T) {
 			r.ServeHTTP(res, req)
 
 			// Check the status code is what we expect.
-			assert.Equal(t, tc.expectedCode, res.Code, "status code not equal")
+			if !assert.Equal(t, tc.expectedCode, res.Code, "status code not equal") {
+				return
+			}
 
 			body, err := ioutil.ReadAll(res.Body)
 			assert.NoError(t, err)
@@ -678,7 +687,7 @@ func TestServiceRemove(t *testing.T) {
 
 	var ctx = context.Background()
 
-	stg, _ := storage.GetMock()
+	stg, _ := storage.Get("mock")
 	envs.Get().SetStorage(stg)
 
 	ns1 := getNamespaceAsset("demo", "")
@@ -738,10 +747,10 @@ func TestServiceRemove(t *testing.T) {
 	}
 
 	clear := func() {
-		err := envs.Get().GetStorage().Namespace().Clear(context.Background())
+		err := envs.Get().GetStorage().Del(context.Background(), stg.Collection().Namespace(), types.EmptyString)
 		assert.NoError(t, err)
 
-		err = envs.Get().GetStorage().Service().Clear(context.Background())
+		err = envs.Get().GetStorage().Del(context.Background(), stg.Collection().Service(), types.EmptyString)
 		assert.NoError(t, err)
 	}
 
@@ -751,10 +760,10 @@ func TestServiceRemove(t *testing.T) {
 			clear()
 			defer clear()
 
-			err := envs.Get().GetStorage().Namespace().Insert(context.Background(), ns1)
+			err := tc.fields.stg.Put(context.Background(), stg.Collection().Namespace(), tc.fields.stg.Key().Namespace(ns1.Meta.Name), ns1, nil)
 			assert.NoError(t, err)
 
-			err = envs.Get().GetStorage().Service().Insert(context.Background(), s1)
+			err = tc.fields.stg.Put(context.Background(), stg.Collection().Service(), tc.fields.stg.Key().Service(s1.Meta.Namespace, s1.Meta.Name), s1, nil)
 			assert.NoError(t, err)
 
 			// Create assert request to pass to our handler. We don't have any query parameters for now, so we'll
@@ -782,7 +791,9 @@ func TestServiceRemove(t *testing.T) {
 			r.ServeHTTP(res, req)
 
 			// Check the status code is what we expect.
-			assert.Equal(t, tc.expectedCode, res.Code, "status code not equal")
+			if !assert.Equal(t, tc.expectedCode, res.Code, "status code not equal") {
+				return
+			}
 
 			body, err := ioutil.ReadAll(res.Body)
 			assert.NoError(t, err)
@@ -791,8 +802,9 @@ func TestServiceRemove(t *testing.T) {
 				assert.Equal(t, tc.err, string(body), "incorrect status code")
 			} else {
 
-				got, err := tc.fields.stg.Service().Get(tc.args.ctx, tc.args.namespace.Meta.Name, tc.args.service.Meta.Name)
-				if err != nil && err.Error() != store.ErrEntityNotFound {
+				got := new(types.Service)
+				err := tc.fields.stg.Get(tc.args.ctx, stg.Collection().Service(), stg.Key().Service(tc.args.namespace.Meta.Name, tc.args.service.Meta.Name), got, nil)
+				if err != nil && !errors.Storage().IsErrEntityNotFound(err) {
 					assert.NoError(t, err)
 				}
 

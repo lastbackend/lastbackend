@@ -21,13 +21,14 @@ package route
 import (
 	"github.com/lastbackend/lastbackend/pkg/api/types/v1"
 
+	"net/http"
+
 	"github.com/lastbackend/lastbackend/pkg/api/envs"
 	"github.com/lastbackend/lastbackend/pkg/distribution"
 	"github.com/lastbackend/lastbackend/pkg/distribution/errors"
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 	"github.com/lastbackend/lastbackend/pkg/log"
 	"github.com/lastbackend/lastbackend/pkg/util/http/utils"
-	"net/http"
 )
 
 const (
@@ -245,7 +246,7 @@ func RouteCreateH(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	svc, err := sm.List(ns.Meta.SelfLink)
+	svc, err := sm.List(ns.Meta.Name)
 	if err != nil {
 		log.V(logLevel).Errorf("%s:create:> get services", logPrefix, err.Error())
 		errors.HTTP.InternalServerError(w)
@@ -261,8 +262,8 @@ func RouteCreateH(w http.ResponseWriter, r *http.Request) {
 
 	var links = make(map[string]string)
 
-	for _, s := range svc {
-		links[s.Meta.Name] = s.Meta.SelfLink
+	for _, s := range svc.Items {
+		links[s.Meta.Name] = s.Meta.Endpoint
 	}
 
 	for _, r := range opts.Rules {
@@ -278,7 +279,7 @@ func RouteCreateH(w http.ResponseWriter, r *http.Request) {
 		if _, ok := links[r.Service]; ok {
 			rcopts.Rules = append(rcopts.Rules, types.RuleOption{
 				Service:  r.Service,
-				Endpoint: svc[links[r.Service]].Meta.Endpoint,
+				Endpoint: links[r.Service],
 				Path:     r.Path,
 				Port:     r.Port,
 			})
@@ -396,7 +397,7 @@ func RouteUpdateH(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	svc, err := sm.List(ns.Meta.SelfLink)
+	svc, err := sm.List(ns.Meta.Name)
 	if err != nil {
 		log.V(logLevel).Errorf("%s:create:> get services", logPrefix, err.Error())
 		errors.HTTP.InternalServerError(w)
@@ -410,8 +411,8 @@ func RouteUpdateH(w http.ResponseWriter, r *http.Request) {
 
 	var links = make(map[string]string)
 
-	for _, s := range svc {
-		links[s.Meta.Name] = s.Meta.SelfLink
+	for _, s := range svc.Items {
+		links[s.Meta.Name] = s.Meta.Endpoint
 	}
 
 	for _, r := range opts.Rules {
@@ -427,7 +428,7 @@ func RouteUpdateH(w http.ResponseWriter, r *http.Request) {
 		if _, ok := links[r.Service]; ok {
 			ruopts.Rules = append(ruopts.Rules, types.RuleOption{
 				Service:  r.Service,
-				Endpoint: svc[links[r.Service]].Meta.Endpoint,
+				Endpoint: links[r.Service],
 				Path:     r.Path,
 				Port:     r.Port,
 			})

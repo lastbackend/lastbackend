@@ -21,13 +21,14 @@ package events
 import (
 	"net/http"
 
+	"time"
+
 	"github.com/gorilla/websocket"
 	"github.com/lastbackend/lastbackend/pkg/api/envs"
 	"github.com/lastbackend/lastbackend/pkg/api/types/v1"
 	"github.com/lastbackend/lastbackend/pkg/distribution"
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 	"github.com/lastbackend/lastbackend/pkg/log"
-	"time"
 )
 
 const (
@@ -71,22 +72,22 @@ func EventSubscribeH(w http.ResponseWriter, r *http.Request) {
 
 	conn, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
-		log.Debugf("%s:subscribe:> set websocket upgrade err: %s", logPrefix, err.Error())
+		log.V(logLevel).Debugf("%s:subscribe:> set websocket upgrade err: %s", logPrefix, err.Error())
 		return
 	}
 
 	ticker := time.NewTicker(time.Second)
 	defer ticker.Stop()
 
-	var serviceEvents = make(chan *types.Event)
-	var namespaceEvents = make(chan *types.Event)
-	var clusterEvents = make(chan *types.Event)
+	var serviceEvents = make(chan types.ServiceEvent)
+	var namespaceEvents = make(chan types.NamespaceEvent)
+	var clusterEvents = make(chan types.ClusterEvent)
 
 	notify := w.(http.CloseNotifier).CloseNotify()
 
 	go func() {
 		<-notify
-		log.Debugf("%s:subscribe:> HTTP connection just closed.", logPrefix)
+		log.V(logLevel).Debugf("%s:subscribe:> HTTP connection just closed.", logPrefix)
 		done <- true
 	}()
 
@@ -104,7 +105,7 @@ func EventSubscribeH(w http.ResponseWriter, r *http.Request) {
 				if e.Data == nil {
 					data = nil
 				} else {
-					data = v1.View().Cluster().New(e.Data.(*types.Cluster))
+					data = v1.View().Cluster().New(e.Data)
 				}
 
 				event := Event{
@@ -123,7 +124,7 @@ func EventSubscribeH(w http.ResponseWriter, r *http.Request) {
 				if e.Data == nil {
 					data = nil
 				} else {
-					data = v1.View().Service().New(e.Data.(*types.Service))
+					data = v1.View().Service().New(e.Data)
 				}
 
 				event := Event{
@@ -142,7 +143,7 @@ func EventSubscribeH(w http.ResponseWriter, r *http.Request) {
 				if e.Data == nil {
 					data = nil
 				} else {
-					data = v1.View().Namespace().New(e.Data.(*types.Namespace))
+					data = v1.View().Namespace().New(e.Data)
 				}
 
 				event := Event{
@@ -160,7 +161,7 @@ func EventSubscribeH(w http.ResponseWriter, r *http.Request) {
 	}()
 
 	go cm.Watch(clusterEvents)
-	go sm.Watch(serviceEvents)
+	go sm.Watch(serviceEvents, nil)
 	go nm.Watch(namespaceEvents)
 
 	go func() {

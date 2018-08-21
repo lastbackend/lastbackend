@@ -21,6 +21,11 @@ package cluster_test
 import (
 	"context"
 	"encoding/json"
+	"io/ioutil"
+	"net/http"
+	"net/http/httptest"
+	"testing"
+
 	"github.com/gorilla/mux"
 	"github.com/lastbackend/lastbackend/pkg/api/envs"
 	"github.com/lastbackend/lastbackend/pkg/api/http/cluster"
@@ -28,10 +33,6 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 	"github.com/lastbackend/lastbackend/pkg/storage"
 	"github.com/stretchr/testify/assert"
-	"io/ioutil"
-	"net/http"
-	"net/http/httptest"
-	"testing"
 )
 
 // Testing ClusterInfoH handler
@@ -39,7 +40,7 @@ func TestClusterInfo(t *testing.T) {
 
 	var ctx = context.Background()
 
-	stg, _ := storage.GetMock()
+	stg, _ := storage.Get("mock")
 	envs.Get().SetStorage(stg)
 
 	c := getClusterAsset(4096)
@@ -76,7 +77,7 @@ func TestClusterInfo(t *testing.T) {
 	}
 
 	clear := func() {
-		err := envs.Get().GetStorage().Cluster().Clear(context.Background())
+		err := envs.Get().GetStorage().Del(context.Background(), stg.Collection().Cluster(), types.EmptyString)
 		assert.NoError(t, err)
 	}
 
@@ -87,7 +88,7 @@ func TestClusterInfo(t *testing.T) {
 			clear()
 			defer clear()
 
-			err := envs.Get().GetStorage().Cluster().SetStatus(context.Background(), &c.Status)
+			err := stg.Put(context.Background(), stg.Collection().Cluster(), types.EmptyString, c, nil)
 			assert.NoError(t, err)
 
 			// Create assert request to pass to our handler. We don't have any query parameters for now, so we'll
@@ -114,12 +115,16 @@ func TestClusterInfo(t *testing.T) {
 			r.ServeHTTP(res, req)
 
 			// Check the status code is what we expect.
-			assert.Equal(t, tc.expectedCode, res.Code, "status code not equal")
+			if !assert.Equal(t, tc.expectedCode, res.Code, "status code not equal") {
+				return
+			}
 
 			body, err := ioutil.ReadAll(res.Body)
 			assert.NoError(t, err)
 
-			if tc.wantErr && res.Code != 200 {
+			if tc.wantErr {
+				assert.Error(t, err, "err, should be not nil")
+				assert.NotEqual(t, 200, res.Code, "err, should be not nil")
 				assert.Equal(t, tc.err, string(body), "incorrect status code")
 			} else {
 

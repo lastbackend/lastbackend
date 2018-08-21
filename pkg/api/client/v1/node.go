@@ -74,9 +74,9 @@ func (nc *NodeClient) Get(ctx context.Context) (*vv1.Node, error) {
 	return s, nil
 }
 
-func (nc *NodeClient) GetSpec(ctx context.Context) (*vv1.NodeSpec, error) {
+func (nc *NodeClient) GetSpec(ctx context.Context) (*vv1.NodeManifest, error) {
 
-	var s *vv1.NodeSpec
+	var s *vv1.NodeManifest
 	var e *errors.Http
 
 	err := nc.client.Get(fmt.Sprintf("/cluster/node/%s/spec", nc.hostname)).

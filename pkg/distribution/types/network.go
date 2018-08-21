@@ -18,18 +18,28 @@
 
 package types
 
+import (
+	"strings"
+)
+
 const NetworkTypeVxLAN = "vxlan"
 
-// swagger:model types_network_spec
+type Network struct {
+	Runtime
+	Meta   Meta          `json:"meta"`
+	Status NetworkStatus `json:"status"`
+	Spec   NetworkSpec   `json:"spec"`
+}
+
+type NetworkStatus struct {
+	State string `json:"state"`
+}
+
 type NetworkSpec struct {
-	// Node network type
-	Type string `json:"type"`
-	// Node Network subnet info
-	Range string `json:"range"`
-	// Node Network interface
-	IFace NetworkInterface `json:"iface"`
-	// Node Public IP
-	Addr string `json:"addr"`
+}
+
+type NetworkState struct {
+	SubnetSpec
 }
 
 // swagger:model types_network_interface
@@ -40,12 +50,46 @@ type NetworkInterface struct {
 	HAddr string `json:"HAddr"`
 }
 
-func (n *NetworkSpec) Equal(nt *NetworkSpec) bool {
+type Subnet struct {
+	Runtime
+	Meta   SubnetMeta         `json:"meta"`
+	Status SubnetStatus `json:"status"`
+	Spec   SubnetSpec   `json:"spec"`
+}
+
+type SubnetStatus struct {
+	State string `json:"state"`
+}
+
+type SubnetMeta struct {
+	Meta
+	Node string `json:"node"`
+}
+
+// swagger:model subnet_spec
+type SubnetSpec struct {
+	// Subnet state
+	State string `json:"state"`
+	// Node network type
+	Type string `json:"type"`
+	// Node Subnet subnet info
+	CIDR string `json:"cidr"`
+	// Node Subnet interface
+	IFace NetworkInterface `json:"iface"`
+	// Node Public IP
+	Addr string `json:"addr"`
+}
+
+func SubnetGetNameFromCIDR(CIDR string) string {
+	return strings.Replace(CIDR, "/", ":", -1)
+}
+
+func SubnetSpecEqual (n *SubnetSpec, nt *SubnetSpec)bool {
 
 	switch false {
 	case n.Type == nt.Type:
 		return false
-	case n.Range == nt.Range:
+	case n.CIDR == nt.CIDR:
 		return false
 	case n.IFace.Index == nt.IFace.Index:
 		return false
@@ -60,3 +104,11 @@ func (n *NetworkSpec) Equal(nt *NetworkSpec) bool {
 	}
 	return true
 }
+
+func (s Subnet) SelfLink() string {
+	if s.Meta.SelfLink == EmptyString {
+		s.Meta.SelfLink = s.Meta.Name
+	}
+	return s.Meta.SelfLink
+}
+

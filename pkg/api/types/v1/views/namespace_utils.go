@@ -86,13 +86,13 @@ func (p *Namespace) ToJson() ([]byte, error) {
 	return json.Marshal(p)
 }
 
-func (nv NamespaceView) NewList(obj map[string]*types.Namespace) *NamespaceList {
+func (nv NamespaceView) NewList(obj *types.NamespaceList) *NamespaceList {
 	if obj == nil {
 		return nil
 	}
 
 	n := make(NamespaceList, 0)
-	for _, v := range obj {
+	for _, v := range obj.Items {
 		n = append(n, nv.New(v))
 	}
 	return &n

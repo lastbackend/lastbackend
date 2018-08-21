@@ -95,7 +95,7 @@ func lbLocal(w dns.ResponseWriter, r *dns.Msg) {
 					if len(match) != 0 {
 						e, err := em.Get(match[2], match[1])
 						if err != nil {
-							log.V(logLevel).Errorf("%s:lb.local:> get endpoint `%s` err: %s", endpoint, logPrefix, err.Error())
+							log.V(logLevel).Errorf("%s:lb.local:> get endpoint `%s` err: %v", endpoint, logPrefix, err)
 						}
 
 						envs.Get().GetCache().Endpoint().Set(endpoint, []string{e.Spec.IP})
@@ -138,7 +138,7 @@ func lbLocal(w dns.ResponseWriter, r *dns.Msg) {
 			}
 		}
 	case dns.OpcodeUpdate:
-		log.Debugf("%s:lb.local:> dns.OpcodeUpdate", logPrefix)
+		log.V(logLevel).Debugf("%s:lb.local:> dns.OpcodeUpdate", logPrefix)
 	}
 
 	if r.IsTsig() != nil {
@@ -149,7 +149,7 @@ func lbLocal(w dns.ResponseWriter, r *dns.Msg) {
 		}
 	}
 
-	log.Debugf("%s:lb.local:> send message info  %#v", logPrefix, m)
+	log.V(logLevel).Debugf("%s:lb.local:> send message info  %#v", logPrefix, m)
 
 	w.WriteMsg(m)
 }

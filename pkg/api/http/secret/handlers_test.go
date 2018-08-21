@@ -21,23 +21,23 @@ package secret_test
 import (
 	"context"
 	"encoding/json"
-	"errors"
 	"fmt"
+	"io/ioutil"
+	"net/http"
+	"net/http/httptest"
+	"strings"
+	"testing"
+
 	"github.com/gorilla/mux"
 	"github.com/lastbackend/lastbackend/pkg/api/envs"
 	"github.com/lastbackend/lastbackend/pkg/api/http/secret"
 	"github.com/lastbackend/lastbackend/pkg/api/types/v1"
 	"github.com/lastbackend/lastbackend/pkg/api/types/v1/request"
 	"github.com/lastbackend/lastbackend/pkg/api/types/v1/views"
+	"github.com/lastbackend/lastbackend/pkg/distribution/errors"
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 	"github.com/lastbackend/lastbackend/pkg/storage"
-	"github.com/lastbackend/lastbackend/pkg/storage/store"
 	"github.com/stretchr/testify/assert"
-	"io/ioutil"
-	"net/http"
-	"net/http/httptest"
-	"strings"
-	"testing"
 )
 
 // Testing SecretListH handler
@@ -45,7 +45,7 @@ func TestSecretList(t *testing.T) {
 
 	var ctx = context.Background()
 
-	stg, _ := storage.GetMock()
+	stg, _ := storage.Get("mock")
 	envs.Get().SetStorage(stg)
 
 	ns1 := getNamespaceAsset("demo", "")
@@ -53,9 +53,9 @@ func TestSecretList(t *testing.T) {
 	r1 := getSecretAsset(ns1.Meta.Name, "demo", "demo")
 	r2 := getSecretAsset(ns1.Meta.Name, "test", "test")
 
-	rl := make(types.SecretMap, 0)
-	rl[r1.SelfLink()] = r1
-	rl[r2.SelfLink()] = r2
+	rl := types.NewSecretMap()
+	rl.Items[r1.SelfLink()] = r1
+	rl.Items[r2.SelfLink()] = r2
 
 	type fields struct {
 		stg storage.Storage
@@ -73,12 +73,12 @@ func TestSecretList(t *testing.T) {
 		headers      map[string]string
 		handler      func(http.ResponseWriter, *http.Request)
 		err          string
-		want         types.SecretMap
+		want         *types.SecretMap
 		wantErr      bool
 		expectedCode int
 	}{
 		{
-			name:         "checking get routes list if namespace not found",
+			name:         "checking get secrets list if namespace not found",
 			args:         args{ctx, ns2},
 			fields:       fields{stg},
 			handler:      secret.SecretListH,
@@ -87,7 +87,7 @@ func TestSecretList(t *testing.T) {
 			expectedCode: http.StatusNotFound,
 		},
 		{
-			name:         "checking get routes list successfully",
+			name:         "checking get secrets list successfully",
 			args:         args{ctx, ns1},
 			fields:       fields{stg},
 			handler:      secret.SecretListH,
@@ -98,10 +98,10 @@ func TestSecretList(t *testing.T) {
 	}
 
 	clear := func() {
-		err := envs.Get().GetStorage().Namespace().Clear(context.Background())
+		err := envs.Get().GetStorage().Del(context.Background(), stg.Collection().Namespace(), types.EmptyString)
 		assert.NoError(t, err)
 
-		err = envs.Get().GetStorage().Secret().Clear(context.Background())
+		err = envs.Get().GetStorage().Del(context.Background(), stg.Collection().Secret(), types.EmptyString)
 		assert.NoError(t, err)
 	}
 
@@ -112,13 +112,13 @@ func TestSecretList(t *testing.T) {
 			clear()
 			defer clear()
 
-			err := envs.Get().GetStorage().Namespace().Insert(context.Background(), ns1)
+			err := tc.fields.stg.Put(context.Background(), stg.Collection().Namespace(), tc.fields.stg.Key().Namespace(ns1.Meta.Name), ns1, nil)
 			assert.NoError(t, err)
 
-			err = envs.Get().GetStorage().Secret().Insert(context.Background(), r1)
+			err = stg.Put(context.Background(), stg.Collection().Secret(), stg.Key().Secret(r1.Meta.Namespace, r1.Meta.Name), &r1, nil)
 			assert.NoError(t, err)
 
-			err = envs.Get().GetStorage().Secret().Insert(context.Background(), r2)
+			err = stg.Put(context.Background(), stg.Collection().Secret(), stg.Key().Secret(r2.Meta.Namespace, r2.Meta.Name), &r2, nil)
 			assert.NoError(t, err)
 
 			// Create assert request to pass to our handler. We don't have any query parameters for now, so we'll
@@ -159,7 +159,7 @@ func TestSecretList(t *testing.T) {
 				assert.NoError(t, err)
 
 				for _, item := range *r {
-					if _, ok := tc.want[item.Meta.SelfLink]; !ok {
+					if _, ok := tc.want.Items[item.Meta.SelfLink]; !ok {
 						assert.Error(t, errors.New("not equals"))
 					}
 				}
@@ -189,7 +189,7 @@ func TestSecretCreate(t *testing.T) {
 
 	var ctx = context.Background()
 
-	stg, _ := storage.GetMock()
+	stg, _ := storage.Get("mock")
 	envs.Get().SetStorage(stg)
 
 	srtPointer := func(s string) *string { return &s }
@@ -255,10 +255,10 @@ func TestSecretCreate(t *testing.T) {
 	}
 
 	clear := func() {
-		err := envs.Get().GetStorage().Namespace().Clear(context.Background())
+		err := envs.Get().GetStorage().Del(context.Background(), stg.Collection().Namespace(), types.EmptyString)
 		assert.NoError(t, err)
 
-		err = envs.Get().GetStorage().Secret().Clear(context.Background())
+		err = envs.Get().GetStorage().Del(context.Background(), stg.Collection().Secret(), types.EmptyString)
 		assert.NoError(t, err)
 	}
 
@@ -268,10 +268,10 @@ func TestSecretCreate(t *testing.T) {
 			clear()
 			defer clear()
 
-			err := envs.Get().GetStorage().Namespace().Insert(context.Background(), ns1)
+			err := tc.fields.stg.Put(context.Background(), stg.Collection().Namespace(), tc.fields.stg.Key().Namespace(ns1.Meta.Name), ns1, nil)
 			assert.NoError(t, err)
 
-			err = envs.Get().GetStorage().Secret().Insert(context.Background(), r1)
+			err = stg.Put(context.Background(), stg.Collection().Secret(), stg.Key().Secret(r1.Meta.Namespace, r1.Meta.Name), &r1, nil)
 			assert.NoError(t, err)
 
 			// Create assert request to pass to our handler. We don't have any query parameters for now, so we'll
@@ -298,16 +298,19 @@ func TestSecretCreate(t *testing.T) {
 			r.ServeHTTP(res, req)
 
 			// Check the status code is what we expect.
-			assert.Equal(t, tc.expectedCode, res.Code, "status code not equal")
+			if !assert.Equal(t, tc.expectedCode, res.Code, "status code not equal") {
+				return
+			}
 
 			body, err := ioutil.ReadAll(res.Body)
 			assert.NoError(t, err)
 
-			if tc.wantErr && res.Code != 200 {
+			if tc.wantErr {
 				assert.Equal(t, tc.err, string(body), "incorrect status code")
 			} else {
 
-				got, err := tc.fields.stg.Secret().Get(tc.args.ctx, tc.args.namespace.Meta.Name, tc.want.Meta.Name)
+				got := new(types.Secret)
+				err := tc.fields.stg.Get(tc.args.ctx, stg.Collection().Secret(), tc.fields.stg.Key().Secret(tc.args.namespace.Meta.Name, tc.want.Meta.Name), got, nil)
 				assert.NoError(t, err)
 
 				assert.Equal(t, ns1.Meta.Name, got.Meta.Name, "it was not be create")
@@ -337,7 +340,7 @@ func TestSecretUpdate(t *testing.T) {
 
 	var ctx = context.Background()
 
-	stg, _ := storage.GetMock()
+	stg, _ := storage.Get("mock")
 	envs.Get().SetStorage(stg)
 
 	srtPointer := func(s string) *string { return &s }
@@ -381,10 +384,10 @@ func TestSecretUpdate(t *testing.T) {
 	}
 
 	clear := func() {
-		err := envs.Get().GetStorage().Namespace().Clear(context.Background())
+		err := envs.Get().GetStorage().Del(context.Background(), stg.Collection().Namespace(), types.EmptyString)
 		assert.NoError(t, err)
 
-		err = envs.Get().GetStorage().Secret().Clear(context.Background())
+		err = envs.Get().GetStorage().Del(context.Background(), stg.Collection().Secret(), types.EmptyString)
 		assert.NoError(t, err)
 	}
 
@@ -394,10 +397,10 @@ func TestSecretUpdate(t *testing.T) {
 			clear()
 			defer clear()
 
-			err := envs.Get().GetStorage().Namespace().Insert(context.Background(), ns1)
+			err := tc.fields.stg.Put(context.Background(), stg.Collection().Namespace(), tc.fields.stg.Key().Namespace(ns1.Meta.Name), ns1, nil)
 			assert.NoError(t, err)
 
-			err = envs.Get().GetStorage().Secret().Insert(context.Background(), s1)
+			err = stg.Put(context.Background(), stg.Collection().Secret(), stg.Key().Secret(s1.Meta.Namespace, s1.Meta.Name), &s1, nil)
 			assert.NoError(t, err)
 
 			// Create assert request to pass to our handler. We don't have any query parameters for now, so we'll
@@ -424,12 +427,14 @@ func TestSecretUpdate(t *testing.T) {
 			r.ServeHTTP(res, req)
 
 			// Check the status code is what we expect.
-			assert.Equal(t, tc.expectedCode, res.Code, "status code not equal")
+			if !assert.Equal(t, tc.expectedCode, res.Code, "status code not equal") {
+				return
+			}
 
 			body, err := ioutil.ReadAll(res.Body)
 			assert.NoError(t, err)
 
-			if tc.wantErr && res.Code != 200 {
+			if tc.wantErr {
 				assert.Equal(t, tc.err, string(body), "incorrect status code")
 			} else {
 
@@ -449,7 +454,7 @@ func TestSecretRemove(t *testing.T) {
 
 	var ctx = context.Background()
 
-	stg, _ := storage.GetMock()
+	stg, _ := storage.Get("mock")
 	envs.Get().SetStorage(stg)
 
 	ns1 := getNamespaceAsset("demo", "")
@@ -508,10 +513,10 @@ func TestSecretRemove(t *testing.T) {
 	}
 
 	clear := func() {
-		err := envs.Get().GetStorage().Namespace().Clear(context.Background())
+		err := envs.Get().GetStorage().Del(context.Background(), stg.Collection().Namespace(), types.EmptyString)
 		assert.NoError(t, err)
 
-		err = envs.Get().GetStorage().Secret().Clear(context.Background())
+		err = envs.Get().GetStorage().Del(context.Background(), stg.Collection().Secret(), types.EmptyString)
 		assert.NoError(t, err)
 	}
 
@@ -522,10 +527,10 @@ func TestSecretRemove(t *testing.T) {
 			clear()
 			defer clear()
 
-			err := envs.Get().GetStorage().Namespace().Insert(context.Background(), ns1)
+			err := tc.fields.stg.Put(context.Background(), stg.Collection().Namespace(), tc.fields.stg.Key().Namespace(ns1.Meta.Name), ns1, nil)
 			assert.NoError(t, err)
 
-			err = envs.Get().GetStorage().Secret().Insert(context.Background(), s1)
+			err = stg.Put(context.Background(), stg.Collection().Secret(), stg.Key().Secret(s1.Meta.Namespace, s1.Meta.Name), &s1, nil)
 			assert.NoError(t, err)
 
 			// Create assert request to pass to our handler. We don't have any query parameters for now, so we'll
@@ -553,22 +558,21 @@ func TestSecretRemove(t *testing.T) {
 			r.ServeHTTP(res, req)
 
 			// Check the status code is what we expect.
-			assert.Equal(t, tc.expectedCode, res.Code, "status code not equal")
+			if !assert.Equal(t, tc.expectedCode, res.Code, "status code not equal") {
+				return
+			}
 
 			body, err := ioutil.ReadAll(res.Body)
 			assert.NoError(t, err)
 
-			if tc.wantErr && res.Code != 200 {
+			if tc.wantErr {
 				assert.Equal(t, tc.err, string(body), "incorrect status code")
 			} else {
-				got, err := tc.fields.stg.Secret().Get(tc.args.ctx, tc.args.namespace.Meta.Name, tc.args.secret.Meta.Name)
-				if err != nil && err.Error() != store.ErrEntityNotFound {
-					assert.NoError(t, err)
-				}
 
-				if got != nil {
-					t.Error("can not be set to destroy")
-					return
+				got := new(types.Secret)
+				err := tc.fields.stg.Get(tc.args.ctx, stg.Collection().Secret(), tc.fields.stg.Key().Secret(tc.args.namespace.Meta.Name, tc.args.secret.Meta.Name), got, nil)
+				if err != nil && !errors.Storage().IsErrEntityNotFound(err) {
+					assert.NoError(t, err)
 				}
 
 				assert.Equal(t, tc.want, string(body), "response not empty")

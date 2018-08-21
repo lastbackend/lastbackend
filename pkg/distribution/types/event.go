@@ -22,10 +22,110 @@ const (
 	EventActionCreate = "create"
 	EventActionUpdate = "update"
 	EventActionDelete = "delete"
+	EventActionError  = "error"
 )
 
+type event struct {
+	Action   string
+	Name     string
+	SelfLink string
+}
+
 type Event struct {
-	Action string
-	Name   string
-	Data   interface{}
+	event
+	Data interface{}
+}
+
+type NamespaceEvent struct {
+	event
+	Data *Namespace
+}
+
+type ClusterEvent struct {
+	event
+	Data *Cluster
+}
+
+type ServiceEvent struct {
+	event
+	Data *Service
+}
+
+type VolumeEvent struct {
+	event
+	Data *Volume
+}
+
+type NetworkEvent struct {
+	event
+	Data *Network
+}
+
+type SubnetEvent struct {
+	event
+	Data *Subnet
+}
+
+
+type IngresEvent struct {
+	event
+	Data *Ingress
+}
+
+type EndpointEvent struct {
+	event
+	Data *Endpoint
+}
+
+type DeploymentEvent struct {
+	event
+	Data *Deployment
+}
+
+type PodEvent struct {
+	event
+	Data *Pod
+}
+
+type PodManifestEvent struct {
+	event
+	Node string
+	Data *PodManifest
+}
+
+type VolumeManifestEvent struct {
+	event
+	Node string
+	Data *VolumeManifest
+}
+
+type EndpointManifestEvent struct {
+	event
+	Data *EndpointManifest
+}
+
+type SubnetManifestEvent struct {
+	event
+	Data *SubnetManifest
+}
+
+type NodeEvent struct {
+	event
+	Data *Node
+}
+
+func (e *event) IsActionCreate() bool {
+	return e.Action == EventActionCreate
+}
+
+func (e *event) IsActionUpdate() bool {
+	return e.Action == EventActionUpdate
+}
+
+func (e *event) IsActionRemove() bool {
+	return e.Action == EventActionDelete
+}
+
+func (e *event) IsActionError() bool {
+	return e.Action == EventActionError
 }

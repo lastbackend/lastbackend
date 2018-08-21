@@ -23,11 +23,12 @@ import (
 	"fmt"
 	"strings"
 
+	"encoding/json"
+
 	"github.com/lastbackend/lastbackend/pkg/distribution/errors"
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 	"github.com/lastbackend/lastbackend/pkg/log"
 	"github.com/lastbackend/lastbackend/pkg/storage"
-	"github.com/lastbackend/lastbackend/pkg/storage/store"
 	"github.com/spf13/viper"
 )
 
@@ -35,37 +36,39 @@ const (
 	logServicePrefix = "distribution:service"
 )
 
-type IService interface {
-	Get(namespace, service string) (*types.Service, error)
-	List(namespace string) (map[string]*types.Service, error)
-	Create(namespace *types.Namespace, opts *types.ServiceCreateOptions) (*types.Service, error)
-	Update(service *types.Service, opts *types.ServiceUpdateOptions) (*types.Service, error)
-	Destroy(service *types.Service) (*types.Service, error)
-	Remove(service *types.Service) error
-	SetStatus(service *types.Service) error
-	Watch(ch chan *types.Event) error
-	WatchSpec(ch chan *types.Service) error
-}
-
 type Service struct {
 	context context.Context
 	storage storage.Storage
 }
 
+func (s *Service) Runtime() (*types.Runtime, error) {
+
+	log.V(logLevel).Debugf("%s:get:> get services runtime info", logServicePrefix)
+	runtime, err := s.storage.Info(s.context, s.storage.Collection().Service(), "")
+	if err != nil {
+		log.V(logLevel).Errorf("%s:get:> get runtime info error: %s", logServicePrefix, err)
+		return &runtime.Runtime, err
+	}
+	return &runtime.Runtime, nil
+
+}
+
 // Get service by namespace and service name
-func (s *Service) Get(namespace, service string) (*types.Service, error) {
+func (s *Service) Get(namespace, name string) (*types.Service, error) {
 
-	log.V(logLevel).Debugf("%s:get:> get in namespace %s by name %s", logServicePrefix, namespace, service)
+	log.V(logLevel).Debugf("%s:get:> get in namespace %s by name %s", logServicePrefix, namespace, name)
 
-	svc, err := s.storage.Service().Get(s.context, namespace, service)
+	svc := new(types.Service)
+
+	err := s.storage.Get(s.context, s.storage.Collection().Service(), s.storage.Key().Service(namespace, name), svc, nil)
 	if err != nil {
 
-		if err.Error() == store.ErrEntityNotFound {
-			log.V(logLevel).Warnf("%s:get:> get in namespace %s by name %s not found", logServicePrefix, namespace, service)
+		if errors.Storage().IsErrEntityNotFound(err) {
+			log.V(logLevel).Warnf("%s:get:> get in namespace %s by name %s not found", logServicePrefix, namespace, name)
 			return nil, nil
 		}
 
-		log.V(logLevel).Errorf("%s:get:> get in namespace %s by name %s error: %s", logServicePrefix, namespace, service, err)
+		log.V(logLevel).Errorf("%s:get:> get in namespace %s by name %s error: %v", logServicePrefix, namespace, name, err)
 		return nil, err
 	}
 
@@ -73,19 +76,22 @@ func (s *Service) Get(namespace, service string) (*types.Service, error) {
 }
 
 // List method return map of services in selected namespace
-func (s *Service) List(namespace string) (map[string]*types.Service, error) {
+func (s *Service) List(namespace string) (*types.ServiceList, error) {
 
 	log.V(logLevel).Debugf("%s:list:> by namespace %s", logServicePrefix, namespace)
 
-	items, err := s.storage.Service().ListByNamespace(s.context, namespace)
+	list := types.NewServiceList()
+	q := s.storage.Filter().Service().ByNamespace(namespace)
+
+	err := s.storage.List(s.context, s.storage.Collection().Service(), q, list, nil)
 	if err != nil {
-		log.V(logLevel).Error("%s:list:> by namespace %s err: %s", logServicePrefix, namespace, err)
+		log.V(logLevel).Error("%s:list:> by namespace %s err: %v", logServicePrefix, namespace, err)
 		return nil, err
 	}
 
-	log.V(logLevel).Debugf("%s:list:> by namespace %s result: %d", logServicePrefix, namespace, len(items))
+	log.V(logLevel).Debugf("%s:list:> by namespace %s result: %d", logServicePrefix, namespace, len(list.Items))
 
-	return items, nil
+	return list, nil
 }
 
 // Create new service model in namespace
@@ -115,6 +121,7 @@ func (s *Service) Create(namespace *types.Namespace, opts *types.ServiceCreateOp
 
 	service.SelfLink()
 
+	service.Status.State = types.StateCreated
 	// prepare default template spec
 	c := types.SpecTemplateContainer{}
 	c.SetDefault()
@@ -129,8 +136,11 @@ func (s *Service) Create(namespace *types.Namespace, opts *types.ServiceCreateOp
 		service.Spec.Update(opts.Spec)
 	}
 
-	if err := s.storage.Service().Insert(s.context, service); err != nil {
-		log.V(logLevel).Errorf("%s:create:> insert service err: %s", logServicePrefix, err)
+	service.SelfLink()
+
+	if err := s.storage.Put(s.context, s.storage.Collection().Service(),
+		s.storage.Key().Service(service.Meta.Namespace, service.Meta.Name), service, nil); err != nil {
+		log.V(logLevel).Errorf("%s:create:> insert service err: %v", logServicePrefix, err)
 		return nil, err
 	}
 
@@ -148,20 +158,17 @@ func (s *Service) Update(service *types.Service, opts *types.ServiceUpdateOption
 
 	if opts.Description != nil {
 		service.Meta.Description = *opts.Description
-		if err := s.storage.Service().Update(s.context, service); err != nil {
-			log.V(logLevel).Errorf("%s:update:> update service meta err: %s", logServicePrefix, err)
-			return nil, err
-		}
 	}
 
 	if opts.Spec != nil {
-
+		service.Status.State = types.StateProvision
 		service.Spec.Update(opts.Spec)
+	}
 
-		if err := s.storage.Service().SetSpec(s.context, service); err != nil {
-			log.V(logLevel).Errorf("%s:update:> update service spec err: %s", logServicePrefix, err)
-			return nil, err
-		}
+	if err := s.storage.Set(s.context, s.storage.Collection().Service(),
+		s.storage.Key().Service(service.Meta.Namespace, service.Meta.Name), service, nil); err != nil {
+		log.V(logLevel).Errorf("%s:update:> update service spec err: %v", logServicePrefix, err)
+		return nil, err
 	}
 
 	return service, nil
@@ -173,17 +180,13 @@ func (s *Service) Destroy(service *types.Service) (*types.Service, error) {
 	log.V(logLevel).Debugf("%s:destroy:> destroy service %s", logServicePrefix, service.SelfLink())
 
 	service.Status.State = types.StateDestroy
-	if err := s.storage.Service().SetStatus(s.context, service); err != nil {
-		log.V(logLevel).Errorf("%s:destroy:> destroy service err: %s", logServicePrefix, err)
-		return nil, err
-	}
-
 	service.Spec.State.Destroy = true
-	if err := s.storage.Service().SetSpec(s.context, service); err != nil {
-		log.V(logLevel).Errorf("%s:destroy:> destroy service err: %s", logServicePrefix, err)
+
+	if err := s.storage.Set(s.context, s.storage.Collection().Service(),
+		s.storage.Key().Service(service.Meta.Namespace, service.Meta.Name), service, nil); err != nil {
+		log.V(logLevel).Errorf("%s:destroy:> destroy service err: %v", logServicePrefix, err)
 		return nil, err
 	}
-
 	return service, nil
 }
 
@@ -192,9 +195,10 @@ func (s *Service) Remove(service *types.Service) error {
 
 	log.V(logLevel).Debugf("%s:remove:> remove service %#v", logServicePrefix, service)
 
-	err := s.storage.Service().Remove(s.context, service)
+	err := s.storage.Del(s.context, s.storage.Collection().Service(),
+		s.storage.Key().Service(service.Meta.Namespace, service.Meta.Name))
 	if err != nil {
-		log.V(logLevel).Errorf("%s:remove:> remove service err: %s", logServicePrefix, err)
+		log.V(logLevel).Errorf("%s:remove:> remove service err: %v", logServicePrefix, err)
 		return err
 	}
 
@@ -202,12 +206,18 @@ func (s *Service) Remove(service *types.Service) error {
 }
 
 // Set state for deployment
-func (s *Service) SetStatus(service *types.Service) error {
+func (s *Service) Set(service *types.Service) error {
 
-	log.Debugf("%s:setstatus:> set state for service %s", logServicePrefix, service.Meta.Name)
+	if service == nil {
+		return errors.New(errors.ErrStructArgIsNil)
+	}
 
-	if err := s.storage.Service().SetStatus(s.context, service); err != nil {
-		log.Errorf("%s:setstatus:> set state for service %s err: %s", logServicePrefix, service.Meta.Name, err.Error())
+
+	log.V(logLevel).Debugf("%s:setstatus:> set state for service %s", logServicePrefix, service.Meta.Name)
+
+	key := s.storage.Key().Service(service.Meta.Namespace, service.Meta.Name)
+	if err := s.storage.Set(s.context, s.storage.Collection().Service(), key, service, nil); err != nil {
+		log.Errorf("%s:setstatus:> set state for service %s err: %v", logServicePrefix, service.Meta.Name, err)
 		return err
 	}
 
@@ -215,23 +225,45 @@ func (s *Service) SetStatus(service *types.Service) error {
 }
 
 // Watch service changes
-func (s *Service) Watch(ch chan *types.Event) error {
+func (s *Service) Watch(ch chan types.ServiceEvent, rev *int64) error {
 
-	log.Debugf("%s:watch:> watch deployments", logServicePrefix)
-	if err := s.storage.Service().Watch(s.context, ch); err != nil {
-		log.Debugf("%s:watch:> watch deployment err: %s", logServicePrefix, err.Error())
-		return err
-	}
+	log.V(logLevel).Debugf("%s:watch:> watch service by spec changes", logServicePrefix)
 
-	return nil
-}
+	done := make(chan bool)
+	watcher := storage.NewWatcher()
 
-// Watch service by spec changes
-func (s *Service) WatchSpec(ch chan *types.Service) error {
+	go func() {
+		for {
+			select {
+			case <-s.context.Done():
+				done <- true
+				return
+			case e := <-watcher:
+				if e.Data == nil {
+					continue
+				}
 
-	log.Debugf("%s:watchspec:> watch deployments by spec changes", logServicePrefix)
-	if err := s.storage.Service().WatchSpec(s.context, ch); err != nil {
-		log.Debugf("%s:watchspec:> watch deployment by spec changes err: %s", logServicePrefix, err.Error())
+				res := types.ServiceEvent{}
+				res.Action = e.Action
+				res.Name = e.Name
+
+				service := new(types.Service)
+
+				if err := json.Unmarshal(e.Data.([]byte), service); err != nil {
+					log.Errorf("%s:> parse data err: %v", logServicePrefix, err)
+					continue
+				}
+
+				res.Data = service
+
+				ch <- res
+			}
+		}
+	}()
+
+	opts := storage.GetOpts()
+	opts.Rev = rev
+	if err := s.storage.Watch(s.context, s.storage.Collection().Service(), watcher, opts); err != nil {
 		return err
 	}
 
@@ -239,6 +271,6 @@ func (s *Service) WatchSpec(ch chan *types.Service) error {
 }
 
 // NewServiceModel returns new service management model
-func NewServiceModel(ctx context.Context, stg storage.Storage) IService {
+func NewServiceModel(ctx context.Context, stg storage.Storage) *Service {
 	return &Service{ctx, stg}
 }

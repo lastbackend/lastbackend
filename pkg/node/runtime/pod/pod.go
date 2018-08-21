@@ -33,20 +33,23 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/util/cleaner"
 )
 
-const BUFFER_SIZE = 1024
+const (
+	BUFFER_SIZE = 1024
+	logLevel = 3
+)
 
-func Manage(ctx context.Context, key string, spec *types.PodSpec) error {
-	log.Debugf("Provision pod: %s", key)
+func Manage(ctx context.Context, key string, manifest *types.PodManifest) error {
+	log.V(logLevel).Debugf("Provision pod: %s", key)
 
 	//==========================================================================
 	// Destroy pod =============================================================
 	//==========================================================================
 
 	// Call destroy pod
-	if spec.State.Destroy {
+	if manifest.State.Destroy {
 
 		if task := envs.Get().GetState().Tasks().GetTask(key); task != nil {
-			log.Debugf("Cancel pod creating: %s", key)
+			log.V(logLevel).Debugf("Cancel pod creating: %s", key)
 			task.Cancel()
 		}
 
@@ -61,7 +64,7 @@ func Manage(ctx context.Context, key string, spec *types.PodSpec) error {
 			return nil
 		}
 
-		log.Debugf("Pod found > destroy it: %s", key)
+		log.V(logLevel).Debugf("Pod found > destroy it: %s", key)
 
 		Destroy(ctx, key, p)
 
@@ -78,19 +81,19 @@ func Manage(ctx context.Context, key string, spec *types.PodSpec) error {
 	// Get pod list from current state
 	p := envs.Get().GetState().Pods().GetPod(key)
 	if p != nil {
-		if p.Stage != types.StateWarning {
+		if p.State != types.StateWarning {
 			events.NewPodStatusEvent(ctx, key)
 			return nil
 		}
 		Destroy(ctx, key, p)
 	}
 
-	log.Debugf("Pod not found > create it: %s", key)
+	log.V(logLevel).Debugf("Pod not found > create it: %s", key)
 
 	ctx, cancel := context.WithCancel(context.Background())
 	envs.Get().GetState().Tasks().AddTask(key, &types.NodeTask{Cancel: cancel})
 
-	status, err := Create(ctx, key, spec)
+	status, err := Create(ctx, key, manifest)
 	if err != nil {
 		log.Errorf("Can not create pod: %s err: %s", key, err.Error())
 		status.SetError(err)
@@ -101,14 +104,14 @@ func Manage(ctx context.Context, key string, spec *types.PodSpec) error {
 	return nil
 }
 
-func Create(ctx context.Context, key string, spec *types.PodSpec) (*types.PodStatus, error) {
+func Create(ctx context.Context, key string, manifest *types.PodManifest) (*types.PodStatus, error) {
 
 	var (
 		err    error
 		status = types.NewPodStatus()
 	)
 
-	log.Debugf("Create pod: %s", key)
+	log.V(logLevel).Debugf("Create pod: %s", key)
 
 	//==========================================================================
 	// Pull image ==============================================================
@@ -119,10 +122,10 @@ func Create(ctx context.Context, key string, spec *types.PodSpec) (*types.PodSta
 	envs.Get().GetState().Pods().AddPod(key, status)
 	events.NewPodStatusEvent(ctx, key)
 
-	log.Debugf("Have %d containers", len(spec.Template.Containers))
-	for _, c := range spec.Template.Containers {
+	log.V(logLevel).Debugf("Have %d containers", len(manifest.Template.Containers))
+	for _, c := range manifest.Template.Containers {
 
-		log.Debug("Pull images for pod if needed")
+		log.V(logLevel).Debug("Pull images for pod if needed")
 		r, err := envs.Get().GetCRI().ImagePull(ctx, &c.Image)
 		if err != nil {
 			log.Errorf("Can-not pull image: %s", err)
@@ -147,7 +150,7 @@ func Create(ctx context.Context, key string, spec *types.PodSpec) (*types.PodSta
 	envs.Get().GetState().Pods().SetPod(key, status)
 	events.NewPodStatusEvent(ctx, key)
 
-	for _, s := range spec.Template.Containers {
+	for _, s := range manifest.Template.Containers {
 
 		//==========================================================================
 		// Create container ========================================================
@@ -189,7 +192,7 @@ func Create(ctx context.Context, key string, spec *types.PodSpec) (*types.PodSta
 		}
 		status.Containers[c.ID] = c
 		envs.Get().GetState().Pods().SetPod(key, status)
-		log.Debugf("Container created: %#v", c)
+		log.V(logLevel).Debugf("Container created: %#v", c)
 
 		if err := envs.Get().GetCRI().ContainerStart(ctx, c.ID); err != nil {
 			switch err {
@@ -240,14 +243,14 @@ func Create(ctx context.Context, key string, spec *types.PodSpec) (*types.PodSta
 func Clean(ctx context.Context, status *types.PodStatus) {
 
 	for _, c := range status.Containers {
-		log.Debugf("Remove unnecessary container: %s", c.ID)
+		log.V(logLevel).Debugf("Remove unnecessary container: %s", c.ID)
 		if err := envs.Get().GetCRI().ContainerRemove(ctx, c.ID, true, true); err != nil {
 			log.Warnf("Can-not remove unnecessary container %s: %s", c.ID, err)
 		}
 	}
 
 	for _, c := range status.Containers {
-		log.Debugf("Try to clean image: %s", c.Image.Name)
+		log.V(logLevel).Debugf("Try to clean image: %s", c.Image.Name)
 		if err := envs.Get().GetCRI().ImageRemove(ctx, c.Image.Name); err != nil {
 			log.Warnf("Can-not remove unnecessary image %s: %s", c.Image.Name, err)
 		}
@@ -255,14 +258,14 @@ func Clean(ctx context.Context, status *types.PodStatus) {
 }
 
 func Destroy(ctx context.Context, pod string, status *types.PodStatus) {
-	log.Debugf("Try to remove pod: %s", pod)
+	log.V(logLevel).Debugf("Try to remove pod: %s", pod)
 	Clean(ctx, status)
 	envs.Get().GetState().Pods().DelPod(pod)
 }
 
 func Restore(ctx context.Context) error {
 
-	log.Debug("Runtime restore state")
+	log.V(logLevel).Debug("Runtime restore state")
 
 	cl, err := envs.Get().GetCRI().ContainerList(ctx, true)
 	if err != nil {
@@ -272,7 +275,7 @@ func Restore(ctx context.Context) error {
 
 	for _, c := range cl {
 
-		log.Debugf("Pod [%s] > container restore %s", c.Pod, c.ID)
+		log.V(logLevel).Debugf("Pod [%s] > container restore %s", c.Pod, c.ID)
 
 		status := envs.Get().GetState().Pods().GetPod(c.Pod)
 		if status == nil {
@@ -287,8 +290,6 @@ func Restore(ctx context.Context) error {
 				Name: c.Image,
 			},
 		}
-
-		log.Debugf("%#v", c.State)
 
 		switch c.State {
 		case types.StateCreated:
@@ -305,7 +306,7 @@ func Restore(ctx context.Context) error {
 				},
 			}
 			cs.State.Stopped.Stopped = false
-		case types.StateStopped:
+		case types.StatusStopped:
 			cs.State.Stopped.Stopped = true
 			cs.State.Stopped.Exit = types.PodContainerStateExit{
 				Code:      c.ExitCode,
@@ -329,7 +330,7 @@ func Restore(ctx context.Context) error {
 			cs.State.Started.Started = false
 		}
 
-		if c.Status == types.StateStopped {
+		if c.Status == types.StatusStopped {
 			cs.State.Stopped = types.PodContainerStateStopped{
 				Stopped: true,
 				Exit: types.PodContainerStateExit{
@@ -342,9 +343,9 @@ func Restore(ctx context.Context) error {
 		cs.Ready = true
 		status.Containers[cs.ID] = cs
 
-		log.Debugf("Container restored %s", c.ID)
+		log.V(logLevel).Debugf("Container restored %s", c.ID)
 		envs.Get().GetState().Pods().SetPod(key, status)
-		log.Debugf("Pod restored %#v", status)
+		log.V(logLevel).Debugf("Pod restored %#v", status)
 	}
 
 	return nil
@@ -352,7 +353,7 @@ func Restore(ctx context.Context) error {
 
 func Logs(ctx context.Context, id string, follow bool, s io.Writer, doneChan chan bool) error {
 
-	log.Debugf("Get container [%s] logs streaming", id)
+	log.V(logLevel).Debugf("Get container [%s] logs streaming", id)
 
 	var (
 		cri    = envs.Get().GetCRI()
@@ -366,7 +367,7 @@ func Logs(ctx context.Context, id string, follow bool, s io.Writer, doneChan cha
 		return err
 	}
 	defer func() {
-		log.Debugf("Stop container [%s] logs streaming", id)
+		log.V(logLevel).Debugf("Stop container [%s] logs streaming", id)
 		ctx.Done()
 		close(done)
 		req.Close()
@@ -384,7 +385,7 @@ func Logs(ctx context.Context, id string, follow bool, s io.Writer, doneChan cha
 				if err != nil {
 
 					if err == context.Canceled {
-						log.Debug("Stream is canceled")
+						log.V(logLevel).Debug("Stream is canceled")
 						return
 					}
 
@@ -438,7 +439,7 @@ func containerInspect(ctx context.Context, status *types.PodStatus, container *t
 		container.Image = types.PodContainerImage{
 			Name: info.Image,
 		}
-		if info.Status == types.StateStopped {
+		if info.Status == types.StatusStopped {
 			container.State.Stopped = types.PodContainerStateStopped{
 				Stopped: true,
 				Exit: types.PodContainerStateExit{

@@ -112,7 +112,7 @@ func (r *Runtime) ContainerLogs(ctx context.Context, ID string, stdout, stderr, 
 
 func (r *Runtime) ContainerInspect(ctx context.Context, ID string) (*types.Container, error) {
 
-	log.Debug("Docker: Container Inspect")
+	log.V(logLevel).Debug("Docker: Container Inspect")
 
 	info, err := r.client.ContainerInspect(ctx, ID)
 	if err != nil {
@@ -148,12 +148,12 @@ func (r *Runtime) ContainerInspect(ctx context.Context, ID string) (*types.Conta
 		container.State = types.StateCreated
 	case types.StateStarted:
 		container.State = types.StateStarted
-	case types.StateRunning:
+	case types.StatusRunning:
 		container.State = types.StateStarted
-	case types.StateStopped:
-		container.State = types.StateStopped
+	case types.StatusStopped:
+		container.State = types.StatusStopped
 	case types.StateExited:
-		container.State = types.StateStopped
+		container.State = types.StatusStopped
 	case types.StateError:
 		container.State = types.StateError
 	}
@@ -163,7 +163,7 @@ func (r *Runtime) ContainerInspect(ctx context.Context, ID string) (*types.Conta
 
 	meta, ok := info.Config.Labels["LB"]
 	if !ok {
-		log.Debug("Docker: Container Meta not found")
+		log.V(logLevel).Debug("Docker: Container Meta not found")
 		return nil, nil
 	}
 

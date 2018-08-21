@@ -20,10 +20,19 @@ package types
 
 import "fmt"
 
-type TriggerMap map[string]*Trigger
-type TriggerList []*Trigger
+type TriggerMap struct {
+	Runtime
+	Items map[string]*Trigger
+}
+
+type TriggerList struct {
+	Runtime
+	Items []*Trigger
+}
+
 
 type Trigger struct {
+	Runtime
 	Meta   TriggerMeta   `json:"meta"`
 	Spec   TriggerSpec   `json:"spec"`
 	Status TriggerStatus `json:"status"`
@@ -45,7 +54,23 @@ type TriggerSpec struct {
 
 func (t *Trigger) SelfLink() string {
 	if t.Meta.SelfLink == "" {
-		t.Meta.SelfLink = fmt.Sprintf("%s:%s:%s", t.Meta.Namespace, t.Meta.Service, t.Meta.Name)
+		t.Meta.SelfLink = t.CreateSelfLink(t.Meta.Namespace, t.Meta.Service, t.Meta.Name)
 	}
 	return t.Meta.SelfLink
+}
+
+func (t *Trigger) CreateSelfLink(namespace, service, name string) string {
+	return fmt.Sprintf("%s:%s:%s", namespace, service, name)
+}
+
+func NewTriggerList () *TriggerList {
+	dm := new(TriggerList)
+	dm.Items = make([]*Trigger, 0)
+	return dm
+}
+
+func NewTriggerMap () *TriggerMap {
+	dm := new(TriggerMap)
+	dm.Items = make(map[string]*Trigger)
+	return dm
 }

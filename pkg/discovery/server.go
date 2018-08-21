@@ -24,18 +24,20 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/util/dns"
 )
 
+const logLevel = 3
+
 func Listen(port int) (*dns.DNS, error) {
 
 	var d = dns.DNS{}
 
-	log.Debug(`Init discovery resources`)
+	log.V(logLevel).Debug(`Init discovery resources`)
 
 	for pattern, resource := range resources.Map {
 		d.AddHandler(pattern, resource)
 	}
 
 	go func() {
-		log.Debugf(`Start discovery %s service on %d port`, dns.TCP, port)
+		log.V(logLevel).Debugf(`Start discovery %s service on %d port`, dns.TCP, port)
 		if err := d.Start(dns.TCP, port, nil); err != nil {
 			log.Errorf(`Start discovery %s service on %d port error: %s`, dns.TCP, port, err)
 			return
@@ -43,7 +45,7 @@ func Listen(port int) (*dns.DNS, error) {
 	}()
 
 	go func() {
-		log.Debugf(`Start discovery %s service on %d port`, dns.UDP, port)
+		log.V(logLevel).Debugf(`Start discovery %s service on %d port`, dns.UDP, port)
 		if err := d.Start(dns.UDP, port, nil); err != nil {
 			log.Errorf(`Start discovery %s service on %d port error: %s`, dns.TCP, port, err)
 			return

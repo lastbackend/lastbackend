@@ -26,6 +26,8 @@ import (
 	"github.com/pkg/errors"
 )
 
+const logLevel = 3
+
 // NewConnectEventt - send node info event after
 // node is successful accepted and each hour
 func NewConnectEvent(ctx context.Context) error {
@@ -90,7 +92,7 @@ func NewVolumeStatusEvent(ctx context.Context, volume string) error {
 		return errors.New("Event: volume state event: volume is empty")
 	}
 
-	log.Debugf("Event: volume state event state: %s", volume)
+	log.V(logLevel).Debugf("Event: volume state event state: %s", volume)
 
 	opts := v1.Request().Node().NodeVolumeStatusOptions()
 	return c.SetVolumeStatus(ctx, volume, opts)

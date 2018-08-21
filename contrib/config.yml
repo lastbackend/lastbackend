@@ -2,7 +2,7 @@
 
 # Runtime
 verbose: 3
-token:
+token: lstbknd
 ssl: true
 
 # Etcd database

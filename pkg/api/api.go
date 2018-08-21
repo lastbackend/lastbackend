@@ -26,6 +26,7 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/api/cache"
 	"github.com/lastbackend/lastbackend/pkg/api/envs"
 	"github.com/lastbackend/lastbackend/pkg/api/http"
+	"github.com/lastbackend/lastbackend/pkg/api/runtime"
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 	"github.com/lastbackend/lastbackend/pkg/log"
 	"github.com/lastbackend/lastbackend/pkg/storage"
@@ -47,17 +48,9 @@ func Daemon() bool {
 	}
 
 	envs.Get().SetStorage(stg)
+	envs.Get().SetCache(cache.NewCache())
 
-	c := cache.NewCache()
-	go c.Node().CachePods(stg.Node().EventPodSpec)
-	go c.Node().CacheVolumes(stg.Node().EventVolumeSpec)
-	go c.Node().CacheEndpoints(stg.Endpoint().EventSpec)
-	go c.Node().Del(stg.Node().EventStatus)
-
-	go c.Ingress().CacheRoutes(stg.Route().WatchSpecEvents)
-	go c.Ingress().Status(stg.Ingress().WatchStatus)
-
-	envs.Get().SetCache(c)
+	runtime.New().Run()
 
 	go func() {
 		types.SecretAccessToken = viper.GetString("token")

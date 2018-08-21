@@ -24,37 +24,36 @@ import (
 )
 
 // swagger:ignore
-// swagger:model types_node_status_map
-type NodeMapStatus map[string]*NodeStatus
-
-// swagger:ignore
 // swagger:model types_node_map
-type NodeMap map[string]*Node
+type NodeMap struct {
+	Runtime
+	Items map[string]*Node
+}
 
 // swagger:ignore
 // swagger:model types_node_list
-type NodeList []*Node
+type NodeList struct {
+	Runtime
+	Items []*Node
+}
 
 // swagger:ignore
 // swagger:model types_node
 type Node struct {
-	Meta    NodeMeta    `json:"meta"`
-	Info    NodeInfo    `json:"info"`
-	Status  NodeStatus  `json:"status"`
-	Spec    NodeSpec    `json:"spec"`
-	Roles   NodeRole    `json:"roles"`
-	Network NetworkSpec `json:"network"`
-	Online  bool        `json:"online"`
+	Runtime
+	Meta   NodeMeta   `json:"meta"`
+	Status NodeStatus `json:"status"`
+	Spec   NodeSpec   `json:"spec"`
 }
 
 // swagger:ignore
 // swagger:model types_node_meta
 type NodeMeta struct {
 	Meta
+	NodeInfo
+	Subnet   string `json:"subnet"`
 	Cluster  string `json:"cluster"`
 	Token    string `json:"token"`
-	Region   string `json:"region"`
-	Provider string `json:"provider"`
 }
 
 func (m *NodeMeta) Set(meta *NodeUpdateMetaOptions) {
@@ -66,16 +65,27 @@ func (m *NodeMeta) Set(meta *NodeUpdateMetaOptions) {
 		m.Token = *meta.Token
 	}
 
-	if meta.Region != nil {
-		m.Region = *meta.Region
-	}
-
-	if meta.Provider != nil {
-		m.Provider = *meta.Provider
-	}
-
 	if meta.Labels != nil {
 		m.Labels = meta.Labels
+	}
+
+	if meta.Hostname != nil {
+		m.Hostname = *meta.Hostname
+	}
+	if meta.Architecture != nil {
+		m.Architecture = *meta.Architecture
+	}
+	if meta.OSName != nil {
+		m.OSName = *meta.OSName
+	}
+	if meta.OSType != nil {
+		m.OSType = *meta.OSType
+	}
+	if meta.ExternalIP != nil {
+		m.ExternalIP = *meta.ExternalIP
+	}
+	if meta.InternalIP != nil {
+		m.InternalIP = *meta.InternalIP
 	}
 
 }
@@ -95,35 +105,37 @@ type NodeInfo struct {
 
 // swagger:model types_node_status
 type NodeStatus struct {
+	// state
+	State NodeStatusState `json:"state"`
+	// node status online
+	Online bool `json:"online"`
 	// Node Capacity
 	Capacity NodeResources `json:"capacity"`
 	// Node Allocated
 	Allocated NodeResources `json:"allocated"`
 }
 
+type NodeStatusState struct {
+	CRI NodeStatusInterfaceState `json:"cri"`
+	CNI NodeStatusInterfaceState `json:"cni"`
+	CPI NodeStatusInterfaceState `json:"cpi"`
+	CSI NodeStatusInterfaceState `json:"csi"`
+}
+
+type NodeStatusInterfaceState struct {
+	Type    string `json:"type"`
+	Version string `json:"version"`
+	State   string `json:"state"`
+	Message string `json:"message"`
+}
+
 // swagger:ignore
 // swagger:model types_node_spec
 type NodeSpec struct {
-	Network   map[string]NetworkSpec  `json:"network"`
+	Network   map[string]SubnetSpec   `json:"network"`
 	Pods      map[string]PodSpec      `json:"pods"`
 	Volumes   map[string]VolumeSpec   `json:"volumes"`
 	Endpoints map[string]EndpointSpec `json:"endpoints"`
-}
-
-// swagger:ignore
-// swagger:model types_node_namespace
-type NodeNamespace struct {
-	Meta NamespaceMeta     `json:"meta",yaml:"meta"`
-	Spec NodeNamespaceSpec `json:"spec",yaml:"spec"`
-}
-
-// swagger:ignore
-// swagger:model types_node_namespace_spec
-type NodeNamespaceSpec struct {
-	Routes  []*Route  `json:"routes",yaml:"routes"`
-	Pods    []*Pod    `json:"pods",yaml:"pods"`
-	Volumes []*Volume `json:"volumes",yaml:"volumes"`
-	Secrets []*Secret `json:"secrets",yaml:"secrets"`
 }
 
 // swagger:model types_node_resources
@@ -164,6 +176,7 @@ type NodeTask struct {
 // swagger:model types_node_meta_create
 type NodeCreateMetaOptions struct {
 	MetaCreateOptions
+	Subnet   string `json:"subnet"`
 	Token    string `json:"token"`
 	Region   string `json:"region"`
 	Provider string `json:"provider"`
@@ -172,18 +185,36 @@ type NodeCreateMetaOptions struct {
 // swagger:model types_node_meta_update
 type NodeUpdateMetaOptions struct {
 	MetaUpdateOptions
+	NodeUpdateInfoOptions
 	Token    *string `json:"token"`
 	Region   *string `json:"region"`
 	Provider *string `json:"provider"`
 }
 
+type NodeUpdateInfoOptions struct {
+	Hostname     *string `json:"hostname"`
+	Architecture *string `json:"architecture"`
+	OSName       *string `json:"os_name"`
+	OSType       *string `json:"os_type"`
+	ExternalIP   *string `json:"external_ip"`
+	InternalIP   *string `json:"internal_ip"`
+}
+
+func (o *NodeUpdateInfoOptions) Set(i NodeInfo) {
+	o.Hostname = &i.Hostname
+	o.Architecture = &i.Architecture
+	o.OSName = &i.OSName
+	o.OSType = &i.OSType
+	o.ExternalIP = &i.ExternalIP
+	o.InternalIP = &i.InternalIP
+}
+
 // swagger:ignore
 // swagger:model types_node_create
 type NodeCreateOptions struct {
-	Meta    NodeCreateMetaOptions `json:"meta",yaml:"meta"`
-	Info    NodeInfo              `json:"info",yaml:"info"`
-	Status  NodeStatus            `json:"status",yaml:"status"`
-	Network NetworkSpec           `json:"network"`
+	Meta   NodeCreateMetaOptions `json:"meta",yaml:"meta"`
+	Info   NodeInfo              `json:"info",yaml:"info"`
+	Status NodeStatus            `json:"status",yaml:"status"`
 }
 
 func (n *Node) SelfLink() string {
@@ -191,4 +222,16 @@ func (n *Node) SelfLink() string {
 		n.Meta.SelfLink = fmt.Sprintf("%s", n.Meta.Name)
 	}
 	return n.Meta.SelfLink
+}
+
+func NewNodeList() *NodeList {
+	dm := new(NodeList)
+	dm.Items = make([]*Node, 0)
+	return dm
+}
+
+func NewNodeMap() *NodeMap {
+	dm := new(NodeMap)
+	dm.Items = make(map[string]*Node)
+	return dm
 }

@@ -26,46 +26,46 @@ import (
 
 type NetworkState struct {
 	lock    sync.RWMutex
-	subnets map[string]types.NetworkSpec
+	subnets map[string]types.NetworkState
 }
 
-func (n *NetworkState) GetSubnets() map[string]types.NetworkSpec {
+func (n *NetworkState) GetSubnets() map[string]types.NetworkState {
 	return n.subnets
 }
 
-func (n *NetworkState) AddSubnet(sn *types.NetworkSpec) {
-	log.V(logLevel).Debugf("Stage: NetworkState: add subnet: %v", sn)
-	n.SetSubnet(sn)
+func (n *NetworkState) AddSubnet(cidr string, sn *types.NetworkState) {
+	log.V(logLevel).Debugf("Stage: NetworkState: add subnet: %s", cidr)
+	n.SetSubnet(cidr, sn)
 }
 
-func (n *NetworkState) SetSubnet(sn *types.NetworkSpec) {
-	log.V(logLevel).Debugf("Stage: NetworkState: set subnet: %v", sn)
+func (n *NetworkState) SetSubnet(cidr string, sn *types.NetworkState) {
+	log.V(logLevel).Debugf("Stage: NetworkState: set subnet: %s", cidr)
 	n.lock.Lock()
 	defer n.lock.Unlock()
 
-	if _, ok := n.subnets[sn.Range]; ok {
-		delete(n.subnets, sn.Range)
+	if _, ok := n.subnets[cidr]; ok {
+		delete(n.subnets, cidr)
 	}
 
-	n.subnets[sn.Range] = *sn
+	n.subnets[cidr] = *sn
 }
 
-func (n *NetworkState) GetSubnet(sn string) *types.NetworkSpec {
-	log.V(logLevel).Debugf("Stage: NetworkState: get subnet: %s", sn)
+func (n *NetworkState) GetSubnet(cidr string) *types.NetworkState {
+	log.V(logLevel).Debugf("Stage: NetworkState: get subnet: %s", cidr)
 	n.lock.Lock()
 	defer n.lock.Unlock()
-	s, ok := n.subnets[sn]
+	s, ok := n.subnets[cidr]
 	if !ok {
 		return nil
 	}
 	return &s
 }
 
-func (n *NetworkState) DelSubnet(sn *types.NetworkSpec) {
-	log.V(logLevel).Debugf("Stage: NetworkState: del subnet: %v", sn)
+func (n *NetworkState) DelSubnet(cidr string) {
+	log.V(logLevel).Debugf("Stage: NetworkState: del subnet: %v", cidr)
 	n.lock.Lock()
 	defer n.lock.Unlock()
-	if _, ok := n.subnets[sn.Range]; ok {
-		delete(n.subnets, sn.Range)
+	if _, ok := n.subnets[cidr]; ok {
+		delete(n.subnets, cidr)
 	}
 }

@@ -19,13 +19,14 @@
 package namespace
 
 import (
+	"net/http"
+
 	"github.com/lastbackend/lastbackend/pkg/api/envs"
 	"github.com/lastbackend/lastbackend/pkg/api/types/v1"
 	"github.com/lastbackend/lastbackend/pkg/distribution"
 	"github.com/lastbackend/lastbackend/pkg/distribution/errors"
 	"github.com/lastbackend/lastbackend/pkg/log"
 	"github.com/lastbackend/lastbackend/pkg/util/http/utils"
-	"net/http"
 )
 
 const (
@@ -338,7 +339,7 @@ func NamespaceRemoveH(w http.ResponseWriter, r *http.Request) {
 	}
 
 	exists, err := sm.List(ns.Meta.Name)
-	if len(exists) > 0 {
+	if len(exists.Items) > 0 {
 		errors.New("namespace").Forbidden().Http(w)
 		return
 	}

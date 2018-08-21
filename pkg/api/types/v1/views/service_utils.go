@@ -39,12 +39,14 @@ func (sv *ServiceView) New(srv *types.Service) *Service {
 	return s
 }
 
-func (sv *ServiceView) NewWithDeployment(srv *types.Service, d map[string]*types.Deployment, p map[string]*types.Pod) *Service {
+func (sv *ServiceView) NewWithDeployment(srv *types.Service, d *types.DeploymentList, p *types.PodList) *Service {
 	s := new(Service)
 	s.Meta = s.ToMeta(srv.Meta)
 	s.Status = s.ToStatus(srv.Status)
 	s.Spec = s.ToSpec(srv.Spec)
-	s.Deployments = s.ToDeployments(d, p)
+	if d != nil {
+		s.Deployments = s.ToDeployments(d, p)
+	}
 	return s
 }
 
@@ -95,9 +97,9 @@ func (sv *Service) ToSpec(obj types.ServiceSpec) ServiceSpec {
 	return spec
 }
 
-func (sv *Service) ToDeployments(obj map[string]*types.Deployment, pods map[string]*types.Pod) DeploymentMap {
+func (sv *Service) ToDeployments(obj *types.DeploymentList, pods *types.PodList) DeploymentMap {
 	deployments := make(DeploymentMap, 0)
-	for _, d := range obj {
+	for _, d := range obj.Items {
 		if d.Meta.Service == sv.Meta.Name {
 			dv := new(DeploymentView)
 			dp := dv.New(d, pods)
@@ -111,14 +113,14 @@ func (sv *Service) ToJson() ([]byte, error) {
 	return json.Marshal(sv)
 }
 
-func (sv *ServiceView) NewList(obj map[string]*types.Service, d map[string]*types.Deployment) *ServiceList {
+func (sv *ServiceView) NewList(obj *types.ServiceList, d *types.DeploymentList) *ServiceList {
 	if obj == nil {
 		return nil
 	}
 
 	s := make(ServiceList, 0)
 	slv := ServiceView{}
-	for _, v := range obj {
+	for _, v := range obj.Items {
 		s = append(s, slv.NewWithDeployment(v, d, nil))
 	}
 	return &s

@@ -89,7 +89,7 @@ func IsPort(port int) bool {
 	return govalidator.IsPort(strconv.Itoa(port))
 }
 
-func IsDomain(domain string) bool { // TODO domait Validator
+func IsDomain(domain string) bool { // TODO domain Validator
 	return true
 }
 

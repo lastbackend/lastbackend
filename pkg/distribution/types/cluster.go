@@ -18,17 +18,20 @@
 
 package types
 
-const (
-	CentralUSRegions = "CU"
-	WestEuropeRegion = "WE"
-	EastAsiaRegion   = "EA"
-)
-
-type ClusterList []*Cluster
-type ClusterMap map[string]*Cluster
+type ClusterList struct {
+	Runtime
+	Items []*Cluster
+}
+type ClusterMap struct {
+	Runtime
+	Items map[string]*Cluster
+}
 
 type Cluster struct {
+	Runtime
+	Meta   Meta          `json:"meta"`
 	Status ClusterStatus `json:"status"`
+	Spec   ClusterSpec   `json:"spec"`
 }
 
 type ClusterStatus struct {
@@ -50,6 +53,9 @@ type ClusterResources struct {
 	Memory     int64 `json:"memory"`
 	Cpu        int   `json:"cpu"`
 	Storage    int   `json:"storage"`
+}
+
+type ClusterSpec struct {
 }
 
 // swagger:ignore

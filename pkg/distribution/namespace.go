@@ -20,14 +20,15 @@ package distribution
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
+	"strings"
+
 	"github.com/lastbackend/lastbackend/pkg/distribution/errors"
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 	"github.com/lastbackend/lastbackend/pkg/log"
 	"github.com/lastbackend/lastbackend/pkg/storage"
-	"github.com/lastbackend/lastbackend/pkg/storage/store"
 	"github.com/spf13/viper"
-	"strings"
 )
 
 const (
@@ -36,33 +37,38 @@ const (
 	defaultNamespaceRoutes = 1
 )
 
-type INamespace interface {
-	List() (map[string]*types.Namespace, error)
-	Get(name string) (*types.Namespace, error)
-	Create(opts *types.NamespaceCreateOptions) (*types.Namespace, error)
-	Update(namespace *types.Namespace, opts *types.NamespaceUpdateOptions) error
-	Remove(namespace *types.Namespace) error
-	Watch(ch chan *types.Event) error
-}
-
 type Namespace struct {
 	context context.Context
 	storage storage.Storage
 }
 
-func (n *Namespace) List() (map[string]*types.Namespace, error) {
+
+type NM struct {
+	Meta struct{}
+	Entity Namespace
+}
+
+func (n *NM) Set(Namespace) error {
+	return nil
+}
+
+func (n *Namespace) List() (*types.NamespaceList, error) {
 
 	log.V(logLevel).Debugf("%s:list:> get namespaces list", logNamespacePrefix)
 
-	items, err := n.storage.Namespace().List(n.context)
+	var list = types.NewNamespaceList()
+
+	err := n.storage.List(n.context, n.storage.Collection().Namespace(), "", list, nil)
+
 	if err != nil {
-		log.V(logLevel).Error("%s:list:> get namespaces list err: %s", logNamespacePrefix, err.Error())
-		return items, err
+		log.Info(err.Error())
+		log.V(logLevel).Error("%s:list:> get namespaces list err: %v", logNamespacePrefix, err)
+		return nil, err
 	}
 
-	log.V(logLevel).Debugf("%s:list:> get namespaces list result: %d", logNamespacePrefix, len(items))
+	log.V(logLevel).Debugf("%s:list:> get namespaces list result: %d", logNamespacePrefix, len(list.Items))
 
-	return items, nil
+	return list, nil
 }
 
 func (n *Namespace) Get(name string) (*types.Namespace, error) {
@@ -73,16 +79,20 @@ func (n *Namespace) Get(name string) (*types.Namespace, error) {
 		return nil, errors.New(errors.ArgumentIsEmpty)
 	}
 
-	namespace, err := n.storage.Namespace().Get(n.context, name)
+	namespace := new(types.Namespace)
+
+	err := n.storage.Get(n.context, n.storage.Collection().Namespace(), n.storage.Key().Namespace(name), &namespace, nil)
 	if err != nil {
-		if err.Error() == store.ErrEntityNotFound {
+		if errors.Storage().IsErrEntityNotFound(err) {
 			log.V(logLevel).Warnf("%s:get:> namespace by name `%s` not found", logNamespacePrefix, name)
 			return nil, nil
 		}
 
-		log.V(logLevel).Errorf("%s:get:> get namespace by name `%s` err: %s", logNamespacePrefix, name, err.Error())
+		log.V(logLevel).Errorf("%s:get:> get namespace by name `%s` err: %v", logNamespacePrefix, name, err)
 		return nil, err
 	}
+
+
 
 	return namespace, nil
 }
@@ -108,8 +118,8 @@ func (n *Namespace) Create(opts *types.NamespaceCreateOptions) (*types.Namespace
 		ns.Spec.Quotas.Routes = defaultNamespaceRoutes
 	}
 
-	if err := n.storage.Namespace().Insert(n.context, ns); err != nil {
-		log.V(logLevel).Errorf("%s:create:> insert namespace err: %s", logNamespacePrefix, err.Error())
+	if err := n.storage.Put(n.context, n.storage.Collection().Namespace(), n.storage.Key().Namespace(ns.Meta.Name), ns, nil); err != nil {
+		log.V(logLevel).Errorf("%s:create:> insert namespace err: %v", logNamespacePrefix, err)
 		return nil, err
 	}
 
@@ -130,8 +140,9 @@ func (n *Namespace) Update(namespace *types.Namespace, opts *types.NamespaceUpda
 		namespace.Spec.Quotas.Disabled = opts.Quotas.Disabled
 	}
 
-	if err := n.storage.Namespace().Update(n.context, namespace); err != nil {
-		log.V(logLevel).Errorf("%s:update:> namespace update err: %s", logNamespacePrefix, err.Error())
+	if err := n.storage.Set(n.context, n.storage.Collection().Namespace(),
+		n.storage.Key().Namespace(namespace.Meta.Name), namespace, nil); err != nil {
+		log.V(logLevel).Errorf("%s:update:> namespace update err: %v", logNamespacePrefix, err)
 		return err
 	}
 
@@ -142,8 +153,8 @@ func (n *Namespace) Remove(namespace *types.Namespace) error {
 
 	log.V(logLevel).Debugf("%s:remove:> remove namespace %s", logNamespacePrefix, namespace.Meta.Name)
 
-	if err := n.storage.Namespace().Remove(n.context, namespace); err != nil {
-		log.V(logLevel).Errorf("%s:remove:> remove namespace err: %s", logNamespacePrefix, err.Error())
+	if err := n.storage.Del(n.context, n.storage.Collection().Namespace(), n.storage.Key().Namespace(namespace.Meta.Name)); err != nil {
+		log.V(logLevel).Errorf("%s:remove:> remove namespace err: %v", logNamespacePrefix, err)
 		return err
 	}
 
@@ -151,18 +162,50 @@ func (n *Namespace) Remove(namespace *types.Namespace) error {
 }
 
 // Watch namespace changes
-func (n *Namespace) Watch(ch chan *types.Event) error {
+func (n *Namespace) Watch(ch chan types.NamespaceEvent) error {
 
-	log.Debugf("%s:watch:> watch namespace", logNamespacePrefix)
+	log.V(logLevel).Debugf("%s:watch:> watch namespace", logNamespacePrefix)
 
-	if err := n.storage.Namespace().Watch(n.context, ch); err != nil {
-		log.Debugf("%s:watch:> watch namespace err: %s", logNamespacePrefix, err.Error())
+	done := make(chan bool)
+	watcher := storage.NewWatcher()
+
+	go func() {
+		for {
+			select {
+			case <-n.context.Done():
+				done <- true
+				return
+			case e := <-watcher:
+				if e.Data == nil {
+					continue
+				}
+
+				res := types.NamespaceEvent{}
+				res.Action = e.Action
+				res.Name = e.Name
+
+				obj := new(types.Namespace)
+
+				if err := json.Unmarshal(e.Data.([]byte), &obj); err != nil {
+					log.Errorf("%s:watch:> parse json", logNamespacePrefix)
+					continue
+				}
+
+				res.Data = obj
+
+				ch <- res
+			}
+		}
+	}()
+
+	opts := storage.GetOpts()
+	if err := n.storage.Watch(n.context, n.storage.Collection().Namespace(), watcher, opts); err != nil {
 		return err
 	}
 
 	return nil
 }
 
-func NewNamespaceModel(ctx context.Context, stg storage.Storage) INamespace {
+func NewNamespaceModel(ctx context.Context, stg storage.Storage) *Namespace {
 	return &Namespace{ctx, stg}
 }

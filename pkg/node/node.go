@@ -29,6 +29,7 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/node/state"
 
 	"fmt"
+
 	"github.com/lastbackend/lastbackend/pkg/api/client"
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 	"github.com/lastbackend/lastbackend/pkg/log"

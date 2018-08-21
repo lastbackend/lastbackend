@@ -19,25 +19,20 @@
 package v3
 
 import (
-	"context"
 	"crypto/tls"
 	"github.com/coreos/etcd/clientv3"
 	"github.com/coreos/etcd/pkg/transport"
-	"github.com/lastbackend/lastbackend/pkg/log"
-	s "github.com/lastbackend/lastbackend/pkg/storage/store"
+	s "github.com/lastbackend/lastbackend/pkg/storage/etcd/store"
 	"github.com/lastbackend/lastbackend/pkg/util/serializer"
 	"github.com/lastbackend/lastbackend/pkg/util/serializer/json"
-	"github.com/spf13/viper"
 	"path"
 	"time"
 )
 
-func GetClient(_ context.Context) (s.Store, s.DestroyFunc, error) {
+func GetClient(conf *Config) (s.Store, s.DestroyFunc, error) {
 
-	var conf = Config{}
-	if err := viper.UnmarshalKey("etcd", &conf); err != nil {
-		log.Errorf("Etcd v3: error parsing etcd config: %s", err.Error())
-		return nil, nil, err
+	if conf == nil {
+		panic("need to set the ыещкфпу configuration")
 	}
 
 	tlsConfig, err := getTLSConfig(conf.TLS.Cert, conf.TLS.Key, conf.TLS.CA)
@@ -65,6 +60,7 @@ func GetClient(_ context.Context) (s.Store, s.DestroyFunc, error) {
 		client:     client,
 		codec:      codec,
 		pathPrefix: path.Join("/", conf.Prefix),
+		watcher:    newWatcher(client),
 	}
 	st.opts = append(st.opts, clientv3.WithSerializable())
 

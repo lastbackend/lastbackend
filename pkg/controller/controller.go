@@ -19,17 +19,19 @@
 package controller
 
 import (
-	"github.com/lastbackend/lastbackend/pkg/controller/envs"
-	"github.com/lastbackend/lastbackend/pkg/log"
 	"os/signal"
 	"syscall"
 
+	"github.com/lastbackend/lastbackend/pkg/controller/envs"
+	"github.com/lastbackend/lastbackend/pkg/log"
+
 	"context"
+	"os"
+
 	"github.com/lastbackend/lastbackend/pkg/controller/ipam"
 	"github.com/lastbackend/lastbackend/pkg/controller/runtime"
 	"github.com/lastbackend/lastbackend/pkg/storage"
 	"github.com/spf13/viper"
-	"os"
 )
 
 // Daemon - controller entrypoint
@@ -41,7 +43,7 @@ func Daemon() bool {
 		done = make(chan bool, 1)
 	)
 
-	log.Info("Start Stage Controller")
+	log.Info("Start State Controller")
 
 	stg, err := storage.Get(viper.GetString("etcd"))
 	if err != nil {

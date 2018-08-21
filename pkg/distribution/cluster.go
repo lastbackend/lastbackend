@@ -20,10 +20,14 @@ package distribution
 
 import (
 	"context"
+
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 	"github.com/lastbackend/lastbackend/pkg/log"
 	"github.com/lastbackend/lastbackend/pkg/storage"
-	"github.com/lastbackend/lastbackend/pkg/storage/store"
+
+	"encoding/json"
+
+	"github.com/lastbackend/lastbackend/pkg/distribution/errors"
 )
 
 const (
@@ -41,14 +45,16 @@ func (c *Cluster) Get() (*types.Cluster, error) {
 
 	log.V(logLevel).Debugf("%s:get:> get info", logClusterPrefix)
 
-	cluster, err := c.storage.Cluster().Get(c.context)
+	cluster := new(types.Cluster)
+
+	err := c.storage.Get(c.context, c.storage.Collection().Cluster(), "", cluster, nil)
 	if err != nil {
-		if err.Error() == store.ErrEntityNotFound {
+		if errors.Storage().IsErrEntityNotFound(err) {
 			log.V(logLevel).Warnf("%s:get:> cluster not found", logClusterPrefix)
 			return nil, nil
 		}
 
-		log.V(logLevel).Errorf("%s:get:> get cluster err: %s", logClusterPrefix, err.Error())
+		log.V(logLevel).Errorf("%s:get:> get cluster err: %v", logClusterPrefix, err)
 		return nil, err
 	}
 
@@ -56,16 +62,46 @@ func (c *Cluster) Get() (*types.Cluster, error) {
 }
 
 // Watch cluster changes
-func (c *Cluster) Watch(ch chan *types.Event) error {
+func (c *Cluster) Watch(ch chan types.ClusterEvent) {
 
-	log.Debugf("%s:watch:> watch cluster", logClusterPrefix)
+	log.V(logLevel).Debugf("%s:watch:> watch cluster", logClusterPrefix)
 
-	if err := c.storage.Cluster().Watch(c.context, ch); err != nil {
-		log.Debugf("%s:watch:> watch cluster err: %s", logClusterPrefix, err.Error())
-		return err
-	}
+	done := make(chan bool)
+	watcher := storage.NewWatcher()
 
-	return nil
+	go func() {
+		for {
+			select {
+			case <-c.context.Done():
+				done <- true
+				return
+			case e := <-watcher:
+				if e.Data == nil {
+					continue
+				}
+
+				res := types.ClusterEvent{}
+				res.Name = e.Name
+				res.Action = e.Action
+
+				cluster := new(types.Cluster)
+
+				if err := json.Unmarshal(e.Data.([]byte), *cluster); err != nil {
+					log.Errorf("%s:> parse data err: %v", logClusterPrefix, err)
+					continue
+				}
+
+				res.Data = cluster
+
+				ch <- res
+			}
+		}
+	}()
+
+	opts := storage.GetOpts()
+	go c.storage.Watch(c.context, c.storage.Collection().Cluster(), watcher, opts)
+
+	<-done
 }
 
 // NewClusterModel - return new cluster model

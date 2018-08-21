@@ -18,34 +18,18 @@
 
 package types
 
-import "time"
-
 var (
 	SecretAccessToken = ""
 )
 
 const KindAPIServer = "api"
 const KindController = "controller"
-const KindScheduler = "scheduler"
-const KindBuilder = "builder"
 const KindDiscovery = "discovery"
 const KindNode = "node"
 
-type Limits struct {
-	ID             string `json:"id"`
-	PrivateRepos   int    `json:"private_repos"`
-	ParallelBuilds int    `json:"parallel_builds"`
-	Support        bool   `json:"support"`
-}
-
-type SystemConfig struct {
-	BaseDomain   string    `json:"base-domain"`
-	RegistryHost string    `json:"registry-host"`
-	Updated      time.Time `json:"updated" `
-}
 
 type Process struct {
-	ID string `json:"id"`
+	Runtime
 	// Process Meta
 	Meta ProcessMeta `json:"meta"`
 	// Process status

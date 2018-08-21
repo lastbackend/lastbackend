@@ -19,8 +19,9 @@
 package views
 
 import (
-	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 	"time"
+
+	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 )
 
 // Node - default node structure
@@ -76,9 +77,9 @@ type NodeResources struct {
 }
 
 // swagger:model views_node_spec
-type NodeSpec struct {
-	Network   map[string]types.NetworkSpec  `json:"network"`
-	Pods      map[string]types.PodSpec      `json:"pods"`
-	Volumes   map[string]types.VolumeSpec   `json:"volumes"`
-	Endpoints map[string]types.EndpointSpec `json:"endpoints"`
+type NodeManifest struct {
+	Network   map[string]*types.SubnetManifest  `json:"network, omitempty"`
+	Pods      map[string]*types.PodManifest      `json:"pods, omitempty"`
+	Volumes   map[string]*types.VolumeManifest   `json:"volumes, omitempty"`
+	Endpoints map[string]*types.EndpointManifest `json:"endpoints, omitempty"`
 }

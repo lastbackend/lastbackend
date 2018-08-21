@@ -20,124 +20,231 @@ package mock
 
 import (
 	"context"
-	"strings"
+		"strings"
 
-	"github.com/lastbackend/lastbackend/pkg/log"
-	"github.com/lastbackend/lastbackend/pkg/storage/storage"
-	"github.com/lastbackend/lastbackend/pkg/storage/store"
+	"reflect"
+
+	"encoding/json"
+
+	"github.com/lastbackend/lastbackend/pkg/storage/types"
+	"github.com/lastbackend/lastbackend/pkg/util/converter"
+	"github.com/lastbackend/lastbackend/pkg/distribution/errors"
 )
 
-const logLevel = 5
-
 type Storage struct {
-	context.Context
-	context.CancelFunc
-
-	*ClusterStorage
-	*DeploymentStorage
-	*TriggerStorage
-	*NodeStorage
-	*EndpointStorage
-	*IngressStorage
-	*NamespaceStorage
-	*PodStorage
-	*ServiceStorage
-	*RouteStorage
-	*VolumeStorage
-	*SecretStorage
-	*SystemStorage
-	*IPAMStorage
+	store map[string]map[string][]byte
 }
 
-func (s *Storage) Cluster() storage.Cluster {
-	return s.ClusterStorage
+func (s *Storage) Info(ctx context.Context, collection string, name string) (*types.Runtime, error) {
+	return new(types.Runtime), nil
 }
 
-func (s *Storage) Deployment() storage.Deployment {
-	return s.DeploymentStorage
+func (s *Storage) Get(ctx context.Context, collection string, name string, obj interface{}, opts *types.Opts) error {
+	s.check(collection)
+
+	if _, ok := s.store[collection][name]; !ok {
+		return errors.New(types.ErrEntityNotFound)
+	}
+
+	if reflect.ValueOf(obj).IsNil() {
+		return errors.New(types.ErrStructOutIsNil)
+	}
+
+	if err := json.Unmarshal(s.store[collection][name], obj); err != nil {
+		return err
+	}
+
+	return nil
 }
 
-func (s *Storage) Trigger() storage.Trigger {
-	return s.TriggerStorage
+func (s *Storage) List(ctx context.Context, collection string, q string, obj interface{}, opts *types.Opts) error {
+	s.check(collection)
+
+	if reflect.ValueOf(obj).IsNil() {
+		return errors.New(types.ErrStructOutIsNil)
+	}
+
+	v, err := converter.EnforcePtr(obj)
+	if err != nil {
+		return errors.New(types.ErrStructOutIsNotPointer)
+	}
+
+	buffer := []byte("[")
+	current := 0
+	for k, item := range s.store[collection] {
+		if strings.HasPrefix(k, q) {
+
+			if current > 0 {
+				buffer = append(buffer, []byte(",")...)
+			}
+
+			buffer = append(buffer, item...)
+			current++
+
+		}
+	}
+
+	buffer = append(buffer, []byte("]")...)
+
+	f := v.FieldByName("Items")
+	if f.Kind() != reflect.Slice {
+		return errors.New(types.ErrStructOutIsInvalid)
+	}
+
+	if !f.IsValid() {
+		return nil
+	}
+
+	if !f.CanSet() {
+		return nil
+	}
+
+	items := reflect.New(f.Type()).Interface().(interface{})
+	if err := json.Unmarshal(buffer, items); err != nil {
+		return err
+	}
+
+	f.Set(reflect.ValueOf(items).Elem())
+	return nil
 }
 
-func (s *Storage) Node() storage.Node {
-	return s.NodeStorage
+func (s *Storage) Map(ctx context.Context, collection string, q string, obj interface{}, opts *types.Opts) error {
+	s.check(collection)
+
+	if reflect.ValueOf(obj).IsNil() {
+		return errors.New(types.ErrStructOutIsNil)
+	}
+
+	v, err := converter.EnforcePtr(obj)
+	if err != nil {
+		return errors.New(types.ErrStructOutIsNotPointer)
+	}
+
+	buffer := []byte("{")
+	current := 0
+	for k, item := range s.store[collection] {
+		if strings.HasPrefix(k, q) {
+
+			ks := strings.Split(k, "/")
+
+			if current > 0 {
+				buffer = append(buffer, []byte(",")...)
+			}
+
+			buffer = append(buffer, []byte("\"")...)
+			buffer = append(buffer, []byte(ks[len(ks)-1])...)
+			buffer = append(buffer, []byte("\":")...)
+			buffer = append(buffer, item...)
+			current++
+
+		}
+	}
+
+	buffer = append(buffer, []byte("}")...)
+
+
+	f := v.FieldByName("Items")
+	if f.Kind() != reflect.Map {
+		return errors.New(types.ErrStructOutIsInvalid)
+	}
+
+	if !f.IsValid() {
+		return nil
+	}
+
+	if !f.CanSet() {
+		return nil
+	}
+
+	items := reflect.New(f.Type()).Interface().(interface{})
+	if err := json.Unmarshal(buffer, items); err != nil {
+		return err
+	}
+
+	f.Set(reflect.ValueOf(items).Elem())
+
+	return nil
 }
 
-func (s *Storage) Ingress() storage.Ingress {
-	return s.IngressStorage
+func (s *Storage) Put(ctx context.Context, collection string, name string, obj interface{}, opts *types.Opts) error {
+	s.check(collection)
+
+	if _, ok := s.store[collection][name]; ok {
+
+		if opts == nil {
+			return errors.New(types.ErrEntityExists)
+		}
+
+		if !opts.Force {
+			return errors.New(types.ErrEntityExists)
+		}
+	}
+
+	b, err := json.Marshal(obj)
+	if err != nil {
+		return err
+	}
+
+	s.store[collection][name] = b
+	return nil
 }
 
-func (s *Storage) Namespace() storage.Namespace {
-	return s.NamespaceStorage
+func (s *Storage) Set(ctx context.Context, collection string, name string, obj interface{}, opts *types.Opts) error {
+	s.check(collection)
+
+	if _, ok := s.store[collection][name]; !ok {
+		if opts != nil && !opts.Force {
+			return errors.New(types.ErrEntityNotFound)
+		}
+	}
+
+	b, err := json.Marshal(obj)
+	if err != nil {
+		return err
+	}
+
+	s.store[collection][name] = b
+
+	return nil
 }
 
-func (s *Storage) Route() storage.Route {
-	return s.RouteStorage
+func (s *Storage) Del(ctx context.Context, collection string, name string)  error {
+	s.check(collection)
+	if name == "" {
+		s.store[collection] = make(map[string][]byte)
+		return nil
+	}
+	delete(s.store[collection], name)
+	return nil
 }
 
-func (s *Storage) Pod() storage.Pod {
-	return s.PodStorage
+func (s *Storage) Watch(ctx context.Context, collection string, event chan *types.WatcherEvent, opts *types.Opts)  error {
+	s.check(collection)
+	return nil
 }
 
-func (s *Storage) Service() storage.Service {
-	return s.ServiceStorage
+func (s Storage) Filter() types.Filter {
+	return new(Filter)
 }
 
-func (s *Storage) Volume() storage.Volume {
-	return s.VolumeStorage
+func (s Storage) Key() types.Key {
+	return new(Key)
 }
 
-func (s *Storage) Secret() storage.Secret {
-	return s.SecretStorage
+func (s Storage) Collection() types.Collection {
+	return new(Collection)
 }
 
-func (s *Storage) System() storage.System {
-	return s.SystemStorage
-}
 
-func (s *Storage) Endpoint() storage.Endpoint {
-	return s.EndpointStorage
-}
 
-func (s *Storage) IPAM() storage.IPAM {
-	return s.IPAMStorage
-}
-
-func keyCreate(args ...string) string {
-	return strings.Join([]string(args), "/")
+func (s *Storage) check(kind string) {
+	if _, ok := s.store[kind]; !ok {
+		s.store[kind] = make(map[string][]byte)
+	}
 }
 
 func New() (*Storage, error) {
-
-	log.Debug("Etcd: define mock storage")
-
-	s := new(Storage)
-
-	s.ClusterStorage = newClusterStorage()
-	s.NodeStorage = newNodeStorage()
-	s.IngressStorage = newIngressStorage()
-
-	s.NamespaceStorage = newNamespaceStorage()
-	s.ServiceStorage = newServiceStorage()
-	s.DeploymentStorage = newDeploymentStorage()
-	s.PodStorage = newPodStorage()
-
-	s.TriggerStorage = newTriggerStorage()
-
-	s.RouteStorage = newRouteStorage()
-	s.SystemStorage = newSystemStorage()
-	s.VolumeStorage = newVolumeStorage()
-	s.SecretStorage = newSecretStorage()
-	s.EndpointStorage = newEndpointStorage()
-	s.IPAMStorage = newIPAMStorage()
-
-	return s, nil
-}
-
-func getClient(_ context.Context) (store.Store, store.DestroyFunc, error) {
-
-	log.V(logLevel).Debug("Etcd3: initialization storage")
-	return nil, nil, nil
+	db := new(Storage)
+	db.store = make(map[string]map[string][]byte)
+	return db, nil
 }

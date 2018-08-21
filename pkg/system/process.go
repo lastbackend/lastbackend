@@ -22,22 +22,25 @@ import (
 	"context"
 	"encoding/base64"
 	"fmt"
+	"time"
+
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 	"github.com/lastbackend/lastbackend/pkg/log"
 	"github.com/lastbackend/lastbackend/pkg/storage"
 	"github.com/lastbackend/lastbackend/pkg/util/system"
-	"strconv"
-	"strings"
-	"time"
+
+	"encoding/json"
+
+	"github.com/lastbackend/lastbackend/pkg/distribution/errors"
+	"github.com/lastbackend/lastbackend/pkg/storage/etcd"
 )
 
 // HeartBeat Interval
 const heartBeatInterval = 10 // in seconds
+const systemLeadTTL = 11
 const logLevel = 7
 
 type Process struct {
-	// Process operations context
-	ctx context.Context
 	// Process storage
 	storage storage.Storage
 	// Managed process
@@ -69,31 +72,50 @@ func (c *Process) Register(ctx context.Context, kind string, stg storage.Storage
 	c.process = item
 	c.storage = stg
 
-	if err := c.storage.System().ProcessSet(context.Background(), c.process); err != nil {
-		log.Errorf("System: Process: Register: %s", err.Error())
-		return item, err
+	opts := storage.GetOpts()
+	opts.Ttl = systemLeadTTL
+	opts.Force = true
+	if err := c.storage.Set(ctx, c.storage.Collection().System(), c.storage.Key().Process(kind, c.process.Meta.Hostname, false), c.process, opts); err != nil {
+		if !errors.Storage().IsErrEntityNotFound(err) {
+			log.Errorf("System: Process: Register: %s", err.Error())
+			return item, err
+		}
 	}
 
-	go c.HeartBeat()
+	go c.HeartBeat(ctx)
+
 	return item, nil
 }
 
 // HeartBeat function - updates current process state
 // and master election ttl option
-func (c *Process) HeartBeat() {
+func (c *Process) HeartBeat(ctx context.Context) {
 
 	log.V(logLevel).Debugf("System: Process: Start HeartBeat for: %s", c.process.Meta.Kind)
 	ticker := time.NewTicker(heartBeatInterval * time.Second)
+
+	opts := storage.GetOpts()
+	opts.Ttl = systemLeadTTL
+	opts.Force = true
+
 	for range ticker.C {
 		// Update process state
 		log.V(logLevel).Debug("System: Process: Beat")
-		if err := c.storage.System().ProcessSet(context.Background(), c.process); err != nil {
 
+		if err := c.storage.Set(ctx, c.storage.Collection().System(), c.storage.Key().Process(c.process.Meta.Kind, c.process.Meta.Hostname, false), c.process, opts); err != nil {
+			log.Errorf("System: Process: Register: %s", err.Error())
+			return
 		}
+
 		// Check election
 		if c.process.Meta.Lead {
 			log.V(logLevel).Debug("System: Process: Beat: Lead TTL update")
-			c.storage.System().ElectUpdate(context.Background(), c.process)
+
+			if err := c.storage.Set(ctx, c.storage.Collection().System(), c.storage.Key().Process(c.process.Meta.Kind, c.process.Meta.Hostname, true), c.process, opts); err != nil {
+				log.Errorf("System: Process: update process: %s", err.Error())
+				return
+			}
+
 		}
 
 	}
@@ -101,15 +123,28 @@ func (c *Process) HeartBeat() {
 
 // WaitElected function used for election waiting if
 // master/replicas type of process used
-func (c *Process) WaitElected(lead chan bool) error {
-	var (
-		ld = make(chan bool)
-	)
+func (c *Process) WaitElected(ctx context.Context, lead chan bool) error {
 
 	log.V(logLevel).Debug("System: Process: Wait for election")
-	l, err := c.storage.System().Elect(context.Background(), c.process)
-	if err != nil {
-		return err
+
+	l := false
+	opts := storage.GetOpts()
+	opts.Ttl = systemLeadTTL
+
+	if err := c.storage.Get(ctx, c.storage.Collection().System(), etcd.BuildProcessLeadKey(c.process.Meta.Kind), &l, nil); err != nil {
+
+		if errors.Storage().IsErrEntityNotFound(err) {
+			err = c.storage.Put(ctx, c.storage.Collection().System(), c.storage.Key().Process(c.process.Meta.Kind, c.process.Meta.Hostname, true), c.process, opts)
+			if err != nil && !errors.Storage().IsErrEntityExists(err) {
+				log.V(logLevel).Errorf("System: Process: create process ttl err: %s", err.Error())
+				return err
+			}
+			l = true
+		} else {
+			log.Errorf("System: Process: get lead process: %s", err.Error())
+			return err
+		}
+
 	}
 
 	if l {
@@ -119,46 +154,68 @@ func (c *Process) WaitElected(lead chan bool) error {
 		lead <- true
 	}
 
+	done := make(chan bool)
+	watcher := storage.NewWatcher()
+
 	go func() {
 		for {
 			select {
-			case l := <-ld:
-				c.process.Meta.Lead = l
-				c.process.Meta.Slave = !l
-				lead <- l
+			case <-ctx.Done():
+				done <- true
+				return
+			case e := <-watcher:
+				if e.Data == nil {
+					continue
+				}
+
+				switch e.Action {
+				case types.EventActionCreate:
+					fallthrough
+				case types.EventActionUpdate:
+					var id string
+					if err := json.Unmarshal(e.Data.([]byte), &id); err != nil {
+						continue
+					}
+
+					if id == c.process.Meta.ID {
+						lead <- true
+					} else {
+						lead <- false
+					}
+				case types.EventActionDelete:
+
+					if err := c.storage.Get(ctx, c.storage.Collection().System(), etcd.BuildProcessLeadKey(c.process.Meta.Kind), &l, nil); err != nil {
+						log.Errorf("System: Process: get lead process: %s", err.Error())
+
+						if errors.Storage().IsErrEntityNotFound(err) {
+
+							err = c.storage.Put(ctx, c.storage.Collection().System(), c.storage.Key().Process(c.process.Meta.Kind, c.process.Meta.Hostname, true), c.process, opts)
+							if err != nil && !errors.Storage().IsErrEntityExists(err) {
+								log.V(logLevel).Errorf("System: Process: create process ttl err: %s", err.Error())
+								continue
+							}
+							l = true
+						} else {
+							continue
+						}
+
+					}
+
+				}
+
 			}
 		}
 	}()
 
-	return c.storage.System().ElectWait(context.Background(), c.process, ld)
+	if err := c.storage.Watch(ctx, c.storage.Collection().System(), watcher, nil); err != nil {
+		return err
+	}
+
+	return nil
 }
 
 // Encode unique ID from pid and process hostname
 func encodeID(c *types.Process) string {
 	key := fmt.Sprintf("%s|%d", c.Meta.Hostname, c.Meta.PID)
 	return base64.StdEncoding.EncodeToString([]byte(key))
-}
-
-// Decode ID into hostname and pid
-func decodeID(id string) (int, string, error) {
-
-	var (
-		key      []byte
-		pid      int
-		err      error
-		hostname string
-	)
-
-	key, err = base64.StdEncoding.DecodeString(id)
-	if err != nil {
-		return pid, hostname, err
-	}
-
-	parts := strings.Split(string(key), "|")
-	if len(parts) == 2 {
-		hostname = parts[0]
-		pid, _ = strconv.Atoi(parts[1])
-	}
-
-	return pid, hostname, nil
 }

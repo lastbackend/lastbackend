@@ -21,22 +21,29 @@ package types
 import "fmt"
 
 // swagger:ignore
-// swagger:model types_volume_map
-type VolumeMap map[string]*Volume
-
-// swagger:ignore
-// swagger:model types_volume_list
-type VolumeList []*Volume
-
-// swagger:ignore
 // swagger:model types_volume
 type Volume struct {
+	Runtime
 	// Volume meta
 	Meta VolumeMeta `json:"meta" yaml:"meta"`
 	// Volume spec
 	Spec VolumeSpec `json:"spec" yaml:"spec"`
 	// Volume status
 	Status VolumeStatus `json:"status" yaml:"status"`
+}
+
+// swagger:ignore
+// swagger:model types_volume_map
+type VolumeMap struct {
+	Runtime
+	Items map[string]*Volume
+}
+
+// swagger:ignore
+// swagger:model types_volume_list
+type VolumeList struct {
+	Runtime
+	Items []*Volume
 }
 
 // swagger:ignore
@@ -77,7 +84,23 @@ type VolumeStatus struct {
 
 func (v *Volume) SelfLink() string {
 	if v.Meta.SelfLink == "" {
-		v.Meta.SelfLink = fmt.Sprintf("%s:%s", v.Meta.Namespace, v.Meta.Name)
+		v.Meta.SelfLink = v.CreateSelfLink(v.Meta.Namespace, v.Meta.Name)
 	}
 	return v.Meta.SelfLink
+}
+
+func (v *Volume) CreateSelfLink(namespace, name string) string {
+	return fmt.Sprintf("%s:%s", namespace, name)
+}
+
+func NewVolumeList () *VolumeList {
+	dm := new(VolumeList)
+	dm.Items = make([]*Volume, 0)
+	return dm
+}
+
+func NewVolumeMap () *VolumeMap {
+	dm := new(VolumeMap)
+	dm.Items = make(map[string]*Volume)
+	return dm
 }

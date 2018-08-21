@@ -25,11 +25,24 @@ import (
 	"os"
 )
 
+type Log interface {
+	Debug(args ...interface{})
+	Debugf(args ...interface{})
+	Info(args ...interface{})
+	Infof(args ...interface{})
+	Warn(args ...interface{})
+	Warnf(args ...interface{})
+	Error(args ...interface{})
+	Errorf(args ...interface{})
+}
+
 type Logger struct {
 	name  string
 	level Level
 	log   *logrus.Logger
-	v     Verbose
+	lv    Verbose
+	ev    Verbose
+
 }
 
 type Level int
@@ -41,8 +54,8 @@ func New(level int) *Logger {
 	l.log.Out = os.Stdout
 	l.log.Formatter = getJSONFormatter()
 
-	l.v.print = false
-	l.v.log = l.log
+	l.lv = l.log
+	l.ev = new(Empty)
 
 	if level >= 0 {
 		l.log.Level = logrus.DebugLevel
@@ -115,8 +128,10 @@ func (l *Logger) Panicf(format string, args ...interface{}) {
 }
 
 func (l *Logger) V(level Level) Verbose {
-	l.v.print = level <= l.level
-	return l.v
+	if level <= l.level {
+		return l.lv
+	}
+	return l.ev
 }
 
 func getJSONFormatter() *logrus.JSONFormatter {

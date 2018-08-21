@@ -30,10 +30,22 @@ const (
 // swagger:ignore
 // Endpoint - service endpoint
 type Endpoint struct {
+	Runtime
 	Meta   EndpointMeta   `json:"meta"`
 	Status EndpointStatus `json:"status"`
 	Spec   EndpointSpec   `json:"spec"`
 }
+
+type EndpointList struct {
+	Runtime
+	Items []*Endpoint
+}
+
+type EndpointMap struct {
+	Runtime
+	Items map[string]*Endpoint
+}
+
 
 // swagger:ignore
 // EndpointMeta - endpoint meta data
@@ -46,23 +58,26 @@ type EndpointMeta struct {
 // swagger:ignore
 // EndpointStatus - endpoint status
 type EndpointStatus struct {
-	State     string               `json:"state"`
-	Message   string               `json:"message"`
-	IP        string               `json:"ip"`
-	PortMap   map[uint16]string    `json:"port_map"`
-	Upstreams []string             `json:"upstreams"`
-	Strategy  EndpointSpecStrategy `json:"strategy"`
+	State string          `json:"state"`
+	Ready map[string]bool `json:"ready"`
 }
 
 // EndpointSpec spec data
 // swagger:model types_endpoint_spec
 type EndpointSpec struct {
+	// Endpoint state
+	State string `json:"state"`
+
 	IP        string               `json:"ip"`
 	Domain    string               `json:"domain"`
 	PortMap   map[uint16]string    `json:"port_map"`
-	Upstreams []string             `json:"upstreams"`
 	Strategy  EndpointSpecStrategy `json:"strategy"`
 	Policy    string               `json:"policy"`
+	Upstreams  []string `json:"-"`
+}
+
+type EndpointState struct {
+	EndpointSpec
 }
 
 // EndpointSpecStrategy describes route and bind
@@ -83,10 +98,15 @@ type EndpointUpstream struct {
 // SelfLink generates and returning link to object in platform
 func (e *Endpoint) SelfLink() string {
 	if e.Meta.SelfLink == "" {
-		e.Meta.SelfLink = fmt.Sprintf("%s:%s", e.Meta.Namespace, e.Meta.Name)
+		e.Meta.SelfLink = e.CreateSelfLink(e.Meta.Namespace, e.Meta.Name)
 	}
 	return e.Meta.SelfLink
 }
+
+func (e *Endpoint) CreateSelfLink(namespace, name string) string {
+	return fmt.Sprintf("%s:%s", namespace, name)
+}
+
 
 // swagger:ignore
 type EndpointCreateOptions struct {
@@ -100,9 +120,21 @@ type EndpointCreateOptions struct {
 
 // swagger:ignore
 type EndpointUpdateOptions struct {
-	IP            string            `json:"ip"`
+	IP            *string           `json:"ip"`
 	Ports         map[uint16]string `json:"ports"`
 	RouteStrategy string            `json:"route_strategy"`
 	Policy        string            `json:"policy"`
 	BindStrategy  string            `json:"bind_strategy"`
+}
+
+func NewEndpointList () *EndpointList {
+	dm := new(EndpointList)
+	dm.Items = make([]*Endpoint, 0)
+	return dm
+}
+
+func NewEndpointMap () *EndpointMap {
+	dm := new(EndpointMap)
+	dm.Items = make(map[string]*Endpoint)
+	return dm
 }

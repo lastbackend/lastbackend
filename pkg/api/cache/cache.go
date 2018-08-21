@@ -20,24 +20,26 @@ package cache
 
 import "context"
 
+const logLevel = 3
+
 type Cache struct {
-	node    *CacheNodeSpec
-	ingress *CacheIngressSpec
+	node    *CacheNodeManifest
+	ingress *CacheIngressManifest
 }
 
 type Cleaner func(ctx context.Context) error
 
-func (c *Cache) Node() *CacheNodeSpec {
+func (c *Cache) Node() *CacheNodeManifest {
 	return c.node
 }
 
-func (c *Cache) Ingress() *CacheIngressSpec {
+func (c *Cache) Ingress() *CacheIngressManifest {
 	return c.ingress
 }
 
 func NewCache() *Cache {
 	c := new(Cache)
-	c.node = NewCacheNodeSpec()
+	c.node = NewCacheNodeManifest()
 	c.ingress = NewCacheIngressSpec()
 	return c
 }

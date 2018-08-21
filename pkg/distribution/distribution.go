@@ -18,4 +18,4 @@
 
 package distribution
 
-const logLevel = 3
+const logLevel = 4

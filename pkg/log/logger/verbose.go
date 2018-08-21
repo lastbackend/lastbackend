@@ -21,79 +21,75 @@ package logger
 import "github.com/sirupsen/logrus"
 
 // Verbose is a boolean type that implements Infof (like Printf) etc.
-type Verbose struct {
-	print bool
-	log   *logrus.Logger
+type Logrus struct {
+	log *logrus.Logger
 }
 
-func (v Verbose) Debug(args ...interface{}) {
-	if v.print {
-		v.log.Debug(args...)
-	}
+func (v Logrus) Debug(args ...interface{}) {
+	v.log.Debug(args...)
 }
 
-func (v Verbose) Debugf(format string, args ...interface{}) {
-	if v.print {
-		v.log.Debugf(format, args...)
-	}
+func (v Logrus) Debugf(format string, args ...interface{}) {
+	v.log.Debugf(format, args...)
 }
 
-func (v Verbose) Info(args ...interface{}) {
-	if v.print {
-		v.log.Info(args...)
-	}
+func (v Logrus) Info(args ...interface{}) {
+	v.log.Info(args...)
 }
 
-func (v Verbose) Infof(format string, args ...interface{}) {
-	if v.print {
-		v.log.Infof(format, args...)
-	}
+func (v Logrus) Infof(format string, args ...interface{}) {
+	v.log.Infof(format, args...)
 }
 
-func (v Verbose) Warn(args ...interface{}) {
-	if v.print {
-		v.log.Warn(args...)
-	}
+func (v Logrus) Warn(args ...interface{}) {
+	v.log.Warn(args...)
 }
 
-func (v Verbose) Warnf(format string, args ...interface{}) {
-	if v.print {
-		v.log.Warnf(format, args...)
-	}
+func (v Logrus) Warnf(format string, args ...interface{}) {
+	v.log.Warnf(format, args...)
 }
 
-func (v Verbose) Error(args ...interface{}) {
-	if v.print {
-		v.log.Error(args...)
-	}
+func (v Logrus) Error(args ...interface{}) {
+	v.log.Error(args...)
 }
 
-func (v Verbose) Errorf(format string, args ...interface{}) {
-	if v.print {
-		v.log.Errorf(format, args...)
-	}
+func (v Logrus) Errorf(format string, args ...interface{}) {
+	v.log.Errorf(format, args...)
 }
 
-func (v Verbose) Fatal(args ...interface{}) {
-	if v.print {
-		v.log.Fatal(args...)
-	}
+type Empty struct{}
+
+func (v Empty) Debug(args ...interface{}) {
 }
 
-func (v Verbose) Fatalf(format string, args ...interface{}) {
-	if v.print {
-		v.log.Fatalf(format, args...)
-	}
+func (v Empty) Debugf(format string, args ...interface{}) {
 }
 
-func (v Verbose) Panic(args ...interface{}) {
-	if v.print {
-		v.log.Panic(args...)
-	}
+func (v Empty) Info(args ...interface{}) {
 }
 
-func (v Verbose) Panicf(format string, args ...interface{}) {
-	if v.print {
-		v.log.Panicf(format, args...)
-	}
+func (v Empty) Infof(format string, args ...interface{}) {
+}
+
+func (v Empty) Warn(args ...interface{}) {
+}
+
+func (v Empty) Warnf(format string, args ...interface{}) {
+}
+
+func (v Empty) Error(args ...interface{}) {
+}
+
+func (v Empty) Errorf(format string, args ...interface{}) {
+}
+
+type Verbose interface {
+	Debug(args ...interface{})
+	Debugf(format string, args ...interface{})
+	Info(args ...interface{})
+	Infof(format string, args ...interface{})
+	Warn(args ...interface{})
+	Warnf(format string, args ...interface{})
+	Error(args ...interface{})
+	Errorf(format string, args ...interface{})
 }

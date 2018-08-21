@@ -21,6 +21,8 @@ package ingress
 import (
 	"net/http"
 
+	"strings"
+
 	"github.com/lastbackend/lastbackend/pkg/api/envs"
 	"github.com/lastbackend/lastbackend/pkg/api/types/v1"
 	"github.com/lastbackend/lastbackend/pkg/api/types/v1/request"
@@ -29,7 +31,6 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 	"github.com/lastbackend/lastbackend/pkg/log"
 	"github.com/lastbackend/lastbackend/pkg/util/http/utils"
-	"strings"
 )
 
 const (
@@ -145,7 +146,7 @@ func IngressGetSpecH(w http.ResponseWriter, r *http.Request) {
 	spec := new(types.IngressSpec)
 	spec = cache.Get(ing.Meta.Name)
 	if spec == nil {
-		sp, err := rm.ListSpec()
+		routes, err := rm.List()
 		if err != nil {
 			log.V(logLevel).Warnf("%s:getspec:> ingress `%s` not found", logPrefix, cid)
 			errors.HTTP.InternalServerError(w)
@@ -153,8 +154,8 @@ func IngressGetSpecH(w http.ResponseWriter, r *http.Request) {
 		}
 		spec = new(types.IngressSpec)
 		spec.Routes = make(map[string]types.RouteSpec)
-		for r, rsp := range sp {
-			spec.Routes[r] = *rsp
+		for _, rt := range routes.Items {
+			spec.Routes[rt.Meta.Name] = rt.Spec
 		}
 	}
 

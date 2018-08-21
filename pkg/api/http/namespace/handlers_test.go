@@ -21,23 +21,23 @@ package namespace_test
 import (
 	"context"
 	"encoding/json"
-	"errors"
 	"fmt"
+	"io/ioutil"
+	"net/http"
+	"net/http/httptest"
+	"strings"
+	"testing"
+
 	"github.com/gorilla/mux"
 	"github.com/lastbackend/lastbackend/pkg/api/envs"
 	"github.com/lastbackend/lastbackend/pkg/api/http/namespace"
 	"github.com/lastbackend/lastbackend/pkg/api/types/v1"
 	"github.com/lastbackend/lastbackend/pkg/api/types/v1/request"
 	"github.com/lastbackend/lastbackend/pkg/api/types/v1/views"
+	"github.com/lastbackend/lastbackend/pkg/distribution/errors"
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 	"github.com/lastbackend/lastbackend/pkg/storage"
-	"github.com/lastbackend/lastbackend/pkg/storage/store"
 	"github.com/stretchr/testify/assert"
-	"io/ioutil"
-	"net/http"
-	"net/http/httptest"
-	"strings"
-	"testing"
 )
 
 // Testing NamespaceInfoH handler
@@ -45,7 +45,7 @@ func TestNamespaceInfo(t *testing.T) {
 
 	var ctx = context.Background()
 
-	stg, _ := storage.GetMock()
+	stg, _ := storage.Get("mock")
 	envs.Get().SetStorage(stg)
 
 	ns1 := getNamespaceAsset("demo", "")
@@ -81,6 +81,7 @@ func TestNamespaceInfo(t *testing.T) {
 			fields:       fields{stg},
 			handler:      namespace.NamespaceInfoH,
 			err:          "{\"code\":404,\"status\":\"Not Found\",\"message\":\"Namespace not found\"}",
+			want:         v1.View().Namespace().New(ns1),
 			wantErr:      true,
 			expectedCode: http.StatusNotFound,
 		},
@@ -96,7 +97,7 @@ func TestNamespaceInfo(t *testing.T) {
 	}
 
 	clear := func() {
-		err := envs.Get().GetStorage().Namespace().Clear(context.Background())
+		err := envs.Get().GetStorage().Del(context.Background(), stg.Collection().Namespace(), types.EmptyString)
 		assert.NoError(t, err)
 	}
 
@@ -106,7 +107,7 @@ func TestNamespaceInfo(t *testing.T) {
 			clear()
 			defer clear()
 
-			err := envs.Get().GetStorage().Namespace().Insert(context.Background(), ns1)
+			err := tc.fields.stg.Put(context.Background(), stg.Collection().Namespace(), tc.fields.stg.Key().Namespace(ns1.Meta.Name), ns1, nil)
 			assert.NoError(t, err)
 
 			// Create assert request to pass to our handler. We don't have any query parameters for now, so we'll
@@ -138,7 +139,12 @@ func TestNamespaceInfo(t *testing.T) {
 			body, err := ioutil.ReadAll(res.Body)
 			assert.NoError(t, err)
 
-			if tc.wantErr && res.Code != 200 {
+			// Check the status code is what we expect.
+			if !assert.Equal(t, tc.expectedCode, res.Code, "status code not equal") {
+				return
+			}
+
+			if tc.wantErr {
 				assert.Equal(t, tc.err, string(body), "incorrect status code")
 			} else {
 
@@ -159,7 +165,7 @@ func TestNamespaceList(t *testing.T) {
 
 	var ctx = context.Background()
 
-	stg, _ := storage.GetMock()
+	stg, _ := storage.Get("mock")
 	envs.Get().SetStorage(stg)
 
 	ns1 := getNamespaceAsset("demo", "")
@@ -201,7 +207,7 @@ func TestNamespaceList(t *testing.T) {
 	}
 
 	clear := func() {
-		err := envs.Get().GetStorage().Namespace().Clear(context.Background())
+		err := envs.Get().GetStorage().Del(context.Background(), stg.Collection().Namespace(), types.EmptyString)
 		assert.NoError(t, err)
 	}
 
@@ -211,10 +217,10 @@ func TestNamespaceList(t *testing.T) {
 			clear()
 			defer clear()
 
-			err := envs.Get().GetStorage().Namespace().Insert(context.Background(), ns1)
+			err := tc.fields.stg.Put(context.Background(), stg.Collection().Namespace(), tc.fields.stg.Key().Namespace(ns1.Meta.Name), ns1, nil)
 			assert.NoError(t, err)
 
-			err = envs.Get().GetStorage().Namespace().Insert(context.Background(), ns2)
+			err = tc.fields.stg.Put(context.Background(), stg.Collection().Namespace(), tc.fields.stg.Key().Namespace(ns2.Meta.Name), ns2, nil)
 			assert.NoError(t, err)
 
 			// Create assert request to pass to our handler. We don't have any query parameters for now, so we'll
@@ -241,12 +247,14 @@ func TestNamespaceList(t *testing.T) {
 			r.ServeHTTP(res, req)
 
 			// Check the status code is what we expect.
-			assert.Equal(t, tc.expectedCode, res.Code, "status code not equal")
+			if !assert.Equal(t, tc.expectedCode, res.Code, "status code not equal") {
+				return
+			}
 
 			body, err := ioutil.ReadAll(res.Body)
 			assert.NoError(t, err)
 
-			if tc.wantErr && res.Code != 200 {
+			if tc.wantErr {
 				assert.Equal(t, tc.err, string(body), "incorrect status code")
 			} else {
 
@@ -287,7 +295,7 @@ func TestNamespaceCreate(t *testing.T) {
 
 	var ctx = context.Background()
 
-	stg, _ := storage.GetMock()
+	stg, _ := storage.Get("mock")
 	envs.Get().SetStorage(stg)
 
 	ns1 := getNamespaceAsset("demo", "")
@@ -356,7 +364,7 @@ func TestNamespaceCreate(t *testing.T) {
 	}
 
 	clear := func() {
-		err := envs.Get().GetStorage().Namespace().Clear(context.Background())
+		err := envs.Get().GetStorage().Del(context.Background(), stg.Collection().Namespace(), types.EmptyString)
 		assert.NoError(t, err)
 	}
 
@@ -366,7 +374,7 @@ func TestNamespaceCreate(t *testing.T) {
 			clear()
 			defer clear()
 
-			err := envs.Get().GetStorage().Namespace().Insert(context.Background(), ns1)
+			err := tc.fields.stg.Put(context.Background(), stg.Collection().Namespace(), tc.fields.stg.Key().Namespace(ns1.Meta.Name), ns1, nil)
 			assert.NoError(t, err)
 
 			// Create assert request to pass to our handler. We don't have any query parameters for now, so we'll
@@ -398,13 +406,18 @@ func TestNamespaceCreate(t *testing.T) {
 			body, err := ioutil.ReadAll(res.Body)
 			assert.NoError(t, err)
 
-			if tc.wantErr && res.Code != 200 {
+			// Check the status code is what we expect.
+			if !assert.Equal(t, tc.expectedCode, res.Code, "status code not equal") {
+				return
+			}
+
+			if tc.wantErr {
 				assert.Equal(t, tc.err, string(body), "incorrect status code")
 			} else {
 
-				got, err := tc.fields.stg.Namespace().Get(tc.args.ctx, tc.args.namespace.Meta.Name)
+				got := new(types.Namespace)
+				err = tc.fields.stg.Get(context.Background(), stg.Collection().Namespace(), tc.fields.stg.Key().Namespace(tc.args.namespace.Meta.Name), got, nil)
 				assert.NoError(t, err)
-
 				assert.Equal(t, ns1.Meta.Name, got.Meta.Name, "name not equal")
 			}
 
@@ -434,7 +447,7 @@ func TestNamespaceUpdate(t *testing.T) {
 
 	var ctx = context.Background()
 
-	stg, _ := storage.GetMock()
+	stg, _ := storage.Get("mock")
 	envs.Get().SetStorage(stg)
 
 	strPointer := func(s string) *string { return &s }
@@ -475,6 +488,7 @@ func TestNamespaceUpdate(t *testing.T) {
 			handler:      namespace.NamespaceUpdateH,
 			data:         createNamespaceUpdateOptions(nil, nil).toJson(),
 			err:          "{\"code\":404,\"status\":\"Not Found\",\"message\":\"Namespace not found\"}",
+			want:         v1.View().Namespace().New(ns1),
 			wantErr:      true,
 			expectedCode: http.StatusNotFound,
 		},
@@ -484,6 +498,7 @@ func TestNamespaceUpdate(t *testing.T) {
 			fields:       fields{stg},
 			handler:      namespace.NamespaceUpdateH,
 			err:          "{\"code\":400,\"status\":\"Incorrect json\",\"message\":\"Incorrect json\"}",
+			want:         v1.View().Namespace().New(ns1),
 			wantErr:      true,
 			expectedCode: http.StatusBadRequest,
 		},
@@ -500,7 +515,7 @@ func TestNamespaceUpdate(t *testing.T) {
 	}
 
 	clear := func() {
-		err := envs.Get().GetStorage().Namespace().Clear(context.Background())
+		err := envs.Get().GetStorage().Del(context.Background(), stg.Collection().Namespace(), types.EmptyString)
 		assert.NoError(t, err)
 	}
 
@@ -510,7 +525,7 @@ func TestNamespaceUpdate(t *testing.T) {
 			clear()
 			defer clear()
 
-			err := envs.Get().GetStorage().Namespace().Insert(context.Background(), ns1)
+			err := tc.fields.stg.Put(context.Background(), stg.Collection().Namespace(), tc.fields.stg.Key().Namespace(ns1.Meta.Name), ns1, nil)
 			assert.NoError(t, err)
 
 			// Create assert request to pass to our handler. We don't have any query parameters for now, so we'll
@@ -542,7 +557,12 @@ func TestNamespaceUpdate(t *testing.T) {
 			body, err := ioutil.ReadAll(res.Body)
 			assert.NoError(t, err)
 
-			if tc.wantErr && res.Code != 200 {
+			// Check the status code is what we expect.
+			if !assert.Equal(t, tc.expectedCode, res.Code, "status code not equal") {
+				return
+			}
+
+			if tc.wantErr {
 				assert.Equal(t, tc.err, string(body), "incorrect status code")
 			} else {
 
@@ -566,7 +586,7 @@ func TestNamespaceRemove(t *testing.T) {
 
 	var ctx = context.Background()
 
-	stg, _ := storage.GetMock()
+	stg, _ := storage.Get("mock")
 	envs.Get().SetStorage(stg)
 
 	ns1 := getNamespaceAsset("demo", "")
@@ -613,7 +633,7 @@ func TestNamespaceRemove(t *testing.T) {
 	}
 
 	clear := func() {
-		err := envs.Get().GetStorage().Namespace().Clear(context.Background())
+		err := envs.Get().GetStorage().Del(context.Background(), stg.Collection().Namespace(), types.EmptyString)
 		assert.NoError(t, err)
 	}
 
@@ -624,7 +644,7 @@ func TestNamespaceRemove(t *testing.T) {
 			clear()
 			defer clear()
 
-			err := envs.Get().GetStorage().Namespace().Insert(context.Background(), ns1)
+			err := tc.fields.stg.Put(context.Background(), stg.Collection().Namespace(), tc.fields.stg.Key().Namespace(ns1.Meta.Name), ns1, nil)
 			assert.NoError(t, err)
 
 			// Create assert request to pass to our handler. We don't have any query parameters for now, so we'll
@@ -656,16 +676,25 @@ func TestNamespaceRemove(t *testing.T) {
 			body, err := ioutil.ReadAll(res.Body)
 			assert.NoError(t, err)
 
-			if tc.wantErr && res.Code != 200 {
+			// Check the status code is what we expect.
+			if !assert.Equal(t, tc.expectedCode, res.Code, "status code not equal") {
+				return
+			}
+
+			if tc.wantErr {
 				assert.Equal(t, tc.err, string(body), "")
 			} else {
 
-				got, err := tc.fields.stg.Namespace().Get(tc.args.ctx, tc.args.namespace.Meta.Name)
-				if err != nil && err.Error() != store.ErrEntityNotFound {
+				got := new(types.Namespace)
+				err = tc.fields.stg.Get(context.Background(), stg.Collection().Namespace(), tc.fields.stg.Key().Namespace(tc.args.namespace.Meta.Name), got, nil)
+				if err != nil && !errors.Storage().IsErrEntityNotFound(err) {
 					assert.NoError(t, err)
 				}
 
-				assert.Nil(t, got, "namespace not be removed")
+				if errors.Storage().IsErrEntityNotFound(err) {
+					return
+				}
+
 				assert.Equal(t, tc.want, string(body), "response not empty")
 			}
 

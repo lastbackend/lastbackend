@@ -20,6 +20,7 @@ package distribution
 
 import (
 	"context"
+
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 	"github.com/lastbackend/lastbackend/pkg/log"
 	"github.com/lastbackend/lastbackend/pkg/storage"
@@ -29,28 +30,26 @@ const (
 	logTriggerPrefix = "distribution:trigger"
 )
 
-type ITrigger interface {
-	Get(namespace, service, name string) (*types.Trigger, error)
-}
-
 type Trigger struct {
 	context context.Context
 	storage storage.Storage
 }
 
-func (h *Trigger) Get(namespace, service, name string) (*types.Trigger, error) {
+func (t *Trigger) Get(namespace, service, name string) (*types.Trigger, error) {
 
 	log.V(logLevel).Debugf("%s:get:> get trigger by name %s: %s", logTriggerPrefix, namespace, name)
 
-	hook, err := h.storage.Trigger().Get(h.context, namespace, service, name)
+	trigger := new(types.Trigger)
+
+	err := t.storage.Get(t.context, t.storage.Collection().Trigger(), t.storage.Key().Trigger(namespace, service, name), &trigger, nil)
 	if err != nil {
-		log.V(logLevel).Errorf("%s:get:> create trigger err: %s", logTriggerPrefix, err.Error())
+		log.V(logLevel).Errorf("%s:get:> create trigger err: %v", logTriggerPrefix, err)
 		return nil, err
 	}
 
-	return hook, nil
+	return trigger, nil
 }
 
-func NewTriggerModel(ctx context.Context, stg storage.Storage) ITrigger {
+func NewTriggerModel(ctx context.Context, stg storage.Storage) *Trigger {
 	return &Trigger{ctx, stg}
 }

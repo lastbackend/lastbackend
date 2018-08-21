@@ -20,9 +20,10 @@ package state
 
 import (
 	"errors"
+	"sync"
+
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 	"github.com/lastbackend/lastbackend/pkg/log"
-	"sync"
 )
 
 const logPodPrefix = "state:pods:>"
@@ -88,8 +89,6 @@ func (s *PodState) SetPod(key string, pod *types.PodStatus) {
 		s.stats.pods--
 	}
 
-	state(pod)
-
 	s.pods[key] = pod
 	s.stats.pods++
 
@@ -97,6 +96,10 @@ func (s *PodState) SetPod(key string, pod *types.PodStatus) {
 	for _, c := range pod.Containers {
 		s.SetContainer(c)
 	}
+
+	s.lock.Lock()
+	state(pod)
+	s.lock.Unlock()
 }
 
 func (s *PodState) DelPod(key string) {
@@ -165,7 +168,7 @@ func state(s *types.PodStatus) {
 	var sts = make(map[string]int)
 	var ems string
 
-	switch s.Stage {
+	switch s.State {
 	case types.StateDestroyed:
 		return
 	case types.StateError:
@@ -174,12 +177,12 @@ func state(s *types.PodStatus) {
 		return
 	case types.StateCreated:
 		return
-	case types.StatePull:
+	case types.StatusPull:
 		return
 	}
 
 	if len(s.Containers) == 0 {
-		s.Stage = types.StateWarning
+		s.State = types.StateDegradation
 		return
 	}
 
@@ -191,7 +194,7 @@ func state(s *types.PodStatus) {
 			ems = cn.State.Error.Message
 			break
 		case cn.State.Stopped.Stopped:
-			sts[types.StateStopped] += 1
+			sts[types.StatusStopped] += 1
 			break
 		case cn.State.Started.Started:
 			sts[types.StateStarted] += 1
@@ -206,7 +209,7 @@ func state(s *types.PodStatus) {
 	case len(s.Containers) == sts[types.StateStarted]:
 		s.SetRunning()
 		break
-	case len(s.Containers) == sts[types.StateStopped]:
+	case len(s.Containers) == sts[types.StatusStopped]:
 		s.SetStopped()
 		break
 	}

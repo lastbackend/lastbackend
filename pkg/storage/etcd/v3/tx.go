@@ -39,59 +39,40 @@ type TxResponse struct {
 }
 
 //TODO: add compare parameters as argument
-func (t *tx) Create(key string, obj interface{}, ttl uint64) error {
+func (t *tx) Put(key string, obj interface{}, ttl uint64) error {
 	key = path.Join(t.pathPrefix, key)
 
-	log.V(logLevel).Debugf("Etcd3: Create: key: %s, ttl: %d, val: %#v", key, ttl, obj)
+	log.V(logLevel).Debugf("%s:create:> key: %s, ttl: %d, val: %#v", logPrefix, key, ttl, obj)
 
 	t.cmp = append(t.cmp, clientv3.Compare(clientv3.ModRevision(key), "=", 0))
 	data, err := serializer.Encode(t.codec, obj)
 	if err != nil {
-		log.V(logLevel).Errorf("Etcd3: Create: encode data err: %s", err.Error())
+		log.V(logLevel).Errorf("%s:create:> encode data err: %v", logPrefix, err)
 		return err
 	}
 	opts, err := t.ttlOpts(int64(ttl))
 	if err != nil {
-		log.V(logLevel).Errorf("Etcd3: Create: create ttl option err: %s", err.Error())
+		log.V(logLevel).Errorf("%s:create:> create ttl option err: %v", logPrefix, err)
 		return err
 	}
 	t.ops = append(t.ops, clientv3.OpPut(key, string(data), opts...))
 	return nil
 }
 
-func (t *tx) Update(key string, obj interface{}, ttl uint64) error {
+func (t *tx) Set(key string, obj interface{}, ttl uint64, force bool) error {
 	key = path.Join(t.pathPrefix, key)
 
-	log.V(logLevel).Debugf("Etcd3: Update: key: %s, ttl: %d, val: %#v", key, ttl, obj)
+	log.V(logLevel).Debugf("%s:update:> key: %s, ttl: %d, val: %#v", logPrefix, key, ttl, obj)
 
 	t.cmp = append(t.cmp, clientv3.Compare(clientv3.ModRevision(key), "!=", 0))
 	data, err := serializer.Encode(t.codec, obj)
 	if err != nil {
-		log.V(logLevel).Errorf("Etcd3: Update: encode data err: %s", err.Error())
+		log.V(logLevel).Errorf("%s:update:> encode data err: %v", logPrefix, err)
 		return err
 	}
 	opts, err := t.ttlOpts(int64(ttl))
 	if err != nil {
-		log.V(logLevel).Errorf("Etcd3: Update: create ttl option err: %s", err.Error())
-		return err
-	}
-	t.ops = append(t.ops, clientv3.OpPut(key, string(data), opts...))
-	return nil
-}
-
-func (t *tx) Upsert(key string, obj interface{}, ttl uint64) error {
-	key = path.Join(t.pathPrefix, key)
-
-	log.V(logLevel).Debugf("Etcd3: Upsert: key: %s, val: %#v", key, obj)
-
-	data, err := serializer.Encode(t.codec, obj)
-	if err != nil {
-		log.V(logLevel).Errorf("Etcd3: Upsert: encode data err: %s", err.Error())
-		return err
-	}
-	opts, err := t.ttlOpts(int64(ttl))
-	if err != nil {
-		log.V(logLevel).Errorf("Etcd3: Upsert: create ttl option err: %s", err.Error())
+		log.V(logLevel).Errorf("%s:update:> create ttl option err: %v", logPrefix, err)
 		return err
 	}
 	t.ops = append(t.ops, clientv3.OpPut(key, string(data), opts...))
@@ -99,30 +80,22 @@ func (t *tx) Upsert(key string, obj interface{}, ttl uint64) error {
 }
 
 //TODO: add compare parameters as argument
-func (t *tx) Delete(key string) {
+func (t *tx) Del(key string) {
 	key = path.Join(t.pathPrefix, key)
 
-	log.V(logLevel).Debugf("Etcd3: Delete: key: %s", key)
+	log.V(logLevel).Debugf("%s:delete:> key: %s", logPrefix, key)
 
 	t.ops = append(t.ops, clientv3.OpDelete(key))
 }
 
-//TODO: add compare parameters as argument
-func (t *tx) DeleteDir(key string) {
-	key = path.Join(t.pathPrefix, key)
-
-	log.V(logLevel).Debugf("Etcd3: DeleteDir: key: %s", key)
-
-	t.ops = append(t.ops, clientv3.OpDelete(key, clientv3.WithPrefix()))
-}
 
 func (t *tx) Commit() error {
 
-	log.V(logLevel).Debugf("Etcd3: Commit")
+	log.V(logLevel).Debugf("%s:commit:> commit transaction", logPrefix)
 
 	_, err := t.txn.If(t.cmp...).Then(t.ops...).Commit()
 	if err != nil {
-		log.V(logLevel).Errorf("Etcd3: Commit: request err: %s", err.Error())
+		log.V(logLevel).Errorf("%s:commit:> request err: %v", logPrefix, err)
 		return err
 	}
 	return nil

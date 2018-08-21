@@ -41,7 +41,6 @@ func GetConfig(spec *types.SpecTemplateContainer) *container.Config {
 		ports[port] = struct{}{}
 	}
 
-
 	var envs []string
 	for _, e := range spec.EnvVars {
 		env := fmt.Sprintf("%s=%s", e.Name, e.Value)
@@ -118,7 +117,7 @@ func GetNetworkConfig(spec *types.SpecTemplateContainer) *network.NetworkingConf
 	}
 
 	//endpoint := &network.EndpointSettings{
-	//	NetworkID: spec.Network.NetworkSpec,
+	//	NetworkID: spec.Subnet.SubnetSpec,
 	//}
 	//cfg.EndpointsConfig["lo"] = endpoint
 

@@ -29,7 +29,7 @@ const logEndpointPrefix = "state:endpoints:>"
 type EndpointState struct {
 	lock      sync.RWMutex
 	hash      string
-	endpoints map[string]*types.EndpointStatus
+	endpoints map[string]*types.EndpointState
 }
 
 func (es *EndpointState) GetHash() string {
@@ -40,12 +40,12 @@ func (es *EndpointState) SetHash(hash string) {
 	es.hash = hash
 }
 
-func (es *EndpointState) GetEndpoints() map[string]*types.EndpointStatus {
+func (es *EndpointState) GetEndpoints() map[string]*types.EndpointState {
 	log.V(logLevel).Debugf("%s get endpoints", logEndpointPrefix)
 	return es.endpoints
 }
 
-func (es *EndpointState) SetEndpoints(endpoints map[string]*types.EndpointStatus) {
+func (es *EndpointState) SetEndpoints(endpoints map[string]*types.EndpointState) {
 	es.lock.Lock()
 	defer es.lock.Unlock()
 
@@ -54,7 +54,7 @@ func (es *EndpointState) SetEndpoints(endpoints map[string]*types.EndpointStatus
 	}
 }
 
-func (es *EndpointState) GetEndpoint(key string) *types.EndpointStatus {
+func (es *EndpointState) GetEndpoint(key string) *types.EndpointState {
 	log.V(logLevel).Debugf("%s: get endpoint: %s", logEndpointPrefix, key)
 	es.lock.Lock()
 	defer es.lock.Unlock()
@@ -67,13 +67,13 @@ func (es *EndpointState) GetEndpoint(key string) *types.EndpointStatus {
 	return ep
 }
 
-func (es *EndpointState) AddEndpoint(key string, endpoint *types.EndpointStatus) {
+func (es *EndpointState) AddEndpoint(key string, endpoint *types.EndpointState) {
 	es.lock.Lock()
 	defer es.lock.Unlock()
 	es.endpoints[key] = endpoint
 }
 
-func (es *EndpointState) SetEndpoint(key string, endpoint *types.EndpointStatus) {
+func (es *EndpointState) SetEndpoint(key string, endpoint *types.EndpointState) {
 	es.lock.Lock()
 	defer es.lock.Unlock()
 	es.endpoints[key] = endpoint

@@ -22,8 +22,11 @@ import (
 	"strings"
 
 	"fmt"
-	"github.com/lastbackend/lastbackend/pkg/util/generator"
+
+	"time"
+
 	"github.com/lastbackend/lastbackend/pkg/util/network"
+	"github.com/lastbackend/lastbackend/pkg/log"
 )
 
 const (
@@ -32,13 +35,22 @@ const (
 )
 
 type Service struct {
+	Runtime
 	Meta   ServiceMeta   `json:"meta"`
 	Status ServiceStatus `json:"status"`
 	Spec   ServiceSpec   `json:"spec"`
 }
 
-type ServiceMap map[string]*Service
-type ServiceList []*Service
+type ServiceMap struct {
+	Runtime
+	Items map[string]*Service
+}
+
+type ServiceList struct {
+	Runtime
+	Items []*Service
+}
+
 
 type ServiceMeta struct {
 	Meta
@@ -59,9 +71,9 @@ type ServiceStatus struct {
 }
 
 type ServiceSpec struct {
-	Meta     Meta         `json:"meta"`
 	Replicas int          `json:"replicas"`
 	State    SpecState    `json:"state"`
+	Network  SpecNetwork  `json:"network"`
 	Strategy SpecStrategy `json:"strategy"`
 	Triggers SpecTriggers `json:"triggers"`
 	Selector SpecSelector `json:"selector"`
@@ -103,8 +115,6 @@ type ServiceReplicas struct {
 }
 
 func (s *ServiceSpec) SetDefault() {
-	s.Meta.SetDefault()
-	s.Meta.Name = generator.GetUUIDV4()
 	s.Replicas = DEFAULT_SERVICE_REPLICAS
 	s.Template.Volumes = make(SpecTemplateVolumeList, 0)
 	s.Template.Containers = make(SpecTemplateContainers, 0)
@@ -120,10 +130,10 @@ func (s *ServiceSpec) Update(spec *ServiceOptionsSpec) {
 	var (
 		f bool
 		i int
-		n bool
 	)
 
 	if spec.Replicas != nil {
+		log.Infof("set replicas: %d", *spec.Replicas)
 		s.Replicas = *spec.Replicas
 	}
 
@@ -142,18 +152,18 @@ func (s *ServiceSpec) Update(spec *ServiceOptionsSpec) {
 
 	if spec.Command != nil {
 		c.Exec.Command = strings.Split(*spec.Command, " ")
-		n = true
+		s.Template.Updated = time.Now()
 	}
 
 	if spec.Entrypoint != nil {
 		c.Exec.Entrypoint = strings.Split(*spec.Entrypoint, " ")
-		n = true
+		s.Template.Updated = time.Now()
 	}
 
 	// TODO: update for multi-container pod
 	if spec.Ports != nil {
 
-		s.Template.Network.Ports = make(map[uint16]string, 0)
+		s.Network.Ports = make(map[uint16]string, 0)
 		c.Ports = SpecTemplateContainerPorts{}
 
 		for pt, pm := range spec.Ports {
@@ -167,7 +177,8 @@ func (s *ServiceSpec) Update(spec *ServiceOptionsSpec) {
 				ContainerPort: port,
 			})
 
-			s.Template.Network.Ports[pt] = fmt.Sprintf("%d/%s", port, proto)
+			s.Network.Ports[pt] = fmt.Sprintf("%d/%s", port, proto)
+			s.Network.Updated = time.Now()
 		}
 
 	}
@@ -183,12 +194,12 @@ func (s *ServiceSpec) Update(spec *ServiceOptionsSpec) {
 			}
 			c.EnvVars = append(c.EnvVars, env)
 		}
-		n = true
+		s.Template.Updated = time.Now()
 	}
 
-	if spec.Memory != nil {
+	if spec.Memory != nil && *spec.Memory != c.Resources.Limits.RAM {
 		c.Resources.Limits.RAM = *spec.Memory
-		n = true
+		s.Template.Updated = time.Now()
 	}
 
 	if !f {
@@ -197,10 +208,6 @@ func (s *ServiceSpec) Update(spec *ServiceOptionsSpec) {
 		s.Template.Containers[i] = c
 	}
 
-	// Need to create new spec name for new deployment creating
-	if n {
-		s.Meta.Name = generator.GetUUIDV4()
-	}
 }
 
 type ServiceSources struct {
@@ -230,9 +237,13 @@ type ServiceSourcesRepo struct {
 
 func (s *Service) SelfLink() string {
 	if s.Meta.SelfLink == "" {
-		s.Meta.SelfLink = fmt.Sprintf("%s:%s", s.Meta.Namespace, s.Meta.Name)
+		s.Meta.SelfLink = s.CreateSelfLink(s.Meta.Namespace, s.Meta.Name)
 	}
 	return s.Meta.SelfLink
+}
+
+func (s *Service) CreateSelfLink(namespace, name string) string {
+	return fmt.Sprintf("%s:%s", namespace, name)
 }
 
 type ServiceCreateOptions struct {
@@ -258,4 +269,17 @@ type ServiceOptionsSpec struct {
 	Command    *string           `json:"command,omitempty"`
 	EnvVars    *[]string         `json:"env,omitempty"`
 	Ports      map[uint16]string `json:"ports,omitempty"`
+}
+
+
+func NewServiceList () *ServiceList {
+	dm := new(ServiceList)
+	dm.Items = make([]*Service, 0)
+	return dm
+}
+
+func NewServiceMap () *ServiceMap {
+	dm := new(ServiceMap)
+	dm.Items = make(map[string]*Service)
+	return dm
 }

@@ -19,13 +19,13 @@
 package cluster
 
 import (
+	"net/http"
+
 	"github.com/lastbackend/lastbackend/pkg/api/envs"
 	"github.com/lastbackend/lastbackend/pkg/api/types/v1"
 	"github.com/lastbackend/lastbackend/pkg/distribution"
 	"github.com/lastbackend/lastbackend/pkg/distribution/errors"
-	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 	"github.com/lastbackend/lastbackend/pkg/log"
-	"net/http"
 )
 
 const (
@@ -61,7 +61,8 @@ func ClusterInfoH(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if cl == nil {
-		cl = new(types.Cluster)
+		errors.HTTP.NotFound(w)
+		return
 	}
 
 	response, err := v1.View().Cluster().New(cl).ToJson()

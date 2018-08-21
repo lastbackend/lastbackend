@@ -48,7 +48,7 @@ func PodLogsH(w http.ResponseWriter, r *http.Request) {
 
 	go func() {
 		<-notify
-		log.Debug("HTTP connection just closed.")
+		log.V(logLevel).Debug("HTTP connection just closed.")
 		done <- true
 	}()
 

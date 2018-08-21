@@ -28,21 +28,21 @@ type Proxy struct {
 	cpi.CPI
 }
 
-func (p *Proxy) Info(ctx context.Context) (map[string]*types.EndpointStatus, error) {
-	es := make(map[string]*types.EndpointStatus)
+func (p *Proxy) Info(ctx context.Context) (map[string]*types.EndpointState, error) {
+	es := make(map[string]*types.EndpointState)
 	return es, nil
 }
 
-func (p *Proxy) Create(ctx context.Context, endpoint *types.EndpointSpec) (*types.EndpointStatus, error) {
-	return new(types.EndpointStatus), nil
+func (p *Proxy) Create(ctx context.Context, endpoint *types.EndpointManifest) (*types.EndpointState, error) {
+	return new(types.EndpointState), nil
 }
 
-func (p *Proxy) Destroy(ctx context.Context, endpoint *types.EndpointStatus) error {
+func (p *Proxy) Destroy(ctx context.Context, endpoint *types.EndpointState) error {
 	return nil
 }
 
-func (p *Proxy) Update(ctx context.Context, endpoint *types.EndpointStatus, spec *types.EndpointSpec) (*types.EndpointStatus, error) {
-	return new(types.EndpointStatus), nil
+func (p *Proxy) Update(ctx context.Context, endpoint *types.EndpointState, spec *types.EndpointManifest) (*types.EndpointState, error) {
+	return new(types.EndpointState), nil
 }
 
 func New() (*Proxy, error) {

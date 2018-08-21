@@ -20,9 +20,10 @@ package endpoint
 
 import (
 	"context"
+
+	"github.com/lastbackend/lastbackend/pkg/discovery/envs"
 	"github.com/lastbackend/lastbackend/pkg/distribution"
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
-	"github.com/lastbackend/lastbackend/pkg/discovery/envs"
 	"github.com/lastbackend/lastbackend/pkg/log"
 )
 
@@ -38,7 +39,7 @@ func Watch(ctx context.Context) {
 	var (
 		em    = distribution.NewEndpointModel(ctx, envs.Get().GetStorage())
 		cache = envs.Get().GetCache().Endpoint()
-		event = make(chan *types.Event)
+		event = make(chan types.EndpointEvent)
 	)
 
 	go func() {
@@ -51,7 +52,7 @@ func Watch(ctx context.Context) {
 						continue
 					}
 
-					endpoint := e.Data.(types.Endpoint)
+					endpoint := e.Data
 
 					switch e.Action {
 					case types.EventActionCreate:
@@ -70,5 +71,5 @@ func Watch(ctx context.Context) {
 		}
 	}()
 
-	go em.Watch(event)
+	go em.Watch(event, nil)
 }

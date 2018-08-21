@@ -20,252 +20,135 @@ package cache
 
 import (
 	"context"
+		"sync"
+
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 	"github.com/lastbackend/lastbackend/pkg/log"
-	"sync"
 )
 
-type CacheNodeSpec struct {
-	lock sync.RWMutex
-	spec map[string]*types.NodeSpec
+const logCacheNode = "api:cache:node"
+
+type CacheNodeManifest struct {
+	lock      sync.RWMutex
+	manifests map[string]*types.NodeManifest
 }
 
-type NetworkSpecWatcher func(ctx context.Context, event chan *types.NetworkSpecEvent) error
+type NetworkManifestWatcher func(ctx context.Context, event chan *types.Event) error
 
-type PodSpecWatcher func(ctx context.Context, event chan *types.PodSpecEvent) error
+type PodManifestWatcher func(ctx context.Context, event chan *types.Event) error
 
-type VolumeSpecWatcher func(ctx context.Context, event chan *types.VolumeSpecEvent) error
+type VolumeManifestWatcher func(ctx context.Context, event chan *types.Event) error
 
-type NodeStatusWatcher func(ctx context.Context, event chan *types.NodeStatusEvent) error
+type EndpointManifestWatcher func(ctx context.Context, event chan *types.Event) error
 
-type EndpointSpecWatcher func(ctx context.Context, event chan *types.EndpointSpecEvent) error
+func (c *CacheNodeManifest) checkNode(node string) {
+	if _, ok := c.manifests[node]; !ok {
+		c.manifests[node] = new(types.NodeManifest)
+	}
+}
 
-func (c *CacheNodeSpec) SetPodSpec(node, pod string, s types.PodSpec) {
-	log.Info("api:cache:setpodspec:> %s, %s, %#v", node, pod, s)
+func (c *CacheNodeManifest) SetPodManifest(node, pod string, s *types.PodManifest) {
+	log.Infof("%s:PodManifestSet:> %s, %s, %#v", logCacheNode, node, pod, s)
 	c.lock.Lock()
 	defer c.lock.Unlock()
 
-	if _, ok := c.spec[node]; !ok {
-		c.spec[node] = new(types.NodeSpec)
+	c.checkNode(node)
+
+	if c.manifests[node].Pods == nil {
+		sp := c.manifests[node]
+		sp.Pods = make(map[string]*types.PodManifest, 0)
 	}
 
-	if c.spec[node].Pods == nil {
-		sp := c.spec[node]
-		sp.Pods = make(map[string]types.PodSpec, 0)
+	c.manifests[node].Pods[pod] = s
+}
+
+func (c *CacheNodeManifest) DelPodManifest(node, pod string) {
+	log.Infof("%s:PodManifestDel:> %s, %s", node, pod)
+	c.lock.Lock()
+	defer c.lock.Unlock()
+
+	if _, ok := c.manifests[node]; !ok {
+		return
 	}
 
-	c.spec[node].Pods[pod] = s
+	delete(c.manifests[node].Pods, pod)
 }
 
-func (c *CacheNodeSpec) DelPodSpec(node, pod string) {
-	log.Info("api:cache:delpodspec:> %s, %s", node, pod)
-	c.lock.Lock()
-	defer c.lock.Unlock()
-	delete(c.spec[node].Pods, pod)
-}
-
-func (c *CacheNodeSpec) SetVolumeSpec(node, volume string, s types.VolumeSpec) {
+func (c *CacheNodeManifest) SetVolumeManifest(node, volume string, s *types.VolumeManifest) {
 	c.lock.Lock()
 	defer c.lock.Unlock()
 
-	if _, ok := c.spec[node]; !ok {
-		c.spec[node] = new(types.NodeSpec)
+	c.checkNode(node)
+
+	if c.manifests[node].Volumes == nil {
+		sp := c.manifests[node]
+		sp.Volumes = make(map[string]*types.VolumeManifest, 0)
 	}
 
-	if c.spec[node].Volumes == nil {
-		sp := c.spec[node]
-		sp.Volumes = make(map[string]types.VolumeSpec, 0)
+	c.manifests[node].Volumes[volume] = s
+}
+
+func (c *CacheNodeManifest) DelVolumeManifest(node, volume string) {
+	c.lock.Lock()
+	defer c.lock.Unlock()
+
+	if _, ok := c.manifests[node]; !ok {
+		return
 	}
 
-	c.spec[node].Volumes[volume] = s
+	delete(c.manifests[node].Volumes, volume)
 }
 
-func (c *CacheNodeSpec) DelVolumeSpec(node, volume string) {
-	c.lock.Lock()
-	defer c.lock.Unlock()
-	delete(c.spec[node].Volumes, volume)
-}
-
-func (c *CacheNodeSpec) SetNetworkSpec(node string, s types.NetworkSpec) {
+func (c *CacheNodeManifest) SetSubnetManifest(cidr string, s *types.SubnetManifest) {
 	c.lock.Lock()
 	defer c.lock.Unlock()
 
-	for n := range c.spec {
-		if c.spec[node].Network == nil {
-			sp := c.spec[node]
-			sp.Network = make(map[string]types.NetworkSpec, 0)
+	for n := range c.manifests {
+
+		if _, ok := c.manifests[n].Network[cidr]; !ok {
+			c.manifests[n].Network = make(map[string]*types.SubnetManifest)
 		}
 
-		c.spec[n].Network[node] = s
+		c.manifests[n].Network[cidr] = s
 	}
 }
 
-func (c *CacheNodeSpec) DelNetworkSpec(node string) {
-	c.lock.Lock()
-	defer c.lock.Unlock()
-	for n := range c.spec {
-		delete(c.spec[n].Network, node)
-	}
-
-}
-
-func (c *CacheNodeSpec) SetEndpointSpec(endpoint string, s types.EndpointSpec) {
+func (c *CacheNodeManifest) SetEndpointManifest(addr string, s *types.EndpointManifest) {
 	c.lock.Lock()
 	defer c.lock.Unlock()
 
-	for _, n := range c.spec {
+	for _, n := range c.manifests {
 		if n.Endpoints == nil {
-			n.Endpoints = make(map[string]types.EndpointSpec, 0)
+			n.Endpoints = make(map[string]*types.EndpointManifest, 0)
 		}
-		n.Endpoints[endpoint] = s
+		n.Endpoints[addr] = s
 	}
 }
 
-func (c *CacheNodeSpec) DelEndpointSpec(endpoint string) {
+func (c *CacheNodeManifest) Get(node string) *types.NodeManifest {
 	c.lock.Lock()
 	defer c.lock.Unlock()
-
-	for _, n := range c.spec {
-		delete(n.Endpoints, endpoint)
-	}
-}
-
-func (c *CacheNodeSpec) Get(node string) *types.NodeSpec {
-	c.lock.Lock()
-	defer c.lock.Unlock()
-	if s, ok := c.spec[node]; !ok {
+	if s, ok := c.manifests[node]; !ok {
 		return nil
 	} else {
 		return s
 	}
 }
 
-func (c *CacheNodeSpec) Flush(node string) {
+func (c *CacheNodeManifest) Flush(node string) {
 	c.lock.Lock()
 	defer c.lock.Unlock()
-	c.spec[node] = new(types.NodeSpec)
+	c.manifests[node] = new(types.NodeManifest)
 }
 
-func (c *CacheNodeSpec) Clear(node string) {
+func (c *CacheNodeManifest) Clear(node string) {
 	c.lock.Lock()
 	defer c.lock.Unlock()
-	delete(c.spec, node)
+	delete(c.manifests, node)
 }
 
-func (c *CacheNodeSpec) CachePods(ps PodSpecWatcher) error {
-	evs := make(chan *types.PodSpecEvent)
-	go func() {
-		for {
-			select {
-			case e := <-evs:
-				{
-					if e.Event == "create" || e.Event == "update" {
-						c.SetPodSpec(e.Node, e.Name, e.Spec)
-						continue
-					}
-
-					if e.Event == "delete" {
-						c.DelPodSpec(e.Node, e.Name)
-						continue
-					}
-				}
-			}
-		}
-	}()
-
-	return ps(context.Background(), evs)
-}
-
-func (c *CacheNodeSpec) CacheVolumes(vs VolumeSpecWatcher) error {
-	evs := make(chan *types.VolumeSpecEvent)
-	go func() {
-		for {
-			select {
-			case e := <-evs:
-				{
-					if e.Event == "create" || e.Event == "update" {
-						c.SetVolumeSpec(e.Node, e.Name, e.Spec)
-						continue
-					}
-
-					if e.Event == "delete" {
-						c.DelVolumeSpec(e.Node, e.Name)
-						continue
-					}
-				}
-			}
-		}
-	}()
-
-	return vs(context.Background(), evs)
-}
-
-func (c *CacheNodeSpec) CacheNetwork(ns NetworkSpecWatcher) error {
-	evs := make(chan *types.NetworkSpecEvent)
-	go func() {
-		for {
-			select {
-			case e := <-evs:
-				{
-					if e.Event == "create" || e.Event == "update" {
-						c.SetNetworkSpec(e.Node, e.Spec)
-						continue
-					}
-
-					if e.Event == "delete" {
-						c.DelNetworkSpec(e.Node)
-						continue
-					}
-				}
-			}
-		}
-	}()
-
-	return ns(context.Background(), evs)
-}
-
-func (c *CacheNodeSpec) CacheEndpoints(es EndpointSpecWatcher) error {
-	evs := make(chan *types.EndpointSpecEvent)
-	go func() {
-		for {
-			select {
-			case e := <-evs:
-				{
-					if e.Event == "create" || e.Event == "update" {
-						c.SetEndpointSpec(e.Spec.IP ,e.Spec)
-						continue
-					}
-
-					if e.Event == "delete" {
-						c.DelEndpointSpec(e.Spec.IP)
-						continue
-					}
-				}
-			}
-		}
-	}()
-
-	return es(context.Background(), evs)
-}
-
-func (c *CacheNodeSpec) Del(dw NodeStatusWatcher) error {
-	evs := make(chan *types.NodeStatusEvent)
-	go func() {
-		for {
-			select {
-			case e := <-evs:
-				if !e.Online {
-					delete(c.spec, e.Node)
-				}
-			}
-		}
-	}()
-
-	return dw(context.Background(), evs)
-}
-
-func NewCacheNodeSpec() *CacheNodeSpec {
-	c := new(CacheNodeSpec)
-	c.spec = make(map[string]*types.NodeSpec, 0)
+func NewCacheNodeManifest() *CacheNodeManifest {
+	c := new(CacheNodeManifest)
+	c.manifests = make(map[string]*types.NodeManifest, 0)
 	return c
 }

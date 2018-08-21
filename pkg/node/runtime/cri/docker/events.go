@@ -32,7 +32,7 @@ import (
 
 func (r *Runtime) Subscribe(ctx context.Context, state *state.PodState, p chan string) {
 
-	log.Debug("Create new event listener subscribe")
+	log.V(logLevel).Debug("Create new event listener subscribe")
 
 	go func() {
 
@@ -50,15 +50,15 @@ func (r *Runtime) Subscribe(ctx context.Context, state *state.PodState, p chan s
 					continue
 				}
 
-				log.Debugf("Event type: %s action: %s", e.Type, e.Action)
+				log.V(logLevel).Debugf("Event type: %s action: %s", e.Type, e.Action)
 
 				container := state.GetContainer(e.ID)
 				if container == nil {
-					log.Debugf("Container not found")
+					log.V(logLevel).Debugf("Container not found")
 					continue
 				}
 
-				log.Debugf("Container %s update in pod %s", container.ID, container.Pod)
+				log.V(logLevel).Debugf("Container %s update in pod %s", container.ID, container.Pod)
 
 				if e.Action == types.StateDestroy {
 					state.DelContainer(container)
@@ -96,7 +96,7 @@ func (r *Runtime) Subscribe(ctx context.Context, state *state.PodState, p chan s
 						},
 					}
 					container.State.Stopped.Stopped = false
-				case types.StateStopped:
+				case types.StatusStopped:
 					if container.State.Stopped.Stopped {
 						continue
 					}

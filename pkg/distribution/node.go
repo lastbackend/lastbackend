@@ -20,246 +20,96 @@ package distribution
 
 import (
 	"context"
+
 	"github.com/lastbackend/lastbackend/pkg/util/generator"
+
+	"encoding/json"
 
 	"github.com/lastbackend/lastbackend/pkg/distribution/errors"
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 	"github.com/lastbackend/lastbackend/pkg/log"
 	"github.com/lastbackend/lastbackend/pkg/storage"
-	"github.com/lastbackend/lastbackend/pkg/storage/store"
 )
 
 const (
 	logNodePrefix = "distribution:node"
 )
 
-type INode interface {
-	List() (map[string]*types.Node, error)
-	Create(opts *types.NodeCreateOptions) (*types.Node, error)
-
-	Get(name string) (*types.Node, error)
-	GetSpec(node *types.Node) (*types.NodeSpec, error)
-
-	SetMeta(node *types.Node, meta *types.NodeUpdateMetaOptions) error
-	SetStatus(node *types.Node, state types.NodeStatus) error
-	SetInfo(node *types.Node, info types.NodeInfo) error
-	SetNetwork(node *types.Node, network types.NetworkSpec) error
-	SetOnline(node *types.Node) error
-	SetOffline(node *types.Node) error
-
-	InsertPod(node *types.Node, pod *types.Pod) error
-	UpdatePod(node *types.Node, pod *types.Pod) error
-	RemovePod(node *types.Node, pod *types.Pod) error
-	InsertVolume(node *types.Node, volume *types.Volume) error
-	RemoveVolume(node *types.Node, volume *types.Volume) error
-	InsertRoute(node *types.Node, route *types.Route) error
-	RemoveRoute(node *types.Node, route *types.Route) error
-	Remove(node *types.Node) error
-}
-
 type Node struct {
 	context context.Context
 	storage storage.Storage
 }
 
-func (n *Node) List() (map[string]*types.Node, error) {
-	log.Debugf("%s:list:> get nodes list", logNodePrefix)
-	return n.storage.Node().List(n.context)
+func (n *Node) List() (*types.NodeList, error) {
+	log.V(logLevel).Debugf("%s:list:> get nodes list", logNodePrefix)
+
+	nodes := types.NewNodeList()
+
+	err := n.storage.List(n.context, n.storage.Collection().Node(), "", nodes, nil)
+	if err != nil {
+		log.V(logLevel).Debugf("%s:list:> get nodes list err: %v", logNodePrefix, err)
+		return nil, err
+	}
+	return nodes, nil
 }
 
-func (n *Node) Create(opts *types.NodeCreateOptions) (*types.Node, error) {
+func (n *Node) Put(opts *types.NodeCreateOptions) (*types.Node, error) {
 
-	log.Debugf("%s:create:> create node in cluster", logNodePrefix)
+	log.V(logLevel).Debugf("%s:create:> create node in cluster", logNodePrefix)
 
 	ni := new(types.Node)
 	ni.Meta.SetDefault()
 
 	ni.Meta.Name = opts.Meta.Name
 	ni.Meta.Token = opts.Meta.Token
-	ni.Meta.Region = opts.Meta.Region
-	ni.Meta.Provider = opts.Meta.Provider
 
-	ni.Info = opts.Info
+	ni.Meta.NodeInfo = opts.Info
 	ni.Status = opts.Status
-	ni.Network = opts.Network
+	ni.Status.Online = true
 
 	if ni.Meta.Token == "" {
 		ni.Meta.Token = generator.GenerateRandomString(32)
 	}
 
-	ni.Online = true
-
 	ni.SelfLink()
 
-	if err := n.storage.Node().Insert(n.context, ni); err != nil {
-		log.Debugf("%s:create:> insert node err: %s", logNodePrefix, err.Error())
+	if err := n.storage.Put(n.context, n.storage.Collection().Node(), n.storage.Key().Node(ni.Meta.Name), ni, nil); err != nil {
+		log.V(logLevel).Debugf("%s:create:> insert node err: %v", logNodePrefix, err)
 		return nil, err
 	}
 
 	return ni, nil
 }
 
-func (n *Node) Get(name string) (*types.Node, error) {
+func (n *Node) Get(hostname string) (*types.Node, error) {
 
-	log.V(logLevel).Debugf("%s:get:> get by name %s", logNodePrefix, name)
+	log.V(logLevel).Debugf("%s:get:> get by hostname %s", logNodePrefix, hostname)
 
-	node, err := n.storage.Node().Get(n.context, name)
+	node := new(types.Node)
+
+	err := n.storage.Get(n.context, n.storage.Collection().Node(), n.storage.Key().Node(hostname), &node, nil)
 	if err != nil {
 
-		if err.Error() == store.ErrEntityNotFound {
-			log.V(logLevel).Warnf("%s:get:> get: node %s not found", logNodePrefix, name)
+		if errors.Storage().IsErrEntityNotFound(err) {
+			log.V(logLevel).Warnf("%s:get:> get: node %s not found", logNodePrefix, hostname)
 			return nil, nil
 		}
 
-		log.V(logLevel).Debugf("%s:get:> get node `%s` err: %s", logNodePrefix, name, err.Error())
+		log.V(logLevel).Debugf("%s:get:> get node `%s` err: %v", logNodePrefix, hostname, err)
 		return nil, err
 	}
 
 	return node, nil
 }
 
-func (n *Node) GetSpec(node *types.Node) (*types.NodeSpec, error) {
+func (n *Node) Set(node *types.Node) error {
 
-	log.V(logLevel).Debugf("%s:getspec:> get node spec: %s", logNodePrefix, node.Meta.Name)
-
-	spec, err := n.storage.Node().GetSpec(n.context, node)
-	if err != nil {
-		log.V(logLevel).Debugf("%s:getspec:> get Node `%s` err: %s", logNodePrefix, node.Meta.Name, err.Error())
-		return nil, err
-	}
-
-	es, err := n.storage.Endpoint().List(n.context)
-	if err != nil {
-		log.V(logLevel).Debugf("%s:getspec:> get endpoints `%s` err: %s", logNodePrefix, node.Meta.Name, err.Error())
-		return nil, err
-	}
-
-	spec.Endpoints = make(map[string]types.EndpointSpec, 0)
-	for _, sp := range es {
-		spec.Endpoints[sp.Spec.IP] = sp.Spec
-	}
-
-	log.Debugf("%#v", spec.Endpoints)
-
-	return spec, nil
-}
-
-func (n *Node) SetMeta(node *types.Node, meta *types.NodeUpdateMetaOptions) error {
-
-	log.V(logLevel).Debugf("%s:setmeta:> update Node %#v", logNodePrefix, meta)
-	if meta == nil {
-		log.V(logLevel).Errorf("%s:setmeta:> update Node err: %s", logNodePrefix, errors.New(errors.ArgumentIsEmpty))
-		return errors.New(errors.ArgumentIsEmpty)
-	}
-
-	node.Meta.Set(meta)
-
-	if err := n.storage.Node().Update(n.context, node); err != nil {
-		log.V(logLevel).Errorf("%s:setmeta:> update Node meta err: %s", logNodePrefix, err.Error())
+	log.V(logLevel).Debugf("%s:setmeta:> update Node %#v", logNodePrefix, node)
+	if err := n.storage.Set(n.context, n.storage.Collection().Node(), n.storage.Key().Node(node.Meta.Name), node, nil); err != nil {
+		log.V(logLevel).Errorf("%s:setmeta:> update Node meta err: %v", logNodePrefix, err)
 		return err
 	}
 
-	return nil
-}
-
-func (n *Node) SetOnline(node *types.Node) error {
-
-	if err := n.storage.Node().SetOnline(n.context, node); err != nil {
-		log.Errorf("%s:setonline:> set node online state error: %s", logNodePrefix, err.Error())
-		return err
-	}
-
-	return nil
-}
-
-func (n *Node) SetOffline(node *types.Node) error {
-
-	if err := n.storage.Node().SetOffline(n.context, node); err != nil {
-		log.Errorf("%s:setoffline:> set node offline state error: %s", logNodePrefix, err.Error())
-		return err
-	}
-
-	return nil
-
-}
-
-func (n *Node) SetStatus(node *types.Node, status types.NodeStatus) error {
-
-	node.Status = status
-
-	if err := n.storage.Node().SetStatus(n.context, node); err != nil {
-		log.Errorf("%s:setstatus:> set node offline state error: %s", logNodePrefix, err.Error())
-		return err
-	}
-
-	return nil
-}
-
-func (n *Node) SetInfo(node *types.Node, info types.NodeInfo) error {
-
-	node.Info = info
-	if err := n.storage.Node().SetInfo(n.context, node); err != nil {
-		log.Errorf("%s:setinfo:> set node info error: %s", logNodePrefix, err.Error())
-		return err
-	}
-
-	return nil
-}
-
-func (n *Node) SetNetwork(node *types.Node, network types.NetworkSpec) error {
-
-	node.Network = network
-	if err := n.storage.Node().SetNetwork(n.context, node); err != nil {
-		log.Errorf("%s:setnetwork:> set node network error: %s", logNodePrefix, err.Error())
-		return err
-	}
-
-	return nil
-}
-
-func (n *Node) InsertPod(node *types.Node, pod *types.Pod) error {
-
-	if err := n.storage.Node().InsertPod(n.context, node, pod); err != nil {
-		log.Errorf("%s:insertpod:> set node network error: %s", logNodePrefix, err.Error())
-		return err
-	}
-
-	return nil
-}
-
-func (n *Node) UpdatePod(node *types.Node, pod *types.Pod) error {
-
-	if err := n.storage.Node().UpdatePod(n.context, node, pod); err != nil {
-		log.Errorf("%s:updatepod:> set node network error: %s", logNodePrefix, err.Error())
-		return err
-	}
-
-	return nil
-}
-
-func (n *Node) RemovePod(node *types.Node, pod *types.Pod) error {
-
-	if err := n.storage.Node().RemovePod(n.context, node, pod); err != nil {
-		log.Errorf("%s:removepod:> set node network error: %s", logNodePrefix, err.Error())
-		return err
-	}
-
-	return nil
-}
-
-func (n *Node) InsertVolume(node *types.Node, volume *types.Volume) error {
-	return nil
-}
-
-func (n *Node) RemoveVolume(node *types.Node, volume *types.Volume) error {
-	return nil
-}
-
-func (n *Node) InsertRoute(node *types.Node, route *types.Route) error {
-	return nil
-}
-
-func (n *Node) RemoveRoute(node *types.Node, route *types.Route) error {
 	return nil
 }
 
@@ -267,14 +117,61 @@ func (n *Node) Remove(node *types.Node) error {
 
 	log.V(logLevel).Debugf("%s:remove:> remove node %s", logNodePrefix, node.Meta.Name)
 
-	if err := n.storage.Node().Remove(n.context, node); err != nil {
-		log.V(logLevel).Debugf("%s:remove:> remove node err: %s", logNodePrefix, err.Error())
+	if err := n.storage.Del(n.context, n.storage.Collection().Node(), n.storage.Key().Node(node.Meta.Name)); err != nil {
+		log.V(logLevel).Debugf("%s:remove:> remove node err: %v", logNodePrefix, err)
 		return err
 	}
 
 	return nil
 }
 
-func NewNodeModel(ctx context.Context, stg storage.Storage) INode {
+// Watch node changes
+func (n *Node) Watch(ch chan types.NodeEvent, rev *int64) error {
+
+	log.V(logLevel).Debugf("%s:watch:> watch node", logNodePrefix)
+
+	done := make(chan bool)
+	watcher := storage.NewWatcher()
+
+	go func() {
+		for {
+			select {
+			case <-n.context.Done():
+				done <- true
+				return
+			case e := <-watcher:
+				if e.Data == nil {
+					continue
+				}
+
+				res := types.NodeEvent{}
+				res.Action = e.Action
+				res.Name = e.Name
+
+				obj := new(types.Node)
+
+				if err := json.Unmarshal(e.Data.([]byte), &obj); err != nil {
+					log.Errorf("%s:watch:> parse json", logNodePrefix)
+					continue
+				}
+
+				res.Data = obj
+
+				ch <- res
+			}
+		}
+	}()
+
+	opts := storage.GetOpts()
+	opts.Rev = rev
+
+	if err := n.storage.Watch(n.context, n.storage.Collection().Node(), watcher, opts); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func NewNodeModel(ctx context.Context, stg storage.Storage) *Node {
 	return &Node{ctx, stg}
 }

@@ -20,17 +20,26 @@ package types
 
 import "fmt"
 
+type DeploymentMap struct {
+	Runtime
+	Items map[string]*Deployment
+}
+
+type DeploymentList struct {
+	Runtime
+	Items []*Deployment
+}
+
 type Deployment struct {
+	Runtime
+	// Deployment Meta
 	Meta DeploymentMeta `json:"meta"`
-	// Deployment spec
-	Spec DeploymentSpec `json:"spec"`
 	// Deployment status
 	Status DeploymentStatus `json:"status"`
-	// Deployment replicas
-	Replicas DeploymentReplicas `json:"replicas"`
+	// Deployment spec
+	Spec DeploymentSpec `json:"spec"`
+
 }
-type DeploymentMap map[string]*Deployment
-type DeploymentList []*Deployment
 
 type DeploymentMeta struct {
 	Meta
@@ -47,11 +56,8 @@ type DeploymentMeta struct {
 }
 
 type DeploymentSpec struct {
-	Meta     Meta         `json:"meta"`
 	Replicas int          `json:"replicas"`
 	State    SpecState    `json:"state"`
-	Strategy SpecStrategy `json:"strategy"`
-	Triggers SpecTriggers `json:"triggers"`
 	Selector SpecSelector `json:"selector"`
 	Template SpecTemplate `json:"template"`
 }
@@ -77,9 +83,17 @@ type DeploymentOptions struct {
 
 func (d *Deployment) SelfLink() string {
 	if d.Meta.SelfLink == "" {
-		d.Meta.SelfLink = fmt.Sprintf("%s:%s:%s", d.Meta.Namespace, d.Meta.Service, d.Meta.Name)
+		d.Meta.SelfLink = d.CreateSelfLink(d.Meta.Namespace, d.Meta.Service, d.Meta.Name)
 	}
 	return d.Meta.SelfLink
+}
+
+func (d *Deployment) CreateSelfLink(namespace, service, name string) string {
+	return fmt.Sprintf("%s:%s:%s", namespace, service, name)
+}
+
+func (d *Deployment) ServiceLink() string {
+	return fmt.Sprintf("%s:%s", d.Meta.Namespace, d.Meta.Service)
 }
 
 func (d *DeploymentStatus) SetProvision() {
@@ -100,4 +114,26 @@ func (d *DeploymentStatus) SetCancel() {
 func (d *DeploymentStatus) SetDestroy() {
 	d.State = StateDestroy
 	d.Message = ""
+}
+
+type DeploymentUpdateOptions struct {
+	// Number of replicas
+	Replicas *int
+	// Deployment status for update
+	Status *struct {
+		State   string
+		Message string
+	}
+}
+
+func NewDeploymentList () *DeploymentList {
+	dm := new(DeploymentList)
+	dm.Items = make([]*Deployment, 0)
+	return dm
+}
+
+func NewDeploymentMap () *DeploymentMap {
+	dm := new(DeploymentMap)
+	dm.Items = make(map[string]*Deployment)
+	return dm
 }

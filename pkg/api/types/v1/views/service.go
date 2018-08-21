@@ -108,8 +108,8 @@ type ServiceSpecMeta struct {
 // swagger:model views_service_spec_port
 type ServiceSpecPort struct {
 	Protocol  string `json:"protocol"`
-	Container uint16    `json:"internal"`
-	Host      uint16    `json:"external"`
+	Container uint16 `json:"internal"`
+	Host      uint16 `json:"external"`
 	Published bool   `json:"published"`
 }
 

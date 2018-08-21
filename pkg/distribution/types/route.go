@@ -20,24 +20,32 @@ package types
 
 import (
 	"fmt"
-	"github.com/lastbackend/lastbackend/pkg/util/generator"
 	"strings"
+
+	"github.com/lastbackend/lastbackend/pkg/util/generator"
 )
 
 // Route
 // swagger:ignore
 // swagger:model types_route
 type Route struct {
+	Runtime
 	Meta   RouteMeta   `json:"meta" yaml:"meta"`
 	Spec   RouteSpec   `json:"spec" yaml:"spec"`
 	Status RouteStatus `json:"status" yaml:"status"`
 }
 
 // swagger:ignore
-type RouteMap map[string]*Route
+type RouteMap struct {
+	Runtime
+	Items map[string]*Route
+}
 
 // swagger:ignore
-type RouteList []*Route
+type RouteList struct {
+	Runtime
+	Items []*Route
+}
 
 // swagger:ignore
 // swagger:model types_route_meta
@@ -100,9 +108,13 @@ type RoteLocation struct {
 
 func (r *Route) SelfLink() string {
 	if r.Meta.SelfLink == "" {
-		r.Meta.SelfLink = fmt.Sprintf("%s:%s", r.Meta.Namespace, r.Meta.Name)
+		r.Meta.SelfLink = r.CreateSelfLink(r.Meta.Namespace, r.Meta.Name)
 	}
 	return r.Meta.SelfLink
+}
+
+func (r *Route) CreateSelfLink(namespace, name string) string {
+	return fmt.Sprintf("%s:%s", namespace, name)
 }
 
 func (r *Route) GetRouteConfig() *RouterConfig {
@@ -164,4 +176,16 @@ type RuleOption struct {
 	Endpoint string `json:"endpoint"`
 	Path     string `json:"path"`
 	Port     int    `json:"port"`
+}
+
+func NewRouteList () *RouteList {
+	dm := new(RouteList)
+	dm.Items = make([]*Route, 0)
+	return dm
+}
+
+func NewRouteMap () *RouteMap {
+	dm := new(RouteMap)
+	dm.Items = make(map[string]*Route)
+	return dm
 }

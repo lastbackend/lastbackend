@@ -27,17 +27,17 @@ type NodeMetaOptions struct {
 
 // swagger:model request_node_connect
 type NodeConnectOptions struct {
-	Info    types.NodeInfo    `json:"info"`
-	Status  types.NodeStatus  `json:"status"`
-	Network types.NetworkSpec `json:"network"`
+	Info    types.NodeInfo     `json:"info"`
+	Status  types.NodeStatus   `json:"status"`
+	Network types.NetworkState `json:"network"`
 }
 
 // swagger:model request_node_status
 type NodeStatusOptions struct {
-
+	// Node interface options
+	State types.NodeStatusState `json:"state"`
 	// Pods statuses
 	Pods map[string]*NodePodStatusOptions `json:"pods"`
-
 	// Node resources
 	Resources NodeResourcesOptions `json:"resources"`
 }
@@ -54,6 +54,10 @@ type NodeResourcesOptions struct {
 type NodePodStatusOptions struct {
 	// Pod state
 	State string `json:"state" yaml:"state"`
+	// Pod state
+	Status string `json:"status" yaml:"status"`
+	// Pod state
+	Running bool `json:"running" yaml:"running"`
 	// Pod state message
 	Message string `json:"message" yaml:"message"`
 	// Pod steps

@@ -21,6 +21,12 @@ package node_test
 import (
 	"context"
 	"fmt"
+	"io/ioutil"
+	"net/http"
+	"net/http/httptest"
+	"strings"
+	"testing"
+
 	"github.com/gorilla/mux"
 	"github.com/lastbackend/lastbackend/pkg/api/cache"
 	"github.com/lastbackend/lastbackend/pkg/api/envs"
@@ -30,29 +36,23 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/storage"
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/assert"
-	"io/ioutil"
-	"net/http"
-	"net/http/httptest"
-	"strings"
-	"testing"
 )
 
 // Testing NodeList handler
 func TestNodeListH(t *testing.T) {
 
-	stg, _ := storage.GetMock()
+	stg, _ := storage.Get("mock")
 	envs.Get().SetStorage(stg)
 	viper.Set("verbose", 0)
 
 	var (
-		ctx = context.Background()
-		n1  = getNodeAsset("test1", "", true)
-		n2  = getNodeAsset("test2", "", false)
-		nl  = make(map[string]*types.Node, 0)
+		n1 = getNodeAsset("test1", "", true)
+		n2 = getNodeAsset("test2", "", false)
+		nl = types.NewNodeList()
 	)
 
-	nl[n1.Meta.Name] = &n1
-	nl[n2.Meta.Name] = &n2
+	nl.Items = append(nl.Items, &n1)
+	nl.Items = append(nl.Items, &n2)
 
 	v, err := v1.View().Node().NewList(nl).ToJson()
 	assert.NoError(t, err)
@@ -74,11 +74,11 @@ func TestNodeListH(t *testing.T) {
 
 	for _, tc := range tests {
 
-		err = envs.Get().GetStorage().Node().Clear(ctx)
+		err = envs.Get().GetStorage().Del(context.Background(), stg.Collection().Node(), types.EmptyString)
 		assert.NoError(t, err)
 
-		for _, n := range nl {
-			err = envs.Get().GetStorage().Node().Insert(ctx, n)
+		for _, n := range nl.Items {
+			err = stg.Put(context.Background(), stg.Collection().Node(), stg.Key().Node(n.Meta.Name), &n, nil)
 			assert.NoError(t, err)
 		}
 
@@ -124,14 +124,13 @@ func TestNodeListH(t *testing.T) {
 }
 
 func TestNodeGetH(t *testing.T) {
-	stg, _ := storage.GetMock()
+	stg, _ := storage.Get("mock")
 	envs.Get().SetStorage(stg)
 	viper.Set("verbose", 0)
 
 	var (
-		ctx = context.Background()
-		n1  = getNodeAsset("test1", "", true)
-		n2  = getNodeAsset("test2", "", true)
+		n1 = getNodeAsset("test1", "", true)
+		n2 = getNodeAsset("test2", "", true)
 	)
 
 	v, err := v1.View().Node().New(&n1).ToJson()
@@ -163,10 +162,10 @@ func TestNodeGetH(t *testing.T) {
 
 	for _, tc := range tests {
 
-		err = envs.Get().GetStorage().Node().Clear(ctx)
+		err = envs.Get().GetStorage().Del(context.Background(), stg.Collection().Node(), types.EmptyString)
 		assert.NoError(t, err)
 
-		err = envs.Get().GetStorage().Node().Insert(ctx, &n1)
+		err = stg.Put(context.Background(), stg.Collection().Node(), stg.Key().Node(n1.Meta.Name), &n1, nil)
 		assert.NoError(t, err)
 
 		t.Run(tc.name, func(t *testing.T) {
@@ -205,8 +204,8 @@ func TestNodeGetH(t *testing.T) {
 	}
 }
 
-func TestNodeGetSpecH(t *testing.T) {
-	stg, _ := storage.GetMock()
+func TestNodeGetManifestH(t *testing.T) {
+	stg, _ := storage.Get("mock")
 	cg := cache.NewCache()
 
 	envs.Get().SetStorage(stg)
@@ -215,24 +214,22 @@ func TestNodeGetSpecH(t *testing.T) {
 	viper.Set("verbose", 0)
 
 	var (
-		ns  = "ns"
-		svc = "svc"
-		dp  = "dp"
-		ctx = context.Background()
-		n1  = getNodeAsset("test1", "", true)
-		n2  = getNodeAsset("test2", "", true)
-		p1  = getPodAsset(ns, svc, dp, "test1", "")
-		p2  = getPodAsset(ns, svc, dp, "test2", "")
+		n1 = getNodeAsset("test1", "", true)
+		n2 = getNodeAsset("test2", "", true)
+		p1 = "test1"
+		p2 = "test2"
+
+		nm = new(types.NodeManifest)
 	)
 
-	n1.Spec.Pods = make(map[string]types.PodSpec)
-	n1.Spec.Volumes = make(map[string]types.VolumeSpec)
-	n1.Spec.Endpoints = make(map[string]types.EndpointSpec)
+	nm.Network = make(map[string]*types.SubnetManifest, 0)
+	nm.Pods = make(map[string]*types.PodManifest,0 )
+	nm.Pods[p1] = getPodManifest()
+	nm.Pods[p2] = getPodManifest()
+	nm.Volumes = make(map[string]*types.VolumeManifest, 0)
+	nm.Endpoints = make(map[string]*types.EndpointManifest, 0)
 
-	n1.Spec.Pods[p1.SelfLink()] = p1.Spec
-	n1.Spec.Pods[p2.SelfLink()] = p2.Spec
-
-	v, err := v1.View().Node().NewSpec(&n1.Spec).ToJson()
+	v, err := v1.View().Node().NewManifest(nm).ToJson()
 	assert.NoError(t, err)
 
 	tests := []struct {
@@ -244,14 +241,14 @@ func TestNodeGetSpecH(t *testing.T) {
 		expectedCode int
 	}{
 		{
-			name:         "checking get node spec failed: not found",
+			name:         "node spec failed not found",
 			url:          fmt.Sprintf("/cluster/node/%s/spec", n2.Meta.Name),
 			handler:      node.NodeGetSpecH,
 			expectedBody: "{\"code\":404,\"status\":\"Not Found\",\"message\":\"Node not found\"}",
 			expectedCode: http.StatusNotFound,
 		},
 		{
-			name:         "checking get node spec successfully",
+			name:         "node spec successfully",
 			url:          fmt.Sprintf("/cluster/node/%s/spec", n1.Meta.Name),
 			handler:      node.NodeGetSpecH,
 			expectedBody: string(v),
@@ -261,19 +258,22 @@ func TestNodeGetSpecH(t *testing.T) {
 
 	for _, tc := range tests {
 
-		err = envs.Get().GetStorage().Node().Clear(ctx)
-		assert.NoError(t, err)
-
-		err = envs.Get().GetStorage().Node().Insert(ctx, &n1)
-		assert.NoError(t, err)
-
-		err = envs.Get().GetStorage().Node().InsertPod(ctx, &n1, &p1)
-		assert.NoError(t, err)
-
-		err = envs.Get().GetStorage().Node().InsertPod(ctx, &n1, &p2)
-		assert.NoError(t, err)
-
 		t.Run(tc.name, func(t *testing.T) {
+
+			err = envs.Get().GetStorage().Del(context.Background(), stg.Collection().Node(), types.EmptyString)
+			assert.NoError(t, err)
+
+			err = envs.Get().GetStorage().Del(context.Background(), stg.Collection().Manifest().Pod(n1.Meta.Name), types.EmptyString)
+			assert.NoError(t, err)
+
+			err = stg.Put(context.Background(), stg.Collection().Node(), stg.Key().Node(n1.Meta.Name), &n1, nil)
+			assert.NoError(t, err)
+
+			err = stg.Put(context.Background(), stg.Collection().Manifest().Pod(n1.Meta.Name), p1, getPodManifest(), nil)
+			assert.NoError(t, err)
+
+			err = stg.Put(context.Background(), stg.Collection().Manifest().Pod(n1.Meta.Name), p2, getPodManifest(), nil)
+			assert.NoError(t, err)
 
 			// Create assert request to pass to our handler. We don't have any query parameters for now, so we'll
 			// pass 'nil' as the third parameter.
@@ -299,10 +299,14 @@ func TestNodeGetSpecH(t *testing.T) {
 			r.ServeHTTP(res, req)
 
 			// Check the status code is what we expect.
-			assert.Equal(t, tc.expectedCode, res.Code, "status code not equal")
+			if !assert.Equal(t, tc.expectedCode, res.Code, "status code not equal") {
+				return
+			}
 
 			body, err := ioutil.ReadAll(res.Body)
-			assert.NoError(t, err)
+			if !assert.NoError(t, err) {
+				return
+			}
 
 			assert.Equal(t, tc.expectedBody, string(body), "incorrect status code")
 		})
@@ -310,13 +314,12 @@ func TestNodeGetSpecH(t *testing.T) {
 }
 
 func TestNodeRemoveH(t *testing.T) {
-	stg, _ := storage.GetMock()
+	stg, _ := storage.Get("mock")
 	envs.Get().SetStorage(stg)
 	viper.Set("verbose", 0)
 
 	var (
 		err error
-		ctx = context.Background()
 		n1  = getNodeAsset("test1", "", true)
 		n2  = getNodeAsset("test2", "", true)
 	)
@@ -347,10 +350,10 @@ func TestNodeRemoveH(t *testing.T) {
 
 	for _, tc := range tests {
 
-		err = envs.Get().GetStorage().Node().Clear(ctx)
+		err = envs.Get().GetStorage().Del(context.Background(), stg.Collection().Node(), types.EmptyString)
 		assert.NoError(t, err)
 
-		err = envs.Get().GetStorage().Node().Insert(ctx, &n1)
+		err = stg.Put(context.Background(), stg.Collection().Node(), stg.Key().Node(n1.Meta.Name), &n1, nil)
 		assert.NoError(t, err)
 
 		t.Run(tc.name, func(t *testing.T) {
@@ -390,7 +393,7 @@ func TestNodeRemoveH(t *testing.T) {
 }
 
 func TestNodeSetMetaH(t *testing.T) {
-	stg, _ := storage.GetMock()
+	stg, _ := storage.Get("mock")
 	envs.Get().SetStorage(stg)
 	viper.Set("verbose", 0)
 	strPointer := func(s string) *string { return &s }
@@ -403,9 +406,8 @@ func TestNodeSetMetaH(t *testing.T) {
 		uo = v1.Request().Node().UpdateOptions()
 	)
 
-	uo.Meta = &types.NodeUpdateMetaOptions{
-		Provider: strPointer("test"),
-	}
+	uo.Meta = &types.NodeUpdateMetaOptions{}
+	uo.Meta.Architecture = strPointer("test")
 
 	v, err := v1.View().Node().New(&n1).ToJson()
 	assert.NoError(t, err)
@@ -444,10 +446,10 @@ func TestNodeSetMetaH(t *testing.T) {
 
 	for _, tc := range tests {
 
-		err = envs.Get().GetStorage().Node().Clear(ctx)
+		err = envs.Get().GetStorage().Del(context.Background(), stg.Collection().Node(), types.EmptyString)
 		assert.NoError(t, err)
 
-		err = envs.Get().GetStorage().Node().Insert(ctx, &n1)
+		err = stg.Put(context.Background(), stg.Collection().Node(), stg.Key().Node(n1.Meta.Name), &n1, nil)
 		assert.NoError(t, err)
 
 		t.Run(tc.name, func(t *testing.T) {
@@ -483,9 +485,13 @@ func TestNodeSetMetaH(t *testing.T) {
 			assert.Equal(t, tc.expectedBody, string(body), "incorrect status code")
 
 			if tc.expectedCode == http.StatusOK {
-				n, err := envs.Get().GetStorage().Node().Get(ctx, tc.args.node)
+				got := new(types.Node)
+				err = envs.Get().GetStorage().Get(context.Background(), stg.Collection().Node(), envs.Get().GetStorage().Key().Node(tc.args.node), got, nil)
 				assert.NoError(t, err)
-				assert.Equal(t, *uo.Meta.Provider, n.Meta.Provider, "provider not equal")
+				if !assert.NotNil(t, got, "node should not be empty") {
+					return
+				}
+				assert.Equal(t, *uo.Meta.Architecture, got.Meta.Architecture, "Architecture not equal")
 			}
 
 		})
@@ -493,7 +499,7 @@ func TestNodeSetMetaH(t *testing.T) {
 }
 
 func TestNodeConnectH(t *testing.T) {
-	stg, _ := storage.GetMock()
+	stg, _ := storage.Get("mock")
 	envs.Get().SetStorage(stg)
 	viper.Set("verbose", 0)
 
@@ -543,10 +549,10 @@ func TestNodeConnectH(t *testing.T) {
 
 	for _, tc := range tests {
 
-		err = envs.Get().GetStorage().Node().Clear(ctx)
+		err = envs.Get().GetStorage().Del(context.Background(), stg.Collection().Node(), types.EmptyString)
 		assert.NoError(t, err)
 
-		err = envs.Get().GetStorage().Node().Insert(ctx, &n1)
+		err = stg.Put(context.Background(), stg.Collection().Node(), stg.Key().Node(n1.Meta.Name), &n1, nil)
 		assert.NoError(t, err)
 
 		t.Run(tc.name, func(t *testing.T) {
@@ -582,10 +588,11 @@ func TestNodeConnectH(t *testing.T) {
 			assert.Equal(t, tc.expectedBody, string(body), "incorrect status code")
 
 			if tc.expectedCode == http.StatusOK {
-				n, err := envs.Get().GetStorage().Node().Get(ctx, tc.args.node)
+				got := new(types.Node)
+				err = envs.Get().GetStorage().Get(context.Background(), stg.Collection().Node(), envs.Get().GetStorage().Key().Node(tc.args.node), got, nil)
 				if assert.NoError(t, err) {
-					assert.Equal(t, uo.Info.Hostname, n.Info.Hostname, "hostname not equal")
-					assert.Equal(t, uo.Info.Architecture, n.Info.Architecture, "architecture not equal")
+					assert.Equal(t, uo.Info.Hostname, got.Meta.Hostname, "hostname not equal")
+					assert.Equal(t, uo.Info.Architecture, got.Meta.Architecture, "architecture not equal")
 				}
 
 			}
@@ -596,7 +603,7 @@ func TestNodeConnectH(t *testing.T) {
 
 func TestNodeSetStatusH(t *testing.T) {
 
-	stg, _ := storage.GetMock()
+	stg, _ := storage.Get("mock")
 	envs.Get().SetStorage(stg)
 	viper.Set("verbose", 0)
 
@@ -610,7 +617,6 @@ func TestNodeSetStatusH(t *testing.T) {
 	)
 
 	uo.Resources.Capacity.Pods = 20
-	uo.Resources.Allocated.Containers = 10
 
 	type args struct {
 		ctx  context.Context
@@ -646,10 +652,10 @@ func TestNodeSetStatusH(t *testing.T) {
 
 	for _, tc := range tests {
 
-		err = envs.Get().GetStorage().Node().Clear(ctx)
+		err = envs.Get().GetStorage().Del(context.Background(), stg.Collection().Node(), types.EmptyString)
 		assert.NoError(t, err)
 
-		err = envs.Get().GetStorage().Node().Insert(ctx, &n1)
+		err = stg.Put(context.Background(), stg.Collection().Node(), stg.Key().Node(n1.Meta.Name), &n1, nil)
 		assert.NoError(t, err)
 
 		t.Run(tc.name, func(t *testing.T) {
@@ -685,398 +691,10 @@ func TestNodeSetStatusH(t *testing.T) {
 			assert.Equal(t, tc.expectedBody, string(body), "incorrect status code")
 
 			if tc.expectedCode == http.StatusOK {
-				n, err := envs.Get().GetStorage().Node().Get(ctx, tc.args.node)
+				got := new(types.Node)
+				err = envs.Get().GetStorage().Get(context.Background(), stg.Collection().Node(), envs.Get().GetStorage().Key().Node(tc.args.node), got, nil)
 				assert.NoError(t, err)
-				assert.Equal(t, uo.Resources.Capacity.Pods, n.Status.Capacity.Pods, "pods not equal")
-				assert.Equal(t, uo.Resources.Allocated.Containers, n.Status.Allocated.Containers, "containers not equal")
-			}
-
-		})
-	}
-}
-
-func TestNodeSetPodStatusH(t *testing.T) {
-
-	stg, _ := storage.GetMock()
-	envs.Get().SetStorage(stg)
-	viper.Set("verbose", 0)
-
-	var (
-		ns  = "ns"
-		svc = "svc"
-		dp  = "dp"
-
-		err error
-		ctx = context.Background()
-
-		n1 = getNodeAsset("test1", "", true)
-		n2 = getNodeAsset("test2", "", true)
-
-		p1 = getPodAsset(ns, svc, dp, "test1", "")
-		p2 = getPodAsset(ns, svc, dp, "test2", "")
-
-		uo = v1.Request().Node().NodePodStatusOptions()
-	)
-
-	uo.State = types.StateError
-	uo.Message = "error message"
-	uo.Containers = make(map[string]*types.PodContainer)
-	uo.Containers["test"] = &types.PodContainer{
-		ID: "container-id",
-		Image: types.PodContainerImage{
-			ID:   "image-id",
-			Name: "image-name",
-		},
-	}
-
-	type args struct {
-		ctx  context.Context
-		node string
-		pod  string
-	}
-
-	tests := []struct {
-		name         string
-		args         args
-		headers      map[string]string
-		handler      func(http.ResponseWriter, *http.Request)
-		data         string
-		expectedBody string
-		expectedCode int
-	}{
-		{
-			name:         "checking node set pod state failed: node not found",
-			args:         args{ctx, n2.Meta.Name, p1.SelfLink()},
-			handler:      node.NodeSetPodStatusH,
-			data:         uo.ToJson(),
-			expectedBody: "{\"code\":404,\"status\":\"Not Found\",\"message\":\"Node not found\"}",
-			expectedCode: http.StatusNotFound,
-		},
-		{
-			name:         "checking node set pod state failed: pod not found",
-			args:         args{ctx, n1.Meta.Name, p2.SelfLink()},
-			handler:      node.NodeSetPodStatusH,
-			data:         uo.ToJson(),
-			expectedBody: "{\"code\":404,\"status\":\"Not Found\",\"message\":\"Pod not found\"}",
-			expectedCode: http.StatusNotFound,
-		},
-		{
-			name:         "checking update node successfully",
-			args:         args{ctx, n1.Meta.Name, p1.SelfLink()},
-			handler:      node.NodeSetPodStatusH,
-			data:         uo.ToJson(),
-			expectedBody: "",
-			expectedCode: http.StatusOK,
-		},
-	}
-
-	for _, tc := range tests {
-
-		err = envs.Get().GetStorage().Node().Clear(ctx)
-		assert.NoError(t, err)
-
-		err = envs.Get().GetStorage().Node().Insert(ctx, &n1)
-		assert.NoError(t, err)
-
-		err = envs.Get().GetStorage().Pod().Insert(ctx, &p1)
-		assert.NoError(t, err)
-
-		t.Run(tc.name, func(t *testing.T) {
-
-			// Create assert request to pass to our handler. We don't have any query parameters for now, so we'll
-			// pass 'nil' as the third parameter.
-			req, err := http.NewRequest("PUT", fmt.Sprintf("/cluster/node/%s/status/pod/%s", tc.args.node, tc.args.pod), strings.NewReader(tc.data))
-			assert.NoError(t, err)
-
-			if tc.headers != nil {
-				for key, val := range tc.headers {
-					req.Header.Set(key, val)
-				}
-			}
-
-			r := mux.NewRouter()
-			r.HandleFunc("/cluster/node/{node}/status/pod/{pod}", tc.handler)
-
-			setRequestVars(r, req)
-
-			// We create assert ResponseRecorder (which satisfies http.ResponseWriter) to record the response.
-			res := httptest.NewRecorder()
-
-			// Our handlers satisfy http.Handler, so we can call their ServeHTTP method
-			// directly and pass in our Request and ResponseRecorder.
-			r.ServeHTTP(res, req)
-
-			// Check the status code is what we expect.
-			assert.Equal(t, tc.expectedCode, res.Code, "status code not equal")
-
-			body, err := ioutil.ReadAll(res.Body)
-			assert.NoError(t, err)
-			assert.Equal(t, tc.expectedBody, string(body), "incorrect status code")
-
-			if tc.expectedCode == http.StatusOK {
-				p, err := envs.Get().GetStorage().Pod().Get(ctx, p1.Meta.Namespace, p1.Meta.Service, p1.Meta.Deployment, p1.Meta.Name)
-				assert.NoError(t, err)
-
-				assert.Equal(t, uo.State, p.Status.Stage, "pods state not equal")
-				assert.Equal(t, uo.Message, p.Status.Message, "pods message not equal")
-
-				uo.Containers = make(map[string]*types.PodContainer)
-				uo.Containers["test"] = &types.PodContainer{
-					ID: "container-id",
-					Image: types.PodContainerImage{
-						ID:   "image-id",
-						Name: "image-name",
-					},
-				}
-
-				b := assert.NotNil(t, p.Status.Containers["test"], "container 'test' not exists")
-				if !b {
-					return
-				}
-
-				assert.Equal(t, uo.Containers["test"].ID, p.Status.Containers["test"].ID, "container id not equal")
-				assert.Equal(t, uo.Containers["test"].Image.ID, p.Status.Containers["test"].Image.ID, "container image id not equal")
-				assert.Equal(t, uo.Containers["test"].Image.Name, p.Status.Containers["test"].Image.Name, "container image name not equal")
-			}
-
-		})
-	}
-}
-
-func TestNodeSetVolumeStatusH(t *testing.T) {
-
-	stg, _ := storage.GetMock()
-	envs.Get().SetStorage(stg)
-	viper.Set("verbose", 0)
-
-	var (
-		ns = "ns"
-
-		err error
-		ctx = context.Background()
-
-		n1 = getNodeAsset("test1", "", true)
-		n2 = getNodeAsset("test2", "", true)
-
-		vl1 = getVolumeAsset(ns, "test1", "")
-		vl2 = getVolumeAsset(ns, "test2", "")
-
-		uo = v1.Request().Node().NodeVolumeStatusOptions()
-	)
-
-	uo.State = types.StateError
-	uo.Message = "error message"
-
-	type args struct {
-		ctx    context.Context
-		node   string
-		volume string
-	}
-
-	tests := []struct {
-		name         string
-		args         args
-		headers      map[string]string
-		handler      func(http.ResponseWriter, *http.Request)
-		data         string
-		expectedBody string
-		expectedCode int
-	}{
-		{
-			name:         "checking ndoe set volume state failed: node not found",
-			args:         args{ctx, n2.Meta.Name, vl1.SelfLink()},
-			handler:      node.NodeSetVolumeStatusH,
-			data:         uo.ToJson(),
-			expectedBody: "{\"code\":404,\"status\":\"Not Found\",\"message\":\"Node not found\"}",
-			expectedCode: http.StatusNotFound,
-		},
-		{
-			name:         "checking ndoe set volume state failed: volume not found",
-			args:         args{ctx, n1.Meta.Name, vl2.SelfLink()},
-			handler:      node.NodeSetVolumeStatusH,
-			data:         uo.ToJson(),
-			expectedBody: "{\"code\":404,\"status\":\"Not Found\",\"message\":\"Volume not found\"}",
-			expectedCode: http.StatusNotFound,
-		},
-		{
-			name:         "checking update node successfully",
-			args:         args{ctx, n1.Meta.Name, vl1.SelfLink()},
-			handler:      node.NodeSetVolumeStatusH,
-			data:         uo.ToJson(),
-			expectedBody: "",
-			expectedCode: http.StatusOK,
-		},
-	}
-
-	for _, tc := range tests {
-
-		err = envs.Get().GetStorage().Node().Clear(ctx)
-		assert.NoError(t, err)
-
-		err = envs.Get().GetStorage().Node().Insert(ctx, &n1)
-		assert.NoError(t, err)
-
-		err = envs.Get().GetStorage().Volume().Insert(ctx, &vl1)
-		assert.NoError(t, err)
-
-		t.Run(tc.name, func(t *testing.T) {
-
-			// Create assert request to pass to our handler. We don't have any query parameters for now, so we'll
-			// pass 'nil' as the third parameter.
-			req, err := http.NewRequest("PUT", fmt.Sprintf("/cluster/node/%s/status/volume/%s", tc.args.node, tc.args.volume), strings.NewReader(tc.data))
-			assert.NoError(t, err)
-
-			if tc.headers != nil {
-				for key, val := range tc.headers {
-					req.Header.Set(key, val)
-				}
-			}
-
-			r := mux.NewRouter()
-			r.HandleFunc("/cluster/node/{node}/status/volume/{volume}", tc.handler)
-
-			setRequestVars(r, req)
-
-			// We create assert ResponseRecorder (which satisfies http.ResponseWriter) to record the response.
-			res := httptest.NewRecorder()
-
-			// Our handlers satisfy http.Handler, so we can call their ServeHTTP method
-			// directly and pass in our Request and ResponseRecorder.
-			r.ServeHTTP(res, req)
-
-			// Check the status code is what we expect.
-			assert.Equal(t, tc.expectedCode, res.Code, "status code not equal")
-
-			body, err := ioutil.ReadAll(res.Body)
-			assert.NoError(t, err)
-			assert.Equal(t, tc.expectedBody, string(body), "incorrect status code")
-
-			if tc.expectedCode == http.StatusOK {
-				p, err := envs.Get().GetStorage().Volume().Get(ctx, vl1.Meta.Namespace, vl1.Meta.Name)
-				assert.NoError(t, err)
-
-				assert.Equal(t, uo.State, p.Status.State, "pods state not equal")
-				assert.Equal(t, uo.Message, p.Status.Message, "pods message not equal")
-			}
-
-		})
-	}
-}
-
-func TestNodeSetRouteStatusH(t *testing.T) {
-
-	stg, _ := storage.GetMock()
-	envs.Get().SetStorage(stg)
-	viper.Set("verbose", 0)
-
-	var (
-		ns = "ns"
-
-		err error
-		ctx = context.Background()
-
-		n1 = getNodeAsset("test1", "", true)
-		n2 = getNodeAsset("test2", "", true)
-
-		r1 = getRouteAsset(ns, "test1", "")
-		r2 = getRouteAsset(ns, "test2", "")
-
-		uo = v1.Request().Node().NodeRouteStatusOptions()
-	)
-
-	uo.State = types.StateError
-	uo.Message = "error message"
-
-	type args struct {
-		ctx   context.Context
-		node  string
-		route string
-	}
-
-	tests := []struct {
-		name         string
-		args         args
-		headers      map[string]string
-		handler      func(http.ResponseWriter, *http.Request)
-		data         string
-		expectedBody string
-		expectedCode int
-	}{
-		{
-			name:         "checking ndoe set route state failed: node not found",
-			args:         args{ctx, n2.Meta.Name, r1.SelfLink()},
-			handler:      node.NodeSetRouteStatusH,
-			data:         uo.ToJson(),
-			expectedBody: "{\"code\":404,\"status\":\"Not Found\",\"message\":\"Node not found\"}",
-			expectedCode: http.StatusNotFound,
-		},
-		{
-			name:         "checking ndoe set route state failed: route not found",
-			args:         args{ctx, n1.Meta.Name, r2.SelfLink()},
-			handler:      node.NodeSetRouteStatusH,
-			data:         uo.ToJson(),
-			expectedBody: "{\"code\":404,\"status\":\"Not Found\",\"message\":\"Route not found\"}",
-			expectedCode: http.StatusNotFound,
-		},
-		{
-			name:         "checking update node successfully",
-			args:         args{ctx, n1.Meta.Name, r1.SelfLink()},
-			handler:      node.NodeSetRouteStatusH,
-			data:         uo.ToJson(),
-			expectedBody: "",
-			expectedCode: http.StatusOK,
-		},
-	}
-
-	for _, tc := range tests {
-
-		err = envs.Get().GetStorage().Node().Clear(ctx)
-		assert.NoError(t, err)
-
-		err = envs.Get().GetStorage().Node().Insert(ctx, &n1)
-		assert.NoError(t, err)
-
-		err = envs.Get().GetStorage().Route().Insert(ctx, &r1)
-		assert.NoError(t, err)
-
-		t.Run(tc.name, func(t *testing.T) {
-
-			// Create assert request to pass to our handler. We don't have any query parameters for now, so we'll
-			// pass 'nil' as the third parameter.
-			req, err := http.NewRequest("PUT", fmt.Sprintf("/cluster/node/%s/status/route/%s", tc.args.node, tc.args.route), strings.NewReader(tc.data))
-			assert.NoError(t, err)
-
-			if tc.headers != nil {
-				for key, val := range tc.headers {
-					req.Header.Set(key, val)
-				}
-			}
-
-			r := mux.NewRouter()
-			r.HandleFunc("/cluster/node/{node}/status/route/{route}", tc.handler)
-
-			setRequestVars(r, req)
-
-			// We create assert ResponseRecorder (which satisfies http.ResponseWriter) to record the response.
-			res := httptest.NewRecorder()
-
-			// Our handlers satisfy http.Handler, so we can call their ServeHTTP method
-			// directly and pass in our Request and ResponseRecorder.
-			r.ServeHTTP(res, req)
-
-			// Check the status code is what we expect.
-			assert.Equal(t, tc.expectedCode, res.Code, "status code not equal")
-
-			body, err := ioutil.ReadAll(res.Body)
-			assert.NoError(t, err)
-			assert.Equal(t, tc.expectedBody, string(body), "incorrect status code")
-
-			if tc.expectedCode == http.StatusOK {
-				p, err := envs.Get().GetStorage().Route().Get(ctx, r1.Meta.Namespace, r1.Meta.Name)
-				assert.NoError(t, err)
-
-				assert.Equal(t, uo.State, p.Status.State, "pods state not equal")
-				assert.Equal(t, uo.Message, p.Status.Message, "pods message not equal")
+				assert.Equal(t, uo.Resources.Capacity.Pods, got.Status.Capacity.Pods, "pods not equal")
 			}
 
 		})
@@ -1094,14 +712,10 @@ func setRequestVars(r *mux.Router, req *http.Request) {
 func getNodeAsset(name, desc string, online bool) types.Node {
 	var n = types.Node{
 		Meta: types.NodeMeta{
-			Region:   "local",
 			Token:    "token",
-			Provider: "local",
-		},
-		Info: types.NodeInfo{
-			Hostname: name,
 		},
 		Status: types.NodeStatus{
+			Online: true,
 			Capacity: types.NodeResources{
 				Containers: 2,
 				Pods:       2,
@@ -1121,22 +735,11 @@ func getNodeAsset(name, desc string, online bool) types.Node {
 			Pods:    make(map[string]types.PodSpec),
 			Volumes: make(map[string]types.VolumeSpec),
 		},
-		Roles: types.NodeRole{},
-		Network: types.NetworkSpec{
-			Type:  types.NetworkTypeVxLAN,
-			Range: "10.0.0.1",
-			IFace: types.NetworkInterface{
-				Index: 1,
-				Name:  "lb",
-				Addr:  "10.0.0.1",
-				HAddr: "dc:a9:04:83:0d:eb",
-			},
-		},
-		Online: online,
 	}
 
 	n.Meta.Name = name
 	n.Meta.Description = desc
+	n.Meta.Hostname = name
 
 	return n
 }
@@ -1154,6 +757,11 @@ func getPodAsset(namespace, service, deployment, name, desc string) types.Pod {
 	return p
 }
 
+func getPodManifest() *types.PodManifest {
+	p := types.PodManifest{}
+	return &p
+}
+
 func getVolumeAsset(namespace, name, desc string) types.Volume {
 
 	var n = types.Volume{}
@@ -1165,13 +773,7 @@ func getVolumeAsset(namespace, name, desc string) types.Volume {
 	return n
 }
 
-func getRouteAsset(namespace, name, desc string) types.Route {
-
-	var n = types.Route{}
-
-	n.Meta.Name = name
-	n.Meta.Namespace = namespace
-	n.Meta.Description = desc
-
-	return n
+func getVolumeManifest() *types.VolumeManifest {
+	v := types.VolumeManifest{}
+	return &v
 }

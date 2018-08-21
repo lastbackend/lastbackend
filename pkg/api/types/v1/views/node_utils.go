@@ -30,8 +30,6 @@ func (nv *NodeView) New(obj *types.Node) *Node {
 	n := Node{}
 	n.Meta = nv.ToNodeMeta(obj.Meta)
 	n.Status = nv.ToNodeStatus(obj.Status)
-	n.Info = nv.ToNodeInfo(obj.Info)
-	n.Status.Online = obj.Online
 	return &n
 }
 
@@ -79,40 +77,40 @@ func (obj *Node) ToJson() ([]byte, error) {
 	return json.Marshal(obj)
 }
 
-func (obj *NodeSpec) Decode() *types.NodeSpec {
+func (obj *NodeManifest) Decode() *types.NodeManifest {
 
-	spec := types.NodeSpec{
-		Network:   make(map[string]types.NetworkSpec, 0),
-		Pods:      make(map[string]types.PodSpec, 0),
-		Volumes:   make(map[string]types.VolumeSpec, 0),
-		Endpoints: make(map[string]types.EndpointSpec, 0),
+	manifest := types.NodeManifest{
+		Network:   make(map[string]*types.SubnetManifest, 0),
+		Pods:      make(map[string]*types.PodManifest, 0),
+		Volumes:   make(map[string]*types.VolumeManifest, 0),
+		Endpoints: make(map[string]*types.EndpointManifest, 0),
 	}
 
 	for i, s := range obj.Network {
-		spec.Network[i] = s
+		manifest.Network[i] = s
 	}
 
 	for i, s := range obj.Pods {
-		spec.Pods[i] = s
+		manifest.Pods[i] = s
 	}
 
 	for i, s := range obj.Volumes {
-		spec.Volumes[i] = s
+		manifest.Volumes[i] = s
 	}
 
 	for i, s := range obj.Endpoints {
-		spec.Endpoints[i] = s
+		manifest.Endpoints[i] = s
 	}
 
-	return &spec
+	return &manifest
 }
 
-func (nv *NodeView) NewList(obj map[string]*types.Node) *NodeList {
+func (nv *NodeView) NewList(obj *types.NodeList) *NodeList {
 	if obj == nil {
 		return nil
 	}
 	nodes := make(NodeList, 0)
-	for _, v := range obj {
+	for _, v := range obj.Items {
 		nn := nv.New(v)
 		nodes[nn.Meta.Name] = nn
 	}
@@ -120,23 +118,28 @@ func (nv *NodeView) NewList(obj map[string]*types.Node) *NodeList {
 	return &nodes
 }
 
-func (nv *NodeView) NewSpec(obj *types.NodeSpec) *NodeSpec {
+func (nv *NodeView) NewManifest(obj *types.NodeManifest) *NodeManifest {
 
-	spec := NodeSpec{}
+	manifest := NodeManifest{
+		Network: make(map[string]*types.SubnetManifest, 0),
+		Pods: make(map[string]*types.PodManifest, 0),
+		Volumes: make(map[string]*types.VolumeManifest, 0),
+		Endpoints: make(map[string]*types.EndpointManifest, 0),
+	}
 
 	if obj == nil {
 		return nil
 	}
 
-	spec.Network = obj.Network
-	spec.Pods = obj.Pods
-	spec.Volumes = obj.Volumes
-	spec.Endpoints = obj.Endpoints
+	manifest.Network = obj.Network
+	manifest.Pods = obj.Pods
+	manifest.Volumes = obj.Volumes
+	manifest.Endpoints = obj.Endpoints
 
-	return &spec
+	return &manifest
 }
 
-func (obj *NodeSpec) ToJson() ([]byte, error) {
+func (obj *NodeManifest) ToJson() ([]byte, error) {
 	return json.Marshal(obj)
 }
 

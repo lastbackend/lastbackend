@@ -20,21 +20,29 @@ package types
 
 import (
 	"fmt"
-	"sync"
-	"time"
+		"time"
 )
 
 // swagger:ignore
 // swagger:model types_pod
 type Pod struct {
-	// Lock map
-	lock sync.RWMutex
+	Runtime
 	// Pod Meta
 	Meta PodMeta `json:"meta" yaml:"meta"`
 	// Pod Spec
 	Spec PodSpec `json:"spec" yaml:"spec"`
 	// Containers status info
 	Status PodStatus `json:"status" yaml:"status"`
+}
+
+type PodList struct {
+	Runtime
+	Items []*Pod
+}
+
+type PodMap struct {
+	Runtime
+	Items map[string]*Pod
 }
 
 // swagger:ignore
@@ -70,7 +78,11 @@ type PodSpec struct {
 // swagger:model types_pod_status
 type PodStatus struct {
 	// Pod state
-	Stage string `json:"stage" yaml:"stage"`
+	State string `json:"state" yaml:"state"`
+	// Pod status
+	Status string `json:"status" yaml:"status"`
+	// Pod state
+	Running bool `json:"running" yaml:"state"`
 	// Pod state message
 	Message string `json:"message" yaml:"message"`
 	// Pod steps
@@ -174,48 +186,62 @@ type PodContainerStateExit struct {
 }
 
 func (s *PodStatus) SetInitialized() {
-	s.Stage = StateInitialized
+	s.State = StateProvision
+	s.Status = StatusInitialized
+	s.Running = false
 	s.Message = EmptyString
 }
 
 func (s *PodStatus) SetDestroy() {
-	s.Stage = StateDestroy
+	s.State = StateDestroy
 }
 
 func (s *PodStatus) SetDestroyed() {
-	s.Stage = StateDestroyed
+	s.State = StateDestroyed
+	s.Running = false
 }
 
 func (s *PodStatus) SetPull() {
-	s.Stage = StatePull
+	s.State = StateProvision
+	s.Status = StatusPull
+	s.Running = false
 }
 
 func (s *PodStatus) SetProvision() {
-	s.Stage = StateProvision
+	s.State = StateProvision
+	s.Running = false
 }
 
 func (s *PodStatus) SetCreated() {
-	s.Stage = StateCreated
+	s.State = StateProvision
+	s.Status = StateCreated
+	s.Running = false
 	s.Message = EmptyString
 }
 
 func (s *PodStatus) SetStarting() {
-	s.Stage = StateStarting
+	s.State = StateProvision
+	s.Status = StatusStarting
+	s.Running = false
 	s.Message = EmptyString
 }
 
 func (s *PodStatus) SetRunning() {
-	s.Stage = StateRunning
+	s.State = StateReady
+	s.Status = StatusRunning
+	s.Running = true
 	s.Message = EmptyString
 }
 
 func (s *PodStatus) SetStopped() {
-	s.Stage = StateStopped
+	s.State = StateReady
+	s.Status = StatusStopped
+	s.Running = false
 	s.Message = EmptyString
 }
 
 func (s *PodStatus) SetError(err error) {
-	s.Stage = StateError
+	s.State = StateError
 	s.Message = err.Error()
 }
 
@@ -223,6 +249,18 @@ func NewPod() *Pod {
 	pod := new(Pod)
 	pod.Status = *NewPodStatus()
 	return pod
+}
+
+func NewPodList () *PodList {
+	dm := new(PodList)
+	dm.Items = make([]*Pod, 0)
+	return dm
+}
+
+func NewPodMap () *PodMap {
+	dm := new(PodMap)
+	dm.Items = make(map[string]*Pod)
+	return dm
 }
 
 func NewPodStatus() *PodStatus {
@@ -235,7 +273,19 @@ func NewPodStatus() *PodStatus {
 
 func (p *Pod) SelfLink() string {
 	if p.Meta.SelfLink == "" {
-		p.Meta.SelfLink = fmt.Sprintf("%s:%s:%s:%s", p.Meta.Namespace, p.Meta.Service, p.Meta.Deployment, p.Meta.Name)
+		p.Meta.SelfLink = p.CreateSelfLink(p.Meta.Namespace, p.Meta.Service, p.Meta.Deployment, p.Meta.Name)
 	}
 	return p.Meta.SelfLink
+}
+
+func (p *Pod) ServiceLink() string {
+	return new(Service).CreateSelfLink(p.Meta.Namespace, p.Meta.Service)
+}
+
+func (p *Pod) DeploymentLink() string {
+	return new(Deployment).CreateSelfLink(p.Meta.Namespace, p.Meta.Service, p.Meta.Deployment)
+}
+
+func (p *Pod) CreateSelfLink(namespace, service, deployment, name string) string {
+	return fmt.Sprintf("%s:%s:%s:%s", namespace, service, deployment, name)
 }
