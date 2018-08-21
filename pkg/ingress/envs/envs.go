@@ -19,9 +19,9 @@
 package envs
 
 import (
-	"github.com/lastbackend/lastbackend/pkg/api/client/interfaces"
 	"github.com/lastbackend/lastbackend/pkg/ingress/events/exporter"
 	"github.com/lastbackend/lastbackend/pkg/ingress/state"
+	"github.com/lastbackend/lastbackend/pkg/api/client/types"
 )
 
 var e Env
@@ -32,7 +32,7 @@ func Get() *Env {
 
 type Env struct {
 	state    *state.State
-	client   interfaces.Ingress
+	client   types.IngressClientV1
 	exporter *exporter.Exporter
 }
 
@@ -44,11 +44,11 @@ func (c *Env) GetState() *state.State {
 	return c.state
 }
 
-func (c *Env) SetClient(cl interfaces.Ingress) {
+func (c *Env) SetClient(cl types.IngressClientV1) {
 	c.client = cl
 }
 
-func (c *Env) GetClient() interfaces.Ingress {
+func (c *Env) GetClient() types.IngressClientV1 {
 	return c.client
 }
 
