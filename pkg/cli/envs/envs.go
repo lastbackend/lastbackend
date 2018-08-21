@@ -42,16 +42,16 @@ func Mock() *ctx {
 
 type ctx struct {
 	config *config.Config
+	client client.IClient
 	token  *string
 	mock   bool
-	client *client.Client
 }
 
-func (c *ctx) SetClient(client *client.Client) {
+func (c *ctx) SetClient(client client.IClient) {
 	c.client = client
 }
 
-func (c *ctx) GetClient() *client.Client {
+func (c *ctx) GetClient() client.IClient {
 	return c.client
 }
 
