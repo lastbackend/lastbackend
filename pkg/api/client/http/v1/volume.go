@@ -20,19 +20,18 @@ package v1
 
 import (
 	"context"
-
 	"fmt"
-	"github.com/lastbackend/lastbackend/pkg/api/client/http"
-	"github.com/lastbackend/lastbackend/pkg/api/client/interfaces"
+	"strconv"
+
+	"github.com/lastbackend/lastbackend/pkg/distribution/errors"
+	"github.com/lastbackend/lastbackend/pkg/util/http/request"
 	rv1 "github.com/lastbackend/lastbackend/pkg/api/types/v1/request"
 	vv1 "github.com/lastbackend/lastbackend/pkg/api/types/v1/views"
-	"github.com/lastbackend/lastbackend/pkg/distribution/errors"
-	"strconv"
 )
 
 type VolumeClient struct {
-	interfaces.Volume
-	client    http.Interface
+	client *request.RESTClient
+
 	namespace string
 	name      string
 }
@@ -153,6 +152,6 @@ func (vc *VolumeClient) Remove(ctx context.Context, opts *rv1.VolumeRemoveOption
 	return nil
 }
 
-func newVolumeClient(client http.Interface, namespace, name string) *VolumeClient {
+func newVolumeClient(client *request.RESTClient, namespace, name string) *VolumeClient {
 	return &VolumeClient{client: client, namespace: namespace, name: name}
 }

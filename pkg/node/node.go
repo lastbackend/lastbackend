@@ -28,10 +28,7 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/node/runtime/node"
 	"github.com/lastbackend/lastbackend/pkg/node/state"
 
-	"fmt"
-
 	"github.com/lastbackend/lastbackend/pkg/api/client"
-	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 	"github.com/lastbackend/lastbackend/pkg/log"
 	"github.com/lastbackend/lastbackend/pkg/node/envs"
 	"github.com/lastbackend/lastbackend/pkg/node/events"
@@ -82,22 +79,22 @@ func Daemon() {
 	state.Node().Info = node.GetInfo()
 	state.Node().Status = node.GetStatus()
 
-	host := viper.GetString("api.uri")
-	port := viper.GetInt("api.port")
-	tls := viper.GetBool("api.tls")
+	cfg := client.NewConfig()
 
-	schema := "http"
-	if tls {
-		schema = "https"
+	cfg.BearerToken = viper.GetString("token")
+
+	if viper.IsSet("api.tls") && !viper.GetBool("api.tls.insecure") {
+		cfg.TLS = client.NewTLSConfig()
+		cfg.TLS.CertFile = viper.GetString("api.tls.cert")
+		cfg.TLS.KeyFile = viper.GetString("api.tls.key")
+		cfg.TLS.CAFile = viper.GetString("api.tls.ca")
 	}
 
-	endpoint := fmt.Sprintf("%s://%s:%d", schema, host, port)
-	types.SecretAccessToken = viper.GetString("token")
-
-	rest, err := client.NewHTTP(endpoint, &client.Config{
-		BearerToken: types.SecretAccessToken,
-		Timeout:     5,
-	})
+	endpoint := viper.GetString("api.uri")
+	rest, err := client.New(client.ClientHTTP, endpoint, cfg)
+	if err != nil {
+		log.Fatalf("Init client err: %s", err)
+	}
 
 	if err != nil {
 		log.Errorf("node:initialize client err: %s", err.Error())
@@ -121,8 +118,13 @@ func Daemon() {
 	r.Loop()
 
 	go func() {
+		opts := new(http.HttpOpts)
+		opts.Insecure = viper.GetBool("node.tls.insecure")
+		opts.CertFile = viper.GetString("node.tls.server_cert")
+		opts.KeyFile = viper.GetString("node.tls.server_key")
+		opts.CaFile = viper.GetString("node.tls.ca")
 
-		if err := http.Listen(viper.GetString("node.host"), viper.GetInt("node.port")); err != nil {
+		if err := http.Listen(viper.GetString("node.host"), viper.GetInt("node.port"), opts); err != nil {
 			log.Fatalf("Http server start error: %v", err)
 		}
 	}()

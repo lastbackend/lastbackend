@@ -19,9 +19,25 @@
 package http
 
 import (
+	"crypto/tls"
+	"crypto/x509"
 	"fmt"
+	"io/ioutil"
 	"net/http"
-	//	"time"
+
+	"github.com/lastbackend/lastbackend/pkg/util/http/cors"
+)
+
+const (
+	MethodGet     = http.MethodGet
+	MethodHead    = http.MethodHead
+	MethodPost    = http.MethodPost
+	MethodPut     = http.MethodPut
+	MethodPatch   = http.MethodPatch
+	MethodDelete  = http.MethodDelete
+	MethodConnect = http.MethodConnect
+	MethodOptions = http.MethodOptions
+	MethodTrace   = http.MethodTrace
 )
 
 type NotFoundHandler struct {
@@ -47,7 +63,7 @@ func (MethodNotAllowedHandler) ServeHTTP(w http.ResponseWriter, req *http.Reques
 func Handle(h http.HandlerFunc, middleware ...Middleware) http.HandlerFunc {
 	headers := func(h http.HandlerFunc) http.HandlerFunc {
 		return func(w http.ResponseWriter, r *http.Request) {
-			Headers(w, r)
+			cors.Headers(w, r)
 			h.ServeHTTP(w, r)
 		}
 	}
@@ -62,4 +78,42 @@ func Handle(h http.HandlerFunc, middleware ...Middleware) http.HandlerFunc {
 
 func Listen(host string, port int, router http.Handler) error {
 	return http.ListenAndServe(fmt.Sprintf("%s:%d", host, port), router)
+}
+
+func ListenWithTLS(host string, port int, caFile, certFile, keyFile string, router http.Handler) error {
+
+	server := &http.Server{
+		Addr:    fmt.Sprintf("%s:%d", host, port),
+		Handler: router,
+	}
+
+	server.TLSConfig = configTLS(caFile)
+
+	return server.ListenAndServeTLS(certFile, keyFile)
+}
+
+func configTLS(caFile string) *tls.Config {
+
+	caCert, err := ioutil.ReadFile(caFile)
+	if err != nil {
+		return nil
+	}
+
+	caCertPool := x509.NewCertPool()
+	ok := caCertPool.AppendCertsFromPEM(caCert)
+	if !ok {
+		panic("failed to parse root certificate")
+	}
+
+	TLSConfig := &tls.Config{
+		// Reject any TLS certificate that cannot be validated
+		ClientAuth: tls.RequireAndVerifyClientCert,
+		// Ensure that we only use our "CA" to validate certificates
+		ClientCAs: caCertPool,
+		// Force it server side
+		PreferServerCipherSuites: true,
+		// TLS 1.2 because we can
+		MinVersion: tls.VersionTLS12,
+	}
+	return TLSConfig
 }

@@ -16,21 +16,20 @@
 // from Last.Backend LLC.
 //
 
-package http
+package request
 
 import (
 	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/lastbackend/lastbackend/pkg/api/client/watcher"
 	"golang.org/x/net/http2"
 	"io"
 	"io/ioutil"
 	"net/http"
 	"net/url"
 	"path"
-	"time"
+	"strings"
 )
 
 type Request struct {
@@ -54,7 +53,7 @@ type HTTPClient interface {
 	Do(req *http.Request) (*http.Response, error)
 }
 
-func NewRequest(client HTTPClient, method string, baseURL *url.URL) *Request {
+func New(client HTTPClient, method string, baseURL *url.URL) *Request {
 	pathPrefix := "/"
 
 	if baseURL != nil {
@@ -93,9 +92,7 @@ func (r *Request) Do() Result {
 
 	client := r.client
 	if client == nil {
-		client = &http.Client{
-			Timeout: time.Second * 10,
-		}
+		panic("client not initialized")
 	}
 
 	u := r.URL().String()
@@ -124,9 +121,7 @@ func (r *Request) JSON(success interface{}, failure interface{}) error {
 
 	client := r.client
 	if client == nil {
-		client = &http.Client{
-			Timeout: time.Second * 10,
-		}
+		panic("client not initialized")
 	}
 
 	u := r.URL().String()
@@ -143,6 +138,9 @@ func (r *Request) JSON(success interface{}, failure interface{}) error {
 
 	resp, err := client.Do(req)
 	if err != nil {
+		if io.EOF == err || strings.Contains(err.Error(), "EOF") {
+			return nil
+		}
 		return err
 	}
 
@@ -229,31 +227,6 @@ func (r *Request) Stream() (io.ReadCloser, error) {
 	}
 }
 
-func (r *Request) Watch() (watcher.IWatcher, error) {
-
-	u := r.URL().String()
-	req, err := http.NewRequest(r.verb, u, r.body)
-	if err != nil {
-		return nil, err
-	}
-	if r.ctx != nil {
-		req = req.WithContext(r.ctx)
-	}
-
-	req.Header = r.headers
-	client := r.client
-	if client == nil {
-		client = http.DefaultClient
-	}
-
-	res, err := client.Do(req)
-	if err != nil {
-		return nil, err
-	}
-
-	return watcher.NewStreamWatcher(res.Body), nil
-}
-
 func (r *Request) Param(name, value string) *Request {
 	if r.params == nil {
 		r.params = make(url.Values)
@@ -267,7 +240,6 @@ func (r *Request) transformResponse(resp *http.Response, req *http.Request) Resu
 
 	if resp.Body != nil {
 		data, err := ioutil.ReadAll(resp.Body)
-
 		switch err.(type) {
 		case nil:
 			body = data

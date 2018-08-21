@@ -16,19 +16,15 @@
 // from Last.Backend LLC.
 //
 
-package client
+package cors
 
-import "time"
+import "net/http"
 
-type Config struct {
-	// Server requires Bearer authentication.
-	BearerToken string
-	// The maximum length of time to wait before giving up on a server request. A value of zero means no timeout.
-	Timeout time.Duration
-	// Disable security check
-	Insecure bool
-}
-
-func (c *Config) SetDefault() {
-	c.Timeout = 10
+func Headers(w http.ResponseWriter, r *http.Request) {
+	origin := r.Header.Get("Origin")
+	w.Header().Add("Access-Control-Allow-Origin", origin)
+	w.Header().Add("Access-Control-Allow-Credentials", "true")
+	w.Header().Add("Access-Control-Allow-Methods", "OPTIONS,GET,POST,PUT,DELETE")
+	w.Header().Add("Access-Control-Allow-Headers", "X-CSRF-Auth, Authorization, Content-Type, x-lastbackend, Origin, X-Requested-With, Content-HostPath, Accept")
+	w.Header().Add("Content-Type", "application/json")
 }

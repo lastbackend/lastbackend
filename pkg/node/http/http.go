@@ -24,12 +24,24 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/node/http/node"
 	"github.com/lastbackend/lastbackend/pkg/node/http/pod"
 	"github.com/lastbackend/lastbackend/pkg/util/http"
+	"github.com/lastbackend/lastbackend/pkg/util/http/cors"
 )
 
-const logLevel = 2
+const (
+	logLevel  = 2
+	logPrefix = "node:http"
+)
 
 // Extends routes variable
 var Routes = make([]http.Route, 0)
+
+type HttpOpts struct {
+	Insecure bool
+
+	CertFile string
+	KeyFile  string
+	CaFile   string
+}
 
 func AddRoutes(r ...[]http.Route) {
 	for i := range r {
@@ -42,17 +54,33 @@ func init() {
 	AddRoutes(pod.Routes)
 }
 
-func Listen(host string, port int) error {
+func Listen(host string, port int, opts *HttpOpts) error {
 
-	log.V(logLevel).Debugf("HTTP: listen HTTP server on %s:%d", host, port)
+	if opts == nil {
+		opts = new(HttpOpts)
+	}
+
+	log.V(logLevel).Debugf("%s:> listen HTTP server on %s:%d", logPrefix, host, port)
 
 	r := mux.NewRouter()
-	r.Methods("OPTIONS").HandlerFunc(http.Headers)
+	r.Methods("OPTIONS").HandlerFunc(cors.Headers)
+
+	var notFound http.MethodNotAllowedHandler
+	r.NotFoundHandler = notFound
+
+	var notAllowed http.MethodNotAllowedHandler
+	r.MethodNotAllowedHandler = notAllowed
 
 	for _, route := range Routes {
-		log.V(logLevel).Debugf("HTTP: init route: %s", route.Path)
+		log.V(logLevel).Debugf("%s:> init route: %s", logPrefix, route.Path)
 		r.Handle(route.Path, http.Handle(route.Handler, route.Middleware...)).Methods(route.Method)
 	}
 
-	return http.Listen(host, port, r)
+	if opts.Insecure {
+		log.V(logLevel).Debugf("%s:> run insecure http server", logPrefix)
+		return http.Listen(host, port, r)
+	}
+
+	log.V(logLevel).Debugf("%s:> run http server  with tls", logPrefix)
+	return http.ListenWithTLS(host, port, opts.CaFile, opts.CertFile, opts.KeyFile, r)
 }

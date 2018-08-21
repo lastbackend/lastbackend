@@ -19,13 +19,13 @@
 package envs
 
 import (
-	"github.com/lastbackend/lastbackend/pkg/api/client/interfaces"
 	"github.com/lastbackend/lastbackend/pkg/cache"
 	"github.com/lastbackend/lastbackend/pkg/node/events/exporter"
 	"github.com/lastbackend/lastbackend/pkg/node/runtime/cni"
 	"github.com/lastbackend/lastbackend/pkg/node/runtime/cpi"
 	"github.com/lastbackend/lastbackend/pkg/node/runtime/cri"
 	"github.com/lastbackend/lastbackend/pkg/node/state"
+	"github.com/lastbackend/lastbackend/pkg/api/client/types"
 )
 
 var e Env
@@ -40,7 +40,7 @@ type Env struct {
 	cpi      cpi.CPI
 	cache    *cache.Cache
 	state    *state.State
-	client   interfaces.Node
+	client   types.NodeClientV1
 	exporter *exporter.Exporter
 }
 
@@ -84,11 +84,11 @@ func (c *Env) GetState() *state.State {
 	return c.state
 }
 
-func (c *Env) SetClient(cl interfaces.Node) {
+func (c *Env) SetClient(cl types.NodeClientV1) {
 	c.client = cl
 }
 
-func (c *Env) GetClient() interfaces.Node {
+func (c *Env) GetClient() types.NodeClientV1 {
 	return c.client
 }
 

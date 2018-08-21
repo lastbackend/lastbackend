@@ -20,23 +20,22 @@ package v1
 
 import (
 	"context"
-
 	"fmt"
-	"github.com/lastbackend/lastbackend/pkg/api/client/http"
-	"github.com/lastbackend/lastbackend/pkg/api/client/interfaces"
+	"strconv"
+
+	"github.com/lastbackend/lastbackend/pkg/distribution/errors"
+	"github.com/lastbackend/lastbackend/pkg/util/http/request"
 	rv1 "github.com/lastbackend/lastbackend/pkg/api/types/v1/request"
 	vv1 "github.com/lastbackend/lastbackend/pkg/api/types/v1/views"
-	"github.com/lastbackend/lastbackend/pkg/distribution/errors"
-	"strconv"
 )
 
 type NodeClient struct {
-	interfaces.Node
-	client   http.Interface
+	client *request.RESTClient
+
 	hostname string
 }
 
-func (nc *NodeClient) List(ctx context.Context) (*vv1.NodeList, error) {
+func (nc NodeClient) List(ctx context.Context) (*vv1.NodeList, error) {
 
 	var s *vv1.NodeList
 	var e *errors.Http
@@ -55,7 +54,28 @@ func (nc *NodeClient) List(ctx context.Context) (*vv1.NodeList, error) {
 	return s, nil
 }
 
-func (nc *NodeClient) Get(ctx context.Context) (*vv1.Node, error) {
+func (nc NodeClient) Connect(ctx context.Context, opts *rv1.NodeConnectOptions) error {
+
+	body := opts.ToJson()
+
+	var e *errors.Http
+
+	err := nc.client.Put(fmt.Sprintf("/cluster/node/%s", nc.hostname)).
+		AddHeader("Content-Type", "application/json").
+		Body([]byte(body)).
+		JSON(nil, &e)
+
+	if err != nil {
+		return err
+	}
+	if e != nil {
+		return errors.New(e.Message)
+	}
+
+	return nil
+}
+
+func (nc NodeClient) Get(ctx context.Context) (*vv1.Node, error) {
 
 	var s *vv1.Node
 	var e *errors.Http
@@ -74,7 +94,7 @@ func (nc *NodeClient) Get(ctx context.Context) (*vv1.Node, error) {
 	return s, nil
 }
 
-func (nc *NodeClient) GetSpec(ctx context.Context) (*vv1.NodeManifest, error) {
+func (nc NodeClient) GetSpec(ctx context.Context) (*vv1.NodeManifest, error) {
 
 	var s *vv1.NodeManifest
 	var e *errors.Http
@@ -93,7 +113,7 @@ func (nc *NodeClient) GetSpec(ctx context.Context) (*vv1.NodeManifest, error) {
 	return s, nil
 }
 
-func (nc *NodeClient) SetMeta(ctx context.Context, opts *rv1.NodeMetaOptions) (*vv1.Node, error) {
+func (nc NodeClient) SetMeta(ctx context.Context, opts *rv1.NodeMetaOptions) (*vv1.Node, error) {
 
 	body := opts.ToJson()
 
@@ -115,28 +135,7 @@ func (nc *NodeClient) SetMeta(ctx context.Context, opts *rv1.NodeMetaOptions) (*
 	return s, nil
 }
 
-func (nc *NodeClient) Connect(ctx context.Context, opts *rv1.NodeConnectOptions) error {
-
-	body := opts.ToJson()
-
-	var e *errors.Http
-
-	err := nc.client.Put(fmt.Sprintf("/cluster/node/%s", nc.hostname)).
-		AddHeader("Content-Type", "application/json").
-		Body([]byte(body)).
-		JSON(nil, &e)
-
-	if err != nil {
-		return err
-	}
-	if e != nil {
-		return errors.New(e.Message)
-	}
-
-	return nil
-}
-
-func (nc *NodeClient) SetStatus(ctx context.Context, opts *rv1.NodeStatusOptions) error {
+func (nc NodeClient) SetStatus(ctx context.Context, opts *rv1.NodeStatusOptions) error {
 
 	body := opts.ToJson()
 
@@ -157,7 +156,7 @@ func (nc *NodeClient) SetStatus(ctx context.Context, opts *rv1.NodeStatusOptions
 	return nil
 }
 
-func (nc *NodeClient) SetPodStatus(ctx context.Context, pod string, opts *rv1.NodePodStatusOptions) error {
+func (nc NodeClient) SetPodStatus(ctx context.Context, pod string, opts *rv1.NodePodStatusOptions) error {
 
 	body := opts.ToJson()
 
@@ -178,7 +177,7 @@ func (nc *NodeClient) SetPodStatus(ctx context.Context, pod string, opts *rv1.No
 	return nil
 }
 
-func (nc *NodeClient) SetVolumeStatus(ctx context.Context, volume string, opts *rv1.NodeVolumeStatusOptions) error {
+func (nc NodeClient) SetVolumeStatus(ctx context.Context, volume string, opts *rv1.NodeVolumeStatusOptions) error {
 
 	body := opts.ToJson()
 
@@ -199,7 +198,7 @@ func (nc *NodeClient) SetVolumeStatus(ctx context.Context, volume string, opts *
 	return nil
 }
 
-func (nc *NodeClient) SetRouteStatus(ctx context.Context, route string, opts *rv1.NodeRouteStatusOptions) error {
+func (nc NodeClient) SetRouteStatus(ctx context.Context, route string, opts *rv1.NodeRouteStatusOptions) error {
 
 	body := opts.ToJson()
 
@@ -220,7 +219,7 @@ func (nc *NodeClient) SetRouteStatus(ctx context.Context, route string, opts *rv
 	return nil
 }
 
-func (nc *NodeClient) Remove(ctx context.Context, opts *rv1.NodeRemoveOptions) error {
+func (nc NodeClient) Remove(ctx context.Context, opts *rv1.NodeRemoveOptions) error {
 
 	req := nc.client.Delete(fmt.Sprintf("/cluster/node/%s", nc.hostname)).
 		AddHeader("Content-Type", "application/json")
@@ -243,6 +242,6 @@ func (nc *NodeClient) Remove(ctx context.Context, opts *rv1.NodeRemoveOptions) e
 	return nil
 }
 
-func newNodeClient(req http.Interface, hostname string) *NodeClient {
+func newNodeClient(req *request.RESTClient, hostname string) *NodeClient {
 	return &NodeClient{client: req, hostname: hostname}
 }

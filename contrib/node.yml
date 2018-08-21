@@ -3,17 +3,25 @@
 # Runtime
 verbose: 3
 token: lstbknd
-ssl: true
 
 api:
-  host: 0.0.0.0
-  port: 2967
   uri: "api.lstbknd.net"
-  tls: false
+  tls:
+    insecure: false
+    ca: "/opt/cert/lastbackend/ca.pem"
+    cert: "/opt/cert/lastbackend/client.pem"
+    key: "/opt/cert/lastbackend/client-key.pem"
 
 node:
   host: 0.0.0.0
   port: 2969
+  tls:
+    insecure: false
+    ca: "/opt/cert/node/ca.pem"
+    server_cert: "/opt/cert/node/server.pem"
+    server_key: "/opt/cert/node/server-key.pem"
+    client_cert: "/opt/cert/node/client.pem"
+    client_key: "/opt/cert/node/client-key.pem"
   cri:
     type: "docker"
   cni:

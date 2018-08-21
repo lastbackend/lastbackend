@@ -20,34 +20,34 @@ package v1
 
 import (
 	"context"
-
 	"fmt"
-	"github.com/lastbackend/lastbackend/pkg/api/client/http"
-	"github.com/lastbackend/lastbackend/pkg/api/client/interfaces"
+	"strconv"
+
+	"github.com/lastbackend/lastbackend/pkg/util/http/request"
+	"github.com/lastbackend/lastbackend/pkg/distribution/errors"
 	rv1 "github.com/lastbackend/lastbackend/pkg/api/types/v1/request"
 	vv1 "github.com/lastbackend/lastbackend/pkg/api/types/v1/views"
-	"github.com/lastbackend/lastbackend/pkg/distribution/errors"
-	"strconv"
 )
 
-type SecretClient struct {
-	interfaces.Secret
-	client    http.Interface
+type TriggerClient struct {
+	client *request.RESTClient
+
 	namespace string
+	service   string
 	name      string
 }
 
-func (sc *SecretClient) Create(ctx context.Context, opts *rv1.SecretCreateOptions) (*vv1.Secret, error) {
+func (tc *TriggerClient) Create(ctx context.Context, opts *rv1.TriggerCreateOptions) (*vv1.Trigger, error) {
 
 	body, err := opts.ToJson()
 	if err != nil {
 		return nil, err
 	}
 
-	var s *vv1.Secret
+	var s *vv1.Trigger
 	var e *errors.Http
 
-	err = sc.client.Post(fmt.Sprintf("/namespace/%s/secret", sc.namespace)).
+	err = tc.client.Post(fmt.Sprintf("/namespace/%s/service/%s/trigger", tc.namespace, tc.service)).
 		AddHeader("Content-Type", "application/json").
 		Body(body).
 		JSON(&s, &e)
@@ -62,12 +62,12 @@ func (sc *SecretClient) Create(ctx context.Context, opts *rv1.SecretCreateOption
 	return s, nil
 }
 
-func (sc *SecretClient) List(ctx context.Context) (*vv1.SecretList, error) {
+func (tc *TriggerClient) List(ctx context.Context) (*vv1.TriggerList, error) {
 
-	var s *vv1.SecretList
+	var s *vv1.TriggerList
 	var e *errors.Http
 
-	err := sc.client.Get(fmt.Sprintf("/namespace/%s/secret", sc.namespace)).
+	err := tc.client.Get(fmt.Sprintf("/namespace/%s/service/%s/trigger", tc.namespace, tc.service)).
 		AddHeader("Content-Type", "application/json").
 		JSON(&s, &e)
 
@@ -79,24 +79,43 @@ func (sc *SecretClient) List(ctx context.Context) (*vv1.SecretList, error) {
 	}
 
 	if s == nil {
-		list := make(vv1.SecretList, 0)
+		list := make(vv1.TriggerList, 0)
 		s = &list
 	}
 
 	return s, nil
 }
 
-func (sc *SecretClient) Update(ctx context.Context, opts *rv1.SecretUpdateOptions) (*vv1.Secret, error) {
+func (tc *TriggerClient) Get(ctx context.Context) (*vv1.Trigger, error) {
+
+	var s *vv1.Trigger
+	var e *errors.Http
+
+	err := tc.client.Get(fmt.Sprintf("/namespace/%s/service/%s/trigger/%s", tc.namespace, tc.service, tc.name)).
+		AddHeader("Content-Type", "application/json").
+		JSON(&s, &e)
+
+	if err != nil {
+		return nil, err
+	}
+	if e != nil {
+		return nil, errors.New(e.Message)
+	}
+
+	return s, nil
+}
+
+func (tc *TriggerClient) Update(ctx context.Context, opts *rv1.TriggerUpdateOptions) (*vv1.Trigger, error) {
 
 	body, err := opts.ToJson()
 	if err != nil {
 		return nil, err
 	}
 
-	var s *vv1.Secret
+	var s *vv1.Trigger
 	var e *errors.Http
 
-	err = sc.client.Put(fmt.Sprintf("/namespace/%s/secret/%s", sc.namespace, sc.name)).
+	err = tc.client.Put(fmt.Sprintf("/namespace/%s/service/%s/trigger/%s", tc.namespace, tc.service, tc.name)).
 		AddHeader("Content-Type", "application/json").
 		Body(body).
 		JSON(&s, &e)
@@ -111,9 +130,9 @@ func (sc *SecretClient) Update(ctx context.Context, opts *rv1.SecretUpdateOption
 	return s, nil
 }
 
-func (sc *SecretClient) Remove(ctx context.Context, opts *rv1.SecretRemoveOptions) error {
+func (tc *TriggerClient) Remove(ctx context.Context, opts *rv1.TriggerRemoveOptions) error {
 
-	req := sc.client.Delete(fmt.Sprintf("/namespace/%s/secret/%s", sc.namespace, sc.name)).
+	req := tc.client.Delete(fmt.Sprintf("/namespace/%s/service/%s/trigger/%s", tc.namespace, tc.service, tc.name)).
 		AddHeader("Content-Type", "application/json")
 
 	if opts != nil {
@@ -134,6 +153,6 @@ func (sc *SecretClient) Remove(ctx context.Context, opts *rv1.SecretRemoveOption
 	return nil
 }
 
-func newSecretClient(client http.Interface, namespace, name string) *SecretClient {
-	return &SecretClient{client: client, namespace: namespace, name: name}
+func newTriggerClient(req *request.RESTClient, namespace, service, name string) *TriggerClient {
+	return &TriggerClient{client: req, namespace: namespace, service: service, name: name}
 }

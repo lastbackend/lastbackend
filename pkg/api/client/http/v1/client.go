@@ -19,31 +19,33 @@
 package v1
 
 import (
-	"github.com/lastbackend/lastbackend/pkg/api/client/http"
+	"github.com/lastbackend/lastbackend/pkg/util/http/request"
+	"github.com/lastbackend/lastbackend/pkg/api/client/types"
 )
 
 type Client struct {
-	client http.Interface
+	client *request.RESTClient
 }
 
-func (s *Client) Cluster() *ClusterClient {
-	if s == nil {
-		return nil
-	}
+func New(req *request.RESTClient) *Client {
+	return &Client{client: req}
+}
+
+func (s *Client) Cluster() types.ClusterClientV1 {
 	return newClusterClient(s.client)
 }
 
-func (s *Client) Namespace(name ...string) *NamespaceClient {
-	if s == nil {
-		return nil
+func (s *Client) Namespace(args ...string) types.NamespaceClientV1 {
+	name := ""
+	// Get any parameters passed to us out of the args variable into "real"
+	// variables we created for them.
+	for i := range args {
+		switch i {
+		case 0: // hostname
+			name = args[0]
+		default:
+			panic("Wrong parameter count: (is allowed from 0 to 1)")
+		}
 	}
-	n := ""
-	if len(name) > 0 {
-		n = name[0]
-	}
-	return newNamespaceClient(s.client, n)
-}
-
-func New(req http.Interface) *Client {
-	return &Client{client: req}
+	return newNamespaceClient(s.client, name)
 }

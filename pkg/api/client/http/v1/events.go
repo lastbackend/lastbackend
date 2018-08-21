@@ -16,9 +16,17 @@
 // from Last.Backend LLC.
 //
 
-package client
+package v1
 
-type ConfigOptions struct {
-	Endpoint string
-	TLS      bool
+import (
+	"github.com/lastbackend/lastbackend/pkg/util/http/request"
+)
+
+type EventsClient struct {
+	client *request.RESTClient
+}
+
+func newEventsClient() *EventsClient {
+	s := new(EventsClient)
+	return s
 }

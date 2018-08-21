@@ -3,7 +3,6 @@
 # Runtime
 verbose: 3
 token: lstbknd
-ssl: true
 
 # Etcd database
 etcd:
@@ -20,7 +19,11 @@ api:
   host: 0.0.0.0
   port: 2967
   uri: "api.lstbknd.net"
-  tls: false
+  tls:
+    insecure: false
+    ca: "/opt/cert/lastbackend/ca.pem"
+    cert: "/opt/cert/lastbackend/server.pem"
+    key: "/opt/cert/lastbackend/server-key.pem"
 
 dns:
   host: 0.0.0.0

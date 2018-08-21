@@ -35,7 +35,7 @@ import (
 )
 
 const (
-	logNodeRuntimePrefix = "%s"
+	logNodeRuntimePrefix = "node:runtime"
 	logLevel = 3
 )
 

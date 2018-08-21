@@ -21,31 +21,44 @@ package v1
 import (
 	"context"
 
-	"github.com/lastbackend/lastbackend/pkg/api/client/http"
-	"github.com/lastbackend/lastbackend/pkg/api/client/interfaces"
-	vv1 "github.com/lastbackend/lastbackend/pkg/api/types/v1/views"
 	"github.com/lastbackend/lastbackend/pkg/distribution/errors"
+	"github.com/lastbackend/lastbackend/pkg/util/http/request"
+	vv1 "github.com/lastbackend/lastbackend/pkg/api/types/v1/views"
+	"github.com/lastbackend/lastbackend/pkg/api/client/types"
 )
 
 type ClusterClient struct {
-	interfaces.Cluster
-	client http.Interface
+	client *request.RESTClient
 }
 
-func (cc *ClusterClient) Node(hostname ...string) *NodeClient {
-	hst := ""
-	if len(hostname) > 0 {
-		hst = hostname[0]
+func (cc *ClusterClient) Node(args ...string) types.NodeClientV1 {
+	hostname := ""
+	// Get any parameters passed to us out of the args variable into "real"
+	// variables we created for them.
+	for i := range args {
+		switch i {
+		case 0: // hostname
+			hostname = args[0]
+		default:
+			panic("Wrong parameter count: (is allowed from 0 to 1)")
+		}
 	}
-	return newNodeClient(cc.client, hst)
+	return newNodeClient(cc.client, hostname)
 }
 
-func (cc *ClusterClient) Ingress(name ...string) *IngressClient {
-	hst := ""
-	if len(name) > 0 {
-		hst = name[0]
+func (cc *ClusterClient) Ingress(args ...string) types.IngressClientV1 {
+	name := ""
+	// Get any parameters passed to us out of the args variable into "real"
+	// variables we created for them.
+	for i := range args {
+		switch i {
+		case 0: // hostname
+			name = args[0]
+		default:
+			panic("Wrong parameter count: (is allowed from 0 to 1)")
+		}
 	}
-	return newIngressClient(cc.client, hst)
+	return newIngressClient(cc.client, name)
 }
 
 func (cc *ClusterClient) Get(ctx context.Context) (*vv1.Cluster, error) {
@@ -67,6 +80,6 @@ func (cc *ClusterClient) Get(ctx context.Context) (*vv1.Cluster, error) {
 	return s, nil
 }
 
-func newClusterClient(req http.Interface) *ClusterClient {
+func newClusterClient(req *request.RESTClient) *ClusterClient {
 	return &ClusterClient{client: req}
 }
