@@ -18,7 +18,6 @@ domain:
 api:
   host: 0.0.0.0
   port: 2967
-  uri: "api.lstbknd.net"
   tls:
     insecure: false
     ca: "/opt/cert/lastbackend/ca.pem"

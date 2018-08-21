@@ -8,7 +8,7 @@ ingress:
   name: local
 
 api:
-  uri: "api.lstbknd.net"
+  uri: "127.0.0.1:2967"
   tls:
     insecure: false
     ca: "/opt/cert/lastbackend/ca.pem"
