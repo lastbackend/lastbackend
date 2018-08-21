@@ -16,23 +16,29 @@
 // from Last.Backend LLC.
 //
 
-package interfaces
+package types
 
 import (
+	"io"
 	"context"
 
 	rv1 "github.com/lastbackend/lastbackend/pkg/api/types/v1/request"
 	vv1 "github.com/lastbackend/lastbackend/pkg/api/types/v1/views"
-	"io"
 )
 
-type Cluster interface {
-	Node(hostname string) Node
-
-	Get(ctx context.Context) (*vv1.ClusterList, error)
+type ClientV1 interface {
+	Cluster() ClusterClientV1
+	Namespace(args ...string) NamespaceClientV1
 }
 
-type Node interface {
+type ClusterClientV1 interface {
+	Node(args ...string) NodeClientV1
+	Ingress(args ...string) IngressClientV1
+
+	Get(ctx context.Context) (*vv1.Cluster, error)
+}
+
+type NodeClientV1 interface {
 	List(ctx context.Context) (*vv1.NodeList, error)
 	Connect(ctx context.Context, opts *rv1.NodeConnectOptions) error
 	Get(ctx context.Context) (*vv1.Node, error)
@@ -45,7 +51,7 @@ type Node interface {
 	Remove(ctx context.Context, opts *rv1.NodeRemoveOptions) error
 }
 
-type Ingress interface {
+type IngressClientV1 interface {
 	List(ctx context.Context) (*vv1.IngressList, error)
 	Connect(ctx context.Context, opts *rv1.IngressConnectOptions) error
 	Get(ctx context.Context) (*vv1.Ingress, error)
@@ -57,11 +63,11 @@ type Ingress interface {
 	Logs(ctx context.Context, pod, container string, opts *rv1.IngressLogsOptions) (io.ReadCloser, error)
 }
 
-type Namespace interface {
-	Service(name ...string) Service
-	Secret(name ...string) Secret
-	Volume(name ...string) Volume
-	Route(name ...string) Route
+type NamespaceClientV1 interface {
+	Service(args ...string) ServiceClientV1
+	Secret(args ...string) SecretClientV1
+	Volume(args ...string) VolumeClientV1
+	Route(args ...string) RouteClientV1
 
 	Create(ctx context.Context, opts *rv1.NamespaceCreateOptions) (*vv1.Namespace, error)
 	List(ctx context.Context) (*vv1.NamespaceList, error)
@@ -70,42 +76,43 @@ type Namespace interface {
 	Remove(ctx context.Context, opts *rv1.NamespaceRemoveOptions) error
 }
 
-type Service interface {
-	Deployment(name ...string) Deployment
-	Trigger(name ...string) Trigger
+type ServiceClientV1 interface {
+	Deployment(args ...string) DeploymentClientV1
+	Trigger(args ...string) TriggerClientV1
 
 	Create(ctx context.Context, opts *rv1.ServiceCreateOptions) (*vv1.Service, error)
 	List(ctx context.Context) (*vv1.ServiceList, error)
 	Get(ctx context.Context) (*vv1.Service, error)
-	Update(ctx context.Context, opts *rv1.ServiceUpdateOptions) (*vv1.NamespaceList, error)
+	Update(ctx context.Context, opts *rv1.ServiceUpdateOptions) (*vv1.Service, error)
 	Remove(ctx context.Context, opts *rv1.ServiceRemoveOptions) error
 	Logs(ctx context.Context, opts *rv1.ServiceLogsOptions) (io.ReadCloser, error)
 }
 
-type Deployment interface {
-	Pod(name ...string) Pod
+type DeploymentClientV1 interface {
+	Pod(args ...string) PodClientV1
+
 	List(ctx context.Context) (*vv1.DeploymentList, error)
 	Get(ctx context.Context) (*vv1.Deployment, error)
 	Update(ctx context.Context, opts *rv1.DeploymentUpdateOptions) (*vv1.Deployment, error)
 }
 
-type Pod interface {
+type PodClientV1 interface {
 	List(ctx context.Context) (*vv1.PodList, error)
 	Get(ctx context.Context) (*vv1.Pod, error)
 	Logs(ctx context.Context, opts *rv1.PodLogsOptions) (io.ReadCloser, error)
 }
 
-type Events interface {
+type EventsClientV1 interface {
 }
 
-type Secret interface {
+type SecretClientV1 interface {
 	Create(ctx context.Context, opts *rv1.SecretCreateOptions) (*vv1.Secret, error)
 	List(ctx context.Context) (*vv1.SecretList, error)
 	Update(ctx context.Context, opts *rv1.SecretUpdateOptions) (*vv1.Secret, error)
 	Remove(ctx context.Context, opts *rv1.SecretRemoveOptions) error
 }
 
-type Route interface {
+type RouteClientV1 interface {
 	Create(ctx context.Context, opts *rv1.RouteCreateOptions) (*vv1.Route, error)
 	List(ctx context.Context) (*vv1.RouteList, error)
 	Get(ctx context.Context) (*vv1.Route, error)
@@ -113,7 +120,7 @@ type Route interface {
 	Remove(ctx context.Context, opts *rv1.RouteRemoveOptions) error
 }
 
-type Trigger interface {
+type TriggerClientV1 interface {
 	Create(ctx context.Context, opts *rv1.TriggerCreateOptions) (*vv1.Trigger, error)
 	List(ctx context.Context) (*vv1.TriggerList, error)
 	Get(ctx context.Context) (*vv1.Trigger, error)
@@ -121,7 +128,7 @@ type Trigger interface {
 	Remove(ctx context.Context, opts *rv1.TriggerRemoveOptions) error
 }
 
-type Volume interface {
+type VolumeClientV1 interface {
 	Create(ctx context.Context, opts *rv1.VolumeCreateOptions) (*vv1.Volume, error)
 	List(ctx context.Context) (*vv1.VolumeList, error)
 	Get(ctx context.Context) (*vv1.Volume, error)

@@ -21,50 +21,79 @@ package v1
 import (
 	"context"
 	"fmt"
-	"github.com/lastbackend/lastbackend/pkg/api/client/http"
-	"github.com/lastbackend/lastbackend/pkg/api/client/interfaces"
+	"strconv"
+
+	"github.com/lastbackend/lastbackend/pkg/distribution/errors"
+	"github.com/lastbackend/lastbackend/pkg/util/http/request"
 	rv1 "github.com/lastbackend/lastbackend/pkg/api/types/v1/request"
 	vv1 "github.com/lastbackend/lastbackend/pkg/api/types/v1/views"
-	"github.com/lastbackend/lastbackend/pkg/distribution/errors"
-	"strconv"
+	"github.com/lastbackend/lastbackend/pkg/api/client/types"
 )
 
 type NamespaceClient struct {
-	interfaces.Namespace
-	client http.Interface
-	name   string
+	client *request.RESTClient
+
+	name string
 }
 
-func (nc *NamespaceClient) Service(name ...string) *ServiceClient {
-	n := ""
-	if len(name) > 0 {
-		n = name[0]
+func (nc *NamespaceClient) Service(args ...string) types.ServiceClientV1 {
+	name := ""
+	// Get any parameters passed to us out of the args variable into "real"
+	// variables we created for them.
+	for i := range args {
+		switch i {
+		case 0: // hostname
+			name = args[0]
+		default:
+			panic("Wrong parameter count: (is allowed from 0 to 1)")
+		}
 	}
-	return newServiceClient(nc.client, nc.name, n)
+	return newServiceClient(nc.client, nc.name, name)
 }
 
-func (nc *NamespaceClient) Secret(name ...string) *SecretClient {
-	n := ""
-	if len(name) > 0 {
-		n = name[0]
+func (nc *NamespaceClient) Secret(args ...string) types.SecretClientV1 {
+	name := ""
+	// Get any parameters passed to us out of the args variable into "real"
+	// variables we created for them.
+	for i := range args {
+		switch i {
+		case 0: // hostname
+			name = args[0]
+		default:
+			panic("Wrong parameter count: (is allowed from 0 to 1)")
+		}
 	}
-	return newSecretClient(nc.client, nc.name, n)
+	return newSecretClient(nc.client, nc.name, name)
 }
 
-func (nc *NamespaceClient) Route(name ...string) *RouteClient {
-	n := ""
-	if len(name) > 0 {
-		n = name[0]
+func (nc *NamespaceClient) Route(args ...string) types.RouteClientV1 {
+	name := ""
+	// Get any parameters passed to us out of the args variable into "real"
+	// variables we created for them.
+	for i := range args {
+		switch i {
+		case 0: // hostname
+			name = args[0]
+		default:
+			panic("Wrong parameter count: (is allowed from 0 to 1)")
+		}
 	}
-	return newRouteClient(nc.client, nc.name, n)
+	return newRouteClient(nc.client, nc.name, name)
 }
 
-func (nc *NamespaceClient) Volume(name ...string) *VolumeClient {
-	n := ""
-	if len(name) > 0 {
-		n = name[0]
+func (nc *NamespaceClient) Volume(args ...string) types.VolumeClientV1 {
+	name := ""
+	// Get any parameters passed to us out of the args variable into "real"
+	// variables we created for them.
+	for i := range args {
+		switch i {
+		case 0: // hostname
+			name = args[0]
+		default:
+			panic("Wrong parameter count: (is allowed from 0 to 1)")
+		}
 	}
-	return newVolumeClient(nc.client, nc.name, n)
+	return newVolumeClient(nc.client, nc.name, name)
 }
 
 func (nc *NamespaceClient) List(ctx context.Context) (*vv1.NamespaceList, error) {
@@ -183,6 +212,6 @@ func (nc *NamespaceClient) Remove(ctx context.Context, opts *rv1.NamespaceRemove
 	return nil
 }
 
-func newNamespaceClient(client http.Interface, name string) *NamespaceClient {
+func newNamespaceClient(client *request.RESTClient, name string) types.NamespaceClientV1 {
 	return &NamespaceClient{client: client, name: name}
 }

@@ -3,13 +3,14 @@
 # Runtime
 verbose: 3
 token:
-ssl: true
 
 ingress:
   name: local
 
 api:
-  host: 0.0.0.0
-  port: 2967
-  uri: "api.lstbknd.net"
-  tls: false
+  uri: "127.0.0.1:2967"
+  tls:
+    insecure: false
+    ca: "/opt/cert/lastbackend/ca.pem"
+    cert: "/opt/cert/lastbackend/client.pem"
+    key: "/opt/cert/lastbackend/client-key.pem"

@@ -20,28 +20,18 @@ package envs
 
 import (
 	"github.com/lastbackend/lastbackend/pkg/api/cache"
-	"github.com/lastbackend/lastbackend/pkg/api/client"
-	"github.com/lastbackend/lastbackend/pkg/storage"
+		"github.com/lastbackend/lastbackend/pkg/storage"
 )
 
 var e Env
 
 type Env struct {
 	storage storage.Storage
-	client  client.Client
 	cache   *cache.Cache
 }
 
 func Get() *Env {
 	return &e
-}
-
-func (c *Env) SetClient(client client.Client) {
-	c.client = client
-}
-
-func (c *Env) GetClient() client.Client {
-	return c.client
 }
 
 func (c *Env) SetStorage(storage storage.Storage) {

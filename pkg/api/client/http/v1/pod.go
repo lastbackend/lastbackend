@@ -20,20 +20,19 @@ package v1
 
 import (
 	"context"
-
 	"fmt"
-	"github.com/lastbackend/lastbackend/pkg/api/client/http"
-	"github.com/lastbackend/lastbackend/pkg/api/client/interfaces"
-	rv1 "github.com/lastbackend/lastbackend/pkg/api/types/v1/request"
-	vv1 "github.com/lastbackend/lastbackend/pkg/api/types/v1/views"
-	"github.com/lastbackend/lastbackend/pkg/distribution/errors"
 	"io"
 	"strconv"
+
+		"github.com/lastbackend/lastbackend/pkg/distribution/errors"
+	"github.com/lastbackend/lastbackend/pkg/util/http/request"
+	rv1 "github.com/lastbackend/lastbackend/pkg/api/types/v1/request"
+	vv1 "github.com/lastbackend/lastbackend/pkg/api/types/v1/views"
 )
 
 type PodClient struct {
-	interfaces.Pod
-	client     http.Interface
+	client *request.RESTClient
+
 	namespace  string
 	service    string
 	deployment string
@@ -100,6 +99,6 @@ func (pc *PodClient) Logs(ctx context.Context, opts *rv1.PodLogsOptions) (io.Rea
 	return res.Stream()
 }
 
-func newPodClient(client http.Interface, namespace, service, deployment, name string) *PodClient {
+func newPodClient(client *request.RESTClient, namespace, service, deployment, name string) *PodClient {
 	return &PodClient{client: client, namespace: namespace, service: service, deployment: deployment, name: name}
 }

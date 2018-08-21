@@ -27,6 +27,7 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/cli/envs"
 	"github.com/lastbackend/lastbackend/pkg/cli/storage"
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 )
 
 func init() {
@@ -65,9 +66,19 @@ var RootCmd = &cobra.Command{
 		}
 
 		host := cmd.Flag("host").Value.String()
-		insecure, _ := cmd.Flags().GetBool("insecure")
 
-		httpcli, err := client.NewHTTP(host, &client.Config{BearerToken: token, Insecure: insecure})
+		cfg := client.NewConfig()
+
+		cfg.BearerToken = token
+
+		if viper.IsSet("api.tls") && !viper.GetBool("api.tls.insecure") {
+			cfg.TLS = client.NewTLSConfig()
+			cfg.TLS.CertFile = viper.GetString("api.tls.cert")
+			cfg.TLS.KeyFile = viper.GetString("api.tls.key")
+			cfg.TLS.CAFile = viper.GetString("api.tls.ca")
+		}
+
+		httpcli, err := client.New(client.ClientHTTP, host, cfg)
 		if err != nil {
 			panic(err)
 		}

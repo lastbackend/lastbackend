@@ -19,40 +19,35 @@
 package client
 
 import (
+	"github.com/lastbackend/lastbackend/pkg/api/client/config"
 	"github.com/lastbackend/lastbackend/pkg/api/client/http"
-	"github.com/lastbackend/lastbackend/pkg/api/client/v1"
-	"net/url"
+	"github.com/lastbackend/lastbackend/pkg/api/client/types"
+	"github.com/lastbackend/lastbackend/pkg/log"
 )
 
-func NewHTTP(endpoint string, config *Config) (*Client, error) {
-	c := new(Client)
+const (
+	ClientHTTP = "http"
+	ClientGRPC = "grpc"
+)
 
-	u, err := url.Parse(endpoint)
-	if err != nil {
-		return nil, err
-	}
-
-	cfg := new(http.Config)
-	if config != nil {
-		cfg.BearerToken = config.BearerToken
-		cfg.Timeout = config.Timeout
-		cfg.Insecure = config.Insecure
-	} else {
-		cfg.SetDefault()
-	}
-
-	client, err := http.NewRESTClient(u, cfg)
-	if err != nil {
-		return nil, err
-	}
-	c.client = client
-	return c, nil
+type IClient interface {
+	V1() types.ClientV1
 }
 
-type Client struct {
-	client http.Interface
+func New(driver string, endpoint string, config *config.Config) (IClient, error) {
+	switch driver {
+	case ClientHTTP:
+		return http.New(endpoint, config)
+	default:
+		log.Panicf("driver %s not defined", driver)
+	}
+	return nil, nil
 }
 
-func (c Client) V1() IClientV1 {
-	return v1.New(c.client)
+func NewConfig() *config.Config {
+	return new(config.Config)
+}
+
+func NewTLSConfig() *config.TLSConfig {
+	return new(config.TLSConfig)
 }

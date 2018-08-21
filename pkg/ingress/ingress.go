@@ -27,10 +27,8 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/ingress/runtime"
 	"github.com/lastbackend/lastbackend/pkg/ingress/state"
 
-	"fmt"
-	"github.com/lastbackend/lastbackend/pkg/api/client"
-	"github.com/lastbackend/lastbackend/pkg/distribution/types"
-	"github.com/lastbackend/lastbackend/pkg/ingress/envs"
+		"github.com/lastbackend/lastbackend/pkg/api/client"
+		"github.com/lastbackend/lastbackend/pkg/ingress/envs"
 	"github.com/lastbackend/lastbackend/pkg/ingress/events"
 	"github.com/lastbackend/lastbackend/pkg/ingress/events/exporter"
 	"github.com/lastbackend/lastbackend/pkg/log"
@@ -54,22 +52,22 @@ func Daemon() {
 
 	r := runtime.NewRuntime(context.Background())
 
-	host := viper.GetString("api.uri")
-	port := viper.GetInt("api.port")
-	tls := viper.GetBool("api.tls")
+	cfg := client.NewConfig()
 
-	schema := "http"
-	if tls {
-		schema = "https"
+	cfg.BearerToken = viper.GetString("token")
+
+	if viper.IsSet("api.tls") && !viper.GetBool("api.tls.insecure") {
+		cfg.TLS = client.NewTLSConfig()
+		cfg.TLS.CertFile = viper.GetString("api.tls.cert")
+		cfg.TLS.KeyFile = viper.GetString("api.tls.key")
+		cfg.TLS.CAFile = viper.GetString("api.tls.ca")
 	}
 
-	endpoint := fmt.Sprintf("%s://%s:%d", schema, host, port)
-	types.SecretAccessToken = viper.GetString("token")
-
-	rest, err := client.NewHTTP(endpoint, &client.Config{
-		BearerToken: types.SecretAccessToken,
-		Timeout:     5,
-	})
+	endpoint := viper.GetString("api.uri")
+	rest, err := client.New(client.ClientHTTP, endpoint, cfg)
+	if err != nil {
+		log.Fatalf("Init client err: %s", err)
+	}
 
 	if err != nil {
 		log.Errorf("node:initialize client err: %s", err.Error())

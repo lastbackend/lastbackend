@@ -20,19 +20,18 @@ package v1
 
 import (
 	"context"
-
 	"fmt"
-	"github.com/lastbackend/lastbackend/pkg/api/client/http"
-	"github.com/lastbackend/lastbackend/pkg/api/client/interfaces"
+	"strconv"
+
+	"github.com/lastbackend/lastbackend/pkg/util/http/request"
+	"github.com/lastbackend/lastbackend/pkg/distribution/errors"
 	rv1 "github.com/lastbackend/lastbackend/pkg/api/types/v1/request"
 	vv1 "github.com/lastbackend/lastbackend/pkg/api/types/v1/views"
-	"github.com/lastbackend/lastbackend/pkg/distribution/errors"
-	"strconv"
 )
 
 type RouteClient struct {
-	interfaces.Route
-	client    http.Interface
+	client *request.RESTClient
+
 	namespace string
 	name      string
 }
@@ -153,6 +152,6 @@ func (rc *RouteClient) Remove(ctx context.Context, opts *rv1.RouteRemoveOptions)
 	return nil
 }
 
-func newRouteClient(client http.Interface, namespace, name string) *RouteClient {
+func newRouteClient(client *request.RESTClient, namespace, name string) *RouteClient {
 	return &RouteClient{client: client, namespace: namespace, name: name}
 }

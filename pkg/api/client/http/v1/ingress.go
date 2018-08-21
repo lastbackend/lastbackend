@@ -20,20 +20,19 @@ package v1
 
 import (
 	"context"
-
 	"fmt"
-	"github.com/lastbackend/lastbackend/pkg/api/client/http"
-	"github.com/lastbackend/lastbackend/pkg/api/client/interfaces"
-	rv1 "github.com/lastbackend/lastbackend/pkg/api/types/v1/request"
-	vv1 "github.com/lastbackend/lastbackend/pkg/api/types/v1/views"
-	"github.com/lastbackend/lastbackend/pkg/distribution/errors"
 	"io"
 	"strconv"
+
+	"github.com/lastbackend/lastbackend/pkg/distribution/errors"
+	"github.com/lastbackend/lastbackend/pkg/util/http/request"
+	rv1 "github.com/lastbackend/lastbackend/pkg/api/types/v1/request"
+	vv1 "github.com/lastbackend/lastbackend/pkg/api/types/v1/views"
 )
 
 type IngressClient struct {
-	interfaces.Ingress
-	client   http.Interface
+	client *request.RESTClient
+
 	hostname string
 }
 
@@ -238,6 +237,6 @@ func (ic *IngressClient) Logs(ctx context.Context, pod, container string, opts *
 	return req.Stream()
 }
 
-func newIngressClient(req http.Interface, hostname string) *IngressClient {
+func newIngressClient(req *request.RESTClient, hostname string) *IngressClient {
 	return &IngressClient{client: req, hostname: hostname}
 }

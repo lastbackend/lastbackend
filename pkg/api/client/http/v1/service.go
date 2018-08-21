@@ -20,29 +20,51 @@ package v1
 
 import (
 	"context"
-
 	"fmt"
-	"github.com/lastbackend/lastbackend/pkg/api/client/http"
-	"github.com/lastbackend/lastbackend/pkg/api/client/interfaces"
-	rv1 "github.com/lastbackend/lastbackend/pkg/api/types/v1/request"
-	vv1 "github.com/lastbackend/lastbackend/pkg/api/types/v1/views"
-	"github.com/lastbackend/lastbackend/pkg/distribution/errors"
 	"io"
 	"strconv"
+
+	"github.com/lastbackend/lastbackend/pkg/distribution/errors"
+	"github.com/lastbackend/lastbackend/pkg/util/http/request"
+	rv1 "github.com/lastbackend/lastbackend/pkg/api/types/v1/request"
+	vv1 "github.com/lastbackend/lastbackend/pkg/api/types/v1/views"
+	"github.com/lastbackend/lastbackend/pkg/api/client/types"
 )
 
 type ServiceClient struct {
-	interfaces.Service
-	client    http.Interface
+	client *request.RESTClient
+
 	namespace string
 	name      string
 }
 
-func (sc *ServiceClient) Deployment(name string) *DeploymentClient {
+func (sc *ServiceClient) Deployment(args ...string) types.DeploymentClientV1 {
+	name := ""
+	// Get any parameters passed to us out of the args variable into "real"
+	// variables we created for them.
+	for i := range args {
+		switch i {
+		case 0: // hostname
+			name = args[0]
+		default:
+			panic("Wrong parameter count: (is allowed from 0 to 1)")
+		}
+	}
 	return newDeploymentClient(sc.client, sc.namespace, sc.name, name)
 }
 
-func (sc *ServiceClient) Trigger(name string) *TriggerClient {
+func (sc *ServiceClient) Trigger(args ...string) types.TriggerClientV1 {
+	name := ""
+	// Get any parameters passed to us out of the args variable into "real"
+	// variables we created for them.
+	for i := range args {
+		switch i {
+		case 0: // hostname
+			name = args[0]
+		default:
+			panic("Wrong parameter count: (is allowed from 0 to 1)")
+		}
+	}
 	return newTriggerClient(sc.client, sc.namespace, sc.name, name)
 }
 
@@ -179,6 +201,6 @@ func (sc *ServiceClient) Logs(ctx context.Context, opts *rv1.ServiceLogsOptions)
 	return res.Stream()
 }
 
-func newServiceClient(client http.Interface, namespace, name string) *ServiceClient {
+func newServiceClient(client *request.RESTClient, namespace, name string) *ServiceClient {
 	return &ServiceClient{client: client, namespace: namespace, name: name}
 }
