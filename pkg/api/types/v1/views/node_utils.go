@@ -35,28 +35,18 @@ func (nv *NodeView) New(obj *types.Node) *Node {
 }
 
 func (nv *NodeView) ToNodeMeta(meta types.NodeMeta) NodeMeta {
-	nm := NodeMeta{
-		Name:     meta.Name,
-		SelfLink: meta.SelfLink,
-		Created:  meta.Created,
-		Updated:  meta.Updated,
-	}
-	nm.NodeInfo = nv.ToNodeInfo(meta.NodeInfo)
-
+	nm := NodeMeta{}
+	nm.Name = meta.Name
+	nm.SelfLink = meta.SelfLink
+	nm.Created = meta.Created
+	nm.Updated = meta.Updated
+	nm.Hostname = meta.Hostname
+	nm.OSName = meta.OSName
+	nm.OSType = meta.OSType
+	nm.Architecture = meta.Architecture
+	nm.IP.External = meta.ExternalIP
+	nm.IP.Internal = meta.InternalIP
 	return nm
-}
-
-func (nv *NodeView) ToNodeInfo(info types.NodeInfo) NodeInfo {
-	ni := NodeInfo{
-		Hostname:     info.Hostname,
-		OSType:       info.OSType,
-		OSName:       info.OSName,
-		Architecture: info.Architecture,
-	}
-	ni.IP.External = info.ExternalIP
-	ni.IP.Internal = info.InternalIP
-
-	return ni
 }
 
 func (nv *NodeView) ToNodeStatus(status types.NodeStatus) NodeStatus {

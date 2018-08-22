@@ -42,8 +42,8 @@ type NodeMeta struct {
 	NodeInfo
 	Name     string    `json:"name"`
 	SelfLink string    `json:"self_link"`
-	Subnet  string `json:"subnet"`
-	Cluster string `json:"cluster"`
+	Subnet   string    `json:"subnet"`
+	Cluster  string    `json:"cluster"`
 	Created  time.Time `json:"created"`
 	Updated  time.Time `json:"updated"`
 }
