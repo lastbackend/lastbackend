@@ -32,40 +32,44 @@ type Http struct {
 	Message string `json:"message"`
 }
 
-func (Http) Unauthorized(w http.ResponseWriter) {
-	Http{Code: http.StatusUnauthorized, Status: http.StatusText(http.StatusUnauthorized), Message: "Unauthorized"}.send(w)
+func (Http) Unauthorized(w http.ResponseWriter, msg ...string) {
+	HTTP.getUnauthorized(msg...).send(w)
 }
 
-func (Http) Forbidden(w http.ResponseWriter) {
-	Http{Code: http.StatusForbidden, Status: http.StatusText(http.StatusForbidden), Message: "Access forbidden"}.send(w)
+func (Http) Forbidden(w http.ResponseWriter, msg ...string) {
+	HTTP.getForbidden(msg...).send(w)
 }
 
-func (Http) InvalidJSON(w http.ResponseWriter) {
-	Http{Code: http.StatusBadRequest, Status: StatusIncorrectJson, Message: "Invalid json"}.send(w)
+func (Http) BadRequest(w http.ResponseWriter, msg ...string) {
+	HTTP.getBadRequest(msg...).send(w)
 }
 
-func (Http) InvalidXML(w http.ResponseWriter) {
-	Http{Code: http.StatusBadRequest, Status: StatusIncorrectXml, Message: "Invalid xml"}.send(w)
+func (Http) NotFound(w http.ResponseWriter, args ...string) {
+	HTTP.getNotFound(args...).send(w)
 }
 
-func (Http) BadRequest(w http.ResponseWriter) {
-	Http{Code: http.StatusBadRequest, Status: http.StatusText(http.StatusBadRequest), Message: "Bad request"}.send(w)
+func (Http) InternalServerError(w http.ResponseWriter, msg ...string) {
+	HTTP.getInternalServerError(msg...).send(w)
 }
 
-func (Http) NotFound(w http.ResponseWriter) {
-	Http{Code: http.StatusNotFound, Status: http.StatusText(http.StatusNotFound), Message: "Not found"}.send(w)
+func (Http) PaymentRequired(w http.ResponseWriter, msg ...string) {
+	HTTP.getPaymentRequired(msg...).send(w)
 }
 
-func (Http) InternalServerError(w http.ResponseWriter) {
-	Http{Code: http.StatusInternalServerError, Status: http.StatusText(http.StatusInternalServerError), Message: "Internal server error"}.send(w)
+func (Http) NotImplemented(w http.ResponseWriter, msg ...string) {
+	HTTP.getPaymentRequired(msg...).send(w)
 }
 
-func (Http) PaymentRequired(w http.ResponseWriter) {
-	Http{Code: http.StatusPaymentRequired, Status: http.StatusText(http.StatusPaymentRequired), Message: "Payment required"}.send(w)
+func (Http) BadParameter(w http.ResponseWriter, args ...string) {
+	HTTP.getBadParameter(args...).send(w)
 }
 
-func (Http) NotImplemented(w http.ResponseWriter) {
-	Http{Code: http.StatusNotImplemented, Status: http.StatusText(http.StatusNotImplemented), Message: "Not implemented"}.send(w)
+func (Http) InvalidJSON(w http.ResponseWriter, msg ...string) {
+	HTTP.getIncorrectJSON(msg...).send(w)
+}
+
+func (Http) InvalidXML(w http.ResponseWriter, msg ...string) {
+	HTTP.getIncorrectXML(msg...).send(w)
 }
 
 func (h Http) send(w http.ResponseWriter) {
@@ -79,27 +83,48 @@ func (h Http) send(w http.ResponseWriter) {
 // ============================================= INTERNAL HELPER METHODS =============================================
 // ===================================================================================================================
 
-func (Http) getNotFound(name string) *Http {
+func (Http) getUnauthorized(msg ...string) *Http {
+	return getHttpError(http.StatusUnauthorized, msg...)
+}
+
+func (Http) getForbidden(msg ...string) *Http {
+	return getHttpError(http.StatusForbidden, msg...)
+}
+
+func (Http) getPaymentRequired(msg ...string) *Http {
+	return getHttpError(http.StatusPaymentRequired, msg...)
+}
+
+func (Http) getUnknown(msg ...string) *Http {
+	return getHttpError(http.StatusInternalServerError, msg...)
+}
+
+func (Http) getInternalServerError(msg ...string) *Http {
+	return getHttpError(http.StatusInternalServerError, msg...)
+}
+
+func (Http) getNotImplemented(msg ...string) *Http {
+	return getHttpError(http.StatusNotImplemented, msg...)
+}
+
+func (Http) getBadRequest(msg ...string) *Http {
+	return getHttpError(http.StatusBadRequest, msg...)
+}
+
+func (Http) getNotFound(args ...string) *Http {
+	message := "Not Found"
+	for i, a := range args {
+		switch i {
+		case 0:
+			message = fmt.Sprintf("%s not found", toUpperFirstChar(a))
+		default:
+			panic("Wrong parameter count: (is allowed from 0 to 1)")
+		}
+	}
 	return &Http{
 		Code:    http.StatusNotFound,
 		Status:  http.StatusText(http.StatusNotFound),
-		Message: fmt.Sprintf("%s not found", toUpperFirstChar(name)),
-	}
-}
-
-func (Http) getBadParameter(name string) *Http {
-	return &Http{
-		Code:    http.StatusBadRequest,
-		Status:  StatusBadParameter,
-		Message: fmt.Sprintf("Bad %s parameter", name),
-	}
-}
-
-func (Http) getBadRequest() *Http {
-	return &Http{
-		Code:    http.StatusBadRequest,
-		Status:  StatusBadRequest,
-		Message: fmt.Sprintf("Bad request"),
+		Message: message,
 	}
 }
 
@@ -111,50 +136,72 @@ func (Http) getNotUnique(name string) *Http {
 	}
 }
 
-func (Http) getIncorrectJSON() *Http {
+func (Http) getIncorrectJSON(msg ...string) *Http {
+	message := "Incorrect json"
+	for i, m := range msg {
+		switch i {
+		case 0:
+			message = m
+		default:
+			panic("Wrong parameter count: (is allowed from 0 to 1)")
+		}
+	}
 	return &Http{
 		Code:    http.StatusBadRequest,
 		Status:  StatusIncorrectJson,
-		Message: "Incorrect json",
+		Message: message,
 	}
 }
 
-func (Http) getIncorrectXML() *Http {
+func (Http) getIncorrectXML(msg ...string) *Http {
+	message := "Incorrect json"
+	for i, m := range msg {
+		switch i {
+		case 0:
+			message = m
+		default:
+			panic("Wrong parameter count: (is allowed from 0 to 1)")
+		}
+	}
 	return &Http{
 		Code:    http.StatusBadRequest,
 		Status:  StatusIncorrectXml,
-		Message: "Incorrect xml",
+		Message: message,
 	}
 }
 
-func (Http) getUnauthorized() *Http {
+func (Http) getBadParameter(args ...string) *Http {
+	message := "Bad parameter"
+	for i, a := range args {
+		switch i {
+		case 0:
+			message = fmt.Sprintf("Bad %s parameter", a)
+		default:
+			panic("Wrong parameter count: (is allowed from 0 to 1)")
+		}
+	}
 	return &Http{
-		Code:    http.StatusUnauthorized,
-		Status:  http.StatusText(http.StatusUnauthorized),
-		Message: "Access denied",
+		Code:    http.StatusBadRequest,
+		Status:  StatusBadParameter,
+		Message: message,
 	}
 }
 
-func (Http) getForbidden() *Http {
-	return &Http{
-		Code:    http.StatusForbidden,
-		Status:  http.StatusText(http.StatusForbidden),
-		Message: "Forbidden",
-	}
-}
+func getHttpError(code int, msg ...string) *Http {
+	status := http.StatusText(code)
+	message := http.StatusText(code)
 
-func (Http) getPaymentrequired() *Http {
-	return &Http{
-		Code:    http.StatusPaymentRequired,
-		Status:  http.StatusText(http.StatusPaymentRequired),
-		Message: "payment required",
+	for i, m := range msg {
+		switch i {
+		case 0:
+			message = m
+		default:
+			panic("Wrong parameter count: (is allowed from 0 to 1)")
+		}
 	}
-}
-
-func (Http) getUnknown() *Http {
 	return &Http{
-		Code:    http.StatusInternalServerError,
-		Status:  http.StatusText(http.StatusInternalServerError),
-		Message: "Internal server error",
+		Code:    code,
+		Status:  status,
+		Message: message,
 	}
 }
