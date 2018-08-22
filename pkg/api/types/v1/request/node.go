@@ -30,6 +30,14 @@ type NodeConnectOptions struct {
 	Info    types.NodeInfo     `json:"info"`
 	Status  types.NodeStatus   `json:"status"`
 	Network types.NetworkState `json:"network"`
+	TLS     bool               `json:"tls"`
+	SSL     *SSL               `json:"ssl"`
+}
+
+type SSL struct {
+	CA   []byte `json:"ca"`
+	Cert []byte `json:"cert"`
+	Key  []byte `json:"key"`
 }
 
 // swagger:model request_node_status
