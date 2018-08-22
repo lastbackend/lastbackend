@@ -59,7 +59,7 @@ func (r *Runtime) ImagePull(ctx context.Context, spec *types.SpecTemplateContain
 	}
 
 	if secret != nil {
-		data, err := secret.DecodeSecretRegistryData()
+		data, err := secret.DecodeSecretAuthData()
 		if err != nil {
 			return nil, err
 		}
@@ -79,8 +79,8 @@ func (r *Runtime) ImagePush(ctx context.Context, spec *types.SpecTemplateContain
 
 	options := docker.ImagePushOptions{}
 	if secret != nil {
-		if secret.Meta.Kind == types.KindSecretRegistry {
-			data, err := secret.DecodeSecretRegistryData()
+		if secret.Meta.Kind == types.KindSecretAuth {
+			data, err := secret.DecodeSecretAuthData()
 			if err != nil {
 				return nil, err
 			}

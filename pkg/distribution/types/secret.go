@@ -26,9 +26,9 @@ import (
 )
 
 const (
-	KindSecretText     = "text"
-	KindSecretRegistry = "registry"
-	KindSecretFiles    = "files"
+	KindSecretText  = "text"
+	KindSecretAuth  = "auth"
+	KindSecretFiles = "files"
 )
 
 // swagger:ignore
@@ -58,25 +58,19 @@ type SecretMeta struct {
 	Meta `yaml:",inline"`
 }
 
-func (s *Secret) EncodeSecretRegistryData(d SecretRegistryData) {
-	s.Data["registry"] = []byte(base64.StdEncoding.EncodeToString([]byte(d.Registry)))
+func (s *Secret) EncodeSecretAuthData(d SecretAuthData) {
+	s.Data = make(map[string][]byte)
 	s.Data["username"] = []byte(base64.StdEncoding.EncodeToString([]byte(d.Username)))
 	s.Data["password"] = []byte(base64.StdEncoding.EncodeToString([]byte(d.Password)))
 }
 
-func (s *Secret) DecodeSecretRegistryData() (*SecretRegistryData, error) {
+func (s *Secret) DecodeSecretAuthData() (*SecretAuthData, error) {
 
-	if s.Meta.Kind != KindSecretRegistry {
-		return nil, errors.New("Invalid secret type")
+	if s.Meta.Kind != KindSecretAuth {
+		return nil, errors.New("invalid secret type")
 	}
 
-	data := new(SecretRegistryData)
-
-	r, err := base64.StdEncoding.DecodeString(string(s.Data["registry"]))
-	if err != nil {
-		return nil, err
-	}
-	data.Registry = string(r)
+	data := new(SecretAuthData)
 
 	u, err := base64.StdEncoding.DecodeString(string(s.Data["username"]))
 	if err != nil {
@@ -93,8 +87,7 @@ func (s *Secret) DecodeSecretRegistryData() (*SecretRegistryData, error) {
 	return data, nil
 }
 
-type SecretRegistryData struct {
-	Registry string `json:"registry"`
+type SecretAuthData struct {
 	Username string `json:"username"`
 	Password string `json:"password"`
 }

@@ -34,7 +34,7 @@ import (
 func init() {
 	secretCreateCmd.Flags().StringP("text", "t", types.EmptyString, "write raw data")
 	secretCreateCmd.Flags().StringArrayP("file", "f", make([]string, 0), "create secret from files")
-	secretCreateCmd.Flags().StringP("registry", "r", types.EmptyString, "create registry secret")
+	secretCreateCmd.Flags().BoolP("auth", "a", false, "create auth secret")
 	secretCreateCmd.Flags().StringP("username", "u", types.EmptyString, "add username to registry secret")
 	secretCreateCmd.Flags().StringP("password", "p", types.EmptyString, "add password to registry secret")
 	secretCmd.AddCommand(secretCreateCmd)
@@ -52,7 +52,7 @@ var secretCreateCmd = &cobra.Command{
 	Args:    cobra.MinimumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 
-		registry, err := cmd.Flags().GetString("registry")
+		auth, err := cmd.Flags().GetBool("auth")
 		if err != nil {
 			fmt.Println(err.Error())
 			return
@@ -83,15 +83,23 @@ var secretCreateCmd = &cobra.Command{
 			opts.Kind = types.KindSecretText
 			opts.Data[types.KindSecretText] = []byte(base64.StdEncoding.EncodeToString(data))
 			break
-		case registry != types.EmptyString:
-			opts.Kind = types.KindSecretRegistry
+		case auth:
+			opts.Kind = types.KindSecretAuth
 
-			username, _ := cmd.Flags().GetString("username")
-			password, _ := cmd.Flags().GetString("password")
+			username, err := cmd.Flags().GetString("username")
+			if err != nil {
+				fmt.Println(err.Error())
+				return
+			}
+
+			password, err := cmd.Flags().GetString("password")
+			if err != nil {
+				fmt.Println(err.Error())
+				return
+			}
 
 			s := new(types.Secret)
-			s.EncodeSecretRegistryData(types.SecretRegistryData{
-				Registry: registry,
+			s.EncodeSecretAuthData(types.SecretAuthData{
 				Username: username,
 				Password: password,
 			})
