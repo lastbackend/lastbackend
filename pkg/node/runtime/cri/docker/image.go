@@ -70,7 +70,6 @@ func (r *Runtime) ImagePull(ctx context.Context, spec *types.SpecTemplateContain
 		options.RegistryAuth = getAuthString(data.Username, data.Password)
 	}
 
-	log.V(logLevel).Debugf("Docker: auth: %s", string(options.RegistryAuth))
 	return r.client.ImagePull(ctx, spec.Name, options)
 }
 
