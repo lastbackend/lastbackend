@@ -26,7 +26,9 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/distribution"
 	"github.com/lastbackend/lastbackend/pkg/distribution/errors"
 	"github.com/lastbackend/lastbackend/pkg/log"
-	)
+	"github.com/lastbackend/lastbackend/pkg/distribution/types"
+	"github.com/spf13/viper"
+)
 
 const (
 	logLevel  = 2
@@ -61,8 +63,11 @@ func ClusterInfoH(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if cl == nil {
-		errors.HTTP.NotFound(w)
-		return
+		cl = new(types.Cluster)
+		cl.Meta.SetDefault()
+		cl.Meta.Name = viper.GetString("name")
+		cl.Meta.SelfLink = cl.Meta.Name
+		cl.Meta.Description = viper.GetString("description")
 	}
 
 	response, err := v1.View().Cluster().New(cl).ToJson()

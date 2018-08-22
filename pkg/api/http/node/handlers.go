@@ -399,6 +399,15 @@ func NodeConnectH(w http.ResponseWriter, r *http.Request) {
 			nco.Status.State.CNI.Message = errors.ErrEntityExists
 		}
 
+		nco.Security.TLS = opts.TLS
+
+		if opts.SSL != nil {
+			nco.Security.SSL = new(types.NodeSSL)
+			nco.Security.SSL.CA = opts.SSL.CA
+			nco.Security.SSL.Cert = opts.SSL.Cert
+			nco.Security.SSL.Key = opts.SSL.Key
+		}
+
 		node, err = nm.Put(&nco)
 		if err != nil {
 			log.V(logLevel).Errorf("%s:connect:> node put error: %s", logPrefix, err.Error())
@@ -426,6 +435,15 @@ func NodeConnectH(w http.ResponseWriter, r *http.Request) {
 	ou.NodeUpdateInfoOptions.Set(opts.Info)
 	node.Meta.Set(ou)
 	node.Status = opts.Status
+
+	node.Spec.Security.TLS = opts.TLS
+
+	if opts.SSL != nil {
+		node.Spec.Security.SSL = new(types.NodeSSL)
+		node.Spec.Security.SSL.CA = opts.SSL.CA
+		node.Spec.Security.SSL.Cert = opts.SSL.Cert
+		node.Spec.Security.SSL.Key = opts.SSL.Key
+	}
 
 	if err := nm.Set(node); err != nil {
 		log.V(logLevel).Errorf("%s:connect:> get node set err: %s", logPrefix, err.Error())

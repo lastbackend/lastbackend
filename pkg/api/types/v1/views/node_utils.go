@@ -30,16 +30,20 @@ func (nv *NodeView) New(obj *types.Node) *Node {
 	n := Node{}
 	n.Meta = nv.ToNodeMeta(obj.Meta)
 	n.Status = nv.ToNodeStatus(obj.Status)
+	n.Spec = nv.ToNodeSpec(obj.Spec)
 	return &n
 }
 
 func (nv *NodeView) ToNodeMeta(meta types.NodeMeta) NodeMeta {
-	return NodeMeta{
+	nm := NodeMeta{
 		Name:     meta.Name,
 		SelfLink: meta.SelfLink,
 		Created:  meta.Created,
 		Updated:  meta.Updated,
 	}
+	nm.NodeInfo = nv.ToNodeInfo(meta.NodeInfo)
+
+	return nm
 }
 
 func (nv *NodeView) ToNodeInfo(info types.NodeInfo) NodeInfo {
@@ -51,26 +55,54 @@ func (nv *NodeView) ToNodeInfo(info types.NodeInfo) NodeInfo {
 	}
 	ni.IP.External = info.ExternalIP
 	ni.IP.Internal = info.InternalIP
+
 	return ni
 }
 
 func (nv *NodeView) ToNodeStatus(status types.NodeStatus) NodeStatus {
-	return NodeStatus{
-		Capacity: NodeResources{
-			Containers: status.Capacity.Containers,
-			Pods:       status.Capacity.Pods,
-			Memory:     status.Capacity.Memory,
-			Cpu:        status.Capacity.Cpu,
-			Storage:    status.Capacity.Storage,
-		},
-		Allocated: NodeResources{
-			Containers: status.Allocated.Containers,
-			Pods:       status.Allocated.Pods,
-			Memory:     status.Allocated.Memory,
-			Cpu:        status.Allocated.Cpu,
-			Storage:    status.Allocated.Storage,
-		},
-	}
+	ns := NodeStatus{}
+
+	ns.Online = status.Online
+
+	ns.Capacity.Containers = status.Capacity.Containers
+	ns.Capacity.Pods = status.Capacity.Pods
+	ns.Capacity.Memory = status.Capacity.Memory
+	ns.Capacity.Cpu = status.Capacity.Cpu
+	ns.Capacity.Storage = status.Capacity.Storage
+
+	ns.Allocated.Containers = status.Allocated.Containers
+	ns.Allocated.Pods = status.Allocated.Pods
+	ns.Allocated.Memory = status.Allocated.Memory
+	ns.Allocated.Cpu = status.Allocated.Cpu
+	ns.Allocated.Storage = status.Allocated.Storage
+
+	ns.State.CNI.Type = status.State.CNI.Type
+	ns.State.CNI.State = status.State.CNI.State
+	ns.State.CNI.Version = status.State.CNI.Version
+	ns.State.CNI.Message = status.State.CNI.Message
+
+	ns.State.CPI.Type = status.State.CPI.Type
+	ns.State.CPI.State = status.State.CPI.State
+	ns.State.CPI.Version = status.State.CPI.Version
+	ns.State.CPI.Message = status.State.CPI.Message
+
+	ns.State.CRI.Type = status.State.CRI.Type
+	ns.State.CRI.State = status.State.CRI.State
+	ns.State.CRI.Version = status.State.CRI.Version
+	ns.State.CRI.Message = status.State.CRI.Message
+
+	ns.State.CSI.Type = status.State.CSI.Type
+	ns.State.CSI.State = status.State.CSI.State
+	ns.State.CSI.Version = status.State.CSI.Version
+	ns.State.CSI.Message = status.State.CSI.Message
+
+	return ns
+}
+
+func (nv *NodeView) ToNodeSpec(status types.NodeSpec) NodeSpec {
+	spec := NodeSpec{}
+
+	return spec
 }
 
 func (obj *Node) ToJson() ([]byte, error) {
@@ -121,9 +153,9 @@ func (nv *NodeView) NewList(obj *types.NodeList) *NodeList {
 func (nv *NodeView) NewManifest(obj *types.NodeManifest) *NodeManifest {
 
 	manifest := NodeManifest{
-		Network: make(map[string]*types.SubnetManifest, 0),
-		Pods: make(map[string]*types.PodManifest, 0),
-		Volumes: make(map[string]*types.VolumeManifest, 0),
+		Network:   make(map[string]*types.SubnetManifest, 0),
+		Pods:      make(map[string]*types.PodManifest, 0),
+		Volumes:   make(map[string]*types.VolumeManifest, 0),
 		Endpoints: make(map[string]*types.EndpointManifest, 0),
 	}
 

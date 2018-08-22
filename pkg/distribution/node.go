@@ -71,6 +71,15 @@ func (n *Node) Put(opts *types.NodeCreateOptions) (*types.Node, error) {
 		ni.Meta.Token = generator.GenerateRandomString(32)
 	}
 
+	ni.Spec.Security.TLS = opts.Security.TLS
+
+	if opts.Security.SSL != nil {
+		ni.Spec.Security.SSL = new(types.NodeSSL)
+		ni.Spec.Security.SSL.CA = opts.Security.SSL.CA
+		ni.Spec.Security.SSL.Cert = opts.Security.SSL.Cert
+		ni.Spec.Security.SSL.Key = opts.Security.SSL.Key
+	}
+
 	ni.SelfLink()
 
 	if err := n.storage.Put(n.context, n.storage.Collection().Node(), n.storage.Key().Node(ni.Meta.Name), ni, nil); err != nil {
