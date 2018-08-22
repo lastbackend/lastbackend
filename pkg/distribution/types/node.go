@@ -51,9 +51,9 @@ type Node struct {
 type NodeMeta struct {
 	Meta
 	NodeInfo
-	Subnet   string `json:"subnet"`
-	Cluster  string `json:"cluster"`
-	Token    string `json:"token"`
+	Subnet  string `json:"subnet"`
+	Cluster string `json:"cluster"`
+	Token   string `json:"token"`
 }
 
 func (m *NodeMeta) Set(meta *NodeUpdateMetaOptions) {
@@ -136,6 +136,18 @@ type NodeSpec struct {
 	Pods      map[string]PodSpec      `json:"pods"`
 	Volumes   map[string]VolumeSpec   `json:"volumes"`
 	Endpoints map[string]EndpointSpec `json:"endpoints"`
+	Security  NodeSecurity            `json:"security"`
+}
+
+type NodeSecurity struct {
+	TLS bool     `json:"tls"`
+	SSL *NodeSSL `json:"ssl"`
+}
+
+type NodeSSL struct {
+	CA   []byte `json:"ca"`
+	Cert []byte `json:"cert"`
+	Key  []byte `json:"key"`
 }
 
 // swagger:model types_node_resources
@@ -212,9 +224,10 @@ func (o *NodeUpdateInfoOptions) Set(i NodeInfo) {
 // swagger:ignore
 // swagger:model types_node_create
 type NodeCreateOptions struct {
-	Meta   NodeCreateMetaOptions `json:"meta",yaml:"meta"`
-	Info   NodeInfo              `json:"info",yaml:"info"`
-	Status NodeStatus            `json:"status",yaml:"status"`
+	Meta     NodeCreateMetaOptions `json:"meta",yaml:"meta"`
+	Info     NodeInfo              `json:"info",yaml:"info"`
+	Status   NodeStatus            `json:"status",yaml:"status"`
+	Security NodeSecurity          `json:"security",yaml:"security"`
 }
 
 func (n *Node) SelfLink() string {

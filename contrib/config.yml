@@ -3,6 +3,8 @@
 # Runtime
 verbose: 3
 token: lstbknd
+name: "lastbackend"
+description: "lastbackend cluster"
 
 # Etcd database
 etcd:

@@ -406,6 +406,8 @@ func TestNodeSetMetaH(t *testing.T) {
 		uo = v1.Request().Node().UpdateOptions()
 	)
 
+	n1.Meta.Architecture = "test"
+
 	uo.Meta = &types.NodeUpdateMetaOptions{}
 	uo.Meta.Architecture = strPointer("test")
 

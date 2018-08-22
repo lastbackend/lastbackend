@@ -24,9 +24,15 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/log"
 	"github.com/lastbackend/lastbackend/pkg/node/envs"
 	"github.com/pkg/errors"
+	"github.com/spf13/viper"
+	"io/ioutil"
+	"github.com/lastbackend/lastbackend/pkg/api/types/v1/request"
 )
 
-const logLevel = 3
+const (
+	logLevel = 3
+	logPrefix = "node:events"
+)
 
 // NewConnectEventt - send node info event after
 // node is successful accepted and each hour
@@ -40,6 +46,35 @@ func NewConnectEvent(ctx context.Context) error {
 	opts.Info = envs.Get().GetState().Node().Info
 	opts.Status = envs.Get().GetState().Node().Status
 	opts.Network = *envs.Get().GetCNI().Info(ctx)
+
+	if viper.IsSet("node.tls") {
+		opts.TLS = !viper.GetBool("node.tls.insecure")
+
+		if opts.TLS {
+			caData, err := ioutil.ReadFile(viper.GetString("node.tls.ca"))
+			if err != nil {
+				log.Errorf("%s:connect_event:> read ca cert file err: %v", logPrefix, err)
+				return err
+			}
+
+			certData, err := ioutil.ReadFile(viper.GetString("node.tls.client_cert"))
+			if err != nil {
+				log.Errorf("%s:connect_event:> read client cert file err: %v", logPrefix, err)
+				return err
+			}
+
+			keyData, err := ioutil.ReadFile(viper.GetString("node.tls.client_key"))
+			if err != nil {
+				log.Errorf("%s:connect_event:> read client key file err: %v", logPrefix, err)
+				return err
+			}
+
+			opts.SSL = new(request.SSL)
+			opts.SSL.CA = caData
+			opts.SSL.Key = keyData
+			opts.SSL.Cert = certData
+		}
+	}
 
 	return c.Connect(ctx, opts)
 
@@ -66,8 +101,8 @@ func NewPodStatusEvent(ctx context.Context, pod string) error {
 	)
 
 	if pod == "" {
-		log.Errorf("Event: Pod state event: pod is empty")
-		return errors.New("Event: Pod state event: pod is empty")
+		log.Errorf("%s:pod_status_event:> pod state event: pod is empty", logPrefix)
+		return errors.New("pod state event: pod is empty")
 	}
 
 	if p == nil {
@@ -88,11 +123,11 @@ func NewVolumeStatusEvent(ctx context.Context, volume string) error {
 	)
 
 	if volume == "" {
-		log.Errorf("Event: volume state event: volume is empty")
+		log.Errorf("%s:volume_status_event:> volume state event: volume is empty", logPrefix)
 		return errors.New("Event: volume state event: volume is empty")
 	}
 
-	log.V(logLevel).Debugf("Event: volume state event state: %s", volume)
+	log.V(logLevel).Debugf("%s:volume_status_event:> volume state event state: %s", logPrefix, volume)
 
 	opts := v1.Request().Node().NodeVolumeStatusOptions()
 	return c.SetVolumeStatus(ctx, volume, opts)
