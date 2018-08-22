@@ -21,7 +21,7 @@ package errors
 import (
 	"errors"
 
-	)
+)
 
 const (
 	ErrEntityExists          = "entity exists"
