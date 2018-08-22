@@ -46,12 +46,23 @@ type ServiceImageSpec struct {
 
 // swagger:model request_service_spec
 type ServiceOptionsSpec struct {
-	Replicas   *int              `json:"replicas"`
-	Memory     *int64            `json:"memory,omitempty"`
-	Entrypoint *string           `json:"entrypoint,omitempty"`
-	Command    *string           `json:"command,omitempty"`
-	EnvVars    *[]string         `json:"env,omitempty"`
-	Ports      map[uint16]string `json:"ports,omitempty"`
+	Replicas   *int                `json:"replicas"`
+	Memory     *int64              `json:"memory,omitempty"`
+	Entrypoint *string             `json:"entrypoint,omitempty"`
+	Command    *string             `json:"command,omitempty"`
+	EnvVars    *[]ServiceEnvOption `json:"env,omitempty"`
+	Ports      map[uint16]string   `json:"ports,omitempty"`
+}
+
+type ServiceEnvOption struct {
+	Name  string               `json:"name"`
+	Value string               `json:"value"`
+	From  ServiceEnvFromOption `json:"from"`
+}
+
+type ServiceEnvFromOption struct {
+	Name string `json:"name"`
+	Key  string `json:"key"`
 }
 
 // swagger:ignore

@@ -23,6 +23,7 @@ import (
 	"encoding/base64"
 	"fmt"
 	"errors"
+	"github.com/lastbackend/registry/pkg/distribution/types"
 )
 
 const (
@@ -85,6 +86,25 @@ func (s *Secret) DecodeSecretAuthData() (*SecretAuthData, error) {
 	data.Password = string(p)
 
 	return data, nil
+}
+
+func (s *Secret) DecodeSecretTextData(key string) (string, error) {
+
+	if s.Meta.Kind != KindSecretText {
+		return types.EmptyString, errors.New("invalid secret type")
+	}
+
+	if _, ok := s.Data[key]; !ok {
+		return types.EmptyString, errors.New("secret key not found")
+	}
+
+	d, err := base64.StdEncoding.DecodeString(string(s.Data[key]))
+	if err != nil {
+		return types.EmptyString, err
+	}
+
+	return string(d), nil
+
 }
 
 type SecretAuthData struct {

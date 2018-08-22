@@ -35,7 +35,8 @@ func init() {
 	serviceUpdateCmd.Flags().Int64P("memory", "m", 0, "set service spec memory")
 	serviceUpdateCmd.Flags().IntP("replicas", "r", 0, "set service replicas")
 	serviceUpdateCmd.Flags().StringArrayP("port", "p", make([]string, 0), "set service ports")
-	serviceUpdateCmd.Flags().StringArrayP("envs", "e", make([]string, 0), "set service envs")
+	serviceUpdateCmd.Flags().StringArrayP("env", "e", make([]string, 0), "set service env")
+	serviceUpdateCmd.Flags().StringArray("env-from-secret", make([]string, 0), "set service env from secret")
 	serviceUpdateCmd.Flags().StringP("image", "i", "", "set service image")
 	serviceUpdateCmd.Flags().StringP("auth", "a", "", "set service image auth")
 	serviceCmd.AddCommand(serviceUpdateCmd)
@@ -59,7 +60,8 @@ var serviceUpdateCmd = &cobra.Command{
 		description, _ := cmd.Flags().GetString("desc")
 		memory, _ := cmd.Flags().GetInt64("memory")
 		ports, _ := cmd.Flags().GetStringArray("port")
-		env, _ := cmd.Flags().GetStringArray("envs")
+		env, _ := cmd.Flags().GetStringArray("env")
+		senv, _ := cmd.Flags().GetStringArray("env-from-secret")
 		replicas, _ := cmd.Flags().GetInt("replicas")
 		image, _ := cmd.Flags().GetString("image")
 		secret, _ := cmd.Flags().GetString("auth")
@@ -99,8 +101,48 @@ var serviceUpdateCmd = &cobra.Command{
 			}
 		}
 
+		es := make(map[string]request.ServiceEnvOption)
 		if len(env) > 0 {
-			opts.Spec.EnvVars = &env
+			for _, e := range env {
+				kv := strings.SplitN(e, "=", 2)
+				eo := request.ServiceEnvOption{
+					Name: kv[0],
+				}
+				if len(kv) > 1 {
+					eo.Value = kv[1]
+				}
+
+				es[eo.Name] = eo
+			}
+
+
+		}
+		if len(senv) > 0 {
+			for _, e := range senv {
+				kv := strings.SplitN(e, "=", 3)
+				eo := request.ServiceEnvOption{
+					Name: kv[0],
+				}
+				if len(kv) < 3 {
+					fmt.Println("Service env from secret is in wrong format, should be [NAME]=[SECRET NAME]=[SECRET STORAGE KEY]")
+					return
+				}
+
+				if len(kv) == 3 {
+					eo.From.Name = kv[1]
+					eo.From.Key = kv[2]
+				}
+
+				es[eo.Name] = eo
+			}
+		}
+
+		if len(es) > 0 {
+			senvs := make([]request.ServiceEnvOption, 0)
+			for _, e := range es {
+				senvs = append(senvs, e)
+			}
+			opts.Spec.EnvVars = &senvs
 		}
 
 		if image != types.EmptyString {

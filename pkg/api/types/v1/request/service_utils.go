@@ -91,7 +91,23 @@ func (s *ServiceCreateOptions) DecodeAndValidate(reader io.Reader) (*types.Servi
 		opts.Spec = new(types.ServiceOptionsSpec)
 		opts.Spec.Replicas = s.Spec.Replicas
 		opts.Spec.Memory = s.Spec.Memory
-		opts.Spec.EnvVars = s.Spec.EnvVars
+
+		if s.Spec.EnvVars != nil {
+			envs := make([]types.ServiceEnvOption, 0)
+			for _, e := range *s.Spec.EnvVars {
+				 envs = append(envs, types.ServiceEnvOption{
+					Name: e.Name,
+					Value: e.Value,
+					From: types.ServiceEnvFromOption{
+						Key: e.From.Key,
+						Name: e.From.Name,
+					},
+				})
+			}
+
+			opts.Spec.EnvVars = &envs
+		}
+
 		opts.Spec.Entrypoint = s.Spec.Entrypoint
 		opts.Spec.Command = s.Spec.Command
 
@@ -157,7 +173,23 @@ func (s *ServiceUpdateOptions) DecodeAndValidate(reader io.Reader) (*types.Servi
 	if s.Spec != nil {
 		opts.Spec = new(types.ServiceOptionsSpec)
 		opts.Spec.Memory = s.Spec.Memory
-		opts.Spec.EnvVars = s.Spec.EnvVars
+
+		if s.Spec.EnvVars != nil {
+			envs := make([]types.ServiceEnvOption, 0)
+			for _, e := range *s.Spec.EnvVars {
+				envs = append(envs, types.ServiceEnvOption{
+					Name: e.Name,
+					Value: e.Value,
+					From: types.ServiceEnvFromOption{
+						Key: e.From.Key,
+						Name: e.From.Name,
+					},
+				})
+			}
+
+			opts.Spec.EnvVars = &envs
+		}
+
 		opts.Spec.Entrypoint = s.Spec.Entrypoint
 		opts.Spec.Command = s.Spec.Command
 		opts.Spec.Replicas = s.Spec.Replicas

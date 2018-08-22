@@ -169,6 +169,27 @@ func Create(ctx context.Context, key string, manifest *types.PodManifest) (*type
 	envs.Get().GetState().Pods().SetPod(key, status)
 	events.NewPodStatusEvent(ctx, key)
 
+
+	var secrets = make(map[string]*types.Secret)
+	for _, s := range manifest.Template.Containers {
+		for _, e := range s.EnvVars {
+			if e.From.Name != types.EmptyString {
+				log.V(logLevel).Debug("Get secret info from api")
+
+				vs, err := envs.Get().GetRestClient().Secret(e.From.Name).Get(ctx)
+				if err != nil {
+					log.Errorf("Can-not get secret from api: %s", err)
+					status.SetError(err)
+					Clean(context.Background(), status)
+					return status, err
+				}
+
+				secret := vs.Decode()
+				secrets[secret.Meta.Name] = secret
+			}
+		}
+	}
+
 	for _, s := range manifest.Template.Containers {
 
 		//==========================================================================
@@ -176,7 +197,7 @@ func Create(ctx context.Context, key string, manifest *types.PodManifest) (*type
 		//==========================================================================
 
 		var c = new(types.PodContainer)
-		c.ID, err = envs.Get().GetCRI().ContainerCreate(ctx, &s)
+		c.ID, err = envs.Get().GetCRI().ContainerCreate(ctx, &s, secrets)
 		if err != nil {
 			switch err {
 			case context.Canceled:

@@ -131,7 +131,6 @@ func (s *ServiceSpec) Update(image *ServiceImageSpec, spec *ServiceOptionsSpec) 
 		i int
 	)
 
-
 	c := SpecTemplateContainer{}
 
 	for i, t := range s.Template.Containers {
@@ -203,10 +202,14 @@ func (s *ServiceSpec) Update(image *ServiceImageSpec, spec *ServiceOptionsSpec) 
 			c.EnvVars = SpecTemplateContainerEnvs{}
 
 			for _, e := range *spec.EnvVars {
-				match := strings.Split(e, "=")
-				env := SpecTemplateContainerEnv{Name: match[0]}
-				if len(match) == 2 {
-					env.Value = match[1]
+
+				env := SpecTemplateContainerEnv{
+					Name: e.Name,
+					Value: e.Value,
+					From: SpecTemplateContainerEnvSecret{
+						Name: e.From.Name,
+						Key: e.From.Key,
+					},
 				}
 				c.EnvVars = append(c.EnvVars, env)
 			}
@@ -225,8 +228,6 @@ func (s *ServiceSpec) Update(image *ServiceImageSpec, spec *ServiceOptionsSpec) 
 		}
 
 	}
-
-
 
 }
 
@@ -289,12 +290,23 @@ type ServiceImageSpec struct {
 }
 
 type ServiceOptionsSpec struct {
-	Replicas   *int              `json:"replicas"`
-	Memory     *int64            `json:"memory,omitempty"`
-	Entrypoint *string           `json:"entrypoint,omitempty"`
-	Command    *string           `json:"command,omitempty"`
-	EnvVars    *[]string         `json:"env,omitempty"`
-	Ports      map[uint16]string `json:"ports,omitempty"`
+	Replicas   *int                `json:"replicas"`
+	Memory     *int64              `json:"memory,omitempty"`
+	Entrypoint *string             `json:"entrypoint,omitempty"`
+	Command    *string             `json:"command,omitempty"`
+	EnvVars    *[]ServiceEnvOption `json:"env,omitempty"`
+	Ports      map[uint16]string   `json:"ports,omitempty"`
+}
+
+type ServiceEnvOption struct {
+	Name  string               `json:"name"`
+	Value string               `json:"value"`
+	From  ServiceEnvFromOption `json:"from"`
+}
+
+type ServiceEnvFromOption struct {
+	Name string `json:"name"`
+	Key  string `json:"key"`
 }
 
 func NewServiceList() *ServiceList {

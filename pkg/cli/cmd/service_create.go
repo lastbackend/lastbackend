@@ -37,7 +37,8 @@ func init() {
 	serviceCreateCmd.Flags().Int64P("memory", "m", 128, "set service spec memory")
 	serviceCreateCmd.Flags().IntP("replicas", "r", 1, "set service replicas")
 	serviceCreateCmd.Flags().StringArrayP("port", "p", make([]string, 0), "set service ports")
-	serviceCreateCmd.Flags().StringArrayP("envs", "e", make([]string, 0), "set service envs")
+	serviceCreateCmd.Flags().StringArrayP("env", "e", make([]string, 0), "set service env")
+	serviceCreateCmd.Flags().StringArray("env-from-secret", make([]string, 0), "set service env from secret")
 	serviceCmd.AddCommand(serviceCreateCmd)
 }
 
@@ -60,7 +61,8 @@ var serviceCreateCmd = &cobra.Command{
 		memory, _ := cmd.Flags().GetInt64("memory")
 		name, _ := cmd.Flags().GetString("name")
 		ports, _ := cmd.Flags().GetStringArray("ports")
-		env, _ := cmd.Flags().GetStringArray("envs")
+		env, _ := cmd.Flags().GetStringArray("env")
+		senv, _ := cmd.Flags().GetStringArray("env-from-secret")
 		replicas, _ := cmd.Flags().GetInt("replicas")
 		auth, _ := cmd.Flags().GetString("auth")
 
@@ -104,9 +106,50 @@ var serviceCreateCmd = &cobra.Command{
 			}
 		}
 
+		es := make(map[string]request.ServiceEnvOption)
 		if len(env) > 0 {
-			opts.Spec.EnvVars = &env
+			for _, e := range env {
+				kv := strings.SplitN(e, "=", 2)
+				eo := request.ServiceEnvOption{
+					Name: kv[0],
+				}
+				if len(kv) > 1 {
+					eo.Value = kv[1]
+				}
+
+				es[eo.Name] = eo
+			}
+
+
 		}
+		if len(senv) > 0 {
+			for _, e := range senv {
+				kv := strings.SplitN(e, "=", 3)
+				eo := request.ServiceEnvOption{
+					Name: kv[0],
+				}
+				if len(kv) < 3 {
+					fmt.Println("Service env from secret is in wrong format, should be [NAME]=[SECRET NAME]=[SECRET STORAGE KEY]")
+					return
+				}
+
+				if len(kv) == 3 {
+					eo.From.Name = kv[1]
+					eo.From.Key = kv[2]
+				}
+
+				es[eo.Name] = eo
+			}
+		}
+
+		if len(es) > 0 {
+			senvs := make([]request.ServiceEnvOption, 0)
+			for _, e := range es {
+				senvs = append(senvs, e)
+			}
+			opts.Spec.EnvVars = &senvs
+		}
+
 
 		opts.Description = &description
 		opts.Image.Name = &image

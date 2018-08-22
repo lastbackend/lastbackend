@@ -27,9 +27,10 @@ import (
 	"github.com/docker/go-connections/nat"
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 	"strconv"
+	"github.com/lastbackend/dynamic/pkg/log"
 )
 
-func GetConfig(spec *types.SpecTemplateContainer) *container.Config {
+func GetConfig(spec *types.SpecTemplateContainer, secrets map[string]*types.Secret) *container.Config {
 
 	var volumes map[string]struct{}
 
@@ -43,9 +44,24 @@ func GetConfig(spec *types.SpecTemplateContainer) *container.Config {
 
 	var envs []string
 	for _, e := range spec.EnvVars {
-		env := fmt.Sprintf("%s=%s", e.Name, e.Value)
+		var env string
+		if e.From.Name != types.EmptyString {
+			if _, ok := secrets[e.From.Name]; !ok {
+				continue
+			}
+			v, err := secrets[e.From.Name].DecodeSecretTextData(e.From.Key)
+			if err != nil {
+				log.Error(err.Error())
+				continue
+			}
+			env = fmt.Sprintf("%s=%s", e.Name, v)
+		} else {
+			env = fmt.Sprintf("%s=%s", e.Name, e.Value)
+		}
 		envs = append(envs, env)
 	}
+
+	log.Info(envs)
 
 	return &container.Config{
 		Hostname:     spec.Network.Hostname,
