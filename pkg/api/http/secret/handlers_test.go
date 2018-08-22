@@ -237,7 +237,7 @@ func TestSecretCreate(t *testing.T) {
 			fields:       fields{stg},
 			handler:      secret.SecretCreateH,
 			data:         "{name:demo}",
-			err:          "{\"code\":400,\"status\":\"Incorrect json\",\"message\":\"Incorrect json\"}",
+			err:          "{\"code\":400,\"status\":\"Incorrect Json\",\"message\":\"Incorrect json\"}",
 			wantErr:      true,
 			expectedCode: http.StatusBadRequest,
 		},

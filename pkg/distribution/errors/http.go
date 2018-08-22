@@ -124,7 +124,7 @@ func (Http) getNotFound(args ...string) *Http {
 	return &Http{
 		Code:    http.StatusNotFound,
 		Status:  http.StatusText(http.StatusNotFound),
-		Message: message,
+		Message: message,Incorrect json
 	}
 }
 
