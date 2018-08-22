@@ -26,9 +26,9 @@ import (
 )
 
 const (
-	KindSecretText  = "text"
-	KindSecretAuth  = "auth"
-	KindSecretFiles = "files"
+	KindSecretText = "text"
+	KindSecretAuth = "auth"
+	KindSecretFile = "file"
 )
 
 // swagger:ignore

@@ -29,10 +29,11 @@ import (
 	"encoding/base64"
 	"io/ioutil"
 	"os"
+	"strings"
 )
 
 func init() {
-	secretUpdateCmd.Flags().StringP("text", "t", "", "write raw data")
+	secretUpdateCmd.Flags().StringArrayP("text", "t", make([]string, 0), "write secret in key=value format")
 	secretUpdateCmd.Flags().StringArrayP("file", "f", make([]string, 0), "create secret from files")
 	secretUpdateCmd.Flags().BoolP("auth", "a", false, "create auth secret")
 	secretUpdateCmd.Flags().StringP("username", "u", types.EmptyString, "add username to registry secret")
@@ -53,7 +54,7 @@ var secretUpdateCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 
 		auth, _ := cmd.Flags().GetBool("auth")
-		text, _ := cmd.Flags().GetString("text")
+		text, _ := cmd.Flags().GetStringArray("text")
 		files, _ := cmd.Flags().GetStringArray("file")
 
 		name := args[0]
@@ -61,12 +62,23 @@ var secretUpdateCmd = &cobra.Command{
 		opts.Data = make(map[string][]byte, 0)
 
 		switch true {
-		case text != types.EmptyString:
-			var (
-				data = []byte(text)
-			)
+		case len(text) > 0 :
 			opts.Kind = types.KindSecretText
-			opts.Data[types.KindSecretText] = []byte(base64.StdEncoding.EncodeToString(data))
+
+			for _, t := range text {
+				var (
+					k string
+					v = make([]byte, 0)
+				)
+
+				kv := strings.SplitN(t, "=", 2)
+				k = kv[0]
+				if len(kv) > 1 {
+					v = []byte(kv[1])
+				}
+				opts.Data[k] = []byte(base64.StdEncoding.EncodeToString(v))
+			}
+
 			break
 		case auth:
 			opts.Kind = types.KindSecretAuth
@@ -83,7 +95,7 @@ var secretUpdateCmd = &cobra.Command{
 
 			break
 		case len(files) > 0:
-			opts.Kind = types.KindSecretFiles
+			opts.Kind = types.KindSecretFile
 			for _, f := range files {
 				c, err := ioutil.ReadFile(f)
 				if err != nil {
