@@ -80,9 +80,9 @@ type DeploymentMeta struct {
 //
 // swagger:model views_deployment_sources
 type DeploymentSources struct {
-	// Image namespace name
+	// Name namespace name
 	Namespace string `json:"namespace"`
-	// Image tag
+	// Name tag
 	Tag string `json:"tag"`
 	// Hash
 	Hash string `json:"hash"`

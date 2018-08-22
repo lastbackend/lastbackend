@@ -24,7 +24,7 @@ type Key interface {
 	Deployment(namespace, service, name string) string
 	Pod(namespace, service, deployment, name string) string
 	Endpoint(namespace, service string) string
-	Secret(namespace, name string) string
+	Secret(name string) string
 	Volume(namespace, name string) string
 	Trigger(namespace, service, name string) string
 	Ingress(name string) string

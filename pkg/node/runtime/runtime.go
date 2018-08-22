@@ -132,7 +132,7 @@ func (r *Runtime) GetSpec(ctx context.Context) error {
 	log.V(logLevel).Debugf("%s:getspec:> getspec request init", logNodeRuntimePrefix)
 
 	var (
-		c = envs.Get().GetClient()
+		c = envs.Get().GetNodeClient()
 	)
 
 	spec, err := c.GetSpec(ctx)

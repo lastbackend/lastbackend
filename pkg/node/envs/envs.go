@@ -40,7 +40,10 @@ type Env struct {
 	cpi      cpi.CPI
 	cache    *cache.Cache
 	state    *state.State
-	client   types.NodeClientV1
+	client   struct {
+		node types.NodeClientV1
+		rest types.ClientV1
+	}
 	exporter *exporter.Exporter
 }
 
@@ -84,12 +87,17 @@ func (c *Env) GetState() *state.State {
 	return c.state
 }
 
-func (c *Env) SetClient(cl types.NodeClientV1) {
-	c.client = cl
+func (c *Env) SetClient(nc types.NodeClientV1, rc types.ClientV1) {
+	c.client.node = nc
+	c.client.rest = rc
 }
 
-func (c *Env) GetClient() types.NodeClientV1 {
-	return c.client
+func (c *Env) GetNodeClient() types.NodeClientV1 {
+	return c.client.node
+}
+
+func (c *Env) GetRestClient() types.ClientV1 {
+	return c.client.rest
 }
 
 func (c *Env) SetExporter(e *exporter.Exporter) {

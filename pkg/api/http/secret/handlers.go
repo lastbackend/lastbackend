@@ -26,12 +26,74 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/log"
 	"github.com/lastbackend/lastbackend/pkg/util/http/utils"
 	"net/http"
+	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 )
 
 const (
 	logLevel  = 2
 	logPrefix = "api:handler:secret"
 )
+
+func SecretGetH(w http.ResponseWriter, r *http.Request) {
+
+	// swagger:operation GET /namespace/{namespace}/secret secret secretList
+	//
+	// Shows a list of secrets
+	//
+	// ---
+	// produces:
+	// - application/json
+	// parameters:
+	//   - name: namespace
+	//     in: path
+	//     description: namespace id
+	//     required: true
+	//     type: string
+	// responses:
+	//   '200':
+	//     description: Secret list response
+	//     schema:
+	//       "$ref": "#/definitions/views_secret_list"
+	//   '404':
+	//     description: Namespace not found
+	//   '500':
+	//     description: Internal server error
+
+	log.V(logLevel).Debugf("%s:list:> get secret", logPrefix)
+
+
+
+	var (
+		sid = utils.Vars(r)["secret"]
+		rm  = distribution.NewSecretModel(r.Context(), envs.Get().GetStorage())
+	)
+
+	item, err := rm.Get(sid)
+	if err != nil {
+		log.V(logLevel).Errorf("%s:list:> find secret list err: %s", logPrefix, err.Error())
+		errors.HTTP.InternalServerError(w)
+		return
+	}
+
+	if item == nil {
+		log.V(logLevel).Warnf("%s:update:> secret `%s` not found", logPrefix, sid)
+		errors.New("secret").NotFound().Http(w)
+		return
+	}
+
+	response, err := v1.View().Secret().New(item).ToJson()
+	if err != nil {
+		log.V(logLevel).Errorf("%s:list:> convert struct to json err: %s", logPrefix, err.Error())
+		errors.HTTP.InternalServerError(w)
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+	if _, err := w.Write(response); err != nil {
+		log.V(logLevel).Errorf("%s:list:> write response err: %s", logPrefix, err.Error())
+		return
+	}
+}
 
 func SecretListH(w http.ResponseWriter, r *http.Request) {
 
@@ -60,27 +122,13 @@ func SecretListH(w http.ResponseWriter, r *http.Request) {
 
 	log.V(logLevel).Debugf("%s:list:> get secrets list", logPrefix)
 
-	nid := utils.Vars(r)["namespace"]
+
 
 	var (
 		rm  = distribution.NewSecretModel(r.Context(), envs.Get().GetStorage())
-		nsm = distribution.NewNamespaceModel(r.Context(), envs.Get().GetStorage())
 	)
 
-	ns, err := nsm.Get(nid)
-	if err != nil {
-		log.V(logLevel).Errorf("%s:list:> get namespace", logPrefix, err.Error())
-		errors.HTTP.InternalServerError(w)
-		return
-	}
-	if ns == nil {
-		err := errors.New("namespace not found")
-		log.V(logLevel).Errorf("%s:list:> get namespace", logPrefix, err.Error())
-		errors.New("namespace").NotFound().Http(w)
-		return
-	}
-
-	items, err := rm.ListByNamespace(ns.Meta.Name)
+	items, err := rm.List(types.EmptyString)
 	if err != nil {
 		log.V(logLevel).Errorf("%s:list:> find secret list err: %s", logPrefix, err.Error())
 		errors.HTTP.InternalServerError(w)
@@ -133,11 +181,8 @@ func SecretCreateH(w http.ResponseWriter, r *http.Request) {
 
 	log.V(logLevel).Debugf("%s:create:> create secret", logPrefix)
 
-	nid := utils.Vars(r)["namespace"]
-
 	var (
 		rm  = distribution.NewSecretModel(r.Context(), envs.Get().GetStorage())
-		nsm = distribution.NewNamespaceModel(r.Context(), envs.Get().GetStorage())
 	)
 
 	// request body struct
@@ -148,22 +193,9 @@ func SecretCreateH(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	ns, err := nsm.Get(nid)
+	rs, err := rm.Create(opts)
 	if err != nil {
-		log.V(logLevel).Errorf("%s:create:> get namespace", logPrefix, err.Error())
-		errors.HTTP.InternalServerError(w)
-		return
-	}
-	if ns == nil {
-		err := errors.New("namespace not found")
-		log.V(logLevel).Errorf("%s:create:> get namespace", logPrefix, err.Error())
-		errors.New("namespace").NotFound().Http(w)
-		return
-	}
-
-	rs, err := rm.Create(ns, opts)
-	if err != nil {
-		log.V(logLevel).Errorf("%s:create:> create secret err: %s", logPrefix, ns.Meta.Name, err.Error())
+		log.V(logLevel).Errorf("%s:create:> create secret err: %s", logPrefix, err.Error())
 		errors.HTTP.InternalServerError(w)
 		return
 	}
@@ -217,14 +249,12 @@ func SecretUpdateH(w http.ResponseWriter, r *http.Request) {
 	//   '500':
 	//     description: Internal server error
 
-	nid := utils.Vars(r)["namespace"]
 	sid := utils.Vars(r)["secret"]
 
-	log.V(logLevel).Debugf("%s:update:> update secret `%s`", logPrefix, nid)
+	log.V(logLevel).Debugf("%s:update:> update secret `%s`", logPrefix, sid)
 
 	var (
 		rm  = distribution.NewSecretModel(r.Context(), envs.Get().GetStorage())
-		nsm = distribution.NewNamespaceModel(r.Context(), envs.Get().GetStorage())
 	)
 
 	// request body struct
@@ -235,22 +265,9 @@ func SecretUpdateH(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	ns, err := nsm.Get(nid)
+	ss, err := rm.Get(sid)
 	if err != nil {
-		log.V(logLevel).Errorf("%s:update:> get namespace", logPrefix, err.Error())
-		errors.HTTP.InternalServerError(w)
-		return
-	}
-	if ns == nil {
-		err := errors.New("namespace not found")
-		log.V(logLevel).Errorf("%s:update:> get namespace", logPrefix, err.Error())
-		errors.New("namespace").NotFound().Http(w)
-		return
-	}
-
-	ss, err := rm.Get(ns.Meta.Name, sid)
-	if err != nil {
-		log.V(logLevel).Errorf("%s:update:> check secret exists by selflink `%s` err: %s", logPrefix, ns.Meta.SelfLink, err.Error())
+		log.V(logLevel).Errorf("%s:update:> check secret exists by selflink err: %s", logPrefix, err.Error())
 		errors.HTTP.InternalServerError(w)
 		return
 	}
@@ -260,9 +277,9 @@ func SecretUpdateH(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	ss, err = rm.Update(ss, ns, opts)
+	ss, err = rm.Update(ss,opts)
 	if err != nil {
-		log.V(logLevel).Errorf("%s:update:> update secret `%s` err: %s", logPrefix, ns.Meta.Name, err.Error())
+		log.V(logLevel).Errorf("%s:update:> update secret `%s` err: %s", logPrefix, ss.Meta.SelfLink, err.Error())
 		errors.HTTP.InternalServerError(w)
 	}
 
@@ -308,30 +325,15 @@ func SecretRemoveH(w http.ResponseWriter, r *http.Request) {
 	//   '500':
 	//     description: Internal server error
 
-	nid := utils.Vars(r)["namespace"]
 	sid := utils.Vars(r)["secret"]
 
 	log.V(logLevel).Debugf("%s:remove:> remove secret %s", logPrefix, sid)
 
 	var (
 		sm  = distribution.NewSecretModel(r.Context(), envs.Get().GetStorage())
-		nsm = distribution.NewNamespaceModel(r.Context(), envs.Get().GetStorage())
 	)
 
-	ns, err := nsm.Get(nid)
-	if err != nil {
-		log.V(logLevel).Errorf("%s:remove:> get namespace", logPrefix, err.Error())
-		errors.HTTP.InternalServerError(w)
-		return
-	}
-	if ns == nil {
-		err := errors.New("namespace not found")
-		log.V(logLevel).Errorf("%s:remove:> get namespace", logPrefix, err.Error())
-		errors.New("namespace").NotFound().Http(w)
-		return
-	}
-
-	ss, err := sm.Get(ns.Meta.Name, sid)
+	ss, err := sm.Get(sid)
 	if err != nil {
 		log.V(logLevel).Errorf("%s:remove:> get secret by id `%s` err: %s", logPrefix, sid, err.Error())
 		errors.HTTP.InternalServerError(w)

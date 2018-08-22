@@ -45,8 +45,8 @@ func (Key) Endpoint(namespace, service string) string {
 	return fmt.Sprintf("%s:%s", namespace, service)
 }
 
-func (Key) Secret(namespace, name string) string {
-	return fmt.Sprintf("%s:%s", namespace, name)
+func (Key) Secret(name string) string {
+	return fmt.Sprintf("%s", name)
 }
 
 func (Key) Volume(namespace, name string) string {

@@ -129,7 +129,7 @@ type SpecTemplateContainer struct {
 // swagger:model types_spec_template_container_image
 type SpecTemplateContainerImage struct {
 	Name   string `json:"name"`
-	Auth   string `json:"auth"`
+	Secret string `json:"secret"`
 	Policy string `json:"policy"`
 }
 

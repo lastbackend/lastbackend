@@ -212,7 +212,9 @@ func (s *ServiceSources) String() string {
 
 func FromApiServiceView(service *views.Service) *Service {
 	var item = new(Service)
-
+	if service == nil {
+		return nil
+	}
 	item.Meta.Name = service.Meta.Name
 	item.Meta.Description = service.Meta.Description
 	item.Meta.Namespace = service.Meta.Namespace

@@ -25,30 +25,79 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/cli/envs"
 	"github.com/lastbackend/lastbackend/pkg/cli/view"
 	"github.com/spf13/cobra"
+	"github.com/lastbackend/lastbackend/pkg/distribution/types"
+	"encoding/base64"
+	"io/ioutil"
+	"os"
 )
 
 func init() {
+	secretUpdateCmd.Flags().StringP("text", "t", "", "write raw data")
+	secretUpdateCmd.Flags().StringArrayP("file", "f", make([]string, 0), "create secret from files")
+	secretUpdateCmd.Flags().StringP("registry", "r", types.EmptyString, "create hub secret")
+	secretUpdateCmd.Flags().StringP("username", "u", types.EmptyString, "add username to registry secret")
+	secretUpdateCmd.Flags().StringP("password", "p", types.EmptyString, "add password to registry secret")
 	secretCmd.AddCommand(secretUpdateCmd)
 }
 
 const secretUpdateExample = `
-  # Update 'token' secret record with 'new-secret' data  in 'ns-demo' namespace
-  lb secret update ns-demo token new-secret"
+  # Update 'token' secret record with 'new-secret' data
+  lb secret update token new-secret"
 `
 
 var secretUpdateCmd = &cobra.Command{
-	Use:     "update [NAMESPACE] [NAME] [DATA]",
+	Use:     "update [NAME]",
 	Short:   "Change configuration of the secret",
 	Example: secretUpdateExample,
-	Args:    cobra.ExactArgs(3),
+	Args:    cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 
-		namespace := args[0]
-		name := args[1]
-		data := args[2]
+		registry, _ := cmd.Flags().GetString("registry")
+		text, _ := cmd.Flags().GetString("text")
+		files, _ := cmd.Flags().GetStringArray("file")
 
+		name := args[0]
 		opts := new(request.SecretUpdateOptions)
-		opts.Data = &data
+		opts.Data = make(map[string][]byte, 0)
+
+		switch true {
+		case text != types.EmptyString:
+			var (
+				data = []byte(text)
+			)
+			opts.Kind = types.KindSecretText
+			opts.Data[types.KindSecretText] = []byte(base64.StdEncoding.EncodeToString(data))
+			break
+		case registry != types.EmptyString:
+			opts.Kind = types.KindSecretRegistry
+
+			username, _ := cmd.Flags().GetString("username")
+			password, _ := cmd.Flags().GetString("password")
+
+			s := new(types.Secret)
+			s.EncodeSecretRegistryData(types.SecretRegistryData{
+				Registry: registry,
+				Username: username,
+				Password: password,
+			})
+			opts.Data = s.Data
+
+			break
+		case len(files) > 0:
+			opts.Kind = types.KindSecretFiles
+			for _, f := range files {
+				c, err := ioutil.ReadFile(f)
+				if err != nil {
+					_ = fmt.Errorf("failed read data from file: %s", f)
+					os.Exit(1)
+				}
+				opts.Data[f] = c
+			}
+			break
+		default:
+			fmt.Println("You need to provide secret type")
+			os.Exit(0)
+		}
 
 		if err := opts.Validate(); err != nil {
 			fmt.Println(err.Err())
@@ -56,7 +105,7 @@ var secretUpdateCmd = &cobra.Command{
 		}
 
 		cli := envs.Get().GetClient()
-		response, err := cli.V1().Namespace(namespace).Secret(name).Update(envs.Background(), opts)
+		response, err := cli.V1().Secret(name).Update(envs.Background(), opts)
 		if err != nil {
 			fmt.Println(err)
 			return

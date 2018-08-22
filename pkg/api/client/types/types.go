@@ -29,6 +29,7 @@ import (
 type ClientV1 interface {
 	Cluster() ClusterClientV1
 	Namespace(args ...string) NamespaceClientV1
+	Secret(args ...string) SecretClientV1
 }
 
 type ClusterClientV1 interface {
@@ -65,10 +66,8 @@ type IngressClientV1 interface {
 
 type NamespaceClientV1 interface {
 	Service(args ...string) ServiceClientV1
-	Secret(args ...string) SecretClientV1
-	Volume(args ...string) VolumeClientV1
 	Route(args ...string) RouteClientV1
-
+	Volume(args ...string) VolumeClientV1
 	Create(ctx context.Context, opts *rv1.NamespaceCreateOptions) (*vv1.Namespace, error)
 	List(ctx context.Context) (*vv1.NamespaceList, error)
 	Get(ctx context.Context) (*vv1.Namespace, error)
@@ -106,6 +105,7 @@ type EventsClientV1 interface {
 }
 
 type SecretClientV1 interface {
+	Get(ctx context.Context) (*vv1.Secret, error)
 	Create(ctx context.Context, opts *rv1.SecretCreateOptions) (*vv1.Secret, error)
 	List(ctx context.Context) (*vv1.SecretList, error)
 	Update(ctx context.Context, opts *rv1.SecretUpdateOptions) (*vv1.Secret, error)

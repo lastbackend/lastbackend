@@ -105,7 +105,9 @@ func (s *Service) Create(namespace *types.Namespace, opts *types.ServiceCreateOp
 		return nil, errors.New("opts can not be nil")
 	case opts.Name == nil || *opts.Name == "":
 		return nil, errors.New("name is required")
-	case opts.Image == nil || *opts.Image == "":
+	case opts.Image == nil:
+		return nil, errors.New("image is required")
+	case opts.Image.Name == nil  || *opts.Image.Name == types.EmptyString:
 		return nil, errors.New("image is required")
 	}
 
@@ -126,14 +128,13 @@ func (s *Service) Create(namespace *types.Namespace, opts *types.ServiceCreateOp
 	c := types.SpecTemplateContainer{}
 	c.SetDefault()
 	c.Role = types.ContainerRolePrimary
-	c.Image.Name = *opts.Image
 
 	// prepare spec data for service
 	service.Spec.SetDefault()
 	service.Spec.Template.Containers = append(service.Spec.Template.Containers, c)
 
 	if opts.Spec != nil {
-		service.Spec.Update(opts.Spec)
+		service.Spec.Update(opts.Image, opts.Spec)
 	}
 
 	service.SelfLink()
@@ -160,9 +161,9 @@ func (s *Service) Update(service *types.Service, opts *types.ServiceUpdateOption
 		service.Meta.Description = *opts.Description
 	}
 
-	if opts.Spec != nil {
+	if opts.Spec != nil || opts.Image != nil {
 		service.Status.State = types.StateProvision
-		service.Spec.Update(opts.Spec)
+		service.Spec.Update(opts.Image, opts.Spec)
 	}
 
 	if err := s.storage.Set(s.context, s.storage.Collection().Service(),

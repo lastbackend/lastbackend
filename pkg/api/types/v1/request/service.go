@@ -22,13 +22,14 @@ package request
 type ServiceCreateOptions struct {
 	Name        *string             `json:"name"`
 	Description *string             `json:"description"`
-	Image       *string             `json:"image"`
+	Image       *ServiceImageSpec   `json:"image"`
 	Spec        *ServiceOptionsSpec `json:"spec"`
 }
 
 // swagger:model request_service_update
 type ServiceUpdateOptions struct {
 	Description *string             `json:"description"`
+	Image       *ServiceImageSpec   `json:"image"`
 	Spec        *ServiceOptionsSpec `json:"spec"`
 }
 
@@ -36,6 +37,11 @@ type ServiceUpdateOptions struct {
 // swagger:model request_service_remove
 type ServiceRemoveOptions struct {
 	Force bool `json:"force"`
+}
+
+type ServiceImageSpec struct {
+	Name   *string `json:"name"`
+	Secret *string `json:"secret"`
 }
 
 // swagger:model request_service_spec

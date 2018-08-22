@@ -25,8 +25,6 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 	"github.com/lastbackend/lastbackend/pkg/log"
 	"github.com/lastbackend/lastbackend/pkg/storage"
-
-	"github.com/lastbackend/lastbackend/pkg/util/generator"
 )
 
 const (
@@ -38,34 +36,39 @@ type Secret struct {
 	storage storage.Storage
 }
 
-func (n *Secret) Get(namespace, name string) (*types.Secret, error) {
+func (n *Secret) Get(name string) (*types.Secret, error) {
 
-	log.V(logLevel).Debugf("%s:get:> get secret by id %s/%s", logSecretPrefix, namespace, name)
+	log.V(logLevel).Debugf("%s:get:> get secret by id %s/%s", logSecretPrefix, name)
 
 	item := new(types.Secret)
 
-	err := n.storage.Get(n.context, n.storage.Collection().Secret(), n.storage.Key().Secret(namespace, name), &item, nil)
+	err := n.storage.Get(n.context, n.storage.Collection().Secret(), n.storage.Key().Secret(name), &item, nil)
 	if err != nil {
 
 		if errors.Storage().IsErrEntityNotFound(err) {
-			log.V(logLevel).Warnf("%s:get:> in namespace %s by name %s not found", logSecretPrefix, namespace, name)
+			log.V(logLevel).Warnf("%s:get:> in namespace %s by name %s not found", logSecretPrefix, name)
 			return nil, nil
 		}
 
-		log.V(logLevel).Errorf("%s:get:> in namespace %s by name %s error: %s", logSecretPrefix, namespace, name, err)
+		log.V(logLevel).Errorf("%s:get:> in namespace %s by name %s error: %s", logSecretPrefix, name, err)
 		return nil, err
 	}
 
 	return item, nil
 }
 
-func (n *Secret) ListByNamespace(namespace string) (*types.SecretList, error) {
+func (n *Secret) List(filter string) (*types.SecretList, error) {
+
+	var f string
 
 	log.V(logLevel).Debugf("%s:listbynamespace:> get secrets list by namespace", logSecretPrefix)
 
 	list := types.NewSecretList()
-	filter := n.storage.Filter().Secret().ByNamespace(namespace)
-	err := n.storage.List(n.context, n.storage.Collection().Secret(), filter, list, nil)
+	if filter != types.EmptyString {
+		f = n.storage.Filter().Secret().ByNamespace(filter)
+	}
+
+	err := n.storage.List(n.context, n.storage.Collection().Secret(), f, list, nil)
 	if err != nil {
 		log.V(logLevel).Error("%s:listbynamespace:> get secrets list by namespace err: %s", logSecretPrefix, err)
 		return list, err
@@ -76,21 +79,19 @@ func (n *Secret) ListByNamespace(namespace string) (*types.SecretList, error) {
 	return list, nil
 }
 
-func (n *Secret) Create(namespace *types.Namespace, opts *types.SecretCreateOptions) (*types.Secret, error) {
+func (n *Secret) Create(opts *types.SecretCreateOptions) (*types.Secret, error) {
 
 	log.V(logLevel).Debugf("%s:crete:> create secret %#v", logSecretPrefix, opts)
 
 	secret := new(types.Secret)
 	secret.Meta.SetDefault()
-	secret.Meta.Name = generator.GenerateRandomString(10)
-	secret.Meta.Namespace = namespace.Meta.Name
-	if opts.Data != nil {
-		secret.Data = *opts.Data
-	}
+	secret.Meta.Name = opts.Name
+	secret.Meta.Kind = opts.Kind
+	secret.Data = opts.Data
 	secret.SelfLink()
 
 	if err := n.storage.Put(n.context, n.storage.Collection().Secret(),
-		n.storage.Key().Secret(secret.Meta.Namespace, secret.Meta.Name), secret, nil); err != nil {
+		n.storage.Key().Secret(secret.Meta.Name), secret, nil); err != nil {
 		log.V(logLevel).Errorf("%s:crete:> insert secret err: %s", logSecretPrefix, err)
 		return nil, err
 	}
@@ -98,16 +99,16 @@ func (n *Secret) Create(namespace *types.Namespace, opts *types.SecretCreateOpti
 	return secret, nil
 }
 
-func (n *Secret) Update(secret *types.Secret, namespace *types.Namespace, opts *types.SecretUpdateOptions) (*types.Secret, error) {
+func (n *Secret) Update(secret *types.Secret, opts *types.SecretUpdateOptions) (*types.Secret, error) {
 
 	log.V(logLevel).Debugf("%s:update:> update secret %s", logSecretPrefix, secret.Meta.Name)
 
-	if opts.Data != nil {
-		secret.Data = *opts.Data
-	}
+	secret.Meta.Kind = opts.Kind
+	secret.Data = opts.Data
+
 
 	if err := n.storage.Set(n.context, n.storage.Collection().Secret(),
-		n.storage.Key().Secret(secret.Meta.Namespace, secret.Meta.Name), secret, nil); err != nil {
+		n.storage.Key().Secret(secret.Meta.Name), secret, nil); err != nil {
 		log.V(logLevel).Errorf("%s:update:> update secret err: %s", logSecretPrefix, err)
 		return nil, err
 	}
@@ -120,7 +121,7 @@ func (n *Secret) Remove(secret *types.Secret) error {
 	log.V(logLevel).Debugf("%s:remove:> remove secret %#v", logSecretPrefix, secret)
 
 	if err := n.storage.Del(n.context, n.storage.Collection().Secret(),
-		n.storage.Key().Secret(secret.Meta.Namespace, secret.Meta.Name)); err != nil {
+		n.storage.Key().Secret(secret.Meta.Name)); err != nil {
 		log.V(logLevel).Errorf("%s:remove:> remove secret  err: %s", logSecretPrefix, err)
 		return err
 	}

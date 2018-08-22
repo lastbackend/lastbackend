@@ -101,9 +101,10 @@ func Daemon() {
 		os.Exit(0)
 	}
 
-	c := rest.V1().Cluster().Node(state.Node().Info.Hostname)
+	n := rest.V1().Cluster().Node(state.Node().Info.Hostname)
+	s := rest.V1()
+	envs.Get().SetClient(n, s)
 
-	envs.Get().SetClient(c)
 	e := exporter.NewExporter()
 	e.SetDispatcher(events.Dispatcher)
 	envs.Get().SetExporter(e)

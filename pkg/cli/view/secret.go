@@ -26,20 +26,28 @@ import (
 type SecretList []*Secret
 type Secret struct {
 	Meta SecretMeta `json:"meta"`
+	Data map[string]int
 }
 
 type SecretMeta struct {
 	Name string `json:"name"`
+	Kind string `json:"kind"`
 }
 
 func (sl *SecretList) Print() {
 
-	t := table.New([]string{"NAME"})
+	t := table.New([]string{"NAME", "TYPE", "SIZE"})
 	t.VisibleHeader = true
 
 	for _, s := range *sl {
 		var data = map[string]interface{}{}
 		data["NAME"] = s.Meta.Name
+		data["TYPE"] = s.Meta.Kind
+		size := 0
+		for _, d := range s.Data {
+			size+=d
+		}
+		data["SIZE"] = size
 		t.AddRow(data)
 	}
 	println()
@@ -48,16 +56,31 @@ func (sl *SecretList) Print() {
 }
 
 func (s *Secret) Print() {
+	var meta = map[string]interface{}{}
+	meta["NAME"] = s.Meta.Name
+	meta["TYPE"] = s.Meta.Kind
+	println()
+	table.PrintHorizontal(meta)
+	println()
 	var data = map[string]interface{}{}
-	data["NAME"] = s.Meta.Name
-	println()
+	for n, d := range s.Data {
+		data[n] = d
+	}
 	table.PrintHorizontal(data)
-	println()
+
 }
 
 func FromApiSecretView(secret *views.Secret) *Secret {
 	var item = new(Secret)
+
 	item.Meta.Name = secret.Meta.Name
+	item.Meta.Kind = secret.Meta.Kind
+	item.Data = make(map[string]int, 0)
+
+	for n,d := range secret.Data {
+		item.Data[n] = len(d)
+	}
+
 	return item
 }
 

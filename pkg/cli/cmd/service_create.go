@@ -27,13 +27,17 @@ import (
 	"github.com/spf13/cobra"
 	"strconv"
 	"strings"
+	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 )
 
 func init() {
 	serviceCreateCmd.Flags().StringP("desc", "d", "", "set service description")
 	serviceCreateCmd.Flags().StringP("name", "n", "", "set service name")
+	serviceCreateCmd.Flags().StringP("auth", "a", "", "service image auth secret")
 	serviceCreateCmd.Flags().Int64P("memory", "m", 128, "set service spec memory")
 	serviceCreateCmd.Flags().IntP("replicas", "r", 1, "set service replicas")
+	serviceCreateCmd.Flags().StringArrayP("port", "p", make([]string, 0), "set service ports")
+	serviceCreateCmd.Flags().StringArrayP("envs", "e", make([]string, 0), "set service envs")
 	serviceCmd.AddCommand(serviceCreateCmd)
 }
 
@@ -55,10 +59,13 @@ var serviceCreateCmd = &cobra.Command{
 		description, _ := cmd.Flags().GetString("desc")
 		memory, _ := cmd.Flags().GetInt64("memory")
 		name, _ := cmd.Flags().GetString("name")
-		ports, _ := cmd.Flags().GetString("ports")
+		ports, _ := cmd.Flags().GetStringArray("ports")
+		env, _ := cmd.Flags().GetStringArray("envs")
 		replicas, _ := cmd.Flags().GetInt("replicas")
+		auth, _ := cmd.Flags().GetString("auth")
 
 		opts := new(request.ServiceCreateOptions)
+		opts.Image = new(request.ServiceImageSpec)
 		opts.Spec = new(request.ServiceOptionsSpec)
 
 		if len(name) != 0 {
@@ -77,25 +84,35 @@ var serviceCreateCmd = &cobra.Command{
 			opts.Spec.Replicas = &replicas
 		}
 
-		if ports != "" {
+		if len(ports) > 0 {
+			opts.Spec.Ports = make(map[uint16]string, 0)
 
-			pm := strings.Split(ports, ":")
-			if len(pm) != 2 {
-				fmt.Println("port mapping is in invalid format")
-				return
+			for _, p := range ports {
+				pm := strings.Split(p, ":")
+				if len(pm) != 2 {
+					fmt.Println("port mapping is in invalid format")
+					return
+				}
+
+				ext, err := strconv.ParseUint(pm[0], 10, 16)
+				if err != nil {
+					fmt.Println("port mapping is in invalid format")
+					return
+				}
+
+				opts.Spec.Ports[uint16(ext)] = pm[1]
 			}
+		}
 
-			ext, err := strconv.ParseUint(pm[0], 10, 16)
-			if err != nil {
-				fmt.Println("port mapping is in invalid format")
-				return
-			}
-
-			opts.Spec.Ports[uint16(ext)] = pm[1]
+		if len(env) > 0 {
+			opts.Spec.EnvVars = &env
 		}
 
 		opts.Description = &description
-		opts.Image = &image
+		opts.Image.Name = &image
+		if auth != types.EmptyString {
+			opts.Image.Secret = &auth
+		}
 
 		if err := opts.Validate(); err != nil {
 			fmt.Println(err.Err())
