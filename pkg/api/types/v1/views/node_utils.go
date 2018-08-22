@@ -89,10 +89,10 @@ func (nv *NodeView) ToNodeStatus(status types.NodeStatus) NodeStatus {
 	return ns
 }
 
-func (nv *NodeView) ToNodeSpec(status types.NodeSpec) NodeSpec {
-	spec := NodeSpec{}
-
-	return spec
+func (nv *NodeView) ToNodeSpec(spec types.NodeSpec) NodeSpec {
+	ns := NodeSpec{}
+	ns.Security.TLS = spec.Security.TLS
+	return ns
 }
 
 func (obj *Node) ToJson() ([]byte, error) {

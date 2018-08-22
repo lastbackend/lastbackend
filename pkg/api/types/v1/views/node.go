@@ -42,8 +42,6 @@ type NodeMeta struct {
 	NodeInfo
 	Name     string    `json:"name"`
 	SelfLink string    `json:"self_link"`
-	Subnet   string    `json:"subnet"`
-	Cluster  string    `json:"cluster"`
 	Created  time.Time `json:"created"`
 	Updated  time.Time `json:"updated"`
 }
@@ -61,19 +59,6 @@ type NodeInfo struct {
 	} `json:"ip"`
 }
 
-// NodeStatus - node state struct
-// swagger:model views_node_status
-type NodeStatus struct {
-	// state
-	State NodeStatusState `json:"state"`
-	// node status online
-	Online bool `json:"online"`
-	// Node Capacity
-	Capacity NodeResources `json:"capacity"`
-	// Node Allocated
-	Allocated NodeResources `json:"allocated"`
-}
-
 type NodeStatusState struct {
 	CRI NodeStatusInterfaceState `json:"cri"`
 	CNI NodeStatusInterfaceState `json:"cni"`
@@ -88,32 +73,19 @@ type NodeStatusInterfaceState struct {
 	Message string `json:"message"`
 }
 
+// NodeStatus - node state struct
+// swagger:model views_node_status
+type NodeStatus struct {
+	State     NodeStatusState `json:"state"`
+	Online    bool            `json:"online"`
+	Capacity  NodeResources   `json:"capacity"`
+	Allocated NodeResources   `json:"allocated"`
+}
+
+// swagger:ignore
+// swagger:model types_node_spec
 type NodeSpec struct {
-	Network   map[string]SubnetSpec   `json:"network"`
-	Pods      map[string]PodSpec      `json:"pods"`
-	Volumes   map[string]VolumeSpec   `json:"volumes"`
-	Endpoints map[string]EndpointSpec `json:"endpoints"`
-	Security  NodeSecurity            `json:"security"`
-}
-
-type SubnetSpec struct {
-	// Subnet state
-	State string `json:"state"`
-	// Node network type
-	Type string `json:"type"`
-	// Node Subnet subnet info
-	CIDR string `json:"cidr"`
-	// Node Subnet interface
-	IFace NetworkInterface `json:"iface"`
-	// Node Public IP
-	Addr string `json:"addr"`
-}
-
-type NetworkInterface struct {
-	Index int    `json:"index"`
-	Name  string `json:"name"`
-	Addr  string `json:"addr"`
-	HAddr string `json:"HAddr"`
+	Security NodeSecurity `json:"security"`
 }
 
 type NodeSecurity struct {
@@ -132,8 +104,8 @@ type NodeResources struct {
 
 // swagger:model views_node_spec
 type NodeManifest struct {
-	Network   map[string]*types.SubnetManifest   `json:"network, omitempty"`
-	Pods      map[string]*types.PodManifest      `json:"pods, omitempty"`
-	Volumes   map[string]*types.VolumeManifest   `json:"volumes, omitempty"`
-	Endpoints map[string]*types.EndpointManifest `json:"endpoints, omitempty"`
+	Network   map[string]*types.SubnetManifest   `json:"network,omitempty"`
+	Pods      map[string]*types.PodManifest      `json:"pods,omitempty"`
+	Volumes   map[string]*types.VolumeManifest   `json:"volumes,omitempty"`
+	Endpoints map[string]*types.EndpointManifest `json:"endpoints,omitempty"`
 }

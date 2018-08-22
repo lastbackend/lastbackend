@@ -34,6 +34,19 @@ type EndpointMeta struct {
 }
 
 type EndpointSpec struct {
+	// Endpoint state
+	State string `json:"state"`
+
+	IP        string               `json:"ip"`
+	Domain    string               `json:"domain"`
+	PortMap   map[uint16]string    `json:"port_map"`
+	Strategy  EndpointSpecStrategy `json:"strategy"`
+	Policy    string               `json:"policy"`
+}
+
+type EndpointSpecStrategy struct {
+	Route string `json:"route"`
+	Bind  string `json:"bind"`
 }
 
 type EndpointStatus struct {

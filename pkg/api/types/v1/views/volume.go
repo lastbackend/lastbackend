@@ -33,6 +33,11 @@ type VolumeMeta struct {
 }
 
 type VolumeSpec struct {
+	State VolumeSpecState `json:"state"`
+}
+
+type VolumeSpecState struct {
+	Destroy bool `json:"destroy"`
 }
 
 type VolumeStatus struct {
