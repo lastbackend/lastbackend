@@ -26,6 +26,7 @@ import (
 
 const (
 	StatusBadParameter  = "Bad Parameter"
+	StatusBadRequest    = "Bad Request"
 	StatusUnknown       = "Unknown"
 	StatusIncorrectXml  = "Incorrect XML"
 	StatusIncorrectJson = "Incorrect json"
@@ -132,6 +133,14 @@ func (e *err) BadParameter(attr string, err ...error) *Err {
 		Attr:   attr,
 		origin: getError(joinNameAndMessage(e.s, "bad parameter "+strings.ToLower(attr)), err...),
 		http:   HTTP.getBadParameter(attr),
+	}
+}
+
+func (e *err) BadRequest(err ...error) *Err {
+	return &Err{
+		Code:   StatusBadParameter,
+		origin: getError(joinNameAndMessage(e.s, "bad request"), err...),
+		http:   HTTP.getBadRequest(),
 	}
 }
 

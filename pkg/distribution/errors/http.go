@@ -95,6 +95,14 @@ func (Http) getBadParameter(name string) *Http {
 	}
 }
 
+func (Http) getBadRequest() *Http {
+	return &Http{
+		Code:    http.StatusBadRequest,
+		Status:  StatusBadRequest,
+		Message: fmt.Sprintf("Bad request"),
+	}
+}
+
 func (Http) getNotUnique(name string) *Http {
 	return &Http{
 		Code:    http.StatusBadRequest,
