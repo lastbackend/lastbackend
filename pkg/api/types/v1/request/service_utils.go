@@ -84,8 +84,11 @@ func (s *ServiceCreateOptions) DecodeAndValidate(reader io.Reader) (*types.Servi
 	opts.Name = s.Name
 	opts.Description = s.Description
 
-	opts.Image.Name = s.Image.Name
-	opts.Image.Secret = s.Image.Secret
+	if s.Image != nil {
+		opts.Image = new(types.ServiceImageSpec)
+		opts.Image.Name = s.Image.Name
+		opts.Image.Secret = s.Image.Secret
+	}
 
 	if s.Spec != nil {
 		opts.Spec = new(types.ServiceOptionsSpec)

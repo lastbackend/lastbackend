@@ -48,10 +48,11 @@ func TestSecretList(t *testing.T) {
 	stg, _ := storage.Get("mock")
 	envs.Get().SetStorage(stg)
 
-	ns1 := getNamespaceAsset("demo", "")
-	ns2 := getNamespaceAsset("test", "")
-	r1 := getSecretAsset(ns1.Meta.Name, "demo", "demo")
-	r2 := getSecretAsset(ns1.Meta.Name, "test", "test")
+	r1 := getSecretAsset("demo")
+	r2 := getSecretAsset("test")
+
+	r1.Data["demo"]=[]byte("demo")
+	r2.Data["test"]=[]byte("test")
 
 	rl := types.NewSecretMap()
 	rl.Items[r1.SelfLink()] = r1
@@ -63,7 +64,6 @@ func TestSecretList(t *testing.T) {
 
 	type args struct {
 		ctx       context.Context
-		namespace *types.Namespace
 	}
 
 	tests := []struct {
@@ -78,17 +78,8 @@ func TestSecretList(t *testing.T) {
 		expectedCode int
 	}{
 		{
-			name:         "checking get secrets list if namespace not found",
-			args:         args{ctx, ns2},
-			fields:       fields{stg},
-			handler:      secret.SecretListH,
-			err:          "{\"code\":404,\"status\":\"Not Found\",\"message\":\"Namespace not found\"}",
-			wantErr:      true,
-			expectedCode: http.StatusNotFound,
-		},
-		{
 			name:         "checking get secrets list successfully",
-			args:         args{ctx, ns1},
+			args:         args{ctx},
 			fields:       fields{stg},
 			handler:      secret.SecretListH,
 			want:         rl,
@@ -112,18 +103,15 @@ func TestSecretList(t *testing.T) {
 			clear()
 			defer clear()
 
-			err := tc.fields.stg.Put(context.Background(), stg.Collection().Namespace(), tc.fields.stg.Key().Namespace(ns1.Meta.Name), ns1, nil)
+			err := stg.Put(context.Background(), stg.Collection().Secret(), stg.Key().Secret(r1.Meta.Name), &r1, nil)
 			assert.NoError(t, err)
 
-			err = stg.Put(context.Background(), stg.Collection().Secret(), stg.Key().Secret(r1.Meta.Namespace, r1.Meta.Name), &r1, nil)
-			assert.NoError(t, err)
-
-			err = stg.Put(context.Background(), stg.Collection().Secret(), stg.Key().Secret(r2.Meta.Namespace, r2.Meta.Name), &r2, nil)
+			err = stg.Put(context.Background(), stg.Collection().Secret(), stg.Key().Secret(r2.Meta.Name), &r2, nil)
 			assert.NoError(t, err)
 
 			// Create assert request to pass to our handler. We don't have any query parameters for now, so we'll
 			// pass 'nil' as the third parameter.
-			req, err := http.NewRequest("GET", fmt.Sprintf("/namespace/%s", tc.args.namespace.Meta.Name), nil)
+			req, err := http.NewRequest("GET", fmt.Sprintf("/secret"), nil)
 			assert.NoError(t, err)
 
 			if tc.headers != nil {
@@ -133,7 +121,7 @@ func TestSecretList(t *testing.T) {
 			}
 
 			r := mux.NewRouter()
-			r.HandleFunc("/namespace/{namespace}", tc.handler)
+			r.HandleFunc("/secret", tc.handler)
 
 			setRequestVars(r, req)
 
@@ -173,9 +161,11 @@ type SecretCreateOptions struct {
 	request.SecretCreateOptions
 }
 
-func createSecretCreateOptions(data *string) *SecretCreateOptions {
+func createSecretCreateOptions(s *types.Secret) *SecretCreateOptions {
 	opts := new(SecretCreateOptions)
-	opts.Data = data
+	opts.Name = s.Meta.Name
+	opts.Kind = s.Meta.Kind
+	opts.Data = s.Data
 	return opts
 }
 
@@ -192,12 +182,9 @@ func TestSecretCreate(t *testing.T) {
 	stg, _ := storage.Get("mock")
 	envs.Get().SetStorage(stg)
 
-	srtPointer := func(s string) *string { return &s }
-
-	ns1 := getNamespaceAsset("demo", "")
-	ns2 := getNamespaceAsset("test", "")
-
-	r1 := getSecretAsset(ns1.Meta.Name, "demo", "demo")
+	r1 := getSecretAsset("demo")
+	r1.Meta.Kind = types.KindSecretText
+	r1.Data["demo"]=[]byte("demo")
 
 	type fields struct {
 		stg storage.Storage
@@ -205,7 +192,6 @@ func TestSecretCreate(t *testing.T) {
 
 	type args struct {
 		ctx       context.Context
-		namespace *types.Namespace
 	}
 
 	tests := []struct {
@@ -220,20 +206,9 @@ func TestSecretCreate(t *testing.T) {
 		wantErr      bool
 		expectedCode int
 	}{
-		// TODO: need checking for unique
-		{
-			name:         "checking create secret if namespace not found",
-			args:         args{ctx, ns2},
-			fields:       fields{stg},
-			handler:      secret.SecretCreateH,
-			data:         createSecretCreateOptions(srtPointer(r1.Data)).toJson(),
-			err:          "{\"code\":404,\"status\":\"Not Found\",\"message\":\"Namespace not found\"}",
-			wantErr:      true,
-			expectedCode: http.StatusNotFound,
-		},
 		{
 			name:         "check create secret if failed incoming json data",
-			args:         args{ctx, ns1},
+			args:         args{ctx},
 			fields:       fields{stg},
 			handler:      secret.SecretCreateH,
 			data:         "{name:demo}",
@@ -244,10 +219,10 @@ func TestSecretCreate(t *testing.T) {
 		// TODO: need checking incoming data for validity
 		{
 			name:         "check create secret success",
-			args:         args{ctx, ns1},
+			args:         args{ctx},
 			fields:       fields{stg},
 			handler:      secret.SecretCreateH,
-			data:         createSecretCreateOptions(srtPointer(r1.Data)).toJson(),
+			data:         createSecretCreateOptions(r1).toJson(),
 			want:         v1.View().Secret().New(r1),
 			wantErr:      false,
 			expectedCode: http.StatusOK,
@@ -255,10 +230,7 @@ func TestSecretCreate(t *testing.T) {
 	}
 
 	clear := func() {
-		err := envs.Get().GetStorage().Del(context.Background(), stg.Collection().Namespace(), types.EmptyString)
-		assert.NoError(t, err)
-
-		err = envs.Get().GetStorage().Del(context.Background(), stg.Collection().Secret(), types.EmptyString)
+		err := envs.Get().GetStorage().Del(context.Background(), stg.Collection().Secret(), types.EmptyString)
 		assert.NoError(t, err)
 	}
 
@@ -267,16 +239,10 @@ func TestSecretCreate(t *testing.T) {
 
 			clear()
 			defer clear()
-
-			err := tc.fields.stg.Put(context.Background(), stg.Collection().Namespace(), tc.fields.stg.Key().Namespace(ns1.Meta.Name), ns1, nil)
-			assert.NoError(t, err)
-
-			err = stg.Put(context.Background(), stg.Collection().Secret(), stg.Key().Secret(r1.Meta.Namespace, r1.Meta.Name), &r1, nil)
-			assert.NoError(t, err)
-
+			
 			// Create assert request to pass to our handler. We don't have any query parameters for now, so we'll
 			// pass 'nil' as the third parameter.
-			req, err := http.NewRequest("POST", fmt.Sprintf("/namespace/%s/secret", tc.args.namespace.Meta.Name), strings.NewReader(tc.data))
+			req, err := http.NewRequest("POST", fmt.Sprintf("/secret"), strings.NewReader(tc.data))
 			assert.NoError(t, err)
 
 			if tc.headers != nil {
@@ -286,7 +252,7 @@ func TestSecretCreate(t *testing.T) {
 			}
 
 			r := mux.NewRouter()
-			r.HandleFunc("/namespace/{namespace}/secret", tc.handler)
+			r.HandleFunc("/secret", tc.handler)
 
 			setRequestVars(r, req)
 
@@ -310,10 +276,16 @@ func TestSecretCreate(t *testing.T) {
 			} else {
 
 				got := new(types.Secret)
-				err := tc.fields.stg.Get(tc.args.ctx, stg.Collection().Secret(), tc.fields.stg.Key().Secret(tc.args.namespace.Meta.Name, tc.want.Meta.Name), got, nil)
+				err := tc.fields.stg.Get(tc.args.ctx, stg.Collection().Secret(), tc.fields.stg.Key().Secret(tc.want.Meta.Name), got, nil)
 				assert.NoError(t, err)
 
-				assert.Equal(t, ns1.Meta.Name, got.Meta.Name, "it was not be create")
+				if !assert.Equal(t, r1.Meta.Kind, got.Meta.Kind, "secret kind different") {
+					return
+				}
+
+				if !assert.Equal(t, r1.Data, got.Data, "secret kind different") {
+					return
+				}
 			}
 		})
 	}
@@ -324,8 +296,9 @@ type SecretUpdateOptions struct {
 	request.SecretUpdateOptions
 }
 
-func createSecretUpdateOptions(data *string) *SecretUpdateOptions {
+func createSecretUpdateOptions(kind string, data map[string][]byte) *SecretUpdateOptions {
 	opts := new(SecretUpdateOptions)
+	opts.Kind = kind
 	opts.Data = data
 	return opts
 }
@@ -343,11 +316,11 @@ func TestSecretUpdate(t *testing.T) {
 	stg, _ := storage.Get("mock")
 	envs.Get().SetStorage(stg)
 
-	srtPointer := func(s string) *string { return &s }
+	r1 := getSecretAsset("demo")
+	r2 := getSecretAsset("test")
 
-	ns1 := getNamespaceAsset("demo", "")
-	s1 := getSecretAsset(ns1.Meta.Name, "demo", "demo")
-	s2 := getSecretAsset(ns1.Meta.Name, "test", "test")
+	r1.Data["demo"]=[]byte("demo")
+	r2.Data["test"]=[]byte("test")
 
 	type fields struct {
 		stg storage.Storage
@@ -355,7 +328,6 @@ func TestSecretUpdate(t *testing.T) {
 
 	type args struct {
 		ctx       context.Context
-		namespace *types.Namespace
 		secret    *types.Secret
 	}
 
@@ -373,21 +345,18 @@ func TestSecretUpdate(t *testing.T) {
 	}{
 		{
 			name:         "checking update secret if name not exists",
-			args:         args{ctx, ns1, s1},
+			args:         args{ctx,  r1},
 			fields:       fields{stg},
 			handler:      secret.SecretUpdateH,
-			data:         createSecretUpdateOptions(srtPointer(s2.Data)).toJson(),
-			want:         v1.View().Secret().New(s2),
+			data:         createSecretUpdateOptions(r2.Meta.Kind, r2.Data).toJson(),
+			want:         v1.View().Secret().New(r2),
 			wantErr:      false,
 			expectedCode: http.StatusOK,
 		},
 	}
 
 	clear := func() {
-		err := envs.Get().GetStorage().Del(context.Background(), stg.Collection().Namespace(), types.EmptyString)
-		assert.NoError(t, err)
-
-		err = envs.Get().GetStorage().Del(context.Background(), stg.Collection().Secret(), types.EmptyString)
+		err := envs.Get().GetStorage().Del(context.Background(), stg.Collection().Secret(), types.EmptyString)
 		assert.NoError(t, err)
 	}
 
@@ -397,15 +366,12 @@ func TestSecretUpdate(t *testing.T) {
 			clear()
 			defer clear()
 
-			err := tc.fields.stg.Put(context.Background(), stg.Collection().Namespace(), tc.fields.stg.Key().Namespace(ns1.Meta.Name), ns1, nil)
-			assert.NoError(t, err)
-
-			err = stg.Put(context.Background(), stg.Collection().Secret(), stg.Key().Secret(s1.Meta.Namespace, s1.Meta.Name), &s1, nil)
+			err := stg.Put(context.Background(), stg.Collection().Secret(), stg.Key().Secret(r1.Meta.Name), &r1, nil)
 			assert.NoError(t, err)
 
 			// Create assert request to pass to our handler. We don't have any query parameters for now, so we'll
 			// pass 'nil' as the third parameter.
-			req, err := http.NewRequest("PUT", fmt.Sprintf("/namespace/%s/secret/%s", tc.args.namespace.Meta.Name, tc.args.secret.Meta.Name), strings.NewReader(tc.data))
+			req, err := http.NewRequest("PUT", fmt.Sprintf("/secret/%s", tc.args.secret.Meta.Name), strings.NewReader(tc.data))
 			assert.NoError(t, err)
 
 			if tc.headers != nil {
@@ -415,7 +381,7 @@ func TestSecretUpdate(t *testing.T) {
 			}
 
 			r := mux.NewRouter()
-			r.HandleFunc("/namespace/{namespace}/secret/{secret}", tc.handler)
+			r.HandleFunc("/secret/{secret}", tc.handler)
 
 			setRequestVars(r, req)
 
@@ -442,7 +408,7 @@ func TestSecretUpdate(t *testing.T) {
 				err := json.Unmarshal(body, &s)
 				assert.NoError(t, err)
 
-				assert.Equal(t, tc.want.Data, s.Data, "it was not be update")
+				assert.Equal(t, tc.want.Data, s.Data, "secret data mismatch")
 			}
 		})
 	}
@@ -457,10 +423,11 @@ func TestSecretRemove(t *testing.T) {
 	stg, _ := storage.Get("mock")
 	envs.Get().SetStorage(stg)
 
-	ns1 := getNamespaceAsset("demo", "")
-	ns2 := getNamespaceAsset("test", "")
-	s1 := getSecretAsset(ns1.Meta.Name, "demo", "demo")
-	s2 := getSecretAsset(ns1.Meta.Name, "test", "test")
+	r1 := getSecretAsset("demo")
+	r2 := getSecretAsset("test")
+
+	r1.Data["demo"]=[]byte("demo")
+	r2.Data["test"]=[]byte("test")
 
 	type fields struct {
 		stg storage.Storage
@@ -468,7 +435,6 @@ func TestSecretRemove(t *testing.T) {
 
 	type args struct {
 		ctx       context.Context
-		namespace *types.Namespace
 		secret    *types.Secret
 	}
 
@@ -485,7 +451,7 @@ func TestSecretRemove(t *testing.T) {
 	}{
 		{
 			name:         "checking get secret if not exists",
-			args:         args{ctx, ns1, s2},
+			args:         args{ctx, r2},
 			fields:       fields{stg},
 			handler:      secret.SecretRemoveH,
 			err:          "{\"code\":404,\"status\":\"Not Found\",\"message\":\"Secret not found\"}",
@@ -493,17 +459,8 @@ func TestSecretRemove(t *testing.T) {
 			expectedCode: http.StatusNotFound,
 		},
 		{
-			name:         "checking get secret if namespace not exists",
-			args:         args{ctx, ns2, s1},
-			fields:       fields{stg},
-			handler:      secret.SecretRemoveH,
-			err:          "{\"code\":404,\"status\":\"Not Found\",\"message\":\"Namespace not found\"}",
-			wantErr:      true,
-			expectedCode: http.StatusNotFound,
-		},
-		{
 			name:         "checking get secret successfully",
-			args:         args{ctx, ns1, s1},
+			args:         args{ctx, r1},
 			fields:       fields{stg},
 			handler:      secret.SecretRemoveH,
 			want:         "",
@@ -513,10 +470,7 @@ func TestSecretRemove(t *testing.T) {
 	}
 
 	clear := func() {
-		err := envs.Get().GetStorage().Del(context.Background(), stg.Collection().Namespace(), types.EmptyString)
-		assert.NoError(t, err)
-
-		err = envs.Get().GetStorage().Del(context.Background(), stg.Collection().Secret(), types.EmptyString)
+		err := envs.Get().GetStorage().Del(context.Background(), stg.Collection().Secret(), types.EmptyString)
 		assert.NoError(t, err)
 	}
 
@@ -527,15 +481,12 @@ func TestSecretRemove(t *testing.T) {
 			clear()
 			defer clear()
 
-			err := tc.fields.stg.Put(context.Background(), stg.Collection().Namespace(), tc.fields.stg.Key().Namespace(ns1.Meta.Name), ns1, nil)
-			assert.NoError(t, err)
-
-			err = stg.Put(context.Background(), stg.Collection().Secret(), stg.Key().Secret(s1.Meta.Namespace, s1.Meta.Name), &s1, nil)
+			err := stg.Put(context.Background(), stg.Collection().Secret(), stg.Key().Secret(r1.Meta.Name), &r1, nil)
 			assert.NoError(t, err)
 
 			// Create assert request to pass to our handler. We don't have any query parameters for now, so we'll
 			// pass 'nil' as the third parameter.
-			req, err := http.NewRequest("DELETE", fmt.Sprintf("/namespace/%s/secret/%s", tc.args.namespace.Meta.Name, tc.args.secret.Meta.Name), nil)
+			req, err := http.NewRequest("DELETE", fmt.Sprintf("/secret/%s", tc.args.secret.Meta.Name), nil)
 			assert.NoError(t, err)
 
 			if tc.headers != nil {
@@ -546,7 +497,7 @@ func TestSecretRemove(t *testing.T) {
 			}
 
 			r := mux.NewRouter()
-			r.HandleFunc("/namespace/{namespace}/secret/{secret}", tc.handler)
+			r.HandleFunc("/secret/{secret}", tc.handler)
 
 			setRequestVars(r, req)
 
@@ -570,7 +521,7 @@ func TestSecretRemove(t *testing.T) {
 			} else {
 
 				got := new(types.Secret)
-				err := tc.fields.stg.Get(tc.args.ctx, stg.Collection().Secret(), tc.fields.stg.Key().Secret(tc.args.namespace.Meta.Name, tc.args.secret.Meta.Name), got, nil)
+				err := tc.fields.stg.Get(tc.args.ctx, stg.Collection().Secret(), tc.fields.stg.Key().Secret(tc.args.secret.Meta.Name), got, nil)
 				if err != nil && !errors.Storage().IsErrEntityNotFound(err) {
 					assert.NoError(t, err)
 				}
@@ -582,20 +533,11 @@ func TestSecretRemove(t *testing.T) {
 
 }
 
-func getNamespaceAsset(name, desc string) *types.Namespace {
-	var n = types.Namespace{}
-	n.Meta.SetDefault()
-	n.Meta.Name = name
-	n.Meta.Description = desc
-	return &n
-}
-
-func getSecretAsset(namespace, name, data string) *types.Secret {
+func getSecretAsset(name string) *types.Secret {
 	var r = types.Secret{}
 	r.Meta.SetDefault()
-	r.Meta.Namespace = namespace
 	r.Meta.Name = name
-	r.Data = data
+	r.Data = make(map[string][]byte, 0)
 	return &r
 }
 

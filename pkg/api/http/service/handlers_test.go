@@ -312,7 +312,8 @@ func createServiceCreateOptions(name, description, image *string, spec *request.
 	opts := new(ServiceCreateOptions)
 	opts.Name = name
 	opts.Description = description
-	opts.Image = image
+	opts.Image = new(request.ServiceImageSpec)
+	opts.Image.Name = image
 	opts.Spec = spec
 	return opts
 }

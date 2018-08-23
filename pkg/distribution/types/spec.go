@@ -71,6 +71,15 @@ type SpecTemplateVolumeList []*SpecTemplateVolume
 type SpecTemplateVolume struct {
 	// Template volume name
 	Name string `json:"name"`
+	// Template volume from secret type
+	From SpecTemplateSecretVolume `json:"from"`
+}
+
+type SpecTemplateSecretVolume struct {
+	// Secret name to mount
+	Name string `json:"name"`
+	// Secret file key
+	Files  []string `json:"key"`
 }
 
 // swagger:ignore

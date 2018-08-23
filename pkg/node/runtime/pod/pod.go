@@ -169,7 +169,6 @@ func Create(ctx context.Context, key string, manifest *types.PodManifest) (*type
 	envs.Get().GetState().Pods().SetPod(key, status)
 	events.NewPodStatusEvent(ctx, key)
 
-
 	var secrets = make(map[string]*types.Secret)
 	for _, s := range manifest.Template.Containers {
 		for _, e := range s.EnvVars {
