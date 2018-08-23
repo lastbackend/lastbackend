@@ -27,7 +27,7 @@ import (
 	"github.com/docker/go-connections/nat"
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 	"strconv"
-	"github.com/lastbackend/dynamic/pkg/log"
+	"github.com/lastbackend/lastbackend/pkg/log"
 )
 
 func GetConfig(spec *types.SpecTemplateContainer, secrets map[string]*types.Secret) *container.Config {
