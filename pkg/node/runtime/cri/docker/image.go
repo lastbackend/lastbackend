@@ -26,28 +26,68 @@ import (
 
 	"context"
 	"io"
+	"encoding/base64"
+	"encoding/json"
 )
 
 const logLevel = 3
 
-func (r *Runtime) ImagePull(ctx context.Context, spec *types.SpecTemplateContainerImage) (io.ReadCloser, error) {
-	log.V(logLevel).Debugf("Docker: Image pull: %s", spec.Name)
+func getAuthString(username, password string) string {
+
+	config := types.AuthConfig{
+		Username: username,
+		Password: password,
+	}
+
+	js, err := json.Marshal(config)
+	if err != nil {
+		panic(err)
+	}
+
+	return base64.URLEncoding.EncodeToString(js)
+
+}
+
+func (r *Runtime) ImagePull(ctx context.Context, spec *types.SpecTemplateContainerImage, secret *types.Secret) (io.ReadCloser, error) {
+	log.V(logLevel).Debugf("Docker: Name pull: %s", spec.Name)
 
 	options := docker.ImagePullOptions{
-		RegistryAuth: spec.Auth,
 		PrivilegeFunc: func() (string, error) {
 			panic(0)
 			return "", errors.New("Access denied")
 		},
 	}
+
+	if secret != nil {
+		data, err := secret.DecodeSecretAuthData()
+		if err != nil {
+			return nil, err
+		}
+		if data == nil {
+			return nil, errors.New("Decode secret error")
+		}
+
+		options.RegistryAuth = getAuthString(data.Username, data.Password)
+	}
+
 	return r.client.ImagePull(ctx, spec.Name, options)
 }
 
-func (r *Runtime) ImagePush(ctx context.Context, spec *types.SpecTemplateContainerImage) (io.ReadCloser, error) {
-	log.V(logLevel).Debugf("Docker: Image push: %s", spec.Name)
-	options := docker.ImagePushOptions{
-		RegistryAuth: spec.Auth,
+func (r *Runtime) ImagePush(ctx context.Context, spec *types.SpecTemplateContainerImage, secret *types.Secret) (io.ReadCloser, error) {
+	log.V(logLevel).Debugf("Docker: Name push: %s", spec.Name)
+
+	options := docker.ImagePushOptions{}
+	if secret != nil {
+		if secret.Meta.Kind == types.KindSecretAuth {
+			data, err := secret.DecodeSecretAuthData()
+			if err != nil {
+				return nil, err
+			}
+
+			options.RegistryAuth = getAuthString(data.Username, data.Password)
+		}
 	}
+
 	return r.client.ImagePush(ctx, spec.Name, options)
 }
 
@@ -72,7 +112,7 @@ func (r *Runtime) ImageBuild(ctx context.Context, stream io.Reader, spec *types.
 }
 
 func (r *Runtime) ImageRemove(ctx context.Context, ID string) error {
-	log.V(logLevel).Debugf("Docker: Image remove: %s", ID)
+	log.V(logLevel).Debugf("Docker: Name remove: %s", ID)
 	var options docker.ImageRemoveOptions
 
 	options = docker.ImageRemoveOptions{

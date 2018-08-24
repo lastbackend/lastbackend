@@ -31,8 +31,6 @@ import (
 
 type SecretClient struct {
 	client *request.RESTClient
-
-	namespace string
 	name      string
 }
 
@@ -46,7 +44,7 @@ func (sc *SecretClient) Create(ctx context.Context, opts *rv1.SecretCreateOption
 	var s *vv1.Secret
 	var e *errors.Http
 
-	err = sc.client.Post(fmt.Sprintf("/namespace/%s/secret", sc.namespace)).
+	err = sc.client.Post(fmt.Sprintf("/secret")).
 		AddHeader("Content-Type", "application/json").
 		Body(body).
 		JSON(&s, &e)
@@ -61,12 +59,35 @@ func (sc *SecretClient) Create(ctx context.Context, opts *rv1.SecretCreateOption
 	return s, nil
 }
 
+func (sc *SecretClient) Get(ctx context.Context) (*vv1.Secret, error) {
+
+	var s *vv1.Secret
+	var e *errors.Http
+
+	err := sc.client.Get(fmt.Sprintf("/secret/%s", sc.name)).
+		AddHeader("Content-Type", "application/json").
+		JSON(&s, &e)
+
+	if err != nil {
+		return nil, err
+	}
+	if e != nil {
+		return nil, errors.New(e.Message)
+	}
+
+	if s == nil {
+		s = new(vv1.Secret)
+	}
+
+	return s, nil
+}
+
 func (sc *SecretClient) List(ctx context.Context) (*vv1.SecretList, error) {
 
 	var s *vv1.SecretList
 	var e *errors.Http
 
-	err := sc.client.Get(fmt.Sprintf("/namespace/%s/secret", sc.namespace)).
+	err := sc.client.Get(fmt.Sprintf("/secret")).
 		AddHeader("Content-Type", "application/json").
 		JSON(&s, &e)
 
@@ -95,7 +116,7 @@ func (sc *SecretClient) Update(ctx context.Context, opts *rv1.SecretUpdateOption
 	var s *vv1.Secret
 	var e *errors.Http
 
-	err = sc.client.Put(fmt.Sprintf("/namespace/%s/secret/%s", sc.namespace, sc.name)).
+	err = sc.client.Put(fmt.Sprintf("/secret/%s", sc.name)).
 		AddHeader("Content-Type", "application/json").
 		Body(body).
 		JSON(&s, &e)
@@ -112,7 +133,7 @@ func (sc *SecretClient) Update(ctx context.Context, opts *rv1.SecretUpdateOption
 
 func (sc *SecretClient) Remove(ctx context.Context, opts *rv1.SecretRemoveOptions) error {
 
-	req := sc.client.Delete(fmt.Sprintf("/namespace/%s/secret/%s", sc.namespace, sc.name)).
+	req := sc.client.Delete(fmt.Sprintf("/secret/%s", sc.name)).
 		AddHeader("Content-Type", "application/json")
 
 	if opts != nil {
@@ -133,6 +154,6 @@ func (sc *SecretClient) Remove(ctx context.Context, opts *rv1.SecretRemoveOption
 	return nil
 }
 
-func newSecretClient(client *request.RESTClient, namespace, name string) *SecretClient {
-	return &SecretClient{client: client, namespace: namespace, name: name}
+func newSecretClient(client *request.RESTClient, name string) *SecretClient {
+	return &SecretClient{client: client, name: name}
 }

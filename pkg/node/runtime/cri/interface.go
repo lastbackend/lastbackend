@@ -37,7 +37,7 @@ type CRI interface {
 
 type ContainerRuntime interface {
 	ContainerList(ctx context.Context, all bool) ([]*types.Container, error)
-	ContainerCreate(ctx context.Context, spec *types.SpecTemplateContainer) (string, error)
+	ContainerCreate(ctx context.Context, spec *types.SpecTemplateContainer, secrets map[string]*types.Secret) (string, error)
 	ContainerStart(ctx context.Context, ID string) error
 	ContainerRestart(ctx context.Context, ID string, timeout *time.Duration) error
 	ContainerStop(ctx context.Context, ID string, timeout *time.Duration) error
@@ -50,9 +50,9 @@ type ContainerRuntime interface {
 }
 
 type ImageRuntime interface {
-	ImagePull(ctx context.Context, spec *types.SpecTemplateContainerImage) (io.ReadCloser, error)
+	ImagePull(ctx context.Context, spec *types.SpecTemplateContainerImage, secret *types.Secret) (io.ReadCloser, error)
 	ImageRemove(ctx context.Context, image string) error
-	ImagePush(ctx context.Context, spec *types.SpecTemplateContainerImage) (io.ReadCloser, error)
+	ImagePush(ctx context.Context, spec *types.SpecTemplateContainerImage, secret *types.Secret) (io.ReadCloser, error)
 	ImageBuild(ctx context.Context, stream io.Reader, spec *types.SpecBuildImage) (io.ReadCloser, error)
 	ImageList(ctx context.Context) ([]docker.ImageSummary, error)
 	ImageInspect(ctx context.Context, id string) (*types.ImageInfo, []byte, error)

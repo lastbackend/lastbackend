@@ -273,7 +273,18 @@ func ServiceCreateH(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if opts.Name == nil {
-		data, err := converter.DockerNamespaceParse(*opts.Image)
+
+		if opts.Image == nil {
+			errors.New("service").BadParameter("image spec").Http(w)
+			return
+		}
+
+		if opts.Image.Name == nil {
+			errors.New("service").BadParameter("image name").Http(w)
+			return
+		}
+
+		data, err := converter.DockerNamespaceParse(*opts.Image.Name)
 		if err != nil {
 			errors.New("service").BadParameter("image").Http(w)
 			return

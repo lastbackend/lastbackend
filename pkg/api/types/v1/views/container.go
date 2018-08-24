@@ -138,10 +138,10 @@ type ContainerVolumeSpec struct {
 }
 
 type ContainerImageSpec struct {
-	// Image full name
+	// Name full name
 	Name string `json:"name"`
-	// Image pull provision flag
+	// Name pull provision flag
 	Pull bool `json:"pull"`
-	// Image Auth base64 encoded string
+	// Name Auth base64 encoded string
 	Auth string `json:"auth"`
 }

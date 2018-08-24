@@ -59,7 +59,13 @@ func (s *SecretCreateOptions) DecodeAndValidate(reader io.Reader) (*types.Secret
 	}
 
 	opts := new(types.SecretCreateOptions)
+	opts.Name = s.Name
+	opts.Kind = s.Kind
 	opts.Data = s.Data
+
+	if opts.Name == types.EmptyString {
+		return nil, errors.New("secret").BadParameter("name")
+	}
 
 	return opts, nil
 }
@@ -102,6 +108,7 @@ func (s *SecretUpdateOptions) DecodeAndValidate(reader io.Reader) (*types.Secret
 	}
 
 	opts := new(types.SecretUpdateOptions)
+	opts.Kind = s.Kind
 	opts.Data = s.Data
 
 	return opts, nil

@@ -39,7 +39,7 @@ const (
 func NewConnectEvent(ctx context.Context) error {
 
 	var (
-		c = envs.Get().GetClient()
+		c = envs.Get().GetNodeClient()
 	)
 
 	opts := v1.Request().Node().NodeConnectOptions()
@@ -119,7 +119,7 @@ func NewPodStatusEvent(ctx context.Context, pod string) error {
 func NewVolumeStatusEvent(ctx context.Context, volume string) error {
 
 	var (
-		c = envs.Get().GetClient()
+		c = envs.Get().GetNodeClient()
 	)
 
 	if volume == "" {

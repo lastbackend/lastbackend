@@ -147,7 +147,6 @@ func handlePodStateDestroy(ss *ServiceState, p *types.Pod) error {
 		return err
 	}
 
-
 	return nil
 }
 
@@ -233,6 +232,7 @@ func podDestroy(ss *ServiceState, p *types.Pod) (err error) {
 		if p.Meta.Node == types.EmptyString {
 			p.Status.State = types.StateDestroyed
 			p.Meta.Updated = time.Now()
+			return nil
 		}
 
 		if p.Status.State != types.StateDestroy {
@@ -256,6 +256,7 @@ func podDestroy(ss *ServiceState, p *types.Pod) (err error) {
 
 			p.Status.State = types.StateDestroyed
 			p.Meta.Updated = time.Now()
+			return nil
 		}
 
 		return err

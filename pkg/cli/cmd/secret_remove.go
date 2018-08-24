@@ -20,40 +20,40 @@ package cmd
 
 import (
 	"fmt"
+
+	"github.com/lastbackend/lastbackend/pkg/api/types/v1/request"
 	"github.com/lastbackend/lastbackend/pkg/cli/envs"
-	"github.com/lastbackend/lastbackend/pkg/cli/view"
 	"github.com/spf13/cobra"
 )
 
 func init() {
-	secretCmd.AddCommand(secretListCmd)
+	secretCmd.AddCommand(secretRemoveCmd)
 }
 
-const secretListExample = `
-  # Get all secrets records
-  lb secret ls"
+const secretRemoveExample = `
+  # Remove 'token' secret
+  lb secret remove token
 `
 
-var secretListCmd = &cobra.Command{
-	Use:     "ls",
-	Short:   "Display the secrets list",
-	Example: secretListExample,
-	Args:    cobra.ExactArgs(0),
+var secretRemoveCmd = &cobra.Command{
+	Use:     "remove [NAME]",
+	Short:   "Remove secret by name",
+	Example: secretRemoveExample,
+	Args:    cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 
+		name := args[0]
+
+		opts := &request.SecretRemoveOptions{Force: false}
+
+		if err := opts.Validate(); err != nil {
+			fmt.Println(err.Err())
+			return
+		}
+
 		cli := envs.Get().GetClient()
-		response, err := cli.V1().Secret().List(envs.Background())
-		if err != nil {
-			fmt.Println(err)
-			return
-		}
+		cli.V1().Secret(name).Remove(envs.Background(), opts)
 
-		if response == nil || len(*response) == 0 {
-			fmt.Println("no secrets available")
-			return
-		}
-
-		list := view.FromApiSecretListView(response)
-		list.Print()
+		fmt.Println(fmt.Sprintf("Secret `%s` remove now", name))
 	},
 }

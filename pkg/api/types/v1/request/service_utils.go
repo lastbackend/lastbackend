@@ -39,10 +39,15 @@ func (s *ServiceCreateOptions) Validate() *errors.Err {
 	case s.Name != nil && !validator.IsServiceName(*s.Name):
 		return errors.New("service").BadParameter("name")
 	case s.Image == nil:
-		return errors.New("service").BadParameter("image")
+		if s.Image.Name == nil {
+			return errors.New("service").BadParameter("image name")
+		}
+		return errors.New("service").BadParameter("image spec")
+
 	case s.Description != nil && len(*s.Description) > DEFAULT_DESCRIPTION_LIMIT:
 		return errors.New("service").BadParameter("description")
 	case s.Spec != nil:
+
 		if s.Spec.Replicas != nil && *s.Spec.Replicas < DEFAULT_REPLICAS_MIN {
 			return errors.New("service").BadParameter("replicas")
 		}
@@ -78,13 +83,34 @@ func (s *ServiceCreateOptions) DecodeAndValidate(reader io.Reader) (*types.Servi
 	opts := new(types.ServiceCreateOptions)
 	opts.Name = s.Name
 	opts.Description = s.Description
-	opts.Image = s.Image
+
+	if s.Image != nil {
+		opts.Image = new(types.ServiceImageSpec)
+		opts.Image.Name = s.Image.Name
+		opts.Image.Secret = s.Image.Secret
+	}
 
 	if s.Spec != nil {
 		opts.Spec = new(types.ServiceOptionsSpec)
 		opts.Spec.Replicas = s.Spec.Replicas
 		opts.Spec.Memory = s.Spec.Memory
-		opts.Spec.EnvVars = s.Spec.EnvVars
+
+		if s.Spec.EnvVars != nil {
+			envs := make([]types.ServiceEnvOption, 0)
+			for _, e := range *s.Spec.EnvVars {
+				 envs = append(envs, types.ServiceEnvOption{
+					Name: e.Name,
+					Value: e.Value,
+					From: types.ServiceEnvFromOption{
+						Key: e.From.Key,
+						Name: e.From.Name,
+					},
+				})
+			}
+
+			opts.Spec.EnvVars = &envs
+		}
+
 		opts.Spec.Entrypoint = s.Spec.Entrypoint
 		opts.Spec.Command = s.Spec.Command
 
@@ -141,10 +167,32 @@ func (s *ServiceUpdateOptions) DecodeAndValidate(reader io.Reader) (*types.Servi
 	opts := new(types.ServiceUpdateOptions)
 	opts.Description = s.Description
 
+	if s.Image != nil {
+		opts.Image = new(types.ServiceImageSpec)
+		opts.Image.Name = s.Image.Name
+		opts.Image.Secret = s.Image.Secret
+	}
+
 	if s.Spec != nil {
 		opts.Spec = new(types.ServiceOptionsSpec)
 		opts.Spec.Memory = s.Spec.Memory
-		opts.Spec.EnvVars = s.Spec.EnvVars
+
+		if s.Spec.EnvVars != nil {
+			envs := make([]types.ServiceEnvOption, 0)
+			for _, e := range *s.Spec.EnvVars {
+				envs = append(envs, types.ServiceEnvOption{
+					Name: e.Name,
+					Value: e.Value,
+					From: types.ServiceEnvFromOption{
+						Key: e.From.Key,
+						Name: e.From.Name,
+					},
+				})
+			}
+
+			opts.Spec.EnvVars = &envs
+		}
+
 		opts.Spec.Entrypoint = s.Spec.Entrypoint
 		opts.Spec.Command = s.Spec.Command
 		opts.Spec.Replicas = s.Spec.Replicas

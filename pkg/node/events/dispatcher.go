@@ -25,5 +25,5 @@ import (
 )
 
 func Dispatcher(options *request.NodeStatusOptions) error {
-	return envs.Get().GetClient().SetStatus(context.Background(), options)
+	return envs.Get().GetNodeClient().SetStatus(context.Background(), options)
 }

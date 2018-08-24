@@ -38,7 +38,7 @@ type Container struct {
 	Spec ContainerSpec `json:"spec"`
 	// Container name
 	Name string `json:"name"`
-	// Image information
+	// Name information
 	Image string `json:"image"`
 	// Container current state
 	State string `json:"state"`
@@ -74,7 +74,7 @@ type ContainerSpec struct {
 	ID string `json:"id"`
 	// Container meta spec
 	Meta ContainerSpecMeta `json:"meta"`
-	// Image spec
+	// Name spec
 	Image ImageSpec `json:"image"`
 	// Subnet spec
 	Network ContainerNetworkSpec `json:"network"`
@@ -176,7 +176,7 @@ type ContainerLinkSpec struct {
 type ContainerStatusInfo struct {
 	// Container ID on host
 	ID string `json:"cid"`
-	// Image ID
+	// Name ID
 	Image string `json:"image"`
 	// Container current state
 	State string `json:"state"`

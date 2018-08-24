@@ -22,14 +22,21 @@ import (
 	"crypto/sha1"
 	"encoding/base64"
 	"fmt"
+	"errors"
+)
+
+const (
+	KindSecretText = "text"
+	KindSecretAuth = "auth"
+	KindSecretFile = "file"
 )
 
 // swagger:ignore
 // swagger:model types_secret
 type Secret struct {
 	Runtime
-	Meta SecretMeta `json:"meta" yaml:"meta"`
-	Data string     `json:"data" yaml:"data"`
+	Meta SecretMeta        `json:"meta" yaml:"meta"`
+	Data map[string][]byte `json:"data" yaml:"data"`
 }
 
 // swagger:ignore
@@ -47,35 +54,106 @@ type SecretMap struct {
 // swagger:ignore
 // swagger:model types_secret_meta
 type SecretMeta struct {
-	Meta      `yaml:",inline"`
-	Namespace string `json:"namespace" yaml:"namespace"`
+	Kind string `json:"kind"`
+	Meta `yaml:",inline"`
 }
+
+func (s *Secret) EncodeSecretAuthData(d SecretAuthData) {
+	s.Data = make(map[string][]byte)
+	s.Data["username"] = []byte(base64.StdEncoding.EncodeToString([]byte(d.Username)))
+	s.Data["password"] = []byte(base64.StdEncoding.EncodeToString([]byte(d.Password)))
+}
+
+func (s *Secret) DecodeSecretAuthData() (*SecretAuthData, error) {
+
+	if s.Meta.Kind != KindSecretAuth {
+		return nil, errors.New("invalid secret type")
+	}
+
+	data := new(SecretAuthData)
+
+	u, err := base64.StdEncoding.DecodeString(string(s.Data["username"]))
+	if err != nil {
+		return nil, err
+	}
+	data.Username = string(u)
+
+	p, err := base64.StdEncoding.DecodeString(string(s.Data["password"]))
+	if err != nil {
+		return nil, err
+	}
+	data.Password = string(p)
+
+	return data, nil
+}
+
+func (s *Secret) DecodeSecretTextData(key string) (string, error) {
+
+	if s.Meta.Kind != KindSecretText {
+		return EmptyString, errors.New("invalid secret type")
+	}
+
+	if _, ok := s.Data[key]; !ok {
+		return EmptyString, errors.New("secret key not found")
+	}
+
+	d, err := base64.StdEncoding.DecodeString(string(s.Data[key]))
+	if err != nil {
+		return EmptyString, err
+	}
+
+	return string(d), nil
+
+}
+
+type SecretAuthData struct {
+	Username string `json:"username"`
+	Password string `json:"password"`
+}
+
+type SecretText struct {
+	Text string `json:"text"`
+}
+
+type SecretFile struct {
+	Files map[string][]byte `json:"text"`
+}
+
+
 
 func (s *Secret) GetHash() string {
 	h := sha1.New()
-	h.Write([]byte(fmt.Sprintf("%s:%s", s.Meta.Namespace, s.Meta.Name)))
+	h.Write([]byte(fmt.Sprintf("%s", s.Meta.Name)))
 	return base64.URLEncoding.EncodeToString(h.Sum(nil))
 }
 
 func (s *Secret) SelfLink() string {
 	if s.Meta.SelfLink == "" {
-		s.Meta.SelfLink = s.CreateSelfLink(s.Meta.Namespace, s.Meta.Name)
+		s.Meta.SelfLink = s.CreateSelfLink(s.Meta.Name)
 	}
 	return s.Meta.SelfLink
 }
 
-func (s *Secret) CreateSelfLink(namespace, name string) string {
-	return fmt.Sprintf("%s:%s", namespace, name)
+func (s *Secret) CreateSelfLink(name string) string {
+	return fmt.Sprintf("%s", name)
 }
+
+func (s *Secret) DecodeRegistry() {
+
+}
+
 
 // swagger:ignore
 type SecretCreateOptions struct {
-	Data *string
+	Name string
+	Kind string
+	Data map[string][]byte
 }
 
 // swagger:ignore
 type SecretUpdateOptions struct {
-	Data *string
+	Kind string
+	Data map[string][]byte
 }
 
 // swagger:ignore
@@ -83,13 +161,13 @@ type SecretRemoveOptions struct {
 	Force bool `json:"force"`
 }
 
-func NewSecretList () *SecretList {
+func NewSecretList() *SecretList {
 	dm := new(SecretList)
 	dm.Items = make([]*Secret, 0)
 	return dm
 }
 
-func NewSecretMap () *SecretMap {
+func NewSecretMap() *SecretMap {
 	dm := new(SecretMap)
 	dm.Items = make(map[string]*Secret)
 	return dm

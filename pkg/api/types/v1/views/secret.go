@@ -18,21 +18,24 @@
 
 package views
 
-import "time"
+import (
+	"time"
+	"github.com/lastbackend/lastbackend/pkg/distribution/types"
+)
 
 // swagger:model views_secret
 type Secret struct {
-	Meta SecretMeta `json:"meta"`
-	Data string     `json:"data"`
+	Meta SecretMeta        `json:"meta"`
+	Data map[string][]byte `json:"data"`
 }
 
 // swagger:model views_secret_meta
 type SecretMeta struct {
-	Name      string    `json:"name"`
-	Namespace string    `json:"namespace"`
-	SelfLink  string    `json:"self_link"`
-	Updated   time.Time `json:"updated"`
-	Created   time.Time `json:"created"`
+	Name     string    `json:"name"`
+	Kind     string    `json:"kind"`
+	SelfLink string    `json:"self_link"`
+	Updated  time.Time `json:"updated"`
+	Created  time.Time `json:"created"`
 }
 
 // swagger:ignore
@@ -40,3 +43,17 @@ type SecretMap map[string]*Secret
 
 // swagger:model views_secret_list
 type SecretList []*Secret
+
+func (s *Secret) Decode () *types.Secret {
+
+	o := new(types.Secret)
+	o.Meta.Name = s.Meta.Name
+	o.Meta.Kind = s.Meta.Kind
+	o.Meta.SelfLink = s.Meta.SelfLink
+	o.Meta.Updated = s.Meta.Updated
+	o.Meta.Created = s.Meta.Created
+
+	o.Data = s.Data
+
+	return o
+}

@@ -31,6 +31,7 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/api/http/trigger"
 	"github.com/lastbackend/lastbackend/pkg/log"
 	"github.com/lastbackend/lastbackend/pkg/util/http/cors"
+	"github.com/lastbackend/lastbackend/pkg/api/http/secret"
 )
 
 const (
@@ -62,6 +63,9 @@ func init() {
 	AddRoutes(node.Routes)
 	AddRoutes(ingress.Routes)
 
+
+	// Secrets
+	AddRoutes(secret.Routes)
 	// Namespace
 	AddRoutes(namespace.Routes)
 	AddRoutes(service.Routes)
