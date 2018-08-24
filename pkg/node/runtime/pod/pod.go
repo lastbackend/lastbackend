@@ -31,11 +31,11 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/node/envs"
 	"github.com/lastbackend/lastbackend/pkg/node/events"
 	"github.com/lastbackend/lastbackend/pkg/util/cleaner"
-)
+	)
 
 const (
 	BUFFER_SIZE = 1024
-	logLevel = 3
+	logLevel    = 3
 )
 
 func Manage(ctx context.Context, key string, manifest *types.PodManifest) error {
@@ -81,7 +81,7 @@ func Manage(ctx context.Context, key string, manifest *types.PodManifest) error 
 	// Get pod list from current state
 	p := envs.Get().GetState().Pods().GetPod(key)
 	if p != nil {
-		if p.State != types.StateWarning  {
+		if p.State != types.StateWarning {
 			events.NewPodStatusEvent(ctx, key)
 			return nil
 		}
@@ -130,10 +130,12 @@ func Create(ctx context.Context, key string, manifest *types.PodManifest) (*type
 
 		log.V(logLevel).Debug("Pull images for pod if needed")
 
-		var secret = new(types.Secret)
+		var secret *types.Secret
 
 		if c.Image.Secret != types.EmptyString {
+
 			log.V(logLevel).Debug("Get secret info from api")
+
 			vs, err := envs.Get().GetRestClient().Secret(c.Image.Secret).Get(ctx)
 			if err != nil {
 				log.Errorf("Can-not get secret from api: %s", err)
