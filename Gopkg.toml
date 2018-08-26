@@ -24,20 +24,6 @@
 #   go-tests = true
 #   unused-packages = true
 
-# Override start
-# =========================================================================
-
-[[override]]
-  name = "github.com/docker/distribution"
-  revision = "83389a148052d74ac602f5f1d62f86ff2f3c4aa5"
-
-[[override]]
-  name = "github.com/docker/docker"
-  revision = "cbde00b44273a584bed2ee3513db68924b4a6dba"
-
-# =========================================================================
-# Override end
-
 [[constraint]]
   name = "github.com/ararog/timeago"
   version = "0.0.1"
@@ -115,10 +101,6 @@
   version = "0.2.0"
 
 [[constraint]]
-  name = "github.com/vishvananda/netlink"
-  version = "1.0.0"
-
-[[constraint]]
   branch = "master"
   name = "golang.org/x/crypto"
 
@@ -133,6 +115,18 @@
 [[constraint]]
   name = "gopkg.in/yaml.v2"
   version = "2.2.1"
+
+[[constraint]]
+  name = "github.com/docker/docker"
+  revision = "cbde00b44273a584bed2ee3513db68924b4a6dba"
+
+[[constraint]]
+  name = "github.com/docker/go-connections"
+  revision = "7395e3f8aa162843a74ed6d48e79627d9792ac55"
+
+[[constraint]]
+  name = "github.com/vishvananda/netlink"
+  revision = "b2de5d10e38ecce8607e6b438b6d174f389a004e"
 
 [prune]
   go-tests = true
