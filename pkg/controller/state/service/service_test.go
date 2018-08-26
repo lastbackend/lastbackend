@@ -28,8 +28,8 @@ import (
 	"github.com/stretchr/testify/assert"
 	"time"
 	"github.com/lastbackend/lastbackend/pkg/controller/ipam"
-	"github.com/satori/go.uuid"
 	"github.com/lastbackend/lastbackend/pkg/controller/state/cluster"
+	"github.com/lastbackend/lastbackend/pkg/util/generator"
 )
 
 func testServiceObserver(t *testing.T, name, werr string, wst *ServiceState, state *ServiceState, svc *types.Service) {
@@ -328,7 +328,6 @@ func testStatusState(t *testing.T, fn func(*ServiceState) error, name string, ws
 	})
 }
 
-
 func TestHandleServiceStateCreated(t *testing.T) {
 
 	type suit struct {
@@ -439,8 +438,6 @@ func TestHandleServiceStateCreated(t *testing.T) {
 
 		s.args.state.deployment.provision = dp1
 		s.args.state.deployment.list[dp1.SelfLink()] = dp1
-
-
 
 		s.want.err = types.EmptyString
 		s.want.state = getServiceStateCopy(s.args.state)
@@ -629,7 +626,6 @@ func TestHandleServiceStateProvision(t *testing.T) {
 		dp1 := getDeploymentAsset(s.args.svc, types.StateReady, types.EmptyString)
 		dp2 := getDeploymentAsset(s.args.svc, types.StateError, types.EmptyString)
 
-
 		s.args.state = getServiceStateAsset(s.args.svc)
 		s.args.state.deployment.active = dp1
 		s.args.state.deployment.provision = dp2
@@ -638,7 +634,6 @@ func TestHandleServiceStateProvision(t *testing.T) {
 
 		s.args.svc.Spec.Template.Updated = time.Now()
 		dp3 := getDeploymentAsset(s.args.svc, types.StateProvision, types.EmptyString)
-
 
 		s.want.err = types.EmptyString
 		s.want.state = getServiceStateCopy(s.args.state)
@@ -661,10 +656,8 @@ func TestHandleServiceStateProvision(t *testing.T) {
 		s.args.state.deployment.active = dp1
 		s.args.state.deployment.list[dp1.SelfLink()] = dp1
 
-
 		s.args.svc.Spec.Template.Updated = time.Now()
 		dp2 := getDeploymentAsset(s.args.svc, types.StateProvision, types.EmptyString)
-
 
 		s.want.err = types.EmptyString
 		s.want.state = getServiceStateCopy(s.args.state)
@@ -1194,10 +1187,9 @@ func TestServiceStatusState(t *testing.T) {
 	}())
 
 	for _, tt := range tests {
-		testStatusState(t, serviceStatusState, tt.name,  tt.want.state, tt.args.state)
+		testStatusState(t, serviceStatusState, tt.name, tt.want.state, tt.args.state)
 	}
 }
-
 
 func getServiceAsset(state, message string) *types.Service {
 	s := new(types.Service)
@@ -1231,11 +1223,10 @@ func getEndpointAsset(svc *types.Service) *types.Endpoint {
 func getDeploymentAsset(svc *types.Service, state, message string) *types.Deployment {
 
 	d := new(types.Deployment)
-	u, _ := uuid.NewV4()
 
 	d.Meta.Namespace = svc.Meta.Namespace
 	d.Meta.Service = svc.Meta.Name
-	d.Meta.Name = u.String()
+	d.Meta.Name = generator.GetUUIDV4()
 
 	d.Status.State = state
 	d.Status.Message = message
@@ -1249,14 +1240,12 @@ func getDeploymentAsset(svc *types.Service, state, message string) *types.Deploy
 
 func getPodAsset(d *types.Deployment, state, message string) *types.Pod {
 
-	u, _ := uuid.NewV4()
-
 	p := new(types.Pod)
 
 	p.Meta.Namespace = d.Meta.Namespace
 	p.Meta.Service = d.Meta.Service
 	p.Meta.Deployment = d.Meta.Name
-	p.Meta.Name = u.String()
+	p.Meta.Name = generator.GetUUIDV4()
 
 	p.Status.State = state
 	p.Status.Message = message
@@ -1278,10 +1267,10 @@ func getServiceStateAsset(svc *types.Service) *ServiceState {
 	n.Meta.Name = "node"
 	n.Status.Capacity = types.NodeResources{
 		Containers: 10,
-		Pods: 10,
-		Memory: 1000,
-		Cpu: 1,
-		Storage: 1000,
+		Pods:       10,
+		Memory:     1000,
+		Cpu:        1,
+		Storage:    1000,
 	}
 
 	cs := cluster.NewClusterState()

@@ -70,7 +70,7 @@
 
 [[constraint]]
   name = "github.com/satori/go.uuid"
-  revision = "36e9d2ebbde5e3f13ab2e25625fd453271d6522e"
+  version = "1.2.0"
 
 [[constraint]]
   name = "github.com/shirou/gopsutil"
