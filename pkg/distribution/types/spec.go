@@ -91,7 +91,7 @@ type SpecTemplateVolumeMounts struct {
 
 // SpecTemplateContainers is a list of spec template containers
 // swagger:model types_spec_template_container_list
-type SpecTemplateContainers []SpecTemplateContainer
+type SpecTemplateContainers []*SpecTemplateContainer
 
 // swagger:model types_spec_template_container
 type SpecTemplateContainer struct {

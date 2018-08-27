@@ -19,12 +19,11 @@
 package request
 
 import (
-	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 	"encoding/json"
+	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 	"gopkg.in/yaml.v2"
-	"time"
 	"strings"
-	"github.com/lastbackend/lastbackend/pkg/log"
+	"time"
 )
 
 type ServiceManifest struct {
@@ -140,7 +139,7 @@ func (s *ServiceManifest) SetServiceSpec(svc *types.Service) {
 			for _, sc := range svc.Spec.Template.Containers {
 				if c.Name == sc.Name {
 					f = true
-					spec = &sc
+					spec = sc
 				}
 			}
 
@@ -225,7 +224,6 @@ func (s *ServiceManifest) SetServiceSpec(svc *types.Service) {
 			}
 
 
-			log.Info("envs: ", len(envs))
 			if len(spec.EnvVars) != len(envs) {
 				svc.Spec.Template.Updated = time.Now()
 			}
@@ -277,7 +275,6 @@ func (s *ServiceManifest) SetServiceSpec(svc *types.Service) {
 				}
 			}
 
-			log.Info("volumes: ", len(vlms))
 			if len(vlms) != len(spec.Volumes) {
 
 				svc.Spec.Template.Updated = time.Now()
@@ -286,18 +283,15 @@ func (s *ServiceManifest) SetServiceSpec(svc *types.Service) {
 			spec.Volumes = vlms
 
 			if !f {
-				svc.Spec.Template.Containers = append(svc.Spec.Template.Containers, *spec)
+				svc.Spec.Template.Containers = append(svc.Spec.Template.Containers, spec)
 			}
 
 		}
 
-		var spcs = make([]types.SpecTemplateContainer, 0)
+		var spcs = make([]*types.SpecTemplateContainer, 0)
 		for _, ss := range svc.Spec.Template.Containers {
 			for _, cs := range s.Spec.Template.Containers {
 				if ss.Name == cs.Name {
-
-
-
 					spcs = append(spcs, ss)
 				}
 			}
