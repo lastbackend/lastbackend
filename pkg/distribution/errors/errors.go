@@ -32,6 +32,7 @@ const (
 	StatusIncorrectJson = "Incorrect Json"
 	StatusNotUnique     = "Not Unique"
 	StatusForbidden     = "Forbidden"
+	StatusNotAllowed    = "Not Allowed"
 	ArgumentIsEmpty     = "ArgumentIsEmpty"
 )
 
@@ -72,6 +73,14 @@ func Forbidden(e ...error) *Err {
 		Code:   StatusForbidden,
 		origin: getError("forbidden", e...),
 		http:   HTTP.getForbidden(),
+	}
+}
+
+func NotAllowed(e ...error) *Err {
+	return &Err{
+		Code:   StatusNotAllowed,
+		origin: getError("not allowed", e...),
+		http:   HTTP.getNotAllowed(),
 	}
 }
 
@@ -165,6 +174,14 @@ func (e *err) Forbidden(err ...error) *Err {
 		Code:   StatusForbidden,
 		origin: getError(joinNameAndMessage(e.s, "forbidden"), err...),
 		http:   HTTP.getForbidden(),
+	}
+}
+
+func (e *err) NotAllowed(err ...error) *Err {
+	return &Err{
+		Code:   StatusNotAllowed,
+		origin: getError(joinNameAndMessage(e.s, "not allowed"), err...),
+		http:   HTTP.getNotAllowed(),
 	}
 }
 
