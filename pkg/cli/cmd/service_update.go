@@ -38,7 +38,7 @@ func init() {
 	serviceUpdateCmd.Flags().StringArrayP("env", "e", make([]string, 0), "set service env")
 	serviceUpdateCmd.Flags().StringArray("env-from-secret", make([]string, 0), "set service env from secret")
 	serviceUpdateCmd.Flags().StringP("image", "i", "", "set service image")
-	serviceUpdateCmd.Flags().StringP("auth", "a", "", "set service image auth")
+	serviceUpdateCmd.Flags().String("image-secret", "", "set service image auth")
 	serviceCmd.AddCommand(serviceUpdateCmd)
 }
 
@@ -64,17 +64,24 @@ var serviceUpdateCmd = &cobra.Command{
 		senv, _ := cmd.Flags().GetStringArray("env-from-secret")
 		replicas, _ := cmd.Flags().GetInt("replicas")
 		image, _ := cmd.Flags().GetString("image")
-		secret, _ := cmd.Flags().GetString("auth")
+		secret, _ := cmd.Flags().GetString("image-secret")
 
-		opts := new(request.ServiceUpdateOptions)
-		opts.Spec = new(request.ServiceOptionsSpec)
+		opts := new(request.ServiceManifest)
+		css := make([]request.ManifestSpecTemplateContainer, 0)
+		cs := request.ManifestSpecTemplateContainer{}
 
-		if description != "" {
-			opts.Description = &description
+
+		if len(name) != 0 {
+			opts.Meta.Name = &name
 		}
 
+		if len(description) != 0 {
+			opts.Meta.Description = &description
+		}
+
+
 		if memory != 0 {
-			opts.Spec.Memory = &memory
+			cs.Resources.Request.RAM = memory
 		}
 
 		if replicas != 0 {
@@ -82,7 +89,8 @@ var serviceUpdateCmd = &cobra.Command{
 		}
 
 		if len(ports) > 0 {
-			opts.Spec.Ports = make(map[uint16]string, 0)
+			opts.Spec.Network = new(request.ManifestSpecNetwork)
+			opts.Spec.Network.Ports = make(map[uint16]string, 0)
 
 			for _, p := range ports {
 				pm := strings.Split(p, ":")
@@ -97,15 +105,15 @@ var serviceUpdateCmd = &cobra.Command{
 					return
 				}
 
-				opts.Spec.Ports[uint16(ext)] = pm[1]
+				opts.Spec.Network.Ports[uint16(ext)] = pm[1]
 			}
 		}
 
-		es := make(map[string]request.ServiceEnvOption)
+		es := make(map[string]request.ManifestSpecTemplateContainerEnv)
 		if len(env) > 0 {
 			for _, e := range env {
 				kv := strings.SplitN(e, "=", 2)
-				eo := request.ServiceEnvOption{
+				eo := request.ManifestSpecTemplateContainerEnv{
 					Name: kv[0],
 				}
 				if len(kv) > 1 {
@@ -115,12 +123,11 @@ var serviceUpdateCmd = &cobra.Command{
 				es[eo.Name] = eo
 			}
 
-
 		}
 		if len(senv) > 0 {
 			for _, e := range senv {
 				kv := strings.SplitN(e, "=", 3)
-				eo := request.ServiceEnvOption{
+				eo := request.ManifestSpecTemplateContainerEnv{
 					Name: kv[0],
 				}
 				if len(kv) < 3 {
@@ -138,27 +145,21 @@ var serviceUpdateCmd = &cobra.Command{
 		}
 
 		if len(es) > 0 {
-			senvs := make([]request.ServiceEnvOption, 0)
+			senvs := make([]request.ManifestSpecTemplateContainerEnv, 0)
 			for _, e := range es {
 				senvs = append(senvs, e)
 			}
-			opts.Spec.EnvVars = &senvs
+			cs.Env = senvs
 		}
 
-		if image != types.EmptyString {
-			if opts.Image == nil {
-				opts.Image = new(request.ServiceImageSpec)
-			}
-
-			opts.Image.Name = &image
-		}
+		opts.Meta.Description = &description
+		cs.Image.Name = image
 
 		if secret != types.EmptyString {
-			if opts.Image == nil {
-				opts.Image = new(request.ServiceImageSpec)
-			}
-			opts.Image.Secret = &secret
+			cs.Image.Secret = secret
 		}
+
+		css = append(css, cs)
 
 		if err := opts.Validate(); err != nil {
 			fmt.Println(err.Err())

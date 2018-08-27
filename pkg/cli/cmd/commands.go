@@ -39,6 +39,7 @@ func init() {
 		secretCmd,
 		tokenCmd,
 		versionCmd,
+		applyCmd,
 	)
 }
 

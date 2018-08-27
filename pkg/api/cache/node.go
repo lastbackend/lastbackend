@@ -19,8 +19,7 @@
 package cache
 
 import (
-	"context"
-		"sync"
+	"sync"
 
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 	"github.com/lastbackend/lastbackend/pkg/log"
@@ -33,13 +32,6 @@ type CacheNodeManifest struct {
 	manifests map[string]*types.NodeManifest
 }
 
-type NetworkManifestWatcher func(ctx context.Context, event chan *types.Event) error
-
-type PodManifestWatcher func(ctx context.Context, event chan *types.Event) error
-
-type VolumeManifestWatcher func(ctx context.Context, event chan *types.Event) error
-
-type EndpointManifestWatcher func(ctx context.Context, event chan *types.Event) error
 
 func (c *CacheNodeManifest) checkNode(node string) {
 	if _, ok := c.manifests[node]; !ok {
@@ -99,6 +91,7 @@ func (c *CacheNodeManifest) DelVolumeManifest(node, volume string) {
 	delete(c.manifests[node].Volumes, volume)
 }
 
+
 func (c *CacheNodeManifest) SetSubnetManifest(cidr string, s *types.SubnetManifest) {
 	c.lock.Lock()
 	defer c.lock.Unlock()
@@ -110,6 +103,21 @@ func (c *CacheNodeManifest) SetSubnetManifest(cidr string, s *types.SubnetManife
 		}
 
 		c.manifests[n].Network[cidr] = s
+	}
+}
+
+
+func (c *CacheNodeManifest) SetSecretManifest(name string, s *types.SecretManifest) {
+	c.lock.Lock()
+	defer c.lock.Unlock()
+
+	for n := range c.manifests {
+
+		if _, ok := c.manifests[n].Secrets[name]; !ok {
+			c.manifests[n].Secrets = make(map[string]*types.SecretManifest)
+		}
+
+		c.manifests[n].Secrets[name] = s
 	}
 }
 

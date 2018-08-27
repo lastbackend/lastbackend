@@ -86,14 +86,15 @@ type ServiceDeployment struct {
 
 // swagger:model views_service_spec
 type ServiceSpec struct {
-	Replicas   int                `json:"replicas"`
-	Meta       ServiceSpecMeta    `json:"meta"`
-	Memory     int64              `json:"memory"`
-	Image      string             `json:"image"`
-	Entrypoint string             `json:"entrypoint"`
-	Command    string             `json:"command"`
-	EnvVars    []string           `json:"env"`
-	Ports      []*ServiceSpecPort `json:"ports"`
+	Selector ManifestSpecSelector `json:"selector,omitempty" yaml:"selector,omitempty"`
+	Replicas int                  `json:"replicas,omitempty" yaml:"replicas,omitempty"`
+	Network  ManifestSpecNetwork  `json:"network,omitempty" yaml:"network,omitempty"`
+	Strategy ManifestSpecStrategy `json:"strategy,omitempty" yaml:"strategy,omitempty"`
+	Template ManifestSpecTemplate `json:"template,omitempty" yaml:"template,omitempty"`
+}
+
+type ServiceTemplateSpec struct {
+
 }
 
 // swagger:model views_service_spec_meta

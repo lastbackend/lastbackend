@@ -41,11 +41,9 @@ func (r *Runtime) Run() {
 	go r.endpointManifestWatch(ctx, nil)
 	go r.subnetManifestWatch(ctx, nil)
 
-	//go c.Node().CachePods(stg.Node().EventPodSpec)
-	//go c.Node().CacheVolumes(stg.Node().EventVolumeSpec)
-	//go c.Node().CacheEndpoints(stg.Endpoint().EventSpec)
-	//go c.Node().Del(stg.Node().EventStatus)
-	//
+	go r.secretWatch(ctx, nil)
+	go r.nodeWatch(ctx, nil)
+
 	//go c.Ingress().CacheRoutes(stg.Route().WatchSpecEvents)
 	//go c.Ingress().Status(stg.Ingress().WatchStatus)
 }
@@ -182,6 +180,45 @@ func (r *Runtime) subnetManifestWatch(ctx context.Context, rev *int64) {
 	}()
 
 	mm.SubnetManifestWatch(v, rev)
+}
+
+func (r *Runtime) secretWatch(ctx context.Context, rev *int64) {
+
+	var (
+		n = make(chan types.SecretEvent)
+		c = envs.Get().GetCache()
+	)
+
+	mm := distribution.NewSecretModel(ctx, envs.Get().GetStorage())
+
+	go func() {
+		for {
+			select {
+			case <-ctx.Done():
+				return
+			case w := <-n:
+
+				if w.Data == nil {
+					continue
+				}
+
+				sm := new(types.SecretManifest)
+				sm.Kind = w.Data.Meta.Kind
+				sm.Created = w.Data.Meta.Created
+				sm.Updated = w.Data.Meta.Updated
+				sm.State = types.StateUpdated
+
+				if w.IsActionRemove() {
+					sm := new(types.SecretManifest)
+					sm.State = types.StateDestroyed
+				}
+
+				c.Node().SetSecretManifest(w.Data.Meta.Name, sm)
+			}
+		}
+	}()
+
+	mm.Watch(n, rev)
 }
 
 func (r *Runtime) nodeWatch(ctx context.Context, rev *int64) {

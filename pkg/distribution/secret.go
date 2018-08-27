@@ -25,6 +25,7 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 	"github.com/lastbackend/lastbackend/pkg/log"
 	"github.com/lastbackend/lastbackend/pkg/storage"
+	"encoding/json"
 )
 
 const (
@@ -128,6 +129,51 @@ func (n *Secret) Remove(secret *types.Secret) error {
 
 	return nil
 }
+
+func (n *Secret) Watch(ch chan types.SecretEvent, rev *int64) error {
+
+	log.V(logLevel).Debugf("%s:watch:> watch secret", logSecretPrefix)
+
+	done := make(chan bool)
+	watcher := storage.NewWatcher()
+
+	go func() {
+		for {
+			select {
+			case <-n.context.Done():
+				done <- true
+				return
+			case e := <-watcher:
+				if e.Data == nil {
+					continue
+				}
+
+				res := types.SecretEvent{}
+				res.Action = e.Action
+				res.Name = e.Name
+
+				secret := new(types.Secret)
+
+				if err := json.Unmarshal(e.Data.([]byte), secret); err != nil {
+					log.Errorf("%s:> parse data err: %v", logSecretPrefix, err)
+					continue
+				}
+
+				res.Data = secret
+
+				ch <- res
+			}
+		}
+	}()
+
+	opts := storage.GetOpts()
+	if err := n.storage.Watch(n.context, n.storage.Collection().Secret(), watcher, opts); err != nil {
+		return err
+	}
+
+	return nil
+}
+
 
 func NewSecretModel(ctx context.Context, stg storage.Storage) *Secret {
 	return &Secret{ctx, stg}

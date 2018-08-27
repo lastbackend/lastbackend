@@ -20,16 +20,13 @@ package distribution
 
 import (
 	"context"
-	"fmt"
-	"strings"
-
 	"encoding/json"
 
 	"github.com/lastbackend/lastbackend/pkg/distribution/errors"
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 	"github.com/lastbackend/lastbackend/pkg/log"
 	"github.com/lastbackend/lastbackend/pkg/storage"
-	"github.com/spf13/viper"
+	"time"
 )
 
 const (
@@ -95,76 +92,34 @@ func (s *Service) List(namespace string) (*types.ServiceList, error) {
 }
 
 // Create new service model in namespace
-func (s *Service) Create(namespace *types.Namespace, opts *types.ServiceCreateOptions) (*types.Service, error) {
+func (s *Service) Create(namespace *types.Namespace, svc *types.Service) (*types.Service, error) {
 
-	log.V(logLevel).Debugf("%s:create:> create new service %#v", logServicePrefix, opts)
+	log.V(logLevel).Debugf("%s:create:> create new service %#v", logServicePrefix, svc.Meta)
 
-	service := new(types.Service)
-	switch true {
-	case opts == nil:
-		return nil, errors.New("opts can not be nil")
-	case opts.Name == nil || *opts.Name == "":
-		return nil, errors.New("name is required")
-	case opts.Image == nil:
-		return nil, errors.New("image is required")
-	case opts.Image.Name == nil  || *opts.Image.Name == types.EmptyString:
-		return nil, errors.New("image is required")
-	}
+	svc.Meta.Namespace = namespace.Meta.Name
+	svc.SelfLink()
 
-	// prepare meta data for service
-	service.Meta.SetDefault()
-	service.Meta.Name = *opts.Name
-	service.Meta.Namespace = namespace.Meta.Name
-	service.Meta.Endpoint = strings.ToLower(fmt.Sprintf("%s-%s.%s", *opts.Name, namespace.Meta.Name, viper.GetString("domain.internal")))
+	svc.Meta.Created = time.Now()
+	svc.Meta.Updated = time.Now()
 
-	if opts.Description != nil {
-		service.Meta.Description = *opts.Description
-	}
+	svc.Status.State = types.StateCreated
 
-	service.SelfLink()
-
-	service.Status.State = types.StateCreated
-	// prepare default template spec
-	c := types.SpecTemplateContainer{}
-	c.SetDefault()
-	c.Role = types.ContainerRolePrimary
-
-	// prepare spec data for service
-	service.Spec.SetDefault()
-	service.Spec.Template.Containers = append(service.Spec.Template.Containers, c)
-
-	if opts.Spec != nil {
-		service.Spec.Update(opts.Image, opts.Spec)
-	}
-
-	service.SelfLink()
+	svc.Spec.Network.Updated = time.Now()
+	svc.Spec.Template.Updated = time.Now()
 
 	if err := s.storage.Put(s.context, s.storage.Collection().Service(),
-		s.storage.Key().Service(service.Meta.Namespace, service.Meta.Name), service, nil); err != nil {
+		s.storage.Key().Service(svc.Meta.Namespace, svc.Meta.Name), svc, nil); err != nil {
 		log.V(logLevel).Errorf("%s:create:> insert service err: %v", logServicePrefix, err)
 		return nil, err
 	}
 
-	return service, nil
+	return svc, nil
 }
 
 // Update service in namespace
-func (s *Service) Update(service *types.Service, opts *types.ServiceUpdateOptions) (*types.Service, error) {
+func (s *Service) Update(service *types.Service) (*types.Service, error) {
 
-	log.V(logLevel).Debugf("%s:update:> %#v -> %#v", logServicePrefix, service, opts)
-
-	if opts == nil {
-		opts = new(types.ServiceUpdateOptions)
-	}
-
-	if opts.Description != nil {
-		service.Meta.Description = *opts.Description
-	}
-
-	if opts.Spec != nil || opts.Image != nil {
-		service.Status.State = types.StateProvision
-		service.Spec.Update(opts.Image, opts.Spec)
-	}
+	log.V(logLevel).Debugf("%s:update:> %#v -> %#v", logServicePrefix, service)
 
 	if err := s.storage.Set(s.context, s.storage.Collection().Service(),
 		s.storage.Key().Service(service.Meta.Namespace, service.Meta.Name), service, nil); err != nil {

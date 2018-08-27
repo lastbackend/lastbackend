@@ -66,6 +66,10 @@ type SubnetEvent struct {
 	Data *Subnet
 }
 
+type SecretEvent struct {
+	event
+	Data *Secret
+}
 
 type IngresEvent struct {
 	event
@@ -107,6 +111,11 @@ type EndpointManifestEvent struct {
 type SubnetManifestEvent struct {
 	event
 	Data *SubnetManifest
+}
+
+type SecretManifestEvent struct {
+	event
+	Data *SecretManifest
 }
 
 type NodeEvent struct {

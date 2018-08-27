@@ -198,7 +198,7 @@ func Create(ctx context.Context, key string, manifest *types.PodManifest) (*type
 		//==========================================================================
 
 		var c = new(types.PodContainer)
-		c.ID, err = envs.Get().GetCRI().ContainerCreate(ctx, &s, secrets)
+		c.ID, err = envs.Get().GetCRI().ContainerCreate(ctx, s, secrets)
 		if err != nil {
 			switch err {
 			case context.Canceled:

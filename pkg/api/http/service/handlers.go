@@ -29,8 +29,8 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/distribution"
 	"github.com/lastbackend/lastbackend/pkg/distribution/errors"
 	"github.com/lastbackend/lastbackend/pkg/log"
-	"github.com/lastbackend/lastbackend/pkg/util/converter"
 	"github.com/lastbackend/lastbackend/pkg/util/http/utils"
+	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 )
 
 const (
@@ -249,13 +249,13 @@ func ServiceCreateH(w http.ResponseWriter, r *http.Request) {
 	var (
 		nm = distribution.NewNamespaceModel(r.Context(), envs.Get().GetStorage())
 		sm = distribution.NewServiceModel(r.Context(), envs.Get().GetStorage())
+		opts = v1.Request().Service().Manifest()
 	)
 
 	// request body struct
-	opts, e := v1.Request().Service().CreateOptions().DecodeAndValidate(r.Body)
-	if e != nil {
-		log.V(logLevel).Errorf("%s:create:> validation incoming data err: %s", logPrefix, e.Err())
-		e.Http(w)
+	if err := opts.DecodeAndValidate(r.Body); err != nil {
+		log.V(logLevel).Errorf("%s:create:> validation incoming data err: %s", logPrefix, err.Err())
+		err.Http(w)
 		return
 	}
 
@@ -272,39 +272,30 @@ func ServiceCreateH(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if opts.Name == nil {
+	if opts.Meta.Name != nil {
 
-		if opts.Image == nil {
-			errors.New("service").BadParameter("image spec").Http(w)
-			return
-		}
-
-		if opts.Image.Name == nil {
-			errors.New("service").BadParameter("image name").Http(w)
-			return
-		}
-
-		data, err := converter.DockerNamespaceParse(*opts.Image.Name)
+		srv, err := sm.Get(ns.Meta.Name, *opts.Meta.Name)
 		if err != nil {
-			errors.New("service").BadParameter("image").Http(w)
+			log.V(logLevel).Errorf("%s:create:> get service by name `%s` in namespace `%s` err: %s", logPrefix, opts.Meta.Name, ns.Meta.Name, err.Error())
+			errors.HTTP.InternalServerError(w)
 			return
 		}
-		opts.Name = &data.Repo
+
+		if srv != nil {
+			log.V(logLevel).Warnf("%s:create:> service name `%s` in namespace `%s` not unique", logPrefix, opts.Meta.Name, ns.Meta.Name)
+			errors.New("service").NotUnique("name").Http(w)
+			return
+		}
 	}
 
-	srv, err := sm.Get(ns.Meta.Name, *opts.Name)
-	if err != nil {
-		log.V(logLevel).Errorf("%s:create:> get service by name `%s` in namespace `%s` err: %s", logPrefix, opts.Name, ns.Meta.Name, err.Error())
-		errors.HTTP.InternalServerError(w)
-		return
-	}
-	if srv != nil {
-		log.V(logLevel).Warnf("%s:create:> service name `%s` in namespace `%s` not unique", logPrefix, opts.Name, ns.Meta.Name)
-		errors.New("service").NotUnique("name").Http(w)
-		return
-	}
 
-	srv, err = sm.Create(ns, opts)
+
+	svc := new(types.Service)
+	opts.SetServiceMeta(svc)
+	opts.SetServiceSpec(svc)
+
+
+	srv, err := sm.Create(ns, svc)
 	if err != nil {
 		log.V(logLevel).Errorf("%s:create:> create service err: %s", logPrefix, err.Error())
 		errors.HTTP.InternalServerError(w)
@@ -371,8 +362,8 @@ func ServiceUpdateH(w http.ResponseWriter, r *http.Request) {
 	)
 
 	// request body struct
-	opts, e := v1.Request().Service().UpdateOptions().DecodeAndValidate(r.Body)
-	if e != nil {
+	opts := v1.Request().Service().Manifest()
+	if e := opts.DecodeAndValidate(r.Body); e != nil {
 		log.V(logLevel).Errorf("%s:update:> validation incoming data err: %s", logPrefix, e.Err())
 		e.Http(w)
 		return
@@ -403,7 +394,10 @@ func ServiceUpdateH(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	srv, err := sm.Update(svc, opts)
+	opts.SetServiceMeta(svc)
+	opts.SetServiceSpec(svc)
+
+	srv, err := sm.Update(svc)
 	if err != nil {
 		log.V(logLevel).Errorf("%s:update:> update service err: %s", logPrefix, err.Error())
 		errors.HTTP.InternalServerError(w)

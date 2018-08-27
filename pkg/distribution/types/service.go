@@ -19,14 +19,7 @@
 package types
 
 import (
-	"strings"
-
 	"fmt"
-
-	"time"
-
-	"github.com/lastbackend/lastbackend/pkg/util/network"
-	"github.com/lastbackend/lastbackend/pkg/log"
 )
 
 const (
@@ -70,13 +63,12 @@ type ServiceStatus struct {
 }
 
 type ServiceSpec struct {
-	Replicas int          `json:"replicas"`
-	State    SpecState    `json:"state"`
-	Network  SpecNetwork  `json:"network"`
-	Strategy SpecStrategy `json:"strategy"`
-	Triggers SpecTriggers `json:"triggers"`
-	Selector SpecSelector `json:"selector"`
-	Template SpecTemplate `json:"template"`
+	Replicas int          `json:"replicas" yaml:"replicas"`
+	State    SpecState    `json:"state" yaml:"state"`
+	Network  SpecNetwork  `json:"network" yaml:"network" `
+	Strategy SpecStrategy `json:"strategy" yaml:"strategy"`
+	Selector SpecSelector `json:"selector" yaml:"selector"`
+	Template SpecTemplate `json:"template" yaml:"template"`
 }
 
 type ServiceStatusNetwork struct {
@@ -91,10 +83,6 @@ type ServiceSpecStrategy struct {
 }
 
 type ServiceSpecStrategyResources struct{}
-
-type ServiceQuotas struct {
-	RAM *int64 `json:"ram"`
-}
 
 type ServiceSpecStrategyRollingOptions struct {
 	PeriodUpdate   int `json:"period_update"`
@@ -117,143 +105,6 @@ func (s *ServiceSpec) SetDefault() {
 	s.Replicas = DEFAULT_SERVICE_REPLICAS
 	s.Template.Volumes = make(SpecTemplateVolumeList, 0)
 	s.Template.Containers = make(SpecTemplateContainers, 0)
-	s.Triggers = make(SpecTriggers, 0)
-}
-
-func (s *ServiceSpec) Update(image *ServiceImageSpec, spec *ServiceOptionsSpec) {
-
-	if spec == nil && image == nil {
-		return
-	}
-
-	var (
-		f bool
-		i int
-	)
-
-	c := SpecTemplateContainer{}
-
-	for i, t := range s.Template.Containers {
-		if t.Role == ContainerRolePrimary {
-			c = s.Template.Containers[i]
-			f = true
-		}
-	}
-
-	if !f {
-		c.SetDefault()
-		c.Role = ContainerRolePrimary
-	}
-
-	if image != nil {
-
-		if image.Name != nil {
-			c.Image.Name = *image.Name
-		}
-
-		if image.Secret != nil {
-			c.Image.Secret = *image.Secret
-		}
-
-		s.Template.Updated = time.Now()
-	}
-
-	if spec != nil {
-
-		if spec.Replicas != nil {
-			log.Infof("set replicas: %d", *spec.Replicas)
-			s.Replicas = *spec.Replicas
-		}
-
-		if spec.Command != nil {
-			c.Exec.Command = strings.Split(*spec.Command, " ")
-			s.Template.Updated = time.Now()
-		}
-
-		if spec.Entrypoint != nil {
-			c.Exec.Entrypoint = strings.Split(*spec.Entrypoint, " ")
-			s.Template.Updated = time.Now()
-		}
-
-		// TODO: update for multi-container pod
-		if spec.Ports != nil {
-
-			s.Network.Ports = make(map[uint16]string, 0)
-			c.Ports = SpecTemplateContainerPorts{}
-
-			for pt, pm := range spec.Ports {
-				port, proto, err := network.ParsePortMap(pm)
-				if err != nil {
-					continue
-				}
-
-				c.Ports = append(c.Ports, SpecTemplateContainerPort{
-					Protocol:      proto,
-					ContainerPort: port,
-				})
-
-				s.Network.Ports[pt] = fmt.Sprintf("%d/%s", port, proto)
-				s.Network.Updated = time.Now()
-			}
-
-		}
-
-		if spec.EnvVars != nil {
-			c.EnvVars = SpecTemplateContainerEnvs{}
-
-			for _, e := range *spec.EnvVars {
-
-				env := SpecTemplateContainerEnv{
-					Name: e.Name,
-					Value: e.Value,
-					From: SpecTemplateContainerEnvSecret{
-						Name: e.From.Name,
-						Key: e.From.Key,
-					},
-				}
-				c.EnvVars = append(c.EnvVars, env)
-			}
-			s.Template.Updated = time.Now()
-		}
-
-		if spec.Memory != nil && *spec.Memory != c.Resources.Limits.RAM {
-			c.Resources.Limits.RAM = *spec.Memory
-			s.Template.Updated = time.Now()
-		}
-
-		if !f {
-			s.Template.Containers = append(s.Template.Containers, c)
-		} else {
-			s.Template.Containers[i] = c
-		}
-
-	}
-
-}
-
-type ServiceSources struct {
-	// Name sources
-	Image ServiceSourcesImage `json:"image"`
-	// Deployment source lastbackend repo
-	Repo ServiceSourcesRepo `json:"repo"`
-}
-
-type ServiceSourcesImage struct {
-	// Name namespace name
-	Namespace string `json:"namespace"`
-	// Name tag
-	Tag string `json:"tag"`
-	// Hash
-	Hash string `json:"hash"`
-}
-
-type ServiceSourcesRepo struct {
-	// Deployment source lastbackend repo ID
-	ID string `json:"id"`
-	// Branch info
-	Tag string `json:"tag"`
-	// Build sources info
-	Build string `json:"build"`
 }
 
 func (s *Service) SelfLink() string {
@@ -267,17 +118,9 @@ func (s *Service) CreateSelfLink(namespace, name string) string {
 	return fmt.Sprintf("%s:%s", namespace, name)
 }
 
-type ServiceCreateOptions struct {
-	Name        *string             `json:"name"`
-	Description *string             `json:"description"`
-	Image       *ServiceImageSpec   `json:"image"`
-	Spec        *ServiceOptionsSpec `json:"spec"`
-}
 
-type ServiceUpdateOptions struct {
-	Description *string             `json:"description"`
-	Image       *ServiceImageSpec   `json:"image"`
-	Spec        *ServiceOptionsSpec `json:"spec"`
+type ServiceManifest struct {
+	Meta   ServiceMeta   `json:"meta"`
 }
 
 type ServiceRemoveOptions struct {

@@ -16,29 +16,16 @@
 // from Last.Backend LLC.
 //
 
-package types
+package request
 
-const StateProvision = "provision"
-const StatusInitialized = "initialized"
-const StateWarning = "warning"
-const StateDegradation = "degradation"
-const StateReady = "ready"
+type Runtime struct {
+	Kind    string      `json:"kind" yaml:"kind"`
+	Version string      `json:"version" yaml:"version"`
+	Meta    RuntimeMeta `json:"meta" yaml:"meta"`
+}
 
-const StatusPull = "pull"
-const StateDestroy = "destroy"
-const StateUpdated = "updated"
-const StateCancel = "cancel"
-
-const StateCreated = "created"
-const StatusStarting = "starting"
-const StateStarted = "started"
-const StatusStopped = "stopped"
-const StateDestroyed = "destroyed"
-
-const StateExited = "exited"
-const StatusRunning = "running"
-const StateError = "error"
-
-const StepInitialized = "initialized"
-const StepPull = "pull"
-const StepReady = "ready"
+type RuntimeMeta struct {
+	Name        *string           `json:"name,omitempty" yaml:"name,omitempty"`
+	Description *string           `json:"description,omitempty",yaml:"description,omitempty"`
+	Labels      map[string]string `json:"labels,omitempty" yaml:"labels,omitempty"`
+}

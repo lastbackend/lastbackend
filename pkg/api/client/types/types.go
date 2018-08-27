@@ -79,10 +79,10 @@ type ServiceClientV1 interface {
 	Deployment(args ...string) DeploymentClientV1
 	Trigger(args ...string) TriggerClientV1
 
-	Create(ctx context.Context, opts *rv1.ServiceCreateOptions) (*vv1.Service, error)
+	Create(ctx context.Context, opts *rv1.ServiceManifest) (*vv1.Service, error)
 	List(ctx context.Context) (*vv1.ServiceList, error)
 	Get(ctx context.Context) (*vv1.Service, error)
-	Update(ctx context.Context, opts *rv1.ServiceUpdateOptions) (*vv1.Service, error)
+	Update(ctx context.Context, opts *rv1.ServiceManifest) (*vv1.Service, error)
 	Remove(ctx context.Context, opts *rv1.ServiceRemoveOptions) error
 	Logs(ctx context.Context, opts *rv1.ServiceLogsOptions) (io.ReadCloser, error)
 }

@@ -147,3 +147,7 @@ func (ManifestCollection) Subnet() string {
 func (ManifestCollection) Endpoint() string {
 	return fmt.Sprintf("%s/%s/%s", manifestCollection, clusterCollection, endpointCollection)
 }
+
+func (ManifestCollection) Secret() string {
+	return fmt.Sprintf("%s/%s/%s", manifestCollection, clusterCollection, secretCollection)
+}

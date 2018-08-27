@@ -68,7 +68,7 @@ func (sc *ServiceClient) Trigger(args ...string) types.TriggerClientV1 {
 	return newTriggerClient(sc.client, sc.namespace, sc.name, name)
 }
 
-func (sc *ServiceClient) Create(ctx context.Context, opts *rv1.ServiceCreateOptions) (*vv1.Service, error) {
+func (sc *ServiceClient) Create(ctx context.Context, opts *rv1.ServiceManifest) (*vv1.Service, error) {
 
 	body, err := opts.ToJson()
 	if err != nil {
@@ -136,7 +136,7 @@ func (sc *ServiceClient) Get(ctx context.Context) (*vv1.Service, error) {
 	return s, nil
 }
 
-func (sc *ServiceClient) Update(ctx context.Context, opts *rv1.ServiceUpdateOptions) (*vv1.Service, error) {
+func (sc *ServiceClient) Update(ctx context.Context, opts *rv1.ServiceManifest) (*vv1.Service, error) {
 
 	body, err := opts.ToJson()
 	if err != nil {
