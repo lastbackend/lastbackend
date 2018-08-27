@@ -1,0 +1,35 @@
+kind: Service
+version: v1
+meta:
+  name: proxy
+  labels:
+    type: proxy
+    demo: test
+spec:
+  selector:
+    node:
+    labels:
+      type: "frontend"
+  replicas: 1
+  template:
+    containers:
+    - name: nginx-proxy
+      image:
+        name: undassa/nginx:latest
+        secret: docker
+      ports:
+        - 8080
+      env:
+        - name: demo
+          value: test
+        - name: secret
+          from:
+            name: demo
+            key: test
+
+#      volumes:
+#        - name: demo
+#          mount: "/test:/test"
+#    volumes:
+#      - name: demo
+
