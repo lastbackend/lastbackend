@@ -89,7 +89,19 @@ type ManifestSpecTemplateContainerResource struct {
 }
 
 type ManifestSpecTemplateVolume struct {
+	// Template volume name
 	Name string `json:"name,omitempty" yaml:"name,omitempty"`
+	// Template volume type
 	Type string `json:"type,omitempty" yaml:"type,omitempty"`
+	// Template volume from secret type
+	From  ManifestSpecTemplateSecretVolume `json:"from,omitempty" yaml:"from,omitempty"`
 }
+
+type ManifestSpecTemplateSecretVolume struct {
+	// Secret name to mount
+	Name string `json:"name,omitempty" yaml:"name,omitempty"`
+	// Secret file key
+	Files  []string `json:"files,omitempty" yaml:"files,omitempty"`
+}
+
 

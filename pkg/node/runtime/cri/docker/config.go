@@ -76,7 +76,7 @@ func GetConfig(spec *types.SpecTemplateContainer, secrets map[string]*types.Secr
 	}
 }
 
-func GetHostConfig(spec *types.SpecTemplateContainer) *container.HostConfig {
+func GetHostConfig(spec *types.SpecTemplateContainer, volumes map[string]*types.PodVolume) *container.HostConfig {
 
 	rPolicy := container.RestartPolicy{
 		Name:              spec.RestartPolicy.Policy,
@@ -96,7 +96,12 @@ func GetHostConfig(spec *types.SpecTemplateContainer) *container.HostConfig {
 	)
 
 	for _, v := range spec.Volumes {
+
 		if v.Name == types.EmptyString || v.Path == types.EmptyString {
+			continue
+		}
+
+		if _, ok := volumes[v.Name]; !ok {
 			continue
 		}
 
@@ -104,7 +109,7 @@ func GetHostConfig(spec *types.SpecTemplateContainer) *container.HostConfig {
 			v.Mode = "ro"
 		}
 
-		binds = append(binds, fmt.Sprintf("%s:%s:%s", v.Name, v.Path, v.Mode))
+		binds = append(binds, fmt.Sprintf("%s:%s:%s", volumes[v.Name].Path, v.Path, v.Mode))
 	}
 
 	for _, l := range spec.Links {

@@ -17,3 +17,13 @@
 //
 
 package csi
+
+import (
+	"context"
+	"github.com/lastbackend/lastbackend/pkg/distribution/types"
+)
+
+type CSI interface {
+	Create (ctx context.Context, name string, manifest *types.VolumeManifest) (*types.VolumeStatus, error)
+	Remove (ctx context.Context, name string, manifest *types.VolumeManifest) error
+}

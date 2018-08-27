@@ -71,6 +71,8 @@ type SpecTemplateVolumeList []*SpecTemplateVolume
 type SpecTemplateVolume struct {
 	// Template volume name
 	Name string `json:"name"`
+	// Template volume name
+	Type string `json:"type"`
 	// Template volume from secret type
 	From SpecTemplateSecretVolume `json:"from"`
 }
@@ -212,6 +214,21 @@ type SpecTemplateContainerResources struct {
 	// Request resources
 	Request SpecTemplateContainerResource `json:"quota"`
 }
+
+// swagger:model types_spec_volume_resources
+type SpecVolumeResources struct {
+	// Limit resources
+	Limits SpecTemplateContainerResource `json:"limits"`
+	// Request resources
+	Request SpecTemplateContainerResource `json:"quota"`
+}
+
+// swagger:model types_spec_volume_resource
+type SpecVolumeResource struct {
+	// Size resource option
+	Size int64 `json:"size"`
+}
+
 
 // swagger:model types_spec_template_container_exec
 type SpecTemplateContainerExec struct {

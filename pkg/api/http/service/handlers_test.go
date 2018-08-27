@@ -468,10 +468,10 @@ func TestServiceUpdate(t *testing.T) {
 	envs.Get().SetStorage(stg)
 
 	ns1 := getNamespaceAsset("demo", "")
-	//ns2 := getNamespaceAsset("test", "")
+	ns2 := getNamespaceAsset("test", "")
 
 	s1 := getServiceAsset(ns1.Meta.Name, "demo", "")
-	//s2 := getServiceAsset(ns1.Meta.Name, "test", "")
+	s2 := getServiceAsset(ns1.Meta.Name, "test", "")
 	s3 := getServiceAsset(ns1.Meta.Name, "demo", "demo description")
 
 	m1 := getServiceManifest(s3.Meta.Name, "redis")
@@ -482,6 +482,8 @@ func TestServiceUpdate(t *testing.T) {
 	m3.Meta.Description = &s3.Meta.Description
 	m3.Spec.Template.Containers[0].Env[0].Name = "updated"
 	m3.Spec.Template.Containers[0].Env[1].Value = "meta"
+	m3.Spec.Template.Volumes[0].Name = "secret-test"
+	m3.Spec.Template.Volumes[0].From.Name = "r"
 
 	m3.SetServiceSpec(s3)
 
@@ -507,27 +509,27 @@ func TestServiceUpdate(t *testing.T) {
 		err          string
 		expectedCode int
 	}{
-		//{
-		//	name:         "checking update service if name not exists",
-		//	fields:       fields{stg},
-		//	args:         args{ctx, ns1, s2},
-		//	handler:      service.ServiceUpdateH,
-		//	data:         getServiceManifest("test", "redis"),
-		//	err:          "{\"code\":404,\"status\":\"Not Found\",\"message\":\"Service not found\"}",
-		//	wantErr:      true,
-		//	expectedCode: http.StatusNotFound,
-		//},
-		//{
-		//	name:         "checking update service if namespace not found",
-		//	fields:       fields{stg},
-		//	args:         args{ctx, ns2, s1},
-		//	handler:      service.ServiceUpdateH,
-		//	data:         getServiceManifest("demo", "redis"),
-		//	err:          "{\"code\":404,\"status\":\"Not Found\",\"message\":\"Namespace not found\"}",
-		//	wantErr:      true,
-		//	expectedCode: http.StatusNotFound,
-		//},
-		//// TODO: check another spec parameters
+		{
+			name:         "checking update service if name not exists",
+			fields:       fields{stg},
+			args:         args{ctx, ns1, s2},
+			handler:      service.ServiceUpdateH,
+			data:         getServiceManifest("test", "redis"),
+			err:          "{\"code\":404,\"status\":\"Not Found\",\"message\":\"Service not found\"}",
+			wantErr:      true,
+			expectedCode: http.StatusNotFound,
+		},
+		{
+			name:         "checking update service if namespace not found",
+			fields:       fields{stg},
+			args:         args{ctx, ns2, s1},
+			handler:      service.ServiceUpdateH,
+			data:         getServiceManifest("demo", "redis"),
+			err:          "{\"code\":404,\"status\":\"Not Found\",\"message\":\"Namespace not found\"}",
+			wantErr:      true,
+			expectedCode: http.StatusNotFound,
+		},
+		// TODO: check another spec parameters
 		{
 			name:         "check update service success",
 			fields:       fields{stg},
@@ -682,6 +684,39 @@ func TestServiceUpdate(t *testing.T) {
 						assert.Error(t, errors.New("container spec not found"), wcs.Name)
 						return
 					}
+				}
+
+
+
+				if !assert.Equal(t, len(tc.want.Spec.Template.Volumes), len(s.Spec.Template.Volumes), "volumes specs count not equal") {
+					return
+				}
+
+				for _, wvs := range tc.want.Spec.Template.Volumes {
+
+					var f = false
+
+					for _, scs := range s.Spec.Template.Volumes {
+
+						if scs.Name != wvs.Name {
+							continue
+						}
+
+						f = true
+
+						assert.Equal(t, wvs.Type, scs.Type, "volume spec type not equal")
+						assert.Equal(t, wvs.From.Name, scs.From.Name, "volume spec secret name not equal")
+
+						assert.Equal(t, strings.Join(wvs.From.Files, " "), strings.Join(scs.From.Files, " "), "container spec secret files not equal")
+
+					}
+
+					if !f {
+						t.Log("not found")
+						t.Error("volume spec not found", wvs.Name)
+						return
+					}
+
 				}
 			}
 		})
@@ -864,6 +899,13 @@ func getServiceManifest(name, image string) *request.ServiceManifest {
 			},
 			Env: make([]request.ManifestSpecTemplateContainerEnv, 0),
 		}
+		volume = request.ManifestSpecTemplateVolume{
+			Name: "demo",
+			From: request.ManifestSpecTemplateSecretVolume{
+				Name: "test",
+				Files: []string{"1.txt"},
+			},
+		}
 	)
 
 	container.Env = append(container.Env, request.ManifestSpecTemplateContainerEnv{
@@ -884,5 +926,6 @@ func getServiceManifest(name, image string) *request.ServiceManifest {
 	mf.Spec.Replicas = &replicas
 	mf.Spec.Template = new(request.ManifestSpecTemplate)
 	mf.Spec.Template.Containers = append(mf.Spec.Template.Containers, container)
+	mf.Spec.Template.Volumes = append(mf.Spec.Template.Volumes, volume)
 	return mf
 }

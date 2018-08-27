@@ -130,6 +130,19 @@ func (sv *Service) ToSpec(obj types.ServiceSpec) ServiceSpec {
 		spec.Template.Containers = append(spec.Template.Containers, c)
 	}
 
+	for _, s := range obj.Template.Volumes {
+		v := ManifestSpecTemplateVolume{
+			Name: s.Name,
+			Type: s.Type,
+			From:ManifestSpecTemplateSecretVolume{
+				Name: s.From.Name,
+				Files: s.From.Files,
+			},
+		}
+
+		spec.Template.Volumes = append(spec.Template.Volumes, v)
+	}
+
 	return spec
 }
 

@@ -37,6 +37,7 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/node/runtime/cni/cni"
 	"github.com/lastbackend/lastbackend/pkg/node/runtime/cpi/cpi"
 	"github.com/lastbackend/lastbackend/pkg/node/runtime/cri/cri"
+	"github.com/lastbackend/lastbackend/pkg/node/runtime/csi/csi"
 	"github.com/spf13/viper"
 )
 
@@ -50,6 +51,8 @@ func Daemon() {
 
 	log.New(viper.GetInt("verbose"))
 	log.Info("Start Node")
+
+
 
 	cri, err := cri.New()
 	if err != nil {
@@ -66,8 +69,22 @@ func Daemon() {
 		log.Errorf("Cannot initialize cni: %v", err)
 	}
 
-	state := state.New()
 
+	csis := viper.GetStringMap("node.csi")
+	if csis  != nil {
+		for kind := range csis {
+			si, err := csi.New(kind)
+			if err != nil {
+				log.Errorf("Cannot initialize sni: %s > %v", kind, err)
+			}
+			envs.Get().SetCSI(kind, si)
+		}
+
+
+	}
+
+
+	state := state.New()
 	envs.Get().SetState(state)
 	envs.Get().SetCRI(cri)
 	envs.Get().SetCNI(cni)

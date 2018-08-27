@@ -20,6 +20,8 @@ package types
 
 import "fmt"
 
+const VOLUMETYPELOCAL = "local"
+
 // swagger:ignore
 // swagger:model types_volume
 type Volume struct {
@@ -56,6 +58,10 @@ type VolumeMeta struct {
 // swagger:model types_volume_spec
 type VolumeSpec struct {
 	State VolumeSpecState `json:"state"`
+	Type  string `json:"type"`
+	Path  string `json:"path"`
+	Mode  string `json:"mode"`
+	Resources SpecVolumeResources `json:"resources"`
 }
 
 // swagger:model types_volume_spec_state
@@ -80,6 +86,10 @@ type VolumeStatus struct {
 	State string `json:"state" yaml:"state"`
 	// volume status message
 	Message string `json:"message" yaml:"message"`
+	// Volume root path
+	Path string `json:"path" yaml:"path"`
+	// Volume state ready
+	Ready bool `json:"ready" yaml:"ready"`
 }
 
 func (v *Volume) SelfLink() string {

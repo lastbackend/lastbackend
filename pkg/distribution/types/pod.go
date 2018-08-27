@@ -91,6 +91,8 @@ type PodStatus struct {
 	Network PodNetwork `json:"network" yaml:"network"`
 	// Pod containers
 	Containers map[string]*PodContainer `json:"containers" yaml:"containers"`
+	// Pod volumes
+	Volumes map[string]*PodVolume `json:"volumes" yaml:"volumes"`
 }
 
 // PodSteps is a map of pod steps
@@ -130,6 +132,21 @@ type PodContainer struct {
 	Restart int `json:"restared" yaml:"restared"`
 	// Pod container image meta
 	Image PodContainerImage `json:"image" yaml:"image"`
+}
+
+// PodContainer is a container of the pod
+// swagger:model types_pod_container
+type PodVolume struct {
+	// Pod name
+	Pod string `json:"pod" yaml:"pod"`
+	// Pod volume name
+	Name string `json:"name" yaml:"name"`
+	// Pod volume ready flag
+	Ready bool `json:"ready" yaml:"ready"`
+	// Pod volume string
+	Type string `json:"type" yaml:"type"`
+	// Pod volume Path
+	Path string `json:"path" yaml:"path"`
 }
 
 // swagger:model types_pod_container_image
@@ -267,6 +284,7 @@ func NewPodStatus() *PodStatus {
 	status := PodStatus{
 		Steps:      make(PodSteps, 0),
 		Containers: make(map[string]*PodContainer, 0),
+		Volumes: make(map[string]*PodVolume, 0),
 	}
 	return &status
 }

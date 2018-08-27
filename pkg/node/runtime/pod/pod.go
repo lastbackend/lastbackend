@@ -22,6 +22,8 @@ import (
 	"context"
 	"io"
 	"os"
+	"path/filepath"
+	"strings"
 	"time"
 
 	"net/http"
@@ -31,7 +33,7 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/node/envs"
 	"github.com/lastbackend/lastbackend/pkg/node/events"
 	"github.com/lastbackend/lastbackend/pkg/util/cleaner"
-	)
+)
 
 const (
 	BUFFER_SIZE = 1024
@@ -125,6 +127,47 @@ func Create(ctx context.Context, key string, manifest *types.PodManifest) (*type
 	envs.Get().GetState().Pods().AddPod(key, status)
 	events.NewPodStatusEvent(ctx, key)
 
+	log.V(logLevel).Debugf("Have %d volumes", len(manifest.Template.Volumes))
+	for _, v := range manifest.Template.Volumes {
+		log.V(logLevel).Debugf("Create volume: %s", v.Name)
+		if v.Type == types.EmptyString {
+			v.Type = types.VOLUMETYPELOCAL
+		}
+		si, err := envs.Get().GetCSI(v.Type)
+		if err != nil {
+			log.Errorf("Can-not get storage interface: %s", err)
+			status.SetError(err)
+			Clean(context.Background(), status)
+			return status, err
+		}
+
+
+		vm := types.VolumeManifest{
+			Path: filepath.Join(key, v.Name),
+			Type: types.VOLUMETYPELOCAL,
+		}
+
+		st, err := si.Create(ctx, key, &vm)
+		if err != nil {
+			log.Errorf("Can-not get secret from api: %s", err)
+			status.SetError(err)
+			Clean(context.Background(), status)
+			return status, err
+		}
+
+		status.Volumes[v.Name] = &types.PodVolume{
+			Pod: key,
+			Type: types.VOLUMETYPELOCAL,
+			Ready: st.Ready,
+			Path: st.Path,
+		}
+
+		vs := types.VolumeSpec(vm)
+		envs.Get().GetState().Volumes().AddVolume(strings.Join([]string{key, v.Name}, ":"), &vs)
+		envs.Get().GetState().Pods().SetPod(key, status)
+	}
+
+
 	log.V(logLevel).Debugf("Have %d containers", len(manifest.Template.Containers))
 	for _, c := range manifest.Template.Containers {
 
@@ -198,7 +241,7 @@ func Create(ctx context.Context, key string, manifest *types.PodManifest) (*type
 		//==========================================================================
 
 		var c = new(types.PodContainer)
-		c.ID, err = envs.Get().GetCRI().ContainerCreate(ctx, s, secrets)
+		c.ID, err = envs.Get().GetCRI().ContainerCreate(ctx, s, secrets, status.Volumes)
 		if err != nil {
 			switch err {
 			case context.Canceled:
@@ -302,6 +345,30 @@ func Destroy(ctx context.Context, pod string, status *types.PodStatus) {
 	log.V(logLevel).Debugf("Try to remove pod: %s", pod)
 	Clean(ctx, status)
 	envs.Get().GetState().Pods().DelPod(pod)
+
+	for _, v := range status.Volumes {
+
+		if v.Type == types.EmptyString {
+			v.Type = types.VOLUMETYPELOCAL
+		}
+
+		si, err := envs.Get().GetCSI(v.Type)
+		if err != nil {
+			log.Errorf("Remove volume failed: %s", err.Error())
+			continue
+		}
+
+		vm := types.VolumeManifest{
+			Path: filepath.Join(pod, v.Name),
+			Type: types.VOLUMETYPELOCAL,
+		}
+
+		if err := si.Remove(ctx, v.Name, &vm); err != nil {
+			log.Warnf("can note remove volume: %s: %s", v.Name, err.Error())
+		}
+
+		envs.Get().GetState().Volumes().DelVolume(strings.Join([]string{pod, v.Name}, ":"))
+	}
 }
 
 func Restore(ctx context.Context) error {

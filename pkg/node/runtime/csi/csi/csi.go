@@ -17,3 +17,15 @@
 //
 
 package csi
+
+import (
+	"github.com/lastbackend/lastbackend/pkg/node/runtime/csi"
+	"github.com/lastbackend/lastbackend/pkg/node/runtime/csi/local"
+)
+
+func New(kind string) (csi.CSI, error) {
+	switch kind {
+	default:
+		return local.Get()
+	}
+}

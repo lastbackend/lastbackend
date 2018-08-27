@@ -57,12 +57,12 @@ func (r *Runtime) ContainerList(ctx context.Context, all bool) ([]*types.Contain
 	return cl, nil
 }
 
-func (r *Runtime) ContainerCreate(ctx context.Context, spec *types.SpecTemplateContainer, secrets map[string]*types.Secret) (string, error) {
+func (r *Runtime) ContainerCreate(ctx context.Context, spec *types.SpecTemplateContainer, secrets map[string]*types.Secret, volumes map[string]*types.PodVolume) (string, error) {
 
 	c, err := r.client.ContainerCreate(
 		ctx,
 		GetConfig(spec, secrets),
-		GetHostConfig(spec),
+		GetHostConfig(spec, volumes),
 		GetNetworkConfig(spec),
 		"",
 	)

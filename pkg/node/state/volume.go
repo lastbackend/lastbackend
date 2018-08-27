@@ -69,11 +69,11 @@ func (s *VolumesState) SetVolume(key string, volume *types.VolumeSpec) {
 	s.volumes[key] = *volume
 }
 
-func (s *VolumesState) DelVolume(volume *types.Volume) {
-	log.V(logLevel).Debugf("Cache: VolumeCache: del volume: %#v", volume)
+func (s *VolumesState) DelVolume(key string) {
+	log.V(logLevel).Debugf("Cache: VolumeCache: del volume: %#v", key)
 	s.lock.Lock()
 	defer s.lock.Unlock()
-	if _, ok := s.volumes[volume.Meta.Name]; ok {
-		delete(s.volumes, volume.Meta.Name)
+	if _, ok := s.volumes[key]; ok {
+		delete(s.volumes, key)
 	}
 }

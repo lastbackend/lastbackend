@@ -37,7 +37,7 @@ type CRI interface {
 
 type ContainerRuntime interface {
 	ContainerList(ctx context.Context, all bool) ([]*types.Container, error)
-	ContainerCreate(ctx context.Context, spec *types.SpecTemplateContainer, secrets map[string]*types.Secret) (string, error)
+	ContainerCreate(ctx context.Context, spec *types.SpecTemplateContainer, secrets map[string]*types.Secret, volumes map[string]*types.PodVolume) (string, error)
 	ContainerStart(ctx context.Context, ID string) error
 	ContainerRestart(ctx context.Context, ID string, timeout *time.Duration) error
 	ContainerStop(ctx context.Context, ID string, timeout *time.Duration) error
