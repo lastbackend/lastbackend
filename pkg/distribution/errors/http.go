@@ -40,6 +40,10 @@ func (Http) Forbidden(w http.ResponseWriter, msg ...string) {
 	HTTP.getForbidden(msg...).send(w)
 }
 
+func (Http) NotAllowed(w http.ResponseWriter, msg ...string) {
+	HTTP.getNotAllowed(msg...).send(w)
+}
+
 func (Http) BadRequest(w http.ResponseWriter, msg ...string) {
 	HTTP.getBadRequest(msg...).send(w)
 }
@@ -89,6 +93,10 @@ func (Http) getUnauthorized(msg ...string) *Http {
 
 func (Http) getForbidden(msg ...string) *Http {
 	return getHttpError(http.StatusForbidden, msg...)
+}
+
+func (Http) getNotAllowed(msg ...string) *Http {
+	return getHttpError(http.StatusMethodNotAllowed, msg...)
 }
 
 func (Http) getPaymentRequired(msg ...string) *Http {
