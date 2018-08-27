@@ -68,15 +68,11 @@ var applyCmd = &cobra.Command{
 				_ = fmt.Errorf("failed read data from file: %s", f)
 				os.Exit(1)
 			}
-			fmt.Println(string(c))
+
 			var m = new(request.Runtime)
 			yaml.Unmarshal(c, m)
 
-			fmt.Println("Kind:>", m.Kind)
-
 			if m.Kind == "Service" {
-
-				fmt.Println("Service manage")
 
 				spec := v1.Request().Service().Manifest()
 				spec.FromYaml(c)
@@ -84,40 +80,29 @@ var applyCmd = &cobra.Command{
 				var rsvc *views.Service
 
 				if m.Meta.Name != nil {
-					rsvc, err = cli.V1().Namespace(namespace).Service(*m.Meta.Name).Get(envs.Background())
-					if err != nil {
-						fmt.Errorf(err.Error())
-						//return
-					}
+					rsvc, _ = cli.V1().Namespace(namespace).Service(*m.Meta.Name).Get(envs.Background())
 				}
 
 				if rsvc == nil {
 					fmt.Println("create new service")
 					rsvc, err = cli.V1().Namespace(namespace).Service().Create(envs.Background(), spec)
 					if err != nil {
-						fmt.Println(2)
 						fmt.Println(err)
 						return
 					}
-					fmt.Println(fmt.Sprintf("Service `%s` is created", m.Meta.Name))
 				} else {
-					fmt.Println("update service")
 					rsvc, err = cli.V1().Namespace(namespace).Service(rsvc.Meta.Name).Update(envs.Background(), spec)
 					if err != nil {
 						fmt.Println(3)
 						fmt.Println(err)
 						return
 					}
-
-					fmt.Println(fmt.Sprintf("Service `%s` is updated", m.Meta.Name))
 				}
 
 				if rsvc != nil {
-					fmt.Println(4)
 					service := view.FromApiServiceView(rsvc)
 					service.Print()
 				} else {
-					fmt.Println(5)
 					fmt.Println("ooops")
 				}
 
