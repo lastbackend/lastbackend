@@ -304,24 +304,6 @@ func TestServiceList(t *testing.T) {
 
 }
 
-type ServiceCreateOptions struct {
-	request.ServiceCreateOptions
-}
-
-func createServiceCreateOptions(name, description, image *string, spec *request.ServiceOptionsSpec) *ServiceCreateOptions {
-	opts := new(ServiceCreateOptions)
-	opts.Name = name
-	opts.Description = description
-	opts.Image = new(request.ServiceImageSpec)
-	opts.Image.Name = image
-	opts.Spec = spec
-	return opts
-}
-
-func (s *ServiceCreateOptions) toJson() string {
-	buf, _ := json.Marshal(s)
-	return string(buf)
-}
 
 // Testing ServiceCreateH handler
 func TestServiceCreate(t *testing.T) {
@@ -331,12 +313,9 @@ func TestServiceCreate(t *testing.T) {
 	stg, _ := storage.Get("mock")
 	envs.Get().SetStorage(stg)
 
-	srtPointer := func(s string) *string { return &s }
-	intPointer := func(i int) *int { return &i }
-	int64Pointer := func(i int64) *int64 { return &i }
-
 	ns1 := getNamespaceAsset("demo", "")
 	ns2 := getNamespaceAsset("test", "")
+
 	s1 := getServiceAsset(ns1.Meta.Name, "demo", "")
 	s2 := getServiceAsset(ns1.Meta.Name, "test", "")
 	s3 := getServiceAsset(ns1.Meta.Name, "new_demo", "")
@@ -357,7 +336,7 @@ func TestServiceCreate(t *testing.T) {
 		fields       fields
 		headers      map[string]string
 		handler      func(http.ResponseWriter, *http.Request)
-		data         string
+		data         *request.ServiceManifest
 		want         *views.Service
 		wantErr      bool
 		err          string
@@ -368,7 +347,7 @@ func TestServiceCreate(t *testing.T) {
 			args:         args{ctx, ns1, s1},
 			fields:       fields{stg},
 			handler:      service.ServiceCreateH,
-			data:         createServiceCreateOptions(srtPointer("demo"), nil, srtPointer("redis"), nil).toJson(),
+			data:         getServiceManifest("demo", "redis"),
 			err:          "{\"code\":400,\"status\":\"Not Unique\",\"message\":\"Name is already in use\"}",
 			wantErr:      true,
 			expectedCode: http.StatusBadRequest,
@@ -378,58 +357,28 @@ func TestServiceCreate(t *testing.T) {
 			args:         args{ctx, ns2, s2},
 			fields:       fields{stg},
 			handler:      service.ServiceCreateH,
-			data:         createServiceCreateOptions(srtPointer("test"), nil, srtPointer("redis"), nil).toJson(),
+			data:         getServiceManifest("test", "redis"),
 			err:          "{\"code\":404,\"status\":\"Not Found\",\"message\":\"Namespace not found\"}",
 			wantErr:      true,
 			expectedCode: http.StatusNotFound,
-		},
-		{
-			name:         "check create service if failed incoming json data",
-			args:         args{ctx, ns1, s3},
-			fields:       fields{stg},
-			handler:      service.ServiceCreateH,
-			data:         "{name:demo}",
-			err:          "{\"code\":400,\"status\":\"Incorrect Json\",\"message\":\"Incorrect json\"}",
-			wantErr:      true,
-			expectedCode: http.StatusBadRequest,
 		},
 		{
 			name:         "check create service if bad parameter name",
 			args:         args{ctx, ns1, s3},
 			fields:       fields{stg},
 			handler:      service.ServiceCreateH,
-			data:         createServiceCreateOptions(srtPointer("___test"), nil, srtPointer("redis"), nil).toJson(),
+			data:         getServiceManifest("_____test", "redis"),
 			err:          "{\"code\":400,\"status\":\"Bad Parameter\",\"message\":\"Bad name parameter\"}",
-			wantErr:      true,
-			expectedCode: http.StatusBadRequest,
-		},
-		{
-			name:         "check create service if bad parameter memory",
-			args:         args{ctx, ns1, s3},
-			fields:       fields{stg},
-			handler:      service.ServiceCreateH,
-			data:         createServiceCreateOptions(srtPointer("test"), nil, srtPointer("redis"), &request.ServiceOptionsSpec{Replicas: intPointer(1), Memory: int64Pointer(127)}).toJson(),
-			err:          "{\"code\":400,\"status\":\"Bad Parameter\",\"message\":\"Bad memory parameter\"}",
 			wantErr:      true,
 			expectedCode: http.StatusBadRequest,
 		},
 		// TODO: check another spec parameters
 		{
-			name:         "check create service if bad parameter replicas",
-			args:         args{ctx, ns1, s3},
-			fields:       fields{stg},
-			handler:      service.ServiceCreateH,
-			data:         createServiceCreateOptions(srtPointer("test"), nil, srtPointer("redis"), &request.ServiceOptionsSpec{Replicas: intPointer(-1)}).toJson(),
-			err:          "{\"code\":400,\"status\":\"Bad Parameter\",\"message\":\"Bad replicas parameter\"}",
-			wantErr:      true,
-			expectedCode: http.StatusBadRequest,
-		},
-		{
 			name:         "check create service success",
 			args:         args{ctx, ns1, s3},
 			fields:       fields{stg},
 			handler:      service.ServiceCreateH,
-			data:         createServiceCreateOptions(srtPointer(s3.Meta.Name), nil, srtPointer("redis"), nil).toJson(),
+			data:         getServiceManifest("new_demo", "redis"),
 			want:         v1.View().Service().NewWithDeployment(s3, nil, nil),
 			wantErr:      false,
 			expectedCode: http.StatusOK,
@@ -458,7 +407,10 @@ func TestServiceCreate(t *testing.T) {
 
 			// Create assert request to pass to our handler. We don't have any query parameters for now, so we'll
 			// pass 'nil' as the third parameter.
-			req, err := http.NewRequest("POST", fmt.Sprintf("/namespace/%s/service", tc.args.namespace.Meta.Name), strings.NewReader(tc.data))
+			bd, err := tc.data.ToJson()
+			assert.NoError(t, err)
+
+			req, err := http.NewRequest("POST", fmt.Sprintf("/namespace/%s/service", tc.args.namespace.Meta.Name), strings.NewReader(string(bd)))
 			assert.NoError(t, err)
 
 			if tc.headers != nil {
@@ -508,22 +460,6 @@ func TestServiceCreate(t *testing.T) {
 
 }
 
-type ServiceUpdateOptions struct {
-	request.ServiceUpdateOptions
-}
-
-func createServiceUpdateOptions(description *string, spec *request.ServiceOptionsSpec) *ServiceUpdateOptions {
-	opts := new(ServiceUpdateOptions)
-	opts.Description = description
-	opts.Spec = spec
-	return opts
-}
-
-func (s *ServiceUpdateOptions) toJson() string {
-	buf, _ := json.Marshal(s)
-	return string(buf)
-}
-
 // Testing ServiceUpdateH handler
 func TestServiceUpdate(t *testing.T) {
 
@@ -532,13 +468,26 @@ func TestServiceUpdate(t *testing.T) {
 	stg, _ := storage.Get("mock")
 	envs.Get().SetStorage(stg)
 
-	int64Pointer := func(i int64) *int64 { return &i }
-
 	ns1 := getNamespaceAsset("demo", "")
 	ns2 := getNamespaceAsset("test", "")
+
 	s1 := getServiceAsset(ns1.Meta.Name, "demo", "")
 	s2 := getServiceAsset(ns1.Meta.Name, "test", "")
 	s3 := getServiceAsset(ns1.Meta.Name, "demo", "demo description")
+
+
+	m1 := getServiceManifest(s3.Meta.Name, "redis")
+	m1.SetServiceSpec(s1)
+
+	m3 := getServiceManifest(s3.Meta.Name, "redis")
+
+	m3.Meta.Description = &s3.Meta.Description
+	m3.Spec.Template.Containers[0].Env[0].Name = "updated"
+
+	m3.SetServiceSpec(s3)
+
+	a, _ := v1.View().Service().NewWithDeployment(s1, nil, nil).ToJson()
+	fmt.Println(len(s3.Spec.Template.Containers), string(a))
 
 	type fields struct {
 		stg storage.Storage
@@ -556,7 +505,7 @@ func TestServiceUpdate(t *testing.T) {
 		args         args
 		headers      map[string]string
 		handler      func(http.ResponseWriter, *http.Request)
-		data         string
+		data         *request.ServiceManifest
 		want         *views.Service
 		wantErr      bool
 		err          string
@@ -567,7 +516,7 @@ func TestServiceUpdate(t *testing.T) {
 			fields:       fields{stg},
 			args:         args{ctx, ns1, s2},
 			handler:      service.ServiceUpdateH,
-			data:         createServiceUpdateOptions(nil, nil).toJson(),
+			data:         getServiceManifest("test", "redis"),
 			err:          "{\"code\":404,\"status\":\"Not Found\",\"message\":\"Service not found\"}",
 			wantErr:      true,
 			expectedCode: http.StatusNotFound,
@@ -577,30 +526,10 @@ func TestServiceUpdate(t *testing.T) {
 			fields:       fields{stg},
 			args:         args{ctx, ns2, s1},
 			handler:      service.ServiceUpdateH,
-			data:         createServiceUpdateOptions(nil, nil).toJson(),
+			data:         getServiceManifest("demo", "redis"),
 			err:          "{\"code\":404,\"status\":\"Not Found\",\"message\":\"Namespace not found\"}",
 			wantErr:      true,
 			expectedCode: http.StatusNotFound,
-		},
-		{
-			name:         "check update service if failed incoming json data",
-			fields:       fields{stg},
-			args:         args{ctx, ns1, s1},
-			handler:      service.ServiceUpdateH,
-			data:         "{name:demo}",
-			err:          "{\"code\":400,\"status\":\"Incorrect Json\",\"message\":\"Incorrect json\"}",
-			wantErr:      true,
-			expectedCode: http.StatusBadRequest,
-		},
-		{
-			name:         "check update service if bad parameter memory",
-			fields:       fields{stg},
-			args:         args{ctx, ns1, s1},
-			handler:      service.ServiceUpdateH,
-			data:         createServiceUpdateOptions(nil, &request.ServiceOptionsSpec{Memory: int64Pointer(127)}).toJson(),
-			err:          "{\"code\":400,\"status\":\"Bad Parameter\",\"message\":\"Bad memory parameter\"}",
-			wantErr:      true,
-			expectedCode: http.StatusBadRequest,
 		},
 		// TODO: check another spec parameters
 		{
@@ -608,7 +537,7 @@ func TestServiceUpdate(t *testing.T) {
 			fields:       fields{stg},
 			args:         args{ctx, ns1, s1},
 			handler:      service.ServiceUpdateH,
-			data:         createServiceUpdateOptions(&s3.Meta.Description, nil).toJson(),
+			data:         m3,
 			want:         v1.View().Service().NewWithDeployment(s3, nil, nil),
 			wantErr:      false,
 			expectedCode: http.StatusOK,
@@ -637,7 +566,10 @@ func TestServiceUpdate(t *testing.T) {
 
 			// Create assert request to pass to our handler. We don't have any query parameters for now, so we'll
 			// pass 'nil' as the third parameter.
-			req, err := http.NewRequest("PUT", fmt.Sprintf("/namespace/%s/service/%s", tc.args.namespace.Meta.Name, tc.args.service.Meta.Name), strings.NewReader(tc.data))
+			bd, err := tc.data.ToJson()
+			assert.NoError(t, err)
+
+			req, err := http.NewRequest("PUT", fmt.Sprintf("/namespace/%s/service/%s", tc.args.namespace.Meta.Name, tc.args.service.Meta.Name), strings.NewReader(string(bd)))
 			assert.NoError(t, err)
 
 			if tc.headers != nil {
@@ -666,6 +598,7 @@ func TestServiceUpdate(t *testing.T) {
 			body, err := ioutil.ReadAll(res.Body)
 			assert.NoError(t, err)
 
+
 			if tc.wantErr && res.Code != 200 {
 				assert.Equal(t, tc.err, string(body), "incorrect status code")
 			} else {
@@ -676,7 +609,93 @@ func TestServiceUpdate(t *testing.T) {
 				assert.Equal(t, tc.want.Meta.Name, s.Meta.Name, "description not equal")
 				assert.Equal(t, tc.want.Meta.Description, s.Meta.Description, "description not equal")
 				assert.Equal(t, tc.want.Spec.Replicas, s.Spec.Replicas, "replicas not equal")
-				// TODO: check all updated parameters
+				assert.Equal(t, tc.want.Spec.Network.IP, s.Spec.Network.IP, "network ip spec not equal")
+				assert.Equal(t, tc.want.Spec.Network.Ports, s.Spec.Network.Ports, "network ports spec not equal")
+				assert.Equal(t, tc.want.Spec.Strategy.Type, s.Spec.Strategy.Type, "deployment strategy not equal")
+				assert.Equal(t, tc.want.Spec.Selector.Node, s.Spec.Selector.Node, "provision node selectors not equal")
+				assert.Equal(t, tc.want.Spec.Selector.Labels, s.Spec.Selector.Labels, "provision labels selectors not equal")
+
+				for _, wcs := range tc.want.Spec.Template.Containers {
+					var f = false
+
+					t.Logf("check container template: %s", wcs.Name)
+
+					for _, scs := range s.Spec.Template.Containers {
+						if scs.Name != wcs.Name {
+							continue
+						}
+
+						f = true
+
+						assert.Equal(t, wcs.Command, scs.Command, "container spec command not equal")
+						assert.Equal(t, wcs.Entrypoint, scs.Entrypoint, "container spec entrypoint not equal")
+						assert.Equal(t, wcs.Workdir, scs.Workdir, "container spec workdir not equal")
+
+						assert.Equal(t, strings.Join(wcs.Args, " "), strings.Join(scs.Args, " "), "container spec command args not equal")
+
+						assert.Equal(t, wcs.Resources, scs.Resources, "container resources not equal")
+						assert.Equal(t, wcs.Image, scs.Image, "container spec image not equal")
+
+
+						t.Logf("check container template volumes: %d", len(wcs.Volumes))
+						for _, wvcs := range wcs.Volumes {
+							var vf = false
+
+							for _, svcs := range scs.Volumes {
+
+
+								if wvcs.Name != svcs.Name {
+									continue
+								}
+
+								vf = true
+
+								t.Logf("check container template volume: %s", wvcs.Name)
+								assert.Equal(t, wvcs, svcs, "container volume spec not equal")
+
+							}
+
+							if !vf {
+								assert.Error(t, errors.New("container volume not found"), wcs.Name)
+								return
+							}
+
+						}
+
+						t.Logf("check container template envs: %d", len(wcs.Env))
+						for _, wecs := range wcs.Env {
+
+							var ef = false
+							t.Logf("check container template env: %s", wecs.Name)
+
+							for _, secs := range scs.Volumes {
+								if wecs.Name != secs.Name {
+									continue
+								}
+
+								ef = true
+
+								t.Logf("check container template env: %s", wecs.Name)
+								assert.Equal(t, wecs, secs, "container env spec not equal")
+
+
+							}
+
+							if !ef {
+								assert.Error(t, errors.New("container env not found"), wcs.Name)
+								return
+							}
+
+						}
+
+						assert.Equal(t, wcs.Volumes, scs.Volumes, "container spec image not equal")
+					}
+
+					if !f {
+						assert.Error(t, errors.New("container spec not found"), wcs.Name)
+						return
+					}
+				}
 			}
 		})
 	}
@@ -835,6 +854,7 @@ func getServiceAsset(namespace, name, desc string) *types.Service {
 	s.Meta.Namespace = namespace
 	s.Meta.Name = name
 	s.Meta.Description = desc
+	s.Spec.Replicas = 1
 	return &s
 }
 
@@ -844,4 +864,38 @@ func setRequestVars(r *mux.Router, req *http.Request) {
 	r.Match(req, &match)
 	// Push the variable onto the context
 	req = mux.SetURLVars(req, match.Vars)
+}
+
+func getServiceManifest(name, image string) *request.ServiceManifest {
+
+	var (
+		replicas = 1
+		container = request.ManifestSpecTemplateContainer{
+			Name: image,
+			Image:request.ManifestSpecTemplateContainerImage{
+				Name: image,
+			},
+			Env: make([]request.ManifestSpecTemplateContainerEnv, 0),
+		}
+	)
+
+	container.Env = append(container.Env, request.ManifestSpecTemplateContainerEnv{
+		Name: "Demo",
+		Value: "test",
+	})
+
+	container.Env = append(container.Env, request.ManifestSpecTemplateContainerEnv{
+		Name: "Secret",
+		From: request.ManifestSpecTemplateContainerEnvSecret{
+			Name: "secret-name",
+			Key: "secret-key",
+		},
+	})
+
+	mf := new(request.ServiceManifest)
+	mf.Meta.Name = &name
+	mf.Spec.Replicas = &replicas
+	mf.Spec.Template = new(request.ManifestSpecTemplate)
+	mf.Spec.Template.Containers = append(mf.Spec.Template.Containers, container)
+	return mf
 }

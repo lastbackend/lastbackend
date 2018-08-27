@@ -38,13 +38,13 @@ type SpecState struct {
 // swagger:model types_spec_template
 type SpecTemplate struct {
 	// Template spec for volume
-	Volumes SpecTemplateVolumeList `json:"volumes"`
+	Volumes SpecTemplateVolumeList `json:"volumes" yaml:"volumes"`
 	// Template main container
-	Containers SpecTemplateContainers `json:"container"`
+	Containers SpecTemplateContainers `json:"container" yaml:"container"`
 	// Termination period
-	Termination int `json:"termination"`
+	Termination int `json:"termination" yaml:"termination"`
 	// Spec updated time
-	Updated time.Time `json:"updated"`
+	Updated time.Time `json:"updated" yaml:"updated"`
 }
 
 // SpecNetwork is a map of spec template for network
@@ -96,50 +96,50 @@ type SpecTemplateContainers []SpecTemplateContainer
 // swagger:model types_spec_template_container
 type SpecTemplateContainer struct {
 	// Template container id
-	ID string `json:"id"`
+	ID string `json:"id" yaml:"id"`
 	// Template container name
-	Name string `json:"name"`
+	Name string `json:"name" yaml:"name"`
 	// Template container role
-	Role string `json:"role"`
+	Role string `json:"role" yaml:"role"`
 	// Automatically remove container when it exits
-	AutoRemove bool `json:"autoremove"`
+	AutoRemove bool `json:"autoremove" yaml:"autoremove"`
 	// Labels list
-	Labels map[string]string `json:"labels"`
+	Labels map[string]string `json:"labels" yaml:"labels"`
 	// Template container image
-	Image SpecTemplateContainerImage `json:"image"`
+	Image SpecTemplateContainerImage `json:"image" yaml:"image"`
 	// Template container ports binding
-	Ports SpecTemplateContainerPorts `json:"ports"`
+	Ports SpecTemplateContainerPorts `json:"ports" yaml:"ports"`
 	// Template container envs
-	EnvVars SpecTemplateContainerEnvs `json:"env"`
+	EnvVars SpecTemplateContainerEnvs `json:"env" yaml:"env"`
 	// Template container resources
-	Resources SpecTemplateContainerResources `json:"resources"`
+	Resources SpecTemplateContainerResources `json:"resources" yaml:"resources"`
 	// Template container exec options
-	Exec SpecTemplateContainerExec `json:"exec"`
+	Exec SpecTemplateContainerExec `json:"exec" yaml:"exec"`
 	// Template container volumes
-	Volumes SpecTemplateContainerVolumes `json:"volumes"`
+	Volumes SpecTemplateContainerVolumes `json:"volumes" yaml:"volumes"`
 	// Template container probes
-	Probes SpecTemplateContainerProbes `json:"probes"`
+	Probes SpecTemplateContainerProbes `json:"probes" yaml:"probes"`
 	// Template container security
-	Security SpecTemplateContainerSecurity `json:"security"`
+	Security SpecTemplateContainerSecurity `json:"security" yaml:"security"`
 	// Subnet container settings
-	Network SpecTemplateContainerNetwork `json:"network"`
+	Network SpecTemplateContainerNetwork `json:"network" yaml:"network"`
 	// Container DNS configuration
-	DNS SpecTemplateContainerDNS `json:"dns"`
+	DNS SpecTemplateContainerDNS `json:"dns" yaml:"dns"`
 	// List of extra hosts
-	ExtraHosts []string `json:"extra_hosts"`
+	ExtraHosts []string `json:"extra_hosts" yaml:"extra_hosts"`
 	// Should docker publish all exposed port for the container
-	PublishAllPorts bool `json:"publish"`
+	PublishAllPorts bool `json:"publish" yaml:"publish"`
 	// Links to another containers
-	Links []SpecTemplateContainerLink `json:"links"`
+	Links []SpecTemplateContainerLink `json:"links" yaml:"links"`
 	// Restart Policy
-	RestartPolicy SpecTemplateRestartPolicy `json:"restart"`
+	RestartPolicy SpecTemplateRestartPolicy `json:"restart" yaml:"restart"`
 }
 
 // swagger:model types_spec_template_container_image
 type SpecTemplateContainerImage struct {
-	Name   string `json:"name"`
-	Secret string `json:"secret"`
-	Policy string `json:"policy"`
+	Name   string `json:"name" yaml:"name"`
+	Secret string `json:"secret" yaml:"secret"`
+	Policy string `json:"policy" yaml:"policy"`
 }
 
 // swagger:ignore
@@ -357,6 +357,10 @@ type SpecTrigger struct {
 
 // swagger:model types_spec_selector
 type SpecSelector struct {
+
+	Labels map[string]string `json:"labels"`
+
+	Node string `json:"node"`
 	// Spec updated time
 	Updated time.Time `json:"updated"`
 }

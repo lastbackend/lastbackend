@@ -24,189 +24,50 @@ import (
 	"io/ioutil"
 
 	"github.com/lastbackend/lastbackend/pkg/distribution/errors"
-	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 	"github.com/lastbackend/lastbackend/pkg/util/validator"
 )
 
 type ServiceRequest struct{}
 
-func (ServiceRequest) CreateOptions() *ServiceCreateOptions {
-	return new(ServiceCreateOptions)
+
+func (ServiceRequest) Manifest() *ServiceManifest {
+	return new(ServiceManifest)
 }
 
-func (s *ServiceCreateOptions) Validate() *errors.Err {
+func (s *ServiceManifest) Validate() *errors.Err {
 	switch true {
-	case s.Name != nil && !validator.IsServiceName(*s.Name):
+	case s.Meta.Name != nil && !validator.IsServiceName(*s.Meta.Name):
 		return errors.New("service").BadParameter("name")
-	case s.Image == nil:
-		if s.Image.Name == nil {
-			return errors.New("service").BadParameter("image name")
-		}
-		return errors.New("service").BadParameter("image spec")
-
-	case s.Description != nil && len(*s.Description) > DEFAULT_DESCRIPTION_LIMIT:
+	case s.Meta.Description != nil && len(*s.Meta.Description) > DEFAULT_DESCRIPTION_LIMIT:
 		return errors.New("service").BadParameter("description")
-	case s.Spec != nil:
-
-		if s.Spec.Replicas != nil && *s.Spec.Replicas < DEFAULT_REPLICAS_MIN {
-			return errors.New("service").BadParameter("replicas")
-		}
-
-		if s.Spec.Memory != nil && *s.Spec.Memory < DEFAULT_MEMORY_MIN {
-			return errors.New("service").BadParameter("memory")
-		}
 	}
+
 	return nil
 }
 
-func (s *ServiceCreateOptions) DecodeAndValidate(reader io.Reader) (*types.ServiceCreateOptions, *errors.Err) {
+func (s *ServiceManifest) DecodeAndValidate(reader io.Reader) *errors.Err {
+
 
 	if reader == nil {
 		err := errors.New("data body can not be null")
-		return nil, errors.New("service").IncorrectJSON(err)
+		return errors.New("service").IncorrectJSON(err)
 	}
 
 	body, err := ioutil.ReadAll(reader)
 	if err != nil {
-		return nil, errors.New("service").Unknown(err)
+		return errors.New("service").Unknown(err)
 	}
 
 	err = json.Unmarshal(body, s)
 	if err != nil {
-		return nil, errors.New("service").IncorrectJSON(err)
+		return errors.New("service").IncorrectJSON(err)
 	}
 
 	if err := s.Validate(); err != nil {
-		return nil, err
+		return err
 	}
 
-	opts := new(types.ServiceCreateOptions)
-	opts.Name = s.Name
-	opts.Description = s.Description
-
-	if s.Image != nil {
-		opts.Image = new(types.ServiceImageSpec)
-		opts.Image.Name = s.Image.Name
-		opts.Image.Secret = s.Image.Secret
-	}
-
-	if s.Spec != nil {
-		opts.Spec = new(types.ServiceOptionsSpec)
-		opts.Spec.Replicas = s.Spec.Replicas
-		opts.Spec.Memory = s.Spec.Memory
-
-		if s.Spec.EnvVars != nil {
-			envs := make([]types.ServiceEnvOption, 0)
-			for _, e := range *s.Spec.EnvVars {
-				 envs = append(envs, types.ServiceEnvOption{
-					Name: e.Name,
-					Value: e.Value,
-					From: types.ServiceEnvFromOption{
-						Key: e.From.Key,
-						Name: e.From.Name,
-					},
-				})
-			}
-
-			opts.Spec.EnvVars = &envs
-		}
-
-		opts.Spec.Entrypoint = s.Spec.Entrypoint
-		opts.Spec.Command = s.Spec.Command
-
-		if s.Spec.Ports != nil {
-			opts.Spec.Ports = s.Spec.Ports
-		}
-
-	}
-
-	return opts, nil
-}
-
-func (s *ServiceCreateOptions) ToJson() ([]byte, error) {
-	return json.Marshal(s)
-}
-
-func (ServiceRequest) UpdateOptions() *ServiceUpdateOptions {
-	return new(ServiceUpdateOptions)
-}
-
-func (s *ServiceUpdateOptions) Validate() *errors.Err {
-	switch true {
-	case s.Description != nil && len(*s.Description) > DEFAULT_DESCRIPTION_LIMIT:
-		return errors.New("service").BadParameter("description")
-	case s.Spec != nil:
-		if s.Spec.Memory != nil && *s.Spec.Memory < DEFAULT_MEMORY_MIN {
-			return errors.New("service").BadParameter("memory")
-		}
-	}
 	return nil
-}
-
-func (s *ServiceUpdateOptions) DecodeAndValidate(reader io.Reader) (*types.ServiceUpdateOptions, *errors.Err) {
-
-	if reader == nil {
-		err := errors.New("data body can not be null")
-		return nil, errors.New("service").IncorrectJSON(err)
-	}
-
-	body, err := ioutil.ReadAll(reader)
-	if err != nil {
-		return nil, errors.New("service").Unknown(err)
-	}
-
-	err = json.Unmarshal(body, s)
-	if err != nil {
-		return nil, errors.New("service").IncorrectJSON(err)
-	}
-
-	if err := s.Validate(); err != nil {
-		return nil, err
-	}
-
-	opts := new(types.ServiceUpdateOptions)
-	opts.Description = s.Description
-
-	if s.Image != nil {
-		opts.Image = new(types.ServiceImageSpec)
-		opts.Image.Name = s.Image.Name
-		opts.Image.Secret = s.Image.Secret
-	}
-
-	if s.Spec != nil {
-		opts.Spec = new(types.ServiceOptionsSpec)
-		opts.Spec.Memory = s.Spec.Memory
-
-		if s.Spec.EnvVars != nil {
-			envs := make([]types.ServiceEnvOption, 0)
-			for _, e := range *s.Spec.EnvVars {
-				envs = append(envs, types.ServiceEnvOption{
-					Name: e.Name,
-					Value: e.Value,
-					From: types.ServiceEnvFromOption{
-						Key: e.From.Key,
-						Name: e.From.Name,
-					},
-				})
-			}
-
-			opts.Spec.EnvVars = &envs
-		}
-
-		opts.Spec.Entrypoint = s.Spec.Entrypoint
-		opts.Spec.Command = s.Spec.Command
-		opts.Spec.Replicas = s.Spec.Replicas
-
-		if len(s.Spec.Ports) != 0 {
-			opts.Spec.Ports = s.Spec.Ports
-		}
-	}
-
-	return opts, nil
-}
-
-func (s *ServiceUpdateOptions) ToJson() ([]byte, error) {
-	return json.Marshal(s)
 }
 
 func (ServiceRequest) RemoveOptions() *ServiceRemoveOptions {

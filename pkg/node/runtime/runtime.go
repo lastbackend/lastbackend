@@ -64,6 +64,11 @@ func (r *Runtime) Provision(ctx context.Context, spec *types.NodeManifest) error
 		}
 	}
 
+	log.V(logLevel).Debugf("%s> update secrets", logNodeRuntimePrefix)
+	for s, spec := range spec.Secrets {
+		log.V(logLevel).Debugf("secret: %s > %s", s, spec.State)
+	}
+
 	log.V(logLevel).Debugf("%s> provision pods", logNodeRuntimePrefix)
 	for p, spec := range spec.Pods {
 		log.V(logLevel).Debugf("pod: %v", p)

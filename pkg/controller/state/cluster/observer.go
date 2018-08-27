@@ -156,6 +156,7 @@ func (cs *ClusterState) Endpoint() *EndpointController {
 	return cs.ec
 }
 
+
 func (cs *ClusterState) SetNode(n *types.Node) {
 	cs.node.observer <- n
 }

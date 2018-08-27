@@ -16,29 +16,4 @@
 // from Last.Backend LLC.
 //
 
-package types
-
-const StateProvision = "provision"
-const StatusInitialized = "initialized"
-const StateWarning = "warning"
-const StateDegradation = "degradation"
-const StateReady = "ready"
-
-const StatusPull = "pull"
-const StateDestroy = "destroy"
-const StateUpdated = "updated"
-const StateCancel = "cancel"
-
-const StateCreated = "created"
-const StatusStarting = "starting"
-const StateStarted = "started"
-const StatusStopped = "stopped"
-const StateDestroyed = "destroyed"
-
-const StateExited = "exited"
-const StatusRunning = "running"
-const StateError = "error"
-
-const StepInitialized = "initialized"
-const StepPull = "pull"
-const StepReady = "ready"
+package cluster

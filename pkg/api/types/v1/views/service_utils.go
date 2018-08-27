@@ -20,9 +20,8 @@ package views
 
 import (
 	"encoding/json"
-	"strings"
-
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
+	"strings"
 )
 
 type ServiceView struct{}
@@ -74,24 +73,61 @@ func (sv *Service) ToSpec(obj types.ServiceSpec) ServiceSpec {
 
 	var spec = ServiceSpec{
 		Replicas: obj.Replicas,
+		Template: ManifestSpecTemplate{
+			Containers: make([]ManifestSpecTemplateContainer, 0),
+			Volumes: make([]ManifestSpecTemplateVolume, 0),
+		},
+		Selector:ManifestSpecSelector{
+			Node: obj.Selector.Node,
+			Labels: obj.Selector.Labels,
+		},
+		Network:ManifestSpecNetwork{
+			IP: obj.Network.IP,
+			Ports: obj.Network.Ports,
+		},
+		Strategy:ManifestSpecStrategy{
+			Type: obj.Strategy.Type,
+		},
 	}
 
 	for _, s := range obj.Template.Containers {
-		if s.Role == types.ContainerRolePrimary {
-			spec.Memory = s.Resources.Limits.RAM
-			spec.Image = s.Image.Name
-			spec.Entrypoint = strings.Join(s.Exec.Entrypoint, " ")
-			spec.Command = strings.Join(s.Exec.Command, " ")
-			spec.EnvVars = s.EnvVars.ToLinuxFormat()
-			spec.Ports = make([]*ServiceSpecPort, 0)
-			for _, port := range s.Ports {
-				p := new(ServiceSpecPort)
-				p.Container = port.ContainerPort
-				p.Protocol = port.Protocol
-				spec.Ports = append(spec.Ports, p)
-			}
-			break
+
+		c := ManifestSpecTemplateContainer{
+			Name: s.Name,
+			Command: strings.Join(s.Exec.Command, " "),
+			Workdir: s.Exec.Workdir,
+			Args: s.Exec.Args,
+			Entrypoint: strings.Join(s.Exec.Entrypoint, " "),
 		}
+
+		for _, env := range s.EnvVars {
+			c.Env = append(c.Env, ManifestSpecTemplateContainerEnv{
+				Name: env.Name,
+				Value: env.Value,
+				From:ManifestSpecTemplateContainerEnvSecret{
+					Name: env.From.Name,
+					Key: env.From.Key,
+				},
+			})
+		}
+
+		c.Image.Name = s.Image.Name
+		c.Image.Secret = s.Image.Secret
+
+		for _, volume := range s.Volumes {
+			c.Volumes = append(c.Volumes, ManifestSpecTemplateContainerVolume{
+				Name: volume.Name,
+				Mode: volume.Mode,
+				Path: volume.Path,
+			})
+		}
+
+		c.Resources.Limits.RAM = s.Resources.Limits.RAM
+		c.Resources.Limits.CPU = s.Resources.Limits.CPU
+		c.Resources.Request.RAM = s.Resources.Request.RAM
+		c.Resources.Request.CPU = s.Resources.Request.CPU
+
+		spec.Template.Containers = append(spec.Template.Containers, c)
 	}
 
 	return spec

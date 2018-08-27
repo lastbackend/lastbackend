@@ -45,6 +45,7 @@ type ManifestCollection interface {
 	Volume(node string) string
 	Ingress() string
 	Subnet() string
+	Secret() string
 	Endpoint() string
 }
 

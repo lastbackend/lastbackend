@@ -102,6 +102,7 @@ func (obj *Node) ToJson() ([]byte, error) {
 func (obj *NodeManifest) Decode() *types.NodeManifest {
 
 	manifest := types.NodeManifest{
+		Secrets:   make(map[string]*types.SecretManifest, 0),
 		Network:   make(map[string]*types.SubnetManifest, 0),
 		Pods:      make(map[string]*types.PodManifest, 0),
 		Volumes:   make(map[string]*types.VolumeManifest, 0),
@@ -124,6 +125,10 @@ func (obj *NodeManifest) Decode() *types.NodeManifest {
 		manifest.Endpoints[i] = s
 	}
 
+	for i, s := range obj.Secrets {
+		manifest.Secrets[i] = s
+	}
+
 	return &manifest
 }
 
@@ -143,6 +148,7 @@ func (nv *NodeView) NewList(obj *types.NodeList) *NodeList {
 func (nv *NodeView) NewManifest(obj *types.NodeManifest) *NodeManifest {
 
 	manifest := NodeManifest{
+		Secrets:   make(map[string]*types.SecretManifest, 0),
 		Network:   make(map[string]*types.SubnetManifest, 0),
 		Pods:      make(map[string]*types.PodManifest, 0),
 		Volumes:   make(map[string]*types.VolumeManifest, 0),
@@ -153,6 +159,7 @@ func (nv *NodeView) NewManifest(obj *types.NodeManifest) *NodeManifest {
 		return nil
 	}
 
+	manifest.Secrets = obj.Secrets
 	manifest.Network = obj.Network
 	manifest.Pods = obj.Pods
 	manifest.Volumes = obj.Volumes
