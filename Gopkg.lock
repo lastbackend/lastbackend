@@ -242,7 +242,8 @@
 [[projects]]
   name = "github.com/satori/go.uuid"
   packages = ["."]
-  revision = "36e9d2ebbde5e3f13ab2e25625fd453271d6522e"
+  revision = "f58768cc1a7a7e77a3bd49e98cdd21419399b6a3"
+  version = "v1.2.0"
 
 [[projects]]
   name = "github.com/shirou/gopsutil"
@@ -458,6 +459,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "44067d51f8a3dedcafeab515635860333fb10f699eda4949fd64311084b9cf3c"
+  inputs-digest = "aa89a76c0d9da0f87048429f4282037df406c8ed6e59827537a7aaac30dda95b"
   solver-name = "gps-cdcl"
   solver-version = 1
