@@ -100,7 +100,7 @@ func GetHostConfig(spec *types.SpecTemplateContainer) *container.HostConfig {
 			continue
 		}
 
-		if v.Mode == types.EmptyString {
+		if v.Mode != "rw" {
 			v.Mode = "ro"
 		}
 
