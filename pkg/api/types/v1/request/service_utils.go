@@ -57,7 +57,7 @@ func (s *ServiceManifest) DecodeAndValidate(reader io.Reader) *errors.Err {
 	if err != nil {
 		return errors.New("service").Unknown(err)
 	}
-
+	
 	err = json.Unmarshal(body, s)
 	if err != nil {
 		return errors.New("service").IncorrectJSON(err)

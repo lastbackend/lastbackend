@@ -21,6 +21,7 @@ package request
 import (
 	"encoding/json"
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
+	"github.com/lastbackend/lastbackend/pkg/log"
 	"gopkg.in/yaml.v2"
 	"strings"
 	"time"
@@ -244,8 +245,14 @@ func (s *ServiceManifest) SetServiceSpec(svc *types.Service) {
 			}
 
 			for _, v := range c.Volumes {
+
+
+
 				var f = false
 				for _, sv := range spec.Volumes {
+
+					log.Info(sv.Name, v.Name)
+
 					if v.Name == sv.Name {
 						f = true
 						if sv.Mode != v.Mode || sv.Path != v.Path {
@@ -257,7 +264,7 @@ func (s *ServiceManifest) SetServiceSpec(svc *types.Service) {
 					}
 				}
 				if !f {
-					spec.Volumes = append(spec.Volumes, types.SpecTemplateContainerVolume{
+					spec.Volumes = append(spec.Volumes, &types.SpecTemplateContainerVolume{
 						Name: v.Name,
 						Mode: v.Mode,
 						Path: v.Path,
@@ -265,7 +272,7 @@ func (s *ServiceManifest) SetServiceSpec(svc *types.Service) {
 				}
 			}
 
-			vlms := make([]types.SpecTemplateContainerVolume, 0)
+			vlms := make([]*types.SpecTemplateContainerVolume, 0)
 			for _, sv := range spec.Volumes {
 				for _, cv := range c.Volumes {
 					if sv.Name == cv.Name {

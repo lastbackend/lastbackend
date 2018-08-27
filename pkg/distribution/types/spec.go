@@ -234,7 +234,7 @@ type SpecTemplateContainerResource struct {
 
 // SpecTemplateContainerVolumes is a list of spec template container volumes
 // swagger:model types_spec_template_container_volume_list
-type SpecTemplateContainerVolumes []SpecTemplateContainerVolume
+type SpecTemplateContainerVolumes []*SpecTemplateContainerVolume
 
 // swagger:model types_spec_template_container_volume
 type SpecTemplateContainerVolume struct {

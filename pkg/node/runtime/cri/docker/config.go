@@ -26,16 +26,16 @@ import (
 	"github.com/docker/docker/api/types/strslice"
 	"github.com/docker/go-connections/nat"
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
-	"strconv"
 	"github.com/lastbackend/lastbackend/pkg/log"
+	"strconv"
 )
 
 func GetConfig(spec *types.SpecTemplateContainer, secrets map[string]*types.Secret) *container.Config {
 
-	var volumes map[string]struct{}
-
-	ports := make(nat.PortSet, 0)
-
+	var (
+		volumes = make(map[string]struct{}, 0)
+		ports = make(nat.PortSet, 0)
+	)
 
 	for _, p := range spec.Ports {
 		port := nat.Port(strconv.Itoa(int(p.ContainerPort)))
@@ -60,6 +60,7 @@ func GetConfig(spec *types.SpecTemplateContainer, secrets map[string]*types.Secr
 		}
 		envs = append(envs, env)
 	}
+
 
 	return &container.Config{
 		Hostname:     spec.Network.Hostname,
@@ -95,6 +96,14 @@ func GetHostConfig(spec *types.SpecTemplateContainer) *container.HostConfig {
 	)
 
 	for _, v := range spec.Volumes {
+		if v.Name == types.EmptyString || v.Path == types.EmptyString {
+			continue
+		}
+
+		if v.Mode == types.EmptyString {
+			v.Mode = "ro"
+		}
+
 		binds = append(binds, fmt.Sprintf("%s:%s:%s", v.Name, v.Path, v.Mode))
 	}
 
@@ -102,12 +111,12 @@ func GetHostConfig(spec *types.SpecTemplateContainer) *container.HostConfig {
 		links = append(links, fmt.Sprintf("%s:%s", l.Link, l.Alias))
 	}
 
-	log := container.LogConfig{}
+	logC := container.LogConfig{}
 	ports = make(nat.PortMap)
 
 	return &container.HostConfig{
 		Binds:           binds,
-		LogConfig:       log,
+		LogConfig:       logC,
 		NetworkMode:     container.NetworkMode(spec.Network.Mode),
 		PortBindings:    ports,
 		DNS:             spec.DNS.Server,
@@ -127,7 +136,7 @@ func GetHostConfig(spec *types.SpecTemplateContainer) *container.HostConfig {
 func GetNetworkConfig(spec *types.SpecTemplateContainer) *network.NetworkingConfig {
 
 	cfg := &network.NetworkingConfig{
-		//EndpointsConfig: make(map[string]*network.EndpointSettings),
+	//EndpointsConfig: make(map[string]*network.EndpointSettings),
 	}
 
 	//endpoint := &network.EndpointSettings{
