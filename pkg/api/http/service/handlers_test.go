@@ -486,9 +486,6 @@ func TestServiceUpdate(t *testing.T) {
 
 	m3.SetServiceSpec(s3)
 
-	a, _ := v1.View().Service().NewWithDeployment(s1, nil, nil).ToJson()
-	fmt.Println(len(s3.Spec.Template.Containers), string(a))
-
 	type fields struct {
 		stg storage.Storage
 	}
@@ -615,12 +612,17 @@ func TestServiceUpdate(t *testing.T) {
 				assert.Equal(t, tc.want.Spec.Selector.Node, s.Spec.Selector.Node, "provision node selectors not equal")
 				assert.Equal(t, tc.want.Spec.Selector.Labels, s.Spec.Selector.Labels, "provision labels selectors not equal")
 
+				t.Logf("check container templates: %d", len(tc.want.Spec.Template.Containers))
+
+				assert.Equal(t, len(tc.want.Spec.Template.Containers), len(s.Spec.Template.Containers), "container spec count not equal")
+
 				for _, wcs := range tc.want.Spec.Template.Containers {
 					var f = false
 
 					t.Logf("check container template: %s", wcs.Name)
 
 					for _, scs := range s.Spec.Template.Containers {
+
 						if scs.Name != wcs.Name {
 							continue
 						}
@@ -656,8 +658,7 @@ func TestServiceUpdate(t *testing.T) {
 							}
 
 							if !vf {
-								assert.Error(t, errors.New("container volume not found"), wcs.Name)
-								return
+								t.Error("container volume not found", wcs.Name)
 							}
 
 						}
@@ -668,7 +669,7 @@ func TestServiceUpdate(t *testing.T) {
 							var ef = false
 							t.Logf("check container template env: %s", wecs.Name)
 
-							for _, secs := range scs.Volumes {
+							for _, secs := range scs.Env {
 								if wecs.Name != secs.Name {
 									continue
 								}
@@ -678,17 +679,16 @@ func TestServiceUpdate(t *testing.T) {
 								t.Logf("check container template env: %s", wecs.Name)
 								assert.Equal(t, wecs, secs, "container env spec not equal")
 
-
 							}
 
 							if !ef {
-								assert.Error(t, errors.New("container env not found"), wcs.Name)
+								t.Error("container env not found", wecs.Name)
 								return
 							}
 
 						}
 
-						assert.Equal(t, wcs.Volumes, scs.Volumes, "container spec image not equal")
+						assert.Equal(t, wcs.Env, scs.Env, "container spec image not equal")
 					}
 
 					if !f {

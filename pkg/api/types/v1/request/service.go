@@ -24,7 +24,7 @@ import (
 	"gopkg.in/yaml.v2"
 	"time"
 	"strings"
-	"github.com/lastbackend/dynamic/pkg/log"
+	"github.com/lastbackend/lastbackend/pkg/log"
 )
 
 type ServiceManifest struct {
@@ -223,6 +223,9 @@ func (s *ServiceManifest) SetServiceSpec(svc *types.Service) {
 					}
 				}
 			}
+
+
+			log.Info("envs: ", len(envs))
 			if len(spec.EnvVars) != len(envs) {
 				svc.Spec.Template.Updated = time.Now()
 			}
@@ -274,7 +277,7 @@ func (s *ServiceManifest) SetServiceSpec(svc *types.Service) {
 				}
 			}
 
-			log.Info("vs:>", len(vlms))
+			log.Info("volumes: ", len(vlms))
 			if len(vlms) != len(spec.Volumes) {
 
 				svc.Spec.Template.Updated = time.Now()
@@ -292,6 +295,9 @@ func (s *ServiceManifest) SetServiceSpec(svc *types.Service) {
 		for _, ss := range svc.Spec.Template.Containers {
 			for _, cs := range s.Spec.Template.Containers {
 				if ss.Name == cs.Name {
+
+
+
 					spcs = append(spcs, ss)
 				}
 			}
