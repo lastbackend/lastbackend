@@ -190,7 +190,7 @@ type SpecTemplateContainerPort struct {
 
 // SpecTemplateContainerPorts is a list of spec template container env vars
 // swagger:model types_spec_template_container_env_list
-type SpecTemplateContainerEnvs []SpecTemplateContainerEnv
+type SpecTemplateContainerEnvs []*SpecTemplateContainerEnv
 
 // swagger:model types_spec_template_container_env
 type SpecTemplateContainerEnv struct {

@@ -202,7 +202,7 @@ func (s *ServiceManifest) SetServiceSpec(svc *types.Service) {
 				}
 
 				if !f {
-					spec.EnvVars = append(spec.EnvVars, types.SpecTemplateContainerEnv{
+					spec.EnvVars = append(spec.EnvVars, &types.SpecTemplateContainerEnv{
 						Name:  ce.Name,
 						Value: ce.Value,
 						From: types.SpecTemplateContainerEnvSecret{
@@ -213,7 +213,7 @@ func (s *ServiceManifest) SetServiceSpec(svc *types.Service) {
 				}
 			}
 
-			var envs = make([]types.SpecTemplateContainerEnv, 0)
+			var envs = make([]*types.SpecTemplateContainerEnv, 0)
 			for _, se := range spec.EnvVars {
 				for _, ce := range c.Env {
 					if ce.Name == se.Name {

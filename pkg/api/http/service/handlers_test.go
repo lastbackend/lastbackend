@@ -481,6 +481,7 @@ func TestServiceUpdate(t *testing.T) {
 
 	m3.Meta.Description = &s3.Meta.Description
 	m3.Spec.Template.Containers[0].Env[0].Name = "updated"
+	m3.Spec.Template.Containers[0].Env[1].Value = "meta"
 
 	m3.SetServiceSpec(s3)
 
