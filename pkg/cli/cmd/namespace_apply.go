@@ -45,6 +45,7 @@ func init() {
 var applyCmd = &cobra.Command{
 	Use:   "apply [NAME]",
 	Short: "Apply file manifest to cluster",
+	Args:    cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 
 		namespace := args[0]
