@@ -56,6 +56,10 @@ func (Http) InternalServerError(w http.ResponseWriter, msg ...string) {
 	HTTP.getInternalServerError(msg...).send(w)
 }
 
+func (Http) BadGateway(w http.ResponseWriter) {
+	HTTP.getBadGateway().send(w)
+}
+
 func (Http) PaymentRequired(w http.ResponseWriter, msg ...string) {
 	HTTP.getPaymentRequired(msg...).send(w)
 }
@@ -109,6 +113,10 @@ func (Http) getUnknown(msg ...string) *Http {
 
 func (Http) getInternalServerError(msg ...string) *Http {
 	return getHttpError(http.StatusInternalServerError, msg...)
+}
+
+func (Http) getBadGateway() *Http {
+	return getHttpError(http.StatusBadGateway)
 }
 
 func (Http) getNotImplemented(msg ...string) *Http {
