@@ -21,7 +21,7 @@ package types
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/lastbackend/registry/pkg/distribution/types"
+
 	"time"
 
 	"github.com/lastbackend/lastbackend/pkg/log"
@@ -399,7 +399,7 @@ func NewContainerManifest(spec *SpecTemplateContainer) *ContainerManifest {
 	var envs []string
 	for _, e := range spec.EnvVars {
 		var env string
-		if e.Value == types.EmptyString {
+		if e.Value == EmptyString {
 			continue
 		}
 		env = fmt.Sprintf("%s=%s", e.Name, e.Value)
