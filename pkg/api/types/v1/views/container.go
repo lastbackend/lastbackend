@@ -141,7 +141,5 @@ type ContainerImageSpec struct {
 	// Name full name
 	Name string `json:"name"`
 	// Name pull provision flag
-	Pull bool `json:"pull"`
-	// Name Auth base64 encoded string
-	Auth string `json:"auth"`
+	Secret string `json:"secret"`
 }

@@ -62,8 +62,8 @@ func (s *SecretsState) SetSecret(hash string, secret *types.Secret) {
 	s.lock.Lock()
 	defer s.lock.Unlock()
 
-	if _, ok := s.secrets[secret.GetHash()]; ok {
-		delete(s.secrets, secret.GetHash())
+	if _, ok := s.secrets[secret.SelfLink()]; ok {
+		delete(s.secrets, secret.SelfLink())
 	}
 
 	s.secrets[secret.GetHash()] = *secret

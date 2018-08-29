@@ -23,11 +23,12 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/api/client/types"
 	"github.com/lastbackend/lastbackend/pkg/cache"
 	"github.com/lastbackend/lastbackend/pkg/node/events/exporter"
-	"github.com/lastbackend/lastbackend/pkg/node/runtime/cni"
-	"github.com/lastbackend/lastbackend/pkg/node/runtime/cpi"
-	"github.com/lastbackend/lastbackend/pkg/node/runtime/cri"
-	"github.com/lastbackend/lastbackend/pkg/node/runtime/csi"
+	"github.com/lastbackend/lastbackend/pkg/runtime/cni"
+	"github.com/lastbackend/lastbackend/pkg/runtime/cpi"
+	"github.com/lastbackend/lastbackend/pkg/runtime/cri"
+	"github.com/lastbackend/lastbackend/pkg/runtime/csi"
 	"github.com/lastbackend/lastbackend/pkg/node/state"
+	"github.com/lastbackend/lastbackend/pkg/runtime/iri"
 )
 
 var e Env
@@ -38,6 +39,7 @@ func Get() *Env {
 
 type Env struct {
 	cri      cri.CRI
+	iri      iri.IRI
 	cni      cni.CNI
 	cpi      cpi.CPI
 	csi      map[string]csi.CSI
@@ -57,6 +59,14 @@ func (c *Env) SetCRI(cri cri.CRI) {
 
 func (c *Env) GetCRI() cri.CRI {
 	return c.cri
+}
+
+func (c *Env) SetIRI(iri iri.IRI) {
+	c.iri = iri
+}
+
+func (c *Env) GetIRI() iri.IRI {
+	return c.iri
 }
 
 func (c *Env) SetCNI(n cni.CNI) {

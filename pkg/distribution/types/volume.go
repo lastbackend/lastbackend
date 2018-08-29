@@ -79,13 +79,19 @@ type VolumeCreateOptions struct {
 type VolumeUpdateOptions struct {
 }
 
-// swagger:ignore
-// swagger:model types_volume_status
+
 type VolumeStatus struct {
-	// volume status state
+	// volume state
 	State string `json:"state" yaml:"state"`
+	// volume status
+	Status VolumeState `json:"status" yaml:"status"`
 	// volume status message
 	Message string `json:"message" yaml:"message"`
+}
+// swagger:ignore
+// swagger:model types_volume_status
+type VolumeState struct {
+	Type string `json:"type" yaml:"type"`
 	// Volume root path
 	Path string `json:"path" yaml:"path"`
 	// Volume state ready
