@@ -20,7 +20,7 @@ package local
 
 import (
 	"context"
-	"github.com/lastbackend/dynamic/pkg/log"
+	"github.com/lastbackend/lastbackend/pkg/log"
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 	"github.com/lastbackend/lastbackend/pkg/runtime/csi"
 	"github.com/spf13/viper"
