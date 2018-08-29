@@ -52,5 +52,5 @@ type ImageManifest struct {
 }
 
 func (i *Image) SelfLink() string {
-	return fmt.Sprintf("%s:%s", i.Meta.Name)
+	return fmt.Sprintf("%s", i.Meta.Name)
 }
