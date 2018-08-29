@@ -33,6 +33,7 @@ const (
 	StatusNotUnique     = "Not Unique"
 	StatusForbidden     = "Forbidden"
 	StatusNotAllowed    = "Not Allowed"
+	ArgumentIsEmpty    = "ArgumentIsEmpty"
 )
 
 type Err struct {
