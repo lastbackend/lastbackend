@@ -100,7 +100,7 @@ func (p *Pod) Create(deployment *types.Deployment) (*types.Pod, error) {
 
 	for _, s := range deployment.Spec.Template.Containers {
 		s.Labels = make(map[string]string)
-		s.Labels["LBC"] = pod.SelfLink()
+		s.Labels[types.ContainerTypeLBC] = pod.SelfLink()
 		s.DNS = types.SpecTemplateContainerDNS{
 			Server: ips,
 			Search: ips,

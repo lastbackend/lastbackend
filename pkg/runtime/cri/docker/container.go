@@ -161,7 +161,7 @@ func (r *Runtime) Inspect(ctx context.Context, ID string) (*types.Container, err
 	container.Created, _ = time.Parse(time.RFC3339Nano, info.Created)
 	container.Started, _ = time.Parse(time.RFC3339Nano, info.State.StartedAt)
 
-	meta, ok := info.Config.Labels["LBC"]
+	meta, ok := info.Config.Labels[types.ContainerTypeLBC]
 	if ok {
 		if len(strings.Split(meta, ":")) < 3 {
 			return container, nil
