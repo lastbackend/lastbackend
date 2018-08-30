@@ -20,7 +20,6 @@ package errors
 
 import (
 	"errors"
-
 )
 
 const (

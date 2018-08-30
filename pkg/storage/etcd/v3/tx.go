@@ -88,7 +88,6 @@ func (t *tx) Del(key string) {
 	t.ops = append(t.ops, clientv3.OpDelete(key))
 }
 
-
 func (t *tx) Commit() error {
 
 	log.V(logLevel).Debugf("%s:commit:> commit transaction", logPrefix)

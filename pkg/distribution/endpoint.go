@@ -198,7 +198,6 @@ func (e *Endpoint) Watch(ch chan types.EndpointEvent, rev *int64) error {
 	return nil
 }
 
-
 // Get network subnet manifests map
 func (e *Endpoint) ManifestMap() (*types.EndpointManifestMap, error) {
 	log.V(logLevel).Debugf("%s:EndpointManifestMap:> ", logEndpointPrefix)

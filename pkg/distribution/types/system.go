@@ -27,7 +27,6 @@ const KindController = "controller"
 const KindDiscovery = "discovery"
 const KindNode = "node"
 
-
 type Process struct {
 	Runtime
 	// Process Meta

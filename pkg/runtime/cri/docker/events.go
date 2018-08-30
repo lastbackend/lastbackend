@@ -21,7 +21,6 @@ package docker
 import (
 	"context"
 	d "github.com/docker/docker/api/types"
-	"github.com/docker/docker/api/types/events"
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 	"github.com/lastbackend/lastbackend/pkg/log"
 )
@@ -42,10 +41,6 @@ func (r *Runtime) Subscribe(ctx context.Context) (chan *types.Container, error) 
 		for {
 			select {
 			case e := <-es:
-
-				if e.Type != events.ContainerEventType {
-					continue
-				}
 
 				log.V(logLevel).Debugf("Container %s", e.ID)
 

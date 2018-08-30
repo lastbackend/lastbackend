@@ -30,7 +30,7 @@ const (
 	writeWait  = 10 * time.Second
 	pongWait   = 10 * time.Second
 	pingPeriod = (pongWait * 9) / 10
-  logLevel = 3
+	logLevel   = 3
 )
 
 type Socket struct {

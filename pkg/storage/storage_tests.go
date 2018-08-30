@@ -24,10 +24,10 @@ import (
 
 	"encoding/json"
 
-	"github.com/lastbackend/lastbackend/pkg/log"
-	"github.com/lastbackend/lastbackend/pkg/distribution/types"
-	"github.com/stretchr/testify/assert"
 	"github.com/lastbackend/lastbackend/pkg/distribution/errors"
+	"github.com/lastbackend/lastbackend/pkg/distribution/types"
+	"github.com/lastbackend/lastbackend/pkg/log"
+	"github.com/stretchr/testify/assert"
 )
 
 func StorageGetAssets(t *testing.T, stg Storage) {
@@ -61,7 +61,7 @@ func StorageGetAssets(t *testing.T, stg Storage) {
 		{
 			"test not found err",
 			fields{stg},
-			args{ctx: ctx, key: "n", obj: &obj{Name:"demo"}, out: new(obj)},
+			args{ctx: ctx, key: "n", obj: &obj{Name: "demo"}, out: new(obj)},
 			nil,
 			true,
 			errors.ErrEntityNotFound,
@@ -69,7 +69,7 @@ func StorageGetAssets(t *testing.T, stg Storage) {
 		{
 			"out struct is nil",
 			fields{stg},
-			args{ctx: ctx, key: "demo", obj: &obj{Name:"demo"}, out: nil},
+			args{ctx: ctx, key: "demo", obj: &obj{Name: "demo"}, out: nil},
 			nil,
 			true,
 			errors.ErrStructOutIsNil,
@@ -77,8 +77,8 @@ func StorageGetAssets(t *testing.T, stg Storage) {
 		{
 			"test successful get",
 			fields{stg},
-			args{ctx: ctx, key: "demo", obj: &obj{Name:"demo"}, out: new(obj)},
-			&obj{Name:"demo"},
+			args{ctx: ctx, key: "demo", obj: &obj{Name: "demo"}, out: new(obj)},
+			&obj{Name: "demo"},
 			false,
 			"",
 		},
@@ -165,7 +165,7 @@ func StorageListAssets(t *testing.T, stg Storage) {
 		{
 			"out struct is nil",
 			fields{stg},
-			args{ctx: ctx, obj: objl{Items:[]*obj{{Name:"demo"}, {Name:"test"}}}, out: nil},
+			args{ctx: ctx, obj: objl{Items: []*obj{{Name: "demo"}, {Name: "test"}}}, out: nil},
 			nil,
 			true,
 			errors.ErrStructOutIsNil,
@@ -173,16 +173,16 @@ func StorageListAssets(t *testing.T, stg Storage) {
 		{
 			"test successful list with filter",
 			fields{stg},
-			args{ctx: ctx, obj: objl{Items:[]*obj{{Name:"demo"}, {Name:"test"}}}, out: outf(), q: "demo"},
-			&objl{Items:[]*obj{{Name:"demo"}}},
+			args{ctx: ctx, obj: objl{Items: []*obj{{Name: "demo"}, {Name: "test"}}}, out: outf(), q: "demo"},
+			&objl{Items: []*obj{{Name: "demo"}}},
 			false,
 			"",
 		},
 		{
 			"test successful list",
 			fields{stg},
-			args{ctx: ctx, obj: objl{Items:[]*obj{{Name:"demo"}, {Name:"test"}}}, out: outf()},
-			&objl{Items:[]*obj{{Name:"demo"}, {Name:"test"}}},
+			args{ctx: ctx, obj: objl{Items: []*obj{{Name: "demo"}, {Name: "test"}}}, out: outf()},
+			&objl{Items: []*obj{{Name: "demo"}, {Name: "test"}}},
 			false,
 			"",
 		},
@@ -286,7 +286,7 @@ func StorageMapAssets(t *testing.T, stg Storage) {
 		{
 			"out struct is nil",
 			fields{stg},
-			args{ctx: ctx, obj: []*obj{{Name:"demo"}, {Name:"test"}}, out: nil},
+			args{ctx: ctx, obj: []*obj{{Name: "demo"}, {Name: "test"}}, out: nil},
 			nil,
 			true,
 			errors.ErrStructOutIsNil,
@@ -294,16 +294,16 @@ func StorageMapAssets(t *testing.T, stg Storage) {
 		{
 			"test successful list with filter",
 			fields{stg},
-			args{ctx: ctx, obj: []*obj{{Name:"demo"}, {Name:"test"}}, out: outf(), q: "demo"},
-			&objm{Items:map[string]*obj{"demo": {Name:"demo"}}},
+			args{ctx: ctx, obj: []*obj{{Name: "demo"}, {Name: "test"}}, out: outf(), q: "demo"},
+			&objm{Items: map[string]*obj{"demo": {Name: "demo"}}},
 			false,
 			"",
 		},
 		{
 			"test successful map",
 			fields{stg},
-			args{ctx: ctx, obj: []*obj{{Name:"demo"}, {Name:"test"}}, out: outf()},
-			&objm{Items:map[string]*obj{"demo": {Name:"demo"}, "test": {Name:"test"}}},
+			args{ctx: ctx, obj: []*obj{{Name: "demo"}, {Name: "test"}}, out: outf()},
+			&objm{Items: map[string]*obj{"demo": {Name: "demo"}, "test": {Name: "test"}}},
 			false,
 			"",
 		},

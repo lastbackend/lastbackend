@@ -25,13 +25,13 @@ import (
 
 	"encoding/json"
 
+	"fmt"
 	"github.com/lastbackend/lastbackend/pkg/distribution/errors"
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 	"github.com/lastbackend/lastbackend/pkg/log"
 	"github.com/lastbackend/lastbackend/pkg/storage"
 	"github.com/lastbackend/lastbackend/pkg/util/generator"
 	"github.com/spf13/viper"
-	"fmt"
 	"regexp"
 )
 
@@ -100,7 +100,7 @@ func (p *Pod) Create(deployment *types.Deployment) (*types.Pod, error) {
 
 	for _, s := range deployment.Spec.Template.Containers {
 		s.Labels = make(map[string]string)
-		s.Labels["LB"] = pod.SelfLink()
+		s.Labels["LBC"] = pod.SelfLink()
 		s.DNS = types.SpecTemplateContainerDNS{
 			Server: ips,
 			Search: ips,
@@ -308,7 +308,6 @@ func (p *Pod) ManifestGet(node, pod string) (*types.PodManifest, error) {
 func (p *Pod) ManifestAdd(node, pod string, manifest *types.PodManifest) error {
 	log.V(logLevel).Debugf("%s:PodManifestAdd:> ", logPodPrefix)
 
-
 	if err := p.storage.Put(p.context, p.storage.Collection().Manifest().Pod(node), pod, manifest, nil); err != nil {
 		log.Errorf("%s:PodManifestAdd:> err :%s", logPodPrefix, err.Error())
 		return err
@@ -388,7 +387,6 @@ func (p *Pod) ManifestWatch(node string, ch chan types.PodManifestEvent, rev *in
 					res.Node = keys[1]
 				}
 
-
 				manifest := new(types.PodManifest)
 
 				if err := json.Unmarshal(e.Data.([]byte), manifest); err != nil {
@@ -411,7 +409,6 @@ func (p *Pod) ManifestWatch(node string, ch chan types.PodManifestEvent, rev *in
 
 	return nil
 }
-
 
 func NewPodModel(ctx context.Context, stg storage.Storage) *Pod {
 	return &Pod{ctx, stg}

@@ -52,7 +52,7 @@ type NetworkInterface struct {
 
 type Subnet struct {
 	Runtime
-	Meta   SubnetMeta         `json:"meta"`
+	Meta   SubnetMeta   `json:"meta"`
 	Status SubnetStatus `json:"status"`
 	Spec   SubnetSpec   `json:"spec"`
 }
@@ -84,7 +84,7 @@ func SubnetGetNameFromCIDR(CIDR string) string {
 	return strings.Replace(CIDR, "/", ":", -1)
 }
 
-func SubnetSpecEqual (n *SubnetSpec, nt *SubnetSpec)bool {
+func SubnetSpecEqual(n *SubnetSpec, nt *SubnetSpec) bool {
 
 	switch false {
 	case n.Type == nt.Type:
@@ -111,4 +111,3 @@ func (s Subnet) SelfLink() string {
 	}
 	return s.Meta.SelfLink
 }
-

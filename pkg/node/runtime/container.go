@@ -72,6 +72,10 @@ func containerSubscribe(ctx context.Context) error {
 	go func() {
 		for c := range cs {
 
+			if c.Pod != types.ContainerTypeLBC {
+				continue
+			}
+
 			container := state.GetContainer(c.ID)
 			if container == nil {
 				log.V(logLevel).Debugf("Container not found")
@@ -148,7 +152,6 @@ func containerSubscribe(ctx context.Context) error {
 
 func containerManifestCreate(ctx context.Context, pod string, spec *types.SpecTemplateContainer) (*types.ContainerManifest, error) {
 
-
 	mf := types.NewContainerManifest(spec)
 
 	for _, s := range spec.EnvVars {
@@ -189,7 +192,7 @@ func containerManifestCreate(ctx context.Context, pod string, spec *types.SpecTe
 			continue
 		}
 
-		vol:= envs.Get().GetState().Volumes().GetVolume(podVolumeKeyCreate(pod, v.Name))
+		vol := envs.Get().GetState().Volumes().GetVolume(podVolumeKeyCreate(pod, v.Name))
 		if vol == nil {
 			log.Debugf("volume %s not found in volumes state", v.Name)
 			continue
@@ -199,12 +202,10 @@ func containerManifestCreate(ctx context.Context, pod string, spec *types.SpecTe
 			v.Mode = "ro"
 		}
 
-		log.Debugf("attach volume: %s to %s:%s", v.Name, vol.Path,v.Path)
+		log.Debugf("attach volume: %s to %s:%s", v.Name, vol.Path, v.Path)
 
 		mf.Binds = append(mf.Binds, fmt.Sprintf("%s:%s:%s", vol.Path, v.Path, v.Mode))
 	}
-
-
 
 	return mf, nil
 }

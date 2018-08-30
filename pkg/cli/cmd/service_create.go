@@ -73,7 +73,6 @@ var serviceCreateCmd = &cobra.Command{
 
 		cs := request.ManifestSpecTemplateContainer{}
 
-
 		if len(name) != 0 {
 			opts.Meta.Name = &name
 		}
@@ -160,7 +159,6 @@ var serviceCreateCmd = &cobra.Command{
 		if auth != types.EmptyString {
 			cs.Image.Secret = auth
 		}
-
 
 		css = append(css, cs)
 

@@ -25,8 +25,8 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/controller/state/cluster"
 	"github.com/lastbackend/lastbackend/pkg/controller/state/service"
 	"github.com/lastbackend/lastbackend/pkg/distribution"
-	"github.com/lastbackend/lastbackend/pkg/log"
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
+	"github.com/lastbackend/lastbackend/pkg/log"
 )
 
 const logLevel = 3
@@ -41,7 +41,6 @@ func (s *State) Loop() {
 	log.Info("start cluster restore")
 	s.Cluster.Loop()
 	log.Info("finish cluster restore\n\n")
-
 
 	log.Info("start services restore")
 	nm := distribution.NewNamespaceModel(context.Background(), envs.Get().GetStorage())
@@ -99,7 +98,6 @@ func (s *State) Loop() {
 
 	log.Info("finish services restore\n\n")
 }
-
 
 func (s *State) watchServices(ctx context.Context, rev *int64) {
 
@@ -222,7 +220,6 @@ func (s *State) watchPods(ctx context.Context, rev *int64) {
 
 	pm.Watch(p, rev)
 }
-
 
 func NewState() *State {
 	var state = new(State)

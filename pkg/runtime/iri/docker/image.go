@@ -128,7 +128,6 @@ func (r *Runtime) List(ctx context.Context) ([]*types.Image, error) {
 		img.Status.Size = i.Size
 		img.Status.VirtualSize = i.VirtualSize
 
-
 	}
 
 	return images, nil
@@ -138,7 +137,7 @@ func (r *Runtime) Inspect(ctx context.Context, id string) (*types.Image, error) 
 	info, _, err := r.client.ImageInspectWithRaw(ctx, id)
 
 	image := new(types.Image)
-	image.Meta. ID = info.ID
+	image.Meta.ID = info.ID
 	image.Status.Size = info.Size
 	image.Status.VirtualSize = info.VirtualSize
 

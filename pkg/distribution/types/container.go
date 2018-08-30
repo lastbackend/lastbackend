@@ -27,6 +27,11 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/log"
 )
 
+const (
+	ContainerTypeLBC = "LBC"
+	ContainerTypeLBR = "LBR"
+)
+
 type Container struct {
 	// Container CID
 	ID string `json:"id"`
@@ -362,7 +367,6 @@ func (cs *ContainerSpec) PortsFromString(ports string) {
 		log.Errorf("Can-not convert ports value from string: %s", err)
 	}
 }
-
 
 func convertSliceToString(slice []string) (string, error) {
 	if slice == nil {

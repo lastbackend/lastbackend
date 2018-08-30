@@ -24,6 +24,6 @@ import (
 )
 
 type CSI interface {
-	Create (ctx context.Context, name string, manifest *types.VolumeManifest) (*types.VolumeState, error)
-	Remove (ctx context.Context, name string, manifest *types.VolumeManifest) error
+	Create(ctx context.Context, name string, manifest *types.VolumeManifest) (*types.VolumeState, error)
+	Remove(ctx context.Context, name string, manifest *types.VolumeManifest) error
 }

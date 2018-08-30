@@ -85,7 +85,7 @@ func (wc *watchChan) ResultChan() <-chan *types.Event {
 
 func (w *watcher) newWatchChan(ctx context.Context, key, keyRegexFilter string, rev *int64) *watchChan {
 
-		wc := &watchChan{
+	wc := &watchChan{
 		watcher: w,
 		key:     key,
 		rev:     rev,
@@ -143,7 +143,7 @@ func (wc *watchChan) watching(watchClosedCh chan struct{}) {
 			wc.sendError(err)
 			return
 		}
-		opts = append(opts, clientv3.WithRev(*wc.rev + 1))
+		opts = append(opts, clientv3.WithRev(*wc.rev+1))
 	}
 
 	r, _ := regexp.Compile(wc.filter)
@@ -274,7 +274,6 @@ func transformEvent(e *event) *types.Event {
 		Rev:    e.rev,
 		Object: data,
 	}
-
 
 	return event
 }

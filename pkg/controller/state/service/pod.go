@@ -23,16 +23,16 @@ import (
 
 	"github.com/lastbackend/lastbackend/pkg/controller/envs"
 	"github.com/lastbackend/lastbackend/pkg/distribution"
+	"github.com/lastbackend/lastbackend/pkg/distribution/errors"
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 	"github.com/lastbackend/lastbackend/pkg/log"
-	"github.com/lastbackend/lastbackend/pkg/distribution/errors"
 	"time"
 )
 
 const logPodPrefix = "state:observer:pod"
 
 // PodObserve function manages pod handlers based on pod state
-func PodObserve (ss *ServiceState, p *types.Pod) error {
+func PodObserve(ss *ServiceState, p *types.Pod) error {
 
 	log.V(logLevel).Debugf("%s:> observe start: %s > state %s", logPodPrefix, p.SelfLink(), p.Status.State)
 	// Call pod state manager methods
@@ -159,7 +159,6 @@ func handlePodStateDestroyed(ss *ServiceState, p *types.Pod) error {
 		return err
 	}
 
-
 	return nil
 }
 
@@ -181,7 +180,6 @@ func podProvision(ss *ServiceState, p *types.Pod) (err error) {
 		}
 
 	}()
-
 
 	if p.Meta.Node == types.EmptyString {
 
@@ -309,7 +307,6 @@ func podUpdate(p *types.Pod, timestamp time.Time) error {
 	return nil
 }
 
-
 func podManifestPut(p *types.Pod) error {
 
 	mm := distribution.NewPodModel(context.Background(), envs.Get().GetStorage())
@@ -336,7 +333,7 @@ func podManifestPut(p *types.Pod) error {
 func podManifestSet(p *types.Pod) error {
 
 	var (
-		m *types.PodManifest
+		m   *types.PodManifest
 		err error
 	)
 
@@ -384,5 +381,3 @@ func podManifestDel(p *types.Pod) error {
 
 	return nil
 }
-
-

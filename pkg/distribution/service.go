@@ -168,7 +168,6 @@ func (s *Service) Set(service *types.Service) error {
 		return errors.New(errors.ErrStructArgIsNil)
 	}
 
-
 	log.V(logLevel).Debugf("%s:setstatus:> set state for service %s", logServicePrefix, service.Meta.Name)
 
 	key := s.storage.Key().Service(service.Meta.Namespace, service.Meta.Name)

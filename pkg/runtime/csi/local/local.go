@@ -20,8 +20,8 @@ package local
 
 import (
 	"context"
-	"github.com/lastbackend/lastbackend/pkg/log"
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
+	"github.com/lastbackend/lastbackend/pkg/log"
 	"github.com/lastbackend/lastbackend/pkg/runtime/csi"
 	"github.com/spf13/viper"
 	"os"
@@ -37,11 +37,11 @@ type StorageOpts struct {
 	root string
 }
 
-func (s *Storage) Create (ctx context.Context, name string, manifest *types.VolumeManifest) (*types.VolumeState, error) {
+func (s *Storage) Create(ctx context.Context, name string, manifest *types.VolumeManifest) (*types.VolumeState, error) {
 
 	var (
 		status = new(types.VolumeState)
-		path = filepath.Join(s.root, manifest.Path)
+		path   = filepath.Join(s.root, manifest.Path)
 	)
 
 	if _, err := os.Stat(path); os.IsNotExist(err) {
@@ -57,7 +57,7 @@ func (s *Storage) Create (ctx context.Context, name string, manifest *types.Volu
 	return status, nil
 }
 
-func (s *Storage) Remove (ctx context.Context, name string, manifest *types.VolumeManifest) error {
+func (s *Storage) Remove(ctx context.Context, name string, manifest *types.VolumeManifest) error {
 	return os.Remove(filepath.Join(s.root, manifest.Path))
 }
 

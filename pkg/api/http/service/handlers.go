@@ -28,9 +28,9 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/api/types/v1"
 	"github.com/lastbackend/lastbackend/pkg/distribution"
 	"github.com/lastbackend/lastbackend/pkg/distribution/errors"
+	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 	"github.com/lastbackend/lastbackend/pkg/log"
 	"github.com/lastbackend/lastbackend/pkg/util/http/utils"
-	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 )
 
 const (
@@ -247,8 +247,8 @@ func ServiceCreateH(w http.ResponseWriter, r *http.Request) {
 	log.V(logLevel).Debugf("%s:create:> create service in namespace `%s`", logPrefix, nid)
 
 	var (
-		nm = distribution.NewNamespaceModel(r.Context(), envs.Get().GetStorage())
-		sm = distribution.NewServiceModel(r.Context(), envs.Get().GetStorage())
+		nm   = distribution.NewNamespaceModel(r.Context(), envs.Get().GetStorage())
+		sm   = distribution.NewServiceModel(r.Context(), envs.Get().GetStorage())
 		opts = v1.Request().Service().Manifest()
 	)
 
@@ -288,12 +288,9 @@ func ServiceCreateH(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-
-
 	svc := new(types.Service)
 	opts.SetServiceMeta(svc)
 	opts.SetServiceSpec(svc)
-
 
 	srv, err := sm.Create(ns, svc)
 	if err != nil {

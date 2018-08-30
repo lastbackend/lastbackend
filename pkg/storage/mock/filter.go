@@ -62,7 +62,6 @@ func (Filter) Volume() types.VolumeFilter {
 	return new(VolumeFilter)
 }
 
-
 type NamespaceFilter struct{}
 
 type ServiceFilter struct{}

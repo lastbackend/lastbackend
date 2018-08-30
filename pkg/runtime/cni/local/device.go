@@ -23,7 +23,7 @@ import (
 	"strings"
 )
 
-func getInterface () *net.Interface {
+func getInterface() *net.Interface {
 
 	ifas, err := net.Interfaces()
 	if err != nil {

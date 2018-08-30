@@ -51,7 +51,6 @@ var secretInspectCmd = &cobra.Command{
 			return
 		}
 
-
 		secret := view.FromApiSecretView(response)
 		secret.Print()
 	},

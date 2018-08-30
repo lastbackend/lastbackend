@@ -178,13 +178,13 @@ type RuleOption struct {
 	Port     int    `json:"port"`
 }
 
-func NewRouteList () *RouteList {
+func NewRouteList() *RouteList {
 	dm := new(RouteList)
 	dm.Items = make([]*Route, 0)
 	return dm
 }
 
-func NewRouteMap () *RouteMap {
+func NewRouteMap() *RouteMap {
 	dm := new(RouteMap)
 	dm.Items = make(map[string]*Route)
 	return dm

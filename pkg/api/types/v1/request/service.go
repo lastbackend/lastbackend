@@ -224,7 +224,6 @@ func (s *ServiceManifest) SetServiceSpec(svc *types.Service) {
 				}
 			}
 
-
 			if len(spec.EnvVars) != len(envs) {
 				svc.Spec.Template.Updated = time.Now()
 			}
@@ -245,8 +244,6 @@ func (s *ServiceManifest) SetServiceSpec(svc *types.Service) {
 			}
 
 			for _, v := range c.Volumes {
-
-
 
 				var f = false
 				for _, sv := range spec.Volumes {
@@ -309,7 +306,6 @@ func (s *ServiceManifest) SetServiceSpec(svc *types.Service) {
 
 		svc.Spec.Template.Containers = spcs
 
-
 		for _, v := range s.Spec.Template.Volumes {
 
 			var (
@@ -332,7 +328,6 @@ func (s *ServiceManifest) SetServiceSpec(svc *types.Service) {
 				spec.Name = v.Name
 				svc.Spec.Template.Updated = time.Now()
 			}
-
 
 			if v.Type != spec.Type || v.From.Name != spec.From.Name {
 				spec.Type = v.Type

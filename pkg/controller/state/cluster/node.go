@@ -19,14 +19,14 @@
 package cluster
 
 import (
-				"github.com/lastbackend/lastbackend/pkg/distribution/types"
-	"github.com/lastbackend/lastbackend/pkg/distribution"
 	"context"
 	"github.com/lastbackend/lastbackend/pkg/controller/envs"
-	)
+	"github.com/lastbackend/lastbackend/pkg/distribution"
+	"github.com/lastbackend/lastbackend/pkg/distribution/types"
+)
 
 type NodeLease struct {
-	done    chan bool
+	done     chan bool
 	Request  NodeLeaseOptions
 	Response struct {
 		Err  error
@@ -41,12 +41,10 @@ type NodeLeaseOptions struct {
 }
 
 func (nl *NodeLease) Wait() {
-	<- nl.done
+	<-nl.done
 }
 
-func handleNodeLease (cs *ClusterState, nl *NodeLease) error {
-
-
+func handleNodeLease(cs *ClusterState, nl *NodeLease) error {
 
 	defer func() {
 		nl.done <- true
@@ -54,7 +52,7 @@ func handleNodeLease (cs *ClusterState, nl *NodeLease) error {
 
 	for _, n := range cs.node.list {
 
-		if (n.Status.Capacity.Memory-n.Status.Allocated.Memory) > *nl.Request.Memory {
+		if (n.Status.Capacity.Memory - n.Status.Allocated.Memory) > *nl.Request.Memory {
 
 			n.Status.Allocated.Pods++
 			n.Status.Allocated.Memory += *nl.Request.Memory
@@ -71,7 +69,7 @@ func handleNodeLease (cs *ClusterState, nl *NodeLease) error {
 	return nil
 }
 
-func handleNodeRelease (cs *ClusterState, nl *NodeLease) error {
+func handleNodeRelease(cs *ClusterState, nl *NodeLease) error {
 
 	defer func() {
 		nl.done <- true
@@ -83,7 +81,7 @@ func handleNodeRelease (cs *ClusterState, nl *NodeLease) error {
 
 	n := cs.node.list[*nl.Request.Node]
 	n.Status.Allocated.Pods--
-	n.Status.Allocated.Memory-=*nl.Request.Memory
+	n.Status.Allocated.Memory -= *nl.Request.Memory
 
 	nm := distribution.NewNodeModel(context.Background(), envs.Get().GetStorage())
 	nm.Set(n)

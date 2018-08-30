@@ -31,7 +31,7 @@ import (
 
 const (
 	logNodeRuntimePrefix = "node:runtime"
-	logLevel = 3
+	logLevel             = 3
 )
 
 type Runtime struct {

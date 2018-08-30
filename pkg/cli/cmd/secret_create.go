@@ -21,12 +21,12 @@ package cmd
 import (
 	"fmt"
 
+	"encoding/base64"
 	"github.com/lastbackend/lastbackend/pkg/api/types/v1/request"
 	"github.com/lastbackend/lastbackend/pkg/cli/envs"
 	"github.com/lastbackend/lastbackend/pkg/cli/view"
-	"github.com/spf13/cobra"
-	"encoding/base64"
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
+	"github.com/spf13/cobra"
 	"io/ioutil"
 	"os"
 	"strings"
@@ -75,7 +75,7 @@ var secretCreateCmd = &cobra.Command{
 		opts.Data = make(map[string][]byte, 0)
 
 		switch true {
-		case len(text) > 0 :
+		case len(text) > 0:
 			opts.Kind = types.KindSecretText
 
 			for _, t := range text {

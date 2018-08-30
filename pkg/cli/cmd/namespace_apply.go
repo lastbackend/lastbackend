@@ -23,13 +23,13 @@ import (
 	"io/ioutil"
 	"os"
 
+	"github.com/lastbackend/lastbackend/pkg/api/types/v1"
 	"github.com/lastbackend/lastbackend/pkg/api/types/v1/request"
+	"github.com/lastbackend/lastbackend/pkg/api/types/v1/views"
 	"github.com/lastbackend/lastbackend/pkg/cli/envs"
 	"github.com/lastbackend/lastbackend/pkg/cli/view"
 	"github.com/spf13/cobra"
 	"gopkg.in/yaml.v2"
-	"github.com/lastbackend/lastbackend/pkg/api/types/v1/views"
-	"github.com/lastbackend/lastbackend/pkg/api/types/v1"
 )
 
 const applyExample = `
@@ -45,7 +45,7 @@ func init() {
 var applyCmd = &cobra.Command{
 	Use:   "apply [NAME]",
 	Short: "Apply file manifest to cluster",
-	Args:    cobra.ExactArgs(1),
+	Args:  cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 
 		namespace := args[0]

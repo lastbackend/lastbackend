@@ -20,8 +20,7 @@ package mock
 
 import (
 	"fmt"
-
-	)
+)
 
 type Key struct{}
 

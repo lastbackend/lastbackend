@@ -38,7 +38,6 @@ type Deployment struct {
 	Status DeploymentStatus `json:"status"`
 	// Deployment spec
 	Spec DeploymentSpec `json:"spec"`
-
 }
 
 type DeploymentMeta struct {
@@ -126,13 +125,13 @@ type DeploymentUpdateOptions struct {
 	}
 }
 
-func NewDeploymentList () *DeploymentList {
+func NewDeploymentList() *DeploymentList {
 	dm := new(DeploymentList)
 	dm.Items = make([]*Deployment, 0)
 	return dm
 }
 
-func NewDeploymentMap () *DeploymentMap {
+func NewDeploymentMap() *DeploymentMap {
 	dm := new(DeploymentMap)
 	dm.Items = make(map[string]*Deployment)
 	return dm

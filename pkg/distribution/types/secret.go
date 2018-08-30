@@ -21,8 +21,8 @@ package types
 import (
 	"crypto/sha1"
 	"encoding/base64"
-	"fmt"
 	"errors"
+	"fmt"
 )
 
 const (
@@ -119,8 +119,6 @@ type SecretFile struct {
 	Files map[string][]byte `json:"text"`
 }
 
-
-
 func (s *Secret) GetHash() string {
 	h := sha1.New()
 	h.Write([]byte(fmt.Sprintf("%s", s.Meta.Name)))
@@ -141,7 +139,6 @@ func (s *Secret) CreateSelfLink(name string) string {
 func (s *Secret) DecodeRegistry() {
 
 }
-
 
 // swagger:ignore
 type SecretCreateOptions struct {

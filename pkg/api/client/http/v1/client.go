@@ -19,8 +19,8 @@
 package v1
 
 import (
-	"github.com/lastbackend/lastbackend/pkg/util/http/request"
 	"github.com/lastbackend/lastbackend/pkg/api/client/types"
+	"github.com/lastbackend/lastbackend/pkg/util/http/request"
 )
 
 type Client struct {

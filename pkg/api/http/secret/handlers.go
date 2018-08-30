@@ -23,10 +23,10 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/api/types/v1"
 	"github.com/lastbackend/lastbackend/pkg/distribution"
 	"github.com/lastbackend/lastbackend/pkg/distribution/errors"
+	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 	"github.com/lastbackend/lastbackend/pkg/log"
 	"github.com/lastbackend/lastbackend/pkg/util/http/utils"
 	"net/http"
-	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 )
 
 const (
@@ -60,8 +60,6 @@ func SecretGetH(w http.ResponseWriter, r *http.Request) {
 	//     description: Internal server error
 
 	log.V(logLevel).Debugf("%s:list:> get secret", logPrefix)
-
-
 
 	var (
 		sid = utils.Vars(r)["secret"]
@@ -122,10 +120,8 @@ func SecretListH(w http.ResponseWriter, r *http.Request) {
 
 	log.V(logLevel).Debugf("%s:list:> get secrets list", logPrefix)
 
-
-
 	var (
-		rm  = distribution.NewSecretModel(r.Context(), envs.Get().GetStorage())
+		rm = distribution.NewSecretModel(r.Context(), envs.Get().GetStorage())
 	)
 
 	items, err := rm.List(types.EmptyString)
@@ -182,7 +178,7 @@ func SecretCreateH(w http.ResponseWriter, r *http.Request) {
 	log.V(logLevel).Debugf("%s:create:> create secret", logPrefix)
 
 	var (
-		rm  = distribution.NewSecretModel(r.Context(), envs.Get().GetStorage())
+		rm = distribution.NewSecretModel(r.Context(), envs.Get().GetStorage())
 	)
 
 	// request body struct
@@ -254,7 +250,7 @@ func SecretUpdateH(w http.ResponseWriter, r *http.Request) {
 	log.V(logLevel).Debugf("%s:update:> update secret `%s`", logPrefix, sid)
 
 	var (
-		rm  = distribution.NewSecretModel(r.Context(), envs.Get().GetStorage())
+		rm = distribution.NewSecretModel(r.Context(), envs.Get().GetStorage())
 	)
 
 	// request body struct
@@ -277,7 +273,7 @@ func SecretUpdateH(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	ss, err = rm.Update(ss,opts)
+	ss, err = rm.Update(ss, opts)
 	if err != nil {
 		log.V(logLevel).Errorf("%s:update:> update secret `%s` err: %s", logPrefix, ss.Meta.SelfLink, err.Error())
 		errors.HTTP.InternalServerError(w)
@@ -330,7 +326,7 @@ func SecretRemoveH(w http.ResponseWriter, r *http.Request) {
 	log.V(logLevel).Debugf("%s:remove:> remove secret %s", logPrefix, sid)
 
 	var (
-		sm  = distribution.NewSecretModel(r.Context(), envs.Get().GetStorage())
+		sm = distribution.NewSecretModel(r.Context(), envs.Get().GetStorage())
 	)
 
 	ss, err := sm.Get(sid)

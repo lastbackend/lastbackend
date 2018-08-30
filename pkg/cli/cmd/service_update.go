@@ -24,10 +24,10 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/api/types/v1/request"
 	"github.com/lastbackend/lastbackend/pkg/cli/envs"
 	"github.com/lastbackend/lastbackend/pkg/cli/view"
+	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 	"github.com/spf13/cobra"
 	"strconv"
 	"strings"
-	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 )
 
 func init() {
@@ -70,7 +70,6 @@ var serviceUpdateCmd = &cobra.Command{
 		css := make([]request.ManifestSpecTemplateContainer, 0)
 		cs := request.ManifestSpecTemplateContainer{}
 
-
 		if len(name) != 0 {
 			opts.Meta.Name = &name
 		}
@@ -78,7 +77,6 @@ var serviceUpdateCmd = &cobra.Command{
 		if len(description) != 0 {
 			opts.Meta.Description = &description
 		}
-
 
 		if memory != 0 {
 			cs.Resources.Request.RAM = memory
