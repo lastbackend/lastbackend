@@ -10,7 +10,7 @@ spec:
     node:
     labels:
       type: "frontend"
-  replicas: 1
+  replicas: 3
   template:
     containers:
     - name: nginx-proxy
@@ -29,6 +29,9 @@ spec:
         - name: demo
           path: "/usr/share/nginx/html"
         - name: test
-          path: "/test"
+          path: "/test/demo"
     volumes:
       - name: demo
+  network:
+    ip: 127.0.0.1
+    ports: ["80:8080/tcp"]

@@ -20,21 +20,22 @@ package view
 
 import (
 	"fmt"
+	"github.com/ararog/timeago"
+	"github.com/lastbackend/lastbackend/pkg/distribution/types"
+	"github.com/lastbackend/lastbackend/pkg/util/converter"
+	"sort"
 	"time"
 
-	"github.com/ararog/timeago"
 	"github.com/lastbackend/lastbackend/pkg/api/types/v1/views"
-	"github.com/lastbackend/lastbackend/pkg/util/converter"
 	"github.com/lastbackend/lastbackend/pkg/util/table"
 )
 
 type ServiceList []*Service
 type Service struct {
-	Meta        ServiceMeta    `json:"meta"`
-	Spec        ServiceSpec    `json:"spec"`
-	Status      ServiceStatus  `json:"status"`
-	Sources     ServiceSources `json:"sources"`
-	Deployments DeploymentMap  `json:"deployments"`
+	Meta        ServiceMeta   `json:"meta"`
+	Spec        ServiceSpec   `json:"spec"`
+	Status      ServiceStatus `json:"status"`
+	Deployments DeploymentMap `json:"deployments"`
 }
 
 type ServiceMeta struct {
@@ -69,10 +70,22 @@ type ServiceSpec struct {
 type DeploymentList []*Deployment
 type DeploymentMap map[string]*Deployment
 type Deployment struct {
-	Name  string             `json:"name"`
-	State string             `json:"state"`
-	Spec  DeploymentSpec     `json:"spec"`
-	Pods  map[string]PodView `json:"pods"`
+	Meta   DeploymentMeta     `json:"meta"`
+	Status DeploymentStatus   `json:"status"`
+	Spec   DeploymentSpec     `json:"spec"`
+	Pods   map[string]PodView `json:"pods"`
+}
+
+type DeploymentMeta struct {
+	Name        string            `json:"name"`
+	Description string            `json:"description"`
+	Created     time.Time         `json:"created"`
+	Updated     time.Time         `json:"updated"`
+}
+
+type DeploymentStatus struct {
+	State   string `json:"state"`
+	Message string `json:"message"`
 }
 
 type PodView struct {
@@ -100,7 +113,7 @@ type DeploymentSpec struct {
 
 func (sl *ServiceList) Print() {
 
-	t := table.New([]string{"NAME", "SOURCES", "ENDPOINT", "STATUS", "CMD", "MEMORY", "REPLICAS"})
+	t := table.New([]string{"NAME", "ENDPOINT", "STATUS", "REPLICAS"})
 	t.VisibleHeader = true
 
 	for _, s := range *sl {
@@ -108,12 +121,8 @@ func (sl *ServiceList) Print() {
 		var data = map[string]interface{}{}
 
 		data["NAME"] = s.Meta.Name
-		data["SOURCES"] = s.Sources.String()
 		data["ENDPOINT"] = s.Meta.Endpoint
 		data["STATUS"] = s.Status.State
-		data["CMD"] = s.Spec.Command
-		data["MEMORY"] = s.Spec.Memory
-		//data["REPLICAS"] = s.Deployments.Replicas()
 
 		t.AddRow(data)
 	}
@@ -124,83 +133,166 @@ func (sl *ServiceList) Print() {
 
 func (s *Service) Print() {
 
-	var data = map[string]interface{}{}
-
-	data["Name"] = s.Meta.Name
-	data["Namespace"] = s.Meta.Namespace
-	data["Endpoint"] = s.Meta.Endpoint
-	data["Status"] = s.Status.State
-	data["Message"] = s.Status.Message
-	data["Created"] = s.Meta.Created
-	data["Updated"] = s.Meta.Updated
-
-	//var labelList string
-	//for key, l := range s.Meta.Labels {
-	//	labelList += key + "=" + l + " "
-	//}
-	//data["LABELS"] = labelList
-
-	//if s.Deployments != nil {
-	//	data["REPLICAS"] = s.Deployments.Replicas()
-	//}
-
-	println()
-	table.PrintHorizontal(data)
-	println()
-	if s.Deployments != nil {
-		fmt.Println("Deployments:")
-		println()
-		s.Deployments.Print()
+	fmt.Printf("Name:\t\t%s/%s\n", s.Meta.Namespace, s.Meta.Name)
+	if s.Meta.Description != types.EmptyString {
+		fmt.Printf(" Description:\t%s\n", s.Meta.Description)
 	}
+
+	fmt.Printf("State:\t\t%s\n", s.Status.State)
+	if s.Status.Message != types.EmptyString {
+		fmt.Printf("Message:\t\t%s\n", s.Status.Message)
+	}
+	if s.Meta.Endpoint != types.EmptyString {
+		fmt.Printf("Endpoint:\t%s\n", s.Meta.Endpoint)
+	}
+
+	created, _ := timeago.TimeAgoWithTime(time.Now(), s.Meta.Created)
+	updated, _ := timeago.TimeAgoWithTime(time.Now(), s.Meta.Updated)
+
+	fmt.Printf("Created:\t%s\n", created)
+	fmt.Printf("Updated:\t%s\n", updated)
+
+	var (
+		labels = make([]string, 0, len(s.Meta.Labels))
+		out string
+	)
+
+	for key := range s.Meta.Labels {
+		labels = append(labels, key)
+	}
+
+	sort.Strings(labels) //sort by key
+	for _, key := range labels {
+		out += key + "=" + s.Meta.Labels[key] + " "
+	}
+
+
+	fmt.Printf("Labels:\t\t%s\n", out)
 	println()
-}
 
-//func (dl *DeploymentList) Replicas() int {
-//	for _, d := range *dl {
-//		if d.State.Active {
-//			return d.Spec.Replicas
-//		}
-//	}
-//	return 0
-//}
-//
-func (dl *DeploymentMap) Print() {
-	for _, d := range *dl {
-		var data = map[string]interface{}{}
+	println()
+	if len(s.Deployments) > 0 {
 
-		data["Name"] = d.Name
-		data["Status"] = d.State
-		//data["REPLICAS"] = string(d.Spec.Replicas) + " updated | " + string(d.Spec.Replicas) + " total | " + string(d.Spec.Replicas) + " availible | 0 unavailible"
+		var states = make(map[string]int, 0)
+		states[types.StateReady] = 0
+		states[types.StateProvision] = 0
+		states[types.EmptyString] = 0
 
-		table.PrintHorizontal(data)
-		fmt.Println("\n Pods:")
-
-		podTable := table.New([]string{"Name", "Ready", "Status", "Message", "Restarts", "Age"})
-		podTable.VisibleHeader = true
-
-		for _, p := range d.Pods {
-			var ready, restarts int
-			for _, c := range p.Status.Containers {
-				if c.Ready {
-					ready++
-					restarts += c.Restart
-				}
+		for _, d := range s.Deployments {
+			switch d.Status.State {
+			case types.StateReady:
+				states[types.StateReady]++
+				break
+			case types.StateProvision:
+				states[types.StateProvision]++
+				break
+			default:
+				states[types.EmptyString]++
+				break
 			}
-			var podRow = map[string]interface{}{}
-			got, _ := timeago.TimeAgoWithTime(time.Now(), p.Created)
-			podRow["Name"] = p.Name
-			podRow["Ready"] = string(converter.IntToString(ready) + "/" + converter.IntToString(len(p.Status.Containers)))
-			podRow["Status"] = p.Status.State
-			podRow["Message"] = p.Status.Message
-			podRow["Restarts"] = restarts
-			podRow["Age"] = got
-			podTable.AddRow(podRow)
 		}
 
-		podTable.Print()
-		println()
+		if states[types.StateReady] > 0 {
+
+			fmt.Println("Active deployments:")
+			println()
+
+			for _, d := range s.Deployments {
+				if d.Status.State == types.StateReady {
+					d.Print()
+				}
+			}
+		}
+
+		if states[types.StateProvision] > 0 {
+			println()
+			fmt.Println("Provision deployments:")
+			println()
+			for _, d := range s.Deployments {
+				if d.Status.State == types.StateProvision {
+					d.Print()
+					println()
+				}
+			}
+		}
+
+		if states[types.EmptyString] > 0 {
+			println()
+			fmt.Println("Inactive deployments:")
+			println()
+			for _, d := range s.Deployments {
+				if d.Status.State != types.StateProvision && d.Status.State != types.StateReady {
+					d.Print()
+					println()
+				}
+			}
+		}
+
+
+
+
+
+
+
 	}
+	println()
 }
+
+func (d *Deployment) Print() {
+
+	fmt.Printf(" Name:\t\t%s\n", d.Meta.Name)
+	if d.Meta.Description != types.EmptyString {
+		fmt.Printf(" Description:\t%s\n", d.Meta.Description)
+	}
+	fmt.Printf(" State:\t\t%s\n", d.Status.State)
+	if d.Status.Message != types.EmptyString {
+		fmt.Printf(" Message:\t%s\n", d.Status.Message)
+	}
+	created, _ := timeago.TimeAgoWithTime(time.Now(), d.Meta.Created)
+	updated, _ := timeago.TimeAgoWithTime(time.Now(), d.Meta.Updated)
+
+	fmt.Printf(" Created:\t%s\n", created)
+	fmt.Printf(" Updated:\t%s\n", updated)
+	println()
+	fmt.Printf(" Pods:\n")
+	println()
+	podTable := table.New([]string{"Name", "Ready", "Status", "Restarts", "Age"})
+	podTable.VisibleHeader = true
+
+	var (
+		ids = make([]string, 0, len(d.Pods))
+
+	)
+	for key := range d.Pods {
+		ids = append(ids, key)
+	}
+
+	sort.Strings(ids) //sort by key
+
+	for _, id := range ids {
+		p := d.Pods[id]
+
+		var ready, restarts int
+		for _, c := range p.Status.Containers {
+			if c.Ready {
+				ready++
+				restarts += c.Restart
+			}
+		}
+		var podRow = map[string]interface{}{}
+		got, _ := timeago.TimeAgoWithTime(time.Now(), p.Created)
+		podRow["Name"] = p.Name
+		podRow["Ready"] = string(converter.IntToString(ready) + "/" + converter.IntToString(len(p.Status.Containers)))
+		podRow["Status"] = p.Status.State
+		podRow["Restarts"] = restarts
+		podRow["Age"] = got
+		podTable.AddRow(podRow)
+	}
+
+	podTable.Print()
+	println()
+}
+
 
 func (s *ServiceSources) String() string {
 	if s.Image != nil && s.Image.Namespace != "" {
@@ -231,8 +323,13 @@ func FromApiServiceView(service *views.Service) *Service {
 	for i, d := range service.Deployments {
 		var itd Deployment
 
-		itd.State = d.Status.State
-		itd.Name = d.Meta.Name
+		itd.Meta.Name = d.Meta.Name
+		itd.Meta.Description = d.Meta.Description
+		itd.Meta.Created = d.Meta.Created
+		itd.Meta.Updated = d.Meta.Updated
+
+		itd.Status.State = d.Status.State
+		itd.Status.Message = d.Status.Message
 		itd.Pods = make(map[string]PodView, 0)
 
 		for j, p := range d.Pods {

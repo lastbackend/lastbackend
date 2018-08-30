@@ -288,6 +288,9 @@ func serviceEndpointProvision(ss *ServiceState, svc *types.Service) error {
 		return err
 	}
 
+	svc.Meta.Endpoint = ss.endpoint.endpoint.Spec.Domain
+	svc.Meta.IP = ss.endpoint.endpoint.Spec.IP
+
 	return nil
 }
 

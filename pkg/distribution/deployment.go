@@ -21,6 +21,7 @@ package distribution
 import (
 	"context"
 	"strings"
+	"time"
 
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 	"github.com/lastbackend/lastbackend/pkg/log"
@@ -85,6 +86,8 @@ func (d *Deployment) Create(service *types.Service) (*types.Deployment, error) {
 	deployment.Meta.Service = service.Meta.Name
 	deployment.Meta.Status = types.StateCreated
 	deployment.Meta.Name = strings.Split(generator.GetUUIDV4(), "-")[4][5:]
+	deployment.Meta.Created = time.Now()
+	deployment.Meta.Updated = time.Now()
 
 	deployment.SelfLink()
 

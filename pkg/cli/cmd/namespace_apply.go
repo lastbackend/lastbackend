@@ -75,7 +75,11 @@ var applyCmd = &cobra.Command{
 			if m.Kind == "Service" {
 
 				spec := v1.Request().Service().Manifest()
-				spec.FromYaml(c)
+				err := spec.FromYaml(c)
+				if err != nil {
+					fmt.Errorf("invalid specification: %s", err.Error())
+					return
+				}
 
 				var rsvc *views.Service
 

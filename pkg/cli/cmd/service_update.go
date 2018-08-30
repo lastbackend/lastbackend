@@ -24,10 +24,9 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/api/types/v1/request"
 	"github.com/lastbackend/lastbackend/pkg/cli/envs"
 	"github.com/lastbackend/lastbackend/pkg/cli/view"
-	"github.com/spf13/cobra"
-	"strconv"
-	"strings"
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
+	"github.com/spf13/cobra"
+	"strings"
 )
 
 func init() {
@@ -90,23 +89,8 @@ var serviceUpdateCmd = &cobra.Command{
 
 		if len(ports) > 0 {
 			opts.Spec.Network = new(request.ManifestSpecNetwork)
-			opts.Spec.Network.Ports = make(map[uint16]string, 0)
-
-			for _, p := range ports {
-				pm := strings.Split(p, ":")
-				if len(pm) != 2 {
-					fmt.Println("port mapping is in invalid format")
-					return
-				}
-
-				ext, err := strconv.ParseUint(pm[0], 10, 16)
-				if err != nil {
-					fmt.Println("port mapping is in invalid format")
-					return
-				}
-
-				opts.Spec.Network.Ports[uint16(ext)] = pm[1]
-			}
+			opts.Spec.Network.Ports = make([]string, 0)
+			opts.Spec.Network.Ports = ports
 		}
 
 		es := make(map[string]request.ManifestSpecTemplateContainerEnv)

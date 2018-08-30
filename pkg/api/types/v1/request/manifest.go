@@ -24,8 +24,8 @@ type ManifestSpecSelector struct {
 }
 
 type ManifestSpecNetwork struct {
-	IP    *string           `json:"ip,omitempty" yaml:"ip,omitempty"`
-	Ports map[uint16]string `json:"ports,omitempty" yaml:"ports,omitempty"`
+	IP    *string  `json:"ip,omitempty" yaml:"ip,omitempty"`
+	Ports []string `json:"ports,omitempty" yaml:"ports,omitempty"`
 }
 
 type ManifestSpecStrategy struct {
@@ -94,12 +94,12 @@ type ManifestSpecTemplateVolume struct {
 	// Template volume types
 	Type string `json:"type,omitempty" yaml:"type,omitempty"`
 	// Template volume from secret type
-	From  ManifestSpecTemplateSecretVolume `json:"from,omitempty" yaml:"name,omitempty"`
+	From ManifestSpecTemplateSecretVolume `json:"from,omitempty" yaml:"from,omitempty"`
 }
 
 type ManifestSpecTemplateSecretVolume struct {
 	// Secret name to mount
 	Name string `json:"name,omitempty" yaml:"name,omitempty"`
 	// Secret file key
-	Files  []string `json:"files,omitempty" yaml:"files,omitempty"`
+	Files []string `json:"files,omitempty" yaml:"files,omitempty"`
 }

@@ -49,6 +49,7 @@ type ServiceMeta struct {
 	Namespace string `json:"namespace"`
 	SelfLink  string `json:"self_link"`
 	Endpoint  string `json:"endpoint"`
+	IP        string `json:"ip"`
 }
 
 type ServiceEndpoint struct {
@@ -118,9 +119,8 @@ func (s *Service) CreateSelfLink(namespace, name string) string {
 	return fmt.Sprintf("%s:%s", namespace, name)
 }
 
-
 type ServiceManifest struct {
-	Meta   ServiceMeta   `json:"meta"`
+	Meta ServiceMeta `json:"meta"`
 }
 
 type ServiceRemoveOptions struct {
