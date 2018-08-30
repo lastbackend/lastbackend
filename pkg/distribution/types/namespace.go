@@ -129,13 +129,13 @@ type NamespaceQuotasOptions struct {
 	Routes   int   `json:"routes"`
 }
 
-func NewNamespaceList () *NamespaceList {
+func NewNamespaceList() *NamespaceList {
 	dm := new(NamespaceList)
 	dm.Items = make([]*Namespace, 0)
 	return dm
 }
 
-func NewNamespaceMap () *NamespaceMap {
+func NewNamespaceMap() *NamespaceMap {
 	dm := new(NamespaceMap)
 	dm.Items = make(map[string]*Namespace)
 	return dm

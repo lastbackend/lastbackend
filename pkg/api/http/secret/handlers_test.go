@@ -51,8 +51,8 @@ func TestSecretList(t *testing.T) {
 	r1 := getSecretAsset("demo")
 	r2 := getSecretAsset("test")
 
-	r1.Data["demo"]=[]byte("demo")
-	r2.Data["test"]=[]byte("test")
+	r1.Data["demo"] = []byte("demo")
+	r2.Data["test"] = []byte("test")
 
 	rl := types.NewSecretMap()
 	rl.Items[r1.SelfLink()] = r1
@@ -63,7 +63,7 @@ func TestSecretList(t *testing.T) {
 	}
 
 	type args struct {
-		ctx       context.Context
+		ctx context.Context
 	}
 
 	tests := []struct {
@@ -184,14 +184,14 @@ func TestSecretCreate(t *testing.T) {
 
 	r1 := getSecretAsset("demo")
 	r1.Meta.Kind = types.KindSecretText
-	r1.Data["demo"]=[]byte("demo")
+	r1.Data["demo"] = []byte("demo")
 
 	type fields struct {
 		stg storage.Storage
 	}
 
 	type args struct {
-		ctx       context.Context
+		ctx context.Context
 	}
 
 	tests := []struct {
@@ -239,7 +239,7 @@ func TestSecretCreate(t *testing.T) {
 
 			clear()
 			defer clear()
-			
+
 			// Create assert request to pass to our handler. We don't have any query parameters for now, so we'll
 			// pass 'nil' as the third parameter.
 			req, err := http.NewRequest("POST", fmt.Sprintf("/secret"), strings.NewReader(tc.data))
@@ -319,16 +319,16 @@ func TestSecretUpdate(t *testing.T) {
 	r1 := getSecretAsset("demo")
 	r2 := getSecretAsset("test")
 
-	r1.Data["demo"]=[]byte("demo")
-	r2.Data["test"]=[]byte("test")
+	r1.Data["demo"] = []byte("demo")
+	r2.Data["test"] = []byte("test")
 
 	type fields struct {
 		stg storage.Storage
 	}
 
 	type args struct {
-		ctx       context.Context
-		secret    *types.Secret
+		ctx    context.Context
+		secret *types.Secret
 	}
 
 	tests := []struct {
@@ -345,7 +345,7 @@ func TestSecretUpdate(t *testing.T) {
 	}{
 		{
 			name:         "checking update secret if name not exists",
-			args:         args{ctx,  r1},
+			args:         args{ctx, r1},
 			fields:       fields{stg},
 			handler:      secret.SecretUpdateH,
 			data:         createSecretUpdateOptions(r2.Meta.Kind, r2.Data).toJson(),
@@ -426,16 +426,16 @@ func TestSecretRemove(t *testing.T) {
 	r1 := getSecretAsset("demo")
 	r2 := getSecretAsset("test")
 
-	r1.Data["demo"]=[]byte("demo")
-	r2.Data["test"]=[]byte("test")
+	r1.Data["demo"] = []byte("demo")
+	r2.Data["test"] = []byte("test")
 
 	type fields struct {
 		stg storage.Storage
 	}
 
 	type args struct {
-		ctx       context.Context
-		secret    *types.Secret
+		ctx    context.Context
+		secret *types.Secret
 	}
 
 	tests := []struct {

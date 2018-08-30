@@ -45,7 +45,7 @@ func (sl *SecretList) Print() {
 		data["TYPE"] = s.Meta.Kind
 		size := 0
 		for _, d := range s.Data {
-			size+=d
+			size += d
 		}
 		data["SIZE"] = size
 		t.AddRow(data)
@@ -77,7 +77,7 @@ func FromApiSecretView(secret *views.Secret) *Secret {
 	item.Meta.Kind = secret.Meta.Kind
 	item.Data = make(map[string]int, 0)
 
-	for n,d := range secret.Data {
+	for n, d := range secret.Data {
 		item.Data[n] = len(d)
 	}
 

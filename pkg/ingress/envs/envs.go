@@ -19,9 +19,9 @@
 package envs
 
 import (
+	"github.com/lastbackend/lastbackend/pkg/api/client/types"
 	"github.com/lastbackend/lastbackend/pkg/ingress/events/exporter"
 	"github.com/lastbackend/lastbackend/pkg/ingress/state"
-	"github.com/lastbackend/lastbackend/pkg/api/client/types"
 )
 
 var e Env

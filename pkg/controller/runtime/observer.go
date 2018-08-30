@@ -21,7 +21,7 @@ package runtime
 import (
 	"github.com/lastbackend/lastbackend/pkg/controller/envs"
 	"github.com/lastbackend/lastbackend/pkg/controller/state"
-					"github.com/lastbackend/lastbackend/pkg/storage"
+	"github.com/lastbackend/lastbackend/pkg/storage"
 	"golang.org/x/net/context"
 )
 
@@ -30,7 +30,7 @@ const (
 )
 
 type Observer struct {
-	rev *int64
+	rev   *int64
 	stg   storage.Storage
 	state *state.State
 }

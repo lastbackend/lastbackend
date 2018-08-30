@@ -26,7 +26,7 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/distribution"
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 	"github.com/lastbackend/lastbackend/pkg/log"
-	)
+)
 
 const logLevel = 3
 
@@ -156,7 +156,6 @@ func (cs *ClusterState) Endpoint() *EndpointController {
 	return cs.ec
 }
 
-
 func (cs *ClusterState) SetNode(n *types.Node) {
 	cs.node.observer <- n
 }
@@ -164,7 +163,6 @@ func (cs *ClusterState) SetNode(n *types.Node) {
 func (cs *ClusterState) DelNode(n *types.Node) {
 	delete(cs.node.list, n.Meta.SelfLink)
 }
-
 
 func (cs *ClusterState) PodLease(p *types.Pod) (*types.Node, error) {
 
@@ -195,7 +193,7 @@ func (cs *ClusterState) PodRelease(p *types.Pod) (*types.Node, error) {
 	}
 
 	opts := NodeLeaseOptions{
-		Node: &p.Meta.Node,
+		Node:   &p.Meta.Node,
 		Memory: &RAM,
 	}
 

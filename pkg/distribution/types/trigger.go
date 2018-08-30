@@ -30,7 +30,6 @@ type TriggerList struct {
 	Items []*Trigger
 }
 
-
 type Trigger struct {
 	Runtime
 	Meta   TriggerMeta   `json:"meta"`
@@ -63,13 +62,13 @@ func (t *Trigger) CreateSelfLink(namespace, service, name string) string {
 	return fmt.Sprintf("%s:%s:%s", namespace, service, name)
 }
 
-func NewTriggerList () *TriggerList {
+func NewTriggerList() *TriggerList {
 	dm := new(TriggerList)
 	dm.Items = make([]*Trigger, 0)
 	return dm
 }
 
-func NewTriggerMap () *TriggerMap {
+func NewTriggerMap() *TriggerMap {
 	dm := new(TriggerMap)
 	dm.Items = make(map[string]*Trigger)
 	return dm

@@ -20,7 +20,7 @@ package types
 
 import (
 	"fmt"
-		"time"
+	"time"
 )
 
 // swagger:ignore
@@ -268,13 +268,13 @@ func NewPod() *Pod {
 	return pod
 }
 
-func NewPodList () *PodList {
+func NewPodList() *PodList {
 	dm := new(PodList)
 	dm.Items = make([]*Pod, 0)
 	return dm
 }
 
-func NewPodMap () *PodMap {
+func NewPodMap() *PodMap {
 	dm := new(PodMap)
 	dm.Items = make(map[string]*Pod)
 	return dm
@@ -284,7 +284,7 @@ func NewPodStatus() *PodStatus {
 	status := PodStatus{
 		Steps:      make(PodSteps, 0),
 		Containers: make(map[string]*PodContainer, 0),
-		Volumes: make(map[string]*PodVolume, 0),
+		Volumes:    make(map[string]*PodVolume, 0),
 	}
 	return &status
 }

@@ -130,9 +130,9 @@ func (s Storage) Put(ctx context.Context, collection string, name string, obj in
 func (s Storage) Set(ctx context.Context, collection string, name string, obj interface{}, opts *types.Opts) error {
 
 	var (
-		rev *int64
+		rev   *int64
 		force bool
-		ttl uint64
+		ttl   uint64
 	)
 
 	if opts != nil {

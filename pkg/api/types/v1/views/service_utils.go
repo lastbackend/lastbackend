@@ -75,17 +75,17 @@ func (sv *Service) ToSpec(obj types.ServiceSpec) ServiceSpec {
 		Replicas: obj.Replicas,
 		Template: ManifestSpecTemplate{
 			Containers: make([]ManifestSpecTemplateContainer, 0),
-			Volumes: make([]ManifestSpecTemplateVolume, 0),
+			Volumes:    make([]ManifestSpecTemplateVolume, 0),
 		},
-		Selector:ManifestSpecSelector{
-			Node: obj.Selector.Node,
+		Selector: ManifestSpecSelector{
+			Node:   obj.Selector.Node,
 			Labels: obj.Selector.Labels,
 		},
-		Network:ManifestSpecNetwork{
-			IP: obj.Network.IP,
+		Network: ManifestSpecNetwork{
+			IP:    obj.Network.IP,
 			Ports: obj.Network.Ports,
 		},
-		Strategy:ManifestSpecStrategy{
+		Strategy: ManifestSpecStrategy{
 			Type: obj.Strategy.Type,
 		},
 	}
@@ -93,20 +93,20 @@ func (sv *Service) ToSpec(obj types.ServiceSpec) ServiceSpec {
 	for _, s := range obj.Template.Containers {
 
 		c := ManifestSpecTemplateContainer{
-			Name: s.Name,
-			Command: strings.Join(s.Exec.Command, " "),
-			Workdir: s.Exec.Workdir,
-			Args: s.Exec.Args,
+			Name:       s.Name,
+			Command:    strings.Join(s.Exec.Command, " "),
+			Workdir:    s.Exec.Workdir,
+			Args:       s.Exec.Args,
 			Entrypoint: strings.Join(s.Exec.Entrypoint, " "),
 		}
 
 		for _, env := range s.EnvVars {
 			c.Env = append(c.Env, ManifestSpecTemplateContainerEnv{
-				Name: env.Name,
+				Name:  env.Name,
 				Value: env.Value,
-				From:ManifestSpecTemplateContainerEnvSecret{
+				From: ManifestSpecTemplateContainerEnvSecret{
 					Name: env.From.Name,
-					Key: env.From.Key,
+					Key:  env.From.Key,
 				},
 			})
 		}
@@ -134,8 +134,8 @@ func (sv *Service) ToSpec(obj types.ServiceSpec) ServiceSpec {
 		v := ManifestSpecTemplateVolume{
 			Name: s.Name,
 			Type: s.Type,
-			From:ManifestSpecTemplateSecretVolume{
-				Name: s.From.Name,
+			From: ManifestSpecTemplateSecretVolume{
+				Name:  s.From.Name,
 				Files: s.From.Files,
 			},
 		}

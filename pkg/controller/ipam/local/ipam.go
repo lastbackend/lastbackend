@@ -127,7 +127,7 @@ func New(cidr string) (*IPAM, error) {
 	var (
 		skip = true
 		ipam = new(IPAM)
-		stg =  envs.Get().GetStorage()
+		stg  = envs.Get().GetStorage()
 	)
 
 	ipam.storage = envs.Get().GetStorage()

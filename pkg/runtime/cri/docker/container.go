@@ -30,7 +30,7 @@ import (
 )
 
 func (r *Runtime) List(ctx context.Context, all bool) ([]*types.Container, error) {
-	var cl []*types.Container
+	var cl = make([]*types.Container, 0)
 
 	items, err := r.client.ContainerList(ctx, docker.ContainerListOptions{
 		All: all,
@@ -161,7 +161,7 @@ func (r *Runtime) Inspect(ctx context.Context, ID string) (*types.Container, err
 	container.Created, _ = time.Parse(time.RFC3339Nano, info.Created)
 	container.Started, _ = time.Parse(time.RFC3339Nano, info.State.StartedAt)
 
-	meta, ok := info.Config.Labels["LB"]
+	meta, ok := info.Config.Labels[types.ContainerTypeLBC]
 	if ok {
 		if len(strings.Split(meta, ":")) < 3 {
 			return container, nil

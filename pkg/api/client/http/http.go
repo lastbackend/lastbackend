@@ -67,4 +67,3 @@ func New(endpoint string, cfg *config.Config) (*Client, error) {
 func (c Client) V1() types.ClientV1 {
 	return v1.New(c.client)
 }
-

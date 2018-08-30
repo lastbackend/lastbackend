@@ -29,7 +29,6 @@ import (
 
 type ServiceRequest struct{}
 
-
 func (ServiceRequest) Manifest() *ServiceManifest {
 	return new(ServiceManifest)
 }
@@ -47,7 +46,6 @@ func (s *ServiceManifest) Validate() *errors.Err {
 
 func (s *ServiceManifest) DecodeAndValidate(reader io.Reader) *errors.Err {
 
-
 	if reader == nil {
 		err := errors.New("data body can not be null")
 		return errors.New("service").IncorrectJSON(err)
@@ -57,7 +55,7 @@ func (s *ServiceManifest) DecodeAndValidate(reader io.Reader) *errors.Err {
 	if err != nil {
 		return errors.New("service").Unknown(err)
 	}
-	
+
 	err = json.Unmarshal(body, s)
 	if err != nil {
 		return errors.New("service").IncorrectJSON(err)

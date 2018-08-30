@@ -223,7 +223,7 @@ func TestNodeGetManifestH(t *testing.T) {
 	)
 
 	nm.Network = make(map[string]*types.SubnetManifest, 0)
-	nm.Pods = make(map[string]*types.PodManifest,0 )
+	nm.Pods = make(map[string]*types.PodManifest, 0)
 	nm.Pods[p1] = getPodManifest()
 	nm.Pods[p2] = getPodManifest()
 	nm.Volumes = make(map[string]*types.VolumeManifest, 0)
@@ -714,7 +714,7 @@ func setRequestVars(r *mux.Router, req *http.Request) {
 func getNodeAsset(name, desc string, online bool) types.Node {
 	var n = types.Node{
 		Meta: types.NodeMeta{
-			Token:    "token",
+			Token: "token",
 		},
 		Status: types.NodeStatus{
 			Online: true,

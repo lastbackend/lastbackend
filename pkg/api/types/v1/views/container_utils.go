@@ -201,14 +201,14 @@ func (cv *ContainerView) FromContainerVolumeSpec(spec ContainerVolumeSpec) types
 
 func (cv *ContainerView) ToImageSpec(spec types.ImageSpec) ContainerImageSpec {
 	return ContainerImageSpec{
-		Name: spec.Name,
+		Name:   spec.Name,
 		Secret: spec.Secret,
 	}
 }
 
 func (cv *ContainerView) FromImageSpec(spec ContainerImageSpec) types.ImageSpec {
 	return types.ImageSpec{
-		Name: spec.Name,
+		Name:   spec.Name,
 		Secret: spec.Secret,
 	}
 }

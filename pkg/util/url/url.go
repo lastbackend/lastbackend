@@ -20,7 +20,7 @@ package url
 
 import (
 	"errors"
-			"net/url"
+	"net/url"
 	"regexp"
 	"strings"
 )

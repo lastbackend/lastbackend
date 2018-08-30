@@ -32,7 +32,6 @@ type CacheNodeManifest struct {
 	manifests map[string]*types.NodeManifest
 }
 
-
 func (c *CacheNodeManifest) checkNode(node string) {
 	if _, ok := c.manifests[node]; !ok {
 		c.manifests[node] = new(types.NodeManifest)
@@ -91,7 +90,6 @@ func (c *CacheNodeManifest) DelVolumeManifest(node, volume string) {
 	delete(c.manifests[node].Volumes, volume)
 }
 
-
 func (c *CacheNodeManifest) SetSubnetManifest(cidr string, s *types.SubnetManifest) {
 	c.lock.Lock()
 	defer c.lock.Unlock()
@@ -105,7 +103,6 @@ func (c *CacheNodeManifest) SetSubnetManifest(cidr string, s *types.SubnetManife
 		c.manifests[n].Network[cidr] = s
 	}
 }
-
 
 func (c *CacheNodeManifest) SetSecretManifest(name string, s *types.SecretManifest) {
 	c.lock.Lock()

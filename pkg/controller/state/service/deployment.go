@@ -203,7 +203,6 @@ func handleDeploymentStateDegradation(ss *ServiceState, d *types.Deployment) err
 		}
 	}
 
-
 	if ss.deployment.active.SelfLink() != d.SelfLink() {
 		return deploymentDestroy(ss, d)
 	}
@@ -287,7 +286,7 @@ func deploymentPodProvision(ss *ServiceState, d *types.Deployment) (err error) {
 	}()
 
 	var (
-		st       = []string{
+		st = []string{
 			types.StateError,
 			types.StateWarning,
 			types.StateCreated,
@@ -310,7 +309,6 @@ func deploymentPodProvision(ss *ServiceState, d *types.Deployment) (err error) {
 		)
 
 		for _, p := range pods {
-
 
 			if p.Status.State != types.StateDestroy && p.Status.State != types.StateDestroyed {
 
@@ -454,7 +452,6 @@ func deploymentDestroy(ss *ServiceState, d *types.Deployment) (err error) {
 		return nil
 	}
 
-
 	return nil
 }
 
@@ -486,7 +483,7 @@ func deploymentStatusState(d *types.Deployment, pl map[string]*types.Pod) (err e
 	}()
 
 	var (
-		state = make(map[string]int)
+		state   = make(map[string]int)
 		message string
 		running int
 	)
@@ -501,7 +498,6 @@ func deploymentStatusState(d *types.Deployment, pl map[string]*types.Pod) (err e
 			running++
 		}
 	}
-
 
 	switch d.Status.State {
 	case types.StateCreated:
@@ -528,7 +524,6 @@ func deploymentStatusState(d *types.Deployment, pl map[string]*types.Pod) (err e
 			d.Meta.Updated = time.Now()
 			break
 		}
-
 
 		d.Status.State = types.StateDegradation
 		d.Status.Message = types.EmptyString

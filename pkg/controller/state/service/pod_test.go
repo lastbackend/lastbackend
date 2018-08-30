@@ -19,13 +19,13 @@
 package service
 
 import (
-	"testing"
-	"github.com/lastbackend/lastbackend/pkg/controller/ipam"
-	"github.com/lastbackend/lastbackend/pkg/storage"
-	"github.com/stretchr/testify/assert"
-	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 	"context"
 	"github.com/lastbackend/lastbackend/pkg/controller/envs"
+	"github.com/lastbackend/lastbackend/pkg/controller/ipam"
+	"github.com/lastbackend/lastbackend/pkg/distribution/types"
+	"github.com/lastbackend/lastbackend/pkg/storage"
+	"github.com/stretchr/testify/assert"
+	"testing"
 )
 
 func testPodObserver(t *testing.T, name, werr string, wst *ServiceState, state *ServiceState, p *types.Pod) {
@@ -242,11 +242,10 @@ func testPodObserver(t *testing.T, name, werr string, wst *ServiceState, state *
 			}
 		}
 
-
 	})
 }
 
-func TestHandlePodStateCreated (t *testing.T) {
+func TestHandlePodStateCreated(t *testing.T) {
 
 	type suit struct {
 		name string
@@ -290,7 +289,7 @@ func TestHandlePodStateCreated (t *testing.T) {
 	}
 }
 
-func TestHandlePodStateProvision (t *testing.T) {
+func TestHandlePodStateProvision(t *testing.T) {
 
 	type suit struct {
 		name string
@@ -380,7 +379,7 @@ func TestHandlePodStateProvision (t *testing.T) {
 	}
 }
 
-func TestHandlePodStateReady (t *testing.T) {
+func TestHandlePodStateReady(t *testing.T) {
 
 	type suit struct {
 		name string
@@ -477,7 +476,7 @@ func TestHandlePodStateReady (t *testing.T) {
 	}
 }
 
-func TestHandlePodStateError (t *testing.T) {
+func TestHandlePodStateError(t *testing.T) {
 
 	type suit struct {
 		name string
@@ -571,7 +570,7 @@ func TestHandlePodStateError (t *testing.T) {
 	}
 }
 
-func TestHandlePodStateDegradation (t *testing.T) {
+func TestHandlePodStateDegradation(t *testing.T) {
 
 	type suit struct {
 		name string
@@ -665,7 +664,7 @@ func TestHandlePodStateDegradation (t *testing.T) {
 	}
 }
 
-func TestHandlePodStateDestroy (t *testing.T) {
+func TestHandlePodStateDestroy(t *testing.T) {
 
 	type suit struct {
 		name string
@@ -781,7 +780,7 @@ func TestHandlePodStateDestroy (t *testing.T) {
 	}
 }
 
-func TestHandlePodStateDestroyed (t *testing.T) {
+func TestHandlePodStateDestroyed(t *testing.T) {
 
 	type suit struct {
 		name string

@@ -118,9 +118,8 @@ func (s *Service) CreateSelfLink(namespace, name string) string {
 	return fmt.Sprintf("%s:%s", namespace, name)
 }
 
-
 type ServiceManifest struct {
-	Meta   ServiceMeta   `json:"meta"`
+	Meta ServiceMeta `json:"meta"`
 }
 
 type ServiceRemoveOptions struct {

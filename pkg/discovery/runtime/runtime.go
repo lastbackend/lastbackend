@@ -26,7 +26,7 @@ import (
 
 const (
 	logPrefix = "discovery:runtime"
-	logLevel = 3
+	logLevel  = 3
 )
 
 type Runtime struct {

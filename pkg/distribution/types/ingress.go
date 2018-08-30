@@ -89,13 +89,13 @@ func (n *Ingress) SelfLink() string {
 	return n.Meta.SelfLink
 }
 
-func NewIngressList () *IngressList {
+func NewIngressList() *IngressList {
 	dm := new(IngressList)
 	dm.Items = make([]*Ingress, 0)
 	return dm
 }
 
-func NewIngressMap () *IngressMap {
+func NewIngressMap() *IngressMap {
 	dm := new(IngressMap)
 	dm.Items = make(map[string]*Ingress)
 	return dm

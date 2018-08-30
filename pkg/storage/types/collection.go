@@ -35,7 +35,7 @@ type Collection interface {
 	Network() string
 	Subnet() string
 	Manifest() ManifestCollection
-	Test () string
+	Test() string
 }
 
 type ManifestCollection interface {
@@ -48,4 +48,3 @@ type ManifestCollection interface {
 	Secret() string
 	Endpoint() string
 }
-

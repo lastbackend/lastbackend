@@ -22,10 +22,10 @@ import (
 	"context"
 	"errors"
 
-	"github.com/lastbackend/lastbackend/pkg/log"
 	"github.com/lastbackend/lastbackend/pkg/controller/envs"
 	"github.com/lastbackend/lastbackend/pkg/distribution"
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
+	"github.com/lastbackend/lastbackend/pkg/log"
 	"time"
 )
 
@@ -180,7 +180,7 @@ func handleServiceStateDestroy(ss *ServiceState, svc *types.Service) (err error)
 
 	log.V(logLevel).Debugf("%s:> handleServiceStateDestroy: %s > %s", logServicePrefix, svc.SelfLink(), svc.Status.State)
 
-	if ss.endpoint.endpoint != nil  {
+	if ss.endpoint.endpoint != nil {
 		if err = endpointDel(ss); err != nil {
 			log.Errorf("%s:> endpoint remove err:", logServicePrefix, err.Error())
 			return err
@@ -188,7 +188,7 @@ func handleServiceStateDestroy(ss *ServiceState, svc *types.Service) (err error)
 	}
 
 	dm := distribution.NewDeploymentModel(context.Background(), envs.Get().GetStorage())
-	if len(ss.deployment.list) == 0  {
+	if len(ss.deployment.list) == 0 {
 		sm := distribution.NewServiceModel(context.Background(), envs.Get().GetStorage())
 		if err = sm.Remove(svc); err != nil {
 			log.Errorf("%s:> service remove err:", logServicePrefix, err.Error())
@@ -225,15 +225,13 @@ func handleServiceStateDestroyed(ss *ServiceState, svc *types.Service) (err erro
 
 	log.V(logLevel).Debugf("%s:> handleServiceStateDestroyed: %s > %s", logServicePrefix, svc.SelfLink(), svc.Status.State)
 
-
 	if err = endpointDel(ss); err != nil {
-			log.Errorf("%s:> endpoint remove err:", logServicePrefix, err.Error())
-			return err
-		}
+		log.Errorf("%s:> endpoint remove err:", logServicePrefix, err.Error())
+		return err
+	}
 
 	svc.Status.State = types.StateDestroy
 	svc.Meta.Updated = time.Now()
-
 
 	if len(ss.deployment.list) > 0 {
 		dm := distribution.NewDeploymentModel(context.Background(), envs.Get().GetStorage())
@@ -374,7 +372,6 @@ func serviceStatusState(ss *ServiceState) (err error) {
 		return nil
 	}()
 
-
 	if ss.service.Status.State == types.StateProvision || ss.service.Status.State == types.StateCreated {
 
 		if ss.deployment.active != nil {
@@ -382,18 +379,18 @@ func serviceStatusState(ss *ServiceState) (err error) {
 				ss.deployment.active.Spec.Replicas == ss.service.Spec.Replicas {
 				ss.service.Status.State = ss.deployment.active.Status.State
 				ss.service.Status.Message = ss.deployment.active.Status.Message
-					if ss.deployment.active.Status.State == types.StateCreated {
-						ss.service.Status.State = types.StateProvision
-						ss.service.Status.Message = types.EmptyString
-					}
+				if ss.deployment.active.Status.State == types.StateCreated {
+					ss.service.Status.State = types.StateProvision
+					ss.service.Status.Message = types.EmptyString
+				}
 			}
 		}
 
 		if ss.deployment.provision != nil && ss.deployment.active == nil {
 			if deploymentSpecValidate(ss.deployment.provision, ss.service.Spec.Template) &&
-					ss.deployment.provision.Spec.Replicas == ss.service.Spec.Replicas {
-					ss.service.Status.State = ss.deployment.provision.Status.State
-					ss.service.Status.Message = ss.deployment.provision.Status.Message
+				ss.deployment.provision.Spec.Replicas == ss.service.Spec.Replicas {
+				ss.service.Status.State = ss.deployment.provision.Status.State
+				ss.service.Status.Message = ss.deployment.provision.Status.Message
 			}
 		}
 
@@ -408,7 +405,6 @@ func serviceStatusState(ss *ServiceState) (err error) {
 
 		return nil
 	}
-
 
 	if ss.deployment.provision != nil {
 		ss.service.Status.State = ss.deployment.provision.Status.State

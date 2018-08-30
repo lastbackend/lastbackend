@@ -33,7 +33,7 @@ func GetConfig(manifest *types.ContainerManifest) *container.Config {
 
 	var (
 		volumes = make(map[string]struct{}, 0)
-		ports = make(nat.PortSet, 0)
+		ports   = make(nat.PortSet, 0)
 	)
 
 	for _, p := range manifest.Ports {
@@ -101,8 +101,7 @@ func GetHostConfig(manifest *types.ContainerManifest) *container.HostConfig {
 
 func GetNetworkConfig(manifest *types.ContainerManifest) *network.NetworkingConfig {
 
-	cfg := &network.NetworkingConfig{
-	}
+	cfg := &network.NetworkingConfig{}
 
 	return cfg
 }

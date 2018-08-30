@@ -57,10 +57,10 @@ type VolumeMeta struct {
 
 // swagger:model types_volume_spec
 type VolumeSpec struct {
-	State VolumeSpecState `json:"state"`
-	Type  string `json:"type"`
-	Path  string `json:"path"`
-	Mode  string `json:"mode"`
+	State     VolumeSpecState     `json:"state"`
+	Type      string              `json:"type"`
+	Path      string              `json:"path"`
+	Mode      string              `json:"mode"`
 	Resources SpecVolumeResources `json:"resources"`
 }
 
@@ -79,7 +79,6 @@ type VolumeCreateOptions struct {
 type VolumeUpdateOptions struct {
 }
 
-
 type VolumeStatus struct {
 	// volume state
 	State string `json:"state" yaml:"state"`
@@ -88,6 +87,7 @@ type VolumeStatus struct {
 	// volume status message
 	Message string `json:"message" yaml:"message"`
 }
+
 // swagger:ignore
 // swagger:model types_volume_status
 type VolumeState struct {
@@ -109,13 +109,13 @@ func (v *Volume) CreateSelfLink(namespace, name string) string {
 	return fmt.Sprintf("%s:%s", namespace, name)
 }
 
-func NewVolumeList () *VolumeList {
+func NewVolumeList() *VolumeList {
 	dm := new(VolumeList)
 	dm.Items = make([]*Volume, 0)
 	return dm
 }
 
-func NewVolumeMap () *VolumeMap {
+func NewVolumeMap() *VolumeMap {
 	dm := new(VolumeMap)
 	dm.Items = make(map[string]*Volume)
 	return dm

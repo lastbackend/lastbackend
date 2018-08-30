@@ -19,16 +19,16 @@
 package service
 
 import (
+	"context"
+	"github.com/lastbackend/lastbackend/pkg/controller/envs"
 	"github.com/lastbackend/lastbackend/pkg/controller/ipam"
+	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 	"github.com/lastbackend/lastbackend/pkg/storage"
 	"github.com/stretchr/testify/assert"
 	"testing"
-	"github.com/lastbackend/lastbackend/pkg/distribution/types"
-	"context"
-	"github.com/lastbackend/lastbackend/pkg/controller/envs"
 )
 
-func testDeploymentObserver (t *testing.T, name, werr string, wst *ServiceState, state *ServiceState, d *types.Deployment) {
+func testDeploymentObserver(t *testing.T, name, werr string, wst *ServiceState, state *ServiceState, d *types.Deployment) {
 	var (
 		ctx = context.Background()
 		err error
@@ -210,7 +210,6 @@ func testDeploymentObserver (t *testing.T, name, werr string, wst *ServiceState,
 			}
 		}
 
-
 		if !assert.Equal(t,
 			len(wst.pod.list[d.SelfLink()]),
 			len(state.pod.list[d.SelfLink()]),
@@ -218,8 +217,7 @@ func testDeploymentObserver (t *testing.T, name, werr string, wst *ServiceState,
 			return
 		}
 
-
-		if d.Status.State != types.StateDestroy && d.Status.State != types.StateDestroyed  {
+		if d.Status.State != types.StateDestroy && d.Status.State != types.StateDestroyed {
 
 			var count = 0
 			for _, p := range state.pod.list[d.SelfLink()] {
@@ -250,19 +248,16 @@ func testDeploymentObserver (t *testing.T, name, werr string, wst *ServiceState,
 			return
 		}
 
-
-
 	})
 }
 
-
-func TestHandleDeploymentStateCreated (t *testing.T) {
+func TestHandleDeploymentStateCreated(t *testing.T) {
 
 	type suit struct {
 		name string
 		args struct {
 			state *ServiceState
-			d   *types.Deployment
+			d     *types.Deployment
 		}
 		want struct {
 			err   string
@@ -299,7 +294,7 @@ func TestHandleDeploymentStateCreated (t *testing.T) {
 		s := suit{name: "successful state handle with pods should scale up pods count"}
 
 		svc := getServiceAsset(types.StateProvision, types.EmptyString)
-		svc.Spec.Replicas=2
+		svc.Spec.Replicas = 2
 
 		dp := getDeploymentAsset(svc, types.StateCreated, types.EmptyString)
 		p1 := getPodAsset(dp, types.StateCreated, types.EmptyString)
@@ -328,7 +323,7 @@ func TestHandleDeploymentStateCreated (t *testing.T) {
 		s := suit{name: "successful state handle with pods should scale down pods count"}
 
 		svc := getServiceAsset(types.StateProvision, types.EmptyString)
-		svc.Spec.Replicas=2
+		svc.Spec.Replicas = 2
 
 		dp := getDeploymentAsset(svc, types.StateCreated, types.EmptyString)
 		p1 := getPodAsset(dp, types.StateCreated, types.EmptyString)
@@ -345,10 +340,10 @@ func TestHandleDeploymentStateCreated (t *testing.T) {
 
 		s.want.err = types.EmptyString
 		s.want.state = getServiceStateCopy(s.args.state)
-		s.want.state.service.Spec.Replicas=1
+		s.want.state.service.Spec.Replicas = 1
 
-		s.want.state.deployment.provision.Status.State=types.StateProvision
-		s.want.state.deployment.provision.Spec.Replicas=1
+		s.want.state.deployment.provision.Status.State = types.StateProvision
+		s.want.state.deployment.provision.Spec.Replicas = 1
 
 		s.want.state.pod.list[p1.DeploymentLink()] = make(map[string]*types.Pod)
 		s.want.state.pod.list[p1.DeploymentLink()][p1.SelfLink()] = p1
@@ -391,13 +386,13 @@ func TestHandleDeploymentStateCreated (t *testing.T) {
 	}
 }
 
-func TestHandleDeploymentStateProvision (t *testing.T) {
+func TestHandleDeploymentStateProvision(t *testing.T) {
 
 	type suit struct {
 		name string
 		args struct {
 			state *ServiceState
-			d   *types.Deployment
+			d     *types.Deployment
 		}
 		want struct {
 			err   string
@@ -434,7 +429,7 @@ func TestHandleDeploymentStateProvision (t *testing.T) {
 		s := suit{name: "successful state handle with pods should scale up pods count"}
 
 		svc := getServiceAsset(types.StateProvision, types.EmptyString)
-		svc.Spec.Replicas=2
+		svc.Spec.Replicas = 2
 
 		dp := getDeploymentAsset(svc, types.StateProvision, types.EmptyString)
 		p1 := getPodAsset(dp, types.StateCreated, types.EmptyString)
@@ -462,7 +457,7 @@ func TestHandleDeploymentStateProvision (t *testing.T) {
 		s := suit{name: "successful state handle with pods should scale down pods count"}
 
 		svc := getServiceAsset(types.StateProvision, types.EmptyString)
-		svc.Spec.Replicas=2
+		svc.Spec.Replicas = 2
 
 		dp := getDeploymentAsset(svc, types.StateProvision, types.EmptyString)
 		p1 := getPodAsset(dp, types.StateCreated, types.EmptyString)
@@ -479,9 +474,9 @@ func TestHandleDeploymentStateProvision (t *testing.T) {
 
 		s.want.err = types.EmptyString
 		s.want.state = getServiceStateCopy(s.args.state)
-		s.want.state.service.Spec.Replicas=1
-		s.want.state.deployment.provision.Spec.Replicas=1
-		s.want.state.deployment.provision.Status.State=types.StateProvision
+		s.want.state.service.Spec.Replicas = 1
+		s.want.state.deployment.provision.Spec.Replicas = 1
+		s.want.state.deployment.provision.Status.State = types.StateProvision
 
 		s.want.state.pod.list[p1.DeploymentLink()] = make(map[string]*types.Pod)
 		s.want.state.pod.list[p1.DeploymentLink()][p1.SelfLink()] = p1
@@ -524,13 +519,13 @@ func TestHandleDeploymentStateProvision (t *testing.T) {
 	}
 }
 
-func TestHandleDeploymentStateReady (t *testing.T) {
+func TestHandleDeploymentStateReady(t *testing.T) {
 
 	type suit struct {
 		name string
 		args struct {
 			state *ServiceState
-			d   *types.Deployment
+			d     *types.Deployment
 		}
 		want struct {
 			err   string
@@ -561,7 +556,6 @@ func TestHandleDeploymentStateReady (t *testing.T) {
 		s.want.state.deployment.provision = nil
 		s.want.state.deployment.active = dp
 		s.want.state.service.Status.State = types.StateReady
-
 
 		return s
 	}())
@@ -609,7 +603,6 @@ func TestHandleDeploymentStateReady (t *testing.T) {
 		p2 := getPodAsset(dp1, types.StateReady, types.EmptyString)
 		p1.Meta.Node = "node"
 
-
 		s.args.state = getServiceStateAsset(svc)
 		s.args.state.deployment.active = dp1
 		s.args.state.deployment.provision = dp2
@@ -639,13 +632,13 @@ func TestHandleDeploymentStateReady (t *testing.T) {
 	}
 }
 
-func TestHandleDeploymentStateError (t *testing.T) {
+func TestHandleDeploymentStateError(t *testing.T) {
 
 	type suit struct {
 		name string
 		args struct {
 			state *ServiceState
-			d   *types.Deployment
+			d     *types.Deployment
 		}
 		want struct {
 			err   string
@@ -662,7 +655,6 @@ func TestHandleDeploymentStateError (t *testing.T) {
 		svc := getServiceAsset(types.StateProvision, types.EmptyString)
 		dp := getDeploymentAsset(svc, types.StateError, types.EmptyString)
 		p1 := getPodAsset(dp, types.StateError, types.EmptyString)
-
 
 		s.args.state = getServiceStateAsset(svc)
 		s.args.state.deployment.provision = dp
@@ -690,7 +682,6 @@ func TestHandleDeploymentStateError (t *testing.T) {
 
 		dp1 := getDeploymentAsset(svc, types.StateReady, types.EmptyString)
 		dp2 := getDeploymentAsset(svc, types.StateError, types.EmptyString)
-
 
 		p1 := getPodAsset(dp1, types.StateReady, types.EmptyString)
 		p2 := getPodAsset(dp2, types.StateError, types.EmptyString)
@@ -723,13 +714,13 @@ func TestHandleDeploymentStateError (t *testing.T) {
 	}
 }
 
-func TestHandleDeploymentStateDegradation (t *testing.T) {
+func TestHandleDeploymentStateDegradation(t *testing.T) {
 
 	type suit struct {
 		name string
 		args struct {
 			state *ServiceState
-			d   *types.Deployment
+			d     *types.Deployment
 		}
 		want struct {
 			err   string
@@ -800,13 +791,13 @@ func TestHandleDeploymentStateDegradation (t *testing.T) {
 	}
 }
 
-func TestHandleDeploymentStateDestroy (t *testing.T) {
+func TestHandleDeploymentStateDestroy(t *testing.T) {
 
 	type suit struct {
 		name string
 		args struct {
 			state *ServiceState
-			d   *types.Deployment
+			d     *types.Deployment
 		}
 		want struct {
 			err   string
@@ -821,7 +812,7 @@ func TestHandleDeploymentStateDestroy (t *testing.T) {
 		s := suit{name: "successful state handle active deployment with pods with nodes"}
 
 		svc := getServiceAsset(types.StateDestroy, types.EmptyString)
-		svc.Spec.Replicas=2
+		svc.Spec.Replicas = 2
 
 		dp := getDeploymentAsset(svc, types.StateDestroy, types.EmptyString)
 		p1 := getPodAsset(dp, types.StateCreated, types.EmptyString)
@@ -843,7 +834,6 @@ func TestHandleDeploymentStateDestroy (t *testing.T) {
 		s.want.state = getServiceStateCopy(s.args.state)
 		s.want.state.deployment.active.Status.State = types.StateDestroy
 
-
 		return s
 	}())
 
@@ -852,7 +842,7 @@ func TestHandleDeploymentStateDestroy (t *testing.T) {
 		s := suit{name: "successful state handle provision deployment with pods without nodes"}
 
 		svc := getServiceAsset(types.StateDestroy, types.EmptyString)
-		svc.Spec.Replicas=2
+		svc.Spec.Replicas = 2
 
 		dp := getDeploymentAsset(svc, types.StateDestroy, types.EmptyString)
 		p1 := getPodAsset(dp, types.StateCreated, types.EmptyString)
@@ -874,7 +864,6 @@ func TestHandleDeploymentStateDestroy (t *testing.T) {
 		s.want.state.deployment.list = make(map[string]*types.Deployment, 0)
 		s.want.state.pod.list = make(map[string]map[string]*types.Pod, 0)
 
-
 		return s
 	}())
 
@@ -883,7 +872,7 @@ func TestHandleDeploymentStateDestroy (t *testing.T) {
 		s := suit{name: "successful state handle active deployment with one pod without node"}
 
 		svc := getServiceAsset(types.StateDestroy, types.EmptyString)
-		svc.Spec.Replicas=2
+		svc.Spec.Replicas = 2
 
 		dp := getDeploymentAsset(svc, types.StateDestroy, types.EmptyString)
 		p1 := getPodAsset(dp, types.StateCreated, types.EmptyString)
@@ -912,7 +901,7 @@ func TestHandleDeploymentStateDestroy (t *testing.T) {
 		s := suit{name: "successful state handle provision deployment without pods"}
 
 		svc := getServiceAsset(types.StateDestroy, types.EmptyString)
-		svc.Spec.Replicas=2
+		svc.Spec.Replicas = 2
 
 		dp := getDeploymentAsset(svc, types.StateDestroy, types.EmptyString)
 
@@ -944,7 +933,7 @@ func TestHandleDeploymentStateDestroyed(t *testing.T) {
 		name string
 		args struct {
 			state *ServiceState
-			d   *types.Deployment
+			d     *types.Deployment
 		}
 		want struct {
 			err   string
@@ -959,7 +948,7 @@ func TestHandleDeploymentStateDestroyed(t *testing.T) {
 		s := suit{name: "successful state handle with pods"}
 
 		svc := getServiceAsset(types.StateDestroy, types.EmptyString)
-		svc.Spec.Replicas=2
+		svc.Spec.Replicas = 2
 
 		dp := getDeploymentAsset(svc, types.StateDestroyed, types.EmptyString)
 		p1 := getPodAsset(dp, types.StateCreated, types.EmptyString)
@@ -1019,7 +1008,7 @@ func TestHandleDeploymentStateDestroyed(t *testing.T) {
 		s := suit{name: "successful state handle without service state change"}
 
 		svc := getServiceAsset(types.StateDestroy, types.EmptyString)
-		svc.Spec.Replicas=2
+		svc.Spec.Replicas = 2
 
 		dp1 := getDeploymentAsset(svc, types.StateDestroy, types.EmptyString)
 		dp2 := getDeploymentAsset(svc, types.StateDestroyed, types.EmptyString)
@@ -1030,14 +1019,13 @@ func TestHandleDeploymentStateDestroyed(t *testing.T) {
 		s.args.state.deployment.list[dp1.SelfLink()] = dp1
 		s.args.state.deployment.list[dp2.SelfLink()] = dp2
 		p1 := getPodAsset(dp1, types.StateCreated, types.EmptyString)
-		p2:= getPodAsset(dp1, types.StateCreated, types.EmptyString)
+		p2 := getPodAsset(dp1, types.StateCreated, types.EmptyString)
 		p1.Meta.Node = "node"
 		p2.Meta.Node = "node"
 
 		s.args.state.pod.list[dp1.SelfLink()] = make(map[string]*types.Pod)
 		s.args.state.pod.list[p1.DeploymentLink()][p1.SelfLink()] = p1
 		s.args.state.pod.list[p2.DeploymentLink()][p2.SelfLink()] = p2
-
 
 		s.args.d = dp2
 

@@ -21,16 +21,16 @@ package events
 import (
 	"context"
 	"github.com/lastbackend/lastbackend/pkg/api/types/v1"
+	"github.com/lastbackend/lastbackend/pkg/api/types/v1/request"
 	"github.com/lastbackend/lastbackend/pkg/log"
 	"github.com/lastbackend/lastbackend/pkg/node/envs"
 	"github.com/pkg/errors"
 	"github.com/spf13/viper"
 	"io/ioutil"
-	"github.com/lastbackend/lastbackend/pkg/api/types/v1/request"
 )
 
 const (
-	logLevel = 3
+	logLevel  = 3
 	logPrefix = "node:events"
 )
 

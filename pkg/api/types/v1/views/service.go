@@ -94,7 +94,6 @@ type ServiceSpec struct {
 }
 
 type ServiceTemplateSpec struct {
-
 }
 
 // swagger:model views_service_spec_meta

@@ -46,7 +46,6 @@ type EndpointMap struct {
 	Items map[string]*Endpoint
 }
 
-
 // swagger:ignore
 // EndpointMeta - endpoint meta data
 type EndpointMeta struct {
@@ -73,7 +72,7 @@ type EndpointSpec struct {
 	PortMap   map[uint16]string    `json:"port_map"`
 	Strategy  EndpointSpecStrategy `json:"strategy"`
 	Policy    string               `json:"policy"`
-	Upstreams  []string `json:"-"`
+	Upstreams []string             `json:"-"`
 }
 
 type EndpointState struct {
@@ -107,7 +106,6 @@ func (e *Endpoint) CreateSelfLink(namespace, name string) string {
 	return fmt.Sprintf("%s:%s", namespace, name)
 }
 
-
 // swagger:ignore
 type EndpointCreateOptions struct {
 	IP            string            `json:"ip"`
@@ -127,13 +125,13 @@ type EndpointUpdateOptions struct {
 	BindStrategy  string            `json:"bind_strategy"`
 }
 
-func NewEndpointList () *EndpointList {
+func NewEndpointList() *EndpointList {
 	dm := new(EndpointList)
 	dm.Items = make([]*Endpoint, 0)
 	return dm
 }
 
-func NewEndpointMap () *EndpointMap {
+func NewEndpointMap() *EndpointMap {
 	dm := new(EndpointMap)
 	dm.Items = make(map[string]*Endpoint)
 	return dm

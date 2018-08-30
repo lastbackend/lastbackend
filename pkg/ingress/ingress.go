@@ -27,8 +27,8 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/ingress/runtime"
 	"github.com/lastbackend/lastbackend/pkg/ingress/state"
 
-		"github.com/lastbackend/lastbackend/pkg/api/client"
-		"github.com/lastbackend/lastbackend/pkg/ingress/envs"
+	"github.com/lastbackend/lastbackend/pkg/api/client"
+	"github.com/lastbackend/lastbackend/pkg/ingress/envs"
 	"github.com/lastbackend/lastbackend/pkg/ingress/events"
 	"github.com/lastbackend/lastbackend/pkg/ingress/events/exporter"
 	"github.com/lastbackend/lastbackend/pkg/log"
