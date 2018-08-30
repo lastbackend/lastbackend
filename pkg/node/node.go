@@ -20,12 +20,12 @@ package node
 
 import (
 	"context"
+	"github.com/lastbackend/lastbackend/pkg/runtime/iri/iri"
 	"os"
 	"os/signal"
 	"syscall"
 
 	"github.com/lastbackend/lastbackend/pkg/node/runtime"
-	"github.com/lastbackend/lastbackend/pkg/node/runtime/node"
 	"github.com/lastbackend/lastbackend/pkg/node/state"
 
 	"github.com/lastbackend/lastbackend/pkg/api/client"
@@ -34,9 +34,10 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/node/events"
 	"github.com/lastbackend/lastbackend/pkg/node/events/exporter"
 	"github.com/lastbackend/lastbackend/pkg/node/http"
-	"github.com/lastbackend/lastbackend/pkg/node/runtime/cni/cni"
-	"github.com/lastbackend/lastbackend/pkg/node/runtime/cpi/cpi"
-	"github.com/lastbackend/lastbackend/pkg/node/runtime/cri/cri"
+	"github.com/lastbackend/lastbackend/pkg/runtime/cni/cni"
+	"github.com/lastbackend/lastbackend/pkg/runtime/cpi/cpi"
+	"github.com/lastbackend/lastbackend/pkg/runtime/cri/cri"
+	"github.com/lastbackend/lastbackend/pkg/runtime/csi/csi"
 	"github.com/spf13/viper"
 )
 
@@ -66,18 +67,35 @@ func Daemon() {
 		log.Errorf("Cannot initialize cni: %v", err)
 	}
 
-	state := state.New()
+	iri, err := iri.New()
+	if err != nil {
+		log.Errorf("Cannot initialize iri: %v", err)
+	}
 
+	csis := viper.GetStringMap("node.csi")
+	if csis != nil {
+		for kind := range csis {
+			si, err := csi.New(kind)
+			if err != nil {
+				log.Errorf("Cannot initialize sni: %s > %v", kind, err)
+			}
+			envs.Get().SetCSI(kind, si)
+		}
+
+	}
+
+	state := state.New()
 	envs.Get().SetState(state)
 	envs.Get().SetCRI(cri)
+	envs.Get().SetIRI(iri)
 	envs.Get().SetCNI(cni)
 	envs.Get().SetCPI(cpi)
 
 	r := runtime.NewRuntime(context.Background())
 	r.Restore()
 
-	state.Node().Info = node.GetInfo()
-	state.Node().Status = node.GetStatus()
+	state.Node().Info = runtime.NodeInfo()
+	state.Node().Status = runtime.NodeStatus()
 
 	cfg := client.NewConfig()
 

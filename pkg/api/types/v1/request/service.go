@@ -21,6 +21,7 @@ package request
 import (
 	"encoding/json"
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
+	"github.com/lastbackend/lastbackend/pkg/log"
 	"gopkg.in/yaml.v2"
 	"strings"
 	"time"
@@ -244,8 +245,14 @@ func (s *ServiceManifest) SetServiceSpec(svc *types.Service) {
 			}
 
 			for _, v := range c.Volumes {
+
+
+
 				var f = false
 				for _, sv := range spec.Volumes {
+
+					log.Info(sv.Name, v.Name)
+
 					if v.Name == sv.Name {
 						f = true
 						if sv.Mode != v.Mode || sv.Path != v.Path {
@@ -257,7 +264,7 @@ func (s *ServiceManifest) SetServiceSpec(svc *types.Service) {
 					}
 				}
 				if !f {
-					spec.Volumes = append(spec.Volumes, types.SpecTemplateContainerVolume{
+					spec.Volumes = append(spec.Volumes, &types.SpecTemplateContainerVolume{
 						Name: v.Name,
 						Mode: v.Mode,
 						Path: v.Path,
@@ -265,7 +272,7 @@ func (s *ServiceManifest) SetServiceSpec(svc *types.Service) {
 				}
 			}
 
-			vlms := make([]types.SpecTemplateContainerVolume, 0)
+			vlms := make([]*types.SpecTemplateContainerVolume, 0)
 			for _, sv := range spec.Volumes {
 				for _, cv := range c.Volumes {
 					if sv.Name == cv.Name {
@@ -276,7 +283,6 @@ func (s *ServiceManifest) SetServiceSpec(svc *types.Service) {
 			}
 
 			if len(vlms) != len(spec.Volumes) {
-
 				svc.Spec.Template.Updated = time.Now()
 			}
 
@@ -302,6 +308,81 @@ func (s *ServiceManifest) SetServiceSpec(svc *types.Service) {
 		}
 
 		svc.Spec.Template.Containers = spcs
+
+
+		for _, v := range s.Spec.Template.Volumes {
+
+			var (
+				f    = false
+				spec *types.SpecTemplateVolume
+			)
+
+			for _, sv := range svc.Spec.Template.Volumes {
+				if v.Name == sv.Name {
+					f = true
+					spec = sv
+				}
+			}
+
+			if spec == nil {
+				spec = new(types.SpecTemplateVolume)
+			}
+
+			if spec.Name == types.EmptyString {
+				spec.Name = v.Name
+				svc.Spec.Template.Updated = time.Now()
+			}
+
+
+			if v.Type != spec.Type || v.From.Name != spec.From.Name {
+				spec.Type = v.Type
+				spec.From.Name = v.From.Name
+				svc.Spec.Template.Updated = time.Now()
+			}
+
+			var e = true
+			for _, vf := range v.From.Files {
+
+				var f = false
+				for _, sf := range spec.From.Files {
+					if vf == sf {
+						f = true
+						break
+					}
+				}
+
+				if !f {
+					e = false
+					break
+				}
+
+			}
+
+			if !e {
+				spec.From.Files = v.From.Files
+				svc.Spec.Template.Updated = time.Now()
+			}
+
+			if !f {
+				svc.Spec.Template.Volumes = append(svc.Spec.Template.Volumes, spec)
+			}
+
+		}
+
+		var vlms = make([]*types.SpecTemplateVolume, 0)
+		for _, ss := range svc.Spec.Template.Volumes {
+			for _, cs := range s.Spec.Template.Volumes {
+				if ss.Name == cs.Name {
+					vlms = append(vlms, ss)
+				}
+			}
+		}
+
+		if len(vlms) != len(svc.Spec.Template.Volumes) {
+			svc.Spec.Template.Updated = time.Now()
+		}
+
+		svc.Spec.Template.Volumes = vlms
 
 	}
 

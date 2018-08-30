@@ -27,6 +27,7 @@ const logLevel = 3
 type State struct {
 	node      *NodeState
 	pods      *PodState
+	images    *ImageState
 	networks  *NetworkState
 	volumes   *VolumesState
 	secrets   *SecretsState
@@ -40,6 +41,10 @@ func (s *State) Node() *NodeState {
 
 func (s *State) Pods() *PodState {
 	return s.pods
+}
+
+func (s *State) Images() *ImageState {
+	return s.images
 }
 
 func (s *State) Networks() *NetworkState {
@@ -75,11 +80,14 @@ func New() *State {
 			containers: make(map[string]*types.PodContainer, 0),
 			pods:       make(map[string]*types.PodStatus, 0),
 		},
+		images: &ImageState{
+			images: make(map[string]*types.Image, 0),
+		},
 		networks: &NetworkState{
 			subnets: make(map[string]types.NetworkState, 0),
 		},
 		volumes: &VolumesState{
-			volumes: make(map[string]types.VolumeSpec, 0),
+			volumes: make(map[string]types.VolumeState, 0),
 		},
 		secrets: &SecretsState{
 			secrets: make(map[string]types.Secret, 0),

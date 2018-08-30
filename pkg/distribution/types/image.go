@@ -18,17 +18,39 @@
 
 package types
 
+import "fmt"
+
+type Image struct {
+	Meta   ImageMeta
+	Status ImageStatus
+	Spec   ImageSpec
+}
+
+type ImageMeta struct {
+	ID   string `json:"id"`
+	Hash string `json:"hash"`
+	Name string `json:"name"`
+}
+
+type ImageStatus struct {
+	State       string `json:"state"`
+	Size        int64  `json:"size"`
+	VirtualSize int64  `json:"virtual_size"`
+}
+
 type ImageSpec struct {
 	// Name full name
 	Name string `json:"name"`
-	// Name pull provision flag
-	Pull bool `json:"image-pull"`
-	// Name Auth base64 encoded string
-	Auth string `json:"auth"`
+	// Secret name for pulling
+	Secret string `json:"auth"`
 }
 
-type ImageInfo struct {
-	ID          string `json:"id"`
-	Size        int64  `json:"size"`
-	VirtualSize int64  `json:"virtual_size"`
+type ImageManifest struct {
+	Name   string `json:"name" yaml:"name"`
+	Auth   string `json:"auth" yaml:"auth"`
+	Policy string `json:"policy" yaml:"policy"`
+}
+
+func (i *Image) SelfLink() string {
+	return fmt.Sprintf("%s", i.Meta.Name)
 }

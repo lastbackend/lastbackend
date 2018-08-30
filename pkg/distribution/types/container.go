@@ -20,6 +20,8 @@ package types
 
 import (
 	"encoding/json"
+	"fmt"
+
 	"time"
 
 	"github.com/lastbackend/lastbackend/pkg/log"
@@ -108,6 +110,43 @@ type ContainerSpec struct {
 	ExtraHosts []string `json:"extra_hosts"`
 	// Should docker publish all exposed port for the container
 	PublishAllPorts bool `json:"publish_all_ports"`
+}
+
+type ContainerManifest struct {
+	// Template container id
+	ID string `json:"id" yaml:"id"`
+	// Template container name
+	Name string `json:"name" yaml:"name"`
+	// Labels list
+	Labels map[string]string `json:"labels" yaml:"labels"`
+	// Template container image
+	Image string `json:"image" yaml:"image"`
+	// Template container ports binding
+	Ports SpecTemplateContainerPorts `json:"ports" yaml:"ports"`
+	// Template container envs
+	Envs []string `json:"env" yaml:"env"`
+	// Template container resources
+	Resources SpecTemplateContainerResources `json:"resources" yaml:"resources"`
+	// Template container exec options
+	Exec SpecTemplateContainerExec `json:"exec" yaml:"exec"`
+	// Template container binds
+	Binds []string `json:"volumes" yaml:"volumes"`
+	// Template container security
+	Security SpecTemplateContainerSecurity `json:"security" yaml:"security"`
+	// Subnet container settings
+	Network SpecTemplateContainerNetwork `json:"network" yaml:"network"`
+	// Container DNS configuration
+	DNS SpecTemplateContainerDNS `json:"dns" yaml:"dns"`
+	// List of extra hosts
+	ExtraHosts []string `json:"extra_hosts" yaml:"extra_hosts"`
+	// Should docker publish all exposed port for the container
+	PublishAllPorts bool `json:"publish" yaml:"publish"`
+	// Links to another containers
+	Links []SpecTemplateContainerLink `json:"links" yaml:"links"`
+	// Restart Policy
+	RestartPolicy SpecTemplateRestartPolicy `json:"restart" yaml:"restart"`
+	// AutoRemove flag
+	AutoRemove bool `json:"autoremove" yaml:"autoremove"`
 }
 
 type ContainerSpecMeta struct {
@@ -324,10 +363,6 @@ func (cs *ContainerSpec) PortsFromString(ports string) {
 	}
 }
 
-const ContainerStateRunning = "running"
-const ContainerStateStopped = "stopped"
-const ContainerStateError = "error"
-const ContainerStatePending = "pending"
 
 func convertSliceToString(slice []string) (string, error) {
 	if slice == nil {
@@ -342,4 +377,35 @@ func convertSliceToString(slice []string) (string, error) {
 		return EmptyStringSlice, nil
 	}
 	return string(res), nil
+}
+
+func NewContainerManifest(spec *SpecTemplateContainer) *ContainerManifest {
+
+	mf := new(ContainerManifest)
+	mf.Name = spec.Name
+	mf.Resources = spec.Resources
+	mf.Image = spec.Image.Name
+	mf.Labels = spec.Labels
+	mf.Ports = spec.Ports
+	mf.Network = spec.Network
+	mf.Exec = spec.Exec
+	mf.DNS = spec.DNS
+	mf.ExtraHosts = spec.ExtraHosts
+	mf.RestartPolicy = spec.RestartPolicy
+	mf.PublishAllPorts = spec.PublishAllPorts
+	mf.Security = spec.Security
+	mf.AutoRemove = spec.AutoRemove
+
+	var envs []string
+	for _, e := range spec.EnvVars {
+		var env string
+		if e.Value == EmptyString {
+			continue
+		}
+		env = fmt.Sprintf("%s=%s", e.Name, e.Value)
+		envs = append(envs, env)
+	}
+
+	mf.Envs = envs
+	return mf
 }

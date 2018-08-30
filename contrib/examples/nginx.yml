@@ -15,8 +15,7 @@ spec:
     containers:
     - name: nginx-proxy
       image:
-        name: undassa/nginx:latest
-        secret: docker
+        name: nginx
       ports:
         - 8080
       env:
@@ -26,10 +25,10 @@ spec:
           from:
             name: demo
             key: test
-
-#      volumes:
-#        - name: demo
-#          mount: "/test:/test"
-#    volumes:
-#      - name: demo
-
+      volumes:
+        - name: demo
+          path: "/usr/share/nginx/html"
+        - name: test
+          path: "/test"
+    volumes:
+      - name: demo

@@ -128,25 +128,6 @@ func (v *Volume) Destroy(volume *types.Volume) error {
 	return nil
 }
 
-func (v *Volume) SetStatus(volume *types.Volume, status *types.VolumeStatus) error {
-	if volume == nil {
-		log.V(logLevel).Warnf("%s:setstatus:> invalid argument %v", logVolumePrefix, volume)
-		return nil
-	}
-
-	log.V(logLevel).Debugf("%s:setstatus:> set state volume %s -> %#v", logVolumePrefix, volume.Meta.Name, status)
-
-	volume.Status = *status
-
-	if err := v.storage.Set(v.context, v.storage.Collection().Volume(),
-		v.storage.Key().Volume(volume.Meta.Namespace, volume.Meta.Name), volume, nil); err != nil {
-		log.Errorf("%s:setstatus:> pod set status err: %v", err)
-		return err
-	}
-
-	return nil
-}
-
 func (v *Volume) Remove(volume *types.Volume) error {
 	log.V(logLevel).Debugf("%s:remove:> remove volume %#v", logVolumePrefix, volume)
 

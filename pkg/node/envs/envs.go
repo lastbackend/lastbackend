@@ -19,13 +19,16 @@
 package envs
 
 import (
+	"errors"
+	"github.com/lastbackend/lastbackend/pkg/api/client/types"
 	"github.com/lastbackend/lastbackend/pkg/cache"
 	"github.com/lastbackend/lastbackend/pkg/node/events/exporter"
-	"github.com/lastbackend/lastbackend/pkg/node/runtime/cni"
-	"github.com/lastbackend/lastbackend/pkg/node/runtime/cpi"
-	"github.com/lastbackend/lastbackend/pkg/node/runtime/cri"
+	"github.com/lastbackend/lastbackend/pkg/runtime/cni"
+	"github.com/lastbackend/lastbackend/pkg/runtime/cpi"
+	"github.com/lastbackend/lastbackend/pkg/runtime/cri"
+	"github.com/lastbackend/lastbackend/pkg/runtime/csi"
 	"github.com/lastbackend/lastbackend/pkg/node/state"
-	"github.com/lastbackend/lastbackend/pkg/api/client/types"
+	"github.com/lastbackend/lastbackend/pkg/runtime/iri"
 )
 
 var e Env
@@ -36,8 +39,11 @@ func Get() *Env {
 
 type Env struct {
 	cri      cri.CRI
+	iri      iri.IRI
 	cni      cni.CNI
 	cpi      cpi.CPI
+	csi      map[string]csi.CSI
+
 	cache    *cache.Cache
 	state    *state.State
 	client   struct {
@@ -55,6 +61,14 @@ func (c *Env) GetCRI() cri.CRI {
 	return c.cri
 }
 
+func (c *Env) SetIRI(iri iri.IRI) {
+	c.iri = iri
+}
+
+func (c *Env) GetIRI() iri.IRI {
+	return c.iri
+}
+
 func (c *Env) SetCNI(n cni.CNI) {
 	c.cni = n
 }
@@ -69,6 +83,18 @@ func (c *Env) SetCPI(cpi cpi.CPI) {
 
 func (c *Env) GetCPI() cpi.CPI {
 	return c.cpi
+}
+
+func (c *Env) SetCSI(kind string, si csi.CSI) {
+	c.csi = make(map[string]csi.CSI)
+	c.csi[kind] = si
+}
+
+func (c *Env) GetCSI(kind string) (csi.CSI, error) {
+	if _, ok := c.csi[kind]; !ok {
+		return nil, errors.New("storage container interface not supported")
+	}
+	return c.csi[kind], nil
 }
 
 func (c *Env) SetCache(s *cache.Cache) {

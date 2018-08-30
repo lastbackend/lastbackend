@@ -21,17 +21,12 @@ package runtime
 import (
 	"context"
 
-	"github.com/lastbackend/lastbackend/pkg/node/runtime/network"
-
 	"time"
 
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 	"github.com/lastbackend/lastbackend/pkg/log"
 	"github.com/lastbackend/lastbackend/pkg/node/envs"
 	"github.com/lastbackend/lastbackend/pkg/node/events"
-	"github.com/lastbackend/lastbackend/pkg/node/runtime/endpoint"
-	"github.com/lastbackend/lastbackend/pkg/node/runtime/pod"
-	"github.com/lastbackend/lastbackend/pkg/node/runtime/volume"
 )
 
 const (
@@ -46,10 +41,10 @@ type Runtime struct {
 
 func (r *Runtime) Restore() {
 	log.V(logLevel).Debugf("%s:restore:> restore init", logNodeRuntimePrefix)
-	network.Restore(r.ctx)
-	volume.Restore(r.ctx)
-	pod.Restore(r.ctx)
-	endpoint.Restore(r.ctx)
+	NetworkRestore(r.ctx)
+	VolumeRestore(r.ctx)
+	PodRestore(r.ctx)
+	EndpointRestore(r.ctx)
 }
 
 func (r *Runtime) Provision(ctx context.Context, spec *types.NodeManifest) error {
@@ -59,7 +54,7 @@ func (r *Runtime) Provision(ctx context.Context, spec *types.NodeManifest) error
 	log.V(logLevel).Debugf("%s> provision networks", logNodeRuntimePrefix)
 	for cidr, n := range spec.Network {
 		log.V(logLevel).Debugf("network: %v", n)
-		if err := network.Manage(ctx, cidr, n); err != nil {
+		if err := NetworkManage(ctx, cidr, n); err != nil {
 			log.Errorf("Subnet [%s] create err: %s", n.CIDR, err.Error())
 		}
 	}
@@ -72,7 +67,7 @@ func (r *Runtime) Provision(ctx context.Context, spec *types.NodeManifest) error
 	log.V(logLevel).Debugf("%s> provision pods", logNodeRuntimePrefix)
 	for p, spec := range spec.Pods {
 		log.V(logLevel).Debugf("pod: %v", p)
-		if err := pod.Manage(ctx, p, spec); err != nil {
+		if err := PodManage(ctx, p, spec); err != nil {
 			log.Errorf("Pod [%s] manage err: %s", p, err.Error())
 		}
 	}
@@ -80,7 +75,7 @@ func (r *Runtime) Provision(ctx context.Context, spec *types.NodeManifest) error
 	log.V(logLevel).Debugf("%s> provision endpoints", logNodeRuntimePrefix)
 	for e, spec := range spec.Endpoints {
 		log.V(logLevel).Debugf("endpoint: %v", e)
-		if err := endpoint.Manage(ctx, e, spec); err != nil {
+		if err := EndpointManage(ctx, e, spec); err != nil {
 			log.Errorf("Endpoint [%s] manage err: %s", e, err.Error())
 		}
 	}
@@ -96,20 +91,10 @@ func (r *Runtime) Provision(ctx context.Context, spec *types.NodeManifest) error
 func (r *Runtime) Subscribe() {
 
 	log.V(logLevel).Debugf("%s:subscribe:> subscribe init", logNodeRuntimePrefix)
-	pc := make(chan string)
 
-	go func() {
-
-		for {
-			select {
-			case p := <-pc:
-				log.V(logLevel).Debugf("%s:subscribe:> new pod state event: %s", logNodeRuntimePrefix, p)
-				events.NewPodStatusEvent(r.ctx, p)
-			}
-		}
-	}()
-
-	envs.Get().GetCRI().Subscribe(r.ctx, envs.Get().GetState().Pods(), pc)
+	if err := containerSubscribe(r.ctx); err != nil {
+		log.Errorf("container subscribe err:", err.Error())
+	}
 }
 
 func (r *Runtime) Connect(ctx context.Context) error {
@@ -161,7 +146,7 @@ func (r *Runtime) Clean(ctx context.Context, manifest *types.NodeManifest) error
 	endpoints := envs.Get().GetState().Endpoints().GetEndpoints()
 	for e := range endpoints {
 		if _, ok := manifest.Endpoints[e]; !ok {
-			endpoint.Destroy(context.Background(), e, endpoints[e])
+			EndpointDestroy(context.Background(), e, endpoints[e])
 		}
 	}
 
@@ -170,7 +155,7 @@ func (r *Runtime) Clean(ctx context.Context, manifest *types.NodeManifest) error
 
 	for k := range pods {
 		if _, ok := manifest.Pods[k]; !ok {
-			pod.Destroy(context.Background(), k, pods[k])
+			PodDestroy(context.Background(), k, pods[k])
 		}
 	}
 
@@ -179,7 +164,7 @@ func (r *Runtime) Clean(ctx context.Context, manifest *types.NodeManifest) error
 
 	for cidr := range nets {
 		if _, ok := manifest.Network[cidr]; !ok {
-			network.Destroy(ctx, cidr)
+			NetworkDestroy(ctx, cidr)
 		}
 	}
 

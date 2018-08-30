@@ -23,7 +23,7 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/distribution/errors"
 	"github.com/lastbackend/lastbackend/pkg/log"
 	"github.com/lastbackend/lastbackend/pkg/node/envs"
-	"github.com/lastbackend/lastbackend/pkg/node/runtime/pod"
+	"github.com/lastbackend/lastbackend/pkg/node/runtime"
 	"net/http"
 )
 
@@ -64,7 +64,7 @@ func PodLogsH(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := pod.Logs(r.Context(), c, true, w, done); err != nil {
+	if err := runtime.PodLogs(r.Context(), c, true, w, done); err != nil {
 		log.Errorf("node:http:pod:get:> get pod logs err: %s", err.Error())
 	}
 

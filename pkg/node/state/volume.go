@@ -26,23 +26,23 @@ import (
 
 type VolumesState struct {
 	lock    sync.RWMutex
-	volumes map[string]types.VolumeSpec
+	volumes map[string]types.VolumeState
 }
 
-func (s *VolumesState) GetVolumes() map[string]types.VolumeSpec {
+func (s *VolumesState) GetVolumes() map[string]types.VolumeState {
 	log.V(logLevel).Debug("Cache: VolumeCache: get pods")
 	return s.volumes
 }
 
-func (s *VolumesState) SetVolumes(key string, volumes []*types.VolumeSpec) {
+func (s *VolumesState) SetVolumes(key string, volumes []*types.VolumeState) {
 	log.V(logLevel).Debugf("Cache: VolumeCache: set volumes: %#v", volumes)
-	for _, secret := range volumes {
-		s.volumes[key] = *secret
+	for _, vol := range volumes {
+		s.volumes[key] = *vol
 	}
 }
 
-func (s *VolumesState) GetVolume(hash string) *types.VolumeSpec {
-	log.V(logLevel).Debugf("Cache: VolumeCache: get secret: %s", hash)
+func (s *VolumesState) GetVolume(hash string) *types.VolumeState {
+	log.V(logLevel).Debugf("Cache: VolumeCache: get volume: %s", hash)
 	s.lock.Lock()
 	defer s.lock.Unlock()
 	v, ok := s.volumes[hash]
@@ -52,28 +52,23 @@ func (s *VolumesState) GetVolume(hash string) *types.VolumeSpec {
 	return &v
 }
 
-func (s *VolumesState) AddVolume(key string, v *types.VolumeSpec) {
+func (s *VolumesState) AddVolume(key string, v *types.VolumeState) {
 	log.V(logLevel).Debugf("Cache: VolumeCache: add volume: %#v", key)
 	s.SetVolume(key, v)
 }
 
-func (s *VolumesState) SetVolume(key string, volume *types.VolumeSpec) {
+func (s *VolumesState) SetVolume(key string, volume *types.VolumeState) {
 	log.V(logLevel).Debugf("Cache: VolumeCache: set volume: %s", key)
 	s.lock.Lock()
 	defer s.lock.Unlock()
-
-	if _, ok := s.volumes[key]; ok {
-		delete(s.volumes, key)
-	}
-
 	s.volumes[key] = *volume
 }
 
-func (s *VolumesState) DelVolume(volume *types.Volume) {
-	log.V(logLevel).Debugf("Cache: VolumeCache: del volume: %#v", volume)
+func (s *VolumesState) DelVolume(key string) {
+	log.V(logLevel).Debugf("Cache: VolumeCache: del volume: %#v", key)
 	s.lock.Lock()
 	defer s.lock.Unlock()
-	if _, ok := s.volumes[volume.Meta.Name]; ok {
-		delete(s.volumes, volume.Meta.Name)
+	if _, ok := s.volumes[key]; ok {
+		delete(s.volumes, key)
 	}
 }
