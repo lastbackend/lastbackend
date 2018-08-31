@@ -20,7 +20,7 @@ package envs
 
 import (
 	"github.com/lastbackend/lastbackend/pkg/api/cache"
-		"github.com/lastbackend/lastbackend/pkg/storage"
+	"github.com/lastbackend/lastbackend/pkg/storage"
 )
 
 var e Env

@@ -23,11 +23,11 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/api/client/types"
 	"github.com/lastbackend/lastbackend/pkg/cache"
 	"github.com/lastbackend/lastbackend/pkg/node/events/exporter"
+	"github.com/lastbackend/lastbackend/pkg/node/state"
 	"github.com/lastbackend/lastbackend/pkg/runtime/cni"
 	"github.com/lastbackend/lastbackend/pkg/runtime/cpi"
 	"github.com/lastbackend/lastbackend/pkg/runtime/cri"
 	"github.com/lastbackend/lastbackend/pkg/runtime/csi"
-	"github.com/lastbackend/lastbackend/pkg/node/state"
 	"github.com/lastbackend/lastbackend/pkg/runtime/iri"
 )
 
@@ -38,15 +38,15 @@ func Get() *Env {
 }
 
 type Env struct {
-	cri      cri.CRI
-	iri      iri.IRI
-	cni      cni.CNI
-	cpi      cpi.CPI
-	csi      map[string]csi.CSI
+	cri cri.CRI
+	iri iri.IRI
+	cni cni.CNI
+	cpi cpi.CPI
+	csi map[string]csi.CSI
 
-	cache    *cache.Cache
-	state    *state.State
-	client   struct {
+	cache  *cache.Cache
+	state  *state.State
+	client struct {
 		node types.NodeClientV1
 		rest types.ClientV1
 	}

@@ -23,13 +23,13 @@ import (
 	"testing"
 
 	"github.com/lastbackend/lastbackend/pkg/controller/envs"
-	"github.com/lastbackend/lastbackend/pkg/distribution/types"
-	"github.com/lastbackend/lastbackend/pkg/storage"
-	"github.com/stretchr/testify/assert"
-	"time"
 	"github.com/lastbackend/lastbackend/pkg/controller/ipam"
 	"github.com/lastbackend/lastbackend/pkg/controller/state/cluster"
+	"github.com/lastbackend/lastbackend/pkg/distribution/types"
+	"github.com/lastbackend/lastbackend/pkg/storage"
 	"github.com/lastbackend/lastbackend/pkg/util/generator"
+	"github.com/stretchr/testify/assert"
+	"time"
 )
 
 func testServiceObserver(t *testing.T, name, werr string, wst *ServiceState, state *ServiceState, svc *types.Service) {

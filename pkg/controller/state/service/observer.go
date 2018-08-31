@@ -23,14 +23,14 @@ import (
 	"sync"
 
 	"github.com/lastbackend/lastbackend/pkg/controller/envs"
+	"github.com/lastbackend/lastbackend/pkg/controller/state/cluster"
 	"github.com/lastbackend/lastbackend/pkg/distribution"
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 	"github.com/lastbackend/lastbackend/pkg/log"
-	"github.com/lastbackend/lastbackend/pkg/controller/state/cluster"
 )
 
 const (
-	logLevel = 3
+	logLevel  = 3
 	logPrefix = "state:service"
 )
 
@@ -202,8 +202,6 @@ func (ss *ServiceState) SetDeployment(d *types.Deployment) {
 }
 
 func (ss *ServiceState) DelDeployment(d *types.Deployment) {
-
-
 
 	if _, ok := ss.pod.list[d.SelfLink()]; !ok {
 		return

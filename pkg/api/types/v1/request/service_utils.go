@@ -29,7 +29,6 @@ import (
 
 type ServiceRequest struct{}
 
-
 func (ServiceRequest) Manifest() *ServiceManifest {
 	return new(ServiceManifest)
 }
@@ -46,7 +45,6 @@ func (s *ServiceManifest) Validate() *errors.Err {
 }
 
 func (s *ServiceManifest) DecodeAndValidate(reader io.Reader) *errors.Err {
-
 
 	if reader == nil {
 		err := errors.New("data body can not be null")

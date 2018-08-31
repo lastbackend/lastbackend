@@ -42,7 +42,6 @@ type Logger struct {
 	log   *logrus.Logger
 	lv    Verbose
 	ev    Verbose
-
 }
 
 type Level int

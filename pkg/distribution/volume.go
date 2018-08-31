@@ -21,14 +21,14 @@ package distribution
 import (
 	"context"
 
+	"encoding/json"
+	"fmt"
 	"github.com/lastbackend/lastbackend/pkg/distribution/errors"
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 	"github.com/lastbackend/lastbackend/pkg/log"
 	"github.com/lastbackend/lastbackend/pkg/storage"
 	"github.com/lastbackend/lastbackend/pkg/util/generator"
-	"fmt"
 	"regexp"
-	"encoding/json"
 )
 
 const (
@@ -223,7 +223,6 @@ func (v *Volume) ManifestGet(node, volume string) (*types.VolumeManifest, error)
 func (v *Volume) ManifestAdd(node, volume string, manifest *types.VolumeManifest) error {
 	log.V(logLevel).Debugf("%s:VolumeManifestAdd:> ", logVolumePrefix)
 
-
 	if err := v.storage.Put(v.context, v.storage.Collection().Manifest().Volume(node), volume, manifest, nil); err != nil {
 		log.Errorf("%s:VolumeManifestAdd:> err :%s", logVolumePrefix, err.Error())
 		return err
@@ -260,7 +259,6 @@ func (v *Volume) ManifestWatch(node string, ch chan types.VolumeManifestEvent, r
 
 	done := make(chan bool)
 	watcher := storage.NewWatcher()
-
 
 	var f, c string
 

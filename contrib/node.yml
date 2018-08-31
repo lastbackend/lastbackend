@@ -1,9 +1,7 @@
 ---
-
 # Runtime
 verbose: 3
 token: lstbknd
-
 api:
   uri: "127.0.0.1:2967"
   tls:
@@ -11,7 +9,6 @@ api:
     ca: "/opt/cert/lastbackend/ca.pem"
     cert: "/opt/cert/lastbackend/client.pem"
     key: "/opt/cert/lastbackend/client-key.pem"
-
 node:
   host: 0.0.0.0
   port: 2969
@@ -24,12 +21,15 @@ node:
     client_key: "/opt/cert/node/client-key.pem"
   cri:
     type: "docker"
+  iri:
+    type: "docker"
   cni:
     type: "vxlan"
   cpi:
     type: "ipvs"
-  volume: "/var/lib/lastbackend/"
-
+  csi:
+    local:
+      root: "/private/var/lib/lastbackend/"
 # Runtime
 runtime:
   type: "docker"

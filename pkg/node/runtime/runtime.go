@@ -31,7 +31,7 @@ import (
 
 const (
 	logNodeRuntimePrefix = "node:runtime"
-	logLevel = 3
+	logLevel             = 3
 )
 
 type Runtime struct {
@@ -93,7 +93,7 @@ func (r *Runtime) Subscribe() {
 	log.V(logLevel).Debugf("%s:subscribe:> subscribe init", logNodeRuntimePrefix)
 
 	if err := containerSubscribe(r.ctx); err != nil {
-		log.Errorf("container subscribe err:", err.Error())
+		log.Errorf("container subscribe err: %v", err)
 	}
 }
 
@@ -184,7 +184,7 @@ func (r *Runtime) Loop() {
 
 				if clean {
 					if err := r.Clean(ctx, spec); err != nil {
-						log.Errorf("%s:loop:> clean err: %s", err.Error())
+						log.Errorf("%s:loop:> clean err: %s", logEndpointPrefix, err.Error())
 						continue
 					}
 					clean = false

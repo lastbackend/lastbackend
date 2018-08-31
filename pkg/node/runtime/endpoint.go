@@ -75,7 +75,7 @@ func EndpointRestore(ctx context.Context) error {
 	cpi := envs.Get().GetCPI()
 	endpoints, err := cpi.Info(ctx)
 	if err != nil {
-		log.Errorf("%s restore error: %s", err.Error())
+		log.Errorf("%s restore error: %s", logEndpointPrefix, err.Error())
 		return err
 	}
 	envs.Get().GetState().Endpoints().SetEndpoints(endpoints)

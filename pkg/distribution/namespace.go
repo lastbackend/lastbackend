@@ -42,9 +42,8 @@ type Namespace struct {
 	storage storage.Storage
 }
 
-
 type NM struct {
-	Meta struct{}
+	Meta   struct{}
 	Entity Namespace
 }
 
@@ -91,8 +90,6 @@ func (n *Namespace) Get(name string) (*types.Namespace, error) {
 		log.V(logLevel).Errorf("%s:get:> get namespace by name `%s` err: %v", logNamespacePrefix, name, err)
 		return nil, err
 	}
-
-
 
 	return namespace, nil
 }

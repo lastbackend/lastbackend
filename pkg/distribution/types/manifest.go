@@ -28,7 +28,6 @@ type NodeManifest struct {
 	Volumes   map[string]*VolumeManifest   `json:"volumes"`
 }
 
-
 type PodManifest PodSpec
 
 type PodManifestList struct {
@@ -41,7 +40,6 @@ type PodManifestMap struct {
 	Items map[string]*PodManifest
 }
 
-
 type VolumeManifest VolumeSpec
 
 type VolumeManifestList struct {
@@ -53,7 +51,6 @@ type VolumeManifestMap struct {
 	Runtime
 	Items map[string]*VolumeManifest
 }
-
 
 type SubnetManifest struct {
 	Runtime
@@ -70,11 +67,10 @@ type SubnetManifestMap struct {
 	Items map[string]*SubnetManifest
 }
 
-
 type EndpointManifest struct {
 	Runtime
 	EndpointSpec `json:",inline"`
-	Upstreams []string `json:"upstreams"`
+	Upstreams    []string `json:"upstreams"`
 }
 
 type EndpointManifestList struct {
@@ -87,11 +83,10 @@ type EndpointManifestMap struct {
 	Items map[string]*EndpointManifest
 }
 
-
 type SecretManifest struct {
 	Runtime
-	State   string `json:"state"`
-	Kind    string `json:"kind"`
+	State   string    `json:"state"`
+	Kind    string    `json:"kind"`
 	Created time.Time `json:"created"`
 	Updated time.Time `json:"updated"`
 }
@@ -106,7 +101,6 @@ type SecretManifestMap struct {
 	Items map[string]*SecretManifest
 }
 
-
 func NewPodManifestList() *PodManifestList {
 	dm := new(PodManifestList)
 	dm.Items = make([]*PodManifest, 0)
@@ -118,7 +112,6 @@ func NewPodManifestMap() *PodManifestMap {
 	dm.Items = make(map[string]*PodManifest)
 	return dm
 }
-
 
 func NewVolumeManifestList() *VolumeManifestList {
 	dm := new(VolumeManifestList)
@@ -132,8 +125,6 @@ func NewVolumeManifestMap() *VolumeManifestMap {
 	return dm
 }
 
-
-
 func NewSubnetManifestList() *SubnetManifestList {
 	dm := new(SubnetManifestList)
 	dm.Items = make([]*SubnetManifest, 0)
@@ -146,7 +137,6 @@ func NewSubnetManifestMap() *SubnetManifestMap {
 	return dm
 }
 
-
 func NewEndpointManifestList() *EndpointManifestList {
 	dm := new(EndpointManifestList)
 	dm.Items = make([]*EndpointManifest, 0)
@@ -158,7 +148,6 @@ func NewEndpointManifestMap() *EndpointManifestMap {
 	dm.Items = make(map[string]*EndpointManifest)
 	return dm
 }
-
 
 func NewSecretManifestList() *SecretManifestList {
 	dm := new(SecretManifestList)

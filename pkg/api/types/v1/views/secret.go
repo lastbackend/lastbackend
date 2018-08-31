@@ -19,8 +19,8 @@
 package views
 
 import (
-	"time"
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
+	"time"
 )
 
 // swagger:model views_secret
@@ -44,7 +44,7 @@ type SecretMap map[string]*Secret
 // swagger:model views_secret_list
 type SecretList []*Secret
 
-func (s *Secret) Decode () *types.Secret {
+func (s *Secret) Decode() *types.Secret {
 
 	o := new(types.Secret)
 	o.Meta.Name = s.Meta.Name

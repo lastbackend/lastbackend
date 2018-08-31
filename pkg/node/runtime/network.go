@@ -29,7 +29,7 @@ func NetworkRestore(ctx context.Context) error {
 
 	sn, err := envs.Get().GetCNI().Subnets(ctx)
 	if err != nil {
-		log.Errorf("Can-not get subnets from CNI", err.Error())
+		log.Errorf("Can-not get subnets from CNI err: %v", err)
 	}
 
 	for cidr, s := range sn {

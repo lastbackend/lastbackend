@@ -24,9 +24,13 @@
 #   go-tests = true
 #   unused-packages = true
 
-[[constraint]]
-  name = "github.com/ararog/timeago"
-  version = "0.0.1"
+# To use reference package:
+#   vendor/github.com/docker/docker/client/container_commit.go:17: undefined: reference.ParseNormalizedNamed
+#   vendor/github.com/docker/docker/client/container_commit.go:25: undefined: reference.TagNameOnly
+#   vendor/github.com/docker/docker/client/container_commit.go:30: undefined: reference.FamiliarName
+[[override]]
+  name = "github.com/docker/distribution"
+  branch = "master"
 
 [[constraint]]
   name = "github.com/asaskevich/govalidator"
@@ -46,7 +50,7 @@
 
 [[constraint]]
   name = "github.com/docker/go-connections"
-  revision = "7395e3f8aa162843a74ed6d48e79627d9792ac55"
+  revision = "master"
 
 [[constraint]]
   name = "github.com/gorilla/mux"
@@ -55,10 +59,6 @@
 [[constraint]]
   name = "github.com/gorilla/websocket"
   version = "1.2.0"
-
-[[constraint]]
-  name = "github.com/mattn/go-runewidth"
-  version = "0.0.2"
 
 [[constraint]]
   name = "github.com/miekg/dns"
@@ -91,10 +91,6 @@
 [[constraint]]
   name = "github.com/stretchr/testify"
   version = "1.2.1"
-
-[[constraint]]
-  name = "github.com/unloop/gopipe"
-  version = "0.2.0"
 
 [[constraint]]
   name = "github.com/vishvananda/netlink"

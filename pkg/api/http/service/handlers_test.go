@@ -686,8 +686,6 @@ func TestServiceUpdate(t *testing.T) {
 					}
 				}
 
-
-
 				if !assert.Equal(t, len(tc.want.Spec.Template.Volumes), len(s.Spec.Template.Volumes), "volumes specs count not equal") {
 					return
 				}
@@ -902,7 +900,7 @@ func getServiceManifest(name, image string) *request.ServiceManifest {
 		volume = request.ManifestSpecTemplateVolume{
 			Name: "demo",
 			From: request.ManifestSpecTemplateSecretVolume{
-				Name: "test",
+				Name:  "test",
 				Files: []string{"1.txt"},
 			},
 		}

@@ -81,7 +81,7 @@ type SpecTemplateSecretVolume struct {
 	// Secret name to mount
 	Name string `json:"name"`
 	// Secret file key
-	Files  []string `json:"key"`
+	Files []string `json:"key"`
 }
 
 // swagger:ignore
@@ -229,7 +229,6 @@ type SpecVolumeResource struct {
 	Size int64 `json:"size"`
 }
 
-
 // swagger:model types_spec_template_container_exec
 type SpecTemplateContainerExec struct {
 	Command []string `json:"command"`
@@ -374,7 +373,6 @@ type SpecTrigger struct {
 
 // swagger:model types_spec_selector
 type SpecSelector struct {
-
 	Labels map[string]string `json:"labels"`
 
 	Node string `json:"node"`

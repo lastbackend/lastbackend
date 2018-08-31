@@ -144,7 +144,6 @@ func PodCreate(ctx context.Context, key string, manifest *types.PodManifest) (*t
 		envs.Get().GetState().Pods().SetPod(key, status)
 	}
 
-
 	log.V(logLevel).Debugf("Have %d containers", len(manifest.Template.Containers))
 	for _, c := range manifest.Template.Containers {
 		log.V(logLevel).Debug("Pull images for pod if needed")
@@ -166,7 +165,6 @@ func PodCreate(ctx context.Context, key string, manifest *types.PodManifest) (*t
 
 	envs.Get().GetState().Pods().SetPod(key, status)
 	events.NewPodStatusEvent(ctx, key)
-
 
 	for _, s := range manifest.Template.Containers {
 		for _, e := range s.EnvVars {
@@ -320,6 +318,10 @@ func PodRestore(ctx context.Context) error {
 	}
 
 	for _, c := range cl {
+
+		if c.Pod != types.ContainerTypeLBC {
+			continue
+		}
 
 		log.V(logLevel).Debugf("Pod [%s] > container restore %s", c.Pod, c.ID)
 
@@ -485,8 +487,6 @@ func PodVolumeCreate(ctx context.Context, pod string, spec *types.SpecTemplateVo
 			Type: types.VOLUMETYPELOCAL,
 		}
 	)
-
-
 
 	st, err := VolumeCreate(ctx, name, &vm)
 	if err != nil {

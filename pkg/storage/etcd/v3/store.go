@@ -26,6 +26,8 @@ import (
 	"strings"
 
 	"github.com/coreos/etcd/clientv3"
+	"github.com/coreos/etcd/etcdserver/etcdserverpb"
+	"github.com/coreos/etcd/mvcc/mvccpb"
 	"github.com/lastbackend/lastbackend/pkg/log"
 	"github.com/lastbackend/lastbackend/pkg/storage/etcd/store"
 	"github.com/lastbackend/lastbackend/pkg/storage/types"
@@ -33,9 +35,7 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/util/serializer"
 	"github.com/lastbackend/lastbackend/pkg/util/validator"
 	"golang.org/x/net/context"
-	"github.com/coreos/etcd/etcdserver/etcdserverpb"
-	"github.com/coreos/etcd/mvcc/mvccpb"
-	)
+)
 
 type dbstore struct {
 	store.Store
@@ -52,7 +52,6 @@ func (s *dbstore) Info(ctx context.Context, key string) (*types.Runtime, error) 
 
 	key = path.Join(s.pathPrefix, key)
 	r := new(types.Runtime)
-
 
 	log.V(logLevel).Debugf("%s:count:> key: %s with filter: %s", logPrefix, key)
 
@@ -137,7 +136,6 @@ func (s *dbstore) Put(ctx context.Context, key string, obj, outPtr interface{}, 
 
 func (s *dbstore) Get(ctx context.Context, key string, outPtr interface{}, rev *int64) error {
 
-
 	key = path.Join(s.pathPrefix, key)
 
 	log.V(logLevel).Debugf("%s:get:> key: %s", key)
@@ -195,7 +193,6 @@ func (s *dbstore) List(ctx context.Context, key, keyRegexFilter string, listOutP
 		log.V(logLevel).Errorf("%s:list:> decode data err: %v", logPrefix, err)
 		return err
 	}
-
 
 	if err := setEntityRuntimeInfo(listOutPtr, getRuntimeFromResponse(getResp.Header)); err != nil {
 		log.V(logLevel).Errorf("%s:get:> can not set runtime info err: %v", logPrefix, err)
@@ -342,11 +339,10 @@ func (s *dbstore) Decode(ctx context.Context, value []byte, out interface{}) err
 	return decode(s.codec, value, out)
 }
 
-
-func setEntityRuntimeInfo(out interface{}, runtime types.Runtime)  error {
+func setEntityRuntimeInfo(out interface{}, runtime types.Runtime) error {
 
 	var (
-		v reflect.Value
+		v   reflect.Value
 		err error
 	)
 
@@ -360,10 +356,10 @@ func setEntityRuntimeInfo(out interface{}, runtime types.Runtime)  error {
 	}
 
 	setValueRuntimeInfo(v, runtime)
-	return  nil
+	return nil
 }
 
-func setValueRuntimeInfo(v reflect.Value, runtime types.Runtime)  error {
+func setValueRuntimeInfo(v reflect.Value, runtime types.Runtime) error {
 
 	if v.Kind() != reflect.Struct {
 		return nil
@@ -383,7 +379,6 @@ func setValueRuntimeInfo(v reflect.Value, runtime types.Runtime)  error {
 
 	return nil
 }
-
 
 func getRuntimeFromResponse(res *etcdserverpb.ResponseHeader) types.Runtime {
 	runtime := types.Runtime{}

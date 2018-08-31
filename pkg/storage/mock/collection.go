@@ -119,7 +119,6 @@ func (Collection) Test() string {
 	return testCollection
 }
 
-
 func (ManifestCollection) Node() string {
 	return fmt.Sprintf("%s/%s", manifestCollection, nodeCollection)
 }

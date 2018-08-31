@@ -23,6 +23,6 @@ type Runtime struct {
 }
 
 type RuntimeSystem struct {
-	Revision int64 `json:"-"`
-	Key string `json:"-"`
+	Revision int64  `json:"-"`
+	Key      string `json:"-"`
 }

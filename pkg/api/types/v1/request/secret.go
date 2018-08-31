@@ -20,15 +20,15 @@ package request
 
 // swagger:model request_secret_create
 type SecretCreateOptions struct {
-	Name string `json:"name"`
-	Kind string `json:"kind"`
+	Name string            `json:"name"`
+	Kind string            `json:"kind"`
 	Data map[string][]byte `json:"data,omitempty"`
 }
 
 // swagger:model request_secret_update
 type SecretUpdateOptions struct {
-	Kind string `json:"kind"`
-	Data  map[string][]byte `json:"data"`
+	Kind string            `json:"kind"`
+	Data map[string][]byte `json:"data"`
 }
 
 // swagger:ignore

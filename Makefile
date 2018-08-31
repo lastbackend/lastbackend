@@ -26,12 +26,6 @@ build:
 	@echo "== Building Last.Backend platform"
 	@bash ./hack/build-cross.sh
 
-build-cli:
-	@echo "== Pre-building cli configuration"
-	mkdir -p build/linux && mkdir -p build/darwin
-	@echo "== Building Last.Backend CLI"
-	@bash ./hack/build-cross.sh cli
-
 install:
 	@echo "== Install binaries"
 	@bash ./hack/install-cross.sh

@@ -20,18 +20,18 @@ package http
 
 import (
 	"github.com/gorilla/mux"
-	"github.com/lastbackend/lastbackend/pkg/util/http"
 	"github.com/lastbackend/lastbackend/pkg/api/http/cluster"
 	"github.com/lastbackend/lastbackend/pkg/api/http/deployment"
 	"github.com/lastbackend/lastbackend/pkg/api/http/events"
 	"github.com/lastbackend/lastbackend/pkg/api/http/ingress"
 	"github.com/lastbackend/lastbackend/pkg/api/http/namespace"
 	"github.com/lastbackend/lastbackend/pkg/api/http/node"
+	"github.com/lastbackend/lastbackend/pkg/api/http/secret"
 	"github.com/lastbackend/lastbackend/pkg/api/http/service"
 	"github.com/lastbackend/lastbackend/pkg/api/http/trigger"
 	"github.com/lastbackend/lastbackend/pkg/log"
+	"github.com/lastbackend/lastbackend/pkg/util/http"
 	"github.com/lastbackend/lastbackend/pkg/util/http/cors"
-	"github.com/lastbackend/lastbackend/pkg/api/http/secret"
 )
 
 const (
@@ -62,7 +62,6 @@ func init() {
 	AddRoutes(cluster.Routes)
 	AddRoutes(node.Routes)
 	AddRoutes(ingress.Routes)
-
 
 	// Secrets
 	AddRoutes(secret.Routes)

@@ -21,11 +21,11 @@ package distribution
 import (
 	"context"
 
+	"encoding/json"
 	"github.com/lastbackend/lastbackend/pkg/distribution/errors"
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 	"github.com/lastbackend/lastbackend/pkg/log"
 	"github.com/lastbackend/lastbackend/pkg/storage"
-	"encoding/json"
 )
 
 const (
@@ -107,7 +107,6 @@ func (n *Secret) Update(secret *types.Secret, opts *types.SecretUpdateOptions) (
 	secret.Meta.Kind = opts.Kind
 	secret.Data = opts.Data
 
-
 	if err := n.storage.Set(n.context, n.storage.Collection().Secret(),
 		n.storage.Key().Secret(secret.Meta.Name), secret, nil); err != nil {
 		log.V(logLevel).Errorf("%s:update:> update secret err: %s", logSecretPrefix, err)
@@ -173,7 +172,6 @@ func (n *Secret) Watch(ch chan types.SecretEvent, rev *int64) error {
 
 	return nil
 }
-
 
 func NewSecretModel(ctx context.Context, stg storage.Storage) *Secret {
 	return &Secret{ctx, stg}

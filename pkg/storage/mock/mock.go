@@ -20,15 +20,15 @@ package mock
 
 import (
 	"context"
-		"strings"
+	"strings"
 
 	"reflect"
 
 	"encoding/json"
 
+	"github.com/lastbackend/lastbackend/pkg/distribution/errors"
 	"github.com/lastbackend/lastbackend/pkg/storage/types"
 	"github.com/lastbackend/lastbackend/pkg/util/converter"
-	"github.com/lastbackend/lastbackend/pkg/distribution/errors"
 )
 
 type Storage struct {
@@ -142,7 +142,6 @@ func (s *Storage) Map(ctx context.Context, collection string, q string, obj inte
 
 	buffer = append(buffer, []byte("}")...)
 
-
 	f := v.FieldByName("Items")
 	if f.Kind() != reflect.Map {
 		return errors.New(types.ErrStructOutIsInvalid)
@@ -208,7 +207,7 @@ func (s *Storage) Set(ctx context.Context, collection string, name string, obj i
 	return nil
 }
 
-func (s *Storage) Del(ctx context.Context, collection string, name string)  error {
+func (s *Storage) Del(ctx context.Context, collection string, name string) error {
 	s.check(collection)
 	if name == "" {
 		s.store[collection] = make(map[string][]byte)
@@ -218,7 +217,7 @@ func (s *Storage) Del(ctx context.Context, collection string, name string)  erro
 	return nil
 }
 
-func (s *Storage) Watch(ctx context.Context, collection string, event chan *types.WatcherEvent, opts *types.Opts)  error {
+func (s *Storage) Watch(ctx context.Context, collection string, event chan *types.WatcherEvent, opts *types.Opts) error {
 	s.check(collection)
 	return nil
 }
@@ -234,8 +233,6 @@ func (s Storage) Key() types.Key {
 func (s Storage) Collection() types.Collection {
 	return new(Collection)
 }
-
-
 
 func (s *Storage) check(kind string) {
 	if _, ok := s.store[kind]; !ok {

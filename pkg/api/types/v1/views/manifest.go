@@ -19,12 +19,12 @@
 package views
 
 type ManifestSpecSelector struct {
-	Node   string           `json:"node,omitempty" yaml:"node,omitempty"`
+	Node   string            `json:"node,omitempty" yaml:"node,omitempty"`
 	Labels map[string]string `json:"labels,omitempty" yaml:"labels,omitempty"`
 }
 
 type ManifestSpecNetwork struct {
-	IP    string           `json:"ip,omitempty" yaml:"ip,omitempty"`
+	IP    string            `json:"ip,omitempty" yaml:"ip,omitempty"`
 	Ports map[uint16]string `json:"ports,omitempty" yaml:"ports,omitempty"`
 }
 
@@ -94,14 +94,12 @@ type ManifestSpecTemplateVolume struct {
 	// Template volume type
 	Type string `json:"type,omitempty" yaml:"type,omitempty"`
 	// Template volume from secret type
-	From  ManifestSpecTemplateSecretVolume `json:"from,omitempty" yaml:"from,omitempty"`
+	From ManifestSpecTemplateSecretVolume `json:"from,omitempty" yaml:"from,omitempty"`
 }
 
 type ManifestSpecTemplateSecretVolume struct {
 	// Secret name to mount
 	Name string `json:"name,omitempty" yaml:"name,omitempty"`
 	// Secret file key
-	Files  []string `json:"files,omitempty" yaml:"files,omitempty"`
+	Files []string `json:"files,omitempty" yaml:"files,omitempty"`
 }
-
-

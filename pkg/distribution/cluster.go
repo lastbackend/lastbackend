@@ -27,7 +27,7 @@ import (
 
 	"encoding/json"
 
-		"github.com/lastbackend/lastbackend/pkg/distribution/errors"
+	"github.com/lastbackend/lastbackend/pkg/distribution/errors"
 )
 
 const (

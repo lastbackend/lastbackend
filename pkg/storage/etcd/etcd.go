@@ -64,7 +64,7 @@ func New() (*Storage, error) {
 	s.client = new(client)
 
 	if s.client.store, s.client.dfunc, err = v3.GetClient(config); err != nil {
-		log.Errorf("%s: store initialize err: %v", err)
+		log.Errorf("%s: store initialize err: %v", logPrefix, err)
 		return nil, err
 	}
 
@@ -130,9 +130,9 @@ func (s Storage) Put(ctx context.Context, collection string, name string, obj in
 func (s Storage) Set(ctx context.Context, collection string, name string, obj interface{}, opts *types.Opts) error {
 
 	var (
-		rev *int64
+		rev   *int64
 		force bool
-		ttl uint64
+		ttl   uint64
 	)
 
 	if opts != nil {

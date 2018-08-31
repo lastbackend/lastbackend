@@ -20,8 +20,7 @@ package etcd
 
 import (
 	"fmt"
-
-	)
+)
 
 type Key struct{}
 

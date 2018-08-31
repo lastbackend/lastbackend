@@ -23,9 +23,9 @@ import (
 
 	"github.com/lastbackend/lastbackend/pkg/controller/envs"
 	"github.com/lastbackend/lastbackend/pkg/distribution"
+	"github.com/lastbackend/lastbackend/pkg/distribution/errors"
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 	"github.com/lastbackend/lastbackend/pkg/log"
-	"github.com/lastbackend/lastbackend/pkg/distribution/errors"
 )
 
 const logEndpointPrefix = "state:observer:endpoint"
@@ -247,7 +247,7 @@ func endpointManifestUpstreamsEqual(m *types.EndpointManifest, pl map[string]*ty
 	}
 
 	for _, ip := range m.Upstreams {
-		ups[ip]=true
+		ups[ip] = true
 	}
 
 	for _, ip := range ips {
@@ -258,7 +258,6 @@ func endpointManifestUpstreamsEqual(m *types.EndpointManifest, pl map[string]*ty
 
 	return true
 }
-
 
 func endpointManifestProvision(ss *ServiceState) error {
 
@@ -374,7 +373,7 @@ func endpointManifestGetUpstreams(pl map[string]*types.Pod) []string {
 
 	ips := make([]string, 0)
 
-	for _, p :=range pl {
+	for _, p := range pl {
 		if p.Status.State == types.StateReady && p.Status.Network.PodIP != types.EmptyString {
 			ips = append(ips, p.Status.Network.PodIP)
 		}
