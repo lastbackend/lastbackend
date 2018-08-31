@@ -6,7 +6,7 @@ govendor sync
 mkdir -p build/linux && mkdir -p build/darwin
 
 ## declare an array of components variable
-declare -a arr=("kit" "node"")
+declare -a arr=("kit" "node")
 
 if [[ $1 != "" ]]; then
   arr=($1)
