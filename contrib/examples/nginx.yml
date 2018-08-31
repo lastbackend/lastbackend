@@ -10,7 +10,7 @@ spec:
     node:
     labels:
       type: "frontend"
-  replicas: 3
+  replicas: 1
   template:
     containers:
     - name: nginx-proxy
@@ -19,7 +19,7 @@ spec:
       ports:
         - 8080
       env:
-        - name: demo
+        - name: demo2
           value: test
         - name: secret
           from:
