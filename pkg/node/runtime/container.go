@@ -33,10 +33,10 @@ func containerInspect(ctx context.Context, status *types.PodStatus, container *t
 	if err != nil {
 		switch err {
 		case context.Canceled:
-			log.Errorf("Stop inspect container %s: %s", err.Error())
+			log.Errorf("Stop inspect container err: %v", err)
 			return nil
 		}
-		log.Errorf("Can-not inspect container: %s", err)
+		log.Errorf("Can-not inspect container: %v", err)
 		return err
 	} else {
 		container.Image = types.PodContainerImage{

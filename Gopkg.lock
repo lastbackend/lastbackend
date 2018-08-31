@@ -47,13 +47,13 @@
   version = "v1.1.1"
 
 [[projects]]
+  branch = "master"
   name = "github.com/docker/distribution"
   packages = [
-    "digest",
+    "digestset",
     "reference"
   ]
-  revision = "48294d928ced5dd9b378f7fd7c6f5da3ff3f2c89"
-  version = "v2.6.2"
+  revision = "90705d2fb81dda1466be49bd958ed8a0dd9a6145"
 
 [[projects]]
   name = "github.com/docker/docker"
@@ -85,7 +85,7 @@
     "sockets",
     "tlsconfig"
   ]
-  revision = "7395e3f8aa162843a74ed6d48e79627d9792ac55"
+  revision = "master"
 
 [[projects]]
   name = "github.com/docker/go-units"
@@ -182,12 +182,6 @@
   packages = ["."]
   revision = "c2353362d570a7bfa228149c62842019201cfb71"
   version = "v1.8.0"
-
-[[projects]]
-  name = "github.com/mattn/go-runewidth"
-  packages = ["."]
-  revision = "ce7b0b5c7b45a81508558cd1dba6bb1e4ddb51bb"
-  version = "v0.0.3"
 
 [[projects]]
   name = "github.com/miekg/dns"
@@ -450,6 +444,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "ffe31a851f229e19ad082c3cf25f9f9efa485f5c24d78cea44b486a8fdf063c2"
+  inputs-digest = "a5d2cf1690835984f44f40d52fdbbec0fdfb58d4639d084e12260cc9d7e92c63"
   solver-name = "gps-cdcl"
   solver-version = 1

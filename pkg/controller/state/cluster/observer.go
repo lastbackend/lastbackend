@@ -28,7 +28,10 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/log"
 )
 
-const logLevel = 3
+const (
+	logLevel = 3
+	logPrefix = "observer:cluster"
+)
 
 // ClusterState is cluster current state struct
 type ClusterState struct {
@@ -178,7 +181,7 @@ func (cs *ClusterState) PodLease(p *types.Pod) (*types.Node, error) {
 
 	node, err := cs.lease(opts)
 	if err != nil {
-		log.Errorf("%s:> pod lease err: %s", err)
+		log.Errorf("%s:> pod lease err: %s", logPrefix, err)
 		return nil, err
 	}
 
@@ -199,7 +202,7 @@ func (cs *ClusterState) PodRelease(p *types.Pod) (*types.Node, error) {
 
 	node, err := cs.release(opts)
 	if err != nil {
-		log.Errorf("%s:> pod lease err: %s", err)
+		log.Errorf("%s:> pod lease err: %s", logPrefix, err)
 		return nil, err
 	}
 

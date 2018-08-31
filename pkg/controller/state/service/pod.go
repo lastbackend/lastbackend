@@ -187,7 +187,7 @@ func podProvision(ss *ServiceState, p *types.Pod) (err error) {
 
 		node, err = ss.cluster.PodLease(p)
 		if err != nil {
-			log.Errorf("%s:> pod node lease err: %s", err.Error())
+			log.Errorf("%s:> pod node lease err: %s", logPrefix, err.Error())
 			return err
 		}
 
@@ -203,7 +203,7 @@ func podProvision(ss *ServiceState, p *types.Pod) (err error) {
 	}
 
 	if err = podManifestPut(p); err != nil {
-		log.Errorf("%s:> pod manifest create err: %s", err.Error())
+		log.Errorf("%s:> pod manifest create err: %s", logPrefix, err.Error())
 		return err
 	}
 

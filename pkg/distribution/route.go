@@ -161,7 +161,7 @@ func (n *Route) SetStatus(route *types.Route, status *types.RouteStatus) error {
 	route.Status = *status
 	if err := n.storage.Set(n.context, n.storage.Collection().Route(),
 		n.storage.Key().Route(route.Meta.Namespace, route.Meta.Name), route, nil); err != nil {
-		log.Errorf("%s:setstatus:> pod set status err: %v", err)
+		log.Errorf("%s:setstatus:> pod set status err: %v", logRoutePrefix, err)
 		return err
 	}
 

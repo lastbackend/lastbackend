@@ -64,7 +64,7 @@ func New() (*Storage, error) {
 	s.client = new(client)
 
 	if s.client.store, s.client.dfunc, err = v3.GetClient(config); err != nil {
-		log.Errorf("%s: store initialize err: %v", err)
+		log.Errorf("%s: store initialize err: %v", logPrefix, err)
 		return nil, err
 	}
 
