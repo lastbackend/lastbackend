@@ -43,7 +43,7 @@ func (r *Runtime) List(ctx context.Context, all bool) ([]*types.Container, error
 
 		c, err := r.Inspect(ctx, item.ID)
 		if err != nil {
-			log.Errorf("Can-not inspect container", err.Error())
+			log.Errorf("Can-not inspect container err: %v", err)
 			continue
 		}
 

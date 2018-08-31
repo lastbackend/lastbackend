@@ -54,7 +54,7 @@ func (c *CacheNodeManifest) SetPodManifest(node, pod string, s *types.PodManifes
 }
 
 func (c *CacheNodeManifest) DelPodManifest(node, pod string) {
-	log.Infof("%s:PodManifestDel:> %s, %s", node, pod)
+	log.Infof("%s:PodManifestDel:> %s, %s", logCacheNode, node, pod)
 	c.lock.Lock()
 	defer c.lock.Unlock()
 

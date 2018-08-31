@@ -5,7 +5,7 @@ token: lstbknd
 api:
   uri: "127.0.0.1:2967"
   tls:
-    insecure: true
+    insecure: false
     ca: "/opt/cert/lastbackend/ca.pem"
     cert: "/opt/cert/lastbackend/client.pem"
     key: "/opt/cert/lastbackend/client-key.pem"
@@ -13,7 +13,7 @@ node:
   host: 0.0.0.0
   port: 2969
   tls:
-    insecure: true
+    insecure: false
     ca: "/opt/cert/node/ca.pem"
     server_cert: "/opt/cert/node/server.pem"
     server_key: "/opt/cert/node/server-key.pem"

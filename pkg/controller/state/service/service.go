@@ -138,13 +138,13 @@ func handleServiceStateProvision(ss *ServiceState, svc *types.Service) error {
 
 	// Endpoint provision call
 	if err := serviceEndpointProvision(ss, svc); err != nil {
-		log.Errorf("%s:> endpoint provision err:", logServicePrefix, err.Error())
+		log.Errorf("%s:> endpoint provision err: %s", logServicePrefix, err.Error())
 		return err
 	}
 
 	// Deployment provision call
 	if err := serviceDeploymentProvision(ss, svc); err != nil {
-		log.Errorf("%s:> deployment provision err:", logServicePrefix, err.Error())
+		log.Errorf("%s:> deployment provision err: %s", logServicePrefix, err.Error())
 		return err
 	}
 
@@ -182,7 +182,7 @@ func handleServiceStateDestroy(ss *ServiceState, svc *types.Service) (err error)
 
 	if ss.endpoint.endpoint != nil {
 		if err = endpointDel(ss); err != nil {
-			log.Errorf("%s:> endpoint remove err:", logServicePrefix, err.Error())
+			log.Errorf("%s:> endpoint remove err: %s", logServicePrefix, err.Error())
 			return err
 		}
 	}
@@ -191,7 +191,7 @@ func handleServiceStateDestroy(ss *ServiceState, svc *types.Service) (err error)
 	if len(ss.deployment.list) == 0 {
 		sm := distribution.NewServiceModel(context.Background(), envs.Get().GetStorage())
 		if err = sm.Remove(svc); err != nil {
-			log.Errorf("%s:> service remove err:", logServicePrefix, err.Error())
+			log.Errorf("%s:> service remove err: %s", logServicePrefix, err.Error())
 			return err
 		}
 
@@ -226,7 +226,7 @@ func handleServiceStateDestroyed(ss *ServiceState, svc *types.Service) (err erro
 	log.V(logLevel).Debugf("%s:> handleServiceStateDestroyed: %s > %s", logServicePrefix, svc.SelfLink(), svc.Status.State)
 
 	if err = endpointDel(ss); err != nil {
-		log.Errorf("%s:> endpoint remove err:", logServicePrefix, err.Error())
+		log.Errorf("%s:> endpoint remove err: %s", logServicePrefix, err.Error())
 		return err
 	}
 
@@ -259,7 +259,7 @@ func handleServiceStateDestroyed(ss *ServiceState, svc *types.Service) (err erro
 
 	sm := distribution.NewServiceModel(context.Background(), envs.Get().GetStorage())
 	if err = sm.Remove(svc); err != nil {
-		log.Errorf("%s:> service remove err:", logServicePrefix, err.Error())
+		log.Errorf("%s:> service remove err: %s", logServicePrefix, err.Error())
 		return err
 	}
 
@@ -314,7 +314,7 @@ func serviceDeploymentProvision(ss *ServiceState, svc *types.Service) error {
 	if d != nil {
 		if d.Spec.Replicas != svc.Spec.Replicas {
 			if err := deploymentScale(d, svc.Spec.Replicas); err != nil {
-				log.Errorf("%s:> deployment scale err:", logServicePrefix, err.Error())
+				log.Errorf("%s:> deployment scale err: %s", logServicePrefix, err.Error())
 				return err
 			}
 		}
@@ -325,7 +325,7 @@ func serviceDeploymentProvision(ss *ServiceState, svc *types.Service) error {
 
 		d, err := deploymentCreate(svc)
 		if err != nil {
-			log.Errorf("%s:> deployment create err:", logServicePrefix, err.Error())
+			log.Errorf("%s:> deployment create err: %s", logServicePrefix, err.Error())
 			return err
 		}
 
@@ -339,7 +339,7 @@ func serviceDeploymentProvision(ss *ServiceState, svc *types.Service) error {
 
 			if od.Status.State != types.StateDestroy && od.Status.State != types.StateDestroyed {
 				if err := deploymentDestroy(ss, od); err != nil {
-					log.Errorf("%s:> deployment cancel err:", logServicePrefix, err.Error())
+					log.Errorf("%s:> deployment cancel err: %s", logServicePrefix, err.Error())
 					return err
 				}
 			}
