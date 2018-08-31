@@ -22,11 +22,12 @@ import (
 	"context"
 	"errors"
 
+	"time"
+
 	"github.com/lastbackend/lastbackend/pkg/controller/envs"
 	"github.com/lastbackend/lastbackend/pkg/distribution"
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 	"github.com/lastbackend/lastbackend/pkg/log"
-	"time"
 )
 
 const (
@@ -286,8 +287,10 @@ func serviceEndpointProvision(ss *ServiceState, svc *types.Service) error {
 		return err
 	}
 
-	svc.Meta.Endpoint = ss.endpoint.endpoint.Spec.Domain
-	svc.Meta.IP = ss.endpoint.endpoint.Spec.IP
+	if ss.endpoint.endpoint != nil {
+		svc.Meta.Endpoint = ss.endpoint.endpoint.Spec.Domain
+		svc.Meta.IP = ss.endpoint.endpoint.Spec.IP
+	}
 
 	return nil
 }
