@@ -23,6 +23,7 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 	"github.com/lastbackend/lastbackend/pkg/log"
 	"gopkg.in/yaml.v2"
+	"strconv"
 	"strings"
 	"time"
 )
@@ -103,8 +104,27 @@ func (s *ServiceManifest) SetServiceSpec(svc *types.Service) {
 			svc.Spec.Network.IP = *s.Spec.Network.IP
 		}
 
-		if s.Spec.Network.Ports != nil {
-			svc.Spec.Network.Ports = s.Spec.Network.Ports
+		if len(s.Spec.Network.Ports) > 0 {
+
+			svc.Spec.Network.Ports = make(map[uint16]string, 0)
+
+			for _, p := range s.Spec.Network.Ports {
+				mp := strings.Split(p, ":")
+				var base = 10
+				var size = 16
+				port, err := strconv.ParseUint(mp[0], base, size)
+				if err != nil {
+					continue
+				}
+				if len(mp) == 1 {
+					svc.Spec.Network.Ports[uint16(port)] = mp[0]
+				}
+
+				if len(mp) == 2 {
+					svc.Spec.Network.Ports[uint16(port)] = mp[1]
+				}
+
+			}
 		}
 
 		svc.Spec.Network.Updated = time.Now()

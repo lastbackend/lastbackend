@@ -19,7 +19,7 @@ spec:
       ports:
         - 8080
       env:
-        - name: demo
+        - name: demo2
           value: test
         - name: secret
           from:
@@ -29,6 +29,9 @@ spec:
         - name: demo
           path: "/usr/share/nginx/html"
         - name: test
-          path: "/test"
+          path: "/test/demo"
     volumes:
       - name: demo
+  network:
+    ip: 127.0.0.1
+    ports: ["80:8080/tcp"]

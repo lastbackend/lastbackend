@@ -49,6 +49,7 @@ type ServiceMeta struct {
 	Namespace string `json:"namespace"`
 	SelfLink  string `json:"self_link"`
 	Endpoint  string `json:"endpoint"`
+	IP        string `json:"ip"`
 }
 
 type ServiceEndpoint struct {

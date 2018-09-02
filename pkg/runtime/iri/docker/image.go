@@ -20,10 +20,11 @@ package docker
 
 import (
 	"errors"
+	"os"
+
 	docker "github.com/docker/docker/api/types"
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 	"github.com/lastbackend/lastbackend/pkg/log"
-	"os"
 
 	"context"
 	"io"
