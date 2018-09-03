@@ -702,7 +702,7 @@ func TestRouteRemove(t *testing.T) {
 			expectedCode: http.StatusNotFound,
 		},
 		{
-			name:         "checking get route successfully",
+			name:         "checking del route successfully",
 			args:         args{ctx, ns1, r1},
 			fields:       fields{stg},
 			handler:      route.RouteRemoveH,
@@ -768,7 +768,7 @@ func TestRouteRemove(t *testing.T) {
 			if tc.wantErr {
 				assert.Equal(t, tc.err, string(body), "incorrect status code")
 			} else {
-				got := new(types.Route)
+				var got *types.Route
 				err := tc.fields.stg.Get(tc.args.ctx, stg.Collection().Route(), stg.Key().Route(tc.args.namespace.Meta.Name, tc.args.route.Meta.Name), got, nil)
 				if err != nil && !errors.Storage().IsErrEntityNotFound(err) {
 					assert.NoError(t, err)
