@@ -51,7 +51,7 @@ func Daemon() bool {
 	r.Restore()
 	r.Loop()
 
-	sd, err := Listen(viper.GetInt("discovery.port"))
+	sd, err := Listen(viper.GetInt("dns.port"))
 	if err != nil {
 		log.Fatalf("Start discovery server error: %v", err)
 	}

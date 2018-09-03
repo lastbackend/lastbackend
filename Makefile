@@ -46,6 +46,10 @@ run-ctl:
 	@echo "== Run lastbackend rest api daemon all in one"
 	@go run ./cmd/kit/kit.go ctl --config=./contrib/config.yml
 
+run-dns:
+	@echo "== Run lastbackend dns daemon "
+	@go run ./cmd/kit/kit.go dns --config=./contrib/config.yml
+
 
 run-node:
 	@echo "== Run node"

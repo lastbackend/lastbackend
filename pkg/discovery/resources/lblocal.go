@@ -77,7 +77,6 @@ func lbLocal(w dns.ResponseWriter, r *dns.Msg) {
 				ips := make([]net.IP, 0)
 
 				endpoint := util.Trim(q.Name, `.`)
-
 				item := envs.Get().GetCache().Endpoint().Get(endpoint)
 
 				if item != nil {
@@ -89,21 +88,30 @@ func lbLocal(w dns.ResponseWriter, r *dns.Msg) {
 					}
 				} else {
 
-					rg, _ := regexp.Compile("^(.+)-(.+)\\.lb\\.local$")
+					rg, _ := regexp.Compile("^(.+)\\.(.+)\\.lb\\.local$")
 					match := rg.FindStringSubmatch(endpoint)
 
 					if len(match) != 0 {
+
+						log.V(logLevel).Debugf("%s:lb.local:> find endpoint %s:%s", logPrefix, match[2], match[1])
+
 						e, err := em.Get(match[2], match[1])
 						if err != nil {
 							log.V(logLevel).Errorf("%s:lb.local:> get endpoint `%s` err: %v", endpoint, logPrefix, err)
 						}
 
-						envs.Get().GetCache().Endpoint().Set(endpoint, []string{e.Spec.IP})
+						if e != nil {
+							envs.Get().GetCache().Endpoint().Set(endpoint, []string{e.Spec.IP})
 
-						ips, err = util.ConvertStringIPToNetIP([]string{e.Spec.IP})
-						if err != nil {
-							log.Error(err)
-							return
+							ips, err = util.ConvertStringIPToNetIP([]string{e.Spec.IP})
+							if err != nil {
+								log.Error(err)
+								return
+							}
+						}
+
+						if e == nil {
+							break
 						}
 					}
 

@@ -57,6 +57,7 @@ type Env struct {
 
 	exporter *exporter.Exporter
 	ingress ingress.Ingress
+	dns []string
 }
 
 func (c *Env) SetCRI(cri cri.CRI) {
@@ -163,4 +164,12 @@ func (c *Env) SetExporter(e *exporter.Exporter) {
 
 func (c *Env) GetExporter() *exporter.Exporter {
 	return c.exporter
+}
+
+func (c *Env) SetDNS(dns []string) {
+	c.dns = dns
+}
+
+func (c *Env) GetDNS() []string {
+	return c.dns
 }

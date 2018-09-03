@@ -207,5 +207,12 @@ func containerManifestCreate(ctx context.Context, pod string, spec *types.SpecTe
 		mf.Binds = append(mf.Binds, fmt.Sprintf("%s:%s:%s", vol.Path, v.Path, v.Mode))
 	}
 
+	// TODO: Add dns search option only for LB domains
+	dns := envs.Get().GetDNS()
+	for _, d := range dns {
+		mf.DNS.Server = append(mf.DNS.Server, d)
+	}
+
+
 	return mf, nil
 }

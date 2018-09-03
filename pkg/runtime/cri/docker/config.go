@@ -97,7 +97,6 @@ func GetHostConfig(manifest *types.ContainerManifest) *container.HostConfig {
 
 	}
 
-
 	return &container.HostConfig{
 		Binds:           manifest.Binds,
 		LogConfig:       logC,

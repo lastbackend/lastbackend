@@ -85,6 +85,8 @@ func Daemon() {
 
 	}
 
+	envs.Get().SetDNS(viper.GetStringSlice("dns.ips"))
+
 	state := state.New()
 	envs.Get().SetState(state)
 	envs.Get().SetCRI(cri)
