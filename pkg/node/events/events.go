@@ -47,6 +47,7 @@ func NewConnectEvent(ctx context.Context) error {
 	opts.Status = envs.Get().GetState().Node().Status
 	opts.Network = *envs.Get().GetCNI().Info(ctx)
 
+
 	if viper.IsSet("node.tls") {
 		opts.TLS = !viper.GetBool("node.tls.insecure")
 
@@ -76,6 +77,7 @@ func NewConnectEvent(ctx context.Context) error {
 		}
 	}
 
+	opts.Status.Mode.Ingress = envs.Get().GetIngress()
 	return c.Connect(ctx, opts)
 
 }

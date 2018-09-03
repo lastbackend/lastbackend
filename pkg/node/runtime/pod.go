@@ -319,7 +319,7 @@ func PodRestore(ctx context.Context) error {
 
 	for _, c := range cl {
 
-		if c.Pod != types.ContainerTypeLBC {
+		if c.Pod == types.EmptyString {
 			continue
 		}
 

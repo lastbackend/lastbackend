@@ -42,6 +42,10 @@ type NetworkState struct {
 	SubnetSpec
 }
 
+type NodeMode struct {
+	Ingress bool `json:"ingress"`
+}
+
 // swagger:model types_network_interface
 type NetworkInterface struct {
 	Index int    `json:"index"`

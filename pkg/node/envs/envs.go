@@ -21,7 +21,6 @@ package envs
 import (
 	"errors"
 	"github.com/lastbackend/lastbackend/pkg/api/client/types"
-	"github.com/lastbackend/lastbackend/pkg/cache"
 	"github.com/lastbackend/lastbackend/pkg/node/events/exporter"
 	"github.com/lastbackend/lastbackend/pkg/node/state"
 	"github.com/lastbackend/lastbackend/pkg/runtime/cni"
@@ -44,12 +43,17 @@ type Env struct {
 	cpi cpi.CPI
 	csi map[string]csi.CSI
 
-	cache  *cache.Cache
 	state  *state.State
 	client struct {
 		node types.NodeClientV1
 		rest types.ClientV1
 	}
+
+	mode struct {
+		provision bool
+		ingress   bool
+	}
+
 	exporter *exporter.Exporter
 }
 
@@ -85,6 +89,22 @@ func (c *Env) GetCPI() cpi.CPI {
 	return c.cpi
 }
 
+func (c *Env) SetIngress(on bool) {
+	c.mode.ingress = on
+}
+
+func (c *Env) GetIngress() bool {
+	return c.mode.ingress
+}
+
+func (c *Env) SetPorvision(on bool) {
+	c.mode.provision = on
+}
+
+func (c *Env) GetProvision() bool {
+	return c.mode.provision
+}
+
 func (c *Env) SetCSI(kind string, si csi.CSI) {
 	c.csi = make(map[string]csi.CSI)
 	c.csi[kind] = si
@@ -95,14 +115,6 @@ func (c *Env) GetCSI(kind string) (csi.CSI, error) {
 		return nil, errors.New("storage container interface not supported")
 	}
 	return c.csi[kind], nil
-}
-
-func (c *Env) SetCache(s *cache.Cache) {
-	c.cache = s
-}
-
-func (c *Env) GetCache() *cache.Cache {
-	return c.cache
 }
 
 func (c *Env) SetState(s *state.State) {

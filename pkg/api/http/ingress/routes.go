@@ -26,10 +26,5 @@ import (
 var Routes = []http.Route{
 	{Path: "/cluster/ingress", Method: http.MethodGet, Middleware: []http.Middleware{middleware.Authenticate}, Handler: IngressListH},
 	{Path: "/cluster/ingress/{ingress}", Method: http.MethodGet, Middleware: []http.Middleware{middleware.Authenticate}, Handler: IngressInfoH},
-	{Path: "/cluster/ingress/{ingress}/spec", Method: http.MethodGet, Middleware: []http.Middleware{middleware.Authenticate}, Handler: IngressGetSpecH},
 	{Path: "/cluster/ingress/{ingress}", Method: http.MethodDelete, Middleware: []http.Middleware{middleware.Authenticate}, Handler: IngressRemoveH},
-	{Path: "/cluster/ingress/{ingress}", Method: http.MethodPut, Middleware: []http.Middleware{middleware.Authenticate}, Handler: IngressConnectH},
-	{Path: "/cluster/ingress/{ingress}/meta", Method: http.MethodPut, Middleware: []http.Middleware{middleware.Authenticate}, Handler: IngressSetMetaH},
-	{Path: "/cluster/ingress/{ingress}/status", Method: http.MethodPut, Middleware: []http.Middleware{middleware.Authenticate}, Handler: IngressSetStatusH},
-	{Path: "/cluster/ingress/{ingress}/status/route/{pod}", Method: http.MethodPut, Middleware: []http.Middleware{middleware.Authenticate}, Handler: IngressSetRouteStatusH},
 }

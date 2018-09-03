@@ -184,7 +184,13 @@ func NodeGetSpecH(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
+		if n.Status.Mode.Ingress {
+			spec.Routes = cache.GetRoutes(n.SelfLink())
+		}
+
 		spec.Network = subnets.Items
+
+
 
 	}
 	cache.Flush(n.Meta.Name)

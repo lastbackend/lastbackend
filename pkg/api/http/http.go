@@ -26,6 +26,7 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/api/http/ingress"
 	"github.com/lastbackend/lastbackend/pkg/api/http/namespace"
 	"github.com/lastbackend/lastbackend/pkg/api/http/node"
+	"github.com/lastbackend/lastbackend/pkg/api/http/route"
 	"github.com/lastbackend/lastbackend/pkg/api/http/secret"
 	"github.com/lastbackend/lastbackend/pkg/api/http/service"
 	"github.com/lastbackend/lastbackend/pkg/api/http/trigger"
@@ -62,6 +63,7 @@ func init() {
 	AddRoutes(cluster.Routes)
 	AddRoutes(node.Routes)
 	AddRoutes(ingress.Routes)
+	AddRoutes(route.Routes)
 
 	// Secrets
 	AddRoutes(secret.Routes)

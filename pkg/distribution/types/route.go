@@ -20,9 +20,7 @@ package types
 
 import (
 	"fmt"
-	"strings"
-
-	"github.com/lastbackend/lastbackend/pkg/util/generator"
+	"time"
 )
 
 // Route
@@ -57,8 +55,10 @@ type RouteMeta struct {
 
 // swagger:model types_route_spec
 type RouteSpec struct {
-	Domain string       `json:"domain" yaml:"domain"`
-	Rules  []*RouteRule `json:"rules" yaml:"rules"`
+	Security bool        `json:"security" yaml:"security"`
+	Domain   string      `json:"domain" yaml:"domain"`
+	Rules    []RouteRule `json:"rules" yaml:"rules"`
+	Updated  time.Time   `json:"updated"`
 }
 
 // swagger:ignore
@@ -77,35 +77,6 @@ type RouteRule struct {
 	Port     int    `json:"port" yaml:"port"`
 }
 
-// swagger:ignore
-type RouterConfig struct {
-	Name      string      `json:"id" yaml:"id"`
-	Hash      string      `json:"hash" yaml:"hash"`
-	RootPath  string      `json:"-" yaml:"-"`
-	Upstreams []*Upstream `json:"upstreams" yaml:"upstreams"`
-	Server    RouteServer `json:"server" yaml:"server"`
-}
-
-// swagger:ignore
-type RouteServer struct {
-	Hostname  string          `json:"hostname" yaml:"hostname"`
-	Port      int             `json:"port" yaml:"port"`
-	Protocol  string          `json:"protocol" yaml:"protocol"`
-	Locations []*RoteLocation `json:"locations" yaml:"locations"`
-}
-
-// swagger:ignore
-type Upstream struct {
-	Name    string `json:"name" yaml:"name"`
-	Address string `json:"address" yaml:"address"`
-}
-
-// swagger:ignore
-type RoteLocation struct {
-	Path      string `json:"path" yaml:"path"`
-	ProxyPass string `json:"proxy_pass" yaml:"proxy_pass"`
-}
-
 func (r *Route) SelfLink() string {
 	if r.Meta.SelfLink == "" {
 		r.Meta.SelfLink = r.CreateSelfLink(r.Meta.Namespace, r.Meta.Name)
@@ -117,65 +88,26 @@ func (r *Route) CreateSelfLink(namespace, name string) string {
 	return fmt.Sprintf("%s:%s", namespace, name)
 }
 
-func (r *Route) GetRouteConfig() *RouterConfig {
-	var RouterConfig = new(RouterConfig)
-
-	RouterConfig.Name = r.Meta.Name
-
-	RouterConfig.Server.Hostname = r.Spec.Domain
-	RouterConfig.Server.Protocol = "http"
-	RouterConfig.Server.Port = 80
-
-	if r.Meta.Security {
-		RouterConfig.Server.Protocol = "https"
-		RouterConfig.Server.Port = 443
-	}
-
-	RouterConfig.Upstreams = make([]*Upstream, 0)
-	RouterConfig.Server.Locations = make([]*RoteLocation, 0)
-	for _, rule := range r.Spec.Rules {
-
-		name := generator.GetUUIDV4()
-
-		RouterConfig.Upstreams = append(RouterConfig.Upstreams, &Upstream{
-			Name:    name,
-			Address: strings.ToLower(fmt.Sprintf("%s:%d", rule.Endpoint, rule.Port)),
-		})
-
-		RouterConfig.Server.Locations = append(RouterConfig.Server.Locations, &RoteLocation{
-			Path:      rule.Path,
-			ProxyPass: strings.ToLower(fmt.Sprintf("http://%s", name)),
-		})
-	}
-
-	return RouterConfig
+type RouteManifest struct {
+	State    string      `json:"state"`
+	Domain   string      `json:"domain"`
+	Endpoint string      `json:"endpoint"`
+	Rules    []RouteRule `json:"rules"`
 }
 
-// swagger:ignore
-type RouteCreateOptions struct {
-	Name     string       `json:"name"`
-	Domain   string       `json:"domain"`
-	Security bool         `json:"security"`
-	Rules    []RuleOption `json:"rules"`
+type RouteManifestList struct {
+	Runtime
+	Items []*RouteManifest
 }
 
-// swagger:ignore
-type RouteUpdateOptions struct {
-	Security bool         `json:"security"`
-	Rules    []RuleOption `json:"rules"`
+type RouteManifestMap struct {
+	Runtime
+	Items map[string]*RouteManifest
 }
 
-// swagger:ignore
-type RouteRemoveOptions struct {
-	Force bool `json:"force"`
-}
-
-// swagger:ignore
-type RuleOption struct {
-	Service  string `json:"service"`
-	Endpoint string `json:"endpoint"`
-	Path     string `json:"path"`
-	Port     int    `json:"port"`
+func (r *RouteManifest) Set(route *Route) {
+	r.Domain = route.Spec.Domain
+	r.Rules = route.Spec.Rules
 }
 
 func NewRouteList() *RouteList {
@@ -187,5 +119,17 @@ func NewRouteList() *RouteList {
 func NewRouteMap() *RouteMap {
 	dm := new(RouteMap)
 	dm.Items = make(map[string]*Route)
+	return dm
+}
+
+func NewRouteManifestList() *RouteManifestList {
+	dm := new(RouteManifestList)
+	dm.Items = make([]*RouteManifest, 0)
+	return dm
+}
+
+func NewRouteManifestMap() *RouteManifestMap {
+	dm := new(RouteManifestMap)
+	dm.Items = make(map[string]*RouteManifest)
 	return dm
 }

@@ -80,6 +80,18 @@ func (r *Runtime) Provision(ctx context.Context, spec *types.NodeManifest) error
 		}
 	}
 
+	if envs.Get().GetIngress() {
+		log.V(logLevel).Debugf("%s> provision routes", logNodeRuntimePrefix)
+		for e, spec := range spec.Routes {
+			log.V(logLevel).Debugf("route: %v", e)
+			if err := RouteManage(ctx, e, spec); err != nil {
+				log.Errorf("Route [%s] manage err: %s", e, err.Error())
+			}
+		}
+
+	}
+
+
 	log.V(logLevel).Debugf("%s> provision volumes", logNodeRuntimePrefix)
 	for _, v := range spec.Volumes {
 		log.V(logLevel).Debugf("volume: %v", v)
@@ -211,6 +223,10 @@ func (r *Runtime) Loop() {
 	if err != nil {
 		log.V(logLevel).Debugf("%s:loop:> new spec request err: %s", logNodeRuntimePrefix, err.Error())
 	}
+}
+
+func (r *Runtime) Ingress() {
+
 }
 
 func NewRuntime(ctx context.Context) *Runtime {

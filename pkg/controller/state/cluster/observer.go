@@ -29,15 +29,18 @@ import (
 )
 
 const (
-	logLevel = 3
+	logLevel  = 3
 	logPrefix = "observer:cluster"
 )
 
 // ClusterState is cluster current state struct
 type ClusterState struct {
-	ec      *EndpointController
+
 	cluster *types.Cluster
-	node    struct {
+	ingress struct {
+		list map[string]*types.Ingress
+	}
+	node struct {
 		observer chan *types.Node
 		lease    chan *NodeLease
 		release  chan *NodeLease
@@ -58,6 +61,9 @@ func (cs *ClusterState) Observe() {
 			break
 		case n := <-cs.node.observer:
 			log.V(7).Debugf("node: %s", n.Meta.Name)
+			if err := ingressHandle(context.Background(), cs, n); err != nil {
+				log.Errorf("%s", err.Error())
+			}
 			cs.node.list[n.SelfLink()] = n
 			break
 		}
@@ -154,10 +160,6 @@ func (cs *ClusterState) IPAM() ipam.IPAM {
 	return envs.Get().GetIPAM()
 }
 
-// Endpoint management caller
-func (cs *ClusterState) Endpoint() *EndpointController {
-	return cs.ec
-}
 
 func (cs *ClusterState) SetNode(n *types.Node) {
 	cs.node.observer <- n
@@ -213,7 +215,6 @@ func (cs *ClusterState) PodRelease(p *types.Pod) (*types.Node, error) {
 func NewClusterState() *ClusterState {
 
 	var cs = new(ClusterState)
-	cs.ec = new(EndpointController)
 
 	cs.node.observer = make(chan *types.Node)
 	cs.node.list = make(map[string]*types.Node)

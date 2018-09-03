@@ -47,7 +47,7 @@ type NotFoundHandler struct {
 func (NotFoundHandler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
 	w.WriteHeader(http.StatusNotFound)
-	w.Write([]byte(`{"code": "404", "status": "Not Found", "message": "Not Found"}`))
+	w.Write([]byte(`{"code": 404, "status": "Not Found", "message": "Not Found"}`))
 }
 
 type MethodNotAllowedHandler struct {
@@ -57,7 +57,7 @@ type MethodNotAllowedHandler struct {
 func (MethodNotAllowedHandler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
 	w.WriteHeader(http.StatusMethodNotAllowed)
-	w.Write([]byte(`{"code": "405", "status": "Method Not Allowed", "message": "Method Not Allowed"}`))
+	w.Write([]byte(`{"code": 405, "status": "Method Not Allowed", "message": "Method Not Allowed"}`))
 }
 
 func Handle(h http.HandlerFunc, middleware ...Middleware) http.HandlerFunc {

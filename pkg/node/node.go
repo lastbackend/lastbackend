@@ -91,6 +91,8 @@ func Daemon() {
 	envs.Get().SetCNI(cni)
 	envs.Get().SetCPI(cpi)
 
+	envs.Get().SetIngress(viper.GetBool("ingress.enable"))
+
 	r := runtime.NewRuntime(context.Background())
 	r.Restore()
 

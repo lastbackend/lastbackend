@@ -16,4 +16,18 @@
 // from Last.Backend LLC.
 //
 
-package cluster
+package runtime
+
+import (
+	"context"
+	"github.com/lastbackend/lastbackend/pkg/distribution/types"
+	"github.com/lastbackend/lastbackend/pkg/log"
+)
+
+func RouteManage(ctx context.Context, name string, route *types.RouteManifest) error {
+
+	log.Info("route manage: %s", name)
+
+
+	return nil
+}

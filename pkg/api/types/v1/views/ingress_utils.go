@@ -73,8 +73,6 @@ func (nv *IngressView) NewSpec(obj *types.IngressSpec) *IngressSpec {
 		return nil
 	}
 
-	spec.Routes = obj.Routes
-
 	return &spec
 }
 
@@ -85,12 +83,9 @@ func (obj *IngressSpec) ToJson() ([]byte, error) {
 func (obj *IngressSpec) Decode() *types.IngressSpec {
 
 	spec := types.IngressSpec{
-		Routes: make(map[string]types.RouteSpec, 0),
+
 	}
 
-	for i, s := range obj.Routes {
-		spec.Routes[i] = s
-	}
 
 	return &spec
 }

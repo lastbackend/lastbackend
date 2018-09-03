@@ -28,5 +28,6 @@ var Routes = []http.Route{
 	{Path: "/namespace/{namespace}/route", Method: http.MethodPost, Middleware: []http.Middleware{middleware.Authenticate}, Handler: RouteCreateH},
 	{Path: "/namespace/{namespace}/route", Method: http.MethodGet, Middleware: []http.Middleware{middleware.Authenticate}, Handler: RouteListH},
 	{Path: "/namespace/{namespace}/route/{route}", Method: http.MethodGet, Middleware: []http.Middleware{middleware.Authenticate}, Handler: RouteInfoH},
+	{Path: "/namespace/{namespace}/route/{route}", Method: http.MethodPut, Middleware: []http.Middleware{middleware.Authenticate}, Handler: RouteUpdateH},
 	{Path: "/namespace/{namespace}/route/{route}", Method: http.MethodDelete, Middleware: []http.Middleware{middleware.Authenticate}, Handler: RouteRemoveH},
 }

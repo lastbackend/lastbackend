@@ -29,6 +29,9 @@ const logCacheNode = "api:cache:node"
 
 type CacheNodeManifest struct {
 	lock      sync.RWMutex
+	nodes     map[string]*types.Node
+	ingress   map[string]*types.Ingress
+	routes    map[string]*types.RouteManifest
 	manifests map[string]*types.NodeManifest
 }
 
@@ -130,6 +133,48 @@ func (c *CacheNodeManifest) SetEndpointManifest(addr string, s *types.EndpointMa
 	}
 }
 
+func (c *CacheNodeManifest) SetRouteManifest(name string, s *types.RouteManifest) {
+	c.lock.Lock()
+	defer c.lock.Unlock()
+	log.Debugf("set route manifest %s", name)
+	c.routes[name] = s
+	for _, i := range c.ingress {
+		if _, ok := c.manifests[i.Meta.Node]; ok {
+
+			if _, ok := c.manifests[i.Meta.Node].Routes[name]; !ok {
+				c.manifests[i.Meta.Node].Routes = make(map[string]*types.RouteManifest, 0)
+			}
+
+			c.manifests[i.Meta.Node].Routes[name] = s
+		}
+	}
+}
+
+func (c *CacheNodeManifest) SetIngress(ingress *types.Ingress) {
+	c.lock.Lock()
+	defer c.lock.Unlock()
+	c.ingress[ingress.SelfLink()] = ingress
+}
+
+func (c *CacheNodeManifest) DelIngress(selflink string) {
+	c.lock.Lock()
+	defer c.lock.Unlock()
+	delete(c.ingress, selflink)
+}
+
+func (c *CacheNodeManifest) SetNode(node *types.Node) {
+	c.lock.Lock()
+	defer c.lock.Unlock()
+	c.nodes[node.SelfLink()] = node
+}
+
+func (c *CacheNodeManifest) DelNode(node *types.Node) {
+	c.lock.Lock()
+	defer c.lock.Unlock()
+	delete(c.nodes, node.SelfLink())
+	delete(c.manifests, node.SelfLink())
+}
+
 func (c *CacheNodeManifest) Get(node string) *types.NodeManifest {
 	c.lock.Lock()
 	defer c.lock.Unlock()
@@ -139,6 +184,17 @@ func (c *CacheNodeManifest) Get(node string) *types.NodeManifest {
 		return s
 	}
 }
+
+func (c *CacheNodeManifest) GetRoutes(node string) map[string]*types.RouteManifest {
+	c.lock.Lock()
+	defer c.lock.Unlock()
+	if _, ok := c.ingress[node]; !ok {
+		return nil
+	} else {
+		return c.routes
+	}
+}
+
 
 func (c *CacheNodeManifest) Flush(node string) {
 	c.lock.Lock()
@@ -155,5 +211,7 @@ func (c *CacheNodeManifest) Clear(node string) {
 func NewCacheNodeManifest() *CacheNodeManifest {
 	c := new(CacheNodeManifest)
 	c.manifests = make(map[string]*types.NodeManifest, 0)
+	c.ingress = make(map[string]*types.Ingress, 0)
+	c.routes = make(map[string]*types.RouteManifest, 0)
 	return c
 }

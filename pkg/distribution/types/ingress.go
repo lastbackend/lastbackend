@@ -41,7 +41,7 @@ type IngressMap struct {
 // swagger:ignore
 type IngressMeta struct {
 	Meta
-	Cluster string `json:"cluster"`
+	Node string `json:"node"`
 }
 
 // swagger:model types_ingress_status
@@ -51,40 +51,11 @@ type IngressStatus struct {
 
 // swagger:ignore
 type IngressSpec struct {
-	Routes map[string]RouteSpec `json:"routes"`
-}
-
-// swagger:ignore
-type IngressCreateMetaOptions struct {
-	MetaCreateOptions
-}
-
-// swagger:model types_ingress_meta_update
-type IngressUpdateMetaOptions struct {
-	MetaUpdateOptions
-}
-
-// swagger:ignore
-type IngressCreateOptions struct {
-	Meta    IngressCreateMetaOptions `json:"meta",yaml:"meta"`
-	Status  IngressStatus            `json:"status",yaml:"status"`
-	Network SubnetSpec               `json:"network"`
-}
-
-func (m *IngressMeta) Set(meta *IngressUpdateMetaOptions) {
-	if meta.Description != nil {
-		m.Description = *meta.Description
-	}
-
-	if meta.Labels != nil {
-		m.Labels = meta.Labels
-	}
-
 }
 
 func (n *Ingress) SelfLink() string {
 	if n.Meta.SelfLink == "" {
-		n.Meta.SelfLink = fmt.Sprintf("%s:%s", n.Meta.Cluster, n.Meta.Name)
+		n.Meta.SelfLink = fmt.Sprintf("%s", n.Meta.Node)
 	}
 	return n.Meta.SelfLink
 }

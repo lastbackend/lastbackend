@@ -71,7 +71,12 @@ type SecretEvent struct {
 	Data *Secret
 }
 
-type IngresEvent struct {
+type RouteEvent struct {
+	event
+	Data *Route
+}
+
+type IngressEvent struct {
 	event
 	Data *Ingress
 }

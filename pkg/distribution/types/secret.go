@@ -23,6 +23,7 @@ import (
 	"encoding/base64"
 	"errors"
 	"fmt"
+	"time"
 )
 
 const (
@@ -56,6 +57,36 @@ type SecretMap struct {
 type SecretMeta struct {
 	Kind string `json:"kind"`
 	Meta `yaml:",inline"`
+}
+
+type SecretManifest struct {
+	Runtime
+	State   string    `json:"state"`
+	Kind    string    `json:"kind"`
+	Created time.Time `json:"created"`
+	Updated time.Time `json:"updated"`
+}
+
+type SecretManifestList struct {
+	Runtime
+	Items []*SecretManifest
+}
+
+type SecretManifestMap struct {
+	Runtime
+	Items map[string]*SecretManifest
+}
+
+func NewSecretManifestList() *SecretManifestList {
+	dm := new(SecretManifestList)
+	dm.Items = make([]*SecretManifest, 0)
+	return dm
+}
+
+func NewSecretManifestMap() *SecretManifestMap {
+	dm := new(SecretManifestMap)
+	dm.Items = make(map[string]*SecretManifest)
+	return dm
 }
 
 func (s *Secret) EncodeSecretAuthData(d SecretAuthData) {
