@@ -22,6 +22,7 @@ import (
 	"context"
 	"github.com/lastbackend/lastbackend/pkg/api/types/v1"
 	"github.com/lastbackend/lastbackend/pkg/api/types/v1/request"
+	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 	"github.com/lastbackend/lastbackend/pkg/log"
 	"github.com/lastbackend/lastbackend/pkg/node/envs"
 	"github.com/pkg/errors"
@@ -77,7 +78,7 @@ func NewConnectEvent(ctx context.Context) error {
 		}
 	}
 
-	opts.Status.Mode.Ingress = envs.Get().GetIngress()
+	opts.Status.Mode.Ingress = envs.Get().GetModeIngress()
 	return c.Connect(ctx, opts)
 
 }
@@ -102,12 +103,16 @@ func NewPodStatusEvent(ctx context.Context, pod string) error {
 		e = envs.Get().GetExporter()
 	)
 
-	if pod == "" {
+	if pod == types.EmptyString {
 		log.Errorf("%s:pod_status_event:> pod state event: pod is empty", logPrefix)
 		return errors.New("pod state event: pod is empty")
 	}
 
 	if p == nil {
+		return nil
+	}
+
+	if p.Local {
 		return nil
 	}
 

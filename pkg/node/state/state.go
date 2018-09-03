@@ -32,6 +32,7 @@ type State struct {
 	volumes   *VolumesState
 	secrets   *SecretsState
 	endpoints *EndpointState
+	routes     *RouteState
 	task      *TaskState
 }
 
@@ -63,6 +64,10 @@ func (s *State) Endpoints() *EndpointState {
 	return s.endpoints
 }
 
+func (s *State) Routes() *RouteState {
+	return s.routes
+}
+
 func (s *State) Tasks() *TaskState {
 	return s.task
 }
@@ -77,6 +82,7 @@ func New() *State {
 	state := State{
 		node: new(NodeState),
 		pods: &PodState{
+			local: make(map[string]bool),
 			containers: make(map[string]*types.PodContainer, 0),
 			pods:       make(map[string]*types.PodStatus, 0),
 		},
@@ -97,6 +103,9 @@ func New() *State {
 		},
 		task: &TaskState{
 			tasks: make(map[string]types.NodeTask, 0),
+		},
+		routes: &RouteState{
+			routes: make(map[string]*types.RouteManifest, 0),
 		},
 	}
 

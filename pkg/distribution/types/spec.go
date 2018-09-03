@@ -186,6 +186,10 @@ type SpecTemplateContainerPorts []SpecTemplateContainerPort
 type SpecTemplateContainerPort struct {
 	// Container port
 	ContainerPort uint16 `json:"container_port"`
+	// Host port
+	HostPort uint16 `json:"host_port"`
+	// Host port
+	HostIP string `json:"host_port"`
 	// Binding protocol
 	Protocol string `json:"protocol"`
 }

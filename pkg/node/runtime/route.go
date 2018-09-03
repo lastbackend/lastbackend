@@ -22,12 +22,23 @@ import (
 	"context"
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 	"github.com/lastbackend/lastbackend/pkg/log"
+	"github.com/lastbackend/lastbackend/pkg/node/envs"
 )
 
 func RouteManage(ctx context.Context, name string, route *types.RouteManifest) error {
 
-	log.Info("route manage: %s", name)
+	defer envs.Get().GetIngress().Update(ctx)
+
+	log.Debugf("route manage: %s", name)
 
 
+	log.Debugf("total routes: %d", len(envs.Get().GetState().Routes().GetRoutes()))
+
+	if route.State == types.StateDestroyed {
+		envs.Get().GetState().Routes().DelRoute(name)
+		return nil
+	}
+
+	envs.Get().GetState().Routes().SetRoute(name, route)
 	return nil
 }

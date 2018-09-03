@@ -19,28 +19,11 @@
 package runtime
 
 import (
-	"encoding/base64"
-	"encoding/json"
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 	"github.com/lastbackend/lastbackend/pkg/log"
 	"github.com/lastbackend/lastbackend/pkg/node/envs"
 	"golang.org/x/net/context"
 )
-
-func imageCreateAuthString(username, password string) string {
-
-	config := types.AuthConfig{
-		Username: username,
-		Password: password,
-	}
-
-	js, err := json.Marshal(config)
-	if err != nil {
-		panic(err)
-	}
-
-	return base64.URLEncoding.EncodeToString(js)
-}
 
 func ImagePull(ctx context.Context, image *types.SpecTemplateContainerImage) error {
 
@@ -55,12 +38,19 @@ func ImagePull(ctx context.Context, image *types.SpecTemplateContainerImage) err
 			log.Errorf("can not get secret for image. err: %s", err.Error())
 			return err
 		}
-		auth, err := secret.DecodeSecretAuthData()
+		data, err := secret.DecodeSecretAuthData()
 		if err != nil {
 			log.Errorf("can not get parse secret auth data. err: %s", err.Error())
 			return err
 		}
-		mf.Auth = imageCreateAuthString(auth.Username, auth.Password)
+
+		auth, err := envs.Get().GetIRI().Auth(ctx, data)
+		if err != nil {
+			log.Errorf("can not create secret string. err: %s", err.Error())
+			return err
+		}
+
+		mf.Auth = auth
 	}
 
 	img, err := envs.Get().GetIRI().Pull(ctx, mf)

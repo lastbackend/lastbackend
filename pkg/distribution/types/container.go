@@ -28,6 +28,7 @@ import (
 )
 
 const (
+	ContainerTypeLocal = "local"
 	ContainerTypeLBC = "LBC"
 	ContainerTypeLBR = "LBR"
 )

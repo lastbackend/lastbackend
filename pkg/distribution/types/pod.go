@@ -69,6 +69,7 @@ type PodMeta struct {
 // PodSpec is a spec of pod
 // swagger:model types_pod_spec
 type PodSpec struct {
+	Local    bool         `json:"local,omitempty"`
 	State    SpecState    `json:"state"`
 	Template SpecTemplate `json:"template" yaml:"template"`
 }
@@ -77,6 +78,8 @@ type PodSpec struct {
 // PodSpecStatus is a status of pod
 // swagger:model types_pod_status
 type PodStatus struct {
+	// Pod type
+	Local bool `json:"local" yaml:"local"`
 	// Pod state
 	State string `json:"state" yaml:"state"`
 	// Pod status

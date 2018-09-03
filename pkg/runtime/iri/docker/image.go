@@ -19,6 +19,8 @@
 package docker
 
 import (
+	"encoding/base64"
+	"encoding/json"
 	"errors"
 	"os"
 
@@ -31,6 +33,21 @@ import (
 )
 
 const logLevel = 3
+
+func (r *Runtime) Auth(ctx context.Context, secret *types.SecretAuthData) (string, error) {
+
+	config := types.AuthConfig{
+		Username: secret.Username,
+		Password: secret.Password,
+	}
+
+	js, err := json.Marshal(config)
+	if err != nil {
+		return types.EmptyString, err
+	}
+
+	return base64.URLEncoding.EncodeToString(js), nil
+}
 
 func (r *Runtime) Pull(ctx context.Context, spec *types.ImageManifest) (*types.Image, error) {
 

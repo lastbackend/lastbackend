@@ -348,7 +348,7 @@ func (r *Runtime) routeWatch(ctx context.Context, rev *int64) {
 					m.State = types.StateDestroyed
 				}
 
-				c.Node().SetRouteManifest(w.Name, m)
+				c.Node().SetRouteManifest(w.Data.SelfLink(), m)
 			}
 		}
 	}()

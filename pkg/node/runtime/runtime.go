@@ -41,10 +41,15 @@ type Runtime struct {
 
 func (r *Runtime) Restore() {
 	log.V(logLevel).Debugf("%s:restore:> restore init", logNodeRuntimePrefix)
+
 	NetworkRestore(r.ctx)
 	VolumeRestore(r.ctx)
 	PodRestore(r.ctx)
 	EndpointRestore(r.ctx)
+
+	if envs.Get().GetModeIngress() {
+		envs.Get().GetIngress().Provision(context.Background())
+	}
 }
 
 func (r *Runtime) Provision(ctx context.Context, spec *types.NodeManifest) error {
@@ -80,7 +85,7 @@ func (r *Runtime) Provision(ctx context.Context, spec *types.NodeManifest) error
 		}
 	}
 
-	if envs.Get().GetIngress() {
+	if envs.Get().GetModeIngress() {
 		log.V(logLevel).Debugf("%s> provision routes", logNodeRuntimePrefix)
 		for e, spec := range spec.Routes {
 			log.V(logLevel).Debugf("route: %v", e)
@@ -167,7 +172,9 @@ func (r *Runtime) Clean(ctx context.Context, manifest *types.NodeManifest) error
 
 	for k := range pods {
 		if _, ok := manifest.Pods[k]; !ok {
-			PodDestroy(context.Background(), k, pods[k])
+			if !envs.Get().GetState().Pods().IsLocal(k) {
+				PodDestroy(context.Background(), k, pods[k])
+			}
 		}
 	}
 

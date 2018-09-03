@@ -24,6 +24,7 @@ import (
 )
 
 type CSI interface {
+	List(ctx context.Context) (map[string]*types.VolumeState, error)
 	Create(ctx context.Context, name string, manifest *types.VolumeManifest) (*types.VolumeState, error)
 	Remove(ctx context.Context, name string, manifest *types.VolumeManifest) error
 }

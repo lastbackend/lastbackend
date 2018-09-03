@@ -16,22 +16,17 @@
 // from Last.Backend LLC.
 //
 
-package iri
+package ingress
 
 import (
-	"context"
-	"github.com/lastbackend/lastbackend/pkg/distribution/types"
-	"io"
+	"github.com/lastbackend/lastbackend/pkg/node/ingress"
+	"github.com/lastbackend/lastbackend/pkg/node/ingress/haproxy"
+	"github.com/spf13/viper"
 )
 
-// IMI - Image Runtime Interface
-type IRI interface {
-	Auth(ctx context.Context, secret *types.SecretAuthData) (string, error)
-	Pull(ctx context.Context, spec *types.ImageManifest) (*types.Image, error)
-	Remove(ctx context.Context, image string) error
-	Push(ctx context.Context, spec *types.ImageManifest) error
-	Build(ctx context.Context, stream io.Reader, spec *types.SpecBuildImage) (*types.Image, error)
-	List(ctx context.Context) ([]*types.Image, error)
-	Inspect(ctx context.Context, id string) (*types.Image, error)
-	Subscribe(ctx context.Context) (chan *types.Image, error)
+func New() (ingress.Ingress, error) {
+	switch viper.GetString("ingress.type") {
+	default:
+		return haproxy.New()
+	}
 }

@@ -37,6 +37,39 @@ type StorageOpts struct {
 	root string
 }
 
+func (s *Storage) List(ctx context.Context) (map[string]*types.VolumeState, error) {
+	var vols = make(map[string]*types.VolumeState, 0)
+
+	var dirs []string
+	f, err := os.Open(s.root)
+	if err != nil {
+		return vols, err
+	}
+
+	items, err := f.Readdir(-1)
+	f.Close()
+	if err != nil {
+		return vols, err
+	}
+
+	for _, item := range items {
+		if item.IsDir() {
+			dirs = append(dirs, item.Name())
+		}
+	}
+
+	for _, dir := range dirs {
+		vol := new(types.VolumeState)
+
+		vol.Path = filepath.Join(s.root, dir)
+		vol.Type = types.VOLUMETYPELOCAL
+		vol.Ready = true
+		vols[dir] = vol
+	}
+
+	return vols, nil
+}
+
 func (s *Storage) Create(ctx context.Context, name string, manifest *types.VolumeManifest) (*types.VolumeState, error) {
 
 	var (

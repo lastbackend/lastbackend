@@ -19,10 +19,8 @@
 package docker
 
 import (
-	docker "github.com/docker/docker/api/types"
-	"strings"
-
 	"context"
+	docker "github.com/docker/docker/api/types"
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 	"github.com/lastbackend/lastbackend/pkg/log"
 	"io"
@@ -163,9 +161,6 @@ func (r *Runtime) Inspect(ctx context.Context, ID string) (*types.Container, err
 
 	meta, ok := info.Config.Labels[types.ContainerTypeLBC]
 	if ok {
-		if len(strings.Split(meta, ":")) < 3 {
-			return container, nil
-		}
 		container.Pod = meta
 	} else {
 		log.V(logLevel).Debug("Docker: Container Meta not found")

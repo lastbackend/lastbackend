@@ -22,7 +22,6 @@ import (
 	"context"
 	"fmt"
 	"io"
-	"path/filepath"
 	"strings"
 	"time"
 
@@ -82,14 +81,16 @@ func PodManage(ctx context.Context, key string, manifest *types.PodManifest) err
 	// Get pod list from current state
 	p := envs.Get().GetState().Pods().GetPod(key)
 	if p != nil {
-		if p.State != types.StateWarning {
+
+		if p.State == types.StateError || len(p.Containers) != len(manifest.Template.Containers) {
+			PodDestroy(ctx, key, p)
+		}
+
+		if p.State != types.StateDestroyed && p.State != types.StateWarning {
 			events.NewPodStatusEvent(ctx, key)
 			return nil
 		}
 
-		if p.State == types.StateError {
-			PodDestroy(ctx, key, p)
-		}
 	}
 
 	log.V(logLevel).Debugf("Pod not found > create it: %s", key)
@@ -323,6 +324,7 @@ func PodRestore(ctx context.Context) error {
 			continue
 		}
 
+
 		log.V(logLevel).Debugf("Pod [%s] > container restore %s", c.Pod, c.ID)
 
 		status := envs.Get().GetState().Pods().GetPod(c.Pod)
@@ -477,8 +479,8 @@ func PodVolumeCreate(ctx context.Context, pod string, spec *types.SpecTemplateVo
 
 	log.V(logLevel).Debugf("Create pod volume: %s", pod, spec.Name)
 
-	path := filepath.Join(strings.Split(pod, ":")...)
-	path = filepath.Join(path, spec.Name)
+	path := strings.Replace(pod, ":", "-", -1)
+	path = fmt.Sprintf("%s-%s", path, spec.Name)
 
 	var (
 		name = podVolumeKeyCreate(pod, spec.Name)

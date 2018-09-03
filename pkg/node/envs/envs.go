@@ -22,6 +22,7 @@ import (
 	"errors"
 	"github.com/lastbackend/lastbackend/pkg/api/client/types"
 	"github.com/lastbackend/lastbackend/pkg/node/events/exporter"
+	"github.com/lastbackend/lastbackend/pkg/node/ingress"
 	"github.com/lastbackend/lastbackend/pkg/node/state"
 	"github.com/lastbackend/lastbackend/pkg/runtime/cni"
 	"github.com/lastbackend/lastbackend/pkg/runtime/cpi"
@@ -55,6 +56,7 @@ type Env struct {
 	}
 
 	exporter *exporter.Exporter
+	ingress ingress.Ingress
 }
 
 func (c *Env) SetCRI(cri cri.CRI) {
@@ -89,11 +91,19 @@ func (c *Env) GetCPI() cpi.CPI {
 	return c.cpi
 }
 
-func (c *Env) SetIngress(on bool) {
+func (c *Env) SetIngress(ing ingress.Ingress) {
+	c.ingress = ing
+}
+
+func (c *Env) GetIngress() ingress.Ingress {
+	return c.ingress
+}
+
+func (c *Env) SetModeIngress(on bool) {
 	c.mode.ingress = on
 }
 
-func (c *Env) GetIngress() bool {
+func (c *Env) GetModeIngress() bool {
 	return c.mode.ingress
 }
 
@@ -108,6 +118,15 @@ func (c *Env) GetProvision() bool {
 func (c *Env) SetCSI(kind string, si csi.CSI) {
 	c.csi = make(map[string]csi.CSI)
 	c.csi[kind] = si
+}
+
+func (c *Env) ListCSI () []string {
+	var types = []string{}
+
+	for t := range c.csi {
+		types = append(types, t)
+	}
+	return types
 }
 
 func (c *Env) GetCSI(kind string) (csi.CSI, error) {

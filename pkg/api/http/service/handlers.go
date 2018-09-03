@@ -291,7 +291,7 @@ func ServiceCreateH(w http.ResponseWriter, r *http.Request) {
 	svc := new(types.Service)
 	opts.SetServiceMeta(svc)
 	svc.Meta.Namespace = ns.Meta.Name
-	svc.Meta.Endpoint  = fmt.Sprintf("%s.%s",strings.ToLower(svc.Meta.Name), ns.Meta.Endpoint)
+	svc.Meta.Endpoint  = fmt.Sprintf("%s.%s", strings.ToLower(svc.Meta.Name), ns.Meta.Endpoint)
 
 	opts.SetServiceSpec(svc)
 
@@ -395,6 +395,7 @@ func ServiceUpdateH(w http.ResponseWriter, r *http.Request) {
 	}
 
 	opts.SetServiceMeta(svc)
+	svc.Meta.Endpoint  = fmt.Sprintf("%s.%s", strings.ToLower(svc.Meta.Name), ns.Meta.Endpoint)
 	opts.SetServiceSpec(svc)
 
 	srv, err := sm.Update(svc)
