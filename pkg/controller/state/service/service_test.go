@@ -201,9 +201,6 @@ func testServiceObserver(t *testing.T, name, werr string, wst *ServiceState, sta
 
 func testStatusState(t *testing.T, fn func(*ServiceState) error, name string, wst, state *ServiceState) {
 
-	stg, _ := storage.Get("mock")
-	envs.Get().SetStorage(stg)
-
 	t.Run(name, func(t *testing.T) {
 
 		fn(state)

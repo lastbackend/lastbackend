@@ -21,6 +21,7 @@ package mock
 import (
 	"context"
 	"strings"
+	"sync"
 
 	"reflect"
 
@@ -32,6 +33,7 @@ import (
 )
 
 type Storage struct {
+	lock   sync.RWMutex
 	store map[string]map[string][]byte
 }
 
@@ -41,6 +43,9 @@ func (s *Storage) Info(ctx context.Context, collection string, name string) (*ty
 
 func (s *Storage) Get(ctx context.Context, collection string, name string, obj interface{}, opts *types.Opts) error {
 	s.check(collection)
+
+	s.lock.Lock()
+	defer s.lock.Unlock()
 
 	if _, ok := s.store[collection][name]; !ok {
 		return errors.New(types.ErrEntityNotFound)
@@ -59,6 +64,9 @@ func (s *Storage) Get(ctx context.Context, collection string, name string, obj i
 
 func (s *Storage) List(ctx context.Context, collection string, q string, obj interface{}, opts *types.Opts) error {
 	s.check(collection)
+
+	s.lock.Lock()
+	defer s.lock.Unlock()
 
 	if reflect.ValueOf(obj).IsNil() {
 		return errors.New(types.ErrStructOutIsNil)
@@ -110,6 +118,9 @@ func (s *Storage) List(ctx context.Context, collection string, q string, obj int
 
 func (s *Storage) Map(ctx context.Context, collection string, q string, obj interface{}, opts *types.Opts) error {
 	s.check(collection)
+
+	s.lock.Lock()
+	defer s.lock.Unlock()
 
 	if reflect.ValueOf(obj).IsNil() {
 		return errors.New(types.ErrStructOutIsNil)
@@ -168,6 +179,9 @@ func (s *Storage) Map(ctx context.Context, collection string, q string, obj inte
 func (s *Storage) Put(ctx context.Context, collection string, name string, obj interface{}, opts *types.Opts) error {
 	s.check(collection)
 
+	s.lock.Lock()
+	defer s.lock.Unlock()
+
 	if _, ok := s.store[collection][name]; ok {
 
 		if opts == nil {
@@ -191,6 +205,9 @@ func (s *Storage) Put(ctx context.Context, collection string, name string, obj i
 func (s *Storage) Set(ctx context.Context, collection string, name string, obj interface{}, opts *types.Opts) error {
 	s.check(collection)
 
+	s.lock.Lock()
+	defer s.lock.Unlock()
+
 	if _, ok := s.store[collection][name]; !ok {
 		if opts != nil && !opts.Force {
 			return errors.New(types.ErrEntityNotFound)
@@ -209,6 +226,10 @@ func (s *Storage) Set(ctx context.Context, collection string, name string, obj i
 
 func (s *Storage) Del(ctx context.Context, collection string, name string) error {
 	s.check(collection)
+
+	s.lock.Lock()
+	defer s.lock.Unlock()
+
 	if name == "" {
 		s.store[collection] = make(map[string][]byte)
 		return nil
@@ -235,6 +256,8 @@ func (s Storage) Collection() types.Collection {
 }
 
 func (s *Storage) check(kind string) {
+	s.lock.Lock()
+	defer s.lock.Unlock()
 	if _, ok := s.store[kind]; !ok {
 		s.store[kind] = make(map[string][]byte)
 	}
