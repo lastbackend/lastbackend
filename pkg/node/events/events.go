@@ -112,7 +112,7 @@ func NewPodStatusEvent(ctx context.Context, pod string) error {
 		return nil
 	}
 
-	if p.Local {
+	if envs.Get().GetState().Pods().IsLocal(pod) {
 		return nil
 	}
 
