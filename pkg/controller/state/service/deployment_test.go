@@ -23,7 +23,6 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/controller/envs"
 	"github.com/lastbackend/lastbackend/pkg/controller/ipam"
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
-	"github.com/lastbackend/lastbackend/pkg/storage"
 	"github.com/stretchr/testify/assert"
 	"testing"
 )
@@ -34,8 +33,7 @@ func testDeploymentObserver(t *testing.T, name, werr string, wst *ServiceState, 
 		err error
 	)
 
-	stg, _ := storage.Get("mock")
-	envs.Get().SetStorage(stg)
+	stg := envs.Get().GetStorage()
 
 	ipm, _ := ipam.New("")
 	envs.Get().SetIPAM(ipm)

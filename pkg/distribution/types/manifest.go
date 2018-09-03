@@ -18,14 +18,13 @@
 
 package types
 
-import "time"
-
 type NodeManifest struct {
 	Secrets   map[string]*SecretManifest   `json:"secrets"`
 	Endpoints map[string]*EndpointManifest `json:"endpoint"`
 	Network   map[string]*SubnetManifest   `json:"network"`
 	Pods      map[string]*PodManifest      `json:"pods"`
 	Volumes   map[string]*VolumeManifest   `json:"volumes"`
+	Routes    map[string]*RouteManifest    `json:"routes"`
 }
 
 type PodManifest PodSpec
@@ -83,24 +82,6 @@ type EndpointManifestMap struct {
 	Items map[string]*EndpointManifest
 }
 
-type SecretManifest struct {
-	Runtime
-	State   string    `json:"state"`
-	Kind    string    `json:"kind"`
-	Created time.Time `json:"created"`
-	Updated time.Time `json:"updated"`
-}
-
-type SecretManifestList struct {
-	Runtime
-	Items []*SecretManifest
-}
-
-type SecretManifestMap struct {
-	Runtime
-	Items map[string]*SecretManifest
-}
-
 func NewPodManifestList() *PodManifestList {
 	dm := new(PodManifestList)
 	dm.Items = make([]*PodManifest, 0)
@@ -146,17 +127,5 @@ func NewEndpointManifestList() *EndpointManifestList {
 func NewEndpointManifestMap() *EndpointManifestMap {
 	dm := new(EndpointManifestMap)
 	dm.Items = make(map[string]*EndpointManifest)
-	return dm
-}
-
-func NewSecretManifestList() *SecretManifestList {
-	dm := new(SecretManifestList)
-	dm.Items = make([]*SecretManifest, 0)
-	return dm
-}
-
-func NewSecretManifestMap() *SecretManifestMap {
-	dm := new(SecretManifestMap)
-	dm.Items = make(map[string]*SecretManifest)
 	return dm
 }

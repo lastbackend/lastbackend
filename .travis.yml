@@ -25,7 +25,7 @@ after_success:
   - make docs
 
 notifications:
-  slack: lastbackend:0e7apir97phOrZbD12RJ9v0P
+  slack: $ST_TOKEN
 
 deploy:
   - provider: pages

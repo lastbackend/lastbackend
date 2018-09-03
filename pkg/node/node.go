@@ -20,6 +20,7 @@ package node
 
 import (
 	"context"
+	"github.com/lastbackend/lastbackend/pkg/node/ingress/ingress"
 	"github.com/lastbackend/lastbackend/pkg/runtime/iri/iri"
 	"os"
 	"os/signal"
@@ -84,6 +85,8 @@ func Daemon() {
 
 	}
 
+	envs.Get().SetDNS(viper.GetStringSlice("dns.ips"))
+
 	state := state.New()
 	envs.Get().SetState(state)
 	envs.Get().SetCRI(cri)
@@ -91,8 +94,16 @@ func Daemon() {
 	envs.Get().SetCNI(cni)
 	envs.Get().SetCPI(cpi)
 
-	r := runtime.NewRuntime(context.Background())
-	r.Restore()
+	envs.Get().SetModeIngress(viper.GetBool("ingress.enable"))
+	if envs.Get().GetModeIngress() {
+		ing, err := ingress.New()
+		if err != nil {
+			log.Errorf("Cannot initialize iri: %v", err)
+		}
+		envs.Get().SetIngress(ing)
+	}
+
+
 
 	state.Node().Info = runtime.NodeInfo()
 	state.Node().Status = runtime.NodeStatus()
@@ -126,6 +137,9 @@ func Daemon() {
 	e := exporter.NewExporter()
 	e.SetDispatcher(events.Dispatcher)
 	envs.Get().SetExporter(e)
+
+	r := runtime.NewRuntime(context.Background())
+	r.Restore()
 
 	if err := r.Connect(context.Background()); err != nil {
 		log.Fatalf("node:initialize: connect err %s", err.Error())

@@ -242,6 +242,11 @@ func (s *Network) SubnetSet(snet *types.Subnet) error {
 		return err
 	}
 
+	if m == nil {
+		return nil
+	}
+
+
 	if !types.SubnetSpecEqual(&m.SubnetSpec, &snet.Spec) {
 		if err := s.SubnetManifestSet(m, snet); err != nil {
 			log.V(logLevel).Errorf("%s:SubnetPut:> insert subnet manifest err: %v", logNetworkPrefix, err)

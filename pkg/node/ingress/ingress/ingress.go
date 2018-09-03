@@ -16,10 +16,17 @@
 // from Last.Backend LLC.
 //
 
-package state
+package ingress
 
-import "github.com/lastbackend/lastbackend/pkg/distribution/types"
+import (
+	"github.com/lastbackend/lastbackend/pkg/node/ingress"
+	"github.com/lastbackend/lastbackend/pkg/node/ingress/haproxy"
+	"github.com/spf13/viper"
+)
 
-type IngressState struct {
-	Status types.IngressStatus
+func New() (ingress.Ingress, error) {
+	switch viper.GetString("ingress.type") {
+	default:
+		return haproxy.New()
+	}
 }

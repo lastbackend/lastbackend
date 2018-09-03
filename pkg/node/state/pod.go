@@ -31,6 +31,7 @@ const logPodPrefix = "state:pods:>"
 type PodState struct {
 	lock       sync.RWMutex
 	stats      PodStateStats
+	local      map[string]bool
 	containers map[string]*types.PodContainer
 	pods       map[string]*types.PodStatus
 }
@@ -78,6 +79,24 @@ func (s *PodState) GetPod(key string) *types.PodStatus {
 func (s *PodState) AddPod(key string, pod *types.PodStatus) {
 	log.V(logLevel).Debugf("%s: add pod: %#v", logPodPrefix, pod)
 	s.SetPod(key, pod)
+}
+
+func (s *PodState) SetLocal(key string) {
+	log.V(logLevel).Debugf("%s: set pod: %s as local", logPodPrefix, key)
+	s.lock.Lock()
+	defer s.lock.Unlock()
+	s.local[key] = true
+}
+
+func (s *PodState) IsLocal(key string) bool {
+	log.V(logLevel).Debugf("%s: check pod: %s is local", logPodPrefix, key)
+	s.lock.Lock()
+	defer s.lock.Unlock()
+	if _, ok := s.local[key]; ok {
+		return true
+	}
+
+ 	return false
 }
 
 func (s *PodState) SetPod(key string, pod *types.PodStatus) {

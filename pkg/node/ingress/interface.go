@@ -16,4 +16,17 @@
 // from Last.Backend LLC.
 //
 
-package proxy
+package ingress
+
+import (
+	"context"
+	"github.com/lastbackend/lastbackend/pkg/distribution/types"
+)
+
+type Ingress interface {
+	Info(ctx context.Context) *types.IngressStatus
+	Update(ctx context.Context)  error
+	Destroy(ctx context.Context) error
+	Restore(ctx context.Context) error
+	Provision(ctx context.Context) error
+}

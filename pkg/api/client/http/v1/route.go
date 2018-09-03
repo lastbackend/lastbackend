@@ -36,7 +36,7 @@ type RouteClient struct {
 	name      string
 }
 
-func (rc *RouteClient) Create(ctx context.Context, opts *rv1.RouteCreateOptions) (*vv1.Route, error) {
+func (rc *RouteClient) Create(ctx context.Context, opts *rv1.RouteManifest) (*vv1.Route, error) {
 
 	body, err := opts.ToJson()
 	if err != nil {
@@ -104,7 +104,7 @@ func (rc *RouteClient) Get(ctx context.Context) (*vv1.Route, error) {
 	return s, nil
 }
 
-func (rc *RouteClient) Update(ctx context.Context, opts *rv1.RouteUpdateOptions) (*vv1.Route, error) {
+func (rc *RouteClient) Update(ctx context.Context, opts *rv1.RouteManifest) (*vv1.Route, error) {
 
 	body, err := opts.ToJson()
 	if err != nil {

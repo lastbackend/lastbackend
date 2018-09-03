@@ -128,6 +128,7 @@ var (
 					"controller": controller.Daemon,
 					"ctl":        controller.Daemon,
 					"discovery":  discovery.Daemon,
+					"dns":        discovery.Daemon,
 				}
 			)
 

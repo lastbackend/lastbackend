@@ -27,9 +27,10 @@ type Image struct {
 }
 
 type ImageMeta struct {
-	ID   string `json:"id"`
-	Hash string `json:"hash"`
-	Name string `json:"name"`
+	ID   string   `json:"id"`
+	Hash string   `json:"hash"`
+	Name string   `json:"name"`
+	Tags []string `json:"tags"`
 }
 
 type ImageStatus struct {

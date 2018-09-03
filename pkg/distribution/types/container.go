@@ -28,6 +28,7 @@ import (
 )
 
 const (
+	ContainerTypeLocal = "local"
 	ContainerTypeLBC = "LBC"
 	ContainerTypeLBR = "LBR"
 )
@@ -55,6 +56,8 @@ type Container struct {
 	Status string `json:"status,omitempty"`
 	// Container network settings
 	Network NetworkSettings `json:"network"`
+	// Container labels
+	Labels map[string]string `json:"labels"`
 	// Container created time
 	Created time.Time `json:"created"`
 	// Container started time

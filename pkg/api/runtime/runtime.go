@@ -44,6 +44,34 @@ func (r *Runtime) Run() {
 	go r.secretWatch(ctx, nil)
 	go r.nodeWatch(ctx, nil)
 
+	im := distribution.NewIngressModel(ctx, envs.Get().GetStorage())
+	il, err := im.List()
+	if err != nil {
+		return
+	}
+
+	c := envs.Get().GetCache()
+	for _, i := range il.Items {
+		c.Node().SetIngress(i)
+	}
+
+	go r.ingressWatch(ctx, &il.Runtime.System.Revision)
+
+	rm := distribution.NewRouteModel(ctx, envs.Get().GetStorage())
+	rl, err := rm.List()
+	if err != nil {
+		return
+	}
+
+	for _, i := range rl.Items {
+		m := new(types.RouteManifest)
+		m.Set(i)
+		c.Node().SetRouteManifest(i.SelfLink(), m)
+	}
+
+
+	go r.routeWatch(ctx, &rl.System.Revision)
+
 	//go c.Ingress().CacheRoutes(stg.Route().WatchSpecEvents)
 	//go c.Ingress().Status(stg.Ingress().WatchStatus)
 }
@@ -256,4 +284,74 @@ func (r *Runtime) nodeWatch(ctx context.Context, rev *int64) {
 	}()
 
 	mm.Watch(n, rev)
+}
+
+func (r *Runtime) ingressWatch(ctx context.Context, rev *int64) {
+
+	// Watch node changes
+	var (
+		n = make(chan types.IngressEvent)
+		c = envs.Get().GetCache()
+	)
+
+	im := distribution.NewIngressModel(ctx, envs.Get().GetStorage())
+
+	go func() {
+		for {
+			select {
+			case <-ctx.Done():
+				return
+			case w := <-n:
+
+				if w.Data == nil {
+					continue
+				}
+
+				if w.IsActionRemove() {
+					c.Node().DelIngress(w.Name)
+					continue
+				}
+				c.Node().SetIngress(w.Data)
+
+			}
+		}
+	}()
+
+	im.Watch(n, rev)
+}
+
+func (r *Runtime) routeWatch(ctx context.Context, rev *int64) {
+
+	// Watch node changes
+	var (
+		n = make(chan types.RouteEvent)
+		c = envs.Get().GetCache()
+	)
+
+	im := distribution.NewRouteModel(ctx, envs.Get().GetStorage())
+
+	go func() {
+		for {
+			select {
+			case <-ctx.Done():
+				return
+			case w := <-n:
+
+				if w.Data == nil {
+					continue
+				}
+
+				m := new(types.RouteManifest)
+				m.Set(w.Data)
+
+				if w.IsActionRemove() {
+					m.State = types.StateDestroyed
+				}
+
+				c.Node().SetRouteManifest(w.Data.SelfLink(), m)
+			}
+		}
+	}()
+
+	im.Watch(n, rev)
 }

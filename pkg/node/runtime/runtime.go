@@ -41,10 +41,15 @@ type Runtime struct {
 
 func (r *Runtime) Restore() {
 	log.V(logLevel).Debugf("%s:restore:> restore init", logNodeRuntimePrefix)
+
 	NetworkRestore(r.ctx)
 	VolumeRestore(r.ctx)
 	PodRestore(r.ctx)
 	EndpointRestore(r.ctx)
+
+	if envs.Get().GetModeIngress() {
+		envs.Get().GetIngress().Provision(context.Background())
+	}
 }
 
 func (r *Runtime) Provision(ctx context.Context, spec *types.NodeManifest) error {
@@ -79,6 +84,18 @@ func (r *Runtime) Provision(ctx context.Context, spec *types.NodeManifest) error
 			log.Errorf("Endpoint [%s] manage err: %s", e, err.Error())
 		}
 	}
+
+	if envs.Get().GetModeIngress() {
+		log.V(logLevel).Debugf("%s> provision routes", logNodeRuntimePrefix)
+		for e, spec := range spec.Routes {
+			log.V(logLevel).Debugf("route: %v", e)
+			if err := RouteManage(ctx, e, spec); err != nil {
+				log.Errorf("Route [%s] manage err: %s", e, err.Error())
+			}
+		}
+
+	}
+
 
 	log.V(logLevel).Debugf("%s> provision volumes", logNodeRuntimePrefix)
 	for _, v := range spec.Volumes {
@@ -155,7 +172,9 @@ func (r *Runtime) Clean(ctx context.Context, manifest *types.NodeManifest) error
 
 	for k := range pods {
 		if _, ok := manifest.Pods[k]; !ok {
-			PodDestroy(context.Background(), k, pods[k])
+			if !envs.Get().GetState().Pods().IsLocal(k) {
+				PodDestroy(context.Background(), k, pods[k])
+			}
 		}
 	}
 
@@ -211,6 +230,10 @@ func (r *Runtime) Loop() {
 	if err != nil {
 		log.V(logLevel).Debugf("%s:loop:> new spec request err: %s", logNodeRuntimePrefix, err.Error())
 	}
+}
+
+func (r *Runtime) Ingress() {
+
 }
 
 func NewRuntime(ctx context.Context) *Runtime {

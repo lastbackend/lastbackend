@@ -109,6 +109,8 @@ type NodeStatus struct {
 	State NodeStatusState `json:"state"`
 	// node status online
 	Online bool `json:"online"`
+	// node status modes
+	Mode NodeStatusMode `json:"mode"`
 	// Node Capacity
 	Capacity NodeResources `json:"capacity"`
 	// Node Allocated
@@ -127,6 +129,10 @@ type NodeStatusInterfaceState struct {
 	Version string `json:"version"`
 	State   string `json:"state"`
 	Message string `json:"message"`
+}
+
+type NodeStatusMode struct {
+	Ingress bool `json:"ingress"`
 }
 
 // swagger:ignore

@@ -24,7 +24,6 @@ const logLevel = 3
 
 type Cache struct {
 	node    *CacheNodeManifest
-	ingress *CacheIngressManifest
 }
 
 type Cleaner func(ctx context.Context) error
@@ -33,13 +32,8 @@ func (c *Cache) Node() *CacheNodeManifest {
 	return c.node
 }
 
-func (c *Cache) Ingress() *CacheIngressManifest {
-	return c.ingress
-}
-
 func NewCache() *Cache {
 	c := new(Cache)
 	c.node = NewCacheNodeManifest()
-	c.ingress = NewCacheIngressSpec()
 	return c
 }

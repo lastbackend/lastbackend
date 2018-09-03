@@ -20,7 +20,9 @@ package distribution
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
+	"github.com/spf13/viper"
 	"strings"
 
 	"github.com/lastbackend/lastbackend/pkg/distribution/errors"
@@ -92,29 +94,12 @@ func (n *Route) ListByNamespace(namespace string) (*types.RouteList, error) {
 	return list, nil
 }
 
-func (n *Route) Create(namespace *types.Namespace, opts *types.RouteCreateOptions) (*types.Route, error) {
+func (n *Route) Create(namespace *types.Namespace, route *types.Route) (*types.Route, error) {
 
-	log.V(logLevel).Debugf("%s:create:> create route %#v", logRoutePrefix, opts)
-
-	route := new(types.Route)
-	route.Meta.SetDefault()
-	route.Meta.Name = opts.Name
-	route.Meta.Namespace = namespace.Meta.Name
-	route.Meta.Security = opts.Security
-	route.SelfLink()
+	log.V(logLevel).Debugf("%s:create:> create route %#v", logRoutePrefix, route.Meta.Name)
 
 	route.Status.State = types.StatusInitialized
-
-	route.Spec.Domain = fmt.Sprintf("%s.%s", strings.ToLower(opts.Name), strings.ToLower(opts.Domain))
-	route.Spec.Rules = make([]*types.RouteRule, 0)
-	for _, rule := range opts.Rules {
-		route.Spec.Rules = append(route.Spec.Rules, &types.RouteRule{
-			Service:  rule.Service,
-			Endpoint: rule.Endpoint,
-			Port:     rule.Port,
-			Path:     rule.Path,
-		})
-	}
+	route.Spec.Domain = fmt.Sprintf("%s.%s.%s", strings.ToLower(route.Meta.Name), strings.ToLower(namespace.Meta.Name),  viper.GetString("domain.external"))
 
 	if err := n.storage.Put(n.context, n.storage.Collection().Route(),
 		n.storage.Key().Route(route.Meta.Namespace, route.Meta.Name), route, nil); err != nil {
@@ -125,20 +110,10 @@ func (n *Route) Create(namespace *types.Namespace, opts *types.RouteCreateOption
 	return route, nil
 }
 
-func (n *Route) Update(route *types.Route, opts *types.RouteUpdateOptions) (*types.Route, error) {
+func (n *Route) Update(route *types.Route) (*types.Route, error) {
 
 	log.V(logLevel).Debugf("%s:update:> update route %s", logRoutePrefix, route.Meta.Name)
-
-	route.Meta.Security = opts.Security
 	route.Status.State = types.StateProvision
-	route.Spec.Rules = make([]*types.RouteRule, 0)
-	for _, rule := range opts.Rules {
-		route.Spec.Rules = append(route.Spec.Rules, &types.RouteRule{
-			Endpoint: rule.Endpoint,
-			Port:     rule.Port,
-			Path:     rule.Path,
-		})
-	}
 
 	if err := n.storage.Set(n.context, n.storage.Collection().Route(),
 		n.storage.Key().Route(route.Meta.Namespace, route.Meta.Name), route, nil); err != nil {
@@ -175,6 +150,50 @@ func (n *Route) Remove(route *types.Route) error {
 	if err := n.storage.Del(n.context, n.storage.Collection().Route(),
 		n.storage.Key().Route(route.Meta.Namespace, route.Meta.Name)); err != nil {
 		log.V(logLevel).Errorf("%s:remove:> remove route  err: %v", logRoutePrefix, err)
+		return err
+	}
+
+	return nil
+}
+
+func (n *Route) Watch(ch chan types.RouteEvent, rev *int64) error {
+
+	log.V(logLevel).Debugf("%s:watch:> watch routes", logRoutePrefix)
+
+	done := make(chan bool)
+	watcher := storage.NewWatcher()
+
+	go func() {
+		for {
+			select {
+			case <-n.context.Done():
+				done <- true
+				return
+			case e := <-watcher:
+				if e.Data == nil {
+					continue
+				}
+
+				res := types.RouteEvent{}
+				res.Action = e.Action
+				res.Name = e.Name
+
+				route := new(types.Route)
+
+				if err := json.Unmarshal(e.Data.([]byte), route); err != nil {
+					log.Errorf("%s:> parse data err: %v", logRoutePrefix, err)
+					continue
+				}
+
+				res.Data = route
+
+				ch <- res
+			}
+		}
+	}()
+
+	opts := storage.GetOpts()
+	if err := n.storage.Watch(n.context, n.storage.Collection().Route(), watcher, opts); err != nil {
 		return err
 	}
 

@@ -292,6 +292,7 @@ func endpointManifestProvision(ss *ServiceState) error {
 	return nil
 }
 
+
 func endpointManifestAdd(ss *ServiceState) error {
 
 	var (
@@ -311,15 +312,38 @@ func endpointManifestAdd(ss *ServiceState) error {
 		}
 	}
 
-	ss.endpoint.manifest = &types.EndpointManifest{}
-	ss.endpoint.manifest.EndpointSpec = ss.endpoint.endpoint.Spec
-	ss.endpoint.manifest.Upstreams = endpointManifestGetUpstreams(pl)
-
-	if err = em.ManifestAdd(ss.endpoint.endpoint.SelfLink(), ss.endpoint.manifest); err != nil {
-		log.Errorf("%s> add endpoint manifest error: %s", logPrefix, err.Error())
+	epm, err := em.ManifestGet(ss.endpoint.endpoint.SelfLink())
+	if err != nil {
 		return err
 	}
 
+	if epm == nil {
+		ss.endpoint.manifest = &types.EndpointManifest{}
+		ss.endpoint.manifest.EndpointSpec = ss.endpoint.endpoint.Spec
+		ss.endpoint.manifest.Upstreams = endpointManifestGetUpstreams(pl)
+
+		if err = em.ManifestAdd(ss.endpoint.endpoint.SelfLink(), ss.endpoint.manifest); err != nil {
+			log.Errorf("%s> add endpoint manifest error: %s", logPrefix, err.Error())
+			return err
+		}
+
+		return nil
+	}
+
+
+	if endpointManifestSpecEqual(ss.endpoint.endpoint, epm) {
+		return nil
+	}
+
+	epm.EndpointSpec = ss.endpoint.endpoint.Spec
+	epm.Upstreams = endpointManifestGetUpstreams(pl)
+
+	if err = em.ManifestSet(ss.endpoint.endpoint.SelfLink(), epm); err != nil {
+		log.Errorf("%s> update endpoint manifest error: %s", logPrefix, err.Error())
+		return err
+	}
+
+	ss.endpoint.manifest = epm
 	return nil
 }
 

@@ -26,10 +26,11 @@ import (
 
 // IMI - Image Runtime Interface
 type IRI interface {
-	Pull(ctx context.Context, spec *types.ImageManifest) (*types.Image, error)
+	Auth(ctx context.Context, secret *types.SecretAuthData) (string, error)
+	Pull(ctx context.Context, spec *types.ImageManifest, out io.Writer) (*types.Image, error)
 	Remove(ctx context.Context, image string) error
-	Push(ctx context.Context, spec *types.ImageManifest) error
-	Build(ctx context.Context, stream io.Reader, spec *types.SpecBuildImage) (*types.Image, error)
+	Push(ctx context.Context, spec *types.ImageManifest, out io.Writer) error
+	Build(ctx context.Context, stream io.Reader, spec *types.SpecBuildImage, out io.Writer) (*types.Image, error)
 	List(ctx context.Context) ([]*types.Image, error)
 	Inspect(ctx context.Context, id string) (*types.Image, error)
 	Subscribe(ctx context.Context) (chan *types.Image, error)

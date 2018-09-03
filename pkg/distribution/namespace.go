@@ -102,7 +102,7 @@ func (n *Namespace) Create(opts *types.NamespaceCreateOptions) (*types.Namespace
 	ns.Meta.SetDefault()
 	ns.Meta.Name = strings.ToLower(opts.Name)
 	ns.Meta.Description = opts.Description
-	ns.Meta.Endpoint = strings.ToLower(fmt.Sprintf("%s.%s", opts.Name, viper.GetString("domain.external")))
+	ns.Meta.Endpoint = strings.ToLower(fmt.Sprintf("%s.%s", opts.Name, viper.GetString("domain.internal")))
 	ns.SelfLink()
 
 	if opts.Quotas != nil {

@@ -226,7 +226,7 @@ func RouteCreateH(w http.ResponseWriter, r *http.Request) {
 	)
 
 	// request body struct
-	opts, e := v1.Request().Route().CreateOptions().DecodeAndValidate(r.Body)
+	manifest, e := v1.Request().Route().Manifest().DecodeAndValidate(r.Body)
 	if e != nil {
 		log.V(logLevel).Errorf("%s:create:> validation incoming data err: %s", logPrefix, e.Err())
 		e.Http(w)
@@ -253,49 +253,21 @@ func RouteCreateH(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	rcopts := types.RouteCreateOptions{
-		Name:     opts.Name,
-		Domain:   ns.Meta.Endpoint,
-		Security: opts.Security,
-		Rules:    make([]types.RuleOption, 0),
-	}
+	rs := new(types.Route)
+	rs.Meta.SetDefault()
+	rs.Meta.Namespace = ns.Meta.Name
 
-	var links = make(map[string]string)
+	manifest.SetRouteMeta(rs)
+	manifest.SetRouteSpec(rs, svc)
 
-	for _, s := range svc.Items {
-		links[s.Meta.Name] = s.Meta.Endpoint
-	}
-
-	for _, r := range opts.Rules {
-
-		if r.Service == "" || r.Port == 0 {
-			continue
-		}
-
-		if r.Path == "" {
-			r.Path = "/"
-		}
-
-		if _, ok := links[r.Service]; ok {
-			rcopts.Rules = append(rcopts.Rules, types.RuleOption{
-				Service:  r.Service,
-				Endpoint: links[r.Service],
-				Path:     r.Path,
-				Port:     r.Port,
-			})
-		}
-	}
-
-	if len(rcopts.Rules) == 0 {
+	if len(rs.Spec.Rules) == 0 {
 		err := errors.New("route rules are incorrect")
 		log.V(logLevel).Errorf("%s:create:> route rules empty", logPrefix, err.Error())
 		errors.New("route").BadParameter("rules", err).Http(w)
 		return
 	}
 
-	rs, err := rm.Create(ns, &rcopts)
-
-	if err != nil {
+	if _, err := rm.Create(ns, rs); err != nil {
 		log.V(logLevel).Errorf("%s:create:> create route err: %s", logPrefix, ns.Meta.Name, err.Error())
 		errors.HTTP.InternalServerError(w)
 		return
@@ -365,7 +337,7 @@ func RouteUpdateH(w http.ResponseWriter, r *http.Request) {
 	)
 
 	// request body struct
-	opts, e := v1.Request().Route().UpdateOptions().DecodeAndValidate(r.Body)
+	manifest, e := v1.Request().Route().Manifest().DecodeAndValidate(r.Body)
 	if e != nil {
 		log.V(logLevel).Errorf("%s:update:> validation incoming data err: %s", logPrefix, e.Err())
 		e.Http(w)
@@ -404,45 +376,18 @@ func RouteUpdateH(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	ruopts := types.RouteUpdateOptions{
-		Security: opts.Security,
-		Rules:    make([]types.RuleOption, 0),
-	}
 
-	var links = make(map[string]string)
+	manifest.SetRouteMeta(rs)
+	manifest.SetRouteSpec(rs, svc)
 
-	for _, s := range svc.Items {
-		links[s.Meta.Name] = s.Meta.Endpoint
-	}
-
-	for _, r := range opts.Rules {
-
-		if r.Service == "" || r.Port == 0 {
-			continue
-		}
-
-		if r.Path == "" {
-			r.Path = "/"
-		}
-
-		if _, ok := links[r.Service]; ok {
-			ruopts.Rules = append(ruopts.Rules, types.RuleOption{
-				Service:  r.Service,
-				Endpoint: links[r.Service],
-				Path:     r.Path,
-				Port:     r.Port,
-			})
-		}
-	}
-
-	if len(ruopts.Rules) == 0 {
+	if len(rs.Spec.Rules) == 0 {
 		err := errors.New("route rules are incorrect")
 		log.V(logLevel).Errorf("%s:create:> route rules empty", logPrefix, err.Error())
 		errors.New("route").BadParameter("rules", err).Http(w)
 		return
 	}
 
-	rs, err = rm.Update(rs, &ruopts)
+	rs, err = rm.Update(rs)
 	if err != nil {
 		log.V(logLevel).Errorf("%s:update:> update route `%s` err: %s", logPrefix, ns.Meta.Name, err.Error())
 		errors.HTTP.InternalServerError(w)
@@ -525,7 +470,7 @@ func RouteRemoveH(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = rm.SetStatus(rs, &types.RouteStatus{State: types.StateDestroy})
+	err = rm.Remove(rs)
 	if err != nil {
 		log.V(logLevel).Errorf("%s:remove:> remove route `%s` err: %s", logPrefix, rid, err.Error())
 		errors.HTTP.InternalServerError(w)

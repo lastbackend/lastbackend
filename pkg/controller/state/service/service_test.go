@@ -32,6 +32,14 @@ import (
 	"time"
 )
 
+func init() {
+	stg, _ := storage.Get("mock")
+	envs.Get().SetStorage(stg)
+
+	ipm, _ := ipam.New("")
+	envs.Get().SetIPAM(ipm)
+}
+
 func testServiceObserver(t *testing.T, name, werr string, wst *ServiceState, state *ServiceState, svc *types.Service) {
 
 	var (
@@ -39,11 +47,7 @@ func testServiceObserver(t *testing.T, name, werr string, wst *ServiceState, sta
 		err error
 	)
 
-	stg, _ := storage.Get("mock")
-	envs.Get().SetStorage(stg)
-
-	ipm, _ := ipam.New("")
-	envs.Get().SetIPAM(ipm)
+	stg := envs.Get().GetStorage()
 
 	err = stg.Del(ctx, stg.Collection().Deployment(), "")
 	if !assert.NoError(t, err) {
@@ -196,9 +200,6 @@ func testServiceObserver(t *testing.T, name, werr string, wst *ServiceState, sta
 }
 
 func testStatusState(t *testing.T, fn func(*ServiceState) error, name string, wst, state *ServiceState) {
-
-	stg, _ := storage.Get("mock")
-	envs.Get().SetStorage(stg)
 
 	t.Run(name, func(t *testing.T) {
 
@@ -1265,6 +1266,7 @@ func getServiceStateAsset(svc *types.Service) *ServiceState {
 	n := new(types.Node)
 
 	n.Meta.Name = "node"
+	n.Meta.Hostname = "node.local"
 	n.Status.Capacity = types.NodeResources{
 		Containers: 10,
 		Pods:       10,
@@ -1272,6 +1274,7 @@ func getServiceStateAsset(svc *types.Service) *ServiceState {
 		Cpu:        1,
 		Storage:    1000,
 	}
+	n.SelfLink()
 
 	cs := cluster.NewClusterState()
 	cs.SetNode(n)

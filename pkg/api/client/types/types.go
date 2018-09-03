@@ -54,14 +54,7 @@ type NodeClientV1 interface {
 
 type IngressClientV1 interface {
 	List(ctx context.Context) (*vv1.IngressList, error)
-	Connect(ctx context.Context, opts *rv1.IngressConnectOptions) error
 	Get(ctx context.Context) (*vv1.Ingress, error)
-	GetSpec(ctx context.Context) (*vv1.IngressSpec, error)
-	SetMeta(ctx context.Context, opts *rv1.IngressMetaOptions) (*vv1.Ingress, error)
-	SetStatus(ctx context.Context, opts *rv1.IngressStatusOptions) error
-	SetRouteStatus(ctx context.Context, route string, opts *rv1.IngressRouteStatusOptions) error
-	Remove(ctx context.Context, opts *rv1.IngressRemoveOptions) error
-	Logs(ctx context.Context, pod, container string, opts *rv1.IngressLogsOptions) (io.ReadCloser, error)
 }
 
 type NamespaceClientV1 interface {
@@ -113,10 +106,10 @@ type SecretClientV1 interface {
 }
 
 type RouteClientV1 interface {
-	Create(ctx context.Context, opts *rv1.RouteCreateOptions) (*vv1.Route, error)
+	Create(ctx context.Context, opts *rv1.RouteManifest) (*vv1.Route, error)
 	List(ctx context.Context) (*vv1.RouteList, error)
 	Get(ctx context.Context) (*vv1.Route, error)
-	Update(ctx context.Context, opts *rv1.RouteUpdateOptions) (*vv1.Route, error)
+	Update(ctx context.Context, opts *rv1.RouteManifest) (*vv1.Route, error)
 	Remove(ctx context.Context, opts *rv1.RouteRemoveOptions) error
 }
 

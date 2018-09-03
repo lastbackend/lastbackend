@@ -86,5 +86,32 @@ func VolumeUpdate(ctx context.Context, name string, manifest *types.VolumeManife
 }
 
 func VolumeRestore(ctx context.Context) error {
+
+	log.Debug("Start volumes restore")
+
+	tp := envs.Get().ListCSI()
+
+	for _, t := range tp {
+
+		log.Debugf("restore volumes type: %s", t)
+		sci, err := envs.Get().GetCSI(t)
+		if err != nil {
+			log.Errorf("storage interface init err: %s", err.Error())
+			return err
+		}
+
+		states, err := sci.List(ctx)
+		if err != nil {
+			log.Errorf("volumes restore err: %s", err.Error())
+			return err
+		}
+
+		for name, state := range states {
+			envs.Get().GetState().Volumes().SetVolume(name, state)
+		}
+
+	}
+
+
 	return nil
 }

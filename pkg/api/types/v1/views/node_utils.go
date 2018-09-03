@@ -107,6 +107,7 @@ func (obj *NodeManifest) Decode() *types.NodeManifest {
 		Pods:      make(map[string]*types.PodManifest, 0),
 		Volumes:   make(map[string]*types.VolumeManifest, 0),
 		Endpoints: make(map[string]*types.EndpointManifest, 0),
+		Routes: make(map[string]*types.RouteManifest, 0),
 	}
 
 	for i, s := range obj.Network {
@@ -128,6 +129,11 @@ func (obj *NodeManifest) Decode() *types.NodeManifest {
 	for i, s := range obj.Secrets {
 		manifest.Secrets[i] = s
 	}
+
+	for i, r := range obj.Routes {
+		manifest.Routes[i] = r
+	}
+
 
 	return &manifest
 }
@@ -153,6 +159,7 @@ func (nv *NodeView) NewManifest(obj *types.NodeManifest) *NodeManifest {
 		Pods:      make(map[string]*types.PodManifest, 0),
 		Volumes:   make(map[string]*types.VolumeManifest, 0),
 		Endpoints: make(map[string]*types.EndpointManifest, 0),
+		Routes: make(map[string]*types.RouteManifest, 0),
 	}
 
 	if obj == nil {
@@ -164,6 +171,7 @@ func (nv *NodeView) NewManifest(obj *types.NodeManifest) *NodeManifest {
 	manifest.Pods = obj.Pods
 	manifest.Volumes = obj.Volumes
 	manifest.Endpoints = obj.Endpoints
+	manifest.Routes = obj.Routes
 
 	return &manifest
 }

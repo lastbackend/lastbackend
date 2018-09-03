@@ -16,18 +16,4 @@
 // from Last.Backend LLC.
 //
 
-package cluster
-
-type EndpointController struct{}
-
-func (EndpointController) EndpointCreate() {
-
-}
-
-func (EndpointController) EndpointUpdate() {
-
-}
-
-func (EndpointController) EndpointRemove() {
-
-}
+package runtime

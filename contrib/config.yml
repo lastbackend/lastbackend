@@ -21,7 +21,7 @@ api:
   host: 0.0.0.0
   port: 2967
   tls:
-    insecure: false
+    insecure: true
     ca: "/opt/cert/lastbackend/ca.pem"
     cert: "/opt/cert/lastbackend/server.pem"
     key: "/opt/cert/lastbackend/server-key.pem"

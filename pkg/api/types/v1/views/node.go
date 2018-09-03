@@ -109,4 +109,5 @@ type NodeManifest struct {
 	Pods      map[string]*types.PodManifest      `json:"pods,omitempty"`
 	Volumes   map[string]*types.VolumeManifest   `json:"volumes,omitempty"`
 	Endpoints map[string]*types.EndpointManifest `json:"endpoints,omitempty"`
+	Routes    map[string]*types.RouteManifest    `json:"routes,omitempty"`
 }

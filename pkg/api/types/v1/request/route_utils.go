@@ -28,15 +28,15 @@ import (
 
 type RouteRequest struct{}
 
-func (RouteRequest) CreateOptions() *RouteCreateOptions {
-	return new(RouteCreateOptions)
+func (RouteRequest) Manifest() *RouteManifest {
+	return new(RouteManifest)
 }
 
-func (r *RouteCreateOptions) Validate() *errors.Err {
+func (r *RouteManifest) Validate() *errors.Err {
 	return nil
 }
 
-func (r *RouteCreateOptions) DecodeAndValidate(reader io.Reader) (*RouteCreateOptions, *errors.Err) {
+func (r *RouteManifest) DecodeAndValidate(reader io.Reader) (*RouteManifest, *errors.Err) {
 
 	if reader == nil {
 		err := errors.New("data body can not be null")
@@ -58,46 +58,6 @@ func (r *RouteCreateOptions) DecodeAndValidate(reader io.Reader) (*RouteCreateOp
 	}
 
 	return r, nil
-}
-
-func (r *RouteCreateOptions) ToJson() ([]byte, error) {
-	return json.Marshal(r)
-}
-
-func (RouteRequest) UpdateOptions() *RouteUpdateOptions {
-	return new(RouteUpdateOptions)
-}
-
-func (r *RouteUpdateOptions) Validate() *errors.Err {
-	return nil
-}
-
-func (r *RouteUpdateOptions) DecodeAndValidate(reader io.Reader) (*RouteUpdateOptions, *errors.Err) {
-
-	if reader == nil {
-		err := errors.New("data body can not be null")
-		return nil, errors.New("route").IncorrectJSON(err)
-	}
-
-	body, err := ioutil.ReadAll(reader)
-	if err != nil {
-		return nil, errors.New("route").Unknown(err)
-	}
-
-	err = json.Unmarshal(body, r)
-	if err != nil {
-		return nil, errors.New("route").IncorrectJSON(err)
-	}
-
-	if err := r.Validate(); err != nil {
-		return nil, err
-	}
-
-	return r, nil
-}
-
-func (r *RouteUpdateOptions) ToJson() ([]byte, error) {
-	return json.Marshal(r)
 }
 
 func (RouteRequest) RemoveOptions() *RouteRemoveOptions {
