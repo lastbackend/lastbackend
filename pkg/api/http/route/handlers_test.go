@@ -312,13 +312,15 @@ func TestRouteCreate(t *testing.T) {
 	sv1 := getServiceAsset(ns1.Meta.Name, "demo", "")
 
 	r1 := getRouteAsset(ns1.Meta.Name, "demo")
-	r1.Spec.Rules = append(r1.Spec.Rules, types.RouteRule{
-		Path:     "/",
-		Endpoint: fmt.Sprintf("%s.%s", ns1.Meta.Name, sv1.Meta.Name),
-		Port:     80,
-	})
 
-	mf, _ :=  getRouteManifest("demo").ToJson()
+	sl := new(types.ServiceList)
+	sl.Items = append(sl.Items, sv1)
+
+	mf :=  getRouteManifest(sv1.Meta.Name)
+	mf.SetRouteSpec(r1, sl)
+
+	mf1, _ := mf.ToJson()
+	mf2, _ :=  getRouteManifest("not_found").ToJson()
 
 
 	type fields struct {
@@ -348,7 +350,7 @@ func TestRouteCreate(t *testing.T) {
 			args:         args{ctx, ns2},
 			fields:       fields{stg},
 			handler:      route.RouteCreateH,
-			data:        string(mf),
+			data:        string(mf1),
 			err:          "{\"code\":404,\"status\":\"Not Found\",\"message\":\"Namespace not found\"}",
 			wantErr:      true,
 			expectedCode: http.StatusNotFound,
@@ -358,7 +360,7 @@ func TestRouteCreate(t *testing.T) {
 			args:         args{ctx, ns1},
 			fields:       fields{stg},
 			handler:      route.RouteCreateH,
-			data:        string(mf),
+			data:        string(mf2),
 			err:          "{\"code\":400,\"status\":\"Bad Parameter\",\"message\":\"Bad rules parameter\"}",
 			wantErr:      true,
 			expectedCode: http.StatusBadRequest,
@@ -379,7 +381,7 @@ func TestRouteCreate(t *testing.T) {
 			args:         args{ctx, ns1},
 			fields:       fields{stg},
 			handler:      route.RouteCreateH,
-			data:        string(mf),
+			data:        string(mf1),
 			want:         v1.View().Route().New(r1),
 			wantErr:      false,
 			expectedCode: http.StatusOK,
@@ -449,8 +451,15 @@ func TestRouteCreate(t *testing.T) {
 				err := tc.fields.stg.Get(tc.args.ctx, stg.Collection().Route(), stg.Key().Route(tc.args.namespace.Meta.Name, tc.want.Meta.Name), got, nil)
 				assert.NoError(t, err)
 				if assert.NotEmpty(t, got, "route is empty") {
-					assert.Equal(t, tc.want.Meta.Name, got.Meta.Name, "names mismatch")
-					assert.Equal(t, len(tc.want.Spec.Rules), len(got.Spec.Rules), "rules count mismatch")
+
+					if !assert.Equal(t, tc.want.Meta.Name, got.Meta.Name, "names mismatch") {
+						return
+					}
+
+					if !assert.Equal(t, len(tc.want.Spec.Rules), len(got.Spec.Rules), "rules count mismatch") {
+						return
+					}
+
 					assert.Equal(t, tc.want.Spec.Rules[0].Endpoint, got.Spec.Rules[0].Endpoint, "endpoints mismatch")
 				}
 			}
@@ -472,7 +481,7 @@ func TestRouteUpdate(t *testing.T) {
 
 	sv1 := getServiceAsset(ns1.Meta.Name, "demo", "")
 	sv2 := getServiceAsset(ns1.Meta.Name, "test1", "")
-	//sv3 := getServiceAsset(ns1.Meta.Name, "test2", "")
+	sv3 := getServiceAsset(ns1.Meta.Name, "test2", "")
 
 	r1 := getRouteAsset(ns1.Meta.Name, "demo")
 	r2 := getRouteAsset(ns1.Meta.Name, "test")
@@ -484,7 +493,9 @@ func TestRouteUpdate(t *testing.T) {
 		Port:     80,
 	})
 
-	mf, _ :=  getRouteManifest("demo").ToJson()
+	mf1, _ :=  getRouteManifest(sv1.Meta.Name).ToJson()
+	mf2, _ :=  getRouteManifest(sv2.Meta.Name).ToJson()
+	mf3, _ :=  getRouteManifest(sv3.Meta.Name).ToJson()
 
 	type fields struct {
 		stg storage.Storage
@@ -513,7 +524,7 @@ func TestRouteUpdate(t *testing.T) {
 			args:         args{ctx, ns1, r2},
 			fields:       fields{stg},
 			handler:      route.RouteUpdateH,
-			data:        	string(mf),
+			data:        	string(mf3),
 			err:          "{\"code\":404,\"status\":\"Not Found\",\"message\":\"Route not found\"}",
 			wantErr:      true,
 			expectedCode: http.StatusNotFound,
@@ -523,7 +534,7 @@ func TestRouteUpdate(t *testing.T) {
 			args:         args{ctx, ns2, r1},
 			fields:       fields{stg},
 			handler:      route.RouteUpdateH,
-			data:        	string(mf),
+			data:        	string(mf2),
 			err:          "{\"code\":404,\"status\":\"Not Found\",\"message\":\"Namespace not found\"}",
 			wantErr:      true,
 			expectedCode: http.StatusNotFound,
@@ -533,7 +544,7 @@ func TestRouteUpdate(t *testing.T) {
 			args:         args{ctx, ns2, r1},
 			fields:       fields{stg},
 			handler:      route.RouteUpdateH,
-			data:        	string(mf),
+			data:        	string(mf1),
 			err:          "{\"code\":404,\"status\":\"Not Found\",\"message\":\"Namespace not found\"}",
 			wantErr:      true,
 			expectedCode: http.StatusNotFound,
@@ -553,7 +564,7 @@ func TestRouteUpdate(t *testing.T) {
 			args:         args{ctx, ns1, r1},
 			fields:       fields{stg},
 			handler:      route.RouteUpdateH,
-			data:        	string(mf),
+			data:        	string(mf2),
 			want:         v1.View().Route().New(r3),
 			wantErr:      false,
 			expectedCode: http.StatusOK,
@@ -813,7 +824,7 @@ func getRouteManifest(name string) *request.RouteManifest {
 	mf.Spec.Rules = append(mf.Spec.Rules, request.RouteManifestSpecRulesOption{
 		Port: 80,
 		Path: "/",
-		Service: "demo",
+		Service: name,
 	})
 
 	return mf

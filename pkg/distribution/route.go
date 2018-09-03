@@ -99,7 +99,6 @@ func (n *Route) Create(namespace *types.Namespace, route *types.Route) (*types.R
 
 	route.Status.State = types.StatusInitialized
 	route.Spec.Domain = fmt.Sprintf("%s.%s", strings.ToLower(route.Meta.Name), strings.ToLower(namespace.Meta.Endpoint))
-	route.Spec.Rules = make([]types.RouteRule, 0)
 
 	if err := n.storage.Put(n.context, n.storage.Collection().Route(),
 		n.storage.Key().Route(route.Meta.Namespace, route.Meta.Name), route, nil); err != nil {

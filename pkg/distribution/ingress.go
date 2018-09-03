@@ -21,7 +21,6 @@ package distribution
 import (
 	"context"
 	"encoding/json"
-
 	"github.com/lastbackend/lastbackend/pkg/distribution/errors"
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 	"github.com/lastbackend/lastbackend/pkg/log"
@@ -66,7 +65,6 @@ func (n *Ingress) Get(name string) (*types.Ingress, error) {
 	log.V(logLevel).Debugf("%s:get:> get by name %s", logIngressPrefix, name)
 
 	ingress := new(types.Ingress)
-
 	err := n.storage.Get(n.context, n.storage.Collection().Ingress(), n.storage.Key().Ingress(name), ingress, nil)
 	if err != nil {
 

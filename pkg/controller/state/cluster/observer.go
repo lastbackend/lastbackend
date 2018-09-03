@@ -216,6 +216,7 @@ func NewClusterState() *ClusterState {
 
 	var cs = new(ClusterState)
 
+	cs.ingress.list = make(map[string]*types.Ingress)
 	cs.node.observer = make(chan *types.Node)
 	cs.node.list = make(map[string]*types.Node)
 
