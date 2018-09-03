@@ -22,8 +22,6 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"errors"
-	"os"
-
 	docker "github.com/docker/docker/api/types"
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 	"github.com/lastbackend/lastbackend/pkg/log"
@@ -49,7 +47,7 @@ func (r *Runtime) Auth(ctx context.Context, secret *types.SecretAuthData) (strin
 	return base64.URLEncoding.EncodeToString(js), nil
 }
 
-func (r *Runtime) Pull(ctx context.Context, spec *types.ImageManifest) (*types.Image, error) {
+func (r *Runtime) Pull(ctx context.Context, spec *types.ImageManifest, out io.Writer) (*types.Image, error) {
 
 	log.V(logLevel).Debugf("Docker: Name pull: %s", spec.Name)
 
@@ -69,13 +67,16 @@ func (r *Runtime) Pull(ctx context.Context, spec *types.ImageManifest) (*types.I
 	if err != nil {
 		return nil, err
 	}
-	io.Copy(os.Stdout, rc)
+
+	if out != nil {
+		io.Copy(out, rc)
+	}
 
 	image.Status.State = types.StateReady
 	return image, nil
 }
 
-func (r *Runtime) Push(ctx context.Context, spec *types.ImageManifest) error {
+func (r *Runtime) Push(ctx context.Context, spec *types.ImageManifest, out io.Writer) error {
 
 	log.V(logLevel).Debugf("Docker: Name push: %s", spec.Name)
 
@@ -88,11 +89,13 @@ func (r *Runtime) Push(ctx context.Context, spec *types.ImageManifest) error {
 		return err
 	}
 
-	io.Copy(os.Stdout, rc)
+	if out != nil {
+		io.Copy(out, rc)
+	}
 	return err
 }
 
-func (r *Runtime) Build(ctx context.Context, stream io.Reader, spec *types.SpecBuildImage) (*types.Image, error) {
+func (r *Runtime) Build(ctx context.Context, stream io.Reader, spec *types.SpecBuildImage, out io.Writer) (*types.Image, error) {
 	options := docker.ImageBuildOptions{
 		Tags:           spec.Tags,
 		Memory:         spec.Memory,
@@ -111,7 +114,9 @@ func (r *Runtime) Build(ctx context.Context, stream io.Reader, spec *types.SpecB
 	res, err := r.client.ImageBuild(ctx, stream, options)
 
 	img := new(types.Image)
-	io.Copy(os.Stdout, res.Body)
+	if out != nil {
+		io.Copy(out, res.Body)
+	}
 
 	return img, err
 }
@@ -139,10 +144,13 @@ func (r *Runtime) List(ctx context.Context) ([]*types.Image, error) {
 	}
 
 	for _, i := range il {
+
 		img := new(types.Image)
 
-		img.Meta.Name = i.ID
 		img.Meta.ID = i.ID
+		img.Meta.Tags = i.RepoTags
+		img.Meta.Name = i.ID
+
 		img.Status.Size = i.Size
 		img.Status.VirtualSize = i.VirtualSize
 

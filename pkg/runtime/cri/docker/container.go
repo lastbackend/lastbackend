@@ -124,6 +124,7 @@ func (r *Runtime) Inspect(ctx context.Context, ID string) (*types.Container, err
 		Image:    info.Config.Image,
 		Status:   info.State.Status,
 		ExitCode: info.State.ExitCode,
+		Labels:   info.Config.Labels,
 	}
 
 	container.Network.Gateway = info.NetworkSettings.Gateway

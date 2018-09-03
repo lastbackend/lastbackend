@@ -53,7 +53,7 @@ func ImagePull(ctx context.Context, image *types.SpecTemplateContainerImage) err
 		mf.Auth = auth
 	}
 
-	img, err := envs.Get().GetIRI().Pull(ctx, mf)
+	img, err := envs.Get().GetIRI().Pull(ctx, mf, nil)
 	if err != nil {
 		log.Errorf("can not pull image: %s", err.Error())
 		return err
