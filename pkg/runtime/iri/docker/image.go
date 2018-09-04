@@ -19,18 +19,21 @@
 package docker
 
 import (
+	"context"
 	"encoding/base64"
 	"encoding/json"
 	"errors"
+	"fmt"
 	docker "github.com/docker/docker/api/types"
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 	"github.com/lastbackend/lastbackend/pkg/log"
-
-	"context"
 	"io"
+	"net/http"
 )
 
-const logLevel = 3
+const (
+	logLevel = 3
+)
 
 func (r *Runtime) Auth(ctx context.Context, secret *types.SecretAuthData) (string, error) {
 
@@ -53,30 +56,74 @@ func (r *Runtime) Pull(ctx context.Context, spec *types.ImageManifest, out io.Wr
 
 	image := new(types.Image)
 	image.Meta.Name = spec.Name
-	image.Status.State = types.StateReady
+	image.Status.State = types.StatusPull
 
 	options := docker.ImagePullOptions{
 		PrivilegeFunc: func() (string, error) {
-			panic(0)
-			return "", errors.New("Access denied")
+			return "", errors.New("access denied")
 		},
 		RegistryAuth: spec.Auth,
 	}
 
-	rc, err := r.client.ImagePull(ctx, spec.Name, options)
+	res, err := r.client.ImagePull(ctx, spec.Name, options)
 	if err != nil {
 		return nil, err
 	}
+	defer res.Close()
 
-	if out != nil {
-		io.Copy(out, rc)
+	const bufferSize = 1024
+	var buffer = make([]byte, bufferSize)
+
+	for {
+		select {
+		case <-ctx.Done():
+			return nil, nil
+		default:
+
+			readBytes, err := res.Read(buffer)
+			if err != nil && err != io.EOF {
+				return nil, err
+			}
+			if readBytes == 0 {
+				ii, _, err := r.client.ImageInspectWithRaw(ctx, spec.Name)
+				if err != nil {
+					return nil, err
+				}
+				image.Meta.Hash = ii.ID
+				image.Meta.Tags = ii.RepoTags
+				image.Status.State = types.StateReady
+
+				return image, nil
+			}
+
+			_, err = func(p []byte) (n int, err error) {
+
+				if out != nil {
+					n, err = out.Write(p)
+					if err != nil {
+						return n, err
+					}
+
+					if f, ok := out.(http.Flusher); ok {
+						f.Flush()
+					}
+				}
+
+				return n, nil
+			}(buffer[0:readBytes])
+
+			if err != nil {
+				return nil, err
+			}
+
+			for i := 0; i < readBytes; i++ {
+				buffer[i] = 0
+			}
+		}
 	}
-
-	image.Status.State = types.StateReady
-	return image, nil
 }
 
-func (r *Runtime) Push(ctx context.Context, spec *types.ImageManifest, out io.Writer) error {
+func (r *Runtime) Push(ctx context.Context, spec *types.ImageManifest, out io.Writer) (string, error) {
 
 	log.V(logLevel).Debugf("Docker: Name push: %s", spec.Name)
 
@@ -84,15 +131,65 @@ func (r *Runtime) Push(ctx context.Context, spec *types.ImageManifest, out io.Wr
 		RegistryAuth: spec.Auth,
 	}
 
-	rc, err := r.client.ImagePush(ctx, spec.Name, options)
+	res, err := r.client.ImagePush(ctx, spec.Name, options)
 	if err != nil {
-		return err
+		return "", err
 	}
+	defer res.Close()
 
-	if out != nil {
-		io.Copy(out, rc)
-	}
-	return err
+	const bufferSize = 5e+6 //  5e+6 = 5MB
+	var (
+		readBytesLast = 0
+		bufferLast    = make([]byte, bufferSize)
+	)
+
+	result := new(struct {
+		Progress    map[string]interface{} `json:"progressDetail"`
+		ErrorDetail *struct {
+			Message string `json:"message"`
+			Error   string `json:"error"`
+		} `json:"errorDetail,omitempty"`
+		Aux struct {
+			Tag    string `json:"Tag"`
+			Digest string `json:"Digest"`
+			Size   int    `json:"Limit"`
+		} `json:"aux"`
+	})
+
+	err = func(stream io.ReadCloser, data interface{}) error {
+		for {
+			buffer := make([]byte, bufferSize)
+			readBytes, err := res.Read(buffer)
+			if err != nil && err != io.EOF {
+				return err
+			}
+			if readBytes == 0 {
+				if err := json.Unmarshal(bufferLast[:readBytesLast], &data); err != nil {
+					result = nil
+					break
+				}
+
+				if result.ErrorDetail != nil {
+					return fmt.Errorf("%s", result.ErrorDetail.Message)
+				}
+
+				break
+			}
+
+			bufferLast = make([]byte, bufferSize)
+
+			readBytesLast = readBytes
+			copy(bufferLast, buffer)
+
+			if out != nil {
+				out.Write(buffer[:readBytes])
+			}
+		}
+
+		return nil
+	}(res, result)
+
+	return result.Aux.Digest, err
 }
 
 func (r *Runtime) Build(ctx context.Context, stream io.Reader, spec *types.SpecBuildImage, out io.Writer) (*types.Image, error) {
@@ -112,13 +209,54 @@ func (r *Runtime) Build(ctx context.Context, stream io.Reader, spec *types.SpecB
 		}
 	}
 	res, err := r.client.ImageBuild(ctx, stream, options)
-
-	img := new(types.Image)
-	if out != nil {
-		io.Copy(out, res.Body)
+	if err != nil {
+		return nil, err
 	}
+	defer res.Body.Close()
 
-	return img, err
+	const bufferSize = 1024
+	var buffer = make([]byte, bufferSize)
+
+	for {
+		select {
+		case <-ctx.Done():
+			return nil, nil
+		default:
+
+			readBytes, err := res.Body.Read(buffer)
+			if err != nil && err != io.EOF {
+				return nil, err
+			}
+			if readBytes == 0 {
+				// TODO: get image info
+				return new(types.Image), err
+			}
+
+			_, err = func(p []byte) (n int, err error) {
+
+				if out != nil {
+					n, err = out.Write(p)
+					if err != nil {
+						return n, err
+					}
+
+					if f, ok := out.(http.Flusher); ok {
+						f.Flush()
+					}
+				}
+
+				return n, nil
+			}(buffer[0:readBytes])
+
+			if err != nil {
+				return nil, err
+			}
+
+			for i := 0; i < readBytes; i++ {
+				buffer[i] = 0
+			}
+		}
+	}
 }
 
 func (r *Runtime) Remove(ctx context.Context, ID string) error {
@@ -154,6 +292,7 @@ func (r *Runtime) List(ctx context.Context) ([]*types.Image, error) {
 		img.Status.Size = i.Size
 		img.Status.VirtualSize = i.VirtualSize
 
+		images = append(images, img)
 	}
 
 	return images, nil

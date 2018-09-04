@@ -22,14 +22,18 @@ import (
 	"fmt"
 	"github.com/lastbackend/lastbackend/pkg/runtime/cri"
 	"github.com/lastbackend/lastbackend/pkg/runtime/cri/docker"
-	"github.com/spf13/viper"
 )
 
-func New() (cri.CRI, error) {
-	switch viper.GetString("node.cri.type") {
-	case "docker":
-		return docker.New()
+const (
+	dockerDriver = "docker"
+	runcDriver   = "runc"
+)
+
+func New(driver string, cfg map[string]interface{}) (cri.CRI, error) {
+	switch driver {
+	case dockerDriver:
+		return docker.New(cfg)
 	default:
-		return nil, fmt.Errorf("container runtime <%s> interface not supported", viper.GetString("node.cri.type"))
+		return nil, fmt.Errorf("container runtime <%s> interface not supported", driver)
 	}
 }

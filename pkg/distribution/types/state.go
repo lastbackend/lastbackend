@@ -24,6 +24,7 @@ const StateWarning = "warning"
 const StateDegradation = "degradation"
 const StateReady = "ready"
 
+const StatusBuild = "build"
 const StatusPull = "pull"
 const StateDestroy = "destroy"
 const StateUpdated = "updated"

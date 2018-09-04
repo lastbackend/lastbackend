@@ -26,7 +26,7 @@ import (
 )
 
 func New() (cni.CNI, error) {
-	switch viper.GetString("node.cni.type") {
+	switch viper.GetString("runtime.cni.type") {
 	default:
 		return local.New()
 	}
