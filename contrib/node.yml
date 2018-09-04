@@ -22,10 +22,23 @@ node:
     server_key: "/opt/cert/node/server-key.pem"
     client_cert: "/opt/cert/node/client.pem"
     client_key: "/opt/cert/node/client-key.pem"
+
+# Runtime
+runtime:
+  docker:
+    version: 1.35
   cri:
     type: "docker"
+#    tls:
+#      ca_file: ""
+#      cert_file: ""
+#      key_file: ""
   iri:
     type: "docker"
+#    tls:
+#      ca_file: ""
+#      cert_file: ""
+#      key_file: ""
   cni:
     type: "vxlan"
   cpi:
@@ -33,13 +46,6 @@ node:
   csi:
     local:
       root: "/private/var/lib/lastbackend/"
-# Runtime
-runtime:
-  type: "docker"
-  docker:
-    version: 1.35
-#  docker:
-#    certs: "/opt/ssl/"
 
 ingress:
   enable: true

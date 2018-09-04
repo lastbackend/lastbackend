@@ -99,8 +99,8 @@ func Get() (*Storage, error) {
 	log.Debug("Initialize local storage interface")
 	var s = new(Storage)
 
-	if viper.GetString("node.csi.local.root") != "" {
-		s.root = viper.GetString("node.csi.local.root")
+	if viper.GetString("runtime.csi.local.root") != "" {
+		s.root = viper.GetString("runtime.csi.local.root")
 		log.Debugf("Initialize local storage interface root: %s", s.root)
 	}
 
