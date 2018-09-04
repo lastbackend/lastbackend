@@ -21,12 +21,8 @@ package docker
 import (
 	"github.com/docker/docker/api"
 	"github.com/docker/docker/client"
-	"github.com/docker/go-connections/tlsconfig"
 	"github.com/lastbackend/lastbackend/pkg/log"
-
-	"github.com/spf13/viper"
-	"net/http"
-	"path/filepath"
+	"strconv"
 )
 
 const logLevel = 5
@@ -35,96 +31,60 @@ type Runtime struct {
 	client *client.Client
 }
 
-func New() (*Runtime, error) {
+type config map[string]interface{}
+
+func New(cfg config) (*Runtime, error) {
 
 	var (
-		err error
-		cli *http.Client
-		r   = new(Runtime)
+		err           error
+		r             = new(Runtime)
+		clientOptions = make([]func(*client.Client) error, 0)
 	)
 
-	log.V(logLevel).Debug("Use docker CRI")
-
-	if viper.GetString("runtime.docker.certs") != "" {
-
-		log.V(logLevel).Debugf("Create Docker secure client: %s", viper.GetString("runtime.docker.certs"))
-
-		options := tlsconfig.Options{
-			CAFile:             filepath.Join(viper.GetString("runtime.docker.certs"), "ca.pem"),
-			CertFile:           filepath.Join(viper.GetString("runtime.docker.certs"), "cert.pem"),
-			KeyFile:            filepath.Join(viper.GetString("runtime.docker.certs"), "key.pem"),
-			InsecureSkipVerify: viper.GetBool("runtime.docker.ssl"),
-		}
-
-		tlsc, err := tlsconfig.Client(options)
-		if err != nil {
-			return nil, err
-		}
-
-		cli = &http.Client{
-			Transport: &http.Transport{
-				TLSClientConfig: tlsc,
-			},
-		}
+	if cfg == nil {
+		cfg = make(config, 0)
 	}
+
+	log.V(logLevel).Debug("Use docker runtime interface")
 
 	host := client.DefaultDockerHost
-	if viper.GetString("runtime.docker.host") != "" {
-		host = viper.GetString("runtime.docker.host")
+	if v, ok := cfg["host"]; ok {
+		host = v.(string)
 	}
+	clientOptions = append(clientOptions, client.WithHost(host))
 
 	version := api.DefaultVersion
-	if viper.GetString("runtime.docker.version") != "" {
-		version = viper.GetString("runtime.docker.version")
-	}
-
-	r.client, err = client.NewClient(host, version, cli, nil)
-	if err != nil {
-		return nil, err
-	}
-
-	return r, nil
-}
-
-func NewWithHost(host string) (*Runtime, error) {
-
-	var (
-		err error
-		cli *http.Client
-		r   = new(Runtime)
-	)
-
-	log.V(logLevel).Debugf("Use docker CRI with host %s", host)
-
-	if viper.GetString("runtime.docker.certs") != "" {
-
-		log.V(logLevel).Debugf("Create Docker secure client: %s", viper.GetString("runtime.docker.certs"))
-
-		options := tlsconfig.Options{
-			CAFile:             filepath.Join(viper.GetString("runtime.docker.certs"), "ca.pem"),
-			CertFile:           filepath.Join(viper.GetString("runtime.docker.certs"), "cert.pem"),
-			KeyFile:            filepath.Join(viper.GetString("runtime.docker.certs"), "key.pem"),
-			InsecureSkipVerify: viper.GetBool("runtime.docker.ssl"),
-		}
-
-		tlsc, err := tlsconfig.Client(options)
-		if err != nil {
-			return nil, err
-		}
-
-		cli = &http.Client{
-			Transport: &http.Transport{
-				TLSClientConfig: tlsc,
-			},
+	if v, ok := cfg["version"]; ok {
+		switch i := v.(type) {
+		case string:
+			version = string(i)
+		case float64:
+			version = strconv.FormatFloat(float64(i), 'f', 2, 64)
 		}
 	}
+	clientOptions = append(clientOptions, client.WithVersion(version))
 
-	version := api.DefaultVersion
-	if viper.GetString("runtime.docker.version") != "" {
-		version = viper.GetString("runtime.docker.version")
+	if v, ok := cfg["tls"]; ok {
+
+		var tls = v.(map[string]string)
+		var caFile, certFile, keyFile string
+
+		if v, ok := tls["ca_file"]; ok {
+			caFile = v
+		}
+
+		if v, ok := tls["cert_file"]; ok {
+			certFile = v
+		}
+
+		if v, ok := tls["key_file"]; ok {
+			keyFile = v
+		}
+
+		clientOptions = append(clientOptions, client.WithTLSClientConfig(caFile, certFile, keyFile))
 	}
 
-	r.client, err = client.NewClient(host, version, cli, nil)
+	r.client, err = client.NewClientWithOpts(clientOptions...)
 	if err != nil {
 		return nil, err
 	}

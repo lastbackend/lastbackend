@@ -20,6 +20,7 @@ package node
 
 import (
 	"context"
+	"fmt"
 	"github.com/lastbackend/lastbackend/pkg/node/ingress/ingress"
 	"github.com/lastbackend/lastbackend/pkg/runtime/iri/iri"
 	"os"
@@ -53,27 +54,29 @@ func Daemon() {
 	log.New(viper.GetInt("verbose"))
 	log.Info("Start Node")
 
-	cri, err := cri.New()
+	criDriver := viper.GetString("runtime.cri.type")
+	_cri, err := cri.New(criDriver, viper.GetStringMap(fmt.Sprintf("runtime.%s", criDriver)))
 	if err != nil {
 		log.Errorf("Cannot initialize cri: %v", err)
 	}
 
-	cni, err := cni.New()
-	if err != nil {
-		log.Errorf("Cannot initialize cni: %v", err)
-	}
-
-	cpi, err := cpi.New()
-	if err != nil {
-		log.Errorf("Cannot initialize cni: %v", err)
-	}
-
-	iri, err := iri.New()
+	iriDriver := viper.GetString("runtime.iri.type")
+	_iri, err := iri.New(iriDriver, viper.GetStringMap(fmt.Sprintf("runtime.%s", iriDriver)))
 	if err != nil {
 		log.Errorf("Cannot initialize iri: %v", err)
 	}
 
-	csis := viper.GetStringMap("node.csi")
+	_cni, err := cni.New()
+	if err != nil {
+		log.Errorf("Cannot initialize cni: %v", err)
+	}
+
+	_cpi, err := cpi.New()
+	if err != nil {
+		log.Errorf("Cannot initialize cni: %v", err)
+	}
+
+	csis := viper.GetStringMap("runtime.csi")
 	if csis != nil {
 		for kind := range csis {
 			si, err := csi.New(kind)
@@ -87,12 +90,12 @@ func Daemon() {
 
 	envs.Get().SetDNS(viper.GetStringSlice("dns.ips"))
 
-	state := state.New()
-	envs.Get().SetState(state)
-	envs.Get().SetCRI(cri)
-	envs.Get().SetIRI(iri)
-	envs.Get().SetCNI(cni)
-	envs.Get().SetCPI(cpi)
+	st := state.New()
+	envs.Get().SetState(st)
+	envs.Get().SetCRI(_cri)
+	envs.Get().SetIRI(_iri)
+	envs.Get().SetCNI(_cni)
+	envs.Get().SetCPI(_cpi)
 
 	envs.Get().SetModeIngress(viper.GetBool("ingress.enable"))
 	if envs.Get().GetModeIngress() {
@@ -103,10 +106,8 @@ func Daemon() {
 		envs.Get().SetIngress(ing)
 	}
 
-
-
-	state.Node().Info = runtime.NodeInfo()
-	state.Node().Status = runtime.NodeStatus()
+	st.Node().Info = runtime.NodeInfo()
+	st.Node().Status = runtime.NodeStatus()
 
 	cfg := client.NewConfig()
 
@@ -130,7 +131,7 @@ func Daemon() {
 		os.Exit(0)
 	}
 
-	n := rest.V1().Cluster().Node(state.Node().Info.Hostname)
+	n := rest.V1().Cluster().Node(st.Node().Info.Hostname)
 	s := rest.V1()
 	envs.Get().SetClient(n, s)
 
