@@ -36,28 +36,28 @@ func (r *RouteManifest) Validate() *errors.Err {
 	return nil
 }
 
-func (r *RouteManifest) DecodeAndValidate(reader io.Reader) (*RouteManifest, *errors.Err) {
+func (r *RouteManifest) DecodeAndValidate(reader io.Reader) *errors.Err {
 
 	if reader == nil {
 		err := errors.New("data body can not be null")
-		return nil, errors.New("route").IncorrectJSON(err)
+		return errors.New("route").IncorrectJSON(err)
 	}
 
 	body, err := ioutil.ReadAll(reader)
 	if err != nil {
-		return nil, errors.New("route").Unknown(err)
+		return errors.New("route").Unknown(err)
 	}
 
 	err = json.Unmarshal(body, r)
 	if err != nil {
-		return nil, errors.New("route").IncorrectJSON(err)
+		return errors.New("route").IncorrectJSON(err)
 	}
 
 	if err := r.Validate(); err != nil {
-		return nil, err
+		return err
 	}
 
-	return r, nil
+	return nil
 }
 
 func (RouteRequest) RemoveOptions() *RouteRemoveOptions {

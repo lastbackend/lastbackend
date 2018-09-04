@@ -30,6 +30,7 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/api/http/secret"
 	"github.com/lastbackend/lastbackend/pkg/api/http/service"
 	"github.com/lastbackend/lastbackend/pkg/api/http/trigger"
+	"github.com/lastbackend/lastbackend/pkg/api/http/volume"
 	"github.com/lastbackend/lastbackend/pkg/log"
 	"github.com/lastbackend/lastbackend/pkg/util/http"
 	"github.com/lastbackend/lastbackend/pkg/util/http/cors"
@@ -63,19 +64,19 @@ func init() {
 	AddRoutes(cluster.Routes)
 	AddRoutes(node.Routes)
 	AddRoutes(ingress.Routes)
-	AddRoutes(route.Routes)
 
-	// Secrets
 	AddRoutes(secret.Routes)
 	// Namespace
 	AddRoutes(namespace.Routes)
+	AddRoutes(route.Routes)
 	AddRoutes(service.Routes)
 	AddRoutes(deployment.Routes)
+	AddRoutes(volume.Routes)
 
-	// Hooks
+	//triggers
 	AddRoutes(trigger.Routes)
 
-	// Events
+	// events
 	AddRoutes(events.Routes)
 }
 

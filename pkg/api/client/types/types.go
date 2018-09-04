@@ -122,9 +122,9 @@ type TriggerClientV1 interface {
 }
 
 type VolumeClientV1 interface {
-	Create(ctx context.Context, opts *rv1.VolumeCreateOptions) (*vv1.Volume, error)
+	Create(ctx context.Context, opts *rv1.VolumeManifest) (*vv1.Volume, error)
 	List(ctx context.Context) (*vv1.VolumeList, error)
 	Get(ctx context.Context) (*vv1.Volume, error)
-	Update(ctx context.Context, opts *rv1.VolumeUpdateOptions) (*vv1.Volume, error)
+	Update(ctx context.Context, opts *rv1.VolumeManifest) (*vv1.Volume, error)
 	Remove(ctx context.Context, opts *rv1.VolumeRemoveOptions) error
 }

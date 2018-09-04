@@ -69,7 +69,7 @@ func VolumeDestroy(ctx context.Context, name string) error {
 
 	mf := types.VolumeManifest{
 		Type: vol.Type,
-		Path: vol.Path,
+		HostPath: vol.Path,
 	}
 
 	if err := si.Remove(ctx, name, &mf); err != nil {

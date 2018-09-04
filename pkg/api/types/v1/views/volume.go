@@ -27,13 +27,30 @@ type Volume struct {
 }
 
 type VolumeMeta struct {
-	Name    string    `json:"name"`
-	Updated time.Time `json:"updated"`
-	Created time.Time `json:"created"`
+	Name        string    `json:"name"`
+	Namespace   string    `json:"namespace"`
+	Description string    `json:"description"`
+	SelfLink    string    `json:"self_link"`
+	Updated     time.Time `json:"updated"`
+	Created     time.Time `json:"created"`
 }
 
 type VolumeSpec struct {
-	State VolumeSpecState `json:"state"`
+	Selector   VolumeSpecSelector `json:"selector"`
+	State      VolumeSpecState    `json:"state"`
+	Type       string             `json:"type"`
+	HostPath   string             `json:"path"`
+	AccessMode string             `json:"mode"`
+	Capacity   VolumeSpecCapacity `json:"capacity"`
+}
+
+type VolumeSpecSelector struct {
+	Node string `json:"node"`
+	Labels map[string]string `json:"labels"`
+}
+
+type VolumeSpecCapacity struct {
+	Storage string `json:"storage"`
 }
 
 type VolumeSpecState struct {
@@ -43,4 +60,4 @@ type VolumeSpecState struct {
 type VolumeStatus struct {
 }
 
-type VolumeList map[string]*Volume
+type VolumeList []*Volume

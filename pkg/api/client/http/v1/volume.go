@@ -36,7 +36,7 @@ type VolumeClient struct {
 	name      string
 }
 
-func (vc *VolumeClient) Create(ctx context.Context, opts *rv1.VolumeCreateOptions) (*vv1.Volume, error) {
+func (vc *VolumeClient) Create(ctx context.Context, opts *rv1.VolumeManifest) (*vv1.Volume, error) {
 
 	body, err := opts.ToJson()
 	if err != nil {
@@ -104,7 +104,7 @@ func (vc *VolumeClient) Get(ctx context.Context) (*vv1.Volume, error) {
 	return s, nil
 }
 
-func (vc *VolumeClient) Update(ctx context.Context, opts *rv1.VolumeUpdateOptions) (*vv1.Volume, error) {
+func (vc *VolumeClient) Update(ctx context.Context, opts *rv1.VolumeManifest) (*vv1.Volume, error) {
 
 	body, err := opts.ToJson()
 	if err != nil {

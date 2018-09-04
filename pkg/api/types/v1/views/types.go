@@ -33,6 +33,7 @@ type IView interface {
 	Endpoint() *EndpointView
 	Pod() *Pod
 	Container() *ContainerView
+	Volume() *VolumeView
 }
 
 type View struct{}
@@ -70,4 +71,8 @@ func (View) Endpoint() *EndpointView {
 }
 func (View) Container() *ContainerView {
 	return new(ContainerView)
+}
+
+func (View) Volume() *VolumeView {
+	return new(VolumeView)
 }
