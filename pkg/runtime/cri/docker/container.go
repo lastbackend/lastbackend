@@ -163,9 +163,11 @@ func (r *Runtime) Inspect(ctx context.Context, ID string) (*types.Container, err
 	meta, ok := info.Config.Labels[types.ContainerTypeLBC]
 	if ok {
 		container.Pod = meta
-	} else {
+	} else if _, ok := info.Config.Labels[types.ContainerTypeLBR]; !ok {
 		log.V(logLevel).Debug("Docker: Container Meta not found")
 	}
+
+	container.Labels = info.Config.Labels
 
 	return container, nil
 }

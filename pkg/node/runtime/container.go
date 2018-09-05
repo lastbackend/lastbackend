@@ -64,88 +64,80 @@ func containerSubscribe(ctx context.Context) error {
 
 	state := envs.Get().GetState().Pods()
 
-	cs, err := envs.Get().GetCRI().Subscribe(ctx)
-	if err != nil {
-		log.Errorf("container subscribe error: %s", err)
-	}
+	cs := make(chan *types.Container)
 
-	go func() {
-		for c := range cs {
+	go envs.Get().GetCRI().Subscribe(ctx, cs)
 
-			if c.Pod != types.ContainerTypeLBC {
-				continue
-			}
+	for c := range cs {
 
-			container := state.GetContainer(c.ID)
-			if container == nil {
-				log.V(logLevel).Debugf("Container not found")
-				continue
-			}
-
-			container.Pod = c.Pod
-
-			switch c.State {
-			case types.StateDestroyed:
-				state.DelContainer(container)
-				break
-			case types.StateCreated:
-				container.State = types.PodContainerState{
-					Created: types.PodContainerStateCreated{
-						Created: time.Now().UTC(),
-					},
-				}
-			case types.StateStarted:
-				if container.State.Started.Started {
-					continue
-				}
-				container.State = types.PodContainerState{
-					Started: types.PodContainerStateStarted{
-						Started:   true,
-						Timestamp: time.Now().UTC(),
-					},
-				}
-				container.State.Stopped.Stopped = false
-			case types.StatusStopped:
-				if container.State.Stopped.Stopped {
-					continue
-				}
-				container.State.Stopped.Stopped = true
-				container.State.Stopped.Exit = types.PodContainerStateExit{
-					Code:      c.ExitCode,
-					Timestamp: time.Now().UTC(),
-				}
-				container.State.Started.Started = false
-			case types.StateError:
-				if container.State.Error.Error {
-					continue
-				}
-				container.State.Error.Error = true
-				container.State.Error.Message = c.Status
-				container.State.Error.Exit = types.PodContainerStateExit{
-					Code:      c.ExitCode,
-					Timestamp: time.Now().UTC(),
-				}
-				container.State.Started.Started = false
-				container.State.Stopped.Stopped = false
-				container.State.Stopped.Exit = types.PodContainerStateExit{
-					Code:      c.ExitCode,
-					Timestamp: time.Now().UTC(),
-				}
-				container.State.Started.Started = false
-			}
-
-			if err != nil {
-				log.Errorf("Container: can-not inspect")
-				break
-			}
-
-			if c.State != types.StateDestroyed {
-				state.SetContainer(container)
-			}
-
-			events.NewPodStatusEvent(ctx, c.Pod)
+		if c.Pod != types.ContainerTypeLBC {
+			continue
 		}
-	}()
+
+		container := state.GetContainer(c.ID)
+		if container == nil {
+			log.V(logLevel).Debugf("Container not found")
+			continue
+		}
+
+		container.Pod = c.Pod
+
+		switch c.State {
+		case types.StateDestroyed:
+			state.DelContainer(container)
+			break
+		case types.StateCreated:
+			container.State = types.PodContainerState{
+				Created: types.PodContainerStateCreated{
+					Created: time.Now().UTC(),
+				},
+			}
+		case types.StateStarted:
+			if container.State.Started.Started {
+				continue
+			}
+			container.State = types.PodContainerState{
+				Started: types.PodContainerStateStarted{
+					Started:   true,
+					Timestamp: time.Now().UTC(),
+				},
+			}
+			container.State.Stopped.Stopped = false
+		case types.StatusStopped:
+			if container.State.Stopped.Stopped {
+				continue
+			}
+			container.State.Stopped.Stopped = true
+			container.State.Stopped.Exit = types.PodContainerStateExit{
+				Code:      c.ExitCode,
+				Timestamp: time.Now().UTC(),
+			}
+			container.State.Started.Started = false
+		case types.StateError:
+			if container.State.Error.Error {
+				continue
+			}
+			container.State.Error.Error = true
+			container.State.Error.Message = c.Status
+			container.State.Error.Exit = types.PodContainerStateExit{
+				Code:      c.ExitCode,
+				Timestamp: time.Now().UTC(),
+			}
+			container.State.Started.Started = false
+			container.State.Stopped.Stopped = false
+			container.State.Stopped.Exit = types.PodContainerStateExit{
+				Code:      c.ExitCode,
+				Timestamp: time.Now().UTC(),
+			}
+			container.State.Started.Started = false
+		}
+
+		if c.State != types.StateDestroyed {
+			state.SetContainer(container)
+		}
+
+		events.NewPodStatusEvent(ctx, c.Pod)
+	}
 
 	return nil
 }
@@ -212,7 +204,6 @@ func containerManifestCreate(ctx context.Context, pod string, spec *types.SpecTe
 	for _, d := range dns {
 		mf.DNS.Server = append(mf.DNS.Server, d)
 	}
-
 
 	return mf, nil
 }
