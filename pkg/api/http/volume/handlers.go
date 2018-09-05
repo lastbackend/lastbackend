@@ -16,7 +16,7 @@
 // from Last.Backend LLC.
 //
 
-package route
+package volume
 
 import (
 	"github.com/lastbackend/lastbackend/pkg/api/types/v1"
@@ -33,14 +33,14 @@ import (
 
 const (
 	logLevel  = 2
-	logPrefix = "api:handler:route"
+	logPrefix = "api:handler:volume"
 )
 
-func RouteListH(w http.ResponseWriter, r *http.Request) {
+func VolumeListH(w http.ResponseWriter, r *http.Request) {
 
-	// swagger:operation GET /namespace/{namespace}/route route routeList
+	// swagger:operation GET /namespace/{namespace}/volume volume volumeList
 	//
-	// Shows a list of routes
+	// Shows a list of volumes
 	//
 	// ---
 	// produces:
@@ -53,20 +53,20 @@ func RouteListH(w http.ResponseWriter, r *http.Request) {
 	//     type: string
 	// responses:
 	//   '200':
-	//     description: Route list response
+	//     description: Volume list response
 	//     schema:
-	//       "$ref": "#/definitions/views_route_list"
+	//       "$ref": "#/definitions/views_volume_list"
 	//   '404':
 	//     description: Namespace not found
 	//   '500':
 	//     description: Internal server error
 
-	log.V(logLevel).Debugf("%s:list:> get routes list", logPrefix)
+	log.V(logLevel).Debugf("%s:list:> get volumes list", logPrefix)
 
 	nid := utils.Vars(r)["namespace"]
 
 	var (
-		rm  = distribution.NewRouteModel(r.Context(), envs.Get().GetStorage())
+		rm  = distribution.NewVolumeModel(r.Context(), envs.Get().GetStorage())
 		nsm = distribution.NewNamespaceModel(r.Context(), envs.Get().GetStorage())
 	)
 
@@ -85,12 +85,12 @@ func RouteListH(w http.ResponseWriter, r *http.Request) {
 
 	items, err := rm.ListByNamespace(ns.Meta.Name)
 	if err != nil {
-		log.V(logLevel).Errorf("%s:list:> find route list err: %s", logPrefix, err.Error())
+		log.V(logLevel).Errorf("%s:list:> find volume list err: %s", logPrefix, err.Error())
 		errors.HTTP.InternalServerError(w)
 		return
 	}
 
-	response, err := v1.View().Route().NewList(items).ToJson()
+	response, err := v1.View().Volume().NewList(items).ToJson()
 	if err != nil {
 		log.V(logLevel).Errorf("%s:list:> convert struct to json err: %s", logPrefix, err.Error())
 		errors.HTTP.InternalServerError(w)
@@ -104,11 +104,11 @@ func RouteListH(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func RouteInfoH(w http.ResponseWriter, r *http.Request) {
+func VolumeInfoH(w http.ResponseWriter, r *http.Request) {
 
-	// swagger:operation GET /namespace/{namespace}/route/{route} route routeInfo
+	// swagger:operation GET /namespace/{namespace}/volume/{volume} volume volumeInfo
 	//
-	// Shows an info about route
+	// Shows an info about volume
 	//
 	// ---
 	// produces:
@@ -119,28 +119,28 @@ func RouteInfoH(w http.ResponseWriter, r *http.Request) {
 	//     description: namespace id
 	//     required: true
 	//     type: string
-	//   - name: route
+	//   - name: volume
 	//     in: path
-	//     description: route id
+	//     description: volume id
 	//     required: true
 	//     type: string
 	// responses:
 	//   '200':
-	//     description: Route response
+	//     description: Volume response
 	//     schema:
-	//       "$ref": "#/definitions/views_route"
+	//       "$ref": "#/definitions/views_volume"
 	//   '404':
-	//     description: Namespace not found / Route not found
+	//     description: Namespace not found / Volume not found
 	//   '500':
 	//     description: Internal server error
 
 	nid := utils.Vars(r)["namespace"]
-	rid := utils.Vars(r)["route"]
+	rid := utils.Vars(r)["volume"]
 
-	log.V(logLevel).Debugf("%s:info:> get route `%s`", logPrefix, rid)
+	log.V(logLevel).Debugf("%s:info:> get volume `%s`", logPrefix, rid)
 
 	var (
-		rm  = distribution.NewRouteModel(r.Context(), envs.Get().GetStorage())
+		rm  = distribution.NewVolumeModel(r.Context(), envs.Get().GetStorage())
 		nsm = distribution.NewNamespaceModel(r.Context(), envs.Get().GetStorage())
 	)
 
@@ -159,17 +159,17 @@ func RouteInfoH(w http.ResponseWriter, r *http.Request) {
 
 	item, err := rm.Get(ns.Meta.Name, rid)
 	if err != nil {
-		log.V(logLevel).Errorf("%s:info:> find route by id `%s` err: %s", rid, logPrefix, err.Error())
+		log.V(logLevel).Errorf("%s:info:> find volume by id `%s` err: %s", rid, logPrefix, err.Error())
 		errors.HTTP.InternalServerError(w)
 		return
 	}
 	if item == nil {
-		log.Warnf("%s:info:> route `%s` not found", logPrefix, rid)
-		errors.New("route").NotFound().Http(w)
+		log.Warnf("%s:info:> volume `%s` not found", logPrefix, rid)
+		errors.New("volume").NotFound().Http(w)
 		return
 	}
 
-	response, err := v1.View().Route().New(item).ToJson()
+	response, err := v1.View().Volume().New(item).ToJson()
 	if err != nil {
 		log.V(logLevel).Errorf("%s:info:> convert struct to json err: %s", logPrefix, err.Error())
 		errors.HTTP.InternalServerError(w)
@@ -183,11 +183,11 @@ func RouteInfoH(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func RouteCreateH(w http.ResponseWriter, r *http.Request) {
+func VolumeCreateH(w http.ResponseWriter, r *http.Request) {
 
-	// swagger:operation POST /namespace/{namespace}/route route routeCreate
+	// swagger:operation POST /namespace/{namespace}/volume volume volumeCreate
 	//
-	// Creates a route
+	// Creates a volume
 	//
 	// ---
 	// produces:
@@ -202,12 +202,12 @@ func RouteCreateH(w http.ResponseWriter, r *http.Request) {
 	//     in: body
 	//     required: true
 	//     schema:
-	//       "$ref": "#/definitions/request_route_create"
+	//       "$ref": "#/definitions/request_volume_create"
 	// responses:
 	//   '200':
-	//     description: Route was successfully created
+	//     description: Volume was successfully created
 	//     schema:
-	//       "$ref": "#/definitions/views_route"
+	//       "$ref": "#/definitions/views_volume"
 	//   '400':
 	//     description: Bad rules parameter
 	//   '404':
@@ -215,21 +215,20 @@ func RouteCreateH(w http.ResponseWriter, r *http.Request) {
 	//   '500':
 	//     description: Internal server error
 
-	log.V(logLevel).Debugf("%s:create:> create route", logPrefix)
+	log.V(logLevel).Debugf("%s:create:> create volume", logPrefix)
 
 	nid := utils.Vars(r)["namespace"]
 
 	var (
-		rm = distribution.NewRouteModel(r.Context(), envs.Get().GetStorage())
+		rm = distribution.NewVolumeModel(r.Context(), envs.Get().GetStorage())
 		nm = distribution.NewNamespaceModel(r.Context(), envs.Get().GetStorage())
-		sm = distribution.NewServiceModel(r.Context(), envs.Get().GetStorage())
-		mf = v1.Request().Route().Manifest()
+		mf = v1.Request().Volume().Manifest()
 	)
 
 	// request body struct
-	if e := mf.DecodeAndValidate(r.Body); e != nil {
-		log.V(logLevel).Errorf("%s:create:> validation incoming data err: %s", logPrefix, e.Err())
-		e.Http(w)
+	if err := mf.DecodeAndValidate(r.Body); err != nil {
+		log.V(logLevel).Errorf("%s:create:> validation incoming data err: %s", logPrefix, err.Err())
+		err.Http(w)
 		return
 	}
 
@@ -246,34 +245,20 @@ func RouteCreateH(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	svc, err := sm.List(ns.Meta.Name)
-	if err != nil {
-		log.V(logLevel).Errorf("%s:create:> get services", logPrefix, err.Error())
-		errors.HTTP.InternalServerError(w)
-		return
-	}
-
-	rs := new(types.Route)
+	rs := new(types.Volume)
 	rs.Meta.SetDefault()
 	rs.Meta.Namespace = ns.Meta.Name
 
-	mf.SetRouteMeta(rs)
-	mf.SetRouteSpec(rs, svc)
-
-	if len(rs.Spec.Rules) == 0 {
-		err := errors.New("route rules are incorrect")
-		log.V(logLevel).Errorf("%s:create:> route rules empty", logPrefix, err.Error())
-		errors.New("route").BadParameter("rules", err).Http(w)
-		return
-	}
+	mf.SetVolumeMeta(rs)
+	mf.SetVolumeSpec(rs)
 
 	if _, err := rm.Create(ns, rs); err != nil {
-		log.V(logLevel).Errorf("%s:create:> create route err: %s", logPrefix, ns.Meta.Name, err.Error())
+		log.V(logLevel).Errorf("%s:create:> create volume err: %s", logPrefix, ns.Meta.Name, err.Error())
 		errors.HTTP.InternalServerError(w)
 		return
 	}
 
-	response, err := v1.View().Route().New(rs).ToJson()
+	response, err := v1.View().Volume().New(rs).ToJson()
 	if err != nil {
 		log.V(logLevel).Errorf("%s:create:> convert struct to json err: %s", logPrefix, err.Error())
 		errors.HTTP.InternalServerError(w)
@@ -287,11 +272,11 @@ func RouteCreateH(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func RouteUpdateH(w http.ResponseWriter, r *http.Request) {
+func VolumeUpdateH(w http.ResponseWriter, r *http.Request) {
 
-	// swagger:operation PUT /namespace/{namespace}/route/{route} route routeUpdate
+	// swagger:operation PUT /namespace/{namespace}/volume/{volume} volume volumeUpdate
 	//
-	// Update route
+	// Update volume
 	//
 	// ---
 	// deprecated: true
@@ -303,38 +288,37 @@ func RouteUpdateH(w http.ResponseWriter, r *http.Request) {
 	//     description: namespace id
 	//     required: true
 	//     type: string
-	//   - name: route
+	//   - name: volume
 	//     in: path
-	//     description: route id
+	//     description: volume id
 	//     required: true
 	//     type: string
 	//   - name: body
 	//     in: body
 	//     required: true
 	//     schema:
-	//       "$ref": "#/definitions/request_route_update"
+	//       "$ref": "#/definitions/request_volume_update"
 	// responses:
 	//   '200':
-	//     description: Route was successfully updated
+	//     description: Volume was successfully updated
 	//     schema:
-	//       "$ref": "#/definitions/views_route"
+	//       "$ref": "#/definitions/views_volume"
 	//   '400':
 	//     description: Bad rules parameter
 	//   '404':
-	//     description: Namespace not found / Route not found
+	//     description: Namespace not found / Volume not found
 	//   '500':
 	//     description: Internal server error
 
 	nid := utils.Vars(r)["namespace"]
-	rid := utils.Vars(r)["route"]
+	rid := utils.Vars(r)["volume"]
 
-	log.V(logLevel).Debugf("%s:update:> update route `%s`", logPrefix, nid)
+	log.V(logLevel).Debugf("%s:update:> update volume `%s`", logPrefix, nid)
 
 	var (
-		rm = distribution.NewRouteModel(r.Context(), envs.Get().GetStorage())
+		rm = distribution.NewVolumeModel(r.Context(), envs.Get().GetStorage())
 		nm = distribution.NewNamespaceModel(r.Context(), envs.Get().GetStorage())
-		sm = distribution.NewServiceModel(r.Context(), envs.Get().GetStorage())
-		mf = v1.Request().Route().Manifest()
+		mf = v1.Request().Volume().Manifest()
 	)
 
 	// request body struct
@@ -359,41 +343,25 @@ func RouteUpdateH(w http.ResponseWriter, r *http.Request) {
 
 	rs, err := rm.Get(ns.Meta.Name, rid)
 	if err != nil {
-		log.V(logLevel).Errorf("%s:update:> check route exists by selflink `%s` err: %s", logPrefix, ns.Meta.SelfLink, err.Error())
+		log.V(logLevel).Errorf("%s:update:> check volume exists by selflink `%s` err: %s", logPrefix, ns.Meta.SelfLink, err.Error())
 		errors.HTTP.InternalServerError(w)
 		return
 	}
 	if rs == nil {
-		log.V(logLevel).Warnf("%s:update:> route `%s` not found", logPrefix, rid)
-		errors.New("route").NotFound().Http(w)
+		log.V(logLevel).Warnf("%s:update:> volume `%s` not found", logPrefix, rid)
+		errors.New("volume").NotFound().Http(w)
 		return
 	}
 
-	svc, err := sm.List(ns.Meta.Name)
-	if err != nil {
-		log.V(logLevel).Errorf("%s:create:> get services", logPrefix, err.Error())
-		errors.HTTP.InternalServerError(w)
-		return
-	}
+	mf.SetVolumeMeta(rs)
+	mf.SetVolumeSpec(rs)
 
-
-	mf.SetRouteMeta(rs)
-	mf.SetRouteSpec(rs, svc)
-
-	if len(rs.Spec.Rules) == 0 {
-		err := errors.New("route rules are incorrect")
-		log.V(logLevel).Errorf("%s:create:> route rules empty", logPrefix, err.Error())
-		errors.New("route").BadParameter("rules", err).Http(w)
-		return
-	}
-
-	rs, err = rm.Update(rs)
-	if err != nil {
-		log.V(logLevel).Errorf("%s:update:> update route `%s` err: %s", logPrefix, ns.Meta.Name, err.Error())
+	if err = rm.Update(rs); err != nil {
+		log.V(logLevel).Errorf("%s:update:> update volume `%s` err: %s", logPrefix, ns.Meta.Name, err.Error())
 		errors.HTTP.InternalServerError(w)
 	}
 
-	response, err := v1.View().Route().New(rs).ToJson()
+	response, err := v1.View().Volume().New(rs).ToJson()
 	if err != nil {
 		log.V(logLevel).Errorf("%s:update:> convert struct to json err: %s", logPrefix, err.Error())
 		errors.HTTP.InternalServerError(w)
@@ -407,11 +375,11 @@ func RouteUpdateH(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func RouteRemoveH(w http.ResponseWriter, r *http.Request) {
+func VolumeRemoveH(w http.ResponseWriter, r *http.Request) {
 
-	// swagger:operation DELETE /namespace/{namespace}/route/{route} route routeRemove
+	// swagger:operation DELETE /namespace/{namespace}/volume/{volume} volume volumeRemove
 	//
-	// Removes route
+	// Removes volume
 	//
 	// ---
 	// produces:
@@ -422,26 +390,26 @@ func RouteRemoveH(w http.ResponseWriter, r *http.Request) {
 	//     description: namespace id
 	//     required: true
 	//     type: string
-	//   - name: route
+	//   - name: volume
 	//     in: path
-	//     description: route id
+	//     description: volume id
 	//     required: true
 	//     type: string
 	// responses:
 	//   '200':
-	//     description: Route was successfully removed
+	//     description: Volume was successfully removed
 	//   '404':
-	//     description: Namespace not found / Route not found
+	//     description: Namespace not found / Volume not found
 	//   '500':
 	//     description: Internal server error
 
 	nid := utils.Vars(r)["namespace"]
-	rid := utils.Vars(r)["route"]
+	rid := utils.Vars(r)["volume"]
 
-	log.V(logLevel).Debugf("%s:remove:> remove route %s", logPrefix, rid)
+	log.V(logLevel).Debugf("%s:remove:> remove volume %s", logPrefix, rid)
 
 	var (
-		rm  = distribution.NewRouteModel(r.Context(), envs.Get().GetStorage())
+		rm  = distribution.NewVolumeModel(r.Context(), envs.Get().GetStorage())
 		nsm = distribution.NewNamespaceModel(r.Context(), envs.Get().GetStorage())
 	)
 
@@ -460,19 +428,19 @@ func RouteRemoveH(w http.ResponseWriter, r *http.Request) {
 
 	rs, err := rm.Get(ns.Meta.Name, rid)
 	if err != nil {
-		log.V(logLevel).Errorf("%s:remove:> get route by id `%s` err: %s", logPrefix, rid, err.Error())
+		log.V(logLevel).Errorf("%s:remove:> get volume by id `%s` err: %s", logPrefix, rid, err.Error())
 		errors.HTTP.InternalServerError(w)
 		return
 	}
 	if rs == nil {
-		log.V(logLevel).Warnf("%s:remove:> route `%s` not found", logPrefix, rid)
-		errors.New("route").NotFound().Http(w)
+		log.V(logLevel).Warnf("%s:remove:> volume `%s` not found", logPrefix, rid)
+		errors.New("volume").NotFound().Http(w)
 		return
 	}
 
 	err = rm.Remove(rs)
 	if err != nil {
-		log.V(logLevel).Errorf("%s:remove:> remove route `%s` err: %s", logPrefix, rid, err.Error())
+		log.V(logLevel).Errorf("%s:remove:> remove volume `%s` err: %s", logPrefix, rid, err.Error())
 		errors.HTTP.InternalServerError(w)
 		return
 	}

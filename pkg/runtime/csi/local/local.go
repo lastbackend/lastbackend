@@ -74,7 +74,7 @@ func (s *Storage) Create(ctx context.Context, name string, manifest *types.Volum
 
 	var (
 		status = new(types.VolumeState)
-		path   = filepath.Join(s.root, manifest.Path)
+		path   = filepath.Join(s.root, manifest.HostPath)
 	)
 
 	if _, err := os.Stat(path); os.IsNotExist(err) {
@@ -91,7 +91,7 @@ func (s *Storage) Create(ctx context.Context, name string, manifest *types.Volum
 }
 
 func (s *Storage) Remove(ctx context.Context, name string, manifest *types.VolumeManifest) error {
-	return os.Remove(filepath.Join(s.root, manifest.Path))
+	return os.Remove(filepath.Join(s.root, manifest.HostPath))
 }
 
 func Get() (*Storage, error) {

@@ -28,15 +28,15 @@ import (
 
 type VolumeRequest struct{}
 
-func (VolumeRequest) CreateOptions() *VolumeCreateOptions {
-	return new(VolumeCreateOptions)
+func (VolumeRequest) Manifest() *VolumeManifest {
+	return new(VolumeManifest)
 }
 
-func (v *VolumeCreateOptions) Validate() *errors.Err {
+func (v *VolumeManifest) Validate() *errors.Err {
 	return nil
 }
 
-func (v *VolumeCreateOptions) DecodeAndValidate(reader io.Reader) *errors.Err {
+func (v *VolumeManifest) DecodeAndValidate(reader io.Reader) *errors.Err {
 
 	if reader == nil {
 		err := errors.New("data body can not be null")
@@ -59,47 +59,6 @@ func (v *VolumeCreateOptions) DecodeAndValidate(reader io.Reader) *errors.Err {
 	}
 
 	return v.Validate()
-}
-
-func (v *VolumeCreateOptions) ToJson() ([]byte, error) {
-	return json.Marshal(v)
-}
-
-func (VolumeRequest) UpdateOptions() *VolumeUpdateOptions {
-	return new(VolumeUpdateOptions)
-}
-
-func (v *VolumeUpdateOptions) Validate() *errors.Err {
-	return nil
-}
-
-func (v *VolumeUpdateOptions) DecodeAndValidate(reader io.Reader) *errors.Err {
-
-	if reader == nil {
-		err := errors.New("data body can not be null")
-		return errors.New("volume").IncorrectJSON(err)
-	}
-
-	if reader == nil {
-		err := errors.New("data body can not be null")
-		return errors.New("volume").IncorrectJSON(err)
-	}
-
-	body, err := ioutil.ReadAll(reader)
-	if err != nil {
-		return errors.New("volume").Unknown(err)
-	}
-
-	err = json.Unmarshal(body, v)
-	if err != nil {
-		return errors.New("volume").IncorrectJSON(err)
-	}
-
-	return v.Validate()
-}
-
-func (v *VolumeUpdateOptions) ToJson() ([]byte, error) {
-	return json.Marshal(v)
 }
 
 func (VolumeRequest) RemoveOptions() *VolumeRemoveOptions {

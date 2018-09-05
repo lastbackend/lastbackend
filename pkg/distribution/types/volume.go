@@ -18,7 +18,10 @@
 
 package types
 
-import "fmt"
+import (
+	"fmt"
+	"time"
+)
 
 const VOLUMETYPELOCAL = "local"
 
@@ -52,16 +55,24 @@ type VolumeList struct {
 // swagger:model types_volume_meta
 type VolumeMeta struct {
 	Meta
+	Node      string `json:"node"`
 	Namespace string `json:"namespace"`
 }
 
 // swagger:model types_volume_spec
 type VolumeSpec struct {
-	State     VolumeSpecState     `json:"state"`
-	Type      string              `json:"type"`
-	Path      string              `json:"path"`
-	Mode      string              `json:"mode"`
-	Resources SpecVolumeResources `json:"resources"`
+	Type       string             `json:"type"`
+	Selector   VolumeSpecSelector `json:"selector"`
+	Capacity   SpecVolumeCapacity `json:"capacity"`
+	State      VolumeSpecState    `json:"state"`
+	HostPath   string             `json:"host_path"`
+	AccessMode string             `json:"access_mode"`
+	Updated    time.Time          `json:"updated"`
+}
+
+type VolumeSpecSelector struct {
+	Node   string            `json:"node"`
+	Labels map[string]string `json:"labels"`
 }
 
 // swagger:model types_volume_spec_state

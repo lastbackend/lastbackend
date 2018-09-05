@@ -40,6 +40,10 @@ type ClusterState struct {
 	ingress struct {
 		list map[string]*types.Ingress
 	}
+	volume struct {
+		observer chan *types.Volume
+		list map[string]*types.Volume
+	}
 	node struct {
 		observer chan *types.Node
 		lease    chan *NodeLease
@@ -65,6 +69,12 @@ func (cs *ClusterState) Observe() {
 				log.Errorf("%s", err.Error())
 			}
 			cs.node.list[n.SelfLink()] = n
+			break
+			case v := <- cs.volume.observer:
+			log.V(7).Debugf("volume: %s", v.SelfLink())
+			if err := volumeObserve(cs, v); err != nil {
+				log.Errorf("%s", err.Error())
+			}
 			break
 		}
 	}
@@ -211,12 +221,49 @@ func (cs *ClusterState) PodRelease(p *types.Pod) (*types.Node, error) {
 	return node, err
 }
 
+func (cs *ClusterState) VolumeLease(v *types.Volume) (*types.Node, error) {
+
+	opts := NodeLeaseOptions{
+		Node: &v.Spec.Selector.Node,
+		Selector: v.Spec.Selector.Labels,
+		Storage: &v.Spec.Capacity.Storage,
+	}
+
+	node, err := cs.lease(opts)
+	if err != nil {
+		log.Errorf("%s:> pod lease err: %s", logPrefix, err)
+		return nil, err
+	}
+
+	return node, err
+}
+
+func (cs *ClusterState) VolumeRelease(v *types.Volume) (*types.Node, error) {
+
+	opts := NodeLeaseOptions{
+		Node:   &v.Meta.Node,
+		Storage: &v.Spec.Capacity.Storage,
+	}
+
+	node, err := cs.release(opts)
+	if err != nil {
+		log.Errorf("%s:> pod lease err: %s", logPrefix, err)
+		return nil, err
+	}
+
+	return node, err
+}
+
 // NewClusterState returns new cluster state instance
 func NewClusterState() *ClusterState {
 
 	var cs = new(ClusterState)
 
 	cs.ingress.list = make(map[string]*types.Ingress)
+
+	cs.volume.list  = make(map[string]*types.Volume)
+	cs.volume.observer = make(chan *types.Volume)
+
 	cs.node.observer = make(chan *types.Node)
 	cs.node.list = make(map[string]*types.Node)
 

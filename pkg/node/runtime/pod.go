@@ -485,7 +485,7 @@ func PodVolumeCreate(ctx context.Context, pod string, spec *types.SpecTemplateVo
 	var (
 		name = podVolumeKeyCreate(pod, spec.Name)
 		vm   = types.VolumeManifest{
-			Path: path,
+			HostPath: path,
 			Type: types.VOLUMETYPELOCAL,
 		}
 	)

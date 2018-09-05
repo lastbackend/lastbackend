@@ -373,11 +373,5 @@ func podManifestDel(p *types.Pod) error {
 		}
 	}
 
-	if err := mm.ManifestDel(p.Meta.Node, p.SelfLink()); err != nil {
-		if !errors.Storage().IsErrEntityNotFound(err) {
-			return err
-		}
-	}
-
 	return nil
 }

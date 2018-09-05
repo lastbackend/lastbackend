@@ -27,7 +27,6 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 	"github.com/lastbackend/lastbackend/pkg/log"
 	"github.com/lastbackend/lastbackend/pkg/storage"
-	"github.com/lastbackend/lastbackend/pkg/util/generator"
 	"regexp"
 )
 
@@ -64,7 +63,7 @@ func (v *Volume) ListByNamespace(namespace string) (*types.VolumeList, error) {
 
 	list := types.NewVolumeList()
 	filter := v.storage.Filter().Volume().ByNamespace(namespace)
-	err := v.storage.Map(v.context, v.storage.Collection().Volume(), filter, list, nil)
+	err := v.storage.List(v.context, v.storage.Collection().Volume(), filter, list, nil)
 	if err != nil {
 		log.V(logLevel).Error("%s:list:> get volumes list err: %v", logVolumePrefix, err)
 		return list, err
@@ -75,37 +74,32 @@ func (v *Volume) ListByNamespace(namespace string) (*types.VolumeList, error) {
 	return list, nil
 }
 
-func (v *Volume) Create(namespace *types.Namespace, opts *types.VolumeCreateOptions) (*types.Volume, error) {
-	log.V(logLevel).Debugf("%s:crete:> create volume %#v", logVolumePrefix, opts)
+func (v *Volume) Create(namespace *types.Namespace, vol *types.Volume) (*types.Volume, error) {
+	log.V(logLevel).Debugf("%s:crete:> create volume %s", logVolumePrefix, vol.SelfLink())
 
-	volume := new(types.Volume)
-	volume.Meta.SetDefault()
-	volume.Meta.Name = generator.GenerateRandomString(10)
-	volume.Meta.Namespace = namespace.Meta.Name
-	volume.Status.State = types.StatusInitialized
+	vol.Meta.SetDefault()
+	vol.Meta.Namespace = namespace.Meta.Name
+	vol.Status.State = types.StatusInitialized
 
 	if err := v.storage.Put(v.context, v.storage.Collection().Volume(),
-		v.storage.Key().Volume(volume.Meta.Namespace, volume.Meta.Name), volume, nil); err != nil {
+		v.storage.Key().Volume(vol.Meta.Namespace, vol.Meta.Name), vol, nil); err != nil {
 		log.V(logLevel).Errorf("%s:crete:> insert volume err: %v", logVolumePrefix, err)
 		return nil, err
 	}
 
-	return volume, nil
+	return vol, nil
 }
 
-func (v *Volume) Update(volume *types.Volume, opts *types.VolumeUpdateOptions) (*types.Volume, error) {
+func (v *Volume) Update(volume *types.Volume) error {
 	log.V(logLevel).Debugf("%s:update:> update volume %s", logVolumePrefix, volume.Meta.Name)
-
-	volume.Meta.SetDefault()
-	volume.Status.State = types.StateProvision
 
 	if err := v.storage.Set(v.context, v.storage.Collection().Volume(),
 		v.storage.Key().Volume(volume.Meta.Namespace, volume.Meta.Name), volume, nil); err != nil {
 		log.V(logLevel).Errorf("%s:update:> update volume err: %v", logVolumePrefix, err)
-		return nil, err
+		return err
 	}
 
-	return volume, nil
+	return nil
 }
 
 func (v *Volume) Destroy(volume *types.Volume) error {
