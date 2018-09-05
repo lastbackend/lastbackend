@@ -29,7 +29,7 @@ type IRI interface {
 	Auth(ctx context.Context, secret *types.SecretAuthData) (string, error)
 	Pull(ctx context.Context, spec *types.ImageManifest, out io.Writer) (*types.Image, error)
 	Remove(ctx context.Context, image string) error
-	Push(ctx context.Context, spec *types.ImageManifest, out io.Writer) (string, error)
+	Push(ctx context.Context, spec *types.ImageManifest, out io.Writer) (*types.Image, error)
 	Build(ctx context.Context, stream io.Reader, spec *types.SpecBuildImage, out io.Writer) (*types.Image, error)
 	List(ctx context.Context) ([]*types.Image, error)
 	Inspect(ctx context.Context, id string) (*types.Image, error)
