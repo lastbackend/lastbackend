@@ -92,6 +92,7 @@ func (m *NodeMeta) Set(meta *NodeUpdateMetaOptions) {
 
 // swagger:model types_node_info
 type NodeInfo struct {
+	Version      string `json:"version"`
 	Hostname     string `json:"hostname"`
 	Architecture string `json:"architecture"`
 

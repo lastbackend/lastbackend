@@ -52,7 +52,7 @@ type ClusterResources struct {
 	Pods       int   `json:"pods"`
 	Memory     int64 `json:"memory"`
 	Cpu        int   `json:"cpu"`
-	Storage    int   `json:"storage"`
+	Storage    int64 `json:"storage"`
 }
 
 type ClusterSpec struct {

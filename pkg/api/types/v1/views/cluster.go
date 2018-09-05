@@ -22,6 +22,7 @@ package views
 //
 // swagger:model views_cluster
 type Cluster struct {
+	Meta
 	Status ClusterStatus `json:"status"`
 }
 
@@ -69,5 +70,5 @@ type ClusterResources struct {
 	Cpu int `json:"cpu"`
 
 	// storage volume
-	Storage int `json:"storage"`
+	Storage string `json:"storage"`
 }
