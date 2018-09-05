@@ -146,7 +146,7 @@ func Daemon() {
 		log.Fatalf("node:initialize: connect err %s", err.Error())
 	}
 
-	r.Subscribe()
+	go r.Subscribe()
 
 	e.Loop()
 	r.Loop()
