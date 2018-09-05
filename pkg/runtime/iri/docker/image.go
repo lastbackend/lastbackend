@@ -192,7 +192,13 @@ func (r *Runtime) Push(ctx context.Context, spec *types.ImageManifest, out io.Wr
 		return nil, err
 	}
 
-	image, err := r.Inspect(ctx, fmt.Sprintf("%s@%s", spec.Name, result.Aux.Digest))
+	imageID := spec.Name
+
+	if result != nil {
+		imageID = fmt.Sprintf("%s@%s", spec.Name, result.Aux.Digest)
+	}
+
+	image, err := r.Inspect(ctx, imageID)
 	if err != nil {
 		return nil, err
 	}
