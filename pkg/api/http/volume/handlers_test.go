@@ -22,7 +22,8 @@ import (
 "context"
 "encoding/json"
 "fmt"
-"io/ioutil"
+	"github.com/lastbackend/lastbackend/pkg/util/resource"
+	"io/ioutil"
 "net/http"
 "net/http/httptest"
 "strings"
@@ -476,7 +477,7 @@ func TestVolumeUpdate(t *testing.T) {
 
 	r3.Spec.Selector.Node = "node"
 	r3.Spec.HostPath = "/"
-	r3.Spec.Capacity.Storage = "1Gi"
+	r3.Spec.Capacity.Storage, _ = resource.DecodeResource("1GB")
 
 	mf2, _ :=  getVolumeManifest(sv2.Meta.Name).ToJson()
 	mf3, _ :=  getVolumeManifest(sv3.Meta.Name).ToJson()
@@ -792,7 +793,7 @@ func getVolumeAsset(namespace, name string) *types.Volume {
 	r.Meta.Name = name
 	r.Spec.Selector.Node = ""
 	r.Spec.HostPath = "/"
-	r.Spec.Capacity.Storage = "128MBi"
+	r.Spec.Capacity.Storage, _ = resource.DecodeResource("128MB")
 	return &r
 }
 

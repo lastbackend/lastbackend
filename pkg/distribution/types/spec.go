@@ -222,7 +222,7 @@ type SpecTemplateContainerResources struct {
 // swagger:model types_spec_volume_resources
 type SpecVolumeCapacity struct {
 	// Limit resources
-	Storage string `json:"storage"`
+	Storage int64 `json:"storage"`
 }
 
 // swagger:model types_spec_volume_resource

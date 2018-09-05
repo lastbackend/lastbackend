@@ -20,6 +20,7 @@ package views
 
 import (
 	"encoding/json"
+	"github.com/lastbackend/lastbackend/pkg/util/resource"
 
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 )
@@ -57,7 +58,7 @@ func (r *Volume) ToSpec(obj types.VolumeSpec) VolumeSpec {
 	spec.HostPath = obj.HostPath
 	spec.Type = obj.Type
 	spec.AccessMode = obj.AccessMode
-	spec.Capacity.Storage = obj.Capacity.Storage
+	spec.Capacity.Storage = resource.EncodeResource(obj.Capacity.Storage)
 	return spec
 }
 

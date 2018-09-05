@@ -112,6 +112,7 @@ func (p *Pod) Create(deployment *types.Deployment) (*types.Pod, error) {
 		pod.Spec.Template.Volumes = append(pod.Spec.Template.Volumes, s)
 	}
 
+	pod.Spec.Selector = deployment.Spec.Selector
 	if err := p.storage.Put(p.context, p.storage.Collection().Pod(),
 		p.storage.Key().Pod(pod.Meta.Namespace, pod.Meta.Service, pod.Meta.Deployment, pod.Meta.Name), pod, nil); err != nil {
 		log.Errorf("%s:create:> insert pod err %v", logPodPrefix, err)

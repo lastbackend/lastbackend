@@ -90,16 +90,16 @@ func (v *Volume) Create(namespace *types.Namespace, vol *types.Volume) (*types.V
 	return vol, nil
 }
 
-func (v *Volume) Update(volume *types.Volume) (*types.Volume, error) {
+func (v *Volume) Update(volume *types.Volume) error {
 	log.V(logLevel).Debugf("%s:update:> update volume %s", logVolumePrefix, volume.Meta.Name)
 
 	if err := v.storage.Set(v.context, v.storage.Collection().Volume(),
 		v.storage.Key().Volume(volume.Meta.Namespace, volume.Meta.Name), volume, nil); err != nil {
 		log.V(logLevel).Errorf("%s:update:> update volume err: %v", logVolumePrefix, err)
-		return nil, err
+		return err
 	}
 
-	return volume, nil
+	return nil
 }
 
 func (v *Volume) Destroy(volume *types.Volume) error {

@@ -21,6 +21,7 @@ package request
 import (
 	"encoding/json"
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
+	"github.com/lastbackend/lastbackend/pkg/util/resource"
 	"gopkg.in/yaml.v2"
 	"time"
 )
@@ -131,8 +132,13 @@ func (v *VolumeManifest) SetVolumeSpec(vol *types.Volume) {
 		vol.Spec.Updated = time.Now()
 	}
 
-	if vol.Spec.Capacity.Storage != v.Spec.Capacity.Storage {
-		vol.Spec.Capacity.Storage = v.Spec.Capacity.Storage
+	stg, err := resource.DecodeResource(v.Spec.Capacity.Storage)
+	if err != nil {
+		return
+	}
+
+	if vol.Spec.Capacity.Storage != stg {
+		vol.Spec.Capacity.Storage = stg
 		vol.Spec.Updated = time.Now()
 	}
 

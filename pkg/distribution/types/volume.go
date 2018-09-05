@@ -55,6 +55,7 @@ type VolumeList struct {
 // swagger:model types_volume_meta
 type VolumeMeta struct {
 	Meta
+	Node      string `json:"node"`
 	Namespace string `json:"namespace"`
 }
 
@@ -66,7 +67,7 @@ type VolumeSpec struct {
 	State      VolumeSpecState    `json:"state"`
 	HostPath   string             `json:"host_path"`
 	AccessMode string             `json:"access_mode"`
-	Updated    time.Time             `json:"updated"`
+	Updated    time.Time          `json:"updated"`
 }
 
 type VolumeSpecSelector struct {

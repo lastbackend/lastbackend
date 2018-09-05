@@ -38,6 +38,7 @@ type NodeLeaseOptions struct {
 	Node    *string
 	Memory  *int64
 	Storage *int64
+	Selector map[string]string
 }
 
 func (nl *NodeLease) Wait() {

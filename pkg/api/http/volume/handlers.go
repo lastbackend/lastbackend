@@ -356,8 +356,7 @@ func VolumeUpdateH(w http.ResponseWriter, r *http.Request) {
 	mf.SetVolumeMeta(rs)
 	mf.SetVolumeSpec(rs)
 
-	rs, err = rm.Update(rs)
-	if err != nil {
+	if err = rm.Update(rs); err != nil {
 		log.V(logLevel).Errorf("%s:update:> update volume `%s` err: %s", logPrefix, ns.Meta.Name, err.Error())
 		errors.HTTP.InternalServerError(w)
 	}

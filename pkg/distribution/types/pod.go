@@ -71,6 +71,7 @@ type PodMeta struct {
 type PodSpec struct {
 	Local    bool         `json:"local,omitempty"`
 	State    SpecState    `json:"state"`
+	Selector SpecSelector `json:"selector"`
 	Template SpecTemplate `json:"template" yaml:"template"`
 }
 
