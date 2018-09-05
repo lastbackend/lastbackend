@@ -123,7 +123,7 @@ func (r *Runtime) Pull(ctx context.Context, spec *types.ImageManifest, out io.Wr
 	}
 }
 
-func (r *Runtime) Push(ctx context.Context, spec *types.ImageManifest, out io.Writer) (string, error) {
+func (r *Runtime) Push(ctx context.Context, spec *types.ImageManifest, out io.Writer) (*types.Image, error) {
 
 	log.V(logLevel).Debugf("Docker: Name push: %s", spec.Name)
 
@@ -133,7 +133,7 @@ func (r *Runtime) Push(ctx context.Context, spec *types.ImageManifest, out io.Wr
 
 	res, err := r.client.ImagePush(ctx, spec.Name, options)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 	defer res.Close()
 
@@ -188,8 +188,22 @@ func (r *Runtime) Push(ctx context.Context, spec *types.ImageManifest, out io.Wr
 
 		return nil
 	}(res, result)
+	if err != nil {
+		return nil, err
+	}
 
-	return result.Aux.Digest, err
+	imageID := spec.Name
+
+	if result != nil {
+		imageID = fmt.Sprintf("%s@%s", spec.Name, result.Aux.Digest)
+	}
+
+	image, err := r.Inspect(ctx, imageID)
+	if err != nil {
+		return nil, err
+	}
+
+	return image, err
 }
 
 func (r *Runtime) Build(ctx context.Context, stream io.Reader, spec *types.SpecBuildImage, out io.Writer) (*types.Image, error) {

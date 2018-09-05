@@ -48,6 +48,7 @@ type ImageSpec struct {
 
 type ImageManifest struct {
 	Name   string `json:"name" yaml:"name"`
+	Tag    string `json:"tag" yaml:"tag"`
 	Auth   string `json:"auth" yaml:"auth"`
 	Policy string `json:"policy" yaml:"policy"`
 }

@@ -20,54 +20,60 @@ package docker
 
 import (
 	"context"
-	d "github.com/docker/docker/api/types"
+
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 	"github.com/lastbackend/lastbackend/pkg/log"
+
+	d "github.com/docker/docker/api/types"
 )
 
-func (r *Runtime) Subscribe(ctx context.Context) (chan *types.Container, error) {
+func (r *Runtime) Subscribe(ctx context.Context, container chan *types.Container) error {
 
-	log.V(logLevel).Debug("Create new event listener subscribe")
-	var cs = make(chan *types.Container)
+	log.Debugf("%s:subscribe:> create new event listener subscribe", logPrefix)
 
-	go func() {
+	if _, err := r.client.Ping(ctx); err != nil {
+		log.Errorf("%s:subscribe:> can not ping docker client err: %v", logPrefix, err)
+		return err
+	}
 
-		if _, err := r.client.Ping(ctx); err != nil {
-			log.Errorf("Can not ping docker client")
-			return
-		}
+	event, err := r.client.Events(ctx, d.EventsOptions{})
 
-		es, errr := r.client.Events(ctx, d.EventsOptions{})
-		for {
-			select {
-			case e := <-es:
+	for {
+		select {
+		case e := <-event:
+			log.Debugf("%s:subscribe:> event type: %s action: %v", logPrefix, e.Type, e.Action)
 
-				log.V(logLevel).Debugf("Container %s", e.ID)
-
-				if e.Action == types.StateDestroy {
-					c := new(types.Container)
-					c.ID = e.ID
-					c.State = types.StateDestroyed
-					cs <- c
-					break
-				}
-
-				c, err := r.Inspect(ctx, e.ID)
-				if err != nil {
-					log.Errorf("Container inspect err: %s", err.Error())
-					continue
-				}
-				if c == nil {
-					log.Errorf("Container: container not found")
-					break
-				}
-				break
-
-			case err := <-errr:
-				log.Errorf("Event listening error: %s", err)
+			if len(e.ID) == 0 {
+				continue
 			}
-		}
-	}()
 
-	return cs, nil
+			if e.Status == types.StateDestroy {
+				c := new(types.Container)
+				c.ID = e.ID
+				c.State = types.StateDestroyed
+				container <- c
+				continue
+			}
+
+			c, err := r.Inspect(ctx, e.ID)
+			if err != nil {
+				log.Errorf("%s:subscribe:> container inspect err: %v", logPrefix, err)
+				continue
+			}
+
+			if c == nil {
+				continue
+			}
+
+			container <- c
+
+		case err := <-err:
+			if err == context.Canceled {
+				log.Warnf("%s:subscribe:> context canceled err: %v", logPrefix, err)
+				return nil
+			}
+			log.Errorf("%s:subscribe:> event listening err: %v", logPrefix, err)
+			return err
+		}
+	}
 }

@@ -25,7 +25,10 @@ import (
 	"strconv"
 )
 
-const logLevel = 5
+const (
+	logLevel = 5
+	logPrefix = "runtime:docker"
+)
 
 type Runtime struct {
 	client *client.Client
