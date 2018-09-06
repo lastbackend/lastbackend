@@ -63,6 +63,12 @@ type NamespaceSpec struct {
 	Quotas    NamespaceQuotas    `json:"quotas"`
 	Resources NamespaceResources `json:"resources"`
 	Env       NamespaceEnvs      `json:"env"`
+	Domain    NamespaceDomain    `json:"domain"`
+}
+
+type NamespaceDomain struct {
+	Internal string `json:"internal"`
+	External string `json:"external"`
 }
 
 // swagger:ignore
@@ -108,12 +114,14 @@ func (n *NamespaceList) ToJson() ([]byte, error) {
 type NamespaceCreateOptions struct {
 	Name        string                  `json:"name"`
 	Description string                  `json:"description"`
+	Domain      *string                 `json:"domain"`
 	Quotas      *NamespaceQuotasOptions `json:"quotas"`
 }
 
 // swagger:ignore
 type NamespaceUpdateOptions struct {
 	Description *string                 `json:"description"`
+	Domain      *string                 `json:"domain"`
 	Quotas      *NamespaceQuotasOptions `json:"quotas"`
 }
 
