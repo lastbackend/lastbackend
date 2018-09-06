@@ -115,6 +115,13 @@ func (n *Namespace) Create(opts *types.NamespaceCreateOptions) (*types.Namespace
 		ns.Spec.Quotas.Routes = defaultNamespaceRoutes
 	}
 
+	ns.Spec.Domain.Internal = viper.GetString("domain.internal")
+	ns.Spec.Domain.External = viper.GetString("domain.external")
+
+	if opts.Domain != nil {
+		ns.Spec.Domain.External = *opts.Domain
+	}
+
 	if err := n.storage.Put(n.context, n.storage.Collection().Namespace(), n.storage.Key().Namespace(ns.Meta.Name), ns, nil); err != nil {
 		log.V(logLevel).Errorf("%s:create:> insert namespace err: %v", logNamespacePrefix, err)
 		return nil, err
@@ -135,6 +142,14 @@ func (n *Namespace) Update(namespace *types.Namespace, opts *types.NamespaceUpda
 		namespace.Spec.Quotas.RAM = opts.Quotas.RAM
 		namespace.Spec.Quotas.Routes = opts.Quotas.Routes
 		namespace.Spec.Quotas.Disabled = opts.Quotas.Disabled
+	}
+
+	if opts.Domain != nil {
+		if len(*opts.Domain) == 0 {
+			namespace.Spec.Domain.External = viper.GetString("domain.external")
+		} else {
+			namespace.Spec.Domain.External = *opts.Domain
+		}
 	}
 
 	if err := n.storage.Set(n.context, n.storage.Collection().Namespace(),
