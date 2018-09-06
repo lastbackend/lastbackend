@@ -20,7 +20,6 @@ package views
 
 import (
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
-	"time"
 )
 
 // Ingress - default node structure
@@ -37,10 +36,8 @@ type IngressList map[string]*Ingress
 // IngressMeta - node metadata structure
 // swagger:model views_ingress_meta
 type IngressMeta struct {
-	Name        string    `json:"name"`
-	Description string    `json:"description"`
-	Created     time.Time `json:"created"`
-	Updated     time.Time `json:"updated"`
+	Meta
+	Version string `json:"version"`
 }
 
 // IngressStatus - node state struct

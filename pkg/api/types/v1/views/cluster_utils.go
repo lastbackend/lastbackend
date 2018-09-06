@@ -20,6 +20,7 @@ package views
 
 import (
 	"encoding/json"
+	"github.com/lastbackend/lastbackend/pkg/util/resource"
 
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 )
@@ -63,14 +64,14 @@ func (cv *ClusterView) ToClusterStatus(status types.ClusterStatus) ClusterStatus
 			Pods:       status.Capacity.Pods,
 			Memory:     status.Capacity.Memory,
 			Cpu:        status.Capacity.Cpu,
-			Storage:    status.Capacity.Storage,
+			Storage:    resource.EncodeResource(status.Capacity.Storage),
 		},
 		Allocated: ClusterResources{
 			Containers: status.Allocated.Containers,
 			Pods:       status.Allocated.Pods,
 			Memory:     status.Allocated.Memory,
 			Cpu:        status.Allocated.Cpu,
-			Storage:    status.Allocated.Storage,
+			Storage:    resource.EncodeResource(status.Allocated.Storage),
 		},
 	}
 }

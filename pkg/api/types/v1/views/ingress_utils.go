@@ -34,12 +34,12 @@ func (nv *IngressView) New(obj *types.Ingress) *Ingress {
 }
 
 func (nv *IngressView) ToIngressMeta(meta types.IngressMeta) IngressMeta {
-	return IngressMeta{
-		Name:        meta.Name,
-		Description: meta.Description,
-		Created:     meta.Created,
-		Updated:     meta.Updated,
-	}
+	m := IngressMeta{}
+	m.Name = meta.Name
+	m.Description = meta.Description
+	m.Created = meta.Created
+	m.Updated = meta.Updated
+	return m
 }
 
 func (nv *IngressView) ToIngressStatus(status types.IngressStatus) IngressStatus {
@@ -85,7 +85,6 @@ func (obj *IngressSpec) Decode() *types.IngressSpec {
 	spec := types.IngressSpec{
 
 	}
-
 
 	return &spec
 }

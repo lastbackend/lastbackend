@@ -40,10 +40,11 @@ type NodeList map[string]*Node
 // swagger:model views_node_meta
 type NodeMeta struct {
 	NodeInfo
-	Name     string    `json:"name"`
-	SelfLink string    `json:"self_link"`
-	Created  time.Time `json:"created"`
-	Updated  time.Time `json:"updated"`
+	Name     string            `json:"name"`
+	Labels   map[string]string `json:"labels"`
+	SelfLink string            `json:"self_link"`
+	Created  time.Time         `json:"created"`
+	Updated  time.Time         `json:"updated"`
 }
 
 // NodeInfo - node info struct
@@ -57,13 +58,15 @@ type NodeInfo struct {
 		External string `json:"external"`
 		Internal string `json:"internal"`
 	} `json:"ip"`
+	Version string `json:"version"`
 }
 
 type NodeStatusState struct {
-	CRI NodeStatusInterfaceState `json:"cri"`
-	CNI NodeStatusInterfaceState `json:"cni"`
-	CPI NodeStatusInterfaceState `json:"cpi"`
-	CSI NodeStatusInterfaceState `json:"csi"`
+	Ready bool                     `json:"ready"`
+	CRI   NodeStatusInterfaceState `json:"cri"`
+	CNI   NodeStatusInterfaceState `json:"cni"`
+	CPI   NodeStatusInterfaceState `json:"cpi"`
+	CSI   NodeStatusInterfaceState `json:"csi"`
 }
 
 type NodeStatusInterfaceState struct {

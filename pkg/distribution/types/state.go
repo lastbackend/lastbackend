@@ -23,6 +23,7 @@ const StatusInitialized = "initialized"
 const StateWarning = "warning"
 const StateDegradation = "degradation"
 const StateReady = "ready"
+const StateNotReady = "not ready"
 
 const StatusBuild = "build"
 const StatusPull = "pull"

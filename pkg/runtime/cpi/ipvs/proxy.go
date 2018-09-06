@@ -54,7 +54,7 @@ func (p *Proxy) Info(ctx context.Context) (map[string]*types.EndpointState, erro
 // Create new proxy rules
 func (p *Proxy) Create(ctx context.Context, manifest *types.EndpointManifest) (*types.EndpointState, error) {
 
-	log.V(logLevel).Debugf("%s create ipvs virtual server with ip %s", logIPVSPrefix, manifest.IP)
+	log.V(logLevel).Debugf("%s create ipvs virtual server with ip %s: and upstreams %v", logIPVSPrefix, manifest.IP, manifest.Upstreams)
 
 	var (
 		err    error
@@ -63,7 +63,7 @@ func (p *Proxy) Create(ctx context.Context, manifest *types.EndpointManifest) (*
 	)
 
 	status.IP = manifest.IP
-	svcs, dests, err := specToServices(&manifest.EndpointSpec)
+	svcs, dests, err := specToServices(manifest)
 	if err != nil {
 		log.Errorf("%s can not get services from manifest: %s", logIPVSPrefix, err.Error())
 		return nil, err
@@ -121,7 +121,11 @@ func (p *Proxy) Destroy(ctx context.Context, state *types.EndpointState) error {
 		err error
 	)
 
-	svcs, _, err := specToServices(&state.EndpointSpec)
+	mf := types.EndpointManifest{}
+	mf.EndpointSpec = state.EndpointSpec
+	mf.Upstreams = state.Upstreams
+
+	svcs, _, err := specToServices(&mf)
 	if err != nil {
 		return err
 	}
@@ -142,13 +146,17 @@ func (p *Proxy) Update(ctx context.Context, state *types.EndpointState, spec *ty
 		status = new(types.EndpointState)
 	)
 
-	psvc, pdest, err := specToServices(&spec.EndpointSpec)
+	psvc, pdest, err := specToServices(spec)
 	if err != nil {
 		log.Errorf("%s can not convert spec to services: %s", logIPVSPrefix, err.Error())
 		return state, err
 	}
 
-	csvc, cdest, err := specToServices(&state.EndpointSpec)
+	mf := types.EndpointManifest{}
+	mf.EndpointSpec = state.EndpointSpec
+	mf.Upstreams = state.Upstreams
+
+	csvc, cdest, err := specToServices(&mf)
 	if err != nil {
 		log.Errorf("%s can not convert state to services: %s", logIPVSPrefix, err.Error())
 		return state, err
@@ -322,7 +330,7 @@ func New() (*Proxy, error) {
 	return prx, nil
 }
 
-func specToServices(spec *types.EndpointSpec) (map[string]*libipvs.Service, map[string]*libipvs.Destination, error) {
+func specToServices(spec *types.EndpointManifest) (map[string]*libipvs.Service, map[string]*libipvs.Destination, error) {
 
 	var svcs = make(map[string]*libipvs.Service, 0)
 	dests := make(map[string]*libipvs.Destination, 0)
@@ -343,12 +351,14 @@ func specToServices(spec *types.EndpointSpec) (map[string]*libipvs.Service, map[
 		}
 
 		for _, host := range spec.Upstreams {
+			log.Debugf("create new destination for: %s", host)
 			dest := new(libipvs.Destination)
 
 			dest.Address = net.ParseIP(host)
 			dest.Port = port
 			dest.Weight = 1
 			dests[fmt.Sprintf("%s_%d", dest.Address.String(), dest.Port)] = dest
+			log.Debugf("created new destination %s_%d", dest.Address.String(), dest.Port)
 		}
 
 		switch proto {
