@@ -91,7 +91,7 @@ func init() {
 
 	// set config defaults
 	viper.SetDefault("garbage-collect", false)
-
+	viper.SetEnvPrefix("LB")
 	// local flags;
 	CLI.Flags().StringVarP(&config, "config", "c", "/etc/lastbackend/node", "/path/to/config.yml")
 	CLI.Flags().StringVarP(&token, "token", "t", "", "Last.Backend cluster authentication token")
@@ -101,7 +101,8 @@ func init() {
 
 	viper.BindPFlag("verbose", CLI.Flags().Lookup("verbose"))
 	viper.BindPFlag("token", CLI.Flags().Lookup("token"))
-	viper.BindPFlag("external_ip", CLI.Flags().Lookup("node.services.router.external_ip"))
+	viper.BindEnv("api_uri")
+	viper.BindEnv("dns_ips")
 }
 
 func main() {

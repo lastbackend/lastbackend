@@ -324,7 +324,6 @@ func PodRestore(ctx context.Context) error {
 			continue
 		}
 
-
 		log.V(logLevel).Debugf("Pod [%s] > container restore %s", c.Pod, c.ID)
 
 		status := envs.Get().GetState().Pods().GetPod(c.Pod)
@@ -392,6 +391,8 @@ func PodRestore(ctx context.Context) error {
 
 		cs.Ready = true
 		status.Containers[cs.ID] = cs
+		status.Network.PodIP = c.Network.IPAddress
+		status.Network.HostIP = envs.Get().GetCNI().Info(ctx).Addr
 
 		log.V(logLevel).Debugf("Container restored %s", c.ID)
 		envs.Get().GetState().Pods().SetPod(key, status)
@@ -486,7 +487,7 @@ func PodVolumeCreate(ctx context.Context, pod string, spec *types.SpecTemplateVo
 		name = podVolumeKeyCreate(pod, spec.Name)
 		vm   = types.VolumeManifest{
 			HostPath: path,
-			Type: types.VOLUMETYPELOCAL,
+			Type:     types.VOLUMETYPELOCAL,
 		}
 	)
 

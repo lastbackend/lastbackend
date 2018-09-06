@@ -23,7 +23,9 @@ package ipvs
 import (
 	"context"
 	"fmt"
+	"github.com/vishvananda/netlink"
 	"net"
+	"strings"
 	"syscall"
 
 	libipvs "github.com/docker/libnetwork/ipvs"
@@ -37,7 +39,8 @@ import (
 
 const (
 	logIPVSPrefix = "cpi:ipvs:proxy:>"
-	logLevel = 3
+	logLevel      = 3
+	linkPrefix    = "lb"
 )
 
 // Proxy balancer
@@ -45,6 +48,7 @@ type Proxy struct {
 	cpi cpi.CPI
 	// IVPS cmd path
 	ipvs *libipvs.Handle
+	link netlink.Link
 }
 
 func (p *Proxy) Info(ctx context.Context) (map[string]*types.EndpointState, error) {
@@ -98,7 +102,6 @@ func (p *Proxy) Create(ctx context.Context, manifest *types.EndpointManifest) (*
 		}
 
 		csvcs = append(csvcs, svc)
-		return status, err
 	}
 
 	state, err := p.getStateByIP(ctx, manifest.IP)
@@ -133,6 +136,10 @@ func (p *Proxy) Destroy(ctx context.Context, state *types.EndpointState) error {
 	for _, svc := range svcs {
 		if err = p.ipvs.DelService(svc); err != nil {
 			log.Errorf("%s can not delete service: %s", logIPVSPrefix, err.Error())
+		}
+
+		if err := p.delIpBindToLink(svc.Address.String()); err != nil {
+			log.Errorf("%s can not unbind ip from link: %s", logIPVSPrefix, err.Error())
 		}
 	}
 
@@ -207,7 +214,6 @@ func (p *Proxy) Update(ctx context.Context, state *types.EndpointState, spec *ty
 	status.PortMap = st.PortMap
 	status.Upstreams = st.Upstreams
 	status.Strategy = st.Strategy
-
 	return status, nil
 }
 
@@ -235,7 +241,12 @@ func (p *Proxy) getState(ctx context.Context) (map[string]*types.EndpointState, 
 
 	log.V(logLevel).Debugf("%s services list: %#v", logIPVSPrefix, svcs)
 
+	var ips = make(map[string]bool, 0)
+
 	for _, svc := range svcs {
+
+		ips[svc.Address.String()] = true
+
 		// check if endpoint exists
 		var host = svc.Address.String()
 
@@ -311,6 +322,11 @@ func (p *Proxy) getState(ctx context.Context) (map[string]*types.EndpointState, 
 		el[host] = endpoint
 	}
 
+	for ip := range ips {
+		log.Debugf("Check ip %s binded to link %s", ip, p.link.Attrs().Name)
+		p.addIpBindToLink(ip)
+	}
+
 	log.V(logLevel).Debugf("%s current ipvs state: %#v", logIPVSPrefix, el)
 
 	return el, nil
@@ -326,9 +342,84 @@ func New() (*Proxy, error) {
 
 	prx.ipvs = handler
 
+	links, err := netlink.LinkList()
+	if err != nil {
+		return nil, err
+	}
+
+	for _, link := range links {
+		if strings.HasPrefix(link.Attrs().Name, linkPrefix) {
+			prx.link = link
+			break
+		}
+	}
+
 	// TODO: Check ipvs proxy mode is available on host
 	return prx, nil
 }
+
+func (p *Proxy) addIpBindToLink(ip string) error {
+
+
+	ipn := net.ParseIP(ip)
+	addr, err := netlink.ParseAddr(fmt.Sprintf("%s/32", ipn.String()))
+	if err != nil {
+		log.Errorf("can not parse IP %s; %s", ip, err.Error())
+		return err
+	}
+
+	addrs, err := netlink.AddrList(p.link, netlink.FAMILY_V4)
+	if err != nil {
+		log.Errorf("can not fetch IPs :%s", err.Error())
+		return err
+	}
+
+	var exists = false
+	for _, a := range addrs {
+
+		if a.IP.String() == addr.IP.String() {
+			exists = true
+			break
+		}
+	}
+	if !exists {
+		netlink.AddrAdd(p.link, addr)
+	}
+
+	return nil
+}
+
+func (p *Proxy) delIpBindToLink(ip string) error {
+
+
+	ipn := net.ParseIP(ip)
+	addr, err := netlink.ParseAddr(fmt.Sprintf("%s/32", ipn.String()))
+	if err != nil {
+		log.Errorf("can not parse IP %s; %s", ip, err.Error())
+		return err
+	}
+
+	addrs, err := netlink.AddrList(p.link, netlink.FAMILY_V4)
+	if err != nil {
+		log.Errorf("can not fetch IPs :%s", err.Error())
+		return err
+	}
+
+	var exists = false
+	for _, a := range addrs {
+
+		if a.IP.String() == addr.IP.String() {
+			exists = true
+			break
+		}
+	}
+	if exists {
+		netlink.AddrDel(p.link, addr)
+	}
+
+	return nil
+}
+
 
 func specToServices(spec *types.EndpointManifest) (map[string]*libipvs.Service, map[string]*libipvs.Destination, error) {
 

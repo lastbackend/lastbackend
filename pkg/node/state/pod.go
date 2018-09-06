@@ -96,7 +96,7 @@ func (s *PodState) IsLocal(key string) bool {
 		return true
 	}
 
- 	return false
+	return false
 }
 
 func (s *PodState) SetPod(key string, pod *types.PodStatus) {

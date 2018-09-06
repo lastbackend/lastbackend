@@ -232,6 +232,23 @@ func endpointManifestSpecEqual(e *types.Endpoint, m *types.EndpointManifest) boo
 		}
 	}
 
+	if len(e.Spec.Upstreams) != len(m.Upstreams) {
+		return false
+	}
+
+	for _, u := range e.Spec.Upstreams {
+		var f = false
+		for _, mu := range m.Upstreams {
+			if u == mu {
+				f = true
+				break
+			}
+		}
+		if !f {
+			return false
+		}
+	}
+
 	return true
 }
 
@@ -292,7 +309,6 @@ func endpointManifestProvision(ss *ServiceState) error {
 	return nil
 }
 
-
 func endpointManifestAdd(ss *ServiceState) error {
 
 	var (
@@ -329,7 +345,6 @@ func endpointManifestAdd(ss *ServiceState) error {
 
 		return nil
 	}
-
 
 	if endpointManifestSpecEqual(ss.endpoint.endpoint, epm) {
 		return nil
