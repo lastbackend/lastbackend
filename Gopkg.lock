@@ -558,7 +558,6 @@
     "github.com/docker/docker/api/types/strslice",
     "github.com/docker/docker/client",
     "github.com/docker/go-connections/nat",
-    "github.com/docker/go-connections/tlsconfig",
     "github.com/docker/libnetwork/ipvs",
     "github.com/gorilla/mux",
     "github.com/gorilla/websocket",

@@ -21,11 +21,13 @@ package node
 import (
 	"context"
 	"fmt"
-	"github.com/lastbackend/lastbackend/pkg/node/ingress/ingress"
-	"github.com/lastbackend/lastbackend/pkg/runtime/iri/iri"
 	"os"
 	"os/signal"
+	"strings"
 	"syscall"
+
+	"github.com/lastbackend/lastbackend/pkg/node/ingress/ingress"
+	"github.com/lastbackend/lastbackend/pkg/runtime/iri/iri"
 
 	"github.com/lastbackend/lastbackend/pkg/node/runtime"
 	"github.com/lastbackend/lastbackend/pkg/node/state"
@@ -87,8 +89,11 @@ func Daemon() {
 		}
 
 	}
-
 	envs.Get().SetDNS(viper.GetStringSlice("dns.ips"))
+	if viper.IsSet("dns_ips") {
+		ips := strings.Split(viper.GetString("dns_ips"), ",")
+		envs.Get().SetDNS(ips)
+	}
 
 	st := state.New()
 	envs.Get().SetState(st)
@@ -121,6 +126,10 @@ func Daemon() {
 	}
 
 	endpoint := viper.GetString("api.uri")
+	if viper.IsSet("api_uri") {
+		endpoint = viper.GetString("api_uri")
+	}
+
 	rest, err := client.New(client.ClientHTTP, endpoint, cfg)
 	if err != nil {
 		log.Fatalf("Init client err: %s", err)
