@@ -74,6 +74,7 @@ func (n *NamespaceCreateOptions) DecodeAndValidate(reader io.Reader) (*types.Nam
 	opts := new(types.NamespaceCreateOptions)
 	opts.Description = n.Description
 	opts.Name = n.Name
+	opts.Domain = n.Domain
 
 	if n.Quotas != nil {
 		opts.Quotas = new(types.NamespaceQuotasOptions)

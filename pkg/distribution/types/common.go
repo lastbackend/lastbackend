@@ -59,7 +59,6 @@ type MetaUpdateOptions struct {
 
 func (m *Meta) SetDefault() {
 	m.Labels = make(map[string]string, 0)
-	m.Labels = make(map[string]string, 0)
 	m.Created = time.Now().UTC()
 	m.Updated = time.Now().UTC()
 }

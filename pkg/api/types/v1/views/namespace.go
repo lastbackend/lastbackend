@@ -45,6 +45,7 @@ type NamespaceSpec struct {
 	Env       NamespaceEnvs      `json:"env"`
 	Resources NamespaceResources `json:"resources"`
 	Quotas    NamespaceQuotas    `json:"quotas"`
+	Domain    NamespaceDomain    `json:"domain"`
 }
 
 // swagger:model views_namespace_envs
@@ -61,6 +62,11 @@ type NamespaceQuotas struct {
 	Disabled bool  `json:"disabled"`
 	RAM      int64 `json:"ram"`
 	Routes   int   `json:"routes"`
+}
+
+type NamespaceDomain struct {
+	Internal string `json:"internal"`
+	External string `json:"external"`
 }
 
 // swagger:ignore

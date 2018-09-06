@@ -22,12 +22,14 @@ package request
 type NamespaceCreateOptions struct {
 	Name        string                  `json:"name"`
 	Description string                  `json:"description"`
+	Domain      *string                 `json:"domain"`
 	Quotas      *NamespaceQuotasOptions `json:"quotas"`
 }
 
 // swagger:model request_namespace_update
 type NamespaceUpdateOptions struct {
 	Description *string                 `json:"description"`
+	Domain      *string                 `json:"domain"`
 	Quotas      *NamespaceQuotasOptions `json:"quotas"`
 }
 

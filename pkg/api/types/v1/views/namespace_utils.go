@@ -56,6 +56,10 @@ func (r *Namespace) ToSpec(spec types.NamespaceSpec) NamespaceSpec {
 		Resources: r.ToResources(spec.Resources),
 		Quotas:    r.ToQuotas(spec.Quotas),
 		Env:       r.ToEnv(spec.Env),
+		Domain: NamespaceDomain{
+			Internal: spec.Domain.Internal,
+			External: spec.Domain.External,
+		},
 	}
 }
 
