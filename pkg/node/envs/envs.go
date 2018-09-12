@@ -55,7 +55,10 @@ type Env struct {
 	}
 
 	ingress ingress.Ingress
-	dns []string
+	dns struct {
+		Cluster []string
+		External []string
+	}
 }
 
 func (c *Env) SetCRI(cri cri.CRI) {
@@ -156,10 +159,22 @@ func (c *Env) GetRestClient() types.ClientV1 {
 	return c.client.rest
 }
 
-func (c *Env) SetDNS(dns []string) {
-	c.dns = dns
+func (c *Env) SetClusterDNS(dns []string) {
+	c.dns.Cluster = dns
 }
 
-func (c *Env) GetDNS() []string {
-	return c.dns
+func (c *Env) GetClusterDNS() []string {
+	return c.dns.Cluster
+}
+
+func (c *Env) SetExternalDNS(dns []string) {
+
+	if len(dns) == 0 {
+		c.dns.External = []string{"8.8.8.8", "8.8.4.4"}
+	}
+	c.dns.External = dns
+}
+
+func (c *Env) GetExternalDNS() []string {
+	return c.dns.External
 }

@@ -25,6 +25,7 @@ type Collection interface {
 	Cluster() string
 	Pod() string
 	Ingress() string
+	Discovery() string
 	System() string
 	Node() string
 	Route() string

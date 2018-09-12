@@ -39,6 +39,7 @@ const (
 	networkCollection = "network"
 	subnetCollection  = "subnet"
 
+	discoveryCollection = "discovery"
 	ingressCollection = "ingress"
 	routeCollection   = "route"
 
@@ -77,6 +78,10 @@ func (Collection) Pod() string {
 
 func (Collection) Volume() string {
 	return volumeCollection
+}
+
+func (Collection) Discovery() string {
+	return discoveryCollection
 }
 
 func (Collection) Ingress() string {

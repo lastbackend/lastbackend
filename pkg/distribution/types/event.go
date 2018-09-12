@@ -81,6 +81,12 @@ type IngressEvent struct {
 	Data *Ingress
 }
 
+type DiscoveryEvent struct {
+	event
+	Data *Discovery
+}
+
+
 type EndpointEvent struct {
 	event
 	Data *Endpoint

@@ -19,7 +19,7 @@
 package types
 
 type NodeManifest struct {
-	Meta      NodeManifestMeta `json:"meta"`
+	Meta      NodeManifestMeta             `json:"meta"`
 	Secrets   map[string]*SecretManifest   `json:"secrets"`
 	Configs   map[string]*ConfigManifest   `json:"configs"`
 	Endpoints map[string]*EndpointManifest `json:"endpoint"`
@@ -30,7 +30,8 @@ type NodeManifest struct {
 }
 
 type NodeManifestMeta struct {
-	Initial bool `json:"initial"`
+	Initial   bool     `json:"initial"`
+	Discovery []string `json:"discovery"`
 }
 
 type PodManifest PodSpec

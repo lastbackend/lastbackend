@@ -91,10 +91,10 @@ func Daemon() {
 		}
 
 	}
-	envs.Get().SetDNS(viper.GetStringSlice("dns.ips"))
+	envs.Get().SetExternalDNS(viper.GetStringSlice("dns.ips"))
 	if viper.IsSet("dns_ips") {
 		ips := strings.Split(viper.GetString("dns_ips"), ",")
-		envs.Get().SetDNS(ips)
+		envs.Get().SetExternalDNS(ips)
 	}
 
 	st := state.New()

@@ -60,6 +60,10 @@ func (Key) Ingress(name string) string {
 	return fmt.Sprintf("%s", name)
 }
 
+func (Key) Discovery(name string) string {
+	return fmt.Sprintf("%s", name)
+}
+
 func (Key) Process(kind, name string, lead bool) string {
 	if lead {
 		return fmt.Sprintf("%s:%s:lead", kind, name)

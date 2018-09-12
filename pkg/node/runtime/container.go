@@ -209,8 +209,13 @@ func containerManifestCreate(ctx context.Context, pod string, spec *types.SpecTe
 	}
 
 	// TODO: Add dns search option only for LB domains
-	dns := envs.Get().GetDNS()
-	for _, d := range dns {
+	cdns := envs.Get().GetClusterDNS()
+	for _, d := range cdns {
+		mf.DNS.Server = append(mf.DNS.Server, d)
+	}
+
+	edns := envs.Get().GetExternalDNS()
+	for _, d := range edns {
 		mf.DNS.Server = append(mf.DNS.Server, d)
 	}
 

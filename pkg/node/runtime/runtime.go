@@ -215,6 +215,11 @@ func (r *Runtime) Loop(ctx context.Context) {
 					}
 				}
 
+				if len(spec.Meta.Discovery) != 0 {
+					log.V(logLevel).Debugf("%s>set cluster dns ips: %#v", logNodeRuntimePrefix, spec.Meta.Discovery)
+					envs.Get().SetClusterDNS(spec.Meta.Discovery)
+				}
+
 				log.V(logLevel).Debugf("%s> provision init", logNodeRuntimePrefix)
 
 				log.V(logLevel).Debugf("%s> provision networks", logNodeRuntimePrefix)

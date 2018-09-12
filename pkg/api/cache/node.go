@@ -31,6 +31,7 @@ type CacheNodeManifest struct {
 	lock      sync.RWMutex
 	nodes     map[string]*types.Node
 	ingress   map[string]*types.Ingress
+	discovery map[string]*types.Discovery
 	routes    map[string]*types.RouteManifest
 	manifests map[string]*types.NodeManifest
 }
@@ -162,6 +163,41 @@ func (c *CacheNodeManifest) DelIngress(selflink string) {
 	delete(c.ingress, selflink)
 }
 
+func (c *CacheNodeManifest) SetDiscovery(discovery *types.Discovery) {
+	c.lock.Lock()
+	defer c.lock.Unlock()
+	c.discovery[discovery.SelfLink()] = discovery
+
+	ips := []string{}
+
+	for _, d := range c.discovery {
+		if d.Status.Ready {
+			ips = append(ips, d.Status.IP)
+		}
+	}
+
+	for _, n := range c.manifests {
+		n.Meta.Discovery = ips
+	}
+}
+
+func (c *CacheNodeManifest) DelDiscovery(selflink string) {
+	c.lock.Lock()
+	defer c.lock.Unlock()
+	delete(c.discovery, selflink)
+
+	ips := []string{}
+	for _, d := range c.discovery {
+		if d.Status.Ready {
+			ips = append(ips, d.Status.IP)
+		}
+	}
+
+	for _, n := range c.manifests {
+		n.Meta.Discovery = ips
+	}
+}
+
 func (c *CacheNodeManifest) SetNode(node *types.Node) {
 	c.lock.Lock()
 	defer c.lock.Unlock()
@@ -195,7 +231,6 @@ func (c *CacheNodeManifest) GetRoutes(node string) map[string]*types.RouteManife
 	}
 }
 
-
 func (c *CacheNodeManifest) Flush(node string) {
 	c.lock.Lock()
 	defer c.lock.Unlock()
@@ -212,6 +247,7 @@ func NewCacheNodeManifest() *CacheNodeManifest {
 	c := new(CacheNodeManifest)
 	c.manifests = make(map[string]*types.NodeManifest, 0)
 	c.ingress = make(map[string]*types.Ingress, 0)
+	c.discovery = make(map[string]*types.Discovery, 0)
 	c.routes = make(map[string]*types.RouteManifest, 0)
 	return c
 }
