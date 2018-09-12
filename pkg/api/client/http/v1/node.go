@@ -94,129 +94,26 @@ func (nc NodeClient) Get(ctx context.Context) (*vv1.Node, error) {
 	return s, nil
 }
 
-func (nc NodeClient) GetSpec(ctx context.Context) (*vv1.NodeManifest, error) {
+func (nc NodeClient) SetStatus(ctx context.Context, opts *rv1.NodeStatusOptions) (*vv1.NodeManifest, error) {
+
+	body := opts.ToJson()
 
 	var s *vv1.NodeManifest
-	var e *errors.Http
-
-	err := nc.client.Get(fmt.Sprintf("/cluster/node/%s/spec", nc.hostname)).
-		AddHeader("Content-Type", "application/json").
-		JSON(&s, &e)
-
-	if err != nil {
-		return nil, err
-	}
-	if e != nil {
-		return nil, errors.New(e.Message)
-	}
-
-	return s, nil
-}
-
-func (nc NodeClient) SetMeta(ctx context.Context, opts *rv1.NodeMetaOptions) (*vv1.Node, error) {
-
-	body := opts.ToJson()
-
-	var s *vv1.Node
-	var e *errors.Http
-
-	err := nc.client.Put(fmt.Sprintf("/cluster/node/%s/Meta", nc.hostname)).
-		AddHeader("Content-Type", "application/json").
-		Body([]byte(body)).
-		JSON(&s, &e)
-
-	if err != nil {
-		return nil, err
-	}
-	if e != nil {
-		return nil, errors.New(e.Message)
-	}
-
-	return s, nil
-}
-
-func (nc NodeClient) SetStatus(ctx context.Context, opts *rv1.NodeStatusOptions) error {
-
-	body := opts.ToJson()
-
 	var e *errors.Http
 
 	err := nc.client.Put(fmt.Sprintf("/cluster/node/%s/status", nc.hostname)).
 		AddHeader("Content-Type", "application/json").
 		Body([]byte(body)).
-		JSON(nil, &e)
+		JSON(&s, &e)
 
 	if err != nil {
-		return err
+		return nil, err
 	}
 	if e != nil {
-		return errors.New(e.Message)
+		return nil, errors.New(e.Message)
 	}
 
-	return nil
-}
-
-func (nc NodeClient) SetPodStatus(ctx context.Context, pod string, opts *rv1.NodePodStatusOptions) error {
-
-	body := opts.ToJson()
-
-	var e *errors.Http
-
-	err := nc.client.Put(fmt.Sprintf("/cluster/node/%s/status/pod/%s", nc.hostname, pod)).
-		AddHeader("Content-Type", "application/json").
-		Body([]byte(body)).
-		JSON(nil, &e)
-
-	if err != nil {
-		return err
-	}
-	if e != nil {
-		return errors.New(e.Message)
-	}
-
-	return nil
-}
-
-func (nc NodeClient) SetVolumeStatus(ctx context.Context, volume string, opts *rv1.NodeVolumeStatusOptions) error {
-
-	body := opts.ToJson()
-
-	var e *errors.Http
-
-	err := nc.client.Put(fmt.Sprintf("/cluster/node/%s/status/volume/%s", nc.hostname, volume)).
-		AddHeader("Content-Type", "application/json").
-		Body([]byte(body)).
-		JSON(nil, &e)
-
-	if err != nil {
-		return err
-	}
-	if e != nil {
-		return errors.New(e.Message)
-	}
-
-	return nil
-}
-
-func (nc NodeClient) SetRouteStatus(ctx context.Context, route string, opts *rv1.NodeRouteStatusOptions) error {
-
-	body := opts.ToJson()
-
-	var e *errors.Http
-
-	err := nc.client.Put(fmt.Sprintf("/cluster/node/%s/status/route/%s", nc.hostname, route)).
-		AddHeader("Content-Type", "application/json").
-		Body([]byte(body)).
-		JSON(nil, &e)
-
-	if err != nil {
-		return err
-	}
-	if e != nil {
-		return errors.New(e.Message)
-	}
-
-	return nil
+	return s, nil
 }
 
 func (nc NodeClient) Remove(ctx context.Context, opts *rv1.NodeRemoveOptions) error {

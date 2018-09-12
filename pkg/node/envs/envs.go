@@ -21,7 +21,6 @@ package envs
 import (
 	"errors"
 	"github.com/lastbackend/lastbackend/pkg/api/client/types"
-	"github.com/lastbackend/lastbackend/pkg/node/events/exporter"
 	"github.com/lastbackend/lastbackend/pkg/node/ingress"
 	"github.com/lastbackend/lastbackend/pkg/node/state"
 	"github.com/lastbackend/lastbackend/pkg/runtime/cni"
@@ -55,7 +54,6 @@ type Env struct {
 		ingress   bool
 	}
 
-	exporter *exporter.Exporter
 	ingress ingress.Ingress
 	dns []string
 }
@@ -156,14 +154,6 @@ func (c *Env) GetNodeClient() types.NodeClientV1 {
 
 func (c *Env) GetRestClient() types.ClientV1 {
 	return c.client.rest
-}
-
-func (c *Env) SetExporter(e *exporter.Exporter) {
-	c.exporter = e
-}
-
-func (c *Env) GetExporter() *exporter.Exporter {
-	return c.exporter
 }
 
 func (c *Env) SetDNS(dns []string) {

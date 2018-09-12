@@ -27,17 +27,11 @@ type ContainerView struct{}
 func (cv *ContainerView) New(c *types.Container) Container {
 	container := Container{
 		ID:      c.ID,
-		Spec:    cv.ToContainerSpec(&c.Spec),
 		State:   c.State,
 		Status:  c.Status,
 		Image:   c.Image,
 		Created: c.Created,
 		Started: c.Started,
-	}
-
-	container.Ports = make(map[string][]*types.Port, len(c.Network.Ports))
-	if len(c.Network.Ports) != 0 {
-		container.Ports = c.Network.Ports
 	}
 
 	return container
@@ -220,7 +214,6 @@ func (cv *ContainerView) NewPodContainer(c *types.PodContainer) PodContainer {
 		Pod:     c.Pod,
 		Name:    c.Name,
 		Ready:   c.Ready,
-		Restart: c.Restart,
 	}
 
 	container.State.Error.Error = c.State.Error.Error

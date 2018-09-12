@@ -75,3 +75,20 @@ func ImageRemove(ctx context.Context, link string) error {
 
 	return nil
 }
+
+func ImageRestore(ctx context.Context) error {
+
+	state := envs.Get().GetState().Images()
+	imgs, err := envs.Get().GetIRI().List(ctx)
+	if err != nil {
+		return err
+	}
+
+	for _, i := range imgs {
+		if len(i.Meta.Tags) > 0 {
+			state.AddImage(i.Meta.Name, i)
+		}
+	}
+
+	return nil
+}

@@ -16,4 +16,38 @@
 // from Last.Backend LLC.
 //
 
-package runtime
+package decoder
+
+import (
+	"bytes"
+)
+
+const separator = "\n---"
+
+func YamlSplit(data []byte) [][]byte {
+
+	sep := []byte(separator)
+	obj := make([][]byte, 0)
+
+	for {
+		i := bytes.Index(data, sep)
+		if i < 0 {
+			break
+		}
+
+		item := make([]byte, i)
+		if len(data) < i {
+			break
+		}
+
+		copy(item, data[: i])
+		obj = append(obj, item)
+		data = data[i + len(sep):]
+	}
+
+	if len(data) > 0 {
+		obj = append(obj, data)
+	}
+
+	return obj
+}

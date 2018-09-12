@@ -27,6 +27,8 @@ import (
 	d "github.com/docker/docker/api/types"
 )
 
+const CTYPE = "container"
+
 func (r *Runtime) Subscribe(ctx context.Context, container chan *types.Container) error {
 
 	log.Debugf("%s:subscribe:> create new event listener subscribe", logPrefix)
@@ -41,6 +43,11 @@ func (r *Runtime) Subscribe(ctx context.Context, container chan *types.Container
 	for {
 		select {
 		case e := <-event:
+
+			if e.Type != CTYPE {
+				continue
+			}
+
 			log.Debugf("%s:subscribe:> event type: %s action: %v", logPrefix, e.Type, e.Action)
 
 			if len(e.ID) == 0 {

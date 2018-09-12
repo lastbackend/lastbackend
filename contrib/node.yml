@@ -45,7 +45,7 @@ runtime:
     type: "ipvs"
   csi:
     local:
-      root: "/var/run/lastbackend/"
+      root: "/private/var/run/lastbackend/"
 
 ingress:
   enable: true

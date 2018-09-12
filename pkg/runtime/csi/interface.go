@@ -1,4 +1,4 @@
-//
+ //
 // Last.Backend LLC CONFIDENTIAL
 // __________________
 //
@@ -26,5 +26,8 @@ import (
 type CSI interface {
 	List(ctx context.Context) (map[string]*types.VolumeState, error)
 	Create(ctx context.Context, name string, manifest *types.VolumeManifest) (*types.VolumeState, error)
-	Remove(ctx context.Context, name string, manifest *types.VolumeManifest) error
+	FilesPut(ctx context.Context, state *types.VolumeState, files map[string][]byte) error
+	FilesCheck(ctx context.Context, state *types.VolumeState, files map[string][]byte) (bool, error)
+	FilesDel(ctx context.Context, state *types.VolumeState, files []string) error
+	Remove(ctx context.Context, state *types.VolumeState) error
 }

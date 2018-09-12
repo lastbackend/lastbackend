@@ -20,6 +20,7 @@ package runtime
 
 import (
 	"context"
+	"github.com/lastbackend/lastbackend/pkg/distribution/errors"
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 	"github.com/lastbackend/lastbackend/pkg/log"
 	"github.com/lastbackend/lastbackend/pkg/node/envs"
@@ -49,6 +50,7 @@ func VolumeCreate(ctx context.Context, name string, mf *types.VolumeManifest) (*
 	return st, nil
 }
 
+
 func VolumeDestroy(ctx context.Context, name string) error {
 
 	vol := envs.Get().GetState().Volumes().GetVolume(name)
@@ -67,12 +69,8 @@ func VolumeDestroy(ctx context.Context, name string) error {
 		return err
 	}
 
-	mf := types.VolumeManifest{
-		Type: vol.Type,
-		HostPath: vol.Path,
-	}
 
-	if err := si.Remove(ctx, name, &mf); err != nil {
+	if err := si.Remove(ctx, vol); err != nil {
 		log.Warnf("can note remove volume: %s: %s", name, err.Error())
 	}
 
@@ -100,6 +98,10 @@ func VolumeRestore(ctx context.Context) error {
 			return err
 		}
 
+		if sci == nil {
+			return errors.New("container storage runtime interface not supported")
+		}
+
 		states, err := sci.List(ctx)
 		if err != nil {
 			log.Errorf("volumes restore err: %s", err.Error())
@@ -112,6 +114,61 @@ func VolumeRestore(ctx context.Context) error {
 
 	}
 
-
 	return nil
+}
+
+func VolumeSetSecretData (ctx context.Context, name string, secret string) error {
+	return nil
+}
+
+func VolumeCheckSecretData(ctx context.Context, name string, secret string) (bool, error) {
+	log.Debug("volume check secret data: %s > %s", secret, name)
+	return true, nil
+}
+
+func VolumeCheckConfigData(ctx context.Context, name string, config string) (bool, error) {
+	log.Debugf("volume check config data: %s > %s", config, name)
+
+	vol := envs.Get().GetState().Volumes().GetVolume(name)
+	cfg := envs.Get().GetState().Configs().GetConfig(config)
+
+	if vol == nil {
+		return  false, errors.New("volume not exists")
+	}
+
+	if vol.Type == types.EmptyString {
+		vol.Type = types.VOLUMETYPELOCAL
+	}
+
+	si, err := envs.Get().GetCSI(vol.Type)
+	if err != nil {
+		log.Errorf("Remove volume failed: %s", err.Error())
+		return false, err
+	}
+
+	return si.FilesCheck(ctx, vol, cfg.Data)
+}
+
+func VolumeSetConfigData (ctx context.Context, name string, config string) error {
+
+	log.Debugf("set volume config data: %s > %s", config, name)
+
+	vol := envs.Get().GetState().Volumes().GetVolume(name)
+	cfg := envs.Get().GetState().Configs().GetConfig(config)
+
+	if vol == nil {
+		return errors.New("volume not exists")
+	}
+
+	if vol.Type == types.EmptyString {
+		vol.Type = types.VOLUMETYPELOCAL
+	}
+
+	si, err := envs.Get().GetCSI(vol.Type)
+	if err != nil {
+		log.Errorf("Remove volume failed: %s", err.Error())
+		return err
+	}
+
+	return si.FilesPut(ctx, vol, cfg.Data)
 }

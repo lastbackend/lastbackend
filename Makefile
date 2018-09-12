@@ -53,7 +53,7 @@ run-dns:
 
 run-node:
 	@echo "== Run node"
-	@go run ./cmd/node/node.go --config=./contrib/node.yml
+	@go run ./cmd/node/node.go --config=./contrib/node.yml --dir=./contrib/manifest
 
 swagger-spec:
 	@echo "== Generating Swagger spec for Last.Backend API"

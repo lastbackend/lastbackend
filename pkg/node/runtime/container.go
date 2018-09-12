@@ -24,7 +24,7 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 	"github.com/lastbackend/lastbackend/pkg/log"
 	"github.com/lastbackend/lastbackend/pkg/node/envs"
-	"github.com/lastbackend/lastbackend/pkg/node/events"
+	"strings"
 	"time"
 )
 
@@ -136,7 +136,6 @@ func containerSubscribe(ctx context.Context) error {
 			state.SetContainer(container)
 		}
 
-		events.NewPodStatusEvent(ctx, c.Pod)
 	}
 
 	return nil
@@ -146,13 +145,23 @@ func containerManifestCreate(ctx context.Context, pod string, spec *types.SpecTe
 
 	mf := types.NewContainerManifest(spec)
 
+	name := strings.Split(pod, ":")
+	mf.Name = fmt.Sprintf("%s-%s", name[len(name)-1], spec.Name)
+
+	mf.Labels = make(map[string]string, 0)
+	for n, v := range spec.Labels {
+		mf.Labels[n] = v
+	}
+
+	mf.Labels[types.ContainerTypeLBC] = pod
+
 	for _, s := range spec.EnvVars {
 
-		if s.From.Name == types.EmptyString || s.From.Key == types.EmptyString {
+		if s.Secret.Name == types.EmptyString || s.Secret.Key == types.EmptyString {
 			continue
 		}
 
-		secret, err := SecretGet(ctx, s.From.Name)
+		secret, err := SecretGet(ctx, s.Secret.Name)
 		if err != nil {
 			log.Errorf("Can not get secret for container: %s", err.Error())
 			return nil, err
@@ -162,11 +171,11 @@ func containerManifestCreate(ctx context.Context, pod string, spec *types.SpecTe
 			continue
 		}
 
-		if _, ok := secret.Data[s.From.Key]; !ok {
+		if _, ok := secret.Data[s.Secret.Key]; !ok {
 			continue
 		}
 
-		val, err := secret.DecodeSecretTextData(s.From.Key)
+		val, err := secret.DecodeSecretTextData(s.Secret.Key)
 		if err != nil {
 			continue
 		}

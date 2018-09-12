@@ -107,10 +107,16 @@ type NodeResources struct {
 
 // swagger:model views_node_spec
 type NodeManifest struct {
+	Meta      NodeManifestMeta                   `json:"meta"`
+	Configs   map[string]*types.ConfigManifest   `json:"configs,omitempty"`
 	Secrets   map[string]*types.SecretManifest   `json:"secrets,omitempty"`
 	Network   map[string]*types.SubnetManifest   `json:"network,omitempty"`
 	Pods      map[string]*types.PodManifest      `json:"pods,omitempty"`
 	Volumes   map[string]*types.VolumeManifest   `json:"volumes,omitempty"`
 	Endpoints map[string]*types.EndpointManifest `json:"endpoints,omitempty"`
 	Routes    map[string]*types.RouteManifest    `json:"routes,omitempty"`
+}
+
+type NodeManifestMeta struct {
+	Initial bool `json:"initial"`
 }

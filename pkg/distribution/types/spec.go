@@ -21,6 +21,8 @@ package types
 import (
 	"fmt"
 	"io"
+	"regexp"
+	"strconv"
 	"time"
 )
 
@@ -74,7 +76,9 @@ type SpecTemplateVolume struct {
 	// Template volume name
 	Type string `json:"type"`
 	// Template volume from secret type
-	From SpecTemplateSecretVolume `json:"from"`
+	Secret SpecTemplateSecretVolume `json:"secret,omitempty"`
+	// Template volume from config type
+	Config SpecTemplateConfigVolume `json:"config,omitempty"`
 }
 
 type SpecTemplateSecretVolume struct {
@@ -83,6 +87,14 @@ type SpecTemplateSecretVolume struct {
 	// Secret file key
 	Files []string `json:"key"`
 }
+
+type SpecTemplateConfigVolume struct {
+	// Secret name to mount
+	Name string `json:"name"`
+	// Secret file key
+	Files []string `json:"files"`
+}
+
 
 // swagger:ignore
 // swagger:model types_spec_template_volume_mounts
@@ -196,17 +208,23 @@ type SpecTemplateContainerPort struct {
 
 // SpecTemplateContainerPorts is a list of spec template container env vars
 // swagger:model types_spec_template_container_env_list
-type SpecTemplateContainerEnvs []*SpecTemplateContainerEnv
+type SpecTemplateContainerEnvs []SpecTemplateContainerEnv
 
 // swagger:model types_spec_template_container_env
 type SpecTemplateContainerEnv struct {
-	Name  string                         `json:"name"`
-	Value string                         `json:"value"`
-	From  SpecTemplateContainerEnvSecret `json:"from"`
+	Name   string                         `json:"name"`
+	Value  string                         `json:"value,omitempty"`
+	Secret SpecTemplateContainerEnvSecret `json:"secret,omitempty"`
+	Config SpecTemplateContainerEnvConfig `json:"config,omitempty"`
 }
 
 // swagger:model types_spec_template_container_env_secret
 type SpecTemplateContainerEnvSecret struct {
+	Name string `json:"name"`
+	Key  string `json:"key"`
+}
+
+type SpecTemplateContainerEnvConfig struct {
 	Name string `json:"name"`
 	Key  string `json:"key"`
 }
@@ -252,7 +270,7 @@ type SpecTemplateContainerResource struct {
 
 // SpecTemplateContainerVolumes is a list of spec template container volumes
 // swagger:model types_spec_template_container_volume_list
-type SpecTemplateContainerVolumes []*SpecTemplateContainerVolume
+type SpecTemplateContainerVolumes []SpecTemplateContainerVolume
 
 // swagger:model types_spec_template_container_volume
 type SpecTemplateContainerVolume struct {
@@ -337,9 +355,9 @@ type SpecTemplateContainerLink struct {
 // swagger:model types_spec_template_policy
 type SpecTemplateRestartPolicy struct {
 	// Restart policy name
-	Policy string `json:"policy"`
+	Policy string `json:"policy" yaml:"policy"`
 	// Attempt period
-	Attempt int `json:"attempt"`
+	Attempt int `json:"attempt" yaml:"attempt"`
 }
 
 // swagger:model types_spec_strategy
@@ -412,5 +430,63 @@ func (s *SpecTemplateContainer) SetDefault() {
 	s.Probes.ReadProbe.Exec.Command = make([]string, 0)
 	s.RestartPolicy = SpecTemplateRestartPolicy{
 		Policy: "always",
+	}
+}
+
+func (s *SpecTemplateContainerPort) Parse(p string) {
+
+	var (
+		base = 10
+		size = 16
+	)
+
+	reg, _ := regexp.Compile(`((?P<host>\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})\:)?((?P<hport>\d{1,5})?)?(\:(?P<cport>\d{1,5}))?(\/(?P<proto>\w{3}))?`)
+
+	match := reg.FindStringSubmatch(p)
+	pm := make(map[string]string)
+	for i, name := range reg.SubexpNames() {
+		if i > 0 && i <= len(match) {
+			pm[name] = match[i]
+		}
+	}
+
+	if _, ok := pm["host"]; ok {
+		if pm["host"] != EmptyString {
+			s.HostIP = pm["host"]
+		} else {
+			s.HostIP = "127.0.0.1"
+		}
+	} else {
+		s.HostIP = "127.0.0.1"
+	}
+
+	if _, ok := pm["proto"]; ok {
+
+		if pm["proto"] != EmptyString {
+			s.Protocol = pm["proto"]
+		} else {
+			s.Protocol = "tcp"
+		}
+	} else {
+		s.Protocol = "tcp"
+	}
+
+	if _, ok := pm["hport"]; ok {
+		if pt, err := strconv.ParseUint(pm["hport"], base, size); err == nil {
+			s.HostPort = uint16(pt)
+		}
+	}
+
+	if _, ok := pm["cport"]; ok {
+
+		if pm["cport"] != EmptyString {
+			if pt, err := strconv.ParseUint(pm["cport"], base, size); err == nil {
+				s.ContainerPort = uint16(pt)
+			}
+		} else {
+			s.ContainerPort = s.HostPort
+		}
+	} else {
+		s.ContainerPort = s.HostPort
 	}
 }

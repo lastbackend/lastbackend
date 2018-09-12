@@ -34,11 +34,24 @@ type PodState struct {
 	local      map[string]bool
 	containers map[string]*types.PodContainer
 	pods       map[string]*types.PodStatus
+	watchers   map[chan string] bool
 }
 
 type PodStateStats struct {
 	pods       int
 	containers int
+}
+
+func (s *PodState) dispatch(pod string) {
+	for w := range s.watchers {
+		w <- pod
+	}
+}
+
+func (s *PodState) Watch(watcher chan string, done chan bool) {
+	s.watchers[watcher] = true
+	defer delete(s.watchers, watcher)
+	<- done
 }
 
 func (s *PodState) GetPodsCount() int {
@@ -119,16 +132,18 @@ func (s *PodState) SetPod(key string, pod *types.PodStatus) {
 	s.lock.Lock()
 	state(pod)
 	s.lock.Unlock()
+	s.dispatch(key)
 }
 
 func (s *PodState) DelPod(key string) {
 	log.V(logLevel).Debugf("%s: del pod: %s", logPodPrefix, key)
 	s.lock.Lock()
-	defer s.lock.Unlock()
 	if _, ok := s.pods[key]; ok {
 		delete(s.pods, key)
 		s.stats.pods--
 	}
+	s.lock.Unlock()
+	s.dispatch(key)
 }
 
 func (s *PodState) GetContainer(id string) *types.PodContainer {
@@ -186,19 +201,6 @@ func state(s *types.PodStatus) {
 
 	var sts = make(map[string]int)
 	var ems string
-
-	switch s.State {
-	case types.StateDestroyed:
-		return
-	case types.StateError:
-		return
-	case types.StateProvision:
-		return
-	case types.StateCreated:
-		return
-	case types.StatusPull:
-		return
-	}
 
 	if len(s.Containers) == 0 {
 		s.State = types.StateDegradation

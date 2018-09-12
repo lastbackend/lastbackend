@@ -128,14 +128,25 @@ type PodContainer struct {
 	Pod string `json:"pod" yaml:"pod"`
 	// Pod container name
 	Name string `json:"name" yaml:"name"`
+	// Pod container exec
+	Exec SpecTemplateContainerExec `json:"exec" yaml:"exec"`
 	// Pod container state
 	State PodContainerState `json:"state" yaml:"state"`
 	// Pod container ready
 	Ready bool `json:"ready" yaml:"ready"`
 	// Pod container restart count
-	Restart int `json:"restared" yaml:"restared"`
+	Restart struct {
+		Policy  string `json:"policy"`
+		Attempt int    `json:"count"`
+	} `json:"restart" yaml:"restart"`
 	// Pod container image meta
 	Image PodContainerImage `json:"image" yaml:"image"`
+	// Pod container envs
+	Envs []string `json:"-"`
+	// Pod container binds
+	Binds []string `json:"-"`
+	// Pod container ports
+	Ports []SpecTemplateContainerPort `json:"ports"`
 }
 
 // PodContainer is a container of the pod
@@ -163,6 +174,8 @@ type PodContainerImage struct {
 
 // swagger:model types_pod_container_state
 type PodContainerState struct {
+	// Container restart state
+	Restarted PodContainerStateRestarted `json:"restarted" yaml:"restarted"`
 	// Container create state
 	Created PodContainerStateCreated `json:"created" yaml:"created"`
 
@@ -174,6 +187,12 @@ type PodContainerState struct {
 
 	// Container error state
 	Error PodContainerStateError `json:"error" yaml:"error"`
+}
+
+// swagger:model types_pod_container_state_restarted
+type PodContainerStateRestarted struct {
+	Count int `json:"count" yaml:"count"`
+	Restarted time.Time `json:"restarted" yaml:"restarted"`
 }
 
 // swagger:model types_pod_container_state_created
@@ -310,4 +329,20 @@ func (p *Pod) DeploymentLink() string {
 
 func (p *Pod) CreateSelfLink(namespace, service, deployment, name string) string {
 	return fmt.Sprintf("%s:%s:%s:%s", namespace, service, deployment, name)
+}
+
+func (c *PodContainer) GetManifest() *ContainerManifest {
+	var manifest = new(ContainerManifest)
+
+	manifest.Name = c.Name
+	manifest.Image = c.Image.Name
+	manifest.Binds = c.Binds
+	manifest.Envs = c.Envs
+	manifest.Ports = c.Ports
+	manifest.Exec = c.Exec
+
+	manifest.RestartPolicy.Policy = c.Restart.Policy
+	manifest.RestartPolicy.Attempt = c.Restart.Attempt
+
+	return manifest
 }

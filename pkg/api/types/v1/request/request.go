@@ -21,7 +21,7 @@ package request
 type Runtime struct {
 	Kind    string      `json:"kind" yaml:"kind"`
 	Version string      `json:"version" yaml:"version"`
-	Meta    RuntimeMeta `json:"meta" yaml:"meta"`
+	Raw     []byte
 }
 
 type RuntimeMeta struct {

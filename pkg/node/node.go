@@ -21,6 +21,8 @@ package node
 import (
 	"context"
 	"fmt"
+	"github.com/lastbackend/lastbackend/pkg/distribution/types"
+	"github.com/lastbackend/lastbackend/pkg/node/controller"
 	"os"
 	"os/signal"
 	"strings"
@@ -35,8 +37,6 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/api/client"
 	"github.com/lastbackend/lastbackend/pkg/log"
 	"github.com/lastbackend/lastbackend/pkg/node/envs"
-	"github.com/lastbackend/lastbackend/pkg/node/events"
-	"github.com/lastbackend/lastbackend/pkg/node/events/exporter"
 	"github.com/lastbackend/lastbackend/pkg/node/http"
 	"github.com/lastbackend/lastbackend/pkg/runtime/cni/cni"
 	"github.com/lastbackend/lastbackend/pkg/runtime/cpi/cpi"
@@ -51,6 +51,7 @@ func Daemon() {
 	var (
 		sigs = make(chan os.Signal)
 		done = make(chan bool, 1)
+		ctx, cancel = context.WithCancel(context.Background())
 	)
 
 	log.New(viper.GetInt("verbose"))
@@ -84,6 +85,7 @@ func Daemon() {
 			si, err := csi.New(kind)
 			if err != nil {
 				log.Errorf("Cannot initialize sni: %s > %v", kind, err)
+				return
 			}
 			envs.Get().SetCSI(kind, si)
 		}
@@ -114,51 +116,57 @@ func Daemon() {
 	st.Node().Info = runtime.NodeInfo()
 	st.Node().Status = runtime.NodeStatus()
 
-	cfg := client.NewConfig()
+	r := runtime.NewRuntime()
+	r.Restore(ctx)
+	r.Subscribe(ctx)
+	r.Loop(ctx)
 
-	cfg.BearerToken = viper.GetString("token")
+	if viper.IsSet("node.manifest.dir") ||  viper.IsSet("dir") {
 
-	if viper.IsSet("api.tls") && !viper.GetBool("api.tls.insecure") {
-		cfg.TLS = client.NewTLSConfig()
-		cfg.TLS.CertFile = viper.GetString("api.tls.cert")
-		cfg.TLS.KeyFile = viper.GetString("api.tls.key")
-		cfg.TLS.CAFile = viper.GetString("api.tls.ca")
+		dir := viper.GetString("node.manifest.dir")
+		if viper.IsSet("dir") {
+			dir = viper.GetString("dir")
+		}
+		if dir != types.EmptyString {
+			r.Provision(context.Background(), dir)
+		}
 	}
 
-	endpoint := viper.GetString("api.uri")
-	if viper.IsSet("api_uri") {
-		endpoint = viper.GetString("api_uri")
+
+	if viper.IsSet("api") || viper.IsSet("api_uri") {
+
+		cfg := client.NewConfig()
+		cfg.BearerToken = viper.GetString("token")
+
+		if viper.IsSet("api.tls") && !viper.GetBool("api.tls.insecure") {
+			cfg.TLS = client.NewTLSConfig()
+			cfg.TLS.CertFile = viper.GetString("api.tls.cert")
+			cfg.TLS.KeyFile = viper.GetString("api.tls.key")
+			cfg.TLS.CAFile = viper.GetString("api.tls.ca")
+		}
+
+		endpoint := viper.GetString("api.uri")
+		if viper.IsSet("api_uri") {
+			endpoint = viper.GetString("api_uri")
+		}
+
+		rest, err := client.New(client.ClientHTTP, endpoint, cfg)
+		if err != nil {
+			log.Errorf("Init client err: %s", err)
+		}
+
+		n := rest.V1().Cluster().Node(st.Node().Info.Hostname)
+		s := rest.V1()
+		envs.Get().SetClient(n, s)
+
+		ctl := controller.New(r)
+
+		if err := ctl.Connect(context.Background());err != nil {
+			log.Errorf("node:initialize: connect err %s", err.Error())
+		}
+
+		go ctl.Sync(context.Background())
 	}
-
-	rest, err := client.New(client.ClientHTTP, endpoint, cfg)
-	if err != nil {
-		log.Fatalf("Init client err: %s", err)
-	}
-
-	if err != nil {
-		log.Errorf("node:initialize client err: %s", err.Error())
-		os.Exit(0)
-	}
-
-	n := rest.V1().Cluster().Node(st.Node().Info.Hostname)
-	s := rest.V1()
-	envs.Get().SetClient(n, s)
-
-	e := exporter.NewExporter()
-	e.SetDispatcher(events.Dispatcher)
-	envs.Get().SetExporter(e)
-
-	r := runtime.NewRuntime(context.Background())
-	r.Restore()
-
-	if err := r.Connect(context.Background()); err != nil {
-		log.Fatalf("node:initialize: connect err %s", err.Error())
-	}
-
-	go r.Subscribe()
-
-	e.Loop()
-	r.Loop()
 
 	go func() {
 		opts := new(http.HttpOpts)
@@ -186,7 +194,7 @@ func Daemon() {
 	}()
 
 	<-done
-
+	cancel()
 	log.Info("Handle SIGINT and SIGTERM.")
 
 	return

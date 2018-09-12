@@ -483,7 +483,7 @@ func TestServiceUpdate(t *testing.T) {
 	m3.Spec.Template.Containers[0].Env[0].Name = "updated"
 	m3.Spec.Template.Containers[0].Env[1].Value = "meta"
 	m3.Spec.Template.Volumes[0].Name = "secret-test"
-	m3.Spec.Template.Volumes[0].From.Name = "r"
+	m3.Spec.Template.Volumes[0].Secret.Name = "r"
 
 	m3.SetServiceSpec(s3)
 
@@ -899,7 +899,7 @@ func getServiceManifest(name, image string) *request.ServiceManifest {
 		}
 		volume = request.ManifestSpecTemplateVolume{
 			Name: "demo",
-			From: request.ManifestSpecTemplateSecretVolume{
+			Secret: request.ManifestSpecTemplateSecretVolume{
 				Name:  "test",
 				Files: []string{"1.txt"},
 			},

@@ -28,7 +28,6 @@ import (
 )
 
 const (
-	ContainerTypeLocal = "local"
 	ContainerTypeLBC = "LBC"
 	ContainerTypeLBR = "LBR"
 )
@@ -42,8 +41,10 @@ type Container struct {
 	Deployment string `json:"deployment"`
 	// Container Namespace ID
 	Namespace string `json:"namespace"`
-	// Spec ID
-	Spec ContainerSpec `json:"spec"`
+	// Container envs
+	Envs []string `json:"envs"`
+	// Container binds
+	Binds []string `json:"binds"`
 	// Container name
 	Name string `json:"name"`
 	// Name information
@@ -58,10 +59,17 @@ type Container struct {
 	Network NetworkSettings `json:"network"`
 	// Container labels
 	Labels map[string]string `json:"labels"`
+	// Contaienr restart policy
+	Restart struct {
+		Policy string `json:"policy"`
+		Retry  int    `json:"count"`
+	} `json:"restart"`
 	// Container created time
 	Created time.Time `json:"created"`
 	// Container started time
 	Started time.Time `json:"started"`
+
+	Exec SpecTemplateContainerExec `json:"exec"`
 }
 
 type Port struct {
@@ -77,7 +85,7 @@ type NetworkSettings struct {
 	// Container ip address
 	IPAddress string `json:"ip"`
 	// Container ports mapping
-	Ports map[string][]*Port `json:"ports"`
+	Ports []SpecTemplateContainerPort `json:"ports"`
 }
 
 type ContainerSpec struct {

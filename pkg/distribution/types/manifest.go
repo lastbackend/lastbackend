@@ -19,12 +19,18 @@
 package types
 
 type NodeManifest struct {
+	Meta      NodeManifestMeta `json:"meta"`
 	Secrets   map[string]*SecretManifest   `json:"secrets"`
+	Configs   map[string]*ConfigManifest   `json:"configs"`
 	Endpoints map[string]*EndpointManifest `json:"endpoint"`
 	Network   map[string]*SubnetManifest   `json:"network"`
 	Pods      map[string]*PodManifest      `json:"pods"`
 	Volumes   map[string]*VolumeManifest   `json:"volumes"`
 	Routes    map[string]*RouteManifest    `json:"routes"`
+}
+
+type NodeManifestMeta struct {
+	Initial bool `json:"initial"`
 }
 
 type PodManifest PodSpec

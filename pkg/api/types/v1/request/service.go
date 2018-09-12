@@ -21,7 +21,6 @@ package request
 import (
 	"encoding/json"
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
-	"github.com/lastbackend/lastbackend/pkg/log"
 	"gopkg.in/yaml.v2"
 	"strconv"
 	"strings"
@@ -132,9 +131,7 @@ func (s *ServiceManifest) SetServiceSpec(svc *types.Service) {
 
 	if s.Spec.Selector != nil {
 
-		if s.Spec.Selector.Node != nil {
-			svc.Spec.Selector.Node = *s.Spec.Selector.Node
-		}
+		svc.Spec.Selector.Node = s.Spec.Selector.Node
 
 		if s.Spec.Selector.Labels != nil {
 			svc.Spec.Selector.Labels = s.Spec.Selector.Labels
@@ -214,19 +211,19 @@ func (s *ServiceManifest) SetServiceSpec(svc *types.Service) {
 							svc.Spec.Template.Updated = time.Now()
 						}
 
-						if se.From.Name != ce.From.Name || se.From.Key != ce.From.Key {
-							se.From.Name = ce.From.Name
-							se.From.Key = ce.From.Key
+						if se.Secret.Name != ce.From.Name || se.Secret.Key != ce.From.Key {
+							se.Secret.Name = ce.From.Name
+							se.Secret.Key = ce.From.Key
 							svc.Spec.Template.Updated = time.Now()
 						}
 					}
 				}
 
 				if !f {
-					spec.EnvVars = append(spec.EnvVars, &types.SpecTemplateContainerEnv{
+					spec.EnvVars = append(spec.EnvVars, types.SpecTemplateContainerEnv{
 						Name:  ce.Name,
 						Value: ce.Value,
-						From: types.SpecTemplateContainerEnvSecret{
+						Secret: types.SpecTemplateContainerEnvSecret{
 							Name: ce.From.Name,
 							Key:  ce.From.Key,
 						},
@@ -234,7 +231,7 @@ func (s *ServiceManifest) SetServiceSpec(svc *types.Service) {
 				}
 			}
 
-			var envs = make([]*types.SpecTemplateContainerEnv, 0)
+			var envs = make([]types.SpecTemplateContainerEnv, 0)
 			for _, se := range spec.EnvVars {
 				for _, ce := range c.Env {
 					if ce.Name == se.Name {
@@ -268,8 +265,6 @@ func (s *ServiceManifest) SetServiceSpec(svc *types.Service) {
 				var f = false
 				for _, sv := range spec.Volumes {
 
-					log.Info(sv.Name, v.Name)
-
 					if v.Name == sv.Name {
 						f = true
 						if sv.Mode != v.Mode || sv.Path != v.Path {
@@ -281,7 +276,7 @@ func (s *ServiceManifest) SetServiceSpec(svc *types.Service) {
 					}
 				}
 				if !f {
-					spec.Volumes = append(spec.Volumes, &types.SpecTemplateContainerVolume{
+					spec.Volumes = append(spec.Volumes, types.SpecTemplateContainerVolume{
 						Name: v.Name,
 						Mode: v.Mode,
 						Path: v.Path,
@@ -289,7 +284,7 @@ func (s *ServiceManifest) SetServiceSpec(svc *types.Service) {
 				}
 			}
 
-			vlms := make([]*types.SpecTemplateContainerVolume, 0)
+			vlms := make([]types.SpecTemplateContainerVolume, 0)
 			for _, sv := range spec.Volumes {
 				for _, cv := range c.Volumes {
 					if sv.Name == cv.Name {
@@ -349,17 +344,17 @@ func (s *ServiceManifest) SetServiceSpec(svc *types.Service) {
 				svc.Spec.Template.Updated = time.Now()
 			}
 
-			if v.Type != spec.Type || v.From.Name != spec.From.Name {
+			if v.Type != spec.Type || v.Secret.Name != spec.Secret.Name {
 				spec.Type = v.Type
-				spec.From.Name = v.From.Name
+				spec.Secret.Name = v.Secret.Name
 				svc.Spec.Template.Updated = time.Now()
 			}
 
 			var e = true
-			for _, vf := range v.From.Files {
+			for _, vf := range v.Secret.Files {
 
 				var f = false
-				for _, sf := range spec.From.Files {
+				for _, sf := range spec.Secret.Files {
 					if vf == sf {
 						f = true
 						break
@@ -374,7 +369,7 @@ func (s *ServiceManifest) SetServiceSpec(svc *types.Service) {
 			}
 
 			if !e {
-				spec.From.Files = v.From.Files
+				spec.Secret.Files = v.Secret.Files
 				svc.Spec.Template.Updated = time.Now()
 			}
 
@@ -401,6 +396,11 @@ func (s *ServiceManifest) SetServiceSpec(svc *types.Service) {
 
 	}
 
+}
+
+func (s *ServiceManifest) GetManifest() *types.ServiceManifest {
+	sm := new(types.ServiceManifest)
+	return sm
 }
 
 // swagger:ignore
