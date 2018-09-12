@@ -862,5 +862,5 @@ func PodVolumeDestroy(ctx context.Context, pod, volume string) error {
 }
 
 func podVolumeKeyCreate(pod, volume string) string {
-	return fmt.Sprintf("%s-%s", pod, volume)
+	return fmt.Sprintf("%s-%s", strings.Replace(pod, ":","-", -1), volume)
 }
