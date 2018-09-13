@@ -122,7 +122,7 @@ func VolumeSetSecretData (ctx context.Context, name string, secret string) error
 }
 
 func VolumeCheckSecretData(ctx context.Context, name string, secret string) (bool, error) {
-	log.Debug("volume check secret data: %s > %s", secret, name)
+	log.Debugf("volume check secret data: %s > %s", secret, name)
 	return true, nil
 }
 
