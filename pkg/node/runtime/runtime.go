@@ -20,12 +20,16 @@ package runtime
 
 import (
 	"context"
-	"time"
-
+	"fmt"
+	"github.com/lastbackend/lastbackend/pkg/api/types/v1/request"
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 	"github.com/lastbackend/lastbackend/pkg/log"
 	"github.com/lastbackend/lastbackend/pkg/node/envs"
-	"github.com/lastbackend/lastbackend/pkg/node/events"
+	"github.com/lastbackend/lastbackend/pkg/util/decoder"
+	"gopkg.in/yaml.v2"
+	"io/ioutil"
+	"path/filepath"
+	"strings"
 )
 
 const (
@@ -33,213 +37,262 @@ const (
 	logLevel             = 3
 )
 
+// Runtime main node process
 type Runtime struct {
-	ctx  context.Context
 	spec chan *types.NodeManifest
 }
 
-func (r *Runtime) Restore() {
+// Restore node runtime state
+func (r *Runtime) Restore(ctx context.Context) {
 	log.V(logLevel).Debugf("%s:restore:> restore init", logNodeRuntimePrefix)
 
-	NetworkRestore(r.ctx)
-	VolumeRestore(r.ctx)
-	PodRestore(r.ctx)
-	EndpointRestore(r.ctx)
+	NetworkRestore(ctx)
+	VolumeRestore(ctx)
+
+	if err := ImageRestore(ctx); err != nil {
+		log.Errorf("Can not restore images: %s", err.Error())
+		return
+	}
+
+	if err := PodRestore(ctx); err != nil {
+		log.Errorf("Can not restore pods: %s", err.Error())
+		return
+	}
+
+	EndpointRestore(ctx)
 
 	if envs.Get().GetModeIngress() {
 		envs.Get().GetIngress().Provision(context.Background())
 	}
 }
 
-func (r *Runtime) Provision(ctx context.Context, spec *types.NodeManifest) error {
+// Provision node manifest
+func (r *Runtime) Provision(ctx context.Context, dir string) error {
 
-	log.V(logLevel).Debugf("%s> provision init", logNodeRuntimePrefix)
+	log.V(logLevel).Debugf("%s:provision:> local init", logNodeRuntimePrefix)
 
-	log.V(logLevel).Debugf("%s> provision networks", logNodeRuntimePrefix)
-	for cidr, n := range spec.Network {
-		log.V(logLevel).Debugf("network: %v", n)
-		if err := NetworkManage(ctx, cidr, n); err != nil {
-			log.Errorf("Subnet [%s] create err: %s", n.CIDR, err.Error())
-		}
-	}
+	log.V(logLevel).Debugf("%s:provision:> read manifests from dir: %s", logNodeRuntimePrefix, dir)
 
-	log.V(logLevel).Debugf("%s> update secrets", logNodeRuntimePrefix)
-	for s, spec := range spec.Secrets {
-		log.V(logLevel).Debugf("secret: %s > %s", s, spec.State)
-	}
-
-	log.V(logLevel).Debugf("%s> provision pods", logNodeRuntimePrefix)
-	for p, spec := range spec.Pods {
-		log.V(logLevel).Debugf("pod: %v", p)
-		if err := PodManage(ctx, p, spec); err != nil {
-			log.Errorf("Pod [%s] manage err: %s", p, err.Error())
-		}
-	}
-
-	log.V(logLevel).Debugf("%s> provision endpoints", logNodeRuntimePrefix)
-	for e, spec := range spec.Endpoints {
-		log.V(logLevel).Debugf("endpoint: %v", e)
-		if err := EndpointManage(ctx, e, spec); err != nil {
-			log.Errorf("Endpoint [%s] manage err: %s", e, err.Error())
-		}
-	}
-
-	if envs.Get().GetModeIngress() {
-		log.V(logLevel).Debugf("%s> provision routes", logNodeRuntimePrefix)
-		for e, spec := range spec.Routes {
-			log.V(logLevel).Debugf("route: %v", e)
-			if err := RouteManage(ctx, e, spec); err != nil {
-				log.Errorf("Route [%s] manage err: %s", e, err.Error())
-			}
-		}
-
-	}
-
-
-	log.V(logLevel).Debugf("%s> provision volumes", logNodeRuntimePrefix)
-	for _, v := range spec.Volumes {
-		log.V(logLevel).Debugf("volume: %v", v)
-	}
-
-	return nil
-}
-
-func (r *Runtime) Subscribe() {
-
-	log.V(logLevel).Debugf("%s:subscribe:> subscribe init", logNodeRuntimePrefix)
-
-	if err := containerSubscribe(r.ctx); err != nil {
-		log.Errorf("container subscribe err: %v", err)
-	}
-}
-
-func (r *Runtime) Connect(ctx context.Context) error {
-
-	log.V(logLevel).Debugf("%s:connect:> connect init", logNodeRuntimePrefix)
-	if err := events.NewConnectEvent(ctx); err != nil {
-		log.Errorf("%s:connect:> connect err: %s", logNodeRuntimePrefix, err.Error())
+	files, err := ioutil.ReadDir(dir)
+	if err != nil {
+		log.Fatal(err)
 		return err
 	}
-
-	go func(ctx context.Context) {
-		ticker := time.NewTicker(time.Second * 10)
-		for range ticker.C {
-			if err := events.NewStatusEvent(ctx); err != nil {
-				log.Errorf("%s:connect:> send status err: %s", logNodeRuntimePrefix, err.Error())
-			}
-		}
-	}(ctx)
-
-	return nil
-}
-
-func (r *Runtime) GetSpec(ctx context.Context) error {
-
-	log.V(logLevel).Debugf("%s:getspec:> getspec request init", logNodeRuntimePrefix)
 
 	var (
-		c = envs.Get().GetNodeClient()
+		mf = new(types.NodeManifest)
 	)
+	mf.Configs = make(map[string]*types.ConfigManifest)
+	mf.Pods = make(map[string]*types.PodManifest)
+	mf.Volumes = make(map[string]*types.VolumeManifest)
 
-	spec, err := c.GetSpec(ctx)
-	if err != nil {
-		log.Errorf("%s:getspec:> request err: %s", logNodeRuntimePrefix, err.Error())
-		return err
-	}
-
-	if spec == nil {
-		log.Warnf("%s:getspec:> new spec is nil", logNodeRuntimePrefix)
-		return nil
-	}
-
-	r.spec <- spec.Decode()
-	return nil
-}
-
-func (r *Runtime) Clean(ctx context.Context, manifest *types.NodeManifest) error {
-
-	log.V(logLevel).Debugf("%s> clean up endpoints", logNodeRuntimePrefix)
-	endpoints := envs.Get().GetState().Endpoints().GetEndpoints()
-	for e := range endpoints {
-		if _, ok := manifest.Endpoints[e]; !ok {
-			EndpointDestroy(context.Background(), e, endpoints[e])
+	for _, f := range files {
+		if f.IsDir() {
+			continue
 		}
-	}
 
-	log.V(logLevel).Debugf("%s> clean up pods", logNodeRuntimePrefix)
-	pods := envs.Get().GetState().Pods().GetPods()
+		c, err := ioutil.ReadFile(filepath.Join(dir, f.Name()))
+		if err != nil {
+			_ = fmt.Errorf("failed read data from file: %s", f)
+			continue
+		}
 
-	for k := range pods {
-		if _, ok := manifest.Pods[k]; !ok {
-			if !envs.Get().GetState().Pods().IsLocal(k) {
-				PodDestroy(context.Background(), k, pods[k])
+
+		items := decoder.YamlSplit(c)
+		log.Debugf("manifests: %d", len(items))
+
+		for _, i := range items {
+
+			var m = new(request.Runtime)
+
+			if err := yaml.Unmarshal([]byte(i), m); err != nil {
+				log.Errorf("can not parse manifest: %s: %s", f.Name(), err.Error())
+				continue
+			}
+
+			switch strings.ToLower(m.Kind) {
+			case types.KindConfig:
+				m := new(request.ConfigManifest)
+				err := m.FromYaml(i)
+				if err != nil {
+					log.Errorf("invalid specification: %s", err.Error())
+					return err
+				}
+				if m.Meta.Name == nil {
+					break
+				}
+				log.Debugf("Add config Manifest: %s", *m.Meta.Name)
+				if m.Spec.Type == types.KindConfigFile {
+					if err := m.ReadData(); err != nil {
+						log.Errorf("can not read config data from files")
+						return err
+					}
+				}
+				mf.Configs[*m.Meta.Name] = m.GetManifest()
+				break
+			case types.KindPod:
+
+				m := new(request.PodManifest)
+				err := m.FromYaml(i)
+				if err != nil {
+					log.Errorf("invalid specification: %s", err.Error())
+					return err
+				}
+				if m.Meta.Name == nil {
+					break
+				}
+				log.Debugf("Add Pod Manifest: %s", *m.Meta.Name)
+				mf.Pods[*m.Meta.Name] = m.GetManifest()
+				envs.Get().GetState().Pods().SetLocal(*m.Meta.Name)
+				break
+			case types.KindVolume:
+
+				m := new(request.VolumeManifest)
+				err := m.FromYaml(i)
+				if err != nil {
+					log.Errorf("invalid specification: %s", err.Error())
+					return err
+				}
+				if m.Meta.Name == nil {
+					break
+				}
+				log.Debugf("Add Volume Manifest: %s", *m.Meta.Name)
+				mf.Volumes[*m.Meta.Name] = m.GetManifest()
 			}
 		}
 	}
 
-	log.V(logLevel).Debugf("%s> clean up networks", logNodeRuntimePrefix)
-	nets := envs.Get().GetState().Networks().GetSubnets()
-
-	for cidr := range nets {
-		if _, ok := manifest.Network[cidr]; !ok {
-			NetworkDestroy(ctx, cidr)
-		}
-	}
-
+	r.Sync(ctx, mf)
 	return nil
 }
 
-func (r *Runtime) Loop() {
-	log.V(logLevel).Debugf("%s:loop:> start runtime loop", logNodeRuntimePrefix)
+// Sync node runtime with new spec
+func (r *Runtime) Sync(ctx context.Context, spec *types.NodeManifest) error {
+	log.V(logLevel).Debugf("%s:sync:> sync runtime state", logNodeRuntimePrefix)
+	r.spec <- spec
+	return nil
+}
 
-	var clean = true
+// Loop runtime method defines single runtime loop
+func (r *Runtime) Loop(ctx context.Context) {
+
+	log.V(logLevel).Debugf("%s:loop:> start runtime loop", logNodeRuntimePrefix)
 
 	go func(ctx context.Context) {
 		for {
 			select {
 			case spec := <-r.spec:
+
 				log.V(logLevel).Debugf("%s:loop:> provision new spec", logNodeRuntimePrefix)
 
-				if clean {
-					if err := r.Clean(ctx, spec); err != nil {
-						log.Errorf("%s:loop:> clean err: %s", logEndpointPrefix, err.Error())
-						continue
+				if spec.Meta.Initial {
+					log.V(logLevel).Debugf("%s> clean up endpoints", logNodeRuntimePrefix)
+					endpoints := envs.Get().GetState().Endpoints().GetEndpoints()
+					for e := range endpoints {
+						if _, ok := spec.Endpoints[e]; !ok {
+							EndpointDestroy(context.Background(), e, endpoints[e])
+						}
 					}
-					clean = false
+
+					log.V(logLevel).Debugf("%s> clean up pods", logNodeRuntimePrefix)
+					pods := envs.Get().GetState().Pods().GetPods()
+
+					for k := range pods {
+						if _, ok := spec.Pods[k]; !ok {
+							if !envs.Get().GetState().Pods().IsLocal(k) {
+								PodDestroy(context.Background(), k, pods[k])
+							}
+						}
+					}
+
+					log.V(logLevel).Debugf("%s> clean up networks", logNodeRuntimePrefix)
+					nets := envs.Get().GetState().Networks().GetSubnets()
+
+					for cidr := range nets {
+						if _, ok := spec.Network[cidr]; !ok {
+							NetworkDestroy(ctx, cidr)
+						}
+					}
 				}
 
-				if err := r.Provision(ctx, spec); err != nil {
-					log.Errorf("%s:loop:> provision new spec err: %s", logNodeRuntimePrefix, err.Error())
+				if len(spec.Meta.Discovery) != 0 {
+					log.V(logLevel).Debugf("%s>set cluster dns ips: %#v", logNodeRuntimePrefix, spec.Meta.Discovery)
+					envs.Get().SetClusterDNS(spec.Meta.Discovery)
+				}
+
+				log.V(logLevel).Debugf("%s> provision init", logNodeRuntimePrefix)
+
+				log.V(logLevel).Debugf("%s> provision networks", logNodeRuntimePrefix)
+				for cidr, n := range spec.Network {
+					log.V(logLevel).Debugf("network: %v", n)
+					if err := NetworkManage(ctx, cidr, n); err != nil {
+						log.Errorf("Subnet [%s] create err: %s", n.CIDR, err.Error())
+					}
+				}
+
+				log.V(logLevel).Debugf("%s> update secrets", logNodeRuntimePrefix)
+				for s, spec := range spec.Secrets {
+					log.V(logLevel).Debugf("secret: %s > %s", s, spec.State)
+				}
+
+
+				log.V(logLevel).Debugf("%s> provision configs", logNodeRuntimePrefix)
+				for s, spec := range spec.Configs {
+					log.V(logLevel).Debugf("config: %s > %s", s, spec.State)
+					if err := ConfigManage(ctx, s, spec); err != nil {
+						log.Errorf("Config [%s] manage err: %s", s, err.Error())
+					}
+				}
+
+				log.V(logLevel).Debugf("%s> provision pods", logNodeRuntimePrefix)
+				for p, spec := range spec.Pods {
+					log.V(logLevel).Debugf("pod: %v", p)
+					if err := PodManage(ctx, p, spec); err != nil {
+						log.Errorf("Pod [%s] manage err: %s", p, err.Error())
+					}
+				}
+
+				log.V(logLevel).Debugf("%s> provision endpoints", logNodeRuntimePrefix)
+				for e, spec := range spec.Endpoints {
+					log.V(logLevel).Debugf("endpoint: %v", e)
+					if err := EndpointManage(ctx, e, spec); err != nil {
+						log.Errorf("Endpoint [%s] manage err: %s", e, err.Error())
+					}
+				}
+
+				if envs.Get().GetModeIngress() {
+					log.V(logLevel).Debugf("%s> provision routes", logNodeRuntimePrefix)
+					for e, spec := range spec.Routes {
+						log.V(logLevel).Debugf("route: %v", e)
+						if err := RouteManage(ctx, e, spec); err != nil {
+							log.Errorf("Route [%s] manage err: %s", e, err.Error())
+						}
+					}
+				}
+
+				log.V(logLevel).Debugf("%s> provision volumes", logNodeRuntimePrefix)
+				for _, v := range spec.Volumes {
+					log.V(logLevel).Debugf("volume: %v", v)
 				}
 			}
 		}
-	}(r.ctx)
+	}(ctx)
+}
 
-	go func(ctx context.Context) {
-		ticker := time.NewTicker(time.Second * 10)
-		for range ticker.C {
-			err := r.GetSpec(r.ctx)
-			if err != nil {
-				log.V(logLevel).Debugf("%s:loop:> new spec request err: %s", logNodeRuntimePrefix, err.Error())
-			}
+// Subscribe runtime for container events
+func (r *Runtime) Subscribe(ctx context.Context) {
+
+	log.V(logLevel).Debugf("%s:subscribe:> subscribe init", logNodeRuntimePrefix)
+	go func() {
+		if err := containerSubscribe(ctx); err != nil {
+			log.Errorf("container subscribe err: %v", err)
 		}
-	}(context.Background())
-
-	err := r.GetSpec(r.ctx)
-	if err != nil {
-		log.V(logLevel).Debugf("%s:loop:> new spec request err: %s", logNodeRuntimePrefix, err.Error())
-	}
+	}()
 }
 
-func (r *Runtime) Ingress() {
-
-}
-
-func NewRuntime(ctx context.Context) *Runtime {
-	r := Runtime{
-		ctx:  ctx,
-		spec: make(chan *types.NodeManifest),
-	}
-
-	return &r
+// NewRuntime method return new runtime pointer
+func NewRuntime() *Runtime {
+	r := new(Runtime)
+	r.spec = make(chan *types.NodeManifest)
+	return r
 }

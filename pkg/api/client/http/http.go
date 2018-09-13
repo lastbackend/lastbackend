@@ -22,6 +22,7 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/api/client/config"
 	"github.com/lastbackend/lastbackend/pkg/api/client/http/v1"
 	"github.com/lastbackend/lastbackend/pkg/api/client/types"
+	"github.com/lastbackend/lastbackend/pkg/log"
 	"github.com/lastbackend/lastbackend/pkg/util/http/request"
 )
 
@@ -56,7 +57,7 @@ func New(endpoint string, cfg *config.Config) (*Client, error) {
 
 	client, err := request.NewRESTClient(endpoint, opts)
 	if err != nil {
-		return nil, err
+		log.Errorf("can not initialize client: %s", err.Error())
 	}
 
 	cl.client = client

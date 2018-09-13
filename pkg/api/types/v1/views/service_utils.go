@@ -105,8 +105,8 @@ func (sv *Service) ToSpec(obj types.ServiceSpec) ServiceSpec {
 				Name:  env.Name,
 				Value: env.Value,
 				From: ManifestSpecTemplateContainerEnvSecret{
-					Name: env.From.Name,
-					Key:  env.From.Key,
+					Name: env.Secret.Name,
+					Key:  env.Secret.Key,
 				},
 			})
 		}
@@ -135,8 +135,8 @@ func (sv *Service) ToSpec(obj types.ServiceSpec) ServiceSpec {
 			Name: s.Name,
 			Type: s.Type,
 			From: ManifestSpecTemplateSecretVolume{
-				Name:  s.From.Name,
-				Files: s.From.Files,
+				Name:  s.Secret.Name,
+				Files: s.Secret.Files,
 			},
 		}
 

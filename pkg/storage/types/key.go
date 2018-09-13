@@ -28,6 +28,7 @@ type Key interface {
 	Volume(namespace, name string) string
 	Trigger(namespace, service, name string) string
 	Ingress(name string) string
+	Discovery(name string) string
 	Process(kind, name string, lead bool) string
 	Manifest(name string) string
 	Node(name string) string

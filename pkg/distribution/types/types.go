@@ -24,4 +24,13 @@ const (
 	DEFAULT_MEMORY_MIN        = 128
 	DEFAULT_REPLICAS_MIN      = 1
 	DEFAULT_DESCRIPTION_LIMIT = 512
+
+	KindSecret    = "secret"
+	KindRoute     = "route"
+	KindNamespace = "namespace"
+	KindService   = "service"
+	KindPod       = "pod"
+	KindEndpoint  = "endpoint"
+	KindConfig    = "config"
+	KindVolume    = "volume"
 )

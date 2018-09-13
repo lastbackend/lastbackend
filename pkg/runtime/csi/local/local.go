@@ -19,11 +19,16 @@
 package local
 
 import (
+	"bytes"
 	"context"
+	"crypto/sha1"
+	"encoding/hex"
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 	"github.com/lastbackend/lastbackend/pkg/log"
 	"github.com/lastbackend/lastbackend/pkg/runtime/csi"
 	"github.com/spf13/viper"
+	"io"
+	"io/ioutil"
 	"os"
 	"path/filepath"
 )
@@ -90,8 +95,95 @@ func (s *Storage) Create(ctx context.Context, name string, manifest *types.Volum
 	return status, nil
 }
 
-func (s *Storage) Remove(ctx context.Context, name string, manifest *types.VolumeManifest) error {
-	return os.Remove(filepath.Join(s.root, manifest.HostPath))
+func (s *Storage) FilesList(ctx context.Context, state *types.VolumeState) ([]string, error) {
+
+	return make([]string, 0), nil
+}
+
+func (s *Storage) FilesPut(ctx context.Context, state *types.VolumeState, files map[string][]byte) error {
+
+	for file, data := range files {
+		path := filepath.Join(state.Path, file)
+		var f *os.File
+
+		f, err := os.OpenFile(path, os.O_WRONLY, 0644)
+		if err != nil {
+			if os.IsNotExist(err) {
+				if f, err = os.Create(path); err != nil {
+					return err
+				}
+			} else {
+				return err
+			}
+		}
+		f.Close()
+
+		if err := ioutil.WriteFile(path, data, 0644); err != nil {
+			log.Errorf("can not write data to file: %s", err.Error())
+		}
+
+	}
+
+	return nil
+}
+
+func (s *Storage) FilesCheck(ctx context.Context, state *types.VolumeState, files map[string][]byte) (bool, error) {
+
+	for file, data := range files {
+		path := filepath.Join(state.Path, file)
+		var f *os.File
+
+		f, err := os.Open(path)
+		if err != nil {
+			if os.IsNotExist(err) {
+				return false, nil
+			} else {
+				return false, err
+			}
+		}
+
+		hashFile := sha1.New()
+		hashData := sha1.New()
+		if _, err := io.Copy(hashFile, f); err != nil {
+			return false, err
+		}
+		if _, err := io.Copy(hashData, bytes.NewReader(data)); err != nil {
+			return false, err
+		}
+
+
+
+		//Convert the bytes to a string
+		hashFileS := hex.EncodeToString(hashFile.Sum(nil)[:20])
+		hashFileD := hex.EncodeToString(hashData.Sum(nil)[:20])
+
+		if hashFileS != hashFileD {
+			return false, nil
+		}
+
+		f.Close()
+	}
+
+	return true, nil
+}
+
+func (s *Storage) FilesDel(ctx context.Context, state *types.VolumeState, files []string) error {
+
+	for _, file := range files {
+		path := filepath.Join(state.Path, file)
+		if err := os.Remove(path); err != nil {
+			if os.IsNotExist(err) {
+				continue
+			}
+		}
+	}
+
+	return nil
+}
+
+
+func (s *Storage) Remove(ctx context.Context, state *types.VolumeState) error {
+	return os.Remove(filepath.Join(s.root, state.Path))
 }
 
 func Get() (*Storage, error) {

@@ -286,6 +286,39 @@ func (r *Runtime) nodeWatch(ctx context.Context, rev *int64) {
 	mm.Watch(n, rev)
 }
 
+func (r *Runtime) discoveryWatch(ctx context.Context, rev *int64) {
+
+	// Watch node changes
+	var (
+		n = make(chan types.DiscoveryEvent)
+		c = envs.Get().GetCache()
+	)
+
+	im := distribution.NewDiscoveryModel(ctx, envs.Get().GetStorage())
+
+	go func() {
+		for {
+			select {
+			case <-ctx.Done():
+				return
+			case w := <-n:
+
+				if w.Data == nil {
+					continue
+				}
+
+				if w.IsActionRemove() {
+					c.Node().DelDiscovery(w.Name)
+					continue
+				}
+				c.Node().SetDiscovery(w.Data)
+			}
+		}
+	}()
+
+	im.Watch(n, rev)
+}
+
 func (r *Runtime) ingressWatch(ctx context.Context, rev *int64) {
 
 	// Watch node changes

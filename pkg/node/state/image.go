@@ -21,6 +21,7 @@ package state
 import (
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 	"github.com/lastbackend/lastbackend/pkg/log"
+	"strings"
 	"sync"
 )
 
@@ -36,37 +37,45 @@ func (s *ImageState) GetImages() map[string]*types.Image {
 
 func (s *ImageState) SetImages(images map[string]*types.Image) {
 	log.V(logLevel).Debugf("Cache: ImageCache: set images: %#v", images)
-	for h, image := range images {
-		s.images[h] = image
+	for _, image := range images {
+		for _, tag := range image.Meta.Tags {
+			s.images[tag] = image
+		}
+
 	}
 }
 
-func (s *ImageState) GetImage(link string) *types.Image {
-	log.V(logLevel).Debugf("Cache: ImageCache: get image: %s", link)
+func (s *ImageState) GetImage(tag string) *types.Image {
+	log.V(logLevel).Debugf("Cache: ImageCache: get image: %s", tag)
 	s.lock.Lock()
 	defer s.lock.Unlock()
-	image, ok := s.images[link]
+
+	if len(strings.Split(tag, ":"))==1 {
+		tag+=":latest"
+	}
+
+	image, ok := s.images[tag]
 	if !ok {
 		return nil
 	}
 	return image
 }
 
-func (s *ImageState) AddImage(link string, image *types.Image) {
+func (s *ImageState) AddImage(tag string, image *types.Image) {
 	log.V(logLevel).Debugf("Cache: ImageCache: add image: %#v", image)
-	s.SetImage(link, image)
+	s.SetImage(tag, image)
 }
 
-func (s *ImageState) SetImage(link string, image *types.Image) {
+func (s *ImageState) SetImage(tag string, image *types.Image) {
 	log.V(logLevel).Debugf("Cache: ImageCache: set image: %#v", image)
 	s.lock.Lock()
 	defer s.lock.Unlock()
 
-	if _, ok := s.images[image.SelfLink()]; ok {
-		delete(s.images, image.SelfLink())
-	}
-
 	s.images[image.SelfLink()] = image
+
+	for _, i := range image.Meta.Tags {
+		s.images[i] = image
+	}
 }
 
 func (s *ImageState) DelImage(link string) {

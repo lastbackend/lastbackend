@@ -96,11 +96,14 @@ func init() {
 	CLI.Flags().StringVarP(&config, "config", "c", "/etc/lastbackend/node", "/path/to/config.yml")
 	CLI.Flags().StringVarP(&token, "token", "t", "", "Last.Backend cluster authentication token")
 	CLI.Flags().StringVarP(&externalIP, "external_ip", "", "", "External host ip")
+	CLI.Flags().StringVar(&externalIP, "dir", "",  "Manifests directory")
 	CLI.Flags().BoolVar(&daemon, "daemon", false, "Run hoarder as a server")
 	CLI.Flags().IntVarP(&debug, "verbose", "v", 0, "verbose level")
 
 	viper.BindPFlag("verbose", CLI.Flags().Lookup("verbose"))
 	viper.BindPFlag("token", CLI.Flags().Lookup("token"))
+	viper.BindPFlag("dir", CLI.Flags().Lookup("dir"))
+
 	viper.BindEnv("api_uri")
 	viper.BindEnv("dns_ips")
 }

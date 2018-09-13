@@ -39,7 +39,7 @@ type VolumeManifestSpec struct {
 	// Template volume types
 	Type string `json:"type,omitempty" yaml:"type,omitempty"`
 	// Tempate volume selector
-	Selector VolumeManifestSpecSelector `json:"selector,omitempty" yaml:"selector,omitempty"`
+	Selector ManifestSpecSelector `json:"selector,omitempty" yaml:"selector,omitempty"`
 	//  Volume Resources
 	Capacity VolumeManifestSpecCapacity `json:"capacity,omitempty" yaml:"capacity,omitempty"`
 	// Volume hostpath
@@ -50,11 +50,6 @@ type VolumeManifestSpec struct {
 
 type VolumeManifestSpecCapacity struct {
 	Storage string `json:"storage,omitempty" yaml:"storage,omitempty"`
-}
-
-type VolumeManifestSpecSelector struct {
-	Node   string            `json:"node,omitempty" yaml:"node,omitempty"`
-	Labels map[string]string `json:"labels,omitempty" yaml:"labels,omitempty"`
 }
 
 func (v *VolumeManifest) FromJson(data []byte) error {
@@ -154,6 +149,18 @@ func (v *VolumeManifest) SetVolumeSpec(vol *types.Volume) {
 
 }
 
+
+func (m VolumeManifest) GetManifest() *types.VolumeManifest {
+	var v = new(types.VolumeManifest)
+
+	v.Selector = m.Spec.Selector.GetSpec()
+	v.Type = m.Spec.Type
+	v.Capacity.Storage, _ = resource.DecodeResource(m.Spec.Capacity.Storage)
+	v.HostPath = m.Spec.HostPath
+	v.AccessMode = m.Spec.AccessMode
+
+	return v
+}
 
 type VolumeRemoveOptions struct {
 	Force bool

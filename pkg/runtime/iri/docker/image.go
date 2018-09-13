@@ -54,10 +54,6 @@ func (r *Runtime) Pull(ctx context.Context, spec *types.ImageManifest, out io.Wr
 
 	log.V(logLevel).Debugf("Docker: Name pull: %s", spec.Name)
 
-	image := new(types.Image)
-	image.Meta.Name = spec.Name
-	image.Status.State = types.StatusPull
-
 	options := docker.ImagePullOptions{
 		PrivilegeFunc: func() (string, error) {
 			return "", errors.New("access denied")
@@ -77,7 +73,12 @@ func (r *Runtime) Pull(ctx context.Context, spec *types.ImageManifest, out io.Wr
 	for {
 		select {
 		case <-ctx.Done():
-			return nil, nil
+			image, err := r.Inspect(ctx, spec.Name)
+			if err != nil {
+				return nil, err
+			}
+
+			return image, nil
 		default:
 
 			readBytes, err := res.Read(buffer)
@@ -85,13 +86,10 @@ func (r *Runtime) Pull(ctx context.Context, spec *types.ImageManifest, out io.Wr
 				return nil, err
 			}
 			if readBytes == 0 {
-				ii, _, err := r.client.ImageInspectWithRaw(ctx, spec.Name)
+				image, err := r.Inspect(ctx, spec.Name)
 				if err != nil {
 					return nil, err
 				}
-				image.Meta.Hash = ii.ID
-				image.Meta.Tags = ii.RepoTags
-				image.Status.State = types.StateReady
 
 				return image, nil
 			}
@@ -297,14 +295,13 @@ func (r *Runtime) List(ctx context.Context) ([]*types.Image, error) {
 
 	for _, i := range il {
 
-		img := new(types.Image)
-
-		img.Meta.ID = i.ID
-		img.Meta.Tags = i.RepoTags
-		img.Meta.Name = i.ID
-
-		img.Status.Size = i.Size
-		img.Status.VirtualSize = i.VirtualSize
+		if len(i.RepoTags) == 0 {
+			continue
+		}
+		img, err := r.Inspect(ctx, i.ID)
+		if err != nil {
+			return images, err
+		}
 
 		images = append(images, img)
 	}
@@ -317,8 +314,14 @@ func (r *Runtime) Inspect(ctx context.Context, id string) (*types.Image, error) 
 
 	image := new(types.Image)
 	image.Meta.ID = info.ID
+	image.Meta.Tags = info.RepoTags
 	image.Status.Size = info.Size
 	image.Status.VirtualSize = info.VirtualSize
+	image.Status.Container.Envs = info.ContainerConfig.Env
+
+	image.Status.Container.Exec.Command = info.Config.Cmd
+	image.Status.Container.Exec.Entrypoint = info.Config.Entrypoint
+	image.Status.Container.Exec.Workdir = info.Config.WorkingDir
 
 	return image, err
 }

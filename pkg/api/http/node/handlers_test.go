@@ -222,6 +222,7 @@ func TestNodeGetManifestH(t *testing.T) {
 		nm = new(types.NodeManifest)
 	)
 
+	nm.Meta.Initial = true
 	nm.Network = make(map[string]*types.SubnetManifest, 0)
 	nm.Pods = make(map[string]*types.PodManifest, 0)
 	nm.Pods[p1] = getPodManifest()
@@ -606,7 +607,11 @@ func TestNodeConnectH(t *testing.T) {
 func TestNodeSetStatusH(t *testing.T) {
 
 	stg, _ := storage.Get("mock")
+	cg := cache.NewCache()
+
 	envs.Get().SetStorage(stg)
+	envs.Get().SetCache(cg)
+
 	viper.Set("verbose", 0)
 
 	var (
@@ -616,8 +621,10 @@ func TestNodeSetStatusH(t *testing.T) {
 		n1 = getNodeAsset("test1", "", true)
 		n2 = getNodeAsset("test2", "", true)
 		uo = v1.Request().Node().NodeStatusOptions()
+		nm = new(types.NodeManifest)
 	)
 
+	nm.Meta.Initial = true
 	uo.Resources.Capacity.Pods = 20
 
 	type args struct {
@@ -625,6 +632,8 @@ func TestNodeSetStatusH(t *testing.T) {
 		node string
 	}
 
+	v, err := v1.View().Node().NewManifest(nm).ToJson()
+	assert.NoError(t, err)
 	tests := []struct {
 		name         string
 		args         args
@@ -647,7 +656,7 @@ func TestNodeSetStatusH(t *testing.T) {
 			args:         args{ctx, n1.Meta.Name},
 			handler:      node.NodeSetStatusH,
 			data:         uo.ToJson(),
-			expectedBody: "",
+			expectedBody: string(v),
 			expectedCode: http.StatusOK,
 		},
 	}
@@ -746,36 +755,7 @@ func getNodeAsset(name, desc string, online bool) types.Node {
 	return n
 }
 
-func getPodAsset(namespace, service, deployment, name, desc string) types.Pod {
-	p := types.Pod{}
-
-	p.Meta.Name = name
-	p.Meta.Description = desc
-	p.Meta.Namespace = namespace
-	p.Meta.Service = service
-	p.Meta.Deployment = deployment
-	p.SelfLink()
-
-	return p
-}
-
 func getPodManifest() *types.PodManifest {
 	p := types.PodManifest{}
 	return &p
-}
-
-func getVolumeAsset(namespace, name, desc string) types.Volume {
-
-	var n = types.Volume{}
-
-	n.Meta.Name = name
-	n.Meta.Namespace = namespace
-	n.Meta.Description = desc
-
-	return n
-}
-
-func getVolumeManifest() *types.VolumeManifest {
-	v := types.VolumeManifest{}
-	return &v
 }

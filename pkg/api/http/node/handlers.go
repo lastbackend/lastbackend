@@ -19,6 +19,7 @@
 package node
 
 import (
+	"context"
 	"net/http"
 
 	"strings"
@@ -126,14 +127,9 @@ func NodeGetSpecH(w http.ResponseWriter, r *http.Request) {
 	var (
 		stg = envs.Get().GetStorage()
 		nm  = distribution.NewNodeModel(r.Context(), stg)
-		pm  = distribution.NewPodModel(r.Context(), stg)
-		vm  = distribution.NewVolumeModel(r.Context(), stg)
-		em  = distribution.NewEndpointModel(r.Context(), stg)
-		ns  = distribution.NewNetworkModel(r.Context(), stg)
 
 		cid   = utils.Vars(r)["cluster"]
 		nid   = utils.Vars(r)["node"]
-		cache = envs.Get().GetCache().Node()
 	)
 
 	n, err := nm.Get(nid)
@@ -148,52 +144,11 @@ func NodeGetSpecH(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	spec := cache.Get(n.Meta.Name)
-	if spec == nil {
-
-		spec = new(types.NodeManifest)
-
-		pods, err := pm.ManifestMap(n.Meta.Name)
-		if err != nil {
-			log.V(logLevel).Errorf("%s:getmanifest:> get pod manifests for node err: %s", logPrefix, err.Error())
-			errors.HTTP.InternalServerError(w)
-			return
-		}
-		spec.Pods = pods.Items
-
-		volumes, err := vm.ManifestMap(n.Meta.Name)
-		if err != nil {
-			log.V(logLevel).Errorf("%s:getmanifest:> get volume manifests for node err: %s", logPrefix, err.Error())
-			errors.HTTP.InternalServerError(w)
-			return
-		}
-		spec.Volumes = volumes.Items
-
-		endpoints, err := em.ManifestMap()
-		if err != nil {
-			log.V(logLevel).Errorf("%s:getmanifest:> get endpoint manifests for node err: %s", logPrefix, err.Error())
-			errors.HTTP.InternalServerError(w)
-			return
-		}
-		spec.Endpoints = endpoints.Items
-
-		subnets, err := ns.SubnetManifestMap()
-		if err != nil {
-			log.V(logLevel).Errorf("%s:getmanifest:> get endpoint manifests for node err: %s", logPrefix, err.Error())
-			errors.HTTP.InternalServerError(w)
-			return
-		}
-
-		if n.Status.Mode.Ingress {
-			spec.Routes = cache.GetRoutes(n.SelfLink())
-		}
-
-		spec.Network = subnets.Items
-
-
-
+	spec, err := getNodeSpec(r.Context(), n)
+	if err != nil {
+		errors.HTTP.InternalServerError(w)
+		return
 	}
-	cache.Flush(n.Meta.Name)
 
 	response, err := v1.View().Node().NewManifest(spec).ToJson()
 	if err != nil {
@@ -589,8 +544,21 @@ func NodeSetStatusH(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
+
+	spec, err := getNodeSpec(r.Context(), node)
+	if err != nil {
+		errors.HTTP.InternalServerError(w)
+	}
+
+	response, err := v1.View().Node().NewManifest(spec).ToJson()
+	if err != nil {
+		log.V(logLevel).Errorf("%s:getspec:> convert struct to json err: %s", logPrefix, err.Error())
+		errors.HTTP.InternalServerError(w)
+		return
+	}
+
 	w.WriteHeader(http.StatusOK)
-	if _, err := w.Write([]byte{}); err != nil {
+	if _, err := w.Write(response); err != nil {
 		log.Errorf("%s:setstatus:> write response err: %s", logPrefix, err.Error())
 		return
 	}
@@ -657,4 +625,60 @@ func NodeRemoveH(w http.ResponseWriter, r *http.Request) {
 		log.Errorf("%s:remove:>_ write response err: %s", logPrefix, err.Error())
 		return
 	}
+}
+
+func getNodeSpec(ctx context.Context, n *types.Node) (*types.NodeManifest, error){
+
+	var (
+		cache = envs.Get().GetCache().Node()
+		spec = cache.Get(n.Meta.Name)
+		stg = envs.Get().GetStorage()
+		pm  = distribution.NewPodModel(ctx, stg)
+		vm  = distribution.NewVolumeModel(ctx, stg)
+		em  = distribution.NewEndpointModel(ctx, stg)
+		ns  = distribution.NewNetworkModel(ctx, stg)
+	)
+
+	if spec == nil {
+
+		spec = new(types.NodeManifest)
+		spec.Meta.Initial = true
+
+		pods, err := pm.ManifestMap(n.Meta.Name)
+		if err != nil {
+			log.V(logLevel).Errorf("%s:getmanifest:> get pod manifests for node err: %s", logPrefix, err.Error())
+			return spec, err
+		}
+		spec.Pods = pods.Items
+
+		volumes, err := vm.ManifestMap(n.Meta.Name)
+		if err != nil {
+			log.V(logLevel).Errorf("%s:getmanifest:> get volume manifests for node err: %s", logPrefix, err.Error())
+			return spec, err
+		}
+		spec.Volumes = volumes.Items
+
+		endpoints, err := em.ManifestMap()
+		if err != nil {
+			log.V(logLevel).Errorf("%s:getmanifest:> get endpoint manifests for node err: %s", logPrefix, err.Error())
+			return spec, err
+		}
+		spec.Endpoints = endpoints.Items
+
+		subnets, err := ns.SubnetManifestMap()
+		if err != nil {
+			log.V(logLevel).Errorf("%s:getmanifest:> get endpoint manifests for node err: %s", logPrefix, err.Error())
+			return spec, err
+		}
+
+		if n.Status.Mode.Ingress {
+			spec.Routes = cache.GetRoutes(n.SelfLink())
+		}
+
+		spec.Network = subnets.Items
+	}
+	cache.Flush(n.Meta.Name)
+
+	return spec, nil
+
 }

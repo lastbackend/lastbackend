@@ -43,12 +43,7 @@ type NodeClientV1 interface {
 	List(ctx context.Context) (*vv1.NodeList, error)
 	Connect(ctx context.Context, opts *rv1.NodeConnectOptions) error
 	Get(ctx context.Context) (*vv1.Node, error)
-	GetSpec(ctx context.Context) (*vv1.NodeManifest, error)
-	SetMeta(ctx context.Context, opts *rv1.NodeMetaOptions) (*vv1.Node, error)
-	SetStatus(ctx context.Context, opts *rv1.NodeStatusOptions) error
-	SetPodStatus(ctx context.Context, pod string, opts *rv1.NodePodStatusOptions) error
-	SetVolumeStatus(ctx context.Context, volume string, opts *rv1.NodeVolumeStatusOptions) error
-	SetRouteStatus(ctx context.Context, route string, opts *rv1.NodeRouteStatusOptions) error
+	SetStatus(ctx context.Context, opts *rv1.NodeStatusOptions) (*vv1.NodeManifest, error)
 	Remove(ctx context.Context, opts *rv1.NodeRemoveOptions) error
 }
 

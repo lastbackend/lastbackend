@@ -37,6 +37,13 @@ type ImageStatus struct {
 	State       string `json:"state"`
 	Size        int64  `json:"size"`
 	VirtualSize int64  `json:"virtual_size"`
+	Container   ImageContainer `json:"container"`
+}
+
+type ImageContainer struct {
+	Ports []string
+	Envs  []string
+	Exec  SpecTemplateContainerExec
 }
 
 type ImageSpec struct {

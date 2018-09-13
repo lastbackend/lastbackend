@@ -21,6 +21,7 @@ package runtime
 import (
 	"context"
 	"fmt"
+	"github.com/lastbackend/lastbackend/pkg/distribution/errors"
 	"io"
 	"strings"
 	"time"
@@ -30,7 +31,6 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 	"github.com/lastbackend/lastbackend/pkg/log"
 	"github.com/lastbackend/lastbackend/pkg/node/envs"
-	"github.com/lastbackend/lastbackend/pkg/node/events"
 	"github.com/lastbackend/lastbackend/pkg/util/cleaner"
 )
 
@@ -59,7 +59,6 @@ func PodManage(ctx context.Context, key string, manifest *types.PodManifest) err
 			ps := types.NewPodStatus()
 			ps.SetDestroyed()
 			envs.Get().GetState().Pods().AddPod(key, ps)
-			events.NewPodStatusEvent(ctx, key)
 
 			return nil
 		}
@@ -70,7 +69,6 @@ func PodManage(ctx context.Context, key string, manifest *types.PodManifest) err
 
 		p.SetDestroyed()
 		envs.Get().GetState().Pods().SetPod(key, p)
-		events.NewPodStatusEvent(ctx, key)
 		return nil
 	}
 
@@ -82,15 +80,24 @@ func PodManage(ctx context.Context, key string, manifest *types.PodManifest) err
 	p := envs.Get().GetState().Pods().GetPod(key)
 	if p != nil {
 
-		if p.State == types.StateError || len(p.Containers) != len(manifest.Template.Containers) {
+		switch true {
+		case !PodSpecCheck(ctx, key, manifest):
 			PodDestroy(ctx, key, p)
-		}
+			break
+		case !PodVolumesCheck(ctx, key, manifest.Template.Volumes):
+			log.Debugf("Volumes data changed: %s", key)
+			for _, v := range manifest.Template.Volumes {
+				pv, err := PodVolumeUpdate(ctx, key, v)
+				if err != nil {
+					log.Errorf("can not update volume data: %s", err.Error())
+					return err
+				}
+				p.Volumes[pv.Name] = pv
 
-		if p.State != types.StateDestroyed && p.State != types.StateWarning {
-			events.NewPodStatusEvent(ctx, key)
-			return nil
+			}
+			return PodRestart(ctx, key)
+		default: return nil
 		}
-
 	}
 
 	log.V(logLevel).Debugf("Pod not found > create it: %s", key)
@@ -105,7 +112,25 @@ func PodManage(ctx context.Context, key string, manifest *types.PodManifest) err
 	}
 
 	envs.Get().GetState().Pods().SetPod(key, status)
-	events.NewPodStatusEvent(ctx, key)
+	return nil
+}
+
+func PodRestart(ctx context.Context, key string) error {
+
+	pod := envs.Get().GetState().Pods().GetPod(key)
+	if pod == nil {
+		return errors.New("pod not found")
+	}
+
+	cri := envs.Get().GetCRI()
+
+	for _, c := range pod.Containers {
+		if err := cri.Restart(ctx, c.ID, nil); err != nil {
+			return err
+		}
+	}
+
+
 	return nil
 }
 
@@ -130,7 +155,6 @@ func PodCreate(ctx context.Context, key string, manifest *types.PodManifest) (*t
 	status.SetPull()
 
 	envs.Get().GetState().Pods().AddPod(key, status)
-	events.NewPodStatusEvent(ctx, key)
 
 	log.V(logLevel).Debugf("Have %d volumes", len(manifest.Template.Volumes))
 	for _, v := range manifest.Template.Volumes {
@@ -165,13 +189,12 @@ func PodCreate(ctx context.Context, key string, manifest *types.PodManifest) (*t
 	}
 
 	envs.Get().GetState().Pods().SetPod(key, status)
-	events.NewPodStatusEvent(ctx, key)
 
 	for _, s := range manifest.Template.Containers {
 		for _, e := range s.EnvVars {
-			if e.From.Name != types.EmptyString {
+			if e.Secret.Name != types.EmptyString {
 				log.V(logLevel).Debug("Get secret info from api")
-				if err := SecretCreate(ctx, e.From.Name); err != nil {
+				if err := SecretCreate(ctx, e.Secret.Name); err != nil {
 					log.Errorf("can not fetch secret from api")
 				}
 			}
@@ -335,10 +358,18 @@ func PodRestore(ctx context.Context) error {
 
 		cs := &types.PodContainer{
 			ID: c.ID,
+			Name: c.Name,
 			Image: types.PodContainerImage{
 				Name: c.Image,
 			},
+			Envs: c.Envs,
+			Ports: c.Network.Ports,
+			Binds: c.Binds,
 		}
+
+		cs.Restart.Policy = c.Restart.Policy
+		cs.Restart.Attempt = c.Restart.Retry
+		cs.Exec = c.Exec
 
 		switch c.State {
 		case types.StateCreated:
@@ -398,6 +429,7 @@ func PodRestore(ctx context.Context) error {
 		envs.Get().GetState().Pods().SetPod(key, status)
 		log.V(logLevel).Debugf("Pod restored %#v", status)
 	}
+
 
 	return nil
 }
@@ -476,9 +508,320 @@ func PodLogs(ctx context.Context, id string, follow bool, s io.Writer, doneChan 
 	return nil
 }
 
+func PodSpecCheck(ctx context.Context, key string, manifest *types.PodManifest) bool {
+
+	log.V(logLevel).Infof("Pod check spec pod: %s", key)
+
+	state := envs.Get().GetState().Pods().GetPod(key)
+
+	var statec = make(map[string]*types.ContainerManifest, 0)
+	var specc  = make(map[string]*types.ContainerManifest, 0)
+
+
+	for _, c := range manifest.Template.Containers {
+		mf, err :=  containerManifestCreate(ctx, key, c)
+		if err != nil {
+			return false
+		}
+		specc[mf.Name] = mf
+	}
+
+	for _, c := range state.Containers {
+		statec[c.Name] = c.GetManifest()
+	}
+
+	if len(statec) != len(specc) {
+		log.Debugf("container spec count not equal not exists: %d != %d", len(statec), len(specc))
+		return false
+	}
+
+	for n, mf := range specc {
+
+		if _, ok := statec[n]; !ok {
+			log.Debugf("container spec not exists: %s", n)
+			return false
+		}
+
+		// check image
+
+		c :=  statec[n]
+
+		if c.Image != mf.Image {
+			log.Debugf("images not equal: %s != %s", c.Image, mf.Image)
+			return false
+		}
+
+		img := envs.Get().GetState().Images().GetImage(c.Image)
+		if img == nil {
+			log.Debugf("image not found in state: %s", mf.Image)
+			return false
+		}
+
+		if len(mf.Exec.Command) == 0 {
+			if strings.Join(c.Exec.Command, " ") != strings.Join(img.Status.Container.Exec.Command, " ") {
+				log.Debugf("cmd different with img cmd: %s != %s",
+					strings.Join(c.Exec.Command, " "),
+					strings.Join(img.Status.Container.Exec.Command, " "))
+				return false
+			}
+		} else {
+			if strings.Join(c.Exec.Command, " ") != strings.Join(mf.Exec.Command, " ") {
+				log.Debugf("cmd different with manifest cmd: %s != %s",
+					strings.Join(c.Exec.Command, " "),
+					strings.Join(mf.Exec.Command, " "))
+				return false
+			}
+		}
+
+		if len(mf.Exec.Entrypoint) == 0 {
+			if strings.Join(c.Exec.Entrypoint, " ") != strings.Join(img.Status.Container.Exec.Entrypoint, " ") {
+				log.Debugf("entrypoint changed: %s != %s",
+					strings.Join(c.Exec.Entrypoint, " "),
+					strings.Join(img.Status.Container.Exec.Entrypoint, " "))
+				return false
+			}
+		} else {
+			if strings.Join(c.Exec.Entrypoint, " ") != strings.Join(mf.Exec.Entrypoint, " ") {
+				log.Debugf("entrypoint changed: %s != %s",
+					strings.Join(c.Exec.Entrypoint, " "),
+					strings.Join(mf.Exec.Entrypoint, " "))
+				return false
+			}
+		}
+
+		if mf.Exec.Workdir == types.EmptyString {
+			if c.Exec.Workdir != img.Status.Container.Exec.Workdir {
+				log.Debugf("workdir changed: %s != %s", c.Exec.Workdir, img.Status.Container.Exec.Workdir)
+				return false
+			}
+		} else {
+			if c.Exec.Workdir != mf.Exec.Workdir {
+				log.Debugf("workdir changed: %s != %s", c.Exec.Workdir, mf.Exec.Workdir)
+				return false
+			}
+		}
+
+		if len(mf.Exec.Args) != 0 {
+			if strings.Join(c.Exec.Args, " ") != strings.Join(mf.Exec.Args, " ") {
+				log.Debugf("args changed: %s != %s",
+					strings.Join(c.Exec.Args, " "),
+					strings.Join(mf.Exec.Args, " "))
+				return false
+			}
+		}
+
+		// Check environments
+		for _, e := range mf.Envs {
+			var f = false
+			for _, ie := range c.Envs {
+
+				if ie == e {
+					f = true
+					break
+				}
+			}
+			if ! f {
+				log.Debugf("Env not found:%s", e)
+				return false
+			}
+		}
+
+		for _, e := range c.Envs {
+			var f = false
+			for _, ie := range mf.Envs {
+				if ie == e {
+					f = true
+					break
+				}
+			}
+
+			if !f {
+				for _, ie := range img.Status.Container.Envs {
+					if ie == e {
+						f = true
+						break
+					}
+				}
+			}
+
+			if !f {
+				log.Debugf("\tEnv is unnecessary:%s", e)
+				return false
+			}
+		}
+
+		// Check binds
+		for _, e := range mf.Binds {
+			var f = false
+			for _, ie := range c.Binds {
+				if ie == e {
+					f = true
+					break
+				}
+			}
+			if ! f {
+				log.Debugf("Bind not found:%s", e)
+				return false
+			}
+		}
+
+		for _, e := range c.Binds {
+			var f = false
+			for _, ie := range mf.Binds {
+				if ie == e {
+					f = true
+					break
+				}
+			}
+			if ! f {
+				log.Debugf("Bind is unnecessary:%s", e)
+				return false
+			}
+		}
+
+		// Check ports
+		for _, e := range mf.Ports {
+			var f = false
+			for _, ie := range c.Ports {
+				if e.HostIP != types.EmptyString {
+					if e.HostIP != ie.HostIP {
+						log.Debugf("\t Port map check failed: \t\t %s:%d:%d/%s == %s:%d:%d/%s",
+							e.HostIP, e.HostPort, e.ContainerPort, e.Protocol,
+							ie.HostIP, ie.HostPort, ie.ContainerPort, ie.Protocol)
+						return false
+					}
+				}
+
+				if e.Protocol != types.EmptyString {
+					if e.Protocol != ie.Protocol {
+						log.Debugf("\t Port map check failed: \t\t %s:%d:%d/%s == %s:%d:%d/%s",
+							e.HostIP, e.HostPort, e.ContainerPort, e.Protocol,
+							ie.HostIP, ie.HostPort, ie.ContainerPort, ie.Protocol)
+						return false
+					}
+				} else {
+					if ie.Protocol != "tcp" {
+						log.Debugf("\t Port map check failed: \t\t %s:%d:%d/%s == %s:%d:%d/%s",
+							e.HostIP, e.HostPort, e.ContainerPort, e.Protocol,
+							ie.HostIP, ie.HostPort, ie.ContainerPort, ie.Protocol)
+						return false
+					}
+				}
+
+				if ie.ContainerPort == e.ContainerPort &&
+					ie.HostPort == ie.HostPort {
+					f = true
+					break
+				}
+			}
+
+			if ! f {
+				log.Debugf("\t Port map not found: \t\t %s:%d:%d/%s ",
+					e.HostIP, e.HostPort, e.ContainerPort, e.Protocol)
+				return false
+			}
+		}
+
+		for _, e := range c.Ports {
+			var f = false
+			for _, ie := range mf.Ports {
+				if ie.ContainerPort == e.ContainerPort &&
+					ie.HostPort == ie.HostPort &&
+					ie.Protocol == ie.Protocol &&
+					ie.HostIP == ie.HostIP {
+					f = true
+					break
+				}
+			}
+
+			if ! f {
+				log.Debugf("Port map is unnecessary: %#v", e)
+				return false
+			}
+		}
+
+		if mf.RestartPolicy.Policy != c.RestartPolicy.Policy ||
+			mf.RestartPolicy.Attempt != c.RestartPolicy.Attempt {
+
+			log.Debugf("Restart policy changed: %s:%d => %s:%d",
+				c.RestartPolicy.Policy, c.RestartPolicy.Attempt,
+				mf.RestartPolicy.Policy, mf.RestartPolicy.Attempt)
+			return false
+		}
+
+	}
+
+	return true
+
+}
+
+func PodVolumesCheck(ctx context.Context, pod string, spec []*types.SpecTemplateVolume) bool {
+
+	log.V(logLevel).Debugf("Check pod volumes: %s: %d", pod, len(spec))
+
+	for _, v := range spec {
+		name := podVolumeKeyCreate(pod, v.Name)
+
+		if v.Config.Name != types.EmptyString && len(v.Config.Files) > 0 {
+			equal, err := VolumeCheckConfigData(ctx, name, v.Config.Name)
+			if err != nil {
+				return false
+			}
+			return equal
+		}
+
+		if v.Secret.Name != types.EmptyString && len(v.Secret.Files) > 0 {
+			equal, err := VolumeCheckSecretData(ctx, name, v.Config.Name)
+			if err != nil {
+				return false
+			}
+			return equal
+		}
+	}
+
+	return true
+}
+
+func PodVolumeUpdate(ctx context.Context, pod string, spec *types.SpecTemplateVolume) (*types.PodVolume, error) {
+
+	log.V(logLevel).Debugf("Update pod volume: %s: %s", pod, spec.Name)
+
+	path := strings.Replace(pod, ":", "-", -1)
+	path = fmt.Sprintf("%s-%s", path, spec.Name)
+
+	var (
+		name = podVolumeKeyCreate(pod, spec.Name)
+	)
+
+	vol := envs.Get().GetState().Volumes().GetVolume(name)
+
+	if vol == nil {
+		log.V(logLevel).Debugf("Update pod volume: volume not found: create %s: %s", pod, spec.Name)
+		return PodVolumeCreate(ctx, pod, spec)
+	}
+
+	pv := &types.PodVolume{
+		Pod:   pod,
+		Type:  types.VOLUMETYPELOCAL,
+		Ready: vol.Ready,
+		Path:  vol.Path,
+	}
+
+
+	if spec.Config.Name != types.EmptyString && len(spec.Config.Files) > 0 {
+		if err := VolumeSetConfigData(ctx, name, spec.Config.Name); err != nil {
+			log.Errorf("can not set config data to volume: %s", err.Error())
+			return pv, err
+		}
+	}
+
+
+	return pv, nil
+}
+
 func PodVolumeCreate(ctx context.Context, pod string, spec *types.SpecTemplateVolume) (*types.PodVolume, error) {
 
-	log.V(logLevel).Debugf("Create pod volume: %s", pod, spec.Name)
+	log.V(logLevel).Debugf("Create pod volume: %s: %s", pod, spec.Name)
 
 	path := strings.Replace(pod, ":", "-", -1)
 	path = fmt.Sprintf("%s-%s", path, spec.Name)
@@ -497,12 +840,21 @@ func PodVolumeCreate(ctx context.Context, pod string, spec *types.SpecTemplateVo
 		return nil, err
 	}
 
-	return &types.PodVolume{
+	pv := &types.PodVolume{
 		Pod:   pod,
 		Type:  types.VOLUMETYPELOCAL,
 		Ready: st.Ready,
 		Path:  st.Path,
-	}, nil
+	}
+
+	if spec.Config.Name != types.EmptyString && len(spec.Config.Files) > 0 {
+		if err := VolumeSetConfigData(ctx, name, spec.Config.Name); err != nil {
+			log.Errorf("can not set config data to volume: %s", err.Error())
+			return pv, err
+		}
+	}
+
+	return pv, nil
 }
 
 func PodVolumeDestroy(ctx context.Context, pod, volume string) error {
@@ -510,5 +862,5 @@ func PodVolumeDestroy(ctx context.Context, pod, volume string) error {
 }
 
 func podVolumeKeyCreate(pod, volume string) string {
-	return fmt.Sprintf("%s:%s", pod, volume)
+	return fmt.Sprintf("%s-%s", strings.Replace(pod, ":","-", -1), volume)
 }

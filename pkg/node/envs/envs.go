@@ -21,7 +21,6 @@ package envs
 import (
 	"errors"
 	"github.com/lastbackend/lastbackend/pkg/api/client/types"
-	"github.com/lastbackend/lastbackend/pkg/node/events/exporter"
 	"github.com/lastbackend/lastbackend/pkg/node/ingress"
 	"github.com/lastbackend/lastbackend/pkg/node/state"
 	"github.com/lastbackend/lastbackend/pkg/runtime/cni"
@@ -55,9 +54,11 @@ type Env struct {
 		ingress   bool
 	}
 
-	exporter *exporter.Exporter
 	ingress ingress.Ingress
-	dns []string
+	dns struct {
+		Cluster []string
+		External []string
+	}
 }
 
 func (c *Env) SetCRI(cri cri.CRI) {
@@ -158,18 +159,22 @@ func (c *Env) GetRestClient() types.ClientV1 {
 	return c.client.rest
 }
 
-func (c *Env) SetExporter(e *exporter.Exporter) {
-	c.exporter = e
+func (c *Env) SetClusterDNS(dns []string) {
+	c.dns.Cluster = dns
 }
 
-func (c *Env) GetExporter() *exporter.Exporter {
-	return c.exporter
+func (c *Env) GetClusterDNS() []string {
+	return c.dns.Cluster
 }
 
-func (c *Env) SetDNS(dns []string) {
-	c.dns = dns
+func (c *Env) SetExternalDNS(dns []string) {
+
+	if len(dns) == 0 {
+		c.dns.External = []string{"8.8.8.8", "8.8.4.4"}
+	}
+	c.dns.External = dns
 }
 
-func (c *Env) GetDNS() []string {
-	return c.dns
+func (c *Env) GetExternalDNS() []string {
+	return c.dns.External
 }

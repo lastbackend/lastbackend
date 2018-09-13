@@ -24,6 +24,8 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 	"github.com/lastbackend/lastbackend/pkg/log"
 	"io"
+	"strconv"
+	"strings"
 	"time"
 )
 
@@ -62,7 +64,7 @@ func (r *Runtime) Create(ctx context.Context, manifest *types.ContainerManifest)
 		GetConfig(manifest),
 		GetHostConfig(manifest),
 		GetNetworkConfig(manifest),
-		"",
+		manifest.Name,
 	)
 	if err != nil {
 		return "", err
@@ -120,25 +122,45 @@ func (r *Runtime) Inspect(ctx context.Context, ID string) (*types.Container, err
 
 	container := &types.Container{
 		ID:       info.ID,
-		Name:     info.Name,
+		Name:     strings.Replace(info.Name,"/","",1),
 		Image:    info.Config.Image,
 		Status:   info.State.Status,
 		ExitCode: info.State.ExitCode,
 		Labels:   info.Config.Labels,
+		Envs: info.Config.Env,
+		Binds: info.HostConfig.Binds,
 	}
+
+	container.Exec.Command = info.Config.Cmd
+	container.Exec.Entrypoint = info.Config.Entrypoint
+	container.Exec.Workdir = info.Config.WorkingDir
+
+	container.Restart.Policy = info.HostConfig.RestartPolicy.Name
+	container.Restart.Retry = info.HostConfig.RestartPolicy.MaximumRetryCount
 
 	container.Network.Gateway = info.NetworkSettings.Gateway
 	container.Network.IPAddress = info.NetworkSettings.IPAddress
 
-	container.Network.Ports = make(map[string][]*types.Port, 0)
-	for key, val := range info.NetworkSettings.Ports {
-		item := string(key)
-		container.Network.Ports[item] = make([]*types.Port, 0)
+	container.Network.Ports = make([]*types.SpecTemplateContainerPort, 0)
+	for key, val := range info.HostConfig.PortBindings {
+
 		for _, port := range val {
-			container.Network.Ports[item] = append(container.Network.Ports[item], &types.Port{
-				HostIP:   port.HostIP,
-				HostPort: port.HostPort,
-			})
+
+			p := &types.SpecTemplateContainerPort{
+				HostIP: port.HostIP,
+				ContainerPort: uint16(key.Int()),
+				Protocol: key.Proto(),
+			}
+
+			var base = 10
+			var size = 16
+			pt, err := strconv.ParseUint(port.HostPort, base, size)
+			if err != nil {
+				continue
+			}
+
+			p.HostPort = uint16(pt)
+			container.Network.Ports = append(container.Network.Ports, p)
 		}
 	}
 
