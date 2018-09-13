@@ -179,13 +179,13 @@ func (m ManifestSpecTemplateContainer) GetSpec() types.SpecTemplateContainer {
 	s.Exec.Entrypoint = strings.Split(m.Entrypoint, " ")
 
 	for _, p := range m.Ports {
-		port := types.SpecTemplateContainerPort{}
+		port := new(types.SpecTemplateContainerPort)
 		port.Parse(p)
 		s.Ports = append(s.Ports, port)
 	}
 
 	for _, e := range m.Env {
-		s.EnvVars = append(s.EnvVars, types.SpecTemplateContainerEnv{
+		s.EnvVars = append(s.EnvVars, &types.SpecTemplateContainerEnv{
 			Name:  e.Name,
 			Value: e.Value,
 			Secret: types.SpecTemplateContainerEnvSecret{
@@ -210,7 +210,7 @@ func (m ManifestSpecTemplateContainer) GetSpec() types.SpecTemplateContainer {
 
 	for _, v := range m.Volumes {
 
-		s.Volumes = append(s.Volumes, types.SpecTemplateContainerVolume{
+		s.Volumes = append(s.Volumes, &types.SpecTemplateContainerVolume{
 			Name: v.Name,
 			Mode: v.Mode,
 			Path: v.Path,

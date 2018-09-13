@@ -191,7 +191,7 @@ type AuthConfig struct {
 
 // SpecTemplateContainerPorts is a list of spec template container ports
 // swagger:model types_spec_template_container_port_list
-type SpecTemplateContainerPorts []SpecTemplateContainerPort
+type SpecTemplateContainerPorts []*SpecTemplateContainerPort
 
 // SpecTemplateContainerPort is a port of the spec template container
 // swagger:model types_spec_template_container_port
@@ -208,7 +208,7 @@ type SpecTemplateContainerPort struct {
 
 // SpecTemplateContainerPorts is a list of spec template container env vars
 // swagger:model types_spec_template_container_env_list
-type SpecTemplateContainerEnvs []SpecTemplateContainerEnv
+type SpecTemplateContainerEnvs []*SpecTemplateContainerEnv
 
 // swagger:model types_spec_template_container_env
 type SpecTemplateContainerEnv struct {
@@ -270,7 +270,7 @@ type SpecTemplateContainerResource struct {
 
 // SpecTemplateContainerVolumes is a list of spec template container volumes
 // swagger:model types_spec_template_container_volume_list
-type SpecTemplateContainerVolumes []SpecTemplateContainerVolume
+type SpecTemplateContainerVolumes []*SpecTemplateContainerVolume
 
 // swagger:model types_spec_template_container_volume
 type SpecTemplateContainerVolume struct {

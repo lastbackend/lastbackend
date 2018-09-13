@@ -108,21 +108,21 @@ func (h *Haproxy) Provision(ctx context.Context) (error) {
 			Secret: h.Spec.Image.Secret,
 		},
 		Labels: make(map[string]string, 0),
-		Ports: make([]types.SpecTemplateContainerPort, 0),
-		Volumes: make([]types.SpecTemplateContainerVolume, 0),
+		Ports: make([]*types.SpecTemplateContainerPort, 0),
+		Volumes: make([]*types.SpecTemplateContainerVolume, 0),
 		Security: types.SpecTemplateContainerSecurity{
 			Privileged: true,
 		},
 	}
 
 	for _, p := range h.Spec.Ports {
-		container.Ports = append(container.Ports, types.SpecTemplateContainerPort {
+		container.Ports = append(container.Ports, &types.SpecTemplateContainerPort {
 			HostPort: p,
 			ContainerPort: p,
 		})
 	}
 
-	container.Volumes = append(container.Volumes, types.SpecTemplateContainerVolume{
+	container.Volumes = append(container.Volumes, &types.SpecTemplateContainerVolume{
 		Name: volume,
 		Path: "/etc/haproxy",
 	})

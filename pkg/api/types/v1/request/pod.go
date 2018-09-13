@@ -167,7 +167,7 @@ func (s *PodManifest) SetPodSpec(pod *types.Pod) {
 				}
 
 				if !f {
-					spec.EnvVars = append(spec.EnvVars, types.SpecTemplateContainerEnv{
+					spec.EnvVars = append(spec.EnvVars, &types.SpecTemplateContainerEnv{
 						Name:  ce.Name,
 						Value: ce.Value,
 						Secret: types.SpecTemplateContainerEnvSecret{
@@ -182,7 +182,7 @@ func (s *PodManifest) SetPodSpec(pod *types.Pod) {
 				}
 			}
 
-			var envs = make([]types.SpecTemplateContainerEnv, 0)
+			var envs = make([]*types.SpecTemplateContainerEnv, 0)
 			for _, se := range spec.EnvVars {
 				for _, ce := range c.Env {
 					if ce.Name == se.Name {
@@ -227,7 +227,7 @@ func (s *PodManifest) SetPodSpec(pod *types.Pod) {
 					}
 				}
 				if !f {
-					spec.Volumes = append(spec.Volumes, types.SpecTemplateContainerVolume{
+					spec.Volumes = append(spec.Volumes, &types.SpecTemplateContainerVolume{
 						Name: v.Name,
 						Mode: v.Mode,
 						Path: v.Path,
@@ -235,7 +235,7 @@ func (s *PodManifest) SetPodSpec(pod *types.Pod) {
 				}
 			}
 
-			vlms := make([]types.SpecTemplateContainerVolume, 0)
+			vlms := make([]*types.SpecTemplateContainerVolume, 0)
 			for _, sv := range spec.Volumes {
 				for _, cv := range c.Volumes {
 					if sv.Name == cv.Name {

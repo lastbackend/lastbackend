@@ -206,6 +206,7 @@ func (s *ServiceManifest) SetServiceSpec(svc *types.Service) {
 				for _, se := range spec.EnvVars {
 					if ce.Name == se.Name {
 						f = true
+
 						if se.Value != ce.Value {
 							se.Value = ce.Value
 							svc.Spec.Template.Updated = time.Now()
@@ -220,7 +221,7 @@ func (s *ServiceManifest) SetServiceSpec(svc *types.Service) {
 				}
 
 				if !f {
-					spec.EnvVars = append(spec.EnvVars, types.SpecTemplateContainerEnv{
+					spec.EnvVars = append(spec.EnvVars, &types.SpecTemplateContainerEnv{
 						Name:  ce.Name,
 						Value: ce.Value,
 						Secret: types.SpecTemplateContainerEnvSecret{
@@ -231,7 +232,7 @@ func (s *ServiceManifest) SetServiceSpec(svc *types.Service) {
 				}
 			}
 
-			var envs = make([]types.SpecTemplateContainerEnv, 0)
+			var envs = make([]*types.SpecTemplateContainerEnv, 0)
 			for _, se := range spec.EnvVars {
 				for _, ce := range c.Env {
 					if ce.Name == se.Name {
@@ -276,7 +277,7 @@ func (s *ServiceManifest) SetServiceSpec(svc *types.Service) {
 					}
 				}
 				if !f {
-					spec.Volumes = append(spec.Volumes, types.SpecTemplateContainerVolume{
+					spec.Volumes = append(spec.Volumes, &types.SpecTemplateContainerVolume{
 						Name: v.Name,
 						Mode: v.Mode,
 						Path: v.Path,
@@ -284,7 +285,7 @@ func (s *ServiceManifest) SetServiceSpec(svc *types.Service) {
 				}
 			}
 
-			vlms := make([]types.SpecTemplateContainerVolume, 0)
+			vlms := make([]*types.SpecTemplateContainerVolume, 0)
 			for _, sv := range spec.Volumes {
 				for _, cv := range c.Volumes {
 					if sv.Name == cv.Name {

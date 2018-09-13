@@ -146,7 +146,7 @@ type PodContainer struct {
 	// Pod container binds
 	Binds []string `json:"-"`
 	// Pod container ports
-	Ports []SpecTemplateContainerPort `json:"ports"`
+	Ports []*SpecTemplateContainerPort `json:"ports"`
 }
 
 // PodContainer is a container of the pod

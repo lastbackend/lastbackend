@@ -141,12 +141,12 @@ func (r *Runtime) Inspect(ctx context.Context, ID string) (*types.Container, err
 	container.Network.Gateway = info.NetworkSettings.Gateway
 	container.Network.IPAddress = info.NetworkSettings.IPAddress
 
-	container.Network.Ports = make([]types.SpecTemplateContainerPort, 0)
+	container.Network.Ports = make([]*types.SpecTemplateContainerPort, 0)
 	for key, val := range info.HostConfig.PortBindings {
 
 		for _, port := range val {
 
-			p := types.SpecTemplateContainerPort{
+			p := &types.SpecTemplateContainerPort{
 				HostIP: port.HostIP,
 				ContainerPort: uint16(key.Int()),
 				Protocol: key.Proto(),

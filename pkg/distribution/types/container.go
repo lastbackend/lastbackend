@@ -85,7 +85,7 @@ type NetworkSettings struct {
 	// Container ip address
 	IPAddress string `json:"ip"`
 	// Container ports mapping
-	Ports []SpecTemplateContainerPort `json:"ports"`
+	Ports []*SpecTemplateContainerPort `json:"ports"`
 }
 
 type ContainerSpec struct {
