@@ -81,11 +81,20 @@ type IngressEvent struct {
 	Data *Ingress
 }
 
+type IngressStatusEvent struct {
+	event
+	Data *IngressStatus
+}
+
 type DiscoveryEvent struct {
 	event
 	Data *Discovery
 }
 
+type DiscoveryStatusEvent struct {
+	event
+	Data *DiscoveryStatus
+}
 
 type EndpointEvent struct {
 	event
@@ -132,6 +141,11 @@ type SecretManifestEvent struct {
 type NodeEvent struct {
 	event
 	Data *Node
+}
+
+type NodeStatusEvent struct {
+	event
+	Data *NodeStatus
 }
 
 func (e *event) IsActionCreate() bool {

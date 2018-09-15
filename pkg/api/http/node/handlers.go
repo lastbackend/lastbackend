@@ -505,6 +505,9 @@ func NodeSetStatusH(w http.ResponseWriter, r *http.Request) {
 	}
 
 	for p, s := range opts.Pods {
+
+		log.Debugf("set pod status: %s", p)
+
 		keys := strings.Split(p, ":")
 		if len(keys) != 4 {
 			log.V(logLevel).Errorf("%s:setpodstatus:> invalid pod selflink err: %s", logPrefix, p)

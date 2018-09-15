@@ -20,8 +20,12 @@ package runtime
 
 import (
 	"context"
+	"github.com/lastbackend/lastbackend/pkg/discovery/envs"
 	"github.com/lastbackend/lastbackend/pkg/discovery/runtime/endpoint"
+	"github.com/lastbackend/lastbackend/pkg/distribution"
+	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 	"github.com/lastbackend/lastbackend/pkg/log"
+	"github.com/lastbackend/lastbackend/pkg/util/system"
 )
 
 const (
@@ -37,9 +41,36 @@ func (r *Runtime) Restore() {
 	log.V(logLevel).Debugf("%s:restore:> restore init", logPrefix)
 }
 
-func (r *Runtime) Loop() {
-	log.V(logLevel).Debugf("%s:restore:> watch endpoint start", logPrefix)
+func (r *Runtime) Loop() error {
+
+	log.V(logLevel).Debugf("%s:loop:> update current discovery service info", logPrefix)
+
+	hostname, err := system.GetHostname()
+	if err != nil {
+		log.Errorf(" can not get discovery hostname:%s", err.Error())
+		return err
+	}
+
+	ip, err := system.GetNodeIP()
+	if err != nil {
+		log.Errorf(" can not get discovery ip:%s", err.Error())
+		return err
+	}
+
+	discovery := new(types.Discovery)
+	discovery.Meta.Name = hostname
+	discovery.Status.IP = ip
+
+	dm := distribution.NewDiscoveryModel(context.Background(), envs.Get().GetStorage())
+	if err := dm.Set(discovery); err != nil {
+		log.Errorf(" can not get discovery data from storage:%s", err.Error())
+		return err
+	}
+
+	log.V(logLevel).Debugf("%s:loop:> watch endpoint start", logPrefix)
 	endpoint.Watch(r.ctx)
+
+	return nil
 }
 
 func NewRuntime(ctx context.Context) *Runtime {

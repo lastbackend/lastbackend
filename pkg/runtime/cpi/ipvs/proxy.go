@@ -149,9 +149,6 @@ func (p *Proxy) Destroy(ctx context.Context, state *types.EndpointState) error {
 // Update proxy rules
 func (p *Proxy) Update(ctx context.Context, state *types.EndpointState, spec *types.EndpointManifest) (*types.EndpointState, error) {
 
-	var (
-		status = new(types.EndpointState)
-	)
 
 	psvc, pdest, err := specToServices(spec)
 	if err != nil {
@@ -208,13 +205,10 @@ func (p *Proxy) Update(ctx context.Context, state *types.EndpointState, spec *ty
 	st, err := p.getStateByIP(ctx, spec.IP)
 	if err != nil {
 		log.Errorf("%s get state by ip err: %s", logIPVSPrefix, err.Error())
-		return status, err
+		return nil, err
 	}
 
-	status.PortMap = st.PortMap
-	status.Upstreams = st.Upstreams
-	status.Strategy = st.Strategy
-	return status, nil
+	return st, nil
 }
 
 // getStateByIp returns current proxy state filtered by endpoint ip
@@ -323,7 +317,7 @@ func (p *Proxy) getState(ctx context.Context) (map[string]*types.EndpointState, 
 	}
 
 	for ip := range ips {
-		log.Debugf("Check ip %s binded to link %s", ip, p.link.Attrs().Name)
+		log.Debugf("Check ip %s is binded to link %s", ip, p.link.Attrs().Name)
 		p.addIpBindToLink(ip)
 	}
 

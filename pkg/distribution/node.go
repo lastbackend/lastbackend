@@ -45,7 +45,7 @@ func (n *Node) List() (*types.NodeList, error) {
 
 	nodes := types.NewNodeList()
 
-	err := n.storage.List(n.context, n.storage.Collection().Node(), "", nodes, nil)
+	err := n.storage.List(n.context, n.storage.Collection().Node().Info(), "", nodes, nil)
 	if err != nil {
 		log.V(logLevel).Debugf("%s:list:> get nodes list err: %v", logNodePrefix, err)
 		return nil, err
@@ -82,7 +82,7 @@ func (n *Node) Put(opts *types.NodeCreateOptions) (*types.Node, error) {
 
 	ni.SelfLink()
 
-	if err := n.storage.Put(n.context, n.storage.Collection().Node(), n.storage.Key().Node(ni.Meta.Name), ni, nil); err != nil {
+	if err := n.storage.Put(n.context, n.storage.Collection().Node().Info(), n.storage.Key().Node(ni.Meta.Name), ni, nil); err != nil {
 		log.V(logLevel).Debugf("%s:create:> insert node err: %v", logNodePrefix, err)
 		return nil, err
 	}
@@ -96,7 +96,7 @@ func (n *Node) Get(hostname string) (*types.Node, error) {
 
 	node := new(types.Node)
 
-	err := n.storage.Get(n.context, n.storage.Collection().Node(), n.storage.Key().Node(hostname), &node, nil)
+	err := n.storage.Get(n.context, n.storage.Collection().Node().Info(), n.storage.Key().Node(hostname), &node, nil)
 	if err != nil {
 
 		if errors.Storage().IsErrEntityNotFound(err) {
@@ -114,7 +114,7 @@ func (n *Node) Get(hostname string) (*types.Node, error) {
 func (n *Node) Set(node *types.Node) error {
 
 	log.V(logLevel).Debugf("%s:setmeta:> update Node %#v", logNodePrefix, node)
-	if err := n.storage.Set(n.context, n.storage.Collection().Node(), n.storage.Key().Node(node.Meta.Name), node, nil); err != nil {
+	if err := n.storage.Set(n.context, n.storage.Collection().Node().Info(), n.storage.Key().Node(node.Meta.Name), node, nil); err != nil {
 		log.V(logLevel).Errorf("%s:setmeta:> update Node meta err: %v", logNodePrefix, err)
 		return err
 	}
@@ -126,7 +126,7 @@ func (n *Node) Remove(node *types.Node) error {
 
 	log.V(logLevel).Debugf("%s:remove:> remove node %s", logNodePrefix, node.Meta.Name)
 
-	if err := n.storage.Del(n.context, n.storage.Collection().Node(), n.storage.Key().Node(node.Meta.Name)); err != nil {
+	if err := n.storage.Del(n.context, n.storage.Collection().Node().Info(), n.storage.Key().Node(node.Meta.Name)); err != nil {
 		log.V(logLevel).Debugf("%s:remove:> remove node err: %v", logNodePrefix, err)
 		return err
 	}
@@ -174,7 +174,7 @@ func (n *Node) Watch(ch chan types.NodeEvent, rev *int64) error {
 	opts := storage.GetOpts()
 	opts.Rev = rev
 
-	if err := n.storage.Watch(n.context, n.storage.Collection().Node(), watcher, opts); err != nil {
+	if err := n.storage.Watch(n.context, n.storage.Collection().Node().Info(), watcher, opts); err != nil {
 		return err
 	}
 

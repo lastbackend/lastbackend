@@ -164,7 +164,7 @@ func Daemon() {
 		if err := ctl.Connect(context.Background());err != nil {
 			log.Errorf("node:initialize: connect err %s", err.Error())
 		}
-
+		go ctl.Subscribe()
 		go ctl.Sync(context.Background())
 	}
 

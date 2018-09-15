@@ -24,10 +24,10 @@ type Collection interface {
 	Deployment() string
 	Cluster() string
 	Pod() string
-	Ingress() string
-	Discovery() string
+	Ingress() IngressCollection
+	Discovery() DiscoveryCollection
 	System() string
-	Node() string
+	Node() NodeCollection
 	Route() string
 	Volume() string
 	Trigger() string
@@ -48,4 +48,19 @@ type ManifestCollection interface {
 	Subnet() string
 	Secret() string
 	Endpoint() string
+}
+
+type NodeCollection interface {
+	Info () string
+	Status () string
+}
+
+type DiscoveryCollection interface {
+	Info () string
+	Status () string
+}
+
+type IngressCollection interface {
+	Info () string
+	Status () string
 }

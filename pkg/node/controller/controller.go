@@ -104,6 +104,7 @@ func (c *Controller) Connect(ctx context.Context) error {
 
 func (c *Controller) Sync(ctx context.Context) error {
 
+	log.Debugf("Start node sync")
 
 	ticker := time.NewTicker(time.Second * 5)
 
@@ -129,6 +130,10 @@ func (c *Controller) Sync(ctx context.Context) error {
 
 		c.cache.lock.Unlock()
 
+		for p, i := range opts.Pods {
+			log.Debugf("send pod status: %s > %s", p, i.State)
+		}
+
 		spec, err := envs.Get().GetNodeClient().SetStatus(ctx, opts)
 		if err != nil {
 			log.Errorf("node:exporter:dispatch err: %s", err.Error())
@@ -151,8 +156,10 @@ func (c *Controller) Subscribe() {
 	)
 
 	go func(){
+		log.Debug("pods subscribe")
 		for {
 			p := <- pods
+			log.Debugf("pod changed: %s", p)
 			c.cache.lock.Lock()
 			c.cache.pods[p]= envs.Get().GetState().Pods().GetPod(p)
 			c.cache.lock.Unlock()

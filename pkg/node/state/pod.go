@@ -202,6 +202,19 @@ func state(s *types.PodStatus) {
 	var sts = make(map[string]int)
 	var ems string
 
+	switch s.State {
+	case types.StateDestroyed:
+		return
+	case types.StateError:
+		return
+	case types.StateProvision:
+		return
+	case types.StateCreated:
+		return
+	case types.StatusPull:
+		return
+	}
+
 	if len(s.Containers) == 0 {
 		s.State = types.StateDegradation
 		return
