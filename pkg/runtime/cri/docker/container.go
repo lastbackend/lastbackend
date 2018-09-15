@@ -142,7 +142,7 @@ func (r *Runtime) Inspect(ctx context.Context, ID string) (*types.Container, err
 	container.Network.IPAddress = info.NetworkSettings.IPAddress
 
 	container.Network.Ports = make([]*types.SpecTemplateContainerPort, 0)
-	for key, val := range info.HostConfig.PortBindings {
+	for key, val := range info.NetworkSettings.Ports {
 
 		for _, port := range val {
 
