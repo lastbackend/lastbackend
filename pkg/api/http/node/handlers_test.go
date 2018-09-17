@@ -742,10 +742,7 @@ func getNodeAsset(name, desc string, online bool) types.Node {
 				Storage:    256,
 			},
 		},
-		Spec: types.NodeSpec{
-			Pods:    make(map[string]types.PodSpec),
-			Volumes: make(map[string]types.VolumeSpec),
-		},
+		Spec: types.NodeSpec{},
 	}
 
 	n.Meta.Name = name
