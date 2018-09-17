@@ -34,3 +34,4 @@ docs/output/
 /build/
 coverage.txt
 /profile.out
+/swagger.json
