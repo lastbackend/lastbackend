@@ -29,10 +29,10 @@ const logCacheIngress = "api:cache:ingress"
 
 type CacheIngressManifest struct {
 	lock      sync.RWMutex
-	ingress     map[string]*types.Ingress
-	discovery   map[string]*types.Discovery
-	routes      map[string]*types.RouteManifest
-	manifests   map[string]*types.IngressManifest
+	ingress   map[string]*types.Ingress
+	discovery map[string]*types.Discovery
+	routes    map[string]*types.RouteManifest
+	manifests map[string]*types.IngressManifest
 }
 
 func (c *CacheIngressManifest) SetSubnetManifest(cidr string, s *types.SubnetManifest) {
@@ -54,7 +54,6 @@ func (c *CacheIngressManifest) SetRouteManifest(name string, s *types.RouteManif
 	defer c.lock.Unlock()
 	log.Debugf("set route manifest %s", name)
 
-
 	if s.State == types.StateDestroyed {
 		delete(c.routes, name)
 	} else {
@@ -68,6 +67,20 @@ func (c *CacheIngressManifest) SetRouteManifest(name string, s *types.RouteManif
 			}
 			c.manifests[i.SelfLink()].Routes[name] = s
 		}
+	}
+}
+
+func (c *CacheIngressManifest) SetEndpointManifest(addr string, s *types.EndpointManifest) {
+	c.lock.Lock()
+	defer c.lock.Unlock()
+
+	log.Debugf("set endpoint manifest: %s > %#v", addr, s)
+
+	for _, n := range c.manifests {
+		if n.Endpoints == nil {
+			n.Endpoints = make(map[string]*types.EndpointManifest, 0)
+		}
+		n.Endpoints[addr] = s
 	}
 }
 

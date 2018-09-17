@@ -20,6 +20,7 @@ package runtime
 
 import (
 	"context"
+
 	"github.com/lastbackend/lastbackend/pkg/api/envs"
 	"github.com/lastbackend/lastbackend/pkg/distribution"
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
@@ -155,6 +156,7 @@ func (r *Runtime) endpointManifestWatch(ctx context.Context, rev *int64) {
 				}
 
 				c.Node().SetEndpointManifest(w.Name, w.Data)
+				c.Ingress().SetEndpointManifest(w.Name, w.Data)
 			}
 		}
 	}()

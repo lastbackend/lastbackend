@@ -36,6 +36,7 @@ type NodeManifestMeta struct {
 type IngressManifest struct {
 	Meta      NodeManifestMeta             `json:"meta"`
 	Routes    map[string]*RouteManifest    `json:"routes"`
+	Endpoints map[string]*EndpointManifest `json:"endpoints"`
 	Network   map[string]*SubnetManifest   `json:"network"`
 }
 
@@ -43,7 +44,6 @@ type IngressManifestMeta struct {
 	Initial   bool     `json:"initial"`
 	Discovery []string `json:"discovery"`
 }
-
 
 type PodManifest PodSpec
 
