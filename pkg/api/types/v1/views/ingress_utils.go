@@ -72,7 +72,8 @@ func (obj *IngressList) ToJson() ([]byte, error) {
 func (nv *IngressView) NewManifest(obj *types.IngressManifest) *IngressManifest {
 
 	manifest := IngressManifest{
-		Routes: make(map[string]*types.RouteManifest, 0),
+		Endpoints: make(map[string]*types.EndpointManifest, 0),
+		Routes:    make(map[string]*types.RouteManifest, 0),
 	}
 
 	if obj == nil {
@@ -81,6 +82,7 @@ func (nv *IngressView) NewManifest(obj *types.IngressManifest) *IngressManifest 
 
 	manifest.Meta.Initial = obj.Meta.Initial
 	manifest.Meta.Discovery = obj.Meta.Discovery
+	manifest.Endpoints = obj.Endpoints
 	manifest.Routes = obj.Routes
 
 	return &manifest
@@ -105,4 +107,3 @@ func (obj *IngressManifest) Decode() *types.IngressManifest {
 func (obj *IngressManifest) ToJson() ([]byte, error) {
 	return json.Marshal(obj)
 }
-
