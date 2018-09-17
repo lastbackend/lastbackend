@@ -67,7 +67,6 @@ import (
 
 	"github.com/lastbackend/lastbackend/pkg/api"
 	"github.com/lastbackend/lastbackend/pkg/controller"
-	"github.com/lastbackend/lastbackend/pkg/discovery"
 	"github.com/lastbackend/lastbackend/pkg/log"
 
 	"github.com/spf13/cobra"
@@ -127,8 +126,6 @@ var (
 					"api":        api.Daemon,
 					"controller": controller.Daemon,
 					"ctl":        controller.Daemon,
-					"discovery":  discovery.Daemon,
-					"dns":        discovery.Daemon,
 				}
 			)
 

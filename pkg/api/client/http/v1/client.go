@@ -62,3 +62,31 @@ func (s *Client) Namespace(args ...string) types.NamespaceClientV1 {
 	}
 	return newNamespaceClient(s.client, name)
 }
+
+func (s *Client) Ingress(args ...string) types.IngressClientV1 {
+	name := ""
+
+	for i := range args {
+		switch i {
+		case 0: // hostname
+			name = args[0]
+		default:
+			panic("Wrong parameters count: (is allowed from 0 to 1)")
+		}
+	}
+	return newIngressClient(s.client, name)
+}
+
+func (s *Client) Discovery(args ...string) types.DiscoveryClientV1 {
+	name := ""
+
+	for i := range args {
+		switch i {
+		case 0: // hostname
+			name = args[0]
+		default:
+			panic("Wrong parameters count: (is allowed from 0 to 1)")
+		}
+	}
+	return newDiscoveryClient(s.client, name)
+}

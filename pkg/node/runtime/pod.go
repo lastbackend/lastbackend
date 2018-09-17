@@ -427,7 +427,7 @@ func PodRestore(ctx context.Context) error {
 
 		log.V(logLevel).Debugf("Container restored %s", c.ID)
 		envs.Get().GetState().Pods().SetPod(key, status)
-		log.V(logLevel).Debugf("Pod restored %#v", status)
+		log.V(logLevel).Debugf("Pod restored %s: %#v", key, status)
 	}
 
 

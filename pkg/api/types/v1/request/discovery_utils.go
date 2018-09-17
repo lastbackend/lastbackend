@@ -26,18 +26,18 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/distribution/errors"
 )
 
-type IngressRequest struct{}
+type DiscoveryRequest struct{}
 
-func (IngressRequest) IngressConnectOptions() *IngressConnectOptions {
-	cp := new(IngressConnectOptions)
+func (DiscoveryRequest) DiscoveryConnectOptions() *DiscoveryConnectOptions {
+	cp := new(DiscoveryConnectOptions)
 	return cp
 }
 
-func (n *IngressConnectOptions) Validate() *errors.Err {
+func (n *DiscoveryConnectOptions) Validate() *errors.Err {
 	return nil
 }
 
-func (n *IngressConnectOptions) DecodeAndValidate(reader io.Reader) *errors.Err {
+func (n *DiscoveryConnectOptions) DecodeAndValidate(reader io.Reader) *errors.Err {
 
 	if reader == nil {
 		err := errors.New("data body can not be null")
@@ -57,21 +57,21 @@ func (n *IngressConnectOptions) DecodeAndValidate(reader io.Reader) *errors.Err 
 	return n.Validate()
 }
 
-func (s *IngressConnectOptions) ToJson() string {
+func (s *DiscoveryConnectOptions) ToJson() string {
 	buf, _ := json.Marshal(s)
 	return string(buf)
 }
 
-func (IngressRequest) IngressStatusOptions() *IngressStatusOptions {
-	ns := new(IngressStatusOptions)
+func (DiscoveryRequest) DiscoveryStatusOptions() *DiscoveryStatusOptions {
+	ns := new(DiscoveryStatusOptions)
 	return ns
 }
 
-func (n *IngressStatusOptions) Validate() *errors.Err {
+func (n *DiscoveryStatusOptions) Validate() *errors.Err {
 	return nil
 }
 
-func (n *IngressStatusOptions) DecodeAndValidate(reader io.Reader) *errors.Err {
+func (n *DiscoveryStatusOptions) DecodeAndValidate(reader io.Reader) *errors.Err {
 
 	if reader == nil {
 		err := errors.New("data body can not be null")
@@ -91,20 +91,20 @@ func (n *IngressStatusOptions) DecodeAndValidate(reader io.Reader) *errors.Err {
 	return n.Validate()
 }
 
-func (s *IngressStatusOptions) ToJson() string {
+func (s *DiscoveryStatusOptions) ToJson() string {
 	buf, _ := json.Marshal(s)
 	return string(buf)
 }
 
-func (IngressRequest) RemoveOptions() *IngressRemoveOptions {
-	return new(IngressRemoveOptions)
+func (DiscoveryRequest) RemoveOptions() *DiscoveryRemoveOptions {
+	return new(DiscoveryRemoveOptions)
 }
 
-func (s *IngressRemoveOptions) ToJson() string {
+func (s *DiscoveryRemoveOptions) ToJson() string {
 	buf, _ := json.Marshal(s)
 	return string(buf)
 }
 
-func (n *IngressRemoveOptions) Validate() *errors.Err {
+func (n *DiscoveryRemoveOptions) Validate() *errors.Err {
 	return nil
 }

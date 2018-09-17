@@ -65,30 +65,44 @@ func (nv *IngressView) NewList(obj *types.IngressList) *IngressList {
 	return &ingresses
 }
 
-func (nv *IngressView) NewSpec(obj *types.IngressSpec) *IngressSpec {
+func (obj *IngressList) ToJson() ([]byte, error) {
+	return json.Marshal(obj)
+}
 
-	spec := IngressSpec{}
+func (nv *IngressView) NewManifest(obj *types.IngressManifest) *IngressManifest {
+
+	manifest := IngressManifest{
+		Routes: make(map[string]*types.RouteManifest, 0),
+	}
 
 	if obj == nil {
 		return nil
 	}
 
-	return &spec
+	manifest.Meta.Initial = obj.Meta.Initial
+	manifest.Meta.Discovery = obj.Meta.Discovery
+	manifest.Routes = obj.Routes
+
+	return &manifest
 }
 
-func (obj *IngressSpec) ToJson() ([]byte, error) {
-	return json.Marshal(obj)
-}
+func (obj *IngressManifest) Decode() *types.IngressManifest {
 
-func (obj *IngressSpec) Decode() *types.IngressSpec {
-
-	spec := types.IngressSpec{
-
+	manifest := types.IngressManifest{
+		Routes: make(map[string]*types.RouteManifest, 0),
 	}
 
-	return &spec
+	manifest.Meta.Initial = obj.Meta.Initial
+	manifest.Meta.Discovery = obj.Meta.Discovery
+
+	for i, r := range obj.Routes {
+		manifest.Routes[i] = r
+	}
+
+	return &manifest
 }
 
-func (obj *IngressList) ToJson() ([]byte, error) {
+func (obj *IngressManifest) ToJson() ([]byte, error) {
 	return json.Marshal(obj)
 }
+

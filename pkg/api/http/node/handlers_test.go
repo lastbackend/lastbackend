@@ -74,11 +74,11 @@ func TestNodeListH(t *testing.T) {
 
 	for _, tc := range tests {
 
-		err = envs.Get().GetStorage().Del(context.Background(), stg.Collection().Node(), types.EmptyString)
+		err = envs.Get().GetStorage().Del(context.Background(), stg.Collection().Node().Info(), types.EmptyString)
 		assert.NoError(t, err)
 
 		for _, n := range nl.Items {
-			err = stg.Put(context.Background(), stg.Collection().Node(), stg.Key().Node(n.Meta.Name), &n, nil)
+			err = stg.Put(context.Background(), stg.Collection().Node().Info(), stg.Key().Node(n.Meta.Name), &n, nil)
 			assert.NoError(t, err)
 		}
 
@@ -162,10 +162,10 @@ func TestNodeGetH(t *testing.T) {
 
 	for _, tc := range tests {
 
-		err = envs.Get().GetStorage().Del(context.Background(), stg.Collection().Node(), types.EmptyString)
+		err = envs.Get().GetStorage().Del(context.Background(), stg.Collection().Node().Info(), types.EmptyString)
 		assert.NoError(t, err)
 
-		err = stg.Put(context.Background(), stg.Collection().Node(), stg.Key().Node(n1.Meta.Name), &n1, nil)
+		err = stg.Put(context.Background(), stg.Collection().Node().Info(), stg.Key().Node(n1.Meta.Name), &n1, nil)
 		assert.NoError(t, err)
 
 		t.Run(tc.name, func(t *testing.T) {
@@ -261,13 +261,13 @@ func TestNodeGetManifestH(t *testing.T) {
 
 		t.Run(tc.name, func(t *testing.T) {
 
-			err = envs.Get().GetStorage().Del(context.Background(), stg.Collection().Node(), types.EmptyString)
+			err = envs.Get().GetStorage().Del(context.Background(), stg.Collection().Node().Info(), types.EmptyString)
 			assert.NoError(t, err)
 
 			err = envs.Get().GetStorage().Del(context.Background(), stg.Collection().Manifest().Pod(n1.Meta.Name), types.EmptyString)
 			assert.NoError(t, err)
 
-			err = stg.Put(context.Background(), stg.Collection().Node(), stg.Key().Node(n1.Meta.Name), &n1, nil)
+			err = stg.Put(context.Background(), stg.Collection().Node().Info(), stg.Key().Node(n1.Meta.Name), &n1, nil)
 			assert.NoError(t, err)
 
 			err = stg.Put(context.Background(), stg.Collection().Manifest().Pod(n1.Meta.Name), p1, getPodManifest(), nil)
@@ -351,10 +351,10 @@ func TestNodeRemoveH(t *testing.T) {
 
 	for _, tc := range tests {
 
-		err = envs.Get().GetStorage().Del(context.Background(), stg.Collection().Node(), types.EmptyString)
+		err = envs.Get().GetStorage().Del(context.Background(), stg.Collection().Node().Info(), types.EmptyString)
 		assert.NoError(t, err)
 
-		err = stg.Put(context.Background(), stg.Collection().Node(), stg.Key().Node(n1.Meta.Name), &n1, nil)
+		err = stg.Put(context.Background(), stg.Collection().Node().Info(), stg.Key().Node(n1.Meta.Name), &n1, nil)
 		assert.NoError(t, err)
 
 		t.Run(tc.name, func(t *testing.T) {
@@ -449,10 +449,10 @@ func TestNodeSetMetaH(t *testing.T) {
 
 	for _, tc := range tests {
 
-		err = envs.Get().GetStorage().Del(context.Background(), stg.Collection().Node(), types.EmptyString)
+		err = envs.Get().GetStorage().Del(context.Background(), stg.Collection().Node().Info(), types.EmptyString)
 		assert.NoError(t, err)
 
-		err = stg.Put(context.Background(), stg.Collection().Node(), stg.Key().Node(n1.Meta.Name), &n1, nil)
+		err = stg.Put(context.Background(), stg.Collection().Node().Info(), stg.Key().Node(n1.Meta.Name), &n1, nil)
 		assert.NoError(t, err)
 
 		t.Run(tc.name, func(t *testing.T) {
@@ -489,7 +489,7 @@ func TestNodeSetMetaH(t *testing.T) {
 
 			if tc.expectedCode == http.StatusOK {
 				got := new(types.Node)
-				err = envs.Get().GetStorage().Get(context.Background(), stg.Collection().Node(), envs.Get().GetStorage().Key().Node(tc.args.node), got, nil)
+				err = envs.Get().GetStorage().Get(context.Background(), stg.Collection().Node().Info(), envs.Get().GetStorage().Key().Node(tc.args.node), got, nil)
 				assert.NoError(t, err)
 				if !assert.NotNil(t, got, "node should not be empty") {
 					return
@@ -552,10 +552,10 @@ func TestNodeConnectH(t *testing.T) {
 
 	for _, tc := range tests {
 
-		err = envs.Get().GetStorage().Del(context.Background(), stg.Collection().Node(), types.EmptyString)
+		err = envs.Get().GetStorage().Del(context.Background(), stg.Collection().Node().Info(), types.EmptyString)
 		assert.NoError(t, err)
 
-		err = stg.Put(context.Background(), stg.Collection().Node(), stg.Key().Node(n1.Meta.Name), &n1, nil)
+		err = stg.Put(context.Background(), stg.Collection().Node().Info(), stg.Key().Node(n1.Meta.Name), &n1, nil)
 		assert.NoError(t, err)
 
 		t.Run(tc.name, func(t *testing.T) {
@@ -592,7 +592,7 @@ func TestNodeConnectH(t *testing.T) {
 
 			if tc.expectedCode == http.StatusOK {
 				got := new(types.Node)
-				err = envs.Get().GetStorage().Get(context.Background(), stg.Collection().Node(), envs.Get().GetStorage().Key().Node(tc.args.node), got, nil)
+				err = envs.Get().GetStorage().Get(context.Background(), stg.Collection().Node().Info(), envs.Get().GetStorage().Key().Node(tc.args.node), got, nil)
 				if assert.NoError(t, err) {
 					assert.Equal(t, uo.Info.Hostname, got.Meta.Hostname, "hostname not equal")
 					assert.Equal(t, uo.Info.Architecture, got.Meta.Architecture, "architecture not equal")
@@ -663,10 +663,10 @@ func TestNodeSetStatusH(t *testing.T) {
 
 	for _, tc := range tests {
 
-		err = envs.Get().GetStorage().Del(context.Background(), stg.Collection().Node(), types.EmptyString)
+		err = envs.Get().GetStorage().Del(context.Background(), stg.Collection().Node().Info(), types.EmptyString)
 		assert.NoError(t, err)
 
-		err = stg.Put(context.Background(), stg.Collection().Node(), stg.Key().Node(n1.Meta.Name), &n1, nil)
+		err = stg.Put(context.Background(), stg.Collection().Node().Info(), stg.Key().Node(n1.Meta.Name), &n1, nil)
 		assert.NoError(t, err)
 
 		t.Run(tc.name, func(t *testing.T) {
@@ -703,7 +703,7 @@ func TestNodeSetStatusH(t *testing.T) {
 
 			if tc.expectedCode == http.StatusOK {
 				got := new(types.Node)
-				err = envs.Get().GetStorage().Get(context.Background(), stg.Collection().Node(), envs.Get().GetStorage().Key().Node(tc.args.node), got, nil)
+				err = envs.Get().GetStorage().Get(context.Background(), stg.Collection().Node().Info(), envs.Get().GetStorage().Key().Node(tc.args.node), got, nil)
 				assert.NoError(t, err)
 				assert.Equal(t, uo.Resources.Capacity.Pods, got.Status.Capacity.Pods, "pods not equal")
 			}
@@ -742,10 +742,7 @@ func getNodeAsset(name, desc string, online bool) types.Node {
 				Storage:    256,
 			},
 		},
-		Spec: types.NodeSpec{
-			Pods:    make(map[string]types.PodSpec),
-			Volumes: make(map[string]types.VolumeSpec),
-		},
+		Spec: types.NodeSpec{},
 	}
 
 	n.Meta.Name = name

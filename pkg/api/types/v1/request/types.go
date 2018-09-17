@@ -68,6 +68,8 @@ type IRequest interface {
 	Secret() *SecretRequest
 	Trigger() *TriggerRequest
 	Volume() *VolumeRequest
+	Ingress() *IngressRequest
+	Discovery() *DiscoveryRequest
 }
 
 type Request struct{}
@@ -101,4 +103,10 @@ func (Request) Trigger() *TriggerRequest {
 }
 func (Request) Volume() *VolumeRequest {
 	return new(VolumeRequest)
+}
+func (Request) Ingress() *IngressRequest {
+	return new(IngressRequest)
+}
+func (Request) Discovery() *DiscoveryRequest {
+	return new(DiscoveryRequest)
 }

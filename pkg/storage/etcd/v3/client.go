@@ -32,7 +32,7 @@ import (
 func GetClient(conf *Config) (s.Store, s.DestroyFunc, error) {
 
 	if conf == nil {
-		panic("need to set the ыещкфпу configuration")
+		panic("need to set the storage configuration")
 	}
 
 	tlsConfig, err := getTLSConfig(conf.TLS.Cert, conf.TLS.Key, conf.TLS.CA)

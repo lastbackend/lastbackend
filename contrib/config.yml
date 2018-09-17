@@ -10,7 +10,7 @@ description: "lastbackend cluster"
 etcd:
   prefix: lastbackend
   endpoints:
-    "127.0.0.1:2379"
+    "192.168.99.100:2379"
 
 # Domain
 domain:

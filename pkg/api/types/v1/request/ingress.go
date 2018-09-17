@@ -18,3 +18,20 @@
 
 package request
 
+import "github.com/lastbackend/lastbackend/pkg/distribution/types"
+
+// swagger:model request_ingress_connect
+type IngressConnectOptions struct {
+	Info    types.IngressInfo     `json:"info"`
+	Status  types.IngressStatus   `json:"status"`
+}
+
+// swagger:ignore
+// swagger:model request_ingress_remove
+type IngressRemoveOptions struct {
+	Force bool `json:"force"`
+}
+
+type IngressStatusOptions struct {
+	Status types.IngressStatus `json:"status"`
+}
