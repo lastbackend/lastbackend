@@ -45,7 +45,7 @@ type NetworkInterface struct {
 }
 
 func New() (*Network, error) {
-	ip, _ := system.GetNodeIP()
+	ip, _ := system.GetHostIP()
 
 	iface := getInterface()
 

@@ -113,7 +113,7 @@ func (s *PodState) IsLocal(key string) bool {
 }
 
 func (s *PodState) SetPod(key string, pod *types.PodStatus) {
-	log.V(logLevel).Debugf("%s: set pod: %#v", logPodPrefix, pod)
+	log.V(logLevel).Debugf("%s: set pod %s: %#v", logPodPrefix, key, pod)
 
 	s.lock.Lock()
 	if _, ok := s.pods[key]; ok {

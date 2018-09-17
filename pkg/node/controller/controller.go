@@ -50,6 +50,10 @@ func New(r *runtime.Runtime) *Controller {
 	var c = new(Controller)
 	c.runtime = r
 	c.cache.pods = make(map[string]*types.PodStatus)
+
+	for p, st := range envs.Get().GetState().Pods().GetPods() {
+		c.cache.pods[p] = st
+	}
 	return c
 }
 
@@ -91,12 +95,12 @@ func (c *Controller) Connect(ctx context.Context) error {
 			opts.SSL.Cert = certData
 		}
 	}
-
-	opts.Status.Mode.Ingress = envs.Get().GetModeIngress()
+	
 	for {
 		if err := envs.Get().GetNodeClient().Connect(ctx, opts); err == nil {
 			return nil
 		}
+		time.Sleep(3*time.Second)
 	}
 
 	return nil
@@ -121,7 +125,10 @@ func (c *Controller) Sync(ctx context.Context) error {
 			if i > 10 {
 				break
 			}
-			opts.Pods[p] = getPodOptions(status)
+
+			if !envs.Get().GetState().Pods().IsLocal(p) {
+				opts.Pods[p] = getPodOptions(status)
+			}
 		}
 
 		for p := range opts.Pods {

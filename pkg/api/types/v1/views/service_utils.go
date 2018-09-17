@@ -20,8 +20,9 @@ package views
 
 import (
 	"encoding/json"
-	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 	"strings"
+
+	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 )
 
 type ServiceView struct{}
@@ -162,7 +163,7 @@ func (sv *Service) ToJson() ([]byte, error) {
 	return json.Marshal(sv)
 }
 
-func (sv *ServiceView) NewList(obj *types.ServiceList, d *types.DeploymentList) *ServiceList {
+func (sv *ServiceView) NewList(obj *types.ServiceList, d *types.DeploymentList, pl *types.PodList) *ServiceList {
 	if obj == nil {
 		return nil
 	}
@@ -170,7 +171,7 @@ func (sv *ServiceView) NewList(obj *types.ServiceList, d *types.DeploymentList) 
 	s := make(ServiceList, 0)
 	slv := ServiceView{}
 	for _, v := range obj.Items {
-		s = append(s, slv.NewWithDeployment(v, d, nil))
+		s = append(s, slv.NewWithDeployment(v, d, pl))
 	}
 	return &s
 }

@@ -69,9 +69,11 @@ func ServiceListH(w http.ResponseWriter, r *http.Request) {
 	log.V(logLevel).Debugf("%s:list:> list services in %s", logPrefix, nid)
 
 	var (
-		sm  = distribution.NewServiceModel(r.Context(), envs.Get().GetStorage())
-		nsm = distribution.NewNamespaceModel(r.Context(), envs.Get().GetStorage())
-		dm  = distribution.NewDeploymentModel(r.Context(), envs.Get().GetStorage())
+		stg = envs.Get().GetStorage()
+		sm  = distribution.NewServiceModel(r.Context(), stg)
+		nsm = distribution.NewNamespaceModel(r.Context(), stg)
+		dm  = distribution.NewDeploymentModel(r.Context(), stg)
+		pm  = distribution.NewPodModel(r.Context(), stg)
 	)
 
 	ns, err := nsm.Get(nid)
@@ -101,7 +103,14 @@ func ServiceListH(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	response, err := v1.View().Service().NewList(items, dl).ToJson()
+	pl, err := pm.ListByNamespace(ns.Meta.Name)
+	if err != nil {
+		log.V(logLevel).Errorf("%s:list:> get pod list by service id `%s` err: %s", logPrefix, ns.Meta.Name, err.Error())
+		errors.HTTP.InternalServerError(w)
+		return
+	}
+
+	response, err := v1.View().Service().NewList(items, dl, pl).ToJson()
 	if err != nil {
 		log.V(logLevel).Errorf("%s:list:> convert struct to json err: %s", logPrefix, err.Error())
 		errors.HTTP.InternalServerError(w)
@@ -291,7 +300,7 @@ func ServiceCreateH(w http.ResponseWriter, r *http.Request) {
 	svc := new(types.Service)
 	opts.SetServiceMeta(svc)
 	svc.Meta.Namespace = ns.Meta.Name
-	svc.Meta.Endpoint  = fmt.Sprintf("%s.%s", strings.ToLower(svc.Meta.Name), ns.Meta.Endpoint)
+	svc.Meta.Endpoint = fmt.Sprintf("%s.%s", strings.ToLower(svc.Meta.Name), ns.Meta.Endpoint)
 
 	opts.SetServiceSpec(svc)
 
@@ -395,7 +404,7 @@ func ServiceUpdateH(w http.ResponseWriter, r *http.Request) {
 	}
 
 	opts.SetServiceMeta(svc)
-	svc.Meta.Endpoint  = fmt.Sprintf("%s.%s", strings.ToLower(svc.Meta.Name), ns.Meta.Endpoint)
+	svc.Meta.Endpoint = fmt.Sprintf("%s.%s", strings.ToLower(svc.Meta.Name), ns.Meta.Endpoint)
 	opts.SetServiceSpec(svc)
 
 	srv, err := sm.Update(svc)

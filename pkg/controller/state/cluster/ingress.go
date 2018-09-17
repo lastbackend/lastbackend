@@ -37,24 +37,6 @@ const (
 //TODO: handle node status and update ingress ready state
 func ingressHandle(ctx context.Context, cs *ClusterState, node *types.Node) error {
 
-	im := distribution.NewIngressModel(ctx, envs.Get().GetStorage())
-	ingress, err := im.Get(node.SelfLink())
-	if err != nil {
-		if errors.Storage().IsErrEntityNotFound(err) {
-			return nil
-		}
-
-		log.Errorf("%s: get ingress error: %s", logPrefixIngress, err.Error())
-	}
-
-	if node.Status.Mode.Ingress && ingress == nil {
-		return ingressCreate(ctx, cs, node)
-	}
-
-	if !node.Status.Mode.Ingress && ingress != nil {
-		return ingressRemove(ctx, cs, node)
-	}
-
 	return nil
 }
 
@@ -70,7 +52,7 @@ func ingressCreate(ctx context.Context, cs *ClusterState, node *types.Node) erro
 
 	im := distribution.NewIngressModel(ctx, envs.Get().GetStorage())
 
-	if err := im.Create(ingress); err != nil {
+	if err := im.Put(ingress); err != nil {
 		log.Errorf("can not create ingress: %s", err.Error())
 	}
 

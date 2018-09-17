@@ -28,7 +28,6 @@ import (
 	"strings"
 	"syscall"
 
-	"github.com/lastbackend/lastbackend/pkg/node/ingress/ingress"
 	"github.com/lastbackend/lastbackend/pkg/runtime/iri/iri"
 
 	"github.com/lastbackend/lastbackend/pkg/node/runtime"
@@ -104,15 +103,6 @@ func Daemon() {
 	envs.Get().SetCNI(_cni)
 	envs.Get().SetCPI(_cpi)
 
-	envs.Get().SetModeIngress(viper.GetBool("ingress.enable"))
-	if envs.Get().GetModeIngress() {
-		ing, err := ingress.New()
-		if err != nil {
-			log.Errorf("Cannot initialize iri: %v", err)
-		}
-		envs.Get().SetIngress(ing)
-	}
-
 	st.Node().Info = runtime.NodeInfo()
 	st.Node().Status = runtime.NodeStatus()
 
@@ -161,7 +151,7 @@ func Daemon() {
 
 		ctl := controller.New(r)
 
-		if err := ctl.Connect(context.Background());err != nil {
+		if err := ctl.Connect(context.Background()); err != nil {
 			log.Errorf("node:initialize: connect err %s", err.Error())
 		}
 		go ctl.Subscribe()

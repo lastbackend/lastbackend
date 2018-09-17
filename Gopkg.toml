@@ -61,10 +61,6 @@
   version = "1.2.0"
 
 [[constraint]]
-  name = "github.com/miekg/dns"
-  version = "1.0.5"
-
-[[constraint]]
   name = "github.com/pkg/errors"
   version = "0.8.0"
 
@@ -82,11 +78,11 @@
 
 [[constraint]]
   name = "github.com/spf13/cobra"
-  version = "0.0.2"
+  version = "0.0.3"
 
 [[constraint]]
   name = "github.com/spf13/viper"
-  version = "1.0.2"
+  version = "1.2.0"
 
 [[constraint]]
   name = "github.com/stretchr/testify"

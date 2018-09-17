@@ -674,10 +674,6 @@ func getNodeSpec(ctx context.Context, n *types.Node) (*types.NodeManifest, error
 			return spec, err
 		}
 
-		if n.Status.Mode.Ingress {
-			spec.Routes = cache.GetRoutes(n.SelfLink())
-		}
-
 		spec.Network = subnets.Items
 	}
 	cache.Flush(n.Meta.Name)

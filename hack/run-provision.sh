@@ -1,30 +1,5 @@
-== Getting Started
+#!/bin/sh
 
-image:assets/infrastructure.png[Last.Backend]
-
-=== Build
-
-==== Prerequisites
-
-- Go 1.7 or higher
-- Go docker client v17.03
-- Go etcd client for v3
-- Git
-
-
-[source,bash]
-----
-$ go get github.com/lastbackend/lastbackend
-$ cd ${GOPATH:-~/go}/src/github.com/lastbackend/lastbackend
-$ make deps && make build && make install
-----
-
-=== Create local development environment
-
-use docker-machine to create nodes for cluster
-
-[source,bash]
-----
 # set sources path
 export LB_SOURCES_PATH=/opt/src/github.com/lastbackend/lastbackend
 cd ${LB_SOURCES_PATH}
@@ -98,18 +73,7 @@ docker-machine stop minion-00
 VBoxManage sharedfolder add minion-00 --name /lastbackend --hostpath $LB_SOURCES_PATH --automount
 docker-machine start minion-00
 
-# enable modprobe ip_vs for internal load balancing
-# this is required for boot2docker iso image
-docker-machine ssh minion-00 "sudo modprobe ip_vs"
-
 eval (docker-machine env minion-00)
-# install deps for sources
-docker run --rm -it  \
-      -v /lastbackend:/go/src/github.com/lastbackend/lastbackend \
-      -w /go/src/github.com/lastbackend/lastbackend \
-      --name=deps \
-      --net=host \
-      golang ./hack/bootstrap.sh
 
 # run node container
 docker run -d -it --restart=always \
@@ -125,8 +89,3 @@ docker run -d -it --restart=always \
 --name=node \
 --net=host \
 index.lstbknd.net/lastbackend/lastbackend go run ./cmd/node/node.go -c /etc/lastbackend/config.yml
-
-# check logs
-docker logs -f node
-
-----

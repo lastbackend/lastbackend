@@ -47,11 +47,24 @@ func (n *Ingress) List() (*types.IngressList, error) {
 	return list, nil
 }
 
-func (n *Ingress) Create(ingress *types.Ingress) error {
+func (n *Ingress) Put(ingress *types.Ingress) error {
 
 	log.V(logLevel).Debugf("%s:create:> create ingress in cluster", logIngressPrefix)
 
 	if err := n.storage.Put(n.context, n.storage.Collection().Ingress().Info(),
+		n.storage.Key().Ingress(ingress.SelfLink()), ingress, nil); err != nil {
+		log.V(logLevel).Errorf("%s:create:> insert ingress err: %v", logIngressPrefix, err)
+		return err
+	}
+
+	return nil
+}
+
+func (n *Ingress) Set(ingress *types.Ingress) error {
+
+	log.V(logLevel).Debugf("%s:create:> create ingress in cluster", logIngressPrefix)
+
+	if err := n.storage.Set(n.context, n.storage.Collection().Ingress().Info(),
 		n.storage.Key().Ingress(ingress.SelfLink()), ingress, nil); err != nil {
 		log.V(logLevel).Errorf("%s:create:> insert ingress err: %v", logIngressPrefix, err)
 		return err

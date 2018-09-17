@@ -42,7 +42,7 @@ func NodeInfo() types.NodeInfo {
 		fmt.Errorf("get hostname err: %s", err)
 	}
 
-	ip, err := system.GetNodeIP()
+	ip, err := system.GetHostIP()
 	if err != nil {
 		fmt.Errorf("get ip err: %s", err)
 	}

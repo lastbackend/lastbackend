@@ -21,6 +21,7 @@ package distribution
 import (
 	"context"
 	"encoding/json"
+	"github.com/lastbackend/lastbackend/pkg/distribution/errors"
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 	"github.com/lastbackend/lastbackend/pkg/log"
 	"github.com/lastbackend/lastbackend/pkg/storage"
@@ -48,7 +49,7 @@ func (n *Discovery) List() (*types.DiscoveryList, error) {
 	return list, nil
 }
 
-func (n *Discovery) Create(discovery *types.Discovery) error {
+func (n *Discovery) Put(discovery *types.Discovery) error {
 
 	log.V(logLevel).Debugf("%s:create:> create discovery in cluster", logDiscoveryPrefix)
 
@@ -68,6 +69,26 @@ func (n *Discovery) Create(discovery *types.Discovery) error {
 	}
 
 	return nil
+}
+
+func (n *Discovery) Get(name string) (*types.Discovery, error) {
+
+	log.V(logLevel).Debugf("%s:get:> get by name %s", logDiscoveryPrefix, name)
+
+	discovery := new(types.Discovery)
+	err := n.storage.Get(n.context, n.storage.Collection().Discovery().Info(), n.storage.Key().Discovery(name), discovery, nil)
+	if err != nil {
+
+		if errors.Storage().IsErrEntityNotFound(err) {
+			log.V(logLevel).Warnf("%s:get:> get: discovery %s not found", logDiscoveryPrefix, name)
+			return nil, nil
+		}
+
+		log.V(logLevel).Debugf("%s:get:> get discovery `%s` err: %v", logDiscoveryPrefix, name, err)
+		return nil, err
+	}
+
+	return discovery, nil
 }
 
 func (n *Discovery) Set(discovery *types.Discovery) error {
