@@ -16,29 +16,28 @@
 // from Last.Backend LLC.
 //
 
-package cache
+package views
 
-import (
-	"sync"
-	"time"
-)
-
-type Item struct {
-	sync.RWMutex
-	data    []string
-	expires *time.Time
+// Discovery - default node structure
+// swagger:model views_ingress
+type Discovery struct {
+	Meta   DiscoveryMeta   `json:"meta"`
+	Status DiscoveryStatus `json:"status"`
 }
 
-func (item *Item) setExpireTime(duration time.Duration) {
-	item.Lock()
-	defer item.Unlock()
+// DiscoveryList - node map list
+// swagger:model views_ingress_list
+type DiscoveryList map[string]*Discovery
 
-	expires := time.Now().Add(duration)
-	item.expires = &expires
+// DiscoveryMeta - node metadata structure
+// swagger:model views_ingress_meta
+type DiscoveryMeta struct {
+	Meta
+	Version string `json:"version"`
 }
 
-func (item *Item) expired() bool {
-	item.RLock()
-	defer item.RUnlock()
-	return item.expires == nil || item.expires.Before(time.Now())
+// DiscoveryStatus - node state struct
+// swagger:model views_ingress_status
+type DiscoveryStatus struct {
+	Ready bool `json:"ready"`
 }

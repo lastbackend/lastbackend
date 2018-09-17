@@ -28,6 +28,8 @@ import (
 
 type ClientV1 interface {
 	Cluster() ClusterClientV1
+	Ingress(args ...string) IngressClientV1
+	Discovery(args ...string) DiscoveryClientV1
 	Namespace(args ...string) NamespaceClientV1
 	Secret(args ...string) SecretClientV1
 }
@@ -47,9 +49,18 @@ type NodeClientV1 interface {
 	Remove(ctx context.Context, opts *rv1.NodeRemoveOptions) error
 }
 
+type DiscoveryClientV1 interface {
+	List(ctx context.Context) (*vv1.DiscoveryList, error)
+	Get(ctx context.Context) (*vv1.Discovery, error)
+	Connect(ctx context.Context, opts *rv1.DiscoveryConnectOptions) error
+	SetStatus(ctx context.Context, opts *rv1.DiscoveryStatusOptions) error
+}
+
 type IngressClientV1 interface {
 	List(ctx context.Context) (*vv1.IngressList, error)
 	Get(ctx context.Context) (*vv1.Ingress, error)
+	Connect(ctx context.Context, opts *rv1.IngressConnectOptions) error
+	SetStatus(ctx context.Context, opts *rv1.IngressStatusOptions) (*vv1.IngressManifest, error)
 }
 
 type NamespaceClientV1 interface {

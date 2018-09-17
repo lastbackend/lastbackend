@@ -110,8 +110,6 @@ type NodeStatus struct {
 	State NodeStatusState `json:"state"`
 	// node status online
 	Online bool `json:"online"`
-	// node status modes
-	Mode NodeStatusMode `json:"mode"`
 	// Node Capacity
 	Capacity NodeResources `json:"capacity"`
 	// Node Allocated
@@ -132,17 +130,10 @@ type NodeStatusInterfaceState struct {
 	Message string `json:"message"`
 }
 
-type NodeStatusMode struct {
-	Ingress bool `json:"ingress"`
-}
 
 // swagger:ignore
 // swagger:model types_node_spec
 type NodeSpec struct {
-	Network   map[string]SubnetSpec   `json:"network"`
-	Pods      map[string]PodSpec      `json:"pods"`
-	Volumes   map[string]VolumeSpec   `json:"volumes"`
-	Endpoints map[string]EndpointSpec `json:"endpoints"`
 	Security  NodeSecurity            `json:"security"`
 }
 

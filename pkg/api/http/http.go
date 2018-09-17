@@ -22,6 +22,7 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/lastbackend/lastbackend/pkg/api/http/cluster"
 	"github.com/lastbackend/lastbackend/pkg/api/http/deployment"
+	"github.com/lastbackend/lastbackend/pkg/api/http/discovery"
 	"github.com/lastbackend/lastbackend/pkg/api/http/events"
 	"github.com/lastbackend/lastbackend/pkg/api/http/ingress"
 	"github.com/lastbackend/lastbackend/pkg/api/http/namespace"
@@ -72,6 +73,8 @@ func init() {
 	AddRoutes(service.Routes)
 	AddRoutes(deployment.Routes)
 	AddRoutes(volume.Routes)
+	AddRoutes(ingress.Routes)
+	AddRoutes(discovery.Routes)
 
 	//triggers
 	AddRoutes(trigger.Routes)

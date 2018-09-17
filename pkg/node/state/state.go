@@ -32,7 +32,6 @@ type State struct {
 	volumes   *VolumesState
 	secrets   *SecretsState
 	endpoints *EndpointState
-	routes    *RouteState
 	task      *TaskState
 	configs    *ConfigState
 }
@@ -63,10 +62,6 @@ func (s *State) Secrets() *SecretsState {
 
 func (s *State) Endpoints() *EndpointState {
 	return s.endpoints
-}
-
-func (s *State) Routes() *RouteState {
-	return s.routes
 }
 
 func (s *State) Tasks() *TaskState {
@@ -109,9 +104,6 @@ func New() *State {
 		},
 		task: &TaskState{
 			tasks: make(map[string]types.NodeTask, 0),
-		},
-		routes: &RouteState{
-			routes: make(map[string]*types.RouteManifest, 0),
 		},
 		configs: &ConfigState{
 			configs: make(map[string]*types.ConfigManifest, 0),

@@ -10,7 +10,7 @@ api:
     cert: "/opt/cert/lastbackend/client.pem"
     key: "/opt/cert/lastbackend/client-key.pem"
 dns:
-  ips: ["172.16.0.1"]
+  ips: ["192.168.99.100","8.8.8.8"]
 
 node:
   host: 0.0.0.0
@@ -45,13 +45,4 @@ runtime:
     type: "ipvs"
   csi:
     local:
-      root: "/private/var/run/lastbackend/"
-
-ingress:
-  enable: true
-  type: haproxy
-  opts:
-    image:
-      name: "index.lstbknd.net/lastbackend/ingress-haproxy"
-      secret: ""
-    ports: [80,443]
+      root: "/var/run/lastbackend/"

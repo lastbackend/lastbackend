@@ -113,7 +113,7 @@ func (s *PodState) IsLocal(key string) bool {
 }
 
 func (s *PodState) SetPod(key string, pod *types.PodStatus) {
-	log.V(logLevel).Debugf("%s: set pod: %#v", logPodPrefix, pod)
+	log.V(logLevel).Debugf("%s: set pod %s: %#v", logPodPrefix, key, pod)
 
 	s.lock.Lock()
 	if _, ok := s.pods[key]; ok {
@@ -201,6 +201,19 @@ func state(s *types.PodStatus) {
 
 	var sts = make(map[string]int)
 	var ems string
+
+	switch s.State {
+	case types.StateDestroyed:
+		return
+	case types.StateError:
+		return
+	case types.StateProvision:
+		return
+	case types.StateCreated:
+		return
+	case types.StatusPull:
+		return
+	}
 
 	if len(s.Containers) == 0 {
 		s.State = types.StateDegradation

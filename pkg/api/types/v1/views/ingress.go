@@ -47,6 +47,12 @@ type IngressStatus struct {
 }
 
 // swagger:model views_ingress_spec
-type IngressSpec struct {
-	Routes map[string]types.RouteSpec `json:"routes"`
+type IngressManifest struct {
+	Meta   IngressManifestMeta            `json:"meta"`
+	Routes map[string]*types.RouteManifest `json:"routes"`
+}
+
+type IngressManifestMeta struct {
+	Initial bool `json:"initial"`
+	Discovery []string `json:"discovery"`
 }

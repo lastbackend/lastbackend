@@ -19,6 +19,9 @@
 package ingress
 
 import (
+	"context"
+	"github.com/lastbackend/lastbackend/pkg/api/types/v1/request"
+	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 	"net/http"
 
 	"github.com/lastbackend/lastbackend/pkg/api/envs"
@@ -136,6 +139,175 @@ func IngressListH(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+func IngressConnectH(w http.ResponseWriter, r *http.Request) {
+
+	// swagger:operation GET /cluster/ingress/{ingress} ingress ingressInfo
+	//
+	// Shows an ingress info
+	//
+	// ---
+	// produces:
+	// - application/json
+	// parameters:
+	//   - name: ingress
+	//     in: path
+	//     description: ingress id
+	//     required: true
+	//     type: string
+	// responses:
+	//   '200':
+	//     description: Ingress response
+	//     schema:
+	//       "$ref": "#/definitions/views_ingress_list"
+	//   '404':
+	//     description: Ingress not found
+	//   '500':
+	//     description: Internal server error
+
+	log.V(logLevel).Debugf("%s:info:> get ingress", logPrefix)
+
+	var (
+		im  = distribution.NewIngressModel(r.Context(), envs.Get().GetStorage())
+		nid = utils.Vars(r)["ingress"]
+		cache = envs.Get().GetCache().Ingress()
+	)
+
+
+	// request body struct
+	opts := new(request.IngressConnectOptions)
+	if err := opts.DecodeAndValidate(r.Body); err != nil {
+		log.V(logLevel).Errorf("%s:setstatus:> validation incoming data", logPrefix, err.Err())
+		err.Http(w)
+		return
+	}
+
+	ing, err := im.Get(nid)
+	if err != nil {
+		log.V(logLevel).Errorf("%s:info:> get ingress err: %s", logPrefix, err.Error())
+		errors.HTTP.InternalServerError(w)
+		return
+	}
+	if ing == nil {
+		log.V(logLevel).Warnf("%s:info:> ingress `%s` not found", logPrefix, nid)
+
+		ingress := new(types.Ingress)
+		ingress.Meta.SetDefault()
+		ingress.Meta.Name = opts.Info.Hostname
+		ingress.Status.Ready = opts.Status.Ready
+
+		im.Put(ingress)
+
+		w.WriteHeader(http.StatusOK)
+		if _, err := w.Write([]byte{}); err != nil {
+			log.Errorf("%s:connect:> write response err: %s", logPrefix, err.Error())
+			return
+		}
+
+		return
+	}
+
+	ing.Status.Ready = opts.Status.Ready
+	if err := im.Set(ing); err != nil {
+		log.V(logLevel).Errorf("%s:connect:> get ingress set err: %s", logPrefix, err.Error())
+		errors.HTTP.InternalServerError(w)
+		return
+	}
+
+
+	cache.Clear(nid)
+
+	w.WriteHeader(http.StatusOK)
+	if _, err := w.Write([]byte{}); err != nil {
+		log.Errorf("%s:connect:> write response err: %s", logPrefix, err.Error())
+		return
+	}
+}
+
+func IngressSetStatusH(w http.ResponseWriter, r *http.Request) {
+
+	// swagger:operation PUT /ingress/{ingress}/status ingress ingressSetStatus
+	//
+	// Set ingress status
+	//
+	// ---
+	// produces:
+	// - application/json
+	// parameters:
+	//   - name: ingress
+	//     in: path
+	//     description: ingress id
+	//     required: true
+	//     type: string
+	//   - name: body
+	//     in: body
+	//     required: true
+	//     schema:
+	//       "$ref": "#/definitions/request_ingress_status"
+	// responses:
+	//   '200':
+	//     description: Successfully set ingress status
+	//   '400':
+	//     description: Bad request
+	//   '404':
+	//     description: Node not found / Pod not found
+	//   '500':
+	//     description: Internal server error
+
+	log.V(logLevel).Debugf("%s:setstatus:> ingress set state", logPrefix)
+
+	var (
+		im  = distribution.NewIngressModel(r.Context(), envs.Get().GetStorage())
+		nid = utils.Vars(r)["ingress"]
+	)
+
+	// request body struct
+	opts := new(request.IngressStatusOptions)
+	if err := opts.DecodeAndValidate(r.Body); err != nil {
+		log.V(logLevel).Errorf("%s:setstatus:> validation incoming data", logPrefix, err.Err())
+		err.Http(w)
+		return
+	}
+
+	ingress, err := im.Get(nid)
+	if err != nil {
+		log.V(logLevel).Errorf("%s:setstatus:> get ingresss list err: %s", logPrefix, err.Error())
+		errors.HTTP.InternalServerError(w)
+		return
+	}
+	if ingress == nil {
+		log.V(logLevel).Warnf("%s:setstatus:> update ingress `%s` not found", logPrefix, nid)
+		errors.New("ingress").NotFound().Http(w)
+		return
+	}
+
+	ingress.Status.Ready = opts.Status.Ready
+	ingress.Status.Online = true
+
+	if err := im.Set(ingress); err != nil {
+		log.V(logLevel).Errorf("%s:setstatus:> set status err: %s", logPrefix, err.Error())
+		errors.HTTP.InternalServerError(w)
+		return
+	}
+
+	spec, err := getIngressManifest(r.Context(), ingress)
+	if err != nil {
+		errors.HTTP.InternalServerError(w)
+	}
+
+	response, err := v1.View().Ingress().NewManifest(spec).ToJson()
+	if err != nil {
+		log.V(logLevel).Errorf("%s:getspec:> convert struct to json err: %s", logPrefix, err.Error())
+		errors.HTTP.InternalServerError(w)
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+	if _, err := w.Write(response); err != nil {
+		log.Errorf("%s:setstatus:> write response err: %s", logPrefix, err.Error())
+		return
+	}
+}
+
 func IngressRemoveH(w http.ResponseWriter, r *http.Request) {
 
 	// swagger:operation DELETE /cluster/ingress/{ingress} ingress ingressRemove
@@ -190,4 +362,31 @@ func IngressRemoveH(w http.ResponseWriter, r *http.Request) {
 		log.Errorf("%s:remove:>_ write response err: %s", logPrefix, err.Error())
 		return
 	}
+}
+
+
+func getIngressManifest(ctx context.Context, ing *types.Ingress) (*types.IngressManifest, error){
+
+	var (
+		cache = envs.Get().GetCache().Ingress()
+		spec = cache.Get(ing.SelfLink())
+		stg = envs.Get().GetStorage()
+		ns  = distribution.NewNetworkModel(ctx, stg)
+	)
+
+	if spec == nil {
+		spec = new(types.IngressManifest)
+		spec.Meta.Initial = true
+		spec.Routes = cache.GetRoutes(ing.SelfLink())
+
+		subnets, err := ns.SubnetManifestMap()
+		if err != nil {
+			log.V(logLevel).Errorf("%s:getmanifest:> get endpoint manifests for ingress err: %s", logPrefix, err.Error())
+			return spec, err
+		}
+		spec.Network = subnets.Items
+	}
+	cache.Flush(ing.SelfLink())
+	return spec, nil
+
 }
