@@ -16,37 +16,28 @@
 // from Last.Backend LLC.
 //
 
-package cache
+package request
 
-import (
-	"github.com/lastbackend/lastbackend/pkg/log"
-	"github.com/spf13/viper"
-	"time"
-)
+import "github.com/lastbackend/lastbackend/pkg/distribution/types"
 
-const (
-	logLevel          = 7
-	defaultExpireTime = 24 // 24 hours
-)
-
-type Cache struct {
-	endpoints *EndpointCache
+// swagger:model request_ingress_connect
+type DiscoveryConnectOptions struct {
+	Info    types.DiscoveryInfo     `json:"info"`
+	Status  types.DiscoveryStatus   `json:"status"`
 }
 
-func New() *Cache {
-	log.V(logLevel).Debug("Cache: initialization cache storage")
 
-	var duration = viper.GetDuration("discovery.cache.duration")
-	if duration == 0 {
-		duration = defaultExpireTime
-	}
-
-	return &Cache{
-		endpoints: NewEndpointCache(duration * time.Minute),
-	}
+type DiscoveryMeta struct {
+	
 }
 
-// Return endpoint storage
-func (s *Cache) Endpoint() *EndpointCache {
-	return s.endpoints
+// swagger:ignore
+// swagger:model request_node_remove
+type DiscoveryRemoveOptions struct {
+	Force bool `json:"force"`
+}
+
+
+type DiscoveryStatusOptions struct {
+	Ready bool `json:"ready"`
 }

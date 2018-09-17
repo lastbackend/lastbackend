@@ -44,10 +44,25 @@ type DiscoveryMeta struct {
 	Node string `json:"node"`
 }
 
-// swagger:model types_ingress_status
+// swagger:model types_discovery_info
+type DiscoveryInfo struct {
+	Version      string `json:"version"`
+	Hostname     string `json:"hostname"`
+	Architecture string `json:"architecture"`
+
+	OSName string `json:"os_name"`
+	OSType string `json:"os_type"`
+
+	// RewriteIP - need to set true if you want to use an external ip
+	ExternalIP string `json:"external_ip"`
+	InternalIP string `json:"internal_ip"`
+}
+
+// swagger:model types_discovery_status
 type DiscoveryStatus struct {
-	IP    string `json:"ip"`
-	Ready bool   `json:"ready"`
+	IP     string `json:"ip"`
+	Ready  bool   `json:"ready"`
+	Online bool   `json:"online"`
 }
 
 // swagger:ignore

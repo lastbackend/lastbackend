@@ -16,18 +16,4 @@
 // from Last.Backend LLC.
 //
 
-package resources
-
-import (
-	"github.com/miekg/dns"
-)
-
-const (
-	logLevel  = 3
-	logPrefix = "dns:resources"
-)
-
-var Map = map[string]func(w dns.ResponseWriter, r *dns.Msg){
-	"lb.local.": lbLocal,
-	".":         other,
-}
+package discovery

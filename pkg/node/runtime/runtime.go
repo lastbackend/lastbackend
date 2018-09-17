@@ -60,10 +60,6 @@ func (r *Runtime) Restore(ctx context.Context) {
 	}
 
 	EndpointRestore(ctx)
-
-	if envs.Get().GetModeIngress() {
-		envs.Get().GetIngress().Provision(context.Background())
-	}
 }
 
 // Provision node manifest
@@ -257,16 +253,6 @@ func (r *Runtime) Loop(ctx context.Context) {
 					log.V(logLevel).Debugf("endpoint: %v", e)
 					if err := EndpointManage(ctx, e, spec); err != nil {
 						log.Errorf("Endpoint [%s] manage err: %s", e, err.Error())
-					}
-				}
-
-				if envs.Get().GetModeIngress() {
-					log.V(logLevel).Debugf("%s> provision routes", logNodeRuntimePrefix)
-					for e, spec := range spec.Routes {
-						log.V(logLevel).Debugf("route: %v", e)
-						if err := RouteManage(ctx, e, spec); err != nil {
-							log.Errorf("Route [%s] manage err: %s", e, err.Error())
-						}
 					}
 				}
 

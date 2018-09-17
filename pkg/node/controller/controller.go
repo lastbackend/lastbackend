@@ -50,6 +50,10 @@ func New(r *runtime.Runtime) *Controller {
 	var c = new(Controller)
 	c.runtime = r
 	c.cache.pods = make(map[string]*types.PodStatus)
+
+	for p, st := range envs.Get().GetState().Pods().GetPods() {
+		c.cache.pods[p] = st
+	}
 	return c
 }
 
@@ -91,12 +95,12 @@ func (c *Controller) Connect(ctx context.Context) error {
 			opts.SSL.Cert = certData
 		}
 	}
-
-	opts.Status.Mode.Ingress = envs.Get().GetModeIngress()
+	
 	for {
 		if err := envs.Get().GetNodeClient().Connect(ctx, opts); err == nil {
 			return nil
 		}
+		time.Sleep(3*time.Second)
 	}
 
 	return nil
@@ -104,6 +108,7 @@ func (c *Controller) Connect(ctx context.Context) error {
 
 func (c *Controller) Sync(ctx context.Context) error {
 
+	log.Debugf("Start node sync")
 
 	ticker := time.NewTicker(time.Second * 5)
 
@@ -120,7 +125,10 @@ func (c *Controller) Sync(ctx context.Context) error {
 			if i > 10 {
 				break
 			}
-			opts.Pods[p] = getPodOptions(status)
+
+			if !envs.Get().GetState().Pods().IsLocal(p) {
+				opts.Pods[p] = getPodOptions(status)
+			}
 		}
 
 		for p := range opts.Pods {
@@ -128,6 +136,10 @@ func (c *Controller) Sync(ctx context.Context) error {
 		}
 
 		c.cache.lock.Unlock()
+
+		for p, i := range opts.Pods {
+			log.Debugf("send pod status: %s > %s", p, i.State)
+		}
 
 		spec, err := envs.Get().GetNodeClient().SetStatus(ctx, opts)
 		if err != nil {
@@ -151,8 +163,10 @@ func (c *Controller) Subscribe() {
 	)
 
 	go func(){
+		log.Debug("pods subscribe")
 		for {
 			p := <- pods
+			log.Debugf("pod changed: %s", p)
 			c.cache.lock.Lock()
 			c.cache.pods[p]= envs.Get().GetState().Pods().GetPod(p)
 			c.cache.lock.Unlock()

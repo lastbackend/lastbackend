@@ -43,37 +43,22 @@ func (r *Runtime) Run() {
 
 	go r.secretWatch(ctx, nil)
 	go r.nodeWatch(ctx, nil)
-
-	im := distribution.NewIngressModel(ctx, envs.Get().GetStorage())
-	il, err := im.List()
-	if err != nil {
-		return
-	}
+	go r.ingressWatch(ctx, nil)
 
 	c := envs.Get().GetCache()
-	for _, i := range il.Items {
-		c.Node().SetIngress(i)
-	}
-
-	go r.ingressWatch(ctx, &il.Runtime.System.Revision)
 
 	rm := distribution.NewRouteModel(ctx, envs.Get().GetStorage())
 	rl, err := rm.List()
 	if err != nil {
 		return
 	}
+	go r.routeWatch(ctx, &rl.System.Revision)
 
 	for _, i := range rl.Items {
 		m := new(types.RouteManifest)
 		m.Set(i)
-		c.Node().SetRouteManifest(i.SelfLink(), m)
+		c.Ingress().SetRouteManifest(i.SelfLink(), m)
 	}
-
-
-	go r.routeWatch(ctx, &rl.System.Revision)
-
-	//go c.Ingress().CacheRoutes(stg.Route().WatchSpecEvents)
-	//go c.Ingress().Status(stg.Ingress().WatchStatus)
 }
 
 func (r *Runtime) podManifestWatch(ctx context.Context, rev *int64) {
@@ -203,6 +188,7 @@ func (r *Runtime) subnetManifestWatch(ctx context.Context, rev *int64) {
 				}
 
 				c.Node().SetSubnetManifest(w.Name, w.Data)
+				c.Ingress().SetSubnetManifest(w.Name, w.Data)
 			}
 		}
 	}()
@@ -309,9 +295,11 @@ func (r *Runtime) discoveryWatch(ctx context.Context, rev *int64) {
 
 				if w.IsActionRemove() {
 					c.Node().DelDiscovery(w.Name)
+					c.Ingress().DelDiscovery(w.Name)
 					continue
 				}
 				c.Node().SetDiscovery(w.Data)
+				c.Ingress().SetDiscovery(w.Data)
 			}
 		}
 	}()
@@ -341,10 +329,10 @@ func (r *Runtime) ingressWatch(ctx context.Context, rev *int64) {
 				}
 
 				if w.IsActionRemove() {
-					c.Node().DelIngress(w.Name)
+					c.Ingress().DelIngress(w.Name)
 					continue
 				}
-				c.Node().SetIngress(w.Data)
+				c.Ingress().SetIngress(w.Data)
 
 			}
 		}
@@ -381,7 +369,7 @@ func (r *Runtime) routeWatch(ctx context.Context, rev *int64) {
 					m.State = types.StateDestroyed
 				}
 
-				c.Node().SetRouteManifest(w.Data.SelfLink(), m)
+				c.Ingress().SetRouteManifest(w.Data.SelfLink(), m)
 			}
 		}
 	}()

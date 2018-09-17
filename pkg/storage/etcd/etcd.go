@@ -53,10 +53,10 @@ func New() (*Storage, error) {
 	var (
 		err    error
 		s      = new(Storage)
-		config *v3.Config
+		config = new(v3.Config)
 	)
 
-	if err := viper.UnmarshalKey("etcd", &config); err != nil {
+	if err := viper.UnmarshalKey("etcd", config); err != nil {
 		log.Errorf("%s: error parsing etcd config: %v", logPrefix, err)
 		return nil, err
 	}

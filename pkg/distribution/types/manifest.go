@@ -26,13 +26,24 @@ type NodeManifest struct {
 	Network   map[string]*SubnetManifest   `json:"network"`
 	Pods      map[string]*PodManifest      `json:"pods"`
 	Volumes   map[string]*VolumeManifest   `json:"volumes"`
-	Routes    map[string]*RouteManifest    `json:"routes"`
 }
 
 type NodeManifestMeta struct {
 	Initial   bool     `json:"initial"`
 	Discovery []string `json:"discovery"`
 }
+
+type IngressManifest struct {
+	Meta      NodeManifestMeta             `json:"meta"`
+	Routes    map[string]*RouteManifest    `json:"routes"`
+	Network   map[string]*SubnetManifest   `json:"network"`
+}
+
+type IngressManifestMeta struct {
+	Initial   bool     `json:"initial"`
+	Discovery []string `json:"discovery"`
+}
+
 
 type PodManifest PodSpec
 

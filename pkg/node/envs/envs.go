@@ -21,7 +21,6 @@ package envs
 import (
 	"errors"
 	"github.com/lastbackend/lastbackend/pkg/api/client/types"
-	"github.com/lastbackend/lastbackend/pkg/node/ingress"
 	"github.com/lastbackend/lastbackend/pkg/node/state"
 	"github.com/lastbackend/lastbackend/pkg/runtime/cni"
 	"github.com/lastbackend/lastbackend/pkg/runtime/cpi"
@@ -54,7 +53,6 @@ type Env struct {
 		ingress   bool
 	}
 
-	ingress ingress.Ingress
 	dns struct {
 		Cluster []string
 		External []string
@@ -93,23 +91,7 @@ func (c *Env) GetCPI() cpi.CPI {
 	return c.cpi
 }
 
-func (c *Env) SetIngress(ing ingress.Ingress) {
-	c.ingress = ing
-}
-
-func (c *Env) GetIngress() ingress.Ingress {
-	return c.ingress
-}
-
-func (c *Env) SetModeIngress(on bool) {
-	c.mode.ingress = on
-}
-
-func (c *Env) GetModeIngress() bool {
-	return c.mode.ingress
-}
-
-func (c *Env) SetPorvision(on bool) {
+func (c *Env) SetProvision(on bool) {
 	c.mode.provision = on
 }
 

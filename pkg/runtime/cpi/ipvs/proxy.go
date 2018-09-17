@@ -25,6 +25,7 @@ import (
 	"fmt"
 	"github.com/vishvananda/netlink"
 	"net"
+	"os/exec"
 	"strings"
 	"syscall"
 
@@ -62,11 +63,10 @@ func (p *Proxy) Create(ctx context.Context, manifest *types.EndpointManifest) (*
 
 	var (
 		err    error
-		status = new(types.EndpointState)
 		csvcs  = make([]*libipvs.Service, 0)
 	)
 
-	status.IP = manifest.IP
+
 	svcs, dests, err := specToServices(manifest)
 	if err != nil {
 		log.Errorf("%s can not get services from manifest: %s", logIPVSPrefix, err.Error())
@@ -81,6 +81,7 @@ func (p *Proxy) Create(ctx context.Context, manifest *types.EndpointManifest) (*
 	defer func() {
 		if err != nil {
 			for _, svc := range csvcs {
+				log.V(logLevel).Debugf("%s delete service: %s", logIPVSPrefix, svc.Address.String())
 				p.ipvs.DelService(svc)
 			}
 		}
@@ -107,14 +108,10 @@ func (p *Proxy) Create(ctx context.Context, manifest *types.EndpointManifest) (*
 	state, err := p.getStateByIP(ctx, manifest.IP)
 	if err != nil {
 		log.Errorf("%s get state by ip err: %s", logIPVSPrefix, err.Error())
-		return status, err
+		return nil, err
 	}
 
-	status.PortMap = state.PortMap
-	status.Upstreams = state.Upstreams
-	status.Strategy = state.Strategy
-
-	return status, nil
+	return state, nil
 }
 
 // Destroy proxy rules
@@ -149,9 +146,6 @@ func (p *Proxy) Destroy(ctx context.Context, state *types.EndpointState) error {
 // Update proxy rules
 func (p *Proxy) Update(ctx context.Context, state *types.EndpointState, spec *types.EndpointManifest) (*types.EndpointState, error) {
 
-	var (
-		status = new(types.EndpointState)
-	)
 
 	psvc, pdest, err := specToServices(spec)
 	if err != nil {
@@ -208,13 +202,10 @@ func (p *Proxy) Update(ctx context.Context, state *types.EndpointState, spec *ty
 	st, err := p.getStateByIP(ctx, spec.IP)
 	if err != nil {
 		log.Errorf("%s get state by ip err: %s", logIPVSPrefix, err.Error())
-		return status, err
+		return nil, err
 	}
 
-	status.PortMap = st.PortMap
-	status.Upstreams = st.Upstreams
-	status.Strategy = st.Strategy
-	return status, nil
+	return st, nil
 }
 
 // getStateByIp returns current proxy state filtered by endpoint ip
@@ -231,7 +222,12 @@ func (p *Proxy) getStateByIP(ctx context.Context, ip string) (*types.EndpointSta
 
 // getStateByIp returns current proxy state
 func (p *Proxy) getState(ctx context.Context) (map[string]*types.EndpointState, error) {
+
 	el := make(map[string]*types.EndpointState)
+
+	if out, err := exec.Command("modprobe", "-va", "ip_vs").CombinedOutput(); err != nil {
+		return nil, fmt.Errorf("Running modprobe ip_vs failed with message: `%s`, error: %v", strings.TrimSpace(string(out)), err)
+	}
 
 	svcs, err := p.ipvs.GetServices()
 	if err != nil {
@@ -323,7 +319,7 @@ func (p *Proxy) getState(ctx context.Context) (map[string]*types.EndpointState, 
 	}
 
 	for ip := range ips {
-		log.Debugf("Check ip %s binded to link %s", ip, p.link.Attrs().Name)
+		log.Debugf("Check ip %s is binded to link %s", ip, p.link.Attrs().Name)
 		p.addIpBindToLink(ip)
 	}
 
@@ -333,6 +329,7 @@ func (p *Proxy) getState(ctx context.Context) (map[string]*types.EndpointState, 
 }
 
 func New() (*Proxy, error) {
+
 	prx := new(Proxy)
 	handler, err := libipvs.New("")
 	if err != nil {

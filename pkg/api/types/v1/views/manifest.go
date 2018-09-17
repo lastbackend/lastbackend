@@ -43,6 +43,7 @@ type ManifestSpecTemplateContainer struct {
 	Workdir    string                                 `json:"workdir,omitempty" yaml:"workdir,omitempty"`
 	Entrypoint string                                 `json:"entrypoint,omitempty" yaml:"entrypoint,omitempty"`
 	Args       []string                               `json:"args,omitempty" yaml:"args,omitempty"`
+	Ports      []string 															`json:"ports,omitempty" yaml:"ports,omitempty"`
 	Env        []ManifestSpecTemplateContainerEnv     `json:"env,omitempty" yaml:"env,omitempty"`
 	Image      ManifestSpecTemplateContainerImage     `json:"image,omitempty" yaml:"image,omitempty"`
 	Resources  ManifestSpecTemplateContainerResources `json:"resources,omitempty" yaml:"resources,omitempty"`

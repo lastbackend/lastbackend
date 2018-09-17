@@ -27,18 +27,18 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/util/http/request"
 )
 
-type IngressClient struct {
+type DiscoveryClient struct {
 	client *request.RESTClient
 
 	hostname string
 }
 
-func (ic *IngressClient) List(ctx context.Context) (*vv1.IngressList, error) {
+func (ic *DiscoveryClient) List(ctx context.Context) (*vv1.DiscoveryList, error) {
 
-	var i *vv1.IngressList
+	var i *vv1.DiscoveryList
 	var e *errors.Http
 
-	err := ic.client.Get(fmt.Sprintf("/ingress")).
+	err := ic.client.Get(fmt.Sprintf("/discovery")).
 		AddHeader("Content-Type", "application/json").
 		JSON(&i, &e)
 
@@ -50,19 +50,19 @@ func (ic *IngressClient) List(ctx context.Context) (*vv1.IngressList, error) {
 	}
 
 	if ic == nil {
-		list := make(vv1.IngressList, 0)
+		list := make(vv1.DiscoveryList, 0)
 		i = &list
 	}
 
 	return i, nil
 }
 
-func (ic *IngressClient) Get(ctx context.Context) (*vv1.Ingress, error) {
+func (ic *DiscoveryClient) Get(ctx context.Context) (*vv1.Discovery, error) {
 
-	var s *vv1.Ingress
+	var s *vv1.Discovery
 	var e *errors.Http
 
-	err := ic.client.Get(fmt.Sprintf("/ingress/%s", ic.hostname)).
+	err := ic.client.Get(fmt.Sprintf("/discovery/%s", ic.hostname)).
 		AddHeader("Content-Type", "application/json").
 		JSON(&s, &e)
 
@@ -76,13 +76,13 @@ func (ic *IngressClient) Get(ctx context.Context) (*vv1.Ingress, error) {
 	return s, nil
 }
 
-func (ic *IngressClient) Connect(ctx context.Context, opts *rv1.IngressConnectOptions) error {
+func (ic *DiscoveryClient) Connect(ctx context.Context, opts *rv1.DiscoveryConnectOptions) error {
 
 	body := opts.ToJson()
 
 	var e *errors.Http
 
-	err := ic.client.Put(fmt.Sprintf("/ingress/%s", ic.hostname)).
+	err := ic.client.Put(fmt.Sprintf("/discovery/%s", ic.hostname)).
 		AddHeader("Content-Type", "application/json").
 		Body([]byte(body)).
 		JSON(nil, &e)
@@ -97,28 +97,27 @@ func (ic *IngressClient) Connect(ctx context.Context, opts *rv1.IngressConnectOp
 	return nil
 }
 
-func (ic *IngressClient) SetStatus(ctx context.Context, opts *rv1.IngressStatusOptions) (*vv1.IngressManifest, error) {
+func (ic *DiscoveryClient) SetStatus(ctx context.Context, opts *rv1.DiscoveryStatusOptions) error {
 
 	body := opts.ToJson()
 
-	var s *vv1.IngressManifest
 	var e *errors.Http
 
-	err := ic.client.Put(fmt.Sprintf("/ingress/%s/status", ic.hostname)).
+	err := ic.client.Put(fmt.Sprintf("/discovery/%s/status", ic.hostname)).
 		AddHeader("Content-Type", "application/json").
 		Body([]byte(body)).
-		JSON(&s, &e)
+		JSON(nil, &e)
 
 	if err != nil {
-		return nil, err
+		return err
 	}
 	if e != nil {
-		return nil, errors.New(e.Message)
+		return errors.New(e.Message)
 	}
 
-	return s, nil
+	return nil
 }
 
-func newIngressClient(req *request.RESTClient, hostname string) *IngressClient {
-	return &IngressClient{client: req, hostname: hostname}
+func newDiscoveryClient(req *request.RESTClient, hostname string) *DiscoveryClient {
+	return &DiscoveryClient{client: req, hostname: hostname}
 }

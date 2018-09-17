@@ -44,18 +44,34 @@ type IngressMeta struct {
 	Node string `json:"node"`
 }
 
+type IngressInfo struct {
+	Type         string `json:"type"`
+	Version      string `json:"version"`
+	Hostname     string `json:"hostname"`
+	Architecture string `json:"architecture"`
+
+	OSName string `json:"os_name"`
+	OSType string `json:"os_type"`
+
+	// RewriteIP - need to set true if you want to use an external ip
+	ExternalIP string `json:"external_ip"`
+	InternalIP string `json:"internal_ip"`
+}
+
 // swagger:model types_ingress_status
 type IngressStatus struct {
 	Ready bool `json:"ready"`
+	Online bool `json:"online"`
+}
+
+type IngressSpec struct {
+
 }
 
 // swagger:ignore
-type IngressSpec struct {
-}
-
 func (n *Ingress) SelfLink() string {
 	if n.Meta.SelfLink == "" {
-		n.Meta.SelfLink = fmt.Sprintf("%s", n.Meta.Node)
+		n.Meta.SelfLink = fmt.Sprintf("%s", n.Meta.Name)
 	}
 	return n.Meta.SelfLink
 }

@@ -505,6 +505,9 @@ func NodeSetStatusH(w http.ResponseWriter, r *http.Request) {
 	}
 
 	for p, s := range opts.Pods {
+
+		log.Debugf("set pod status: %s", p)
+
 		keys := strings.Split(p, ":")
 		if len(keys) != 4 {
 			log.V(logLevel).Errorf("%s:setpodstatus:> invalid pod selflink err: %s", logPrefix, p)
@@ -669,10 +672,6 @@ func getNodeSpec(ctx context.Context, n *types.Node) (*types.NodeManifest, error
 		if err != nil {
 			log.V(logLevel).Errorf("%s:getmanifest:> get endpoint manifests for node err: %s", logPrefix, err.Error())
 			return spec, err
-		}
-
-		if n.Status.Mode.Ingress {
-			spec.Routes = cache.GetRoutes(n.SelfLink())
 		}
 
 		spec.Network = subnets.Items

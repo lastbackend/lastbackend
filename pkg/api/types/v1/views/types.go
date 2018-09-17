@@ -24,6 +24,7 @@ type IView interface {
 	Cluster() *ClusterView
 	Node() *NodeView
 	Ingress() *IngressView
+	Discovery() *DiscoveryView
 
 	Namespace() *NamespaceView
 	Route() *RouteView
@@ -46,6 +47,9 @@ func (View) Node() *NodeView {
 }
 func (View) Ingress() *IngressView {
 	return new(IngressView)
+}
+func (View) Discovery() *DiscoveryView {
+	return new(DiscoveryView)
 }
 
 func (View) Namespace() *NamespaceView {
