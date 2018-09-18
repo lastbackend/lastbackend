@@ -32,22 +32,22 @@ make deps
 
 # create master node
 docker-machine create --driver virtualbox master
-
+docker-machine stop master
 # note: for virtulabox driver we can mount host dir into docker-machine with this command
 VBoxManage sharedfolder add master --name /lastbackend --hostpath $LB_SOURCES_PATH --automount
+docker-machine start master
 
 # create minion nodes
 docker-machine create --driver virtualbox minion-00
+docker-machine stop minion-00
 VBoxManage sharedfolder add minion-00 --name /lastbackend --hostpath $LB_SOURCES_PATH --automount
-
-docker-machine create --driver virtualbox minion-01
-VBoxManage sharedfolder add minion-01 --name /lastbackend --hostpath $LB_SOURCES_PATH --automount
+docker-machine start minion-00
 
 # run etcd on master machine
 eval (docker-machine env master)
 export MASTER_IP=$(docker-machine ip master)
 docker run -d -p 4001:4001 -p 2380:2380 -p 2379:2379 \
- --name etcd quay.io/coreos/etcd:v2.3.8 \
+ --name etcd quay.io/coreos/etcd:v3.2.9 /usr/local/bin/etcd \
  -name etcd0 \
  -advertise-client-urls http://${MASTER_IP}:2379,http://${MASTER_IP}:4001 \
  -listen-client-urls http://0.0.0.0:2379,http://0.0.0.0:4001 \
@@ -80,16 +80,7 @@ docker run -d -it --restart=always \
       -v /lastbackend/contrib/config.yml:/etc/lastbackend/config.yml \
       -w /go/src/github.com/lastbackend/lastbackend \
       --name=ctl \
-      golang go run ./cmd/kit/kit.go api -c /etc/lastbackend/config.yml
-
-# run Last.Backend Cluster DNS from sources in docker
-docker run -d -it --restart=always \
-      -v /lastbackend:/go/src/github.com/lastbackend/lastbackend \
-      -v /lastbackend/contrib/config.yml:/etc/lastbackend/config.yml \
-      -w /go/src/github.com/lastbackend/lastbackend \
-      --name=dns \
-      --net=host \
-      golang go run ./cmd/kit/kit.go dns -c /etc/lastbackend/config.yml
+      golang go run ./cmd/kit/kit.go ctl -c /etc/lastbackend/config.yml
 
 # run node on minion host
 # create minion node

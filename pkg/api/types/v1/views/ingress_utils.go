@@ -101,6 +101,10 @@ func (obj *IngressManifest) Decode() *types.IngressManifest {
 		manifest.Routes[i] = r
 	}
 
+	for i, e := range obj.Endpoints {
+		manifest.Endpoints[i] = e
+	}
+
 	return &manifest
 }
 
