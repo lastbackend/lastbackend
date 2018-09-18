@@ -377,7 +377,7 @@ func NodeConnectH(w http.ResponseWriter, r *http.Request) {
 		}
 
 		if snet == nil {
-			if _, err := sn.SubnetPut(node, opts.Network.SubnetSpec); err != nil {
+			if _, err := sn.SubnetPut(node.SelfLink(), opts.Network.SubnetSpec); err != nil {
 				log.V(logLevel).Errorf("%s:connect:> snet put error: %s", logPrefix, err.Error())
 				errors.HTTP.InternalServerError(w)
 			}
@@ -412,7 +412,7 @@ func NodeConnectH(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if snet == nil {
-		if _, err := sn.SubnetPut(node, opts.Network.SubnetSpec); err != nil {
+		if _, err := sn.SubnetPut(node.SelfLink(), opts.Network.SubnetSpec); err != nil {
 			log.V(logLevel).Errorf("%s:connect:> snet put error: %s", logPrefix, err.Error())
 			errors.HTTP.InternalServerError(w)
 		}

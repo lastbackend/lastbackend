@@ -168,6 +168,7 @@ func IngressConnectH(w http.ResponseWriter, r *http.Request) {
 
 	var (
 		im  = distribution.NewIngressModel(r.Context(), envs.Get().GetStorage())
+		sn  = distribution.NewNetworkModel(r.Context(), envs.Get().GetStorage())
 		nid = utils.Vars(r)["ingress"]
 		cache = envs.Get().GetCache().Ingress()
 	)
@@ -178,6 +179,13 @@ func IngressConnectH(w http.ResponseWriter, r *http.Request) {
 	if err := opts.DecodeAndValidate(r.Body); err != nil {
 		log.V(logLevel).Errorf("%s:setstatus:> validation incoming data", logPrefix, err.Err())
 		err.Http(w)
+		return
+	}
+
+	snet, err := sn.SubnetGet(opts.Network.CIDR)
+	if err != nil {
+		log.V(logLevel).Errorf("%s:connect:> get subnet err: %s", logPrefix, err.Error())
+		errors.HTTP.InternalServerError(w)
 		return
 	}
 
@@ -197,6 +205,13 @@ func IngressConnectH(w http.ResponseWriter, r *http.Request) {
 
 		im.Put(ingress)
 
+		if snet == nil {
+			if _, err := sn.SubnetPut(opts.Info.Hostname, opts.Network.SubnetSpec); err != nil {
+				log.V(logLevel).Errorf("%s:connect:> snet put error: %s", logPrefix, err.Error())
+				errors.HTTP.InternalServerError(w)
+			}
+		}
+
 		w.WriteHeader(http.StatusOK)
 		if _, err := w.Write([]byte{}); err != nil {
 			log.Errorf("%s:connect:> write response err: %s", logPrefix, err.Error())
@@ -211,6 +226,21 @@ func IngressConnectH(w http.ResponseWriter, r *http.Request) {
 		log.V(logLevel).Errorf("%s:connect:> get ingress set err: %s", logPrefix, err.Error())
 		errors.HTTP.InternalServerError(w)
 		return
+	}
+
+	if snet == nil {
+		if _, err := sn.SubnetPut(opts.Info.Hostname, opts.Network.SubnetSpec); err != nil {
+			log.V(logLevel).Errorf("%s:connect:> snet put error: %s", logPrefix, err.Error())
+			errors.HTTP.InternalServerError(w)
+		}
+	} else {
+		if !sn.SubnetEqual(snet, opts.Network.SubnetSpec) {
+			if err := sn.SubnetSet(snet); err != nil {
+				log.V(logLevel).Errorf("%s:connect:> get subnet set err: %s", logPrefix, err.Error())
+				errors.HTTP.InternalServerError(w)
+				return
+			}
+		}
 	}
 
 	cache.Clear(nid)
