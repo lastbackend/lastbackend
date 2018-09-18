@@ -51,6 +51,7 @@ type IngressManifest struct {
 	Meta      IngressManifestMeta                `json:"meta"`
 	Routes    map[string]*types.RouteManifest    `json:"routes"`
 	Endpoints map[string]*types.EndpointManifest `json:"endpoints"`
+	Subnets   map[string]*types.SubnetManifest   `json:"subnets"`
 }
 
 type IngressManifestMeta struct {
