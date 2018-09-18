@@ -213,7 +213,6 @@ func IngressConnectH(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-
 	cache.Clear(nid)
 
 	w.WriteHeader(http.StatusOK)
@@ -372,12 +371,23 @@ func getIngressManifest(ctx context.Context, ing *types.Ingress) (*types.Ingress
 		spec = cache.Get(ing.SelfLink())
 		stg = envs.Get().GetStorage()
 		ns  = distribution.NewNetworkModel(ctx, stg)
+		em  = distribution.NewEndpointModel(ctx, stg)
 	)
 
 	if spec == nil {
 		spec = new(types.IngressManifest)
 		spec.Meta.Initial = true
+
+
 		spec.Routes = cache.GetRoutes(ing.SelfLink())
+
+		endpoints, err := em.ManifestMap()
+		if err != nil {
+			log.V(logLevel).Errorf("%s:getmanifest:> get endpoint manifests for node err: %s", logPrefix, err.Error())
+			return spec, err
+		}
+		spec.Endpoints = endpoints.Items
+
 
 		subnets, err := ns.SubnetManifestMap()
 		if err != nil {

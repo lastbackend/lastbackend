@@ -92,6 +92,7 @@ func (obj *IngressManifest) Decode() *types.IngressManifest {
 
 	manifest := types.IngressManifest{
 		Routes: make(map[string]*types.RouteManifest, 0),
+		Endpoints: make(map[string]*types.EndpointManifest, 0),
 	}
 
 	manifest.Meta.Initial = obj.Meta.Initial
