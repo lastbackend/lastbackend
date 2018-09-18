@@ -201,14 +201,14 @@ func (s *Network) SubnetGet(cidr string) (*types.Subnet, error) {
 }
 
 // Create new subnet
-func (s *Network) SubnetPut(node *types.Node, spec types.SubnetSpec) (*types.Subnet, error) {
+func (s *Network) SubnetPut(hostname string, spec types.SubnetSpec) (*types.Subnet, error) {
 
 	log.V(logLevel).Debugf("%s:SubnetPut:> put new subnet", logNetworkPrefix)
 
 	snet := new(types.Subnet)
 	snet.Meta.SetDefault()
 	snet.Meta.Name = types.SubnetGetNameFromCIDR(spec.CIDR)
-	snet.Meta.Node = node.SelfLink()
+	snet.Meta.Node = hostname
 	snet.Spec = spec
 
 	if err := s.storage.Put(s.context, s.storage.Collection().Subnet(),

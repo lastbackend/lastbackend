@@ -24,6 +24,7 @@ import "github.com/lastbackend/lastbackend/pkg/distribution/types"
 type IngressConnectOptions struct {
 	Info    types.IngressInfo     `json:"info"`
 	Status  types.IngressStatus   `json:"status"`
+	Network types.NetworkState `json:"network"`
 }
 
 // swagger:ignore
