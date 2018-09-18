@@ -317,11 +317,16 @@ func (r *Runtime) Inspect(ctx context.Context, id string) (*types.Image, error) 
 	image.Meta.Tags = info.RepoTags
 	image.Status.Size = info.Size
 	image.Status.VirtualSize = info.VirtualSize
-	image.Status.Container.Envs = info.ContainerConfig.Env
 
-	image.Status.Container.Exec.Command = info.Config.Cmd
-	image.Status.Container.Exec.Entrypoint = info.Config.Entrypoint
-	image.Status.Container.Exec.Workdir = info.Config.WorkingDir
+	if info.ContainerConfig!= nil {
+		image.Status.Container.Envs = info.ContainerConfig.Env
+	}
+
+	if info.Config!= nil {
+		image.Status.Container.Exec.Command = info.Config.Cmd
+		image.Status.Container.Exec.Entrypoint = info.Config.Entrypoint
+		image.Status.Container.Exec.Workdir = info.Config.WorkingDir
+	}
 
 	return image, err
 }
