@@ -74,6 +74,7 @@ func (nv *IngressView) NewManifest(obj *types.IngressManifest) *IngressManifest 
 	manifest := IngressManifest{
 		Endpoints: make(map[string]*types.EndpointManifest, 0),
 		Routes:    make(map[string]*types.RouteManifest, 0),
+		Subnets:   make(map[string]*types.SubnetManifest, 0),
 	}
 
 	if obj == nil {
@@ -84,6 +85,7 @@ func (nv *IngressView) NewManifest(obj *types.IngressManifest) *IngressManifest 
 	manifest.Meta.Discovery = obj.Meta.Discovery
 	manifest.Endpoints = obj.Endpoints
 	manifest.Routes = obj.Routes
+	manifest.Subnets = obj.Network
 
 	return &manifest
 }
@@ -92,6 +94,8 @@ func (obj *IngressManifest) Decode() *types.IngressManifest {
 
 	manifest := types.IngressManifest{
 		Routes: make(map[string]*types.RouteManifest, 0),
+		Endpoints: make(map[string]*types.EndpointManifest, 0),
+		Network: make(map[string]*types.SubnetManifest, 0),
 	}
 
 	manifest.Meta.Initial = obj.Meta.Initial
@@ -103,6 +107,10 @@ func (obj *IngressManifest) Decode() *types.IngressManifest {
 
 	for i, e := range obj.Endpoints {
 		manifest.Endpoints[i] = e
+	}
+
+	for i, e := range obj.Subnets {
+		manifest.Network[i] = e
 	}
 
 	return &manifest
