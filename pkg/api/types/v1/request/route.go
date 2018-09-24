@@ -52,8 +52,6 @@ type RouteManifestSpecRulesOption struct {
 	Port    int    `json:"port" yaml:"port"`
 }
 
-
-
 func (r *RouteManifest) FromJson(data []byte) error {
 	return json.Unmarshal(data, r)
 }
@@ -110,9 +108,9 @@ func (r *RouteManifest) SetRouteSpec(route *types.Route, svc *types.ServiceList)
 
 		route.Spec.Rules = append(route.Spec.Rules, types.RouteRule{
 			Endpoint: sl[rs.Service].Meta.Endpoint,
-			Service: rs.Service,
-			Port: rs.Port,
-			Path: rs.Path,
+			Service:  rs.Service,
+			Port:     rs.Port,
+			Path:     rs.Path,
 		})
 
 	}
