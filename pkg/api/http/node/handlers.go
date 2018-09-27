@@ -418,6 +418,7 @@ func NodeConnectH(w http.ResponseWriter, r *http.Request) {
 		}
 	} else {
 		if !sn.SubnetEqual(snet, opts.Network.SubnetSpec) {
+			snet.Spec = opts.Network.SubnetSpec
 			if err := sn.SubnetSet(snet); err != nil {
 				log.V(logLevel).Errorf("%s:connect:> get subnet set err: %s", logPrefix, err.Error())
 				errors.HTTP.InternalServerError(w)

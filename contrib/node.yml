@@ -41,8 +41,10 @@ runtime:
 #      key_file: ""
   cni:
     type: "vxlan"
+    interface: "eth1"
   cpi:
     type: "ipvs"
+    interface: "eth1" #external interface to route traffic
   csi:
     local:
       root: "/var/run/lastbackend/"

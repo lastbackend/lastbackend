@@ -243,7 +243,7 @@ func (s *Network) SubnetSet(snet *types.Subnet) error {
 	}
 
 	if m == nil {
-		return nil
+		return s.SubnetManifestAdd(snet)
 	}
 
 
