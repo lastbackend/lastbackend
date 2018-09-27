@@ -46,6 +46,7 @@ func (r *Runtime) Run() {
 	go r.nodeWatch(ctx, nil)
 	go r.ingressWatch(ctx, nil)
 
+
 	c := envs.Get().GetCache()
 
 	rm := distribution.NewRouteModel(ctx, envs.Get().GetStorage())
@@ -59,6 +60,18 @@ func (r *Runtime) Run() {
 		m := new(types.RouteManifest)
 		m.Set(i)
 		c.Ingress().SetRouteManifest(i.SelfLink(), m)
+	}
+
+
+	dm := distribution.NewDiscoveryModel(ctx, envs.Get().GetStorage())
+	dl, err := dm.List()
+	if err != nil {
+		return
+	}
+	go r.discoveryWatch(ctx, &dl.System.Revision)
+	for _, i := range dl.Items {
+		c.Node().SetDiscovery(i)
+		c.Ingress().SetDiscovery(i)
 	}
 }
 

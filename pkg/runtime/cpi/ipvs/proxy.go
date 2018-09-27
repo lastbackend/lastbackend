@@ -170,18 +170,22 @@ func (p *Proxy) Update(ctx context.Context, state *types.EndpointState, spec *ty
 		return state, err
 	}
 
-	for id, svc := range csvc {
 
-		// remove service which not exists in new spec
-		if _, ok := psvc[id]; !ok {
-			if err := p.ipvs.DelService(svc); err != nil {
-				log.Errorf("%s can not remove service: %s", logIPVSPrefix, err.Error())
+	for id, svc := range psvc {
+		log.Debugf("%s check new service: %s", logIPVSPrefix, id)
+
+		if _, ok := csvc[id]; !ok {
+			log.Debugf("%s create service: %s", logIPVSPrefix, id)
+			if err := p.ipvs.NewService(svc); err != nil {
+				log.Errorf("%s can not create service: %s", logIPVSPrefix, err.Error())
 			}
 		}
 
 		// check service upstreams for removing
-		for id, dest := range cdest {
-			if _, ok := pdest[id]; !ok {
+		for did, dest := range cdest {
+			log.Debugf("%s check service %s old backend exists %s", logIPVSPrefix, id, did)
+			if _, ok := pdest[did]; !ok {
+				log.Debugf("%s service %s backend delete %s", logIPVSPrefix, id, did)
 				if err := p.ipvs.DelDestination(svc, dest); err != nil {
 					log.Errorf("%s can not remove backend: %s", logIPVSPrefix, err.Error())
 				}
@@ -189,8 +193,10 @@ func (p *Proxy) Update(ctx context.Context, state *types.EndpointState, spec *ty
 		}
 
 		// check service upstreams for creating
-		for id, dest := range pdest {
-			if _, ok := cdest[id]; !ok {
+		for did, dest := range pdest {
+			log.Debugf("%s check service %s new backend exists %s", logIPVSPrefix, id, did)
+			if _, ok := cdest[did]; !ok {
+				log.Debugf("%s service %s backend create %s", logIPVSPrefix, id, did)
 				if err := p.ipvs.NewDestination(svc, dest); err != nil {
 					log.Errorf("%s can not add backend: %s", logIPVSPrefix, err.Error())
 				}
@@ -198,13 +204,19 @@ func (p *Proxy) Update(ctx context.Context, state *types.EndpointState, spec *ty
 		}
 	}
 
-	for id, svc := range psvc {
-		if _, ok := csvc[id]; !ok {
-			if err := p.ipvs.NewService(svc); err != nil {
-				log.Errorf("%s can not create service: %s", logIPVSPrefix, err.Error())
+	for id, svc := range csvc {
+
+		log.Debugf("%s check old service: %s", logIPVSPrefix, id)
+		// remove service which not exists in new spec
+		if _, ok := psvc[id]; !ok {
+			log.Debugf("%s delete service: %s", logIPVSPrefix, id)
+			if err := p.ipvs.DelService(svc); err != nil {
+				log.Errorf("%s can not remove service: %s", logIPVSPrefix, err.Error())
 			}
+			continue
 		}
 	}
+
 
 	st, err := p.getStateByIP(ctx, spec.IP)
 	if err != nil {
@@ -325,10 +337,10 @@ func (p *Proxy) getState(ctx context.Context) (map[string]*types.EndpointState, 
 		el[host] = endpoint
 	}
 
-	for ip := range ips {
-		log.Debugf("Check ip %s is binded to link %s", ip, p.link.Attrs().Name)
-		p.addIpBindToLink(ip)
-	}
+	//for ip := range ips {
+	//	log.Debugf("Check ip %s is binded to link %s", ip, p.link.Attrs().Name)
+	//	p.addIpBindToLink(ip)
+	//}
 
 	log.V(logLevel).Debugf("%s current ipvs state: %#v", logIPVSPrefix, el)
 
@@ -516,14 +528,14 @@ func specToServices(spec *types.EndpointManifest) (map[string]*libipvs.Service, 
 		}
 
 		for _, host := range spec.Upstreams {
-			log.Debugf("create new destination for: %s", host)
+			log.Debugf("%s: add new destination to spec for: %s", logIPVSPrefix, host)
 			dest := new(libipvs.Destination)
 
 			dest.Address = net.ParseIP(host)
 			dest.Port = port
 			dest.Weight = 1
 			dests[fmt.Sprintf("%s_%d", dest.Address.String(), dest.Port)] = dest
-			log.Debugf("created new destination %s_%d", dest.Address.String(), dest.Port)
+			log.Debugf("%s: added new destination %s_%d", logIPVSPrefix, dest.Address.String(), dest.Port)
 		}
 
 		switch proto {

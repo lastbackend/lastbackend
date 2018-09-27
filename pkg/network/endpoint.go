@@ -16,40 +16,45 @@
 // from Last.Backend LLC.
 //
 
-package runtime
+package network
 
 import (
 	"context"
+	"github.com/lastbackend/lastbackend/pkg/network/state"
 
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 	"github.com/lastbackend/lastbackend/pkg/log"
-	"github.com/lastbackend/lastbackend/pkg/node/envs"
 )
 
 const (
-	logEndpointPrefix = "runtime:endpoint:>"
+	logEndpointPrefix = "network:endpoint:>"
 )
 
-func EndpointManage(ctx context.Context, key string, manifest *types.EndpointManifest) error {
+
+func (n *Network) Endpoints() *state.EndpointState {
+	return n.state.Endpoints()
+}
+
+func (n *Network) EndpointManage(ctx context.Context, key string, manifest *types.EndpointManifest) error {
 	log.V(logLevel).Debugf("%s manage: %s", logEndpointPrefix, key)
 
-	state := envs.Get().GetState().Endpoints().GetEndpoint(key)
+	state := n.state.Endpoints().GetEndpoint(key)
 
 	if state != nil {
 		if manifest.State == types.StateDestroy {
-			EndpointDestroy(ctx, key, state)
-			envs.Get().GetState().Endpoints().DelEndpoint(key)
+			n.EndpointDestroy(ctx, key, state)
+			n.state.Endpoints().DelEndpoint(key)
 			return nil
 		}
 
 		log.V(logLevel).Debugf("%s check endpoint: %s", logEndpointPrefix, key)
 		if !endpointEqual(manifest, state) {
-			state, err := EndpointUpdate(ctx, key, state, manifest)
+			state, err := n.EndpointUpdate(ctx, key, state, manifest)
 			if err != nil {
 				log.Errorf("%s update error: %s", logEndpointPrefix, err.Error())
 				return err
 			}
-			envs.Get().GetState().Endpoints().SetEndpoint(key, state)
+			n.state.Endpoints().SetEndpoint(key, state)
 			return nil
 		}
 
@@ -60,43 +65,43 @@ func EndpointManage(ctx context.Context, key string, manifest *types.EndpointMan
 		return nil
 	}
 
-	state, err := EndpointCreate(ctx, key, manifest)
+	state, err := n.EndpointCreate(ctx, key, manifest)
 	if err != nil {
 		log.Errorf("%s create error: %s", logEndpointPrefix, err.Error())
 		return err
 	}
 
-	envs.Get().GetState().Endpoints().SetEndpoint(key, state)
+	n.state.Endpoints().SetEndpoint(key, state)
 	return nil
 }
 
-func EndpointRestore(ctx context.Context) error {
+func (n *Network) EndpointRestore(ctx context.Context) error {
 	log.V(logLevel).Debugf("%s restore", logEndpointPrefix)
-	cpi := envs.Get().GetCPI()
+	cpi := n.cpi
 	endpoints, err := cpi.Info(ctx)
 	if err != nil {
 		log.Errorf("%s restore error: %s", logEndpointPrefix, err.Error())
 		return err
 	}
-	envs.Get().GetState().Endpoints().SetEndpoints(endpoints)
+	n.state.Endpoints().SetEndpoints(endpoints)
 	return nil
 }
 
-func EndpointCreate(ctx context.Context, key string, manifest *types.EndpointManifest) (*types.EndpointState, error) {
+func (n *Network) EndpointCreate(ctx context.Context, key string, manifest *types.EndpointManifest) (*types.EndpointState, error) {
 	log.V(logLevel).Debugf("%s create %s", logEndpointPrefix, key)
-	cpi := envs.Get().GetCPI()
+	cpi := n.cpi
 	return cpi.Create(ctx, manifest)
 }
 
-func EndpointUpdate(ctx context.Context, endpoint string, state *types.EndpointState, manifest *types.EndpointManifest) (*types.EndpointState, error) {
+func (n *Network) EndpointUpdate(ctx context.Context, endpoint string, state *types.EndpointState, manifest *types.EndpointManifest) (*types.EndpointState, error) {
 	log.V(logLevel).Debugf("%s update %s", logEndpointPrefix, endpoint)
-	cpi := envs.Get().GetCPI()
+	cpi := n.cpi
 	return cpi.Update(ctx, state, manifest)
 }
 
-func EndpointDestroy(ctx context.Context, endpoint string, state *types.EndpointState) error {
-	log.V(logLevel).Debugf("%s destroy", logEndpointPrefix, endpoint)
-	cpi := envs.Get().GetCPI()
+func (n *Network) EndpointDestroy(ctx context.Context, endpoint string, state *types.EndpointState) error {
+	log.V(logLevel).Debugf("%s destroy: %s", logEndpointPrefix, endpoint)
+	cpi := n.cpi
 	return cpi.Destroy(ctx, state)
 }
 
@@ -120,12 +125,12 @@ func endpointEqual(manifest *types.EndpointManifest, state *types.EndpointState)
 	for port, pm := range manifest.PortMap {
 
 		if _, ok := state.PortMap[port]; !ok {
-			log.V(logLevel).Debugf("%s portmap not found %#v", logEndpointPrefix, pm)
+			log.V(logLevel).Debugf("%s portmap not found %s", logEndpointPrefix, pm)
 			return false
 		}
 
 		if state.PortMap[port] != pm {
-			log.V(logLevel).Debugf("%s portmap not match %#v != %#v", logEndpointPrefix, pm, state.PortMap[port])
+			log.V(logLevel).Debugf("%s portmap not match %s != %s", logEndpointPrefix, pm, state.PortMap[port])
 			return false
 		}
 	}

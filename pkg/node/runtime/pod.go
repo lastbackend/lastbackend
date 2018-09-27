@@ -299,7 +299,7 @@ func PodCreate(ctx context.Context, key string, manifest *types.PodManifest) (*t
 		Timestamp: time.Now().UTC(),
 	}
 
-	status.Network.HostIP = envs.Get().GetCNI().Info(ctx).Addr
+
 	envs.Get().GetState().Pods().SetPod(key, status)
 	return status, nil
 }
@@ -423,7 +423,6 @@ func PodRestore(ctx context.Context) error {
 		cs.Ready = true
 		status.Containers[cs.ID] = cs
 		status.Network.PodIP = c.Network.IPAddress
-		status.Network.HostIP = envs.Get().GetCNI().Info(ctx).Addr
 
 		log.V(logLevel).Debugf("Container restored %s", c.ID)
 		envs.Get().GetState().Pods().SetPod(key, status)

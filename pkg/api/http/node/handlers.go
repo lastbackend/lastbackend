@@ -647,6 +647,7 @@ func getNodeSpec(ctx context.Context, n *types.Node) (*types.NodeManifest, error
 
 		spec = new(types.NodeManifest)
 		spec.Meta.Initial = true
+		spec.Meta.Discovery = cache.GetResolvers()
 
 		pods, err := pm.ManifestMap(n.Meta.Name)
 		if err != nil {

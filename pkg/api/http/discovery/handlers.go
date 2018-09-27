@@ -164,10 +164,10 @@ func DiscoveryConnectH(w http.ResponseWriter, r *http.Request) {
 	//   '500':
 	//     description: Internal server error
 
-	log.V(logLevel).Debugf("%s:info:> get discovery", logPrefix)
+	log.V(logLevel).Debugf("%s:info:> discovery connect", logPrefix)
 
 	var (
-		im  = distribution.NewDiscoveryModel(r.Context(), envs.Get().GetStorage())
+		dm  = distribution.NewDiscoveryModel(r.Context(), envs.Get().GetStorage())
 		nid = utils.Vars(r)["discovery"]
 	)
 
@@ -180,21 +180,24 @@ func DiscoveryConnectH(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	ing, err := im.Get(nid)
+	dvc, err := dm.Get(nid)
 	if err != nil {
 		log.V(logLevel).Errorf("%s:info:> get discovery err: %s", logPrefix, err.Error())
 		errors.HTTP.InternalServerError(w)
 		return
 	}
-	if ing == nil {
-		log.V(logLevel).Warnf("%s:info:> discovery `%s` not found", logPrefix, nid)
+	if dvc == nil {
+		log.V(logLevel).Debugf("%s:info:> create new discovery `%s`", logPrefix, nid)
 
 		discovery := new(types.Discovery)
 		discovery.Meta.SetDefault()
 		discovery.Meta.Name = opts.Info.Hostname
+
+		discovery.Status.Port = opts.Status.Port
+		discovery.Status.IP = opts.Status.IP
 		discovery.Status.Ready = opts.Status.Ready
 
-		im.Put(discovery)
+		dm.Put(discovery)
 
 		w.WriteHeader(http.StatusOK)
 		if _, err := w.Write([]byte{}); err != nil {
@@ -205,8 +208,11 @@ func DiscoveryConnectH(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	ing.Status.Ready = opts.Status.Ready
-	if err := im.Set(ing); err != nil {
+	dvc.Status.Ready = opts.Status.Ready
+	dvc.Status.Port = opts.Status.Port
+	dvc.Status.IP = opts.Status.IP
+
+	if err := dm.Set(dvc); err != nil {
 		log.V(logLevel).Errorf("%s:connect:> get discovery set err: %s", logPrefix, err.Error())
 		errors.HTTP.InternalServerError(w)
 		return
@@ -253,7 +259,7 @@ func DiscoverySetStatusH(w http.ResponseWriter, r *http.Request) {
 	log.V(logLevel).Debugf("%s:setstatus:> discovery set state", logPrefix)
 
 	var (
-		im  = distribution.NewDiscoveryModel(r.Context(), envs.Get().GetStorage())
+		dm  = distribution.NewDiscoveryModel(r.Context(), envs.Get().GetStorage())
 		nid = utils.Vars(r)["discovery"]
 	)
 
@@ -265,7 +271,7 @@ func DiscoverySetStatusH(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	discovery, err := im.Get(nid)
+	discovery, err := dm.Get(nid)
 	if err != nil {
 		log.V(logLevel).Errorf("%s:setstatus:> get discoverys list err: %s", logPrefix, err.Error())
 		errors.HTTP.InternalServerError(w)
@@ -278,9 +284,12 @@ func DiscoverySetStatusH(w http.ResponseWriter, r *http.Request) {
 	}
 
 	discovery.Status.Ready = opts.Ready
+	discovery.Status.Port = opts.Port
+	discovery.Status.IP = opts.IP
+
 	discovery.Status.Online = true
 
-	if err := im.Set(discovery); err != nil {
+	if err := dm.Set(discovery); err != nil {
 		log.V(logLevel).Errorf("%s:setstatus:> set status err: %s", logPrefix, err.Error())
 		errors.HTTP.InternalServerError(w)
 		return

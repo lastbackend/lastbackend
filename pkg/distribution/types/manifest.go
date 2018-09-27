@@ -29,20 +29,25 @@ type NodeManifest struct {
 }
 
 type NodeManifestMeta struct {
-	Initial   bool     `json:"initial"`
-	Discovery []string `json:"discovery"`
+	Initial   bool                         `json:"initial"`
+	Discovery map[string]*ResolverManifest `json:"discovery"`
+}
+
+type ResolverManifest struct {
+	IP   string `json:"ip"`
+	Port uint16 `json:"port"`
 }
 
 type IngressManifest struct {
-	Meta      NodeManifestMeta             `json:"meta"`
+	Meta      IngressManifestMeta          `json:"meta"`
 	Routes    map[string]*RouteManifest    `json:"routes"`
 	Endpoints map[string]*EndpointManifest `json:"endpoints"`
 	Network   map[string]*SubnetManifest   `json:"network"`
 }
 
 type IngressManifestMeta struct {
-	Initial   bool     `json:"initial"`
-	Discovery []string `json:"discovery"`
+	Initial   bool                         `json:"initial"`
+	Discovery map[string]*ResolverManifest `json:"discovery"`
 }
 
 type PodManifest PodSpec
