@@ -57,6 +57,7 @@ type RouteMeta struct {
 type RouteSpec struct {
 	Security bool        `json:"security" yaml:"security"`
 	Domain   string      `json:"domain" yaml:"domain"`
+	Port     uint16      `json:"port" yaml:"port"`
 	Rules    []RouteRule `json:"rules" yaml:"rules"`
 	Updated  time.Time   `json:"updated"`
 }
@@ -91,6 +92,7 @@ func (r *Route) CreateSelfLink(namespace, name string) string {
 type RouteManifest struct {
 	State    string      `json:"state"`
 	Domain   string      `json:"domain"`
+	Port     uint16      `json:"port"`
 	Endpoint string      `json:"endpoint"`
 	Rules    []RouteRule `json:"rules"`
 }
@@ -108,6 +110,7 @@ type RouteManifestMap struct {
 func (r *RouteManifest) Set(route *Route) {
 	r.Domain = route.Spec.Domain
 	r.Rules = route.Spec.Rules
+	r.Port = route.Spec.Port
 }
 
 func NewRouteList() *RouteList {

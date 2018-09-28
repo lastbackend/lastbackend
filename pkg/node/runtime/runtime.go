@@ -56,6 +56,10 @@ func (r *Runtime) Restore(ctx context.Context) error {
 		return err
 	}
 
+	if err := envs.Get().GetNet().ResolverManage(ctx); err != nil {
+		log.Errorf("%s:> can not manage resolver:%s",logNodeRuntimePrefix,  err.Error())
+	}
+
 	if err := VolumeRestore(ctx); err != nil {
 		log.Errorf("can not restore volumes: %s", err.Error())
 		return err

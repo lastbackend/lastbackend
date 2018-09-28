@@ -170,6 +170,18 @@ func (p *Proxy) Update(ctx context.Context, state *types.EndpointState, spec *ty
 		return state, err
 	}
 
+	for id, svc := range csvc {
+
+		log.Debugf("%s check old service: %s", logIPVSPrefix, id)
+		// remove service which not exists in new spec
+		if _, ok := psvc[id]; !ok {
+			log.Debugf("%s delete service: %s", logIPVSPrefix, id)
+			if err := p.ipvs.DelService(svc); err != nil {
+				log.Errorf("%s can not remove service: %s", logIPVSPrefix, err.Error())
+			}
+			continue
+		}
+	}
 
 	for id, svc := range psvc {
 		log.Debugf("%s check new service: %s", logIPVSPrefix, id)
@@ -204,19 +216,10 @@ func (p *Proxy) Update(ctx context.Context, state *types.EndpointState, spec *ty
 		}
 	}
 
-	for id, svc := range csvc {
-
-		log.Debugf("%s check old service: %s", logIPVSPrefix, id)
-		// remove service which not exists in new spec
-		if _, ok := psvc[id]; !ok {
-			log.Debugf("%s delete service: %s", logIPVSPrefix, id)
-			if err := p.ipvs.DelService(svc); err != nil {
-				log.Errorf("%s can not remove service: %s", logIPVSPrefix, err.Error())
-			}
-			continue
-		}
+	log.Debugf("Check ip %s is binded to link %s", spec.IP, p.link.Attrs().Name)
+	if err := p.addIpBindToLink(spec.IP); err != nil {
+		log.Warnf("%s failed bind ip to link err: %s", logIPVSPrefix, err.Error())
 	}
-
 
 	st, err := p.getStateByIP(ctx, spec.IP)
 	if err != nil {
@@ -336,11 +339,6 @@ func (p *Proxy) getState(ctx context.Context) (map[string]*types.EndpointState, 
 		log.V(logLevel).Debugf("%s add endpoint state: %#v", logIPVSPrefix, endpoint)
 		el[host] = endpoint
 	}
-
-	//for ip := range ips {
-	//	log.Debugf("Check ip %s is binded to link %s", ip, p.link.Attrs().Name)
-	//	p.addIpBindToLink(ip)
-	//}
 
 	log.V(logLevel).Debugf("%s current ipvs state: %#v", logIPVSPrefix, el)
 
@@ -483,7 +481,7 @@ func New() (*Proxy, error) {
 	}
 
 	var (
-		iface = viper.GetString("runtime.cpi.interface")
+		iface = viper.GetString("runtime.interface")
 	)
 
 	if iface == types.EmptyString {
@@ -501,6 +499,26 @@ func New() (*Proxy, error) {
 	}
 
 	log.Debugf("default route ip net: %s", prx.dest.String())
+
+
+	svcs, err := prx.ipvs.GetServices()
+	if err != nil {
+		log.Errorf("%s info error: %s", logIPVSPrefix, err.Error())
+		return nil, err
+	}
+
+	log.V(logLevel).Debugf("%s services list: %#v", logIPVSPrefix, svcs)
+
+	var ips = make(map[string]bool, 0)
+
+	for _, svc := range svcs {
+		ips[svc.Address.String()] = true
+	}
+
+	for ip := range ips {
+		log.Debugf("Check ip %s is binded to link %s", ip, prx.link.Attrs().Name)
+		prx.addIpBindToLink(ip)
+	}
 
 	// TODO: Check ipvs proxy mode is available on host
 	return prx, nil

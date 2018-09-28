@@ -61,7 +61,7 @@ func New() (*Network, error) {
 
 	nt.ExtIface = new(NetworkInterface)
 
-	iface := viper.GetString("runtime.cni.interface")
+	iface := viper.GetString("runtime.interface")
 
 	if iface == types.EmptyString {
 		log.Debug("Add network to default interface")

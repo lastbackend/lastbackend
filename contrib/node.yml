@@ -9,8 +9,6 @@ api:
     ca: "/opt/cert/lastbackend/ca.pem"
     cert: "/opt/cert/lastbackend/client.pem"
     key: "/opt/cert/lastbackend/client-key.pem"
-dns:
-  ips: ["192.168.99.100","8.8.8.8"]
 
 node:
   host: 0.0.0.0
@@ -25,6 +23,7 @@ node:
 
 # Runtime
 runtime:
+  interface: "eth1" #external interface to route traffic
   docker:
     version: 1.35
   cri:

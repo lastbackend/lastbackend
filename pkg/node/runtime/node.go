@@ -23,6 +23,7 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/node/envs"
 	"github.com/lastbackend/lastbackend/pkg/util/system"
 	"github.com/shirou/gopsutil/mem"
+	"github.com/spf13/viper"
 
 	"fmt"
 	"os"
@@ -39,12 +40,13 @@ func NodeInfo() types.NodeInfo {
 	osInfo := system.GetOsInfo()
 	hostname, err := os.Hostname()
 	if err != nil {
-		fmt.Errorf("get hostname err: %s", err)
+		_ = fmt.Errorf("get hostname err: %s", err)
 	}
 
-	ip, err := system.GetHostIP()
+	link := viper.GetString("runtime.interface")
+	ip, err := system.GetHostIP(link)
 	if err != nil {
-		fmt.Errorf("get ip err: %s", err)
+		_ = fmt.Errorf("get ip err: %s", err)
 	}
 
 	info.Hostname = hostname

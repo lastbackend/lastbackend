@@ -43,7 +43,6 @@ func (r *Route) ToMeta(obj types.RouteMeta) RouteMeta {
 	meta.Name = obj.Name
 	meta.Namespace = obj.Namespace
 	meta.SelfLink = obj.SelfLink
-	meta.Security = obj.Security
 	meta.Updated = obj.Updated
 	meta.Created = obj.Created
 
@@ -53,6 +52,7 @@ func (r *Route) ToMeta(obj types.RouteMeta) RouteMeta {
 func (r *Route) ToSpec(obj types.RouteSpec) RouteSpec {
 	spec := RouteSpec{}
 	spec.Domain = obj.Domain
+	spec.Port = obj.Port
 	for _, rule := range obj.Rules {
 		spec.Rules = append(spec.Rules, &RouteRule{
 			Service:  rule.Service,
