@@ -138,6 +138,7 @@ func PodCreate(ctx context.Context, key string, manifest *types.PodManifest) (*t
 
 	var (
 		status   = types.NewPodStatus()
+		namespace = getPodNamespace(key)
 		setError = func(err error) (*types.PodStatus, error) {
 			log.Errorf("Can-not pull image: %s", err)
 			status.SetError(err)
@@ -172,7 +173,7 @@ func PodCreate(ctx context.Context, key string, manifest *types.PodManifest) (*t
 	log.V(logLevel).Debugf("Have %d containers", len(manifest.Template.Containers))
 	for _, c := range manifest.Template.Containers {
 		log.V(logLevel).Debug("Pull images for pod if needed")
-		if err := ImagePull(ctx, &c.Image); err != nil {
+		if err := ImagePull(ctx, namespace, &c.Image); err != nil {
 			log.Errorf("can not pull image: %s", err.Error())
 			return setError(err)
 		}
@@ -194,7 +195,7 @@ func PodCreate(ctx context.Context, key string, manifest *types.PodManifest) (*t
 		for _, e := range s.EnvVars {
 			if e.Secret.Name != types.EmptyString {
 				log.V(logLevel).Debug("Get secret info from api")
-				if err := SecretCreate(ctx, e.Secret.Name); err != nil {
+				if err := SecretCreate(ctx, fmt.Sprintf("%s:%s", namespace, e.Secret.Name)); err != nil {
 					log.Errorf("can not fetch secret from api")
 				}
 			}
@@ -862,4 +863,18 @@ func PodVolumeDestroy(ctx context.Context, pod, volume string) error {
 
 func podVolumeKeyCreate(pod, volume string) string {
 	return fmt.Sprintf("%s-%s", strings.Replace(pod, ":","-", -1), volume)
+}
+
+
+// TODO: move to distribution
+func getPodNamespace(key string) string {
+	var namespace = types.DEFAULT_NAMESPACE
+
+	parts := strings.Split(key, ":")
+
+	if len(parts) == 4 {
+		namespace = parts[0]
+	}
+
+	return namespace
 }

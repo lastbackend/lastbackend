@@ -35,8 +35,8 @@ const (
 // swagger:model types_config
 type Config struct {
 	Runtime
-	Meta ConfigMeta        `json:"meta" yaml:"meta"`
-	Data map[string][]byte `json:"data" yaml:"data"`
+	Meta ConfigMeta `json:"meta" yaml:"meta"`
+	Spec ConfigSpec `json:"spec" yaml:"spec"`
 }
 
 // swagger:ignore
@@ -54,8 +54,21 @@ type ConfigMap struct {
 // swagger:ignore
 // swagger:model types_config_meta
 type ConfigMeta struct {
-	Kind string `json:"kind"`
-	Meta `yaml:",inline"`
+	Kind      string `json:"kind"`
+	Namespace string `json:"namespace"`
+	Meta      `yaml:",inline"`
+}
+
+type ConfigSpec struct {
+	Type string `json:"type" yaml:"type"`
+	Data []*ConfigSpecData `json:"data" yaml:"data"`
+}
+
+type ConfigSpecData struct {
+	Key   string `json:"key,omitempty" yaml:"key,omitempty"`
+	Value string `json:"value,omitempty" yaml:"value,omitempty"`
+	File  string `json:"file,omitempty" yaml:"file,omitempty"`
+	Data  []byte `json:"data,omitempty"`
 }
 
 type ConfigManifest struct {
@@ -91,21 +104,22 @@ func NewConfigManifestMap() *ConfigManifestMap {
 
 func (s *Config) DecodeConfigTextData(key string) (string, error) {
 
-	if s.Meta.Kind != KindConfigText {
+	if s.Spec.Type != KindConfigText {
 		return EmptyString, errors.New("invalid config type")
 	}
 
-	if _, ok := s.Data[key]; !ok {
-		return EmptyString, errors.New("config key not found")
+	for _, item := range s.Spec.Data {
+
+		if item.Key == key {
+			d, err := base64.StdEncoding.DecodeString(item.Value)
+			if err != nil {
+				return EmptyString, err
+			}
+			return string(d), nil
+		}
 	}
 
-	d, err := base64.StdEncoding.DecodeString(string(s.Data[key]))
-	if err != nil {
-		return EmptyString, err
-	}
-
-	return string(d), nil
-
+	return EmptyString, errors.New("config key not found")
 }
 
 type ConfigText struct {
@@ -131,23 +145,6 @@ func (s *Config) SelfLink() string {
 
 func (s *Config) CreateSelfLink(name string) string {
 	return fmt.Sprintf("%s", name)
-}
-
-func (s *Config) DecodeRegistry() {
-
-}
-
-// swagger:ignore
-type ConfigCreateOptions struct {
-	Name string
-	Kind string
-	Data map[string][]byte
-}
-
-// swagger:ignore
-type ConfigUpdateOptions struct {
-	Kind string
-	Data map[string][]byte
 }
 
 // swagger:ignore

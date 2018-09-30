@@ -232,7 +232,6 @@ func (r *Runtime) secretWatch(ctx context.Context, rev *int64) {
 				}
 
 				sm := new(types.SecretManifest)
-				sm.Kind = w.Data.Meta.Kind
 				sm.Created = w.Data.Meta.Created
 				sm.Updated = w.Data.Meta.Updated
 				sm.State = types.StateUpdated

@@ -31,7 +31,6 @@ type ClientV1 interface {
 	Ingress(args ...string) IngressClientV1
 	Discovery(args ...string) DiscoveryClientV1
 	Namespace(args ...string) NamespaceClientV1
-	Secret(args ...string) SecretClientV1
 }
 
 type ClusterClientV1 interface {
@@ -64,6 +63,8 @@ type IngressClientV1 interface {
 }
 
 type NamespaceClientV1 interface {
+	Secret(args ...string) SecretClientV1
+	Config(args ...string) ConfigClientV1
 	Service(args ...string) ServiceClientV1
 	Route(args ...string) RouteClientV1
 	Volume(args ...string) VolumeClientV1
@@ -76,8 +77,6 @@ type NamespaceClientV1 interface {
 
 type ServiceClientV1 interface {
 	Deployment(args ...string) DeploymentClientV1
-	Trigger(args ...string) TriggerClientV1
-
 	Create(ctx context.Context, opts *rv1.ServiceManifest) (*vv1.Service, error)
 	List(ctx context.Context) (*vv1.ServiceList, error)
 	Get(ctx context.Context) (*vv1.Service, error)
@@ -105,10 +104,18 @@ type EventsClientV1 interface {
 
 type SecretClientV1 interface {
 	Get(ctx context.Context) (*vv1.Secret, error)
-	Create(ctx context.Context, opts *rv1.SecretCreateOptions) (*vv1.Secret, error)
+	Create(ctx context.Context, opts *rv1.SecretManifest) (*vv1.Secret, error)
 	List(ctx context.Context) (*vv1.SecretList, error)
-	Update(ctx context.Context, opts *rv1.SecretUpdateOptions) (*vv1.Secret, error)
+	Update(ctx context.Context, opts *rv1.SecretManifest) (*vv1.Secret, error)
 	Remove(ctx context.Context, opts *rv1.SecretRemoveOptions) error
+}
+
+type ConfigClientV1 interface {
+	Get(ctx context.Context) (*vv1.Config, error)
+	Create(ctx context.Context, opts *rv1.ConfigManifest) (*vv1.Config, error)
+	List(ctx context.Context) (*vv1.ConfigList, error)
+	Update(ctx context.Context, opts *rv1.ConfigManifest) (*vv1.Config, error)
+	Remove(ctx context.Context, opts *rv1.ConfigRemoveOptions) error
 }
 
 type RouteClientV1 interface {
@@ -117,14 +124,6 @@ type RouteClientV1 interface {
 	Get(ctx context.Context) (*vv1.Route, error)
 	Update(ctx context.Context, opts *rv1.RouteManifest) (*vv1.Route, error)
 	Remove(ctx context.Context, opts *rv1.RouteRemoveOptions) error
-}
-
-type TriggerClientV1 interface {
-	Create(ctx context.Context, opts *rv1.TriggerCreateOptions) (*vv1.Trigger, error)
-	List(ctx context.Context) (*vv1.TriggerList, error)
-	Get(ctx context.Context) (*vv1.Trigger, error)
-	Update(ctx context.Context, opts *rv1.TriggerUpdateOptions) (*vv1.Trigger, error)
-	Remove(ctx context.Context, opts *rv1.TriggerRemoveOptions) error
 }
 
 type VolumeClientV1 interface {

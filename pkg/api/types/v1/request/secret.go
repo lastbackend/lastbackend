@@ -18,17 +18,78 @@
 
 package request
 
-// swagger:model request_secret_create
-type SecretCreateOptions struct {
-	Name string            `json:"name"`
-	Kind string            `json:"kind"`
-	Data map[string][]byte `json:"data,omitempty"`
+import (
+	"encoding/base64"
+	"encoding/json"
+	"github.com/lastbackend/lastbackend/pkg/distribution/types"
+	"gopkg.in/yaml.v2"
+)
+
+type SecretManifest struct {
+	Meta SecretManifestMeta `json:"meta,omitempty" yaml:"meta,omitempty"`
+	Spec SecretManifestSpec `json:"spec,omitempty" yaml:"spec,omitempty"`
 }
 
-// swagger:model request_secret_update
-type SecretUpdateOptions struct {
-	Kind string            `json:"kind"`
-	Data map[string][]byte `json:"data"`
+type SecretManifestMeta struct {
+	RuntimeMeta `yaml:",inline"`
+	Namespace *string `json:"namespace" yaml:"namespace"`
+}
+
+type SecretManifestSpec struct {
+	// Template volume types
+	Type string `json:"type,omitempty" yaml:"type,omitempty"`
+	// Tempate volume selector
+	Data map[string]string `json:"data,omitempty" yaml:"data,omitempty"`
+}
+
+func (v *SecretManifest) FromJson(data []byte) error {
+	return json.Unmarshal(data, v)
+}
+
+func (v *SecretManifest) ToJson() ([]byte, error) {
+	return json.Marshal(v)
+}
+
+func (v *SecretManifest) FromYaml(data []byte) error {
+	return yaml.Unmarshal(data, v)
+}
+
+func (v *SecretManifest) ToYaml() ([]byte, error) {
+	return yaml.Marshal(v)
+}
+
+func (v *SecretManifest) SetSecretMeta(cfg *types.Secret) {
+
+	if cfg.Meta.Name == types.EmptyString {
+		cfg.Meta.Name = *v.Meta.Name
+	}
+
+	if v.Meta.Description != nil {
+		cfg.Meta.Description = *v.Meta.Description
+	}
+
+	if v.Meta.Labels != nil {
+		cfg.Meta.Labels = v.Meta.Labels
+	}
+
+}
+
+// SetSecretSpec - set config spec from manifest
+// TODO: check if config spec is updated => update Meta.Updated or skip
+func (v *SecretManifest) SetSecretSpec(s *types.Secret) {
+
+	s.Spec.Type = v.Spec.Type
+	s.Spec.Data = make(map[string][]byte, 0)
+
+	for key, value := range v.Spec.Data {
+		s.Spec.Data[key] =[]byte(base64.StdEncoding.EncodeToString([]byte(value)))
+	}
+}
+
+func (v *SecretManifest) GetManifest() *types.SecretManifest {
+	cfg := new(types.SecretManifest)
+	cfg.Type = v.Spec.Type
+	return cfg
 }
 
 // swagger:ignore

@@ -50,12 +50,12 @@ func (Filter) Route() types.RouteFilter {
 	return new(RouteFilter)
 }
 
-func (Filter) Secret() types.SecretFilter {
-	return new(SecretFilter)
+func (Filter) Config() types.ConfigFilter {
+	return new(ConfigFilter)
 }
 
-func (Filter) Trigger() types.TriggerFilter {
-	return new(TriggerFilter)
+func (Filter) Secret() types.SecretFilter {
+	return new(SecretFilter)
 }
 
 func (Filter) Volume() types.VolumeFilter {
@@ -124,20 +124,16 @@ func (SecretFilter) ByNamespace(namespace string) string {
 	return byNamespace(namespace)
 }
 
+type ConfigFilter struct{}
+
+func (ConfigFilter) ByNamespace(namespace string) string {
+	return byNamespace(namespace)
+}
+
 type VolumeFilter struct{}
 
 func (VolumeFilter) ByNamespace(namespace string) string {
 	return byNamespace(namespace)
-}
-
-type TriggerFilter struct{}
-
-func (TriggerFilter) ByNamespace(namespace string) string {
-	return byNamespace(namespace)
-}
-
-func (TriggerFilter) ByService(namespace, service string) string {
-	return byService(namespace, service)
 }
 
 type ManifestFilter struct{}

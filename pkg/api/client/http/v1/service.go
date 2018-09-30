@@ -53,21 +53,6 @@ func (sc *ServiceClient) Deployment(args ...string) types.DeploymentClientV1 {
 	return newDeploymentClient(sc.client, sc.namespace, sc.name, name)
 }
 
-func (sc *ServiceClient) Trigger(args ...string) types.TriggerClientV1 {
-	name := ""
-	// Get any parameters passed to us out of the args variable into "real"
-	// variables we created for them.
-	for i := range args {
-		switch i {
-		case 0: // hostname
-			name = args[0]
-		default:
-			panic("Wrong parameter count: (is allowed from 0 to 1)")
-		}
-	}
-	return newTriggerClient(sc.client, sc.namespace, sc.name, name)
-}
-
 func (sc *ServiceClient) Create(ctx context.Context, opts *rv1.ServiceManifest) (*vv1.Service, error) {
 
 	body, err := opts.ToJson()

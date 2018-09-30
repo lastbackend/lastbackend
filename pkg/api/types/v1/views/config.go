@@ -24,42 +24,60 @@ import (
 )
 
 // swagger:model views_secret
-type Secret struct {
-	Meta SecretMeta `json:"meta"`
-	Spec SecretSpec `json:"spec"`
+type Config struct {
+	Meta ConfigMeta `json:"meta"`
+	Spec ConfigSpec `json:"spec"`
 }
 
-type SecretSpec struct {
-	Type string            `json:"type"`
-	Data map[string][]byte `json:"data"`
+type ConfigSpec struct {
+	Type string           `json:"type"`
+	Data []ConfigSpecData `json:"data"`
+}
+
+type ConfigSpecData struct {
+	Key   string `json:"key,omitempty"`
+	Value string `json:"value,omitempty"`
+	File  string `json:"file,omitempty"`
+	Data  []byte `json:"data,omitempty"`
 }
 
 // swagger:model views_secret_meta
-type SecretMeta struct {
+type ConfigMeta struct {
 	Name      string    `json:"name"`
 	Namespace string    `json:"namespace"`
+	Kind      string    `json:"kind"`
 	SelfLink  string    `json:"self_link"`
 	Updated   time.Time `json:"updated"`
 	Created   time.Time `json:"created"`
 }
 
 // swagger:ignore
-type SecretMap map[string]*Secret
+type ConfigMap map[string]*Config
 
 // swagger:model views_secret_list
-type SecretList []*Secret
+type ConfigList []*Config
 
-func (s *Secret) Decode() *types.Secret {
+func (s *Config) Decode() *types.Config {
 
-	o := new(types.Secret)
+	o := new(types.Config)
 	o.Meta.Name = s.Meta.Name
-
+	o.Meta.Namespace = s.Meta.Namespace
+	o.Meta.Kind = s.Meta.Kind
 	o.Meta.SelfLink = s.Meta.SelfLink
 	o.Meta.Updated = s.Meta.Updated
 	o.Meta.Created = s.Meta.Created
 
 	o.Spec.Type = s.Spec.Type
-	o.Spec.Data = s.Spec.Data
+	o.Spec.Data = make([]*types.ConfigSpecData, 0)
+
+	for _, d := range s.Spec.Data {
+		o.Spec.Data = append(o.Spec.Data, &types.ConfigSpecData{
+			Key: d.Key,
+			File: d.File,
+			Value: d.Value,
+			Data: d.Data,
+		})
+	}
 
 	return o
 }

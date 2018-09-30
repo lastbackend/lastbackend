@@ -10,13 +10,13 @@
 // if any.  The intellectual and technical concepts contained
 // herein are proprietary to Last.Backend LLC
 // and its suppliers and may be covered by Russian Federation and Foreign Patents,
-// patents in process, and are protected by trade secret or copyright law.
+// patents in process, and are protected by trade config or copyright law.
 // Dissemination of this information or reproduction of this material
 // is strictly forbidden unless prior written permission is obtained
 // from Last.Backend LLC.
 //
 
-package secret
+package config
 
 import (
 	"github.com/lastbackend/lastbackend/pkg/api/envs"
@@ -31,14 +31,14 @@ import (
 
 const (
 	logLevel  = 2
-	logPrefix = "api:handler:secret"
+	logPrefix = "api:handler:config"
 )
 
-func SecretGetH(w http.ResponseWriter, r *http.Request) {
+func ConfigGetH(w http.ResponseWriter, r *http.Request) {
 
-	// swagger:operation GET /namespace/{namespace}/secret secret secretList
+	// swagger:operation GET /namespace/{namespace}/config config configList
 	//
-	// Shows a list of secrets
+	// Shows a list of configs
 	//
 	// ---
 	// produces:
@@ -51,21 +51,22 @@ func SecretGetH(w http.ResponseWriter, r *http.Request) {
 	//     type: string
 	// responses:
 	//   '200':
-	//     description: Secret list response
+	//     description: Config list response
 	//     schema:
-	//       "$ref": "#/definitions/views_secret_list"
+	//       "$ref": "#/definitions/views_config_list"
 	//   '404':
 	//     description: Namespace not found
 	//   '500':
 	//     description: Internal server error
 
-	log.V(logLevel).Debugf("%s:list:> get secret", logPrefix)
+	log.V(logLevel).Debugf("%s:list:> get config", logPrefix)
 
 	var (
-		sid = utils.Vars(r)["secret"]
+		sid = utils.Vars(r)["config"]
 		nid = utils.Vars(r)["namespace"]
+
 		nm  = distribution.NewNamespaceModel(r.Context(), envs.Get().GetStorage())
-		rm  = distribution.NewSecretModel(r.Context(), envs.Get().GetStorage())
+		rm  = distribution.NewConfigModel(r.Context(), envs.Get().GetStorage())
 	)
 
 	ns, err := nm.Get(nid)
@@ -83,18 +84,18 @@ func SecretGetH(w http.ResponseWriter, r *http.Request) {
 
 	item, err := rm.Get(ns.Meta.Name, sid)
 	if err != nil {
-		log.V(logLevel).Errorf("%s:list:> find secret list err: %s", logPrefix, err.Error())
+		log.V(logLevel).Errorf("%s:list:> find config list err: %s", logPrefix, err.Error())
 		errors.HTTP.InternalServerError(w)
 		return
 	}
 
 	if item == nil {
-		log.V(logLevel).Warnf("%s:update:> secret `%s` not found", logPrefix, sid)
-		errors.New("secret").NotFound().Http(w)
+		log.V(logLevel).Warnf("%s:update:> config `%s` not found", logPrefix, sid)
+		errors.New("config").NotFound().Http(w)
 		return
 	}
 
-	response, err := v1.View().Secret().New(item).ToJson()
+	response, err := v1.View().Config().New(item).ToJson()
 	if err != nil {
 		log.V(logLevel).Errorf("%s:list:> convert struct to json err: %s", logPrefix, err.Error())
 		errors.HTTP.InternalServerError(w)
@@ -108,11 +109,11 @@ func SecretGetH(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func SecretListH(w http.ResponseWriter, r *http.Request) {
+func ConfigListH(w http.ResponseWriter, r *http.Request) {
 
-	// swagger:operation GET /namespace/{namespace}/secret secret secretList
+	// swagger:operation GET /namespace/{namespace}/config config configList
 	//
-	// Shows a list of secrets
+	// Shows a list of configs
 	//
 	// ---
 	// produces:
@@ -125,20 +126,21 @@ func SecretListH(w http.ResponseWriter, r *http.Request) {
 	//     type: string
 	// responses:
 	//   '200':
-	//     description: Secret list response
+	//     description: Config list response
 	//     schema:
-	//       "$ref": "#/definitions/views_secret_list"
+	//       "$ref": "#/definitions/views_config_list"
 	//   '404':
 	//     description: Namespace not found
 	//   '500':
 	//     description: Internal server error
 
-	log.V(logLevel).Debugf("%s:list:> get secrets list", logPrefix)
+	log.V(logLevel).Debugf("%s:list:> get configs list", logPrefix)
 
 	var (
 		nid = utils.Vars(r)["namespace"]
+
 		nm  = distribution.NewNamespaceModel(r.Context(), envs.Get().GetStorage())
-		rm = distribution.NewSecretModel(r.Context(), envs.Get().GetStorage())
+		rm = distribution.NewConfigModel(r.Context(), envs.Get().GetStorage())
 	)
 
 	ns, err := nm.Get(nid)
@@ -156,12 +158,12 @@ func SecretListH(w http.ResponseWriter, r *http.Request) {
 
 	items, err := rm.List(ns.Meta.Name)
 	if err != nil {
-		log.V(logLevel).Errorf("%s:list:> find secret list err: %s", logPrefix, err.Error())
+		log.V(logLevel).Errorf("%s:list:> find config list err: %s", logPrefix, err.Error())
 		errors.HTTP.InternalServerError(w)
 		return
 	}
 
-	response, err := v1.View().Secret().NewList(items).ToJson()
+	response, err := v1.View().Config().NewList(items).ToJson()
 	if err != nil {
 		log.V(logLevel).Errorf("%s:list:> convert struct to json err: %s", logPrefix, err.Error())
 		errors.HTTP.InternalServerError(w)
@@ -175,11 +177,11 @@ func SecretListH(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func SecretCreateH(w http.ResponseWriter, r *http.Request) {
+func ConfigCreateH(w http.ResponseWriter, r *http.Request) {
 
-	// swagger:operation POST /namespace/{namespace}/secret secret secretCreate
+	// swagger:operation POST /namespace/{namespace}/config config configCreate
 	//
-	// Create secret
+	// Create config
 	//
 	// ---
 	// produces:
@@ -194,24 +196,24 @@ func SecretCreateH(w http.ResponseWriter, r *http.Request) {
 	//     in: body
 	//     required: true
 	//     schema:
-	//       "$ref": "#/definitions/request_secret_create"
+	//       "$ref": "#/definitions/request_config_create"
 	// responses:
 	//   '200':
-	//     description: Secret was successfully created
+	//     description: Config was successfully created
 	//     schema:
-	//       "$ref": "#/definitions/views_secret"
+	//       "$ref": "#/definitions/views_config"
 	//   '404':
 	//     description: Namespace not found
 	//   '500':
 	//     description: Internal server error
 
-	log.V(logLevel).Debugf("%s:create:> create secret", logPrefix)
+	log.V(logLevel).Debugf("%s:create:> create config", logPrefix)
 
 	var (
-		nid  = utils.Vars(r)["namespace"]
-		nm   = distribution.NewNamespaceModel(r.Context(), envs.Get().GetStorage())
-		sm   = distribution.NewSecretModel(r.Context(), envs.Get().GetStorage())
-		opts = v1.Request().Secret().Manifest()
+		nid = utils.Vars(r)["namespace"]
+		nm  = distribution.NewNamespaceModel(r.Context(), envs.Get().GetStorage())
+		rm = distribution.NewConfigModel(r.Context(), envs.Get().GetStorage())
+		opts =  v1.Request().Config().Manifest()
 	)
 
 	ns, err := nm.Get(nid)
@@ -227,6 +229,7 @@ func SecretCreateH(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+
 	// request body struct
 	e := opts.DecodeAndValidate(r.Body)
 	if e != nil {
@@ -235,18 +238,18 @@ func SecretCreateH(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	ss := new(types.Secret)
-	opts.SetSecretMeta(ss)
-	opts.SetSecretSpec(ss)
+	cfg := new(types.Config)
+	opts.SetConfigMeta(cfg)
+	opts.SetConfigSpec(cfg)
 
-	rs, err := sm.Create(ns, ss)
+	rs, err := rm.Create(ns, cfg)
 	if err != nil {
-		log.V(logLevel).Errorf("%s:create:> create secret err: %s", logPrefix, err.Error())
+		log.V(logLevel).Errorf("%s:create:> create config err: %s", logPrefix, err.Error())
 		errors.HTTP.InternalServerError(w)
 		return
 	}
 
-	response, err := v1.View().Secret().New(rs).ToJson()
+	response, err := v1.View().Config().New(rs).ToJson()
 	if err != nil {
 		log.V(logLevel).Errorf("%s:create:> convert struct to json err: %s", logPrefix, err.Error())
 		errors.HTTP.InternalServerError(w)
@@ -260,11 +263,11 @@ func SecretCreateH(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func SecretUpdateH(w http.ResponseWriter, r *http.Request) {
+func ConfigUpdateH(w http.ResponseWriter, r *http.Request) {
 
-	// swagger:operation PUT /namespace/{namespace}/secret/{secret} secret secretUpdate
+	// swagger:operation PUT /namespace/{namespace}/config/{config} config configUpdate
 	//
-	// Create secret
+	// Create config
 	//
 	// ---
 	// produces:
@@ -275,36 +278,40 @@ func SecretUpdateH(w http.ResponseWriter, r *http.Request) {
 	//     description: namespace id
 	//     required: true
 	//     type: string
-	//   - name: secret
+	//   - name: config
 	//     in: path
-	//     description: secret id
+	//     description: config id
 	//     required: true
 	//     type: string
 	//   - name: body
 	//     in: body
 	//     required: true
 	//     schema:
-	//       "$ref": "#/definitions/request_secret_update"
+	//       "$ref": "#/definitions/request_config_update"
 	// responses:
 	//   '200':
-	//     description: Secret was successfully updated
+	//     description: Config was successfully updated
 	//     schema:
-	//       "$ref": "#/definitions/views_secret"
+	//       "$ref": "#/definitions/views_config"
 	//   '404':
-	//     description: Namespace not found / Secret not found
+	//     description: Namespace not found / Config not found
 	//   '500':
 	//     description: Internal server error
 
-	sid := utils.Vars(r)["secret"]
 
-	log.V(logLevel).Debugf("%s:update:> update secret `%s`", logPrefix, sid)
+
+
 
 	var (
 		nid = utils.Vars(r)["namespace"]
+		cid = utils.Vars(r)["config"]
+
 		nm  = distribution.NewNamespaceModel(r.Context(), envs.Get().GetStorage())
-		rm = distribution.NewSecretModel(r.Context(), envs.Get().GetStorage())
-		opts = v1.Request().Secret().Manifest()
+		rm = distribution.NewConfigModel(r.Context(), envs.Get().GetStorage())
+		opts =  v1.Request().Config().Manifest()
 	)
+
+	log.V(logLevel).Debugf("%s:update:> update config `%s`", logPrefix, cid)
 
 	ns, err := nm.Get(nid)
 	if err != nil {
@@ -322,33 +329,33 @@ func SecretUpdateH(w http.ResponseWriter, r *http.Request) {
 	// request body struct
 	e := opts.DecodeAndValidate(r.Body)
 	if e != nil {
-		log.V(logLevel).Errorf("%s:create:> validation incoming data err: %s", logPrefix, e.Err())
+		log.V(logLevel).Errorf("%s:update:> validation incoming data err: %s", logPrefix, e.Err())
 		e.Http(w)
 		return
 	}
 
-	ss, err := rm.Get(ns.Meta.Name, sid)
+	cfg, err := rm.Get(ns.Meta.Name, cid)
 	if err != nil {
-		log.V(logLevel).Errorf("%s:update:> check secret exists by selflink err: %s", logPrefix, err.Error())
+		log.V(logLevel).Errorf("%s:update:> check config exists by selflink err: %s", logPrefix, err.Error())
 		errors.HTTP.InternalServerError(w)
 		return
 	}
-	if ss == nil {
-		log.V(logLevel).Warnf("%s:update:> secret `%s` not found", logPrefix, sid)
-		errors.New("secret").NotFound().Http(w)
+	if cfg == nil {
+		log.V(logLevel).Warnf("%s:update:> config `%s` not found", logPrefix, cid)
+		errors.New("config").NotFound().Http(w)
 		return
 	}
 
-	opts.SetSecretMeta(ss)
-	opts.SetSecretSpec(ss)
+	opts.SetConfigMeta(cfg)
+	opts.SetConfigSpec(cfg)
 
-	ss, err = rm.Update(ss)
+	cfg, err = rm.Update(cfg)
 	if err != nil {
-		log.V(logLevel).Errorf("%s:update:> update secret `%s` err: %s", logPrefix, ss.Meta.SelfLink, err.Error())
+		log.V(logLevel).Errorf("%s:update:> update config `%s` err: %s", logPrefix, cfg.Meta.SelfLink, err.Error())
 		errors.HTTP.InternalServerError(w)
 	}
 
-	response, err := v1.View().Secret().New(ss).ToJson()
+	response, err := v1.View().Config().New(cfg).ToJson()
 	if err != nil {
 		log.V(logLevel).Errorf("%s:update:> convert struct to json err: %s", logPrefix, err.Error())
 		errors.HTTP.InternalServerError(w)
@@ -362,11 +369,11 @@ func SecretUpdateH(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func SecretRemoveH(w http.ResponseWriter, r *http.Request) {
+func ConfigRemoveH(w http.ResponseWriter, r *http.Request) {
 
-	// swagger:operation DELETE /namespace/{namespace}/secret/{secret} secret secretRemove
+	// swagger:operation DELETE /namespace/{namespace}/config/{config} config configRemove
 	//
-	// Remove secret
+	// Remove config
 	//
 	// ---
 	// produces:
@@ -377,28 +384,31 @@ func SecretRemoveH(w http.ResponseWriter, r *http.Request) {
 	//     description: namespace id
 	//     required: true
 	//     type: string
-	//   - name: secret
+	//   - name: config
 	//     in: path
-	//     description: secret id
+	//     description: config id
 	//     required: true
 	//     type: string
 	// responses:
 	//   '200':
-	//     description: Secret was successfully removed
+	//     description: Config was successfully removed
 	//   '404':
-	//     description: Namespace not found / Secret not found
+	//     description: Namespace not found / Config not found
 	//   '500':
 	//     description: Internal server error
 
-	sid := utils.Vars(r)["secret"]
 
-	log.V(logLevel).Debugf("%s:remove:> remove secret %s", logPrefix, sid)
+
+
 
 	var (
+		cid = utils.Vars(r)["config"]
 		nid = utils.Vars(r)["namespace"]
 		nm  = distribution.NewNamespaceModel(r.Context(), envs.Get().GetStorage())
-		sm = distribution.NewSecretModel(r.Context(), envs.Get().GetStorage())
+		cm  = distribution.NewConfigModel(r.Context(), envs.Get().GetStorage())
 	)
+
+	log.V(logLevel).Debugf("%s:remove:> remove config %s", logPrefix, cid)
 
 	ns, err := nm.Get(nid)
 	if err != nil {
@@ -413,21 +423,21 @@ func SecretRemoveH(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	ss, err := sm.Get(ns.Meta.Name, sid)
+	cfg, err := cm.Get(ns.Meta.Name, cid)
 	if err != nil {
-		log.V(logLevel).Errorf("%s:remove:> get secret by id `%s` err: %s", logPrefix, sid, err.Error())
+		log.V(logLevel).Errorf("%s:remove:> get config by id `%s` err: %s", logPrefix, cid, err.Error())
 		errors.HTTP.InternalServerError(w)
 		return
 	}
-	if ss == nil {
-		log.V(logLevel).Warnf("%s:remove:> secret `%s` not found", logPrefix, sid)
-		errors.New("secret").NotFound().Http(w)
+	if cfg == nil {
+		log.V(logLevel).Warnf("%s:remove:> config `%s` not found", logPrefix, cid)
+		errors.New("config").NotFound().Http(w)
 		return
 	}
 
-	err = sm.Remove(ss)
+	err = cm.Remove(cfg)
 	if err != nil {
-		log.V(logLevel).Errorf("%s:remove:> remove secret `%s` err: %s", logPrefix, sid, err.Error())
+		log.V(logLevel).Errorf("%s:remove:> remove config `%s` err: %s", logPrefix, cid, err.Error())
 		errors.HTTP.InternalServerError(w)
 		return
 	}

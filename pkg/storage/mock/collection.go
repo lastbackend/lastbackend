@@ -26,6 +26,7 @@ import (
 const (
 	namespaceCollection  = "namespace"
 	secretCollection     = "secret"
+	configCollection     = "config"
 	endpointCollection   = "endpoint"
 	serviceCollection    = "service"
 	deploymentCollection = "deployment"
@@ -44,7 +45,6 @@ const (
 	routeCollection   = "route"
 
 	systemCollection  = "system"
-	triggerCollection = "trigger"
 	testCollection    = "test"
 
 	infoColletion = "info"
@@ -68,6 +68,10 @@ func (Collection) Namespace() string {
 
 func (Collection) Secret() string {
 	return secretCollection
+}
+
+func (Collection) Config() string {
+	return configCollection
 }
 
 func (Collection) Endpoint() string {
@@ -104,10 +108,6 @@ func (Collection) Route() string {
 
 func (Collection) System() string {
 	return systemCollection
-}
-
-func (Collection) Trigger() string {
-	return triggerCollection
 }
 
 func (Collection) Cluster() string {

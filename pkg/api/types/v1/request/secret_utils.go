@@ -24,98 +24,41 @@ import (
 	"io/ioutil"
 
 	"github.com/lastbackend/lastbackend/pkg/distribution/errors"
-	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 )
 
 type SecretRequest struct{}
 
-func (SecretRequest) CreateOptions() *SecretCreateOptions {
-	return new(SecretCreateOptions)
+func (SecretRequest) Manifest() *SecretManifest {
+	return new(SecretManifest)
 }
 
-func (s *SecretCreateOptions) Validate() *errors.Err {
-	switch true {
-	case s.Data == nil:
-		return errors.New("secret").BadParameter("data")
-	}
+func (v *SecretManifest) Validate() *errors.Err {
 	return nil
 }
 
-func (s *SecretCreateOptions) DecodeAndValidate(reader io.Reader) (*types.SecretCreateOptions, *errors.Err) {
+func (v *SecretManifest) DecodeAndValidate(reader io.Reader) *errors.Err {
 
 	if reader == nil {
 		err := errors.New("data body can not be null")
-		return nil, errors.New("secret").IncorrectJSON(err)
+		return errors.New("config").IncorrectJSON(err)
+	}
+
+	if reader == nil {
+		err := errors.New("data body can not be null")
+		return errors.New("config").IncorrectJSON(err)
 	}
 
 	body, err := ioutil.ReadAll(reader)
 	if err != nil {
-		return nil, errors.New("secret").Unknown(err)
+		return errors.New("config").Unknown(err)
 	}
 
-	err = json.Unmarshal(body, s)
+	err = json.Unmarshal(body, v)
 	if err != nil {
-		return nil, errors.New("secret").IncorrectJSON(err)
+		return errors.New("config").IncorrectJSON(err)
 	}
 
-	opts := new(types.SecretCreateOptions)
-	opts.Name = s.Name
-	opts.Kind = s.Kind
-	opts.Data = s.Data
-
-	if opts.Name == types.EmptyString {
-		return nil, errors.New("secret").BadParameter("name")
-	}
-
-	return opts, nil
-}
-
-func (s *SecretCreateOptions) ToJson() ([]byte, error) {
-	return json.Marshal(s)
-}
-
-func (SecretRequest) UpdateOptions() *SecretUpdateOptions {
-	return new(SecretUpdateOptions)
-}
-
-func (s *SecretUpdateOptions) Validate() *errors.Err {
-	switch true {
-	case s.Data == nil:
-		return errors.New("secret").BadParameter("data")
-	}
-	return nil
-}
-
-func (s *SecretUpdateOptions) DecodeAndValidate(reader io.Reader) (*types.SecretUpdateOptions, *errors.Err) {
-
-	if reader == nil {
-		err := errors.New("data body can not be null")
-		return nil, errors.New("secret").IncorrectJSON(err)
-	}
-
-	body, err := ioutil.ReadAll(reader)
-	if err != nil {
-		return nil, errors.New("secret").Unknown(err)
-	}
-
-	err = json.Unmarshal(body, s)
-	if err != nil {
-		return nil, errors.New("secret").IncorrectJSON(err)
-	}
-
-	if s.Data == nil {
-
-	}
-
-	opts := new(types.SecretUpdateOptions)
-	opts.Kind = s.Kind
-	opts.Data = s.Data
-
-	return opts, nil
-}
-
-func (s *SecretUpdateOptions) ToJson() ([]byte, error) {
-	return json.Marshal(s)
+	return v.Validate()
 }
 
 func (SecretRequest) RemoveOptions() *SecretRemoveOptions {

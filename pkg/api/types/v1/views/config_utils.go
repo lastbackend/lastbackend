@@ -24,53 +24,64 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 )
 
-type SecretView struct{}
+type ConfigView struct{}
 
-func (sv *SecretView) New(obj *types.Secret) *Secret {
-	s := Secret{}
+func (sv *ConfigView) New(obj *types.Config) *Config {
+	s := Config{}
 	s.Meta = s.ToMeta(obj.Meta)
 	s.Spec = s.ToSpec(obj.Spec)
 	return &s
 }
 
-func (s *Secret) ToJson() ([]byte, error) {
+func (s *Config) ToJson() ([]byte, error) {
 	return json.Marshal(s)
 }
 
-func (s *Secret) ToMeta(obj types.SecretMeta) SecretMeta {
-	meta := SecretMeta{}
+func (s *Config) ToMeta(obj types.ConfigMeta) ConfigMeta {
+	meta := ConfigMeta{}
 	meta.Name = obj.Name
 	meta.Namespace = obj.Namespace
+	meta.Kind = obj.Kind
 	meta.Updated = obj.Updated
 	meta.Created = obj.Created
 	return meta
 }
 
-func (s *Secret) ToSpec(obj types.SecretSpec) SecretSpec {
-	spec := SecretSpec{}
+
+func (s *Config) ToSpec(obj types.ConfigSpec) ConfigSpec {
+
+	spec := ConfigSpec{}
 	spec.Type = obj.Type
-	spec.Data = make(map[string][]byte, 0)
-	for key, value := range obj.Data {
-		spec.Data[key]=value
+
+	spec.Data = make([]ConfigSpecData, 0)
+
+	for _, data := range obj.Data {
+		spec.Data = append(spec.Data, ConfigSpecData{
+			Key: data.Key,
+			File: data.File,
+			Value: data.Value,
+			Data: data.Data,
+		})
 	}
+
 	return spec
 }
 
-func (sv SecretView) NewList(obj *types.SecretList) *SecretList {
+func (sv ConfigView) NewList(obj *types.ConfigList) *ConfigList {
 	if obj == nil {
 		return nil
 	}
 
-	sl := make(SecretList, 0)
+	sl := make(ConfigList, 0)
 	for _, v := range obj.Items {
 		sl = append(sl, sv.New(v))
 	}
 	return &sl
 }
 
-func (sl *SecretList) ToJson() ([]byte, error) {
+func (sl *ConfigList) ToJson() ([]byte, error) {
 	if sl == nil {
-		sl = &SecretList{}
+		sl = &ConfigList{}
 	}
 	return json.Marshal(sl)
 }

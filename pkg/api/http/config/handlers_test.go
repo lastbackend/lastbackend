@@ -10,17 +10,16 @@
 // if any.  The intellectual and technical concepts contained
 // herein are proprietary to Last.Backend LLC
 // and its suppliers and may be covered by Russian Federation and Foreign Patents,
-// patents in process, and are protected by trade secret or copyright law.
+// patents in process, and are protected by trade config or copyright law.
 // Dissemination of this information or reproduction of this material
 // is strictly forbidden unless prior written permission is obtained
 // from Last.Backend LLC.
 //
 
-package secret_test
+package config_test
 
 import (
 	"context"
-	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
@@ -31,7 +30,7 @@ import (
 
 	"github.com/gorilla/mux"
 	"github.com/lastbackend/lastbackend/pkg/api/envs"
-	"github.com/lastbackend/lastbackend/pkg/api/http/secret"
+	"github.com/lastbackend/lastbackend/pkg/api/http/config"
 	"github.com/lastbackend/lastbackend/pkg/api/types/v1"
 	"github.com/lastbackend/lastbackend/pkg/api/types/v1/request"
 	"github.com/lastbackend/lastbackend/pkg/api/types/v1/views"
@@ -41,8 +40,8 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-// Testing SecretListH handler
-func TestSecretList(t *testing.T) {
+// Testing ConfigListH handler
+func TestConfigList(t *testing.T) {
 
 	var ctx = context.Background()
 
@@ -51,15 +50,23 @@ func TestSecretList(t *testing.T) {
 
 	ns1 := getNamespaceAsset("demo", "")
 
-	s1 := getSecretAsset(ns1,"demo")
-	s2 := getSecretAsset(ns1,"test")
+	c1 := getConfigAsset(ns1, "demo")
+	c2 := getConfigAsset(ns1,"test")
 
-	s1.Spec.Data["demo"] = []byte("demo")
-	s2.Spec.Data["test"] = []byte("test")
+	c1.Spec.Data = append(c1.Spec.Data, &types.ConfigSpecData{
+		Key: "test.txt",
+		Value: "test1",
+	})
 
-	rl := types.NewSecretMap()
-	rl.Items[s1.SelfLink()] = s1
-	rl.Items[s2.SelfLink()] = s2
+	c2.Spec.Data = append(c1.Spec.Data, &types.ConfigSpecData{
+		Key: "test.txt",
+		Value: "test2",
+	})
+
+
+	cl := types.NewConfigMap()
+	cl.Items[c1.SelfLink()] = c1
+	cl.Items[c2.SelfLink()] = c2
 
 	type fields struct {
 		stg storage.Storage
@@ -76,16 +83,16 @@ func TestSecretList(t *testing.T) {
 		headers      map[string]string
 		handler      func(http.ResponseWriter, *http.Request)
 		err          string
-		want         *types.SecretMap
+		want         *types.ConfigMap
 		wantErr      bool
 		expectedCode int
 	}{
 		{
-			name:         "checking get secrets list successfully",
+			name:         "checking get configs list successfully",
 			args:         args{ctx},
 			fields:       fields{stg},
-			handler:      secret.SecretListH,
-			want:         rl,
+			handler:      config.ConfigListH,
+			want:         cl,
 			wantErr:      false,
 			expectedCode: http.StatusOK,
 		},
@@ -95,7 +102,7 @@ func TestSecretList(t *testing.T) {
 		err := envs.Get().GetStorage().Del(context.Background(), stg.Collection().Namespace(), types.EmptyString)
 		assert.NoError(t, err)
 
-		err = envs.Get().GetStorage().Del(context.Background(), stg.Collection().Secret(), types.EmptyString)
+		err = envs.Get().GetStorage().Del(context.Background(), stg.Collection().Config(), types.EmptyString)
 		assert.NoError(t, err)
 	}
 
@@ -109,15 +116,15 @@ func TestSecretList(t *testing.T) {
 			err := tc.fields.stg.Put(context.Background(), stg.Collection().Namespace(), tc.fields.stg.Key().Namespace(ns1.Meta.Name), ns1, nil)
 			assert.NoError(t, err)
 
-			err = stg.Put(context.Background(), stg.Collection().Secret(), stg.Key().Secret(s1.Meta.Namespace, s1.Meta.Name), &s1, nil)
+			err = stg.Put(context.Background(), stg.Collection().Config(), stg.Key().Config(c1.Meta.Namespace, c1.Meta.Name), &c1, nil)
 			assert.NoError(t, err)
 
-			err = stg.Put(context.Background(), stg.Collection().Secret(), stg.Key().Secret(s2.Meta.Namespace, s2.Meta.Name), &s2, nil)
+			err = stg.Put(context.Background(), stg.Collection().Config(), stg.Key().Config(c2.Meta.Namespace, c2.Meta.Name), &c2, nil)
 			assert.NoError(t, err)
 
 			// Create assert request to pass to our handler. We don't have any query parameters for now, so we'll
 			// pass 'nil' as the third parameter.
-			req, err := http.NewRequest("GET", fmt.Sprintf("/namespace/%s/secret", ns1.Meta.Name), nil)
+			req, err := http.NewRequest("GET", fmt.Sprintf("/namespace/%s/config", ns1.Meta.Name), nil)
 			assert.NoError(t, err)
 
 			if tc.headers != nil {
@@ -127,7 +134,7 @@ func TestSecretList(t *testing.T) {
 			}
 
 			r := mux.NewRouter()
-			r.HandleFunc("/namespace/{namespace}/secret", tc.handler)
+			r.HandleFunc("/namespace/{namespace}/config", tc.handler)
 
 			setRequestVars(r, req)
 
@@ -148,7 +155,7 @@ func TestSecretList(t *testing.T) {
 				assert.Equal(t, tc.err, string(body), "incorrect status code")
 			} else {
 
-				r := new(views.SecretList)
+				r := new(views.ConfigList)
 				err := json.Unmarshal(body, &r)
 				assert.NoError(t, err)
 
@@ -163,8 +170,9 @@ func TestSecretList(t *testing.T) {
 
 }
 
-// Testing SecretCreateH handler
-func TestSecretCreate(t *testing.T) {
+
+// Testing ConfigCreateH handler
+func TestConfigCreate(t *testing.T) {
 
 	var ctx = context.Background()
 
@@ -173,11 +181,15 @@ func TestSecretCreate(t *testing.T) {
 
 	ns1 := getNamespaceAsset("demo", "")
 
-	s1 := getSecretAsset(ns1, "demo")
-	s1.Spec.Type = types.KindSecretText
-	s1.Spec.Data["demo"] = []byte(base64.StdEncoding.EncodeToString([]byte("demo")))
+	c1 := getConfigAsset(ns1, "demo")
+	c1.Meta.Kind = types.KindConfigText
+	c1.Spec.Data = append(c1.Spec.Data, &types.ConfigSpecData{
+		Key: "test.txt",
+		Value: "test1",
+	})
 
-	mf1, _ := getSecretManifest(s1).ToJson()
+	mf1, _ := getConfigManifest(c1).ToJson()
+
 
 	type fields struct {
 		stg storage.Storage
@@ -195,15 +207,15 @@ func TestSecretCreate(t *testing.T) {
 		handler      func(http.ResponseWriter, *http.Request)
 		data         string
 		err          string
-		want         *views.Secret
+		want         *views.Config
 		wantErr      bool
 		expectedCode int
 	}{
 		{
-			name:         "check create secret if failed incoming json data",
+			name:         "check create config if failed incoming json data",
 			args:         args{ctx},
 			fields:       fields{stg},
-			handler:      secret.SecretCreateH,
+			handler:      config.ConfigCreateH,
 			data:         "{name:demo}",
 			err:          "{\"code\":400,\"status\":\"Incorrect Json\",\"message\":\"Incorrect json\"}",
 			wantErr:      true,
@@ -211,22 +223,23 @@ func TestSecretCreate(t *testing.T) {
 		},
 		// TODO: need checking incoming data for validity
 		{
-			name:         "check create secret success",
+			name:         "check create config success",
 			args:         args{ctx},
 			fields:       fields{stg},
-			handler:      secret.SecretCreateH,
+			handler:      config.ConfigCreateH,
 			data:         string(mf1),
-			want:         v1.View().Secret().New(s1),
+			want:         v1.View().Config().New(c1),
 			wantErr:      false,
 			expectedCode: http.StatusOK,
 		},
 	}
 
 	clear := func() {
+
 		err := envs.Get().GetStorage().Del(context.Background(), stg.Collection().Namespace(), types.EmptyString)
 		assert.NoError(t, err)
 
-		err = envs.Get().GetStorage().Del(context.Background(), stg.Collection().Secret(), types.EmptyString)
+		err = envs.Get().GetStorage().Del(context.Background(), stg.Collection().Config(), types.EmptyString)
 		assert.NoError(t, err)
 	}
 
@@ -239,10 +252,9 @@ func TestSecretCreate(t *testing.T) {
 			err := tc.fields.stg.Put(context.Background(), stg.Collection().Namespace(), tc.fields.stg.Key().Namespace(ns1.Meta.Name), ns1, nil)
 			assert.NoError(t, err)
 
-
 			// Create assert request to pass to our handler. We don't have any query parameters for now, so we'll
 			// pass 'nil' as the third parameter.
-			req, err := http.NewRequest("POST", fmt.Sprintf("/namespace/%s/secret", s1.Meta.Namespace), strings.NewReader(tc.data))
+			req, err := http.NewRequest("POST", fmt.Sprintf("/namespace/%s/config", c1.Meta.Namespace), strings.NewReader(tc.data))
 			assert.NoError(t, err)
 
 			if tc.headers != nil {
@@ -252,7 +264,7 @@ func TestSecretCreate(t *testing.T) {
 			}
 
 			r := mux.NewRouter()
-			r.HandleFunc("/namespace/{namespace}/secret", tc.handler)
+			r.HandleFunc("/namespace/{namespace}/config", tc.handler)
 
 			setRequestVars(r, req)
 
@@ -275,26 +287,16 @@ func TestSecretCreate(t *testing.T) {
 				assert.Equal(t, tc.err, string(body), "incorrect status code")
 			} else {
 
-				got := new(types.Secret)
+				got := new(types.Config)
+				err := tc.fields.stg.Get(tc.args.ctx, stg.Collection().Config(), tc.fields.stg.Key().Config(tc.want.Meta.Namespace, tc.want.Meta.Name), got, nil)
+				assert.NoError(t, err)
 
-				err := tc.fields.stg.Get(tc.args.ctx, stg.Collection().Secret(), tc.fields.stg.Key().Secret(tc.want.Meta.Namespace, tc.want.Meta.Name), got, nil)
-				if !assert.NoError(t, err) {
+				if !assert.Equal(t, c1.Spec.Type, got.Spec.Type, "config kind different") {
 					return
 				}
 
-				if !assert.Equal(t, s1.Spec.Type, got.Spec.Type, "secret type different") {
+				if !assert.Equal(t, len(c1.Spec.Data), len(got.Spec.Data), "config kind different") {
 					return
-				}
-
-				for key, value := range s1.Spec.Data {
-					if !assert.NotNil(t, got.Spec.Data[key], "secret key not exists") {
-						return
-					}
-
-					if !assert.Equal(t, got.Spec.Data[key], value, "secret data not equal") {
-						return
-					}
-
 				}
 			}
 		})
@@ -302,8 +304,8 @@ func TestSecretCreate(t *testing.T) {
 
 }
 
-// Testing SecretUpdateH handler
-func TestSecretUpdate(t *testing.T) {
+// Testing ConfigUpdateH handler
+func TestConfigUpdate(t *testing.T) {
 
 	var ctx = context.Background()
 
@@ -312,13 +314,25 @@ func TestSecretUpdate(t *testing.T) {
 
 	ns1 := getNamespaceAsset("demo", "")
 
-	s1 := getSecretAsset(ns1, "demo")
-	s2 := getSecretAsset(ns1, "test")
+	c1 := getConfigAsset(ns1, "demo")
+	c1.Meta.Kind = types.KindConfigText
+	c1.Spec.Data = append(c1.Spec.Data, &types.ConfigSpecData{
+		Key: "test.txt",
+		Value: "test1",
+	})
 
-	s1.Spec.Data["demo"] = []byte(base64.StdEncoding.EncodeToString([]byte("demo")))
-	s2.Spec.Data["test"] = []byte(base64.StdEncoding.EncodeToString([]byte("test")))
+	c2 := getConfigAsset(ns1, "demo")
+	c2.Meta.Kind = types.KindConfigText
+	c2.Spec.Data = append(c1.Spec.Data, &types.ConfigSpecData{
+		Key: "test.txt",
+		Value: "test2",
+	})
+	c2.Spec.Data = append(c1.Spec.Data, &types.ConfigSpecData{
+		Key: "test.cfg",
+		Value: "cfg",
+	})
 
-	mf2, _ := getSecretManifest(s2).ToJson()
+	mf2, _ := getConfigManifest(c2).ToJson()
 
 	type fields struct {
 		stg storage.Storage
@@ -326,7 +340,7 @@ func TestSecretUpdate(t *testing.T) {
 
 	type args struct {
 		ctx    context.Context
-		secret *types.Secret
+		config *types.Config
 	}
 
 	tests := []struct {
@@ -337,28 +351,27 @@ func TestSecretUpdate(t *testing.T) {
 		handler      func(http.ResponseWriter, *http.Request)
 		data         string
 		err          string
-		want         *views.Secret
+		want         *views.Config
 		wantErr      bool
 		expectedCode int
 	}{
 		{
-			name:         "checking update secret if name not exists",
-			args:         args{ctx, s1},
+			name:         "checking update config if name not exists",
+			args:         args{ctx, c1},
 			fields:       fields{stg},
-			handler:      secret.SecretUpdateH,
+			handler:      config.ConfigUpdateH,
 			data:         string(mf2),
-			want:         v1.View().Secret().New(s2),
+			want:         v1.View().Config().New(c2),
 			wantErr:      false,
 			expectedCode: http.StatusOK,
 		},
 	}
 
 	clear := func() {
-
 		err := envs.Get().GetStorage().Del(context.Background(), stg.Collection().Namespace(), types.EmptyString)
 		assert.NoError(t, err)
 
-		err = envs.Get().GetStorage().Del(context.Background(), stg.Collection().Secret(), types.EmptyString)
+		err = envs.Get().GetStorage().Del(context.Background(), stg.Collection().Config(), types.EmptyString)
 		assert.NoError(t, err)
 	}
 
@@ -371,12 +384,14 @@ func TestSecretUpdate(t *testing.T) {
 			err := tc.fields.stg.Put(context.Background(), stg.Collection().Namespace(), tc.fields.stg.Key().Namespace(ns1.Meta.Name), ns1, nil)
 			assert.NoError(t, err)
 
-			err = stg.Put(context.Background(), stg.Collection().Secret(), stg.Key().Secret(tc.args.secret.Meta.Namespace, tc.args.secret.Meta.Name), &tc.args.secret, nil)
+			err = stg.Put(context.Background(), stg.Collection().Config(),
+				stg.Key().Config(tc.args.config.Meta.Namespace, tc.args.config.Meta.Name), &tc.args.config, nil)
 			assert.NoError(t, err)
 
 			// Create assert request to pass to our handler. We don't have any query parameters for now, so we'll
 			// pass 'nil' as the third parameter.
-			req, err := http.NewRequest("PUT", fmt.Sprintf("/namespace/%s/secret/%s", tc.args.secret.Meta.Namespace, tc.args.secret.Meta.Name), strings.NewReader(tc.data))
+			req, err := http.NewRequest("PUT", fmt.Sprintf("/namespace/%s/config/%s",
+				tc.args.config.Meta.Namespace, tc.args.config.Meta.Name), strings.NewReader(tc.data))
 			assert.NoError(t, err)
 
 			if tc.headers != nil {
@@ -386,7 +401,7 @@ func TestSecretUpdate(t *testing.T) {
 			}
 
 			r := mux.NewRouter()
-			r.HandleFunc("/namespace/{namespace}/secret/{secret}", tc.handler)
+			r.HandleFunc("/namespace/{namespace}/config/{config}", tc.handler)
 
 			setRequestVars(r, req)
 
@@ -409,19 +424,19 @@ func TestSecretUpdate(t *testing.T) {
 				assert.Equal(t, tc.err, string(body), "incorrect status code")
 			} else {
 
-				s := new(views.Secret)
+				s := new(views.Config)
 				err := json.Unmarshal(body, &s)
 				assert.NoError(t, err)
 
-				assert.Equal(t, tc.want.Spec.Data, s.Spec.Data, "secret data mismatch")
+				assert.Equal(t, len(tc.want.Spec.Data), len(s.Spec.Data), "config data mismatch")
 			}
 		})
 	}
 
 }
 
-// Testing SecretRemoveH handler
-func TestSecretRemove(t *testing.T) {
+// Testing ConfigRemoveH handler
+func TestConfigRemove(t *testing.T) {
 
 	var ctx = context.Background()
 
@@ -430,11 +445,23 @@ func TestSecretRemove(t *testing.T) {
 
 	ns1 := getNamespaceAsset("demo", "")
 
-	s1 := getSecretAsset(ns1,"demo")
-	s2 := getSecretAsset(ns1,"test")
+	c1 := getConfigAsset(ns1, "demo")
+	c1.Meta.Kind = types.KindConfigText
+	c1.Spec.Data = append(c1.Spec.Data, &types.ConfigSpecData{
+		Key: "test.txt",
+		Value: "test1",
+	})
 
-	s1.Spec.Data["demo"] = []byte("demo")
-	s2.Spec.Data["test"] = []byte("test")
+	c2 := getConfigAsset(ns1, "test")
+	c2.Meta.Kind = types.KindConfigText
+	c2.Spec.Data = append(c1.Spec.Data, &types.ConfigSpecData{
+		Key: "test.txt",
+		Value: "test2",
+	})
+	c2.Spec.Data = append(c1.Spec.Data, &types.ConfigSpecData{
+		Key: "test.cfg",
+		Value: "cfg",
+	})
 
 	type fields struct {
 		stg storage.Storage
@@ -442,7 +469,7 @@ func TestSecretRemove(t *testing.T) {
 
 	type args struct {
 		ctx    context.Context
-		secret *types.Secret
+		config *types.Config
 	}
 
 	tests := []struct {
@@ -457,19 +484,19 @@ func TestSecretRemove(t *testing.T) {
 		expectedCode int
 	}{
 		{
-			name:         "checking remove secret if not exists",
-			args:         args{ctx, s2},
+			name:         "checking remove config if not exists",
+			args:         args{ctx, c2},
 			fields:       fields{stg},
-			handler:      secret.SecretRemoveH,
-			err:          "{\"code\":404,\"status\":\"Not Found\",\"message\":\"Secret not found\"}",
+			handler:      config.ConfigRemoveH,
+			err:          "{\"code\":404,\"status\":\"Not Found\",\"message\":\"Config not found\"}",
 			wantErr:      true,
 			expectedCode: http.StatusNotFound,
 		},
 		{
-			name:         "checking remove secret successfully",
-			args:         args{ctx, s1},
+			name:         "checking remove config successfully",
+			args:         args{ctx, c1},
 			fields:       fields{stg},
-			handler:      secret.SecretRemoveH,
+			handler:      config.ConfigRemoveH,
 			want:         "",
 			wantErr:      false,
 			expectedCode: http.StatusOK,
@@ -477,11 +504,10 @@ func TestSecretRemove(t *testing.T) {
 	}
 
 	clear := func() {
-
 		err := envs.Get().GetStorage().Del(context.Background(), stg.Collection().Namespace(), types.EmptyString)
 		assert.NoError(t, err)
 
-		err = envs.Get().GetStorage().Del(context.Background(), stg.Collection().Secret(), types.EmptyString)
+		err = envs.Get().GetStorage().Del(context.Background(), stg.Collection().Config(), types.EmptyString)
 		assert.NoError(t, err)
 	}
 
@@ -495,12 +521,14 @@ func TestSecretRemove(t *testing.T) {
 			err := tc.fields.stg.Put(context.Background(), stg.Collection().Namespace(), tc.fields.stg.Key().Namespace(ns1.Meta.Name), ns1, nil)
 			assert.NoError(t, err)
 
-			err = stg.Put(context.Background(), stg.Collection().Secret(), stg.Key().Secret(s1.Meta.Namespace, s1.Meta.Name), s1, nil)
+			err = stg.Put(context.Background(), stg.Collection().Config(),
+				stg.Key().Config(c1.Meta.Namespace, c1.Meta.Name), c1, nil)
 			assert.NoError(t, err)
 
 			// Create assert request to pass to our handler. We don't have any query parameters for now, so we'll
 			// pass 'nil' as the third parameter.
-			req, err := http.NewRequest("DELETE", fmt.Sprintf("/namespace/%s/secret/%s",  tc.args.secret.Meta.Namespace, tc.args.secret.Meta.Name), nil)
+			req, err := http.NewRequest("DELETE", fmt.Sprintf("/namespace/%s/config/%s",
+				tc.args.config.Meta.Namespace, tc.args.config.Meta.Name), nil)
 			assert.NoError(t, err)
 
 			if tc.headers != nil {
@@ -511,7 +539,7 @@ func TestSecretRemove(t *testing.T) {
 			}
 
 			r := mux.NewRouter()
-			r.HandleFunc("/namespace/{namespace}/secret/{secret}", tc.handler)
+			r.HandleFunc("/namespace/{namespace}/config/{config}", tc.handler)
 
 			setRequestVars(r, req)
 
@@ -534,8 +562,9 @@ func TestSecretRemove(t *testing.T) {
 				assert.Equal(t, tc.err, string(body), "incorrect status code")
 			} else {
 
-				got := new(types.Secret)
-				err := tc.fields.stg.Get(tc.args.ctx, stg.Collection().Secret(), tc.fields.stg.Key().Secret(tc.args.secret.Meta.Namespace, tc.args.secret.Meta.Name), got, nil)
+				got := new(types.Config)
+				err := tc.fields.stg.Get(tc.args.ctx, stg.Collection().Config(),
+					tc.fields.stg.Key().Config(tc.args.config.Meta.Namespace, tc.args.config.Meta.Name), got, nil)
 				if err != nil && !errors.Storage().IsErrEntityNotFound(err) {
 					assert.NoError(t, err)
 				}
@@ -547,19 +576,22 @@ func TestSecretRemove(t *testing.T) {
 
 }
 
-func getSecretManifest(s *types.Secret) *request.SecretManifest {
+func getConfigManifest(s *types.Config) *request.ConfigManifest {
 
-	smf := new (request.SecretManifest)
+	smf := new (request.ConfigManifest)
 
 	smf.Meta.Name = &s.Meta.Name
 	smf.Meta.Namespace = &s.Meta.Namespace
-	smf.Spec.Data = make(map[string]string, 0)
+	smf.Spec.Data = make([]*request.ConfigManifestData, 0)
 
-	for key, val := range s.Spec.Data {
-		str, _ := base64.StdEncoding.DecodeString(string(val))
-		smf.Spec.Data[key] = string(str)
+	for _, val := range s.Spec.Data {
+		smf.Spec.Data = append(smf.Spec.Data, &request.ConfigManifestData{
+			Key: val.Key,
+			File: val.File,
+			Data: string(val.Data),
+			Value: val.Value,
+		})
 	}
-
 
 	smf.Spec.Type = s.Spec.Type
 
@@ -574,16 +606,14 @@ func getNamespaceAsset(name, desc string) *types.Namespace {
 	return &n
 }
 
-func getSecretAsset(namespace *types.Namespace, name string) *types.Secret {
-	var s = types.Secret{}
-	s.Meta.SetDefault()
-	s.Meta.Name = name
-	s.Meta.Namespace = namespace.Meta.Name
-	s.SelfLink()
-
-	s.Spec.Type = types.KindSecretText
-	s.Spec.Data = make(map[string][]byte, 0)
-	return &s
+func getConfigAsset(namespace *types.Namespace, name string) *types.Config {
+	var c = types.Config{}
+	c.Meta.SetDefault()
+	c.Meta.Name = name
+	c.Meta.Namespace = namespace.Meta.Name
+	c.Spec.Type = types.KindConfigText
+	c.Spec.Data = make([]*types.ConfigSpecData, 0)
+	return &c
 }
 
 func setRequestVars(r *mux.Router, req *http.Request) {

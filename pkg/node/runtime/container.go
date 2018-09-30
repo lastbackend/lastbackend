@@ -161,7 +161,9 @@ func containerManifestCreate(ctx context.Context, pod string, spec *types.SpecTe
 			continue
 		}
 
-		secret, err := SecretGet(ctx, s.Secret.Name)
+		secretSelflink := fmt.Sprintf("%s:%s", name[0], s.Secret.Name)
+
+		secret, err := SecretGet(ctx, secretSelflink)
 		if err != nil {
 			log.Errorf("Can not get secret for container: %s", err.Error())
 			return nil, err
@@ -171,7 +173,7 @@ func containerManifestCreate(ctx context.Context, pod string, spec *types.SpecTe
 			continue
 		}
 
-		if _, ok := secret.Data[s.Secret.Key]; !ok {
+		if _, ok := secret.Spec.Data[s.Secret.Key]; !ok {
 			continue
 		}
 
