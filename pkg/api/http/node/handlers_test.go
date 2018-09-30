@@ -725,7 +725,7 @@ func setRequestVars(r *mux.Router, req *http.Request) {
 func getNodeAsset(name, desc string, online bool) types.Node {
 	var n = types.Node{
 		Meta: types.NodeMeta{
-			Token: "token",
+
 		},
 		Status: types.NodeStatus{
 			Online: true,

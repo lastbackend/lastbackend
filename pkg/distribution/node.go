@@ -21,8 +21,6 @@ package distribution
 import (
 	"context"
 
-	"github.com/lastbackend/lastbackend/pkg/util/generator"
-
 	"encoding/json"
 
 	"github.com/lastbackend/lastbackend/pkg/distribution/errors"
@@ -61,15 +59,9 @@ func (n *Node) Put(opts *types.NodeCreateOptions) (*types.Node, error) {
 	ni.Meta.SetDefault()
 
 	ni.Meta.Name = opts.Meta.Name
-	ni.Meta.Token = opts.Meta.Token
-
 	ni.Meta.NodeInfo = opts.Info
 	ni.Status = opts.Status
 	ni.Status.Online = true
-
-	if ni.Meta.Token == "" {
-		ni.Meta.Token = generator.GenerateRandomString(32)
-	}
 
 	ni.Spec.Security.TLS = opts.Security.TLS
 
