@@ -91,12 +91,9 @@ func deploymentObserve(ss *ServiceState, d *types.Deployment) error {
 
 	log.V(logLevel).Debugf("%s:> observe state: %s > %s", logDeploymentPrefix, d.SelfLink(), d.Status.State)
 
-	if ss.deployment.active != nil {
-		if ss.deployment.active.Status.State == types.StateReady {
-			if err := endpointManifestProvision(ss); err != nil {
-				return err
-			}
-		}
+
+	if err := endpointCheck(ss); err != nil {
+		return err
 	}
 
 	if err := serviceStatusState(ss); err != nil {

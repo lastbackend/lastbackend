@@ -93,7 +93,21 @@ func PodObserve(ss *ServiceState, p *types.Pod) error {
 	}
 
 	log.V(logLevel).Debugf("%s:> observe finish: %s > %s", logPodPrefix, p.SelfLink(), p.Status.State)
-	return deploymentStatusState(d, pl)
+
+
+	if err := deploymentStatusState(d, pl); err != nil {
+		return err
+	}
+
+	if ss.deployment.active != nil {
+		if ss.deployment.active.SelfLink() == d.SelfLink() && d.Status.State == types.StateReady {
+			if err := endpointCheck(ss); err != nil {
+				return err
+			}
+		}
+	}
+
+	return nil
 }
 
 func handlePodStateCreated(ss *ServiceState, p *types.Pod) error {

@@ -78,7 +78,7 @@ func New() (*Network, error) {
 
 	}
 
-	log.Debugf("external interface: %s:%s", nt.ExtIface.Iface, nt.ExtIface.IfaceAddr)
+	log.Debugf("external interface: %s:%s", nt.ExtIface.Iface.Name, nt.ExtIface.IfaceAddr.String())
 
 	if err := nt.SetSubnetFromDevice(DefaultContainerDevice); err != nil {
 		log.Errorf("Can not set subnet: %s", err.Error())
