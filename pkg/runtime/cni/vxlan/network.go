@@ -22,8 +22,10 @@ package vxlan
 import (
 	"context"
 	"fmt"
+	"github.com/lastbackend/lastbackend/pkg/distribution/errors"
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 	"github.com/lastbackend/lastbackend/pkg/runtime/cni"
+	"github.com/spf13/viper"
 	"net"
 	"syscall"
 
@@ -59,12 +61,29 @@ func New() (*Network, error) {
 
 	nt.ExtIface = new(NetworkInterface)
 
-	if nt.ExtIface.Iface, nt.ExtIface.IfaceAddr, err = utils.GetDefaultInterface(); err != nil {
-		log.Errorf("Can not get default interface: %s", err.Error())
-		return nt, err
+	iface := viper.GetString("runtime.interface")
+
+	if iface == types.EmptyString {
+		log.Debug("Add network to default interface")
+		if nt.ExtIface.Iface, nt.ExtIface.IfaceAddr, err = utils.GetDefaultInterface(); err != nil {
+			log.Errorf("Can not get default interface: %s", err.Error())
+			return nt, err
+		}
+	} else {
+		log.Debugf("Add network to interface: %s", iface)
+		if nt.ExtIface.Iface, nt.ExtIface.IfaceAddr, err = utils.GetIfaceByName(iface); err != nil {
+			log.Errorf("Can not get interface [%s]: %s", iface, err.Error())
+			return nt, err
+		}
+
 	}
 
-	nt.SetSubnetFromDevice(DefaultContainerDevice)
+	log.Debugf("external interface: %s:%s", nt.ExtIface.Iface.Name, nt.ExtIface.IfaceAddr.String())
+
+	if err := nt.SetSubnetFromDevice(DefaultContainerDevice); err != nil {
+		log.Errorf("Can not set subnet: %s", err.Error())
+		return nil, err
+	}
 
 	if err := nt.AddInterface(); err != nil {
 		log.Errorf("Can not add interface: %s", err.Error())
@@ -79,10 +98,15 @@ func New() (*Network, error) {
 
 func (n *Network) SetSubnetFromDevice(name string) error {
 
-	iface, err := utils.GetIfaceByName(name)
+	iface, _,  err := utils.GetIfaceByName(name)
 	if err != nil {
 		log.Errorf("Can not find interface by name %s", name)
 		return err
+	}
+
+	if iface == nil {
+		log.Errorf("Can not find interface by name %s", name)
+		return errors.New("can not find interface")
 	}
 
 	addrs, err := netlink.AddrList(&netlink.Device{
@@ -126,7 +150,7 @@ func (n *Network) AddInterface() error {
 
 	if n.Device, err = NewDevice(DeviceCreateOpts{
 		vni:   DeviceDefaultVNI,
-		name:  fmt.Sprintf("%s.%d", DeviceDefaultName, DeviceDefaultVNI),
+		name:  fmt.Sprintf("%s%d", DeviceDefaultName, DeviceDefaultVNI),
 		index: n.ExtIface.Iface.Index,
 		addr:  n.ExtIface.IfaceAddr,
 		port:  DeviceDefaultPort,

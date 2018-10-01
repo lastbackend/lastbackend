@@ -61,6 +61,7 @@ type DiscoveryInfo struct {
 // swagger:model types_discovery_status
 type DiscoveryStatus struct {
 	IP     string `json:"ip"`
+	Port   uint16 `json:"port"`
 	Ready  bool   `json:"ready"`
 	Online bool   `json:"online"`
 }
@@ -71,7 +72,7 @@ type DiscoverySpec struct {
 
 func (n *Discovery) SelfLink() string {
 	if n.Meta.SelfLink == "" {
-		n.Meta.SelfLink = fmt.Sprintf("%s", n.Meta.Node)
+		n.Meta.SelfLink = fmt.Sprintf("%s", n.Meta.Name)
 	}
 	return n.Meta.SelfLink
 }

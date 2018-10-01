@@ -23,6 +23,10 @@ import (
 	"fmt"
 )
 
+const (
+	DEFAULT_NAMESPACE  string = "default"
+)
+
 // swagger:ignore
 type NamespaceMap struct {
 	Runtime

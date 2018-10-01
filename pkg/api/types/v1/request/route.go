@@ -35,7 +35,7 @@ type RouteManifestMeta struct {
 
 // swagger:model request_route_create
 type RouteManifestSpec struct {
-	Security bool                           `json:"security" yaml:"security"`
+	Port     uint16                         `json:"port" yaml:"port"`
 	Rules    []RouteManifestSpecRulesOption `json:"rules" yaml:"rules"`
 }
 
@@ -51,8 +51,6 @@ type RouteManifestSpecRulesOption struct {
 	Path    string `json:"path" yaml:"path"`
 	Port    int    `json:"port" yaml:"port"`
 }
-
-
 
 func (r *RouteManifest) FromJson(data []byte) error {
 	return json.Unmarshal(data, r)
@@ -93,8 +91,8 @@ func (r *RouteManifest) SetRouteSpec(route *types.Route, svc *types.ServiceList)
 		sl[s.Meta.Name] = s
 	}
 
-	if r.Spec.Security != route.Spec.Security {
-		route.Spec.Security = r.Spec.Security
+	if r.Spec.Port != route.Spec.Port {
+		route.Spec.Port = r.Spec.Port
 	}
 
 	route.Spec.Rules = make([]types.RouteRule, 0)
@@ -110,9 +108,9 @@ func (r *RouteManifest) SetRouteSpec(route *types.Route, svc *types.ServiceList)
 
 		route.Spec.Rules = append(route.Spec.Rules, types.RouteRule{
 			Endpoint: sl[rs.Service].Meta.Endpoint,
-			Service: rs.Service,
-			Port: rs.Port,
-			Path: rs.Path,
+			Service:  rs.Service,
+			Port:     rs.Port,
+			Path:     rs.Path,
 		})
 
 	}

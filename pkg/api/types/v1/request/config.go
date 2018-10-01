@@ -19,6 +19,7 @@
 package request
 
 import (
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
@@ -33,6 +34,7 @@ type ConfigManifest struct {
 
 type ConfigManifestMeta struct {
 	RuntimeMeta `yaml:",inline"`
+	Namespace *string `json:"namespace" yaml:"namespace"`
 }
 
 type ConfigManifestSpec struct {
@@ -46,7 +48,7 @@ type ConfigManifestData struct {
 	Key   string `json:"key,omitempty" yaml:"key,omitempty"`
 	Value string `json:"value,omitempty" yaml:"value,omitempty"`
 	File  string `json:"file,omitempty" yaml:"file,omitempty"`
-	Data  []byte `json:"data,omitempty"`
+	Data  string `json:"data,omitempty"`
 }
 
 func (v *ConfigManifest) FromJson(data []byte) error {
@@ -65,32 +67,53 @@ func (v *ConfigManifest) ToYaml() ([]byte, error) {
 	return yaml.Marshal(v)
 }
 
-func (v *ConfigManifest) SetConfigMeta(vol *types.Config) {
+func (v *ConfigManifest) SetConfigMeta(cfg *types.Config) {
 
-	if vol.Meta.Name == types.EmptyString {
-		vol.Meta.Name = *v.Meta.Name
+	if cfg.Meta.Name == types.EmptyString {
+		cfg.Meta.Name = *v.Meta.Name
 	}
 
 	if v.Meta.Description != nil {
-		vol.Meta.Description = *v.Meta.Description
+		cfg.Meta.Description = *v.Meta.Description
 	}
 
 	if v.Meta.Labels != nil {
-		vol.Meta.Labels = v.Meta.Labels
+		cfg.Meta.Labels = v.Meta.Labels
 	}
 
 }
 
-func (v *ConfigManifest) SetConfigSpec(vol *types.Config) {
+// SetConfigSpec - set config spec from manifest
+// TODO: check if config spec is updated => update Meta.Updated or skip
+func (v *ConfigManifest) SetConfigSpec(cfg *types.Config) {
 
+	cfg.Spec.Type = v.Spec.Type
+	cfg.Spec.Data = make([]*types.ConfigSpecData, 0)
+
+	for _, data := range v.Spec.Data {
+		cData := new(types.ConfigSpecData)
+		cData.Key = data.Key
+		cData.File = data.File
+		switch cfg.Spec.Type {
+		case types.KindConfigText:
+			cData.Data = []byte(base64.StdEncoding.EncodeToString([]byte(data.Value)))
+			break
+		case types.KindConfigFile:
+			cData.Data = []byte(base64.StdEncoding.EncodeToString([]byte(data.Data)))
+			break
+		}
+
+		cfg.Spec.Data = append(cfg.Spec.Data, cData)
+	}
 }
+
 
 func (v *ConfigManifest) GetManifest() *types.ConfigManifest {
 	cfg := new(types.ConfigManifest)
 	cfg.Kind = v.Spec.Type
 	cfg.Data = make(map[string][]byte, 0)
 	for _, data := range v.Spec.Data {
-		cfg.Data[data.Key] = data.Data
+		cfg.Data[data.Key] = []byte(base64.StdEncoding.EncodeToString([]byte(data.Data)))
 	}
 	return cfg
 }
@@ -103,7 +126,7 @@ func (v *ConfigManifest) ReadData() error {
 				_ = fmt.Errorf("failed read data from file: %s", f)
 				return err
 			}
-			f.Data = c
+			f.Data = base64.StdEncoding.EncodeToString(c)
 		}
 	}
 	return nil

@@ -38,7 +38,6 @@ type RouteMeta struct {
 	Name      string    `json:"name"`
 	Namespace string    `json:"namespace"`
 	SelfLink  string    `json:"self_link"`
-	Security  bool      `json:"security"`
 	Updated   time.Time `json:"updated"`
 	Created   time.Time `json:"created"`
 }
@@ -46,6 +45,7 @@ type RouteMeta struct {
 // swagger:model views_route_spec
 type RouteSpec struct {
 	Domain string       `json:"domain"`
+	Port   uint16       `json:"port"`
 	Rules  []*RouteRule `json:"rules"`
 }
 

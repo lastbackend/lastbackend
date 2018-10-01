@@ -35,19 +35,6 @@ func (s *Client) Cluster() types.ClusterClientV1 {
 	return newClusterClient(s.client)
 }
 
-func (s *Client) Secret(args ...string) types.SecretClientV1 {
-	name := ""
-	for i := range args {
-		switch i {
-		case 0: // hostname
-			name = args[0]
-		default:
-			panic("Wrong parameters count: (is allowed from 0 to 1)")
-		}
-	}
-	return newSecretClient(s.client, name)
-}
-
 func (s *Client) Namespace(args ...string) types.NamespaceClientV1 {
 	name := ""
 	// Get any parameters passed to us out of the args variable into "real"

@@ -44,7 +44,7 @@ type DeviceCreateOpts struct {
 	port  int
 }
 
-const DeviceDefaultVNI = 1
+const DeviceDefaultVNI = 0
 const DeviceDefaultName = "lb"
 const DeviceDefaultPort = 8472
 
@@ -91,6 +91,7 @@ func (d *Device) Create() error {
 		}
 
 		d.link = l.(*netlink.Vxlan)
+		d.addr = d.link.SrcAddr
 		return nil
 	}
 
@@ -130,6 +131,7 @@ func (d *Device) SetIP(nt net.IPNet) error {
 
 	existingAddrs, err := netlink.AddrList(d.link, netlink.FAMILY_V4)
 	if err != nil {
+		_ = fmt.Errorf("can not get addr list: %s", err.Error())
 		return err
 	}
 
@@ -153,6 +155,7 @@ func (d *Device) SetIP(nt net.IPNet) error {
 		}
 	}
 
+	log.V(logLevel).Debugf("Link IP for device: %s", addr.IP)
 	d.addr = addr.IP
 	return nil
 }

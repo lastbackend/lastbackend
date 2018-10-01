@@ -25,17 +25,22 @@ import (
 
 // swagger:model views_secret
 type Secret struct {
-	Meta SecretMeta        `json:"meta"`
+	Meta SecretMeta `json:"meta"`
+	Spec SecretSpec `json:"spec"`
+}
+
+type SecretSpec struct {
+	Type string            `json:"type"`
 	Data map[string][]byte `json:"data"`
 }
 
 // swagger:model views_secret_meta
 type SecretMeta struct {
-	Name     string    `json:"name"`
-	Kind     string    `json:"kind"`
-	SelfLink string    `json:"self_link"`
-	Updated  time.Time `json:"updated"`
-	Created  time.Time `json:"created"`
+	Name      string    `json:"name"`
+	Namespace string    `json:"namespace"`
+	SelfLink  string    `json:"self_link"`
+	Updated   time.Time `json:"updated"`
+	Created   time.Time `json:"created"`
 }
 
 // swagger:ignore
@@ -48,12 +53,13 @@ func (s *Secret) Decode() *types.Secret {
 
 	o := new(types.Secret)
 	o.Meta.Name = s.Meta.Name
-	o.Meta.Kind = s.Meta.Kind
+
 	o.Meta.SelfLink = s.Meta.SelfLink
 	o.Meta.Updated = s.Meta.Updated
 	o.Meta.Created = s.Meta.Created
 
-	o.Data = s.Data
+	o.Spec.Type = s.Spec.Type
+	o.Spec.Data = s.Spec.Data
 
 	return o
 }

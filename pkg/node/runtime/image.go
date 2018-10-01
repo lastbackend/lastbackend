@@ -19,21 +19,25 @@
 package runtime
 
 import (
+	"fmt"
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 	"github.com/lastbackend/lastbackend/pkg/log"
 	"github.com/lastbackend/lastbackend/pkg/node/envs"
 	"golang.org/x/net/context"
 )
 
-func ImagePull(ctx context.Context, image *types.SpecTemplateContainerImage) error {
+func ImagePull(ctx context.Context, namespace string,  image *types.SpecTemplateContainerImage) error {
 
 	var (
 		mf = new(types.ImageManifest)
 	)
 
+
 	mf.Name = image.Name
 	if image.Secret != types.EmptyString {
-		secret, err := SecretGet(ctx, image.Secret)
+
+		secretSelfLink := fmt.Sprintf("%s:%s", namespace, image.Secret)
+		secret, err := SecretGet(ctx, secretSelfLink)
 		if err != nil {
 			log.Errorf("can not get secret for image. err: %s", err.Error())
 			return err

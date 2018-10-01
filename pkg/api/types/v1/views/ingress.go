@@ -56,5 +56,5 @@ type IngressManifest struct {
 
 type IngressManifestMeta struct {
 	Initial   bool     `json:"initial"`
-	Discovery []string `json:"discovery"`
+	Discovery map[string]*types.ResolverManifest `json:"discovery"`
 }

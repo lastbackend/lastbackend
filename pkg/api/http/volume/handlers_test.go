@@ -51,8 +51,8 @@ func TestVolumeInfo(t *testing.T) {
 
 	ns1 := getNamespaceAsset("demo", "")
 	ns2 := getNamespaceAsset("test", "")
-	r1 := getVolumeAsset(ns1.Meta.Name, "demo")
-	r2 := getVolumeAsset(ns2.Meta.Name, "test")
+	vl1 := getVolumeAsset(ns1.Meta.Name, "demo")
+	vl2 := getVolumeAsset(ns2.Meta.Name, "test")
 
 	type fields struct {
 		stg storage.Storage
@@ -77,7 +77,7 @@ func TestVolumeInfo(t *testing.T) {
 	}{
 		{
 			name:         "checking get volume if not exists",
-			args:         args{ctx, ns1, r2},
+			args:         args{ctx, ns1, vl2},
 			fields:       fields{stg},
 			handler:      volume.VolumeInfoH,
 			err:          "{\"code\":404,\"status\":\"Not Found\",\"message\":\"Volume not found\"}",
@@ -86,7 +86,7 @@ func TestVolumeInfo(t *testing.T) {
 		},
 		{
 			name:         "checking get volume if namespace not exists",
-			args:         args{ctx, ns2, r1},
+			args:         args{ctx, ns2, vl1},
 			fields:       fields{stg},
 			handler:      volume.VolumeInfoH,
 			err:          "{\"code\":404,\"status\":\"Not Found\",\"message\":\"Namespace not found\"}",
@@ -95,10 +95,10 @@ func TestVolumeInfo(t *testing.T) {
 		},
 		{
 			name:         "checking get volume successfully",
-			args:         args{ctx, ns1, r1},
+			args:         args{ctx, ns1, vl1},
 			fields:       fields{stg},
 			handler:      volume.VolumeInfoH,
-			want:         v1.View().Volume().New(r1),
+			want:         v1.View().Volume().New(vl1),
 			wantErr:      false,
 			expectedCode: http.StatusOK,
 		},
@@ -122,7 +122,7 @@ func TestVolumeInfo(t *testing.T) {
 			err := tc.fields.stg.Put(context.Background(), stg.Collection().Namespace(), tc.fields.stg.Key().Namespace(ns1.Meta.Name), ns1, nil)
 			assert.NoError(t, err)
 
-			err = stg.Put(context.Background(), stg.Collection().Volume(), stg.Key().Volume(r1.Meta.Namespace, r1.Meta.Name), r1, nil)
+			err = stg.Put(context.Background(), stg.Collection().Volume(), stg.Key().Volume(vl1.Meta.Namespace, vl1.Meta.Name), vl1, nil)
 			assert.NoError(t, err)
 
 			// Create assert request to pass to our handler. We don't have any query parameters for now, so we'll
@@ -185,11 +185,11 @@ func TestVolumeList(t *testing.T) {
 
 	ns1 := getNamespaceAsset("demo", "")
 	ns2 := getNamespaceAsset("test", "")
-	r1 := getVolumeAsset(ns1.Meta.Name, "demo")
-	r2 := getVolumeAsset(ns1.Meta.Name, "test")
+	vl1 := getVolumeAsset(ns1.Meta.Name, "demo")
+	vl2 := getVolumeAsset(ns1.Meta.Name, "test")
 
-	rl := types.NewVolumeList()
-	rl.Items = append(rl.Items, r1, r2)
+	vl := types.NewVolumeList()
+	vl.Items = append(vl.Items, vl1, vl2)
 
 	type fields struct {
 		stg storage.Storage
@@ -225,7 +225,7 @@ func TestVolumeList(t *testing.T) {
 			args:         args{ctx, ns1},
 			fields:       fields{stg},
 			handler:      volume.VolumeListH,
-			want:         rl,
+			want:         vl,
 			wantErr:      false,
 			expectedCode: http.StatusOK,
 		},
@@ -249,10 +249,10 @@ func TestVolumeList(t *testing.T) {
 			err := tc.fields.stg.Put(context.Background(), stg.Collection().Namespace(), tc.fields.stg.Key().Namespace(ns1.Meta.Name), ns1, nil)
 			assert.NoError(t, err)
 
-			err = stg.Put(context.Background(), stg.Collection().Volume(), stg.Key().Volume(r1.Meta.Namespace, r1.Meta.Name), r1, nil)
+			err = stg.Put(context.Background(), stg.Collection().Volume(), stg.Key().Volume(vl1.Meta.Namespace, vl1.Meta.Name), vl1, nil)
 			assert.NoError(t, err)
 
-			err = stg.Put(context.Background(), stg.Collection().Volume(), stg.Key().Volume(r2.Meta.Namespace, r2.Meta.Name), r2, nil)
+			err = stg.Put(context.Background(), stg.Collection().Volume(), stg.Key().Volume(vl2.Meta.Namespace, vl2.Meta.Name), vl2, nil)
 			assert.NoError(t, err)
 
 			// Create assert request to pass to our handler. We don't have any query parameters for now, so we'll
@@ -313,10 +313,10 @@ func TestVolumeCreate(t *testing.T) {
 
 	sv1 := getServiceAsset(ns1.Meta.Name, "demo", "")
 
-	r1 := getVolumeAsset(ns1.Meta.Name, "demo")
+	vl1 := getVolumeAsset(ns1.Meta.Name, "demo")
 
 	mf :=  getVolumeManifest(sv1.Meta.Name)
-	mf.SetVolumeSpec(r1)
+	mf.SetVolumeSpec(vl1)
 
 	mf1, _ := mf.ToJson()
 
@@ -370,7 +370,7 @@ func TestVolumeCreate(t *testing.T) {
 			fields:       fields{stg},
 			handler:      volume.VolumeCreateH,
 			data:        string(mf1),
-			want:         v1.View().Volume().New(r1),
+			want:         v1.View().Volume().New(vl1),
 			wantErr:      false,
 			expectedCode: http.StatusOK,
 		},
@@ -471,13 +471,13 @@ func TestVolumeUpdate(t *testing.T) {
 	sv2 := getServiceAsset(ns1.Meta.Name, "test1", "")
 	sv3 := getServiceAsset(ns1.Meta.Name, "test2", "")
 
-	r1 := getVolumeAsset(ns1.Meta.Name, "demo")
-	r2 := getVolumeAsset(ns1.Meta.Name, "test")
-	r3 := getVolumeAsset(ns1.Meta.Name, "demo")
+	vl1 := getVolumeAsset(ns1.Meta.Name, "demo")
+	vl2 := getVolumeAsset(ns1.Meta.Name, "test")
+	vl3 := getVolumeAsset(ns1.Meta.Name, "demo")
 
-	r3.Spec.Selector.Node = "node"
-	r3.Spec.HostPath = "/"
-	r3.Spec.Capacity.Storage, _ = resource.DecodeResource("1GB")
+	vl3.Spec.Selector.Node = "node"
+	vl3.Spec.HostPath = "/"
+	vl3.Spec.Capacity.Storage, _ = resource.DecodeResource("1GB")
 
 	mf2, _ :=  getVolumeManifest(sv2.Meta.Name).ToJson()
 	mf3, _ :=  getVolumeManifest(sv3.Meta.Name).ToJson()
@@ -506,7 +506,7 @@ func TestVolumeUpdate(t *testing.T) {
 	}{
 		{
 			name:         "checking update volume if name not exists",
-			args:         args{ctx, ns1, r2},
+			args:         args{ctx, ns1, vl2},
 			fields:       fields{stg},
 			handler:      volume.VolumeUpdateH,
 			data:        	string(mf3),
@@ -516,7 +516,7 @@ func TestVolumeUpdate(t *testing.T) {
 		},
 		{
 			name:         "checking update volume if namespace not found",
-			args:         args{ctx, ns2, r1},
+			args:         args{ctx, ns2, vl1},
 			fields:       fields{stg},
 			handler:      volume.VolumeUpdateH,
 			data:        	string(mf2),
@@ -526,7 +526,7 @@ func TestVolumeUpdate(t *testing.T) {
 		},
 		{
 			name:         "check update volume if failed incoming json data",
-			args:         args{ctx, ns1, r1},
+			args:         args{ctx, ns1, vl1},
 			fields:       fields{stg},
 			handler:      volume.VolumeUpdateH,
 			data:         "{name:demo}",
@@ -536,11 +536,11 @@ func TestVolumeUpdate(t *testing.T) {
 		},
 		{
 			name:         "check update volume success",
-			args:         args{ctx, ns1, r1},
+			args:         args{ctx, ns1, vl1},
 			fields:       fields{stg},
 			handler:      volume.VolumeUpdateH,
 			data:        	string(mf2),
-			want:         v1.View().Volume().New(r3),
+			want:         v1.View().Volume().New(vl3),
 			wantErr:      false,
 			expectedCode: http.StatusOK,
 		},
@@ -572,7 +572,7 @@ func TestVolumeUpdate(t *testing.T) {
 			err = tc.fields.stg.Put(context.Background(), stg.Collection().Service(), stg.Key().Service(sv2.Meta.Namespace, sv2.Meta.Name), sv2, nil)
 			assert.NoError(t, err)
 
-			err = stg.Put(context.Background(), stg.Collection().Volume(), stg.Key().Volume(r1.Meta.Namespace, r1.Meta.Name), r1, nil)
+			err = stg.Put(context.Background(), stg.Collection().Volume(), stg.Key().Volume(vl1.Meta.Namespace, vl1.Meta.Name), vl1, nil)
 			assert.NoError(t, err)
 
 			// Create assert request to pass to our handler. We don't have any query parameters for now, so we'll
@@ -641,8 +641,8 @@ func TestVolumeRemove(t *testing.T) {
 
 	ns1 := getNamespaceAsset("demo", "")
 	ns2 := getNamespaceAsset("test", "")
-	r1 := getVolumeAsset(ns1.Meta.Name, "demo")
-	r2 := getVolumeAsset(ns1.Meta.Name, "test")
+	vl1 := getVolumeAsset(ns1.Meta.Name, "demo")
+	vl2 := getVolumeAsset(ns1.Meta.Name, "test")
 
 	type fields struct {
 		stg storage.Storage
@@ -667,7 +667,7 @@ func TestVolumeRemove(t *testing.T) {
 	}{
 		{
 			name:         "checking get volume if not exists",
-			args:         args{ctx, ns1, r2},
+			args:         args{ctx, ns1, vl2},
 			fields:       fields{stg},
 			handler:      volume.VolumeRemoveH,
 			err:          "{\"code\":404,\"status\":\"Not Found\",\"message\":\"Volume not found\"}",
@@ -676,7 +676,7 @@ func TestVolumeRemove(t *testing.T) {
 		},
 		{
 			name:         "checking get volume if namespace not exists",
-			args:         args{ctx, ns2, r1},
+			args:         args{ctx, ns2, vl1},
 			fields:       fields{stg},
 			handler:      volume.VolumeRemoveH,
 			err:          "{\"code\":404,\"status\":\"Not Found\",\"message\":\"Namespace not found\"}",
@@ -685,7 +685,7 @@ func TestVolumeRemove(t *testing.T) {
 		},
 		{
 			name:         "checking del volume successfully",
-			args:         args{ctx, ns1, r1},
+			args:         args{ctx, ns1, vl1},
 			fields:       fields{stg},
 			handler:      volume.VolumeRemoveH,
 			want:         "",
@@ -712,7 +712,7 @@ func TestVolumeRemove(t *testing.T) {
 			err := tc.fields.stg.Put(context.Background(), stg.Collection().Namespace(), tc.fields.stg.Key().Namespace(ns1.Meta.Name), ns1, nil)
 			assert.NoError(t, err)
 
-			err = stg.Put(context.Background(), stg.Collection().Volume(), stg.Key().Volume(r1.Meta.Namespace, r1.Meta.Name), r1, nil)
+			err = stg.Put(context.Background(), stg.Collection().Volume(), stg.Key().Volume(vl1.Meta.Namespace, vl1.Meta.Name), vl1, nil)
 			assert.NoError(t, err)
 
 			// Create assert request to pass to our handler. We don't have any query parameters for now, so we'll

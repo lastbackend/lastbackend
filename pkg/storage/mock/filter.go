@@ -54,8 +54,8 @@ func (Filter) Secret() types.SecretFilter {
 	return new(SecretFilter)
 }
 
-func (Filter) Trigger() types.TriggerFilter {
-	return new(TriggerFilter)
+func (Filter) Config() types.ConfigFilter {
+	return new(ConfigFilter)
 }
 
 func (Filter) Volume() types.VolumeFilter {
@@ -121,6 +121,12 @@ func (RouteFilter) ByNamespace(namespace string) string {
 type SecretFilter struct{}
 
 func (SecretFilter) ByNamespace(namespace string) string {
+	return byNamespace(namespace)
+}
+
+type ConfigFilter struct{}
+
+func (ConfigFilter) ByNamespace(namespace string) string {
 	return byNamespace(namespace)
 }
 

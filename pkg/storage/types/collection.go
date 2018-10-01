@@ -30,8 +30,8 @@ type Collection interface {
 	Node() NodeCollection
 	Route() string
 	Volume() string
-	Trigger() string
 	Secret() string
+	Config() string
 	Endpoint() string
 	Network() string
 	Subnet() string

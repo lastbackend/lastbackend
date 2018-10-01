@@ -36,8 +36,8 @@ const (
 // swagger:model types_secret
 type Secret struct {
 	Runtime
-	Meta SecretMeta        `json:"meta" yaml:"meta"`
-	Data map[string][]byte `json:"data" yaml:"data"`
+	Meta SecretMeta `json:"meta" yaml:"meta"`
+	Spec SecretSpec `json:"spec" yaml:"yaml"`
 }
 
 // swagger:ignore
@@ -55,14 +55,19 @@ type SecretMap struct {
 // swagger:ignore
 // swagger:model types_secret_meta
 type SecretMeta struct {
-	Kind string `json:"kind"`
-	Meta `yaml:",inline"`
+	Meta      `yaml:",inline"`
+	Namespace string `json:"namespace" yaml:"namespace"`
+}
+
+type SecretSpec struct {
+	Type string            `json:"type"`
+	Data map[string][]byte `json:"data" yaml:"data"`
 }
 
 type SecretManifest struct {
 	Runtime
 	State   string    `json:"state"`
-	Kind    string    `json:"kind"`
+	Type    string    `json:"type"`
 	Created time.Time `json:"created"`
 	Updated time.Time `json:"updated"`
 }
@@ -90,26 +95,26 @@ func NewSecretManifestMap() *SecretManifestMap {
 }
 
 func (s *Secret) EncodeSecretAuthData(d SecretAuthData) {
-	s.Data = make(map[string][]byte)
-	s.Data["username"] = []byte(base64.StdEncoding.EncodeToString([]byte(d.Username)))
-	s.Data["password"] = []byte(base64.StdEncoding.EncodeToString([]byte(d.Password)))
+	s.Spec.Data = make(map[string][]byte)
+	s.Spec.Data["username"] = []byte(base64.StdEncoding.EncodeToString([]byte(d.Username)))
+	s.Spec.Data["password"] = []byte(base64.StdEncoding.EncodeToString([]byte(d.Password)))
 }
 
 func (s *Secret) DecodeSecretAuthData() (*SecretAuthData, error) {
 
-	if s.Meta.Kind != KindSecretAuth {
+	if s.Spec.Type != KindSecretAuth {
 		return nil, errors.New("invalid secret type")
 	}
 
 	data := new(SecretAuthData)
 
-	u, err := base64.StdEncoding.DecodeString(string(s.Data["username"]))
+	u, err := base64.StdEncoding.DecodeString(string(s.Spec.Data["username"]))
 	if err != nil {
 		return nil, err
 	}
 	data.Username = string(u)
 
-	p, err := base64.StdEncoding.DecodeString(string(s.Data["password"]))
+	p, err := base64.StdEncoding.DecodeString(string(s.Spec.Data["password"]))
 	if err != nil {
 		return nil, err
 	}
@@ -120,15 +125,15 @@ func (s *Secret) DecodeSecretAuthData() (*SecretAuthData, error) {
 
 func (s *Secret) DecodeSecretTextData(key string) (string, error) {
 
-	if s.Meta.Kind != KindSecretText {
+	if s.Spec.Type != KindSecretText {
 		return EmptyString, errors.New("invalid secret type")
 	}
 
-	if _, ok := s.Data[key]; !ok {
+	if _, ok := s.Spec.Data[key]; !ok {
 		return EmptyString, errors.New("secret key not found")
 	}
 
-	d, err := base64.StdEncoding.DecodeString(string(s.Data[key]))
+	d, err := base64.StdEncoding.DecodeString(string(s.Spec.Data[key]))
 	if err != nil {
 		return EmptyString, err
 	}

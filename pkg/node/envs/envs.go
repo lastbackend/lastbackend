@@ -21,9 +21,8 @@ package envs
 import (
 	"errors"
 	"github.com/lastbackend/lastbackend/pkg/api/client/types"
+	"github.com/lastbackend/lastbackend/pkg/network"
 	"github.com/lastbackend/lastbackend/pkg/node/state"
-	"github.com/lastbackend/lastbackend/pkg/runtime/cni"
-	"github.com/lastbackend/lastbackend/pkg/runtime/cpi"
 	"github.com/lastbackend/lastbackend/pkg/runtime/cri"
 	"github.com/lastbackend/lastbackend/pkg/runtime/csi"
 	"github.com/lastbackend/lastbackend/pkg/runtime/iri"
@@ -38,11 +37,11 @@ func Get() *Env {
 type Env struct {
 	cri cri.CRI
 	iri iri.IRI
-	cni cni.CNI
-	cpi cpi.CPI
 	csi map[string]csi.CSI
 
 	state  *state.State
+	net *network.Network
+
 	client struct {
 		node types.NodeClientV1
 		rest types.ClientV1
@@ -50,12 +49,6 @@ type Env struct {
 
 	mode struct {
 		provision bool
-		ingress   bool
-	}
-
-	dns struct {
-		Cluster []string
-		External []string
 	}
 }
 
@@ -75,20 +68,12 @@ func (c *Env) GetIRI() iri.IRI {
 	return c.iri
 }
 
-func (c *Env) SetCNI(n cni.CNI) {
-	c.cni = n
+func (c *Env) SetNet(net *network.Network) {
+	c.net = net
 }
 
-func (c *Env) GetCNI() cni.CNI {
-	return c.cni
-}
-
-func (c *Env) SetCPI(cpi cpi.CPI) {
-	c.cpi = cpi
-}
-
-func (c *Env) GetCPI() cpi.CPI {
-	return c.cpi
+func (c *Env) GetNet() *network.Network {
+	return c.net
 }
 
 func (c *Env) SetProvision(on bool) {
@@ -139,24 +124,4 @@ func (c *Env) GetNodeClient() types.NodeClientV1 {
 
 func (c *Env) GetRestClient() types.ClientV1 {
 	return c.client.rest
-}
-
-func (c *Env) SetClusterDNS(dns []string) {
-	c.dns.Cluster = dns
-}
-
-func (c *Env) GetClusterDNS() []string {
-	return c.dns.Cluster
-}
-
-func (c *Env) SetExternalDNS(dns []string) {
-
-	if len(dns) == 0 {
-		c.dns.External = []string{"8.8.8.8", "8.8.4.4"}
-	}
-	c.dns.External = dns
-}
-
-func (c *Env) GetExternalDNS() []string {
-	return c.dns.External
 }

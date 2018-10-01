@@ -200,6 +200,19 @@ func endpointDel(ss *ServiceState) error {
 	return nil
 }
 
+func endpointCheck(ss *ServiceState) error {
+
+	if ss.deployment.active != nil {
+		if ss.deployment.active.Status.State == types.StateReady {
+			if err := endpointManifestProvision(ss); err != nil {
+				return err
+			}
+		}
+	}
+
+	return nil
+}
+
 func endpointManifestSpecEqual(e *types.Endpoint, m *types.EndpointManifest) bool {
 
 	if e.Spec.IP != m.IP {
