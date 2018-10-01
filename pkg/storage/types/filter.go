@@ -21,12 +21,12 @@ package types
 type Filter interface {
 	Namespace() NamespaceFilter
 	Service() ServiceFilter
+	Config() ConfigFilter
 	Deployment() DeploymentFilter
 	Pod() PodFilter
 	Endpoint() EndpointFilter
 	Route() RouteFilter
 	Secret() SecretFilter
-	Trigger() TriggerFilter
 	Volume() VolumeFilter
 }
 
@@ -60,11 +60,10 @@ type SecretFilter interface {
 	ByNamespace(namespace string) string
 }
 
-type VolumeFilter interface {
+type ConfigFilter interface {
 	ByNamespace(namespace string) string
 }
 
-type TriggerFilter interface {
+type VolumeFilter interface {
 	ByNamespace(namespace string) string
-	ByService(namespace, service string) string
 }

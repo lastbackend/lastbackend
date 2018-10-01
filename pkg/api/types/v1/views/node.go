@@ -119,4 +119,5 @@ type NodeManifest struct {
 
 type NodeManifestMeta struct {
 	Initial bool `json:"initial"`
+	Discovery map[string]*types.ResolverManifest `json:"discovery"`
 }

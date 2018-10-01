@@ -819,7 +819,7 @@ func getRouteManifest(name string) *request.RouteManifest {
 	var mf = new(request.RouteManifest)
 
 	mf.Meta.Name = &name
-	mf.Spec.Security = true
+	mf.Spec.Port = 80
 	mf.Spec.Rules = make([]request.RouteManifestSpecRulesOption, 0)
 	mf.Spec.Rules = append(mf.Spec.Rules, request.RouteManifestSpecRulesOption{
 		Port: 80,

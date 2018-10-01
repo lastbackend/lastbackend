@@ -100,19 +100,32 @@ func (c *CacheIngressManifest) DelIngress(selflink string) {
 func (c *CacheIngressManifest) SetDiscovery(discovery *types.Discovery) {
 	c.lock.Lock()
 	defer c.lock.Unlock()
-	c.discovery[discovery.SelfLink()] = discovery
 
-	ips := []string{}
+	dvc, ok := c.discovery[discovery.SelfLink()]
 
-	for _, d := range c.discovery {
-		if d.Status.Ready {
-			ips = append(ips, d.Status.IP)
-		}
+	if !ok {
+		c.discovery[discovery.SelfLink()] = discovery
+		c.SetResolvers()
+		return
 	}
 
-	for _, n := range c.manifests {
-		n.Meta.Discovery = ips
+	var update = false
+	switch true {
+	case dvc.Status.IP != discovery.Status.IP:
+		update = true
+		break
+	case dvc.Status.Port != discovery.Status.Port:
+		update = true
+		break
+	case dvc.Status.Ready != discovery.Status.Ready:
+		update = true
+		break
 	}
+	if update {
+		c.discovery[discovery.SelfLink()] = discovery
+		c.SetResolvers()
+	}
+	return
 }
 
 func (c *CacheIngressManifest) DelDiscovery(selflink string) {
@@ -120,16 +133,53 @@ func (c *CacheIngressManifest) DelDiscovery(selflink string) {
 	defer c.lock.Unlock()
 	delete(c.discovery, selflink)
 
-	ips := []string{}
+	resolvers := make(map[string]*types.ResolverManifest, 0)
+
 	for _, d := range c.discovery {
 		if d.Status.Ready {
-			ips = append(ips, d.Status.IP)
+			resolvers[d.Status.IP] = &types.ResolverManifest{
+				IP:   d.Status.IP,
+				Port: d.Status.Port,
+			}
 		}
 	}
 
 	for _, n := range c.manifests {
-		n.Meta.Discovery = ips
+		n.Meta.Discovery = resolvers
 	}
+}
+
+func (c *CacheIngressManifest) SetResolvers() {
+	resolvers := make(map[string]*types.ResolverManifest, 0)
+
+	for _, d := range c.discovery {
+		if d.Status.Ready {
+			resolvers[d.Status.IP] = &types.ResolverManifest{
+				IP:   d.Status.IP,
+				Port: d.Status.Port,
+			}
+		}
+	}
+
+	for _, n := range c.manifests {
+		n.Meta.Discovery = resolvers
+	}
+}
+
+func (c *CacheIngressManifest) GetResolvers() map[string]*types.ResolverManifest {
+
+	resolvers := make(map[string]*types.ResolverManifest, 0)
+
+	for _, d := range c.discovery {
+		if d.Status.Ready {
+			resolvers[d.Status.IP] = &types.ResolverManifest{
+				IP:   d.Status.IP,
+				Port: d.Status.Port,
+			}
+		}
+	}
+
+	return resolvers
 }
 
 func (c *CacheIngressManifest) Get(ingress string) *types.IngressManifest {

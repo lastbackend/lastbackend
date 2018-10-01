@@ -21,6 +21,7 @@ package http
 import (
 	"github.com/gorilla/mux"
 	"github.com/lastbackend/lastbackend/pkg/api/http/cluster"
+	"github.com/lastbackend/lastbackend/pkg/api/http/config"
 	"github.com/lastbackend/lastbackend/pkg/api/http/deployment"
 	"github.com/lastbackend/lastbackend/pkg/api/http/discovery"
 	"github.com/lastbackend/lastbackend/pkg/api/http/events"
@@ -30,7 +31,6 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/api/http/route"
 	"github.com/lastbackend/lastbackend/pkg/api/http/secret"
 	"github.com/lastbackend/lastbackend/pkg/api/http/service"
-	"github.com/lastbackend/lastbackend/pkg/api/http/trigger"
 	"github.com/lastbackend/lastbackend/pkg/api/http/volume"
 	"github.com/lastbackend/lastbackend/pkg/log"
 	"github.com/lastbackend/lastbackend/pkg/util/http"
@@ -66,18 +66,17 @@ func init() {
 	AddRoutes(node.Routes)
 	AddRoutes(ingress.Routes)
 
-	AddRoutes(secret.Routes)
+
 	// Namespace
 	AddRoutes(namespace.Routes)
+	AddRoutes(secret.Routes)
+	AddRoutes(config.Routes)
 	AddRoutes(route.Routes)
 	AddRoutes(service.Routes)
 	AddRoutes(deployment.Routes)
 	AddRoutes(volume.Routes)
 	AddRoutes(ingress.Routes)
 	AddRoutes(discovery.Routes)
-
-	//triggers
-	AddRoutes(trigger.Routes)
 
 	// events
 	AddRoutes(events.Routes)

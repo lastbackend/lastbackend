@@ -71,6 +71,12 @@ type SecretEvent struct {
 	Data *Secret
 }
 
+type ConfigEvent struct {
+	event
+	Data *Config
+}
+
+
 type RouteEvent struct {
 	event
 	Data *Route

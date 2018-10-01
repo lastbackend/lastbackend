@@ -44,16 +44,16 @@ func (Key) Endpoint(namespace, service string) string {
 	return fmt.Sprintf("%s:%s", namespace, service)
 }
 
-func (Key) Secret(name string) string {
-	return fmt.Sprintf("%s", name)
+func (Key) Secret(namespace, name string) string {
+	return fmt.Sprintf("%s:%s", namespace, name)
+}
+
+func (Key) Config(namespace, name string) string {
+	return fmt.Sprintf("%s:%s", namespace, name)
 }
 
 func (Key) Volume(namespace, name string) string {
 	return fmt.Sprintf("%s:%s", namespace, name)
-}
-
-func (Key) Trigger(namespace, service, name string) string {
-	return fmt.Sprintf("%s:%s:%s", namespace, service, name)
 }
 
 func (Key) Ingress(name string) string {

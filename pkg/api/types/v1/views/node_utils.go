@@ -111,6 +111,11 @@ func (obj *NodeManifest) Decode() *types.NodeManifest {
 	}
 
 	manifest.Meta.Initial = obj.Meta.Initial
+	manifest.Meta.Discovery = make(map[string]*types.ResolverManifest, 0)
+
+	for i, s := range obj.Meta.Discovery {
+		manifest.Meta.Discovery[i] = s
+	}
 
 	for i, s := range obj.Network {
 		manifest.Network[i] = s
@@ -169,6 +174,7 @@ func (nv *NodeView) NewManifest(obj *types.NodeManifest) *NodeManifest {
 	}
 
 	manifest.Meta.Initial = obj.Meta.Initial
+	manifest.Meta.Discovery = obj.Meta.Discovery
 
 	manifest.Configs = obj.Configs
 	manifest.Secrets = obj.Secrets

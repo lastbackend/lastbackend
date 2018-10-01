@@ -22,10 +22,10 @@ import (
 	"context"
 	"fmt"
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
+	"github.com/lastbackend/lastbackend/pkg/network"
 	"github.com/lastbackend/lastbackend/pkg/node/controller"
 	"os"
 	"os/signal"
-	"strings"
 	"syscall"
 
 	"github.com/lastbackend/lastbackend/pkg/runtime/iri/iri"
@@ -37,8 +37,6 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/log"
 	"github.com/lastbackend/lastbackend/pkg/node/envs"
 	"github.com/lastbackend/lastbackend/pkg/node/http"
-	"github.com/lastbackend/lastbackend/pkg/runtime/cni/cni"
-	"github.com/lastbackend/lastbackend/pkg/runtime/cpi/cpi"
 	"github.com/lastbackend/lastbackend/pkg/runtime/cri/cri"
 	"github.com/lastbackend/lastbackend/pkg/runtime/csi/csi"
 	"github.com/spf13/viper"
@@ -68,15 +66,6 @@ func Daemon() {
 		log.Errorf("Cannot initialize iri: %v", err)
 	}
 
-	_cni, err := cni.New()
-	if err != nil {
-		log.Errorf("Cannot initialize cni: %v", err)
-	}
-
-	_cpi, err := cpi.New()
-	if err != nil {
-		log.Errorf("Cannot initialize cni: %v", err)
-	}
 
 	csis := viper.GetStringMap("runtime.csi")
 	if csis != nil {
@@ -90,23 +79,29 @@ func Daemon() {
 		}
 
 	}
-	envs.Get().SetExternalDNS(viper.GetStringSlice("dns.ips"))
-	if viper.IsSet("dns_ips") {
-		ips := strings.Split(viper.GetString("dns_ips"), ",")
-		envs.Get().SetExternalDNS(ips)
-	}
 
 	st := state.New()
 	envs.Get().SetState(st)
 	envs.Get().SetCRI(_cri)
 	envs.Get().SetIRI(_iri)
-	envs.Get().SetCNI(_cni)
-	envs.Get().SetCPI(_cpi)
 
 	st.Node().Info = runtime.NodeInfo()
 	st.Node().Status = runtime.NodeStatus()
 
-	r := runtime.NewRuntime()
+	net, err := network.New()
+	if err != nil {
+		log.Errorf("can not initialize network: %s", err.Error())
+		os.Exit(1)
+	}
+
+	envs.Get().SetNet(net)
+
+	r, err := runtime.NewRuntime()
+	if err != nil {
+		log.Errorf("can not initialize runtime: %s", err.Error())
+		os.Exit(1)
+	}
+
 	r.Restore(ctx)
 	r.Subscribe(ctx)
 	r.Loop(ctx)

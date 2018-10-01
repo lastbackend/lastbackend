@@ -53,16 +53,11 @@ type NodeMeta struct {
 	NodeInfo
 	Subnet  string `json:"subnet"`
 	Cluster string `json:"cluster"`
-	Token   string `json:"token"`
 }
 
 func (m *NodeMeta) Set(meta *NodeUpdateMetaOptions) {
 	if meta.Description != nil {
 		m.Description = *meta.Description
-	}
-
-	if meta.Token != nil {
-		m.Token = *meta.Token
 	}
 
 	if meta.Labels != nil {
@@ -196,9 +191,6 @@ type NodeCreateMetaOptions struct {
 type NodeUpdateMetaOptions struct {
 	MetaUpdateOptions
 	NodeUpdateInfoOptions
-	Token    *string `json:"token"`
-	Region   *string `json:"region"`
-	Provider *string `json:"provider"`
 }
 
 type NodeUpdateInfoOptions struct {

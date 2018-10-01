@@ -235,6 +235,7 @@ func IngressConnectH(w http.ResponseWriter, r *http.Request) {
 		}
 	} else {
 		if !sn.SubnetEqual(snet, opts.Network.SubnetSpec) {
+			snet.Spec = opts.Network.SubnetSpec
 			if err := sn.SubnetSet(snet); err != nil {
 				log.V(logLevel).Errorf("%s:connect:> get subnet set err: %s", logPrefix, err.Error())
 				errors.HTTP.InternalServerError(w)
@@ -330,6 +331,8 @@ func IngressSetStatusH(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	log.Info(string(response))
+
 	w.WriteHeader(http.StatusOK)
 	if _, err := w.Write(response); err != nil {
 		log.Errorf("%s:setstatus:> write response err: %s", logPrefix, err.Error())
@@ -408,7 +411,7 @@ func getIngressManifest(ctx context.Context, ing *types.Ingress) (*types.Ingress
 		spec = new(types.IngressManifest)
 		spec.Meta.Initial = true
 
-
+		spec.Meta.Discovery = cache.GetResolvers()
 		spec.Routes = cache.GetRoutes(ing.SelfLink())
 
 		endpoints, err := em.ManifestMap()
@@ -426,6 +429,8 @@ func getIngressManifest(ctx context.Context, ing *types.Ingress) (*types.Ingress
 		}
 		spec.Network = subnets.Items
 	}
+
+
 	cache.Flush(ing.SelfLink())
 	return spec, nil
 

@@ -38,6 +38,4 @@ type DiscoveryRemoveOptions struct {
 }
 
 
-type DiscoveryStatusOptions struct {
-	Ready bool `json:"ready"`
-}
+type DiscoveryStatusOptions types.DiscoveryStatus

@@ -30,6 +30,7 @@ type IView interface {
 	Route() *RouteView
 	Service() *ServiceView
 	Secret() *SecretView
+	Config() *ConfigView
 	Deployment() *DeploymentView
 	Endpoint() *EndpointView
 	Pod() *Pod
@@ -63,6 +64,9 @@ func (View) Service() *ServiceView {
 }
 func (View) Secret() *SecretView {
 	return new(SecretView)
+}
+func (View) Config() *ConfigView {
+	return new(ConfigView)
 }
 func (View) Deployment() *DeploymentView {
 	return new(DeploymentView)
