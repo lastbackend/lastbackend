@@ -371,18 +371,17 @@ func RouteUpdateH(w http.ResponseWriter, r *http.Request) {
 
 	svc, err := sm.List(ns.Meta.Name)
 	if err != nil {
-		log.V(logLevel).Errorf("%s:create:> get services", logPrefix, err.Error())
+		log.V(logLevel).Errorf("%s:update:> get services err: %s", logPrefix, err.Error())
 		errors.HTTP.InternalServerError(w)
 		return
 	}
-
 
 	mf.SetRouteMeta(rs)
 	mf.SetRouteSpec(rs, svc)
 
 	if len(rs.Spec.Rules) == 0 {
 		err := errors.New("route rules are incorrect")
-		log.V(logLevel).Errorf("%s:create:> route rules empty", logPrefix, err.Error())
+		log.V(logLevel).Errorf("%s:update:> route rules empty err: %s", logPrefix, err.Error())
 		errors.New("route").BadParameter("rules", err).Http(w)
 		return
 	}
