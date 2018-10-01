@@ -16,7 +16,7 @@
 // from Last.Backend LLC.
 //
 
-package trigger
+package config
 
 import (
 	"github.com/lastbackend/lastbackend/pkg/util/http"
@@ -24,5 +24,10 @@ import (
 )
 
 var Routes = []http.Route{
-	{Path: "/hook/{id}", Method: http.MethodPost, Middleware: []http.Middleware{middleware.Context}, Handler: HookExecuteH},
+	// Route handlers
+	{Path: "/namespace/{namespace}/config", Method: http.MethodPost, Middleware: []http.Middleware{middleware.Authenticate}, Handler: ConfigCreateH},
+	{Path: "/namespace/{namespace}/config", Method: http.MethodGet, Middleware: []http.Middleware{middleware.Authenticate}, Handler: ConfigListH},
+	{Path: "/namespace/{namespace}/config/{config}", Method: http.MethodGet, Middleware: []http.Middleware{middleware.Authenticate}, Handler: ConfigGetH},
+	{Path: "/namespace/{namespace}/config/{config}", Method: http.MethodPut, Middleware: []http.Middleware{middleware.Authenticate}, Handler: ConfigUpdateH},
+	{Path: "/namespace/{namespace}/config/{config}", Method: http.MethodDelete, Middleware: []http.Middleware{middleware.Authenticate}, Handler: ConfigRemoveH},
 }

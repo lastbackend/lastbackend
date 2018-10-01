@@ -105,6 +105,12 @@ func (n *Discovery) Set(discovery *types.Discovery) error {
 		return err
 	}
 
+	if err := n.storage.Set(n.context, n.storage.Collection().Discovery().Status(),
+		n.storage.Key().Discovery(discovery.Meta.Name), discovery.Status, nil); err != nil {
+		log.V(logLevel).Debugf("%s:get:> set discovery status `%s` err: %v", logDiscoveryPrefix, discovery.Meta.Name, err)
+		return err
+	}
+
 	return nil
 }
 
@@ -115,8 +121,8 @@ func (n *Discovery) SetOnline(discovery *types.Discovery) error {
 	opts := storage.GetOpts()
 	opts.Force = true
 
-	err := n.storage.Set(n.context, n.storage.Collection().Discovery().Info(),
-		n.storage.Key().Discovery(discovery.Meta.Name), discovery, nil)
+	err := n.storage.Set(n.context, n.storage.Collection().Discovery().Status(),
+		n.storage.Key().Discovery(discovery.Meta.Name), discovery.Status, nil)
 	if err != nil {
 		log.V(logLevel).Debugf("%s:get:> set discovery `%s` err: %v", logDiscoveryPrefix, discovery.Meta.Name, err)
 		return err

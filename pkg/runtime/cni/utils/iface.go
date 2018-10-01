@@ -20,28 +20,33 @@ package utils
 
 import (
 	"fmt"
-	"github.com/lastbackend/lastbackend/pkg/log"
 	"net"
 	"syscall"
+
+	"github.com/lastbackend/lastbackend/pkg/log"
 
 	"github.com/lastbackend/lastbackend/pkg/distribution/errors"
 	"github.com/vishvananda/netlink"
 )
 
-func GetIfaceByName(name string) (*net.Interface, error) {
+func GetIfaceByName(name string) (*net.Interface, net.IP, error) {
 
 	ifaces, err := net.Interfaces()
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	for _, iface := range ifaces {
-		if iface.Name == "docker0" {
-			return &iface, nil
+		if iface.Name == name {
+			ifaceAddr, err := GetIfaceIP4Addr(&iface)
+			if err != nil {
+				return nil, nil, errors.New(fmt.Sprintf("failed to find IPv4 address for interface %s", iface.Name))
+			}
+			return &iface, ifaceAddr, nil
 		}
 	}
 
-	return nil, nil
+	return nil, nil, nil
 
 }
 
@@ -53,6 +58,10 @@ func GetDefaultInterface() (*net.Interface, net.IP, error) {
 	log.Info("Determining IP address of default interface")
 	if iface, err = GetDefaultGatewayIface(); err != nil {
 		return nil, nil, errors.New(fmt.Sprintf("failed to get default interface: %s", err))
+	}
+
+	if iface == nil {
+		return nil, nil, errors.New(fmt.Sprintf("failed to get default interface"))
 	}
 
 	if ifaceAddr == nil {

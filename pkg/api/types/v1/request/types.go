@@ -19,42 +19,16 @@
 package request
 
 const (
-	DEFAULT_MEMORY_MIN        = 128
-	DEFAULT_REPLICAS_MIN      = 1
 	DEFAULT_DESCRIPTION_LIMIT = 512
 )
 
 const (
-	StateProvision   = "provision"
-	StateInitialized = "initialized"
-	StateWarning     = "warning"
-	StateReady       = "ready"
-)
-
-const (
-	StatePull    = "pull"
-	StateDestroy = "destroy"
-	StateCancel  = "cancel"
-)
-
-const (
+	StateProvision = "provision"
+	StateReady     = "ready"
+	StateDestroy   = "destroy"
 	StateCreated   = "created"
-	StateStarting  = "starting"
-	StateStarted   = "started"
-	StateStopped   = "stopped"
 	StateDestroyed = "destroyed"
-)
-
-const (
-	StateExited  = "exited"
-	StateRunning = "running"
-	StateError   = "error"
-)
-
-const (
-	StepInitialized = "initialized"
-	StepPull        = "pull"
-	StepReady       = "ready"
+	StateError     = "error"
 )
 
 type IRequest interface {
@@ -66,7 +40,7 @@ type IRequest interface {
 	Route() *RouteRequest
 	Service() *ServiceRequest
 	Secret() *SecretRequest
-	Trigger() *TriggerRequest
+	Config() *ConfigRequest
 	Volume() *VolumeRequest
 	Ingress() *IngressRequest
 	Discovery() *DiscoveryRequest
@@ -98,8 +72,8 @@ func (Request) Service() *ServiceRequest {
 func (Request) Secret() *SecretRequest {
 	return new(SecretRequest)
 }
-func (Request) Trigger() *TriggerRequest {
-	return new(TriggerRequest)
+func (Request) Config() *ConfigRequest {
+	return new(ConfigRequest)
 }
 func (Request) Volume() *VolumeRequest {
 	return new(VolumeRequest)

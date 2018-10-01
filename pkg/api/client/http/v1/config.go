@@ -10,7 +10,7 @@
 // if any.  The intellectual and technical concepts contained
 // herein are proprietary to Last.Backend LLC
 // and its suppliers and may be covered by Russian Federation and Foreign Patents,
-// patents in process, and are protected by trade secret or copyright law.
+// patents in process, and are protected by trade config or copyright law.
 // Dissemination of this information or reproduction of this material
 // is strictly forbidden unless prior written permission is obtained
 // from Last.Backend LLC.
@@ -29,25 +29,23 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/util/http/request"
 )
 
-type TriggerClient struct {
+type ConfigClient struct {
 	client *request.RESTClient
-
 	namespace string
-	service   string
 	name      string
 }
 
-func (tc *TriggerClient) Create(ctx context.Context, opts *rv1.TriggerCreateOptions) (*vv1.Trigger, error) {
+func (sc *ConfigClient) Create(ctx context.Context, opts *rv1.ConfigManifest) (*vv1.Config, error) {
 
 	body, err := opts.ToJson()
 	if err != nil {
 		return nil, err
 	}
 
-	var s *vv1.Trigger
+	var s *vv1.Config
 	var e *errors.Http
 
-	err = tc.client.Post(fmt.Sprintf("/namespace/%s/service/%s/trigger", tc.namespace, tc.service)).
+	err = sc.client.Post(fmt.Sprintf("/namespace/%s/config", sc.namespace)).
 		AddHeader("Content-Type", "application/json").
 		Body(body).
 		JSON(&s, &e)
@@ -62,12 +60,12 @@ func (tc *TriggerClient) Create(ctx context.Context, opts *rv1.TriggerCreateOpti
 	return s, nil
 }
 
-func (tc *TriggerClient) List(ctx context.Context) (*vv1.TriggerList, error) {
+func (sc *ConfigClient) Get(ctx context.Context) (*vv1.Config, error) {
 
-	var s *vv1.TriggerList
+	var s *vv1.Config
 	var e *errors.Http
 
-	err := tc.client.Get(fmt.Sprintf("/namespace/%s/service/%s/trigger", tc.namespace, tc.service)).
+	err := sc.client.Get(fmt.Sprintf("/namespace/%s/config/%s", sc.namespace, sc.name)).
 		AddHeader("Content-Type", "application/json").
 		JSON(&s, &e)
 
@@ -79,19 +77,18 @@ func (tc *TriggerClient) List(ctx context.Context) (*vv1.TriggerList, error) {
 	}
 
 	if s == nil {
-		list := make(vv1.TriggerList, 0)
-		s = &list
+		s = new(vv1.Config)
 	}
 
 	return s, nil
 }
 
-func (tc *TriggerClient) Get(ctx context.Context) (*vv1.Trigger, error) {
+func (sc *ConfigClient) List(ctx context.Context) (*vv1.ConfigList, error) {
 
-	var s *vv1.Trigger
+	var s *vv1.ConfigList
 	var e *errors.Http
 
-	err := tc.client.Get(fmt.Sprintf("/namespace/%s/service/%s/trigger/%s", tc.namespace, tc.service, tc.name)).
+	err := sc.client.Get(fmt.Sprintf("/namespace/%s/config", sc.namespace)).
 		AddHeader("Content-Type", "application/json").
 		JSON(&s, &e)
 
@@ -102,20 +99,25 @@ func (tc *TriggerClient) Get(ctx context.Context) (*vv1.Trigger, error) {
 		return nil, errors.New(e.Message)
 	}
 
+	if s == nil {
+		list := make(vv1.ConfigList, 0)
+		s = &list
+	}
+
 	return s, nil
 }
 
-func (tc *TriggerClient) Update(ctx context.Context, opts *rv1.TriggerUpdateOptions) (*vv1.Trigger, error) {
+func (sc *ConfigClient) Update(ctx context.Context, opts *rv1.ConfigManifest) (*vv1.Config, error) {
 
 	body, err := opts.ToJson()
 	if err != nil {
 		return nil, err
 	}
 
-	var s *vv1.Trigger
+	var s *vv1.Config
 	var e *errors.Http
 
-	err = tc.client.Put(fmt.Sprintf("/namespace/%s/service/%s/trigger/%s", tc.namespace, tc.service, tc.name)).
+	err = sc.client.Put(fmt.Sprintf("/namespace/%s/config/%s", sc.namespace, sc.name)).
 		AddHeader("Content-Type", "application/json").
 		Body(body).
 		JSON(&s, &e)
@@ -130,9 +132,9 @@ func (tc *TriggerClient) Update(ctx context.Context, opts *rv1.TriggerUpdateOpti
 	return s, nil
 }
 
-func (tc *TriggerClient) Remove(ctx context.Context, opts *rv1.TriggerRemoveOptions) error {
+func (sc *ConfigClient) Remove(ctx context.Context, opts *rv1.ConfigRemoveOptions) error {
 
-	req := tc.client.Delete(fmt.Sprintf("/namespace/%s/service/%s/trigger/%s", tc.namespace, tc.service, tc.name)).
+	req := sc.client.Delete(fmt.Sprintf("/namespace/%s/config/%s", sc.namespace, sc.name)).
 		AddHeader("Content-Type", "application/json")
 
 	if opts != nil {
@@ -153,6 +155,6 @@ func (tc *TriggerClient) Remove(ctx context.Context, opts *rv1.TriggerRemoveOpti
 	return nil
 }
 
-func newTriggerClient(req *request.RESTClient, namespace, service, name string) *TriggerClient {
-	return &TriggerClient{client: req, namespace: namespace, service: service, name: name}
+func newConfigClient(client *request.RESTClient, namespace, name string) *ConfigClient {
+	return &ConfigClient{client: client, namespace:namespace, name: name}
 }

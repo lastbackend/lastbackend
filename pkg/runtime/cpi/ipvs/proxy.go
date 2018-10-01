@@ -23,7 +23,10 @@ package ipvs
 import (
 	"context"
 	"fmt"
+	"github.com/lastbackend/lastbackend/pkg/runtime/cni/utils"
+	"github.com/spf13/viper"
 	"github.com/vishvananda/netlink"
+	"golang.org/x/sys/unix"
 	"net"
 	"os/exec"
 	"strings"
@@ -41,7 +44,7 @@ import (
 const (
 	logIPVSPrefix = "cpi:ipvs:proxy:>"
 	logLevel      = 3
-	linkPrefix    = "lb"
+	ifaceName    = "lb-ipvs"
 )
 
 // Proxy balancer
@@ -50,6 +53,7 @@ type Proxy struct {
 	// IVPS cmd path
 	ipvs *libipvs.Handle
 	link netlink.Link
+	dest net.IP
 }
 
 func (p *Proxy) Info(ctx context.Context) (map[string]*types.EndpointState, error) {
@@ -62,10 +66,9 @@ func (p *Proxy) Create(ctx context.Context, manifest *types.EndpointManifest) (*
 	log.V(logLevel).Debugf("%s create ipvs virtual server with ip %s: and upstreams %v", logIPVSPrefix, manifest.IP, manifest.Upstreams)
 
 	var (
-		err    error
-		csvcs  = make([]*libipvs.Service, 0)
+		err   error
+		csvcs = make([]*libipvs.Service, 0)
 	)
-
 
 	svcs, dests, err := specToServices(manifest)
 	if err != nil {
@@ -103,6 +106,11 @@ func (p *Proxy) Create(ctx context.Context, manifest *types.EndpointManifest) (*
 		}
 
 		csvcs = append(csvcs, svc)
+	}
+
+	log.Debugf("Check ip %s is binded to link %s", manifest.IP, p.link.Attrs().Name)
+	if err := p.addIpBindToLink(manifest.IP); err != nil {
+		log.Warnf("%s failed bind ip to link err: %s", logIPVSPrefix, err.Error())
 	}
 
 	state, err := p.getStateByIP(ctx, manifest.IP)
@@ -146,7 +154,6 @@ func (p *Proxy) Destroy(ctx context.Context, state *types.EndpointState) error {
 // Update proxy rules
 func (p *Proxy) Update(ctx context.Context, state *types.EndpointState, spec *types.EndpointManifest) (*types.EndpointState, error) {
 
-
 	psvc, pdest, err := specToServices(spec)
 	if err != nil {
 		log.Errorf("%s can not convert spec to services: %s", logIPVSPrefix, err.Error())
@@ -165,16 +172,32 @@ func (p *Proxy) Update(ctx context.Context, state *types.EndpointState, spec *ty
 
 	for id, svc := range csvc {
 
+		log.Debugf("%s check old service: %s", logIPVSPrefix, id)
 		// remove service which not exists in new spec
 		if _, ok := psvc[id]; !ok {
+			log.Debugf("%s delete service: %s", logIPVSPrefix, id)
 			if err := p.ipvs.DelService(svc); err != nil {
 				log.Errorf("%s can not remove service: %s", logIPVSPrefix, err.Error())
+			}
+			continue
+		}
+	}
+
+	for id, svc := range psvc {
+		log.Debugf("%s check new service: %s", logIPVSPrefix, id)
+
+		if _, ok := csvc[id]; !ok {
+			log.Debugf("%s create service: %s", logIPVSPrefix, id)
+			if err := p.ipvs.NewService(svc); err != nil {
+				log.Errorf("%s can not create service: %s", logIPVSPrefix, err.Error())
 			}
 		}
 
 		// check service upstreams for removing
-		for id, dest := range cdest {
-			if _, ok := pdest[id]; !ok {
+		for did, dest := range cdest {
+			log.Debugf("%s check service %s old backend exists %s", logIPVSPrefix, id, did)
+			if _, ok := pdest[did]; !ok {
+				log.Debugf("%s service %s backend delete %s", logIPVSPrefix, id, did)
 				if err := p.ipvs.DelDestination(svc, dest); err != nil {
 					log.Errorf("%s can not remove backend: %s", logIPVSPrefix, err.Error())
 				}
@@ -182,8 +205,10 @@ func (p *Proxy) Update(ctx context.Context, state *types.EndpointState, spec *ty
 		}
 
 		// check service upstreams for creating
-		for id, dest := range pdest {
-			if _, ok := cdest[id]; !ok {
+		for did, dest := range pdest {
+			log.Debugf("%s check service %s new backend exists %s", logIPVSPrefix, id, did)
+			if _, ok := cdest[did]; !ok {
+				log.Debugf("%s service %s backend create %s", logIPVSPrefix, id, did)
 				if err := p.ipvs.NewDestination(svc, dest); err != nil {
 					log.Errorf("%s can not add backend: %s", logIPVSPrefix, err.Error())
 				}
@@ -191,12 +216,9 @@ func (p *Proxy) Update(ctx context.Context, state *types.EndpointState, spec *ty
 		}
 	}
 
-	for id, svc := range psvc {
-		if _, ok := csvc[id]; !ok {
-			if err := p.ipvs.NewService(svc); err != nil {
-				log.Errorf("%s can not create service: %s", logIPVSPrefix, err.Error())
-			}
-		}
+	log.Debugf("Check ip %s is binded to link %s", spec.IP, p.link.Attrs().Name)
+	if err := p.addIpBindToLink(spec.IP); err != nil {
+		log.Warnf("%s failed bind ip to link err: %s", logIPVSPrefix, err.Error())
 	}
 
 	st, err := p.getStateByIP(ctx, spec.IP)
@@ -318,45 +340,12 @@ func (p *Proxy) getState(ctx context.Context) (map[string]*types.EndpointState, 
 		el[host] = endpoint
 	}
 
-	for ip := range ips {
-		log.Debugf("Check ip %s is binded to link %s", ip, p.link.Attrs().Name)
-		p.addIpBindToLink(ip)
-	}
-
 	log.V(logLevel).Debugf("%s current ipvs state: %#v", logIPVSPrefix, el)
 
 	return el, nil
 }
 
-func New() (*Proxy, error) {
-
-	prx := new(Proxy)
-	handler, err := libipvs.New("")
-	if err != nil {
-		log.Errorf("%s can not initialize ipvs: %s", logIPVSPrefix, err.Error())
-		return nil, err
-	}
-
-	prx.ipvs = handler
-
-	links, err := netlink.LinkList()
-	if err != nil {
-		return nil, err
-	}
-
-	for _, link := range links {
-		if strings.HasPrefix(link.Attrs().Name, linkPrefix) {
-			prx.link = link
-			break
-		}
-	}
-
-	// TODO: Check ipvs proxy mode is available on host
-	return prx, nil
-}
-
 func (p *Proxy) addIpBindToLink(ip string) error {
-
 
 	ipn := net.ParseIP(ip)
 	addr, err := netlink.ParseAddr(fmt.Sprintf("%s/32", ipn.String()))
@@ -373,7 +362,6 @@ func (p *Proxy) addIpBindToLink(ip string) error {
 
 	var exists = false
 	for _, a := range addrs {
-
 		if a.IP.String() == addr.IP.String() {
 			exists = true
 			break
@@ -383,11 +371,32 @@ func (p *Proxy) addIpBindToLink(ip string) error {
 		netlink.AddrAdd(p.link, addr)
 	}
 
+	routes, err := netlink.RouteGet(ipn)
+	if err != nil {
+		log.Errorf("cano not get routes for ip")
+		return err
+	}
+
+	for _, route := range routes {
+
+		if route.Dst.IP.Equal(ipn) {
+			log.Debugf("replace route destination %s > %s", route.Dst.IP.String(), p.dest.String())
+			route.Src = p.dest
+			route.LinkIndex = p.link.Attrs().Index
+			route.Scope = netlink.SCOPE_HOST
+			route.Table = unix.RT_TABLE_LOCAL
+		}
+
+		if err := netlink.RouteReplace(&route); err != nil {
+			log.Errorf("can not replace route: %s", err.Error())
+			return err
+		}
+	}
+
 	return nil
 }
 
 func (p *Proxy) delIpBindToLink(ip string) error {
-
 
 	ipn := net.ParseIP(ip)
 	addr, err := netlink.ParseAddr(fmt.Sprintf("%s/32", ipn.String()))
@@ -418,6 +427,104 @@ func (p *Proxy) delIpBindToLink(ip string) error {
 }
 
 
+func New() (*Proxy, error) {
+
+	prx := new(Proxy)
+	handler, err := libipvs.New("")
+	if err != nil {
+		log.Errorf("%s can not initialize ipvs: %s", logIPVSPrefix, err.Error())
+		return nil, err
+	}
+
+	prx.ipvs = handler
+
+	links, err := netlink.LinkList()
+	if err != nil {
+		return nil, err
+	}
+
+	f := false
+	for _, link := range links {
+		if link.Attrs().Name == ifaceName {
+			log.Debugf("ipvs interface found %s", link.Attrs().Name)
+			f = true
+			prx.link = link
+			break
+		}
+	}
+
+	if !f {
+		link := netlink.Dummy{
+			LinkAttrs: netlink.LinkAttrs{
+				Name: ifaceName,
+			},
+		}
+
+		log.Debugf("ipvs interface not found: create new")
+		if err := netlink.LinkAdd(&link); err != nil {
+			if err == syscall.EEXIST {
+				log.V(logLevel).Debugf("Device already exists: %s", link.Name)
+
+				l, err := netlink.LinkByName(link.Name)
+				if err != nil {
+					log.V(logLevel).Debugf("Link by name: %s", err.Error())
+				}
+
+				prx.link = l.(*netlink.Vxlan)
+			} else {
+				log.Errorf("can not create ipvs dummy interface: %s", err.Error())
+				return nil, err
+			}
+		}
+
+		prx.link = &link
+	}
+
+	var (
+		iface = viper.GetString("runtime.interface")
+	)
+
+	if iface == types.EmptyString {
+		log.Debug("find default interface to traffic route")
+		_, prx.dest, err = utils.GetDefaultInterface()
+		if err != nil {
+			return nil, err
+		}
+	} else {
+		log.Debugf("find interface to traffic route by name: %s", iface)
+		_, prx.dest, err = utils.GetIfaceByName(iface)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	log.Debugf("default route ip net: %s", prx.dest.String())
+
+
+	svcs, err := prx.ipvs.GetServices()
+	if err != nil {
+		log.Errorf("%s info error: %s", logIPVSPrefix, err.Error())
+		return nil, err
+	}
+
+	log.V(logLevel).Debugf("%s services list: %#v", logIPVSPrefix, svcs)
+
+	var ips = make(map[string]bool, 0)
+
+	for _, svc := range svcs {
+		ips[svc.Address.String()] = true
+	}
+
+	for ip := range ips {
+		log.Debugf("Check ip %s is binded to link %s", ip, prx.link.Attrs().Name)
+		prx.addIpBindToLink(ip)
+	}
+
+	// TODO: Check ipvs proxy mode is available on host
+	return prx, nil
+}
+
+
 func specToServices(spec *types.EndpointManifest) (map[string]*libipvs.Service, map[string]*libipvs.Destination, error) {
 
 	var svcs = make(map[string]*libipvs.Service, 0)
@@ -439,14 +546,14 @@ func specToServices(spec *types.EndpointManifest) (map[string]*libipvs.Service, 
 		}
 
 		for _, host := range spec.Upstreams {
-			log.Debugf("create new destination for: %s", host)
+			log.Debugf("%s: add new destination to spec for: %s", logIPVSPrefix, host)
 			dest := new(libipvs.Destination)
 
 			dest.Address = net.ParseIP(host)
 			dest.Port = port
 			dest.Weight = 1
 			dests[fmt.Sprintf("%s_%d", dest.Address.String(), dest.Port)] = dest
-			log.Debugf("created new destination %s_%d", dest.Address.String(), dest.Port)
+			log.Debugf("%s: added new destination %s_%d", logIPVSPrefix, dest.Address.String(), dest.Port)
 		}
 
 		switch proto {

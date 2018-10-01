@@ -29,7 +29,7 @@ type SecretView struct{}
 func (sv *SecretView) New(obj *types.Secret) *Secret {
 	s := Secret{}
 	s.Meta = s.ToMeta(obj.Meta)
-	s.Data = obj.Data
+	s.Spec = s.ToSpec(obj.Spec)
 	return &s
 }
 
@@ -40,11 +40,20 @@ func (s *Secret) ToJson() ([]byte, error) {
 func (s *Secret) ToMeta(obj types.SecretMeta) SecretMeta {
 	meta := SecretMeta{}
 	meta.Name = obj.Name
-	meta.Kind = obj.Kind
+	meta.Namespace = obj.Namespace
 	meta.Updated = obj.Updated
 	meta.Created = obj.Created
-
 	return meta
+}
+
+func (s *Secret) ToSpec(obj types.SecretSpec) SecretSpec {
+	spec := SecretSpec{}
+	spec.Type = obj.Type
+	spec.Data = make(map[string][]byte, 0)
+	for key, value := range obj.Data {
+		spec.Data[key]=value
+	}
+	return spec
 }
 
 func (sv SecretView) NewList(obj *types.SecretList) *SecretList {

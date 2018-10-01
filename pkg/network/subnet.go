@@ -16,37 +16,47 @@
 // from Last.Backend LLC.
 //
 
-package runtime
+package network
 
 import (
 	"context"
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 	"github.com/lastbackend/lastbackend/pkg/log"
-	"github.com/lastbackend/lastbackend/pkg/node/envs"
+	"github.com/lastbackend/lastbackend/pkg/network/state"
 )
 
-func NetworkRestore(ctx context.Context) error {
+const logLevel = 3
 
-	sn, err := envs.Get().GetCNI().Subnets(ctx)
+func (n *Network) Subnets() *state.SubnetState {
+	return n.state.Subnets()
+}
+
+func (n *Network) Info(ctx context.Context) *types.NetworkState {
+	return n.cni.Info(ctx)
+}
+
+func (n *Network) SubnetRestore(ctx context.Context) error {
+
+	sn, err := n.cni.Subnets(ctx)
 	if err != nil {
 		log.Errorf("Can-not get subnets from CNI err: %v", err)
 	}
 
 	for cidr, s := range sn {
-		envs.Get().GetState().Networks().SetSubnet(cidr, s)
+		n.state.Subnets().SetSubnet(cidr, s)
 	}
 
 	return nil
 }
 
-func NetworkManage(ctx context.Context, cidr string, sn *types.SubnetManifest) error {
+func (n *Network) SubnetManage(ctx context.Context, cidr string, sn *types.SubnetManifest) error {
 
-	subnets := envs.Get().GetState().Networks().GetSubnets()
+	subnets := n.state.Subnets().GetSubnets()
 	if state, ok := subnets[cidr]; ok {
 
 		if sn.State == types.StateDestroy {
-			envs.Get().GetCNI().Destroy(ctx, &state)
-			envs.Get().GetState().Networks().DelSubnet(cidr)
+			n.cni.Destroy(ctx, &state)
+			n.state.Subnets().DelSubnet(cidr)
 			return nil
 		}
 
@@ -59,25 +69,25 @@ func NetworkManage(ctx context.Context, cidr string, sn *types.SubnetManifest) e
 		return nil
 	}
 
-	state, err := envs.Get().GetCNI().Create(ctx, sn)
+	state, err := n.cni.Create(ctx, sn)
 	if err != nil {
 		log.Errorf("Can not create network subnet: %s", err.Error())
 		return err
 	}
 
-	envs.Get().GetState().Networks().AddSubnet(cidr, state)
+	n.state.Subnets().AddSubnet(cidr, state)
 	return nil
 }
 
-func NetworkDestroy(ctx context.Context, cidr string) error {
+func (n *Network) SubnetDestroy(ctx context.Context, cidr string) error {
 
-	sn := envs.Get().GetState().Networks().GetSubnet(cidr)
+	sn := n.state.Subnets().GetSubnet(cidr)
 
-	if err := envs.Get().GetCNI().Destroy(ctx, sn); err != nil {
+	if err := n.cni.Destroy(ctx, sn); err != nil {
 		log.Errorf("Can not destroy network subnet: %s", err.Error())
 		return err
 	}
 
-	envs.Get().GetState().Networks().DelSubnet(cidr)
+	n.state.Subnets().DelSubnet(cidr)
 	return nil
 }
