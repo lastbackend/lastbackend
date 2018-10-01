@@ -28,15 +28,13 @@ import (
 
 type ClientV1 interface {
 	Cluster() ClusterClientV1
-	Ingress(args ...string) IngressClientV1
-	Discovery(args ...string) DiscoveryClientV1
 	Namespace(args ...string) NamespaceClientV1
 }
 
 type ClusterClientV1 interface {
 	Node(args ...string) NodeClientV1
 	Ingress(args ...string) IngressClientV1
-
+	Discovery(args ...string) DiscoveryClientV1
 	Get(ctx context.Context) (*vv1.Cluster, error)
 }
 

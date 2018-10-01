@@ -30,6 +30,9 @@ const (
 	KindSecretText = "text"
 	KindSecretAuth = "auth"
 	KindSecretFile = "file"
+
+	SecretUsernameKey = "username"
+	SecretPasswordKey = "password"
 )
 
 // swagger:ignore
