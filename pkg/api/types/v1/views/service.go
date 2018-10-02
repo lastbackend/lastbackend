@@ -18,7 +18,9 @@
 
 package views
 
-import "time"
+import (
+	"time"
+)
 
 // swagger:model views_service_list
 type ServiceList []*Service

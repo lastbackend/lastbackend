@@ -59,7 +59,7 @@ func SecretGetH(w http.ResponseWriter, r *http.Request) {
 	//   '500':
 	//     description: Internal server error
 
-	log.V(logLevel).Debugf("%s:list:> get secret", logPrefix)
+	log.V(logLevel).Debugf("%s:get:> get secret", logPrefix)
 
 	var (
 		sid = utils.Vars(r)["secret"]
@@ -70,40 +70,40 @@ func SecretGetH(w http.ResponseWriter, r *http.Request) {
 
 	ns, err := nm.Get(nid)
 	if err != nil {
-		log.V(logLevel).Errorf("%s:list:> get namespace", logPrefix, err.Error())
+		log.V(logLevel).Errorf("%s:get:> get namespace err: %s", logPrefix, err.Error())
 		errors.HTTP.InternalServerError(w)
 		return
 	}
 	if ns == nil {
 		err := errors.New("namespace not found")
-		log.V(logLevel).Errorf("%s:list:> get namespace", logPrefix, err.Error())
+		log.V(logLevel).Errorf("%s:get:> get namespace err: %s", logPrefix, err.Error())
 		errors.New("namespace").NotFound().Http(w)
 		return
 	}
 
 	item, err := rm.Get(ns.Meta.Name, sid)
 	if err != nil {
-		log.V(logLevel).Errorf("%s:list:> find secret list err: %s", logPrefix, err.Error())
+		log.V(logLevel).Errorf("%s:get:> find secret list err: %s", logPrefix, err.Error())
 		errors.HTTP.InternalServerError(w)
 		return
 	}
 
 	if item == nil {
-		log.V(logLevel).Warnf("%s:update:> secret `%s` not found", logPrefix, sid)
+		log.V(logLevel).Warnf("%s:get:> secret `%s` not found", logPrefix, sid)
 		errors.New("secret").NotFound().Http(w)
 		return
 	}
 
 	response, err := v1.View().Secret().New(item).ToJson()
 	if err != nil {
-		log.V(logLevel).Errorf("%s:list:> convert struct to json err: %s", logPrefix, err.Error())
+		log.V(logLevel).Errorf("%s:get:> convert struct to json err: %s", logPrefix, err.Error())
 		errors.HTTP.InternalServerError(w)
 		return
 	}
 
 	w.WriteHeader(http.StatusOK)
 	if _, err := w.Write(response); err != nil {
-		log.V(logLevel).Errorf("%s:list:> write response err: %s", logPrefix, err.Error())
+		log.V(logLevel).Errorf("%s:get:> write response err: %s", logPrefix, err.Error())
 		return
 	}
 }
@@ -143,13 +143,13 @@ func SecretListH(w http.ResponseWriter, r *http.Request) {
 
 	ns, err := nm.Get(nid)
 	if err != nil {
-		log.V(logLevel).Errorf("%s:list:> get namespace", logPrefix, err.Error())
+		log.V(logLevel).Errorf("%s:list:> get namespace err: %s", logPrefix, err.Error())
 		errors.HTTP.InternalServerError(w)
 		return
 	}
 	if ns == nil {
 		err := errors.New("namespace not found")
-		log.V(logLevel).Errorf("%s:list:> get namespace", logPrefix, err.Error())
+		log.V(logLevel).Errorf("%s:list:> get namespace err: %s", logPrefix, err.Error())
 		errors.New("namespace").NotFound().Http(w)
 		return
 	}
@@ -216,13 +216,13 @@ func SecretCreateH(w http.ResponseWriter, r *http.Request) {
 
 	ns, err := nm.Get(nid)
 	if err != nil {
-		log.V(logLevel).Errorf("%s:list:> get namespace", logPrefix, err.Error())
+		log.V(logLevel).Errorf("%s:create:> get namespace err: %s", logPrefix, err.Error())
 		errors.HTTP.InternalServerError(w)
 		return
 	}
 	if ns == nil {
 		err := errors.New("namespace not found")
-		log.V(logLevel).Errorf("%s:list:> get namespace", logPrefix, err.Error())
+		log.V(logLevel).Errorf("%s:create:> get namespace err: %s", logPrefix, err.Error())
 		errors.New("namespace").NotFound().Http(w)
 		return
 	}
@@ -308,13 +308,13 @@ func SecretUpdateH(w http.ResponseWriter, r *http.Request) {
 
 	ns, err := nm.Get(nid)
 	if err != nil {
-		log.V(logLevel).Errorf("%s:list:> get namespace", logPrefix, err.Error())
+		log.V(logLevel).Errorf("%s:update:> get namespace err: %s", logPrefix, err.Error())
 		errors.HTTP.InternalServerError(w)
 		return
 	}
 	if ns == nil {
 		err := errors.New("namespace not found")
-		log.V(logLevel).Errorf("%s:list:> get namespace", logPrefix, err.Error())
+		log.V(logLevel).Errorf("%s:update:> get namespace err: %s", logPrefix, err.Error())
 		errors.New("namespace").NotFound().Http(w)
 		return
 	}
@@ -322,7 +322,7 @@ func SecretUpdateH(w http.ResponseWriter, r *http.Request) {
 	// request body struct
 	e := opts.DecodeAndValidate(r.Body)
 	if e != nil {
-		log.V(logLevel).Errorf("%s:create:> validation incoming data err: %s", logPrefix, e.Err())
+		log.V(logLevel).Errorf("%s:update:> validation incoming data err: %s", logPrefix, e.Err())
 		e.Http(w)
 		return
 	}
@@ -402,13 +402,13 @@ func SecretRemoveH(w http.ResponseWriter, r *http.Request) {
 
 	ns, err := nm.Get(nid)
 	if err != nil {
-		log.V(logLevel).Errorf("%s:list:> get namespace", logPrefix, err.Error())
+		log.V(logLevel).Errorf("%s:remove:> get namespace err: %s", logPrefix, err.Error())
 		errors.HTTP.InternalServerError(w)
 		return
 	}
 	if ns == nil {
 		err := errors.New("namespace not found")
-		log.V(logLevel).Errorf("%s:list:> get namespace", logPrefix, err.Error())
+		log.V(logLevel).Errorf("%s:remove:> get namespace err: %s", logPrefix, err.Error())
 		errors.New("namespace").NotFound().Http(w)
 		return
 	}

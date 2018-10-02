@@ -38,16 +38,17 @@ type ManifestSpecTemplate struct {
 }
 
 type ManifestSpecTemplateContainer struct {
-	Name       string                                 `json:"name,omitempty" yaml:"name,omitempty"`
-	Command    string                                 `json:"command,omitempty" yaml:"command,omitempty"`
-	Workdir    string                                 `json:"workdir,omitempty" yaml:"workdir,omitempty"`
-	Entrypoint string                                 `json:"entrypoint,omitempty" yaml:"entrypoint,omitempty"`
-	Args       []string                               `json:"args,omitempty" yaml:"args,omitempty"`
-	Ports      []string 															`json:"ports,omitempty" yaml:"ports,omitempty"`
-	Env        []ManifestSpecTemplateContainerEnv     `json:"env,omitempty" yaml:"env,omitempty"`
-	Image      ManifestSpecTemplateContainerImage     `json:"image,omitempty" yaml:"image,omitempty"`
-	Resources  ManifestSpecTemplateContainerResources `json:"resources,omitempty" yaml:"resources,omitempty"`
-	Volumes    []ManifestSpecTemplateContainerVolume  `json:"volumes,omitempty" yaml:"volumes,omitempty"`
+	Name          string                                 `json:"name,omitempty" yaml:"name,omitempty"`
+	Command       string                                 `json:"command,omitempty" yaml:"command,omitempty"`
+	Workdir       string                                 `json:"workdir,omitempty" yaml:"workdir,omitempty"`
+	Entrypoint    string                                 `json:"entrypoint,omitempty" yaml:"entrypoint,omitempty"`
+	Args          []string                               `json:"args,omitempty" yaml:"args,omitempty"`
+	Ports         []string                               `json:"ports,omitempty" yaml:"ports,omitempty"`
+	Env           []ManifestSpecTemplateContainerEnv     `json:"env,omitempty" yaml:"env,omitempty"`
+	Image         ManifestSpecTemplateContainerImage     `json:"image,omitempty" yaml:"image,omitempty"`
+	Resources     ManifestSpecTemplateContainerResources `json:"resources,omitempty" yaml:"resources,omitempty"`
+	Volumes       []ManifestSpecTemplateContainerVolume  `json:"volumes,omitempty" yaml:"volumes,omitempty"`
+	RestartPolicy ManifestSpecTemplateRestartPolicy      `json:"restart_policy,omitempty" yaml:"restart_policy,omitempty"`
 }
 
 type ManifestSpecTemplateContainerEnv struct {
@@ -80,6 +81,11 @@ type ManifestSpecTemplateContainerVolume struct {
 	Mode string `json:"mode,omitempty" yaml:"mode,omitempty"`
 	// Volume mount path
 	Path string `json:"path,omitempty" yaml:"path,omitempty"`
+}
+
+type ManifestSpecTemplateRestartPolicy struct {
+	Policy  string `json:"policy" yaml:"policy"`
+	Attempt int    `json:"attempt" yaml:"attempt"`
 }
 
 type ManifestSpecTemplateContainerResource struct {
