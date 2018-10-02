@@ -20,6 +20,9 @@ package views
 
 import (
 	"encoding/json"
+	"fmt"
+	"github.com/lastbackend/lastbackend/pkg/api/types/v1/request"
+	"strconv"
 	"strings"
 
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
@@ -161,6 +164,138 @@ func (sv *Service) ToDeployments(obj *types.DeploymentList, pods *types.PodList)
 
 func (sv *Service) ToJson() ([]byte, error) {
 	return json.Marshal(sv)
+}
+
+func (sv Service) ToRequestManifest() *request.ServiceManifest {
+	sm := new(request.ServiceManifest)
+
+	sm.Meta.Name = &sv.Meta.Name
+	sm.Meta.Description = &sv.Meta.Description
+
+	if sv.Meta.Labels == nil {
+		sm.Meta.Labels = make(map[string]string, 0)
+	} else {
+		sm.Meta.Labels = sv.Meta.Labels
+	}
+
+	sm.Spec.Replicas = &sv.Spec.Replicas
+
+	sm.Spec.Selector = new(request.ManifestSpecSelector)
+	sm.Spec.Selector.Node = sv.Spec.Selector.Node
+	sm.Spec.Selector.Labels = sv.Spec.Selector.Labels
+	if sm.Spec.Selector.Labels == nil {
+		sm.Spec.Selector.Labels = make(map[string]string, 0)
+	}
+
+	sm.Spec.Strategy = new(request.ManifestSpecStrategy)
+	sm.Spec.Strategy.Type = &sv.Spec.Strategy.Type
+
+	sm.Spec.Network = new(request.ManifestSpecNetwork)
+	sm.Spec.Network.IP = &sv.Spec.Network.IP
+	sm.Spec.Network.Ports = make([]string, 0)
+
+	if sv.Spec.Network.Ports != nil {
+		// k - port, v - port/protocol
+		for k, v := range sv.Spec.Network.Ports {
+			p := strconv.Itoa(int(k))
+			if p == v {
+				sm.Spec.Network.Ports = append(sm.Spec.Network.Ports, v)
+			} else {
+				sm.Spec.Network.Ports = append(sm.Spec.Network.Ports, fmt.Sprintf("%s:%s", p, v))
+			}
+		}
+	}
+
+	sm.Spec.Template = new(request.ManifestSpecTemplate)
+	sm.Spec.Template.Volumes = make([]request.ManifestSpecTemplateVolume, 0)
+	if sv.Spec.Template.Volumes != nil {
+		for _, v := range sm.Spec.Template.Volumes {
+
+			data := request.ManifestSpecTemplateVolume{
+				Name: v.Name,
+				Type: v.Type,
+			}
+
+			data.Secret.Name = v.Secret.Name
+			data.Secret.Files = v.Secret.Files
+			if data.Secret.Files == nil {
+				data.Secret.Files = make([]string, 0)
+			}
+
+			data.Config.Name = v.Config.Name
+			data.Config.Files = v.Config.Files
+			if data.Config.Files == nil {
+				data.Config.Files = make([]string, 0)
+			}
+
+			sm.Spec.Template.Volumes = append(sm.Spec.Template.Volumes, data)
+		}
+	}
+
+	sm.Spec.Template.Containers = make([]request.ManifestSpecTemplateContainer, 0)
+	if sv.Spec.Template.Containers != nil {
+		for _, v := range sv.Spec.Template.Containers {
+
+			data := request.ManifestSpecTemplateContainer{
+				Name:       v.Name,
+				Command:    v.Command,
+				Workdir:    v.Workdir,
+				Entrypoint: v.Entrypoint,
+			}
+
+			data.Args = v.Args
+			if data.Args == nil {
+				data.Args = make([]string, 0)
+			}
+
+			data.Ports = v.Ports
+			if data.Ports == nil {
+				data.Ports = make([]string, 0)
+			}
+
+			data.Env = make([]request.ManifestSpecTemplateContainerEnv, 0)
+			if v.Env != nil {
+				for _, v := range v.Env {
+					item := request.ManifestSpecTemplateContainerEnv{
+						Name:  v.Name,
+						Value: v.Value,
+						From: request.ManifestSpecTemplateContainerEnvSecret{
+							Name: v.From.Name,
+							Key:  v.From.Key,
+						},
+					}
+					data.Env = append(data.Env, item)
+				}
+			}
+
+			data.Volumes = make([]request.ManifestSpecTemplateContainerVolume, 0)
+			if v.Volumes != nil {
+				for _, v := range v.Volumes {
+					item := request.ManifestSpecTemplateContainerVolume{
+						Name: v.Name,
+						Mode: v.Mode,
+						Path: v.Path,
+					}
+					data.Volumes = append(data.Volumes, item)
+				}
+			}
+
+			data.Image.Name = v.Image.Name
+			data.Image.Secret = v.Image.Secret
+
+			data.Resources.Request.RAM = v.Resources.Request.RAM
+			data.Resources.Request.CPU = v.Resources.Request.CPU
+			data.Resources.Limits.RAM = v.Resources.Limits.RAM
+			data.Resources.Limits.CPU = v.Resources.Limits.CPU
+
+			data.RestartPolicy.Policy = v.RestartPolicy.Policy
+			data.RestartPolicy.Attempt = v.RestartPolicy.Attempt
+
+			sm.Spec.Template.Containers = append(sm.Spec.Template.Containers, data)
+		}
+	}
+
+	return sm
 }
 
 func (sv *ServiceView) NewList(obj *types.ServiceList, d *types.DeploymentList, pl *types.PodList) *ServiceList {
