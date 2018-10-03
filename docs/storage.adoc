@@ -24,7 +24,7 @@ Mock driver is designed to perform tests without database usage. It is in-memory
 
 This version of Last.Backend uses ETCDv3 as default.
 
-===== storage tree
+==== storage tree
 
 [source,generic]
 ----

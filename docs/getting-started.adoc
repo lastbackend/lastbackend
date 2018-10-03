@@ -1,6 +1,6 @@
 == Getting Started
 
-image:assets/infrastructure.png[Last.Backend]
+image:assets/architecture.svg[Last.Backend]
 
 
 === Ready to go environment
