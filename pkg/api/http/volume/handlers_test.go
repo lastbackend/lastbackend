@@ -447,8 +447,6 @@ func TestVolumeCreate(t *testing.T) {
 					if !assert.Equal(t, tc.want.Spec.Selector.Node, got.Spec.Selector.Node, "volume selector node mismatch") {
 						return
 					}
-
-					assert.Equal(t, tc.want.Spec.HostPath, got.Spec.HostPath, "hostpath mismatch")
 				}
 			}
 		})
@@ -750,7 +748,8 @@ func TestVolumeRemove(t *testing.T) {
 			if tc.wantErr {
 				assert.Equal(t, tc.err, string(body), "incorrect status code")
 			} else {
-				var got *types.Volume
+				got := new(types.Volume)
+
 				err := tc.fields.stg.Get(tc.args.ctx, stg.Collection().Volume(), stg.Key().Volume(tc.args.namespace.Meta.Name, tc.args.volume.Meta.Name), got, nil)
 				if err != nil && !errors.Storage().IsErrEntityNotFound(err) {
 					assert.NoError(t, err)
@@ -801,8 +800,8 @@ func getVolumeManifest(name string) *request.VolumeManifest {
 	var mf = new(request.VolumeManifest)
 
 	mf.Meta.Name = &name
+	mf.Spec.Type = types.KindVolumeHostDir
 	mf.Spec.Selector.Node = "node"
-	mf.Spec.HostPath = "/"
 	mf.Spec.Capacity.Storage = "256MBi"
 
 	return mf

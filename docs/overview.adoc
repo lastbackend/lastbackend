@@ -1,0 +1,43 @@
+== Overview
+
+Last.Backend is an open source platform for containerized application management on all stages: from deploy to scale.
+This solution is based on container technology and fully support docker containers type.
+
+Note that project is under active development and our team is working day and night to make it better.
+Your suggestions, comments and contributions is very helpful. Big thanks for that!
+
+== Design principles
+Our design principles allows us to create extendable and powerful system. We separated runtime into particular package and use interfaces to add ability to extend supported technologies.
+By default Last.Backend operate with this runtimes:
+- CRI - container runtime interface: docker by default
+- CII - container image interface: docker by default
+- CSI - container storage interface: host directory by default
+- CNI - container network interface: vxlan by default
+- CPI - container proxy interface: IPVS by default
+
+All these runtimes are documented in runtime section, where are described all methods, types and algorythms.
+
+== Endpoint interface
+The main endpoint to manage cluster is REST API interface.
+Our team use swagger for generation API documentation. To create swagger spec, just execute ``` make swagger-spec``` command in root of repository.
+
+
+You can use REST API in these options:
+
+- directly with CURL or another apps
+- using Last.Backend CLI located in separate repo lastbackend/cli[https://github.com/lastbackend/cli]
+- for building custom go apps - you can use golang client located in `pgk/api/client` package
+
+== Current state
+
+Current version is very close for public beta and include:
+- cluster management
+- node management
+- overlay network based on vxlan
+- internal endpoints for pods balancing based on IPVS
+- ingress server based on haproxy
+- internal discovery server
+- services management with basic blue/green deployments
+- volumes management
+
+All of these functionality is under active test now, so don't surprised by frequent PR please.

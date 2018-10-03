@@ -94,7 +94,9 @@ func New() *State {
 			subnets: make(map[string]types.NetworkState, 0),
 		},
 		volumes: &VolumesState{
-			volumes: make(map[string]types.VolumeState, 0),
+			volumes: make(map[string]types.VolumeStatus, 0),
+			local: make(map[string]bool),
+			watchers:   make(map[chan string]bool, 0),
 		},
 		secrets: &SecretsState{
 			secrets: make(map[string]types.Secret, 0),

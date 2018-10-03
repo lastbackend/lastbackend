@@ -23,7 +23,9 @@ import (
 	"time"
 )
 
-const VOLUMETYPELOCAL = "local"
+const (
+	KindVolumeHostDir = "dir"
+)
 
 // swagger:ignore
 // swagger:model types_volume
@@ -62,13 +64,13 @@ type VolumeMeta struct {
 // swagger:model types_volume_spec
 type VolumeSpec struct {
 	Type       string             `json:"type"`
-	Selector   SpecSelector `json:"selector"`
+	Selector   SpecSelector       `json:"selector"`
 	Capacity   SpecVolumeCapacity `json:"capacity"`
 	State      VolumeSpecState    `json:"state"`
 	HostPath   string             `json:"host_path"`
 	AccessMode string             `json:"access_mode"`
 
-	Updated    time.Time          `json:"updated"`
+	Updated time.Time `json:"updated"`
 }
 
 // swagger:model types_volume_spec_state
@@ -105,6 +107,25 @@ type VolumeState struct {
 	Ready bool `json:"ready" yaml:"ready"`
 }
 
+
+func (vs *VolumeStatus) SetReady () {
+	vs.Status.Ready = true
+	vs.State = StateReady
+	vs.Message = EmptyString
+}
+
+func (vs *VolumeStatus) SetDestroyed () {
+	vs.Status.Ready = false
+	vs.State = StateDestroyed
+	vs.Message = EmptyString
+}
+
+func (vs *VolumeStatus) SetError (err error) {
+	vs.Status.Ready = false
+	vs.State = StateError
+	vs.Message = err.Error()
+}
+
 func (v *Volume) SelfLink() string {
 	if v.Meta.SelfLink == "" {
 		v.Meta.SelfLink = v.CreateSelfLink(v.Meta.Namespace, v.Meta.Name)
@@ -126,4 +147,10 @@ func NewVolumeMap() *VolumeMap {
 	dm := new(VolumeMap)
 	dm.Items = make(map[string]*Volume)
 	return dm
+}
+
+
+func NewVolumeStatus() *VolumeStatus {
+	status := VolumeStatus{}
+	return &status
 }

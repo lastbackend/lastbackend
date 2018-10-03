@@ -802,9 +802,9 @@ func PodVolumeUpdate(ctx context.Context, pod string, spec *types.SpecTemplateVo
 
 	pv := &types.PodVolume{
 		Pod:   pod,
-		Type:  types.VOLUMETYPELOCAL,
-		Ready: vol.Ready,
-		Path:  vol.Path,
+		Type:  types.KindVolumeHostDir,
+		Ready: vol.Status.Ready,
+		Path:  vol.Status.Path,
 	}
 
 
@@ -830,7 +830,7 @@ func PodVolumeCreate(ctx context.Context, pod string, spec *types.SpecTemplateVo
 		name = podVolumeKeyCreate(pod, spec.Name)
 		vm   = types.VolumeManifest{
 			HostPath: path,
-			Type:     types.VOLUMETYPELOCAL,
+			Type:     types.KindVolumeHostDir,
 		}
 	)
 
@@ -842,9 +842,9 @@ func PodVolumeCreate(ctx context.Context, pod string, spec *types.SpecTemplateVo
 
 	pv := &types.PodVolume{
 		Pod:   pod,
-		Type:  types.VOLUMETYPELOCAL,
-		Ready: st.Ready,
-		Path:  st.Path,
+		Type:  types.KindVolumeHostDir,
+		Ready: st.Status.Ready,
+		Path:  st.Status.Path,
 	}
 
 	if spec.Config.Name != types.EmptyString && len(spec.Config.Files) > 0 {
@@ -854,10 +854,13 @@ func PodVolumeCreate(ctx context.Context, pod string, spec *types.SpecTemplateVo
 		}
 	}
 
+	envs.Get().GetState().Volumes().SetLocal(name)
+
 	return pv, nil
 }
 
 func PodVolumeDestroy(ctx context.Context, pod, volume string) error {
+	envs.Get().GetState().Volumes().DelLocal(podVolumeKeyCreate(pod, volume))
 	return VolumeDestroy(ctx, podVolumeKeyCreate(pod, volume))
 }
 

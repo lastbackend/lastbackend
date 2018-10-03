@@ -224,6 +224,17 @@ func (r *Runtime) Loop(ctx context.Context) {
 						}
 					}
 
+					log.V(logLevel).Debugf("%s> clean up volumes", logNodeRuntimePrefix)
+					volumes := envs.Get().GetState().Volumes().GetVolumes()
+
+					for k := range volumes {
+						if _, ok := spec.Volumes[k]; !ok {
+							if !envs.Get().GetState().Volumes().IsLocal(k) {
+								VolumeDestroy(context.Background(), k)
+							}
+						}
+					}
+
 					log.V(logLevel).Debugf("%s> clean up subnets", logNodeRuntimePrefix)
 					nets := envs.Get().GetNet().Subnets().GetSubnets()
 
@@ -283,8 +294,11 @@ func (r *Runtime) Loop(ctx context.Context) {
 				}
 
 				log.V(logLevel).Debugf("%s> provision volumes", logNodeRuntimePrefix)
-				for _, v := range spec.Volumes {
+				for v, spec := range spec.Volumes {
 					log.V(logLevel).Debugf("volume: %v", v)
+					if err := VolumeManage(ctx, v, spec); err != nil {
+						log.Errorf("Volume [%s] manage err: %s", v, err.Error())
+					}
 				}
 			}
 		}

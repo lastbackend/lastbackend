@@ -3,25 +3,22 @@
 verbose: 3
 token: lstbknd
 api:
-  uri: "127.0.0.1:2967"
+  uri: "192.168.99.100:2967"
   tls:
     insecure: true
     ca: "/opt/cert/lastbackend/ca.pem"
     cert: "/opt/cert/lastbackend/client.pem"
     key: "/opt/cert/lastbackend/client-key.pem"
-dns:
-  ips: ["192.168.99.100","8.8.8.8"]
-
-ingress:
-  host: 0.0.0.0
-  port: 2969
 
 haproxy:
-  path: "/private/var/run/lastbackend/ingress/haproxy"
-  exec: "/usr/local/bin/haproxy"
-  pid: "/private/var/run/lastbackend/ingress/haproxy.pid"
+  path: "/var/run/lastbackend/ingress/haproxy"
+  exec: "/usr/sbin/haproxy"
+  pid: "/var/run/lastbackend/ingress/haproxy.pid"
 
 # Runtime
 runtime:
+  interface: "eth1"
   cni:
     type: "vxlan"
+  cpi:
+    type: "ipvs"

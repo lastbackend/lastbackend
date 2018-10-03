@@ -27,6 +27,7 @@ import (
 
 type NodeLease struct {
 	done     chan bool
+	sync     bool
 	Request  NodeLeaseOptions
 	Response struct {
 		Err  error
@@ -35,9 +36,9 @@ type NodeLease struct {
 }
 
 type NodeLeaseOptions struct {
-	Node    *string
-	Memory  *int64
-	Storage *int64
+	Node     *string
+	Memory   *int64
+	Storage  *int64
 	Selector map[string]string
 }
 
@@ -48,15 +49,42 @@ func (nl *NodeLease) Wait() {
 func handleNodeLease(cs *ClusterState, nl *NodeLease) error {
 
 	defer func() {
-		nl.done <- true
+		if !nl.sync {
+			nl.done <- true
+		}
 	}()
 
 	for _, n := range cs.node.list {
 
-		if (n.Status.Capacity.Memory - n.Status.Allocated.Memory) > *nl.Request.Memory {
 
-			n.Status.Allocated.Pods++
-			n.Status.Allocated.Memory += *nl.Request.Memory
+		var (
+			node *types.Node
+			allocated  = new(types.NodeResources)
+		)
+
+		if nl.Request.Memory != nil {
+			if (n.Status.Capacity.Memory - n.Status.Allocated.Memory) > *nl.Request.Memory {
+				node = n
+				allocated.Pods++
+				allocated.Memory += *nl.Request.Memory
+			}
+		}
+
+		if nl.Request.Storage != nil {
+			if (n.Status.Capacity.Storage - n.Status.Allocated.Storage) > *nl.Request.Storage {
+				if node == nil {
+					node = n
+				}
+				allocated.Storage += *nl.Request.Storage
+			}
+		}
+
+
+		if node != nil {
+
+			node.Status.Allocated.Pods += allocated.Pods
+			node.Status.Allocated.Memory += allocated.Memory
+			node.Status.Allocated.Storage += allocated.Storage
 
 			nm := distribution.NewNodeModel(context.Background(), envs.Get().GetStorage())
 			nm.Set(n)
@@ -64,6 +92,7 @@ func handleNodeLease(cs *ClusterState, nl *NodeLease) error {
 			nl.Response.Node = n
 			return nil
 		}
+
 
 	}
 
@@ -73,7 +102,9 @@ func handleNodeLease(cs *ClusterState, nl *NodeLease) error {
 func handleNodeRelease(cs *ClusterState, nl *NodeLease) error {
 
 	defer func() {
-		nl.done <- true
+		if !nl.sync {
+			nl.done <- true
+		}
 	}()
 
 	if _, ok := cs.node.list[*nl.Request.Node]; !ok {
@@ -81,8 +112,15 @@ func handleNodeRelease(cs *ClusterState, nl *NodeLease) error {
 	}
 
 	n := cs.node.list[*nl.Request.Node]
-	n.Status.Allocated.Pods--
-	n.Status.Allocated.Memory -= *nl.Request.Memory
+
+	if nl.Request.Memory != nil {
+		n.Status.Allocated.Pods--
+		n.Status.Allocated.Memory -= *nl.Request.Memory
+	}
+
+	if nl.Request.Storage != nil {
+		n.Status.Allocated.Storage -= *nl.Request.Storage
+	}
 
 	nm := distribution.NewNodeModel(context.Background(), envs.Get().GetStorage())
 	nm.Set(n)

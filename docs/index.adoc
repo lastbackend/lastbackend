@@ -11,11 +11,21 @@
 
 This reference for version: _{revnumber}_
 
-image:assets/last.backend-ce.png[Last.Backend]
+image:assets/preview.png[Last.Backend]
 
-*Last.Backend: the apps cloud hosting for fast apps deploying, you don't need to manage*
+*Last.Backend: open source platform for containerized apps management across cluster of nodes: deploy, manage, scale*
 
 Source code available at https://github.com/lastbackend/lastbackend[lastbackend/lastbackend] GitHub repository.
+
+
+include::overview.adoc[]
+include::getting-started.adoc[]
+include::installation.adoc[]
+include::design.adoc[]
+include::network.adoc[]
+include::runtime.adoc[]
+include::storage.adoc[]
+include::contributing.adoc[]
 
 
 [TIP]
@@ -27,12 +37,6 @@ If you have any questions about the *Last.Backend* usage or want to share some i
 * https://www.facebook.com/lastbackend[facebook]
 
 ====
-
-
-include::getting-started.adoc[]
-include::cli.adoc[]
-include::api.adoc[]
-include::contributing.adoc[]
 
 [appendix]
 == License

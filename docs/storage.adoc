@@ -2,98 +2,94 @@
 
 ===== Default work-flow
 
-.Ordered Namespace management (namespace name should be unique per cluster)
-. Create namespace
-. Get namespaces list
-. Get namespace by name
-. Get namespace info by name
-. Remove namespace by name
+.Ordered Object management (object selfline should be unique per cluster)
 
-.Ordered Service management (service name should be unique per namespace)
-. Create service
-. Get services list by namespace
-. Get service info by namespace
-. Update service info by name
-. Remove service by name
+  .Info - returns object runtime info
+	.Get - returns object information from storage
+	.List - returns List of Objects
+	.Map - returns Map of objects, where key is object selflink
+	.Put - puts new object into storage
+	.Set - updates object in storage
+	.Del - deletes object from storage
+	.Watch - watches for object changes. Can watch collection, or set of collections if parent.
+	.Key - returns key created interface for selflink generation
+	.Collection - returns all collections available to perform operations
+	.Filter - returns all available filters
 
+=== Mock
 
-=== ETCD v3 storage tree
+Mock driver is designed to perform tests without database usage. It is in-memory database with all implemeted methods.
+
+=== ETCD v3
+
+This version of Last.Backend uses ETCDv3 as default.
+
+===== storage tree
 
 [source,generic]
 ----
 /lastbackend
 
-integrations:
-/lastbackend/vendors/<vendor>: <vendor (github|bitbucket|gitlab) object>
-
 namespace:
-/lastbackend/namespace/<namespace name>/meta: <namespace meta object>
-/lastbackend/namespace/<namespace name>/spec: <namespace spec object>
-/lastbackend/namespace/<namespace name>/stat: <namespace stat object>
+/lastbackend/namespace/<namespace selflink>: <namespace object>
 
 service:
-/lastbackend/service/<service name>/meta: <service meta object>
-/lastbackend/service/<service name>/spec: <service spec object>
-/lastbackend/service/<service name>/stat: <service stat object>
+/lastbackend/service/<service selflink>: <service object>
+
+endpoint:
+/lastbackend/endpoint/<endpoint selflink>: <endpoint object>
 
 deployment:
-/lastbackend/deployment/<deployment name>/meta: <deployment meta object>
-/lastbackend/deployment/<deployment name>/spec: <deployment spec object>
-/lastbackend/deployment/<deployment name>/stat: <deployment stat object>
+/lastbackend/deployment/<deployment selflink>: <deployment object>
 
 pod:
-/lastbackend/pod/<pod name>/meta: <pod meta object>
-/lastbackend/pod/<pod name>/spec: <pod spec object>
-/lastbackend/pod/<pod name>/stat: <pod stat object>
+/lastbackend/pod/<pod selflink>: <pod object>
 
 volume:
-/lastbackend/volume/<volume name>/meta: <volume meta object>
-/lastbackend/volume/<volume name>/spec: <volume spec object>
-/lastbackend/volume/<volume name>/stat: <volume stat object>
+/lastbackend/volume/<volume selflink>: <volume object>
 
 secret:
-/lastbackend/secret/<secret name>/meta: <secret meta object>
-/lastbackend/secret/<secret name>/data: <secret data object>
+/lastbackend/secret/<secret selflink>: <secret object>
+
+config:
+/lastbackend/config/<config selflink>: <config object>
 
 route:
-/lastbackend/route/<route name>/meta: <route meta object>
-/lastbackend/route/<route name>/spec: <route spec object>
-/lastbackend/route/<route name>/stat: <route stat object>
+/lastbackend/route/<route selflink>: <route object>
 
 discovery:
-/lastbackend/discovery/<endpoint>: <endpoint spec object>
+/lastbackend/discovery/<discovery selflink>/info: <discovery object>
+/lastbackend/discovery/<discovery selflink>/status: <discovery status object>
+
+ingress:
+/lastbackend/ingress/<ingress selflink>/info: <ingress object>
+/lastbackend/ingress/<ingress selflink>/status: <ingress status object>
 
 cluster:
-/lastbackend/cluster/meta: <cluster meta object>
-/lastbackend/cluster/stat: <cluster stat object>
+/lastbackend/cluster/info: <cluster object>
 
 subnets:
-/lastbackend/cluster/snet/<node hostname>/meta: <subnet meta object>
+/lastbackend/subnet/<subnet cidr>: <subnet object>
+
+manifests:
+/lastbackend/manifests/cluster/endpoint/<endpoint selflink>: <endpoint manifest object>
+/lastbackend/manifests/cluster/subnet/<subnet cidr>: <subnet manifest object>
+
+/lastbackend/manifest/node/<node selflink>/pod/<pod selflink>: <pod manifest object>
+/lastbackend/manifest/node/<node selflink>/volume/<volume selflink>: <volume manifest object>
+
+subnets:
+/lastbackend/cluster/s/<node hostname>/meta: <subnet meta object>
 /lastbackend/cluster/snet/<node hostname>/spec: <subnet spec object>
 
 nodes:
-/lastbackend/cluster/node/<node hostname>/meta: <node meta object>
-/lastbackend/cluster/node/<node hostname>/stat: <node stat object>
-/lastbackend/cluster/node/<node hostname>/beat: <node beat object>
-/lastbackend/cluster/node/<node hostname>/spec/pod/<pod name>: <pod spec object>
-/lastbackend/cluster/node/<node hostname>/spec/route/<route name>: <route spec object>
-/lastbackend/cluster/node/<node hostname>/spec/volume/<volume name>: <volume spec object>
+/lastbackend/cluster/node/<node selflink>/info: <node object>
+/lastbackend/cluster/node/<node hostname>/status: <node status object>
 
 system:
 
 /lastbackend/system
-/lastbackend/system/controller
-/lastbackend/system/controller/lead
-/lastbackend/system/controller/process/<system hostname>
-/lastbackend/system/controller/queue/service/<service name>: <service stat object>
-/lastbackend/system/controller/queue/deployment/<deployment name>: <deployment stat object>
-/lastbackend/system/controller/queue/volume/<volume name>: <volume stat object>
-/lastbackend/system/controller/queue/route/<route name>: <route stat object>
-
-/lastbackend/system/scheduler
-/lastbackend/system/scheduler/lead
-/lastbackend/system/scheduler/process/<system hostname>
-/lastbackend/system/scheduler/pod/<pod name>: <pod stat object>
-/lastbackend/system/scheduler/volume/<volume name>: <volume stat object>
-/lastbackend/system/scheduler/route/<route name>: <volume stat object>
+/lastbackend/system/ipam: <IPAM state>
+/lastbackend/system/controller/<controller selflink>: <controller object>
+/lastbackend/system/controller/<controller selflink>:lead: <controller lead state>
 ----

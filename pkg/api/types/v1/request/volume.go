@@ -42,8 +42,6 @@ type VolumeManifestSpec struct {
 	Selector ManifestSpecSelector `json:"selector,omitempty" yaml:"selector,omitempty"`
 	//  Volume Resources
 	Capacity VolumeManifestSpecCapacity `json:"capacity,omitempty" yaml:"capacity,omitempty"`
-	// Volume hostpath
-	HostPath string `json:"host_path,omitempty" yaml:"host_path,omitempty"`
 	// Volume access mode
 	AccessMode string `json:"access_mode,omitempty" yaml:"access_mode,omitempty"`
 }
@@ -142,11 +140,6 @@ func (v *VolumeManifest) SetVolumeSpec(vol *types.Volume) {
 		vol.Spec.Updated = time.Now()
 	}
 
-	if vol.Spec.HostPath != v.Spec.HostPath {
-		vol.Spec.HostPath = v.Spec.HostPath
-		vol.Spec.Updated = time.Now()
-	}
-
 }
 
 
@@ -156,7 +149,6 @@ func (m VolumeManifest) GetManifest() *types.VolumeManifest {
 	v.Selector = m.Spec.Selector.GetSpec()
 	v.Type = m.Spec.Type
 	v.Capacity.Storage, _ = resource.DecodeResource(m.Spec.Capacity.Storage)
-	v.HostPath = m.Spec.HostPath
 	v.AccessMode = m.Spec.AccessMode
 
 	return v

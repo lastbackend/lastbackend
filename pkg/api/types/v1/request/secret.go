@@ -74,6 +74,11 @@ func (v *SecretManifest) SetSecretMeta(cfg *types.Secret) {
 
 }
 
+func (v *SecretManifest) SetAuthData(username, password string) {
+	v.Spec.Data[types.SecretUsernameKey] = base64.StdEncoding.EncodeToString([]byte(username))
+	v.Spec.Data[types.SecretPasswordKey] = base64.StdEncoding.EncodeToString([]byte(password))
+}
+
 // SetSecretSpec - set config spec from manifest
 // TODO: check if config spec is updated => update Meta.Updated or skip
 func (v *SecretManifest) SetSecretSpec(s *types.Secret) {

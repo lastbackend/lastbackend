@@ -1,20 +1,36 @@
-FROM alpine:3.4
+FROM golang:1.10.1-alpine3.7
 
-MAINTAINER lastbackend "team@lastbackend.com"
+RUN apk add --no-cache ca-certificates
+RUN apk add --no-cache iptables \
+    linux-headers \
+    gcc \
+    musl-dev \
+    iproute2 \
+    haproxy
 
-COPY ./images/ingress/build.sh /tmp/build.sh
-RUN /tmp/build.sh
+RUN set -ex \
+	&& apk add --no-cache --virtual .build-deps \
+    bash \
+    git  \
+    make \
+	\
+	&& rm -rf /*.patch
 
-# forward request and error logs to docker log collector
-RUN ln -sf /dev/stdout /var/log/nginx/access.log \
-RUN ln -sf /dev/stderr /var/log/nginx/error.log
+ENV GOPATH /go
+ENV GOROOT /usr/local/go
+ENV PATH $GOPATH/bin:/usr/local/go/bin:$PATH
 
-COPY ./images/ingress/rootfs/etc/nginx/lua /etc/nginx/lua
-COPY ./images/ingress/rootfs/etc/nginx/nginx.conf /etc/nginx/nginx.conf
-COPY ./images/ingress/rootfs/etc/nginx/conf.d /etc/nginx/conf.d
-COPY ./images/ingress/rootfs/etc/nginx/html /etc/nginx/html
+COPY ./images/errors /var/run/html/errors
 
-EXPOSE 80 443
+ADD . /go/src/github.com/lastbackend/lastbackend
+WORKDIR /go/src/github.com/lastbackend/lastbackend
 
-CMD ["nginx", "-g", "daemon off;"]
+RUN make APP=ingress build && make APP=ingress install
+RUN apk del --purge .build-deps
 
+WORKDIR /go/bin
+RUN rm -rf /go/pkg \
+    && rm -rf /go/src \
+    && rm -rf /var/cache/apk/*
+
+CMD ["/usr/local/bin/ingress"]

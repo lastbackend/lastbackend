@@ -26,11 +26,65 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/node/envs"
 )
 
-func VolumeCreate(ctx context.Context, name string, mf *types.VolumeManifest) (*types.VolumeState, error) {
+
+func VolumeManage(ctx context.Context, key string, manifest *types.VolumeManifest) error {
+
+	log.V(logLevel).Debugf("Provision volume: %s", key)
+
+	//==========================================================================
+	// Destroy pod =============================================================
+	//==========================================================================
+
+	// Call destroy pod
+	if manifest.State.Destroy {
+
+		v := envs.Get().GetState().Volumes().GetVolume(key)
+		if v == nil {
+
+			vs := types.NewVolumeStatus()
+			vs.SetDestroyed()
+			envs.Get().GetState().Volumes().AddVolume(key, vs)
+
+			return nil
+		}
+
+		log.V(logLevel).Debugf("Volume found > destroy it: %s", key)
+
+		VolumeDestroy(ctx, key)
+		v.SetDestroyed()
+		envs.Get().GetState().Volumes().DelVolume(key)
+		return nil
+	}
+
+	//==========================================================================
+	// Check containers pod status =============================================
+	//==========================================================================
+
+	// Get pod list from current state
+	v := envs.Get().GetState().Volumes().GetVolume(key)
+	if v != nil {
+		return nil
+	}
+
+	log.V(logLevel).Debugf("Volume not found > create it: %s", key)
+
+	status, err := VolumeCreate(ctx, key, manifest)
+	if err != nil {
+		log.Errorf("Can not create pod: %s err: %s", key, err.Error())
+		status.SetError(err)
+	}
+
+	envs.Get().GetState().Volumes().SetVolume(key, status)
+	return nil
+}
+
+func VolumeCreate(ctx context.Context, name string, mf *types.VolumeManifest) (*types.VolumeStatus, error) {
+
+	var status   = new(types.VolumeStatus)
 
 	log.V(logLevel).Debugf("Create volume: %s", mf)
 	if mf.Type == types.EmptyString {
-		mf.Type = types.VOLUMETYPELOCAL
+		mf.Type = types.KindVolumeHostDir
 	}
 
 	si, err := envs.Get().GetCSI(mf.Type)
@@ -45,9 +99,14 @@ func VolumeCreate(ctx context.Context, name string, mf *types.VolumeManifest) (*
 		return nil, err
 	}
 
-	envs.Get().GetState().Volumes().AddVolume(name, st)
+	if st.Ready {
+		status.State = types.StateReady
+	}
 
-	return st, nil
+	status.Status = *st
+	envs.Get().GetState().Volumes().AddVolume(name, status)
+
+	return status, nil
 }
 
 
@@ -59,28 +118,24 @@ func VolumeDestroy(ctx context.Context, name string) error {
 		return nil
 	}
 
-	if vol.Type == types.EmptyString {
-		vol.Type = types.VOLUMETYPELOCAL
+	if vol.Status.Type == types.EmptyString {
+		vol.Status.Type = types.KindVolumeHostDir
 	}
 
-	si, err := envs.Get().GetCSI(vol.Type)
+	si, err := envs.Get().GetCSI(vol.Status.Type)
 	if err != nil {
 		log.Errorf("Remove volume failed: %s", err.Error())
 		return err
 	}
 
 
-	if err := si.Remove(ctx, vol); err != nil {
+	if err := si.Remove(ctx, &vol.Status); err != nil {
 		log.Warnf("can note remove volume: %s: %s", name, err.Error())
 	}
 
 	envs.Get().GetState().Volumes().DelVolume(name)
 
 	return nil
-}
-
-func VolumeUpdate(ctx context.Context, name string, manifest *types.VolumeManifest) (*types.VolumeState, error) {
-	return nil, nil
 }
 
 func VolumeRestore(ctx context.Context) error {
@@ -109,7 +164,13 @@ func VolumeRestore(ctx context.Context) error {
 		}
 
 		for name, state := range states {
-			envs.Get().GetState().Volumes().SetVolume(name, state)
+			status := new(types.VolumeStatus)
+			if state.Ready {
+				status.State = types.StateReady
+			}
+			status.Status = *state
+
+			envs.Get().GetState().Volumes().SetVolume(name, status)
 		}
 
 	}
@@ -136,17 +197,17 @@ func VolumeCheckConfigData(ctx context.Context, name string, config string) (boo
 		return  false, errors.New("volume not exists")
 	}
 
-	if vol.Type == types.EmptyString {
-		vol.Type = types.VOLUMETYPELOCAL
+	if vol.Status.Type == types.EmptyString {
+		vol.Status.Type = types.KindVolumeHostDir
 	}
 
-	si, err := envs.Get().GetCSI(vol.Type)
+	si, err := envs.Get().GetCSI(vol.Status.Type)
 	if err != nil {
 		log.Errorf("Remove volume failed: %s", err.Error())
 		return false, err
 	}
 
-	return si.FilesCheck(ctx, vol, cfg.Data)
+	return si.FilesCheck(ctx, &vol.Status, cfg.Data)
 }
 
 func VolumeSetConfigData (ctx context.Context, name string, config string) error {
@@ -160,15 +221,15 @@ func VolumeSetConfigData (ctx context.Context, name string, config string) error
 		return errors.New("volume not exists")
 	}
 
-	if vol.Type == types.EmptyString {
-		vol.Type = types.VOLUMETYPELOCAL
+	if vol.Status.Type == types.EmptyString {
+		vol.Status.Type = types.KindVolumeHostDir
 	}
 
-	si, err := envs.Get().GetCSI(vol.Type)
+	si, err := envs.Get().GetCSI(vol.Status.Type)
 	if err != nil {
 		log.Errorf("Remove volume failed: %s", err.Error())
 		return err
 	}
 
-	return si.FilesPut(ctx, vol, cfg.Data)
+	return si.FilesPut(ctx, &vol.Status, cfg.Data)
 }

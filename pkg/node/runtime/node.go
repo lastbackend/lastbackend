@@ -24,6 +24,7 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/util/system"
 	"github.com/shirou/gopsutil/mem"
 	"github.com/spf13/viper"
+	"syscall"
 
 	"fmt"
 	"os"
@@ -65,10 +66,6 @@ func NodeStatus() types.NodeStatus {
 	state.Capacity = NodeCapacity()
 	state.Allocated = NodeAllocation()
 
-	//state.Services.Router.Enabled = viper.GetBool("node.services.router.enabled")
-	//state.Services.Router.ExternalIP = viper.GetString("node.services.router.external_ip")
-	//state.Services.Builder = viper.GetBool("node.services.builder")
-
 	return state
 }
 
@@ -76,12 +73,22 @@ func NodeCapacity() types.NodeResources {
 
 	vmStat, err := mem.VirtualMemory()
 	if err != nil {
-		fmt.Errorf("get memory err: %s", err)
+		_ = fmt.Errorf("get memory err: %s", err)
 	}
+
+	var stat syscall.Statfs_t
+
+	wd, err := os.Getwd()
+
+	syscall.Statfs(wd, &stat)
+
+	// Available blocks * size per block = available space in bytes
+	storage := stat.Bfree * uint64(stat.Bsize)
 
 	m := vmStat.Total / 1024 / 1024
 
 	return types.NodeResources{
+		Storage: 		int64(storage/1024/1024),
 		Memory:     int64(m),
 		Pods:       int(m / MinContainerMemory),
 		Containers: int(m / MinContainerMemory),
@@ -92,7 +99,7 @@ func NodeAllocation() types.NodeResources {
 
 	vmStat, err := mem.VirtualMemory()
 	if err != nil {
-		fmt.Errorf("get memory err: %s", err)
+		_ = fmt.Errorf("get memory err: %s", err)
 	}
 
 	m := vmStat.Free / 1024 / 1024

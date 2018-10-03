@@ -48,7 +48,7 @@ func ImagePull(ctx context.Context, namespace string,  image *types.SpecTemplate
 			return err
 		}
 
-		auth, err := envs.Get().GetIRI().Auth(ctx, data)
+		auth, err := envs.Get().GetCII().Auth(ctx, data)
 		if err != nil {
 			log.Errorf("can not create secret string. err: %s", err.Error())
 			return err
@@ -57,7 +57,7 @@ func ImagePull(ctx context.Context, namespace string,  image *types.SpecTemplate
 		mf.Auth = auth
 	}
 
-	img, err := envs.Get().GetIRI().Pull(ctx, mf, nil)
+	img, err := envs.Get().GetCII().Pull(ctx, mf, nil)
 	if err != nil {
 		log.Errorf("can not pull image: %s", err.Error())
 		return err
@@ -71,7 +71,7 @@ func ImagePull(ctx context.Context, namespace string,  image *types.SpecTemplate
 }
 
 func ImageRemove(ctx context.Context, link string) error {
-	if err := envs.Get().GetIRI().Remove(ctx, link); err != nil {
+	if err := envs.Get().GetCII().Remove(ctx, link); err != nil {
 		log.Warnf("Can-not remove unnecessary image %s: %s", link, err)
 	}
 
@@ -83,7 +83,7 @@ func ImageRemove(ctx context.Context, link string) error {
 func ImageRestore(ctx context.Context) error {
 
 	state := envs.Get().GetState().Images()
-	imgs, err := envs.Get().GetIRI().List(ctx)
+	imgs, err := envs.Get().GetCII().List(ctx)
 	if err != nil {
 		return err
 	}

@@ -102,7 +102,7 @@ type NodeResources struct {
 	Pods       int   `json:"pods"`
 	Memory     int64 `json:"memory"`
 	Cpu        int   `json:"cpu"`
-	Storage    int   `json:"storage"`
+	Storage    int64 `json:"storage"`
 }
 
 // swagger:model views_node_spec
@@ -114,10 +114,9 @@ type NodeManifest struct {
 	Pods      map[string]*types.PodManifest      `json:"pods,omitempty"`
 	Volumes   map[string]*types.VolumeManifest   `json:"volumes,omitempty"`
 	Endpoints map[string]*types.EndpointManifest `json:"endpoints,omitempty"`
-	Routes    map[string]*types.RouteManifest    `json:"routes,omitempty"`
 }
 
 type NodeManifestMeta struct {
-	Initial bool `json:"initial"`
+	Initial   bool                               `json:"initial"`
 	Discovery map[string]*types.ResolverManifest `json:"discovery"`
 }

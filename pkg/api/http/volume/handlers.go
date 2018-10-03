@@ -438,7 +438,7 @@ func VolumeRemoveH(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = rm.Remove(rs)
+	err = rm.Destroy(rs)
 	if err != nil {
 		log.V(logLevel).Errorf("%s:remove:> remove volume `%s` err: %s", logPrefix, rid, err.Error())
 		errors.HTTP.InternalServerError(w)
