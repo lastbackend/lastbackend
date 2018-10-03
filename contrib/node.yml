@@ -45,5 +45,5 @@ runtime:
     type: "ipvs"
     interface: "eth1" #external interface to route traffic
   csi:
-    local:
+    dir:
       root: "/var/run/lastbackend/"

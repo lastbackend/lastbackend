@@ -46,6 +46,8 @@ type NodeStatusOptions struct {
 	State types.NodeStatusState `json:"state"`
 	// Pods statuses
 	Pods map[string]*NodePodStatusOptions `json:"pods"`
+	// Volumes statuses
+	Volumes map[string]*NodeVolumeStatusOptions `json:"volumes"`
 	// Node resources
 	Resources NodeResourcesOptions `json:"resources"`
 }

@@ -1,0 +1,47 @@
+==== Last.Backend installation
+
+On this section you can find that best solution for setup Last.Backend cluster.
+
+You can run Last.Backend cluster almost anywhere. You can start from your laptop or VMs on a cloud provider.
+Your decision should be based on available resources and infrastructure design requirements.
+
+Our team prepared a common types of installation:
+
+===== Local Installation
+A local installation is an easy way to get started. You can create and test Last.Backend clusters in a few minutes on your laptop using docker-machine for example.
+
+Use this type of installation if you want to:
+- Try and test cluster
+- Develop and contributing
+
+Here you can learn how to deploy Last.Backend cluster with docker-machine.
+
+===== Sefl Hosted Installation
+Self Hosted installation is a good way to create and maintain your own Last.Backend cluster for teams and companies
+
+Use this type of installation if you want to:
+- Get a company/team cluster on your infrastructure
+- Focus on apps development speed without worrying for delivery process.
+
+Here you can learn how to deploy Last.Backend cluster with ansible.
+
+===== Last.Backend Hosted Installation
+Last.Backend Hosted installation is a best way to create and maintain Last.Backend cluster for teams and companies in one click
+On this type of installation, you will get Last.Backend cluster, managed by Last.Backend team.
+
+Use this type of installation if you want to:
+- Get a company/team cluster on your infrastructure
+- Focus on apps development speed without worrying for delivery process.
+- Have high availability cluster, managed by Last.Backend team
+
+You can request for your dedicated cluster on control panel(soon) or by email: mailto:request@lastbackend.com[request@lastbackend.com]
+
+===== Provider Hosted Installation
+Provider Hosted installation is a convenient way to create and maintain Last.Backend cluster for teams and companies in one click
+
+Use this type of installation if you want to:
+- Get a company/team cluster on your infrastructure
+- Focus on apps development speed without worrying for delivery process.
+- Have high availability cluster, managed by providers
+
+Now we are in integration stage with a lot of different hosting providers across the globe. More information you can contact us: mailto:partners@lastbackend.com[partners@lastbackend.com]

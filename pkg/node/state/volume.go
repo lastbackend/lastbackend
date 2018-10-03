@@ -24,24 +24,40 @@ import (
 	"sync"
 )
 
+const logVolumePrefix = "state:volume:"
+
 type VolumesState struct {
-	lock    sync.RWMutex
-	volumes map[string]types.VolumeState
+	lock     sync.RWMutex
+	volumes  map[string]types.VolumeStatus
+	local    map[string]bool
+	watchers map[chan string]bool
 }
 
-func (s *VolumesState) GetVolumes() map[string]types.VolumeState {
+func (s *VolumesState) dispatch(pod string) {
+	for w := range s.watchers {
+		w <- pod
+	}
+}
+
+func (s *VolumesState) Watch(watcher chan string, done chan bool) {
+	s.watchers[watcher] = true
+	defer delete(s.watchers, watcher)
+	<-done
+}
+
+func (s *VolumesState) GetVolumes() map[string]types.VolumeStatus {
 	log.V(logLevel).Debug("Cache: VolumeCache: get pods")
 	return s.volumes
 }
 
-func (s *VolumesState) SetVolumes(key string, volumes []*types.VolumeState) {
+func (s *VolumesState) SetVolumes(key string, volumes []*types.VolumeStatus) {
 	log.V(logLevel).Debugf("Cache: VolumeCache: set volumes: %#v", volumes)
 	for _, vol := range volumes {
 		s.volumes[key] = *vol
 	}
 }
 
-func (s *VolumesState) GetVolume(hash string) *types.VolumeState {
+func (s *VolumesState) GetVolume(hash string) *types.VolumeStatus {
 	log.V(logLevel).Debugf("Cache: VolumeCache: get volume: %s", hash)
 	s.lock.Lock()
 	defer s.lock.Unlock()
@@ -52,23 +68,51 @@ func (s *VolumesState) GetVolume(hash string) *types.VolumeState {
 	return &v
 }
 
-func (s *VolumesState) AddVolume(key string, v *types.VolumeState) {
+func (s *VolumesState) AddVolume(key string, v *types.VolumeStatus) {
 	log.V(logLevel).Debugf("Cache: VolumeCache: add volume: %#v", key)
 	s.SetVolume(key, v)
 }
 
-func (s *VolumesState) SetVolume(key string, volume *types.VolumeState) {
+func (s *VolumesState) SetVolume(key string, volume *types.VolumeStatus) {
 	log.V(logLevel).Debugf("Cache: VolumeCache: set volume: %s", key)
 	s.lock.Lock()
-	defer s.lock.Unlock()
 	s.volumes[key] = *volume
+	s.lock.Unlock()
+	s.dispatch(key)
 }
 
 func (s *VolumesState) DelVolume(key string) {
 	log.V(logLevel).Debugf("Cache: VolumeCache: del volume: %#v", key)
 	s.lock.Lock()
-	defer s.lock.Unlock()
 	if _, ok := s.volumes[key]; ok {
 		delete(s.volumes, key)
 	}
+	s.lock.Unlock()
+	s.dispatch(key)
+}
+
+func (s *VolumesState) SetLocal(key string) {
+	log.V(logLevel).Debugf("%s: set volume: %s as local", logVolumePrefix, key)
+	s.lock.Lock()
+	defer s.lock.Unlock()
+	s.local[key] = true
+}
+
+func (s *VolumesState) DelLocal(key string) {
+	log.V(logLevel).Debugf("%s: del volume: %s from local", logVolumePrefix, key)
+	s.lock.Lock()
+	defer s.lock.Unlock()
+	s.local[key] = true
+}
+
+
+func (s *VolumesState) IsLocal(key string) bool {
+	log.V(logLevel).Debugf("%s: check volume: %s is local", logVolumePrefix, key)
+	s.lock.Lock()
+	defer s.lock.Unlock()
+	if _, ok := s.local[key]; ok {
+		return true
+	}
+
+	return false
 }

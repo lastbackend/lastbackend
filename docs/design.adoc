@@ -1,0 +1,76 @@
+==== Last.Backend platform design
+
+The Design section descrived the parts of the Last.Backend platform and the abstractions to helps you obtain a deeper understanding of how it is works.
+
+===== Overview
+
+Last.Backend platform is a set of processes of 2 types: master processes and minion processes. Master processes operates with cluster state, non-master applying state on physical machines.
+In the core of design principles of Last.Backend there are runtime object(manifests). Using manifest, you can change Last.Backend cluster state.
+Manifests can be 2 types:
+- external - to pass changes into cluster
+- internal - intercommunication system manifests
+
+===== Manifests
+
+There is only 1 endpoint to handle manifests - the REST API. Manifests can be several types:
+- Namespace manifest
+- Service manifest
+- Secret manifest
+- Config manifest
+- Route manifest
+
+In the internal communication process Last.Backend also uses manifests:
+
+- Node manifest: - collection of node state manifests:
+  - Pod manifests - map of pod manifests, that should be on node
+  - Endpoint manifests - map of endpoints manifests, that should be on node
+  - Volume Manifests - map of volumes manifests
+  - Congig Manifests -  map of config manifests
+  - Secret Manifests - map of secrets manifests
+  - Subnets Manifests - network subnets manifests
+  - Resolvers Manifests - cluster resolvers manifests
+
+- Ingress manifest:
+  - Resolvers Manifests - cluster resolvers manifests
+  - Endpoint manifests - map of services endpoint manifests
+  - Routes manifests - map of routes manifests
+
+More about manifests you can read in particular object section in this docs. For example service manifest is described in Serices section.
+
+===== Processes
+
+We can separate all Last.Backend processes in to types:
+- master processes
+- minion processes
+
+To master process group we can set: REST API, Controller, Discovery and Ingress
+To minion process group we can set node.
+
+All master process can be horizontally scaled, except controller. It can be also scaled, but master process should be one, others will be set as slaves.
+
+Last.Backend REST API is designed to setup cluster state directly or with command line interface application.
+The main REST API function is to validate incomming changes, and pass they into database.
+
+Last.Backend Controller is a process that operates for cluster state match.
+After state is changed, controller start applying changes to make cluster state match.
+The main design of controlles - is to handle current state, receive new update from database and preform a variety of automated tasks such as creating new deployment, pod, changind replicas, scheduling containers and volumes, and more.
+Controller handles all cluster state and watches nodes state, handles capacity cluster information and more data. It also performs cluster automated tasks, based on nodes or ingress states.
+For example it can reschedule pods after not rechanble timeout.
+
+Last.Backend Discovery - is service discovery process, that handles all information on services registrations and internal domain names. In two words is an internal DNS server for services.
+
+Last.Backend Ingress - is the entry point for external traffics to internal network. It is auto-configured HAproxy server, which proxy traffic by routes rules to internal endpoints.
+
+Last.Backend minion node - is a minion process that perform all operations with containers, volumes and networks on physical machine.
+Node communicates with REST API. It pull state changes and send current state information about pods, volumes, endpoint, system info and more.
+
+===== Storage
+
+Last.Backend uses storage package to store information about cluster state.
+
+As main database Last.Backend uses ETCDv3. For more information about storage tree and available methods, you can read in design/storage section.
+Etcd is a distributed key value store that provides a reliable way to store data across a cluster of machines.
+It’s open-source and available on GitHub. etcd gracefully handles leader elections during network partitions and will tolerate machine failure, including the leader.
+
+More information about ETCD you can read on the main etcd website: https://coreos.com/etcd/[https://coreos.com/etcd/]
+

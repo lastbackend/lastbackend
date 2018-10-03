@@ -166,7 +166,6 @@ func (nv *NodeView) NewManifest(obj *types.NodeManifest) *NodeManifest {
 		Pods:      make(map[string]*types.PodManifest, 0),
 		Volumes:   make(map[string]*types.VolumeManifest, 0),
 		Endpoints: make(map[string]*types.EndpointManifest, 0),
-		Routes: make(map[string]*types.RouteManifest, 0),
 	}
 
 	if obj == nil {

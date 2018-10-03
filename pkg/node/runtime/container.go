@@ -205,9 +205,9 @@ func containerManifestCreate(ctx context.Context, pod string, spec *types.SpecTe
 			v.Mode = "ro"
 		}
 
-		log.Debugf("attach volume: %s to %s:%s", v.Name, vol.Path, v.Path)
+		log.Debugf("attach volume: %s to %s:%s", v.Name, vol.Status.Path, v.Path)
 
-		mf.Binds = append(mf.Binds, fmt.Sprintf("%s:%s:%s", vol.Path, v.Path, v.Mode))
+		mf.Binds = append(mf.Binds, fmt.Sprintf("%s:%s:%s", vol.Status.Path, v.Path, v.Mode))
 	}
 
 	// TODO: Add dns search option only for LB domains

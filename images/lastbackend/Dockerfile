@@ -23,7 +23,8 @@ ENV PATH $GOPATH/bin:/usr/local/go/bin:$PATH
 ADD . /go/src/github.com/lastbackend/lastbackend
 WORKDIR /go/src/github.com/lastbackend/lastbackend
 
-RUN make build && make install
+RUN make APP=kit build && make APP=kit install
+RUN make APP=node build && make APP=node install
 RUN apk del --purge .build-deps
 
 WORKDIR /go/bin

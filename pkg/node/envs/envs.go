@@ -23,9 +23,9 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/api/client/types"
 	"github.com/lastbackend/lastbackend/pkg/network"
 	"github.com/lastbackend/lastbackend/pkg/node/state"
+	"github.com/lastbackend/lastbackend/pkg/runtime/cii"
 	"github.com/lastbackend/lastbackend/pkg/runtime/cri"
 	"github.com/lastbackend/lastbackend/pkg/runtime/csi"
-	"github.com/lastbackend/lastbackend/pkg/runtime/iri"
 )
 
 var e Env
@@ -36,7 +36,7 @@ func Get() *Env {
 
 type Env struct {
 	cri cri.CRI
-	iri iri.IRI
+	cii cii.CII
 	csi map[string]csi.CSI
 
 	state  *state.State
@@ -60,12 +60,12 @@ func (c *Env) GetCRI() cri.CRI {
 	return c.cri
 }
 
-func (c *Env) SetIRI(iri iri.IRI) {
-	c.iri = iri
+func (c *Env) SetCII(iri cii.CII) {
+	c.cii = iri
 }
 
-func (c *Env) GetIRI() iri.IRI {
-	return c.iri
+func (c *Env) GetCII() cii.CII {
+	return c.cii
 }
 
 func (c *Env) SetNet(net *network.Network) {

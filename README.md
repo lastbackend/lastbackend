@@ -5,27 +5,58 @@
 [![Licensed under Apache License version 2.0](https://img.shields.io/github/license/lastbackend/lastbackend.svg?maxAge=2592000)](https://www.apache.org/licenses/LICENSE-2.0)
 [![StackShare](https://img.shields.io/badge/tech-stack-0690fa.svg?style=flat)](https://stackshare.io/last-backend/last-backend)
 
-![alt text](docs/assets/last.backend-ce.png?raw=true "Image")
+![alt text](docs/assets/preview.png?raw=true "Image")
 
-# Container orchestration with CI&CD, CLI and amazing UI
 
-Last.Backend is an open-source platform, which allows you build and deploy apps on your servers.
+### Containerized apps management platform
 
-Last.Backend fetches code from current directory, request or repo, build it and deploy it to server.
-Last.Backend uses powerful container technology, that means that your app will be run anywhere, from your development environment on your laptop to any large scale cloud hosting.
-You can connect to lastbackend platform the host where you want to deploy your applications, run CLI command or UI and your applications will be deployed.  
+Last.Backend is an open source platform for containerized application management: from deploy to scale.
+This solution is based on container technology.
 
-**Note:** Last.Backend is on activelly development stage, please be care of using it.
+**Note**: Last.Backend is under active development stage and our team is working day and night to make it better.
+Your suggestions, comments and contributions will be very helpful for us!
+
+### Design principles
+Our design principles allows us to create extendable and powerful system. We separated runtime into particular package and use interfaces to add ability to extend supported technologies.
+By default Last.Backend operate with this runtimes:
+- CRI - container runtime interface: docker by default
+- CII - container image interface: docker by default
+- CSI - container storage interface: host directory by default
+- CNI - container network interface: vxlan by default
+- CPI - container proxy interface: IPVS by default
+
+All these runtimes are documented in runtime section, where are described all methods, types and algorithms.
+
+### Endpoint interface
+The main endpoint to manage cluster is REST API interface.
+Our team use swagger for generation API documentation. To create swagger spec, just execute ``` make swagger-spec``` command in root of repository.
+
+
+You can use REST API in these options:
+
+- directly with CURL or another apps
+- using Last.Backend CLI (located in separate repo [lastbackend/cli](https://github.com/lastbackend/cli))
+- for building custom go apps - you can use golang client located in `pgk/api/client` package
+
+#### Current state
+
+Current version is very close for public beta and include:
+- cluster management
+- node management
+- overlay network based on vxlan
+- internal endpoints for pods balancing based on IPVS
+- ingress server based on haproxy
+- internal discovery server
+- services management with basic blue/green deployments
+- volumes management
+
+All of these functionality is under active test now, so don't surprised by frequent PR please.
+
 
 Join us in Gitter [![Gitter](https://badges.gitter.im/lastbackend/lastbackend.svg)](https://gitter.im/lastbackend/lastbackend?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge)
-
 This project has [Roadmap](ROADMAP.md), feel free to offer your features. 
 
 We are actively searching for contributors! If you want to help our project and to make developers life easier, please read our **[Contibuting guideliness](http://docs.lastbackend.com/#_contributing)**.
-
-**We have benefits for active contributors!**
-
-![alt text](docs/screens/workflow.gif?raw=true "Image")
 
 ___
 
@@ -46,11 +77,10 @@ ___
 1. Fast application deploying to any server
 2. Easy application sharing
 3. Easy application management
-4. Deploying application with url/hub (like docker hub)
+4. Deploying application by url
 5. Deploying scheduling
-6. Deploying services like redis, rabbitmq, mysql, etc.
-7. Developer-friendly UI
-8. CLI tool for remote management
+6. Deploying stateful services.
+7. Developer-friendly CLI
 
 
 ## <a name="getting_started"></a>How to get started
@@ -78,13 +108,10 @@ Join us on social media:
  - [LinkedIn](https://www.linkedin.com/company/last-backend)
  - [question@lastbackend.com](mailto:question@lastbackend.com)
 
-Read our [blog](https://blog.lastbackend.com).
 
-
-### <a name="authors"></a>Authors
+### <a name="authors">Repository owners</a>
 
 - Alexander: https://github.com/undassa
-
 - Konstantin: https://github.com/unloop
 
 ---

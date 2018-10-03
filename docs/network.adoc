@@ -1,0 +1,87 @@
+=== Last.Backend Network Design
+
+Last.Backend approaches networking by default installation. There are 3 types of network communications:
+
+1. Container-to-container communications in the pod realized by using one vnet interface by containers in one pod.
+2. Pod-to-pod communications realized by endpoint.
+3. External-to-Service commutication is realized by endpoints and ingress.
+
+Last.Backend assumes that pods can communicate with other pods, across hosts.
+Every pod gets its own IP address so you do not need to create links between pods or mapping container ports to host ports.
+This design provides you clean network model, where pod is like separated host in your cluster.
+
+=== Network Runtime
+
+Last.Backend uses 2 network runtime interfaces:
+- CNI - to perform overlay network operations
+- CPI - to perform network proxy operations
+
+=== CNI
+
+CNI runtime interface operates with network in 5 methods:
+
+[source,golang]
+----
+	Info(ctx context.Context) *types.NetworkState
+	Create(ctx context.Context, network *types.SubnetManifest) (*types.NetworkState, error)
+	Destroy(ctx context.Context, network *types.NetworkState) error
+	Replace(ctx context.Context, state *types.NetworkState, manifest *types.SubnetManifest) (*types.NetworkState, error)
+	Subnets(ctx context.Context) (map[string]*types.NetworkState, error)
+----
+
+.Info - returns current network state
+.Create - creates a new subnet on node
+.Destroy - destroy subnet in network on node
+.Replace - update subnet in network on node
+.Subnets - return all subnets in network state
+
+
+Current version of Last.Backend contains VxLAN overlay network implemetation.
+VxLAN driver automatically creates network interface for communications, creates ARP, FBD rules to reach hosts in network.
+To enable VxLAN network in cluster, you need to pass runtime.cni type to "xvlan".
+CNI automatically detect default network interface, but if you need to setup a specific interface in node: just put in the runtime.interface option.
+
+[source,yaml]
+----
+runtime:
+  interface: "eth1" #external interface to route traffic
+  cni:
+    type: "vxlan"
+----
+
+
+=== CPI
+
+CPI runtime interface operates with proxy endpoints in 4 methods:
+
+[source,golang]
+----
+	Info(ctx context.Context) (map[string]*types.EndpointState, error)
+	Create(ctx context.Context, manifest *types.EndpointManifest) (*types.EndpointState, error)
+	Destroy(ctx context.Context, state *types.EndpointState) error
+	Update(ctx context.Context, state *types.EndpointState, manifest *types.EndpointManifest) (*types.EndpointState, error)
+----
+
+.Info - returns current endpoints state
+.Create - creates a new endpoint
+.Destroy - destroy endpoint
+.Update -  update endpoint rules
+
+Current version of Last.Backend contains IPVS proxy implemetation.
+IPVS driver manages IPVS configuration on node, creates new endpoint services and backends
+IPVS driver automatically creates ipvs dummy network interface for communications, attach cluster IP to it and manage ip routing options.
+To enable IPVS proxy mode in cluster, you need to pass runtime.cpi type to "ipvs".
+
+CNI automatically detect default network interface, but if you need to setup a specific interface in node: just put in the runtime.interface option.
+
+[source,yaml]
+----
+runtime:
+  interface: "eth1" #external interface to route traffic
+  cpi:
+    type: "ipvs"
+----
+
+
+
+

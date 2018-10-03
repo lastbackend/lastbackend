@@ -28,7 +28,7 @@ import (
 	"os/signal"
 	"syscall"
 
-	"github.com/lastbackend/lastbackend/pkg/runtime/iri/iri"
+	"github.com/lastbackend/lastbackend/pkg/runtime/cii/cii"
 
 	"github.com/lastbackend/lastbackend/pkg/node/runtime"
 	"github.com/lastbackend/lastbackend/pkg/node/state"
@@ -61,7 +61,7 @@ func Daemon() {
 	}
 
 	iriDriver := viper.GetString("runtime.iri.type")
-	_iri, err := iri.New(iriDriver, viper.GetStringMap(fmt.Sprintf("runtime.%s", iriDriver)))
+	_cii, err := cii.New(iriDriver, viper.GetStringMap(fmt.Sprintf("runtime.%s", iriDriver)))
 	if err != nil {
 		log.Errorf("Cannot initialize iri: %v", err)
 	}
@@ -83,7 +83,7 @@ func Daemon() {
 	st := state.New()
 	envs.Get().SetState(st)
 	envs.Get().SetCRI(_cri)
-	envs.Get().SetIRI(_iri)
+	envs.Get().SetCII(_cii)
 
 	st.Node().Info = runtime.NodeInfo()
 	st.Node().Status = runtime.NodeStatus()

@@ -45,6 +45,7 @@ func (s *State) Loop() {
 	log.Info("start services restore")
 	nm := distribution.NewNamespaceModel(context.Background(), envs.Get().GetStorage())
 	sm := distribution.NewServiceModel(context.Background(), envs.Get().GetStorage())
+	vm := distribution.NewVolumeModel(context.Background(), envs.Get().GetStorage())
 	dm := distribution.NewDeploymentModel(context.Background(), envs.Get().GetStorage())
 	pm := distribution.NewPodModel(context.Background(), envs.Get().GetStorage())
 
@@ -55,6 +56,12 @@ func (s *State) Loop() {
 	}
 
 	sr, err := sm.Runtime()
+	if err != nil {
+		log.Errorf("%s", err.Error())
+		return
+	}
+
+	vr, err := vm.Runtime()
 	if err != nil {
 		log.Errorf("%s", err.Error())
 		return
@@ -90,11 +97,24 @@ func (s *State) Loop() {
 			s.Service[svc.SelfLink()].Restore()
 		}
 
+		vl, err := vm.ListByNamespace(n.SelfLink())
+		if err != nil {
+			log.Errorf("%s", err.Error())
+			return
+		}
+
+		for _, v := range vl.Items {
+
+			log.V(logLevel).Debugf("restore volume state: %s \n", v.SelfLink())
+			s.Cluster.SetVolume(v)
+		}
+
 	}
 
 	go s.watchPods(context.Background(), &pr.System.Revision)
 	go s.watchDeployments(context.Background(), &dr.System.Revision)
 	go s.watchServices(context.Background(), &sr.System.Revision)
+	go s.watchVolumes(context.Background(), &vr.System.Revision)
 
 	log.Info("finish services restore\n\n")
 }
@@ -219,6 +239,37 @@ func (s *State) watchPods(ctx context.Context, rev *int64) {
 	}()
 
 	pm.Watch(p, rev)
+}
+
+func (s *State) watchVolumes(ctx context.Context, rev *int64) {
+	var (
+		vl = make(chan types.VolumeEvent)
+	)
+
+	sm := distribution.NewVolumeModel(ctx, envs.Get().GetStorage())
+
+	go func() {
+		for {
+			select {
+			case <-ctx.Done():
+				return
+			case w := <-vl:
+
+				if w.Data == nil {
+					continue
+				}
+
+				if w.IsActionRemove() {
+					s.Cluster.DelVolume(w.Data)
+					continue
+				}
+
+				s.Cluster.SetVolume(w.Data)
+			}
+		}
+	}()
+
+	sm.Watch(vl, rev)
 }
 
 func NewState() *State {

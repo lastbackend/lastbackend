@@ -23,12 +23,12 @@ docs: docs/*
 build:
 	@echo "== Pre-building configuration"
 	mkdir -p build/linux && mkdir -p build/darwin
-	@echo "== Building Last.Backend platform"
-	@bash ./hack/build-cross.sh
+	@echo "== Building Last.Backend platform: ${APP}"
+	@bash ./hack/build-cross.sh ${APP}
 
 install:
 	@echo "== Install binaries"
-	@bash ./hack/install-cross.sh
+	@bash ./hack/install-cross.sh ${APP}
 
 image:
 	@echo "== Pre-building configuration"

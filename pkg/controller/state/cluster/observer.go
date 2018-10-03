@@ -65,12 +65,9 @@ func (cs *ClusterState) Observe() {
 			break
 		case n := <-cs.node.observer:
 			log.V(7).Debugf("node: %s", n.Meta.Name)
-			if err := ingressHandle(context.Background(), cs, n); err != nil {
-				log.Errorf("%s", err.Error())
-			}
 			cs.node.list[n.SelfLink()] = n
 			break
-			case v := <- cs.volume.observer:
+		case v := <- cs.volume.observer:
 			log.V(7).Debugf("volume: %s", v.SelfLink())
 			if err := volumeObserve(cs, v); err != nil {
 				log.Errorf("%s", err.Error())
@@ -165,6 +162,37 @@ func (cs *ClusterState) release(opts NodeLeaseOptions) (*types.Node, error) {
 	return req.Response.Node, req.Response.Err
 }
 
+func (cs *ClusterState) leaseSync(opts NodeLeaseOptions) (*types.Node, error) {
+
+	// Work as node lease requests queue
+	req := new(NodeLease)
+	req.Request = opts
+	req.sync = true
+	if err := handleNodeLease(cs, req); err != nil {
+		log.Errorf("sync lease error: %s", err.Error())
+		return nil, err
+	}
+
+
+	return req.Response.Node, req.Response.Err
+}
+
+// release node
+func (cs *ClusterState) releaseSync(opts NodeLeaseOptions) (*types.Node, error) {
+	// Work as node release
+	req := new(NodeLease)
+	req.Request = opts
+	req.sync = true
+
+	if err := handleNodeRelease(cs, req); err != nil {
+		log.Errorf("sync release error: %s", err.Error())
+		return nil, err
+	}
+
+	return req.Response.Node, req.Response.Err
+}
+
+
 // IPAM management
 func (cs *ClusterState) IPAM() ipam.IPAM {
 	return envs.Get().GetIPAM()
@@ -178,6 +206,16 @@ func (cs *ClusterState) SetNode(n *types.Node) {
 func (cs *ClusterState) DelNode(n *types.Node) {
 	delete(cs.node.list, n.Meta.SelfLink)
 }
+
+
+func (cs *ClusterState) SetVolume(v *types.Volume) {
+	cs.volume.observer <- v
+}
+
+func (cs *ClusterState) DelVolume(v *types.Volume) {
+	delete(cs.volume.list, v.Meta.SelfLink)
+}
+
 
 func (cs *ClusterState) PodLease(p *types.Pod) (*types.Node, error) {
 
@@ -229,9 +267,9 @@ func (cs *ClusterState) VolumeLease(v *types.Volume) (*types.Node, error) {
 		Storage: &v.Spec.Capacity.Storage,
 	}
 
-	node, err := cs.lease(opts)
+	node, err := cs.leaseSync(opts)
 	if err != nil {
-		log.Errorf("%s:> pod lease err: %s", logPrefix, err)
+		log.Errorf("%s:> volume lease err: %s", logPrefix, err)
 		return nil, err
 	}
 
@@ -245,9 +283,9 @@ func (cs *ClusterState) VolumeRelease(v *types.Volume) (*types.Node, error) {
 		Storage: &v.Spec.Capacity.Storage,
 	}
 
-	node, err := cs.release(opts)
+	node, err := cs.releaseSync(opts)
 	if err != nil {
-		log.Errorf("%s:> pod lease err: %s", logPrefix, err)
+		log.Errorf("%s:> volume lease err: %s", logPrefix, err)
 		return nil, err
 	}
 

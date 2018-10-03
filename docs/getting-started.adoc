@@ -2,7 +2,30 @@
 
 image:assets/infrastructure.png[Last.Backend]
 
-=== Build
+
+=== Ready to go environment
+
+Ready-to-go environment will be soon available on cloud.lastbackend.com[cloud.lastbackend.com] control panel for your experiments.
+In our control plane you can create new cluster, or connect existing cluster.
+
+There is several types of cluster management for cluster connected to clontrol panel:
+- WEB UI
+- CLI
+
+Using this panel you can manage multiple clusters located on defferent hosting providers from single point.
+
+=== Provision personal cluster
+
+There is many options how you can get local last.backend cluster. The most popular are described here:
+
+- local version with docker-machine
+You can easilly create local environment with docker-machine. You can create local cluster contains 1 node or multiple nodes, with full fuctional support.
+This is a good point to start testing, or start contributing.
+
+- hosted version, provisioned with ansible
+Our team prepared ansible roles for deploy last.backend cluster on your favourite environment. Ansible roles located at separated repository lastbackend/ansible[https://github.com/lastbackend/ansible]
+
+=== Development environment
 
 ==== Prerequisites
 
@@ -11,113 +34,5 @@ image:assets/infrastructure.png[Last.Backend]
 - Go etcd client for v3
 - Git
 
-
-[source,bash]
-----
-$ go get github.com/lastbackend/lastbackend
-$ cd ${GOPATH:-~/go}/src/github.com/lastbackend/lastbackend
-$ make deps && make build && make install
-----
-
-=== Create local development environment
-
-use docker-machine to create nodes for cluster
-
-[source,bash]
-----
-# set sources path
-export LB_SOURCES_PATH=/opt/src/github.com/lastbackend/lastbackend
-cd ${LB_SOURCES_PATH}
-make deps
-
-# create master node
-docker-machine create --driver virtualbox master
-docker-machine stop master
-# note: for virtulabox driver we can mount host dir into docker-machine with this command
-VBoxManage sharedfolder add master --name /lastbackend --hostpath $LB_SOURCES_PATH --automount
-docker-machine start master
-
-# create minion nodes
-docker-machine create --driver virtualbox minion-00
-docker-machine stop minion-00
-VBoxManage sharedfolder add minion-00 --name /lastbackend --hostpath $LB_SOURCES_PATH --automount
-docker-machine start minion-00
-
-# run etcd on master machine
-eval (docker-machine env master)
-export MASTER_IP=$(docker-machine ip master)
-docker run -d -p 4001:4001 -p 2380:2380 -p 2379:2379 \
- --name etcd quay.io/coreos/etcd:v3.2.9 /usr/local/bin/etcd \
- -name etcd0 \
- -advertise-client-urls http://${MASTER_IP}:2379,http://${MASTER_IP}:4001 \
- -listen-client-urls http://0.0.0.0:2379,http://0.0.0.0:4001 \
- -initial-advertise-peer-urls http://${MASTER_IP}:2380 \
- -listen-peer-urls http://0.0.0.0:2380 \
- -initial-cluster-token etcd-cluster-1 \
- -initial-cluster etcd0=http://${MASTER_IP}:2380 \
- -initial-cluster-state new
-
-# fetch deps
-docker run --rm -it  \
-      -v /lastbackend:/go/src/github.com/lastbackend/lastbackend \
-      -w /go/src/github.com/lastbackend/lastbackend \
-      --name=deps \
-      --net=host \
-      golang ./hack/bootstrap.sh
-
-# run Last.Backend Cluster API from sources in docker
-docker run -d -it --restart=always \
-      -v /lastbackend:/go/src/github.com/lastbackend/lastbackend \
-      -v /lastbackend/contrib/config.yml:/etc/lastbackend/config.yml \
-      -w /go/src/github.com/lastbackend/lastbackend \
-      --name=api \
-      --net=host \
-      golang go run ./cmd/kit/kit.go api -c /etc/lastbackend/config.yml
-
-# run Last.Backend Cluster CTL from sources in docker
-docker run -d -it --restart=always \
-      -v /lastbackend:/go/src/github.com/lastbackend/lastbackend \
-      -v /lastbackend/contrib/config.yml:/etc/lastbackend/config.yml \
-      -w /go/src/github.com/lastbackend/lastbackend \
-      --name=ctl \
-      golang go run ./cmd/kit/kit.go ctl -c /etc/lastbackend/config.yml
-
-# run node on minion host
-# create minion node
-docker-machine create --driver virtualbox minion-00
-docker-machine stop minion-00
-VBoxManage sharedfolder add minion-00 --name /lastbackend --hostpath $LB_SOURCES_PATH --automount
-docker-machine start minion-00
-
-# enable modprobe ip_vs for internal load balancing
-# this is required for boot2docker iso image
-docker-machine ssh minion-00 "sudo modprobe ip_vs"
-
-eval (docker-machine env minion-00)
-# install deps for sources
-docker run --rm -it  \
-      -v /lastbackend:/go/src/github.com/lastbackend/lastbackend \
-      -w /go/src/github.com/lastbackend/lastbackend \
-      --name=deps \
-      --net=host \
-      golang ./hack/bootstrap.sh
-
-# run node container
-docker run -d -it --restart=always \
--v /lastbackend:/go/src/github.com/lastbackend/lastbackend \
--v /lastbackend/contrib/node.yml:/etc/lastbackend/config.yml \
--v /var/run/docker.sock:/var/run/docker.sock \
--v /var/run/lastbackend:/var/run/lastbackend \
--v /lib/modules:/lib/modules:rw \
--w /go/src/github.com/lastbackend/lastbackend \
--e LB_API_URI="$MASTER_IP:2967" \
--e LB_DNS_IPS="$MASTER_IP" \
---privileged \
---name=node \
---net=host \
-index.lstbknd.net/lastbackend/lastbackend go run ./cmd/node/node.go -c /etc/lastbackend/config.yml
-
-# check logs
-docker logs -f node
-
-----
+For creation local development environment we suggest you to use docker-machine provision type:
+include::installation/development.adoc[]

@@ -20,12 +20,12 @@ package csi
 
 import (
 	"github.com/lastbackend/lastbackend/pkg/runtime/csi"
-	"github.com/lastbackend/lastbackend/pkg/runtime/csi/local"
+	"github.com/lastbackend/lastbackend/pkg/runtime/csi/dir"
 )
 
 func New(kind string) (csi.CSI, error) {
 	switch kind {
 	default:
-		return local.Get()
+		return dir.Get()
 	}
 }

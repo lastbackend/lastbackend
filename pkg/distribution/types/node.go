@@ -154,7 +154,7 @@ type NodeResources struct {
 	// Node total cpu
 	Cpu int `json:"cpu"`
 	// Node storage
-	Storage int `json:"storage"`
+	Storage int64 `json:"storage"`
 }
 
 // swagger:ignore

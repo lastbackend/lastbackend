@@ -1,0 +1,710 @@
+== Last.Backend Runtime
+
+This section describes runtime Last.Backend information about core objects, componens and other cool things.
+
+Globally Last.Backend contains in 2 parts:
+- namespace runtime
+- infrastructure runtime
+
+=== Namespace runtime
+
+Namespace runtime is a virtual state in cluser, contains:
+- Namespace management
+- Service management
+- Deployment management
+- Pod management
+- Endpoint management
+- Secret management
+- Config management
+- Volumes management
+- Routes management
+
+==== Namespace
+
+Namespace is like a virtual cluster in physical cluster.
+
+Namespaces are designed for create separate isolated group of services. For example you need to use namespace to separate projects or project stages.
+Each namespace is isolate from others, so you can create namespace usage quotas. All resources in namespace need to be unique within namespace, but not across namespaces.
+
+Namespaces are a way to divide cluster resources between multiple projects (via resource quota).
+It is not necessary to use multiple namespaces just to separate project version or stages, but you can use it for that.
+
+===== Working with namespaces
+
+Creation and deletion of namespaces are described in the separated section of documentation for namespaces.
+
+Viewing namespaces
+You can list the current namespaces in a cluster using:
+
+[source,bash]
+----
+$ lb namespace ls
+NAME  DESCRIPTION  ENDPOINT
+----  -----------  --------
+demo               demo.lb.local
+----
+
+Create new namespace:
+[source,bash]
+----
+$ lb namespace create test
+Namespace `test` is created
+
+ NAME         test
+ DESCRIPTION
+ ENDPOINT     test.lb.local
+----
+
+===== DNS in namespaces
+
+Each namespace receive unique DNS entry. This entry needed by services for inter-cluster communitation.
+When you create a Service, it creates a corresponding DNS entry based on namespace DNS.
+This entry is of the form <service-name>.<namespace-name>.lb.local.
+
+
+==== Service
+
+Service in Last.Backend is your running app. Service is set of apps deployments, where only one deployment can be in active state.
+The main idea of services is to create one specification of your app with all needed information, such as container images, network settings, volumes binding and other.
+
+Services can be 2 types:
+- stateless - services that not handle working state information,
+- statefull - services that handle working state
+
+===== Stateless services
+
+Stateless service are the common type of services you need to use in your microservices architecture.
+This type of services can be easilly replicated across the cluster of nodes.
+
+===== Statefull services
+
+Stateless service are the common type of services you need to use in you need to run database or similar application.
+This type of services in Last.Backend workflow should be hard binded to particular node, and should not be scale horizontally.
+But you can always migrate service from one node to another with all data.
+
+===== Working with services
+
+Creation and deletion of services are fully described in the separated section of documentation for services.
+
+====== Viewing services in namespace
+You can list the current service in a namespace using:
+
+[source,bash]
+----
+$ lb service ls <namespace name>
+----
+For example:
+
+[source,bash]
+----
+$ lb service ls demo
+
+ NAME   ENDPOINT             STATUS  REPLICAS
+ ----   --------             ------  --------
+ 2048   2048.demo.lb.local   ready
+ proxy  proxy.demo.lb.local  ready
+----
+
+====== Create new service:
+The convinient way is to create service from manifest file like:
+
+[source, yaml]
+----
+kind: Service
+version: v1
+meta:
+  name: 2048
+  labels:
+    type: proxy
+    demo: test
+spec:
+  selector:
+    node:
+    labels:
+      type: "example"
+  replicas: 2
+  network:
+    ports: ["80:80/tcp"]
+  template:
+    containers:
+    - name: nginx
+      image:
+        name: evilroot/docker-2048
+----
+[source, bash]
+----
+$ lb namespace apply demo -f <path to service manifest>
+Service `2048` is created
+----
+
+====== Inspect service:
+You can view information about service with inspect command:
+[source, bash]
+----
+$lb service inspect <namespace name> <service name>
+----
+
+[source, bash]
+----
+$lb service inspect demo 2048
+Name:		demo/2048
+State:		ready
+Endpoint:	2048.demo.lb.local
+Created:	6 days ago
+Updated:	5 days ago
+Labels:		demo=test type=proxy
+
+
+Active deployments:
+
+ Name:		228d38e
+ State:		ready
+ Created:	6 days ago
+ Updated:	5 days ago
+
+ Pods:
+
+ Name     Ready  Status  Restarts  Age
+ ----     -----  ------  --------  ---
+ b62e295  1/1    ready   0         5 days ago
+ f6a85e8  1/1    ready   0         5 days ago
+
+----
+Here you can see active deployment, pods, endpoint and other helpful information about service.
+
+====== Update service:
+The convinient way to update service is to set new service manifest file:
+
+[source, yaml]
+----
+kind: Service
+version: v1
+meta:
+  name: 2048
+  labels:
+    type: proxy
+    demo: test
+spec:
+  selector:
+    node:
+    labels:
+      type: "example"
+  replicas: 1
+  network:
+    ports: ["80:80/tcp"]
+  template:
+    containers:
+    - name: nginx
+      image:
+        name: evilroot/docker-2048
+----
+
+[source, bash]
+----
+$ lb namespace apply demo -f <path to service manifest>
+Service `2048` is updated
+----
+
+Last.Backend platform creates diff of current service spec and provided. It automatically creates new deployment, when container runtime information is changed.
+
+====== Remove service:
+You can remove service on any stage, even it is in provision state.
+
+[source, bash]
+----
+$ lb service remove demo 2048
+Service `2048` is destroying now
+----
+
+For more information about services and manifest specification, go to separated services section in documentation.
+
+==== Deployment
+
+As described above, service can handle multiple deployments. Deployment is a service configuration, containes all information about how service should be run, scaled and other.
+
+Deployment can be in several type of states:
+- Created
+- Provision
+- Ready
+- Error
+- Degradation
+- Destroy
+- Destroyed
+
+When service configuration is changed, Last.Backend controller should make a decision about new deployment service should be created or not.
+It depends on which spec params changes.
+
+Deployments can not be created, updated or deleted manually - they a fully managed by controller. You can only view current deployments state in service.
+For more information about deployments and manifest specification, go to separated services deployments section in documentation.
+
+
+==== Pod
+
+Pod is a minimal scalable entity in Last.Backend cluster. It can contain one container, or multiple containers with shared resources.
+Pod specification is describe all rules, how host shuld create, start and manage containers.
+
+Pod can be in several type of states:
+- Created
+- Provision
+- Ready
+- Error
+- Degradation
+- Destroy
+- Destroyed
+
+Pods can not be created, updated or deleted manually - they a fully managed by controller. You can only view current pods state in service deployment.
+For more information about pods and manifest specification, go to separated deployment pods section in documentation
+
+====  Endpoint
+
+Endpoint is an internal entrypoint for service. If you need to access service in the cluster, you need to create portMap with proxy rules.
+Each endpoint receives internal cluster IP, and internal domain name in from of <service name>.<namespace name>.lb.local.
+
+===== Create endpoint
+Endpoints are managed automatically by controller and depends on service specification.
+That means that you can have service without endpoint, and it will not be accessible in a cluster network.
+
+[source, yaml]
+----
+kind: Service
+version: v1
+meta:
+  name: 2048
+  labels:
+    type: proxy
+    demo: test
+spec:
+  selector:
+    node:
+    labels:
+      type: "example"
+  replicas: 1
+  network:
+    ports: ["80:8080/tcp"]
+  template:
+    containers:
+    - name: nginx
+      image:
+        name: evilroot/docker-2048
+----
+
+In an example above we open service 2048 to cluster service-2-service communication by passing `network.ports` option to `["80:8080/tcp"]`.
+In this line we allow access to service by 80 port, and proxy traffic to 8080 port on pod. And you can access your service from other services by `2048.demo.lb.local:80` endpoint.
+
+===== Update endpoint
+
+You can update endpoint, by changing service.network.ports spec.
+That changes affects only network settings, and new deployment will not be created.
+
+===== Remove endpoint
+
+If you need to remove endpoint, just remove service.network specification rule in manifest.
+
+For more information about endpoint and manifest specification, go to separated deployment endpoint section in documentation
+
+==== Volumes
+
+Volume is a storage for your services data. When new volume is placed in cluster state, node agent creates a directory on host.
+This directory is mounted to containers according mount rules, specified in service sepcification.
+
+
+==== Secret
+
+Secret is designed to store sensitive information. You can deside yourself, what type of information is sensitive, but in common it is passwords, tokens, ssh keys.
+If you need to use secrets, you should attach it in to pod. There is 2 options how you can do it:
+- attach secret to pod as file placed in volume
+- attach secret data to pod environment
+
+Secret contains map of key=value, so you can store in one secret multiple key=values pairs or files.
+
+===== Get secrets
+
+To receive secret list in namespace use:
+[source, bash]
+----
+$lb secret ls <namespace name>
+----
+
+===== Inspect secret
+
+To get secret information use:
+
+[source, bash]
+----
+$lb secret inspect <namespace name> <secret name>
+----
+
+
+===== Create secret
+
+You can create secret in few types:
+- auth - secret type designed to store Username and Password.
+[source, bash]
+----
+$lb secret create <namespace name> <name> -a -u <username> -p <password>
+----
+
+- text - secret type designed to store key=value info.
+[source, bash]
+----
+$lb secret create <namespace name> <name> -t <key>=<value> -t <key2>=<value2>
+----
+
+- file - secret type designed to store sensitive files, like ssh-keys
+----
+$lb secret create <namespace name> <name> -f <file path>
+----
+
+===== Attach secret to service as environment variable
+
+To attach secret to environment variable in service, you need modify service container spec and set `env.secret.name` to select secret and `env.secret.key` to select secret key value of should be used.
+
+[source, yaml]
+----
+kind: Service
+version: v1
+meta:
+  name: 2048
+  labels:
+    type: proxy
+    demo: test
+spec:
+  selector:
+    node:
+    labels:
+      type: "example"
+  replicas: 1
+  network:
+    ports: ["80:8080/tcp"]
+  template:
+    containers:
+    - name: nginx
+      image:
+        name: evilroot/docker-2048
+      env:
+        - name: <env name>
+          secret:
+            name: <secret name>
+            key: <secret key>
+
+----
+===== Attach secret to service as file in volume
+
+To attach secret to service as file in volume, you need modify service volume spec and set `secret.name` to select secret and `secret.files` to select secret key value of should be used.
+
+[source, yaml]
+----
+kind: Service
+version: v1
+meta:
+  name: 2048
+  labels:
+    type: proxy
+    demo: test
+spec:
+  selector:
+    node:
+    labels:
+      type: "example"
+  replicas: 1
+  network:
+    ports: ["80:8080/tcp"]
+  template:
+    containers:
+    - name: nginx
+      image:
+        name: evilroot/docker-2048
+      volume:
+      - name: <volume name>
+        path: <mount path>
+    volumes:
+    - name: <volume name>
+      secret:
+        name: <secret name>
+        files: [<secret key>]
+
+----
+
+===== Update secret
+You can update secret by changing data but not secret type:
+
+[source, bash]
+----
+$lb secret update <namespace name> <name of auth secret> -a -u <username> -p <password>
+$lb secret update <namespace name> <name of text secret> -t <key>=<value> -t <key2>=<value2>
+$lb secret update <namespace name> <name of file secret> -f <file path> -f <file2 path>
+----
+
+===== Remove secret
+You can update secret by changing data but not secret type:
+
+[source, bash]
+----
+$lb secret remove <namespace name> <name secret>
+----
+
+==== Config
+
+Configs is designed to store configuration information for your sercices.
+If you need to use configs, you should attach it in to pod. There is 2 options how you can do it:
+- attach config to pod as file placed in volume
+- attach config value to pod environment
+
+===== Get configs
+
+To receive config list in namespace use:
+[source, bash]
+----
+$lb config ls <namespace name>
+----
+
+===== Inspect config
+
+To get config information use:
+
+[source, bash]
+----
+$lb config inspect <namespace name> <config name>
+----
+
+
+===== Create config
+
+You can create config of 2 types:
+
+- text - config type designed to store key=value info.
+[source, bash]
+----
+$lb config create <namespace name> <name> -t <key>=<value> -t <key2>=<value2>
+----
+
+- file - config type designed to store config files, like config.yaml
+[source, bash]
+----
+$lb config create <namespace name> <name> -f <file path> -f <file path>
+----
+
+You can create config providing config manifest and apply it into namespace:
+[source, bash]
+----
+$lb namespace apply <namespace name> -f <config manifest file>
+----
+
+Exmaple of config manifest:
+[source, yaml]
+----
+kind: Config
+version: v1
+meta:
+  name: lastbackend
+spec:
+  type: file
+  data:
+  - key: config.yml
+    file: ./contrib/config.yml
+----
+
+===== Attach config to service as environment variable
+
+To attach config to environment variable in service, you need modify service container spec and set `env.config.name` to select config and `env.config.key` to select config key value of should be used.
+
+[source, yaml]
+----
+kind: Service
+version: v1
+meta:
+  name: 2048
+  labels:
+    type: proxy
+    demo: test
+spec:
+  selector:
+    node:
+    labels:
+      type: "example"
+  replicas: 1
+  network:
+    ports: ["80:8080/tcp"]
+  template:
+    containers:
+    - name: nginx
+      image:
+        name: evilroot/docker-2048
+      env:
+        - name: <env name>
+          config:
+            name: <config name>
+            key: <config key>
+
+----
+===== Attach config to service as file in volume
+
+To attach config to service as file in volume, you need modify service volume spec and set `config.name` to select config and `config.files` to select config files which should be placed in volume.
+
+[source, yaml]
+----
+kind: Service
+version: v1
+meta:
+  name: 2048
+  labels:
+    type: proxy
+    demo: test
+spec:
+  selector:
+    node:
+    labels:
+      type: "example"
+  replicas: 1
+  network:
+    ports: ["80:8080/tcp"]
+  template:
+    containers:
+    - name: nginx
+      image:
+        name: evilroot/docker-2048
+      volume:
+      - name: <volume name>
+        path: <mount path>
+    volumes:
+    - name: <volume name>
+      config:
+        name: <config name>
+        files: [<config key>]
+
+----
+
+===== Update config
+You can update config by changing data but not config type:
+
+[source, bash]
+----
+$lb config update <namespace name> <name of text config> -t <key>=<value> -t <key2>=<value2>
+$lb config update <namespace name> <name of file config> -f <file path> -f <file2 path>
+----
+
+===== Remove config
+You can update config by changing data but not config type:
+
+[source, bash]
+----
+$lb config remove <namespace name> <name config>
+----
+
+==== Routes
+
+Routes are designed to pass external traffic into cluster network.
+Route is a set of rules contains:
+  - Domain - DNS record of route
+  - Port - external port to listen
+	- Rules: Set of rules for proxy:
+    - Path to handle
+    - Service service name to proxy
+    - Service endpoint port to proxy
+
+
+===== Get routes
+
+To receive routes list in namespace use:
+[source, bash]
+----
+$lb route ls <namespace name>
+----
+
+[source, bash]
+----
+$lb route ls demo
+
+NAMESPACE  NAME  DOMAIN                HTTPS  STATUS
+---------  ----  ------                -----  ------
+demo       2048  2048.demo.lstbknd.io         initialized
+demo       tank  tank.demo.lstbknd.io         initialized
+----
+
+===== Inspect route info
+
+To get route information use:
+
+[source, bash]
+----
+$lb route inspect <namespace name> <route name>
+----
+
+[source, bash]
+----
+$lb route inspect demo 2048
+NAME       2048
+NAMESPACE  demo
+DOMAIN     2048.demo.lstbknd.io
+PORT       80
+STATUS     initialized
+
+
+PATH  SERVICE  ENDPOINT            PORT
+----  -------  --------            ----
+/     2048     2048.demo.lb.local  80
+----
+
+===== Create route
+To create route you should provide domain and set of rules where ingress should proxy traffic
+
+[source, bash]
+----
+$lb route create <namespace name> <route name> -p <route port> <service name>:<service port>
+----
+
+For example:
+[source, bash]
+----
+$lb route create demo test -p 443 2048:80
+PORT       443
+STATUS     initialized
+NAME       test
+NAMESPACE  demo
+DOMAIN     test.demo.lstbknd.io
+
+
+PATH  SERVICE  ENDPOINT            PORT
+----  -------  --------            ----
+      2048     2048.demo.lb.local  80
+----
+
+===== Update route
+You can anytime update your route, just passing new rules:
+
+[source, bash]
+----
+$lb route update <namespace name> <route name> -p <route port> <service name>:<service port>
+----
+
+For example:
+[source, bash]
+----
+$lb route update demo test -p 80 tank:80
+PORT       tank
+STATUS     initialized
+NAME       test
+NAMESPACE  demo
+DOMAIN     test.demo.lstbknd.io
+
+
+PATH  SERVICE  ENDPOINT            PORT
+----  -------  --------            ----
+      tank     tank.demo.lb.local  80
+----
+
+===== Remove route
+To remove route use remove command:
+
+[source, bash]
+----
+$lb route remove <namespace name> <route name>
+----
+
+==== Cluster runtime
+
+Cluster runtime is physical resources runtime, contains:
+- Cluster management
+- Node management
+- Discovery management
+- Ingress management

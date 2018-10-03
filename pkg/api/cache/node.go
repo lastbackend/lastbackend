@@ -69,6 +69,9 @@ func (c *CacheNodeManifest) DelPodManifest(node, pod string) {
 }
 
 func (c *CacheNodeManifest) SetVolumeManifest(node, volume string, s *types.VolumeManifest) {
+
+	log.Infof("%s:SetVolumeManifest:> %s, %s", logCacheNode, node, volume)
+
 	c.lock.Lock()
 	defer c.lock.Unlock()
 
@@ -83,6 +86,9 @@ func (c *CacheNodeManifest) SetVolumeManifest(node, volume string, s *types.Volu
 }
 
 func (c *CacheNodeManifest) DelVolumeManifest(node, volume string) {
+
+	log.Infof("%s:DelVolumeManifest:> %s, %s", logCacheNode, node, volume)
+
 	c.lock.Lock()
 	defer c.lock.Unlock()
 

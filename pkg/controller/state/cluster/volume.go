@@ -172,7 +172,7 @@ func volumeProvision(cs *ClusterState, volume *types.Volume) (err error) {
 	}()
 
 	if volume.Meta.Node != types.EmptyString  {
-
+		log.Debugf("%s:> volume manifest create: %s", logPrefixVolume, volume.SelfLink())
 		vm := distribution.NewVolumeModel(context.Background(), envs.Get().GetStorage())
 		mf, err := vm.ManifestGet(volume.Meta.Node, volume.SelfLink())
 		if err != nil {
@@ -187,24 +187,42 @@ func volumeProvision(cs *ClusterState, volume *types.Volume) (err error) {
 					return err
 				}
 			}
+		} else {
+			if err := volumeManifestAdd(volume); err != nil {
+				log.Errorf("%s:> volume manifest add err: %s", logPrefixVolume, err.Error())
+				return err
+			}
+		}
+
+		if volume.Status.State != types.StateProvision {
+			volume.Status.State = types.StateProvision
+			volume.Meta.Updated = time.Now()
 		}
 
 		return nil
 	}
 
 	if volume.Meta.Node == types.EmptyString {
+
+		log.Debugf("%s:> volume provision > find node: %s", logPrefixVolume, volume.SelfLink())
+
 		node, err := cs.VolumeLease(volume)
 		if err != nil {
 			log.Errorf("%s:> volume manifest lease err: %s", logPrefixVolume, err.Error())
 			return err
 		}
 
+
+
 		if node == nil {
+			log.Debugf("%s:> volume provision > node not found: %s", logPrefixVolume, volume.SelfLink())
 			volume.Status.State = types.StateError
 			volume.Status.Message = errors.NodeNotFound
 			volume.Meta.Updated = time.Now()
 			return nil
 		}
+
+		log.Debugf("%s:> volume provision > node: %s found: %s", logPrefixVolume, node.SelfLink(), volume.SelfLink())
 
 		volume.Meta.Node = node.SelfLink()
 		volume.Meta.Updated = time.Now()
@@ -239,16 +257,19 @@ func volumeDestroy(cs *ClusterState, volume *types.Volume) (err error) {
 			volume.Meta.Updated = time.Now()
 			return nil
 		}
-
-		if volume.Status.State != types.StateDestroy {
-			volume.Status.State = types.StateDestroy
-			volume.Meta.Updated = time.Now()
-		}
-
-		return nil
+	} else {
+		volume.Spec.State.Destroy = true
+		volume.Status.State = types.StateDestroy
+		volume.Meta.Updated = time.Now()
 	}
 
-	volume.Spec.State.Destroy = true
+	if volume.Status.State != types.StateDestroy {
+		volume.Status.State = types.StateDestroy
+		volume.Meta.Updated = time.Now()
+	}
+
+
+
 	if err = volumeManifestSet(volume); err != nil {
 		if errors.Storage().IsErrEntityNotFound(err) {
 			if volume.Meta.Node != types.EmptyString {
@@ -257,6 +278,8 @@ func volumeDestroy(cs *ClusterState, volume *types.Volume) (err error) {
 						return err
 					}
 				}
+
+				return nil
 			}
 
 			volume.Status.State = types.StateDestroyed
@@ -267,13 +290,15 @@ func volumeDestroy(cs *ClusterState, volume *types.Volume) (err error) {
 		return err
 	}
 
-	volume.Status.State = types.StateDestroy
+
+
 
 	if volume.Meta.Node == types.EmptyString {
 		volume.Status.State = types.StateDestroyed
+		volume.Meta.Updated = time.Now()
 	}
 
-	volume.Meta.Updated = time.Now()
+
 	return nil
 }
 
@@ -305,7 +330,7 @@ func volumeManifestAdd(vol *types.Volume) error {
 
 	log.V(logLevel).Debugf("%s: create volume manifest for node: %s", logPrefixVolume, vol.SelfLink())
 
-	var vm *types.VolumeManifest
+	var vm  = new(types.VolumeManifest)
 
 	vm.State.Destroy = false
 	vm.Type = vol.Spec.Type
@@ -329,7 +354,7 @@ func volumeManifestSet(vol *types.Volume) error {
 		 err error
 	)
 
-	log.V(logLevel).Debugf("%s: create volume for node: %s", logPrefixVolume, vol.SelfLink())
+
 	im := distribution.NewVolumeModel(context.Background(), envs.Get().GetStorage())
 
 	m, err = im.ManifestGet(vol.Meta.Node, vol.Meta.SelfLink)
@@ -339,6 +364,7 @@ func volumeManifestSet(vol *types.Volume) error {
 
 	// Update manifest
 	if m == nil {
+		log.V(logLevel).Debugf("%s: create volume for node: %s", logPrefixVolume, vol.SelfLink())
 		ms := types.VolumeManifest(vol.Spec)
 		m = &ms
 	} else {
@@ -346,7 +372,7 @@ func volumeManifestSet(vol *types.Volume) error {
 	}
 
 	if err := im.ManifestSet(vol.Meta.Node, vol.SelfLink(), m); err != nil {
-		log.Errorf("can not udpate volume manifest: %s", err.Error())
+		log.Errorf("can not update volume manifest: %s", err.Error())
 	}
 
 	return nil

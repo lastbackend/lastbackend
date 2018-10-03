@@ -39,6 +39,17 @@ type Volume struct {
 	storage storage.Storage
 }
 
+func (v *Volume) Runtime() (*types.Runtime, error) {
+
+	log.V(logLevel).Debugf("%s:get:> get services runtime info", logVolumePrefix)
+	runtime, err := v.storage.Info(v.context, v.storage.Collection().Volume(), "")
+	if err != nil {
+		log.V(logLevel).Errorf("%s:get:> get runtime info error: %s", logVolumePrefix, err)
+		return &runtime.Runtime, err
+	}
+	return &runtime.Runtime, nil
+}
+
 func (v *Volume) Get(namespace, name string) (*types.Volume, error) {
 	log.V(logLevel).Debugf("%s:get:> get volume by id %s/%s", logVolumePrefix, namespace, name)
 
@@ -79,7 +90,7 @@ func (v *Volume) Create(namespace *types.Namespace, vol *types.Volume) (*types.V
 
 	vol.Meta.SetDefault()
 	vol.Meta.Namespace = namespace.Meta.Name
-	vol.Status.State = types.StatusInitialized
+	vol.Status.State = types.StateCreated
 
 	if err := v.storage.Put(v.context, v.storage.Collection().Volume(),
 		v.storage.Key().Volume(vol.Meta.Namespace, vol.Meta.Name), vol, nil); err != nil {
@@ -111,6 +122,7 @@ func (v *Volume) Destroy(volume *types.Volume) error {
 
 	log.V(logLevel).Debugf("%s:destroy:> volume %s", logVolumePrefix, volume.Meta.Name)
 
+	volume.Status.State = types.StateDestroy
 	volume.Spec.State.Destroy = true
 
 	if err := v.storage.Set(v.context, v.storage.Collection().Volume(),
@@ -202,12 +214,11 @@ func (v *Volume) ManifestGet(node, volume string) (*types.VolumeManifest, error)
 	)
 
 	if err := v.storage.Get(v.context, v.storage.Collection().Manifest().Volume(node), volume, &mf, nil); err != nil {
-		log.Errorf("%s:VolumeManifestGet:> err :%s", logVolumePrefix, err.Error())
-
 		if errors.Storage().IsErrEntityNotFound(err) {
 			return nil, nil
 		}
 
+		log.Errorf("%s:VolumeManifestGet:> err :%s", logVolumePrefix, err.Error())
 		return nil, err
 	}
 
@@ -240,14 +251,14 @@ func (v *Volume) ManifestDel(node, volume string) error {
 	log.V(logLevel).Debugf("%s:DelVolumeManifest:> ", logVolumePrefix)
 
 	if err := v.storage.Del(v.context, v.storage.Collection().Manifest().Volume(node), volume); err != nil {
-		log.Errorf("%s:PodManifestDel:> err :%s", logVolumePrefix, err.Error())
+		log.Errorf("%s:VolumeManifestDel:> err :%s", logVolumePrefix, err.Error())
 		return err
 	}
 
 	return nil
 }
 
-func (v *Volume) ManifestWatch(node string, ch chan types.VolumeManifestEvent, rev *int64) error {
+func (p *Volume) ManifestWatch(node string, ch chan types.VolumeManifestEvent, rev *int64) error {
 
 	log.V(logLevel).Debugf("%s:watch:> watch volume manifest ", logVolumePrefix)
 
@@ -258,10 +269,10 @@ func (v *Volume) ManifestWatch(node string, ch chan types.VolumeManifestEvent, r
 
 	if node != types.EmptyString {
 		f = fmt.Sprintf(`\b.+\/%s\/%s\/(.+)\b`, node, storage.VolumeKind)
-		c = v.storage.Collection().Manifest().Pod(node)
+		c = p.storage.Collection().Manifest().Volume(node)
 	} else {
 		f = fmt.Sprintf(`\b.+\/(.+)\/%s\/(.+)\b`, storage.VolumeKind)
-		c = v.storage.Collection().Manifest().Node()
+		c = p.storage.Collection().Manifest().Node()
 	}
 
 	r, err := regexp.Compile(f)
@@ -273,7 +284,7 @@ func (v *Volume) ManifestWatch(node string, ch chan types.VolumeManifestEvent, r
 	go func() {
 		for {
 			select {
-			case <-v.context.Done():
+			case <-p.context.Done():
 				done <- true
 				return
 			case e := <-watcher:
@@ -289,7 +300,12 @@ func (v *Volume) ManifestWatch(node string, ch chan types.VolumeManifestEvent, r
 				res := types.VolumeManifestEvent{}
 				res.Action = e.Action
 				res.Name = e.Name
-				res.Node = keys[0]
+				res.SelfLink = e.SelfLink
+				if node != types.EmptyString {
+					res.Node = node
+				} else {
+					res.Node = keys[1]
+				}
 
 				manifest := new(types.VolumeManifest)
 
@@ -307,7 +323,7 @@ func (v *Volume) ManifestWatch(node string, ch chan types.VolumeManifestEvent, r
 
 	opts := storage.GetOpts()
 	opts.Rev = rev
-	if err := v.storage.Watch(v.context, c, watcher, opts); err != nil {
+	if err := p.storage.Watch(p.context, c, watcher, opts); err != nil {
 		return err
 	}
 

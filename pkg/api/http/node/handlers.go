@@ -369,6 +369,8 @@ func NodeConnectH(w http.ResponseWriter, r *http.Request) {
 			nco.Security.SSL.Key = opts.SSL.Key
 		}
 
+		nco.Status.Capacity = opts.Status.Capacity
+
 		node, err = nm.Put(&nco)
 		if err != nil {
 			log.V(logLevel).Errorf("%s:connect:> node put error: %s", logPrefix, err.Error())
@@ -395,7 +397,7 @@ func NodeConnectH(w http.ResponseWriter, r *http.Request) {
 	ou := new(types.NodeUpdateMetaOptions)
 	ou.NodeUpdateInfoOptions.Set(opts.Info)
 	node.Meta.Set(ou)
-	node.Status = opts.Status
+	node.Status.Capacity = opts.Status.Capacity
 
 	node.Spec.Security.TLS = opts.TLS
 
@@ -471,6 +473,7 @@ func NodeSetStatusH(w http.ResponseWriter, r *http.Request) {
 	var (
 		nm = distribution.NewNodeModel(r.Context(), envs.Get().GetStorage())
 		pm = distribution.NewPodModel(r.Context(), envs.Get().GetStorage())
+		vm = distribution.NewVolumeModel(r.Context(), envs.Get().GetStorage())
 
 		nid = utils.Vars(r)["node"]
 	)
@@ -542,7 +545,44 @@ func NodeSetStatusH(w http.ResponseWriter, r *http.Request) {
 		pod.Status.Steps = s.Steps
 
 		if err := pm.Update(pod); err != nil {
-			log.V(logLevel).Errorf("%s:setpodstatus:> get nodes list err: %s", logPrefix, err.Error())
+			log.V(logLevel).Errorf("%s:setpodstatus:> update pod err: %s", logPrefix, err.Error())
+			errors.HTTP.InternalServerError(w)
+			return
+		}
+	}
+
+	for v, s := range opts.Volumes {
+		log.Debugf("set volume status: %s", v)
+
+		keys := strings.Split(v, ":")
+		if len(keys) != 2 {
+			log.V(logLevel).Errorf("%s:set volume status:> invalid volume selflink err: %s", logPrefix, v)
+			errors.HTTP.BadRequest(w)
+			return
+		}
+
+		volume, err := vm.Get(keys[0], keys[1])
+		if err != nil {
+			log.V(logLevel).Errorf("%s:set volume status:> volume not found by selflink err: %s", logPrefix, v)
+			errors.HTTP.InternalServerError(w)
+			return
+		}
+		if volume == nil {
+			log.V(logLevel).Warnf("%s:set volume status:>volume not found `%s` not found", logPrefix, v)
+			if err := vm.ManifestDel(nid, v); err != nil {
+				if !errors.Storage().IsErrEntityNotFound(err) {
+					log.V(logLevel).Warnf("%s:set volume status:>volume manifest del err `%s` ", logPrefix, err.Error())
+					continue
+				}
+			}
+			continue
+		}
+
+		volume.Status.State = s.State
+		volume.Status.Message = s.Message
+
+		if err := vm.Update(volume); err != nil {
+			log.V(logLevel).Errorf("%s:set volume status:> update pod err: %s", logPrefix, err.Error())
 			errors.HTTP.InternalServerError(w)
 			return
 		}

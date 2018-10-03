@@ -40,9 +40,10 @@ const (
 type Controller struct {
 	runtime *runtime.Runtime
 	cache   struct {
-		lock sync.RWMutex
+		lock      sync.RWMutex
 		resources types.NodeStatus
 		pods      map[string]*types.PodStatus
+		volumes   map[string]*types.VolumeStatus
 	}
 }
 
@@ -50,13 +51,13 @@ func New(r *runtime.Runtime) *Controller {
 	var c = new(Controller)
 	c.runtime = r
 	c.cache.pods = make(map[string]*types.PodStatus)
+	c.cache.volumes = make(map[string]*types.VolumeStatus)
 
 	for p, st := range envs.Get().GetState().Pods().GetPods() {
 		c.cache.pods[p] = st
 	}
 	return c
 }
-
 
 func (c *Controller) Connect(ctx context.Context) error {
 
@@ -95,12 +96,12 @@ func (c *Controller) Connect(ctx context.Context) error {
 			opts.SSL.Cert = certData
 		}
 	}
-	
+
 	for {
 		if err := envs.Get().GetNodeClient().Connect(ctx, opts); err == nil {
 			return nil
 		}
-		time.Sleep(3*time.Second)
+		time.Sleep(3 * time.Second)
 	}
 
 	return nil
@@ -115,6 +116,8 @@ func (c *Controller) Sync(ctx context.Context) error {
 	for range ticker.C {
 		opts := new(request.NodeStatusOptions)
 		opts.Pods = make(map[string]*request.NodePodStatusOptions)
+		opts.Volumes = make(map[string]*request.NodeVolumeStatusOptions)
+
 		opts.Resources.Capacity = envs.Get().GetState().Node().Status.Capacity
 		opts.Resources.Allocated = envs.Get().GetState().Node().Status.Allocated
 
@@ -128,6 +131,8 @@ func (c *Controller) Sync(ctx context.Context) error {
 
 			if !envs.Get().GetState().Pods().IsLocal(p) {
 				opts.Pods[p] = getPodOptions(status)
+			} else {
+				delete(c.cache.pods, p)
 			}
 		}
 
@@ -135,11 +140,29 @@ func (c *Controller) Sync(ctx context.Context) error {
 			delete(c.cache.pods, p)
 		}
 
-		c.cache.lock.Unlock()
+		var iv = 0
+		for v, status := range c.cache.volumes {
+			iv++
+			if iv > 10 {
+				break
+			}
 
-		for p, i := range opts.Pods {
-			log.Debugf("send pod status: %s > %s", p, i.State)
+			if status == nil {
+				continue
+			}
+
+			if !envs.Get().GetState().Volumes().IsLocal(v) {
+				opts.Volumes[v] = getVolumeOptions(status)
+			} else {
+				delete(c.cache.volumes, v)
+			}
 		}
+
+		for v := range opts.Volumes {
+			delete(c.cache.volumes, v)
+		}
+
+		c.cache.lock.Unlock()
 
 		spec, err := envs.Get().GetNodeClient().SetStatus(ctx, opts)
 		if err != nil {
@@ -158,22 +181,38 @@ func (c *Controller) Sync(ctx context.Context) error {
 
 func (c *Controller) Subscribe() {
 	var (
-		pods = make(chan string)
-		done = make(chan bool)
+		pods    = make(chan string)
+		volumes = make(chan string)
+		done    = make(chan bool)
 	)
 
-	go func(){
-		log.Debug("pods subscribe")
+	go func() {
+		log.Debug("subscribe state")
+
 		for {
-			p := <- pods
-			log.Debugf("pod changed: %s", p)
-			c.cache.lock.Lock()
-			c.cache.pods[p]= envs.Get().GetState().Pods().GetPod(p)
-			c.cache.lock.Unlock()
+			select {
+			case p := <-pods:
+				log.Debugf("pod changed: %s", p)
+				c.cache.lock.Lock()
+				c.cache.pods[p] = envs.Get().GetState().Pods().GetPod(p)
+				c.cache.lock.Unlock()
+				break
+			case v := <-volumes:
+				log.Debugf("volume changed: %s", v)
+				c.cache.lock.Lock()
+				c.cache.volumes[v] = envs.Get().GetState().Volumes().GetVolume(v)
+				c.cache.lock.Unlock()
+				break
+			}
 		}
+
 	}()
 
-	envs.Get().GetState().Pods().Watch(pods, done)
+
+	go envs.Get().GetState().Pods().Watch(pods, done)
+	go envs.Get().GetState().Volumes().Watch(volumes, done)
+
+	<- done
 }
 
 func getPodOptions(p *types.PodStatus) *request.NodePodStatusOptions {
@@ -187,3 +226,11 @@ func getPodOptions(p *types.PodStatus) *request.NodePodStatusOptions {
 	opts.Steps = p.Steps
 	return opts
 }
+
+func getVolumeOptions(p *types.VolumeStatus) *request.NodeVolumeStatusOptions {
+	opts := v1.Request().Node().NodeVolumeStatusOptions()
+	opts.State = p.State
+	opts.Message = p.Message
+	return opts
+}
+
