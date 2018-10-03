@@ -37,8 +37,8 @@ type ServiceManifestMeta struct {
 }
 
 type ServiceManifestSpec struct {
-	Selector *ManifestSpecSelector `json:"selector,omitempty" yaml:"selector,omitempty"`
 	Replicas *int                  `json:"replicas,omitempty" yaml:"replicas,omitempty"`
+	Selector *ManifestSpecSelector `json:"selector,omitempty" yaml:"selector,omitempty"`
 	Network  *ManifestSpecNetwork  `json:"network,omitempty" yaml:"network,omitempty"`
 	Strategy *ManifestSpecStrategy `json:"strategy,omitempty" yaml:"strategy,omitempty"`
 	Template *ManifestSpecTemplate `json:"template,omitempty" yaml:"template,omitempty"`
