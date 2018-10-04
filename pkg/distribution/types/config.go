@@ -138,13 +138,13 @@ func (s *Config) GetHash() string {
 
 func (s *Config) SelfLink() string {
 	if s.Meta.SelfLink == "" {
-		s.Meta.SelfLink = s.CreateSelfLink(s.Meta.Name)
+		s.Meta.SelfLink = s.CreateSelfLink(s.Meta.Namespace, s.Meta.Name)
 	}
 	return s.Meta.SelfLink
 }
 
-func (s *Config) CreateSelfLink(name string) string {
-	return fmt.Sprintf("%s", name)
+func (s *Config) CreateSelfLink(namespace, name string) string {
+	return fmt.Sprintf("%s:%s", namespace, name)
 }
 
 // swagger:ignore

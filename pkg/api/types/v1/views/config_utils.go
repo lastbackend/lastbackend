@@ -40,6 +40,7 @@ func (s *Config) ToJson() ([]byte, error) {
 func (s *Config) ToMeta(obj types.ConfigMeta) ConfigMeta {
 	meta := ConfigMeta{}
 	meta.Name = obj.Name
+	meta.SelfLink = obj.SelfLink
 	meta.Namespace = obj.Namespace
 	meta.Kind = obj.Kind
 	meta.Updated = obj.Updated

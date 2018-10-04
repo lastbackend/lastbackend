@@ -25,9 +25,9 @@ import (
 
 var Routes = []http.Route{
 	// Route handlers
-	{Path: "/secret", Method: http.MethodPost, Middleware: []http.Middleware{middleware.Authenticate}, Handler: SecretCreateH},
-	{Path: "/secret", Method: http.MethodGet, Middleware: []http.Middleware{middleware.Authenticate}, Handler: SecretListH},
-	{Path: "/secret/{secret}", Method: http.MethodGet, Middleware: []http.Middleware{middleware.Authenticate}, Handler: SecretGetH},
-	{Path: "/secret/{secret}", Method: http.MethodPut, Middleware: []http.Middleware{middleware.Authenticate}, Handler: SecretUpdateH},
-	{Path: "/secret/{secret}", Method: http.MethodDelete, Middleware: []http.Middleware{middleware.Authenticate}, Handler: SecretRemoveH},
+	{Path: "/namespace/{namespace}/secret", Method: http.MethodPost, Middleware: []http.Middleware{middleware.Authenticate}, Handler: SecretCreateH},
+	{Path: "/namespace/{namespace}/secret", Method: http.MethodGet, Middleware: []http.Middleware{middleware.Authenticate}, Handler: SecretListH},
+	{Path: "/namespace/{namespace}/secret/{secret}", Method: http.MethodGet, Middleware: []http.Middleware{middleware.Authenticate}, Handler: SecretGetH},
+	{Path: "/namespace/{namespace}/secret/{secret}", Method: http.MethodPut, Middleware: []http.Middleware{middleware.Authenticate}, Handler: SecretUpdateH},
+	{Path: "/namespace/{namespace}/secret/{secret}", Method: http.MethodDelete, Middleware: []http.Middleware{middleware.Authenticate}, Handler: SecretRemoveH},
 }
