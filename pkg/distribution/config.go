@@ -84,6 +84,8 @@ func (n *Config) Create(namespace *types.Namespace, config *types.Config) (*type
 	log.V(logLevel).Debugf("%s:create:> create config %#v", logConfigPrefix, config.Meta.Name)
 
 	config.Meta.Namespace = namespace.Meta.Name
+	config.SelfLink()
+
 	if err := n.storage.Put(n.context, n.storage.Collection().Config(),
 		n.storage.Key().Config(config.Meta.Namespace, config.Meta.Name), config, nil); err != nil {
 		log.V(logLevel).Errorf("%s:create:> insert config err: %v", logConfigPrefix, err)
