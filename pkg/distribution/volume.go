@@ -91,6 +91,7 @@ func (v *Volume) Create(namespace *types.Namespace, vol *types.Volume) (*types.V
 	vol.Meta.SetDefault()
 	vol.Meta.Namespace = namespace.Meta.Name
 	vol.Status.State = types.StateCreated
+	vol.SelfLink()
 
 	if err := v.storage.Put(v.context, v.storage.Collection().Volume(),
 		v.storage.Key().Volume(vol.Meta.Namespace, vol.Meta.Name), vol, nil); err != nil {

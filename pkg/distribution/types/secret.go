@@ -166,13 +166,13 @@ func (s *Secret) GetHash() string {
 
 func (s *Secret) SelfLink() string {
 	if s.Meta.SelfLink == "" {
-		s.Meta.SelfLink = s.CreateSelfLink(s.Meta.Name)
+		s.Meta.SelfLink = s.CreateSelfLink(s.Meta.Namespace, s.Meta.Name)
 	}
 	return s.Meta.SelfLink
 }
 
-func (s *Secret) CreateSelfLink(name string) string {
-	return fmt.Sprintf("%s", name)
+func (s *Secret) CreateSelfLink(namespace, name string) string {
+	return fmt.Sprintf("%s:%s", namespace, name)
 }
 
 func (s *Secret) DecodeRegistry() {
