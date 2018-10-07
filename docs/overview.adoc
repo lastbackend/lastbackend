@@ -7,15 +7,15 @@ Note that project is under active development and our team is working day and ni
 Your suggestions, comments and contributions is very helpful. Big thanks for that!
 
 == Design principles
-Our design principles allows us to create extendable and powerful system. We separated runtime into particular package and use interfaces to add ability to extend supported technologies.
-By default Last.Backend operate with this runtimes:
+Our design principles allows us to create extendable and powerful system. We separated runtime into particular package and used interfaces to add ability to extend supported technologies.
+By default Last.Backend operate with these runtimes:
 - CRI - container runtime interface: docker by default
 - CII - container image interface: docker by default
 - CSI - container storage interface: host directory by default
 - CNI - container network interface: vxlan by default
 - CPI - container proxy interface: IPVS by default
 
-All these runtimes are documented in runtime section, where are described all methods, types and algorythms.
+All these runtimes are documented in runtime section. where all methods, types and algorythms are described.
 
 == Endpoint interface
 The main endpoint to manage cluster is REST API interface.
@@ -40,4 +40,4 @@ Current version is very close for public beta and include:
 - services management with basic blue/green deployments
 - volumes management
 
-All of these functionality is under active test now, so don't surprised by frequent PR please.
+All of these functionalities is under active tests now, so don't be surprised by frequent PR please.
