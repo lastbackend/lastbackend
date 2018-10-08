@@ -8,7 +8,7 @@ image:assets/architecture.svg[Last.Backend]
 Ready-to-go environment will be soon available on cloud.lastbackend.com[cloud.lastbackend.com] control panel for your experiments.
 In our control plane you can create new cluster, or connect existing cluster.
 
-There is several types of cluster management for cluster connected to clontrol panel:
+There are several types of management for cluster connected to clontrol panel:
 - WEB UI
 - CLI
 
@@ -16,7 +16,7 @@ Using this panel you can manage multiple clusters located on defferent hosting p
 
 === Provision personal cluster
 
-There is many options how you can get local last.backend cluster. The most popular are described here:
+There are many options how you can get local last.backend cluster. The most popular are described here:
 
 - local version with docker-machine
 You can easilly create local environment with docker-machine. You can create local cluster contains 1 node or multiple nodes, with full fuctional support.
@@ -34,5 +34,5 @@ Our team prepared ansible roles for deploy last.backend cluster on your favourit
 - Go etcd client for v3
 - Git
 
-For creation local development environment we suggest you to use docker-machine provision type:
+For creating local development environment we suggest you to use docker-machine provision type:
 include::installation/development.adoc[]

@@ -86,6 +86,7 @@ func (n *Secret) Create(namespace *types.Namespace, secret *types.Secret) (*type
 	log.V(logLevel).Debugf("%s:create:> create secret %#v", logSecretPrefix, secret.Meta.Name)
 
 	secret.Meta.Namespace = namespace.Meta.Name
+	secret.SelfLink()
 
 	if err := n.storage.Put(n.context, n.storage.Collection().Secret(),
 		n.storage.Key().Secret(secret.Meta.Namespace, secret.Meta.Name), secret, nil); err != nil {

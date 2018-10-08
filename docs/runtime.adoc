@@ -73,12 +73,12 @@ Services can be 2 types:
 
 ===== Stateless services
 
-Stateless service are the common type of services you need to use in your microservices architecture.
+Stateless services are the common type of services you need to use in your microservices architecture.
 This type of services can be easilly replicated across the cluster of nodes.
 
 ===== Statefull services
 
-Stateless service are the common type of services you need to use in you need to run database or similar application.
+Stateless services are the common type of services you need to use in you need to run database or similar application.
 This type of services in Last.Backend workflow should be hard binded to particular node, and should not be scale horizontally.
 But you can always migrate service from one node to another with all data.
 
@@ -252,7 +252,7 @@ Pod can be in several type of states:
 - Destroy
 - Destroyed
 
-Pods can not be created, updated or deleted manually - they a fully managed by controller. You can only view current pods state in service deployment.
+Pods can not be created, updated or deleted manually - they are fully managed by controller. You can only view current pods state in service deployment.
 For more information about pods and manifest specification, go to separated deployment pods section in documentation
 
 ====  Endpoint

@@ -1,6 +1,6 @@
 ==== Last.Backend installation
 
-On this section you can find that best solution for setup Last.Backend cluster.
+In this section you can find the best solution for setup Last.Backend cluster.
 
 You can run Last.Backend cluster almost anywhere. You can start from your laptop or VMs on a cloud provider.
 Your decision should be based on available resources and infrastructure design requirements.
@@ -26,7 +26,7 @@ Use this type of installation if you want to:
 Here you can learn how to deploy Last.Backend cluster with ansible.
 
 ===== Last.Backend Hosted Installation
-Last.Backend Hosted installation is a best way to create and maintain Last.Backend cluster for teams and companies in one click
+Last.Backend Hosted installation is the best way to create and maintain Last.Backend cluster for teams and companies in one click
 On this type of installation, you will get Last.Backend cluster, managed by Last.Backend team.
 
 Use this type of installation if you want to:
@@ -44,4 +44,4 @@ Use this type of installation if you want to:
 - Focus on apps development speed without worrying for delivery process.
 - Have high availability cluster, managed by providers
 
-Now we are in integration stage with a lot of different hosting providers across the globe. More information you can contact us: mailto:partners@lastbackend.com[partners@lastbackend.com]
+Now we are in integration stage with a lot of different hosting providers across the globe. For more information you can contact us: mailto:partners@lastbackend.com[partners@lastbackend.com]

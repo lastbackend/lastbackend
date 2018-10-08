@@ -43,7 +43,7 @@ The Last.Backend project roadmap lives in https://github.com/lastbackend/lastbac
 === Support
 
 While there are many different channels that you can use to get hold of us (Issues, Forums/Mailing lists),
-you can help make sure that we are efficient in getting you the help that you need.
+you can help to make sure that we are efficient in getting you the help that you need.
 
 Before opening a new issue, it's helpful to search the project - it's likely that another user has already reported the issue you're facing,
 or it's a known issue that we're already aware of.
