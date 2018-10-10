@@ -47,9 +47,6 @@ func ImagePull(ctx context.Context, namespace string, image *types.SpecTemplateC
 			return err
 		}
 
-		log.Debugf("username: %s", data.Username)
-		log.Debugf("password: %s", data.Password)
-
 		auth, err := envs.Get().GetCII().Auth(ctx, data)
 		if err != nil {
 			log.Errorf("can not create secret string. err: %s", err.Error())
