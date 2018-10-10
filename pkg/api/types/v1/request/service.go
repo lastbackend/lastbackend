@@ -212,9 +212,15 @@ func (s *ServiceManifest) SetServiceSpec(svc *types.Service) {
 							svc.Spec.Template.Updated = time.Now()
 						}
 
-						if se.Secret.Name != ce.From.Name || se.Secret.Key != ce.From.Key {
-							se.Secret.Name = ce.From.Name
-							se.Secret.Key = ce.From.Key
+						if se.Secret.Name != ce.Secret.Name || se.Secret.Key != ce.Secret.Key {
+							se.Secret.Name = ce.Secret.Name
+							se.Secret.Key = ce.Secret.Key
+							svc.Spec.Template.Updated = time.Now()
+						}
+
+						if se.Config.Name != ce.Config.Name || se.Secret.Key != ce.Config.Key {
+							se.Config.Name = ce.Config.Name
+							se.Config.Key = ce.Config.Key
 							svc.Spec.Template.Updated = time.Now()
 						}
 					}
@@ -225,8 +231,12 @@ func (s *ServiceManifest) SetServiceSpec(svc *types.Service) {
 						Name:  ce.Name,
 						Value: ce.Value,
 						Secret: types.SpecTemplateContainerEnvSecret{
-							Name: ce.From.Name,
-							Key:  ce.From.Key,
+							Name: ce.Secret.Name,
+							Key:  ce.Secret.Key,
+						},
+						Config: types.SpecTemplateContainerEnvConfig{
+							Name: ce.Config.Name,
+							Key:  ce.Config.Key,
 						},
 					})
 				}
@@ -345,6 +355,13 @@ func (s *ServiceManifest) SetServiceSpec(svc *types.Service) {
 				svc.Spec.Template.Updated = time.Now()
 			}
 
+			if v.Type != spec.Type || v.Volume.Name != spec.Volume.Name || v.Volume.Subpath != spec.Volume.Subpath {
+				spec.Type = v.Type
+				spec.Volume.Name = v.Volume.Name
+				spec.Volume.Subpath = v.Volume.Subpath
+				svc.Spec.Template.Updated = time.Now()
+			}
+
 			if v.Type != spec.Type || v.Secret.Name != spec.Secret.Name {
 				spec.Type = v.Type
 				spec.Secret.Name = v.Secret.Name
@@ -371,6 +388,35 @@ func (s *ServiceManifest) SetServiceSpec(svc *types.Service) {
 
 			if !e {
 				spec.Secret.Files = v.Secret.Files
+				svc.Spec.Template.Updated = time.Now()
+			}
+
+			if v.Type != spec.Type || v.Config.Name != spec.Config.Name {
+				spec.Type = v.Type
+				spec.Config.Name = v.Config.Name
+				svc.Spec.Template.Updated = time.Now()
+			}
+
+			var ce = true
+			for _, vf := range v.Config.Files {
+
+				var f = false
+				for _, sf := range spec.Config.Files {
+					if vf == sf {
+						f = true
+						break
+					}
+				}
+
+				if !f {
+					ce = false
+					break
+				}
+
+			}
+
+			if !ce {
+				spec.Config.Files = v.Config.Files
 				svc.Spec.Template.Updated = time.Now()
 			}
 

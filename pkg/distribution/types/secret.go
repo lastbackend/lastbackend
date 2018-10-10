@@ -27,9 +27,8 @@ import (
 )
 
 const (
-	KindSecretText = "text"
-	KindSecretAuth = "auth"
-	KindSecretFile = "file"
+	KindSecretOpaque = "opaque"
+	KindSecretAuth   = "auth"
 
 	SecretUsernameKey = "username"
 	SecretPasswordKey = "password"
@@ -128,7 +127,7 @@ func (s *Secret) DecodeSecretAuthData() (*SecretAuthData, error) {
 
 func (s *Secret) DecodeSecretTextData(key string) (string, error) {
 
-	if s.Spec.Type != KindSecretText {
+	if s.Spec.Type != KindSecretOpaque {
 		return EmptyString, errors.New("invalid secret type")
 	}
 

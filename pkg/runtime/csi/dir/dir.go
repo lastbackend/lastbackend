@@ -80,7 +80,7 @@ func (s *Storage) Create(ctx context.Context, name string, manifest *types.Volum
 
 	var (
 		status = new(types.VolumeState)
-		path   = filepath.Join(s.root, strings.Replace(name,":","_", -1))
+		path   = filepath.Join(s.root, strings.Replace(name, ":", "_", -1))
 	)
 
 	if _, err := os.Stat(path); os.IsNotExist(err) {
@@ -101,7 +101,7 @@ func (s *Storage) FilesList(ctx context.Context, state *types.VolumeState) ([]st
 	return make([]string, 0), nil
 }
 
-func (s *Storage) FilesPut(ctx context.Context, state *types.VolumeState, files map[string][]byte) error {
+func (s *Storage) FilesPut(ctx context.Context, state *types.VolumeState, files map[string]string) error {
 
 	for file, data := range files {
 		path := filepath.Join(state.Path, file)
@@ -119,7 +119,7 @@ func (s *Storage) FilesPut(ctx context.Context, state *types.VolumeState, files 
 		}
 		f.Close()
 
-		if err := ioutil.WriteFile(path, data, 0644); err != nil {
+		if err := ioutil.WriteFile(path, []byte(data), 0644); err != nil {
 			log.Errorf("can not write data to file: %s", err.Error())
 		}
 
@@ -128,7 +128,7 @@ func (s *Storage) FilesPut(ctx context.Context, state *types.VolumeState, files 
 	return nil
 }
 
-func (s *Storage) FilesCheck(ctx context.Context, state *types.VolumeState, files map[string][]byte) (bool, error) {
+func (s *Storage) FilesCheck(ctx context.Context, state *types.VolumeState, files map[string]string) (bool, error) {
 
 	for file, data := range files {
 		path := filepath.Join(state.Path, file)
@@ -148,11 +148,9 @@ func (s *Storage) FilesCheck(ctx context.Context, state *types.VolumeState, file
 		if _, err := io.Copy(hashFile, f); err != nil {
 			return false, err
 		}
-		if _, err := io.Copy(hashData, bytes.NewReader(data)); err != nil {
+		if _, err := io.Copy(hashData, bytes.NewReader([]byte(data))); err != nil {
 			return false, err
 		}
-
-
 
 		//Convert the bytes to a string
 		hashFileS := hex.EncodeToString(hashFile.Sum(nil)[:20])
@@ -181,7 +179,6 @@ func (s *Storage) FilesDel(ctx context.Context, state *types.VolumeState, files 
 
 	return nil
 }
-
 
 func (s *Storage) Remove(ctx context.Context, state *types.VolumeState) error {
 	return os.Remove(filepath.Join(state.Path))

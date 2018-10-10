@@ -26,12 +26,11 @@ import (
 	"golang.org/x/net/context"
 )
 
-func ImagePull(ctx context.Context, namespace string,  image *types.SpecTemplateContainerImage) error {
+func ImagePull(ctx context.Context, namespace string, image *types.SpecTemplateContainerImage) error {
 
 	var (
 		mf = new(types.ImageManifest)
 	)
-
 
 	mf.Name = image.Name
 	if image.Secret != types.EmptyString {
@@ -47,6 +46,9 @@ func ImagePull(ctx context.Context, namespace string,  image *types.SpecTemplate
 			log.Errorf("can not get parse secret auth data. err: %s", err.Error())
 			return err
 		}
+
+		log.Debugf("username: %s", data.Username)
+		log.Debugf("password: %s", data.Password)
 
 		auth, err := envs.Get().GetCII().Auth(ctx, data)
 		if err != nil {

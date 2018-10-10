@@ -21,14 +21,12 @@ package types
 import (
 	"crypto/sha1"
 	"encoding/base64"
-	"errors"
 	"fmt"
 	"time"
 )
 
 const (
 	KindConfigText = "text"
-	KindConfigFile = "file"
 )
 
 // swagger:ignore
@@ -60,66 +58,17 @@ type ConfigMeta struct {
 }
 
 type ConfigSpec struct {
-	Type string `json:"type" yaml:"type"`
-	Data []*ConfigSpecData `json:"data" yaml:"data"`
-}
-
-type ConfigSpecData struct {
-	Key   string `json:"key,omitempty" yaml:"key,omitempty"`
-	Value string `json:"value,omitempty" yaml:"value,omitempty"`
-	File  string `json:"file,omitempty" yaml:"file,omitempty"`
-	Data  []byte `json:"data,omitempty"`
+	Type string            `json:"type" yaml:"type"`
+	Data map[string]string `json:"data" yaml:"data"`
 }
 
 type ConfigManifest struct {
 	Runtime
 	State   string            `json:"state"`
-	Kind    string            `json:"kind"`
-	Data    map[string][]byte `json:"data" yaml:"data"`
+	Type    string            `json:"kind"`
+	Data    map[string]string `json:"data" yaml:"data"`
 	Created time.Time         `json:"created"`
 	Updated time.Time         `json:"updated"`
-}
-
-type ConfigManifestList struct {
-	Runtime
-	Items []*ConfigManifest
-}
-
-type ConfigManifestMap struct {
-	Runtime
-	Items map[string]*ConfigManifest
-}
-
-func NewConfigManifestList() *ConfigManifestList {
-	dm := new(ConfigManifestList)
-	dm.Items = make([]*ConfigManifest, 0)
-	return dm
-}
-
-func NewConfigManifestMap() *ConfigManifestMap {
-	dm := new(ConfigManifestMap)
-	dm.Items = make(map[string]*ConfigManifest)
-	return dm
-}
-
-func (s *Config) DecodeConfigTextData(key string) (string, error) {
-
-	if s.Spec.Type != KindConfigText {
-		return EmptyString, errors.New("invalid config type")
-	}
-
-	for _, item := range s.Spec.Data {
-
-		if item.Key == key {
-			d, err := base64.StdEncoding.DecodeString(item.Value)
-			if err != nil {
-				return EmptyString, err
-			}
-			return string(d), nil
-		}
-	}
-
-	return EmptyString, errors.New("config key not found")
 }
 
 type ConfigText struct {
@@ -128,6 +77,11 @@ type ConfigText struct {
 
 type ConfigFile struct {
 	Files map[string][]byte `json:"text"`
+}
+
+func (c *ConfigManifest) Set(cfg *Config) {
+	c.Type = cfg.Spec.Type
+	c.Data = cfg.Spec.Data
 }
 
 func (s *Config) GetHash() string {

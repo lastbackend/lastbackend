@@ -21,10 +21,14 @@ package runtime
 import (
 	"context"
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
+	"github.com/lastbackend/lastbackend/pkg/log"
 	"github.com/lastbackend/lastbackend/pkg/node/envs"
+	"strings"
 )
 
 func ConfigManage(ctx context.Context, name string, cfg *types.ConfigManifest) error {
+
+	log.V(logLevel).Debugf("Manage config: %s", name)
 
 	if cfg.State == types.StateDestroyed {
 		ConfigRemove(ctx, name)
@@ -39,8 +43,9 @@ func ConfigManage(ctx context.Context, name string, cfg *types.ConfigManifest) e
 	return ConfigCreate(ctx, name, cfg)
 }
 
-
 func ConfigCreate(ctx context.Context, name string, cfg *types.ConfigManifest) error {
+
+	log.V(logLevel).Debugf("create config: %s", name)
 
 	ok := envs.Get().GetState().Configs().GetConfig(name)
 	if ok != nil {
@@ -53,11 +58,35 @@ func ConfigCreate(ctx context.Context, name string, cfg *types.ConfigManifest) e
 
 func ConfigUpdate(ctx context.Context, name string, cfg *types.ConfigManifest) error {
 
+	log.V(logLevel).Debugf("update config: %s", name)
+
 	envs.Get().GetState().Configs().SetConfig(name, cfg)
 	return nil
 
 }
 
 func ConfigRemove(ctx context.Context, name string) {
+
+	log.V(logLevel).Debugf("remove config: %s", name)
+
 	envs.Get().GetState().Configs().DelConfig(name)
+}
+
+func parseConfigSelflink(selflink string) (string, string) {
+	var namespace, name string
+
+	parts := strings.Split(selflink, ":")
+
+	if len(parts) == 1 {
+		namespace = types.DEFAULT_NAMESPACE
+		name = parts[0]
+	}
+
+	if len(parts) > 1 {
+		namespace = parts[0]
+		name = parts[1]
+	}
+
+	return namespace, name
+
 }

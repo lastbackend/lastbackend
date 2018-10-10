@@ -43,11 +43,25 @@ func (r *Runtime) Run() {
 	go r.subnetManifestWatch(ctx, nil)
 
 	go r.secretWatch(ctx, nil)
+
 	go r.nodeWatch(ctx, nil)
 	go r.ingressWatch(ctx, nil)
 
-
 	c := envs.Get().GetCache()
+
+	cm := distribution.NewConfigModel(ctx, envs.Get().GetStorage())
+	cl, err := cm.List(types.EmptyString)
+	if err != nil {
+		return
+	}
+	go r.configWatch(ctx, &cl.System.Revision)
+
+	for _, i := range cl.Items {
+		m := new(types.ConfigManifest)
+		m.Set(i)
+		m.State = types.StateReady
+		c.Node().SetConfigManifest(i.SelfLink(), m)
+	}
 
 	rm := distribution.NewRouteModel(ctx, envs.Get().GetStorage())
 	rl, err := rm.List()
@@ -61,7 +75,6 @@ func (r *Runtime) Run() {
 		m.Set(i)
 		c.Ingress().SetRouteManifest(i.SelfLink(), m)
 	}
-
 
 	dm := distribution.NewDiscoveryModel(ctx, envs.Get().GetStorage())
 	dl, err := dm.List()
@@ -242,6 +255,44 @@ func (r *Runtime) secretWatch(ctx context.Context, rev *int64) {
 				}
 
 				c.Node().SetSecretManifest(w.Data.Meta.Name, sm)
+			}
+		}
+	}()
+
+	mm.Watch(n, rev)
+}
+
+func (r *Runtime) configWatch(ctx context.Context, rev *int64) {
+
+	var (
+		n = make(chan types.ConfigEvent)
+		c = envs.Get().GetCache()
+	)
+
+	mm := distribution.NewConfigModel(ctx, envs.Get().GetStorage())
+
+	go func() {
+		for {
+			select {
+			case <-ctx.Done():
+				return
+			case w := <-n:
+
+				if w.Data == nil {
+					continue
+				}
+
+				sm := new(types.ConfigManifest)
+				sm.Created = w.Data.Meta.Created
+				sm.Updated = w.Data.Meta.Updated
+				sm.State = types.StateUpdated
+
+				if w.IsActionRemove() {
+					sm := new(types.ConfigManifest)
+					sm.State = types.StateDestroyed
+				}
+
+				c.Node().SetConfigManifest(w.Data.Meta.Name, sm)
 			}
 		}
 	}()

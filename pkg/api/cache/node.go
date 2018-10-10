@@ -32,6 +32,7 @@ type CacheNodeManifest struct {
 	nodes     map[string]*types.Node
 	ingress   map[string]*types.Ingress
 	discovery map[string]*types.Discovery
+	configs   map[string]*types.ConfigManifest
 	manifests map[string]*types.NodeManifest
 }
 
@@ -127,6 +128,20 @@ func (c *CacheNodeManifest) SetSecretManifest(name string, s *types.SecretManife
 	}
 }
 
+func (c *CacheNodeManifest) SetConfigManifest(name string, s *types.ConfigManifest) {
+	c.lock.Lock()
+	defer c.lock.Unlock()
+
+	c.configs[name] = s
+	for n := range c.manifests {
+		if _, ok := c.manifests[n].Configs[name]; !ok {
+			c.manifests[n].Configs = make(map[string]*types.ConfigManifest)
+		}
+
+		c.manifests[n].Configs[name] = s
+	}
+}
+
 func (c *CacheNodeManifest) SetEndpointManifest(addr string, s *types.EndpointManifest) {
 	c.lock.Lock()
 	defer c.lock.Unlock()
@@ -201,7 +216,7 @@ func (c *CacheNodeManifest) DelDiscovery(selflink string) {
 	}
 
 	for _, n := range c.manifests {
-		n.Meta.Discovery = resolvers
+		n.Resolvers = resolvers
 	}
 }
 
@@ -218,7 +233,7 @@ func (c *CacheNodeManifest) SetResolvers() {
 	}
 
 	for _, n := range c.manifests {
-		n.Meta.Discovery = resolvers
+		n.Resolvers = resolvers
 	}
 }
 
@@ -236,6 +251,10 @@ func (c *CacheNodeManifest) GetResolvers() map[string]*types.ResolverManifest {
 	}
 
 	return resolvers
+}
+
+func (c *CacheNodeManifest) GetConfigs() map[string]*types.ConfigManifest {
+	return c.configs
 }
 
 func (c *CacheNodeManifest) SetNode(node *types.Node) {
@@ -278,5 +297,6 @@ func NewCacheNodeManifest() *CacheNodeManifest {
 	c.manifests = make(map[string]*types.NodeManifest, 0)
 	c.ingress = make(map[string]*types.Ingress, 0)
 	c.discovery = make(map[string]*types.Discovery, 0)
+	c.configs = make(map[string]*types.ConfigManifest, 0)
 	return c
 }

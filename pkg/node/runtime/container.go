@@ -157,33 +157,54 @@ func containerManifestCreate(ctx context.Context, pod string, spec *types.SpecTe
 
 	for _, s := range spec.EnvVars {
 
-		if s.Secret.Name == types.EmptyString || s.Secret.Key == types.EmptyString {
+		switch true {
+
+		case s.Secret.Name != types.EmptyString && s.Secret.Key != types.EmptyString:
+
+			secretSelfLink := fmt.Sprintf("%s:%s", name[0], s.Secret.Name)
+
+			secret, err := SecretGet(ctx, secretSelfLink)
+			if err != nil {
+				log.Errorf("Can not get secret for container: %s", err.Error())
+				return nil, err
+			}
+
+			if secret == nil {
+				continue
+			}
+
+			if _, ok := secret.Spec.Data[s.Secret.Key]; !ok {
+				continue
+			}
+
+			val, err := secret.DecodeSecretTextData(s.Secret.Key)
+			if err != nil {
+				continue
+			}
+
+			env := fmt.Sprintf("%s=%s", s.Name, val)
+			mf.Envs = append(mf.Envs, env)
+			break
+
+		case s.Config.Name != types.EmptyString && s.Config.Key != types.EmptyString:
+			configSelfLink := fmt.Sprintf("%s:%s", name[0], s.Config.Name)
+			config := envs.Get().GetState().Configs().GetConfig(configSelfLink)
+			if config == nil {
+				log.Errorf("Can not get config for container: %s", configSelfLink)
+				continue
+			}
+
+			value, ok := config.Data[s.Config.Key]
+			if !ok {
+				continue
+			}
+
+			env := fmt.Sprintf("%s=%s", s.Name, value)
+			mf.Envs = append(mf.Envs, env)
+			break
+		default:
 			continue
 		}
-
-		secretSelflink := fmt.Sprintf("%s:%s", name[0], s.Secret.Name)
-
-		secret, err := SecretGet(ctx, secretSelflink)
-		if err != nil {
-			log.Errorf("Can not get secret for container: %s", err.Error())
-			return nil, err
-		}
-
-		if secret == nil {
-			continue
-		}
-
-		if _, ok := secret.Spec.Data[s.Secret.Key]; !ok {
-			continue
-		}
-
-		val, err := secret.DecodeSecretTextData(s.Secret.Key)
-		if err != nil {
-			continue
-		}
-
-		env := fmt.Sprintf("%s=%s", s.Name, val)
-		mf.Envs = append(mf.Envs, env)
 
 	}
 
@@ -195,9 +216,15 @@ func containerManifestCreate(ctx context.Context, pod string, spec *types.SpecTe
 			continue
 		}
 
-		vol := envs.Get().GetState().Volumes().GetVolume(podVolumeKeyCreate(pod, v.Name))
+		claim := envs.Get().GetState().Volumes().GetClaim(podVolumeClaimNameCreate(pod, v.Name))
+		if claim == nil {
+			log.Debugf("volume claim %s not found in volumes state", podVolumeClaimNameCreate(pod, v.Name))
+			continue
+		}
+
+		vol := envs.Get().GetState().Volumes().GetVolume(claim.Volume)
 		if vol == nil {
-			log.Debugf("volume %s not found in volumes state", v.Name)
+			log.Debugf("volume %s not found in volumes state", claim.Volume)
 			continue
 		}
 

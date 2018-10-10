@@ -57,7 +57,7 @@ func (r *Runtime) Restore(ctx context.Context) error {
 	}
 
 	if err := envs.Get().GetNet().ResolverManage(ctx); err != nil {
-		log.Errorf("%s:> can not manage resolver:%s",logNodeRuntimePrefix,  err.Error())
+		log.Errorf("%s:> can not manage resolver:%s", logNodeRuntimePrefix, err.Error())
 	}
 
 	if err := VolumeRestore(ctx); err != nil {
@@ -110,7 +110,6 @@ func (r *Runtime) Provision(ctx context.Context, dir string) error {
 			continue
 		}
 
-
 		items := decoder.YamlSplit(c)
 		log.Debugf("manifests: %d", len(items))
 
@@ -135,12 +134,6 @@ func (r *Runtime) Provision(ctx context.Context, dir string) error {
 					break
 				}
 				log.Debugf("Add config Manifest: %s", *m.Meta.Name)
-				if m.Spec.Type == types.KindConfigFile {
-					if err := m.ReadData(); err != nil {
-						log.Errorf("can not read config data from files")
-						return err
-					}
-				}
 				mf.Configs[*m.Meta.Name] = m.GetManifest()
 				break
 			case types.KindPod:
@@ -245,9 +238,9 @@ func (r *Runtime) Loop(ctx context.Context) {
 					}
 				}
 
-				if len(spec.Meta.Discovery) != 0 {
-					log.V(logLevel).Debugf("%s>set cluster dns ips: %#v", logNodeRuntimePrefix, spec.Meta.Discovery)
-					for key, res := range spec.Meta.Discovery {
+				if len(spec.Resolvers) != 0 {
+					log.V(logLevel).Debugf("%s>set cluster dns ips: %#v", logNodeRuntimePrefix, spec.Resolvers)
+					for key, res := range spec.Resolvers {
 						envs.Get().GetNet().Resolvers().SetResolver(key, res)
 						envs.Get().GetNet().ResolverManage(ctx)
 					}
@@ -263,13 +256,12 @@ func (r *Runtime) Loop(ctx context.Context) {
 					}
 				}
 
-				log.V(logLevel).Debugf("%s> update secrets", logNodeRuntimePrefix)
+				log.V(logLevel).Debugf("%s> update secrets %d", logNodeRuntimePrefix, len(spec.Secrets))
 				for s, spec := range spec.Secrets {
 					log.V(logLevel).Debugf("secret: %s > %s", s, spec.State)
 				}
 
-
-				log.V(logLevel).Debugf("%s> provision configs", logNodeRuntimePrefix)
+				log.V(logLevel).Debugf("%s> provision configs %d", logNodeRuntimePrefix, len(spec.Configs))
 				for s, spec := range spec.Configs {
 					log.V(logLevel).Debugf("config: %s > %s", s, spec.State)
 					if err := ConfigManage(ctx, s, spec); err != nil {

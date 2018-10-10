@@ -108,9 +108,13 @@ func (sv *Service) ToSpec(obj types.ServiceSpec) ServiceSpec {
 			c.Env = append(c.Env, ManifestSpecTemplateContainerEnv{
 				Name:  env.Name,
 				Value: env.Value,
-				From: ManifestSpecTemplateContainerEnvSecret{
+				Secret: ManifestSpecTemplateContainerEnvSecret{
 					Name: env.Secret.Name,
 					Key:  env.Secret.Key,
+				},
+				Config: ManifestSpecTemplateContainerEnvConfig{
+					Name: env.Config.Name,
+					Key:  env.Config.Key,
 				},
 			})
 		}
@@ -138,7 +142,15 @@ func (sv *Service) ToSpec(obj types.ServiceSpec) ServiceSpec {
 		v := ManifestSpecTemplateVolume{
 			Name: s.Name,
 			Type: s.Type,
-			From: ManifestSpecTemplateSecretVolume{
+			Volume: ManifestSpecTemplateVolumeClaim{
+				Name:    s.Volume.Name,
+				Subpath: s.Volume.Subpath,
+			},
+			Config: ManifestSpecTemplateConfigVolume{
+				Name:  s.Config.Name,
+				Files: s.Config.Files,
+			},
+			Secret: ManifestSpecTemplateSecretVolume{
 				Name:  s.Secret.Name,
 				Files: s.Secret.Files,
 			},
@@ -259,9 +271,13 @@ func (sv Service) ToRequestManifest() *request.ServiceManifest {
 					item := request.ManifestSpecTemplateContainerEnv{
 						Name:  v.Name,
 						Value: v.Value,
-						From: request.ManifestSpecTemplateContainerEnvSecret{
-							Name: v.From.Name,
-							Key:  v.From.Key,
+						Secret: request.ManifestSpecTemplateContainerEnvSecret{
+							Name: v.Secret.Name,
+							Key:  v.Secret.Key,
+						},
+						Config: request.ManifestSpecTemplateContainerEnvConfig{
+							Name: v.Config.Name,
+							Key:  v.Config.Key,
 						},
 					}
 					data.Env = append(data.Env, item)

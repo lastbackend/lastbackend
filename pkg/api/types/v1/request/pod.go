@@ -152,15 +152,15 @@ func (s *PodManifest) SetPodSpec(pod *types.Pod) {
 							pod.Spec.Template.Updated = time.Now()
 						}
 
-						if se.Secret.Name != ce.From.Name || se.Secret.Key != ce.From.Key {
-							se.Secret.Name = ce.From.Name
-							se.Secret.Key = ce.From.Key
+						if se.Secret.Name != ce.Secret.Name || se.Secret.Key != ce.Secret.Key {
+							se.Secret.Name = ce.Secret.Name
+							se.Secret.Key = ce.Secret.Key
 							pod.Spec.Template.Updated = time.Now()
 						}
 
-						if se.Config.Name != ce.From.Name || se.Config.Key != ce.From.Key {
-							se.Config.Name = ce.From.Name
-							se.Config.Key = ce.From.Key
+						if se.Config.Name != ce.Config.Name || se.Config.Key != ce.Config.Key {
+							se.Config.Name = ce.Config.Name
+							se.Config.Key = ce.Config.Key
 							pod.Spec.Template.Updated = time.Now()
 						}
 					}
@@ -171,12 +171,12 @@ func (s *PodManifest) SetPodSpec(pod *types.Pod) {
 						Name:  ce.Name,
 						Value: ce.Value,
 						Secret: types.SpecTemplateContainerEnvSecret{
-							Name: ce.From.Name,
-							Key:  ce.From.Key,
+							Name: ce.Secret.Name,
+							Key:  ce.Secret.Key,
 						},
 						Config: types.SpecTemplateContainerEnvConfig{
-							Name: ce.From.Name,
-							Key:  ce.From.Key,
+							Name: ce.Config.Name,
+							Key:  ce.Config.Key,
 						},
 					})
 				}
@@ -325,7 +325,6 @@ func (s *PodManifest) SetPodSpec(pod *types.Pod) {
 				pod.Spec.Template.Updated = time.Now()
 			}
 
-
 			var ec = true
 			for _, vf := range v.Config.Files {
 
@@ -348,7 +347,6 @@ func (s *PodManifest) SetPodSpec(pod *types.Pod) {
 				spec.Config.Files = v.Config.Files
 				pod.Spec.Template.Updated = time.Now()
 			}
-
 
 			if !f {
 				pod.Spec.Template.Volumes = append(pod.Spec.Template.Volumes, spec)

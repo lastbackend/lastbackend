@@ -33,7 +33,7 @@ type State struct {
 	secrets   *SecretsState
 	endpoints *EndpointState
 	task      *TaskState
-	configs    *ConfigState
+	configs   *ConfigState
 }
 
 func (s *State) Node() *NodeState {
@@ -82,7 +82,7 @@ func New() *State {
 	state := State{
 		node: new(NodeState),
 		pods: &PodState{
-			local: make(map[string]bool),
+			local:      make(map[string]bool),
 			containers: make(map[string]*types.PodContainer, 0),
 			pods:       make(map[string]*types.PodStatus, 0),
 			watchers:   make(map[chan string]bool, 0),
@@ -94,9 +94,9 @@ func New() *State {
 			subnets: make(map[string]types.NetworkState, 0),
 		},
 		volumes: &VolumesState{
-			volumes: make(map[string]types.VolumeStatus, 0),
-			local: make(map[string]bool),
-			watchers:   make(map[chan string]bool, 0),
+			volumes:  make(map[string]types.VolumeStatus, 0),
+			local:    make(map[string]bool),
+			watchers: make(map[chan string]bool, 0),
 		},
 		secrets: &SecretsState{
 			secrets: make(map[string]types.Secret, 0),
@@ -111,7 +111,6 @@ func New() *State {
 			configs: make(map[string]*types.ConfigManifest, 0),
 		},
 	}
-
 
 	return &state
 }

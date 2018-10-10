@@ -75,10 +75,19 @@ type SpecTemplateVolume struct {
 	Name string `json:"name"`
 	// Template volume name
 	Type string `json:"type"`
+	// Template volume from persistent volume
+	Volume SpecTemplateVolumeClaim `json:"volume,omitempty"`
 	// Template volume from secret type
 	Secret SpecTemplateSecretVolume `json:"secret,omitempty"`
 	// Template volume from config type
 	Config SpecTemplateConfigVolume `json:"config,omitempty"`
+}
+
+type SpecTemplateVolumeClaim struct {
+	// Persistent volume name to mount
+	Name string `json:"name"`
+	// Persistent Volume Subpath
+	Subpath string `json:"subpath"`
 }
 
 type SpecTemplateSecretVolume struct {
@@ -94,7 +103,6 @@ type SpecTemplateConfigVolume struct {
 	// Secret file key
 	Files []string `json:"files"`
 }
-
 
 // swagger:ignore
 // swagger:model types_spec_template_volume_mounts

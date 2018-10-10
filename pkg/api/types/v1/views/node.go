@@ -108,6 +108,7 @@ type NodeResources struct {
 // swagger:model views_node_spec
 type NodeManifest struct {
 	Meta      NodeManifestMeta                   `json:"meta"`
+	Discovery map[string]*types.ResolverManifest `json:"discovery"`
 	Configs   map[string]*types.ConfigManifest   `json:"configs,omitempty"`
 	Secrets   map[string]*types.SecretManifest   `json:"secrets,omitempty"`
 	Network   map[string]*types.SubnetManifest   `json:"network,omitempty"`
@@ -117,6 +118,5 @@ type NodeManifest struct {
 }
 
 type NodeManifestMeta struct {
-	Initial   bool                               `json:"initial"`
-	Discovery map[string]*types.ResolverManifest `json:"discovery"`
+	Initial bool `json:"initial"`
 }
