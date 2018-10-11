@@ -223,7 +223,7 @@ func TestNodeGetManifestH(t *testing.T) {
 	)
 
 	nm.Meta.Initial = true
-	nm.Meta.Discovery = make(map[string]*types.ResolverManifest, 0)
+	nm.Resolvers = make(map[string]*types.ResolverManifest, 0)
 	nm.Network = make(map[string]*types.SubnetManifest, 0)
 	nm.Pods = make(map[string]*types.PodManifest, 0)
 	nm.Pods[p1] = getPodManifest()
@@ -626,7 +626,7 @@ func TestNodeSetStatusH(t *testing.T) {
 	)
 
 	nm.Meta.Initial = true
-	nm.Meta.Discovery = make(map[string]*types.ResolverManifest, 0)
+	nm.Resolvers = make(map[string]*types.ResolverManifest, 0)
 	uo.Resources.Capacity.Pods = 20
 
 	type args struct {
@@ -724,9 +724,7 @@ func setRequestVars(r *mux.Router, req *http.Request) {
 
 func getNodeAsset(name, desc string, online bool) types.Node {
 	var n = types.Node{
-		Meta: types.NodeMeta{
-
-		},
+		Meta: types.NodeMeta{},
 		Status: types.NodeStatus{
 			Online: true,
 			Capacity: types.NodeResources{
