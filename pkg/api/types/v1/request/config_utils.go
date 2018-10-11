@@ -43,11 +43,6 @@ func (v *ConfigManifest) DecodeAndValidate(reader io.Reader) *errors.Err {
 		return errors.New("config").IncorrectJSON(err)
 	}
 
-	if reader == nil {
-		err := errors.New("data body can not be null")
-		return errors.New("config").IncorrectJSON(err)
-	}
-
 	body, err := ioutil.ReadAll(reader)
 	if err != nil {
 		return errors.New("config").Unknown(err)

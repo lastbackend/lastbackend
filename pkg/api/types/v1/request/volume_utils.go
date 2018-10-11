@@ -49,11 +49,6 @@ func (v *VolumeManifest) DecodeAndValidate(reader io.Reader) *errors.Err {
 		return errors.New("volume").IncorrectJSON(err)
 	}
 
-	if reader == nil {
-		err := errors.New("data body can not be null")
-		return errors.New("volume").IncorrectJSON(err)
-	}
-
 	body, err := ioutil.ReadAll(reader)
 	if err != nil {
 		return errors.New("volume").Unknown(err)
