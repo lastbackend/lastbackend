@@ -31,7 +31,7 @@ type Secret struct {
 
 type SecretSpec struct {
 	Type string            `json:"type"`
-	Data map[string][]byte `json:"data"`
+	Data map[string]string `json:"data"`
 }
 
 // swagger:model views_secret_meta
@@ -59,7 +59,11 @@ func (s *Secret) Decode() *types.Secret {
 	o.Meta.Created = s.Meta.Created
 
 	o.Spec.Type = s.Spec.Type
-	o.Spec.Data = s.Spec.Data
+
+	o.Spec.Data = make(map[string][]byte, 0)
+	for k, v := range s.Spec.Data {
+		o.Spec.Data[k] = []byte(v)
+	}
 
 	return o
 }
