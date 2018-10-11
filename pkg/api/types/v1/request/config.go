@@ -19,12 +19,9 @@
 package request
 
 import (
-	"encoding/base64"
 	"encoding/json"
-	"fmt"
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 	"gopkg.in/yaml.v2"
-	"io/ioutil"
 )
 
 type ConfigManifest struct {
@@ -34,21 +31,19 @@ type ConfigManifest struct {
 
 type ConfigManifestMeta struct {
 	RuntimeMeta `yaml:",inline"`
-	Namespace *string `json:"namespace" yaml:"namespace"`
+	Namespace   *string `json:"namespace" yaml:"namespace"`
 }
 
 type ConfigManifestSpec struct {
 	// Template volume types
 	Type string `json:"type,omitempty" yaml:"type,omitempty"`
 	// Tempate volume selector
-	Data []*ConfigManifestData `json:"data,omitempty" yaml:"data,omitempty"`
+	Data map[string]string `json:"data,omitempty" yaml:"data,omitempty"`
 }
 
 type ConfigManifestData struct {
 	Key   string `json:"key,omitempty" yaml:"key,omitempty"`
 	Value string `json:"value,omitempty" yaml:"value,omitempty"`
-	File  string `json:"file,omitempty" yaml:"file,omitempty"`
-	Data  string `json:"data,omitempty"`
 }
 
 func (v *ConfigManifest) FromJson(data []byte) error {
@@ -88,48 +83,21 @@ func (v *ConfigManifest) SetConfigMeta(cfg *types.Config) {
 func (v *ConfigManifest) SetConfigSpec(cfg *types.Config) {
 
 	cfg.Spec.Type = v.Spec.Type
-	cfg.Spec.Data = make([]*types.ConfigSpecData, 0)
+	cfg.Spec.Data = make(map[string]string, 0)
 
-	for _, data := range v.Spec.Data {
-		cData := new(types.ConfigSpecData)
-		cData.Key = data.Key
-		cData.File = data.File
-		switch cfg.Spec.Type {
-		case types.KindConfigText:
-			cData.Data = []byte(base64.StdEncoding.EncodeToString([]byte(data.Value)))
-			break
-		case types.KindConfigFile:
-			cData.Data = []byte(base64.StdEncoding.EncodeToString([]byte(data.Data)))
-			break
-		}
-
-		cfg.Spec.Data = append(cfg.Spec.Data, cData)
+	for key, value := range v.Spec.Data {
+		cfg.Spec.Data[key] = value
 	}
 }
-
 
 func (v *ConfigManifest) GetManifest() *types.ConfigManifest {
 	cfg := new(types.ConfigManifest)
-	cfg.Kind = v.Spec.Type
-	cfg.Data = make(map[string][]byte, 0)
-	for _, data := range v.Spec.Data {
-		cfg.Data[data.Key] = []byte(base64.StdEncoding.EncodeToString([]byte(data.Data)))
+	cfg.Type = v.Spec.Type
+	cfg.Data = make(map[string]string, 0)
+	for key, value := range v.Spec.Data {
+		cfg.Data[key] = value
 	}
 	return cfg
-}
-
-func (v *ConfigManifest) ReadData() error {
-	for _, f := range v.Spec.Data {
-		if f.File != types.EmptyString {
-			c, err := ioutil.ReadFile(f.File)
-			if err != nil {
-				_ = fmt.Errorf("failed read data from file: %s", f)
-				return err
-			}
-			f.Data = base64.StdEncoding.EncodeToString(c)
-		}
-	}
-	return nil
 }
 
 type ConfigRemoveOptions struct {

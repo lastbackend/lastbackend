@@ -87,16 +87,62 @@ func PodManage(ctx context.Context, key string, manifest *types.PodManifest) err
 		case !PodVolumesCheck(ctx, key, manifest.Template.Volumes):
 			log.Debugf("Volumes data changed: %s", key)
 			for _, v := range manifest.Template.Volumes {
-				pv, err := PodVolumeUpdate(ctx, key, v)
-				if err != nil {
-					log.Errorf("can not update volume data: %s", err.Error())
-					return err
+
+				if v.Volume.Name != types.EmptyString {
+
+					pv, err := PodVolumeAttach(ctx, key, v)
+					if err != nil {
+						log.Errorf("can not attach volume for pod: %s", err.Error())
+						return err
+					}
+
+					p.Volumes[v.Name] = pv
+
+				} else {
+
+					var name string
+					if v.Volume.Name != types.EmptyString {
+
+						name = fmt.Sprintf("%s:%s", getPodNamespace(key), v.Name)
+					} else {
+						name = podVolumeKeyCreate(key, v.Name)
+					}
+
+					vol := envs.Get().GetState().Volumes().GetVolume(name)
+
+					if vol == nil {
+						log.V(logLevel).Debugf("Update pod volume: volume not found: create %s: %s", key, v.Name)
+
+						vs, err := PodVolumeCreate(ctx, key, v)
+						if err != nil {
+							log.Errorf("can not update volume data: %s", err.Error())
+							return err
+						}
+
+						pv := &types.VolumeClaim{
+							Name:   podVolumeClaimNameCreate(key, v.Name),
+							Volume: name,
+							Path:   vs.Status.Path,
+						}
+
+						envs.Get().GetState().Volumes().SetClaim(pv.Name, pv)
+						p.Volumes[pv.Name] = pv
+
+					} else {
+
+						_, err := PodVolumeUpdate(ctx, key, v)
+						if err != nil {
+							log.Errorf("can not update volume data: %s", err.Error())
+							return err
+						}
+					}
+
 				}
-				p.Volumes[pv.Name] = pv
 
 			}
 			return PodRestart(ctx, key)
-		default: return nil
+		default:
+			return nil
 		}
 	}
 
@@ -130,16 +176,15 @@ func PodRestart(ctx context.Context, key string) error {
 		}
 	}
 
-
 	return nil
 }
 
 func PodCreate(ctx context.Context, key string, manifest *types.PodManifest) (*types.PodStatus, error) {
 
 	var (
-		status   = types.NewPodStatus()
+		status    = types.NewPodStatus()
 		namespace = getPodNamespace(key)
-		setError = func(err error) (*types.PodStatus, error) {
+		setError  = func(err error) (*types.PodStatus, error) {
 			log.Errorf("Can-not pull image: %s", err)
 			status.SetError(err)
 			PodClean(ctx, status)
@@ -160,13 +205,40 @@ func PodCreate(ctx context.Context, key string, manifest *types.PodManifest) (*t
 	log.V(logLevel).Debugf("Have %d volumes", len(manifest.Template.Volumes))
 	for _, v := range manifest.Template.Volumes {
 
-		pv, err := PodVolumeCreate(ctx, key, v)
-		if err != nil {
-			log.Errorf("can not create volume for pod: %s", err.Error())
-			return nil, err
+		var name string
+		if v.Volume.Name != types.EmptyString {
+			name = fmt.Sprintf("%s:%s", getPodNamespace(key), v.Name)
+		} else {
+			name = podVolumeKeyCreate(key, v.Name)
 		}
 
-		status.Volumes[v.Name] = pv
+		vol := envs.Get().GetState().Volumes().GetVolume(name)
+		if vol == nil {
+			log.V(logLevel).Debugf("Update pod volume: volume not found: create %s: %s", key, v.Name)
+
+			vs, err := PodVolumeCreate(ctx, key, v)
+			if err != nil {
+				log.Errorf("can not update volume data: %s", err.Error())
+				return status, err
+			}
+
+			pv := &types.VolumeClaim{
+				Name:   podVolumeClaimNameCreate(key, v.Name),
+				Volume: name,
+				Path:   vs.Status.Path,
+			}
+
+			envs.Get().GetState().Volumes().SetClaim(pv.Name, pv)
+			status.Volumes[pv.Name] = pv
+
+		} else {
+			_, err := PodVolumeUpdate(ctx, key, v)
+			if err != nil {
+				log.Errorf("can not update volume data: %s", err.Error())
+				return status, err
+			}
+		}
+
 		envs.Get().GetState().Pods().SetPod(key, status)
 	}
 
@@ -300,7 +372,6 @@ func PodCreate(ctx context.Context, key string, manifest *types.PodManifest) (*t
 		Timestamp: time.Now().UTC(),
 	}
 
-
 	envs.Get().GetState().Pods().SetPod(key, status)
 	return status, nil
 }
@@ -358,12 +429,12 @@ func PodRestore(ctx context.Context) error {
 		key := c.Pod
 
 		cs := &types.PodContainer{
-			ID: c.ID,
+			ID:   c.ID,
 			Name: c.Name,
 			Image: types.PodContainerImage{
 				Name: c.Image,
 			},
-			Envs: c.Envs,
+			Envs:  c.Envs,
 			Ports: c.Network.Ports,
 			Binds: c.Binds,
 		}
@@ -429,7 +500,6 @@ func PodRestore(ctx context.Context) error {
 		envs.Get().GetState().Pods().SetPod(key, status)
 		log.V(logLevel).Debugf("Pod restored %s: %#v", key, status)
 	}
-
 
 	return nil
 }
@@ -515,11 +585,10 @@ func PodSpecCheck(ctx context.Context, key string, manifest *types.PodManifest) 
 	state := envs.Get().GetState().Pods().GetPod(key)
 
 	var statec = make(map[string]*types.ContainerManifest, 0)
-	var specc  = make(map[string]*types.ContainerManifest, 0)
-
+	var specc = make(map[string]*types.ContainerManifest, 0)
 
 	for _, c := range manifest.Template.Containers {
-		mf, err :=  containerManifestCreate(ctx, key, c)
+		mf, err := containerManifestCreate(ctx, key, c)
 		if err != nil {
 			return false
 		}
@@ -544,7 +613,7 @@ func PodSpecCheck(ctx context.Context, key string, manifest *types.PodManifest) 
 
 		// check image
 
-		c :=  statec[n]
+		c := statec[n]
 
 		if c.Image != mf.Image {
 			log.Debugf("images not equal: %s != %s", c.Image, mf.Image)
@@ -620,7 +689,7 @@ func PodSpecCheck(ctx context.Context, key string, manifest *types.PodManifest) 
 					break
 				}
 			}
-			if ! f {
+			if !f {
 				log.Debugf("Env not found:%s", e)
 				return false
 			}
@@ -659,7 +728,7 @@ func PodSpecCheck(ctx context.Context, key string, manifest *types.PodManifest) 
 					break
 				}
 			}
-			if ! f {
+			if !f {
 				log.Debugf("Bind not found:%s", e)
 				return false
 			}
@@ -673,7 +742,7 @@ func PodSpecCheck(ctx context.Context, key string, manifest *types.PodManifest) 
 					break
 				}
 			}
-			if ! f {
+			if !f {
 				log.Debugf("Bind is unnecessary:%s", e)
 				return false
 			}
@@ -715,7 +784,7 @@ func PodSpecCheck(ctx context.Context, key string, manifest *types.PodManifest) 
 				}
 			}
 
-			if ! f {
+			if !f {
 				log.Debugf("\t Port map not found: \t\t %s:%d:%d/%s ",
 					e.HostIP, e.HostPort, e.ContainerPort, e.Protocol)
 				return false
@@ -734,7 +803,7 @@ func PodSpecCheck(ctx context.Context, key string, manifest *types.PodManifest) 
 				}
 			}
 
-			if ! f {
+			if !f {
 				log.Debugf("Port map is unnecessary: %#v", e)
 				return false
 			}
@@ -782,7 +851,7 @@ func PodVolumesCheck(ctx context.Context, pod string, spec []*types.SpecTemplate
 	return true
 }
 
-func PodVolumeUpdate(ctx context.Context, pod string, spec *types.SpecTemplateVolume) (*types.PodVolume, error) {
+func PodVolumeUpdate(ctx context.Context, pod string, spec *types.SpecTemplateVolume) (*types.VolumeStatus, error) {
 
 	log.V(logLevel).Debugf("Update pod volume: %s: %s", pod, spec.Name)
 
@@ -793,35 +862,50 @@ func PodVolumeUpdate(ctx context.Context, pod string, spec *types.SpecTemplateVo
 		name = podVolumeKeyCreate(pod, spec.Name)
 	)
 
-	vol := envs.Get().GetState().Volumes().GetVolume(name)
+	status := envs.Get().GetState().Volumes().GetVolume(name)
 
-	if vol == nil {
-		log.V(logLevel).Debugf("Update pod volume: volume not found: create %s: %s", pod, spec.Name)
-		return PodVolumeCreate(ctx, pod, spec)
-	}
-
-	pv := &types.PodVolume{
-		Pod:   pod,
-		Type:  types.KindVolumeHostDir,
-		Ready: vol.Status.Ready,
-		Path:  vol.Status.Path,
-	}
-
-
-	if spec.Config.Name != types.EmptyString && len(spec.Config.Files) > 0 {
-		if err := VolumeSetConfigData(ctx, name, spec.Config.Name); err != nil {
+	if spec.Secret.Name != types.EmptyString && len(spec.Secret.Files) > 0 {
+		if err := VolumeSetSecretData(ctx, name, spec.Secret.Name); err != nil {
 			log.Errorf("can not set config data to volume: %s", err.Error())
-			return pv, err
+			return status, err
 		}
 	}
 
+	if spec.Secret.Name == types.EmptyString && spec.Config.Name != types.EmptyString && len(spec.Config.Files) > 0 {
+		if err := VolumeSetConfigData(ctx, name, spec.Config.Name); err != nil {
+			log.Errorf("can not set config data to volume: %s", err.Error())
+			return status, err
+		}
+	}
+
+	return status, nil
+}
+
+func PodVolumeAttach(ctx context.Context, pod string, spec *types.SpecTemplateVolume) (*types.VolumeClaim, error) {
+
+	log.V(logLevel).Debugf("Attach pod volume: %s: %s", pod, spec.Name)
+
+	var name = fmt.Sprintf("%s:%s", getPodNamespace(pod), spec.Name)
+
+	volume := envs.Get().GetState().Volumes().GetVolume(name)
+	if volume == nil {
+		return nil, errors.New("volume not found on node")
+	}
+
+	pv := &types.VolumeClaim{
+		Name:   podVolumeClaimNameCreate(pod, spec.Name),
+		Volume: name,
+		Path:   volume.Status.Path,
+	}
+
+	envs.Get().GetState().Volumes().SetClaim(pv.Name, pv)
 
 	return pv, nil
 }
 
-func PodVolumeCreate(ctx context.Context, pod string, spec *types.SpecTemplateVolume) (*types.PodVolume, error) {
+func PodVolumeCreate(ctx context.Context, pod string, spec *types.SpecTemplateVolume) (*types.VolumeStatus, error) {
 
-	log.V(logLevel).Debugf("Create pod volume: %s: %s", pod, spec.Name)
+	log.V(logLevel).Debugf("Create pod volume: %s:%s", pod, spec.Name)
 
 	path := strings.Replace(pod, ":", "-", -1)
 	path = fmt.Sprintf("%s-%s", path, spec.Name)
@@ -840,23 +924,23 @@ func PodVolumeCreate(ctx context.Context, pod string, spec *types.SpecTemplateVo
 		return nil, err
 	}
 
-	pv := &types.PodVolume{
-		Pod:   pod,
-		Type:  types.KindVolumeHostDir,
-		Ready: st.Status.Ready,
-		Path:  st.Status.Path,
+	if spec.Secret.Name != types.EmptyString && len(spec.Secret.Files) > 0 {
+		if err := VolumeSetSecretData(ctx, name, spec.Secret.Name); err != nil {
+			log.Errorf("can not set secret data to volume: %s", err.Error())
+			return st, err
+		}
 	}
 
-	if spec.Config.Name != types.EmptyString && len(spec.Config.Files) > 0 {
+	if spec.Secret.Name == types.EmptyString && spec.Config.Name != types.EmptyString && len(spec.Config.Files) > 0 {
 		if err := VolumeSetConfigData(ctx, name, spec.Config.Name); err != nil {
 			log.Errorf("can not set config data to volume: %s", err.Error())
-			return pv, err
+			return st, err
 		}
 	}
 
 	envs.Get().GetState().Volumes().SetLocal(name)
 
-	return pv, nil
+	return st, nil
 }
 
 func PodVolumeDestroy(ctx context.Context, pod, volume string) error {
@@ -865,9 +949,12 @@ func PodVolumeDestroy(ctx context.Context, pod, volume string) error {
 }
 
 func podVolumeKeyCreate(pod, volume string) string {
-	return fmt.Sprintf("%s-%s", strings.Replace(pod, ":","-", -1), volume)
+	return fmt.Sprintf("%s-%s", strings.Replace(pod, ":", "-", -1), volume)
 }
 
+func podVolumeClaimNameCreate(pod, volume string) string {
+	return fmt.Sprintf("%s:%s", pod, volume)
+}
 
 // TODO: move to distribution
 func getPodNamespace(key string) string {

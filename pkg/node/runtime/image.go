@@ -26,12 +26,11 @@ import (
 	"golang.org/x/net/context"
 )
 
-func ImagePull(ctx context.Context, namespace string,  image *types.SpecTemplateContainerImage) error {
+func ImagePull(ctx context.Context, namespace string, image *types.SpecTemplateContainerImage) error {
 
 	var (
 		mf = new(types.ImageManifest)
 	)
-
 
 	mf.Name = image.Name
 	if image.Secret != types.EmptyString {

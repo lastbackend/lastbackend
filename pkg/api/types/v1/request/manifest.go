@@ -57,12 +57,18 @@ type ManifestSpecTemplateContainer struct {
 }
 
 type ManifestSpecTemplateContainerEnv struct {
-	Name  string                                 `json:"name,omitempty" yaml:"name,omitempty"`
-	Value string                                 `json:"value,omitempty" yaml:"value,omitempty"`
-	From  ManifestSpecTemplateContainerEnvSecret `json:"from,omitempty" yaml:"from,omitempty"`
+	Name   string                                 `json:"name,omitempty" yaml:"name,omitempty"`
+	Value  string                                 `json:"value,omitempty" yaml:"value,omitempty"`
+	Secret ManifestSpecTemplateContainerEnvSecret `json:"secret,omitempty" yaml:"secret,omitempty"`
+	Config ManifestSpecTemplateContainerEnvConfig `json:"config,omitempty" yaml:"config,omitempty"`
 }
 
 type ManifestSpecTemplateContainerEnvSecret struct {
+	Name string `json:"name,omitempty" yaml:"name,omitempty"`
+	Key  string `json:"key,omitempty" yaml:"key,omitempty"`
+}
+
+type ManifestSpecTemplateContainerEnvConfig struct {
 	Name string `json:"name,omitempty" yaml:"name,omitempty"`
 	Key  string `json:"key,omitempty" yaml:"key,omitempty"`
 }
@@ -100,10 +106,19 @@ type ManifestSpecTemplateVolume struct {
 	Name string `json:"name,omitempty" yaml:"name,omitempty"`
 	// Template volume types
 	Type string `json:"type,omitempty" yaml:"type,omitempty"`
+	// Template volume from persistent volume
+	Volume ManifestSpecTemplateVolumeClaim `json:"volume,omitempty" yaml:"volume,omitempty"`
 	// Template volume from secret type
 	Secret ManifestSpecTemplateSecretVolume `json:"secret,omitempty" yaml:"secret,omitempty"`
 	// Template volume from config type
 	Config ManifestSpecTemplateConfigVolume `json:"config,omitempty" yaml:"config,omitempty"`
+}
+
+type ManifestSpecTemplateVolumeClaim struct {
+	// Persistent volume name to mount
+	Name string `json:"name,omitempty" yaml:"name,omitempty"`
+	// Persistent volume subpath
+	Subpath string `json:"subpath,omitempty" yaml:"subpath,omitempty"`
 }
 
 type ManifestSpecTemplateSecretVolume struct {
@@ -154,6 +169,10 @@ func (m ManifestSpecTemplateVolume) GetSpec() types.SpecTemplateVolume {
 	s := types.SpecTemplateVolume{
 		Name: m.Name,
 		Type: m.Type,
+		Volume: types.SpecTemplateVolumeClaim{
+			Name:    m.Volume.Name,
+			Subpath: m.Volume.Subpath,
+		},
 		Secret: types.SpecTemplateSecretVolume{
 			Name:  m.Secret.Name,
 			Files: m.Secret.Files,
@@ -189,12 +208,12 @@ func (m ManifestSpecTemplateContainer) GetSpec() types.SpecTemplateContainer {
 			Name:  e.Name,
 			Value: e.Value,
 			Secret: types.SpecTemplateContainerEnvSecret{
-				Name: e.From.Name,
-				Key:  e.From.Key,
+				Name: e.Secret.Name,
+				Key:  e.Secret.Key,
 			},
 			Config: types.SpecTemplateContainerEnvConfig{
-				Name: e.From.Name,
-				Key:  e.From.Key,
+				Name: e.Config.Name,
+				Key:  e.Config.Key,
 			},
 		})
 	}

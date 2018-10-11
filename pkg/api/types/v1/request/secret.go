@@ -32,7 +32,7 @@ type SecretManifest struct {
 
 type SecretManifestMeta struct {
 	RuntimeMeta `yaml:",inline"`
-	Namespace *string `json:"namespace" yaml:"namespace"`
+	Namespace   *string `json:"namespace" yaml:"namespace"`
 }
 
 type SecretManifestSpec struct {
@@ -75,8 +75,8 @@ func (v *SecretManifest) SetSecretMeta(cfg *types.Secret) {
 }
 
 func (v *SecretManifest) SetAuthData(username, password string) {
-	v.Spec.Data[types.SecretUsernameKey] = base64.StdEncoding.EncodeToString([]byte(username))
-	v.Spec.Data[types.SecretPasswordKey] = base64.StdEncoding.EncodeToString([]byte(password))
+	v.Spec.Data[types.SecretUsernameKey] = username
+	v.Spec.Data[types.SecretPasswordKey] = password
 }
 
 // SetSecretSpec - set config spec from manifest
@@ -87,7 +87,7 @@ func (v *SecretManifest) SetSecretSpec(s *types.Secret) {
 	s.Spec.Data = make(map[string][]byte, 0)
 
 	for key, value := range v.Spec.Data {
-		s.Spec.Data[key] =[]byte(base64.StdEncoding.EncodeToString([]byte(value)))
+		s.Spec.Data[key] = []byte(base64.StdEncoding.EncodeToString([]byte(value)))
 	}
 }
 

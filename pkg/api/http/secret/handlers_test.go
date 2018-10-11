@@ -51,8 +51,8 @@ func TestSecretList(t *testing.T) {
 
 	ns1 := getNamespaceAsset("demo", "")
 
-	s1 := getSecretAsset(ns1,"demo")
-	s2 := getSecretAsset(ns1,"test")
+	s1 := getSecretAsset(ns1, "demo")
+	s2 := getSecretAsset(ns1, "test")
 
 	s1.Spec.Data["demo"] = []byte("demo")
 	s2.Spec.Data["test"] = []byte("test")
@@ -174,7 +174,7 @@ func TestSecretCreate(t *testing.T) {
 	ns1 := getNamespaceAsset("demo", "")
 
 	s1 := getSecretAsset(ns1, "demo")
-	s1.Spec.Type = types.KindSecretText
+	s1.Spec.Type = types.KindSecretOpaque
 	s1.Spec.Data["demo"] = []byte(base64.StdEncoding.EncodeToString([]byte("demo")))
 
 	mf1, _ := getSecretManifest(s1).ToJson()
@@ -238,7 +238,6 @@ func TestSecretCreate(t *testing.T) {
 
 			err := tc.fields.stg.Put(context.Background(), stg.Collection().Namespace(), tc.fields.stg.Key().Namespace(ns1.Meta.Name), ns1, nil)
 			assert.NoError(t, err)
-
 
 			// Create assert request to pass to our handler. We don't have any query parameters for now, so we'll
 			// pass 'nil' as the third parameter.
@@ -430,8 +429,8 @@ func TestSecretRemove(t *testing.T) {
 
 	ns1 := getNamespaceAsset("demo", "")
 
-	s1 := getSecretAsset(ns1,"demo")
-	s2 := getSecretAsset(ns1,"test")
+	s1 := getSecretAsset(ns1, "demo")
+	s2 := getSecretAsset(ns1, "test")
 
 	s1.Spec.Data["demo"] = []byte("demo")
 	s2.Spec.Data["test"] = []byte("test")
@@ -500,7 +499,7 @@ func TestSecretRemove(t *testing.T) {
 
 			// Create assert request to pass to our handler. We don't have any query parameters for now, so we'll
 			// pass 'nil' as the third parameter.
-			req, err := http.NewRequest("DELETE", fmt.Sprintf("/namespace/%s/secret/%s",  tc.args.secret.Meta.Namespace, tc.args.secret.Meta.Name), nil)
+			req, err := http.NewRequest("DELETE", fmt.Sprintf("/namespace/%s/secret/%s", tc.args.secret.Meta.Namespace, tc.args.secret.Meta.Name), nil)
 			assert.NoError(t, err)
 
 			if tc.headers != nil {
@@ -549,7 +548,7 @@ func TestSecretRemove(t *testing.T) {
 
 func getSecretManifest(s *types.Secret) *request.SecretManifest {
 
-	smf := new (request.SecretManifest)
+	smf := new(request.SecretManifest)
 
 	smf.Meta.Name = &s.Meta.Name
 	smf.Meta.Namespace = &s.Meta.Namespace
@@ -559,7 +558,6 @@ func getSecretManifest(s *types.Secret) *request.SecretManifest {
 		str, _ := base64.StdEncoding.DecodeString(string(val))
 		smf.Spec.Data[key] = string(str)
 	}
-
 
 	smf.Spec.Type = s.Spec.Type
 
@@ -581,7 +579,7 @@ func getSecretAsset(namespace *types.Namespace, name string) *types.Secret {
 	s.Meta.Namespace = namespace.Meta.Name
 	s.SelfLink()
 
-	s.Spec.Type = types.KindSecretText
+	s.Spec.Type = types.KindSecretOpaque
 	s.Spec.Data = make(map[string][]byte, 0)
 	return &s
 }

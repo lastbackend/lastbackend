@@ -48,21 +48,15 @@ func (s *Config) ToMeta(obj types.ConfigMeta) ConfigMeta {
 	return meta
 }
 
-
 func (s *Config) ToSpec(obj types.ConfigSpec) ConfigSpec {
 
 	spec := ConfigSpec{}
 	spec.Type = obj.Type
 
-	spec.Data = make([]ConfigSpecData, 0)
+	spec.Data = make(map[string]string, 0)
 
-	for _, data := range obj.Data {
-		spec.Data = append(spec.Data, ConfigSpecData{
-			Key: data.Key,
-			File: data.File,
-			Value: data.Value,
-			Data: data.Data,
-		})
+	for key, val := range obj.Data {
+		spec.Data[key] = val
 	}
 
 	return spec

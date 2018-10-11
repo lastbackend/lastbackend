@@ -96,7 +96,7 @@ type PodStatus struct {
 	// Pod containers
 	Containers map[string]*PodContainer `json:"containers" yaml:"containers"`
 	// Pod volumes
-	Volumes map[string]*PodVolume `json:"volumes" yaml:"volumes"`
+	Volumes map[string]*VolumeClaim `json:"volumes" yaml:"volumes"`
 }
 
 // PodSteps is a map of pod steps
@@ -151,15 +151,11 @@ type PodContainer struct {
 
 // PodContainer is a container of the pod
 // swagger:model types_pod_container
-type PodVolume struct {
+type VolumeClaim struct {
 	// Pod name
-	Pod string `json:"pod" yaml:"pod"`
-	// Pod volume name
 	Name string `json:"name" yaml:"name"`
-	// Pod volume ready flag
-	Ready bool `json:"ready" yaml:"ready"`
-	// Pod volume string
-	Type string `json:"type" yaml:"type"`
+	// Pod volume name
+	Volume string `json:"volume" yaml:"volume"`
 	// Pod volume Path
 	Path string `json:"path" yaml:"path"`
 }
@@ -191,7 +187,7 @@ type PodContainerState struct {
 
 // swagger:model types_pod_container_state_restarted
 type PodContainerStateRestarted struct {
-	Count int `json:"count" yaml:"count"`
+	Count     int       `json:"count" yaml:"count"`
 	Restarted time.Time `json:"restarted" yaml:"restarted"`
 }
 
@@ -307,7 +303,7 @@ func NewPodStatus() *PodStatus {
 	status := PodStatus{
 		Steps:      make(PodSteps, 0),
 		Containers: make(map[string]*PodContainer, 0),
-		Volumes:    make(map[string]*PodVolume, 0),
+		Volumes:    make(map[string]*VolumeClaim, 0),
 	}
 	return &status
 }

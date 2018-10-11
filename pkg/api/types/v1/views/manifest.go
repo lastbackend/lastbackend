@@ -52,12 +52,18 @@ type ManifestSpecTemplateContainer struct {
 }
 
 type ManifestSpecTemplateContainerEnv struct {
-	Name  string                                 `json:"name,omitempty" yaml:"name,omitempty"`
-	Value string                                 `json:"value,omitempty" yaml:"value,omitempty"`
-	From  ManifestSpecTemplateContainerEnvSecret `json:"from,omitempty" yaml:"from,omitempty"`
+	Name   string                                 `json:"name,omitempty" yaml:"name,omitempty"`
+	Value  string                                 `json:"value,omitempty" yaml:"value,omitempty"`
+	Secret ManifestSpecTemplateContainerEnvSecret `json:"secret,omitempty" yaml:"secret,omitempty"`
+	Config ManifestSpecTemplateContainerEnvConfig `json:"config,omitempty" yaml:"config,omitempty"`
 }
 
 type ManifestSpecTemplateContainerEnvSecret struct {
+	Name string `json:"name,omitempty" yaml:"name,omitempty"`
+	Key  string `json:"key,omitempty" yaml:"key,omitempty"`
+}
+
+type ManifestSpecTemplateContainerEnvConfig struct {
 	Name string `json:"name,omitempty" yaml:"name,omitempty"`
 	Key  string `json:"key,omitempty" yaml:"key,omitempty"`
 }
@@ -101,12 +107,30 @@ type ManifestSpecTemplateVolume struct {
 	// Template volume type
 	Type string `json:"type,omitempty" yaml:"type,omitempty"`
 	// Template volume from secret type
-	From ManifestSpecTemplateSecretVolume `json:"from,omitempty" yaml:"from,omitempty"`
+	Volume ManifestSpecTemplateVolumeClaim `json:"volume,omitempty" yaml:"volume,omitempty"`
+	// Template volume from secret type
+	Config ManifestSpecTemplateConfigVolume `json:"config,omitempty" yaml:"config,omitempty"`
+	// Template volume from secret type
+	Secret ManifestSpecTemplateSecretVolume `json:"secret,omitempty" yaml:"secret,omitempty"`
+}
+
+type ManifestSpecTemplateVolumeClaim struct {
+	// Persistent volume name to mount
+	Name string `json:"name,omitempty" yaml:"name,omitempty"`
+	// Persistent volume subpath
+	Subpath string `json:"subpath,omitempty" yaml:"subpath,omitempty"`
 }
 
 type ManifestSpecTemplateSecretVolume struct {
 	// Secret name to mount
 	Name string `json:"name,omitempty" yaml:"name,omitempty"`
 	// Secret file key
+	Files []string `json:"files,omitempty" yaml:"files,omitempty"`
+}
+
+type ManifestSpecTemplateConfigVolume struct {
+	// Config name to mount
+	Name string `json:"name,omitempty" yaml:"name,omitempty"`
+	// Config file key
 	Files []string `json:"files,omitempty" yaml:"files,omitempty"`
 }

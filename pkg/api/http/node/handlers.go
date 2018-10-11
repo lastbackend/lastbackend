@@ -128,8 +128,8 @@ func NodeGetSpecH(w http.ResponseWriter, r *http.Request) {
 		stg = envs.Get().GetStorage()
 		nm  = distribution.NewNodeModel(r.Context(), stg)
 
-		cid   = utils.Vars(r)["cluster"]
-		nid   = utils.Vars(r)["node"]
+		cid = utils.Vars(r)["cluster"]
+		nid = utils.Vars(r)["node"]
 	)
 
 	n, err := nm.Get(nid)
@@ -588,7 +588,6 @@ func NodeSetStatusH(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-
 	spec, err := getNodeSpec(r.Context(), node)
 	if err != nil {
 		errors.HTTP.InternalServerError(w)
@@ -671,23 +670,24 @@ func NodeRemoveH(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func getNodeSpec(ctx context.Context, n *types.Node) (*types.NodeManifest, error){
+func getNodeSpec(ctx context.Context, n *types.Node) (*types.NodeManifest, error) {
 
 	var (
 		cache = envs.Get().GetCache().Node()
-		spec = cache.Get(n.Meta.Name)
-		stg = envs.Get().GetStorage()
-		pm  = distribution.NewPodModel(ctx, stg)
-		vm  = distribution.NewVolumeModel(ctx, stg)
-		em  = distribution.NewEndpointModel(ctx, stg)
-		ns  = distribution.NewNetworkModel(ctx, stg)
+		spec  = cache.Get(n.Meta.Name)
+		stg   = envs.Get().GetStorage()
+		pm    = distribution.NewPodModel(ctx, stg)
+		vm    = distribution.NewVolumeModel(ctx, stg)
+		em    = distribution.NewEndpointModel(ctx, stg)
+		ns    = distribution.NewNetworkModel(ctx, stg)
 	)
 
 	if spec == nil {
 
 		spec = new(types.NodeManifest)
 		spec.Meta.Initial = true
-		spec.Meta.Discovery = cache.GetResolvers()
+		spec.Resolvers = cache.GetResolvers()
+		spec.Configs = cache.GetConfigs()
 
 		pods, err := pm.ManifestMap(n.Meta.Name)
 		if err != nil {

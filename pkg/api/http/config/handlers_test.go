@@ -51,18 +51,10 @@ func TestConfigList(t *testing.T) {
 	ns1 := getNamespaceAsset("demo", "")
 
 	c1 := getConfigAsset(ns1, "demo")
-	c2 := getConfigAsset(ns1,"test")
+	c2 := getConfigAsset(ns1, "test")
 
-	c1.Spec.Data = append(c1.Spec.Data, &types.ConfigSpecData{
-		Key: "test.txt",
-		Value: "test1",
-	})
-
-	c2.Spec.Data = append(c1.Spec.Data, &types.ConfigSpecData{
-		Key: "test.txt",
-		Value: "test2",
-	})
-
+	c1.Spec.Data["test.txt"] = "test1"
+	c2.Spec.Data["test.txt"] = "test2"
 
 	cl := types.NewConfigMap()
 	cl.Items[c1.SelfLink()] = c1
@@ -170,7 +162,6 @@ func TestConfigList(t *testing.T) {
 
 }
 
-
 // Testing ConfigCreateH handler
 func TestConfigCreate(t *testing.T) {
 
@@ -183,13 +174,9 @@ func TestConfigCreate(t *testing.T) {
 
 	c1 := getConfigAsset(ns1, "demo")
 	c1.Meta.Kind = types.KindConfigText
-	c1.Spec.Data = append(c1.Spec.Data, &types.ConfigSpecData{
-		Key: "test.txt",
-		Value: "test1",
-	})
+	c1.Spec.Data["test.txt"] = "test1"
 
 	mf1, _ := getConfigManifest(c1).ToJson()
-
 
 	type fields struct {
 		stg storage.Storage
@@ -316,21 +303,12 @@ func TestConfigUpdate(t *testing.T) {
 
 	c1 := getConfigAsset(ns1, "demo")
 	c1.Meta.Kind = types.KindConfigText
-	c1.Spec.Data = append(c1.Spec.Data, &types.ConfigSpecData{
-		Key: "test.txt",
-		Value: "test1",
-	})
+	c1.Spec.Data["test.txt"] = "test1"
 
 	c2 := getConfigAsset(ns1, "demo")
 	c2.Meta.Kind = types.KindConfigText
-	c2.Spec.Data = append(c1.Spec.Data, &types.ConfigSpecData{
-		Key: "test.txt",
-		Value: "test2",
-	})
-	c2.Spec.Data = append(c1.Spec.Data, &types.ConfigSpecData{
-		Key: "test.cfg",
-		Value: "cfg",
-	})
+	c2.Spec.Data["test.txt"] = "test2"
+	c2.Spec.Data["test.cfg"] = "cfg"
 
 	mf2, _ := getConfigManifest(c2).ToJson()
 
@@ -447,21 +425,12 @@ func TestConfigRemove(t *testing.T) {
 
 	c1 := getConfigAsset(ns1, "demo")
 	c1.Meta.Kind = types.KindConfigText
-	c1.Spec.Data = append(c1.Spec.Data, &types.ConfigSpecData{
-		Key: "test.txt",
-		Value: "test1",
-	})
+	c1.Spec.Data["test.txt"] = "test1"
 
 	c2 := getConfigAsset(ns1, "test")
 	c2.Meta.Kind = types.KindConfigText
-	c2.Spec.Data = append(c1.Spec.Data, &types.ConfigSpecData{
-		Key: "test.txt",
-		Value: "test2",
-	})
-	c2.Spec.Data = append(c1.Spec.Data, &types.ConfigSpecData{
-		Key: "test.cfg",
-		Value: "cfg",
-	})
+	c2.Spec.Data["test.txt"] = "test2"
+	c2.Spec.Data["test.cfg"] = "cfg"
 
 	type fields struct {
 		stg storage.Storage
@@ -578,19 +547,14 @@ func TestConfigRemove(t *testing.T) {
 
 func getConfigManifest(s *types.Config) *request.ConfigManifest {
 
-	smf := new (request.ConfigManifest)
+	smf := new(request.ConfigManifest)
 
 	smf.Meta.Name = &s.Meta.Name
 	smf.Meta.Namespace = &s.Meta.Namespace
-	smf.Spec.Data = make([]*request.ConfigManifestData, 0)
+	smf.Spec.Data = make(map[string]string, 0)
 
-	for _, val := range s.Spec.Data {
-		smf.Spec.Data = append(smf.Spec.Data, &request.ConfigManifestData{
-			Key: val.Key,
-			File: val.File,
-			Data: string(val.Data),
-			Value: val.Value,
-		})
+	for key, val := range s.Spec.Data {
+		smf.Spec.Data[key] = val
 	}
 
 	smf.Spec.Type = s.Spec.Type
@@ -612,7 +576,7 @@ func getConfigAsset(namespace *types.Namespace, name string) *types.Config {
 	c.Meta.Name = name
 	c.Meta.Namespace = namespace.Meta.Name
 	c.Spec.Type = types.KindConfigText
-	c.Spec.Data = make([]*types.ConfigSpecData, 0)
+	c.Spec.Data = make(map[string]string, 0)
 	return &c
 }
 

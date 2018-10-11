@@ -129,7 +129,7 @@ func (c *Controller) Sync(ctx context.Context) error {
 				break
 			}
 
-			if !envs.Get().GetState().Pods().IsLocal(p) {
+			if !envs.Get().GetState().Pods().IsLocal(p) && status != nil {
 				opts.Pods[p] = getPodOptions(status)
 			} else {
 				delete(c.cache.pods, p)
@@ -208,11 +208,10 @@ func (c *Controller) Subscribe() {
 
 	}()
 
-
 	go envs.Get().GetState().Pods().Watch(pods, done)
 	go envs.Get().GetState().Volumes().Watch(volumes, done)
 
-	<- done
+	<-done
 }
 
 func getPodOptions(p *types.PodStatus) *request.NodePodStatusOptions {
@@ -233,4 +232,3 @@ func getVolumeOptions(p *types.VolumeStatus) *request.NodeVolumeStatusOptions {
 	opts.Message = p.Message
 	return opts
 }
-
