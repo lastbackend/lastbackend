@@ -50,9 +50,9 @@ func (s *Secret) ToMeta(obj types.SecretMeta) SecretMeta {
 func (s *Secret) ToSpec(obj types.SecretSpec) SecretSpec {
 	spec := SecretSpec{}
 	spec.Type = obj.Type
-	spec.Data = make(map[string][]byte, 0)
+	spec.Data = make(map[string]string, 0)
 	for key, value := range obj.Data {
-		spec.Data[key]=value
+		spec.Data[key]= string(value)
 	}
 	return spec
 }
