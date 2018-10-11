@@ -95,6 +95,7 @@ func New() *State {
 		},
 		volumes: &VolumesState{
 			volumes:  make(map[string]types.VolumeStatus, 0),
+			claims:   make(map[string]types.VolumeClaim, 0),
 			local:    make(map[string]bool),
 			watchers: make(map[chan string]bool, 0),
 		},
