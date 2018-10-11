@@ -46,4 +46,4 @@ runtime:
     interface: "eth1" #external interface to route traffic
   csi:
     dir:
-      root: "/opt/lastbackend/"
+      root: "/var/run/lastbackend/"

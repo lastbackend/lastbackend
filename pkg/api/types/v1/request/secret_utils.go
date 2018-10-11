@@ -40,22 +40,17 @@ func (v *SecretManifest) DecodeAndValidate(reader io.Reader) *errors.Err {
 
 	if reader == nil {
 		err := errors.New("data body can not be null")
-		return errors.New("config").IncorrectJSON(err)
-	}
-
-	if reader == nil {
-		err := errors.New("data body can not be null")
-		return errors.New("config").IncorrectJSON(err)
+		return errors.New("secret").IncorrectJSON(err)
 	}
 
 	body, err := ioutil.ReadAll(reader)
 	if err != nil {
-		return errors.New("config").Unknown(err)
+		return errors.New("secret").Unknown(err)
 	}
 
 	err = json.Unmarshal(body, v)
 	if err != nil {
-		return errors.New("config").IncorrectJSON(err)
+		return errors.New("secret").IncorrectJSON(err)
 	}
 
 	return v.Validate()
