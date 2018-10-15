@@ -20,7 +20,6 @@ package distribution
 
 import (
 	"context"
-
 	"encoding/json"
 	"github.com/lastbackend/lastbackend/pkg/distribution/errors"
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
@@ -85,6 +84,7 @@ func (n *Secret) Create(namespace *types.Namespace, secret *types.Secret) (*type
 
 	log.V(logLevel).Debugf("%s:create:> create secret %#v", logSecretPrefix, secret.Meta.Name)
 
+	secret.Meta.SetDefault()
 	secret.Meta.Namespace = namespace.Meta.Name
 	secret.SelfLink()
 

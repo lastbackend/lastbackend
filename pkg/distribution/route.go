@@ -98,6 +98,7 @@ func (n *Route) Create(namespace *types.Namespace, route *types.Route) (*types.R
 
 	log.V(logLevel).Debugf("%s:create:> create route %#v", logRoutePrefix, route.Meta.Name)
 
+	route.Meta.SetDefault()
 	route.Status.State = types.StatusInitialized
 	route.Spec.Domain = fmt.Sprintf("%s.%s.%s", strings.ToLower(route.Meta.Name), strings.ToLower(namespace.Meta.Name),  viper.GetString("domain.external"))
 	route.SelfLink()

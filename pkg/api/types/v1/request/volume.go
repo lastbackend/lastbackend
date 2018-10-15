@@ -38,7 +38,7 @@ type VolumeManifestMeta struct {
 type VolumeManifestSpec struct {
 	// Template volume types
 	Type string `json:"type,omitempty" yaml:"type,omitempty"`
-	// Tempate volume selector
+	// Template volume selector
 	Selector ManifestSpecSelector `json:"selector,omitempty" yaml:"selector,omitempty"`
 	//  Volume Resources
 	Capacity VolumeManifestSpecCapacity `json:"capacity,omitempty" yaml:"capacity,omitempty"`
