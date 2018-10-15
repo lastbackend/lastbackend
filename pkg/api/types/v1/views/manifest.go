@@ -125,12 +125,22 @@ type ManifestSpecTemplateSecretVolume struct {
 	// Secret name to mount
 	Name string `json:"name,omitempty" yaml:"name,omitempty"`
 	// Secret file key
-	Files []string `json:"files,omitempty" yaml:"files,omitempty"`
+	Binds []ManifestSpecTemplateSecretVolumeBind `json:"binds,omitempty" yaml:"binds,omitempty"`
+}
+
+type ManifestSpecTemplateSecretVolumeBind struct {
+	Key string `json:"key" yaml:"key"`
+	File string `json:"file" yaml:"file"`
 }
 
 type ManifestSpecTemplateConfigVolume struct {
 	// Config name to mount
 	Name string `json:"name,omitempty" yaml:"name,omitempty"`
 	// Config file key
-	Files []string `json:"files,omitempty" yaml:"files,omitempty"`
+	Binds []ManifestSpecTemplateConfigVolumeBind `json:"binds,omitempty" yaml:"binds,omitempty"`
+}
+
+type ManifestSpecTemplateConfigVolumeBind struct {
+	Key string `json:"key" yaml:"key"`
+	File string `json:"file" yaml:"file"`
 }

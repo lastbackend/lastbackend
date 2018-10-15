@@ -83,6 +83,8 @@ type SpecTemplateVolume struct {
 	Config SpecTemplateConfigVolume `json:"config,omitempty"`
 }
 
+// SpecTemplateVolumeClaim - volume bind to use persistent volume in pod
+// swagger:model types_spec_template_volume_claim
 type SpecTemplateVolumeClaim struct {
 	// Persistent volume name to mount
 	Name string `json:"name"`
@@ -90,18 +92,33 @@ type SpecTemplateVolumeClaim struct {
 	Subpath string `json:"subpath"`
 }
 
+// SpecTemplateSecretVolume - use secret as volume in pod
 type SpecTemplateSecretVolume struct {
 	// Secret name to mount
 	Name string `json:"name"`
 	// Secret file key
-	Files []string `json:"key"`
+	Binds []SpecTemplateSecretVolumeBind `json:"binds"`
+}
+
+// SpecTemplateSecretVolumeBind - files bindings.
+// Get secret value by key and create file
+type SpecTemplateSecretVolumeBind struct {
+	Key  string `json:"key"`
+	File string `json:"file"`
 }
 
 type SpecTemplateConfigVolume struct {
 	// Secret name to mount
 	Name string `json:"name"`
-	// Secret file key
-	Files []string `json:"files"`
+	// Config file binding
+	Binds []SpecTemplateConfigVolumeBind `json:"binds"`
+}
+
+type SpecTemplateConfigVolumeBind struct {
+	// Config key
+	Key string `json:"key"`
+	// File to create
+	File string `json:"file"`
 }
 
 // swagger:ignore

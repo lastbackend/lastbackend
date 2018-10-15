@@ -369,11 +369,11 @@ func (s *ServiceManifest) SetServiceSpec(svc *types.Service) {
 			}
 
 			var e = true
-			for _, vf := range v.Secret.Files {
+			for _, vf := range v.Secret.Binds {
 
 				var f = false
-				for _, sf := range spec.Secret.Files {
-					if vf == sf {
+				for _, sf := range spec.Secret.Binds {
+					if vf.Key == sf.Key && vf.File == sf.File {
 						f = true
 						break
 					}
@@ -387,7 +387,13 @@ func (s *ServiceManifest) SetServiceSpec(svc *types.Service) {
 			}
 
 			if !e {
-				spec.Secret.Files = v.Secret.Files
+				spec.Secret.Binds = make([]types.SpecTemplateSecretVolumeBind, 0)
+				for _, v := range v.Secret.Binds {
+					spec.Secret.Binds = append(spec.Secret.Binds, types.SpecTemplateSecretVolumeBind{
+						Key: v.Key,
+						File: v.File,
+					})
+				}
 				svc.Spec.Template.Updated = time.Now()
 			}
 
@@ -398,11 +404,11 @@ func (s *ServiceManifest) SetServiceSpec(svc *types.Service) {
 			}
 
 			var ce = true
-			for _, vf := range v.Config.Files {
+			for _, vf := range v.Config.Binds {
 
 				var f = false
-				for _, sf := range spec.Config.Files {
-					if vf == sf {
+				for _, sf := range spec.Config.Binds {
+					if vf.Key == sf.Key && vf.File == sf.File {
 						f = true
 						break
 					}
@@ -416,7 +422,13 @@ func (s *ServiceManifest) SetServiceSpec(svc *types.Service) {
 			}
 
 			if !ce {
-				spec.Config.Files = v.Config.Files
+				spec.Config.Binds = make([]types.SpecTemplateConfigVolumeBind, 0)
+				for _, v := range v.Config.Binds {
+					spec.Config.Binds = append(spec.Config.Binds, types.SpecTemplateConfigVolumeBind{
+						Key: v.Key,
+						File: v.File,
+					})
+				}
 				svc.Spec.Template.Updated = time.Now()
 			}
 

@@ -705,7 +705,7 @@ func TestServiceUpdate(t *testing.T) {
 						assert.Equal(t, wvs.Type, scs.Type, "volume spec type not equal")
 						assert.Equal(t, wvs.Secret.Name, scs.Secret.Name, "volume spec secret name not equal")
 
-						assert.Equal(t, strings.Join(wvs.Secret.Files, " "), strings.Join(scs.Secret.Files, " "), "container spec secret files not equal")
+						assert.Equal(t, len(wvs.Secret.Binds), len(scs.Secret.Binds), "container spec secret binds not equal")
 
 					}
 
@@ -901,10 +901,15 @@ func getServiceManifest(name, image string) *request.ServiceManifest {
 			Name: "demo",
 			Secret: request.ManifestSpecTemplateSecretVolume{
 				Name:  "test",
-				Files: []string{"1.txt"},
+				Binds: make([]request.ManifestSpecTemplateSecretVolumeBind, 0),
 			},
 		}
 	)
+
+	volume.Secret.Binds = append(volume.Secret.Binds, request.ManifestSpecTemplateSecretVolumeBind{
+		Key: "demo",
+		File: "test.txt",
+	})
 
 	container.Env = append(container.Env, request.ManifestSpecTemplateContainerEnv{
 		Name:  "Demo",
