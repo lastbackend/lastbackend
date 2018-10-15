@@ -146,14 +146,28 @@ func (sv *Service) ToSpec(obj types.ServiceSpec) ServiceSpec {
 				Name:    s.Volume.Name,
 				Subpath: s.Volume.Subpath,
 			},
-			Config: ManifestSpecTemplateConfigVolume{
-				Name:  s.Config.Name,
-				Files: s.Config.Files,
-			},
 			Secret: ManifestSpecTemplateSecretVolume{
 				Name:  s.Secret.Name,
-				Files: s.Secret.Files,
+				Binds: make([]ManifestSpecTemplateSecretVolumeBind, 0),
 			},
+			Config: ManifestSpecTemplateConfigVolume{
+				Name:  s.Config.Name,
+				Binds: make([]ManifestSpecTemplateConfigVolumeBind, 0),
+			},
+		}
+
+		for _, b := range s.Secret.Binds {
+			v.Secret.Binds = append(v.Secret.Binds, ManifestSpecTemplateSecretVolumeBind{
+				Key: b.Key,
+				File: b.File,
+			})
+		}
+
+		for _, b := range s.Config.Binds {
+			v.Config.Binds = append(v.Config.Binds, ManifestSpecTemplateConfigVolumeBind{
+				Key: b.Key,
+				File: b.File,
+			})
 		}
 
 		spec.Template.Volumes = append(spec.Template.Volumes, v)
@@ -229,15 +243,15 @@ func (sv Service) ToRequestManifest() *request.ServiceManifest {
 			}
 
 			data.Secret.Name = v.Secret.Name
-			data.Secret.Files = v.Secret.Files
-			if data.Secret.Files == nil {
-				data.Secret.Files = make([]string, 0)
+			data.Secret.Binds = v.Secret.Binds
+			if data.Secret.Binds == nil {
+				data.Secret.Binds = make([]request.ManifestSpecTemplateSecretVolumeBind, 0)
 			}
 
 			data.Config.Name = v.Config.Name
-			data.Config.Files = v.Config.Files
-			if data.Config.Files == nil {
-				data.Config.Files = make([]string, 0)
+			data.Config.Binds = v.Config.Binds
+			if data.Config.Binds == nil {
+				data.Config.Binds = make([]request.ManifestSpecTemplateConfigVolumeBind, 0)
 			}
 
 			sm.Spec.Template.Volumes = append(sm.Spec.Template.Volumes, data)

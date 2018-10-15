@@ -19,8 +19,9 @@
 package request
 
 import (
-	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 	"strings"
+
+	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 )
 
 type ManifestSpecSelector struct {
@@ -125,14 +126,24 @@ type ManifestSpecTemplateSecretVolume struct {
 	// Secret name to mount
 	Name string `json:"name,omitempty" yaml:"name,omitempty"`
 	// Secret file key
-	Files []string `json:"files,omitempty" yaml:"files,omitempty"`
+	Binds []ManifestSpecTemplateSecretVolumeBind `json:"binds,omitempty" yaml:"bindsk,omitempty"`
+}
+
+type ManifestSpecTemplateSecretVolumeBind struct {
+	Key  string `json:"key" yaml:"key"`
+	File string `json:"file" yaml:"file"`
 }
 
 type ManifestSpecTemplateConfigVolume struct {
 	// Secret name to mount
 	Name string `json:"name,omitempty" yaml:"name,omitempty"`
 	// Secret file key
-	Files []string `json:"files,omitempty" yaml:"files,omitempty"`
+	Binds []ManifestSpecTemplateConfigVolumeBind `json:"binds,omitempty" yaml:"binds,omitempty"`
+}
+
+type ManifestSpecTemplateConfigVolumeBind struct {
+	Key  string `json:"key" yaml:"key"`
+	File string `json:"file" yaml:"file"`
 }
 
 type ManifestSpecTemplateRestartPolicy struct {
@@ -175,13 +186,28 @@ func (m ManifestSpecTemplateVolume) GetSpec() types.SpecTemplateVolume {
 		},
 		Secret: types.SpecTemplateSecretVolume{
 			Name:  m.Secret.Name,
-			Files: m.Secret.Files,
+			Binds: make([]types.SpecTemplateSecretVolumeBind, 0),
 		},
 		Config: types.SpecTemplateConfigVolume{
 			Name:  m.Config.Name,
-			Files: m.Config.Files,
+			Binds: make([]types.SpecTemplateConfigVolumeBind, 0),
 		},
 	}
+
+	for _, b := range m.Secret.Binds {
+		s.Secret.Binds = append(s.Secret.Binds, types.SpecTemplateSecretVolumeBind{
+			Key: b.Key,
+			File: b.File,
+		})
+	}
+
+	for _, b := range m.Config.Binds {
+		s.Config.Binds = append(s.Config.Binds, types.SpecTemplateConfigVolumeBind{
+			Key: b.Key,
+			File: b.File,
+		})
+	}
+
 	return s
 }
 

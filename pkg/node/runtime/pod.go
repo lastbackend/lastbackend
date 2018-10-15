@@ -831,7 +831,7 @@ func PodVolumesCheck(ctx context.Context, pod string, spec []*types.SpecTemplate
 	for _, v := range spec {
 		name := podVolumeKeyCreate(pod, v.Name)
 
-		if v.Config.Name != types.EmptyString && len(v.Config.Files) > 0 {
+		if v.Config.Name != types.EmptyString && len(v.Config.Binds) > 0 {
 			equal, err := VolumeCheckConfigData(ctx, name, v.Config.Name)
 			if err != nil {
 				return false
@@ -839,7 +839,7 @@ func PodVolumesCheck(ctx context.Context, pod string, spec []*types.SpecTemplate
 			return equal
 		}
 
-		if v.Secret.Name != types.EmptyString && len(v.Secret.Files) > 0 {
+		if v.Secret.Name != types.EmptyString && len(v.Secret.Binds) > 0 {
 			equal, err := VolumeCheckSecretData(ctx, name, v.Config.Name)
 			if err != nil {
 				return false
@@ -864,14 +864,14 @@ func PodVolumeUpdate(ctx context.Context, pod string, spec *types.SpecTemplateVo
 
 	status := envs.Get().GetState().Volumes().GetVolume(name)
 
-	if spec.Secret.Name != types.EmptyString && len(spec.Secret.Files) > 0 {
+	if spec.Secret.Name != types.EmptyString && len(spec.Secret.Binds) > 0 {
 		if err := VolumeSetSecretData(ctx, name, spec.Secret.Name); err != nil {
 			log.Errorf("can not set config data to volume: %s", err.Error())
 			return status, err
 		}
 	}
 
-	if spec.Secret.Name == types.EmptyString && spec.Config.Name != types.EmptyString && len(spec.Config.Files) > 0 {
+	if spec.Secret.Name == types.EmptyString && spec.Config.Name != types.EmptyString && len(spec.Config.Binds) > 0 {
 		if err := VolumeSetConfigData(ctx, name, spec.Config.Name); err != nil {
 			log.Errorf("can not set config data to volume: %s", err.Error())
 			return status, err
@@ -924,14 +924,14 @@ func PodVolumeCreate(ctx context.Context, pod string, spec *types.SpecTemplateVo
 		return nil, err
 	}
 
-	if spec.Secret.Name != types.EmptyString && len(spec.Secret.Files) > 0 {
+	if spec.Secret.Name != types.EmptyString && len(spec.Secret.Binds) > 0 {
 		if err := VolumeSetSecretData(ctx, name, spec.Secret.Name); err != nil {
 			log.Errorf("can not set secret data to volume: %s", err.Error())
 			return st, err
 		}
 	}
 
-	if spec.Secret.Name == types.EmptyString && spec.Config.Name != types.EmptyString && len(spec.Config.Files) > 0 {
+	if spec.Secret.Name == types.EmptyString && spec.Config.Name != types.EmptyString && len(spec.Config.Binds) > 0 {
 		if err := VolumeSetConfigData(ctx, name, spec.Config.Name); err != nil {
 			log.Errorf("can not set config data to volume: %s", err.Error())
 			return st, err
