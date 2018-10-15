@@ -83,6 +83,7 @@ func (n *Config) Create(namespace *types.Namespace, config *types.Config) (*type
 
 	log.V(logLevel).Debugf("%s:create:> create config %#v", logConfigPrefix, config.Meta.Name)
 
+	config.Meta.SetDefault()
 	config.Meta.Namespace = namespace.Meta.Name
 	config.SelfLink()
 

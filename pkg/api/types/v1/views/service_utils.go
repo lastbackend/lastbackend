@@ -47,6 +47,8 @@ func (sv *ServiceView) NewWithDeployment(srv *types.Service, d *types.Deployment
 	s.Meta = s.ToMeta(srv.Meta)
 	s.Status = s.ToStatus(srv.Status)
 	s.Spec = s.ToSpec(srv.Spec)
+
+	s.Deployments = make(DeploymentMap, 0)
 	if d != nil {
 		s.Deployments = s.ToDeployments(d, p)
 	}
@@ -54,7 +56,7 @@ func (sv *ServiceView) NewWithDeployment(srv *types.Service, d *types.Deployment
 }
 
 func (sv *Service) ToMeta(obj types.ServiceMeta) ServiceMeta {
-	return ServiceMeta{
+	sm := ServiceMeta{
 		Name:        obj.Name,
 		Description: obj.Description,
 		SelfLink:    obj.SelfLink,
@@ -64,6 +66,13 @@ func (sv *Service) ToMeta(obj types.ServiceMeta) ServiceMeta {
 		Updated:     obj.Updated,
 		Created:     obj.Created,
 	}
+
+	sm.Labels = make(map[string]string, 0)
+	if obj.Labels != nil {
+		sm.Labels = obj.Labels
+	}
+
+	return sm
 }
 
 func (sv *Service) ToStatus(obj types.ServiceStatus) ServiceStatus {
@@ -158,14 +167,14 @@ func (sv *Service) ToSpec(obj types.ServiceSpec) ServiceSpec {
 
 		for _, b := range s.Secret.Binds {
 			v.Secret.Binds = append(v.Secret.Binds, ManifestSpecTemplateSecretVolumeBind{
-				Key: b.Key,
+				Key:  b.Key,
 				File: b.File,
 			})
 		}
 
 		for _, b := range s.Config.Binds {
 			v.Config.Binds = append(v.Config.Binds, ManifestSpecTemplateConfigVolumeBind{
-				Key: b.Key,
+				Key:  b.Key,
 				File: b.File,
 			})
 		}

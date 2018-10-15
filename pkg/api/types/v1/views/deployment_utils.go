@@ -33,6 +33,7 @@ func (dv *DeploymentView) New(obj *types.Deployment, pl *types.PodList) *Deploym
 	d.Status = d.ToStatus(obj.Status)
 	d.Spec = d.ToSpec(obj.Spec)
 
+	d.Pods = make(map[string]Pod, 0)
 	if pl != nil {
 		d.Pods = d.ToPods(pl)
 	}
