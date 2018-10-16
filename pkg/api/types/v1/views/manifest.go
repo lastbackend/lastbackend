@@ -129,7 +129,7 @@ type ManifestSpecTemplateSecretVolume struct {
 }
 
 type ManifestSpecTemplateSecretVolumeBind struct {
-	Key string `json:"key" yaml:"key"`
+	Key  string `json:"key" yaml:"key"`
 	File string `json:"file" yaml:"file"`
 }
 
@@ -141,6 +141,6 @@ type ManifestSpecTemplateConfigVolume struct {
 }
 
 type ManifestSpecTemplateConfigVolumeBind struct {
-	Key string `json:"key" yaml:"key"`
+	Key  string `json:"key" yaml:"key"`
 	File string `json:"file" yaml:"file"`
 }

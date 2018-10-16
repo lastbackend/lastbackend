@@ -42,7 +42,7 @@ type SpecTemplate struct {
 	// Template spec for volume
 	Volumes SpecTemplateVolumeList `json:"volumes" yaml:"volumes"`
 	// Template main container
-	Containers SpecTemplateContainers `json:"container" yaml:"container"`
+	Containers SpecTemplateContainers `json:"containers" yaml:"containers"`
 	// Termination period
 	Termination int `json:"termination" yaml:"termination"`
 	// Spec updated time
