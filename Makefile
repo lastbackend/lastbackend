@@ -1,6 +1,6 @@
 .PHONY : default deps test build image docs
 
-export VERSION = 0.9.0
+export VERSION = 0.1.0-beta1
 
 HARDWARE = $(shell uname -m)
 OS := $(shell uname)
