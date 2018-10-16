@@ -86,7 +86,7 @@ type PodSpecTemplate struct {
 	// Template Volume
 	Volumes types.SpecTemplateVolumeList `json:"volumes"`
 	// Template main container
-	Containers types.SpecTemplateContainers `json:"container"`
+	Containers types.SpecTemplateContainers `json:"containers"`
 	// Termination period
 	Termination int `json:"termination"`
 }
