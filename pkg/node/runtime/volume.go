@@ -221,6 +221,10 @@ func VolumeSetConfigData (ctx context.Context, name string, config string) error
 		return errors.New("volume not exists")
 	}
 
+	if cfg == nil {
+		return errors.New("config not exists")
+	}
+
 	if vol.Status.Type == types.EmptyString {
 		vol.Status.Type = types.KindVolumeHostDir
 	}
