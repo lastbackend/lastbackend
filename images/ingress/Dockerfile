@@ -20,7 +20,7 @@ ENV GOPATH /go
 ENV GOROOT /usr/local/go
 ENV PATH $GOPATH/bin:/usr/local/go/bin:$PATH
 
-COPY ./images/errors /var/run/html/errors
+COPY ./images/ingress/errors /var/run/html/errors
 
 ADD . /go/src/github.com/lastbackend/lastbackend
 WORKDIR /go/src/github.com/lastbackend/lastbackend
