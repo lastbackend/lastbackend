@@ -39,6 +39,14 @@ func (s *ServiceManifest) Validate() *errors.Err {
 		return errors.New("service").BadParameter("name")
 	case s.Meta.Description != nil && len(*s.Meta.Description) > DEFAULT_DESCRIPTION_LIMIT:
 		return errors.New("service").BadParameter("description")
+	case len(s.Spec.Template.Containers) == 0:
+		return errors.New("service").BadParameter("spec")
+	case len(s.Spec.Template.Containers) != 0:
+		for _, container := range s.Spec.Template.Containers {
+			if len(container.Image.Name) == 0 {
+				return errors.New("service").BadParameter("image")
+			}
+		}
 	}
 
 	return nil
