@@ -44,7 +44,8 @@ import (
 const (
 	logIPVSPrefix = "cpi:ipvs:proxy:>"
 	logLevel      = 3
-	ifaceName    = "lb-ipvs"
+	ifaceName     = "lb-ipvs"
+	ifaceDocker   = "docker0"
 )
 
 // Proxy balancer
@@ -426,7 +427,6 @@ func (p *Proxy) delIpBindToLink(ip string) error {
 	return nil
 }
 
-
 func New() (*Proxy, error) {
 
 	prx := new(Proxy)
@@ -481,25 +481,20 @@ func New() (*Proxy, error) {
 	}
 
 	var (
-		iface = viper.GetString("runtime.interface")
+		iface = viper.GetString("runtime.cpi.interface")
 	)
 
 	if iface == types.EmptyString {
-		log.Debug("find default interface to traffic route")
-		_, prx.dest, err = utils.GetDefaultInterface()
-		if err != nil {
-			return nil, err
-		}
-	} else {
-		log.Debugf("find interface to traffic route by name: %s", iface)
-		_, prx.dest, err = utils.GetIfaceByName(iface)
-		if err != nil {
-			return nil, err
-		}
+		iface = ifaceDocker
+	}
+
+	log.Debugf("find interface to traffic route by name: %s", iface)
+	_, prx.dest, err = utils.GetIfaceByName(iface)
+	if err != nil {
+		return nil, err
 	}
 
 	log.Debugf("default route ip net: %s", prx.dest.String())
-
 
 	svcs, err := prx.ipvs.GetServices()
 	if err != nil {
@@ -523,7 +518,6 @@ func New() (*Proxy, error) {
 	// TODO: Check ipvs proxy mode is available on host
 	return prx, nil
 }
-
 
 func specToServices(spec *types.EndpointManifest) (map[string]*libipvs.Service, map[string]*libipvs.Destination, error) {
 
