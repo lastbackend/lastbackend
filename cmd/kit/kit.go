@@ -38,10 +38,10 @@
 //     - application/json
 //
 //     Security:
-//     - BearerToken:
+//     - bearerToken:
 //
 //     SecurityDefinitions:
-//       BearerToken:
+//       bearerToken:
 //         description: Bearer Token authentication
 //         type: apiKey
 //         name: authorization
