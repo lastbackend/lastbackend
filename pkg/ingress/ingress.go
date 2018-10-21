@@ -20,12 +20,12 @@ package ingress
 
 import (
 	"context"
+	"github.com/lastbackend/lastbackend/pkg/api/client"
+	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 	"github.com/lastbackend/lastbackend/pkg/ingress/controller"
 	"github.com/lastbackend/lastbackend/pkg/ingress/envs"
 	"github.com/lastbackend/lastbackend/pkg/ingress/runtime"
 	"github.com/lastbackend/lastbackend/pkg/ingress/state"
-	"github.com/lastbackend/lastbackend/pkg/api/client"
-	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 	"github.com/lastbackend/lastbackend/pkg/log"
 	"github.com/lastbackend/lastbackend/pkg/network"
 	"github.com/spf13/viper"
@@ -34,7 +34,6 @@ import (
 	"syscall"
 	"text/template"
 )
-
 
 func Daemon() bool {
 
@@ -105,8 +104,6 @@ func Daemon() bool {
 
 		go ctl.Sync(context.Background())
 	}
-
-
 
 	// Handle SIGINT and SIGTERM.
 	signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)

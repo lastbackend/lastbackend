@@ -65,8 +65,8 @@ type EndpointStatus struct {
 // swagger:model types_endpoint_spec
 type EndpointSpec struct {
 	// Endpoint state
-	State string `json:"state"`
-
+	State     string               `json:"state"`
+	External  bool                 `json:"external"`
 	IP        string               `json:"ip"`
 	Domain    string               `json:"domain"`
 	PortMap   map[uint16]string    `json:"port_map"`

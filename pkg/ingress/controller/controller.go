@@ -20,11 +20,11 @@ package controller
 
 import (
 	"context"
-	"github.com/lastbackend/lastbackend/pkg/ingress/envs"
-	"github.com/lastbackend/lastbackend/pkg/ingress/runtime"
 	"github.com/lastbackend/lastbackend/pkg/api/types/v1"
 	"github.com/lastbackend/lastbackend/pkg/api/types/v1/request"
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
+	"github.com/lastbackend/lastbackend/pkg/ingress/envs"
+	"github.com/lastbackend/lastbackend/pkg/ingress/runtime"
 	"github.com/lastbackend/lastbackend/pkg/log"
 	"sync"
 	"time"
@@ -56,7 +56,11 @@ func (c *Controller) Connect(ctx context.Context) error {
 	opts := v1.Request().Ingress().IngressConnectOptions()
 	opts.Info = envs.Get().GetState().Ingress().Info
 	opts.Status = envs.Get().GetState().Ingress().Status
-	opts.Network = *envs.Get().GetNet().Info(ctx)
+
+	var net = envs.Get().GetNet()
+	if net != nil {
+		opts.Network = *net.Info(ctx)
+	}
 
 	for {
 		err := envs.Get().GetClient().Connect(ctx, opts)

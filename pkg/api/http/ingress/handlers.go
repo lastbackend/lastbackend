@@ -167,12 +167,11 @@ func IngressConnectH(w http.ResponseWriter, r *http.Request) {
 	log.V(logLevel).Debugf("%s:info:> get ingress", logPrefix)
 
 	var (
-		im  = distribution.NewIngressModel(r.Context(), envs.Get().GetStorage())
-		sn  = distribution.NewNetworkModel(r.Context(), envs.Get().GetStorage())
-		nid = utils.Vars(r)["ingress"]
+		im    = distribution.NewIngressModel(r.Context(), envs.Get().GetStorage())
+		sn    = distribution.NewNetworkModel(r.Context(), envs.Get().GetStorage())
+		nid   = utils.Vars(r)["ingress"]
 		cache = envs.Get().GetCache().Ingress()
 	)
-
 
 	// request body struct
 	opts := new(request.IngressConnectOptions)
@@ -394,22 +393,21 @@ func IngressRemoveH(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-
-func getIngressManifest(ctx context.Context, ing *types.Ingress) (*types.IngressManifest, error){
+func getIngressManifest(ctx context.Context, ing *types.Ingress) (*types.IngressManifest, error) {
 
 	var (
 		cache = envs.Get().GetCache().Ingress()
-		spec = cache.Get(ing.SelfLink())
-		stg = envs.Get().GetStorage()
-		ns  = distribution.NewNetworkModel(ctx, stg)
-		em  = distribution.NewEndpointModel(ctx, stg)
+		spec  = cache.Get(ing.SelfLink())
+		stg   = envs.Get().GetStorage()
+		ns    = distribution.NewNetworkModel(ctx, stg)
+		em    = distribution.NewEndpointModel(ctx, stg)
 	)
 
 	if spec == nil {
 		spec = new(types.IngressManifest)
 		spec.Meta.Initial = true
 
-		spec.Meta.Discovery = cache.GetResolvers()
+		spec.Resolvers = cache.GetResolvers()
 		spec.Routes = cache.GetRoutes(ing.SelfLink())
 
 		endpoints, err := em.ManifestMap()
@@ -419,7 +417,6 @@ func getIngressManifest(ctx context.Context, ing *types.Ingress) (*types.Ingress
 		}
 		spec.Endpoints = endpoints.Items
 
-
 		subnets, err := ns.SubnetManifestMap()
 		if err != nil {
 			log.V(logLevel).Errorf("%s:getmanifest:> get endpoint manifests for ingress err: %s", logPrefix, err.Error())
@@ -427,7 +424,6 @@ func getIngressManifest(ctx context.Context, ing *types.Ingress) (*types.Ingress
 		}
 		spec.Network = subnets.Items
 	}
-
 
 	cache.Flush(ing.SelfLink())
 	return spec, nil

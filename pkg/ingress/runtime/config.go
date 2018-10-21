@@ -31,8 +31,8 @@ import (
 
 	"io/ioutil"
 
-	"github.com/lastbackend/lastbackend/pkg/ingress/envs"
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
+	"github.com/lastbackend/lastbackend/pkg/ingress/envs"
 	"github.com/lastbackend/lastbackend/pkg/log"
 )
 
@@ -41,23 +41,22 @@ const (
 	logConfigPrefix = "runtime:config"
 )
 
-
 type conf struct {
-	Resolver string
-	Frontend map[uint16]*confFrontend
-	Backend map[string]*confBackend
+	Resolvers map[string]uint16
+	Frontend  map[uint16]*confFrontend
+	Backend   map[string]*confBackend
 }
 
 type confFrontend struct {
-	Type string
+	Type  string
 	Rules map[string]map[string]string
 }
 
 type confBackend struct {
-	Domain string
-	Type string
+	Domain   string
+	Type     string
 	Endpoint string
-	Port uint16
+	Port     uint16
 }
 
 func configCheck() error {
@@ -88,9 +87,9 @@ func configSync() error {
 	log.Debugf("Update routes: %d", len(routes))
 
 	var cfg = conf{}
-	cfg.Resolver = envs.Get().GetNet().GetResolverIP()
+	cfg.Resolvers = envs.Get().GetResolvers()
 	cfg.Frontend = make(map[uint16]*confFrontend, 0)
-	cfg.Backend  = make(map[string]*confBackend, 0)
+	cfg.Backend = make(map[string]*confBackend, 0)
 
 	for n, r := range routes {
 
@@ -127,12 +126,10 @@ func configSync() error {
 			frontend.Rules[r.Domain] = make(map[string]string, 0)
 		}
 
-
 		for _, b := range r.Rules {
 
-			name := fmt.Sprintf("%s_%d", strings.Replace(n, ":","_", -1), b.Port)
+			name := fmt.Sprintf("%s_%d", strings.Replace(n, ":", "_", -1), b.Port)
 			log.Debugf("create new backend: %s", name)
-
 
 			backend := new(confBackend)
 			backend.Type = tp
@@ -145,8 +142,6 @@ func configSync() error {
 		}
 
 	}
-
-
 
 	buf := &bytes.Buffer{}
 	tpl.Execute(buf, cfg)

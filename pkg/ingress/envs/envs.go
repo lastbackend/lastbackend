@@ -22,8 +22,8 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/network"
 	"text/template"
 
-	"github.com/lastbackend/lastbackend/pkg/ingress/state"
 	"github.com/lastbackend/lastbackend/pkg/api/client/types"
+	"github.com/lastbackend/lastbackend/pkg/ingress/state"
 )
 
 var _env Env
@@ -41,7 +41,7 @@ type Env struct {
 	haproxy string
 	dns     struct {
 		Endpoint string
-		Cluster  []string
+		Cluster  map[string]uint16
 		External []string
 	}
 }
@@ -64,6 +64,14 @@ func (c *Env) SetState(state *state.State) {
 
 func (c *Env) GetState() *state.State {
 	return c.state
+}
+
+func (c *Env) SetResolvers(resolvers map[string]uint16) {
+	c.dns.Cluster = resolvers
+}
+
+func (c *Env) GetResolvers() map[string]uint16 {
+	return c.dns.Cluster
 }
 
 func (c *Env) SetClient(client types.IngressClientV1) {

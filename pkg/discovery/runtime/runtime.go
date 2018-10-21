@@ -22,59 +22,88 @@ import (
 	"context"
 	"github.com/lastbackend/lastbackend/pkg/discovery/envs"
 	"github.com/lastbackend/lastbackend/pkg/discovery/runtime/endpoint"
-	"github.com/lastbackend/lastbackend/pkg/distribution"
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 	"github.com/lastbackend/lastbackend/pkg/log"
-	"github.com/lastbackend/lastbackend/pkg/util/system"
-	"github.com/spf13/viper"
 )
 
 const (
-	logPrefix = "discovery:runtime"
-	logLevel  = 3
+	logRuntimePrefix = "discovery:runtime"
+	logLevel         = 3
 )
 
 type Runtime struct {
-	ctx context.Context
+	spec chan *types.DiscoveryManifest
+	ctx  context.Context
 }
 
-func (r *Runtime) Restore() {
-	log.V(logLevel).Debugf("%s:restore:> restore init", logPrefix)
+func (r *Runtime) Restore(ctx context.Context) {
+	log.V(logLevel).Debugf("%s:restore:> restore init", logRuntimePrefix)
+	var network = envs.Get().GetNet()
+
+	if network != nil {
+		if err := envs.Get().GetNet().SubnetRestore(ctx); err != nil {
+			log.Errorf("%s:> can not restore network: %s", logRuntimePrefix, err.Error())
+		}
+	}
+
 }
 
-func (r *Runtime) Loop() error {
+// Sync discovery runtime with new spec
+func (r *Runtime) Sync(ctx context.Context, spec *types.DiscoveryManifest) error {
+	log.V(logLevel).Debugf("%s:sync:> sync runtime state", logRuntimePrefix)
+	r.spec <- spec
+	return nil
+}
 
-	log.V(logLevel).Debugf("%s:loop:> update current discovery service info", logPrefix)
+func (r *Runtime) Loop(ctx context.Context) error {
 
-	hostname, err := system.GetHostname()
-	if err != nil {
-		log.Errorf(" can not get discovery hostname:%s", err.Error())
-		return err
-	}
+	log.V(logLevel).Debugf("%s:loop:> watch endpoint start", logRuntimePrefix)
+	go endpoint.Watch(r.ctx)
 
-	iface := viper.GetString("runtime.interface")
-	ip, err := system.GetHostIP(iface)
-	if err != nil {
-		log.Errorf(" can not get discovery ip:%s", err.Error())
-		return err
-	}
+	log.V(logLevel).Debugf("%s:loop:> start runtime loop", logRuntimePrefix)
+	var network = envs.Get().GetNet()
 
-	discovery := new(types.Discovery)
-	discovery.Meta.Name = hostname
-	discovery.Status.IP = ip
+	go func(ctx context.Context) {
 
-	dm := distribution.NewDiscoveryModel(context.Background(), envs.Get().GetStorage())
-	if err := dm.Set(discovery); err != nil {
-		log.Errorf(" can not get discovery data from storage:%s", err.Error())
-		return err
-	}
+		for {
+			select {
+			case spec := <-r.spec:
 
-	log.V(logLevel).Debugf("%s:loop:> watch endpoint start", logPrefix)
-	endpoint.Watch(r.ctx)
+				log.V(logLevel).Debugf("%s:loop:> provision new spec", logRuntimePrefix)
+
+				if spec.Meta.Initial && network != nil {
+					log.V(logLevel).Debugf("%s> clean up networks", logRuntimePrefix)
+					nets := network.Subnets().GetSubnets()
+
+					for cidr := range nets {
+						if _, ok := spec.Network[cidr]; !ok {
+							network.SubnetDestroy(ctx, cidr)
+						}
+					}
+
+				}
+
+				log.V(logLevel).Debugf("%s> provision init", logRuntimePrefix)
+
+				if network != nil {
+					log.V(logLevel).Debugf("%s> provision networks", logRuntimePrefix)
+					for cidr, n := range spec.Network {
+						log.V(logLevel).Debugf("network: %v", n)
+						if err := network.SubnetManage(ctx, cidr, n); err != nil {
+							log.Errorf("Subnet [%s] create err: %s", n.CIDR, err.Error())
+						}
+					}
+				}
+			}
+		}
+	}(ctx)
 
 	return nil
 }
 
 func NewRuntime(ctx context.Context) *Runtime {
-	return &Runtime{ctx: ctx}
+	return &Runtime{
+		ctx:  ctx,
+		spec: make(chan *types.DiscoveryManifest),
+	}
 }

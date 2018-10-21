@@ -22,13 +22,12 @@ import "github.com/lastbackend/lastbackend/pkg/distribution/types"
 
 // swagger:model request_ingress_connect
 type DiscoveryConnectOptions struct {
-	Info    types.DiscoveryInfo     `json:"info"`
-	Status  types.DiscoveryStatus   `json:"status"`
+	Info    types.DiscoveryInfo   `json:"info"`
+	Status  types.DiscoveryStatus `json:"status"`
+	Network types.NetworkState    `json:"network"`
 }
 
-
 type DiscoveryMeta struct {
-	
 }
 
 // swagger:ignore
@@ -36,6 +35,5 @@ type DiscoveryMeta struct {
 type DiscoveryRemoveOptions struct {
 	Force bool `json:"force"`
 }
-
 
 type DiscoveryStatusOptions types.DiscoveryStatus

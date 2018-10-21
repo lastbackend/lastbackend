@@ -68,3 +68,38 @@ func (nv *DiscoveryView) NewList(obj *types.DiscoveryList) *DiscoveryList {
 func (obj *DiscoveryList) ToJson() ([]byte, error) {
 	return json.Marshal(obj)
 }
+
+func (nv *DiscoveryView) NewManifest(obj *types.DiscoveryManifest) *DiscoveryManifest {
+
+	manifest := DiscoveryManifest{
+		Subnets: make(map[string]*types.SubnetManifest, 0),
+	}
+
+	if obj == nil {
+		return nil
+	}
+
+	manifest.Meta.Initial = obj.Meta.Initial
+	manifest.Subnets = obj.Network
+
+	return &manifest
+}
+
+func (obj *DiscoveryManifest) Decode() *types.DiscoveryManifest {
+
+	manifest := types.DiscoveryManifest{
+		Network: make(map[string]*types.SubnetManifest, 0),
+	}
+
+	manifest.Meta.Initial = obj.Meta.Initial
+
+	for i, e := range obj.Subnets {
+		manifest.Network[i] = e
+	}
+
+	return &manifest
+}
+
+func (obj *DiscoveryManifest) ToJson() ([]byte, error) {
+	return json.Marshal(obj)
+}
