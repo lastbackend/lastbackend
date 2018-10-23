@@ -20,16 +20,17 @@ package discovery
 
 import (
 	"context"
+	"github.com/lastbackend/lastbackend/pkg/network"
 	"os"
 	"os/signal"
 	"syscall"
 
+	"github.com/lastbackend/lastbackend/pkg/api/client"
 	"github.com/lastbackend/lastbackend/pkg/discovery/cache"
 	"github.com/lastbackend/lastbackend/pkg/discovery/controller"
 	"github.com/lastbackend/lastbackend/pkg/discovery/envs"
 	"github.com/lastbackend/lastbackend/pkg/discovery/runtime"
 	"github.com/lastbackend/lastbackend/pkg/discovery/state"
-	"github.com/lastbackend/lastbackend/pkg/api/client"
 	"github.com/lastbackend/lastbackend/pkg/log"
 	"github.com/lastbackend/lastbackend/pkg/storage"
 	"github.com/spf13/viper"
@@ -44,6 +45,13 @@ func Daemon() bool {
 
 	log.New(viper.GetInt("verbose"))
 	log.Info("Start service discovery")
+
+	net, err := network.New()
+	if err != nil {
+		log.Errorf("can not initialize network: %s", err.Error())
+		os.Exit(1)
+	}
+	envs.Get().SetNet(net)
 
 	st := state.New()
 	envs.Get().SetState(st)
@@ -91,8 +99,8 @@ func Daemon() bool {
 		go ctl.Sync(context.Background())
 	}
 
-	r.Restore()
-	r.Loop()
+	r.Restore(context.Background())
+	r.Loop(context.Background())
 
 	sd, err := Listen(viper.GetInt("dns.port"))
 	if err != nil {

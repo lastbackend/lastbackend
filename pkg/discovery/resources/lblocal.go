@@ -21,9 +21,8 @@ package resources
 import (
 	"context"
 	"net"
-	"time"
-
 	"regexp"
+	"time"
 
 	"github.com/lastbackend/lastbackend/pkg/discovery/envs"
 	"github.com/lastbackend/lastbackend/pkg/distribution"
@@ -60,6 +59,7 @@ func lbLocal(w dns.ResponseWriter, r *dns.Msg) {
 				log.V(logLevel).Debugf("%s:lb.local:> get txt type query", logPrefix)
 				t := new(dns.TXT)
 				t.Hdr = dns.RR_Header{Name: q.Name, Rrtype: dns.TypeTXT, Class: dns.ClassINET, Ttl: 0}
+				m.Authoritative = true
 				m.Answer = append(m.Answer, t)
 				m.Extra = append(m.Extra, rr)
 			default:
@@ -142,6 +142,9 @@ func lbLocal(w dns.ResponseWriter, r *dns.Msg) {
 						rr.(*dns.AAAA).AAAA = ip
 					}
 
+					m.Authoritative = true
+					m.RecursionAvailable = true
+					m.RecursionDesired = true
 					m.Answer = append(m.Answer, rr)
 				}
 			}

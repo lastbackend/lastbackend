@@ -29,12 +29,14 @@ import (
 	"github.com/spf13/viper"
 )
 
+const DefaultResolverIP = "172.17.0.1"
+
 type Network struct {
-	state *state.State
-	cni   cni.CNI
-	cpi   cpi.CPI
+	state    *state.State
+	cni      cni.CNI
+	cpi      cpi.CPI
 	resolver struct {
-		ip string
+		ip       string
 		external []string
 	}
 }
@@ -44,8 +46,14 @@ func New() (*Network, error) {
 	var err error
 
 	net := new(Network)
-	net.state = state.New()
 
+	if viper.GetString("runtime.cni.type") == types.EmptyString &&
+		viper.GetString("runtime.cpi.type") == types.EmptyString {
+		log.Debug("run ingress without network management")
+		return nil, nil
+	}
+
+	net.state = state.New()
 	if net.cni, err = ni.New(); err != nil {
 		log.Errorf("Cannot initialize cni: %v", err)
 		return nil, err
@@ -58,13 +66,13 @@ func New() (*Network, error) {
 
 	ip := viper.GetString("network.resolver.ip")
 	if ip == types.EmptyString {
-		ip = "172.17.0.1"
+		ip = DefaultResolverIP
 	}
 
 	net.resolver.ip = ip
 	net.resolver.external = viper.GetStringSlice("network.resolver.external")
 	if len(net.resolver.external) == 0 {
-		net.resolver.external = []string{"8.8.8.8","8.8.4.4"}
+		net.resolver.external = []string{"8.8.8.8", "8.8.4.4"}
 	}
 
 	return net, nil

@@ -54,7 +54,10 @@ type Proxy struct {
 	// IVPS cmd path
 	ipvs *libipvs.Handle
 	link netlink.Link
-	dest net.IP
+	dest struct {
+		external net.IP
+		internal net.IP
+	}
 }
 
 func (p *Proxy) Info(ctx context.Context) (map[string]*types.EndpointState, error) {
@@ -110,7 +113,16 @@ func (p *Proxy) Create(ctx context.Context, manifest *types.EndpointManifest) (*
 	}
 
 	log.Debugf("Check ip %s is binded to link %s", manifest.IP, p.link.Attrs().Name)
-	if err := p.addIpBindToLink(manifest.IP); err != nil {
+
+	var dest net.IP
+
+	if manifest.External {
+		dest = p.dest.external
+	} else {
+		dest = p.dest.internal
+	}
+
+	if err := p.addIpBindToLink(manifest.IP, dest); err != nil {
 		log.Warnf("%s failed bind ip to link err: %s", logIPVSPrefix, err.Error())
 	}
 
@@ -218,7 +230,16 @@ func (p *Proxy) Update(ctx context.Context, state *types.EndpointState, spec *ty
 	}
 
 	log.Debugf("Check ip %s is binded to link %s", spec.IP, p.link.Attrs().Name)
-	if err := p.addIpBindToLink(spec.IP); err != nil {
+
+	var dest net.IP
+
+	if spec.External {
+		dest = p.dest.external
+	} else {
+		dest = p.dest.internal
+	}
+
+	if err := p.addIpBindToLink(spec.IP, dest); err != nil {
 		log.Warnf("%s failed bind ip to link err: %s", logIPVSPrefix, err.Error())
 	}
 
@@ -346,7 +367,7 @@ func (p *Proxy) getState(ctx context.Context) (map[string]*types.EndpointState, 
 	return el, nil
 }
 
-func (p *Proxy) addIpBindToLink(ip string) error {
+func (p *Proxy) addIpBindToLink(ip string, dest net.IP) error {
 
 	ipn := net.ParseIP(ip)
 	addr, err := netlink.ParseAddr(fmt.Sprintf("%s/32", ipn.String()))
@@ -381,8 +402,8 @@ func (p *Proxy) addIpBindToLink(ip string) error {
 	for _, route := range routes {
 
 		if route.Dst.IP.Equal(ipn) {
-			log.Debugf("replace route destination %s > %s", route.Dst.IP.String(), p.dest.String())
-			route.Src = p.dest
+			log.Debugf("replace route destination %s > %s", route.Dst.IP.String(), dest.String())
+			route.Src = dest
 			route.LinkIndex = p.link.Attrs().Index
 			route.Scope = netlink.SCOPE_HOST
 			route.Table = unix.RT_TABLE_LOCAL
@@ -481,39 +502,38 @@ func New() (*Proxy, error) {
 	}
 
 	var (
-		iface = viper.GetString("runtime.cpi.interface")
+		eiface = viper.GetString("runtime.cpi.interface.external")
+		iiface = viper.GetString("runtime.cpi.interface.internal")
 	)
 
-	if iface == types.EmptyString {
-		iface = ifaceDocker
+	if eiface == types.EmptyString {
+		log.Debug("find default interface to traffic route by name")
+		_, prx.dest.external, err = utils.GetDefaultInterface()
+		if err != nil {
+			return nil, err
+		}
+
+		log.Debugf("external route ip net: %s", prx.dest.external.String())
+	} else {
+		log.Debugf("find interface to traffic route by name: %s", eiface)
+		_, prx.dest.external, err = utils.GetIfaceByName(eiface)
+		if err != nil {
+			return nil, err
+		}
+		log.Debugf("external route ip net: %s", prx.dest.external.String())
 	}
 
-	log.Debugf("find interface to traffic route by name: %s", iface)
-	_, prx.dest, err = utils.GetIfaceByName(iface)
+	if iiface == types.EmptyString {
+		iiface = ifaceDocker
+	}
+
+	log.Debugf("find interface to traffic route by name: %s", iiface)
+	_, prx.dest.internal, err = utils.GetIfaceByName(iiface)
 	if err != nil {
 		return nil, err
 	}
 
-	log.Debugf("default route ip net: %s", prx.dest.String())
-
-	svcs, err := prx.ipvs.GetServices()
-	if err != nil {
-		log.Errorf("%s info error: %s", logIPVSPrefix, err.Error())
-		return nil, err
-	}
-
-	log.V(logLevel).Debugf("%s services list: %#v", logIPVSPrefix, svcs)
-
-	var ips = make(map[string]bool, 0)
-
-	for _, svc := range svcs {
-		ips[svc.Address.String()] = true
-	}
-
-	for ip := range ips {
-		log.Debugf("Check ip %s is binded to link %s", ip, prx.link.Attrs().Name)
-		prx.addIpBindToLink(ip)
-	}
+	log.Debugf("internal route ip net: %s", prx.dest.internal.String())
 
 	// TODO: Check ipvs proxy mode is available on host
 	return prx, nil

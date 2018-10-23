@@ -57,7 +57,8 @@ defaults
   default-server init-addr none
 
 resolvers lstbknd
-  nameserver dns {{$.Resolver}}:53
+	{{range $endpoint, $port := .Resolvers}}nameserver dns {{$endpoint}}:{{$port}}
+	{{end}}
 
 #---------------------------------------------------------------------
 # frontend which proxys stats
@@ -77,6 +78,9 @@ listen stats # Define a listen section called "stats"
 frontend http
   mode http
   bind :::80 v4v6
+  http-send-name-header Host
+  http-request set-header Host %[req.hdr(Host)]
+	http-request set-header X-Forwarded-Host %[req.hdr(Host)]
   {{range $domain, $acl := .Rules}}{{range $path, $backend := $acl}}acl r_{{$backend}}  hdr_dom(host) -i {{$domain}}  path_beg {{$path}}
   {{end}}{{end}}
   {{range $domain, $acl := .Rules}}{{range $path, $backend := $acl}}use_backend {{$backend}} if r_{{$backend}}
@@ -116,8 +120,6 @@ backend {{$name}}
   mode http
   balance roundrobin
   option forwardfor
-  http-send-name-header Host
-  http-request set-header Host {{$b.Domain}}
   server {{$b.Endpoint}} {{$b.Endpoint}}:{{$b.Port}} check init-addr last,libc,none resolvers lstbknd
 {{else if eq $b.Type "https" }}
 backend {{$name}}

@@ -31,7 +31,6 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/log"
 	"github.com/lastbackend/lastbackend/pkg/storage"
 	"github.com/lastbackend/lastbackend/pkg/util/generator"
-	"github.com/spf13/viper"
 	"regexp"
 )
 
@@ -94,17 +93,10 @@ func (p *Pod) Create(deployment *types.Deployment) (*types.Pod, error) {
 		Timestamp: time.Now().UTC(),
 	}
 
-	var ips = make([]string, 0)
-	viper.UnmarshalKey("dns.ips", &ips)
-	ips = append(ips, "8.8.8.8")
-
 	for _, s := range deployment.Spec.Template.Containers {
 		s.Labels = make(map[string]string)
 		s.Labels[types.ContainerTypeLBC] = pod.SelfLink()
-		s.DNS = types.SpecTemplateContainerDNS{
-			Server: ips,
-			Search: ips,
-		}
+		s.DNS = types.SpecTemplateContainerDNS{}
 		pod.Spec.Template.Containers = append(pod.Spec.Template.Containers, s)
 	}
 

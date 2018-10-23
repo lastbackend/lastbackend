@@ -97,25 +97,26 @@ func (ic *DiscoveryClient) Connect(ctx context.Context, opts *rv1.DiscoveryConne
 	return nil
 }
 
-func (ic *DiscoveryClient) SetStatus(ctx context.Context, opts *rv1.DiscoveryStatusOptions) error {
+func (ic *DiscoveryClient) SetStatus(ctx context.Context, opts *rv1.DiscoveryStatusOptions) (*vv1.DiscoveryManifest, error) {
 
 	body := opts.ToJson()
 
+	var s *vv1.DiscoveryManifest
 	var e *errors.Http
 
 	err := ic.client.Put(fmt.Sprintf("/discovery/%s/status", ic.hostname)).
 		AddHeader("Content-Type", "application/json").
 		Body([]byte(body)).
-		JSON(nil, &e)
+		JSON(&s, &e)
 
 	if err != nil {
-		return err
+		return nil, err
 	}
 	if e != nil {
-		return errors.New(e.Message)
+		return nil, errors.New(e.Message)
 	}
 
-	return nil
+	return s, nil
 }
 
 func newDiscoveryClient(req *request.RESTClient, hostname string) *DiscoveryClient {

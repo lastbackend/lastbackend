@@ -50,7 +50,7 @@ type DiscoveryClientV1 interface {
 	List(ctx context.Context) (*vv1.DiscoveryList, error)
 	Get(ctx context.Context) (*vv1.Discovery, error)
 	Connect(ctx context.Context, opts *rv1.DiscoveryConnectOptions) error
-	SetStatus(ctx context.Context, opts *rv1.DiscoveryStatusOptions) error
+	SetStatus(ctx context.Context, opts *rv1.DiscoveryStatusOptions) (*vv1.DiscoveryManifest, error)
 }
 
 type IngressClientV1 interface {

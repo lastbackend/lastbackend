@@ -19,15 +19,17 @@
 package envs
 
 import (
+	"github.com/lastbackend/lastbackend/pkg/api/client/types"
 	"github.com/lastbackend/lastbackend/pkg/discovery/cache"
 	"github.com/lastbackend/lastbackend/pkg/discovery/state"
-	"github.com/lastbackend/lastbackend/pkg/api/client/types"
+	"github.com/lastbackend/lastbackend/pkg/network"
 	"github.com/lastbackend/lastbackend/pkg/storage"
 )
 
 var _env Env
 
 type Env struct {
+	net     *network.Network
 	client  types.DiscoveryClientV1
 	storage storage.Storage
 	cache   *cache.Cache
@@ -36,6 +38,14 @@ type Env struct {
 
 func Get() *Env {
 	return &_env
+}
+
+func (c *Env) SetNet(n *network.Network) {
+	c.net = n
+}
+
+func (c *Env) GetNet() *network.Network {
+	return c.net
 }
 
 func (c *Env) SetStorage(storage storage.Storage) {

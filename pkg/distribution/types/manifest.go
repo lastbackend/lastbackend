@@ -40,14 +40,23 @@ type ResolverManifest struct {
 
 type IngressManifest struct {
 	Meta      IngressManifestMeta          `json:"meta"`
+	Resolvers map[string]*ResolverManifest `json:"resolvers"`
 	Routes    map[string]*RouteManifest    `json:"routes"`
 	Endpoints map[string]*EndpointManifest `json:"endpoints"`
 	Network   map[string]*SubnetManifest   `json:"network"`
 }
 
 type IngressManifestMeta struct {
-	Initial   bool                         `json:"initial"`
-	Discovery map[string]*ResolverManifest `json:"discovery"`
+	Initial bool `json:"initial"`
+}
+
+type DiscoveryManifest struct {
+	Meta    DiscoveryManifestMeta      `json:"meta"`
+	Network map[string]*SubnetManifest `json:"network"`
+}
+
+type DiscoveryManifestMeta struct {
+	Initial bool `json:"initial"`
 }
 
 type PodManifest PodSpec

@@ -145,7 +145,7 @@ func (c *CacheIngressManifest) DelDiscovery(selflink string) {
 	}
 
 	for _, n := range c.manifests {
-		n.Meta.Discovery = resolvers
+		n.Resolvers = resolvers
 	}
 }
 
@@ -162,7 +162,7 @@ func (c *CacheIngressManifest) SetResolvers() {
 	}
 
 	for _, n := range c.manifests {
-		n.Meta.Discovery = resolvers
+		n.Resolvers = resolvers
 	}
 }
 

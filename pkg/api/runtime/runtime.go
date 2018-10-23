@@ -217,6 +217,7 @@ func (r *Runtime) subnetManifestWatch(ctx context.Context, rev *int64) {
 
 				c.Node().SetSubnetManifest(w.Name, w.Data)
 				c.Ingress().SetSubnetManifest(w.Name, w.Data)
+				c.Discovery().SetSubnetManifest(w.Name, w.Data)
 			}
 		}
 	}()

@@ -29,5 +29,4 @@ const (
 
 var Map = map[string]dns.HandlerFunc{
 	"lb.local.": lbLocal,
-	".":         other,
 }

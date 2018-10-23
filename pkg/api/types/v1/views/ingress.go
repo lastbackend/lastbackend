@@ -52,9 +52,9 @@ type IngressManifest struct {
 	Routes    map[string]*types.RouteManifest    `json:"routes"`
 	Endpoints map[string]*types.EndpointManifest `json:"endpoints"`
 	Subnets   map[string]*types.SubnetManifest   `json:"subnets"`
+	Resolvers map[string]*types.ResolverManifest `json:"resolvers"`
 }
 
 type IngressManifestMeta struct {
-	Initial   bool     `json:"initial"`
-	Discovery map[string]*types.ResolverManifest `json:"discovery"`
+	Initial bool `json:"initial"`
 }

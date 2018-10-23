@@ -28,10 +28,9 @@ import (
 )
 
 const (
-	logResolverPrefix = "network:resolver"
+	logResolverPrefix   = "network:resolver"
 	resolverEndpointKey = "resolver"
 )
-
 
 func (n *Network) Resolvers() *state.ResolverState {
 	return n.state.Resolvers()
@@ -45,13 +44,11 @@ func (n *Network) GetResolverEndpointKey() string {
 	return resolverEndpointKey
 }
 
-
-
-func (n *Network) GetExternalDNS () []string {
+func (n *Network) GetExternalDNS() []string {
 	return n.resolver.external
 }
 
-func (n *Network) ResolverManage (ctx context.Context) error {
+func (n *Network) ResolverManage(ctx context.Context) error {
 
 	log.V(logLevel).Debugf("%s:> create resolver", logResolverPrefix)
 
@@ -63,7 +60,7 @@ func (n *Network) ResolverManage (ctx context.Context) error {
 
 	if len(resolvers) == 0 {
 		manifest.Upstreams = n.resolver.external
-		manifest.PortMap[53]="53/udp"
+		manifest.PortMap[53] = "53/udp"
 	} else {
 		var port uint16
 		for _, r := range resolvers {
@@ -77,9 +74,9 @@ func (n *Network) ResolverManage (ctx context.Context) error {
 			}
 		}
 		if port == 0 {
-			return  errors.New("can not create endpoint: reason: resolver port can not be 0")
+			return errors.New("can not create endpoint: reason: resolver port can not be 0")
 		}
-		manifest.PortMap[53]=fmt.Sprintf("%d/udp", port)
+		manifest.PortMap[53] = fmt.Sprintf("%d/udp", port)
 	}
 
 	if err := n.EndpointManage(ctx, resolverEndpointKey, manifest); err != nil {
