@@ -28,6 +28,7 @@ type Config struct {
 	BearerToken string
 	Timeout     time.Duration
 	TLS         *TLSConfig
+	Headers     map[string]string
 }
 
 // TLSConfig contains settings to enable transport layer security

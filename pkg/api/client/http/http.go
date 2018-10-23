@@ -42,6 +42,7 @@ func New(endpoint string, cfg *config.Config) (*Client, error) {
 	opts := new(request.Config)
 	opts.BearerToken = cfg.BearerToken
 	opts.Timeout = cfg.Timeout
+	opts.Headers = make(map[string]string, 0)
 
 	if cfg.TLS != nil {
 		opts.TLS = new(request.TLSConfig)
@@ -53,6 +54,14 @@ func New(endpoint string, cfg *config.Config) (*Client, error) {
 		opts.TLS.CAData = cfg.TLS.CAData
 		opts.TLS.CertData = cfg.TLS.CertData
 		opts.TLS.KeyData = cfg.TLS.KeyData
+	}
+
+	if cfg.Headers == nil {
+		cfg.Headers = make(map[string]string, 0)
+	}
+
+	for k, v := range cfg.Headers {
+		opts.Headers[k] = v
 	}
 
 	client, err := request.NewRESTClient(endpoint, opts)

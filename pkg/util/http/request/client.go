@@ -40,8 +40,9 @@ type IRESTClient interface {
 type RESTClient struct {
 	base        *url.URL
 	serializers serializer.Codec
+	bearerToken string
+	headers     map[string]string
 	Client      *http.Client
-	BearerToken string
 }
 
 func NewRESTClient(uri string, cfg *Config) (*RESTClient, error) {
@@ -57,13 +58,18 @@ func NewRESTClient(uri string, cfg *Config) (*RESTClient, error) {
 
 	c.Client.Timeout = cfg.Timeout * time.Second
 	c.Client.Transport = new(http.Transport)
-	c.BearerToken = cfg.BearerToken
+	c.bearerToken = cfg.BearerToken
+	c.headers = make(map[string]string, 0)
 
 	if cfg.TLS != nil && !cfg.TLS.Insecure {
 		if err := withTLSClientConfig(cfg)(c.Client); err != nil {
 			return nil, err
 		}
 		c.base.Scheme = "https"
+	}
+
+	for k, v := range cfg.Headers {
+		c.headers[k] = v
 	}
 
 	return c, nil
@@ -100,9 +106,14 @@ func withTLSClientConfig(cfg *Config) func(*http.Client) error {
 func (c *RESTClient) Do(verb string, path string) *Request {
 	c.base.Path = path
 	req := New(c.Client, verb, c.base)
-	if len(c.BearerToken) != 0 {
-		req.AddHeader("Authorization", fmt.Sprintf("Bearer %s", string(c.BearerToken)))
+	if len(c.bearerToken) != 0 {
+		req.AddHeader("Authorization", fmt.Sprintf("Bearer %s", string(c.bearerToken)))
 	}
+
+	for k, v := range c.headers {
+		req.AddHeader(k, v)
+	}
+
 	return req
 }
 
