@@ -30,8 +30,9 @@ const (
 // initialization.
 type Config struct {
 	BearerToken string
-	Timeout     time.Duration
 	TLS         *TLSConfig
+	Timeout     time.Duration
+	Headers     map[string]string
 }
 
 func (c Config) getDefault() *Config {
