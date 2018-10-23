@@ -19,6 +19,7 @@
 package cache
 
 import (
+	"github.com/lastbackend/lastbackend/pkg/log"
 	"sync"
 
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
@@ -64,6 +65,7 @@ func (c *CacheDiscoveryManifest) Flush(discovery string) {
 func (c *CacheDiscoveryManifest) Clear(discovery string) {
 	c.lock.Lock()
 	defer c.lock.Unlock()
+	log.Debugf("clear cache for discovery: %s", discovery)
 	delete(c.manifests, discovery)
 }
 

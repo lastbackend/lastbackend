@@ -39,7 +39,7 @@ func (n *Network) SubnetRestore(ctx context.Context) error {
 
 	sn, err := n.cni.Subnets(ctx)
 	if err != nil {
-		log.Errorf("Can-not get subnets from CNI err: %v", err)
+		log.Errorf("Can-not get subnet list from CNI err: %v", err)
 	}
 
 	for cidr, s := range sn {
@@ -54,12 +54,19 @@ func (n *Network) SubnetManage(ctx context.Context, cidr string, sn *types.Subne
 	subnets := n.state.Subnets().GetSubnets()
 	if state, ok := subnets[cidr]; ok {
 
+		log.Debugf("check subnet exists: %s", cidr)
 		if sn.State == types.StateDestroy {
-			n.cni.Destroy(ctx, &state)
+
+			log.Debugf("destroy subnet: %s", cidr)
+			if err := n.cni.Destroy(ctx, &state); err != nil {
+				log.Errorf("can not destroy subnet: %s", err.Error())
+				return err
+			}
 			n.state.Subnets().DelSubnet(cidr)
 			return nil
 		}
 
+		log.Debugf("check subnet manifest: %s", cidr)
 		// TODO: check if network manifest changes
 		// if changes then update routes and interfaces
 		return nil
@@ -69,6 +76,7 @@ func (n *Network) SubnetManage(ctx context.Context, cidr string, sn *types.Subne
 		return nil
 	}
 
+	log.Debugf("create subnet: %s", cidr)
 	state, err := n.cni.Create(ctx, sn)
 	if err != nil {
 		log.Errorf("Can not create network subnet: %s", err.Error())

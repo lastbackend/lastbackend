@@ -207,12 +207,17 @@ func DiscoveryConnectH(w http.ResponseWriter, r *http.Request) {
 		discovery.Status.IP = opts.Status.IP
 		discovery.Status.Ready = opts.Status.Ready
 
-		dm.Put(discovery)
+		if err := dm.Put(discovery); err != nil {
+			log.V(logLevel).Errorf("can not add discovery: %s", err.Error())
+			errors.HTTP.InternalServerError(w)
+			return
+		}
 
 		if snet == nil {
 			if _, err := sn.SubnetPut(discovery.SelfLink(), opts.Network.SubnetSpec); err != nil {
 				log.V(logLevel).Errorf("%s:connect:> snet put error: %s", logPrefix, err.Error())
 				errors.HTTP.InternalServerError(w)
+				return
 			}
 		}
 
