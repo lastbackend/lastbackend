@@ -1,4 +1,4 @@
-FROM golang:1.10.1-alpine3.7
+FROM golang:1.11.1-alpine3.8
 
 RUN apk add --no-cache ca-certificates
 RUN apk add --no-cache iptables \
