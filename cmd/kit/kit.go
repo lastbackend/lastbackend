@@ -129,7 +129,7 @@ var (
 				}
 			)
 
-			components := []string{"api", "controller", "discovery"}
+			components := []string{"api", "controller", "ctl"}
 
 			if len(args) > 0 {
 				components = args
