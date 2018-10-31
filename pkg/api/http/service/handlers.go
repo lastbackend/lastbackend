@@ -751,7 +751,7 @@ func checkServiceVolumes(ctx context.Context, svc *types.Service) error {
 					return errors.New(v.Meta.Name).Volume().NotReady(v.Meta.Name)
 				}
 
-				if v.Meta.Node != types.EmptyString {
+				if v.Meta.Node == types.EmptyString {
 					log.V(logLevel).Errorf("%s:create:> create service err: volume is not provisioned yet: %s", logPrefix, v.Meta.Name)
 					return errors.New(v.Meta.Name).Volume().NotProvisioned(v.Meta.Name)
 				}

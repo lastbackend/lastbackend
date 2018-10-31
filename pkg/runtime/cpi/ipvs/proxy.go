@@ -112,7 +112,7 @@ func (p *Proxy) Create(ctx context.Context, manifest *types.EndpointManifest) (*
 		csvcs = append(csvcs, svc)
 	}
 
-	log.Debugf("Check ip %s is binded to link %s", manifest.IP, p.link.Attrs().Name)
+	log.Debugf("%s check ip %s is binded to link %s", logIPVSPrefix, manifest.IP, p.link.Attrs().Name)
 
 	var dest net.IP
 
@@ -270,7 +270,7 @@ func (p *Proxy) getState(ctx context.Context) (map[string]*types.EndpointState, 
 	el := make(map[string]*types.EndpointState)
 
 	if out, err := exec.Command("modprobe", "-va", "ip_vs").CombinedOutput(); err != nil {
-		return nil, fmt.Errorf("Running modprobe ip_vs failed with message: `%s`, error: %v", strings.TrimSpace(string(out)), err)
+		return nil, fmt.Errorf("%s running modprobe ip_vs failed with message: `%s`, error: %s", logIPVSPrefix, strings.TrimSpace(string(out)), err.Error())
 	}
 
 	svcs, err := p.ipvs.GetServices()
@@ -358,11 +358,8 @@ func (p *Proxy) getState(ctx context.Context) (map[string]*types.EndpointState, 
 			}
 		}
 
-		log.V(logLevel).Debugf("%s add endpoint state: %#v", logIPVSPrefix, endpoint)
 		el[host] = endpoint
 	}
-
-	log.V(logLevel).Debugf("%s current ipvs state: %#v", logIPVSPrefix, el)
 
 	return el, nil
 }
@@ -372,13 +369,13 @@ func (p *Proxy) addIpBindToLink(ip string, dest net.IP) error {
 	ipn := net.ParseIP(ip)
 	addr, err := netlink.ParseAddr(fmt.Sprintf("%s/32", ipn.String()))
 	if err != nil {
-		log.Errorf("can not parse IP %s; %s", ip, err.Error())
+		log.Errorf("%s can not parse IP %s; %s", logIPVSPrefix, ip, err.Error())
 		return err
 	}
 
 	addrs, err := netlink.AddrList(p.link, netlink.FAMILY_V4)
 	if err != nil {
-		log.Errorf("can not fetch IPs :%s", err.Error())
+		log.Errorf("%s can not fetch IPs: %s", logIPVSPrefix, err.Error())
 		return err
 	}
 
@@ -395,14 +392,14 @@ func (p *Proxy) addIpBindToLink(ip string, dest net.IP) error {
 
 	routes, err := netlink.RouteGet(ipn)
 	if err != nil {
-		log.Errorf("cano not get routes for ip")
+		log.Errorf("%s can not get routes for ip", logIPVSPrefix)
 		return err
 	}
 
 	for _, route := range routes {
 
 		if route.Dst.IP.Equal(ipn) {
-			log.Debugf("replace route destination %s > %s", route.Dst.IP.String(), dest.String())
+			log.Debugf("%s replace route destination %s > %s", logIPVSPrefix, route.Dst.IP.String(), dest.String())
 			route.Src = dest
 			route.LinkIndex = p.link.Attrs().Index
 			route.Scope = netlink.SCOPE_HOST
@@ -410,7 +407,7 @@ func (p *Proxy) addIpBindToLink(ip string, dest net.IP) error {
 		}
 
 		if err := netlink.RouteReplace(&route); err != nil {
-			log.Errorf("can not replace route: %s", err.Error())
+			log.Errorf("%s can not replace route: %s", logIPVSPrefix, err.Error())
 			return err
 		}
 	}
@@ -423,13 +420,13 @@ func (p *Proxy) delIpBindToLink(ip string) error {
 	ipn := net.ParseIP(ip)
 	addr, err := netlink.ParseAddr(fmt.Sprintf("%s/32", ipn.String()))
 	if err != nil {
-		log.Errorf("can not parse IP %s; %s", ip, err.Error())
+		log.Errorf("%s can not parse IP %s; %s", logIPVSPrefix, ip, err.Error())
 		return err
 	}
 
 	addrs, err := netlink.AddrList(p.link, netlink.FAMILY_V4)
 	if err != nil {
-		log.Errorf("can not fetch IPs :%s", err.Error())
+		log.Errorf("%s can not fetch IPs:%s", logIPVSPrefix, err.Error())
 		return err
 	}
 
@@ -442,7 +439,9 @@ func (p *Proxy) delIpBindToLink(ip string) error {
 		}
 	}
 	if exists {
-		netlink.AddrDel(p.link, addr)
+		if err := netlink.AddrDel(p.link, addr); err != nil {
+			log.Errorf("%s can not remove link: %s", logIPVSPrefix, err.Error())
+		}
 	}
 
 	return nil
@@ -481,19 +480,19 @@ func New() (*Proxy, error) {
 			},
 		}
 
-		log.Debugf("ipvs interface not found: create new")
+		log.Debugf("%s ipvs interface not found: create new", logIPVSPrefix)
 		if err := netlink.LinkAdd(&link); err != nil {
 			if err == syscall.EEXIST {
-				log.V(logLevel).Debugf("Device already exists: %s", link.Name)
+				log.V(logLevel).Debugf("%s device already exists: %s", logIPVSPrefix, link.Name)
 
 				l, err := netlink.LinkByName(link.Name)
 				if err != nil {
-					log.V(logLevel).Debugf("Link by name: %s", err.Error())
+					log.Errorf("%s link by name: %s", logIPVSPrefix, err.Error())
 				}
 
 				prx.link = l.(*netlink.Vxlan)
 			} else {
-				log.Errorf("can not create ipvs dummy interface: %s", err.Error())
+				log.Errorf("%s can not create ipvs dummy interface: %s", logIPVSPrefix, err.Error())
 				return nil, err
 			}
 		}
@@ -507,33 +506,33 @@ func New() (*Proxy, error) {
 	)
 
 	if eiface == types.EmptyString {
-		log.Debug("find default interface to traffic route by name")
+		log.Debugf("%s find default interface to traffic route by name", logIPVSPrefix)
 		_, prx.dest.external, err = utils.GetDefaultInterface()
 		if err != nil {
 			return nil, err
 		}
 
-		log.Debugf("external route ip net: %s", prx.dest.external.String())
+		log.Debugf("%s external route ip net: %s", logIPVSPrefix, prx.dest.external.String())
 	} else {
-		log.Debugf("find interface to traffic route by name: %s", eiface)
+		log.Debugf("%s find interface to traffic route by name: %s", logIPVSPrefix, eiface)
 		_, prx.dest.external, err = utils.GetIfaceByName(eiface)
 		if err != nil {
 			return nil, err
 		}
-		log.Debugf("external route ip net: %s", prx.dest.external.String())
+		log.Debugf("%s external route ip net: %s", logIPVSPrefix, prx.dest.external.String())
 	}
 
 	if iiface == types.EmptyString {
 		iiface = ifaceDocker
 	}
 
-	log.Debugf("find interface to traffic route by name: %s", iiface)
+	log.Debugf("%s find interface to traffic route by name: %s", logIPVSPrefix, iiface)
 	_, prx.dest.internal, err = utils.GetIfaceByName(iiface)
 	if err != nil {
 		return nil, err
 	}
 
-	log.Debugf("internal route ip net: %s", prx.dest.internal.String())
+	log.Debugf("%s internal route ip net: %s", logIPVSPrefix, prx.dest.internal.String())
 
 	// TODO: Check ipvs proxy mode is available on host
 	return prx, nil

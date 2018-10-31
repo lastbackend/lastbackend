@@ -131,12 +131,41 @@ func (s *ServiceManifest) SetServiceSpec(svc *types.Service) {
 
 	if s.Spec.Selector != nil {
 
-		svc.Spec.Selector.Node = s.Spec.Selector.Node
-
-		if s.Spec.Selector.Labels != nil {
-			svc.Spec.Selector.Labels = s.Spec.Selector.Labels
+		if svc.Spec.Selector.Node != s.Spec.Selector.Node {
+			svc.Spec.Selector.Node = s.Spec.Selector.Node
+			svc.Spec.Selector.Updated = time.Now()
 		}
 
+		if len(svc.Spec.Selector.Labels) != len(s.Spec.Selector.Labels) {
+			svc.Spec.Selector.Updated = time.Now()
+		}
+
+		var eq = true
+		for k, v := range s.Spec.Selector.Labels {
+			if _, ok := svc.Spec.Selector.Labels[k]; !ok {
+				eq = false
+				break
+			}
+
+			if svc.Spec.Selector.Labels[k] != v {
+				eq = false
+				break
+			}
+		}
+
+		if !eq {
+			svc.Spec.Selector.Labels = s.Spec.Selector.Labels
+			svc.Spec.Selector.Updated = time.Now()
+		}
+
+	} else {
+
+		if svc.Spec.Selector.Node != types.EmptyString || len(svc.Spec.Selector.Labels) > 0 {
+			svc.Spec.Selector.Updated = time.Now()
+		}
+
+		svc.Spec.Selector.Node = types.EmptyString
+		svc.Spec.Selector.Labels = make(map[string]string, 0)
 	}
 
 	if s.Spec.Strategy != nil {

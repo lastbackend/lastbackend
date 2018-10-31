@@ -68,14 +68,14 @@ func (es *EndpointState) GetEndpoint(key string) *types.EndpointState {
 }
 
 func (es *EndpointState) AddEndpoint(key string, endpoint *types.EndpointState) {
-	log.V(logLevel).Debugf("%s: add endpoint %s: %#v", logEndpointPrefix, key, endpoint)
+	log.V(logLevel).Debugf("%s: add endpoint %s: %s", logEndpointPrefix, key, endpoint.IP)
 	es.lock.Lock()
 	defer es.lock.Unlock()
 	es.endpoints[key] = endpoint
 }
 
 func (es *EndpointState) SetEndpoint(key string, endpoint *types.EndpointState) {
-	log.V(logLevel).Debugf("%s: set endpoint %s: %#v", logEndpointPrefix, key, endpoint)
+	log.V(logLevel).Debugf("%s: set endpoint %s: %s", logEndpointPrefix, key, endpoint.IP)
 	es.lock.Lock()
 	defer es.lock.Unlock()
 	es.endpoints[key] = endpoint

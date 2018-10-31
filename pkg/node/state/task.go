@@ -24,18 +24,20 @@ import (
 	"sync"
 )
 
+const logTaskPrefix = "state:task:>"
+
 type TaskState struct {
 	lock  sync.RWMutex
 	tasks map[string]types.NodeTask
 }
 
 func (s *TaskState) AddTask(key string, task *types.NodeTask) {
-	log.V(logLevel).Debugf("Cache: PodCache: add cancel func pod: %#v", key)
+	log.V(logLevel).Debugf("%s add cancel func pod: %s", logTaskPrefix, key)
 	s.tasks[key] = *task
 }
 
 func (s *TaskState) GetTask(key string) *types.NodeTask {
-	log.V(logLevel).Debugf("Cache: PodCache: get cancel func pod: %#v", key)
+	log.V(logLevel).Debugf("%s get cancel func pod: %s", logTaskPrefix, key)
 
 	if _, ok := s.tasks[key]; ok {
 		t := s.tasks[key]
@@ -46,6 +48,6 @@ func (s *TaskState) GetTask(key string) *types.NodeTask {
 }
 
 func (s *TaskState) DelTask(pod *types.Pod) {
-	log.V(logLevel).Debugf("Cache: PodCache: del cancel func pod: %#v", pod)
+	log.V(logLevel).Debugf("%s del cancel func pod: %s", logTaskPrefix, pod.SelfLink())
 	delete(s.tasks, pod.Meta.Name)
 }

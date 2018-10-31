@@ -24,6 +24,8 @@ import (
 	"sync"
 )
 
+const logResolversPrefix = "state:resolvers:>"
+
 type ResolverState struct {
 	lock      sync.RWMutex
 	resolvers map[string]*types.ResolverManifest
@@ -34,12 +36,12 @@ func (n *ResolverState) GetResolvers() map[string]*types.ResolverManifest {
 }
 
 func (n *ResolverState) AddResolver(cidr string, sn *types.ResolverManifest) {
-	log.V(logLevel).Debugf("Stage: ResolverState: add resolver: %s", cidr)
+	log.V(logLevel).Debugf("%s add resolver: %s", logResolversPrefix, cidr)
 	n.SetResolver(cidr, sn)
 }
 
 func (n *ResolverState) SetResolver(cidr string, sn *types.ResolverManifest) {
-	log.V(logLevel).Debugf("Stage: ResolverState: set resolver: %s", cidr)
+	log.V(logLevel).Debugf("%s set resolver: %s", logResolversPrefix, cidr)
 	n.lock.Lock()
 	defer n.lock.Unlock()
 
@@ -51,7 +53,7 @@ func (n *ResolverState) SetResolver(cidr string, sn *types.ResolverManifest) {
 }
 
 func (n *ResolverState) GetResolver(cidr string) *types.ResolverManifest {
-	log.V(logLevel).Debugf("Stage: ResolverState: get resolver: %s", cidr)
+	log.V(logLevel).Debugf("%s get resolver: %s", logResolversPrefix, cidr)
 	n.lock.Lock()
 	defer n.lock.Unlock()
 	s, ok := n.resolvers[cidr]
@@ -62,7 +64,7 @@ func (n *ResolverState) GetResolver(cidr string) *types.ResolverManifest {
 }
 
 func (n *ResolverState) DelResolver(cidr string) {
-	log.V(logLevel).Debugf("Stage: ResolverState: del resolver: %v", cidr)
+	log.V(logLevel).Debugf("%s del resolver: %s", logResolversPrefix, cidr)
 	n.lock.Lock()
 	defer n.lock.Unlock()
 	if _, ok := n.resolvers[cidr]; ok {

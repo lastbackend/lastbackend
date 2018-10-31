@@ -104,13 +104,11 @@ func (c *Controller) Connect(ctx context.Context) error {
 		}
 		time.Sleep(3 * time.Second)
 	}
-
-	return nil
 }
 
 func (c *Controller) Sync(ctx context.Context) error {
 
-	log.Debugf("Start node sync")
+	log.Debugf("%s start node sync", logPrefix)
 
 	ticker := time.NewTicker(time.Second * 5)
 
@@ -164,13 +162,15 @@ func (c *Controller) Sync(ctx context.Context) error {
 
 		spec, err := envs.Get().GetNodeClient().SetStatus(ctx, opts)
 		if err != nil {
-			log.Errorf("node:exporter:dispatch err: %s", err.Error())
+			log.Errorf("%s node:exporter:dispatch err: %s", logPrefix, err.Error())
 		}
 
 		if spec != nil {
-			c.runtime.Sync(ctx, spec.Decode())
+			if err := c.runtime.Sync(ctx, spec.Decode()); err != nil {
+				log.Errorf("%s runtime sync err: %s", logPrefix, err.Error())
+			}
 		} else {
-			log.Debug("received spec is nil, skip apply changes")
+			log.Debugf("%s received spec is nil, skip apply changes", logPrefix)
 		}
 	}
 
@@ -185,18 +185,18 @@ func (c *Controller) Subscribe() {
 	)
 
 	go func() {
-		log.Debug("subscribe state")
+		log.Debugf("%s subscribe state", logPrefix)
 
 		for {
 			select {
 			case p := <-pods:
-				log.Debugf("pod changed: %s", p)
+				log.Debugf("%s pod changed: %s", logPrefix, p)
 				c.cache.lock.Lock()
 				c.cache.pods[p] = envs.Get().GetState().Pods().GetPod(p)
 				c.cache.lock.Unlock()
 				break
 			case v := <-volumes:
-				log.Debugf("volume changed: %s", v)
+				log.Debugf("%s volume changed: %s", logPrefix, v)
 				c.cache.lock.Lock()
 				c.cache.volumes[v] = envs.Get().GetState().Volumes().GetVolume(v)
 				c.cache.lock.Unlock()

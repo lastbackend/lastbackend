@@ -34,7 +34,7 @@ type PodState struct {
 	local      map[string]bool
 	containers map[string]*types.PodContainer
 	pods       map[string]*types.PodStatus
-	watchers   map[chan string] bool
+	watchers   map[chan string]bool
 }
 
 type PodStateStats struct {
@@ -51,7 +51,7 @@ func (s *PodState) dispatch(pod string) {
 func (s *PodState) Watch(watcher chan string, done chan bool) {
 	s.watchers[watcher] = true
 	defer delete(s.watchers, watcher)
-	<- done
+	<-done
 }
 
 func (s *PodState) GetPodsCount() int {
@@ -70,7 +70,7 @@ func (s *PodState) GetPods() map[string]*types.PodStatus {
 }
 
 func (s *PodState) SetPods(pods map[string]*types.PodStatus) {
-	log.V(logLevel).Debugf("%s: set pods: %#v", logPodPrefix, pods)
+	log.V(logLevel).Debugf("%s: set pods: %d", logPodPrefix, len(pods))
 	for key, pod := range pods {
 		state(pod)
 		s.pods[key] = pod
@@ -90,7 +90,7 @@ func (s *PodState) GetPod(key string) *types.PodStatus {
 }
 
 func (s *PodState) AddPod(key string, pod *types.PodStatus) {
-	log.V(logLevel).Debugf("%s: add pod: %#v", logPodPrefix, pod)
+	log.V(logLevel).Debugf("%s: add pod: %s: %s ", logPodPrefix, key, pod.Status)
 	s.SetPod(key, pod)
 }
 
@@ -113,7 +113,7 @@ func (s *PodState) IsLocal(key string) bool {
 }
 
 func (s *PodState) SetPod(key string, pod *types.PodStatus) {
-	log.V(logLevel).Debugf("%s: set pod %s: %#v", logPodPrefix, key, pod)
+	log.V(logLevel).Debugf("%s: set pod %s: %s", logPodPrefix, key, pod.Status)
 
 	s.lock.Lock()
 	if _, ok := s.pods[key]; ok {
@@ -156,7 +156,7 @@ func (s *PodState) GetContainer(id string) *types.PodContainer {
 }
 
 func (s *PodState) AddContainer(c *types.PodContainer) {
-	log.V(logLevel).Debugf("%s: add container: %#v", logPodPrefix, c)
+	log.V(logLevel).Debugf("%s: add container: %s", logPodPrefix, c.ID)
 	s.lock.Lock()
 	if _, ok := s.containers[c.ID]; !ok {
 		s.stats.containers++
@@ -167,7 +167,7 @@ func (s *PodState) AddContainer(c *types.PodContainer) {
 }
 
 func (s *PodState) SetContainer(c *types.PodContainer) {
-	log.V(logLevel).Debugf("%s: set container: %#v", logPodPrefix, c)
+	log.V(logLevel).Debugf("%s: set container: %s", logPodPrefix, c.ID)
 	s.lock.Lock()
 
 	if _, ok := s.containers[c.ID]; !ok {

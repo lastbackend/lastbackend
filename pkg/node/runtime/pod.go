@@ -35,11 +35,12 @@ import (
 )
 
 const (
-	BUFFER_SIZE = 1024
+	BUFFER_SIZE  = 1024
+	logPodPrefix = "node:runtime:pod:>"
 )
 
 func PodManage(ctx context.Context, key string, manifest *types.PodManifest) error {
-	log.V(logLevel).Debugf("Provision pod: %s", key)
+	log.V(logLevel).Debugf("%s provision pod: %s", logPodPrefix, key)
 
 	//==========================================================================
 	// Destroy pod =============================================================
@@ -49,7 +50,7 @@ func PodManage(ctx context.Context, key string, manifest *types.PodManifest) err
 	if manifest.State.Destroy {
 
 		if task := envs.Get().GetState().Tasks().GetTask(key); task != nil {
-			log.V(logLevel).Debugf("Cancel pod creating: %s", key)
+			log.V(logLevel).Debugf("%s cancel pod creating: %s", logPodPrefix, key)
 			task.Cancel()
 		}
 
@@ -63,7 +64,7 @@ func PodManage(ctx context.Context, key string, manifest *types.PodManifest) err
 			return nil
 		}
 
-		log.V(logLevel).Debugf("Pod found > destroy it: %s", key)
+		log.V(logLevel).Debugf("%s pod found > destroy it: %s", logPodPrefix, key)
 
 		PodDestroy(ctx, key, p)
 
@@ -85,16 +86,16 @@ func PodManage(ctx context.Context, key string, manifest *types.PodManifest) err
 			PodDestroy(ctx, key, p)
 			break
 		case !PodVolumesCheck(ctx, key, manifest.Template.Volumes):
-			log.Debugf("Volumes data changed: %s", key)
+			log.Debugf("%s volumes data changed: %s", logPodPrefix, key)
 			for _, v := range manifest.Template.Volumes {
 
 				if v.Volume.Name != types.EmptyString {
 
-					log.Debugf("Attach volume %s for pod %s", v.Name, key)
+					log.Debugf("%s attach volume %s for pod %s", logPodPrefix, v.Name, key)
 
 					pv, err := PodVolumeAttach(ctx, key, v)
 					if err != nil {
-						log.Errorf("can not attach volume for pod: %s", err.Error())
+						log.Errorf("%s can not attach volume for pod: %s", logPodPrefix, err.Error())
 						return err
 					}
 
@@ -102,18 +103,18 @@ func PodManage(ctx context.Context, key string, manifest *types.PodManifest) err
 
 				} else {
 
-					log.Debugf("Create pod volume %s for pod %s", v.Name, key)
+					log.Debugf("%s create pod volume %s for pod %s", logPodPrefix, v.Name, key)
 
 					var name = podVolumeKeyCreate(key, v.Name)
 
 					vol := envs.Get().GetState().Volumes().GetVolume(name)
 
 					if vol == nil {
-						log.V(logLevel).Debugf("Update pod volume: volume not found: create %s: %s", key, v.Name)
+						log.V(logLevel).Debugf("%s update pod volume: volume not found: create %s: %s", logPodPrefix, key, v.Name)
 
 						vs, err := PodVolumeCreate(ctx, key, v)
 						if err != nil {
-							log.Errorf("can not update volume data: %s", err.Error())
+							log.Errorf("%s can not update volume data: %s", logPodPrefix, err.Error())
 							return err
 						}
 
@@ -130,7 +131,7 @@ func PodManage(ctx context.Context, key string, manifest *types.PodManifest) err
 
 						_, err := PodVolumeUpdate(ctx, key, v)
 						if err != nil {
-							log.Errorf("can not update volume data: %s", err.Error())
+							log.Errorf("%s can not update volume data: %s", logPodPrefix, err.Error())
 							return err
 						}
 					}
@@ -144,14 +145,14 @@ func PodManage(ctx context.Context, key string, manifest *types.PodManifest) err
 		}
 	}
 
-	log.V(logLevel).Debugf("Pod not found > create it: %s", key)
+	log.V(logLevel).Debugf("%s pod not found > create it: %s", logPodPrefix, key)
 
 	ctx, cancel := context.WithCancel(context.Background())
 	envs.Get().GetState().Tasks().AddTask(key, &types.NodeTask{Cancel: cancel})
 
 	status, err := PodCreate(ctx, key, manifest)
 	if err != nil {
-		log.Errorf("Can not create pod: %s err: %s", key, err.Error())
+		log.Errorf("%s can not create pod: %s err: %s", logPodPrefix, key, err.Error())
 		status.SetError(err)
 	}
 
@@ -183,14 +184,14 @@ func PodCreate(ctx context.Context, key string, manifest *types.PodManifest) (*t
 		status    = types.NewPodStatus()
 		namespace = getPodNamespace(key)
 		setError  = func(err error) (*types.PodStatus, error) {
-			log.Errorf("Can-not pull image: %s", err)
+			log.Errorf("%s can not pull image: %s", logPodPrefix, err)
 			status.SetError(err)
 			PodClean(ctx, status)
 			return status, err
 		}
 	)
 
-	log.V(logLevel).Debugf("Create pod: %s", key)
+	log.V(logLevel).Debugf("%s create pod: %s", logPodPrefix, key)
 
 	//==========================================================================
 	// Pull image ==============================================================
@@ -200,23 +201,23 @@ func PodCreate(ctx context.Context, key string, manifest *types.PodManifest) (*t
 
 	envs.Get().GetState().Pods().AddPod(key, status)
 
-	log.V(logLevel).Debugf("Have %d volumes", len(manifest.Template.Volumes))
+	log.V(logLevel).Debugf("%s have %d volumes", logPodPrefix, len(manifest.Template.Volumes))
 	for _, v := range manifest.Template.Volumes {
 
 		var name string
 		if v.Volume.Name != types.EmptyString {
-			name = fmt.Sprintf("%s_%s", getPodNamespace(key), v.Name)
+			name = fmt.Sprintf("%s:%s", getPodNamespace(key), v.Volume.Name)
 		} else {
 			name = podVolumeKeyCreate(key, v.Name)
 		}
 
 		vol := envs.Get().GetState().Volumes().GetVolume(name)
 		if vol == nil {
-			log.V(logLevel).Debugf("Update pod volume: volume not found: create %s: %s", key, v.Name)
+			log.V(logLevel).Debugf("%s update pod volume: volume not found: create %s: %s", logPodPrefix, key, v.Name)
 
 			vs, err := PodVolumeCreate(ctx, key, v)
 			if err != nil {
-				log.Errorf("can not update volume data: %s", err.Error())
+				log.Errorf("%s can not update volume data: %s", logPodPrefix, err.Error())
 				return status, err
 			}
 
@@ -233,7 +234,7 @@ func PodCreate(ctx context.Context, key string, manifest *types.PodManifest) (*t
 
 			_, err := PodVolumeUpdate(ctx, key, v)
 			if err != nil {
-				log.Errorf("can not update volume data: %s", err.Error())
+				log.Errorf("%s can not update volume data: %s", logPodPrefix, err.Error())
 				return status, err
 			}
 
@@ -254,11 +255,11 @@ func PodCreate(ctx context.Context, key string, manifest *types.PodManifest) (*t
 		envs.Get().GetState().Pods().SetPod(key, status)
 	}
 
-	log.V(logLevel).Debugf("Have %d containers", len(manifest.Template.Containers))
+	log.V(logLevel).Debugf("%s have %d containers", logPodPrefix, len(manifest.Template.Containers))
 	for _, c := range manifest.Template.Containers {
-		log.V(logLevel).Debug("Pull images for pod if needed")
+		log.V(logLevel).Debugf("%s pull images for pod if needed", logPodPrefix)
 		if err := ImagePull(ctx, namespace, &c.Image); err != nil {
-			log.Errorf("can not pull image: %s", err.Error())
+			log.Errorf("%s can not pull image: %s", logPodPrefix, err.Error())
 			return setError(err)
 		}
 	}
@@ -278,9 +279,9 @@ func PodCreate(ctx context.Context, key string, manifest *types.PodManifest) (*t
 	for _, s := range manifest.Template.Containers {
 		for _, e := range s.EnvVars {
 			if e.Secret.Name != types.EmptyString {
-				log.V(logLevel).Debug("Get secret info from api")
+				log.V(logLevel).Debugf("%s get secret info from api", logPodPrefix)
 				if err := SecretCreate(ctx, fmt.Sprintf("%s:%s", namespace, e.Secret.Name)); err != nil {
-					log.Errorf("can not fetch secret from api")
+					log.Errorf("%s can not fetch secret from api", logPodPrefix)
 				}
 			}
 		}
@@ -298,7 +299,7 @@ func PodCreate(ctx context.Context, key string, manifest *types.PodManifest) (*t
 
 		m, err := containerManifestCreate(ctx, key, s)
 		if err != nil {
-			log.Errorf("can not create container manifest from spec: %s", err.Error())
+			log.Errorf("%s can not create container manifest from spec: %s", logPodPrefix, err.Error())
 			return setError(err)
 		}
 
@@ -306,12 +307,12 @@ func PodCreate(ctx context.Context, key string, manifest *types.PodManifest) (*t
 		if err != nil {
 			switch err {
 			case context.Canceled:
-				log.Errorf("Stop creating container: %s", err.Error())
+				log.Errorf("%s stop creating container: %s", logPodPrefix, err.Error())
 				PodClean(context.Background(), status)
 				return status, nil
 			}
 
-			log.Errorf("Can-not create container: %s", err)
+			log.Errorf("%s can-not create container: %s", logPodPrefix, err)
 			c.State.Error = types.PodContainerStateError{
 				Error:   true,
 				Message: err.Error(),
@@ -323,7 +324,7 @@ func PodCreate(ctx context.Context, key string, manifest *types.PodManifest) (*t
 		}
 
 		if err := containerInspect(context.Background(), status, c); err != nil {
-			log.Errorf("Inspect container after create: err %s", err.Error())
+			log.Errorf("%s inspect container after create: err %s", logPodPrefix, err.Error())
 			PodClean(context.Background(), status)
 			return status, err
 		}
@@ -337,15 +338,15 @@ func PodCreate(ctx context.Context, key string, manifest *types.PodManifest) (*t
 		}
 		status.Containers[c.ID] = c
 		envs.Get().GetState().Pods().SetPod(key, status)
-		log.V(logLevel).Debugf("Container created: %#v", c)
+		log.V(logLevel).Debugf("%s container created: %s", logPodPrefix, c.ID)
 
 		if err := envs.Get().GetCRI().Start(ctx, c.ID); err != nil {
 
-			log.Errorf("Can-not start container: %s", err)
+			log.Errorf("%s can-not start container: %s", logPodPrefix, err)
 
 			switch err {
 			case context.Canceled:
-				log.Errorf("Stop starting container err: %s", err.Error())
+				log.Errorf("%s stop starting container err: %s", logPodPrefix, err.Error())
 				PodClean(context.Background(), status)
 				return status, nil
 			}
@@ -362,10 +363,10 @@ func PodCreate(ctx context.Context, key string, manifest *types.PodManifest) (*t
 			return status, err
 		}
 
-		log.V(logLevel).Debugf("Container started: %#v", c)
+		log.V(logLevel).Debugf("%s container started: %s", logPodPrefix, c.ID)
 
 		if err := containerInspect(context.Background(), status, c); err != nil {
-			log.Errorf("Inspect container after create: err %s", err.Error())
+			log.Errorf("%s inspect container after create: err %s", logPodPrefix, err.Error())
 			return status, err
 		}
 
@@ -391,37 +392,39 @@ func PodCreate(ctx context.Context, key string, manifest *types.PodManifest) (*t
 func PodClean(ctx context.Context, status *types.PodStatus) {
 
 	for _, c := range status.Containers {
-		log.V(logLevel).Debugf("Remove unnecessary container: %s", c.ID)
+		log.V(logLevel).Debugf("%s remove unnecessary container: %s", logPodPrefix, c.ID)
 		if err := envs.Get().GetCRI().Remove(ctx, c.ID, true, true); err != nil {
-			log.Warnf("Can-not remove unnecessary container %s: %s", c.ID, err)
+			log.Warnf("%s can-not remove unnecessary container %s: %s", logPodPrefix, c.ID, err)
 		}
 	}
 
 	for _, c := range status.Containers {
-		log.V(logLevel).Debugf("Try to clean image: %s", c.Image.Name)
+		log.V(logLevel).Debugf("%s try to clean image: %s", logPodPrefix, c.Image.Name)
 		if err := ImageRemove(ctx, c.Image.Name); err != nil {
-			log.Errorf("can not remove image: %s", err.Error())
+			log.Errorf("%s can not remove image: %s", logPodPrefix, err.Error())
 			continue
 		}
 	}
 }
 
 func PodDestroy(ctx context.Context, pod string, status *types.PodStatus) {
-	log.V(logLevel).Debugf("Try to remove pod: %s", pod)
+	log.V(logLevel).Debugf("%s try to remove pod: %s", logPodPrefix, pod)
 	PodClean(ctx, status)
 	envs.Get().GetState().Pods().DelPod(pod)
 	for _, v := range status.Volumes {
-		PodVolumeDestroy(ctx, pod, v.Name)
+		if err := PodVolumeDestroy(ctx, pod, v.Name); err != nil {
+			log.Errorf("%s can not destroy pod: %s", logPodPrefix, err.Error())
+		}
 	}
 }
 
 func PodRestore(ctx context.Context) error {
 
-	log.V(logLevel).Debug("Runtime restore state")
+	log.V(logLevel).Debugf("%s runtime restore state", logPodPrefix)
 
 	cl, err := envs.Get().GetCRI().List(ctx, true)
 	if err != nil {
-		log.Errorf("Pods restore error: %s", err)
+		log.Errorf("%s pods restore error: %s", logPodPrefix, err)
 		return err
 	}
 
@@ -431,7 +434,7 @@ func PodRestore(ctx context.Context) error {
 			continue
 		}
 
-		log.V(logLevel).Debugf("Pod [%s] > container restore %s", c.Pod, c.ID)
+		log.V(logLevel).Debugf("%s pod [%s] > container restore %s", logPodPrefix, c.Pod, c.ID)
 
 		status := envs.Get().GetState().Pods().GetPod(c.Pod)
 		if status == nil {
@@ -508,9 +511,9 @@ func PodRestore(ctx context.Context) error {
 		status.Containers[cs.ID] = cs
 		status.Network.PodIP = c.Network.IPAddress
 
-		log.V(logLevel).Debugf("Container restored %s", c.ID)
+		log.V(logLevel).Debugf("%s container restored %s", logPodPrefix, c.ID)
 		envs.Get().GetState().Pods().SetPod(key, status)
-		log.V(logLevel).Debugf("Pod restored %s: %#v", key, status)
+		log.V(logLevel).Debugf("%s Pod restored %s: %s", key, status.State)
 	}
 
 	return nil
@@ -518,7 +521,7 @@ func PodRestore(ctx context.Context) error {
 
 func PodLogs(ctx context.Context, id string, follow bool, s io.Writer, doneChan chan bool) error {
 
-	log.V(logLevel).Debugf("Get container [%s] logs streaming", id)
+	log.V(logLevel).Debugf("%s get container [%s] logs streaming", logPodPrefix, id)
 
 	var (
 		cri    = envs.Get().GetCRI()
@@ -528,11 +531,11 @@ func PodLogs(ctx context.Context, id string, follow bool, s io.Writer, doneChan 
 
 	req, err := cri.Logs(ctx, id, true, true, follow)
 	if err != nil {
-		log.Errorf("Error get logs stream %s", err)
+		log.Errorf("%s error get logs stream %s", logPodPrefix, err)
 		return err
 	}
 	defer func() {
-		log.V(logLevel).Debugf("Stop container [%s] logs streaming", id)
+		log.V(logLevel).Debugf("%s stop container [%s] logs streaming", logPodPrefix, id)
 		ctx.Done()
 		close(done)
 		req.Close()
@@ -550,11 +553,11 @@ func PodLogs(ctx context.Context, id string, follow bool, s io.Writer, doneChan 
 				if err != nil {
 
 					if err == context.Canceled {
-						log.V(logLevel).Debug("Stream is canceled")
+						log.V(logLevel).Debugf("%s Stream is canceled", logPodPrefix)
 						return
 					}
 
-					log.Errorf("Error read bytes from stream %s", err)
+					log.Errorf("%s read bytes from stream err %s", logPodPrefix, err)
 					doneChan <- true
 					return
 				}
@@ -562,7 +565,7 @@ func PodLogs(ctx context.Context, id string, follow bool, s io.Writer, doneChan 
 				_, err = func(p []byte) (n int, err error) {
 					n, err = s.Write(p)
 					if err != nil {
-						log.Errorf("Error write bytes to stream %s", err)
+						log.Errorf("%s write bytes to stream err %s", logPodPrefix, err)
 						return n, err
 					}
 
@@ -573,7 +576,7 @@ func PodLogs(ctx context.Context, id string, follow bool, s io.Writer, doneChan 
 				}(buffer[0:n])
 
 				if err != nil {
-					log.Errorf("Error written to stream %s", err)
+					log.Errorf("%s write to stream err: %s", logPodPrefix, err)
 					done <- true
 					return
 				}
@@ -592,7 +595,7 @@ func PodLogs(ctx context.Context, id string, follow bool, s io.Writer, doneChan 
 
 func PodSpecCheck(ctx context.Context, key string, manifest *types.PodManifest) bool {
 
-	log.V(logLevel).Infof("Pod check spec pod: %s", key)
+	log.V(logLevel).Infof("%s pod check spec pod: %s", logPodPrefix, key)
 
 	state := envs.Get().GetState().Pods().GetPod(key)
 
@@ -612,14 +615,14 @@ func PodSpecCheck(ctx context.Context, key string, manifest *types.PodManifest) 
 	}
 
 	if len(statec) != len(specc) {
-		log.Debugf("container spec count not equal not exists: %d != %d", len(statec), len(specc))
+		log.Debugf("%s container spec count not equal not exists: %d != %d", logPodPrefix, len(statec), len(specc))
 		return false
 	}
 
 	for n, mf := range specc {
 
 		if _, ok := statec[n]; !ok {
-			log.Debugf("container spec not exists: %s", n)
+			log.Debugf("%s container spec not exists: %s", logPodPrefix, n)
 			return false
 		}
 
@@ -628,26 +631,26 @@ func PodSpecCheck(ctx context.Context, key string, manifest *types.PodManifest) 
 		c := statec[n]
 
 		if c.Image != mf.Image {
-			log.Debugf("images not equal: %s != %s", c.Image, mf.Image)
+			log.Debugf("%s images not equal: %s != %s", logPodPrefix, c.Image, mf.Image)
 			return false
 		}
 
 		img := envs.Get().GetState().Images().GetImage(c.Image)
 		if img == nil {
-			log.Debugf("image not found in state: %s", mf.Image)
+			log.Debugf("%s image not found in state: %s", logPodPrefix, mf.Image)
 			return false
 		}
 
 		if len(mf.Exec.Command) == 0 {
 			if strings.Join(c.Exec.Command, " ") != strings.Join(img.Status.Container.Exec.Command, " ") {
-				log.Debugf("cmd different with img cmd: %s != %s",
+				log.Debugf("%s cmd different with img cmd: %s != %s", logPodPrefix,
 					strings.Join(c.Exec.Command, " "),
 					strings.Join(img.Status.Container.Exec.Command, " "))
 				return false
 			}
 		} else {
 			if strings.Join(c.Exec.Command, " ") != strings.Join(mf.Exec.Command, " ") {
-				log.Debugf("cmd different with manifest cmd: %s != %s",
+				log.Debugf("%s cmd different with manifest cmd: %s != %s", logPodPrefix,
 					strings.Join(c.Exec.Command, " "),
 					strings.Join(mf.Exec.Command, " "))
 				return false
@@ -656,14 +659,14 @@ func PodSpecCheck(ctx context.Context, key string, manifest *types.PodManifest) 
 
 		if len(mf.Exec.Entrypoint) == 0 {
 			if strings.Join(c.Exec.Entrypoint, " ") != strings.Join(img.Status.Container.Exec.Entrypoint, " ") {
-				log.Debugf("entrypoint changed: %s != %s",
+				log.Debugf("%s entrypoint changed: %s != %s", logPodPrefix,
 					strings.Join(c.Exec.Entrypoint, " "),
 					strings.Join(img.Status.Container.Exec.Entrypoint, " "))
 				return false
 			}
 		} else {
 			if strings.Join(c.Exec.Entrypoint, " ") != strings.Join(mf.Exec.Entrypoint, " ") {
-				log.Debugf("entrypoint changed: %s != %s",
+				log.Debugf("%s entrypoint changed: %s != %s", logPodPrefix,
 					strings.Join(c.Exec.Entrypoint, " "),
 					strings.Join(mf.Exec.Entrypoint, " "))
 				return false
@@ -672,19 +675,19 @@ func PodSpecCheck(ctx context.Context, key string, manifest *types.PodManifest) 
 
 		if mf.Exec.Workdir == types.EmptyString {
 			if c.Exec.Workdir != img.Status.Container.Exec.Workdir {
-				log.Debugf("workdir changed: %s != %s", c.Exec.Workdir, img.Status.Container.Exec.Workdir)
+				log.Debugf("%s workdir changed: %s != %s", logPodPrefix, c.Exec.Workdir, img.Status.Container.Exec.Workdir)
 				return false
 			}
 		} else {
 			if c.Exec.Workdir != mf.Exec.Workdir {
-				log.Debugf("workdir changed: %s != %s", c.Exec.Workdir, mf.Exec.Workdir)
+				log.Debugf("%s workdir changed: %s != %s", logPodPrefix, c.Exec.Workdir, mf.Exec.Workdir)
 				return false
 			}
 		}
 
 		if len(mf.Exec.Args) != 0 {
 			if strings.Join(c.Exec.Args, " ") != strings.Join(mf.Exec.Args, " ") {
-				log.Debugf("args changed: %s != %s",
+				log.Debugf("%s args changed: %s != %s", logPodPrefix,
 					strings.Join(c.Exec.Args, " "),
 					strings.Join(mf.Exec.Args, " "))
 				return false
@@ -702,7 +705,7 @@ func PodSpecCheck(ctx context.Context, key string, manifest *types.PodManifest) 
 				}
 			}
 			if !f {
-				log.Debugf("Env not found:%s", e)
+				log.Debugf("%s env not found: %s", logPodPrefix, e)
 				return false
 			}
 		}
@@ -726,7 +729,7 @@ func PodSpecCheck(ctx context.Context, key string, manifest *types.PodManifest) 
 			}
 
 			if !f {
-				log.Debugf("\tEnv is unnecessary:%s", e)
+				log.Debugf("%s env is unnecessary: %s", logPodPrefix, e)
 				return false
 			}
 		}
@@ -741,7 +744,7 @@ func PodSpecCheck(ctx context.Context, key string, manifest *types.PodManifest) 
 				}
 			}
 			if !f {
-				log.Debugf("Bind not found:%s", e)
+				log.Debugf("%s bind not found: %s", logPodPrefix, e)
 				return false
 			}
 		}
@@ -755,7 +758,7 @@ func PodSpecCheck(ctx context.Context, key string, manifest *types.PodManifest) 
 				}
 			}
 			if !f {
-				log.Debugf("Bind is unnecessary:%s", e)
+				log.Debugf("%s bind is unnecessary: %s", logPodPrefix, e)
 				return false
 			}
 		}
@@ -766,7 +769,7 @@ func PodSpecCheck(ctx context.Context, key string, manifest *types.PodManifest) 
 			for _, ie := range c.Ports {
 				if e.HostIP != types.EmptyString {
 					if e.HostIP != ie.HostIP {
-						log.Debugf("\t Port map check failed: \t\t %s:%d:%d/%s == %s:%d:%d/%s",
+						log.Debugf("%s port map check failed: \t\t %s:%d:%d/%s == %s:%d:%d/%s", logPodPrefix,
 							e.HostIP, e.HostPort, e.ContainerPort, e.Protocol,
 							ie.HostIP, ie.HostPort, ie.ContainerPort, ie.Protocol)
 						return false
@@ -775,14 +778,14 @@ func PodSpecCheck(ctx context.Context, key string, manifest *types.PodManifest) 
 
 				if e.Protocol != types.EmptyString {
 					if e.Protocol != ie.Protocol {
-						log.Debugf("\t Port map check failed: \t\t %s:%d:%d/%s == %s:%d:%d/%s",
+						log.Debugf("%s port map check failed: \t\t %s:%d:%d/%s == %s:%d:%d/%s", logPodPrefix,
 							e.HostIP, e.HostPort, e.ContainerPort, e.Protocol,
 							ie.HostIP, ie.HostPort, ie.ContainerPort, ie.Protocol)
 						return false
 					}
 				} else {
 					if ie.Protocol != "tcp" {
-						log.Debugf("\t Port map check failed: \t\t %s:%d:%d/%s == %s:%d:%d/%s",
+						log.Debugf("%s port map check failed: \t\t %s:%d:%d/%s == %s:%d:%d/%s", logPodPrefix,
 							e.HostIP, e.HostPort, e.ContainerPort, e.Protocol,
 							ie.HostIP, ie.HostPort, ie.ContainerPort, ie.Protocol)
 						return false
@@ -797,7 +800,7 @@ func PodSpecCheck(ctx context.Context, key string, manifest *types.PodManifest) 
 			}
 
 			if !f {
-				log.Debugf("\t Port map not found: \t\t %s:%d:%d/%s ",
+				log.Debugf("%s port map not found: \t\t %s:%d:%d/%s ", logPodPrefix,
 					e.HostIP, e.HostPort, e.ContainerPort, e.Protocol)
 				return false
 			}
@@ -816,7 +819,7 @@ func PodSpecCheck(ctx context.Context, key string, manifest *types.PodManifest) 
 			}
 
 			if !f {
-				log.Debugf("Port map is unnecessary: %#v", e)
+				log.Debugf("%s port map is unnecessary: %d", logPodPrefix, e.HostPort)
 				return false
 			}
 		}
@@ -824,7 +827,7 @@ func PodSpecCheck(ctx context.Context, key string, manifest *types.PodManifest) 
 		if mf.RestartPolicy.Policy != c.RestartPolicy.Policy ||
 			mf.RestartPolicy.Attempt != c.RestartPolicy.Attempt {
 
-			log.Debugf("Restart policy changed: %s:%d => %s:%d",
+			log.Debugf("%s restart policy changed: %s:%d => %s:%d", logPodPrefix,
 				c.RestartPolicy.Policy, c.RestartPolicy.Attempt,
 				mf.RestartPolicy.Policy, mf.RestartPolicy.Attempt)
 			return false
@@ -838,9 +841,14 @@ func PodSpecCheck(ctx context.Context, key string, manifest *types.PodManifest) 
 
 func PodVolumesCheck(ctx context.Context, pod string, spec []*types.SpecTemplateVolume) bool {
 
-	log.V(logLevel).Debugf("Check pod volumes: %s: %d", pod, len(spec))
+	log.V(logLevel).Debugf("%s check pod volumes: %s: %d", logPodPrefix, pod, len(spec))
 
 	for _, v := range spec {
+
+		if v.Volume.Name != types.EmptyString {
+			continue
+		}
+
 		name := podVolumeKeyCreate(pod, v.Name)
 
 		if v.Config.Name != types.EmptyString && len(v.Config.Binds) > 0 {
@@ -865,7 +873,7 @@ func PodVolumesCheck(ctx context.Context, pod string, spec []*types.SpecTemplate
 
 func PodVolumeUpdate(ctx context.Context, pod string, spec *types.SpecTemplateVolume) (*types.VolumeStatus, error) {
 
-	log.V(logLevel).Debugf("Update pod volume: %s: %s", pod, spec.Name)
+	log.V(logLevel).Debugf("%s update pod volume: %s: %s", logPodPrefix, pod, spec.Name)
 
 	path := strings.Replace(pod, ":", "-", -1)
 	path = fmt.Sprintf("%s-%s", path, spec.Name)
@@ -878,14 +886,14 @@ func PodVolumeUpdate(ctx context.Context, pod string, spec *types.SpecTemplateVo
 
 	if spec.Secret.Name != types.EmptyString && len(spec.Secret.Binds) > 0 {
 		if err := VolumeSetSecretData(ctx, name, spec.Secret.Name); err != nil {
-			log.Errorf("can not set config data to volume: %s", err.Error())
+			log.Errorf("%s can not set config data to volume: %s", logPodPrefix, err.Error())
 			return status, err
 		}
 	}
 
 	if spec.Secret.Name == types.EmptyString && spec.Config.Name != types.EmptyString && len(spec.Config.Binds) > 0 {
 		if err := VolumeSetConfigData(ctx, name, spec.Config.Name); err != nil {
-			log.Errorf("can not set config data to volume: %s", err.Error())
+			log.Errorf("%s can not set config data to volume: %s", logPodPrefix, err.Error())
 			return status, err
 		}
 	}
@@ -895,9 +903,9 @@ func PodVolumeUpdate(ctx context.Context, pod string, spec *types.SpecTemplateVo
 
 func PodVolumeAttach(ctx context.Context, pod string, spec *types.SpecTemplateVolume) (*types.VolumeClaim, error) {
 
-	log.V(logLevel).Debugf("Attach pod volume: %s: %s", pod, spec.Name)
+	log.V(logLevel).Debugf("%s attach pod volume: %s: %s", logPodPrefix, pod, spec.Name)
 
-	var name = fmt.Sprintf("%s_%s", getPodNamespace(pod), spec.Name)
+	var name = fmt.Sprintf("%s:%s", getPodNamespace(pod), spec.Name)
 
 	volume := envs.Get().GetState().Volumes().GetVolume(name)
 	if volume == nil {
@@ -917,7 +925,7 @@ func PodVolumeAttach(ctx context.Context, pod string, spec *types.SpecTemplateVo
 
 func PodVolumeCreate(ctx context.Context, pod string, spec *types.SpecTemplateVolume) (*types.VolumeStatus, error) {
 
-	log.V(logLevel).Debugf("Create pod volume: %s:%s", pod, spec.Name)
+	log.V(logLevel).Debugf("%s create pod volume: %s:%s", logPodPrefix, pod, spec.Name)
 
 	path := strings.Replace(pod, ":", "-", -1)
 	path = fmt.Sprintf("%s-%s", path, spec.Name)
@@ -932,20 +940,20 @@ func PodVolumeCreate(ctx context.Context, pod string, spec *types.SpecTemplateVo
 
 	st, err := VolumeCreate(ctx, name, &vm)
 	if err != nil {
-		log.Errorf("can not create pod volume: %s", err.Error())
+		log.Errorf("%s can not create pod volume: %s", logPodPrefix, err.Error())
 		return nil, err
 	}
 
 	if spec.Secret.Name != types.EmptyString && len(spec.Secret.Binds) > 0 {
 		if err := VolumeSetSecretData(ctx, name, spec.Secret.Name); err != nil {
-			log.Errorf("can not set secret data to volume: %s", err.Error())
+			log.Errorf("%s can not set secret data to volume: %s", logPodPrefix, err.Error())
 			return st, err
 		}
 	}
 
 	if spec.Secret.Name == types.EmptyString && spec.Config.Name != types.EmptyString && len(spec.Config.Binds) > 0 {
 		if err := VolumeSetConfigData(ctx, name, spec.Config.Name); err != nil {
-			log.Errorf("can not set config data to volume: %s", err.Error())
+			log.Errorf("%s can not set config data to volume: %s", logPodPrefix, err.Error())
 			return st, err
 		}
 	}

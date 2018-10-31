@@ -27,17 +27,19 @@ import (
 	"strings"
 )
 
+const (
+	logVolumePrefix = "node:runtime:volume:>"
+)
+
 func VolumeManage(ctx context.Context, key string, manifest *types.VolumeManifest) error {
 
-	log.V(logLevel).Debugf("Provision volume: %s", key)
+	log.V(logLevel).Debugf("%s provision volume: %s", logVolumePrefix, key)
 
 	//==========================================================================
-	// Destroy pod =============================================================
+	// Destroy volume ==========================================================
 	//==========================================================================
 
-	key = strings.Replace(key, ":", "_", -1)
-
-	// Call destroy pod
+	// Call destroy volume
 	if manifest.State.Destroy {
 
 		v := envs.Get().GetState().Volumes().GetVolume(key)
@@ -50,10 +52,10 @@ func VolumeManage(ctx context.Context, key string, manifest *types.VolumeManifes
 			return nil
 		}
 
-		log.V(logLevel).Debugf("Volume found > destroy it: %s", key)
+		log.V(logLevel).Debugf("%s volume found > destroy it: %s", logVolumePrefix, key)
 
 		if err := VolumeDestroy(ctx, key); err != nil {
-			log.Errorf("can not destroy volume: %s", err.Error())
+			log.Errorf("%s can not destroy volume: %s", logVolumePrefix, err.Error())
 			return err
 		}
 
@@ -63,10 +65,10 @@ func VolumeManage(ctx context.Context, key string, manifest *types.VolumeManifes
 	}
 
 	//==========================================================================
-	// Check containers pod status =============================================
+	// Check containers volume status =============================================
 	//==========================================================================
 
-	// Get pod list from current state
+	// Get volume list from current state
 	v := envs.Get().GetState().Volumes().GetVolume(key)
 	if v != nil {
 		if v.State != types.StateDestroyed {
@@ -74,11 +76,11 @@ func VolumeManage(ctx context.Context, key string, manifest *types.VolumeManifes
 		}
 	}
 
-	log.V(logLevel).Debugf("Volume not found > create it: %s", key)
+	log.V(logLevel).Debugf("%s volume not found > create it: %s", logVolumePrefix, key)
 
 	status, err := VolumeCreate(ctx, key, manifest)
 	if err != nil {
-		log.Errorf("Can not create pod: %s err: %s", key, err.Error())
+		log.Errorf("%s can not create volume: %s err: %s", logVolumePrefix, key, err.Error())
 		status.SetError(err)
 	}
 
@@ -90,20 +92,20 @@ func VolumeCreate(ctx context.Context, name string, mf *types.VolumeManifest) (*
 
 	var status = new(types.VolumeStatus)
 
-	log.V(logLevel).Debugf("Create volume: %s", mf)
+	log.V(logLevel).Debugf("%s create volume: %s", logVolumePrefix, mf)
 	if mf.Type == types.EmptyString {
 		mf.Type = types.KindVolumeHostDir
 	}
 
 	si, err := envs.Get().GetCSI(mf.Type)
 	if err != nil {
-		log.Errorf("Can-not get storage interface: %s", err)
+		log.Errorf("%s can-not get storage interface: %s", logVolumePrefix, err)
 		return nil, err
 	}
 
 	st, err := si.Create(ctx, name, mf)
 	if err != nil {
-		log.Errorf("Can-not get secret from api: %s", err)
+		log.Errorf("%s can-not get secret from api: %s", logVolumePrefix, err)
 		return nil, err
 	}
 
@@ -131,12 +133,12 @@ func VolumeDestroy(ctx context.Context, name string) error {
 
 	si, err := envs.Get().GetCSI(vol.Status.Type)
 	if err != nil {
-		log.Errorf("Remove volume failed: %s", err.Error())
+		log.Errorf("%s remove volume failed: %s", logVolumePrefix, err.Error())
 		return err
 	}
 
 	if err := si.Remove(ctx, &vol.Status); err != nil {
-		log.Warnf("can not remove volume: %s: %s", name, err.Error())
+		log.Warnf("%s can not remove volume: %s: %s", logVolumePrefix, name, err.Error())
 	}
 
 	vol.SetDestroyed()
@@ -147,16 +149,16 @@ func VolumeDestroy(ctx context.Context, name string) error {
 
 func VolumeRestore(ctx context.Context) error {
 
-	log.Debug("Start volumes restore")
+	log.Debugf("%s start volumes restore", logVolumePrefix)
 
 	tp := envs.Get().ListCSI()
 
 	for _, t := range tp {
 
-		log.Debugf("restore volumes type: %s", t)
+		log.Debugf("%s restore volumes type: %s", logVolumePrefix, t)
 		sci, err := envs.Get().GetCSI(t)
 		if err != nil {
-			log.Errorf("storage interface init err: %s", err.Error())
+			log.Errorf("%s storage interface init err: %s", logVolumePrefix, err.Error())
 			return err
 		}
 
@@ -166,7 +168,7 @@ func VolumeRestore(ctx context.Context) error {
 
 		states, err := sci.List(ctx)
 		if err != nil {
-			log.Errorf("volumes restore err: %s", err.Error())
+			log.Errorf("%s volumes restore err: %s", logVolumePrefix, err.Error())
 			return err
 		}
 
@@ -176,8 +178,7 @@ func VolumeRestore(ctx context.Context) error {
 				status.State = types.StateReady
 			}
 			status.Status = *state
-
-			envs.Get().GetState().Volumes().SetVolume(name, status)
+			envs.Get().GetState().Volumes().SetVolume(strings.Replace(name, "_", ":", -1), status)
 		}
 
 	}
@@ -186,17 +187,17 @@ func VolumeRestore(ctx context.Context) error {
 }
 
 func VolumeSetSecretData(ctx context.Context, name string, secret string) error {
-	log.Debugf("volume set secret data: %s > %s", secret, name)
+	log.Debugf("%s volume set secret data: %s > %s", logVolumePrefix, secret, name)
 	return nil
 }
 
 func VolumeCheckSecretData(ctx context.Context, name string, secret string) (bool, error) {
-	log.Debugf("volume check secret data: %s > %s", secret, name)
+	log.Debugf("%s volume check secret data: %s > %s", logVolumePrefix, secret, name)
 	return true, nil
 }
 
 func VolumeCheckConfigData(ctx context.Context, name string, config string) (bool, error) {
-	log.Debugf("volume check config data: %s > %s", config, name)
+	log.Debugf("%s volume check config data: %s > %s", logVolumePrefix, config, name)
 
 	vol := envs.Get().GetState().Volumes().GetVolume(name)
 	cfg := envs.Get().GetState().Configs().GetConfig(config)
@@ -211,7 +212,7 @@ func VolumeCheckConfigData(ctx context.Context, name string, config string) (boo
 
 	si, err := envs.Get().GetCSI(vol.Status.Type)
 	if err != nil {
-		log.Errorf("Remove volume failed: %s", err.Error())
+		log.Errorf("%s remove volume failed: %s", logVolumePrefix, err.Error())
 		return false, err
 	}
 
@@ -220,7 +221,7 @@ func VolumeCheckConfigData(ctx context.Context, name string, config string) (boo
 
 func VolumeSetConfigData(ctx context.Context, name string, config string) error {
 
-	log.Debugf("set volume config data: %s > %s", config, name)
+	log.Debugf("%s set volume config data: %s > %s", logVolumePrefix, config, name)
 
 	vol := envs.Get().GetState().Volumes().GetVolume(name)
 	cfg := envs.Get().GetState().Configs().GetConfig(config)
@@ -239,7 +240,7 @@ func VolumeSetConfigData(ctx context.Context, name string, config string) error 
 
 	si, err := envs.Get().GetCSI(vol.Status.Type)
 	if err != nil {
-		log.Errorf("Remove volume failed: %s", err.Error())
+		log.Errorf("%s remove volume failed: %s", logVolumePrefix, err.Error())
 		return err
 	}
 
