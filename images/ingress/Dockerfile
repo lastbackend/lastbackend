@@ -1,6 +1,8 @@
-FROM golang:1.11.1-alpine3.8
+# Build manifest
+FROM golang:1.11-alpine3.8 as build
 
 RUN apk add --no-cache ca-certificates
+
 RUN apk add --no-cache iptables \
     linux-headers \
     gcc \
@@ -33,4 +35,15 @@ RUN rm -rf /go/pkg \
     && rm -rf /go/src \
     && rm -rf /var/cache/apk/*
 
-CMD ["/usr/local/bin/ingress"]
+
+# Production manifest
+FROM alpine:3.8 as production
+
+RUN apk add --no-cache ca-certificates \
+  iptables \
+  iproute2 \
+  haproxy
+
+COPY --from=build /usr/bin/ingress /usr/bin/ingress
+
+EXPOSE 80 443

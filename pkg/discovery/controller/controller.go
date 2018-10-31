@@ -60,7 +60,10 @@ func (c *Controller) Connect(ctx context.Context) error {
 	opts := v1.Request().Discovery().DiscoveryConnectOptions()
 	opts.Info = envs.Get().GetState().Discovery().Info
 	opts.Status = envs.Get().GetState().Discovery().Status
-	opts.Network = *envs.Get().GetNet().Info(ctx)
+
+	if envs.Get().GetNet() != nil {
+		opts.Network = *envs.Get().GetNet().Info(ctx)
+	}
 
 	for {
 		err := envs.Get().GetClient().Connect(ctx, opts)
