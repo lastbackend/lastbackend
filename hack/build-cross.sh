@@ -1,7 +1,7 @@
 #!/bin/bash
 
-go get -u github.com/kardianos/govendor
-govendor sync
+go get -u github.com/golang/dep/cmd/dep
+dep ensure
 
 mkdir -p build/linux && mkdir -p build/darwin
 
