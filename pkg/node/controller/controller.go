@@ -28,6 +28,7 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/node/runtime"
 	"github.com/spf13/viper"
 	"io/ioutil"
+	"strings"
 	"sync"
 	"time"
 )
@@ -147,19 +148,16 @@ func (c *Controller) Sync(ctx context.Context) error {
 				break
 			}
 
-			if status == nil {
-				continue
-			}
-
-			if !envs.Get().GetState().Volumes().IsLocal(v) {
-				opts.Volumes[v] = getVolumeOptions(status)
+			if !envs.Get().GetState().Volumes().IsLocal(v) && status != nil {
+				selflink := strings.Replace(v, "_", ":", -1)
+				opts.Volumes[selflink] = getVolumeOptions(status)
 			} else {
 				delete(c.cache.volumes, v)
 			}
 		}
 
 		for v := range opts.Volumes {
-			delete(c.cache.volumes, v)
+			delete(c.cache.volumes, strings.Replace(v, ":", "_", -1))
 		}
 
 		c.cache.lock.Unlock()

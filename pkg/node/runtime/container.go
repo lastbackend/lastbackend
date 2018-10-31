@@ -70,10 +70,6 @@ func containerSubscribe(ctx context.Context) error {
 
 	for c := range cs {
 
-		if c.Pod != types.ContainerTypeLBC {
-			continue
-		}
-
 		container := state.GetContainer(c.ID)
 		if container == nil {
 			log.V(logLevel).Debugf("Container not found")
@@ -132,10 +128,11 @@ func containerSubscribe(ctx context.Context) error {
 			container.State.Started.Started = false
 		}
 
-		if c.State != types.StateDestroyed {
-			state.SetContainer(container)
+		pod := state.GetPod(c.Pod)
+		if pod != nil {
+			pod.Containers[c.ID] = container
+			state.SetPod(c.Pod, pod)
 		}
-
 	}
 
 	return nil
@@ -228,8 +225,8 @@ func containerManifestCreate(ctx context.Context, pod string, spec *types.SpecTe
 			continue
 		}
 
-		if v.Mode != "rw" {
-			v.Mode = "ro"
+		if v.Mode != "ro" {
+			v.Mode = "rw"
 		}
 
 		log.Debugf("attach volume: %s to %s:%s", v.Name, vol.Status.Path, v.Path)

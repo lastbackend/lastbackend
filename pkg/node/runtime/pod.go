@@ -90,6 +90,8 @@ func PodManage(ctx context.Context, key string, manifest *types.PodManifest) err
 
 				if v.Volume.Name != types.EmptyString {
 
+					log.Debugf("Attach volume %s for pod %s", v.Name, key)
+
 					pv, err := PodVolumeAttach(ctx, key, v)
 					if err != nil {
 						log.Errorf("can not attach volume for pod: %s", err.Error())
@@ -100,13 +102,9 @@ func PodManage(ctx context.Context, key string, manifest *types.PodManifest) err
 
 				} else {
 
-					var name string
-					if v.Volume.Name != types.EmptyString {
+					log.Debugf("Create pod volume %s for pod %s", v.Name, key)
 
-						name = fmt.Sprintf("%s:%s", getPodNamespace(key), v.Name)
-					} else {
-						name = podVolumeKeyCreate(key, v.Name)
-					}
+					var name = podVolumeKeyCreate(key, v.Name)
 
 					vol := envs.Get().GetState().Volumes().GetVolume(name)
 
@@ -207,7 +205,7 @@ func PodCreate(ctx context.Context, key string, manifest *types.PodManifest) (*t
 
 		var name string
 		if v.Volume.Name != types.EmptyString {
-			name = fmt.Sprintf("%s:%s", getPodNamespace(key), v.Name)
+			name = fmt.Sprintf("%s_%s", getPodNamespace(key), v.Name)
 		} else {
 			name = podVolumeKeyCreate(key, v.Name)
 		}
@@ -232,11 +230,25 @@ func PodCreate(ctx context.Context, key string, manifest *types.PodManifest) (*t
 			status.Volumes[pv.Name] = pv
 
 		} else {
+
 			_, err := PodVolumeUpdate(ctx, key, v)
 			if err != nil {
 				log.Errorf("can not update volume data: %s", err.Error())
 				return status, err
 			}
+
+			claim := envs.Get().GetState().Volumes().GetClaim(podVolumeClaimNameCreate(key, v.Name))
+			if claim == nil {
+				pv := &types.VolumeClaim{
+					Name:   podVolumeClaimNameCreate(key, v.Name),
+					Volume: name,
+					Path:   vol.Status.Path,
+				}
+
+				envs.Get().GetState().Volumes().SetClaim(pv.Name, pv)
+				status.Volumes[pv.Name] = pv
+			}
+
 		}
 
 		envs.Get().GetState().Pods().SetPod(key, status)
@@ -885,7 +897,7 @@ func PodVolumeAttach(ctx context.Context, pod string, spec *types.SpecTemplateVo
 
 	log.V(logLevel).Debugf("Attach pod volume: %s: %s", pod, spec.Name)
 
-	var name = fmt.Sprintf("%s:%s", getPodNamespace(pod), spec.Name)
+	var name = fmt.Sprintf("%s_%s", getPodNamespace(pod), spec.Name)
 
 	volume := envs.Get().GetState().Volumes().GetVolume(name)
 	if volume == nil {

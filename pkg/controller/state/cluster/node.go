@@ -39,7 +39,7 @@ type NodeLeaseOptions struct {
 	Node     *string
 	Memory   *int64
 	Storage  *int64
-	Selector map[string]string
+	Selector types.SpecSelector
 }
 
 func (nl *NodeLease) Wait() {
@@ -56,10 +56,34 @@ func handleNodeLease(cs *ClusterState, nl *NodeLease) error {
 
 	for _, n := range cs.node.list {
 
+		// check selectors first
+
+		if nl.Request.Selector.Node != types.EmptyString {
+			if n.SelfLink() != nl.Request.Selector.Node {
+				continue
+			}
+		}
+
+		if len(nl.Request.Selector.Labels) > 0 {
+			if len(n.Meta.Labels) == 0 {
+				continue
+			}
+
+			for k, v := range nl.Request.Selector.Labels {
+				if _, ok := n.Meta.Labels[k]; !ok {
+					continue
+				}
+
+				if n.Meta.Labels[k] != v {
+					continue
+				}
+			}
+
+		}
 
 		var (
-			node *types.Node
-			allocated  = new(types.NodeResources)
+			node      *types.Node
+			allocated = new(types.NodeResources)
 		)
 
 		if nl.Request.Memory != nil {
@@ -79,7 +103,6 @@ func handleNodeLease(cs *ClusterState, nl *NodeLease) error {
 			}
 		}
 
-
 		if node != nil {
 
 			node.Status.Allocated.Pods += allocated.Pods
@@ -87,12 +110,13 @@ func handleNodeLease(cs *ClusterState, nl *NodeLease) error {
 			node.Status.Allocated.Storage += allocated.Storage
 
 			nm := distribution.NewNodeModel(context.Background(), envs.Get().GetStorage())
-			nm.Set(n)
+			if err := nm.Set(n); err != nil {
+				return err
+			}
 
 			nl.Response.Node = n
 			return nil
 		}
-
 
 	}
 

@@ -130,8 +130,8 @@ type ManifestSpecTemplateSecretVolume struct {
 }
 
 type ManifestSpecTemplateSecretVolumeBind struct {
-	Key  string `json:"key" yaml:"key"`
-	File string `json:"file" yaml:"file"`
+	Key  string `json:"key,omitempty" yaml:"key,omitempty"`
+	File string `json:"file,omitempty" yaml:"file,omitempty"`
 }
 
 type ManifestSpecTemplateConfigVolume struct {
@@ -142,13 +142,13 @@ type ManifestSpecTemplateConfigVolume struct {
 }
 
 type ManifestSpecTemplateConfigVolumeBind struct {
-	Key  string `json:"key" yaml:"key"`
-	File string `json:"file" yaml:"file"`
+	Key  string `json:"key,omitempty" yaml:"key"`
+	File string `json:"file,omitempty" yaml:"file"`
 }
 
 type ManifestSpecTemplateRestartPolicy struct {
-	Policy  string `json:"policy" yaml:"policy"`
-	Attempt int    `json:"attempt" yaml:"attempt"`
+	Policy  string `json:"policy,omitempty" yaml:"policy"`
+	Attempt int    `json:"attempt,omitempty" yaml:"attempt"`
 }
 
 func (m ManifestSpecSelector) GetSpec() types.SpecSelector {
@@ -196,14 +196,14 @@ func (m ManifestSpecTemplateVolume) GetSpec() types.SpecTemplateVolume {
 
 	for _, b := range m.Secret.Binds {
 		s.Secret.Binds = append(s.Secret.Binds, types.SpecTemplateSecretVolumeBind{
-			Key: b.Key,
+			Key:  b.Key,
 			File: b.File,
 		})
 	}
 
 	for _, b := range m.Config.Binds {
 		s.Config.Binds = append(s.Config.Binds, types.SpecTemplateConfigVolumeBind{
-			Key: b.Key,
+			Key:  b.Key,
 			File: b.File,
 		})
 	}

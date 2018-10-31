@@ -239,6 +239,7 @@ func (s *ServiceManifest) SetServiceSpec(svc *types.Service) {
 							Key:  ce.Config.Key,
 						},
 					})
+					svc.Spec.Template.Updated = time.Now()
 				}
 			}
 
@@ -390,7 +391,7 @@ func (s *ServiceManifest) SetServiceSpec(svc *types.Service) {
 				spec.Secret.Binds = make([]types.SpecTemplateSecretVolumeBind, 0)
 				for _, v := range v.Secret.Binds {
 					spec.Secret.Binds = append(spec.Secret.Binds, types.SpecTemplateSecretVolumeBind{
-						Key: v.Key,
+						Key:  v.Key,
 						File: v.File,
 					})
 				}
@@ -425,7 +426,7 @@ func (s *ServiceManifest) SetServiceSpec(svc *types.Service) {
 				spec.Config.Binds = make([]types.SpecTemplateConfigVolumeBind, 0)
 				for _, v := range v.Config.Binds {
 					spec.Config.Binds = append(spec.Config.Binds, types.SpecTemplateConfigVolumeBind{
-						Key: v.Key,
+						Key:  v.Key,
 						File: v.File,
 					})
 				}

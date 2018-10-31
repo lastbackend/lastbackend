@@ -91,7 +91,6 @@ func deploymentObserve(ss *ServiceState, d *types.Deployment) error {
 
 	log.V(logLevel).Debugf("%s:> observe state: %s > %s", logDeploymentPrefix, d.SelfLink(), d.Status.State)
 
-
 	if err := endpointCheck(ss); err != nil {
 		return err
 	}
@@ -150,9 +149,9 @@ func handleDeploymentStateReady(ss *ServiceState, d *types.Deployment) error {
 		}
 	}
 
-	if ss.deployment.active.SelfLink() != d.SelfLink() {
-		return deploymentDestroy(ss, d)
-	}
+	//if ss.deployment.active.SelfLink() != d.SelfLink() {
+	//	return deploymentDestroy(ss, d)
+	//}
 
 	return nil
 }
@@ -172,9 +171,9 @@ func handleDeploymentStateError(ss *ServiceState, d *types.Deployment) error {
 		}
 	}
 
-	if ss.deployment.active.SelfLink() != d.SelfLink() {
-		return deploymentDestroy(ss, d)
-	}
+	//if ss.deployment.active.SelfLink() != d.SelfLink() {
+	//	return deploymentDestroy(ss, d)
+	//}
 
 	return nil
 }
@@ -200,9 +199,9 @@ func handleDeploymentStateDegradation(ss *ServiceState, d *types.Deployment) err
 		}
 	}
 
-	if ss.deployment.active.SelfLink() != d.SelfLink() {
-		return deploymentDestroy(ss, d)
-	}
+	//if ss.deployment.active.SelfLink() != d.SelfLink() {
+	//	return deploymentDestroy(ss, d)
+	//}
 
 	return nil
 }

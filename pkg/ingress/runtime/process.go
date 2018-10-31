@@ -48,8 +48,6 @@ func (hp *Process) manage() error {
 		process *os.Process
 	)
 
-
-
 	pid := hp.getPid()
 
 	process, err := os.FindProcess(int(pid))
@@ -61,7 +59,6 @@ func (hp *Process) manage() error {
 	if err := process.Signal(syscall.Signal(0)); err == nil {
 		hp.process = process
 	}
-
 
 	if hp.process == nil {
 		log.Debug("running process not found: start new")
@@ -138,6 +135,10 @@ func (hp *Process) reload() error {
 		pidpath = hPid
 	}
 
+	if cfg == types.EmptyString {
+		cfg = ConfigName
+	}
+
 	pid := hp.getPid()
 	cmd := exec.Command(bin, "-f", filepath.Join(path, cfg), "-p", pidpath, "-sf", fmt.Sprintf("%d", pid))
 	cmd.Stdout = os.Stdout
@@ -193,7 +194,6 @@ func (hp *Process) getPid() int {
 	}
 
 	return pid
-
 
 	return 0
 }
