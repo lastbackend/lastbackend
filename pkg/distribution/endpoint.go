@@ -20,7 +20,6 @@ package distribution
 
 import (
 	"context"
-
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 	"github.com/lastbackend/lastbackend/pkg/log"
 	"github.com/lastbackend/lastbackend/pkg/storage"
@@ -178,7 +177,7 @@ func (e *Endpoint) Watch(ch chan types.EndpointEvent, rev *int64) error {
 
 				endpoint := new(types.Endpoint)
 
-				if err := json.Unmarshal(e.Data.([]byte), *endpoint); err != nil {
+				if err := json.Unmarshal(e.Data.([]byte), endpoint); err != nil {
 					log.Errorf("%s:> parse data err: %v", logEndpointPrefix, err)
 					continue
 				}
