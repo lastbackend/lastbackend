@@ -20,7 +20,6 @@ package endpoint
 
 import (
 	"context"
-
 	"github.com/lastbackend/lastbackend/pkg/discovery/envs"
 	"github.com/lastbackend/lastbackend/pkg/distribution"
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"

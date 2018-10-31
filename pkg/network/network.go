@@ -49,7 +49,7 @@ func New() (*Network, error) {
 
 	if viper.GetString("runtime.cni.type") == types.EmptyString &&
 		viper.GetString("runtime.cpi.type") == types.EmptyString {
-		log.Debug("run ingress without network management")
+		log.Debug("run without network management")
 		return nil, nil
 	}
 
