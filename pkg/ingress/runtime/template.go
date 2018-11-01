@@ -101,7 +101,7 @@ frontend https
   {{end}}{{end}}
 	{{range $domain, $acl := .Rules}}{{range $path, $backend := $acl}}acl r_{{$backend}}_down  nbsrv({{$backend}}) lt 1
   {{end}}{{end}}
-  {{range $domain, $acl := .Rules}}{{range $path, $backend := $acl}}use_backend local_http if r_{{$backend}}_down
+  {{range $domain, $acl := .Rules}}{{range $path, $backend := $acl}}use_backend local_http if r_{{$backend}}_down r_{{$backend}}
   {{end}}{{end}}
   {{range $domain, $acl := .Rules}}{{range $path, $backend := $acl}}use_backend {{$backend}} if r_{{$backend}}
   {{end}}{{end}}
