@@ -279,8 +279,6 @@ func (p *Proxy) getState(ctx context.Context) (map[string]*types.EndpointState, 
 		return el, err
 	}
 
-	log.V(logLevel).Debugf("%s services list: %#v", logIPVSPrefix, svcs)
-
 	var ips = make(map[string]bool, 0)
 
 	for _, svc := range svcs {
@@ -289,8 +287,6 @@ func (p *Proxy) getState(ctx context.Context) (map[string]*types.EndpointState, 
 
 		// check if endpoint exists
 		var host = svc.Address.String()
-
-		log.V(logLevel).Debugf("%s add service %s to current state", logIPVSPrefix, svc.Address.String())
 
 		endpoint := el[host]
 		if endpoint == nil {
@@ -307,8 +303,6 @@ func (p *Proxy) getState(ctx context.Context) (map[string]*types.EndpointState, 
 			log.Errorf("%s get destinations err: %s", logIPVSPrefix, err.Error())
 			continue
 		}
-
-		log.V(logLevel).Debugf("%s found %d destinations for service: %s", logIPVSPrefix, len(dests), svc.Address.String())
 
 		for _, dest := range dests {
 

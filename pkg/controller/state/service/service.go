@@ -282,11 +282,6 @@ func serviceEndpointProvision(ss *ServiceState, svc *types.Service) error {
 		return err
 	}
 
-	if err := endpointManifestProvision(ss); err != nil {
-		log.Errorf("%s:> endpoint provision err: %s", logServicePrefix, err.Error())
-		return err
-	}
-
 	if ss.endpoint.endpoint != nil {
 		svc.Meta.Endpoint = ss.endpoint.endpoint.Spec.Domain
 		svc.Meta.IP = ss.endpoint.endpoint.Spec.IP

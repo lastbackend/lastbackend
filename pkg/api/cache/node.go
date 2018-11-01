@@ -146,7 +146,7 @@ func (c *CacheNodeManifest) SetEndpointManifest(addr string, s *types.EndpointMa
 	c.lock.Lock()
 	defer c.lock.Unlock()
 
-	log.Debugf("set endpoint manifest: %s > %#v", addr, s)
+	log.Debugf("%s set endpoint manifest: %s > %s", logCacheNode, addr, s.IP)
 
 	for _, n := range c.manifests {
 		if n.Endpoints == nil {

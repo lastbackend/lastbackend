@@ -169,21 +169,21 @@ func (ss *ServiceState) Observe() {
 		select {
 
 		case p := <-ss.observers.pod:
-			log.V(logLevel).Debugf("%s:observe:pod:> %v", logPrefix, p)
+			log.V(logLevel).Debugf("%s:observe:pod:> %s", logPrefix, p.SelfLink())
 			if err := PodObserve(ss, p); err != nil {
 				log.Errorf("%s:observe:pod err:> %s", logPrefix, err.Error())
 			}
 			break
 
 		case d := <-ss.observers.deployment:
-			log.V(logLevel).Debugf("%s:observe:deployment:> %v", logPrefix, d)
+			log.V(logLevel).Debugf("%s:observe:deployment:> %s", logPrefix, d.SelfLink())
 			if err := deploymentObserve(ss, d); err != nil {
 				log.Errorf("%s:observe:deployment err:> %s", logPrefix, err.Error())
 			}
 			break
 
 		case s := <-ss.observers.service:
-			log.V(logLevel).Debugf("%s:observe:service:> %v", logPrefix, s)
+			log.V(logLevel).Debugf("%s:observe:service:> %s", logPrefix, s.SelfLink())
 			if err := serviceObserve(ss, s); err != nil {
 				log.Errorf("%s:observe:service err:> %s", logPrefix, err.Error())
 			}

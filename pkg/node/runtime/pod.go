@@ -81,6 +81,9 @@ func PodManage(ctx context.Context, key string, manifest *types.PodManifest) err
 	p := envs.Get().GetState().Pods().GetPod(key)
 	if p != nil {
 
+		// restore pov volume claims
+		podVolumeClaimRestore(key, manifest)
+
 		switch true {
 		case !PodSpecCheck(ctx, key, manifest):
 			PodDestroy(ctx, key, p)
@@ -966,6 +969,43 @@ func PodVolumeCreate(ctx context.Context, pod string, spec *types.SpecTemplateVo
 func PodVolumeDestroy(ctx context.Context, pod, volume string) error {
 	envs.Get().GetState().Volumes().DelLocal(podVolumeKeyCreate(pod, volume))
 	return VolumeDestroy(ctx, podVolumeKeyCreate(pod, volume))
+}
+
+func podVolumeClaimRestore(key string, manifest *types.PodManifest) {
+
+	pod := envs.Get().GetState().Pods().GetPod(key)
+	if pod == nil {
+		return
+	}
+
+	for _, v := range manifest.Template.Volumes {
+
+		var name string
+		if v.Volume.Name != types.EmptyString {
+			name = fmt.Sprintf("%s:%s", getPodNamespace(key), v.Volume.Name)
+		} else {
+			name = podVolumeKeyCreate(key, v.Name)
+		}
+
+		vol := envs.Get().GetState().Volumes().GetVolume(name)
+		if vol == nil {
+			continue
+		}
+
+		claim := envs.Get().GetState().Volumes().GetClaim(podVolumeClaimNameCreate(key, v.Name))
+		if claim == nil {
+			pv := &types.VolumeClaim{
+				Name:   podVolumeClaimNameCreate(key, v.Name),
+				Volume: name,
+				Path:   vol.Status.Path,
+			}
+
+			envs.Get().GetState().Volumes().SetClaim(pv.Name, pv)
+			pod.Volumes[pv.Name] = pv
+		} else {
+			pod.Volumes[claim.Name] = claim
+		}
+	}
 }
 
 func podVolumeKeyCreate(pod, volume string) string {

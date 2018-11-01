@@ -207,8 +207,6 @@ func containerManifestCreate(ctx context.Context, pod string, spec *types.SpecTe
 
 	for _, v := range spec.Volumes {
 
-		log.Debugf("try to attach volume: %s", v.Name)
-
 		if v.Name == types.EmptyString || v.Path == types.EmptyString {
 			continue
 		}
