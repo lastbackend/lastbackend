@@ -702,7 +702,7 @@ func TestHandleDeploymentStateError(t *testing.T) {
 		s.want.state = getServiceStateCopy(s.args.state)
 		s.want.state.deployment.provision = nil
 		s.want.state.service.Status.State = types.StateReady
-		s.want.state.deployment.list[dp2.SelfLink()].Status.State = types.StateDestroy
+		s.want.state.deployment.list[dp2.SelfLink()].Status.State = types.StateError
 
 		return s
 	}())
@@ -779,7 +779,7 @@ func TestHandleDeploymentStateDegradation(t *testing.T) {
 		s.want.state = getServiceStateCopy(s.args.state)
 		s.want.state.service.Status.State = types.StateReady
 		s.want.state.deployment.provision = nil
-		s.want.state.deployment.list[dp2.SelfLink()].Status.State = types.StateDestroy
+		s.want.state.deployment.list[dp2.SelfLink()].Status.State = types.StateDegradation
 
 		return s
 	}())

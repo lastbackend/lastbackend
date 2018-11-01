@@ -610,7 +610,7 @@ func TestServiceUpdate(t *testing.T) {
 				assert.Equal(t, tc.want.Spec.Network.Ports, s.Spec.Network.Ports, "network ports spec not equal")
 				assert.Equal(t, tc.want.Spec.Strategy.Type, s.Spec.Strategy.Type, "deployment strategy not equal")
 				assert.Equal(t, tc.want.Spec.Selector.Node, s.Spec.Selector.Node, "provision node selectors not equal")
-				assert.Equal(t, tc.want.Spec.Selector.Labels, s.Spec.Selector.Labels, "provision labels selectors not equal")
+				assert.Equal(t, len(tc.want.Spec.Selector.Labels), len(s.Spec.Selector.Labels), "provision labels selectors not equal")
 
 				assert.Equal(t, len(tc.want.Spec.Template.Containers), len(s.Spec.Template.Containers), "container spec count not equal")
 
@@ -907,7 +907,7 @@ func getServiceManifest(name, image string) *request.ServiceManifest {
 	)
 
 	volume.Secret.Binds = append(volume.Secret.Binds, request.ManifestSpecTemplateSecretVolumeBind{
-		Key: "demo",
+		Key:  "demo",
 		File: "test.txt",
 	})
 
