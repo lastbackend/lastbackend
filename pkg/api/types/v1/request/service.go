@@ -158,14 +158,6 @@ func (s *ServiceManifest) SetServiceSpec(svc *types.Service) {
 			svc.Spec.Selector.Updated = time.Now()
 		}
 
-	} else {
-
-		if svc.Spec.Selector.Node != types.EmptyString || len(svc.Spec.Selector.Labels) > 0 {
-			svc.Spec.Selector.Updated = time.Now()
-		}
-
-		svc.Spec.Selector.Node = types.EmptyString
-		svc.Spec.Selector.Labels = make(map[string]string, 0)
 	}
 
 	if s.Spec.Strategy != nil {
