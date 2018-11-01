@@ -261,8 +261,8 @@ func handleDeploymentStateDestroyed(ss *ServiceState, d *types.Deployment) error
 	return nil
 }
 
-func deploymentSpecValidate(d *types.Deployment, spec types.SpecTemplate) bool {
-	return d.Spec.Template.Updated.Equal(spec.Updated)
+func deploymentSpecValidate(d *types.Deployment, svc *types.Service) bool {
+	return d.Spec.Template.Updated.Equal(svc.Spec.Template.Updated) && d.Spec.Selector.Updated.Equal(svc.Spec.Selector.Updated)
 }
 
 // deploymentPodProvision - handles deployment provision logic

@@ -306,12 +306,12 @@ func serviceDeploymentProvision(ss *ServiceState, svc *types.Service) error {
 	switch true {
 
 	// check provision deployment exists and is current for service
-	case ss.deployment.provision != nil && deploymentSpecValidate(ss.deployment.provision, svc.Spec.Template):
+	case ss.deployment.provision != nil && deploymentSpecValidate(ss.deployment.provision, svc):
 		d = ss.deployment.provision
 		break
 
 	// check active deployment exists and is current for service
-	case ss.deployment.active != nil && deploymentSpecValidate(ss.deployment.active, svc.Spec.Template):
+	case ss.deployment.active != nil && deploymentSpecValidate(ss.deployment.active, svc):
 		d = ss.deployment.active
 		break
 	}
@@ -381,7 +381,7 @@ func serviceStatusState(ss *ServiceState) (err error) {
 	if ss.service.Status.State == types.StateProvision || ss.service.Status.State == types.StateCreated {
 
 		if ss.deployment.active != nil {
-			if deploymentSpecValidate(ss.deployment.active, ss.service.Spec.Template) &&
+			if deploymentSpecValidate(ss.deployment.active, ss.service) &&
 				ss.deployment.active.Spec.Replicas == ss.service.Spec.Replicas {
 				ss.service.Status.State = ss.deployment.active.Status.State
 				ss.service.Status.Message = ss.deployment.active.Status.Message
@@ -393,7 +393,7 @@ func serviceStatusState(ss *ServiceState) (err error) {
 		}
 
 		if ss.deployment.provision != nil && ss.deployment.active == nil {
-			if deploymentSpecValidate(ss.deployment.provision, ss.service.Spec.Template) &&
+			if deploymentSpecValidate(ss.deployment.provision, ss.service) &&
 				ss.deployment.provision.Spec.Replicas == ss.service.Spec.Replicas {
 				ss.service.Status.State = ss.deployment.provision.Status.State
 				ss.service.Status.Message = ss.deployment.provision.Status.Message
