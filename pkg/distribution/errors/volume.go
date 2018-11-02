@@ -21,7 +21,6 @@ package errors
 import "errors"
 
 const (
-	volumeAttr                         = "volume"
 	VolumeIsNotReady                   = "volume is not ready"
 	VolumeIsNotProvisioned             = "volume is not provisioned"
 	VolumeNotFound                     = "volume not found"

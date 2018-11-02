@@ -29,7 +29,7 @@ type Key interface {
 	Volume(namespace, name string) string
 	Ingress(name string) string
 	Discovery(name string) string
-	Process(kind, name string, lead bool) string
+	Process(kind, hostname string, pid int, lead bool) string
 	Manifest(name string) string
 	Node(name string) string
 	Route(namespace, name string) string

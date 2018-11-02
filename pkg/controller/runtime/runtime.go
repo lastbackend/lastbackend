@@ -52,6 +52,7 @@ func NewRuntime(ctx context.Context) *Runtime {
 	return r
 }
 
+// Loop - runtime main loop watch
 func (r *Runtime) Loop() {
 
 	var (
@@ -65,6 +66,7 @@ func (r *Runtime) Loop() {
 			select {
 			case <-r.ctx.Done():
 				return
+
 			case l := <-lead:
 				{
 
@@ -74,10 +76,9 @@ func (r *Runtime) Loop() {
 							log.V(logLevel).Debug("Runtime: is already marked as lead -> skip")
 							continue
 						}
-
 						log.V(logLevel).Debug("Runtime: Mark as lead")
-
 						r.active = true
+						r.observer.Loop()
 
 					} else {
 

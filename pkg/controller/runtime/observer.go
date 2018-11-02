@@ -35,14 +35,16 @@ type Observer struct {
 	state *state.State
 }
 
+func (o *Observer) Loop() {
+	o.state.Loop()
+}
+
 func NewObserver(ctx context.Context) *Observer {
 
 	o := new(Observer)
 
 	o.stg = envs.Get().GetStorage()
 	o.state = state.NewState()
-
-	o.state.Loop()
 
 	return o
 }

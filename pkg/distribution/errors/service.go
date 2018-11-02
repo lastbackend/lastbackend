@@ -17,3 +17,20 @@
 //
 
 package errors
+
+import "errors"
+
+const (
+	ServiceIsBindedToRoute = "service is binded to route"
+)
+
+type ServiceError struct {
+}
+
+func (ve *ServiceError) RouteBinded(route string) error {
+	return errors.New(joinNameAndMessage(route, ServiceIsBindedToRoute))
+}
+
+func (e *err) Service() *ServiceError {
+	return new(ServiceError)
+}

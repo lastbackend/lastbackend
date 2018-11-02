@@ -142,6 +142,10 @@ func (p *Proxy) Destroy(ctx context.Context, state *types.EndpointState) error {
 		err error
 	)
 
+	if state == nil {
+		return nil
+	}
+
 	mf := types.EndpointManifest{}
 	mf.EndpointSpec = state.EndpointSpec
 	mf.Upstreams = state.Upstreams

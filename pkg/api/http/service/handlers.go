@@ -475,8 +475,10 @@ func ServiceRemoveH(w http.ResponseWriter, r *http.Request) {
 	log.V(logLevel).Debugf("%s:remove:> remove service `%s` from app `%s`", logPrefix, sid, nid)
 
 	var (
-		nsm = distribution.NewNamespaceModel(r.Context(), envs.Get().GetStorage())
-		sm  = distribution.NewServiceModel(r.Context(), envs.Get().GetStorage())
+		stg = envs.Get().GetStorage()
+		nsm = distribution.NewNamespaceModel(r.Context(), stg)
+		sm  = distribution.NewServiceModel(r.Context(), stg)
+		rm  = distribution.NewRouteModel(r.Context(), stg)
 	)
 
 	ns, err := nsm.Get(nid)
@@ -502,6 +504,24 @@ func ServiceRemoveH(w http.ResponseWriter, r *http.Request) {
 		log.V(logLevel).Warnf("%s:remove:> service name `%s` in namespace `%s` not found", logPrefix, sid, ns.Meta.Name)
 		errors.New("service").NotFound().Http(w)
 		return
+	}
+
+	rl, err := rm.ListByNamespace(nid)
+	if err != nil {
+		log.V(logLevel).Errorf("%s:remove:> get routes list in namespace `%s` err: %s", logPrefix, ns.Meta.Name, err.Error())
+		errors.HTTP.InternalServerError(w)
+		return
+	}
+
+	// check routes attached to routes
+	for _, r := range rl.Items {
+		for _, rule := range r.Spec.Rules {
+			if rule.Service == svc.Meta.Name {
+				log.V(logLevel).Errorf("%s:remove:> service used in route `%s` err: %s", logPrefix, r.Meta.Name, err.Error())
+				errors.HTTP.BadRequest(w, errors.New(r.Meta.Name).Service().RouteBinded(r.Meta.Name).Error())
+				return
+			}
+		}
 	}
 
 	if _, err := sm.Destroy(svc); err != nil {
