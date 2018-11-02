@@ -21,7 +21,6 @@ package system
 import (
 	"context"
 	"encoding/base64"
-	"encoding/json"
 	"fmt"
 	"time"
 
@@ -33,7 +32,7 @@ import (
 )
 
 // HeartBeat Interval
-const heartBeatInterval = 10 // in seconds
+const heartBeatInterval = 5 // in seconds
 const systemLeadTTL = 15
 const logLevel = 7
 
@@ -79,14 +78,12 @@ func (c *Process) Register(ctx context.Context, kind string, stg storage.Storage
 		}
 	}
 
-	go c.HeartBeat(ctx)
-
 	return item, nil
 }
 
 // HeartBeat function - updates current process state
 // and master election ttl option
-func (c *Process) HeartBeat(ctx context.Context) {
+func (c *Process) HeartBeat(ctx context.Context, lead chan bool) {
 
 	log.V(logLevel).Debugf("System: Process: Start HeartBeat for: %s", c.process.Meta.Kind)
 	ticker := time.NewTicker(heartBeatInterval * time.Second)
@@ -98,6 +95,41 @@ func (c *Process) HeartBeat(ctx context.Context) {
 	for range ticker.C {
 		// Update process state
 		log.V(logLevel).Debug("System: Process: Beat")
+
+		l := false
+		opts := storage.GetOpts()
+		opts.Ttl = systemLeadTTL
+		var process types.Process
+
+		err := c.storage.Get(ctx, c.storage.Collection().System(), c.storage.Key().Process(c.process.Meta.Kind, c.process.Meta.Hostname, c.process.Meta.PID, true), &process, nil)
+		if err != nil {
+
+			if errors.Storage().IsErrEntityNotFound(err) {
+
+				err = c.storage.Put(ctx, c.storage.Collection().System(), c.storage.Key().Process(c.process.Meta.Kind, c.process.Meta.Hostname, c.process.Meta.PID, true), c.process, opts)
+				if err != nil && !errors.Storage().IsErrEntityExists(err) {
+					log.V(logLevel).Errorf("System: Process: create process ttl err: %s", err.Error())
+					return
+				}
+
+				l = true
+
+			} else {
+				log.Errorf("System: Process: get lead process: %s", err.Error())
+				return
+			}
+
+		} else {
+			l = process.Meta.Hostname == c.process.Meta.Hostname && process.Meta.PID == c.process.Meta.PID
+		}
+
+		if l {
+			c.process.Meta.Lead = true
+			c.process.Meta.Slave = false
+		} else {
+			c.process.Meta.Lead = false
+			c.process.Meta.Slave = true
+		}
 
 		if err := c.storage.Set(ctx, c.storage.Collection().System(), c.storage.Key().Process(c.process.Meta.Kind, c.process.Meta.Hostname, c.process.Meta.PID, false), c.process, opts); err != nil {
 			log.Errorf("System: Process: Register: %s", err.Error())
@@ -115,113 +147,9 @@ func (c *Process) HeartBeat(ctx context.Context) {
 
 		}
 
-	}
-}
-
-// WaitElected function used for election waiting if
-// master/replicas type of process used
-func (c *Process) WaitElected(ctx context.Context, lead chan bool) error {
-
-	log.V(logLevel).Debug("System: Process: Wait for election")
-
-	l := false
-	opts := storage.GetOpts()
-	opts.Ttl = systemLeadTTL
-	var process types.Process
-
-	if err := c.storage.Get(ctx, c.storage.Collection().System(), c.storage.Key().Process(c.process.Meta.Kind, c.process.Meta.Hostname, c.process.Meta.PID, true), &process, nil); err != nil {
-
-		if errors.Storage().IsErrEntityNotFound(err) {
-			err = c.storage.Put(ctx, c.storage.Collection().System(), c.storage.Key().Process(c.process.Meta.Kind, c.process.Meta.Hostname, c.process.Meta.PID, true), c.process, opts)
-			if err != nil && !errors.Storage().IsErrEntityExists(err) {
-				log.V(logLevel).Errorf("System: Process: create process ttl err: %s", err.Error())
-				return err
-			}
-			l = true
-		} else {
-			log.Errorf("System: Process: get lead process: %s", err.Error())
-			return err
-		}
+		lead <- l
 
 	}
-
-	if l {
-		log.V(logLevel).Debug("System: Process: Set as Lead")
-		c.process.Meta.Lead = true
-		c.process.Meta.Slave = false
-		lead <- true
-	} else {
-		c.process.Meta.Lead = false
-		c.process.Meta.Slave = true
-	}
-
-	done := make(chan bool)
-	watcher := storage.NewWatcher()
-
-	go func() {
-		for {
-			select {
-			case <-ctx.Done():
-				done <- true
-				return
-			case e := <-watcher:
-				if e.Data == nil {
-					continue
-				}
-
-				switch e.Action {
-				case types.EventActionCreate:
-					fallthrough
-				case types.EventActionUpdate:
-					var id string
-					if err := json.Unmarshal(e.Data.([]byte), &id); err != nil {
-						continue
-					}
-
-					if id == c.process.Meta.ID {
-						lead <- true
-					} else {
-						lead <- false
-					}
-				case types.EventActionDelete:
-
-					if err := c.storage.Get(ctx, c.storage.Collection().System(), c.storage.Key().Process(c.process.Meta.Kind, c.process.Meta.Hostname, c.process.Meta.PID, true), &process, nil); err != nil {
-						log.Errorf("System: Process: get lead process: %s", err.Error())
-
-						if errors.Storage().IsErrEntityNotFound(err) {
-
-							err = c.storage.Put(ctx, c.storage.Collection().System(), c.storage.Key().Process(c.process.Meta.Kind, c.process.Meta.Hostname, c.process.Meta.PID, true), c.process, opts)
-							if err != nil && !errors.Storage().IsErrEntityExists(err) {
-								log.V(logLevel).Errorf("System: Process: create process ttl err: %s", err.Error())
-								continue
-							}
-							l = true
-						} else {
-							continue
-						}
-
-					}
-
-				}
-
-			}
-			if l {
-				log.V(logLevel).Debug("System: Process: Set as Lead")
-				c.process.Meta.Lead = true
-				c.process.Meta.Slave = false
-				lead <- true
-			} else {
-				c.process.Meta.Lead = false
-				c.process.Meta.Slave = true
-			}
-		}
-	}()
-
-	if err := c.storage.Watch(ctx, c.storage.Collection().System(), watcher, nil); err != nil {
-		return err
-	}
-
-	return nil
 }
 
 // Encode unique ID from pid and process hostname

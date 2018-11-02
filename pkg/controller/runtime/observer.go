@@ -39,6 +39,10 @@ func (o *Observer) Loop() {
 	o.state.Loop()
 }
 
+func (o *Observer) Stop() {
+	o.state = nil
+}
+
 func NewObserver(ctx context.Context) *Observer {
 
 	o := new(Observer)
