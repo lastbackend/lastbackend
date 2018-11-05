@@ -74,7 +74,7 @@ func (c *CacheIngressManifest) SetEndpointManifest(addr string, s *types.Endpoin
 	c.lock.Lock()
 	defer c.lock.Unlock()
 
-	log.Debugf("set endpoint manifest: %s > %#v", addr, s)
+	log.Debugf("%s set endpoint manifest: %s > %s", logCacheIngress, addr, s.IP)
 
 	for _, n := range c.manifests {
 		if n.Endpoints == nil {

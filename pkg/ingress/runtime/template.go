@@ -57,19 +57,19 @@ defaults
   default-server init-addr none
 
 resolvers lstbknd
-	{{range $endpoint, $port := .Resolvers}}nameserver dns {{$endpoint}}:{{$port}}
-	{{end}}
+  {{range $endpoint, $port := .Resolvers}}nameserver dns {{$endpoint}}:{{$port}}
+  {{end}}
 
 #---------------------------------------------------------------------
 # frontend which proxys stats
 #---------------------------------------------------------------------
-listen stats # Define a listen section called "stats"
-  bind :9000 # Listen on localhost:9000
-  mode http
-  stats enable  # Enable stats page
-  stats hide-version  # Hide HAProxy version
-  stats realm Haproxy\ Statistics  # Title text for popup window
-  stats uri /stats  # Stats URI
+#listen stats # Define a listen section called "stats"
+#  bind :9000 # Listen on localhost:9000
+#  mode http
+#  stats enable  # Enable stats page
+#  stats hide-version  # Hide HAProxy version
+#  stats realm Haproxy\ Statistics  # Title text for popup window
+#  stats uri /stats  # Stats URI
 
 #---------------------------------------------------------------------
 # frontend which proxys raw/ssl request to the backends
@@ -77,22 +77,31 @@ listen stats # Define a listen section called "stats"
 {{range $port, $f := .Frontend}}{{if eq $f.Type "http" }}
 frontend http
   mode http
-  bind :::80 v4v6
+  bind :80 v4v6
   http-send-name-header Host
   http-request set-header Host %[req.hdr(Host)]
-	http-request set-header X-Forwarded-Host %[req.hdr(Host)]
+  http-request set-header X-Forwarded-Host %[req.hdr(Host)]
+
   {{range $domain, $acl := .Rules}}{{range $path, $backend := $acl}}acl r_{{$backend}}  hdr_dom(host) -i {{$domain}}  path_beg {{$path}}
+  {{end}}{{end}}
+  {{range $domain, $acl := .Rules}}{{range $path, $backend := $acl}}acl r_{{$backend}}_down  nbsrv({{$backend}}) lt 1
+  {{end}}{{end}}
+  {{range $domain, $acl := .Rules}}{{range $path, $backend := $acl}}use_backend local_http if r_{{$backend}}_down r_{{$backend}}
   {{end}}{{end}}
   {{range $domain, $acl := .Rules}}{{range $path, $backend := $acl}}use_backend {{$backend}} if r_{{$backend}}
   {{end}}{{end}}
   default_backend local_http
 {{else if eq $f.Type "https" }}
 frontend https
-  bind :::443 v4v6
+  bind :443 v4v6
   option socket-stats
   tcp-request inspect-delay 5s
   tcp-request content accept if { req_ssl_hello_type 1 }
   {{range $domain, $acl := .Rules}}{{range $path, $backend := $acl}}acl r_{{$backend}}  hdr_dom(host) -i {{$domain}}  path_beg {{$path}}
+  {{end}}{{end}}
+	{{range $domain, $acl := .Rules}}{{range $path, $backend := $acl}}acl r_{{$backend}}_down  nbsrv({{$backend}}) lt 1
+  {{end}}{{end}}
+  {{range $domain, $acl := .Rules}}{{range $path, $backend := $acl}}use_backend local_http if r_{{$backend}}_down r_{{$backend}}
   {{end}}{{end}}
   {{range $domain, $acl := .Rules}}{{range $path, $backend := $acl}}use_backend {{$backend}} if r_{{$backend}}
   {{end}}{{end}}

@@ -113,6 +113,10 @@ func (sv *Service) ToSpec(obj types.ServiceSpec) ServiceSpec {
 			Entrypoint: strings.Join(s.Exec.Entrypoint, " "),
 		}
 
+		for _, p := range s.Ports {
+			c.Ports = append(c.Ports, string(p.ContainerPort))
+		}
+
 		for _, env := range s.EnvVars {
 			c.Env = append(c.Env, ManifestSpecTemplateContainerEnv{
 				Name:  env.Name,
@@ -243,6 +247,7 @@ func (sv Service) ToRequestManifest() *request.ServiceManifest {
 
 	sm.Spec.Template = new(request.ManifestSpecTemplate)
 	sm.Spec.Template.Volumes = make([]request.ManifestSpecTemplateVolume, 0)
+
 	if sv.Spec.Template.Volumes != nil {
 		for _, v := range sm.Spec.Template.Volumes {
 
@@ -276,16 +281,12 @@ func (sv Service) ToRequestManifest() *request.ServiceManifest {
 				Command:    v.Command,
 				Workdir:    v.Workdir,
 				Entrypoint: v.Entrypoint,
+				Ports:      v.Ports,
 			}
 
 			data.Args = v.Args
 			if data.Args == nil {
 				data.Args = make([]string, 0)
-			}
-
-			data.Ports = v.Ports
-			if data.Ports == nil {
-				data.Ports = make([]string, 0)
 			}
 
 			data.Env = make([]request.ManifestSpecTemplateContainerEnv, 0)

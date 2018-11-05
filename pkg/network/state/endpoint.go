@@ -50,7 +50,7 @@ func (es *EndpointState) SetEndpoints(endpoints map[string]*types.EndpointState)
 	defer es.lock.Unlock()
 
 	for key, endpoint := range endpoints {
-		log.V(logLevel).Debugf("%s: add endpoint %s: %#v", logEndpointPrefix, key, endpoint)
+		log.V(logLevel).Debugf("%s: add endpoint %s", logEndpointPrefix, key)
 		es.endpoints[key] = endpoint
 	}
 }
@@ -69,14 +69,14 @@ func (es *EndpointState) GetEndpoint(key string) *types.EndpointState {
 }
 
 func (es *EndpointState) AddEndpoint(key string, endpoint *types.EndpointState) {
-	log.V(logLevel).Debugf("%s: add endpoint %s: %#v", logEndpointPrefix, key, endpoint)
+	log.V(logLevel).Debugf("%s: add endpoint %s", logEndpointPrefix, key)
 	es.lock.Lock()
 	defer es.lock.Unlock()
 	es.endpoints[key] = endpoint
 }
 
 func (es *EndpointState) SetEndpoint(key string, endpoint *types.EndpointState) {
-	log.V(logLevel).Debugf("%s: set endpoint %s: %#v", logEndpointPrefix, key, endpoint)
+	log.V(logLevel).Debugf("%s: set endpoint %s", logEndpointPrefix, key)
 	es.lock.Lock()
 	defer es.lock.Unlock()
 	es.endpoints[key] = endpoint

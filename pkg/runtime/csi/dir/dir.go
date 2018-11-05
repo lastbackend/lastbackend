@@ -181,7 +181,15 @@ func (s *Storage) FilesDel(ctx context.Context, state *types.VolumeState, files 
 }
 
 func (s *Storage) Remove(ctx context.Context, state *types.VolumeState) error {
-	return os.Remove(filepath.Join(state.Path))
+
+	if err := os.Remove(filepath.Join(state.Path)); err != nil {
+		if os.IsNotExist(err) {
+			return nil
+		}
+		return err
+	}
+
+	return nil
 }
 
 func Get() (*Storage, error) {

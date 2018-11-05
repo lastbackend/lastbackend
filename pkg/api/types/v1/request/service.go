@@ -131,10 +131,31 @@ func (s *ServiceManifest) SetServiceSpec(svc *types.Service) {
 
 	if s.Spec.Selector != nil {
 
-		svc.Spec.Selector.Node = s.Spec.Selector.Node
+		if svc.Spec.Selector.Node != s.Spec.Selector.Node {
+			svc.Spec.Selector.Node = s.Spec.Selector.Node
+			svc.Spec.Selector.Updated = time.Now()
+		}
 
-		if s.Spec.Selector.Labels != nil {
+		if len(svc.Spec.Selector.Labels) != len(s.Spec.Selector.Labels) {
+			svc.Spec.Selector.Updated = time.Now()
+		}
+
+		var eq = true
+		for k, v := range s.Spec.Selector.Labels {
+			if _, ok := svc.Spec.Selector.Labels[k]; !ok {
+				eq = false
+				break
+			}
+
+			if svc.Spec.Selector.Labels[k] != v {
+				eq = false
+				break
+			}
+		}
+
+		if !eq {
 			svc.Spec.Selector.Labels = s.Spec.Selector.Labels
+			svc.Spec.Selector.Updated = time.Now()
 		}
 
 	}
@@ -239,6 +260,7 @@ func (s *ServiceManifest) SetServiceSpec(svc *types.Service) {
 							Key:  ce.Config.Key,
 						},
 					})
+					svc.Spec.Template.Updated = time.Now()
 				}
 			}
 
@@ -390,7 +412,7 @@ func (s *ServiceManifest) SetServiceSpec(svc *types.Service) {
 				spec.Secret.Binds = make([]types.SpecTemplateSecretVolumeBind, 0)
 				for _, v := range v.Secret.Binds {
 					spec.Secret.Binds = append(spec.Secret.Binds, types.SpecTemplateSecretVolumeBind{
-						Key: v.Key,
+						Key:  v.Key,
 						File: v.File,
 					})
 				}
@@ -425,7 +447,7 @@ func (s *ServiceManifest) SetServiceSpec(svc *types.Service) {
 				spec.Config.Binds = make([]types.SpecTemplateConfigVolumeBind, 0)
 				for _, v := range v.Config.Binds {
 					spec.Config.Binds = append(spec.Config.Binds, types.SpecTemplateConfigVolumeBind{
-						Key: v.Key,
+						Key:  v.Key,
 						File: v.File,
 					})
 				}

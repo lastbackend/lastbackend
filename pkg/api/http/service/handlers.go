@@ -23,6 +23,7 @@ import (
 	"fmt"
 	"net/http"
 	"strings"
+	"time"
 
 	"github.com/lastbackend/lastbackend/pkg/api/envs"
 	"github.com/lastbackend/lastbackend/pkg/api/types/v1"
@@ -256,8 +257,10 @@ func ServiceCreateH(w http.ResponseWriter, r *http.Request) {
 	log.V(logLevel).Debugf("%s:create:> create service in namespace `%s`", logPrefix, nid)
 
 	var (
-		nm   = distribution.NewNamespaceModel(r.Context(), envs.Get().GetStorage())
-		sm   = distribution.NewServiceModel(r.Context(), envs.Get().GetStorage())
+		stg = envs.Get().GetStorage()
+		nm  = distribution.NewNamespaceModel(r.Context(), stg)
+		sm  = distribution.NewServiceModel(r.Context(), stg)
+
 		opts = v1.Request().Service().Manifest()
 	)
 
@@ -303,6 +306,11 @@ func ServiceCreateH(w http.ResponseWriter, r *http.Request) {
 	svc.Meta.Endpoint = fmt.Sprintf("%s.%s", strings.ToLower(svc.Meta.Name), ns.Meta.Endpoint)
 
 	opts.SetServiceSpec(svc)
+
+	if err := checkServiceVolumes(r.Context(), svc); err != nil {
+		log.V(logLevel).Errorf("%s:create:> create service err: %s", logPrefix, err.Error())
+		errors.HTTP.BadParameter(w, "volume templates")
+	}
 
 	srv, err := sm.Create(ns, svc)
 	if err != nil {
@@ -407,6 +415,11 @@ func ServiceUpdateH(w http.ResponseWriter, r *http.Request) {
 	svc.Meta.Endpoint = fmt.Sprintf("%s.%s", strings.ToLower(svc.Meta.Name), ns.Meta.Endpoint)
 	opts.SetServiceSpec(svc)
 
+	if err := checkServiceVolumes(r.Context(), svc); err != nil {
+		log.V(logLevel).Errorf("%s:create:> create service err: %s", logPrefix, err.Error())
+		errors.HTTP.BadParameter(w, "volume templates")
+	}
+
 	srv, err := sm.Update(svc)
 	if err != nil {
 		log.V(logLevel).Errorf("%s:update:> update service err: %s", logPrefix, err.Error())
@@ -462,8 +475,10 @@ func ServiceRemoveH(w http.ResponseWriter, r *http.Request) {
 	log.V(logLevel).Debugf("%s:remove:> remove service `%s` from app `%s`", logPrefix, sid, nid)
 
 	var (
-		nsm = distribution.NewNamespaceModel(r.Context(), envs.Get().GetStorage())
-		sm  = distribution.NewServiceModel(r.Context(), envs.Get().GetStorage())
+		stg = envs.Get().GetStorage()
+		nsm = distribution.NewNamespaceModel(r.Context(), stg)
+		sm  = distribution.NewServiceModel(r.Context(), stg)
+		rm  = distribution.NewRouteModel(r.Context(), stg)
 	)
 
 	ns, err := nsm.Get(nid)
@@ -489,6 +504,24 @@ func ServiceRemoveH(w http.ResponseWriter, r *http.Request) {
 		log.V(logLevel).Warnf("%s:remove:> service name `%s` in namespace `%s` not found", logPrefix, sid, ns.Meta.Name)
 		errors.New("service").NotFound().Http(w)
 		return
+	}
+
+	rl, err := rm.ListByNamespace(nid)
+	if err != nil {
+		log.V(logLevel).Errorf("%s:remove:> get routes list in namespace `%s` err: %s", logPrefix, ns.Meta.Name, err.Error())
+		errors.HTTP.InternalServerError(w)
+		return
+	}
+
+	// check routes attached to routes
+	for _, r := range rl.Items {
+		for _, rule := range r.Spec.Rules {
+			if rule.Service == svc.Meta.Name {
+				log.V(logLevel).Errorf("%s:remove:> service used in route `%s` err: %s", logPrefix, r.Meta.Name, err.Error())
+				errors.HTTP.BadRequest(w, errors.New(r.Meta.Name).Service().RouteBinded(r.Meta.Name).Error())
+				return
+			}
+		}
 	}
 
 	if _, err := sm.Destroy(svc); err != nil {
@@ -694,4 +727,85 @@ func ServiceLogsH(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
+}
+
+func checkServiceVolumes(ctx context.Context, svc *types.Service) error {
+
+	var (
+		stg = envs.Get().GetStorage()
+		vm  = distribution.NewVolumeModel(ctx, stg)
+	)
+
+	var vc = make(map[string]string, 0)
+
+	for _, v := range svc.Spec.Template.Volumes {
+		if v.Volume.Name != types.EmptyString {
+			vc[v.Volume.Name] = v.Name
+		}
+	}
+
+	if len(vc) > 0 {
+
+		var node string
+
+		vl, err := vm.ListByNamespace(svc.Meta.Namespace)
+		if err != nil {
+			log.V(logLevel).Errorf("%s:create:> create service, volume list err: %s", logPrefix, err.Error())
+			return err
+		}
+
+		for name := range vc {
+
+			var f = false
+
+			for _, v := range vl.Items {
+
+				if v.Meta.Name != name {
+					continue
+				}
+
+				f = true
+
+				if v.Status.State != types.StateReady {
+					log.V(logLevel).Errorf("%s:create:> create service err: volume is not ready yet: %s", logPrefix, v.Meta.Name)
+					return errors.New(v.Meta.Name).Volume().NotReady(v.Meta.Name)
+				}
+
+				if v.Meta.Node == types.EmptyString {
+					log.V(logLevel).Errorf("%s:create:> create service err: volume is not provisioned yet: %s", logPrefix, v.Meta.Name)
+					return errors.New(v.Meta.Name).Volume().NotProvisioned(v.Meta.Name)
+				}
+
+				if node == types.EmptyString {
+					node = v.Meta.Node
+				} else {
+					if node != v.Meta.Node {
+						return errors.New(v.Meta.Name).Volume().DifferentNodes()
+					}
+				}
+			}
+
+			if !f {
+				log.V(logLevel).Errorf("%s:create:> create service err: volume is not found: %s", logPrefix, name)
+				return errors.New(name).Volume().NotFound(name)
+			}
+		}
+
+		if node != types.EmptyString {
+
+			if svc.Spec.Selector.Node != types.EmptyString {
+				if svc.Spec.Selector.Node != node {
+					return errors.New("spec.selector.node not matched with provisioned volumes")
+				}
+
+				return nil
+			}
+
+			svc.Spec.Selector.Node = node
+			svc.Spec.Selector.Updated = time.Now()
+		}
+
+	}
+
+	return nil
 }

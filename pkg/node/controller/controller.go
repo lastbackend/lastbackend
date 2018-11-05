@@ -28,6 +28,7 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/node/runtime"
 	"github.com/spf13/viper"
 	"io/ioutil"
+	"strings"
 	"sync"
 	"time"
 )
@@ -103,13 +104,11 @@ func (c *Controller) Connect(ctx context.Context) error {
 		}
 		time.Sleep(3 * time.Second)
 	}
-
-	return nil
 }
 
 func (c *Controller) Sync(ctx context.Context) error {
 
-	log.Debugf("Start node sync")
+	log.Debugf("%s start node sync", logPrefix)
 
 	ticker := time.NewTicker(time.Second * 5)
 
@@ -147,32 +146,31 @@ func (c *Controller) Sync(ctx context.Context) error {
 				break
 			}
 
-			if status == nil {
-				continue
-			}
-
-			if !envs.Get().GetState().Volumes().IsLocal(v) {
-				opts.Volumes[v] = getVolumeOptions(status)
+			if !envs.Get().GetState().Volumes().IsLocal(v) && status != nil {
+				selflink := strings.Replace(v, "_", ":", -1)
+				opts.Volumes[selflink] = getVolumeOptions(status)
 			} else {
 				delete(c.cache.volumes, v)
 			}
 		}
 
 		for v := range opts.Volumes {
-			delete(c.cache.volumes, v)
+			delete(c.cache.volumes, strings.Replace(v, ":", "_", -1))
 		}
 
 		c.cache.lock.Unlock()
 
 		spec, err := envs.Get().GetNodeClient().SetStatus(ctx, opts)
 		if err != nil {
-			log.Errorf("node:exporter:dispatch err: %s", err.Error())
+			log.Errorf("%s node:exporter:dispatch err: %s", logPrefix, err.Error())
 		}
 
 		if spec != nil {
-			c.runtime.Sync(ctx, spec.Decode())
+			if err := c.runtime.Sync(ctx, spec.Decode()); err != nil {
+				log.Errorf("%s runtime sync err: %s", logPrefix, err.Error())
+			}
 		} else {
-			log.Debug("received spec is nil, skip apply changes")
+			log.Debugf("%s received spec is nil, skip apply changes", logPrefix)
 		}
 	}
 
@@ -187,18 +185,18 @@ func (c *Controller) Subscribe() {
 	)
 
 	go func() {
-		log.Debug("subscribe state")
+		log.Debugf("%s subscribe state", logPrefix)
 
 		for {
 			select {
 			case p := <-pods:
-				log.Debugf("pod changed: %s", p)
+				log.Debugf("%s pod changed: %s", logPrefix, p)
 				c.cache.lock.Lock()
 				c.cache.pods[p] = envs.Get().GetState().Pods().GetPod(p)
 				c.cache.lock.Unlock()
 				break
 			case v := <-volumes:
-				log.Debugf("volume changed: %s", v)
+				log.Debugf("%s volume changed: %s", logPrefix, v)
 				c.cache.lock.Lock()
 				c.cache.volumes[v] = envs.Get().GetState().Volumes().GetVolume(v)
 				c.cache.lock.Unlock()

@@ -90,8 +90,8 @@ type ManifestSpecTemplateContainerVolume struct {
 }
 
 type ManifestSpecTemplateRestartPolicy struct {
-	Policy  string `json:"policy" yaml:"policy"`
-	Attempt int    `json:"attempt" yaml:"attempt"`
+	Policy  string `json:"policy,omitempty" yaml:"policy,omitempty"`
+	Attempt int    `json:"attempt,omitempty" yaml:"attempt,omitempty"`
 }
 
 type ManifestSpecTemplateContainerResource struct {

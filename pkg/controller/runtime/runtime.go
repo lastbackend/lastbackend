@@ -52,6 +52,7 @@ func NewRuntime(ctx context.Context) *Runtime {
 	return r
 }
 
+// Loop - runtime main loop watch
 func (r *Runtime) Loop() {
 
 	var (
@@ -65,19 +66,19 @@ func (r *Runtime) Loop() {
 			select {
 			case <-r.ctx.Done():
 				return
+
 			case l := <-lead:
 				{
 
 					if l {
-
 						if r.active {
 							log.V(logLevel).Debug("Runtime: is already marked as lead -> skip")
 							continue
 						}
 
 						log.V(logLevel).Debug("Runtime: Mark as lead")
-
 						r.active = true
+						r.observer.Loop()
 
 					} else {
 
@@ -87,8 +88,8 @@ func (r *Runtime) Loop() {
 						}
 
 						log.V(logLevel).Debug("Runtime: Mark as slave")
-
 						r.active = false
+						r.observer.Stop()
 					}
 
 				}
@@ -96,8 +97,5 @@ func (r *Runtime) Loop() {
 		}
 	}()
 
-	if err := r.process.WaitElected(r.ctx, lead); err != nil {
-		log.Errorf("Runtime: Elect Wait error: %s", err.Error())
-	}
-
+	go r.process.HeartBeat(r.ctx, lead)
 }

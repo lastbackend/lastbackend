@@ -62,7 +62,7 @@ func (n *NetworkState) GetSubnet(cidr string) *types.NetworkState {
 }
 
 func (n *NetworkState) DelSubnet(cidr string) {
-	log.V(logLevel).Debugf("Stage: NetworkState: del subnet: %v", cidr)
+	log.V(logLevel).Debugf("Stage: NetworkState: del subnet: %s", cidr)
 	n.lock.Lock()
 	defer n.lock.Unlock()
 	if _, ok := n.subnets[cidr]; ok {

@@ -1,7 +1,14 @@
-#!/usr/bin/env bash
+#!/bin/bash
 
-docker build -t lastbackend/lastbackend -f ./images/lastbackend/Dockerfile .
+declare -a arr=("lastbackend" "ingress" "discovery")
 
-docker build -t lastbackend/ingress -f ./images/ingress/Dockerfile .
+if [[ $1 != "" ]]; then
+  arr=($1)
+fi
 
-docker build -t lastbackend/discovery -f ./images/discovery/Dockerfile .
+## now loop through the components array
+for i in "${arr[@]}"
+do
+ echo "Build '$i' version '$VERSION' for os '$OSTYPE'"
+ docker build -t "index.lstbknd.net/lastbackend/$i" -f "./images/&i/Dockerfile" .
+done

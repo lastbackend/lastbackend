@@ -16,39 +16,21 @@
 // from Last.Backend LLC.
 //
 
-package runtime
+package errors
 
-import (
-	"github.com/lastbackend/lastbackend/pkg/controller/envs"
-	"github.com/lastbackend/lastbackend/pkg/controller/state"
-	"github.com/lastbackend/lastbackend/pkg/storage"
-	"golang.org/x/net/context"
-)
+import "errors"
 
 const (
-	logPrefix = "controller:runtime:observer"
+	ServiceIsBindedToRoute = "service is binded to route"
 )
 
-type Observer struct {
-	rev   *int64
-	stg   storage.Storage
-	state *state.State
+type ServiceError struct {
 }
 
-func (o *Observer) Loop() {
-	o.state.Loop()
+func (ve *ServiceError) RouteBinded(route string) error {
+	return errors.New(joinNameAndMessage(route, ServiceIsBindedToRoute))
 }
 
-func (o *Observer) Stop() {
-	o.state = nil
-}
-
-func NewObserver(ctx context.Context) *Observer {
-
-	o := new(Observer)
-
-	o.stg = envs.Get().GetStorage()
-	o.state = state.NewState()
-
-	return o
+func (e *err) Service() *ServiceError {
+	return new(ServiceError)
 }

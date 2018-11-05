@@ -64,11 +64,11 @@ func (Key) Discovery(name string) string {
 	return fmt.Sprintf("%s", name)
 }
 
-func (Key) Process(kind, name string, lead bool) string {
+func (Key) Process(kind, hostname string, pid int, lead bool) string {
 	if lead {
-		return fmt.Sprintf("%s:%s:lead", kind, name)
+		return fmt.Sprintf("%s/lead", kind)
 	}
-	return fmt.Sprintf("%s:%s", kind, name)
+	return fmt.Sprintf("%s:%s:%d", kind, hostname, pid)
 }
 
 func (Key) Manifest(name string) string {

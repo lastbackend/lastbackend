@@ -35,14 +35,13 @@ const (
 
 // ClusterState is cluster current state struct
 type ClusterState struct {
-
 	cluster *types.Cluster
 	ingress struct {
 		list map[string]*types.Ingress
 	}
 	volume struct {
 		observer chan *types.Volume
-		list map[string]*types.Volume
+		list     map[string]*types.Volume
 	}
 	node struct {
 		observer chan *types.Node
@@ -67,7 +66,7 @@ func (cs *ClusterState) Observe() {
 			log.V(7).Debugf("node: %s", n.Meta.Name)
 			cs.node.list[n.SelfLink()] = n
 			break
-		case v := <- cs.volume.observer:
+		case v := <-cs.volume.observer:
 			log.V(7).Debugf("volume: %s", v.SelfLink())
 			if err := volumeObserve(cs, v); err != nil {
 				log.Errorf("%s", err.Error())
@@ -173,7 +172,6 @@ func (cs *ClusterState) leaseSync(opts NodeLeaseOptions) (*types.Node, error) {
 		return nil, err
 	}
 
-
 	return req.Response.Node, req.Response.Err
 }
 
@@ -192,12 +190,10 @@ func (cs *ClusterState) releaseSync(opts NodeLeaseOptions) (*types.Node, error) 
 	return req.Response.Node, req.Response.Err
 }
 
-
 // IPAM management
 func (cs *ClusterState) IPAM() ipam.IPAM {
 	return envs.Get().GetIPAM()
 }
-
 
 func (cs *ClusterState) SetNode(n *types.Node) {
 	cs.node.observer <- n
@@ -207,7 +203,6 @@ func (cs *ClusterState) DelNode(n *types.Node) {
 	delete(cs.node.list, n.Meta.SelfLink)
 }
 
-
 func (cs *ClusterState) SetVolume(v *types.Volume) {
 	cs.volume.observer <- v
 }
@@ -215,7 +210,6 @@ func (cs *ClusterState) SetVolume(v *types.Volume) {
 func (cs *ClusterState) DelVolume(v *types.Volume) {
 	delete(cs.volume.list, v.Meta.SelfLink)
 }
-
 
 func (cs *ClusterState) PodLease(p *types.Pod) (*types.Node, error) {
 
@@ -226,7 +220,8 @@ func (cs *ClusterState) PodLease(p *types.Pod) (*types.Node, error) {
 	}
 
 	opts := NodeLeaseOptions{
-		Memory: &RAM,
+		Selector: p.Spec.Selector,
+		Memory:   &RAM,
 	}
 
 	node, err := cs.lease(opts)
@@ -262,9 +257,9 @@ func (cs *ClusterState) PodRelease(p *types.Pod) (*types.Node, error) {
 func (cs *ClusterState) VolumeLease(v *types.Volume) (*types.Node, error) {
 
 	opts := NodeLeaseOptions{
-		Node: &v.Spec.Selector.Node,
-		Selector: v.Spec.Selector.Labels,
-		Storage: &v.Spec.Capacity.Storage,
+		Node:     &v.Spec.Selector.Node,
+		Selector: v.Spec.Selector,
+		Storage:  &v.Spec.Capacity.Storage,
 	}
 
 	node, err := cs.leaseSync(opts)
@@ -279,7 +274,7 @@ func (cs *ClusterState) VolumeLease(v *types.Volume) (*types.Node, error) {
 func (cs *ClusterState) VolumeRelease(v *types.Volume) (*types.Node, error) {
 
 	opts := NodeLeaseOptions{
-		Node:   &v.Meta.Node,
+		Node:    &v.Meta.Node,
 		Storage: &v.Spec.Capacity.Storage,
 	}
 
@@ -299,7 +294,7 @@ func NewClusterState() *ClusterState {
 
 	cs.ingress.list = make(map[string]*types.Ingress)
 
-	cs.volume.list  = make(map[string]*types.Volume)
+	cs.volume.list = make(map[string]*types.Volume)
 	cs.volume.observer = make(chan *types.Volume)
 
 	cs.node.observer = make(chan *types.Node)

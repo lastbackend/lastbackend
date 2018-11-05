@@ -24,41 +24,43 @@ import (
 	"sync"
 )
 
+const logSecretPrefix = "state:secret:>"
+
 type SecretsState struct {
 	lock    sync.RWMutex
 	secrets map[string]types.Secret
 }
 
 func (s *SecretsState) GetSecrets() map[string]types.Secret {
-	log.V(logLevel).Debug("Cache: SecretCache: get pods")
+	log.V(logLevel).Debugf("%s get pods", logSecretPrefix)
 	return s.secrets
 }
 
 func (s *SecretsState) SetSecrets(secrets map[string]*types.Secret) {
-	log.V(logLevel).Debugf("Cache: SecretCache: set secrets: %#v", secrets)
+	log.V(logLevel).Debugf("%s set secrets: %d", logSecretPrefix, len(secrets))
 	for h, secret := range secrets {
 		s.secrets[h] = *secret
 	}
 }
 
-func (s *SecretsState) GetSecret(hash string) *types.Secret {
-	log.V(logLevel).Debugf("Cache: SecretCache: get secret: %s", hash)
+func (s *SecretsState) GetSecret(name string) *types.Secret {
+	log.V(logLevel).Debugf("%s get secret: %s", logSecretPrefix, name)
 	s.lock.Lock()
 	defer s.lock.Unlock()
-	pod, ok := s.secrets[hash]
+	pod, ok := s.secrets[name]
 	if !ok {
 		return nil
 	}
 	return &pod
 }
 
-func (s *SecretsState) AddSecret(hash string, secret *types.Secret) {
-	log.V(logLevel).Debugf("Cache: SecretCache: add secret: %#v", secret)
-	s.SetSecret(hash, secret)
+func (s *SecretsState) AddSecret(name string, secret *types.Secret) {
+	log.V(logLevel).Debugf("%s add secret: %s", logSecretPrefix, name)
+	s.SetSecret(name, secret)
 }
 
-func (s *SecretsState) SetSecret(hash string, secret *types.Secret) {
-	log.V(logLevel).Debugf("Cache: SecretCache: set secret: %#v", secret)
+func (s *SecretsState) SetSecret(name string, secret *types.Secret) {
+	log.V(logLevel).Debugf("%s set secret: %s", logSecretPrefix, name)
 	s.lock.Lock()
 	defer s.lock.Unlock()
 
@@ -69,11 +71,11 @@ func (s *SecretsState) SetSecret(hash string, secret *types.Secret) {
 	s.secrets[secret.GetHash()] = *secret
 }
 
-func (s *SecretsState) DelSecret(hash string) {
-	log.V(logLevel).Debugf("Cache: SecretCache: del secret: %s", hash)
+func (s *SecretsState) DelSecret(name string) {
+	log.V(logLevel).Debugf("%s del secret: %s", logSecretPrefix, name)
 	s.lock.Lock()
 	defer s.lock.Unlock()
-	if _, ok := s.secrets[hash]; ok {
-		delete(s.secrets, hash)
+	if _, ok := s.secrets[name]; ok {
+		delete(s.secrets, name)
 	}
 }

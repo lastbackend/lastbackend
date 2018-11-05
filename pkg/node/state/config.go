@@ -24,25 +24,27 @@ import (
 	"sync"
 )
 
+const logConfigPrefix = "state:config:>"
+
 type ConfigState struct {
 	lock    sync.RWMutex
 	configs map[string]*types.ConfigManifest
 }
 
 func (s *ConfigState) GetConfigs() map[string]*types.ConfigManifest {
-	log.V(logLevel).Debug("Cache: ConfigCache: get pods")
+	log.V(logLevel).Debugf("%s get pods", logConfigPrefix)
 	return s.configs
 }
 
 func (s *ConfigState) SetConfigs(configs map[string]*types.ConfigManifest) {
-	log.V(logLevel).Debugf("Cache: ConfigCache: set configs: %#v", configs)
+	log.V(logLevel).Debugf("%s set configs: %d", logConfigPrefix, len(configs))
 	for h, config := range configs {
 		s.configs[h] = config
 	}
 }
 
 func (s *ConfigState) GetConfig(name string) *types.ConfigManifest {
-	log.V(logLevel).Debugf("Cache: ConfigCache: get config: %s", name)
+	log.V(logLevel).Debugf("%s get config: %s", logConfigPrefix, name)
 	s.lock.Lock()
 	defer s.lock.Unlock()
 	cfg, ok := s.configs[name]
@@ -53,12 +55,12 @@ func (s *ConfigState) GetConfig(name string) *types.ConfigManifest {
 }
 
 func (s *ConfigState) AddConfig(name string, config *types.ConfigManifest) {
-	log.V(logLevel).Debugf("Cache: ConfigCache: add config: %#v", config)
+	log.V(logLevel).Debugf("%s add config: %s", logConfigPrefix, name)
 	s.SetConfig(name, config)
 }
 
 func (s *ConfigState) SetConfig(name string, config *types.ConfigManifest) {
-	log.V(logLevel).Debugf("Cache: ConfigCache: set config: %#v", config)
+	log.V(logLevel).Debugf("%s set config: %s", logConfigPrefix, name)
 	s.lock.Lock()
 	defer s.lock.Unlock()
 
@@ -70,7 +72,7 @@ func (s *ConfigState) SetConfig(name string, config *types.ConfigManifest) {
 }
 
 func (s *ConfigState) DelConfig(name string) {
-	log.V(logLevel).Debugf("Cache: ConfigCache: del config: %s", name)
+	log.V(logLevel).Debugf("%s del config: %s", logConfigPrefix, name)
 	s.lock.Lock()
 	defer s.lock.Unlock()
 	if _, ok := s.configs[name]; ok {
