@@ -339,7 +339,7 @@ func routeManifestSet(route *types.Route) error {
 	}
 
 	// Update manifest
-	if mf == nil && (route.Status.State != types.StateDestroy || route.Status.State != types.StateDestroyed) {
+	if mf == nil && (route.Status.State != types.StateDestroy && route.Status.State != types.StateDestroyed) {
 		log.V(logLevel).Debugf("%s: create route manifest for ingress: %s", logPrefixRoute, route.SelfLink())
 		mf = new(types.RouteManifest)
 		mf.Set(route)
