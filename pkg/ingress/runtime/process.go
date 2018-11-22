@@ -114,9 +114,10 @@ func (hp *Process) reload() error {
 
 	log.Debug("reload haproxy process")
 	var ports = make(map[int]bool, 0)
-	routes := envs.Get().GetState().Routes().GetRoutes()
+	routes := envs.Get().GetState().Routes().GetRouteManifests()
 
 	for _, r := range routes {
+
 		for _, rule := range r.Rules {
 			if _, ok := ports[rule.Port]; !ok {
 				ports[rule.Port] = true

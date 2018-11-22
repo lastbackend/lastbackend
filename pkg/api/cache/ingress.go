@@ -49,7 +49,7 @@ func (c *CacheIngressManifest) SetSubnetManifest(cidr string, s *types.SubnetMan
 	}
 }
 
-func (c *CacheIngressManifest) SetRouteManifest(name string, s *types.RouteManifest) {
+func (c *CacheIngressManifest) SetRouteManifest(ingress, name string, s *types.RouteManifest) {
 	c.lock.Lock()
 	defer c.lock.Unlock()
 	log.Debugf("set route manifest %s", name)
@@ -60,13 +60,22 @@ func (c *CacheIngressManifest) SetRouteManifest(name string, s *types.RouteManif
 		c.routes[name] = s
 	}
 
-	for _, i := range c.ingress {
-		if _, ok := c.manifests[i.SelfLink()]; ok {
-			if _, ok := c.manifests[i.SelfLink()].Routes[name]; !ok {
-				c.manifests[i.SelfLink()].Routes = make(map[string]*types.RouteManifest, 0)
-			}
-			c.manifests[i.SelfLink()].Routes[name] = s
+	if _, ok := c.manifests[ingress]; ok {
+		if _, ok := c.manifests[ingress].Routes[name]; !ok {
+			c.manifests[ingress].Routes = make(map[string]*types.RouteManifest, 0)
 		}
+		c.manifests[ingress].Routes[name] = s
+	}
+
+}
+
+func (c *CacheIngressManifest) DelRouteManifest(ingress, name string) {
+	c.lock.Lock()
+	defer c.lock.Unlock()
+	log.Debugf("del route manifest %s", name)
+	delete(c.routes, name)
+	if _, ok := c.manifests[ingress]; ok {
+		delete(c.manifests[ingress].Routes, name)
 	}
 }
 

@@ -29,8 +29,8 @@ import (
 type Route struct {
 	Runtime
 	Meta   RouteMeta   `json:"meta" yaml:"meta"`
-	Spec   RouteSpec   `json:"spec" yaml:"spec"`
 	Status RouteStatus `json:"status" yaml:"status"`
+	Spec   RouteSpec   `json:"spec" yaml:"spec"`
 }
 
 // swagger:ignore
@@ -50,16 +50,22 @@ type RouteList struct {
 type RouteMeta struct {
 	Meta      `yaml:",inline"`
 	Namespace string `json:"namespace" yaml:"namespace"`
-	Security  bool   `json:"security" yaml:"security"`
+	Ingress   string `json:"ingress" yaml:"ingress"`
 }
 
 // swagger:model types_route_spec
 type RouteSpec struct {
-	Security bool        `json:"security" yaml:"security"`
-	Domain   string      `json:"domain" yaml:"domain"`
-	Port     uint16      `json:"port" yaml:"port"`
-	Rules    []RouteRule `json:"rules" yaml:"rules"`
-	Updated  time.Time   `json:"updated"`
+	Selector RouteSelector `json:"selector" yaml:"selector"`
+	State    string        `json:"state" yaml:"state"`
+	Domain   string        `json:"domain" yaml:"domain"`
+	Port     uint16        `json:"port" yaml:"port"`
+	Rules    []RouteRule   `json:"rules" yaml:"rules"`
+	Updated  time.Time     `json:"updated"`
+}
+
+type RouteSelector struct {
+	Ingress string            `json:"ingress" yaml:"ingress"`
+	Label   map[string]string `json:"label" yaml:"label"`
 }
 
 // swagger:ignore
@@ -108,6 +114,7 @@ type RouteManifestMap struct {
 }
 
 func (r *RouteManifest) Set(route *Route) {
+	r.State = route.Spec.State
 	r.Domain = route.Spec.Domain
 	r.Rules = route.Spec.Rules
 	r.Port = route.Spec.Port

@@ -102,6 +102,7 @@ func Daemon() bool {
 			log.Errorf("ingress:initialize: connect err %s", err.Error())
 		}
 
+		go ctl.Subscribe()
 		go ctl.Sync(context.Background())
 	}
 

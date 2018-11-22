@@ -27,63 +27,164 @@ import (
 const logRoutePrefix = "state:routes:>"
 
 type RouteState struct {
-	lock      sync.RWMutex
-	hash      string
-	routes map[string]*types.RouteManifest
+	lock   sync.RWMutex
+	hash   string
+	routes map[string]struct {
+		status   *types.RouteStatus
+		manifest *types.RouteManifest
+	}
+	watchers map[chan string]bool
 }
 
-func (es *RouteState) GetHash() string {
-	return es.hash
-}
-
-func (es *RouteState) SetHash(hash string) {
-	es.hash = hash
-}
-
-func (es *RouteState) GetRoutes() map[string]*types.RouteManifest {
-	log.V(logLevel).Debugf("%s get routes", logRoutePrefix)
-	return es.routes
-}
-
-func (es *RouteState) SetRoutes(routes map[string]*types.RouteManifest) {
-	es.lock.Lock()
-	defer es.lock.Unlock()
-
-	for key, route := range routes {
-		es.routes[key] = route
+func (rs *RouteState) dispatch(route string) {
+	for w := range rs.watchers {
+		w <- route
 	}
 }
 
-func (es *RouteState) GetRoute(key string) *types.RouteManifest {
-	log.V(logLevel).Debugf("%s: get route: %s", logRoutePrefix, key)
-	es.lock.Lock()
-	defer es.lock.Unlock()
+func (rs *RouteState) Watch(watcher chan string, done chan bool) {
+	rs.watchers[watcher] = true
+	defer delete(rs.watchers, watcher)
+	<-done
+}
 
-	ep, ok := es.routes[key]
+func (rs *RouteState) GetHash() string {
+	return rs.hash
+}
+
+func (rs *RouteState) SetHash(hash string) {
+	rs.hash = hash
+}
+
+func (rs *RouteState) GetRouteManifests() map[string]*types.RouteManifest {
+	log.V(logLevel).Debugf("%s get route manifests", logRoutePrefix)
+
+	var manifests = make(map[string]*types.RouteManifest, 0)
+	for k, route := range rs.routes {
+		if route.manifest != nil {
+			manifests[k] = route.manifest
+		}
+	}
+
+	return manifests
+}
+
+func (rs *RouteState) GetRouteManifest(key string) *types.RouteManifest {
+	log.V(logLevel).Debugf("%s: get route manifest: %s", logRoutePrefix, key)
+	rs.lock.Lock()
+	defer rs.lock.Unlock()
+
+	ep, ok := rs.routes[key]
 	if !ok {
 		return nil
 	}
 
-	return ep
+	return ep.manifest
 }
 
-func (es *RouteState) AddRoute(key string, route *types.RouteManifest) {
-	log.V(logLevel).Debugf("%s: add route: %s", logRoutePrefix, key)
-	es.lock.Lock()
-	defer es.lock.Unlock()
-	es.routes[key] = route
+func (rs *RouteState) AddRouteManifest(key string, route *types.RouteManifest) {
+	log.V(logLevel).Debugf("%s: add route manifest: %s", logRoutePrefix, key)
+	rs.lock.Lock()
+	rt, ok := rs.routes[key]
+	if !ok {
+		rs.routes[key] = struct {
+			status   *types.RouteStatus
+			manifest *types.RouteManifest
+		}{status: nil, manifest: route}
+	} else {
+		rt.manifest = route
+	}
+	rs.lock.Unlock()
 }
 
-func (es *RouteState) SetRoute(key string, route *types.RouteManifest) {
-	es.lock.Lock()
-	defer es.lock.Unlock()
-	log.V(logLevel).Debugf("%s: set route: %s", logRoutePrefix, key)
-	es.routes[key] = route
+func (rs *RouteState) SetRouteManifest(key string, route *types.RouteManifest) {
+	rs.lock.Lock()
+	log.V(logLevel).Debugf("%s: set route manifest: %s", logRoutePrefix, key)
+	rt, ok := rs.routes[key]
+	if !ok {
+		rs.routes[key] = struct {
+			status   *types.RouteStatus
+			manifest *types.RouteManifest
+		}{status: nil, manifest: route}
+	} else {
+		rt.manifest = route
+	}
+	rs.lock.Unlock()
 }
 
-func (es *RouteState) DelRoute(key string) {
-	es.lock.Lock()
-	defer es.lock.Unlock()
+func (rs *RouteState) DelRouteManifests(key string) {
+	rs.lock.Lock()
+	log.V(logLevel).Debugf("%s: del route manifest: %s", logRoutePrefix, key)
+	rt, ok := rs.routes[key]
+	if ok {
+		rt.manifest = nil
+		rs.routes[key] = rt
+	}
+	rs.lock.Unlock()
+}
+
+func (rs *RouteState) GetRouteStatuses() map[string]*types.RouteStatus {
+	log.V(logLevel).Debugf("%s get route statuses", logRoutePrefix)
+
+	var statuses = make(map[string]*types.RouteStatus, 0)
+	for k, route := range rs.routes {
+		statuses[k] = route.status
+	}
+
+	return statuses
+}
+
+func (rs *RouteState) GetRouteStatus(key string) *types.RouteStatus {
+	log.V(logLevel).Debugf("%s: get route status: %s", logRoutePrefix, key)
+	rs.lock.Lock()
+	defer rs.lock.Unlock()
+
+	ep, ok := rs.routes[key]
+	if !ok {
+		return nil
+	}
+
+	return ep.status
+}
+
+func (rs *RouteState) AddRouteStatus(key string, status *types.RouteStatus) {
+	log.V(logLevel).Debugf("%s: add route status: %s", logRoutePrefix, key)
+	rs.lock.Lock()
+	rt, ok := rs.routes[key]
+	if !ok {
+		rs.routes[key] = struct {
+			status   *types.RouteStatus
+			manifest *types.RouteManifest
+		}{status: status, manifest: nil}
+	} else {
+		rt.status = status
+	}
+	rs.routes[key] = rt
+	rs.lock.Unlock()
+	rs.dispatch(key)
+}
+
+func (rs *RouteState) SetRouteStatus(key string, status *types.RouteStatus) {
+	rs.lock.Lock()
+	log.V(logLevel).Debugf("%s: set route status: %s", logRoutePrefix, key)
+	rt, ok := rs.routes[key]
+	if !ok {
+		rs.routes[key] = struct {
+			status   *types.RouteStatus
+			manifest *types.RouteManifest
+		}{status: status, manifest: nil}
+	} else {
+		rt.status = status
+	}
+	rs.routes[key] = rt
+	rs.lock.Unlock()
+	rs.dispatch(key)
+}
+
+func (rs *RouteState) DelRoute(key string) {
+	rs.lock.Lock()
 	log.V(logLevel).Debugf("%s: del route: %s", logRoutePrefix, key)
-	delete(es.routes, key)
+	delete(rs.routes, key)
+	rs.lock.Unlock()
+	rs.dispatch(key)
 }

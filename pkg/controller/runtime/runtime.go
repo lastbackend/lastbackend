@@ -27,7 +27,7 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/system"
 )
 
-const logLevel = 3
+const logLevel = 7
 
 type Runtime struct {
 	ctx      context.Context

@@ -40,12 +40,14 @@ type Controller struct {
 	cache   struct {
 		lock      sync.RWMutex
 		resources types.IngressStatus
+		routes    map[string]*types.RouteStatus
 	}
 }
 
 func New(r *runtime.Runtime) *Controller {
 	var c = new(Controller)
 	c.runtime = r
+	c.cache.routes = make(map[string]*types.RouteStatus, 0)
 	return c
 }
 
@@ -84,12 +86,33 @@ func (c *Controller) Sync(ctx context.Context) error {
 
 	for range ticker.C {
 		opts := new(request.IngressStatusOptions)
+		opts.Routes = make(map[string]*types.RouteStatus, 0)
+
+		c.cache.lock.Lock()
+		var i = 0
+		for r, status := range c.cache.routes {
+			i++
+			if i > 10 {
+				break
+			}
+
+			if status != nil {
+				opts.Routes[r] = status
+			} else {
+				delete(c.cache.routes, r)
+			}
+		}
 
 		spec, err := envs.Get().GetClient().SetStatus(ctx, opts)
 		if err != nil {
 			log.Errorf("ingress:exporter:dispatch err: %s", err.Error())
 		}
 
+		for r := range opts.Routes {
+			delete(c.cache.routes, r)
+		}
+
+		c.cache.lock.Unlock()
 		if spec != nil {
 			c.runtime.Sync(ctx, spec.Decode())
 		} else {
@@ -98,4 +121,35 @@ func (c *Controller) Sync(ctx context.Context) error {
 	}
 
 	return nil
+}
+
+func (c *Controller) Subscribe() {
+	var (
+		routes = make(chan string)
+		done   = make(chan bool)
+	)
+
+	go func() {
+		log.Debugf("%s subscribe state", logPrefix)
+
+		for {
+			select {
+			case r := <-routes:
+				log.Debugf("%s route changed: %s", logPrefix, r)
+				c.cache.lock.Lock()
+				st := envs.Get().GetState().Routes().GetRouteStatus(r)
+				if st == nil {
+					c.cache.routes[r] = &types.RouteStatus{State: types.StateDestroyed}
+				} else {
+					c.cache.routes[r] = st
+				}
+				c.cache.lock.Unlock()
+				break
+			}
+		}
+
+	}()
+
+	go envs.Get().GetState().Routes().Watch(routes, done)
+	<-done
 }

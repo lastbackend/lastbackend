@@ -23,6 +23,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/spf13/viper"
+	"regexp"
 	"strings"
 
 	"github.com/lastbackend/lastbackend/pkg/distribution/errors"
@@ -41,13 +42,57 @@ type Route struct {
 	storage storage.Storage
 }
 
-func (n *Route) Get(namespace, name string) (*types.Route, error) {
+func (r *Route) Runtime() (*types.Runtime, error) {
+
+	log.V(logLevel).Debugf("%s:get:> get route runtime info", logPodPrefix)
+	runtime, err := r.storage.Info(r.context, r.storage.Collection().Pod(), "")
+	if err != nil {
+		log.V(logLevel).Errorf("%s:get:> get runtime info error: %s", logPodPrefix, err)
+		return &runtime.Runtime, err
+	}
+	return &runtime.Runtime, nil
+}
+
+func (r *Route) List() (*types.RouteList, error) {
+
+	log.V(logLevel).Debugf("%s:listspec:> list specs", logRoutePrefix)
+
+	list := types.NewRouteList()
+
+	//TODO: change map to list
+	err := r.storage.List(r.context, r.storage.Collection().Route(), types.EmptyString, list, nil)
+	if err != nil {
+		log.V(logLevel).Error("%s:listbynamespace:> list route err: %v", logRoutePrefix, err)
+		return list, err
+	}
+
+	return list, nil
+}
+
+func (r *Route) ListByNamespace(namespace string) (*types.RouteList, error) {
+
+	log.V(logLevel).Debug("%s:listbynamespace:> list route", logRoutePrefix)
+
+	list := types.NewRouteList()
+
+	err := r.storage.List(r.context, r.storage.Collection().Route(), r.storage.Filter().Route().ByNamespace(namespace), list, nil)
+	if err != nil {
+		log.V(logLevel).Error("%s:listbynamespace:> list route err: %v", logRoutePrefix, err)
+		return list, err
+	}
+
+	log.V(logLevel).Debugf("%s:listbynamespace:> list route result: %d", logRoutePrefix, len(list.Items))
+
+	return list, nil
+}
+
+func (r *Route) Get(namespace, name string) (*types.Route, error) {
 
 	log.V(logLevel).Debug("%s:get:> get route by id %s/%s", logRoutePrefix, namespace, name)
 
 	route := new(types.Route)
 
-	err := n.storage.Get(n.context, n.storage.Collection().Route(), n.storage.Key().Route(namespace, name), &route, nil)
+	err := r.storage.Get(r.context, r.storage.Collection().Route(), r.storage.Key().Route(namespace, name), &route, nil)
 	if err != nil {
 		if errors.Storage().IsErrEntityNotFound(err) {
 			log.V(logLevel).Warnf("%s:get:> in namespace %s by name %s not found", logRoutePrefix, namespace, name)
@@ -61,50 +106,17 @@ func (n *Route) Get(namespace, name string) (*types.Route, error) {
 	return route, nil
 }
 
-func (n *Route) List() (*types.RouteList, error) {
-
-	log.V(logLevel).Debugf("%s:listspec:> list specs", logRoutePrefix)
-
-	list := types.NewRouteList()
-
-	//TODO: change map to list
-	err := n.storage.List(n.context, n.storage.Collection().Route(), types.EmptyString, list, nil)
-	if err != nil {
-		log.V(logLevel).Error("%s:listbynamespace:> list route err: %v", logRoutePrefix, err)
-		return list, err
-	}
-
-	return list, nil
-}
-
-func (n *Route) ListByNamespace(namespace string) (*types.RouteList, error) {
-
-	log.V(logLevel).Debug("%s:listbynamespace:> list route", logRoutePrefix)
-
-	list := types.NewRouteList()
-
-	err := n.storage.List(n.context, n.storage.Collection().Route(), n.storage.Filter().Route().ByNamespace(namespace), list, nil)
-	if err != nil {
-		log.V(logLevel).Error("%s:listbynamespace:> list route err: %v", logRoutePrefix, err)
-		return list, err
-	}
-
-	log.V(logLevel).Debugf("%s:listbynamespace:> list route result: %d", logRoutePrefix, len(list.Items))
-
-	return list, nil
-}
-
-func (n *Route) Create(namespace *types.Namespace, route *types.Route) (*types.Route, error) {
+func (r *Route) Add(namespace *types.Namespace, route *types.Route) (*types.Route, error) {
 
 	log.V(logLevel).Debugf("%s:create:> create route %#v", logRoutePrefix, route.Meta.Name)
 
 	route.Meta.SetDefault()
-	route.Status.State = types.StatusInitialized
-	route.Spec.Domain = fmt.Sprintf("%s.%s.%s", strings.ToLower(route.Meta.Name), strings.ToLower(namespace.Meta.Name),  viper.GetString("domain.external"))
+	route.Status.State = types.StateCreated
+	route.Spec.Domain = fmt.Sprintf("%s.%s.%s", strings.ToLower(route.Meta.Name), strings.ToLower(namespace.Meta.Name), viper.GetString("domain.external"))
 	route.SelfLink()
 
-	if err := n.storage.Put(n.context, n.storage.Collection().Route(),
-		n.storage.Key().Route(route.Meta.Namespace, route.Meta.Name), route, nil); err != nil {
+	if err := r.storage.Put(r.context, r.storage.Collection().Route(),
+		r.storage.Key().Route(route.Meta.Namespace, route.Meta.Name), route, nil); err != nil {
 		log.V(logLevel).Errorf("%s:create:> insert route err: %v", logRoutePrefix, err)
 		return nil, err
 	}
@@ -112,13 +124,12 @@ func (n *Route) Create(namespace *types.Namespace, route *types.Route) (*types.R
 	return route, nil
 }
 
-func (n *Route) Update(route *types.Route) (*types.Route, error) {
+func (r *Route) Set(route *types.Route) (*types.Route, error) {
 
 	log.V(logLevel).Debugf("%s:update:> update route %s", logRoutePrefix, route.Meta.Name)
-	route.Status.State = types.StateProvision
 
-	if err := n.storage.Set(n.context, n.storage.Collection().Route(),
-		n.storage.Key().Route(route.Meta.Namespace, route.Meta.Name), route, nil); err != nil {
+	if err := r.storage.Set(r.context, r.storage.Collection().Route(),
+		r.storage.Key().Route(route.Meta.Namespace, route.Meta.Name), route, nil); err != nil {
 		log.V(logLevel).Errorf("%s:update:> update route err: %v", logRoutePrefix, err)
 		return nil, err
 	}
@@ -126,31 +137,12 @@ func (n *Route) Update(route *types.Route) (*types.Route, error) {
 	return route, nil
 }
 
-func (n *Route) SetStatus(route *types.Route, status *types.RouteStatus) error {
-
-	if route == nil {
-		log.V(logLevel).Warnf("%s:setstatus:> invalid argument %v", logRoutePrefix, route)
-		return nil
-	}
-
-	log.V(logLevel).Debugf("%s:setstate:> set state route %s -> %#v", logRoutePrefix, route.Meta.Name, status)
-
-	route.Status = *status
-	if err := n.storage.Set(n.context, n.storage.Collection().Route(),
-		n.storage.Key().Route(route.Meta.Namespace, route.Meta.Name), route, nil); err != nil {
-		log.Errorf("%s:setstatus:> pod set status err: %v", logRoutePrefix, err)
-		return err
-	}
-
-	return nil
-}
-
-func (n *Route) Remove(route *types.Route) error {
+func (r *Route) Del(route *types.Route) error {
 
 	log.V(logLevel).Debugf("%s:remove:> remove route %#v", logRoutePrefix, route)
 
-	if err := n.storage.Del(n.context, n.storage.Collection().Route(),
-		n.storage.Key().Route(route.Meta.Namespace, route.Meta.Name)); err != nil {
+	if err := r.storage.Del(r.context, r.storage.Collection().Route(),
+		r.storage.Key().Route(route.Meta.Namespace, route.Meta.Name)); err != nil {
 		log.V(logLevel).Errorf("%s:remove:> remove route  err: %v", logRoutePrefix, err)
 		return err
 	}
@@ -158,7 +150,7 @@ func (n *Route) Remove(route *types.Route) error {
 	return nil
 }
 
-func (n *Route) Watch(ch chan types.RouteEvent, rev *int64) error {
+func (r *Route) Watch(ch chan types.RouteEvent, rev *int64) error {
 
 	log.V(logLevel).Debugf("%s:watch:> watch routes", logRoutePrefix)
 
@@ -168,7 +160,7 @@ func (n *Route) Watch(ch chan types.RouteEvent, rev *int64) error {
 	go func() {
 		for {
 			select {
-			case <-n.context.Done():
+			case <-r.context.Done():
 				done <- true
 				return
 			case e := <-watcher:
@@ -195,7 +187,150 @@ func (n *Route) Watch(ch chan types.RouteEvent, rev *int64) error {
 	}()
 
 	opts := storage.GetOpts()
-	if err := n.storage.Watch(n.context, n.storage.Collection().Route(), watcher, opts); err != nil {
+	if err := r.storage.Watch(r.context, r.storage.Collection().Route(), watcher, opts); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (r *Route) ManifestMap(ingress string) (*types.RouteManifestMap, error) {
+	log.V(logLevel).Debug("%s:ManifestMap:> get route manifest map by ingress %s", logRoutePrefix, ingress)
+
+	var (
+		mf = types.NewRouteManifestMap()
+	)
+
+	if err := r.storage.Map(r.context, r.storage.Collection().Manifest().Route(ingress), types.EmptyString, mf, nil); err != nil {
+		if !errors.Storage().IsErrEntityNotFound(err) {
+			log.Errorf("%s:ManifestMap:> err: %s", logPodPrefix, err.Error())
+			return nil, err
+		}
+
+		return nil, nil
+	}
+
+	return mf, nil
+}
+
+func (r *Route) ManifestGet(ingress, route string) (*types.RouteManifest, error) {
+	log.V(logLevel).Debug("%s:ManifestGet:> get route manifest by name %s", logRoutePrefix, route)
+
+	var (
+		mf = new(types.RouteManifest)
+	)
+
+	if err := r.storage.Get(r.context, r.storage.Collection().Manifest().Route(ingress), route, &mf, nil); err != nil {
+
+		if errors.Storage().IsErrEntityNotFound(err) {
+			return nil, nil
+		}
+
+		return nil, err
+	}
+
+	return mf, nil
+}
+
+func (r *Route) ManifestAdd(ingress, route string, manifest *types.RouteManifest) error {
+
+	log.V(logLevel).Debugf("%s:ManifestAdd:> ", logPodPrefix)
+
+	if err := r.storage.Put(r.context, r.storage.Collection().Manifest().Route(ingress), route, manifest, nil); err != nil {
+		log.Errorf("%s:ManifestAdd:> err :%s", logPodPrefix, err.Error())
+		return err
+	}
+
+	return nil
+}
+
+func (r *Route) ManifestSet(ingress, route string, manifest *types.RouteManifest) error {
+	log.V(logLevel).Debugf("%s:ManifestSet:> ", logPodPrefix)
+
+	if err := r.storage.Set(r.context, r.storage.Collection().Manifest().Route(ingress), route, manifest, nil); err != nil {
+		log.Errorf("%s:ManifestSet:> err :%s", logPodPrefix, err.Error())
+		return err
+	}
+
+	return nil
+}
+
+func (r *Route) ManifestDel(ingress, route string) error {
+	log.V(logLevel).Debugf("%s:ManifestDel:> %s on ingress %s", logPodPrefix, route, ingress)
+
+	if err := r.storage.Del(r.context, r.storage.Collection().Manifest().Route(ingress), route); err != nil {
+		log.Errorf("%s:ManifestDel:> err :%s", logPodPrefix, err.Error())
+		return err
+	}
+
+	return nil
+}
+
+func (r *Route) ManifestWatch(ingress string, ch chan types.RouteManifestEvent, rev *int64) error {
+	log.V(logLevel).Debugf("%s:watch:> watch routes manifest", logRoutePrefix)
+
+	done := make(chan bool)
+	watcher := storage.NewWatcher()
+
+	var f, c string
+
+	if ingress != types.EmptyString {
+		f = fmt.Sprintf(`\b.+\/%s\/%s\/(.+)\b`, ingress, storage.RouteKind)
+		c = r.storage.Collection().Manifest().Route(ingress)
+	} else {
+		f = fmt.Sprintf(`\b.+\/(.+)\/%s\/(.+)\b`, storage.RouteKind)
+		c = r.storage.Collection().Manifest().Ingress()
+	}
+
+	rg, err := regexp.Compile(f)
+	if err != nil {
+		log.Errorf("%s:> filter compile err: %v", logPodPrefix, err.Error())
+		return err
+	}
+
+	go func() {
+		for {
+			select {
+			case <-r.context.Done():
+				done <- true
+				return
+			case e := <-watcher:
+				if e.Data == nil {
+					continue
+				}
+
+				keys := rg.FindStringSubmatch(e.System.Key)
+				if len(keys) == 0 {
+					continue
+				}
+
+				res := types.RouteManifestEvent{}
+				res.Action = e.Action
+				res.Name = e.Name
+				res.SelfLink = e.SelfLink
+
+				if ingress != types.EmptyString {
+					res.Ingress = ingress
+				} else {
+					res.Ingress = keys[1]
+				}
+
+				manifest := new(types.RouteManifest)
+
+				if err := json.Unmarshal(e.Data.([]byte), manifest); err != nil {
+					log.Errorf("%s:> parse data err: %v", logRoutePrefix, err)
+					continue
+				}
+
+				res.Data = manifest
+
+				ch <- res
+			}
+		}
+	}()
+
+	opts := storage.GetOpts()
+	if err := r.storage.Watch(r.context, c, watcher, opts); err != nil {
 		return err
 	}
 

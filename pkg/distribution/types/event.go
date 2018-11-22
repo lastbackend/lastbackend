@@ -76,7 +76,6 @@ type ConfigEvent struct {
 	Data *Config
 }
 
-
 type RouteEvent struct {
 	event
 	Data *Route
@@ -142,6 +141,12 @@ type SubnetManifestEvent struct {
 type SecretManifestEvent struct {
 	event
 	Data *SecretManifest
+}
+
+type RouteManifestEvent struct {
+	event
+	Ingress string
+	Data    *RouteManifest
 }
 
 type NodeEvent struct {

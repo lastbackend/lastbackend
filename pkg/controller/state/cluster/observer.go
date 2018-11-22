@@ -36,8 +36,21 @@ const (
 // ClusterState is cluster current state struct
 type ClusterState struct {
 	cluster *types.Cluster
+
 	ingress struct {
-		list map[string]*types.Ingress
+		observer chan *types.Ingress
+		list     map[string]*types.Ingress
+	}
+
+	discovery struct {
+		observer chan *types.Discovery
+		list     map[string]*types.Discovery
+	}
+
+	route struct {
+		ingress  map[string]int
+		observer chan *types.Route
+		list     map[string]*types.Route
 	}
 	volume struct {
 		observer chan *types.Volume
@@ -72,6 +85,16 @@ func (cs *ClusterState) Observe() {
 				log.Errorf("%s", err.Error())
 			}
 			break
+		case r := <-cs.route.observer:
+			log.V(7).Debugf("route: %s", r.SelfLink())
+			if err := routeObserve(cs, r); err != nil {
+				log.Errorf("%s", err.Error())
+			}
+			break
+		case i := <-cs.ingress.observer:
+			log.V(7).Debugf("ingress: %s", i.SelfLink())
+			cs.ingress.list[i.Meta.SelfLink] = i
+			break
 		}
 	}
 }
@@ -95,18 +118,44 @@ func (cs *ClusterState) Loop() error {
 	if err != nil {
 		return err
 	}
-
 	for _, n := range nl.Items {
 		// Add node to local cache
 		cs.SetNode(n)
 		// Run node observers
 	}
 
-	go cs.subscribe(context.Background(), &nl.System.Revision)
+	// Get all ingress servers in cluster
+	im := distribution.NewIngressModel(context.Background(), envs.Get().GetStorage())
+	il, err := im.List()
+	if err != nil {
+		return err
+	}
+	for _, i := range il.Items {
+		// Add ingress to local cache
+		cs.SetIngress(i)
+		// Run ingress observers
+	}
+
+	// Get all routes in cluster
+	rm := distribution.NewRouteModel(context.Background(), envs.Get().GetStorage())
+	rl, err := rm.List()
+	if err != nil {
+		return err
+	}
+	for _, r := range rl.Items {
+		// Add route to local cache
+		cs.SetRoute(r)
+		// Run route observers
+	}
+
+	go cs.watchNode(context.Background(), &nl.System.Revision)
+	go cs.watchIngress(context.Background(), &il.System.Revision)
+	go cs.watchRoute(context.Background(), &rl.System.Revision)
+
 	return nil
 }
 
-func (cs *ClusterState) subscribe(ctx context.Context, rev *int64) {
+func (cs *ClusterState) watchNode(ctx context.Context, rev *int64) {
 
 	var (
 		p = make(chan types.NodeEvent)
@@ -138,6 +187,69 @@ func (cs *ClusterState) subscribe(ctx context.Context, rev *int64) {
 	nm.Watch(p, rev)
 }
 
+func (cs *ClusterState) watchIngress(ctx context.Context, rev *int64) {
+
+	var (
+		p = make(chan types.IngressEvent)
+	)
+
+	nm := distribution.NewIngressModel(ctx, envs.Get().GetStorage())
+
+	go func() {
+		for {
+			select {
+			case <-ctx.Done():
+				return
+			case w := <-p:
+
+				if w.Data == nil {
+					continue
+				}
+
+				if w.IsActionRemove() {
+					cs.DelIngress(w.Data)
+					continue
+				}
+
+				cs.SetIngress(w.Data)
+			}
+		}
+	}()
+
+	nm.Watch(p, rev)
+}
+
+func (cs *ClusterState) watchRoute(ctx context.Context, rev *int64) {
+	var (
+		p = make(chan types.RouteEvent)
+	)
+
+	rm := distribution.NewRouteModel(ctx, envs.Get().GetStorage())
+
+	go func() {
+		for {
+			select {
+			case <-ctx.Done():
+				return
+			case w := <-p:
+
+				if w.Data == nil {
+					continue
+				}
+
+				if w.IsActionRemove() {
+					cs.DelRoute(w.Data)
+					continue
+				}
+
+				cs.SetRoute(w.Data)
+			}
+		}
+	}()
+
+	rm.Watch(p, rev)
+}
+
 // lease new node for requests by parameters
 func (cs *ClusterState) lease(opts NodeLeaseOptions) (*types.Node, error) {
 
@@ -161,6 +273,7 @@ func (cs *ClusterState) release(opts NodeLeaseOptions) (*types.Node, error) {
 	return req.Response.Node, req.Response.Err
 }
 
+// lease node in sync mode
 func (cs *ClusterState) leaseSync(opts NodeLeaseOptions) (*types.Node, error) {
 
 	// Work as node lease requests queue
@@ -175,7 +288,7 @@ func (cs *ClusterState) leaseSync(opts NodeLeaseOptions) (*types.Node, error) {
 	return req.Response.Node, req.Response.Err
 }
 
-// release node
+// release node in sync mode
 func (cs *ClusterState) releaseSync(opts NodeLeaseOptions) (*types.Node, error) {
 	// Work as node release
 	req := new(NodeLease)
@@ -203,12 +316,36 @@ func (cs *ClusterState) DelNode(n *types.Node) {
 	delete(cs.node.list, n.Meta.SelfLink)
 }
 
+func (cs *ClusterState) SetIngress(i *types.Ingress) {
+	cs.ingress.observer <- i
+}
+
+func (cs *ClusterState) DelIngress(i *types.Ingress) {
+	delete(cs.ingress.list, i.Meta.SelfLink)
+}
+
+func (cs *ClusterState) SetDiscovery(d *types.Discovery) {
+	cs.discovery.observer <- d
+}
+
+func (cs *ClusterState) DelDiscovery(d *types.Discovery) {
+	delete(cs.discovery.list, d.Meta.SelfLink)
+}
+
 func (cs *ClusterState) SetVolume(v *types.Volume) {
 	cs.volume.observer <- v
 }
 
 func (cs *ClusterState) DelVolume(v *types.Volume) {
 	delete(cs.volume.list, v.Meta.SelfLink)
+}
+
+func (cs *ClusterState) SetRoute(r *types.Route) {
+	cs.route.observer <- r
+}
+
+func (cs *ClusterState) DelRoute(r *types.Route) {
+	delete(cs.route.list, r.Meta.SelfLink)
 }
 
 func (cs *ClusterState) PodLease(p *types.Pod) (*types.Node, error) {
@@ -292,7 +429,11 @@ func NewClusterState() *ClusterState {
 
 	var cs = new(ClusterState)
 
+	cs.ingress.observer = make(chan *types.Ingress)
 	cs.ingress.list = make(map[string]*types.Ingress)
+
+	cs.discovery.observer = make(chan *types.Discovery)
+	cs.discovery.list = make(map[string]*types.Discovery)
 
 	cs.volume.list = make(map[string]*types.Volume)
 	cs.volume.observer = make(chan *types.Volume)
@@ -304,6 +445,11 @@ func NewClusterState() *ClusterState {
 	cs.node.release = make(chan *NodeLease)
 
 	cs.node.observer = make(chan *types.Node)
+
+	cs.route.observer = make(chan *types.Route)
+	cs.route.ingress = make(map[string]int, 0)
+	cs.route.list = make(map[string]*types.Route, 0)
+
 	go cs.Observe()
 
 	return cs

@@ -267,7 +267,7 @@ func RouteCreateH(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if _, err := rm.Create(ns, rs); err != nil {
+	if _, err := rm.Add(ns, rs); err != nil {
 		log.V(logLevel).Errorf("%s:create:> create route err: %s", logPrefix, ns.Meta.Name, err.Error())
 		errors.HTTP.InternalServerError(w)
 		return
@@ -386,7 +386,7 @@ func RouteUpdateH(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	rs, err = rm.Update(rs)
+	rs, err = rm.Set(rs)
 	if err != nil {
 		log.V(logLevel).Errorf("%s:update:> update route `%s` err: %s", logPrefix, ns.Meta.Name, err.Error())
 		errors.HTTP.InternalServerError(w)
@@ -469,7 +469,8 @@ func RouteRemoveH(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = rm.Remove(rs)
+	rs.Status.State = types.StateDestroy
+	_, err = rm.Set(rs)
 	if err != nil {
 		log.V(logLevel).Errorf("%s:remove:> remove route `%s` err: %s", logPrefix, rid, err.Error())
 		errors.HTTP.InternalServerError(w)

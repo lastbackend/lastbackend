@@ -19,7 +19,7 @@
 package v3
 
 const (
-	logLevel  = 5
+	logLevel  = 6
 	logPrefix = "storage:etcd:v3"
 )
 

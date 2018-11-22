@@ -334,7 +334,11 @@ func NamespaceRemoveH(w http.ResponseWriter, r *http.Request) {
 	if ns == nil {
 		err := errors.New("namespace not found")
 		log.V(logLevel).Errorf("%s:remove:> get namespace err: %s", logPrefix, err.Error())
-		errors.New("namespace").NotFound().Http(w)
+		w.WriteHeader(http.StatusOK)
+		if _, err := w.Write([]byte{}); err != nil {
+			log.V(logLevel).Errorf("%s:remove:> write response err: %s", logPrefix, err.Error())
+			return
+		}
 		return
 	}
 
