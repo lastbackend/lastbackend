@@ -150,15 +150,22 @@ func (r *Runtime) Loop(ctx context.Context) {
 				}
 
 				log.V(logLevel).Debugf("%s> provision routes", logRuntimePrefix)
+				var upd = 0
 				for e, spec := range spec.Routes {
-					log.V(logLevel).Debugf("route: %v", e)
+					log.V(logLevel).Debugf("route: %s", e)
 					if err := RouteManage(ctx, e, spec); err != nil {
 						log.Errorf("Route [%s] manage err: %s", e, err.Error())
 						continue
 					}
-
-					r.process.reload()
+					upd++
 				}
+
+				if upd != 0 {
+					if err := r.process.reload(); err != nil {
+						log.Errorf("reload process err: %s", err.Error())
+					}
+				}
+
 			}
 		}
 	}(ctx)

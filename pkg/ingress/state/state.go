@@ -25,8 +25,8 @@ import (
 const logLevel = 3
 
 type State struct {
-	ingress   *IngressState
-	routes    *RouteState
+	ingress *IngressState
+	routes  *RouteState
 }
 
 type IngressState struct {
@@ -47,7 +47,11 @@ func New() *State {
 	state := State{
 		ingress: new(IngressState),
 		routes: &RouteState{
-			routes: make(map[string]*types.RouteManifest, 0),
+			routes: make(map[string]struct {
+				status   *types.RouteStatus
+				manifest *types.RouteManifest
+			}, 0),
+			watchers: make(map[chan string]bool, 0),
 		},
 	}
 

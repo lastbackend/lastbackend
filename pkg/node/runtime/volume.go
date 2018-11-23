@@ -121,6 +121,8 @@ func VolumeCreate(ctx context.Context, name string, mf *types.VolumeManifest) (*
 
 func VolumeDestroy(ctx context.Context, name string) error {
 
+	log.V(logLevel).Debugf("%s destroy volume: %s", logVolumePrefix, name)
+
 	vol := envs.Get().GetState().Volumes().GetVolume(name)
 
 	if vol == nil {

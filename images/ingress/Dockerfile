@@ -6,9 +6,7 @@ RUN apk add --no-cache ca-certificates
 RUN apk add --no-cache iptables \
     linux-headers \
     gcc \
-    musl-dev \
-    iproute2 \
-    haproxy
+    musl-dev
 
 RUN set -ex \
 	&& apk add --no-cache --virtual .build-deps \

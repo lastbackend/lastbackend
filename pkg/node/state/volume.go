@@ -140,9 +140,12 @@ func (s *VolumesState) IsLocal(key string) bool {
 	log.V(logLevel).Debugf("%s check volume: %s is local", logVolumePrefix, key)
 	s.lock.Lock()
 	defer s.lock.Unlock()
+
 	if _, ok := s.local[key]; ok {
+		log.V(logLevel).Debugf("%s volume: %s is local", logVolumePrefix, key)
 		return true
 	}
 
+	log.V(logLevel).Debugf("%s volume: %s is not local", logVolumePrefix, key)
 	return false
 }

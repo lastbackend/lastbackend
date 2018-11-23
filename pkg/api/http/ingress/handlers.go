@@ -23,6 +23,7 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/api/types/v1/request"
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 	"net/http"
+	"strings"
 
 	"github.com/lastbackend/lastbackend/pkg/api/envs"
 	"github.com/lastbackend/lastbackend/pkg/api/types/v1"
@@ -286,6 +287,7 @@ func IngressSetStatusH(w http.ResponseWriter, r *http.Request) {
 
 	var (
 		im  = distribution.NewIngressModel(r.Context(), envs.Get().GetStorage())
+		rm  = distribution.NewRouteModel(r.Context(), envs.Get().GetStorage())
 		nid = utils.Vars(r)["ingress"]
 	)
 
@@ -316,6 +318,44 @@ func IngressSetStatusH(w http.ResponseWriter, r *http.Request) {
 		log.V(logLevel).Errorf("%s:setstatus:> set status err: %s", logPrefix, err.Error())
 		errors.HTTP.InternalServerError(w)
 		return
+	}
+
+	for r, s := range opts.Routes {
+
+		log.Debugf("set route status: %s> %s", r, s.State)
+
+		keys := strings.Split(r, ":")
+		if len(keys) != 2 {
+			log.V(logLevel).Errorf("%s:setroutestatus:> invalid route selflink err: %s", logPrefix, r)
+			errors.HTTP.BadRequest(w)
+			return
+		}
+
+		route, err := rm.Get(keys[0], keys[1])
+		if err != nil {
+			log.V(logLevel).Errorf("%s:setroutestatus:> route found err: %s", logPrefix, r)
+			errors.HTTP.InternalServerError(w)
+			return
+		}
+		if route == nil {
+			log.V(logLevel).Warnf("%s:setroutestatus:> route not found `%s` not found", logPrefix, r)
+			if err := rm.ManifestDel(nid, r); err != nil {
+				if !errors.Storage().IsErrEntityNotFound(err) {
+					log.V(logLevel).Warnf("%s:setroutestatus:> route manifest del err `%s` ", logPrefix, err.Error())
+					continue
+				}
+			}
+			continue
+		}
+
+		route.Status.State = s.State
+		route.Status.Message = s.Message
+
+		if _, err := rm.Set(route); err != nil {
+			log.V(logLevel).Errorf("%s:setroutestatus:> update route err: %s", logPrefix, err.Error())
+			errors.HTTP.InternalServerError(w)
+			return
+		}
 	}
 
 	spec, err := getIngressManifest(r.Context(), ingress)

@@ -25,24 +25,42 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/log"
 )
 
-func RouteManage(ctx context.Context, name string, route *types.RouteManifest) (err error) {
-
-	defer func() error {
-		if err = configSync(); err != nil {
-			return err
-		}
-		return nil
-	}()
+func RouteManage(_ context.Context, name string, route *types.RouteManifest) (err error) {
 
 	log.Debugf("route manage: %s", name)
 
-	log.Debugf("total routes: %d", len(envs.Get().GetState().Routes().GetRoutes()))
+	var status = new(types.RouteStatus)
+
+	defer func() {
+		if err = configSync(); err != nil {
+			status.State = types.StateError
+			status.Message = err.Error()
+			envs.Get().GetState().Routes().SetRouteStatus(name, status)
+			return
+		}
+
+		if status.State == types.StateDestroy {
+			envs.Get().GetState().Routes().DelRoute(name)
+			return
+		}
+
+		envs.Get().GetState().Routes().SetRouteStatus(name, status)
+	}()
 
 	if route.State == types.StateDestroyed {
+		status.State = types.StateDestroyed
 		envs.Get().GetState().Routes().DelRoute(name)
 		return nil
 	}
 
-	envs.Get().GetState().Routes().SetRoute(name, route)
+	if route.State == types.StateDestroy {
+		status.State = types.StateDestroyed
+		envs.Get().GetState().Routes().DelRouteManifests(name)
+		return nil
+	}
+
+	envs.Get().GetState().Routes().SetRouteManifest(name, route)
+	status.State = types.StateReady
+
 	return nil
 }

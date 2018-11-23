@@ -44,6 +44,7 @@ type ManifestCollection interface {
 	Cluster() string
 	Pod(node string) string
 	Volume(node string) string
+	Route(ingress string) string
 	Ingress() string
 	Subnet() string
 	Secret() string
@@ -51,16 +52,16 @@ type ManifestCollection interface {
 }
 
 type NodeCollection interface {
-	Info () string
-	Status () string
+	Info() string
+	Status() string
 }
 
 type DiscoveryCollection interface {
-	Info () string
-	Status () string
+	Info() string
+	Status() string
 }
 
 type IngressCollection interface {
-	Info () string
-	Status () string
+	Info() string
+	Status() string
 }

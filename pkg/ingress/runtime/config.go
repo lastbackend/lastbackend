@@ -80,7 +80,7 @@ func configSync() error {
 	log.Debug("config sync")
 
 	var (
-		routes             = envs.Get().GetState().Routes().GetRoutes()
+		routes             = envs.Get().GetState().Routes().GetRouteManifests()
 		tpl, path, name, _ = envs.Get().GetTemplate()
 	)
 

@@ -16,8 +16,4 @@
 // from Last.Backend LLC.
 //
 
-package errors
-
-const NodeNotFound = "NodeNotFound"
-const IngressNotFound = "IngressNotFound"
-const PodNotFound = "PodNotFound"
+package cluster

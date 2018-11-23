@@ -46,6 +46,7 @@ func (r *Runtime) Run() {
 
 	go r.nodeWatch(ctx, nil)
 	go r.ingressWatch(ctx, nil)
+	go r.routeManifestWatch(ctx, nil)
 
 	c := envs.Get().GetCache()
 
@@ -61,19 +62,6 @@ func (r *Runtime) Run() {
 		m.Set(i)
 		m.State = types.StateReady
 		c.Node().SetConfigManifest(i.SelfLink(), m)
-	}
-
-	rm := distribution.NewRouteModel(ctx, envs.Get().GetStorage())
-	rl, err := rm.List()
-	if err != nil {
-		return
-	}
-	go r.routeWatch(ctx, &rl.System.Revision)
-
-	for _, i := range rl.Items {
-		m := new(types.RouteManifest)
-		m.Set(i)
-		c.Ingress().SetRouteManifest(i.SelfLink(), m)
 	}
 
 	dm := distribution.NewDiscoveryModel(ctx, envs.Get().GetStorage())
@@ -407,11 +395,11 @@ func (r *Runtime) ingressWatch(ctx context.Context, rev *int64) {
 	im.Watch(n, rev)
 }
 
-func (r *Runtime) routeWatch(ctx context.Context, rev *int64) {
+func (r *Runtime) routeManifestWatch(ctx context.Context, rev *int64) {
 
 	// Watch node changes
 	var (
-		n = make(chan types.RouteEvent)
+		n = make(chan types.RouteManifestEvent)
 		c = envs.Get().GetCache()
 	)
 
@@ -428,17 +416,15 @@ func (r *Runtime) routeWatch(ctx context.Context, rev *int64) {
 					continue
 				}
 
-				m := new(types.RouteManifest)
-				m.Set(w.Data)
-
 				if w.IsActionRemove() {
-					m.State = types.StateDestroyed
+					c.Ingress().DelRouteManifest(w.Ingress, w.SelfLink)
+					continue
 				}
 
-				c.Ingress().SetRouteManifest(w.Data.SelfLink(), m)
+				c.Ingress().SetRouteManifest(w.Ingress, w.SelfLink, w.Data)
 			}
 		}
 	}()
 
-	im.Watch(n, rev)
+	im.ManifestWatch(types.EmptyString, n, rev)
 }

@@ -40,14 +40,14 @@ const (
 	networkCollection = "network"
 	subnetCollection  = "subnet"
 
-	ingressCollection = "ingress"
+	ingressCollection   = "ingress"
 	discoveryCollection = "discovery"
-	routeCollection   = "route"
+	routeCollection     = "route"
 
-	systemCollection  = "system"
-	testCollection    = "test"
+	systemCollection = "system"
+	testCollection   = "test"
 
-	infoColletion = "info"
+	infoColletion   = "info"
 	statusColletion = "status"
 )
 
@@ -60,7 +60,6 @@ type NodeCollection struct{}
 type DiscoveryCollection struct{}
 
 type IngressCollection struct{}
-
 
 func (Collection) Namespace() string {
 	return namespaceCollection
@@ -166,26 +165,30 @@ func (ManifestCollection) Secret() string {
 	return fmt.Sprintf("%s/%s/%s", manifestCollection, clusterCollection, secretCollection)
 }
 
-func (NodeCollection) Info () string {
+func (ManifestCollection) Route(ingress string) string {
+	return fmt.Sprintf("%s/%s/%s/%s", manifestCollection, ingressCollection, ingress, routeCollection)
+}
+
+func (NodeCollection) Info() string {
 	return fmt.Sprintf("%s/%s", nodeCollection, infoColletion)
 }
 
-func (NodeCollection) Status () string {
+func (NodeCollection) Status() string {
 	return fmt.Sprintf("%s/%s", nodeCollection, statusColletion)
 }
 
-func (DiscoveryCollection) Info () string {
+func (DiscoveryCollection) Info() string {
 	return fmt.Sprintf("%s/%s", discoveryCollection, infoColletion)
 }
 
-func (DiscoveryCollection) Status () string {
+func (DiscoveryCollection) Status() string {
 	return fmt.Sprintf("%s/%s", discoveryCollection, statusColletion)
 }
 
-func (IngressCollection) Info () string {
+func (IngressCollection) Info() string {
 	return fmt.Sprintf("%s/%s", ingressCollection, infoColletion)
 }
 
-func (IngressCollection) Status () string {
+func (IngressCollection) Status() string {
 	return fmt.Sprintf("%s/%s", ingressCollection, statusColletion)
 }
