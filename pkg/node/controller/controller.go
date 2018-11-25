@@ -65,6 +65,9 @@ func (c *Controller) Connect(ctx context.Context) error {
 
 	opts := v1.Request().Node().NodeConnectOptions()
 	opts.Info = envs.Get().GetState().Node().Info
+
+	log.Info(opts.Info)
+
 	opts.Status = envs.Get().GetState().Node().Status
 	opts.Network = *envs.Get().GetNet().Info(ctx)
 

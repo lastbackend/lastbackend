@@ -46,8 +46,8 @@ import (
 func Daemon() {
 
 	var (
-		sigs = make(chan os.Signal)
-		done = make(chan bool, 1)
+		sigs        = make(chan os.Signal)
+		done        = make(chan bool, 1)
 		ctx, cancel = context.WithCancel(context.Background())
 	)
 
@@ -65,7 +65,6 @@ func Daemon() {
 	if err != nil {
 		log.Errorf("Cannot initialize iri: %v", err)
 	}
-
 
 	csis := viper.GetStringMap("runtime.csi")
 	if csis != nil {
@@ -85,9 +84,6 @@ func Daemon() {
 	envs.Get().SetCRI(_cri)
 	envs.Get().SetCII(_cii)
 
-	st.Node().Info = runtime.NodeInfo()
-	st.Node().Status = runtime.NodeStatus()
-
 	net, err := network.New()
 	if err != nil {
 		log.Errorf("can not initialize network: %s", err.Error())
@@ -95,6 +91,9 @@ func Daemon() {
 	}
 
 	envs.Get().SetNet(net)
+
+	st.Node().Info = runtime.NodeInfo()
+	st.Node().Status = runtime.NodeStatus()
 
 	r, err := runtime.NewRuntime()
 	if err != nil {
@@ -106,7 +105,7 @@ func Daemon() {
 	r.Subscribe(ctx)
 	r.Loop(ctx)
 
-	if viper.IsSet("node.manifest.dir") ||  viper.IsSet("dir") {
+	if viper.IsSet("node.manifest.dir") || viper.IsSet("dir") {
 
 		dir := viper.GetString("node.manifest.dir")
 		if viper.IsSet("dir") {
@@ -116,7 +115,6 @@ func Daemon() {
 			r.Provision(context.Background(), dir)
 		}
 	}
-
 
 	if viper.IsSet("api") || viper.IsSet("api_uri") {
 

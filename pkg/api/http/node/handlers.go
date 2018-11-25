@@ -398,7 +398,6 @@ func NodeConnectH(w http.ResponseWriter, r *http.Request) {
 	ou.NodeUpdateInfoOptions.Set(opts.Info)
 	node.Meta.Set(ou)
 	node.Status.Capacity = opts.Status.Capacity
-
 	node.Spec.Security.TLS = opts.TLS
 
 	if opts.SSL != nil {
