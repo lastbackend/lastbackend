@@ -88,7 +88,7 @@ func GetHostConfig(manifest *types.ContainerManifest) *container.HostConfig {
 			if p.HostIP == types.EmptyString {
 				p.HostIP = "0.0.0.0"
 			}
-			
+
 			ports[port] = append(ports[port], nat.PortBinding{
 				HostIP:   p.HostIP,
 				HostPort: fmt.Sprintf("%d", p.HostPort),
@@ -97,7 +97,7 @@ func GetHostConfig(manifest *types.ContainerManifest) *container.HostConfig {
 
 	}
 
-	return &container.HostConfig{
+	cfg := container.HostConfig{
 		Binds:           manifest.Binds,
 		LogConfig:       logC,
 		NetworkMode:     container.NetworkMode(manifest.Network.Mode),
@@ -114,13 +114,19 @@ func GetHostConfig(manifest *types.ContainerManifest) *container.HostConfig {
 		PublishAllPorts: manifest.PublishAllPorts,
 		AutoRemove:      manifest.AutoRemove,
 	}
+
+	if cfg.NetworkMode != types.EmptyString {
+		cfg.DNS = make([]string, 0)
+		cfg.DNSOptions = make([]string, 0)
+		cfg.DNSSearch = make([]string, 0)
+	}
+
+	return &cfg
 }
 
 func GetNetworkConfig(manifest *types.ContainerManifest) *network.NetworkingConfig {
 
-	cfg := &network.NetworkingConfig{
-
-	}
+	cfg := &network.NetworkingConfig{}
 
 	return cfg
 }

@@ -82,6 +82,9 @@ func (m *NodeMeta) Set(meta *NodeUpdateMetaOptions) {
 	if meta.InternalIP != nil {
 		m.InternalIP = *meta.InternalIP
 	}
+	if meta.CIDR != nil {
+		m.CIDR = *meta.CIDR
+	}
 
 }
 
@@ -97,6 +100,7 @@ type NodeInfo struct {
 	// RewriteIP - need to set true if you want to use an external ip
 	ExternalIP string `json:"external_ip"`
 	InternalIP string `json:"internal_ip"`
+	CIDR       string `json:"cidr"`
 }
 
 // swagger:model types_node_status
@@ -125,11 +129,10 @@ type NodeStatusInterfaceState struct {
 	Message string `json:"message"`
 }
 
-
 // swagger:ignore
 // swagger:model types_node_spec
 type NodeSpec struct {
-	Security  NodeSecurity            `json:"security"`
+	Security NodeSecurity `json:"security"`
 }
 
 type NodeSecurity struct {
@@ -200,6 +203,7 @@ type NodeUpdateInfoOptions struct {
 	OSType       *string `json:"os_type"`
 	ExternalIP   *string `json:"external_ip"`
 	InternalIP   *string `json:"internal_ip"`
+	CIDR         *string `json:"cidr"`
 }
 
 func (o *NodeUpdateInfoOptions) Set(i NodeInfo) {
@@ -209,15 +213,16 @@ func (o *NodeUpdateInfoOptions) Set(i NodeInfo) {
 	o.OSType = &i.OSType
 	o.ExternalIP = &i.ExternalIP
 	o.InternalIP = &i.InternalIP
+	o.CIDR = &i.CIDR
 }
 
 // swagger:ignore
 // swagger:model types_node_create
 type NodeCreateOptions struct {
-	Meta     NodeCreateMetaOptions `json:"meta",yaml:"meta"`
-	Info     NodeInfo              `json:"info",yaml:"info"`
-	Status   NodeStatus            `json:"status",yaml:"status"`
-	Security NodeSecurity          `json:"security",yaml:"security"`
+	Meta     NodeCreateMetaOptions `json:"meta", yaml:"meta"`
+	Info     NodeInfo              `json:"info", yaml:"info"`
+	Status   NodeStatus            `json:"status", yaml:"status"`
+	Security NodeSecurity          `json:"security", yaml:"security"`
 }
 
 func (n *Node) SelfLink() string {

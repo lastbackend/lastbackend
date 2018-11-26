@@ -46,6 +46,7 @@ func (nv *NodeView) ToNodeMeta(meta types.NodeMeta) NodeMeta {
 	nm.Architecture = meta.Architecture
 	nm.IP.External = meta.ExternalIP
 	nm.IP.Internal = meta.InternalIP
+	nm.CIDR = meta.CIDR
 	return nm
 }
 

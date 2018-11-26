@@ -41,6 +41,7 @@ type Network struct {
 	cni.CNI
 
 	ExtIface *NetworkInterface
+	IntIface *NetworkInterface
 	Device   *Device
 	Network  *net.IPNet
 	CIDR     *net.IPNet
@@ -98,7 +99,7 @@ func New() (*Network, error) {
 
 func (n *Network) SetSubnetFromDevice(name string) error {
 
-	iface, _,  err := utils.GetIfaceByName(name)
+	iface, _, err := utils.GetIfaceByName(name)
 	if err != nil {
 		log.Errorf("Can not find interface by name %s", name)
 		return err
@@ -119,6 +120,9 @@ func (n *Network) SetSubnetFromDevice(name string) error {
 		log.Errorf("Can not locate docker interface ips: %s", err.Error())
 	}
 
+	n.IntIface = new(NetworkInterface)
+	n.IntIface.Iface = iface
+
 	if len(addrs) == 0 {
 		log.Error("docker interface has not IP address")
 		panic(0)
@@ -126,6 +130,8 @@ func (n *Network) SetSubnetFromDevice(name string) error {
 
 	sip := make(net.IP, len(addrs[0].IPNet.IP))
 	smk := make(net.IPMask, len(addrs[0].Mask))
+
+	n.IntIface.IfaceAddr = addrs[0].IP
 
 	copy(sip, addrs[0].IPNet.IP)
 	copy(smk, addrs[0].Mask)
@@ -168,13 +174,14 @@ func (n *Network) Info(ctx context.Context) *types.NetworkState {
 
 	state.Type = NetworkType
 	state.CIDR = n.CIDR.String()
-	state.IFace= types.NetworkInterface{
+	state.IFace = types.NetworkInterface{
 		Index: n.Device.GetIndex(),
 		Name:  n.Device.GetName(),
 		HAddr: n.Device.GetHardware(),
 		Addr:  n.Device.GetAddr(),
 	}
 	state.Addr = n.ExtIface.IfaceAddr.String()
+	state.IP = n.IntIface.IfaceAddr.String()
 	return &state
 }
 
@@ -253,7 +260,7 @@ func (n *Network) Create(ctx context.Context, network *types.SubnetManifest) (*t
 
 	state.Type = NetworkType
 	state.CIDR = n.CIDR.String()
-	state.IFace= types.NetworkInterface{
+	state.IFace = types.NetworkInterface{
 		Index: n.Device.GetIndex(),
 		Name:  n.Device.GetName(),
 		HAddr: n.Device.GetHardware(),
@@ -280,7 +287,6 @@ func (n *Network) Replace(ctx context.Context, state *types.NetworkState, manife
 	if err != nil {
 		return nil, err
 	}
-
 
 	return state, nil
 }
@@ -327,7 +333,6 @@ func (n *Network) Subnets(ctx context.Context) (map[string]*types.NetworkState, 
 			Addr:  r.Gw.String(),
 			HAddr: neighs[r.Gw.String()],
 		}
-
 
 		for _, rule := range rules {
 			if rule.Mac == sn.IFace.HAddr && rule.DST != "" {

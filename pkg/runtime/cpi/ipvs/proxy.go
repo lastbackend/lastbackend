@@ -60,6 +60,11 @@ type Proxy struct {
 	}
 }
 
+type Service struct {
+	srvc *libipvs.Service
+	dest map[string]*libipvs.Destination
+}
+
 func (p *Proxy) Info(ctx context.Context) (map[string]*types.EndpointState, error) {
 	return p.getState(ctx)
 }
@@ -71,40 +76,41 @@ func (p *Proxy) Create(ctx context.Context, manifest *types.EndpointManifest) (*
 
 	var (
 		err   error
-		csvcs = make([]*libipvs.Service, 0)
+		csvcs = make([]*Service, 0)
 	)
 
-	svcs, dests, err := specToServices(manifest)
+	svcs, err := specToServices(manifest)
 	if err != nil {
 		log.Errorf("%s can not get services from manifest: %s", logIPVSPrefix, err.Error())
 		return nil, err
 	}
 
-	if len(dests) == 0 {
-		log.V(logLevel).Debugf("%s skip creating service, destinations not exists", logIPVSPrefix)
-		return nil, nil
-	}
-
 	defer func() {
 		if err != nil {
 			for _, svc := range csvcs {
-				log.V(logLevel).Debugf("%s delete service: %s", logIPVSPrefix, svc.Address.String())
-				p.ipvs.DelService(svc)
+				log.V(logLevel).Debugf("%s delete service: %s", logIPVSPrefix, svc.srvc.Address.String())
+				p.ipvs.DelService(svc.srvc)
 			}
 		}
 	}()
 
 	for _, svc := range svcs {
-		log.V(logLevel).Debugf("%s create new service: %s", logIPVSPrefix, svc.Address.String())
-		if err := p.ipvs.NewService(svc); err != nil {
+
+		if len(svc.dest) == 0 {
+			log.V(logLevel).Debugf("%s skip creating service, destinations not exists", logIPVSPrefix)
+			return nil, nil
+		}
+
+		log.V(logLevel).Debugf("%s create new service: %s", logIPVSPrefix, svc.srvc.Address.String())
+		if err := p.ipvs.NewService(svc.srvc); err != nil {
 			log.Errorf("%s create service err: %s", logIPVSPrefix, err.Error())
 		}
 
-		for _, dest := range dests {
+		for _, dest := range svc.dest {
 			log.V(logLevel).Debugf("%s create new destination %s for service: %s", logIPVSPrefix,
-				dest.Address.String(), svc.Address.String())
+				dest.Address.String(), svc.srvc.Address.String())
 
-			if err := p.ipvs.NewDestination(svc, dest); err != nil {
+			if err := p.ipvs.NewDestination(svc.srvc, dest); err != nil {
 				log.Errorf("%s create destination for service err: %s", logIPVSPrefix, err.Error())
 			}
 		}
@@ -150,17 +156,17 @@ func (p *Proxy) Destroy(ctx context.Context, state *types.EndpointState) error {
 	mf.EndpointSpec = state.EndpointSpec
 	mf.Upstreams = state.Upstreams
 
-	svcs, _, err := specToServices(&mf)
+	svcs, err := specToServices(&mf)
 	if err != nil {
 		return err
 	}
 
 	for _, svc := range svcs {
-		if err = p.ipvs.DelService(svc); err != nil {
+		if err = p.ipvs.DelService(svc.srvc); err != nil {
 			log.Errorf("%s can not delete service: %s", logIPVSPrefix, err.Error())
 		}
 
-		if err := p.delIpBindToLink(svc.Address.String()); err != nil {
+		if err := p.delIpBindToLink(svc.srvc.Address.String()); err != nil {
 			log.Errorf("%s can not unbind ip from link: %s", logIPVSPrefix, err.Error())
 		}
 	}
@@ -171,7 +177,7 @@ func (p *Proxy) Destroy(ctx context.Context, state *types.EndpointState) error {
 // Update proxy rules
 func (p *Proxy) Update(ctx context.Context, state *types.EndpointState, spec *types.EndpointManifest) (*types.EndpointState, error) {
 
-	psvc, pdest, err := specToServices(spec)
+	psvc, err := specToServices(spec)
 	if err != nil {
 		log.Errorf("%s can not convert spec to services: %s", logIPVSPrefix, err.Error())
 		return state, err
@@ -181,7 +187,7 @@ func (p *Proxy) Update(ctx context.Context, state *types.EndpointState, spec *ty
 	mf.EndpointSpec = state.EndpointSpec
 	mf.Upstreams = state.Upstreams
 
-	csvc, cdest, err := specToServices(&mf)
+	csvc, err := specToServices(&mf)
 	if err != nil {
 		log.Errorf("%s can not convert state to services: %s", logIPVSPrefix, err.Error())
 		return state, err
@@ -193,7 +199,7 @@ func (p *Proxy) Update(ctx context.Context, state *types.EndpointState, spec *ty
 		// remove service which not exists in new spec
 		if _, ok := psvc[id]; !ok {
 			log.Debugf("%s delete service: %s", logIPVSPrefix, id)
-			if err := p.ipvs.DelService(svc); err != nil {
+			if err := p.ipvs.DelService(svc.srvc); err != nil {
 				log.Errorf("%s can not remove service: %s", logIPVSPrefix, err.Error())
 			}
 			continue
@@ -205,29 +211,36 @@ func (p *Proxy) Update(ctx context.Context, state *types.EndpointState, spec *ty
 
 		if _, ok := csvc[id]; !ok {
 			log.Debugf("%s create service: %s", logIPVSPrefix, id)
-			if err := p.ipvs.NewService(svc); err != nil {
+			if err := p.ipvs.NewService(svc.srvc); err != nil {
 				log.Errorf("%s can not create service: %s", logIPVSPrefix, err.Error())
 			}
-		}
-
-		// check service upstreams for removing
-		for did, dest := range cdest {
-			log.Debugf("%s check service %s old backend exists %s", logIPVSPrefix, id, did)
-			if _, ok := pdest[did]; !ok {
-				log.Debugf("%s service %s backend delete %s", logIPVSPrefix, id, did)
-				if err := p.ipvs.DelDestination(svc, dest); err != nil {
-					log.Errorf("%s can not remove backend: %s", logIPVSPrefix, err.Error())
+		} else {
+			// check service upstreams for removing
+			for did, dest := range csvc[id].dest {
+				log.Debugf("%s check service %s old backend exists %s", logIPVSPrefix, id, did)
+				if _, ok := svc.dest[did]; !ok {
+					log.Debugf("%s service %s backend delete %s", logIPVSPrefix, id, did)
+					if err := p.ipvs.DelDestination(svc.srvc, dest); err != nil {
+						log.Errorf("%s can not remove backend: %s", logIPVSPrefix, err.Error())
+					}
 				}
 			}
 		}
 
 		// check service upstreams for creating
-		for did, dest := range pdest {
+		for did, dest := range svc.dest {
 			log.Debugf("%s check service %s new backend exists %s", logIPVSPrefix, id, did)
-			if _, ok := cdest[did]; !ok {
-				log.Debugf("%s service %s backend create %s", logIPVSPrefix, id, did)
-				if err := p.ipvs.NewDestination(svc, dest); err != nil {
+
+			if _, ok := csvc[id]; !ok {
+				if err := p.ipvs.NewDestination(svc.srvc, dest); err != nil {
 					log.Errorf("%s can not add backend: %s", logIPVSPrefix, err.Error())
+				}
+			} else {
+				if _, ok := csvc[id].dest[did]; !ok {
+					log.Debugf("%s service %s backend create %s", logIPVSPrefix, id, did)
+					if err := p.ipvs.NewDestination(svc.srvc, dest); err != nil {
+						log.Errorf("%s can not add backend: %s", logIPVSPrefix, err.Error())
+					}
 				}
 			}
 		}
@@ -536,56 +549,58 @@ func New() (*Proxy, error) {
 	return prx, nil
 }
 
-func specToServices(spec *types.EndpointManifest) (map[string]*libipvs.Service, map[string]*libipvs.Destination, error) {
+func specToServices(spec *types.EndpointManifest) (map[string]*Service, error) {
 
-	var svcs = make(map[string]*libipvs.Service, 0)
-	dests := make(map[string]*libipvs.Destination, 0)
+	var svcs = make(map[string]*Service, 0)
 
 	for ext, pm := range spec.PortMap {
 
 		port, proto, err := network.ParsePortMap(pm)
 		if err != nil {
 			err = errors.New("Invalid port map declaration")
-			return svcs, dests, err
+			return svcs, err
 		}
 
-		svc := libipvs.Service{
+		svc := new(Service)
+		svc.srvc = &libipvs.Service{
 			Address:       net.ParseIP(spec.IP),
 			Port:          ext,
 			AddressFamily: nl.FAMILY_V4,
 			SchedName:     "rr",
 		}
+		svc.dest = make(map[string]*libipvs.Destination, 0)
 
 		for _, host := range spec.Upstreams {
 			log.Debugf("%s: add new destination to spec for: %s", logIPVSPrefix, host)
+
 			dest := new(libipvs.Destination)
 
 			dest.Address = net.ParseIP(host)
 			dest.Port = port
 			dest.Weight = 1
-			dests[fmt.Sprintf("%s_%d", dest.Address.String(), dest.Port)] = dest
+			svc.dest[fmt.Sprintf("%s_%d", dest.Address.String(), dest.Port)] = dest
 			log.Debugf("%s: added new destination %s_%d", logIPVSPrefix, dest.Address.String(), dest.Port)
 		}
 
 		switch proto {
 		case "tcp":
-			svc.Protocol = syscall.IPPROTO_TCP
-			svcs[fmt.Sprintf("%s_%d_%d_%s", spec.IP, svc.Port, port, proxyTCPProto)] = &svc
+			svc.srvc.Protocol = syscall.IPPROTO_TCP
+			svcs[fmt.Sprintf("%s_%d_%d_%s", spec.IP, svc.srvc.Port, port, proxyTCPProto)] = svc
 			break
 		case "udp":
-			svc.Protocol = syscall.IPPROTO_UDP
-			svcs[fmt.Sprintf("%s_%d_%d_%s", spec.IP, svc.Port, port, proxyUDPProto)] = &svc
+			svc.srvc.Protocol = syscall.IPPROTO_UDP
+			svcs[fmt.Sprintf("%s_%d_%d_%s", spec.IP, svc.srvc.Port, port, proxyUDPProto)] = svc
 			break
 		case "*":
-			svcc := svc
-			svc.Protocol = syscall.IPPROTO_TCP
-			svcc.Protocol = syscall.IPPROTO_UDP
+			svcc := *svc
+			svc.srvc.Protocol = syscall.IPPROTO_TCP
+			svcc.srvc.Protocol = syscall.IPPROTO_UDP
 
-			svcs[fmt.Sprintf("%s_%d_%d_%s", spec.IP, svc.Port, port, proxyTCPProto)] = &svc
-			svcs[fmt.Sprintf("%s_%d_%d_%s", spec.IP, svcc.Port, port, proxyUDPProto)] = &svcc
+			svcs[fmt.Sprintf("%s_%d_%d_%s", spec.IP, svc.srvc.Port, port, proxyTCPProto)] = svc
+			svcs[fmt.Sprintf("%s_%d_%d_%s", spec.IP, svcc.srvc.Port, port, proxyUDPProto)] = &svcc
 			break
 		}
 	}
 
-	return svcs, dests, nil
+	return svcs, nil
 }

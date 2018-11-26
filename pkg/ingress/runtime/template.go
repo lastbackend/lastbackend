@@ -88,7 +88,7 @@ frontend http
   {{end}}{{end}}
   {{range $domain, $acl := .Rules}}{{range $path, $backend := $acl}}use_backend local_http if r_{{$backend}}_down r_{{$backend}}
   {{end}}{{end}}
-  {{range $domain, $acl := .Rules}}{{range $path, $backend := $acl}}use_backend {{$backend}} if r_{{$backend}}
+  {{range $domain, $acl := .Rules}}{{range $path, $backend := $acl}}use_backend {{$backend}} if r_{{$backend}} {{if eq $path "/"}}{{range $p, $b := $acl}}{{if ne $p "/"}}!r_{{$b}} {{end}}{{end}}{{end}}
   {{end}}{{end}}
   default_backend local_http
 {{else if eq $f.Type "https" }}

@@ -19,6 +19,7 @@
 package runtime
 
 import (
+	"context"
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 	"github.com/lastbackend/lastbackend/pkg/node/envs"
 	"github.com/lastbackend/lastbackend/pkg/util/system"
@@ -51,10 +52,17 @@ func NodeInfo() types.NodeInfo {
 	}
 
 	info.Hostname = hostname
-	info.InternalIP = ip
+	info.ExternalIP = ip
 	info.OSType = osInfo.GoOS
 	info.OSName = fmt.Sprintf("%s %s", osInfo.OS, osInfo.Core)
 	info.Architecture = osInfo.Platform
+
+	net := envs.Get().GetNet()
+	if net != nil {
+		nt := net.Info(context.Background())
+		info.InternalIP = nt.IP
+		info.CIDR = nt.CIDR
+	}
 
 	return info
 }
@@ -88,7 +96,7 @@ func NodeCapacity() types.NodeResources {
 	m := vmStat.Total / 1024 / 1024
 
 	return types.NodeResources{
-		Storage: 		int64(storage/1024/1024),
+		Storage:    int64(storage / 1024 / 1024),
 		Memory:     int64(m),
 		Pods:       int(m / MinContainerMemory),
 		Containers: int(m / MinContainerMemory),

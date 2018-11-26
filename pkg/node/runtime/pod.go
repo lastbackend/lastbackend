@@ -290,6 +290,7 @@ func PodCreate(ctx context.Context, key string, manifest *types.PodManifest) (*t
 		}
 	}
 
+	var primary string
 	for _, s := range manifest.Template.Containers {
 
 		//==========================================================================
@@ -304,6 +305,12 @@ func PodCreate(ctx context.Context, key string, manifest *types.PodManifest) (*t
 		if err != nil {
 			log.Errorf("%s can not create container manifest from spec: %s", logPodPrefix, err.Error())
 			return setError(err)
+		}
+
+		if primary != types.EmptyString {
+			m.Network.Mode = fmt.Sprintf("container:%s", primary)
+		} else {
+			primary = m.Name
 		}
 
 		c.ID, err = envs.Get().GetCRI().Create(ctx, m)
@@ -408,6 +415,7 @@ func PodClean(ctx context.Context, status *types.PodStatus) {
 			continue
 		}
 	}
+
 }
 
 func PodDestroy(ctx context.Context, pod string, status *types.PodStatus) {

@@ -58,6 +58,7 @@ type NodeInfo struct {
 		External string `json:"external"`
 		Internal string `json:"internal"`
 	} `json:"ip"`
+	CIDR    string `json:"cidr"`
 	Version string `json:"version"`
 }
 

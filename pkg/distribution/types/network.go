@@ -82,6 +82,8 @@ type SubnetSpec struct {
 	IFace NetworkInterface `json:"iface"`
 	// Node Public IP
 	Addr string `json:"addr"`
+	// Node Internal IP
+	IP string `json:"ip"`
 }
 
 func SubnetGetNameFromCIDR(CIDR string) string {
