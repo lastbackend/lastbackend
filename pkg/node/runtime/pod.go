@@ -308,7 +308,7 @@ func PodCreate(ctx context.Context, key string, manifest *types.PodManifest) (*t
 		}
 
 		if primary != types.EmptyString {
-			m.Network.Network = fmt.Sprintf("container:%s", primary)
+			m.Network.Mode = fmt.Sprintf("container:%s", primary)
 		} else {
 			primary = m.Name
 		}
@@ -415,6 +415,7 @@ func PodClean(ctx context.Context, status *types.PodStatus) {
 			continue
 		}
 	}
+
 }
 
 func PodDestroy(ctx context.Context, pod string, status *types.PodStatus) {
