@@ -32,7 +32,7 @@ install:
 
 image:
 	@echo "== Pre-building configuration"
-	@sh ./hack/build-images.sh
+	@sh ./hack/build-images.sh $(app)
 
 run-kit:
 	@echo "== Run kit daemon all in one"

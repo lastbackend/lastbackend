@@ -116,7 +116,7 @@ func (n *Namespace) Create(opts *types.NamespaceCreateOptions) (*types.Namespace
 	}
 
 	ns.Spec.Domain.Internal = viper.GetString("domain.internal")
-	ns.Spec.Domain.External = viper.GetString("domain.external")
+	ns.Spec.Domain.External = strings.ToLower(fmt.Sprintf("%s.%s", opts.Name, viper.GetString("domain.external")))
 
 	if opts.Domain != nil {
 		ns.Spec.Domain.External = *opts.Domain
