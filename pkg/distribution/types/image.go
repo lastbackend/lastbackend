@@ -28,7 +28,7 @@ type Image struct {
 
 type ImageMeta struct {
 	ID   string   `json:"id"`
-	Hash string   `json:"hash"`
+	Digest string `json:"digest"`
 	Name string   `json:"name"`
 	Tags []string `json:"tags"`
 }
