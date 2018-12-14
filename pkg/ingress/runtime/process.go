@@ -149,15 +149,17 @@ func (hp *Process) reload() error {
 		c.Start()
 	}
 
+	defer func() {
+		for port := range ports {
+			c := exec.Command(IPTablesExec, "-D", "INPUT", "-p", "tcp", "--dport", fmt.Sprintf("%d", port), "--syn", "-j", "DROP")
+			c.Start()
+		}
+	}()
+
 	err := cmd.Start()
 	if err != nil {
 		log.Errorf("failed to start haproxy: %s", err.Error())
 		return err
-	}
-
-	for port := range ports {
-		c := exec.Command(IPTablesExec, "-D", "INPUT", "-p", "tcp", "--dport", fmt.Sprintf("%d", port), "--syn", "-j", "DROP")
-		c.Start()
 	}
 
 	hp.process = cmd.Process

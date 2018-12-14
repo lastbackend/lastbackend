@@ -314,6 +314,11 @@ func (r *Runtime) Inspect(ctx context.Context, id string) (*types.Image, error) 
 
 	image := new(types.Image)
 	image.Meta.ID = info.ID
+
+	if len(info.RepoDigests) > 0 {
+		image.Meta.Digest = info.RepoDigests[0]
+	}
+
 	image.Meta.Tags = info.RepoTags
 	image.Status.Size = info.Size
 	image.Status.VirtualSize = info.VirtualSize
