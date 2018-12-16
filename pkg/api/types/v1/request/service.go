@@ -159,9 +159,16 @@ func (s *ServiceManifest) SetServiceSpec(svc *types.Service) {
 		}
 
 	} else {
-		svc.Spec.Selector.Node = types.EmptyString
-		svc.Spec.Selector.Labels = make(map[string]string)
-		svc.Spec.Selector.Updated = time.Now()
+
+		if svc.Spec.Selector.Node != types.EmptyString {
+			svc.Spec.Selector.Node = types.EmptyString
+			svc.Spec.Selector.Updated = time.Now()
+		}
+
+		if len(svc.Spec.Selector.Labels) > 0 {
+			svc.Spec.Selector.Labels = make(map[string]string)
+			svc.Spec.Selector.Updated = time.Now()
+		}
 	}
 
 	if s.Spec.Strategy != nil {
@@ -225,6 +232,8 @@ func (s *ServiceManifest) SetServiceSpec(svc *types.Service) {
 				svc.Spec.Template.Updated = time.Now()
 			}
 
+
+			// Environments check
 			for _, ce := range c.Env {
 				var f = false
 
@@ -283,6 +292,7 @@ func (s *ServiceManifest) SetServiceSpec(svc *types.Service) {
 			}
 			spec.EnvVars = envs
 
+			// Resources check
 			if c.Resources.Request.RAM != spec.Resources.Request.RAM ||
 				c.Resources.Request.CPU != spec.Resources.Request.CPU {
 				spec.Resources.Request.RAM = c.Resources.Request.RAM
@@ -297,6 +307,7 @@ func (s *ServiceManifest) SetServiceSpec(svc *types.Service) {
 				svc.Spec.Template.Updated = time.Now()
 			}
 
+			// Volumes check
 			for _, v := range c.Volumes {
 
 				var f = false
@@ -336,6 +347,14 @@ func (s *ServiceManifest) SetServiceSpec(svc *types.Service) {
 			}
 
 			spec.Volumes = vlms
+
+			// Ports check
+			spec.Ports = make(types.SpecTemplateContainerPorts, 0)
+			for _, cp := range c.Ports {
+				port := new(types.SpecTemplateContainerPort)
+				port.Parse(cp)
+				spec.Ports = append(spec.Ports, port)
+			}
 
 			if !f {
 				svc.Spec.Template.Containers = append(svc.Spec.Template.Containers, spec)

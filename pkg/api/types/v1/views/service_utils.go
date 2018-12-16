@@ -114,7 +114,7 @@ func (sv *Service) ToSpec(obj types.ServiceSpec) ServiceSpec {
 		}
 
 		for _, p := range s.Ports {
-			c.Ports = append(c.Ports, string(p.ContainerPort))
+			c.Ports = append(c.Ports, fmt.Sprintf("%d/%s", p.ContainerPort, p.Protocol))
 		}
 
 		for _, env := range s.EnvVars {
