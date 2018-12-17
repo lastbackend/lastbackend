@@ -20,8 +20,6 @@ ENV GOPATH /go
 ENV GOROOT /usr/local/go
 ENV PATH $GOPATH/bin:/usr/local/go/bin:$PATH
 
-COPY ./images/ingress/errors /var/run/html/errors
-
 ADD . /go/src/github.com/lastbackend/lastbackend
 WORKDIR /go/src/github.com/lastbackend/lastbackend
 
@@ -43,5 +41,7 @@ RUN apk add --no-cache ca-certificates \
   haproxy
 
 COPY --from=build /usr/bin/ingress /usr/bin/ingress
+COPY ./images/ingress/errors /var/run/html/errors
+COPY ./images/ingress/conf/haproxy.cfg /etc/haproxy/haproxy.cfg
 
-EXPOSE 80 443
+EXPOSE 80 443 9000

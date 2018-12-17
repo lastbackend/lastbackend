@@ -381,11 +381,11 @@ func deploymentPodProvision(ss *ServiceState, d *types.Deployment) (err error) {
 	return nil
 }
 
-func deploymentCreate(svc *types.Service) (*types.Deployment, error) {
+func deploymentCreate(svc *types.Service, version int) (*types.Deployment, error) {
 
 	dm := distribution.NewDeploymentModel(context.Background(), envs.Get().GetStorage())
 
-	d, err := dm.Create(svc)
+	d, err := dm.Create(svc, version)
 	if err != nil {
 		return nil, err
 	}

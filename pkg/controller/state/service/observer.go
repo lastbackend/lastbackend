@@ -20,6 +20,9 @@ package service
 
 import (
 	"context"
+	"fmt"
+	"strconv"
+	"strings"
 	"sync"
 
 	"github.com/lastbackend/lastbackend/pkg/controller/envs"
@@ -45,6 +48,7 @@ type ServiceState struct {
 	}
 
 	deployment struct {
+		index     int
 		active    *types.Deployment
 		provision *types.Deployment
 		list      map[string]*types.Deployment
@@ -99,6 +103,18 @@ func (ss *ServiceState) Restore() error {
 
 	for _, d := range dl.Items {
 		log.Infof("%s: restore deployment: %s", logPrefix, d.SelfLink())
+
+		var index int
+
+		index, err := strconv.Atoi(strings.Replace(d.Meta.Name,"v","", -1))
+		if err != nil {
+			fmt.Println(err)
+		}
+
+		if ss.deployment.index < index {
+			ss.deployment.index = index
+		}
+
 		ss.deployment.list[d.SelfLink()] = d
 	}
 

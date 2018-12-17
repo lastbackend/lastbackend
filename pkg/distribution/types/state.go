@@ -19,6 +19,7 @@
 package types
 
 const StateProvision = "provision"
+const StateWaiting = "waiting"
 const StatusInitialized = "initialized"
 const StateWarning = "warning"
 const StateDegradation = "degradation"

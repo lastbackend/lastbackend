@@ -192,10 +192,10 @@ func (sv *Service) ToSpec(obj types.ServiceSpec) ServiceSpec {
 func (sv *Service) ToDeployments(obj *types.DeploymentList, pods *types.PodList) DeploymentMap {
 	deployments := make(DeploymentMap, 0)
 	for _, d := range obj.Items {
-		if d.Meta.Service == sv.Meta.Name {
+		if d.Meta.Namespace == sv.Meta.Namespace && d.Meta.Service == sv.Meta.Name {
 			dv := new(DeploymentView)
 			dp := dv.New(d, pods)
-			deployments[dp.Meta.Name] = dp
+			deployments[dp.Meta.SelfLink] = dp
 		}
 	}
 	return deployments

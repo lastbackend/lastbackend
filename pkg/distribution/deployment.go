@@ -20,15 +20,13 @@ package distribution
 
 import (
 	"context"
-	"strings"
+	"fmt"
 	"time"
 
+	"encoding/json"
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 	"github.com/lastbackend/lastbackend/pkg/log"
 	"github.com/lastbackend/lastbackend/pkg/storage"
-	"github.com/lastbackend/lastbackend/pkg/util/generator"
-
-	"encoding/json"
 
 	"github.com/lastbackend/lastbackend/pkg/distribution/errors"
 )
@@ -76,7 +74,7 @@ func (d *Deployment) Get(namespace, service, name string) (*types.Deployment, er
 }
 
 // Create new deployment
-func (d *Deployment) Create(service *types.Service) (*types.Deployment, error) {
+func (d *Deployment) Create(service *types.Service, version int) (*types.Deployment, error) {
 
 	log.V(logLevel).Debugf("%s:create:> distribution create in service: %s", logDeploymentPrefix, service.Meta.Name)
 
@@ -85,7 +83,7 @@ func (d *Deployment) Create(service *types.Service) (*types.Deployment, error) {
 	deployment.Meta.Namespace = service.Meta.Namespace
 	deployment.Meta.Service = service.Meta.Name
 	deployment.Meta.Status = types.StateCreated
-	deployment.Meta.Name = strings.Split(generator.GetUUIDV4(), "-")[4][5:]
+	deployment.Meta.Name = fmt.Sprintf("v%d", version)
 	deployment.Meta.Created = time.Now()
 	deployment.Meta.Updated = time.Now()
 
