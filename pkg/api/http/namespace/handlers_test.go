@@ -273,21 +273,14 @@ func TestNamespaceList(t *testing.T) {
 
 }
 
-type NamespaceCreateOptions struct {
-	request.NamespaceCreateOptions
-}
 
-func createNamespaceCreateOptions(name, description string, quotas *request.NamespaceQuotasOptions) *NamespaceCreateOptions {
-	opts := new(NamespaceCreateOptions)
-	opts.Name = name
-	opts.Description = description
-	opts.Quotas = quotas
+
+func createNamespaceManifest(name, description string, resources *request.NamespaceResourcesOptions) *request.NamespaceManifest {
+	opts := new(request.NamespaceManifest)
+	opts.Meta.Name = &name
+	opts.Meta.Description = &description
+	opts.Spec.Resources = resources
 	return opts
-}
-
-func (s *NamespaceCreateOptions) toJson() string {
-	buf, _ := json.Marshal(s)
-	return string(buf)
 }
 
 // Testing NamespaceCreateH handler
@@ -309,6 +302,11 @@ func TestNamespaceCreate(t *testing.T) {
 		namespace *types.Namespace
 	}
 
+	nsm1, _ := createNamespaceManifest("demo", "", nil).ToJson()
+	nsm2, _ := createNamespaceManifest("__test", "", &request.NamespaceResourcesOptions{Request: &request.NamespaceResourceOptions{RAM: getStrPtr("1GB")}}).ToJson()
+	nsm3, _ := createNamespaceManifest("test", "", &request.NamespaceResourcesOptions{Request: &request.NamespaceResourceOptions{RAM: getStrPtr("1GB")}}).ToJson()
+
+
 	tests := []struct {
 		name         string
 		fields       fields
@@ -326,7 +324,7 @@ func TestNamespaceCreate(t *testing.T) {
 			args:         args{ctx, ns1},
 			fields:       fields{stg},
 			handler:      namespace.NamespaceCreateH,
-			data:         createNamespaceCreateOptions("demo", "", nil).toJson(),
+			data:         string(nsm1),
 			err:          "{\"code\":400,\"status\":\"Not Unique\",\"message\":\"Name is already in use\"}",
 			wantErr:      true,
 			expectedCode: http.StatusBadRequest,
@@ -336,7 +334,7 @@ func TestNamespaceCreate(t *testing.T) {
 			args:         args{ctx, ns1},
 			fields:       fields{stg},
 			handler:      namespace.NamespaceCreateH,
-			data:         createNamespaceCreateOptions("__test", "", &request.NamespaceQuotasOptions{RAM: 2, Routes: 1}).toJson(),
+			data:         string(nsm2),
 			err:          "{\"code\":400,\"status\":\"Bad Parameter\",\"message\":\"Bad name parameter\"}",
 			wantErr:      true,
 			expectedCode: http.StatusBadRequest,
@@ -356,7 +354,7 @@ func TestNamespaceCreate(t *testing.T) {
 			args:         args{ctx, ns1},
 			fields:       fields{stg},
 			handler:      namespace.NamespaceCreateH,
-			data:         createNamespaceCreateOptions("test", "", &request.NamespaceQuotasOptions{RAM: 2, Routes: 1}).toJson(),
+			data:         string(nsm3),
 			want:         v1.View().Namespace().New(ns1),
 			wantErr:      false,
 			expectedCode: http.StatusOK,
@@ -426,22 +424,6 @@ func TestNamespaceCreate(t *testing.T) {
 
 }
 
-type NamespaceUpdateOptions struct {
-	request.NamespaceUpdateOptions
-}
-
-func createNamespaceUpdateOptions(description *string, quotas *request.NamespaceQuotasOptions) *NamespaceUpdateOptions {
-	opts := new(NamespaceUpdateOptions)
-	opts.Description = description
-	opts.Quotas = quotas
-	return opts
-}
-
-func (s *NamespaceUpdateOptions) toJson() string {
-	buf, _ := json.Marshal(s)
-	return string(buf)
-}
-
 // Testing NamespaceUpdateH handler
 func TestNamespaceUpdate(t *testing.T) {
 
@@ -450,15 +432,15 @@ func TestNamespaceUpdate(t *testing.T) {
 	stg, _ := storage.Get("mock")
 	envs.Get().SetStorage(stg)
 
-	strPointer := func(s string) *string { return &s }
-
 	ns1 := getNamespaceAsset("demo", "")
 	ns2 := getNamespaceAsset("empty", "new description")
 	ns3 := getNamespaceAsset("demo", "")
-	ns3.Spec.Resources.RAM = 512
-	ns3.Spec.Resources.Routes = 2
-	ns3.Spec.Quotas.RAM = 512
-	ns3.Spec.Quotas.Routes = 2
+	ns3.Spec.Resources.Request.RAM = "512MB"
+
+	nsm1, _ := createNamespaceManifest("test", "nil", nil).ToJson()
+	nsm3, _ := createNamespaceManifest(ns1.Meta.Name, ns3.Meta.Description, &request.NamespaceResourcesOptions{Request: &request.NamespaceResourceOptions{RAM: getStrPtr("512MB")}}).ToJson()
+
+
 
 	type fields struct {
 		stg storage.Storage
@@ -486,7 +468,7 @@ func TestNamespaceUpdate(t *testing.T) {
 			args:         args{ctx, ns2},
 			fields:       fields{stg},
 			handler:      namespace.NamespaceUpdateH,
-			data:         createNamespaceUpdateOptions(nil, nil).toJson(),
+			data:         string(nsm1),
 			err:          "{\"code\":404,\"status\":\"Not Found\",\"message\":\"Namespace not found\"}",
 			want:         v1.View().Namespace().New(ns1),
 			wantErr:      true,
@@ -507,7 +489,7 @@ func TestNamespaceUpdate(t *testing.T) {
 			args:         args{ctx, ns1},
 			fields:       fields{stg},
 			handler:      namespace.NamespaceUpdateH,
-			data:         createNamespaceUpdateOptions(strPointer(ns3.Meta.Description), &request.NamespaceQuotasOptions{RAM: ns3.Spec.Resources.RAM, Routes: ns3.Spec.Resources.Routes}).toJson(),
+			data:         string(nsm3),
 			want:         v1.View().Namespace().New(ns3),
 			wantErr:      false,
 			expectedCode: http.StatusOK,
@@ -572,8 +554,7 @@ func TestNamespaceUpdate(t *testing.T) {
 
 				assert.Equal(t, tc.want.Meta.Name, n.Meta.Name, "name not equal")
 				assert.Equal(t, tc.want.Meta.Description, n.Meta.Description, "description not equal")
-				assert.Equal(t, tc.want.Spec.Quotas.RAM, n.Spec.Quotas.RAM, "ram not equal")
-				assert.Equal(t, tc.want.Spec.Quotas.Routes, n.Spec.Quotas.Routes, "routes not equal")
+				assert.Equal(t, tc.want.Spec.Resources.Request.RAM, n.Spec.Resources.Request.RAM, "ram not equal")
 			}
 
 		})
@@ -701,6 +682,10 @@ func TestNamespaceRemove(t *testing.T) {
 		})
 	}
 
+}
+
+func getStrPtr(a string) *string {
+	return &a
 }
 
 func getNamespaceAsset(name, desc string) *types.Namespace {

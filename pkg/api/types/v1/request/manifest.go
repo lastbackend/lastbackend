@@ -19,6 +19,7 @@
 package request
 
 import (
+	"github.com/lastbackend/lastbackend/pkg/util/resource"
 	"strings"
 
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
@@ -97,9 +98,9 @@ type ManifestSpecTemplateContainerVolume struct {
 
 type ManifestSpecTemplateContainerResource struct {
 	// CPU resource option
-	CPU int64 `json:"cpu,omitempty" yaml:"cpu,omitempty"`
+	CPU string `json:"cpu,omitempty" yaml:"cpu,omitempty"`
 	// RAM resource option
-	RAM int64 `json:"ram,omitempty" yaml:"ram,omitempty"`
+	RAM string `json:"ram,omitempty" yaml:"ram,omitempty"`
 }
 
 type ManifestSpecTemplateVolume struct {
@@ -247,11 +248,11 @@ func (m ManifestSpecTemplateContainer) GetSpec() types.SpecTemplateContainer {
 	s.Image.Name = m.Image.Name
 	s.Image.Secret = m.Image.Secret
 
-	s.Resources.Request.RAM = m.Resources.Request.RAM
-	s.Resources.Request.CPU = m.Resources.Request.CPU
+	s.Resources.Request.RAM, _ = resource.DecodeMemoryResource(m.Resources.Request.RAM)
+	s.Resources.Request.CPU, _ = resource.DecodeCpuResource(m.Resources.Request.CPU)
 
-	s.Resources.Limits.RAM = m.Resources.Limits.RAM
-	s.Resources.Limits.CPU = m.Resources.Limits.CPU
+	s.Resources.Limits.RAM, _ = resource.DecodeMemoryResource(m.Resources.Limits.RAM)
+	s.Resources.Limits.CPU, _ = resource.DecodeCpuResource(m.Resources.Limits.CPU)
 
 	for _, v := range m.Volumes {
 

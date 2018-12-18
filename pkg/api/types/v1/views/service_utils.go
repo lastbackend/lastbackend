@@ -22,6 +22,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/lastbackend/lastbackend/pkg/api/types/v1/request"
+	"github.com/lastbackend/lastbackend/pkg/util/resource"
 	"strconv"
 	"strings"
 
@@ -323,10 +324,10 @@ func (sv Service) ToRequestManifest() *request.ServiceManifest {
 			data.Image.Name = v.Image.Name
 			data.Image.Secret = v.Image.Secret
 
-			data.Resources.Request.RAM = v.Resources.Request.RAM
-			data.Resources.Request.CPU = v.Resources.Request.CPU
-			data.Resources.Limits.RAM = v.Resources.Limits.RAM
-			data.Resources.Limits.CPU = v.Resources.Limits.CPU
+			data.Resources.Request.RAM = resource.EncodeMemoryResource(v.Resources.Request.RAM)
+			data.Resources.Request.CPU = resource.EncodeCpuResource(v.Resources.Request.CPU)
+			data.Resources.Limits.RAM = resource.EncodeMemoryResource(v.Resources.Limits.RAM)
+			data.Resources.Limits.CPU = resource.EncodeCpuResource(v.Resources.Limits.CPU)
 
 			data.RestartPolicy.Policy = v.RestartPolicy.Policy
 			data.RestartPolicy.Attempt = v.RestartPolicy.Attempt

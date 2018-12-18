@@ -21,10 +21,12 @@ package types
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/lastbackend/lastbackend/pkg/distribution/errors"
+	"github.com/lastbackend/lastbackend/pkg/util/resource"
 )
 
 const (
-	DEFAULT_NAMESPACE  string = "default"
+	DEFAULT_NAMESPACE string = "default"
 )
 
 // swagger:ignore
@@ -42,6 +44,7 @@ type NamespaceList struct {
 // swagger:ignore
 type Namespace struct {
 	Meta NamespaceMeta `json:"meta"`
+	Status NamespaceStatus `json:"status"`
 	Spec NamespaceSpec `json:"spec"`
 }
 
@@ -64,10 +67,54 @@ type NamespaceMeta struct {
 
 // swagger:ignore
 type NamespaceSpec struct {
-	Quotas    NamespaceQuotas    `json:"quotas"`
-	Resources NamespaceResources `json:"resources"`
+	Resources ResourceRequest `json:"resources"`
 	Env       NamespaceEnvs      `json:"env"`
 	Domain    NamespaceDomain    `json:"domain"`
+}
+
+type NamespaceStatus struct {
+	Resources NamespaceStatusResources `json:"resources"`
+}
+
+type NamespaceStatusResources struct {
+	Allocated ResourceRequestItem `json:"usage"`
+}
+
+
+type ResourceRequest struct {
+	Request ResourceRequestItem `json:"request"`
+	Limits  ResourceRequestItem `json:"limits"`
+}
+
+
+func (r *ResourceRequest) Equal(rr ResourceRequest) bool {
+
+
+	if r.Limits.RAM != rr.Limits.RAM {
+		return false
+	}
+
+	if r.Limits.CPU != rr.Limits.CPU {
+		return false
+	}
+
+	if r.Limits.Storage != rr.Limits.Storage {
+		return false
+	}
+
+	if r.Request.RAM != rr.Request.RAM {
+		return false
+	}
+
+	if r.Request.CPU != rr.Request.CPU {
+		return false
+	}
+
+	if r.Request.Storage != rr.Request.Storage {
+		return false
+	}
+
+	return true
 }
 
 type NamespaceDomain struct {
@@ -76,17 +123,13 @@ type NamespaceDomain struct {
 }
 
 // swagger:ignore
-type NamespaceQuotas struct {
-	RAM      int64 `json:"ram"`
-	Routes   int   `json:"routes"`
-	Disabled bool  `json:"disabled"`
+type ResourceRequestItem struct {
+	RAM     string `json:"ram"`
+	CPU     string `json:"cpu"`
+	Storage string `json:"storage"`
 }
 
-// swagger:ignore
-type NamespaceResources struct {
-	RAM    int64 `json:"ram"`
-	Routes int   `json:"routes"`
-}
+
 
 func (n *Namespace) SelfLink() string {
 	if n.Meta.SelfLink == "" {
@@ -116,17 +159,17 @@ func (n *NamespaceList) ToJson() ([]byte, error) {
 
 // swagger:ignore
 type NamespaceCreateOptions struct {
-	Name        string                  `json:"name"`
-	Description string                  `json:"description"`
-	Domain      *string                 `json:"domain"`
-	Quotas      *NamespaceQuotasOptions `json:"quotas"`
+	Name        string                    `json:"name"`
+	Description string                    `json:"description"`
+	Domain      *string                   `json:"domain"`
+	Resources   *NamespaceResourcesOptions `json:"resources"`
 }
 
 // swagger:ignore
 type NamespaceUpdateOptions struct {
-	Description *string                 `json:"description"`
-	Domain      *string                 `json:"domain"`
-	Quotas      *NamespaceQuotasOptions `json:"quotas"`
+	Description *string                    `json:"description"`
+	Domain      *string                    `json:"domain"`
+	Resources   *NamespaceResourcesOptions `json:"resources"`
 }
 
 // swagger:ignore
@@ -135,10 +178,93 @@ type NamespaceRemoveOptions struct {
 }
 
 // swagger:ignore
-type NamespaceQuotasOptions struct {
-	Disabled bool  `json:"disabled"`
-	RAM      int64 `json:"ram"`
-	Routes   int   `json:"routes"`
+type NamespaceResourcesOptions struct {
+	Request *ResourceRequestItemOption `json:"request"`
+	Limits  *ResourceRequestItemOption `json:"limits"`
+}
+
+// swagger:ignore
+type ResourceRequestItemOption struct {
+	RAM     *string `json:"ram"`
+	CPU     *string `json:"cpu"`
+	Storage *string `json:"storage"`
+}
+
+func (n *Namespace) AllocateResources(resources ResourceRequest) error {
+
+	var (
+
+		availableRam int64
+		availableCpu int64
+
+		allocatedRam int64
+		allocatedCpu int64
+
+		requestedRam int64
+		requestedCpu int64
+
+	)
+
+	availableRam, _ = resource.DecodeMemoryResource(n.Spec.Resources.Limits.RAM)
+	availableCpu, _ = resource.DecodeCpuResource(n.Spec.Resources.Limits.CPU)
+
+	allocatedRam, _ = resource.DecodeMemoryResource(n.Status.Resources.Allocated.RAM)
+	allocatedCpu, _ = resource.DecodeCpuResource(n.Status.Resources.Allocated.CPU)
+
+	requestedRam, _ = resource.DecodeMemoryResource(resources.Limits.RAM)
+	requestedCpu, _ = resource.DecodeCpuResource(resources.Limits.CPU)
+
+	if (availableRam - allocatedRam - requestedRam) <= 0 {
+		return errors.New(errors.ResourcesRamLimitExceeded)
+	}
+
+	if (availableCpu - allocatedCpu - requestedCpu) <= 0 {
+		return errors.New(errors.ResourcesCpuLimitExceeded)
+	}
+
+	allocatedRam += requestedRam
+	allocatedCpu += requestedCpu
+
+	n.Status.Resources.Allocated.RAM = resource.EncodeMemoryResource(allocatedRam)
+	n.Status.Resources.Allocated.CPU = resource.EncodeCpuResource(allocatedCpu)
+
+	return nil
+}
+
+func (n *Namespace) ReleaseResources(resources ResourceRequest) {
+
+	var (
+		availableRam int64
+		availableCpu int64
+		allocatedRam int64
+		allocatedCpu int64
+		requestedRam int64
+		requestedCpu int64
+	)
+
+	availableRam, _ = resource.DecodeMemoryResource(n.Spec.Resources.Limits.RAM)
+	availableCpu, _ = resource.DecodeCpuResource(n.Spec.Resources.Limits.CPU)
+
+	allocatedRam, _ = resource.DecodeMemoryResource(n.Status.Resources.Allocated.RAM)
+	allocatedCpu, _ = resource.DecodeCpuResource(n.Status.Resources.Allocated.CPU)
+
+	requestedRam, _ = resource.DecodeMemoryResource(resources.Limits.RAM)
+	requestedCpu, _ = resource.DecodeCpuResource(resources.Limits.CPU)
+
+	if (allocatedRam + requestedRam) > availableRam  {
+		allocatedRam = availableRam
+	} else {
+		allocatedRam+=requestedRam
+	}
+
+	if (allocatedCpu + requestedCpu) > availableCpu  {
+		allocatedCpu = availableCpu
+	} else {
+		allocatedCpu+=requestedCpu
+	}
+
+	n.Status.Resources.Allocated.RAM = resource.EncodeMemoryResource(allocatedRam)
+	n.Status.Resources.Allocated.CPU = resource.EncodeCpuResource(allocatedCpu)
 }
 
 func NewNamespaceList() *NamespaceList {

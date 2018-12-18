@@ -307,6 +307,17 @@ func ServiceCreateH(w http.ResponseWriter, r *http.Request) {
 
 	opts.SetServiceSpec(svc)
 
+	if err := ns.AllocateResources(svc.Spec.GetResourceRequest()); err != nil {
+		log.V(logLevel).Errorf("%s:create:> %s", logPrefix, err.Error())
+		errors.New("service").BadParameter("resources").Http(w)
+	} else {
+		if err := nm.Update(ns); err != nil {
+			log.V(logLevel).Errorf("%s:update:> update namespace err: %s", logPrefix, err.Error())
+			errors.HTTP.InternalServerError(w)
+			return
+		}
+	}
+
 	if err := checkServiceVolumes(r.Context(), svc); err != nil {
 		log.V(logLevel).Errorf("%s:create:> create service err: %s", logPrefix, err.Error())
 		errors.HTTP.BadParameter(w, "volume templates")
@@ -411,9 +422,28 @@ func ServiceUpdateH(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	resources := svc.Spec.GetResourceRequest()
+
 	opts.SetServiceMeta(svc)
 	svc.Meta.Endpoint = fmt.Sprintf("%s.%s", strings.ToLower(svc.Meta.Name), ns.Meta.Endpoint)
 	opts.SetServiceSpec(svc)
+
+	requestedResources := svc.Spec.GetResourceRequest()
+	if !resources.Equal(requestedResources) {
+
+		ns.ReleaseResources(resources)
+
+		if err := ns.AllocateResources(svc.Spec.GetResourceRequest()); err != nil {
+			log.V(logLevel).Errorf("%s:create:> %s", logPrefix, err.Error())
+			errors.New("service").BadParameter("resources").Http(w)
+		} else {
+			if err := nm.Update(ns); err != nil {
+				log.V(logLevel).Errorf("%s:update:> update namespace err: %s", logPrefix, err.Error())
+				errors.HTTP.InternalServerError(w)
+				return
+			}
+		}
+	}
 
 	if err := checkServiceVolumes(r.Context(), svc); err != nil {
 		log.V(logLevel).Errorf("%s:create:> create service err: %s", logPrefix, err.Error())

@@ -475,7 +475,7 @@ func TestVolumeUpdate(t *testing.T) {
 
 	vl3.Spec.Selector.Node = "node"
 	vl3.Spec.HostPath = "/"
-	vl3.Spec.Capacity.Storage, _ = resource.DecodeResource("1GB")
+	vl3.Spec.Capacity.Storage, _ = resource.DecodeMemoryResource("1GB")
 
 	mf2, _ :=  getVolumeManifest(sv2.Meta.Name).ToJson()
 	mf3, _ :=  getVolumeManifest(sv3.Meta.Name).ToJson()
@@ -792,7 +792,7 @@ func getVolumeAsset(namespace, name string) *types.Volume {
 	r.Meta.Name = name
 	r.Spec.Selector.Node = ""
 	r.Spec.HostPath = "/"
-	r.Spec.Capacity.Storage, _ = resource.DecodeResource("128MB")
+	r.Spec.Capacity.Storage, _ = resource.DecodeMemoryResource("128MB")
 	return &r
 }
 

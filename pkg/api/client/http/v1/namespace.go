@@ -135,7 +135,7 @@ func (nc *NamespaceClient) List(ctx context.Context) (*vv1.NamespaceList, error)
 	return s, nil
 }
 
-func (nc *NamespaceClient) Create(ctx context.Context, opts *rv1.NamespaceCreateOptions) (*vv1.Namespace, error) {
+func (nc *NamespaceClient) Create(ctx context.Context, opts *rv1.NamespaceManifest) (*vv1.Namespace, error) {
 
 	body, err := opts.ToJson()
 	if err != nil {
@@ -179,7 +179,7 @@ func (nc *NamespaceClient) Get(ctx context.Context) (*vv1.Namespace, error) {
 	return s, nil
 }
 
-func (nc *NamespaceClient) Update(ctx context.Context, opts *rv1.NamespaceUpdateOptions) (*vv1.Namespace, error) {
+func (nc *NamespaceClient) Update(ctx context.Context, opts *rv1.NamespaceManifest) (*vv1.Namespace, error) {
 
 	body, err := opts.ToJson()
 	if err != nil {

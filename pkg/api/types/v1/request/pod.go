@@ -21,6 +21,7 @@ package request
 import (
 	"encoding/json"
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
+	"github.com/lastbackend/lastbackend/pkg/util/resource"
 	"gopkg.in/yaml.v2"
 	"strings"
 	"time"
@@ -197,17 +198,24 @@ func (s *PodManifest) SetPodSpec(pod *types.Pod) {
 			}
 			spec.EnvVars = envs
 
-			if c.Resources.Request.RAM != spec.Resources.Request.RAM ||
-				c.Resources.Request.CPU != spec.Resources.Request.CPU {
-				spec.Resources.Request.RAM = c.Resources.Request.RAM
-				spec.Resources.Request.CPU = c.Resources.Request.CPU
+			resourcesRequestRam, _ := resource.DecodeMemoryResource(c.Resources.Request.RAM)
+			resourcesRequestCPU, _ := resource.DecodeCpuResource(c.Resources.Request.CPU)
+
+			resourcesLimitsRam, _ := resource.DecodeMemoryResource(c.Resources.Limits.RAM)
+			resourcesLimitsCPU, _ := resource.DecodeCpuResource(c.Resources.Limits.CPU)
+
+
+			if resourcesRequestRam != spec.Resources.Request.RAM ||
+				resourcesRequestCPU != spec.Resources.Request.CPU {
+				spec.Resources.Request.RAM = resourcesRequestRam
+				spec.Resources.Request.CPU = resourcesRequestCPU
 				pod.Spec.Template.Updated = time.Now()
 			}
 
-			if c.Resources.Limits.RAM != spec.Resources.Limits.RAM ||
-				c.Resources.Limits.CPU != spec.Resources.Limits.CPU {
-				spec.Resources.Limits.RAM = c.Resources.Limits.RAM
-				spec.Resources.Limits.CPU = c.Resources.Limits.CPU
+			if resourcesLimitsRam != spec.Resources.Limits.RAM ||
+				resourcesLimitsCPU != spec.Resources.Limits.CPU {
+				spec.Resources.Limits.RAM = resourcesLimitsRam
+				spec.Resources.Limits.CPU = resourcesLimitsCPU
 				pod.Spec.Template.Updated = time.Now()
 			}
 
