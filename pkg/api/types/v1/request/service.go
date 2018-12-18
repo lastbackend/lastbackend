@@ -20,6 +20,7 @@ package request
 
 import (
 	"encoding/json"
+	"github.com/lastbackend/dynamic/pkg/log"
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 	"github.com/lastbackend/lastbackend/pkg/util/resource"
 	"gopkg.in/yaml.v2"
@@ -77,7 +78,7 @@ func (s *ServiceManifest) SetServiceMeta(svc *types.Service) {
 
 }
 
-func (s *ServiceManifest) SetServiceSpec(svc *types.Service) {
+func (s *ServiceManifest) SetServiceSpec(svc *types.Service) (err error) {
 
 	tn := svc.Spec.Network.Updated
 	tc := svc.Spec.Template.Updated
@@ -93,6 +94,11 @@ func (s *ServiceManifest) SetServiceSpec(svc *types.Service) {
 			return
 		}
 	}()
+
+	var handleErr = func(msg string, e error) error {
+		log.Errorf("decode resource %s error: %s", msg, e.Error())
+		return e
+	}
 
 	if s.Spec.Replicas != nil {
 		svc.Spec.Replicas = *s.Spec.Replicas
@@ -293,13 +299,41 @@ func (s *ServiceManifest) SetServiceSpec(svc *types.Service) {
 			}
 			spec.EnvVars = envs
 
+			var (
+				resourcesRequestRam int64
+				resourcesRequestCPU int64
+
+				resourcesLimitsRam int64
+				resourcesLimitsCPU int64
+			)
+
 			// Resources check
-			resourcesRequestRam, _ := resource.DecodeMemoryResource(c.Resources.Request.RAM)
-			resourcesRequestCPU, _ := resource.DecodeCpuResource(c.Resources.Request.CPU)
+			if c.Resources.Request.RAM != types.EmptyString {
+				resourcesRequestRam, err = resource.DecodeMemoryResource(c.Resources.Request.RAM)
+				if err != nil {
+					return handleErr("request.ram", err)
+				}
+			}
+			if c.Resources.Request.CPU != types.EmptyString {
+				resourcesRequestCPU, err = resource.DecodeCpuResource(c.Resources.Request.CPU)
+				if err != nil {
+					return handleErr("request.cpu", err)
+				}
+			}
 
-			resourcesLimitsRam, _ := resource.DecodeMemoryResource(c.Resources.Limits.RAM)
-			resourcesLimitsCPU, _ := resource.DecodeCpuResource(c.Resources.Limits.CPU)
+			if c.Resources.Limits.RAM != types.EmptyString {
+				resourcesLimitsRam, err = resource.DecodeMemoryResource(c.Resources.Limits.RAM)
+				if err != nil {
+					return handleErr("limit.ram", err)
+				}
+			}
 
+			if c.Resources.Limits.CPU != types.EmptyString {
+				resourcesLimitsCPU, err = resource.DecodeCpuResource(c.Resources.Limits.CPU)
+				if err != nil {
+					return handleErr("limit.cpu", err)
+				}
+			}
 
 			if resourcesRequestRam != spec.Resources.Request.RAM ||
 				resourcesRequestCPU != spec.Resources.Request.CPU {
@@ -507,6 +541,8 @@ func (s *ServiceManifest) SetServiceSpec(svc *types.Service) {
 		svc.Spec.Template.Volumes = vlms
 
 	}
+
+	return nil
 
 }
 

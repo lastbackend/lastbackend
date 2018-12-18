@@ -315,9 +315,38 @@ func TestServiceCreate(t *testing.T) {
 	ns1 := getNamespaceAsset("demo", "")
 	ns2 := getNamespaceAsset("test", "")
 
+	ns3 := getNamespaceAsset("limits", "")
+	ns3.Spec.Resources.Limits.RAM = "1GB"
+	ns3.Spec.Resources.Limits.CPU = "1"
+
 	s1 := getServiceAsset(ns1.Meta.Name, "demo", "")
 	s2 := getServiceAsset(ns1.Meta.Name, "test", "")
-	s3 := getServiceAsset(ns1.Meta.Name, "new_demo", "")
+	s3 := getServiceAsset(ns1.Meta.Name, "success", "")
+
+	sm1 := getServiceManifest("errored", "image")
+	sm1.Spec.Template.Containers[0].Resources.Limits.RAM = "0.5GB"
+
+	sm2 := getServiceManifest("errored", "image")
+	sm2.Spec.Template.Containers[0].Resources.Limits.RAM = "2GB"
+	sm2.Spec.Template.Containers[0].Resources.Limits.CPU = "0.5"
+
+	sm3 := getServiceManifest("errored", "image")
+	sm3.Spec.Template.Containers[0].Resources.Limits.RAM = "512MB"
+	sm3.Spec.Template.Containers[0].Resources.Limits.CPU = "1.5"
+
+	sm4 := getServiceManifest("errored", "image")
+	sm4.Spec.Template.Containers[0].Resources.Limits.RAM = "2GB"
+	sm4.Spec.Template.Containers[0].Resources.Limits.CPU = "1.5"
+
+	var rsm5 = 3
+	sm5 := getServiceManifest("errored", "image")
+	sm5.Spec.Replicas = &rsm5
+	sm5.Spec.Template.Containers[0].Resources.Limits.RAM = "128MB"
+	sm5.Spec.Template.Containers[0].Resources.Limits.CPU = "0.5"
+
+	sm6 := getServiceManifest("success", "image")
+	sm6.Spec.Template.Containers[0].Resources.Limits.RAM = "512MB"
+	sm6.Spec.Template.Containers[0].Resources.Limits.CPU = "0.5"
 
 	type fields struct {
 		stg storage.Storage
@@ -362,6 +391,56 @@ func TestServiceCreate(t *testing.T) {
 			expectedCode: http.StatusNotFound,
 		},
 		{
+			name:         "checking create service without limits if namespace with limits",
+			args:         args{ctx, ns3, s2},
+			fields:       fields{stg},
+			handler:      service.ServiceCreateH,
+			data:         sm1,
+			err:          "{\"code\":400,\"status\":\"Bad Request\",\"message\":\"resources cpu limit is required\"}",
+			wantErr:      true,
+			expectedCode: http.StatusBadRequest,
+		},
+		{
+			name:         "checking create service with replica 1 with ram limit are higher then namespace limits",
+			args:         args{ctx, ns3, s2},
+			fields:       fields{stg},
+			handler:      service.ServiceCreateH,
+			data:         sm2,
+			err:          "{\"code\":400,\"status\":\"Bad Request\",\"message\":\"resources ram limit exceeded\"}",
+			wantErr:      true,
+			expectedCode: http.StatusBadRequest,
+		},
+		{
+			name:         "checking create service with replica 1 with cpu limit are higher then namespace limits",
+			args:         args{ctx, ns3, s2},
+			fields:       fields{stg},
+			handler:      service.ServiceCreateH,
+			data:         sm3,
+			err:          "{\"code\":400,\"status\":\"Bad Request\",\"message\":\"resources cpu limit exceeded\"}",
+			wantErr:      true,
+			expectedCode: http.StatusBadRequest,
+		},
+		{
+			name:         "checking create service with replica 1 with ram & cpu limits are higher then namespace limits",
+			args:         args{ctx, ns3, s2},
+			fields:       fields{stg},
+			handler:      service.ServiceCreateH,
+			data:         sm4,
+			err:          "{\"code\":400,\"status\":\"Bad Request\",\"message\":\"resources ram limit exceeded\"}",
+			wantErr:      true,
+			expectedCode: http.StatusBadRequest,
+		},
+		{
+			name:         "checking create service with replica 3 with limits are higher then namespace limits",
+			args:         args{ctx, ns3, s2},
+			fields:       fields{stg},
+			handler:      service.ServiceCreateH,
+			data:         sm5,
+			err:          "{\"code\":400,\"status\":\"Bad Request\",\"message\":\"resources cpu limit exceeded\"}",
+			wantErr:      true,
+			expectedCode: http.StatusBadRequest,
+		},
+		{
 			name:         "check create service if bad parameter name",
 			args:         args{ctx, ns1, s3},
 			fields:       fields{stg},
@@ -377,7 +456,17 @@ func TestServiceCreate(t *testing.T) {
 			args:         args{ctx, ns1, s3},
 			fields:       fields{stg},
 			handler:      service.ServiceCreateH,
-			data:         getServiceManifest("new_demo", "redis"),
+			data:         getServiceManifest("success", "redis"),
+			want:         v1.View().Service().NewWithDeployment(s3, nil, nil),
+			wantErr:      false,
+			expectedCode: http.StatusOK,
+		},
+		{
+			name:         "check create service success with limits",
+			args:         args{ctx, ns3, s3},
+			fields:       fields{stg},
+			handler:      service.ServiceCreateH,
+			data:         sm6,
 			want:         v1.View().Service().NewWithDeployment(s3, nil, nil),
 			wantErr:      false,
 			expectedCode: http.StatusOK,
@@ -399,6 +488,9 @@ func TestServiceCreate(t *testing.T) {
 			defer clear()
 
 			err := tc.fields.stg.Put(context.Background(), stg.Collection().Namespace(), tc.fields.stg.Key().Namespace(ns1.Meta.Name), ns1, nil)
+			assert.NoError(t, err)
+
+			err = tc.fields.stg.Put(context.Background(), stg.Collection().Namespace(), tc.fields.stg.Key().Namespace(ns3.Meta.Name), ns3, nil)
 			assert.NoError(t, err)
 
 			err = tc.fields.stg.Put(context.Background(), stg.Collection().Service(), tc.fields.stg.Key().Service(s1.Meta.Namespace, s1.Meta.Name), s1, nil)

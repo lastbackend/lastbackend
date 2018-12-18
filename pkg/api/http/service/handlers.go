@@ -305,11 +305,15 @@ func ServiceCreateH(w http.ResponseWriter, r *http.Request) {
 	svc.Meta.Namespace = ns.Meta.Name
 	svc.Meta.Endpoint = fmt.Sprintf("%s.%s", strings.ToLower(svc.Meta.Name), ns.Meta.Endpoint)
 
-	opts.SetServiceSpec(svc)
+	if err := opts.SetServiceSpec(svc); err != nil {
+		errors.New("service").BadRequest(err.Error()).Http(w)
+		return
+	}
 
 	if err := ns.AllocateResources(svc.Spec.GetResourceRequest()); err != nil {
 		log.V(logLevel).Errorf("%s:create:> %s", logPrefix, err.Error())
-		errors.New("service").BadParameter("resources").Http(w)
+		errors.New("service").BadRequest(err.Error()).Http(w)
+		return
 	} else {
 		if err := nm.Update(ns); err != nil {
 			log.V(logLevel).Errorf("%s:update:> update namespace err: %s", logPrefix, err.Error())
@@ -426,17 +430,39 @@ func ServiceUpdateH(w http.ResponseWriter, r *http.Request) {
 
 	opts.SetServiceMeta(svc)
 	svc.Meta.Endpoint = fmt.Sprintf("%s.%s", strings.ToLower(svc.Meta.Name), ns.Meta.Endpoint)
-	opts.SetServiceSpec(svc)
+	if err := opts.SetServiceSpec(svc); err != nil {
+		errors.New("service").BadRequest(err.Error()).Http(w)
+		return
+	}
 
 	requestedResources := svc.Spec.GetResourceRequest()
 	if !resources.Equal(requestedResources) {
 
-		ns.ReleaseResources(resources)
+		log.Info(0)
+		log.Info(0, "available: RAM: ", ns.Spec.Resources.Limits.RAM, " CPU: ", ns.Spec.Resources.Limits.CPU)
+		log.Info(0, "allocated: RAM: ", ns.Status.Resources.Allocated.RAM, " CPU: ", ns.Status.Resources.Allocated.CPU)
+
+		if err := ns.ReleaseResources(resources); err != nil {
+			log.V(logLevel).Errorf("%s:update:> %s", logPrefix, err.Error())
+			errors.HTTP.InternalServerError(w)
+			return
+		}
+
+		log.Info(1)
+		log.Info(1, "available: RAM: ", ns.Spec.Resources.Limits.RAM, " CPU: ", ns.Spec.Resources.Limits.CPU)
+		log.Info(1, "allocated: RAM: ", ns.Status.Resources.Allocated.RAM, " CPU: ", ns.Status.Resources.Allocated.CPU)
 
 		if err := ns.AllocateResources(svc.Spec.GetResourceRequest()); err != nil {
-			log.V(logLevel).Errorf("%s:create:> %s", logPrefix, err.Error())
-			errors.New("service").BadParameter("resources").Http(w)
+			log.Info(1, "f")
+			log.Info(1, "f", "available: RAM: ", ns.Spec.Resources.Limits.RAM, " CPU: ", ns.Spec.Resources.Limits.CPU)
+			log.Info(1, "f", "allocated: RAM: ", ns.Status.Resources.Allocated.RAM, " CPU: ", ns.Status.Resources.Allocated.CPU)
+			log.V(logLevel).Errorf("%s:update:> %s", logPrefix, err.Error())
+			errors.New("service").BadParameter("spec.limits").Http(w)
+			return
 		} else {
+			log.Info(1, "t")
+			log.Info(1, "t", "available: RAM: ", ns.Spec.Resources.Limits.RAM, " CPU: ", ns.Spec.Resources.Limits.CPU)
+			log.Info(1, "t", "allocated: RAM: ", ns.Status.Resources.Allocated.RAM, " CPU: ", ns.Status.Resources.Allocated.CPU)
 			if err := nm.Update(ns); err != nil {
 				log.V(logLevel).Errorf("%s:update:> update namespace err: %s", logPrefix, err.Error())
 				errors.HTTP.InternalServerError(w)

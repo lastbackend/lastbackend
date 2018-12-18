@@ -273,6 +273,24 @@ func handleServiceStateDestroyed(ss *ServiceState, svc *types.Service) (err erro
 	}
 
 	sm := distribution.NewServiceModel(context.Background(), envs.Get().GetStorage())
+	nm := distribution.NewNamespaceModel(context.Background(), envs.Get().GetStorage())
+
+	ns, err := nm.Get(svc.Meta.Namespace)
+	if err != nil {
+		log.Errorf("%s:> namespece fetch err: %s", logServicePrefix, err.Error())
+	}
+
+	if ns != nil {
+		resource := svc.Spec.GetResourceRequest()
+		if err := ns.ReleaseResources(resource); err != nil {
+			log.Errorf("%s:> namespece resource release err: %s", logServicePrefix, err.Error())
+		}
+
+		if err := nm.Update(ns); err != nil {
+			log.Errorf("%s:> namespece update err: %s", logServicePrefix, err.Error())
+		}
+	}
+
 	if err = sm.Remove(svc); err != nil {
 		log.Errorf("%s:> service remove err: %s", logServicePrefix, err.Error())
 		return err
@@ -373,19 +391,19 @@ func serviceStatusState(ss *ServiceState) (err error) {
 
 	status := ss.service.Status
 
-	defer func() error {
+	defer func() {
 		if status.State == ss.service.Status.State && status.Message == ss.service.Status.Message {
-			return nil
+			return
 		}
 
 		ss.service.Meta.Updated = time.Now()
 		sm := distribution.NewServiceModel(context.Background(), envs.Get().GetStorage())
 		if err = sm.Set(ss.service); err != nil {
 			log.Errorf("%s", err.Error())
-			return err
+			return
 		}
 
-		return nil
+		return
 	}()
 
 	if ss.service.Status.State == types.StateProvision || ss.service.Status.State == types.StateCreated {
