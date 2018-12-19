@@ -323,7 +323,6 @@ func (n *Namespace) ReleaseResources(resources ResourceRequest) error {
 	}
 
 	if resources.Limits.RAM != types.EmptyString {
-		fmt.Println(">>", resources.Limits.RAM)
 		requestedRam, err = resource.DecodeMemoryResource(resources.Limits.RAM)
 		if err != nil {
 			return handleErr("req limit ram", err)

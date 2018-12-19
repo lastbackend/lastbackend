@@ -437,37 +437,25 @@ func ServiceUpdateH(w http.ResponseWriter, r *http.Request) {
 
 	requestedResources := svc.Spec.GetResourceRequest()
 	if !resources.Equal(requestedResources) {
-
-		log.Info(0)
-		log.Info(0, "available: RAM: ", ns.Spec.Resources.Limits.RAM, " CPU: ", ns.Spec.Resources.Limits.CPU)
-		log.Info(0, "allocated: RAM: ", ns.Status.Resources.Allocated.RAM, " CPU: ", ns.Status.Resources.Allocated.CPU)
-
+		allocatedResources := ns.Status.Resources.Allocated
 		if err := ns.ReleaseResources(resources); err != nil {
 			log.V(logLevel).Errorf("%s:update:> %s", logPrefix, err.Error())
 			errors.HTTP.InternalServerError(w)
 			return
 		}
 
-		log.Info(1)
-		log.Info(1, "available: RAM: ", ns.Spec.Resources.Limits.RAM, " CPU: ", ns.Spec.Resources.Limits.CPU)
-		log.Info(1, "allocated: RAM: ", ns.Status.Resources.Allocated.RAM, " CPU: ", ns.Status.Resources.Allocated.CPU)
-
 		if err := ns.AllocateResources(svc.Spec.GetResourceRequest()); err != nil {
-			log.Info(1, "f")
-			log.Info(1, "f", "available: RAM: ", ns.Spec.Resources.Limits.RAM, " CPU: ", ns.Spec.Resources.Limits.CPU)
-			log.Info(1, "f", "allocated: RAM: ", ns.Status.Resources.Allocated.RAM, " CPU: ", ns.Status.Resources.Allocated.CPU)
+			ns.Status.Resources.Allocated = allocatedResources
 			log.V(logLevel).Errorf("%s:update:> %s", logPrefix, err.Error())
-			errors.New("service").BadParameter("spec.limits").Http(w)
+			errors.New("service").BadRequest(err.Error()).Http(w)
 			return
 		} else {
-			log.Info(1, "t")
-			log.Info(1, "t", "available: RAM: ", ns.Spec.Resources.Limits.RAM, " CPU: ", ns.Spec.Resources.Limits.CPU)
-			log.Info(1, "t", "allocated: RAM: ", ns.Status.Resources.Allocated.RAM, " CPU: ", ns.Status.Resources.Allocated.CPU)
 			if err := nm.Update(ns); err != nil {
 				log.V(logLevel).Errorf("%s:update:> update namespace err: %s", logPrefix, err.Error())
 				errors.HTTP.InternalServerError(w)
 				return
 			}
+
 		}
 	}
 
