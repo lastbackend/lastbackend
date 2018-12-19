@@ -21,7 +21,7 @@ package types
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/lastbackend/dynamic/pkg/log"
+	"github.com/lastbackend/lastbackend/pkg/log"
 	"github.com/lastbackend/lastbackend/pkg/distribution/errors"
 	"github.com/lastbackend/lastbackend/pkg/util/resource"
 	"github.com/lastbackend/registry/pkg/distribution/types"
