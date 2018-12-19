@@ -100,6 +100,10 @@ func (e *Err) Http(w http.ResponseWriter) {
 	e.http.send(w)
 }
 
+func (e *Err) Message(s string) {
+	e.http.Message = s
+}
+
 type err struct {
 	s string
 }
