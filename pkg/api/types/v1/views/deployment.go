@@ -33,7 +33,6 @@ import (
 // swagger:model views_deployment
 type Deployment struct {
 	// deployment id
-	ID       string                 `json:"id"`
 	Meta     DeploymentMeta         `json:"meta"`
 	Status   DeploymentStatusInfo   `json:"status"`
 	Spec     DeploymentSpec         `json:"spec"`

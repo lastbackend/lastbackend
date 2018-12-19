@@ -25,6 +25,7 @@ import (
 // swagger:model views_namespace
 type Namespace struct {
 	Meta NamespaceMeta `json:"meta"`
+	Status NamespaceStatus `json:"status"`
 	Spec NamespaceSpec `json:"spec"`
 }
 
@@ -43,35 +44,36 @@ type NamespaceMeta struct {
 // swagger:model views_namespace_spec
 type NamespaceSpec struct {
 	Env       NamespaceEnvs      `json:"env"`
-	Resources NamespaceResources `json:"resources"`
-	Quotas    NamespaceQuotas    `json:"quotas"`
 	Domain    NamespaceDomain    `json:"domain"`
+	Resources NamespaceResources `json:"resources"`
+}
+
+type NamespaceStatus struct {
+	Resources NamespaceStatusResources `json:"resources"`
+}
+
+type NamespaceStatusResources struct {
+	Usage NamespaceResource `json:"usage"`
 }
 
 // swagger:model views_namespace_envs
 type NamespaceEnvs []string
 
-// swagger:model views_namespace_resource
 type NamespaceResources struct {
-	RAM    int64 `json:"ram"`
-	Routes int   `json:"routes"`
+	Request NamespaceResource `json:"request"`
+	Limits  NamespaceResource `json:"limits"`
 }
 
-// swagger:model views_namespace_quotas
-type NamespaceQuotas struct {
-	Disabled bool  `json:"disabled"`
-	RAM      int64 `json:"ram"`
-	Routes   int   `json:"routes"`
+// swagger:model views_namespace_resource
+type NamespaceResource struct {
+	RAM     string `json:"ram"`
+	CPU     string `json:"cpu"`
+	Storage string `json:"storage"`
 }
 
 type NamespaceDomain struct {
 	Internal string `json:"internal"`
 	External string `json:"external"`
-}
-
-// swagger:ignore
-// swagger:model views_namespace_resource
-type NamespaceResource struct {
 }
 
 // swagger:model views_namespace_list

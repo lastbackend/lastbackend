@@ -21,3 +21,8 @@ package errors
 const NodeNotFound = "NodeNotFound"
 const IngressNotFound = "IngressNotFound"
 const PodNotFound = "PodNotFound"
+
+const ResourcesRamLimitIsRequired = "resources ram limit is required"
+const ResourcesCpuLimitIsRequired = "resources cpu limit is required"
+const ResourcesRamLimitExceeded = "resources ram limit exceeded"
+const ResourcesCpuLimitExceeded = "resources cpu limit exceeded"

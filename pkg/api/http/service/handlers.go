@@ -305,7 +305,22 @@ func ServiceCreateH(w http.ResponseWriter, r *http.Request) {
 	svc.Meta.Namespace = ns.Meta.Name
 	svc.Meta.Endpoint = fmt.Sprintf("%s.%s", strings.ToLower(svc.Meta.Name), ns.Meta.Endpoint)
 
-	opts.SetServiceSpec(svc)
+	if err := opts.SetServiceSpec(svc); err != nil {
+		errors.New("service").BadRequest(err.Error()).Http(w)
+		return
+	}
+
+	if err := ns.AllocateResources(svc.Spec.GetResourceRequest()); err != nil {
+		log.V(logLevel).Errorf("%s:create:> %s", logPrefix, err.Error())
+		errors.New("service").BadRequest(err.Error()).Http(w)
+		return
+	} else {
+		if err := nm.Update(ns); err != nil {
+			log.V(logLevel).Errorf("%s:update:> update namespace err: %s", logPrefix, err.Error())
+			errors.HTTP.InternalServerError(w)
+			return
+		}
+	}
 
 	if err := checkServiceVolumes(r.Context(), svc); err != nil {
 		log.V(logLevel).Errorf("%s:create:> create service err: %s", logPrefix, err.Error())
@@ -411,9 +426,38 @@ func ServiceUpdateH(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	resources := svc.Spec.GetResourceRequest()
+
 	opts.SetServiceMeta(svc)
 	svc.Meta.Endpoint = fmt.Sprintf("%s.%s", strings.ToLower(svc.Meta.Name), ns.Meta.Endpoint)
-	opts.SetServiceSpec(svc)
+	if err := opts.SetServiceSpec(svc); err != nil {
+		errors.New("service").BadRequest(err.Error()).Http(w)
+		return
+	}
+
+	requestedResources := svc.Spec.GetResourceRequest()
+	if !resources.Equal(requestedResources) {
+		allocatedResources := ns.Status.Resources.Allocated
+		if err := ns.ReleaseResources(resources); err != nil {
+			log.V(logLevel).Errorf("%s:update:> %s", logPrefix, err.Error())
+			errors.HTTP.InternalServerError(w)
+			return
+		}
+
+		if err := ns.AllocateResources(svc.Spec.GetResourceRequest()); err != nil {
+			ns.Status.Resources.Allocated = allocatedResources
+			log.V(logLevel).Errorf("%s:update:> %s", logPrefix, err.Error())
+			errors.New("service").BadRequest(err.Error()).Http(w)
+			return
+		} else {
+			if err := nm.Update(ns); err != nil {
+				log.V(logLevel).Errorf("%s:update:> update namespace err: %s", logPrefix, err.Error())
+				errors.HTTP.InternalServerError(w)
+				return
+			}
+
+		}
+	}
 
 	if err := checkServiceVolumes(r.Context(), svc); err != nil {
 		log.V(logLevel).Errorf("%s:create:> create service err: %s", logPrefix, err.Error())
@@ -633,7 +677,7 @@ func ServiceLogsH(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	pod, err := pm.Get(ns.Meta.Name, svc.Meta.Name, did, pid)
+	pod, err := pm.Get(ns.Meta.Name, svc.Meta.Name, deployment.Meta.Name, pid)
 	if err != nil {
 		log.V(logLevel).Errorf("%s:logs:> get pod by name` err: %s", logPrefix, err.Error())
 		errors.HTTP.InternalServerError(w)
@@ -657,7 +701,7 @@ func ServiceLogsH(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	req, err := http.NewRequest(http.MethodGet, fmt.Sprintf("http://%s:%d/pod/%s/%s/logs", node.Meta.InternalIP, 2969, pod.Meta.SelfLink, cid), nil)
+	req, err := http.NewRequest(http.MethodGet, fmt.Sprintf("http://%s:%d/pod/%s/%s/logs", node.Meta.ExternalIP, 2969, pod.Meta.SelfLink, cid), nil)
 	if err != nil {
 		log.V(logLevel).Errorf("%s:logs:> create http client err: %s", logPrefix, err.Error())
 		errors.HTTP.InternalServerError(w)

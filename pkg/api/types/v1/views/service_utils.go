@@ -22,6 +22,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/lastbackend/lastbackend/pkg/api/types/v1/request"
+	"github.com/lastbackend/lastbackend/pkg/util/resource"
 	"strconv"
 	"strings"
 
@@ -114,7 +115,7 @@ func (sv *Service) ToSpec(obj types.ServiceSpec) ServiceSpec {
 		}
 
 		for _, p := range s.Ports {
-			c.Ports = append(c.Ports, string(p.ContainerPort))
+			c.Ports = append(c.Ports, fmt.Sprintf("%d/%s", p.ContainerPort, p.Protocol))
 		}
 
 		for _, env := range s.EnvVars {
@@ -192,10 +193,10 @@ func (sv *Service) ToSpec(obj types.ServiceSpec) ServiceSpec {
 func (sv *Service) ToDeployments(obj *types.DeploymentList, pods *types.PodList) DeploymentMap {
 	deployments := make(DeploymentMap, 0)
 	for _, d := range obj.Items {
-		if d.Meta.Service == sv.Meta.Name {
+		if d.Meta.Namespace == sv.Meta.Namespace && d.Meta.Service == sv.Meta.Name {
 			dv := new(DeploymentView)
 			dp := dv.New(d, pods)
-			deployments[dp.Meta.Name] = dp
+			deployments[dp.Meta.SelfLink] = dp
 		}
 	}
 	return deployments
@@ -323,10 +324,10 @@ func (sv Service) ToRequestManifest() *request.ServiceManifest {
 			data.Image.Name = v.Image.Name
 			data.Image.Secret = v.Image.Secret
 
-			data.Resources.Request.RAM = v.Resources.Request.RAM
-			data.Resources.Request.CPU = v.Resources.Request.CPU
-			data.Resources.Limits.RAM = v.Resources.Limits.RAM
-			data.Resources.Limits.CPU = v.Resources.Limits.CPU
+			data.Resources.Request.RAM = resource.EncodeMemoryResource(v.Resources.Request.RAM)
+			data.Resources.Request.CPU = resource.EncodeCpuResource(v.Resources.Request.CPU)
+			data.Resources.Limits.RAM = resource.EncodeMemoryResource(v.Resources.Limits.RAM)
+			data.Resources.Limits.CPU = resource.EncodeCpuResource(v.Resources.Limits.CPU)
 
 			data.RestartPolicy.Policy = v.RestartPolicy.Policy
 			data.RestartPolicy.Attempt = v.RestartPolicy.Attempt

@@ -20,6 +20,7 @@ package types
 
 import (
 	"fmt"
+	"github.com/lastbackend/lastbackend/pkg/util/resource"
 )
 
 const (
@@ -150,6 +151,49 @@ type ServiceEnvOption struct {
 type ServiceEnvFromOption struct {
 	Name string `json:"name"`
 	Key  string `json:"key"`
+}
+
+func (s *ServiceSpec) GetResourceRequest() ResourceRequest {
+	rr := ResourceRequest{}
+
+	var (
+		limitsRAM  int64
+		limitsCPU  int64
+
+		requestRAM int64
+		requestCPU int64
+	)
+
+	for _, c := range s.Template.Containers {
+
+		limitsCPU += c.Resources.Limits.CPU
+		limitsRAM += c.Resources.Limits.RAM
+
+		requestCPU += c.Resources.Request.CPU
+		requestRAM += c.Resources.Request.RAM
+	}
+
+	if requestRAM > 0 {
+		requestRAM = int64(s.Replicas) * requestRAM
+		rr.Request.RAM = resource.EncodeMemoryResource(requestRAM)
+	}
+
+	if requestCPU > 0 {
+		requestCPU = int64(s.Replicas) * requestCPU
+		rr.Request.CPU = resource.EncodeCpuResource(requestCPU)
+	}
+
+	if limitsRAM > 0 {
+		limitsRAM = int64(s.Replicas) * limitsRAM
+		rr.Limits.RAM = resource.EncodeMemoryResource(limitsRAM)
+	}
+
+	if limitsCPU > 0 {
+		limitsCPU = int64(s.Replicas) * limitsCPU
+		rr.Limits.CPU  = resource.EncodeCpuResource(limitsCPU)
+	}
+
+	return rr
 }
 
 func NewServiceList() *ServiceList {

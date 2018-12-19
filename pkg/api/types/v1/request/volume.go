@@ -125,7 +125,7 @@ func (v *VolumeManifest) SetVolumeSpec(vol *types.Volume) {
 		vol.Spec.Updated = time.Now()
 	}
 
-	stg, err := resource.DecodeResource(v.Spec.Capacity.Storage)
+	stg, err := resource.DecodeMemoryResource(v.Spec.Capacity.Storage)
 	if err != nil {
 		return
 	}
@@ -148,7 +148,7 @@ func (m VolumeManifest) GetManifest() *types.VolumeManifest {
 
 	v.Selector = m.Spec.Selector.GetSpec()
 	v.Type = m.Spec.Type
-	v.Capacity.Storage, _ = resource.DecodeResource(m.Spec.Capacity.Storage)
+	v.Capacity.Storage, _ = resource.DecodeMemoryResource(m.Spec.Capacity.Storage)
 	v.AccessMode = m.Spec.AccessMode
 
 	return v

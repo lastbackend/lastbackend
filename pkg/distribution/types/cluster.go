@@ -61,5 +61,4 @@ type ClusterSpec struct {
 // swagger:ignore
 type ClusterCreateOptions struct {
 	Description string                  `json:"description"`
-	Quotas      *NamespaceQuotasOptions `json:"quotas"`
 }

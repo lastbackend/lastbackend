@@ -49,6 +49,14 @@ func serviceObserve(ss *ServiceState, s *types.Service) error {
 		}
 		break
 
+	// Check service waiting state triggers
+	case types.StateWaiting:
+		if err := handleServiceStateWaiting(ss, s); err != nil {
+			log.V(logLevel).Debugf("%s:observe:serviceStateWaiting err:> %s", logPrefix, err.Error())
+			return err
+		}
+		break
+
 	// Check service provision state triggers
 	case types.StateProvision:
 		if err := handleServiceStateProvision(ss, s); err != nil {
@@ -128,6 +136,12 @@ func handleServiceStateCreated(ss *ServiceState, svc *types.Service) error {
 		log.Errorf("%s:> deployment provision err: %s", logServicePrefix, err.Error())
 		return err
 	}
+
+	return nil
+}
+
+func handleServiceStateWaiting(ss *ServiceState, svc *types.Service) error {
+	log.V(logLevel).Debugf("%s:> handleServiceStateWaiting: %s > %s", logServicePrefix, svc.SelfLink(), svc.Status.State)
 
 	return nil
 }
@@ -259,6 +273,24 @@ func handleServiceStateDestroyed(ss *ServiceState, svc *types.Service) (err erro
 	}
 
 	sm := distribution.NewServiceModel(context.Background(), envs.Get().GetStorage())
+	nm := distribution.NewNamespaceModel(context.Background(), envs.Get().GetStorage())
+
+	ns, err := nm.Get(svc.Meta.Namespace)
+	if err != nil {
+		log.Errorf("%s:> namespece fetch err: %s", logServicePrefix, err.Error())
+	}
+
+	if ns != nil {
+		resource := svc.Spec.GetResourceRequest()
+		if err := ns.ReleaseResources(resource); err != nil {
+			log.Errorf("%s:> namespece resource release err: %s", logServicePrefix, err.Error())
+		}
+
+		if err := nm.Update(ns); err != nil {
+			log.Errorf("%s:> namespece update err: %s", logServicePrefix, err.Error())
+		}
+	}
+
 	if err = sm.Remove(svc); err != nil {
 		log.Errorf("%s:> service remove err: %s", logServicePrefix, err.Error())
 		return err
@@ -324,11 +356,12 @@ func serviceDeploymentProvision(ss *ServiceState, svc *types.Service) error {
 	// create deployment if needed
 	if d == nil {
 
-		d, err := deploymentCreate(svc)
+		d, err := deploymentCreate(svc, ss.deployment.index)
 		if err != nil {
 			log.Errorf("%s:> deployment create err: %s", logServicePrefix, err.Error())
 			return err
 		}
+		ss.deployment.index++
 
 		for _, od := range ss.deployment.list {
 
@@ -358,19 +391,19 @@ func serviceStatusState(ss *ServiceState) (err error) {
 
 	status := ss.service.Status
 
-	defer func() error {
+	defer func() {
 		if status.State == ss.service.Status.State && status.Message == ss.service.Status.Message {
-			return nil
+			return
 		}
 
 		ss.service.Meta.Updated = time.Now()
 		sm := distribution.NewServiceModel(context.Background(), envs.Get().GetStorage())
 		if err = sm.Set(ss.service); err != nil {
 			log.Errorf("%s", err.Error())
-			return err
+			return
 		}
 
-		return nil
+		return
 	}()
 
 	if ss.service.Status.State == types.StateProvision || ss.service.Status.State == types.StateCreated {
@@ -380,11 +413,17 @@ func serviceStatusState(ss *ServiceState) (err error) {
 				ss.deployment.active.Spec.Replicas == ss.service.Spec.Replicas {
 				ss.service.Status.State = ss.deployment.active.Status.State
 				ss.service.Status.Message = ss.deployment.active.Status.Message
+
 				if ss.deployment.active.Status.State == types.StateCreated {
 					ss.service.Status.State = types.StateProvision
 					ss.service.Status.Message = types.EmptyString
 				}
 			}
+		}
+
+		if ss.deployment.provision == nil && ss.deployment.active != nil {
+			ss.service.Status.State = ss.deployment.active.Status.State
+			ss.service.Status.Message = ss.deployment.active.Status.Message
 		}
 
 		if ss.deployment.provision != nil && ss.deployment.active == nil {

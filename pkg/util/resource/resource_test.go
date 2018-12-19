@@ -24,8 +24,7 @@ import (
 	"testing"
 )
 
-func TestParseResource(t *testing.T) {
-
+func TestParseCpuResource(t *testing.T) {
 	tests := []struct {
 		name    string
 		args    string
@@ -35,43 +34,13 @@ func TestParseResource(t *testing.T) {
 	}{
 		{
 			name: "parse int",
-			args: "1024",
-			want: 1024*1024,
+			args: "1",
+			want: 1000000000,
 		},
 		{
-			name: "parse 1mb",
-			args: "1mb",
-			want: 1000*1000,
-		},
-		{
-			name: "parse 1mib",
-			args: "1mib",
-			want: 1024*1024,
-		},
-		{
-			name: "parse 1gb",
-			args: "1gb",
-			want: 1000*1000*1000,
-		},
-		{
-			name: "parse 1gib",
-			args: "1gib",
-			want: 1024*1024*1024,
-		},
-		{
-			name: "parse 12gb",
-			args: "12gb",
-			want: 12*1000*1000*1000,
-		},
-		{
-			name: "parse 12000mib",
-			args: "12000mib",
-			want: 12*1000*1024*1024,
-		},
-		{
-			name: "parse mib",
-			args: "mib",
-			want: 1024*1024,
+			name: "parse float",
+			args: "0.5",
+			want: 500000000,
 		},
 	}
 
@@ -79,7 +48,7 @@ func TestParseResource(t *testing.T) {
 
 		t.Run(tc.name, func(t *testing.T) {
 
-			got, err := DecodeResource(tc.args)
+			got, err := DecodeCpuResource(tc.args)
 
 			if tc.wantErr {
 				if !assert.Error(t, err, "error should be not nil") {
@@ -91,6 +60,143 @@ func TestParseResource(t *testing.T) {
 			if !assert.NoError(t, err, "error should be nil") {
 				return
 			}
+
+			assert.Equal(t, tc.want, got, "parsed values mismatched")
+		})
+	}
+}
+
+func TestParseMemoryResource(t *testing.T) {
+
+	tests := []struct {
+		name    string
+		args    string
+		want    int64
+		wantErr bool
+		err     string
+	}{
+		{
+			name: "parse int",
+			args: "1024",
+			want: 1024,
+		},
+		{
+			name: "parse 1mb",
+			args: "1mb",
+			want: 1024*1024,
+		},
+		{
+			name: "parse 1mib",
+			args: "1mib",
+			want: 1024*1024,
+		},
+		{
+			name: "parse 1gb",
+			args: "1gb",
+			want: 1024*1024*1024,
+		},
+		{
+			name: "parse 1gib",
+			args: "1gib",
+			want: 1024*1024*1024,
+		},
+		{
+			name: "parse 12gb",
+			args: "12gb",
+			want: 12*1024*1024*1024,
+		},
+		{
+			name: "parse 12000mib",
+			args: "12000mib",
+			want: 12*1000*1024*1024,
+		},
+		{
+			name: "parse mib",
+			args: "1mib",
+			want: 1024*1024,
+		},
+		{
+			name: "parse 0.5GB",
+			args: "0.5GB",
+			want: (1024*1024*1024)/2,
+		},
+	}
+
+	for _, tc := range tests {
+
+		t.Run(tc.name, func(t *testing.T) {
+
+			got, err := DecodeMemoryResource(tc.args)
+
+			if tc.wantErr {
+				if !assert.Error(t, err, "error should be not nil") {
+					return
+				}
+				return
+			}
+
+			if !assert.NoError(t, err, "error should be nil") {
+				return
+			}
+
+			assert.Equal(t, tc.want, got, "parsed values mismatched")
+		})
+	}
+
+}
+
+func TestEncodeMemoryResource(t *testing.T) {
+
+	tests := []struct {
+		name    string
+		args    int64
+		want    string
+		wantErr bool
+		err     string
+	}{
+		{
+			name: "encode int",
+			args: 1024,
+			want: "1KiB",
+
+		},
+		{
+			name: "encode 1mb",
+			args: 1024*1024,
+			want: "1MiB",
+
+		},
+		{
+			name: "encode 1gib",
+			args: 1024*1024*1024,
+			want: "1GiB",
+
+		},
+		{
+			name: "encode 1gb",
+			args: 1000*1000*1000,
+			want: "953.7MiB",
+
+		},
+		{
+			name: "encode 12gb",
+			args: 12*1000*1000*1000,
+			want: "11.18GiB",
+
+		},
+		{
+			name: "encode 120GiB",
+			args: 12*1024*1024*1024,
+			want: "12GiB",
+
+		},
+	}
+
+	for _, tc := range tests {
+
+		t.Run(tc.name, func(t *testing.T) {
+
+			got := EncodeMemoryResource(tc.args)
 
 			assert.Equal(t, tc.want, got, "parsed values mismatched")
 		})

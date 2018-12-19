@@ -1105,13 +1105,35 @@ func TestServiceStatusState(t *testing.T) {
 		s.args.state.deployment.list[dp2.SelfLink()] = dp2
 
 		s.want.state = getServiceStateCopy(s.args.state)
-		s.want.state.service.Status.State = types.StateProvision
+		s.want.state.service.Status.State = types.StateCreated
 
 		return s
 	}())
 
 	tests = append(tests, func() suit {
 		s := suit{name: "check provision state to ready with active deployment"}
+
+		svc := getServiceAsset(types.StateProvision, types.EmptyString)
+
+		dp1 := getDeploymentAsset(svc, types.StateReady, types.EmptyString)
+		dp2 := getDeploymentAsset(svc, types.StateError, types.EmptyString)
+		dp2.Spec.Template.Containers[0].Name = "changed"
+		dp2.Spec.Template.Updated.Add(3*time.Second)
+
+		s.args.state = getServiceStateAsset(svc)
+		s.args.state.deployment.active = dp1
+		s.args.state.deployment.provision = dp2
+		s.args.state.deployment.list[dp1.SelfLink()] = dp1
+		s.args.state.deployment.list[dp2.SelfLink()] = dp2
+
+		s.want.state = getServiceStateCopy(s.args.state)
+		s.want.state.service.Status.State = types.StateReady
+
+		return s
+	}())
+
+	tests = append(tests, func() suit {
+		s := suit{name: "check provision state to ready with active deployment and provision error"}
 
 		svc := getServiceAsset(types.StateProvision, types.EmptyString)
 
@@ -1235,6 +1257,11 @@ func getDeploymentAsset(svc *types.Service, state, message string) *types.Deploy
 	d.Spec.State = svc.Spec.State
 	d.Spec.Template = svc.Spec.Template
 	d.Spec.Replicas = svc.Spec.Replicas
+
+	d.Spec.Template.Containers = types.SpecTemplateContainers{}
+	d.Spec.Template.Containers = append(d.Spec.Template.Containers, &types.SpecTemplateContainer{
+		Name: "demo",
+	})
 
 	return d
 }

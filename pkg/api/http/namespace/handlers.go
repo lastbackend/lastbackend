@@ -19,6 +19,7 @@
 package namespace
 
 import (
+	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 	"net/http"
 
 	"github.com/lastbackend/lastbackend/pkg/api/envs"
@@ -165,29 +166,34 @@ func NamespaceCreateH(w http.ResponseWriter, r *http.Request) {
 
 	var (
 		nsm = distribution.NewNamespaceModel(r.Context(), envs.Get().GetStorage())
+		opts = v1.Request().Namespace().Manifest()
 	)
 
 	// request body struct
-	opts, e := v1.Request().Namespace().CreateOptions().DecodeAndValidate(r.Body)
+	e := opts.DecodeAndValidate(r.Body)
 	if e != nil {
 		log.V(logLevel).Errorf("%s:create:> validation incoming data err: %s", logPrefix, e.Err())
 		e.Http(w)
 		return
 	}
 
-	item, err := nsm.Get(opts.Name)
+	item, err := nsm.Get(*opts.Meta.Name)
 	if err != nil {
 		log.V(logLevel).Errorf("%s:create:> check exists by name err: %s", logPrefix, err.Error())
 		errors.HTTP.InternalServerError(w)
 		return
 	}
 	if item != nil {
-		log.V(logLevel).Errorf("%s:create:> name `%s` not unique", logPrefix, opts.Name)
+		log.V(logLevel).Errorf("%s:create:> name `%s` not unique", logPrefix, *opts.Meta.Name)
 		errors.New("namespace").NotUnique("name").Http(w)
 		return
 	}
 
-	ns, err := nsm.Create(opts)
+	ns := new(types.Namespace)
+	opts.SetNamespaceMeta(ns)
+	opts.SetNamespaceSpec(ns)
+
+	ns, err = nsm.Create(ns)
 	if err != nil {
 		log.V(logLevel).Errorf("%s:create:> create namespace err: %s", logPrefix, err.Error())
 		errors.HTTP.InternalServerError(w)
@@ -244,10 +250,11 @@ func NamespaceUpdateH(w http.ResponseWriter, r *http.Request) {
 
 	var (
 		nsm = distribution.NewNamespaceModel(r.Context(), envs.Get().GetStorage())
+		opts = v1.Request().Namespace().Manifest()
 	)
 
 	// request body struct
-	opts, e := v1.Request().Namespace().UpdateOptions().DecodeAndValidate(r.Body)
+	e := opts.DecodeAndValidate(r.Body)
 	if e != nil {
 		log.V(logLevel).Errorf("%s:update:> validation incoming data err: %s", logPrefix, e.Err())
 		e.Http(w)
@@ -266,7 +273,10 @@ func NamespaceUpdateH(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := nsm.Update(ns, opts); err != nil {
+	opts.SetNamespaceMeta(ns)
+	opts.SetNamespaceSpec(ns)
+
+	if err := nsm.Update(ns); err != nil {
 		log.V(logLevel).Errorf("%s:update:> update namespace `%s` err: %s", logPrefix, nid, err.Error())
 		errors.HTTP.InternalServerError(w)
 		return

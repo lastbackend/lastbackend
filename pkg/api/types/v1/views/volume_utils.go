@@ -58,7 +58,7 @@ func (r *Volume) ToSpec(obj types.VolumeSpec) VolumeSpec {
 	spec.HostPath = obj.HostPath
 	spec.Type = obj.Type
 	spec.AccessMode = obj.AccessMode
-	spec.Capacity.Storage = resource.EncodeResource(obj.Capacity.Storage)
+	spec.Capacity.Storage = resource.EncodeMemoryResource(obj.Capacity.Storage)
 	return spec
 }
 

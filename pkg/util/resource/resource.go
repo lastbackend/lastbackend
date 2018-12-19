@@ -20,12 +20,13 @@ package resource
 
 import (
 	"fmt"
-	"regexp"
-	"strconv"
-	"strings"
+	"github.com/docker/go-units"
+	"math/big"
 )
 
 const (
+	// m
+	mili = 100
 	// MB - MegaByte size
 	MB = 1000 * 1000
 	// MIB - MegaByte size
@@ -37,60 +38,28 @@ const (
 )
 
 // parseResource - parse resource size string
-// mb,mib,gb,gib,kb,kib,
-func DecodeResource(res string) (int64, error) {
-
-	var i = int64(1024)
-
-	rq := regexp.MustCompile("([0-9]+)\\w*.*")
-	rt := regexp.MustCompile("\\d*(\\w+)?.*")
-	mq := rq.FindStringSubmatch(res)
-	mt := rt.FindStringSubmatch(res)
-
-	if len(mt) == 2 {
-		switch strings.ToLower(mt[1]) {
-		case "mb":
-			i = MB
-			break
-		case "mib":
-			i = MIB
-			break
-		case "gb":
-			i = GB
-			break
-		case "gib":
-			i = GIB
-			break
-		}
-	}
-
-	if len(mq) == 2 {
-
-		q, err := strconv.ParseInt(mq[1], 10, 64)
-		if err != nil {
-			return i, err
-		}
-		i*=q
-	}
-
-	return i, nil
+// m,mb,mib,gb,gib,kb,kib,
+func DecodeMemoryResource(value string) (int64, error) {
+	return units.RAMInBytes(value)
 }
 
-func EncodeResource(res int64) string {
+func EncodeMemoryResource(res int64) string {
+	return units.BytesSize(float64(res))
+}
 
-	var r string
-
-	if res < MB {
-		return fmt.Sprintf("%d", res/1024)
+// returns microseconds
+func DecodeCpuResource(value string) (int64, error) {
+	cpu, ok := new(big.Rat).SetString(value)
+	if !ok {
+		return 0, fmt.Errorf("failed to parse %v as a rational number", value)
 	}
-
-	if res > MB && res < GB {
-		return fmt.Sprintf("%dMB", res/MB)
+	nano := cpu.Mul(cpu, big.NewRat(1e9, 1))
+	if !nano.IsInt() {
+		return 0, fmt.Errorf("value is too precise")
 	}
+	return nano.Num().Int64(), nil
+}
 
-	if res > GB  {
-		return fmt.Sprintf("%dGB", res/GB)
-	}
-
-	return r
+func EncodeCpuResource(res int64) string {
+	return big.NewRat(res, 1e9).FloatString(3)
 }

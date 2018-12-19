@@ -20,7 +20,9 @@ package request
 
 import (
 	"encoding/json"
+	"github.com/lastbackend/lastbackend/pkg/log"
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
+	"github.com/lastbackend/lastbackend/pkg/util/resource"
 	"gopkg.in/yaml.v2"
 	"strconv"
 	"strings"
@@ -76,7 +78,7 @@ func (s *ServiceManifest) SetServiceMeta(svc *types.Service) {
 
 }
 
-func (s *ServiceManifest) SetServiceSpec(svc *types.Service) {
+func (s *ServiceManifest) SetServiceSpec(svc *types.Service) (err error) {
 
 	tn := svc.Spec.Network.Updated
 	tc := svc.Spec.Template.Updated
@@ -92,6 +94,11 @@ func (s *ServiceManifest) SetServiceSpec(svc *types.Service) {
 			return
 		}
 	}()
+
+	var handleErr = func(msg string, e error) error {
+		log.Errorf("decode resource %s error: %s", msg, e.Error())
+		return e
+	}
 
 	if s.Spec.Replicas != nil {
 		svc.Spec.Replicas = *s.Spec.Replicas
@@ -159,9 +166,16 @@ func (s *ServiceManifest) SetServiceSpec(svc *types.Service) {
 		}
 
 	} else {
-		svc.Spec.Selector.Node = types.EmptyString
-		svc.Spec.Selector.Labels = make(map[string]string)
-		svc.Spec.Selector.Updated = time.Now()
+
+		if svc.Spec.Selector.Node != types.EmptyString {
+			svc.Spec.Selector.Node = types.EmptyString
+			svc.Spec.Selector.Updated = time.Now()
+		}
+
+		if len(svc.Spec.Selector.Labels) > 0 {
+			svc.Spec.Selector.Labels = make(map[string]string)
+			svc.Spec.Selector.Updated = time.Now()
+		}
 	}
 
 	if s.Spec.Strategy != nil {
@@ -225,6 +239,8 @@ func (s *ServiceManifest) SetServiceSpec(svc *types.Service) {
 				svc.Spec.Template.Updated = time.Now()
 			}
 
+
+			// Environments check
 			for _, ce := range c.Env {
 				var f = false
 
@@ -283,20 +299,57 @@ func (s *ServiceManifest) SetServiceSpec(svc *types.Service) {
 			}
 			spec.EnvVars = envs
 
-			if c.Resources.Request.RAM != spec.Resources.Request.RAM ||
-				c.Resources.Request.CPU != spec.Resources.Request.CPU {
-				spec.Resources.Request.RAM = c.Resources.Request.RAM
-				spec.Resources.Request.CPU = c.Resources.Request.CPU
+			var (
+				resourcesRequestRam int64
+				resourcesRequestCPU int64
+
+				resourcesLimitsRam int64
+				resourcesLimitsCPU int64
+			)
+
+			// Resources check
+			if c.Resources.Request.RAM != types.EmptyString {
+				resourcesRequestRam, err = resource.DecodeMemoryResource(c.Resources.Request.RAM)
+				if err != nil {
+					return handleErr("request.ram", err)
+				}
+			}
+			if c.Resources.Request.CPU != types.EmptyString {
+				resourcesRequestCPU, err = resource.DecodeCpuResource(c.Resources.Request.CPU)
+				if err != nil {
+					return handleErr("request.cpu", err)
+				}
+			}
+
+			if c.Resources.Limits.RAM != types.EmptyString {
+				resourcesLimitsRam, err = resource.DecodeMemoryResource(c.Resources.Limits.RAM)
+				if err != nil {
+					return handleErr("limit.ram", err)
+				}
+			}
+
+			if c.Resources.Limits.CPU != types.EmptyString {
+				resourcesLimitsCPU, err = resource.DecodeCpuResource(c.Resources.Limits.CPU)
+				if err != nil {
+					return handleErr("limit.cpu", err)
+				}
+			}
+
+			if resourcesRequestRam != spec.Resources.Request.RAM ||
+				resourcesRequestCPU != spec.Resources.Request.CPU {
+				spec.Resources.Request.RAM = resourcesRequestRam
+				spec.Resources.Request.CPU = resourcesRequestCPU
 				svc.Spec.Template.Updated = time.Now()
 			}
 
-			if c.Resources.Limits.RAM != spec.Resources.Limits.RAM ||
-				c.Resources.Limits.CPU != spec.Resources.Limits.CPU {
-				spec.Resources.Limits.RAM = c.Resources.Limits.RAM
-				spec.Resources.Limits.CPU = c.Resources.Limits.CPU
+			if resourcesLimitsRam != spec.Resources.Limits.RAM ||
+				resourcesLimitsCPU != spec.Resources.Limits.CPU {
+				spec.Resources.Limits.RAM = resourcesLimitsRam
+				spec.Resources.Limits.CPU = resourcesLimitsCPU
 				svc.Spec.Template.Updated = time.Now()
 			}
 
+			// Volumes check
 			for _, v := range c.Volumes {
 
 				var f = false
@@ -336,6 +389,14 @@ func (s *ServiceManifest) SetServiceSpec(svc *types.Service) {
 			}
 
 			spec.Volumes = vlms
+
+			// Ports check
+			spec.Ports = make(types.SpecTemplateContainerPorts, 0)
+			for _, cp := range c.Ports {
+				port := new(types.SpecTemplateContainerPort)
+				port.Parse(cp)
+				spec.Ports = append(spec.Ports, port)
+			}
 
 			if !f {
 				svc.Spec.Template.Containers = append(svc.Spec.Template.Containers, spec)
@@ -480,6 +541,8 @@ func (s *ServiceManifest) SetServiceSpec(svc *types.Service) {
 		svc.Spec.Template.Volumes = vlms
 
 	}
+
+	return nil
 
 }
 

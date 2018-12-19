@@ -28,7 +28,6 @@ type DeploymentView struct{}
 
 func (dv *DeploymentView) New(obj *types.Deployment, pl *types.PodList) *Deployment {
 	d := Deployment{}
-	d.ID = obj.Meta.Name
 	d.Meta = d.ToMeta(obj.Meta)
 	d.Status = d.ToStatus(obj.Status)
 	d.Spec = d.ToSpec(obj.Spec)
@@ -78,7 +77,7 @@ func (di *Deployment) ToSpec(obj types.DeploymentSpec) DeploymentSpec {
 func (di *Deployment) ToPods(obj *types.PodList) map[string]Pod {
 	pods := make(map[string]Pod, 0)
 	for _, p := range obj.Items {
-		if p.Meta.Deployment == di.ID {
+		if p.Meta.Namespace == di.Meta.Namespace && p.Meta.Service == di.Meta.Service && p.Meta.Deployment == di.Meta.Name {
 			pv := new(PodViewHelper)
 			pods[p.Meta.Name] = pv.New(p)
 		}

@@ -6,7 +6,8 @@ RUN apk add --no-cache ca-certificates
 RUN apk add --no-cache \
     linux-headers \
     gcc \
-    musl-dev
+    musl-dev \
+    iproute2
 
 RUN set -ex \
 	&& apk add --no-cache --virtual .build-deps \

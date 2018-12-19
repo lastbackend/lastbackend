@@ -53,12 +53,22 @@ func (r *Namespace) ToMeta(obj types.NamespaceMeta) NamespaceMeta {
 
 func (r *Namespace) ToSpec(spec types.NamespaceSpec) NamespaceSpec {
 	return NamespaceSpec{
-		Resources: r.ToResources(spec.Resources),
-		Quotas:    r.ToQuotas(spec.Quotas),
+		Resources: NamespaceResources{
+			Limits:  r.ToResources(spec.Resources.Limits),
+			Request: r.ToResources(spec.Resources.Request),
+		},
 		Env:       r.ToEnv(spec.Env),
 		Domain: NamespaceDomain{
 			Internal: spec.Domain.Internal,
 			External: spec.Domain.External,
+		},
+	}
+}
+
+func (r *Namespace) ToStatus(status types.NamespaceStatus) NamespaceStatus {
+	return NamespaceStatus{
+		Resources: NamespaceStatusResources{
+			Usage: r.ToResources(status.Resources.Allocated),
 		},
 	}
 }
@@ -71,18 +81,11 @@ func (r *Namespace) ToEnv(obj types.NamespaceEnvs) NamespaceEnvs {
 	return envs
 }
 
-func (r *Namespace) ToResources(obj types.NamespaceResources) NamespaceResources {
-	return NamespaceResources{
-		RAM:    obj.RAM,
-		Routes: obj.Routes,
-	}
-}
-
-func (r *Namespace) ToQuotas(obj types.NamespaceQuotas) NamespaceQuotas {
-	return NamespaceQuotas{
-		Disabled: obj.Disabled,
-		RAM:      obj.RAM,
-		Routes:   obj.Routes,
+func (r *Namespace) ToResources(obj types.ResourceRequestItem) NamespaceResource {
+	return NamespaceResource{
+		RAM:     obj.RAM,
+		CPU:     obj.CPU,
+		Storage: obj.Storage,
 	}
 }
 
