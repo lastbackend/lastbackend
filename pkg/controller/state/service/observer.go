@@ -64,6 +64,10 @@ type ServiceState struct {
 	}
 }
 
+func (ss *ServiceState) Namespace() string {
+	return ss.service.Meta.Namespace
+}
+
 func (ss *ServiceState) Restore() error {
 
 	log.V(logLevel).Debugf("%s:restore state for service: %s", logPrefix, ss.service.SelfLink())
@@ -115,6 +119,8 @@ func (ss *ServiceState) Restore() error {
 			ss.deployment.index = index
 		}
 
+		log.Infof("index:> %d", ss.deployment.index)
+
 		ss.deployment.list[d.SelfLink()] = d
 	}
 
@@ -129,6 +135,10 @@ func (ss *ServiceState) Restore() error {
 		}
 		break
 	// if service is in provision state - mark deployment in ready state as current
+	case types.StateWaiting:
+		fallthrough
+	case types.StateDegradation:
+		fallthrough
 	case types.StateProvision:
 
 		for _, d := range ss.deployment.list {
@@ -151,7 +161,6 @@ func (ss *ServiceState) Restore() error {
 			if ss.deployment.provision.Spec.Template.Updated.Equal(ss.deployment.active.Spec.Template.Updated) {
 				ss.deployment.provision = nil
 			}
-
 		}
 
 		break
@@ -254,6 +263,54 @@ func (ss *ServiceState) DelPod(p *types.Pod) {
 	}
 
 	delete(ss.pod.list[p.DeploymentLink()], p.SelfLink())
+}
+
+func (ss *ServiceState) CheckDeps(dep types.DeploymentStatusDependency) {
+
+	log.Debugf("%s:> check dependency: %s",logPrefix, dep.Name)
+
+	if ss.deployment.provision == nil {
+		log.Debugf("%s:> check dependency: %s: provision deployment not found",logPrefix, dep.Name)
+		return
+	}
+
+	if ss.deployment.provision.Status.State == types.StateWaiting {
+
+		switch dep.Type {
+		case types.KindVolume:
+			if _, ok := ss.deployment.provision.Status.Dependencies.Volumes[dep.Name]; !ok {
+				return
+			}
+
+			ss.deployment.provision.Status.Dependencies.Volumes[dep.Name] = dep
+			if ss.deployment.provision.Status.CheckDeps() {
+				ss.deployment.provision.Status.State = types.StateCreated
+				ss.observers.deployment <- ss.deployment.provision
+			}
+		case types.KindSecret:
+			if _, ok := ss.deployment.provision.Status.Dependencies.Secrets[dep.Name]; !ok {
+				return
+			}
+
+			ss.deployment.provision.Status.Dependencies.Secrets[dep.Name] = dep
+			if ss.deployment.provision.Status.CheckDeps() {
+				ss.deployment.provision.Status.State = types.StateCreated
+				ss.observers.deployment <- ss.deployment.provision
+			}
+
+		case types.KindConfig:
+			if _, ok := ss.deployment.provision.Status.Dependencies.Configs[dep.Name]; !ok {
+				return
+			}
+
+			ss.deployment.provision.Status.Dependencies.Configs[dep.Name] = dep
+			if ss.deployment.provision.Status.CheckDeps() {
+				ss.deployment.provision.Status.State = types.StateCreated
+				ss.observers.deployment <- ss.deployment.provision
+			}
+		}
+
+	}
 }
 
 func NewServiceState(cs *cluster.ClusterState, s *types.Service) *ServiceState {

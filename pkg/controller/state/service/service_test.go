@@ -445,7 +445,7 @@ func TestHandleServiceStateCreated(t *testing.T) {
 
 		dp2 := getDeploymentAsset(s.want.state.service, types.StateProvision, types.EmptyString)
 
-		s.want.state.service.Status.State = types.StateProvision
+		s.want.state.service.Status.State = types.StateCreated
 		s.want.state.deployment.provision = dp2
 		s.want.state.deployment.list[dp2.SelfLink()] = dp2
 		s.want.state.deployment.list[dp1.SelfLink()].Status.State = types.StateDestroyed
@@ -1253,6 +1253,9 @@ func getDeploymentAsset(svc *types.Service, state, message string) *types.Deploy
 
 	d.Status.State = state
 	d.Status.Message = message
+	d.Status.Dependencies.Volumes = make(map[string]types.DeploymentStatusDependency, 0)
+	d.Status.Dependencies.Secrets = make(map[string]types.DeploymentStatusDependency, 0)
+	d.Status.Dependencies.Configs = make(map[string]types.DeploymentStatusDependency, 0)
 
 	d.Spec.State = svc.Spec.State
 	d.Spec.Template = svc.Spec.Template
@@ -1328,16 +1331,18 @@ func getServiceStateCopy(ss *ServiceState) *ServiceState {
 		s.deployment.provision = s.deployment.list[ss.deployment.provision.SelfLink()]
 	}
 
-	for k, pl := range ss.pod.list {
+	if len(ss.pod.list) > 0 {
+		for k, pl := range ss.pod.list {
 
-		if _, ok := s.pod.list[k]; !ok {
-			s.pod.list[k] = make(map[string]*types.Pod)
+			if _, ok := s.pod.list[k]; !ok {
+				s.pod.list[k] = make(map[string]*types.Pod)
+			}
+
+			for l, p := range pl {
+				s.pod.list[k][l] = p
+			}
+
 		}
-
-		for l, p := range pl {
-			s.pod.list[k][l] = p
-		}
-
 	}
 
 	return s

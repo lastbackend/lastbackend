@@ -36,6 +36,17 @@ type Secret struct {
 	storage storage.Storage
 }
 
+func (n *Secret) Runtime() (*types.Runtime, error) {
+
+	log.V(logLevel).Debugf("%s:get:> get secret runtime info", logSecretPrefix)
+	runtime, err := n.storage.Info(n.context, n.storage.Collection().Secret(), "")
+	if err != nil {
+		log.V(logLevel).Errorf("%s:get:> get runtime info error: %s", logSecretPrefix, err)
+		return &runtime.Runtime, err
+	}
+	return &runtime.Runtime, nil
+}
+
 func (n *Secret) Get(namespace, name string) (*types.Secret, error) {
 
 	log.V(logLevel).Debugf("%s:get:> get secret by id %s/%s", logSecretPrefix, name)

@@ -130,6 +130,13 @@ func (hp *Process) reload() error {
 		return nil
 	}
 
+	defer func() {
+		for port := range ports {
+			c := exec.Command(IPTablesExec, "-D", "INPUT", "-p", "tcp", "--dport", fmt.Sprintf("%d", port), "--syn", "-j", "DROP")
+			c.Start()
+		}
+	}()
+
 	bin := envs.Get().GetHaproxy()
 	_, path, cfg, pidpath := envs.Get().GetTemplate()
 	if pidpath == types.EmptyString {
@@ -149,12 +156,7 @@ func (hp *Process) reload() error {
 		c.Start()
 	}
 
-	defer func() {
-		for port := range ports {
-			c := exec.Command(IPTablesExec, "-D", "INPUT", "-p", "tcp", "--dport", fmt.Sprintf("%d", port), "--syn", "-j", "DROP")
-			c.Start()
-		}
-	}()
+
 
 	err := cmd.Start()
 	if err != nil {
@@ -197,6 +199,4 @@ func (hp *Process) getPid() int {
 	}
 
 	return pid
-
-	return 0
 }

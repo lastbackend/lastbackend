@@ -20,12 +20,14 @@ package service
 
 import (
 	"context"
+	"github.com/lastbackend/lastbackend/pkg/distribution/errors"
+
+	"time"
 
 	"github.com/lastbackend/lastbackend/pkg/controller/envs"
 	"github.com/lastbackend/lastbackend/pkg/distribution"
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 	"github.com/lastbackend/lastbackend/pkg/log"
-	"time"
 )
 
 const logDeploymentPrefix = "state:observer:deployment"
@@ -107,6 +109,33 @@ func deploymentObserve(ss *ServiceState, d *types.Deployment) error {
 func handleDeploymentStateCreated(ss *ServiceState, d *types.Deployment) error {
 
 	log.V(logLevel).Debugf("%s:> handleDeploymentStateCreated: %s > %s", logDeploymentPrefix, d.SelfLink(), d.Status.State)
+
+	check, err := deploymentCheckDependencies(ss, d)
+	if err != nil {
+		log.Errorf("%s:> handle deployment check deps: %s, err: %s", logDeploymentPrefix, d.SelfLink(), err.Error())
+		return err
+	}
+
+	if !check {
+		d.Status.State = types.StateWaiting
+		dm := distribution.NewDeploymentModel(context.Background(), envs.Get().GetStorage())
+		if err := dm.Update(d); err != nil {
+			log.Errorf("%s:> handle deployment create, deps update: %s, err: %s", logDeploymentPrefix, d.SelfLink(), err.Error())
+			return err
+		}
+		return nil
+	}
+
+	if err := deploymentCheckSelectors(ss, d); err != nil {
+		d.Status.State = types.StateError
+		d.Status.Message = err.Error()
+		dm := distribution.NewDeploymentModel(context.Background(), envs.Get().GetStorage())
+		if err := dm.Update(d); err != nil {
+			log.Errorf("%s:> handle deployment create, deps update: %s, err: %s", logDeploymentPrefix, d.SelfLink(), err.Error())
+			return err
+		}
+		return nil
+	}
 
 	if err := deploymentPodProvision(ss, d); err != nil {
 		log.Errorf("%s", err.Error())
@@ -263,6 +292,235 @@ func handleDeploymentStateDestroyed(ss *ServiceState, d *types.Deployment) error
 
 func deploymentSpecValidate(d *types.Deployment, svc *types.Service) bool {
 	return d.Spec.Template.Updated.Equal(svc.Spec.Template.Updated) && d.Spec.Selector.Updated.Equal(svc.Spec.Selector.Updated)
+}
+
+// serviceCheckDependencies function - check if service can provisioned or should wait for dependencies
+func deploymentCheckDependencies(ss *ServiceState, d *types.Deployment) (bool, error) {
+
+	var (
+		ctx  = context.Background()
+		stg  = envs.Get().GetStorage()
+		vm   = distribution.NewVolumeModel(ctx, stg)
+		sm   = distribution.NewSecretModel(ctx, stg)
+		cm   = distribution.NewConfigModel(ctx, stg)
+		deps = types.DeploymentStatusDependencies{
+			Volumes: make(map[string]types.DeploymentStatusDependency, 0),
+			Secrets: make(map[string]types.DeploymentStatusDependency, 0),
+			Configs: make(map[string]types.DeploymentStatusDependency, 0),
+		}
+	)
+
+	volumesRequiredList := make(map[string]bool, 0)
+	secretsRequiredList := make(map[string]bool, 0)
+	configsRequiredList := make(map[string]bool, 0)
+	for _, v := range d.Spec.Template.Volumes {
+		if v.Volume.Name != types.EmptyString {
+			volumesRequiredList[v.Volume.Name] = true
+		}
+		if v.Secret.Name != types.EmptyString {
+			secretsRequiredList[v.Secret.Name] = true
+		}
+		if v.Config.Name != types.EmptyString {
+			configsRequiredList[v.Config.Name] = true
+		}
+	}
+
+	for _, c := range d.Spec.Template.Containers {
+		for _, e := range c.EnvVars {
+			if e.Secret.Name != types.EmptyString {
+				secretsRequiredList[e.Secret.Name] = true
+			}
+
+			if e.Config.Name != types.EmptyString {
+				configsRequiredList[e.Config.Name] = true
+			}
+		}
+	}
+
+	if len(volumesRequiredList) != 0 {
+
+		vl, err := vm.ListByNamespace(d.Meta.Namespace)
+		if err != nil {
+			log.Errorf("%s:> service check deps err: %s", logServicePrefix, err.Error())
+			return false, err
+		}
+
+		for vr := range volumesRequiredList {
+			var f = false
+
+			for _, v := range vl.Items {
+				if vr == v.Meta.Name {
+					f = true
+					deps.Volumes[vr] = types.DeploymentStatusDependency{
+						Name:   vr,
+						Type:   types.KindVolume,
+						Status: v.Status.State,
+					}
+				}
+			}
+
+			if !f {
+				deps.Volumes[vr] = types.DeploymentStatusDependency{
+					Name:   vr,
+					Type:   types.KindVolume,
+					Status: types.StateNotReady,
+				}
+			}
+		}
+	}
+
+	if len(secretsRequiredList) != 0 {
+
+		sl, err := sm.List(d.Meta.Namespace)
+		if err != nil {
+			log.Errorf("%s:> service check deps err: %s", logServicePrefix, err.Error())
+			return false, err
+		}
+
+		for sr := range secretsRequiredList {
+			var f = false
+
+			for _, s := range sl.Items {
+				if sr == s.Meta.Name {
+					f = true
+					deps.Secrets[sr] = types.DeploymentStatusDependency{
+						Name:   sr,
+						Type:   types.KindSecret,
+						Status: types.StateReady,
+					}
+				}
+			}
+
+			if !f {
+				deps.Secrets[sr] = types.DeploymentStatusDependency{
+					Name:   sr,
+					Type:   types.KindSecret,
+					Status: types.StateNotReady,
+				}
+			}
+		}
+	}
+
+	if len(configsRequiredList) != 0 {
+
+		cl, err := cm.List(d.Meta.Namespace)
+		if err != nil {
+			log.Errorf("%s:> service check deps err: %s", logServicePrefix, err.Error())
+			return false, err
+		}
+
+		for cr := range configsRequiredList {
+			var f = false
+
+			for _, c := range cl.Items {
+				if cr == c.Meta.Name {
+					f = true
+					deps.Configs[cr] = types.DeploymentStatusDependency{
+						Name:   cr,
+						Type:   types.KindConfig,
+						Status: types.StateReady,
+					}
+				}
+			}
+
+			if !f {
+				deps.Configs[cr] = types.DeploymentStatusDependency{
+					Name:   cr,
+					Type:   types.KindConfig,
+					Status: types.StateNotReady,
+				}
+			}
+		}
+	}
+
+	d.Status.Dependencies = deps
+	if !d.Status.CheckDeps() {
+		d.Status.State = types.StateWaiting
+		return false, nil
+	}
+
+	return true, nil
+}
+
+// deploymentCheckSelectors function - handles provided selectors to match nodes
+func deploymentCheckSelectors(ss *ServiceState, d *types.Deployment) (err error) {
+
+	var (
+		ctx = context.Background()
+		stg = envs.Get().GetStorage()
+		vm  = distribution.NewVolumeModel(ctx, stg)
+		vc  = make(map[string]string, 0)
+	)
+
+	for _, v := range d.Spec.Template.Volumes {
+		if v.Volume.Name != types.EmptyString {
+			vc[v.Volume.Name] = v.Name
+		}
+	}
+
+	if len(vc) > 0 {
+
+		var node string
+
+		vl, err := vm.ListByNamespace(d.Meta.Namespace)
+		if err != nil {
+			log.V(logLevel).Errorf("%s:create:> create deployment, volume list err: %s", logPrefix, err.Error())
+			return err
+		}
+
+		for name := range vc {
+
+			var f = false
+
+			for _, v := range vl.Items {
+
+				if v.Meta.Name != name {
+					continue
+				}
+
+				f = true
+
+				if v.Status.State != types.StateReady {
+					log.V(logLevel).Errorf("%s:create:> create deployment err: volume is not ready yet: %s", logPrefix, v.Meta.Name)
+					return errors.New(v.Meta.Name).Volume().NotReady(v.Meta.Name)
+				}
+
+				if v.Meta.Node == types.EmptyString {
+					log.V(logLevel).Errorf("%s:create:> create deployment err: volume is not provisioned yet: %s", logPrefix, v.Meta.Name)
+					return errors.New(v.Meta.Name).Volume().NotProvisioned(v.Meta.Name)
+				}
+
+				if node == types.EmptyString {
+					node = v.Meta.Node
+				} else {
+					if node != v.Meta.Node {
+						return errors.New(v.Meta.Name).Volume().DifferentNodes()
+					}
+				}
+			}
+
+			if !f {
+				log.V(logLevel).Errorf("%s:create:> create deployment err: volume is not found: %s", logPrefix, name)
+				return errors.New(name).Volume().NotFound(name)
+			}
+		}
+
+		if node != types.EmptyString {
+
+			if d.Spec.Selector.Node != types.EmptyString {
+				if d.Spec.Selector.Node != node {
+					return errors.New("spec.selector.node not matched with attached volumes")
+				}
+
+				return nil
+			}
+
+			d.Spec.Selector.Node = node
+		}
+
+	}
+
+	return nil
 }
 
 // deploymentPodProvision - handles deployment provision logic

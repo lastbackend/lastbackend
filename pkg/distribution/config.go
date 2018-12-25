@@ -36,6 +36,17 @@ type Config struct {
 	storage storage.Storage
 }
 
+func (n *Config) Runtime() (*types.Runtime, error) {
+
+	log.V(logLevel).Debugf("%s:get:> get config runtime info", logConfigPrefix)
+	runtime, err := n.storage.Info(n.context, n.storage.Collection().Config(), "")
+	if err != nil {
+		log.V(logLevel).Errorf("%s:get:> get runtime info error: %s", logConfigPrefix, err)
+		return &runtime.Runtime, err
+	}
+	return &runtime.Runtime, nil
+}
+
 func (n *Config) Get(namespace, name string) (*types.Config, error) {
 
 	log.V(logLevel).Debugf("%s:get:> get config by id %s/%s", logConfigPrefix, name)

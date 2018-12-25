@@ -49,14 +49,6 @@ func serviceObserve(ss *ServiceState, s *types.Service) error {
 		}
 		break
 
-	// Check service waiting state triggers
-	case types.StateWaiting:
-		if err := handleServiceStateWaiting(ss, s); err != nil {
-			log.V(logLevel).Debugf("%s:observe:serviceStateWaiting err:> %s", logPrefix, err.Error())
-			return err
-		}
-		break
-
 	// Check service provision state triggers
 	case types.StateProvision:
 		if err := handleServiceStateProvision(ss, s); err != nil {
@@ -136,12 +128,6 @@ func handleServiceStateCreated(ss *ServiceState, svc *types.Service) error {
 		log.Errorf("%s:> deployment provision err: %s", logServicePrefix, err.Error())
 		return err
 	}
-
-	return nil
-}
-
-func handleServiceStateWaiting(ss *ServiceState, svc *types.Service) error {
-	log.V(logLevel).Debugf("%s:> handleServiceStateWaiting: %s > %s", logServicePrefix, svc.SelfLink(), svc.Status.State)
 
 	return nil
 }
@@ -356,12 +342,15 @@ func serviceDeploymentProvision(ss *ServiceState, svc *types.Service) error {
 	// create deployment if needed
 	if d == nil {
 
+		ss.deployment.index++
+
 		d, err := deploymentCreate(svc, ss.deployment.index)
 		if err != nil {
+			ss.deployment.index--
 			log.Errorf("%s:> deployment create err: %s", logServicePrefix, err.Error())
 			return err
 		}
-		ss.deployment.index++
+
 
 		for _, od := range ss.deployment.list {
 

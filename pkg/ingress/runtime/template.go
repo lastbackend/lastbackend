@@ -63,13 +63,14 @@ resolvers lstbknd
 #---------------------------------------------------------------------
 # frontend which proxys stats
 #---------------------------------------------------------------------
-listen stats # Define a listen section called "stats"
-  bind :9000 # Listen on localhost:9000
-  mode http
-  stats enable  # Enable stats page
-  stats hide-version  # Hide HAProxy version
-  stats realm Haproxy\ Statistics  # Title text for popup window
-  stats uri /stats  # Stats URI
+#listen stats # Define a listen section called "stats"
+#  bind :92967 # Listen on localhost:9000
+#  mode http
+#  stats enable  # Enable stats page
+#  stats hide-version  # Hide HAProxy version
+#  stats realm Haproxy\ Statistics  # Title text for popup window
+#  stats uri /stats  # Stats URI
+  
 
 #---------------------------------------------------------------------
 # frontend which proxys raw/ssl request to the backends

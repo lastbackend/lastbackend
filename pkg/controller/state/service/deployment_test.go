@@ -75,13 +75,13 @@ func testDeploymentObserver(t *testing.T, name, werr string, wst *ServiceState, 
 
 			// check service status state is equal
 			if !assert.Equal(t, wst.service.Status.State, state.service.Status.State,
-				"status state is different") {
+				"service status state is different") {
 				return
 			}
 
 			// check service status message is equal
 			if !assert.Equal(t, wst.service.Status.Message, state.service.Status.Message,
-				"status message is different") {
+				"service status message is different") {
 				return
 			}
 
@@ -215,7 +215,7 @@ func testDeploymentObserver(t *testing.T, name, werr string, wst *ServiceState, 
 			return
 		}
 
-		if d.Status.State != types.StateDestroy && d.Status.State != types.StateDestroyed {
+		if d.Status.State != types.StateDestroy && d.Status.State != types.StateDestroyed && d.Status.State != types.StateWaiting {
 
 			var count = 0
 			for _, p := range state.pod.list[d.SelfLink()] {
@@ -231,6 +231,11 @@ func testDeploymentObserver(t *testing.T, name, werr string, wst *ServiceState, 
 				"pods count not match with replicas") {
 				return
 			}
+
+			return
+		}
+
+		if d.Status.State == types.StateWaiting {
 
 			return
 		}
@@ -375,6 +380,39 @@ func TestHandleDeploymentStateCreated(t *testing.T) {
 		s.want.state.pod.list[p1.DeploymentLink()] = make(map[string]*types.Pod)
 		s.want.state.pod.list[p1.DeploymentLink()][p1.SelfLink()] = p1
 		s.want.state.pod.list[p2.DeploymentLink()][p2.SelfLink()] = p2
+
+		return s
+	}())
+
+	tests = append(tests, func() suit {
+
+		s := suit{name: "waiting state handle without volumes"}
+
+		svc := getServiceAsset(types.StateProvision, types.EmptyString)
+		dp := getDeploymentAsset(svc, types.StateCreated, types.EmptyString)
+		dp.Spec.Template.Volumes = append(dp.Spec.Template.Volumes, &types.SpecTemplateVolume{
+			Name: "demo",
+			Volume: types.SpecTemplateVolumeClaim{
+				Name: "test",
+			},
+		})
+
+		s.args.state = getServiceStateAsset(svc)
+		s.args.state.deployment.provision = dp
+		s.args.state.deployment.list[dp.SelfLink()] = dp
+		s.args.d = dp
+
+		s.want.err = types.EmptyString
+		s.want.state = getServiceStateCopy(s.args.state)
+		s.want.state.service.Status.State = types.StateWaiting
+		s.want.state.deployment.provision.Status.State = types.StateWaiting
+		s.want.state.deployment.provision.Status.Dependencies.Volumes["test"] = types.DeploymentStatusDependency{
+			Name: "test",
+			Type: types.KindVolume,
+			Status: types.StateNotReady,
+		}
+
+		s.want.state.pod.list[dp.SelfLink()] = make(map[string]*types.Pod)
 
 		return s
 	}())

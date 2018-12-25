@@ -59,10 +59,12 @@ type ServiceEndpoint struct {
 }
 
 type ServiceStatus struct {
-	State   string               `json:"state"`
-	Message string               `json:"message"`
-	Network ServiceStatusNetwork `json:"network"`
+	State        string                             `json:"state"`
+	Message      string                             `json:"message"`
+	Network      ServiceStatusNetwork               `json:"network"`
 }
+
+
 
 type ServiceSpec struct {
 	Replicas int          `json:"replicas" yaml:"replicas"`
@@ -102,6 +104,7 @@ type ServiceReplicas struct {
 	Stopped   int `json:"stopped"`
 	Errored   int `json:"errored"`
 }
+
 
 func (s *ServiceSpec) SetDefault() {
 	s.Replicas = DEFAULT_SERVICE_REPLICAS
@@ -157,8 +160,8 @@ func (s *ServiceSpec) GetResourceRequest() ResourceRequest {
 	rr := ResourceRequest{}
 
 	var (
-		limitsRAM  int64
-		limitsCPU  int64
+		limitsRAM int64
+		limitsCPU int64
 
 		requestRAM int64
 		requestCPU int64
@@ -190,7 +193,7 @@ func (s *ServiceSpec) GetResourceRequest() ResourceRequest {
 
 	if limitsCPU > 0 {
 		limitsCPU = int64(s.Replicas) * limitsCPU
-		rr.Limits.CPU  = resource.EncodeCpuResource(limitsCPU)
+		rr.Limits.CPU = resource.EncodeCpuResource(limitsCPU)
 	}
 
 	return rr
