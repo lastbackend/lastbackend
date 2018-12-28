@@ -63,8 +63,8 @@ func GetHostConfig(manifest *types.ContainerManifest) *container.HostConfig {
 	}
 
 	resources := container.Resources{
-		Memory:    manifest.Resources.Request.RAM * 1024 * 1024,
-		CPUShares: manifest.Resources.Request.CPU,
+		Memory:   manifest.Resources.Limits.RAM,
+		NanoCPUs: manifest.Resources.Limits.CPU,
 	}
 
 	var (
