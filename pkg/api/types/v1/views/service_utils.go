@@ -144,10 +144,10 @@ func (sv *Service) ToSpec(obj types.ServiceSpec) ServiceSpec {
 			})
 		}
 
-		c.Resources.Limits.RAM = s.Resources.Limits.RAM
-		c.Resources.Limits.CPU = s.Resources.Limits.CPU
-		c.Resources.Request.RAM = s.Resources.Request.RAM
-		c.Resources.Request.CPU = s.Resources.Request.CPU
+		c.Resources.Limits.RAM = resource.EncodeMemoryResource(s.Resources.Limits.RAM)
+		c.Resources.Limits.CPU = resource.EncodeCpuResource(s.Resources.Limits.CPU)
+		c.Resources.Request.RAM = resource.EncodeMemoryResource(s.Resources.Request.RAM)
+		c.Resources.Request.CPU = resource.EncodeCpuResource(s.Resources.Request.CPU)
 
 		spec.Template.Containers = append(spec.Template.Containers, c)
 	}
@@ -324,10 +324,10 @@ func (sv Service) ToRequestManifest() *request.ServiceManifest {
 			data.Image.Name = v.Image.Name
 			data.Image.Secret = v.Image.Secret
 
-			data.Resources.Request.RAM = resource.EncodeMemoryResource(v.Resources.Request.RAM)
-			data.Resources.Request.CPU = resource.EncodeCpuResource(v.Resources.Request.CPU)
-			data.Resources.Limits.RAM = resource.EncodeMemoryResource(v.Resources.Limits.RAM)
-			data.Resources.Limits.CPU = resource.EncodeCpuResource(v.Resources.Limits.CPU)
+			data.Resources.Request.RAM = v.Resources.Request.RAM
+			data.Resources.Request.CPU = v.Resources.Request.CPU
+			data.Resources.Limits.RAM = v.Resources.Limits.RAM
+			data.Resources.Limits.CPU = v.Resources.Limits.CPU
 
 			data.RestartPolicy.Policy = v.RestartPolicy.Policy
 			data.RestartPolicy.Attempt = v.RestartPolicy.Attempt

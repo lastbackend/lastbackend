@@ -96,9 +96,9 @@ type ManifestSpecTemplateRestartPolicy struct {
 
 type ManifestSpecTemplateContainerResource struct {
 	// CPU resource option
-	CPU int64 `json:"cpu,omitempty" yaml:"cpu,omitempty"`
+	CPU string `json:"cpu,omitempty" yaml:"cpu,omitempty"`
 	// RAM resource option
-	RAM int64 `json:"ram,omitempty" yaml:"ram,omitempty"`
+	RAM string `json:"ram,omitempty" yaml:"ram,omitempty"`
 }
 
 type ManifestSpecTemplateVolume struct {
