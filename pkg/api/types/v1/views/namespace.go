@@ -24,9 +24,9 @@ import (
 
 // swagger:model views_namespace
 type Namespace struct {
-	Meta NamespaceMeta `json:"meta"`
+	Meta   NamespaceMeta   `json:"meta"`
 	Status NamespaceStatus `json:"status"`
-	Spec NamespaceSpec `json:"spec"`
+	Spec   NamespaceSpec   `json:"spec"`
 }
 
 // swagger:model views_namespace_meta
@@ -53,7 +53,8 @@ type NamespaceStatus struct {
 }
 
 type NamespaceStatusResources struct {
-	Usage NamespaceResource `json:"usage"`
+	Allocated NamespaceResource `json:"allocated"`
+	Usage     NamespaceResource `json:"usage"`
 }
 
 // swagger:model views_namespace_envs
