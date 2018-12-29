@@ -30,6 +30,7 @@ type NamespaceView struct{}
 func (nv *NamespaceView) New(obj *types.Namespace) *Namespace {
 	n := Namespace{}
 	n.Meta = n.ToMeta(obj.Meta)
+	n.Status = n.ToStatus(obj.Status)
 	n.Spec = n.ToSpec(obj.Spec)
 	return &n
 }
@@ -105,7 +106,7 @@ func (r *Namespace) ToSpec(spec types.NamespaceSpec) NamespaceSpec {
 func (r *Namespace) ToStatus(status types.NamespaceStatus) NamespaceStatus {
 	return NamespaceStatus{
 		Resources: NamespaceStatusResources{
-			Usage: r.ToResources(status.Resources.Allocated),
+			Allocated: r.ToResources(status.Resources.Allocated),
 		},
 	}
 }
