@@ -19,6 +19,8 @@
 package volume
 
 import (
+	"github.com/lastbackend/lastbackend/pkg/api/http/namespace/namespace"
+	"github.com/lastbackend/lastbackend/pkg/api/http/volume/volume"
 	"github.com/lastbackend/lastbackend/pkg/api/types/v1"
 
 	"net/http"
@@ -26,7 +28,6 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/api/envs"
 	"github.com/lastbackend/lastbackend/pkg/distribution"
 	"github.com/lastbackend/lastbackend/pkg/distribution/errors"
-	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 	"github.com/lastbackend/lastbackend/pkg/log"
 	"github.com/lastbackend/lastbackend/pkg/util/http/utils"
 )
@@ -66,20 +67,12 @@ func VolumeListH(w http.ResponseWriter, r *http.Request) {
 	nid := utils.Vars(r)["namespace"]
 
 	var (
-		rm  = distribution.NewVolumeModel(r.Context(), envs.Get().GetStorage())
-		nsm = distribution.NewNamespaceModel(r.Context(), envs.Get().GetStorage())
+		rm = distribution.NewVolumeModel(r.Context(), envs.Get().GetStorage())
 	)
 
-	ns, err := nsm.Get(nid)
-	if err != nil {
-		log.V(logLevel).Errorf("%s:list:> get namespace", logPrefix, err.Error())
-		errors.HTTP.InternalServerError(w)
-		return
-	}
-	if ns == nil {
-		err := errors.New("namespace not found")
-		log.V(logLevel).Errorf("%s:list:> get namespace", logPrefix, err.Error())
-		errors.New("namespace").NotFound().Http(w)
+	ns, e := namespace.FetchFromRequest(r.Context(), nid)
+	if e != nil {
+		e.Http(w)
 		return
 	}
 
@@ -140,20 +133,12 @@ func VolumeInfoH(w http.ResponseWriter, r *http.Request) {
 	log.V(logLevel).Debugf("%s:info:> get volume `%s`", logPrefix, rid)
 
 	var (
-		rm  = distribution.NewVolumeModel(r.Context(), envs.Get().GetStorage())
-		nsm = distribution.NewNamespaceModel(r.Context(), envs.Get().GetStorage())
+		rm = distribution.NewVolumeModel(r.Context(), envs.Get().GetStorage())
 	)
 
-	ns, err := nsm.Get(nid)
-	if err != nil {
-		log.V(logLevel).Errorf("%s:info:> get namespace", logPrefix, err.Error())
-		errors.HTTP.InternalServerError(w)
-		return
-	}
-	if ns == nil {
-		err := errors.New("namespace not found")
-		log.V(logLevel).Errorf("%s:info:> get namespace", logPrefix, err.Error())
-		errors.New("namespace").NotFound().Http(w)
+	ns, e := namespace.FetchFromRequest(r.Context(), nid)
+	if e != nil {
+		e.Http(w)
 		return
 	}
 
@@ -220,8 +205,6 @@ func VolumeCreateH(w http.ResponseWriter, r *http.Request) {
 	nid := utils.Vars(r)["namespace"]
 
 	var (
-		rm = distribution.NewVolumeModel(r.Context(), envs.Get().GetStorage())
-		nm = distribution.NewNamespaceModel(r.Context(), envs.Get().GetStorage())
 		mf = v1.Request().Volume().Manifest()
 	)
 
@@ -232,33 +215,19 @@ func VolumeCreateH(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	ns, err := nm.Get(nid)
-	if err != nil {
-		log.V(logLevel).Errorf("%s:create:> get namespace", logPrefix, err.Error())
-		errors.HTTP.InternalServerError(w)
-		return
-	}
-	if ns == nil {
-		err := errors.New("namespace not found")
-		log.V(logLevel).Errorf("%s:create:> get namespace", logPrefix, err.Error())
-		errors.New("namespace").NotFound().Http(w)
+	ns, e := namespace.FetchFromRequest(r.Context(), nid)
+	if e != nil {
+		e.Http(w)
 		return
 	}
 
-	rs := new(types.Volume)
-	rs.Meta.SetDefault()
-	rs.Meta.Namespace = ns.Meta.Name
-
-	mf.SetVolumeMeta(rs)
-	mf.SetVolumeSpec(rs)
-
-	if _, err := rm.Create(ns, rs); err != nil {
-		log.V(logLevel).Errorf("%s:create:> create volume err: %s", logPrefix, ns.Meta.Name, err.Error())
-		errors.HTTP.InternalServerError(w)
+	vol, e := volume.Create(r.Context(), ns, mf)
+	if e != nil {
+		e.Http(w)
 		return
 	}
 
-	response, err := v1.View().Volume().New(rs).ToJson()
+	response, err := v1.View().Volume().New(vol).ToJson()
 	if err != nil {
 		log.V(logLevel).Errorf("%s:create:> convert struct to json err: %s", logPrefix, err.Error())
 		errors.HTTP.InternalServerError(w)
@@ -311,13 +280,11 @@ func VolumeUpdateH(w http.ResponseWriter, r *http.Request) {
 	//     description: Internal server error
 
 	nid := utils.Vars(r)["namespace"]
-	rid := utils.Vars(r)["volume"]
+	vid := utils.Vars(r)["volume"]
 
 	log.V(logLevel).Debugf("%s:update:> update volume `%s`", logPrefix, nid)
 
 	var (
-		rm = distribution.NewVolumeModel(r.Context(), envs.Get().GetStorage())
-		nm = distribution.NewNamespaceModel(r.Context(), envs.Get().GetStorage())
 		mf = v1.Request().Volume().Manifest()
 	)
 
@@ -328,40 +295,25 @@ func VolumeUpdateH(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	ns, err := nm.Get(nid)
-	if err != nil {
-		log.V(logLevel).Errorf("%s:update:> get namespace", logPrefix, err.Error())
-		errors.HTTP.InternalServerError(w)
-		return
-	}
-	if ns == nil {
-		err := errors.New("namespace not found")
-		log.V(logLevel).Errorf("%s:update:> get namespace", logPrefix, err.Error())
-		errors.New("namespace").NotFound().Http(w)
+	ns, e := namespace.FetchFromRequest(r.Context(), nid)
+	if e != nil {
+		e.Http(w)
 		return
 	}
 
-	rs, err := rm.Get(ns.Meta.Name, rid)
-	if err != nil {
-		log.V(logLevel).Errorf("%s:update:> check volume exists by selflink `%s` err: %s", logPrefix, ns.Meta.SelfLink, err.Error())
-		errors.HTTP.InternalServerError(w)
-		return
-	}
-	if rs == nil {
-		log.V(logLevel).Warnf("%s:update:> volume `%s` not found", logPrefix, rid)
-		errors.New("volume").NotFound().Http(w)
+	vol, e := volume.Fetch(r.Context(), ns.Meta.Name, vid)
+	if e != nil {
+		e.Http(w)
 		return
 	}
 
-	mf.SetVolumeMeta(rs)
-	mf.SetVolumeSpec(rs)
-
-	if err = rm.Update(rs); err != nil {
-		log.V(logLevel).Errorf("%s:update:> update volume `%s` err: %s", logPrefix, ns.Meta.Name, err.Error())
-		errors.HTTP.InternalServerError(w)
+	vol, e = volume.Update(r.Context(), ns, vol, mf)
+	if e != nil {
+		e.Http(w)
+		return
 	}
 
-	response, err := v1.View().Volume().New(rs).ToJson()
+	response, err := v1.View().Volume().New(vol).ToJson()
 	if err != nil {
 		log.V(logLevel).Errorf("%s:update:> convert struct to json err: %s", logPrefix, err.Error())
 		errors.HTTP.InternalServerError(w)
@@ -409,20 +361,12 @@ func VolumeRemoveH(w http.ResponseWriter, r *http.Request) {
 	log.V(logLevel).Debugf("%s:remove:> remove volume %s", logPrefix, rid)
 
 	var (
-		rm  = distribution.NewVolumeModel(r.Context(), envs.Get().GetStorage())
-		nsm = distribution.NewNamespaceModel(r.Context(), envs.Get().GetStorage())
+		rm = distribution.NewVolumeModel(r.Context(), envs.Get().GetStorage())
 	)
 
-	ns, err := nsm.Get(nid)
-	if err != nil {
-		log.V(logLevel).Errorf("%s:remove:> get namespace", logPrefix, err.Error())
-		errors.HTTP.InternalServerError(w)
-		return
-	}
-	if ns == nil {
-		err := errors.New("namespace not found")
-		log.V(logLevel).Errorf("%s:remove:> get namespace", logPrefix, err.Error())
-		errors.New("namespace").NotFound().Http(w)
+	ns, e := namespace.FetchFromRequest(r.Context(), nid)
+	if e != nil {
+		e.Http(w)
 		return
 	}
 

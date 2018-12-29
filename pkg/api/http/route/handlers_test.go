@@ -488,12 +488,12 @@ func TestRouteUpdate(t *testing.T) {
 
 	r3.Spec.Rules = append(r3.Spec.Rules, types.RouteRule{
 		Path:     "/",
-		Endpoint: fmt.Sprintf("%s.%s", ns1.Meta.Name, sv2.Meta.Name),
+		Endpoint: fmt.Sprintf("%s.%s", ns1.Meta.Name, sv1.Meta.Name),
 		Port:     80,
 	})
 
 	mf1, _ := getRouteManifest(sv1.Meta.Name).ToJson()
-	mf2, _ := getRouteManifest(sv2.Meta.Name).ToJson()
+	mf2, _ := getRouteManifest(sv1.Meta.Name).ToJson()
 	mf3, _ := getRouteManifest(sv3.Meta.Name).ToJson()
 
 	type fields struct {

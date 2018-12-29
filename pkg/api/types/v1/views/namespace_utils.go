@@ -34,6 +34,43 @@ func (nv *NamespaceView) New(obj *types.Namespace) *Namespace {
 	return &n
 }
 
+func (nv *NamespaceView) NewApplyStatus(status struct {
+	Configs  map[string]bool
+	Secrets  map[string]bool
+	Volumes  map[string]bool
+	Services map[string]bool
+	Routes   map[string]bool
+}) *NamespaceApplyStatus {
+	n := NamespaceApplyStatus{}
+	n.Secrets = make(map[string]bool, 0)
+	n.Configs = make(map[string]bool, 0)
+	n.Volumes = make(map[string]bool, 0)
+	n.Services = make(map[string]bool, 0)
+	n.Routes = make(map[string]bool, 0)
+
+	for name, status := range status.Secrets {
+		n.Secrets[name] = status
+	}
+
+	for name, status := range status.Configs {
+		n.Configs[name] = status
+	}
+
+	for name, status := range status.Volumes {
+		n.Volumes[name] = status
+	}
+
+	for name, status := range status.Services {
+		n.Services[name] = status
+	}
+
+	for name, status := range status.Routes {
+		n.Routes[name] = status
+	}
+
+	return &n
+}
+
 func (r *Namespace) ToMeta(obj types.NamespaceMeta) NamespaceMeta {
 	meta := NamespaceMeta{}
 	meta.Name = obj.Name
@@ -57,7 +94,7 @@ func (r *Namespace) ToSpec(spec types.NamespaceSpec) NamespaceSpec {
 			Limits:  r.ToResources(spec.Resources.Limits),
 			Request: r.ToResources(spec.Resources.Request),
 		},
-		Env:       r.ToEnv(spec.Env),
+		Env: r.ToEnv(spec.Env),
 		Domain: NamespaceDomain{
 			Internal: spec.Domain.Internal,
 			External: spec.Domain.External,
@@ -110,4 +147,8 @@ func (n *NamespaceList) ToJson() ([]byte, error) {
 		n = &NamespaceList{}
 	}
 	return json.Marshal(n)
+}
+
+func (s *NamespaceApplyStatus) ToJson() ([]byte, error) {
+	return json.Marshal(s)
 }

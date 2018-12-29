@@ -24,9 +24,9 @@ import (
 
 // swagger:model views_namespace
 type Namespace struct {
-	Meta NamespaceMeta `json:"meta"`
+	Meta   NamespaceMeta   `json:"meta"`
 	Status NamespaceStatus `json:"status"`
-	Spec NamespaceSpec `json:"spec"`
+	Spec   NamespaceSpec   `json:"spec"`
 }
 
 // swagger:model views_namespace_meta
@@ -78,3 +78,11 @@ type NamespaceDomain struct {
 
 // swagger:model views_namespace_list
 type NamespaceList []*Namespace
+
+type NamespaceApplyStatus struct {
+	Configs  map[string]bool
+	Secrets  map[string]bool
+	Volumes  map[string]bool
+	Services map[string]bool
+	Routes   map[string]bool
+}

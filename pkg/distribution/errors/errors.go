@@ -25,15 +25,16 @@ import (
 )
 
 const (
-	StatusBadParameter  = "Bad Parameter"
-	StatusBadRequest    = "Bad Request"
-	StatusUnknown       = "Unknown"
-	StatusIncorrectXml  = "Incorrect Xml"
-	StatusIncorrectJson = "Incorrect Json"
-	StatusNotUnique     = "Not Unique"
-	StatusForbidden     = "Forbidden"
-	StatusNotAllowed    = "Not Allowed"
-	ArgumentIsEmpty     = "ArgumentIsEmpty"
+	StatusBadParameter        = "Bad Parameter"
+	StatusBadRequest          = "Bad Request"
+	StatusUnknown             = "Unknown"
+	StatusIncorrectXml        = "Incorrect Xml"
+	StatusIncorrectJson       = "Incorrect Json"
+	StatusNotUnique           = "Not Unique"
+	StatusInternalServerError = "Internal Server Error"
+	StatusForbidden           = "Forbidden"
+	StatusNotAllowed          = "Not Allowed"
+	ArgumentIsEmpty           = "ArgumentIsEmpty"
 )
 
 type Err struct {
@@ -130,6 +131,14 @@ func (e *err) NotFound(err ...error) *Err {
 		Code:   http.StatusText(http.StatusNotFound),
 		origin: getError(joinNameAndMessage(e.s, "not found"), err...),
 		http:   HTTP.getNotFound(e.s),
+	}
+}
+
+func (e *err) InternalServerError(err ...error) *Err {
+	return &Err{
+		Code:   http.StatusText(http.StatusInternalServerError),
+		origin: getError(joinNameAndMessage(e.s, "internal server error"), err...),
+		http:   HTTP.getInternalServerError(e.s),
 	}
 }
 

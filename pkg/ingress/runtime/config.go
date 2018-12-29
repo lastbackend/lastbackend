@@ -21,6 +21,7 @@ package runtime
 import (
 	"bytes"
 	"fmt"
+	"github.com/spf13/viper"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -42,6 +43,12 @@ const (
 )
 
 type conf struct {
+	Stats struct {
+		Enable   bool
+		Port     int
+		Username string
+		Password string
+	}
 	Resolvers map[string]uint16
 	Frontend  map[uint16]*confFrontend
 	Backend   map[string]*confBackend
@@ -87,6 +94,17 @@ func configSync() error {
 	log.Debugf("Update routes: %d", len(routes))
 
 	var cfg = conf{}
+	cfg.Stats.Username = viper.GetString("haproxy.stats.username")
+	cfg.Stats.Password = viper.GetString("haproxy.stats.password")
+	cfg.Stats.Port = viper.GetInt("haproxy.stats.port")
+
+	if cfg.Stats.Username != types.EmptyString && cfg.Stats.Password != types.EmptyString {
+		cfg.Stats.Enable = true
+		if cfg.Stats.Port == 0 {
+			cfg.Stats.Port = 9000
+		}
+	}
+
 	cfg.Resolvers = envs.Get().GetResolvers()
 	cfg.Frontend = make(map[uint16]*confFrontend, 0)
 	cfg.Backend = make(map[string]*confBackend, 0)
