@@ -170,7 +170,7 @@ func (nc *NamespaceClient) Apply(ctx context.Context, opts *rv1.NamespaceApplyMa
 	var s *vv1.NamespaceApplyStatus
 	var e *errors.Http
 
-	err = nc.client.Put("/namespace/%s/apply").
+	err = nc.client.Put(fmt.Sprintf("/namespace/%s/apply", nc.name)).
 		AddHeader("Content-Type", "application/json").
 		Body(body).
 		JSON(&s, &e)

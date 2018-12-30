@@ -29,5 +29,6 @@ var Routes = []http.Route{
 	{Path: "/namespace", Method: http.MethodPost, Middleware: []http.Middleware{middleware.Authenticate}, Handler: NamespaceCreateH},
 	{Path: "/namespace/{namespace}", Method: http.MethodGet, Middleware: []http.Middleware{middleware.Authenticate}, Handler: NamespaceInfoH},
 	{Path: "/namespace/{namespace}", Method: http.MethodPut, Middleware: []http.Middleware{middleware.Authenticate}, Handler: NamespaceUpdateH},
+	{Path: "/namespace/{namespace}/apply", Method: http.MethodPut, Middleware: []http.Middleware{middleware.Authenticate}, Handler: NamespaceApplyH},
 	{Path: "/namespace/{namespace}", Method: http.MethodDelete, Middleware: []http.Middleware{middleware.Authenticate}, Handler: NamespaceRemoveH},
 }

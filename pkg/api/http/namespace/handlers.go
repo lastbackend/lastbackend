@@ -20,6 +20,8 @@ package namespace
 
 import (
 	"fmt"
+	"net/http"
+
 	"github.com/lastbackend/lastbackend/pkg/api/http/config/config"
 	"github.com/lastbackend/lastbackend/pkg/api/http/namespace/namespace"
 	"github.com/lastbackend/lastbackend/pkg/api/http/route/route"
@@ -27,10 +29,9 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/api/http/service/service"
 	"github.com/lastbackend/lastbackend/pkg/api/http/volume/volume"
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
-	"net/http"
 
 	"github.com/lastbackend/lastbackend/pkg/api/envs"
-	"github.com/lastbackend/lastbackend/pkg/api/types/v1"
+	v1 "github.com/lastbackend/lastbackend/pkg/api/types/v1"
 	"github.com/lastbackend/lastbackend/pkg/distribution"
 	"github.com/lastbackend/lastbackend/pkg/distribution/errors"
 	"github.com/lastbackend/lastbackend/pkg/log"
@@ -320,7 +321,7 @@ func NamespaceApplyH(w http.ResponseWriter, r *http.Request) {
 
 	nid := utils.Vars(r)["namespace"]
 
-	log.V(logLevel).Debugf("%s:apply:> apply namespace `%s`", logPrefix, nid)
+	log.V(logLevel).Debugf("%s:apply:> apply namespace %s", logPrefix, nid)
 
 	var (
 		opts = v1.Request().Namespace().ApplyManifest()
@@ -366,7 +367,7 @@ func NamespaceApplyH(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		status.Configs[fmt.Sprintf("%s/%s", ns.SelfLink(), *m.Meta.Name)] = false
+		status.Configs[fmt.Sprintf("%s:%s", ns.SelfLink(), *m.Meta.Name)] = false
 	}
 
 	for _, m := range opts.Secrets {
@@ -380,7 +381,7 @@ func NamespaceApplyH(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		status.Configs[fmt.Sprintf("%s/%s", ns.SelfLink(), *m.Meta.Name)] = false
+		status.Secrets[fmt.Sprintf("%s:%s", ns.SelfLink(), *m.Meta.Name)] = false
 	}
 
 	for _, m := range opts.Volumes {
@@ -394,7 +395,7 @@ func NamespaceApplyH(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		status.Configs[fmt.Sprintf("%s/%s", ns.SelfLink(), *m.Meta.Name)] = false
+		status.Volumes[fmt.Sprintf("%s:%s", ns.SelfLink(), *m.Meta.Name)] = false
 	}
 
 	for _, m := range opts.Services {
@@ -407,7 +408,7 @@ func NamespaceApplyH(w http.ResponseWriter, r *http.Request) {
 			errors.New("service").BadParameter("meta.name").Http(w)
 			return
 		}
-		status.Configs[fmt.Sprintf("%s/%s", ns.SelfLink(), *m.Meta.Name)] = false
+		status.Services[fmt.Sprintf("%s:%s", ns.SelfLink(), *m.Meta.Name)] = false
 	}
 
 	for _, m := range opts.Routes {
@@ -420,7 +421,7 @@ func NamespaceApplyH(w http.ResponseWriter, r *http.Request) {
 			errors.New("route").BadParameter("meta.name").Http(w)
 			return
 		}
-		status.Configs[fmt.Sprintf("%s/%s", ns.SelfLink(), *m.Meta.Name)] = false
+		status.Routes[fmt.Sprintf("%s:%s", ns.SelfLink(), *m.Meta.Name)] = false
 	}
 
 	for _, m := range opts.Configs {
@@ -456,7 +457,7 @@ func NamespaceApplyH(w http.ResponseWriter, r *http.Request) {
 			e.Http(w)
 			return
 		}
-		status.Volumes[s.SelfLink()] = true
+		status.Services[s.SelfLink()] = true
 	}
 
 	for _, m := range opts.Routes {
@@ -465,7 +466,7 @@ func NamespaceApplyH(w http.ResponseWriter, r *http.Request) {
 			e.Http(w)
 			return
 		}
-		status.Volumes[r.SelfLink()] = true
+		status.Routes[r.SelfLink()] = true
 	}
 
 	response, err := v1.View().Namespace().NewApplyStatus(status).ToJson()

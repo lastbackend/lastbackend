@@ -27,6 +27,7 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/distribution/errors"
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 	"github.com/lastbackend/lastbackend/pkg/log"
+	"github.com/lastbackend/lastbackend/pkg/util/resource"
 	"net/http"
 	"strings"
 )
@@ -103,6 +104,13 @@ func Create(ctx context.Context, ns *types.Namespace, mf *request.ServiceManifes
 
 	if err := mf.SetServiceSpec(svc); err != nil {
 		return nil, errors.New("service").BadRequest(err.Error())
+	}
+
+	if ns.Spec.Resources.Limits.RAM != types.EmptyString || ns.Spec.Resources.Limits.CPU != types.EmptyString {
+		for _, c := range svc.Spec.Template.Containers {
+			c.Resources.Limits.RAM, _ = resource.DecodeMemoryResource(types.DEFAULT_RESOURCE_LIMITS_RAM)
+			c.Resources.Limits.CPU, _ = resource.DecodeMemoryResource(types.DEFAULT_RESOURCE_LIMITS_CPU)
+		}
 	}
 
 	if err := ns.AllocateResources(svc.Spec.GetResourceRequest()); err != nil {

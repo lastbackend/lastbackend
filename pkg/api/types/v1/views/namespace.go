@@ -81,9 +81,9 @@ type NamespaceDomain struct {
 type NamespaceList []*Namespace
 
 type NamespaceApplyStatus struct {
-	Configs  map[string]bool
-	Secrets  map[string]bool
-	Volumes  map[string]bool
-	Services map[string]bool
-	Routes   map[string]bool
+	Configs  map[string]bool `json:"configs,omitempty"`
+	Secrets  map[string]bool `json:"secrets,omitempty"`
+	Volumes  map[string]bool `json:"volumes,omitempty"`
+	Services map[string]bool `json:"services,omitempty"`
+	Routes   map[string]bool `json:"routes,omitempty"`
 }
