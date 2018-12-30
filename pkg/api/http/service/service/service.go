@@ -108,8 +108,12 @@ func Create(ctx context.Context, ns *types.Namespace, mf *request.ServiceManifes
 
 	if ns.Spec.Resources.Limits.RAM != types.EmptyString || ns.Spec.Resources.Limits.CPU != types.EmptyString {
 		for _, c := range svc.Spec.Template.Containers {
-			c.Resources.Limits.RAM, _ = resource.DecodeMemoryResource(types.DEFAULT_RESOURCE_LIMITS_RAM)
-			c.Resources.Limits.CPU, _ = resource.DecodeMemoryResource(types.DEFAULT_RESOURCE_LIMITS_CPU)
+			if c.Resources.Limits.RAM == 0 {
+				c.Resources.Limits.RAM, _ = resource.DecodeMemoryResource(types.DEFAULT_RESOURCE_LIMITS_RAM)
+			}
+			if c.Resources.Limits.CPU == 0 {
+				c.Resources.Limits.CPU, _ = resource.DecodeCpuResource(types.DEFAULT_RESOURCE_LIMITS_CPU)
+			}
 		}
 	}
 
