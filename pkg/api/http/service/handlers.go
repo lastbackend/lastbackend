@@ -21,17 +21,15 @@ package service
 import (
 	"context"
 	"fmt"
-	"net/http"
-	"strings"
-	"time"
-
 	"github.com/lastbackend/lastbackend/pkg/api/envs"
+	"github.com/lastbackend/lastbackend/pkg/api/http/namespace/namespace"
+	"github.com/lastbackend/lastbackend/pkg/api/http/service/service"
 	"github.com/lastbackend/lastbackend/pkg/api/types/v1"
 	"github.com/lastbackend/lastbackend/pkg/distribution"
 	"github.com/lastbackend/lastbackend/pkg/distribution/errors"
-	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 	"github.com/lastbackend/lastbackend/pkg/log"
 	"github.com/lastbackend/lastbackend/pkg/util/http/utils"
+	"net/http"
 )
 
 const (
@@ -161,52 +159,37 @@ func ServiceInfoH(w http.ResponseWriter, r *http.Request) {
 	log.V(logLevel).Debugf("%s:info:> get service `%s` in namespace `%s`", logPrefix, sid, nid)
 
 	var (
-		sm  = distribution.NewServiceModel(r.Context(), envs.Get().GetStorage())
-		nsm = distribution.NewNamespaceModel(r.Context(), envs.Get().GetStorage())
 		dm  = distribution.NewDeploymentModel(r.Context(), envs.Get().GetStorage())
 		pdm = distribution.NewPodModel(r.Context(), envs.Get().GetStorage())
 	)
 
-	ns, err := nsm.Get(nid)
-	if err != nil {
-		log.V(logLevel).Errorf("%s:info:> get namespace", logPrefix, err.Error())
-		errors.HTTP.InternalServerError(w)
-		return
-	}
-	if ns == nil {
-		err := errors.New("namespace not found")
-		log.V(logLevel).Errorf("%s:info:> get namespace", logPrefix, err.Error())
-		errors.New("namespace").NotFound().Http(w)
+	ns, e := namespace.FetchFromRequest(r.Context(), nid)
+	if e != nil {
+		e.Http(w)
 		return
 	}
 
-	srv, err := sm.Get(ns.Meta.Name, sid)
-	if err != nil {
-		log.V(logLevel).Errorf("%s:info:> get service by name `%s` in namespace `%s` err: %s", logPrefix, sid, ns.Meta.Name, err.Error())
-		errors.HTTP.InternalServerError(w)
-		return
-	}
-	if srv == nil {
-		log.V(logLevel).Warnf("%s:info:> service `%s` in namespace `%s` not found", logPrefix, sid, ns.Meta.Name)
-		errors.New("service").NotFound().Http(w)
+	svc, e := service.Fetch(r.Context(), ns.Meta.Name, sid)
+	if e != nil {
+		e.Http(w)
 		return
 	}
 
-	dl, err := dm.ListByService(srv.Meta.Namespace, srv.Meta.Name)
+	dl, err := dm.ListByService(svc.Meta.Namespace, svc.Meta.Name)
 	if err != nil {
-		log.V(logLevel).Errorf("%s:info:> get pod list by service id `%s` err: %s", logPrefix, srv.Meta.Name, err.Error())
+		log.V(logLevel).Errorf("%s:info:> get pod list by service id `%s` err: %s", logPrefix, svc.Meta.Name, err.Error())
 		errors.HTTP.InternalServerError(w)
 		return
 	}
 
-	pods, err := pdm.ListByService(srv.Meta.Namespace, srv.Meta.Name)
+	pods, err := pdm.ListByService(svc.Meta.Namespace, svc.Meta.Name)
 	if err != nil {
-		log.V(logLevel).Errorf("%s:info:> get pod list by service id `%s` err: %s", logPrefix, srv.Meta.Name, err.Error())
+		log.V(logLevel).Errorf("%s:info:> get pod list by service id `%s` err: %s", logPrefix, svc.Meta.Name, err.Error())
 		errors.HTTP.InternalServerError(w)
 		return
 	}
 
-	response, err := v1.View().Service().NewWithDeployment(srv, dl, pods).ToJson()
+	response, err := v1.View().Service().NewWithDeployment(svc, dl, pods).ToJson()
 	if err != nil {
 		log.V(logLevel).Errorf("%s:info:> convert struct to json err: %s", logPrefix, err.Error())
 		errors.HTTP.InternalServerError(w)
@@ -257,10 +240,6 @@ func ServiceCreateH(w http.ResponseWriter, r *http.Request) {
 	log.V(logLevel).Debugf("%s:create:> create service in namespace `%s`", logPrefix, nid)
 
 	var (
-		stg = envs.Get().GetStorage()
-		nm  = distribution.NewNamespaceModel(r.Context(), stg)
-		sm  = distribution.NewServiceModel(r.Context(), stg)
-
 		opts = v1.Request().Service().Manifest()
 	)
 
@@ -271,79 +250,28 @@ func ServiceCreateH(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	ns, err := nm.Get(nid)
+	ns, e := namespace.FetchFromRequest(r.Context(), nid)
+	if e != nil {
+		e.Http(w)
+		return
+	}
+
+	svc, e := service.Create(r.Context(), ns, opts)
+	if e != nil {
+		e.Http(w)
+		return
+	}
+
+	response, err := v1.View().Service().NewWithDeployment(svc, nil, nil).ToJson()
 	if err != nil {
-		log.V(logLevel).Errorf("%s:create:> get namespace", logPrefix, err.Error())
-		errors.HTTP.InternalServerError(w)
-		return
-	}
-	if ns == nil {
-		err := errors.New("namespace not found")
-		log.V(logLevel).Errorf("%s:create:> get namespace", logPrefix, err.Error())
-		errors.New("namespace").NotFound().Http(w)
-		return
-	}
-
-	if opts.Meta.Name != nil {
-
-		srv, err := sm.Get(ns.Meta.Name, *opts.Meta.Name)
-		if err != nil {
-			log.V(logLevel).Errorf("%s:create:> get service by name `%s` in namespace `%s` err: %s", logPrefix, opts.Meta.Name, ns.Meta.Name, err.Error())
-			errors.HTTP.InternalServerError(w)
-			return
-		}
-
-		if srv != nil {
-			log.V(logLevel).Warnf("%s:create:> service name `%s` in namespace `%s` not unique", logPrefix, opts.Meta.Name, ns.Meta.Name)
-			errors.New("service").NotUnique("name").Http(w)
-			return
-		}
-	}
-
-	svc := new(types.Service)
-	opts.SetServiceMeta(svc)
-	svc.Meta.Namespace = ns.Meta.Name
-	svc.Meta.Endpoint = fmt.Sprintf("%s.%s", strings.ToLower(svc.Meta.Name), ns.Meta.Endpoint)
-
-	if err := opts.SetServiceSpec(svc); err != nil {
-		errors.New("service").BadRequest(err.Error()).Http(w)
-		return
-	}
-
-	if err := ns.AllocateResources(svc.Spec.GetResourceRequest()); err != nil {
-		log.V(logLevel).Errorf("%s:create:> %s", logPrefix, err.Error())
-		errors.New("service").BadRequest(err.Error()).Http(w)
-		return
-	} else {
-		if err := nm.Update(ns); err != nil {
-			log.V(logLevel).Errorf("%s:update:> update namespace err: %s", logPrefix, err.Error())
-			errors.HTTP.InternalServerError(w)
-			return
-		}
-	}
-
-	if err := checkServiceVolumes(r.Context(), svc); err != nil {
-		log.V(logLevel).Errorf("%s:create:> create service err: %s", logPrefix, err.Error())
-		errors.HTTP.BadParameter(w, "volume templates")
-	}
-
-	srv, err := sm.Create(ns, svc)
-	if err != nil {
-		log.V(logLevel).Errorf("%s:create:> create service err: %s", logPrefix, err.Error())
-		errors.HTTP.InternalServerError(w)
-		return
-	}
-
-	response, err := v1.View().Service().NewWithDeployment(srv, nil, nil).ToJson()
-	if err != nil {
-		log.V(logLevel).Errorf("%s:create:> convert struct to json err: %s", logPrefix, err.Error())
+		log.V(logLevel).Errorf("%s:update:> convert struct to json err: %s", logPrefix, err.Error())
 		errors.HTTP.InternalServerError(w)
 		return
 	}
 
 	w.WriteHeader(http.StatusOK)
 	if _, err = w.Write(response); err != nil {
-		log.V(logLevel).Errorf("%s:create:> write response err: %s", logPrefix, err.Error())
+		log.V(logLevel).Errorf("%s:update:> write response err: %s", logPrefix, err.Error())
 		return
 	}
 }
@@ -388,11 +316,6 @@ func ServiceUpdateH(w http.ResponseWriter, r *http.Request) {
 
 	log.V(logLevel).Debugf("%s:update:> update service `%s` in namespace `%s`", logPrefix, sid, nid)
 
-	var (
-		nm = distribution.NewNamespaceModel(r.Context(), envs.Get().GetStorage())
-		sm = distribution.NewServiceModel(r.Context(), envs.Get().GetStorage())
-	)
-
 	// request body struct
 	opts := v1.Request().Service().Manifest()
 	if e := opts.DecodeAndValidate(r.Body); e != nil {
@@ -401,77 +324,25 @@ func ServiceUpdateH(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	ns, err := nm.Get(nid)
-	if err != nil {
-		log.V(logLevel).Errorf("%s:update:> get namespace", logPrefix, err.Error())
-		errors.HTTP.InternalServerError(w)
-		return
-	}
-	if ns == nil {
-		err := errors.New("namespace not found")
-		log.V(logLevel).Errorf("%s:update:> get namespace", logPrefix, err.Error())
-		errors.New("namespace").NotFound().Http(w)
+	ns, e := namespace.FetchFromRequest(r.Context(), nid)
+	if e != nil {
+		e.Http(w)
 		return
 	}
 
-	svc, err := sm.Get(ns.Meta.Name, sid)
-	if err != nil {
-		log.V(logLevel).Errorf("%s: get service by name` err: %s", logPrefix, sid, err.Error())
-		errors.HTTP.InternalServerError(w)
-		return
-	}
-	if svc == nil {
-		log.V(logLevel).Warnf("%s:update:> service name `%s` in namespace `%s` not found", logPrefix, sid, ns.Meta.Name)
-		errors.New("service").NotFound().Http(w)
+	svc, e := service.Fetch(r.Context(), ns.Meta.Name, sid)
+	if e != nil {
+		e.Http(w)
 		return
 	}
 
-	resources := svc.Spec.GetResourceRequest()
-
-	opts.SetServiceMeta(svc)
-	svc.Meta.Endpoint = fmt.Sprintf("%s.%s", strings.ToLower(svc.Meta.Name), ns.Meta.Endpoint)
-	if err := opts.SetServiceSpec(svc); err != nil {
-		errors.New("service").BadRequest(err.Error()).Http(w)
+	svc, e = service.Update(r.Context(), ns, svc, opts)
+	if e != nil {
+		e.Http(w)
 		return
 	}
 
-	requestedResources := svc.Spec.GetResourceRequest()
-	if !resources.Equal(requestedResources) {
-		allocatedResources := ns.Status.Resources.Allocated
-		if err := ns.ReleaseResources(resources); err != nil {
-			log.V(logLevel).Errorf("%s:update:> %s", logPrefix, err.Error())
-			errors.HTTP.InternalServerError(w)
-			return
-		}
-
-		if err := ns.AllocateResources(svc.Spec.GetResourceRequest()); err != nil {
-			ns.Status.Resources.Allocated = allocatedResources
-			log.V(logLevel).Errorf("%s:update:> %s", logPrefix, err.Error())
-			errors.New("service").BadRequest(err.Error()).Http(w)
-			return
-		} else {
-			if err := nm.Update(ns); err != nil {
-				log.V(logLevel).Errorf("%s:update:> update namespace err: %s", logPrefix, err.Error())
-				errors.HTTP.InternalServerError(w)
-				return
-			}
-
-		}
-	}
-
-	if err := checkServiceVolumes(r.Context(), svc); err != nil {
-		log.V(logLevel).Errorf("%s:create:> create service err: %s", logPrefix, err.Error())
-		errors.HTTP.BadParameter(w, "volume templates")
-	}
-
-	srv, err := sm.Update(svc)
-	if err != nil {
-		log.V(logLevel).Errorf("%s:update:> update service err: %s", logPrefix, err.Error())
-		errors.HTTP.InternalServerError(w)
-		return
-	}
-
-	response, err := v1.View().Service().NewWithDeployment(srv, nil, nil).ToJson()
+	response, err := v1.View().Service().NewWithDeployment(svc, nil, nil).ToJson()
 	if err != nil {
 		log.V(logLevel).Errorf("%s:update:> convert struct to json err: %s", logPrefix, err.Error())
 		errors.HTTP.InternalServerError(w)
@@ -771,85 +642,4 @@ func ServiceLogsH(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-}
-
-func checkServiceVolumes(ctx context.Context, svc *types.Service) error {
-
-	var (
-		stg = envs.Get().GetStorage()
-		vm  = distribution.NewVolumeModel(ctx, stg)
-	)
-
-	var vc = make(map[string]string, 0)
-
-	for _, v := range svc.Spec.Template.Volumes {
-		if v.Volume.Name != types.EmptyString {
-			vc[v.Volume.Name] = v.Name
-		}
-	}
-
-	if len(vc) > 0 {
-
-		var node string
-
-		vl, err := vm.ListByNamespace(svc.Meta.Namespace)
-		if err != nil {
-			log.V(logLevel).Errorf("%s:create:> create service, volume list err: %s", logPrefix, err.Error())
-			return err
-		}
-
-		for name := range vc {
-
-			var f = false
-
-			for _, v := range vl.Items {
-
-				if v.Meta.Name != name {
-					continue
-				}
-
-				f = true
-
-				if v.Status.State != types.StateReady {
-					log.V(logLevel).Errorf("%s:create:> create service err: volume is not ready yet: %s", logPrefix, v.Meta.Name)
-					return errors.New(v.Meta.Name).Volume().NotReady(v.Meta.Name)
-				}
-
-				if v.Meta.Node == types.EmptyString {
-					log.V(logLevel).Errorf("%s:create:> create service err: volume is not provisioned yet: %s", logPrefix, v.Meta.Name)
-					return errors.New(v.Meta.Name).Volume().NotProvisioned(v.Meta.Name)
-				}
-
-				if node == types.EmptyString {
-					node = v.Meta.Node
-				} else {
-					if node != v.Meta.Node {
-						return errors.New(v.Meta.Name).Volume().DifferentNodes()
-					}
-				}
-			}
-
-			if !f {
-				log.V(logLevel).Errorf("%s:create:> create service err: volume is not found: %s", logPrefix, name)
-				return errors.New(name).Volume().NotFound(name)
-			}
-		}
-
-		if node != types.EmptyString {
-
-			if svc.Spec.Selector.Node != types.EmptyString {
-				if svc.Spec.Selector.Node != node {
-					return errors.New("spec.selector.node not matched with provisioned volumes")
-				}
-
-				return nil
-			}
-
-			svc.Spec.Selector.Node = node
-			svc.Spec.Selector.Updated = time.Now()
-		}
-
-	}
-
-	return nil
 }

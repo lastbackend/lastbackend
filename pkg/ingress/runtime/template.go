@@ -63,13 +63,16 @@ resolvers lstbknd
 #---------------------------------------------------------------------
 # frontend which proxys stats
 #---------------------------------------------------------------------
+{{ if .Stats.Enable }}
 listen stats # Define a listen section called "stats"
-  bind :9000 # Listen on localhost:9000
+  bind :{{ .Stats.Port }} # Listen on localhost:9000
   mode http
   stats enable  # Enable stats page
   stats hide-version  # Hide HAProxy version
   stats realm Haproxy\ Statistics  # Title text for popup window
   stats uri /stats  # Stats URI
+	stats auth {{ .Stats.Username }}: {{ .Stats.Password }} 
+{{ end }}  
 
 #---------------------------------------------------------------------
 # frontend which proxys raw/ssl request to the backends
@@ -94,10 +97,10 @@ frontend http
 {{else if eq $f.Type "https" }}
 frontend https
   bind :443
-  option socket-stats
-  tcp-request inspect-delay 5s
-  tcp-request content accept if { req_ssl_hello_type 1 }
-  {{range $domain, $acl := .Rules}}{{range $path, $backend := $acl}}acl r_{{$backend}}  hdr_dom(host) -i {{$domain}}  path_beg {{$path}}
+  mode tcp
+	tcp-request inspect-delay 5s
+
+  {{range $domain, $acl := .Rules}}{{range $path, $backend := $acl}}acl r_{{$backend}} req_ssl_sni -i {{$domain}}
   {{end}}{{end}}
 	{{range $domain, $acl := .Rules}}{{range $path, $backend := $acl}}acl r_{{$backend}}_down  nbsrv({{$backend}}) lt 1
   {{end}}{{end}}
@@ -105,11 +108,12 @@ frontend https
   {{end}}{{end}}
   {{range $domain, $acl := .Rules}}{{range $path, $backend := $acl}}use_backend {{$backend}} if r_{{$backend}}
   {{end}}{{end}}
+
   default_backend local_http
 {{else if eq $f.Type "tcp" }}
 frontend {{$port}}_tcp
   bind 0.0.0.0:{{$port}}
-  {{range $domain, $acl := .Rules}}{{range $path, $backend := $acl}}use_backend {{$backend}} if r_{{$backend}}
+  {{range $domain, $acl := .Rules}}{{range $path, $backend := $acl}}use_backend {{$backend}}
   {{end}}{{end}}
   default_backend local_http
 {{end}}{{end}}
@@ -134,19 +138,6 @@ backend {{$name}}
 backend {{$name}}
   mode tcp
   # maximum SSL session ID length is 32 bytes.
-  stick-table type binary len 32 size 30k expire 30m
-  acl clienthello req_ssl_hello_type 1
-  acl serverhello rep_ssl_hello_type 2
-  # use tcp content accepts to detects ssl client and server hello.
-  tcp-request inspect-delay 5s
-  tcp-request content accept if clienthello
-  # no timeout on response inspect delay by default.
-  tcp-response content accept if serverhello
-  stick on payload_lv(43,1) if clienthello
-  # Learn on response if server hello.
-  stick store-response payload_lv(43,1) if serverhello
-  option ssl-hello-chk
-  http-request set-header Host {{$b.Domain}}
   server {{$b.Endpoint}} {{$b.Endpoint}}:{{$b.Port}} check init-addr last,libc,none resolvers lstbknd
 {{else if eq $b.Type "tcp" }}
 backend {{$name}}

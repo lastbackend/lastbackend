@@ -35,8 +35,8 @@ type NamespaceManifestMeta struct {
 }
 
 type NamespaceManifestSpec struct {
-	Domain      *string                    `json:"domain"`
-	Resources   *NamespaceResourcesOptions `json:"resources"`
+	Domain    *string                    `json:"domain"`
+	Resources *NamespaceResourcesOptions `json:"resources"`
 }
 
 func (s *NamespaceManifest) FromJson(data []byte) error {
@@ -72,7 +72,6 @@ func (s *NamespaceManifest) SetNamespaceMeta(ns *types.Namespace) {
 }
 
 func (s *NamespaceManifest) SetNamespaceSpec(ns *types.Namespace) {
-
 
 	ns.Spec.Domain.Internal = viper.GetString("domain.internal")
 
@@ -110,6 +109,14 @@ func (s *NamespaceManifest) SetNamespaceSpec(ns *types.Namespace) {
 
 	}
 
+}
+
+type NamespaceApplyManifest struct {
+	Services map[string]*ServiceManifest `json:"services"`
+	Configs  map[string]*ConfigManifest  `json:"configs"`
+	Secrets  map[string]*SecretManifest  `json:"secrets"`
+	Routes   map[string]*RouteManifest   `json:"routes"`
+	Volumes  map[string]*VolumeManifest  `json:"volumes"`
 }
 
 // swagger:model request_namespace_remove

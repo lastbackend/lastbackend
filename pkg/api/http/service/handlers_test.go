@@ -349,6 +349,10 @@ func TestServiceCreate(t *testing.T) {
 	sm6.Spec.Template.Containers[0].Resources.Limits.RAM = "512MB"
 	sm6.Spec.Template.Containers[0].Resources.Limits.CPU = "0.5"
 
+	sm7 := getServiceManifest("success", "image")
+	sm7.Spec.Template.Containers[0].Resources.Limits.RAM = ""
+	sm7.Spec.Template.Containers[0].Resources.Limits.CPU = ""
+
 	type fields struct {
 		stg storage.Storage
 	}
@@ -390,16 +394,6 @@ func TestServiceCreate(t *testing.T) {
 			err:          "{\"code\":404,\"status\":\"Not Found\",\"message\":\"Namespace not found\"}",
 			wantErr:      true,
 			expectedCode: http.StatusNotFound,
-		},
-		{
-			name:         "checking create service without limits if namespace with limits",
-			args:         args{ctx, ns3, s2},
-			fields:       fields{stg},
-			handler:      service.ServiceCreateH,
-			data:         sm1,
-			err:          "{\"code\":400,\"status\":\"Bad Request\",\"message\":\"resources cpu limit is required\"}",
-			wantErr:      true,
-			expectedCode: http.StatusBadRequest,
 		},
 		{
 			name:         "checking create service with replica 1 with ram limit are higher then namespace limits",
@@ -458,6 +452,16 @@ func TestServiceCreate(t *testing.T) {
 			fields:       fields{stg},
 			handler:      service.ServiceCreateH,
 			data:         getServiceManifest("success", "redis"),
+			want:         v1.View().Service().NewWithDeployment(s3, nil, nil),
+			wantErr:      false,
+			expectedCode: http.StatusOK,
+		},
+		{
+			name:         "check create service success with default limits",
+			args:         args{ctx, ns3, s3},
+			fields:       fields{stg},
+			handler:      service.ServiceCreateH,
+			data:         sm7,
 			want:         v1.View().Service().NewWithDeployment(s3, nil, nil),
 			wantErr:      false,
 			expectedCode: http.StatusOK,
@@ -523,13 +527,13 @@ func TestServiceCreate(t *testing.T) {
 			// directly and pass in our Request and ResponseRecorder.
 			r.ServeHTTP(res, req)
 
-			// Check the status code is what we expect.
-			if !assert.Equal(t, tc.expectedCode, res.Code, "status code not equal") {
-				return
-			}
-
 			body, err := ioutil.ReadAll(res.Body)
 			assert.NoError(t, err)
+			// Check the status code is what we expect.
+			if !assert.Equal(t, tc.expectedCode, res.Code, "status code not equal") {
+				fmt.Println(string(body))
+				return
+			}
 
 			if tc.wantErr {
 				assert.Equal(t, tc.err, string(body), "incorrect status code")

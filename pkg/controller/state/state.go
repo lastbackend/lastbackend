@@ -48,6 +48,8 @@ func (s *State) Loop() {
 	vm := distribution.NewVolumeModel(context.Background(), envs.Get().GetStorage())
 	dm := distribution.NewDeploymentModel(context.Background(), envs.Get().GetStorage())
 	pm := distribution.NewPodModel(context.Background(), envs.Get().GetStorage())
+	cm := distribution.NewConfigModel(context.Background(), envs.Get().GetStorage())
+	sc := distribution.NewSecretModel(context.Background(), envs.Get().GetStorage())
 
 	dr, err := dm.Runtime()
 	if err != nil {
@@ -68,6 +70,18 @@ func (s *State) Loop() {
 	}
 
 	pr, err := pm.Runtime()
+	if err != nil {
+		log.Errorf("%s", err.Error())
+		return
+	}
+
+	cr, err := cm.Runtime()
+	if err != nil {
+		log.Errorf("%s", err.Error())
+		return
+	}
+
+	scr, err := sc.Runtime()
 	if err != nil {
 		log.Errorf("%s", err.Error())
 		return
@@ -115,6 +129,8 @@ func (s *State) Loop() {
 	go s.watchDeployments(context.Background(), &dr.System.Revision)
 	go s.watchServices(context.Background(), &sr.System.Revision)
 	go s.watchVolumes(context.Background(), &vr.System.Revision)
+	go s.watchSecrets(context.Background(), &scr.System.Revision)
+	go s.watchConfigs(context.Background(), &cr.System.Revision)
 
 	log.Info("finish services restore\n\n")
 }
@@ -246,7 +262,7 @@ func (s *State) watchVolumes(ctx context.Context, rev *int64) {
 		vl = make(chan types.VolumeEvent)
 	)
 
-	sm := distribution.NewVolumeModel(ctx, envs.Get().GetStorage())
+	vm := distribution.NewVolumeModel(ctx, envs.Get().GetStorage())
 
 	go func() {
 		for {
@@ -265,6 +281,104 @@ func (s *State) watchVolumes(ctx context.Context, rev *int64) {
 				}
 
 				s.Cluster.SetVolume(w.Data)
+				for _, ss := range s.Service {
+
+					if ss.Namespace() != w.Data.Meta.Namespace {
+						continue
+					}
+
+					ss.CheckDeps(types.DeploymentStatusDependency{
+						Name: w.Data.Meta.Name,
+						Type: types.KindVolume,
+						Status: w.Data.Status.State,
+					})
+				}
+			}
+		}
+	}()
+
+	vm.Watch(vl, rev)
+}
+
+func (s *State) watchSecrets(ctx context.Context, rev *int64) {
+
+	var (
+		vl = make(chan types.SecretEvent)
+	)
+
+	sm := distribution.NewSecretModel(ctx, envs.Get().GetStorage())
+
+	go func() {
+		for {
+			select {
+			case <-ctx.Done():
+				return
+			case w := <-vl:
+
+				if w.Data == nil {
+					continue
+				}
+
+				var dep = types.DeploymentStatusDependency{
+					Name: w.Data.Meta.Name,
+					Type: types.KindSecret,
+					Status: types.StateReady,
+				}
+
+				if w.IsActionRemove() {
+					dep.Status = types.StateNotReady
+				}
+
+
+				for _, ss := range s.Service {
+					if ss.Namespace() != w.Data.Meta.Namespace {
+						continue
+					}
+					ss.CheckDeps(dep)
+				}
+			}
+		}
+	}()
+
+	sm.Watch(vl, rev)
+}
+
+func (s *State) watchConfigs(ctx context.Context, rev *int64) {
+
+	var (
+		vl = make(chan types.ConfigEvent)
+	)
+
+	sm := distribution.NewConfigModel(ctx, envs.Get().GetStorage())
+
+	go func() {
+		for {
+			select {
+			case <-ctx.Done():
+				return
+			case w := <-vl:
+
+				if w.Data == nil {
+					continue
+				}
+
+				var dep = types.DeploymentStatusDependency{
+					Name: w.Data.Meta.Name,
+					Type: types.KindConfig,
+					Status: types.StateReady,
+				}
+
+				if w.IsActionRemove() {
+					dep.Status = types.StateNotReady
+				}
+
+
+				for _, ss := range s.Service {
+					if ss.Namespace() != w.Data.Meta.Namespace {
+						continue
+					}
+					ss.CheckDeps(dep)
+				}
 			}
 		}
 	}()

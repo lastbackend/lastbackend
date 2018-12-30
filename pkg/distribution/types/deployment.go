@@ -62,8 +62,21 @@ type DeploymentSpec struct {
 }
 
 type DeploymentStatus struct {
-	State   string `json:"state"`
-	Message string `json:"message"`
+	State        string                       `json:"state"`
+	Message      string                       `json:"message"`
+	Dependencies DeploymentStatusDependencies `json:"dependencies"`
+}
+
+type DeploymentStatusDependencies struct {
+	Volumes map[string]DeploymentStatusDependency `json:"volumes"`
+	Secrets map[string]DeploymentStatusDependency `json:"secrets"`
+	Configs map[string]DeploymentStatusDependency `json:"configs"`
+}
+
+type DeploymentStatusDependency struct {
+	Type   string `json:"type"`
+	Name   string `json:"name"`
+	Status string `json:"status"`
 }
 
 type DeploymentReplicas struct {
@@ -93,6 +106,34 @@ func (d *Deployment) CreateSelfLink(namespace, service, name string) string {
 
 func (d *Deployment) ServiceLink() string {
 	return fmt.Sprintf("%s:%s", d.Meta.Namespace, d.Meta.Service)
+}
+
+func (ds *DeploymentStatus) CheckDeps() bool {
+
+	for _, d := range ds.Dependencies.Volumes {
+		if d.Status != StateReady {
+			return false
+		}
+	}
+
+	for _, d := range ds.Dependencies.Secrets {
+		if d.Status != StateReady {
+			return false
+		}
+	}
+
+	for _, d := range ds.Dependencies.Configs {
+		if d.Status != StateReady {
+			return false
+		}
+	}
+
+	return true
+}
+
+func (d *DeploymentStatus) SetCreated() {
+	d.State = StateCreated
+	d.Message = ""
 }
 
 func (d *DeploymentStatus) SetProvision() {

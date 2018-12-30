@@ -24,7 +24,6 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/log"
 	"github.com/lastbackend/lastbackend/pkg/distribution/errors"
 	"github.com/lastbackend/lastbackend/pkg/util/resource"
-	"github.com/lastbackend/registry/pkg/distribution/types"
 )
 
 const (
@@ -207,42 +206,42 @@ func (n *Namespace) AllocateResources(resources ResourceRequest) error {
 		return e
 	}
 
-	if n.Spec.Resources.Limits.RAM != types.EmptyString {
+	if n.Spec.Resources.Limits.RAM != EmptyString {
 		availableRam, err = resource.DecodeMemoryResource(n.Spec.Resources.Limits.RAM)
 		if err != nil {
 			return handleErr("ns limit ram", err)
 		}
 	}
 
-	if n.Spec.Resources.Limits.CPU != types.EmptyString {
+	if n.Spec.Resources.Limits.CPU != EmptyString {
 		availableCpu, err = resource.DecodeCpuResource(n.Spec.Resources.Limits.CPU)
 		if err != nil {
 			return handleErr("ns limit cpu", err)
 		}
 	}
 
-	if n.Status.Resources.Allocated.RAM != types.EmptyString {
+	if n.Status.Resources.Allocated.RAM != EmptyString {
 		allocatedRam, err = resource.DecodeMemoryResource(n.Status.Resources.Allocated.RAM)
 		if err != nil {
 			return handleErr("ns allocated ram", err)
 		}
 	}
 
-	if n.Status.Resources.Allocated.CPU != types.EmptyString {
+	if n.Status.Resources.Allocated.CPU != EmptyString {
 		allocatedCpu, err = resource.DecodeCpuResource(n.Status.Resources.Allocated.CPU)
 		if err != nil {
 			return handleErr("ns allocated cpu", err)
 		}
 	}
 
-	if resources.Limits.RAM != types.EmptyString {
+	if resources.Limits.RAM != EmptyString {
 		requestedRam, err = resource.DecodeMemoryResource(resources.Limits.RAM)
 		if err != nil {
 			return handleErr("req limit ram", err)
 		}
 	}
 
-	if resources.Limits.CPU != types.EmptyString {
+	if resources.Limits.CPU != EmptyString {
 		requestedCpu, err = resource.DecodeCpuResource(resources.Limits.CPU)
 		if err != nil {
 			return handleErr("req limit cpu", err)
@@ -294,42 +293,42 @@ func (n *Namespace) ReleaseResources(resources ResourceRequest) error {
 		return e
 	}
 
-	if n.Spec.Resources.Limits.RAM != types.EmptyString {
+	if n.Spec.Resources.Limits.RAM != EmptyString {
 		availableRam, err = resource.DecodeMemoryResource(n.Spec.Resources.Limits.RAM)
 		if err != nil {
 			return handleErr("ns limit ram", err)
 		}
 	}
 
-	if n.Spec.Resources.Limits.CPU != types.EmptyString {
+	if n.Spec.Resources.Limits.CPU != EmptyString {
 		availableCpu, err = resource.DecodeCpuResource(n.Spec.Resources.Limits.CPU)
 		if err != nil {
 			return handleErr("ns limit cpu", err)
 		}
 	}
 
-	if n.Status.Resources.Allocated.RAM != types.EmptyString {
+	if n.Status.Resources.Allocated.RAM != EmptyString {
 		allocatedRam, err = resource.DecodeMemoryResource(n.Status.Resources.Allocated.RAM)
 		if err != nil {
 			return handleErr("ns allocated ram", err)
 		}
 	}
 
-	if n.Status.Resources.Allocated.CPU != types.EmptyString {
+	if n.Status.Resources.Allocated.CPU != EmptyString {
 		allocatedCpu, err = resource.DecodeCpuResource(n.Status.Resources.Allocated.CPU)
 		if err != nil {
 			return handleErr("ns allocated cpu", err)
 		}
 	}
 
-	if resources.Limits.RAM != types.EmptyString {
+	if resources.Limits.RAM != EmptyString {
 		requestedRam, err = resource.DecodeMemoryResource(resources.Limits.RAM)
 		if err != nil {
 			return handleErr("req limit ram", err)
 		}
 	}
 
-	if resources.Limits.CPU != types.EmptyString {
+	if resources.Limits.CPU != EmptyString {
 		requestedCpu, err = resource.DecodeCpuResource(resources.Limits.CPU)
 		if err != nil {
 			return handleErr("req limit cpu", err)

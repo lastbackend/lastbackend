@@ -19,6 +19,8 @@
 package route
 
 import (
+	"github.com/lastbackend/lastbackend/pkg/api/http/namespace/namespace"
+	"github.com/lastbackend/lastbackend/pkg/api/http/route/route"
 	"github.com/lastbackend/lastbackend/pkg/api/types/v1"
 
 	"net/http"
@@ -66,20 +68,12 @@ func RouteListH(w http.ResponseWriter, r *http.Request) {
 	nid := utils.Vars(r)["namespace"]
 
 	var (
-		rm  = distribution.NewRouteModel(r.Context(), envs.Get().GetStorage())
-		nsm = distribution.NewNamespaceModel(r.Context(), envs.Get().GetStorage())
+		rm = distribution.NewRouteModel(r.Context(), envs.Get().GetStorage())
 	)
 
-	ns, err := nsm.Get(nid)
-	if err != nil {
-		log.V(logLevel).Errorf("%s:list:> get namespace err: %s", logPrefix, err.Error())
-		errors.HTTP.InternalServerError(w)
-		return
-	}
-	if ns == nil {
-		err := errors.New("namespace not found")
-		log.V(logLevel).Errorf("%s:list:> get namespace err: %s", logPrefix, err.Error())
-		errors.New("namespace").NotFound().Http(w)
+	ns, e := namespace.FetchFromRequest(r.Context(), nid)
+	if e != nil {
+		e.Http(w)
 		return
 	}
 
@@ -140,20 +134,12 @@ func RouteInfoH(w http.ResponseWriter, r *http.Request) {
 	log.V(logLevel).Debugf("%s:info:> get route `%s`", logPrefix, rid)
 
 	var (
-		rm  = distribution.NewRouteModel(r.Context(), envs.Get().GetStorage())
-		nsm = distribution.NewNamespaceModel(r.Context(), envs.Get().GetStorage())
+		rm = distribution.NewRouteModel(r.Context(), envs.Get().GetStorage())
 	)
 
-	ns, err := nsm.Get(nid)
-	if err != nil {
-		log.V(logLevel).Errorf("%s:info:> get namespace err: %s", logPrefix, err.Error())
-		errors.HTTP.InternalServerError(w)
-		return
-	}
-	if ns == nil {
-		err := errors.New("namespace not found")
-		log.V(logLevel).Errorf("%s:info:> get namespace err: %s", logPrefix, err.Error())
-		errors.New("namespace").NotFound().Http(w)
+	ns, e := namespace.FetchFromRequest(r.Context(), nid)
+	if e != nil {
+		e.Http(w)
 		return
 	}
 
@@ -220,9 +206,6 @@ func RouteCreateH(w http.ResponseWriter, r *http.Request) {
 	nid := utils.Vars(r)["namespace"]
 
 	var (
-		rm = distribution.NewRouteModel(r.Context(), envs.Get().GetStorage())
-		nm = distribution.NewNamespaceModel(r.Context(), envs.Get().GetStorage())
-		sm = distribution.NewServiceModel(r.Context(), envs.Get().GetStorage())
 		mf = v1.Request().Route().Manifest()
 	)
 
@@ -233,47 +216,19 @@ func RouteCreateH(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	ns, err := nm.Get(nid)
-	if err != nil {
-		log.V(logLevel).Errorf("%s:create:> get namespace err: %s", logPrefix, err.Error())
-		errors.HTTP.InternalServerError(w)
-		return
-	}
-	if ns == nil {
-		err := errors.New("namespace not found")
-		log.V(logLevel).Errorf("%s:create:> get namespace err: %s", logPrefix, err.Error())
-		errors.New("namespace").NotFound().Http(w)
+	ns, e := namespace.FetchFromRequest(r.Context(), nid)
+	if e != nil {
+		e.Http(w)
 		return
 	}
 
-	svc, err := sm.List(ns.Meta.Name)
-	if err != nil {
-		log.V(logLevel).Errorf("%s:create:> get services", logPrefix, err.Error())
-		errors.HTTP.InternalServerError(w)
+	rt, e := route.Create(r.Context(), ns, mf)
+	if e != nil {
+		e.Http(w)
 		return
 	}
 
-	rs := new(types.Route)
-	rs.Meta.SetDefault()
-	rs.Meta.Namespace = ns.Meta.Name
-
-	mf.SetRouteMeta(rs)
-	mf.SetRouteSpec(rs, svc)
-
-	if len(rs.Spec.Rules) == 0 {
-		err := errors.New("route rules are incorrect")
-		log.V(logLevel).Errorf("%s:create:> route rules empty", logPrefix, err.Error())
-		errors.New("route").BadParameter("rules", err).Http(w)
-		return
-	}
-
-	if _, err := rm.Add(ns, rs); err != nil {
-		log.V(logLevel).Errorf("%s:create:> create route err: %s", logPrefix, ns.Meta.Name, err.Error())
-		errors.HTTP.InternalServerError(w)
-		return
-	}
-
-	response, err := v1.View().Route().New(rs).ToJson()
+	response, err := v1.View().Route().New(rt).ToJson()
 	if err != nil {
 		log.V(logLevel).Errorf("%s:create:> convert struct to json err: %s", logPrefix, err.Error())
 		errors.HTTP.InternalServerError(w)
@@ -331,9 +286,6 @@ func RouteUpdateH(w http.ResponseWriter, r *http.Request) {
 	log.V(logLevel).Debugf("%s:update:> update route `%s`", logPrefix, nid)
 
 	var (
-		rm = distribution.NewRouteModel(r.Context(), envs.Get().GetStorage())
-		nm = distribution.NewNamespaceModel(r.Context(), envs.Get().GetStorage())
-		sm = distribution.NewServiceModel(r.Context(), envs.Get().GetStorage())
 		mf = v1.Request().Route().Manifest()
 	)
 
@@ -344,55 +296,25 @@ func RouteUpdateH(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	ns, err := nm.Get(nid)
-	if err != nil {
-		log.V(logLevel).Errorf("%s:update:> get namespace err: %s", logPrefix, err.Error())
-		errors.HTTP.InternalServerError(w)
-		return
-	}
-	if ns == nil {
-		err := errors.New("namespace not found")
-		log.V(logLevel).Errorf("%s:update:> get namespace err: %s", logPrefix, err.Error())
-		errors.New("namespace").NotFound().Http(w)
+	ns, e := namespace.FetchFromRequest(r.Context(), nid)
+	if e != nil {
+		e.Http(w)
 		return
 	}
 
-	rs, err := rm.Get(ns.Meta.Name, rid)
-	if err != nil {
-		log.V(logLevel).Errorf("%s:update:> check route exists by selflink `%s` err: %s", logPrefix, ns.Meta.SelfLink, err.Error())
-		errors.HTTP.InternalServerError(w)
-		return
-	}
-	if rs == nil {
-		log.V(logLevel).Warnf("%s:update:> route `%s` not found", logPrefix, rid)
-		errors.New("route").NotFound().Http(w)
+	rt, e := route.Fetch(r.Context(), ns.Meta.Name, rid)
+	if e != nil {
+		e.Http(w)
 		return
 	}
 
-	svc, err := sm.List(ns.Meta.Name)
-	if err != nil {
-		log.V(logLevel).Errorf("%s:update:> get services err: %s", logPrefix, err.Error())
-		errors.HTTP.InternalServerError(w)
+	rt, e = route.Update(r.Context(), ns, rt, mf)
+	if e != nil {
+		e.Http(w)
 		return
 	}
 
-	mf.SetRouteMeta(rs)
-	mf.SetRouteSpec(rs, svc)
-
-	if len(rs.Spec.Rules) == 0 {
-		err := errors.New("route rules are incorrect")
-		log.V(logLevel).Errorf("%s:update:> route rules empty err: %s", logPrefix, err.Error())
-		errors.New("route").BadParameter("rules", err).Http(w)
-		return
-	}
-
-	rs, err = rm.Set(rs)
-	if err != nil {
-		log.V(logLevel).Errorf("%s:update:> update route `%s` err: %s", logPrefix, ns.Meta.Name, err.Error())
-		errors.HTTP.InternalServerError(w)
-	}
-
-	response, err := v1.View().Route().New(rs).ToJson()
+	response, err := v1.View().Route().New(rt).ToJson()
 	if err != nil {
 		log.V(logLevel).Errorf("%s:update:> convert struct to json err: %s", logPrefix, err.Error())
 		errors.HTTP.InternalServerError(w)
@@ -440,20 +362,12 @@ func RouteRemoveH(w http.ResponseWriter, r *http.Request) {
 	log.V(logLevel).Debugf("%s:remove:> remove route %s", logPrefix, rid)
 
 	var (
-		rm  = distribution.NewRouteModel(r.Context(), envs.Get().GetStorage())
-		nsm = distribution.NewNamespaceModel(r.Context(), envs.Get().GetStorage())
+		rm = distribution.NewRouteModel(r.Context(), envs.Get().GetStorage())
 	)
 
-	ns, err := nsm.Get(nid)
-	if err != nil {
-		log.V(logLevel).Errorf("%s:remove:> get namespace err: %s", logPrefix, err.Error())
-		errors.HTTP.InternalServerError(w)
-		return
-	}
-	if ns == nil {
-		err := errors.New("namespace not found")
-		log.V(logLevel).Errorf("%s:remove:> get namespace", logPrefix, err.Error())
-		errors.New("namespace").NotFound().Http(w)
+	ns, e := namespace.FetchFromRequest(r.Context(), nid)
+	if e != nil {
+		e.Http(w)
 		return
 	}
 

@@ -79,3 +79,11 @@ type NamespaceDomain struct {
 
 // swagger:model views_namespace_list
 type NamespaceList []*Namespace
+
+type NamespaceApplyStatus struct {
+	Configs  map[string]bool `json:"configs,omitempty"`
+	Secrets  map[string]bool `json:"secrets,omitempty"`
+	Volumes  map[string]bool `json:"volumes,omitempty"`
+	Services map[string]bool `json:"services,omitempty"`
+	Routes   map[string]bool `json:"routes,omitempty"`
+}

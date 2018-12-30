@@ -19,11 +19,19 @@
 package namespace
 
 import (
-	"github.com/lastbackend/lastbackend/pkg/distribution/types"
+	"fmt"
 	"net/http"
 
+	"github.com/lastbackend/lastbackend/pkg/api/http/config/config"
+	"github.com/lastbackend/lastbackend/pkg/api/http/namespace/namespace"
+	"github.com/lastbackend/lastbackend/pkg/api/http/route/route"
+	"github.com/lastbackend/lastbackend/pkg/api/http/secret/secret"
+	"github.com/lastbackend/lastbackend/pkg/api/http/service/service"
+	"github.com/lastbackend/lastbackend/pkg/api/http/volume/volume"
+	"github.com/lastbackend/lastbackend/pkg/distribution/types"
+
 	"github.com/lastbackend/lastbackend/pkg/api/envs"
-	"github.com/lastbackend/lastbackend/pkg/api/types/v1"
+	v1 "github.com/lastbackend/lastbackend/pkg/api/types/v1"
 	"github.com/lastbackend/lastbackend/pkg/distribution"
 	"github.com/lastbackend/lastbackend/pkg/distribution/errors"
 	"github.com/lastbackend/lastbackend/pkg/log"
@@ -108,18 +116,9 @@ func NamespaceInfoH(w http.ResponseWriter, r *http.Request) {
 
 	log.V(logLevel).Debugf("%s:info:> get namespace `%s`", logPrefix, nid)
 
-	var nsm = distribution.NewNamespaceModel(r.Context(), envs.Get().GetStorage())
-
-	ns, err := nsm.Get(nid)
-	if err != nil {
-		log.V(logLevel).Errorf("%s:info:> get namespace err: %s", logPrefix, err.Error())
-		errors.HTTP.InternalServerError(w)
-		return
-	}
-	if ns == nil {
-		err := errors.New("namespace not found")
-		log.V(logLevel).Errorf("%s:info:> get namespace err: %s", logPrefix, err.Error())
-		errors.New("namespace").NotFound().Http(w)
+	ns, e := namespace.FetchFromRequest(r.Context(), nid)
+	if e != nil {
+		e.Http(w)
 		return
 	}
 
@@ -165,7 +164,7 @@ func NamespaceCreateH(w http.ResponseWriter, r *http.Request) {
 	log.V(logLevel).Debugf("%s:create:> create namespace", logPrefix)
 
 	var (
-		nsm = distribution.NewNamespaceModel(r.Context(), envs.Get().GetStorage())
+		nsm  = distribution.NewNamespaceModel(r.Context(), envs.Get().GetStorage())
 		opts = v1.Request().Namespace().Manifest()
 	)
 
@@ -249,7 +248,7 @@ func NamespaceUpdateH(w http.ResponseWriter, r *http.Request) {
 	log.V(logLevel).Debugf("%s:update:> update namespace `%s`", logPrefix, nid)
 
 	var (
-		nsm = distribution.NewNamespaceModel(r.Context(), envs.Get().GetStorage())
+		nsm  = distribution.NewNamespaceModel(r.Context(), envs.Get().GetStorage())
 		opts = v1.Request().Namespace().Manifest()
 	)
 
@@ -261,15 +260,9 @@ func NamespaceUpdateH(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	ns, err := nsm.Get(nid)
-	if err != nil {
-		log.V(logLevel).Errorf("%s:update:> get namespace err: %s", logPrefix, err.Error())
-		errors.HTTP.InternalServerError(w)
-		return
-	}
-	if ns == nil {
-		log.V(logLevel).Errorf("%s:update:> namespace `%s` not found", logPrefix, nid)
-		errors.New("namespace").NotFound().Http(w)
+	ns, e := namespace.FetchFromRequest(r.Context(), nid)
+	if e != nil {
+		e.Http(w)
 		return
 	}
 
@@ -292,6 +285,200 @@ func NamespaceUpdateH(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 	if _, err = w.Write(response); err != nil {
 		log.V(logLevel).Errorf("%s:update:> write response err: %s", logPrefix, err.Error())
+		return
+	}
+}
+
+func NamespaceApplyH(w http.ResponseWriter, r *http.Request) {
+
+	// swagger:operation PUT /namespace/{namespace} namespace namespaceApply
+	//
+	// Update namespace parameters
+	//
+	// ---
+	// produces:
+	// - application/json
+	// parameters:
+	//   - name: namespace
+	//     in: path
+	//     description: namespace id
+	//     required: true
+	//     type: string
+	//   - name: body
+	//     in: body
+	//     required: true
+	//     schema:
+	//       "$ref": "#/definitions/request_namespace_apply"
+	// responses:
+	//   '200':
+	//     description: Namespace was successfully updated
+	//     schema:
+	//       "$ref": "#/definitions/views_namespace"
+	//   '404':
+	//     description: Namespace not found
+	//   '500':
+	//     description: Internal server error
+
+	nid := utils.Vars(r)["namespace"]
+
+	log.V(logLevel).Debugf("%s:apply:> apply namespace %s", logPrefix, nid)
+
+	var (
+		opts = v1.Request().Namespace().ApplyManifest()
+	)
+
+	// request body struct
+	e := opts.DecodeAndValidate(r.Body)
+	if e != nil {
+		log.V(logLevel).Errorf("%s:apply:> validation incoming data err: %s", logPrefix, e.Err())
+		e.Http(w)
+		return
+	}
+
+	var status = struct {
+		Configs  map[string]bool
+		Secrets  map[string]bool
+		Volumes  map[string]bool
+		Services map[string]bool
+		Routes   map[string]bool
+	}{
+		Secrets:  make(map[string]bool, 0),
+		Configs:  make(map[string]bool, 0),
+		Volumes:  make(map[string]bool, 0),
+		Services: make(map[string]bool, 0),
+		Routes:   make(map[string]bool, 0),
+	}
+
+	ns, e := namespace.FetchFromRequest(r.Context(), nid)
+	if e != nil {
+		e.Http(w)
+		return
+	}
+
+	for _, m := range opts.Configs {
+
+		if m == nil {
+			errors.New("config").BadParameter("manifest").Http(w)
+			return
+		}
+
+		if m.Meta.Name == nil {
+			errors.New("config").BadParameter("meta.name").Http(w)
+			return
+		}
+
+		status.Configs[fmt.Sprintf("%s:%s", ns.SelfLink(), *m.Meta.Name)] = false
+	}
+
+	for _, m := range opts.Secrets {
+		if m == nil {
+			errors.New("secret").BadParameter("manifest").Http(w)
+			return
+		}
+
+		if m.Meta.Name == nil {
+			errors.New("secret").BadParameter("meta.name").Http(w)
+			return
+		}
+
+		status.Secrets[fmt.Sprintf("%s:%s", ns.SelfLink(), *m.Meta.Name)] = false
+	}
+
+	for _, m := range opts.Volumes {
+		if m == nil {
+			errors.New("volume").BadParameter("manifest").Http(w)
+			return
+		}
+
+		if m.Meta.Name == nil {
+			errors.New("volume").BadParameter("meta.name").Http(w)
+			return
+		}
+
+		status.Volumes[fmt.Sprintf("%s:%s", ns.SelfLink(), *m.Meta.Name)] = false
+	}
+
+	for _, m := range opts.Services {
+		if m == nil {
+			errors.New("service").BadParameter("manifest").Http(w)
+			return
+		}
+
+		if m.Meta.Name == nil {
+			errors.New("service").BadParameter("meta.name").Http(w)
+			return
+		}
+		status.Services[fmt.Sprintf("%s:%s", ns.SelfLink(), *m.Meta.Name)] = false
+	}
+
+	for _, m := range opts.Routes {
+		if m == nil {
+			errors.New("route").BadParameter("manifest").Http(w)
+			return
+		}
+
+		if m.Meta.Name == nil {
+			errors.New("route").BadParameter("meta.name").Http(w)
+			return
+		}
+		status.Routes[fmt.Sprintf("%s:%s", ns.SelfLink(), *m.Meta.Name)] = false
+	}
+
+	for _, m := range opts.Configs {
+		c, e := config.Apply(r.Context(), ns, m)
+		if e != nil {
+			e.Http(w)
+			return
+		}
+		status.Configs[c.SelfLink()] = true
+	}
+
+	for _, m := range opts.Secrets {
+		s, e := secret.Apply(r.Context(), ns, m)
+		if e != nil {
+			e.Http(w)
+			return
+		}
+		status.Secrets[s.SelfLink()] = true
+	}
+
+	for _, m := range opts.Volumes {
+		v, e := volume.Apply(r.Context(), ns, m)
+		if e != nil {
+			e.Http(w)
+			return
+		}
+		status.Volumes[v.SelfLink()] = true
+	}
+
+	for _, m := range opts.Services {
+		s, e := service.Apply(r.Context(), ns, m)
+		if e != nil {
+			e.Http(w)
+			return
+		}
+		status.Services[s.SelfLink()] = true
+	}
+
+	for _, m := range opts.Routes {
+		r, e := route.Apply(r.Context(), ns, m)
+		if e != nil {
+			e.Http(w)
+			return
+		}
+		status.Routes[r.SelfLink()] = true
+	}
+
+	response, err := v1.View().Namespace().NewApplyStatus(status).ToJson()
+	if err != nil {
+		log.V(logLevel).Errorf("%s:apply:> convert struct to json err: %s", logPrefix, err.Error())
+		errors.HTTP.InternalServerError(w)
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+	if _, err := w.Write(response); err != nil {
+		log.V(logLevel).Errorf("%s:apply:> write response err: %s", logPrefix, err.Error())
 		return
 	}
 }

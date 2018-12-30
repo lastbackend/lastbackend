@@ -16,42 +16,4 @@
 // from Last.Backend LLC.
 //
 
-package request
-
-type Event struct {
-	Cluster     ClusterEvent
-	Nodes       map[string]NodeEvent
-	Services    map[string]ServiceEvent
-	Deployments map[string]DeploymentEvent
-	Pods        map[string]PodEvent
-	Routes      map[string]RouteEvent
-	Volumes     map[string]VolumeEvent
-}
-
-type ClusterEvent struct {
-
-}
-
-type NodeEvent struct {
-
-}
-
-type ServiceEvent struct {
-
-}
-
-type DeploymentEvent struct {
-
-}
-
-type PodEvent struct {
-
-}
-
-type RouteEvent struct {
-
-}
-
-type VolumeEvent struct {
-
-}
+package views

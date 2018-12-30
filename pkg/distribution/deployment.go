@@ -95,7 +95,7 @@ func (d *Deployment) Create(service *types.Service, version int) (*types.Deploym
 		Selector: service.Spec.Selector,
 	}
 
-	deployment.Status.SetProvision()
+	deployment.Status.SetCreated()
 
 	if err := d.storage.Put(d.context, d.storage.Collection().Deployment(),
 		d.storage.Key().Deployment(deployment.Meta.Namespace, deployment.Meta.Service, deployment.Meta.Name), deployment, nil); err != nil {
