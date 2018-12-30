@@ -93,7 +93,9 @@ func (rs *RouteState) AddRouteManifest(key string, route *types.RouteManifest) {
 		}{status: nil, manifest: route}
 	} else {
 		rt.manifest = route
+		rs.routes[key] = rt
 	}
+
 	rs.lock.Unlock()
 }
 
@@ -108,7 +110,9 @@ func (rs *RouteState) SetRouteManifest(key string, route *types.RouteManifest) {
 		}{status: nil, manifest: route}
 	} else {
 		rt.manifest = route
+		rs.routes[key] = rt
 	}
+
 	rs.lock.Unlock()
 }
 

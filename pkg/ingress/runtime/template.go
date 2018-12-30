@@ -71,7 +71,7 @@ listen stats # Define a listen section called "stats"
   stats hide-version  # Hide HAProxy version
   stats realm Haproxy\ Statistics  # Title text for popup window
   stats uri /stats  # Stats URI
-	stats auth {{ .Stats.Username }}: {{ .Stats.Password }} 
+  stats auth {{ .Stats.Username }}:{{ .Stats.Password }} 
 {{ end }}  
 
 #---------------------------------------------------------------------

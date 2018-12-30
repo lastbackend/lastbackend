@@ -131,10 +131,10 @@ func (hp *Process) reload() error {
 	}
 
 	defer func() {
-		for port := range ports {
-			c := exec.Command(IPTablesExec, "-D", "INPUT", "-p", "tcp", "--dport", fmt.Sprintf("%d", port), "--syn", "-j", "DROP")
-			c.Start()
-		}
+		//for port := range ports {
+		//	c := exec.Command(IPTablesExec, "-D", "INPUT", "-p", "tcp", "--dport", fmt.Sprintf("%d", port), "--syn", "-j", "DROP")
+		//	c.Start()
+		//}
 	}()
 
 	bin := envs.Get().GetHaproxy()
@@ -151,10 +151,10 @@ func (hp *Process) reload() error {
 	cmd := exec.Command(bin, "-f", filepath.Join(path, cfg), "-p", pidpath, "-sf", fmt.Sprintf("%d", pid))
 	cmd.Stdout = os.Stdout
 
-	for port := range ports {
-		c := exec.Command(IPTablesExec, "-I", "INPUT", "-p", "tcp", "--dport", fmt.Sprintf("%d", port), "--syn", "-j", "DROP")
-		c.Start()
-	}
+	//for port := range ports {
+	//	c := exec.Command(IPTablesExec, "-I", "INPUT", "-p", "tcp", "--dport", fmt.Sprintf("%d", port), "--syn", "-j", "DROP")
+	//	c.Start()
+	//}
 
 
 
