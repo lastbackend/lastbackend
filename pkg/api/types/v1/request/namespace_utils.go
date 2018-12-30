@@ -71,6 +71,14 @@ func (s *NamespaceManifest) DecodeAndValidate(reader io.Reader) *errors.Err {
 	return nil
 }
 
+func (s *NamespaceApplyManifest) Init() {
+	s.Configs = make(map[string]*ConfigManifest, 0)
+	s.Secrets = make(map[string]*SecretManifest, 0)
+	s.Volumes = make(map[string]*VolumeManifest, 0)
+	s.Services = make(map[string]*ServiceManifest, 0)
+	s.Routes = make(map[string]*RouteManifest, 0)
+}
+
 func (s *NamespaceApplyManifest) Validate() *errors.Err {
 
 	for _, m := range s.Services {
@@ -128,6 +136,10 @@ func (s *NamespaceApplyManifest) DecodeAndValidate(reader io.Reader) *errors.Err
 	}
 
 	return nil
+}
+
+func (s *NamespaceApplyManifest) ToJson() ([]byte, error) {
+	return json.Marshal(s)
 }
 
 func (NamespaceRequest) RemoveOptions() *NamespaceRemoveOptions {

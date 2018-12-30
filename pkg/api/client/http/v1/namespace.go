@@ -160,6 +160,31 @@ func (nc *NamespaceClient) Create(ctx context.Context, opts *rv1.NamespaceManife
 	return s, nil
 }
 
+func (nc *NamespaceClient) Apply(ctx context.Context, opts *rv1.NamespaceApplyManifest) (*vv1.NamespaceApplyStatus, error) {
+
+	body, err := opts.ToJson()
+	if err != nil {
+		return nil, err
+	}
+
+	var s *vv1.NamespaceApplyStatus
+	var e *errors.Http
+
+	err = nc.client.Put("/namespace/%s/apply").
+		AddHeader("Content-Type", "application/json").
+		Body(body).
+		JSON(&s, &e)
+
+	if err != nil {
+		return nil, err
+	}
+	if e != nil {
+		return nil, errors.New(e.Message)
+	}
+
+	return s, nil
+}
+
 func (nc *NamespaceClient) Get(ctx context.Context) (*vv1.Namespace, error) {
 
 	var s *vv1.Namespace

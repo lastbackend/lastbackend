@@ -67,6 +67,7 @@ type NamespaceClientV1 interface {
 	Route(args ...string) RouteClientV1
 	Volume(args ...string) VolumeClientV1
 	Create(ctx context.Context, opts *rv1.NamespaceManifest) (*vv1.Namespace, error)
+	Apply(ctx context.Context, opts *rv1.NamespaceApplyManifest) (*vv1.NamespaceApplyStatus, error)
 	List(ctx context.Context) (*vv1.NamespaceList, error)
 	Get(ctx context.Context) (*vv1.Namespace, error)
 	Update(ctx context.Context, opts *rv1.NamespaceManifest) (*vv1.Namespace, error)
