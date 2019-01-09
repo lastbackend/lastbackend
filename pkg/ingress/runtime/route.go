@@ -60,7 +60,7 @@ func RouteManage(_ context.Context, name string, route *types.RouteManifest) (er
 	}
 
 	envs.Get().GetState().Routes().SetRouteManifest(name, route)
-	status.State = types.StateReady
+	status.State = types.StateProvision
 
 	return nil
 }
