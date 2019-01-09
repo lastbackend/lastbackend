@@ -48,7 +48,7 @@ type DeploymentMeta struct {
 	Namespace string `json:"namespace"`
 	// Service id
 	Service string `json:"service"`
-	// Endpoint
+	// Upstream
 	Endpoint string `json:"endpoint"`
 	// Self Link
 	Status string `json:"status"`

@@ -137,7 +137,7 @@ func (r *Runtime) Loop(ctx context.Context) {
 					for e, spec := range spec.Endpoints {
 						log.V(logLevel).Debugf("endpoint: %v", e)
 						if err := network.EndpointManage(ctx, e, spec); err != nil {
-							log.Errorf("Endpoint [%s] manage err: %s", e, err.Error())
+							log.Errorf("Upstream [%s] manage err: %s", e, err.Error())
 						}
 					}
 

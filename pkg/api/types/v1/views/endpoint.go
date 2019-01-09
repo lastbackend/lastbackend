@@ -34,7 +34,7 @@ type EndpointMeta struct {
 }
 
 type EndpointSpec struct {
-	// Endpoint state
+	// Upstream state
 	State string `json:"state"`
 
 	IP       string               `json:"ip"`

@@ -26,6 +26,7 @@ import (
 
 const (
 	StatusBadParameter        = "Bad Parameter"
+	StatusInUse               = "In use"
 	StatusBadRequest          = "Bad Request"
 	StatusUnknown             = "Unknown"
 	StatusIncorrectXml        = "Incorrect Xml"
@@ -147,6 +148,15 @@ func (e *err) NotUnique(attr string, err ...error) *Err {
 		Code:   StatusNotUnique,
 		origin: getError(joinNameAndMessage(e.s, strings.ToLower(attr)+" not unique"), err...),
 		http:   HTTP.getNotUnique(strings.ToLower(attr)),
+	}
+}
+
+func (e *err) Allocated(attr string, err ...error) *Err {
+	return &Err{
+		Code:   StatusInUse,
+		Attr:   attr,
+		origin: getError(joinNameAndMessage(e.s, strings.ToLower(attr))+" is in use", err...),
+		http:   HTTP.getAllocatedParameter(strings.ToLower(attr)),
 	}
 }
 

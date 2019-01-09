@@ -133,14 +133,14 @@ backend {{$name}}
   mode http
   balance roundrobin
   option forwardfor
-  server {{$b.Endpoint}} {{$b.Endpoint}}:{{$b.Port}} check init-addr last,libc,none resolvers lstbknd
+  server {{$b.Upstream}} {{$b.Upstream}}:{{$b.Port}} check init-addr last,libc,none resolvers lstbknd
 {{else if eq $b.Type "https" }}
 backend {{$name}}
   mode tcp
   # maximum SSL session ID length is 32 bytes.
-  server {{$b.Endpoint}} {{$b.Endpoint}}:{{$b.Port}} check init-addr last,libc,none resolvers lstbknd
+  server {{$b.Upstream}} {{$b.Upstream}}:{{$b.Port}} check init-addr last,libc,none resolvers lstbknd
 {{else if eq $b.Type "tcp" }}
 backend {{$name}}
-  server {{$b.Endpoint}} {{$b.Endpoint}}:{{$b.Port}} check init-addr last,libc,none resolvers lstbknd
+  server {{$b.Upstream}} {{$b.Upstream}}:{{$b.Port}} check init-addr last,libc,none resolvers lstbknd
 {{end}}{{end}}
 `

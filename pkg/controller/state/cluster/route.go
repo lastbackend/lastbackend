@@ -375,7 +375,7 @@ func routeManifestDel(route *types.Route) error {
 
 func routeManifestCheckEqual(mf *types.RouteManifest, route *types.Route) bool {
 
-	if mf.Domain != route.Spec.Domain {
+	if mf.Endpoint != route.Spec.Endpoint {
 		return false
 	}
 

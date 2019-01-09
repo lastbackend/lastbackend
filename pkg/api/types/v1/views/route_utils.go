@@ -51,7 +51,7 @@ func (r *Route) ToMeta(obj types.RouteMeta) RouteMeta {
 
 func (r *Route) ToSpec(obj types.RouteSpec) RouteSpec {
 	spec := RouteSpec{}
-	spec.Domain = obj.Domain
+	spec.Domain = obj.Endpoint
 	spec.Port = obj.Port
 	for _, rule := range obj.Rules {
 		spec.Rules = append(spec.Rules, &RouteRule{

@@ -35,8 +35,10 @@ type RouteManifestMeta struct {
 
 // swagger:model request_route_create
 type RouteManifestSpec struct {
-	Port  uint16                         `json:"port" yaml:"port"`
-	Rules []RouteManifestSpecRulesOption `json:"rules" yaml:"rules"`
+	Port     uint16                         `json:"port" yaml:"port"`
+	Type     string                         `json:"type" yaml:"type"`
+	Endpoint string                         `json:"endpoint" yaml:"endpoint"`
+	Rules    []RouteManifestSpecRulesOption `json:"rules" yaml:"rules"`
 }
 
 // swagger:ignore
@@ -89,6 +91,10 @@ func (r *RouteManifest) SetRouteSpec(route *types.Route, svc *types.ServiceList)
 	var sl = make(map[string]*types.Service)
 	for _, s := range svc.Items {
 		sl[s.Meta.Name] = s
+	}
+
+	if r.Spec.Endpoint != route.Spec.Endpoint {
+		route.Spec.Endpoint = r.Spec.Endpoint
 	}
 
 	if r.Spec.Port != route.Spec.Port {

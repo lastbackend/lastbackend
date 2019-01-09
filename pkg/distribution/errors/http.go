@@ -186,6 +186,23 @@ func (Http) getIncorrectXML(msg ...string) *Http {
 	}
 }
 
+func (Http) getAllocatedParameter(args ...string) *Http {
+	message := "Value is in use"
+	for i, a := range args {
+		switch i {
+		case 0:
+			message = fmt.Sprintf("%s is already in use", toUpperFirstChar(a))
+		default:
+			panic("Wrong parameter count: (is allowed from 0 to 1)")
+		}
+	}
+	return &Http{
+		Code:    http.StatusBadRequest,
+		Status:  StatusBadParameter,
+		Message: message,
+	}
+}
+
 func (Http) getBadParameter(args ...string) *Http {
 	message := "Bad parameter"
 	for i, a := range args {

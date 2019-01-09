@@ -311,16 +311,48 @@ func TestRouteCreate(t *testing.T) {
 
 	sv1 := getServiceAsset(ns1.Meta.Name, "demo", "")
 
-	r1 := getRouteAsset(ns1.Meta.Name, "demo")
-
 	sl := new(types.ServiceList)
 	sl.Items = append(sl.Items, sv1)
 
-	mf := getRouteManifest(sv1.Meta.Name)
-	mf.SetRouteSpec(r1, sl)
+	// initial route in database
+	r0 := getRouteAsset(ns1.Meta.Name, "route-0")
+	mf0 := getRouteManifest(r0.Meta.Name, sv1.Meta.Name)
+	mf0.Spec.Port = 1080
+	mf0.Spec.Endpoint = "lastbackend.com"
+	mf0.SetRouteSpec(r0, sl)
+	mf0s, _ := mf0.ToJson()
 
-	mf1, _ := mf.ToJson()
-	mf2, _ := getRouteManifest("not_found").ToJson()
+	// check unknown namespace
+	r1 := getRouteAsset(ns2.Meta.Name, "route-1")
+	mf1 := getRouteManifest(r1.Meta.Name, sv1.Meta.Name)
+	mf1.SetRouteSpec(r1, sl)
+	mf1s, _ := mf1.ToJson()
+
+	// check service not exists
+	r2 := getRouteAsset(ns2.Meta.Name, "route-2")
+	mf2s, _ := getRouteManifest(r2.Meta.Name, "not_found").ToJson()
+
+	// check tcp port is reserved
+	r3 := getRouteAsset(ns1.Meta.Name, "route-3")
+	mf3 := getRouteManifest(r3.Meta.Name, sv1.Meta.Name)
+	mf3.Spec.Port = mf0.Spec.Port
+	mf3.SetRouteSpec(r3, sl)
+	mf3s, _ := mf3.ToJson()
+
+	// check endpoint is reserved
+	r4 := getRouteAsset(ns1.Meta.Name, "route-4")
+	mf4 := getRouteManifest(r4.Meta.Name, sv1.Meta.Name)
+	mf4.Spec.Endpoint = mf0.Spec.Endpoint
+	mf4.SetRouteSpec(r4, sl)
+	mf4s, _ := mf4.ToJson()
+
+	// check successful creation
+	r5 := getRouteAsset(ns1.Meta.Name, "route-5")
+	mf5 := getRouteManifest(r5.Meta.Name, sv1.Meta.Name)
+	mf5.Spec.Endpoint = "lstbknd.net"
+	mf5.Spec.Port = 2080
+	mf5.SetRouteSpec(r5, sl)
+	mf5s, _ := mf5.ToJson()
 
 	type fields struct {
 		stg storage.Storage
@@ -343,13 +375,13 @@ func TestRouteCreate(t *testing.T) {
 		wantErr      bool
 		expectedCode int
 	}{
-		// TODO: need checking for unique
+		// TODO: need checking for uniqueness
 		{
 			name:         "checking create route if namespace not found",
 			args:         args{ctx, ns2},
 			fields:       fields{stg},
 			handler:      route.RouteCreateH,
-			data:         string(mf1),
+			data:         string(mf1s),
 			err:          "{\"code\":404,\"status\":\"Not Found\",\"message\":\"Namespace not found\"}",
 			wantErr:      true,
 			expectedCode: http.StatusNotFound,
@@ -359,8 +391,18 @@ func TestRouteCreate(t *testing.T) {
 			args:         args{ctx, ns1},
 			fields:       fields{stg},
 			handler:      route.RouteCreateH,
-			data:         string(mf2),
+			data:         string(mf2s),
 			err:          "{\"code\":400,\"status\":\"Bad Parameter\",\"message\":\"Bad rules parameter\"}",
+			wantErr:      true,
+			expectedCode: http.StatusBadRequest,
+		},
+		{
+			name:         "checking create route if exists",
+			args:         args{ctx, ns1},
+			fields:       fields{stg},
+			handler:      route.RouteCreateH,
+			data:         string(mf0s),
+			err:          "{\"code\":400,\"status\":\"Not Unique\",\"message\":\"Name is already in use\"}",
 			wantErr:      true,
 			expectedCode: http.StatusBadRequest,
 		},
@@ -374,14 +416,34 @@ func TestRouteCreate(t *testing.T) {
 			wantErr:      true,
 			expectedCode: http.StatusBadRequest,
 		},
+		{
+			name:         "check create route if tcp port is already use",
+			args:         args{ctx, ns1},
+			fields:       fields{stg},
+			handler:      route.RouteCreateH,
+			data:         string(mf3s),
+			err:          "{\"code\":400,\"status\":\"Bad Parameter\",\"message\":\"Port is already in use\"}",
+			wantErr:      true,
+			expectedCode: http.StatusBadRequest,
+		},
+		{
+			name:         "check create route if endpoint is already use",
+			args:         args{ctx, ns1},
+			fields:       fields{stg},
+			handler:      route.RouteCreateH,
+			data:         string(mf4s),
+			err:          "{\"code\":400,\"status\":\"Bad Parameter\",\"message\":\"Endpoint is already in use\"}",
+			wantErr:      true,
+			expectedCode: http.StatusBadRequest,
+		},
 		// TODO: need checking incoming data for validity
 		{
 			name:         "check create route success",
 			args:         args{ctx, ns1},
 			fields:       fields{stg},
 			handler:      route.RouteCreateH,
-			data:         string(mf1),
-			want:         v1.View().Route().New(r1),
+			data:         string(mf5s),
+			want:         v1.View().Route().New(r5),
 			wantErr:      false,
 			expectedCode: http.StatusOK,
 		},
@@ -408,6 +470,9 @@ func TestRouteCreate(t *testing.T) {
 			assert.NoError(t, err)
 
 			err = tc.fields.stg.Put(context.Background(), stg.Collection().Service(), stg.Key().Service(sv1.Meta.Namespace, sv1.Meta.Name), sv1, nil)
+			assert.NoError(t, err)
+
+			err = tc.fields.stg.Put(context.Background(), stg.Collection().Route(), stg.Key().Service(r0.Meta.Namespace, r0.Meta.Name), r0, nil)
 			assert.NoError(t, err)
 
 			// Create assert request to pass to our handler. We don't have any query parameters for now, so we'll
@@ -446,21 +511,28 @@ func TestRouteCreate(t *testing.T) {
 				assert.Equal(t, tc.err, string(body), "incorrect code message")
 			} else {
 
+				t.Log("route self-link:", tc.want.Meta.Namespace, tc.want.Meta.Name)
+
 				got := new(types.Route)
-				err := tc.fields.stg.Get(tc.args.ctx, stg.Collection().Route(), stg.Key().Route(tc.args.namespace.Meta.Name, tc.want.Meta.Name), got, nil)
-				assert.NoError(t, err)
-				if assert.NotEmpty(t, got, "route is empty") {
-
-					if !assert.Equal(t, tc.want.Meta.Name, got.Meta.Name, "names mismatch") {
-						return
-					}
-
-					if !assert.Equal(t, len(tc.want.Spec.Rules), len(got.Spec.Rules), "rules count mismatch") {
-						return
-					}
-
-					assert.Equal(t, tc.want.Spec.Rules[0].Endpoint, got.Spec.Rules[0].Endpoint, "endpoints mismatch")
+				err := tc.fields.stg.Get(tc.args.ctx, stg.Collection().Route(), stg.Key().Route(tc.want.Meta.Namespace, tc.want.Meta.Name), got, nil)
+				if !assert.NoError(t, err) {
+					return
 				}
+
+				if assert.NotEmpty(t, got, "route is empty") {
+					return
+				}
+
+				if !assert.Equal(t, tc.want.Meta.Name, got.Meta.Name, "names mismatch") {
+					return
+				}
+
+				if !assert.Equal(t, len(tc.want.Spec.Rules), len(got.Spec.Rules), "rules count mismatch") {
+					return
+				}
+
+				assert.Equal(t, tc.want.Spec.Rules[0].Endpoint, got.Spec.Rules[0].Endpoint, "endpoints mismatch")
+
 			}
 		})
 	}
@@ -480,21 +552,55 @@ func TestRouteUpdate(t *testing.T) {
 
 	sv1 := getServiceAsset(ns1.Meta.Name, "demo", "")
 	sv2 := getServiceAsset(ns1.Meta.Name, "test1", "")
-	sv3 := getServiceAsset(ns1.Meta.Name, "test2", "")
 
-	r1 := getRouteAsset(ns1.Meta.Name, "demo")
-	r2 := getRouteAsset(ns1.Meta.Name, "test")
-	r3 := getRouteAsset(ns1.Meta.Name, "demo")
+	sl := new(types.ServiceList)
+	sl.Items = append(sl.Items, sv1)
 
-	r3.Spec.Rules = append(r3.Spec.Rules, types.RouteRule{
-		Path:     "/",
-		Endpoint: fmt.Sprintf("%s.%s", ns1.Meta.Name, sv1.Meta.Name),
-		Port:     80,
-	})
+	r0 := getRouteAsset(ns1.Meta.Name, "initial-0")
+	r0.Spec.Port = 1080
+	r0.Spec.Endpoint = "lstbknd.net"
 
-	mf1, _ := getRouteManifest(sv1.Meta.Name).ToJson()
-	mf2, _ := getRouteManifest(sv1.Meta.Name).ToJson()
-	mf3, _ := getRouteManifest(sv3.Meta.Name).ToJson()
+	r1 := getRouteAsset(ns1.Meta.Name, "initial-1")
+	r1.Spec.Port = 1000
+	r1.Spec.Endpoint = "lastbackend.com"
+
+	// route not exists
+	r2 := getRouteAsset(ns1.Meta.Name, "demo")
+	mf2 := getRouteManifest(r2.Meta.Name, sv1.Meta.Name)
+	mf2.SetRouteSpec(r2, sl)
+	mf2s, _ := mf2.ToJson()
+
+	// invalid namespace
+	r3 := getRouteAsset(ns2.Meta.Name, r1.Meta.Name)
+	mf3 := getRouteManifest(r3.Meta.Name, sv1.Meta.Name)
+	mf3.SetRouteSpec(r1, sl)
+	mf3s, _ := mf3.ToJson()
+
+	// invalid service
+	r4 := getRouteAsset(ns1.Meta.Name, r1.Meta.Name)
+	mf4s, _ := getRouteManifest(r4.Meta.Name, "not_found").ToJson()
+
+	// port in use
+	r5 := getRouteAsset(ns1.Meta.Name, r1.Meta.Name)
+	mf5 := getRouteManifest(r1.Meta.Name, sv1.Meta.Name)
+	mf5.Spec.Port = r0.Spec.Port
+	mf5.SetRouteSpec(r5, sl)
+	mf5s, _ := mf5.ToJson()
+
+	// endpoint in use
+	r6 := getRouteAsset(ns1.Meta.Name, r1.Meta.Name)
+	mf6 := getRouteManifest(r1.Meta.Name, sv1.Meta.Name)
+	mf6.Spec.Endpoint = r0.Spec.Endpoint
+	mf6.SetRouteSpec(r6, sl)
+	mf6s, _ := mf5.ToJson()
+
+	// successful update
+	r7 := getRouteAsset(ns1.Meta.Name, r1.Meta.Name)
+	mf7 := getRouteManifest(r1.Meta.Name, sv1.Meta.Name)
+	mf7.Spec.Endpoint = "lbdp.io"
+	mf7.Spec.Port = 8080
+	mf7.SetRouteSpec(r7, sl)
+	mf7s, _ := mf7.ToJson()
 
 	type fields struct {
 		stg storage.Storage
@@ -519,31 +625,31 @@ func TestRouteUpdate(t *testing.T) {
 		expectedCode int
 	}{
 		{
-			name:         "checking update route if name not exists",
+			name:         "checking update route if not exists",
 			args:         args{ctx, ns1, r2},
 			fields:       fields{stg},
 			handler:      route.RouteUpdateH,
-			data:         string(mf3),
+			data:         string(mf2s),
 			err:          "{\"code\":404,\"status\":\"Not Found\",\"message\":\"Route not found\"}",
 			wantErr:      true,
 			expectedCode: http.StatusNotFound,
 		},
 		{
 			name:         "checking update route if namespace not found",
-			args:         args{ctx, ns2, r1},
+			args:         args{ctx, ns2, r3},
 			fields:       fields{stg},
 			handler:      route.RouteUpdateH,
-			data:         string(mf2),
+			data:         string(mf3s),
 			err:          "{\"code\":404,\"status\":\"Not Found\",\"message\":\"Namespace not found\"}",
 			wantErr:      true,
 			expectedCode: http.StatusNotFound,
 		},
 		{
 			name:         "checking update route if service not found",
-			args:         args{ctx, ns2, r1},
+			args:         args{ctx, ns2, r4},
 			fields:       fields{stg},
 			handler:      route.RouteUpdateH,
-			data:         string(mf1),
+			data:         string(mf4s),
 			err:          "{\"code\":404,\"status\":\"Not Found\",\"message\":\"Namespace not found\"}",
 			wantErr:      true,
 			expectedCode: http.StatusNotFound,
@@ -559,12 +665,32 @@ func TestRouteUpdate(t *testing.T) {
 			expectedCode: http.StatusBadRequest,
 		},
 		{
-			name:         "check update route success",
-			args:         args{ctx, ns1, r1},
+			name:         "checking update route if port is in use",
+			args:         args{ctx, ns2, r5},
 			fields:       fields{stg},
 			handler:      route.RouteUpdateH,
-			data:         string(mf2),
-			want:         v1.View().Route().New(r3),
+			data:         string(mf5s),
+			err:          "{\"code\":404,\"status\":\"Not Found\",\"message\":\"Namespace not found\"}",
+			wantErr:      true,
+			expectedCode: http.StatusNotFound,
+		},
+		{
+			name:         "checking update route if endpoint is in use",
+			args:         args{ctx, ns2, r6},
+			fields:       fields{stg},
+			handler:      route.RouteUpdateH,
+			data:         string(mf6s),
+			err:          "{\"code\":404,\"status\":\"Not Found\",\"message\":\"Namespace not found\"}",
+			wantErr:      true,
+			expectedCode: http.StatusNotFound,
+		},
+		{
+			name:         "check update route success",
+			args:         args{ctx, ns1, r7},
+			fields:       fields{stg},
+			handler:      route.RouteUpdateH,
+			data:         string(mf7s),
+			want:         v1.View().Route().New(r7),
 			wantErr:      false,
 			expectedCode: http.StatusOK,
 		},
@@ -594,6 +720,9 @@ func TestRouteUpdate(t *testing.T) {
 			assert.NoError(t, err)
 
 			err = tc.fields.stg.Put(context.Background(), stg.Collection().Service(), stg.Key().Service(sv2.Meta.Namespace, sv2.Meta.Name), sv2, nil)
+			assert.NoError(t, err)
+
+			err = stg.Put(context.Background(), stg.Collection().Route(), stg.Key().Route(r0.Meta.Namespace, r0.Meta.Name), r0, nil)
 			assert.NoError(t, err)
 
 			err = stg.Put(context.Background(), stg.Collection().Route(), stg.Key().Route(r1.Meta.Namespace, r1.Meta.Name), r1, nil)
@@ -808,12 +937,12 @@ func getRouteAsset(namespace, name string) *types.Route {
 	r.Meta.SetDefault()
 	r.Meta.Namespace = namespace
 	r.Meta.Name = name
-	r.Spec.Domain = fmt.Sprintf("%s.test-domain.com", name)
+	r.Spec.Endpoint = fmt.Sprintf("%s.test-domain.com", name)
 	r.Spec.Rules = make([]types.RouteRule, 0)
 	return &r
 }
 
-func getRouteManifest(name string) *request.RouteManifest {
+func getRouteManifest(name, service string) *request.RouteManifest {
 	var mf = new(request.RouteManifest)
 
 	mf.Meta.Name = &name
@@ -822,7 +951,7 @@ func getRouteManifest(name string) *request.RouteManifest {
 	mf.Spec.Rules = append(mf.Spec.Rules, request.RouteManifestSpecRulesOption{
 		Port:    80,
 		Path:    "/",
-		Service: name,
+		Service: service,
 	})
 
 	return mf

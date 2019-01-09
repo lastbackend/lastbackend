@@ -62,7 +62,7 @@ type PodMeta struct {
 	Node string `json:"node" yaml:"node"`
 	// Pod status
 	Status string `json:"status" yaml:"status"`
-	// Endpoint
+	// Upstream
 	Endpoint string `json:"endpoint" yaml:"endpoint"`
 }
 

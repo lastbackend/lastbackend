@@ -92,6 +92,11 @@ func Create(ctx context.Context, ns *types.Namespace, mf *request.RouteManifest)
 		}
 	}
 
+	if err := validateManifest(ctx, mf); err != nil {
+		log.V(logLevel).Errorf("%s:create:> route manifest validation err", logPrefix, err.Err().Error())
+		return nil, err
+	}
+
 	svc, err := sm.List(ns.Meta.Name)
 	if err != nil {
 		log.V(logLevel).Errorf("%s:create:> get services", logPrefix, err.Error())
@@ -140,6 +145,11 @@ func Update(ctx context.Context, ns *types.Namespace, rt *types.Route, mf *reque
 		}
 	}
 
+	if err := validateManifest(ctx, mf); err != nil {
+		log.V(logLevel).Errorf("%s:update:> route manifest validation err", logPrefix, err.Err().Error())
+		return nil, err
+	}
+
 	svc, err := sm.List(ns.Meta.Name)
 	if err != nil {
 		log.V(logLevel).Errorf("%s:create:> get services", logPrefix, err.Error())
@@ -162,4 +172,33 @@ func Update(ctx context.Context, ns *types.Namespace, rt *types.Route, mf *reque
 	}
 
 	return rt, nil
+}
+
+func validateManifest(ctx context.Context, mf *request.RouteManifest) *errors.Err {
+
+	rm := distribution.NewRouteModel(ctx, envs.Get().GetStorage())
+
+	rl, err := rm.List()
+	if err != nil {
+		log.V(logLevel).Errorf("%s:validate:> route manifest validation failed: %s ", logPrefix, err.Error())
+		return errors.New("route").InternalServerError()
+	}
+
+	if mf.Spec.Port != 80 && mf.Spec.Port != 443 {
+		for _, r := range rl.Items {
+			if r.Spec.Port == mf.Spec.Port {
+				return errors.New("route").Allocated("port", errors.Route().NewErrPortAllocated())
+			}
+		}
+	}
+
+	if mf.Spec.Endpoint != types.EmptyString {
+		for _, r := range rl.Items {
+			if r.Spec.Endpoint == mf.Spec.Endpoint {
+				return errors.New("route").Allocated("endpoint", errors.Route().NewErrEndpointAllocated())
+			}
+		}
+	}
+
+	return nil
 }
