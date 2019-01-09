@@ -531,7 +531,7 @@ func TestRouteCreate(t *testing.T) {
 					return
 				}
 
-				assert.Equal(t, tc.want.Spec.Rules[0].Endpoint, got.Spec.Rules[0].Endpoint, "endpoints mismatch")
+				assert.Equal(t, tc.want.Spec.Rules[0].Endpoint, got.Spec.Rules[0].Upstream, "endpoints mismatch")
 
 			}
 		})
@@ -769,7 +769,7 @@ func TestRouteUpdate(t *testing.T) {
 				if assert.NotEmpty(t, got, "route is empty") {
 					assert.Equal(t, tc.want.Meta.Name, got.Meta.Name, "names mismatch")
 					assert.Equal(t, len(tc.want.Spec.Rules), len(got.Spec.Rules), "rules count mismatch")
-					assert.Equal(t, tc.want.Spec.Rules[0].Endpoint, got.Spec.Rules[0].Endpoint, "endpoints mismatch")
+					assert.Equal(t, tc.want.Spec.Rules[0].Endpoint, got.Spec.Rules[0].Upstream, "endpoints mismatch")
 				}
 			}
 		})

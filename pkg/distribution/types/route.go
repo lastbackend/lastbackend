@@ -80,7 +80,7 @@ type RouteStatus struct {
 type RouteRule struct {
 	Service  string `json:"service" yaml:"service"`
 	Path     string `json:"path" yaml:"path"`
-	Endpoint string `json:"endpoint" yaml:"endpoint"`
+	Upstream string `json:"upstream" yaml:"upstream"`
 	Port     int    `json:"port" yaml:"port"`
 }
 
@@ -99,7 +99,6 @@ type RouteManifest struct {
 	State    string      `json:"state"`
 	Endpoint string      `json:"endpoint"`
 	Port     uint16      `json:"port"`
-	Upstream string      `json:"upstream"`
 	Rules    []RouteRule `json:"rules"`
 }
 

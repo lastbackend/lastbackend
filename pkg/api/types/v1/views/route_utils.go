@@ -58,7 +58,7 @@ func (r *Route) ToSpec(obj types.RouteSpec) RouteSpec {
 			Service:  rule.Service,
 			Path:     rule.Path,
 			Port:     rule.Port,
-			Endpoint: rule.Endpoint,
+			Endpoint: rule.Upstream,
 		})
 	}
 	return spec

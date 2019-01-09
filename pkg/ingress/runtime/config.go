@@ -62,7 +62,7 @@ type confFrontend struct {
 type confBackend struct {
 	Domain   string
 	Type     string
-	Endpoint string
+	Upstream string
 	Port     uint16
 }
 
@@ -152,7 +152,7 @@ func configSync() error {
 			backend := new(confBackend)
 			backend.Type = tp
 			backend.Port = uint16(b.Port)
-			backend.Endpoint = b.Endpoint
+			backend.Upstream = b.Upstream
 			backend.Domain = r.Endpoint
 
 			cfg.Backend[name] = backend

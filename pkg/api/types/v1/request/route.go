@@ -113,7 +113,7 @@ func (r *RouteManifest) SetRouteSpec(route *types.Route, svc *types.ServiceList)
 		}
 
 		route.Spec.Rules = append(route.Spec.Rules, types.RouteRule{
-			Endpoint: sl[rs.Service].Meta.Endpoint,
+			Upstream: sl[rs.Service].Meta.Endpoint,
 			Service:  rs.Service,
 			Port:     rs.Port,
 			Path:     rs.Path,

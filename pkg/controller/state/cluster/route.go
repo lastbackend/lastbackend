@@ -393,7 +393,7 @@ func routeManifestCheckEqual(mf *types.RouteManifest, route *types.Route) bool {
 
 		for _, rr := range route.Spec.Rules {
 
-			if mr.Endpoint != rr.Endpoint {
+			if mr.Upstream != rr.Upstream {
 				continue
 			}
 
@@ -407,7 +407,7 @@ func routeManifestCheckEqual(mf *types.RouteManifest, route *types.Route) bool {
 				return false
 			}
 
-			if mr.Endpoint != rr.Endpoint {
+			if mr.Upstream != rr.Upstream {
 				return false
 			}
 
