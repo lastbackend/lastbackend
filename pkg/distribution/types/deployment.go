@@ -2,7 +2,7 @@
 // Last.Backend LLC CONFIDENTIAL
 // __________________
 //
-// [2014] - [2018] Last.Backend LLC
+// [2014] - [2019] Last.Backend LLC
 // All Rights Reserved.
 //
 // NOTICE:  All information contained herein is, and remains
@@ -48,7 +48,7 @@ type DeploymentMeta struct {
 	Namespace string `json:"namespace"`
 	// Service id
 	Service string `json:"service"`
-	// Endpoint
+	// Upstream
 	Endpoint string `json:"endpoint"`
 	// Self Link
 	Status string `json:"status"`

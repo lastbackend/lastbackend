@@ -2,7 +2,7 @@
 // Last.Backend LLC CONFIDENTIAL
 // __________________
 //
-// [2014] - [2018] Last.Backend LLC
+// [2014] - [2019] Last.Backend LLC
 // All Rights Reserved.
 //
 // NOTICE:  All information contained herein is, and remains
@@ -62,7 +62,7 @@ type confFrontend struct {
 type confBackend struct {
 	Domain   string
 	Type     string
-	Endpoint string
+	Upstream string
 	Port     uint16
 }
 
@@ -140,8 +140,8 @@ func configSync() error {
 			cfg.Frontend[r.Port] = frontend
 		}
 
-		if _, ok := frontend.Rules[r.Domain]; !ok {
-			frontend.Rules[r.Domain] = make(map[string]string, 0)
+		if _, ok := frontend.Rules[r.Endpoint]; !ok {
+			frontend.Rules[r.Endpoint] = make(map[string]string, 0)
 		}
 
 		for _, b := range r.Rules {
@@ -152,11 +152,11 @@ func configSync() error {
 			backend := new(confBackend)
 			backend.Type = tp
 			backend.Port = uint16(b.Port)
-			backend.Endpoint = b.Endpoint
-			backend.Domain = r.Domain
+			backend.Upstream = b.Upstream
+			backend.Domain = r.Endpoint
 
 			cfg.Backend[name] = backend
-			frontend.Rules[r.Domain][b.Path] = name
+			frontend.Rules[r.Endpoint][b.Path] = name
 		}
 
 	}

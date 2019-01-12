@@ -2,7 +2,7 @@
 // Last.Backend LLC CONFIDENTIAL
 // __________________
 //
-// [2014] - [2018] Last.Backend LLC
+// [2014] - [2019] Last.Backend LLC
 // All Rights Reserved.
 //
 // NOTICE:  All information contained herein is, and remains
@@ -62,7 +62,7 @@ type PodMeta struct {
 	Node string `json:"node" yaml:"node"`
 	// Pod status
 	Status string `json:"status" yaml:"status"`
-	// Endpoint
+	// Upstream
 	Endpoint string `json:"endpoint" yaml:"endpoint"`
 }
 

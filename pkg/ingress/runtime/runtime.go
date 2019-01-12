@@ -2,7 +2,7 @@
 // Last.Backend LLC CONFIDENTIAL
 // __________________
 //
-// [2014] - [2018] Last.Backend LLC
+// [2014] - [2019] Last.Backend LLC
 // All Rights Reserved.
 //
 // NOTICE:  All information contained herein is, and remains
@@ -20,7 +20,6 @@ package runtime
 
 import (
 	"context"
-
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 	"github.com/lastbackend/lastbackend/pkg/ingress/envs"
 	"github.com/lastbackend/lastbackend/pkg/log"
@@ -137,7 +136,7 @@ func (r *Runtime) Loop(ctx context.Context) {
 					for e, spec := range spec.Endpoints {
 						log.V(logLevel).Debugf("endpoint: %v", e)
 						if err := network.EndpointManage(ctx, e, spec); err != nil {
-							log.Errorf("Endpoint [%s] manage err: %s", e, err.Error())
+							log.Errorf("Upstream [%s] manage err: %s", e, err.Error())
 						}
 					}
 
@@ -151,19 +150,28 @@ func (r *Runtime) Loop(ctx context.Context) {
 				}
 
 				log.V(logLevel).Debugf("%s> provision routes", logRuntimePrefix)
-				var upd = 0
+				var upd = make(map[string]bool, 0)
 				for e, spec := range spec.Routes {
-					log.V(logLevel).Debugf("route: %s", e)
 					if err := RouteManage(ctx, e, spec); err != nil {
 						log.Errorf("Route [%s] manage err: %s", e, err.Error())
 						continue
 					}
-					upd++
+					upd[e] = true
 				}
 
-				if upd != 0 {
+				if len(upd) > 0 {
+
 					if err := r.process.reload(); err != nil {
 						log.Errorf("reload process err: %s", err.Error())
+					} else {
+
+						for r := range upd {
+							st := envs.Get().GetState().Routes().GetRouteStatus(r)
+							if st.State == types.StateProvision {
+								st.State = types.StateReady
+								envs.Get().GetState().Routes().SetRouteStatus(r, st)
+							}
+						}
 					}
 				}
 

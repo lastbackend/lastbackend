@@ -2,7 +2,7 @@
 // Last.Backend LLC CONFIDENTIAL
 // __________________
 //
-// [2014] - [2018] Last.Backend LLC
+// [2014] - [2019] Last.Backend LLC
 // All Rights Reserved.
 //
 // NOTICE:  All information contained herein is, and remains
@@ -51,14 +51,14 @@ func (r *Route) ToMeta(obj types.RouteMeta) RouteMeta {
 
 func (r *Route) ToSpec(obj types.RouteSpec) RouteSpec {
 	spec := RouteSpec{}
-	spec.Domain = obj.Domain
+	spec.Domain = obj.Endpoint
 	spec.Port = obj.Port
 	for _, rule := range obj.Rules {
 		spec.Rules = append(spec.Rules, &RouteRule{
 			Service:  rule.Service,
 			Path:     rule.Path,
 			Port:     rule.Port,
-			Endpoint: rule.Endpoint,
+			Endpoint: rule.Upstream,
 		})
 	}
 	return spec

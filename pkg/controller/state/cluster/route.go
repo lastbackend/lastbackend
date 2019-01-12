@@ -2,7 +2,7 @@
 // Last.Backend LLC CONFIDENTIAL
 // __________________
 //
-// [2014] - [2018] Last.Backend LLC
+// [2014] - [2019] Last.Backend LLC
 // All Rights Reserved.
 //
 // NOTICE:  All information contained herein is, and remains
@@ -375,7 +375,7 @@ func routeManifestDel(route *types.Route) error {
 
 func routeManifestCheckEqual(mf *types.RouteManifest, route *types.Route) bool {
 
-	if mf.Domain != route.Spec.Domain {
+	if mf.Endpoint != route.Spec.Endpoint {
 		return false
 	}
 
@@ -393,7 +393,7 @@ func routeManifestCheckEqual(mf *types.RouteManifest, route *types.Route) bool {
 
 		for _, rr := range route.Spec.Rules {
 
-			if mr.Endpoint != rr.Endpoint {
+			if mr.Upstream != rr.Upstream {
 				continue
 			}
 
@@ -407,7 +407,7 @@ func routeManifestCheckEqual(mf *types.RouteManifest, route *types.Route) bool {
 				return false
 			}
 
-			if mr.Endpoint != rr.Endpoint {
+			if mr.Upstream != rr.Upstream {
 				return false
 			}
 

@@ -2,7 +2,7 @@
 // Last.Backend LLC CONFIDENTIAL
 // __________________
 //
-// [2014] - [2018] Last.Backend LLC
+// [2014] - [2019] Last.Backend LLC
 // All Rights Reserved.
 //
 // NOTICE:  All information contained herein is, and remains
@@ -60,7 +60,7 @@ func RouteManage(_ context.Context, name string, route *types.RouteManifest) (er
 	}
 
 	envs.Get().GetState().Routes().SetRouteManifest(name, route)
-	status.State = types.StateReady
+	status.State = types.StateProvision
 
 	return nil
 }

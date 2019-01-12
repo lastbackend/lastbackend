@@ -2,7 +2,7 @@
 // Last.Backend LLC CONFIDENTIAL
 // __________________
 //
-// [2014] - [2018] Last.Backend LLC
+// [2014] - [2019] Last.Backend LLC
 // All Rights Reserved.
 //
 // NOTICE:  All information contained herein is, and remains
@@ -93,7 +93,9 @@ func (rs *RouteState) AddRouteManifest(key string, route *types.RouteManifest) {
 		}{status: nil, manifest: route}
 	} else {
 		rt.manifest = route
+		rs.routes[key] = rt
 	}
+
 	rs.lock.Unlock()
 }
 
@@ -108,7 +110,9 @@ func (rs *RouteState) SetRouteManifest(key string, route *types.RouteManifest) {
 		}{status: nil, manifest: route}
 	} else {
 		rt.manifest = route
+		rs.routes[key] = rt
 	}
+
 	rs.lock.Unlock()
 }
 

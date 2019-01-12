@@ -2,7 +2,7 @@
 // Last.Backend LLC CONFIDENTIAL
 // __________________
 //
-// [2014] - [2018] Last.Backend LLC
+// [2014] - [2019] Last.Backend LLC
 // All Rights Reserved.
 //
 // NOTICE:  All information contained herein is, and remains
@@ -57,7 +57,7 @@ type RouteMeta struct {
 type RouteSpec struct {
 	Selector RouteSelector `json:"selector" yaml:"selector"`
 	State    string        `json:"state" yaml:"state"`
-	Domain   string        `json:"domain" yaml:"domain"`
+	Endpoint string        `json:"endpoint" yaml:"endpoint"`
 	Port     uint16        `json:"port" yaml:"port"`
 	Rules    []RouteRule   `json:"rules" yaml:"rules"`
 	Updated  time.Time     `json:"updated"`
@@ -80,7 +80,7 @@ type RouteStatus struct {
 type RouteRule struct {
 	Service  string `json:"service" yaml:"service"`
 	Path     string `json:"path" yaml:"path"`
-	Endpoint string `json:"endpoint" yaml:"endpoint"`
+	Upstream string `json:"upstream" yaml:"upstream"`
 	Port     int    `json:"port" yaml:"port"`
 }
 
@@ -97,9 +97,8 @@ func (r *Route) CreateSelfLink(namespace, name string) string {
 
 type RouteManifest struct {
 	State    string      `json:"state"`
-	Domain   string      `json:"domain"`
-	Port     uint16      `json:"port"`
 	Endpoint string      `json:"endpoint"`
+	Port     uint16      `json:"port"`
 	Rules    []RouteRule `json:"rules"`
 }
 
@@ -115,7 +114,7 @@ type RouteManifestMap struct {
 
 func (r *RouteManifest) Set(route *Route) {
 	r.State = route.Spec.State
-	r.Domain = route.Spec.Domain
+	r.Endpoint = route.Spec.Endpoint
 	r.Rules = route.Spec.Rules
 	r.Port = route.Spec.Port
 }

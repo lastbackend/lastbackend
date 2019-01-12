@@ -2,7 +2,7 @@
 // Last.Backend LLC CONFIDENTIAL
 // __________________
 //
-// [2014] - [2018] Last.Backend LLC
+// [2014] - [2019] Last.Backend LLC
 // All Rights Reserved.
 //
 // NOTICE:  All information contained herein is, and remains
@@ -28,7 +28,7 @@ const (
 )
 
 // swagger:ignore
-// Endpoint - service endpoint
+// Upstream - service endpoint
 type Endpoint struct {
 	Runtime
 	Meta   EndpointMeta   `json:"meta"`
@@ -64,7 +64,7 @@ type EndpointStatus struct {
 // EndpointSpec spec data
 // swagger:model types_endpoint_spec
 type EndpointSpec struct {
-	// Endpoint state
+	// Upstream state
 	State     string               `json:"state"`
 	External  bool                 `json:"external"`
 	IP        string               `json:"ip"`

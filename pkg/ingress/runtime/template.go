@@ -2,7 +2,7 @@
 // Last.Backend LLC CONFIDENTIAL
 // __________________
 //
-// [2014] - [2018] Last.Backend LLC
+// [2014] - [2019] Last.Backend LLC
 // All Rights Reserved.
 //
 // NOTICE:  All information contained herein is, and remains
@@ -71,7 +71,7 @@ listen stats # Define a listen section called "stats"
   stats hide-version  # Hide HAProxy version
   stats realm Haproxy\ Statistics  # Title text for popup window
   stats uri /stats  # Stats URI
-	stats auth {{ .Stats.Username }}: {{ .Stats.Password }} 
+  stats auth {{ .Stats.Username }}:{{ .Stats.Password }} 
 {{ end }}  
 
 #---------------------------------------------------------------------
@@ -133,14 +133,14 @@ backend {{$name}}
   mode http
   balance roundrobin
   option forwardfor
-  server {{$b.Endpoint}} {{$b.Endpoint}}:{{$b.Port}} check init-addr last,libc,none resolvers lstbknd
+  server {{$b.Upstream}} {{$b.Upstream}}:{{$b.Port}} check init-addr last,libc,none resolvers lstbknd
 {{else if eq $b.Type "https" }}
 backend {{$name}}
   mode tcp
   # maximum SSL session ID length is 32 bytes.
-  server {{$b.Endpoint}} {{$b.Endpoint}}:{{$b.Port}} check init-addr last,libc,none resolvers lstbknd
+  server {{$b.Upstream}} {{$b.Upstream}}:{{$b.Port}} check init-addr last,libc,none resolvers lstbknd
 {{else if eq $b.Type "tcp" }}
 backend {{$name}}
-  server {{$b.Endpoint}} {{$b.Endpoint}}:{{$b.Port}} check init-addr last,libc,none resolvers lstbknd
+  server {{$b.Upstream}} {{$b.Upstream}}:{{$b.Port}} check init-addr last,libc,none resolvers lstbknd
 {{end}}{{end}}
 `

@@ -2,7 +2,7 @@
 // Last.Backend LLC CONFIDENTIAL
 // __________________
 //
-// [2014] - [2018] Last.Backend LLC
+// [2014] - [2019] Last.Backend LLC
 // All Rights Reserved.
 //
 // NOTICE:  All information contained herein is, and remains
@@ -112,7 +112,11 @@ func (r *Route) Add(namespace *types.Namespace, route *types.Route) (*types.Rout
 
 	route.Meta.SetDefault()
 	route.Status.State = types.StateCreated
-	route.Spec.Domain = fmt.Sprintf("%s.%s.%s", strings.ToLower(route.Meta.Name), strings.ToLower(namespace.Meta.Name), viper.GetString("domain.external"))
+
+	if route.Spec.Endpoint == types.EmptyString {
+		route.Spec.Endpoint = fmt.Sprintf("%s.%s.%s", strings.ToLower(route.Meta.Name), strings.ToLower(namespace.Meta.Name), viper.GetString("domain.external"))
+	}
+
 	route.SelfLink()
 
 	if err := r.storage.Put(r.context, r.storage.Collection().Route(),

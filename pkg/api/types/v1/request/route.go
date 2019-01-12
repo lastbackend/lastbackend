@@ -2,7 +2,7 @@
 // Last.Backend LLC CONFIDENTIAL
 // __________________
 //
-// [2014] - [2018] Last.Backend LLC
+// [2014] - [2019] Last.Backend LLC
 // All Rights Reserved.
 //
 // NOTICE:  All information contained herein is, and remains
@@ -35,8 +35,10 @@ type RouteManifestMeta struct {
 
 // swagger:model request_route_create
 type RouteManifestSpec struct {
-	Port  uint16                         `json:"port" yaml:"port"`
-	Rules []RouteManifestSpecRulesOption `json:"rules" yaml:"rules"`
+	Port     uint16                         `json:"port" yaml:"port"`
+	Type     string                         `json:"type" yaml:"type"`
+	Endpoint string                         `json:"endpoint" yaml:"endpoint"`
+	Rules    []RouteManifestSpecRulesOption `json:"rules" yaml:"rules"`
 }
 
 // swagger:ignore
@@ -91,6 +93,10 @@ func (r *RouteManifest) SetRouteSpec(route *types.Route, svc *types.ServiceList)
 		sl[s.Meta.Name] = s
 	}
 
+	if r.Spec.Endpoint != route.Spec.Endpoint {
+		route.Spec.Endpoint = r.Spec.Endpoint
+	}
+
 	if r.Spec.Port != route.Spec.Port {
 		route.Spec.Port = r.Spec.Port
 	}
@@ -107,7 +113,7 @@ func (r *RouteManifest) SetRouteSpec(route *types.Route, svc *types.ServiceList)
 		}
 
 		route.Spec.Rules = append(route.Spec.Rules, types.RouteRule{
-			Endpoint: sl[rs.Service].Meta.Endpoint,
+			Upstream: sl[rs.Service].Meta.Endpoint,
 			Service:  rs.Service,
 			Port:     rs.Port,
 			Path:     rs.Path,

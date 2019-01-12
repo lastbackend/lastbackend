@@ -16,42 +16,25 @@
 // from Last.Backend LLC.
 //
 
-package request
+package errors
 
-type Event struct {
-	Cluster     ClusterEvent
-	Nodes       map[string]NodeEvent
-	Services    map[string]ServiceEvent
-	Deployments map[string]DeploymentEvent
-	Pods        map[string]PodEvent
-	Routes      map[string]RouteEvent
-	Volumes     map[string]VolumeEvent
+import "errors"
+
+const (
+	ErrPortAllocated     = "port allocated"
+	ErrEndpointAllocated = "endpoint allocated"
+)
+
+type route struct{}
+
+func (route) NewErrPortAllocated() error {
+	return errors.New(ErrPortAllocated)
 }
 
-type ClusterEvent struct {
-
+func (route) NewErrEndpointAllocated() error {
+	return errors.New(ErrEndpointAllocated)
 }
 
-type NodeEvent struct {
-
-}
-
-type ServiceEvent struct {
-
-}
-
-type DeploymentEvent struct {
-
-}
-
-type PodEvent struct {
-
-}
-
-type RouteEvent struct {
-
-}
-
-type VolumeEvent struct {
-
+func Route() route {
+	return route{}
 }

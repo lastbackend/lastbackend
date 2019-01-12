@@ -2,7 +2,7 @@
 // Last.Backend LLC CONFIDENTIAL
 // __________________
 //
-// [2014] - [2018] Last.Backend LLC
+// [2014] - [2019] Last.Backend LLC
 // All Rights Reserved.
 //
 // NOTICE:  All information contained herein is, and remains
@@ -182,6 +182,23 @@ func (Http) getIncorrectXML(msg ...string) *Http {
 	return &Http{
 		Code:    http.StatusBadRequest,
 		Status:  StatusIncorrectXml,
+		Message: message,
+	}
+}
+
+func (Http) getAllocatedParameter(args ...string) *Http {
+	message := "Value is in use"
+	for i, a := range args {
+		switch i {
+		case 0:
+			message = fmt.Sprintf("%s is already in use", toUpperFirstChar(a))
+		default:
+			panic("Wrong parameter count: (is allowed from 0 to 1)")
+		}
+	}
+	return &Http{
+		Code:    http.StatusBadRequest,
+		Status:  StatusBadParameter,
 		Message: message,
 	}
 }

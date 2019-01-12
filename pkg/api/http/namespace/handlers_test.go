@@ -2,7 +2,7 @@
 // Last.Backend LLC CONFIDENTIAL
 // __________________
 //
-// [2014] - [2018] Last.Backend LLC
+// [2014] - [2019] Last.Backend LLC
 // All Rights Reserved.
 //
 // NOTICE:  All information contained herein is, and remains
@@ -273,16 +273,6 @@ func TestNamespaceList(t *testing.T) {
 
 }
 
-
-
-func createNamespaceManifest(name, description string, resources *request.NamespaceResourcesOptions) *request.NamespaceManifest {
-	opts := new(request.NamespaceManifest)
-	opts.Meta.Name = &name
-	opts.Meta.Description = &description
-	opts.Spec.Resources = resources
-	return opts
-}
-
 // Testing NamespaceCreateH handler
 func TestNamespaceCreate(t *testing.T) {
 
@@ -305,7 +295,6 @@ func TestNamespaceCreate(t *testing.T) {
 	nsm1, _ := createNamespaceManifest("demo", "", nil).ToJson()
 	nsm2, _ := createNamespaceManifest("__test", "", &request.NamespaceResourcesOptions{Request: &request.NamespaceResourceOptions{RAM: getStrPtr("1GB")}}).ToJson()
 	nsm3, _ := createNamespaceManifest("test", "", &request.NamespaceResourcesOptions{Request: &request.NamespaceResourceOptions{RAM: getStrPtr("1GB")}}).ToJson()
-
 
 	tests := []struct {
 		name         string
@@ -439,8 +428,6 @@ func TestNamespaceUpdate(t *testing.T) {
 
 	nsm1, _ := createNamespaceManifest("test", "nil", nil).ToJson()
 	nsm3, _ := createNamespaceManifest(ns1.Meta.Name, ns3.Meta.Description, &request.NamespaceResourcesOptions{Request: &request.NamespaceResourceOptions{RAM: getStrPtr("512MB")}}).ToJson()
-
-
 
 	type fields struct {
 		stg storage.Storage
@@ -682,6 +669,14 @@ func TestNamespaceRemove(t *testing.T) {
 		})
 	}
 
+}
+
+func createNamespaceManifest(name, description string, resources *request.NamespaceResourcesOptions) *request.NamespaceManifest {
+	opts := new(request.NamespaceManifest)
+	opts.Meta.Name = &name
+	opts.Meta.Description = &description
+	opts.Spec.Resources = resources
+	return opts
 }
 
 func getStrPtr(a string) *string {
