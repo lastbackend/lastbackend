@@ -94,6 +94,10 @@ func (s *NamespaceManifest) SetNamespaceSpec(ns *types.Namespace) {
 			if s.Spec.Resources.Request.CPU != nil {
 				ns.Spec.Resources.Request.CPU = *s.Spec.Resources.Request.CPU
 			}
+
+			if s.Spec.Resources.Request.Storage != nil {
+				ns.Spec.Resources.Request.Storage = *s.Spec.Resources.Request.Storage
+			}
 		}
 
 		if s.Spec.Resources.Limits != nil {
@@ -104,6 +108,10 @@ func (s *NamespaceManifest) SetNamespaceSpec(ns *types.Namespace) {
 
 			if s.Spec.Resources.Limits.CPU != nil {
 				ns.Spec.Resources.Limits.CPU = *s.Spec.Resources.Limits.CPU
+			}
+
+			if s.Spec.Resources.Limits.Storage != nil {
+				ns.Spec.Resources.Limits.Storage = *s.Spec.Resources.Limits.Storage
 			}
 		}
 
