@@ -20,6 +20,7 @@ package mock
 
 import (
 	"context"
+	"fmt"
 	"strings"
 	"sync"
 
@@ -33,8 +34,10 @@ import (
 )
 
 type Storage struct {
-	lock   sync.RWMutex
-	store map[string]map[string][]byte
+	root     string
+	lock     sync.RWMutex
+	store    map[string]map[string][]byte
+	watchers map[chan *types.WatcherEvent]string
 }
 
 func (s *Storage) Info(ctx context.Context, collection string, name string) (*types.Runtime, error) {
@@ -46,6 +49,8 @@ func (s *Storage) Get(ctx context.Context, collection string, name string, obj i
 
 	s.lock.Lock()
 	defer s.lock.Unlock()
+
+	collection = fmt.Sprintf("%s/%s", s.root, collection)
 
 	if _, ok := s.store[collection][name]; !ok {
 		return errors.New(types.ErrEntityNotFound)
@@ -77,8 +82,10 @@ func (s *Storage) List(ctx context.Context, collection string, q string, obj int
 		return errors.New(types.ErrStructOutIsNotPointer)
 	}
 
+	collection = fmt.Sprintf("%s/%s", s.root, collection)
 	buffer := []byte("[")
 	current := 0
+
 	for k, item := range s.store[collection] {
 		if strings.HasPrefix(k, q) {
 
@@ -131,8 +138,11 @@ func (s *Storage) Map(ctx context.Context, collection string, q string, obj inte
 		return errors.New(types.ErrStructOutIsNotPointer)
 	}
 
+	collection = fmt.Sprintf("%s/%s", s.root, collection)
+
 	buffer := []byte("{")
 	current := 0
+
 	for k, item := range s.store[collection] {
 		if strings.HasPrefix(k, q) {
 
@@ -182,6 +192,8 @@ func (s *Storage) Put(ctx context.Context, collection string, name string, obj i
 	s.lock.Lock()
 	defer s.lock.Unlock()
 
+	collection = fmt.Sprintf("%s/%s", s.root, collection)
+
 	if _, ok := s.store[collection][name]; ok {
 
 		if opts == nil {
@@ -199,6 +211,8 @@ func (s *Storage) Put(ctx context.Context, collection string, name string, obj i
 	}
 
 	s.store[collection][name] = b
+
+	s.dispatch(collection, name, types.STORAGECREATEEVENT, b)
 	return nil
 }
 
@@ -207,6 +221,8 @@ func (s *Storage) Set(ctx context.Context, collection string, name string, obj i
 
 	s.lock.Lock()
 	defer s.lock.Unlock()
+
+	collection = fmt.Sprintf("%s/%s", s.root, collection)
 
 	if _, ok := s.store[collection][name]; !ok {
 		if opts != nil && !opts.Force {
@@ -221,6 +237,7 @@ func (s *Storage) Set(ctx context.Context, collection string, name string, obj i
 
 	s.store[collection][name] = b
 
+	s.dispatch(collection, name, types.STORAGEUPDATEEVENT, b)
 	return nil
 }
 
@@ -230,16 +247,25 @@ func (s *Storage) Del(ctx context.Context, collection string, name string) error
 	s.lock.Lock()
 	defer s.lock.Unlock()
 
+	collection = fmt.Sprintf("%s/%s", s.root, collection)
 	if name == "" {
 		s.store[collection] = make(map[string][]byte)
 		return nil
 	}
+
+	bt := s.store[collection][name]
 	delete(s.store[collection], name)
+
+	s.dispatch(collection, name, types.STORAGEDELETEEVENT, bt)
+
 	return nil
 }
 
 func (s *Storage) Watch(ctx context.Context, collection string, event chan *types.WatcherEvent, opts *types.Opts) error {
 	s.check(collection)
+	s.watchers[event] = collection
+	defer delete(s.watchers, event)
+	<-ctx.Done()
 	return nil
 }
 
@@ -255,16 +281,49 @@ func (s Storage) Collection() types.Collection {
 	return new(Collection)
 }
 
+func (s *Storage) dispatch(collection, name, action string, b []byte) {
+
+	for w, c := range s.watchers {
+
+		if c == collection || c == s.Collection().Root() {
+
+			e := new(types.WatcherEvent)
+			e.Action = action
+			e.SelfLink = name
+			e.System.Key = fmt.Sprintf("%s/%s", strings.TrimPrefix(collection, s.root), name)
+			e.System.Revision = 0
+			e.Data = b
+
+			match := strings.Split(name, ":")
+
+			if len(match) > 0 {
+				e.Name = match[len(match)-1]
+			} else {
+				e.Name = name
+			}
+
+			w <- e
+		}
+	}
+}
+
 func (s *Storage) check(kind string) {
 	s.lock.Lock()
 	defer s.lock.Unlock()
-	if _, ok := s.store[kind]; !ok {
-		s.store[kind] = make(map[string][]byte)
+
+	collection := fmt.Sprintf("%s/%s", s.root, kind)
+
+	if _, ok := s.store[collection]; !ok {
+		s.store[collection] = make(map[string][]byte)
 	}
 }
 
 func New() (*Storage, error) {
 	db := new(Storage)
+
+	db.root = "lastbackend"
 	db.store = make(map[string]map[string][]byte)
+	db.watchers = make(map[chan *types.WatcherEvent]string, 0)
+
 	return db, nil
 }

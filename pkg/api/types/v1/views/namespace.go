@@ -54,7 +54,6 @@ type NamespaceStatus struct {
 
 type NamespaceStatusResources struct {
 	Allocated NamespaceResource `json:"allocated"`
-	Usage     NamespaceResource `json:"usage"`
 }
 
 // swagger:model views_namespace_envs

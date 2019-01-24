@@ -35,10 +35,12 @@ type Cluster struct {
 }
 
 type ClusterStatus struct {
-	Nodes     ClusterStatusNodes `json:"nodes"`
-	Capacity  ClusterResources   `json:"capacity"`
-	Allocated ClusterResources   `json:"allocated"`
-	Deleted   bool               `json:"deleted"`
+	Nodes     ClusterStatusNodes     `json:"nodes"`
+	Discovery ClusterStatusDiscovery `json:"discovery"`
+	Ingress   ClusterStatusIngress   `json:"ingress"`
+	Capacity  ClusterResources       `json:"capacity"`
+	Allocated ClusterResources       `json:"allocated"`
+	Deleted   bool                   `json:"deleted"`
 }
 
 type ClusterStatusNodes struct {
@@ -47,11 +49,23 @@ type ClusterStatusNodes struct {
 	Offline int `json:"offline"`
 }
 
+type ClusterStatusIngress struct {
+	Total   int `json:"total"`
+	Online  int `json:"online"`
+	Offline int `json:"offline"`
+}
+
+type ClusterStatusDiscovery struct {
+	Total   int `json:"total"`
+	Online  int `json:"online"`
+	Offline int `json:"offline"`
+}
+
 type ClusterResources struct {
 	Containers int   `json:"containers"`
 	Pods       int   `json:"pods"`
-	Memory     int64 `json:"memory"`
-	Cpu        int   `json:"cpu"`
+	RAM        int64 `json:"ram"`
+	CPU        int   `json:"cpu"`
 	Storage    int64 `json:"storage"`
 }
 
@@ -60,5 +74,5 @@ type ClusterSpec struct {
 
 // swagger:ignore
 type ClusterCreateOptions struct {
-	Description string                  `json:"description"`
+	Description string `json:"description"`
 }

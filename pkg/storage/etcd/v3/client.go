@@ -62,6 +62,8 @@ func GetClient(conf *Config) (s.Store, s.DestroyFunc, error) {
 		pathPrefix: path.Join("/", conf.Prefix),
 		watcher:    newWatcher(client),
 	}
+
+	st.watcher.prefix = path.Join("/", conf.Prefix)
 	st.opts = append(st.opts, clientv3.WithSerializable())
 
 	return st, destroyFunc, nil

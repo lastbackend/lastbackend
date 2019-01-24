@@ -57,14 +57,14 @@ func (nv *NodeView) ToNodeStatus(status types.NodeStatus) NodeStatus {
 
 	ns.Capacity.Containers = status.Capacity.Containers
 	ns.Capacity.Pods = status.Capacity.Pods
-	ns.Capacity.Memory = status.Capacity.Memory
-	ns.Capacity.Cpu = status.Capacity.Cpu
+	ns.Capacity.Memory = status.Capacity.RAM
+	ns.Capacity.CPU = status.Capacity.CPU
 	ns.Capacity.Storage = status.Capacity.Storage
 
 	ns.Allocated.Containers = status.Allocated.Containers
 	ns.Allocated.Pods = status.Allocated.Pods
-	ns.Allocated.Memory = status.Allocated.Memory
-	ns.Allocated.Cpu = status.Allocated.Cpu
+	ns.Allocated.Memory = status.Allocated.RAM
+	ns.Allocated.CPU = status.Allocated.CPU
 	ns.Allocated.Storage = status.Allocated.Storage
 
 	ns.State.CNI.Type = status.State.CNI.Type

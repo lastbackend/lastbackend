@@ -36,6 +36,8 @@ type IView interface {
 	Pod() *Pod
 	Container() *ContainerView
 	Volume() *VolumeView
+
+	Event() *EventView
 }
 
 type View struct{}
@@ -83,4 +85,8 @@ func (View) Container() *ContainerView {
 
 func (View) Volume() *VolumeView {
 	return new(VolumeView)
+}
+
+func (View) Event() *EventView {
+	return new(EventView)
 }

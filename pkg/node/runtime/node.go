@@ -97,7 +97,7 @@ func NodeCapacity() types.NodeResources {
 
 	return types.NodeResources{
 		Storage:    int64(storage / 1024 / 1024),
-		Memory:     int64(m),
+		RAM:        int64(m),
 		Pods:       int(m / MinContainerMemory),
 		Containers: int(m / MinContainerMemory),
 	}
@@ -114,7 +114,7 @@ func NodeAllocation() types.NodeResources {
 	s := envs.Get().GetState().Pods()
 
 	return types.NodeResources{
-		Memory:     int64(m),
+		RAM:        int64(m),
 		Pods:       s.GetPodsCount(),
 		Containers: s.GetContainersCount(),
 	}

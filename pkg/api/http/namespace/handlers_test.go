@@ -689,6 +689,15 @@ func getNamespaceAsset(name, desc string) *types.Namespace {
 	n.Meta.Name = name
 	n.Meta.Description = desc
 
+	n.Status.Resources.Allocated.RAM = "512 MB"
+	n.Status.Resources.Allocated.CPU = "0.1"
+
+	n.Spec.Resources.Limits.RAM = "1 GB"
+	n.Spec.Resources.Limits.CPU = "0.1"
+
+	n.Spec.Resources.Request.RAM = "1 GB"
+	n.Spec.Resources.Request.CPU = "0.1"
+
 	return &n
 }
 

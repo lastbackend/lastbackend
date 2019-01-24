@@ -20,6 +20,7 @@ package v3
 
 import (
 	"context"
+	"strings"
 	"sync"
 
 	"regexp"
@@ -35,11 +36,13 @@ const (
 )
 
 type watcher struct {
+	prefix string
 	client *clientv3.Client
 }
 
 type watchChan struct {
 	watcher   *watcher
+	prefix    string
 	key       string
 	filter    string
 	rev       *int64
@@ -90,6 +93,7 @@ func (w *watcher) newWatchChan(ctx context.Context, key, keyRegexFilter string, 
 		key:     key,
 		rev:     rev,
 		filter:  keyRegexFilter,
+		prefix:  w.prefix,
 		event:   make(chan *event, incomingBufSize),
 		result:  make(chan *types.Event, outgoingBufSize),
 		error:   make(chan error, 1),
@@ -160,7 +164,7 @@ func (wc *watchChan) watching(watchClosedCh chan struct{}) {
 		for _, we := range wres.Events {
 			if r.MatchString(string(we.Kv.Key)) {
 				e := &event{
-					key:       string(we.Kv.Key),
+					key:       strings.TrimPrefix(string(we.Kv.Key), wc.prefix),
 					value:     we.Kv.Value,
 					rev:       we.Kv.ModRevision,
 					isDeleted: we.Type == clientv3.EventTypeDelete,

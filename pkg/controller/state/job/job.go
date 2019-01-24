@@ -16,26 +16,4 @@
 // from Last.Backend LLC.
 //
 
-package types
-
-const logLevel = 3
-
-const (
-	DEFAULT_RESOURCE_LIMITS_RAM = "128mib"
-	DEFAULT_RESOURCE_LIMITS_CPU = "0.1"
-
-	DEFAULT_MEMORY_MIN        = 128
-	DEFAULT_REPLICAS_MIN      = 1
-	DEFAULT_DESCRIPTION_LIMIT = 512
-
-	KindSecret     = "secret"
-	KindRoute      = "route"
-	KindNamespace  = "namespace"
-	KindService    = "service"
-	KindDeployment = "deployment"
-	KindJob        = "job"
-	KindPod        = "pod"
-	KindEndpoint   = "endpoint"
-	KindConfig     = "config"
-	KindVolume     = "volume"
-)
+package job

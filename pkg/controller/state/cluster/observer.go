@@ -20,7 +20,6 @@ package cluster
 
 import (
 	"context"
-
 	"github.com/lastbackend/lastbackend/pkg/controller/envs"
 	"github.com/lastbackend/lastbackend/pkg/controller/ipam/ipam"
 	"github.com/lastbackend/lastbackend/pkg/distribution"
@@ -52,10 +51,12 @@ type ClusterState struct {
 		observer chan *types.Route
 		list     map[string]*types.Route
 	}
+
 	volume struct {
 		observer chan *types.Volume
 		list     map[string]*types.Volume
 	}
+
 	node struct {
 		observer chan *types.Node
 		lease    chan *NodeLease
@@ -70,14 +71,15 @@ func (cs *ClusterState) Observe() {
 	for {
 		select {
 		case l := <-cs.node.lease:
-			handleNodeLease(cs, l)
+			_ = handleNodeLease(cs, l)
 			break
 		case l := <-cs.node.release:
-			handleNodeRelease(cs, l)
+			_ = handleNodeRelease(cs, l)
 			break
 		case n := <-cs.node.observer:
 			log.V(7).Debugf("node: %s", n.Meta.Name)
 			cs.node.list[n.SelfLink()] = n
+			_ = clusterStatusState(cs)
 			break
 		case v := <-cs.volume.observer:
 			log.V(7).Debugf("volume: %s", v.SelfLink())
@@ -123,6 +125,8 @@ func (cs *ClusterState) Loop() error {
 		cs.SetNode(n)
 		// Run node observers
 	}
+
+	_ = clusterStatusState(cs)
 
 	// Get all ingress servers in cluster
 	im := distribution.NewIngressModel(context.Background(), envs.Get().GetStorage())
@@ -259,6 +263,7 @@ func (cs *ClusterState) lease(opts NodeLeaseOptions) (*types.Node, error) {
 	req.done = make(chan bool)
 	cs.node.lease <- req
 	req.Wait()
+
 	return req.Response.Node, req.Response.Err
 }
 
@@ -358,7 +363,7 @@ func (cs *ClusterState) PodLease(p *types.Pod) (*types.Node, error) {
 
 	opts := NodeLeaseOptions{
 		Selector: p.Spec.Selector,
-		Memory:   &RAM,
+		RAM:      &RAM,
 	}
 
 	node, err := cs.lease(opts)
@@ -378,8 +383,8 @@ func (cs *ClusterState) PodRelease(p *types.Pod) (*types.Node, error) {
 	}
 
 	opts := NodeLeaseOptions{
-		Node:   &p.Meta.Node,
-		Memory: &RAM,
+		Node: &p.Meta.Node,
+		RAM:  &RAM,
 	}
 
 	node, err := cs.release(opts)
@@ -428,6 +433,8 @@ func (cs *ClusterState) VolumeRelease(v *types.Volume) (*types.Node, error) {
 func NewClusterState() *ClusterState {
 
 	var cs = new(ClusterState)
+
+	cs.cluster = new(types.Cluster)
 
 	cs.ingress.observer = make(chan *types.Ingress)
 	cs.ingress.list = make(map[string]*types.Ingress)

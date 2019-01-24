@@ -18,14 +18,7 @@
 
 package views
 
-import (
-	"github.com/lastbackend/lastbackend/pkg/distribution/types"
-	"time"
-)
-
 type Event struct {
-	Meta      types.NodeMeta   `json:"meta"`
-	Status    types.NodeStatus `json:"status"`
-	Pods      []types.Pod      `json:"pods"`
-	Timestamp time.Time        `json:"timestamp"`
+	Name    string      `json:"event"`
+	Payload interface{} `json:"payload"`
 }

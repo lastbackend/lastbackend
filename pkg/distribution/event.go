@@ -16,46 +16,32 @@
 // from Last.Backend LLC.
 //
 
-package envs
+package distribution
 
 import (
-	"github.com/lastbackend/lastbackend/pkg/api/cache"
-	"github.com/lastbackend/lastbackend/pkg/monitor"
+	"context"
+	"github.com/lastbackend/lastbackend/pkg/distribution/types"
+	"github.com/lastbackend/lastbackend/pkg/log"
 	"github.com/lastbackend/lastbackend/pkg/storage"
+	//"regexp"
 )
 
-var e Env
+const (
+	logEventPrefix = "distribution:events"
+)
 
-type Env struct {
+type Event struct {
+	context context.Context
 	storage storage.Storage
-	cache   *cache.Cache
-	monitor *monitor.Monitor
 }
 
-func Get() *Env {
-	return &e
-}
+func (e *Event) Runtime() (*types.Runtime, error) {
 
-func (c *Env) SetStorage(storage storage.Storage) {
-	c.storage = storage
-}
-
-func (c *Env) GetStorage() storage.Storage {
-	return c.storage
-}
-
-func (c *Env) SetCache(ch *cache.Cache) {
-	c.cache = ch
-}
-
-func (c *Env) GetCache() *cache.Cache {
-	return c.cache
-}
-
-func (c *Env) SetMonitor(monitor *monitor.Monitor) {
-	c.monitor = monitor
-}
-
-func (c *Env) GetMonitor() *monitor.Monitor {
-	return c.monitor
+	log.V(logLevel).Debugf("%s:get:> get events runtime info", logEventPrefix)
+	runtime, err := e.storage.Info(e.context, e.storage.Collection().Root(), "")
+	if err != nil {
+		log.V(logLevel).Errorf("%s:get:> get runtime info error: %s", logEventPrefix, err)
+		return &runtime.Runtime, err
+	}
+	return &runtime.Runtime, nil
 }

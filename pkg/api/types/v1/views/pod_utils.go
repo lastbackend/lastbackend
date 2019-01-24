@@ -56,8 +56,8 @@ func (pv *Pod) toSpec(pod types.PodSpec) PodSpec {
 			Maintenance: pod.State.Maintenance,
 		},
 		Template: PodSpecTemplate{
-			Containers:  pod.Template.Containers,
-			Volumes:     pod.Template.Volumes,
+			Containers:  new(SpecView).NewSpecTemplateContainers(pod.Template.Containers),
+			Volumes:     new(SpecView).NewSpecTemplateVolumes(pod.Template.Volumes),
 			Termination: pod.Template.Termination,
 		},
 	}

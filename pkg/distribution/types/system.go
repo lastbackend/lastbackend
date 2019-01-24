@@ -22,9 +22,11 @@ var (
 	SecretAccessToken = ""
 )
 
+const KindCluster = "cluster"
 const KindAPIServer = "api"
 const KindController = "controller"
 const KindDiscovery = "discovery"
+const KindIngress = "ingress"
 const KindNode = "node"
 
 type Process struct {

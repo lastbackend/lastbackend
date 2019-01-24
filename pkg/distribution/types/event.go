@@ -33,6 +33,7 @@ type event struct {
 
 type Event struct {
 	event
+	Kind string
 	Data interface{}
 }
 

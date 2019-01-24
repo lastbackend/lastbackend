@@ -37,7 +37,8 @@ type NodeLease struct {
 
 type NodeLeaseOptions struct {
 	Node     *string
-	Memory   *int64
+	CPU      *int64
+	RAM      *int64
 	Storage  *int64
 	Selector types.SpecSelector
 }
@@ -86,11 +87,11 @@ func handleNodeLease(cs *ClusterState, nl *NodeLease) error {
 			allocated = new(types.NodeResources)
 		)
 
-		if nl.Request.Memory != nil {
-			if (n.Status.Capacity.Memory - n.Status.Allocated.Memory) > *nl.Request.Memory {
+		if nl.Request.RAM != nil {
+			if (n.Status.Capacity.RAM - n.Status.Allocated.RAM) > *nl.Request.RAM {
 				node = n
 				allocated.Pods++
-				allocated.Memory += *nl.Request.Memory
+				allocated.RAM += *nl.Request.RAM
 			}
 		}
 
@@ -106,7 +107,7 @@ func handleNodeLease(cs *ClusterState, nl *NodeLease) error {
 		if node != nil {
 
 			node.Status.Allocated.Pods += allocated.Pods
-			node.Status.Allocated.Memory += allocated.Memory
+			node.Status.Allocated.RAM += allocated.RAM
 			node.Status.Allocated.Storage += allocated.Storage
 
 			nm := distribution.NewNodeModel(context.Background(), envs.Get().GetStorage())
@@ -137,9 +138,9 @@ func handleNodeRelease(cs *ClusterState, nl *NodeLease) error {
 
 	n := cs.node.list[*nl.Request.Node]
 
-	if nl.Request.Memory != nil {
+	if nl.Request.RAM != nil {
 		n.Status.Allocated.Pods--
-		n.Status.Allocated.Memory -= *nl.Request.Memory
+		n.Status.Allocated.RAM -= *nl.Request.RAM
 	}
 
 	if nl.Request.Storage != nil {

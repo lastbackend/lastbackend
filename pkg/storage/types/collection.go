@@ -37,6 +37,7 @@ type Collection interface {
 	Subnet() string
 	Manifest() ManifestCollection
 	Test() string
+	Root() string
 }
 
 type ManifestCollection interface {

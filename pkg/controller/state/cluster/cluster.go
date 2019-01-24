@@ -18,7 +18,39 @@
 
 package cluster
 
+import (
+	"context"
+	"github.com/lastbackend/lastbackend/pkg/controller/envs"
+	"github.com/lastbackend/lastbackend/pkg/distribution"
+	"github.com/lastbackend/lastbackend/pkg/distribution/types"
+	"github.com/lastbackend/lastbackend/pkg/log"
+)
+
 func clusterStatusState(cs *ClusterState) error {
+
+	cs.cluster.Status.Capacity = types.ClusterResources{}
+	cs.cluster.Status.Allocated = types.ClusterResources{}
+
+	for _, n := range cs.node.list {
+
+		cs.cluster.Status.Allocated.CPU += n.Status.Allocated.CPU
+		cs.cluster.Status.Allocated.RAM += n.Status.Allocated.RAM
+		cs.cluster.Status.Allocated.Storage += n.Status.Allocated.Storage
+		cs.cluster.Status.Allocated.Containers += n.Status.Allocated.Containers
+		cs.cluster.Status.Allocated.Pods += n.Status.Allocated.Pods
+
+		cs.cluster.Status.Capacity.CPU += n.Status.Capacity.CPU
+		cs.cluster.Status.Capacity.RAM += n.Status.Capacity.RAM
+		cs.cluster.Status.Capacity.Storage += n.Status.Capacity.Storage
+		cs.cluster.Status.Capacity.Containers += n.Status.Capacity.Containers
+		cs.cluster.Status.Capacity.Pods += n.Status.Capacity.Pods
+
+	}
+
+	if err := distribution.NewClusterModel(context.Background(), envs.Get().GetStorage()).Set(cs.cluster); err != nil {
+		log.Errorf("%s: cluster update status error: %s", logPrefix, err.Error())
+		return err
+	}
 
 	return nil
 }

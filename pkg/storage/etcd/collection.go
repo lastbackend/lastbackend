@@ -133,6 +133,10 @@ func (Collection) Test() string {
 	return testCollection
 }
 
+func (Collection) Root() string {
+	return ""
+}
+
 func (ManifestCollection) Node() string {
 	return fmt.Sprintf("%s/%s", manifestCollection, nodeCollection)
 }
