@@ -78,7 +78,7 @@ func (di *Deployment) ToPods(obj *types.PodList) map[string]Pod {
 	pods := make(map[string]Pod, 0)
 	for _, p := range obj.Items {
 		if p.Meta.Namespace == di.Meta.Namespace && p.Meta.Service == di.Meta.Service && p.Meta.Deployment == di.Meta.Name {
-			pv := new(PodViewHelper)
+			pv := new(PodView)
 			pods[p.Meta.Name] = pv.New(p)
 		}
 	}

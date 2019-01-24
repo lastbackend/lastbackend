@@ -34,29 +34,27 @@ func (nv *EventView) New(obj *types.Event) *Event {
 
 	switch obj.Kind {
 	case types.KindNamespace:
-
-		ns := obj.Data.(*types.Namespace)
-		n.Payload = new(NamespaceView).New(ns)
-
+		n.Payload = new(NamespaceView).New(obj.Data.(*types.Namespace))
 	case types.KindService:
-		ns := obj.Data.(*types.Service)
-		n.Payload = new(ServiceView).New(ns)
-
+		n.Payload = new(ServiceView).New(obj.Data.(*types.Service))
 	case types.KindDeployment:
 		n.Payload = new(DeploymentView).New(obj.Data.(*types.Deployment), nil)
+	case types.KindPod:
+		n.Payload = new(PodView).New(obj.Data.(*types.Pod))
+	case types.KindRoute:
+		n.Payload = new(RouteView).New(obj.Data.(*types.Route))
 	case types.KindSecret:
 		n.Payload = new(SecretView).New(obj.Data.(*types.Secret))
 	case types.KindConfig:
 		n.Payload = new(ConfigView).New(obj.Data.(*types.Config))
 	case types.KindVolume:
 		n.Payload = new(VolumeView).New(obj.Data.(*types.Volume))
-	case types.KindRoute:
-		n.Payload = new(RouteView).New(obj.Data.(*types.Route))
-
 	case types.KindNode:
-		ns := obj.Data.(*types.Node)
-		n.Payload = new(NodeView).New(ns)
-
+		n.Payload = new(NodeView).New(obj.Data.(*types.Node))
+	case types.KindDiscovery:
+		n.Payload = new(DiscoveryView).New(obj.Data.(*types.Discovery))
+	case types.KindIngress:
+		n.Payload = new(IngressView).New(obj.Data.(*types.Ingress))
 	default:
 
 	}

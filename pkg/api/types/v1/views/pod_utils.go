@@ -22,9 +22,9 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 )
 
-type PodViewHelper struct{}
+type PodView struct{}
 
-func (pv *PodViewHelper) New(pod *types.Pod) Pod {
+func (pv *PodView) New(pod *types.Pod) Pod {
 	p := Pod{}
 	p.ID = pod.Meta.Name
 	p.Meta = p.toMeta(pod.Meta)
