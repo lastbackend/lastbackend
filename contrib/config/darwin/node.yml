@@ -1,0 +1,27 @@
+---
+# Runtime
+verbose: 3
+token: lstbknd
+
+#api:
+#  uri: "api.lbdp.io:2967"
+#  tls:
+#    insecure: true
+
+node:
+  host: 0.0.0.0
+  port: 2969
+  tls:
+    insecure: true
+
+# Runtime
+runtime:
+  docker:
+    version: 1.35
+  cri:
+    type: "docker"
+  iri:
+    type: "docker"
+  csi:
+    dir:
+      root: "/var/lib/lastbackend/"

@@ -69,7 +69,10 @@ func (c *Controller) Connect(ctx context.Context) error {
 	log.Info(opts.Info)
 
 	opts.Status = envs.Get().GetState().Node().Status
-	opts.Network = *envs.Get().GetNet().Info(ctx)
+	var network = envs.Get().GetNet()
+	if network != nil {
+		opts.Network = *envs.Get().GetNet().Info(ctx)
+	}
 
 	if viper.IsSet("node.tls") {
 		opts.TLS = !viper.GetBool("node.tls.insecure")

@@ -71,6 +71,7 @@ type PodMeta struct {
 type PodSpec struct {
 	Local    bool         `json:"local,omitempty"`
 	State    SpecState    `json:"state"`
+	Runtime  SpecRuntime  `json:"runtime"`
 	Selector SpecSelector `json:"selector"`
 	Template SpecTemplate `json:"template" yaml:"template"`
 }
@@ -95,8 +96,17 @@ type PodStatus struct {
 	Network PodNetwork `json:"network" yaml:"network"`
 	// Pod containers
 	Containers map[string]*PodContainer `json:"containers" yaml:"containers"`
+	// Pod containers
+	Tasks map[string]*PodStatusTask `json:"tasks" yaml:"tasks"`
 	// Pod volumes
 	Volumes map[string]*VolumeClaim `json:"volumes" yaml:"volumes"`
+}
+
+type PodStatusTask struct {
+	Status   string          `json:"status" yaml:"status"`
+	Error    bool            `json:"error" yaml:"error"`
+	Message  string          `json:"message" yaml:"message"`
+	Commands []*PodContainer `json:"commands" yaml:"commands"`
 }
 
 // PodSteps is a map of pod steps
@@ -174,13 +184,10 @@ type PodContainerState struct {
 	Restarted PodContainerStateRestarted `json:"restarted" yaml:"restarted"`
 	// Container create state
 	Created PodContainerStateCreated `json:"created" yaml:"created"`
-
 	// Container started state
 	Started PodContainerStateStarted `json:"started" yaml:"started"`
-
 	// Container stopped state
 	Stopped PodContainerStateStopped `json:"stopped" yaml:"stopped"`
-
 	// Container error state
 	Error PodContainerStateError `json:"error" yaml:"error"`
 }
@@ -303,9 +310,44 @@ func NewPodStatus() *PodStatus {
 	status := PodStatus{
 		Steps:      make(PodSteps, 0),
 		Containers: make(map[string]*PodContainer, 0),
+		Tasks:      make(map[string]*PodStatusTask, 0),
 		Volumes:    make(map[string]*VolumeClaim, 0),
 	}
 	return &status
+}
+
+func (s *PodStatus) AddTask(name string) *PodStatusTask {
+	pst := PodStatusTask{
+		Status:   StateCreated,
+		Error:    false,
+		Message:  EmptyString,
+		Commands: make([]*PodContainer, 0),
+	}
+
+	s.Tasks[name] = &pst
+	return &pst
+}
+
+func (s *PodStatusTask) SetCreated() {
+	s.Status = StateCreated
+	s.Error = false
+	s.Message = EmptyString
+}
+
+func (s *PodStatusTask) SetStarted() {
+	s.Status = StateStarted
+	s.Error = false
+	s.Message = EmptyString
+}
+
+func (s *PodStatusTask) SetExited(error bool, message string) {
+	s.Status = StateExited
+	s.Error = error
+	s.Message = message
+}
+
+func (s *PodStatusTask) AddTaskCommandContainer(c *PodContainer) {
+	s.Commands = append(s.Commands, c)
 }
 
 func (p *Pod) SelfLink() string {

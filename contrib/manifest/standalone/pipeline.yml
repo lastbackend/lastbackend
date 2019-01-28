@@ -1,0 +1,61 @@
+kind: Config
+version: v1
+meta:
+  name: docker
+spec:
+  type: file
+  data:
+    "auth": |
+      {
+        "auths": {
+          "index.lstbknd.net": {
+            "auth": ""
+          }
+        }
+      }
+
+---
+kind: Pod
+version: v1
+meta:
+  name: api
+  labels:
+    app: lastbackend
+    type: job
+spec:
+  runtime:
+    services: [dind]
+    tasks:
+      - name: "build"
+        container: "git"
+        commands:
+          - command: "docker build -t index.lstbknd.net/undassa/alpine github.com/undassa/alpine"
+      - name: "push"
+        container: "git"
+        commands:
+          - command: "docker push index.lstbknd.net/undassa/alpine"
+  template:
+    containers:
+      - name: dind
+        image:
+          name: docker:18.09.1-dind
+        restart:
+          policy: always
+        security:
+          privileged: true
+      - name: git
+        image:
+          name: docker:18.09.1-git
+        env:
+          - name: DOCKER_HOST
+            value: "tcp://127.0.0.1:2375"
+        volumes:
+          - name: config
+            path: "/root/.docker/"
+    volumes:
+      - name: config
+        config:
+          name: docker
+          binds:
+            - key: "auth"
+              file: "config.json"

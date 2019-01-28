@@ -77,6 +77,8 @@ func PodManage(ctx context.Context, key string, manifest *types.PodManifest) err
 	// Check containers pod status =============================================
 	//==========================================================================
 
+	log.Infof("tasks: %d", len(manifest.Runtime.Tasks))
+
 	// Get pod list from current state
 	p := envs.Get().GetState().Pods().GetPod(key)
 	if p != nil {
@@ -85,7 +87,7 @@ func PodManage(ctx context.Context, key string, manifest *types.PodManifest) err
 		podVolumeClaimRestore(key, manifest)
 
 		switch true {
-		case !PodSpecCheck(ctx, key, manifest):
+		case !PodSpecCheck(ctx, key, manifest) || len(manifest.Runtime.Tasks) > 0:
 			PodDestroy(ctx, key, p)
 			break
 		case !PodVolumesCheck(ctx, key, manifest.Template.Volumes):
@@ -290,103 +292,58 @@ func PodCreate(ctx context.Context, key string, manifest *types.PodManifest) (*t
 		}
 	}
 
-	var primary string
-	for _, s := range manifest.Template.Containers {
+	var (
+		primary  string
+		services = make([]*types.ContainerManifest, 0)
+	)
 
-		//==========================================================================
-		// Create container ========================================================
-		//==========================================================================
+	if len(manifest.Runtime.Services) == 0 {
+		for _, s := range manifest.Template.Containers {
+			m, err := containerManifestCreate(ctx, key, s)
+			if err != nil {
+				log.Errorf("%s can not create container manifest from spec: %s", logPodPrefix, err.Error())
+				return setError(err)
+			}
 
-		var (
-			c = new(types.PodContainer)
-		)
-
-		m, err := containerManifestCreate(ctx, key, s)
-		if err != nil {
-			log.Errorf("%s can not create container manifest from spec: %s", logPodPrefix, err.Error())
-			return setError(err)
+			services = append(services, m)
 		}
+	}
+
+	if len(manifest.Runtime.Services) != 0 {
+
+		for _, name := range manifest.Runtime.Services {
+			for _, s := range manifest.Template.Containers {
+
+				if s.Name != name {
+					continue
+				}
+
+				m, err := containerManifestCreate(ctx, key, s)
+				if err != nil {
+					log.Errorf("%s can not create container manifest from spec: %s", logPodPrefix, err.Error())
+					return setError(err)
+				}
+
+				services = append(services, m)
+			}
+		}
+
+	}
+
+	// run services
+	for _, svc := range services {
 
 		if primary != types.EmptyString {
-			m.Network.Mode = fmt.Sprintf("container:%s", primary)
+			svc.Network.Mode = fmt.Sprintf("container:%s", primary)
 		} else {
-			primary = m.Name
+			primary = svc.Name
 		}
 
-		c.ID, err = envs.Get().GetCRI().Create(ctx, m)
-		if err != nil {
-			switch err {
-			case context.Canceled:
-				log.Errorf("%s stop creating container: %s", logPodPrefix, err.Error())
-				PodClean(context.Background(), status)
-				return status, nil
-			}
-
-			log.Errorf("%s can-not create container: %s", logPodPrefix, err)
-			c.State.Error = types.PodContainerStateError{
-				Error:   true,
-				Message: err.Error(),
-				Exit: types.PodContainerStateExit{
-					Timestamp: time.Now().UTC(),
-				},
-			}
+		if err := serviceStart(ctx, key, svc, status); err != nil {
+			log.Errorf("%s can not start service: %s", logPodPrefix, err.Error())
 			return status, err
 		}
 
-		if err := containerInspect(context.Background(), status, c); err != nil {
-			log.Errorf("%s inspect container after create: err %s", logPodPrefix, err.Error())
-			PodClean(context.Background(), status)
-			return status, err
-		}
-
-		//==========================================================================
-		// Start container =========================================================
-		//==========================================================================
-
-		c.State.Created = types.PodContainerStateCreated{
-			Created: time.Now().UTC(),
-		}
-		status.Containers[c.ID] = c
-		envs.Get().GetState().Pods().SetPod(key, status)
-		log.V(logLevel).Debugf("%s container created: %s", logPodPrefix, c.ID)
-
-		if err := envs.Get().GetCRI().Start(ctx, c.ID); err != nil {
-
-			log.Errorf("%s can-not start container: %s", logPodPrefix, err)
-
-			switch err {
-			case context.Canceled:
-				log.Errorf("%s stop starting container err: %s", logPodPrefix, err.Error())
-				PodClean(context.Background(), status)
-				return status, nil
-			}
-
-			c.State.Error = types.PodContainerStateError{
-				Error:   true,
-				Message: err.Error(),
-				Exit: types.PodContainerStateExit{
-					Timestamp: time.Now().UTC(),
-				},
-			}
-
-			status.Containers[c.ID] = c
-			return status, err
-		}
-
-		log.V(logLevel).Debugf("%s container started: %s", logPodPrefix, c.ID)
-
-		if err := containerInspect(context.Background(), status, c); err != nil {
-			log.Errorf("%s inspect container after create: err %s", logPodPrefix, err.Error())
-			return status, err
-		}
-
-		c.Ready = true
-		c.State.Started = types.PodContainerStateStarted{
-			Started:   true,
-			Timestamp: time.Now().UTC(),
-		}
-		status.Containers[c.ID] = c
-		envs.Get().GetState().Pods().SetPod(key, status)
 	}
 
 	status.SetRunning()
@@ -396,6 +353,57 @@ func PodCreate(ctx context.Context, key string, manifest *types.PodManifest) (*t
 	}
 
 	envs.Get().GetState().Pods().SetPod(key, status)
+
+	// run tasks
+	for _, t := range manifest.Runtime.Tasks {
+		for _, s := range manifest.Template.Containers {
+
+			if s.Name != t.Container {
+				continue
+			}
+
+			spec := *s
+
+			if len(t.EnvVars) > 0 {
+				for _, te := range t.EnvVars {
+					var f = false
+					for _, se := range spec.EnvVars {
+						if te.Name == se.Name {
+							se.Value = te.Value
+							se.Secret = te.Secret
+							se.Config = te.Config
+							f = true
+						}
+					}
+					if !f {
+						spec.EnvVars = append(spec.EnvVars, te)
+					}
+				}
+			}
+
+			m, err := containerManifestCreate(ctx, key, &spec)
+			if primary != types.EmptyString {
+				m.Network.Mode = fmt.Sprintf("container:%s", primary)
+			}
+
+			if err != nil {
+				log.Errorf("%s can not create container manifest from spec: %s", logPodPrefix, err.Error())
+				return setError(err)
+			}
+
+			m.Name = ""
+			if err := taskExecute(ctx, key, t, *m, status); err != nil {
+				log.Errorf("%s can not execute task: %s", logPodPrefix, err.Error())
+				return setError(err)
+			}
+
+		}
+	}
+
+	if len(manifest.Runtime.Tasks) > 0 {
+		PodExit(ctx, key, status, true)
+	}
+
 	return status, nil
 }
 
@@ -410,12 +418,46 @@ func PodClean(ctx context.Context, status *types.PodStatus) {
 
 	for _, c := range status.Containers {
 		log.V(logLevel).Debugf("%s try to clean image: %s", logPodPrefix, c.Image.Name)
-		if err := ImageRemove(ctx, c.Image.Name); err != nil {
-			log.Errorf("%s can not remove image: %s", logPodPrefix, err.Error())
-			continue
-		}
+		//if err := ImageRemove(ctx, c.Image.Name); err != nil {
+		//	log.Errorf("%s can not remove image: %s", logPodPrefix, err.Error())
+		//	continue
+		//}
 	}
 
+}
+
+func PodExit(ctx context.Context, pod string, status *types.PodStatus, clean bool) {
+	log.V(logLevel).Debugf("%s exit pod: %s", logPodPrefix, pod)
+
+	timeout := time.Duration(3 * time.Second)
+	for _, c := range status.Containers {
+
+		var attempts = 5
+		for i := 1; i <= attempts; i++ {
+			if err := envs.Get().GetCRI().Stop(ctx, c.ID, &timeout); err != nil {
+				// TODO: check container not found error
+				log.Warnf("%s can-not stop container %s: %s", logPodPrefix, c.ID, err)
+				time.Sleep(1 * time.Second)
+				continue
+			}
+			break
+		}
+
+		c.State.Stopped = types.PodContainerStateStopped{
+			Stopped: true,
+			Exit: types.PodContainerStateExit{
+				Code:      0,
+				Timestamp: time.Now(),
+			},
+		}
+
+		envs.Get().GetState().Pods().SetPod(pod, status)
+	}
+
+	if clean {
+		PodClean(ctx, status)
+		return
+	}
 }
 
 func PodDestroy(ctx context.Context, pod string, status *types.PodStatus) {
