@@ -39,6 +39,25 @@ type ManifestSpecStrategy struct {
 	Type *string `json:"type,omitempty" yaml:"type,omitempty"`
 }
 
+type ManifestSpecRuntime struct {
+	Services []string                  `json:"services"`
+	Tasks    []ManifestSpecRuntimeTask `json:"tasks"`
+}
+
+type ManifestSpecRuntimeTask struct {
+	Name      string                             `json:"name"`
+	Container string                             `json:"container" yaml:"container"`
+	Env       []ManifestSpecTemplateContainerEnv `json:"env,omitempty" yaml:"env,omitempty"`
+	Commands  []ManifestSpecRuntimeTaskCommand   `json:"commands" yaml:"commands"`
+}
+
+type ManifestSpecRuntimeTaskCommand struct {
+	Command    string   `json:"command,omitempty" yaml:"command,omitempty"`
+	Workdir    string   `json:"workdir,omitempty" yaml:"workdir,omitempty"`
+	Entrypoint string   `json:"entrypoint,omitempty" yaml:"entrypoint,omitempty"`
+	Args       []string `json:"args,omitempty" yaml:"args,omitempty"`
+}
+
 type ManifestSpecTemplate struct {
 	Containers []ManifestSpecTemplateContainer `json:"containers,omitempty" yaml:"containers,omitempty"`
 	Volumes    []ManifestSpecTemplateVolume    `json:"volumes,omitempty" yaml:"volumes,omitempty"`
@@ -56,6 +75,7 @@ type ManifestSpecTemplateContainer struct {
 	Image         ManifestSpecTemplateContainerImage     `json:"image,omitempty" yaml:"image,omitempty"`
 	Resources     ManifestSpecTemplateContainerResources `json:"resources,omitempty" yaml:"resources,omitempty"`
 	RestartPolicy ManifestSpecTemplateRestartPolicy      `json:"restart,omitempty" yaml:"restart,omitempty"`
+	Security      ManifestSpecSecurity                   `json:"security,omitempty" yaml:"security,omitempty"`
 }
 
 type ManifestSpecTemplateContainerEnv struct {
@@ -152,6 +172,10 @@ type ManifestSpecTemplateRestartPolicy struct {
 	Attempt int    `json:"attempt,omitempty" yaml:"attempt"`
 }
 
+type ManifestSpecSecurity struct {
+	Privileged bool `json:"privileged"`
+}
+
 func (m ManifestSpecSelector) GetSpec() types.SpecSelector {
 	s := types.SpecSelector{}
 
@@ -172,6 +196,59 @@ func (m ManifestSpecTemplate) GetSpec() types.SpecTemplate {
 	for _, t := range m.Volumes {
 		sp := t.GetSpec()
 		s.Volumes = append(s.Volumes, &sp)
+	}
+
+	return s
+}
+
+func (m ManifestSpecRuntime) GetSpec() types.SpecRuntime {
+	var s = types.SpecRuntime{}
+
+	s.Services = m.Services
+
+	for _, t := range m.Tasks {
+		ts := t.GetSpec()
+		s.Tasks = append(s.Tasks, ts)
+	}
+
+	return s
+}
+
+func (m ManifestSpecRuntimeTask) GetSpec() types.SpecRuntimeTask {
+	s := types.SpecRuntimeTask{}
+
+	s.Name = m.Name
+	s.Container = m.Container
+
+	for _, e := range m.Env {
+		s.EnvVars = append(s.EnvVars, &types.SpecTemplateContainerEnv{
+			Name:  e.Name,
+			Value: e.Value,
+			Secret: types.SpecTemplateContainerEnvSecret{
+				Name: e.Secret.Name,
+				Key:  e.Secret.Key,
+			},
+			Config: types.SpecTemplateContainerEnvConfig{
+				Name: e.Config.Name,
+				Key:  e.Config.Key,
+			},
+		})
+	}
+
+	for _, c := range m.Commands {
+		cmd := types.SpecTemplateContainerExec{}
+
+		if c.Command != types.EmptyString {
+			cmd.Command = strings.Split(c.Command, " ")
+		}
+		cmd.Args = c.Args
+		cmd.Workdir = c.Workdir
+
+		if c.Entrypoint != types.EmptyString {
+			cmd.Entrypoint = strings.Split(c.Entrypoint, " ")
+		}
+
+		s.Commands = append(s.Commands, cmd)
 	}
 
 	return s
@@ -219,10 +296,15 @@ func (m ManifestSpecTemplateContainer) GetSpec() types.SpecTemplateContainer {
 	s.RestartPolicy.Policy = m.RestartPolicy.Policy
 	s.RestartPolicy.Attempt = m.RestartPolicy.Attempt
 
-	s.Exec.Command = strings.Split(m.Command, " ")
+	if m.Command != types.EmptyString {
+		s.Exec.Command = strings.Split(m.Command, " ")
+	}
 	s.Exec.Args = m.Args
 	s.Exec.Workdir = m.Workdir
-	s.Exec.Entrypoint = strings.Split(m.Entrypoint, " ")
+
+	if m.Entrypoint != types.EmptyString {
+		s.Exec.Entrypoint = strings.Split(m.Entrypoint, " ")
+	}
 
 	for _, p := range m.Ports {
 		port := new(types.SpecTemplateContainerPort)
@@ -248,11 +330,23 @@ func (m ManifestSpecTemplateContainer) GetSpec() types.SpecTemplateContainer {
 	s.Image.Name = m.Image.Name
 	s.Image.Secret = m.Image.Secret
 
-	s.Resources.Request.RAM, _ = resource.DecodeMemoryResource(m.Resources.Request.RAM)
-	s.Resources.Request.CPU, _ = resource.DecodeCpuResource(m.Resources.Request.CPU)
+	s.Security.Privileged = m.Security.Privileged
 
-	s.Resources.Limits.RAM, _ = resource.DecodeMemoryResource(m.Resources.Limits.RAM)
-	s.Resources.Limits.CPU, _ = resource.DecodeCpuResource(m.Resources.Limits.CPU)
+	if m.Resources.Request.RAM != types.EmptyString {
+		s.Resources.Request.RAM, _ = resource.DecodeMemoryResource(m.Resources.Request.RAM)
+	}
+
+	if m.Resources.Request.CPU != types.EmptyString {
+		s.Resources.Request.CPU, _ = resource.DecodeCpuResource(m.Resources.Request.CPU)
+	}
+
+	if m.Resources.Limits.RAM != types.EmptyString {
+		s.Resources.Limits.RAM, _ = resource.DecodeMemoryResource(m.Resources.Limits.RAM)
+	}
+
+	if m.Resources.Limits.CPU != types.EmptyString {
+		s.Resources.Limits.CPU, _ = resource.DecodeCpuResource(m.Resources.Limits.CPU)
+	}
 
 	for _, v := range m.Volumes {
 

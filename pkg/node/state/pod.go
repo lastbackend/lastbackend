@@ -26,7 +26,7 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/log"
 )
 
-const logPodPrefix = "state:pods:>"
+const logPodPrefix = "node:state:pods:>"
 
 type PodState struct {
 	lock       sync.RWMutex

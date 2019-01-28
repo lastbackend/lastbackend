@@ -1,0 +1,21 @@
+---
+# Runtime
+verbose: 3
+token: lstbknd
+api:
+  uri: "api.lbdp.io:2967"
+  tls:
+    insecure: true
+    ca: "/opt/cert/lastbackend/ca.pem"
+    cert: "/opt/cert/lastbackend/client.pem"
+    key: "/opt/cert/lastbackend/client-key.pem"
+
+haproxy:
+  stats:
+    username: "lastbackend"
+    password: "password"
+  path: "/var/run/lastbackend/ingress/haproxy"
+  exec: "/usr/sbin/haproxy"
+  pid: "/var/run/lastbackend/ingress/haproxy.pid"
+
+# Runtime

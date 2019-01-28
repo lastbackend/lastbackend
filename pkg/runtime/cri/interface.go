@@ -38,5 +38,6 @@ type CRI interface {
 	Inspect(ctx context.Context, ID string) (*types.Container, error)
 	Logs(ctx context.Context, ID string, stdout, stderr, follow bool) (io.ReadCloser, error)
 	Copy(ctx context.Context, ID, path string, content io.Reader) error
+	Wait(ctx context.Context, ID string) error
 	Subscribe(ctx context.Context, container chan *types.Container) error
 }

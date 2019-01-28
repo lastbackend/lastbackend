@@ -36,6 +36,22 @@ type SpecState struct {
 	Maintenance bool `json:"maintenance"`
 }
 
+// SpecRuntime is a runtime of the spec
+// swagger:model types_spec_runtime
+type SpecRuntime struct {
+	Services []string          `json:"services"`
+	Tasks    []SpecRuntimeTask `json:"tasks"`
+}
+
+// SpecRuntimeTask is a runtime task to execute in runtime
+// swagger:model types_spec_runtime_task
+type SpecRuntimeTask struct {
+	Name      string                      `json:"name"`
+	Container string                      `json:"container" yaml:"container"`
+	EnvVars   SpecTemplateContainerEnvs   `json:"env" yaml:"env"`
+	Commands  []SpecTemplateContainerExec `json:"commands" yaml:"commands"`
+}
+
 // SpecTemplate is a template of the spec
 // swagger:model types_spec_template
 type SpecTemplate struct {

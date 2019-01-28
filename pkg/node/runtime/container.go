@@ -72,7 +72,6 @@ func containerSubscribe(ctx context.Context) error {
 
 		container := state.GetContainer(c.ID)
 		if container == nil {
-			log.V(logLevel).Debugf("Container not found")
 			continue
 		}
 
@@ -235,13 +234,14 @@ func containerManifestCreate(ctx context.Context, pod string, spec *types.SpecTe
 	// TODO: Add dns search option only for LB domains
 
 	net := envs.Get().GetNet()
+	if net != nil {
+		if net.GetResolverIP() != types.EmptyString {
+			mf.DNS.Server = append(mf.DNS.Server, net.GetResolverIP())
+		}
 
-	if net.GetResolverIP() != types.EmptyString {
-		mf.DNS.Server = append(mf.DNS.Server, net.GetResolverIP())
-	}
-
-	if len(net.GetExternalDNS()) != 0 {
-		mf.DNS.Server = append(mf.DNS.Server, net.GetExternalDNS()...)
+		if len(net.GetExternalDNS()) != 0 {
+			mf.DNS.Server = append(mf.DNS.Server, net.GetExternalDNS()...)
+		}
 	}
 
 	return mf, nil

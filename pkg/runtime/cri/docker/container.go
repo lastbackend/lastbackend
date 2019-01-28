@@ -21,6 +21,7 @@ package docker
 import (
 	"context"
 	docker "github.com/docker/docker/api/types"
+	"github.com/docker/docker/api/types/container"
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 	"github.com/lastbackend/lastbackend/pkg/log"
 	"io"
@@ -122,13 +123,13 @@ func (r *Runtime) Inspect(ctx context.Context, ID string) (*types.Container, err
 
 	container := &types.Container{
 		ID:       info.ID,
-		Name:     strings.Replace(info.Name,"/","",1),
+		Name:     strings.Replace(info.Name, "/", "", 1),
 		Image:    info.Config.Image,
 		Status:   info.State.Status,
 		ExitCode: info.State.ExitCode,
 		Labels:   info.Config.Labels,
-		Envs: info.Config.Env,
-		Binds: info.HostConfig.Binds,
+		Envs:     info.Config.Env,
+		Binds:    info.HostConfig.Binds,
 	}
 
 	container.Exec.Command = info.Config.Cmd
@@ -147,9 +148,9 @@ func (r *Runtime) Inspect(ctx context.Context, ID string) (*types.Container, err
 		for _, port := range val {
 
 			p := &types.SpecTemplateContainerPort{
-				HostIP: port.HostIP,
+				HostIP:        port.HostIP,
 				ContainerPort: uint16(key.Int()),
-				Protocol: key.Proto(),
+				Protocol:      key.Proto(),
 			}
 
 			var base = 10
@@ -192,6 +193,16 @@ func (r *Runtime) Inspect(ctx context.Context, ID string) (*types.Container, err
 	container.Labels = info.Config.Labels
 
 	return container, nil
+}
+
+func (r *Runtime) Wait(ctx context.Context, ID string) error {
+	ok, err := r.client.ContainerWait(ctx, ID, container.WaitConditionNotRunning)
+	select {
+	case <-ok:
+		return nil
+	case e := <-err:
+		return e
+	}
 }
 
 // Copy - https://docs.docker.com/engine/api/v1.29/#operation/PutContainerArchive
