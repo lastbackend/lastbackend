@@ -2,7 +2,7 @@
 // Last.Backend LLC CONFIDENTIAL
 // __________________
 //
-// [2014] - [2019] Last.Backend LLC
+// [2014] - [2018] Last.Backend LLC
 // All Rights Reserved.
 //
 // NOTICE:  All information contained herein is, and remains
@@ -18,24 +18,6 @@
 
 package types
 
-const logLevel = 3
-
-const (
-	DEFAULT_RESOURCE_LIMITS_RAM = "128mib"
-	DEFAULT_RESOURCE_LIMITS_CPU = "0.1"
-
-	DEFAULT_MEMORY_MIN        = 128
-	DEFAULT_REPLICAS_MIN      = 1
-	DEFAULT_DESCRIPTION_LIMIT = 512
-
-	KindSecret     = "secret"
-	KindRoute      = "route"
-	KindNamespace  = "namespace"
-	KindService    = "service"
-	KindDeployment = "deployment"
-	KindJob        = "job"
-	KindPod        = "pod"
-	KindEndpoint   = "endpoint"
-	KindConfig     = "config"
-	KindVolume     = "volume"
-)
+type Job struct {
+	Runtime
+}

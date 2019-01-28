@@ -101,8 +101,8 @@ type NodeSecurity struct {
 type NodeResources struct {
 	Containers int   `json:"containers"`
 	Pods       int   `json:"pods"`
-	Memory     int64 `json:"memory"`
-	Cpu        int   `json:"cpu"`
+	Memory     int64 `json:"ram"`
+	CPU        int   `json:"cpu"`
 	Storage    int64 `json:"storage"`
 }
 

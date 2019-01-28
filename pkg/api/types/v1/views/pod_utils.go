@@ -22,9 +22,9 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 )
 
-type PodViewHelper struct{}
+type PodView struct{}
 
-func (pv *PodViewHelper) New(pod *types.Pod) Pod {
+func (pv *PodView) New(pod *types.Pod) Pod {
 	p := Pod{}
 	p.ID = pod.Meta.Name
 	p.Meta = p.toMeta(pod.Meta)
@@ -56,8 +56,8 @@ func (pv *Pod) toSpec(pod types.PodSpec) PodSpec {
 			Maintenance: pod.State.Maintenance,
 		},
 		Template: PodSpecTemplate{
-			Containers:  pod.Template.Containers,
-			Volumes:     pod.Template.Volumes,
+			Containers:  new(SpecView).NewSpecTemplateContainers(pod.Template.Containers),
+			Volumes:     new(SpecView).NewSpecTemplateVolumes(pod.Template.Volumes),
 			Termination: pod.Template.Termination,
 		},
 	}

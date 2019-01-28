@@ -19,15 +19,13 @@
 package events
 
 import (
-	"net/http"
-
-	"time"
-
-	"github.com/gorilla/websocket"
 	"github.com/lastbackend/lastbackend/pkg/api/envs"
 	"github.com/lastbackend/lastbackend/pkg/api/types/v1"
-	"github.com/lastbackend/lastbackend/pkg/distribution"
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
+	"github.com/lastbackend/lastbackend/pkg/util/socket"
+	"net/http"
+
+	"github.com/gorilla/websocket"
 	"github.com/lastbackend/lastbackend/pkg/log"
 )
 
@@ -44,13 +42,6 @@ var upgrader = websocket.Upgrader{
 	},
 }
 
-type Event struct {
-	Entity string      `json:"entity"`
-	Action string      `json:"action"`
-	Name   string      `json:"name"`
-	Data   interface{} `json:"data"`
-}
-
 //EventSubscribeH - realtime subscribe handler
 func EventSubscribeH(w http.ResponseWriter, r *http.Request) {
 
@@ -64,10 +55,9 @@ func EventSubscribeH(w http.ResponseWriter, r *http.Request) {
 	log.V(logLevel).Debugf("%s:subscribe:> watch all events", logPrefix)
 
 	var (
-		sm   = distribution.NewServiceModel(r.Context(), envs.Get().GetStorage())
-		nm   = distribution.NewNamespaceModel(r.Context(), envs.Get().GetStorage())
-		cm   = distribution.NewClusterModel(r.Context(), envs.Get().GetStorage())
-		done = make(chan bool, 1)
+		done  = make(chan bool, 1)
+		leave = make(chan *socket.Socket)
+		event = make(chan *socket.Message)
 	)
 
 	conn, err := upgrader.Upgrade(w, r, nil)
@@ -76,103 +66,39 @@ func EventSubscribeH(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	ticker := time.NewTicker(time.Second)
-	defer ticker.Stop()
+	skt := socket.NewSocket(r.Context(), conn, leave, event)
 
-	var serviceEvents = make(chan types.ServiceEvent)
-	var namespaceEvents = make(chan types.NamespaceEvent)
-	var clusterEvents = make(chan types.ClusterEvent)
-
-	notify := w.(http.CloseNotifier).CloseNotify()
-
-	go func() {
-		<-notify
-		log.V(logLevel).Debugf("%s:subscribe:> HTTP connection just closed.", logPrefix)
-		done <- true
-	}()
+	var (
+		es = make(chan *types.Event)
+	)
 
 	go func() {
 		for {
 			select {
-			case <-done:
-				close(serviceEvents)
-				close(namespaceEvents)
-				close(clusterEvents)
-				return
-			case e := <-clusterEvents:
 
-				var data interface{}
-				if e.Data == nil {
-					data = nil
-				} else {
-					data = v1.View().Cluster().New(e.Data)
-				}
-
-				event := Event{
-					Entity: "cluster",
-					Action: e.Action,
-					Name:   e.Name,
-					Data:   data,
-				}
-
-				if err = conn.WriteJSON(event); err != nil {
-					log.Errorf("%s:subscribe:> write cluster event to socket error.", logPrefix)
-				}
-			case e := <-serviceEvents:
-
-				var data interface{}
-				if e.Data == nil {
-					data = nil
-				} else {
-					data = v1.View().Service().New(e.Data)
-				}
-
-				event := Event{
-					Entity: "service",
-					Action: e.Action,
-					Name:   e.Name,
-					Data:   data,
-				}
-
-				if err = conn.WriteJSON(event); err != nil {
-					log.Errorf("%s:subscribe:> write service event to socket error.", logPrefix)
-				}
-			case e := <-namespaceEvents:
-
-				var data interface{}
-				if e.Data == nil {
-					data = nil
-				} else {
-					data = v1.View().Namespace().New(e.Data)
-				}
-
-				event := Event{
-					Entity: "namespace",
-					Action: e.Action,
-					Name:   e.Name,
-					Data:   data,
-				}
-
-				if err = conn.WriteJSON(event); err != nil {
-					log.Errorf("%s:subscribe:> write namespace event to socket error.", logPrefix)
-				}
-			}
-		}
-	}()
-
-	go cm.Watch(clusterEvents)
-	go sm.Watch(serviceEvents, nil)
-	go nm.Watch(namespaceEvents)
-
-	go func() {
-		for range ticker.C {
-			if err := conn.WriteMessage(websocket.TextMessage, []byte{}); err != nil {
-				log.Errorf("%s:subscribe:> writing to the client websocket err: %s", logPrefix, err.Error())
+			case <-leave:
 				done <- true
-				break
+				close(es)
+				return
+
+			case _ = <-skt.Read():
+				{
+
+				}
+
+			case e := <-es:
+
+				event := v1.View().Event().New(e)
+				msg, err := event.ToJson()
+				if err != nil {
+					log.Errorf("err: %s", err.Error())
+					continue
+				}
+
+				skt.Write(msg)
 			}
 		}
 	}()
 
-	<-done
+	envs.Get().GetMonitor().Subscribe(es, done)
 }

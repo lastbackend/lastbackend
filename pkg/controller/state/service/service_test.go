@@ -1118,7 +1118,7 @@ func TestServiceStatusState(t *testing.T) {
 		dp1 := getDeploymentAsset(svc, types.StateReady, types.EmptyString)
 		dp2 := getDeploymentAsset(svc, types.StateError, types.EmptyString)
 		dp2.Spec.Template.Containers[0].Name = "changed"
-		dp2.Spec.Template.Updated.Add(3*time.Second)
+		dp2.Spec.Template.Updated.Add(3 * time.Second)
 
 		s.args.state = getServiceStateAsset(svc)
 		s.args.state.deployment.active = dp1
@@ -1300,8 +1300,8 @@ func getServiceStateAsset(svc *types.Service) *ServiceState {
 	n.Status.Capacity = types.NodeResources{
 		Containers: 10,
 		Pods:       10,
-		Memory:     1000,
-		Cpu:        1,
+		RAM:        1000,
+		CPU:        1,
 		Storage:    1000,
 	}
 	n.SelfLink()

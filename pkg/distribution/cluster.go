@@ -51,7 +51,7 @@ func (c *Cluster) Get() (*types.Cluster, error) {
 	if err != nil {
 		if errors.Storage().IsErrEntityNotFound(err) {
 			log.V(logLevel).Warnf("%s:get:> cluster not found", logClusterPrefix)
-			return nil, nil
+			return cluster, nil
 		}
 
 		log.V(logLevel).Errorf("%s:get:> get cluster err: %v", logClusterPrefix, err)
@@ -59,6 +59,20 @@ func (c *Cluster) Get() (*types.Cluster, error) {
 	}
 
 	return cluster, nil
+}
+
+func (c *Cluster) Set(cluster *types.Cluster) error {
+
+	log.V(logLevel).Debugf("%s:set:> update Cluster %#v", logClusterPrefix, cluster)
+	opts := storage.GetOpts()
+	opts.Force = true
+
+	if err := c.storage.Set(c.context, c.storage.Collection().Cluster(), types.EmptyString, cluster, opts); err != nil {
+		log.V(logLevel).Errorf("%s:set:> update Cluster err: %v", logClusterPrefix, err)
+		return err
+	}
+
+	return nil
 }
 
 // Watch cluster changes

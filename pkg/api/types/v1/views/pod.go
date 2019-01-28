@@ -20,8 +20,6 @@ package views
 
 import (
 	"time"
-
-	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 )
 
 // swagger:model views_pod
@@ -84,9 +82,9 @@ type PodSpecState struct {
 // swagger:model views_pod_spec_template
 type PodSpecTemplate struct {
 	// Template Volume
-	Volumes types.SpecTemplateVolumeList `json:"volumes"`
+	Volumes SpecTemplateVolumeList `json:"volumes"`
 	// Template main container
-	Containers types.SpecTemplateContainers `json:"containers"`
+	Containers SpecTemplateContainers `json:"containers"`
 	// Termination period
 	Termination int `json:"termination"`
 }
