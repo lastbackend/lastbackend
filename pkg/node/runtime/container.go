@@ -28,7 +28,7 @@ import (
 	"time"
 )
 
-func containerInspect(ctx context.Context, status *types.PodStatus, container *types.PodContainer) error {
+func containerInspect(ctx context.Context, container *types.PodContainer) error {
 	info, err := envs.Get().GetCRI().Inspect(ctx, container.ID)
 	if err != nil {
 		switch err {
@@ -38,23 +38,16 @@ func containerInspect(ctx context.Context, status *types.PodStatus, container *t
 		}
 		log.Errorf("Can-not inspect container: %v", err)
 		return err
-	} else {
-		container.Image = types.PodContainerImage{
-			Name: info.Image,
-		}
-		if info.Status == types.StatusStopped {
-			container.State.Stopped = types.PodContainerStateStopped{
-				Stopped: true,
-				Exit: types.PodContainerStateExit{
-					Code:      info.ExitCode,
-					Timestamp: time.Now().UTC(),
-				},
-			}
-		}
 	}
 
-	if status.Network.PodIP == "" {
-		status.Network.PodIP = info.Network.IPAddress
+	container.Pod = info.Pod
+	container.Name = info.Name
+	container.Exec = info.Exec
+	container.Envs = info.Envs
+	container.Binds = info.Binds
+
+	container.Image = types.PodContainerImage{
+		Name: info.Image,
 	}
 
 	return nil

@@ -148,6 +148,11 @@ func taskExecute(ctx context.Context, pod string, task types.SpecRuntimeTask, m 
 			return taskCommandFinish(ctx, &c)
 		}
 
+		if err := containerInspect(context.Background(), &c); err != nil {
+			log.Errorf("%s inspect container after create: err %s", logServicePrefix, err.Error())
+			return err
+		}
+
 		c.Ready = true
 		c.State.Stopped = types.PodContainerStateStopped{
 			Stopped: true,

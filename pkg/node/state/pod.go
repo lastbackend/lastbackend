@@ -203,6 +203,8 @@ func state(s *types.PodStatus) {
 	var ems string
 
 	switch s.State {
+	case types.StateExited:
+		return
 	case types.StateDestroyed:
 		return
 	case types.StateError:
