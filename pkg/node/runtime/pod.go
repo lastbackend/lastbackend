@@ -260,7 +260,7 @@ func PodCreate(ctx context.Context, key string, manifest *types.PodManifest) (*t
 		envs.Get().GetState().Pods().SetPod(key, status)
 	}
 
-	log.V(logLevel).Debugf("%s have %d containers", logPodPrefix, len(manifest.Template.Containers))
+	log.V(logLevel).Debugf("%s have %d images", logPodPrefix, len(manifest.Template.Containers))
 	for _, c := range manifest.Template.Containers {
 		log.V(logLevel).Debugf("%s pull images for pod if needed", logPodPrefix)
 		if err := ImagePull(ctx, namespace, &c.Image); err != nil {
@@ -418,10 +418,10 @@ func PodClean(ctx context.Context, status *types.PodStatus) {
 
 	for _, c := range status.Containers {
 		log.V(logLevel).Debugf("%s try to clean image: %s", logPodPrefix, c.Image.Name)
-		//if err := ImageRemove(ctx, c.Image.Name); err != nil {
-		//	log.Errorf("%s can not remove image: %s", logPodPrefix, err.Error())
-		//	continue
-		//}
+		if err := ImageRemove(ctx, c.Image.Name); err != nil {
+			log.Errorf("%s can not remove image: %s", logPodPrefix, err.Error())
+			continue
+		}
 	}
 
 }
@@ -450,9 +450,15 @@ func PodExit(ctx context.Context, pod string, status *types.PodStatus, clean boo
 				Timestamp: time.Now(),
 			},
 		}
-
-		envs.Get().GetState().Pods().SetPod(pod, status)
 	}
+
+	status.Steps[types.StateExited] = types.PodStep{
+		Ready:     true,
+		Timestamp: time.Now(),
+	}
+
+	status.SetExited()
+	envs.Get().GetState().Pods().SetPod(pod, status)
 
 	if clean {
 		PodClean(ctx, status)

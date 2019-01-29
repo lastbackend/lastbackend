@@ -37,7 +37,6 @@ func serviceStart(ctx context.Context, pod string, m *types.ContainerManifest, s
 		c   = new(types.PodContainer)
 	)
 
-	status.Containers[c.ID] = c
 	c.ID, err = envs.Get().GetCRI().Create(ctx, m)
 	if err != nil {
 		switch err {
@@ -57,7 +56,9 @@ func serviceStart(ctx context.Context, pod string, m *types.ContainerManifest, s
 		return err
 	}
 
-	if err := containerInspect(context.Background(), status, c); err != nil {
+	status.Containers[c.ID] = c
+
+	if err := containerInspect(context.Background(), c); err != nil {
 		log.Errorf("%s inspect container after create: err %s", logServicePrefix, err.Error())
 		PodClean(context.Background(), status)
 		return err
@@ -97,7 +98,7 @@ func serviceStart(ctx context.Context, pod string, m *types.ContainerManifest, s
 
 	log.V(logLevel).Debugf("%s container started: %s", logServicePrefix, c.ID)
 
-	if err := containerInspect(context.Background(), status, c); err != nil {
+	if err := containerInspect(context.Background(), c); err != nil {
 		log.Errorf("%s inspect container after create: err %s", logServicePrefix, err.Error())
 		return err
 	}
@@ -108,8 +109,22 @@ func serviceStart(ctx context.Context, pod string, m *types.ContainerManifest, s
 		Timestamp: time.Now().UTC(),
 	}
 
-	envs.Get().GetState().Pods().SetPod(pod, status)
+	info, err := envs.Get().GetCRI().Inspect(ctx, c.ID)
+	if err != nil {
+		switch err {
+		case context.Canceled:
+			log.Errorf("Stop inspect container err: %v", err)
+			return nil
+		}
+		log.Errorf("Can-not inspect container: %v", err)
+		return err
+	}
 
+	if status.Network.PodIP == "" {
+		status.Network.PodIP = info.Network.IPAddress
+	}
+
+	envs.Get().GetState().Pods().SetPod(pod, status)
 	return nil
 }
 

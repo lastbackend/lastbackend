@@ -235,6 +235,13 @@ func (s *PodStatus) SetInitialized() {
 	s.Message = EmptyString
 }
 
+func (s *PodStatus) SetExited() {
+	s.State = StateExited
+	s.Status = StateExited
+	s.Running = false
+	s.Message = EmptyString
+}
+
 func (s *PodStatus) SetDestroy() {
 	s.State = StateDestroy
 }
