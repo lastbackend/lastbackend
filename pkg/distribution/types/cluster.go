@@ -65,7 +65,7 @@ type ClusterResources struct {
 	Containers int   `json:"containers"`
 	Pods       int   `json:"pods"`
 	RAM        int64 `json:"ram"`
-	CPU        int   `json:"cpu"`
+	CPU        int64 `json:"cpu"`
 	Storage    int64 `json:"storage"`
 }
 

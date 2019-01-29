@@ -155,7 +155,7 @@ type NodeResources struct {
 	// Node total memory
 	RAM int64 `json:"ram"`
 	// Node total cpu
-	CPU int `json:"cpu"`
+	CPU int64 `json:"cpu"`
 	// Node storage
 	Storage int64 `json:"storage"`
 }

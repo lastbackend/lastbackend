@@ -44,7 +44,6 @@ func clusterStatusState(cs *ClusterState) error {
 		cs.cluster.Status.Capacity.Storage += n.Status.Capacity.Storage
 		cs.cluster.Status.Capacity.Containers += n.Status.Capacity.Containers
 		cs.cluster.Status.Capacity.Pods += n.Status.Capacity.Pods
-
 	}
 
 	if err := distribution.NewClusterModel(context.Background(), envs.Get().GetStorage()).Set(cs.cluster); err != nil {
