@@ -81,11 +81,6 @@ func EventSubscribeH(w http.ResponseWriter, r *http.Request) {
 				close(es)
 				return
 
-			case _ = <-skt.Read():
-				{
-
-				}
-
 			case e := <-es:
 
 				event := v1.View().Event().New(e)

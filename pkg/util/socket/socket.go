@@ -36,7 +36,6 @@ type Socket struct {
 	session string
 
 	write chan []byte
-	read  chan []byte
 
 	event chan *Message
 
@@ -154,8 +153,6 @@ func (s *Socket) listen() {
 			if s.event != nil {
 				s.event <- &Message{Data: b, Socket: s}
 			}
-
-			s.read <- b
 		}
 	}()
 
@@ -211,10 +208,6 @@ func (s *Socket) disconnect() error {
 
 func (s *Socket) Write(msg []byte) {
 	s.write <- msg
-}
-
-func (s *Socket) Read() chan []byte {
-	return s.read
 }
 
 func (s *Socket) Context() context.Context {

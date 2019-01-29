@@ -131,7 +131,7 @@ func (m *Monitor) Watch(ctx context.Context, stg storage.Storage, rev *int64) er
 					res.Data = entity
 				case types.KindPod:
 					res.Kind = types.KindPod
-					entity := new(types.Deployment)
+					entity := new(types.Pod)
 					if err := json.Unmarshal(e.Data.([]byte), entity); err != nil {
 						log.Errorf("%s:> parse data err: %v", logMonitorPrefix, err)
 						continue
