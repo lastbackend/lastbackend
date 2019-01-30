@@ -133,7 +133,7 @@ func TestClusterInfo(t *testing.T) {
 				err := json.Unmarshal(body, &s)
 				assert.NoError(t, err)
 
-				assert.Equal(t, tc.want.Status.Capacity.Memory, s.Status.Capacity.Memory, "memory not equal")
+				assert.Equal(t, tc.want.Status.Capacity.RAM, s.Status.Capacity.RAM, "memory not equal")
 			}
 		})
 	}

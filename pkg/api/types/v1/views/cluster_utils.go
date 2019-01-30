@@ -62,14 +62,14 @@ func (cv *ClusterView) ToClusterStatus(status types.ClusterStatus) ClusterStatus
 		Capacity: ClusterResources{
 			Containers: status.Capacity.Containers,
 			Pods:       status.Capacity.Pods,
-			Memory:     resource.EncodeMemoryResource(status.Capacity.RAM),
+			RAM:        resource.EncodeMemoryResource(status.Capacity.RAM),
 			Cpu:        resource.EncodeCpuResource(status.Capacity.CPU),
 			Storage:    resource.EncodeMemoryResource(status.Capacity.Storage),
 		},
 		Allocated: ClusterResources{
 			Containers: status.Allocated.Containers,
 			Pods:       status.Allocated.Pods,
-			Memory:     resource.EncodeMemoryResource(status.Allocated.RAM),
+			RAM:        resource.EncodeMemoryResource(status.Allocated.RAM),
 			Cpu:        resource.EncodeCpuResource(status.Allocated.CPU),
 			Storage:    resource.EncodeMemoryResource(status.Allocated.Storage),
 		},

@@ -61,8 +61,8 @@ type ClusterResources struct {
 	Containers int `json:"containers"`
 	// number of pods
 	Pods int `json:"pods"`
-	// volume size
-	Memory string `json:"memory"`
+	// ram size
+	RAM string `json:"ram"`
 	// cpu  size
 	Cpu string `json:"cpu"`
 	// storage size
