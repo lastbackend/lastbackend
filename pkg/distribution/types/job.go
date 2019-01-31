@@ -18,25 +18,30 @@
 
 package types
 
+import (
+	"fmt"
+	"time"
+)
+
 const (
 	DEFAULT_JOB_MEMORY      int64 = 128
 	DEFAULT_JOB_PARALLELISM int   = 1
 )
 
 type Job struct {
-	Runtime
+	System
 	Meta   JobMeta   `json:"meta"`
 	Status JobStatus `json:"status"`
 	Spec   JobSpec   `json:"spec"`
 }
 
 type JobMap struct {
-	Runtime
+	System
 	Items map[string]*Job
 }
 
 type JobList struct {
-	Runtime
+	System
 	Items []*Job
 }
 
@@ -47,39 +52,88 @@ type JobMeta struct {
 }
 
 type JobStatus struct {
+	State   string         `json:"state"`
+	Message string         `json:"message"`
+	Stats   JobStatusStats `json:"stats"`
+	Updated time.Time      `json:"updated"`
+}
+
+type JobStatusStats struct {
+	Total        int       `json:"total"`
+	Active       int       `json:"active"`
+	Successful   int       `json:"successful"`
+	Failed       int       `json:"failed"`
+	LastSchedule time.Time `json:"last_schedule"`
 }
 
 type JobSpec struct {
+	Enabled     bool               `json:"enabled"`
+	Schedule    string             `json:"schedule"`
+	Template    SpecTemplate       `json:"template"`
+	Concurrency JobSpecConcurrency `json:"concurrency"`
+	Remote      JobSpecRemote      `json:"remote"`
 }
 
-type JobSpecTemplate struct {
+type JobSpecConcurrency struct {
+	Limit    int    `json:"limit"`
+	Strategy string `json:"strategy"`
 }
 
-type JobRunner struct {
-	Runtime
-	Meta   JobRunnerMeta   `json:"meta"`
-	Status JobRunnerStatus `json:"status"`
-	Spec   JobRunnerSpec   `json:"spec"`
+type JobSpecRemote struct {
+	Timeout  int                  `json:"timeout"`
+	Request  JobSpecRemoteRequest `json:"request"`
+	Response JobSpecRemoteRequest `json:"response"`
 }
 
-type JobRunnerMap struct {
-	Runtime
-	Items map[string]*JobRunner
+type JobSpecRemoteRequest struct {
+	Endpoint string            `json:"endpoint"`
+	Headers  map[string]string `json:"headers"`
+	Method   string            `json:"method"`
 }
 
-type JobRunnerList struct {
-	Runtime
-	Items []*JobRunner
+func (js *JobStatus) SetCreated() {
+	js.State = StateCreated
+	js.Message = ""
 }
 
-type JobRunnerMeta struct {
-	Meta
-	Namespace string `json:"namespace"`
-	SelfLink  string `json:"self_link"`
+func (js *JobStatus) SetProvision() {
+	js.State = StateProvision
+	js.Message = ""
 }
 
-type JobRunnerStatus struct {
+func (js *JobStatus) SetRunning() {
+	js.State = StateRunning
+	js.Message = ""
 }
 
-type JobRunnerSpec struct {
+func (js *JobStatus) SetPaused() {
+	js.State = StatePaused
+	js.Message = ""
+}
+
+func (js *JobStatus) SetDestroy() {
+	js.State = StateDestroy
+	js.Message = ""
+}
+
+func (js *JobStatus) SetError(message string) {
+	js.State = StateError
+	js.Message = message
+}
+
+func (j *Job) SelfLink() string {
+	if j.Meta.SelfLink == EmptyString {
+		j.Meta.SelfLink = j.CreateSelfLink(j.Meta.Namespace, j.Meta.Name)
+	}
+	return j.Meta.SelfLink
+}
+
+func (j *Job) CreateSelfLink(namespace, name string) string {
+	return fmt.Sprintf("%s:%s", namespace, name)
+}
+
+func NewJobList() *JobList {
+	jrl := new(JobList)
+	jrl.Items = make([]*Job, 0)
+	return jrl
 }

@@ -125,12 +125,12 @@ func (s *State) Loop() {
 
 	}
 
-	go s.watchPods(context.Background(), &pr.System.Revision)
-	go s.watchDeployments(context.Background(), &dr.System.Revision)
-	go s.watchServices(context.Background(), &sr.System.Revision)
-	go s.watchVolumes(context.Background(), &vr.System.Revision)
-	go s.watchSecrets(context.Background(), &scr.System.Revision)
-	go s.watchConfigs(context.Background(), &cr.System.Revision)
+	go s.watchPods(context.Background(), &pr.Storage.Revision)
+	go s.watchDeployments(context.Background(), &dr.Storage.Revision)
+	go s.watchServices(context.Background(), &sr.Storage.Revision)
+	go s.watchVolumes(context.Background(), &vr.Storage.Revision)
+	go s.watchSecrets(context.Background(), &scr.Storage.Revision)
+	go s.watchConfigs(context.Background(), &cr.Storage.Revision)
 
 	log.Info("finish services restore\n\n")
 }
@@ -288,8 +288,8 @@ func (s *State) watchVolumes(ctx context.Context, rev *int64) {
 					}
 
 					ss.CheckDeps(types.DeploymentStatusDependency{
-						Name: w.Data.Meta.Name,
-						Type: types.KindVolume,
+						Name:   w.Data.Meta.Name,
+						Type:   types.KindVolume,
 						Status: w.Data.Status.State,
 					})
 				}
@@ -320,15 +320,14 @@ func (s *State) watchSecrets(ctx context.Context, rev *int64) {
 				}
 
 				var dep = types.DeploymentStatusDependency{
-					Name: w.Data.Meta.Name,
-					Type: types.KindSecret,
+					Name:   w.Data.Meta.Name,
+					Type:   types.KindSecret,
 					Status: types.StateReady,
 				}
 
 				if w.IsActionRemove() {
 					dep.Status = types.StateNotReady
 				}
-
 
 				for _, ss := range s.Service {
 					if ss.Namespace() != w.Data.Meta.Namespace {
@@ -363,15 +362,14 @@ func (s *State) watchConfigs(ctx context.Context, rev *int64) {
 				}
 
 				var dep = types.DeploymentStatusDependency{
-					Name: w.Data.Meta.Name,
-					Type: types.KindConfig,
+					Name:   w.Data.Meta.Name,
+					Type:   types.KindConfig,
 					Status: types.StateReady,
 				}
 
 				if w.IsActionRemove() {
 					dep.Status = types.StateNotReady
 				}
-
 
 				for _, ss := range s.Service {
 					if ss.Namespace() != w.Data.Meta.Namespace {

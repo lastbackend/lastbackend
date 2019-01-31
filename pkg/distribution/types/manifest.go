@@ -62,55 +62,55 @@ type DiscoveryManifestMeta struct {
 type PodManifest PodSpec
 
 type PodManifestList struct {
-	Runtime
+	System
 	Items []*PodManifest
 }
 
 type PodManifestMap struct {
-	Runtime
+	System
 	Items map[string]*PodManifest
 }
 
 type VolumeManifest VolumeSpec
 
 type VolumeManifestList struct {
-	Runtime
+	System
 	Items []*VolumeManifest
 }
 
 type VolumeManifestMap struct {
-	Runtime
+	System
 	Items map[string]*VolumeManifest
 }
 
 type SubnetManifest struct {
-	Runtime
+	System
 	SubnetSpec
 }
 
 type SubnetManifestList struct {
-	Runtime
+	System
 	Items []*SubnetManifest
 }
 
 type SubnetManifestMap struct {
-	Runtime
+	System
 	Items map[string]*SubnetManifest
 }
 
 type EndpointManifest struct {
-	Runtime
+	System
 	EndpointSpec `json:",inline"`
 	Upstreams    []string `json:"upstreams"`
 }
 
 type EndpointManifestList struct {
-	Runtime
+	System
 	Items []*EndpointManifest
 }
 
 type EndpointManifestMap struct {
-	Runtime
+	System
 	Items map[string]*EndpointManifest
 }
 

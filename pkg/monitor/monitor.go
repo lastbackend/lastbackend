@@ -84,7 +84,7 @@ func (m *Monitor) Watch(ctx context.Context, stg storage.Storage, rev *int64) er
 					continue
 				}
 
-				keys := r.FindStringSubmatch(e.System.Key)
+				keys := r.FindStringSubmatch(e.Storage.Key)
 
 				if len(keys) == 0 {
 					continue
@@ -123,7 +123,7 @@ func (m *Monitor) Watch(ctx context.Context, stg storage.Storage, rev *int64) er
 					res.Data = entity
 				case types.KindJob:
 					res.Kind = types.KindJob
-					entity := new(types.Job)
+					entity := new(types.Task)
 					if err := json.Unmarshal(e.Data.([]byte), entity); err != nil {
 						log.Errorf("%s:> parse data err: %v", logMonitorPrefix, err)
 						continue

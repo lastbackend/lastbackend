@@ -22,19 +22,19 @@ import "fmt"
 
 // swagger:ignore
 type Ingress struct {
-	Runtime
+	System
 	Meta   IngressMeta   `json:"meta"`
 	Status IngressStatus `json:"status"`
 	Spec   IngressSpec   `json:"spec"`
 }
 
 type IngressList struct {
-	Runtime
+	System
 	Items []*Ingress
 }
 
 type IngressMap struct {
-	Runtime
+	System
 	Items map[string]*Ingress
 }
 
@@ -60,12 +60,11 @@ type IngressInfo struct {
 
 // swagger:model types_ingress_status
 type IngressStatus struct {
-	Ready bool `json:"ready"`
+	Ready  bool `json:"ready"`
 	Online bool `json:"online"`
 }
 
 type IngressSpec struct {
-
 }
 
 // swagger:ignore

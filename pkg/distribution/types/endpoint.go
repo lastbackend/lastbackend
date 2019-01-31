@@ -30,19 +30,19 @@ const (
 // swagger:ignore
 // Upstream - service endpoint
 type Endpoint struct {
-	Runtime
+	System
 	Meta   EndpointMeta   `json:"meta"`
 	Status EndpointStatus `json:"status"`
 	Spec   EndpointSpec   `json:"spec"`
 }
 
 type EndpointList struct {
-	Runtime
+	System
 	Items []*Endpoint
 }
 
 type EndpointMap struct {
-	Runtime
+	System
 	Items map[string]*Endpoint
 }
 

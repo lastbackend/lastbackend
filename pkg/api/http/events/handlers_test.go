@@ -995,7 +995,7 @@ func getEventAsset(action, kind string, obj interface{}) (*types.Event, []byte) 
 		e1.Data = obj.(*types.Service)
 
 	case types.KindJob:
-		e1.Data = obj.(*types.Job)
+		e1.Data = obj.(*types.Task)
 
 	case types.KindDeployment:
 		e1.Data = obj.(*types.Deployment)

@@ -44,6 +44,9 @@ const (
 	discoveryCollection = "discovery"
 	routeCollection     = "route"
 
+	jobCollection  = "job"
+	taskCollection = "task"
+
 	systemCollection = "system"
 	testCollection   = "test"
 
@@ -60,6 +63,8 @@ type NodeCollection struct{}
 type DiscoveryCollection struct{}
 
 type IngressCollection struct{}
+
+type JobCollection struct{}
 
 func (Collection) Namespace() string {
 	return namespaceCollection
@@ -127,6 +132,14 @@ func (Collection) Subnet() string {
 
 func (Collection) Manifest() types.ManifestCollection {
 	return new(ManifestCollection)
+}
+
+func (Collection) Job() string {
+	return jobCollection
+}
+
+func (Collection) Task() string {
+	return taskCollection
 }
 
 func (Collection) Test() string {

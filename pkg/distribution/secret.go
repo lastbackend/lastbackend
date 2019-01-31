@@ -36,15 +36,15 @@ type Secret struct {
 	storage storage.Storage
 }
 
-func (n *Secret) Runtime() (*types.Runtime, error) {
+func (n *Secret) Runtime() (*types.System, error) {
 
 	log.V(logLevel).Debugf("%s:get:> get secret runtime info", logSecretPrefix)
 	runtime, err := n.storage.Info(n.context, n.storage.Collection().Secret(), "")
 	if err != nil {
 		log.V(logLevel).Errorf("%s:get:> get runtime info error: %s", logSecretPrefix, err)
-		return &runtime.Runtime, err
+		return &runtime.System, err
 	}
-	return &runtime.Runtime, nil
+	return &runtime.System, nil
 }
 
 func (n *Secret) Get(namespace, name string) (*types.Secret, error) {
@@ -90,7 +90,6 @@ func (n *Secret) List(filter string) (*types.SecretList, error) {
 	return list, nil
 }
 
-
 func (n *Secret) Create(namespace *types.Namespace, secret *types.Secret) (*types.Secret, error) {
 
 	log.V(logLevel).Debugf("%s:create:> create secret %#v", logSecretPrefix, secret.Meta.Name)
@@ -108,7 +107,6 @@ func (n *Secret) Create(namespace *types.Namespace, secret *types.Secret) (*type
 	return secret, nil
 }
 
-
 func (n *Secret) Update(secret *types.Secret) (*types.Secret, error) {
 
 	log.V(logLevel).Debugf("%s:update:> update secret %s", logSecretPrefix, secret.Meta.Name)
@@ -121,7 +119,6 @@ func (n *Secret) Update(secret *types.Secret) (*types.Secret, error) {
 
 	return secret, nil
 }
-
 
 func (n *Secret) Remove(secret *types.Secret) error {
 

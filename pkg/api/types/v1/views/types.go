@@ -37,6 +37,9 @@ type IView interface {
 	Container() *ContainerView
 	Volume() *VolumeView
 
+	Job() *JobView
+	Task() *TaskView
+
 	Event() *EventView
 }
 
@@ -89,4 +92,12 @@ func (View) Volume() *VolumeView {
 
 func (View) Event() *EventView {
 	return new(EventView)
+}
+
+func (View) Job() *JobView {
+	return new(JobView)
+}
+
+func (View) Task() *TaskView {
+	return new(TaskView)
 }

@@ -21,6 +21,7 @@ package utils
 import (
 	"context"
 	"github.com/gorilla/mux"
+	"github.com/lastbackend/lastbackend/pkg/util/converter"
 	"net/http"
 )
 
@@ -30,4 +31,20 @@ func Vars(r *http.Request) map[string]string {
 
 func SetContext(r *http.Request, name string, val interface{}) *http.Request {
 	return r.WithContext(context.WithValue(r.Context(), name, val))
+}
+
+func QueryString(r *http.Request, param string) string {
+	return r.URL.Query().Get(param)
+}
+
+func QueryFloat(r *http.Request, param string) float64 {
+	return converter.StringToFloat(r.URL.Query().Get(param))
+}
+
+func QueryInt(r *http.Request, param string) int64 {
+	return converter.StringToInt64(r.URL.Query().Get(param))
+}
+
+func QueryBool(r *http.Request, param string) bool {
+	return converter.StringToBool(r.URL.Query().Get(param))
 }

@@ -293,7 +293,7 @@ func (e *Endpoint) ManifestWatch(ch chan types.EndpointManifestEvent, rev *int64
 					continue
 				}
 
-				keys := r.FindStringSubmatch(e.System.Key)
+				keys := r.FindStringSubmatch(e.Storage.Key)
 				if len(keys) == 0 {
 					continue
 				}

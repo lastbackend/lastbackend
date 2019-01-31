@@ -36,6 +36,8 @@ type Collection interface {
 	Network() string
 	Subnet() string
 	Manifest() ManifestCollection
+	Job() string
+	Task() string
 	Test() string
 	Root() string
 }

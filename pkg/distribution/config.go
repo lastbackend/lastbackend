@@ -36,15 +36,15 @@ type Config struct {
 	storage storage.Storage
 }
 
-func (n *Config) Runtime() (*types.Runtime, error) {
+func (n *Config) Runtime() (*types.System, error) {
 
 	log.V(logLevel).Debugf("%s:get:> get config runtime info", logConfigPrefix)
 	runtime, err := n.storage.Info(n.context, n.storage.Collection().Config(), "")
 	if err != nil {
 		log.V(logLevel).Errorf("%s:get:> get runtime info error: %s", logConfigPrefix, err)
-		return &runtime.Runtime, err
+		return &runtime.System, err
 	}
-	return &runtime.Runtime, nil
+	return &runtime.System, nil
 }
 
 func (n *Config) Get(namespace, name string) (*types.Config, error) {
@@ -107,11 +107,9 @@ func (n *Config) Create(namespace *types.Namespace, config *types.Config) (*type
 	return config, nil
 }
 
-
 func (n *Config) Update(config *types.Config) (*types.Config, error) {
 
 	log.V(logLevel).Debugf("%s:update:> update config %s", logConfigPrefix, config.Meta.Name)
-
 
 	if err := n.storage.Set(n.context, n.storage.Collection().Config(),
 		n.storage.Key().Config(config.Meta.Namespace, config.Meta.Name), config, nil); err != nil {

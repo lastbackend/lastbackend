@@ -40,8 +40,8 @@ type Storage struct {
 	watchers map[chan *types.WatcherEvent]string
 }
 
-func (s *Storage) Info(ctx context.Context, collection string, name string) (*types.Runtime, error) {
-	return new(types.Runtime), nil
+func (s *Storage) Info(ctx context.Context, collection string, name string) (*types.System, error) {
+	return new(types.System), nil
 }
 
 func (s *Storage) Get(ctx context.Context, collection string, name string, obj interface{}, opts *types.Opts) error {
@@ -290,8 +290,8 @@ func (s *Storage) dispatch(collection, name, action string, b []byte) {
 			e := new(types.WatcherEvent)
 			e.Action = action
 			e.SelfLink = name
-			e.System.Key = fmt.Sprintf("%s/%s", strings.TrimPrefix(collection, s.root), name)
-			e.System.Revision = 0
+			e.Storage.Key = fmt.Sprintf("%s/%s", strings.TrimPrefix(collection, s.root), name)
+			e.Storage.Revision = 0
 			e.Data = b
 
 			match := strings.Split(name, ":")

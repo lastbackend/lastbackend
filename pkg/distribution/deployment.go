@@ -41,15 +41,15 @@ type Deployment struct {
 	storage storage.Storage
 }
 
-func (d *Deployment) Runtime() (*types.Runtime, error) {
+func (d *Deployment) Runtime() (*types.System, error) {
 
 	log.V(logLevel).Debugf("%s:get:> get deployment runtime info", logDeploymentPrefix)
 	runtime, err := d.storage.Info(d.context, d.storage.Collection().Deployment(), "")
 	if err != nil {
 		log.V(logLevel).Errorf("%s:get:> get runtime info error: %s", logDeploymentPrefix, err)
-		return &runtime.Runtime, err
+		return &runtime.System, err
 	}
-	return &runtime.Runtime, nil
+	return &runtime.System, nil
 }
 
 // Get deployment info by namespace service and deployment name

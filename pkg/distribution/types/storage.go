@@ -18,11 +18,11 @@
 
 package types
 
-type Runtime struct {
-	System RuntimeSystem `json:"-"`
+type System struct {
+	Storage SystemStorage `json:"-"`
 }
 
-type RuntimeSystem struct {
+type SystemStorage struct {
 	Revision int64  `json:"-"`
 	Key      string `json:"-"`
 }

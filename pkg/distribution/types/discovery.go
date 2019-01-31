@@ -22,19 +22,19 @@ import "fmt"
 
 // swagger:ignore
 type Discovery struct {
-	Runtime
+	System
 	Meta   DiscoveryMeta   `json:"meta"`
 	Status DiscoveryStatus `json:"status"`
 	Spec   DiscoverySpec   `json:"spec"`
 }
 
 type DiscoveryList struct {
-	Runtime
+	System
 	Items []*Discovery
 }
 
 type DiscoveryMap struct {
-	Runtime
+	System
 	Items map[string]*Discovery
 }
 

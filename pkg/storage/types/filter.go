@@ -28,6 +28,8 @@ type Filter interface {
 	Route() RouteFilter
 	Secret() SecretFilter
 	Volume() VolumeFilter
+	Task() TaskFilter
+	Job() JobFilter
 }
 
 type NamespaceFilter interface {
@@ -46,6 +48,8 @@ type PodFilter interface {
 	ByNamespace(namespace string) string
 	ByService(namespace, service string) string
 	ByDeployment(namespace, service, deployment string) string
+	ByJob(namespace, job string) string
+	ByTask(namespace, job, task string) string
 }
 
 type EndpointFilter interface {
@@ -65,5 +69,14 @@ type ConfigFilter interface {
 }
 
 type VolumeFilter interface {
+	ByNamespace(namespace string) string
+}
+
+type TaskFilter interface {
+	ByNamespace(namespace string) string
+	ByJob(namespace, job string) string
+}
+
+type JobFilter interface {
 	ByNamespace(namespace string) string
 }

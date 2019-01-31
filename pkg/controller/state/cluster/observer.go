@@ -65,7 +65,7 @@ type ClusterState struct {
 	}
 }
 
-// Runtime cluster describes main cluster state loop
+// System cluster describes main cluster state loop
 func (cs *ClusterState) Observe() {
 	// Watch node changes
 	for {
@@ -152,9 +152,9 @@ func (cs *ClusterState) Loop() error {
 		// Run route observers
 	}
 
-	go cs.watchNode(context.Background(), &nl.System.Revision)
-	go cs.watchIngress(context.Background(), &il.System.Revision)
-	go cs.watchRoute(context.Background(), &rl.System.Revision)
+	go cs.watchNode(context.Background(), &nl.Storage.Revision)
+	go cs.watchIngress(context.Background(), &il.Storage.Revision)
+	go cs.watchRoute(context.Background(), &rl.Storage.Revision)
 
 	return nil
 }

@@ -38,15 +38,15 @@ type Service struct {
 	storage storage.Storage
 }
 
-func (s *Service) Runtime() (*types.Runtime, error) {
+func (s *Service) Runtime() (*types.System, error) {
 
 	log.V(logLevel).Debugf("%s:get:> get services runtime info", logServicePrefix)
 	runtime, err := s.storage.Info(s.context, s.storage.Collection().Service(), "")
 	if err != nil {
 		log.V(logLevel).Errorf("%s:get:> get runtime info error: %s", logServicePrefix, err)
-		return &runtime.Runtime, err
+		return &runtime.System, err
 	}
-	return &runtime.Runtime, nil
+	return &runtime.System, nil
 
 }
 

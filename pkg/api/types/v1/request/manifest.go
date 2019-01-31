@@ -359,3 +359,11 @@ func (m ManifestSpecTemplateContainer) GetSpec() types.SpecTemplateContainer {
 
 	return s
 }
+
+func (m ManifestSpecRuntime) SetSpecRuntime(spec *types.SpecRuntime) error {
+	return nil
+}
+
+func (m ManifestSpecTemplate) SetSpecTemplate(spec *types.SpecTemplate) error {
+	return nil
+}

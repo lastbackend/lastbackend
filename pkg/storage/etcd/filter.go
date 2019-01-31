@@ -62,6 +62,14 @@ func (Filter) Volume() types.VolumeFilter {
 	return new(VolumeFilter)
 }
 
+func (Filter) Task() types.TaskFilter {
+	return new(TaskFilter)
+}
+
+func (Filter) Job() types.JobFilter {
+	return new(JobFilter)
+}
+
 type NamespaceFilter struct{}
 
 type ServiceFilter struct{}
@@ -76,6 +84,15 @@ func byService(namespace, service string) string {
 
 func byDeployment(namespace, service, deployment string) string {
 	return fmt.Sprintf("%s:%s:%s:", namespace, service, deployment)
+}
+
+func byJob(namespace, job string) string {
+
+	if job == "" {
+		job = "manual"
+	}
+
+	return fmt.Sprintf("%s:%s:", namespace, job)
 }
 
 func (ServiceFilter) ByNamespace(namespace string) string {
@@ -104,6 +121,14 @@ func (PodFilter) ByService(namespace, service string) string {
 
 func (PodFilter) ByDeployment(namespace, service, deployment string) string {
 	return byDeployment(namespace, service, deployment)
+}
+
+func (PodFilter) ByJob(namespace, job string) string {
+	return byService(namespace, job)
+}
+
+func (PodFilter) ByTask(namespace, job, task string) string {
+	return byDeployment(namespace, job, task)
 }
 
 type EndpointFilter struct{}
@@ -144,4 +169,20 @@ func (ManifestFilter) ByNodeManifest(node string) string {
 
 func (ManifestFilter) ByKindManifest(node string, kind types.Kind) string {
 	return fmt.Sprintf("%s/%s/", node, kind)
+}
+
+type TaskFilter struct{}
+
+func (TaskFilter) ByNamespace(namespace string) string {
+	return byNamespace(namespace)
+}
+
+func (TaskFilter) ByJob(namespace, job string) string {
+	return byJob(namespace, job)
+}
+
+type JobFilter struct{}
+
+func (JobFilter) ByNamespace(namespace string) string {
+	return byNamespace(namespace)
 }

@@ -19,16 +19,16 @@
 package types
 
 type ClusterList struct {
-	Runtime
+	System
 	Items []*Cluster
 }
 type ClusterMap struct {
-	Runtime
+	System
 	Items map[string]*Cluster
 }
 
 type Cluster struct {
-	Runtime
+	System
 	Meta   Meta          `json:"meta"`
 	Status ClusterStatus `json:"status"`
 	Spec   ClusterSpec   `json:"spec"`

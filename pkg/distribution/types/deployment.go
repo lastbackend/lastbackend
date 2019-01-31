@@ -21,17 +21,17 @@ package types
 import "fmt"
 
 type DeploymentMap struct {
-	Runtime
+	System
 	Items map[string]*Deployment
 }
 
 type DeploymentList struct {
-	Runtime
+	System
 	Items []*Deployment
 }
 
 type Deployment struct {
-	Runtime
+	System
 	// Deployment Meta
 	Meta DeploymentMeta `json:"meta"`
 	// Deployment status

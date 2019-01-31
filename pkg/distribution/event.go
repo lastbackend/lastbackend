@@ -35,13 +35,13 @@ type Event struct {
 	storage storage.Storage
 }
 
-func (e *Event) Runtime() (*types.Runtime, error) {
+func (e *Event) Runtime() (*types.System, error) {
 
 	log.V(logLevel).Debugf("%s:get:> get events runtime info", logEventPrefix)
 	runtime, err := e.storage.Info(e.context, e.storage.Collection().Root(), "")
 	if err != nil {
 		log.V(logLevel).Errorf("%s:get:> get runtime info error: %s", logEventPrefix, err)
-		return &runtime.Runtime, err
+		return &runtime.System, err
 	}
-	return &runtime.Runtime, nil
+	return &runtime.System, nil
 }

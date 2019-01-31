@@ -26,7 +26,7 @@ import (
 // swagger:ignore
 // swagger:model types_pod
 type Pod struct {
-	Runtime
+	System
 	// Pod Meta
 	Meta PodMeta `json:"meta" yaml:"meta"`
 	// Pod Spec
@@ -36,12 +36,12 @@ type Pod struct {
 }
 
 type PodList struct {
-	Runtime
+	System
 	Items []*Pod
 }
 
 type PodMap struct {
-	Runtime
+	System
 	Items map[string]*Pod
 }
 

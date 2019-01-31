@@ -44,6 +44,9 @@ const (
 	ingressCollection   = "ingress"
 	routeCollection     = "route"
 
+	jobCollection  = "job"
+	taskCollection = "task"
+
 	systemCollection = "system"
 	testCollection   = "test"
 
@@ -127,6 +130,14 @@ func (Collection) Subnet() string {
 
 func (Collection) Manifest() types.ManifestCollection {
 	return new(ManifestCollection)
+}
+
+func (Collection) Job() string {
+	return jobCollection
+}
+
+func (Collection) Task() string {
+	return taskCollection
 }
 
 func (Collection) Test() string {

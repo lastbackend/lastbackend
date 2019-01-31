@@ -44,11 +44,13 @@ const (
 	ManifestKind   types.Kind = "manifest"
 	NetworkKind    types.Kind = "network"
 	SubnetKind     types.Kind = "subnet"
+	TaskKind       types.Kind = "task"
+	JobKind        types.Kind = "job"
 	TestKind       types.Kind = "test"
 )
 
 type Storage interface {
-	Info(ctx context.Context, collection, name string) (*types.Runtime, error)
+	Info(ctx context.Context, collection, name string) (*types.System, error)
 	Get(ctx context.Context, collection, name string, obj interface{}, opts *types.Opts) error
 	List(ctx context.Context, collection, q string, obj interface{}, opts *types.Opts) error
 	Map(ctx context.Context, collection, q string, obj interface{}, opts *types.Opts) error

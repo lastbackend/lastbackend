@@ -25,7 +25,7 @@ import (
 	"time"
 )
 
-// CRI - Container Runtime Interface
+// CRI - Container System Interface
 type CRI interface {
 	List(ctx context.Context, all bool) ([]*types.Container, error)
 	Create(ctx context.Context, spec *types.ContainerManifest) (string, error)

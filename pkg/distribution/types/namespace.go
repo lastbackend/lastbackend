@@ -21,8 +21,8 @@ package types
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/lastbackend/lastbackend/pkg/log"
 	"github.com/lastbackend/lastbackend/pkg/distribution/errors"
+	"github.com/lastbackend/lastbackend/pkg/log"
 	"github.com/lastbackend/lastbackend/pkg/util/resource"
 )
 
@@ -32,13 +32,13 @@ const (
 
 // swagger:ignore
 type NamespaceMap struct {
-	Runtime
+	System
 	Items map[string]*Namespace
 }
 
 // swagger:ignore
 type NamespaceList struct {
-	Runtime
+	System
 	Items []*Namespace
 }
 
@@ -258,7 +258,6 @@ func (n *Namespace) AllocateResources(resources ResourceRequest) error {
 			return errors.New(errors.ResourcesCpuLimitIsRequired)
 		}
 
-
 		if (availableRam - allocatedRam - requestedRam) <= 0 {
 			return errors.New(errors.ResourcesRamLimitExceeded)
 		}
@@ -285,7 +284,7 @@ func (n *Namespace) ReleaseResources(resources ResourceRequest) error {
 		allocatedCpu int64
 		requestedRam int64
 		requestedCpu int64
-		err error
+		err          error
 	)
 
 	var handleErr = func(msg string, e error) error {

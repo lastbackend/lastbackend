@@ -42,15 +42,15 @@ type Route struct {
 	storage storage.Storage
 }
 
-func (r *Route) Runtime() (*types.Runtime, error) {
+func (r *Route) Runtime() (*types.System, error) {
 
 	log.V(logLevel).Debugf("%s:get:> get route runtime info", logPodPrefix)
 	runtime, err := r.storage.Info(r.context, r.storage.Collection().Pod(), "")
 	if err != nil {
 		log.V(logLevel).Errorf("%s:get:> get runtime info error: %s", logPodPrefix, err)
-		return &runtime.Runtime, err
+		return &runtime.System, err
 	}
-	return &runtime.Runtime, nil
+	return &runtime.System, nil
 }
 
 func (r *Route) List() (*types.RouteList, error) {
@@ -303,7 +303,7 @@ func (r *Route) ManifestWatch(ingress string, ch chan types.RouteManifestEvent, 
 					continue
 				}
 
-				keys := rg.FindStringSubmatch(e.System.Key)
+				keys := rg.FindStringSubmatch(e.Storage.Key)
 				if len(keys) == 0 {
 					continue
 				}
