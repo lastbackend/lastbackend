@@ -30,7 +30,7 @@ const (
 // swagger:ignore
 // swagger:model types_volume
 type Volume struct {
-	Runtime
+	System
 	// Volume meta
 	Meta VolumeMeta `json:"meta" yaml:"meta"`
 	// Volume spec
@@ -42,14 +42,14 @@ type Volume struct {
 // swagger:ignore
 // swagger:model types_volume_map
 type VolumeMap struct {
-	Runtime
+	System
 	Items map[string]*Volume
 }
 
 // swagger:ignore
 // swagger:model types_volume_list
 type VolumeList struct {
-	Runtime
+	System
 	Items []*Volume
 }
 
@@ -107,20 +107,19 @@ type VolumeState struct {
 	Ready bool `json:"ready" yaml:"ready"`
 }
 
-
-func (vs *VolumeStatus) SetReady () {
+func (vs *VolumeStatus) SetReady() {
 	vs.Status.Ready = true
 	vs.State = StateReady
 	vs.Message = EmptyString
 }
 
-func (vs *VolumeStatus) SetDestroyed () {
+func (vs *VolumeStatus) SetDestroyed() {
 	vs.Status.Ready = false
 	vs.State = StateDestroyed
 	vs.Message = EmptyString
 }
 
-func (vs *VolumeStatus) SetError (err error) {
+func (vs *VolumeStatus) SetError(err error) {
 	vs.Status.Ready = false
 	vs.State = StateError
 	vs.Message = err.Error()
@@ -148,7 +147,6 @@ func NewVolumeMap() *VolumeMap {
 	dm.Items = make(map[string]*Volume)
 	return dm
 }
-
 
 func NewVolumeStatus() *VolumeStatus {
 	status := VolumeStatus{}

@@ -39,15 +39,15 @@ type Volume struct {
 	storage storage.Storage
 }
 
-func (v *Volume) Runtime() (*types.Runtime, error) {
+func (v *Volume) Runtime() (*types.System, error) {
 
 	log.V(logLevel).Debugf("%s:get:> get services runtime info", logVolumePrefix)
 	runtime, err := v.storage.Info(v.context, v.storage.Collection().Volume(), "")
 	if err != nil {
 		log.V(logLevel).Errorf("%s:get:> get runtime info error: %s", logVolumePrefix, err)
-		return &runtime.Runtime, err
+		return &runtime.System, err
 	}
-	return &runtime.Runtime, nil
+	return &runtime.System, nil
 }
 
 func (v *Volume) Get(namespace, name string) (*types.Volume, error) {
@@ -293,7 +293,7 @@ func (p *Volume) ManifestWatch(node string, ch chan types.VolumeManifestEvent, r
 					continue
 				}
 
-				keys := r.FindStringSubmatch(e.System.Key)
+				keys := r.FindStringSubmatch(e.Storage.Key)
 				if len(keys) == 0 {
 					continue
 				}

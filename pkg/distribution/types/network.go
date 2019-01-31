@@ -25,7 +25,7 @@ import (
 const NetworkTypeVxLAN = "vxlan"
 
 type Network struct {
-	Runtime
+	System
 	Meta   Meta          `json:"meta"`
 	Status NetworkStatus `json:"status"`
 	Spec   NetworkSpec   `json:"spec"`
@@ -55,7 +55,7 @@ type NetworkInterface struct {
 }
 
 type Subnet struct {
-	Runtime
+	System
 	Meta   SubnetMeta   `json:"meta"`
 	Status SubnetStatus `json:"status"`
 	Spec   SubnetSpec   `json:"spec"`

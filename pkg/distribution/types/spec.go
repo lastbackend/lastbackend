@@ -33,6 +33,7 @@ const ContainerRoleSlave = "slave"
 // swagger:model types_spec_state
 type SpecState struct {
 	Destroy     bool `json:"destroy"`
+	Cancel      bool `json:"cancel"`
 	Maintenance bool `json:"maintenance"`
 }
 

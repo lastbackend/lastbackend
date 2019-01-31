@@ -30,7 +30,7 @@ const KindIngress = "ingress"
 const KindNode = "node"
 
 type Process struct {
-	Runtime
+	System
 	// Process Meta
 	Meta ProcessMeta `json:"meta"`
 	// Process status

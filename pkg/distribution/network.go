@@ -36,15 +36,15 @@ type Network struct {
 	storage storage.Storage
 }
 
-func (s *Network) Runtime() (*types.Runtime, error) {
+func (s *Network) Runtime() (*types.System, error) {
 
 	log.V(logLevel).Debugf("%s:get:> get network runtime info", logNetworkPrefix)
 	runtime, err := s.storage.Info(s.context, s.storage.Collection().Network(), "")
 	if err != nil {
 		log.V(logLevel).Errorf("%s:get:> get runtime info error: %s", logNetworkPrefix, err)
-		return &runtime.Runtime, err
+		return &runtime.System, err
 	}
-	return &runtime.Runtime, nil
+	return &runtime.System, nil
 
 }
 
@@ -245,7 +245,6 @@ func (s *Network) SubnetSet(snet *types.Subnet) error {
 	if m == nil {
 		return s.SubnetManifestAdd(snet)
 	}
-
 
 	if !types.SubnetSpecEqual(&m.SubnetSpec, &snet.Spec) {
 		if err := s.SubnetManifestSet(m, snet); err != nil {

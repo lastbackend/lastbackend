@@ -33,7 +33,7 @@ type Watcher interface {
 }
 
 type WatcherEvent struct {
-	Runtime
+	System
 	Action   string
 	Name     string
 	SelfLink string
@@ -65,6 +65,6 @@ type Opts struct {
 	Rev   *int64
 }
 
-type Runtime struct {
-	types.Runtime
+type System struct {
+	types.System
 }

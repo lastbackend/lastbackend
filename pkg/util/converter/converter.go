@@ -132,3 +132,8 @@ func EnforcePtr(obj interface{}) (reflect.Value, error) {
 	}
 	return v.Elem(), nil
 }
+
+func StringToFloat(s string) float64 {
+	i, _ := strconv.ParseFloat(s, 64)
+	return i
+}

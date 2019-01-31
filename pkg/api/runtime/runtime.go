@@ -55,7 +55,7 @@ func (r *Runtime) Run() {
 	if err != nil {
 		return
 	}
-	go r.configWatch(ctx, &cl.System.Revision)
+	go r.configWatch(ctx, &cl.Storage.Revision)
 
 	for _, i := range cl.Items {
 		m := new(types.ConfigManifest)
@@ -69,7 +69,7 @@ func (r *Runtime) Run() {
 	if err != nil {
 		return
 	}
-	go r.discoveryWatch(ctx, &dl.System.Revision)
+	go r.discoveryWatch(ctx, &dl.Storage.Revision)
 	for _, i := range dl.Items {
 		c.Node().SetDiscovery(i)
 		c.Ingress().SetDiscovery(i)

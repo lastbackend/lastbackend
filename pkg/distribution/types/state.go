@@ -25,6 +25,8 @@ const StateWarning = "warning"
 const StateDegradation = "degradation"
 const StateReady = "ready"
 const StateNotReady = "not ready"
+const StateRunning = "running"
+const StatePaused = "paused"
 
 const StatusBuild = "build"
 const StatusPull = "pull"

@@ -27,7 +27,7 @@ import (
 // swagger:ignore
 // swagger:model types_route
 type Route struct {
-	Runtime
+	System
 	Meta   RouteMeta   `json:"meta" yaml:"meta"`
 	Status RouteStatus `json:"status" yaml:"status"`
 	Spec   RouteSpec   `json:"spec" yaml:"spec"`
@@ -35,13 +35,13 @@ type Route struct {
 
 // swagger:ignore
 type RouteMap struct {
-	Runtime
+	System
 	Items map[string]*Route
 }
 
 // swagger:ignore
 type RouteList struct {
-	Runtime
+	System
 	Items []*Route
 }
 
@@ -103,12 +103,12 @@ type RouteManifest struct {
 }
 
 type RouteManifestList struct {
-	Runtime
+	System
 	Items []*RouteManifest
 }
 
 type RouteManifestMap struct {
-	Runtime
+	System
 	Items map[string]*RouteManifest
 }
 

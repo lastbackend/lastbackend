@@ -24,7 +24,7 @@ import (
 	"io"
 )
 
-// IMI - Image Runtime Interface
+// IMI - Image System Interface
 type CII interface {
 	Auth(ctx context.Context, secret *types.SecretAuthData) (string, error)
 	Pull(ctx context.Context, spec *types.ImageManifest, out io.Writer) (*types.Image, error)

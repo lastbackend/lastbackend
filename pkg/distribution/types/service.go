@@ -29,19 +29,19 @@ const (
 )
 
 type Service struct {
-	Runtime
+	System
 	Meta   ServiceMeta   `json:"meta"`
 	Status ServiceStatus `json:"status"`
 	Spec   ServiceSpec   `json:"spec"`
 }
 
 type ServiceMap struct {
-	Runtime
+	System
 	Items map[string]*Service
 }
 
 type ServiceList struct {
-	Runtime
+	System
 	Items []*Service
 }
 
@@ -59,12 +59,10 @@ type ServiceEndpoint struct {
 }
 
 type ServiceStatus struct {
-	State        string                             `json:"state"`
-	Message      string                             `json:"message"`
-	Network      ServiceStatusNetwork               `json:"network"`
+	State   string               `json:"state"`
+	Message string               `json:"message"`
+	Network ServiceStatusNetwork `json:"network"`
 }
-
-
 
 type ServiceSpec struct {
 	Replicas int          `json:"replicas" yaml:"replicas"`
@@ -104,7 +102,6 @@ type ServiceReplicas struct {
 	Stopped   int `json:"stopped"`
 	Errored   int `json:"errored"`
 }
-
 
 func (s *ServiceSpec) SetDefault() {
 	s.Replicas = DEFAULT_SERVICE_REPLICAS

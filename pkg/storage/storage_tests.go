@@ -35,7 +35,7 @@ func StorageGetAssets(t *testing.T, stg Storage) {
 	var ctx = context.Background()
 
 	type obj struct {
-		types.Runtime
+		types.System
 		Name string `json:"name"`
 	}
 
@@ -129,12 +129,12 @@ func StorageListAssets(t *testing.T, stg Storage) {
 	var ctx = context.Background()
 
 	type obj struct {
-		types.Runtime
+		types.System
 		Name string `json:"name"`
 	}
 
 	type objl struct {
-		types.Runtime
+		types.System
 		Items []*obj
 	}
 
@@ -249,12 +249,12 @@ func StorageMapAssets(t *testing.T, stg Storage) {
 	var ctx = context.Background()
 
 	type obj struct {
-		types.Runtime
+		types.System
 		Name string `json:"name"`
 	}
 
 	type objm struct {
-		types.Runtime
+		types.System
 		Items map[string]*obj
 	}
 

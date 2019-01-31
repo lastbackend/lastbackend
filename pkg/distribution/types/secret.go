@@ -37,20 +37,20 @@ const (
 // swagger:ignore
 // swagger:model types_secret
 type Secret struct {
-	Runtime
+	System
 	Meta SecretMeta `json:"meta" yaml:"meta"`
 	Spec SecretSpec `json:"spec" yaml:"yaml"`
 }
 
 // swagger:ignore
 type SecretList struct {
-	Runtime
+	System
 	Items []*Secret
 }
 
 // swagger:ignore
 type SecretMap struct {
-	Runtime
+	System
 	Items map[string]*Secret
 }
 
@@ -67,7 +67,7 @@ type SecretSpec struct {
 }
 
 type SecretManifest struct {
-	Runtime
+	System
 	State   string    `json:"state"`
 	Type    string    `json:"type"`
 	Created time.Time `json:"created"`
@@ -75,12 +75,12 @@ type SecretManifest struct {
 }
 
 type SecretManifestList struct {
-	Runtime
+	System
 	Items []*SecretManifest
 }
 
 type SecretManifestMap struct {
-	Runtime
+	System
 	Items map[string]*SecretManifest
 }
 

@@ -160,6 +160,16 @@ type NodeStatusEvent struct {
 	Data *NodeStatus
 }
 
+type JobEvent struct {
+	event
+	Data *Task
+}
+
+type JobRunnerEvent struct {
+	event
+	Data *Job
+}
+
 func (e *event) IsActionCreate() bool {
 	return e.Action == EventActionCreate
 }

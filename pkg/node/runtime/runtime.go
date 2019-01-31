@@ -37,7 +37,7 @@ const (
 	logLevel             = 3
 )
 
-// Runtime main node process
+// System main node process
 type Runtime struct {
 	spec chan *types.NodeManifest
 }

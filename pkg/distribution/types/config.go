@@ -32,20 +32,20 @@ const (
 // swagger:ignore
 // swagger:model types_config
 type Config struct {
-	Runtime
+	System
 	Meta ConfigMeta `json:"meta" yaml:"meta"`
 	Spec ConfigSpec `json:"spec" yaml:"spec"`
 }
 
 // swagger:ignore
 type ConfigList struct {
-	Runtime
+	System
 	Items []*Config
 }
 
 // swagger:ignore
 type ConfigMap struct {
-	Runtime
+	System
 	Items map[string]*Config
 }
 
@@ -63,7 +63,7 @@ type ConfigSpec struct {
 }
 
 type ConfigManifest struct {
-	Runtime
+	System
 	State   string            `json:"state"`
 	Type    string            `json:"kind"`
 	Data    map[string]string `json:"data" yaml:"data"`

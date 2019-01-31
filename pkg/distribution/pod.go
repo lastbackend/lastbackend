@@ -43,15 +43,15 @@ type Pod struct {
 	storage storage.Storage
 }
 
-func (p *Pod) Runtime() (*types.Runtime, error) {
+func (p *Pod) Runtime() (*types.System, error) {
 
 	log.V(logLevel).Debugf("%s:get:> get pod runtime info", logPodPrefix)
 	runtime, err := p.storage.Info(p.context, p.storage.Collection().Pod(), "")
 	if err != nil {
 		log.V(logLevel).Errorf("%s:get:> get runtime info error: %s", logPodPrefix, err)
-		return &runtime.Runtime, err
+		return &runtime.System, err
 	}
-	return &runtime.Runtime, nil
+	return &runtime.System, nil
 }
 
 // Get pod info from storage
@@ -157,6 +157,40 @@ func (p *Pod) ListByDeployment(namespace, service, deployment string) (*types.Po
 	if err != nil {
 		log.V(logLevel).Debugf("%s:listbydeployment:> get pod list by deployment id `%s/%s/%s` err: %v",
 			logPodPrefix, namespace, service, deployment, err)
+		return nil, err
+	}
+
+	return list, nil
+}
+
+// ListByJob returns pod list in selected job
+func (p *Pod) ListByJob(namespace, job string) (*types.PodList, error) {
+	log.V(logLevel).Debugf("%s:listbyjob:> get pod list by id %s/%s", logPodPrefix, namespace, job)
+
+	list := types.NewPodList()
+	filter := p.storage.Filter().Pod().ByJob(namespace, job)
+
+	err := p.storage.List(p.context, p.storage.Collection().Pod(), filter, list, nil)
+	if err != nil {
+		log.V(logLevel).Debugf("%s:listbyjob:> get pod list by deployment id `%s/%s` err: %v",
+			logPodPrefix, namespace, job, err)
+		return nil, err
+	}
+
+	return list, nil
+}
+
+// ListByTask returns pod list in selected task
+func (p *Pod) ListByTask(namespace, job, task string) (*types.PodList, error) {
+	log.V(logLevel).Debugf("%s:listbytask:> get pod list by id %s/%s/%s", logPodPrefix, namespace, job, task)
+
+	list := types.NewPodList()
+	filter := p.storage.Filter().Pod().ByTask(namespace, job, task)
+
+	err := p.storage.List(p.context, p.storage.Collection().Pod(), filter, list, nil)
+	if err != nil {
+		log.V(logLevel).Debugf("%s:listbytask:> get pod list by deployment id `%s/%s/%s` err: %v",
+			logPodPrefix, namespace, job, task, err)
 		return nil, err
 	}
 
@@ -365,7 +399,7 @@ func (p *Pod) ManifestWatch(node string, ch chan types.PodManifestEvent, rev *in
 					continue
 				}
 
-				keys := r.FindStringSubmatch(e.System.Key)
+				keys := r.FindStringSubmatch(e.Storage.Key)
 				if len(keys) == 0 {
 					continue
 				}
