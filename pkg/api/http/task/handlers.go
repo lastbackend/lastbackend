@@ -16,7 +16,7 @@
 // from Last.Backend LLC.
 //
 
-package job
+package task
 
 import (
 	"context"
@@ -44,7 +44,7 @@ func TaskListH(w http.ResponseWriter, r *http.Request) {
 
 	// swagger:operation GET /namespace/{namespace}/job job jobList
 	//
-	// Shows a list of jobs
+	// Shows a list of tasks
 	//
 	// ---
 	// produces:
@@ -70,7 +70,7 @@ func TaskListH(w http.ResponseWriter, r *http.Request) {
 
 	pflag := utils.QueryBool(r, "pods")
 
-	log.V(logLevel).Debugf("%s:list:> list jobs in %s", logPrefix, nid)
+	log.V(logLevel).Debugf("%s:list:> list tasks in %s", logPrefix, nid)
 
 	var (
 		stg = envs.Get().GetStorage()
@@ -91,7 +91,7 @@ func TaskListH(w http.ResponseWriter, r *http.Request) {
 
 	tasks, err := tm.ListByJob(ns.Meta.Name, jb.Meta.Name)
 	if err != nil {
-		log.V(logLevel).Errorf("%s:list:> get pod list by job id `%s` err: %s", logPrefix, ns.Meta.Name, err.Error())
+		log.V(logLevel).Errorf("%s:list:> get task list by job id `%s` err: %s", logPrefix, ns.Meta.Name, err.Error())
 		errors.HTTP.InternalServerError(w)
 		return
 	}
@@ -151,13 +151,13 @@ func TaskInfoH(w http.ResponseWriter, r *http.Request) {
 	//   '500':
 	//     description: Internal server error
 
-	sid := utils.Vars(r)["job"]
+	jib := utils.Vars(r)["job"]
 	nid := utils.Vars(r)["namespace"]
 	tsl := utils.Vars(r)["task"]
 
 	pflag := utils.QueryBool(r, "pods")
 
-	log.V(logLevel).Debugf("%s:info:> get job `%s` in namespace `%s`", logPrefix, sid, nid)
+	log.V(logLevel).Debugf("%s:info:> get task `%s` in namespace `%s`", logPrefix, jib, nid)
 
 	var (
 		err error
@@ -169,7 +169,7 @@ func TaskInfoH(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	jb, e := job.Fetch(r.Context(), ns.Meta.Name, sid)
+	jb, e := job.Fetch(r.Context(), ns.Meta.Name, jib)
 	if e != nil {
 		e.Http(w)
 		return
@@ -241,7 +241,7 @@ func TaskCreateH(w http.ResponseWriter, r *http.Request) {
 	nid := utils.Vars(r)["namespace"]
 	jid := utils.Vars(r)["job"]
 
-	log.V(logLevel).Debugf("%s:create:> create job in namespace `%s`", logPrefix, nid)
+	log.V(logLevel).Debugf("%s:create:> create job in namespace `%s`", logPrefix, jid)
 
 	var (
 		opts = v1.Request().Task().Manifest()
@@ -269,7 +269,17 @@ func TaskCreateH(w http.ResponseWriter, r *http.Request) {
 	}
 
 	tk := new(types.Task)
-	tk.Spec.Template = jb.Spec.Template
+	tk.Spec.Runtime = jb.Spec.Task.Runtime
+	tk.Spec.Selector = jb.Spec.Task.Selector
+	tk.Spec.Template = jb.Spec.Task.Template
+
+	if opts != nil {
+		if err := opts.SetTaskSpec(tk); err != nil {
+			log.V(logLevel).Errorf("%s:list:> get pod list by job id `%s` err: %s", logPrefix, ns.Meta.Name, err.Error())
+			errors.HTTP.BadParameter(w, "spec")
+			return
+		}
+	}
 
 	if _, err := tm.Create(tk); err != nil {
 		log.V(logLevel).Errorf("%s:list:> get pod list by job id `%s` err: %s", logPrefix, ns.Meta.Name, err.Error())
@@ -354,9 +364,16 @@ func TaskCancelH(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	response, err := v1.View().Task().New(tk, nil).ToJson()
+	if err != nil {
+		log.V(logLevel).Errorf("%s:info:> convert struct to json err: %s", logPrefix, err.Error())
+		errors.HTTP.InternalServerError(w)
+		return
+	}
+
 	w.WriteHeader(http.StatusOK)
-	if _, err := w.Write([]byte{}); err != nil {
-		log.V(logLevel).Errorf("%s:remove:> write response err: %s", logPrefix, err.Error())
+	if _, err = w.Write(response); err != nil {
+		log.V(logLevel).Errorf("%s:get write response err: %s", logPrefix, err.Error())
 		return
 	}
 }

@@ -19,8 +19,11 @@
 package request
 
 import (
+	"github.com/lastbackend/lastbackend/pkg/log"
+	"github.com/lastbackend/lastbackend/pkg/util/compare"
 	"github.com/lastbackend/lastbackend/pkg/util/resource"
 	"strings"
+	"time"
 
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 )
@@ -360,10 +363,562 @@ func (m ManifestSpecTemplateContainer) GetSpec() types.SpecTemplateContainer {
 	return s
 }
 
-func (m ManifestSpecRuntime) SetSpecRuntime(spec *types.SpecRuntime) error {
+func (m ManifestSpecRuntime) SetSpecRuntime(sr *types.SpecRuntime) {
+
+	// check services in runtime spec
+	if !compare.SliceOfString(m.Services, sr.Services) {
+		sr.Services = m.Services
+		sr.Updated = time.Now()
+	}
+
+	var te = true
+
+	if len(m.Tasks) != len(sr.Tasks) {
+		te = false
+	}
+
+	for _, mt := range m.Tasks {
+		var f = false
+
+		for _, st := range sr.Tasks {
+
+			// check task name
+			if mt.Name != st.Name {
+				continue
+			}
+
+			// check container name
+			if mt.Container != st.Container {
+				continue
+			}
+
+			// check envs commands
+			if len(mt.Env) != len(st.EnvVars) {
+				continue
+			}
+
+			var ee = true
+			for _, ce := range mt.Env {
+
+				var f = false
+
+				for _, se := range st.EnvVars {
+
+					if ce.Name != se.Name {
+						continue
+					}
+
+					if ce.Value != se.Value {
+						continue
+					}
+
+					if se.Secret.Name != ce.Secret.Name || se.Secret.Key != ce.Secret.Key {
+						continue
+					}
+
+					if se.Config.Name != ce.Config.Name || se.Secret.Key != ce.Config.Key {
+						continue
+					}
+
+					f = true
+				}
+
+				if !f {
+					ee = false
+					break
+				}
+			}
+
+			if !ee {
+				continue
+			}
+
+			// check container commands
+			if len(mt.Commands) != len(st.Commands) {
+				continue
+			}
+
+			var ce = true
+			for _, mc := range mt.Commands {
+				var f = false
+
+				for _, sc := range st.Commands {
+
+					if mc.Workdir != sc.Workdir {
+						continue
+					}
+
+					if !compare.SliceOfString(strings.Split(mc.Command, " "), sc.Command) {
+						continue
+					}
+
+					if !compare.SliceOfString(strings.Split(mc.Entrypoint, " "), sc.Entrypoint) {
+						continue
+					}
+
+					if !compare.SliceOfString(mc.Args, sc.Args) {
+						continue
+					}
+
+					f = true
+				}
+
+				if !f {
+					ce = false
+				}
+			}
+
+			if !ce {
+				continue
+			}
+
+			f = true
+		}
+
+		if !f {
+			te = false
+			break
+		}
+	}
+
+	// apply new task manifest if not equal
+	if !te {
+
+		sr.Tasks = make([]types.SpecRuntimeTask, len(m.Tasks))
+
+		for _, t := range m.Tasks {
+			task := types.SpecRuntimeTask{
+				Name:      t.Name,
+				Container: t.Container,
+				EnvVars:   make(types.SpecTemplateContainerEnvs, len(t.Env)),
+				Commands:  make([]types.SpecTemplateContainerExec, len(t.Commands)),
+			}
+
+			for _, e := range t.Env {
+				env := types.SpecTemplateContainerEnv{
+					Name:  e.Name,
+					Value: e.Value,
+					Config: types.SpecTemplateContainerEnvConfig{
+						Name: e.Config.Name,
+						Key:  e.Config.Key,
+					},
+					Secret: types.SpecTemplateContainerEnvSecret{
+						Name: e.Secret.Name,
+						Key:  e.Secret.Key,
+					},
+				}
+
+				task.EnvVars = append(task.EnvVars, &env)
+			}
+
+			for _, c := range t.Commands {
+				cmd := types.SpecTemplateContainerExec{
+					Command:    strings.Split(c.Command, " "),
+					Workdir:    c.Workdir,
+					Args:       c.Args,
+					Entrypoint: strings.Split(c.Entrypoint, " "),
+				}
+				task.Commands = append(task.Commands, cmd)
+			}
+
+			sr.Tasks = append(sr.Tasks, task)
+		}
+
+		sr.Updated = time.Now()
+	}
+
+}
+
+func (m ManifestSpecSelector) SetSpecSelector(ss *types.SpecSelector) {
+
+	if ss.Node != m.Node {
+		ss.Node = m.Node
+		ss.Updated = time.Now()
+	}
+
+	if len(ss.Labels) != len(m.Labels) {
+		ss.Updated = time.Now()
+	}
+
+	var eq = true
+	for k, v := range m.Labels {
+		if _, ok := ss.Labels[k]; !ok {
+			eq = false
+			break
+		}
+
+		if ss.Labels[k] != v {
+			eq = false
+			break
+		}
+	}
+
+	if !eq {
+		ss.Labels = m.Labels
+		ss.Updated = time.Now()
+	}
+}
+
+func (m ManifestSpecTemplate) SetSpecTemplate(st *types.SpecTemplate) error {
+
+	for _, c := range m.Containers {
+
+		var (
+			f    = false
+			err  error
+			spec *types.SpecTemplateContainer
+		)
+
+		for _, sc := range st.Containers {
+			if c.Name == sc.Name {
+				f = true
+				spec = sc
+			}
+		}
+
+		if spec == nil {
+			spec = new(types.SpecTemplateContainer)
+		}
+
+		if spec.Name == types.EmptyString {
+			spec.Name = c.Name
+			st.Updated = time.Now()
+		}
+
+		if spec.Image.Name != c.Image.Name {
+			spec.Image.Name = c.Image.Name
+			st.Updated = time.Now()
+		}
+
+		if spec.Image.Secret != c.Image.Secret {
+			spec.Image.Secret = c.Image.Secret
+			st.Updated = time.Now()
+		}
+
+		if strings.Join(spec.Exec.Command, " ") != c.Command {
+			spec.Exec.Command = strings.Split(c.Command, " ")
+			st.Updated = time.Now()
+		}
+
+		if strings.Join(spec.Exec.Args, "") != strings.Join(c.Args, "") {
+			spec.Exec.Args = c.Args
+			st.Updated = time.Now()
+		}
+
+		if strings.Join(spec.Exec.Entrypoint, " ") != c.Entrypoint {
+			spec.Exec.Entrypoint = strings.Split(c.Entrypoint, " ")
+			st.Updated = time.Now()
+		}
+
+		if spec.Exec.Workdir != c.Workdir {
+			spec.Exec.Workdir = c.Workdir
+			st.Updated = time.Now()
+		}
+
+		// Environments check
+		for _, ce := range c.Env {
+			var f = false
+
+			for _, se := range spec.EnvVars {
+				if ce.Name == se.Name {
+					f = true
+
+					if se.Value != ce.Value {
+						se.Value = ce.Value
+						st.Updated = time.Now()
+					}
+
+					if se.Secret.Name != ce.Secret.Name || se.Secret.Key != ce.Secret.Key {
+						se.Secret.Name = ce.Secret.Name
+						se.Secret.Key = ce.Secret.Key
+						st.Updated = time.Now()
+					}
+
+					if se.Config.Name != ce.Config.Name || se.Secret.Key != ce.Config.Key {
+						se.Config.Name = ce.Config.Name
+						se.Config.Key = ce.Config.Key
+						st.Updated = time.Now()
+					}
+				}
+			}
+
+			if !f {
+				spec.EnvVars = append(spec.EnvVars, &types.SpecTemplateContainerEnv{
+					Name:  ce.Name,
+					Value: ce.Value,
+					Secret: types.SpecTemplateContainerEnvSecret{
+						Name: ce.Secret.Name,
+						Key:  ce.Secret.Key,
+					},
+					Config: types.SpecTemplateContainerEnvConfig{
+						Name: ce.Config.Name,
+						Key:  ce.Config.Key,
+					},
+				})
+				st.Updated = time.Now()
+			}
+		}
+
+		var envs = make([]*types.SpecTemplateContainerEnv, 0)
+		for _, se := range spec.EnvVars {
+			for _, ce := range c.Env {
+				if ce.Name == se.Name {
+					envs = append(envs, se)
+					break
+				}
+			}
+		}
+
+		if len(spec.EnvVars) != len(envs) {
+			st.Updated = time.Now()
+		}
+		spec.EnvVars = envs
+
+		var (
+			resourcesRequestRam int64
+			resourcesRequestCPU int64
+
+			resourcesLimitsRam int64
+			resourcesLimitsCPU int64
+		)
+
+		// Resources check
+		if c.Resources.Request.RAM != types.EmptyString {
+			resourcesRequestRam, err = resource.DecodeMemoryResource(c.Resources.Request.RAM)
+			if err != nil {
+				return handleErr("request.ram", err)
+			}
+		}
+		if c.Resources.Request.CPU != types.EmptyString {
+			resourcesRequestCPU, err = resource.DecodeCpuResource(c.Resources.Request.CPU)
+			if err != nil {
+				return handleErr("request.cpu", err)
+			}
+		}
+
+		if c.Resources.Limits.RAM != types.EmptyString {
+			resourcesLimitsRam, err = resource.DecodeMemoryResource(c.Resources.Limits.RAM)
+			if err != nil {
+				return handleErr("limit.ram", err)
+			}
+		}
+
+		if c.Resources.Limits.CPU != types.EmptyString {
+			resourcesLimitsCPU, err = resource.DecodeCpuResource(c.Resources.Limits.CPU)
+			if err != nil {
+				return handleErr("limit.cpu", err)
+			}
+		}
+
+		if resourcesRequestRam != spec.Resources.Request.RAM ||
+			resourcesRequestCPU != spec.Resources.Request.CPU {
+			spec.Resources.Request.RAM = resourcesRequestRam
+			spec.Resources.Request.CPU = resourcesRequestCPU
+			st.Updated = time.Now()
+		}
+
+		if resourcesLimitsRam != spec.Resources.Limits.RAM ||
+			resourcesLimitsCPU != spec.Resources.Limits.CPU {
+			spec.Resources.Limits.RAM = resourcesLimitsRam
+			spec.Resources.Limits.CPU = resourcesLimitsCPU
+			st.Updated = time.Now()
+		}
+
+		// Volumes check
+		for _, v := range c.Volumes {
+
+			var f = false
+			for _, sv := range spec.Volumes {
+
+				if v.Name == sv.Name {
+					f = true
+					if sv.Mode != v.Mode || sv.Path != v.Path {
+						sv.Mode = v.Mode
+						sv.Path = v.Path
+						st.Updated = time.Now()
+					}
+
+				}
+			}
+			if !f {
+				spec.Volumes = append(spec.Volumes, &types.SpecTemplateContainerVolume{
+					Name: v.Name,
+					Mode: v.Mode,
+					Path: v.Path,
+				})
+			}
+		}
+
+		vlms := make([]*types.SpecTemplateContainerVolume, 0)
+		for _, sv := range spec.Volumes {
+			for _, cv := range c.Volumes {
+				if sv.Name == cv.Name {
+					vlms = append(vlms, sv)
+					break
+				}
+			}
+		}
+
+		if len(vlms) != len(spec.Volumes) {
+			st.Updated = time.Now()
+		}
+
+		spec.Volumes = vlms
+
+		// Ports check
+		spec.Ports = make(types.SpecTemplateContainerPorts, 0)
+		for _, cp := range c.Ports {
+			port := new(types.SpecTemplateContainerPort)
+			port.Parse(cp)
+			spec.Ports = append(spec.Ports, port)
+		}
+
+		if !f {
+			st.Containers = append(st.Containers, spec)
+		}
+
+	}
+
+	var spcs = make([]*types.SpecTemplateContainer, 0)
+	for _, ss := range st.Containers {
+		for _, cs := range m.Containers {
+			if ss.Name == cs.Name {
+				spcs = append(spcs, ss)
+			}
+		}
+	}
+
+	if len(spcs) != len(st.Containers) {
+		st.Updated = time.Now()
+	}
+
+	st.Containers = spcs
+
+	for _, v := range m.Volumes {
+
+		var (
+			f    = false
+			spec *types.SpecTemplateVolume
+		)
+
+		for _, sv := range st.Volumes {
+			if v.Name == sv.Name {
+				f = true
+				spec = sv
+			}
+		}
+
+		if spec == nil {
+			spec = new(types.SpecTemplateVolume)
+		}
+
+		if spec.Name == types.EmptyString {
+			spec.Name = v.Name
+			st.Updated = time.Now()
+		}
+
+		if v.Type != spec.Type || v.Volume.Name != spec.Volume.Name || v.Volume.Subpath != spec.Volume.Subpath {
+			spec.Type = v.Type
+			spec.Volume.Name = v.Volume.Name
+			spec.Volume.Subpath = v.Volume.Subpath
+			st.Updated = time.Now()
+		}
+
+		if v.Type != spec.Type || v.Secret.Name != spec.Secret.Name {
+			spec.Type = v.Type
+			spec.Secret.Name = v.Secret.Name
+			st.Updated = time.Now()
+		}
+
+		var e = true
+		for _, vf := range v.Secret.Binds {
+
+			var f = false
+			for _, sf := range spec.Secret.Binds {
+				if vf.Key == sf.Key && vf.File == sf.File {
+					f = true
+					break
+				}
+			}
+
+			if !f {
+				e = false
+				break
+			}
+
+		}
+
+		if !e {
+			spec.Secret.Binds = make([]types.SpecTemplateSecretVolumeBind, 0)
+			for _, v := range v.Secret.Binds {
+				spec.Secret.Binds = append(spec.Secret.Binds, types.SpecTemplateSecretVolumeBind{
+					Key:  v.Key,
+					File: v.File,
+				})
+			}
+			st.Updated = time.Now()
+		}
+
+		if v.Type != spec.Type || v.Config.Name != spec.Config.Name {
+			spec.Type = v.Type
+			spec.Config.Name = v.Config.Name
+			st.Updated = time.Now()
+		}
+
+		var ce = true
+		for _, vf := range v.Config.Binds {
+
+			var f = false
+			for _, sf := range spec.Config.Binds {
+				if vf.Key == sf.Key && vf.File == sf.File {
+					f = true
+					break
+				}
+			}
+
+			if !f {
+				ce = false
+				break
+			}
+
+		}
+
+		if !ce {
+			spec.Config.Binds = make([]types.SpecTemplateConfigVolumeBind, 0)
+			for _, v := range v.Config.Binds {
+				spec.Config.Binds = append(spec.Config.Binds, types.SpecTemplateConfigVolumeBind{
+					Key:  v.Key,
+					File: v.File,
+				})
+			}
+			st.Updated = time.Now()
+		}
+
+		if !f {
+			st.Volumes = append(st.Volumes, spec)
+		}
+
+	}
+
+	var vlms = make([]*types.SpecTemplateVolume, 0)
+	for _, ss := range st.Volumes {
+		for _, cs := range m.Volumes {
+			if ss.Name == cs.Name {
+				vlms = append(vlms, ss)
+			}
+		}
+	}
+
+	if len(vlms) != len(st.Volumes) {
+		st.Updated = time.Now()
+	}
+
+	st.Volumes = vlms
+
 	return nil
 }
 
-func (m ManifestSpecTemplate) SetSpecTemplate(spec *types.SpecTemplate) error {
-	return nil
+func handleErr(msg string, e error) error {
+	log.Errorf("decode resource %s error: %s", msg, e.Error())
+	return e
 }

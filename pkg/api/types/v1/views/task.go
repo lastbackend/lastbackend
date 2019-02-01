@@ -22,13 +22,29 @@ import "encoding/json"
 
 type TaskList []*Task
 
-type Task struct{}
+type Task struct {
+	Meta   TaskMeta   `json:"meta"`
+	Status TaskStatus `json:"status"`
+	Spec   TaskSpec   `json:"spec"`
+	Pods   PodList    `json:"pods,omitempty"`
+}
 
-type TaskMeta struct{}
+type TaskMeta struct {
+	Meta
+	Namespace string `json:"namespace"`
+	Job       string `json:"job"`
+}
 
-type TaskStatus struct{}
+type TaskStatus struct {
+	State   string `json:"state"`
+	Message string `json:"message"`
+}
 
-type TaskSpec struct{}
+type TaskSpec struct {
+	Runtime  ManifestSpecRuntime  `json:"runtime"`
+	Selector ManifestSpecSelector `json:"selector"`
+	Template ManifestSpecTemplate `json:"template"`
+}
 
 func (t *Task) ToJson() ([]byte, error) {
 	return json.Marshal(t)

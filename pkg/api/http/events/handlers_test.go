@@ -552,7 +552,7 @@ func TestEventsSubscribe(t *testing.T) {
 				}
 
 			case types.KindPod:
-				err := tc.fields.stg.Put(context.Background(), stg.Collection().Pod(), tc.fields.stg.Key().Pod(pd0.Meta.Namespace, pd0.Meta.Service, pd0.Meta.Deployment, pd0.Meta.Name), pd0, nil)
+				err := tc.fields.stg.Put(context.Background(), stg.Collection().Pod(), pd0.SelfLink(), pd0, nil)
 				if !assert.NoError(t, err, "initial service insert error") {
 					return
 				}
@@ -717,11 +717,11 @@ func TestEventsSubscribe(t *testing.T) {
 				item := tc.args.obj.(*types.Pod)
 				switch tc.args.action {
 				case types.EventActionCreate:
-					err = tc.fields.stg.Put(context.Background(), stg.Collection().Pod(), tc.fields.stg.Key().Pod(item.Meta.Namespace, item.Meta.Service, item.Meta.Deployment, item.Meta.Name), item, nil)
+					err = tc.fields.stg.Put(context.Background(), stg.Collection().Pod(), item.SelfLink(), item, nil)
 				case types.EventActionUpdate:
-					err = tc.fields.stg.Set(context.Background(), stg.Collection().Pod(), tc.fields.stg.Key().Pod(item.Meta.Namespace, item.Meta.Service, item.Meta.Deployment, item.Meta.Name), item, nil)
+					err = tc.fields.stg.Set(context.Background(), stg.Collection().Pod(), item.SelfLink(), item, nil)
 				case types.EventActionDelete:
-					err = tc.fields.stg.Del(context.Background(), stg.Collection().Pod(), tc.fields.stg.Key().Pod(item.Meta.Namespace, item.Meta.Service, item.Meta.Deployment, item.Meta.Name))
+					err = tc.fields.stg.Del(context.Background(), stg.Collection().Pod(), item.SelfLink())
 				}
 
 			case types.KindVolume:
@@ -868,8 +868,8 @@ func getPodAsset(namespace, service, deployment, name, desc string) *types.Pod {
 	p.Meta.Name = name
 	p.Meta.Description = desc
 	p.Meta.Namespace = namespace
-	p.Meta.Service = service
-	p.Meta.Deployment = deployment
+	p.Meta.Parent.Kind = types.KindDeployment
+	p.Meta.Parent.SelfLink = fmt.Sprintf("%s:%s:%s", namespace, service, deployment)
 	p.SelfLink()
 
 	return &p

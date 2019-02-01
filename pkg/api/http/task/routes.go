@@ -16,7 +16,7 @@
 // from Last.Backend LLC.
 //
 
-package job
+package task
 
 import (
 	"github.com/lastbackend/lastbackend/pkg/util/http"

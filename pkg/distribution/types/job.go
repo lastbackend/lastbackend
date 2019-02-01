@@ -69,9 +69,16 @@ type JobStatusStats struct {
 type JobSpec struct {
 	Enabled     bool               `json:"enabled"`
 	Schedule    string             `json:"schedule"`
-	Template    SpecTemplate       `json:"template"`
 	Concurrency JobSpecConcurrency `json:"concurrency"`
 	Remote      JobSpecRemote      `json:"remote"`
+
+	Task JobSpecTask `json:"task"`
+}
+
+type JobSpecTask struct {
+	Selector SpecSelector `json:"selector"`
+	Runtime  SpecRuntime  `json:"runtime"`
+	Template SpecTemplate `json:"template"`
 }
 
 type JobSpecConcurrency struct {
@@ -135,5 +142,11 @@ func (j *Job) CreateSelfLink(namespace, name string) string {
 func NewJobList() *JobList {
 	jrl := new(JobList)
 	jrl.Items = make([]*Job, 0)
+	return jrl
+}
+
+func NewJobMap() *JobMap {
+	jrl := new(JobMap)
+	jrl.Items = make(map[string]*Job, 0)
 	return jrl
 }

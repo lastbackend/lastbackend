@@ -36,7 +36,7 @@ const (
 
 func Fetch(ctx context.Context, namespace, name string) (*types.Job, *errors.Err) {
 	jm := distribution.NewJobModel(ctx, envs.Get().GetStorage())
-	job, err := jm.Get(new(types.Job).CreateSelfLink(namespace, name))
+	job, err := jm.Get(distribution.JobSelfLink(namespace, name))
 
 	if err != nil {
 		log.V(logLevel).Errorf("%s:fetch:> err: %s", logPrefix, err.Error())

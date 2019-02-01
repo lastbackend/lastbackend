@@ -51,6 +51,7 @@ type TaskStatus struct {
 
 type TaskSpec struct {
 	State    SpecState    `json:"state" yaml:"state"`
+	Runtime  SpecRuntime  `json:"runtime" yaml:"runtime"`
 	Selector SpecSelector `json:"selector" yaml:"selector"`
 	Template SpecTemplate `json:"template" yaml:"template"`
 }
@@ -105,4 +106,10 @@ func NewTaskList() *TaskList {
 	jl := new(TaskList)
 	jl.Items = make([]*Task, 0)
 	return jl
+}
+
+func NewTaskMap() *TaskMap {
+	jm := new(TaskMap)
+	jm.Items = make(map[string]*Task, 0)
+	return jm
 }

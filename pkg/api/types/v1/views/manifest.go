@@ -18,6 +18,8 @@
 
 package views
 
+import "time"
+
 type ManifestSpecSelector struct {
 	Node   string            `json:"node,omitempty" yaml:"node,omitempty"`
 	Labels map[string]string `json:"labels,omitempty" yaml:"labels,omitempty"`
@@ -30,6 +32,26 @@ type ManifestSpecNetwork struct {
 
 type ManifestSpecStrategy struct {
 	Type string `json:"type,omitempty" yaml:"type,omitempty"`
+}
+
+type ManifestSpecRuntime struct {
+	Services []string                  `json:"services"`
+	Tasks    []ManifestSpecRuntimeTask `json:"tasks"`
+	Updated  time.Time                 `json:"updated"`
+}
+
+type ManifestSpecRuntimeTask struct {
+	Name      string                             `json:"name"`
+	Container string                             `json:"container" yaml:"container"`
+	Env       []ManifestSpecTemplateContainerEnv `json:"env" yaml:"env"`
+	Commands  []ManifestSpecRuntimeTaskCommand   `json:"commands" yaml:"commands"`
+}
+
+type ManifestSpecRuntimeTaskCommand struct {
+	Command    string   `json:"command,omitempty" yaml:"command,omitempty"`
+	Workdir    string   `json:"workdir,omitempty" yaml:"workdir,omitempty"`
+	Entrypoint string   `json:"entrypoint,omitempty" yaml:"entrypoint,omitempty"`
+	Args       []string `json:"args,omitempty" yaml:"args,omitempty"`
 }
 
 type ManifestSpecTemplate struct {

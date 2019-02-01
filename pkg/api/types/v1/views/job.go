@@ -18,20 +18,69 @@
 
 package views
 
-import "encoding/json"
+import (
+	"encoding/json"
+	"time"
+)
 
 type JobList []*Job
 
 type Job struct {
+	Meta   JobMeta   `json:"meta"`
+	Status JobStatus `json:"status"`
+	Spec   JobSpec   `json:"spec"`
+	Tasks  TaskList  `json:"tasks,omitempty"`
 }
 
 type JobMeta struct {
+	Meta
+	Namespace string `json:"namespace"`
 }
 
 type JobStatus struct {
+	State   string         `json:"state"`
+	Message string         `json:"message"`
+	Stats   JobStatusStats `json:"stats"`
+	Updated time.Time      `json:"updated"`
+}
+
+type JobStatusStats struct {
+	Total        int       `json:"total"`
+	Active       int       `json:"active"`
+	Successful   int       `json:"successful"`
+	Failed       int       `json:"failed"`
+	LastSchedule time.Time `json:"last_schedule"`
 }
 
 type JobSpec struct {
+	Enabled     bool               `json:"enabled"`
+	Schedule    string             `json:"schedule"`
+	Concurrency JobSpecConcurrency `json:"concurrency"`
+	Remote      JobSpecRemote      `json:"remote"`
+	Task        JobSpecTask        `json:"task"`
+}
+
+type JobSpecTask struct {
+	Selector ManifestSpecSelector `json:"selector"`
+	Runtime  ManifestSpecRuntime  `json:"runtime"`
+	Template ManifestSpecTemplate `json:"template"`
+}
+
+type JobSpecConcurrency struct {
+	Limit    int    `json:"limit"`
+	Strategy string `json:"strategy"`
+}
+
+type JobSpecRemote struct {
+	Timeout  int                  `json:"timeout"`
+	Request  JobSpecRemoteRequest `json:"request"`
+	Response JobSpecRemoteRequest `json:"response"`
+}
+
+type JobSpecRemoteRequest struct {
+	Endpoint string            `json:"endpoint"`
+	Headers  map[string]string `json:"headers"`
+	Method   string            `json:"method"`
 }
 
 func (j *Job) ToJson() ([]byte, error) {

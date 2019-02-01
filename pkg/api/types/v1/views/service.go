@@ -32,7 +32,6 @@ type ServiceList []*Service
 // swagger:model views_service
 type Service struct {
 	Meta        ServiceMeta            `json:"meta"`
-	Stats       ServiceStats           `json:"stats"`
 	Status      ServiceStatus          `json:"status"`
 	Spec        ServiceSpec            `json:"spec"`
 	Deployments map[string]*Deployment `json:"deployments,omitempty"`

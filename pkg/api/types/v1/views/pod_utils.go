@@ -26,44 +26,44 @@ type PodView struct{}
 
 func (pv *PodView) New(pod *types.Pod) Pod {
 	p := Pod{}
-	p.ID = pod.Meta.Name
-	p.Meta = p.toMeta(pod.Meta)
-	p.Spec = p.toSpec(pod.Spec)
-	p.Status = p.toStatus(pod.Status)
+	p.SetMeta(pod.Meta)
+	p.SetStatus(pod.Status)
+	p.SetSpec(pod.Spec)
+
 	return p
 }
 
-func (pv *Pod) toMeta(pod types.PodMeta) PodMeta {
+func (p *Pod) SetMeta(pod types.PodMeta) {
 	meta := PodMeta{}
+	meta.Namespace = pod.Namespace
 	meta.Name = pod.Name
+
 	meta.Description = pod.Description
 	meta.SelfLink = pod.SelfLink
-	meta.Namespace = pod.Namespace
-	meta.Deployment = pod.Deployment
-	meta.SelfLink = pod.SelfLink
+
+	meta.Parent.Kind = pod.Parent.Kind
+	meta.Parent.SelfLink = pod.Parent.SelfLink
+
 	meta.Node = pod.Node
 	meta.Status = pod.Status
 	meta.Updated = pod.Updated
 	meta.Created = pod.Created
 
-	return meta
+	p.Meta = meta
 }
 
-func (pv *Pod) toSpec(pod types.PodSpec) PodSpec {
-	return PodSpec{
+func (p *Pod) SetSpec(pod types.PodSpec) {
+	mv := new(ManifestView)
+	p.Spec = PodSpec{
 		State: PodSpecState{
 			Destroy:     pod.State.Destroy,
 			Maintenance: pod.State.Maintenance,
 		},
-		Template: PodSpecTemplate{
-			Containers:  new(SpecView).NewSpecTemplateContainers(pod.Template.Containers),
-			Volumes:     new(SpecView).NewSpecTemplateVolumes(pod.Template.Volumes),
-			Termination: pod.Template.Termination,
-		},
+		Template: mv.NewManifestSpecTemplate(pod.Template),
 	}
 }
 
-func (pv *Pod) toStatus(pod types.PodStatus) PodStatus {
+func (p *Pod) SetStatus(pod types.PodStatus) {
 	var status = PodStatus{
 		State:   pod.State,
 		Message: pod.Message,
@@ -85,5 +85,5 @@ func (pv *Pod) toStatus(pod types.PodStatus) PodStatus {
 		cv := new(ContainerView)
 		status.Containers = append(status.Containers, cv.NewPodContainer(container))
 	}
-	return status
+	p.Status = status
 }

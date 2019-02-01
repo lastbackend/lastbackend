@@ -20,6 +20,7 @@ package types
 
 import (
 	"fmt"
+	"strings"
 	"time"
 )
 
@@ -52,10 +53,8 @@ type PodMeta struct {
 	Meta `yaml:",inline"`
 	// Pod SelfLink
 	SelfLink string `json:"self_link" yaml:"self_link"`
-	// Pod deployment
-	Deployment string `json:"deployment" yaml:"deployment"`
-	// Pod service
-	Service string `json:"service" yaml:"service"`
+	// Pod parent
+	Parent PodMetaParent `json:"parent" yaml:"self_link"`
 	// Pod service id
 	Namespace string `json:"namespace" yaml:"namespace"`
 	// Pod node hostname
@@ -64,6 +63,11 @@ type PodMeta struct {
 	Status string `json:"status" yaml:"status"`
 	// Upstream
 	Endpoint string `json:"endpoint" yaml:"endpoint"`
+}
+
+type PodMetaParent struct {
+	Kind     string `json:"kind" yaml:"kind"`
+	SelfLink string `json:"self_link", yaml:"self_link"`
 }
 
 // PodSpec is a spec of pod
@@ -244,6 +248,10 @@ func (s *PodStatus) SetExited() {
 
 func (s *PodStatus) SetDestroy() {
 	s.State = StateDestroy
+	s.Steps[StepDestroy] = PodStep{
+		Ready:     true,
+		Timestamp: time.Now().UTC(),
+	}
 }
 
 func (s *PodStatus) SetDestroyed() {
@@ -255,6 +263,10 @@ func (s *PodStatus) SetPull() {
 	s.State = StateProvision
 	s.Status = StatusPull
 	s.Running = false
+	s.Steps[StepPull] = PodStep{
+		Ready:     true,
+		Timestamp: time.Now().UTC(),
+	}
 }
 
 func (s *PodStatus) SetProvision() {
@@ -267,6 +279,10 @@ func (s *PodStatus) SetCreated() {
 	s.Status = StateCreated
 	s.Running = false
 	s.Message = EmptyString
+	s.Steps[StepInitialized] = PodStep{
+		Ready:     true,
+		Timestamp: time.Now().UTC(),
+	}
 }
 
 func (s *PodStatus) SetStarting() {
@@ -274,6 +290,10 @@ func (s *PodStatus) SetStarting() {
 	s.Status = StatusStarting
 	s.Running = false
 	s.Message = EmptyString
+	s.Steps[StepStarted] = PodStep{
+		Ready:     true,
+		Timestamp: time.Now().UTC(),
+	}
 }
 
 func (s *PodStatus) SetRunning() {
@@ -288,11 +308,36 @@ func (s *PodStatus) SetStopped() {
 	s.Status = StatusStopped
 	s.Running = false
 	s.Message = EmptyString
+	s.Steps[StepStarted] = PodStep{
+		Ready:     true,
+		Timestamp: time.Now().UTC(),
+	}
 }
 
 func (s *PodStatus) SetError(err error) {
 	s.State = StateError
 	s.Message = err.Error()
+}
+
+func (s *PodSpec) SetSpecTemplate(selflink string, template SpecTemplate) {
+	for _, c := range template.Containers {
+		c.Labels = make(map[string]string)
+		c.Labels[ContainerTypeLBC] = selflink
+		c.DNS = SpecTemplateContainerDNS{}
+		s.Template.Containers = append(s.Template.Containers, c)
+	}
+
+	for _, v := range template.Volumes {
+		s.Template.Volumes = append(s.Template.Volumes, v)
+	}
+}
+
+func (s *PodSpec) SetSpecSelector(selector SpecSelector) {
+	s.Selector = selector
+}
+
+func (s *PodSpec) SetSpecRuntime(runtime SpecRuntime) {
+	s.Runtime = runtime
 }
 
 func NewPod() *Pod {
@@ -359,21 +404,36 @@ func (s *PodStatusTask) AddTaskCommandContainer(c *PodContainer) {
 
 func (p *Pod) SelfLink() string {
 	if p.Meta.SelfLink == "" {
-		p.Meta.SelfLink = p.CreateSelfLink(p.Meta.Namespace, p.Meta.Service, p.Meta.Deployment, p.Meta.Name)
+		p.Meta.SelfLink = p.CreateSelfLink(p.Meta.Parent.Kind, p.Meta.Parent.SelfLink, p.Meta.Name)
 	}
 	return p.Meta.SelfLink
 }
 
 func (p *Pod) ServiceLink() string {
-	return new(Service).CreateSelfLink(p.Meta.Namespace, p.Meta.Service)
+
+	if p.Meta.Parent.Kind != KindDeployment {
+		return EmptyString
+	}
+
+	parents := strings.Split(p.Meta.Parent.SelfLink, ":")
+	if len(parents) != 3 {
+		return EmptyString
+	}
+
+	return new(Service).CreateSelfLink(parents[0], parents[1])
 }
 
 func (p *Pod) DeploymentLink() string {
-	return new(Deployment).CreateSelfLink(p.Meta.Namespace, p.Meta.Service, p.Meta.Deployment)
+
+	if p.Meta.Parent.Kind != KindDeployment {
+		return EmptyString
+	}
+
+	return p.Meta.Parent.SelfLink
 }
 
-func (p *Pod) CreateSelfLink(namespace, service, deployment, name string) string {
-	return fmt.Sprintf("%s:%s:%s:%s", namespace, service, deployment, name)
+func (p *Pod) CreateSelfLink(kind, selflink, name string) string {
+	return fmt.Sprintf("%s:%s:%s", kind, selflink, name)
 }
 
 func (c *PodContainer) GetManifest() *ContainerManifest {

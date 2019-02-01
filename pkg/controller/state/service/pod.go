@@ -20,6 +20,8 @@ package service
 
 import (
 	"context"
+	"github.com/lastbackend/lastbackend/pkg/util/generator"
+	"strings"
 
 	"github.com/lastbackend/lastbackend/pkg/controller/envs"
 	"github.com/lastbackend/lastbackend/pkg/distribution"
@@ -93,7 +95,6 @@ func PodObserve(ss *ServiceState, p *types.Pod) error {
 	}
 
 	log.V(logLevel).Debugf("%s:> observe finish: %s > %s", logPodPrefix, p.SelfLink(), p.Status.State)
-
 
 	if err := deploymentStatusState(d, pl); err != nil {
 		return err
@@ -179,7 +180,18 @@ func handlePodStateDestroyed(ss *ServiceState, p *types.Pod) error {
 // podCreate function creates new pod based on deployment spec
 func podCreate(d *types.Deployment) (*types.Pod, error) {
 	dm := distribution.NewPodModel(context.Background(), envs.Get().GetStorage())
-	return dm.Create(d)
+
+	pod := types.NewPod()
+	pod.Meta.SetDefault()
+	pod.Meta.Name = strings.Split(generator.GetUUIDV4(), "-")[4][5:]
+	pod.Meta.Namespace = d.Meta.Namespace
+
+	pod.Status.SetCreated()
+
+	pod.Spec.SetSpecTemplate(pod.SelfLink(), d.Spec.Template)
+	pod.Spec.Selector = d.Spec.Selector
+
+	return dm.Put(pod)
 }
 
 // podDestroy function marks pod as provision
