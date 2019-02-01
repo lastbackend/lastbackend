@@ -248,24 +248,26 @@ func (n *Namespace) AllocateResources(resources ResourceRequest) error {
 		}
 	}
 
-	if availableRam > 0 && availableCpu > 0 {
-
+	if availableRam > 0 {
 		if requestedRam == 0 {
 			return errors.New(errors.ResourcesRamLimitIsRequired)
 		}
 
-		if requestedCpu == 0 {
-			return errors.New(errors.ResourcesCpuLimitIsRequired)
-		}
-
 		if (availableRam - allocatedRam - requestedRam) <= 0 {
 			return errors.New(errors.ResourcesRamLimitExceeded)
+		}
+	}
+
+	if availableCpu > 0 {
+		if requestedCpu == 0 {
+			return errors.New(errors.ResourcesCpuLimitIsRequired)
 		}
 
 		if (availableCpu - allocatedCpu - requestedCpu) <= 0 {
 			return errors.New(errors.ResourcesCpuLimitExceeded)
 		}
 	}
+
 	allocatedRam += requestedRam
 	allocatedCpu += requestedCpu
 
@@ -278,8 +280,6 @@ func (n *Namespace) AllocateResources(resources ResourceRequest) error {
 func (n *Namespace) ReleaseResources(resources ResourceRequest) error {
 
 	var (
-		availableRam int64
-		availableCpu int64
 		allocatedRam int64
 		allocatedCpu int64
 		requestedRam int64
@@ -290,20 +290,6 @@ func (n *Namespace) ReleaseResources(resources ResourceRequest) error {
 	var handleErr = func(msg string, e error) error {
 		log.Errorf("allocate %s error: %s", msg, e.Error())
 		return e
-	}
-
-	if n.Spec.Resources.Limits.RAM != EmptyString {
-		availableRam, err = resource.DecodeMemoryResource(n.Spec.Resources.Limits.RAM)
-		if err != nil {
-			return handleErr("ns limit ram", err)
-		}
-	}
-
-	if n.Spec.Resources.Limits.CPU != EmptyString {
-		availableCpu, err = resource.DecodeCpuResource(n.Spec.Resources.Limits.CPU)
-		if err != nil {
-			return handleErr("ns limit cpu", err)
-		}
 	}
 
 	if n.Status.Resources.Allocated.RAM != EmptyString {
@@ -334,16 +320,14 @@ func (n *Namespace) ReleaseResources(resources ResourceRequest) error {
 		}
 	}
 
-	if (allocatedRam+requestedRam) > availableRam && (availableRam > 0) {
-		allocatedRam = availableRam
-	} else {
-		allocatedRam -= requestedRam
+	allocatedRam -= requestedRam
+	if allocatedRam < 0 {
+		allocatedRam = 0
 	}
 
-	if (allocatedCpu+requestedCpu) > availableCpu && (availableRam > 0) {
-		allocatedCpu = availableCpu
-	} else {
-		allocatedCpu -= requestedCpu
+	allocatedCpu -= requestedCpu
+	if allocatedCpu < 0 {
+		allocatedCpu = 0
 	}
 
 	n.Status.Resources.Allocated.RAM = resource.EncodeMemoryResource(allocatedRam)

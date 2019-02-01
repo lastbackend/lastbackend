@@ -15,5 +15,7 @@ do
         mv  build/linux/$i /usr/bin/$i
     elif [[ "$OSTYPE" == "darwin"* ]]; then
         mv  build/darwin/$i /usr/bin/$i
+    elif [[ "$OSTYPE" == "windows"* ]]; then
+        mv  build/windows/$i /usr/bin/$i
     fi
 done

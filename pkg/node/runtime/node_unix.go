@@ -1,3 +1,5 @@
+// +build linux darwin
+
 //
 // Last.Backend LLC CONFIDENTIAL
 // __________________
@@ -20,15 +22,15 @@ package runtime
 
 import (
 	"context"
+	"fmt"
+	"os"
+	"syscall"
+
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 	"github.com/lastbackend/lastbackend/pkg/node/envs"
 	"github.com/lastbackend/lastbackend/pkg/util/system"
 	"github.com/shirou/gopsutil/mem"
 	"github.com/spf13/viper"
-	"syscall"
-
-	"fmt"
-	"os"
 )
 
 const MinContainerMemory = 32

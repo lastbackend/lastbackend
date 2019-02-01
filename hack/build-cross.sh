@@ -3,7 +3,7 @@
 go get -u github.com/golang/dep/cmd/dep
 dep ensure
 
-mkdir -p build/linux && mkdir -p build/darwin
+mkdir -p build/linux && mkdir -p build/darwin  && mkdir -p build/windows
 
 ## declare an array of components variable
 declare -a arr=("kit" "node" "ingress" "discovery")
@@ -21,5 +21,7 @@ do
     GOOS=linux  go build -ldflags "-X main.Version=$VERSION" -o "build/linux/$i" "cmd/$i/$i.go"
   elif [[ "$OSTYPE" == "darwin"* ]]; then
     GOOS=darwin go build -ldflags "-X main.Version=$VERSION" -o "build/darwin/$i" "cmd/$i/$i.go"
+  elif [[ "$OSTYPE" == "windows"* ]]; then
+    GOOS=windows go build -ldflags "-X main.Version=$VERSION" -o "build/windows/$i" "cmd/$i/$i.go"
   fi
 done

@@ -22,8 +22,6 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 )
 
-const logLevel = 3
-
 type State struct {
 	discovery *DiscoveryState
 }

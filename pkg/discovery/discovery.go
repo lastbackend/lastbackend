@@ -20,7 +20,6 @@ package discovery
 
 import (
 	"context"
-	"github.com/lastbackend/lastbackend/pkg/network"
 	"os"
 	"os/signal"
 	"syscall"
@@ -32,6 +31,7 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/discovery/runtime"
 	"github.com/lastbackend/lastbackend/pkg/discovery/state"
 	"github.com/lastbackend/lastbackend/pkg/log"
+	"github.com/lastbackend/lastbackend/pkg/network"
 	"github.com/lastbackend/lastbackend/pkg/storage"
 	"github.com/spf13/viper"
 )

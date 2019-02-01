@@ -20,6 +20,7 @@ package runtime
 
 import (
 	"context"
+
 	"github.com/lastbackend/lastbackend/pkg/discovery/envs"
 	"github.com/lastbackend/lastbackend/pkg/discovery/runtime/endpoint"
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"

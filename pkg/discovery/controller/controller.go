@@ -20,6 +20,10 @@ package controller
 
 import (
 	"context"
+	"net"
+	"sync"
+	"time"
+
 	"github.com/lastbackend/lastbackend/pkg/api/types/v1"
 	"github.com/lastbackend/lastbackend/pkg/api/types/v1/request"
 	"github.com/lastbackend/lastbackend/pkg/discovery/envs"
@@ -28,9 +32,6 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/log"
 	"github.com/lastbackend/lastbackend/pkg/runtime/cni/utils"
 	"github.com/spf13/viper"
-	"net"
-	"sync"
-	"time"
 )
 
 const (
@@ -75,8 +76,6 @@ func (c *Controller) Connect(ctx context.Context) error {
 		log.Errorf("connect err: %s", err.Error())
 		time.Sleep(3 * time.Second)
 	}
-
-	return nil
 }
 
 func (c *Controller) Sync(ctx context.Context) error {

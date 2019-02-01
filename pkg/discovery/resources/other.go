@@ -98,5 +98,7 @@ func other(w dns.ResponseWriter, r *dns.Msg) {
 
 	log.V(logLevel).Debugf("%s:other:> send message info  %#v", logPrefix, m)
 
-	w.WriteMsg(m)
+	if err := w.WriteMsg(m); err != nil {
+		log.V(logLevel).Errorf("%s:other:> write message err: %v", logPrefix, err)
+	}
 }

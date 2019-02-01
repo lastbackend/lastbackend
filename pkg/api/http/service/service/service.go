@@ -152,7 +152,9 @@ func Update(ctx context.Context, ns *types.Namespace, svc *types.Service, mf *re
 	}
 
 	requestedResources := svc.Spec.GetResourceRequest()
+
 	if !resources.Equal(requestedResources) {
+
 		allocatedResources := ns.Status.Resources.Allocated
 		if err := ns.ReleaseResources(resources); err != nil {
 			log.V(logLevel).Errorf("%s:update:> %s", logPrefix, err.Error())
