@@ -3,10 +3,10 @@
 verbose: 3
 token: lstbknd
 
-api:
-  uri: "127.0.0.1:2967"
-  tls:
-    insecure: true
+#api:
+#  uri: "api.lbdp.io:2967"
+#  tls:
+#    insecure: true
 
 node:
   host: 0.0.0.0
@@ -24,4 +24,4 @@ runtime:
     type: "docker"
   csi:
     dir:
-      root: "/private/var/lib/lastbackend/"
+      root: "/var/lib/lastbackend/"
