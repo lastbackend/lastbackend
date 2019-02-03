@@ -20,6 +20,7 @@ package types
 
 import (
 	"fmt"
+	"github.com/lastbackend/lastbackend/pkg/distribution/errors"
 	"time"
 )
 
@@ -52,10 +53,11 @@ type JobMeta struct {
 }
 
 type JobStatus struct {
-	State   string         `json:"state"`
-	Message string         `json:"message"`
-	Stats   JobStatusStats `json:"stats"`
-	Updated time.Time      `json:"updated"`
+	State     string             `json:"state"`
+	Message   string             `json:"message"`
+	Stats     JobStatusStats     `json:"stats"`
+	Resources JobStatusResources `json:"resources"`
+	Updated   time.Time          `json:"updated"`
 }
 
 type JobStatusStats struct {
@@ -66,13 +68,19 @@ type JobStatusStats struct {
 	LastSchedule time.Time `json:"last_schedule"`
 }
 
+type JobStatusResources struct {
+	Allocated ResourceItem `json:"allocated"`
+	Total     ResourceItem `json:"total"`
+}
+
 type JobSpec struct {
+	State       SpecState          `json:"state"`
 	Enabled     bool               `json:"enabled"`
 	Schedule    string             `json:"schedule"`
 	Concurrency JobSpecConcurrency `json:"concurrency"`
 	Remote      JobSpecRemote      `json:"remote"`
-
-	Task JobSpecTask `json:"task"`
+	Resources   ResourceRequest    `json:"resources"`
+	Task        JobSpecTask        `json:"task"`
 }
 
 type JobSpecTask struct {
@@ -128,6 +136,70 @@ func (js *JobStatus) SetError(message string) {
 	js.Message = message
 }
 
+func (js *JobStatus) GetResourceAvailable() ResourceItem {
+
+	var (
+		RAM = js.Resources.Total.RAM - js.Resources.Allocated.RAM
+		CPU = js.Resources.Total.CPU - js.Resources.Allocated.CPU
+		STG = js.Resources.Total.Storage - js.Resources.Allocated.Storage
+	)
+
+	if RAM < 0 {
+		RAM = 0
+	}
+
+	if CPU < 0 {
+		CPU = 0
+	}
+
+	return ResourceItem{
+		RAM: RAM, CPU: CPU, Storage: STG,
+	}
+}
+
+func (js *JobSpec) GetResourceRequest() ResourceRequest {
+	rr := ResourceRequest{}
+
+	var (
+		limitsRAM int64
+		limitsCPU int64
+
+		requestRAM int64
+		requestCPU int64
+	)
+
+	for _, c := range js.Task.Template.Containers {
+
+		limitsCPU += c.Resources.Limits.CPU
+		limitsRAM += c.Resources.Limits.RAM
+
+		requestCPU += c.Resources.Request.CPU
+		requestRAM += c.Resources.Request.RAM
+	}
+
+	if requestRAM > 0 {
+		requestRAM = int64(js.Concurrency.Limit) * requestRAM
+		rr.Request.RAM = requestRAM
+	}
+
+	if requestCPU > 0 {
+		requestCPU = int64(js.Concurrency.Limit) * requestCPU
+		rr.Request.CPU = requestCPU
+	}
+
+	if limitsRAM > 0 {
+		limitsRAM = int64(js.Concurrency.Limit) * limitsRAM
+		rr.Limits.RAM = limitsRAM
+	}
+
+	if limitsCPU > 0 {
+		limitsCPU = int64(js.Concurrency.Limit) * limitsCPU
+		rr.Limits.CPU = limitsCPU
+	}
+
+	return rr
+}
+
 func (j *Job) SelfLink() string {
 	if j.Meta.SelfLink == EmptyString {
 		j.Meta.SelfLink = j.CreateSelfLink(j.Meta.Namespace, j.Meta.Name)
@@ -137,6 +209,93 @@ func (j *Job) SelfLink() string {
 
 func (j *Job) CreateSelfLink(namespace, name string) string {
 	return fmt.Sprintf("%s:%s", namespace, name)
+}
+
+func (j *Job) AllocateResources(resources ResourceRequest) error {
+
+	var (
+		availableRam int64
+		availableCpu int64
+
+		allocatedRam int64
+		allocatedCpu int64
+
+		requestedRam int64
+		requestedCpu int64
+	)
+
+	availableRam = j.Spec.Resources.Limits.RAM
+	availableCpu = j.Spec.Resources.Limits.CPU
+
+	allocatedRam = j.Status.Resources.Allocated.RAM
+	allocatedCpu = j.Status.Resources.Allocated.CPU
+
+	requestedRam = resources.Limits.RAM
+	requestedCpu = resources.Limits.CPU
+
+	if availableRam > 0 && availableCpu > 0 {
+
+		if requestedRam == 0 {
+			return errors.New(errors.ResourcesRamLimitIsRequired)
+		}
+
+		if requestedCpu == 0 {
+			return errors.New(errors.ResourcesCpuLimitIsRequired)
+		}
+
+		if (availableRam - allocatedRam - requestedRam) <= 0 {
+			return errors.New(errors.ResourcesRamLimitExceeded)
+		}
+
+		if (availableCpu - allocatedCpu - requestedCpu) <= 0 {
+			return errors.New(errors.ResourcesCpuLimitExceeded)
+		}
+	}
+
+	allocatedRam += requestedRam
+	allocatedCpu += requestedCpu
+
+	j.Status.Resources.Allocated.RAM = allocatedRam
+	j.Status.Resources.Allocated.CPU = allocatedCpu
+
+	return nil
+}
+
+func (j *Job) ReleaseResources(resources ResourceRequest) {
+
+	var (
+		availableRam int64
+		availableCpu int64
+		allocatedRam int64
+		allocatedCpu int64
+		requestedRam int64
+		requestedCpu int64
+	)
+
+	availableRam = j.Spec.Resources.Limits.RAM
+	availableCpu = j.Spec.Resources.Limits.CPU
+
+	allocatedRam = j.Status.Resources.Allocated.RAM
+	allocatedCpu = j.Status.Resources.Allocated.CPU
+
+	requestedRam = resources.Limits.RAM
+	requestedCpu = resources.Limits.CPU
+
+	if (allocatedRam+requestedRam) > availableRam && (availableRam > 0) {
+		allocatedRam = availableRam
+	} else {
+		allocatedRam -= requestedRam
+	}
+
+	if (allocatedCpu+requestedCpu) > availableCpu && (availableRam > 0) {
+		allocatedCpu = availableCpu
+	} else {
+		allocatedCpu -= requestedCpu
+	}
+
+	j.Status.Resources.Allocated.RAM = allocatedRam
+	j.Status.Resources.Allocated.CPU = allocatedCpu
+
 }
 
 func NewJobList() *JobList {

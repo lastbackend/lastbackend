@@ -153,6 +153,22 @@ func (j *Job) Start(job *types.Job) error {
 	return nil
 }
 
+// Destroy job
+func (j *Job) Destroy(job *types.Job) (*types.Job, error) {
+
+	log.V(logLevel).Debugf("%s:destroy:> destroy job %s", logServicePrefix, job.SelfLink())
+
+	job.Status.State = types.StateDestroy
+	job.Spec.State.Destroy = true
+
+	if err := j.storage.Set(j.context, j.storage.Collection().Job(),
+		job.SelfLink(), job, nil); err != nil {
+		log.V(logLevel).Errorf("%s:destroy:> destroy job err: %v", logServicePrefix, err)
+		return nil, err
+	}
+	return job, nil
+}
+
 // Remove job
 func (j *Job) Remove(job *types.Job) error {
 

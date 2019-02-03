@@ -310,7 +310,7 @@ func JobUpdateH(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	jb, e = job.Update(r.Context(), jb, opts)
+	jb, e = job.Update(r.Context(), ns, jb, opts)
 	if e != nil {
 		e.Http(w)
 		return
@@ -380,7 +380,8 @@ func JobRemoveH(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := jm.Remove(jb); err != nil {
+	jb, err := jm.Destroy(jb)
+	if err != nil {
 		log.V(logLevel).Errorf("%s:remove:> remove job err: %s", logPrefix, err.Error())
 		errors.HTTP.InternalServerError(w)
 		return

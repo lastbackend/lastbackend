@@ -316,12 +316,13 @@ func TestJobCreate(t *testing.T) {
 	ns2 := getNamespaceAsset("test", "")
 
 	ns3 := getNamespaceAsset("limits", "")
-	ns3.Spec.Resources.Limits.RAM = "1GB"
-	ns3.Spec.Resources.Limits.CPU = "1"
+	ns3.Spec.Resources.Limits.RAM, _ = resource.DecodeMemoryResource("1GB")
+	ns3.Spec.Resources.Limits.CPU, _ = resource.DecodeCpuResource("1")
 
 	s1 := getJobAsset(ns1.Meta.Name, "demo", "")
 	s2 := getJobAsset(ns1.Meta.Name, "test", "")
-	s3 := getJobAsset(ns1.Meta.Name, "success", "")
+	s3 := getJobAsset(ns3.Meta.Name, "success", "")
+	s4 := getJobAsset(ns1.Meta.Name, "success", "")
 
 	sm1 := getJobManifest("errored", "image")
 	sm1.Spec.Task.Template.Containers[0].Resources.Limits.RAM = "0.5GB"
@@ -447,11 +448,11 @@ func TestJobCreate(t *testing.T) {
 		// TODO: check another spec parameters
 		{
 			name:         "check create job success",
-			args:         args{ctx, ns1, s3},
+			args:         args{ctx, ns1, s4},
 			fields:       fields{stg},
 			handler:      job.JobCreateH,
 			data:         getJobManifest("success", "redis"),
-			want:         v1.View().Job().New(s3, nil, nil),
+			want:         v1.View().Job().New(s4, nil, nil),
 			wantErr:      false,
 			expectedCode: http.StatusOK,
 		},
@@ -540,7 +541,9 @@ func TestJobCreate(t *testing.T) {
 
 				got := new(types.Job)
 				err := tc.fields.stg.Get(tc.args.ctx, stg.Collection().Job(), tc.args.job.SelfLink(), got, nil)
-				assert.NoError(t, err)
+				if !assert.NoError(t, err) {
+					return
+				}
 
 				if got == nil {
 					t.Error("can not be not nil")
@@ -567,11 +570,11 @@ func TestJobUpdate(t *testing.T) {
 	ns2 := getNamespaceAsset("test", "")
 	ns3 := getNamespaceAsset("limits", "")
 
-	ns3.Status.Resources.Allocated.RAM = "1.5GB"
-	ns3.Status.Resources.Allocated.CPU = "1.5"
+	ns3.Status.Resources.Allocated.RAM, _ = resource.DecodeMemoryResource("1.5GB")
+	ns3.Status.Resources.Allocated.CPU, _ = resource.DecodeCpuResource("1.5")
 
-	ns3.Spec.Resources.Limits.RAM = "2GB"
-	ns3.Spec.Resources.Limits.CPU = "2"
+	ns3.Spec.Resources.Limits.RAM, _ = resource.DecodeMemoryResource("2GB")
+	ns3.Spec.Resources.Limits.CPU, _ = resource.DecodeCpuResource("2")
 
 	s1 := getJobAsset(ns1.Meta.Name, "demo", "")
 	s2 := getJobAsset(ns1.Meta.Name, "test", "")
@@ -768,10 +771,10 @@ func TestJobUpdate(t *testing.T) {
 			err = tc.fields.stg.Put(context.Background(), stg.Collection().Namespace(), tc.fields.stg.Key().Namespace(ns3.Meta.Name), ns3, nil)
 			assert.NoError(t, err)
 
-			err = tc.fields.stg.Put(context.Background(), stg.Collection().Job(), s1.SelfLink(), tc.args.job, nil)
+			err = tc.fields.stg.Put(context.Background(), stg.Collection().Job(), s1.SelfLink(), s1, nil)
 			assert.NoError(t, err)
 
-			err = tc.fields.stg.Put(context.Background(), stg.Collection().Job(), tc.args.job.SelfLink(), tc.args.job, nil)
+			err = tc.fields.stg.Put(context.Background(), stg.Collection().Job(), s4.SelfLink(), s4, nil)
 			assert.NoError(t, err)
 
 			// Create assert request to pass to our handler. We don't have any query parameters for now, so we'll
@@ -1058,7 +1061,7 @@ func TestJobRemove(t *testing.T) {
 				}
 
 				if got != nil {
-					assert.Equal(t, got.Status.State, types.StateDestroy, "status not destroy")
+					assert.Equal(t, types.StateDestroy, got.Status.State, "status not destroy")
 				}
 
 				assert.Equal(t, tc.want, string(body), "response not equal with want")
@@ -1088,6 +1091,7 @@ func getJobAsset(namespace, name, desc string) *types.Job {
 	s.Spec.Task.Template.Containers = append(s.Spec.Task.Template.Containers, &types.SpecTemplateContainer{
 		Name: "demo",
 	})
+
 	return &s
 }
 

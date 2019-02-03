@@ -56,7 +56,6 @@ func (t *TaskManifest) SetTaskSpec(task *types.Task) error {
 	}
 
 	if t.Spec.Template != nil {
-
 		if err := t.Spec.Template.SetSpecTemplate(&task.Spec.Template); err != nil {
 			return err
 		}

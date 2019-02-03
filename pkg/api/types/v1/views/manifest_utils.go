@@ -30,8 +30,8 @@ type ManifestView struct{}
 func (mv *ManifestView) NewManifestSpecTemplate(obj types.SpecTemplate) ManifestSpecTemplate {
 
 	mst := ManifestSpecTemplate{
-		Containers: make([]ManifestSpecTemplateContainer, len(obj.Containers)),
-		Volumes:    make([]ManifestSpecTemplateVolume, len(obj.Volumes)),
+		Containers: make([]ManifestSpecTemplateContainer, 0),
+		Volumes:    make([]ManifestSpecTemplateVolume, 0),
 	}
 
 	for _, s := range obj.Containers {

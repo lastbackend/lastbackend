@@ -21,6 +21,7 @@ package views
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/lastbackend/lastbackend/pkg/util/resource"
 
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 )
@@ -119,11 +120,11 @@ func (r *Namespace) ToEnv(obj types.NamespaceEnvs) NamespaceEnvs {
 	return envs
 }
 
-func (r *Namespace) ToResources(obj types.ResourceRequestItem) NamespaceResource {
+func (r *Namespace) ToResources(obj types.ResourceItem) NamespaceResource {
 	return NamespaceResource{
-		RAM:     obj.RAM,
-		CPU:     obj.CPU,
-		Storage: obj.Storage,
+		RAM:     resource.EncodeMemoryResource(obj.RAM),
+		CPU:     resource.EncodeCpuResource(obj.CPU),
+		Storage: resource.EncodeMemoryResource(obj.Storage),
 	}
 }
 

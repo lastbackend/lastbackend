@@ -245,8 +245,6 @@ func TaskCreateH(w http.ResponseWriter, r *http.Request) {
 
 	var (
 		opts = v1.Request().Task().Manifest()
-		stg  = envs.Get().GetStorage()
-		tm   = distribution.NewTaskModel(r.Context(), stg)
 	)
 
 	// request body struct
@@ -268,22 +266,9 @@ func TaskCreateH(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	tk := new(types.Task)
-	tk.Spec.Runtime = jb.Spec.Task.Runtime
-	tk.Spec.Selector = jb.Spec.Task.Selector
-	tk.Spec.Template = jb.Spec.Task.Template
-
-	if opts != nil {
-		if err := opts.SetTaskSpec(tk); err != nil {
-			log.V(logLevel).Errorf("%s:list:> get pod list by job id `%s` err: %s", logPrefix, ns.Meta.Name, err.Error())
-			errors.HTTP.BadParameter(w, "spec")
-			return
-		}
-	}
-
-	if _, err := tm.Create(tk); err != nil {
-		log.V(logLevel).Errorf("%s:list:> get pod list by job id `%s` err: %s", logPrefix, ns.Meta.Name, err.Error())
-		errors.HTTP.InternalServerError(w)
+	tk, e := task.Create(r.Context(), ns, jb, opts)
+	if e != nil {
+		e.Http(w)
 		return
 	}
 

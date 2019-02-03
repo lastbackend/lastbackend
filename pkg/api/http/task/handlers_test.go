@@ -31,6 +31,7 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/distribution/errors"
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 	"github.com/lastbackend/lastbackend/pkg/storage"
+	"github.com/lastbackend/lastbackend/pkg/util/resource"
 	"github.com/stretchr/testify/assert"
 	"io/ioutil"
 	"net/http"
@@ -354,15 +355,19 @@ func TestTaskCreate(t *testing.T) {
 	ns2 := getNamespaceAsset("not-found", "")
 	ns3 := getNamespaceAsset("limits", "")
 
-	ns3.Spec.Resources.Limits.RAM = "1GB"
-	ns3.Spec.Resources.Limits.CPU = "1"
+	ns3.Spec.Resources.Limits.RAM, _ = resource.DecodeMemoryResource("2GB")
+	ns3.Spec.Resources.Limits.CPU, _ = resource.DecodeCpuResource("2")
 
 	j1 := getJobAsset(ns1.Meta.Name, "job1", "")
 	j2 := getJobAsset(ns1.Meta.Name, "job2", "")
 	j3 := getJobAsset(ns3.Meta.Name, "job3", "")
 
-	t1 := getTaskAsset(ns1.Meta.Name, j1.Meta.Name, "task1")
-	t2 := getTaskAsset(ns3.Meta.Name, j3.Meta.Name, "task2")
+	j3.Spec.Resources.Limits.RAM, _ = resource.DecodeMemoryResource("1GB")
+	j3.Spec.Resources.Limits.CPU, _ = resource.DecodeCpuResource("0.8")
+
+	t1 := getTaskAsset(ns1.Meta.Name, j1.Meta.Name, "errored")
+	t2 := getTaskAsset(ns3.Meta.Name, j3.Meta.Name, "success")
+	t3 := getTaskAsset(ns1.Meta.Name, j1.Meta.Name, "success")
 
 	tm1 := getTaskManifest("errored", "image")
 	tm1.Spec.Template.Containers[0].Resources.Limits.RAM = "0.5GB"
@@ -400,6 +405,7 @@ func TestTaskCreate(t *testing.T) {
 		namespace *types.Namespace
 		job       *types.Job
 		tmf       *request.TaskManifest
+		task      *types.Task
 	}
 
 	tests := []struct {
@@ -416,7 +422,7 @@ func TestTaskCreate(t *testing.T) {
 	}{
 		{
 			name:         "checking create task with not existed namespace",
-			args:         args{ctx, ns2, j1, tm1},
+			args:         args{ctx, ns2, j1, tm1, t1},
 			fields:       fields{stg},
 			handler:      task.TaskCreateH,
 			data:         getTaskManifest("task", "redis"),
@@ -426,7 +432,7 @@ func TestTaskCreate(t *testing.T) {
 		},
 		{
 			name:         "checking create task not existed job",
-			args:         args{ctx, ns1, j2, tm1},
+			args:         args{ctx, ns1, j2, tm1, t1},
 			fields:       fields{stg},
 			handler:      task.TaskCreateH,
 			data:         getTaskManifest("task", "redis"),
@@ -436,38 +442,38 @@ func TestTaskCreate(t *testing.T) {
 		},
 		{
 			name:         "checking create task with ram limit is higher then job limits",
-			args:         args{ctx, ns3, j3, tm2},
+			args:         args{ctx, ns3, j3, tm2, t1},
 			fields:       fields{stg},
 			handler:      task.TaskCreateH,
 			data:         getTaskManifest("task", "redis"),
-			err:          "{\"code\":400,\"status\":\"Bad Parameter\",\"message\":\"Bad name parameter\"}",
+			err:          "{\"code\":400,\"status\":\"Bad Request\",\"message\":\"resources ram limit exceeded\"}",
 			wantErr:      true,
 			expectedCode: http.StatusBadRequest,
 		},
 		{
-			name:         "checking create task with cpu limit is higher then namespace limits",
-			args:         args{ctx, ns3, j3, tm3},
+			name:         "checking create task with cpu limit is higher then job limits",
+			args:         args{ctx, ns3, j3, tm3, t1},
 			fields:       fields{stg},
 			handler:      task.TaskCreateH,
 			data:         getTaskManifest("task", "redis"),
-			err:          "{\"code\":400,\"status\":\"Bad Parameter\",\"message\":\"Bad name parameter\"}",
+			err:          "{\"code\":400,\"status\":\"Bad Request\",\"message\":\"resources cpu limit exceeded\"}",
 			wantErr:      true,
 			expectedCode: http.StatusBadRequest,
 		},
 		{
-			name:         "checking create task with ram & cpu limits are higher then namespace limits",
-			args:         args{ctx, ns3, j3, tm4},
+			name:         "checking create task with ram & cpu limits are higher then job limits",
+			args:         args{ctx, ns3, j3, tm4, t1},
 			fields:       fields{stg},
 			handler:      task.TaskCreateH,
 			data:         getTaskManifest("task", "redis"),
-			err:          "{\"code\":400,\"status\":\"Bad Parameter\",\"message\":\"Bad name parameter\"}",
+			err:          "{\"code\":400,\"status\":\"Bad Request\",\"message\":\"resources ram limit exceeded\"}",
 			wantErr:      true,
 			expectedCode: http.StatusBadRequest,
 		},
 		// TODO: check another spec parameters
 		{
 			name:         "check create task success with limits",
-			args:         args{ctx, ns3, j3, tm6},
+			args:         args{ctx, ns3, j3, tm6, t2},
 			fields:       fields{stg},
 			handler:      task.TaskCreateH,
 			data:         tm6,
@@ -477,11 +483,11 @@ func TestTaskCreate(t *testing.T) {
 		},
 		{
 			name:         "check create task success without limits",
-			args:         args{ctx, ns1, j1, tm7},
+			args:         args{ctx, ns1, j1, tm7, t3},
 			fields:       fields{stg},
 			handler:      task.TaskCreateH,
 			data:         tm6,
-			want:         v1.View().Task().New(t1, nil),
+			want:         v1.View().Task().New(t3, nil),
 			wantErr:      false,
 			expectedCode: http.StatusOK,
 		},
@@ -518,7 +524,7 @@ func TestTaskCreate(t *testing.T) {
 
 			// Create assert request to pass to our handler. We don't have any query parameters for now, so we'll
 			// pass 'nil' as the third parameter.
-			bd, err := tc.data.ToJson()
+			bd, err := tc.args.tmf.ToJson()
 			assert.NoError(t, err)
 
 			req, err := http.NewRequest("POST", fmt.Sprintf("/namespace/%s/job/%s/task", tc.args.namespace.Meta.Name, tc.args.job.Meta.Name), strings.NewReader(string(bd)))
@@ -554,17 +560,25 @@ func TestTaskCreate(t *testing.T) {
 				assert.Equal(t, tc.err, string(body), "incorrect status code")
 			} else {
 
+				job := new(types.Job)
+				err := tc.fields.stg.Get(tc.args.ctx, stg.Collection().Job(), tc.args.job.SelfLink(), job, nil)
+				if !assert.NoError(t, err) {
+					return
+				}
+
 				got := new(types.Task)
-				err := tc.fields.stg.Get(tc.args.ctx, stg.Collection().Job(), tc.args.job.SelfLink(), got, nil)
-				assert.NoError(t, err)
+				err = tc.fields.stg.Get(tc.args.ctx, stg.Collection().Task(), tc.args.task.SelfLink(), got, nil)
+				if !assert.NoError(t, err) {
+					return
+				}
 
 				if got == nil {
 					t.Error("can not be not nil")
 					return
 				}
 
-				assert.Equal(t, t1.Meta.Name, got.Meta.Name, "name not equal")
-				assert.Equal(t, t1.Meta.Description, got.Meta.Description, "description not equal")
+				assert.Equal(t, tc.want.Meta.Name, got.Meta.Name, "name not equal")
+				assert.Equal(t, tc.want.Meta.Description, got.Meta.Description, "description not equal")
 			}
 		})
 	}

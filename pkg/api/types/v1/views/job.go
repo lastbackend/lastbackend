@@ -38,10 +38,11 @@ type JobMeta struct {
 }
 
 type JobStatus struct {
-	State   string         `json:"state"`
-	Message string         `json:"message"`
-	Stats   JobStatusStats `json:"stats"`
-	Updated time.Time      `json:"updated"`
+	State     string             `json:"state"`
+	Message   string             `json:"message"`
+	Stats     JobStatusStats     `json:"stats"`
+	Resources JobStatusResources `json:"resources"`
+	Updated   time.Time          `json:"updated"`
 }
 
 type JobStatusStats struct {
@@ -52,11 +53,27 @@ type JobStatusStats struct {
 	LastSchedule time.Time `json:"last_schedule"`
 }
 
+type JobStatusResources struct {
+	Allocated JobResource `json:"allocated"`
+}
+
+type JobResources struct {
+	Request JobResource `json:"request"`
+	Limits  JobResource `json:"limits"`
+}
+
+type JobResource struct {
+	RAM     string `json:"ram"`
+	CPU     string `json:"cpu"`
+	Storage string `json:"storage"`
+}
+
 type JobSpec struct {
 	Enabled     bool               `json:"enabled"`
 	Schedule    string             `json:"schedule"`
 	Concurrency JobSpecConcurrency `json:"concurrency"`
 	Remote      JobSpecRemote      `json:"remote"`
+	Resources   JobResources       `json:"resources"`
 	Task        JobSpecTask        `json:"task"`
 }
 

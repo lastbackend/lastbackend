@@ -18,7 +18,10 @@
 
 package views
 
-import "github.com/lastbackend/lastbackend/pkg/distribution/types"
+import (
+	"github.com/lastbackend/lastbackend/pkg/distribution/types"
+	"github.com/lastbackend/lastbackend/pkg/util/resource"
+)
 
 type JobView struct{}
 
@@ -65,6 +68,13 @@ func (j *Job) SetStatus(obj types.JobStatus) {
 			Successful:   obj.Stats.Successful,
 			LastSchedule: obj.Stats.LastSchedule,
 		},
+		Resources: JobStatusResources{
+			Allocated: JobResource{
+				RAM:     resource.EncodeMemoryResource(obj.Resources.Allocated.RAM),
+				CPU:     resource.EncodeCpuResource(obj.Resources.Allocated.CPU),
+				Storage: resource.EncodeMemoryResource(obj.Resources.Allocated.Storage),
+			},
+		},
 		Updated: obj.Updated,
 	}
 
@@ -90,6 +100,18 @@ func (j *Job) SetSpec(obj types.JobSpec) {
 				Endpoint: obj.Remote.Response.Endpoint,
 				Method:   obj.Remote.Response.Method,
 				Headers:  obj.Remote.Response.Headers,
+			},
+		},
+		Resources: JobResources{
+			Request: JobResource{
+				RAM:     resource.EncodeMemoryResource(obj.Resources.Request.RAM),
+				CPU:     resource.EncodeCpuResource(obj.Resources.Request.CPU),
+				Storage: resource.EncodeMemoryResource(obj.Resources.Request.Storage),
+			},
+			Limits: JobResource{
+				RAM:     resource.EncodeMemoryResource(obj.Resources.Limits.RAM),
+				CPU:     resource.EncodeCpuResource(obj.Resources.Limits.CPU),
+				Storage: resource.EncodeMemoryResource(obj.Resources.Limits.Storage),
 			},
 		},
 		Task: JobSpecTask{

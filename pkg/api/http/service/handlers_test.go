@@ -317,8 +317,8 @@ func TestServiceCreate(t *testing.T) {
 	ns2 := getNamespaceAsset("test", "")
 
 	ns3 := getNamespaceAsset("limits", "")
-	ns3.Spec.Resources.Limits.RAM = "1GB"
-	ns3.Spec.Resources.Limits.CPU = "1"
+	ns3.Spec.Resources.Limits.RAM, _ = resource.DecodeMemoryResource("1GB")
+	ns3.Spec.Resources.Limits.CPU, _ = resource.DecodeCpuResource("1")
 
 	s1 := getServiceAsset(ns1.Meta.Name, "demo", "")
 	s2 := getServiceAsset(ns1.Meta.Name, "test", "")
@@ -568,11 +568,11 @@ func TestServiceUpdate(t *testing.T) {
 	ns2 := getNamespaceAsset("test", "")
 	ns3 := getNamespaceAsset("limits", "")
 
-	ns3.Status.Resources.Allocated.RAM = "1.5GB"
-	ns3.Status.Resources.Allocated.CPU = "1.5"
+	ns3.Status.Resources.Allocated.RAM, _ = resource.DecodeMemoryResource("1.5GB")
+	ns3.Status.Resources.Allocated.CPU, _ = resource.DecodeCpuResource("1.5")
 
-	ns3.Spec.Resources.Limits.RAM = "2GB"
-	ns3.Spec.Resources.Limits.CPU = "2"
+	ns3.Spec.Resources.Limits.RAM, _ = resource.DecodeMemoryResource("2GB")
+	ns3.Spec.Resources.Limits.CPU, _ = resource.DecodeCpuResource("2")
 
 	s1 := getServiceAsset(ns1.Meta.Name, "demo", "")
 	s2 := getServiceAsset(ns1.Meta.Name, "test", "")
@@ -594,7 +594,6 @@ func TestServiceUpdate(t *testing.T) {
 	m3.Spec.Template.Volumes[0].Secret.Name = "r"
 
 	m3.SetServiceSpec(s3)
-
 
 	sm1 := getServiceManifest("limited", "image")
 	sm1.Spec.Template.Containers[0].Resources.Limits.RAM = "0.5GB"
