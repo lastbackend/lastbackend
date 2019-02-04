@@ -21,6 +21,7 @@ package request
 import (
 	"encoding/json"
 	"github.com/lastbackend/lastbackend/pkg/distribution/errors"
+	"github.com/lastbackend/lastbackend/pkg/util/validator"
 	"io"
 	"io/ioutil"
 )
@@ -33,6 +34,18 @@ func (JobRequest) Manifest() *JobManifest {
 
 func (j *JobManifest) Validate() *errors.Err {
 	switch true {
+	case j.Meta.Name != nil && !validator.IsJobName(*j.Meta.Name):
+		return errors.New("job").BadParameter("name")
+	case j.Meta.Description != nil && len(*j.Meta.Description) > DEFAULT_DESCRIPTION_LIMIT:
+		return errors.New("job").BadParameter("description")
+	case len(j.Spec.Task.Template.Containers) == 0:
+		return errors.New("job").BadParameter("spec")
+	case len(j.Spec.Task.Template.Containers) != 0:
+		for _, container := range j.Spec.Task.Template.Containers {
+			if len(container.Image.Name) == 0 {
+				return errors.New("job").BadParameter("image")
+			}
+		}
 	}
 
 	return nil

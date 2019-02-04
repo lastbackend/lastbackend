@@ -21,6 +21,7 @@ package request
 import (
 	"encoding/json"
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
+	"github.com/lastbackend/lastbackend/pkg/util/resource"
 	"gopkg.in/yaml.v2"
 )
 
@@ -34,12 +35,18 @@ type JobManifestMeta struct {
 }
 
 type JobManifestSpec struct {
-	Enabled     bool                       `json:"enabled" yaml:"enabled"`
-	Schedule    string                     `json:"schedule" yaml:"schedule"`
-	Runtime     ManifestSpecRuntime        `json:"runtime" yaml:"runtime"`
-	Template    ManifestSpecTemplate       `json:"template" yaml:"template"`
-	Concurrency JobManifestSpecConcurrency `json:"concurrency" yaml:"concurrency"`
-	Remote      JobManifestSpecRemote      `json:"remote" yaml:"remote"`
+	Enabled     bool                        `json:"enabled" yaml:"enabled"`
+	Schedule    string                      `json:"schedule" yaml:"schedule"`
+	Concurrency JobManifestSpecConcurrency  `json:"concurrency" yaml:"concurrency"`
+	Remote      JobManifestSpecRemote       `json:"remote" yaml:"remote"`
+	Resources   *JobResourcesOptions        `json:"resources" yaml:"resources"`
+	Task        JobManifestSpecTaskTemplate `json:"task" yaml:"task"`
+}
+
+type JobManifestSpecTaskTemplate struct {
+	Selector *ManifestSpecSelector `json:"selector" yaml:"selector"`
+	Runtime  *ManifestSpecRuntime  `json:"runtime" yaml:"runtime"`
+	Template *ManifestSpecTemplate `json:"template" yaml:"template"`
 }
 
 type JobManifestSpecConcurrency struct {
@@ -76,8 +83,13 @@ func (j *JobManifest) ToYaml() ([]byte, error) {
 }
 
 func (j *JobManifest) SetJobMeta(job *types.Job) {
+
 	if job.Meta.Name == types.EmptyString {
 		job.Meta.Name = *j.Meta.Name
+	}
+
+	if j.Meta.Description != nil {
+		job.Meta.Description = *j.Meta.Description
 	}
 
 	if j.Meta.Labels != nil {
@@ -87,7 +99,103 @@ func (j *JobManifest) SetJobMeta(job *types.Job) {
 
 func (j *JobManifest) SetJobSpec(job *types.Job) (err error) {
 
+	job.Spec.Enabled = j.Spec.Enabled
+	job.Spec.Schedule = j.Spec.Schedule
+
+	job.Spec.Concurrency.Limit = j.Spec.Concurrency.Limit
+	job.Spec.Concurrency.Strategy = j.Spec.Concurrency.Strategy
+
+	job.Spec.Remote.Timeout = j.Spec.Remote.Timeout
+	job.Spec.Remote.Request = types.JobSpecRemoteRequest{
+		Endpoint: j.Spec.Remote.Request.Endpoint,
+		Headers:  j.Spec.Remote.Request.Headers,
+		Method:   j.Spec.Remote.Request.Method,
+	}
+	job.Spec.Remote.Response = types.JobSpecRemoteRequest{
+		Endpoint: j.Spec.Remote.Response.Endpoint,
+		Headers:  j.Spec.Remote.Response.Headers,
+		Method:   j.Spec.Remote.Response.Method,
+	}
+
+	if j.Spec.Resources != nil {
+
+		if j.Spec.Resources.Request != nil {
+
+			if j.Spec.Resources.Request.RAM != nil {
+				ram, err := resource.DecodeMemoryResource(*j.Spec.Resources.Request.RAM)
+				if err != nil {
+					return err
+				}
+
+				job.Spec.Resources.Request.RAM = ram
+			}
+
+			if j.Spec.Resources.Request.CPU != nil {
+
+				cpu, err := resource.DecodeCpuResource(*j.Spec.Resources.Request.CPU)
+				if err != nil {
+					return err
+				}
+
+				job.Spec.Resources.Request.CPU = cpu
+			}
+		}
+
+		if j.Spec.Resources.Limits != nil {
+
+			if j.Spec.Resources.Limits.RAM != nil {
+
+				ram, err := resource.DecodeMemoryResource(*j.Spec.Resources.Limits.RAM)
+				if err != nil {
+					return err
+				}
+
+				job.Spec.Resources.Limits.RAM = ram
+			}
+
+			if j.Spec.Resources.Limits.CPU != nil {
+
+				cpu, err := resource.DecodeCpuResource(*j.Spec.Resources.Limits.CPU)
+				if err != nil {
+					return err
+				}
+
+				job.Spec.Resources.Limits.CPU = cpu
+			}
+		}
+
+	}
+
+	if j.Spec.Task.Selector != nil {
+		j.Spec.Task.Selector.SetSpecSelector(&job.Spec.Task.Selector)
+	} else {
+		job.Spec.Task.Selector.SetDefault()
+	}
+
+	if j.Spec.Task.Runtime != nil {
+		j.Spec.Task.Runtime.SetSpecRuntime(&job.Spec.Task.Runtime)
+	}
+
+	if j.Spec.Task.Template != nil {
+
+		if err := j.Spec.Task.Template.SetSpecTemplate(&job.Spec.Task.Template); err != nil {
+			return err
+		}
+	}
+
 	return nil
+}
+
+type JobResourcesOptions struct {
+	Request *JobResourceOptions `json:"request"`
+	Limits  *JobResourceOptions `json:"limits"`
+}
+
+// swagger:model request_namespace_quotas
+type JobResourceOptions struct {
+	RAM     *string `json:"ram"`
+	CPU     *string `json:"cpu"`
+	Storage *string `json:"storage"`
 }
 
 type JobRemoveOptions struct {

@@ -267,10 +267,7 @@ func handleServiceStateDestroyed(ss *ServiceState, svc *types.Service) (err erro
 	}
 
 	if ns != nil {
-		resource := svc.Spec.GetResourceRequest()
-		if err := ns.ReleaseResources(resource); err != nil {
-			log.Errorf("%s:> namespece resource release err: %s", logServicePrefix, err.Error())
-		}
+		ns.ReleaseResources(svc.Spec.GetResourceRequest())
 
 		if err := nm.Update(ns); err != nil {
 			log.Errorf("%s:> namespece update err: %s", logServicePrefix, err.Error())
@@ -350,7 +347,6 @@ func serviceDeploymentProvision(ss *ServiceState, svc *types.Service) error {
 			log.Errorf("%s:> deployment create err: %s", logServicePrefix, err.Error())
 			return err
 		}
-
 
 		for _, od := range ss.deployment.list {
 

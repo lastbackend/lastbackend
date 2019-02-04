@@ -30,7 +30,7 @@ import (
 )
 
 const (
-	logJobPrefix = "distribution:task"
+	logTaskPrefix = "distribution:task"
 )
 
 type Task struct {
@@ -40,10 +40,10 @@ type Task struct {
 
 func (t *Task) Runtime() (*types.System, error) {
 
-	log.V(logLevel).Debugf("%s:get:> get task runtime info", logJobPrefix)
+	log.V(logLevel).Debugf("%s:get:> get task runtime info", logTaskPrefix)
 	runtime, err := t.storage.Info(t.context, t.storage.Collection().Task(), "")
 	if err != nil {
-		log.V(logLevel).Errorf("%s:get:> get runtime info error: %s", logJobPrefix, err)
+		log.V(logLevel).Errorf("%s:get:> get runtime info error: %s", logTaskPrefix, err)
 		return &runtime.System, err
 	}
 	return &runtime.System, nil
@@ -51,18 +51,18 @@ func (t *Task) Runtime() (*types.System, error) {
 
 func (t *Task) Get(selflink string) (*types.Task, error) {
 
-	log.V(logLevel).Debugf("%s:get:> get by selflink %s", logJobPrefix, selflink)
+	log.V(logLevel).Debugf("%s:get:> get by selflink %s", logTaskPrefix, selflink)
 
 	task := new(types.Task)
 	err := t.storage.Get(t.context, t.storage.Collection().Task(), selflink, task, nil)
 	if err != nil {
 
 		if errors.Storage().IsErrEntityNotFound(err) {
-			log.V(logLevel).Warnf("%s:get:> get task by selflink %s not found", logJobPrefix, selflink)
+			log.V(logLevel).Warnf("%s:get:> get task by selflink %s not found", logTaskPrefix, selflink)
 			return nil, nil
 		}
 
-		log.V(logLevel).Errorf("%s:get:> get task by selflink %s error: %v", logJobPrefix, selflink, err)
+		log.V(logLevel).Errorf("%s:get:> get task by selflink %s error: %v", logTaskPrefix, selflink, err)
 		return nil, err
 	}
 
@@ -70,33 +70,33 @@ func (t *Task) Get(selflink string) (*types.Task, error) {
 }
 
 func (t *Task) ListByNamespace(namespace string) (*types.TaskList, error) {
-	log.V(logLevel).Debugf("%s:list:> by namespace %s", logJobPrefix, namespace)
+	log.V(logLevel).Debugf("%s:list:> by namespace %s", logTaskPrefix, namespace)
 	tasks := types.NewTaskList()
 
 	q := t.storage.Filter().Task().ByNamespace(namespace)
 	err := t.storage.List(t.context, t.storage.Collection().Task(), q, tasks, nil)
 	if err != nil {
-		log.V(logLevel).Error("%s:list:> by namespace %s err: %v", logJobPrefix, namespace, err)
+		log.V(logLevel).Error("%s:list:> by namespace %s err: %v", logTaskPrefix, namespace, err)
 		return nil, err
 	}
 
-	log.V(logLevel).Debugf("%s:list:> by namespace %s result: %d", logJobPrefix, namespace, len(tasks.Items))
+	log.V(logLevel).Debugf("%s:list:> by namespace %s result: %d", logTaskPrefix, namespace, len(tasks.Items))
 
 	return tasks, nil
 }
 
 func (t *Task) ListByJob(namespace, job string) (*types.TaskList, error) {
-	log.V(logLevel).Debugf("%s:list:> by namespace %s", logJobPrefix, namespace)
+	log.V(logLevel).Debugf("%s:list:> by namespace %s", logTaskPrefix, namespace)
 	tasks := types.NewTaskList()
 
 	q := t.storage.Filter().Task().ByJob(namespace, job)
 	err := t.storage.List(t.context, t.storage.Collection().Task(), q, tasks, nil)
 	if err != nil {
-		log.V(logLevel).Error("%s:list:> by namespace %s err: %v", logJobPrefix, namespace, err)
+		log.V(logLevel).Error("%s:list:> by namespace %s err: %v", logTaskPrefix, namespace, err)
 		return nil, err
 	}
 
-	log.V(logLevel).Debugf("%s:list:> by namespace %s result: %d", logJobPrefix, namespace, len(tasks.Items))
+	log.V(logLevel).Debugf("%s:list:> by namespace %s result: %d", logTaskPrefix, namespace, len(tasks.Items))
 
 	return tasks, nil
 }
@@ -105,7 +105,7 @@ func (t *Task) Create(task *types.Task) (*types.Task, error) {
 
 	if err := t.storage.Put(t.context, t.storage.Collection().Task(),
 		task.SelfLink(), task, nil); err != nil {
-		log.Errorf("%s:create:> task %s create err: %v", logJobPrefix, task.Meta.SelfLink, err)
+		log.Errorf("%s:create:> task %s create err: %v", logTaskPrefix, task.Meta.SelfLink, err)
 		return nil, err
 	}
 
@@ -115,7 +115,7 @@ func (t *Task) Create(task *types.Task) (*types.Task, error) {
 // Update task
 func (t *Task) Cancel(task *types.Task) error {
 
-	log.V(logLevel).Debugf("%s:cancel:> cancel task %s", logJobPrefix, task.Meta.Name)
+	log.V(logLevel).Debugf("%s:cancel:> cancel task %s", logTaskPrefix, task.Meta.Name)
 
 	// mark task for destroy
 	task.Spec.State.Cancel = true
@@ -124,7 +124,7 @@ func (t *Task) Cancel(task *types.Task) error {
 
 	if err := t.storage.Set(t.context, t.storage.Collection().Task(),
 		task.SelfLink(), task, nil); err != nil {
-		log.V(logLevel).Debugf("%s:destroy: destroy task %s err: %v", logJobPrefix, task.Meta.Name, err)
+		log.V(logLevel).Debugf("%s:destroy: destroy task %s err: %v", logTaskPrefix, task.Meta.Name, err)
 		return err
 	}
 
@@ -134,7 +134,7 @@ func (t *Task) Cancel(task *types.Task) error {
 // Destroy task
 func (t *Task) Destroy(task *types.Task) error {
 
-	log.V(logLevel).Debugf("%s:destroy:> destroy task %s", logJobPrefix, task.Meta.Name)
+	log.V(logLevel).Debugf("%s:destroy:> destroy task %s", logTaskPrefix, task.Meta.Name)
 
 	// mark task for destroy
 	task.Spec.State.Destroy = true
@@ -143,7 +143,7 @@ func (t *Task) Destroy(task *types.Task) error {
 
 	if err := t.storage.Set(t.context, t.storage.Collection().Task(),
 		task.SelfLink(), task, nil); err != nil {
-		log.V(logLevel).Debugf("%s:destroy:> destroy task %s err: %v", logJobPrefix, task.Meta.Name, err)
+		log.V(logLevel).Debugf("%s:destroy:> destroy task %s err: %v", logTaskPrefix, task.Meta.Name, err)
 		return err
 	}
 
@@ -153,10 +153,10 @@ func (t *Task) Destroy(task *types.Task) error {
 // Remove task
 func (t *Task) Remove(task *types.Task) error {
 
-	log.V(logLevel).Debugf("%s:remove:> remove task %s", logJobPrefix, task.Meta.Name)
+	log.V(logLevel).Debugf("%s:remove:> remove task %s", logTaskPrefix, task.Meta.Name)
 	if err := t.storage.Del(t.context, t.storage.Collection().Task(),
 		task.SelfLink()); err != nil {
-		log.V(logLevel).Debugf("%s:remove:> remove task %s err: %v", logJobPrefix, task.Meta.Name, err)
+		log.V(logLevel).Debugf("%s:remove:> remove task %s err: %v", logTaskPrefix, task.Meta.Name, err)
 		return err
 	}
 
@@ -169,7 +169,7 @@ func (t *Task) Watch(dt chan types.JobEvent, rev *int64) error {
 	done := make(chan bool)
 	watcher := storage.NewWatcher()
 
-	log.V(logLevel).Debugf("%s:watch:> watch tasks", logJobPrefix)
+	log.V(logLevel).Debugf("%s:watch:> watch tasks", logTaskPrefix)
 
 	go func() {
 		for {
@@ -189,7 +189,7 @@ func (t *Task) Watch(dt chan types.JobEvent, rev *int64) error {
 				task := new(types.Task)
 
 				if err := json.Unmarshal(e.Data.([]byte), task); err != nil {
-					log.Errorf("%s:> parse data err: %v", logJobPrefix, err)
+					log.Errorf("%s:> parse data err: %v", logTaskPrefix, err)
 					continue
 				}
 

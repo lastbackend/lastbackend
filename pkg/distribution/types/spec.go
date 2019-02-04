@@ -42,6 +42,7 @@ type SpecState struct {
 type SpecRuntime struct {
 	Services []string          `json:"services"`
 	Tasks    []SpecRuntimeTask `json:"tasks"`
+	Updated  time.Time         `json:"updated"`
 }
 
 // SpecRuntimeTask is a runtime task to execute in runtime
@@ -450,6 +451,18 @@ func (s *SpecTemplateContainerEnvs) ToLinuxFormat() []string {
 	}
 
 	return env
+}
+
+func (ss *SpecSelector) SetDefault() {
+	if ss.Node != EmptyString {
+		ss.Node = EmptyString
+		ss.Updated = time.Now()
+	}
+
+	if len(ss.Labels) > 0 {
+		ss.Labels = make(map[string]string)
+		ss.Updated = time.Now()
+	}
 }
 
 func (s *SpecTemplate) SetDefault() {

@@ -1274,9 +1274,9 @@ func getPodAsset(d *types.Deployment, state, message string) *types.Pod {
 	p := new(types.Pod)
 
 	p.Meta.Namespace = d.Meta.Namespace
-	p.Meta.Service = d.Meta.Service
-	p.Meta.Deployment = d.Meta.Name
 	p.Meta.Name = generator.GetUUIDV4()
+	p.Meta.Parent.Kind = types.KindDeployment
+	p.Meta.Parent.SelfLink = d.SelfLink()
 
 	p.Status.State = state
 	p.Status.Message = message

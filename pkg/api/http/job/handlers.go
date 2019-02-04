@@ -91,7 +91,7 @@ func JobListH(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	response, err := v1.View().Job().NewListWithTasks(jobs, tasks).ToJson()
+	response, err := v1.View().Job().NewList(jobs, tasks, nil).ToJson()
 	if err != nil {
 		log.V(logLevel).Errorf("%s:list:> convert struct to json err: %s", logPrefix, err.Error())
 		errors.HTTP.InternalServerError(w)
@@ -163,7 +163,7 @@ func JobInfoH(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	response, err := v1.View().Job().NewWithTasks(jb, tasks).ToJson()
+	response, err := v1.View().Job().New(jb, tasks, nil).ToJson()
 	if err != nil {
 		log.V(logLevel).Errorf("%s:info:> convert struct to json err: %s", logPrefix, err.Error())
 		errors.HTTP.InternalServerError(w)
@@ -236,7 +236,7 @@ func JobCreateH(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	response, err := v1.View().Job().New(jb).ToJson()
+	response, err := v1.View().Job().New(jb, nil, nil).ToJson()
 	if err != nil {
 		log.V(logLevel).Errorf("%s:update:> convert struct to json err: %s", logPrefix, err.Error())
 		errors.HTTP.InternalServerError(w)
@@ -310,13 +310,13 @@ func JobUpdateH(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	jb, e = job.Update(r.Context(), jb, opts)
+	jb, e = job.Update(r.Context(), ns, jb, opts)
 	if e != nil {
 		e.Http(w)
 		return
 	}
 
-	response, err := v1.View().Job().New(jb).ToJson()
+	response, err := v1.View().Job().New(jb, nil, nil).ToJson()
 	if err != nil {
 		log.V(logLevel).Errorf("%s:update:> convert struct to json err: %s", logPrefix, err.Error())
 		errors.HTTP.InternalServerError(w)
@@ -380,7 +380,8 @@ func JobRemoveH(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := jm.Remove(jb); err != nil {
+	jb, err := jm.Destroy(jb)
+	if err != nil {
 		log.V(logLevel).Errorf("%s:remove:> remove job err: %s", logPrefix, err.Error())
 		errors.HTTP.InternalServerError(w)
 		return

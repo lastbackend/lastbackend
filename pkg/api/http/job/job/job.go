@@ -26,6 +26,7 @@ import (
 	"github.com/lastbackend/lastbackend/pkg/distribution/errors"
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 	"github.com/lastbackend/lastbackend/pkg/log"
+	"github.com/lastbackend/lastbackend/pkg/util/resource"
 	"net/http"
 )
 
@@ -36,11 +37,11 @@ const (
 
 func Fetch(ctx context.Context, namespace, name string) (*types.Job, *errors.Err) {
 	jm := distribution.NewJobModel(ctx, envs.Get().GetStorage())
-	job, err := jm.Get(new(types.Job).CreateSelfLink(namespace, name))
+	job, err := jm.Get(distribution.JobSelfLink(namespace, name))
 
 	if err != nil {
 		log.V(logLevel).Errorf("%s:fetch:> err: %s", logPrefix, err.Error())
-		return nil, errors.New("service").InternalServerError(err)
+		return nil, errors.New("job").InternalServerError(err)
 	}
 
 	if job == nil {
@@ -69,25 +70,26 @@ func Apply(ctx context.Context, ns *types.Namespace, mf *request.JobManifest) (*
 		return Create(ctx, ns, mf)
 	}
 
-	return Update(ctx, job, mf)
+	return Update(ctx, ns, job, mf)
 }
 
 func Create(ctx context.Context, ns *types.Namespace, mf *request.JobManifest) (*types.Job, *errors.Err) {
 
 	jm := distribution.NewJobModel(ctx, envs.Get().GetStorage())
+	nm := distribution.NewNamespaceModel(ctx, envs.Get().GetStorage())
 
 	if mf.Meta.Name != nil {
 
 		job, err := jm.Get(new(types.Job).CreateSelfLink(ns.Meta.Name, *mf.Meta.Name))
 		if err != nil {
-			log.V(logLevel).Errorf("%s:create:> get service by name `%s` in namespace `%s` err: %s", logPrefix, mf.Meta.Name, ns.Meta.Name, err.Error())
-			return nil, errors.New("service").InternalServerError()
+			log.V(logLevel).Errorf("%s:create:> get job by name `%s` in namespace `%s` err: %s", logPrefix, mf.Meta.Name, ns.Meta.Name, err.Error())
+			return nil, errors.New("job").InternalServerError()
 
 		}
 
 		if job != nil {
-			log.V(logLevel).Warnf("%s:create:> service name `%s` in namespace `%s` not unique", logPrefix, mf.Meta.Name, ns.Meta.Name)
-			return nil, errors.New("service").NotUnique("name")
+			log.V(logLevel).Warnf("%s:create:> job name `%s` in namespace `%s` not unique", logPrefix, mf.Meta.Name, ns.Meta.Name)
+			return nil, errors.New("job").NotUnique("name")
 
 		}
 	}
@@ -97,25 +99,73 @@ func Create(ctx context.Context, ns *types.Namespace, mf *request.JobManifest) (
 	job.Meta.Namespace = ns.Meta.Name
 
 	if err := mf.SetJobSpec(job); err != nil {
-		return nil, errors.New("service").BadRequest(err.Error())
+		return nil, errors.New("job").BadRequest(err.Error())
+	}
+
+	if ns.Spec.Resources.Limits.RAM != 0 || ns.Spec.Resources.Limits.CPU != 0 {
+		for _, c := range job.Spec.Task.Template.Containers {
+			if c.Resources.Limits.RAM == 0 {
+				c.Resources.Limits.RAM, _ = resource.DecodeMemoryResource(types.DEFAULT_RESOURCE_LIMITS_RAM)
+			}
+			if c.Resources.Limits.CPU == 0 {
+				c.Resources.Limits.CPU, _ = resource.DecodeCpuResource(types.DEFAULT_RESOURCE_LIMITS_CPU)
+			}
+		}
+	}
+
+	if err := ns.AllocateResources(job.Spec.GetResourceRequest()); err != nil {
+		log.V(logLevel).Errorf("%s:create:> %s", logPrefix, err.Error())
+		return nil, errors.New("job").BadRequest(err.Error())
+
+	} else {
+		if err := nm.Update(ns); err != nil {
+			log.V(logLevel).Errorf("%s:update:> update namespace err: %s", logPrefix, err.Error())
+			return nil, errors.New("job").InternalServerError()
+		}
 	}
 
 	job, err := jm.Create(job)
 	if err != nil {
-		log.V(logLevel).Errorf("%s:create:> create service err: %s", logPrefix, err.Error())
-		return nil, errors.New("service").InternalServerError()
+		log.V(logLevel).Errorf("%s:create:> create job err: %s", logPrefix, err.Error())
+		return nil, errors.New("job").InternalServerError()
 	}
 
 	return job, nil
 }
 
-func Update(ctx context.Context, job *types.Job, mf *request.JobManifest) (*types.Job, *errors.Err) {
+func Update(ctx context.Context, ns *types.Namespace, job *types.Job, mf *request.JobManifest) (*types.Job, *errors.Err) {
 
-	sm := distribution.NewJobModel(ctx, envs.Get().GetStorage())
+	jm := distribution.NewJobModel(ctx, envs.Get().GetStorage())
+	nm := distribution.NewNamespaceModel(ctx, envs.Get().GetStorage())
+
+	resources := job.Spec.GetResourceRequest()
+
 	mf.SetJobMeta(job)
-	if err := sm.Update(job); err != nil {
-		log.V(logLevel).Errorf("%s:update:> update service err: %s", logPrefix, err.Error())
-		return nil, errors.New("service").InternalServerError()
+	if err := mf.SetJobSpec(job); err != nil {
+		return nil, errors.New("job").BadRequest(err.Error())
+	}
+
+	requestedResources := job.Spec.GetResourceRequest()
+	if !resources.Equal(requestedResources) {
+		allocatedResources := ns.Status.Resources.Allocated
+		ns.ReleaseResources(resources)
+
+		if err := ns.AllocateResources(job.Spec.GetResourceRequest()); err != nil {
+			ns.Status.Resources.Allocated = allocatedResources
+			log.V(logLevel).Errorf("%s:update:> %s", logPrefix, err.Error())
+			return nil, errors.New("job").BadRequest(err.Error())
+		} else {
+			if err := nm.Update(ns); err != nil {
+				log.V(logLevel).Errorf("%s:update:> update namespace err: %s", logPrefix, err.Error())
+				return nil, errors.New("job").InternalServerError()
+			}
+
+		}
+	}
+
+	if err := jm.Update(job); err != nil {
+		log.V(logLevel).Errorf("%s:update:> update job err: %s", logPrefix, err.Error())
+		return nil, errors.New("job").InternalServerError()
 	}
 
 	return job, nil

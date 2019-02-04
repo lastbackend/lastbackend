@@ -24,8 +24,6 @@ import (
 
 // swagger:model views_pod
 type Pod struct {
-	// Pod meta id
-	ID string `json:"id"`
 	// Pod Meta
 	Meta PodMeta `json:"meta"`
 	// Pod Spec
@@ -37,7 +35,7 @@ type Pod struct {
 // swagger:ignore
 // PodList is a map of pods
 // swagger:model views_pod_list
-type PodList map[string]*Pod
+type PodList map[string]Pod
 
 // PodMeta is a meta of pod
 // swagger:model views_pod_meta
@@ -48,9 +46,9 @@ type PodMeta struct {
 	Description string `json:"description"`
 	// Pod SelfLink
 	SelfLink string `json:"self_link"`
-	// Pod deployment id
-	Deployment string `json:"deployment"`
-	// Pod service id
+	// Pod parent
+	Parent PodMetaParent `json:"parent"`
+	// Pod namespace
 	Namespace string `json:"namespace"`
 	// Pod node id
 	Node string `json:"node"`
@@ -64,11 +62,16 @@ type PodMeta struct {
 	Updated time.Time `json:"updated"`
 }
 
+type PodMetaParent struct {
+	Kind     string `json:"kind"`
+	SelfLink string `json:"self_link"`
+}
+
 // PodSpec is a spec of pod
 // swagger:model views_pod_spec
 type PodSpec struct {
-	State    PodSpecState    `json:"state"`
-	Template PodSpecTemplate `json:"template"`
+	State    PodSpecState         `json:"state"`
+	Template ManifestSpecTemplate `json:"template"`
 }
 
 // PodSpecState is a state of pod spec
@@ -76,17 +79,6 @@ type PodSpec struct {
 type PodSpecState struct {
 	Destroy     bool `json:"destroy"`
 	Maintenance bool `json:"maintenance"`
-}
-
-// PodSpecTemplate is a template of pod spec
-// swagger:model views_pod_spec_template
-type PodSpecTemplate struct {
-	// Template Volume
-	Volumes SpecTemplateVolumeList `json:"volumes"`
-	// Template main container
-	Containers SpecTemplateContainers `json:"containers"`
-	// Termination period
-	Termination int `json:"termination"`
 }
 
 // PodStatus is a status of pod

@@ -16,27 +16,32 @@
 // from Last.Backend LLC.
 //
 
-package types
+package compare
 
-const logLevel = 3
+func SliceOfString(a, b []string) bool {
 
-const (
-	DEFAULT_RESOURCE_LIMITS_RAM = "128mib"
-	DEFAULT_RESOURCE_LIMITS_CPU = "0.1"
+	if len(a) != len(b) {
+		return false
+	}
 
-	DEFAULT_MEMORY_MIN        = 128
-	DEFAULT_REPLICAS_MIN      = 1
-	DEFAULT_DESCRIPTION_LIMIT = 512
+	diff := make(map[string]int, len(a))
 
-	KindSecret     = "secret"
-	KindRoute      = "route"
-	KindNamespace  = "namespace"
-	KindService    = "service"
-	KindDeployment = "deployment"
-	KindJob        = "job"
-	KindTask       = "task"
-	KindPod        = "pod"
-	KindEndpoint   = "endpoint"
-	KindConfig     = "config"
-	KindVolume     = "volume"
-)
+	for _, _a := range a {
+		diff[_a]++
+	}
+
+	for _, _b := range b {
+
+		if _, ok := diff[_b]; !ok {
+			return false
+		}
+
+		diff[_b] -= 1
+		if diff[_b] == 0 {
+			delete(diff, _b)
+		}
+
+	}
+
+	return len(diff) == 0
+}

@@ -146,10 +146,10 @@ func TestDeploymentInfo(t *testing.T) {
 			err = tc.fields.stg.Put(context.Background(), stg.Collection().Deployment(), tc.fields.stg.Key().Deployment(d1.Meta.Namespace, d1.Meta.Service, d1.Meta.Name), d1, nil)
 			assert.NoError(t, err)
 
-			err = tc.fields.stg.Put(context.Background(), stg.Collection().Pod(), tc.fields.stg.Key().Pod(p1.Meta.Namespace, p1.Meta.Service, p1.Meta.Name, p1.Meta.Name), p1, nil)
+			err = tc.fields.stg.Put(context.Background(), stg.Collection().Pod(), p1.SelfLink(), p1, nil)
 			assert.NoError(t, err)
 
-			err = tc.fields.stg.Put(context.Background(), stg.Collection().Pod(), tc.fields.stg.Key().Pod(p2.Meta.Namespace, p2.Meta.Service, p2.Meta.Name, p2.Meta.Name), p2, nil)
+			err = tc.fields.stg.Put(context.Background(), stg.Collection().Pod(), p2.SelfLink(), p2, nil)
 			assert.NoError(t, err)
 
 			// Create assert request to pass to our handler. We don't have any query parameters for now, so we'll
@@ -381,8 +381,8 @@ func getPodAsset(namespace, service, deployment, name, desc string) types.Pod {
 	p.Meta.Name = name
 	p.Meta.Description = desc
 	p.Meta.Namespace = namespace
-	p.Meta.Service = service
-	p.Meta.Deployment = deployment
+	p.Meta.Parent.Kind = types.KindDeployment
+	p.Meta.Parent.SelfLink = fmt.Sprintf("%s:%s:%s", namespace, service, deployment)
 	p.SelfLink()
 
 	return p

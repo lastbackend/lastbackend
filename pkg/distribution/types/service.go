@@ -20,7 +20,6 @@ package types
 
 import (
 	"fmt"
-	"github.com/lastbackend/lastbackend/pkg/util/resource"
 )
 
 const (
@@ -175,22 +174,22 @@ func (s *ServiceSpec) GetResourceRequest() ResourceRequest {
 
 	if requestRAM > 0 {
 		requestRAM = int64(s.Replicas) * requestRAM
-		rr.Request.RAM = resource.EncodeMemoryResource(requestRAM)
+		rr.Request.RAM = requestRAM
 	}
 
 	if requestCPU > 0 {
 		requestCPU = int64(s.Replicas) * requestCPU
-		rr.Request.CPU = resource.EncodeCpuResource(requestCPU)
+		rr.Request.CPU = requestCPU
 	}
 
 	if limitsRAM > 0 {
 		limitsRAM = int64(s.Replicas) * limitsRAM
-		rr.Limits.RAM = resource.EncodeMemoryResource(limitsRAM)
+		rr.Limits.RAM = limitsRAM
 	}
 
 	if limitsCPU > 0 {
 		limitsCPU = int64(s.Replicas) * limitsCPU
-		rr.Limits.CPU = resource.EncodeCpuResource(limitsCPU)
+		rr.Limits.CPU = limitsCPU
 	}
 
 	return rr

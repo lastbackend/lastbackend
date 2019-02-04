@@ -22,6 +22,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/lastbackend/lastbackend/pkg/util/resource"
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
@@ -424,7 +425,7 @@ func TestNamespaceUpdate(t *testing.T) {
 	ns1 := getNamespaceAsset("demo", "")
 	ns2 := getNamespaceAsset("empty", "new description")
 	ns3 := getNamespaceAsset("demo", "")
-	ns3.Spec.Resources.Request.RAM = "512MB"
+	ns3.Spec.Resources.Request.RAM, _ = resource.DecodeMemoryResource("512MB")
 
 	nsm1, _ := createNamespaceManifest("test", "nil", nil).ToJson()
 	nsm3, _ := createNamespaceManifest(ns1.Meta.Name, ns3.Meta.Description, &request.NamespaceResourcesOptions{Request: &request.NamespaceResourceOptions{RAM: getStrPtr("512MB")}}).ToJson()
@@ -689,14 +690,14 @@ func getNamespaceAsset(name, desc string) *types.Namespace {
 	n.Meta.Name = name
 	n.Meta.Description = desc
 
-	n.Status.Resources.Allocated.RAM = "512 MB"
-	n.Status.Resources.Allocated.CPU = "0.1"
+	n.Status.Resources.Allocated.RAM, _ = resource.DecodeMemoryResource("512 MB")
+	n.Status.Resources.Allocated.CPU, _ = resource.DecodeCpuResource("0.1")
 
-	n.Spec.Resources.Limits.RAM = "1 GB"
-	n.Spec.Resources.Limits.CPU = "0.1"
+	n.Spec.Resources.Limits.RAM, _ = resource.DecodeMemoryResource("1 GB")
+	n.Spec.Resources.Limits.CPU, _ = resource.DecodeCpuResource("0.1")
 
-	n.Spec.Resources.Request.RAM = "1 GB"
-	n.Spec.Resources.Request.CPU = "0.1"
+	n.Spec.Resources.Request.RAM, _ = resource.DecodeMemoryResource("1 GB")
+	n.Spec.Resources.Request.CPU, _ = resource.DecodeCpuResource("0.1")
 
 	return &n
 }
