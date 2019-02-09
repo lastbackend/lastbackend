@@ -28,7 +28,7 @@ import (
 )
 
 const (
-	logPrefix = "api:handler:namespace:fetchFromRequest:>"
+	logPrefix = "api:handler:namespace:fetchFromRequest"
 	logLevel  = 3
 )
 
@@ -38,13 +38,13 @@ func FetchFromRequest(ctx context.Context, selflink string) (*types.Namespace, *
 	ns, err := nm.Get(selflink)
 
 	if err != nil {
-		log.V(logLevel).Errorf("%s:create:> get namespace", logPrefix, err.Error())
+		log.V(logLevel).Errorf("%s:> get namespace err: %s", logPrefix, err.Error())
 		return nil, errors.New("namespace").InternalServerError(err)
 	}
 
 	if ns == nil {
 		err := errors.New("namespace not found")
-		log.V(logLevel).Errorf("%s:create:> get namespace", logPrefix, err.Error())
+		log.V(logLevel).Errorf("%s:> get namespace err: %s", logPrefix, err.Error())
 		return nil, errors.New("namespace").NotFound()
 	}
 

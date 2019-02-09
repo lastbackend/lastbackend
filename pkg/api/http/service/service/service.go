@@ -48,7 +48,7 @@ func Fetch(ctx context.Context, namespace, name string) (*types.Service, *errors
 	}
 
 	if svc == nil {
-		err := errors.New("namespace not found")
+		err := errors.New("service not found")
 		log.V(logLevel).Errorf("%s:fetch:> err: %s", logPrefix, err.Error())
 		return nil, errors.New("service").NotFound()
 	}

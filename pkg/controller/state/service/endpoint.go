@@ -76,7 +76,7 @@ func endpointRestore(ss *ServiceState) error {
 		}
 	}
 
-	ss.endpoint.manifest, err = em.ManifestGet(em.ManifestGetSelfLink(ss.service.Meta.Namespace, ss.service.Meta.Name))
+	ss.endpoint.manifest, err = em.ManifestGet(ss.endpoint.endpoint.SelfLink().String())
 	if err != nil {
 		if !errors.Storage().IsErrEntityNotFound(err) {
 			log.Errorf("%s:restore:> get endpoint error: %v", logPrefix, err)

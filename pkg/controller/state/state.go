@@ -353,9 +353,17 @@ func (s *State) watchPods(ctx context.Context, rev *int64) {
 					continue
 				}
 
-				kind, sl := w.Data.SelfLink().Parent()
+				kind, parent := w.Data.SelfLink().Parent()
+
 				switch kind {
 				case types.KindDeployment:
+
+					k, sl := parent.Parent()
+
+					if k != types.KindService {
+						continue
+					}
+
 					_, ok := s.Service[sl.String()]
 					if !ok {
 						break
@@ -370,7 +378,15 @@ func (s *State) watchPods(ctx context.Context, rev *int64) {
 					}
 
 					s.Service[sl.String()].SetPod(w.Data)
+
 				case types.KindTask:
+
+					k, sl := parent.Parent()
+
+					if k != types.KindJob {
+						continue
+					}
+
 					_, ok := s.Job[sl.String()]
 					if !ok {
 						break

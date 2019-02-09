@@ -83,7 +83,7 @@ func byService(namespace, service string) string {
 }
 
 func byDeployment(namespace, service, deployment string) string {
-	return fmt.Sprintf("%s:%s:%s:", namespace, service, deployment)
+	return fmt.Sprintf("%s:%s:d_%s:", namespace, service, deployment)
 }
 
 func byJob(namespace, runner string) string {

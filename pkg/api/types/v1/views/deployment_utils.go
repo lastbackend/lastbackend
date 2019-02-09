@@ -20,7 +20,6 @@ package views
 
 import (
 	"encoding/json"
-
 	"github.com/lastbackend/lastbackend/pkg/distribution/types"
 )
 
@@ -34,7 +33,7 @@ func (dv *DeploymentView) New(obj *types.Deployment, pl *types.PodList) *Deploym
 
 	d.Pods = make(map[string]Pod, 0)
 	if pl != nil {
-		d.Pods = d.JoinPods(pl)
+		d.JoinPods(pl)
 	}
 
 	return &d
@@ -73,8 +72,7 @@ func (d *Deployment) SetSpec(obj types.DeploymentSpec) {
 	d.Spec = spec
 }
 
-func (d *Deployment) JoinPods(obj *types.PodList) map[string]Pod {
-	pods := make(map[string]Pod, 0)
+func (d *Deployment) JoinPods(obj *types.PodList) {
 	for _, p := range obj.Items {
 
 		if p.Meta.Namespace != d.Meta.Namespace {
@@ -89,10 +87,8 @@ func (d *Deployment) JoinPods(obj *types.PodList) map[string]Pod {
 		if sl.String() != d.Meta.SelfLink {
 			continue
 		}
-
-		d.Pods[p.Meta.SelfLink.String()] = new(PodView).New(p)
+		d.Pods[p.SelfLink().String()] = new(PodView).New(p)
 	}
-	return pods
 }
 
 func (d *Deployment) ToJson() ([]byte, error) {

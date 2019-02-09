@@ -86,7 +86,7 @@ func (ss *ServiceState) Restore() error {
 	}
 
 	for _, p := range pl.Items {
-		log.Infof("%s: restore: restore pod: %s", logPrefix, p.SelfLink())
+		log.Infof("%s: restore: restore pod: %s", logPrefix, p.SelfLink().String())
 
 		// Check if deployment map for pod exists
 		_, sl := p.SelfLink().Parent()
@@ -195,24 +195,27 @@ func (ss *ServiceState) Observe() {
 		select {
 
 		case p := <-ss.observers.pod:
-			log.V(logLevel).Debugf("%s:observe:pod:> %s", logPrefix, p.SelfLink())
+			log.V(logLevel).Debugf("%s:observe:pod:start> %s", logPrefix, p.SelfLink())
 			if err := PodObserve(ss, p); err != nil {
 				log.Errorf("%s:observe:pod err:> %s", logPrefix, err.Error())
 			}
+			log.V(logLevel).Debugf("%s:observe:pod:finish> %s", logPrefix, p.SelfLink())
 			break
 
 		case d := <-ss.observers.deployment:
-			log.V(logLevel).Debugf("%s:observe:deployment:> %s", logPrefix, d.SelfLink())
+			log.V(logLevel).Debugf("%s:observe:deployment:start> %s", logPrefix, d.SelfLink())
 			if err := deploymentObserve(ss, d); err != nil {
 				log.Errorf("%s:observe:deployment err:> %s", logPrefix, err.Error())
 			}
+			log.V(logLevel).Debugf("%s:observe:deployment:finish> %s", logPrefix, d.SelfLink())
 			break
 
 		case s := <-ss.observers.service:
-			log.V(logLevel).Debugf("%s:observe:service:> %s", logPrefix, s.SelfLink())
+			log.V(logLevel).Debugf("%s:observe:service:start> %s", logPrefix, s.SelfLink())
 			if err := serviceObserve(ss, s); err != nil {
 				log.Errorf("%s:observe:service err:> %s", logPrefix, err.Error())
 			}
+			log.V(logLevel).Debugf("%s:observe:service:finish> %s", logPrefix, s.SelfLink())
 			break
 		}
 

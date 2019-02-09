@@ -162,7 +162,7 @@ func handleDeploymentStateReady(ss *ServiceState, d *types.Deployment) error {
 	log.V(logLevel).Debugf("%s:> handleDeploymentStateReady: %s > %s", logDeploymentPrefix, d.SelfLink(), d.Status.State)
 
 	if ss.deployment.active != nil {
-		if ss.deployment.active.SelfLink() != d.SelfLink() {
+		if ss.deployment.active.SelfLink().String() != d.SelfLink().String() {
 			if err := deploymentDestroy(ss, ss.deployment.active); err != nil {
 				log.Errorf("%s", err.Error())
 				return err
@@ -173,14 +173,14 @@ func handleDeploymentStateReady(ss *ServiceState, d *types.Deployment) error {
 	ss.deployment.active = d
 
 	if ss.deployment.provision != nil {
-		if ss.deployment.provision.SelfLink() == d.SelfLink() {
+		if ss.deployment.provision.SelfLink().String() == d.SelfLink().String() {
 			ss.deployment.provision = nil
 		}
 	}
 
-	//if ss.deployment.active.SelfLink() != d.SelfLink() {
-	//	return deploymentDestroy(ss, d)
-	//}
+	if ss.deployment.active.SelfLink().String() != d.SelfLink().String() {
+		return deploymentDestroy(ss, d)
+	}
 
 	return nil
 }
@@ -262,7 +262,7 @@ func handleDeploymentStateDestroyed(ss *ServiceState, d *types.Deployment) error
 	log.V(logLevel).Debugf("%s:> handleDeploymentStateDestroyed: %s > %s", logDeploymentPrefix, d.SelfLink(), d.Status.State)
 
 	if ss.deployment.provision != nil {
-		if ss.deployment.provision.SelfLink() == d.SelfLink() {
+		if ss.deployment.provision.SelfLink().String() == d.SelfLink().String() {
 			ss.deployment.provision = nil
 		}
 	}
@@ -580,6 +580,12 @@ func deploymentPodProvision(ss *ServiceState, d *types.Deployment) (err error) {
 						}
 					}
 
+				}
+
+				if p.Meta.Node == types.EmptyString {
+					if err := podProvision(ss, p); err != nil {
+						return err
+					}
 				}
 
 				total++

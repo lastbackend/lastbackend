@@ -86,7 +86,7 @@ func (d *Deployment) Create(service *types.Service, version int) (*types.Deploym
 	deployment.Meta.Created = time.Now()
 	deployment.Meta.Updated = time.Now()
 
-	deployment.SelfLink()
+	deployment.Meta.SelfLink = *types.NewDeploymentSelfLink(deployment.Meta.Namespace, deployment.Meta.Service, deployment.Meta.Name)
 
 	deployment.Spec = types.DeploymentSpec{
 		Replicas: service.Spec.Replicas,

@@ -6,9 +6,6 @@ api:
   uri: "127.0.0.1:2967"
   tls:
     insecure: true
-    ca: "/opt/cert/lastbackend/ca.pem"
-    cert: "/opt/cert/lastbackend/client.pem"
-    key: "/opt/cert/lastbackend/client-key.pem"
 
 # Etcd database
 etcd:

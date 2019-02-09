@@ -26,15 +26,16 @@ import (
 	rv1 "github.com/lastbackend/lastbackend/pkg/api/types/v1/request"
 	vv1 "github.com/lastbackend/lastbackend/pkg/api/types/v1/views"
 	"github.com/lastbackend/lastbackend/pkg/distribution/errors"
+	t "github.com/lastbackend/lastbackend/pkg/distribution/types"
 	"github.com/lastbackend/lastbackend/pkg/util/http/request"
 )
 
 type TaskClient struct {
 	client *request.RESTClient
 
-	namespace string
-	job       string
-	name      string
+	namespace t.NamespaceSelfLink
+	job       t.JobSelfLink
+	selflink  t.TaskSelfLink
 }
 
 func (dc *TaskClient) Pod(args ...string) types.PodClientV1 {
@@ -49,7 +50,7 @@ func (dc *TaskClient) Pod(args ...string) types.PodClientV1 {
 			panic("Wrong parameter count: (is allowed from 0 to 1)")
 		}
 	}
-	return newPodClient(dc.client, dc.namespace, name)
+	return newPodClient(dc.client, dc.namespace.String(), t.KindTask, dc.selflink.String(), name)
 }
 
 func (dc *TaskClient) List(ctx context.Context) (*vv1.TaskList, error) {
@@ -57,7 +58,7 @@ func (dc *TaskClient) List(ctx context.Context) (*vv1.TaskList, error) {
 	var s *vv1.TaskList
 	var e *errors.Http
 
-	err := dc.client.Get(fmt.Sprintf("/namespace/%s/job/%s/task", dc.namespace, dc.job)).
+	err := dc.client.Get(fmt.Sprintf("/namespace/%s/job/%s/task", dc.namespace.String(), dc.job.Name())).
 		AddHeader("Content-Type", "application/json").
 		JSON(&s, &e)
 
@@ -81,7 +82,7 @@ func (dc *TaskClient) Get(ctx context.Context) (*vv1.Task, error) {
 	var s *vv1.Task
 	var e *errors.Http
 
-	err := dc.client.Get(fmt.Sprintf("/namespace/%s/job/%s/task/%s", dc.namespace, dc.job, dc.name)).
+	err := dc.client.Get(fmt.Sprintf("/namespace/%s/job/%s/task/%s", dc.namespace.String(), dc.job.Name(), dc.selflink.Name())).
 		AddHeader("Content-Type", "application/json").
 		JSON(&s, &e)
 
@@ -105,7 +106,7 @@ func (dc *TaskClient) Cancel(ctx context.Context, opts *rv1.TaskCancelOptions) (
 	var s *vv1.Task
 	var e *errors.Http
 
-	err = dc.client.Delete(fmt.Sprintf("/namespace/%s/job/%s/deployment/%s", dc.namespace, dc.job, dc.name)).
+	err = dc.client.Delete(fmt.Sprintf("/namespace/%s/job/%s/deployment/%s", dc.namespace.String(), dc.job.Name(), dc.selflink.Name())).
 		AddHeader("Content-Type", "application/json").
 		Body(body).
 		JSON(&s, &e)
@@ -121,5 +122,10 @@ func (dc *TaskClient) Cancel(ctx context.Context, opts *rv1.TaskCancelOptions) (
 }
 
 func newTaskClient(client *request.RESTClient, namespace, job, name string) *TaskClient {
-	return &TaskClient{client: client, namespace: namespace, job: job, name: name}
+	return &TaskClient{
+		client:    client,
+		namespace: *t.NewNamespaceSelfLink(namespace),
+		job:       *t.NewJobSelfLink(namespace, job),
+		selflink:  *t.NewTaskSelfLink(namespace, job, name),
+	}
 }

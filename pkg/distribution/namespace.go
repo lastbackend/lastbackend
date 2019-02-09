@@ -101,7 +101,7 @@ func (n *Namespace) Create(ns *types.Namespace) (*types.Namespace, error) {
 
 	ns.Meta.SetDefault()
 	ns.Meta.Endpoint = strings.ToLower(fmt.Sprintf("%s.%s", ns.Meta.Name, viper.GetString("domain.internal")))
-	ns.SelfLink()
+	ns.Meta.SelfLink = *types.NewNamespaceSelfLink(ns.Meta.Name)
 
 	if err := n.storage.Put(n.context, n.storage.Collection().Namespace(), ns.SelfLink().String(), ns, nil); err != nil {
 		log.V(logLevel).Errorf("%s:create:> insert namespace err: %v", logNamespacePrefix, err)

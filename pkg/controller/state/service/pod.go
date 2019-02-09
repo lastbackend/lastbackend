@@ -373,7 +373,10 @@ func podManifestSet(p *types.Pod) error {
 	mm := distribution.NewPodModel(context.Background(), envs.Get().GetStorage())
 	m, err = mm.ManifestGet(p.Meta.Node, p.Meta.SelfLink.String())
 	if err != nil {
-		return err
+		if !errors.Storage().IsErrEntityNotFound(err) {
+			log.Errorf("%s", err.Error())
+			return err
+		}
 	}
 
 	// Update manifest
@@ -384,7 +387,7 @@ func podManifestSet(p *types.Pod) error {
 		*m = types.PodManifest(p.Spec)
 	}
 
-	if err := mm.ManifestSet(p.Meta.Node, p.Meta.SelfLink.String(), m); err != nil {
+	if err := mm.ManifestSet(p.Meta.Node, p.SelfLink().String(), m); err != nil {
 		return err
 	}
 

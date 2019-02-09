@@ -498,11 +498,17 @@ func (sl *PodSelfLink) Parse(selflink string) error {
 
 		// get parent prefix from selflink
 
-		sl.parent.Kind = KindDeployment
-		sl.parent.SelfLink = NewDeploymentSelfLink(parts[0], parts[1], parts[2])
+		if strings.HasPrefix(parts[2], "d_") {
+			parts[2] = strings.TrimPrefix(parts[2], "d_")
+			sl.parent.Kind = KindDeployment
+			sl.parent.SelfLink = NewDeploymentSelfLink(parts[0], parts[1], parts[2])
+		}
 
-		sl.parent.Kind = KindTask
-		sl.parent.SelfLink = NewTaskSelfLink(parts[0], parts[1], parts[2])
+		if strings.HasPrefix(parts[2], "t_") {
+			parts[2] = strings.TrimPrefix(parts[2], "t_")
+			sl.parent.Kind = KindTask
+			sl.parent.SelfLink = NewTaskSelfLink(parts[0], parts[1], parts[2])
+		}
 
 		sl.name = parts[3]
 		return nil

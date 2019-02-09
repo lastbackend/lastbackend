@@ -79,7 +79,7 @@ func (e *Endpoint) Create(namespace, service string, opts *types.EndpointCreateO
 	endpoint.Meta.Name = service
 	endpoint.Meta.Namespace = namespace
 	endpoint.Meta.SetDefault()
-	endpoint.SelfLink()
+	endpoint.Meta.SelfLink = *types.NewEndpointSelfLink(namespace, service)
 
 	endpoint.Status.State = types.StateCreated
 	endpoint.Spec.PortMap = make(map[uint16]string, 0)
@@ -95,8 +95,7 @@ func (e *Endpoint) Create(namespace, service string, opts *types.EndpointCreateO
 	endpoint.Spec.IP = opts.IP
 	endpoint.Spec.Domain = opts.Domain
 
-	key := types.NewEndpointSelfLink(namespace, service).String()
-	if err := e.storage.Put(e.context, e.storage.Collection().Endpoint(), key, endpoint, nil); err != nil {
+	if err := e.storage.Put(e.context, e.storage.Collection().Endpoint(), endpoint.SelfLink().String(), endpoint, nil); err != nil {
 		log.Errorf("%s:create:> distribution create endpoint: %s err: %v", logEndpointPrefix, endpoint.SelfLink(), err)
 		return nil, err
 	}
